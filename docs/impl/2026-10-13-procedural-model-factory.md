@@ -39,6 +39,21 @@ The work is on the session branch `claude/magical-bardeen-rap63u` rather than a
 fresh `claude/<slug>-<hex>` branch: the session's git rules forbid pushing to any
 other branch.
 
+## Follow-up changes
+
+1. **Deploy failed on "Multiple versions of pnpm specified".** The workflows no
+   longer pass `version:` to `pnpm/action-setup`; it reads `packageManager` from
+   `package.json`.
+2. **Port the webapp's skyscraper flicker fix, with a systematic guard.** The
+   geometry fix from rail-island-webapp `b24138aa` (open-topped cores, art deco
+   piers under the cornice, a glass-office roof slab, narrower balconies) and its
+   coplanar-face detector `generator/coplanar.ts` came over; all ten GLBs are
+   byte-identical to that commit's. Beyond the webapp, the build itself now
+   refuses a z-fighting design (`ZFightingError`, nothing written), because the
+   deploy does not wait for the tests, and the site's viewer fits its camera
+   near/far to each model. Tests: 42, including the per-design regression (fails
+   on the old geometry for five towers) and the build guard.
+
 ## How to test
 
 **Automated coverage.** No E2E: the repository has no browser test framework and
@@ -68,6 +83,10 @@ No account, no flags.
    verts and GLB size.
 10. After `pnpm build && pnpm preview`, fetch `/skyscrapers.meta.json` and
     `/glb/sky-pagoda.glb` - both are served.
+
+**Flicker.** Open Art Deco Tower and orbit to look down on its setbacks: the
+roofs are steady stone, not a shimmer of stone and dark window. Zoom fully in on
+a facade: slabs and mullions stay crisp.
 
 **Also worth trying.**
 - `/?model=sky-nope` shows "No model "sky-nope"" with a link back.

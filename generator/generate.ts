@@ -12,6 +12,10 @@
 // unchanged design produces byte-identical GLBs and its thumbnail -- the slow
 // part -- is not re-rendered. Files of a design that no longer exists are deleted.
 //
+// A design with z-fighting faces (coplanar.ts) fails the build before anything
+// is written: the deploy does not wait for the tests, so this is what keeps a
+// flickering model off the site and out of the export.
+//
 //   pnpm build:models
 import fs from "node:fs";
 import path from "node:path";
@@ -20,6 +24,7 @@ import { PNG } from "pngjs";
 import { renderGlbThumb } from "./renderGlbThumb.ts";
 import { SKYSCRAPERS, type ProceduralDesign } from "./skyscrapers.ts";
 import { glbStats } from "./glbStats.ts";
+import { findCoplanarOverlaps, type CoplanarOverlap } from "./coplanar.ts";
 import {
   CATALOG_FILE, META_FILE, catalogRecord, exportMeta, metaEntry,
   type ModelCatalog,
@@ -45,6 +50,39 @@ export function designGlb(id: string): Uint8Array {
   return design.build().toGlb(`Rail Island procedural building (${id})`);
 }
 
+/** Thrown when one or more designs would flicker; the message lists every overlap. */
+export class ZFightingError extends Error {
+  constructor(readonly found: ReadonlyMap<string, CoplanarOverlap[]>) {
+    super(
+      [
+        "z-fighting faces (coplanar surfaces of different materials) - the model would flicker:",
+        ...[...found].flatMap(([id, overlaps]) =>
+          overlaps.map((o) =>
+            `  ${id}: ${o.materials.join(" vs ")} on the plane n=(${o.normal.map((c) => c.toFixed(2)).join(", ")}) d=${o.offset.toFixed(2)}, ${o.area.toFixed(2)} m2`,
+          ),
+        ),
+        "Give the shared surface one owner (see docs/models/skyscrapers.md, \"Flicker\").",
+      ].join("\n"),
+    );
+    this.name = "ZFightingError";
+  }
+}
+
+/** Every design's GLB bytes, after checking none of them z-fights. */
+function buildAll(designs: readonly ProceduralDesign[]): Array<{ design: ProceduralDesign; bytes: Uint8Array; triangles: number }> {
+  const built = designs.map((design) => {
+    const model = design.build();
+    return { design, bytes: model.toGlb(`Rail Island procedural building (${design.id})`), triangles: model.triangleCount() };
+  });
+  const found = new Map<string, CoplanarOverlap[]>();
+  for (const b of built) {
+    const overlaps = findCoplanarOverlaps(b.bytes);
+    if (overlaps.length) found.set(b.design.id, overlaps);
+  }
+  if (found.size) throw new ZFightingError(found);
+  return built;
+}
+
 export interface GeneratedModel {
   id: string;
   glb: string; // absolute path
@@ -57,17 +95,21 @@ export interface GeneratedModel {
 /**
  * Builds every design's GLB and thumbnail into `dir`/glb and `dir`/thumbs. The
  * thumbnail is only re-rendered when the GLB's bytes changed or the PNG is
- * missing; files of designs that no longer exist are removed.
+ * missing; files of designs that no longer exist are removed. Throws a
+ * ZFightingError, writing nothing, when any design would flicker.
  */
-export function generateModels(dir = EXPORT_DIR): GeneratedModel[] {
+export function generateModels(
+  dir = EXPORT_DIR,
+  designs: readonly ProceduralDesign[] = [...DESIGNS.values()],
+): GeneratedModel[] {
+  const built = buildAll(designs); // throws before anything touches the disk
+  const known = new Set(designs.map((d) => d.id));
   const glbDir = path.join(dir, "glb");
   const thumbDir = path.join(dir, "thumbs");
   fs.mkdirSync(glbDir, { recursive: true });
   fs.mkdirSync(thumbDir, { recursive: true });
   const out: GeneratedModel[] = [];
-  for (const design of DESIGNS.values()) {
-    const model = design.build();
-    const bytes = model.toGlb(`Rail Island procedural building (${design.id})`);
+  for (const { design, bytes, triangles } of built) {
     const glb = path.join(glbDir, `${design.id}.glb`);
     const thumb = path.join(thumbDir, `${design.id}.png`);
     const old = fs.existsSync(glb) ? fs.readFileSync(glb) : null;
@@ -76,11 +118,11 @@ export function generateModels(dir = EXPORT_DIR): GeneratedModel[] {
     if (changed || !fs.existsSync(thumb)) {
       fs.writeFileSync(thumb, PNG.sync.write(renderGlbThumb(glb, THUMB_SIZE)));
     }
-    out.push({ id: design.id, glb, thumb, triangles: model.triangleCount(), changed });
+    out.push({ id: design.id, glb, thumb, triangles, changed });
   }
   for (const [sub, ext] of [[glbDir, ".glb"], [thumbDir, ".png"]] as const) {
     for (const name of fs.readdirSync(sub)) {
-      if (name.endsWith(ext) && !DESIGNS.has(name.slice(0, -ext.length))) fs.rmSync(path.join(sub, name));
+      if (name.endsWith(ext) && !known.has(name.slice(0, -ext.length))) fs.rmSync(path.join(sub, name));
     }
   }
   return out;
@@ -109,7 +151,14 @@ export function buildExport(dir = EXPORT_DIR): { models: GeneratedModel[]; catal
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const { models } = buildExport();
+  let models: GeneratedModel[];
+  try {
+    ({ models } = buildExport());
+  } catch (e) {
+    if (!(e instanceof ZFightingError)) throw e;
+    console.error(e.message);
+    process.exit(1);
+  }
   for (const m of models) {
     console.log(`${m.id.padEnd(24)} ${String(m.triangles).padStart(5)} tris ${m.changed ? "(written)" : "(unchanged)"}`);
   }

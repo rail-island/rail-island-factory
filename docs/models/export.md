@@ -4,7 +4,7 @@
 contract the game is meant to import, the site's `catalog.json`, and the offline
 thumbnail renderer.
 **Code** - `generator/generate.ts`, `generator/catalog.ts`, `generator/renderGlbThumb.ts`,
-`generator/glbStats.ts`, `generator/glbTriangles.ts`, `generator/glbParse.ts`, `test/export.test.ts`
+`generator/glbStats.ts`, `generator/coplanar.ts`, `generator/glbTriangles.ts`, `generator/glbParse.ts`, `test/export.test.ts`
 **See also** - [skyscrapers.md](skyscrapers.md), [../site/catalog-site.md](../site/catalog-site.md),
 [../guide/setup-and-build.md](../guide/setup-and-build.md)
 
@@ -30,6 +30,11 @@ software rasterizer, the slow part - is re-rendered only when the GLB changed or
 the PNG is missing. A file of a design that no longer exists is deleted, so a
 dropped id cannot linger. The two JSON documents are rewritten every run and
 carry no timestamp, so they are deterministic too.
+
+**Guarded.** Before anything is written, every design is checked for z-fighting
+faces; one that would flicker fails the build with a `ZFightingError` naming the
+design, the two materials and the plane, and the export is left as it was. See
+[skyscrapers.md](skyscrapers.md) ("Flicker").
 
 ## `skyscrapers.meta.json` (the import contract)
 

@@ -69,13 +69,17 @@ function mast(m: MeshBuilder, cx: number, cz: number, y0: number, h: number, r =
   m.prism("red", ngon(6, r * 0.8, 0, cx, cz), y0 + h, y0 + h + 0.8);
 }
 
-/** A glass shaft with floor slabs and mullions -- the basic modern curtain wall. */
+/**
+ * A glass shaft with floor slabs and mullions -- the basic modern curtain wall.
+ * It has no roof of its own: the caller caps it with a slab or cornice wider
+ * than the mullions, or the glass roof and the mullion tops would z-fight.
+ */
 function curtainWall(
   m: MeshBuilder, glass: string, frame: string, cx: number, cz: number, w: number, d: number,
   y0: number, y1: number, opts: { floor?: number; bays?: number } = {},
 ): void {
   const floor = opts.floor ?? 4;
-  m.box(glass, cx, cz, w, d, y0, y1);
+  m.box(glass, cx, cz, w, d, y0, y1, 0, false);
   floorBands(m, "slab", rect(w, d, cx, cz), y0, y1, floor, 0.45, 0.25);
   piers(m, frame, cx, cz, w, d, y0, y1, opts.bays ?? 6, 0.35, 0.35);
 }
@@ -89,6 +93,7 @@ function glassOffice(): MeshBuilder {
   m.box("glassDark", 0, 0, 29, 29, 4, 11);
   m.box("slab", 0, 0, 30.5, 30.5, 11, 12);
   curtainWall(m, "glass", "steel", 0, 0, 22, 22, 12, 128, { bays: 6 });
+  m.box("slab", 0, 0, 23, 23, 128, 128.6);
   m.box("glassDark", 0, 0, 19, 19, 128, 136);
   floorBands(m, "steel", rect(19, 19), 128, 136, 2, 0.3, 0.3);
   m.box("steel", 0, 0, 20, 20, 136, 137);
@@ -110,8 +115,10 @@ function artDeco(): MeshBuilder {
     [10, 9, 128, 138, 2],
   ];
   for (const [w, d, y0, y1, bays] of tiers) {
-    m.box("window", 0, 0, w, d, y0, y1);
-    piers(m, "stone", 0, 0, w, d, y0, y1, bays, w / bays * 0.45, 0.6);
+    // the cornice caps the tier: the core has no roof and the piers stop under
+    // it, or three roofs would share one height and z-fight
+    m.box("window", 0, 0, w, d, y0, y1, 0, false);
+    piers(m, "stone", 0, 0, w, d, y0, y1 - 1.2, bays, w / bays * 0.45, 0.6);
     floorBands(m, "stone", rect(w, d), y0, y1, 3.6, 1.0, 0.15);
     m.box("stoneDark", 0, 0, w + 1.4, d + 1.4, y1 - 1.2, y1);
   }
@@ -155,15 +162,16 @@ function brickResidential(): MeshBuilder {
   const d = 18;
   const top = 92;
   m.box("stone", 0, 0, w + 1, d + 1, 0, 7);
-  m.box("window", 0, 0, w, d, 7, top);
+  m.box("window", 0, 0, w, d, 7, top, 0, false);
   piers(m, "brick", 0, 0, w, d, 7, top, 8, 1.6, 0.5);
   floorBands(m, "brick", rect(w, d), 7, top, 3.2, 1.1, 0.5);
   // balconies: a slab and a rail, every floor on the front, every other at the back
   for (let y = 10.2, floor = 0; y < top - 3; y += 3.2, floor++) {
     for (const s of floor % 2 ? [1] : [-1, 1]) {
       for (const x of [-7.5, 0, 7.5]) {
-        m.box("white", x, s * (d / 2 + 1.1), 4.6, 2.2, y - 0.15, y + 0.15);
-        m.box("steel", x, s * (d / 2 + 2.15), 4.6, 0.12, y + 0.15, y + 1.0);
+        // 4.4 wide, so a balcony's ends fall between the piers' faces, not on them
+        m.box("white", x, s * (d / 2 + 1.1), 4.4, 2.2, y - 0.15, y + 0.15);
+        m.box("steel", x, s * (d / 2 + 2.15), 4.4, 0.12, y + 0.15, y + 1.0);
       }
     }
   }
@@ -232,13 +240,13 @@ function darkSlab(): MeshBuilder {
   const w = 28;
   const d = 15;
   m.box("stone", 0, 0, w + 10, d + 10, 0, 0.6); // the plaza
-  m.box("glass", 0, 0, w - 3, d - 3, 0.6, 8);
+  m.box("glass", 0, 0, w - 3, d - 3, 0.6, 8, 0, false);
   for (const x of [-1, -0.5, 0, 0.5, 1]) m.box("bronze", x * (w / 2 - 1), 0, 0.8, d - 1, 0.6, 8);
-  m.box("glassBlack", 0, 0, w, d, 8, 120);
+  m.box("glassBlack", 0, 0, w, d, 8, 120, 0, false);
   floorBands(m, "bronze", rect(w, d), 8, 120, 3.8, 0.35, 0.12);
   piers(m, "bronze", 0, 0, w, d, 8, 120, 9, 0.25, 0.4);
   m.box("bronze", 0, 0, w + 0.6, d + 0.6, 120, 121);
-  m.box("glassBlack", 0, 0, w - 2, d - 2, 121, 127);
+  m.box("glassBlack", 0, 0, w - 2, d - 2, 121, 127, 0, false);
   piers(m, "bronze", 0, 0, w - 2, d - 2, 121, 127, 18, 0.4, 0.3);
   m.box("bronze", 0, 0, w - 1.6, d - 1.6, 127, 128);
   return m;

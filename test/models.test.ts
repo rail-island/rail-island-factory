@@ -7,7 +7,8 @@ import os from "node:os";
 import path from "node:path";
 import { MeshBuilder, ngon, rect } from "../generator/meshBuilder";
 import { SKYSCRAPERS } from "../generator/skyscrapers";
-import { designGlb, generateModels } from "../generator/generate";
+import { ZFightingError, designGlb, generateModels } from "../generator/generate";
+import { findCoplanarOverlaps } from "../generator/coplanar";
 import { glbStats } from "../generator/glbStats";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles";
 
@@ -56,7 +57,46 @@ describe("MeshBuilder", () => {
   });
 });
 
+describe("findCoplanarOverlaps", () => {
+  const palette = { a: { color: "#ff0000" }, b: { color: "#0000ff" } };
+
+  it("finds two materials' roofs at one height, and only where they overlap", () => {
+    const m = new MeshBuilder(palette);
+    m.box("a", 0, 0, 10, 10, 0, 5);
+    m.box("b", 4, 0, 4, 4, 2, 5); // pokes out of the side, roof flush with a's
+    const found = findCoplanarOverlaps(m.toGlb("test"));
+    expect(found.length).toBe(1);
+    expect(found[0]!.normal[1]).toBeCloseTo(1);
+    expect(found[0]!.offset).toBeCloseTo(5);
+    expect(found[0]!.area).toBeCloseTo(12); // x 2..5 inside a, z -2..2
+  });
+
+  it("ignores faces that only touch, face away from each other or share a material", () => {
+    const m = new MeshBuilder(palette);
+    m.box("a", 0, 0, 2, 2, 0, 2);
+    m.box("b", 2, 0, 2, 2, 0, 2); // walls touching back to back
+    m.box("b", 10, 0, 2, 2, 0, 2);
+    m.box("b", 10, 0, 2, 2, 0, 2); // same material on top of itself
+    m.box("b", 0, 0, 2, 2, 2, 3); // sits on a's roof: b has no bottom cap
+    expect(findCoplanarOverlaps(m.toGlb("test"))).toEqual([]);
+  });
+
+  it("finds a wall face shared by two materials, not only roofs", () => {
+    const m = new MeshBuilder(palette);
+    m.box("a", 0, 0, 4, 4, 0, 4);
+    m.box("b", 0, 0.5, 4, 3, 1, 3); // its +x/-x walls lie in a's
+    expect(findCoplanarOverlaps(m.toGlb("test")).length).toBeGreaterThan(0);
+  });
+});
+
 describe("the skyscrapers", () => {
+  // Regression: the art deco tower's roofs flickered seen from above -- each
+  // tier's dark core, its stone piers and its cornice all ended at one height.
+  // The glass office, apartment, black slab and terraced towers had smaller cases.
+  it.each(SKYSCRAPERS.map((d) => [d.id] as const))("%s has no z-fighting faces", (id) => {
+    expect(findCoplanarOverlaps(designGlb(id))).toEqual([]);
+  });
+
   it("are ten, with unique sky- ids", () => {
     expect(SKYSCRAPERS.length).toBe(10);
     const ids = SKYSCRAPERS.map((d) => d.id);
@@ -85,6 +125,36 @@ describe("the skyscrapers", () => {
 });
 
 describe("generateModels", () => {
+  // The systematic guard: the deploy does not wait for the tests, so the build
+  // itself refuses a design that would flicker -- and writes nothing.
+  it("refuses a z-fighting design and writes nothing", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "factory-zfight-"));
+    try {
+      const flicker = {
+        id: "sky-flicker",
+        title: "Flicker",
+        build: () => {
+          const m = new MeshBuilder({ a: { color: "#ff0000" }, b: { color: "#0000ff" } });
+          m.box("a", 0, 0, 10, 10, 0, 50);
+          m.box("b", 0, 0, 4, 4, 20, 50); // roof flush with a's
+          return m;
+        },
+      };
+      let thrown: unknown;
+      try {
+        generateModels(dir, [SKYSCRAPERS[0]!, flicker]);
+      } catch (e) {
+        thrown = e;
+      }
+      expect(thrown).toBeInstanceOf(ZFightingError);
+      expect((thrown as ZFightingError).found.has("sky-flicker")).toBe(true);
+      expect((thrown as Error).message).toMatch(/sky-flicker/);
+      expect(fs.readdirSync(dir)).toEqual([]);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it("writes a GLB and a thumbnail per design, skips an unchanged one, and prunes a dropped one", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "factory-"));
     try {

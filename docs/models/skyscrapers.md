@@ -2,7 +2,7 @@
 
 **Covers** - the ten procedurally generated skyscrapers, the mesh builder they
 are made with, and how to add or change a design.
-**Code** - `generator/skyscrapers.ts`, `generator/meshBuilder.ts`, `test/models.test.ts`
+**Code** - `generator/skyscrapers.ts`, `generator/meshBuilder.ts`, `generator/coplanar.ts`, `test/models.test.ts`
 **See also** - [export.md](export.md), [../site/catalog-site.md](../site/catalog-site.md)
 
 ## The designs
@@ -60,6 +60,50 @@ string is `Rail Island procedural building (<id>)`, unchanged from when the
 designs lived in the webapp, so a model built here is byte-identical to one built
 there - which keeps the game's LOD proxy cache (keyed on the GLB bytes) hitting.
 
+## Flicker (z-fighting)
+
+Two faces of **different materials** that lie in one plane, face the same way
+and overlap cannot be ordered by the depth buffer: the GPU shows one or the other
+pixel by pixel and the surface flickers as the camera moves. The art deco tower
+did it at every setback - its dark window core, its stone piers and its cornice
+all ended at one height, three roofs in one plane - and the glass office,
+apartment, black slab and terraced towers had smaller cases of the same thing.
+
+The rule is **one part owns each surface**:
+
+- A core whose roof something else covers is built **open-topped** -
+  `box(..., ry, top = false)` (or `prism(..., top = false)`). `curtainWall()`
+  never caps its glass: its caller puts a slab or cornice on it, wider than the
+  mullions.
+- Parts that would end flush under a cap stop **below** it (the art deco piers
+  end 1.2 m down, under the cornice).
+- Parts that sit beside each other must not share a face plane where they
+  overlap: the apartment balconies are 4.4 m rather than 4.6 m wide, so their ends
+  fall between the brick piers' faces instead of on them.
+
+Faces that merely touch along an edge, faces back to back, and overlaps of one
+material (both sides of the fight are the same colour) are harmless.
+
+**What enforces it.** `generator/coplanar.ts` `findCoplanarOverlaps()` finds every
+overlapping same-facing pair of differently coloured faces in a GLB, merged per
+material pair and plane. It runs twice over:
+
+- **in the build** - `generateModels()` checks every design before writing
+  anything and throws a `ZFightingError` listing each offender (design, material
+  pair, plane, overlap area). The deploy does not wait for the tests, so this is
+  what keeps a flickering model off the site and out of the export;
+- **in the tests** - `test/models.test.ts` asserts no overlaps for every design,
+  plus the detector's own cases and the build guard.
+
+The detector buckets faces by exact plane (rounded to a millimetre), which is the
+case that fights - the designs place coplanar faces at exactly equal
+coordinates. Two surfaces a hair apart are not reported; keep a deliberate gap
+to at least a few centimetres.
+
+The site's viewer does its part on the other side: it fits the camera's near and
+far planes to each model rather than a fixed range, so depth precision is spent
+where the model is ([../site/catalog-site.md](../site/catalog-site.md)).
+
 ## Adding or changing a design
 
 1. Write a function in `skyscrapers.ts` that returns a `MeshBuilder`, and add it
@@ -67,8 +111,9 @@ there - which keeps the game's LOD proxy cache (keyed on the GLB bytes) hitting.
 2. `pnpm build:models`, then look at `export/thumbs/<id>.png` - the headless
    check that the model is the right way up and reads well - or open it in
    `pnpm dev` and orbit it.
-3. `pnpm test` - each model must stand on y = 0, be taller than twice its width
-   and stay under 4,000 triangles.
+3. `pnpm test` - each model must stand on y = 0, be taller than twice its width,
+   stay under 4,000 triangles and have no z-fighting faces (the build already
+   refuses the last; see "Flicker" above for how to resolve a report).
 
 Keep a design's triangle count in the low thousands: the game draws these many
 times over in a big city. Most of the budget goes on repeated floor slabs and

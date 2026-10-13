@@ -19,6 +19,7 @@ export interface Gltf {
   }[];
   meshes?: { primitives: GltfPrimitive[] }[];
   materials?: {
+    name?: string;
     pbrMetallicRoughness?: {
       baseColorFactor?: number[];
       baseColorTexture?: { index: number };

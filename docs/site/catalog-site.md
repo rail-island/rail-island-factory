@@ -49,7 +49,10 @@ Escape, the app bar's back arrow or the browser's Back return to it.
 script and the renderer arrives only when a model opens. It renders on demand
 (no damping, no idle loop), follows its pane with a ResizeObserver, frames the
 model on each selection, and discards a load that resolves after the selection
-moved on. It shows the GLB exactly as built - no `defaultScale` applied.
+moved on. On each framing it also fits the camera's `near`/`far` to the model
+(near a twentieth of the closest zoom, far past the farthest): depth precision
+goes with far/near, and a fixed 0.1..5000 range wasted it and let surfaces a few
+centimetres apart flicker. It shows the GLB exactly as built - no `defaultScale` applied.
 
 ## URL state
 

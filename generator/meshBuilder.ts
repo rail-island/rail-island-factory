@@ -141,9 +141,12 @@ export class MeshBuilder {
     }
   }
 
-  /** An axis-aligned (or `ry`-turned) box. */
-  box(mat: string, cx: number, cz: number, w: number, d: number, y0: number, y1: number, ry = 0): void {
-    this.prism(mat, rect(w, d, cx, cz, ry), y0, y1);
+  /**
+   * An axis-aligned (or `ry`-turned) box. Pass `top: false` for a core whose
+   * roof something else covers: two caps at one height z-fight (coplanar.ts).
+   */
+  box(mat: string, cx: number, cz: number, w: number, d: number, y0: number, y1: number, ry = 0, top = true): void {
+    this.prism(mat, rect(w, d, cx, cz, ry), y0, y1, top);
   }
 
   triangleCount(): number {

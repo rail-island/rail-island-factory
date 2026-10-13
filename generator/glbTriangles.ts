@@ -17,6 +17,8 @@ export interface Tri {
   p: [Vec3, Vec3, Vec3]; // world position
   n: [Vec3, Vec3, Vec3]; // world normal
   color: Vec3; // linear base colour
+  /** The primitive's material name, or `#<index>` when it has none. */
+  material: string;
 }
 
 export function collectTriangles(json: Gltf, bin: Uint8Array): Tri[] {
@@ -39,6 +41,7 @@ export function collectTriangles(json: Gltf, bin: Uint8Array): Tri[] {
           ? json.materials?.[prim.material]?.pbrMetallicRoughness?.baseColorFactor
           : undefined) ?? [1, 1, 1, 1];
         const color: Vec3 = [factor[0], factor[1], factor[2]];
+        const material = prim.material != null ? (json.materials?.[prim.material]?.name ?? `#${prim.material}`) : "default";
         for (let i = 0; i + 2 < idx.length; i += 3) {
           const p: Vec3[] = [];
           const n: Vec3[] = [];
@@ -51,7 +54,7 @@ export function collectTriangles(json: Gltf, bin: Uint8Array): Tri[] {
             const face = norm(cross(sub(p[1], p[0]), sub(p[2], p[0])));
             n[0] = n[1] = n[2] = face;
           }
-          tris.push({ p: p as [Vec3, Vec3, Vec3], n: n as [Vec3, Vec3, Vec3], color });
+          tris.push({ p: p as [Vec3, Vec3, Vec3], n: n as [Vec3, Vec3, Vec3], color, material });
         }
       }
     }

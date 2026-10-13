@@ -125,6 +125,13 @@ export function ModelViewer(props: { record: CatalogRecord }) {
         controls.target.copy(center);
         controls.minDistance = maxDim * 0.4 + 2;
         controls.maxDistance = maxDim * 4 + 40;
+        // Fit the depth range to the model: depth precision goes with far/near,
+        // and a fixed 0.1..5000 spends it on space the camera can never see,
+        // which shows as flicker between surfaces a few centimetres apart.
+        // `near` stays inside the closest zoom; `far` reaches past the farthest.
+        camera.near = controls.minDistance * 0.05;
+        camera.far = controls.maxDistance + maxDim * 2;
+        camera.updateProjectionMatrix();
         controls.update();
         render();
       },
