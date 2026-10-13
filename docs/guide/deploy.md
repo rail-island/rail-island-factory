@@ -27,7 +27,9 @@ as a failed check while the site already carries the commit. Fix forward. A
 dispatch of `deploy.yml` against a `claude/*` branch puts that branch on the
 site - the way to look at a change before it reaches `master`.
 
-Both use Node 22 and pnpm 10, `pnpm install --frozen-lockfile`, and cancel an
+Both use Node 22 and the pnpm that `packageManager` in `package.json` pins
+(`pnpm/action-setup` reads it there; giving the action a `version:` as well makes
+it fail with "Multiple versions of pnpm specified"), `pnpm install --frozen-lockfile`, and cancel an
 in-flight run when a newer one starts.
 
 ## Credentials
