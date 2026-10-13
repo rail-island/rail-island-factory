@@ -7,7 +7,8 @@ import os from "node:os";
 import path from "node:path";
 import { MeshBuilder, ngon, rect } from "../generator/meshBuilder";
 import { SKYSCRAPERS } from "../generator/skyscrapers";
-import { ZFightingError, designGlb, generateModels } from "../generator/generate";
+import { ZFightingError, designGlb, designTree, generateModels } from "../generator/generate";
+import { isLeaf, type LeafNode, type ScopeNode, type TreeNode } from "../generator/sourceTree";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { glbStats } from "../generator/glbStats";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles";
@@ -54,6 +55,70 @@ describe("MeshBuilder", () => {
   it("refuses a material missing from its palette", () => {
     const m = new MeshBuilder({ a: { color: "#808080" } });
     expect(() => m.box("b", 0, 0, 1, 1, 0, 1)).toThrow(/unknown material/);
+  });
+});
+
+/** Every node of a tree, depth first. */
+function walk(n: TreeNode, out: TreeNode[] = []): TreeNode[] {
+  out.push(n);
+  if (!isLeaf(n)) for (const c of n.children) walk(c, out);
+  return out;
+}
+
+describe("MeshBuilder's source tree", () => {
+  const palette = { a: { color: "#808080" }, b: { color: "#404040" } };
+
+  it("records the outermost primitive call as a leaf, with its triangle range in its material", () => {
+    const m = new MeshBuilder(palette);
+    m.scope("base", () => {
+      m.box("a", 0, 0, 4, 4, 0, 2);
+      m.prism("b", ngon(6, 1), 2, 3);
+      m.box("a", 0, 0, 2, 2, 2, 5, 0, false);
+    });
+    const t = m.sourceTree("sky-test", "Test");
+    expect(t.materials).toEqual(["a", "b"]);
+    expect(t.triangles).toBe(m.triangleCount());
+    const base = t.root.children[0] as ScopeNode;
+    expect(base.id).toBe("base");
+    // a box draws through prism, loft, quad, tri and cap -- still one leaf
+    expect(base.children.map((c) => [c.id, (c as LeafNode).kind, (c as LeafNode).tri])).toEqual([
+      ["base/box-1", "box", [0, 10]],
+      ["base/prism-1", "prism", [0, 16]],
+      ["base/box-2", "box", [10, 8]],
+    ]);
+    expect((base.children[0] as LeafNode).args).toEqual({ cx: 0, cz: 0, w: 4, d: 4, y0: 0, y1: 2, ry: 0, top: true });
+    expect((base.children[1] as LeafNode).args).toEqual({ ring: 6, y0: 2, y1: 3, top: true });
+    expect(base.triangles).toBe(34);
+    expect(base.min).toEqual([-2, 0, -2]);
+    expect(base.max).toEqual([2, 5, 2]);
+  });
+
+  it("makes sibling ids unique, nests paths and drops empty scopes", () => {
+    const m = new MeshBuilder(palette);
+    m.scope("Tier 1", () => m.scope("piers", () => m.box("a", 0, 0, 1, 1, 0, 1)));
+    m.scope("tier 1", () => m.box("a", 0, 0, 1, 1, 1, 2));
+    m.scope("nothing", () => {});
+    const ids = walk(m.sourceTree("x", "X").root).map((n) => n.id);
+    expect(ids).toEqual(["", "tier-1", "tier-1/piers", "tier-1/piers/box-1", "tier-1-2", "tier-1-2/box-1"]);
+  });
+
+  it("keeps a call whose every triangle was degenerate, with an empty range", () => {
+    const m = new MeshBuilder(palette);
+    m.scope("flat", () => m.tri("a", [0, 0, 0], [1, 0, 0], [2, 0, 0]));
+    const leaf = (m.sourceTree("x", "X").root.children[0] as ScopeNode).children[0] as LeafNode;
+    expect(leaf.tri).toEqual([0, 0]);
+    expect(leaf.triangles).toBe(0);
+    expect(leaf.min).toBeUndefined();
+  });
+
+  it("does not change the GLB", () => {
+    const plain = new MeshBuilder(palette);
+    plain.box("a", 0, 0, 4, 4, 0, 2);
+    plain.spire("b", ngon(5, 2), 2, 6);
+    const scoped = new MeshBuilder(palette);
+    scoped.scope("one", () => scoped.box("a", 0, 0, 4, 4, 0, 2));
+    scoped.scope("two", () => scoped.scope("deeper", () => scoped.spire("b", ngon(5, 2), 2, 6)));
+    expect(Buffer.from(scoped.toGlb("t")).equals(Buffer.from(plain.toGlb("t")))).toBe(true);
   });
 });
 
@@ -121,6 +186,56 @@ describe("the skyscrapers", () => {
 
   it("throws on an unknown id", () => {
     expect(() => designGlb("sky-nope")).toThrow(/no procedural model/);
+    expect(() => designTree("sky-nope")).toThrow(/no procedural model/);
+  });
+
+  // The site's source tree is only readable when every primitive sits in a
+  // named scope: a design must not draw straight under its root.
+  it.each(SKYSCRAPERS.map((d) => [d.id] as const))("%s draws every primitive inside a named scope", (id) => {
+    const tree = designTree(id);
+    expect(tree.root.children.length).toBeGreaterThan(0);
+    expect(tree.root.children.filter(isLeaf).map((l) => l.id)).toEqual([]);
+    const ids = walk(tree.root).map((n) => n.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  // The site highlights and picks through the leaves' triangle ranges, so they
+  // must tile each material's GLB primitive exactly and point at the right faces.
+  it.each(SKYSCRAPERS.map((d) => [d.id] as const))("%s has a tree whose triangle ranges match its GLB", (id) => {
+    const tree = designTree(id);
+    const { json, bin } = parseGlb(designGlb(id));
+    const byMat = new Map<string, ReturnType<typeof collectTriangles>>();
+    for (const t of collectTriangles(json, bin)) {
+      if (!byMat.has(t.material)) byMat.set(t.material, []);
+      byMat.get(t.material)!.push(t);
+    }
+    expect(tree.materials).toEqual([...byMat.keys()]);
+    expect(tree.triangles).toBe(glbStats(designGlb(id)).triangles);
+    expect(tree.root.triangles).toBe(tree.triangles);
+    const leaves = walk(tree.root).filter(isLeaf);
+    for (const mat of tree.materials) {
+      const ranges = leaves.filter((l) => l.material === mat).map((l) => l.tri).sort((a, b) => a[0] - b[0]);
+      let next = 0;
+      for (const [first, count] of ranges) {
+        expect(first).toBe(next);
+        next += count;
+      }
+      expect(next).toBe(byMat.get(mat)!.length);
+    }
+    for (const leaf of leaves) {
+      if (leaf.tri[1] === 0) continue;
+      const tris = byMat.get(leaf.material)!.slice(leaf.tri[0], leaf.tri[0] + leaf.tri[1]);
+      for (let k = 0; k < 3; k++) {
+        const lo = Math.min(...tris.flatMap((t) => t.p.map((p) => p[k]!)));
+        const hi = Math.max(...tris.flatMap((t) => t.p.map((p) => p[k]!)));
+        expect(Math.abs(lo - leaf.min![k]!)).toBeLessThan(0.002);
+        expect(Math.abs(hi - leaf.max![k]!)).toBeLessThan(0.002);
+      }
+    }
+  });
+
+  it("record the same source tree every time", () => {
+    for (const d of SKYSCRAPERS) expect(JSON.stringify(designTree(d.id))).toBe(JSON.stringify(designTree(d.id)));
   });
 });
 
@@ -162,12 +277,16 @@ describe("generateModels", () => {
       fs.mkdirSync(path.join(dir, "thumbs"));
       fs.writeFileSync(path.join(dir, "glb", "sky-retired.glb"), "stale");
       fs.writeFileSync(path.join(dir, "thumbs", "sky-retired.png"), "stale");
+      fs.mkdirSync(path.join(dir, "tree"));
+      fs.writeFileSync(path.join(dir, "tree", "sky-retired.json"), "stale");
       const first = generateModels(dir);
       expect(first.map((b) => b.id).sort()).toEqual(SKYSCRAPERS.map((d) => d.id).sort());
       for (const b of first) {
         expect(b.changed).toBe(true);
         expect(fs.readFileSync(b.thumb).subarray(1, 4).toString()).toBe("PNG");
+        expect(JSON.parse(fs.readFileSync(b.tree, "utf8"))).toEqual(designTree(b.id));
       }
+      expect(fs.existsSync(path.join(dir, "tree", "sky-retired.json"))).toBe(false);
       expect(fs.existsSync(path.join(dir, "glb", "sky-retired.glb"))).toBe(false);
       expect(fs.existsSync(path.join(dir, "thumbs", "sky-retired.png"))).toBe(false);
       // a second run finds nothing to rewrite, and leaves the thumbnails alone

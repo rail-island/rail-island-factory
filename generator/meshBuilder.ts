@@ -7,6 +7,13 @@
 //
 // Units are metres, +Y up, base at y = 0. The game's catalog recentres a model on
 // its footprint, so a design need not be centred on the origin.
+//
+// While a design runs, the builder also records its source tree (sourceTree.ts):
+// `scope(name, fn)` opens a named node, and every OUTERMOST primitive call (a box,
+// not the prism, loft and caps it draws through) becomes a leaf holding its
+// arguments and its triangle range. Recording never changes what is drawn.
+
+import { slug, type ArgValue, type NodeExtent, type PrimitiveKind, type ScopeNode, type SourceTree, type TreeNode } from "./sourceTree.ts";
 
 export type Ring = Array<[number, number]>; // (x, z) points, counter-clockwise seen from above
 
@@ -18,6 +25,30 @@ export interface MaterialSpec {
 }
 
 type Vec3 = [number, number, number];
+
+interface RawLeaf {
+  kind: PrimitiveKind;
+  material: string;
+  args: Record<string, ArgValue>;
+  first: number;
+  count: number;
+}
+
+interface RawScope {
+  name: string;
+  children: Array<RawScope | RawLeaf>;
+}
+
+/** Rounded to the millimetre, so float noise does not reach the tree file. */
+const mm = (v: number): number => Math.round(v * 1000) / 1000 + 0; // + 0 turns -0 into 0
+
+function roundArgs(args: Record<string, ArgValue>): Record<string, ArgValue> {
+  const out: Record<string, ArgValue> = {};
+  for (const [k, v] of Object.entries(args)) {
+    out[k] = typeof v === "number" ? mm(v) : Array.isArray(v) ? v.map(mm) : v;
+  }
+  return out;
+}
 
 /** sRGB hex -> linear RGB, the space glTF's baseColorFactor is in. */
 function linearRgb(hex: string): Vec3 {
@@ -73,10 +104,55 @@ export function scaleRing(ring: Ring, s: number): Ring {
 
 export class MeshBuilder {
   private readonly groups = new Map<string, { pos: number[]; nrm: number[] }>();
+  private readonly root: RawScope = { name: "", children: [] };
+  private readonly open: RawScope[] = [this.root];
+  /** True inside a recorded primitive call: the calls it draws through are not leaves. */
+  private drawing = false;
 
   constructor(private readonly palette: Record<string, MaterialSpec>) {}
 
+  /**
+   * Runs `fn` inside a named scope of the source tree: every primitive it draws,
+   * directly or through helpers, becomes a leaf under this scope.
+   */
+  scope<T>(name: string, fn: () => T): T {
+    if (this.drawing) throw new Error("scope() inside a primitive call");
+    const s: RawScope = { name, children: [] };
+    this.open[this.open.length - 1]!.children.push(s);
+    this.open.push(s);
+    try {
+      return fn();
+    } finally {
+      this.open.pop();
+    }
+  }
+
+  private trianglesOf(mat: string): number {
+    return (this.groups.get(mat)?.pos.length ?? 0) / 9;
+  }
+
+  /** Draws through `draw` and, when this is the outermost primitive call, records it as a leaf. */
+  private leaf(kind: PrimitiveKind, mat: string, args: () => Record<string, ArgValue>, draw: () => void): void {
+    if (this.drawing) {
+      draw();
+      return;
+    }
+    const first = this.trianglesOf(mat);
+    this.drawing = true;
+    try {
+      draw();
+    } finally {
+      this.drawing = false;
+    }
+    const count = this.trianglesOf(mat) - first;
+    this.open[this.open.length - 1]!.children.push({ kind, material: mat, args: roundArgs(args()), first, count });
+  }
+
   tri(mat: string, a: Vec3, b: Vec3, c: Vec3): void {
+    this.leaf("tri", mat, () => ({ a, b, c }), () => this.drawTri(mat, a, b, c));
+  }
+
+  private drawTri(mat: string, a: Vec3, b: Vec3, c: Vec3): void {
     if (!this.palette[mat]) throw new Error(`unknown material "${mat}"`);
     const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
     const v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
@@ -92,12 +168,18 @@ export class MeshBuilder {
   }
 
   quad(mat: string, a: Vec3, b: Vec3, c: Vec3, d: Vec3): void {
-    this.tri(mat, a, b, c);
-    this.tri(mat, a, c, d);
+    this.leaf("quad", mat, () => ({ a, b, c, d }), () => {
+      this.tri(mat, a, b, c);
+      this.tri(mat, a, c, d);
+    });
   }
 
   /** Flat horizontal cap over a convex ring, facing up (or down). */
   cap(mat: string, ring: Ring, y: number, up = true): void {
+    this.leaf("cap", mat, () => ({ ring: ring.length, y, up }), () => this.drawCap(mat, ring, y, up));
+  }
+
+  private drawCap(mat: string, ring: Ring, y: number, up: boolean): void {
     for (let i = 1; i < ring.length - 1; i++) {
       const a: Vec3 = [ring[0][0], y, ring[0][1]];
       const b: Vec3 = [ring[i][0], y, ring[i][1]];
@@ -113,6 +195,10 @@ export class MeshBuilder {
    * the same way (counter-clockwise from above, as every helper here returns).
    */
   loft(mat: string, lower: Ring, y0: number, upper: Ring, y1: number, top = true): void {
+    this.leaf("loft", mat, () => ({ lower: lower.length, y0, upper: upper.length, y1, top }), () => this.drawLoft(mat, lower, y0, upper, y1, top));
+  }
+
+  private drawLoft(mat: string, lower: Ring, y0: number, upper: Ring, y1: number, top: boolean): void {
     if (lower.length !== upper.length) throw new Error("loft rings differ in length");
     const n = lower.length;
     for (let i = 0; i < n; i++) {
@@ -128,11 +214,15 @@ export class MeshBuilder {
 
   /** A vertical prism over `ring` from y0 to y1. */
   prism(mat: string, ring: Ring, y0: number, y1: number, top = true): void {
-    this.loft(mat, ring, y0, ring, y1, top);
+    this.leaf("prism", mat, () => ({ ring: ring.length, y0, y1, top }), () => this.loft(mat, ring, y0, ring, y1, top));
   }
 
   /** A pointed roof or spire: the ring's edges to an apex above its centroid. */
   spire(mat: string, ring: Ring, y0: number, y1: number): void {
+    this.leaf("spire", mat, () => ({ ring: ring.length, y0, y1 }), () => this.drawSpire(mat, ring, y0, y1));
+  }
+
+  private drawSpire(mat: string, ring: Ring, y0: number, y1: number): void {
     const cx = ring.reduce((s, p) => s + p[0], 0) / ring.length;
     const cz = ring.reduce((s, p) => s + p[1], 0) / ring.length;
     for (let i = 0; i < ring.length; i++) {
@@ -146,13 +236,73 @@ export class MeshBuilder {
    * roof something else covers: two caps at one height z-fight (coplanar.ts).
    */
   box(mat: string, cx: number, cz: number, w: number, d: number, y0: number, y1: number, ry = 0, top = true): void {
-    this.prism(mat, rect(w, d, cx, cz, ry), y0, y1, top);
+    this.leaf("box", mat, () => ({ cx, cz, w, d, y0, y1, ry, top }), () => this.prism(mat, rect(w, d, cx, cz, ry), y0, y1, top));
   }
 
   triangleCount(): number {
     let n = 0;
     for (const g of this.groups.values()) n += g.pos.length / 9;
     return n;
+  }
+
+  /**
+   * The recorded source tree, its root named `title`. Ids are slash paths of
+   * slugged scope names, unique among siblings (a repeated name gets "-2",
+   * "-3"...); a leaf is "<kind>-<n>" within its scope. Empty scopes are dropped.
+   */
+  sourceTree(id: string, title: string): SourceTree {
+    const materials = [...this.groups.keys()].sort();
+    const extentOf = (mat: string, first: number, count: number): NodeExtent => {
+      if (count === 0) return { triangles: 0 };
+      const pos = this.groups.get(mat)!.pos;
+      const min: [number, number, number] = [Infinity, Infinity, Infinity];
+      const max: [number, number, number] = [-Infinity, -Infinity, -Infinity];
+      for (let i = first * 9; i < (first + count) * 9; i += 3) {
+        for (let k = 0; k < 3; k++) {
+          min[k] = Math.min(min[k]!, pos[i + k]!);
+          max[k] = Math.max(max[k]!, pos[i + k]!);
+        }
+      }
+      return { triangles: count, min: min.map(mm) as [number, number, number], max: max.map(mm) as [number, number, number] };
+    };
+    const merge = (nodes: TreeNode[]): NodeExtent => {
+      const out: NodeExtent = { triangles: 0 };
+      for (const n of nodes) {
+        out.triangles += n.triangles;
+        if (!n.min || !n.max) continue;
+        out.min = out.min ? (out.min.map((v, k) => Math.min(v, n.min![k]!)) as [number, number, number]) : n.min;
+        out.max = out.max ? (out.max.map((v, k) => Math.max(v, n.max![k]!)) as [number, number, number]) : n.max;
+      }
+      return out;
+    };
+    const build = (raw: RawScope, path: string, name: string): ScopeNode | null => {
+      const taken = new Set<string>();
+      const perKind = new Map<string, number>();
+      const children: TreeNode[] = [];
+      const join = (seg: string): string => (path ? `${path}/${seg}` : seg);
+      for (const c of raw.children) {
+        if ("kind" in c) {
+          const n = (perKind.get(c.kind) ?? 0) + 1;
+          perKind.set(c.kind, n);
+          let seg = `${c.kind}-${n}`;
+          for (let k = 2; taken.has(seg); k++) seg = `${c.kind}-${n}-${k}`;
+          taken.add(seg);
+          children.push({ id: join(seg), kind: c.kind, material: c.material, args: c.args, tri: [c.first, c.count], ...extentOf(c.material, c.first, c.count) });
+        } else {
+          const base = slug(c.name);
+          let seg = base;
+          for (let k = 2; taken.has(seg); k++) seg = `${base}-${k}`;
+          const node = build(c, join(seg), c.name);
+          if (!node) continue;
+          taken.add(seg);
+          children.push(node);
+        }
+      }
+      if (children.length === 0 && path) return null;
+      return { id: path, name, ...merge(children), children };
+    };
+    const root = build(this.root, "", title)!;
+    return { version: 1, id, triangles: this.triangleCount(), materials, root };
   }
 
   /** The finished model as a binary glTF (.glb): one node, one mesh, a primitive per material. */

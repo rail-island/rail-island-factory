@@ -3,6 +3,8 @@
 //
 //   export/glb/<id>.glb             the model
 //   export/thumbs/<id>.png          a 512 px thumbnail (renderGlbThumb.ts)
+//   export/tree/<id>.json           the procedural source tree, for the site only
+//                                   (sourceTree.ts)
 //   export/skyscrapers.meta.json    the catalog entries, for the game to import
 //   export/catalog.json             what the site lists (catalog.ts)
 //
@@ -29,6 +31,7 @@ import {
   CATALOG_FILE, META_FILE, catalogRecord, exportMeta, metaEntry,
   type ModelCatalog,
 } from "./catalog.ts";
+import { TREE_DIR, type SourceTree } from "./sourceTree.ts";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -50,6 +53,13 @@ export function designGlb(id: string): Uint8Array {
   return design.build().toGlb(`Rail Island procedural building (${id})`);
 }
 
+/** The procedural source tree of one design. Throws on an unknown id. */
+export function designTree(id: string): SourceTree {
+  const design = DESIGNS.get(id);
+  if (!design) throw new Error(`no procedural model "${id}"`);
+  return design.build().sourceTree(design.id, design.title);
+}
+
 /** Thrown when one or more designs would flicker; the message lists every overlap. */
 export class ZFightingError extends Error {
   constructor(readonly found: ReadonlyMap<string, CoplanarOverlap[]>) {
@@ -69,10 +79,15 @@ export class ZFightingError extends Error {
 }
 
 /** Every design's GLB bytes, after checking none of them z-fights. */
-function buildAll(designs: readonly ProceduralDesign[]): Array<{ design: ProceduralDesign; bytes: Uint8Array; triangles: number }> {
+function buildAll(designs: readonly ProceduralDesign[]): Array<{ design: ProceduralDesign; bytes: Uint8Array; triangles: number; tree: SourceTree }> {
   const built = designs.map((design) => {
     const model = design.build();
-    return { design, bytes: model.toGlb(`Rail Island procedural building (${design.id})`), triangles: model.triangleCount() };
+    return {
+      design,
+      bytes: model.toGlb(`Rail Island procedural building (${design.id})`),
+      triangles: model.triangleCount(),
+      tree: model.sourceTree(design.id, design.title),
+    };
   });
   const found = new Map<string, CoplanarOverlap[]>();
   for (const b of built) {
@@ -87,15 +102,17 @@ export interface GeneratedModel {
   id: string;
   glb: string; // absolute path
   thumb: string; // absolute path
+  tree: string; // absolute path
   triangles: number;
   /** False when the GLB came out byte-identical to the one already on disk. */
   changed: boolean;
 }
 
 /**
- * Builds every design's GLB and thumbnail into `dir`/glb and `dir`/thumbs. The
- * thumbnail is only re-rendered when the GLB's bytes changed or the PNG is
- * missing; files of designs that no longer exist are removed. Throws a
+ * Builds every design's GLB, thumbnail and source tree into `dir`/glb,
+ * `dir`/thumbs and `dir`/tree. The thumbnail is only re-rendered when the GLB's
+ * bytes changed or the PNG is missing, and a tree file is only rewritten when
+ * its text changed; files of designs that no longer exist are removed. Throws a
  * ZFightingError, writing nothing, when any design would flicker.
  */
 export function generateModels(
@@ -106,21 +123,26 @@ export function generateModels(
   const known = new Set(designs.map((d) => d.id));
   const glbDir = path.join(dir, "glb");
   const thumbDir = path.join(dir, "thumbs");
+  const treeDir = path.join(dir, TREE_DIR);
   fs.mkdirSync(glbDir, { recursive: true });
   fs.mkdirSync(thumbDir, { recursive: true });
+  fs.mkdirSync(treeDir, { recursive: true });
   const out: GeneratedModel[] = [];
-  for (const { design, bytes, triangles } of built) {
+  for (const { design, bytes, triangles, tree: sourceTree } of built) {
     const glb = path.join(glbDir, `${design.id}.glb`);
     const thumb = path.join(thumbDir, `${design.id}.png`);
+    const tree = path.join(treeDir, `${design.id}.json`);
+    const treeText = `${JSON.stringify(sourceTree)}\n`;
+    if (!fs.existsSync(tree) || fs.readFileSync(tree, "utf8") !== treeText) fs.writeFileSync(tree, treeText);
     const old = fs.existsSync(glb) ? fs.readFileSync(glb) : null;
     const changed = !old || !Buffer.from(bytes).equals(old);
     if (changed) fs.writeFileSync(glb, bytes);
     if (changed || !fs.existsSync(thumb)) {
       fs.writeFileSync(thumb, PNG.sync.write(renderGlbThumb(glb, THUMB_SIZE)));
     }
-    out.push({ id: design.id, glb, thumb, triangles, changed });
+    out.push({ id: design.id, glb, thumb, tree, triangles, changed });
   }
-  for (const [sub, ext] of [[glbDir, ".glb"], [thumbDir, ".png"]] as const) {
+  for (const [sub, ext] of [[glbDir, ".glb"], [thumbDir, ".png"], [treeDir, ".json"]] as const) {
     for (const name of fs.readdirSync(sub)) {
       if (name.endsWith(ext) && !known.has(name.slice(0, -ext.length))) fs.rmSync(path.join(sub, name));
     }
