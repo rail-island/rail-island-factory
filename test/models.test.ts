@@ -77,6 +77,7 @@ describe("MeshBuilder's source tree", () => {
     });
     const t = m.sourceTree("sky-test", "Test");
     expect(t.materials).toEqual(["a", "b"]);
+    expect(t.colors).toEqual(["#808080", "#404040"]);
     expect(t.triangles).toBe(m.triangleCount());
     const base = t.root.children[0] as ScopeNode;
     expect(base.id).toBe("base");

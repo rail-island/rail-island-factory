@@ -52,6 +52,8 @@ export interface SourceTree {
   triangles: number;
   /** Material names in the GLB's primitive order (sorted by name). */
   materials: string[];
+  /** Each material's sRGB colour ("#rrggbb"), parallel to `materials`. */
+  colors: string[];
   root: ScopeNode;
 }
 

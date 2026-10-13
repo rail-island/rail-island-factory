@@ -1,12 +1,26 @@
 // One model as a page: the interactive 3D preview and the whole spec sheet, with
 // arrows stepping through the CURRENT filtered and sorted list -- so "next" means
 // next in what the visitor is looking at. Escape goes back; the arrow keys step.
+//
+// The side panel has two tabs: the spec list, and the procedural source tree
+// (SourceTreePanel), fetched from tree/<id>.json only once that tab is open.
 
-import { For, Suspense, createEffect, lazy, onCleanup } from "solid-js";
-import { COLUMNS, cellText, type Row } from "./catalogQuery";
+import { For, Match, Suspense, Switch, createEffect, createMemo, createResource, lazy, onCleanup } from "solid-js";
+import { COLUMNS, cellText, type DetailTab, type Row } from "./catalogQuery";
+import { indexTree, type SourceTree } from "./sourceTreeView";
+import { SourceTreePanel } from "./SourceTreePanel";
 
 // three, GLTFLoader and OrbitControls arrive only once somebody opens a model.
 const ModelViewer = lazy(() => import("./ModelViewer").then((m) => ({ default: m.ModelViewer })));
+
+async function loadTree(id: string): Promise<SourceTree> {
+  const res = await fetch(`/tree/${encodeURIComponent(id)}.json`);
+  // `vite` serves index.html for a missing file, so check the type as well.
+  if (!res.ok || !(res.headers.get("content-type") ?? "").includes("json")) {
+    throw new Error("This model has no source tree - run `pnpm build:models`.");
+  }
+  return (await res.json()) as SourceTree;
+}
 
 export function ModelDetail(props: {
   record: Row;
@@ -15,7 +29,19 @@ export function ModelDetail(props: {
   total: number;
   onStep: (delta: number) => void;
   onClose: () => void;
+  tab: DetailTab;
+  /** The selected source-tree node, or null. */
+  node: string | null;
+  onTab: (tab: DetailTab) => void;
+  onNode: (id: string | null) => void;
 }) {
+  const [tree] = createResource(() => (props.tab === "source" ? props.record.id : false), loadTree);
+  // Only this model's tree: after a step the previous one lingers until the next lands.
+  const index = createMemo(() => {
+    const t = tree.error ? undefined : tree();
+    return t && t.id === props.record.id ? indexTree(t) : null;
+  });
+
   createEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") props.onClose();
@@ -32,7 +58,12 @@ export function ModelDetail(props: {
     <section class="factory-detail" aria-label={props.record.title}>
       <div class="factory-detail__stage">
         <Suspense fallback={<div class="factory-viewer factory-viewer--pending" />}>
-          <ModelViewer record={props.record} />
+          <ModelViewer
+            record={props.record}
+            tree={props.tab === "source" ? index() : null}
+            selected={props.node}
+            onPick={props.onNode}
+          />
         </Suspense>
       </div>
       <div class="factory-detail__specs">
@@ -45,20 +76,47 @@ export function ModelDetail(props: {
             &rarr;
           </button>
         </div>
-        <img class="factory-detail__thumb" src={`/${props.record.thumbUrl}`} alt={`${props.record.title} thumbnail`} width="160" height="160" />
-        <dl class="factory-specs">
-          <For each={specs()}>
-            {(c) => (
-              <div class="factory-spec">
-                <dt>{c.label}</dt>
-                <dd>
-                  {cellText(props.record, c)}
-                  {c.unit ? ` ${c.unit}` : ""}
-                </dd>
-              </div>
+        <div class="factory-tabs" role="tablist">
+          <For each={[["specs", "Specs"], ["source", "Source"]] as const}>
+            {([tab, label]) => (
+              <button
+                type="button"
+                role="tab"
+                class="factory-tab"
+                classList={{ "factory-tab--active": props.tab === tab }}
+                aria-selected={props.tab === tab}
+                onClick={() => props.onTab(tab)}
+              >
+                {label}
+              </button>
             )}
           </For>
-        </dl>
+        </div>
+        <Switch>
+          <Match when={props.tab === "specs"}>
+            <img class="factory-detail__thumb" src={`/${props.record.thumbUrl}`} alt={`${props.record.title} thumbnail`} width="160" height="160" />
+            <dl class="factory-specs">
+              <For each={specs()}>
+                {(c) => (
+                  <div class="factory-spec">
+                    <dt>{c.label}</dt>
+                    <dd>
+                      {cellText(props.record, c)}
+                      {c.unit ? ` ${c.unit}` : ""}
+                    </dd>
+                  </div>
+                )}
+              </For>
+            </dl>
+          </Match>
+          <Match when={tree.error}>
+            <p class="factory-error">{(tree.error as Error).message}</p>
+          </Match>
+          <Match when={index()}>{(ix) => <SourceTreePanel index={ix()} selected={props.node} onSelect={props.onNode} />}</Match>
+          <Match when={true}>
+            <p class="factory-muted">Loading the source tree...</p>
+          </Match>
+        </Switch>
       </div>
     </section>
   );

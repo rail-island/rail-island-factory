@@ -60,12 +60,28 @@ describe("cellText", () => {
 describe("the URL state", () => {
   it("round-trips, leaving defaults out", () => {
     expect(serializeView(parseView(""))).toBe("");
-    const v = { q: "tower", sort: "triangles", dir: "asc" as const, model: "sky-pagoda" };
+    const v = { q: "tower", sort: "triangles", dir: "asc" as const, model: "sky-pagoda", tab: "specs" as const, node: null };
     expect(parseView(serializeView(v))).toEqual(v);
+  });
+
+  it("carries the source tab and the selected node of an open model", () => {
+    const v = { q: "", sort: DEFAULT_SORT, dir: "asc" as const, model: "sky-art-deco", tab: "source" as const, node: "tier-3/piers" };
+    expect(serializeView(v)).toBe("?model=sky-art-deco&tab=source&node=tier-3%2Fpiers");
+    expect(parseView(serializeView(v))).toEqual(v);
+    // the root scope's id is the empty string, and still a selection
+    expect(parseView("?model=sky-pagoda&tab=source&node=").node).toBe("");
+    expect(parseView(serializeView({ ...v, node: "" })).node).toBe("");
+  });
+
+  it("drops a tab or node that has no model or no source tab to belong to", () => {
+    expect(parseView("?tab=source&node=crown")).toMatchObject({ model: null, tab: "specs", node: null });
+    expect(parseView("?model=sky-pagoda&node=crown")).toMatchObject({ tab: "specs", node: null });
+    expect(parseView("?model=sky-pagoda&tab=bogus")).toMatchObject({ tab: "specs", node: null });
+    expect(serializeView({ q: "", sort: DEFAULT_SORT, dir: "asc", model: "sky-pagoda", tab: "specs", node: "crown" })).toBe("?model=sky-pagoda");
   });
 
   it("gives a column its own starting direction and ignores an unknown sort", () => {
     expect(parseView("?sort=triangles").dir).toBe("desc");
-    expect(parseView("?sort=bogus&dir=sideways")).toEqual({ q: "", sort: DEFAULT_SORT, dir: "asc", model: null });
+    expect(parseView("?sort=bogus&dir=sideways")).toEqual({ q: "", sort: DEFAULT_SORT, dir: "asc", model: null, tab: "specs", node: null });
   });
 });

@@ -3,7 +3,7 @@
 **Covers** - the ten procedurally generated skyscrapers, the mesh builder they
 are made with, and how to add or change a design.
 **Code** - `generator/skyscrapers.ts`, `generator/meshBuilder.ts`, `generator/coplanar.ts`, `test/models.test.ts`
-**See also** - [export.md](export.md), [../site/catalog-site.md](../site/catalog-site.md)
+**See also** - [export.md](export.md), [source-tree.md](source-tree.md), [../site/catalog-site.md](../site/catalog-site.md)
 
 ## The designs
 
@@ -50,6 +50,10 @@ invisible in the game and in the site's viewer - while the offline thumbnail,
 which does not cull, still looks right. Every ring helper returns
 counter-clockwise rings seen from above, and `loft`, `cap` and `spire` wind
 outward/upward from that; `test/models.test.ts` checks it.
+
+**Scopes.** `m.scope(name, fn)` groups the calls `fn` makes into a named node of
+the model's source tree, which the build writes beside the GLB and the site
+shows; recording never changes the geometry. See [source-tree.md](source-tree.md).
 
 Units are metres, +Y up, base at y = 0. The game recentres a model on its
 footprint, so a design need not be centred on the origin.
@@ -108,6 +112,9 @@ where the model is ([../site/catalog-site.md](../site/catalog-site.md)).
 
 1. Write a function in `skyscrapers.ts` that returns a `MeshBuilder`, and add it
    to `SKYSCRAPERS` with an `id` (dash-separated, `sky-` prefix) and a title.
+   Wrap every part in a named `m.scope(...)` - podium, each tier or segment,
+   crown - so the site's Source tab reads like the design; the tests refuse a
+   primitive drawn outside any scope ([source-tree.md](source-tree.md)).
 2. `pnpm build:models`, then look at `export/thumbs/<id>.png` - the headless
    check that the model is the right way up and reads well - or open it in
    `pnpm dev` and orbit it.

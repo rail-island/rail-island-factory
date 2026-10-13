@@ -134,14 +134,24 @@ export interface ViewState {
   dir: SortDir;
   /** The id of the model whose detail page is open, or null for the list. */
   model: string | null;
+  /** The model page's side panel: the spec list, or the procedural source tree. */
+  tab: DetailTab;
+  /** The selected source-tree node (its slash-path id), or null. Kept only on the source tab. */
+  node: string | null;
 }
+
+export type DetailTab = "specs" | "source";
 
 export function parseView(search: string): ViewState {
   const p = new URLSearchParams(search);
   const sort = column(p.get("sort") ?? "") ? p.get("sort")! : DEFAULT_SORT;
   const rawDir = p.get("dir");
   const dir: SortDir = rawDir === "asc" || rawDir === "desc" ? rawDir : column(sort)!.dir;
-  return { q: p.get("q") ?? "", sort, dir, model: p.get("model") || null };
+  const model = p.get("model") || null;
+  // the tab and the node belong to an open model; a node only to the source tab
+  const tab: DetailTab = model && p.get("tab") === "source" ? "source" : "specs";
+  const node = tab === "source" ? p.get("node") : null;
+  return { q: p.get("q") ?? "", sort, dir, model, tab, node: node ?? null };
 }
 
 /** The inverse of parseView; defaults are left out, so the bare list is a bare `?`-less URL. */
@@ -150,7 +160,13 @@ export function serializeView(v: ViewState): string {
   if (v.q) p.set("q", v.q);
   if (v.sort !== DEFAULT_SORT) p.set("sort", v.sort);
   if (v.dir !== (column(v.sort)?.dir ?? DEFAULT_DIR)) p.set("dir", v.dir);
-  if (v.model) p.set("model", v.model);
+  if (v.model) {
+    p.set("model", v.model);
+    if (v.tab === "source") {
+      p.set("tab", "source");
+      if (v.node != null) p.set("node", v.node);
+    }
+  }
   const s = p.toString();
   return s ? `?${s}` : "";
 }

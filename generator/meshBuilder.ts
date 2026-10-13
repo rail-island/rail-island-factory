@@ -302,7 +302,8 @@ export class MeshBuilder {
       return { id: path, name, ...merge(children), children };
     };
     const root = build(this.root, "", title)!;
-    return { version: 1, id, triangles: this.triangleCount(), materials, root };
+    const colors = materials.map((name) => this.palette[name]!.color);
+    return { version: 1, id, triangles: this.triangleCount(), materials, colors, root };
   }
 
   /** The finished model as a binary glTF (.glb): one node, one mesh, a primitive per material. */

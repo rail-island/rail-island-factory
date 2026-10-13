@@ -6,15 +6,23 @@
 // OrbitControls runs WITHOUT damping, so there is no idle animation loop: each
 // drag or zoom emits "change" and the scene renders once. A ResizeObserver keeps
 // the canvas matched to its pane. The model is framed on every selection change.
+//
+// With a source tree (the model page's Source tab) it also highlights the
+// selected node -- its triangles glow, everything else turns into a faint ghost --
+// and a click that is not a drag picks the leaf under the cursor. The GLB has one
+// mesh per material and the tree's triangle ranges index into them, so both work
+// through draw groups and the face index; nothing is split or re-uploaded.
 
 import { createEffect, createSignal, onCleanup, onMount, Show } from "solid-js";
 import {
-  AmbientLight, Box3, Color, DirectionalLight, PerspectiveCamera, Scene, Vector3, WebGLRenderer,
+  AmbientLight, Box3, Color, DirectionalLight, PerspectiveCamera, Raycaster, Scene, Vector2, Vector3, WebGLRenderer,
   type Object3D,
 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import type { CatalogRecord } from "./catalogQuery";
+import { leafAt, rangesOf, type TreeIndex } from "./sourceTreeView";
+import { applyHighlight, makeParts, type Part } from "./viewerHighlight";
 
 const loader = new GLTFLoader();
 
@@ -28,7 +36,18 @@ function disposeModel(obj: Object3D): void {
   });
 }
 
-export function ModelViewer(props: { record: CatalogRecord }) {
+/** A pointer that moved less than this (px) between down and up clicked rather than dragged. */
+const CLICK_SLOP = 5;
+
+export function ModelViewer(props: {
+  record: CatalogRecord;
+  /** The model's source tree, when the page shows it; null turns highlight and picking off. */
+  tree?: TreeIndex | null;
+  /** The selected node's id, or null. */
+  selected?: string | null;
+  /** A click on the model: the leaf under the cursor, or null for a click on nothing. */
+  onPick?: (id: string | null) => void;
+}) {
   let canvas!: HTMLCanvasElement;
   let pane!: HTMLDivElement;
   let renderer: WebGLRenderer | null = null;
@@ -36,11 +55,22 @@ export function ModelViewer(props: { record: CatalogRecord }) {
   let camera: PerspectiveCamera | null = null;
   let controls: OrbitControls | null = null;
   let current: Object3D | null = null;
+  let parts: Part[] = [];
   // A slow load that resolves after the selection changed again is discarded.
   let token = 0;
   let resizeRaf = 0;
   const [busy, setBusy] = createSignal(false);
   const [failed, setFailed] = createSignal(false);
+  // Bumped when a model lands, so the highlight effect re-runs on the new parts.
+  const [loaded, setLoaded] = createSignal(0);
+
+  const disposeParts = () => {
+    for (const p of parts) {
+      p.glow.dispose();
+      p.ghost.dispose();
+    }
+    parts = [];
+  };
 
   const render = () => {
     if (renderer && scene && camera) renderer.render(scene, camera);
@@ -86,11 +116,44 @@ export function ModelViewer(props: { record: CatalogRecord }) {
     ro.observe(pane);
     resize();
 
+    // Picking: a press and release in (nearly) one place is a click, not an orbit.
+    const raycaster = new Raycaster();
+    let down: { x: number; y: number } | null = null;
+    const onDown = (e: PointerEvent) => {
+      down = e.isPrimary ? { x: e.clientX, y: e.clientY } : null;
+    };
+    const onUp = (e: PointerEvent) => {
+      const from = down;
+      down = null;
+      const index = props.tree;
+      if (!from || !e.isPrimary || !index || !props.onPick || !current || !camera) return;
+      if (Math.hypot(e.clientX - from.x, e.clientY - from.y) > CLICK_SLOP) return;
+      const rect = canvas.getBoundingClientRect();
+      const ndc = new Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
+      raycaster.setFromCamera(ndc, camera);
+      for (const hit of raycaster.intersectObject(current, true)) {
+        const part = parts.find((p) => p.mesh === hit.object);
+        if (!part || hit.faceIndex == null) continue;
+        const leaf = leafAt(index, part.name, hit.faceIndex);
+        if (leaf) {
+          props.onPick(leaf.id);
+          return;
+        }
+      }
+      props.onPick(null);
+    };
+    canvas.addEventListener("pointerdown", onDown);
+    canvas.addEventListener("pointerup", onUp);
+
     onCleanup(() => {
       if (resizeRaf) cancelAnimationFrame(resizeRaf);
       ro.disconnect();
+      canvas.removeEventListener("pointerdown", onDown);
+      canvas.removeEventListener("pointerup", onUp);
       controls?.removeEventListener("change", render);
       controls?.dispose();
+      if (current) applyHighlight(parts, null);
+      disposeParts();
       if (current) disposeModel(current);
       renderer?.dispose();
       renderer = scene = camera = controls = current = null;
@@ -112,9 +175,12 @@ export function ModelViewer(props: { record: CatalogRecord }) {
         setBusy(false);
         if (current) {
           scene.remove(current);
+          applyHighlight(parts, null); // hand the built materials back, so dispose finds them
+          disposeParts();
           disposeModel(current);
         }
         current = group;
+        parts = makeParts(group);
         scene.add(group);
         const box = new Box3().setFromObject(group);
         const center = box.getCenter(new Vector3());
@@ -133,6 +199,7 @@ export function ModelViewer(props: { record: CatalogRecord }) {
         camera.far = controls.maxDistance + maxDim * 2;
         camera.updateProjectionMatrix();
         controls.update();
+        setLoaded((n) => n + 1);
         render();
       },
       () => {
@@ -141,6 +208,16 @@ export function ModelViewer(props: { record: CatalogRecord }) {
         setFailed(true);
       },
     );
+  });
+
+  createEffect(() => {
+    loaded();
+    const index = props.tree;
+    const id = props.selected;
+    // a tree for another model (one still loading after a step) highlights nothing
+    const live = index && index.tree.id === props.record.id && id != null && index.byId.has(id);
+    applyHighlight(parts, live ? rangesOf(index, id) : null);
+    render();
   });
 
   return (

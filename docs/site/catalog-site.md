@@ -4,7 +4,8 @@
 the table and card layouts, sorting and search, the model page with its 3D
 preview, and the URL state.
 **Code** - `src/main.tsx`, `src/App.tsx`, `src/catalogQuery.ts`, `src/ModelTable.tsx`,
-`src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/Thumb.tsx`,
+`src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`,
+`src/SourceTreePanel.tsx`, `src/sourceTreeView.ts`, `src/Thumb.tsx`,
 `src/factory.css`, `index.html`, `test/catalogQuery.test.ts`
 **See also** - [../models/export.md](../models/export.md), [../guide/deploy.md](../guide/deploy.md)
 
@@ -44,8 +45,11 @@ orbit, wheel or pinch to zoom, no pan), the build's thumbnail and every column a
 a spec list. Arrows step through the **current** filtered and sorted list;
 Escape, the app bar's back arrow or the browser's Back return to it.
 
-`ModelViewer.tsx` is the only module importing three (plus `GLTFLoader` and
-`OrbitControls`), reached through a lazy import, so the list loads ~30 kB of
+The side panel has two tabs: **Specs** (the thumbnail and the spec list) and
+**Source** (below).
+
+`ModelViewer.tsx` (with its helper `viewerHighlight.ts`) is the only code
+importing three (plus `GLTFLoader` and `OrbitControls`), reached through a lazy import, so the list loads ~30 kB of
 script and the renderer arrives only when a model opens. It renders on demand
 (no damping, no idle loop), follows its pane with a ResizeObserver, frames the
 model on each selection, and discards a load that resolves after the selection
@@ -54,11 +58,33 @@ moved on. On each framing it also fits the camera's `near`/`far` to the model
 goes with far/near, and a fixed 0.1..5000 range wasted it and let surfaces a few
 centimetres apart flicker. It shows the GLB exactly as built - no `defaultScale` applied.
 
+## The Source tab
+
+The model's procedural source tree ([../models/source-tree.md](../models/source-tree.md)):
+named scopes - podium, tier 3, piers - down to the `MeshBuilder` calls that drew
+the triangles. `tree/<id>.json` is fetched only when the tab opens; a missing
+file says to run `pnpm build:models`.
+
+- **The tree** starts with the root open. Each row shows the scope name (or a
+  leaf's call kind and material, with a colour swatch) and its triangle count;
+  the caret opens and closes a scope, the label selects the node.
+- **Selecting** a node highlights it in the preview: its triangles glow, the
+  rest of the model turns into a faint ghost.
+- **Clicking the model** (a click, not a drag) selects the call under the cursor;
+  the tree opens down to it and scrolls it into view. A click on empty space
+  clears the selection. Picking works only while the Source tab is open.
+- **The detail block** above the tree shows the selection: for a call its kind,
+  material and arguments; for a scope its number of parts; for both the
+  triangle count with its share of the model, the bounding-box size and the
+  height span. The x button clears it.
+
 ## URL state
 
 All state is in the query string (`parseView`/`serializeView` in
 `catalogQuery.ts`): `?q=` search, `?sort=` and `?dir=` ordering, `?model=` the
-open model. Defaults are left out, so the plain list is the bare URL. Opening and
-closing a model push a history entry; typing, sorting and stepping replace the
-current one, so Back does not replay keystrokes. An unknown `?model=` shows
+open model, `?tab=source` its Source tab and `?node=` the selected tree node (kept
+only with the Source tab; a node id no longer in the tree selects nothing). Defaults are left out, so the plain list is the bare URL. Opening and
+closing a model push a history entry and reset the tab and node; typing,
+sorting, stepping (which drops the node), switching tabs and selecting replace
+the current one, so Back does not replay keystrokes. An unknown `?model=` shows
 "No model" with a link back.

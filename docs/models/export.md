@@ -17,18 +17,21 @@ and `pnpm dev`) writes the gitignored `export/`:
 |---|---|
 | `export/glb/<id>.glb` | the model |
 | `export/thumbs/<id>.png` | a 512 px square thumbnail, transparent background |
+| `export/tree/<id>.json` | the procedural source tree, for the site only ([source-tree.md](source-tree.md)) |
 | `export/skyscrapers.meta.json` | one game-catalog entry per model - the import contract |
 | `export/catalog.json` | what the site lists |
 
 `export/` is also Vite's `publicDir`, so `vite build` copies it into `dist/` as
 it stands and the deployed site serves the very files the game would import, at
-`/glb/...`, `/thumbs/...`, `/skyscrapers.meta.json` and `/catalog.json`.
+`/glb/...`, `/thumbs/...`, `/skyscrapers.meta.json` and `/catalog.json` (and the
+site-only `/tree/...`, which the game ignores).
 
 **Incremental.** An unchanged design produces byte-identical GLB bytes; the
 generator then leaves the file and its thumbnail alone. The thumbnail - a
 software rasterizer, the slow part - is re-rendered only when the GLB changed or
 the PNG is missing. A file of a design that no longer exists is deleted, so a
-dropped id cannot linger. The two JSON documents are rewritten every run and
+dropped id cannot linger. A tree file is rewritten only when its text changed.
+The two JSON documents are rewritten every run and
 carry no timestamp, so they are deterministic too.
 
 **Guarded.** Before anything is written, every design is checked for z-fighting
