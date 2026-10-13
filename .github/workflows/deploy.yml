@@ -1,0 +1,69 @@
+# Deploy the factory site (rail-island-factory -> https://factory.railisland.com).
+#
+# One environment: every push to `master` lands here. Can also be dispatched by
+# hand against any branch -- pick a `claude/*` branch in the Run workflow dialog to
+# put that branch on factory.railisland.com.
+#
+# `pnpm build` generates the models (export/), typechecks and builds the site
+# with export/ as its publicDir; `wrangler deploy` uploads dist/ to an
+# assets-only Worker (wrangler.jsonc). No tests here: test.yml runs them in
+# parallel and is deliberately NOT a dependency -- a red run shows up as a failed
+# check without holding the deploy back.
+#
+# Required repository secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID (the
+# same pair as rail-island-webapp). The custom domain provisions on deploy, so the
+# token needs zone-scoped `Workers Routes: Edit` over railisland.com besides
+# `Workers Scripts: Edit`; without it the upload succeeds and then fails with
+# `Authentication error [code: 10000]`. See docs/guide/deploy.md.
+
+name: Deploy
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+# Last push wins: an in-flight deploy is irrelevant once a newer commit exists.
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22"
+  PNPM_VERSION: "10"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # The models take a few seconds to generate, so there is no asset cache.
+      - name: Build
+        run: pnpm build
+
+      - name: Deploy
+        run: pnpm exec wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      # The branch name goes through the environment rather than into the script,
+      # so a `$` or a quote in it cannot reach the shell.
+      - name: Summary
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          echo "Deployed \`$BRANCH\` (${GITHUB_SHA:0:7}) to https://factory.railisland.com" >> "$GITHUB_STEP_SUMMARY"

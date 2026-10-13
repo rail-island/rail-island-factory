@@ -1,0 +1,433 @@
+/* The factory site. Its palette and its listing styles are the webapp Creator's
+   (dark M3 surfaces, outlined fields, a sticky table header), copied rather than
+   imported -- the two evolve independently. */
+
+:root {
+  color-scheme: dark;
+  --m-surface: #101e29;
+  --m-surface-1: #192c39;
+  --m-surface-2: #243b49;
+  --m-on-surface: #eff6f5;
+  --m-on-surface-variant: #a7bac3;
+  --m-outline: rgba(255, 255, 255, 0.16);
+  --m-outline-variant: rgba(255, 255, 255, 0.08);
+  --m-primary: #8fb6f2;
+  --m-secondary-container: #2f4a44;
+  --m-on-secondary-container: #cfe7de;
+  --m-error: #bf5b58;
+  --m-state-hover: rgba(255, 255, 255, 0.08);
+  --m-radius-sm: 8px;
+  --m-radius-md: 12px;
+  --m-bar-h: 64px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--m-surface);
+  color: var(--m-on-surface);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.factory-muted {
+  color: var(--m-on-surface-variant);
+}
+
+.factory-error {
+  color: var(--m-error);
+}
+
+.factory-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.factory-btn,
+.factory-dir,
+.factory-sortctl select {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 10px;
+  border-radius: var(--m-radius-sm);
+  border: 1px solid var(--m-outline);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.factory-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.factory-link {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--m-primary);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* -------------------------------------------------------------- the app bar */
+
+.factory-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--m-bar-h);
+  padding: 0 16px;
+  background: var(--m-surface-1);
+  border-bottom: 1px solid var(--m-outline-variant);
+}
+
+.factory-bar__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.factory-bar__sub {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.factory-main {
+  padding: 0 16px 64px;
+}
+
+/* -------------------------------------------------------------- the toolbar */
+
+.factory-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 16px 0 10px;
+  padding: 10px 0;
+  background: var(--m-surface);
+}
+
+.factory-search {
+  flex: 1 1 260px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: var(--m-radius-sm);
+  border: 1px solid var(--m-outline);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.factory-search:focus,
+.factory-sortctl select:focus,
+.factory-dir:focus-visible,
+.factory-btn:focus-visible {
+  outline: none;
+  border-color: var(--m-primary);
+  box-shadow: inset 0 0 0 1px var(--m-primary);
+}
+
+.factory-sortctl {
+  display: flex;
+  gap: 6px;
+}
+
+.factory-sortctl select {
+  background: var(--m-surface);
+}
+
+.factory-totals {
+  color: var(--m-on-surface-variant);
+  font-size: 13px;
+}
+
+.factory-totals b {
+  color: var(--m-on-surface);
+  font-weight: 600;
+}
+
+.factory-chip {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 0 8px;
+  border-radius: var(--m-radius-sm);
+  background: var(--m-secondary-container);
+  color: var(--m-on-secondary-container);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+/* ---------------------------------------------------------- the thumbnails */
+
+.factory-thumb {
+  display: block;
+  width: 96px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: var(--m-radius-sm);
+  background: rgb(30, 30, 35);
+}
+
+/* ---------------------------------------------------------------- the table */
+
+/* The one thing allowed to scroll sideways, and only inside its own box. */
+.factory-tablewrap {
+  overflow-x: auto;
+  border: 1px solid var(--m-outline-variant);
+  border-radius: var(--m-radius-md);
+}
+
+.factory-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.factory-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--m-surface-2);
+  text-align: left;
+  padding: 0;
+  box-shadow: inset 0 -1px 0 var(--m-surface);
+}
+
+.factory-table thead th button {
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  background: none;
+  color: var(--m-on-surface);
+  font: inherit;
+  font-weight: 600;
+  text-align: inherit;
+  cursor: pointer;
+}
+
+.factory-table thead th.factory-num button {
+  text-align: right;
+}
+
+.factory-unit {
+  color: var(--m-on-surface-variant);
+  font-weight: 400;
+}
+
+/* Fixed width even when empty, so a re-sort does not shift the columns. */
+.factory-caret {
+  display: inline-block;
+  width: 1em;
+  margin-left: 3px;
+  text-align: center;
+  color: var(--m-primary);
+  font-size: 10px;
+}
+
+.factory-table tbody tr {
+  cursor: pointer;
+  border-bottom: 1px solid var(--m-outline-variant);
+}
+
+.factory-table tbody tr:hover,
+.factory-table tbody tr:focus-visible {
+  background: var(--m-state-hover);
+  outline: none;
+}
+
+.factory-table td,
+.factory-table tbody th {
+  padding: 6px 10px;
+  text-align: left;
+  font-weight: 400;
+  vertical-align: middle;
+}
+
+.factory-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.factory-table thead th.factory-table__thumbcol,
+.factory-table td.factory-table__thumbcol {
+  width: 96px;
+  padding: 4px 6px;
+}
+
+.factory-rowid {
+  display: block;
+  color: var(--m-on-surface-variant);
+  font-size: 11px;
+}
+
+/* ---------------------------------------------------------------- the cards */
+
+.factory-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.factory-card {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--m-outline-variant);
+  border-radius: var(--m-radius-md);
+  background: var(--m-surface-1);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.factory-card:hover {
+  background: var(--m-surface-2);
+}
+
+.factory-card__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.factory-card__title {
+  font-weight: 600;
+}
+
+.factory-card__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  color: var(--m-on-surface-variant);
+  font-size: 13px;
+}
+
+.factory-card__facts b {
+  color: var(--m-on-surface);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------ the model page */
+
+.factory-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.factory-detail__stage {
+  height: 60vh;
+  min-height: 280px;
+}
+
+.factory-viewer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--m-radius-md);
+  overflow: hidden;
+  background: rgb(30, 30, 35);
+}
+
+.factory-viewer__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.factory-viewer__overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--m-on-surface-variant);
+  pointer-events: none;
+}
+
+.factory-detail__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.factory-detail__thumb {
+  display: block;
+  margin: 12px 0;
+  border-radius: var(--m-radius-sm);
+  background: rgb(30, 30, 35);
+}
+
+.factory-specs {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.factory-spec {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--m-outline-variant);
+  font-size: 14px;
+}
+
+.factory-spec dt {
+  color: var(--m-on-surface-variant);
+}
+
+.factory-spec dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* On a wide screen the model page splits: the viewer left, the specs right. */
+@media (min-width: 900px) {
+  .factory-detail {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .factory-detail__stage {
+    flex: 1;
+    height: calc(100dvh - var(--m-bar-h) - 48px);
+  }
+
+  .factory-detail__specs {
+    flex: none;
+    width: 340px;
+  }
+}

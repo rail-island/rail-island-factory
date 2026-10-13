@@ -1,0 +1,51 @@
+# Agent Instructions (Claude Code)
+
+This is **Rail Island Factory**: Rail Island models generated from code, and the
+catalog site that shows them at `factory.railisland.com`. Today it builds ten
+procedural skyscrapers. The build writes an export folder (GLBs, thumbnails,
+`skyscrapers.meta.json`) that the game repository, `rail-island-webapp`, is meant
+to import - the factory is the source of these models, the game a consumer.
+
+## Documentation (`docs/`)
+
+All documentation lives in **`docs/`**, indexed by hand in `docs/README.md`; the
+root `README.md` is a landing page only. **When you change behaviour, update the
+document that owns it in the same change.** Conventions:
+
+- One file, one subsystem, about 600 lines at most.
+- Every file opens with `# Title` and three lines - **Covers**, **Code** (the
+  source paths it documents) and **See also**.
+- A new file gets a row in `docs/README.md` in the same change.
+- Cross-references are relative paths between documents. English only.
+- `docs/specs/` and `docs/impl/` are planning records, not reference.
+
+## Stack
+
+- **TypeScript (strict)**. `generator/` is Node-only, run with `tsx`.
+- The site is **Solid** (`solid-js`) + **Vite**, three.js for the 3D preview. Do
+  not use React APIs; use signals, `createEffect`/`onMount`/`onCleanup`,
+  `<Show>`/`<For>`/`<Switch>`, do not destructure props, `class` not `className`.
+- Tests are **Vitest** under `test/`. Package manager is **pnpm**.
+- Hosting is an assets-only **Cloudflare Worker** (`wrangler.jsonc`), deployed by
+  `.github/workflows/deploy.yml` on every push to `master`.
+
+## Rules
+
+- **`src/` may import only types from `generator/`** (`generator/catalog.ts` has
+  no `node:` imports). Generator code must never reach the browser bundle.
+- **Model ids are stored in the game's saved maps** - never rename a shipped one.
+- **Output stays deterministic**: no timestamps, no unordered iteration in what is
+  written. A design's GLB bytes must not change unless the design changed.
+- **`export/` and `dist/` are generated and gitignored.** Never commit them.
+- The site is **English only**; there is no i18n layer.
+- Every bug fix ships with a regression test in the suite that owns the behaviour.
+- Use ASCII in code and comments; no emoji.
+
+## Verify changes
+
+`pnpm typecheck`, `pnpm test` and `pnpm build`. For a model change, also look at
+`export/thumbs/<id>.png` after `pnpm build:models`.
+
+**Headless verification only**: do not drive a real browser (no dev server +
+browser automation) unless the task is about browser tooling and the user agreed
+first. The user runs the browser checks.

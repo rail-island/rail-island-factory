@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // factory.railisland.com: an assets-only Worker (no script, no bindings, no
+  // vars) that serves `pnpm build`'s output -- the catalog site plus the
+  // generated models it lists. Deployed from `master` by
+  // .github/workflows/deploy.yml. See docs/guide/deploy.md.
+  "name": "rail-island-factory",
+  "compatibility_date": "2026-06-16",
+  "assets": {
+    "directory": "./dist",
+    // The site keeps its state in the query string of one page, so any unknown
+    // path falls back to index.html rather than a 404.
+    "not_found_handling": "single-page-application"
+  },
+  "routes": [
+    { "pattern": "factory.railisland.com", "custom_domain": true }
+  ]
+}

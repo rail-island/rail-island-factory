@@ -1,0 +1,71 @@
+// The site's listing logic (src/catalogQuery.ts): search, sort and the URL state.
+
+import { describe, expect, it } from "vitest";
+import {
+  COLUMNS, DEFAULT_SORT, cellText, column, compareRows, formatBytes, parseView, prepareRows, queryRows, serializeView,
+  type CatalogRecord,
+} from "../src/catalogQuery";
+
+function rec(id: string, title: string, triangles: number, extra: Partial<CatalogRecord> = {}): CatalogRecord {
+  return {
+    id, title, category: "Commercial", group: "skyscraper_c", glb: `${id}.glb`, thumb: `${id}.png`,
+    defaultScale: 0.5, license: "CC0", author: "Rail Island", source: "Rail Island",
+    glbUrl: `glb/${id}.glb`, thumbUrl: `thumbs/${id}.png`, glbBytes: triangles * 72, thumbBytes: 100,
+    triangles, vertices: triangles * 3, primitives: 3, materials: 3, sizeX: 20, sizeY: 80, sizeZ: 20,
+    ...extra,
+  };
+}
+
+const ROWS = prepareRows([
+  rec("sky-pagoda", "Pagoda Tower", 912),
+  rec("sky-art-deco", "Art Deco Tower", 1272),
+  rec("sky-twin-towers", "Twin Towers", 2930, { license: "CC-BY" }),
+]);
+
+describe("queryRows", () => {
+  it("sorts by title by default", () => {
+    expect(queryRows(ROWS, "", DEFAULT_SORT, "asc").map((r) => r.id)).toEqual(["sky-art-deco", "sky-pagoda", "sky-twin-towers"]);
+  });
+
+  it("sorts numbers numerically in both directions", () => {
+    expect(queryRows(ROWS, "", "triangles", "desc").map((r) => r.triangles)).toEqual([2930, 1272, 912]);
+    expect(queryRows(ROWS, "", "triangles", "asc").map((r) => r.triangles)).toEqual([912, 1272, 2930]);
+  });
+
+  it("matches every word of the search, case-insensitively, across fields", () => {
+    expect(queryRows(ROWS, "TOWER deco", "title", "asc").map((r) => r.id)).toEqual(["sky-art-deco"]);
+    expect(queryRows(ROWS, "cc-by", "title", "asc").map((r) => r.id)).toEqual(["sky-twin-towers"]);
+    expect(queryRows(ROWS, "nothing", "title", "asc")).toEqual([]);
+  });
+
+  it("breaks ties on the title, so the order is total", () => {
+    const tied = prepareRows([rec("b", "Beta", 5), rec("a", "Alpha", 5)]);
+    expect(compareRows(tied[0]!, tied[1]!, column("triangles")!, "desc")).toBeGreaterThan(0);
+  });
+
+  it("offers a sort for every column", () => {
+    for (const c of COLUMNS) expect(() => queryRows(ROWS, "", c.key, c.dir)).not.toThrow();
+  });
+});
+
+describe("cellText", () => {
+  it("formats numbers, sizes and units", () => {
+    expect(cellText(ROWS[2]!, column("triangles")!)).toBe("2,930");
+    expect(formatBytes(512)).toBe("512 B");
+    expect(formatBytes(2048)).toBe("2.0 kB");
+    expect(formatBytes(3 * 1024 * 1024)).toBe("3.00 MB");
+  });
+});
+
+describe("the URL state", () => {
+  it("round-trips, leaving defaults out", () => {
+    expect(serializeView(parseView(""))).toBe("");
+    const v = { q: "tower", sort: "triangles", dir: "asc" as const, model: "sky-pagoda" };
+    expect(parseView(serializeView(v))).toEqual(v);
+  });
+
+  it("gives a column its own starting direction and ignores an unknown sort", () => {
+    expect(parseView("?sort=triangles").dir).toBe("desc");
+    expect(parseView("?sort=bogus&dir=sideways")).toEqual({ q: "", sort: DEFAULT_SORT, dir: "asc", model: null });
+  });
+});
