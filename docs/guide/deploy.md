@@ -10,7 +10,9 @@ that build and deploy it, and the Cloudflare credentials they need.
 `wrangler.jsonc` declares one **assets-only** Worker, `rail-island-factory`: no
 script, no bindings, no vars. It serves `dist/` - the site plus the generated
 models it lists - on the custom domain `factory.railisland.com`, which wrangler
-provisions on deploy. `not_found_handling: single-page-application` sends any
+provisions on deploy, and - `workers_dev: true` - on the account's implicit
+`rail-island-factory.<subdomain>.workers.dev` address too (wrangler would
+otherwise switch that off because `routes` is set). `not_found_handling: single-page-application` sends any
 unknown path to `index.html`; the site keeps its state in the query string.
 
 There is one environment. The site is public and has no sign-in.

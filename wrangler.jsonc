@@ -12,6 +12,10 @@
     // path falls back to index.html rather than a 404.
     "not_found_handling": "single-page-application"
   },
+  // Also serve on the account's implicit rail-island-factory.<subdomain>.workers.dev.
+  // Wrangler turns that address off by default once `routes` is set, so it is
+  // switched on explicitly here.
+  "workers_dev": true,
   "routes": [
     { "pattern": "factory.railisland.com", "custom_domain": true }
   ]
