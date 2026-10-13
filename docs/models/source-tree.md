@@ -4,7 +4,7 @@
 that built it, the `export/tree/<id>.json` file, and how the site's Source tab
 maps tree nodes to triangles for highlighting and picking.
 **Code** - `generator/sourceTree.ts`, `generator/meshBuilder.ts` (`scope`, `sourceTree`),
-`generator/skyscrapers.ts`, `generator/generate.ts` (`designTree`), `src/sourceTreeView.ts`,
+`generator/skyscrapers.ts`, `generator/vehicles.ts`, `generator/generate.ts` (`designTree`), `src/sourceTreeView.ts`,
 `src/viewerHighlight.ts`, `src/SourceTreePanel.tsx`, `test/models.test.ts`,
 `test/sourceTreeView.test.ts`, `test/viewerHighlight.test.ts`
 **See also** - [skyscrapers.md](skyscrapers.md), [export.md](export.md),
@@ -17,8 +17,8 @@ that code's shape, recorded while it runs:
 
 - a **scope** is a named block - a helper (`curtain wall`, `piers`, `mast`) or a
   part of a design (`podium`, `tier 3`, `segment 5`, `crown`);
-- a **leaf** is one primitive call (`box`, `prism`, `loft`, `spire`, `cap`,
-  `quad`, `tri`) with its material, its arguments and the triangles it drew.
+- a **leaf** is one primitive call (`box`, `prism`, `loft`, `spire`, `sweep`,
+  `cap`, `quad`, `tri`) with its material, its arguments and the triangles it drew.
 
 Only the **outermost** call is a leaf: a `box` draws through `prism`, `loft`,
 `quad`, `tri` and `cap`, and is still one leaf.
@@ -46,7 +46,7 @@ directly from a design is enough for its primitives.
 
 Written by `pnpm build:models` beside the GLB and thumbnail, compact JSON,
 deterministic, rewritten only when its text changed, pruned with its design.
-It is **site-only**: not listed in `skyscrapers.meta.json`, not part of the
+It is **site-only**: not listed in either meta.json, not part of the
 game's import contract, and free to change.
 
 ```ts

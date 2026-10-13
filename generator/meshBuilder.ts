@@ -17,6 +17,9 @@ import { slug, type ArgValue, type NodeExtent, type PrimitiveKind, type ScopeNod
 
 export type Ring = Array<[number, number]>; // (x, z) points, counter-clockwise seen from above
 
+/** The horizontal axis a sweep runs along (see MeshBuilder.sweep). */
+export type SweepAxis = "x" | "z";
+
 export interface MaterialSpec {
   /** sRGB hex, e.g. "#6f9fc4". */
   color: string;
@@ -108,6 +111,12 @@ export class MeshBuilder {
   private readonly open: RawScope[] = [this.root];
   /** True inside a recorded primitive call: the calls it draws through are not leaves. */
   private drawing = false;
+  /**
+   * Maps a point of the loft frame (ring u, height, ring v) to the model: the
+   * identity, except inside a sweep, which turns a loft on its side. Always a
+   * rotation (a cyclic permutation of the axes), so winding stays outward.
+   */
+  private frame: (p: Vec3) => Vec3 = (p) => p;
 
   constructor(private readonly palette: Record<string, MaterialSpec>) {}
 
@@ -154,6 +163,7 @@ export class MeshBuilder {
 
   private drawTri(mat: string, a: Vec3, b: Vec3, c: Vec3): void {
     if (!this.palette[mat]) throw new Error(`unknown material "${mat}"`);
+    [a, b, c] = [this.frame(a), this.frame(b), this.frame(c)];
     const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
     const v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
     const n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
@@ -232,6 +242,43 @@ export class MeshBuilder {
   }
 
   /**
+   * A loft laid on its side: the walls between two vertical cross-sections at
+   * `a0` and `a1` along the horizontal `axis`, with end caps unless `caps` is
+   * false. A section's points are (x, y) for a sweep along z and (z, y) for one
+   * along x, in either winding (the walls are always wound outward); both must
+   * be convex and of equal length. A wheel is an n-gon swept along z, a hood a
+   * chamfered section swept along x to a slightly smaller one.
+   */
+  sweep(mat: string, axis: SweepAxis, s0: Ring, a0: number, s1: Ring, a1: number, caps = true): void {
+    this.leaf("sweep", mat, () => ({ axis: axis === "x" ? 0 : 2, s0: s0.length, a0, s1: s1.length, a1, caps }), () => {
+      if (a1 < a0) [s0, a0, s1, a1] = [s1, a1, s0, a0];
+      // the loft frame's ring (u, v): (z, y) along x, (y, x) along z -- see `frame`
+      const toUv = (s: Ring): Ring => (axis === "x" ? s.map(([p, y]) => [p, y]) : s.map(([p, y]) => [y, p]));
+      let lower = toUv(s0);
+      let upper = toUv(s1);
+      // rect() winds negatively in (u, v), and that is the winding loft walls outward from
+      let area = 0;
+      for (let i = 0; i < lower.length; i++) {
+        const [x0, y0] = lower[i]!;
+        const [x1, y1] = lower[(i + 1) % lower.length]!;
+        area += x0 * y1 - x1 * y0;
+      }
+      if (area > 0) {
+        lower = [...lower].reverse();
+        upper = [...upper].reverse();
+      }
+      const outer = this.frame;
+      this.frame = axis === "x" ? ([u, h, v]) => outer([h, v, u]) : ([u, h, v]) => outer([v, u, h]);
+      try {
+        this.drawLoft(mat, lower, a0, upper, a1, caps);
+        if (caps) this.drawCap(mat, lower, a0, false);
+      } finally {
+        this.frame = outer;
+      }
+    });
+  }
+
+  /**
    * An axis-aligned (or `ry`-turned) box. Pass `top: false` for a core whose
    * roof something else covers: two caps at one height z-fight (coplanar.ts).
    */
@@ -307,7 +354,7 @@ export class MeshBuilder {
   }
 
   /** The finished model as a binary glTF (.glb): one node, one mesh, a primitive per material. */
-  toGlb(generator: string): Uint8Array {
+  toGlb(generator: string, name = "building"): Uint8Array {
     type Json = {
       asset: { version: string; generator: string };
       scene: number;
@@ -323,8 +370,8 @@ export class MeshBuilder {
       asset: { version: "2.0", generator },
       scene: 0,
       scenes: [{ nodes: [0] }],
-      nodes: [{ mesh: 0, name: "building" }],
-      meshes: [{ name: "building", primitives: [] }],
+      nodes: [{ mesh: 0, name }],
+      meshes: [{ name, primitives: [] }],
       materials: [],
       accessors: [],
       bufferViews: [],

@@ -7,7 +7,8 @@ import os from "node:os";
 import path from "node:path";
 import { MeshBuilder, ngon, rect } from "../generator/meshBuilder";
 import { SKYSCRAPERS } from "../generator/skyscrapers";
-import { ZFightingError, designGlb, designTree, generateModels } from "../generator/generate";
+import { VEHICLES } from "../generator/vehicles";
+import { DESIGNS, ZFightingError, designGlb, designTree, generateModels } from "../generator/generate";
 import { isLeaf, type LeafNode, type ScopeNode, type TreeNode } from "../generator/sourceTree";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { glbStats } from "../generator/glbStats";
@@ -49,6 +50,24 @@ describe("MeshBuilder", () => {
       const radial = n[0] * c[0] + n[2] * c[2];
       if (Math.abs(n[1]) > 1e-6 && Math.hypot(n[0], n[2]) < 1e-6) expect(n[1]).toBeGreaterThan(0); // the cap
       else expect(radial).toBeGreaterThan(0);
+    }
+  });
+
+  // A sweep turns the loft on its side, so its winding is the easiest to get
+  // wrong -- and a section may come in either winding.
+  it.each([["x"], ["z"]] as const)("winds a sweep along %s outward, end caps included, whichever way its section winds", (axis) => {
+    for (const reversed of [false, true]) {
+      const m = new MeshBuilder({ a: { color: "#808080" } });
+      const section = ngon(6, 1, 0, 2, 3);
+      const s = reversed ? [...section].reverse() : section;
+      m.sweep("a", axis, s, 5, s, 1); // a1 < a0 is fine too
+      const centre = axis === "x" ? [3, 3, 2] : [2, 3, 3];
+      const tris = faces(m.toGlb("test"));
+      expect(tris.length).toBe(6 * 2 + 2 * 4); // six walls and two hexagonal caps
+      for (const { n, c } of tris) {
+        const out = n[0] * (c[0] - centre[0]) + n[1] * (c[1] - centre[1]) + n[2] * (c[2] - centre[2]);
+        expect(out).toBeGreaterThan(0);
+      }
     }
   });
 
@@ -155,22 +174,25 @@ describe("findCoplanarOverlaps", () => {
   });
 });
 
-describe("the skyscrapers", () => {
+/** Every design's id, skyscrapers and vehicles alike, for the checks they share. */
+const ALL_IDS = [...DESIGNS.keys()].map((id) => [id] as const);
+
+describe("the designs", () => {
   // Regression: the art deco tower's roofs flickered seen from above -- each
   // tier's dark core, its stone piers and its cornice all ended at one height.
   // The glass office, apartment, black slab and terraced towers had smaller cases.
-  it.each(SKYSCRAPERS.map((d) => [d.id] as const))("%s has no z-fighting faces", (id) => {
+  it.each(ALL_IDS)("%s has no z-fighting faces", (id) => {
     expect(findCoplanarOverlaps(designGlb(id))).toEqual([]);
   });
 
-  it("are ten, with unique sky- ids", () => {
+  it("include ten skyscrapers, with unique sky- ids", () => {
     expect(SKYSCRAPERS.length).toBe(10);
     const ids = SKYSCRAPERS.map((d) => d.id);
     expect(new Set(ids).size).toBe(ids.length);
     for (const id of ids) expect(id).toMatch(/^sky-[a-z0-9]+(-[a-z0-9]+)*$/);
   });
 
-  it.each(SKYSCRAPERS.map((d) => [d.id] as const))("%s stands on y = 0, is tall and stays in budget", (id) => {
+  it.each(SKYSCRAPERS.map((d) => [d.id] as const))("skyscraper %s stands on y = 0, is tall and stays in budget", (id) => {
     const glb = designGlb(id);
     const s = glbStats(glb);
     expect(s.min[1]).toBeCloseTo(0, 5);
@@ -182,7 +204,7 @@ describe("the skyscrapers", () => {
   });
 
   it("generate the same bytes every time, so the game's LOD cache can key on them", () => {
-    for (const d of SKYSCRAPERS) expect(Buffer.from(designGlb(d.id)).equals(Buffer.from(designGlb(d.id)))).toBe(true);
+    for (const d of DESIGNS.values()) expect(Buffer.from(designGlb(d.id)).equals(Buffer.from(designGlb(d.id)))).toBe(true);
   });
 
   it("throws on an unknown id", () => {
@@ -192,7 +214,7 @@ describe("the skyscrapers", () => {
 
   // The site's source tree is only readable when every primitive sits in a
   // named scope: a design must not draw straight under its root.
-  it.each(SKYSCRAPERS.map((d) => [d.id] as const))("%s draws every primitive inside a named scope", (id) => {
+  it.each(ALL_IDS)("%s draws every primitive inside a named scope", (id) => {
     const tree = designTree(id);
     expect(tree.root.children.length).toBeGreaterThan(0);
     expect(tree.root.children.filter(isLeaf).map((l) => l.id)).toEqual([]);
@@ -202,7 +224,7 @@ describe("the skyscrapers", () => {
 
   // The site highlights and picks through the leaves' triangle ranges, so they
   // must tile each material's GLB primitive exactly and point at the right faces.
-  it.each(SKYSCRAPERS.map((d) => [d.id] as const))("%s has a tree whose triangle ranges match its GLB", (id) => {
+  it.each(ALL_IDS)("%s has a tree whose triangle ranges match its GLB", (id) => {
     const tree = designTree(id);
     const { json, bin } = parseGlb(designGlb(id));
     const byMat = new Map<string, ReturnType<typeof collectTriangles>>();
@@ -236,7 +258,43 @@ describe("the skyscrapers", () => {
   });
 
   it("record the same source tree every time", () => {
-    for (const d of SKYSCRAPERS) expect(JSON.stringify(designTree(d.id))).toBe(JSON.stringify(designTree(d.id)));
+    for (const d of DESIGNS.values()) expect(JSON.stringify(designTree(d.id))).toBe(JSON.stringify(designTree(d.id)));
+  });
+});
+
+describe("the vehicles", () => {
+  it("have unique veh- ids that no skyscraper shares", () => {
+    const ids = VEHICLES.map((d) => d.id);
+    expect(ids).toContain("veh-american-truck");
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const id of ids) expect(id).toMatch(/^veh-[a-z0-9]+(-[a-z0-9]+)*$/);
+    expect(DESIGNS.size).toBe(SKYSCRAPERS.length + VEHICLES.length);
+  });
+
+  it.each(VEHICLES.map((d) => [d.id] as const))("%s stands on its wheels, faces +x, fits a US road and stays in budget", (id) => {
+    const glb = designGlb(id);
+    const s = glbStats(glb);
+    expect(s.min[1]).toBeCloseTo(0, 5);
+    const length = s.max[0] - s.min[0];
+    const width = s.max[2] - s.min[2];
+    expect(length).toBeGreaterThan(2 * width); // long along x
+    expect(s.min[2]).toBeCloseTo(-s.max[2], 5); // centred across
+    expect(width).toBeLessThanOrEqual(2.7); // 2.6 m legal width, mirrors aside
+    expect(s.max[1]).toBeLessThanOrEqual(4.115); // 13 ft 6 in
+    expect(s.triangles).toBeLessThanOrEqual(4000);
+    expect(faces(glb).length).toBe(s.triangles);
+    const { json } = parseGlb(glb);
+    expect((json as { asset: { generator: string } }).asset.generator).toBe(`Rail Island procedural vehicle (${id})`);
+  });
+
+  it("puts the truck's grille at the +x end, ahead of the front axle", () => {
+    const tree = designTree("veh-american-truck");
+    const byId = new Map(walk(tree.root).map((n) => [n.id, n]));
+    const grille = byId.get("grille")!;
+    const axle = byId.get("front-axle")!;
+    const sleeper = byId.get("sleeper")!;
+    expect(grille.max![0]).toBeGreaterThan(axle.max![0]);
+    expect(sleeper.max![0]).toBeLessThan(axle.min![0]);
   });
 });
 
@@ -281,7 +339,7 @@ describe("generateModels", () => {
       fs.mkdirSync(path.join(dir, "tree"));
       fs.writeFileSync(path.join(dir, "tree", "sky-retired.json"), "stale");
       const first = generateModels(dir);
-      expect(first.map((b) => b.id).sort()).toEqual(SKYSCRAPERS.map((d) => d.id).sort());
+      expect(first.map((b) => b.id).sort()).toEqual([...DESIGNS.keys()].sort());
       for (const b of first) {
         expect(b.changed).toBe(true);
         expect(fs.readFileSync(b.thumb).subarray(1, 4).toString()).toBe("PNG");

@@ -3,7 +3,7 @@
 **Covers** - the ten procedurally generated skyscrapers, the mesh builder they
 are made with, and how to add or change a design.
 **Code** - `generator/skyscrapers.ts`, `generator/meshBuilder.ts`, `generator/coplanar.ts`, `test/models.test.ts`
-**See also** - [export.md](export.md), [source-tree.md](source-tree.md), [../site/catalog-site.md](../site/catalog-site.md)
+**See also** - [export.md](export.md), [source-tree.md](source-tree.md), [vehicles.md](vehicles.md), [../site/catalog-site.md](../site/catalog-site.md)
 
 ## The designs
 
@@ -23,7 +23,8 @@ and a crown:
 | `sky-terraced` | Terraced Green Tower | glass steps receding to one corner, planted terraces |
 | `sky-pyramid` | Pyramid Tower | white tapering pyramid with two lift-shaft wings |
 
-`SKYSCRAPERS` in `skyscrapers.ts` lists them as `{ id, title, build }`.
+`SKYSCRAPERS` in `skyscrapers.ts` lists them as `{ id, title, build }` (the
+`ProceduralDesign` of `design.ts`).
 `SKYSCRAPER_CATALOG` beside it holds the game-catalog fields they all share -
 category `Commercial`, city pool `skyscraper_c`, `defaultScale` 0.5, CC0 by Rail
 Island - which the build writes into each model's meta.json entry
@@ -39,7 +40,8 @@ horizontal rings of `(x, z)` points at two heights: a box is a four-point ring
 lofted to itself, a frustum an n-gon lofted to a smaller one, and `spire()`
 closes a ring to an apex. Ring helpers are `rect` (optionally turned about +Y),
 `ngon`, `chamferedRect`, `grow` (offset outward, for slabs that stand proud of a
-wall) and `scaleRing`.
+wall) and `scaleRing`. `sweep()` is the same loft laid on its side, along x or
+z - what the vehicles are built from ([vehicles.md](vehicles.md)).
 
 Geometry is a flat-shaded, non-indexed triangle soup, one primitive per
 material, with a plain `baseColorFactor` (no textures). The palette lives in

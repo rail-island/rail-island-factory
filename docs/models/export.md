@@ -1,11 +1,11 @@
 # The export folder
 
-**Covers** - what `pnpm build:models` writes, the `skyscrapers.meta.json`
-contract the game is meant to import, the site's `catalog.json`, and the offline
+**Covers** - what `pnpm build:models` writes, the `skyscrapers.meta.json` and
+`vehicles.meta.json` contracts the game is meant to import, the site's `catalog.json`, and the offline
 thumbnail renderer.
 **Code** - `generator/generate.ts`, `generator/catalog.ts`, `generator/renderGlbThumb.ts`,
 `generator/glbStats.ts`, `generator/coplanar.ts`, `generator/glbTriangles.ts`, `generator/glbParse.ts`, `test/export.test.ts`
-**See also** - [skyscrapers.md](skyscrapers.md), [../site/catalog-site.md](../site/catalog-site.md),
+**See also** - [skyscrapers.md](skyscrapers.md), [vehicles.md](vehicles.md), [../site/catalog-site.md](../site/catalog-site.md),
 [../guide/setup-and-build.md](../guide/setup-and-build.md)
 
 ## What is written
@@ -18,12 +18,13 @@ and `pnpm dev`) writes the gitignored `export/`:
 | `export/glb/<id>.glb` | the model |
 | `export/thumbs/<id>.png` | a 512 px square thumbnail, transparent background |
 | `export/tree/<id>.json` | the procedural source tree, for the site only ([source-tree.md](source-tree.md)) |
-| `export/skyscrapers.meta.json` | one game-catalog entry per model - the import contract |
+| `export/skyscrapers.meta.json` | one game-catalog entry per skyscraper - the import contract |
+| `export/vehicles.meta.json` | the same per vehicle, under `vehicles` |
 | `export/catalog.json` | what the site lists |
 
 `export/` is also Vite's `publicDir`, so `vite build` copies it into `dist/` as
 it stands and the deployed site serves the very files the game would import, at
-`/glb/...`, `/thumbs/...`, `/skyscrapers.meta.json` and `/catalog.json` (and the
+`/glb/...`, `/thumbs/...`, `/skyscrapers.meta.json`, `/vehicles.meta.json` and `/catalog.json` (and the
 site-only `/tree/...`, which the game ignores).
 
 **Incremental.** An unchanged design produces byte-identical GLB bytes; the
@@ -31,7 +32,7 @@ generator then leaves the file and its thumbnail alone. The thumbnail - a
 software rasterizer, the slow part - is re-rendered only when the GLB changed or
 the PNG is missing. A file of a design that no longer exists is deleted, so a
 dropped id cannot linger. A tree file is rewritten only when its text changed.
-The two JSON documents are rewritten every run and
+The JSON documents are rewritten every run and
 carry no timestamp, so they are deterministic too.
 
 **Guarded.** Before anything is written, every design is checked for z-fighting
@@ -71,9 +72,20 @@ import that mirrors `glb/`, `thumbs/` and this file into the game's building
 catalog, the way the webapp already imports vehicles from vlakosimdb's export.
 Changing a field here is a contract change for that importer.
 
+## `vehicles.meta.json`
+
+The vehicles ([vehicles.md](vehicles.md)) are not buildings, so they get their
+own file, built by `exportVehicleMeta()`: the same `note` and `count`, and the
+same entry shape under **`vehicles`** instead of `buildings`, with the fields of
+`VEHICLE_CATALOG` (category `Road vehicles`, group `truck`, `defaultScale` 1). A
+building import reading `skyscrapers.meta.json` therefore never sees a truck.
+Nothing reads this file yet either; the game's vehicle import will decide its
+final fields.
+
 ## `catalog.json` (the site's data)
 
-`{ version: 1, records: CatalogRecord[] }`. A record is the meta entry plus what
+`{ version: 1, records: CatalogRecord[] }`, one record per design - the
+skyscrapers, then the vehicles. A record is its meta entry plus what
 only the built files know: `glbUrl`/`thumbUrl` (site-relative), `glbBytes`,
 `thumbBytes`, `triangles`, `vertices`, `primitives` (draw calls), `materials`, and
 the bounding-box extents `sizeX`/`sizeY`/`sizeZ` in metres (before

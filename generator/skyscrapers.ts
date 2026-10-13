@@ -14,6 +14,9 @@ import {
   MeshBuilder, grow, ngon, rect, scaleRing,
   type MaterialSpec, type Ring,
 } from "./meshBuilder.ts";
+import type { CatalogFields, ProceduralDesign } from "./design.ts";
+
+export type { ProceduralDesign } from "./design.ts";
 
 export const PALETTE: Record<string, MaterialSpec> = {
   glass: { color: "#78a6c8", metallic: 0.2, roughness: 0.25 },
@@ -418,26 +421,20 @@ function pyramid(): MeshBuilder {
   return m;
 }
 
-export interface ProceduralDesign {
-  id: string;
-  title: string;
-  build: () => MeshBuilder;
-}
-
 /**
  * The game-catalog fields every skyscraper shares, written into each one's
  * meta.json entry (generate.ts). They are what the game's building catalog needs
  * beyond the GLB: the picker category, the city block pool the towers are drawn
  * from, the on-map size, and the attribution.
  */
-export const SKYSCRAPER_CATALOG = {
+export const SKYSCRAPER_CATALOG: CatalogFields = {
   category: "Commercial",
   group: "skyscraper_c",
   defaultScale: 0.5,
   license: "CC0",
   author: "Rail Island",
   source: "Rail Island",
-} as const;
+};
 
 /** Every procedural skyscraper, by catalog id. The ids are stored in saved maps. */
 export const SKYSCRAPERS: ProceduralDesign[] = [

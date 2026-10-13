@@ -45,12 +45,13 @@ design is not re-rendered at all (see [../models/export.md](../models/export.md)
 `pnpm test` runs five suites:
 
 - `test/models.test.ts` - the mesh builder winds faces outward (three.js culls
-  back faces, so an inward wall is invisible in the game and the viewer); every
-  design stands on y = 0, is taller than twice its width and stays under 4,000
-  triangles; the bytes are deterministic; the generator writes, skips and prunes;
+  back faces, so an inward wall is invisible in the game and the viewer), sweeps
+  included; every skyscraper stands on y = 0, is taller than twice its width and
+  stays under 4,000 triangles, every vehicle stands on its wheels, faces +x and
+  fits a US road; no design z-fights; the bytes are deterministic; the generator writes, skips and prunes;
   every primitive sits in a scope and the source tree's triangle ranges match
   the GLB.
-- `test/export.test.ts` - `skyscrapers.meta.json` and `catalog.json` match the
+- `test/export.test.ts` - `skyscrapers.meta.json`, `vehicles.meta.json` and `catalog.json` match the
   designs and the files beside them, and a rebuild writes the same documents.
 - `test/catalogQuery.test.ts` - the site's search, sort, formatting and URL state.
 - `test/sourceTreeView.test.ts` - the Source tab's tree index, ranges and labels.
