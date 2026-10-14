@@ -3,6 +3,10 @@
 // the tree's triangle ranges become draw groups on those meshes -- the selected
 // node's triangles glow, the rest turn into a faint ghost. Nothing is split or
 // re-uploaded; selecting nothing hands every mesh its built material back.
+//
+// A model with parts (an articulated vehicle's truck and trailer) has a mesh per
+// material in EACH part's node. The tree numbers a material's triangles across
+// the parts in node order, so each mesh carries the offset of its first one.
 
 import { Color, Mesh, MeshStandardMaterial, type Material, type Object3D } from "three";
 import type { TriRange } from "./sourceTreeView";
@@ -12,6 +16,8 @@ export interface Part {
   mesh: Mesh;
   /** The GLB material's name, which the source tree's ranges are keyed by. */
   name: string;
+  /** How many triangles of this material earlier meshes (earlier parts) hold. */
+  offset: number;
   base: Material;
   glow: MeshStandardMaterial;
   ghost: MeshStandardMaterial;
@@ -19,6 +25,7 @@ export interface Part {
 
 export function makeParts(root: Object3D): Part[] {
   const parts: Part[] = [];
+  const seen = new Map<string, number>();
   root.traverse((o) => {
     if (!(o instanceof Mesh) || Array.isArray(o.material)) return;
     const base = o.material as MeshStandardMaterial;
@@ -29,9 +36,17 @@ export function makeParts(root: Object3D): Part[] {
     ghost.transparent = true;
     ghost.opacity = 0.12;
     ghost.depthWrite = false;
-    parts.push({ mesh: o, name: base.name, base, glow, ghost });
+    const offset = seen.get(base.name) ?? 0;
+    seen.set(base.name, offset + triangleCount(o));
+    parts.push({ mesh: o, name: base.name, offset, base, glow, ghost });
   });
   return parts;
+}
+
+/** A mesh's triangle count, indexed or not. */
+function triangleCount(mesh: Mesh): number {
+  const g = mesh.geometry;
+  return (g.index ? g.index.count : g.getAttribute("position").count) / 3;
 }
 
 /** Shows `ranges` glowing and the rest ghosted, or -- with null -- every part as built. */
@@ -43,14 +58,20 @@ export function applyHighlight(parts: readonly Part[], ranges: ReadonlyMap<strin
       p.mesh.material = p.base;
       continue;
     }
-    const runs = ranges.get(p.name);
-    if (!runs || runs.length === 0) {
+    const total = triangleCount(p.mesh);
+    // the material's ranges that fall in this mesh, made local to it
+    const runs: Array<[number, number]> = [];
+    for (const [first, count] of ranges.get(p.name) ?? []) {
+      const lo = Math.max(first, p.offset);
+      const hi = Math.min(first + count, p.offset + total);
+      if (hi > lo) runs.push([lo - p.offset, hi - lo]);
+    }
+    if (runs.length === 0) {
       p.mesh.material = p.ghost;
       continue;
     }
-    // non-indexed triangle soup: triangle i is vertices 3i..3i+2
+    // triangle i is vertices (or, indexed, indices) 3i..3i+2
     p.mesh.material = [p.ghost, p.glow];
-    const total = g.getAttribute("position").count / 3;
     let at = 0;
     for (const [first, count] of runs) {
       if (first > at) g.addGroup(at * 3, (first - at) * 3, 0);

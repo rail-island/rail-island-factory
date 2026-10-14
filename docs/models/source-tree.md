@@ -66,7 +66,11 @@ LeafNode  = { id, kind, material, args, tri: [first, count], triangles, min?, ma
   primitive**. Every call draws in one material and triangles are appended in
   call order, so the range is contiguous; a degenerate call has `count` 0.
   Because a scope's calls are consecutive, a scope's triangles are one run per
-  material too.
+  material too. In a model with **parts** (an articulated vehicle's `truck` and
+  `trailer`, [vehicles.md](vehicles.md)) a material has a primitive in each
+  part's node; `tri` then counts across them in node order - the truck's
+  triangles of that material first, then the trailer's. Each part is also a
+  top-level scope.
 - `args` are the call's arguments rounded to the millimetre; a ring is recorded
   as its point count (`ring`, `lower`, `upper`).
 - `triangles`, `min`, `max` are the node's extent in metres (absent when it drew
@@ -83,11 +87,12 @@ fetches the tree once the tab is open. `src/sourceTreeView.ts` indexes it: nodes
 by id, and per material an array naming the leaf that owns each triangle.
 
 - **Highlight** (`src/viewerHighlight.ts`): GLTFLoader gives one mesh per
-  material. For a selection, each mesh gets draw groups - the node's ranges with
+  material (per material and part, with parts; each mesh then knows the
+  `offset` of its first triangle in the tree's numbering). For a selection, each mesh gets draw groups - the node's ranges with
   a glowing copy of its material, the rest with a transparent ghost copy; a mesh
   the node does not touch is all ghost. Clearing the selection restores the
   built materials. Nothing is split or re-uploaded.
 - **Picking**: a click that is not a drag raycasts the model; the hit mesh's
-  material and the hit's face index (the triangle index, the GLB being
-  non-indexed) name the leaf. `test/viewerHighlight.test.ts` loads real GLBs
+  material and the hit's face index (the triangle index, indexed or not), plus
+  the mesh's offset, name the leaf. `test/viewerHighlight.test.ts` loads real GLBs
   with GLTFLoader in Node to pin both.

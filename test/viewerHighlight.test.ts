@@ -56,6 +56,49 @@ describe("the preview's highlight", () => {
   });
 });
 
+// An articulated vehicle has a mesh per material in each part's node, and the
+// tree numbers a material's triangles across both: each mesh carries an offset.
+describe("a model with parts", () => {
+  const id = "veh-american-truck";
+
+  it("glows a trailer node's triangles in the trailer's meshes only", async () => {
+    const scene = await load(id);
+    const parts = makeParts(scene);
+    const index = indexTree(designTree(id));
+    const truckMeshes = new Set<Object3D>();
+    scene.getObjectByName("truck")!.traverse((o) => truckMeshes.add(o));
+    const ranges = rangesOf(index, "trailer/axle-1");
+    applyHighlight(parts, ranges);
+    let glowing = 0;
+    for (const p of parts) {
+      if (truckMeshes.has(p.mesh)) {
+        expect(p.mesh.material).toBe(p.ghost); // shares rubber and chrome with the trailer
+        continue;
+      }
+      if (p.mesh.material === p.ghost) continue;
+      glowing++;
+      // the glowing group is the range made local to this mesh
+      const glow = p.mesh.geometry.groups.filter((g) => g.materialIndex === 1);
+      const local = ranges.get(p.name)!.map(([first, count]) => ({ start: (first - p.offset) * 3, count: count * 3, materialIndex: 1 }));
+      expect(glow).toEqual(local);
+    }
+    expect(glowing).toBe(3); // rubber tyres, chrome rims and hubs, the dark axle beam
+  });
+
+  it("maps a ray into a trailer tail light to that leaf, past the truck's red lamps", async () => {
+    const scene = await load(id);
+    const parts = makeParts(scene);
+    const index = indexTree(designTree(id));
+    const light = index.leaves.find((l) => l.id.startsWith("trailer/rear/tail-lights/"))!;
+    const centre = new Box3(new Vector3(...light.min!), new Vector3(...light.max!)).getCenter(new Vector3());
+    const hit = new Raycaster(new Vector3(centre.x - 20, centre.y, centre.z), new Vector3(1, 0, 0)).intersectObject(scene, true)[0]!;
+    const part = parts.find((p) => p.mesh === hit.object)!;
+    expect(part.name).toBe("lampRed");
+    expect(part.offset).toBeGreaterThan(0); // the truck's emblem and tail lights come first
+    expect(leafAt(index, part.name, part.offset + hit.faceIndex!)!.id).toBe(light.id);
+  });
+});
+
 describe("picking", () => {
   // The face index a raycast reports must be the triangle index the tree's
   // ranges use, or a click would select the wrong part.

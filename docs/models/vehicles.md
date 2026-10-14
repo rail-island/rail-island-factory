@@ -1,16 +1,17 @@
 # Vehicles
 
-**Covers** - the procedurally generated road vehicles (today one American
-truck), the conventions they are modelled in, the `sweep` primitive they are
-mostly built from, and how to add one.
-**Code** - `generator/vehicles.ts`, `generator/design.ts`, `generator/meshBuilder.ts` (`sweep`), `test/models.test.ts`
+**Covers** - the procedurally generated road vehicles (today one articulated
+American truck), their budgets and conventions, articulated vehicles' truck and
+trailer parts, the compact GLB they are written as, the `sweep` primitive they
+are mostly built from, and how to add one.
+**Code** - `generator/vehicles.ts`, `generator/design.ts`, `generator/meshBuilder.ts` (`sweep`, `part`, `toGlb`), `src/viewerHighlight.ts`, `test/models.test.ts`, `test/viewerHighlight.test.ts`, `.claude/skills/road-vehicle/SKILL.md`
 **See also** - [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md)
 
 ## The designs
 
 | id | title | look |
 |---|---|---|
-| `veh-american-truck` | American Truck | long-nose conventional tractor: chrome grille, sleeper, twin stacks, tandem drive axle |
+| `veh-american-truck` | American Truck | articulated: a long-nose conventional tractor (chrome grille, sleeper, twin stacks, tandem drive axle) and a 53 ft dry van; 22.2 m, about 4,900 triangles, 74 kB |
 
 `VEHICLES` in `vehicles.ts` lists them as `{ id, title, build }`, the same
 `ProceduralDesign` shape as the skyscrapers (`design.ts`). `VEHICLE_CATALOG`
@@ -22,16 +23,55 @@ for the game's vehicle import; settle them when the webapp side is written.
 **The ids are stored in the game's saved maps**: never rename one that has
 shipped. Vehicle ids start with `veh-`.
 
+Agents adding or changing a vehicle follow the `road-vehicle` skill
+(`.claude/skills/road-vehicle/SKILL.md`), the checklist for this page.
+
+## Budgets
+
+At most **10,000 triangles** and **300 kB** of GLB per vehicle, tested. A
+vehicle is written **compact** (`toGlb(..., { compact: true })`): indexed
+primitives, one vertex per distinct position, and **no normals** - glTF loaders
+then compute flat normals (three.js turns on `flatShading`), which is what the
+mesh builder's per-face normals are anyway. That is about a third of the plain
+triangle soup's bytes, so the two budgets meet. The skyscrapers stay plain:
+their bytes must not change.
+
+## Articulated vehicles: truck and trailer
+
+A tractor with a semi-trailer is one model with **two named parts**, divided at
+the coupling's rotation point - the king pin on the fifth wheel:
+
+```ts
+m.part("truck", [0, 0, 0], () => tractor(m));
+m.part("trailer", PIVOT, () => trailer(m)); // PIVOT = the king pin
+```
+
+The design draws both in world coordinates as usual. `toGlb` writes a node per
+part, named after it and translated to its pivot, with its mesh's positions
+relative to that pivot: the `truck` node sits at the origin, the `trailer` node
+at the king pin, so **the game turns the trailer by rotating that node about its
+own Y axis**. Each part is also a top-level scope of the source tree, and a
+material's triangle numbering runs across the parts in node order
+([source-tree.md](source-tree.md)). Parts are top level, used once each, and
+once a model has parts every triangle must be in one (`part()` and `toGlb`
+throw otherwise).
+
+The American truck's king pin is at x = 1.05 m, on the fifth wheel's top
+(y = 1.18 m), 0.6 m behind the trailer's front. Its front corners sweep a
+1.43 m circle about it and the sleeper starts 1.55 m ahead, so the trailer can
+swing without touching the tractor; the landing gear stands behind the
+tractor's rear wheels. Both are tested.
+
 ## Conventions
 
 - Metres, **+X forward**, +Y up, +Z to the vehicle's right; centred on z = 0.
 - The wheels **stand on y = 0**. A tyre is a 16-gon with a flat side down, so the
   axle sits at `WHEEL_R * cos(pi / 16)`, not at the radius.
 - Real proportions: the tests hold a vehicle under 2.7 m wide (2.6 m legal,
-  plus mirrors) and 4.115 m high (13 ft 6 in), longer than twice its width, and
-  under 4,000 triangles.
-- The GLB's generator string is `Rail Island procedural vehicle (<id>)` and its
-  one node is named `vehicle`.
+  plus mirrors) and 4.115 m high (13 ft 6 in), and longer than twice its width.
+- The GLB's generator string is `Rail Island procedural vehicle (<id>)`; a rigid
+  vehicle's one node is named `vehicle`, an articulated one's are `truck` and
+  `trailer`.
 - Chrome is only mildly metallic (0.45): the game and the site light models with
   no environment map, where a fully metallic surface renders nearly black.
 
@@ -55,6 +95,7 @@ What the truck builds with it:
 | the cab, the sleeper, the visor | the side profile in (x, y) along z |
 | the hood | a chamfered (z, y) section along x, to a slightly smaller one |
 | a fuel tank, an air horn | an `ngon` in (z, y) along x |
+| the trailer's body, rails, posts, doors | `block()`s |
 | a closed box (`block()`) | a (z, y) rectangle along x - six faces, unlike `box()`, which has no floor |
 | a fender (`plate()`) | quads between two parallel side-view polylines, each along z |
 
@@ -74,10 +115,14 @@ shell for that reason - flush, its back face shared a plane with the bars'.
 
 ## Adding a vehicle
 
+Follow the `road-vehicle` skill. In short:
+
 1. Write a function in `vehicles.ts` that returns a `MeshBuilder` over
    `VEHICLE_PALETTE`, and add it to `VEHICLES` with a `veh-` id and a title.
    Wrap every part in a named `m.scope(...)` - chassis, each axle, hood, cab - so
-   the site's Source tab reads like the design.
-2. `pnpm build:models`, then look at `export/thumbs/<id>.png`.
+   the site's Source tab reads like the design. An articulated vehicle draws
+   its tractor and trailer in `m.part("truck", ...)` and `m.part("trailer", pivot, ...)`.
+2. `pnpm build:models`, then look at `export/thumbs/<id>.png` and the triangle
+   count.
 3. `pnpm test` - every design's z-fighting, scope and source-tree checks run
-   over the vehicles too, plus the vehicle shape checks above.
+   over the vehicles too, plus the vehicle shape and budget checks above.

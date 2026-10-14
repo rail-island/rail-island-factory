@@ -106,7 +106,11 @@ export function scaleRing(ring: Ring, s: number): Ring {
 }
 
 export class MeshBuilder {
-  private readonly groups = new Map<string, { pos: number[]; nrm: number[] }>();
+  /** Per material: positions and normals, 9 numbers a triangle, and each triangle's part (-1 for none). */
+  private readonly groups = new Map<string, { pos: number[]; nrm: number[]; part: number[] }>();
+  private readonly parts: Array<{ name: string; pivot: Vec3 }> = [];
+  /** The part being drawn, or -1. */
+  private currentPart = -1;
   private readonly root: RawScope = { name: "", children: [] };
   private readonly open: RawScope[] = [this.root];
   /** True inside a recorded primitive call: the calls it draws through are not leaves. */
@@ -133,6 +137,25 @@ export class MeshBuilder {
       return fn();
     } finally {
       this.open.pop();
+    }
+  }
+
+  /**
+   * Draws `fn` as a named part of the model: its own node in the GLB, translated
+   * to `pivot` (see toGlb) -- an articulated vehicle's truck and trailer, the
+   * trailer's pivot its rotation point. Draw in world coordinates as usual. Parts
+   * are top level, used once each, one after another; once a model has parts,
+   * every triangle must be in one. A part is also a scope of the source tree.
+   */
+  part<T>(name: string, pivot: Vec3, fn: () => T): T {
+    if (this.drawing || this.open.length > 1 || this.currentPart >= 0) throw new Error("part() must be top level");
+    if (this.parts.some((p) => p.name === name)) throw new Error(`part "${name}" drawn twice`);
+    this.parts.push({ name, pivot });
+    this.currentPart = this.parts.length - 1;
+    try {
+      return this.scope(name, fn);
+    } finally {
+      this.currentPart = -1;
     }
   }
 
@@ -170,7 +193,8 @@ export class MeshBuilder {
     const l = Math.hypot(n[0], n[1], n[2]);
     if (l < 1e-9) return; // degenerate
     let g = this.groups.get(mat);
-    if (!g) this.groups.set(mat, (g = { pos: [], nrm: [] }));
+    if (!g) this.groups.set(mat, (g = { pos: [], nrm: [], part: [] }));
+    g.part.push(this.currentPart);
     for (const p of [a, b, c]) {
       g.pos.push(p[0], p[1], p[2]);
       g.nrm.push(n[0] / l, n[1] / l, n[2] / l);
@@ -353,25 +377,44 @@ export class MeshBuilder {
     return { version: 1, id, triangles: this.triangleCount(), materials, colors, root };
   }
 
-  /** The finished model as a binary glTF (.glb): one node, one mesh, a primitive per material. */
-  toGlb(generator: string, name = "building"): Uint8Array {
+  /**
+   * The finished model as a binary glTF (.glb): a primitive per material, in
+   * material name order. Without parts it is one node and one mesh named `name`;
+   * with parts (see `part`) it is a node per part, named after it, translated to
+   * the part's pivot, its mesh's positions relative to that pivot.
+   *
+   * `compact` writes indexed primitives with shared vertices and no normals --
+   * glTF loaders then compute flat normals, which is what the triangle soup's
+   * per-face normals are anyway -- at about a third of the bytes. Triangle order
+   * within a primitive is the same either way, so the source tree's ranges hold.
+   */
+  toGlb(generator: string, name = "building", opts: { compact?: boolean } = {}): Uint8Array {
     type Json = {
       asset: { version: string; generator: string };
       scene: number;
       scenes: Array<{ nodes: number[] }>;
-      nodes: Array<{ mesh: number; name: string }>;
+      nodes: Array<{ mesh: number; name: string; translation?: Vec3 }>;
       meshes: Array<{ name: string; primitives: unknown[] }>;
       materials: unknown[];
       accessors: unknown[];
       bufferViews: unknown[];
       buffers: Array<{ byteLength: number }>;
     };
+    if (this.parts.length) {
+      for (const g of this.groups.values()) {
+        if (g.part.includes(-1)) throw new Error("a model with parts drew a triangle outside any part");
+      }
+    }
+    // a model without parts is one unit holding every triangle (part index -1)
+    const units = this.parts.length
+      ? this.parts.map((p, i) => ({ name: p.name, pivot: p.pivot, index: i }))
+      : [{ name, pivot: [0, 0, 0] as Vec3, index: -1 }];
     const json: Json = {
       asset: { version: "2.0", generator },
       scene: 0,
-      scenes: [{ nodes: [0] }],
-      nodes: [{ mesh: 0, name }],
-      meshes: [{ name, primitives: [] }],
+      scenes: [{ nodes: units.map((_, i) => i) }],
+      nodes: units.map((u, i) => (this.parts.length ? { mesh: i, name: u.name, translation: u.pivot } : { mesh: i, name: u.name })),
+      meshes: units.map((u) => ({ name: u.name, primitives: [] })),
       materials: [],
       accessors: [],
       bufferViews: [],
@@ -379,48 +422,96 @@ export class MeshBuilder {
     };
     const chunks: Buffer[] = [];
     let offset = 0;
+    const view = (buf: Buffer, target: number): number => {
+      json.bufferViews.push({ buffer: 0, byteOffset: offset, byteLength: buf.length, target });
+      chunks.push(buf);
+      offset += buf.length;
+      if (buf.length % 4) {
+        chunks.push(Buffer.alloc(4 - (buf.length % 4)));
+        offset += 4 - (buf.length % 4);
+      }
+      return json.bufferViews.length - 1;
+    };
+    const vec3Accessor = (data: number[], withBounds: boolean): number => {
+      const acc: Record<string, unknown> = {
+        bufferView: view(Buffer.from(new Float32Array(data).buffer), 34962), componentType: 5126, count: data.length / 3, type: "VEC3",
+      };
+      if (withBounds) {
+        const min = [Infinity, Infinity, Infinity];
+        const max = [-Infinity, -Infinity, -Infinity];
+        for (let i = 0; i < data.length; i += 3) {
+          for (let k = 0; k < 3; k++) {
+            const f = Math.fround(data[i + k]);
+            min[k] = Math.min(min[k], f);
+            max[k] = Math.max(max[k], f);
+          }
+        }
+        acc.min = min;
+        acc.max = max;
+      }
+      json.accessors.push(acc);
+      return json.accessors.length - 1;
+    };
     // Sorted by name so the output does not depend on the order a design happened
     // to touch its materials in -- the bytes are what the LOD cache keys on.
-    for (const name of [...this.groups.keys()].sort()) {
-      const g = this.groups.get(name)!;
-      const spec = this.palette[name];
+    const materials = [...this.groups.keys()].sort();
+    for (const mat of materials) {
+      const spec = this.palette[mat];
       json.materials.push({
-        name,
+        name: mat,
         pbrMetallicRoughness: {
           baseColorFactor: [...linearRgb(spec.color), 1],
           metallicFactor: spec.metallic ?? 0,
           roughnessFactor: spec.roughness ?? 0.85,
         },
       });
-      const accessorFor = (data: number[], withBounds: boolean): number => {
-        const buf = Buffer.from(new Float32Array(data).buffer);
-        json.bufferViews.push({ buffer: 0, byteOffset: offset, byteLength: buf.length, target: 34962 });
-        const acc: Record<string, unknown> = {
-          bufferView: json.bufferViews.length - 1, componentType: 5126, count: data.length / 3, type: "VEC3",
-        };
-        if (withBounds) {
-          const min = [Infinity, Infinity, Infinity];
-          const max = [-Infinity, -Infinity, -Infinity];
-          for (let i = 0; i < data.length; i += 3) {
-            for (let k = 0; k < 3; k++) {
-              const f = Math.fround(data[i + k]);
-              min[k] = Math.min(min[k], f);
-              max[k] = Math.max(max[k], f);
+    }
+    units.forEach((unit, u) => {
+      materials.forEach((mat, m) => {
+        const g = this.groups.get(mat)!;
+        let pos: number[] = g.pos;
+        let nrm: number[] = g.nrm;
+        if (unit.index >= 0) {
+          pos = [];
+          nrm = [];
+          for (let t = 0; t < g.part.length; t++) {
+            if (g.part[t] !== unit.index) continue;
+            for (let k = 0; k < 9; k++) {
+              pos.push(g.pos[t * 9 + k]! - unit.pivot[k % 3]!);
+              nrm.push(g.nrm[t * 9 + k]!);
             }
           }
-          acc.min = min;
-          acc.max = max;
+          if (pos.length === 0) return;
         }
-        json.accessors.push(acc);
-        chunks.push(buf);
-        offset += buf.length;
-        return json.accessors.length - 1;
-      };
-      const position = accessorFor(g.pos, true);
-      const normal = accessorFor(g.nrm, false);
-      json.meshes[0].primitives.push({ attributes: { POSITION: position, NORMAL: normal }, material: json.materials.length - 1 });
-    }
-    const bin = Buffer.concat(chunks); // float32 data, already 4-byte aligned
+        if (!opts.compact) {
+          const position = vec3Accessor(pos, true);
+          const normal = vec3Accessor(nrm, false);
+          json.meshes[u]!.primitives.push({ attributes: { POSITION: position, NORMAL: normal }, material: m });
+          return;
+        }
+        // shared vertices: one per distinct float32 position, in first-use order
+        const at = new Map<string, number>();
+        const verts: number[] = [];
+        const idx: number[] = [];
+        for (let i = 0; i < pos.length; i += 3) {
+          const p = [Math.fround(pos[i]!), Math.fround(pos[i + 1]!), Math.fround(pos[i + 2]!)];
+          const key = p.join(",");
+          let v = at.get(key);
+          if (v === undefined) {
+            v = verts.length / 3;
+            at.set(key, v);
+            verts.push(p[0]!, p[1]!, p[2]!);
+          }
+          idx.push(v);
+        }
+        const position = vec3Accessor(verts, true);
+        const wide = verts.length / 3 > 65535;
+        const ibuf = Buffer.from(wide ? new Uint32Array(idx).buffer : new Uint16Array(idx).buffer);
+        json.accessors.push({ bufferView: view(ibuf, 34963), componentType: wide ? 5125 : 5123, count: idx.length, type: "SCALAR" });
+        json.meshes[u]!.primitives.push({ attributes: { POSITION: position }, indices: json.accessors.length - 1, material: m });
+      });
+    });
+    const bin = Buffer.concat(chunks); // every view padded to 4 bytes
     json.buffers.push({ byteLength: bin.length });
     let text = Buffer.from(JSON.stringify(json));
     if (text.length % 4) text = Buffer.concat([text, Buffer.alloc(4 - (text.length % 4), 0x20)]);

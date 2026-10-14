@@ -47,8 +47,10 @@ design is not re-rendered at all (see [../models/export.md](../models/export.md)
 - `test/models.test.ts` - the mesh builder winds faces outward (three.js culls
   back faces, so an inward wall is invisible in the game and the viewer), sweeps
   included; every skyscraper stands on y = 0, is taller than twice its width and
-  stays under 4,000 triangles, every vehicle stands on its wheels, faces +x and
-  fits a US road; no design z-fights; the bytes are deterministic; the generator writes, skips and prunes;
+  stays under 4,000 triangles, every vehicle stands on its wheels, faces +x,
+  fits a US road and its budgets (10,000 triangles, 300 kB), the articulated
+  truck splits at the king pin and its trailer swings clear; parts and the
+  compact encoding; no design z-fights; the bytes are deterministic; the generator writes, skips and prunes;
   every primitive sits in a scope and the source tree's triangle ranges match
   the GLB.
 - `test/export.test.ts` - `skyscrapers.meta.json`, `vehicles.meta.json` and `catalog.json` match the

@@ -134,7 +134,7 @@ export function ModelViewer(props: {
       for (const hit of raycaster.intersectObject(current, true)) {
         const part = parts.find((p) => p.mesh === hit.object);
         if (!part || hit.faceIndex == null) continue;
-        const leaf = leafAt(index, part.name, hit.faceIndex);
+        const leaf = leafAt(index, part.name, part.offset + hit.faceIndex);
         if (leaf) {
           props.onPick(leaf.id);
           return;

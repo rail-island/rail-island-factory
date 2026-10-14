@@ -15,7 +15,7 @@ and `pnpm dev`) writes the gitignored `export/`:
 
 | Path | What |
 |---|---|
-| `export/glb/<id>.glb` | the model |
+| `export/glb/<id>.glb` | the model (a vehicle's is compact and may have parts - [vehicles.md](vehicles.md)) |
 | `export/thumbs/<id>.png` | a 512 px square thumbnail, transparent background |
 | `export/tree/<id>.json` | the procedural source tree, for the site only ([source-tree.md](source-tree.md)) |
 | `export/skyscrapers.meta.json` | one game-catalog entry per skyscraper - the import contract |

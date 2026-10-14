@@ -71,6 +71,56 @@ describe("MeshBuilder", () => {
     }
   });
 
+  it("writes a node per part, translated to its pivot, its positions local to it", () => {
+    const m = new MeshBuilder({ a: { color: "#808080" }, b: { color: "#404040" } });
+    m.part("front", [0, 0, 0], () => m.box("a", 0, 0, 2, 2, 0, 1));
+    m.part("back", [-3, 1, 0], () => {
+      m.box("a", -3, 0, 2, 2, 1, 2);
+      m.box("b", -3, 0, 1, 1, 2, 3);
+    });
+    const glb = m.toGlb("test");
+    const { json, bin } = parseGlb(glb);
+    const j = json as { nodes: Array<{ name: string; mesh: number; translation: number[] }>; meshes: Array<{ primitives: unknown[] }> };
+    expect(j.nodes.map((n) => [n.name, n.translation])).toEqual([["front", [0, 0, 0]], ["back", [-3, 1, 0]]]);
+    expect(j.meshes.map((x) => x.primitives.length)).toEqual([1, 2]);
+    // world positions are what was drawn
+    const back = collectTriangles(json, bin).filter((t) => t.material === "b");
+    expect(Math.min(...back.flatMap((t) => t.p.map((p) => p[1])))).toBeCloseTo(2);
+    expect(glbStats(glb).max[1]).toBeCloseTo(3);
+    // a part is a scope of the tree, and a material's ranges run across parts
+    const tree = m.sourceTree("x", "X");
+    expect(tree.root.children.map((c) => c.id)).toEqual(["front", "back"]);
+    expect((((tree.root.children[1] as ScopeNode).children[0]) as LeafNode).tri).toEqual([10, 10]);
+  });
+
+  it("refuses a part inside a scope, a part drawn twice, and a triangle outside any part", () => {
+    const m = new MeshBuilder({ a: { color: "#808080" } });
+    expect(() => m.scope("s", () => m.part("p", [0, 0, 0], () => {}))).toThrow(/top level/);
+    m.part("p", [0, 0, 0], () => m.box("a", 0, 0, 1, 1, 0, 1));
+    expect(() => m.part("p", [0, 0, 0], () => {})).toThrow(/twice/);
+    m.box("a", 5, 0, 1, 1, 0, 1);
+    expect(() => m.toGlb("test")).toThrow(/outside any part/);
+  });
+
+  it("writes the same triangles compact, indexed and without normals, in fewer bytes", () => {
+    const m = new MeshBuilder({ a: { color: "#808080" }, b: { color: "#404040" } });
+    m.sweep("a", "z", ngon(16, 1, 0, 0, 1), -1, ngon(16, 1, 0, 0, 1), 1);
+    m.box("b", 3, 0, 1, 1, 0, 2);
+    const plain = parseGlb(m.toGlb("t"));
+    const compactGlb = m.toGlb("t", "building", { compact: true });
+    const compact = parseGlb(compactGlb);
+    const strip = (tris: ReturnType<typeof collectTriangles>) => tris.map((t) => [t.material, t.p]);
+    expect(strip(collectTriangles(compact.json, compact.bin))).toEqual(strip(collectTriangles(plain.json, plain.bin)));
+    const prims = (compact.json as { meshes: Array<{ primitives: Array<{ attributes: object; indices?: number }> }> }).meshes[0]!.primitives;
+    for (const p of prims) {
+      expect(p.indices).toBeDefined();
+      expect(Object.keys(p.attributes)).toEqual(["POSITION"]);
+    }
+    expect(compactGlb.length).toBeLessThan(m.toGlb("t").length / 2);
+    // winding still faces out once the loader computes flat normals
+    for (const { n, c } of faces(compactGlb)) if (c[0] < 2) expect(n[0] * c[0] + n[1] * (c[1] - 1) + n[2] * c[2]).toBeGreaterThan(0);
+  });
+
   it("refuses a material missing from its palette", () => {
     const m = new MeshBuilder({ a: { color: "#808080" } });
     expect(() => m.box("b", 0, 0, 1, 1, 0, 1)).toThrow(/unknown material/);
@@ -232,7 +282,8 @@ describe("the designs", () => {
       if (!byMat.has(t.material)) byMat.set(t.material, []);
       byMat.get(t.material)!.push(t);
     }
-    expect(tree.materials).toEqual([...byMat.keys()]);
+    // a model with parts visits its materials node by node, so compare as sets
+    expect(tree.materials).toEqual([...byMat.keys()].sort());
     expect(tree.triangles).toBe(glbStats(designGlb(id)).triangles);
     expect(tree.root.triangles).toBe(tree.triangles);
     const leaves = walk(tree.root).filter(isLeaf);
@@ -281,7 +332,9 @@ describe("the vehicles", () => {
     expect(s.min[2]).toBeCloseTo(-s.max[2], 5); // centred across
     expect(width).toBeLessThanOrEqual(2.7); // 2.6 m legal width, mirrors aside
     expect(s.max[1]).toBeLessThanOrEqual(4.115); // 13 ft 6 in
-    expect(s.triangles).toBeLessThanOrEqual(4000);
+    // the road-vehicle budgets (.claude/skills/road-vehicle)
+    expect(s.triangles).toBeLessThanOrEqual(10_000);
+    expect(glb.length).toBeLessThanOrEqual(300_000);
     expect(faces(glb).length).toBe(s.triangles);
     const { json } = parseGlb(glb);
     expect((json as { asset: { generator: string } }).asset.generator).toBe(`Rail Island procedural vehicle (${id})`);
@@ -290,11 +343,44 @@ describe("the vehicles", () => {
   it("puts the truck's grille at the +x end, ahead of the front axle", () => {
     const tree = designTree("veh-american-truck");
     const byId = new Map(walk(tree.root).map((n) => [n.id, n]));
-    const grille = byId.get("grille")!;
-    const axle = byId.get("front-axle")!;
-    const sleeper = byId.get("sleeper")!;
+    const grille = byId.get("truck/grille")!;
+    const axle = byId.get("truck/front-axle")!;
+    const sleeper = byId.get("truck/sleeper")!;
     expect(grille.max![0]).toBeGreaterThan(axle.max![0]);
     expect(sleeper.max![0]).toBeLessThan(axle.min![0]);
+  });
+
+  // An articulated vehicle is two named parts divided at the rotation point:
+  // the game turns the trailer by rotating its node about the node's origin.
+  it("splits the articulated truck into a truck and a trailer node, the trailer's at the king pin", () => {
+    const { json } = parseGlb(designGlb("veh-american-truck"));
+    const nodes = (json as { nodes: Array<{ name: string; translation?: number[] }> }).nodes;
+    expect(nodes.map((n) => n.name)).toEqual(["truck", "trailer"]);
+    expect(nodes[0]!.translation).toEqual([0, 0, 0]);
+    const pivot = nodes[1]!.translation!;
+    expect(pivot[2]).toBe(0); // on the centre line
+    const tree = designTree("veh-american-truck");
+    expect(tree.root.children.map((c) => c.id)).toEqual(["truck", "trailer"]);
+    const byId = new Map(walk(tree.root).map((n) => [n.id, n]));
+    // the king pin rides on the fifth wheel's top, within its plate
+    const fifth = byId.get("truck/chassis/fifth-wheel")!;
+    expect(pivot[1]).toBeCloseTo(fifth.max![1] - 0.01, 5);
+    expect(pivot[0]).toBeGreaterThan(fifth.min![0]);
+    expect(pivot[0]).toBeLessThan(fifth.max![0]);
+  });
+
+  it("lets the trailer swing clear of the sleeper", () => {
+    const tree = designTree("veh-american-truck");
+    const byId = new Map(walk(tree.root).map((n) => [n.id, n]));
+    const { json } = parseGlb(designGlb("veh-american-truck"));
+    const pivot = (json as { nodes: Array<{ translation?: number[] }> }).nodes[1]!.translation!;
+    const body = byId.get("trailer/body")!;
+    const sleeper = byId.get("truck/sleeper")!;
+    // the trailer front's corners sweep a circle about the pivot
+    const reach = Math.hypot(body.max![0] - pivot[0]!, body.max![2]!);
+    expect(pivot[0]! + reach + 0.1).toBeLessThanOrEqual(sleeper.min![0]!);
+    // and the landing gear stands behind the tractor's rear wheels
+    expect(byId.get("trailer/landing-gear")!.max![0]).toBeLessThan(byId.get("truck/drive-axle-1")!.min![0]!);
   });
 });
 

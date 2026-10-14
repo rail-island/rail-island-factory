@@ -21,6 +21,8 @@ export const VEHICLE_PALETTE: Record<string, MaterialSpec> = {
   lampHead: { color: "#f3f5f6", roughness: 0.2 },
   lampAmber: { color: "#ff9a2e", roughness: 0.3 },
   lampRed: { color: "#c8202c", roughness: 0.3 },
+  aluminum: { color: "#d9dde2", metallic: 0.25, roughness: 0.45 },
+  aluminumDark: { color: "#b3bac2", metallic: 0.25, roughness: 0.45 },
 };
 
 // --- helpers --------------------------------------------------------------------
@@ -93,7 +95,11 @@ function axle(m: MeshBuilder, x: number, drive: boolean): void {
 // A long-nose American conventional tractor in the classic Peterbilt 379 mould:
 // a long hood ending in an upright chrome grille, arched front fenders, a flat
 // split windscreen, a high-rise sleeper behind the cab, twin chrome stacks,
-// chrome fuel tanks and a tandem drive axle under a fifth wheel. 8.5 m long.
+// chrome fuel tanks and a tandem drive axle under a fifth wheel -- pulling a
+// 53 ft dry van. 8.5 m of tractor, 16.15 m of trailer, 22.2 m in all.
+//
+// An articulated vehicle: two parts, "truck" and "trailer", divided at the king
+// pin (PIVOT), which the trailer's node turns about (MeshBuilder.part).
 
 const FRONT_AXLE = 7.0;
 const DRIVE_AXLES = [0.75, 2.0];
@@ -103,10 +109,10 @@ const BODY_Y = 1.05; // the cab's and sleeper's floor
 const CAB_TOP = 2.86;
 const HOOD_X1 = 7.95;
 const FRAME_TOP = 1.0;
+/** The rotation point: the king pin, on the fifth wheel's top, on the centre line. */
+const PIVOT: [number, number, number] = [1.05, 1.18, 0];
 
-function americanTruck(): MeshBuilder {
-  const m = new MeshBuilder(VEHICLE_PALETTE);
-
+function tractor(m: MeshBuilder): void {
   m.scope("chassis", () => {
     m.scope("frame rails", () => {
       for (const s of [-1, 1]) block(m, "darkMetal", 0, 8.13, 0.72, FRAME_TOP, ...side(s, 0.38, 0.48));
@@ -115,9 +121,10 @@ function americanTruck(): MeshBuilder {
       for (const x of [0.3, 1.4, 3.2, 5.0, 7.6]) block(m, "darkMetal", x, x + 0.08, 0.78, 0.95, -0.38, 0.38);
     });
     m.scope("fifth wheel", () => {
-      block(m, "darkMetal", 1.0, 1.9, FRAME_TOP, 1.1, -0.46, 0.46);
-      m.prism("grease", ngon(14, 0.52, 0, 1.45, 0), 1.1, 1.18);
-      block(m, "rubber", 0.95, 1.45, 1.17, 1.19, -0.06, 0.06);
+      const [x, y] = PIVOT;
+      block(m, "darkMetal", x - 0.45, x + 0.45, FRAME_TOP, 1.1, -0.46, 0.46);
+      m.prism("grease", ngon(14, 0.52, 0, x, 0), 1.1, y);
+      block(m, "rubber", x - 0.5, x, y - 0.01, y + 0.01, -0.06, 0.06); // the slot the king pin rides in
     });
     m.scope("rear light bar", () => {
       block(m, "darkMetal", -0.06, 0, 0.75, 0.95, -0.52, 0.52);
@@ -300,6 +307,95 @@ function americanTruck(): MeshBuilder {
     }
   });
 
+}
+
+// --- the trailer: a 53 ft dry van ---------------------------------------------------
+
+const TRAILER_FRONT = PIVOT[0] + 0.6; // the king pin sits 0.6 m behind the front
+const TRAILER_REAR = TRAILER_FRONT - 16.15;
+const TRAILER_FLOOR = 1.2; // 2 cm above the fifth wheel
+const TRAILER_TOP = 4.11; // 13 ft 6 in
+const TRAILER_HW = 1.285; // half the body's width; rails and posts stand to 1.3
+const TRAILER_AXLES = [TRAILER_REAR + 2.3, TRAILER_REAR + 1.05];
+
+function trailer(m: MeshBuilder): void {
+  const back = TRAILER_REAR + 0.08; // the body's rear face, behind the doors
+  m.scope("body", () => {
+    block(m, "aluminum", back, TRAILER_FRONT, TRAILER_FLOOR, TRAILER_TOP - 0.03, -TRAILER_HW, TRAILER_HW);
+    // the rails run from the rear frame to 1 cm short of the front, which the
+    // body's front face owns
+    const r0 = TRAILER_REAR + 0.12;
+    block(m, "darkMetal", r0, TRAILER_FRONT - 0.01, TRAILER_FLOOR - 0.05, 1.32, -1.3, 1.3);
+    block(m, "aluminum", r0, TRAILER_FRONT - 0.01, TRAILER_TOP - 0.08, TRAILER_TOP, -1.3, 1.3);
+  });
+  m.scope("side posts", () => {
+    const n = 27;
+    for (let i = 0; i < n; i++) {
+      const x = back + 0.3 + (i / (n - 1)) * (TRAILER_FRONT - back - 0.6);
+      for (const s of [-1, 1]) block(m, "aluminumDark", x - 0.03, x + 0.03, 1.32, TRAILER_TOP - 0.08, ...side(s, TRAILER_HW - 0.01, 1.3));
+    }
+  });
+  m.scope("side markers", () => {
+    for (const x of [TRAILER_FRONT - 0.4, (TRAILER_FRONT + TRAILER_REAR) / 2, TRAILER_REAR + 0.4]) {
+      for (const s of [-1, 1]) block(m, "lampAmber", x - 0.05, x + 0.05, 1.21, 1.27, ...side(s, 1.295, 1.32));
+    }
+  });
+  m.scope("rear", () => {
+    const x0 = TRAILER_REAR;
+    const x1 = TRAILER_REAR + 0.12;
+    m.scope("frame", () => {
+      for (const s of [-1, 1]) block(m, "darkMetal", x0, x1, TRAILER_FLOOR - 0.1, TRAILER_TOP, ...side(s, 1.18, 1.3));
+      block(m, "darkMetal", x0, x1, 3.98, TRAILER_TOP, -1.18, 1.18);
+      block(m, "darkMetal", x0, x1, TRAILER_FLOOR - 0.1, 1.32, -1.18, 1.18);
+    });
+    m.scope("doors", () => {
+      block(m, "aluminum", x0 + 0.03, back + 0.02, 1.32, 3.98, -1.18, 1.18);
+      block(m, "darkMetal", x0 + 0.02, x0 + 0.05, 1.32, 3.98, -0.01, 0.01); // the seam
+    });
+    m.scope("lock bars", () => {
+      for (const z of [-0.9, -0.3, 0.3, 0.9]) block(m, "chrome", x0 + 0.01, x0 + 0.04, 1.4, 3.9, z - 0.015, z + 0.015);
+    });
+    m.scope("tail lights", () => {
+      for (const s of [-1, 1]) block(m, "lampRed", x0 - 0.02, x0 + 0.01, 1.15, 1.27, ...side(s, 0.85, 1.12));
+    });
+    m.scope("underride guard", () => {
+      block(m, "darkMetal", x0 + 0.08, x0 + 0.2, 0.45, 0.6, -1.2, 1.2);
+      for (const s of [-1, 1]) block(m, "darkMetal", x0 + 0.1, x0 + 0.18, 0.6, TRAILER_FLOOR, ...side(s, 0.55, 0.63));
+    });
+  });
+  m.scope("landing gear", () => {
+    const x = -0.6;
+    for (const s of [-1, 1]) {
+      block(m, "darkMetal", x - 0.06, x + 0.06, 0.3, TRAILER_FLOOR, ...side(s, 0.95, 1.07));
+      block(m, "darkMetal", x - 0.15, x + 0.15, 0.25, 0.3, ...side(s, 0.88, 1.14));
+    }
+    block(m, "darkMetal", x - 0.02, x + 0.02, 0.7, 0.76, -0.95, 0.95);
+    block(m, "chrome", x - 0.02, x + 0.02, 0.9, 0.94, ...side(1, 1.07, 1.25)); // the crank
+  });
+  m.scope("slider", () => {
+    for (const s of [-1, 1]) {
+      block(m, "darkMetal", TRAILER_AXLES[1]! - 0.7, TRAILER_AXLES[0]! + 0.7, 0.95, TRAILER_FLOOR, ...side(s, 0.42, 0.52));
+    }
+  });
+  TRAILER_AXLES.forEach((x, i) => m.scope(`axle ${i + 1}`, () => {
+    axle(m, x, false);
+    for (const s of [-1, 1]) {
+      m.scope(s > 0 ? "right duals" : "left duals", () => {
+        wheel(m, x, ...side(s, 0.56, 0.84), null);
+        wheel(m, x, ...side(s, 0.87, 1.15), s);
+      });
+    }
+  }));
+  m.scope("mudflaps", () => {
+    const x = TRAILER_AXLES[1]! - 0.75;
+    for (const s of [-1, 1]) block(m, "rubber", x - 0.03, x, 0.2, TRAILER_FLOOR, ...side(s, 0.55, 1.18));
+  });
+}
+
+function americanTruck(): MeshBuilder {
+  const m = new MeshBuilder(VEHICLE_PALETTE);
+  m.part("truck", [0, 0, 0], () => tractor(m));
+  m.part("trailer", PIVOT, () => trailer(m));
   return m;
 }
 

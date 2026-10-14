@@ -41,7 +41,8 @@ lofted to itself, a frustum an n-gon lofted to a smaller one, and `spire()`
 closes a ring to an apex. Ring helpers are `rect` (optionally turned about +Y),
 `ngon`, `chamferedRect`, `grow` (offset outward, for slabs that stand proud of a
 wall) and `scaleRing`. `sweep()` is the same loft laid on its side, along x or
-z - what the vehicles are built from ([vehicles.md](vehicles.md)).
+z - what the vehicles are built from, and `part()` splits a model into named
+nodes, an articulated vehicle's truck and trailer ([vehicles.md](vehicles.md)).
 
 Geometry is a flat-shaded, non-indexed triangle soup, one primitive per
 material, with a plain `baseColorFactor` (no textures). The palette lives in
