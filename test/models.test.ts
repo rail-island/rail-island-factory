@@ -313,7 +313,7 @@ describe("the vehicles", () => {
     expect(s.min[2]).toBeCloseTo(-s.max[2], 5); // centred across
     expect(width).toBeLessThanOrEqual(2.7); // 2.6 m legal width, mirrors aside
     expect(s.max[1]).toBeLessThanOrEqual(4.115); // 13 ft 6 in
-    // the road-vehicle budget (.claude/skills/road-vehicle)
+    // the road-vehicle budget (.agents/skills/road-vehicle)
     expect(s.triangles).toBeLessThanOrEqual(10_000);
     expect(faces(glb).length).toBe(s.triangles);
     const { json } = parseGlb(glb);

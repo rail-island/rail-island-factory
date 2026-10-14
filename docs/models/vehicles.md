@@ -4,7 +4,7 @@
 American truck), their triangle budget and conventions, articulated vehicles'
 truck and trailer parts, the `sweep` primitive they are mostly built from, and
 how to add one.
-**Code** - `generator/vehicles.ts`, `generator/design.ts`, `generator/meshCore.ts` (`sweep`, `part`), `generator/meshBuilder.ts` (`toGlb`), `src/viewerHighlight.ts`, `test/models.test.ts`, `test/viewerHighlight.test.ts`, `.claude/skills/road-vehicle/SKILL.md`
+**Code** - `generator/vehicles.ts`, `generator/design.ts`, `generator/meshCore.ts` (`sweep`, `part`), `generator/meshBuilder.ts` (`toGlb`), `src/viewerHighlight.ts`, `test/models.test.ts`, `test/viewerHighlight.test.ts`, `.agents/skills/road-vehicle/SKILL.md`
 **See also** - [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md)
 
 ## The designs
@@ -24,7 +24,7 @@ for the game's vehicle import; settle them when the webapp side is written.
 shipped. Vehicle ids start with `veh-`.
 
 Agents adding or changing a vehicle follow the `road-vehicle` skill
-(`.claude/skills/road-vehicle/SKILL.md`), the checklist for this page.
+(`.agents/skills/road-vehicle/SKILL.md`), the checklist for this page.
 
 ## Budget
 

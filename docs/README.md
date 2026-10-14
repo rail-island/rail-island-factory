@@ -2,7 +2,7 @@
 
 **Covers** - the index of this repository's documentation, one row per file.
 **Code** - none
-**See also** - [../README.md](../README.md), [../CLAUDE.md](../CLAUDE.md)
+**See also** - [../README.md](../README.md), [../AGENTS.md](../CLAUDE.md)
 
 | File | What it covers |
 |---|---|
