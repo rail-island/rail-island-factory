@@ -24,6 +24,9 @@ importers:
       '@types/three':
         specifier: ^0.160.0
         version: 0.160.0
+      esbuild:
+        specifier: ^0.25.12
+        version: 0.25.12
       pngjs:
         specifier: ^7.0.0
         version: 7.0.0

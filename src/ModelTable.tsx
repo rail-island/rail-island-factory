@@ -1,14 +1,36 @@
 // The wide layout: a comparison grid. Headers sort, as the toolbar's <select>
-// does; both drive the same state. The whole row opens the model.
+// does; both drive the same state. The whole row opens the model, except a GLB or
+// JS size, which is a link that downloads that file.
 
-import { For } from "solid-js";
-import { COLUMNS, cellText, type Column, type Row, type SortDir } from "./catalogQuery";
+import { For, Show } from "solid-js";
+import { COLUMNS, cellFile, cellText, type Column, type Row, type SortDir } from "./catalogQuery";
 import { Thumb } from "./Thumb";
 
 const TABLE_COLUMNS = COLUMNS.filter((c) => c.table);
 
 function ariaSort(active: boolean, dir: SortDir): "ascending" | "descending" | "none" {
   return !active ? "none" : dir === "asc" ? "ascending" : "descending";
+}
+
+/** A cell's text; for a GLB or JS size, a link that downloads the file without opening the model. */
+export function FileCell(props: { row: Row; col: Column }) {
+  const file = () => cellFile(props.row, props.col);
+  return (
+    <Show when={file()} fallback={cellText(props.row, props.col)}>
+      {(f) => (
+        <a
+          class="factory-download"
+          href={f().href}
+          download={f().name}
+          title={`Download ${f().name}`}
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
+          {cellText(props.row, props.col)}
+        </a>
+      )}
+    </Show>
+  );
 }
 
 export function ModelTable(props: {
@@ -56,7 +78,9 @@ export function ModelTable(props: {
                         <span class="factory-rowid">{r.id}</span>
                       </th>
                     ) : (
-                      <td class={c.type === "text" ? "" : "factory-num"}>{cellText(r, c)}</td>
+                      <td class={c.type === "text" ? "" : "factory-num"}>
+                        <FileCell row={r} col={c} />
+                      </td>
                     )
                   }
                 </For>

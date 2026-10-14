@@ -22,8 +22,11 @@ missing file with `index.html`, so the response type is checked too).
 ## The listing
 
 - **Wide (900 px and up): a table.** Thumbnail, title with the id beneath it, city
-  pool, triangles, vertices, GLB size, primitives, materials, width, depth,
+  pool, triangles, vertices, GLB size, JS size, primitives, materials, width, depth,
   height and license. Every header sorts; a second click flips the direction.
+  **The GLB and JS sizes are links**: a click downloads that file (`glb/<id>.glb`,
+  `js/<id>.js`, [../models/js-format.md](../models/js-format.md)) without opening the model. The model page's
+  spec list links them too and adds the gzip sizes.
 - **Narrow: cards.** Title and pool chip, then triangles, vertices and GLB size -
   plus the sorted-by column when it is something else, so a reorder never hides
   the number behind it.

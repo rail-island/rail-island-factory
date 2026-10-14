@@ -55,6 +55,12 @@ export interface CatalogRecord extends MetaEntry {
   glbUrl: string;
   thumbUrl: string;
   glbBytes: number;
+  /** The GLB as gzip -9 would send it. */
+  glbGzipBytes: number;
+  /** The standalone JS model (js/<id>.js, see jsModel.ts). */
+  jsUrl: string;
+  jsBytes: number;
+  jsGzipBytes: number;
   thumbBytes: number;
   triangles: number;
   vertices: number;
@@ -74,6 +80,9 @@ export interface ModelCatalog {
 /** What the build measured for one model (see generate.ts). */
 export interface BuiltFacts {
   glbBytes: number;
+  glbGzipBytes: number;
+  jsBytes: number;
+  jsGzipBytes: number;
   thumbBytes: number;
   triangles: number;
   vertices: number;
@@ -122,6 +131,10 @@ export function catalogRecord(entry: MetaEntry, facts: BuiltFacts): CatalogRecor
     glbUrl: `glb/${entry.glb}`,
     thumbUrl: `thumbs/${entry.thumb}`,
     glbBytes: facts.glbBytes,
+    glbGzipBytes: facts.glbGzipBytes,
+    jsUrl: `js/${entry.id}.js`,
+    jsBytes: facts.jsBytes,
+    jsGzipBytes: facts.jsGzipBytes,
     thumbBytes: facts.thumbBytes,
     triangles: facts.triangles,
     vertices: facts.vertices,

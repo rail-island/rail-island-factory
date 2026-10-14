@@ -32,6 +32,8 @@ export interface Column {
   /** In the wide table. Every column is in the detail panel and the sort control regardless. */
   table: boolean;
   value: (r: CatalogRecord) => number | string | null;
+  /** Site-relative URL of the file the cell is the size of; the cell then downloads it. */
+  file?: (r: CatalogRecord) => string;
 }
 
 // The order here is the order of the table's columns, of the sort <select> and of
@@ -43,7 +45,10 @@ export const COLUMNS: readonly Column[] = [
   { key: "group", label: "City pool", unit: null, type: "text", dir: "asc", table: true, value: (r) => r.group },
   { key: "triangles", label: "Triangles", unit: null, type: "num", dir: "desc", table: true, value: (r) => r.triangles },
   { key: "vertices", label: "Vertices", unit: null, type: "num", dir: "desc", table: true, value: (r) => r.vertices },
-  { key: "glbBytes", label: "GLB", unit: null, type: "bytes", dir: "desc", table: true, value: (r) => r.glbBytes },
+  { key: "glbBytes", label: "GLB", unit: null, type: "bytes", dir: "desc", table: true, value: (r) => r.glbBytes, file: (r) => r.glbUrl },
+  { key: "glbGzipBytes", label: "GLB gzip", unit: null, type: "bytes", dir: "desc", table: false, value: (r) => r.glbGzipBytes },
+  { key: "jsBytes", label: "JS", unit: null, type: "bytes", dir: "desc", table: true, value: (r) => r.jsBytes, file: (r) => r.jsUrl },
+  { key: "jsGzipBytes", label: "JS gzip", unit: null, type: "bytes", dir: "desc", table: false, value: (r) => r.jsGzipBytes },
   { key: "primitives", label: "Prims", unit: null, type: "num", dir: "desc", table: true, value: (r) => r.primitives },
   { key: "materials", label: "Mats", unit: null, type: "num", dir: "desc", table: true, value: (r) => r.materials },
   { key: "thumbBytes", label: "Thumbnail", unit: null, type: "bytes", dir: "desc", table: false, value: (r) => r.thumbBytes },
@@ -120,6 +125,12 @@ export function cellText(r: CatalogRecord, col: Column): string {
   if (v == null || v === "") return "-";
   if (typeof v === "number") return col.type === "bytes" ? formatBytes(v) : formatNumber(v);
   return v;
+}
+
+/** Where a cell's file is downloaded from, or null when the column has none. */
+export function cellFile(r: CatalogRecord, col: Column): { href: string; name: string } | null {
+  const url = col.file?.(r);
+  return url ? { href: `/${url}`, name: url.slice(url.lastIndexOf("/") + 1) } : null;
 }
 
 // ------------------------------------------------------------- the URL state

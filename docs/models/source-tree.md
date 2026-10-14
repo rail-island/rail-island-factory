@@ -3,7 +3,7 @@
 **Covers** - how a design records the tree of named scopes and primitive calls
 that built it, the `export/tree/<id>.json` file, and how the site's Source tab
 maps tree nodes to triangles for highlighting and picking.
-**Code** - `generator/sourceTree.ts`, `generator/meshBuilder.ts` (`scope`, `sourceTree`),
+**Code** - `generator/sourceTree.ts`, `generator/meshBuilder.ts` (`scope`, `sourceTree`; the geometry itself is `meshCore.ts`),
 `generator/skyscrapers.ts`, `generator/vehicles.ts`, `generator/generate.ts` (`designTree`), `src/sourceTreeView.ts`,
 `src/viewerHighlight.ts`, `src/SourceTreePanel.tsx`, `test/models.test.ts`,
 `test/sourceTreeView.test.ts`, `test/viewerHighlight.test.ts`

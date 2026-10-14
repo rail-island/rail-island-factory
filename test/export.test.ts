@@ -63,10 +63,12 @@ describe("exportVehicleMeta", () => {
 describe("catalogRecord", () => {
   it("joins the meta entry with the built facts and the site URLs", () => {
     const r = catalogRecord(metaEntry(SKYSCRAPERS[0]!), {
-      glbBytes: 1000, thumbBytes: 200, triangles: 12, vertices: 36, primitives: 2, materials: 2,
+      glbBytes: 1000, glbGzipBytes: 300, jsBytes: 80, jsGzipBytes: 50, thumbBytes: 200, triangles: 12, vertices: 36, primitives: 2, materials: 2,
       min: [-1.0004, 0, -2], max: [1, 30.1234567, 2],
     });
     expect(r.glbUrl).toBe(`glb/${SKYSCRAPERS[0]!.id}.glb`);
+    expect(r.jsUrl).toBe(`js/${SKYSCRAPERS[0]!.id}.js`);
+    expect([r.glbGzipBytes, r.jsBytes, r.jsGzipBytes]).toEqual([300, 80, 50]);
     expect(r.thumbUrl).toBe(`thumbs/${SKYSCRAPERS[0]!.id}.png`);
     expect([r.sizeX, r.sizeY, r.sizeZ]).toEqual([2, 30.123, 4]);
     expect(r.triangles).toBe(12);
@@ -74,10 +76,10 @@ describe("catalogRecord", () => {
 });
 
 describe("buildExport", () => {
-  it("writes the meta.json files and catalog.json that agree with the files beside them", () => {
+  it("writes the meta.json files and catalog.json that agree with the files beside them", async () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "factory-export-"));
     try {
-      buildExport(dir);
+      await buildExport(dir);
       const meta = JSON.parse(fs.readFileSync(path.join(dir, META_FILE), "utf8")) as ExportMeta;
       const catalog = JSON.parse(fs.readFileSync(path.join(dir, CATALOG_FILE), "utf8")) as ModelCatalog;
       const vehicles = JSON.parse(fs.readFileSync(path.join(dir, VEHICLE_META_FILE), "utf8")) as VehicleExportMeta;
@@ -88,6 +90,8 @@ describe("buildExport", () => {
       for (const r of catalog.records) {
         expect(fs.statSync(path.join(dir, r.glbUrl)).size).toBe(r.glbBytes);
         expect(fs.statSync(path.join(dir, r.thumbUrl)).size).toBe(r.thumbBytes);
+        expect(fs.statSync(path.join(dir, r.jsUrl)).size).toBe(r.jsBytes);
+        expect(r.jsBytes).toBeLessThan(r.glbBytes);
         expect(r.triangles).toBeGreaterThan(0);
         const listed = meta.buildings.find((b) => b.id === r.id) ?? vehicles.vehicles.find((v) => v.id === r.id);
         expect(r).toMatchObject(listed!);
@@ -95,7 +99,7 @@ describe("buildExport", () => {
       }
       // deterministic: a second build writes the same documents
       const before = fs.readFileSync(path.join(dir, CATALOG_FILE), "utf8");
-      buildExport(dir);
+      await buildExport(dir);
       expect(fs.readFileSync(path.join(dir, CATALOG_FILE), "utf8")).toBe(before);
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });

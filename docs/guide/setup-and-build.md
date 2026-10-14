@@ -42,7 +42,7 @@ design is not re-rendered at all (see [../models/export.md](../models/export.md)
 
 ## Tests
 
-`pnpm test` runs five suites:
+`pnpm test` runs six suites:
 
 - `test/models.test.ts` - the mesh builder winds faces outward (three.js culls
   back faces, so an inward wall is invisible in the game and the viewer), sweeps
@@ -55,7 +55,9 @@ design is not re-rendered at all (see [../models/export.md](../models/export.md)
   the GLB.
 - `test/export.test.ts` - `skyscrapers.meta.json`, `vehicles.meta.json` and `catalog.json` match the
   designs and the files beside them, and a rebuild writes the same documents.
-- `test/catalogQuery.test.ts` - the site's search, sort, formatting and URL state.
+- `test/jsModel.test.ts` - each design's standalone JS model builds the GLB's triangles, colours and parts
+  with real three.js, and is standalone and smaller ([../models/js-format.md](../models/js-format.md)).
+- `test/catalogQuery.test.ts` - the site's search, sort, formatting, URL state and download links.
 - `test/sourceTreeView.test.ts` - the Source tab's tree index, ranges and labels.
 - `test/viewerHighlight.test.ts` - the preview's highlight groups and picking, on
   real GLBs loaded with three's GLTFLoader (no WebGL).

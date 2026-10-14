@@ -392,7 +392,7 @@ function trailer(m: MeshBuilder): void {
   });
 }
 
-function americanTruck(): MeshBuilder {
+export function americanTruck(): MeshBuilder {
   const m = new MeshBuilder(VEHICLE_PALETTE);
   m.part("truck", [0, 0, 0], () => tractor(m));
   m.part("trailer", PIVOT, () => trailer(m));

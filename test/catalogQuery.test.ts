@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from "vitest";
 import {
-  COLUMNS, DEFAULT_SORT, cellText, column, compareRows, formatBytes, parseView, prepareRows, queryRows, serializeView,
+  COLUMNS, DEFAULT_SORT, cellFile, cellText, column, compareRows, formatBytes, parseView, prepareRows, queryRows, serializeView,
   type CatalogRecord,
 } from "../src/catalogQuery";
 
@@ -10,7 +10,8 @@ function rec(id: string, title: string, triangles: number, extra: Partial<Catalo
   return {
     id, title, category: "Commercial", group: "skyscraper_c", glb: `${id}.glb`, thumb: `${id}.png`,
     defaultScale: 0.5, license: "CC0", author: "Rail Island", source: "Rail Island",
-    glbUrl: `glb/${id}.glb`, thumbUrl: `thumbs/${id}.png`, glbBytes: triangles * 72, thumbBytes: 100,
+    glbUrl: `glb/${id}.glb`, thumbUrl: `thumbs/${id}.png`, glbBytes: triangles * 72, glbGzipBytes: triangles * 6, jsUrl: `js/${id}.js`,
+    jsBytes: triangles * 2, jsGzipBytes: triangles, thumbBytes: 100,
     triangles, vertices: triangles * 3, primitives: 3, materials: 3, sizeX: 20, sizeY: 80, sizeZ: 20,
     ...extra,
   };
@@ -83,5 +84,20 @@ describe("the URL state", () => {
   it("gives a column its own starting direction and ignores an unknown sort", () => {
     expect(parseView("?sort=triangles").dir).toBe("desc");
     expect(parseView("?sort=bogus&dir=sideways")).toEqual({ q: "", sort: DEFAULT_SORT, dir: "asc", model: null, tab: "specs", node: null });
+  });
+});
+
+describe("downloads", () => {
+  it("makes the GLB and JS sizes links to their files, and no other column", () => {
+    const r = ROWS[0]!;
+    expect(cellFile(r, column("glbBytes")!)).toEqual({ href: "/glb/sky-pagoda.glb", name: "sky-pagoda.glb" });
+    expect(cellFile(r, column("jsBytes")!)).toEqual({ href: "/js/sky-pagoda.js", name: "sky-pagoda.js" });
+    for (const c of COLUMNS.filter((c) => c.key !== "glbBytes" && c.key !== "jsBytes")) expect(cellFile(r, c)).toBeNull();
+  });
+
+  it("lists the JS size and the gzip sizes as sortable columns", () => {
+    expect(column("jsBytes")!.table).toBe(true);
+    const sorted = queryRows(ROWS, "", "jsGzipBytes", "desc").map((r) => r.id);
+    expect(sorted).toEqual(["sky-twin-towers", "sky-art-deco", "sky-pagoda"]);
   });
 });

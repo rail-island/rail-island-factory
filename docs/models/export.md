@@ -4,7 +4,7 @@
 `vehicles.meta.json` contracts the game is meant to import, the site's `catalog.json`, and the offline
 thumbnail renderer.
 **Code** - `generator/generate.ts`, `generator/catalog.ts`, `generator/renderGlbThumb.ts`,
-`generator/glbStats.ts`, `generator/coplanar.ts`, `generator/glbTriangles.ts`, `generator/glbParse.ts`, `test/export.test.ts`
+`generator/jsModel.ts`, `generator/glbStats.ts`, `generator/coplanar.ts`, `generator/glbTriangles.ts`, `generator/glbParse.ts`, `test/export.test.ts`
 **See also** - [skyscrapers.md](skyscrapers.md), [vehicles.md](vehicles.md), [../site/catalog-site.md](../site/catalog-site.md),
 [../guide/setup-and-build.md](../guide/setup-and-build.md)
 
@@ -17,6 +17,7 @@ and `pnpm dev`) writes the gitignored `export/`:
 |---|---|
 | `export/glb/<id>.glb` | the model (a vehicle's may have parts - [vehicles.md](vehicles.md)) |
 | `export/thumbs/<id>.png` | a 512 px square thumbnail, transparent background |
+| `export/js/<id>.js` | the model as one standalone JS file ([js-format.md](js-format.md)) |
 | `export/tree/<id>.json` | the procedural source tree, for the site only ([source-tree.md](source-tree.md)) |
 | `export/skyscrapers.meta.json` | one game-catalog entry per skyscraper - the import contract |
 | `export/vehicles.meta.json` | the same per vehicle, under `vehicles` |
@@ -24,13 +25,13 @@ and `pnpm dev`) writes the gitignored `export/`:
 
 `export/` is also Vite's `publicDir`, so `vite build` copies it into `dist/` as
 it stands and the deployed site serves the very files the game would import, at
-`/glb/...`, `/thumbs/...`, `/skyscrapers.meta.json`, `/vehicles.meta.json` and `/catalog.json` (and the
+`/glb/...`, `/js/...`, `/thumbs/...`, `/skyscrapers.meta.json`, `/vehicles.meta.json` and `/catalog.json` (and the
 site-only `/tree/...`, which the game ignores).
 
 **Incremental.** An unchanged design produces byte-identical GLB bytes; the
 generator then leaves the file and its thumbnail alone. The thumbnail - a
 software rasterizer, the slow part - is re-rendered only when the GLB changed or
-the PNG is missing. A file of a design that no longer exists is deleted, so a
+the PNG is missing. A JS file is rewritten only when its text changed. A file of a design that no longer exists is deleted, so a
 dropped id cannot linger. A tree file is rewritten only when its text changed.
 The JSON documents are rewritten every run and
 carry no timestamp, so they are deterministic too.
@@ -87,7 +88,7 @@ final fields.
 `{ version: 1, records: CatalogRecord[] }`, one record per design - the
 skyscrapers, then the vehicles. A record is its meta entry plus what
 only the built files know: `glbUrl`/`thumbUrl` (site-relative), `glbBytes`,
-`thumbBytes`, `triangles`, `vertices`, `primitives` (draw calls), `materials`, and
+`thumbBytes`, `glbGzipBytes`, `jsUrl`, `jsBytes`, `jsGzipBytes` (the standalone JS model, [js-format.md](js-format.md); gzip sizes are gzip -9), `triangles`, `vertices`, `primitives` (draw calls), `materials`, and
 the bounding-box extents `sizeX`/`sizeY`/`sizeZ` in metres (before
 `defaultScale`), rounded to the millimetre.
 

@@ -2,7 +2,7 @@
 
 **Covers** - the ten procedurally generated skyscrapers, the mesh builder they
 are made with, and how to add or change a design.
-**Code** - `generator/skyscrapers.ts`, `generator/meshBuilder.ts`, `generator/coplanar.ts`, `test/models.test.ts`
+**Code** - `generator/skyscrapers.ts`, `generator/meshCore.ts`, `generator/meshBuilder.ts`, `generator/coplanar.ts`, `test/models.test.ts`
 **See also** - [export.md](export.md), [source-tree.md](source-tree.md), [vehicles.md](vehicles.md), [../site/catalog-site.md](../site/catalog-site.md)
 
 ## The designs
@@ -35,7 +35,9 @@ shipped.
 
 ## The mesh builder
 
-`meshBuilder.ts` is deliberately small. Everything is a **loft** between two
+Each design is an exported function of `skyscrapers.ts` (`glassOffice`, `artDeco`, ...): the JS bundle imports it by name.
+
+The geometry (`meshCore.ts`; `meshBuilder.ts` adds the recording and the GLB, [js-format.md](js-format.md)) is deliberately small. Everything is a **loft** between two
 horizontal rings of `(x, z)` points at two heights: a box is a four-point ring
 lofted to itself, a frustum an n-gon lofted to a smaller one, and `spire()`
 closes a ring to an apex. Ring helpers are `rect` (optionally turned about +Y),

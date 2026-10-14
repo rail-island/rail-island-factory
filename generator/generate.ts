@@ -3,6 +3,8 @@
 //
 //   export/glb/<id>.glb             the model
 //   export/thumbs/<id>.png          a 512 px thumbnail (renderGlbThumb.ts)
+//   export/js/<id>.js               the model as one standalone JS file, build(THREE)
+//                                   returning a THREE.Group (jsModel.ts)
 //   export/tree/<id>.json           the procedural source tree, for the site only
 //                                   (sourceTree.ts)
 //   export/skyscrapers.meta.json    the skyscrapers' catalog entries, for the game to import
@@ -29,6 +31,7 @@ import { SKYSCRAPERS, SKYSCRAPER_CATALOG } from "./skyscrapers.ts";
 import { VEHICLES, VEHICLE_CATALOG } from "./vehicles.ts";
 import type { ProceduralDesign } from "./design.ts";
 import { glbStats } from "./glbStats.ts";
+import { JS_DIR, bundleDesign, gzipSize, writeIfChanged } from "./jsModel.ts";
 import { findCoplanarOverlaps, type CoplanarOverlap } from "./coplanar.ts";
 import {
   CATALOG_FILE, META_FILE, VEHICLE_META_FILE, catalogRecord, exportMeta, exportVehicleMeta, metaEntry,
@@ -49,6 +52,12 @@ const THUMB_SIZE = 512;
 export const DESIGNS: ReadonlyMap<string, ProceduralDesign> = new Map([...SKYSCRAPERS, ...VEHICLES].map((d) => [d.id, d]));
 
 const VEHICLE_IDS = new Set(VEHICLES.map((d) => d.id));
+
+/** The generator module that exports each design's build function (the JS bundle's entry). */
+const DESIGN_SOURCE = new Map<string, string>([
+  ...SKYSCRAPERS.map((d) => [d.id, "skyscrapers.ts"] as const),
+  ...VEHICLES.map((d) => [d.id, "vehicles.ts"] as const),
+]);
 
 /**
  * A built design's GLB bytes. The generator string is part of the bytes; a
@@ -165,9 +174,35 @@ export function generateModels(
   return out;
 }
 
+/**
+ * Writes `dir`/js/<id>.js for every design (a file is rewritten only when its
+ * text changed) and removes the files of designs that no longer exist. Returns
+ * each file's text by id.
+ */
+export async function generateJsModels(
+  dir = EXPORT_DIR,
+  designs: readonly ProceduralDesign[] = [...DESIGNS.values()],
+): Promise<Map<string, string>> {
+  const jsDir = path.join(dir, JS_DIR);
+  fs.mkdirSync(jsDir, { recursive: true });
+  const out = new Map<string, string>();
+  for (const design of designs) {
+    const source = DESIGN_SOURCE.get(design.id);
+    if (!source) throw new Error(`no source module for design "${design.id}"`);
+    const text = `${await bundleDesign(design, source)}`;
+    writeIfChanged(path.join(jsDir, `${design.id}.js`), text);
+    out.set(design.id, text);
+  }
+  for (const name of fs.readdirSync(jsDir)) {
+    if (name.endsWith(".js") && !out.has(name.slice(0, -3))) fs.rmSync(path.join(jsDir, name));
+  }
+  return out;
+}
+
 /** The whole export: the models, then the two meta.json files and the site's catalog.json. */
-export function buildExport(dir = EXPORT_DIR): { models: GeneratedModel[]; catalog: ModelCatalog } {
+export async function buildExport(dir = EXPORT_DIR): Promise<{ models: GeneratedModel[]; catalog: ModelCatalog; js: Map<string, string> }> {
   const models = generateModels(dir);
+  const js = await generateJsModels(dir);
   const designs = [...DESIGNS.values()];
   fs.writeFileSync(path.join(dir, META_FILE), `${JSON.stringify(exportMeta(SKYSCRAPERS), null, 2)}\n`);
   fs.writeFileSync(path.join(dir, VEHICLE_META_FILE), `${JSON.stringify(exportVehicleMeta(VEHICLES), null, 2)}\n`);
@@ -178,21 +213,26 @@ export function buildExport(dir = EXPORT_DIR): { models: GeneratedModel[]; catal
       const bytes = fs.readFileSync(built.glb);
       const stats = glbStats(bytes);
       const fields = VEHICLE_IDS.has(design.id) ? VEHICLE_CATALOG : SKYSCRAPER_CATALOG;
+      const jsText = js.get(design.id)!;
       return catalogRecord(metaEntry(design, fields), {
         ...stats,
         glbBytes: bytes.length,
+        glbGzipBytes: gzipSize(bytes),
+        jsBytes: Buffer.byteLength(jsText),
+        jsGzipBytes: gzipSize(jsText),
         thumbBytes: fs.statSync(built.thumb).size,
       });
     }),
   };
   fs.writeFileSync(path.join(dir, CATALOG_FILE), `${JSON.stringify(catalog, null, 2)}\n`);
-  return { models, catalog };
+  return { models, catalog, js };
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   let models: GeneratedModel[];
+  let catalog: ModelCatalog;
   try {
-    ({ models } = buildExport());
+    ({ models, catalog } = await buildExport());
   } catch (e) {
     if (!(e instanceof ZFightingError)) throw e;
     console.error(e.message);
@@ -201,5 +241,10 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   for (const m of models) {
     console.log(`${m.id.padEnd(24)} ${String(m.triangles).padStart(5)} tris ${m.changed ? "(written)" : "(unchanged)"}`);
   }
-  console.log(`Export: ${path.relative(process.cwd(), EXPORT_DIR) || "."} (${models.length} models)`);
+  console.log(`\n${"model".padEnd(24)} ${"GLB".padStart(9)} ${"GLB gz".padStart(8)} ${"JS".padStart(8)} ${"JS gz".padStart(8)}`);
+  for (const r of catalog.records) {
+    const kb = (n: number): string => `${(n / 1024).toFixed(1)} KB`.padStart(9);
+    console.log(`${r.id.padEnd(24)} ${kb(r.glbBytes)} ${kb(r.glbGzipBytes)} ${kb(r.jsBytes)} ${kb(r.jsGzipBytes)}`);
+  }
+  console.log(`\nExport: ${path.relative(process.cwd(), EXPORT_DIR) || "."} (${models.length} models)`);
 }

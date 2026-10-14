@@ -559,3 +559,15 @@ body {
     width: 340px;
   }
 }
+
+/* A GLB or JS size in the table or the spec list: a link that downloads the file. */
+.factory-download {
+  color: var(--m-primary, inherit);
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+
+.factory-download:hover,
+.factory-download:focus-visible {
+  text-decoration: underline;
+}

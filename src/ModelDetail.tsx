@@ -6,8 +6,9 @@
 // (SourceTreePanel), fetched from tree/<id>.json only once that tab is open.
 
 import { For, Match, Suspense, Switch, createEffect, createMemo, createResource, lazy, onCleanup } from "solid-js";
-import { COLUMNS, cellText, type DetailTab, type Row } from "./catalogQuery";
+import { COLUMNS, type DetailTab, type Row } from "./catalogQuery";
 import { indexTree, type SourceTree } from "./sourceTreeView";
+import { FileCell } from "./ModelTable";
 import { SourceTreePanel } from "./SourceTreePanel";
 
 // three, GLTFLoader and OrbitControls arrive only once somebody opens a model.
@@ -101,7 +102,7 @@ export function ModelDetail(props: {
                   <div class="factory-spec">
                     <dt>{c.label}</dt>
                     <dd>
-                      {cellText(props.record, c)}
+                      <FileCell row={props.record} col={c} />
                       {c.unit ? ` ${c.unit}` : ""}
                     </dd>
                   </div>

@@ -21,7 +21,7 @@ a GLB with a thumbnail and a catalog entry, in an export folder that the game
 
 ```bash
 pnpm install
-pnpm build:models   # generate export/ (GLBs, thumbnails, meta.json, catalog.json)
+pnpm build:models   # generate export/ (GLBs, standalone JS models, thumbnails, meta.json, catalog.json)
 pnpm dev            # the site on http://localhost:5173
 pnpm test           # Vitest
 pnpm build          # models + typecheck + production site in dist/

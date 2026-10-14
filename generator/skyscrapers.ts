@@ -104,7 +104,7 @@ function curtainWall(
 // site's source tree reads like the design (test/models.test.ts checks it).
 
 /** A square blue-glass office tower: stone podium, curtain wall, crown, mast. */
-function glassOffice(): MeshBuilder {
+export function glassOffice(): MeshBuilder {
   const m = new MeshBuilder(PALETTE);
   m.scope("podium", () => {
     m.box("dark", 0, 0, 30, 30, 0, 4);
@@ -126,7 +126,7 @@ function glassOffice(): MeshBuilder {
 }
 
 /** A 1930s setback tower in pale stone with dark window strips and a steel spire. */
-function artDeco(): MeshBuilder {
+export function artDeco(): MeshBuilder {
   const m = new MeshBuilder(PALETTE);
   m.scope("plinth", () => m.box("stoneDark", 0, 0, 33, 29, 0, 4));
   const tiers: Array<[number, number, number, number, number]> = [
@@ -155,7 +155,7 @@ function artDeco(): MeshBuilder {
 }
 
 /** An octagonal tower of tapering gold-glass segments, each with a flared rim. */
-function pagoda(): MeshBuilder {
+export function pagoda(): MeshBuilder {
   const m = new MeshBuilder(PALETTE);
   const rot = Math.PI / 8;
   m.scope("base", () => {
@@ -189,7 +189,7 @@ function pagoda(): MeshBuilder {
 }
 
 /** A brick apartment high-rise with balconies and a timber water tank on the roof. */
-function brickResidential(): MeshBuilder {
+export function brickResidential(): MeshBuilder {
   const m = new MeshBuilder(PALETTE);
   const w = 24;
   const d = 18;
@@ -230,7 +230,7 @@ function brickResidential(): MeshBuilder {
 }
 
 /** Twin round towers of stepped glass drums joined by a sky bridge. */
-function twinTowers(): MeshBuilder {
+export function twinTowers(): MeshBuilder {
   const m = new MeshBuilder(PALETTE);
   m.scope("podium", () => {
     m.box("dark", 0, 0, 44, 22, 0, 4);
@@ -266,7 +266,7 @@ function twinTowers(): MeshBuilder {
 }
 
 /** A white-and-teal tower whose floor plates turn a little each storey. */
-function twisted(): MeshBuilder {
+export function twisted(): MeshBuilder {
   const m = new MeshBuilder(PALETTE);
   m.scope("plinth", () => m.box("dark", 0, 0, 28, 28, 0, 6));
   const floors = 36;
@@ -292,7 +292,7 @@ function twisted(): MeshBuilder {
 }
 
 /** A black-glass slab with bronze mullions, a recessed glass lobby and a plant floor. */
-function darkSlab(): MeshBuilder {
+export function darkSlab(): MeshBuilder {
   const m = new MeshBuilder(PALETTE);
   const w = 28;
   const d = 15;
@@ -318,7 +318,7 @@ function darkSlab(): MeshBuilder {
 }
 
 /** A round, bullet-shaped tower banded in light and dark glass. */
-function bullet(): MeshBuilder {
+export function bullet(): MeshBuilder {
   const m = new MeshBuilder(PALETTE);
   const n = 20;
   m.scope("plinth", () => m.prism("dark", ngon(n, 15, 0), 0, 4));
@@ -361,7 +361,7 @@ function bullet(): MeshBuilder {
 }
 
 /** A glass tower stepping back in green roof terraces towards one corner. */
-function terraced(): MeshBuilder {
+export function terraced(): MeshBuilder {
   const m = new MeshBuilder(PALETTE);
   m.scope("plinth", () => m.box("stone", 0, 0, 30, 30, 0, 5));
   const steps: Array<[number, number, number, number, number]> = [
@@ -390,7 +390,7 @@ function terraced(): MeshBuilder {
 }
 
 /** A white tapering pyramid tower with two side wings and a spire. */
-function pyramid(): MeshBuilder {
+export function pyramid(): MeshBuilder {
   const m = new MeshBuilder(PALETTE);
   const H = 140;
   const base = 26;
