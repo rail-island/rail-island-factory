@@ -315,8 +315,9 @@ describe("the vehicles", () => {
     expect(s.min[2]).toBeCloseTo(-s.max[2], 5); // centred across
     expect(width).toBeLessThanOrEqual(rail ? 3.1 : 2.7); // 2.6 m legal road width, mirrors aside
     expect(s.max[1]).toBeLessThanOrEqual(rail ? 4.7 : 4.115); // 13 ft 6 in on the road
-    // the road-vehicle budget (.agents/skills/road-vehicle)
-    expect(s.triangles).toBeLessThanOrEqual(10_000);
+    // the road-vehicle budget (.agents/skills/road-vehicle); a rail vehicle,
+    // much larger and seen closer along the track, gets 25k
+    expect(s.triangles).toBeLessThanOrEqual(rail ? 25_000 : 10_000);
     expect(faces(glb).length).toBe(s.triangles);
     const { json } = parseGlb(glb);
     // flat normals are stored, not left to the loader: a pipeline step that
@@ -335,8 +336,15 @@ describe("the vehicles", () => {
     const { json } = parseGlb(designGlb(d.id));
     expect((json as { nodes: Array<{ name: string }> }).nodes.map((n) => n.name)).toEqual(["vehicle"]);
     const s = glbStats(designGlb(d.id));
-    expect(s.max[0] - s.min[0]).toBeGreaterThan(16.5); // 16.8 m over the buffers
+    expect(s.max[0] - s.min[0]).toBeCloseTo(16.8, 2); // over the buffers
     expect(s.max[0] + s.min[0]).toBeCloseTo(0, 5); // centred along x
+    // the bogies: 8.30 m between the pivots, 3.20 m wheelbase, so the four
+    // axles stand at +-2.55 and +-5.75 m
+    const tree = designTree(d.id);
+    // each wheelset's first primitive is its axle
+    const axleLeaves = walk(tree.root).filter((n) => /\/wheelset(-\d+)?\/sweep-1$/.test(n.id));
+    const axles = axleLeaves.map((n) => Math.round(((n.min![0] + n.max![0]) / 2) * 100) / 100).sort((a, b) => a - b);
+    expect(axles).toEqual([-5.75, -2.55, 2.55, 5.75]);
   });
 
   it("puts the truck's grille at the +x end, ahead of the front axle", () => {

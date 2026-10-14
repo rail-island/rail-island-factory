@@ -4,7 +4,7 @@
 truck and the CD 163 electric locomotive), their triangle budget and conventions, articulated vehicles'
 truck and trailer parts, the `sweep` primitive they are mostly built from, and
 how to add one.
-**Code** - `generator/vehicles.ts`, `generator/design.ts`, `generator/meshCore.ts` (`sweep`, `part`), `generator/meshBuilder.ts` (`toGlb`), `src/viewerHighlight.ts`, `test/models.test.ts`, `test/viewerHighlight.test.ts`, `.agents/skills/road-vehicle/SKILL.md`
+**Code** - `generator/vehicles.ts`, `generator/cd163.ts`, `generator/vehicleParts.ts`, `generator/design.ts`, `generator/meshCore.ts` (`sweep`, `part`), `generator/meshBuilder.ts` (`toGlb`), `src/viewerHighlight.ts`, `test/models.test.ts`, `test/viewerHighlight.test.ts`, `.agents/skills/road-vehicle/SKILL.md`
 **See also** - [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md)
 
 ## The designs
@@ -12,7 +12,7 @@ how to add one.
 | id | title | look |
 |---|---|---|
 | `veh-american-truck` | American Truck | articulated: a long-nose conventional tractor (chrome grille, sleeper, twin stacks, tandem drive axle) and a 53 ft dry van; 22.2 m, about 4,900 triangles |
-| `veh-cd-163` | CD 163 | rigid: the Czech Railways class 163 Bo'Bo' electric locomotive - dark green with a yellow stripe, grey roof, two driving cabs, two folded pantographs, two two-axle bogies on 1.435 m gauge; 16.8 m over the buffers, about 4,400 triangles. Inspired by the vlakosimdb / webapp `train-loco-electric-cd-163` model (reference in `assets/cd-163/`) |
+| `veh-cd-163` | CD 163 | rigid rail vehicle (`cd163.ts`): the Czech Railways class 163 Bo'Bo' electric in the green livery with the yellow band - ribbed sides, portholes, cant louvres, raked windscreens, two single-arm pantographs on shedded insulators, bogies with coil springs, axle boxes, motors and sandboxes; 16.80 m over the buffers, about 19,800 triangles. Modelled from photographs and the vlakosimdb model (`assets/cd-163/`, see `SOURCES.md` there) |
 
 `VEHICLES` in `vehicles.ts` lists them as `{ id, title, build }`, the same
 `ProceduralDesign` shape as the skyscrapers (`design.ts`). `VEHICLE_CATALOG`
@@ -23,9 +23,20 @@ for the game's vehicle import; settle them when the webapp side is written.
 
 A design may carry its own `catalog` (`ProceduralDesign.catalog`) in place of
 `VEHICLE_CATALOG`: the CD 163 uses `RAIL_CATALOG` (category `Rail vehicles`,
-group `loco`) and `RAIL_PALETTE`. A rail vehicle is held to the UIC loading
+group `loco`) and its own palette. A rail vehicle is held to the UIC loading
 gauge in `test/models.test.ts` (at most 3.1 m wide and 4.7 m high, pantographs
-folded) instead of the US road limits below.
+folded) instead of the US road limits, and to a **25,000-triangle** budget
+instead of 10,000: it is 16.8 m long and seen up close along the track. The
+test also pins the CD 163's length (16.80 m) and axle positions (the bogie
+pivots 8.30 m apart, 3.20 m wheelbase). The shared helpers (`block`, `side`,
+`plate`, `arc`) live in `vehicleParts.ts`; `vehicles.ts` re-exports `cd163` so
+the JS bundle finds every vehicle's build function in one module.
+
+The CD 163's body is lofted in plan rather than swept: horizontal octagons (the
+cab ends' corners chamfered) stacked in colour bands, the end faces raked back
+above the sill, and the roof a hip over the whole body. Windscreens sit on the
+raked face (`raked()`), louvres on the roof's cant (`onCant()`); coil springs and
+insulators are stacks of rings of alternating radius.
 
 **The ids are stored in the game's saved maps**: never rename one that has
 shipped. Vehicle ids start with `veh-`.
@@ -35,7 +46,7 @@ Agents adding or changing a vehicle follow the `road-vehicle` skill
 
 ## Budget
 
-At most **10,000 triangles** per vehicle, tested; there is no file-size budget.
+At most **10,000 triangles** per road vehicle and **25,000** per rail vehicle, tested; there is no file-size budget.
 A vehicle's GLB is the same format as a skyscraper's: non-indexed triangle
 soups with **flat normals stored** per face (tested). The normals are
 redundant - a loader could compute the same ones - but storing them means no
