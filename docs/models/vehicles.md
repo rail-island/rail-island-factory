@@ -12,7 +12,7 @@ how to add one.
 | id | title | look |
 |---|---|---|
 | `veh-american-truck` | American Truck | articulated: a long-nose conventional tractor (chrome grille, sleeper, twin stacks, tandem drive axle) and a 53 ft dry van; 22.2 m, about 4,900 triangles |
-| `veh-cd-163` | CD 163 | rigid rail vehicle (`cd163.ts`): the Czech Railways class 163 Bo'Bo' electric 163 244-7 in the green livery with the yellow band - ribbed sides, portholes, the raised cooler box and cant grilles, raked framed windscreens, the exact CD emblem and number plates, two single-arm pantographs on shedded insulators, bogies with coil springs, axle boxes, motors and sandboxes; 16.80 m over the buffers, 4.64 m high, about 21,100 triangles. Modelled from photographs, the vlakosimdb elevation drawings and the official emblem (`assets/cd-163/`, see `SOURCES.md` there) |
+| `veh-cd-163` | CD 163 | rigid rail vehicle (`cd163.ts`): the Czech Railways class 163 Bo'Bo' electric 163 244-7 in the green livery with the yellow band - ribbed sides, four portholes opposite continuous intake shutters, the raised cooler box and cant grilles, raked framed windscreens, an upright period CD monogram and condensed number plates, two single-arm pantographs on shedded insulators, bogies with coil springs, axle boxes, motors and sandboxes; 16.80 m over the buffers, 4.64 m high, about 22,500 triangles. Modelled from photographs, the vlakosimdb elevation drawings and the official emblem (`assets/cd-163/`, see `SOURCES.md` there) |
 
 `VEHICLES` in `vehicles.ts` lists them as `{ id, title, build }`, the same
 `ProceduralDesign` shape as the skyscrapers (`design.ts`). `VEHICLE_CATALOG`
@@ -34,17 +34,38 @@ the JS bundle finds every vehicle's build function in one module.
 
 The CD 163's body is lofted in plan rather than swept: horizontal octagons (the
 cab ends' corners chamfered) stacked in colour bands, the end faces raked back
-above the sill, and the roof a hip over the whole body. Its proportions are
-measured, not guessed: the heights from a square-on side photograph scaled by
-the painted 16.80 m (body 1.03 to 3.56 m, the yellow band 1.78 to 2.38 m, the
-windows 2.72 to 3.42 m), the positions along the body and across the ends from
-the vlakosimdb elevation drawings and a head-on photograph of 163 244-7. Windows,
-lamps and plates are `slab`s laid on a face through a small `Surface` mapping
-(the side wall, the upright end, the raked windscreen face); the lettering
-(seven-segment strokes) and the emblem are one-sided `facets` decals a few
-millimetres off the plate or the band. The emblem (`cdLogo.ts`) is the outline
-of the official CD logo, flattened from its SVG and triangulated by ear
-clipping. Coil springs and insulators are stacks of rings of alternating radius.
+above the sill, and the roof a hip over the whole body. Its cab proportions are reconstructed from the photographs of 163 244-7 and
+163 048-2; the vlakosimdb elevations provide a layout reference, not a reliable
+vertical scale. The body runs from 1.03 to 3.76 m, with a yellow band at
+1.78 to 2.38 m. The end sets back 0.34 m between the 2.53 m sill and the eave.
+Each front glass is approximately 1.08 m wide and 0.96 m high, inside a thin
+metal surround and a separate rubber gasket. Side cab windows have a sloping
+leading edge so their upper corners stay on the flat wall behind the chamfer;
+the narrow door glazing aligns with them. Bottom-mounted wipers and front
+handrails stand proud of the shell.
+
+The lower white marker lenses are 236 mm across; the upper twin light sits in
+its own housing below the windscreens. Buffer heads are rounded 550 by 420 mm
+plates at the standard 1,750 mm spacing, with separate housings and plungers;
+the locomotive stays 16.80 m long. Broad track clearers sit behind them.
+Horizontal corrugations use approximately 145 mm pitch. Four 610 mm porthole
+glass panes occupy the +Z machine-room side, while the -Z side has framed
+vertical intake shutters, following the two vlakosimdb side elevations.
+
+Windows, lamps and plates are `slab`s laid on a face through a small `Surface`
+mapping (the side wall, the upright end, the raked windscreen face). Lettering
+uses connected condensed numeral strokes with diagonal legs and curved bowls,
+rather than seven-segment digits. The period upright CD badge is an approximate
+reconstruction: the official SVG outlines in `cdLogo.ts` are de-skewed and
+narrowed to the photographed badge's proportions, normalized and triangulated
+by ear clipping. It is not an exact historic logo tracing. These markings are
+one-sided `facets` decals a few millimetres off their supporting surfaces.
+Coil springs and insulators are stacks of rings of alternating radius.
+
+Regression checks in `test/models.test.ts` cover the cab glazing aspect ratio
+and rake, door/window alignment, marker lens and buffer head sizes, upright
+badge proportions, and the different machine-room sides, alongside the overall
+dimensions, axle positions, triangle budget and coplanar-overlap checks.
 
 **The ids are stored in the game's saved maps**: never rename one that has
 shipped. Vehicle ids start with `veh-`.

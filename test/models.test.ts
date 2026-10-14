@@ -373,6 +373,67 @@ describe("the vehicles", () => {
     expect(axles).toEqual([-5.75, -2.55, 2.55, 5.75]);
   });
 
+  it("keeps the CD 163 cab glazing tall and the nose raked like the photo references", () => {
+    const nodes = walk(designTree("veh-cd-163").root);
+    for (const cab of ["front-cab", "rear-cab"]) {
+      const panes = nodes.filter((n): n is LeafNode => isLeaf(n) && n.id.startsWith(`${cab}/windscreen/`) && n.material === "glass");
+      expect(panes).toHaveLength(2);
+      for (const pane of panes) {
+        const height = pane.max![1] - pane.min![1];
+        const width = pane.max![2] - pane.min![2];
+        // Photo proportions, not just overall loading gauge: the old squat
+        // panes were only 0.70 m high and almost twice as wide as high.
+        expect(height).toBeGreaterThan(0.9);
+        expect(width / height).toBeGreaterThan(1.0);
+        expect(width / height).toBeLessThan(1.3);
+        expect(pane.max![0] - pane.min![0]).toBeGreaterThan(0.25);
+      }
+      for (const side of ["left-side", "right-side"]) {
+        const glass = (scope: string) => nodes.find((n): n is LeafNode => isLeaf(n) && n.id.startsWith(`${cab}/${side}/${scope}/`) && n.material === "glass")!;
+        const window = glass("side-window");
+        const door = glass("door");
+        expect(window.max![1] - window.min![1]).toBeGreaterThan(0.9);
+        expect(door.max![1] - door.min![1]).toBeGreaterThan(0.85);
+        expect(Math.abs(window.max![1] - door.max![1])).toBeLessThan(0.06);
+      }
+    }
+  });
+
+  it("gives the CD 163 substantial marker lamps, rounded buffer heads and an upright badge", () => {
+    const nodes = walk(designTree("veh-cd-163").root);
+    for (const cab of ["front-cab", "rear-cab"]) {
+      const markers = nodes.filter((n): n is LeafNode => isLeaf(n) && n.id.startsWith(`${cab}/lamps/`) && n.material === "lampHead" && n.max![1] < 2);
+      expect(markers).toHaveLength(2);
+      for (const lens of markers) expect(lens.max![2] - lens.min![2]).toBeGreaterThan(0.22);
+      const heads = nodes.filter((n): n is LeafNode => isLeaf(n) && n.id.startsWith(`${cab}/buffer-beam/buffers/`) && n.kind === "slab");
+      expect(heads).toHaveLength(2);
+      for (const head of heads) {
+        expect(head.max![2] - head.min![2]).toBeCloseTo(0.55, 2);
+        expect(head.max![1] - head.min![1]).toBeCloseTo(0.42, 2);
+      }
+      const badge = nodes.find((n) => n.id === `${cab}/front-markings/emblem`)!;
+      const aspect = (badge.max![2] - badge.min![2]) / (badge.max![1] - badge.min![1]);
+      expect(aspect).toBeGreaterThan(1.2);
+      expect(aspect).toBeLessThan(1.35);
+      expect(badge.min![1]).toBeGreaterThan(1.8);
+      expect(badge.max![1]).toBeLessThan(2.38); // contained in the yellow band
+    }
+  });
+
+  it("distinguishes the CD 163 porthole side from the opposite intake shutters", () => {
+    const nodes = walk(designTree("veh-cd-163").root);
+    const panes = nodes.filter((n): n is LeafNode => isLeaf(n) && n.id.startsWith("body/portholes/") && n.material === "glass");
+    expect(panes).toHaveLength(4);
+    for (const pane of panes) {
+      expect(pane.min![2]).toBeGreaterThan(1.4);
+      expect(pane.max![1] - pane.min![1]).toBeGreaterThan(0.6);
+    }
+    const intake = nodes.find((n) => n.id === "body/machine-room-intake")!;
+    expect(intake.max![2]).toBeLessThan(-1.4);
+    expect(intake.max![0] - intake.min![0]).toBeGreaterThan(11);
+    expect(intake.min![1]).toBeGreaterThan(2.38); // clear of the livery band
+  });
+
   it("puts the truck's grille at the +x end, ahead of the front axle", () => {
     const tree = designTree("veh-american-truck");
     const byId = new Map(walk(tree.root).map((n) => [n.id, n]));

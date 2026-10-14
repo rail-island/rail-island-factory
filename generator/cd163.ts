@@ -1,6 +1,6 @@
 // The CD 163: the Czech Railways class 163 (Skoda 71E) 3 kV DC Bo'Bo' electric
 // locomotive, in the classic green livery with the yellow band, numbered 163 244-7.
-// Modelled from photographs and elevation drawings (assets/cd-163/) and the
+// Reconstructed from photographs and elevation drawings (assets/cd-163/) and the
 // dimensions painted on the locomotive itself: 16.80 m over the buffers, 8.30 m
 // between the bogie pivots, 3.20 m bogie wheelbase, 1.25 m wheels; 4.64 m high
 // with the pantographs down. See docs/models/vehicles.md.
@@ -20,7 +20,7 @@ import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "./meshBuilder.t
 import type { Vec3 } from "./meshCore.ts";
 import type { CatalogFields } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
-import { CD_EMBLEM, CD_EMBLEM_ASPECT, triangulate } from "./cdLogo.ts";
+import { CD_EMBLEM, triangulate } from "./cdLogo.ts";
 
 /** The catalog fields of a rail vehicle, in place of the road vehicles'. */
 export const RAIL_CATALOG: CatalogFields = {
@@ -33,9 +33,9 @@ export const RAIL_CATALOG: CatalogFields = {
 };
 
 export const CD163_PALETTE: Record<string, MaterialSpec> = {
-  green: { color: "#2f6b37", metallic: 0.1, roughness: 0.5 },
-  yellow: { color: "#e3b72c", metallic: 0.1, roughness: 0.5 },
-  roof: { color: "#77797c", roughness: 0.7 },
+  green: { color: "#245b42", metallic: 0.1, roughness: 0.5 },
+  yellow: { color: "#c6a84c", metallic: 0.1, roughness: 0.5 },
+  roof: { color: "#727773", roughness: 0.7 },
   underframe: { color: "#2a2c2f", roughness: 0.8 },
   bogie: { color: "#3c3e42", roughness: 0.75 },
   spring: { color: "#5a5d62", metallic: 0.2, roughness: 0.6 },
@@ -62,23 +62,23 @@ const NUMBER = "163 244-7";
 // --- dimensions -------------------------------------------------------------------
 
 const HALF = 7.9; // the body's end faces (below the windscreen); buffers reach 8.40
-const RAKE = 0.18; // how far the front sets back from the sill to the eave
-const CH = 0.12; // the cab ends' corner chamfer, in plan
+const RAKE = 0.34; // how far the front sets back from the sill to the eave
+const CH = 0.22; // the cab ends' corner chamfer, in plan
 const HW = 1.47; // half the body's width (2.94 m)
 
 const Y_BOTTOM = 1.03; // the body's lower edge
 const Y_BAND0 = 1.78; // the yellow band
 const Y_BAND1 = 2.38;
-const Y_SILL = 2.68; // the front rakes back above here: the windscreen's lower edge
-const Y_EAVE = 3.56; // the side walls' top, where the roof's cant starts
-const Y_CANT = 3.86;
-const Y_ROOF = 4.02;
+const Y_SILL = 2.53; // the front rakes back above here: the windscreen's lower edge
+const Y_EAVE = 3.76; // the side walls' top, where the roof's cant starts
+const Y_CANT = 3.94;
+const Y_ROOF = 4.06;
 const CANT_HW = 1.22; // half the width at the top of the cant
 const ROOF_HW = 1.0;
 const COOLER_X = 2.0; // the raised cooler box over the middle of the machine room
 const Y_COOLER = 4.28;
-const Y_WINDOW0 = 2.72; // the cab's side windows and the door window
-const Y_WINDOW1 = 3.42;
+const Y_WINDOW0 = 2.62; // the cab's side windows and the door window
+const Y_WINDOW1 = 3.58;
 
 const WHEEL_R = 0.625; // 1250 mm wheels
 const WHEEL_N = 24;
@@ -87,7 +87,7 @@ const AXLE_Y = WHEEL_R * Math.cos(Math.PI / WHEEL_N);
 const BOGIE_X = 4.15; // 8.30 m between the pivots
 const HALF_BASE = 1.6; // 3.20 m bogie wheelbase
 const PANTO_X = 4.15; // the pantographs stand over the bogies
-const PANTO_Y = Y_ROOF + 0.22; // the pantographs' base frames, on their insulators
+const PANTO_Y = Y_ROOF + 0.18; // the pantographs' base frames, on their insulators
 
 // --- helpers ----------------------------------------------------------------------
 
@@ -183,7 +183,13 @@ function decal(m: MeshBuilder, mat: string, f: Surface, tris: Array<[number, num
   m.facets(mat, tris.map(([u, v]) => f.at(u, v, d)), f.n);
 }
 
-const EMBLEM_TRIANGLES = CD_EMBLEM.map((poly) => triangulate(poly));
+// The photographed green/yellow locomotives carry the older, upright badge.
+// Undo the modern SVG's italic shear and narrow the monogram to the photo's
+// approximately 1.27:1 proportions. This is a reconstruction, not a new SVG.
+const UPRIGHT_EMBLEM = CD_EMBLEM.map((poly) => poly.map(([u, v]) => [(u - 0.2126 * v) * 0.85, v] as const));
+const EMBLEM_LEFT = Math.min(...UPRIGHT_EMBLEM.flat().map(([u]) => u));
+const EMBLEM_ASPECT = Math.max(...UPRIGHT_EMBLEM.flat().map(([u]) => u)) - EMBLEM_LEFT;
+const EMBLEM_TRIANGLES = UPRIGHT_EMBLEM.map((poly) => triangulate(poly));
 
 /**
  * The CD emblem, `h` high, its lower left corner at (u0, v0) of a surface whose
@@ -191,9 +197,10 @@ const EMBLEM_TRIANGLES = CD_EMBLEM.map((poly) => triangulate(poly));
  */
 function emblem(u0: number, v0: number, h: number, flipU: boolean): Array<[number, number]> {
   const out: Array<[number, number]> = [];
-  CD_EMBLEM.forEach((poly, k) => {
+  UPRIGHT_EMBLEM.forEach((poly, k) => {
     for (const i of EMBLEM_TRIANGLES[k]!) {
-      const [u, v] = poly[i]!;
+      const [rawU, v] = poly[i]!;
+      const u = rawU - EMBLEM_LEFT;
       out.push([flipU ? u0 - u * h : u0 + u * h, v0 + v * h]);
     }
   });
@@ -201,33 +208,39 @@ function emblem(u0: number, v0: number, h: number, flipU: boolean): Array<[numbe
 }
 
 /** The emblem's width at height h. */
-const emblemWidth = (h: number): number => CD_EMBLEM_ASPECT * h;
+const emblemWidth = (h: number): number => EMBLEM_ASPECT * h;
 
-/** Seven-segment strokes of each character the plates use, as cell fractions. */
-const SEGMENTS: Record<string, string> = {
-  "0": "abcdef", "1": "bc", "2": "abged", "3": "abgcd", "4": "fgbc",
-  "5": "afgcd", "6": "afgedc", "7": "abc", "8": "abcdefg", "9": "abcdfg", "-": "g", " ": "",
+// Condensed painted numerals: connected strokes, curved bowls and diagonal
+// legs. Seven-segment digits read as a digital display on the real cast plates.
+const DIGITS: Record<string, Array<Array<[number, number]>>> = {
+  "0": [[[0.25, 0.06], [0.12, 0.18], [0.12, 0.82], [0.25, 0.94], [0.75, 0.94], [0.88, 0.82], [0.88, 0.18], [0.75, 0.06], [0.25, 0.06]]],
+  "1": [[[0.15, 0.77], [0.55, 0.94], [0.55, 0.06]], [[0.18, 0.06], [0.86, 0.06]]],
+  "2": [[[0.12, 0.78], [0.12, 0.84], [0.27, 0.94], [0.72, 0.94], [0.88, 0.82], [0.88, 0.65], [0.12, 0.17], [0.12, 0.06], [0.88, 0.06]]],
+  "3": [[[0.12, 0.86], [0.27, 0.94], [0.72, 0.94], [0.88, 0.82], [0.88, 0.63], [0.66, 0.51], [0.32, 0.51]], [[0.66, 0.51], [0.88, 0.39], [0.88, 0.18], [0.72, 0.06], [0.27, 0.06], [0.12, 0.16]]],
+  "4": [[[0.68, 0.94], [0.12, 0.36], [0.92, 0.36]], [[0.72, 0.94], [0.72, 0.06]]],
+  "5": [[[0.88, 0.94], [0.12, 0.94], [0.12, 0.53], [0.72, 0.53], [0.88, 0.41], [0.88, 0.18], [0.72, 0.06], [0.27, 0.06], [0.12, 0.16]]],
+  "6": [[[0.85, 0.86], [0.7, 0.94], [0.3, 0.94], [0.12, 0.77], [0.12, 0.18], [0.27, 0.06], [0.72, 0.06], [0.88, 0.18], [0.88, 0.43], [0.72, 0.55], [0.27, 0.55], [0.12, 0.43]]],
+  "7": [[[0.12, 0.94], [0.88, 0.94], [0.35, 0.06]]],
+  "8": [[[0.27, 0.51], [0.12, 0.64], [0.12, 0.82], [0.27, 0.94], [0.72, 0.94], [0.88, 0.82], [0.88, 0.64], [0.72, 0.51], [0.27, 0.51], [0.12, 0.38], [0.12, 0.18], [0.27, 0.06], [0.72, 0.06], [0.88, 0.18], [0.88, 0.38], [0.72, 0.51]]],
+  "9": [[[0.88, 0.57], [0.72, 0.45], [0.27, 0.45], [0.12, 0.57], [0.12, 0.82], [0.27, 0.94], [0.72, 0.94], [0.88, 0.82], [0.88, 0.23], [0.7, 0.06], [0.3, 0.06], [0.15, 0.14]]],
+  "-": [[[0.22, 0.5], [0.78, 0.5]]],
 };
 
-/**
- * `text` in seven-segment strokes, characters h high, w wide, `gap` apart, the
- * first one's lower left corner at (u0, v0), reading toward +u (or -u when
- * `flipU`): triangles for decal().
- */
+/** Thin connected numeral strokes on a surface, optionally read toward -u. */
 function lettering(text: string, u0: number, v0: number, h: number, w: number, gap: number, flipU: boolean): Array<[number, number]> {
-  const t = h * 0.16;
-  const seg: Record<string, [number, number, number, number]> = {
-    a: [t / 2, w - t / 2, h - t, h], b: [w - t, w, h / 2, h - t / 2], c: [w - t, w, t / 2, h / 2],
-    d: [t / 2, w - t / 2, 0, t], e: [0, t, t / 2, h / 2], f: [0, t, h / 2, h - t / 2],
-    g: [t / 2, w - t / 2, h / 2 - t / 2, h / 2 + t / 2],
-  };
   const out: Array<[number, number]> = [];
   [...text].forEach((ch, i) => {
     const cu = i * (w + gap);
-    for (const s of SEGMENTS[ch] ?? "") {
-      const [a, b, c, d] = seg[s]!;
-      const [ua, ub] = flipU ? [u0 - cu - a, u0 - cu - b] : [u0 + cu + a, u0 + cu + b];
-      out.push([ua, v0 + c], [ub, v0 + c], [ub, v0 + d], [ua, v0 + c], [ub, v0 + d], [ua, v0 + d]);
+    for (const line of DIGITS[ch] ?? []) {
+      for (let j = 1; j < line.length; j++) {
+        const [a, b] = line[j - 1]!;
+        const [c, d] = line[j]!;
+        const q = bar(cu + a * w, b * h, cu + c * w, d * h, h * 0.09);
+        for (const k of [0, 1, 2, 0, 2, 3]) {
+          const [u, v] = q[k]!;
+          out.push([flipU ? u0 - u : u0 + u, v0 + v]);
+        }
+      }
     }
   });
   return out;
@@ -286,30 +299,44 @@ function body(m: MeshBuilder): void {
     });
   });
 
-  // the side walls are ribbed: horizontal pressings every 10 cm, in the colour
+  // the side walls are ribbed: horizontal pressings at approximately 145 mm pitch, in the colour
   // of the band they sit in, along the machine room and under the cab windows
   m.scope("ribs", () => {
-    for (let k = 0; k < 22; k++) {
-      const y = Y_BOTTOM + 0.1 + k * 0.1;
+    for (let k = 0; k < 17; k++) {
+      const y = Y_BOTTOM + 0.12 + k * 0.145;
       const mat = y >= Y_BAND0 && y < Y_BAND1 ? "yellow" : "green";
       for (const s of [-1, 1]) {
-        const z = side(s, HW - 0.01, HW + 0.012);
-        block(m, mat, -6.05, 6.05, y, y + 0.03, ...z);
-        if (y < Y_WINDOW0 - 0.1) for (const e of [-1, 1]) block(m, mat, ...ex(e, 7.03, 7.74), y, y + 0.03, ...z);
+        const z = side(s, HW - 0.01, HW + 0.018);
+        block(m, mat, -6.05, 6.05, y, y + 0.026, ...z);
+        if (y < Y_WINDOW0 - 0.1) for (const e of [-1, 1]) block(m, mat, ...ex(e, 7.03, 7.74), y, y + 0.026, ...z);
       }
     }
   });
 
   m.scope("portholes", () => {
     for (const x of [-4.97, -3.47, 3.47, 4.97]) {
-      for (const s of [-1, 1]) {
-        const rim = ngon(20, 0.3, 0, x, 2.98);
-        const pane = ngon(20, 0.255, 0, x, 2.98);
+      for (const s of [1]) {
+        const rim = ngon(24, 0.34, 0, x, 3.08);
+        const pane = ngon(24, 0.305, 0, x, 3.08);
         const [r0, r1] = side(s, HW - 0.02, HW + 0.024);
         const [p0, p1] = side(s, HW - 0.005, HW + 0.036);
         m.sweep("rubber", "z", rim, r0, rim, r1);
         m.sweep("glass", "z", pane, p0, pane, p1);
       }
+    }
+  });
+
+  // The opposite machine-room side has continuous intake shutters, not portholes.
+  m.scope("machine room intake", () => {
+    const wall = sideWall(-1);
+    panel(m, "roof", wall, [[-5.95, 2.57], [5.95, 2.57], [5.95, 3.55], [-5.95, 3.55]], -0.018, 0.022);
+    panel(m, "louvre", wall, [[-5.88, 2.63], [5.88, 2.63], [5.88, 3.49], [-5.88, 3.49]], 0.008, 0.029);
+    for (let i = 0; i < 88; i++) {
+      const x = -5.81 + i * 0.133;
+      panel(m, "slat", wall, [[x, 2.65], [x + 0.035, 2.65], [x + 0.035, 3.47], [x, 3.47]], 0.016, 0.043);
+    }
+    for (const x of [-3.95, -1.98, 0, 1.98, 3.95]) {
+      block(m, "roof", x - 0.025, x + 0.025, 2.61, 3.51, ...side(-1, HW + 0.01, HW + 0.049));
     }
   });
 
@@ -368,7 +395,7 @@ function body(m: MeshBuilder): void {
         decal(m, "white", wall, lettering(NUMBER, flip ? w / 2 : -w / 2, 2.02, 0.12, 0.065, 0.025, flip), 0.03);
       });
       m.scope("emblem", () => {
-        const h = 0.4;
+        const h = 0.43;
         const xc = -3.95;
         const u0 = flip ? xc + emblemWidth(h) / 2 : xc - emblemWidth(h) / 2;
         decal(m, "logo", wall, emblem(u0, 1.88, h, flip), 0.02);
@@ -387,30 +414,32 @@ function cab(m: MeshBuilder, e: number): void {
 
   m.scope("windscreen", () => {
     for (const s of [-1, 1]) {
-      // each pane in its own frame, the green between them the pillar
-      const [f0, f1] = side(s, 0.04, 1.33);
-      const [z0, z1] = side(s, 0.1, 1.27);
-      panel(m, "yellow", screen, rrect(f0, f1, Y_SILL, 3.5, 0.1), -0.01, 0.012);
-      panel(m, "glass", screen, rrect(z0, z1, Y_SILL + 0.06, 3.44, 0.07), -0.005, 0.024);
-      // the wiper, hanging slantwise from its pivot over the pane
-      panel(m, "rubber", screen, bar(s * 0.5, 3.4, s * 0.82, 2.82, 0.022), 0.02, 0.036);
+      const [f0, f1] = side(s, 0.055, 1.235);
+      const [g0, g1] = side(s, 0.078, 1.212);
+      const [z0, z1] = side(s, 0.105, 1.185);
+      panel(m, "yellow", screen, rrect(f0, f1, 2.59, 3.65, 0.095), -0.01, 0.015);
+      panel(m, "rubber", screen, rrect(g0, g1, 2.613, 3.627, 0.08), 0.006, 0.023);
+      panel(m, "glass", screen, rrect(z0, z1, 2.64, 3.60, 0.065), 0.012, 0.03);
+      // Bottom-mounted wipers: spindle, arm and separate blade.
+      panel(m, "rubber", screen, bar(s * 0.42, 2.55, s * 0.62, 3.18, 0.018), 0.035, 0.046);
+      panel(m, "rubber", screen, bar(s * 0.38, 2.94, s * 0.96, 3.41, 0.026), 0.035, 0.049);
+      panel(m, "steel", screen, bar(s * 0.46, 2.52, s * 1.10, 2.52, 0.022), 0.02, 0.037);
     }
   });
 
   m.scope("lamps", () => {
     // the twin headlight in the green between the band and the windscreen
-    panel(m, "rubber", front, rrect(-0.21, 0.21, 2.45, 2.61, 0.03), -0.01, 0.05);
+    panel(m, "rubber", front, rrect(-0.27, 0.27, 2.29, 2.52, 0.045), -0.01, 0.05);
     for (const s of [-1, 1]) {
-      const lens = ngon(12, 0.058, 0, s * 0.095, 2.53);
-      const [a, b] = face(e, 0.04, 0.066);
-      m.sweep("lampHead", "x", lens, a, lens, b);
+      panel(m, "steel", front, ngon(20, 0.105, 0, s * 0.122, 2.405), 0.035, 0.060);
+      panel(m, "lampHead", front, ngon(20, 0.086, 0, s * 0.122, 2.405), 0.048, 0.070);
     }
     // a white and a red lamp low on each side, at the number plate's height
     for (const s of [-1, 1]) {
       for (const [z, mat] of [[s * 0.77, "lampHead"], [s * 1.05, "lampRed"]] as const) {
         const big = mat === "lampHead";
-        const rim = ngon(16, big ? 0.105 : 0.09, 0, z, 1.64);
-        const lens = ngon(16, big ? 0.08 : 0.065, 0, z, 1.64);
+        const rim = ngon(16, big ? 0.15 : 0.135, 0, z, 1.66);
+        const lens = ngon(16, big ? 0.118 : 0.103, 0, z, 1.66);
         const [r0, r1] = face(e, -0.01, 0.025);
         const [l0, l1] = face(e, 0.0, 0.037);
         m.sweep("rubber", "x", rim, r0, rim, r1);
@@ -419,14 +448,22 @@ function cab(m: MeshBuilder, e: number): void {
     }
   });
 
+  m.scope("front handrails", () => {
+    for (const s of [-1, 1]) {
+      panel(m, "steel", front, bar(s * 1.24, 1.79, s * 1.24, 2.28, 0.025), 0.035, 0.06);
+      panel(m, "steel", front, bar(s * 1.24, 2.28, s * 1.12, 2.31, 0.025), 0.035, 0.06);
+    }
+  });
+
   m.scope("front markings", () => {
     m.scope("number plate", () => {
-      panel(m, "plate", front, [[-0.45, 1.555], [0.45, 1.555], [0.45, 1.725], [-0.45, 1.725]], -0.01, 0.02);
-      const w = letteringWidth(NUMBER, 0.06, 0.025);
-      decal(m, "white", front, lettering(NUMBER, flip ? w / 2 : -w / 2, 1.585, 0.11, 0.06, 0.025, flip), 0.024);
+      panel(m, "steel", front, rrect(-0.53, 0.53, 1.52, 1.80, 0.018), -0.016, 0.014);
+      panel(m, "plate", front, rrect(-0.51, 0.51, 1.54, 1.78, 0.01), 0.006, 0.024);
+      const w = letteringWidth(NUMBER, 0.072, 0.027);
+      decal(m, "white", front, lettering(NUMBER, flip ? w / 2 : -w / 2, 1.575, 0.17, 0.072, 0.027, flip), 0.028);
     });
     m.scope("emblem", () => {
-      const h = 0.4;
+      const h = 0.43;
       const u0 = flip ? emblemWidth(h) / 2 : -emblemWidth(h) / 2;
       decal(m, "logo", front, emblem(u0, 1.88, h, flip), 0.006);
     });
@@ -438,16 +475,19 @@ function cab(m: MeshBuilder, e: number): void {
       const z = (d0: number, d1: number) => side(s, HW + d0, HW + d1);
       const xs = (a: number, b: number): [number, number] => ex(e, a, b);
       m.scope("side window", () => {
-        panel(m, "rubber", wall, rrect(...xs(7.09, 7.59), Y_WINDOW0 - 0.03, Y_WINDOW1 + 0.03, 0.09), -0.01, 0.012);
-        panel(m, "glass", wall, rrect(...xs(7.12, 7.56), Y_WINDOW0, Y_WINDOW1, 0.07), -0.005, 0.024);
+        // The leading edge follows the cab rake. A rectangular pane here
+        // would project beyond the chamfered shell at its upper front corner.
+        const profile = (points: Array<[number, number]>) => points.map(([x, y]): [number, number] => [e * x, y]);
+        panel(m, "rubber", wall, profile([[7.00, 2.59], [7.49, 2.59], [7.49, 2.64], [7.36, 3.61], [7.00, 3.61]]), -0.01, 0.012);
+        panel(m, "glass", wall, profile([[7.03, 2.62], [7.455, 2.62], [7.455, 2.65], [7.33, 3.58], [7.03, 3.58]]), -0.005, 0.024);
       });
       m.scope("door", () => {
-        block(m, "rubber", ...xs(6.2, 6.9), 1.45, 3.5, ...z(-0.01, 0.012)); // the gap around it
+        block(m, "rubber", ...xs(6.2, 6.9), 1.45, 3.66, ...z(-0.01, 0.012)); // the gap around it
         block(m, "green", ...xs(6.23, 6.87), 1.48, Y_BAND0, ...z(-0.005, 0.024));
         block(m, "yellow", ...xs(6.23, 6.87), Y_BAND0, Y_BAND1, ...z(-0.005, 0.024));
-        block(m, "green", ...xs(6.23, 6.87), Y_BAND1, 3.47, ...z(-0.005, 0.024));
-        panel(m, "rubber", wall, rrect(...xs(6.31, 6.79), Y_WINDOW0 - 0.03, Y_WINDOW1 + 0.03, 0.09), 0.01, 0.034);
-        panel(m, "glass", wall, rrect(...xs(6.34, 6.76), Y_WINDOW0, Y_WINDOW1, 0.07), 0.015, 0.046);
+        block(m, "green", ...xs(6.23, 6.87), Y_BAND1, 3.63, ...z(-0.005, 0.024));
+        panel(m, "rubber", wall, rrect(...xs(6.34, 6.76), Y_WINDOW0 - 0.01, Y_WINDOW1 + 0.01, 0.025), 0.01, 0.034);
+        panel(m, "glass", wall, rrect(...xs(6.37, 6.73), Y_WINDOW0 + 0.02, Y_WINDOW1 - 0.02, 0.015), 0.015, 0.046);
         block(m, "steel", ...xs(6.76, 6.84), 2.45, 2.49, ...z(0.02, 0.05)); // the handle
         block(m, "underframe", ...xs(6.32, 6.78), 1.14, 1.3, ...z(-0.01, 0.012)); // the foothold below it
       });
@@ -458,8 +498,8 @@ function cab(m: MeshBuilder, e: number): void {
       });
       m.scope("handrails", () => {
         for (const x of [6.13, 6.97]) {
-          m.prism("steel", ngon(6, 0.018, 0, e * x, s * (HW + 0.055)), 1.4, 3.35);
-          for (const y of [1.43, 3.28]) block(m, "steel", ...xs(x - 0.015, x + 0.015), y, y + 0.03, ...z(-0.01, 0.06));
+          m.prism("steel", ngon(6, 0.018, 0, e * x, s * (HW + 0.055)), 1.4, 3.58);
+          for (const y of [1.43, 3.51]) block(m, "steel", ...xs(x - 0.015, x + 0.015), y, y + 0.026, ...z(-0.01, 0.06));
         }
       });
       m.scope("steps", () => {
@@ -506,7 +546,7 @@ function cab(m: MeshBuilder, e: number): void {
         const [p0, p1] = face(e, 0.31, 0.44);
         m.sweep("underframe", "x", housing, h0, housing, h1);
         m.sweep("steel", "x", plunger, p0, plunger, p1);
-        block(m, "rubber", ...face(e, 0.43, 0.5), 0.9, 1.23, z - 0.22, z + 0.22); // the head, rectangular
+        panel(m, "underframe", front, rrect(z - 0.275, z + 0.275, 0.855, 1.275, 0.065), 0.43, 0.5);
       }
     });
     m.scope("coupling", () => {
@@ -522,10 +562,10 @@ function cab(m: MeshBuilder, e: number): void {
   });
 
   m.scope("track clearers", () => {
-    // a yellow plate ahead of each rail, its foot swept forward, on a bracket under the buffer beam
-    const q: Ring = [[e * 7.86, 0.13], [e * 7.9, 0.13], [e * 7.875, 0.52], [e * 7.835, 0.52]];
+    // a broad yellow plate ahead of each rail, its foot swept forward, on a bracket under the buffer beam
+    const q: Ring = [[e * 7.86, 0.13], [e * 7.9, 0.13], [e * 7.875, 0.64], [e * 7.835, 0.64]];
     for (const s of [-1, 1]) {
-      const [z0, z1] = side(s, 0.5, 0.95);
+      const [z0, z1] = side(s, 0.20, 1.25);
       m.sweep("yellow", "z", q, z0, q, z1);
       block(m, "underframe", ...face(e, -0.1, -0.04), 0.5, 0.82, ...side(s, 0.68, 0.78));
     }
