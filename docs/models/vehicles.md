@@ -4,7 +4,7 @@
 truck and the CD 163 electric locomotive), their triangle budget and conventions, articulated vehicles'
 truck and trailer parts, the `sweep` primitive they are mostly built from, and
 how to add one.
-**Code** - `generator/vehicles.ts`, `generator/cd163.ts`, `generator/vehicleParts.ts`, `generator/design.ts`, `generator/meshCore.ts` (`sweep`, `part`), `generator/meshBuilder.ts` (`toGlb`), `src/viewerHighlight.ts`, `test/models.test.ts`, `test/viewerHighlight.test.ts`, `.agents/skills/road-vehicle/SKILL.md`
+**Code** - `generator/vehicles.ts`, `generator/cd163.ts`, `generator/cdLogo.ts`, `generator/vehicleParts.ts`, `generator/design.ts`, `generator/meshCore.ts` (`sweep`, `part`), `generator/meshBuilder.ts` (`toGlb`), `src/viewerHighlight.ts`, `test/models.test.ts`, `test/cdLogo.test.ts`, `test/viewerHighlight.test.ts`, `.agents/skills/road-vehicle/SKILL.md`
 **See also** - [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md)
 
 ## The designs
@@ -12,7 +12,7 @@ how to add one.
 | id | title | look |
 |---|---|---|
 | `veh-american-truck` | American Truck | articulated: a long-nose conventional tractor (chrome grille, sleeper, twin stacks, tandem drive axle) and a 53 ft dry van; 22.2 m, about 4,900 triangles |
-| `veh-cd-163` | CD 163 | rigid rail vehicle (`cd163.ts`): the Czech Railways class 163 Bo'Bo' electric in the green livery with the yellow band - ribbed sides, portholes, cant louvres, raked windscreens, two single-arm pantographs on shedded insulators, bogies with coil springs, axle boxes, motors and sandboxes; 16.80 m over the buffers, about 19,800 triangles. Modelled from photographs and the vlakosimdb model (`assets/cd-163/`, see `SOURCES.md` there) |
+| `veh-cd-163` | CD 163 | rigid rail vehicle (`cd163.ts`): the Czech Railways class 163 Bo'Bo' electric 163 244-7 in the green livery with the yellow band - ribbed sides, portholes, the raised cooler box and cant grilles, raked framed windscreens, the exact CD emblem and number plates, two single-arm pantographs on shedded insulators, bogies with coil springs, axle boxes, motors and sandboxes; 16.80 m over the buffers, 4.64 m high, about 21,100 triangles. Modelled from photographs, the vlakosimdb elevation drawings and the official emblem (`assets/cd-163/`, see `SOURCES.md` there) |
 
 `VEHICLES` in `vehicles.ts` lists them as `{ id, title, build }`, the same
 `ProceduralDesign` shape as the skyscrapers (`design.ts`). `VEHICLE_CATALOG`
@@ -34,9 +34,17 @@ the JS bundle finds every vehicle's build function in one module.
 
 The CD 163's body is lofted in plan rather than swept: horizontal octagons (the
 cab ends' corners chamfered) stacked in colour bands, the end faces raked back
-above the sill, and the roof a hip over the whole body. Windscreens sit on the
-raked face (`raked()`), louvres on the roof's cant (`onCant()`); coil springs and
-insulators are stacks of rings of alternating radius.
+above the sill, and the roof a hip over the whole body. Its proportions are
+measured, not guessed: the heights from a square-on side photograph scaled by
+the painted 16.80 m (body 1.03 to 3.56 m, the yellow band 1.78 to 2.38 m, the
+windows 2.72 to 3.42 m), the positions along the body and across the ends from
+the vlakosimdb elevation drawings and a head-on photograph of 163 244-7. Windows,
+lamps and plates are `slab`s laid on a face through a small `Surface` mapping
+(the side wall, the upright end, the raked windscreen face); the lettering
+(seven-segment strokes) and the emblem are one-sided `facets` decals a few
+millimetres off the plate or the band. The emblem (`cdLogo.ts`) is the outline
+of the official CD logo, flattened from its SVG and triangulated by ear
+clipping. Coil springs and insulators are stacks of rings of alternating radius.
 
 **The ids are stored in the game's saved maps**: never rename one that has
 shipped. Vehicle ids start with `veh-`.

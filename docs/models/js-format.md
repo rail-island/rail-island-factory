@@ -33,7 +33,7 @@ scene.add(build(THREE)); // a THREE.Group named after the model id
 ## How it is built
 
 `generator/meshCore.ts` holds the geometry: the ring helpers and the primitives (`tri`, `quad`, `cap`, `loft`,
-`prism`, `spire`, `sweep`, `box`), `scope` and `part`. Two classes extend it:
+`prism`, `spire`, `sweep`, `box`, `slab`, `facets`), `scope` and `part`. Two classes extend it:
 
 | Class | File | Adds |
 |---|---|---|

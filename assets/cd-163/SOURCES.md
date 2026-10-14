@@ -4,6 +4,12 @@ Inspiration for `veh-cd-163` (generator/cd163.ts). Not shipped with any model.
 
 - `cd-163.glb`, `cd-163-side.png` - the vlakosimdb model `db/train/loco/electric/cd_163`
   (by Vojtech Vohladka), as the webapp imports it (`train-loco-electric-cd-163`).
+- `elevation-front.png`, `elevation-side.png` - that model's textures `x_both_4x.png` and
+  `z_inc_4x.png`: orthographic front and side elevations at 40 px/m, used for positions
+  along the body and across the ends (their vertical scale is squashed; heights come from
+  the side photograph).
+- `cd-emblem.svg` - "Ceske_drahy-logo.svg", Wikimedia Commons: the official CD logo.
+  generator/cdLogo.ts holds its emblem's outlines (the wordmark is not used).
 - `photo-163-244-front.jpg` - "Praha hlavni nadrazi, lokomotiva 163.jpg" by PatrikPaprika,
   Wikimedia Commons, CC BY-SA 4.0. The green livery with the yellow band, the front.
 - `photo-163-048-three-quarter.jpg` - "CzechLocomotive163a.jpg" by Radouch, Wikimedia Commons,

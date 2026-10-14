@@ -122,6 +122,14 @@ export class MeshBuilder extends MeshCore {
     );
   }
 
+  override slab(mat: string, outline: Vec3[], depth: Vec3): void {
+    this.leaf("slab", mat, () => ({ outline: outline.length, depth: [...depth] }), () => super.slab(mat, outline, depth));
+  }
+
+  override facets(mat: string, points: Vec3[], normal: Vec3): void {
+    this.leaf("facets", mat, () => ({ triangles: Math.floor(points.length / 3) }), () => super.facets(mat, points, normal));
+  }
+
   override box(mat: string, cx: number, cz: number, w: number, d: number, y0: number, y1: number, ry = 0, top = true): void {
     this.leaf("box", mat, () => ({ cx, cz, w, d, y0, y1, ry, top }), () => super.box(mat, cx, cz, w, d, y0, y1, ry, top));
   }

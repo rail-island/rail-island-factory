@@ -1,5 +1,5 @@
 // The geometry core of the procedural models: the ring helpers and the primitives
-// (tri, quad, cap, loft, prism, spire, sweep, box) that collect a flat-shaded
+// (tri, quad, cap, loft, prism, spire, sweep, box, slab, facets) that collect a flat-shaded
 // triangle soup per material, plus the named parts of an articulated model.
 // Pure Node-free code with no recording and no output format, so it can be
 // bundled into a model's standalone JS file (jsModel.ts, threeBuilder.ts).
@@ -220,6 +220,52 @@ export class MeshCore {
       if (caps) this.cap(mat, lower, a0, false);
     } finally {
       this.frame = outer;
+    }
+  }
+
+  /**
+   * A flat convex polygon extruded along any direction: the face `outline`
+   * (points in order, either winding, all in one plane) and its copy moved by
+   * `depth`, joined by walls. The face looks away from `depth`, so a panel on a
+   * slanted surface is its outline just proud of the surface and a `depth`
+   * pointing into it. Walls always face out.
+   */
+  slab(mat: string, outline: Vec3[], depth: Vec3): void {
+    const n = outline.length;
+    // Newell's normal of the outline; the face must look against `depth`
+    const nv: Vec3 = [0, 0, 0];
+    for (let i = 0; i < n; i++) {
+      const a = outline[i]!;
+      const b = outline[(i + 1) % n]!;
+      nv[0] += (a[1] - b[1]) * (a[2] + b[2]);
+      nv[1] += (a[2] - b[2]) * (a[0] + b[0]);
+      nv[2] += (a[0] - b[0]) * (a[1] + b[1]);
+    }
+    const f = nv[0] * depth[0] + nv[1] * depth[1] + nv[2] * depth[2] > 0 ? [...outline].reverse() : outline;
+    const back = f.map((p): Vec3 => [p[0] + depth[0], p[1] + depth[1], p[2] + depth[2]]);
+    for (let i = 1; i + 1 < n; i++) {
+      this.tri(mat, f[0]!, f[i]!, f[i + 1]!);
+      this.tri(mat, back[0]!, back[i + 1]!, back[i]!);
+    }
+    for (let i = 0; i < n; i++) {
+      const j = (i + 1) % n;
+      this.quad(mat, f[j]!, f[i]!, back[i]!, back[j]!);
+    }
+  }
+
+  /**
+   * Loose triangles, three points each in `points`, every one turned to face
+   * along `normal`: a one-sided decal -- a logo, lettering -- laid a few
+   * millimetres off the surface it reads on.
+   */
+  facets(mat: string, points: Vec3[], normal: Vec3): void {
+    for (let i = 0; i + 2 < points.length; i += 3) {
+      const [a, b, c] = [points[i]!, points[i + 1]!, points[i + 2]!];
+      const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+      const v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+      const n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+      if (n[0] * normal[0] + n[1] * normal[1] + n[2] * normal[2] >= 0) this.tri(mat, a, b, c);
+      else this.tri(mat, a, c, b);
     }
   }
 

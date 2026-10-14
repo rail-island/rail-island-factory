@@ -18,7 +18,8 @@ that code's shape, recorded while it runs:
 - a **scope** is a named block - a helper (`curtain wall`, `piers`, `mast`) or a
   part of a design (`podium`, `tier 3`, `segment 5`, `crown`);
 - a **leaf** is one primitive call (`box`, `prism`, `loft`, `spire`, `sweep`,
-  `cap`, `quad`, `tri`) with its material, its arguments and the triangles it drew.
+  `slab`, `facets`, `cap`, `quad`, `tri`) with its material, its arguments and the
+  triangles it drew.
 
 Only the **outermost** call is a leaf: a `box` draws through `prism`, `loft`,
 `quad`, `tri` and `cap`, and is still one leaf.

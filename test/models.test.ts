@@ -71,6 +71,32 @@ describe("MeshBuilder", () => {
     }
   });
 
+  // A slab is laid on a slanted face: its outline may come in either winding and
+  // its depth in any direction, and every face must still look out.
+  it("winds a slab outward, whichever way its outline winds and its depth points", () => {
+    const outline: Array<[number, number, number]> = [[0, 0, 0], [2, 0, 0.5], [2, 1, 0.5], [1, 1.5, 0.25], [0, 1, 0]];
+    for (const reversed of [false, true]) {
+      for (const depth of [[0.1, 0, -0.4], [-0.1, 0, 0.4]] as Array<[number, number, number]>) {
+        const m = new MeshBuilder({ a: { color: "#808080" } });
+        m.slab("a", reversed ? [...outline].reverse() : outline, depth);
+        const tris = faces(m.toGlb("test"));
+        expect(tris.length).toBe(2 * 3 + 5 * 2); // two pentagons and five walls
+        const centre = [1 + depth[0] / 2, 0.7 + depth[1] / 2, 0.25 + depth[2] / 2];
+        for (const { n, c } of tris) {
+          expect(n[0] * (c[0] - centre[0]) + n[1] * (c[1] - centre[1]) + n[2] * (c[2] - centre[2])).toBeGreaterThan(0);
+        }
+      }
+    }
+  });
+
+  it("turns every facet of a decal to face along its normal", () => {
+    const m = new MeshBuilder({ a: { color: "#808080" } });
+    m.facets("a", [[0, 0, 1], [1, 0, 1], [0, 1, 1], [0, 0, 1], [0, 1, 1], [-1, 0, 1]], [0, 0, -1]);
+    const tris = faces(m.toGlb("test"));
+    expect(tris.length).toBe(2);
+    for (const { n } of tris) expect(n[2]).toBeLessThan(0);
+  });
+
   it("writes a node per part, translated to its pivot, its positions local to it", () => {
     const m = new MeshBuilder({ a: { color: "#808080" }, b: { color: "#404040" } });
     m.part("front", [0, 0, 0], () => m.box("a", 0, 0, 2, 2, 0, 1));
