@@ -2,7 +2,7 @@
 
 This is **Rail Island Factory**: Rail Island models generated from code, and the
 catalog site that shows them at `factory.railisland.com`. Today it builds ten
-procedural skyscrapers and one vehicle (an American truck). The build writes an
+procedural skyscrapers and one vehicle (an American truck with a trailer). The build writes an
 export folder (GLBs, thumbnails, `skyscrapers.meta.json`, `vehicles.meta.json`) that the game repository, `rail-island-webapp`, is meant
 to import - the factory is the source of these models, the game a consumer.
 
@@ -50,6 +50,11 @@ document that owns it in the same change.** Conventions:
 - **Publishing to the game is a separate, standalone step** (the webapp's
   import of the export folder). Never do it as part of a factory change unless
   asked to.
+
+## Skills
+
+- **`road-vehicle`** (`.claude/skills/road-vehicle/`) - use it whenever a road
+  vehicle model is added or changed: budgets, the truck/trailer split, checks.
 
 ## Verify changes
 
