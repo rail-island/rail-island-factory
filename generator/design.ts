@@ -8,6 +8,8 @@ export interface ProceduralDesign {
   id: string;
   title: string;
   build: () => MeshBuilder;
+  /** Catalog fields that replace the family's (a rail vehicle among the road vehicles). */
+  catalog?: CatalogFields;
 }
 
 /**

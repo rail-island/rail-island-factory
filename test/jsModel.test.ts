@@ -73,7 +73,9 @@ describe("standalone JS models", () => {
         expect([c.r, c.g, c.b].map((v, k) => Math.abs(v - want[k]!)).every((d) => d < 1e-4)).toBe(true);
       });
       const nodeNames = (glb.json.nodes ?? []).map((n) => (n as { name?: string }).name);
-      if (id.startsWith("veh-")) expect(group.children.map((c) => c.name)).toEqual(nodeNames);
+      // an articulated vehicle's parts are child groups; a rigid vehicle's one node
+      // ("vehicle") is the group itself, its meshes the group's children
+      if (id.startsWith("veh-") && !(nodeNames.length === 1 && nodeNames[0] === "vehicle")) expect(group.children.map((c) => c.name)).toEqual(nodeNames);
       expect(group.name).toBe(id);
     }, 30_000);
 

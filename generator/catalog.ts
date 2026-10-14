@@ -119,7 +119,7 @@ export function exportMeta(designs: readonly ProceduralDesign[]): ExportMeta {
 }
 
 export function exportVehicleMeta(designs: readonly ProceduralDesign[]): VehicleExportMeta {
-  return { note: NOTE, count: designs.length, vehicles: designs.map((d) => metaEntry(d, VEHICLE_CATALOG)) };
+  return { note: NOTE, count: designs.length, vehicles: designs.map((d) => metaEntry(d, d.catalog ?? VEHICLE_CATALOG)) };
 }
 
 /** Rounded to the millimetre, so float noise does not reach the listing. */

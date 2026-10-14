@@ -399,6 +399,232 @@ export function americanTruck(): MeshBuilder {
   return m;
 }
 
+// --- the CD 163 electric locomotive -------------------------------------------------
+//
+// The Czech Railways class 163 (Skoda 69E): a 3 kV DC Bo'Bo' with two driving
+// cabs, dark green with a yellow stripe and a grey roof. 16.8 m over the
+// buffers, 2.95 m wide, two folded pantographs. Standard gauge: the wheels
+// stand 1.435 m apart. Modelled with the centre at x = 0, faced +x like every
+// vehicle (the locomotive is symmetric but for its details). Rigid: one node.
+
+/** The catalog fields of a rail vehicle, in place of the road vehicles'. */
+export const RAIL_CATALOG: CatalogFields = {
+  category: "Rail vehicles",
+  group: "loco",
+  defaultScale: 1,
+  license: "CC0",
+  author: "Rail Island",
+  source: "Rail Island",
+};
+
+export const RAIL_PALETTE: Record<string, MaterialSpec> = {
+  ...VEHICLE_PALETTE,
+  green: { color: "#1f5d34", metallic: 0.1, roughness: 0.45 },
+  yellow: { color: "#eec21c", metallic: 0.1, roughness: 0.45 },
+  roofGrey: { color: "#8b9096", roughness: 0.6 },
+  insulator: { color: "#8a4a26", roughness: 0.5 },
+  steel: { color: "#6b7078", metallic: 0.3, roughness: 0.5 },
+  headstock: { color: "#a8232c", roughness: 0.5 },
+};
+
+const LOCO_HALF = 7.9; // the body's end faces
+const LOCO_HW = 1.45; // half the body's width
+const LOCO_FLOOR = 1.3;
+const LOCO_SIDE_TOP = 3.5;
+const LOCO_WHEEL_R = 0.625;
+const LOCO_AXLE_Y = LOCO_WHEEL_R * Math.cos(Math.PI / 20);
+const BOGIE_X = 4.25;
+const BOGIE_HALF_BASE = 1.3; // half the 2.6 m wheelbase
+const CAB_START = 5.6;
+const GAUGE_HALF = 0.7175;
+
+/** One railway wheel: a tread, a disc centre and a hub on the outer face. */
+function railWheel(m: MeshBuilder, x: number, s: number): void {
+  const [z0, z1] = side(s, GAUGE_HALF - 0.075, GAUGE_HALF + 0.075);
+  const tread = ngon(20, LOCO_WHEEL_R, Math.PI / 20, x, LOCO_AXLE_Y);
+  m.sweep("darkMetal", "z", tread, z0, tread, z1);
+  const face = s > 0 ? z1 : z0;
+  const disc = ngon(16, 0.5, 0, x, LOCO_AXLE_Y);
+  m.sweep("steel", "z", disc, face - s * 0.02, disc, face + s * 0.02);
+  const hub = ngon(10, 0.2, 0, x, LOCO_AXLE_Y);
+  m.sweep("darkMetal", "z", hub, face, hub, face + s * 0.1);
+}
+
+function bogie(m: MeshBuilder, cx: number): void {
+  for (const dx of [-BOGIE_HALF_BASE, BOGIE_HALF_BASE]) {
+    const x = cx + dx;
+    m.scope("wheelset", () => {
+      const beam = ngon(8, 0.09, Math.PI / 8, x, LOCO_AXLE_Y);
+      m.sweep("steel", "z", beam, -0.93, beam, 0.93);
+      for (const s of [-1, 1]) {
+        railWheel(m, x, s);
+        block(m, "darkMetal", x - 0.17, x + 0.17, LOCO_AXLE_Y - 0.14, LOCO_AXLE_Y + 0.14, ...side(s, 0.86, 1.0)); // the axle box
+      }
+      block(m, "steel", x - 0.35, x + 0.35, LOCO_AXLE_Y - 0.25, LOCO_AXLE_Y + 0.3, -0.42, 0.42); // the traction motor
+    });
+  }
+  m.scope("frame", () => {
+    for (const s of [-1, 1]) block(m, "darkMetal", cx - 1.75, cx + 1.75, 0.75, 0.9, ...side(s, 0.82, 0.96));
+    block(m, "darkMetal", cx - 0.2, cx + 0.2, 0.7, 0.92, -0.85, 0.85); // the bolster
+    for (const s of [-1, 1]) for (const dx of [-0.9, 0.9]) {
+      m.prism("steel", ngon(8, 0.09, 0, cx + dx, s * 0.89), 0.9, 1.26);
+    }
+  });
+}
+
+function locoBody(m: MeshBuilder): void {
+  m.scope("body", () => {
+    block(m, "green", -LOCO_HALF, LOCO_HALF, LOCO_FLOOR, LOCO_SIDE_TOP, -LOCO_HW, LOCO_HW);
+  });
+  m.scope("roof", () => {
+    const sec = (hw: number, top: number, shoulder: number): Ring => [
+      [-1.46, 3.4], [1.46, 3.4], [1.46, shoulder], [hw, top], [-hw, top], [-1.46, shoulder],
+    ];
+    // the machine room's roof, higher than the cabs'
+    m.sweep("roofGrey", "x", sec(1.15, 4.05, 3.55), -CAB_START, sec(1.15, 4.05, 3.55), CAB_START);
+    for (const s of [-1, 1]) {
+      // each cab roof slopes down at the front
+      m.sweep("roofGrey", "x", sec(1.1, 3.85, 3.52), s * (CAB_START - 0.05), sec(1.1, 3.62, 3.5), s * (LOCO_HALF + 0.02));
+    }
+  });
+  m.scope("underframe", () => {
+    m.scope("skirts", () => {
+      for (const s of [-1, 1]) block(m, "green", -2.0, 2.0, 0.95, LOCO_FLOOR + 0.02, ...side(s, 1.3, LOCO_HW - 0.01));
+    });
+    m.scope("equipment", () => {
+      block(m, "darkMetal", -1.9, 1.9, 0.8, LOCO_FLOOR + 0.02, -1.2, 1.2);
+      for (const x of [-1.2, 0, 1.2]) block(m, "steel", x - 0.35, x + 0.35, 0.55, 0.85, -0.9, 0.9);
+    });
+    m.scope("headstocks", () => {
+      for (const e of [-1, 1]) {
+        const [x0, x1] = e > 0 ? [LOCO_HALF - 0.2, LOCO_HALF + 0.12] : [-LOCO_HALF - 0.12, -LOCO_HALF + 0.2];
+        block(m, "headstock", x0, x1, 0.85, LOCO_FLOOR + 0.02, -1.4, 1.4);
+      }
+    });
+  });
+  m.scope("stripe", () => {
+    for (const s of [-1, 1]) block(m, "yellow", -LOCO_HALF + 0.05, LOCO_HALF - 0.05, 1.85, 2.35, ...side(s, 1.43, 1.46));
+    for (const e of [-1, 1]) {
+      const [x0, x1] = e > 0 ? [LOCO_HALF - 0.02, LOCO_HALF + 0.015] : [-LOCO_HALF - 0.015, -LOCO_HALF + 0.02];
+      block(m, "yellow", x0, x1, 1.85, 2.35, -1.4, 1.4);
+    }
+  });
+}
+
+function locoCabs(m: MeshBuilder): void {
+  for (const e of [-1, 1]) {
+    m.scope(e > 0 ? "front cab" : "rear cab", () => {
+      const xs = (a: number, b: number): [number, number] => (e > 0 ? [a, b] : [-b, -a]);
+      const face = e * LOCO_HALF;
+      const fx = (d: number): [number, number] => (e > 0 ? [face + d - 0.015, face + d + 0.015] : [face - d - 0.015, face - d + 0.015]);
+      m.scope("windscreen", () => {
+        for (const s of [-1, 1]) block(m, "glass", ...fx(0.005), 2.45, 3.25, ...side(s, 0.08, 1.28));
+      });
+      m.scope("lamps", () => {
+        for (const s of [-1, 1]) {
+          block(m, "lampHead", ...fx(0.005), 1.5, 1.68, ...side(s, 0.95, 1.15));
+          block(m, "lampRed", ...fx(0.005), 1.5, 1.68, ...side(s, 0.45, 0.6));
+        }
+      });
+      m.scope("doors", () => {
+        for (const s of [-1, 1]) {
+          block(m, "darkMetal", ...xs(6.0, 6.8), 1.45, 3.4, ...side(s, 1.42, 1.47));
+          block(m, "glass", ...xs(6.15, 6.65), 2.5, 3.3, ...side(s, 1.44, 1.485));
+          block(m, "chrome", ...xs(6.66, 6.76), 2.3, 2.34, ...side(s, 1.46, 1.5));
+          block(m, "darkMetal", ...xs(6.9, 7.6), 2.45, 3.35, ...side(s, 1.42, 1.47));
+          block(m, "glass", ...xs(6.95, 7.55), 2.5, 3.3, ...side(s, 1.44, 1.485));
+        }
+      });
+      m.scope("steps", () => {
+        for (const s of [-1, 1]) {
+          for (const y of [0.78, 1.05]) block(m, "darkMetal", ...xs(6.1, 6.7), y, y + 0.04, ...side(s, 1.0, 1.4));
+        }
+      });
+    });
+  }
+  m.scope("buffers and coupling", () => {
+    for (const e of [-1, 1]) {
+      for (const z of [-0.875, 0.875]) {
+        const stem = ngon(8, 0.07, Math.PI / 8, z, 1.05);
+        const head = ngon(10, 0.17, 0, z, 1.05);
+        const [a, b] = e > 0 ? [LOCO_HALF + 0.1, LOCO_HALF + 0.42] : [-LOCO_HALF - 0.42, -LOCO_HALF - 0.1];
+        m.sweep("steel", "x", stem, a, stem, b);
+        const [c, d] = e > 0 ? [LOCO_HALF + 0.4, LOCO_HALF + 0.5] : [-LOCO_HALF - 0.5, -LOCO_HALF - 0.4];
+        m.sweep("chrome", "x", head, c, head, d);
+      }
+      const [h0, h1] = e > 0 ? [LOCO_HALF + 0.1, LOCO_HALF + 0.55] : [-LOCO_HALF - 0.55, -LOCO_HALF - 0.1];
+      block(m, "darkMetal", h0, h1, 0.98, 1.12, -0.07, 0.07);
+    }
+  });
+}
+
+function locoSides(m: MeshBuilder): void {
+  m.scope("side vents", () => {
+    for (const s of [-1, 1]) {
+      for (const x of [-4.8, -3.3, 3.3, 4.8]) {
+        const rim = ngon(14, 0.27, 0, x, 2.95);
+        { const [a, b] = side(s, 1.43, 1.47); m.sweep("aluminumDark", "z", rim, a, rim, b); }
+        const grille = ngon(14, 0.2, 0, x, 2.95);
+        { const [a, b] = side(s, 1.44, 1.485); m.sweep("darkMetal", "z", grille, a, grille, b); }
+      }
+    }
+  });
+  m.scope("handrails", () => {
+    for (const s of [-1, 1]) {
+      for (const x of [-5.2, 5.2]) block(m, "chrome", x - 0.02, x + 0.02, 1.5, 3.3, ...side(s, 1.5, 1.54));
+    }
+  });
+}
+
+function pantograph(m: MeshBuilder, x: number): void {
+  m.scope("insulators", () => {
+    for (const dx of [-0.6, 0.6]) for (const z of [-0.55, 0.55]) m.prism("insulator", ngon(8, 0.08, 0, x + dx, z), 4.03, 4.38);
+  });
+  m.scope("base", () => block(m, "darkMetal", x - 0.7, x + 0.7, 4.36, 4.42, -0.7, 0.7));
+  m.scope("folded arms", () => {
+    const lower: Ring = [[x - 0.65, 4.4], [x + 0.35, 4.52], [x + 0.35, 4.58], [x - 0.65, 4.46]];
+    const upper: Ring = [[x + 0.35, 4.52], [x - 0.5, 4.57], [x - 0.5, 4.62], [x + 0.35, 4.58]];
+    for (const s of [-1, 1]) {
+      const [z0, z1] = side(s, 0.4, 0.48);
+      m.sweep("darkMetal", "z", lower, z0, lower, z1);
+      m.sweep("darkMetal", "z", upper, z0, upper, z1);
+    }
+  });
+  m.scope("collector head", () => {
+    block(m, "chrome", x - 0.6, x - 0.3, 4.57, 4.64, -0.95, 0.95);
+    for (const s of [-1, 1]) block(m, "darkMetal", x - 0.62, x - 0.28, 4.6, 4.66, ...side(s, 0.88, 0.96));
+  });
+}
+
+function locoRoof(m: MeshBuilder): void {
+  m.scope("pantographs", () => {
+    for (const x of [-4.2, 4.2]) m.scope("pantograph", () => pantograph(m, x));
+  });
+  m.scope("roof cooler", () => {
+    block(m, "aluminumDark", -3.2, 0.8, 4.0, 4.17, -0.6, 0.6);
+    for (let i = 0; i < 9; i++) {
+      const x = -3.05 + i * 0.45;
+      block(m, "darkMetal", x - 0.03, x + 0.03, 4.15, 4.19, -0.55, 0.55);
+    }
+  });
+  m.scope("roof insulators", () => {
+    for (const x of [-2.3, 0, 2.3]) for (const s of [-1, 1]) m.prism("insulator", ngon(8, 0.06, 0, x, s * 0.95), 4.0, 4.28);
+  });
+  m.scope("hv cable", () => block(m, "darkMetal", -4.2, 4.2, 4.28, 4.32, -0.02, 0.02));
+}
+
+export function cd163(): MeshBuilder {
+  const m = new MeshBuilder(RAIL_PALETTE);
+  locoBody(m);
+  locoCabs(m);
+  locoSides(m);
+  locoRoof(m);
+  m.scope("bogies", () => {
+    for (const x of [-BOGIE_X, BOGIE_X]) m.scope("bogie", () => bogie(m, x));
+  });
+  return m;
+}
+
 /**
  * The game-catalog fields every procedural vehicle shares, written into each
  * one's entry of vehicles.meta.json (catalog.ts).
@@ -415,4 +641,5 @@ export const VEHICLE_CATALOG: CatalogFields = {
 /** Every procedural vehicle, by catalog id. The ids are stored in saved maps. */
 export const VEHICLES: ProceduralDesign[] = [
   { id: "veh-american-truck", title: "American Truck", build: americanTruck },
+  { id: "veh-cd-163", title: "CD 163", build: cd163, catalog: RAIL_CATALOG },
 ];

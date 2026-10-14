@@ -47,8 +47,8 @@ describe("exportVehicleMeta", () => {
       expect(v).toEqual({
         id: v.id,
         title: VEHICLES.find((d) => d.id === v.id)!.title,
-        category: "Road vehicles",
-        group: "truck",
+        category: VEHICLES.find((d) => d.id === v.id)!.catalog?.category ?? "Road vehicles",
+        group: VEHICLES.find((d) => d.id === v.id)!.catalog?.group ?? "truck",
         glb: `${v.id}.glb`,
         thumb: `${v.id}.png`,
         defaultScale: 1,

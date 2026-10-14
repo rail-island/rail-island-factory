@@ -212,7 +212,7 @@ export async function buildExport(dir = EXPORT_DIR): Promise<{ models: Generated
       const built = models.find((m) => m.id === design.id)!;
       const bytes = fs.readFileSync(built.glb);
       const stats = glbStats(bytes);
-      const fields = VEHICLE_IDS.has(design.id) ? VEHICLE_CATALOG : SKYSCRAPER_CATALOG;
+      const fields = design.catalog ?? (VEHICLE_IDS.has(design.id) ? VEHICLE_CATALOG : SKYSCRAPER_CATALOG);
       const jsText = js.get(design.id)!;
       return catalogRecord(metaEntry(design, fields), {
         ...stats,

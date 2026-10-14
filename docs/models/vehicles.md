@@ -1,7 +1,7 @@
 # Vehicles
 
-**Covers** - the procedurally generated road vehicles (today one articulated
-American truck), their triangle budget and conventions, articulated vehicles'
+**Covers** - the procedurally generated road vehicles (an articulated American
+truck and the CD 163 electric locomotive), their triangle budget and conventions, articulated vehicles'
 truck and trailer parts, the `sweep` primitive they are mostly built from, and
 how to add one.
 **Code** - `generator/vehicles.ts`, `generator/design.ts`, `generator/meshCore.ts` (`sweep`, `part`), `generator/meshBuilder.ts` (`toGlb`), `src/viewerHighlight.ts`, `test/models.test.ts`, `test/viewerHighlight.test.ts`, `.agents/skills/road-vehicle/SKILL.md`
@@ -12,6 +12,7 @@ how to add one.
 | id | title | look |
 |---|---|---|
 | `veh-american-truck` | American Truck | articulated: a long-nose conventional tractor (chrome grille, sleeper, twin stacks, tandem drive axle) and a 53 ft dry van; 22.2 m, about 4,900 triangles |
+| `veh-cd-163` | CD 163 | rigid: the Czech Railways class 163 Bo'Bo' electric locomotive - dark green with a yellow stripe, grey roof, two driving cabs, two folded pantographs, two two-axle bogies on 1.435 m gauge; 16.8 m over the buffers, about 4,400 triangles. Inspired by the vlakosimdb / webapp `train-loco-electric-cd-163` model (reference in `assets/cd-163/`) |
 
 `VEHICLES` in `vehicles.ts` lists them as `{ id, title, build }`, the same
 `ProceduralDesign` shape as the skyscrapers (`design.ts`). `VEHICLE_CATALOG`
@@ -19,6 +20,12 @@ beside it holds the game-catalog fields they share - category `Road vehicles`,
 group `truck`, `defaultScale` 1, CC0 by Rail Island - which the build writes into
 `vehicles.meta.json` ([export.md](export.md)). Those values are a first guess
 for the game's vehicle import; settle them when the webapp side is written.
+
+A design may carry its own `catalog` (`ProceduralDesign.catalog`) in place of
+`VEHICLE_CATALOG`: the CD 163 uses `RAIL_CATALOG` (category `Rail vehicles`,
+group `loco`) and `RAIL_PALETTE`. A rail vehicle is held to the UIC loading
+gauge in `test/models.test.ts` (at most 3.1 m wide and 4.7 m high, pantographs
+folded) instead of the US road limits below.
 
 **The ids are stored in the game's saved maps**: never rename one that has
 shipped. Vehicle ids start with `veh-`.

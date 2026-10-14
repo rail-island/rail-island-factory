@@ -303,7 +303,9 @@ describe("the vehicles", () => {
     expect(DESIGNS.size).toBe(SKYSCRAPERS.length + VEHICLES.length);
   });
 
-  it.each(VEHICLES.map((d) => [d.id] as const))("%s stands on its wheels, faces +x, fits a US road and stays in budget", (id) => {
+  it.each(VEHICLES.map((d) => [d.id] as const))("%s stands on its wheels, faces +x, fits its road or track and stays in budget", (id) => {
+    // a rail vehicle keeps to the UIC loading gauge (3.1 m x 4.7 m), not a US road's
+    const rail = DESIGNS.get(id)!.catalog?.category === "Rail vehicles";
     const glb = designGlb(id);
     const s = glbStats(glb);
     expect(s.min[1]).toBeCloseTo(0, 5);
@@ -311,8 +313,8 @@ describe("the vehicles", () => {
     const width = s.max[2] - s.min[2];
     expect(length).toBeGreaterThan(2 * width); // long along x
     expect(s.min[2]).toBeCloseTo(-s.max[2], 5); // centred across
-    expect(width).toBeLessThanOrEqual(2.7); // 2.6 m legal width, mirrors aside
-    expect(s.max[1]).toBeLessThanOrEqual(4.115); // 13 ft 6 in
+    expect(width).toBeLessThanOrEqual(rail ? 3.1 : 2.7); // 2.6 m legal road width, mirrors aside
+    expect(s.max[1]).toBeLessThanOrEqual(rail ? 4.7 : 4.115); // 13 ft 6 in on the road
     // the road-vehicle budget (.agents/skills/road-vehicle)
     expect(s.triangles).toBeLessThanOrEqual(10_000);
     expect(faces(glb).length).toBe(s.triangles);
@@ -325,6 +327,16 @@ describe("the vehicles", () => {
       expect(p.indices).toBeUndefined();
     }
     expect((json as { asset: { generator: string } }).asset.generator).toBe(`Rail Island procedural vehicle (${id})`);
+  });
+
+  it("ships the CD 163 as a rigid rail vehicle on standard gauge", () => {
+    const d = VEHICLES.find((v) => v.id === "veh-cd-163")!;
+    expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "loco" });
+    const { json } = parseGlb(designGlb(d.id));
+    expect((json as { nodes: Array<{ name: string }> }).nodes.map((n) => n.name)).toEqual(["vehicle"]);
+    const s = glbStats(designGlb(d.id));
+    expect(s.max[0] - s.min[0]).toBeGreaterThan(16.5); // 16.8 m over the buffers
+    expect(s.max[0] + s.min[0]).toBeCloseTo(0, 5); // centred along x
   });
 
   it("puts the truck's grille at the +x end, ahead of the front axle", () => {
