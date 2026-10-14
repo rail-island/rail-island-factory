@@ -10,7 +10,7 @@
 // of the rail), centred on x = 0 and z = 0. Standard gauge. Rigid: one node.
 //
 // The body is lofted in plan: horizontal octagons (the cab ends' corners are
-// chamfered) stacked in colour bands, the upper front raked back, the roof a
+// chamfered) stacked in colour bands, the front raked back above and below its nose, the roof a
 // hip over the whole body. Windows, lamps and plates are slabs laid on those
 // faces, sunk a centimetre into them and standing a centimetre or more proud;
 // the lettering and the CD emblem are one-sided decals a few millimetres off
@@ -61,15 +61,17 @@ const NUMBER = "163 244-7";
 
 // --- dimensions -------------------------------------------------------------------
 
-const HALF = 7.9; // the body's end faces (below the windscreen); buffers reach 8.40
-const RAKE = 0.34; // how far the front sets back from the sill to the eave
+const HALF = 7.9; // the projecting nose at the yellow band's upper edge; buffers reach 8.40
+const RAKE = 0.20; // upper setback, from the vlakosimdb side profile
+const LOWER_RAKE = 0.10; // lower setback to the apron above the buffer beam
 const CH = 0.22; // the cab ends' corner chamfer, in plan
 const HW = 1.47; // half the body's width (2.94 m)
 
 const Y_BOTTOM = 1.03; // the body's lower edge
 const Y_BAND0 = 1.78; // the yellow band
 const Y_BAND1 = 2.38;
-const Y_SILL = 2.53; // the front rakes back above here: the windscreen's lower edge
+const Y_NOSE = Y_BAND1; // both slopes meet here, at the top of the yellow band
+const Y_APRON = 1.20; // the lower slope meets the upright chassis skirt
 const Y_EAVE = 3.76; // the side walls' top, where the roof's cant starts
 const Y_CANT = 3.94;
 const Y_ROOF = 4.06;
@@ -110,9 +112,11 @@ function plan(xEnd: number, hw: number, c: number): Ring {
   ]);
 }
 
-/** The end face's x at height y: upright to the sill, raked back above it. */
+/** Both cab ends project at the band, with upper and lower setbacks. */
 function frontX(y: number): number {
-  return y <= Y_SILL ? HALF : HALF - (RAKE * (y - Y_SILL)) / (Y_EAVE - Y_SILL);
+  if (y <= Y_APRON) return HALF - LOWER_RAKE;
+  if (y <= Y_NOSE) return HALF - LOWER_RAKE * (Y_NOSE - y) / (Y_NOSE - Y_APRON);
+  return HALF - RAKE * (y - Y_NOSE) / (Y_EAVE - Y_NOSE);
 }
 
 /** The x range a..b (both >= 0) at the end `e` (+1 front, -1 rear), low end first. */
@@ -120,7 +124,7 @@ function ex(e: number, a: number, b: number): [number, number] {
   return e > 0 ? [a, b] : [-b, -a];
 }
 
-/** The x range d0..d1 out from the upright end face at the end `e`. */
+/** Fixed buffer-beam coordinates, independent of the sloping cab skin. */
 function face(e: number, d0: number, d1: number): [number, number] {
   return ex(e, HALF + d0, HALF + d1);
 }
@@ -159,17 +163,29 @@ function sideWall(s: number): Surface {
   return { at: (u, v, d) => [u, v, s * (HW + d)], n: [0, 0, s] };
 }
 
-/** The upright end face (below the sill) at the end `e`: u is z, v is y. */
-function endFace(e: number): Surface {
-  return { at: (u, v, d) => [e * (HALF + d), v, u], n: [e, 0, 0] };
+/** A planar cab face, with dx/dy = slope; u is z and v is height. */
+function cabFace(e: number, slope: number): Surface {
+  const nx = 1 / Math.hypot(1, slope);
+  const ny = -slope * nx;
+  return {
+    at: (u, v, d) => [e * (HALF + slope * (v - Y_NOSE) + nx * d), v + ny * d, u],
+    n: [e * nx, ny, 0],
+  };
 }
 
-/** The raked windscreen face (above the sill) at the end `e`: u is z, v is y on the face. */
+/** The lower cab face slopes inward toward the apron. */
+function endFace(e: number): Surface {
+  return cabFace(e, LOWER_RAKE / (Y_NOSE - Y_APRON));
+}
+
+/** The upper cab face slopes inward toward the eave. */
 function windscreenFace(e: number): Surface {
-  const k = RAKE / (Y_EAVE - Y_SILL);
-  const l = Math.hypot(1, k);
-  const [nx, ny] = [1 / l, k / l];
-  return { at: (u, v, d) => [e * (frontX(v) + nx * d), v + ny * d, u], n: [e * nx, ny, 0] };
+  return cabFace(e, -RAKE / (Y_EAVE - Y_NOSE));
+}
+
+/** Buffer heads remain upright, attached to the chassis rather than the cab. */
+function bufferFace(e: number): Surface {
+  return { at: (u, v, d) => [e * (HALF + d), v, u], n: [e, 0, 0] };
 }
 
 /** A convex panel `ring` (u, v) on `f`, from d0 (sunk into it) to d1 (proud of it). */
@@ -278,13 +294,14 @@ function insulator(m: MeshBuilder, x: number, z: number, y0: number, y1: number,
 
 function body(m: MeshBuilder): void {
   m.scope("shell", () => {
-    const low = plan(HALF, HW, CH);
-    m.cap("underframe", low, Y_BOTTOM, false);
-    m.loft("green", low, Y_BOTTOM, low, Y_BAND0, false);
-    m.loft("yellow", low, Y_BAND0, low, Y_BAND1, false);
-    m.loft("green", low, Y_BAND1, low, Y_SILL, false);
-    // above the sill the end faces rake back to the eave
-    m.loft("green", low, Y_SILL, plan(frontX(Y_EAVE), HW, CH), Y_EAVE, false);
+    const at = (y: number) => plan(frontX(y), HW, CH);
+    m.cap("underframe", at(Y_BOTTOM), Y_BOTTOM, false);
+    // Split at the apron, colour boundary and nose: every band follows the
+    // same profile, without flattening the lower face into a vertical wall.
+    m.loft("green", at(Y_BOTTOM), Y_BOTTOM, at(Y_APRON), Y_APRON, false);
+    m.loft("green", at(Y_APRON), Y_APRON, at(Y_BAND0), Y_BAND0, false);
+    m.loft("yellow", at(Y_BAND0), Y_BAND0, at(Y_NOSE), Y_NOSE, false);
+    m.loft("green", at(Y_NOSE), Y_NOSE, at(Y_EAVE), Y_EAVE, false);
   });
   m.scope("roof", () => {
     const eave = plan(frontX(Y_EAVE), HW, CH);
@@ -308,7 +325,10 @@ function body(m: MeshBuilder): void {
       for (const s of [-1, 1]) {
         const z = side(s, HW - 0.01, HW + 0.018);
         block(m, mat, -6.05, 6.05, y, y + 0.026, ...z);
-        if (y < Y_WINDOW0 - 0.1) for (const e of [-1, 1]) block(m, mat, ...ex(e, 7.03, 7.74), y, y + 0.026, ...z);
+        if (y < Y_WINDOW0 - 0.1) {
+          const end = Math.min(frontX(y), frontX(y + 0.026)) - CH - 0.015;
+          for (const e of [-1, 1]) block(m, mat, ...ex(e, 7.03, end), y, y + 0.026, ...z);
+        }
       }
     }
   });
@@ -417,9 +437,9 @@ function cab(m: MeshBuilder, e: number): void {
       const [f0, f1] = side(s, 0.055, 1.235);
       const [g0, g1] = side(s, 0.078, 1.212);
       const [z0, z1] = side(s, 0.105, 1.185);
-      panel(m, "yellow", screen, rrect(f0, f1, 2.59, 3.65, 0.095), -0.01, 0.015);
-      panel(m, "rubber", screen, rrect(g0, g1, 2.613, 3.627, 0.08), 0.006, 0.023);
-      panel(m, "glass", screen, rrect(z0, z1, 2.64, 3.60, 0.065), 0.012, 0.03);
+      panel(m, "yellow", screen, rrect(f0, f1, 2.64, 3.65, 0.095), -0.01, 0.015);
+      panel(m, "rubber", screen, rrect(g0, g1, 2.663, 3.627, 0.08), 0.006, 0.023);
+      panel(m, "glass", screen, rrect(z0, z1, 2.69, 3.60, 0.065), 0.012, 0.03);
       // Bottom-mounted wipers: spindle, arm and separate blade.
       panel(m, "rubber", screen, bar(s * 0.42, 2.55, s * 0.62, 3.18, 0.018), 0.035, 0.046);
       panel(m, "rubber", screen, bar(s * 0.38, 2.94, s * 0.96, 3.41, 0.026), 0.035, 0.049);
@@ -429,10 +449,10 @@ function cab(m: MeshBuilder, e: number): void {
 
   m.scope("lamps", () => {
     // the twin headlight in the green between the band and the windscreen
-    panel(m, "rubber", front, rrect(-0.27, 0.27, 2.29, 2.52, 0.045), -0.01, 0.05);
+    panel(m, "rubber", screen, rrect(-0.27, 0.27, 2.385, 2.595, 0.045), -0.01, 0.05);
     for (const s of [-1, 1]) {
-      panel(m, "steel", front, ngon(20, 0.105, 0, s * 0.122, 2.405), 0.035, 0.060);
-      panel(m, "lampHead", front, ngon(20, 0.086, 0, s * 0.122, 2.405), 0.048, 0.070);
+      panel(m, "steel", screen, ngon(20, 0.105, 0, s * 0.122, 2.49), 0.035, 0.060);
+      panel(m, "lampHead", screen, ngon(20, 0.086, 0, s * 0.122, 2.49), 0.048, 0.070);
     }
     // a white and a red lamp low on each side, at the number plate's height
     for (const s of [-1, 1]) {
@@ -440,10 +460,8 @@ function cab(m: MeshBuilder, e: number): void {
         const big = mat === "lampHead";
         const rim = ngon(16, big ? 0.15 : 0.135, 0, z, 1.66);
         const lens = ngon(16, big ? 0.118 : 0.103, 0, z, 1.66);
-        const [r0, r1] = face(e, -0.01, 0.025);
-        const [l0, l1] = face(e, 0.0, 0.037);
-        m.sweep("rubber", "x", rim, r0, rim, r1);
-        m.sweep(mat, "x", lens, l0, lens, l1);
+        panel(m, "rubber", front, rim, -0.01, 0.025);
+        panel(m, mat, front, lens, 0.0, 0.037);
       }
     }
   });
@@ -546,7 +564,7 @@ function cab(m: MeshBuilder, e: number): void {
         const [p0, p1] = face(e, 0.31, 0.44);
         m.sweep("underframe", "x", housing, h0, housing, h1);
         m.sweep("steel", "x", plunger, p0, plunger, p1);
-        panel(m, "underframe", front, rrect(z - 0.275, z + 0.275, 0.855, 1.275, 0.065), 0.43, 0.5);
+        panel(m, "underframe", bufferFace(e), rrect(z - 0.275, z + 0.275, 0.855, 1.275, 0.065), 0.43, 0.5);
       }
     });
     m.scope("coupling", () => {

@@ -386,7 +386,9 @@ describe("the vehicles", () => {
         expect(height).toBeGreaterThan(0.9);
         expect(width / height).toBeGreaterThan(1.0);
         expect(width / height).toBeLessThan(1.3);
-        expect(pane.max![0] - pane.min![0]).toBeGreaterThan(0.25);
+        // The reference upper profile recedes 0.20 m over the whole cab.
+        expect(pane.max![0] - pane.min![0]).toBeGreaterThan(0.12);
+        expect(pane.max![0] - pane.min![0]).toBeLessThan(0.20);
       }
       for (const side of ["left-side", "right-side"]) {
         const glass = (scope: string) => nodes.find((n): n is LeafNode => isLeaf(n) && n.id.startsWith(`${cab}/${side}/${scope}/`) && n.material === "glass")!;
@@ -395,6 +397,45 @@ describe("the vehicles", () => {
         expect(window.max![1] - window.min![1]).toBeGreaterThan(0.9);
         expect(door.max![1] - door.min![1]).toBeGreaterThan(0.85);
         expect(Math.abs(window.max![1] - door.max![1])).toBeLessThan(0.06);
+      }
+    }
+  });
+
+  it("recedes above AND below the CD 163 nose and keeps its fittings on the sloped skin", () => {
+    const nodes = walk(designTree("veh-cd-163").root);
+    const { json, bin } = parseGlb(designGlb("veh-cd-163"));
+    const triangles = collectTriangles(json, bin);
+    const materials = new Map([...new Set(triangles.map((t) => t.material))].map((mat) => [mat, triangles.filter((t) => t.material === mat)]));
+    const scoped = (id: string) => nodes.filter((n): n is LeafNode => isLeaf(n) && n.id.startsWith(id + "/"))
+      .flatMap((n) => materials.get(n.material)!.slice(n.tri[0], n.tri[0] + n.tri[1]));
+    const shell = scoped("body/shell");
+    for (const e of [-1, 1]) {
+      const extentAt = (y: number) => Math.max(...shell.flatMap((t) => t.p)
+        .filter((p) => Math.abs(p[1] - y) < 1e-5).map((p) => e * p[0]));
+      // The original vlakosimdb alongz/base profile recedes 0.10 m below
+      // the nose and 0.20 m above it. A vertical lower face must fail.
+      const nose = extentAt(2.38);
+      expect(nose - extentAt(1.20)).toBeCloseTo(0.10, 4);
+      expect(nose - extentAt(3.76)).toBeCloseTo(0.20, 4);
+      expect(extentAt(1.03)).toBeCloseTo(extentAt(1.20), 4);
+      const lowerFaces = shell.filter((t) => t.n[0][0] * e > 0.9 && t.p.every((p) => p[1] >= 1.19999 && p[1] <= 2.38001));
+      expect(lowerFaces.length).toBeGreaterThan(0);
+      for (const t of lowerFaces) expect(t.n[0][1]).toBeLessThan(-0.07);
+
+      const cab = e > 0 ? "front-cab" : "rear-cab";
+      const lowerSlope = 0.10 / (2.38 - 1.20);
+      const distance = (p: readonly number[]) => (e * p[0]! - nose - lowerSlope * (p[1]! - 2.38)) / Math.hypot(1, lowerSlope);
+      const badge = scoped(`${cab}/front-markings/emblem`);
+      expect(badge.length).toBeGreaterThan(0);
+      for (const p of badge.flatMap((t) => t.p)) expect(distance(p)).toBeCloseTo(0.006, 4);
+      const numbers = scoped(`${cab}/front-markings/number-plate`).filter((t) => t.material === "white");
+      expect(numbers.length).toBeGreaterThan(0);
+      for (const p of numbers.flatMap((t) => t.p)) expect(distance(p)).toBeCloseTo(0.028, 4);
+      const markers = scoped(`${cab}/lamps`).filter((t) => t.material === "lampHead" && t.p.every((p) => p[1] < 2));
+      expect(markers.length).toBeGreaterThan(0);
+      for (const p of markers.flatMap((t) => t.p)) {
+        expect(distance(p)).toBeGreaterThanOrEqual(-1e-5);
+        expect(distance(p)).toBeLessThanOrEqual(0.03701);
       }
     }
   });

@@ -33,12 +33,17 @@ pivots 8.30 m apart, 3.20 m wheelbase). The shared helpers (`block`, `side`,
 the JS bundle finds every vehicle's build function in one module.
 
 The CD 163's body is lofted in plan rather than swept: horizontal octagons (the
-cab ends' corners chamfered) stacked in colour bands, the end faces raked back
-above the sill, and the roof a hip over the whole body. Its cab proportions are reconstructed from the photographs of 163 244-7 and
+cab ends' corners chamfered) stacked in colour bands, with both the upper and
+lower cab faces raked inward from the nose, and a hipped roof. Its cab proportions are reconstructed from the photographs of 163 244-7 and
 163 048-2; the vlakosimdb elevations provide a layout reference, not a reliable
 vertical scale. The body runs from 1.03 to 3.76 m, with a yellow band at
-1.78 to 2.38 m. The end sets back 0.34 m between the 2.53 m sill and the eave.
-Each front glass is approximately 1.08 m wide and 0.96 m high, inside a thin
+1.78 to 2.38 m. The projecting nose is at the band's upper edge: the face
+recedes 0.20 m toward the eave and 0.10 m toward the apron at 1.20 m. Below
+that apron the chassis skirt is upright. These two horizontal setbacks come
+from the original vlakosimdb `alongz/base` profile (see the reference notes),
+adapted to the factory model's band and roof heights. Each colour band is
+lofted between sections of this same profile; the yellow band also slopes.
+Each front glass is approximately 1.08 m wide and 0.91 m high, inside a thin
 metal surround and a separate rubber gasket. Side cab windows have a sloping
 leading edge so their upper corners stay on the flat wall behind the chamfer;
 the narrow door glazing aligns with them. Bottom-mounted wipers and front
@@ -53,7 +58,10 @@ glass panes occupy the +Z machine-room side, while the -Z side has framed
 vertical intake shutters, following the two vlakosimdb side elevations.
 
 Windows, lamps and plates are `slab`s laid on a face through a small `Surface`
-mapping (the side wall, the upright end, the raked windscreen face). Lettering
+mapping (the side wall and the two sloped cab faces). Marker lights, number
+plates, the badge and lower handrails follow the lower plane and its outward
+normal; the twin headlight follows the upper plane. Buffer heads remain
+upright on the chassis, preserving the overall length. Lettering
 uses connected condensed numeral strokes with diagonal legs and curved bowls,
 rather than seven-segment digits. The period upright CD badge is an approximate
 reconstruction: the official SVG outlines in `cdLogo.ts` are de-skewed and
@@ -63,7 +71,8 @@ one-sided `facets` decals a few millimetres off their supporting surfaces.
 Coil springs and insulators are stacks of rings of alternating radius.
 
 Regression checks in `test/models.test.ts` cover the cab glazing aspect ratio
-and rake, door/window alignment, marker lens and buffer head sizes, upright
+and rake, both cab setbacks and the upright skirt, the actual GLB surface
+distances of lower fittings, door/window alignment, marker lens and buffer head sizes, upright
 badge proportions, and the different machine-room sides, alongside the overall
 dimensions, axle positions, triangle budget and coplanar-overlap checks.
 
