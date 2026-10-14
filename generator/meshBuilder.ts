@@ -381,14 +381,10 @@ export class MeshBuilder {
    * The finished model as a binary glTF (.glb): a primitive per material, in
    * material name order. Without parts it is one node and one mesh named `name`;
    * with parts (see `part`) it is a node per part, named after it, translated to
-   * the part's pivot, its mesh's positions relative to that pivot.
-   *
-   * `compact` writes indexed primitives with shared vertices and no normals --
-   * glTF loaders then compute flat normals, which is what the triangle soup's
-   * per-face normals are anyway -- at about a third of the bytes. Triangle order
-   * within a primitive is the same either way, so the source tree's ranges hold.
+   * the part's pivot, its mesh's positions relative to that pivot. Either way
+   * the primitives are non-indexed triangle soups with flat per-face normals.
    */
-  toGlb(generator: string, name = "building", opts: { compact?: boolean } = {}): Uint8Array {
+  toGlb(generator: string, name = "building"): Uint8Array {
     type Json = {
       asset: { version: string; generator: string };
       scene: number;
@@ -422,19 +418,13 @@ export class MeshBuilder {
     };
     const chunks: Buffer[] = [];
     let offset = 0;
-    const view = (buf: Buffer, target: number): number => {
-      json.bufferViews.push({ buffer: 0, byteOffset: offset, byteLength: buf.length, target });
+    const vec3Accessor = (data: number[], withBounds: boolean): number => {
+      const buf = Buffer.from(new Float32Array(data).buffer);
+      json.bufferViews.push({ buffer: 0, byteOffset: offset, byteLength: buf.length, target: 34962 });
       chunks.push(buf);
       offset += buf.length;
-      if (buf.length % 4) {
-        chunks.push(Buffer.alloc(4 - (buf.length % 4)));
-        offset += 4 - (buf.length % 4);
-      }
-      return json.bufferViews.length - 1;
-    };
-    const vec3Accessor = (data: number[], withBounds: boolean): number => {
       const acc: Record<string, unknown> = {
-        bufferView: view(Buffer.from(new Float32Array(data).buffer), 34962), componentType: 5126, count: data.length / 3, type: "VEC3",
+        bufferView: json.bufferViews.length - 1, componentType: 5126, count: data.length / 3, type: "VEC3",
       };
       if (withBounds) {
         const min = [Infinity, Infinity, Infinity];
@@ -483,35 +473,12 @@ export class MeshBuilder {
           }
           if (pos.length === 0) return;
         }
-        if (!opts.compact) {
-          const position = vec3Accessor(pos, true);
-          const normal = vec3Accessor(nrm, false);
-          json.meshes[u]!.primitives.push({ attributes: { POSITION: position, NORMAL: normal }, material: m });
-          return;
-        }
-        // shared vertices: one per distinct float32 position, in first-use order
-        const at = new Map<string, number>();
-        const verts: number[] = [];
-        const idx: number[] = [];
-        for (let i = 0; i < pos.length; i += 3) {
-          const p = [Math.fround(pos[i]!), Math.fround(pos[i + 1]!), Math.fround(pos[i + 2]!)];
-          const key = p.join(",");
-          let v = at.get(key);
-          if (v === undefined) {
-            v = verts.length / 3;
-            at.set(key, v);
-            verts.push(p[0]!, p[1]!, p[2]!);
-          }
-          idx.push(v);
-        }
-        const position = vec3Accessor(verts, true);
-        const wide = verts.length / 3 > 65535;
-        const ibuf = Buffer.from(wide ? new Uint32Array(idx).buffer : new Uint16Array(idx).buffer);
-        json.accessors.push({ bufferView: view(ibuf, 34963), componentType: wide ? 5125 : 5123, count: idx.length, type: "SCALAR" });
-        json.meshes[u]!.primitives.push({ attributes: { POSITION: position }, indices: json.accessors.length - 1, material: m });
+        const position = vec3Accessor(pos, true);
+        const normal = vec3Accessor(nrm, false);
+        json.meshes[u]!.primitives.push({ attributes: { POSITION: position, NORMAL: normal }, material: m });
       });
     });
-    const bin = Buffer.concat(chunks); // every view padded to 4 bytes
+    const bin = Buffer.concat(chunks); // float32 data, already 4-byte aligned
     json.buffers.push({ byteLength: bin.length });
     let text = Buffer.from(JSON.stringify(json));
     if (text.length % 4) text = Buffer.concat([text, Buffer.alloc(4 - (text.length % 4), 0x20)]);

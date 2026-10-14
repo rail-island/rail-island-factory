@@ -1,6 +1,6 @@
 ---
 name: road-vehicle
-description: Model or change a procedural road vehicle (truck, articulated truck with trailer, bus, van, car) in generator/vehicles.ts - the budgets it must meet (about 10k triangles, about 300 kB GLB), the truck/trailer split at the coupling's rotation point for an articulated vehicle, the conventions, and how to check the result headlessly. Use whenever a road vehicle model is added or changed in this repository.
+description: Model or change a procedural road vehicle (truck, articulated truck with trailer, bus, van, car) in generator/vehicles.ts - the triangle budget it must meet (about 10k triangles), the truck/trailer split at the coupling's rotation point for an articulated vehicle, the conventions, and how to check the result headlessly. Use whenever a road vehicle model is added or changed in this repository.
 ---
 
 # Road vehicle
@@ -8,19 +8,16 @@ description: Model or change a procedural road vehicle (truck, articulated truck
 How to add or change a road vehicle in `generator/vehicles.ts`. The reference
 for the code is `docs/models/vehicles.md`; this skill is the checklist.
 
-## Budgets
+## Budget
 
-| | limit | enforced by |
-|---|---|---|
-| triangles | about **10,000** (hard cap 10,000) | `test/models.test.ts` |
-| GLB size | about **300 kB** (hard cap 300 kB) | `test/models.test.ts` |
+About **10,000 triangles** per vehicle (hard cap 10,000, enforced by
+`test/models.test.ts`). There is no file-size budget. Spend triangles where they
+read from the game's camera - wheels, the front, the silhouette - not on parts
+under the body. The count is in the `pnpm build:models` output and in
+`export/catalog.json` (`triangles`).
 
-Vehicles are written as compact GLBs (indexed, vertices shared, no normals -
-flat normals are computed by the loader, as glTF requires), so the size budget
-is reachable at the triangle budget. Spend triangles where they read from the
-game's camera - wheels, the front, the silhouette - not on parts under the body.
-Check both numbers in the `pnpm build:models` output and in `export/catalog.json`
-(`triangles`, `glbBytes`).
+Vehicles are written like the skyscrapers: non-indexed triangle soups with flat
+normals stored per face (tested), so no consumer has to compute them.
 
 ## Articulated vehicles (truck + trailer)
 

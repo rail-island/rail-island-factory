@@ -1,9 +1,9 @@
 # Vehicles
 
 **Covers** - the procedurally generated road vehicles (today one articulated
-American truck), their budgets and conventions, articulated vehicles' truck and
-trailer parts, the compact GLB they are written as, the `sweep` primitive they
-are mostly built from, and how to add one.
+American truck), their triangle budget and conventions, articulated vehicles'
+truck and trailer parts, the `sweep` primitive they are mostly built from, and
+how to add one.
 **Code** - `generator/vehicles.ts`, `generator/design.ts`, `generator/meshBuilder.ts` (`sweep`, `part`, `toGlb`), `src/viewerHighlight.ts`, `test/models.test.ts`, `test/viewerHighlight.test.ts`, `.claude/skills/road-vehicle/SKILL.md`
 **See also** - [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md)
 
@@ -11,7 +11,7 @@ are mostly built from, and how to add one.
 
 | id | title | look |
 |---|---|---|
-| `veh-american-truck` | American Truck | articulated: a long-nose conventional tractor (chrome grille, sleeper, twin stacks, tandem drive axle) and a 53 ft dry van; 22.2 m, about 4,900 triangles, 74 kB |
+| `veh-american-truck` | American Truck | articulated: a long-nose conventional tractor (chrome grille, sleeper, twin stacks, tandem drive axle) and a 53 ft dry van; 22.2 m, about 4,900 triangles |
 
 `VEHICLES` in `vehicles.ts` lists them as `{ id, title, build }`, the same
 `ProceduralDesign` shape as the skyscrapers (`design.ts`). `VEHICLE_CATALOG`
@@ -26,15 +26,14 @@ shipped. Vehicle ids start with `veh-`.
 Agents adding or changing a vehicle follow the `road-vehicle` skill
 (`.claude/skills/road-vehicle/SKILL.md`), the checklist for this page.
 
-## Budgets
+## Budget
 
-At most **10,000 triangles** and **300 kB** of GLB per vehicle, tested. A
-vehicle is written **compact** (`toGlb(..., { compact: true })`): indexed
-primitives, one vertex per distinct position, and **no normals** - glTF loaders
-then compute flat normals (three.js turns on `flatShading`), which is what the
-mesh builder's per-face normals are anyway. That is about a third of the plain
-triangle soup's bytes, so the two budgets meet. The skyscrapers stay plain:
-their bytes must not change.
+At most **10,000 triangles** per vehicle, tested; there is no file-size budget.
+A vehicle's GLB is the same format as a skyscraper's: non-indexed triangle
+soups with **flat normals stored** per face (tested). The normals are
+redundant - a loader could compute the same ones - but storing them means no
+step of the game's pipeline that recomputes normals on shared vertices (which
+smooths every hard edge) can get them wrong.
 
 ## Articulated vehicles: truck and trailer
 
@@ -125,4 +124,4 @@ Follow the `road-vehicle` skill. In short:
 2. `pnpm build:models`, then look at `export/thumbs/<id>.png` and the triangle
    count.
 3. `pnpm test` - every design's z-fighting, scope and source-tree checks run
-   over the vehicles too, plus the vehicle shape and budget checks above.
+   over the vehicles too, plus the vehicle shape and triangle budget checks above.

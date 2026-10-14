@@ -53,12 +53,11 @@ const VEHICLE_IDS = new Set(VEHICLES.map((d) => d.id));
 /**
  * A built design's GLB bytes. The generator string is part of the bytes; a
  * skyscraper's matches what the webapp's copy wrote, so a model built here is
- * byte-identical to one built there. A vehicle is written compact (indexed, no
- * normals) to stay inside its size budget (docs/models/vehicles.md).
+ * byte-identical to one built there.
  */
 function toGlb(id: string, model: MeshBuilder): Uint8Array {
   return VEHICLE_IDS.has(id)
-    ? model.toGlb(`Rail Island procedural vehicle (${id})`, "vehicle", { compact: true })
+    ? model.toGlb(`Rail Island procedural vehicle (${id})`, "vehicle")
     : model.toGlb(`Rail Island procedural building (${id})`);
 }
 

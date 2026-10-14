@@ -54,7 +54,7 @@ document that owns it in the same change.** Conventions:
 ## Skills
 
 - **`road-vehicle`** (`.claude/skills/road-vehicle/`) - use it whenever a road
-  vehicle model is added or changed: budgets, the truck/trailer split, checks.
+  vehicle model is added or changed: triangle budget, the truck/trailer split, checks.
 
 ## Verify changes
 
