@@ -2,8 +2,9 @@
 
 This is **Rail Island Factory**: Rail Island models generated from code, and the
 catalog site that shows them at `factory.railisland.com`. Today it builds ten
-procedural skyscrapers and one vehicle (an American truck with a trailer). The build writes an
-export folder (GLBs, thumbnails, `skyscrapers.meta.json`, `vehicles.meta.json`) that the game repository, `rail-island-webapp`, is meant
+procedural skyscrapers, five parametric village houses and a set of road and rail
+vehicles. The build writes an export folder (GLBs, thumbnails,
+`skyscrapers.meta.json`, `village.meta.json`, `vehicles.meta.json`) that the game repository, `rail-island-webapp`, is meant
 to import - the factory is the source of these models, the game a consumer.
 
 ## Documentation (`docs/`)

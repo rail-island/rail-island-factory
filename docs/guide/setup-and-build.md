@@ -42,7 +42,7 @@ design is not re-rendered at all (see [../models/export.md](../models/export.md)
 
 ## Tests
 
-`pnpm test` runs six suites:
+`pnpm test` runs these suites, among others:
 
 - `test/models.test.ts` - the mesh builder winds faces outward (three.js culls
   back faces, so an inward wall is invisible in the game and the viewer), sweeps
@@ -53,7 +53,10 @@ design is not re-rendered at all (see [../models/export.md](../models/export.md)
   no design z-fights; the bytes are deterministic; the generator writes, skips and prunes;
   every primitive sits in a scope and the source tree's triangle ranges match
   the GLB.
-- `test/export.test.ts` - `skyscrapers.meta.json`, `vehicles.meta.json` and `catalog.json` match the
+- `test/village.test.ts` - the village houses: ids and catalog fields, every
+  shape on y = 0 at house size and under 10,000 triangles, finish parameters
+  that only recolour, the side mirror ([../models/village.md](../models/village.md)).
+- `test/export.test.ts` - `skyscrapers.meta.json`, `village.meta.json`, `vehicles.meta.json` and `catalog.json` match the
   designs and the files beside them, and a rebuild writes the same documents.
 - `test/jsModel.test.ts` - each design's standalone JS model builds the GLB's triangles, colours and parts
   with real three.js, and is standalone and smaller ([../models/js-format.md](../models/js-format.md)).

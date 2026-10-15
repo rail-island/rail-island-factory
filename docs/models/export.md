@@ -1,11 +1,11 @@
 # The export folder
 
-**Covers** - what `pnpm build:models` writes, the `skyscrapers.meta.json` and
-`vehicles.meta.json` contracts the game is meant to import, the site's `catalog.json`, and the offline
+**Covers** - what `pnpm build:models` writes, the `skyscrapers.meta.json`,
+`village.meta.json` and `vehicles.meta.json` contracts the game is meant to import, the site's `catalog.json`, and the offline
 thumbnail renderer.
 **Code** - `generator/generate.ts`, `generator/catalog.ts`, `generator/renderGlbThumb.ts`,
 `generator/jsModel.ts`, `generator/glbStats.ts`, `generator/coplanar.ts`, `generator/glbTriangles.ts`, `generator/glbParse.ts`, `test/export.test.ts`
-**See also** - [skyscrapers.md](skyscrapers.md), [vehicles.md](vehicles.md), [../site/catalog-site.md](../site/catalog-site.md),
+**See also** - [skyscrapers.md](skyscrapers.md), [village.md](village.md), [vehicles.md](vehicles.md), [../site/catalog-site.md](../site/catalog-site.md),
 [../guide/setup-and-build.md](../guide/setup-and-build.md)
 
 ## What is written
@@ -21,12 +21,13 @@ and `pnpm dev`) writes the gitignored `export/`:
 | `export/tree/<id>.json` | the procedural source tree, for the site only ([source-tree.md](source-tree.md)) |
 | `export/refs/<id>/...` | the design's source images, copied from `assets/<references>/`, for the site only |
 | `export/skyscrapers.meta.json` | one game-catalog entry per skyscraper - the import contract |
+| `export/village.meta.json` | the same per village house, under `buildings` |
 | `export/vehicles.meta.json` | the same per vehicle, under `vehicles` |
 | `export/catalog.json` | what the site lists |
 
 `export/` is also Vite's `publicDir`, so `vite build` copies it into `dist/` as
 it stands and the deployed site serves the very files the game would import, at
-`/glb/...`, `/js/...`, `/thumbs/...`, `/skyscrapers.meta.json`, `/vehicles.meta.json` and `/catalog.json` (and the
+`/glb/...`, `/js/...`, `/thumbs/...`, `/skyscrapers.meta.json`, `/village.meta.json`, `/vehicles.meta.json` and `/catalog.json` (and the
 site-only `/tree/...` and `/refs/...`, which the game ignores).
 
 **Incremental.** An unchanged design produces byte-identical GLB bytes; the
@@ -79,6 +80,16 @@ entry is built by `metaEntry()` in `generator/catalog.ts` from a design and
 import that mirrors `glb/`, `thumbs/` and this file into the game's building
 catalog, the way the webapp already imports vehicles from vlakosimdb's export.
 Changing a field here is a contract change for that importer.
+
+## `village.meta.json`
+
+The village houses ([village.md](village.md)) are buildings of their own
+family: `exportMeta(VILLAGE_HOUSES)` writes them in exactly the
+`skyscrapers.meta.json` shape, under `buildings`, each entry with the fields of
+`VILLAGE_CATALOG` (category `Village`, group `village`, `defaultScale` 1.88) and
+its `params`. `exportMeta` takes each design's own `catalog` fields, the
+skyscrapers' when it has none. A separate file lets the game import the houses
+into its village pool without touching the skyscrapers. Nothing reads it yet.
 
 ## `vehicles.meta.json`
 

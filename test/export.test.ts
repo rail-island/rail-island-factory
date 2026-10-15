@@ -7,9 +7,10 @@ import os from "node:os";
 import path from "node:path";
 import { SKYSCRAPERS } from "../generator/skyscrapers";
 import { VEHICLES } from "../generator/vehicles";
+import { VILLAGE_HOUSES } from "../generator/village";
 import { DESIGNS, buildExport, generateReferences } from "../generator/generate";
 import {
-  CATALOG_FILE, META_FILE, VEHICLE_META_FILE, catalogRecord, exportMeta, exportVehicleMeta, metaEntry,
+  CATALOG_FILE, META_FILE, VEHICLE_META_FILE, VILLAGE_META_FILE, catalogRecord, exportMeta, exportVehicleMeta, metaEntry,
   type ExportMeta, type ModelCatalog, type VehicleExportMeta,
 } from "../generator/catalog";
 
@@ -30,6 +31,31 @@ describe("exportMeta", () => {
         license: "CC0",
         author: "Rail Island",
         source: "Rail Island",
+      });
+    }
+  });
+});
+
+describe("exportMeta for the village houses", () => {
+  // the houses go to village.meta.json in the same buildings shape, each entry
+  // with the village catalog fields and the design's parameters
+  it("has one entry per house, with the Village fields and the params", () => {
+    const meta = exportMeta(VILLAGE_HOUSES);
+    expect(meta.count).toBe(VILLAGE_HOUSES.length);
+    for (const b of meta.buildings) {
+      const d = VILLAGE_HOUSES.find((x) => x.id === b.id)!;
+      expect(b).toEqual({
+        id: d.id,
+        title: d.title,
+        category: "Village",
+        group: "village",
+        glb: `${d.id}.glb`,
+        thumb: `${d.id}.png`,
+        defaultScale: 1.88,
+        license: "CC0",
+        author: "Rail Island",
+        source: "Rail Island",
+        params: d.params,
       });
     }
   });
@@ -85,7 +111,9 @@ describe("buildExport", () => {
       const meta = JSON.parse(fs.readFileSync(path.join(dir, META_FILE), "utf8")) as ExportMeta;
       const catalog = JSON.parse(fs.readFileSync(path.join(dir, CATALOG_FILE), "utf8")) as ModelCatalog;
       const vehicles = JSON.parse(fs.readFileSync(path.join(dir, VEHICLE_META_FILE), "utf8")) as VehicleExportMeta;
+      const village = JSON.parse(fs.readFileSync(path.join(dir, VILLAGE_META_FILE), "utf8")) as ExportMeta;
       expect(meta).toEqual(exportMeta(SKYSCRAPERS));
+      expect(village).toEqual(exportMeta(VILLAGE_HOUSES));
       expect(vehicles).toEqual(exportVehicleMeta(VEHICLES));
       expect(catalog.version).toBe(1);
       expect(catalog.records.map((r) => r.id)).toEqual([...DESIGNS.keys()]);
@@ -95,7 +123,9 @@ describe("buildExport", () => {
         expect(fs.statSync(path.join(dir, r.jsUrl)).size).toBe(r.jsBytes);
         expect(r.jsBytes).toBeLessThan(r.glbBytes);
         expect(r.triangles).toBeGreaterThan(0);
-        const listed = meta.buildings.find((b) => b.id === r.id) ?? vehicles.vehicles.find((v) => v.id === r.id);
+        const listed = meta.buildings.find((b) => b.id === r.id)
+          ?? village.buildings.find((b) => b.id === r.id)
+          ?? vehicles.vehicles.find((v) => v.id === r.id);
         expect(r).toMatchObject(listed!);
         if (meta.buildings.some((b) => b.id === r.id)) expect(r.sizeY).toBeGreaterThan(2 * Math.max(r.sizeX, r.sizeZ));
         for (const ref of r.references) expect(fs.statSync(path.join(dir, ref.url)).size).toBe(ref.bytes);

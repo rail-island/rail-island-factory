@@ -8,6 +8,7 @@ import path from "node:path";
 import { MeshBuilder, ngon, rect } from "../generator/meshBuilder";
 import { SKYSCRAPERS } from "../generator/skyscrapers";
 import { VEHICLES } from "../generator/vehicles";
+import { VILLAGE_HOUSES } from "../generator/village";
 import { DESIGNS, ZFightingError, designGlb, designTree, generateModels } from "../generator/generate";
 import { isLeaf, type LeafNode, type ScopeNode, type TreeNode } from "../generator/sourceTree";
 import { findCoplanarOverlaps } from "../generator/coplanar";
@@ -326,7 +327,7 @@ describe("the vehicles", () => {
     expect(ids).toContain("veh-american-truck");
     expect(new Set(ids).size).toBe(ids.length);
     for (const id of ids) expect(id).toMatch(/^veh-[a-z0-9]+(-[a-z0-9]+)*$/);
-    expect(DESIGNS.size).toBe(SKYSCRAPERS.length + VEHICLES.length);
+    expect(DESIGNS.size).toBe(SKYSCRAPERS.length + VILLAGE_HOUSES.length + VEHICLES.length);
   });
 
   it.each(VEHICLES.map((d) => [d.id] as const))("%s stands on its wheels, faces +x, fits its road or track and stays in budget", (id) => {

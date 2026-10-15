@@ -4,7 +4,9 @@ The model factory for [Rail Island](https://railisland.com): Rail Island models
 generated from code, and the catalog site that shows them at
 [factory.railisland.com](https://factory.railisland.com).
 
-Today it builds ten procedurally generated skyscrapers and an American truck with its trailer and CD 150/CD 163 electric locomotives.
+Today it builds ten procedurally generated skyscrapers, five parametric village
+houses (3,640 variants), an American truck with its trailer, and Czech
+locomotives, coaches and freight wagons.
 Every model is written as
 a GLB with a thumbnail and a catalog entry, in an export folder that the game
 (`rail-island-webapp`) can import.

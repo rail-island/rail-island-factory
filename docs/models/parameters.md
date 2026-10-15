@@ -1,8 +1,8 @@
 # Parametric models
 
 **Covers** - designs with enum parameters: how a design declares them, what the export holds (one GLB per design, built with the defaults), how the meta and catalog entries and the standalone JS model expose them, the site's parameter picker, and the tests.
-**Code** - `generator/design.ts` (`ParamSpec`, `resolveParams`, `paramCombinations`), `generator/catalog.ts` (`MetaEntry.params`), `generator/jsModel.ts`, `generator/csdCoaches.ts` (`CLASSIC_GREEN_PARAMS`), `generator/bmoCoach.ts` (`BMO_PARAMS`), `generator/cdGreenWhiteCoach.ts` (`GREEN_WHITE_PARAMS`), `generator/wagons.ts` (`NAS_PARAMS`, `UA_PARAMS`, `EAS_PARAMS`), `generator/cd163Family.ts` (`CD163_PARAMS`, `CD263_PARAMS`), `generator/cd150.ts` (`CD150_PARAMS`), `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/catalogQuery.ts` (`effectiveParams`, `isDefaultParams`), `test/params.test.ts`
-**See also** - [export.md](export.md), [js-format.md](js-format.md), [csd-coaches.md](csd-coaches.md), [../site/catalog-site.md](../site/catalog-site.md)
+**Code** - `generator/design.ts` (`ParamSpec`, `resolveParams`, `paramCombinations`, `coverageCombinations`), `generator/village.ts` (the village houses' params), `generator/catalog.ts` (`MetaEntry.params`), `generator/jsModel.ts`, `generator/csdCoaches.ts` (`CLASSIC_GREEN_PARAMS`), `generator/bmoCoach.ts` (`BMO_PARAMS`), `generator/cdGreenWhiteCoach.ts` (`GREEN_WHITE_PARAMS`), `generator/wagons.ts` (`NAS_PARAMS`, `UA_PARAMS`, `EAS_PARAMS`), `generator/cd163Family.ts` (`CD163_PARAMS`, `CD263_PARAMS`), `generator/cd150.ts` (`CD150_PARAMS`), `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/catalogQuery.ts` (`effectiveParams`, `isDefaultParams`), `test/params.test.ts`
+**See also** - [export.md](export.md), [js-format.md](js-format.md), [csd-coaches.md](csd-coaches.md), [village.md](village.md), [../site/catalog-site.md](../site/catalog-site.md)
 
 ## The idea
 
@@ -19,7 +19,8 @@ and `veh-cd-263` (`livery`, [loco-liveries.md](loco-liveries.md)),
 [bmo-double-deck.md](bmo-double-deck.md)) and `veh-cd-green-white-coach`
 (`variant`: a, ab, b, bee, beel, bds, ds, bdmeer, bdmtee; default b;
 [cd-green-white.md](cd-green-white.md)), and the three freight wagons with a
-`cargo` (default empty; [wagons.md](wagons.md)). A variant may change more than
+`cargo` (default empty; [wagons.md](wagons.md)). The five village houses are
+parametric too, with up to six parameters each ([village.md](village.md)). A variant may change more than
 paint: the green and white coach's variants have their own lengths and
 layouts. The first was `veh-csd-classic-green-coach` with one parameter:
 
@@ -89,9 +90,17 @@ unknown name or value falls back to the default (`effectiveParams`).
 
 ## Tests
 
+**Finish parameters.** A design may name some parameters in `finishParams`:
+ones that only recolour it (the village houses' roof and wall colours). They
+are ordinary parameters everywhere else; the tests build
+`coverageCombinations(params, finishParams)` - every combination of the other
+parameters at the default finish, then each other finish value on the default
+shape - instead of the full product. A design without `finishParams` is tested
+on every combination.
+
 `test/params.test.ts` checks the resolution and enumeration rules, that every
 parametric design's enums are well formed, that the meta entries list exactly
-the declared parameters, and, for every combination of every parametric design:
+the declared parameters, and, for every covered combination of every parametric design:
 deterministic GLB bytes, no coplanar overlaps, the rail envelope and budget, and
 that the JS model's `build(THREE, combination)` draws the generator's triangles.
 `test/catalogQuery.test.ts` covers the URL round trip and the site's fallback to
