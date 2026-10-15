@@ -2,7 +2,7 @@
 
 **Covers** - the parametric electric locomotives: `veh-cd-150` (CD 150, CD 151, ZSR 350), `veh-cd-163` (CD 162, 163, 362, 363) and `veh-cd-263` (CD 263, 371, 372) as `livery` values, the livery model (colour bands, cab paint, emblems, running numbers), the CD 263's own machine room, the native BMP evidence, deviations and tests.
 **Code** - `generator/cd163.ts` (`Cd163Livery`, `Band`, `bandAt`, `bandPieces`, `splitHeights`, `runningNumber`, `cd163Body`, `cabPaint`, `grillesAndWindows`), `generator/cd163Family.ts` (`CD163_LIVERIES`, `CD263_LIVERIES`, `cd163`, `cd263`), `generator/cd150.ts` (`CD150_LIVERIES`, `CD150_PARAMS`), `generator/vehicles.ts`, `test/cd163Family.test.ts`, `assets/cd-163/native/liveries/`, `assets/cd-263/`, `assets/cd-150/native/liveries/`
-**See also** - [vehicles.md](vehicles.md) (the CD 150 and CD 163 bodies), [parameters.md](parameters.md), [the railroad-vehicle skill](../../.agents/skills/railroad-vehicle/SKILL.md), [the vlakosimdb-transfer skill](../../.agents/skills/vlakosimdb-transfer/SKILL.md)
+**See also** - [vehicles.md](vehicles.md) (the CD 150 and CD 163 bodies), [cd-230.md](cd-230.md) (the laminatka), [parameters.md](parameters.md), [the railroad-vehicle skill](../../.agents/skills/railroad-vehicle/SKILL.md), [the vlakosimdb-transfer skill](../../.agents/skills/vlakosimdb-transfer/SKILL.md)
 
 ## The idea
 
@@ -18,6 +18,7 @@ so they are a design of their own built by the same code.
 |---|---|---|---|
 | `veh-cd-163` | CD 163 / 363 | `cd163`, `cd162`, `cd162No022`, `cd163No022`, `cd163No021`, `cd362`, `cd362No054`, `cd363`, `cd363No044`, `cd363No037`, `cd363No009` | 15,300 to 16,000 |
 | `veh-cd-263` | CD 263 / 371 / 372 | `cd263`, `cd263No015`, `cd371No002`, `cd371No005`, `cd372` | 15,200 to 15,500 |
+| `veh-cd-230` | CD 230 / 240 / 340 | `cd230`, `cd240`, `cd240No047`, `cd340` - its own body and livery model, see [cd-230.md](cd-230.md) | 15,600 to 15,900 |
 | `veh-cd-150` | CD 150 / 151 / ZSR 350 | `cd150`, `cd151`, `cd151Cez`, `zsr350`, `zsr350No001` ... `zsr350No004` | 12,100 to 12,600 |
 
 A value names its vlakosimdb model: `cd363No044` is `cd_363.044`, `zsr350No001`
