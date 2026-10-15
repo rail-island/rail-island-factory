@@ -33,7 +33,7 @@ const PALETTE: Record<string, MaterialSpec> = {
   ladder: C("#ae5402"),
 };
 
-/** T 679.001 in the CSD numbering; as 776 001-? it would carry the 1988 number. */
+/** T 679.001 in the CSD numbering (a Kryspin number, no check digit). */
 export const T679_NUMBER = "T 679.001";
 /** The 1988 number the same locomotive took (with its check digit). */
 export const T679_NUMBER_1988 = runningNumber("776", "001");

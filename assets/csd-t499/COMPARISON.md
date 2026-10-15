@@ -4,7 +4,7 @@
 **Code** - `generator/dieselComparison.ts`, `generator/dieselReport.ts`, `native/landmarks.json`.
 **See also** - [source notes](SOURCES.md), [photographs](PHOTOS.md), [the models' reference](../../docs/models/diesel-locos.md).
 
-Model geometry revision (SHA-256 of the comparison GLB): `adbfbc5b3778b7298a71bf71560cac15a2c538a3fe3c905fa765d8cc341d5e18`.
+Model geometry revision (SHA-256 of the comparison GLB): `5f7d9c0472be8db2d9f06179669ce0a1bc64f6d215b857fd76f5a8feff610d55`.
 
 Regenerate with `pnpm exec tsx generator/dieselReport.ts`. The baseline is the first authored model (a new model: no earlier factory version existed), stored in `native/baseline.json` with the same annotations.
 
@@ -16,8 +16,8 @@ Each vector is (left, top, width, height). Percentages are 100*x/W, 100*y/H, 100
 |---|---:|---:|---:|
 | x_front | 10 | 1.099 | 1.099 |
 | x_rear | 10 | 1.099 | 1.099 |
-| z_right | 9 | 0.254 | 0.254 |
-| All | 29 | 0.837 | 0.837 |
+| z_right | 9 | 0.185 | 0.054 |
+| All | 29 | 0.815 | 0.775 |
 
 One pixel is 3.333 pp horizontally at the front, 0.556 pp horizontally at the sides and 2.000 pp vertically. Rows with a tolerance above about one pixel are deliberate departures, explained in their uncertainty column.
 
@@ -52,10 +52,10 @@ Annotated views (generated locally, not committed):
 | B10 | 0, 43, 30, 47 | native | `rear-cab/lower-end/plough` | 0.000, 86.000, 100.000, 8.000 | 1.667, 85.000, 96.667, 11.000 | 1.667, -1.000, -3.333, 3.000 | 2.250 | 2.250 | Native pixel edge estimate; +/- one pixel. |
 | R01 | 9, 17, 14, 22 | native | `sides/right-side/left-cab/cab-window` | 5.000, 34.000, 2.778, 10.000 | 5.000, 34.000, 2.778, 10.000 | 0.000, 0.000, 0.000, 0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. |
 | R02 | 17, 17, 21, 22 | native | `sides/right-side/left-cab/door/window` | 9.444, 34.000, 2.222, 10.000 | 9.333, 34.000, 2.444, 10.000 | -0.111, 0.000, 0.222, 0.000 | 0.083 | 0.083 | Native pixel edge estimate; +/- one pixel. The door's window. |
-| R03 | 25, 16, 51, 30 | native | `sides/right-side/left-cab/yellow-bay/frame` | 13.889, 32.000, 14.444, 28.000 | 14.167, 33.600, 13.611, 24.800 | 0.278, 1.600, -0.833, -3.200 | 1.478 | 1.478 | Native pixel edge estimate; +/- one pixel. The louvred bay behind the cab. |
+| R03 | 25, 16, 51, 30 | native | `sides/right-side/left-cab/yellow-bay/frame` | 13.889, 32.000, 14.444, 28.000 | 13.889, 32.400, 14.444, 27.200 | 0.000, 0.400, -0.000, -0.800 | 1.478 | 0.300 | Native pixel edge estimate; +/- one pixel. The louvred bay behind the cab. |
 | R04 | 58, 17, 63, 22 | native | `sides/right-side/windows/window-1` | 32.222, 34.000, 2.778, 10.000 | 32.222, 34.000, 2.778, 10.000 | -0.000, 0.000, 0.000, 0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. Machine-room window. |
 | R05 | 78, 17, 83, 22 | native | `sides/right-side/windows/window-2` | 43.333, 34.000, 2.778, 10.000 | 43.333, 34.000, 2.778, 10.000 | 0.000, 0.000, 0.000, 0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. Machine-room window. |
 | R06 | 85, 17, 90, 22 | native | `sides/right-side/windows/window-3` | 47.222, 34.000, 2.778, 10.000 | 47.222, 34.000, 2.778, 10.000 | 0.000, 0.000, 0.000, 0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. Machine-room window. |
 | R07 | 102, 17, 107, 22 | native | `sides/right-side/windows/window-4` | 56.667, 34.000, 2.778, 10.000 | 56.667, 34.000, 2.778, 10.000 | 0.000, 0.000, 0.000, 0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. Machine-room window. |
-| R08 | 5, 30, 170, 35 | native | `body/shell/side-right/band-1`, `body/shell/cab-right/band-1` | 2.778, 60.000, 91.667, 10.000 | 3.611, 60.000, 90.000, 10.000 | 0.833, 0.000, -1.667, 0.000 | 0.625 | 0.625 | Livery band 1.5 .. 2.0 m (navy). |
+| R08 | 5, 30, 170, 35 | native | `body/shell/side-right/band-1`, `body/shell/cab-right/band-1`, `body/shell/front/band-1`, `body/shell/rear/band-1` | 2.778, 60.000, 91.667, 10.000 | 2.778, 60.000, 91.667, 10.000 | 0.000, 0.000, 0.000, 0.000 | 0.000 | 0.000 | Livery band 1.5 .. 2.0 m (navy). |
 | R09 | 63, 40, 112, 47 | native | `underframe/fuel-tank` | 35.000, 80.000, 27.222, 14.000 | 35.000, 80.000, 27.222, 13.600 | -0.000, 0.000, 0.000, -0.400 | 0.100 | 0.100 | XML 'box' clip 6.3 .. 11.2, 0.3 .. 1.0 m. |

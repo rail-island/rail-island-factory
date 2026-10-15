@@ -42,8 +42,8 @@ export const CD771_LIVERIES = {
   cd771: {
     title: "CD 771, green with the white band",
     source: "cd 771",
-    number: runningNumber("771", "131"),
-    numberSource: "illustrative, a unit of the class (771 131-0, photo-771-131.jpg); the native plate does not resolve digits",
+    number: runningNumber("771", "099"),
+    numberSource: "771 099-9, a unit photographed in green (photo-771-099-three-quarter.jpg); the native plate does not resolve digits",
     palette: { green: C("#2e5b00"), white: C("#f2f2ee"), red: C("#b7322f"), lightGreen: C("#4f9d00") },
     // "cd 771" z_both rows 8..16 white (3.1 .. 3.9 m of its 4.7 m canvas), green below and above
     hood: [[1.7, 3.1, "green"], [3.1, 3.9, "white"], [3.9, 4.6, "green"]],
@@ -151,7 +151,7 @@ function frame(m: MeshBuilder, l: Cd771Livery): void {
         m.facets("hazard", pts, [e, 0, 0]);
       });
       buffers(m, e, face, 8.625, 1.0, "round");
-      coupling(m, e, face, 1.0);
+      coupling(m, e, face, 1.0, 0.36);
       m.scope("lamps", () => {
         for (const z of [-0.95, 0.95]) {
           const rim = ngon(10, 0.1, 0, z, 1.45), lens = ngon(10, 0.07, 0, z, 1.45);

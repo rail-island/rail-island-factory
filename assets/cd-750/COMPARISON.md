@@ -4,7 +4,7 @@
 **Code** - `generator/dieselComparison.ts`, `generator/dieselReport.ts`, `native/landmarks.json`.
 **See also** - [source notes](SOURCES.md), [photographs](PHOTOS.md), [the models' reference](../../docs/models/diesel-locos.md).
 
-Model geometry revision (SHA-256 of the comparison GLB): `94a35619cf0e80fe5b83125d2e5b05fea743bb76e67ff9de1f938417bb7242d5`.
+Model geometry revision (SHA-256 of the comparison GLB): `cc6cd73d13a48beda7aed6b230aae06c249aede2746c2b6739cda6df9e5b6d1e`.
 
 Regenerate with `pnpm exec tsx generator/dieselReport.ts`. The baseline is the first authored model (a new model: no earlier factory version existed), stored in `native/baseline.json` with the same annotations.
 
@@ -14,11 +14,11 @@ Each vector is (left, top, width, height). Percentages are 100*x/W, 100*y/H, 100
 
 | View | Boxes | Baseline MAE (pp) | Final MAE (pp) |
 |---|---:|---:|---:|
-| x_front | 15 | 1.192 | 1.192 |
-| x_rear | 15 | 1.192 | 1.192 |
-| z_right | 15 | 0.202 | 0.202 |
-| z_left | 15 | 0.202 | 0.202 |
-| All | 60 | 0.697 | 0.697 |
+| x_front | 15 | 1.192 | 0.933 |
+| x_rear | 15 | 1.192 | 0.933 |
+| z_right | 15 | 0.202 | 0.135 |
+| z_left | 15 | 0.202 | 0.135 |
+| All | 60 | 0.697 | 0.534 |
 
 One pixel is 3.333 pp horizontally at the front, 0.625 pp horizontally at the sides and 2.000 pp vertically. Rows with a tolerance above about one pixel are deliberate departures, explained in their uncertainty column.
 
@@ -38,10 +38,10 @@ Annotated views (generated locally, not committed):
 | B02 | 1, 16, 14, 23 | native | `rear-cab/face/windscreen/left-pane` | 3.333, 32.000, 43.333, 14.000 | 3.273, 32.000, 43.416, 14.000 | -0.061, -0.000, 0.083, 0.000 | 0.036 | 0.036 | Native pixel edge estimate; +/- one pixel. Rubber and glass of the viewer's left pane. |
 | F03 | 16, 16, 29, 23 | native | `front-cab/face/windscreen/right-pane` | 53.333, 32.000, 43.333, 14.000 | 53.311, 32.000, 43.416, 14.000 | -0.022, -0.000, 0.083, 0.000 | 0.026 | 0.026 | Native pixel edge estimate; +/- one pixel. |
 | B03 | 16, 16, 29, 23 | native | `rear-cab/face/windscreen/right-pane` | 53.333, 32.000, 43.333, 14.000 | 53.311, 32.000, 43.416, 14.000 | -0.022, -0.000, 0.083, 0.000 | 0.026 | 0.026 | Native pixel edge estimate; +/- one pixel. |
-| F04 | 11, 9, 20, 15 | native | `front-cab/face/headlight/rim` | 36.667, 18.000, 30.000, 12.000 | 38.667, 17.770, 22.667, 13.259 | 2.000, -0.230, -7.333, 1.259 | 2.705 | 2.705 | The white ring of the headlight on the housing; +/- one pixel, a 9 px circle drawn square. |
-| B04 | 11, 9, 20, 15 | native | `rear-cab/face/headlight/rim` | 36.667, 18.000, 30.000, 12.000 | 38.667, 17.770, 22.667, 13.259 | 2.000, -0.230, -7.333, 1.259 | 2.705 | 2.705 | The white ring of the headlight on the housing; +/- one pixel, a 9 px circle drawn square. |
-| F05 | 12, 25, 18, 29 | native | `front-cab/face/emblem` | 40.000, 50.000, 20.000, 8.000 | 42.361, 46.801, 15.277, 7.207 | 2.361, -3.199, -4.723, -0.793 | 2.769 | 2.769 | Native pixel edge estimate; +/- one pixel. CD emblem. |
-| B05 | 12, 25, 18, 29 | native | `rear-cab/face/emblem` | 40.000, 50.000, 20.000, 8.000 | 42.361, 46.801, 15.277, 7.207 | 2.361, -3.199, -4.723, -0.793 | 2.769 | 2.769 | Native pixel edge estimate; +/- one pixel. CD emblem. |
+| F04 | 11, 9, 20, 15 | native | `front-cab/face/headlight/rim` | 36.667, 18.000, 30.000, 12.000 | 35.000, 18.000, 30.000, 11.900 | -1.667, 0.000, -0.000, -0.100 | 2.705 | 0.442 | The white ring of the headlight on the housing; +/- one pixel, a 9 px circle drawn square. |
+| B04 | 11, 9, 20, 15 | native | `rear-cab/face/headlight/rim` | 36.667, 18.000, 30.000, 12.000 | 35.000, 18.000, 30.000, 11.900 | -1.667, 0.000, -0.000, -0.100 | 2.705 | 0.442 | The white ring of the headlight on the housing; +/- one pixel, a 9 px circle drawn square. |
+| F05 | 12, 25, 18, 29 | native | `front-cab/face/emblem` | 40.000, 50.000, 20.000, 8.000 | 41.514, 50.014, 16.972, 7.994 | 1.514, 0.014, -3.028, -0.006 | 2.769 | 1.140 | Native pixel edge estimate; +/- one pixel. CD emblem. |
+| B05 | 12, 25, 18, 29 | native | `rear-cab/face/emblem` | 40.000, 50.000, 20.000, 8.000 | 41.514, 50.014, 16.972, 7.994 | 1.514, 0.014, -3.028, -0.006 | 2.769 | 1.140 | Native pixel edge estimate; +/- one pixel. CD emblem. |
 | F06 | 11, 35, 19, 37 | native | `front-cab/face/number-plate` | 36.667, 70.000, 26.667, 4.000 | 36.667, 70.000, 26.667, 4.000 | -0.000, 0.000, 0.000, 0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. |
 | B06 | 11, 35, 19, 37 | native | `rear-cab/face/number-plate` | 36.667, 70.000, 26.667, 4.000 | 36.667, 70.000, 26.667, 4.000 | -0.000, 0.000, 0.000, 0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. |
 | F07 | 6, 35, 8, 37 | native | `front-cab/face/lamps/head-lamp` | 20.000, 70.000, 6.667, 4.000 | 19.000, 69.527, 8.667, 4.945 | -1.000, -0.473, 2.000, 0.945 | 1.105 | 1.105 | Native pixel edge estimate; +/- one pixel. White lamp (2 by 2 px). |
@@ -76,7 +76,7 @@ Annotated views (generated locally, not committed):
 | R12 | 33, 26, 38, 30 | native | `sides/right-side/emblem` | 20.625, 52.000, 3.125, 8.000 | 20.758, 52.001, 2.859, 7.195 | 0.133, 0.001, -0.266, -0.805 | 0.301 | 0.301 | Native pixel edge estimate; +/- one pixel. |
 | R13 | 0, 34, 153, 39 | native | `body/frame` | 0.000, 68.000, 95.625, 10.000 | -0.000, 68.000, 95.625, 10.000 | -0.000, -0.000, 0.000, 0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. The frame, 1.1 .. 1.6 m, over the body's length. |
 | R14 | 50, 7, 106, 8 | native | `body/roof/hatch` | 31.250, 14.000, 35.000, 2.000 | 31.250, 14.000, 35.000, 2.600 | -0.000, -0.000, 0.000, 0.600 | 0.150 | 0.150 | XML roof clip 5.0 .. 10.6, its crest at 4.3 m; one row. |
-| R15 | 54, 39, 99, 48 | native | `underframe/fuel-tank` | 33.750, 78.000, 28.125, 18.000 | 33.750, 79.000, 28.125, 15.000 | 0.000, 1.000, 0.000, -3.000 | 1.000 | 1.000 | XML base clip 5.4 .. 9.9, 0.2 .. 1.1 m: the fuel tank. |
+| R15 | 54, 39, 99, 48 | native | `underframe/fuel-tank` | 33.750, 78.000, 28.125, 18.000 | 33.750, 78.000, 28.125, 18.000 | 0.000, -0.000, 0.000, 0.000 | 1.000 | 0.000 | XML base clip 5.4 .. 9.9, 0.2 .. 1.1 m: the fuel tank. |
 | L01 | 25, 19, 29, 23 | native | `sides/left-side/windows/window-1` | 15.625, 38.000, 2.500, 8.000 | 15.625, 38.000, 2.500, 8.000 | -0.000, 0.000, 0.000, -0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. Machine-room window, frame and glass. |
 | L02 | 39, 19, 43, 23 | native | `sides/left-side/windows/window-2` | 24.375, 38.000, 2.500, 8.000 | 24.375, 38.000, 2.500, 8.000 | 0.000, 0.000, 0.000, -0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. Machine-room window, frame and glass. |
 | L03 | 53, 19, 57, 23 | native | `sides/left-side/windows/window-3` | 33.125, 38.000, 2.500, 8.000 | 33.125, 38.000, 2.500, 8.000 | 0.000, 0.000, -0.000, -0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. Machine-room window, frame and glass. |
@@ -91,4 +91,4 @@ Annotated views (generated locally, not committed):
 | L12 | 33, 26, 38, 30 | native | `sides/left-side/emblem` | 20.625, 52.000, 3.125, 8.000 | 20.758, 52.001, 2.859, 7.195 | 0.133, 0.001, -0.266, -0.805 | 0.301 | 0.301 | Native pixel edge estimate; +/- one pixel. |
 | L13 | 0, 34, 153, 39 | native | `body/frame` | 0.000, 68.000, 95.625, 10.000 | -0.000, 68.000, 95.625, 10.000 | -0.000, -0.000, 0.000, 0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. The frame, 1.1 .. 1.6 m, over the body's length. |
 | L14 | 50, 7, 106, 8 | native | `body/roof/hatch` | 31.250, 14.000, 35.000, 2.000 | 31.250, 14.000, 35.000, 2.600 | -0.000, -0.000, 0.000, 0.600 | 0.150 | 0.150 | XML roof clip 5.0 .. 10.6, its crest at 4.3 m; one row. |
-| L15 | 54, 39, 99, 48 | native | `underframe/fuel-tank` | 33.750, 78.000, 28.125, 18.000 | 33.750, 79.000, 28.125, 15.000 | 0.000, 1.000, 0.000, -3.000 | 1.000 | 1.000 | XML base clip 5.4 .. 9.9, 0.2 .. 1.1 m: the fuel tank. |
+| L15 | 54, 39, 99, 48 | native | `underframe/fuel-tank` | 33.750, 78.000, 28.125, 18.000 | 33.750, 78.000, 28.125, 18.000 | 0.000, -0.000, 0.000, 0.000 | 1.000 | 0.000 | XML base clip 5.4 .. 9.9, 0.2 .. 1.1 m: the fuel tank. |

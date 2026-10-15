@@ -502,12 +502,12 @@ export function buffers(m: MeshBuilder, e: number, xBeam: number, xHead: number,
 }
 
 /** The screw coupling's hook and the draw gear box, plus brake hoses, on end e. */
-export function coupling(m: MeshBuilder, e: number, xBeam: number, y: number): void {
+export function coupling(m: MeshBuilder, e: number, xBeam: number, y: number, reach = 0.44): void {
   const along = (a: number, b: number): [number, number] => (e > 0 ? [a, b] : [-b, -a]);
   m.scope("coupling", () => {
-    block(m, "underframe", ...along(xBeam, xBeam + 0.25), y - 0.08, y + 0.08, -0.12, 0.12);
-    block(m, "steel", ...along(xBeam + 0.25, xBeam + 0.42), y - 0.04, y + 0.04, -0.04, 0.04);
-    block(m, "steel", ...along(xBeam + 0.36, xBeam + 0.44), y - 0.12, y + 0.04, -0.04, 0.04);
+    block(m, "underframe", ...along(xBeam, xBeam + reach * 0.57), y - 0.08, y + 0.08, -0.12, 0.12);
+    block(m, "steel", ...along(xBeam + reach * 0.57, xBeam + reach * 0.95), y - 0.04, y + 0.04, -0.04, 0.04);
+    block(m, "steel", ...along(xBeam + reach * 0.82, xBeam + reach), y - 0.12, y + 0.04, -0.04, 0.04);
   });
   m.scope("hoses", () => {
     for (const z of [-0.45, 0.45]) {

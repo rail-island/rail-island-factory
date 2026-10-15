@@ -4,7 +4,7 @@
 **Code** - `generator/dieselComparison.ts`, `generator/dieselReport.ts`, `native/landmarks.json`.
 **See also** - [source notes](SOURCES.md), [photographs](PHOTOS.md), [the models' reference](../../docs/models/diesel-locos.md).
 
-Model geometry revision (SHA-256 of the comparison GLB): `89e4d81ddd9e2f7f20f94a1eadef3d9fc8c346be90182fce89010750c64a191e`.
+Model geometry revision (SHA-256 of the comparison GLB): `939b85cd1afcfd97b32f4cbd142ba4cc7a8a3ba2f184f7939a684d31241d6efd`.
 
 Regenerate with `pnpm exec tsx generator/dieselReport.ts`. The baseline is the first authored model (a new model: no earlier factory version existed), stored in `native/baseline.json` with the same annotations.
 
@@ -16,8 +16,8 @@ Each vector is (left, top, width, height). Percentages are 100*x/W, 100*y/H, 100
 |---|---:|---:|---:|
 | x_front | 9 | 0.819 | 0.819 |
 | x_rear | 9 | 0.819 | 0.819 |
-| z_right | 9 | 0.646 | 0.646 |
-| All | 27 | 0.761 | 0.761 |
+| z_right | 9 | 0.600 | 0.507 |
+| All | 27 | 0.746 | 0.715 |
 
 One pixel is 3.333 pp horizontally at the front, 0.526 pp horizontally at the sides and 2.273 pp vertically. Rows with a tolerance above about one pixel are deliberate departures, explained in their uncertainty column.
 
@@ -53,7 +53,7 @@ Annotated views (generated locally, not committed):
 | R02 | 20, 7, 26, 14 | native | `sides/right-side/left-cab/door/window` | 10.526, 15.909, 3.158, 15.909 | 10.471, 15.455, 2.742, 17.500 | -0.055, -0.455, -0.416, 1.591 | 0.629 | 0.629 | Native pixel edge estimate; +/- one pixel. The door's window. |
 | R03 | 30, 8, 51, 25 | native | `sides/right-side/intake` | 15.789, 18.182, 11.053, 38.636 | 15.789, 18.182, 10.526, 38.636 | -0.000, 0.000, -0.526, -0.000 | 0.132 | 0.132 | Native pixel edge estimate; +/- one pixel. The louvred intake, two panels. |
 | R04 | 58, 6, 131, 19 | native | `sides/right-side/machine-room-window/frame` | 30.526, 13.636, 38.421, 29.545 | 30.526, 13.636, 38.421, 28.409 | 0.000, 0.000, -0.000, -1.136 | 0.284 | 0.284 | Native pixel edge estimate; +/- one pixel. The machine room's long window. |
-| R05 | 155, 5, 161, 31 | native | `sides/right-side/ladder` | 81.579, 11.364, 3.158, 59.091 | 81.842, 11.364, 2.368, 56.818 | 0.263, -0.000, -0.789, -2.273 | 0.831 | 0.831 | Native pixel edge estimate; +/- one pixel. The ladder to the roof. |
+| R05 | 155, 5, 161, 31 | native | `sides/right-side/ladder` | 81.579, 11.364, 3.158, 59.091 | 81.579, 11.364, 3.158, 59.091 | -0.000, -0.000, 0.000, 0.000 | 0.831 | 0.000 | Native pixel edge estimate; +/- one pixel. The ladder to the roof. |
 | R06 | 91, 24, 99, 27 | native | `sides/right-side/number-plate` | 47.895, 54.545, 4.211, 6.818 | 47.958, 56.136, 3.557, 3.636 | 0.064, 1.591, -0.654, -3.182 | 1.373 | 1.373 | Native pixel edge estimate; +/- one pixel. The model's plate is as wide as T 679.001. |
-| R07 | 6, 32, 184, 34 | native | `body/shell/side-right/band-1`, `body/shell/cab-right/band-1` | 3.158, 72.727, 93.684, 4.545 | 3.712, 72.727, 92.050, 4.545 | 0.554, -0.000, -1.634, 0.000 | 0.547 | 0.547 | Livery band 1.0 .. 1.2 m (olive). |
+| R07 | 6, 32, 184, 34 | native | `body/shell/side-right/band-1`, `body/shell/cab-right/band-1`, `body/shell/front/band-1`, `body/shell/rear/band-1` | 3.158, 72.727, 93.684, 4.545 | 3.158, 72.727, 93.158, 4.545 | -0.000, -0.000, -0.526, 0.000 | 0.132 | 0.132 | Livery band 1.0 .. 1.2 m (olive). |
 | R08 | 74, 35, 115, 42 | native | `underframe/fuel-tank` | 38.947, 79.545, 21.579, 15.909 | 38.947, 79.545, 21.579, 15.455 | 0.000, 0.000, -0.000, -0.455 | 0.114 | 0.114 | Native pixel edge estimate; +/- one pixel. The fuel tank (XML 'box' 7.4 .. 11.5). |

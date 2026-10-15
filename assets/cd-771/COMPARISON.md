@@ -4,7 +4,7 @@
 **Code** - `generator/dieselComparison.ts`, `generator/dieselReport.ts`, `native/landmarks.json`.
 **See also** - [source notes](SOURCES.md), [photographs](PHOTOS.md), [the models' reference](../../docs/models/diesel-locos.md).
 
-Model geometry revision (SHA-256 of the comparison GLB): `8bd6adaf0a184e682e34be44b946fde79c0063e06dfe2a69a5043b266e078837`.
+Model geometry revision (SHA-256 of the comparison GLB): `73651409b827446e400085a59ed1fbcb46f7d48e13901cdf84331833f926fdb2`.
 
 Regenerate with `pnpm exec tsx generator/dieselReport.ts`. The baseline is the first authored model (a new model: no earlier factory version existed), stored in `native/baseline.json` with the same annotations.
 
@@ -14,9 +14,9 @@ Each vector is (left, top, width, height). Percentages are 100*x/W, 100*y/H, 100
 
 | View | Boxes | Baseline MAE (pp) | Final MAE (pp) |
 |---|---:|---:|---:|
-| x_front | 6 | 3.024 | 3.024 |
+| x_front | 6 | 3.024 | 1.823 |
 | z_right | 8 | 0.398 | 0.398 |
-| All | 14 | 1.524 | 1.524 |
+| All | 14 | 1.524 | 1.009 |
 
 One pixel is 3.333 pp horizontally at the front, 0.556 pp horizontally at the sides and 1.667 pp vertically. Rows with a tolerance above about one pixel are deliberate departures, explained in their uncertainty column.
 
@@ -28,12 +28,12 @@ Annotated views (generated locally, not committed):
 
 | ID | Native pixel edges | Reference | Mesh scope(s) | Source % (x,y,w,h) | Model % | Signed delta (pp) | Baseline abs. mean (pp) | Final abs. mean (pp) | Uncertainty |
 |---|---|---|---|---|---|---|---:|---:|---|
-| F01 | 5, 22, 25, 32 | native | `short-hood/end/grille` | 16.667, 36.667, 66.667, 16.667 | 25.000, 36.667, 50.000, 23.333 | 8.333, 0.000, -16.667, 6.667 | 7.917 | 7.917 | Native pixel edge estimate; +/- one pixel. The hood end's radiator (cream in the BMP); the model's grille is 1.5 m wide, 2.4 .. 3.8 m. |
+| F01 | 5, 22, 25, 32 | native | `short-hood/end/grille` | 16.667, 36.667, 66.667, 16.667 | 18.333, 36.667, 63.333, 16.667 | 1.667, 0.000, -3.333, 0.000 | 7.917 | 1.250 | Native pixel edge estimate; +/- one pixel. The hood end's radiator (cream in the BMP); the model's grille is 1.5 m wide, 2.4 .. 3.8 m. |
 | F02 | 0, 22, 5, 31 | native | `cab/end-windows/front-left` | 0.000, 36.667, 16.667, 15.000 | 2.000, 36.667, 13.333, 13.333 | 2.000, 0.000, -3.333, -1.667 | 1.750 | 1.750 | Native pixel edge estimate; +/- one pixel. The cab window beside the hood, viewer's left. |
 | F06 | 25, 22, 30, 31 | native | `cab/end-windows/front-right` | 83.333, 36.667, 16.667, 15.000 | 84.667, 36.667, 13.333, 13.333 | 1.333, 0.000, -3.333, -1.667 | 1.583 | 1.583 | Native pixel edge estimate; +/- one pixel. The cab window beside the hood, viewer's right. |
 | F03 | 13, 17, 17, 21 | native | `short-hood/end/headlight` | 43.333, 28.333, 13.333, 6.667 | 45.667, 27.000, 8.667, 4.333 | 2.333, -1.333, -4.667, -2.333 | 2.667 | 2.667 | Native pixel edge estimate; +/- one pixel. The headlight on the hood's cap. |
 | F04 | 2, 48, 8, 52 | native | `frame/short-hood-end/right-buffer/head` | 6.667, 80.000, 20.000, 6.667 | 14.167, 80.084, 13.333, 6.500 | 7.500, 0.084, -6.667, -0.167 | 3.604 | 3.604 | Native buffer frames; the model keeps the standard 1.75 m buffer spacing and 1.03 m height (deliberate mechanical constraint). |
-| F05 | 0, 43, 30, 57 | native | `frame/short-hood-end/end-plate` | 0.000, 71.667, 100.000, 23.333 | 0.000, 71.667, 100.000, 20.833 | 0.000, -0.000, 0.000, -2.500 | 0.625 | 0.625 | Native pixel edge estimate; +/- one pixel. The end plate and buffer beam, 0.4 .. 1.7 m. |
+| F05 | 0, 43, 30, 57 | native | `frame/short-hood-end/end-plate` | 0.000, 71.667, 100.000, 23.333 | 0.000, 71.667, 100.000, 23.000 | 0.000, -0.000, 0.000, -0.333 | 0.625 | 0.083 | Native pixel edge estimate; +/- one pixel. The end plate and buffer beam, 0.4 .. 1.7 m. |
 | R01 | 34, 22, 49, 31 | native | `cab/side-windows` | 18.889, 36.667, 8.333, 15.000 | 19.002, 36.667, 8.107, 13.333 | 0.113, 0.000, -0.227, -1.667 | 0.502 | 0.502 | Native pixel edge estimate; +/- one pixel. The cab's side windows, two panes. |
 | R02 | 30, 14, 54, 21 | native | `cab/roof` | 16.667, 23.333, 13.333, 11.667 | 16.667, 23.333, 12.778, 11.667 | -0.000, 0.000, -0.556, -0.000 | 0.139 | 0.139 | Native pixel edge estimate; +/- one pixel. The cab's roof (XML 3.0 .. 5.3, 3.9 .. 4.6 m). |
 | R03 | 31, 21, 52, 43 | native | `cab/body` | 17.222, 35.000, 11.667, 36.667 | 17.222, 35.000, 11.667, 36.667 | 0.000, -0.000, -0.000, 0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. |
