@@ -6,7 +6,7 @@ description: Create or change procedural railway vehicles, including electric an
 # Railroad vehicle
 
 **Covers** - railway vehicle geometry, operating poses and verification.
-**Code** - `generator/vehicles.ts`, `generator/cd150.ts`, `generator/cd163.ts`, `test/models.test.ts`, `test/cd150.test.ts`
+**Code** - `generator/vehicles.ts`, `generator/cd150.ts`, `generator/cd163.ts`, `generator/csdCoaches.ts`, `generator/csdCoachParts.ts`, `test/models.test.ts`, `test/cd150.test.ts`, `test/csdCoaches.test.ts`
 **See also** - [vehicle reference](../../../docs/models/vehicles.md), [road-vehicle](../road-vehicle/SKILL.md), [vlakosimdb-transfer](../vlakosimdb-transfer/SKILL.md)
 
 This skill follows the repository's road-vehicle workflow, with railway-specific
@@ -26,7 +26,8 @@ documentation in English.
   face. Every component belongs to a meaningful `m.scope(...)`.
 - Use stable `veh-` identifiers, never rename shipped models, and register the
   design in `VEHICLES`. Rail catalog entries use `category: "Rail vehicles"`
-  and the appropriate group; CD 163 uses `loco`.
+  and the appropriate group; CD 163 uses `loco`, the CSD coaches `coach`
+  (`COACH_CATALOG`).
 - A rigid locomotive or wagon remains one node unless its consumer explicitly
   needs articulated parts. Do not apply the road truck/trailer split to a train.
   If articulation is required, place pivots at the actual bogie or coupling
@@ -109,6 +110,18 @@ its own check digit over all eleven digits); the models show the national number
 front), never just the class: choose a unit that existed in the modelled era
 and livery, note it in `SOURCES.md`, keep it in one constant (`CD150_NUMBER`,
 `NUMBER` in `cd163.ts`), and test its check digit.
+
+**Coaches and wagons** carry their number on the body side, under the railway's
+lettering ("CSD" with the caron, painted, not on plates): a 12-digit UIC number
+(`51 54 19-41 068-0`; the check digit uses the same weights over the first eleven
+digits) or, for older vehicles, the national number (class, district digit,
+serial: `Ddk 6-3777`, no check digit). Prefer a number legible on a photograph of
+the type; when none exists, use an illustrative number in the right format and
+say so in `SOURCES.md` (`RUNNING_NUMBERS` in `csdCoaches.ts`).
+
+**Variants of one body** (classes, window layouts) are one parametric design with
+enum parameters, not separate models: the export holds the default build and the
+JS model builds the others (docs/models/parameters.md).
 
 ## Electric locomotives and pantographs
 

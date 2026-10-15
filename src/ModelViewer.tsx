@@ -7,6 +7,11 @@
 // drag or zoom emits "change" and the scene renders once. A ResizeObserver keeps
 // the canvas matched to its pane. The model is framed on every selection change.
 //
+// A parametric model at its default parameters shows its GLB; any other choice
+// is built in the browser by the model's standalone JS module (js/<id>.js,
+// build(THREE, params)), fetched once per model. The camera keeps its place
+// while only the parameters change.
+//
 // With a source tree (the model page's Source tab) it also highlights the
 // selected node -- its triangles glow, everything else turns into a faint ghost --
 // and a click that is not a drag picks the leaf under the cursor. The GLB has one
@@ -15,16 +20,47 @@
 
 import { createEffect, createSignal, onCleanup, onMount, Show } from "solid-js";
 import {
-  AmbientLight, Box3, Color, DirectionalLight, PerspectiveCamera, Raycaster, Scene, Vector2, Vector3, WebGLRenderer,
-  type Object3D,
+  AmbientLight, Box3, BufferAttribute, BufferGeometry, Color, DirectionalLight, Group, Mesh, MeshStandardMaterial, PerspectiveCamera,
+  Raycaster, Scene, Vector2, Vector3, WebGLRenderer, type Object3D,
 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import type { CatalogRecord } from "./catalogQuery";
+import { isDefaultParams, type CatalogRecord } from "./catalogQuery";
 import { leafAt, rangesOf, type TreeIndex } from "./sourceTreeView";
 import { applyHighlight, makeParts, type Part } from "./viewerHighlight";
 
 const loader = new GLTFLoader();
+
+type JsBuild = (three: object, params?: Record<string, string>) => Object3D;
+/** The classes a model's JS module uses: all it needs of three. */
+const THREE_SUBSET = { Group, Mesh, BufferGeometry, BufferAttribute, MeshStandardMaterial };
+const modules = new Map<string, Promise<JsBuild>>();
+
+/** A model's standalone JS module, loaded once: fetched as text and imported from a blob URL. */
+function jsModule(url: string): Promise<JsBuild> {
+  let p = modules.get(url);
+  if (!p) {
+    p = (async () => {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`${url}: ${res.status}`);
+      const blob = URL.createObjectURL(new Blob([await res.text()], { type: "text/javascript" }));
+      try {
+        return ((await import(/* @vite-ignore */ blob)) as { default: JsBuild }).default;
+      } finally {
+        URL.revokeObjectURL(blob);
+      }
+    })();
+    p.catch(() => modules.delete(url));
+    modules.set(url, p);
+  }
+  return p;
+}
+
+/** The model as the page should show it: the GLB at the defaults, else a JS build of the chosen values. */
+async function loadModel(record: CatalogRecord, params: Record<string, string>): Promise<Object3D> {
+  if (isDefaultParams(record, params)) return (await loader.loadAsync(`/${record.glbUrl}`)).scene as Object3D;
+  return (await jsModule(`/${record.jsUrl}`))(THREE_SUBSET, params);
+}
 
 function disposeModel(obj: Object3D): void {
   obj.traverse((o) => {
@@ -41,6 +77,8 @@ const CLICK_SLOP = 5;
 
 export function ModelViewer(props: {
   record: CatalogRecord;
+  /** A parametric model's chosen values (effectiveParams); {} for the defaults. */
+  params?: Record<string, string>;
   /** The model's source tree, when the page shows it; null turns highlight and picking off. */
   tree?: TreeIndex | null;
   /** The selected node's id, or null. */
@@ -58,6 +96,8 @@ export function ModelViewer(props: {
   let parts: Part[] = [];
   // A slow load that resolves after the selection changed again is discarded.
   let token = 0;
+  // The camera is framed when another model lands, not when a parameter changes.
+  let framed: string | null = null;
   let resizeRaf = 0;
   const [busy, setBusy] = createSignal(false);
   const [failed, setFailed] = createSignal(false);
@@ -161,13 +201,13 @@ export function ModelViewer(props: {
   });
 
   createEffect(() => {
-    const url = `/${props.record.glbUrl}`;
+    const record = props.record;
+    const params = { ...(props.params ?? {}) };
     const mine = ++token;
     setBusy(true);
     setFailed(false);
-    loader.loadAsync(url).then(
-      (gltf) => {
-        const group = gltf.scene as Object3D;
+    loadModel(record, params).then(
+      (group) => {
         if (mine !== token || !scene || !camera || !controls) {
           disposeModel(group);
           return;
@@ -182,6 +222,12 @@ export function ModelViewer(props: {
         current = group;
         parts = makeParts(group);
         scene.add(group);
+        if (framed === record.id) {
+          setLoaded((n) => n + 1);
+          render();
+          return;
+        }
+        framed = record.id;
         const box = new Box3().setFromObject(group);
         const center = box.getCenter(new Vector3());
         const size = box.getSize(new Vector3());

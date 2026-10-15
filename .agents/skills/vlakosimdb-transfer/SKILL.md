@@ -6,7 +6,7 @@ description: Reconstruct or refine a procedural railway vehicle from vlakosimdb 
 # Vlakosimdb model transfer
 
 **Covers** - reference extraction, geometric reconstruction and measurable proportion matching.
-**Code** - `generator/cd163.ts`, `assets/cd-163/native/`, `test/models.test.ts`
+**Code** - `generator/cd163.ts`, `assets/cd-163/native/`, `generator/csdCoaches.ts`, `generator/csdCoachComparison.ts`, `test/models.test.ts`, `test/csdCoaches.test.ts`
 **See also** - [railroad-vehicle](../railroad-vehicle/SKILL.md), [vehicle reference](../../../docs/models/vehicles.md), [CD 163 source notes](../../../assets/cd-163/SOURCES.md)
 
 Transfer the source vehicle's shape and layout into maintainable procedural
@@ -108,6 +108,14 @@ orthographic images to make annotations reviewable.
    omit difficult rows or loosen tolerances to make the score look better.
    If an annotation is found to be wrong, correct it transparently and recompute
    both the baseline and final measurements using that same correction.
+
+For a family of similar vehicles, share one builder and keep one landmark file
+per vehicle: the nine CSD coaches (`generator/csdCoachParts.ts`, one
+`assets/csd-<name>/native/landmarks.json` each) loft their bodies from the XML
+`alongx` section scaled by the `alongy` plan and clamped by the `alongz`
+elevation, and lay every measured box on that skin. A colorize paints the faces
+whose outward normal opposes its direction, so `z_dec` is the +z side and
+`x_dec` the x = 0 end.
 
 The CD 163 calibration reduced mean absolute error across the same 50 boxes
 from 1.736 to 0.356 percentage points. This measures those annotations on full

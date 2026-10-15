@@ -55,6 +55,8 @@ describe("exportVehicleMeta", () => {
         license: "CC0",
         author: "Rail Island",
         source: "Rail Island",
+        // a parametric vehicle lists its enum parameters; a fixed one has no key
+        ...(VEHICLES.find((d) => d.id === v.id)!.params ? { params: VEHICLES.find((d) => d.id === v.id)!.params } : {}),
       });
     }
   });

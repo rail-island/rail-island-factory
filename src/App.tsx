@@ -60,14 +60,14 @@ export function App() {
     update({ sort: col.key, dir: v.sort === col.key ? (v.dir === "asc" ? "desc" : "asc") : col.dir });
   };
   // A node belongs to one model's tree: opening, closing or stepping drops it.
-  const onOpen = (r: Row) => update({ model: r.id, tab: "specs", node: null }, true);
-  const onClose = () => update({ model: null, tab: "specs", node: null }, true);
+  const onOpen = (r: Row) => update({ model: r.id, tab: "specs", node: null, params: {} }, true);
+  const onClose = () => update({ model: null, tab: "specs", node: null, params: {} }, true);
   const onStep = (delta: number) => {
     const list = listed();
     if (list.length === 0) return;
     const at = list.findIndex((r) => r.id === view().model);
     const next = list[(((at < 0 ? 0 : at + delta) % list.length) + list.length) % list.length]!;
-    update({ model: next.id, node: null });
+    update({ model: next.id, node: null, params: {} });
   };
 
   const totalTris = () => listed().reduce((s, r) => s + r.triangles, 0);
@@ -111,6 +111,8 @@ export function App() {
                 node={view().node}
                 onTab={(tab) => update({ tab })}
                 onNode={(node) => update({ node })}
+                params={view().params}
+                onParams={(params) => update({ params, node: null })}
               />
             )}
           </Match>

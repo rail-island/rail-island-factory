@@ -2,7 +2,8 @@
 
 import { describe, expect, it } from "vitest";
 import {
-  COLUMNS, DEFAULT_SORT, cellFile, cellText, column, compareRows, formatBytes, parseView, prepareRows, queryRows, serializeView,
+  COLUMNS, DEFAULT_SORT, cellFile, cellText, column, compareRows, effectiveParams, formatBytes, isDefaultParams, nonDefaultParams, parseView,
+  prepareRows, queryRows, serializeView,
   type CatalogRecord,
 } from "../src/catalogQuery";
 
@@ -61,12 +62,12 @@ describe("cellText", () => {
 describe("the URL state", () => {
   it("round-trips, leaving defaults out", () => {
     expect(serializeView(parseView(""))).toBe("");
-    const v = { q: "tower", sort: "triangles", dir: "asc" as const, model: "sky-pagoda", tab: "specs" as const, node: null };
+    const v = { q: "tower", sort: "triangles", dir: "asc" as const, model: "sky-pagoda", tab: "specs" as const, node: null, params: {} };
     expect(parseView(serializeView(v))).toEqual(v);
   });
 
   it("carries the source tab and the selected node of an open model", () => {
-    const v = { q: "", sort: DEFAULT_SORT, dir: "asc" as const, model: "sky-art-deco", tab: "source" as const, node: "tier-3/piers" };
+    const v = { q: "", sort: DEFAULT_SORT, dir: "asc" as const, model: "sky-art-deco", tab: "source" as const, node: "tier-3/piers", params: {} };
     expect(serializeView(v)).toBe("?model=sky-art-deco&tab=source&node=tier-3%2Fpiers");
     expect(parseView(serializeView(v))).toEqual(v);
     // the root scope's id is the empty string, and still a selection
@@ -75,22 +76,50 @@ describe("the URL state", () => {
   });
 
   it("carries the references tab of an open model, without a node", () => {
-    const v = { q: "", sort: DEFAULT_SORT, dir: "asc" as const, model: "veh-cd-150", tab: "references" as const, node: null };
+    const v = { q: "", sort: DEFAULT_SORT, dir: "asc" as const, model: "veh-cd-150", tab: "references" as const, node: null, params: {} };
     expect(serializeView(v)).toBe("?model=veh-cd-150&tab=references");
     expect(parseView(serializeView(v))).toEqual(v);
     expect(parseView("?model=veh-cd-150&tab=references&node=crown")).toMatchObject({ tab: "references", node: null });
     expect(serializeView({ ...v, node: "crown" })).toBe("?model=veh-cd-150&tab=references");
   });
   it("drops a tab or node that has no model or no source tab to belong to", () => {
-    expect(parseView("?tab=source&node=crown")).toMatchObject({ model: null, tab: "specs", node: null });
+    expect(parseView("?tab=source&node=crown")).toMatchObject({ model: null, tab: "specs", node: null, params: {} });
     expect(parseView("?model=sky-pagoda&node=crown")).toMatchObject({ tab: "specs", node: null });
     expect(parseView("?model=sky-pagoda&tab=bogus")).toMatchObject({ tab: "specs", node: null });
-    expect(serializeView({ q: "", sort: DEFAULT_SORT, dir: "asc", model: "sky-pagoda", tab: "specs", node: "crown" })).toBe("?model=sky-pagoda");
+    expect(serializeView({ q: "", sort: DEFAULT_SORT, dir: "asc", model: "sky-pagoda", tab: "specs", node: "crown", params: {} })).toBe("?model=sky-pagoda");
+  });
+
+  it("carries a parametric model's chosen values, only with an open model", () => {
+    const v = { q: "", sort: DEFAULT_SORT, dir: "asc" as const, model: "veh-csd-classic-green-coach", tab: "specs" as const, node: null, params: { variant: "classB" } };
+    expect(serializeView(v)).toBe("?model=veh-csd-classic-green-coach&p.variant=classB");
+    expect(parseView(serializeView(v))).toEqual(v);
+    expect(parseView("?p.variant=classB").params).toEqual({});
+    expect(serializeView({ ...v, model: null })).toBe("");
   });
 
   it("gives a column its own starting direction and ignores an unknown sort", () => {
     expect(parseView("?sort=triangles").dir).toBe("desc");
-    expect(parseView("?sort=bogus&dir=sideways")).toEqual({ q: "", sort: DEFAULT_SORT, dir: "asc", model: null, tab: "specs", node: null });
+    expect(parseView("?sort=bogus&dir=sideways")).toEqual({ q: "", sort: DEFAULT_SORT, dir: "asc", model: null, tab: "specs", node: null, params: {} });
+  });
+});
+
+describe("parameters", () => {
+  const coach = rec("veh-coach", "Coach", 100, {
+    params: [{ name: "variant", title: "Variant", default: "classA", values: [{ value: "classA", title: "A" }, { value: "classB", title: "B" }] }],
+  });
+  it("resolve chosen values against the record's enums, falling back to the defaults", () => {
+    expect(effectiveParams(coach, {})).toEqual({ variant: "classA" });
+    expect(effectiveParams(coach, { variant: "classB" })).toEqual({ variant: "classB" });
+    expect(effectiveParams(coach, { variant: "classZ", colour: "red" })).toEqual({ variant: "classA" });
+    expect(effectiveParams(rec("sky-x", "X", 1), { variant: "classB" })).toEqual({});
+  });
+  it("tell the default build (the GLB) from a variant, and keep only non-defaults", () => {
+    expect(isDefaultParams(coach, {})).toBe(true);
+    expect(isDefaultParams(coach, { variant: "classA" })).toBe(true);
+    expect(isDefaultParams(coach, { variant: "classB" })).toBe(false);
+    expect(isDefaultParams(coach, { variant: "bogus" })).toBe(true);
+    expect(nonDefaultParams(coach, { variant: "classA" })).toEqual({});
+    expect(nonDefaultParams(coach, { variant: "classB" })).toEqual({ variant: "classB" });
   });
 });
 

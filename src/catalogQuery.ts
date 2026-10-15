@@ -149,6 +149,8 @@ export interface ViewState {
   tab: DetailTab;
   /** The selected source-tree node (its slash-path id), or null. Kept only on the source tab. */
   node: string | null;
+  /** A parametric model's chosen values (`?p.<name>=<value>`), as given; see effectiveParams. */
+  params: Record<string, string>;
 }
 
 export type DetailTab = "specs" | "source" | "references";
@@ -165,7 +167,9 @@ export function parseView(search: string): ViewState {
   const rawTab = p.get("tab") as DetailTab | null;
   const tab: DetailTab = model && rawTab && DETAIL_TABS.includes(rawTab) ? rawTab : "specs";
   const node = tab === "source" ? p.get("node") : null;
-  return { q: p.get("q") ?? "", sort, dir, model, tab, node: node ?? null };
+  const params: Record<string, string> = {};
+  if (model) for (const [k, v] of p) if (k.startsWith("p.") && k.length > 2 && v) params[k.slice(2)] = v;
+  return { q: p.get("q") ?? "", sort, dir, model, tab, node: node ?? null, params };
 }
 
 /** The inverse of parseView; defaults are left out, so the bare list is a bare `?`-less URL. */
@@ -178,7 +182,33 @@ export function serializeView(v: ViewState): string {
     p.set("model", v.model);
     if (v.tab !== "specs") p.set("tab", v.tab);
     if (v.tab === "source" && v.node != null) p.set("node", v.node);
+    for (const k of Object.keys(v.params).sort()) p.set(`p.${k}`, v.params[k]!);
   }
   const s = p.toString();
   return s ? `?${s}` : "";
+}
+
+// ------------------------------------------------------------- parameters
+
+/**
+ * A parametric record's values: each declared parameter takes the chosen value
+ * when its enum lists it, else its default; names it does not declare are
+ * dropped. A fixed record has none.
+ */
+export function effectiveParams(r: CatalogRecord, chosen: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const p of r.params ?? []) out[p.name] = p.values.some((v) => v.value === chosen[p.name]) ? chosen[p.name]! : p.default;
+  return out;
+}
+
+/** The values that differ from the defaults: what the URL keeps. */
+export function nonDefaultParams(r: CatalogRecord, values: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const p of r.params ?? []) if (values[p.name] !== undefined && values[p.name] !== p.default) out[p.name] = values[p.name]!;
+  return out;
+}
+
+/** True when every parameter is at its default, i.e. the exported GLB is the model. */
+export function isDefaultParams(r: CatalogRecord, values: Record<string, string>): boolean {
+  return Object.keys(nonDefaultParams(r, effectiveParams(r, values))).length === 0;
 }

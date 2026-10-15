@@ -1,11 +1,11 @@
 # Vehicles
 
 **Covers** - the procedurally generated road and rail vehicles (an articulated American
-truck and the CD 150 and CD 163 electric locomotives), their triangle budget and conventions, articulated vehicles'
+truck, the CD 150 and CD 163 electric locomotives and the nine CSD coaches), their triangle budget and conventions, articulated vehicles'
 truck and trailer parts, the `sweep` primitive they are mostly built from, and
 how to add one.
 **Code** - `generator/vehicles.ts`, `generator/cd150.ts`, `generator/cd150Comparison.ts`, `generator/cd150Report.ts`, `test/cd150.test.ts`, `generator/cd163.ts`, `generator/cdLogo.ts`, `generator/vehicleParts.ts`, `generator/design.ts`, `generator/meshCore.ts` (`sweep`, `part`), `generator/meshBuilder.ts` (`toGlb`), `src/viewerHighlight.ts`, `test/models.test.ts`, `test/cdLogo.test.ts`, `test/viewerHighlight.test.ts`, `.agents/skills/road-vehicle/SKILL.md`, `.agents/skills/railroad-vehicle/SKILL.md`, `.agents/skills/vlakosimdb-transfer/SKILL.md`
-**See also** - [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md)
+**See also** - [csd-coaches.md](csd-coaches.md) (the CSD coaches), [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md)
 
 ## The designs
 
@@ -14,6 +14,8 @@ how to add one.
 | `veh-american-truck` | American Truck | articulated: a long-nose conventional tractor (chrome grille, sleeper, twin stacks, tandem drive axle) and a 53 ft dry van; 22.2 m, about 4,900 triangles |
 | `veh-cd-150` | CD 150 | rigid cream/green electric locomotive 150 222-8 reconstructed from native vlakosimdb XML/BMPs: tapered sloping cabs, a green skirt lowered between the bogies, opposite grille/window sides, asymmetric cooler and two linked-arm pantographs (rear raised, front folded, knees toward the cab ends), bogies with spoked wheels, axle boxes on equalisers with paired primary coils, a side frame dropped between the axles over large secondary coils, traction motors, brake cylinders and sandboxes; 16.80 m over buffers, 6.24 m operating height, about 12,600 triangles. [Source notes](../../assets/cd-150/SOURCES.md), [measured comparison](../../assets/cd-150/COMPARISON.md) |
 | `veh-cd-163` | CD 163 | rigid rail vehicle (`cd163.ts`): the Czech Railways class 163 Bo'Bo' electric 163 244-7 in the green livery with the yellow band - ribbed sides, four portholes opposite continuous intake shutters, the raised cooler box and cant grilles, raked framed windscreens, an upright period CD monogram and condensed number plates, two single-arm pantographs on shedded insulators (rear raised, front folded, knees toward the cab ends), bogies with coil springs, axle boxes, motors and sandboxes; 16.80 m over the buffers, 5.74 m high with the rear collector raised, about 15,600 triangles. Modelled from photographs, the vlakosimdb elevation drawings and the official emblem (`assets/cd-163/`, see `SOURCES.md` there) |
+
+| `veh-csd-classic-green-coach`, `veh-csd-balm` ... `veh-csd-dsk` | CSD Classic Green Coach, Balm, Bam, Bdmtee, Be31, Bi20, Bmo, Dsk | rigid coaches and a luggage van reconstructed from native vlakosimdb XML/BMPs by a shared coach builder (`csdCoaches.ts`, `csdCoachParts.ts`), with running numbers: the Y-type classic green coach (parametric, `variant` classA/classB = vlakosimdb CSD A/B, [parameters.md](parameters.md)), the Balm and Bam trailers, the Bdmtee commuter coach, the Bmo double-decker, the two-axle Be31, Bi20 and Dsk; 10.5 to 26.8 m, 3,200 to 6,400 triangles. See [csd-coaches.md](csd-coaches.md) |
 
 `VEHICLES` in `vehicles.ts` lists them as `{ id, title, build }`, the same
 `ProceduralDesign` shape as the skyscrapers (`design.ts`). `VEHICLE_CATALOG`
@@ -24,15 +26,16 @@ for the game's vehicle import; settle them when the webapp side is written.
 
 A design may carry its own `catalog` (`ProceduralDesign.catalog`) in place of
 `VEHICLE_CATALOG`: both locomotives use `RAIL_CATALOG` (category `Rail vehicles`,
-group `loco`) and its own palette. The repository rail envelope in
+group `loco`) and its own palette; the CSD coaches use `COACH_CATALOG` (category
+`Rail vehicles`, group `coach`). The repository rail envelope in
 `test/models.test.ts` allows at most 3.1 m width and 4.7 m fixed-equipment height,
 with a separate 6.5 m operating height limit for extended pantographs. These are
 project limits rather than a universal loading gauge. Rail vehicles aim at about **15,000 triangles** (tested at most 16,000, so a
 small overflow for a detail worth keeping passes) instead of 10,000: it is 16.8 m long and seen up close along the track. The
 test also pins the CD 163's length (16.80 m) and axle positions (the bogie
 pivots 8.30 m apart, 3.20 m wheelbase). The shared helpers (`block`, `side`,
-`plate`, `arc`) live in `vehicleParts.ts`; `vehicles.ts` re-exports `cd150` and `cd163` so
-the JS bundle finds every vehicle's build function in one module.
+`plate`, `arc`) live in `vehicleParts.ts`; `vehicles.ts` re-exports `cd150`, `cd163` and the CSD coaches'
+builders so the JS bundle finds every vehicle's build function in one module.
 
 The CD 150 preserves the source XML's 1 m upper cab setback and different
 2.6/2.7 m nose breaks. Panels split at the changes of slope. Its two sides have

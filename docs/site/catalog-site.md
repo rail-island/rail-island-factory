@@ -76,6 +76,13 @@ model that has any; each image is shown at the panel's width with its path and
 size and opens full size in a new tab. Low-resolution `.bmp`/`.gif` textures are
 scaled with `image-rendering: pixelated`, so their pixels stay sharp.
 
+A **parametric** model (one whose record has `params`) shows a Parameters block
+above the tabs: a `<select>` per enum parameter, its default marked. Any choice
+other than the defaults is built in the browser from the model's JS module
+instead of the GLB, keeping the camera; the thumbnail, specs and source tree stay
+the default build's, so tree highlight and picking pause until the defaults
+return ([../models/parameters.md](../models/parameters.md)).
+
 `ModelViewer.tsx` (with its helper `viewerHighlight.ts`) is the only code
 importing three (plus `GLTFLoader` and `OrbitControls`), reached through a lazy import, so the list loads ~30 kB of
 script and the renderer arrives only when a model opens. It renders on demand
@@ -111,7 +118,8 @@ file says to run `pnpm build:models`.
 All state is in the query string (`parseView`/`serializeView` in
 `catalogQuery.ts`): `?q=` search, `?sort=` and `?dir=` ordering, `?model=` the
 open model, `?tab=source` or `?tab=references` its Source or Images tab and `?node=` the selected tree node (kept
-only with the Source tab; a node id no longer in the tree selects nothing). Defaults are left out, so the plain list is the bare URL. Opening and
+only with the Source tab; a node id no longer in the tree selects nothing), and
+`?p.<name>=<value>` a parametric model's non-default values (an unknown name or value falls back to the default). Defaults are left out, so the plain list is the bare URL. Opening and
 closing a model push a history entry and reset the tab and node; typing,
 sorting, stepping (which drops the node), switching tabs and selecting replace
 the current one, so Back does not replay keystrokes. An unknown `?model=` shows
