@@ -6,11 +6,31 @@ preview, and the URL state.
 **Code** - `src/main.tsx`, `src/App.tsx`, `src/catalogQuery.ts`, `src/ModelTable.tsx`,
 `src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`,
 `src/SourceTreePanel.tsx`, `src/sourceTreeView.ts`, `src/Thumb.tsx`,
-`src/factory.css`, `index.html`, `test/catalogQuery.test.ts`
+`src/factory.css`, `src/boot.ts`, `src/bootEntry.ts`, `index.html`, `vite.config.ts`,
+`test/catalogQuery.test.ts`, `test/boot.test.ts`
 **See also** - [../models/export.md](../models/export.md), [../guide/deploy.md](../guide/deploy.md)
 
 The site is the factory's counterpart of the webapp Creator's model listing,
 copied and trimmed: no sign-in, uploads, woods or packages, and English only.
+
+## Loading and errors
+
+The page must say something before the app bundle runs - on a slow phone link the
+stylesheet and bundle can take a minute, and a failed load used to leave a blank
+white page. So `index.html` carries, without waiting for anything else:
+
+- an inline `<style>` with the dark background and the styles of the two items
+  below, so neither depends on `factory.css` arriving;
+- a **loading line** inside `#root` ("Loading Rail Island Factory..."). After 8 s
+  it changes to say the connection looks slow. `main.tsx` empties `#root` before
+  rendering, which removes it;
+- the **boot script** (`src/boot.ts`), inlined as a classic script ahead of
+  everything else by the `inline-boot` plugin in `vite.config.ts` (esbuild
+  compiles `src/bootEntry.ts`; Vite itself bundles only module scripts). It
+  lists every script error, unhandled rejection and failed script or stylesheet
+  load in an **error box** at the bottom of the page, with Reload and Close.
+  Failed images (a missing thumbnail) and the browsers' benign "ResizeObserver
+  loop" notice are left out; each message shows once, at most ten.
 
 ## Data
 

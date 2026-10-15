@@ -5,9 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark" />
     <title>Rail Island Factory</title>
+    <!-- Enough style to show the loading line and the error box (src/boot.ts)
+         before factory.css arrives, or if it never does. -->
+    <style>
+      html, body { margin: 0; background: #101e29; color: #eff6f5; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+      .factory-boot { margin: 0; padding: 24px 16px; color: #a7bac3; }
+      #factory-boot-errors { position: fixed; left: 8px; right: 8px; bottom: 8px; z-index: 1000; max-height: 45vh; overflow: auto; padding: 10px 12px; border: 1px solid #bf5b58; border-radius: 8px; background: #2a1517; color: #f3d6d5; font: 13px/1.4 ui-monospace, Menlo, Consolas, monospace; }
+      #factory-boot-errors ul { margin: 6px 0 0; padding-left: 18px; }
+      #factory-boot-errors li { overflow-wrap: anywhere; }
+      .factory-boot-errors__head { display: flex; gap: 8px; align-items: center; }
+      .factory-boot-errors__head b { flex: 1; }
+      .factory-boot-errors__head button { min-height: 32px; padding: 4px 10px; border: 1px solid #bf5b58; border-radius: 6px; background: transparent; color: inherit; font: inherit; }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><p class="factory-boot" id="factory-boot">Loading Rail Island Factory...</p></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

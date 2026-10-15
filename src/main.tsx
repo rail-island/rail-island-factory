@@ -5,4 +5,8 @@ import { App } from "./App";
 import "./factory.css";
 
 const root = document.getElementById("root");
-if (root) render(() => <App />, root);
+if (root) {
+  // index.html ships a loading line in #root (src/boot.ts); the app replaces it.
+  root.textContent = "";
+  render(() => <App />, root);
+}
