@@ -4,10 +4,15 @@ Inspiration for `veh-cd-163` (generator/cd163.ts). Not shipped with any model.
 
 - `cd-163.glb`, `cd-163-side.png` - the vlakosimdb model `db/train/loco/electric/cd_163`
   (by Vojtech Vohladka), as the webapp imports it (`train-loco-electric-cd-163`).
-- `elevation-front.png`, `elevation-side.png` - that model's textures `x_both_4x.png` and
-  `z_inc_4x.png`: orthographic front and side elevations at 40 px/m, used for positions
-  along the body and across the ends (their vertical scale is squashed; heights come from
-  the side photograph).
+- `native/x_both.bmp`, `native/z_dec.bmp`, `native/z_inc.bmp` - unchanged original
+  low-resolution BMPs from `janproch/vlakosimdb` commit
+  `b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f`, under
+  `db/train/loco/electric/cd_163/model/`. The XML's `colorize` mapping gives
+  10 pixels per metre in both axes. `native/landmarks.json` contains the
+  manually reviewed pixel-edge annotations used for regression checks.
+- `elevation-front.png`, `elevation-side.png` - legacy copies of the 4x textures.
+  They are not used to calibrate the current geometry: the upscaled details
+  differ from the native BMPs.
 - `cd-emblem.svg` - "Ceske_drahy-logo.svg", Wikimedia Commons: the modern official CD logo.
   generator/cdLogo.ts holds its outlines (the wordmark is not used). The model
   de-skews and narrows them to approximate the upright period badge visible
@@ -24,31 +29,17 @@ Inspiration for `veh-cd-163` (generator/cd163.ts). Not shipped with any model.
 
 ## Proportion corrections
 
-The photographs above are the primary references for the revised cab, glazing,
-light housings, number plates, buffer heads and handrails. The 4x side drawings
-in vlakosimdb (`z_dec_4x.png`, portholes; `z_inc_4x.png`, intake shutters) also
-show the different machine-room sides. They are layout references, not
-photographs or engineering drawings; the absolute mechanical dimensions remain
-those documented on the photographed locomotive and bogie.
+Use the original BMPs above, not the legacy 4x images. `x_both.bmp` is shared
+by both ends; there are no separate `x_dec`, `x_inc` or `z_both` files for this
+model. `z_dec.bmp` has portholes, `z_inc.bmp` has intake shutters.
 
-## Double-raked cab profile
+The original `index.xml`, `alongz/clip/polygon[@apply="base"]`, also establishes
+the double rake: (x, y) = (0.6, 1.2), (0.5, 2.3), (0.7, 3.7) at one end.
+The factory keeps the 0.10 m lower and 0.20 m upper horizontal setbacks, with
+the current colour boundary at 2.30 m and structural eave at 3.70 m. Fittings follow the
+sloped faces; the buffer heads remain upright.
 
-`cd_163/model/` uses `z_dec.bmp` and `z_inc.bmp` for the two sides, but a shared
-`x_both.bmp` for both ends (there are no separate `x_dec`/`x_inc` files in this
-model). Their `*_4x.png` counterparts were compared with the factory renders.
-
-The original `index.xml`, `alongz/clip/polygon[@apply="base"]`, makes the
-lower rake explicit. At one end its profile runs through (x, y) =
-(0.6, 1.2), (0.5, 2.3), (0.7, 3.7); the opposite end mirrors it. Thus the nose
-projects 0.10 m beyond the lower apron and 0.20 m beyond the upper cab. The
-factory uses these setbacks at its existing 2.38 m band top and 3.76 m eave,
-with a 1.20 m apron; these are not claims of an exact engineering drawing.
-The lower lamps and markings must follow the lower face rather than floating
-in front of it, while the buffer heads stay vertical.
-
-The front-mask spacing was also checked against `x_both.bmp` and its 4x
-version: each windscreen spans about 40% of the body width, the number-plate
-surround about 31%, and the twin upper headlight is narrower than half that
-surround. The front panes are 1.18 by 0.80 m, the plate surround 0.92 by
-0.22 m. Equal red/white marker housings leave a 0.25 m lateral gap to the
-plate and sit fully below the band. The two cab slopes remain unchanged.
+See `../../docs/models/vehicles.md` for the native-pixel coordinate convention,
+calibrated dimensions and treatment of ambiguous outlines. Round marker lenses,
+standard buffer spacing and the emblem's continuous outline are retained rather
+than reproducing low-resolution raster artifacts.

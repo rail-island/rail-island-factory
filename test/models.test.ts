@@ -383,10 +383,10 @@ describe("the vehicles", () => {
         const width = pane.max![2] - pane.min![2];
         // Wide rectangles near the outer cab edges, rather than near-square
         // panes surrounded by a broad green border.
-        expect(height).toBeGreaterThan(0.75);
-        expect(height).toBeLessThan(0.85);
-        expect(width / height).toBeGreaterThan(1.4);
-        expect(width / height).toBeLessThan(1.6);
+        expect(height).toBeGreaterThan(0.69);
+        expect(height).toBeLessThan(0.72);
+        expect(width / height).toBeGreaterThan(1.69);
+        expect(width / height).toBeLessThan(1.73);
         const outer = Math.max(Math.abs(pane.min![2]), Math.abs(pane.max![2]));
         expect(outer).toBeGreaterThan(1.26);
         expect(outer).toBeLessThan(1.31);
@@ -398,8 +398,10 @@ describe("the vehicles", () => {
         const glass = (scope: string) => nodes.find((n): n is LeafNode => isLeaf(n) && n.id.startsWith(`${cab}/${side}/${scope}/`) && n.material === "glass")!;
         const window = glass("side-window");
         const door = glass("door");
-        expect(window.max![1] - window.min![1]).toBeGreaterThan(0.9);
-        expect(door.max![1] - door.min![1]).toBeGreaterThan(0.85);
+        expect(window.max![1] - window.min![1]).toBeCloseTo(0.70, 2);
+        expect(window.max![0] - window.min![0]).toBeCloseTo(0.60, 2);
+        expect(door.max![1] - door.min![1]).toBeCloseTo(0.70, 2);
+        expect(door.max![0] - door.min![0]).toBeCloseTo(0.50, 2);
         expect(Math.abs(window.max![1] - door.max![1])).toBeLessThan(0.06);
       }
     }
@@ -418,17 +420,17 @@ describe("the vehicles", () => {
         .filter((p) => Math.abs(p[1] - y) < 1e-5).map((p) => e * p[0]));
       // The original vlakosimdb alongz/base profile recedes 0.10 m below
       // the nose and 0.20 m above it. A vertical lower face must fail.
-      const nose = extentAt(2.38);
+      const nose = extentAt(2.30);
       expect(nose - extentAt(1.20)).toBeCloseTo(0.10, 4);
-      expect(nose - extentAt(3.76)).toBeCloseTo(0.20, 4);
+      expect(nose - extentAt(3.70)).toBeCloseTo(0.20, 4);
       expect(extentAt(1.03)).toBeCloseTo(extentAt(1.20), 4);
-      const lowerFaces = shell.filter((t) => t.n[0][0] * e > 0.9 && t.p.every((p) => p[1] >= 1.19999 && p[1] <= 2.38001));
+      const lowerFaces = shell.filter((t) => t.n[0][0] * e > 0.9 && t.p.every((p) => p[1] >= 1.19999 && p[1] <= 2.30001));
       expect(lowerFaces.length).toBeGreaterThan(0);
       for (const t of lowerFaces) expect(t.n[0][1]).toBeLessThan(-0.07);
 
       const cab = e > 0 ? "front-cab" : "rear-cab";
-      const lowerSlope = 0.10 / (2.38 - 1.20);
-      const distance = (p: readonly number[]) => (e * p[0]! - nose - lowerSlope * (p[1]! - 2.38)) / Math.hypot(1, lowerSlope);
+      const lowerSlope = 0.10 / (2.30 - 1.20);
+      const distance = (p: readonly number[]) => (e * p[0]! - nose - lowerSlope * (p[1]! - 2.30)) / Math.hypot(1, lowerSlope);
       const badge = scoped(`${cab}/front-markings/emblem`);
       expect(badge.length).toBeGreaterThan(0);
       for (const p of badge.flatMap((t) => t.p)) expect(distance(p)).toBeCloseTo(0.006, 4);
@@ -449,19 +451,19 @@ describe("the vehicles", () => {
     for (const cab of ["front-cab", "rear-cab"]) {
       const markers = nodes.filter((n): n is LeafNode => isLeaf(n) && n.id.startsWith(`${cab}/lamps/`) && n.material === "lampHead" && n.max![1] < 2);
       expect(markers).toHaveLength(2);
-      for (const lens of markers) expect(lens.max![2] - lens.min![2]).toBeGreaterThan(0.22);
+      for (const lens of markers) expect(lens.max![2] - lens.min![2]).toBeCloseTo(0.20, 2);
       const heads = nodes.filter((n): n is LeafNode => isLeaf(n) && n.id.startsWith(`${cab}/buffer-beam/buffers/`) && n.kind === "slab");
       expect(heads).toHaveLength(2);
       for (const head of heads) {
-        expect(head.max![2] - head.min![2]).toBeCloseTo(0.55, 2);
-        expect(head.max![1] - head.min![1]).toBeCloseTo(0.42, 2);
+        expect(head.max![2] - head.min![2]).toBeCloseTo(0.70, 2);
+        expect(head.max![1] - head.min![1]).toBeCloseTo(0.40, 2);
       }
       const badge = nodes.find((n) => n.id === `${cab}/front-markings/emblem`)!;
       const aspect = (badge.max![2] - badge.min![2]) / (badge.max![1] - badge.min![1]);
       expect(aspect).toBeGreaterThan(1.2);
       expect(aspect).toBeLessThan(1.35);
-      expect(badge.min![1]).toBeGreaterThan(1.8);
-      expect(badge.max![1]).toBeLessThan(2.38); // contained in the yellow band
+      expect(badge.min![1]).toBeGreaterThan(1.79);
+      expect(badge.max![1]).toBeLessThan(2.30); // contained in the yellow band
     }
   });
 
@@ -475,15 +477,15 @@ describe("the vehicles", () => {
       expect(markers).toHaveLength(4);
       expect(markers.filter((n) => n.material === "lampRed")).toHaveLength(2);
       for (const lens of markers) {
-        expect(lens.max![2] - lens.min![2]).toBeCloseTo(0.236, 3);
+        expect(lens.max![2] - lens.min![2]).toBeCloseTo(0.200, 3);
         expect(lens.max![1] - lens.min![1]).toBeCloseTo(markers[0]!.max![1] - markers[0]!.min![1], 3);
       }
       const buffers = nodes.find((n) => n.id === `${cab}/buffer-beam/buffers`)!;
       const numberPlate = nodes.find((n) => n.id === `${cab}/front-markings/number-plate`)!;
-      expect(numberPlate.max![2] - numberPlate.min![2]).toBeLessThan(0.95);
-      expect(numberPlate.max![1] - numberPlate.min![1]).toBeLessThan(0.24);
+      expect(numberPlate.max![2] - numberPlate.min![2]).toBeCloseTo(1.04, 2);
+      expect(numberPlate.max![1] - numberPlate.min![1]).toBeCloseTo(0.343, 2);
       const upperHousing = lamps.find((n) => n.material === "rubber" && n.min![1] > 2)!;
-      expect(upperHousing.max![2] - upperHousing.min![2]).toBeLessThan(0.46);
+      expect(upperHousing.max![2] - upperHousing.min![2]).toBeCloseTo(0.60, 2);
       const rims = lamps.filter((n) => n.material === "rubber" && n.max![1] < 2);
       for (const side of [-1, 1]) {
         const onSide = rims.filter((n) => side * (n.min![2] + n.max![2]) > 0)
@@ -491,31 +493,31 @@ describe("the vehicles", () => {
         expect(onSide).toHaveLength(2);
         const inner = onSide[0]!, outer = onSide[1]!;
         const innerEdge = Math.min(Math.abs(inner.min![2]), Math.abs(inner.max![2]));
-        expect(innerEdge - Math.max(Math.abs(numberPlate.min![2]), Math.abs(numberPlate.max![2]))).toBeGreaterThan(0.24);
+        expect(innerEdge - Math.max(Math.abs(numberPlate.min![2]), Math.abs(numberPlate.max![2]))).toBeGreaterThan(0.17);
         const separation = Math.min(Math.abs(outer.min![2]), Math.abs(outer.max![2])) - Math.max(Math.abs(inner.min![2]), Math.abs(inner.max![2]));
         expect(separation).toBeGreaterThan(0.015);
       }
       for (const lamp of lamps) {
         if (lamp.max![1] < 2) {
-          expect(lamp.max![1]).toBeLessThan(1.78 - 0.10);
+          expect(lamp.max![1]).toBeLessThan(1.70 - 0.04);
           if (lamp.material === "rubber") {
             const gap = lamp.min![1] - buffers.max![1];
-            expect(gap).toBeGreaterThan(0.04);
-            expect(gap).toBeLessThan(0.10);
+            expect(gap).toBeGreaterThan(0.14);
+            expect(gap).toBeLessThan(0.16);
           }
         } else {
-          expect(lamp.min![1]).toBeGreaterThan(2.38 + 0.04);
+          expect(lamp.min![1]).toBeGreaterThan(2.30 + 0.04);
         }
       }
       const plates = nodes.filter((n): n is LeafNode => isLeaf(n) && n.id.startsWith(`${cab}/track-clearers/`) && n.material === "yellow");
       expect(plates).toHaveLength(2);
       for (const plate of plates) {
         expect(plate.min![1]).toBeCloseTo(0.10, 3);
-        expect(plate.max![1]).toBeCloseTo(0.49, 3);
+        expect(plate.max![1]).toBeCloseTo(0.50, 3);
         const vertices = yellow.slice(plate.tri[0], plate.tri[0] + plate.tri[1]).flatMap((t) => t.p);
         const e = cab === "front-cab" ? 1 : -1;
         const reach = (y: number) => Math.max(...vertices.filter((p) => Math.abs(p[1] - y) < 1e-5).map((p) => e * p[0]));
-        expect(reach(0.10) - reach(0.49)).toBeCloseTo(0.17, 4);
+        expect(reach(0.10) - reach(0.50)).toBeCloseTo(0.17, 4);
       }
     }
   });
@@ -531,7 +533,43 @@ describe("the vehicles", () => {
     const intake = nodes.find((n) => n.id === "body/machine-room-intake")!;
     expect(intake.max![2]).toBeLessThan(-1.4);
     expect(intake.max![0] - intake.min![0]).toBeGreaterThan(11);
-    expect(intake.min![1]).toBeGreaterThan(2.38); // clear of the livery band
+    expect(intake.min![1]).toBeGreaterThan(2.30); // clear of the livery band
+  });
+
+  it("matches native CD 163 bitmap landmarks in orthographic projection", () => {
+    // Original 30x60 / 170x60 BMP annotations, independent of generator values.
+    // One native pixel is 0.10 m. Wider tolerances cover ambiguous buffer and
+    // door outlines, and the painted band's extent beyond the body silhouette.
+    const reference = JSON.parse(fs.readFileSync(new URL("../assets/cd-163/native/landmarks.json", import.meta.url), "utf8")) as {
+      annotations: Array<{ id: string; view: string; box: number[]; nodes: string[]; tolerancePixels: number }>;
+    };
+    const nodes = walk(designTree("veh-cd-163").root).filter(isLeaf);
+    const { json, bin } = parseGlb(designGlb("veh-cd-163"));
+    const triangles = collectTriangles(json, bin);
+    const materials = new Map([...new Set(triangles.map((t) => t.material))].map((mat) => [mat, triangles.filter((t) => t.material === mat)]));
+    expect(reference.annotations).toHaveLength(50);
+    for (const row of reference.annotations) {
+      // Check both ends against x_both in the same texture-coordinate basis.
+      for (const rear of row.view === "x_both" ? [false, true] : [false]) {
+        const ids = row.nodes.map((id) => rear ? id.replace("front-cab/", "rear-cab/") : id);
+        const selected = nodes.filter((n) => ids.some((id) => n.id === id || n.id.startsWith(id + "/")));
+        expect(selected.length, row.id).toBeGreaterThan(0);
+        const points = selected.flatMap((n) => materials.get(n.material)!.slice(n.tri[0], n.tri[0] + n.tri[1])).flatMap((t) => t.p);
+        const u = points.map((p) => row.view === "x_both" ? 10 * (1.5 - p[2]) : 10 * (p[0] + 8.5));
+        const v = points.map((p) => 10 * (6 - p[1]));
+        const actual = [Math.min(...u), Math.min(...v), Math.max(...u), Math.max(...v)];
+        // Compare left/top AND width/height, so matching only the centre fails.
+        const dimensions = (b: number[]) => [b[0]!, b[1]!, b[2]! - b[0]!, b[3]! - b[1]!];
+        const expected = dimensions(row.box);
+        dimensions(actual).forEach((value, i) => {
+          expect(Math.abs(value - expected[i]!), `${row.id} ${rear ? "rear" : "front/side"} component ${i}`).toBeLessThanOrEqual(row.tolerancePixels);
+        });
+      }
+    }
+    const heads = nodes.filter((n) => n.id.startsWith("front-cab/buffer-beam/buffers/") && n.kind === "slab");
+    const centres = heads.map((n) => (n.min![2] + n.max![2]) / 2).sort((a, b) => a - b);
+    // Preserve the mechanical spacing despite the coarse buffer silhouettes.
+    expect(centres[1]! - centres[0]!).toBeCloseTo(1.75, 3);
   });
 
   it("puts the truck's grille at the +x end, ahead of the front axle", () => {

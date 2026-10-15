@@ -34,38 +34,68 @@ the JS bundle finds every vehicle's build function in one module.
 
 The CD 163's body is lofted in plan rather than swept: horizontal octagons (the
 cab ends' corners chamfered) stacked in colour bands, with both the upper and
-lower cab faces raked inward from the nose, and a hipped roof. Its cab proportions are reconstructed from the photographs of 163 244-7 and
-163 048-2; the vlakosimdb elevations provide a layout reference, not a reliable
-vertical scale. The body runs from 1.03 to 3.76 m, with a yellow band at
-1.78 to 2.38 m. The projecting nose is at the band's upper edge: the face
-recedes 0.20 m toward the eave and 0.10 m toward the apron at 1.20 m. Below
-that apron the chassis skirt is upright. These two horizontal setbacks come
-from the original vlakosimdb `alongz/base` profile (see the reference notes),
-adapted to the factory model's band and roof heights. Each colour band is
-lofted between sections of this same profile; the yellow band also slopes.
-Each front glass is approximately 1.18 m wide and 0.80 m high, inside a thin
-metal surround and a separate rubber gasket. The 120 mm corner chamfers leave
-room for the front frames to extend to 1.335 m either side of the centreline,
-so the windows read as wide rectangles close to the cab edges. Side cab windows
-have a sloping leading edge so their upper corners stay on the flat wall behind the chamfer;
-the narrow door glazing aligns with them. Bottom-mounted wipers and front
-handrails stand proud of the shell.
+lower cab faces raked inward from the nose, and a hipped roof. Cab and side
+landmarks are calibrated to the original vlakosimdb BMPs, retained under
+`assets/cd-163/native/`: `x_both.bmp` (30 by 60 pixels) and `z_dec.bmp` /
+`z_inc.bmp` (170 by 60). The source XML maps these to 3 by 6 m and 17 by 6 m,
+so each native pixel represents 0.10 m. The old 4x images are not measurement
+sources. Photographs still establish mechanical dimensions, including buffer
+spacing, wheel diameter and overall length.
 
-Both red and white lower marker lenses are 236 mm across, in identical 300 mm
-housings centred at 1.49 m above rail. Their centres sit 0.86 and 1.18 m either
-side of the centreline, leaving 250 mm between the number plate and the inner
-housing, and 20 mm between adjacent housings. The lamp housings leave about
-65 mm above the buffer heads and stay wholly below the yellow band. The number
-plate is lowered with the lamps and reduced to a 920 by 220 mm surround,
-matching the proportions in `x_both`. The upper twin light sits in a 440 mm
-wide housing above the band and below the windscreens, with at least 40 mm
-clearance from the band. Buffer heads are rounded 550 by 420 mm plates at the standard 1,750 mm spacing, with separate housings and plungers;
-the locomotive stays 16.80 m long. Broad snow ploughs sit behind them, spanning
-0.10 to 0.49 m above rail. Their cutting edges project 170 mm ahead of their
-tops, a rearward lean of approximately 24 degrees from vertical.
-Horizontal corrugations use approximately 145 mm pitch. Four 610 mm porthole
-glass panes occupy the +Z machine-room side, while the -Z side has framed
-vertical intake shutters, following the two vlakosimdb side elevations.
+The body runs from 1.03 to 3.70 m, with a yellow band at 1.70 to 2.30 m.
+Grey roof aprons start at 3.50 m on the sides; the front stays green to 3.70 m,
+matching the different paint boundaries in the native front and side BMPs.
+The projecting nose is at the band's upper edge: the face recedes 0.20 m toward
+the eave and 0.10 m toward the apron at 1.20 m. Below that apron the chassis
+skirt is upright. Each colour band follows this same double-raked profile.
+Each front glass is 1.20 m wide and approximately 0.70 m high (aspect 1.71),
+from 2.70 to 3.40 m above rail, inside a metal surround and rubber gasket.
+The 80 mm corner chamfers leave room for frames extending to 1.39 m either
+side of the centreline. The side cab panes are 0.60 by 0.70 m with a sloping
+leading edge; the door glazing is 0.50 by 0.70 m, aligned at 2.60 to 3.30 m.
+Doors, handles, steps and handrails move together with the wider glazing.
+Bottom-mounted wipers and front handrails stand proud of the shell.
+
+Both red and white lower marker lenses are circular, 200 mm across, in equal
+300 mm housings centred at 1.50 m above rail. Their lateral centres are 0.85
+and 1.25 m either side of the centreline. The 1 by 2 pixel lens patches do not
+justify stretching a circular lens to a narrow rectangle. Housings stay below
+the yellow band, with about 150 mm above the buffer heads. The front number
+plate's red field is 1,000 by 300 mm, inside a 1,040 by 340 mm surround; the
+upper twin headlight has a 600 by 200 mm housing. The side number plates are
+1,100 by 300 mm. Upright badges retain their outline proportions at 400 mm
+height rather than copying the pixel stair steps.
+
+Buffer heads are rounded 700 by 400 mm plates at the standard 1,750 mm spacing,
+with separate housings and plungers; the locomotive stays 16.80 m long. The
+coarse bitmap head outlines are ambiguous, so they do not override the standard
+spacing. Broad, tilted snow ploughs span 0.10 to 0.50 m above rail and 0.40 to
+1.40 m either side of the centreline. Their cutting edges project 170 mm ahead
+of their tops, a rearward lean of approximately 23 degrees from vertical.
+Horizontal corrugations use approximately 145 mm pitch and stop below the
+gutters. Four 700 mm porthole panes sit at 2.85 m on the +Z side. The opposite
+intake frame extends from 2.40 to 3.30 m, matching `z_inc`. The central cooler
+has a skirt overlapping the upper side wall at 3.30 m and reaches 4.25 m, the
+midpoint of the two side textures' half-pixel disagreement in its top edge.
+
+`assets/cd-163/native/landmarks.json` records 50 independently annotated
+native-pixel boxes and their model scopes. Regression checks project the actual
+GLB vertices onto the same canvases: front `u = 1.5 - Z`, side `u = X + 8.5`,
+vertical `v = 6 - Y`. Both side comparisons follow the bitmap's longitudinal
+axis; the intake side is mirrored relative to a normal outside view. Tests
+compare left/top coordinates and width/height within one pixel for clear
+landmarks, two for ambiguous doors/buffers/ploughs. The painted band's
+horizontal silhouette has a three-pixel tolerance because the texture extends
+beyond the mesh; its vertical position and height are also covered by the
+cab-profile and clearance tests. These are raster-layout tolerances, not claims
+of engineering accuracy.
+
+Across the same 50 annotated boxes, mean absolute error in normalized left, top,
+width and height decreased from 1.736 percentage points in `421c9ce` to 0.356
+(about 80%). Front error decreased from 1.732 to 0.657 pp; the porthole side
+from 1.685 to 0.124 pp and the intake side from 1.804 to 0.153 pp. The metric
+weights all four box components equally on the full texture canvases; it does
+not measure photographic realism or the unannotated roof/underframe details.
 
 Windows, lamps and plates are `slab`s laid on a face through a small `Surface`
 mapping (the side wall and the two sloped cab faces). Marker lights, number
