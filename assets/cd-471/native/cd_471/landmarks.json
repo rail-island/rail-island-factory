@@ -1,0 +1,597 @@
+{
+ "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/emu/cd 471/cd_471/model",
+ "pixelMetres": 0.1,
+ "convention": "Pixel edges [left, top, right, bottom] on the native BMP; origin top left, x right, y down.",
+ "annotations": [
+  {
+   "id": "R01",
+   "view": "z_both",
+   "side": "right",
+   "element": "upper window 1 (small) frame",
+   "box": [
+    90,
+    17,
+    96,
+    24
+   ],
+   "nodes": [
+    "body/right-side/upper-windows/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R02",
+   "view": "z_both",
+   "side": "right",
+   "element": "upper window 2 frame",
+   "box": [
+    99,
+    17,
+    113,
+    26
+   ],
+   "nodes": [
+    "body/right-side/upper-windows/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R03",
+   "view": "z_both",
+   "side": "right",
+   "element": "upper window 4 frame",
+   "box": [
+    134,
+    17,
+    148,
+    26
+   ],
+   "nodes": [
+    "body/right-side/upper-windows/window-4/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R04",
+   "view": "z_both",
+   "side": "right",
+   "element": "upper window 6 frame",
+   "box": [
+    168,
+    17,
+    182,
+    26
+   ],
+   "nodes": [
+    "body/right-side/upper-windows/window-6/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R05",
+   "view": "z_both",
+   "side": "right",
+   "element": "lower window 1 (small) frame",
+   "box": [
+    67,
+    40,
+    74,
+    49
+   ],
+   "nodes": [
+    "body/right-side/lower-windows/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R06",
+   "view": "z_both",
+   "side": "right",
+   "element": "lower window 2 frame",
+   "box": [
+    99,
+    39,
+    113,
+    49
+   ],
+   "nodes": [
+    "body/right-side/lower-windows/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R07",
+   "view": "z_both",
+   "side": "right",
+   "element": "lower window 5 frame",
+   "box": [
+    151,
+    39,
+    165,
+    49
+   ],
+   "nodes": [
+    "body/right-side/lower-windows/window-5/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R08",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 1 outline",
+   "box": [
+    76,
+    33,
+    92,
+    57
+   ],
+   "nodes": [
+    "body/right-side/doors/door-1/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R09",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 2 outline",
+   "box": [
+    166,
+    33,
+    182,
+    57
+   ],
+   "nodes": [
+    "body/right-side/doors/door-2/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R10",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 1 canopy",
+   "box": [
+    73,
+    32,
+    96,
+    33
+   ],
+   "nodes": [
+    "body/right-side/doors/canopy-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R11",
+   "view": "z_both",
+   "side": "right",
+   "element": "inner-end window 1 frame",
+   "box": [
+    196,
+    28,
+    210,
+    37
+   ],
+   "nodes": [
+    "body/right-side/end-windows/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R12",
+   "view": "z_both",
+   "side": "right",
+   "element": "inner-end window 2 frame",
+   "box": [
+    223,
+    28,
+    237,
+    37
+   ],
+   "nodes": [
+    "body/right-side/end-windows/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R13",
+   "view": "z_both",
+   "side": "right",
+   "element": "CD emblem panel",
+   "box": [
+    212,
+    30,
+    221,
+    35
+   ],
+   "nodes": [
+    "body/right-side/emblem"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R14",
+   "view": "z_both",
+   "side": "right",
+   "element": "yellow line under the upper windows",
+   "box": [
+    99,
+    26,
+    182,
+    27
+   ],
+   "nodes": [
+    "body/right-side/paint-lines/yellow-line-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R15",
+   "view": "z_both",
+   "side": "right",
+   "element": "red stripe, inner end",
+   "box": [
+    186,
+    43,
+    250,
+    45
+   ],
+   "nodes": [
+    "body/right-side/paint-lines/stripe-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R16",
+   "view": "z_both",
+   "side": "right",
+   "element": "blue band between the decks",
+   "box": [
+    3,
+    27,
+    250,
+    38
+   ],
+   "nodes": [
+    "body/blue-band"
+   ],
+   "tolerancePixels": 2.5,
+   "uncertainty": "Band runs onto the nose slope and the end wall; +/- one pixel."
+  },
+  {
+   "id": "R17",
+   "view": "z_both",
+   "side": "right",
+   "element": "low-floor skirt",
+   "box": [
+    52,
+    51,
+    201,
+    58
+   ],
+   "nodes": [
+    "body/skirtdark-band/sweep-1",
+    "body/skirtdark-band/sweep-2",
+    "body/skirtdark-band/sweep-3",
+    "body/skirtdark-band/sweep-4",
+    "body/skirt-band/sweep-4",
+    "body/skirt-band/sweep-5",
+    "body/skirt-band/sweep-6",
+    "body/skirt-band/sweep-7"
+   ],
+   "tolerancePixels": 2.5,
+   "uncertainty": "The skirt's sloped ends follow the XML elevation, not the painted outline; +/- one pixel."
+  },
+  {
+   "id": "R18",
+   "view": "z_both",
+   "side": "right",
+   "element": "cab side window frame",
+   "box": [
+    6,
+    28,
+    16,
+    37
+   ],
+   "nodes": [
+    "cab/right-cab-side/cab-window/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R19",
+   "view": "z_both",
+   "side": "right",
+   "element": "cab door window frame",
+   "box": [
+    20,
+    29,
+    25,
+    38
+   ],
+   "nodes": [
+    "cab/right-cab-side/cab-door/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R20",
+   "view": "z_both",
+   "side": "right",
+   "element": "pantograph well louvres",
+   "box": [
+    209,
+    19,
+    235,
+    24
+   ],
+   "nodes": [
+    "roof-equipment/well-louvres/right"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R21",
+   "view": "z_both",
+   "side": "right",
+   "element": "roof louvres over the cab end",
+   "box": [
+    23,
+    13,
+    50,
+    16
+   ],
+   "nodes": [
+    "roof-louvres/right"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R22",
+   "view": "z_both",
+   "side": "right",
+   "element": "cab-end bogie (drawn wheels and frame)",
+   "box": [
+    12,
+    51,
+    45,
+    60
+   ],
+   "nodes": [
+    "running-gear/bogie-2/wheelset",
+    "running-gear/bogie-2/wheelset-2",
+    "running-gear/bogie-2/frame"
+   ],
+   "tolerancePixels": 2.5,
+   "uncertainty": "Drawn bogie silhouette; the model's bogie stands at the published 19.0 m pivots and 2.6 m wheelbase."
+  },
+  {
+   "id": "R23",
+   "view": "z_both",
+   "side": "right",
+   "element": "inner bogie (drawn wheels and frame)",
+   "box": [
+    204,
+    52,
+    237,
+    60
+   ],
+   "nodes": [
+    "running-gear/bogie-1/wheelset",
+    "running-gear/bogie-1/wheelset-2",
+    "running-gear/bogie-1/frame"
+   ],
+   "tolerancePixels": 2.5,
+   "uncertainty": "Drawn bogie silhouette; the model's bogie stands at the published 19.0 m pivots and 2.6 m wheelbase."
+  },
+  {
+   "id": "F01",
+   "view": "x_inc",
+   "end": "front",
+   "element": "windscreen frame",
+   "box": [
+    4,
+    27,
+    26,
+    37
+   ],
+   "nodes": [
+    "cab/windscreen"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "F02",
+   "view": "x_inc",
+   "end": "front",
+   "element": "top lamp",
+   "box": [
+    13,
+    20,
+    17,
+    24
+   ],
+   "nodes": [
+    "cab/top-lamp"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "F03",
+   "view": "x_inc",
+   "end": "front",
+   "element": "visor bar over the lamp",
+   "box": [
+    11,
+    17,
+    19,
+    19
+   ],
+   "nodes": [
+    "cab/visor"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "F04",
+   "view": "x_inc",
+   "end": "front",
+   "element": "left lamp cluster",
+   "box": [
+    2,
+    42,
+    11,
+    45
+   ],
+   "nodes": [
+    "cab/lamps/lamp-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Checkered lamp patch, three lenses; housing compared."
+  },
+  {
+   "id": "F05",
+   "view": "x_inc",
+   "end": "front",
+   "element": "right lamp cluster",
+   "box": [
+    19,
+    42,
+    28,
+    45
+   ],
+   "nodes": [
+    "cab/lamps/lamp-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Checkered lamp patch, three lenses; housing compared."
+  },
+  {
+   "id": "F06",
+   "view": "x_inc",
+   "end": "front",
+   "element": "red stripe across the front",
+   "box": [
+    0,
+    43,
+    30,
+    45
+   ],
+   "nodes": [
+    "cab/front-stripe"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "F07",
+   "view": "x_inc",
+   "end": "front",
+   "element": "black lower front and apron",
+   "box": [
+    1,
+    46,
+    29,
+    54
+   ],
+   "nodes": [
+    "cab/lower-front",
+    "cab/apron/upper"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Dark area spans the nose undercut and the apron."
+  },
+  {
+   "id": "F08",
+   "view": "x_inc",
+   "end": "front",
+   "element": "yellow apron edge",
+   "box": [
+    1,
+    54,
+    29,
+    58
+   ],
+   "nodes": [
+    "cab/apron/edge"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "B01",
+   "view": "x_dec",
+   "end": "rear",
+   "element": "gangway bellows frame",
+   "box": [
+    9,
+    19,
+    21,
+    48
+   ],
+   "nodes": [
+    "rear-end/gangway"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "B02",
+   "view": "x_dec",
+   "end": "rear",
+   "element": "end door",
+   "box": [
+    11,
+    26,
+    19,
+    44
+   ],
+   "nodes": [
+    "rear-end/end-door/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "B03",
+   "view": "x_dec",
+   "end": "rear",
+   "element": "marker lamps",
+   "box": [
+    4,
+    42,
+    26,
+    44
+   ],
+   "nodes": [
+    "rear-end/marker-lamps"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Two 2 px lamps; their joint bounds compared."
+  }
+ ]
+}
