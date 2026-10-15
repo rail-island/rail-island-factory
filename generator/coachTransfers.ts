@@ -1,13 +1,16 @@
 // Every coach transferred from vlakosimdb, for the measured comparison
 // (csdCoachComparison.ts, csdCoachReport.ts): the CSD coaches (csdCoaches.ts),
 // the Bmo double-deck coach in its four liveries (bmoCoach.ts) and the CD green
-// and white coaches (cdGreenWhiteCoach.ts). See docs/models/csd-coaches.md.
+// and white coaches (cdGreenWhiteCoach.ts); ALL_TRANSFERS adds the freight
+// wagons (wagonTransfers.ts). See docs/models/csd-coaches.md.
 
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamSpec, ParamValues } from "./design.ts";
 import { CSD_COACHES } from "./csdCoaches.ts";
 import { BMO_PARAMS, bmoCoach } from "./bmoCoach.ts";
 import { GREEN_WHITE_PARAMS, cdGreenWhiteCoach } from "./cdGreenWhiteCoach.ts";
+import { WAGON_DESIGNS } from "./wagons.ts";
+import { WAGON_TRANSFERS } from "./wagonTransfers.ts";
 
 /** A coach design: id, title, builder, parameters and its reference folder (assets/<folder>/). */
 export interface CoachDesign {
@@ -43,6 +46,8 @@ export interface CoachTransfer {
   centre: number;
   /** The comparison table, relative to assets/<folder>/. */
   report: string;
+  /** The reference the comparison table links and the code it names; the CSD coaches' when absent. */
+  doc?: { title: string; path: string; code: string[]; residuals?: string };
 }
 
 const greenWhite = (variant: string, title: string, centre = 12.25): CoachTransfer => ({
@@ -91,7 +96,10 @@ export const COACH_TRANSFERS: readonly CoachTransfer[] = [
   greenWhite("bdmtee", "CD Bdmtee", 13.2),
 ];
 
+/** Every transferred vlakosimdb vehicle with a measured comparison: the coaches, then the freight wagons (wagonTransfers.ts). */
+export const ALL_TRANSFERS: readonly CoachTransfer[] = [...COACH_TRANSFERS, ...WAGON_TRANSFERS];
+
 /** The builder of a transfer's design. */
 export function transferBuild(t: CoachTransfer): MeshBuilder {
-  return COACH_DESIGNS.find((c) => c.id === t.id)!.build(t.params);
+  return [...COACH_DESIGNS, ...WAGON_DESIGNS].find((c) => c.id === t.id)!.build(t.params);
 }
