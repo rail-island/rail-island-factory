@@ -1,7 +1,7 @@
 # Vehicles
 
 **Covers** - the procedurally generated road and rail vehicles (an articulated American
-truck, the CD 150, CD 163 and CD 263 electric locomotives the CSD and CD coaches and the freight wagons), their triangle budget and conventions, articulated vehicles'
+truck, the CD 150, CD 163 and CD 263 electric locomotives the CSD and CD coaches, the freight wagons and the steam locomotives), their triangle budget and conventions, articulated vehicles'
 truck and trailer parts, the `sweep` primitive they are mostly built from, and
 how to add one.
 **Code** - `generator/vehicles.ts`, `generator/cd150.ts`, `generator/cd150Comparison.ts`, `generator/cd150Report.ts`, `test/cd150.test.ts`, `generator/cd163.ts`, `generator/cd163Family.ts`, `generator/cdLogo.ts`, `generator/vehicleParts.ts`, `generator/design.ts`, `generator/meshCore.ts` (`sweep`, `part`), `generator/meshBuilder.ts` (`toGlb`), `src/viewerHighlight.ts`, `test/models.test.ts`, `test/cdLogo.test.ts`, `test/viewerHighlight.test.ts`, `.agents/skills/road-vehicle/SKILL.md`, `.agents/skills/railroad-vehicle/SKILL.md`, `.agents/skills/vlakosimdb-transfer/SKILL.md`
@@ -20,6 +20,7 @@ how to add one.
 | `veh-bmo-double-deck-coach` | Bmo Double-Deck Coach | parametric (`livery` csd/cdBlue/cdBlueGrey/cdRedDoors = vlakosimdb CSD Bmo and CD Bmo#1..#3): the double-deck coach with a dropped centre, 26.8 m, about 6,500 to 6,800 triangles. See [bmo-double-deck.md](bmo-double-deck.md) |
 | `veh-cd-green-white-coach` | CD Green-White Coach | parametric (`variant` a/ab/b/bee/beel/bds/ds/bdmeer/bdmtee = vlakosimdb CD A ... CD Bdmtee): the CD green and white Y-type compartment coaches, luggage coach and van, and the 26.4 m BDmeer and Bdmtee; about 6,000 to 6,500 triangles. See [cd-green-white.md](cd-green-white.md) |
 | `veh-nas-flat-wagon`, `veh-ua-open-wagon`, `veh-eas-open-wagon` | Nas Flat Wagon, Ua Open Wagon, Eas Open Wagon | parametric (`cargo`: Nas empty/wood/tubes/reels, Ua empty/coal/wood/sand, Eas empty/wood/coal = the vlakosimdb load variants): a 20.9 m flat wagon with stakes and two high-sided open wagons, about 4,000 to 10,300 triangles. See [wagons.md](wagons.md) |
+| `veh-csd-433-0`, `veh-csd-456-0`, `veh-csd-475-1`, `veh-csd-477-0`, `veh-csd-498-1`, `veh-csd-556-0`, `veh-csd-636`, `veh-csd-386`, `veh-csd-m112` | CSD 433.0 ... CSD M 112.0 | the steam locomotives from vlakosimdb, their own family (`steamLocos.ts`): tank engines, tender engines with a `unit` parameter (`locomotive`, `tender`), a Mallet, a streamliner and a steam railcar, every wheelset and rod a part moved by the `running` animation clip; 3,000 to 14,400 triangles. See [steam-locomotives.md](steam-locomotives.md) and [animation.md](animation.md) |
 | `veh-raj-hopper-wagon`, `veh-rah-tank-wagon` | Raj Hopper Wagon, Rah Tank Wagon | rigid: the Raj with four yellow pressure-discharge hoppers and the silver CPAVEX ammonia tank wagon, about 4,200 and 4,400 triangles. See [wagons.md](wagons.md) |
 
 `VEHICLES` in `vehicles.ts` lists them as `{ id, title, build }`, the same
@@ -218,6 +219,11 @@ material's triangle numbering runs across the parts in node order
 once a model has parts every triangle must be in one (`part()` and `toGlb`
 throw otherwise).
 
+**Animated parts.** A rigid vehicle stays one node unless something must move.
+The steam locomotives are the exception: a static `body` part, then a part per
+wheelset, rod and valve-gear link, each pivoted at its joint and driven by an
+animation clip ([animation.md](animation.md)).
+
 The American truck's king pin is at x = 1.05 m, on the fifth wheel's top
 (y = 1.18 m), 0.6 m behind the trailer's front. Its front corners sweep a
 1.43 m circle about it and the sleeper starts 1.55 m ahead, so the trailer can
@@ -233,7 +239,8 @@ tractor's rear wheels. Both are tested.
   plus mirrors) and 4.115 m high (13 ft 6 in), and longer than twice its width.
 - The GLB's generator string is `Rail Island procedural vehicle (<id>)`; a rigid
   vehicle's one node is named `vehicle`, an articulated one's are `truck` and
-  `trailer`.
+  `trailer`, a steam locomotive's `body`, `wheelset-<n>` and the rods'
+  (`main-rod-right`, ...).
 - Chrome is only mildly metallic (0.45): the game and the site light models with
   no environment map, where a fully metallic surface renders nearly black.
 

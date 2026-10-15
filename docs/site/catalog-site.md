@@ -98,6 +98,12 @@ instead of the GLB, keeping the camera; the thumbnail, specs and source tree sta
 the default build's, so tree highlight and picking pause until the defaults
 return ([../models/parameters.md](../models/parameters.md)).
 
+A model with animation clips (the steam locomotives' running gear) gets
+**Start** and **Stop** buttons over the preview: Start plays the clips in a loop
+with a render loop that runs only while they play, Stop halts them in place, and
+another model or parameter choice stops them
+([../models/animation.md](../models/animation.md)).
+
 `ModelViewer.tsx` (with its helper `viewerHighlight.ts`) is the only code
 importing three (plus `GLTFLoader` and `OrbitControls`), reached through a lazy import, so the list loads ~30 kB of
 script and the renderer arrives only when a model opens. It renders on demand

@@ -9,7 +9,7 @@
 // Source x runs from the front buffer rearward; the model is +X forward, centred
 // between the buffer heads.
 
-import type { CatalogFields, ParamSpec, ParamValues } from "./design.ts";
+import type { CatalogFields, ParamSpec, ParamValues, ProceduralDesign } from "./design.ts";
 import { resolveParams } from "./design.ts";
 import type { MeshBuilder } from "./meshBuilder.ts";
 import { buildLoco, type LocoSpec } from "./steamLoco.ts";
@@ -22,7 +22,7 @@ export const STEAM_CATALOG: CatalogFields = {
   defaultScale: 1,
   license: "CC0",
   author: "Rail Island",
-  source: "Rail Island (from vlakosimdb)",
+  source: "Rail Island",
 };
 
 /** The `unit` parameter of a locomotive with a tender. */
@@ -806,6 +806,14 @@ export const STEAM_DESIGNS: readonly SteamDesign[] = [
   { id: "veh-csd-386", title: "CSD 386 Streamlined", folder: "steam-386", build: csd386, params: [UNIT_PARAM] },
   { id: "veh-csd-m112", title: "CSD M 112.0 Steam Railcar", folder: "steam-m112", build: csdM112 },
 ];
+
+/**
+ * The steam family, registered in generate.ts beside the other vehicles: its own
+ * module, so the standalone JS models of the other vehicles do not carry it.
+ */
+export const STEAM_LOCOS: ProceduralDesign[] = STEAM_DESIGNS.map((d) => ({
+  id: d.id, title: d.title, build: d.build, catalog: STEAM_CATALOG, references: d.folder, ...(d.params ? { params: d.params } : {}),
+}));
 
 /** The spec a steam design builds for the given parameters (tests and the comparison read it). */
 export function steamSpec(id: string, params?: ParamValues): LocoSpec {

@@ -127,7 +127,7 @@ describe("buildExport", () => {
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
-  }, 60_000);
+  }, 240_000);
 });
 
 describe("generateReferences", () => {

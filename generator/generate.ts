@@ -41,6 +41,7 @@ import { AIRCRAFT } from "./aircraft.ts";
 import { SHIPS } from "./ships.ts";
 import { CABLE_CABINS } from "./cableCabins.ts";
 import { TRUCKS } from "./trucks.ts";
+import { STEAM_LOCOS } from "./steamLocos.ts";
 import type { ProceduralDesign } from "./design.ts";
 import { glbStats } from "./glbStats.ts";
 import { JS_DIR, bundleDesign, gzipSize, writeIfChanged } from "./jsModel.ts";
@@ -74,6 +75,7 @@ const FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: st
   { designs: LANDMARKS, source: "landmarks.ts", vehicle: false },
   { designs: STATIONS, source: "stations.ts", vehicle: false },
   { designs: VEHICLES, source: "vehicles.ts", vehicle: true },
+  { designs: STEAM_LOCOS, source: "steamLocos.ts", vehicle: true },
   { designs: TRUCKS, source: "trucks.ts", vehicle: true },
   { designs: AIRCRAFT, source: "aircraft.ts", vehicle: true },
   { designs: SHIPS, source: "ships.ts", vehicle: true },

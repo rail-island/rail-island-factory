@@ -15,7 +15,7 @@ and `pnpm dev`) writes the gitignored `export/`:
 
 | Path | What |
 |---|---|
-| `export/glb/<id>.glb` | the model (a vehicle's may have parts - [vehicles.md](vehicles.md)) |
+| `export/glb/<id>.glb` | the model (a vehicle's may have parts - [vehicles.md](vehicles.md) - and animation clips - [animation.md](animation.md)) |
 | `export/thumbs/<id>.png` | a 512 px square thumbnail, transparent background |
 | `export/js/<id>.js` | the model as one standalone JS file ([js-format.md](js-format.md)) |
 | `export/tree/<id>.json` | the procedural source tree, for the site only ([source-tree.md](source-tree.md)) |

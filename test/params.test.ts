@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from "vitest";
 import * as THREE from "three";
-import { DESIGNS } from "../generator/generate";
+import { DESIGNS, designSource } from "../generator/generate";
 import { paramCombinations, resolveParams, type ParamSpec, type ParamValues } from "../generator/design";
 import { exportVehicleMeta, metaEntry } from "../generator/catalog";
 import { VEHICLES } from "../generator/vehicles";
@@ -105,7 +105,7 @@ describe("parametric models", () => {
     });
 
     it(`${d.id}: the JS model exports its parameters and builds every combination like the generator`, async () => {
-      const mod = await loadModule(await bundleDesign(d, "vehicles.ts"));
+      const mod = await loadModule(await bundleDesign(d, designSource(d.id)));
       expect(mod.params).toEqual(d.params);
       for (const combo of paramCombinations(d.params)) {
         const want = new Map<string, number[]>();

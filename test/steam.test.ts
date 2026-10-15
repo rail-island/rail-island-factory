@@ -5,8 +5,8 @@
 
 import { describe, expect, it } from "vitest";
 import { paramCombinations } from "../generator/design.ts";
-import { VEHICLES } from "../generator/vehicles.ts";
-import { STEAM_CATALOG, STEAM_DESIGNS, UNIT_PARAM, steamSpec } from "../generator/steamLocos.ts";
+import { ALL_VEHICLES } from "../generator/generate.ts";
+import { STEAM_CATALOG, STEAM_DESIGNS, STEAM_LOCOS, UNIT_PARAM, steamSpec } from "../generator/steamLocos.ts";
 import { N_SAMPLES, RUNNING_CLIP, RUNNING_SPEED, RunningGear, axleHeight, tyreSides } from "../generator/steamGear.ts";
 import { STEAM_TRANSFERS, steamComparison, worstPixels } from "../generator/steamComparison.ts";
 import { findCoplanarOverlaps } from "../generator/coplanar.ts";
@@ -31,7 +31,8 @@ describe("the steam designs", () => {
       "veh-csd-556-0", "veh-csd-636", "veh-csd-386", "veh-csd-m112",
     ]);
     for (const d of STEAM_DESIGNS) {
-      const v = VEHICLES.find((x) => x.id === d.id)!;
+      expect(ALL_VEHICLES).toContain(STEAM_LOCOS.find((x) => x.id === d.id));
+      const v = STEAM_LOCOS.find((x) => x.id === d.id)!;
       expect(v.catalog).toBe(STEAM_CATALOG);
       expect(v.catalog?.category).toBe("Rail vehicles");
       expect(v.references).toBe(d.folder);

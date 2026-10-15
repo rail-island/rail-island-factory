@@ -27,6 +27,9 @@ scene.add(build(THREE)); // a THREE.Group named after the model id
   are the palette's sRGB hex, so three's colour management converts them to the linear value the GLB stores.
   A model with parts (the truck, [vehicles.md](vehicles.md)) has a child `Group` per part, named after it and
   positioned at its pivot, its meshes relative to that pivot - the GLB's nodes.
+- **Animations.** The group's `animations` holds the GLB's clips as `THREE.AnimationClip`s (a steam
+  locomotive's `running`, [animation.md](animation.md)); an animated model's namespace also needs
+  `AnimationClip`, `QuaternionKeyframeTrack` and `VectorKeyframeTrack`.
 - **Parameters.** The module also exports `params`, the design's enum parameters (`[]` for a fixed design),
   and `build(THREE, params)` builds any combination of their values; `build(THREE)` builds the defaults, the
   GLB's model, and an unknown name or value throws ([parameters.md](parameters.md)).

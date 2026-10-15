@@ -6,7 +6,7 @@ description: Create or change procedural railway vehicles, including electric an
 # Railroad vehicle
 
 **Covers** - railway vehicle geometry, operating poses and verification.
-**Code** - `generator/vehicles.ts`, `generator/cd150.ts`, `generator/cd163.ts`, `generator/cd163Family.ts`, `generator/csdCoaches.ts`, `generator/csdCoachParts.ts`, `generator/bmoCoach.ts`, `generator/cdGreenWhiteCoach.ts`, `generator/wagons.ts`, `generator/wagonParts.ts`, `test/models.test.ts`, `test/cd150.test.ts`, `test/csdCoaches.test.ts`
+**Code** - `generator/vehicles.ts`, `generator/cd150.ts`, `generator/cd163.ts`, `generator/cd163Family.ts`, `generator/csdCoaches.ts`, `generator/csdCoachParts.ts`, `generator/bmoCoach.ts`, `generator/cdGreenWhiteCoach.ts`, `generator/wagons.ts`, `generator/wagonParts.ts`, `generator/steamLocos.ts`, `generator/steamLoco.ts`, `generator/steamParts.ts`, `generator/steamGear.ts`, `test/models.test.ts`, `test/steam.test.ts`, `test/cd150.test.ts`, `test/csdCoaches.test.ts`
 **See also** - [vehicle reference](../../../docs/models/vehicles.md), [road-vehicle](../road-vehicle/SKILL.md), [vlakosimdb-transfer](../vlakosimdb-transfer/SKILL.md)
 
 This skill follows the repository's road-vehicle workflow, with railway-specific
@@ -127,6 +127,17 @@ locomotive body are a `livery` parameter whose values are data (`Cd163Livery`:
 colour bands, optional cab bands, emblems, number); a sister class whose body
 differs only in its machine-room sides reuses `cd163Body` with its own layout
 rather than copying the builder (docs/models/loco-liveries.md).
+
+## Steam locomotives and moving parts
+
+Steam locomotives are a `LocoSpec` drawn by `buildLoco` (`steamLoco.ts`,
+docs/models/steam-locomotives.md). A locomotive with a tender is one design with
+the `unit` parameter (`locomotive` default, `tender`). Their wheelsets, rods and
+valve gear are parts animated by the `running` clip (`steamGear.ts`,
+docs/models/animation.md): keep each moving piece in its own z plane, keep
+spoke counts so a tyre has twice the spokes in facets, and check posed frames
+(`poseGlb`) for flicker as `test/steam.test.ts` does. A rigid vehicle without
+moving parts stays one node.
 
 ## Electric locomotives and pantographs
 
