@@ -53,7 +53,8 @@ resolve - the front masks, lamps, mirrors, grilles, the joint.
   texture: e.g. the B 731's 2.29 m front overhang and 5.60 m wheelbase, the
   articulated Karosas' 6.27 m from the middle to the driven rear axle (they are
   pushers), the City Bus 18M's 2.71 + 5.355 + 6.575 m, the Citaro's 5.845 m, the
-  O 345 G's 5.725 + 6.415 m (a pusher too). Bus 1 keeps the texture's.
+  O 345 G's 5.725 m (its second, 6.415 m, is measured off the photographs; it
+  is a pusher too). Bus 1 keeps the texture's.
 - Widths are the real 2.50 m (Citaro and Urbino 2.55 m), not the source's 2.6 m.
   Heights follow the sources: the Karosas' roof crown at the XML's 3.10 m, the
   hatches bringing them to the quoted 3.165 m; the City Bus at 2.924 m, its 18M's

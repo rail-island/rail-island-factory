@@ -62,7 +62,7 @@ describe("the buses", () => {
   });
 
   it("puts the axles where the real buses have them", () => {
-    // front overhang and wheelbases, from the nose (cs.wikipedia, pl.wikipedia, the makers' data)
+    // front overhang and wheelbases, from the nose (assets/<folder>/SOURCES.md)
     const axlesOf = (id: string, params?: Record<string, string>): number[] => {
       const d = BUS_DESIGNS.find((x) => x.id === id)!;
       const nodes = walk(d.build(params).sourceTree(id, d.title).root);
