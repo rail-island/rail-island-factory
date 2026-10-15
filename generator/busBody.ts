@@ -263,8 +263,9 @@ export function drawShell(m: MeshBuilder, s: Shell, name = "shell"): void {
         const x1 = xcuts[xi + 1]!;
         const xm = (x0 + x1) / 2;
         const arch = archAt(xm);
-        // a band wholly inside an arch's notch has nothing left
-        if (arch && Math.max(archBottom(s.arches, x0 + 1e-6), archBottom(s.arches, x1 - 1e-6)) >= yb) {
+        // a band wholly inside an arch's notch -- the crown above its top at both
+        // ends -- has nothing left; one the crown rises through is clipped by it
+        if (arch && Math.min(archBottom(s.arches, x0 + 1e-6), archBottom(s.arches, x1 - 1e-6)) >= yb) {
           cells.push({ x0, x1, mat: "", arch });
           continue;
         }

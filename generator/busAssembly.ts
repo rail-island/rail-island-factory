@@ -179,6 +179,8 @@ export interface DoorStyle {
   surround?: string;
   /** A leaf's width at most: the door gets as many leaves as that needs. */
   leafWidth?: number;
+  /** The number of leaves, whatever the width (a double door: 2). */
+  leaves?: number;
 }
 
 /**
@@ -220,8 +222,8 @@ export class BusDraft {
   }
 
   /** A passenger door over x0..x1 on side `s` (the right, +1, by default). */
-  door(x0: number, x1: number, st: DoorStyle, s = 1): void {
-    const leaves = Math.max(1, Math.ceil((x1 - x0 - 0.06) / (st.leafWidth ?? 0.62) - 1e-9));
+  /** A door x0..x1 on side `s`: its leaves `leaves`, else the style's count, else as many as its leaf width needs. */
+  door(x0: number, x1: number, st: DoorStyle, s = 1, leaves = st.leaves ?? Math.max(1, Math.ceil((x1 - x0 - 0.06) / (st.leafWidth ?? 0.62) - 1e-9))): void {
     this.fit(s > 0 ? "right doors" : "left doors", (x0 + x1) / 2, () => {
       const m = this.m;
       if (st.surround) sideSlab(m, st.surround, this.frame, s, x0, x1, st.bottom - 0.04, st.top + 0.04, 0.01);

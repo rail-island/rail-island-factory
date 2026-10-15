@@ -11,6 +11,8 @@ import { collectTriangles, parseGlb } from "../generator/glbTriangles";
 import { KAROSA_LONG, KAROSA_SHORT } from "../generator/karosa";
 import { jointTriangles, steerLock } from "../generator/rig";
 import { isLeaf, type ScopeNode, type TreeNode } from "../generator/sourceTree";
+import type { MeshBuilder } from "../generator/meshBuilder";
+import { insideSeen, type Tri, type V3 } from "./collision";
 
 /** Every node of a tree, depth first. */
 function walk(n: TreeNode, out: TreeNode[] = []): TreeNode[] {
@@ -188,5 +190,160 @@ describe("the shell", () => {
     expect(() => m.scope("ok", () => drawShell(m, shell))).not.toThrow();
     // a crossed plan (two corners swapped), as a mis-ordered corner list would make
     expect(() => m.scope("bad", () => drawShell(m, { ...shell, plan: [[0, -1], [5, 1], [5, -1], [0, 1]] }))).toThrow(/not convex/);
+  });
+});
+
+/** A built bus's triangles in world space, with their material and the source-tree leaf they come from. */
+function trianglesOf(m: MeshBuilder): Array<{ p: Tri; material: string; leaf: string }> {
+  const tree = m.sourceTree("bus", "bus");
+  const { json, bin } = parseGlb(m.toGlb("test", "vehicle"));
+  const byMat = new Map<string, Tri[]>();
+  for (const t of collectTriangles(json, bin)) {
+    if (!byMat.has(t.material)) byMat.set(t.material, []);
+    byMat.get(t.material)!.push(t.p as Tri);
+  }
+  return walk(tree.root).filter(isLeaf).flatMap((leaf) =>
+    byMat.get(leaf.material)!.slice(leaf.tri[0], leaf.tri[0] + leaf.tri[1]).map((p) => ({ p, material: leaf.material, leaf: leaf.id })),
+  );
+}
+
+/** The first triangle a ray from `origin` along `dir` meets, or undefined. */
+function firstHit<T extends { p: Tri }>(tris: readonly T[], origin: V3, dir: V3): T | undefined {
+  let best = Infinity;
+  let hit: T | undefined;
+  for (const t of tris) {
+    const [p0, p1, p2] = t.p;
+    const e1: V3 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
+    const e2: V3 = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
+    const h: V3 = [dir[1] * e2[2] - dir[2] * e2[1], dir[2] * e2[0] - dir[0] * e2[2], dir[0] * e2[1] - dir[1] * e2[0]];
+    const det = e1[0] * h[0] + e1[1] * h[1] + e1[2] * h[2];
+    if (Math.abs(det) < 1e-12) continue;
+    const sv: V3 = [origin[0] - p0[0], origin[1] - p0[1], origin[2] - p0[2]];
+    const u = (sv[0] * h[0] + sv[1] * h[1] + sv[2] * h[2]) / det;
+    if (u < 0 || u > 1) continue;
+    const q: V3 = [sv[1] * e1[2] - sv[2] * e1[1], sv[2] * e1[0] - sv[0] * e1[2], sv[0] * e1[1] - sv[1] * e1[0]];
+    const v = (dir[0] * q[0] + dir[1] * q[1] + dir[2] * q[2]) / det;
+    if (v < 0 || u + v > 1) continue;
+    const t2 = (e2[0] * q[0] + e2[1] * q[1] + e2[2] * q[2]) / det;
+    if (t2 > 0 && t2 < best) {
+      best = t2;
+      hit = t;
+    }
+  }
+  return hit;
+}
+
+/** Whether `p` is inside the closed triangles `tris` (an odd number of crossings straight up, nudged off any edge). */
+function inside(tris: readonly { p: Tri }[], p: V3): boolean {
+  let n = 0;
+  const dir: V3 = [0.0013, 1, 0.0009];
+  let from = p;
+  for (let k = 0; k < 64; k++) {
+    const hit = firstHit(tris, from, dir);
+    if (!hit) break;
+    n++;
+    // step just past this face
+    const ys = hit.p.map((q) => q[1]);
+    const [a, b, c] = hit.p;
+    const nrm: V3 = [
+      (b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1]),
+      (b[2] - a[2]) * (c[0] - a[0]) - (b[0] - a[0]) * (c[2] - a[2]),
+      (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]),
+    ];
+    const t = ((a[0] - from[0]) * nrm[0] + (a[1] - from[1]) * nrm[1] + (a[2] - from[2]) * nrm[2]) / (dir[0] * nrm[0] + dir[1] * nrm[1] + dir[2] * nrm[2]);
+    from = [from[0] + dir[0] * (t + 1e-5), from[1] + dir[1] * (t + 1e-5), from[2] + dir[2] * (t + 1e-5)];
+    void ys;
+  }
+  return n % 2 === 1;
+}
+
+/** Every bus and Karosa variant, built. */
+const BUILDS = BUS_DESIGNS.flatMap((d) => paramCombinations(d.params).map((params) => ({ id: d.id, params, label: params.variant ? `${d.id} ${params.variant}` : d.id, m: () => d.build(params) })));
+
+describe("the bus bodies", () => {
+  // three.js culls back faces: a ray from outside whose first face looks away has
+  // come in through a gap, which shows as a see-through slit (the arch feet's were)
+  it.each(BUS_DESIGNS.map((d) => [d.id] as const))("%s has no holes: no ray from outside meets the inside of a face", (id) => {
+    const tris = trianglesOf(BUS_DESIGNS.find((d) => d.id === id)!.build()).map((t) => t.p);
+    for (const dir of [[0, 0.4, 1], [0, 0.4, -1], [0.6, 0.4, 1], [-0.6, 0.4, -1], [0.6, 0.6, -1], [-0.6, 0.6, 1], [0, -0.3, 1], [0, 1, 0.2]] as V3[]) {
+      const seen = insideSeen(tris, dir, 0.03);
+      expect(seen.length, `along ${dir.join(",")}: ${seen.slice(0, 3).map((p) => p.map((v) => v.toFixed(2)).join(",")).join("; ")}`).toBe(0);
+    }
+  }, 60_000);
+
+  it.each(BUILDS.map((b) => [b.label, b] as const))("%s hangs each mirror on an arm that reaches into the body", (_, b) => {
+    const tris = trianglesOf(b.m());
+    const shell = tris.filter((t) => /(^|\/)shell\//.test(t.leaf));
+    const mirrors = tris.filter((t) => /(^|\/)mirrors\//.test(t.leaf));
+    for (const s of [1, -1]) {
+      // the mirror's pieces on this side, joined into one by touching boxes
+      const leaves = [...new Set(mirrors.filter((t) => t.p[0][2] * s > 0).map((t) => t.leaf))];
+      const box = (leaf: string): { lo: V3; hi: V3 } => {
+        const ps = mirrors.filter((t) => t.leaf === leaf).flatMap((t) => t.p);
+        return { lo: [0, 1, 2].map((k) => Math.min(...ps.map((p) => p[k]!))) as V3, hi: [0, 1, 2].map((k) => Math.max(...ps.map((p) => p[k]!))) as V3 };
+      };
+      const boxes = leaves.map(box);
+      const joined = new Set([0]);
+      for (let grew = true; grew; ) {
+        grew = false;
+        boxes.forEach((bx, i) => {
+          if (joined.has(i)) return;
+          if ([...joined].some((j) => [0, 1, 2].every((k) => bx.lo[k]! <= boxes[j]!.hi[k]! + 1e-6 && boxes[j]!.lo[k]! <= bx.hi[k]! + 1e-6))) {
+            joined.add(i);
+            grew = true;
+          }
+        });
+      }
+      expect(joined.size, `side ${s}: ${leaves.join(", ")}`).toBe(leaves.length);
+      // and some corner of it is inside the body
+      expect(boxes.flatMap((bx) => [bx.lo, bx.hi, [bx.lo[0], bx.hi[1], bx.lo[2]] as V3, [bx.lo[0], bx.lo[1], bx.hi[2]] as V3]).some((p) => inside(shell, p)), `side ${s}`).toBe(true);
+    }
+  }, 30_000);
+
+  it.each(BUILDS.map((b) => [b.label, b] as const))("%s has double doors (the LC 735's rear one single)", (label, b) => {
+    const tree = b.m().sourceTree(b.id, b.label);
+    // the leaves: tall, thin and not glass; a door's leaves stand 2 cm apart, doors further
+    const leaves = walk(tree.root)
+      .filter((n): n is ScopeNode => !isLeaf(n) && /(^|\/)right-doors(-\d+)?$/.test(n.id))
+      .flatMap((d) => walk(d).filter(isLeaf))
+      .filter((l) => l.material !== "glass" && l.max![1] - l.min![1] > 1.8 && l.max![2] - l.min![2] < 0.02)
+      .sort((a, c) => c.max![0] - a.max![0]);
+    const doors: number[] = [];
+    leaves.forEach((l, i) => {
+      if (i > 0 && leaves[i - 1]!.min![0] - l.max![0] < 0.1) doors[doors.length - 1]!++;
+      else doors.push(1);
+    });
+    const want = doors.map((_, i) => (label.endsWith("lc735") && i === doors.length - 1 ? 1 : 2));
+    expect(doors.length).toBeGreaterThan(0);
+    expect(doors).toEqual(want);
+  });
+
+  it("lays its slabs across the shell's corners without sinking: a Karosa door's surround, the O 345 G's and Bus 1's plates", () => {
+    const karosa = trianglesOf(BUS_DESIGNS.find((d) => d.id === "veh-karosa-short")!.build({ variant: "b731" }));
+    const door = karosa.filter((t) => /right-doors/.test(t.leaf)).flatMap((t) => t.p);
+    const x0 = Math.min(...door.map((p) => p[0]));
+    // the surround's strip beside the leaves, at every height across the belt corner
+    for (const y of [0.6, 1.2, 1.45, 1.55, 2.0, 2.5]) expect(firstHit(karosa, [x0 + 0.015, y, 5], [0, 0, -1])?.material, `y ${y}`).toBe("frame");
+    for (const [id, end, y] of [["veh-mb-o345-g", 1, 0.51], ["veh-bus-1", 1, 0.48], ["veh-bus-1", -1, 0.63]] as const) {
+      const tris = trianglesOf(BUS_DESIGNS.find((d) => d.id === id)!.build());
+      expect(firstHit(tris, [end * 30, y, 0.1], [-end, 0, 0])?.material, `${id} ${end}`).toBe("plate");
+    }
+  });
+
+  it("paints what the native files show: grilles behind the last door, the B 931's grey bumpers, no grey roof, the Citaro's and Bus 1's tails", () => {
+    for (const b of BUILDS.filter((x) => x.id === "veh-karosa-short" || x.id === "veh-karosa-long")) {
+      const nodes = walk(b.m().sourceTree(b.id, b.label).root);
+      const grille = nodes.find((n) => /(^|\/)engine-grille$/.test(n.id))!;
+      const doors = nodes.filter((n) => !isLeaf(n) && /(^|\/)right-doors(-\d+)?$/.test(n.id));
+      expect(grille.max![0], b.label).toBeLessThan(Math.min(...doors.map((d) => d.min![0])));
+      const mats = new Set(walk(b.m().sourceTree(b.id, b.label).root).filter(isLeaf).map((l) => l.material));
+      expect(mats.has("bumperGrey"), b.label).toBe(b.params.variant === "b931");
+      expect(mats.has("roofGrey"), b.label).toBe(false);
+    }
+    const citaro = trianglesOf(BUS_DESIGNS.find((d) => d.id === "veh-mb-citaro")!.build());
+    expect(firstHit(citaro, [-30, 0.85, 0.3], [1, 0, 0])?.material).toBe("body");
+    expect(firstHit(citaro, [-30, 2.55, 0.9], [1, 0, 0])?.material).toBe("body");
+    const bus1 = trianglesOf(BUS_DESIGNS.find((d) => d.id === "veh-bus-1")!.build());
+    expect(firstHit(bus1, [-30, 2.2, 0.3], [1, 0, 0])?.material).toBe("mint");
   });
 });
