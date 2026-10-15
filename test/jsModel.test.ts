@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from "vitest";
 import * as THREE from "three";
-import { DESIGNS, designGlb, generateJsModels } from "../generator/generate";
+import { DESIGNS, designGlb, designSource, generateJsModels } from "../generator/generate";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles";
 import { bundleDesign, gzipSize } from "../generator/jsModel";
 import { SKYSCRAPERS } from "../generator/skyscrapers";
@@ -39,8 +39,7 @@ function groupTriangles(group: THREE.Group): Map<string, number[]> {
 
 const JS = new Map<string, string>();
 async function jsOf(id: string): Promise<string> {
-  const source = id.startsWith("veh-") ? "vehicles.ts" : "skyscrapers.ts";
-  if (!JS.has(id)) JS.set(id, await bundleDesign(DESIGNS.get(id)!, source));
+  if (!JS.has(id)) JS.set(id, await bundleDesign(DESIGNS.get(id)!, designSource(id)));
   return JS.get(id)!;
 }
 
