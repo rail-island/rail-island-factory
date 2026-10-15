@@ -12,7 +12,7 @@ how to add one.
 | id | title | look |
 |---|---|---|
 | `veh-american-truck` | American Truck | articulated: a long-nose conventional tractor (chrome grille, sleeper, twin stacks, tandem drive axle) and a 53 ft dry van; 22.2 m, about 4,900 triangles |
-| `veh-cd-150` | CD 150 | rigid cream/green electric locomotive 150 222-8 reconstructed from native vlakosimdb XML/BMPs: tapered sloping cabs, a green skirt lowered between the bogies, opposite grille/window sides, asymmetric cooler and two linked-arm pantographs (rear raised, front folded); 16.80 m over buffers, 6.24 m operating height, about 9,100 triangles. [Source notes](../../assets/cd-150/SOURCES.md), [measured comparison](../../assets/cd-150/COMPARISON.md) |
+| `veh-cd-150` | CD 150 | rigid cream/green electric locomotive 150 222-8 reconstructed from native vlakosimdb XML/BMPs: tapered sloping cabs, a green skirt lowered between the bogies, opposite grille/window sides, asymmetric cooler and two linked-arm pantographs (rear raised, front folded); 16.80 m over buffers, 6.24 m operating height, about 10,700 triangles. [Source notes](../../assets/cd-150/SOURCES.md), [measured comparison](../../assets/cd-150/COMPARISON.md) |
 | `veh-cd-163` | CD 163 | rigid rail vehicle (`cd163.ts`): the Czech Railways class 163 Bo'Bo' electric 163 244-7 in the green livery with the yellow band - ribbed sides, four portholes opposite continuous intake shutters, the raised cooler box and cant grilles, raked framed windscreens, an upright period CD monogram and condensed number plates, two single-arm pantographs on shedded insulators (rear raised, front folded), bogies with coil springs, axle boxes, motors and sandboxes; 16.80 m over the buffers, 5.74 m high with the rear collector raised, about 22,500 triangles. Modelled from photographs, the vlakosimdb elevation drawings and the official emblem (`assets/cd-163/`, see `SOURCES.md` there) |
 
 `VEHICLES` in `vehicles.ts` lists them as `{ id, title, build }`, the same
@@ -37,10 +37,15 @@ the JS bundle finds every vehicle's build function in one module.
 The CD 150 preserves the source XML's 1 m upper cab setback and different
 2.6/2.7 m nose breaks. Panels split at the changes of slope. Its two sides have
 different machine-room features: large intake banks versus four rectangular
-windows, with a higher cooler on the window side. The green side skirt drops
-from the body's 1.2 m underside to 0.6 m above rail over x=-1.1..1.1 m, rising
-at the native BMPs' slope (0.3 m per 0.4 m) - source columns 70..100 of both
-side textures. Wheel contact is at y=0,
+windows, with a higher cooler on the window side. The green side skirt hangs
+to 0.9 m above rail along the body, broken by the cab-door steps, and drops to
+0.6 m over x=-1.1..1.1 m at the native BMPs' slope (0.3 m per 0.4 m). The
+front mask follows the photographs in `assets/cd-150/` where they resolve more
+than the BMP: the plate and the chrome-rimmed marker lamps sit just below the
+cream/green boundary, the top headlight is a dark twin-lens housing, and the
+green wraps down to the buffer beam; the wheels have spoked centres. Those
+landmarks carry a photo-measured `photoBox` that the comparison uses in place
+of the native estimate. Wheel contact is at y=0,
 bogie centres are 8.40 m apart and the wheelbase is 3.30 m. Its collector arm
 lengths are preserved between folded and raised poses. The dedicated tests
 check these mechanical constraints and 39 native-raster landmarks; generic

@@ -60,16 +60,27 @@ than treating the painted boundary as an additional solid roof box.
   in both poses instead of stretching that source component. Rear (-X) is
   raised, front (+X) folded. Collector tops are 6.24 and 4.64 m. This is a
   display operating height, not a sourced contact-wire specification.
-- Equal circular marker lenses are white/red inside yellow housings; the tiny
-  native yellow patches cannot establish lens colours or exact outlines.
+- Front mask, checked against the photographs (scaled by the 1.0 m plate):
+  the number plate (0.23 m tall) sits just below the 1.9 m cream/green
+  boundary, and the four marker lamps are level with it, chrome-rimmed, at
+  z=+/-0.87 and +/-1.13 (inner white, outer red). The native BMP's 3-pixel
+  plate and yellow lamp patches put them 0.35 m lower; landmarks F06 and
+  F08..F11 keep that estimate but carry a superseding `photoBox`. The top
+  headlight is a dark 0.6 m housing with two round lenses (landmark F05 is the
+  lens pair). The green front wraps down to the buffer beam (0.8..1.22 m).
 - Plates show the full running number `150 222-8`: a CD-era 150.2 unit with a
   valid check digit. The tiny native plate does not resolve digits, so the
   serial is a choice, not read from the source; 150 222 is a real unit in this
   livery (`photo-150-222-front-three-quarter.jpg`). The shared CD
   outline approximates the native period badge.
-- The green side skirt drops to 0.6 m above rail between the bogies (source
-  columns 74..95, rows 51..53 of both side BMPs), with sloped ends at columns
-  70..73 and 96..100; the model keeps that slope up to the body underside.
+- The green side skirt hangs to 0.9 m above rail along the body (source rows
+  41..50 of both side BMPs; in the photographs only the lower wheels show
+  below it), broken by the cab-door steps, and drops to 0.6 m between the
+  bogies (columns 74..95, rows 51..53) with sloped ends at columns 70..73 and
+  96..100.
+- Wheels have cast spoked centres (ten spokes and a hub), after
+  `photo-150-209-bogie.jpg`; the bogie frame, motors and springs behind the
+  skirt stay simplified.
 - One rigid node; no truck/trailer articulation. Fixed equipment remains below
   4.7 m and the active collector below the separate 6.5 m project limit.
 
@@ -89,8 +100,9 @@ interpretations, not claims of photographic accuracy.
 
 Downloaded from Wikimedia Commons for the model page's Images tab and visual
 checks; downscaled to at most 1600 px on the long side, otherwise unchanged.
-They were not used to re-fit the geometry, which stays calibrated to the native
-BMPs above. Licences require attribution (and share-alike for derivatives of
+They decide the front mask details, the full skirt and the spoked wheels
+(see "Mechanical and display choices"); the rest stays calibrated to the
+native BMPs above. Licences require attribution (and share-alike for derivatives of
 the photographs themselves); the procedural model is not a derivative copy.
 
 - `photo-150-222-front-three-quarter.jpg` - "I10 333 Bf Zilina, 150 222.jpg" by Falk2, CC BY-SA 3.0,

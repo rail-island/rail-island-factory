@@ -232,9 +232,17 @@ function body(m: MeshBuilder): void {
           [0, 0, s],
         );
       });
-      // The green side skirt drops between the bogies: 0.6 m above rail over
-      // x=-1.1..1.1, rising at the native slope (0.3 m per 0.4 m) into the body.
-      m.scope("skirt", () =>
+      // The green side skirt covers the frame down to 0.9 m above rail (native
+      // side BMPs and photographs: only the lower wheels show below it), stops at
+      // the cab-door steps, and drops to 0.6 m between the bogies over
+      // x=-1.1..1.1 at the native slope (0.3 m per 0.4 m).
+      m.scope("skirt", () => {
+        for (const [a, b] of [
+          [-7.35, -6.95],
+          [-5.85, 5.85],
+          [6.95, 7.35],
+        ])
+          sidePanel(m, "green", s, rect(a!, 0.9, b!, 1.3), 0.003, 0.04);
         sidePanel(
           m,
           "green",
@@ -242,13 +250,13 @@ function body(m: MeshBuilder): void {
           [
             [-1.1, 0.6],
             [1.1, 0.6],
-            [2.03, 1.3],
-            [-2.03, 1.3],
+            [1.5, 0.92],
+            [-1.5, 0.92],
           ],
           0.003,
           0.04,
-        ),
-      );
+        );
+      });
       m.scope("emblem", () => {
         const x = s > 0 ? 3.3 : -4;
         m.facets(
@@ -336,34 +344,43 @@ function cab(m: MeshBuilder, e: number): void {
       });
   });
   m.scope("lamps", () => {
-    endPanel(m, "lampHead", e, rect(-0.2, 3.6, 0.2, 3.8), 0.045);
+    // Photographs: a dark housing on the cab roof edge with two round lenses.
+    m.scope("headlight", () => {
+      endPanel(m, "rubber", e, rect(-0.3, 3.62, 0.3, 3.86), 0.03);
+      m.scope("lenses", () => {
+        for (const z of [-0.13, 0.13])
+          endPanel(m, "lampHead", e, ngon(16, 0.08, 0, z, 3.74), 0.045);
+      });
+    });
+    // Photographs: chrome-rimmed pairs level with the plate, just below the
+    // cream/green boundary (the coarse BMP puts them 0.35 m lower).
     for (const s of [-1, 1])
-      for (const [i, z] of [s * 0.95, s * 1.25].entries())
+      for (const [i, z] of [s * 0.87, s * 1.13].entries())
         m.scope(`${s > 0 ? "right" : "left"} marker ${i}`, () => {
-          endPanel(m, "yellow", e, ngon(16, 0.125, 0, z, 1.4), 0.045);
+          endPanel(m, "steel", e, ngon(16, 0.125, 0, z, 1.75), 0.045);
           endPanel(
             m,
             i === 0 ? "lampHead" : "lampRed",
             e,
-            ngon(16, 0.095, 0, z, 1.4),
+            ngon(16, 0.095, 0, z, 1.75),
             0.055,
           );
         });
   });
   m.scope("number plate", () => {
     m.scope("housing", () =>
-      endPanel(m, "plate", e, rect(-0.5, 1.4, 0.5, 1.7), 0.035),
+      endPanel(m, "plate", e, rect(-0.5, 1.64, 0.5, 1.87), 0.035),
     );
-    const w = letteringWidth(CD150_NUMBER, 0.075, 0.022);
+    const w = letteringWidth(CD150_NUMBER, 0.07, 0.02);
     m.facets(
       "white",
       lettering(
         CD150_NUMBER,
         e > 0 ? w / 2 : -w / 2,
-        1.45,
-        0.2,
-        0.075,
-        0.022,
+        1.675,
+        0.16,
+        0.07,
+        0.02,
         e > 0,
       ).map(([z, y]) => [e * (frontX(y, e) + 0.045), y, z]),
       [e, 0, 0],
@@ -414,10 +431,22 @@ function cab(m: MeshBuilder, e: number): void {
           );
       });
     });
+  // Photographs: the green front wraps down to the buffer beam.
+  m.scope("apron", () =>
+    block(
+      m,
+      "green",
+      ...([e * 7.74, e * 7.84].sort((a, b) => a - b) as [number, number]),
+      0.8,
+      1.22,
+      -1.36,
+      1.36,
+    ),
+  );
   m.scope("buffers", () => {
     for (const z of [-0.875, 0.875]) {
       const q = ngon(12, 0.12, 0, z, 1);
-      m.sweep("steel", "x", q, e * 7.85, q, e * 8.35);
+      m.sweep("steel", "x", q, e * 7.8, q, e * 8.35);
       block(
         m,
         "underframe",
@@ -454,6 +483,27 @@ function bogie(m: MeshBuilder, xc: number): void {
         m.sweep("steel", "z", wheel, w0, wheel, w1);
         const [a, b] = side(s, 0.79, 0.825);
         m.sweep("wheel", "z", disc, a, disc, b);
+        // Photographs: cast spoked wheel centres, ten spokes and a hub.
+        m.scope("spokes", () => {
+          const [c, d] = side(s, 0.825, 0.845);
+          const hub = ngon(12, 0.13, 0, x, ay);
+          m.sweep("steel", "z", hub, c, hub, d);
+          for (let k = 0; k < 10; k++) {
+            const t = (k * Math.PI) / 5,
+              u = [Math.cos(t), Math.sin(t)],
+              n = [-u[1]! * 0.025, u[0]! * 0.025];
+            const q: Ring = [0.12, 0.47].flatMap((r, j) =>
+              (j === 0 ? [1, -1] : [-1, 1]).map(
+                (sg) =>
+                  [x + u[0]! * r + sg * n[0]!, ay + u[1]! * r + sg * n[1]!] as [
+                    number,
+                    number,
+                  ],
+              ),
+            );
+            m.sweep("steel", "z", q, c, q, d);
+          }
+        });
         block(
           m,
           "bogie",

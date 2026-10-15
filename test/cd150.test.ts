@@ -133,7 +133,7 @@ describe("CD 150 transfer", () => {
       .reduce((a, d, i) => a + (i % 2 === 0 ? ((2 * d) % 10) + Math.floor((2 * d) / 10) : d), 0);
     expect((10 - (sum % 10)) % 10).toBe(digits[6]);
   });
-  it("lowers the green side skirt between the bogies", () => {
+  it("hangs the green side skirt to 0.9 m and lowers it between the bogies", () => {
     const mesh = cd150();
     const { json, bin } = parseGlb(mesh.toGlb("test"));
     const green = collectTriangles(json, bin)
@@ -145,8 +145,23 @@ describe("CD 150 transfer", () => {
           .filter((p) => Math.abs(p[0]) >= x0 - 1e-4 && Math.abs(p[0]) <= x1 + 1e-4)
           .map((p) => p[1]),
       );
-    // Native side BMPs: the green drops 0.6 m above rail over source x=7.4..9.6.
+    // Native side BMPs and photographs: the green skirt reaches 0.9 m along the
+    // body and drops to 0.6 m between the bogies (source x=7.4..9.6).
     expect(lowest(0, 1.1)).toBeCloseTo(0.6, 4);
-    expect(lowest(2.1, 7)).toBeGreaterThanOrEqual(1.2 - 1e-6);
+    expect(lowest(1.6, 5.85)).toBeCloseTo(0.9, 4);
+  });
+  it("places the front plate and marker lamps just below the cream/green boundary, as photographed", () => {
+    const nodes = leaves(cd150().sourceTree("test", "Test").root);
+    const box = (id: string) => {
+      const ns = nodes.filter((n) => n.id === id || n.id.startsWith(id + "/"));
+      return [Math.min(...ns.map((n) => n.min![1])), Math.max(...ns.map((n) => n.max![1]))];
+    };
+    const [p0, p1] = box("front-cab/number-plate/housing");
+    expect(1.9 - p1!).toBeLessThan(0.06);
+    expect(p1! - p0!).toBeCloseTo(0.23, 2);
+    for (const lamp of ["right-marker-0", "right-marker-1", "left-marker-0", "left-marker-1"]) {
+      const [l0, l1] = box(`front-cab/lamps/${lamp}`);
+      expect((l0! + l1!) / 2).toBeCloseTo((p0! + p1!) / 2, 1);
+    }
   });
 });

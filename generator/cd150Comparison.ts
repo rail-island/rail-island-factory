@@ -7,6 +7,9 @@ export interface Landmark {
   id: string;
   view: string;
   box: number[];
+  /** A photo-calibrated box that supersedes `box` where photographs resolve what the BMP cannot. */
+  photoBox?: number[];
+  photoNote?: string;
   nodes: string[];
   tolerancePixels: number;
   uncertainty: string;
@@ -60,7 +63,8 @@ export function cd150Comparison() {
       b[2]! - b[0]!,
       b[3]! - b[1]!,
     ];
-    const source = dimensions(row.box),
+    const reference = row.photoBox ? "photo" : "native";
+    const source = dimensions(row.photoBox ?? row.box),
       model = dimensions(actual);
     const canvas =
       row.view === "x_both" ? [30, 60, 30, 60] : [170, 60, 170, 60];
@@ -68,6 +72,7 @@ export function cd150Comparison() {
     const modelPercent = model.map((x, i) => (100 * x) / canvas[i]!);
     return {
       ...row,
+      reference,
       source,
       model,
       sourcePercent,
