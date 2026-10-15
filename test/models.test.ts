@@ -10,6 +10,7 @@ import { SKYSCRAPERS } from "../generator/skyscrapers";
 import { VEHICLES } from "../generator/vehicles";
 import { STEAM_LOCOS } from "../generator/steamLocos";
 import { ALL_VEHICLES, BUILDINGS, DESIGNS, ZFightingError, designGlb, designTree, generateModels } from "../generator/generate";
+import { VILLAGE_HOUSES } from "../generator/village";
 import { isLeaf, type LeafNode, type ScopeNode, type TreeNode } from "../generator/sourceTree";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { glbStats } from "../generator/glbStats";
@@ -328,7 +329,7 @@ describe("the vehicles", () => {
     expect(new Set(ids).size).toBe(ids.length);
     for (const id of ids) expect(id).toMatch(/^veh-[a-z0-9]+(-[a-z0-9]+)*$/);
     for (const d of BUILDINGS) expect(d.id).toMatch(/^(sky|bld)-[a-z0-9]+(-[a-z0-9]+)*$/);
-    expect(DESIGNS.size).toBe(BUILDINGS.length + ALL_VEHICLES.length);
+    expect(DESIGNS.size).toBe(BUILDINGS.length + VILLAGE_HOUSES.length + ALL_VEHICLES.length);
   });
 
   it.each([...VEHICLES, ...STEAM_LOCOS].map((d) => [d.id] as const))("%s stands on its wheels, faces +x, fits its road or track and stays in budget", (id) => {
@@ -638,13 +639,16 @@ describe("the vehicles", () => {
   // the game turns the trailer by rotating its node about the node's origin.
   it("splits the articulated truck into a truck and a trailer node, the trailer's at the king pin", () => {
     const { json } = parseGlb(designGlb("veh-american-truck"));
-    const nodes = (json as { nodes: Array<{ name: string; translation?: number[] }> }).nodes;
-    expect(nodes.map((n) => n.name)).toEqual(["truck", "trailer"]);
+    const nodes = (json as { nodes: Array<{ name: string; translation?: number[]; children?: number[] }> }).nodes;
+    // the steered front wheels are children of the truck's node
+    expect(nodes.map((n) => n.name)).toEqual(["truck", "wheel-front-left", "wheel-front-right", "trailer"]);
+    expect((json as { scenes: Array<{ nodes: number[] }> }).scenes[0]!.nodes).toEqual([0, 3]);
+    expect(nodes[0]!.children).toEqual([1, 2]);
     expect(nodes[0]!.translation).toEqual([0, 0, 0]);
-    const pivot = nodes[1]!.translation!;
+    const pivot = nodes[3]!.translation!;
     expect(pivot[2]).toBe(0); // on the centre line
     const tree = designTree("veh-american-truck");
-    expect(tree.root.children.map((c) => c.id)).toEqual(["truck", "trailer"]);
+    expect(tree.root.children.map((c) => c.id)).toEqual(["truck", "wheel-front-left", "wheel-front-right", "trailer"]);
     const byId = new Map(walk(tree.root).map((n) => [n.id, n]));
     // the king pin rides on the fifth wheel's top, within its plate
     const fifth = byId.get("truck/chassis/fifth-wheel")!;
@@ -657,7 +661,7 @@ describe("the vehicles", () => {
     const tree = designTree("veh-american-truck");
     const byId = new Map(walk(tree.root).map((n) => [n.id, n]));
     const { json } = parseGlb(designGlb("veh-american-truck"));
-    const pivot = (json as { nodes: Array<{ translation?: number[] }> }).nodes[1]!.translation!;
+    const pivot = (json as { nodes: Array<{ name: string; translation?: number[] }> }).nodes.find((n) => n.name === "trailer")!.translation!;
     const body = byId.get("trailer/body")!;
     const sleeper = byId.get("truck/sleeper")!;
     // the trailer front's corners sweep a circle about the pivot
@@ -699,7 +703,7 @@ describe("generateModels", () => {
     }
   });
 
-  it("writes a GLB and a thumbnail per design, skips an unchanged one, and prunes a dropped one", () => {
+  it("writes a GLB and a thumbnail per design, skips an unchanged one, and prunes a dropped one", async () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "factory-"));
     try {
       fs.mkdirSync(path.join(dir, "glb"));
@@ -718,8 +722,10 @@ describe("generateModels", () => {
       expect(fs.existsSync(path.join(dir, "tree", "sky-retired.json"))).toBe(false);
       expect(fs.existsSync(path.join(dir, "glb", "sky-retired.glb"))).toBe(false);
       expect(fs.existsSync(path.join(dir, "thumbs", "sky-retired.png"))).toBe(false);
-      // a second run finds nothing to rewrite, and leaves the thumbnails alone
+      // a second run finds nothing to rewrite, and leaves the thumbnails alone;
+      // each run is long, so let vitest's RPC replies in between (test/setup.ts)
       const mtime = fs.statSync(first[0]!.thumb).mtimeMs;
+      await new Promise<void>((resolve) => setImmediate(resolve));
       expect(generateModels(dir).every((b) => !b.changed)).toBe(true);
       expect(fs.statSync(first[0]!.thumb).mtimeMs).toBe(mtime);
     } finally {

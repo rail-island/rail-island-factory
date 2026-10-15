@@ -207,8 +207,10 @@ export class MeshBuilder extends MeshCore {
    * The finished model as a binary glTF (.glb): a primitive per material, in
    * material name order. Without parts it is one node and one mesh named `name`;
    * with parts (see `part`) it is a node per part, named after it, translated to
-   * the part's pivot, its mesh's positions relative to that pivot. Either way
-   * the primitives are non-indexed triangle soups with flat per-face normals.
+   * the part's pivot (within its parent part's node, for a child part), its
+   * mesh's positions relative to that pivot. Either way the primitives are
+   * non-indexed triangle soups with flat per-face normals. A model with a rig
+   * carries it as the scene's `extras.rig` (three's GLTFLoader: `scene.userData.rig`).
    * Animation clips (see `animate`) become glTF animations of the part nodes,
    * linearly interpolated.
    */
@@ -216,8 +218,8 @@ export class MeshBuilder extends MeshCore {
     type Json = {
       asset: { version: string; generator: string };
       scene: number;
-      scenes: Array<{ nodes: number[] }>;
-      nodes: Array<{ mesh: number; name: string; translation?: Vec3 }>;
+      scenes: Array<{ nodes: number[]; extras?: { rig: unknown } }>;
+      nodes: Array<{ mesh: number; name: string; translation?: Vec3; children?: number[] }>;
       meshes: Array<{ name: string; primitives: unknown[] }>;
       materials: unknown[];
       accessors: unknown[];
@@ -237,8 +239,15 @@ export class MeshBuilder extends MeshCore {
     const json: Json = {
       asset: { version: "2.0", generator },
       scene: 0,
-      scenes: [{ nodes: units.map((_, i) => i) }],
-      nodes: units.map((u, i) => (this.parts.length ? { mesh: i, name: u.name, translation: u.pivot } : { mesh: i, name: u.name })),
+      scenes: [{
+        nodes: units.map((_, i) => i).filter((i) => !this.parts.length || this.parts[i]!.parent < 0),
+        ...(this.rig ? { extras: { rig: this.rig } } : {}),
+      }],
+      nodes: units.map((u, i) => {
+        if (!this.parts.length) return { mesh: i, name: u.name };
+        const children = this.parts.map((p, k) => (p.parent === i ? k : -1)).filter((k) => k >= 0);
+        return { mesh: i, name: u.name, translation: this.partOffset(i), ...(children.length ? { children } : {}) };
+      }),
       meshes: units.map((u) => ({ name: u.name, primitives: [] })),
       materials: [],
       accessors: [],

@@ -3,8 +3,8 @@
 **Covers** - the procedural European trucks that replace the webapp's hand-authored truck GLBs: the
 MAN cistern semi-truck, the 8x4 concrete mixer and the white reefer semi-truck - their references,
 dimensions, datums, articulation, budget and deviations, and the cab-over shell they share.
-**Code** - `generator/trucks.ts`, `generator/vehicleParts.ts`, `generator/meshCore.ts` (`loft`, `sweep`, `slab`, `facets`, `part`), `test/referenceModels.test.ts`, `test/models.test.ts`, `.agents/skills/road-vehicle/SKILL.md`
-**See also** - [vehicles.md](vehicles.md) (the American truck, articulation, `sweep`), [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md)
+**Code** - `generator/trucks.ts`, `generator/vehicleParts.ts` (`steeredWheels`), `generator/rig.ts`, `generator/meshCore.ts` (`loft`, `sweep`, `slab`, `facets`, `part`), `test/referenceModels.test.ts`, `test/models.test.ts`, `.agents/skills/road-vehicle/SKILL.md`
+**See also** - [vehicles.md](vehicles.md) (the American truck, articulation, `sweep`), [vehicle-rig.md](vehicle-rig.md) (steered wheels and the trailer hinge), [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md)
 
 ## The designs
 
@@ -45,9 +45,22 @@ clearance, measured in plan from the pivot:
 | cistern | 1.98 m (the tank's front head) | 2.15 m (the cab's back) |
 | reefer | 2.07 m (the refrigeration unit) | 2.52 m (the cab's back) |
 
-Both landing gears sit behind the tractor's rear wheels. The webapp's current `articulation` entries
-name the reference GLBs' own nodes (`kingpin`, `axle_0`...); a factory GLB has only the two part
-nodes, so the import will need its own entries.
+Both landing gears sit behind the tractor's rear wheels; `test/rig.test.ts` checks the swing for
+every semi. The webapp's current `articulation` entries name the reference GLBs' own nodes
+(`kingpin`, `axle_0`...); a factory GLB has its part nodes and a `rig` naming them
+([vehicle-rig.md](vehicle-rig.md)), which the import can read instead.
+
+## Steering
+
+Every truck's steered wheels are parts of their own inside the tractor's (or the mixer's) node,
+each turning about its centre ([vehicle-rig.md](vehicle-rig.md)): the semis' front axle, and both
+front axles of the 8x4 mixer, whose wheels aim at one turning centre on the line midway along the
+rear tandem (wheelbases 6.10 and 4.25 m), the second axle turning less. The mixer is therefore
+a `body` part with its four steered wheels inside, no longer a single node. This family is
+authored with +Z to the vehicle's left, so its steered nodes are named for that frame
+(`wheel-front-right` is the one at -Z, which the rig lists first) and a positive steering angle -
+toward -Z, as everywhere - turns these trucks right. Each inner wheel locks at 40 degrees; the semis'
+trailers swing 75 degrees either way.
 
 ## The cab-over shell
 

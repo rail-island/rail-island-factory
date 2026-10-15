@@ -695,3 +695,25 @@ body {
 .factory-download:focus-visible {
   text-decoration: underline;
 }
+
+.factory-pose__row {
+  grid-template-columns: minmax(0, 7rem) minmax(0, 1fr) 3.5rem;
+}
+
+.factory-pose__row input[type="range"] {
+  width: 100%;
+  min-height: 44px;
+  accent-color: var(--m-primary);
+}
+
+.factory-pose__value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.factory-pose__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}

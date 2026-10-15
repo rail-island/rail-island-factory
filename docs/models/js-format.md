@@ -5,7 +5,7 @@
 the measured sizes.
 **Code** - `generator/jsModel.ts`, `generator/threeBuilder.ts`, `generator/meshCore.ts`,
 `generator/generate.ts` (`generateJsModels`), `test/jsModel.test.ts`
-**See also** - [parameters.md](parameters.md), [export.md](export.md), [skyscrapers.md](skyscrapers.md), [vehicles.md](vehicles.md),
+**See also** - [vehicle-rig.md](vehicle-rig.md), [parameters.md](parameters.md), [export.md](export.md), [skyscrapers.md](skyscrapers.md), [vehicles.md](vehicles.md),
 [../site/catalog-site.md](../site/catalog-site.md)
 
 ## What it is
@@ -25,8 +25,12 @@ scene.add(build(THREE)); // a THREE.Group named after the model id
 - **The Group.** Metres, +Y up, base at y = 0, like the GLB. One `Mesh` per material in material-name order
   (mesh and material carry the material's name), non-indexed triangle soup with flat per-face normals. Colours
   are the palette's sRGB hex, so three's colour management converts them to the linear value the GLB stores.
-  A model with parts (the truck, [vehicles.md](vehicles.md)) has a child `Group` per part, named after it and
-  positioned at its pivot, its meshes relative to that pivot - the GLB's nodes.
+  A model with parts (the truck, the buses, [vehicles.md](vehicles.md)) has a `Group` per part, named after it and
+  positioned at its pivot, its meshes relative to that pivot - the GLB's nodes, nested as they are (a steered
+  wheel inside its body).
+- **The rig.** A rigged vehicle's group carries `userData.rig`, and its module also exports `pose`,
+  `renderJoint`, `steerAngles`, `steerLock` and `jointTriangles`: the code that turns its wheels, bends its
+  sections and re-draws its joints ([vehicle-rig.md](vehicle-rig.md)).
 - **Animations.** The group's `animations` holds the GLB's clips as `THREE.AnimationClip`s (a steam
   locomotive's `running`, [animation.md](animation.md)); an animated model's namespace also needs
   `AnimationClip`, `QuaternionKeyframeTrack` and `VectorKeyframeTrack`.

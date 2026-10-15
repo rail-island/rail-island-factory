@@ -1,0 +1,1187 @@
+{
+  "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/loco/electric/cd_230/model",
+  "pixelMetres": 0.1,
+  "annotations": [
+    {
+      "id": "F01",
+      "view": "x_both",
+      "box": [
+        13,
+        21,
+        17,
+        25
+      ],
+      "nodes": [
+        "front-cab/face/headlight/housing"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native dark 4 x 4 px housing; the photographs resolve a round housing 0.44 m across whose top stands 4.04 m high.",
+      "photoBox": [
+        12.8,
+        19.6,
+        17.2,
+        24.0
+      ],
+      "photoNote": "photo-230-025-front.jpg, scaled by the 3.0 m face and the 2.54 m from the buffer centres to the windscreen top: housing 0.44 m across, 3.60 to 4.04 m. Supersedes the 4 x 4 px native estimate."
+    },
+    {
+      "id": "F02",
+      "view": "x_both",
+      "box": [
+        5,
+        22,
+        12,
+        24
+      ],
+      "nodes": [
+        "front-cab/face/vents/right"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Rim and slot together."
+    },
+    {
+      "id": "F03",
+      "view": "x_both",
+      "box": [
+        18,
+        22,
+        25,
+        24
+      ],
+      "nodes": [
+        "front-cab/face/vents/left"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Rim and slot together."
+    },
+    {
+      "id": "F04",
+      "view": "x_both",
+      "box": [
+        0,
+        25,
+        14,
+        34
+      ],
+      "nodes": [
+        "front-cab/face/windscreen/right-pane/glass"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Glass only; the grey frame rows 24 and 34 are excluded. The pane wraps onto the side, so it reaches the body's edge."
+    },
+    {
+      "id": "F05",
+      "view": "x_both",
+      "box": [
+        16,
+        25,
+        30,
+        34
+      ],
+      "nodes": [
+        "front-cab/face/windscreen/left-pane/glass"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Glass only."
+    },
+    {
+      "id": "F06",
+      "view": "x_both",
+      "box": [
+        14,
+        25,
+        16,
+        35
+      ],
+      "nodes": [
+        "front-cab/face/windscreen/pillar"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. The painted centre pillar."
+    },
+    {
+      "id": "F07",
+      "view": "x_both",
+      "box": [
+        0,
+        35,
+        30,
+        37
+      ],
+      "nodes": [
+        "body/shell/front/band-5"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Livery band boundary (2.3 to 2.5 m); +/- one pixel."
+    },
+    {
+      "id": "F08",
+      "view": "x_both",
+      "box": [
+        0,
+        37,
+        30,
+        38
+      ],
+      "nodes": [
+        "body/shell/front/band-4"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Lip, red upper edge (2.2 to 2.3 m); +/- one pixel."
+    },
+    {
+      "id": "F09",
+      "view": "x_both",
+      "box": [
+        0,
+        38,
+        30,
+        41
+      ],
+      "nodes": [
+        "body/shell/front/band-3"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Lip, silver band (1.9 to 2.2 m); +/- one pixel. The corner grilles overlay it."
+    },
+    {
+      "id": "F10",
+      "view": "x_both",
+      "box": [
+        0,
+        37,
+        6,
+        40
+      ],
+      "nodes": [
+        "front-cab/face/lip-grilles/right"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Oval grille on the lip's corner; it wraps onto the side."
+    },
+    {
+      "id": "F11",
+      "view": "x_both",
+      "box": [
+        24,
+        37,
+        30,
+        40
+      ],
+      "nodes": [
+        "front-cab/face/lip-grilles/left"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Oval grille on the lip's corner."
+    },
+    {
+      "id": "F12",
+      "view": "x_both",
+      "box": [
+        5,
+        42,
+        11,
+        44
+      ],
+      "nodes": [
+        "front-cab/face/lamps/right/housing"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Lamp housing; the native 2-row trapezoid is read as its bounding box."
+    },
+    {
+      "id": "F13",
+      "view": "x_both",
+      "box": [
+        19,
+        42,
+        25,
+        44
+      ],
+      "nodes": [
+        "front-cab/face/lamps/left/housing"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Lamp housing."
+    },
+    {
+      "id": "F14",
+      "view": "x_both",
+      "box": [
+        11,
+        42,
+        19,
+        44
+      ],
+      "nodes": [
+        "front-cab/face/number-plate/housing"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Number plate."
+    },
+    {
+      "id": "F15",
+      "view": "x_both",
+      "box": [
+        0,
+        42,
+        30,
+        47
+      ],
+      "nodes": [
+        "body/shell/front/band-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Lower face colour (1.3 to 1.8 m); +/- one pixel."
+    },
+    {
+      "id": "F16",
+      "view": "x_both",
+      "box": [
+        0,
+        47,
+        30,
+        48
+      ],
+      "nodes": [
+        "body/shell/front/band-0"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Silver bottom trim (1.2 to 1.3 m); +/- one pixel."
+    },
+    {
+      "id": "F17",
+      "view": "x_both",
+      "box": [
+        0,
+        48,
+        30,
+        51
+      ],
+      "nodes": [
+        "body/frame"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Buffer beam (0.9 to 1.2 m); +/- one pixel."
+    },
+    {
+      "id": "F18",
+      "view": "x_both",
+      "box": [
+        2,
+        48,
+        8,
+        51
+      ],
+      "nodes": [
+        "front-cab/buffers/right/head"
+      ],
+      "tolerancePixels": 1.6,
+      "uncertainty": "Native buffer frames centre 1.0 m off the axis; the model keeps the standard 1.75 m buffer spacing (deliberate mechanical constraint)."
+    },
+    {
+      "id": "F19",
+      "view": "x_both",
+      "box": [
+        22,
+        48,
+        28,
+        51
+      ],
+      "nodes": [
+        "front-cab/buffers/left/head"
+      ],
+      "tolerancePixels": 1.6,
+      "uncertainty": "As F18."
+    },
+    {
+      "id": "F20",
+      "view": "x_both",
+      "box": [
+        0,
+        51,
+        30,
+        58
+      ],
+      "nodes": [
+        "front-cab/plough"
+      ],
+      "tolerancePixels": 1.7,
+      "uncertainty": "Native ploughx BMP fills the canvas width; the model follows the XML plough clip, 2.5 m wide at its foot and 2.85 m under the beam."
+    },
+    {
+      "id": "B01",
+      "view": "x_both_rear",
+      "box": [
+        13,
+        21,
+        17,
+        25
+      ],
+      "nodes": [
+        "rear-cab/face/headlight/housing"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native dark 4 x 4 px housing; the photographs resolve a round housing 0.44 m across whose top stands 4.04 m high.",
+      "photoBox": [
+        12.8,
+        19.6,
+        17.2,
+        24.0
+      ],
+      "photoNote": "photo-230-025-front.jpg, scaled by the 3.0 m face and the 2.54 m from the buffer centres to the windscreen top: housing 0.44 m across, 3.60 to 4.04 m. Supersedes the 4 x 4 px native estimate."
+    },
+    {
+      "id": "B02",
+      "view": "x_both_rear",
+      "box": [
+        5,
+        22,
+        12,
+        24
+      ],
+      "nodes": [
+        "rear-cab/face/vents/left"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Rim and slot together."
+    },
+    {
+      "id": "B03",
+      "view": "x_both_rear",
+      "box": [
+        18,
+        22,
+        25,
+        24
+      ],
+      "nodes": [
+        "rear-cab/face/vents/right"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Rim and slot together."
+    },
+    {
+      "id": "B04",
+      "view": "x_both_rear",
+      "box": [
+        0,
+        25,
+        14,
+        34
+      ],
+      "nodes": [
+        "rear-cab/face/windscreen/left-pane/glass"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Glass only; the grey frame rows 24 and 34 are excluded. The pane wraps onto the side, so it reaches the body's edge."
+    },
+    {
+      "id": "B05",
+      "view": "x_both_rear",
+      "box": [
+        16,
+        25,
+        30,
+        34
+      ],
+      "nodes": [
+        "rear-cab/face/windscreen/right-pane/glass"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Glass only."
+    },
+    {
+      "id": "B06",
+      "view": "x_both_rear",
+      "box": [
+        14,
+        25,
+        16,
+        35
+      ],
+      "nodes": [
+        "rear-cab/face/windscreen/pillar"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. The painted centre pillar."
+    },
+    {
+      "id": "B07",
+      "view": "x_both_rear",
+      "box": [
+        0,
+        35,
+        30,
+        37
+      ],
+      "nodes": [
+        "body/shell/rear/band-5"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Livery band boundary (2.3 to 2.5 m); +/- one pixel."
+    },
+    {
+      "id": "B08",
+      "view": "x_both_rear",
+      "box": [
+        0,
+        37,
+        30,
+        38
+      ],
+      "nodes": [
+        "body/shell/rear/band-4"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Lip, red upper edge (2.2 to 2.3 m); +/- one pixel."
+    },
+    {
+      "id": "B09",
+      "view": "x_both_rear",
+      "box": [
+        0,
+        38,
+        30,
+        41
+      ],
+      "nodes": [
+        "body/shell/rear/band-3"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Lip, silver band (1.9 to 2.2 m); +/- one pixel. The corner grilles overlay it."
+    },
+    {
+      "id": "B10",
+      "view": "x_both_rear",
+      "box": [
+        0,
+        37,
+        6,
+        40
+      ],
+      "nodes": [
+        "rear-cab/face/lip-grilles/left"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Oval grille on the lip's corner; it wraps onto the side."
+    },
+    {
+      "id": "B11",
+      "view": "x_both_rear",
+      "box": [
+        24,
+        37,
+        30,
+        40
+      ],
+      "nodes": [
+        "rear-cab/face/lip-grilles/right"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Oval grille on the lip's corner."
+    },
+    {
+      "id": "B12",
+      "view": "x_both_rear",
+      "box": [
+        5,
+        42,
+        11,
+        44
+      ],
+      "nodes": [
+        "rear-cab/face/lamps/left/housing"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Lamp housing; the native 2-row trapezoid is read as its bounding box."
+    },
+    {
+      "id": "B13",
+      "view": "x_both_rear",
+      "box": [
+        19,
+        42,
+        25,
+        44
+      ],
+      "nodes": [
+        "rear-cab/face/lamps/right/housing"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Lamp housing."
+    },
+    {
+      "id": "B14",
+      "view": "x_both_rear",
+      "box": [
+        11,
+        42,
+        19,
+        44
+      ],
+      "nodes": [
+        "rear-cab/face/number-plate/housing"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Number plate."
+    },
+    {
+      "id": "B15",
+      "view": "x_both_rear",
+      "box": [
+        0,
+        42,
+        30,
+        47
+      ],
+      "nodes": [
+        "body/shell/rear/band-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Lower face colour (1.3 to 1.8 m); +/- one pixel."
+    },
+    {
+      "id": "B16",
+      "view": "x_both_rear",
+      "box": [
+        0,
+        47,
+        30,
+        48
+      ],
+      "nodes": [
+        "body/shell/rear/band-0"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Silver bottom trim (1.2 to 1.3 m); +/- one pixel."
+    },
+    {
+      "id": "B17",
+      "view": "x_both_rear",
+      "box": [
+        0,
+        48,
+        30,
+        51
+      ],
+      "nodes": [
+        "body/frame"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Buffer beam (0.9 to 1.2 m); +/- one pixel."
+    },
+    {
+      "id": "B18",
+      "view": "x_both_rear",
+      "box": [
+        2,
+        48,
+        8,
+        51
+      ],
+      "nodes": [
+        "rear-cab/buffers/left/head"
+      ],
+      "tolerancePixels": 1.6,
+      "uncertainty": "Native buffer frames centre 1.0 m off the axis; the model keeps the standard 1.75 m buffer spacing (deliberate mechanical constraint)."
+    },
+    {
+      "id": "B19",
+      "view": "x_both_rear",
+      "box": [
+        22,
+        48,
+        28,
+        51
+      ],
+      "nodes": [
+        "rear-cab/buffers/right/head"
+      ],
+      "tolerancePixels": 1.6,
+      "uncertainty": "As F18."
+    },
+    {
+      "id": "B20",
+      "view": "x_both_rear",
+      "box": [
+        0,
+        51,
+        30,
+        58
+      ],
+      "nodes": [
+        "rear-cab/plough"
+      ],
+      "tolerancePixels": 1.7,
+      "uncertainty": "Native ploughx BMP fills the canvas width; the model follows the XML plough clip, 2.5 m wide at its foot and 2.85 m under the beam."
+    },
+    {
+      "id": "R01",
+      "view": "z_right",
+      "box": [
+        18,
+        28,
+        24,
+        34
+      ],
+      "nodes": [
+        "sides/right-side/front-cab/porthole"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Porthole ring, front cab."
+    },
+    {
+      "id": "R02",
+      "view": "z_right",
+      "box": [
+        140,
+        28,
+        146,
+        34
+      ],
+      "nodes": [
+        "sides/right-side/rear-cab/porthole"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Porthole ring, rear cab."
+    },
+    {
+      "id": "R03",
+      "view": "z_right",
+      "box": [
+        16,
+        24,
+        26,
+        44
+      ],
+      "nodes": [
+        "sides/right-side/front-cab/handrails"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Vertical rails either side of the door, 3.6 to 1.6 m."
+    },
+    {
+      "id": "R04",
+      "view": "z_right",
+      "box": [
+        138,
+        24,
+        148,
+        44
+      ],
+      "nodes": [
+        "sides/right-side/rear-cab/handrails"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Vertical rails either side of the door, 3.6 to 1.6 m."
+    },
+    {
+      "id": "R05",
+      "view": "z_right",
+      "box": [
+        38,
+        24,
+        52,
+        26
+      ],
+      "nodes": [
+        "sides/right-side/windows/window-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window with its frame."
+    },
+    {
+      "id": "R06",
+      "view": "z_right",
+      "box": [
+        54,
+        24,
+        65,
+        26
+      ],
+      "nodes": [
+        "sides/right-side/windows/window-2"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window with its frame."
+    },
+    {
+      "id": "R07",
+      "view": "z_right",
+      "box": [
+        70,
+        24,
+        82,
+        26
+      ],
+      "nodes": [
+        "sides/right-side/windows/window-3"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window with its frame."
+    },
+    {
+      "id": "R08",
+      "view": "z_right",
+      "box": [
+        84,
+        24,
+        96,
+        26
+      ],
+      "nodes": [
+        "sides/right-side/windows/window-4"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window with its frame."
+    },
+    {
+      "id": "R09",
+      "view": "z_right",
+      "box": [
+        101,
+        24,
+        113,
+        26
+      ],
+      "nodes": [
+        "sides/right-side/windows/window-5"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window with its frame."
+    },
+    {
+      "id": "R10",
+      "view": "z_right",
+      "box": [
+        114,
+        24,
+        128,
+        26
+      ],
+      "nodes": [
+        "sides/right-side/windows/window-6"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window with its frame."
+    },
+    {
+      "id": "R11",
+      "view": "z_right",
+      "box": [
+        28,
+        27,
+        135,
+        34
+      ],
+      "nodes": [
+        "sides/right-side/grille/housing"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. The louvred band's frame."
+    },
+    {
+      "id": "R12",
+      "view": "z_right",
+      "box": [
+        79,
+        41,
+        87,
+        43
+      ],
+      "nodes": [
+        "sides/right-side/number-plate"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Side number plate."
+    },
+    {
+      "id": "R13",
+      "view": "z_right",
+      "box": [
+        6,
+        35,
+        158,
+        37
+      ],
+      "nodes": [
+        "body/shell/side-right/band-6",
+        "body/shell/cab-right/band-5",
+        "body/shell/front/band-5",
+        "body/shell/rear/band-5"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Livery band (2.3 to 2.5 m) over the whole length; +/- one pixel."
+    },
+    {
+      "id": "R14",
+      "view": "z_right",
+      "box": [
+        5,
+        38,
+        159,
+        41
+      ],
+      "nodes": [
+        "body/shell/side-right/band-4",
+        "body/shell/cab-right/band-3",
+        "body/shell/front/band-3",
+        "body/shell/rear/band-3"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Lip's silver band over the whole length, the lip standing 0.1 m proud of each nose (XML and the native outline); +/- one pixel."
+    },
+    {
+      "id": "R15",
+      "view": "z_right",
+      "box": [
+        19,
+        44,
+        145,
+        45
+      ],
+      "nodes": [
+        "body/shell/side-right/band-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Silver strip (1.5 to 1.6 m) between the cab sections; +/- one pixel."
+    },
+    {
+      "id": "R16",
+      "view": "z_right",
+      "box": [
+        69,
+        51,
+        83,
+        55
+      ],
+      "nodes": [
+        "underframe/tank"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Transformer tank between the bogies."
+    },
+    {
+      "id": "R17",
+      "view": "z_right",
+      "box": [
+        6,
+        25,
+        12,
+        34
+      ],
+      "nodes": [
+        "front-cab/face/windscreen/right-pane/glass"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. The windscreen's glass where it wraps onto the side; the grey frame rows 24 and 34 are excluded, as at the front."
+    },
+    {
+      "id": "L01",
+      "view": "z_left",
+      "box": [
+        18,
+        28,
+        24,
+        34
+      ],
+      "nodes": [
+        "sides/left-side/front-cab/porthole"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Porthole ring, front cab."
+    },
+    {
+      "id": "L02",
+      "view": "z_left",
+      "box": [
+        140,
+        28,
+        146,
+        34
+      ],
+      "nodes": [
+        "sides/left-side/rear-cab/porthole"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Porthole ring, rear cab."
+    },
+    {
+      "id": "L03",
+      "view": "z_left",
+      "box": [
+        16,
+        24,
+        26,
+        44
+      ],
+      "nodes": [
+        "sides/left-side/front-cab/handrails"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Vertical rails either side of the door, 3.6 to 1.6 m."
+    },
+    {
+      "id": "L04",
+      "view": "z_left",
+      "box": [
+        138,
+        24,
+        148,
+        44
+      ],
+      "nodes": [
+        "sides/left-side/rear-cab/handrails"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Vertical rails either side of the door, 3.6 to 1.6 m."
+    },
+    {
+      "id": "L05",
+      "view": "z_left",
+      "box": [
+        38,
+        24,
+        52,
+        26
+      ],
+      "nodes": [
+        "sides/left-side/windows/window-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window with its frame."
+    },
+    {
+      "id": "L06",
+      "view": "z_left",
+      "box": [
+        54,
+        24,
+        65,
+        26
+      ],
+      "nodes": [
+        "sides/left-side/windows/window-2"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window with its frame."
+    },
+    {
+      "id": "L07",
+      "view": "z_left",
+      "box": [
+        70,
+        24,
+        82,
+        26
+      ],
+      "nodes": [
+        "sides/left-side/windows/window-3"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window with its frame."
+    },
+    {
+      "id": "L08",
+      "view": "z_left",
+      "box": [
+        84,
+        24,
+        96,
+        26
+      ],
+      "nodes": [
+        "sides/left-side/windows/window-4"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window with its frame."
+    },
+    {
+      "id": "L09",
+      "view": "z_left",
+      "box": [
+        101,
+        24,
+        113,
+        26
+      ],
+      "nodes": [
+        "sides/left-side/windows/window-5"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window with its frame."
+    },
+    {
+      "id": "L10",
+      "view": "z_left",
+      "box": [
+        114,
+        24,
+        128,
+        26
+      ],
+      "nodes": [
+        "sides/left-side/windows/window-6"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window with its frame."
+    },
+    {
+      "id": "L11",
+      "view": "z_left",
+      "box": [
+        28,
+        27,
+        135,
+        34
+      ],
+      "nodes": [
+        "sides/left-side/grille/housing"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. The louvred band's frame."
+    },
+    {
+      "id": "L12",
+      "view": "z_left",
+      "box": [
+        79,
+        41,
+        87,
+        43
+      ],
+      "nodes": [
+        "sides/left-side/number-plate"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Side number plate."
+    },
+    {
+      "id": "L13",
+      "view": "z_left",
+      "box": [
+        6,
+        35,
+        158,
+        37
+      ],
+      "nodes": [
+        "body/shell/side-left/band-6",
+        "body/shell/cab-left/band-5",
+        "body/shell/front/band-5",
+        "body/shell/rear/band-5"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Livery band (2.3 to 2.5 m) over the whole length; +/- one pixel."
+    },
+    {
+      "id": "L14",
+      "view": "z_left",
+      "box": [
+        5,
+        38,
+        159,
+        41
+      ],
+      "nodes": [
+        "body/shell/side-left/band-4",
+        "body/shell/cab-left/band-3",
+        "body/shell/front/band-3",
+        "body/shell/rear/band-3"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Lip's silver band over the whole length, the lip standing 0.1 m proud of each nose (XML and the native outline); +/- one pixel."
+    },
+    {
+      "id": "L15",
+      "view": "z_left",
+      "box": [
+        19,
+        44,
+        145,
+        45
+      ],
+      "nodes": [
+        "body/shell/side-left/band-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Silver strip (1.5 to 1.6 m) between the cab sections; +/- one pixel."
+    },
+    {
+      "id": "L16",
+      "view": "z_left",
+      "box": [
+        69,
+        51,
+        83,
+        55
+      ],
+      "nodes": [
+        "underframe/tank"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Transformer tank between the bogies."
+    },
+    {
+      "id": "L17",
+      "view": "z_left",
+      "box": [
+        6,
+        25,
+        12,
+        34
+      ],
+      "nodes": [
+        "front-cab/face/windscreen/left-pane/glass"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. The windscreen's glass where it wraps onto the side; the grey frame rows 24 and 34 are excluded, as at the front."
+    },
+    {
+      "id": "T01",
+      "view": "z_right",
+      "box": [
+        73,
+        15,
+        88,
+        20
+      ],
+      "nodes": [
+        "roof-equipment/breaker"
+      ],
+      "tolerancePixels": 2.1,
+      "uncertainty": "Native breaker pixels reach source x = 8.8 and 4.5 m; the model follows the XML roof clip, source x 7.3 to 8.6, 4.0 to 4.5 m."
+    },
+    {
+      "id": "T02",
+      "view": "z_right",
+      "box": [
+        15,
+        12,
+        57,
+        19
+      ],
+      "nodes": [
+        "roof-equipment/pantographs/front-pantograph"
+      ],
+      "tolerancePixels": 10.5,
+      "uncertainty": "Not a tight landmark: the source stretches its folded pant2 to 4.4 m (sx = 2.2); the model keeps one arm length in both poses (folded 3.2 m)."
+    },
+    {
+      "id": "T03",
+      "view": "z_right",
+      "box": [
+        109,
+        2,
+        141,
+        19
+      ],
+      "nodes": [
+        "roof-equipment/pantographs/rear-pantograph"
+      ],
+      "tolerancePixels": 5.5,
+      "uncertainty": "Not a tight landmark: the raised diamond's span follows the arm length; the collector stands at 5.87 m (model display height)."
+    }
+  ]
+}

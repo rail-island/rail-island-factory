@@ -8,8 +8,9 @@
 
 import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "./meshBuilder.ts";
 import type { CatalogFields, ProceduralDesign } from "./design.ts";
-import { arc, block, plate, side } from "./vehicleParts.ts";
+import { arc, block, plate, side, steeredWheels } from "./vehicleParts.ts";
 import { CD150_PARAMS, cd150 } from "./cd150.ts";
+import { CD230_PARAMS, cd230 } from "./cd230.ts";
 import { RAIL_CATALOG } from "./cd163.ts";
 import { CD163_PARAMS, CD263_PARAMS, cd163, cd263 } from "./cd163Family.ts";
 import { COACH_CATALOG } from "./csdCoaches.ts";
@@ -19,6 +20,7 @@ import { WAGON_CATALOG, WAGON_DESIGNS } from "./wagons.ts";
 // re-exported: a design's JS bundle imports its build function from this module
 export { cd163, cd263 };
 export { cd150 } from "./cd150.ts";
+export { cd230 } from "./cd230.ts";
 export { csdClassicGreenCoach, csdBalm, csdBam, csdBdmtee, csdBe31, csdBi20, csdDsk } from "./csdCoaches.ts";
 export { bmoCoach } from "./bmoCoach.ts";
 export { cdGreenWhiteCoach } from "./cdGreenWhiteCoach.ts";
@@ -115,10 +117,8 @@ function tractor(m: MeshBuilder): void {
     });
   });
 
-  m.scope("front axle", () => {
-    axle(m, FRONT_AXLE, false);
-    for (const s of [-1, 1]) m.scope(s > 0 ? "right wheel" : "left wheel", () => wheel(m, FRONT_AXLE, ...side(s, 0.86, 1.16), s));
-  });
+  // the front wheels steer: each is its own part (americanTruck), only the beam is here
+  m.scope("front axle", () => axle(m, FRONT_AXLE, false));
   DRIVE_AXLES.forEach((x, i) => m.scope(`drive axle ${i + 1}`, () => {
     axle(m, x, true);
     for (const s of [-1, 1]) {
@@ -372,10 +372,24 @@ function trailer(m: MeshBuilder): void {
   });
 }
 
+/** The steered front wheels' tyres span 0.86..1.16 m either side of the centre line. */
+const FRONT_TYRE: [number, number] = [0.86, 1.16];
+
 export function americanTruck(): MeshBuilder {
   const m = new MeshBuilder(VEHICLE_PALETTE);
   m.part("truck", [0, 0, 0], () => tractor(m));
+  const nodes = steeredWheels(m, "truck", FRONT_AXLE, AXLE_Y, (s, z0, z1) => wheel(m, FRONT_AXLE, z0, z1, s), FRONT_TYRE);
   m.part("trailer", PIVOT, () => trailer(m));
+  m.rig = {
+    steer: {
+      // the tractor turns about the middle of its tandem
+      axles: [{ nodes, wheelbase: FRONT_AXLE - (DRIVE_AXLES[0]! + DRIVE_AXLES[1]!) / 2 }],
+      maxAngleDeg: 40,
+      track: FRONT_TYRE[0] + FRONT_TYRE[1],
+    },
+    sections: [{ node: "truck", pivot: [0, 0, 0] }, { node: "trailer", pivot: PIVOT }],
+    maxBendDeg: 75,
+  };
   return m;
 }
 
@@ -397,6 +411,7 @@ export const VEHICLES: ProceduralDesign[] = [
   { id: "veh-american-truck", title: "American Truck", build: americanTruck, references: "american-truck" },
   { id: "veh-cd-150", title: "CD 150 / 151 / ZSR 350", build: cd150, params: CD150_PARAMS, catalog: RAIL_CATALOG, references: "cd-150" },
   { id: "veh-cd-163", title: "CD 163 / 363", build: cd163, params: CD163_PARAMS, catalog: RAIL_CATALOG, references: "cd-163" },
+  { id: "veh-cd-230", title: "CD 230 / 240 / 340", build: cd230, params: CD230_PARAMS, catalog: RAIL_CATALOG, references: "cd-230" },
   { id: "veh-cd-263", title: "CD 263 / 371 / 372", build: cd263, params: CD263_PARAMS, catalog: RAIL_CATALOG, references: "cd-263" },
   ...COACH_DESIGNS.map((c): ProceduralDesign => ({ id: c.id, title: c.title, build: c.build, catalog: COACH_CATALOG, references: c.folder, ...(c.params ? { params: c.params } : {}) })),
   ...WAGON_DESIGNS.map((w): ProceduralDesign => ({ id: w.id, title: w.title, build: w.build, catalog: WAGON_CATALOG, references: w.folder, ...(w.params ? { params: w.params } : {}) })),

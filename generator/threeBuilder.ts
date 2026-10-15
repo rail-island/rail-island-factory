@@ -15,8 +15,9 @@ export class MeshBuilder extends MeshCore {
   /**
    * The finished model as a `THREE.Group` named `name`: a Mesh per material in
    * material name order. Without parts the meshes are the group's children; with
-   * parts (see `part`) each part is a child Group named after it, positioned at
-   * its pivot, its meshes' positions relative to that pivot. Non-indexed
+   * parts (see `part`) each part is a Group named after it, positioned at its
+   * pivot (a child part inside its parent's Group), its meshes' positions
+   * relative to that pivot. A rigged model's group carries `userData.rig`. Non-indexed
    * triangle soups with flat per-face normals, MeshStandardMaterial colours from
    * the palette's sRGB hex: the same data toGlb writes.
    */
@@ -38,12 +39,16 @@ export class MeshBuilder extends MeshCore {
     const units = this.parts.length
       ? this.parts.map((p, index) => ({ name: p.name, pivot: p.pivot, index }))
       : [{ name, pivot: [0, 0, 0] as [number, number, number], index: -1 }];
+    const holders: Array<InstanceType<ThreeNamespace["Group"]>> = [];
     for (const unit of units) {
       const holder = unit.index >= 0 ? new THREE.Group() : root;
       if (unit.index >= 0) {
+        const at = this.partOffset(unit.index);
         holder.name = unit.name;
-        holder.position.set(unit.pivot[0], unit.pivot[1], unit.pivot[2]);
-        root.add(holder);
+        holder.position.set(at[0], at[1], at[2]);
+        const parent = this.parts[unit.index]!.parent;
+        (parent >= 0 ? holders[parent]! : root).add(holder);
+        holders.push(holder);
       }
       materials.forEach((mat, m) => {
         const g = this.groups.get(mat)!;
@@ -72,6 +77,8 @@ export class MeshBuilder extends MeshCore {
         ? new THREE.QuaternionKeyframeTrack(`${t.node}.quaternion`, clip.times, t.values)
         : new THREE.VectorKeyframeTrack(`${t.node}.position`, clip.times, t.values)),
     ));
+    // a deep copy, as GLTFLoader hands the GLB's scene extras over
+    if (this.rig) root.userData.rig = JSON.parse(JSON.stringify(this.rig));
     return root;
   }
 }
