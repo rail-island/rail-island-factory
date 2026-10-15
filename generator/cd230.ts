@@ -163,7 +163,7 @@ const Y_FRAME = 0.9; // the frame's lower edge
 const Y_SHELL = 1.2; // the frame's top, where the glass-fibre shell starts
 const Y_ROOF = 4.0; // the flat crown of the roof
 const SETBACK = 0.4; // the nose's plan: the corners stand 0.4 m behind its centre
-const CAB_X = 6.6; // the cab sections (nose paint) run from here to the noses
+const CAB_X = 6.3; // the cab sections (nose paint) run from here to the noses: the native silver strip ends at source x = 1.9
 const LIP = [1.9, 1.94, 2.18, 2.3] as const; // the moulded lip around the body
 
 function lerpTable(table: ReadonlyArray<readonly [number, number]>, y: number): number {
@@ -176,9 +176,9 @@ function lerpTable(table: ReadonlyArray<readonly [number, number]>, y: number): 
   return table[table.length - 1]![1];
 }
 // The nose's centre line: the lower face leans out to the lip, the lip stands
-// 7 cm proud, the windscreen rakes back, the hood rolls over into the roof.
+// 10 cm proud (XML), the windscreen rakes back, the hood rolls over into the roof.
 const TIP: ReadonlyArray<readonly [number, number]> = [
-  [1.2, 7.5], [1.9, 7.6], [1.94, 7.67], [2.18, 7.67], [2.3, 7.6], [3.65, 7.45], [3.7, 7.42], [3.8, 7.3], [3.9, 7.02], [4.0, 6.6],
+  [1.2, 7.5], [1.9, 7.6], [1.94, 7.7], [2.18, 7.7], [2.3, 7.6], [3.65, 7.45], [3.7, 7.42], [3.8, 7.3], [3.9, 7.02], [4.0, 6.6],
 ];
 // Half the body's width: 3.0 m to the waist, leaning in to 2.8 m at 3.4 m and
 // 2.4 m at the cant; the lip stands 2.5 cm proud along the sides.
@@ -475,7 +475,7 @@ function frame(m: MeshBuilder, l: Cd230Livery): void {
 // The face (native front BMP rows, photo-calibrated where noted in landmarks.json)
 
 const PILLAR = 0.075; // half the windscreen's centre pillar
-const WS = [2.58, 3.58] as const; // the windscreen's rubber, bottom and top
+const WS = [2.57, 3.53] as const; // the windscreen's rubber, bottom and top
 function face_(m: MeshBuilder, e: number, l: Cd230Livery): void {
   const outer = REF_ARC + 0.1; // the panes wrap 10 cm past the nose onto the side
   m.scope("windscreen", () => {
@@ -489,43 +489,43 @@ function face_(m: MeshBuilder, e: number, l: Cd230Livery): void {
           nosePanel(m, "rubber", e, [[s * 0.2, WS[0] + 0.06], [s * 0.22, WS[0] + 0.05], [s * 0.85, WS[0] + 0.15], [s * 0.85, WS[0] + 0.17]].map(([u, v]): SY => [u, v]).sort((p, q) => p[0] - q[0]) as SY[], 0.03, 0.04, 0.3),
         );
       });
-    m.scope("pillar", () => nosePanel(m, l.pillar, e, [[-PILLAR, WS[0]], [PILLAR, WS[0]], [PILLAR, WS[1]], [-PILLAR, WS[1]]], -0.02, 0.012));
+    m.scope("pillar", () => nosePanel(m, l.pillar, e, [[-PILLAR, 2.5], [PILLAR, 2.5], [PILLAR, 3.51], [-PILLAR, 3.51]], -0.02, 0.012));
   });
   m.scope("headlight", () => headlight(m, e, l));
   m.scope("vents", () => {
     for (const s of [-1, 1])
       m.scope(s > 0 ? "right" : "left", () => {
-        const [a, b] = side(s, 0.3, 1.0);
-        nosePanel(m, l.ventRim, e, roundRect(a, b, 3.63, 3.79, 0.06), -0.02, 0.012);
-        m.scope("slot", () => nosePanel(m, "louvre", e, roundRect(a + 0.03, b - 0.03, 3.65, 3.77, 0.05), -0.012, 0.018));
+        const [a, b] = side(s, 0.3, 1.14);
+        nosePanel(m, l.ventRim, e, roundRect(a, b, 3.61, 3.8, 0.06), -0.02, 0.012);
+        m.scope("slot", () => nosePanel(m, "louvre", e, roundRect(a + 0.03, b - 0.03, 3.635, 3.775, 0.05), -0.012, 0.018));
       });
   });
   // the oval grilles at the lip's corners, wrapping from the face onto the side
   m.scope("lip grilles", () => {
     for (const s of [-1, 1])
       m.scope(s > 0 ? "right" : "left", () => {
-        const [a, b] = side(s, 0.95, REF_ARC + 0.22);
-        nosePanel(m, "silver", e, roundRect(a, b, 1.98, 2.25, 0.135, 3), -0.02, 0.012);
-        m.scope("louvre", () => nosePanel(m, "louvre", e, roundRect(a + 0.03, b - 0.03, 2.01, 2.22, 0.105, 3), -0.012, 0.018));
-        for (let y = 2.045; y < 2.2; y += 0.045)
+        const [a, b] = side(s, 0.88, REF_ARC + 0.22);
+        nosePanel(m, "silver", e, roundRect(a, b, 2.0, 2.28, 0.14, 3), -0.02, 0.012);
+        m.scope("louvre", () => nosePanel(m, "louvre", e, roundRect(a + 0.03, b - 0.03, 2.03, 2.25, 0.11, 3), -0.012, 0.018));
+        for (let y = 2.065; y < 2.22; y += 0.045)
           m.scope("slat", () => nosePanel(m, "slat", e, [[a + 0.05, y], [b - 0.05, y], [b - 0.05, y + 0.012], [a + 0.05, y + 0.012]], 0.01, 0.024, 0.2));
       });
   });
   m.scope("lamps", () => {
     for (const s of [-1, 1])
       m.scope(s > 0 ? "right" : "left", () => {
-        const [a, b] = side(s, 0.47, 1.03);
+        const [a, b] = side(s, 0.41, 0.985);
         m.scope("housing", () => nosePanel(m, "rim", e, roundRect(a, b, 1.6, 1.82, 0.03), -0.02, 0.03));
         m.scope("lens", () => nosePanel(m, "lampHead", e, roundRect(a + 0.04, b - 0.04, 1.63, 1.79, 0.02), -0.012, 0.042));
         // the step under the lamp: a bar on two brackets
         m.scope("step", () => {
-          const [u0, u1] = side(s, 0.55, 0.95);
+          const [u0, u1] = side(s, 0.5, 0.9);
           nosePanel(m, "steel", e, [[u0, 1.47], [u1, 1.47], [u1, 1.51], [u0, 1.51]], -0.02, 0.14);
         });
       });
   });
   m.scope("number plate", () => {
-    m.scope("housing", () => nosePanel(m, "plate", e, [[-0.4, 1.62], [0.4, 1.62], [0.4, 1.8], [-0.4, 1.8]], -0.02, 0.03));
+    m.scope("housing", () => nosePanel(m, "plate", e, [[-0.39, 1.61], [0.39, 1.61], [0.39, 1.8], [-0.39, 1.8]], -0.02, 0.03));
     const w = letteringWidth(l.number, 0.062, 0.016);
     const tris = lettering(l.number, e > 0 ? -w / 2 : w / 2, 1.65, 0.12, 0.062, 0.016, e < 0);
     m.facets("white", tris.map(([u, v]) => onNose(e, -u, v, 0.034).p), [e, 0, 0]);
@@ -592,7 +592,7 @@ function lowerEnd(m: MeshBuilder, e: number, l: Cd230Livery): void {
           m.slab("louvre", [[fx(0.004), y, z - 0.06], [fx(0.004), y, z + 0.06], [fx(0.004), y + 0.1, z + 0.06], [fx(0.004), y + 0.1, z - 0.06]], [-e * 0.03, 0, 0]);
         }
     });
-    if (l.ploughStripe) m.scope("stripe", () => m.slab(l.ploughStripe!, [[fx(0.006), 0.22, -1.25], [fx(0.006), 0.22, 1.25], [fx(0.006), 0.3, 1.25], [fx(0.006), 0.3, -1.25]], [-e * 0.03, 0, 0]));
+    if (l.ploughStripe) m.scope("stripe", () => m.slab(l.ploughStripe!, [[fx(0.006), 0.23, -1.25], [fx(0.006), 0.23, 1.25], [fx(0.006), 0.3, 1.25], [fx(0.006), 0.3, -1.25]], [-e * 0.03, 0, 0]));
   });
 }
 
@@ -604,9 +604,9 @@ const fromSource = (a: number, b: number): [number, number] => [8.2 - b, 8.2 - a
 // the machine room's six top windows, as drawn (source metres)
 const WINDOWS: ReadonlyArray<readonly [number, number]> = [[3.8, 5.2], [5.4, 6.5], [7.0, 8.2], [8.4, 9.6], [10.1, 11.3], [11.4, 12.8]];
 const GRILLE = fromSource(2.8, 13.5); // the louvred band, 2.6 to 3.3 m
-const PORTHOLE = { x: 8.2 - 2.15, y: 2.9, r: 0.28 };
+const PORTHOLE = { x: 8.2 - 2.1, y: 2.9, r: 0.3 };
 const DOOR = [5.72, 6.48] as const;
-const RAILS = [8.2 - 2.55, 8.2 - 1.65] as const;
+const RAILS = [8.2 - 2.582, 8.2 - 1.618] as const; // the rods' outer edges at source x 1.6 and 2.6
 
 function sides(m: MeshBuilder, l: Cd230Livery): void {
   for (const s of [-1, 1])
@@ -654,13 +654,13 @@ function sides(m: MeshBuilder, l: Cd230Livery): void {
           });
           m.scope("handrails", () => {
             for (const x of RAILS) {
-              const ys = [1.3, 2.3, 3.4, 3.6];
+              const ys = [1.6, 2.3, 3.4, 3.58];
               // a rod standing off the leaning wall, in straight pieces
               for (let i = 1; i < ys.length; i++) {
                 const [ya, yb] = [ys[i - 1]!, ys[i]!];
-                m.loft("steel", ngon(6, 0.018, 0, e * x, sideZ(s, ya, 0.06)), ya, ngon(6, 0.018, 0, e * x, sideZ(s, yb, 0.06)), yb, i === ys.length - 1);
+                m.loft("steel", ngon(6, 0.018, 0, e * x, sideZ(s, ya, 0.03)), ya, ngon(6, 0.018, 0, e * x, sideZ(s, yb, 0.03)), yb, i === ys.length - 1);
               }
-              for (const y of [1.3, 3.6]) block(m, "steel", e * x - 0.015, e * x + 0.015, y - 0.015, y + 0.015, ...side(s, halfWidth(y) - 0.01, halfWidth(y) + 0.06));
+              for (const y of [1.6, 3.58]) block(m, "steel", e * x - 0.015, e * x + 0.015, y - 0.015, y + 0.015, ...side(s, halfWidth(y) - 0.01, halfWidth(y) + 0.03));
             }
           });
         });
