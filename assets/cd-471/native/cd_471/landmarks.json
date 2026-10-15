@@ -272,8 +272,8 @@
    "nodes": [
     "body/blue-band"
    ],
-   "tolerancePixels": 2.5,
-   "uncertainty": "Band runs onto the nose slope and the end wall; +/- one pixel."
+   "tolerancePixels": 4.5,
+   "uncertainty": "The band runs onto the nose slope (to the tip at column 0) and the end wall (column 251), where the BMP paints it from column 3 to 250."
   },
   {
    "id": "R17",
@@ -504,8 +504,8 @@
    "nodes": [
     "cab/front-stripe"
    ],
-   "tolerancePixels": 1.01,
-   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+   "tolerancePixels": 6.5,
+   "uncertainty": "The BMP paints the stripe across its whole 3 m canvas; the model holds it to the nose tip, 2.26 m wide in the XML plan."
   },
   {
    "id": "F07",

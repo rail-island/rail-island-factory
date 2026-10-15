@@ -75,7 +75,7 @@ const BODY_BANDS: Array<[number, number, string]> = [[0.2, 1.0, "teal"], [1.0, 1
 /** The cab section behind the nose (native columns 25..50): light up to the roof's teal and dark edge. */
 const CAB_BANDS: Array<[number, number, string]> = [[0.2, 1.0, "teal"], [1.0, 3.05, "light"], [3.05, 3.35, "teal"], [3.35, 3.6, "dark"]];
 /** The nose (columns 0..25): the dark cap over a yellow line. */
-const NOSE_BANDS: Array<[number, number, string]> = [[0.2, 1.0, "teal"], [1.0, 1.75, "light"], [1.75, 1.95, "yellow"], [1.95, 3.6, "dark"]];
+const NOSE_BANDS: Array<[number, number, string]> = [[0.2, 1.0, "teal"], [1.0, 1.6, "light"], [1.6, 1.9, "yellow"], [1.9, 3.6, "dark"]];
 
 interface CarLayout {
   key: string;
@@ -95,8 +95,8 @@ interface CarLayout {
   signs: PxBox[];
 }
 
-const RIGHT_DOOR = { box: [236, 17, 246, 48] as PxBox, glass: [238, 23, 243, 32] as PxBox };
-const LEFT_DOOR = { box: [4, 17, 14, 48] as PxBox, glass: [8, 23, 13, 32] as PxBox };
+const RIGHT_DOOR = { box: [236, 17, 246, 48] as PxBox, glass: [239, 24, 242, 31] as PxBox };
+const LEFT_DOOR = { box: [4, 17, 14, 48] as PxBox, glass: [9, 24, 12, 31] as PxBox };
 const MID_WINDOWS: PxBox[] = [30, 48, 66, 84, 102, 120, 138, 156, 174, 192, 210].map((u): PxBox => [u, 24, u + 9, 28]);
 
 const LAYOUTS: Record<PendolinoUnit, CarLayout> = {
@@ -166,7 +166,6 @@ export function cd680(params?: ParamValues): MeshBuilder {
   const len = lengthOf(L);
   const c = new Coach(PALETTE, len / 2);
   const m = c.m;
-  const box = (b: PxBox) => sb(L, b);
   const gum = 0.1 * L.k;
   // the body from the gangway end (source 24.9) to the cab section or the far gangway (source 0.1)
   const bodyEnd = L.cab ? 5.0 : 0.1;
@@ -186,7 +185,7 @@ export function cd680(params?: ParamValues): MeshBuilder {
     for (const s of [1, -1]) m.scope(s > 0 ? "right side" : "left side", () => sideWork(c, body, L, s));
   });
   if (L.cab) m.scope("cab", () => cab(c, L));
-  for (const e of L.cab ? [-1] : [-1, 1]) m.scope(e > 0 ? "front end" : "rear end", () => gangwayEnd(c, body, L, e, gum));
+  for (const e of L.cab ? [-1] : [-1, 1]) m.scope(e > 0 ? "front end" : "rear end", () => gangwayEnd(c, body, e, gum));
   m.scope("roof equipment", () => {
     L.boxes.forEach(([x0, x1], i) =>
       m.scope(`roof cover ${i + 1}`, () => {
@@ -200,17 +199,59 @@ export function cd680(params?: ParamValues): MeshBuilder {
   m.scope("running gear", () => {
     L.bogies.forEach((x, i) =>
       m.scope(`bogie ${i + 1}`, () => {
-        const bc = bOf(L, x);
-        c.bogie(bc, 2.7, 0.445, 0.75);
-        // the tilting bolster and its two actuators between the side frames
-        m.scope("tilt gear", () => {
-          block(m, "motor", c.X(bc) - 0.5, c.X(bc) + 0.5, 0.62, 0.74, -1.05, 1.05);
-          for (const z of [-0.8, 0.8]) m.prism("motor", ngon(8, 0.06, 0, c.X(bc), z), 0.45, 0.74);
-        });
+        tiltingBogie(c, c.X(bOf(L, x)));
       }),
     );
   });
   return m;
+}
+
+/**
+ * A Fiat tilting bogie at Factory x: two wheelsets 2.7 m apart on 890 mm wheels,
+ * long side frames with axle boxes and primary springs, the tilting bolster
+ * with its secondary springs and actuators, and yaw dampers outside the frame.
+ */
+function tiltingBogie(c: Coach, x: number): void {
+  const m = c.m;
+  const wb = 2.7;
+  const r = 0.445;
+  const ay = r * Math.cos(Math.PI / 24);
+  for (const dx of [-wb / 2, wb / 2]) m.scope("wheelset", () => c.wheelset(x + dx, r));
+  m.scope("frame", () => {
+    for (const s of [-1, 1]) {
+      block(m, "bogie", x - wb / 2 - 0.6, x + wb / 2 + 0.6, ay + 0.02, ay + 0.2, ...side(s, 0.92, 1.06));
+      // the frame dips between the wheels to carry the bolster low
+      block(m, "bogie", x - 0.75, x + 0.75, ay - 0.12, ay + 0.02, ...side(s, 0.94, 1.04));
+      for (const dx of [-wb / 2, wb / 2]) {
+        block(m, "bogie", x + dx - 0.17, x + dx + 0.17, ay - 0.13, ay + 0.1, ...side(s, 0.86, 1.08));
+        for (const d of [-0.3, 0.3]) coilSpring(m, x + dx + d, s * 0.99, ay + 0.2, ay + 0.34);
+      }
+    }
+    for (const dx of [-0.95, 0.95]) block(m, "bogie", x + dx - 0.1, x + dx + 0.1, ay - 0.02, ay + 0.16, -0.92, 0.92);
+  });
+  m.scope("tilt gear", () => {
+    block(m, "motor", x - 0.45, x + 0.45, 0.6, 0.72, -1.1, 1.1);
+    for (const s of [-1, 1]) {
+      coilSpring(m, x, s * 0.82, ay + 0.02, 0.6);
+      m.prism("steel", ngon(8, 0.05, 0, x + 0.3, s * 0.6), ay - 0.05, 0.6);
+      // the yaw damper along the frame's outside
+      damper(m, x - 1.2, x - 0.3, ay + 0.12, s * 1.1);
+    }
+  });
+}
+
+/** A short coil spring standing on y0. */
+function coilSpring(m: MeshBuilder, x: number, z: number, y0: number, y1: number): void {
+  const turns = 3;
+  const steps = 2 * turns + 1;
+  const ring = (i: number) => ngon(8, i % 2 === 0 ? 0.055 : 0.07, Math.PI / 8, x, z);
+  for (let i = 0; i < steps; i++) m.loft("spring", ring(i), y0 + ((y1 - y0) * i) / steps, ring(i + 1), y0 + ((y1 - y0) * (i + 1)) / steps, i === steps - 1);
+}
+
+/** A damper cylinder along x from x0 to x1 at height y, across z. */
+function damper(m: MeshBuilder, x0: number, x1: number, y: number, z: number): void {
+  const ring = ngon(8, 0.045, 0, z, y);
+  m.sweep("steel", "x", ring, x0, ring, x1);
 }
 
 /** Windows, doors, skirt panels and markings on side s. */
@@ -234,7 +275,7 @@ function sideWork(c: Coach, v: Volume, L: CarLayout, s: number): void {
       }),
     ),
   );
-  if (L.hatch) m.scope("kitchen hatch", () => c.sidePanel(v, "seam", s, box(L.hatch!), 0.006, 0.004));
+  if (L.hatch) m.scope("kitchen hatch", () => c.door(v, s, box(L.hatch!), "bands", { seam: 0.03 }));
   m.scope("signs", () => L.signs.forEach((b) => c.sidePanel(v, "sign", s, box(b), 0.012, 0.004)));
   m.scope("skirt panels", () => {
     for (const u of [64, 81, 99, 116, 134, 151, 169]) c.sidePanel(v, "skirtPanel", s, box([u, 43, u + 16, 47]), 0.006, 0.004);
@@ -262,7 +303,7 @@ function cab(c: Coach, L: CarLayout): void {
     name: "nose",
     section: PENDOLINO_SECTION,
     plan: toB(L, [[0, 0.5], [0.1, 1.1], [0.3, 1.3], [0.9, 1.4], [1.8, 1.5], [2.5, 1.5]]).map(([b, h]): Pt => [b, h * K_Z]),
-    top: toB(L, [[0, 1.1], [0.1, 1.5], [0.2, 1.7], slope(1.75), slope(1.95), [1.8, 3.4], [2.0, 3.5], [2.4, 3.6], [2.5, 3.6]]),
+    top: toB(L, [[0, 1.1], [0.1, 1.5], [0.15, 1.6], [0.2, 1.7], slope(1.9), [1.8, 3.4], [2.0, 3.5], [2.4, 3.6], [2.5, 3.6]]),
     bottom: toB(L, [[0, 0.9], [0.2, 0.7], [0.6, 0.6], [1.8, 0.5], [2.0, 0.8], [2.5, 0.8]]),
     bands: NOSE_BANDS,
   };
@@ -285,14 +326,15 @@ function cab(c: Coach, L: CarLayout): void {
     slopePanel(m, "frame", 1, plane, fz(15.3), fz(14.7), fy(28.6), fy(20), 0.02, 0.004);
   });
   m.scope("lamps", () => {
-    for (const z of [-1, 1]) {
+    for (const z of [-1, 1]) m.scope(z > 0 ? "lamp 1" : "lamp 2", () => {
       const x = X(0.12);
-      blockX(m, "frame", x - 0.15, x + 0.01, 1.43, 1.67, z * 1.05 - 0.2, z * 1.05 + 0.2);
+      // x_inc columns 2..7 and 23..28, rows 33..36
+      blockX(m, "frame", x - 0.15, x + 0.01, 1.4, 1.7, (z * 1.05 - 0.25) * K_Z, (z * 1.05 + 0.25) * K_Z);
       for (const [j, dz] of [-0.09, 0.09].entries()) {
-        const lens = ngon(10, 0.06, 0, z * 1.05 + dz, 1.55);
+        const lens = ngon(10, 0.06, 0, (z * 1.05 + dz) * K_Z, 1.55);
         m.sweep(j === (z > 0 ? 0 : 1) ? "lampRed" : "lampBlue", "x", lens, x + 0.01, lens, x + 0.025);
       }
-    }
+    });
   });
   // the plough under the nose (XML "nar": 0.4..2.0 m, down to 0.2 m)
   m.scope("plough", () => {
@@ -302,9 +344,9 @@ function cab(c: Coach, L: CarLayout): void {
   });
   for (const s of [1, -1])
     m.scope(s > 0 ? "right cab door" : "left cab door", () => {
-      c.sidePanel(cabBody, "seam", s, sb(L, [28, 20, 35, 40]), 0.006, 0.04);
-      c.sidePanel(cabBody, "light", s, sb(L, [28.6, 20.6, 34.4, 39.4]), 0.01, 0.003);
-      c.sidePanel(cabBody, "glass", s, sb(L, [29.2, 21, 33.8, 24]), 0.014, 0.003);
+      m.scope("outline", () => c.sidePanel(cabBody, "seam", s, sb(L, [28, 20, 35, 40]), 0.006, 0.04));
+      m.scope("leaf", () => c.sidePanel(cabBody, "light", s, sb(L, [28.6, 20.6, 34.4, 39.4]), 0.01, 0.003));
+      m.scope("window", () => c.sidePanel(cabBody, "glass", s, sb(L, [29.2, 21, 33.8, 24]), 0.014, 0.003));
     });
   m.scope("roof fairing", () => {
     const ring = (k: number, top: number): Pt[] => [[-1.0 * k * K_Z, 3.5], [1.0 * k * K_Z, 3.5], [0.5 * k * K_Z, top], [-0.5 * k * K_Z, top]];
@@ -314,7 +356,7 @@ function cab(c: Coach, L: CarLayout): void {
 }
 
 /** A gangway end e: the rubber gangway, its frame, the double door, and the coupler under it. */
-function gangwayEnd(c: Coach, v: Volume, L: CarLayout, e: number, gum: number): void {
+function gangwayEnd(c: Coach, v: Volume, e: number, gum: number): void {
   const m = c.m;
   const wall = e > 0 ? v.plan[v.plan.length - 1]![0] : v.plan[0]![0];
   const X = (b: number) => c.X(b);
@@ -327,7 +369,7 @@ function gangwayEnd(c: Coach, v: Volume, L: CarLayout, e: number, gum: number): 
   m.scope("door frame", () => c.door(v, e, { x0: fz(4.5), x1: fz(25.5), y0: 1.12, y1: 3.26 }, "frame", { end: true, seam: 0.04 }));
   m.scope("doors", () => {
     for (const [u0, u1] of [[6, 14], [16, 24]] as const) {
-      c.endPanel(v, "teal", e, { x0: fz(u0), x1: fz(u1), y0: 1.22, y1: 3.08 }, 0.016, 0.004);
+      c.endPanel(v, "teal", e, { x0: fz(u0), x1: fz(u1), y0: 1.1, y1: 3.1 }, 0.016, 0.004);
       c.endPanel(v, "glass", e, { x0: fz(u0 + 2), x1: fz(u1 - 2), y0: 2.33, y1: 2.9 }, 0.022, 0.004);
     }
   });

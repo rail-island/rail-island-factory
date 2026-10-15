@@ -12,6 +12,7 @@ import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { collectTriangles, parseGlb } from "./glbTriangles.ts";
 import { isLeaf, type LeafNode, type TreeNode } from "./sourceTree.ts";
 import { EMU471_DESIGNS, elefantCentre, ELEFANT_LAYOUTS, K_Y, K_Z } from "./emu471.ts";
+import { EMU680_DESIGNS, K_X_END, K_Z as K_Z_680, PENDOLINO_LAYOUTS, pendolinoLength } from "./emu680.ts";
 import type { CoachLandmark, CoachComparisonRow } from "./csdCoachComparison.ts";
 
 export { meanAbsoluteError, bmpSize } from "./csdCoachComparison.ts";
@@ -30,17 +31,21 @@ export interface EmuTransfer {
   native: string;
   /** The comparison table, relative to assets/<folder>/. */
   report: string;
-  /** Factory X to the side canvas's column (native pixels). */
+  /** Factory X to the side canvas's column (native pixels), physically: one metre is ten columns. */
   side: (x: number) => number;
+  /** The same with the documented length scale undone. */
+  sideUnscaled: (x: number) => number;
   /** The side canvas's mapping, as the report states it. */
   sideRule: string;
-  /** The documented scales from source to model: heights (y) and widths (z). */
+  /** The documented scales from source to model: length (x), heights (y) and widths (z). */
+  kX: number;
   kY: number;
   kZ: number;
 }
 
 const elefant = ELEFANT_LAYOUTS.motorCar;
 const elefantC = elefantCentre(elefant);
+const end680 = PENDOLINO_LAYOUTS.endCar;
 
 export const EMU_TRANSFERS: readonly EmuTransfer[] = [
   {
@@ -53,13 +58,31 @@ export const EMU_TRANSFERS: readonly EmuTransfer[] = [
     report: "COMPARISON.md",
     // the BMP's cab is at column 0: u = 10 * (25.1 - body metres), body metres = X + centre
     side: (x) => 10 * (25.1 - (x + elefantC)),
+    sideUnscaled: (x) => 10 * (25.1 - (x + elefantC)),
     sideRule: `u = 10 * (25.1 - (Factory X + ${elefantC.toFixed(3)})): the BMP has the cab at column 0, the model at +X`,
+    kX: 1,
     kY: K_Y,
     kZ: K_Z,
   },
+  {
+    key: "cd_681",
+    title: "CD 681 end car",
+    id: "veh-cd-680",
+    params: { unit: "endCar" },
+    folder: "cd-680",
+    native: "native/cd_681",
+    report: "COMPARISON.md",
+    // the BMP has the cab tip at column 0; the model is 27.7 m against the BMP's 25 m
+    side: (x) => 10 * (pendolinoLength(end680) - (x + pendolinoLength(end680) / 2)),
+    sideUnscaled: (x) => 10 * (25 - (x + pendolinoLength(end680) / 2) / K_X_END),
+    sideRule: `u = 10 * (${pendolinoLength(end680).toFixed(2)} - (Factory X + ${(pendolinoLength(end680) / 2).toFixed(2)})): the cab tip at column 0, the model at +X`,
+    kX: K_X_END,
+    kY: 1,
+    kZ: K_Z_680,
+  },
 ];
 
-const DESIGNS: readonly ProceduralDesign[] = [...EMU471_DESIGNS];
+const DESIGNS: readonly ProceduralDesign[] = [...EMU471_DESIGNS, ...EMU680_DESIGNS];
 
 export function emuTransfer(key: string): EmuTransfer {
   const t = EMU_TRANSFERS.find((x) => x.key === key);
@@ -83,7 +106,7 @@ export function readEmuLandmarks(t: EmuTransfer): CoachLandmark[] {
 
 /**
  * The comparison rows of one transferred car, on the physical canvas, or with
- * `unscaled` the documented height and width scales undone (y / kY, z / kZ).
+ * `unscaled` the documented scales undone (the side's length, y / kY, z / kZ).
  */
 export function emuComparison(key: string, unscaled = false): CoachComparisonRow[] {
   const t = emuTransfer(key);
@@ -114,7 +137,7 @@ export function emuComparison(key: string, unscaled = false): CoachComparisonRow
     const canvas = size(row.view);
     const H = canvas[1] / 10;
     const [ky, kz] = unscaled ? [t.kY, t.kZ] : [1, 1];
-    const u = points.map((p) => (row.end ? (row.end === "rear" ? 10 * (p[2] / kz + 1.5) : 10 * (1.5 - p[2] / kz)) : t.side(p[0])));
+    const u = points.map((p) => (row.end ? (row.end === "rear" ? 10 * (p[2] / kz + 1.5) : 10 * (1.5 - p[2] / kz)) : (unscaled ? t.sideUnscaled(p[0]) : t.side(p[0]))));
     const v = points.map((p) => 10 * (H - p[1] / ky));
     const box = [Math.min(...u), Math.min(...v), Math.max(...u), Math.max(...v)];
     const dims = (b: number[]) => [b[0]!, b[1]!, b[2]! - b[0]!, b[3]! - b[1]!];

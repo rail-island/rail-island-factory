@@ -396,14 +396,16 @@ function cab(c: Coach, v: Volume, L: CarLayout, paint: Paint): void {
     slopePanel(m, "lampWhite", 1, upper, fz(13.6), fz(16.4), fy(23.4), fy(20.6), 0.018, 0.008);
   });
   m.scope("visor", () => slopePanel(m, "trim", 1, roof, fz(11), fz(19), fy(18.8), fy(17.2), 0.006, 0.01));
-  m.scope("front stripe", () => slopePanel(m, paint.stripe, 1, upper, fz(0.6), fz(29.4), fy(44.9), fy(42.9), 0.004, 0.003));
+  // the stripe the BMP paints across its full 3 m canvas, held to the 2.26 m nose tip
+  m.scope("front stripe", () => slopePanel(m, paint.stripe, 1, upper, fz(3.1), fz(26.9), fy(44.9), fy(42.9), 0.004, 0.003));
   m.scope("lamps", () => {
-    for (const [k, z] of [-0.86, 0.86].entries())
+    // x_inc columns 2..11 and 19..28, rows 42..45: a housing of three lenses each side
+    for (const [k, z] of [-0.85 * K_Z, 0.85 * K_Z].entries())
       m.scope(`lamp ${k + 1}`, () => {
         // a lamp housing at the nose tip, its lenses facing +X
         const x = X(25.1);
-        blockX(m, "cabBlack", x - 0.12, x + 0.04, fy(45.5), fy(41.5), z - 0.36, z + 0.36);
-        for (const [j, dz] of [-0.2, 0, 0.2].entries()) {
+        blockX(m, "cabBlack", x - 0.12, x + 0.04, fy(45), fy(42), z - 0.45 * K_Z, z + 0.45 * K_Z);
+        for (const [j, dz] of [-0.25, 0, 0.25].entries()) {
           const lens = ngon(10, 0.055, 0, z + dz, fy(43.5));
           m.sweep(j === (z > 0 ? 0 : 2) ? "lampRed" : "lampWhite", "x", lens, x + 0.04, lens, x + 0.055);
         }

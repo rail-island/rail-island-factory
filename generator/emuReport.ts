@@ -132,9 +132,10 @@ function report(key: string): string {
     const H = ch / 10;
     const end = where === "front" || where === "rear";
     const project = (p: P3) => {
-      const u = end ? (where === "rear" ? 10 * (p[2]! + 1.5) : 10 * (1.5 - p[2]!)) : t.side(p[0]!);
+      // drawn with the documented scales undone, so the model overlays its BMP
+      const u = end ? (where === "rear" ? 10 * (p[2]! / t.kZ + 1.5) : 10 * (1.5 - p[2]! / t.kZ)) : t.sideUnscaled(p[0]!);
       const depth = end ? (where === "rear" ? -p[0]! : p[0]!) : where === "right" ? p[2]! : -p[2]!;
-      return [u * scale, 10 * (H - p[1]!) * scale, depth];
+      return [u * scale, 10 * (H - p[1]! / t.kY) * scale, depth];
     };
     const png = PNG.sync.write(raster(tris, cw * scale, ch * scale, project, (x) => x.rgb));
     const name = `${v}-${where}`;
@@ -158,7 +159,7 @@ function report(key: string): string {
   }
   summary.push(`| All | ${rows.length} | ${meanAbsoluteError(rows.map((r) => base(r.id))).toFixed(3)} | ${meanAbsoluteError(rows).toFixed(3)} |`);
   const unscaled = emuComparison(key, true);
-  summary.push("", `With the documented scales undone (model heights / ${t.kY.toFixed(4)}, end-view widths / ${t.kZ.toFixed(4)}: the published height and width against the XML's), the final MAE is ${meanAbsoluteError(unscaled).toFixed(3)} pp over the same ${unscaled.length} boxes; the residual left is the transfer itself.`);
+  summary.push("", `With the documented scales undone (side lengths / ${t.kX.toFixed(4)}, model heights / ${t.kY.toFixed(4)}, end-view widths / ${t.kZ.toFixed(4)}: the published dimensions against the XML's), the final MAE is ${meanAbsoluteError(unscaled).toFixed(3)} pp over the same ${unscaled.length} boxes; the residual left is the transfer itself.`);
   const [sw, sh] = rows.find((r) => !r.end)!.canvas;
   const lines = [
     `# ${t.title} native reference comparison`,
