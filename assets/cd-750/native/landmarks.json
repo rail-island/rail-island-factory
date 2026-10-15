@@ -1,0 +1,906 @@
+{
+  "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/loco/diesel/cd_750/model",
+  "pixelMetres": 0.1,
+  "annotations": [
+    {
+      "id": "F01",
+      "view": "x_front",
+      "box": [
+        0,
+        15,
+        30,
+        24
+      ],
+      "nodes": [
+        "front-cab/face/windscreen/surround"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. The white surround of the windscreens (the 'glasses')."
+    },
+    {
+      "id": "B01",
+      "view": "x_rear",
+      "box": [
+        0,
+        15,
+        30,
+        24
+      ],
+      "nodes": [
+        "rear-cab/face/windscreen/surround"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. The white surround of the windscreens (the 'glasses')."
+    },
+    {
+      "id": "F02",
+      "view": "x_front",
+      "box": [
+        1,
+        16,
+        14,
+        23
+      ],
+      "nodes": [
+        "front-cab/face/windscreen/left-pane"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Rubber and glass of the viewer's left pane."
+    },
+    {
+      "id": "B02",
+      "view": "x_rear",
+      "box": [
+        1,
+        16,
+        14,
+        23
+      ],
+      "nodes": [
+        "rear-cab/face/windscreen/left-pane"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Rubber and glass of the viewer's left pane."
+    },
+    {
+      "id": "F03",
+      "view": "x_front",
+      "box": [
+        16,
+        16,
+        29,
+        23
+      ],
+      "nodes": [
+        "front-cab/face/windscreen/right-pane"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "B03",
+      "view": "x_rear",
+      "box": [
+        16,
+        16,
+        29,
+        23
+      ],
+      "nodes": [
+        "rear-cab/face/windscreen/right-pane"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "F04",
+      "view": "x_front",
+      "box": [
+        11,
+        9,
+        20,
+        15
+      ],
+      "nodes": [
+        "front-cab/face/headlight/rim"
+      ],
+      "tolerancePixels": 1.5,
+      "uncertainty": "The white ring of the headlight on the housing; +/- one pixel, a 9 px circle drawn square."
+    },
+    {
+      "id": "B04",
+      "view": "x_rear",
+      "box": [
+        11,
+        9,
+        20,
+        15
+      ],
+      "nodes": [
+        "rear-cab/face/headlight/rim"
+      ],
+      "tolerancePixels": 1.5,
+      "uncertainty": "The white ring of the headlight on the housing; +/- one pixel, a 9 px circle drawn square."
+    },
+    {
+      "id": "F05",
+      "view": "x_front",
+      "box": [
+        12,
+        25,
+        18,
+        29
+      ],
+      "nodes": [
+        "front-cab/face/emblem"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. CD emblem."
+    },
+    {
+      "id": "B05",
+      "view": "x_rear",
+      "box": [
+        12,
+        25,
+        18,
+        29
+      ],
+      "nodes": [
+        "rear-cab/face/emblem"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. CD emblem."
+    },
+    {
+      "id": "F06",
+      "view": "x_front",
+      "box": [
+        11,
+        35,
+        19,
+        37
+      ],
+      "nodes": [
+        "front-cab/face/number-plate"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "B06",
+      "view": "x_rear",
+      "box": [
+        11,
+        35,
+        19,
+        37
+      ],
+      "nodes": [
+        "rear-cab/face/number-plate"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "F07",
+      "view": "x_front",
+      "box": [
+        6,
+        35,
+        8,
+        37
+      ],
+      "nodes": [
+        "front-cab/face/lamps/head-lamp"
+      ],
+      "tolerancePixels": 1.5,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. White lamp (2 by 2 px)."
+    },
+    {
+      "id": "B07",
+      "view": "x_rear",
+      "box": [
+        6,
+        35,
+        8,
+        37
+      ],
+      "nodes": [
+        "rear-cab/face/lamps/head-lamp"
+      ],
+      "tolerancePixels": 1.5,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. White lamp (2 by 2 px)."
+    },
+    {
+      "id": "F08",
+      "view": "x_front",
+      "box": [
+        22,
+        35,
+        24,
+        37
+      ],
+      "nodes": [
+        "front-cab/face/lamps/head-lamp-2"
+      ],
+      "tolerancePixels": 1.5,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "B08",
+      "view": "x_rear",
+      "box": [
+        22,
+        35,
+        24,
+        37
+      ],
+      "nodes": [
+        "rear-cab/face/lamps/head-lamp-2"
+      ],
+      "tolerancePixels": 1.5,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "F09",
+      "view": "x_front",
+      "box": [
+        3,
+        35,
+        5,
+        37
+      ],
+      "nodes": [
+        "front-cab/face/lamps/tail-lamp"
+      ],
+      "tolerancePixels": 1.5,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Red lamp."
+    },
+    {
+      "id": "B09",
+      "view": "x_rear",
+      "box": [
+        3,
+        35,
+        5,
+        37
+      ],
+      "nodes": [
+        "rear-cab/face/lamps/tail-lamp"
+      ],
+      "tolerancePixels": 1.5,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Red lamp."
+    },
+    {
+      "id": "F10",
+      "view": "x_front",
+      "box": [
+        25,
+        35,
+        27,
+        37
+      ],
+      "nodes": [
+        "front-cab/face/lamps/tail-lamp-2"
+      ],
+      "tolerancePixels": 1.5,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "B10",
+      "view": "x_rear",
+      "box": [
+        25,
+        35,
+        27,
+        37
+      ],
+      "nodes": [
+        "rear-cab/face/lamps/tail-lamp-2"
+      ],
+      "tolerancePixels": 1.5,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "F11",
+      "view": "x_front",
+      "box": [
+        0,
+        31,
+        30,
+        34
+      ],
+      "nodes": [
+        "body/shell/front/band-0"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Livery band 1.6 .. 1.9 m (yellow)."
+    },
+    {
+      "id": "B11",
+      "view": "x_rear",
+      "box": [
+        0,
+        31,
+        30,
+        34
+      ],
+      "nodes": [
+        "body/shell/rear/band-0"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Livery band 1.6 .. 1.9 m (yellow)."
+    },
+    {
+      "id": "F12",
+      "view": "x_front",
+      "box": [
+        0,
+        24,
+        30,
+        31
+      ],
+      "nodes": [
+        "body/shell/front/band-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Livery band 1.9 .. 2.6 m (grey)."
+    },
+    {
+      "id": "B12",
+      "view": "x_rear",
+      "box": [
+        0,
+        24,
+        30,
+        31
+      ],
+      "nodes": [
+        "body/shell/rear/band-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Livery band 1.9 .. 2.6 m (grey)."
+    },
+    {
+      "id": "F13",
+      "view": "x_front",
+      "box": [
+        1,
+        38,
+        8,
+        42
+      ],
+      "nodes": [
+        "front-cab/lower-end/right-buffer/head"
+      ],
+      "tolerancePixels": 3.5,
+      "uncertainty": "Native buffer frames; the model keeps the standard 1.75 m buffer spacing and 1.03 m height (deliberate mechanical constraint)."
+    },
+    {
+      "id": "B13",
+      "view": "x_rear",
+      "box": [
+        1,
+        38,
+        8,
+        42
+      ],
+      "nodes": [
+        "rear-cab/lower-end/right-buffer/head"
+      ],
+      "tolerancePixels": 3.5,
+      "uncertainty": "Native buffer frames; the model keeps the standard 1.75 m buffer spacing and 1.03 m height (deliberate mechanical constraint)."
+    },
+    {
+      "id": "F14",
+      "view": "x_front",
+      "box": [
+        22,
+        38,
+        29,
+        42
+      ],
+      "nodes": [
+        "front-cab/lower-end/left-buffer/head"
+      ],
+      "tolerancePixels": 3.5,
+      "uncertainty": "Native buffer frames; the model keeps the standard 1.75 m buffer spacing and 1.03 m height (deliberate mechanical constraint)."
+    },
+    {
+      "id": "B14",
+      "view": "x_rear",
+      "box": [
+        22,
+        38,
+        29,
+        42
+      ],
+      "nodes": [
+        "rear-cab/lower-end/left-buffer/head"
+      ],
+      "tolerancePixels": 3.5,
+      "uncertainty": "Native buffer frames; the model keeps the standard 1.75 m buffer spacing and 1.03 m height (deliberate mechanical constraint)."
+    },
+    {
+      "id": "F15",
+      "view": "x_front",
+      "box": [
+        0,
+        42,
+        30,
+        48
+      ],
+      "nodes": [
+        "front-cab/lower-end/plough"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. The plough's face, 0.2 .. 0.8 m."
+    },
+    {
+      "id": "B15",
+      "view": "x_rear",
+      "box": [
+        0,
+        42,
+        30,
+        48
+      ],
+      "nodes": [
+        "rear-cab/lower-end/plough"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. The plough's face, 0.2 .. 0.8 m."
+    },
+    {
+      "id": "R01",
+      "view": "z_right",
+      "box": [
+        25,
+        19,
+        29,
+        23
+      ],
+      "nodes": [
+        "sides/right-side/windows/window-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window, frame and glass."
+    },
+    {
+      "id": "R02",
+      "view": "z_right",
+      "box": [
+        39,
+        19,
+        43,
+        23
+      ],
+      "nodes": [
+        "sides/right-side/windows/window-2"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window, frame and glass."
+    },
+    {
+      "id": "R03",
+      "view": "z_right",
+      "box": [
+        53,
+        19,
+        57,
+        23
+      ],
+      "nodes": [
+        "sides/right-side/windows/window-3"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window, frame and glass."
+    },
+    {
+      "id": "R04",
+      "view": "z_right",
+      "box": [
+        68,
+        19,
+        72,
+        23
+      ],
+      "nodes": [
+        "sides/right-side/windows/window-4"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window, frame and glass."
+    },
+    {
+      "id": "R05",
+      "view": "z_right",
+      "box": [
+        82,
+        19,
+        86,
+        23
+      ],
+      "nodes": [
+        "sides/right-side/windows/window-5"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window, frame and glass."
+    },
+    {
+      "id": "R06",
+      "view": "z_right",
+      "box": [
+        96,
+        19,
+        100,
+        23
+      ],
+      "nodes": [
+        "sides/right-side/windows/window-6"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window, frame and glass."
+    },
+    {
+      "id": "R07",
+      "view": "z_right",
+      "box": [
+        107,
+        18,
+        130,
+        24
+      ],
+      "nodes": [
+        "sides/right-side/radiator"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Two radiator shutter panels."
+    },
+    {
+      "id": "R08",
+      "view": "z_right",
+      "box": [
+        3,
+        17,
+        5,
+        22
+      ],
+      "nodes": [
+        "sides/right-side/left-cab/window-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Cab windows at the left end; the right end is drawn 2 px off its mirror image and is not annotated."
+    },
+    {
+      "id": "R09",
+      "view": "z_right",
+      "box": [
+        6,
+        17,
+        11,
+        22
+      ],
+      "nodes": [
+        "sides/right-side/left-cab/window-2"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "R10",
+      "view": "z_right",
+      "box": [
+        13,
+        17,
+        17,
+        22
+      ],
+      "nodes": [
+        "sides/right-side/left-cab/window-3"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "R11",
+      "view": "z_right",
+      "box": [
+        74,
+        27,
+        82,
+        30
+      ],
+      "nodes": [
+        "sides/right-side/number-plate"
+      ],
+      "tolerancePixels": 1.6,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. The model's plate is the running number's width, 0.16 m tall."
+    },
+    {
+      "id": "R12",
+      "view": "z_right",
+      "box": [
+        33,
+        26,
+        38,
+        30
+      ],
+      "nodes": [
+        "sides/right-side/emblem"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "R13",
+      "view": "z_right",
+      "box": [
+        0,
+        34,
+        153,
+        39
+      ],
+      "nodes": [
+        "body/frame"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. The frame, 1.1 .. 1.6 m, over the body's length."
+    },
+    {
+      "id": "R14",
+      "view": "z_right",
+      "box": [
+        50,
+        7,
+        106,
+        8
+      ],
+      "nodes": [
+        "body/roof/hatch"
+      ],
+      "tolerancePixels": 1.4,
+      "uncertainty": "XML roof clip 5.0 .. 10.6, its crest at 4.3 m; one row."
+    },
+    {
+      "id": "R15",
+      "view": "z_right",
+      "box": [
+        54,
+        39,
+        99,
+        48
+      ],
+      "nodes": [
+        "underframe/fuel-tank"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "XML base clip 5.4 .. 9.9, 0.2 .. 1.1 m: the fuel tank."
+    },
+    {
+      "id": "L01",
+      "view": "z_left",
+      "box": [
+        25,
+        19,
+        29,
+        23
+      ],
+      "nodes": [
+        "sides/left-side/windows/window-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window, frame and glass."
+    },
+    {
+      "id": "L02",
+      "view": "z_left",
+      "box": [
+        39,
+        19,
+        43,
+        23
+      ],
+      "nodes": [
+        "sides/left-side/windows/window-2"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window, frame and glass."
+    },
+    {
+      "id": "L03",
+      "view": "z_left",
+      "box": [
+        53,
+        19,
+        57,
+        23
+      ],
+      "nodes": [
+        "sides/left-side/windows/window-3"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window, frame and glass."
+    },
+    {
+      "id": "L04",
+      "view": "z_left",
+      "box": [
+        68,
+        19,
+        72,
+        23
+      ],
+      "nodes": [
+        "sides/left-side/windows/window-4"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window, frame and glass."
+    },
+    {
+      "id": "L05",
+      "view": "z_left",
+      "box": [
+        82,
+        19,
+        86,
+        23
+      ],
+      "nodes": [
+        "sides/left-side/windows/window-5"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window, frame and glass."
+    },
+    {
+      "id": "L06",
+      "view": "z_left",
+      "box": [
+        96,
+        19,
+        100,
+        23
+      ],
+      "nodes": [
+        "sides/left-side/windows/window-6"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window, frame and glass."
+    },
+    {
+      "id": "L07",
+      "view": "z_left",
+      "box": [
+        107,
+        18,
+        130,
+        24
+      ],
+      "nodes": [
+        "sides/left-side/radiator"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Two radiator shutter panels."
+    },
+    {
+      "id": "L08",
+      "view": "z_left",
+      "box": [
+        3,
+        17,
+        5,
+        22
+      ],
+      "nodes": [
+        "sides/left-side/left-cab/window-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Cab windows at the left end; the right end is drawn 2 px off its mirror image and is not annotated."
+    },
+    {
+      "id": "L09",
+      "view": "z_left",
+      "box": [
+        6,
+        17,
+        11,
+        22
+      ],
+      "nodes": [
+        "sides/left-side/left-cab/window-2"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "L10",
+      "view": "z_left",
+      "box": [
+        13,
+        17,
+        17,
+        22
+      ],
+      "nodes": [
+        "sides/left-side/left-cab/window-3"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "L11",
+      "view": "z_left",
+      "box": [
+        74,
+        27,
+        82,
+        30
+      ],
+      "nodes": [
+        "sides/left-side/number-plate"
+      ],
+      "tolerancePixels": 1.6,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. The model's plate is the running number's width, 0.16 m tall."
+    },
+    {
+      "id": "L12",
+      "view": "z_left",
+      "box": [
+        33,
+        26,
+        38,
+        30
+      ],
+      "nodes": [
+        "sides/left-side/emblem"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "L13",
+      "view": "z_left",
+      "box": [
+        0,
+        34,
+        153,
+        39
+      ],
+      "nodes": [
+        "body/frame"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. The frame, 1.1 .. 1.6 m, over the body's length."
+    },
+    {
+      "id": "L14",
+      "view": "z_left",
+      "box": [
+        50,
+        7,
+        106,
+        8
+      ],
+      "nodes": [
+        "body/roof/hatch"
+      ],
+      "tolerancePixels": 1.4,
+      "uncertainty": "XML roof clip 5.0 .. 10.6, its crest at 4.3 m; one row."
+    },
+    {
+      "id": "L15",
+      "view": "z_left",
+      "box": [
+        54,
+        39,
+        99,
+        48
+      ],
+      "nodes": [
+        "underframe/fuel-tank"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "XML base clip 5.4 .. 9.9, 0.2 .. 1.1 m: the fuel tank."
+    }
+  ]
+}

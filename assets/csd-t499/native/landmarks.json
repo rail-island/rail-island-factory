@@ -1,0 +1,444 @@
+{
+  "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/loco/diesel/csd_t499/model",
+  "pixelMetres": 0.1,
+  "annotations": [
+    {
+      "id": "F01",
+      "view": "x_front",
+      "box": [
+        1,
+        17,
+        14,
+        24
+      ],
+      "nodes": [
+        "front-cab/face/windscreen/left-pane"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "B01",
+      "view": "x_rear",
+      "box": [
+        1,
+        17,
+        14,
+        24
+      ],
+      "nodes": [
+        "rear-cab/face/windscreen/left-pane"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "F02",
+      "view": "x_front",
+      "box": [
+        16,
+        17,
+        29,
+        24
+      ],
+      "nodes": [
+        "front-cab/face/windscreen/right-pane"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "B02",
+      "view": "x_rear",
+      "box": [
+        16,
+        17,
+        29,
+        24
+      ],
+      "nodes": [
+        "rear-cab/face/windscreen/right-pane"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "F03",
+      "view": "x_front",
+      "box": [
+        12,
+        25,
+        18,
+        30
+      ],
+      "nodes": [
+        "front-cab/face/headlight/rim"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. The central 'Kyklop' headlight."
+    },
+    {
+      "id": "B03",
+      "view": "x_rear",
+      "box": [
+        12,
+        25,
+        18,
+        30
+      ],
+      "nodes": [
+        "rear-cab/face/headlight/rim"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. The central 'Kyklop' headlight."
+    },
+    {
+      "id": "F04",
+      "view": "x_front",
+      "box": [
+        2,
+        25,
+        10,
+        26
+      ],
+      "nodes": [
+        "front-cab/face/grab-bars/left"
+      ],
+      "tolerancePixels": 1.3,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. The grab bar under the left pane."
+    },
+    {
+      "id": "B04",
+      "view": "x_rear",
+      "box": [
+        2,
+        25,
+        10,
+        26
+      ],
+      "nodes": [
+        "rear-cab/face/grab-bars/left"
+      ],
+      "tolerancePixels": 1.3,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. The grab bar under the left pane."
+    },
+    {
+      "id": "F05",
+      "view": "x_front",
+      "box": [
+        0,
+        30,
+        30,
+        35
+      ],
+      "nodes": [
+        "body/shell/front/band-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Livery band 1.5 .. 2.0 m (navy)."
+    },
+    {
+      "id": "B05",
+      "view": "x_rear",
+      "box": [
+        0,
+        30,
+        30,
+        35
+      ],
+      "nodes": [
+        "body/shell/rear/band-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Livery band 1.5 .. 2.0 m (navy)."
+    },
+    {
+      "id": "F06",
+      "view": "x_front",
+      "box": [
+        2,
+        32,
+        4,
+        34
+      ],
+      "nodes": [
+        "front-cab/face/lamps/tail-lamp"
+      ],
+      "tolerancePixels": 1.5,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Red lamp."
+    },
+    {
+      "id": "B06",
+      "view": "x_rear",
+      "box": [
+        2,
+        32,
+        4,
+        34
+      ],
+      "nodes": [
+        "rear-cab/face/lamps/tail-lamp"
+      ],
+      "tolerancePixels": 1.5,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Red lamp."
+    },
+    {
+      "id": "F07",
+      "view": "x_front",
+      "box": [
+        5,
+        32,
+        7,
+        34
+      ],
+      "nodes": [
+        "front-cab/face/lamps/head-lamp"
+      ],
+      "tolerancePixels": 1.5,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. White lamp."
+    },
+    {
+      "id": "B07",
+      "view": "x_rear",
+      "box": [
+        5,
+        32,
+        7,
+        34
+      ],
+      "nodes": [
+        "rear-cab/face/lamps/head-lamp"
+      ],
+      "tolerancePixels": 1.5,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. White lamp."
+    },
+    {
+      "id": "F08",
+      "view": "x_front",
+      "box": [
+        11,
+        35,
+        19,
+        38
+      ],
+      "nodes": [
+        "front-cab/face/number-plate"
+      ],
+      "tolerancePixels": 1.3,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "B08",
+      "view": "x_rear",
+      "box": [
+        11,
+        35,
+        19,
+        38
+      ],
+      "nodes": [
+        "rear-cab/face/number-plate"
+      ],
+      "tolerancePixels": 1.3,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "F09",
+      "view": "x_front",
+      "box": [
+        3,
+        38,
+        9,
+        42
+      ],
+      "nodes": [
+        "front-cab/lower-end/right-buffer/head"
+      ],
+      "tolerancePixels": 1.6,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Rectangular buffer head."
+    },
+    {
+      "id": "B09",
+      "view": "x_rear",
+      "box": [
+        3,
+        38,
+        9,
+        42
+      ],
+      "nodes": [
+        "rear-cab/lower-end/right-buffer/head"
+      ],
+      "tolerancePixels": 1.6,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Rectangular buffer head."
+    },
+    {
+      "id": "F10",
+      "view": "x_front",
+      "box": [
+        0,
+        43,
+        30,
+        47
+      ],
+      "nodes": [
+        "front-cab/lower-end/plough"
+      ],
+      "tolerancePixels": 1.5,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "B10",
+      "view": "x_rear",
+      "box": [
+        0,
+        43,
+        30,
+        47
+      ],
+      "nodes": [
+        "rear-cab/lower-end/plough"
+      ],
+      "tolerancePixels": 1.5,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "R01",
+      "view": "z_right",
+      "box": [
+        9,
+        17,
+        14,
+        22
+      ],
+      "nodes": [
+        "sides/right-side/left-cab/cab-window"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "R02",
+      "view": "z_right",
+      "box": [
+        17,
+        17,
+        21,
+        22
+      ],
+      "nodes": [
+        "sides/right-side/left-cab/door/window"
+      ],
+      "tolerancePixels": 1.2,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. The door's window."
+    },
+    {
+      "id": "R03",
+      "view": "z_right",
+      "box": [
+        25,
+        16,
+        51,
+        30
+      ],
+      "nodes": [
+        "sides/right-side/left-cab/yellow-bay/frame"
+      ],
+      "tolerancePixels": 1.2,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. The louvred bay behind the cab."
+    },
+    {
+      "id": "R04",
+      "view": "z_right",
+      "box": [
+        58,
+        17,
+        63,
+        22
+      ],
+      "nodes": [
+        "sides/right-side/windows/window-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window."
+    },
+    {
+      "id": "R05",
+      "view": "z_right",
+      "box": [
+        78,
+        17,
+        83,
+        22
+      ],
+      "nodes": [
+        "sides/right-side/windows/window-2"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window."
+    },
+    {
+      "id": "R06",
+      "view": "z_right",
+      "box": [
+        85,
+        17,
+        90,
+        22
+      ],
+      "nodes": [
+        "sides/right-side/windows/window-3"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window."
+    },
+    {
+      "id": "R07",
+      "view": "z_right",
+      "box": [
+        102,
+        17,
+        107,
+        22
+      ],
+      "nodes": [
+        "sides/right-side/windows/window-4"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel. Machine-room window."
+    },
+    {
+      "id": "R08",
+      "view": "z_right",
+      "box": [
+        5,
+        30,
+        170,
+        35
+      ],
+      "nodes": [
+        "body/shell/side-right/band-1",
+        "body/shell/cab-right/band-1",
+        "body/shell/front/band-1",
+        "body/shell/rear/band-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Livery band 1.5 .. 2.0 m (navy)."
+    },
+    {
+      "id": "R09",
+      "view": "z_right",
+      "box": [
+        63,
+        40,
+        112,
+        47
+      ],
+      "nodes": [
+        "underframe/fuel-tank"
+      ],
+      "tolerancePixels": 1.3,
+      "uncertainty": "XML 'box' clip 6.3 .. 11.2, 0.3 .. 1.0 m."
+    }
+  ]
+}

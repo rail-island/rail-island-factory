@@ -119,10 +119,10 @@ function face(m: MeshBuilder, e: number): void {
     m.scope("lens", () => m.sweep("lampHead", "x", lens, e * (t + 0.12), lens, e * (t + 0.14)));
   });
   const faceX = BODY.tip(1.1);
-  // rows 32..33: the lamps at columns 5..6 and 23..24 in the olive band
+  // rows 32..33: the lamps in the olive band (columns 5..6 and 23..24; moved inboard of the standard buffers, which the BMP draws lower)
   m.scope("lamps", () => {
-    for (const z of [-0.9, 0.9]) m.scope("head lamp", () => faceLamp(m, e, faceX, z, 1.1, 0.08, "lampHead"));
-    for (const z of [-1.3, 1.3]) m.scope("tail lamp", () => faceLamp(m, e, faceX, z, 1.1, 0.06, "lampRed"));
+    for (const u of [-0.55, 0.55]) m.scope("head lamp", () => faceLamp(m, e, faceX, -e * u, 1.1, 0.08, "lampHead"));
+    for (const u of [-1.3, 1.3]) m.scope("tail lamp", () => faceLamp(m, e, faceX, -e * u, 1.1, 0.06, "lampRed"));
   });
   m.scope("number plate", () => facePlate(m, e, faceX, T679_NUMBER, 1.6, "white", "black"));
 }
@@ -149,8 +149,8 @@ function sides(m: MeshBuilder): void {
           const span = (a: number, b: number): [number, number] => [Math.min(sx(a), sx(b)), Math.max(sx(a), sx(b))];
           // z_both rows 6..14, columns 7..10 and 12..16: two cab windows; the door 18..27, its window 20..25
           m.scope("cab windows", () => {
-            sideWindow(m, w, s, ...span(0.75, 1.05), 2.95, 3.75, "blue", 0.03);
-            sideWindow(m, w, s, ...span(1.2, 1.7), 2.95, 3.75, "blue", 0.03);
+            m.scope("window 1", () => sideWindow(m, w, s, ...span(0.75, 1.05), 2.95, 3.75, "blue", 0.03));
+            m.scope("window 2", () => sideWindow(m, w, s, ...span(1.2, 1.7), 2.95, 3.75, "blue", 0.03));
           });
           const [d0, d1] = span(1.8, 2.7);
           m.scope("door", () => {
@@ -178,8 +178,8 @@ function sides(m: MeshBuilder): void {
       });
       // the ladder (columns 155..160, rows 5..30) up to the roof
       m.scope("ladder", () => {
-        const [a, b] = [X(15.55), X(16.0)];
-        sideDecal(m, w, "ladder", s, [rect(a, 1.4, a + 0.04, 3.9), rect(b - 0.04, 1.4, b, 3.9), ...[1.6, 1.95, 2.3, 2.65, 3.0, 3.35, 3.7].map((y) => rect(a, y, b, y + 0.04))], 0.02);
+        const [a, b] = [X(15.5), X(16.1)];
+        sideDecal(m, w, "ladder", s, [rect(a, 1.3, a + 0.04, 3.9), rect(b - 0.04, 1.3, b, 3.9), ...[1.6, 1.95, 2.3, 2.65, 3.0, 3.35, 3.7].map((y) => rect(a, y, b, y + 0.04))], 0.02);
       });
       // the plate at columns 91..98, rows 24..26 (1.7 .. 2.0 m)
       m.scope("number plate", () => sidePlate(m, w, s, T679_NUMBER, (X(9.1) + X(9.8)) / 2, 1.77, "white", "black"));

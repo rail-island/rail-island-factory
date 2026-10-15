@@ -105,7 +105,7 @@ function face(m: MeshBuilder, e: number): void {
   endWindscreen(m, BODY, e, null, [["left pane", -1.42, -0.08, 2.68, 3.32], ["right pane", 0.08, 1.42, 2.68, 3.32]], 0.05);
   // row 25: the grab bars under the panes (columns 2..9 and 20..27)
   m.scope("grab bars", () => {
-    for (const [a, b] of [[-1.3, -0.6], [0.6, 1.3]]) endPanel(m, BODY, "olive", e, [[a, 2.48], [b, 2.48], [b, 2.52], [a, 2.52]], 0.04, 0.07);
+    for (const [name, a, b] of [["left", -1.3, -0.6], ["right", 0.6, 1.3]] as const) m.scope(name, () => endPanel(m, BODY, "olive", e, [[a, 2.48], [b, 2.48], [b, 2.52], [a, 2.52]], 0.04, 0.07));
   });
   // rows 25..29, columns 12..17: the "Kyklop" headlight in the middle of the face
   m.scope("headlight", () => {
@@ -162,8 +162,8 @@ function sides(m: MeshBuilder): void {
           m.scope("yellow bay", () => {
             const q: Ring = [[sx(2.4), 2.0], [sx(5.6), 2.0], [sx(5.2), 3.4], [sx(2.4), 3.4]];
             sideDecal(m, w, "yellow", s, [mirror ? [...q].reverse() : q], 0.003);
-            const [g0, g1] = span(2.55, 5.0);
-            sideGrille(m, w, s, g0, g1, 2.08, 3.32, "louvreYellow", 9);
+            const [g0, g1] = span(2.5, 5.1);
+            sideGrille(m, w, s, g0, g1, 2.02, 3.38, "louvreYellow", 9);
           });
         });
       // the machine room's windows: columns 58, 78, 85, 102 (0.5 m), rows 17..21

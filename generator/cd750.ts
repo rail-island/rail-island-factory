@@ -340,10 +340,11 @@ function brejlovecFace(m: MeshBuilder, pb: PlanBody, e: number, l: Cd750Livery):
     m.scope("housing", () => m.sweep(bandAt(l.face, 3.9)[2], "x", sec, e * (tip - 1.2), sec, e * (tip + 0.08)));
     const lens = ngon(14, 0.24, 0, 0, 3.78);
     m.scope("lens", () => m.sweep("lampHead", "x", lens, e * (tip + 0.08), lens, e * (tip + 0.1)));
-    const rim = ngon(14, 0.34, 0, 0, 3.78);
-    m.scope("rim", () => m.sweep(l.housing, "x", rim, e * (tip + 0.07), rim, e * (tip + 0.09)));
+    // the housing's painted face round the lens: 0.9 m wide, 3.5 .. 4.1 m
+    const rim = sec.map(([z, y]): [number, number] => [z * 0.9, Math.max(y, 3.505)]);
+    m.scope("rim", () => m.sweep(l.housing, "x", rim, e * (tip + 0.075), rim, e * (tip + 0.09)));
   });
-  faceCommon(m, pb, e, l, 2.3);
+  faceCommon(m, pb, e, l, 2.1);
 }
 
 function bardotkaFace(m: MeshBuilder, pb: PlanBody, e: number, l: Cd750Livery): void {
@@ -359,17 +360,25 @@ function bardotkaFace(m: MeshBuilder, pb: PlanBody, e: number, l: Cd750Livery): 
     const rim = ngon(14, 0.3, 0, 0, 4.02);
     m.scope("rim", () => m.sweep(l.housing, "x", rim, e * (tip + 0.05), rim, e * (tip + 0.07)));
   });
-  faceCommon(m, pb, e, l, 2.2);
+  faceCommon(m, pb, e, l, 2.1);
+}
+
+/** The CD emblem h tall, its lower edge at v0, centred on u = 0. */
+function centredEmblem(v0: number, h: number, flipU: boolean): Array<[number, number]> {
+  const tris = emblem(0, v0, h, flipU);
+  const us = tris.map(([u]) => u);
+  const mid = (Math.min(...us) + Math.max(...us)) / 2;
+  return tris.map(([u, v]) => [u - mid, v]);
 }
 
 /** The emblem, lamps and number plate common to both faces. */
 function faceCommon(m: MeshBuilder, pb: PlanBody, e: number, l: Cd750Livery, emblemY: number): void {
   if (l.emblem)
     m.scope("emblem", () => {
-      const h = 0.28;
-      const tris = emblem(1.5 - 0.29, emblemY, h, false);
+      // x_both columns 12..17, rows 25..28: 0.6 by 0.4 m, centred
+      const tris = centredEmblem(emblemY, 0.4, false);
       const pts = tris.map(([u, v]): Vec3 => {
-        const z = -e * (u - 1.5);
+        const z = -e * u;
         const s = endSurface(pb, z, v);
         return [e * (s.x + 0.006 * s.n[0]), v + 0.006 * s.n[1], z + 0.006 * s.n[2]];
       });
@@ -460,7 +469,7 @@ function sides(m: MeshBuilder, g: Geometry, w: Wall, l: Cd750Livery, X: (sx: num
       // the machine room's small windows: Brejlovec columns 25, 39, 53, 68, 82, 96 (4 px, rows 19..22); Bardotka 47, 63, 80, 96 (rows 19..22)
       m.scope("windows", () => {
         const xs = brej ? [2.5, 3.9, 5.3, 6.8, 8.2, 9.6] : [4.7, 6.3, 8.0, 9.6];
-        xs.forEach((x, i) => m.scope(`window ${i + 1}`, () => sideWindow(m, w, s, X(x), X(x + (brej ? 0.4 : 0.55)), 2.75, 3.1, "rubber", 0.03)));
+        xs.forEach((x, i) => m.scope(`window ${i + 1}`, () => sideWindow(m, w, s, X(x), X(x + (brej ? 0.4 : 0.55)), 2.7, 3.1, "rubber", 0.03)));
       });
       // the radiator shutters: Brejlovec columns 107..129, rows 18..23 (two panels); Bardotka 113..136, rows 19..31
       m.scope("radiator", () => {
@@ -493,13 +502,13 @@ function sides(m: MeshBuilder, g: Geometry, w: Wall, l: Cd750Livery, X: (sx: num
         });
       if (l.emblem)
         m.scope("emblem", () => {
-          // side columns 19..23 (Brejlovec) / 23..27 (Bardotka), rows 16..19 at the 750; on the band of the others
-          const h = 0.26;
-          const x0 = X(brej ? 3.0 : 3.8);
-          const tris = emblem(s > 0 ? x0 : x0 + 0.38, brej ? 2.25 : 1.95, h, s < 0);
-          m.facets(l.emblem!, tris.map(([x, y]): Vec3 => [x, y, s * (g.half(y) + 0.004)]), [0, 0, s]);
+          // z_both: Brejlovec columns 33..37, Bardotka 39..44, rows 26..29 (2.0 .. 2.4 m); read from outside on both sides
+          const xc = X(brej ? 3.55 : 4.15);
+          const tris = centredEmblem(2.04, 0.36, s < 0);
+          m.facets(l.emblem!, tris.map(([u, y]): Vec3 => [xc + u, y, s * (g.half(y) + 0.004)]), [0, 0, s]);
         });
-      m.scope("number plate", () => sidePlate(m, w, s, l.number, X(brej ? 7.9 : 8.1), 2.15));
+      // z_both: the plate at columns 74..81 (Brejlovec) / 80..87 (Bardotka), rows 27..29 (2.0 .. 2.3 m)
+      m.scope("number plate", () => sidePlate(m, w, s, l.number, X(brej ? 7.8 : 8.4), 2.07));
     });
 }
 
@@ -521,7 +530,7 @@ function underframe(m: MeshBuilder, g: Geometry, l: Cd750Livery, X: (sx: number)
   // the fuel tank between the bogies (Brejlovec XML base clip 5.4 .. 9.9, 0.2 .. 1.1 m; Bardotka "tank" 7.2 .. 10.5)
   const [a, b] = g === BREJLOVEC ? [5.4, 9.9] : [6.3 + 0.6, 10.5];
   m.scope("fuel tank", () => {
-    const sec: Ring = [[-1.25, 0.5], [-1.1, 0.3], [1.1, 0.3], [1.25, 0.5], [1.25, 1.05], [-1.25, 1.05]];
+    const sec: Ring = [[-1.25, 0.4], [-1.1, 0.2], [1.1, 0.2], [1.25, 0.4], [1.25, 1.1], [-1.25, 1.1]];
     m.sweep("tank", "x", sec, X(a), sec, X(b));
     // filler and gauge on each side
     for (const s of [-1, 1]) block(m, "steel", X((a + b) / 2) - 0.15, X((a + b) / 2) + 0.15, 0.7, 0.9, ...side(s, 1.25, 1.29));

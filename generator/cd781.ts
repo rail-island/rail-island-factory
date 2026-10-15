@@ -153,12 +153,13 @@ function roof(m: MeshBuilder, l: Cd781Livery): void {
 
 function face(m: MeshBuilder, pb: PlanBody, e: number, l: Cd781Livery): void {
   // x_both: surround rows 13..20 (2.9 .. 3.7 m), glass rows 14..19, panes columns 2..13 and 16..27
-  endWindscreen(m, pb, e, null, [["left pane", -1.3, -0.12, 2.92, 3.68], ["right pane", 0.12, 1.3, 2.92, 3.68]], 0.14);
+  endWindscreen(m, pb, e, null, [["left pane", -1.4, -0.01, 2.92, 3.68], ["right pane", 0.01, 1.4, 2.92, 3.68]], 0.14);
   m.scope("headlight", () => {
     // rows 8..11, columns 12..17: the headlight on the roof's slope, 3.8 .. 4.2 m
-    const ring = (r: number) => ngon(12, r, 0, 0, 4.0).map(([a, b]) => [a, b] as [number, number]);
-    m.scope("housing", () => endPanel(m, pb, "grey", e, ring(0.26), -0.05, 0.06));
-    m.scope("lens", () => endPanel(m, pb, "lampHead", e, ring(0.19), -0.02, 0.08));
+    // an oval 0.6 by 0.4 m seen from ahead: the round lamp foreshortened on the slope
+    const ring = (r: number) => ngon(12, r, 0, 0, 0).map(([a, b]) => [a * 1.5, 4.0 + b] as [number, number]);
+    m.scope("housing", () => endPanel(m, pb, "grey", e, ring(0.2), -0.05, 0.06));
+    m.scope("lens", () => endPanel(m, pb, "lampHead", e, ring(0.14), -0.02, 0.08));
   });
   m.scope("handrails", () => {
     for (const u of [-1.0, 1.0]) endPanel(m, pb, "handrail", e, [[u - 0.02, 1.9], [u + 0.02, 1.9], [u + 0.02, 2.55], [u - 0.02, 2.55]], 0.03, 0.06);
@@ -166,8 +167,8 @@ function face(m: MeshBuilder, pb: PlanBody, e: number, l: Cd781Livery): void {
   const faceX = CENTRE - 0.5;
   // rows 34..35: white lamps at columns 2..4; the red ones outboard (photographs); the plate columns 11..18
   m.scope("lamps", () => {
-    for (const z of [-1.12, 1.12]) m.scope("head lamp", () => faceLamp(m, e, faceX, z, 1.48, 0.1, "lampHead"));
-    for (const z of [-1.34, 1.34]) m.scope("tail lamp", () => faceLamp(m, e, faceX, z, 1.48, 0.06, "lampRed"));
+    for (const u of [-1.12, 1.12]) m.scope("head lamp", () => faceLamp(m, e, faceX, -e * u, 1.48, 0.1, "lampHead"));
+    for (const u of [-1.34, 1.34]) m.scope("tail lamp", () => faceLamp(m, e, faceX, -e * u, 1.48, 0.06, "lampRed"));
   });
   m.scope("number plate", () => facePlate(m, e, faceX, l.number, 1.48));
 }
@@ -178,7 +179,7 @@ function lowerEnd(m: MeshBuilder, e: number, l: Cd781Livery): void {
   buffers(m, e, beam, 8.775, 1.03, "round");
   coupling(m, e, beam, 1.03);
   // rows 42..45: the plough, 0.4 .. 0.8 m, under the beam
-  plough(m, e, l.plough, beam - 0.02, 0.5, 0.2, 0.85, 1.25, 1.42);
+  plough(m, e, l.plough, beam - 0.02, 0.5, 0.4, 0.8, 1.45, 1.47);
 }
 
 function sides(m: MeshBuilder, w: Wall, l: Cd781Livery): void {

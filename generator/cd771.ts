@@ -138,7 +138,7 @@ function frame(m: MeshBuilder, l: Cd771Livery): void {
       const face = e > 0 ? X(0.4) : X(17.2) * -1;
       const along = (a: number, b: number): [number, number] => (e > 0 ? [a, b] : [-b, -a]);
       // the end plate and buffer beam (XML "p": 0.4 .. 1.7 m), the buffers (XML "n", 0.8 .. 1.2 m)
-      m.scope("end plate", () => block(m, l.frame, ...along(face - 0.12, face), 0.45, DECK, -1.5, 1.5));
+      m.scope("end plate", () => block(m, l.frame, ...along(face - 0.12, face), 0.32, DECK, -1.5, 1.5));
       m.scope("hazard stripes", () => {
         const pts: Vec3[] = [];
         for (let i = -5; i <= 5; i++) {
@@ -212,8 +212,8 @@ function hood(m: MeshBuilder, l: Cd771Livery, [a, b]: [number, number], e: numbe
     const lens = ngon(12, 0.13, 0, 0, 4.25);
     m.scope("headlight", () => m.sweep("lampHead", "x", lens, Math.min(out(0.3), out(0.32)), lens, Math.max(out(0.3), out(0.32))));
     m.scope("grille", () => {
-      block(m, "grille", Math.min(endX, out(0.02)), Math.max(endX, out(0.02)), 2.4, 3.8, -0.75, 0.75);
-      for (let y = 2.5; y < 3.75; y += 0.1) block(m, "louvre", Math.min(out(0.01), out(0.03)), Math.max(out(0.01), out(0.03)), y, y + 0.04, -0.7, 0.7);
+      block(m, "grille", Math.min(endX, out(0.02)), Math.max(endX, out(0.02)), 2.8, 3.8, -0.95, 0.95);
+      for (let y = 2.88; y < 3.75; y += 0.1) block(m, "louvre", Math.min(out(0.01), out(0.03)), Math.max(out(0.01), out(0.03)), y, y + 0.04, -0.9, 0.9);
     });
     m.scope("number plate", () => {
       const text = l.number;
@@ -237,8 +237,11 @@ function cab(m: MeshBuilder, l: Cd771Livery): void {
     for (const x of [x0, x1])
       for (const s of [-1, 1]) {
         const e = x === x1 ? 1 : -1;
-        block(m, "rubber", x + (e > 0 ? -0.01 : -0.02), x + (e > 0 ? 0.02 : 0.01), 3.0, 3.8, ...side(s, 1.04, 1.44));
-        block(m, "glass", x + (e > 0 ? -0.005 : -0.03), x + (e > 0 ? 0.03 : 0.005), 3.04, 3.76, ...side(s, 1.08, 1.4));
+        // named as seen from ahead of that end
+        m.scope(`${e > 0 ? "front" : "rear"} ${s * e > 0 ? "left" : "right"}`, () => {
+          block(m, "rubber", x + (e > 0 ? -0.01 : -0.02), x + (e > 0 ? 0.02 : 0.01), 3.0, 3.8, ...side(s, 1.04, 1.44));
+          block(m, "glass", x + (e > 0 ? -0.005 : -0.03), x + (e > 0 ? 0.03 : 0.005), 3.04, 3.76, ...side(s, 1.08, 1.4));
+        });
       }
   });
   // the side windows (z_both columns 34..48, rows 22..30: two panes, 3.0 .. 3.8 m)
