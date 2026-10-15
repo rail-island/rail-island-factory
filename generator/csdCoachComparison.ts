@@ -6,7 +6,7 @@
 // outside observer, as the BMP is). End canvases are seen from outside: the rear
 // (-X) end u = 10 * (z + 1.5), the front (+X) end u = 10 * (1.5 - z).
 import fs from "node:fs";
-import { CSD_TRANSFERS, transferBuild, type CsdTransfer } from "./csdCoaches.ts";
+import { COACH_TRANSFERS, transferBuild, type CoachTransfer } from "./coachTransfers.ts";
 import { collectTriangles, parseGlb } from "./glbTriangles.ts";
 import { isLeaf, type LeafNode, type TreeNode } from "./sourceTree.ts";
 
@@ -40,14 +40,14 @@ export function bmpSize(file: URL): [number, number] {
 }
 
 /** A transfer by its vlakosimdb key ("csd_a"). */
-export function transfer(key: string): CsdTransfer {
-  const t = CSD_TRANSFERS.find((c) => c.key === key);
-  if (!t) throw new Error(`no CSD transfer ${key}`);
+export function transfer(key: string): CoachTransfer {
+  const t = COACH_TRANSFERS.find((c) => c.key === key);
+  if (!t) throw new Error(`no coach transfer ${key}`);
   return t;
 }
 
 /** A file of a transfer's native folder, e.g. "landmarks.json". */
-export function nativeFile(t: CsdTransfer, name: string): URL {
+export function nativeFile(t: CoachTransfer, name: string): URL {
   return new URL(`assets/${t.folder}/${t.native}/${name}`, ROOT);
 }
 

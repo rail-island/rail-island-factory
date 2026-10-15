@@ -1,0 +1,1027 @@
+{
+ "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/coach/cd_bmo#2/model",
+ "pixelMetres": 0.1,
+ "convention": "Pixel edges [left, top, right, bottom] on the native BMP; origin top left, x right, y down.",
+ "annotations": [
+  {
+   "id": "R01",
+   "view": "z_both",
+   "side": "right",
+   "element": "window 1 frame",
+   "box": [
+    85,
+    10,
+    98,
+    18
+   ],
+   "nodes": [
+    "body/right-side/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R02",
+   "view": "z_both",
+   "side": "right",
+   "element": "window 2 frame",
+   "box": [
+    102,
+    10,
+    115,
+    18
+   ],
+   "nodes": [
+    "body/right-side/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R03",
+   "view": "z_both",
+   "side": "right",
+   "element": "window 3 frame",
+   "box": [
+    119,
+    10,
+    132,
+    18
+   ],
+   "nodes": [
+    "body/right-side/window-3/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R04",
+   "view": "z_both",
+   "side": "right",
+   "element": "window 4 frame",
+   "box": [
+    136,
+    10,
+    149,
+    18
+   ],
+   "nodes": [
+    "body/right-side/window-4/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R05",
+   "view": "z_both",
+   "side": "right",
+   "element": "window 5 frame",
+   "box": [
+    153,
+    10,
+    166,
+    18
+   ],
+   "nodes": [
+    "body/right-side/window-5/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R06",
+   "view": "z_both",
+   "side": "right",
+   "element": "window 6 frame",
+   "box": [
+    170,
+    10,
+    183,
+    18
+   ],
+   "nodes": [
+    "body/right-side/window-6/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R07",
+   "view": "z_both",
+   "side": "right",
+   "element": "window 7 frame",
+   "box": [
+    85,
+    31,
+    98,
+    40
+   ],
+   "nodes": [
+    "body/right-side/window-7/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R08",
+   "view": "z_both",
+   "side": "right",
+   "element": "window 8 frame",
+   "box": [
+    102,
+    31,
+    115,
+    40
+   ],
+   "nodes": [
+    "body/right-side/window-8/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R09",
+   "view": "z_both",
+   "side": "right",
+   "element": "window 9 frame",
+   "box": [
+    119,
+    31,
+    132,
+    40
+   ],
+   "nodes": [
+    "body/right-side/window-9/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R10",
+   "view": "z_both",
+   "side": "right",
+   "element": "window 10 frame",
+   "box": [
+    136,
+    31,
+    149,
+    40
+   ],
+   "nodes": [
+    "body/right-side/window-10/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R11",
+   "view": "z_both",
+   "side": "right",
+   "element": "window 11 frame",
+   "box": [
+    153,
+    31,
+    166,
+    40
+   ],
+   "nodes": [
+    "body/right-side/window-11/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R12",
+   "view": "z_both",
+   "side": "right",
+   "element": "window 12 frame",
+   "box": [
+    170,
+    31,
+    183,
+    40
+   ],
+   "nodes": [
+    "body/right-side/window-12/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R13",
+   "view": "z_both",
+   "side": "right",
+   "element": "window 13 frame",
+   "box": [
+    23,
+    21,
+    36,
+    30
+   ],
+   "nodes": [
+    "body/right-side/window-13/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R14",
+   "view": "z_both",
+   "side": "right",
+   "element": "window 14 frame",
+   "box": [
+    233,
+    21,
+    246,
+    30
+   ],
+   "nodes": [
+    "body/right-side/window-14/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R15",
+   "view": "z_both",
+   "side": "right",
+   "element": "window 15 frame",
+   "box": [
+    251,
+    21,
+    259,
+    30
+   ],
+   "nodes": [
+    "body/right-side/window-15/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R16",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 1 outline",
+   "box": [
+    63,
+    25,
+    80,
+    46
+   ],
+   "nodes": [
+    "body/right-side/door-1/outline"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "Door leaf edges read from the dark seam columns and the leaf colour; +/- two pixels."
+  },
+  {
+   "id": "R17",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 1 window 1 frame",
+   "box": [
+    66,
+    26,
+    71,
+    36
+   ],
+   "nodes": [
+    "body/right-side/door-1/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R18",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 1 window 2 frame",
+   "box": [
+    74,
+    26,
+    79,
+    36
+   ],
+   "nodes": [
+    "body/right-side/door-1/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R19",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 2 outline",
+   "box": [
+    187,
+    25,
+    204,
+    46
+   ],
+   "nodes": [
+    "body/right-side/door-2/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R20",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 2 window 1 frame",
+   "box": [
+    189,
+    26,
+    194,
+    36
+   ],
+   "nodes": [
+    "body/right-side/door-2/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R21",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 2 window 2 frame",
+   "box": [
+    197,
+    26,
+    202,
+    36
+   ],
+   "nodes": [
+    "body/right-side/door-2/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R22",
+   "view": "z_both",
+   "side": "right",
+   "element": "hatch outline",
+   "box": [
+    24,
+    32,
+    35,
+    39
+   ],
+   "nodes": [
+    "body/right-side/hatch/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L01",
+   "view": "z_both",
+   "side": "left",
+   "element": "window 1 frame",
+   "box": [
+    85,
+    10,
+    98,
+    18
+   ],
+   "nodes": [
+    "body/left-side/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L02",
+   "view": "z_both",
+   "side": "left",
+   "element": "window 2 frame",
+   "box": [
+    102,
+    10,
+    115,
+    18
+   ],
+   "nodes": [
+    "body/left-side/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L03",
+   "view": "z_both",
+   "side": "left",
+   "element": "window 3 frame",
+   "box": [
+    119,
+    10,
+    132,
+    18
+   ],
+   "nodes": [
+    "body/left-side/window-3/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L04",
+   "view": "z_both",
+   "side": "left",
+   "element": "window 4 frame",
+   "box": [
+    136,
+    10,
+    149,
+    18
+   ],
+   "nodes": [
+    "body/left-side/window-4/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L05",
+   "view": "z_both",
+   "side": "left",
+   "element": "window 5 frame",
+   "box": [
+    153,
+    10,
+    166,
+    18
+   ],
+   "nodes": [
+    "body/left-side/window-5/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L06",
+   "view": "z_both",
+   "side": "left",
+   "element": "window 6 frame",
+   "box": [
+    170,
+    10,
+    183,
+    18
+   ],
+   "nodes": [
+    "body/left-side/window-6/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L07",
+   "view": "z_both",
+   "side": "left",
+   "element": "window 7 frame",
+   "box": [
+    85,
+    31,
+    98,
+    40
+   ],
+   "nodes": [
+    "body/left-side/window-7/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L08",
+   "view": "z_both",
+   "side": "left",
+   "element": "window 8 frame",
+   "box": [
+    102,
+    31,
+    115,
+    40
+   ],
+   "nodes": [
+    "body/left-side/window-8/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L09",
+   "view": "z_both",
+   "side": "left",
+   "element": "window 9 frame",
+   "box": [
+    119,
+    31,
+    132,
+    40
+   ],
+   "nodes": [
+    "body/left-side/window-9/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L10",
+   "view": "z_both",
+   "side": "left",
+   "element": "window 10 frame",
+   "box": [
+    136,
+    31,
+    149,
+    40
+   ],
+   "nodes": [
+    "body/left-side/window-10/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L11",
+   "view": "z_both",
+   "side": "left",
+   "element": "window 11 frame",
+   "box": [
+    153,
+    31,
+    166,
+    40
+   ],
+   "nodes": [
+    "body/left-side/window-11/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L12",
+   "view": "z_both",
+   "side": "left",
+   "element": "window 12 frame",
+   "box": [
+    170,
+    31,
+    183,
+    40
+   ],
+   "nodes": [
+    "body/left-side/window-12/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L13",
+   "view": "z_both",
+   "side": "left",
+   "element": "window 13 frame",
+   "box": [
+    23,
+    21,
+    36,
+    30
+   ],
+   "nodes": [
+    "body/left-side/window-13/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L14",
+   "view": "z_both",
+   "side": "left",
+   "element": "window 14 frame",
+   "box": [
+    233,
+    21,
+    246,
+    30
+   ],
+   "nodes": [
+    "body/left-side/window-14/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L15",
+   "view": "z_both",
+   "side": "left",
+   "element": "window 15 frame",
+   "box": [
+    251,
+    21,
+    259,
+    30
+   ],
+   "nodes": [
+    "body/left-side/window-15/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of window-frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L16",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 1 outline",
+   "box": [
+    63,
+    25,
+    80,
+    46
+   ],
+   "nodes": [
+    "body/left-side/door-1/outline"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "Door leaf edges read from the dark seam columns and the leaf colour; +/- two pixels."
+  },
+  {
+   "id": "L17",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 1 window 1 frame",
+   "box": [
+    66,
+    26,
+    71,
+    36
+   ],
+   "nodes": [
+    "body/left-side/door-1/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L18",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 1 window 2 frame",
+   "box": [
+    74,
+    26,
+    79,
+    36
+   ],
+   "nodes": [
+    "body/left-side/door-1/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L19",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 2 outline",
+   "box": [
+    187,
+    25,
+    204,
+    46
+   ],
+   "nodes": [
+    "body/left-side/door-2/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L20",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 2 window 1 frame",
+   "box": [
+    189,
+    26,
+    194,
+    36
+   ],
+   "nodes": [
+    "body/left-side/door-2/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L21",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 2 window 2 frame",
+   "box": [
+    197,
+    26,
+    202,
+    36
+   ],
+   "nodes": [
+    "body/left-side/door-2/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L22",
+   "view": "z_both",
+   "side": "left",
+   "element": "hatch outline",
+   "box": [
+    24,
+    32,
+    35,
+    39
+   ],
+   "nodes": [
+    "body/left-side/hatch/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "B01",
+   "view": "x_both",
+   "end": "rear",
+   "element": "gangway frame",
+   "box": [
+    7,
+    17,
+    23,
+    37
+   ],
+   "nodes": [
+    "rear-end/gangway"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "B02",
+   "view": "x_both",
+   "end": "rear",
+   "element": "end door outline",
+   "box": [
+    9,
+    19,
+    21,
+    37
+   ],
+   "nodes": [
+    "rear-end/end-door/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Door between the gangway posts; the raster shows the frame, not the leaf edge."
+  },
+  {
+   "id": "B03",
+   "view": "x_both",
+   "end": "rear",
+   "element": "end door window 1",
+   "box": [
+    10,
+    20,
+    13,
+    29
+   ],
+   "nodes": [
+    "rear-end/end-door/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "B04",
+   "view": "x_both",
+   "end": "rear",
+   "element": "end door window 2",
+   "box": [
+    17,
+    20,
+    20,
+    29
+   ],
+   "nodes": [
+    "rear-end/end-door/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "B05",
+   "view": "x_both",
+   "end": "rear",
+   "element": "lamp 1",
+   "box": [
+    3,
+    32,
+    6,
+    35
+   ],
+   "nodes": [
+    "rear-end/lamps/lamp-1"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "One-to-three-pixel lamp patch; a round lens of the stated size is kept."
+  },
+  {
+   "id": "B06",
+   "view": "x_both",
+   "end": "rear",
+   "element": "lamp 2",
+   "box": [
+    24,
+    32,
+    27,
+    35
+   ],
+   "nodes": [
+    "rear-end/lamps/lamp-2"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "One-to-three-pixel lamp patch; a round lens of the stated size is kept."
+  },
+  {
+   "id": "B07",
+   "view": "x_both",
+   "end": "rear",
+   "element": "buffer head 1",
+   "box": [
+    2,
+    38,
+    8,
+    41
+   ],
+   "nodes": [
+    "rear-end/buffers/buffer-1/sweep-1"
+   ],
+   "tolerancePixels": 2.51,
+   "uncertainty": "Standard 1.75 m buffer spacing kept; the coarse raster places the heads wider."
+  },
+  {
+   "id": "B08",
+   "view": "x_both",
+   "end": "rear",
+   "element": "buffer head 2",
+   "box": [
+    22,
+    38,
+    28,
+    41
+   ],
+   "nodes": [
+    "rear-end/buffers/buffer-2/sweep-1"
+   ],
+   "tolerancePixels": 2.51,
+   "uncertainty": "Standard 1.75 m buffer spacing kept; the coarse raster places the heads wider."
+  },
+  {
+   "id": "F01",
+   "view": "x_both",
+   "end": "front",
+   "element": "gangway frame",
+   "box": [
+    7,
+    17,
+    23,
+    37
+   ],
+   "nodes": [
+    "front-end/gangway"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "F02",
+   "view": "x_both",
+   "end": "front",
+   "element": "end door outline",
+   "box": [
+    9,
+    19,
+    21,
+    37
+   ],
+   "nodes": [
+    "front-end/end-door/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Door between the gangway posts; the raster shows the frame, not the leaf edge."
+  },
+  {
+   "id": "F03",
+   "view": "x_both",
+   "end": "front",
+   "element": "end door window 1",
+   "box": [
+    10,
+    20,
+    13,
+    29
+   ],
+   "nodes": [
+    "front-end/end-door/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "F04",
+   "view": "x_both",
+   "end": "front",
+   "element": "end door window 2",
+   "box": [
+    17,
+    20,
+    20,
+    29
+   ],
+   "nodes": [
+    "front-end/end-door/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "F05",
+   "view": "x_both",
+   "end": "front",
+   "element": "lamp 1",
+   "box": [
+    3,
+    32,
+    6,
+    35
+   ],
+   "nodes": [
+    "front-end/lamps/lamp-2"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "One-to-three-pixel lamp patch; a round lens of the stated size is kept."
+  },
+  {
+   "id": "F06",
+   "view": "x_both",
+   "end": "front",
+   "element": "lamp 2",
+   "box": [
+    24,
+    32,
+    27,
+    35
+   ],
+   "nodes": [
+    "front-end/lamps/lamp-1"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "One-to-three-pixel lamp patch; a round lens of the stated size is kept."
+  },
+  {
+   "id": "F07",
+   "view": "x_both",
+   "end": "front",
+   "element": "buffer head 1",
+   "box": [
+    2,
+    38,
+    8,
+    41
+   ],
+   "nodes": [
+    "front-end/buffers/buffer-2/sweep-1"
+   ],
+   "tolerancePixels": 2.51,
+   "uncertainty": "Standard 1.75 m buffer spacing kept; the coarse raster places the heads wider."
+  },
+  {
+   "id": "F08",
+   "view": "x_both",
+   "end": "front",
+   "element": "buffer head 2",
+   "box": [
+    22,
+    38,
+    28,
+    41
+   ],
+   "nodes": [
+    "front-end/buffers/buffer-1/sweep-1"
+   ],
+   "tolerancePixels": 2.51,
+   "uncertainty": "Standard 1.75 m buffer spacing kept; the coarse raster places the heads wider."
+  }
+ ]
+}

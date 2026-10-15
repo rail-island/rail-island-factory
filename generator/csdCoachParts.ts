@@ -301,7 +301,7 @@ export class Coach {
    * Painted lettering on side s: each line centred at source x, its foot at y,
    * h tall, reading left to right from outside on both sides.
    */
-  inscription(v: Volume, s: number, x: number, lines: Array<{ text: string; y: number; h: number }>, proud = 0.006): void {
+  inscription(v: Volume, s: number, x: number, lines: Array<{ text: string; y: number; h: number }>, proud = 0.006, mat = "marking"): void {
     const hw0 = halfWidth(v);
     for (const line of lines) {
       const w = line.h * 0.58;
@@ -309,19 +309,19 @@ export class Coach {
       const width = strokeWidth(line.text, w, gap);
       const z = s * ((sectionHalf(v.section, line.y + line.h / 2) * lerp(v.plan, x)) / hw0 + proud);
       const u0 = this.X(x) + (s > 0 ? -width / 2 : width / 2);
-      this.m.facets("marking", strokeText(line.text, u0, line.y, line.h, w, gap, s < 0).map(([u, vv]): Vec3 => [u, vv, z]), [0, 0, s]);
+      this.m.facets(mat, strokeText(line.text, u0, line.y, line.h, w, gap, s < 0).map(([u, vv]): Vec3 => [u, vv, z]), [0, 0, s]);
     }
   }
 
   /** Class numerals ("1", "2") on side s, centred at source x, its foot at y. */
-  numeral(v: Volume, s: number, text: string, x: number, y: number, h = 0.42, proud = 0.004): void {
+  numeral(v: Volume, s: number, text: string, x: number, y: number, h = 0.42, proud = 0.004, mat = "marking"): void {
     const w = h * 0.55;
     const width = letteringWidth(text, w, w * 0.25);
     const hw0 = Math.max(...v.section.map((p) => Math.abs(p[0])));
     const z = s * ((sectionHalf(v.section, y + h / 2) * lerp(v.plan, x)) / hw0 + proud);
     // read left to right from outside: toward +x on the +z side, toward -x on the -z side
     const u0 = this.X(x) + (s > 0 ? -width / 2 : width / 2);
-    this.m.facets("marking", lettering(text, u0, y, h, w, w * 0.25, s < 0).map(([u, vv]): Vec3 => [u, vv, z]), [0, 0, s]);
+    this.m.facets(mat, lettering(text, u0, y, h, w, w * 0.25, s < 0).map(([u, vv]): Vec3 => [u, vv, z]), [0, 0, s]);
   }
 
   /** Two buffers at the standard 1.75 m spacing on end e, heads at source x `head`, stocks back to `beam`. */

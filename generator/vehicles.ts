@@ -11,12 +11,15 @@ import type { CatalogFields, ProceduralDesign } from "./design.ts";
 import { arc, block, plate, side } from "./vehicleParts.ts";
 import { cd150 } from "./cd150.ts";
 import { RAIL_CATALOG, cd163 } from "./cd163.ts";
-import { COACH_CATALOG, CSD_COACHES } from "./csdCoaches.ts";
+import { COACH_CATALOG } from "./csdCoaches.ts";
+import { COACH_DESIGNS } from "./coachTransfers.ts";
 
 // re-exported: a design's JS bundle imports its build function from this module
 export { cd163 };
 export { cd150 } from "./cd150.ts";
-export { csdClassicGreenCoach, csdBalm, csdBam, csdBdmtee, csdBe31, csdBi20, csdBmo, csdDsk } from "./csdCoaches.ts";
+export { csdClassicGreenCoach, csdBalm, csdBam, csdBdmtee, csdBe31, csdBi20, csdDsk } from "./csdCoaches.ts";
+export { bmoCoach } from "./bmoCoach.ts";
+export { cdGreenWhiteCoach } from "./cdGreenWhiteCoach.ts";
 
 // Chrome is only mildly metallic: the game and the site light models without an
 // environment map, so a fully metallic surface would render nearly black.
@@ -391,5 +394,5 @@ export const VEHICLES: ProceduralDesign[] = [
   { id: "veh-american-truck", title: "American Truck", build: americanTruck, references: "american-truck" },
   { id: "veh-cd-150", title: "CD 150", build: cd150, catalog: RAIL_CATALOG, references: "cd-150" },
   { id: "veh-cd-163", title: "CD 163", build: cd163, catalog: RAIL_CATALOG, references: "cd-163" },
-  ...CSD_COACHES.map((c): ProceduralDesign => ({ id: c.id, title: c.title, build: c.build, catalog: COACH_CATALOG, references: c.folder, ...("params" in c ? { params: c.params } : {}) })),
+  ...COACH_DESIGNS.map((c): ProceduralDesign => ({ id: c.id, title: c.title, build: c.build, catalog: COACH_CATALOG, references: c.folder, ...(c.params ? { params: c.params } : {}) })),
 ];
