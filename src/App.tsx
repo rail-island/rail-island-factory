@@ -5,8 +5,8 @@
 // All of its state is the URL's query string (catalogQuery.ts parseView), so the
 // browser's back button walks it and a model page can be linked to.
 
-import { Match, Switch, createMemo, createResource, createSignal, onCleanup, onMount } from "solid-js";
-import { COLUMNS, parseView, prepareRows, queryRows, serializeView, type Column, type Row, type ViewState } from "./catalogQuery";
+import { For, Match, Show, Switch, createMemo, createResource, createSignal, onCleanup, onMount } from "solid-js";
+import { COLUMNS, GROUPS, chipLabel, chipRows, parseView, prepareRows, queryRows, serializeView, type Column, type Row, type ViewState } from "./catalogQuery";
 import type { ModelCatalog } from "../generator/catalog.ts";
 import { ModelTable } from "./ModelTable";
 import { ModelCards } from "./ModelCards";
@@ -52,7 +52,16 @@ export function App() {
     else history.replaceState(null, "", url);
   };
 
-  const listed = createMemo(() => queryRows(rows() ?? [], view().q, view().sort, view().dir));
+  const listed = createMemo(() => queryRows(rows() ?? [], view().q, view().sort, view().dir, view()));
+  // What each chip row offers, from every model rather than the searched ones, so
+  // the chips hold still while somebody types.
+  const chips = createMemo(() => chipRows(rows() ?? [], view()));
+
+  // One chip per row: picking a chip replaces the row's pick, picking the picked
+  // chip again clears it, and a change in a row clears every row below it.
+  const pickGroup = (id: string | null) => update({ group: view().group === id ? null : id, l2: null, l3: null });
+  const pickL2 = (id: string | null) => update({ l2: view().l2 === id ? null : id, l3: null });
+  const pickL3 = (id: string | null) => update({ l3: view().l3 === id ? null : id });
   const open = createMemo(() => (view().model ? (rows() ?? []).find((r) => r.id === view().model) : undefined));
 
   const onSort = (col: Column) => {
@@ -141,12 +150,30 @@ export function App() {
                   {view().dir === "asc" ? "\u25b2" : "\u25bc"}
                 </button>
               </div>
+              <div class="factory-chips">
+                <Chip label="All" on={view().group === null} onPick={() => pickGroup(null)} />
+                <For each={GROUPS.filter((g) => chips().groups.includes(g.id))}>
+                  {(g) => <Chip label={g.label} on={view().group === g.id} onPick={() => pickGroup(g.id)} />}
+                </For>
+              </div>
+              <Show when={chips().l2.length > 0}>
+                <div class="factory-chips">
+                  <Chip label="All" on={view().l2 === null} onPick={() => update({ l2: null, l3: null })} />
+                  <For each={chips().l2}>{(s) => <Chip label={chipLabel(s)} on={view().l2 === s} onPick={() => pickL2(s)} />}</For>
+                </div>
+              </Show>
+              <Show when={chips().l3.length > 0}>
+                <div class="factory-chips">
+                  <Chip label="All" on={view().l3 === null} onPick={() => update({ l3: null })} />
+                  <For each={chips().l3}>{(s) => <Chip label={chipLabel(s)} on={view().l3 === s} onPick={() => pickL3(s)} />}</For>
+                </div>
+              </Show>
               <span class="factory-totals">
                 <b>{listed().length}</b> models &middot; <b>{totalTris().toLocaleString("en-US")}</b> triangles
               </span>
             </div>
             {listed().length === 0 ? (
-              <p class="factory-muted">No model matches "{view().q}".</p>
+              <p class="factory-muted">{view().q ? `No model matches "${view().q}".` : "No model matches the chosen filter."}</p>
             ) : wide() ? (
               <ModelTable rows={listed()} sort={view().sort} dir={view().dir} onSort={onSort} onOpen={onOpen} />
             ) : (
@@ -156,5 +183,14 @@ export function App() {
         </Switch>
       </main>
     </div>
+  );
+}
+
+/** One filter chip: an outline while off, filled while on. */
+function Chip(props: { label: string; on: boolean; onPick: () => void }) {
+  return (
+    <button type="button" class="factory-filter" classList={{ "factory-filter--on": props.on }} aria-pressed={props.on} onClick={() => props.onPick()}>
+      {props.label}
+    </button>
   );
 }

@@ -160,6 +160,43 @@ body {
   background: var(--m-surface);
 }
 
+/* The filter chip rows (the webapp Creator's M3 filter chips): each takes the
+   toolbar's full width, so the search and sort stay on the first line. */
+.factory-chips {
+  flex: 1 1 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.factory-filter {
+  min-height: 34px;
+  padding: 5px 12px;
+  border-radius: var(--m-radius-sm);
+  border: 1px solid var(--m-outline);
+  background: transparent;
+  color: var(--m-on-surface-variant);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.factory-filter:hover {
+  background: var(--m-state-hover);
+  color: var(--m-on-surface);
+}
+
+.factory-filter--on {
+  border-color: transparent;
+  color: var(--m-on-secondary-container);
+  background: var(--m-secondary-container);
+}
+
+.factory-filter:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--m-primary);
+}
+
 .factory-totals {
   color: var(--m-on-surface-variant);
   font-size: 13px;

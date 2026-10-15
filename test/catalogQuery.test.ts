@@ -3,7 +3,7 @@
 import { describe, expect, it } from "vitest";
 import {
   COLUMNS, DEFAULT_SORT, cellFile, cellText, column, compareRows, effectiveParams, formatBytes, isDefaultParams, nonDefaultParams, parseView,
-  prepareRows, queryRows, serializeView,
+  NO_CHIPS, chipLabel, chipRows, groupOf, prepareRows, queryRows, serializeView,
   type CatalogRecord,
 } from "../src/catalogQuery";
 
@@ -59,15 +59,69 @@ describe("cellText", () => {
   });
 });
 
+describe("the filter chips", () => {
+  const MIXED = prepareRows([
+    ...ROWS,
+    rec("veh-american-truck", "American Truck", 9000, { category: "Road vehicles", group: "truck" }),
+    rec("veh-cd-150", "CD 150", 8000, { category: "Rail vehicles", group: "loco" }),
+    rec("veh-cd-163", "CD 163", 8100, { category: "Rail vehicles", group: "loco" }),
+    rec("veh-bmo", "Bmo", 7000, { category: "Rail vehicles", group: "coach" }),
+    rec("sky-village", "Village Tower", 500, { category: "Village", group: "village" }),
+  ]);
+  const ids = (path: Partial<typeof NO_CHIPS>) => queryRows(MIXED, "", "title", "asc", { ...NO_CHIPS, ...path }).map((r) => r.id);
+
+  it("files vehicles under their fleet and everything else under Buildings", () => {
+    expect(MIXED.map(groupOf)).toEqual(["building", "building", "building", "moto", "train", "train", "train", "building"]);
+  });
+
+  it("offers only the fleets that have models, in the Creator's order, and no lower row without a pick", () => {
+    expect(chipRows(MIXED, NO_CHIPS)).toEqual({ groups: ["train", "moto", "building"], l2: [], l3: [] });
+  });
+
+  it("splits a fleet by its group, and a building by category, then city pool", () => {
+    expect(chipRows(MIXED, { ...NO_CHIPS, group: "train" })).toEqual({ groups: ["train", "moto", "building"], l2: ["coach", "loco"], l3: [] });
+    expect(chipRows(MIXED, { ...NO_CHIPS, group: "building" }).l2).toEqual(["Commercial", "Village"]);
+    // one city pool under Commercial is no choice, so no third row
+    expect(chipRows(MIXED, { group: "building", l2: "Commercial", l3: null }).l3).toEqual([]);
+    // a fleet of one type has no second row
+    expect(chipRows(MIXED, { ...NO_CHIPS, group: "moto" }).l2).toEqual([]);
+  });
+
+  it("filters the listing by the picked chips", () => {
+    expect(ids({ group: "train" })).toEqual(["veh-bmo", "veh-cd-150", "veh-cd-163"]);
+    expect(ids({ group: "train", l2: "loco" })).toEqual(["veh-cd-150", "veh-cd-163"]);
+    expect(ids({ group: "building", l2: "Village" })).toEqual(["sky-village"]);
+    expect(ids({ group: "ship" })).toEqual([]);
+  });
+
+  it("keeps a picked chip that matches nothing, so it can be switched off", () => {
+    expect(chipRows(MIXED, { ...NO_CHIPS, group: "ship" }).groups).toContain("ship");
+    expect(chipRows(MIXED, { group: "train", l2: "dmu", l3: null }).l2).toContain("dmu");
+  });
+
+  it("labels a value the Creator names, and any other as itself", () => {
+    expect(chipLabel("loco")).toBe("Locomotive");
+    expect(chipLabel("skyscraper_c")).toBe("skyscraper_c");
+  });
+
+  it("round-trips the chips in the URL, a lower one only under the one above", () => {
+    const v = { ...parseView(""), group: "train", l2: "loco", l3: null };
+    expect(serializeView(v)).toBe("?cat=train&sub=loco");
+    expect(parseView(serializeView(v))).toEqual(v);
+    expect(parseView("?cat=bogus&sub=loco")).toMatchObject({ group: null, l2: null, l3: null });
+    expect(parseView("?sub=loco&sub2=x")).toMatchObject(NO_CHIPS);
+  });
+});
+
 describe("the URL state", () => {
   it("round-trips, leaving defaults out", () => {
     expect(serializeView(parseView(""))).toBe("");
-    const v = { q: "tower", sort: "triangles", dir: "asc" as const, model: "sky-pagoda", tab: "specs" as const, node: null, params: {} };
+    const v = { q: "tower", ...NO_CHIPS, sort: "triangles", dir: "asc" as const, model: "sky-pagoda", tab: "specs" as const, node: null, params: {} };
     expect(parseView(serializeView(v))).toEqual(v);
   });
 
   it("carries the source tab and the selected node of an open model", () => {
-    const v = { q: "", sort: DEFAULT_SORT, dir: "asc" as const, model: "sky-art-deco", tab: "source" as const, node: "tier-3/piers", params: {} };
+    const v = { q: "", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "sky-art-deco", tab: "source" as const, node: "tier-3/piers", params: {} };
     expect(serializeView(v)).toBe("?model=sky-art-deco&tab=source&node=tier-3%2Fpiers");
     expect(parseView(serializeView(v))).toEqual(v);
     // the root scope's id is the empty string, and still a selection
@@ -76,7 +130,7 @@ describe("the URL state", () => {
   });
 
   it("carries the references tab of an open model, without a node", () => {
-    const v = { q: "", sort: DEFAULT_SORT, dir: "asc" as const, model: "veh-cd-150", tab: "references" as const, node: null, params: {} };
+    const v = { q: "", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "veh-cd-150", tab: "references" as const, node: null, params: {} };
     expect(serializeView(v)).toBe("?model=veh-cd-150&tab=references");
     expect(parseView(serializeView(v))).toEqual(v);
     expect(parseView("?model=veh-cd-150&tab=references&node=crown")).toMatchObject({ tab: "references", node: null });
@@ -86,11 +140,11 @@ describe("the URL state", () => {
     expect(parseView("?tab=source&node=crown")).toMatchObject({ model: null, tab: "specs", node: null, params: {} });
     expect(parseView("?model=sky-pagoda&node=crown")).toMatchObject({ tab: "specs", node: null });
     expect(parseView("?model=sky-pagoda&tab=bogus")).toMatchObject({ tab: "specs", node: null });
-    expect(serializeView({ q: "", sort: DEFAULT_SORT, dir: "asc", model: "sky-pagoda", tab: "specs", node: "crown", params: {} })).toBe("?model=sky-pagoda");
+    expect(serializeView({ q: "", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc", model: "sky-pagoda", tab: "specs", node: "crown", params: {} })).toBe("?model=sky-pagoda");
   });
 
   it("carries a parametric model's chosen values, only with an open model", () => {
-    const v = { q: "", sort: DEFAULT_SORT, dir: "asc" as const, model: "veh-csd-classic-green-coach", tab: "specs" as const, node: null, params: { variant: "classB" } };
+    const v = { q: "", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "veh-csd-classic-green-coach", tab: "specs" as const, node: null, params: { variant: "classB" } };
     expect(serializeView(v)).toBe("?model=veh-csd-classic-green-coach&p.variant=classB");
     expect(parseView(serializeView(v))).toEqual(v);
     expect(parseView("?p.variant=classB").params).toEqual({});
@@ -99,7 +153,7 @@ describe("the URL state", () => {
 
   it("gives a column its own starting direction and ignores an unknown sort", () => {
     expect(parseView("?sort=triangles").dir).toBe("desc");
-    expect(parseView("?sort=bogus&dir=sideways")).toEqual({ q: "", sort: DEFAULT_SORT, dir: "asc", model: null, tab: "specs", node: null, params: {} });
+    expect(parseView("?sort=bogus&dir=sideways")).toEqual({ q: "", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc", model: null, tab: "specs", node: null, params: {} });
   });
 });
 
