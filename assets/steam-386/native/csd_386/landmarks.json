@@ -1,0 +1,70 @@
+{
+ "note": "Native pixel edges [left, top, right, bottom] on the vlakosimdb side view (0.1 m a pixel), read from the original BMP; nodes are source-tree scopes of the model at rest.",
+ "annotations": [
+  {
+   "id": "skirts",
+   "view": "z_both",
+   "element": "skirts",
+   "box": [
+    3,
+    27,
+    140,
+    48
+   ],
+   "nodes": [
+    "body/skirts"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "XML skirts"
+  },
+  {
+   "id": "casing",
+   "view": "z_both",
+   "element": "boiler casing",
+   "box": [
+    3,
+    2,
+    114,
+    39
+   ],
+   "nodes": [
+    "body/boiler-casing"
+   ],
+   "tolerancePixels": 3,
+   "uncertainty": "vlakosimdb top at 4.8 m, lowered to 4.62 m for the envelope"
+  },
+  {
+   "id": "cab",
+   "view": "z_both",
+   "element": "cab with overhang",
+   "box": [
+    114,
+    2,
+    148,
+    36
+   ],
+   "nodes": [
+    "body/cab",
+    "body/cab-overhang"
+   ],
+   "tolerancePixels": 3,
+   "uncertainty": "top lowered as the casing"
+  },
+  {
+   "id": "driver-1",
+   "view": "z_both",
+   "element": "first coupled wheel tyre",
+   "box": [
+    53,
+    31,
+    72,
+    50
+   ],
+   "nodes": [
+    "wheelset-3/right-wheel/tyre"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "estimate: only the skirt opening is painted"
+  }
+ ]
+}

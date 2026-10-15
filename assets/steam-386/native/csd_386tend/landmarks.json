@@ -1,0 +1,37 @@
+{
+ "note": "Native pixel edges [left, top, right, bottom] on the vlakosimdb side view (0.1 m a pixel), read from the original BMP; nodes are source-tree scopes of the model at rest.",
+ "annotations": [
+  {
+   "id": "body",
+   "view": "z_both",
+   "element": "body",
+   "box": [
+    0,
+    15,
+    71,
+    48
+   ],
+   "nodes": [
+    "body/body"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "XML base"
+  },
+  {
+   "id": "top",
+   "view": "z_both",
+   "element": "tank top",
+   "box": [
+    1,
+    4,
+    70,
+    15
+   ],
+   "nodes": [
+    "body/tank-top"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "XML tel1, tel2, top"
+  }
+ ]
+}

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="Windows-1250"?>
+<loco author="Jan Prochazka" default="0" email="zputil@centrum.cz" maxspeed="60" name="CSD_433_0#2" path="Loco/Steam" power="500" title="CSD 433.0#2" weight="75" smoke_x="0.12" smoke_y="0.35" smoke="../smoke1">
+<smoke count="500" elem_size="0.05" end_a="0" end_b="0.4" end_g="0.4" end_r="0.4" fade_max="0.3" fade_min="0.1" impuls_rate="0.2" interval="1" slow_down="0.5" start_a="1" start_b="0.6" start_g="0.5" start_r="0.4" vx_max="0.2" vx_min="-0.2" vy_max="0.5" vy_min="0" vz_max="0.2" vz_min="-0.2" x0="0.12" y0="0.35"/>
+</loco>

@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="Windows-1250"?>
+<loco name="CSD_M112" power="120" maxspeed="75" weight="30" author="Paul Burton " email="pgb_454@hotmail.com" default="0" title="CSD M112 " path="Loco/Steam" smoke_x="0.06" smoke_y="0.34" smoke="../smoke3"/>

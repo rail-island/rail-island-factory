@@ -70,7 +70,10 @@ const CAB433: Pt[] = [[1.5, 1.4], [1.5, 2.7], [1.2, 3.7], [1.0, 3.9], [0.7, 4.0]
 const TANK433: Pt[] = [[1.45, 1.76], [1.45, 2.66], [1.38, 2.72]];
 
 export function csd433(params?: ParamValues): MeshBuilder {
-  const { livery } = resolveParams(CSD433_PARAMS, params);
+  return buildLoco(csd433Spec(resolveParams(CSD433_PARAMS, params).livery!));
+}
+
+function csd433Spec(livery: string): LocoSpec {
   const tankSec = mirrored(TANK433);
   const cabSec = mirrored(CAB433);
   const spec: LocoSpec = {
@@ -125,7 +128,7 @@ export function csd433(params?: ParamValues): MeshBuilder {
       })
       : undefined,
   };
-  return buildLoco(spec);
+  return spec;
 }
 
 
@@ -803,3 +806,20 @@ export const STEAM_DESIGNS: readonly SteamDesign[] = [
   { id: "veh-csd-386", title: "CSD 386 Streamlined", folder: "steam-386", build: csd386, params: [UNIT_PARAM] },
   { id: "veh-csd-m112", title: "CSD M 112.0 Steam Railcar", folder: "steam-m112", build: csdM112 },
 ];
+
+/** The spec a steam design builds for the given parameters (tests and the comparison read it). */
+export function steamSpec(id: string, params?: ParamValues): LocoSpec {
+  const unit = (specs: [() => LocoSpec, () => LocoSpec]) => (resolveParams([UNIT_PARAM], params).unit === "tender" ? specs[1]() : specs[0]());
+  switch (id) {
+    case "veh-csd-433-0": return csd433Spec(resolveParams(CSD433_PARAMS, params).livery!);
+    case "veh-csd-456-0": return csd456Spec();
+    case "veh-csd-475-1": return unit([csd475Spec, csd475TenderSpec]);
+    case "veh-csd-477-0": return csd477Spec();
+    case "veh-csd-498-1": return unit([csd498Spec, csd498TenderSpec]);
+    case "veh-csd-556-0": return unit([csd556Spec, csd556TenderSpec]);
+    case "veh-csd-636": return unit([csd636Spec, csd636TenderSpec]);
+    case "veh-csd-386": return unit([csd386Spec, csd386TenderSpec]);
+    case "veh-csd-m112": return csdM112Spec();
+    default: throw new Error(`no steam design ${id}`);
+  }
+}

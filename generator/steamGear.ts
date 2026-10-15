@@ -109,19 +109,23 @@ const scale = (a: P2, k: number): P2 => [a[0] * k, a[1] * k];
 const dist = (a: P2, b: P2): number => Math.hypot(a[0] - b[0], a[1] - b[1]);
 const polar = (r: number, a: number): P2 => [r * Math.cos(a), r * Math.sin(a)];
 
-/** The tyre's facets and the axle height they give with a flat side down. */
-export const tyreSides = (d: number): number => (d >= 1.2 ? 24 : 18);
-export const axleHeight = (d: number): number => (d / 2) * Math.cos(Math.PI / tyreSides(d));
+/**
+ * A tyre's facets: twice the spokes, so a turn by one spoke pitch maps the
+ * whole wheel onto itself (see turnsPerCycle); 24 or 18 for a disc wheel.
+ */
+export const tyreSides = (w: SteamWheel): number => (w.spokes > 0 ? 2 * w.spokes : w.d >= 1.2 ? 24 : 18);
+/** The axle height of a wheel standing on a flat facet. */
+export const axleHeight = (w: SteamWheel): number => (w.d / 2) * Math.cos(Math.PI / tyreSides(w));
 
 /** Turns per cycle of a wheel of diameter d, rounded so its spokes (or facets) come back where they started. */
 function turnsPerCycle(w: SteamWheel, ref: SteamWheel): number {
   if (w.d === ref.d) return 1;
-  const k = w.spokes || tyreSides(w.d);
+  const k = w.spokes || tyreSides(w);
   return Math.round((k * ref.d) / w.d) / k;
 }
 
 /** Where every joint of one side of one engine is at crank angle phi (model coordinates). */
-interface EnginePose {
+export interface EnginePose {
   crank: P2;
   crosshead: P2;
   returnCrank?: P2;
@@ -294,11 +298,31 @@ export class RunningGear {
     this.times = Array.from({ length: N_SAMPLES + 1 }, (_, k) => Math.round(((k * this.duration) / N_SAMPLES) * 1e6) / 1e6);
     spec.engines.forEach((engine, index) => {
       const w = spec.wheels[engine.main]!;
-      const axle: P2 = [X(w.x), axleHeight(w.d)];
+      const axle: P2 = [X(w.x), axleHeight(w)];
       for (const s of [1, -1]) {
         this.sides.push({ engine, index, s, side: new EngineSide(engine, s, 0, axle, X(engine.cylinder.x0), X(engine.cylinder.x1)) });
       }
     });
+  }
+
+  /**
+   * Every engine side's joints at each sample, solved afresh (for tests): the
+   * crank pin, crosshead and valve gear, with the rod lengths they must keep.
+   */
+  solvedPoses(): Array<{ suffix: string; axle: [number, number]; crank: number; poses: EnginePose[]; lengths: { mainRod: number; eccentricRod: number; radiusRod: number; unionLink: number } }> {
+    const thetas = this.times.map((_, k) => (2 * Math.PI * k) / N_SAMPLES);
+    return this.spec.engines.flatMap((engine, index) => [1, -1].map((s) => {
+      const w = this.spec.wheels[engine.main]!;
+      const es = new EngineSide(engine, s, 0, [this.X(w.x), axleHeight(w)], this.X(engine.cylinder.x0), this.X(engine.cylinder.x1));
+      void index;
+      return {
+        suffix: this.suffix(engine, s),
+        axle: es.axle,
+        crank: engine.crank,
+        poses: thetas.map((t) => es.solve(es.phi(t))),
+        lengths: { mainRod: es.mainRod, eccentricRod: es.eccentricRod, radiusRod: es.radiusRod, unionLink: es.unionLink },
+      };
+    }));
   }
 
   /** "right", "left", plus the engine's name for an articulated locomotive. */
@@ -355,7 +379,7 @@ export class RunningGear {
     this.spec.wheels.forEach((w, i) => {
       if (!w.outsideBoxes) return;
       const X = this.X(w.x);
-      const ay = axleHeight(w.d);
+      const ay = axleHeight(w);
       m.scope(`axle boxes ${i + 1}`, () => {
         for (const s of [-1, 1]) {
           block(m, "black", X - 0.17, X + 0.17, ay - 0.14, ay + 0.16, ...side(s, 0.9, 1.06));
@@ -382,7 +406,7 @@ export class RunningGear {
     spec.wheels.forEach((w, i) => {
       const name = `wheelset-${i + 1}`;
       const X = this.X(w.x);
-      const ay = axleHeight(w.d);
+      const ay = axleHeight(w);
       const engine = this.engineOf(i);
       m.part(name, [X, ay, 0], () => {
         m.scope("axle", () => {
@@ -501,12 +525,12 @@ export class RunningGear {
    */
   private wheel(m: MeshBuilder, s: number, X: number, ay: number, w: SteamWheel, phi: number | null, main: EngineSide | null): void {
     const R = w.d / 2;
-    const n = tyreSides(w.d);
+    const n = tyreSides(w);
     const ri = R - Math.max(0.065, R * 0.085);
     const mat = this.spec.wheelMaterial;
     m.scope("tyre", () => m.tube("tyre", "z", X, ay, R, ri, ...side(s, Z.tyre0, Z.tyre1), n, -Math.PI / 2 + Math.PI / n));
     const hubR = Math.max(0.13, R * 0.2);
-    m.scope("hub", () => pin(m, mat, s, [X, ay], hubR, Z.tyre0 + 0.01, Z.hub1, 12));
+    m.scope("hub", () => pin(m, mat, s, [X, ay], hubR, Z.tyre0 + 0.01, Z.hub1, w.spokes >= 8 ? w.spokes : 12));
     const zo = s * Z.spoke1;
     if (w.spokes > 0) {
       m.scope("spokes", () => {

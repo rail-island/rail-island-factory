@@ -1,0 +1,54 @@
+{
+ "note": "Native pixel edges [left, top, right, bottom] on the vlakosimdb side view (0.1 m a pixel), read from the original BMP; nodes are source-tree scopes of the model at rest.",
+ "annotations": [
+  {
+   "id": "bunker",
+   "view": "z_both",
+   "element": "coal bunker with coal",
+   "box": [
+    0,
+    7,
+    56,
+    19
+   ],
+   "nodes": [
+    "body/coal-bunker",
+    "body/coal"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "coal heap outline"
+  },
+  {
+   "id": "tank",
+   "view": "z_both",
+   "element": "tank",
+   "box": [
+    0,
+    19,
+    80,
+    40
+   ],
+   "nodes": [
+    "body/tank"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "XML base"
+  },
+  {
+   "id": "wheel-1",
+   "view": "z_both",
+   "element": "first wheel tyre",
+   "box": [
+    3,
+    40,
+    12,
+    50
+   ],
+   "nodes": [
+    "wheelset-1/right-wheel/tyre"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "wheel tyre; blurred low-resolution spokes, edges +-1 px"
+  }
+ ]
+}
