@@ -9,7 +9,7 @@
 | [guide/setup-and-build.md](guide/setup-and-build.md) | installing, the scripts, what `pnpm build` produces, tests |
 | [guide/deploy.md](guide/deploy.md) | the Cloudflare Worker, the GitHub Actions workflows, secrets |
 | [models/skyscrapers.md](models/skyscrapers.md) | the ten skyscraper designs, the mesh builder, adding a design |
-| [models/vehicles.md](models/vehicles.md) | the procedural vehicles (the American truck and trailer), budgets, truck/trailer parts, the `sweep` primitive, adding a vehicle |
+| [models/vehicles.md](models/vehicles.md) | the procedural road and rail vehicles, budgets, articulation, pantograph operating poses, native-reference calibration and adding a vehicle |
 | [models/js-format.md](models/js-format.md) | the standalone JS model (`export/js/<id>.js`, `build(THREE)`), how it is bundled, the sizes |
 | [models/source-tree.md](models/source-tree.md) | the procedural source tree: scopes, `export/tree/<id>.json`, highlight and picking |
 | [models/export.md](models/export.md) | the export folder: GLBs, thumbnails, `skyscrapers.meta.json`, `vehicles.meta.json`, `catalog.json` |
@@ -17,3 +17,9 @@
 
 `docs/specs/` and `docs/impl/` are planning records (a spec and the notes on how
 it was built), not reference.
+
+## Workflow skills
+
+- [Road vehicle](../.agents/skills/road-vehicle/SKILL.md): road geometry and articulation.
+- [Railroad vehicle](../.agents/skills/railroad-vehicle/SKILL.md): rail geometry, operating pantographs and verification.
+- [Vlakosimdb transfer](../.agents/skills/vlakosimdb-transfer/SKILL.md): XML profiles, native-pixel comparison tables, optimization and user-facing evidence.

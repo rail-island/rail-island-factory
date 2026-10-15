@@ -3,7 +3,7 @@
 // Reconstructed from photographs and elevation drawings (assets/cd-163/) and the
 // dimensions painted on the locomotive itself: 16.80 m over the buffers, 8.30 m
 // between the bogie pivots, 3.20 m bogie wheelbase, 1.25 m wheels; 4.64 m high
-// with the pantographs down. See docs/models/vehicles.md.
+// with the pantographs down; the displayed rear collector is raised to 5.74 m. See docs/models/vehicles.md.
 //
 // Metres, +X forward (the "front" cab; the locomotive is symmetric end for end
 // but for its markings), +Y up, +Z right, the wheels standing on y = 0 (the top
@@ -689,8 +689,8 @@ function underframe(m: MeshBuilder): void {
 
 // --- the roof equipment --------------------------------------------------------------
 
-/** A single-arm pantograph, folded down, its base centred at xc; `h` points to its hinge end. */
-function pantograph(m: MeshBuilder, xc: number, h: number): void {
+/** A single-arm pantograph; h points to its hinge end, raised selects its working pose. */
+function pantograph(m: MeshBuilder, xc: number, h: number, raised: boolean): void {
   const y = PANTO_Y;
   m.scope("insulators", () => {
     for (const dx of [-0.55, 0.55]) for (const z of [-0.48, 0.48]) insulator(m, xc + dx, z, Y_ROOF - 0.01, y, 3);
@@ -701,29 +701,48 @@ function pantograph(m: MeshBuilder, xc: number, h: number): void {
     block(m, "pantograph", ...ex(h, 0.1, 0.45).map((v) => v + xc) as [number, number], y + 0.05, y + 0.16, -0.15, 0.15); // the drive
   });
   const xh = xc + h * 0.55; // the hinge
-  const kx = xc - h * 1.05; // the knee, folded toward the middle of the roof
-  const hx = xc + h * 0.15; // the head
+  const hx = xc + h * 0.15; // keep the collector centred above its base
+  const headY = y + 0.33 + (raised ? 1.10 : 0);
+  let kx = xc - h * 1.05;
+  let ky = y + 0.22;
+  if (raised) {
+    // Intersect circles about the hinge and head to unfold the linkage without
+    // stretching either arm. The upper attachment sits 20 mm above the knee.
+    const dx = -0.40;
+    const dy = headY - 0.02 - (y + 0.11);
+    const distance = Math.hypot(dx, dy);
+    const lower2 = 1.60 ** 2 + 0.11 ** 2;
+    const upper2 = 1.20 ** 2 + 0.09 ** 2;
+    const along = (lower2 - upper2 + distance ** 2) / (2 * distance);
+    const across = Math.sqrt(lower2 - along ** 2);
+    kx = xh + h * (along * dx - across * dy) / distance;
+    ky = y + 0.11 + (along * dy + across * dx) / distance;
+  }
   m.scope("arms", () => {
     for (const s of [-1, 1]) block(m, "pantograph", xh - 0.04, xh + 0.04, y + 0.04, y + 0.14, ...side(s, 0.36, 0.44));
     const shaft = ngon(8, 0.035, 0, xh, y + 0.11);
     m.sweep("pantograph", "z", shaft, -0.42, shaft, 0.42);
     // the lower arm: an A-frame from the hinge shaft to the knee
-    for (const s of [-1, 1]) tubeX(m, "pantograph", 0.04, xh, y + 0.11, s * 0.3, kx, y + 0.22, s * 0.04);
-    tubeX(m, "pantograph", 0.016, xc + h * 0.68, y + 0.08, 0, kx + h * 0.1, y + 0.19, 0, 6); // the push rod
-    const knee = ngon(8, 0.05, 0, kx, y + 0.225);
+    m.scope("lower arms", () => {
+      for (const s of [-1, 1]) tubeX(m, "pantograph", 0.04, xh, y + 0.11, s * 0.3, kx, ky, s * 0.04);
+    });
+    tubeX(m, "pantograph", 0.016, xc + h * 0.68, y + 0.08, 0, kx + h * 0.1, ky - 0.03, 0, 6); // the push rod
+    const knee = ngon(8, 0.05, 0, kx, ky + 0.005);
     m.sweep("pantograph", "z", knee, -0.08, knee, 0.08);
     // the upper arm: two tubes spreading from the knee to the head
-    for (const s of [-1, 1]) tubeX(m, "pantograph", 0.026, kx, y + 0.24, s * 0.04, hx, y + 0.33, s * 0.32);
+    m.scope("upper arms", () => {
+      for (const s of [-1, 1]) tubeX(m, "pantograph", 0.026, kx, ky + 0.02, s * 0.04, hx, headY, s * 0.32);
+    });
   });
   m.scope("head", () => {
-    for (const s of [-1, 1]) block(m, "pantograph", hx - 0.15, hx + 0.15, y + 0.325, y + 0.355, ...side(s, 0.28, 0.36));
+    for (const s of [-1, 1]) block(m, "pantograph", hx - 0.15, hx + 0.15, headY - 0.005, headY + 0.025, ...side(s, 0.28, 0.36));
     for (const dx of [-0.12, 0.12]) {
       const x = hx + dx;
-      block(m, "carbon", x - 0.03, x + 0.03, y + 0.35, y + 0.4, -0.62, 0.62);
+      block(m, "carbon", x - 0.03, x + 0.03, headY + 0.02, headY + 0.07, -0.62, 0.62);
       for (const s of [-1, 1]) {
         // the horns bend down at both ends of the collector strip
-        const top: Ring = [[x - 0.03, y + 0.35], [x + 0.03, y + 0.35], [x + 0.03, y + 0.4], [x - 0.03, y + 0.4]];
-        const tip: Ring = [[x - 0.02, y + 0.26], [x + 0.02, y + 0.26], [x + 0.02, y + 0.3], [x - 0.02, y + 0.3]];
+        const top: Ring = [[x - 0.03, headY + 0.02], [x + 0.03, headY + 0.02], [x + 0.03, headY + 0.07], [x - 0.03, headY + 0.07]];
+        const tip: Ring = [[x - 0.02, headY - 0.07], [x + 0.02, headY - 0.07], [x + 0.02, headY - 0.03], [x - 0.02, headY - 0.03]];
         m.sweep("pantograph", "z", s > 0 ? top : tip, s > 0 ? 0.61 : -0.92, s > 0 ? tip : top, s > 0 ? 0.92 : -0.61);
       }
     }
@@ -732,7 +751,7 @@ function pantograph(m: MeshBuilder, xc: number, h: number): void {
 
 function roofEquipment(m: MeshBuilder): void {
   m.scope("pantographs", () => {
-    for (const e of [-1, 1]) m.scope(e > 0 ? "front pantograph" : "rear pantograph", () => pantograph(m, e * PANTO_X, e));
+    for (const e of [-1, 1]) m.scope(e > 0 ? "front pantograph" : "rear pantograph", () => pantograph(m, e * PANTO_X, e, e < 0));
   });
   m.scope("high-voltage line", () => {
     // from pantograph to pantograph along one side of the roof, clear of the

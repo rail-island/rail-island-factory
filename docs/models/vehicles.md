@@ -1,10 +1,10 @@
 # Vehicles
 
-**Covers** - the procedurally generated road vehicles (an articulated American
+**Covers** - the procedurally generated road and rail vehicles (an articulated American
 truck and the CD 163 electric locomotive), their triangle budget and conventions, articulated vehicles'
 truck and trailer parts, the `sweep` primitive they are mostly built from, and
 how to add one.
-**Code** - `generator/vehicles.ts`, `generator/cd163.ts`, `generator/cdLogo.ts`, `generator/vehicleParts.ts`, `generator/design.ts`, `generator/meshCore.ts` (`sweep`, `part`), `generator/meshBuilder.ts` (`toGlb`), `src/viewerHighlight.ts`, `test/models.test.ts`, `test/cdLogo.test.ts`, `test/viewerHighlight.test.ts`, `.agents/skills/road-vehicle/SKILL.md`
+**Code** - `generator/vehicles.ts`, `generator/cd163.ts`, `generator/cdLogo.ts`, `generator/vehicleParts.ts`, `generator/design.ts`, `generator/meshCore.ts` (`sweep`, `part`), `generator/meshBuilder.ts` (`toGlb`), `src/viewerHighlight.ts`, `test/models.test.ts`, `test/cdLogo.test.ts`, `test/viewerHighlight.test.ts`, `.agents/skills/road-vehicle/SKILL.md`, `.agents/skills/railroad-vehicle/SKILL.md`, `.agents/skills/vlakosimdb-transfer/SKILL.md`
 **See also** - [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md)
 
 ## The designs
@@ -12,7 +12,7 @@ how to add one.
 | id | title | look |
 |---|---|---|
 | `veh-american-truck` | American Truck | articulated: a long-nose conventional tractor (chrome grille, sleeper, twin stacks, tandem drive axle) and a 53 ft dry van; 22.2 m, about 4,900 triangles |
-| `veh-cd-163` | CD 163 | rigid rail vehicle (`cd163.ts`): the Czech Railways class 163 Bo'Bo' electric 163 244-7 in the green livery with the yellow band - ribbed sides, four portholes opposite continuous intake shutters, the raised cooler box and cant grilles, raked framed windscreens, an upright period CD monogram and condensed number plates, two single-arm pantographs on shedded insulators, bogies with coil springs, axle boxes, motors and sandboxes; 16.80 m over the buffers, 4.64 m high, about 22,500 triangles. Modelled from photographs, the vlakosimdb elevation drawings and the official emblem (`assets/cd-163/`, see `SOURCES.md` there) |
+| `veh-cd-163` | CD 163 | rigid rail vehicle (`cd163.ts`): the Czech Railways class 163 Bo'Bo' electric 163 244-7 in the green livery with the yellow band - ribbed sides, four portholes opposite continuous intake shutters, the raised cooler box and cant grilles, raked framed windscreens, an upright period CD monogram and condensed number plates, two single-arm pantographs on shedded insulators (rear raised, front folded), bogies with coil springs, axle boxes, motors and sandboxes; 16.80 m over the buffers, 5.74 m high with the rear collector raised, about 22,500 triangles. Modelled from photographs, the vlakosimdb elevation drawings and the official emblem (`assets/cd-163/`, see `SOURCES.md` there) |
 
 `VEHICLES` in `vehicles.ts` lists them as `{ id, title, build }`, the same
 `ProceduralDesign` shape as the skyscrapers (`design.ts`). `VEHICLE_CATALOG`
@@ -23,9 +23,10 @@ for the game's vehicle import; settle them when the webapp side is written.
 
 A design may carry its own `catalog` (`ProceduralDesign.catalog`) in place of
 `VEHICLE_CATALOG`: the CD 163 uses `RAIL_CATALOG` (category `Rail vehicles`,
-group `loco`) and its own palette. A rail vehicle is held to the UIC loading
-gauge in `test/models.test.ts` (at most 3.1 m wide and 4.7 m high, pantographs
-folded) instead of the US road limits, and to a **25,000-triangle** budget
+group `loco`) and its own palette. The repository rail envelope in
+`test/models.test.ts` allows at most 3.1 m width and 4.7 m fixed-equipment height,
+with a separate 6.5 m operating height limit for extended pantographs. These are
+project limits rather than a universal loading gauge. Rail vehicles have a **25,000-triangle** budget
 instead of 10,000: it is 16.8 m long and seen up close along the track. The
 test also pins the CD 163's length (16.80 m) and axle positions (the bogie
 pivots 8.30 m apart, 3.20 m wheelbase). The shared helpers (`block`, `side`,
@@ -110,6 +111,16 @@ by ear clipping. It is not an exact historic logo tracing. These markings are
 one-sided `facets` decals a few millimetres off their supporting surfaces.
 Coil springs and insulators are stacks of rings of alternating radius.
 
+The rear (-X) pantograph is raised to a 5.74 m collector height; the front one
+remains folded at 4.64 m. This is a static operating pose in the rigid model,
+not an animation. The raised linkage is solved from the folded arm lengths:
+the knee moves at the intersection of hinge/head distance circles, preserving
+both arm lengths while lifting the contact head 1.10 m. The collector strips
+stay level, the base remains anchored, and the upper arm attaches 20 mm above
+the lower knee. Tests cover exactly one raised collector, folded and operating
+heights, constant arm lengths and joint continuity. Electric locomotives with
+two pantographs use one raised and one folded in their default displayed pose.
+
 Regression checks in `test/models.test.ts` cover the cab glazing aspect ratio
 and rake, both cab setbacks and the upright skirt, the actual GLB surface
 distances of lower fittings, door/window alignment, equal marker sizes and
@@ -121,8 +132,12 @@ dimensions, axle positions, triangle budget and coplanar-overlap checks.
 **The ids are stored in the game's saved maps**: never rename one that has
 shipped. Vehicle ids start with `veh-`.
 
-Agents adding or changing a vehicle follow the `road-vehicle` skill
-(`.agents/skills/road-vehicle/SKILL.md`), the checklist for this page.
+Use [road-vehicle](../../.agents/skills/road-vehicle/SKILL.md) for road models
+and [railroad-vehicle](../../.agents/skills/railroad-vehicle/SKILL.md) for rail
+models. When vlakosimdb is a source, also follow
+[vlakosimdb-transfer](../../.agents/skills/vlakosimdb-transfer/SKILL.md): use XML
+shapes and original BMPs, optimize an element-comparison table, and present
+the final table and before/after errors to the user.
 
 ## Budget
 
@@ -212,7 +227,7 @@ shell for that reason - flush, its back face shared a plane with the bars'.
 
 ## Adding a vehicle
 
-Follow the `road-vehicle` skill. In short:
+Follow the applicable road or railroad vehicle skill linked above:
 
 1. Write a function in `vehicles.ts` that returns a `MeshBuilder` over
    `VEHICLE_PALETTE`, and add it to `VEHICLES` with a `veh-` id and a title.

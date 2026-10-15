@@ -55,6 +55,12 @@ document that owns it in the same change.** Conventions:
 
 - **`road-vehicle`** (`.agents/skills/road-vehicle/`) - use it whenever a road
   vehicle model is added or changed: triangle budget, the truck/trailer split, checks.
+- **`railroad-vehicle`** (`.agents/skills/railroad-vehicle/`) - use it whenever a
+  railway vehicle is added or changed: rail dimensions, running gear, one raised
+  pantograph on two-pantograph electric locomotives, and headless checks.
+- **`vlakosimdb-transfer`** (`.agents/skills/vlakosimdb-transfer/`) - use it when
+  reconstructing or correcting a vehicle from vlakosimdb: XML shapes, original
+  BMP measurements, comparison-table optimization and presentation to the user.
 
 ## Verify changes
 

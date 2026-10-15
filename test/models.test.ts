@@ -330,7 +330,8 @@ describe("the vehicles", () => {
   });
 
   it.each(VEHICLES.map((d) => [d.id] as const))("%s stands on its wheels, faces +x, fits its road or track and stays in budget", (id) => {
-    // a rail vehicle keeps to the UIC loading gauge (3.1 m x 4.7 m), not a US road's
+    // Repository rail envelope: 3.1 m wide, 4.7 m excluding pantographs.
+    // An active collector may reach the separate 6.5 m operating limit.
     const rail = DESIGNS.get(id)!.catalog?.category === "Rail vehicles";
     const glb = designGlb(id);
     const s = glbStats(glb);
@@ -340,7 +341,11 @@ describe("the vehicles", () => {
     expect(length).toBeGreaterThan(2 * width); // long along x
     expect(s.min[2]).toBeCloseTo(-s.max[2], 5); // centred across
     expect(width).toBeLessThanOrEqual(rail ? 3.1 : 2.7); // 2.6 m legal road width, mirrors aside
-    expect(s.max[1]).toBeLessThanOrEqual(rail ? 4.7 : 4.115); // 13 ft 6 in on the road
+    expect(s.max[1]).toBeLessThanOrEqual(rail ? 6.5 : 4.115); // raised collector or road height
+    if (rail) {
+      const fixed = walk(designTree(id).root).filter((n) => isLeaf(n) && !n.id.startsWith("roof-equipment/pantographs/"));
+      expect(Math.max(...fixed.map((n) => n.max![1]))).toBeLessThanOrEqual(4.7);
+    }
     // the road-vehicle budget (.agents/skills/road-vehicle); a rail vehicle,
     // much larger and seen closer along the track, gets 25k
     expect(s.triangles).toBeLessThanOrEqual(rail ? 25_000 : 10_000);
@@ -371,6 +376,46 @@ describe("the vehicles", () => {
     const axleLeaves = walk(tree.root).filter((n) => /\/wheelset(-\d+)?\/sweep-1$/.test(n.id));
     const axles = axleLeaves.map((n) => Math.round(((n.min![0] + n.max![0]) / 2) * 100) / 100).sort((a, b) => a - b);
     expect(axles).toEqual([-5.75, -2.55, 2.55, 5.75]);
+  });
+
+  it("raises only the rear CD 163 pantograph with connected, constant-length arms and a level head", () => {
+    const nodes = walk(designTree("veh-cd-163").root);
+    const { json, bin } = parseGlb(designGlb("veh-cd-163"));
+    const triangles = collectTriangles(json, bin);
+    const metal = triangles.filter((t) => t.material === "pantograph");
+    const roots = nodes.filter((n) => /^roof-equipment\/pantographs\/(front|rear)-pantograph$/.test(n.id));
+    expect(roots).toHaveLength(2);
+    expect(roots.filter((n) => n.max![1] > 5)).toHaveLength(1);
+    for (const end of ["front", "rear"]) {
+      const prefix = `roof-equipment/pantographs/${end}-pantograph`;
+      const head = nodes.find((n) => n.id === `${prefix}/head`)!;
+      expect(head.max![1]).toBeCloseTo(end === "rear" ? 5.74 : 4.64, 3);
+      const strips = nodes.filter((n): n is LeafNode => isLeaf(n) && n.id.startsWith(`${prefix}/head/`) && n.material === "carbon");
+      expect(strips).toHaveLength(2);
+      for (const strip of strips) {
+        expect(strip.max![1]).toBeCloseTo(head.max![1], 3);
+        expect(strip.max![1] - strip.min![1]).toBeCloseTo(0.05, 3);
+      }
+      const joints: number[] = [];
+      for (const [arm, length] of [["lower", Math.hypot(1.60, 0.11, 0.26)], ["upper", Math.hypot(1.20, 0.09, 0.28)]] as const) {
+        const tubes = nodes.filter((n): n is LeafNode => isLeaf(n) && n.id.startsWith(`${prefix}/arms/${arm}-arms/`));
+        expect(tubes).toHaveLength(2);
+        for (const tube of tubes) {
+          const points = metal.slice(tube.tri[0], tube.tri[0] + tube.tri[1]).flatMap((t) => t.p);
+          const xs = [Math.min(...points.map((p) => p[0])), Math.max(...points.map((p) => p[0]))];
+          const centres = xs.map((x) => {
+            const ring = points.filter((p) => Math.abs(p[0] - x) < 1e-6);
+            return [x, ...[1, 2].map((axis) => (Math.min(...ring.map((p) => p[axis]!)) + Math.max(...ring.map((p) => p[axis]!))) / 2)];
+          }).sort((a, b) => a[1]! - b[1]!);
+          expect(Math.hypot(...centres[1]!.map((v, i) => v - centres[0]![i]!))).toBeCloseTo(length, 5);
+          if (arm === "lower") joints.push(centres[1]![1]!);
+          else {
+            expect(centres[0]![1]! - joints[0]!).toBeCloseTo(0.02, 5);
+            expect(head.max![1] - centres[1]![1]!).toBeCloseTo(0.07, 4);
+          }
+        }
+      }
+    }
   });
 
   it("keeps the CD 163 windscreens wide, near the cab edges, and raked", () => {
