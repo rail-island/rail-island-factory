@@ -39,6 +39,12 @@ export interface ProceduralDesign {
   /** The design's enum parameters; absent for a fixed design. */
   params?: readonly ParamSpec[];
   /**
+   * The names of the parameters that only recolour the model (a roof or wall
+   * colour): they change no geometry, so the tests vary them one value at a
+   * time instead of multiplying every combination by them (coverageCombinations).
+   */
+  finishParams?: readonly string[];
+  /**
    * The folder under assets/ holding the design's source images (photos, drawings,
    * native textures). The build copies them to export/refs/<id>/ and the site
    * shows them on the model page.
@@ -74,6 +80,23 @@ export function paramCombinations(specs: readonly ParamSpec[] = []): ParamValues
   for (const s of specs) {
     const ordered = [s.default, ...s.values.map((v) => v.value).filter((v) => v !== s.default)];
     out = out.flatMap((combo) => ordered.map((v) => ({ ...combo, [s.name]: v })));
+  }
+  return out;
+}
+
+/**
+ * The combinations the tests build: every combination of the shape parameters
+ * with the finish parameters at their defaults (the defaults first), then each
+ * other value of each finish parameter with everything else at its default.
+ * Without finish parameters this is paramCombinations(specs).
+ */
+export function coverageCombinations(specs: readonly ParamSpec[] = [], finish: readonly string[] = []): ParamValues[] {
+  const shapes = paramCombinations(specs.filter((s) => !finish.includes(s.name)));
+  const defaults = resolveParams(specs);
+  const out = shapes.map((c) => ({ ...defaults, ...c }));
+  for (const s of specs) {
+    if (!finish.includes(s.name)) continue;
+    for (const v of s.values) if (v.value !== s.default) out.push({ ...defaults, [s.name]: v.value });
   }
   return out;
 }
