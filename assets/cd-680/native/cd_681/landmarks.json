@@ -1,0 +1,404 @@
+{
+ "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/emu/cd 680/cd_681/model",
+ "pixelMetres": 0.1,
+ "convention": "Pixel edges [left, top, right, bottom] on the native BMP; origin top left, x right, y down.",
+ "annotations": [
+  {
+   "id": "P01",
+   "view": "z_inc",
+   "side": "right",
+   "element": "window 1 (short) glass",
+   "box": [
+    63,
+    24,
+    69,
+    28
+   ],
+   "nodes": [
+    "body/right-side/windows/window-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P02",
+   "view": "z_inc",
+   "side": "right",
+   "element": "window 2 glass",
+   "box": [
+    80,
+    24,
+    89,
+    28
+   ],
+   "nodes": [
+    "body/right-side/windows/window-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P03",
+   "view": "z_inc",
+   "side": "right",
+   "element": "window 5 glass",
+   "box": [
+    134,
+    24,
+    143,
+    28
+   ],
+   "nodes": [
+    "body/right-side/windows/window-5"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P04",
+   "view": "z_inc",
+   "side": "right",
+   "element": "window 9 glass",
+   "box": [
+    206,
+    24,
+    215,
+    28
+   ],
+   "nodes": [
+    "body/right-side/windows/window-9"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P05",
+   "view": "z_inc",
+   "side": "right",
+   "element": "entrance door outline",
+   "box": [
+    236,
+    17,
+    246,
+    48
+   ],
+   "nodes": [
+    "body/right-side/doors/door-1/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P06",
+   "view": "z_inc",
+   "side": "right",
+   "element": "entrance door window",
+   "box": [
+    239,
+    24,
+    242,
+    31
+   ],
+   "nodes": [
+    "body/right-side/doors/door-1/window"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P07",
+   "view": "z_inc",
+   "side": "right",
+   "element": "cab door outline",
+   "box": [
+    28,
+    20,
+    35,
+    40
+   ],
+   "nodes": [
+    "cab/right-cab-door/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P08",
+   "view": "z_inc",
+   "side": "right",
+   "element": "CD emblem",
+   "box": [
+    182,
+    33,
+    188,
+    38
+   ],
+   "nodes": [
+    "body/right-side/emblem"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P09",
+   "view": "z_inc",
+   "side": "right",
+   "element": "skirt panels between the bogies",
+   "box": [
+    64,
+    43,
+    184,
+    47
+   ],
+   "nodes": [
+    "body/right-side/skirt-panels"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P10",
+   "view": "z_inc",
+   "side": "right",
+   "element": "sign by the door",
+   "box": [
+    230,
+    24,
+    232,
+    28
+   ],
+   "nodes": [
+    "body/right-side/signs"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P11",
+   "view": "z_inc",
+   "side": "right",
+   "element": "roof cover",
+   "box": [
+    96,
+    10,
+    183,
+    15
+   ],
+   "nodes": [
+    "roof-equipment/roof-cover-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P12",
+   "view": "z_inc",
+   "side": "right",
+   "element": "window band (black)",
+   "box": [
+    48,
+    20,
+    249,
+    31
+   ],
+   "nodes": [
+    "body/band-band"
+   ],
+   "tolerancePixels": 2.5,
+   "uncertainty": "The band's model scope runs under the door to the gangway; +/- one pixel."
+  },
+  {
+   "id": "P13",
+   "view": "z_inc",
+   "side": "right",
+   "element": "nose silhouette with the plough",
+   "box": [
+    0,
+    14,
+    25,
+    48
+   ],
+   "nodes": [
+    "cab/nose",
+    "cab/plough"
+   ],
+   "tolerancePixels": 2.5,
+   "uncertainty": "The nose's dark silhouette, including its roof edge; estimate."
+  },
+  {
+   "id": "P14",
+   "view": "z_inc",
+   "side": "right",
+   "element": "cab-end bogie (drawn)",
+   "box": [
+    20,
+    41,
+    57,
+    50
+   ],
+   "nodes": [
+    "running-gear/bogie-1/wheelset",
+    "running-gear/bogie-1/wheelset-2",
+    "running-gear/bogie-1/frame"
+   ],
+   "tolerancePixels": 2.5,
+   "uncertainty": "Drawn bogie silhouette; the model's bogie has the published 2.7 m wheelbase."
+  },
+  {
+   "id": "P15",
+   "view": "z_inc",
+   "side": "right",
+   "element": "inner bogie (drawn)",
+   "box": [
+    197,
+    41,
+    233,
+    50
+   ],
+   "nodes": [
+    "running-gear/bogie-2/wheelset",
+    "running-gear/bogie-2/wheelset-2",
+    "running-gear/bogie-2/frame"
+   ],
+   "tolerancePixels": 2.5,
+   "uncertainty": "Drawn bogie silhouette; the model's bogie has the published 2.7 m wheelbase."
+  },
+  {
+   "id": "Q01",
+   "view": "x_inc",
+   "end": "front",
+   "element": "windscreen frame",
+   "box": [
+    2,
+    19,
+    28,
+    30
+   ],
+   "nodes": [
+    "cab/windscreen"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "Q02",
+   "view": "x_inc",
+   "end": "front",
+   "element": "left lamp",
+   "box": [
+    2,
+    33,
+    7,
+    36
+   ],
+   "nodes": [
+    "cab/lamps/lamp-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Two 2 px lenses; the housing compared."
+  },
+  {
+   "id": "Q03",
+   "view": "x_inc",
+   "end": "front",
+   "element": "right lamp",
+   "box": [
+    23,
+    33,
+    28,
+    36
+   ],
+   "nodes": [
+    "cab/lamps/lamp-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Two 2 px lenses; the housing compared."
+  },
+  {
+   "id": "Q04",
+   "view": "x_inc",
+   "end": "front",
+   "element": "roof cover (cab view)",
+   "box": [
+    5,
+    10,
+    25,
+    15
+   ],
+   "nodes": [
+    "roof-equipment/roof-cover-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "Q05",
+   "view": "x_inc",
+   "end": "front",
+   "element": "teal lower nose and plough",
+   "box": [
+    0,
+    40,
+    30,
+    48
+   ],
+   "nodes": [
+    "cab/nose/teal-band",
+    "cab/plough"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "G01",
+   "view": "x_dec",
+   "end": "rear",
+   "element": "gangway door frame",
+   "box": [
+    4,
+    17,
+    26,
+    39
+   ],
+   "nodes": [
+    "rear-end/door-frame/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "G02",
+   "view": "x_dec",
+   "end": "rear",
+   "element": "gangway door leaves",
+   "box": [
+    6,
+    19,
+    24,
+    39
+   ],
+   "nodes": [
+    "rear-end/doors"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "G03",
+   "view": "x_dec",
+   "end": "rear",
+   "element": "roof cover (end view)",
+   "box": [
+    5,
+    10,
+    25,
+    15
+   ],
+   "nodes": [
+    "roof-equipment/roof-cover-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  }
+ ]
+}

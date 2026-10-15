@@ -18,6 +18,7 @@
 | [models/cd-green-white.md](models/cd-green-white.md) | the parametric CD green and white coach: nine vlakosimdb coaches as one `variant` parameter |
 | [models/loco-liveries.md](models/loco-liveries.md) | the parametric locomotives: CD 150 / 151 / ZSR 350, CD 163 / 363 and CD 263 / 371 / 372 liveries, the livery model, cab paint, the 263's machine room |
 | [models/cd-230.md](models/cd-230.md) | the parametric CD 230 / 240 / 340 "laminatka": the rounded nose, the face laid on the curved skin, four liveries, the native comparison |
+| [models/czech-emus.md](models/czech-emus.md) | the parametric Czech electric units: the CD 471 CityElefant (three cars, the vlakosimdb CD 675 as a variant) and the CD 680 Pendolino (four cars) as `unit` values, the shared EMU parts, the native comparison |
 | [models/bmo-double-deck.md](models/bmo-double-deck.md) | the parametric Bmo double-deck coach: the CSD and three CD liveries as one `livery` parameter |
 | [models/steam-locomotives.md](models/steam-locomotives.md) | the nine steam locomotives from vlakosimdb, locomotive and tender as `unit` variants, the shared builder, deviations, the native comparison and tests |
 | [models/animation.md](models/animation.md) | animation clips of parts, the steam locomotives' running-gear clip and its timing contract, the site's Start and Stop buttons |
