@@ -2,7 +2,8 @@
 
 This is **Rail Island Factory**: Rail Island models generated from code, and the
 catalog site that shows them at `factory.railisland.com`. Today it builds ten
-procedural skyscrapers and one vehicle (an American truck with a trailer). The build writes an
+procedural skyscrapers, road vehicles (an American truck with a trailer, the
+vlakosimdb buses) and rail vehicles (locomotives, coaches). The build writes an
 export folder (GLBs, thumbnails, `skyscrapers.meta.json`, `vehicles.meta.json`) that the game repository, `rail-island-webapp`, is meant
 to import - the factory is the source of these models, the game a consumer.
 
@@ -54,7 +55,8 @@ document that owns it in the same change.** Conventions:
 ## Skills
 
 - **`road-vehicle`** (`.agents/skills/road-vehicle/`) - use it whenever a road
-  vehicle model is added or changed: triangle budget, the truck/trailer split, checks.
+  vehicle model is added or changed: triangle budget, steered front wheels, the
+  truck/trailer split, an articulated bus's sections and joints, checks.
 - **`railroad-vehicle`** (`.agents/skills/railroad-vehicle/`) - use it whenever a
   railway vehicle is added or changed: rail dimensions, running gear, one raised
   pantograph on two-pantograph electric locomotives, and headless checks.

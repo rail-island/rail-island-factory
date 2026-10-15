@@ -13,8 +13,8 @@
 import type { MeshBuilder } from "./meshBuilder.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import type { Arch, Paint } from "./busBody.ts";
-import { assembleBus, type Axle, type BusSpec, type Fitting } from "./busAssembly.ts";
-import { busPalette, endLamp, endSlab, mirror, sideSlab, type BusFrame } from "./busKit.ts";
+import { BusDraft, type Axle, type DoorStyle, type PaneStyle } from "./busAssembly.ts";
+import { busPalette, endLamp, endSlab, mirror, sideSlab } from "./busKit.ts";
 import { block } from "./vehicleParts.ts";
 
 type Series = "700" | "900" | "951";
@@ -80,19 +80,23 @@ interface Frame {
   length: number;
   /** The rigid bodies in u, front first. */
   bodies: Array<[number, number]>;
-  /** The axles in u, front first. */
-  axles: Array<{ u: number; dual: boolean; drive?: boolean }>;
+  /** The axles, front first, at their real distance from the nose (m). */
+  axles: Array<{ at: number; dual: boolean; drive?: boolean }>;
 }
 
-const SHORT_FRAME: Frame = {
-  nose: 0.1, tail: 11.5, length: 10.97,
-  bodies: [[0.1, 11.5]],
-  axles: [{ u: 2.45, dual: false }, { u: 8.15, dual: true, drive: true }],
-};
-const LONG_FRAME: Frame = {
-  nose: 0.2, tail: 17.9, length: 17.36,
-  bodies: [[0.2, 9.7], [11.6, 17.9]],
-  axles: [{ u: 2.55, dual: false }, { u: 8.25, dual: true }, { u: 14.65, dual: true, drive: true }],
+// Real lengths, overhangs and wheelbases (cs.wikipedia, assets/karosa-*/SOURCES.md):
+// the 700s 2.29 + 5.60 + 3.085 m, the 900s 2.355 + 5.60 m and a longer tail; the
+// articulated ones 6.27 m more from the middle to the driven rear axle (pushers).
+const AXLES_SHORT = (front: number): Frame["axles"] => [{ at: front, dual: false }, { at: front + 5.6, dual: true, drive: true }];
+const AXLES_LONG = (front: number): Frame["axles"] => [{ at: front, dual: false }, { at: front + 5.6, dual: true }, { at: front + 11.87, dual: true, drive: true }];
+
+const FRAMES: Record<string, Frame> = {
+  short700: { nose: 0.1, tail: 11.5, length: 10.975, bodies: [[0.1, 11.5]], axles: AXLES_SHORT(2.29) },
+  short900: { nose: 0.1, tail: 11.7, length: 11.345, bodies: [[0.1, 11.7]], axles: AXLES_SHORT(2.355) },
+  short951: { nose: 0.1, tail: 11.7, length: 11.32, bodies: [[0.1, 11.7]], axles: AXLES_SHORT(2.355) },
+  long700: { nose: 0.2, tail: 17.9, length: 17.355, bodies: [[0.2, 9.7], [11.6, 17.9]], axles: AXLES_LONG(2.29) },
+  long900: { nose: 0.0, tail: 18.0, length: 17.615, bodies: [[0.0, 9.6], [11.5, 18.0]], axles: AXLES_LONG(2.355) },
+  long951: { nose: 0.0, tail: 17.9, length: 17.59, bodies: [[0.0, 9.6], [11.5, 17.9]], axles: AXLES_LONG(2.355) },
 };
 
 /** Body half width (m) and the height of the belt, eave and roof crown. */
@@ -100,7 +104,7 @@ const HW = 1.25;
 const BOTTOM = 0.3;
 const BELT = 1.5;
 const EAVE = 2.9;
-const ROOF = 3.1;
+const ROOF = 3.1; // the XML's crown; the hatches bring it to the quoted 3.165 m
 const WHEEL_R = 0.52;
 
 /** The source-to-factory mapping of one family. */
@@ -116,7 +120,7 @@ class Karosa {
 }
 
 export function karosaBus(variant: KarosaVariant, long: boolean): MeshBuilder {
-  const K = new Karosa(long ? LONG_FRAME : SHORT_FRAME);
+  const K = new Karosa(FRAMES[`${long ? "long" : "short"}${variant.series}`]!);
   const x = (u: number): number => K.x(u);
   const nose = x(K.f.nose);
   const tail = x(K.f.tail);
@@ -146,55 +150,27 @@ export function karosaBus(variant: KarosaVariant, long: boolean): MeshBuilder {
     { x0: tail - 1, x1: nose + 1, y0: BOTTOM, y1: 0.8, mat: stripe },
     // the nose's lower panel, wrapping round the corners
     ...(series === "700"
-      ? [{ x0: nose - 0.14, x1: nose + 1, y0: 0.55, y1: 1.32, mat: stripe }]
-      : [{ x0: nose - 0.14, x1: nose + 1, y0: 1.2, y1: 1.32, mat: stripe }, { x0: nose - 0.14, x1: nose + 1, y0: BOTTOM, y1: 0.85, mat: "maskGrey" }]),
+      ? [{ x0: nose - 0.14, x1: nose + 1, y0: 1.15, y1: 1.55, mat: stripe }, { x0: nose - 0.14, x1: nose + 1, y0: 0.62, y1: 1.15, mat: "maskBlack" }]
+      : []),
+    { x0: tail - 1, x1: tail + 0.1, y0: 1.4, y1: 1.95, mat: stripe },
     ...(variant.greyRoof ? [{ x0: tail - 1, x1: nose + 1, y0: 2.95, y1: ROOF + 1, mat: "roofGrey" }] : []),
   ];
-  const axles: Axle[] = K.f.axles.map((a, i) => ({ x: x(a.u), dual: a.dual, steer: i === 0, drive: a.drive ?? false }));
+  const axles: Axle[] = K.f.axles.map((a, i) => ({ x: nose - a.at, dual: a.dual, steer: i === 0, drive: a.drive ?? false }));
   const arches: Arch[] = axles.map((a) => ({ x: a.x, half: a.steer ? 0.62 : 0.6, side: 0.72, top: 1.14 }));
   const bodies: Array<[number, number]> = K.f.bodies.map(([u0, u1]) => [x(u1), x(u0)]);
 
-  const frame: BusFrame = { section, side };
-  const fittings: Fitting[] = [];
-  const fit = (group: string, at: number, draw: () => void): void => {
-    fittings.push({ group, x: at, draw });
-  };
+  const draft = new BusDraft({ section, side });
+  const frame = draft.frame;
+  const m = (): MeshBuilder => draft.m;
+  const fit = (group: string, at: number, draw: () => void): void => draft.fit(group, at, draw);
 
   // --- glazing and doors ------------------------------------------------------------
-  // the window band: glass 1.9..2.7 in a dark grey surround 1.75..2.82
-  const GLASS: [number, number] = [1.92, 2.68];
-  const SURROUND: [number, number] = [1.78, 2.8];
-  const window = (s: number, u0: number, u1: number, vent = true): void => {
-    const [x0, x1] = [x(u1), x(u0)];
-    fit(s > 0 ? "right windows" : "left windows", (x0 + x1) / 2, () => {
-      sideSlab(m(), "frame", frame, s, x0, x1, SURROUND[0], SURROUND[1], 0.012);
-      sideSlab(m(), "glass", frame, s, x0 + 0.06, x1 - 0.06, GLASS[0], GLASS[1], 0.022);
-      // the top-hung vent's lower rail
-      if (vent && x1 - x0 > 0.9) sideSlab(m(), "frame", frame, s, x0 + 0.04, x1 - 0.04, 2.42, 2.46, 0.03);
-    });
-  };
-  /** Fills u0..u1 with panes of about 1.8 m between narrow pillars. */
-  const windowRun = (s: number, u0: number, u1: number): void => {
-    const n = Math.max(1, Math.round((u1 - u0) / 1.8));
-    const w = (u1 - u0) / n;
-    for (let i = 0; i < n; i++) window(s, u0 + i * w + 0.05, u0 + (i + 1) * w - 0.05);
-  };
-  const door = (u0: number, u1: number): void => {
-    const [x0, x1] = [x(u1), x(u0)];
-    const leaves = x1 - x0 > 0.95 ? 2 : 1;
-    fit("doors", (x0 + x1) / 2, () => {
-      // the opening's dark surround, then each leaf: a light frame round two panes
-      sideSlab(m(), "frame", frame, 1, x0, x1, BOTTOM + 0.04, 2.8, 0.01);
-      const lw = (x1 - x0 - 0.06) / leaves;
-      for (let l = 0; l < leaves; l++) {
-        const a = x0 + 0.03 + l * lw;
-        const b = a + lw - 0.02;
-        block(m(), "doorFrame", a, b, BOTTOM + 0.08, 2.72, HW + 0.012, HW + 0.03);
-        block(m(), "glass", a + 0.06, b - 0.06, 1.15, 2.6, HW + 0.025, HW + 0.04);
-        block(m(), "glass", a + 0.06, b - 0.06, 0.45, 1.05, HW + 0.025, HW + 0.04);
-      }
-    });
-  };
+  // (native BMPs: glass 1.9..2.7 m in a dark surround 1.8..2.8 m, the upper part a
+  // top-hung vent; photographs: two-leaf folding doors, glazed in two panes)
+  const PANE: PaneStyle = { glass: [1.92, 2.68], surround: [1.78, 2.8], vent: 2.42 };
+  const DOOR: DoorStyle = { bottom: BOTTOM + 0.08, top: 2.72, leafMat: "doorFrame", panes: [[1.15, 2.6], [0.45, 1.05]], surround: "frame", leafWidth: 0.7 };
+  /** Fills u0..u1 on side `s` with panes. */
+  const windowRun = (s: number, u0: number, u1: number): void => draft.run(s, x(u1), x(u0), PANE);
   const bodyRanges = K.f.bodies;
   for (const [b0, b1] of bodyRanges) {
     // right side: the windows between the doors
@@ -206,70 +182,119 @@ export function karosaBus(variant: KarosaVariant, long: boolean): MeshBuilder {
     }
     const end = b1 === K.f.tail ? b1 - 0.6 : b1 - 0.3;
     if (end - at > 0.6) windowRun(1, at + 0.1, end);
-    // left side: the driver's window, then one run
+    // left side: the driver's sliding window, then one run
     const start = b0 === K.f.nose ? 1.5 : b0 + 0.3;
-    if (b0 === K.f.nose) window(-1, 0.55, 1.4, false);
+    if (b0 === K.f.nose) draft.pane(-1, x(1.4), x(0.55), { ...PANE, vent: undefined });
     windowRun(-1, start, end);
   }
-  for (const [d0, d1] of variant.doors) door(d0, d1);
+  for (const [d0, d1] of variant.doors) draft.door(x(d1), x(d0), DOOR);
 
   // --- the nose ---------------------------------------------------------------------
+  // (photographs: a near-upright windscreen down to 1.65 m over a white strip, a
+  // livery-coloured panel with louvres, a black band holding round headlamps and
+  // the grille, the bumper in the livery colour)
   fit("front", nose, () => {
-    const wsTop = series === "951" ? 2.78 : 2.68;
-    endSlab(m(), "frame", frame, 1, -1.18, 1.18, 1.36, wsTop + 0.08, 0.01);
-    endSlab(m(), "glass", frame, 1, -1.12, 1.12, 1.42, wsTop, 0.02);
-    // the destination display behind the windscreen's top
-    endSlab(m(), "sign", frame, 1, -0.75, 0.75, wsTop - 0.24, wsTop - 0.04, 0.026);
-    endSlab(m(), "signText", frame, 1, -0.6, 0.6, wsTop - 0.17, wsTop - 0.11, 0.03);
+    const wsTop = series === "951" ? 2.9 : 2.88;
+    const wsBottom = series === "700" ? 1.66 : 1.7;
+    endSlab(m(), "frame", frame, 1, -1.21, 1.21, wsBottom - 0.04, wsTop + 0.02, 0.01);
+    endSlab(m(), "glass", frame, 1, -1.15, 1.15, wsBottom, wsTop - 0.03, 0.02);
+    // the destination display behind the windscreen's top, and the wipers at rest
+    endSlab(m(), "sign", frame, 1, -0.72, 0.72, wsTop - 0.3, wsTop - 0.06, 0.026);
+    endSlab(m(), "signText", frame, 1, -0.6, 0.6, wsTop - 0.22, wsTop - 0.14, 0.03);
+    for (const z of [-0.98, 0.08]) endSlab(m(), "frame", frame, 1, z, z + 0.86, wsBottom + 0.05, wsBottom + 0.08, 0.03);
     if (series === "700") {
-      // a black grille band with paired rectangular headlamps at its ends
-      endSlab(m(), "grille", frame, 1, -0.82, 0.82, 0.74, 1.12, 0.012);
-      for (const s of [-1, 1]) {
-        endSlab(m(), "grille", frame, 1, s > 0 ? 0.86 : -1.18, s > 0 ? 1.18 : -0.86, 0.72, 1.14, 0.012);
-        endSlab(m(), "lampHead", frame, 1, s * 1.12 - 0.1, s * 1.12 + 0.1, 0.8, 0.98, 0.02);
-        endSlab(m(), "lampAmber", frame, 1, s * 1.1 - 0.07, s * 1.1 + 0.07, 1.02, 1.1, 0.02);
+      // louvres right of the centre in the coloured panel, indicators at its ends
+      endSlab(m(), "grille", frame, 1, -0.42, 0.98, 1.21, 1.47, 0.008);
+      for (let i = 0; i < 16; i++) {
+        const z = -0.38 + i * 0.086;
+        endSlab(m(), "stripe", frame, 1, z, z + 0.035, 1.21, 1.47, 0.016);
       }
-      for (let i = 0; i < 6; i++) endSlab(m(), "frame", frame, 1, -0.78, 0.78, 0.78 + i * 0.06, 0.8 + i * 0.06, 0.018);
+      for (const s of [-1, 1]) endSlab(m(), "lampAmber", frame, 1, s * 1.12 - 0.06, s * 1.12 + 0.06, 1.2, 1.44, 0.014);
+      // the black band: the grille's mesh between two round headlamps in square housings
+      endSlab(m(), "grille", frame, 1, -0.78, 0.78, 0.7, 1.08, 0.008);
+      for (let i = 0; i < 5; i++) endSlab(m(), "frame", frame, 1, -0.76, 0.76, 0.74 + i * 0.07, 0.76 + i * 0.07, 0.014);
+      for (const s of [-1, 1]) {
+        endSlab(m(), "frame", frame, 1, s * 0.95 - 0.17, s * 0.95 + 0.17, 0.72, 1.06, 0.008);
+        endLamp(m(), "lampHead", frame, 1, s * 0.95, 0.89, 0.105, 0.016, "chrome", 12);
+      }
     } else {
-      // the 900s' grey mask: headlamp clusters each side of a black grille
-      endSlab(m(), "grille", frame, 1, -0.45, 0.45, 0.88, 1.12, 0.012);
-      for (const s of [-1, 1]) {
-        endSlab(m(), "frame", frame, 1, s > 0 ? 0.55 : -1.15, s > 0 ? 1.15 : -0.55, 0.9, 1.12, 0.012);
-        endLamp(m(), "lampHead", frame, 1, s * 0.98, 1.01, 0.08, 0.02);
-        endLamp(m(), "lampHead", frame, 1, s * 0.75, 1.01, 0.08, 0.02);
-        endSlab(m(), "lampAmber", frame, 1, s * 1.08 - 0.06, s * 1.08 + 0.06, 0.6, 0.72, 0.02);
+      // the 900s (photographs of B 941 E, B 961 E): a white panel under the
+      // windscreen -- a slatted grille on its right (the 931s and 941s) or two slots
+      // (the 951 and 961) -- over a deep bumper in the livery colour that carries
+      // round headlamps, the indicators outside them and a black slot between
+      if (series === "900") {
+        endSlab(m(), "grille", frame, 1, 0.3, 1.0, 1.08, 1.34, 0.008);
+        for (let i = 0; i < 4; i++) endSlab(m(), "body", frame, 1, 0.32, 0.98, 1.1 + i * 0.065, 1.13 + i * 0.065, 0.016);
+      } else {
+        for (const [z0, z1] of [[-0.95, -0.3], [0.2, 0.85]] as const) endSlab(m(), "grille", frame, 1, z0, z1, 1.14, 1.22, 0.008);
       }
+      const front = nose + 0.08;
+      block(m(), "stripe", nose - 0.05, front, 0.33, 0.98, -1.24, 1.24);
+      for (const s of [-1, 1]) {
+        block(m(), "frame", front - 0.01, front + 0.008, 0.71, 0.89, s * 0.93 - 0.11, s * 0.93 + 0.11);
+        block(m(), "lampHead", front, front + 0.015, 0.74, 0.86, s * 0.93 - 0.08, s * 0.93 + 0.08);
+        block(m(), "lampAmber", front - 0.01, front + 0.012, 0.72, 0.86, s * 1.14 - 0.07, s * 1.14 + 0.07);
+      }
+      block(m(), "grille", front - 0.01, front + 0.008, 0.74, 0.87, -0.6, 0.6);
+      block(m(), "plateYellow", front, front + 0.015, 0.47, 0.6, -0.26, 0.26);
     }
-    // the number plate on the bumper, the bumper below
-    endSlab(m(), "plate", frame, 1, -0.26, 0.26, 0.5, 0.62, 0.025);
-    endSlab(m(), "bumper", frame, 1, -1.22, 1.22, 0.32, 0.5, 0.03, 0.05);
+    if (series === "700") {
+      // the bumper: a deep bar with rubber blocks; the plate on it, right of the centre
+      block(m(), "stripe", nose - 0.04, nose + 0.08, 0.33, 0.62, -1.24, 1.24);
+      for (const z of [-0.78, 0.86]) block(m(), "rubber", nose + 0.07, nose + 0.1, 0.36, 0.6, z - 0.05, z + 0.05);
+      block(m(), "plateYellow", nose + 0.07, nose + 0.095, 0.41, 0.53, 0.02, 0.54);
+    }
   });
 
   // --- the tail ---------------------------------------------------------------------
+  // (photographs: a big rear window over the livery's belt, a vent on the left, the
+  // engine flap with the plate, tail light columns at the corners)
   fit("rear", tail, () => {
-    endSlab(m(), "frame", frame, -1, -0.92, 0.92, 1.86, 2.66, 0.01);
-    endSlab(m(), "glass", frame, -1, -0.86, 0.86, 1.92, 2.6, 0.02);
-    // the engine flap's louvres
-    for (let i = 0; i < 5; i++) endSlab(m(), "grille", frame, -1, -0.7, 0.7, 0.95 + i * 0.08, 0.99 + i * 0.08, 0.012);
-    for (const s of [-1, 1]) {
-      endSlab(m(), "lampRed", frame, -1, s * 1.05 - 0.09, s * 1.05 + 0.09, 1.0, 1.24, 0.015);
-      endSlab(m(), "lampAmber", frame, -1, s * 1.05 - 0.09, s * 1.05 + 0.09, 1.26, 1.36, 0.015);
+    if (series === "700") {
+      endSlab(m(), "frame", frame, -1, -1.1, 1.1, 1.93, 2.88, 0.01);
+      endSlab(m(), "glass", frame, -1, -1.04, 1.04, 1.99, 2.82, 0.02);
+      // the engine compartment's vent, high on the left
+      endSlab(m(), "grille", frame, -1, -1.0, -0.72, 1.48, 1.86, 0.008);
+      for (let i = 0; i < 5; i++) endSlab(m(), "frame", frame, -1, -0.99 + i * 0.056, -0.97 + i * 0.056, 1.5, 1.84, 0.014);
+    } else {
+      // (photograph of a B 941: a smaller window high up, louvres in the belt)
+      endSlab(m(), "frame", frame, -1, -0.92, 0.92, 2.08, 2.84, 0.01);
+      endSlab(m(), "glass", frame, -1, -0.87, 0.87, 2.13, 2.79, 0.02);
+      for (let i = 0; i < 4; i++) endSlab(m(), "grille", frame, -1, -1.08, -0.1, 1.5 + i * 0.09, 1.54 + i * 0.09, 0.008);
     }
-    endSlab(m(), "plate", frame, -1, -0.26, 0.26, 0.62, 0.74, 0.02);
-    endSlab(m(), "bumper", frame, -1, -1.2, 1.2, 0.34, 0.52, 0.03, 0.05);
+    // the engine flap: a seam round it, a handle above the plate
+    endSlab(m(), "frame", frame, -1, -0.86, 0.86, 0.58, 1.36, 0.006);
+    endSlab(m(), "body", frame, -1, -0.84, 0.84, 0.6, 1.34, 0.01);
+    endSlab(m(), "chrome", frame, -1, -0.16, 0.16, 1.02, 1.06, 0.02);
+    endSlab(m(), "plateYellow", frame, -1, -0.17, 0.17, 0.78, 0.98, 0.016);
+    for (const s of [-1, 1]) {
+      const z = s * 1.04;
+      endSlab(m(), "lampAmber", frame, -1, z - 0.08, z + 0.08, 1.06, 1.16, 0.014);
+      endSlab(m(), "lampRed", frame, -1, z - 0.08, z + 0.08, 0.88, 1.05, 0.014);
+      endSlab(m(), "lampHead", frame, -1, z - 0.08, z + 0.08, 0.77, 0.87, 0.014);
+    }
+    block(m(), "stripe", tail - 0.07, tail + 0.03, 0.33, 0.56, -1.24, 1.24);
+    for (const s of [-1, 1]) block(m(), "lampRed", tail - 0.085, tail - 0.065, 0.4, 0.48, s * 1.0 - 0.04, s * 1.0 + 0.04);
+  });
+  // the engine's side grille, low on the right behind the last door
+  fit("engine grille", tail + 0.8, () => {
+    for (let i = 0; i < 5; i++) sideSlab(m(), "grille", frame, 1, tail + 0.25, tail + 1.35, 0.4 + i * 0.09, 0.45 + i * 0.09, 0.012);
   });
 
   // --- roof, mirrors, markers -------------------------------------------------------
-  for (const [u0, u1, h] of [[1.0, 1.4, 0.1], [3.4, 3.9, 0.1], [6.2, 6.8, 0.1], [8.7, 9.3, 0.1], [10.3, 10.9, 0.1], [12.4, 13.0, 0.1], [15.1, 15.7, 0.1]] as const) {
+  // (the XML's roof boxes; the 951 and 961 carry an air-conditioning pod at the front instead of the first)
+  if (series === "951") fit("roof", x(1.0), () => block(m(), "roofHatch", x(1.45), x(0.6), ROOF - 0.04, 3.32, -0.5, 0.5));
+  for (const [u0, u1, h] of [[1.0, 1.4, 0.065], [3.4, 3.9, 0.065], [6.2, 6.8, 0.065], [8.7, 9.3, 0.065], [10.3, 10.9, 0.065], [12.4, 13.0, 0.065], [15.1, 15.7, 0.065]] as const) {
+    if (series === "951" && u0 < 1.5) continue;
     if (u1 > K.f.tail - 0.4) continue;
     if (bodyRanges.every(([b0, b1]) => u0 < b0 + 0.2 || u1 > b1 - 0.2)) continue;
-    fit("roof hatches", x((u0 + u1) / 2), () => block(m(), "roofHatch", x(u1), x(u0), ROOF - 0.04, ROOF + h, -0.45, 0.45));
+    fit("roof hatches", x((u0 + u1) / 2), () => block(m(), "roofHatch", x(u1), x(u0), ROOF - 0.04, ROOF + h, -0.4, 0.4));
   }
   fit("mirrors", nose, () => {
-    for (const s of [-1, 1]) mirror(m(), frame, s, nose - 0.35, 2.55, HW + 0.09, { h: 0.42, w: 0.2, drop: 0.08 });
+    for (const s of [-1, 1]) mirror(m(), frame, s, nose, s > 0 ? 2.8 : 2.55, { h: 0.42, w: 0.2, drop: 0.06 });
   });
 
-  const spec: BusSpec = {
+  return draft.build({
     palette: busPalette({
       body: "#f4f4f1",
       stripe: liv.stripe,
@@ -277,6 +302,7 @@ export function karosaBus(variant: KarosaVariant, long: boolean): MeshBuilder {
       doorFrame: "#c8cbcc",
       bumper: "#2e3034",
       maskGrey: "#7d8186",
+      maskBlack: "#1d1e21",
       roofHatch: "#d9dbdb",
       roofGrey: "#a7aaad",
     }),
@@ -287,12 +313,7 @@ export function karosaBus(variant: KarosaVariant, long: boolean): MeshBuilder {
     hingeY: 0.6,
     maxSteerDeg: 50,
     maxBendDeg: 50,
-    fittings,
-  };
-  // the mesh builder exists only once assembleBus runs; fittings draw into it then
-  let builder: MeshBuilder | null = null;
-  const m = (): MeshBuilder => builder!;
-  return assembleBus(spec, (b) => (builder = b));
+  });
 }
 
 export function karosaShort(params?: ParamValues): MeshBuilder {

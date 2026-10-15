@@ -95,6 +95,12 @@ A **parametric** model's entry also carries `params`: its enum parameters as
 are the default build; the JS model builds the other combinations
 ([parameters.md](parameters.md)). A fixed model's entry has no `params` key.
 
+A **rigged** vehicle - every road vehicle - also carries `rig`: the GLB node names
+of its steered front wheels and, for an articulated vehicle, of its sections and
+joints, with the pivots, limits and joint shapes the game needs to move them
+([vehicle-rig.md](vehicle-rig.md)). The same object is in the GLB's scene extras.
+The buses take `BUS_CATALOG` (category `Road vehicles`, group `bus`).
+
 ## `catalog.json` (the site's data)
 
 `{ version: 1, records: CatalogRecord[] }`, one record per design - the

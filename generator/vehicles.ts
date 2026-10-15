@@ -22,6 +22,7 @@ export { csdClassicGreenCoach, csdBalm, csdBam, csdBdmtee, csdBe31, csdBi20, csd
 export { bmoCoach } from "./bmoCoach.ts";
 export { cdGreenWhiteCoach } from "./cdGreenWhiteCoach.ts";
 export { karosaShort, karosaLong } from "./karosa.ts";
+export { bus1, karosaRenault12, karosaRenault18, mbCitaro, mbCitaroBlue, mbO345g, solarisUrbino15 } from "./cityBuses.ts";
 
 // Chrome is only mildly metallic: the game and the site light models without an
 // environment map, so a fully metallic surface would render nearly black.

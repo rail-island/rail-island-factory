@@ -11,6 +11,7 @@ import { endAt, halfWidth, rectAB } from "./busBody.ts";
 export const BUS_BASE_PALETTE: Record<string, MaterialSpec> = {
   glass: { color: "#26323f", metallic: 0.2, roughness: 0.15 },
   glassDark: { color: "#161c24", metallic: 0.2, roughness: 0.15 },
+  glassLight: { color: "#456d7a", metallic: 0.2, roughness: 0.15 },
   rubber: { color: "#1c1c1e", roughness: 0.95 },
   frame: { color: "#2b2d31", roughness: 0.6 },
   under: { color: "#26272a", roughness: 0.9 },
@@ -24,7 +25,7 @@ export const BUS_BASE_PALETTE: Record<string, MaterialSpec> = {
   plateYellow: { color: "#f2c21b", roughness: 0.5 },
   sign: { color: "#141414", roughness: 0.4 },
   signText: { color: "#ffb21e", roughness: 0.3 },
-  bellows: { color: "#2a2b2e", roughness: 0.9 },
+  bellows: { color: "#56585b", roughness: 0.9 },
   grille: { color: "#1e1f22", roughness: 0.7 },
 };
 
@@ -51,9 +52,9 @@ export function busWheel(m: MeshBuilder, x: number, radius: number, z0: number, 
   const f = face > 0 ? z1 : z0;
   const disc = ngon(12, radius * 0.56, 0, x, y);
   const hub = ngon(8, radius * 0.2, Math.PI / 8, x, y);
-  // the disc is dished: it sits a little inside the tyre's face
-  m.sweep("rim", "z", disc, f - face * 0.05, disc, f - face * 0.015);
-  m.sweep("hub", "z", hub, f - face * 0.02, hub, f + face * 0.02);
+  // the steel disc just proud of the (solid) tyre's face, the hub proud of the disc
+  m.sweep("rim", "z", disc, f - face * 0.01, disc, f + face * 0.012);
+  m.sweep("hub", "z", hub, f, hub, f + face * 0.04);
 }
 
 /** An axle beam across the bus at x, between the wheels. */
@@ -128,16 +129,19 @@ export function endLamp(m: MeshBuilder, mat: string, f: BusFrame, end: 1 | -1, z
 }
 
 /**
- * An outside mirror on a stalk, on side `s`, its glass facing backward: the
- * stalk from (x, y) on the shell out to `reach` from the centre line, the head
- * hanging below it.
+ * An outside mirror on side `s`, ahead of the nose's corner: an arm from the
+ * corner forward to the head, which hangs `drop` below it with its glass facing
+ * back. The head reaches out to `reach` from the centre line at most (the road
+ * width rule: 1.35 m).
  */
-export function mirror(m: MeshBuilder, f: BusFrame, s: number, x: number, y: number, reach: number, head: { h: number; w: number; drop: number }): void {
-  const z0 = halfWidth(f.section, y) - 0.02;
-  const zs: [number, number] = s > 0 ? [z0, reach] : [-reach, -z0];
-  block(m, "frame", x - 0.02, x + 0.02, y - 0.02, y + 0.02, ...zs);
-  const zc = s * (reach - head.w / 2);
-  const top = y + 0.02 - head.drop + head.h;
-  block(m, "frame", x - 0.03, x + 0.04, top - head.h, top, zc - head.w / 2, zc + head.w / 2);
-  block(m, "glass", x - 0.045, x - 0.03, top - head.h + 0.02, top - 0.02, zc - head.w / 2 + 0.02, zc + head.w / 2 - 0.02);
+export function mirror(m: MeshBuilder, f: BusFrame, s: number, nose: number, y: number, head: { h: number; w: number; drop: number; fwd?: number }): void {
+  // both mirrors reach as far out, whatever height they hang at: the body's widest plus a little
+  const reach = Math.min(Math.max(...f.section.map(([z]) => Math.abs(z))) + 0.08, 1.345);
+  const fwd = head.fwd ?? 0.22;
+  const zi = reach - head.w;
+  const zs = (a: number, b: number): [number, number] => (s > 0 ? [a, b] : [-b, -a]);
+  block(m, "frame", nose - 0.2, nose + fwd + 0.02, y - 0.02, y + 0.02, ...zs(zi + 0.02, zi + 0.06));
+  const top = y - head.drop;
+  block(m, "frame", nose + fwd - 0.03, nose + fwd + 0.04, top - head.h, top, ...zs(zi, reach));
+  block(m, "glass", nose + fwd - 0.045, nose + fwd - 0.02, top - head.h + 0.02, top - 0.02, ...zs(zi + 0.02, reach - 0.02));
 }

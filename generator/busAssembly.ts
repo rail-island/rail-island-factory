@@ -10,9 +10,9 @@
 
 import { MeshBuilder, type MaterialSpec } from "./meshBuilder.ts";
 import { drawJoint, type JointRig, type SectionRig, type VehicleRig } from "./rig.ts";
-import { drawShell, type Arch, type Paint } from "./busBody.ts";
-import { AXLE_FACTOR, axleBeam, busWheel, onSide } from "./busKit.ts";
-import { steeredWheels } from "./vehicleParts.ts";
+import { drawShell, halfWidth, type Arch, type Paint } from "./busBody.ts";
+import { AXLE_FACTOR, axleBeam, busWheel, onSide, sideSlab, type BusFrame } from "./busKit.ts";
+import { block, steeredWheels } from "./vehicleParts.ts";
 
 /** One axle: where it is, and what it carries. */
 export interface Axle {
@@ -94,9 +94,9 @@ export function assembleBus(spec: BusSpec, bind?: (m: MeshBuilder) => void): Mes
         section: spec.section, side: spec.side, plan: spec.plan, base: spec.base, paint: spec.paint,
         arches: spec.arches, under: "under", x0: lo, x1: hi,
       });
-      for (const a of spec.axles) {
-        if (a.x < lo || a.x > hi) continue;
-        m.scope(a.steer ? "front axle" : `axle ${a.x.toFixed(1)}`, () => {
+      spec.axles.forEach((a, ai) => {
+        if (a.x < lo || a.x > hi) return;
+        m.scope(a.steer ? "front axle" : `axle ${ai + 1}`, () => {
           axleBeam(m, a.x, r, (a.dual ? spec.tyres.inner[0] : spec.tyres.single[0]) + 0.02, a.drive ?? false);
           if (a.steer) return; // its wheels are parts of their own
           for (const s of [-1, 1]) m.scope(s > 0 ? "right wheels" : "left wheels", () => {
@@ -106,7 +106,7 @@ export function assembleBus(spec: BusSpec, bind?: (m: MeshBuilder) => void): Mes
             } else busWheel(m, a.x, r, ...onSide(s, ...spec.tyres.single), s);
           });
         });
-      }
+      });
       drawFittings(m, spec.fittings, lo, hi);
     });
     if (i === 0) {
@@ -151,4 +151,94 @@ export function assembleBus(spec: BusSpec, bind?: (m: MeshBuilder) => void): Mes
   }
   m.rig = rig;
   return m;
+}
+
+// --- drafting a bus: fittings first, the builder later -----------------------------
+
+/** How a side window looks. Heights are metres above the road. */
+export interface PaneStyle {
+  /** The glass's height range. */
+  glass: [number, number];
+  /** A surround's height range (the rubber or frame round the glass); none for bonded glazing. */
+  surround?: [number, number];
+  /** How far the glass stops short of the surround's ends. */
+  inset?: number;
+  /** The height of a top-hung vent's lower rail, if the pane has one. */
+  vent?: number;
+  glassMat?: string;
+  surroundMat?: string;
+}
+
+/** How a passenger door looks: leaves in a frame material, each with panes. */
+export interface DoorStyle {
+  bottom: number;
+  top: number;
+  leafMat: string;
+  /** The glass in each leaf, height ranges. */
+  panes: Array<[number, number]>;
+  /** The opening's dark surround, if drawn. */
+  surround?: string;
+  /** A leaf's width at most: the door gets as many leaves as that needs. */
+  leafWidth?: number;
+}
+
+/**
+ * Collects a bus's fittings (glazing, doors, lamps, ...) before the mesh builder
+ * exists -- they are found by their x and drawn into the section they fall in --
+ * then builds it (assembleBus).
+ */
+export class BusDraft {
+  readonly fittings: Fitting[] = [];
+  private builder: MeshBuilder | null = null;
+
+  constructor(readonly frame: BusFrame) {}
+
+  /** The mesh builder: only while the bus is being built. */
+  get m(): MeshBuilder {
+    if (!this.builder) throw new Error("a fitting drew outside build()");
+    return this.builder;
+  }
+
+  fit(group: string, x: number, draw: () => void): void {
+    this.fittings.push({ group, x, draw });
+  }
+
+  /** One side window over x0..x1 on side `s` (+1 right, -1 left). */
+  pane(s: number, x0: number, x1: number, st: PaneStyle): void {
+    const inset = st.inset ?? 0.06;
+    this.fit(s > 0 ? "right windows" : "left windows", (x0 + x1) / 2, () => {
+      if (st.surround) sideSlab(this.m, st.surroundMat ?? "frame", this.frame, s, x0, x1, st.surround[0], st.surround[1], 0.012);
+      sideSlab(this.m, st.glassMat ?? "glass", this.frame, s, x0 + inset, x1 - inset, st.glass[0], st.glass[1], 0.022);
+      if (st.vent !== undefined && x1 - x0 > 0.9) sideSlab(this.m, st.surroundMat ?? "frame", this.frame, s, x0 + inset - 0.02, x1 - inset + 0.02, st.vent, st.vent + 0.04, 0.03);
+    });
+  }
+
+  /** Fills x0..x1 on side `s` with panes about `pitch` long, `gap` apart. */
+  run(s: number, x0: number, x1: number, st: PaneStyle, pitch = 1.8, gap = 0.1): void {
+    const n = Math.max(1, Math.round((x1 - x0) / pitch));
+    const w = (x1 - x0) / n;
+    for (let i = 0; i < n; i++) this.pane(s, x0 + i * w + gap / 2, x0 + (i + 1) * w - gap / 2, st);
+  }
+
+  /** A passenger door over x0..x1 on side `s` (the right, +1, by default). */
+  door(x0: number, x1: number, st: DoorStyle, s = 1): void {
+    const leaves = Math.max(1, Math.ceil((x1 - x0 - 0.06) / (st.leafWidth ?? 0.62) - 1e-9));
+    this.fit(s > 0 ? "right doors" : "left doors", (x0 + x1) / 2, () => {
+      const m = this.m;
+      if (st.surround) sideSlab(m, st.surround, this.frame, s, x0, x1, st.bottom - 0.04, st.top + 0.04, 0.01);
+      const hw = halfWidth(this.frame.section, st.bottom + 0.2);
+      const lw = (x1 - x0 - 0.06) / leaves;
+      for (let l = 0; l < leaves; l++) {
+        const a = x0 + 0.03 + l * lw;
+        const b = a + lw - 0.02;
+        block(m, st.leafMat, a, b, st.bottom, st.top, ...onSide(s, hw + 0.006, hw + 0.02));
+        for (const [y0, y1] of st.panes) block(m, "glass", a + 0.06, b - 0.06, y0, y1, ...onSide(s, hw + 0.014, hw + 0.026));
+      }
+    });
+  }
+
+  /** Builds the bus with these fittings. */
+  build(spec: Omit<BusSpec, "fittings">): MeshBuilder {
+    return assembleBus({ ...spec, fittings: this.fittings }, (b) => (this.builder = b));
+  }
 }

@@ -106,6 +106,14 @@ function outlinePlanes(outline: Array<[number, number]>, lift: (a: number, b: nu
     area += a0 * b1 - a1 * b0;
   }
   const s = area > 0 ? 1 : -1;
+  // a dent or a crossing would cut the solid away: every corner must turn the same way
+  for (let i = 0; i < n; i++) {
+    const [a0, b0] = outline[i]!;
+    const [a1, b1] = outline[(i + 1) % n]!;
+    const [a2, b2] = outline[(i + 2) % n]!;
+    const turn = (a1 - a0) * (b2 - b1) - (b1 - b0) * (a2 - a1);
+    if (turn * s < -1e-9) throw new Error(`a shell outline is not convex at point ${(i + 1) % n}`);
+  }
   const planes: Plane[] = [];
   for (let i = 0; i < n; i++) {
     const [a0, b0] = outline[i]!;
@@ -223,7 +231,11 @@ export function drawShell(m: MeshBuilder, s: Shell, name = "shell"): void {
     for (const x of [p.x0, p.x1]) if (x > lo && x < hi) xs.add(x);
     for (const y of [p.y0, p.y1]) if (y > bottom && y < top) ys.add(y);
   }
-  for (const a of s.arches) for (const [x] of archOutline(a)) if (x > lo && x < hi) xs.add(x);
+  for (const a of s.arches) {
+    for (const [x] of archOutline(a)) if (x > lo && x < hi) xs.add(x);
+    // the arch's crown and feet cut the bands too, so a wall into the notch is no taller than the notch
+    for (const y of [a.side, a.top]) if (y > bottom && y < top) ys.add(y);
+  }
   const xcuts = [...xs].sort((a, b) => a - b);
   const ycuts = [...ys].sort((a, b) => a - b);
   const colour = (x: number, y: number): string => {

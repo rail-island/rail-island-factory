@@ -1,6 +1,6 @@
 ---
 name: road-vehicle
-description: Model or change a procedural road vehicle (truck, articulated truck with trailer, bus, van, car) in generator/vehicles.ts - the triangle budget it must meet (about 10k triangles), the truck/trailer split at the coupling's rotation point for an articulated vehicle, the conventions, and how to check the result headlessly. Use whenever a road vehicle model is added or changed in this repository.
+description: Model or change a procedural road vehicle (truck, articulated truck with trailer, bus, articulated bus, van, car) in generator/vehicles.ts or generator/buses.ts - the triangle budget it must meet (about 10k triangles), the steered front wheels every road vehicle has as parts, the truck/trailer split at the coupling's rotation point, an articulated bus's sections and joints, the conventions, and how to check the result headlessly. Use whenever a road vehicle model is added or changed in this repository.
 ---
 
 # Road vehicle
@@ -43,7 +43,32 @@ the split. Every triangle must sit in a part once parts are used. Rules:
 - nothing of the trailer reaches into the tractor, and the trailer's landing
   gear sits behind the tractor's rear wheels.
 
-A rigid vehicle (bus, van, box truck) has no parts and is written as one node.
+## Steered front wheels (every road vehicle)
+
+The two front wheels are **parts of their own inside the front body's part**, so
+the game can steer them by turning a node, as it spins the wind turbine's rotor:
+
+- draw the body as a part first (`m.part("body", [0, 0, 0], ...)`; the truck's is
+  `truck`, an articulated bus's `section0`), leaving the front axle's beam in it;
+- then `steeredWheels(m, "body", axleX, axleY, drawWheel, [zInner, zOuter])`
+  (`vehicleParts.ts`): it draws `wheel-front-left` and `wheel-front-right` as
+  child parts with their pivots at the wheel centres;
+- set `m.rig = { steer: { nodes, maxAngleDeg, wheelbase, track }, ... }`
+  (`rig.ts`); the inner wheel's lock is about 40 degrees for a truck, 50 for a bus;
+- check the tyre at lock clears the fender or arch: a tyre only turns about its
+  own vertical, so its farthest point stays `hypot(r, width / 2)` from its centre.
+
+A rigid vehicle (bus, van, box truck) is then the body part with the two wheels in
+it, and no sections.
+
+## Articulated buses (sections + joints)
+
+An articulated bus is `section0`, `section1`, ... hinged in the middle of each
+gap, and a `joint<i>` part per gap drawn by `drawJoint()` -- the bellows the game
+re-draws between the sections with `renderJoint()`. Use `assembleBus()`
+(`busAssembly.ts`), which lays out the parts and the rig; see
+`docs/models/buses.md` and `docs/models/vehicle-rig.md`. Check the bend on the
+model page's Joint slider headlessly with a posed render (Steps, 4).
 
 ## Conventions
 
@@ -88,8 +113,11 @@ If downloading is not possible, tell the user and list what you would have used.
 3. `pnpm build:models` - read the triangle count; fix any z-fighting report.
 4. Look at `export/thumbs/<id>.png`, and render more views (side, front, rear,
    top) from a scratch copy of `renderGlbThumb.ts` with a different `VIEW_DIR`.
-   For an articulated vehicle also check the trailer swung: rotate the trailer
-   node and confirm it clears the tractor.
+   Also render it posed: build the JS module (`bundleDesign`), call its
+   `pose(group, { steer, bend })` and rasterize the group's triangles with back
+   faces culled (as three.js does) -- the steered wheels at lock, and for an
+   articulated vehicle the trailer or rear section swung, clear of the front one
+   and, for a bus, the bellows sealed.
 5. `pnpm typecheck`, `pnpm test`, `pnpm build`.
 6. Update `docs/models/vehicles.md` (the designs table, anything new), commit
    and push to `master`.
