@@ -1,8 +1,8 @@
 # CSD coaches
 
-**Covers** - the nine CSD passenger coaches and vans transferred from vlakosimdb, as eight designs (CSD A and B are one parametric model): their sources and photographs, the shared coach builder, running numbers, the per-coach choices and deviations, the native-raster comparison and its tests.
-**Code** - `generator/csdCoaches.ts`, `generator/csdCoachParts.ts`, `generator/strokeFont.ts`, `generator/csdCoachComparison.ts`, `generator/csdCoachReport.ts`, `test/csdCoaches.test.ts`, `assets/csd-*/`
-**See also** - [vehicles.md](vehicles.md), [parameters.md](parameters.md), [skyscrapers.md](skyscrapers.md) ("Flicker"), [the vlakosimdb-transfer skill](../../.agents/skills/vlakosimdb-transfer/SKILL.md), [the railroad-vehicle skill](../../.agents/skills/railroad-vehicle/SKILL.md)
+**Covers** - the nine CSD passenger coaches and vans transferred from vlakosimdb, as seven CSD designs (CSD A and B are one parametric model) plus the CSD livery of the Bmo double-deck coach: their sources and photographs, the shared coach builder, running numbers, the per-coach choices and deviations, the native-raster comparison and its tests.
+**Code** - `generator/csdCoaches.ts`, `generator/csdCoachParts.ts`, `generator/coachTransfers.ts`, `generator/strokeFont.ts`, `generator/csdCoachComparison.ts`, `generator/csdCoachReport.ts`, `test/csdCoaches.test.ts`, `assets/csd-*/`
+**See also** - [vehicles.md](vehicles.md), [bmo-double-deck.md](bmo-double-deck.md), [cd-green-white.md](cd-green-white.md), [parameters.md](parameters.md), [skyscrapers.md](skyscrapers.md) ("Flicker"), [the vlakosimdb-transfer skill](../../.agents/skills/vlakosimdb-transfer/SKILL.md), [the railroad-vehicle skill](../../.agents/skills/railroad-vehicle/SKILL.md)
 
 ## The designs
 
@@ -13,7 +13,11 @@ parametric design `veh-csd-classic-green-coach` ("CSD Classic Green Coach",
 parameter `variant` = `classA` (default) or `classB`; [parameters.md](parameters.md)).
 All are rigid, one GLB node, `category: "Rail vehicles"`, `group: "coach"`
 (`COACH_CATALOG`), and stay far inside the 25,000-triangle rail budget.
-`CSD_COACHES` lists the eight designs; `CSD_TRANSFERS` the nine transferred
+`CSD_COACHES` lists the seven CSD designs. The Bmo is now the parametric
+`veh-bmo-double-deck-coach` ([bmo-double-deck.md](bmo-double-deck.md); its
+`csd` livery is vlakosimdb csd_bmo), built by `bmoCoach.ts`, and the CD green
+and white coaches are `veh-cd-green-white-coach` ([cd-green-white.md](cd-green-white.md)).
+`COACH_TRANSFERS` (`coachTransfers.ts`) lists every transferred
 vlakosimdb vehicles (each with its design, parameters, native folder and centre).
 
 | id | title | what it is | over buffers | running gear | triangles |
@@ -24,7 +28,7 @@ vlakosimdb vehicles (each with its design, parameters, native folder and centre)
 | `veh-csd-bdmtee` | CSD Bdmtee | 26.4 m green commuter coach with two pairs of double doors set in from the ends and seven roof ventilators | 26.40 m | bogies 19.00 m apart, 2.50 m wheelbase | about 6,200 |
 | `veh-csd-be31` | CSD Be31 | two-axle coach with narrower enclosed end vestibules (side and end doors), seven windows and a toilet | 15.50 m | two axles 9.40 m apart, leaf springs | about 3,900 |
 | `veh-csd-bi20` | CSD Bi20 | short two-axle compartment coach: a door to each of six compartments, brass window frames, open end platforms with railings and side steps | 12.60 m | two axles 7.90 m apart, a queen-post truss | about 3,700 |
-| `veh-csd-bmo` | CSD Bmo | blue and beige double-deck coach: a lower deck dropped to 0.2 m between the bogies, six upper and six lower windows, double doors with canopies, single-level ends, yellow emblem wings | 26.80 m | bogies 19.80 m apart, 2.50 m wheelbase | about 6,400 |
+| `veh-bmo-double-deck-coach` (`livery=csd`) | Bmo Double-Deck Coach | blue and beige double-deck coach (see [bmo-double-deck.md](bmo-double-deck.md)): a lower deck dropped to 0.2 m between the bogies, six upper and six lower windows, double doors with canopies, single-level ends, yellow emblem wings | 26.80 m | bogies 19.80 m apart, 2.50 m wheelbase | about 6,400 |
 | `veh-csd-dsk` | CSD Dsk | two-axle planked luggage van: framing posts and diagonal braces, a large sliding door, lookout duckets and an open platform at the +X end | 10.50 m | two axles 6.20 m apart | about 3,200 |
 
 The source tree names every element: `body/<right|left>-side/window-<n>/frame`,
@@ -68,11 +72,12 @@ direction opposes its outward normal, so `z_dec` paints the source +z side,
 
 The Factory model is source `(x - centre, y, z)`: no axis is flipped, so
 `z_dec` is the right (+Z) side and the source x = 0 end is the rear (-X).
-`centre` is the midpoint between the buffer heads (`CSD_TRANSFERS` lists it).
+`centre` is the midpoint between the buffer heads (`COACH_TRANSFERS` lists it).
 
 ## The builder
 
-`csdCoachParts.ts` holds the `Coach` class the nine designs share.
+`csdCoachParts.ts` holds the `Coach` class every transferred coach shares (the CSD
+designs, the Bmo and the CD green and white coach).
 
 - **Volumes.** A `Volume` is an XML section, scaled across by the plan's half
   width at each station and clamped by the elevation's top and bottom: the

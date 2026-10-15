@@ -1,4 +1,6 @@
-# CSD Bmo - reference photos
+# Bmo Double-Deck Coach - reference photos
+
+One parametric model, `livery` csd (vlakosimdb csd_bmo), cdBlue, cdBlueGrey, cdRedDoors (cd_bmo#1..#3).
 
 Prototype: CSD Bap, in the 1980s/90s Bmo, now CD Bmto292 (50 54 26-18 101 to 150): 50 double-deck 2nd class coaches, 26.8 m, Goerlitz VI K bogies, 100 km/h, built in 1976 by VEB Waggonbau Goerlitz for the Praha - Cercany line. Source: https://cs.wikipedia.org/wiki/V%C5%AFz_Bmto292_%C4%8CD . Confidence: high. No free photo of the original blue/beige livery was found; the bogie photo of about 1997 shows the older dark blue body paint.
 
@@ -11,7 +13,7 @@ All files were downloaded from Wikimedia Commons, downscaled to at most 1600 px 
 - Author: PatrikPaprika
 - Licence: CC BY-SA 3.0
 - Date: 2014-04-19 08:41:23
-- Shows: Bmto double-deck coach, end three-quarter: end shape, upper/lower deck windows, door pair. Later CD light-blue/grey livery.
+- Shows: Bmto double-deck coach, end three-quarter: end shape, upper/lower deck windows, door pair. Later CD light-blue/grey livery with red doors (livery cdRedDoors).
 
 ## photo-bmto-side-praha-2014.jpg
 

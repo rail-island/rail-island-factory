@@ -6,7 +6,7 @@ description: Reconstruct or refine a procedural railway vehicle from vlakosimdb 
 # Vlakosimdb model transfer
 
 **Covers** - reference extraction, geometric reconstruction and measurable proportion matching.
-**Code** - `generator/cd163.ts`, `assets/cd-163/native/`, `generator/csdCoaches.ts`, `generator/csdCoachComparison.ts`, `test/models.test.ts`, `test/csdCoaches.test.ts`
+**Code** - `generator/cd163.ts`, `assets/cd-163/native/`, `generator/csdCoaches.ts`, `generator/bmoCoach.ts`, `generator/cdGreenWhiteCoach.ts`, `generator/coachTransfers.ts`, `generator/csdCoachComparison.ts`, `test/models.test.ts`, `test/csdCoaches.test.ts`
 **See also** - [railroad-vehicle](../railroad-vehicle/SKILL.md), [vehicle reference](../../../docs/models/vehicles.md), [CD 163 source notes](../../../assets/cd-163/SOURCES.md)
 
 Transfer the source vehicle's shape and layout into maintainable procedural

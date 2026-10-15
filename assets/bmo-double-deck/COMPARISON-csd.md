@@ -4,9 +4,9 @@
 **Code** - `generator/csdCoaches.ts`, `generator/csdCoachComparison.ts`, `generator/csdCoachReport.ts`.
 **See also** - [source notes](SOURCES.md), [CSD coaches](../../docs/models/csd-coaches.md).
 
-Model geometry revision (SHA-256 of comparison GLB): `91044295ebdc7d37034113675181d9523babd74be6ebb58d1228759ac0ed5523`.
+Model geometry revision (SHA-256 of comparison GLB): `4885f92ca52385185a5379e2090f2c3445e0436e1bb0ccfb076de19cee8eb138`.
 
-Regenerate with `pnpm exec tsx generator/csdCoachReport.ts csd_bmo`. The baseline is the first authored geometry (`native/baseline.json`); baseline and final use the same annotations.
+Regenerate with `pnpm exec tsx generator/csdCoachReport.ts csd_bmo`. The baseline is the first authored geometry (`native/csd_bmo/baseline.json`); baseline and final use the same annotations. Built with `livery=csd` of `veh-bmo-double-deck-coach`.
 
 Canvases: sides 27 x 5 m (270 x 50 px), ends 3 x 5 m (30 x 50 px), including empty space, 0.1 m a pixel. Origin top left; x right, y down. Side u = 10 * source x = 10 * (Factory X + 13.4); both sides keep increasing source x, so the left (-Z) elevation is mirrored relative to an outside observer, as its BMP is. Ends are seen from outside: rear u = 10 * (z + 1.5), front u = 10 * (1.5 - z). v = 10 * (5 - y).
 
@@ -28,7 +28,7 @@ Annotated views (generated locally, not committed):
 - z_both, left: [native](../../export/review/csd_bmo/z_both-left-native.svg), [model](../../export/review/csd_bmo/z_both-left-model.svg)
 - x_both, rear: [native](../../export/review/csd_bmo/x_both-rear-native.svg), [model](../../export/review/csd_bmo/x_both-rear-model.svg)
 - x_both, front: [native](../../export/review/csd_bmo/x_both-front-native.svg), [model](../../export/review/csd_bmo/x_both-front-model.svg)
-- [Three-quarter view](../../export/review/csd_bmo/three-quarter.png), [thumbnail](../../export/thumbs/veh-csd-bmo.png)
+- [Three-quarter view](../../export/review/csd_bmo/three-quarter.png), [thumbnail](../../export/thumbs/veh-bmo-double-deck-coach.png)
 
 | ID | View | Element | Native pixel edges | Mesh scope(s) | Source % (x,y,w,h) | Model % | Signed delta (pp) | Baseline abs. mean (pp) | Final abs. mean (pp) | Uncertainty |
 |---|---|---|---|---|---|---|---|---:|---:|---|
@@ -53,7 +53,7 @@ Annotated views (generated locally, not committed):
 | R19 | z_both, right | door 2 outline | 187, 25, 204, 46 | `body/right-side/door-2/outline` | 69.259, 50.000, 6.296, 42.000 | 69.259, 50.000, 6.296, 42.000 | 0.000, 0.000, -0.000, -0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. |
 | R20 | z_both, right | door 2 window 1 frame | 189, 26, 194, 36 | `body/right-side/door-2/window-1/frame` | 70.000, 52.000, 1.852, 20.000 | 70.000, 52.000, 1.852, 20.000 | 0.000, -0.000, 0.000, 0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. |
 | R21 | z_both, right | door 2 window 2 frame | 197, 26, 202, 36 | `body/right-side/door-2/window-2/frame` | 72.963, 52.000, 1.852, 20.000 | 72.963, 52.000, 1.852, 20.000 | 0.000, -0.000, 0.000, 0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. |
-| R22 | z_both, right | hatch outline | 24, 32, 35, 39 | `body/right-side/door-3/outline` | 8.889, 64.000, 4.074, 14.000 | 8.889, 64.000, 4.074, 14.000 | 0.000, 0.000, 0.000, -0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. |
+| R22 | z_both, right | hatch outline | 24, 32, 35, 39 | `body/right-side/hatch/outline` | 8.889, 64.000, 4.074, 14.000 | 8.889, 64.000, 4.074, 14.000 | 0.000, 0.000, 0.000, -0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. |
 | L01 | z_both, left | window 1 frame | 85, 10, 98, 18 | `body/left-side/window-1/frame` | 31.481, 20.000, 4.815, 16.000 | 31.481, 20.000, 4.815, 16.000 | -0.000, 0.000, 0.000, -0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. |
 | L02 | z_both, left | window 2 frame | 102, 10, 115, 18 | `body/left-side/window-2/frame` | 37.778, 20.000, 4.815, 16.000 | 37.778, 20.000, 4.815, 16.000 | -0.000, 0.000, 0.000, -0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. |
 | L03 | z_both, left | window 3 frame | 119, 10, 132, 18 | `body/left-side/window-3/frame` | 44.074, 20.000, 4.815, 16.000 | 44.074, 20.000, 4.815, 16.000 | 0.000, 0.000, -0.000, -0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. |
@@ -75,7 +75,7 @@ Annotated views (generated locally, not committed):
 | L19 | z_both, left | door 2 outline | 187, 25, 204, 46 | `body/left-side/door-2/outline` | 69.259, 50.000, 6.296, 42.000 | 69.259, 50.000, 6.296, 42.000 | 0.000, 0.000, -0.000, -0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. |
 | L20 | z_both, left | door 2 window 1 frame | 189, 26, 194, 36 | `body/left-side/door-2/window-1/frame` | 70.000, 52.000, 1.852, 20.000 | 70.000, 52.000, 1.852, 20.000 | 0.000, -0.000, 0.000, 0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. |
 | L21 | z_both, left | door 2 window 2 frame | 197, 26, 202, 36 | `body/left-side/door-2/window-2/frame` | 72.963, 52.000, 1.852, 20.000 | 72.963, 52.000, 1.852, 20.000 | 0.000, -0.000, 0.000, 0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. |
-| L22 | z_both, left | hatch outline | 24, 32, 35, 39 | `body/left-side/door-3/outline` | 8.889, 64.000, 4.074, 14.000 | 8.889, 64.000, 4.074, 14.000 | 0.000, 0.000, 0.000, -0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. |
+| L22 | z_both, left | hatch outline | 24, 32, 35, 39 | `body/left-side/hatch/outline` | 8.889, 64.000, 4.074, 14.000 | 8.889, 64.000, 4.074, 14.000 | 0.000, 0.000, 0.000, -0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. |
 | B01 | x_both, rear | gangway frame | 7, 17, 23, 37 | `rear-end/gangway` | 23.333, 34.000, 53.333, 40.000 | 23.333, 34.000, 53.333, 40.000 | -0.000, 0.000, 0.000, 0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. |
 | B02 | x_both, rear | end door outline | 9, 19, 21, 37 | `rear-end/end-door/outline` | 30.000, 38.000, 40.000, 36.000 | 30.000, 38.000, 40.000, 36.000 | -0.000, 0.000, 0.000, -0.000 | 0.000 | 0.000 | Door between the gangway posts; the raster shows the frame, not the leaf edge. |
 | B03 | x_both, rear | end door window 1 | 10, 20, 13, 29 | `rear-end/end-door/window-1/frame` | 33.333, 40.000, 10.000, 18.000 | 33.333, 40.000, 10.000, 18.000 | 0.000, 0.000, -0.000, 0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. |

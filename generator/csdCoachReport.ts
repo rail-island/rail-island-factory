@@ -4,11 +4,11 @@
 // Writes, per transferred vehicle, export/review/<key>/ (orthographic model views
 // with the native annotation boxes, the native BMPs with the same boxes, a shaded
 // three-quarter view; generated, not committed) and its comparison table
-// (assets/<folder>/<report>, csdCoaches.ts CSD_TRANSFERS).
+// (assets/<folder>/<report>, csdCoaches.ts COACH_TRANSFERS).
 import fs from "node:fs";
 import { createHash } from "node:crypto";
 import { PNG } from "pngjs";
-import { CSD_TRANSFERS, transferBuild } from "./csdCoaches.ts";
+import { COACH_TRANSFERS, transferBuild } from "./coachTransfers.ts";
 import { coachComparison, meanAbsoluteError, nativeFile, transfer, type CoachComparisonRow } from "./csdCoachComparison.ts";
 import { collectTriangles, parseGlb } from "./glbTriangles.ts";
 
@@ -171,4 +171,4 @@ function report(key: string): string[] {
 }
 
 const wanted = process.argv.slice(2);
-for (const c of CSD_TRANSFERS) if (!wanted.length || wanted.includes(c.key)) console.log(report(c.key).join("\n"));
+for (const c of COACH_TRANSFERS) if (!wanted.length || wanted.includes(c.key)) console.log(report(c.key).join("\n"));

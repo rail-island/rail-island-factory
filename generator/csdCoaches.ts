@@ -32,7 +32,6 @@ export const RUNNING_NUMBERS = {
   balm: { number: "70 54 28-05 676-0", source: "legible on photo-balm-020-original-livery-side-2016.jpg (Balm in the original livery)" },
   bam: { number: "Bam 5159", source: "legible on photo-bam-5159-side-praha-2014.jpg" },
   bdmtee: { number: "50 54 22-44 268-9", source: "legible on photo-bdmtee-50-54-22-44-268-9-side-brno-2009.jpg (a later Bdmtee275 rebuild of the type)" },
-  bmo: { number: "50 54 26-18 134-1", source: "legible on photo-bmto-side-praha-2014.jpg (now Bmto292)" },
   be31: { number: "Be 2-4157", source: "illustrative: no photo of the type; the national format of the photographed Ddk 6-3777 and Bam 5159" },
   bi20: { number: "Bi 3-1820", source: "illustrative: no photo of the type; the national format of the photographed Ddk 6-3777 and Bam 5159" },
   dsk: { number: "Dsk 4-1210", source: "illustrative: no photo of the type; the national format of the photographed Ddk 6-3777 and Bam 5159" },
@@ -46,7 +45,7 @@ export function uicCheckDigit(number: string): number {
 }
 
 /** The railway's lettering, "CSD" with a caron on the C. */
-const CSD = "\u010cSD";
+export const CSD = "\u010cSD";
 
 /** "CSD" (C with a caron) over the running number, as the coaches carry it on both sides. */
 function numberPlate(c: Coach, v: Volume, x: number, y: number, number: string, h = 0.11, proud = 0.006): SideWork {
@@ -56,25 +55,25 @@ function numberPlate(c: Coach, v: Volume, x: number, y: number, number: string, 
     );
 }
 
-type PxBox = [number, number, number, number];
+export type PxBox = [number, number, number, number];
 
 /** A front-view box (native pixels on a 3 m wide end canvas) as z across, y up. */
-const fpx = (b: PxBox, h: number): Box => px(b, h, -1.5);
+export const fpx = (b: PxBox, h: number): Box => px(b, h, -1.5);
 /** The same box seen from the other end: mirrored across. */
-const mirror = (b: Box): Box => ({ x0: -b.x1, y0: b.y0, x1: -b.x0, y1: b.y1 });
-const sides = [1, -1] as const;
-const sideName = (s: number) => (s > 0 ? "right side" : "left side");
-const endName = (e: number) => (e > 0 ? "front end" : "rear end");
+export const mirror = (b: Box): Box => ({ x0: -b.x1, y0: b.y0, x1: -b.x0, y1: b.y1 });
+export const sides = [1, -1] as const;
+export const sideName = (s: number) => (s > 0 ? "right side" : "left side");
+export const endName = (e: number) => (e > 0 ? "front end" : "rear end");
 
-type SideWork = (s: number) => void;
+export type SideWork = (s: number) => void;
 
 /** Runs every piece of side work on both sides, each side in one scope. */
-function onSides(c: Coach, ...work: SideWork[]): void {
+export function onSides(c: Coach, ...work: SideWork[]): void {
   for (const s of sides) c.m.scope(sideName(s), () => work.forEach((w) => w(s)));
 }
 
 /** A list of framed windows on a side of `v`. */
-function windows(c: Coach, v: Volume, h: number, list: Array<PxBox | [PxBox, string]>, opts: { frame?: string; fw?: number; sash?: (b: Box) => number | undefined } = {}): SideWork {
+export function windows(c: Coach, v: Volume, h: number, list: Array<PxBox | [PxBox, string]>, opts: { frame?: string; fw?: number; sash?: (b: Box) => number | undefined } = {}): SideWork {
   return (s) =>
     list.forEach((w, i) => {
       const [b, glass] = typeof w[0] === "number" ? [w as PxBox, "glass"] : (w as [PxBox, string]);
@@ -84,7 +83,7 @@ function windows(c: Coach, v: Volume, h: number, list: Array<PxBox | [PxBox, str
 }
 
 /** Doors on a side of `v`: the leaf box and its windows. */
-function doors(c: Coach, v: Volume, h: number, list: Array<{ box: PxBox; glass: PxBox[] }>, paint: string, opts: { frame?: string; fw?: number } = {}): SideWork {
+export function doors(c: Coach, v: Volume, h: number, list: Array<{ box: PxBox; glass: PxBox[] }>, paint: string, opts: { frame?: string; fw?: number } = {}): SideWork {
   return (s) =>
     list.forEach((d, i) =>
       c.m.scope(`door ${i + 1}`, () => {
@@ -95,7 +94,7 @@ function doors(c: Coach, v: Volume, h: number, list: Array<{ box: PxBox; glass: 
 }
 
 /** A round lamp on end e at front-view centre (z, y): a housing and a lens. */
-function lamp(c: Coach, v: Volume, e: number, z: number, y: number, r: number, lens: string): void {
+export function lamp(c: Coach, v: Volume, e: number, z: number, y: number, r: number, lens: string): void {
   const xEnd = c.X(e > 0 ? v.plan[v.plan.length - 1]![0] : v.plan[0]![0]);
   const housing = ngon(12, r * 1.25, 0, z, y);
   c.m.sweep("underframe", "x", housing, xEnd, housing, xEnd + e * 0.05);
@@ -104,13 +103,13 @@ function lamp(c: Coach, v: Volume, e: number, z: number, y: number, r: number, l
 }
 
 /** A headstock below the body end: the beam the buffers and coupling hang on. */
-function headstock(c: Coach, e: number, x: number, y0: number, y1: number, half: number): void {
+export function headstock(c: Coach, e: number, x: number, y0: number, y1: number, half: number): void {
   const [a, b] = [c.X(x) + e * 0.03, c.X(x) - e * 0.25].sort((p, q) => p - q) as [number, number];
   block(c.m, "underframe", a, b, y0, y1, -half, half);
 }
 
 /** A UIC gangway: the rubber U-frame from the end wall out to `face`. */
-function gangway(c: Coach, e: number, wall: number, face: number, h: number): void {
+export function gangway(c: Coach, e: number, wall: number, face: number, h: number): void {
   const [a, b] = [c.X(wall) - e * 0.02, c.X(face)].sort((p, q) => p - q) as [number, number];
   const fr = fpx([7, 17, 23, 37], h);
   for (const z of [-1, 1]) block(c.m, "rubber", a, b, fr.y0, fr.y1 - 0.2, ...side(z, 0.62, 0.8));
@@ -131,7 +130,7 @@ function diagonals(c: Coach, e: number, wall: number, list: Array<[Pt, Pt]>, h: 
   }
 }
 
-function roofVents(c: Coach, list: Array<[number, number]>, y0: number, y1: number, half: number, mat = "roof"): void {
+export function roofVents(c: Coach, list: Array<[number, number]>, y0: number, y1: number, half: number, mat = "roof"): void {
   c.m.scope("roof vents", () => {
     for (const [a, b] of list) {
       const q: Pt[] = [[-half, y0], [half, y0], [half * 0.6, y1], [-half * 0.6, y1]];
@@ -142,7 +141,7 @@ function roofVents(c: Coach, list: Array<[number, number]>, y0: number, y1: numb
 
 // --- the Y-type coaches A and B (24.5 m) ---------------------------------------
 
-const Y_SECTION: Pt[] = [[1.5, 0.9], [-1.5, 0.9], [-1.5, 3.2], [-1.3, 3.6], [-1, 3.9], [-0.6, 4.1], [0, 4.2], [0.6, 4.1], [1, 3.9], [1.3, 3.6], [1.5, 3.2]];
+export const Y_SECTION: Pt[] = [[1.5, 0.9], [-1.5, 0.9], [-1.5, 3.2], [-1.3, 3.6], [-1, 3.9], [-0.6, 4.1], [0, 4.2], [0.6, 4.1], [1, 3.9], [1.3, 3.6], [1.5, 3.2]];
 
 function yCoach(kind: "A" | "B"): MeshBuilder {
   const H = 5;
@@ -340,96 +339,6 @@ export function csdBdmtee(): MeshBuilder {
   m.scope("roof equipment", () =>
     roofVents(c, [[0.8, 1.5], [3.9, 4.5], [9.7, 10.3], [12.9, 13.5], [16.1, 16.7], [21.9, 22.5], [25.0, 25.6]], 3.9, 4.1, 0.3, "steel"),
   );
-  return m;
-}
-
-// --- Bmo (26.8 m double-deck) ---------------------------------------------------
-
-export function csdBmo(): MeshBuilder {
-  const H = 5;
-  const c = new Coach(
-    {
-      blue: { color: "#283a7c", roughness: 0.5 },
-      beige: { color: "#958c73", roughness: 0.6 },
-      yellow: { color: "#c9c234", roughness: 0.5 },
-      frame: { color: "#6f686f", metallic: 0.2, roughness: 0.5 },
-    },
-    13.4,
-  );
-  const m = c.m;
-  const body: Volume = {
-    name: "body",
-    section: [[-1.4, 0.2], [1.4, 0.2], [1.5, 0.4], [1.5, 3.2], [1.1, 4.0], [0.9, 4.3], [0.6, 4.5], [0, 4.6], [-0.6, 4.5], [-0.9, 4.3], [-1.1, 4.0], [-1.5, 3.2], [-1.5, 0.4]],
-    plan: [[0.2, 1.5], [26.6, 1.5]],
-    bottom: [[0.2, 0.9], [5.7, 0.9], [6.0, 0.2], [20.8, 0.2], [21.1, 0.9], [26.6, 0.9]],
-    bands: [[0.2, 0.5, "underframe"], [0.5, 3.1, "blue"], [3.1, 3.2, "yellow"], [3.2, 4.7, "beige"]],
-    endPaint: "blue",
-  };
-  const xs = [85, 102, 119, 136, 153, 170];
-  m.scope("body", () => {
-    c.volume(body);
-    onSides(
-      c,
-      windows(c, body, H, [
-        ...xs.map((x): PxBox => [x, 10, x + 13, 18]),
-        ...xs.map((x): PxBox => [x, 31, x + 13, 40]),
-        [23, 21, 36, 30], [233, 21, 246, 30], [[251, 21, 259, 30], "frosted"],
-      ], { fw: 0.08, sash: (b) => (b.y1 < 2 ? 1.5 : b.y0 > 3 || b.x1 - b.x0 < 1 ? undefined : 2.5) }),
-      doors(c, body, H, [
-        { box: [64, 25, 81, 46], glass: [[66, 26, 71, 36], [74, 26, 79, 36]] },
-        { box: [187, 25, 204, 46], glass: [[189, 26, 194, 36], [197, 26, 202, 36]] },
-        { box: [24, 32, 35, 39], glass: [] },
-      ], "blue", { fw: 0.04 }),
-      (s) =>
-        m.scope("door canopies", () => {
-          for (const [a, b] of [[5.7, 8.8], [18.0, 21.1]]) c.sidePanel(body, "underframe", s, { x0: a, y0: 2.6, x1: b, y1: 2.66 }, 0.04, 0.06);
-          for (const x of [7.25, 19.55]) c.sidePanel(body, "seam", s, { x0: x - 0.02, y0: 0.4, x1: x + 0.02, y1: 2.5 }, 0.016);
-        }),
-      (s) =>
-        m.scope("handrails", () => {
-          for (const x of [0.85, 25.95]) c.handrail(body, s, x, 1.3, 1.9);
-        }),
-      // the yellow wings either side of the CSD emblem: native rows 21, 23 and 25
-      (s) =>
-        m.scope("emblem wings", () => {
-          for (const b of [[98, 21, 125, 22], [104, 23, 124, 24], [111, 25, 125, 26], [143, 21, 171, 22], [145, 23, 165, 24], [145, 25, 159, 26]] as PxBox[])
-            c.sidePanel(body, "yellow", s, px(b, H), 0.006, 0.004);
-        }),
-      // the emblem's "CSD" (C with a caron) between the wings, the number under it
-      (s) =>
-        m.scope("running number", () =>
-          c.inscription(body, s, 13.4, [{ text: CSD, y: 2.47, h: 0.33 }, { text: RUNNING_NUMBERS.bmo.number, y: 2.24, h: 0.1 }], 0.008),
-        ),
-    );
-  });
-  for (const e of [-1, 1])
-    m.scope(endName(e), () => {
-      const wall = e > 0 ? 26.6 : 0.2;
-      const head = e > 0 ? 26.8 : 0;
-      const fb = (b: PxBox) => (e > 0 ? mirror(fpx(b, H)) : fpx(b, H));
-      m.scope("gangway", () => gangway(c, e, wall, head + -e * 0.01, H));
-      m.scope("end door", () => {
-        c.door(body, e, fb([9, 19, 21, 37]), "blue", { end: true });
-        for (const [k, b] of ([[10, 20, 13, 29], [17, 20, 20, 29]] as PxBox[]).entries())
-          m.scope(`window ${k + 1}`, () => c.window(body, e, fb(b), { end: true, fw: 0.04 }));
-      });
-      m.scope("lamps", () => {
-        for (const [k, z] of [-1.05, 1.05].entries())
-          m.scope(`lamp ${k + 1}`, () => {
-            lamp(c, body, e, z, 1.65, 0.12, "lampHead");
-            const red = ngon(10, 0.05, 0, z, 1.65);
-            const x = c.X(wall) + e * 0.07;
-            m.sweep("lampRed", "x", red, x, red, x + e * 0.012);
-          });
-      });
-      m.scope("headstock", () => headstock(c, e, wall, 0.66, 0.92, 1.45));
-      m.scope("buffers", () => c.buffers(e, head, wall));
-      m.scope("coupling", () => c.coupling(e, head + -e * 0.02, wall));
-    });
-  m.scope("running gear", () => {
-    m.scope("bogie 1", () => c.bogie(3.5, 2.5, 0.45, 0.9));
-    m.scope("bogie 2", () => c.bogie(23.3, 2.5, 0.45, 0.9));
-  });
   return m;
 }
 
@@ -918,41 +827,5 @@ export const CSD_COACHES = [
   { id: "veh-csd-bdmtee", title: "CSD Bdmtee", folder: "csd-bdmtee", build: csdBdmtee },
   { id: "veh-csd-be31", title: "CSD Be31", folder: "csd-be31", build: csdBe31 },
   { id: "veh-csd-bi20", title: "CSD Bi20", folder: "csd-bi20", build: csdBi20 },
-  { id: "veh-csd-bmo", title: "CSD Bmo", folder: "csd-bmo", build: csdBmo },
   { id: "veh-csd-dsk", title: "CSD Dsk", folder: "csd-dsk", build: csdDsk },
 ] as const;
-
-/**
- * One transferred vlakosimdb vehicle, for the measured comparison: the design and
- * parameters that build it, where its native files are (assets/<folder>/<native>)
- * and the source x of its buffer midpoint (the model's x = 0).
- */
-export interface CsdTransfer {
-  /** The vlakosimdb folder name, e.g. "csd_a". */
-  key: string;
-  title: string;
-  id: string;
-  params?: ParamValues;
-  folder: string;
-  native: string;
-  centre: number;
-  /** The comparison table, relative to assets/<folder>/. */
-  report: string;
-}
-
-export const CSD_TRANSFERS: readonly CsdTransfer[] = [
-  { key: "csd_a", title: "CSD A", id: "veh-csd-classic-green-coach", params: { variant: "classA" }, folder: "csd-classic-green", native: "native/csd_a", centre: 12.25, report: "COMPARISON-class-a.md" },
-  { key: "csd_b", title: "CSD B", id: "veh-csd-classic-green-coach", params: { variant: "classB" }, folder: "csd-classic-green", native: "native/csd_b", centre: 12.25, report: "COMPARISON-class-b.md" },
-  { key: "csd_balm", title: "CSD Balm", id: "veh-csd-balm", folder: "csd-balm", native: "native", centre: 9.55, report: "COMPARISON.md" },
-  { key: "csd_bam", title: "CSD Bam", id: "veh-csd-bam", folder: "csd-bam", native: "native", centre: 11.15, report: "COMPARISON.md" },
-  { key: "csd_bdmtee", title: "CSD Bdmtee", id: "veh-csd-bdmtee", folder: "csd-bdmtee", native: "native", centre: 13.2, report: "COMPARISON.md" },
-  { key: "csd_be31", title: "CSD Be31", id: "veh-csd-be31", folder: "csd-be31", native: "native", centre: 7.8, report: "COMPARISON.md" },
-  { key: "csd_bi20", title: "CSD Bi20", id: "veh-csd-bi20", folder: "csd-bi20", native: "native", centre: 6.3, report: "COMPARISON.md" },
-  { key: "csd_bmo", title: "CSD Bmo", id: "veh-csd-bmo", folder: "csd-bmo", native: "native", centre: 13.4, report: "COMPARISON.md" },
-  { key: "csd_dsk", title: "CSD Dsk", id: "veh-csd-dsk", folder: "csd-dsk", native: "native", centre: 5.25, report: "COMPARISON.md" },
-];
-
-/** The builder of a transfer's design. */
-export function transferBuild(t: CsdTransfer): MeshBuilder {
-  return CSD_COACHES.find((c) => c.id === t.id)!.build(t.params);
-}
