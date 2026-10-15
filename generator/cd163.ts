@@ -56,8 +56,88 @@ export const CD163_PALETTE: Record<string, MaterialSpec> = {
   copper: { color: "#b0733f", metallic: 0.4, roughness: 0.4 },
 };
 
-/** The number on the plates, front and side. */
-const NUMBER = "163 244-7";
+/**
+ * A running number in the 1988 CSD/CD scheme, `ABC DEF-G`: the class, the serial
+ * and the check digit over the six digits (docs/models/vehicles.md, "Running numbers").
+ */
+export function runningNumber(cls: string, serial: string): string {
+  const digits = [...(cls + serial)].map(Number);
+  if (digits.length !== 6 || digits.some((d) => !Number.isInteger(d))) throw new Error(`bad running number ${cls} ${serial}`);
+  let sum = 0;
+  digits.forEach((d, i) => {
+    const p = d * ((digits.length - i) % 2 === 1 ? 2 : 1);
+    sum += Math.floor(p / 10) + (p % 10);
+  });
+  return `${cls} ${serial}-${(10 - (sum % 10)) % 10}`;
+}
+
+/** A colour band of a livery: from y0 to y1, its material, and optionally its ribs' material. */
+export type Band = readonly [y0: number, y1: number, mat: string, rib?: string];
+
+/** The material of `bands` at height y (bands are half-open, [y0, y1)). */
+export function bandAt(bands: readonly Band[], y: number): Band {
+  const b = bands.find(([y0, y1]) => y >= y0 && y < y1) ?? (y < bands[0]![0] ? bands[0] : bands[bands.length - 1]);
+  return b!;
+}
+
+/**
+ * The bands of `bands` clipped to y0..y1, each with its material, low first: the
+ * pieces a part spanning several colours is drawn in.
+ */
+export function bandPieces(bands: readonly Band[], y0: number, y1: number): Array<[number, number, string]> {
+  const out: Array<[number, number, string]> = [];
+  for (const [a, b, mat] of bands) {
+    const lo = Math.max(a, y0);
+    const hi = Math.min(b, y1);
+    if (hi > lo + 1e-9) out.push([lo, hi, mat]);
+  }
+  return out;
+}
+
+/** The sorted, distinct heights of `breaks` and the band boundaries strictly inside y0..y1, with y0 and y1. */
+export function splitHeights(bands: readonly Band[], y0: number, y1: number, breaks: readonly number[]): number[] {
+  const hs = [y0, y1, ...breaks, ...bands.flatMap(([a, b]) => [a, b])].filter((h) => h >= y0 && h <= y1);
+  return [...new Set(hs.map((h) => Math.round(h * 1e6) / 1e6))].sort((a, b) => a - b);
+}
+
+/**
+ * A livery of the CD 163 body (and of the CD 263 that shares it): the paint, the
+ * number, which emblems it carries. The default, `CD163_GREEN`, is the model as
+ * first built; the others are vlakosimdb liveries (cd163Liveries.ts).
+ */
+export interface Cd163Livery {
+  /** The running number on the plates, front and side. */
+  number: string;
+  /** Palette entries added to (or replacing) CD163_PALETTE. */
+  palette?: Record<string, MaterialSpec>;
+  /** The body's colour bands from Y_BOTTOM to Y_EAVE, low first: shell, ribs and machine room. */
+  bands: readonly Band[];
+  /** Bands painted over the cab sections and the ends, when they differ from the machine room's (to Y_SIDE_EAVE). */
+  cabBands?: readonly Band[];
+  /** The windscreens' frame. */
+  frame: string;
+  /** Whether the sides and the ends carry the CD emblem. */
+  sideEmblem: boolean;
+  frontEmblem: boolean;
+}
+
+/** The machine room's side equipment: the 163's portholes and shutters, or the 263's grille banks and windows. */
+export type Cd163Layout = "163" | "263" | "371";
+
+/** The CD 163 as first modelled: green, the yellow band, 163 244-7. */
+export const CD163_GREEN: Cd163Livery = {
+  number: "163 244-7",
+  bands: [[1.03, 1.70, "green"], [1.70, 2.30, "yellow"], [2.30, 3.70, "green"]],
+  frame: "yellow",
+  sideEmblem: true,
+  frontEmblem: true,
+};
+
+/** What one build draws: the livery and the side layout. */
+interface Style {
+  livery: Cd163Livery;
+  layout: Cd163Layout;
+}
 
 // --- dimensions -------------------------------------------------------------------
 
@@ -68,9 +148,7 @@ const CH = 0.08; // the cab ends' corner chamfer, in plan
 const HW = 1.47; // half the body's width (2.94 m)
 
 const Y_BOTTOM = 1.03; // the body's lower edge
-const Y_BAND0 = 1.70; // the yellow band
-const Y_BAND1 = 2.30;
-const Y_NOSE = Y_BAND1; // both slopes meet here, at the top of the yellow band
+const Y_NOSE = 2.30; // both slopes meet here, at the top of the yellow band
 const Y_APRON = 1.20; // the lower slope meets the upright chassis skirt
 const Y_EAVE = 3.70; // the upper cab profile and structural roof spring
 const Y_SIDE_EAVE = 3.50; // grey roof paint extends lower along the sides
@@ -297,16 +375,136 @@ function insulator(m: MeshBuilder, x: number, z: number, y0: number, y1: number,
 
 // --- the body ---------------------------------------------------------------------
 
-function body(m: MeshBuilder): void {
+/** The CD 163's machine room: portholes on the right (+z), continuous intake shutters on the left. */
+function portholesAndShutters(m: MeshBuilder): void {
+  m.scope("portholes", () => {
+    for (const x of [-4.95, -3.45, 3.35, 4.85]) {
+      for (const s of [1]) {
+        const rim = ngon(16, 0.375, 0, x, 2.85);
+        const pane = ngon(16, 0.35, 0, x, 2.85);
+        const [r0, r1] = side(s, HW - 0.02, HW + 0.024);
+        const [p0, p1] = side(s, HW - 0.005, HW + 0.036);
+        m.sweep("rubber", "z", rim, r0, rim, r1);
+        m.sweep("glass", "z", pane, p0, pane, p1);
+      }
+    }
+  });
+
+  // The opposite machine-room side has continuous intake shutters, not portholes.
+  m.scope("machine room intake", () => {
+    const wall = sideWall(-1);
+    panel(m, "roof", wall, [[-5.80, 2.40], [5.70, 2.40], [5.70, 3.30], [-5.80, 3.30]], -0.018, 0.022);
+    panel(m, "louvre", wall, [[-5.74, 2.46], [5.64, 2.46], [5.64, 3.24], [-5.74, 3.24]], 0.008, 0.029);
+    for (let i = 0; i < 88; i++) {
+      const x = -5.69 + i * 0.129;
+      panel(m, "slat", wall, [[x, 2.48], [x + 0.035, 2.48], [x + 0.035, 3.22], [x, 3.22]], 0.016, 0.043);
+    }
+    for (const x of [-3.95, -1.98, 0, 1.98, 3.95]) {
+      block(m, "roof", x - 0.025, x + 0.025, 2.44, 3.26, ...side(-1, HW + 0.01, HW + 0.049));
+    }
+  });
+}
+
+/** A grille bank row: a grey housing, a dark louvre and three slats, on the right side wall. */
+function grillePanel(m: MeshBuilder, x0: number, x1: number, y0: number, y1: number): void {
+  const wall = sideWall(1);
+  panel(m, "roof", wall, [[x0, y0], [x1, y0], [x1, y1], [x0, y1]], -0.018, 0.022);
+  panel(m, "louvre", wall, [[x0 + 0.05, y0 + 0.05], [x1 - 0.05, y0 + 0.05], [x1 - 0.05, y1 - 0.05], [x0 + 0.05, y1 - 0.05]], 0.008, 0.029);
+  for (let i = 0; i < 3; i++) {
+    const y = y0 + 0.09 + i * 0.1;
+    panel(m, "slat", wall, [[x0 + 0.07, y], [x1 - 0.07, y], [x1 - 0.07, y + 0.035], [x0 + 0.07, y + 0.035]], 0.016, 0.043);
+  }
+}
+
+/** A machine-room window on the left side wall: a rubber surround and the glass. */
+function sideWindow(m: MeshBuilder, x0: number, x1: number, y0: number, y1: number, r: number): void {
+  const wall = sideWall(-1);
+  panel(m, "rubber", wall, rrect(x0 - 0.03, x1 + 0.03, y0 - 0.03, y1 + 0.03, r + 0.02), -0.014, 0.026); // its back clear of the ribs' (HW - 0.01)
+  panel(m, "glass", wall, rrect(x0, x1, y0, y1, r), -0.005, 0.034);
+}
+
+/**
+ * The CD 263 family's machine room (vlakosimdb cd_263 z_dec and z_inc, 0.1 m a
+ * pixel): on the right two banks of grilles, three rows of two panels each, at
+ * x = -5.6..-2.5 and 2.4..5.5; on the left windows instead of the 163's
+ * shutters: two square ones and two divided ones ("263"), or four equal ones
+ * (cd_371.005, "371").
+ */
+function grillesAndWindows(m: MeshBuilder, layout: Cd163Layout): void {
+  m.scope("grille banks", () => {
+    for (const [a, b] of [[-5.6, -2.5], [2.4, 5.5]] as const) {
+      const mid = (a + b) / 2;
+      for (const [y0, y1] of [[1.9, 2.3], [2.4, 2.8], [2.9, 3.3]] as const) {
+        grillePanel(m, a, mid - 0.02, y0, y1);
+        grillePanel(m, mid + 0.02, b, y0, y1);
+      }
+    }
+  });
+  m.scope("machine room windows", () => {
+    if (layout === "371") {
+      for (const x of [-4.7, -1.8, 1.7, 4.6]) sideWindow(m, x - 0.4, x + 0.4, 2.5, 3.1, 0.08);
+    } else {
+      for (const [a, b] of [[-4.5, -3.5], [3.4, 4.4]] as const) sideWindow(m, a, b, 2.5, 3.2, 0.03);
+      for (const [a, b] of [[-1.8, -0.8], [0.7, 1.7]] as const) {
+        sideWindow(m, a, b, 2.5, 2.8, 0.02);
+        sideWindow(m, a, b, 2.9, 3.1, 0.02);
+      }
+    }
+  });
+}
+
+/** Where the cab paint of a livery with `cabBands` begins, clear of the machine-room ribs' ends at 6.05. */
+const CAB_X = 6.07;
+
+/**
+ * A livery's cab paint (`cabBands`): a one-sided skin 3 mm off the shell over
+ * the cab section of both sides, the chamfers and the end at `e`, split where the
+ * profile kinks and where the colours change. It stops 10 mm under the grey side
+ * apron so the two never share a face.
+ */
+function cabPaint(m: MeshBuilder, e: number, bands: readonly Band[]): void {
+  const top = Y_SIDE_EAVE - 0.01;
+  const line = (y: number): Vec3[] => {
+    const fx = frontX(y);
+    const pts: Array<[number, number]> = [[CAB_X, -HW], [fx - CH, -HW], [fx, -HW + CH], [fx, HW - CH], [fx - CH, HW], [CAB_X, HW]];
+    return pts.map(([x, z]): Vec3 => [e * x, y, z]);
+  };
+  const hs = splitHeights(bands, Y_BOTTOM, top, [Y_APRON, Y_NOSE]);
+  for (let i = 1; i < hs.length; i++) {
+    const [y0, y1] = [hs[i - 1]!, hs[i]!];
+    const mat = bandAt(bands, (y0 + y1) / 2)[2];
+    const [lo, hi] = [line(y0), line(y1)];
+    for (let k = 0; k + 1 < lo.length; k++) {
+      const quad = [lo[k]!, lo[k + 1]!, hi[k + 1]!, hi[k]!];
+      // the outward normal: perpendicular to the strip, away from the body's axis
+      const [a, b, d] = [quad[0]!, quad[1]!, quad[3]!];
+      const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+      const v = [d[0] - a[0], d[1] - a[1], d[2] - a[2]];
+      let n: Vec3 = [u[1]! * v[2]! - u[2]! * v[1]!, u[2]! * v[0]! - u[0]! * v[2]!, u[0]! * v[1]! - u[1]! * v[0]!];
+      const l = Math.hypot(...n);
+      n = [n[0] / l, n[1] / l, n[2] / l];
+      // away from a point on the axis well inside the cab
+      const [cx, cz] = [(a[0] + b[0]) / 2 - e * (HALF - 1.5), (a[2] + b[2]) / 2];
+      if (n[0] * cx + n[2] * cz < 0) n = [-n[0], -n[1], -n[2]];
+      const q = quad.map((p): Vec3 => [p[0] + n[0] * 0.003, p[1] + n[1] * 0.003, p[2] + n[2] * 0.003]);
+      m.facets(mat, [q[0]!, q[1]!, q[2]!, q[0]!, q[2]!, q[3]!], n);
+    }
+  }
+}
+
+
+function body(m: MeshBuilder, st: Style): void {
+  const { bands } = st.livery;
   m.scope("shell", () => {
     const at = (y: number) => plan(frontX(y), HW, CH);
     m.cap("underframe", at(Y_BOTTOM), Y_BOTTOM, false);
-    // Split at the apron, colour boundary and nose: every band follows the
+    // Split at the apron, colour boundaries and nose: every band follows the
     // same profile, without flattening the lower face into a vertical wall.
-    m.loft("green", at(Y_BOTTOM), Y_BOTTOM, at(Y_APRON), Y_APRON, false);
-    m.loft("green", at(Y_APRON), Y_APRON, at(Y_BAND0), Y_BAND0, false);
-    m.loft("yellow", at(Y_BAND0), Y_BAND0, at(Y_NOSE), Y_NOSE, false);
-    m.loft("green", at(Y_NOSE), Y_NOSE, at(Y_EAVE), Y_EAVE, false);
+    const hs = splitHeights(bands, Y_BOTTOM, Y_EAVE, [Y_APRON, Y_NOSE]);
+    for (let i = 1; i < hs.length; i++) {
+      const [y0, y1] = [hs[i - 1]!, hs[i]!];
+      m.loft(bandAt(bands, (y0 + y1) / 2)[2], at(y0), y0, at(y1), y1, false);
+    }
   });
   m.scope("roof", () => {
     const eave = plan(frontX(Y_EAVE), HW, CH);
@@ -336,44 +534,23 @@ function body(m: MeshBuilder): void {
     for (let k = 0; k < 17; k++) {
       const y = Y_BOTTOM + 0.12 + k * 0.145;
       if (y + 0.026 >= Y_SIDE_EAVE - 0.04) continue; // leave the gutter clear
-      const mat = y >= Y_BAND0 && y < Y_BAND1 ? "yellow" : "green";
+      const rib = (b: Band) => b[3] ?? b[2];
+      const mat = rib(bandAt(bands, y));
+      const cabMat = rib(bandAt(st.livery.cabBands ?? bands, y));
       for (const s of [-1, 1]) {
         const z = side(s, HW - 0.01, HW + 0.018);
         block(m, mat, -6.05, 6.05, y, y + 0.026, ...z);
         if (y < Y_WINDOW0 - 0.1) {
           const end = Math.min(frontX(y), frontX(y + 0.026)) - CH - 0.015;
-          for (const e of [-1, 1]) block(m, mat, ...ex(e, 7.18, end), y, y + 0.026, ...z);
+          for (const e of [-1, 1]) block(m, cabMat, ...ex(e, 7.18, end), y, y + 0.026, ...z);
         }
       }
     }
   });
 
-  m.scope("portholes", () => {
-    for (const x of [-4.95, -3.45, 3.35, 4.85]) {
-      for (const s of [1]) {
-        const rim = ngon(16, 0.375, 0, x, 2.85);
-        const pane = ngon(16, 0.35, 0, x, 2.85);
-        const [r0, r1] = side(s, HW - 0.02, HW + 0.024);
-        const [p0, p1] = side(s, HW - 0.005, HW + 0.036);
-        m.sweep("rubber", "z", rim, r0, rim, r1);
-        m.sweep("glass", "z", pane, p0, pane, p1);
-      }
-    }
-  });
-
-  // The opposite machine-room side has continuous intake shutters, not portholes.
-  m.scope("machine room intake", () => {
-    const wall = sideWall(-1);
-    panel(m, "roof", wall, [[-5.80, 2.40], [5.70, 2.40], [5.70, 3.30], [-5.80, 3.30]], -0.018, 0.022);
-    panel(m, "louvre", wall, [[-5.74, 2.46], [5.64, 2.46], [5.64, 3.24], [-5.74, 3.24]], 0.008, 0.029);
-    for (let i = 0; i < 88; i++) {
-      const x = -5.69 + i * 0.129;
-      panel(m, "slat", wall, [[x, 2.48], [x + 0.035, 2.48], [x + 0.035, 3.22], [x, 3.22]], 0.016, 0.043);
-    }
-    for (const x of [-3.95, -1.98, 0, 1.98, 3.95]) {
-      block(m, "roof", x - 0.025, x + 0.025, 2.44, 3.26, ...side(-1, HW + 0.01, HW + 0.049));
-    }
-  });
+  if (st.layout === "163") portholesAndShutters(m);
+  else grillesAndWindows(m, st.layout);
+  if (st.livery.cabBands) m.scope("cab paint", () => { for (const e of [-1, 1]) cabPaint(m, e, st.livery.cabBands!); });
 
   m.scope("cant grilles", () => {
     // long grille strips in the roof's cant, between the cooler box and the cabs
@@ -420,18 +597,20 @@ function body(m: MeshBuilder): void {
   });
 
   m.scope("side markings", () => {
+    const number = st.livery.number;
     for (const s of [-1, 1]) {
       const wall = sideWall(s);
       // read from outside: the reader's right is +x on the right side, -x on the left
       const flip = s < 0;
       m.scope("number plate", () => {
         panel(m, "plate", wall, [[-0.60, 1.90], [0.50, 1.90], [0.50, 2.20], [-0.60, 2.20]], 0.005, 0.026);
-        const w = letteringWidth(NUMBER, 0.080, 0.025);
-        decal(m, "white", wall, lettering(NUMBER, -0.05 + (flip ? w / 2 : -w / 2), 1.95, 0.20, 0.080, 0.025, flip), 0.03);
+        const w = letteringWidth(number, 0.080, 0.025);
+        decal(m, "white", wall, lettering(number, -0.05 + (flip ? w / 2 : -w / 2), 1.95, 0.20, 0.080, 0.025, flip), 0.03);
       });
-      m.scope("emblem", () => {
+      if (st.livery.sideEmblem) m.scope("emblem", () => {
         const h = 0.40;
-        const xc = s > 0 ? -3.90 : -4.10;
+        // the 263's emblem stands beside the plate, between the grille banks
+        const xc = st.layout !== "163" ? -1.85 : s > 0 ? -3.90 : -4.10;
         const u0 = flip ? xc + emblemWidth(h) / 2 : xc - emblemWidth(h) / 2;
         decal(m, "logo", wall, emblem(u0, 1.80, h, flip), 0.02);
       });
@@ -441,7 +620,8 @@ function body(m: MeshBuilder): void {
 
 // --- the cabs ---------------------------------------------------------------------
 
-function cab(m: MeshBuilder, e: number): void {
+function cab(m: MeshBuilder, e: number, st: Style): void {
+  const { livery } = st;
   const front = endFace(e);
   const screen = windscreenFace(e);
   // the reader's right on this end: -z on the front, +z on the rear
@@ -452,7 +632,7 @@ function cab(m: MeshBuilder, e: number): void {
       const [f0, f1] = side(s, 0.025, 1.39);
       const [g0, g1] = side(s, 0.070, 1.33);
       const [z0, z1] = side(s, 0.100, 1.30);
-      panel(m, "yellow", screen, rrect(f0, f1, 2.63, 3.50, 0.075), -0.01, 0.015);
+      panel(m, livery.frame, screen, rrect(f0, f1, 2.63, 3.50, 0.075), -0.01, 0.015);
       panel(m, "rubber", screen, rrect(g0, g1, 2.67, 3.43, 0.060), 0.006, 0.023);
       panel(m, "glass", screen, rrect(z0, z1, 2.70, 3.40, 0.050), 0.012, 0.03);
       // Bottom-mounted wipers: spindle, arm and separate blade.
@@ -493,10 +673,10 @@ function cab(m: MeshBuilder, e: number): void {
     m.scope("number plate", () => {
       panel(m, "steel", front, rrect(-0.52, 0.52, 1.38, 1.72, 0.018), -0.016, 0.014);
       panel(m, "plate", front, rrect(-0.50, 0.50, 1.40, 1.70, 0.01), 0.006, 0.024);
-      const w = letteringWidth(NUMBER, 0.073, 0.022);
-      decal(m, "white", front, lettering(NUMBER, flip ? w / 2 : -w / 2, 1.45, 0.20, 0.073, 0.022, flip), 0.028);
+      const w = letteringWidth(livery.number, 0.073, 0.022);
+      decal(m, "white", front, lettering(livery.number, flip ? w / 2 : -w / 2, 1.45, 0.20, 0.073, 0.022, flip), 0.028);
     });
-    m.scope("emblem", () => {
+    if (livery.frontEmblem) m.scope("emblem", () => {
       const h = 0.40;
       const u0 = flip ? emblemWidth(h) / 2 : -emblemWidth(h) / 2;
       decal(m, "logo", front, emblem(u0, 1.80, h, flip), 0.006);
@@ -517,9 +697,7 @@ function cab(m: MeshBuilder, e: number): void {
       });
       m.scope("door", () => {
         block(m, "rubber", ...xs(6.35, 7.05), 1.40, 3.40, ...z(-0.01, 0.012)); // the gap around it
-        block(m, "green", ...xs(6.38, 7.02), 1.43, Y_BAND0, ...z(-0.005, 0.024));
-        block(m, "yellow", ...xs(6.38, 7.02), Y_BAND0, Y_BAND1, ...z(-0.005, 0.024));
-        block(m, "green", ...xs(6.38, 7.02), Y_BAND1, 3.37, ...z(-0.005, 0.024));
+        for (const [y0, y1, mat] of bandPieces(livery.cabBands ?? livery.bands, 1.43, 3.37)) block(m, mat, ...xs(6.38, 7.02), y0, y1, ...z(-0.005, 0.024));
         panel(m, "rubber", wall, rrect(...xs(6.42, 6.98), Y_WINDOW0 - 0.01, Y_WINDOW1 + 0.01, 0.025), 0.01, 0.034);
         panel(m, "glass", wall, rrect(...xs(6.45, 6.95), Y_WINDOW0 + 0.02, Y_WINDOW1 - 0.02, 0.015), 0.015, 0.046);
         block(m, "steel", ...xs(6.91, 6.99), 1.97, 2.01, ...z(0.02, 0.05)); // the handle
@@ -777,10 +955,12 @@ function roofEquipment(m: MeshBuilder): void {
   });
 }
 
-export function cd163(): MeshBuilder {
-  const m = new MeshBuilder(CD163_PALETTE);
-  m.scope("body", () => body(m));
-  for (const e of [-1, 1]) m.scope(e > 0 ? "front cab" : "rear cab", () => cab(m, e));
+/** The CD 163 body in `livery`, its machine room laid out as `layout`. */
+export function cd163Body(livery: Cd163Livery, layout: Cd163Layout): MeshBuilder {
+  const st: Style = { livery, layout };
+  const m = new MeshBuilder({ ...CD163_PALETTE, ...livery.palette });
+  m.scope("body", () => body(m, st));
+  for (const e of [-1, 1]) m.scope(e > 0 ? "front cab" : "rear cab", () => cab(m, e, st));
   m.scope("roof equipment", () => roofEquipment(m));
   m.scope("bogies", () => {
     for (const e of [-1, 1]) m.scope(e > 0 ? "front bogie" : "rear bogie", () => bogie(m, e * BOGIE_X));

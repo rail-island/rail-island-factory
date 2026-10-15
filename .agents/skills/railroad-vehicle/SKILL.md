@@ -6,7 +6,7 @@ description: Create or change procedural railway vehicles, including electric an
 # Railroad vehicle
 
 **Covers** - railway vehicle geometry, operating poses and verification.
-**Code** - `generator/vehicles.ts`, `generator/cd150.ts`, `generator/cd163.ts`, `generator/csdCoaches.ts`, `generator/csdCoachParts.ts`, `generator/bmoCoach.ts`, `generator/cdGreenWhiteCoach.ts`, `test/models.test.ts`, `test/cd150.test.ts`, `test/csdCoaches.test.ts`
+**Code** - `generator/vehicles.ts`, `generator/cd150.ts`, `generator/cd163.ts`, `generator/cd163Family.ts`, `generator/csdCoaches.ts`, `generator/csdCoachParts.ts`, `generator/bmoCoach.ts`, `generator/cdGreenWhiteCoach.ts`, `test/models.test.ts`, `test/cd150.test.ts`, `test/csdCoaches.test.ts`
 **See also** - [vehicle reference](../../../docs/models/vehicles.md), [road-vehicle](../road-vehicle/SKILL.md), [vlakosimdb-transfer](../vlakosimdb-transfer/SKILL.md)
 
 This skill follows the repository's road-vehicle workflow, with railway-specific
@@ -121,7 +121,11 @@ say so in `SOURCES.md` (`RUNNING_NUMBERS` in `csdCoaches.ts`).
 
 **Variants of one body** (classes, window layouts) are one parametric design with
 enum parameters, not separate models: the export holds the default build and the
-JS model builds the others (docs/models/parameters.md).
+JS model builds the others (docs/models/parameters.md). Paint schemes of one
+locomotive body are a `livery` parameter whose values are data (`Cd163Livery`:
+colour bands, optional cab bands, emblems, number); a sister class whose body
+differs only in its machine-room sides reuses `cd163Body` with its own layout
+rather than copying the builder (docs/models/loco-liveries.md).
 
 ## Electric locomotives and pantographs
 

@@ -43,3 +43,24 @@ See `../../docs/models/vehicles.md` for the native-pixel coordinate convention,
 calibrated dimensions and treatment of ambiguous outlines. Round marker lenses,
 standard buffer spacing and the emblem's continuous outline are retained rather
 than reproducing low-resolution raster artifacts.
+
+## Liveries (`livery` parameter)
+
+The other liveries of this design are read from their vlakosimdb side BMPs,
+kept unchanged under `native/liveries/<model>/` (`x_both.bmp`, `z_dec.bmp`,
+`z_inc.bmp`, from `janproch/vlakosimdb` commit
+`b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f`, `db/train/loco/electric/<model>/model/`).
+See docs/models/loco-liveries.md for the reading and the deviations.
+
+| model | author (vlakosimdb) | running number |
+|---|---|---|
+| `cd_162` | Vojtech Vohlidka | 162 035 - illustrative |
+| `cd_162.022` | Borek Hudak | 162 022 - the model's name |
+| `cd_163.022` | Borek Hudak | 163 022 - the model's name; 169 x 57 px onto 16.9 x 6.1 m |
+| `cd_163_021` | Vojtech Vohlidka | 163 021 - the model's name |
+| `cd_362` | Vojtech Vohlidka | 362 024 - illustrative |
+| `cd_362.054` | Borek Hudak | 362 054 - the model's name |
+| `cd_363` | Vojtech Vohlidka | 363 060 - illustrative |
+| `cd_363.044` | Borek Hudak | 363 044 - the model's name |
+| `cd_363_037` | Vojtech Vohlidka | 363 037 - the model's name |
+| `cd_363_009` | Vojtech Vohlidka | 363 009 - the model's name |
