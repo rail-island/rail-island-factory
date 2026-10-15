@@ -116,15 +116,27 @@ async function moduleOf(id: string): Promise<Module> {
 }
 
 const RIGGED = ALL_VEHICLES.filter((d) => d.build().rig !== null).map((d) => [d.id] as const);
+/** The rigged vehicles with steered wheels: every road vehicle (an articulated tram has none). */
+const STEERED = RIGGED.filter(([id]) => DESIGNS.get(id)!.build().rig!.steer !== undefined);
 
 describe("the rigged vehicles", () => {
-  it("are every road vehicle", () => {
+  it("are every road vehicle, steered, and the articulated rail vehicles, sections and joints only", () => {
     const road = ALL_VEHICLES.filter((d) => (d.catalog?.category ?? "Road vehicles") === "Road vehicles").map((d) => d.id);
-    expect(RIGGED.map(([id]) => id)).toEqual(road);
+    expect(STEERED.map(([id]) => id)).toEqual(road);
     expect(road).toContain("veh-american-truck");
+    const rail = RIGGED.map(([id]) => id).filter((id) => !road.includes(id));
+    expect(rail).toEqual(expect.arrayContaining(["veh-tatra-kt8", "veh-tatra-kt4", "veh-kvag-gt4"]));
+    for (const id of rail) {
+      const d = DESIGNS.get(id)!;
+      const rig = d.build().rig!;
+      expect(d.catalog?.category).toBe("Rail vehicles");
+      expect(rig.steer).toBeUndefined();
+      expect(rig.sections!.length).toBeGreaterThanOrEqual(2);
+      expect(rig.joints).toHaveLength(rig.sections!.length - 1);
+    }
   });
 
-  it.each(RIGGED)("%s: its steered wheels are child nodes of the front body, pivoting at their centres", (id) => {
+  it.each(STEERED)("%s: its steered wheels are child nodes of the front body, pivoting at their centres", (id) => {
     const rig = DESIGNS.get(id)!.build().rig!;
     const { json } = parseGlb(designGlb(id));
     const nodes = json.nodes as Array<{ name: string; children?: number[]; translation?: number[] }>;
@@ -155,8 +167,10 @@ describe("the rigged vehicles", () => {
     const hinges = Math.max(0, (rig.sections?.length ?? 0) - 1);
     const bend = Array.from({ length: hinges }, (_, i) => (i % 2 ? -1 : 1) * 0.4);
     mod.pose(group, { steer: 0.3, bend });
-    const angles = steerAngles(rig.steer!, 0.3);
-    rig.steer!.axles.forEach((a, k) => a.nodes.forEach((n, i) => expect(group.getObjectByName(n)!.rotation.y).toBeCloseTo(angles[k]![i]!, 9)));
+    if (rig.steer) {
+      const angles = steerAngles(rig.steer, 0.3);
+      rig.steer.axles.forEach((a, k) => a.nodes.forEach((n, i) => expect(group.getObjectByName(n)!.rotation.y).toBeCloseTo(angles[k]![i]!, 9)));
+    }
     group.updateMatrixWorld(true);
     const sections = rig.sections ?? [];
     for (let i = 1; i < sections.length; i++) {
@@ -172,7 +186,8 @@ describe("the rigged vehicles", () => {
     }
     // back to rest: the GLB's geometry again
     mod.pose(group, {});
-    for (const a of rig.steer!.axles) for (const n of a.nodes) expect(group.getObjectByName(n)!.rotation.y).toBe(0);
+    for (const a of rig.steer?.axles ?? []) for (const n of a.nodes) expect(group.getObjectByName(n)!.rotation.y).toBe(0);
+    for (const sec of sections.slice(1)) expect(group.getObjectByName(sec.node)!.rotation.y).toBe(0);
   }, 30_000);
 });
 

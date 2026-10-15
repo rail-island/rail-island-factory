@@ -20,6 +20,7 @@
 | [models/cd-230.md](models/cd-230.md) | the parametric CD 230 / 240 / 340 "laminatka": the rounded nose, the face laid on the curved skin, four liveries, the native comparison |
 | [models/bmo-double-deck.md](models/bmo-double-deck.md) | the parametric Bmo double-deck coach: the CSD and three CD liveries as one `livery` parameter |
 | [models/steam-locomotives.md](models/steam-locomotives.md) | the nine steam locomotives from vlakosimdb, locomotive and tender as `unit` variants, the shared builder, deviations, the native comparison and tests |
+| [models/trams.md](models/trams.md) | the trams and the metro car from vlakosimdb: Tatra T3, T6A5, KT8D5 and KT4, the GT4, the 81-71; the tram builder, the drawing-to-published map, articulated sections, pantographs, the native comparison and tests |
 | [models/animation.md](models/animation.md) | animation clips of parts, the steam locomotives' running-gear clip and its timing contract, the site's Start and Stop buttons |
 | [models/wagons.md](models/wagons.md) | the five freight wagons from vlakosimdb (Nas, Ua, Eas, Raj, Rah), three of them parametric by `cargo`: sources, the shared wagon parts, the native-raster comparison and tests |
 | [models/reproductions.md](models/reproductions.md) | the 23 reproductions of the webapp's hand-authored models: photos, ids, same-size rule, budgets, what a webapp import must change |

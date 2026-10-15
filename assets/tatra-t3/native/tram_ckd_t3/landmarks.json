@@ -1,0 +1,328 @@
+{
+ "note": "Tatra T3 (tram_ckd_t3), default variant t3",
+ "convention": "pixel edges [left, top, right, bottom], origin top left, x right, y down; 0.1 source m a pixel",
+ "annotations": [
+  {
+   "id": "body",
+   "element": "body side silhouette",
+   "view": "z_inc",
+   "box": [
+    4,
+    26,
+    151,
+    56
+   ],
+   "nodes": [
+    "body"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "the XML plan ends at 15.3 m, the BMP's body at 15.1 m"
+  },
+  {
+   "id": "belt",
+   "element": "red belt (saloon)",
+   "view": "z_inc",
+   "box": [
+    12,
+    42,
+    145,
+    51
+   ],
+   "nodes": [
+    "body/saloon/red-band"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "pink edge rows 42 and 50 counted as belt"
+  },
+  {
+   "id": "cab-glass",
+   "element": "front cab side glass",
+   "view": "z_inc",
+   "box": [
+    5,
+    30,
+    12,
+    41
+   ],
+   "nodes": [
+    "body/front-cab/glass-band"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "the cab glass is the body's glass band"
+  },
+  {
+   "id": "w1",
+   "element": "window 1",
+   "view": "z_inc",
+   "box": [
+    32,
+    30,
+    46,
+    41
+   ],
+   "nodes": [
+    "right-side/windows/window-1/frame"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "w2",
+   "element": "window 2",
+   "view": "z_inc",
+   "box": [
+    47,
+    30,
+    61,
+    41
+   ],
+   "nodes": [
+    "right-side/windows/window-2/frame"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "w3",
+   "element": "window 3",
+   "view": "z_inc",
+   "box": [
+    62,
+    30,
+    77,
+    41
+   ],
+   "nodes": [
+    "right-side/windows/window-3/frame"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "w4",
+   "element": "window 4",
+   "view": "z_inc",
+   "box": [
+    96,
+    30,
+    110,
+    41
+   ],
+   "nodes": [
+    "right-side/windows/window-4/frame"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "w5",
+   "element": "window 5",
+   "view": "z_inc",
+   "box": [
+    111,
+    30,
+    125,
+    41
+   ],
+   "nodes": [
+    "right-side/windows/window-5/frame"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "d1",
+   "element": "door 1",
+   "view": "z_inc",
+   "box": [
+    14,
+    30,
+    31,
+    56
+   ],
+   "nodes": [
+    "right-side/doors/door-1/outline"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "d2",
+   "element": "door 2",
+   "view": "z_inc",
+   "box": [
+    78,
+    30,
+    95,
+    56
+   ],
+   "nodes": [
+    "right-side/doors/door-2/outline"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "d3",
+   "element": "door 3",
+   "view": "z_inc",
+   "box": [
+    126,
+    30,
+    143,
+    56
+   ],
+   "nodes": [
+    "right-side/doors/door-3/outline"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "bogie1",
+   "element": "front bogie wheels",
+   "view": "z_inc",
+   "box": [
+    31,
+    53,
+    59,
+    60
+   ],
+   "nodes": [
+    "running-gear/bogie-1/wheelset",
+    "running-gear/bogie-1/wheelset-2"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "wheels kept at the real 700 mm and 1.9 m wheelbase"
+  },
+  {
+   "id": "bogie2",
+   "element": "rear bogie wheels",
+   "view": "z_inc",
+   "box": [
+    99,
+    53,
+    127,
+    60
+   ],
+   "nodes": [
+    "running-gear/bogie-2/wheelset",
+    "running-gear/bogie-2/wheelset-2"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "wheels kept at the real 700 mm and 1.9 m wheelbase"
+  },
+  {
+   "id": "lw1",
+   "element": "left window 1",
+   "view": "z_dec",
+   "box": [
+    14,
+    30,
+    29,
+    41
+   ],
+   "nodes": [
+    "left-side/windows/window-1/frame"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "lw8",
+   "element": "left window 8",
+   "view": "z_dec",
+   "box": [
+    127,
+    30,
+    141,
+    41
+   ],
+   "nodes": [
+    "left-side/windows/window-8/frame"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "resistor",
+   "element": "roof resistor box",
+   "view": "z_dec",
+   "box": [
+    109,
+    22,
+    126,
+    26
+   ],
+   "nodes": [
+    "roof-equipment/resistor-box"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "drawn on z_dec only; the XML has it in t3m and t3x"
+  },
+  {
+   "id": "windscreen",
+   "element": "windscreen",
+   "view": "x_inc",
+   "box": [
+    0,
+    11,
+    30,
+    21
+   ],
+   "nodes": [
+    "body/front-cab/glass-band"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "the end BMP is projected over the tapered sides as well; rows match, the width is the canvas's"
+  },
+  {
+   "id": "front-belt",
+   "element": "front red belt",
+   "view": "x_inc",
+   "box": [
+    0,
+    23,
+    30,
+    30
+   ],
+   "nodes": [
+    "body/front-cab/red-band"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "the end BMP is projected over the tapered sides as well; rows match, the width is the canvas's"
+  },
+  {
+   "id": "route",
+   "element": "route-number box",
+   "view": "x_inc",
+   "box": [
+    12,
+    6,
+    18,
+    10
+   ],
+   "nodes": [
+    "front-end/destination"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "headlights",
+   "element": "headlights (both)",
+   "view": "x_inc",
+   "box": [
+    7,
+    26,
+    23,
+    29
+   ],
+   "nodes": [
+    "front-end/lamps"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "3 px lamps: the lens size is an estimate"
+  }
+ ]
+}

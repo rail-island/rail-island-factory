@@ -1,0 +1,378 @@
+{
+ "note": "Tatra KT8D5 (tram_ckd_kt8), default livery redWhite",
+ "convention": "pixel edges [left, top, right, bottom], origin top left, x right, y down; 0.1 source m a pixel",
+ "annotations": [
+  {
+   "id": "bodyA",
+   "element": "section A body",
+   "view": "z_inc",
+   "box": [
+    4,
+    26,
+    105,
+    56
+   ],
+   "nodes": [
+    "section0/body"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "the cab nose at u 4..6 is a sloped pixel edge"
+  },
+  {
+   "id": "bodyB",
+   "element": "section B body",
+   "view": "z_inc",
+   "box": [
+    112,
+    26,
+    170,
+    56
+   ],
+   "nodes": [
+    "section1/body"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "bodyC",
+   "element": "section C body",
+   "view": "z_inc",
+   "box": [
+    178,
+    26,
+    280,
+    56
+   ],
+   "nodes": [
+    "section2/body"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "the rear nose is a sloped pixel edge"
+  },
+  {
+   "id": "joint1",
+   "element": "joint 1 bellows",
+   "view": "z_inc",
+   "box": [
+    105,
+    26,
+    112,
+    56
+   ],
+   "nodes": [
+    "joint0"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "the bellows' ridges stand out of the section's outline"
+  },
+  {
+   "id": "joint2",
+   "element": "joint 2 bellows",
+   "view": "z_inc",
+   "box": [
+    170,
+    26,
+    178,
+    56
+   ],
+   "nodes": [
+    "joint1"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "the bellows' ridges stand out of the section's outline"
+  },
+  {
+   "id": "beltB",
+   "element": "red belt (section B)",
+   "view": "z_inc",
+   "box": [
+    112,
+    42,
+    170,
+    51
+   ],
+   "nodes": [
+    "section1/body/saloon/red-band"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "d1",
+   "element": "door 1",
+   "view": "z_inc",
+   "box": [
+    16,
+    30,
+    29,
+    56
+   ],
+   "nodes": [
+    "section0/right-side/doors/door-1/outline"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "d2",
+   "element": "door 2",
+   "view": "z_inc",
+   "box": [
+    66,
+    30,
+    83,
+    56
+   ],
+   "nodes": [
+    "section0/right-side/doors/door-2/outline"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "d3",
+   "element": "door 3",
+   "view": "z_inc",
+   "box": [
+    133,
+    30,
+    150,
+    56
+   ],
+   "nodes": [
+    "section1/right-side/doors/door-1/outline"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "d4",
+   "element": "door 4",
+   "view": "z_inc",
+   "box": [
+    199,
+    30,
+    216,
+    56
+   ],
+   "nodes": [
+    "section2/right-side/doors/door-1/outline"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "d5",
+   "element": "door 5",
+   "view": "z_inc",
+   "box": [
+    254,
+    30,
+    267,
+    56
+   ],
+   "nodes": [
+    "section2/right-side/doors/door-2/outline"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "w1",
+   "element": "window 1",
+   "view": "z_inc",
+   "box": [
+    34,
+    30,
+    48,
+    41
+   ],
+   "nodes": [
+    "section0/right-side/windows/window-1/frame"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "w3",
+   "element": "window 3",
+   "view": "z_inc",
+   "box": [
+    85,
+    30,
+    99,
+    41
+   ],
+   "nodes": [
+    "section0/right-side/windows/window-3/frame"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "w4",
+   "element": "window 4 (section B)",
+   "view": "z_inc",
+   "box": [
+    117,
+    30,
+    131,
+    41
+   ],
+   "nodes": [
+    "section1/right-side/windows/window-1/frame"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "w5",
+   "element": "window 5 (section B)",
+   "view": "z_inc",
+   "box": [
+    152,
+    30,
+    166,
+    41
+   ],
+   "nodes": [
+    "section1/right-side/windows/window-2/frame"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "w8",
+   "element": "window 8",
+   "view": "z_inc",
+   "box": [
+    234,
+    30,
+    248,
+    41
+   ],
+   "nodes": [
+    "section2/right-side/windows/window-3/frame"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "bogie1",
+   "element": "bogie 1 wheels",
+   "view": "z_inc",
+   "box": [
+    31,
+    53,
+    59,
+    60
+   ],
+   "nodes": [
+    "section0/running-gear/bogie-1/wheelset",
+    "section0/running-gear/bogie-1/wheelset-2"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "real 700 mm wheels"
+  },
+  {
+   "id": "bogie2",
+   "element": "bogie 2 wheels",
+   "view": "z_inc",
+   "box": [
+    95,
+    53,
+    123,
+    60
+   ],
+   "nodes": [
+    "section1/running-gear/bogie-2/wheelset",
+    "section1/running-gear/bogie-2/wheelset-2"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "under the first joint"
+  },
+  {
+   "id": "bogie3",
+   "element": "bogie 3 wheels",
+   "view": "z_inc",
+   "box": [
+    160,
+    53,
+    188,
+    60
+   ],
+   "nodes": [
+    "section1/running-gear/bogie-3/wheelset",
+    "section1/running-gear/bogie-3/wheelset-2"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "under the second joint"
+  },
+  {
+   "id": "bogie4",
+   "element": "bogie 4 wheels",
+   "view": "z_inc",
+   "box": [
+    224,
+    53,
+    253,
+    60
+   ],
+   "nodes": [
+    "section2/running-gear/bogie-4/wheelset",
+    "section2/running-gear/bogie-4/wheelset-2"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "real 700 mm wheels"
+  },
+  {
+   "id": "windscreen",
+   "element": "windscreen",
+   "view": "x_both",
+   "box": [
+    0,
+    8,
+    30,
+    21
+   ],
+   "nodes": [
+    "section0/body/front-cab/glass-band"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "the end BMP is projected over the tapered sides as well; rows match, the width is the canvas's"
+  },
+  {
+   "id": "front-belt",
+   "element": "front red belt",
+   "view": "x_both",
+   "box": [
+    0,
+    22,
+    30,
+    31
+   ],
+   "nodes": [
+    "section0/body/front-cab/red-band"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "the end BMP is projected over the tapered sides as well; rows match, the width is the canvas's"
+  },
+  {
+   "id": "headlights",
+   "element": "headlights (both)",
+   "view": "x_both",
+   "box": [
+    8,
+    26,
+    22,
+    29
+   ],
+   "nodes": [
+    "section0/front-end/lamps"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "3 px lamps"
+  }
+ ]
+}

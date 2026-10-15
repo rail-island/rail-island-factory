@@ -12,7 +12,7 @@ declare **enum parameters**, each a stable `name`, a `title`, a list of
 `{ value, title }` and a `default`. One design id stands for every combination;
 the parameter values pick the variant.
 
-Seventeen designs are parametric: the three locomotives `veh-cd-150`, `veh-cd-163`
+Twenty designs are parametric: the three locomotives `veh-cd-150`, `veh-cd-163`
 and `veh-cd-263` (`livery`, [loco-liveries.md](loco-liveries.md)),
 `veh-csd-classic-green-coach` (below),
 `veh-bmo-double-deck-coach` (`livery`: csd, cdBlue, cdBlueGrey, cdRedDoors;
@@ -23,7 +23,9 @@ and `veh-cd-263` (`livery`, [loco-liveries.md](loco-liveries.md)),
 `veh-karosa-short` (`variant`: b731, b732, c734, lc735, b931, b931e, b951e) and
 `veh-karosa-long` (`variant`: b741, b941, b941e, b961) ([buses.md](buses.md)), the CSD 433.0
 (`livery`: black, redLining) and the five steam locomotives with a tender (`unit`: locomotive, the
-default, or tender - [steam-locomotives.md](steam-locomotives.md)). The five village houses are
+default, or tender - [steam-locomotives.md](steam-locomotives.md)),
+`veh-tatra-t3` (`variant`: t3, t3m, t3prototype), `veh-tatra-kt8` (`livery`: redWhite, red,
+modern) and `veh-metro-81-71` (`unit`: headCar, middleCar) ([trams.md](trams.md)). The five village houses are
 parametric too, with up to six parameters each ([village.md](village.md)). A variant may change more than
 paint: the green and white coach's variants have their own lengths and
 layouts, and a `unit` value is a different vehicle. The first was `veh-csd-classic-green-coach` with one parameter:
