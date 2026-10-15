@@ -5,7 +5,7 @@
 import { describe, expect, it } from "vitest";
 import * as THREE from "three";
 import { DESIGNS, designSource } from "../generator/generate";
-import { paramCombinations, resolveParams, type ParamSpec, type ParamValues } from "../generator/design";
+import { coverageCombinations, paramCombinations, resolveParams, type ParamSpec, type ParamValues } from "../generator/design";
 import { exportVehicleMeta, metaEntry } from "../generator/catalog";
 import { VEHICLES } from "../generator/vehicles";
 import { findCoplanarOverlaps } from "../generator/coplanar";
@@ -56,6 +56,16 @@ describe("parametric models", () => {
     expect(paramCombinations()).toEqual([{}]);
   });
 
+  it("cover every shape combination and each finish value once", () => {
+    const finishSpecs: ParamSpec[] = [...SPECS, { name: "colour", title: "Colour", default: "red", values: [{ value: "red", title: "Red" }, { value: "blue", title: "Blue" }, { value: "green", title: "Green" }] }];
+    const all = coverageCombinations(finishSpecs, ["colour"]);
+    // 6 shapes in red, then blue and green on the default shape
+    expect(all).toHaveLength(8);
+    expect(all[0]).toEqual({ variant: "b", roof: "flat", colour: "red" });
+    expect(all.slice(6)).toEqual([{ variant: "b", roof: "flat", colour: "blue" }, { variant: "b", roof: "flat", colour: "green" }]);
+    expect(coverageCombinations(SPECS)).toEqual(paramCombinations(SPECS));
+  });
+
   it("declare valid enums: unique names and values, titles, a listed default", () => {
     expect(PARAMETRIC.length).toBeGreaterThan(0);
     for (const d of PARAMETRIC) {
@@ -69,6 +79,7 @@ describe("parametric models", () => {
         for (const v of p.values) expect(v.value).toMatch(/^[A-Za-z0-9]+$/);
         expect(p.values.map((v) => v.value)).toContain(p.default);
       }
+      for (const name of d.finishParams ?? []) expect(names).toContain(name);
     }
   });
 
@@ -88,14 +99,16 @@ describe("parametric models", () => {
   for (const d of PARAMETRIC) {
     it(`${d.id}: builds every combination deterministically, without flicker, inside the rail envelope`, () => {
       const rail = d.catalog?.category === "Rail vehicles";
+      // a vehicle is centred on its track or lane; a building need not be
+      const vehicle = VEHICLES.includes(d);
       const defaults = d.build().toGlb(d.id);
-      for (const combo of paramCombinations(d.params)) {
+      for (const combo of coverageCombinations(d.params, d.finishParams)) {
         const glb = d.build(combo).toGlb(d.id);
         expect(Buffer.from(d.build(combo).toGlb(d.id)).equals(Buffer.from(glb))).toBe(true);
         expect(findCoplanarOverlaps(glb)).toEqual([]);
         const s = glbStats(glb);
         expect(s.min[1]).toBeCloseTo(0, 5);
-        expect(s.min[2]).toBeCloseTo(-s.max[2], 5);
+        if (vehicle) expect(s.min[2]).toBeCloseTo(-s.max[2], 5);
         if (rail) {
           expect(s.max[2] - s.min[2]).toBeLessThanOrEqual(3.1);
           expect(s.triangles).toBeLessThanOrEqual(25_000);
@@ -107,7 +120,7 @@ describe("parametric models", () => {
     it(`${d.id}: the JS model exports its parameters and builds every combination like the generator`, async () => {
       const mod = await loadModule(await bundleDesign(d, designSource(d.id)));
       expect(mod.params).toEqual(d.params);
-      for (const combo of paramCombinations(d.params)) {
+      for (const combo of coverageCombinations(d.params, d.finishParams)) {
         const want = new Map<string, number[]>();
         const glb = parseGlb(d.build(combo).toGlb(d.id));
         for (const t of collectTriangles(glb.json, glb.bin)) want.set(t.material, [...(want.get(t.material) ?? []), ...t.p.flat()]);
