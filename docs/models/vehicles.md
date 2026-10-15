@@ -12,8 +12,8 @@ how to add one.
 | id | title | look |
 |---|---|---|
 | `veh-american-truck` | American Truck | articulated: a long-nose conventional tractor (chrome grille, sleeper, twin stacks, tandem drive axle) and a 53 ft dry van; 22.2 m, about 4,900 triangles |
-| `veh-cd-150` | CD 150 | rigid cream/green electric locomotive 150 222-8 reconstructed from native vlakosimdb XML/BMPs: tapered sloping cabs, a green skirt lowered between the bogies, opposite grille/window sides, asymmetric cooler and two linked-arm pantographs (rear raised, front folded); 16.80 m over buffers, 6.24 m operating height, about 9,100 triangles. [Source notes](../../assets/cd-150/SOURCES.md), [measured comparison](../../assets/cd-150/COMPARISON.md) |
-| `veh-cd-163` | CD 163 | rigid rail vehicle (`cd163.ts`): the Czech Railways class 163 Bo'Bo' electric 163 244-7 in the green livery with the yellow band - ribbed sides, four portholes opposite continuous intake shutters, the raised cooler box and cant grilles, raked framed windscreens, an upright period CD monogram and condensed number plates, two single-arm pantographs on shedded insulators (rear raised, front folded), bogies with coil springs, axle boxes, motors and sandboxes; 16.80 m over the buffers, 5.74 m high with the rear collector raised, about 22,500 triangles. Modelled from photographs, the vlakosimdb elevation drawings and the official emblem (`assets/cd-163/`, see `SOURCES.md` there) |
+| `veh-cd-150` | CD 150 | rigid cream/green electric locomotive 150 222-8 reconstructed from native vlakosimdb XML/BMPs: tapered sloping cabs, a green skirt lowered between the bogies, opposite grille/window sides, asymmetric cooler and two linked-arm pantographs (rear raised, front folded, knees toward the cab ends), bogies with spoked wheels, axle boxes on equalisers with paired primary coils, a side frame dropped between the axles over large secondary coils, traction motors, brake cylinders and sandboxes; 16.80 m over buffers, 6.24 m operating height, about 12,600 triangles. [Source notes](../../assets/cd-150/SOURCES.md), [measured comparison](../../assets/cd-150/COMPARISON.md) |
+| `veh-cd-163` | CD 163 | rigid rail vehicle (`cd163.ts`): the Czech Railways class 163 Bo'Bo' electric 163 244-7 in the green livery with the yellow band - ribbed sides, four portholes opposite continuous intake shutters, the raised cooler box and cant grilles, raked framed windscreens, an upright period CD monogram and condensed number plates, two single-arm pantographs on shedded insulators (rear raised, front folded, knees toward the cab ends), bogies with coil springs, axle boxes, motors and sandboxes; 16.80 m over the buffers, 5.74 m high with the rear collector raised, about 15,600 triangles. Modelled from photographs, the vlakosimdb elevation drawings and the official emblem (`assets/cd-163/`, see `SOURCES.md` there) |
 
 | `veh-csd-a` ... `veh-csd-dsk` | CSD A, B, Balm, Bam, Bdmtee, Be31, Bi20, Bmo, Dsk | rigid coaches and a luggage van reconstructed from native vlakosimdb XML/BMPs by a shared coach builder (`csdCoaches.ts`, `csdCoachParts.ts`): Y-type A and B, the Balm and Bam trailers, the Bdmtee commuter coach, the Bmo double-decker, the two-axle Be31, Bi20 and Dsk; 10.5 to 26.8 m, 2,900 to 5,900 triangles. See [csd-coaches.md](csd-coaches.md) |
 
@@ -30,8 +30,8 @@ group `loco`) and its own palette; the CSD coaches use `COACH_CATALOG` (category
 `Rail vehicles`, group `coach`). The repository rail envelope in
 `test/models.test.ts` allows at most 3.1 m width and 4.7 m fixed-equipment height,
 with a separate 6.5 m operating height limit for extended pantographs. These are
-project limits rather than a universal loading gauge. Rail vehicles have a **25,000-triangle** budget
-instead of 10,000: it is 16.8 m long and seen up close along the track. The
+project limits rather than a universal loading gauge. Rail vehicles aim at about **15,000 triangles** (tested at most 16,000, so a
+small overflow for a detail worth keeping passes) instead of 10,000: it is 16.8 m long and seen up close along the track. The
 test also pins the CD 163's length (16.80 m) and axle positions (the bogie
 pivots 8.30 m apart, 3.20 m wheelbase). The shared helpers (`block`, `side`,
 `plate`, `arc`) live in `vehicleParts.ts`; `vehicles.ts` re-exports `cd150`, `cd163` and the CSD coaches'
@@ -40,10 +40,15 @@ builders so the JS bundle finds every vehicle's build function in one module.
 The CD 150 preserves the source XML's 1 m upper cab setback and different
 2.6/2.7 m nose breaks. Panels split at the changes of slope. Its two sides have
 different machine-room features: large intake banks versus four rectangular
-windows, with a higher cooler on the window side. The green side skirt drops
-from the body's 1.2 m underside to 0.6 m above rail over x=-1.1..1.1 m, rising
-at the native BMPs' slope (0.3 m per 0.4 m) - source columns 70..100 of both
-side textures. Wheel contact is at y=0,
+windows, with a higher cooler on the window side. The green side skirt hangs
+to 0.9 m above rail along the body, broken by the cab-door steps, and drops to
+0.6 m over x=-1.1..1.1 m at the native BMPs' slope (0.3 m per 0.4 m). The
+front mask follows the photographs in `assets/cd-150/` where they resolve more
+than the BMP: the plate and the chrome-rimmed marker lamps sit just below the
+cream/green boundary, the top headlight is a dark twin-lens housing, and the
+green wraps down to the buffer beam; the wheels have spoked centres. Those
+landmarks carry a photo-measured `photoBox` that the comparison uses in place
+of the native estimate. Wheel contact is at y=0,
 bogie centres are 8.40 m apart and the wheelbase is 3.30 m. Its collector arm
 lengths are preserved between folded and raised poses. The dedicated tests
 check these mechanical constraints and 39 native-raster landmarks; generic
@@ -140,10 +145,17 @@ reconstruction: the official SVG outlines in `cdLogo.ts` are de-skewed and
 narrowed to the photographed badge's proportions, normalized and triangulated
 by ear clipping. It is not an exact historic logo tracing. These markings are
 one-sided `facets` decals a few millimetres off their supporting surfaces.
-Coil springs and insulators are stacks of rings of alternating radius.
+Coil springs (`coil`, shared with the CD 150's bogies) are one lofted tube whose
+radius swells and narrows once per turn, capped only on top; insulators are a
+core with a few sheds. Round parts use as few sides as their size allows
+(portholes 16, lamps 12, tanks and axle boxes 8-10): the model was trimmed
+from about 22,400 to about 15,600 triangles this way. The intake shutters keep
+their full 88 fine slats: thinning them made the side read worse.
 
 The rear (-X) pantograph is raised to a 5.74 m collector height; the front one
-remains folded at 4.64 m. This is a static operating pose in the rigid model,
+remains folded at 4.64 m. On both locomotives the lower arm hinges toward the
+middle of the roof and the knee points to the nearer cab end, as on the
+photographs; the tests check this in both poses. This is a static operating pose in the rigid model,
 not an animation. The raised linkage is solved from the folded arm lengths:
 the knee moves at the intersection of hinge/head distance circles, preserving
 both arm lengths while lifting the contact head 1.10 m. The collector strips
@@ -172,7 +184,7 @@ the final table and before/after errors to the user.
 
 ## Budget
 
-At most **10,000 triangles** per road vehicle and **25,000** per rail vehicle, tested; there is no file-size budget.
+At most **10,000 triangles** per road vehicle and about **15,000** per rail vehicle (tested at most 16,000); there is no file-size budget.
 A vehicle's GLB is the same format as a skyscraper's: non-indexed triangle
 soups with **flat normals stored** per face (tested). The normals are
 redundant - a loader could compute the same ones - but storing them means no

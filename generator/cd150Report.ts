@@ -100,7 +100,10 @@ for (const view of ["x_both", "rear", "z_dec", "z_inc"]) {
   const boxes = rs
     .map(
       (r) =>
-        `<rect x="${r.box[0]}" y="${r.box[1]}" width="${r.box[2]! - r.box[0]!}" height="${r.box[3]! - r.box[1]!}" fill="none" stroke="#f05" stroke-width="0.12"/><text x="${r.box[0]}" y="${r.box[1]! - 0.2}" fill="#e03" font-size="1.2">${r.id}</text>`,
+        `<rect x="${r.box[0]}" y="${r.box[1]}" width="${r.box[2]! - r.box[0]!}" height="${r.box[3]! - r.box[1]!}" fill="none" stroke="#f05" stroke-width="0.12"/><text x="${r.box[0]}" y="${r.box[1]! - 0.2}" fill="#e03" font-size="1.2">${r.id}</text>` +
+        (r.photoBox
+          ? `<rect x="${r.photoBox[0]}" y="${r.photoBox[1]}" width="${r.photoBox[2]! - r.photoBox[0]!}" height="${r.photoBox[3]! - r.photoBox[1]!}" fill="none" stroke="#06f" stroke-width="0.12"/>`
+          : ""),
     )
     .join("\n");
   const svg = (inside: string) =>
@@ -134,11 +137,11 @@ const lines = [
   "",
   "Canvases: front 3 x 6 m (30 x 60 px), sides 17 x 6 m (170 x 60 px), including empty space. Origin is top left; X right, Y down. Source x maps to Factory x + 8.5; source z maps to -Factory z. Both side plots use source x increasing to the right, so the left elevation is mirrored relative to an outside observer. The front plot uses (1.5 - z, 6 - y).",
   "",
-  "Each vector is (left, top, width, height). Percentages are 100*x/W, 100*y/H, 100*w/W, 100*h/H. Signed delta = model minus source in percentage points. MAE = sum(abs(delta)) / (4 * number of boxes). Actual GLB vertices are selected by named scope/material triangle ranges; bounds include occluded vertices. Frames and lenses are separate where annotated. Native BMPs, never enhanced 4x textures, define the measurements.",
+  "Each vector is (left, top, width, height). Percentages are 100*x/W, 100*y/H, 100*w/W, 100*h/H. Signed delta = model minus source in percentage points. MAE = sum(abs(delta)) / (4 * number of boxes). Actual GLB vertices are selected by named scope/material triangle ranges; bounds include occluded vertices. Frames and lenses are separate where annotated. Native BMPs, never enhanced 4x textures, define the measurements, except where a row's reference is `photo`: there a box measured on the photographs (blue in the views) supersedes the native estimate (red), which stays in the record. Baseline columns are against the native boxes.",
   "",
   ...summary,
   "",
-  "One pixel is 3.333 pp horizontally at the front, 0.588 pp horizontally at the sides, and 1.667 pp vertically. The 1.75 m buffer spacing is retained; the coarse front silhouettes differ by up to 1.75 px. The CD emblem is a shared outline approximation. Raster yellow lamp patches do not resolve lens colour; equal circular white/red lenses are retained. Full running gear uses 1.25 m wheels rather than the source's painted low box. These choices are outside a claim of photographic accuracy.",
+  "One pixel is 3.333 pp horizontally at the front, 0.588 pp horizontally at the sides, and 1.667 pp vertically. The 1.75 m buffer spacing is retained; the coarse front silhouettes differ by up to 1.75 px. The CD emblem is a shared outline approximation. The front plate and marker lamps follow the photographs: the plate just below the cream/green boundary, chrome-rimmed white/red lamp pairs level with it, a dark twin-lens headlight on the roof edge. Full running gear uses 1.25 m wheels rather than the source's painted low box. These choices are outside a claim of photographic accuracy.",
   "",
   "Annotated views (generated locally, not committed):",
   "",
@@ -149,11 +152,12 @@ const lines = [
   "- [Rear model](../../export/review/cd-150/rear-model.svg)",
   "- [Three-quarter thumbnail](../../export/thumbs/veh-cd-150.png)",
   "",
-  "| ID | Native pixel edges | Mesh scope(s) | Source % (x,y,w,h) | Model % | Signed delta (pp) | Baseline abs. mean (pp) | Final abs. mean (pp) | Uncertainty |",
-  "|---|---|---|---|---|---|---:|---:|---|",
+  "| ID | Native pixel edges | Reference | Mesh scope(s) | Source % (x,y,w,h) | Model % | Signed delta (pp) | Baseline abs. mean (pp) | Final abs. mean (pp) | Uncertainty |",
+  "|---|---|---|---|---|---|---|---:|---:|---|",
   ...rows.map((r) => {
     const b = baseline.find((x) => x.id === r.id)!;
-    return `| ${r.id} | ${r.box.join(", ")} | ${r.nodes.map((n) => "`" + n + "`").join(", ")} | ${fmt(r.sourcePercent)} | ${fmt(r.modelPercent)} | ${fmt(r.delta)} | ${metric([b]).toFixed(3)} | ${metric([r]).toFixed(3)} | ${r.uncertainty} |`;
+    const ref = r.photoBox ? `photo ${r.photoBox.join(", ")}` : "native";
+    return `| ${r.id} | ${r.box.join(", ")} | ${ref} | ${r.nodes.map((n) => "`" + n + "`").join(", ")} | ${fmt(r.sourcePercent)} | ${fmt(r.modelPercent)} | ${fmt(r.delta)} | ${metric([b]).toFixed(3)} | ${metric([r]).toFixed(3)} | ${r.uncertainty} |`;
   }),
   "",
 ];

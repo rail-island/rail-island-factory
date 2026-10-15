@@ -111,6 +111,12 @@ describe("CD 150 transfer", () => {
       });
       for (const [a, b] of ends)
         lengths.push(Math.hypot(...a!.map((v, i) => v - b![i]!)));
+      // Lower arms: the hinge stands toward the middle, the knee points to the
+      // nearer cab end (photographs), in both poses.
+      for (const lower of [ends[0]!, ends[2]!]) {
+        const [hinge, knee] = [...lower].sort((p, q) => p[1]! - q[1]!);
+        expect(Math.abs(knee![0]!)).toBeGreaterThan(Math.abs(hinge![0]!) + 0.3);
+      }
       for (const [lower, upper] of [
         [0, 1],
         [2, 3],
@@ -123,6 +129,28 @@ describe("CD 150 transfer", () => {
     }
     lengths.forEach((l) => expect(l).toBeCloseTo(Math.hypot(1.66, 0.26), 4));
   });
+  it("hangs each bogie on primary and secondary coils under a dropped side frame", () => {
+    const nodes = leaves(cd150().sourceTree("test", "Test").root);
+    for (const [bogie, xc] of [["rear-bogie", -4.25], ["front-bogie", 4.15]] as const) {
+      const prefix = `bogies/${bogie}/`;
+      const within = (scope: string) =>
+        nodes.filter((n) => n.id.startsWith(prefix) && new RegExp(`/${scope}(-\\d+)?/`).test(n.id));
+      // a box on each side of each axle, paired coils on its equaliser
+      expect(within("axle-box").filter((n) => n.material === "bogie")).toHaveLength(8);
+      const primary = within("primary-suspension").filter((n) => n.material === "spring");
+      const primaryCentres = new Set(primary.map((n) => `${((n.min![0] + n.max![0]) / 2).toFixed(2)},${((n.min![2] + n.max![2]) / 2).toFixed(2)}`));
+      expect(primaryCentres.size).toBe(8);
+      // the secondary coils stand on the spring plank, up to the body's bracket
+      const secondary = within("secondary-suspension").filter((n) => n.material === "spring");
+      expect(Math.min(...secondary.map((n) => n.min![1]))).toBeCloseTo(0.52, 5);
+      expect(Math.max(...secondary.map((n) => n.max![1]))).toBeCloseTo(0.94, 5);
+      // the side frame is level over the axle boxes and dropped between them
+      const frame = within("frame").filter((n) => Math.abs(n.min![2]) > 0.9 || Math.abs(n.max![2]) > 0.9);
+      const centre = frame.filter((n) => n.min![0] < xc && n.max![0] > xc && n.max![1] < 0.9);
+      expect(Math.min(...centre.map((n) => n.min![1]))).toBeLessThanOrEqual(0.5);
+      expect(Math.max(...frame.map((n) => n.max![1]))).toBeCloseTo(1.02, 5);
+    }
+  });
   it("carries a full running number with a valid check digit", () => {
     expect(CD150_NUMBER).toMatch(/^150 \d{3}-\d$/);
     const digits = [...CD150_NUMBER.replace(/\D/g, "")].map(Number);
@@ -133,7 +161,7 @@ describe("CD 150 transfer", () => {
       .reduce((a, d, i) => a + (i % 2 === 0 ? ((2 * d) % 10) + Math.floor((2 * d) / 10) : d), 0);
     expect((10 - (sum % 10)) % 10).toBe(digits[6]);
   });
-  it("lowers the green side skirt between the bogies", () => {
+  it("hangs the green side skirt to 0.9 m and lowers it between the bogies", () => {
     const mesh = cd150();
     const { json, bin } = parseGlb(mesh.toGlb("test"));
     const green = collectTriangles(json, bin)
@@ -145,8 +173,23 @@ describe("CD 150 transfer", () => {
           .filter((p) => Math.abs(p[0]) >= x0 - 1e-4 && Math.abs(p[0]) <= x1 + 1e-4)
           .map((p) => p[1]),
       );
-    // Native side BMPs: the green drops 0.6 m above rail over source x=7.4..9.6.
+    // Native side BMPs and photographs: the green skirt reaches 0.9 m along the
+    // body and drops to 0.6 m between the bogies (source x=7.4..9.6).
     expect(lowest(0, 1.1)).toBeCloseTo(0.6, 4);
-    expect(lowest(2.1, 7)).toBeGreaterThanOrEqual(1.2 - 1e-6);
+    expect(lowest(1.6, 5.85)).toBeCloseTo(0.9, 4);
+  });
+  it("places the front plate and marker lamps just below the cream/green boundary, as photographed", () => {
+    const nodes = leaves(cd150().sourceTree("test", "Test").root);
+    const box = (id: string) => {
+      const ns = nodes.filter((n) => n.id === id || n.id.startsWith(id + "/"));
+      return [Math.min(...ns.map((n) => n.min![1])), Math.max(...ns.map((n) => n.max![1]))];
+    };
+    const [p0, p1] = box("front-cab/number-plate/housing");
+    expect(1.9 - p1!).toBeLessThan(0.06);
+    expect(p1! - p0!).toBeCloseTo(0.23, 2);
+    for (const lamp of ["right-marker-0", "right-marker-1", "left-marker-0", "left-marker-1"]) {
+      const [l0, l1] = box(`front-cab/lamps/${lamp}`);
+      expect((l0! + l1!) / 2).toBeCloseTo((p0! + p1!) / 2, 1);
+    }
   });
 });
