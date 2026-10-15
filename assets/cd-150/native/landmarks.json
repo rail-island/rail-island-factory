@@ -1,0 +1,591 @@
+{
+  "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/loco/electric/cd_150/model",
+  "pixelMetres": 0.1,
+  "annotations": [
+    {
+      "id": "F01",
+      "view": "x_both",
+      "box": [
+        1,
+        24,
+        14,
+        32
+      ],
+      "nodes": [
+        "front-cab/windscreen/right-pane/slab-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "F02",
+      "view": "x_both",
+      "box": [
+        2,
+        25,
+        14,
+        32
+      ],
+      "nodes": [
+        "front-cab/windscreen/right-pane/slab-2"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "F03",
+      "view": "x_both",
+      "box": [
+        16,
+        24,
+        29,
+        32
+      ],
+      "nodes": [
+        "front-cab/windscreen/left-pane/slab-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "F04",
+      "view": "x_both",
+      "box": [
+        17,
+        25,
+        29,
+        32
+      ],
+      "nodes": [
+        "front-cab/windscreen/left-pane/slab-2"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "F05",
+      "view": "x_both",
+      "box": [
+        13,
+        22,
+        17,
+        24
+      ],
+      "nodes": [
+        "front-cab/lamps/slab-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "F06",
+      "view": "x_both",
+      "box": [
+        10,
+        43,
+        20,
+        46
+      ],
+      "nodes": [
+        "front-cab/number-plate/housing"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "F07",
+      "view": "x_both",
+      "box": [
+        12,
+        36,
+        18,
+        40
+      ],
+      "nodes": [
+        "front-cab/emblem"
+      ],
+      "tolerancePixels": 1.51,
+      "uncertainty": "Period badge approximated with the shared CD emblem; raster is six pixels wide."
+    },
+    {
+      "id": "F08",
+      "view": "x_both",
+      "box": [
+        1,
+        45,
+        3,
+        47
+      ],
+      "nodes": [
+        "front-cab/lamps/right-marker-1/slab-2"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Circular lenses retained; native source paints yellow light patches without resolving lens colours."
+    },
+    {
+      "id": "F09",
+      "view": "x_both",
+      "box": [
+        5,
+        45,
+        7,
+        47
+      ],
+      "nodes": [
+        "front-cab/lamps/right-marker-0/slab-2"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Circular lenses retained; native source paints yellow light patches without resolving lens colours."
+    },
+    {
+      "id": "F10",
+      "view": "x_both",
+      "box": [
+        23,
+        45,
+        25,
+        47
+      ],
+      "nodes": [
+        "front-cab/lamps/left-marker-0/slab-2"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Circular lenses retained; native source paints yellow light patches without resolving lens colours."
+    },
+    {
+      "id": "F11",
+      "view": "x_both",
+      "box": [
+        27,
+        45,
+        29,
+        47
+      ],
+      "nodes": [
+        "front-cab/lamps/left-marker-1/slab-2"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Circular lenses retained; native source paints yellow light patches without resolving lens colours."
+    },
+    {
+      "id": "F12",
+      "view": "x_both",
+      "box": [
+        1,
+        48,
+        8,
+        52
+      ],
+      "nodes": [
+        "front-cab/buffers/sweep-4"
+      ],
+      "tolerancePixels": 2.01,
+      "uncertainty": "Keep 1.75 m mechanical buffer spacing despite coarse raster."
+    },
+    {
+      "id": "F13",
+      "view": "x_both",
+      "box": [
+        22,
+        48,
+        29,
+        52
+      ],
+      "nodes": [
+        "front-cab/buffers/sweep-2"
+      ],
+      "tolerancePixels": 2.01,
+      "uncertainty": "Keep 1.75 m mechanical buffer spacing despite coarse raster."
+    },
+    {
+      "id": "D01",
+      "view": "z_dec",
+      "box": [
+        16,
+        25,
+        26,
+        44
+      ],
+      "nodes": [
+        "rear-cab/right-side/door/slab-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "D02",
+      "view": "z_dec",
+      "box": [
+        18,
+        26,
+        24,
+        33
+      ],
+      "nodes": [
+        "rear-cab/right-side/door/glass"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "D03",
+      "view": "z_dec",
+      "box": [
+        144,
+        25,
+        154,
+        44
+      ],
+      "nodes": [
+        "front-cab/right-side/door/slab-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "D04",
+      "view": "z_dec",
+      "box": [
+        146,
+        26,
+        152,
+        33
+      ],
+      "nodes": [
+        "front-cab/right-side/door/glass"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "D05",
+      "view": "z_dec",
+      "box": [
+        80,
+        37,
+        90,
+        40
+      ],
+      "nodes": [
+        "body/right-side/number-plate/slab-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "D06",
+      "view": "z_dec",
+      "box": [
+        30,
+        25,
+        59,
+        41
+      ],
+      "nodes": [
+        "body/right-side/machine-room-grilles/bank-1/housing"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "D07",
+      "view": "z_dec",
+      "box": [
+        111,
+        25,
+        140,
+        41
+      ],
+      "nodes": [
+        "body/right-side/machine-room-grilles/bank-2/housing"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "D08",
+      "view": "z_dec",
+      "box": [
+        63,
+        24,
+        70,
+        31
+      ],
+      "nodes": [
+        "body/cooler/right-grilles/panel-1/housing"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native gray grille frame edges; one pixel uncertainty; dark recess excluded."
+    },
+    {
+      "id": "D09",
+      "view": "z_dec",
+      "box": [
+        70,
+        24,
+        77,
+        31
+      ],
+      "nodes": [
+        "body/cooler/right-grilles/panel-2/housing"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native gray grille frame edges; one pixel uncertainty; dark recess excluded."
+    },
+    {
+      "id": "D10",
+      "view": "z_dec",
+      "box": [
+        77,
+        24,
+        84,
+        31
+      ],
+      "nodes": [
+        "body/cooler/right-grilles/panel-3/housing"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native gray grille frame edges; one pixel uncertainty; dark recess excluded."
+    },
+    {
+      "id": "D11",
+      "view": "z_dec",
+      "box": [
+        85,
+        24,
+        92,
+        31
+      ],
+      "nodes": [
+        "body/cooler/right-grilles/panel-4/housing"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native gray grille frame edges; one pixel uncertainty; dark recess excluded."
+    },
+    {
+      "id": "D12",
+      "view": "z_dec",
+      "box": [
+        92,
+        24,
+        99,
+        31
+      ],
+      "nodes": [
+        "body/cooler/right-grilles/panel-5/housing"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native gray grille frame edges; one pixel uncertainty; dark recess excluded."
+    },
+    {
+      "id": "D13",
+      "view": "z_dec",
+      "box": [
+        99,
+        24,
+        106,
+        31
+      ],
+      "nodes": [
+        "body/cooler/right-grilles/panel-6/housing"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native gray grille frame edges; one pixel uncertainty; dark recess excluded."
+    },
+    {
+      "id": "I01",
+      "view": "z_inc",
+      "box": [
+        16,
+        25,
+        26,
+        44
+      ],
+      "nodes": [
+        "rear-cab/left-side/door/slab-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "I02",
+      "view": "z_inc",
+      "box": [
+        18,
+        26,
+        24,
+        33
+      ],
+      "nodes": [
+        "rear-cab/left-side/door/glass"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "I03",
+      "view": "z_inc",
+      "box": [
+        144,
+        25,
+        154,
+        44
+      ],
+      "nodes": [
+        "front-cab/left-side/door/slab-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "I04",
+      "view": "z_inc",
+      "box": [
+        146,
+        26,
+        152,
+        33
+      ],
+      "nodes": [
+        "front-cab/left-side/door/glass"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "I05",
+      "view": "z_inc",
+      "box": [
+        80,
+        37,
+        90,
+        40
+      ],
+      "nodes": [
+        "body/left-side/number-plate/slab-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "I06",
+      "view": "z_inc",
+      "box": [
+        38,
+        27,
+        47,
+        33
+      ],
+      "nodes": [
+        "body/left-side/machine-room-windows/window-1/slab-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "I07",
+      "view": "z_inc",
+      "box": [
+        68,
+        27,
+        77,
+        33
+      ],
+      "nodes": [
+        "body/left-side/machine-room-windows/window-2/slab-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "I08",
+      "view": "z_inc",
+      "box": [
+        93,
+        27,
+        102,
+        33
+      ],
+      "nodes": [
+        "body/left-side/machine-room-windows/window-3/slab-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "I09",
+      "view": "z_inc",
+      "box": [
+        123,
+        27,
+        132,
+        33
+      ],
+      "nodes": [
+        "body/left-side/machine-room-windows/window-4/slab-1"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native pixel edge estimate; +/- one pixel."
+    },
+    {
+      "id": "I10",
+      "view": "z_inc",
+      "box": [
+        64,
+        14,
+        75,
+        23
+      ],
+      "nodes": [
+        "body/cooler/left-grilles/panel-1/housing"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native gray grille frame edges; one pixel uncertainty; dark recess excluded."
+    },
+    {
+      "id": "I11",
+      "view": "z_inc",
+      "box": [
+        74,
+        14,
+        85,
+        23
+      ],
+      "nodes": [
+        "body/cooler/left-grilles/panel-2/housing"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native gray grille frame edges; one pixel uncertainty; dark recess excluded."
+    },
+    {
+      "id": "I12",
+      "view": "z_inc",
+      "box": [
+        85,
+        14,
+        96,
+        23
+      ],
+      "nodes": [
+        "body/cooler/left-grilles/panel-3/housing"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native gray grille frame edges; one pixel uncertainty; dark recess excluded."
+    },
+    {
+      "id": "I13",
+      "view": "z_inc",
+      "box": [
+        95,
+        14,
+        106,
+        23
+      ],
+      "nodes": [
+        "body/cooler/left-grilles/panel-4/housing"
+      ],
+      "tolerancePixels": 1.01,
+      "uncertainty": "Native gray grille frame edges; one pixel uncertainty; dark recess excluded."
+    }
+  ]
+}

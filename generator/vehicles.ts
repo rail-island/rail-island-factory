@@ -9,10 +9,12 @@
 import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "./meshBuilder.ts";
 import type { CatalogFields, ProceduralDesign } from "./design.ts";
 import { arc, block, plate, side } from "./vehicleParts.ts";
+import { cd150 } from "./cd150.ts";
 import { RAIL_CATALOG, cd163 } from "./cd163.ts";
 
 // re-exported: a design's JS bundle imports its build function from this module
 export { cd163 };
+export { cd150 } from "./cd150.ts";
 
 // Chrome is only mildly metallic: the game and the site light models without an
 // environment map, so a fully metallic surface would render nearly black.
@@ -385,5 +387,6 @@ export const VEHICLE_CATALOG: CatalogFields = {
 /** Every procedural vehicle, by catalog id. The ids are stored in saved maps. */
 export const VEHICLES: ProceduralDesign[] = [
   { id: "veh-american-truck", title: "American Truck", build: americanTruck },
+  { id: "veh-cd-150", title: "CD 150", build: cd150, catalog: RAIL_CATALOG },
   { id: "veh-cd-163", title: "CD 163", build: cd163, catalog: RAIL_CATALOG },
 ];

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="Windows-1250"?>
+<shape3d name="pant" rep.name="emptyobj.shape3d">
+<polyline b="$b!1" closed="1" g="$g!1" linewi="0.05" polygon="1" r="$r!1">
+<vertex x="0" y="0" z="0"/>
+<vertex x="1" y="1" z="0.3"/>
+<vertex x="1" y="1" z="0.7"/>
+<vertex x="0" y="0" z="1"/>
+</polyline>
+<polyline b="$b!1" closed="0" g="$g!1" linewi="0.05" polygon="1" r="$r!1">
+<vertex x="0" y="0" z="0"/>
+<vertex x="1" y="1" z="0.7"/>
+</polyline>
+<polyline b="$b!1" closed="1" g="$g!1" linewi="0.05" polygon="1" r="$r!1">
+<vertex x="0" y="2" z="0"/>
+<vertex x="1" y="1" z="0.3"/>
+<vertex x="1" y="1" z="0.7"/>
+<vertex x="0" y="2" z="1"/>
+</polyline>
+<polyline b="$b!1" closed="0" g="$g!1" linewi="0.05" polygon="1" r="$r!1">
+<vertex x="0" y="2" z="0"/>
+<vertex x="1" y="1" z="0.7"/>
+</polyline>
+</shape3d>

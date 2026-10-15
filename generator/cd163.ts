@@ -213,7 +213,7 @@ const EMBLEM_TRIANGLES = UPRIGHT_EMBLEM.map((poly) => triangulate(poly));
  * The CD emblem, `h` high, its lower left corner at (u0, v0) of a surface whose
  * u runs to the reader's right: triangles for decal().
  */
-function emblem(u0: number, v0: number, h: number, flipU: boolean): Array<[number, number]> {
+export function emblem(u0: number, v0: number, h: number, flipU: boolean): Array<[number, number]> {
   const out: Array<[number, number]> = [];
   UPRIGHT_EMBLEM.forEach((poly, k) => {
     for (const i of EMBLEM_TRIANGLES[k]!) {
@@ -245,7 +245,7 @@ const DIGITS: Record<string, Array<Array<[number, number]>>> = {
 };
 
 /** Thin connected numeral strokes on a surface, optionally read toward -u. */
-function lettering(text: string, u0: number, v0: number, h: number, w: number, gap: number, flipU: boolean): Array<[number, number]> {
+export function lettering(text: string, u0: number, v0: number, h: number, w: number, gap: number, flipU: boolean): Array<[number, number]> {
   const out: Array<[number, number]> = [];
   [...text].forEach((ch, i) => {
     const cu = i * (w + gap);
@@ -268,7 +268,7 @@ function lettering(text: string, u0: number, v0: number, h: number, w: number, g
 const letteringWidth = (text: string, w: number, gap: number): number => text.length * w + (text.length - 1) * gap;
 
 /** A tube from (x0, y0, z0) to (x1, y1, z1), running mainly along x, its section upright. */
-function tubeX(m: MeshBuilder, mat: string, r: number, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, n = 8): void {
+export function tubeX(m: MeshBuilder, mat: string, r: number, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, n = 8): void {
   m.sweep(mat, "x", ngon(n, r, 0, z0, y0), x0, ngon(n, r, 0, z1, y1), x1);
 }
 
