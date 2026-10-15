@@ -636,13 +636,16 @@ describe("the vehicles", () => {
   // the game turns the trailer by rotating its node about the node's origin.
   it("splits the articulated truck into a truck and a trailer node, the trailer's at the king pin", () => {
     const { json } = parseGlb(designGlb("veh-american-truck"));
-    const nodes = (json as { nodes: Array<{ name: string; translation?: number[] }> }).nodes;
-    expect(nodes.map((n) => n.name)).toEqual(["truck", "trailer"]);
+    const nodes = (json as { nodes: Array<{ name: string; translation?: number[]; children?: number[] }> }).nodes;
+    // the steered front wheels are children of the truck's node
+    expect(nodes.map((n) => n.name)).toEqual(["truck", "wheel-front-left", "wheel-front-right", "trailer"]);
+    expect((json as { scenes: Array<{ nodes: number[] }> }).scenes[0]!.nodes).toEqual([0, 3]);
+    expect(nodes[0]!.children).toEqual([1, 2]);
     expect(nodes[0]!.translation).toEqual([0, 0, 0]);
-    const pivot = nodes[1]!.translation!;
+    const pivot = nodes[3]!.translation!;
     expect(pivot[2]).toBe(0); // on the centre line
     const tree = designTree("veh-american-truck");
-    expect(tree.root.children.map((c) => c.id)).toEqual(["truck", "trailer"]);
+    expect(tree.root.children.map((c) => c.id)).toEqual(["truck", "wheel-front-left", "wheel-front-right", "trailer"]);
     const byId = new Map(walk(tree.root).map((n) => [n.id, n]));
     // the king pin rides on the fifth wheel's top, within its plate
     const fifth = byId.get("truck/chassis/fifth-wheel")!;
@@ -655,7 +658,7 @@ describe("the vehicles", () => {
     const tree = designTree("veh-american-truck");
     const byId = new Map(walk(tree.root).map((n) => [n.id, n]));
     const { json } = parseGlb(designGlb("veh-american-truck"));
-    const pivot = (json as { nodes: Array<{ translation?: number[] }> }).nodes[1]!.translation!;
+    const pivot = (json as { nodes: Array<{ name: string; translation?: number[] }> }).nodes.find((n) => n.name === "trailer")!.translation!;
     const body = byId.get("trailer/body")!;
     const sleeper = byId.get("truck/sleeper")!;
     // the trailer front's corners sweep a circle about the pivot

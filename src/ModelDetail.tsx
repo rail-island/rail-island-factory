@@ -7,13 +7,20 @@
 // the source images the model was made from (refs/<id>/..., listed in the catalog
 // record), shown only for a model that has any.
 //
+// A rigged vehicle (steered wheels, an articulated body) gets a Pose block: a
+// slider for the steering and one per hinge, which pose the preview through the
+// model's own JS module -- the code the game is to call.
+//
 // A parametric model gets a Parameters block above the tabs: a <select> per enum
 // parameter. Choosing a value rebuilds the preview from the model's JS module
 // (ModelViewer); the source tree describes the default build, so its highlight
 // and picking pause while another value is chosen.
 
-import { For, Match, Show, Suspense, Switch, createEffect, createMemo, createResource, lazy, onCleanup } from "solid-js";
-import { COLUMNS, effectiveParams, formatBytes, isDefaultParams, nonDefaultParams, type DetailTab, type Row } from "./catalogQuery";
+import { For, Match, Show, Suspense, Switch, createEffect, createMemo, createResource, createSignal, lazy, on, onCleanup } from "solid-js";
+import {
+  COLUMNS, effectiveParams, formatBytes, isDefaultParams, nonDefaultParams, poseControls, poseOf,
+  type DetailTab, type PoseValues, type Row,
+} from "./catalogQuery";
 import { indexTree, type SourceTree } from "./sourceTreeView";
 import { FileCell } from "./ModelTable";
 import { SourceTreePanel } from "./SourceTreePanel";
@@ -49,6 +56,11 @@ export function ModelDetail(props: {
   const values = createMemo(() => effectiveParams(props.record, props.params));
   const atDefaults = createMemo(() => isDefaultParams(props.record, values()));
   const choose = (name: string, value: string) => props.onParams(nonDefaultParams(props.record, { ...values(), [name]: value }));
+  // A rigged model's pose: slider values in degrees, back to rest for every new model.
+  const controls = createMemo(() => poseControls(props.record));
+  const [pose, setPose] = createSignal<PoseValues>({});
+  createEffect(on(() => props.record.id, () => setPose({})));
+  const posed = createMemo(() => (controls().length ? poseOf(props.record, pose()) : null));
   const [tree] = createResource(() => (props.tab === "source" ? props.record.id : false), loadTree);
   // Only this model's tree: after a step the previous one lingers until the next lands.
   const index = createMemo(() => {
@@ -84,6 +96,7 @@ export function ModelDetail(props: {
             tree={props.tab === "source" && atDefaults() ? index() : null}
             selected={props.node}
             onPick={props.onNode}
+            pose={posed()}
           />
         </Suspense>
       </div>
@@ -113,6 +126,34 @@ export function ModelDetail(props: {
             <Show when={!atDefaults()}>
               <p class="factory-muted factory-params__note">Built in the browser from the JS model; the GLB, thumbnail and source tree are the defaults.</p>
             </Show>
+          </fieldset>
+        </Show>
+        <Show when={controls().length > 0}>
+          <fieldset class="factory-params factory-pose">
+            <legend>Pose</legend>
+            <For each={controls()}>
+              {(c) => (
+                <label class="factory-param factory-pose__row">
+                  <span>{c.label}</span>
+                  <input
+                    type="range"
+                    id={`pose-${c.key}`}
+                    min={-c.max}
+                    max={c.max}
+                    step="1"
+                    value={pose()[c.key] ?? 0}
+                    onInput={(e) => setPose({ ...pose(), [c.key]: Number(e.currentTarget.value) })}
+                  />
+                  <output for={`pose-${c.key}`} class="factory-pose__value">{`${pose()[c.key] ?? 0}\u00b0`}</output>
+                </label>
+              )}
+            </For>
+            <div class="factory-pose__foot">
+              <p class="factory-muted factory-params__note">Posed by the model's JS module (pose, renderJoint), as the game would; + turns left.</p>
+              <button type="button" class="factory-btn" onClick={() => setPose({})} disabled={Object.values(pose()).every((v) => v === 0)}>
+                Reset
+              </button>
+            </div>
           </fieldset>
         </Show>
         <div class="factory-tabs" role="tablist">

@@ -2,6 +2,7 @@
 // catalog.json (what the site lists), both built from the designs themselves.
 
 import { describe, expect, it } from "vitest";
+import { parseGlb } from "../generator/glbTriangles";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -60,6 +61,13 @@ describe("exportVehicleMeta", () => {
       });
     }
   });
+
+  it("lists a rigged vehicle's rig, and no rig key for the others", () => {
+    const rig = { steer: { nodes: ["wheel-front-left", "wheel-front-right"] as [string, string], maxAngleDeg: 40, wheelbase: 5, track: 2 } };
+    const meta = exportVehicleMeta(VEHICLES, new Map([["veh-american-truck", rig]]));
+    expect(meta.vehicles.find((v) => v.id === "veh-american-truck")!.rig).toEqual(rig);
+    expect(meta.vehicles.filter((v) => v.rig).map((v) => v.id)).toEqual(["veh-american-truck"]);
+  });
 });
 
 describe("catalogRecord", () => {
@@ -86,7 +94,17 @@ describe("buildExport", () => {
       const catalog = JSON.parse(fs.readFileSync(path.join(dir, CATALOG_FILE), "utf8")) as ModelCatalog;
       const vehicles = JSON.parse(fs.readFileSync(path.join(dir, VEHICLE_META_FILE), "utf8")) as VehicleExportMeta;
       expect(meta).toEqual(exportMeta(SKYSCRAPERS));
-      expect(vehicles).toEqual(exportVehicleMeta(VEHICLES));
+      // a rigged vehicle's entry carries its rig, the one its GLB's scene holds
+      const rigs = new Map(VEHICLES.flatMap((d) => {
+        const rig = d.build().rig;
+        return rig ? [[d.id, rig] as const] : [];
+      }));
+      expect(vehicles).toEqual(exportVehicleMeta(VEHICLES, rigs));
+      for (const v of vehicles.vehicles) {
+        const { json } = parseGlb(fs.readFileSync(path.join(dir, "glb", v.glb)));
+        expect((json.scenes![0] as { extras?: { rig?: unknown } }).extras?.rig).toEqual(v.rig);
+      }
+      expect(vehicles.vehicles.find((v) => v.id === "veh-american-truck")!.rig!.steer!.nodes).toEqual(["wheel-front-left", "wheel-front-right"]);
       expect(catalog.version).toBe(1);
       expect(catalog.records.map((r) => r.id)).toEqual([...DESIGNS.keys()]);
       for (const r of catalog.records) {

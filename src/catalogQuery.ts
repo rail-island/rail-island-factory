@@ -361,3 +361,48 @@ export function nonDefaultParams(r: CatalogRecord, values: Record<string, string
 export function isDefaultParams(r: CatalogRecord, values: Record<string, string>): boolean {
   return Object.keys(nonDefaultParams(r, effectiveParams(r, values))).length === 0;
 }
+
+// --- posing a rigged model (generator/rig.ts) ---------------------------------------
+
+/** One slider of a rigged model's Pose block: the steering, or the bend at one hinge. */
+export interface PoseControl {
+  /** "steer", or "bend<i>" for the hinge between sections i and i + 1. */
+  key: string;
+  label: string;
+  /** Degrees, symmetric about 0. */
+  max: number;
+}
+
+/** The pose sliders' values, degrees, by control key; a missing one is 0. */
+export type PoseValues = Record<string, number>;
+
+/**
+ * The largest steering angle in degrees: the virtual middle wheel's angle that
+ * turns the inner wheel to its lock. The same formula as rig.ts's steerLock,
+ * which the site cannot import (it only imports types from generator/).
+ */
+export function steerLockDeg(s: { maxAngleDeg: number; wheelbase: number; track: number }): number {
+  const radius = s.wheelbase / Math.tan((s.maxAngleDeg * Math.PI) / 180) + s.track / 2;
+  return (Math.atan(s.wheelbase / radius) * 180) / Math.PI;
+}
+
+/** The Pose block's sliders: steering, then one per hinge, named after the body behind it. */
+export function poseControls(r: CatalogRecord): PoseControl[] {
+  const rig = r.rig;
+  if (!rig) return [];
+  const out: PoseControl[] = [];
+  if (rig.steer) out.push({ key: "steer", label: "Steering", max: Math.floor(steerLockDeg(rig.steer)) });
+  const sections = rig.sections ?? [];
+  for (let i = 0; i + 1 < sections.length; i++) {
+    const behind = sections[i + 1]!.node.replace(/^section(\d+)$/, "section $1");
+    out.push({ key: `bend${i}`, label: sections.length > 2 ? `Joint ${i + 1}` : behind === "trailer" ? "Trailer" : "Joint", max: rig.maxBendDeg ?? 45 });
+  }
+  return out;
+}
+
+/** The slider values as the model's pose() takes them: radians, + turning left. */
+export function poseOf(r: CatalogRecord, values: PoseValues): { steer: number; bend: number[] } {
+  const rad = (deg: number): number => (deg * Math.PI) / 180;
+  const hinges = Math.max(0, (r.rig?.sections?.length ?? 0) - 1);
+  return { steer: rad(values.steer ?? 0), bend: Array.from({ length: hinges }, (_, i) => rad(values[`bend${i}`] ?? 0)) };
+}

@@ -1,5 +1,6 @@
-// Shared helpers of the procedural vehicles (vehicles.ts, cd163.ts): closed
-// boxes, bent plates and arcs, all drawn through the mesh builder's sweep.
+// Shared helpers of the procedural vehicles (vehicles.ts, cd163.ts, buses.ts):
+// closed boxes, bent plates and arcs drawn through the mesh builder's sweep, and
+// the steered front wheels every road vehicle has.
 
 import type { MeshBuilder, Ring } from "./meshBuilder.ts";
 
@@ -34,4 +35,18 @@ export function arc(cx: number, cy: number, r: number, a0: number, a1: number, n
     out.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
   }
   return out;
+}
+
+/**
+ * The two steered front wheels, each a part inside `parent`'s node with its
+ * pivot at the wheel's centre: the game turns it about the pivot's vertical
+ * (vehicle-rig.md). Names follow the rig: wheel-front-left (-Z), -right (+Z).
+ */
+export function steeredWheels(m: MeshBuilder, parent: string, x: number, axleY: number, draw: (s: number, z0: number, z1: number) => void, tyre: [number, number]): [string, string] {
+  const names: [string, string] = ["wheel-front-left", "wheel-front-right"];
+  for (const s of [-1, 1]) {
+    const [z0, z1] = side(s, tyre[0], tyre[1]);
+    m.part(names[s < 0 ? 0 : 1], [x, axleY, (z0 + z1) / 2], () => draw(s, z0, z1), parent);
+  }
+  return names;
 }

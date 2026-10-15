@@ -18,6 +18,7 @@
 import { SKYSCRAPER_CATALOG } from "./skyscrapers.ts";
 import { VEHICLE_CATALOG } from "./vehicles.ts";
 import type { CatalogFields, ParamSpec, ProceduralDesign } from "./design.ts";
+import type { VehicleRig } from "./rig.ts";
 
 /** One model as the game's building catalog would hold it. */
 export interface MetaEntry {
@@ -41,6 +42,12 @@ export interface MetaEntry {
    * Absent for a fixed model.
    */
   params?: ParamSpec[];
+  /**
+   * What of a vehicle the game may move (rig.ts): its steered wheels, an
+   * articulated vehicle's sections and the joints between them, by GLB node
+   * name. The default build's; absent for a model without one.
+   */
+  rig?: VehicleRig;
 }
 
 export interface ExportMeta {
@@ -117,8 +124,8 @@ export const REFS_DIR = "refs";
 /** The file types copied as source images, all of which a browser shows in an <img>. */
 export const REFERENCE_EXTENSIONS = [".bmp", ".gif", ".jpeg", ".jpg", ".png", ".svg", ".webp"] as const;
 
-/** One design's entry, with the catalog fields of its family (the skyscrapers' by default). */
-export function metaEntry(design: ProceduralDesign, fields: CatalogFields = SKYSCRAPER_CATALOG): MetaEntry {
+/** One design's entry, with the catalog fields of its family (the skyscrapers' by default) and its built rig. */
+export function metaEntry(design: ProceduralDesign, fields: CatalogFields = SKYSCRAPER_CATALOG, rig: VehicleRig | null = null): MetaEntry {
   return {
     id: design.id,
     title: design.title,
@@ -131,6 +138,7 @@ export function metaEntry(design: ProceduralDesign, fields: CatalogFields = SKYS
     author: fields.author,
     source: fields.source,
     ...(design.params?.length ? { params: design.params.map((p) => ({ ...p, values: p.values.map((v) => ({ ...v })) })) } : {}),
+    ...(rig ? { rig: JSON.parse(JSON.stringify(rig)) as VehicleRig } : {}),
   };
 }
 
@@ -140,8 +148,9 @@ export function exportMeta(designs: readonly ProceduralDesign[]): ExportMeta {
   return { note: NOTE, count: designs.length, buildings: designs.map((d) => metaEntry(d)) };
 }
 
-export function exportVehicleMeta(designs: readonly ProceduralDesign[]): VehicleExportMeta {
-  return { note: NOTE, count: designs.length, vehicles: designs.map((d) => metaEntry(d, d.catalog ?? VEHICLE_CATALOG)) };
+/** The vehicles' meta; `rigs` holds each rigged design's built rig by id. */
+export function exportVehicleMeta(designs: readonly ProceduralDesign[], rigs: ReadonlyMap<string, VehicleRig> = new Map()): VehicleExportMeta {
+  return { note: NOTE, count: designs.length, vehicles: designs.map((d) => metaEntry(d, d.catalog ?? VEHICLE_CATALOG, rigs.get(d.id) ?? null)) };
 }
 
 /** Rounded to the millimetre, so float noise does not reach the listing. */
