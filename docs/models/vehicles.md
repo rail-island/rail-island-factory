@@ -1,11 +1,11 @@
 # Vehicles
 
 **Covers** - the procedurally generated road and rail vehicles (an articulated American
-truck, the CD 150, CD 163 and CD 263 electric locomotives and the CSD and CD coaches), their triangle budget and conventions, articulated vehicles'
+truck, the CD 150, CD 163 and CD 263 electric locomotives the CSD and CD coaches and the freight wagons), their triangle budget and conventions, articulated vehicles'
 truck and trailer parts, the `sweep` primitive they are mostly built from, and
 how to add one.
 **Code** - `generator/vehicles.ts`, `generator/cd150.ts`, `generator/cd150Comparison.ts`, `generator/cd150Report.ts`, `test/cd150.test.ts`, `generator/cd163.ts`, `generator/cd163Family.ts`, `generator/cdLogo.ts`, `generator/vehicleParts.ts`, `generator/design.ts`, `generator/meshCore.ts` (`sweep`, `part`), `generator/meshBuilder.ts` (`toGlb`), `src/viewerHighlight.ts`, `test/models.test.ts`, `test/cdLogo.test.ts`, `test/viewerHighlight.test.ts`, `.agents/skills/road-vehicle/SKILL.md`, `.agents/skills/railroad-vehicle/SKILL.md`, `.agents/skills/vlakosimdb-transfer/SKILL.md`
-**See also** - [loco-liveries.md](loco-liveries.md) (the locomotives' liveries and the CD 263), [csd-coaches.md](csd-coaches.md) (the CSD coaches), [cd-green-white.md](cd-green-white.md), [bmo-double-deck.md](bmo-double-deck.md), [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md)
+**See also** - [loco-liveries.md](loco-liveries.md) (the locomotives' liveries and the CD 263), [csd-coaches.md](csd-coaches.md) (the CSD coaches), [wagons.md](wagons.md) (the freight wagons), [cd-green-white.md](cd-green-white.md), [bmo-double-deck.md](bmo-double-deck.md), [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md)
 
 ## The designs
 
@@ -19,6 +19,8 @@ how to add one.
 | `veh-csd-classic-green-coach`, `veh-csd-balm` ... `veh-csd-dsk` | CSD Classic Green Coach, Balm, Bam, Bdmtee, Be31, Bi20, Dsk | rigid coaches and a luggage van reconstructed from native vlakosimdb XML/BMPs by a shared coach builder (`csdCoaches.ts`, `csdCoachParts.ts`), with running numbers: the Y-type classic green coach (parametric, `variant` classA/classB = vlakosimdb CSD A/B, [parameters.md](parameters.md)), the Balm and Bam trailers, the Bdmtee commuter coach, the two-axle Be31, Bi20 and Dsk; 10.5 to 26.4 m, 3,200 to 6,200 triangles. See [csd-coaches.md](csd-coaches.md) |
 | `veh-bmo-double-deck-coach` | Bmo Double-Deck Coach | parametric (`livery` csd/cdBlue/cdBlueGrey/cdRedDoors = vlakosimdb CSD Bmo and CD Bmo#1..#3): the double-deck coach with a dropped centre, 26.8 m, about 6,500 to 6,800 triangles. See [bmo-double-deck.md](bmo-double-deck.md) |
 | `veh-cd-green-white-coach` | CD Green-White Coach | parametric (`variant` a/ab/b/bee/beel/bds/ds/bdmeer/bdmtee = vlakosimdb CD A ... CD Bdmtee): the CD green and white Y-type compartment coaches, luggage coach and van, and the 26.4 m BDmeer and Bdmtee; about 6,000 to 6,500 triangles. See [cd-green-white.md](cd-green-white.md) |
+| `veh-nas-flat-wagon`, `veh-ua-open-wagon`, `veh-eas-open-wagon` | Nas Flat Wagon, Ua Open Wagon, Eas Open Wagon | parametric (`cargo`: Nas empty/wood/tubes/reels, Ua empty/coal/wood/sand, Eas empty/wood/coal = the vlakosimdb load variants): a 20.9 m flat wagon with stakes and two high-sided open wagons, about 4,000 to 10,300 triangles. See [wagons.md](wagons.md) |
+| `veh-raj-hopper-wagon`, `veh-rah-tank-wagon` | Raj Hopper Wagon, Rah Tank Wagon | rigid: the Raj with four yellow pressure-discharge hoppers and the silver CPAVEX ammonia tank wagon, about 4,200 and 4,400 triangles. See [wagons.md](wagons.md) |
 
 `VEHICLES` in `vehicles.ts` lists them as `{ id, title, build }`, the same
 `ProceduralDesign` shape as the skyscrapers (`design.ts`). `VEHICLE_CATALOG`
@@ -30,7 +32,7 @@ for the game's vehicle import; settle them when the webapp side is written.
 A design may carry its own `catalog` (`ProceduralDesign.catalog`) in place of
 `VEHICLE_CATALOG`: the locomotives use `RAIL_CATALOG` (category `Rail vehicles`,
 group `loco`) and its own palette; the CSD coaches use `COACH_CATALOG` (category
-`Rail vehicles`, group `coach`). The repository rail envelope in
+`Rail vehicles`, group `coach`) and the freight wagons `WAGON_CATALOG` (group `wagon`). The repository rail envelope in
 `test/models.test.ts` allows at most 3.1 m width and 4.7 m fixed-equipment height,
 with a separate 6.5 m operating height limit for extended pantographs. These are
 project limits rather than a universal loading gauge. Rail vehicles aim at about **15,000 triangles** (tested at most 16,000, so a

@@ -6,7 +6,7 @@ description: Create or change procedural railway vehicles, including electric an
 # Railroad vehicle
 
 **Covers** - railway vehicle geometry, operating poses and verification.
-**Code** - `generator/vehicles.ts`, `generator/cd150.ts`, `generator/cd163.ts`, `generator/cd163Family.ts`, `generator/csdCoaches.ts`, `generator/csdCoachParts.ts`, `generator/bmoCoach.ts`, `generator/cdGreenWhiteCoach.ts`, `test/models.test.ts`, `test/cd150.test.ts`, `test/csdCoaches.test.ts`
+**Code** - `generator/vehicles.ts`, `generator/cd150.ts`, `generator/cd163.ts`, `generator/cd163Family.ts`, `generator/csdCoaches.ts`, `generator/csdCoachParts.ts`, `generator/bmoCoach.ts`, `generator/cdGreenWhiteCoach.ts`, `generator/wagons.ts`, `generator/wagonParts.ts`, `test/models.test.ts`, `test/cd150.test.ts`, `test/csdCoaches.test.ts`
 **See also** - [vehicle reference](../../../docs/models/vehicles.md), [road-vehicle](../road-vehicle/SKILL.md), [vlakosimdb-transfer](../vlakosimdb-transfer/SKILL.md)
 
 This skill follows the repository's road-vehicle workflow, with railway-specific
@@ -27,7 +27,8 @@ documentation in English.
 - Use stable `veh-` identifiers, never rename shipped models, and register the
   design in `VEHICLES`. Rail catalog entries use `category: "Rail vehicles"`
   and the appropriate group; CD 163 uses `loco`, the CSD coaches `coach`
-  (`COACH_CATALOG`).
+  (`COACH_CATALOG`), the freight wagons `wagon` (`WAGON_CATALOG`). A wagon's
+  load variants are one design with a `cargo` parameter (docs/models/wagons.md).
 - A rigid locomotive or wagon remains one node unless its consumer explicitly
   needs articulated parts. Do not apply the road truck/trailer split to a train.
   If articulation is required, place pivots at the actual bogie or coupling

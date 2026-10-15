@@ -1,5 +1,6 @@
 // A small stroke font for painted inscriptions: the digits, the hyphen and the
-// letters the CSD coaches' running numbers and "CSD" (C with a caron) lettering need. Each glyph
+// letters the CSD coaches' running numbers and "CSD" (C with a caron) lettering need,
+// and the capitals of the wagons' "RIV" and "CPAVEX" (C with a caron) lettering. Each glyph
 // is polylines in a unit cell (x right 0..1, y up 0..1, the caron above 1);
 // strokeText turns them into thin bars, triangles in (u, v), for MeshCore.facets.
 // No `node:` imports: it is bundled into the standalone JS models.
@@ -24,8 +25,15 @@ const GLYPHS: Record<string, Glyph> = {
   B: [[[0.15, 0], [0.15, 1], [0.65, 1], [0.82, 0.88], [0.82, 0.64], [0.65, 0.53], [0.15, 0.53]], [[0.65, 0.53], [0.85, 0.4], [0.85, 0.13], [0.68, 0], [0.15, 0]]],
   C,
   "\u010c": [...C, [[0.3, 1.28], [0.5, 1.12], [0.7, 1.28]]],
+  A: [[[0.1, 0], [0.5, 1], [0.9, 0]], [[0.27, 0.42], [0.73, 0.42]]],
   D: [[[0.15, 0], [0.15, 1], [0.6, 1], [0.85, 0.75], [0.85, 0.25], [0.6, 0], [0.15, 0]]],
+  E: [[[0.85, 1], [0.15, 1], [0.15, 0], [0.85, 0]], [[0.15, 0.52], [0.7, 0.52]]],
+  I: [[[0.5, 0], [0.5, 1]], [[0.3, 1], [0.7, 1]], [[0.3, 0], [0.7, 0]]],
+  P: [[[0.15, 0], [0.15, 1], [0.68, 1], [0.85, 0.85], [0.85, 0.62], [0.68, 0.48], [0.15, 0.48]]],
+  R: [[[0.15, 0], [0.15, 1], [0.68, 1], [0.85, 0.85], [0.85, 0.62], [0.68, 0.48], [0.15, 0.48]], [[0.5, 0.48], [0.85, 0]]],
   S: [[[0.85, 0.85], [0.7, 1], [0.3, 1], [0.15, 0.85], [0.15, 0.66], [0.3, 0.53], [0.7, 0.47], [0.85, 0.34], [0.85, 0.15], [0.7, 0], [0.3, 0], [0.15, 0.15]]],
+  V: [[[0.1, 1], [0.5, 0], [0.9, 1]]],
+  X: [[[0.12, 0], [0.88, 1]], [[0.12, 1], [0.88, 0]]],
   a: [[[0.2, 0.55], [0.35, 0.65], [0.7, 0.65], [0.82, 0.52], [0.82, 0]], [[0.82, 0.38], [0.35, 0.38], [0.18, 0.25], [0.18, 0.12], [0.32, 0], [0.65, 0], [0.82, 0.15]]],
   e: [[[0.18, 0.35], [0.82, 0.35], [0.82, 0.5], [0.68, 0.65], [0.32, 0.65], [0.18, 0.5], [0.18, 0.15], [0.32, 0], [0.75, 0]]],
   i: [[[0.5, 0], [0.5, 0.65]], [[0.5, 0.82], [0.5, 0.94]]],
@@ -49,11 +57,12 @@ export const strokeWidth = (text: string, w: number, gap: number): number => {
  * `text` as thin bars, triangles in (u, v): characters h tall and w wide, `gap`
  * apart, the first starting at u0 and running toward +u (toward -u when `flipU`,
  * which also mirrors each glyph, so text drawn on a surface seen from the other
- * side still reads correctly). Throws on a character without a glyph.
+ * side still reads correctly), bars `stroke` wide (a tenth of h by default).
+ * Throws on a character without a glyph.
  */
-export function strokeText(text: string, u0: number, v0: number, h: number, w: number, gap: number, flipU = false): Array<[number, number]> {
+export function strokeText(text: string, u0: number, v0: number, h: number, w: number, gap: number, flipU = false, stroke = h * 0.1): Array<[number, number]> {
   const out: Array<[number, number]> = [];
-  const t = h * 0.1; // stroke width
+  const t = stroke; // stroke width
   [...text].forEach((ch, i) => {
     const glyph = GLYPHS[ch];
     if (!glyph) throw new Error(`no glyph for "${ch}"`);

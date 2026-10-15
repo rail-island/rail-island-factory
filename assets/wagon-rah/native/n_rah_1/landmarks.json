@@ -1,0 +1,381 @@
+{
+ "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/truck/n_rah#1/model",
+ "pixelMetres": 0.1,
+ "convention": "Pixel edges [left, top, right, bottom] on the native BMP; origin top left, x right, y down.",
+ "annotations": [
+  {
+   "id": "R01",
+   "view": "z_dec",
+   "side": "right",
+   "element": "tank shell",
+   "box": [
+    10,
+    16,
+    114,
+    35
+   ],
+   "nodes": [
+    "tank/shell"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "The silhouette 3.4 m to 1.5 m of the XML rotation; the native shading continues below it."
+  },
+  {
+   "id": "R02",
+   "view": "z_dec",
+   "side": "right",
+   "element": "orange band",
+   "box": [
+    10,
+    23,
+    113,
+    28
+   ],
+   "nodes": [
+    "tank/band"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "The model band runs over the conical end to the 0.9 m end disc; native column 9 is shaded grey."
+  },
+  {
+   "id": "R03",
+   "view": "z_dec",
+   "side": "right",
+   "element": "CPAVEX lettering",
+   "box": [
+    50,
+    23,
+    71,
+    28
+   ],
+   "nodes": [
+    "tank/lettering"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Bold one-pixel glyphs."
+  },
+  {
+   "id": "R04",
+   "view": "z_dec",
+   "side": "right",
+   "element": "dome",
+   "box": [
+    60,
+    10,
+    69,
+    16
+   ],
+   "nodes": [
+    "tank/dome"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "XML alongz dome (6.0..6.9 m, up to 4.0 m) inside the painted walkway handrail."
+  },
+  {
+   "id": "R05",
+   "view": "z_dec",
+   "side": "right",
+   "element": "walkway handrail",
+   "box": [
+    58,
+    11,
+    75,
+    15
+   ],
+   "nodes": [
+    "tank/walkway-handrail"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R06",
+   "view": "z_dec",
+   "side": "right",
+   "element": "side ladder",
+   "box": [
+    52,
+    11,
+    58,
+    45
+   ],
+   "nodes": [
+    "right-side-boards/ladder"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Its rails cross the tank in the native; the model rails stand just outside the shell."
+  },
+  {
+   "id": "R07",
+   "view": "z_dec",
+   "side": "right",
+   "element": "data board 1",
+   "box": [
+    16,
+    30,
+    41,
+    38
+   ],
+   "nodes": [
+    "right-side-boards/board-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Black on the black background: the outline is the XML `sign` (1.6..4.1 m, 1.2..2.0 m)."
+  },
+  {
+   "id": "R08",
+   "view": "z_dec",
+   "side": "right",
+   "element": "data board 2",
+   "box": [
+    82,
+    30,
+    107,
+    38
+   ],
+   "nodes": [
+    "right-side-boards/board-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Black on the black background: the outline is the XML `sign` (8.2..10.7 m, 1.2..2.0 m)."
+  },
+  {
+   "id": "R09",
+   "view": "z_dec",
+   "side": "right",
+   "element": "running number lines",
+   "box": [
+    18,
+    31,
+    31,
+    38
+   ],
+   "nodes": [
+    "right-side-boards/running-number"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "One-pixel glyphs; the model lettering is set in the stroke font."
+  },
+  {
+   "id": "R10",
+   "view": "z_dec",
+   "side": "right",
+   "element": "frame",
+   "box": [
+    5,
+    38,
+    122,
+    42
+   ],
+   "nodes": [
+    "frame/underframe"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R11",
+   "view": "z_dec",
+   "side": "right",
+   "element": "platform railing post",
+   "box": [
+    121,
+    27,
+    122,
+    38
+   ],
+   "nodes": [
+    "platform-railing"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "XML `rail` (12.1..12.2 m, 1.2..2.3 m); the native paints the post one column to the left."
+  },
+  {
+   "id": "L01",
+   "view": "z_inc",
+   "side": "left",
+   "element": "tank shell",
+   "box": [
+    10,
+    16,
+    114,
+    35
+   ],
+   "nodes": [
+    "tank/shell"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "The silhouette 3.4 m to 1.5 m of the XML rotation; the native shading continues below it."
+  },
+  {
+   "id": "L02",
+   "view": "z_inc",
+   "side": "left",
+   "element": "orange band",
+   "box": [
+    10,
+    23,
+    113,
+    28
+   ],
+   "nodes": [
+    "tank/band"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "The model band runs over the conical end to the 0.9 m end disc; native column 9 is shaded grey."
+  },
+  {
+   "id": "L03",
+   "view": "z_inc",
+   "side": "left",
+   "element": "CPAVEX lettering",
+   "box": [
+    50,
+    23,
+    71,
+    28
+   ],
+   "nodes": [
+    "tank/lettering"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Bold one-pixel glyphs."
+  },
+  {
+   "id": "L04",
+   "view": "z_inc",
+   "side": "left",
+   "element": "dome",
+   "box": [
+    60,
+    10,
+    69,
+    16
+   ],
+   "nodes": [
+    "tank/dome"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "XML alongz dome (6.0..6.9 m, up to 4.0 m) inside the painted walkway handrail."
+  },
+  {
+   "id": "L05",
+   "view": "z_inc",
+   "side": "left",
+   "element": "walkway handrail",
+   "box": [
+    58,
+    11,
+    75,
+    15
+   ],
+   "nodes": [
+    "tank/walkway-handrail"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L06",
+   "view": "z_inc",
+   "side": "left",
+   "element": "side ladder",
+   "box": [
+    52,
+    11,
+    58,
+    45
+   ],
+   "nodes": [
+    "left-side-boards/ladder"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Its rails cross the tank in the native; the model rails stand just outside the shell."
+  },
+  {
+   "id": "L07",
+   "view": "z_inc",
+   "side": "left",
+   "element": "data board 1",
+   "box": [
+    16,
+    30,
+    41,
+    38
+   ],
+   "nodes": [
+    "left-side-boards/board-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Black on the black background: the outline is the XML `sign` (1.6..4.1 m, 1.2..2.0 m)."
+  },
+  {
+   "id": "L08",
+   "view": "z_inc",
+   "side": "left",
+   "element": "data board 2",
+   "box": [
+    82,
+    30,
+    107,
+    38
+   ],
+   "nodes": [
+    "left-side-boards/board-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Black on the black background: the outline is the XML `sign` (8.2..10.7 m, 1.2..2.0 m)."
+  },
+  {
+   "id": "L09",
+   "view": "z_inc",
+   "side": "left",
+   "element": "running number lines",
+   "box": [
+    18,
+    31,
+    31,
+    38
+   ],
+   "nodes": [
+    "left-side-boards/running-number"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "One-pixel glyphs; the model lettering is set in the stroke font."
+  },
+  {
+   "id": "L10",
+   "view": "z_inc",
+   "side": "left",
+   "element": "frame",
+   "box": [
+    5,
+    38,
+    122,
+    42
+   ],
+   "nodes": [
+    "frame/underframe"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L11",
+   "view": "z_inc",
+   "side": "left",
+   "element": "platform railing post",
+   "box": [
+    121,
+    27,
+    122,
+    38
+   ],
+   "nodes": [
+    "platform-railing"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "XML `rail` (12.1..12.2 m, 1.2..2.3 m); the native paints the post one column to the left."
+  }
+ ]
+}

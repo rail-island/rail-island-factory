@@ -1,0 +1,699 @@
+{
+ "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/truck/n_eas-uhlo/model",
+ "pixelMetres": 0.1,
+ "convention": "Pixel edges [left, top, right, bottom] on the native BMP; origin top left, x right, y down.",
+ "annotations": [
+  {
+   "id": "R01",
+   "view": "z_dec",
+   "side": "right",
+   "element": "side wall, top rail and solebar",
+   "box": [
+    2,
+    7,
+    137,
+    32
+   ],
+   "nodes": [
+    "body/right-side/wall",
+    "body/right-side/top-rail",
+    "body/right-side/solebar"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R02",
+   "view": "z_dec",
+   "side": "right",
+   "element": "door 1 frame",
+   "box": [
+    25,
+    7,
+    48,
+    29
+   ],
+   "nodes": [
+    "body/right-side/door-1/frame",
+    "body/right-side/door-1/posts"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Grey frame; native posts are 2 px wide where the XML stanchions are 0.1 m."
+  },
+  {
+   "id": "R03",
+   "view": "z_dec",
+   "side": "right",
+   "element": "door 2 frame",
+   "box": [
+    91,
+    7,
+    114,
+    29
+   ],
+   "nodes": [
+    "body/right-side/door-2/frame",
+    "body/right-side/door-2/posts"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Grey frame; native posts are 2 px wide where the XML stanchions are 0.1 m."
+  },
+  {
+   "id": "R04",
+   "view": "z_dec",
+   "side": "right",
+   "element": "door 1 middle post",
+   "box": [
+    36,
+    8,
+    38,
+    29
+   ],
+   "nodes": [
+    "body/right-side/door-1/posts/post-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Painted 2 px wide; the XML stanchion is 0.1 m."
+  },
+  {
+   "id": "R05",
+   "view": "z_dec",
+   "side": "right",
+   "element": "door 2 middle post",
+   "box": [
+    102,
+    8,
+    104,
+    29
+   ],
+   "nodes": [
+    "body/right-side/door-2/posts/post-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Painted 2 px wide; the XML stanchion is 0.1 m."
+  },
+  {
+   "id": "R06",
+   "view": "z_dec",
+   "side": "right",
+   "element": "stanchion at 1.4 m",
+   "box": [
+    14,
+    8,
+    15,
+    31
+   ],
+   "nodes": [
+    "body/right-side/stanchions/stanchion-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R07",
+   "view": "z_dec",
+   "side": "right",
+   "element": "stanchion at 5.8 m",
+   "box": [
+    58,
+    8,
+    59,
+    31
+   ],
+   "nodes": [
+    "body/right-side/stanchions/stanchion-6"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R08",
+   "view": "z_dec",
+   "side": "right",
+   "element": "stanchion at 6.9 m",
+   "box": [
+    69,
+    8,
+    70,
+    31
+   ],
+   "nodes": [
+    "body/right-side/stanchions/stanchion-7"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R09",
+   "view": "z_dec",
+   "side": "right",
+   "element": "stanchion at 8.0 m",
+   "box": [
+    80,
+    8,
+    81,
+    31
+   ],
+   "nodes": [
+    "body/right-side/stanchions/stanchion-8"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R10",
+   "view": "z_dec",
+   "side": "right",
+   "element": "stanchion at 12.4 m",
+   "box": [
+    124,
+    8,
+    125,
+    31
+   ],
+   "nodes": [
+    "body/right-side/stanchions/stanchion-12"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R11",
+   "view": "z_dec",
+   "side": "right",
+   "element": "data panel",
+   "box": [
+    4,
+    22,
+    14,
+    28
+   ],
+   "nodes": [
+    "body/right-side/data-panel"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R12",
+   "view": "z_dec",
+   "side": "right",
+   "element": "white label",
+   "box": [
+    16,
+    14,
+    24,
+    17
+   ],
+   "nodes": [
+    "body/right-side/label"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R13",
+   "view": "z_dec",
+   "side": "right",
+   "element": "running number block",
+   "box": [
+    5,
+    13,
+    13,
+    18
+   ],
+   "nodes": [
+    "body/right-side/running-number"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "One-pixel glyphs: the block of the first three lines."
+  },
+  {
+   "id": "L01",
+   "view": "z_inc",
+   "side": "left",
+   "element": "side wall, top rail and solebar",
+   "box": [
+    2,
+    7,
+    137,
+    32
+   ],
+   "nodes": [
+    "body/left-side/wall",
+    "body/left-side/top-rail",
+    "body/left-side/solebar"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L02",
+   "view": "z_inc",
+   "side": "left",
+   "element": "door 1 frame",
+   "box": [
+    25,
+    7,
+    48,
+    29
+   ],
+   "nodes": [
+    "body/left-side/door-1/frame",
+    "body/left-side/door-1/posts"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Grey frame; native posts are 2 px wide where the XML stanchions are 0.1 m."
+  },
+  {
+   "id": "L03",
+   "view": "z_inc",
+   "side": "left",
+   "element": "door 2 frame",
+   "box": [
+    91,
+    7,
+    114,
+    29
+   ],
+   "nodes": [
+    "body/left-side/door-2/frame",
+    "body/left-side/door-2/posts"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Grey frame; native posts are 2 px wide where the XML stanchions are 0.1 m."
+  },
+  {
+   "id": "L04",
+   "view": "z_inc",
+   "side": "left",
+   "element": "door 1 middle post",
+   "box": [
+    36,
+    8,
+    38,
+    29
+   ],
+   "nodes": [
+    "body/left-side/door-1/posts/post-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Painted 2 px wide; the XML stanchion is 0.1 m."
+  },
+  {
+   "id": "L05",
+   "view": "z_inc",
+   "side": "left",
+   "element": "door 2 middle post",
+   "box": [
+    102,
+    8,
+    104,
+    29
+   ],
+   "nodes": [
+    "body/left-side/door-2/posts/post-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Painted 2 px wide; the XML stanchion is 0.1 m."
+  },
+  {
+   "id": "L06",
+   "view": "z_inc",
+   "side": "left",
+   "element": "stanchion at 1.4 m",
+   "box": [
+    14,
+    8,
+    15,
+    31
+   ],
+   "nodes": [
+    "body/left-side/stanchions/stanchion-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L07",
+   "view": "z_inc",
+   "side": "left",
+   "element": "stanchion at 5.8 m",
+   "box": [
+    58,
+    8,
+    59,
+    31
+   ],
+   "nodes": [
+    "body/left-side/stanchions/stanchion-6"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L08",
+   "view": "z_inc",
+   "side": "left",
+   "element": "stanchion at 6.9 m",
+   "box": [
+    69,
+    8,
+    70,
+    31
+   ],
+   "nodes": [
+    "body/left-side/stanchions/stanchion-7"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L09",
+   "view": "z_inc",
+   "side": "left",
+   "element": "stanchion at 8.0 m",
+   "box": [
+    80,
+    8,
+    81,
+    31
+   ],
+   "nodes": [
+    "body/left-side/stanchions/stanchion-8"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L10",
+   "view": "z_inc",
+   "side": "left",
+   "element": "stanchion at 12.4 m",
+   "box": [
+    124,
+    8,
+    125,
+    31
+   ],
+   "nodes": [
+    "body/left-side/stanchions/stanchion-12"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L11",
+   "view": "z_inc",
+   "side": "left",
+   "element": "data panel",
+   "box": [
+    125,
+    22,
+    135,
+    28
+   ],
+   "nodes": [
+    "body/left-side/data-panel"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L12",
+   "view": "z_inc",
+   "side": "left",
+   "element": "white label",
+   "box": [
+    115,
+    14,
+    123,
+    17
+   ],
+   "nodes": [
+    "body/left-side/label"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L13",
+   "view": "z_inc",
+   "side": "left",
+   "element": "running number block",
+   "box": [
+    126,
+    13,
+    134,
+    18
+   ],
+   "nodes": [
+    "body/left-side/running-number"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "One-pixel glyphs: the block of the first three lines."
+  },
+  {
+   "id": "B01",
+   "view": "x_both",
+   "end": "rear",
+   "element": "end top rail",
+   "box": [
+    0,
+    7,
+    30,
+    8
+   ],
+   "nodes": [
+    "body/rear-end-wall/top-rail",
+    "body/right-side/top-rail",
+    "body/left-side/top-rail"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "B02",
+   "view": "x_both",
+   "end": "rear",
+   "element": "end post at u 10",
+   "box": [
+    10,
+    9,
+    11,
+    29
+   ],
+   "nodes": [
+    "body/rear-end-wall/post-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "B03",
+   "view": "x_both",
+   "end": "rear",
+   "element": "end post at u 19",
+   "box": [
+    19,
+    9,
+    20,
+    29
+   ],
+   "nodes": [
+    "body/rear-end-wall/post-3"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "B04",
+   "view": "x_both",
+   "end": "rear",
+   "element": "middle end rail",
+   "box": [
+    2,
+    20,
+    28,
+    21
+   ],
+   "nodes": [
+    "body/rear-end-wall/rail-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "The rail runs into the dark corner posts; its ends are the XML `side` section (z -1.3..1.3)."
+  },
+  {
+   "id": "B05",
+   "view": "x_both",
+   "end": "rear",
+   "element": "top end rail",
+   "box": [
+    2,
+    9,
+    28,
+    10
+   ],
+   "nodes": [
+    "body/rear-end-wall/rail-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "The rail runs into the dark corner posts; its ends are the XML `side` section (z -1.3..1.3)."
+  },
+  {
+   "id": "B06",
+   "view": "x_both",
+   "end": "rear",
+   "element": "buffer at u 3..8",
+   "box": [
+    3,
+    29,
+    8,
+    32
+   ],
+   "nodes": [
+    "rear-end/buffers/buffer-1"
+   ],
+   "tolerancePixels": 2.1,
+   "uncertainty": "Standard 1.75 m buffer spacing and 0.44 m heads kept; the native paints a 0.5 to 0.6 m dark box."
+  },
+  {
+   "id": "B07",
+   "view": "x_both",
+   "end": "rear",
+   "element": "buffer at u 22..27",
+   "box": [
+    22,
+    29,
+    27,
+    32
+   ],
+   "nodes": [
+    "rear-end/buffers/buffer-2"
+   ],
+   "tolerancePixels": 2.1,
+   "uncertainty": "Standard 1.75 m buffer spacing and 0.44 m heads kept; the native paints a 0.5 to 0.6 m dark box."
+  },
+  {
+   "id": "F01",
+   "view": "x_both",
+   "end": "front",
+   "element": "end top rail",
+   "box": [
+    0,
+    7,
+    30,
+    8
+   ],
+   "nodes": [
+    "body/front-end-wall/top-rail",
+    "body/right-side/top-rail",
+    "body/left-side/top-rail"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "F02",
+   "view": "x_both",
+   "end": "front",
+   "element": "end post at u 10",
+   "box": [
+    10,
+    9,
+    11,
+    29
+   ],
+   "nodes": [
+    "body/front-end-wall/post-3"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "F03",
+   "view": "x_both",
+   "end": "front",
+   "element": "end post at u 19",
+   "box": [
+    19,
+    9,
+    20,
+    29
+   ],
+   "nodes": [
+    "body/front-end-wall/post-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "F04",
+   "view": "x_both",
+   "end": "front",
+   "element": "middle end rail",
+   "box": [
+    2,
+    20,
+    28,
+    21
+   ],
+   "nodes": [
+    "body/front-end-wall/rail-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "The rail runs into the dark corner posts; its ends are the XML `side` section (z -1.3..1.3)."
+  },
+  {
+   "id": "F05",
+   "view": "x_both",
+   "end": "front",
+   "element": "top end rail",
+   "box": [
+    2,
+    9,
+    28,
+    10
+   ],
+   "nodes": [
+    "body/front-end-wall/rail-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "The rail runs into the dark corner posts; its ends are the XML `side` section (z -1.3..1.3)."
+  },
+  {
+   "id": "F06",
+   "view": "x_both",
+   "end": "front",
+   "element": "buffer at u 3..8",
+   "box": [
+    3,
+    29,
+    8,
+    32
+   ],
+   "nodes": [
+    "front-end/buffers/buffer-2"
+   ],
+   "tolerancePixels": 2.1,
+   "uncertainty": "Standard 1.75 m buffer spacing and 0.44 m heads kept; the native paints a 0.5 to 0.6 m dark box."
+  },
+  {
+   "id": "F07",
+   "view": "x_both",
+   "end": "front",
+   "element": "buffer at u 22..27",
+   "box": [
+    22,
+    29,
+    27,
+    32
+   ],
+   "nodes": [
+    "front-end/buffers/buffer-1"
+   ],
+   "tolerancePixels": 2.1,
+   "uncertainty": "Standard 1.75 m buffer spacing and 0.44 m heads kept; the native paints a 0.5 to 0.6 m dark box."
+  }
+ ]
+}
