@@ -4,35 +4,47 @@
 
 import { describe, expect, it } from "vitest";
 import * as THREE from "three";
-import { DESIGNS, designGlb } from "../generator/generate";
-import { parseGlb } from "../generator/glbTriangles";
+import { ALL_VEHICLES, DESIGNS, designGlb, designSource } from "../generator/generate";
+import { collectTriangles, parseGlb } from "../generator/glbTriangles";
 import { bundleDesign } from "../generator/jsModel";
 import { jointTriangles, pose, steerAngles, steerLock, type JointRig, type SectionRig, type SteerRig, type VehicleRig } from "../generator/rig";
-import { VEHICLES } from "../generator/vehicles";
 import { poseControls, poseOf, steerLockDeg, type CatalogRecord } from "../src/catalogQuery";
 
 const DEG = Math.PI / 180;
-const STEER: SteerRig = { nodes: ["l", "r"], maxAngleDeg: 45, wheelbase: 5.5, track: 2.1 };
+const STEER: SteerRig = { axles: [{ nodes: ["l", "r"], wheelbase: 5.5 }], maxAngleDeg: 45, track: 2.1 };
+/** An 8x4 truck's: two steered axles 1.85 m apart. */
+const STEER2: SteerRig = { axles: [{ nodes: ["l", "r"], wheelbase: 6.12 }, { nodes: ["l2", "r2"], wheelbase: 4.27 }], maxAngleDeg: 40, track: 2.1 };
 
 describe("steerAngles", () => {
   it("turns both wheels toward one centre on the rear axle's line, the inner one tighter", () => {
     for (const steer of [5, 20, 35].map((d) => d * DEG)) {
-      const [left, right] = steerAngles(STEER, steer);
-      expect(left).toBeGreaterThan(steer); // turning left: the left wheel is inside
+      const [[left, right]] = steerAngles(STEER, steer) as [[number, number]];
+      expect(left).toBeGreaterThan(steer); // turning toward -z: the -z wheel is inside
       expect(right).toBeLessThan(steer);
       // both wheels' axes meet the rear axle's line at one point
-      const centre = STEER.wheelbase / Math.tan(steer);
-      expect(STEER.wheelbase / Math.tan(left) + STEER.track / 2).toBeCloseTo(centre, 9);
-      expect(STEER.wheelbase / Math.tan(right) - STEER.track / 2).toBeCloseTo(centre, 9);
-      // and a right turn mirrors it
-      expect(steerAngles(STEER, -steer)).toEqual([-right, -left]);
+      const wheelbase = STEER.axles[0]!.wheelbase;
+      const centre = wheelbase / Math.tan(steer);
+      expect(wheelbase / Math.tan(left) + STEER.track / 2).toBeCloseTo(centre, 9);
+      expect(wheelbase / Math.tan(right) - STEER.track / 2).toBeCloseTo(centre, 9);
+      // and a turn the other way mirrors it
+      expect(steerAngles(STEER, -steer)).toEqual([[-right, -left]]);
     }
-    expect(steerAngles(STEER, 0)).toEqual([0, 0]);
+    expect(steerAngles(STEER, 0)).toEqual([[0, 0]]);
+  });
+
+  it("aims a second steered axle at the same centre, turning it less", () => {
+    const steer = 20 * DEG;
+    const [[l1, r1], [l2, r2]] = steerAngles(STEER2, steer) as [[number, number], [number, number]];
+    expect(l2).toBeLessThan(l1);
+    expect(r2).toBeLessThan(r1);
+    const centre = STEER2.axles[0]!.wheelbase / Math.tan(steer);
+    expect(STEER2.axles[1]!.wheelbase / Math.tan(l2) + STEER2.track / 2).toBeCloseTo(centre, 9);
+    expect(STEER2.axles[1]!.wheelbase / Math.tan(r2) - STEER2.track / 2).toBeCloseTo(centre, 9);
   });
 
   it("locks the inner wheel at the rig's maximum", () => {
     const lock = steerLock(STEER);
-    expect(steerAngles(STEER, lock)[0]).toBeCloseTo(45 * DEG, 9);
+    expect(steerAngles(STEER, lock)[0]![0]).toBeCloseTo(45 * DEG, 9);
     // the site computes the same limit without importing the generator
     expect(steerLockDeg(STEER)).toBeCloseTo(lock / DEG, 9);
   });
@@ -97,17 +109,17 @@ type Module = {
 const MODULES = new Map<string, Module>();
 async function moduleOf(id: string): Promise<Module> {
   if (!MODULES.has(id)) {
-    const text = await bundleDesign(DESIGNS.get(id)!, "vehicles.ts");
+    const text = await bundleDesign(DESIGNS.get(id)!, designSource(id));
     MODULES.set(id, (await import(/* @vite-ignore */ `data:text/javascript;base64,${Buffer.from(text).toString("base64")}`)) as Module);
   }
   return MODULES.get(id)!;
 }
 
-const RIGGED = VEHICLES.filter((d) => d.build().rig !== null).map((d) => [d.id] as const);
+const RIGGED = ALL_VEHICLES.filter((d) => d.build().rig !== null).map((d) => [d.id] as const);
 
 describe("the rigged vehicles", () => {
   it("are every road vehicle", () => {
-    const road = VEHICLES.filter((d) => (d.catalog?.category ?? "Road vehicles") === "Road vehicles").map((d) => d.id);
+    const road = ALL_VEHICLES.filter((d) => (d.catalog?.category ?? "Road vehicles") === "Road vehicles").map((d) => d.id);
     expect(RIGGED.map(([id]) => id)).toEqual(road);
     expect(road).toContain("veh-american-truck");
   });
@@ -118,16 +130,22 @@ describe("the rigged vehicles", () => {
     const nodes = json.nodes as Array<{ name: string; children?: number[]; translation?: number[] }>;
     const front = rig.sections?.[0]?.node ?? nodes[0]!.name;
     const parent = nodes.find((n) => n.name === front)!;
-    for (const name of rig.steer!.nodes) {
-      const i = nodes.findIndex((n) => n.name === name);
-      expect(parent.children).toContain(i);
+    expect(rig.steer!.axles.length).toBeGreaterThan(0);
+    let ahead = Infinity;
+    for (const axle of rig.steer!.axles) {
+      for (const name of axle.nodes) expect(parent.children).toContain(nodes.findIndex((n) => n.name === name));
+      // the -z wheel first, the pair mirrored across the centre line, track apart
+      const [l, r] = axle.nodes.map((n) => nodes.find((x) => x.name === n)!.translation!);
+      expect(l![2]).toBeLessThan(0);
+      expect(r![2]).toBeCloseTo(-l![2]!, 6);
+      expect(r![0]).toBeCloseTo(l![0]!, 6);
+      expect(rig.steer!.track).toBeCloseTo(r![2]! - l![2]!, 6);
+      // axles front first, the wheelbases shrinking with them
+      expect(l![0]).toBeLessThan(ahead);
+      ahead = l![0]!;
     }
-    // left at -z, right at +z, mirror images
-    const [l, r] = rig.steer!.nodes.map((n) => nodes.find((x) => x.name === n)!.translation!);
-    expect(l![2]).toBeLessThan(0);
-    expect(r![2]).toBeCloseTo(-l![2]!, 6);
-    expect(r![0]).toBeCloseTo(l![0]!, 6);
-    expect(rig.steer!.track).toBeCloseTo(r![2]! - l![2]!, 6);
+    const bases = rig.steer!.axles.map((a) => a.wheelbase);
+    expect([...bases].sort((a, b) => b - a)).toEqual(bases);
   });
 
   it.each(RIGGED)("%s: pose() turns the wheels and lays the sections out as a hinged chain", async (id) => {
@@ -137,9 +155,8 @@ describe("the rigged vehicles", () => {
     const hinges = Math.max(0, (rig.sections?.length ?? 0) - 1);
     const bend = Array.from({ length: hinges }, (_, i) => (i % 2 ? -1 : 1) * 0.4);
     mod.pose(group, { steer: 0.3, bend });
-    const [left, right] = steerAngles(rig.steer!, 0.3);
-    expect(group.getObjectByName(rig.steer!.nodes[0])!.rotation.y).toBeCloseTo(left, 9);
-    expect(group.getObjectByName(rig.steer!.nodes[1])!.rotation.y).toBeCloseTo(right, 9);
+    const angles = steerAngles(rig.steer!, 0.3);
+    rig.steer!.axles.forEach((a, k) => a.nodes.forEach((n, i) => expect(group.getObjectByName(n)!.rotation.y).toBeCloseTo(angles[k]![i]!, 9)));
     group.updateMatrixWorld(true);
     const sections = rig.sections ?? [];
     for (let i = 1; i < sections.length; i++) {
@@ -155,8 +172,36 @@ describe("the rigged vehicles", () => {
     }
     // back to rest: the GLB's geometry again
     mod.pose(group, {});
-    for (const n of rig.steer!.nodes) expect(group.getObjectByName(n)!.rotation.y).toBe(0);
+    for (const a of rig.steer!.axles) for (const n of a.nodes) expect(group.getObjectByName(n)!.rotation.y).toBe(0);
   }, 30_000);
+});
+
+describe("the semi-trucks", () => {
+  const SEMIS = RIGGED.filter(([id]) => DESIGNS.get(id)!.build().rig!.sections?.[1]?.node === "trailer");
+
+  /** A part's world-space points: the GLB's triangles under that node alone. */
+  function partPoints(glb: Uint8Array, name: string): Array<[number, number, number]> {
+    const { json, bin } = parseGlb(glb);
+    const nodes = (json.nodes as Array<{ name: string; children?: number[] }>).map((n) => ({ ...n, children: [] }));
+    const only = { ...json, nodes, scene: 0, scenes: [{ nodes: [nodes.findIndex((n) => n.name === name)] }] };
+    return collectTriangles(only as typeof json, bin).flatMap((t) => t.p);
+  }
+
+  it("are the American truck and the two reproduced from the game", () => {
+    expect(SEMIS.map(([id]) => id).sort()).toEqual(["veh-american-truck", "veh-cistern-semi-truck", "veh-reefer-semi-truck"]);
+  });
+
+  // at any bend: everything of the trailer ahead of the king pin sweeps a circle
+  // about it, which must stay inside everything of the tractor above the fifth wheel
+  it.each(SEMIS)("%s swings its trailer clear of the tractor", (id) => {
+    const rig = DESIGNS.get(id)!.build().rig!;
+    const [px, py, pz] = rig.sections![1]!.pivot;
+    const glb = designGlb(id);
+    const flat = (p: [number, number, number]): number => Math.hypot(p[0] - px, p[2] - pz);
+    const reach = Math.max(...partPoints(glb, "trailer").filter((p) => p[0] > px - 0.01 && p[1] > py).map(flat));
+    const clear = Math.min(...partPoints(glb, "truck").filter((p) => p[1] > py + 0.02 && p[0] > px).map(flat));
+    expect(reach + 0.1).toBeLessThan(clear);
+  });
 });
 
 describe("the site's pose sliders", () => {

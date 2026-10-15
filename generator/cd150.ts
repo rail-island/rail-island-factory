@@ -1,15 +1,22 @@
 // CD 150, reconstructed from the native JT7 XML and BMPs in assets/cd-150.
 // Source coordinates: (x, y, z) -> (x - 8.5, y, -z), metres.
 // No runtime textures or sibling database dependency. See assets/cd-150/SOURCES.md.
-import { MeshBuilder, ngon, type Ring } from "./meshBuilder.ts";
+import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "./meshBuilder.ts";
+import type { Vec3 } from "./meshCore.ts";
 import { block, plate, side } from "./vehicleParts.ts";
+import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import {
   CD163_PALETTE,
+  bandAt,
+  bandPieces,
   coil,
   lettering,
   letteringWidth,
   emblem,
+  runningNumber,
+  splitHeights,
   tubeX,
+  type Band,
 } from "./cd163.ts";
 
 const PALETTE = {
@@ -25,6 +32,139 @@ const PALETTE = {
 // Running number in the 1988 CSD/CD scheme: class 150, serial 222 (the CD-era
 // 150.2 subclass), check digit 8 (see docs/models/vehicles.md, "Running numbers").
 export const CD150_NUMBER = "150 222-8";
+
+/**
+ * A livery of the CD 150 body. The CD 151 and the ZSR 350 (Skoda 66E and 55E)
+ * share the 150's body and are drawn on it in their own paint; see
+ * docs/models/loco-liveries.md.
+ */
+export interface Cd150Livery {
+  title: string;
+  /** The vlakosimdb directory under db/train/loco/electric. */
+  source: string;
+  number: string;
+  numberSource: string;
+  palette?: Record<string, MaterialSpec>;
+  /** The body's colour bands from 1.2 to 3.7 m, low first; a band's fourth entry is its ribs' material. */
+  bands: readonly Band[];
+  /** Bands painted over the cab sections and the ends, when they differ from the machine room's. */
+  cabBands?: readonly Band[];
+  /** The cab doors' bands; by default the cab's bands. */
+  door?: readonly Band[];
+  /** The side skirt and the apron over the buffer beam. */
+  skirt: string;
+  sideEmblem: boolean;
+  frontEmblem: boolean;
+}
+
+const c = (color: string, roughness = 0.6): MaterialSpec => ({ color, roughness });
+
+export const CD150_LIVERIES = {
+  cd150: {
+    title: "CD 150 222, cream and green",
+    source: "cd_150",
+    number: CD150_NUMBER,
+    numberSource: "a CD-era 150.2 unit; the native plate does not resolve digits",
+    bands: [[1.2, 1.9, "green"], [1.9, 3.7, "cream", "rib"]],
+    door: [[0, 9, "cream"]],
+    skirt: "green",
+    sideEmblem: true,
+    frontEmblem: true,
+  },
+  cd151: {
+    title: "CD 151 012, cream and dark green",
+    source: "cd_151",
+    number: runningNumber("151", "012"),
+    numberSource: "illustrative, a unit of the class",
+    palette: { green: c("#0d4a26"), cream: c("#d2d2b0"), rib: c("#b4b48a", 0.7) },
+    // rows 43-50 green, 25-42 cream
+    bands: [[1.2, 1.7, "green"], [1.7, 3.7, "cream", "rib"]],
+    skirt: "green",
+    sideEmblem: true,
+    frontEmblem: true,
+  },
+  cd151Cez: {
+    title: "CD 151 CEZ, blue advertising livery",
+    source: "cd_151_cez",
+    number: runningNumber("151", "019"),
+    numberSource: "illustrative; the advertising artwork itself is not modelled",
+    palette: { cezBlue: c("#17336f", 0.5), logo: c("#eeeeee", 0.5) },
+    bands: [[1.2, 3.7, "cezBlue"]],
+    skirt: "cezBlue",
+    sideEmblem: true,
+    frontEmblem: true,
+  },
+  zsr350: {
+    title: "ZSR 350 016, cream and blue, yellow cab stripe",
+    source: "zsr_350",
+    number: runningNumber("350", "016"),
+    numberSource: "illustrative, a unit of the class",
+    palette: { zsrBlue: c("#1f3ab8", 0.5), cream: c("#e6e3b6"), zsrYellow: c("#e8d020", 0.5) },
+    // rows 35-49 blue, 25-34 cream; the cabs add a yellow stripe at rows 41-45
+    bands: [[1.2, 2.5, "zsrBlue"], [2.5, 3.7, "cream"]],
+    cabBands: [[1.2, 1.4, "zsrBlue"], [1.4, 1.9, "zsrYellow"], [1.9, 2.5, "zsrBlue"], [2.5, 3.7, "cream"]],
+    skirt: "zsrBlue",
+    sideEmblem: false,
+    frontEmblem: false,
+  },
+  zsr350No001: {
+    title: "ZSR 350 001, pearl and dark grey, yellow cab ends",
+    source: "zsr_350_001",
+    number: runningNumber("350", "001"),
+    numberSource: "the vlakosimdb model's name",
+    palette: { darkGrey: c("#444a44"), pearl: c("#ece8de", 0.5), zsrYellow: c("#d8d020", 0.5) },
+    // rows 45-50 dark grey, 34-44 pearl, 25-33 dark grey; the cabs yellow at rows 35-42
+    bands: [[1.2, 1.5, "darkGrey"], [1.5, 2.6, "pearl"], [2.6, 3.7, "darkGrey"]],
+    cabBands: [[1.2, 1.5, "darkGrey"], [1.5, 1.7, "pearl"], [1.7, 2.5, "zsrYellow"], [2.5, 2.6, "pearl"], [2.6, 3.7, "darkGrey"]],
+    skirt: "darkGrey",
+    sideEmblem: false,
+    frontEmblem: false,
+  },
+  zsr350No002: {
+    title: "ZSR 350 002, red and white",
+    source: "zsr_350_002",
+    number: runningNumber("350", "002"),
+    numberSource: "the vlakosimdb model's name",
+    palette: { red: c("#b8121a", 0.5), pearl: c("#e0e0e0", 0.5) },
+    // rows 43-50 red, 35-42 white, 25-34 red
+    bands: [[1.2, 1.7, "red"], [1.7, 2.5, "pearl"], [2.5, 3.7, "red"]],
+    skirt: "red",
+    sideEmblem: false,
+    frontEmblem: false,
+  },
+  zsr350No003: {
+    title: "ZSR 350 003, blue, yellow band",
+    source: "zsr_350_003",
+    number: runningNumber("350", "003"),
+    numberSource: "the vlakosimdb model's name",
+    palette: { zsrBlue: c("#1048b8", 0.5), lemon: c("#dcd84a", 0.5) },
+    // rows 43-50 blue, 36-42 yellow, 25-35 blue
+    bands: [[1.2, 1.7, "zsrBlue"], [1.7, 2.4, "lemon"], [2.4, 3.7, "zsrBlue"]],
+    skirt: "zsrBlue",
+    sideEmblem: false,
+    frontEmblem: false,
+  },
+  zsr350No004: {
+    title: "ZSR 350 004, dark blue, white cab ends",
+    source: "zsr_350_004",
+    number: runningNumber("350", "004"),
+    numberSource: "the vlakosimdb model's name",
+    palette: { navy: c("#14148a", 0.5), pearl: c("#ece8ec", 0.5), skyBlue: c("#1a7ec0", 0.5), darkGrey: c("#404840") },
+    // rows 47-50 sky blue, 43-46 white, 25-42 navy; the cabs white at rows 35-43, navy at 44-46
+    bands: [[1.2, 1.3, "skyBlue"], [1.3, 1.7, "pearl"], [1.7, 3.7, "navy"]],
+    cabBands: [[1.2, 1.3, "skyBlue"], [1.3, 1.6, "navy"], [1.6, 2.5, "pearl"], [2.5, 3.7, "darkGrey"]],
+    skirt: "skyBlue",
+    sideEmblem: false,
+    frontEmblem: false,
+  },
+} as const satisfies Record<string, Cd150Livery>;
+
+export const CD150_PARAMS: readonly ParamSpec[] = [{
+  name: "livery",
+  title: "Livery",
+  default: "cd150",
+  values: Object.entries(CD150_LIVERIES).map(([value, l]) => ({ value, title: l.title })),
+}];
 
 // Source plan tapers from 3.0 m across the machine room to 2.8 m at the noses.
 function halfWidth(x: number): number {
@@ -167,26 +307,26 @@ function grille(
   for (let y = y0 + 0.12; y + 0.025 < y1 - 0.045; y += 0.13)
     draw("slat", x0 + 0.05, y, x1 - 0.05, y + 0.025, 0.05);
 }
-function body(m: MeshBuilder): void {
+function body(m: MeshBuilder, livery: Cd150Livery): void {
+  const { bands } = livery;
   m.scope("shell", () => {
     m.cap("underframe", shellRing(1.2), 1.2, false);
-    const bands: Array<[number, number, string]> = [
-      [1.2, 1.6, "green"],
-      [1.6, 1.9, "green"],
-      [1.9, 2.6, "cream"],
-      [2.6, 2.7, "cream"],
-      [2.7, 3.7, "cream"],
-    ];
-    for (const [a, b, mat] of bands)
-      m.loft(mat, shellRing(a), a, shellRing(b), b, false);
+    // split where the cab profile kinks and where the colours change
+    const hs = splitHeights(bands, 1.2, 3.7, [1.6, 1.9, 2.6, 2.7]);
+    for (let i = 1; i < hs.length; i++) {
+      const [a, b] = [hs[i - 1]!, hs[i]!];
+      m.loft(bandAt(bands, (a + b) / 2)[2], shellRing(a), a, shellRing(b), b, false);
+    }
     m.loft("roof", shellRing(3.7), 3.7, plan(7, 1.42, 1.42), 3.9, false);
     m.loft("roof", plan(7, 1.42, 1.42), 3.9, plan(5.8, 1.3, 1.3), 4.2);
   });
   for (const s of [-1, 1])
     m.scope(s > 0 ? "right side" : "left side", () => {
       m.scope("ribs", () => {
-        for (let y = 2.05; y < 3.55; y += 0.24)
-          sideBox(m, "rib", s, -5.8, y, 5.8, y + 0.075, 0.008);
+        for (let y = 2.05; y < 3.55; y += 0.24) {
+          const band = bandAt(bands, y);
+          sideBox(m, band[3] ?? band[2], s, -5.8, y, 5.8, y + 0.075, 0.008);
+        }
       });
       if (s > 0)
         m.scope("machine room grilles", () => {
@@ -218,11 +358,11 @@ function body(m: MeshBuilder): void {
         });
       m.scope("number plate", () => {
         sideBox(m, "plate", s, -0.5, 2.0, 0.5, 2.3, 0.028);
-        const w = letteringWidth(CD150_NUMBER, 0.08, 0.025);
+        const w = letteringWidth(livery.number, 0.08, 0.025);
         m.facets(
           "white",
           lettering(
-            CD150_NUMBER,
+            livery.number,
             s < 0 ? w / 2 : -w / 2,
             2.05,
             0.2,
@@ -243,10 +383,10 @@ function body(m: MeshBuilder): void {
           [-5.85, 5.85],
           [6.95, 7.35],
         ])
-          sidePanel(m, "green", s, rect(a!, 0.9, b!, 1.3), 0.003, 0.04);
+          sidePanel(m, livery.skirt, s, rect(a!, 0.9, b!, 1.3), 0.003, 0.04);
         sidePanel(
           m,
-          "green",
+          livery.skirt,
           s,
           [
             [-1.1, 0.6],
@@ -258,7 +398,7 @@ function body(m: MeshBuilder): void {
           0.04,
         );
       });
-      m.scope("emblem", () => {
+      if (livery.sideEmblem) m.scope("emblem", () => {
         const x = s > 0 ? 3.3 : -4;
         m.facets(
           "logo",
@@ -321,7 +461,7 @@ function body(m: MeshBuilder): void {
       });
   });
 }
-function cab(m: MeshBuilder, e: number): void {
+function cab(m: MeshBuilder, e: number, livery: Cd150Livery): void {
   m.scope("windscreen", () => {
     for (const s of [-1, 1])
       m.scope(s > 0 ? "right pane" : "left pane", () => {
@@ -372,11 +512,11 @@ function cab(m: MeshBuilder, e: number): void {
     m.scope("housing", () =>
       endPanel(m, "plate", e, rect(-0.5, 1.64, 0.5, 1.87), 0.035),
     );
-    const w = letteringWidth(CD150_NUMBER, 0.07, 0.02);
+    const w = letteringWidth(livery.number, 0.07, 0.02);
     m.facets(
       "white",
       lettering(
-        CD150_NUMBER,
+        livery.number,
         e > 0 ? w / 2 : -w / 2,
         1.675,
         0.16,
@@ -387,7 +527,7 @@ function cab(m: MeshBuilder, e: number): void {
       [e, 0, 0],
     );
   });
-  m.scope("emblem", () => {
+  if (livery.frontEmblem) m.scope("emblem", () => {
     m.facets(
       "logo",
       emblem(e > 0 ? 0.3 : -0.3, 2.02, 0.38, e > 0).map(([z, y]) => [
@@ -404,7 +544,8 @@ function cab(m: MeshBuilder, e: number): void {
         x1 = x0 + 1.0;
       m.scope("door", () => {
         sideBox(m, "roof", s, x0, 1.6, x1, 3.5, 0.02);
-        sideBox(m, "cream", s, x0 + 0.08, 1.75, x1 - 0.08, 3.44, 0.035);
+        for (const [y0, y1, mat] of bandPieces(livery.door ?? livery.cabBands ?? livery.bands, 1.75, 3.44))
+          sideBox(m, mat, s, x0 + 0.08, y0, x1 - 0.08, y1, 0.035);
         m.scope("glass", () =>
           sideBox(m, "glass", s, x0 + 0.2, 2.7, x1 - 0.2, 3.4, 0.052),
         );
@@ -436,7 +577,7 @@ function cab(m: MeshBuilder, e: number): void {
   m.scope("apron", () =>
     block(
       m,
-      "green",
+      livery.skirt,
       ...([e * 7.74, e * 7.84].sort((a, b) => a - b) as [number, number]),
       0.8,
       1.22,
@@ -648,11 +789,53 @@ function pantograph(
     }
   });
 }
-export function cd150(): MeshBuilder {
-  const m = new MeshBuilder(PALETTE);
-  m.scope("body", () => body(m));
+/** Where a livery's cab paint begins: clear of the ribs and the skirt, ahead of the doors. */
+const CAB_X = 5.85;
+
+/**
+ * A livery's cab paint (`cabBands`): a one-sided skin 3 mm off the shell over
+ * the tapered cab sides and the end at `e`, split where the profile kinks and
+ * the colours change.
+ */
+function cabPaint(m: MeshBuilder, e: number, bands: readonly Band[]): void {
+  const line = (y: number): Vec3[] => {
+    const fx = frontX(y, e);
+    // the side runs from (5.8, 1.5) to the end's corner (fx, 1.4)
+    const z = 1.5 - (0.1 * (CAB_X - 5.8)) / (fx - 5.8);
+    const pts: Array<[number, number]> = [[CAB_X, -z], [fx, -1.4], [fx, 1.4], [CAB_X, z]];
+    return pts.map(([x, zz]): Vec3 => [e * x, y, zz]);
+  };
+  const hs = splitHeights(bands, 1.2, 3.69, [1.6, 1.9, e > 0 ? 2.7 : 2.6]);
+  for (let i = 1; i < hs.length; i++) {
+    const [y0, y1] = [hs[i - 1]!, hs[i]!];
+    const mat = bandAt(bands, (y0 + y1) / 2)[2];
+    const [lo, hi] = [line(y0), line(y1)];
+    for (let k = 0; k + 1 < lo.length; k++) {
+      const quad = [lo[k]!, lo[k + 1]!, hi[k + 1]!, hi[k]!];
+      const [a, b, d] = [quad[0]!, quad[1]!, quad[3]!];
+      const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+      const v = [d[0] - a[0], d[1] - a[1], d[2] - a[2]];
+      let n: Vec3 = [u[1]! * v[2]! - u[2]! * v[1]!, u[2]! * v[0]! - u[0]! * v[2]!, u[0]! * v[1]! - u[1]! * v[0]!];
+      const l = Math.hypot(...n);
+      n = [n[0] / l, n[1] / l, n[2] / l];
+      // away from a point on the axis inside the cab
+      const [cx, cz] = [(a[0] + b[0]) / 2 - e * 6.5, (a[2] + b[2]) / 2];
+      if (n[0] * cx + n[2] * cz < 0) n = [-n[0], -n[1], -n[2]];
+      const q = quad.map((p): Vec3 => [p[0] + n[0] * 0.003, p[1] + n[1] * 0.003, p[2] + n[2] * 0.003]);
+      m.facets(mat, [q[0]!, q[1]!, q[2]!, q[0]!, q[2]!, q[3]!], n);
+    }
+  }
+}
+
+/** The CD 150 in one of its liveries (CD 150, CD 151, ZSR 350); the default is 150 222-8. */
+export function cd150(params?: ParamValues): MeshBuilder {
+  const { livery: key } = resolveParams(CD150_PARAMS, params);
+  const livery: Cd150Livery = CD150_LIVERIES[key as keyof typeof CD150_LIVERIES];
+  const m = new MeshBuilder({ ...PALETTE, ...livery.palette });
+  m.scope("body", () => body(m, livery));
+  if (livery.cabBands) m.scope("cab paint", () => { for (const e of [-1, 1]) cabPaint(m, e, livery.cabBands!); });
   for (const e of [-1, 1])
-    m.scope(e > 0 ? "front cab" : "rear cab", () => cab(m, e));
+    m.scope(e > 0 ? "front cab" : "rear cab", () => cab(m, e, livery));
   m.scope("bogies", () => {
     for (const [name, x] of [
       ["rear bogie", -4.25],

@@ -1,11 +1,12 @@
 // The rig of a vehicle model: the nodes the game moves after it has loaded the
 // model, and the pure functions that pose them.
 //
-//   steered wheels   two nodes, one per front wheel, each with its origin on the
+//   steered wheels   a node per steered wheel, a pair per steered axle (a bus has
+//                    one axle, an 8x4 truck two), each with its origin on the
 //                    wheel's steering axis (the wheel's centre). The game turns a
 //                    wheel by writing the node's Y rotation -- the way it spins the
-//                    wind turbine's rotor node -- and steerAngles() gives the two
-//                    angles (Ackermann: the inner wheel turns tighter).
+//                    wind turbine's rotor node -- and steerAngles() gives the
+//                    angles (Ackermann: every wheel aims at one turning centre).
 //   sections         an articulated vehicle's rigid bodies, front first, each a
 //                    node whose origin is its hinge with the body ahead (the first's
 //                    is the model origin). They form a hinged chain: section i
@@ -27,20 +28,26 @@
 // file and exports pose(), renderJoint(), steerAngles() and steerLock()
 // (jsModel.ts), so the game and the site's sliders call the same code the GLB
 // was built with. Angles in the API are radians, positive turning counter-
-// clockwise seen from above (toward -Z, the vehicle's left); the rig's limits
-// are stated in degrees. See docs/models/vehicle-rig.md.
+// clockwise seen from above (toward -Z: the vehicle's left in the factory's
+// frame); the rig's limits are stated in degrees. See docs/models/vehicle-rig.md.
 
 export type Vec3 = [number, number, number];
 
-/** The steered front wheels. */
-export interface SteerRig {
-  /** The wheel nodes, left (-Z) then right (+Z); each turns about its own +Y. */
+/** One steered axle: its two wheel nodes and how far it is from the axle the vehicle turns about. */
+export interface SteerAxle {
+  /** The wheel nodes: the one at -Z, then the one at +Z; each turns about its own +Y. */
   nodes: [string, string];
-  /** The inner wheel's lock, degrees. */
-  maxAngleDeg: number;
-  /** Metres from the steered axle back to the axle the vehicle turns about. */
+  /** Metres from this axle back to the axle (or the line) the vehicle turns about. */
   wheelbase: number;
-  /** Metres between the two wheels' steering axes. */
+}
+
+/** The steered wheels. */
+export interface SteerRig {
+  /** The steered axles, front first. */
+  axles: SteerAxle[];
+  /** The front axle's inner wheel's lock, degrees. */
+  maxAngleDeg: number;
+  /** Metres between a steered axle's two wheels' steering axes. */
   track: number;
 }
 
@@ -82,7 +89,7 @@ export interface VehicleRig {
 
 /** A pose: the steering angle and one bend per hinge, radians. */
 export interface VehiclePose {
-  /** The angle of a virtual wheel midway between the steered ones; + turns left. */
+  /** The angle of a virtual wheel midway along the front steered axle; + turns counter-clockwise from above (toward -Z). */
   steer?: number;
   /** Per hinge (between sections i and i + 1): the rear body's turn relative to the front one; + is counter-clockwise from above. */
   bend?: number[];
@@ -94,22 +101,28 @@ export type Mat4 = ArrayLike<number>;
 const DEG = Math.PI / 180;
 
 /**
- * The left and right wheel angles for a steering angle (radians, + = left):
- * both wheels aim at one turning centre on the line of the rear axle, so the
- * inner wheel turns tighter than the outer one.
+ * Every steered wheel's angle for a steering angle (radians, + = toward -Z),
+ * axle by axle, the -Z wheel first: the steering angle is that of a virtual
+ * wheel midway along the front axle, and every wheel aims at the one turning
+ * centre it puts on the line of the axle the vehicle turns about -- so the
+ * inner wheels turn tighter than the outer ones, and a second steered axle,
+ * nearer that line, less than the first.
  */
-export function steerAngles(s: SteerRig, steer: number): [number, number] {
-  if (Math.abs(steer) < 1e-9) return [0, 0];
-  const radius = s.wheelbase / Math.tan(Math.abs(steer)); // to the centre line
-  const inner = Math.atan(s.wheelbase / (radius - s.track / 2));
-  const outer = Math.atan(s.wheelbase / (radius + s.track / 2));
-  return steer > 0 ? [inner, outer] : [-outer, -inner];
+export function steerAngles(s: SteerRig, steer: number): Array<[number, number]> {
+  if (Math.abs(steer) < 1e-9) return s.axles.map(() => [0, 0]);
+  const radius = s.axles[0]!.wheelbase / Math.tan(Math.abs(steer)); // to the centre line
+  return s.axles.map(({ wheelbase }) => {
+    const inner = Math.atan(wheelbase / (radius - s.track / 2));
+    const outer = Math.atan(wheelbase / (radius + s.track / 2));
+    return steer > 0 ? [inner, outer] : [-outer, -inner];
+  });
 }
 
-/** The largest steering angle (radians): the one that turns the inner wheel to its lock. */
+/** The largest steering angle (radians): the one that turns the front axle's inner wheel to its lock. */
 export function steerLock(s: SteerRig): number {
-  const radius = s.wheelbase / Math.tan(s.maxAngleDeg * DEG) + s.track / 2;
-  return Math.atan(s.wheelbase / radius);
+  const wheelbase = s.axles[0]!.wheelbase;
+  const radius = wheelbase / Math.tan(s.maxAngleDeg * DEG) + s.track / 2;
+  return Math.atan(wheelbase / radius);
 }
 
 // --- the joint --------------------------------------------------------------------
@@ -318,7 +331,7 @@ export function pose(root: Obj, p: VehiclePose = {}, rig?: VehicleRig): void {
   const r = rigOf(root, rig);
   if (r.steer) {
     const angles = steerAngles(r.steer, p.steer ?? 0);
-    r.steer.nodes.forEach((name, i) => node(root, name).rotation.set(0, angles[i]!, 0));
+    r.steer.axles.forEach((a, k) => a.nodes.forEach((name, i) => node(root, name).rotation.set(0, angles[k]![i]!, 0)));
   }
   const sections = r.sections ?? [];
   let yaw = 0;

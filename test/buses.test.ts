@@ -85,7 +85,8 @@ describe("the buses", () => {
       const rig = m.rig!;
       const tree = m.sourceTree(id, d.title);
       const nodes = walk(tree.root);
-      const [left, right] = rig.steer!.nodes.map((n) => nodes.find((x) => x.id === n)!);
+      expect(rig.steer!.axles.length).toBe(1);
+      const [left, right] = rig.steer!.axles[0]!.nodes.map((n) => nodes.find((x) => x.id === n)!);
       // the steered wheels are the frontmost wheels
       const axles = nodes.filter((n) => !isLeaf(n) && /axle/.test(n.id));
       const front = Math.max(...axles.map((n) => (n.min![0] + n.max![0]) / 2));
@@ -103,7 +104,7 @@ describe("the buses", () => {
     const m = BUS_DESIGNS.find((x) => x.id === id)!.build();
     const steer = m.rig!.steer!;
     const tree = m.sourceTree(id, "x");
-    const wheel = walk(tree.root).find((n) => n.id === steer.nodes[0])! as ScopeNode;
+    const wheel = walk(tree.root).find((n) => n.id === steer.axles[0]!.nodes[0])! as ScopeNode;
     const r = (wheel.max![1] - wheel.min![1]) / 2;
     const w = wheel.max![2] - wheel.min![2];
     // the inner wheel turns furthest; the tyre's length along x at that angle

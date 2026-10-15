@@ -1,14 +1,14 @@
-// Review views and measured comparison tables of the CSD coaches (csdCoaches.ts).
+// Review views and measured comparison tables of the transferred coaches and freight wagons.
 // Run: pnpm exec tsx generator/csdCoachReport.ts [csd_a ...]  (all transfers by default)
 //
 // Writes, per transferred vehicle, export/review/<key>/ (orthographic model views
 // with the native annotation boxes, the native BMPs with the same boxes, a shaded
 // three-quarter view; generated, not committed) and its comparison table
-// (assets/<folder>/<report>, csdCoaches.ts COACH_TRANSFERS).
+// (assets/<folder>/<report>, coachTransfers.ts ALL_TRANSFERS: the coaches and the freight wagons).
 import fs from "node:fs";
 import { createHash } from "node:crypto";
 import { PNG } from "pngjs";
-import { COACH_TRANSFERS, transferBuild } from "./coachTransfers.ts";
+import { ALL_TRANSFERS, transferBuild } from "./coachTransfers.ts";
 import { coachComparison, meanAbsoluteError, nativeFile, transfer, type CoachComparisonRow } from "./csdCoachComparison.ts";
 import { collectTriangles, parseGlb } from "./glbTriangles.ts";
 
@@ -142,8 +142,8 @@ function report(key: string): string[] {
     `# ${coach.title} native reference comparison`,
     "",
     "**Covers** - native pixel annotations, baseline and final orthographic errors.",
-    "**Code** - `generator/csdCoaches.ts`, `generator/csdCoachComparison.ts`, `generator/csdCoachReport.ts`.",
-    "**See also** - [source notes](SOURCES.md), [CSD coaches](../../docs/models/csd-coaches.md).",
+    `**Code** - ${[...(coach.doc?.code ?? ["generator/csdCoaches.ts"]), "generator/csdCoachComparison.ts", "generator/csdCoachReport.ts"].map((c) => "`" + c + "`").join(", ")}.`,
+    `**See also** - [source notes](SOURCES.md), [${coach.doc?.title ?? "CSD coaches"}](../../${coach.doc?.path ?? "docs/models/csd-coaches.md"}).`,
     "",
     `Model geometry revision (SHA-256 of comparison GLB): \`${revision}\`.`,
     "",
@@ -155,7 +155,7 @@ function report(key: string): string[] {
     "",
     ...summary,
     "",
-    `One pixel is ${(100 / sw).toFixed(3)} pp horizontally on the sides, 3.333 pp horizontally on the ends and ${(100 / sh).toFixed(3)} pp vertically. The model was authored from these same measured boxes, so the residuals measure the transfer onto the XML body (tapered and rounded ends, sloped faces, 5 mm edge clearances) and the deliberate mechanical choices (1.75 m buffer spacing, round lamp lenses), not photographic accuracy.`,
+    `One pixel is ${(100 / sw).toFixed(3)} pp horizontally on the sides, 3.333 pp horizontally on the ends and ${(100 / sh).toFixed(3)} pp vertically. The model was authored from these same measured boxes, so the residuals measure ${coach.doc?.residuals ?? "the transfer onto the XML body (tapered and rounded ends, sloped faces, 5 mm edge clearances) and the deliberate mechanical choices (1.75 m buffer spacing, round lamp lenses)"}, not photographic accuracy.`,
     "",
     "Annotated views (generated locally, not committed):",
     "",
@@ -171,4 +171,4 @@ function report(key: string): string[] {
 }
 
 const wanted = process.argv.slice(2);
-for (const c of COACH_TRANSFERS) if (!wanted.length || wanted.includes(c.key)) console.log(report(c.key).join("\n"));
+for (const c of ALL_TRANSFERS) if (!wanted.length || wanted.includes(c.key)) console.log(report(c.key).join("\n"));

@@ -381,9 +381,10 @@ export type PoseValues = Record<string, number>;
  * turns the inner wheel to its lock. The same formula as rig.ts's steerLock,
  * which the site cannot import (it only imports types from generator/).
  */
-export function steerLockDeg(s: { maxAngleDeg: number; wheelbase: number; track: number }): number {
-  const radius = s.wheelbase / Math.tan((s.maxAngleDeg * Math.PI) / 180) + s.track / 2;
-  return (Math.atan(s.wheelbase / radius) * 180) / Math.PI;
+export function steerLockDeg(s: { maxAngleDeg: number; axles: Array<{ wheelbase: number }>; track: number }): number {
+  const wheelbase = s.axles[0]!.wheelbase;
+  const radius = wheelbase / Math.tan((s.maxAngleDeg * Math.PI) / 180) + s.track / 2;
+  return (Math.atan(wheelbase / radius) * 180) / Math.PI;
 }
 
 /** The Pose block's sliders: steering, then one per hinge, named after the body behind it. */
@@ -400,7 +401,7 @@ export function poseControls(r: CatalogRecord): PoseControl[] {
   return out;
 }
 
-/** The slider values as the model's pose() takes them: radians, + turning left. */
+/** The slider values as the model's pose() takes them: radians, + counter-clockwise seen from above. */
 export function poseOf(r: CatalogRecord, values: PoseValues): { steer: number; bend: number[] } {
   const rad = (deg: number): number => (deg * Math.PI) / 180;
   const hinges = Math.max(0, (r.rig?.sections?.length ?? 0) - 1);

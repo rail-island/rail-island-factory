@@ -38,12 +38,17 @@ export function arc(cx: number, cy: number, r: number, a0: number, a1: number, n
 }
 
 /**
- * The two steered front wheels, each a part inside `parent`'s node with its
+ * The two wheels of a steered axle, each a part inside `parent`'s node with its
  * pivot at the wheel's centre: the game turns it about the pivot's vertical
- * (vehicle-rig.md). Names follow the rig: wheel-front-left (-Z), -right (+Z).
+ * (vehicle-rig.md). Returns the rig's node pair, the -Z wheel first. The names
+ * say left for -Z, as the factory's frame has it (+Z right); a design whose
+ * frame has +Z left passes its own `names` ([-Z, +Z]). `axle` numbers the
+ * second steered axle of a vehicle with two: wheel-front-2-left, ...
  */
-export function steeredWheels(m: MeshBuilder, parent: string, x: number, axleY: number, draw: (s: number, z0: number, z1: number) => void, tyre: [number, number]): [string, string] {
-  const names: [string, string] = ["wheel-front-left", "wheel-front-right"];
+export function steeredWheels(
+  m: MeshBuilder, parent: string, x: number, axleY: number, draw: (s: number, z0: number, z1: number) => void,
+  tyre: [number, number], names: [string, string] = ["wheel-front-left", "wheel-front-right"],
+): [string, string] {
   for (const s of [-1, 1]) {
     const [z0, z1] = side(s, tyre[0], tyre[1]);
     m.part(names[s < 0 ? 0 : 1], [x, axleY, (z0 + z1) / 2], () => draw(s, z0, z1), parent);

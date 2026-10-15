@@ -20,7 +20,7 @@ and `pnpm dev`) writes the gitignored `export/`:
 | `export/js/<id>.js` | the model as one standalone JS file ([js-format.md](js-format.md)) |
 | `export/tree/<id>.json` | the procedural source tree, for the site only ([source-tree.md](source-tree.md)) |
 | `export/refs/<id>/...` | the design's source images, copied from `assets/<references>/`, for the site only |
-| `export/skyscrapers.meta.json` | one game-catalog entry per skyscraper - the import contract |
+| `export/skyscrapers.meta.json` | one game-catalog entry per building (skyscrapers, landmarks, stations) - the import contract |
 | `export/vehicles.meta.json` | the same per vehicle, under `vehicles` |
 | `export/catalog.json` | what the site lists |
 
@@ -74,8 +74,13 @@ The same top-level shape as the webapp's `db/buildings/buildings.meta.json`:
 ```
 
 `glb` and `thumb` are file names within the export's `glb/` and `thumbs/`. The
-entry is built by `metaEntry()` in `generator/catalog.ts` from a design and
-`SKYSCRAPER_CATALOG`. Nothing reads this file yet: it exists for a webapp-side
+entry is built by `metaEntry()` in `generator/catalog.ts` from a design and its
+family's catalog fields: `SKYSCRAPER_CATALOG` for the skyscrapers, the design's own
+`catalog` for the churches, cathedrals, landmarks and stations (category
+`Historical` / `Station`, their game pool and the `defaultScale` of the webapp model
+they reproduce - [reproductions.md](reproductions.md)). The file keeps its name
+from when it held only skyscrapers; `BUILDINGS` in `generator/generate.ts` lists
+what goes into it. Nothing reads this file yet: it exists for a webapp-side
 import that mirrors `glb/`, `thumbs/` and this file into the game's building
 catalog, the way the webapp already imports vehicles from vlakosimdb's export.
 Changing a field here is a contract change for that importer.
@@ -85,7 +90,10 @@ Changing a field here is a contract change for that importer.
 The vehicles ([vehicles.md](vehicles.md)) are not buildings, so they get their
 own file, built by `exportVehicleMeta()`: the same `note` and `count`, and the
 same entry shape under **`vehicles`** instead of `buildings`, with the fields of
-`VEHICLE_CATALOG` (category `Road vehicles`, group `truck`, `defaultScale` 1). A
+`VEHICLE_CATALOG` (category `Road vehicles`, group `truck`, `defaultScale` 1) or a
+design's own `catalog`: `Rail vehicles`, and for the reproductions of the webapp's
+models `Aircraft`, `Ships` and `Cable car` ([reproductions.md](reproductions.md)).
+`ALL_VEHICLES` in `generator/generate.ts` lists what goes into it. A
 building import reading `skyscrapers.meta.json` therefore never sees a truck.
 Nothing reads this file yet either; the game's vehicle import will decide its
 final fields.

@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="Windows-1250"?>
+<simplemodel rep.name="emptyobj.simplemodel" name="wood" xsize="15" ysize="2" zsize="2" version="1.0" glomodel.loadchild="model" edit_along="2">
+<colorizes>
+<colorize texture="material:wood017.bmp" dirs="1;1;0;0;0;0;" texx1="0" texy1="0" texx2="2" texy2="2" transp="0" xscale="" yscale="" transparent="0" material="1" stamp="0" cond="" rkoef="" gkoef="" bkoef="" stampcntx="" stampcnty="" stampspacex="" stampspacey="" stampdist="" denylight="0"/>
+<colorize texture="material:wood019.bmp" dirs="0;0;1;1;0;0;" texx1="0" texy1="0" texx2="15" texy2="2" transp="0" xscale="" yscale="" transparent="0" material="1" stamp="0" cond="" rkoef="" gkoef="" bkoef="" stampcntx="" stampcnty="" stampspacex="" stampspacey="" stampdist="" denylight="0"/>
+<colorize texture="material:wood019.bmp" dirs="0;0;0;0;1;1;" texx1="0" texy1="0" texx2="15" texy2="2" transp="0" xscale="" yscale="" transparent="0" material="1" stamp="0" cond="" rkoef="" gkoef="" bkoef="" stampcntx="" stampcnty="" stampspacex="" stampspacey="" stampdist="" denylight="0"/>
+</colorizes>
+<alongx edit_jumpx="0.1" edit_jumpy="0.1" edit_scale="57" edit_dx="-392" edit_dy="-26" edit_incdec="-1">
+<clip>
+<polygon apply="base">
+<point x="0" y="0.2"/>
+<point x="0.1" y="0"/>
+<point x="0.3" y="0"/>
+<point x="0.4" y="0.2"/>
+<point x="0.2" y="0.4"/>
+</polygon>
+<polygon apply="base">
+<point x="0.4" y="0.2"/>
+<point x="0.5" y="0.4"/>
+<point x="0.8" y="0.2"/>
+<point x="0.8" y="0"/>
+<point x="0.4" y="0"/>
+</polygon>
+<polygon apply="base">
+<point x="0.9" y="0"/>
+<point x="0.8" y="0.2"/>
+<point x="1" y="0.4"/>
+<point x="1.2" y="0.2"/>
+<point x="1.1" y="0"/>
+</polygon>
+<polygon apply="base">
+<point x="0.4" y="0.7"/>
+<point x="0" y="0.6"/>
+<point x="0.1" y="0.4"/>
+<point x="0.4" y="0.4"/>
+</polygon>
+<polygon apply="base">
+<point x="0.4" y="0.5"/>
+<point x="0.5" y="0.8"/>
+<point x="0.7" y="0.6"/>
+<point x="0.8" y="0.2"/>
+</polygon>
+<polygon apply="base">
+<point x="0.7" y="0.5"/>
+<point x="0.9" y="0.8"/>
+<point x="1.1" y="0.6"/>
+<point x="1" y="0.3"/>
+</polygon>
+</clip>
+</alongx>
+<alongy edit_jumpx="0.1" edit_jumpy="0.1" edit_scale="25" edit_dx="300" edit_dy="200">
+<clip>
+<polygon apply="base">
+<point x="0" y="0"/>
+<point x="15" y="0"/>
+<point x="15" y="2"/>
+<point x="0" y="2"/>
+</polygon>
+</clip>
+</alongy>
+<alongz edit_jumpx="0.1" edit_jumpy="0.1" edit_scale="39" edit_dx="-728" edit_dy="228" edit_incdec="-1">
+<clip>
+<polygon apply="base">
+<point x="0" y="0"/>
+<point x="16" y="0"/>
+<point x="16" y="1"/>
+<point x="0" y="1"/>
+</polygon>
+</clip>
+</alongz>
+<inlines/>
+<crook/>
+<shapes>
+<shape name="base" type="clip"/>
+</shapes>
+<model>
+<polygon nx="-0" ny="0.447214" nz="0.894427" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="0" y="0" z="0.1" s="0" t="0"/>
+<vertex x="0" y="0.2" z="0" s="0" t="0.2"/>
+<vertex x="15" y="0.2" z="0" s="15" t="0.2"/>
+<vertex x="15" y="0" z="0.1" s="15" t="0"/>
+</polygon>
+<polygon nx="-0" ny="1" nz="-0" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="15" y="0" z="0.1" s="15" t="0.1"/>
+<vertex x="15" y="0" z="0.3" s="15" t="0.3"/>
+<vertex x="0" y="0" z="0.3" s="0" t="0.3"/>
+<vertex x="0" y="0" z="0.1" s="0" t="0.1"/>
+</polygon>
+<polygon nx="-0" ny="0.447214" nz="-0.894427" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="15" y="0" z="0.3" s="15" t="0"/>
+<vertex x="15" y="0.2" z="0.4" s="15" t="0.2"/>
+<vertex x="0" y="0.2" z="0.4" s="0" t="0.2"/>
+<vertex x="0" y="0" z="0.3" s="0" t="0"/>
+</polygon>
+<polygon nx="-0" ny="-0.707107" nz="-0.707107" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="15" y="0.2" z="0.4" s="15" t="0.4"/>
+<vertex x="15" y="0.4" z="0.2" s="15" t="0.2"/>
+<vertex x="0" y="0.4" z="0.2" s="0" t="0.2"/>
+<vertex x="0" y="0.2" z="0.4" s="0" t="0.4"/>
+</polygon>
+<polygon nx="-0" ny="-0.707107" nz="0.707107" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="0" y="0.2" z="0" s="0" t="0"/>
+<vertex x="0" y="0.4" z="0.2" s="0" t="0.2"/>
+<vertex x="15" y="0.4" z="0.2" s="15" t="0.2"/>
+<vertex x="15" y="0.2" z="0" s="15" t="0"/>
+</polygon>
+<polygon nx="-1" ny="-0" nz="-0" culling="1" texture="material:wood017.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="15" y="0" z="0.1" s="0.1" t="0"/>
+<vertex x="15" y="0.2" z="0" s="0" t="0.2"/>
+<vertex x="15" y="0.4" z="0.2" s="0.2" t="0.4"/>
+<vertex x="15" y="0.2" z="0.4" s="0.4" t="0.2"/>
+<vertex x="15" y="0" z="0.3" s="0.3" t="0"/>
+</polygon>
+<polygon nx="1" ny="-0" nz="-0" culling="1" texture="material:wood017.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="0" y="0" z="0.3" s="0.3" t="0"/>
+<vertex x="0" y="0.2" z="0.4" s="0.4" t="0.2"/>
+<vertex x="0" y="0.4" z="0.2" s="0.2" t="0.4"/>
+<vertex x="0" y="0.2" z="0" s="0" t="0.2"/>
+<vertex x="0" y="0" z="0.1" s="0.1" t="0"/>
+</polygon>
+<polygon nx="0" ny="-0.447214" nz="0.894427" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="0" y="0.2" z="0.4" s="0" t="0.2"/>
+<vertex x="0" y="0.4" z="0.5" s="0" t="0.4"/>
+<vertex x="15" y="0.4" z="0.5" s="15" t="0.4"/>
+<vertex x="15" y="0.2" z="0.4" s="15" t="0.2"/>
+</polygon>
+<polygon nx="0" ny="-0.83205" nz="-0.5547" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="0" y="0.4" z="0.5" s="0" t="0.5"/>
+<vertex x="0" y="0.2" z="0.8" s="0" t="0.8"/>
+<vertex x="15" y="0.2" z="0.8" s="15" t="0.8"/>
+<vertex x="15" y="0.4" z="0.5" s="15" t="0.5"/>
+</polygon>
+<polygon nx="0" ny="0" nz="-1" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="0" y="0.2" z="0.8" s="0" t="0.2"/>
+<vertex x="0" y="0" z="0.8" s="0" t="0"/>
+<vertex x="15" y="0" z="0.8" s="15" t="0"/>
+<vertex x="15" y="0.2" z="0.8" s="15" t="0.2"/>
+</polygon>
+<polygon nx="0" ny="1" nz="0" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="0" y="0" z="0.8" s="0" t="0.8"/>
+<vertex x="0" y="0" z="0.4" s="0" t="0.4"/>
+<vertex x="15" y="0" z="0.4" s="15" t="0.4"/>
+<vertex x="15" y="0" z="0.8" s="15" t="0.8"/>
+</polygon>
+<polygon nx="0" ny="0" nz="1" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="15" y="0.2" z="0.4" s="15" t="0.2"/>
+<vertex x="15" y="0" z="0.4" s="15" t="0"/>
+<vertex x="0" y="0" z="0.4" s="0" t="0"/>
+<vertex x="0" y="0.2" z="0.4" s="0" t="0.2"/>
+</polygon>
+<polygon nx="-1" ny="-0" nz="-0" culling="1" texture="material:wood017.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="15" y="0.2" z="0.4" s="0.4" t="0.2"/>
+<vertex x="15" y="0.4" z="0.5" s="0.5" t="0.4"/>
+<vertex x="15" y="0.2" z="0.8" s="0.8" t="0.2"/>
+<vertex x="15" y="0" z="0.8" s="0.8" t="0"/>
+<vertex x="15" y="0" z="0.4" s="0.4" t="0"/>
+</polygon>
+<polygon nx="1" ny="-0" nz="-0" culling="1" texture="material:wood017.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="0" y="0" z="0.4" s="0.4" t="0"/>
+<vertex x="0" y="0" z="0.8" s="0.8" t="0"/>
+<vertex x="0" y="0.2" z="0.8" s="0.8" t="0.2"/>
+<vertex x="0" y="0.4" z="0.5" s="0.5" t="0.4"/>
+<vertex x="0" y="0.2" z="0.4" s="0.4" t="0.2"/>
+</polygon>
+<polygon nx="0" ny="0.447214" nz="0.894427" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="15" y="0.2" z="0.8" s="15" t="0.2"/>
+<vertex x="15" y="0" z="0.9" s="15" t="0"/>
+<vertex x="0" y="0" z="0.9" s="0" t="0"/>
+<vertex x="0" y="0.2" z="0.8" s="0" t="0.2"/>
+</polygon>
+<polygon nx="0" ny="-0.707107" nz="0.707107" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="0" y="0.2" z="0.8" s="0" t="0.8"/>
+<vertex x="0" y="0.4" z="1" s="0" t="1"/>
+<vertex x="15" y="0.4" z="1" s="15" t="1"/>
+<vertex x="15" y="0.2" z="0.8" s="15" t="0.8"/>
+</polygon>
+<polygon nx="0" ny="-0.707107" nz="-0.707107" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="0" y="0.4" z="1" s="0" t="1"/>
+<vertex x="0" y="0.2" z="1.2" s="0" t="1.2"/>
+<vertex x="15" y="0.2" z="1.2" s="15" t="1.2"/>
+<vertex x="15" y="0.4" z="1" s="15" t="1"/>
+</polygon>
+<polygon nx="0" ny="0.447214" nz="-0.894427" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="0" y="0.2" z="1.2" s="0" t="0.2"/>
+<vertex x="0" y="0" z="1.1" s="0" t="0"/>
+<vertex x="15" y="0" z="1.1" s="15" t="0"/>
+<vertex x="15" y="0.2" z="1.2" s="15" t="0.2"/>
+</polygon>
+<polygon nx="0" ny="1" nz="0" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="15" y="0" z="0.9" s="15" t="0.9"/>
+<vertex x="15" y="0" z="1.1" s="15" t="1.1"/>
+<vertex x="0" y="0" z="1.1" s="0" t="1.1"/>
+<vertex x="0" y="0" z="0.9" s="0" t="0.9"/>
+</polygon>
+<polygon nx="-1" ny="-0" nz="-0" culling="1" texture="material:wood017.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="15" y="0.4" z="1" s="1" t="0.4"/>
+<vertex x="15" y="0.2" z="1.2" s="1.2" t="0.2"/>
+<vertex x="15" y="0" z="1.1" s="1.1" t="0"/>
+<vertex x="15" y="0" z="0.9" s="0.9" t="0"/>
+<vertex x="15" y="0.2" z="0.8" s="0.8" t="0.2"/>
+</polygon>
+<polygon nx="1" ny="-0" nz="-0" culling="1" texture="material:wood017.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="0" y="0.2" z="0.8" s="0.8" t="0.2"/>
+<vertex x="0" y="0" z="0.9" s="0.9" t="0"/>
+<vertex x="0" y="0" z="1.1" s="1.1" t="0"/>
+<vertex x="0" y="0.2" z="1.2" s="1.2" t="0.2"/>
+<vertex x="0" y="0.4" z="1" s="1" t="0.4"/>
+</polygon>
+<polygon nx="-0" ny="-0.970143" nz="0.242536" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="0" y="0.6" z="0" s="0" t="0"/>
+<vertex x="0" y="0.7" z="0.4" s="0" t="0.4"/>
+<vertex x="15" y="0.7" z="0.4" s="15" t="0.4"/>
+<vertex x="15" y="0.6" z="0" s="15" t="0"/>
+</polygon>
+<polygon nx="-0" ny="0.447214" nz="0.894427" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="15" y="0.6" z="0" s="15" t="0.6"/>
+<vertex x="15" y="0.4" z="0.1" s="15" t="0.4"/>
+<vertex x="0" y="0.4" z="0.1" s="0" t="0.4"/>
+<vertex x="0" y="0.6" z="0" s="0" t="0.6"/>
+</polygon>
+<polygon nx="-0" ny="1" nz="-0" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="15" y="0.4" z="0.1" s="15" t="0.1"/>
+<vertex x="15" y="0.4" z="0.4" s="15" t="0.4"/>
+<vertex x="0" y="0.4" z="0.4" s="0" t="0.4"/>
+<vertex x="0" y="0.4" z="0.1" s="0" t="0.1"/>
+</polygon>
+<polygon nx="-0" ny="-0" nz="-1" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="0" y="0.7" z="0.4" s="0" t="0.7"/>
+<vertex x="0" y="0.4" z="0.4" s="0" t="0.4"/>
+<vertex x="15" y="0.4" z="0.4" s="15" t="0.4"/>
+<vertex x="15" y="0.7" z="0.4" s="15" t="0.7"/>
+</polygon>
+<polygon nx="-1" ny="-0" nz="-0" culling="1" texture="material:wood017.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="15" y="0.6" z="0" s="0" t="0.6"/>
+<vertex x="15" y="0.7" z="0.4" s="0.4" t="0.7"/>
+<vertex x="15" y="0.4" z="0.4" s="0.4" t="0.4"/>
+<vertex x="15" y="0.4" z="0.1" s="0.1" t="0.4"/>
+</polygon>
+<polygon nx="1" ny="-0" nz="-0" culling="1" texture="material:wood017.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="0" y="0.7" z="0.4" s="0.4" t="0.7"/>
+<vertex x="0" y="0.6" z="0" s="0" t="0.6"/>
+<vertex x="0" y="0.4" z="0.1" s="0.1" t="0.4"/>
+<vertex x="0" y="0.4" z="0.4" s="0.4" t="0.4"/>
+</polygon>
+<polygon nx="0" ny="-0.316228" nz="0.948683" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="15" y="0.8" z="0.5" s="15" t="0.8"/>
+<vertex x="15" y="0.5" z="0.4" s="15" t="0.5"/>
+<vertex x="0" y="0.5" z="0.4" s="0" t="0.5"/>
+<vertex x="0" y="0.8" z="0.5" s="0" t="0.8"/>
+</polygon>
+<polygon nx="0" ny="-0.707107" nz="-0.707107" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="0" y="0.8" z="0.5" s="0" t="0.5"/>
+<vertex x="0" y="0.6" z="0.7" s="0" t="0.7"/>
+<vertex x="15" y="0.6" z="0.7" s="15" t="0.7"/>
+<vertex x="15" y="0.8" z="0.5" s="15" t="0.5"/>
+</polygon>
+<polygon nx="0" ny="-0.242536" nz="-0.970143" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="15" y="0.2" z="0.8" s="15" t="0.2"/>
+<vertex x="15" y="0.6" z="0.7" s="15" t="0.6"/>
+<vertex x="0" y="0.6" z="0.7" s="0" t="0.6"/>
+<vertex x="0" y="0.2" z="0.8" s="0" t="0.2"/>
+</polygon>
+<polygon nx="0" ny="0.8" nz="0.6" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="0" y="0.2" z="0.8" s="0" t="0.8"/>
+<vertex x="0" y="0.5" z="0.4" s="0" t="0.4"/>
+<vertex x="15" y="0.5" z="0.4" s="15" t="0.4"/>
+<vertex x="15" y="0.2" z="0.8" s="15" t="0.8"/>
+</polygon>
+<polygon nx="-1" ny="-0" nz="-0" culling="1" texture="material:wood017.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="15" y="0.2" z="0.8" s="0.8" t="0.2"/>
+<vertex x="15" y="0.5" z="0.4" s="0.4" t="0.5"/>
+<vertex x="15" y="0.8" z="0.5" s="0.5" t="0.8"/>
+<vertex x="15" y="0.6" z="0.7" s="0.7" t="0.6"/>
+</polygon>
+<polygon nx="1" ny="-0" nz="-0" culling="1" texture="material:wood017.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="0" y="0.6" z="0.7" s="0.7" t="0.6"/>
+<vertex x="0" y="0.8" z="0.5" s="0.5" t="0.8"/>
+<vertex x="0" y="0.5" z="0.4" s="0.4" t="0.5"/>
+<vertex x="0" y="0.2" z="0.8" s="0.8" t="0.2"/>
+</polygon>
+<polygon nx="0" ny="-0.5547" nz="0.83205" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="15" y="0.8" z="0.9" s="15" t="0.8"/>
+<vertex x="15" y="0.5" z="0.7" s="15" t="0.5"/>
+<vertex x="0" y="0.5" z="0.7" s="0" t="0.5"/>
+<vertex x="0" y="0.8" z="0.9" s="0" t="0.8"/>
+</polygon>
+<polygon nx="0" ny="-0.707107" nz="-0.707107" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="0" y="0.8" z="0.9" s="0" t="0.9"/>
+<vertex x="0" y="0.6" z="1.1" s="0" t="1.1"/>
+<vertex x="15" y="0.6" z="1.1" s="15" t="1.1"/>
+<vertex x="15" y="0.8" z="0.9" s="15" t="0.9"/>
+</polygon>
+<polygon nx="0" ny="0.316228" nz="-0.948683" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="0" y="0.6" z="1.1" s="0" t="0.6"/>
+<vertex x="0" y="0.3" z="1" s="0" t="0.3"/>
+<vertex x="15" y="0.3" z="1" s="15" t="0.3"/>
+<vertex x="15" y="0.6" z="1.1" s="15" t="0.6"/>
+</polygon>
+<polygon nx="0" ny="0.83205" nz="0.5547" culling="1" texture="material:wood019.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="15" y="0.5" z="0.7" s="15" t="0.7"/>
+<vertex x="15" y="0.3" z="1" s="15" t="1"/>
+<vertex x="0" y="0.3" z="1" s="0" t="1"/>
+<vertex x="0" y="0.5" z="0.7" s="0" t="0.7"/>
+</polygon>
+<polygon nx="-1" ny="-0" nz="-0" culling="1" texture="material:wood017.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="15" y="0.6" z="1.1" s="1.1" t="0.6"/>
+<vertex x="15" y="0.3" z="1" s="1" t="0.3"/>
+<vertex x="15" y="0.5" z="0.7" s="0.7" t="0.5"/>
+<vertex x="15" y="0.8" z="0.9" s="0.9" t="0.8"/>
+</polygon>
+<polygon nx="1" ny="-0" nz="-0" culling="1" texture="material:wood017.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="0" y="0.3" z="1" s="1" t="0.3"/>
+<vertex x="0" y="0.6" z="1.1" s="1.1" t="0.6"/>
+<vertex x="0" y="0.8" z="0.9" s="0.9" t="0.8"/>
+<vertex x="0" y="0.5" z="0.7" s="0.7" t="0.5"/>
+</polygon>
+</model>
+<noise/>
+</simplemodel>

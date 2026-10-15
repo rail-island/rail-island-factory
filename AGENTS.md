@@ -2,8 +2,10 @@
 
 This is **Rail Island Factory**: Rail Island models generated from code, and the
 catalog site that shows them at `factory.railisland.com`. Today it builds ten
-procedural skyscrapers, road vehicles (an American truck with a trailer, the
-vlakosimdb buses) and rail vehicles (locomotives, coaches). The build writes an
+procedural skyscrapers, road and rail vehicles (among them the vlakosimdb buses,
+with steerable front wheels and articulated joints), and procedural reproductions of the
+game's hand-authored landmarks, stations, aircraft, ships, cable car cabins and trucks
+(docs/models/reproductions.md). The build writes an
 export folder (GLBs, thumbnails, `skyscrapers.meta.json`, `vehicles.meta.json`) that the game repository, `rail-island-webapp`, is meant
 to import - the factory is the source of these models, the game a consumer.
 

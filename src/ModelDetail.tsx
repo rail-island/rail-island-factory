@@ -149,7 +149,7 @@ export function ModelDetail(props: {
               )}
             </For>
             <div class="factory-pose__foot">
-              <p class="factory-muted factory-params__note">Posed by the model's JS module (pose, renderJoint), as the game would; + turns left.</p>
+              <p class="factory-muted factory-params__note">Posed by the model's JS module (pose, renderJoint), as the game would; + turns counter-clockwise seen from above.</p>
               <button type="button" class="factory-btn" onClick={() => setPose({})} disabled={Object.values(pose()).every((v) => v === 0)}>
                 Reset
               </button>

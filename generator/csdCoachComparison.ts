@@ -6,7 +6,7 @@
 // outside observer, as the BMP is). End canvases are seen from outside: the rear
 // (-X) end u = 10 * (z + 1.5), the front (+X) end u = 10 * (1.5 - z).
 import fs from "node:fs";
-import { COACH_TRANSFERS, transferBuild, type CoachTransfer } from "./coachTransfers.ts";
+import { ALL_TRANSFERS, transferBuild, type CoachTransfer } from "./coachTransfers.ts";
 import { collectTriangles, parseGlb } from "./glbTriangles.ts";
 import { isLeaf, type LeafNode, type TreeNode } from "./sourceTree.ts";
 
@@ -39,10 +39,10 @@ export function bmpSize(file: URL): [number, number] {
   return [b.readInt32LE(18), Math.abs(b.readInt32LE(22))];
 }
 
-/** A transfer by its vlakosimdb key ("csd_a"). */
+/** A transfer, coach or wagon, by its vlakosimdb key ("csd_a", "n_eas"). */
 export function transfer(key: string): CoachTransfer {
-  const t = COACH_TRANSFERS.find((c) => c.key === key);
-  if (!t) throw new Error(`no coach transfer ${key}`);
+  const t = ALL_TRANSFERS.find((c) => c.key === key);
+  if (!t) throw new Error(`no transfer ${key}`);
   return t;
 }
 

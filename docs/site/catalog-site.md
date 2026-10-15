@@ -100,7 +100,7 @@ return ([../models/parameters.md](../models/parameters.md)).
 
 A **rigged** vehicle (its record has `rig`: every road vehicle) shows a **Pose**
 block: a Steering slider and one per hinge of an articulated body ("Trailer",
-"Joint", "Joint 1"...), in degrees, positive turning left, with a Reset button.
+"Joint", "Joint 1"...), in degrees, positive counter-clockwise seen from above, with a Reset button.
 Moving one loads the model's JS module once and calls its `pose()` on the preview
 - the GLB's scene or the parametric JS build - which turns the steered wheels,
 swings the sections about their hinges and re-draws the joints: the same code the

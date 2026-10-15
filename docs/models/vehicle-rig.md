@@ -1,7 +1,7 @@
 # Vehicle rig
 
 **Covers** - what of a road vehicle the game may move after loading it: the steered front wheels, an articulated vehicle's sections and the joints (bellows) between them; how they are laid out as GLB nodes, the `rig` that names them in the GLB, the meta entry and the JS model, the pose and joint functions the JS model exports, and the model page's Pose sliders.
-**Code** - `generator/rig.ts`, `generator/meshCore.ts` (`part` with a parent), `generator/meshBuilder.ts` (`toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/vehicleParts.ts` (`steeredWheels`), `generator/busAssembly.ts`, `generator/jsModel.ts`, `generator/catalog.ts` (`MetaEntry.rig`), `src/catalogQuery.ts` (`poseControls`, `poseOf`, `steerLockDeg`), `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `test/rig.test.ts`
+**Code** - `generator/rig.ts`, `generator/trucks.ts` (`steered`), `generator/meshCore.ts` (`part` with a parent), `generator/meshBuilder.ts` (`toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/vehicleParts.ts` (`steeredWheels`), `generator/busAssembly.ts`, `generator/jsModel.ts`, `generator/catalog.ts` (`MetaEntry.rig`), `src/catalogQuery.ts` (`poseControls`, `poseOf`, `steerLockDeg`), `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `test/rig.test.ts`
 **See also** - [vehicles.md](vehicles.md), [buses.md](buses.md), [js-format.md](js-format.md), [export.md](export.md), [../site/catalog-site.md](../site/catalog-site.md)
 
 ## The idea
@@ -16,13 +16,15 @@ and a `rig` says which.
 
 | What | Nodes | How it moves |
 |---|---|---|
-| steered wheels | `wheel-front-left`, `wheel-front-right`, children of the front body's node | each turns about its own +Y; its origin is the wheel's centre (on the steering axis) |
+| steered wheels | `wheel-front-left`, `wheel-front-right` (a second steered axle's `wheel-front-2-left`, ...), children of the front body's node | each turns about its own +Y; its origin is the wheel's centre (on the steering axis) |
 | sections | `section0`, `section1`, ... (the American truck: `truck`, `trailer`) | section i turns about its origin, the hinge with section i - 1, which section i - 1 carries |
 | joints | `joint0`, ... between sections i and i + 1 | not rigid: re-drawn between the two sections wherever they are (`renderJoint`) |
 
-A rigid vehicle has a body node (`body` for a bus) holding the steered wheels and no
-sections. The truck is two sections (tractor and trailer, hinged at the king pin) and
-no joint. Every road vehicle has a rig; the rail vehicles have none and are unchanged.
+A rigid vehicle has a body node (`body` for a bus and the mixer) holding the steered
+wheels and no sections. A semi-truck is two sections (tractor and trailer, hinged at
+the king pin) and no joint. Every road vehicle has a rig - the American truck, the
+three trucks reproduced from the game ([trucks.md](trucks.md)) and the buses
+([buses.md](buses.md)); the rail, air and water vehicles have none.
 
 ## The rig
 
@@ -31,16 +33,18 @@ right), limits in degrees:
 
 ```ts
 interface VehicleRig {
-  steer?: { nodes: [left, right]; maxAngleDeg; wheelbase; track };
+  steer?: { axles: Array<{ nodes: [atMinusZ, atPlusZ]; wheelbase }>; maxAngleDeg; track };
   sections?: Array<{ node; pivot: [x, y, z] }>;      // front first; pivot = the node's rest origin
   joints?: Array<{ node; sections: [front, rear]; front; rear; profile: Array<[z, y]>; folds; depth; material }>;
   maxBendDeg?: number;
 }
 ```
 
-- `steer.maxAngleDeg` is the **inner** wheel's lock; `wheelbase` runs from the steered
+- `steer.axles` lists the steered axles front first (one, or two on the 8x4 mixer),
+  each with its two wheel nodes - the one at -Z first - and its `wheelbase`, from the
   axle back to the axle the vehicle turns about (a tandem's middle; an articulated
-  bus's front-section axle); `track` is the distance between the two steering axes.
+  bus's front-section axle). `maxAngleDeg` is the front axle's **inner** wheel's lock;
+  `track` is the distance between an axle's two steering axes.
 - `sections[i].pivot` is section i's hinge with the section ahead (`[0, 0, 0]` for the
   first). For a bus it is the middle of the gap the joint covers, 0.6 m above the
   road; for the truck the king pin.
@@ -74,11 +78,14 @@ top-level scope of the source tree.
 
 ## Steering
 
-Both wheels aim at one turning centre on the line of the rear axle (Ackermann):
-`steerAngles(steer, angle)` gives the left and right Y rotations for the angle of a
-virtual wheel midway between them, positive turning left (counter-clockwise from
-above, toward -Z); the inner wheel turns tighter. `steerLock(steer)` is the largest
-such angle, the one that brings the inner wheel to `maxAngleDeg`. A wheel only ever
+Every steered wheel aims at one turning centre on the line of the axle the vehicle
+turns about (Ackermann): `steerAngles(steer, angle)` gives each axle's pair of Y
+rotations, the -Z wheel first, for the angle of a virtual wheel midway along the
+front axle - positive counter-clockwise from above, toward -Z, which is a left turn in
+the factory's frame (the reproduced trucks, authored with +Z left, turn right; their
+nodes are named for their own frame). The inner wheels turn tighter, and a second
+steered axle, nearer the turning line, less than the first. `steerLock(steer)` is
+the largest such angle, the one that brings the front inner wheel to `maxAngleDeg`. A wheel only ever
 turns about its own vertical, so nothing else of it moves: the tyre, disc and hub
 stay round its centre. The front wheel arches are long enough for the tyre at lock.
 
@@ -87,7 +94,7 @@ stay round its centre. The front wheel arches are long enough for the tyre at lo
 `pose(group, { steer, bend }, rig?)` poses a built model in place - the GLB's scene
 or the JS group, both carry the nodes and the rig:
 
-1. turns the two steered wheels (`steerAngles`);
+1. turns the steered wheels (`steerAngles`);
 2. keeps section 0 where it is and lays every section behind it out as a chain: the
    hinge of section i is where section i - 1 now carries it, and section i's yaw is
    section i - 1's plus `bend[i - 1]` (radians, + counter-clockwise from above);
@@ -127,8 +134,8 @@ renderJoint(bus, 0);
 ## On the site
 
 A rigged model's page has a **Pose** block above the tabs: a Steering slider
-(plus or minus the steering lock, degrees) and one per hinge - "Trailer" for the
-truck, "Joint" for a two-section bus, "Joint 1", "Joint 2" beyond. Moving one fetches
+(plus or minus the steering lock, degrees) and one per hinge - "Trailer" for a
+semi-truck, "Joint" for a two-section bus, "Joint 1", "Joint 2" beyond. Moving one fetches
 the model's JS module once and calls its `pose()` on the preview (the GLB at the
 default parameters, the JS build otherwise); Reset returns to rest. The pose is not
 in the URL, and the thumbnail, specs and source tree stay the rest pose's. The slider
@@ -138,10 +145,12 @@ test holds the two equal.
 
 ## Tests
 
-`test/rig.test.ts`: Ackermann angles meet at one centre and reach the lock; a joint
-stays sealed to both sections under arbitrary matrices and winds outward; every road
-vehicle is rigged, its steered wheels are children of the front body, mirrored and
-`track` apart; `pose()` on the JS module turns the wheels by `steerAngles` and keeps
-every hinge where both of its sections put it; the site's sliders and units.
+`test/rig.test.ts`: Ackermann angles meet at one centre and reach the lock, a second
+steered axle aimed at the same centre; a joint stays sealed to both sections under
+arbitrary matrices and winds outward; every road vehicle is rigged, its steered
+wheels are children of the front body, mirrored and `track` apart, axles front first;
+`pose()` on the JS module turns every wheel by `steerAngles` and keeps every hinge
+where both of its sections put it; every semi-trailer swings clear of its tractor;
+the site's sliders and units.
 `test/jsModel.test.ts` checks the JS group's node nesting and `userData.rig` against
 the GLB's nodes and scene extras; `test/export.test.ts` the meta entries' `rig`.

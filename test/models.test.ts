@@ -8,7 +8,7 @@ import path from "node:path";
 import { MeshBuilder, ngon, rect } from "../generator/meshBuilder";
 import { SKYSCRAPERS } from "../generator/skyscrapers";
 import { VEHICLES } from "../generator/vehicles";
-import { DESIGNS, ZFightingError, designGlb, designTree, generateModels } from "../generator/generate";
+import { ALL_VEHICLES, BUILDINGS, DESIGNS, ZFightingError, designGlb, designTree, generateModels } from "../generator/generate";
 import { isLeaf, type LeafNode, type ScopeNode, type TreeNode } from "../generator/sourceTree";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { glbStats } from "../generator/glbStats";
@@ -321,12 +321,13 @@ describe("the designs", () => {
 });
 
 describe("the vehicles", () => {
-  it("have unique veh- ids that no skyscraper shares", () => {
-    const ids = VEHICLES.map((d) => d.id);
+  it("have unique veh- ids that no building shares", () => {
+    const ids = ALL_VEHICLES.map((d) => d.id);
     expect(ids).toContain("veh-american-truck");
     expect(new Set(ids).size).toBe(ids.length);
     for (const id of ids) expect(id).toMatch(/^veh-[a-z0-9]+(-[a-z0-9]+)*$/);
-    expect(DESIGNS.size).toBe(SKYSCRAPERS.length + VEHICLES.length);
+    for (const d of BUILDINGS) expect(d.id).toMatch(/^(sky|bld)-[a-z0-9]+(-[a-z0-9]+)*$/);
+    expect(DESIGNS.size).toBe(BUILDINGS.length + ALL_VEHICLES.length);
   });
 
   it.each(VEHICLES.map((d) => [d.id] as const))("%s stands on its wheels, faces +x, fits its road or track and stays in budget", (id) => {
@@ -726,5 +727,5 @@ describe("generateModels", () => {
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
-  }, 60_000);
+  }, 240_000);
 });

@@ -8,7 +8,7 @@ import os from "node:os";
 import path from "node:path";
 import { SKYSCRAPERS } from "../generator/skyscrapers";
 import { VEHICLES } from "../generator/vehicles";
-import { DESIGNS, buildExport, generateReferences } from "../generator/generate";
+import { ALL_VEHICLES, BUILDINGS, DESIGNS, buildExport, generateReferences } from "../generator/generate";
 import {
   CATALOG_FILE, META_FILE, VEHICLE_META_FILE, catalogRecord, exportMeta, exportVehicleMeta, metaEntry,
   type ExportMeta, type ModelCatalog, type VehicleExportMeta,
@@ -33,6 +33,23 @@ describe("exportMeta", () => {
         source: "Rail Island",
       });
     }
+  });
+});
+
+describe("the buildings' meta", () => {
+  // The landmarks and stations share skyscrapers.meta.json with the skyscrapers,
+  // each with its own family's category, pool and scale -- not the skyscrapers'.
+  it("lists every building once, each with its own catalog fields", () => {
+    const meta = exportMeta(BUILDINGS);
+    expect(meta.buildings.map((b) => b.id)).toEqual(BUILDINGS.map((d) => d.id));
+    expect(new Set(meta.buildings.map((b) => b.id)).size).toBe(BUILDINGS.length);
+    for (const b of meta.buildings) {
+      const d = BUILDINGS.find((x) => x.id === b.id)!;
+      if (b.id.startsWith("sky-")) expect(b.category).toBe("Commercial");
+      else expect([b.category, b.group, b.defaultScale]).toEqual([d.catalog!.category, d.catalog!.group, d.catalog!.defaultScale]);
+    }
+    expect(meta.buildings.find((b) => b.id === "bld-prague-main-station")).toMatchObject({ category: "Station", defaultScale: 1.3 });
+    expect(meta.buildings.find((b) => b.id === "bld-white-house")).toMatchObject({ category: "Historical", group: "hist_center", defaultScale: 1.88 });
   });
 });
 
@@ -63,7 +80,7 @@ describe("exportVehicleMeta", () => {
   });
 
   it("lists a rigged vehicle's rig, and no rig key for the others", () => {
-    const rig = { steer: { nodes: ["wheel-front-left", "wheel-front-right"] as [string, string], maxAngleDeg: 40, wheelbase: 5, track: 2 } };
+    const rig = { steer: { axles: [{ nodes: ["wheel-front-left", "wheel-front-right"] as [string, string], wheelbase: 5 }], maxAngleDeg: 40, track: 2 } };
     const meta = exportVehicleMeta(VEHICLES, new Map([["veh-american-truck", rig]]));
     expect(meta.vehicles.find((v) => v.id === "veh-american-truck")!.rig).toEqual(rig);
     expect(meta.vehicles.filter((v) => v.rig).map((v) => v.id)).toEqual(["veh-american-truck"]);
@@ -93,18 +110,18 @@ describe("buildExport", () => {
       const meta = JSON.parse(fs.readFileSync(path.join(dir, META_FILE), "utf8")) as ExportMeta;
       const catalog = JSON.parse(fs.readFileSync(path.join(dir, CATALOG_FILE), "utf8")) as ModelCatalog;
       const vehicles = JSON.parse(fs.readFileSync(path.join(dir, VEHICLE_META_FILE), "utf8")) as VehicleExportMeta;
-      expect(meta).toEqual(exportMeta(SKYSCRAPERS));
+      expect(meta).toEqual(exportMeta(BUILDINGS));
       // a rigged vehicle's entry carries its rig, the one its GLB's scene holds
-      const rigs = new Map(VEHICLES.flatMap((d) => {
+      const rigs = new Map(ALL_VEHICLES.flatMap((d) => {
         const rig = d.build().rig;
         return rig ? [[d.id, rig] as const] : [];
       }));
-      expect(vehicles).toEqual(exportVehicleMeta(VEHICLES, rigs));
+      expect(vehicles).toEqual(exportVehicleMeta(ALL_VEHICLES, rigs));
       for (const v of vehicles.vehicles) {
         const { json } = parseGlb(fs.readFileSync(path.join(dir, "glb", v.glb)));
         expect((json.scenes![0] as { extras?: { rig?: unknown } }).extras?.rig).toEqual(v.rig);
       }
-      expect(vehicles.vehicles.find((v) => v.id === "veh-american-truck")!.rig!.steer!.nodes).toEqual(["wheel-front-left", "wheel-front-right"]);
+      expect(vehicles.vehicles.find((v) => v.id === "veh-american-truck")!.rig!.steer!.axles[0]!.nodes).toEqual(["wheel-front-left", "wheel-front-right"]);
       expect(catalog.version).toBe(1);
       expect(catalog.records.map((r) => r.id)).toEqual([...DESIGNS.keys()]);
       for (const r of catalog.records) {
@@ -115,7 +132,8 @@ describe("buildExport", () => {
         expect(r.triangles).toBeGreaterThan(0);
         const listed = meta.buildings.find((b) => b.id === r.id) ?? vehicles.vehicles.find((v) => v.id === r.id);
         expect(r).toMatchObject(listed!);
-        if (meta.buildings.some((b) => b.id === r.id)) expect(r.sizeY).toBeGreaterThan(2 * Math.max(r.sizeX, r.sizeZ));
+        // a skyscraper is tall; the landmarks and stations need not be
+        if (r.id.startsWith("sky-")) expect(r.sizeY).toBeGreaterThan(2 * Math.max(r.sizeX, r.sizeZ));
         for (const ref of r.references) expect(fs.statSync(path.join(dir, ref.url)).size).toBe(ref.bytes);
       }
       // the CD 150's native BMPs reach the site

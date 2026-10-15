@@ -138,9 +138,8 @@ export function assembleBus(spec: BusSpec, bind?: (m: MeshBuilder) => void): Mes
   const pivotX = behind.length ? behind.reduce((s, a) => s + a.x, 0) / behind.length : steer.x - 5;
   const rig: VehicleRig = {
     steer: {
-      nodes: wheelNodes,
+      axles: [{ nodes: wheelNodes, wheelbase: steer.x - pivotX }],
       maxAngleDeg: spec.maxSteerDeg,
-      wheelbase: steer.x - pivotX,
       track: spec.tyres.single[0] + spec.tyres.single[1],
     },
   };

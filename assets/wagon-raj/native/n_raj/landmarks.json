@@ -1,0 +1,321 @@
+{
+ "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/truck/n_raj/model",
+ "pixelMetres": 0.1,
+ "convention": "Pixel edges [left, top, right, bottom] on the native BMP; origin top left, x right, y down.",
+ "annotations": [
+  {
+   "id": "R01",
+   "view": "z_both",
+   "side": "right",
+   "element": "red frame body",
+   "box": [
+    12,
+    30,
+    140,
+    38
+   ],
+   "nodes": [
+    "frame/body"
+   ],
+   "tolerancePixels": 3.01,
+   "uncertainty": "The model keeps the XML alongz (1.3/1.9 .. 13.1/13.8 m); the native paints the sloped ends 0.1 m (rear) and 0.2 m (front) longer."
+  },
+  {
+   "id": "R02",
+   "view": "z_both",
+   "side": "right",
+   "element": "hopper 1",
+   "box": [
+    17,
+    4,
+    43,
+    30
+   ],
+   "nodes": [
+    "hoppers/hopper-1/shell",
+    "hoppers/hopper-1/lid"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R03",
+   "view": "z_both",
+   "side": "right",
+   "element": "hopper 2",
+   "box": [
+    47,
+    4,
+    73,
+    30
+   ],
+   "nodes": [
+    "hoppers/hopper-2/shell",
+    "hoppers/hopper-2/lid"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Its left edge meets the ladder pixels."
+  },
+  {
+   "id": "R04",
+   "view": "z_both",
+   "side": "right",
+   "element": "hopper 3",
+   "box": [
+    76,
+    4,
+    102,
+    30
+   ],
+   "nodes": [
+    "hoppers/hopper-3/shell",
+    "hoppers/hopper-3/lid"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Its right edge meets the ladder pixels."
+  },
+  {
+   "id": "R05",
+   "view": "z_both",
+   "side": "right",
+   "element": "hopper 4",
+   "box": [
+    106,
+    4,
+    133,
+    30
+   ],
+   "nodes": [
+    "hoppers/hopper-4/shell",
+    "hoppers/hopper-4/lid"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R06",
+   "view": "z_both",
+   "side": "right",
+   "element": "ladder 1",
+   "box": [
+    42,
+    7,
+    48,
+    30
+   ],
+   "nodes": [
+    "platforms/platform/ladder"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R07",
+   "view": "z_both",
+   "side": "right",
+   "element": "ladder 2",
+   "box": [
+    101,
+    7,
+    107,
+    30
+   ],
+   "nodes": [
+    "platforms/platform-2/ladder"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R08",
+   "view": "z_both",
+   "side": "right",
+   "element": "handrail 1",
+   "box": [
+    33,
+    5,
+    57,
+    7
+   ],
+   "nodes": [
+    "platforms/platform/handrails/top-rails"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Top rail rows 5..6; the XML puts it at 4.3..4.4 m, one pixel lower."
+  },
+  {
+   "id": "R09",
+   "view": "z_both",
+   "side": "right",
+   "element": "handrail 2",
+   "box": [
+    92,
+    5,
+    116,
+    7
+   ],
+   "nodes": [
+    "platforms/platform-2/handrails/top-rails"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Top rail rows 5..6; the XML puts it at 4.3..4.4 m, one pixel lower."
+  },
+  {
+   "id": "L01",
+   "view": "z_both",
+   "side": "left",
+   "element": "red frame body",
+   "box": [
+    12,
+    30,
+    140,
+    38
+   ],
+   "nodes": [
+    "frame/body"
+   ],
+   "tolerancePixels": 3.01,
+   "uncertainty": "The model keeps the XML alongz (1.3/1.9 .. 13.1/13.8 m); the native paints the sloped ends 0.1 m (rear) and 0.2 m (front) longer."
+  },
+  {
+   "id": "L02",
+   "view": "z_both",
+   "side": "left",
+   "element": "hopper 1",
+   "box": [
+    17,
+    4,
+    43,
+    30
+   ],
+   "nodes": [
+    "hoppers/hopper-1/shell",
+    "hoppers/hopper-1/lid"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L03",
+   "view": "z_both",
+   "side": "left",
+   "element": "hopper 2",
+   "box": [
+    47,
+    4,
+    73,
+    30
+   ],
+   "nodes": [
+    "hoppers/hopper-2/shell",
+    "hoppers/hopper-2/lid"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Its left edge meets the ladder pixels."
+  },
+  {
+   "id": "L04",
+   "view": "z_both",
+   "side": "left",
+   "element": "hopper 3",
+   "box": [
+    76,
+    4,
+    102,
+    30
+   ],
+   "nodes": [
+    "hoppers/hopper-3/shell",
+    "hoppers/hopper-3/lid"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Its right edge meets the ladder pixels."
+  },
+  {
+   "id": "L05",
+   "view": "z_both",
+   "side": "left",
+   "element": "hopper 4",
+   "box": [
+    106,
+    4,
+    133,
+    30
+   ],
+   "nodes": [
+    "hoppers/hopper-4/shell",
+    "hoppers/hopper-4/lid"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L06",
+   "view": "z_both",
+   "side": "left",
+   "element": "ladder 1",
+   "box": [
+    42,
+    7,
+    48,
+    30
+   ],
+   "nodes": [
+    "platforms/platform/ladder"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L07",
+   "view": "z_both",
+   "side": "left",
+   "element": "ladder 2",
+   "box": [
+    101,
+    7,
+    107,
+    30
+   ],
+   "nodes": [
+    "platforms/platform-2/ladder"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L08",
+   "view": "z_both",
+   "side": "left",
+   "element": "handrail 1",
+   "box": [
+    33,
+    5,
+    57,
+    7
+   ],
+   "nodes": [
+    "platforms/platform/handrails/top-rails"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Top rail rows 5..6; the XML puts it at 4.3..4.4 m, one pixel lower."
+  },
+  {
+   "id": "L09",
+   "view": "z_both",
+   "side": "left",
+   "element": "handrail 2",
+   "box": [
+    92,
+    5,
+    116,
+    7
+   ],
+   "nodes": [
+    "platforms/platform-2/handrails/top-rails"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Top rail rows 5..6; the XML puts it at 4.3..4.4 m, one pixel lower."
+  }
+ ]
+}
