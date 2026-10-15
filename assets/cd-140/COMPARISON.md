@@ -4,7 +4,7 @@
 **Code** - `generator/czElectricComparison.ts`, `generator/czElectricReport.ts`, `test/czElectrics.test.ts`
 **See also** - [SOURCES.md](SOURCES.md), [docs/models/cz-electrics.md](../../docs/models/cz-electrics.md)
 
-Model revision: `1ea204d` (measured when this file was written). Mapping: side column px = 85.5 - x / 0.09006 (the native body scaled to the published 14.50 m), row = 10 (6 - y); front column = 10 (1.5 - z). Canvases: x_front 30 x 60 px (`native/x_both.bmp`), z_right 180 x 60 px (`native/z_both.bmp`).
+Model revision: `b73f62f` (measured when this file was written). Mapping: side column px = 85.5 - x / 0.09006 (the native body scaled to the published 14.50 m), row = 10 (6 - y); front column = 10 (1.5 - z). Canvases: x_front 30 x 60 px (`native/x_both.bmp`), z_right 180 x 60 px (`native/z_both.bmp`).
 
 Each vector is (left, top, width, height) in native pixels; percentages are 100*x/W, 100*y/H, 100*w/W, 100*h/H of the view's canvas, origin top left. Delta = model minus source in percentage points. MAE = sum(|delta|) / (4 * boxes). Model boxes are the bounds of the actual GLB vertices of the named scopes, occluded vertices included.
 
