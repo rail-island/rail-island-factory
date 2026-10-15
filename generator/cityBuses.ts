@@ -8,7 +8,8 @@
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { Arch, Paint } from "./busBody.ts";
 import { BusDraft, type Axle, type DoorStyle, type PaneStyle } from "./busAssembly.ts";
-import { busPalette, endLamp, endSlab, mirror, sideSlab, type BusFrame } from "./busKit.ts";
+import { bentSlab, busPalette, endLamp, endSlab, mirror, sideSlab, type BusFrame } from "./busKit.ts";
+import type { Vec3 } from "./meshCore.ts";
 import { block } from "./vehicleParts.ts";
 
 /** What a fitting callback gets: the draft, the source-to-factory mapping and the body's measures. */
@@ -529,11 +530,14 @@ function bus1Spec(): CitySpec {
     maxSteerDeg: 45,
     details: (c) => {
       const { x } = c;
-      // the mint sweep: a band rising from the front wheel to the tail, both sides
-      c.d.fit("sweep", x(6), () => {
+      // the mint sweep under the windows, its lower edge falling from u 5.75 to the
+      // tail as the native z_inc/z_dec draw it, held above the rear arch's crown
+      // (the texture paints over the wheel); one closed strip (bentSlab), both sides
+      c.d.fit("sweep", x(8), () => {
+        const lower: Array<[number, number]> = [[5.75, 1.45], [7.3, 1.18], [8.8, 1.18], [9.5, 0.6], [10.25, 0.45], [11.0, 0.32]];
         for (const s of [-1, 1]) {
-          const pts: Array<[number, number]> = [[x(3.5), 1.55], [x(11.0), 1.6], [x(11.0), 0.5], [x(9.5), 0.9]];
-          c.m().slab("mint", pts.map(([px, py]): [number, number, number] => [px, py, s * (c.hw + 0.006)]), [0, 0, -s * 0.03]);
+          const z = s * (c.hw + 0.006);
+          bentSlab(c.m(), "mint", lower.map(([u, y]): [Vec3, Vec3] => [[x(u), 1.58, z], [x(u), y, z]]), [0, 0, -s * 0.03]);
         }
       });
       c.d.fit("front", c.nose, () => {

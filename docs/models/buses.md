@@ -34,7 +34,7 @@ The Karosa variants differ in series (front mask, rear, length), doors and liver
 | `b931e` | 900 | 2-2-2 | white, red |
 | `b951e` | 951 | 2-2-2; roof air-conditioning | white, red |
 | `b741` | 700 | 2-2-2-2 | white, red |
-| `b941`, `b941e` | 900 | 2-2-2-2 (the E's lower front floor does not show; its native files are the B 941's) | white, red |
+| `b941`, `b941e` | 900 | 2-2-2-2; the E's roof grey (its native left side greys the roof's edge) | white, red |
 | `b961` | 951 | 2-2-2-2; roof air-conditioning | white, red |
 
 ## Where the measures come from
@@ -140,7 +140,8 @@ runs, axles, and a `details` callback for the nose, the tail and the roof.
   axle and a trailing axle on single tyres, the engine tower in the rear left corner
   (no window there), round rear lamps.
 - **Bus 1**: the source's generic coach: blue under a long window band, a mint sweep
-  rising to a mint tail.
+  falling from under the windows to the foot of a mint tail (the native sides' outline,
+  held above the rear arch's crown).
 
 ## Tests
 
@@ -153,7 +154,8 @@ the 10,000-triangle budget; the articulated buses have one joint per gap, hinged
 its middle, its faces on the sections' ends, its triangles the renderer's rest pose.
 The bodies: no ray from outside meets the inside of a face (no gaps, `insideSeen` in
 `test/collision.ts`); every mirror is one connected piece reaching into the body; the
-doors are double (the LC 735's rear one single); a slab across a corner of the shell
+doors are double (the LC 735's rear one single); nothing is laid over a wheel arch's
+opening; a slab across a corner of the shell
 stays on it (a Karosa door's surround, the O 345 G's and Bus 1's plates); the
 grilles, bumpers and tails follow the native files.
 The shared suites cover the rest: flicker, determinism, the source tree, the JS model

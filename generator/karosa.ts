@@ -32,6 +32,8 @@ export interface KarosaVariant {
   doors: Array<[number, number, number?]>;
   /** The B 931's bumpers, grey in its native files (the E's and the 951's are in the livery). */
   greyBumpers?: boolean;
+  /** The B 941 E's grey roof (its native left side, z_dec, greys the roof's edge where the B 941's is white). */
+  greyRoof?: boolean;
 }
 
 export const KAROSA_SHORT: readonly KarosaVariant[] = [
@@ -47,7 +49,7 @@ export const KAROSA_SHORT: readonly KarosaVariant[] = [
 export const KAROSA_LONG: readonly KarosaVariant[] = [
   { value: "b741", title: "B 741 (articulated, four doors)", source: "bus_kar_b741", series: "700", livery: "red", doors: [[0.5, 1.5], [5.3, 6.7], [12.0, 13.4], [15.4, 16.6]] },
   { value: "b941", title: "B 941 (articulated, four doors)", source: "bus_kar_b941", series: "900", livery: "red", doors: [[0.5, 1.6], [5.2, 6.7], [11.9, 13.4], [15.3, 16.6]] },
-  { value: "b941e", title: "B 941 E (articulated, four doors)", source: "bus_kar_b941e", series: "900", livery: "red", doors: [[0.5, 1.6], [5.2, 6.7], [11.9, 13.4], [15.3, 16.6]] },
+  { value: "b941e", title: "B 941 E (articulated, four doors)", source: "bus_kar_b941e", series: "900", livery: "red", doors: [[0.5, 1.6], [5.2, 6.7], [11.9, 13.4], [15.3, 16.6]], greyRoof: true },
   { value: "b961", title: "B 961 (articulated, four doors)", source: "bus_kar_b961", series: "951", livery: "red", doors: [[0.5, 1.6], [5.2, 6.7], [11.9, 13.4], [15.3, 16.6]] },
 ];
 
@@ -154,6 +156,7 @@ export function karosaBus(variant: KarosaVariant, long: boolean): MeshBuilder {
       ? [{ x0: nose - 0.14, x1: nose + 1, y0: 1.15, y1: 1.55, mat: stripe }, { x0: nose - 0.14, x1: nose + 1, y0: 0.62, y1: 1.15, mat: "maskBlack" }]
       : []),
     { x0: tail - 1, x1: tail + 0.1, y0: 1.4, y1: 1.95, mat: stripe },
+    ...(variant.greyRoof ? [{ x0: tail - 1, x1: nose + 1, y0: 2.95, y1: ROOF + 1, mat: "roofGrey" }] : []),
   ];
   const axles: Axle[] = K.f.axles.map((a, i) => ({ x: nose - a.at, dual: a.dual, steer: i === 0, drive: a.drive ?? false }));
   const arches: Arch[] = axles.map((a) => ({ x: a.x, half: a.steer ? 0.62 : 0.6, side: 0.72, top: 1.14 }));
@@ -309,6 +312,7 @@ export function karosaBus(variant: KarosaVariant, long: boolean): MeshBuilder {
       maskBlack: "#1d1e21",
       roofHatch: "#d9dbdb",
       bumperGrey: "#808285",
+      roofGrey: "#a7aaad",
     }),
     section, side, plan, base: "body", paint, arches, bodies,
     axles, wheelRadius: WHEEL_R,

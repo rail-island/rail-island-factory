@@ -106,7 +106,7 @@ function rowsAt(outline: Array<[number, number]>, y0: number, y1: number): numbe
  * closed solid with no faces inside, so a slab laid across a corner of the shell
  * follows it without sinking into it or doubling a face.
  */
-function bentSlab(m: MeshBuilder, mat: string, rows: Array<[Vec3, Vec3]>, depth: Vec3): void {
+export function bentSlab(m: MeshBuilder, mat: string, rows: Array<[Vec3, Vec3]>, depth: Vec3): void {
   const ring = [rows[0]![0], ...rows.map((r) => r[1]), ...rows.slice(1).reverse().map((r) => r[0])];
   const nv: Vec3 = [0, 0, 0];
   ring.forEach((a, i) => {

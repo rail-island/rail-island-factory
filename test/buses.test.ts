@@ -318,6 +318,24 @@ describe("the bus bodies", () => {
     expect(doors).toEqual(want);
   });
 
+  // through the gap between each tyre's top and its arch's crown a ray from the side
+  // meets only wheels, the crown and the underside -- no paint or fitting laid over
+  // the opening (Bus 1's sweep, fan-drawn from a concave outline, once covered one)
+  it.each(BUS_DESIGNS.map((d) => [d.id] as const))("%s leaves its wheel arches open", (id) => {
+    const tris = trianglesOf(BUS_DESIGNS.find((d) => d.id === id)!.build());
+    const tyres = tris.filter((t) => t.material === "rubber");
+    const nodes = walk(BUS_DESIGNS.find((d) => d.id === id)!.build().sourceTree(id, "x").root);
+    const axles = nodes.filter((n) => !isLeaf(n) && /(^|\/)(front-axle|axle-\d+)$/.test(n.id)).map((n) => (n.min![0] + n.max![0]) / 2);
+    expect(axles.length).toBeGreaterThan(1);
+    for (const x of axles) {
+      const top = Math.max(...tyres.flatMap((t) => t.p).filter((p) => Math.abs(p[0] - x) < 0.3).map((p) => p[1]));
+      for (const [z, dz] of [[30, -1], [-30, 1]] as const) {
+        const hit = firstHit(tris, [x, top + 0.02, z], [0, 0, dz]);
+        expect(["rubber", "rim", "hub", "under", undefined], `axle at ${x.toFixed(2)}, from ${z > 0 ? "+" : "-"}z: ${hit?.leaf}`).toContain(hit?.material);
+      }
+    }
+  });
+
   it("lays its slabs across the shell's corners without sinking: a Karosa door's surround, the O 345 G's and Bus 1's plates", () => {
     const karosa = trianglesOf(BUS_DESIGNS.find((d) => d.id === "veh-karosa-short")!.build({ variant: "b731" }));
     const door = karosa.filter((t) => /right-doors/.test(t.leaf)).flatMap((t) => t.p);
@@ -330,7 +348,7 @@ describe("the bus bodies", () => {
     }
   });
 
-  it("paints what the native files show: grilles behind the last door, the B 931's grey bumpers, no grey roof, the Citaro's and Bus 1's tails", () => {
+  it("paints what the native files show: grilles behind the last door, the B 931's grey bumpers, the B 941 E's grey roof, the Citaro's and Bus 1's tails", () => {
     for (const b of BUILDS.filter((x) => x.id === "veh-karosa-short" || x.id === "veh-karosa-long")) {
       const nodes = walk(b.m().sourceTree(b.id, b.label).root);
       const grille = nodes.find((n) => /(^|\/)engine-grille$/.test(n.id))!;
@@ -338,7 +356,7 @@ describe("the bus bodies", () => {
       expect(grille.max![0], b.label).toBeLessThan(Math.min(...doors.map((d) => d.min![0])));
       const mats = new Set(walk(b.m().sourceTree(b.id, b.label).root).filter(isLeaf).map((l) => l.material));
       expect(mats.has("bumperGrey"), b.label).toBe(b.params.variant === "b931");
-      expect(mats.has("roofGrey"), b.label).toBe(false);
+      expect(mats.has("roofGrey"), b.label).toBe(b.params.variant === "b941e");
     }
     const citaro = trianglesOf(BUS_DESIGNS.find((d) => d.id === "veh-mb-citaro")!.build());
     expect(firstHit(citaro, [-30, 0.85, 0.3], [1, 0, 0])?.material).toBe("body");
