@@ -386,7 +386,7 @@ export const VEHICLE_CATALOG: CatalogFields = {
 
 /** Every procedural vehicle, by catalog id. The ids are stored in saved maps. */
 export const VEHICLES: ProceduralDesign[] = [
-  { id: "veh-american-truck", title: "American Truck", build: americanTruck },
-  { id: "veh-cd-150", title: "CD 150", build: cd150, catalog: RAIL_CATALOG },
-  { id: "veh-cd-163", title: "CD 163", build: cd163, catalog: RAIL_CATALOG },
+  { id: "veh-american-truck", title: "American Truck", build: americanTruck, references: "american-truck" },
+  { id: "veh-cd-150", title: "CD 150", build: cd150, catalog: RAIL_CATALOG, references: "cd-150" },
+  { id: "veh-cd-163", title: "CD 163", build: cd163, catalog: RAIL_CATALOG, references: "cd-163" },
 ];

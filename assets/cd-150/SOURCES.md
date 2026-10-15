@@ -62,8 +62,13 @@ than treating the painted boundary as an additional solid roof box.
   display operating height, not a sourced contact-wire specification.
 - Equal circular marker lenses are white/red inside yellow housings; the tiny
   native yellow patches cannot establish lens colours or exact outlines.
-- Plates show the class `150`; the tiny native plate does not resolve a full
-  running number. The shared CD outline approximates the native period badge.
+- Plates show the full running number `150 222-8`: a CD-era 150.2 unit with a
+  valid check digit. The tiny native plate does not resolve digits, so the
+  serial is a representative choice, not read from the source. The shared CD
+  outline approximates the native period badge.
+- The green side skirt drops to 0.6 m above rail between the bogies (source
+  columns 74..95, rows 51..53 of both side BMPs), with sloped ends at columns
+  70..73 and 96..100; the model keeps that slope up to the body underside.
 - One rigid node; no truck/trailer articulation. Fixed equipment remains below
   4.7 m and the active collector below the separate 6.5 m project limit.
 

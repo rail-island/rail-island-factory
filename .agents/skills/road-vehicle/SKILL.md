@@ -61,9 +61,28 @@ A rigid vehicle (bus, van, box truck) has no parts and is written as one node.
 - Ids start with `veh-` and are never renamed once shipped (saved maps store
   them). Reference photos and an inspiration GLB go under `assets/<name>/`.
 
+## Reference images from the internet
+
+Model from real photos, not memory. Before modelling a new vehicle (or when
+correcting one), download a few reference images and commit them:
+
+1. Find at least two or three images: a side view, a front or three-quarter view,
+   and the rear or a dimension drawing if available. Prefer Wikimedia Commons and
+   other sources with a clear free license (CC0, CC BY, CC BY-SA, public domain).
+2. Save them under `assets/<name>/` with descriptive lowercase names, downscaled
+   to about 1600 px on the long side.
+3. Record each file (title, URL, author, licence, use) in `assets/<name>/SOURCES.md`.
+4. Set `references: "<name>"` on the design in `VEHICLES`; the build copies the
+   images to `export/refs/<id>/` and the site shows them on the model page's
+   **Images** tab.
+5. Commit and push the images together with the model change.
+
+If downloading is not possible, tell the user and list what you would have used.
+
 ## Steps
 
-1. Look at the references in `assets/<name>/` (photos; render a reference GLB
+1. Download reference images if `assets/<name>/` has none (above). Look at the
+   references in `assets/<name>/` (photos; render a reference GLB
    with `pnpm exec tsx generator/renderGlbThumb.ts <glb> <out.png> 512`).
 2. Write or change the design in `vehicles.ts`; add a new one to `VEHICLES`.
 3. `pnpm build:models` - read the triangle count; fix any z-fighting report.

@@ -265,7 +265,7 @@ export function lettering(text: string, u0: number, v0: number, h: number, w: nu
 }
 
 /** The width of `text` in lettering(). */
-const letteringWidth = (text: string, w: number, gap: number): number => text.length * w + (text.length - 1) * gap;
+export const letteringWidth = (text: string, w: number, gap: number): number => text.length * w + (text.length - 1) * gap;
 
 /** A tube from (x0, y0, z0) to (x1, y1, z1), running mainly along x, its section upright. */
 export function tubeX(m: MeshBuilder, mat: string, r: number, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, n = 8): void {

@@ -7,7 +7,7 @@ import os from "node:os";
 import path from "node:path";
 import { SKYSCRAPERS } from "../generator/skyscrapers";
 import { VEHICLES } from "../generator/vehicles";
-import { DESIGNS, buildExport } from "../generator/generate";
+import { DESIGNS, buildExport, generateReferences } from "../generator/generate";
 import {
   CATALOG_FILE, META_FILE, VEHICLE_META_FILE, catalogRecord, exportMeta, exportVehicleMeta, metaEntry,
   type ExportMeta, type ModelCatalog, type VehicleExportMeta,
@@ -96,7 +96,10 @@ describe("buildExport", () => {
         const listed = meta.buildings.find((b) => b.id === r.id) ?? vehicles.vehicles.find((v) => v.id === r.id);
         expect(r).toMatchObject(listed!);
         if (meta.buildings.some((b) => b.id === r.id)) expect(r.sizeY).toBeGreaterThan(2 * Math.max(r.sizeX, r.sizeZ));
+        for (const ref of r.references) expect(fs.statSync(path.join(dir, ref.url)).size).toBe(ref.bytes);
       }
+      // the CD 150's native BMPs reach the site
+      expect(catalog.records.find((r) => r.id === "veh-cd-150")!.references.map((x) => x.name)).toContain("native/z_inc.bmp");
       // deterministic: a second build writes the same documents
       const before = fs.readFileSync(path.join(dir, CATALOG_FILE), "utf8");
       await buildExport(dir);
@@ -105,4 +108,35 @@ describe("buildExport", () => {
       fs.rmSync(dir, { recursive: true, force: true });
     }
   }, 60_000);
+});
+
+describe("generateReferences", () => {
+  it("copies only the images of a design's assets folder and removes stale ones", () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "factory-refs-"));
+    try {
+      const assets = path.join(root, "assets");
+      const out = path.join(root, "export");
+      fs.mkdirSync(path.join(assets, "loco", "native"), { recursive: true });
+      fs.writeFileSync(path.join(assets, "loco", "photo.JPG"), "jpg");
+      fs.writeFileSync(path.join(assets, "loco", "native", "side.bmp"), "bmp");
+      fs.writeFileSync(path.join(assets, "loco", "SOURCES.md"), "text");
+      fs.writeFileSync(path.join(assets, "loco", "model.glb"), "glb");
+      fs.mkdirSync(path.join(out, "refs", "gone"), { recursive: true });
+      fs.writeFileSync(path.join(out, "refs", "gone", "old.png"), "png");
+      const designs = [
+        { id: "veh-loco", title: "Loco", build: SKYSCRAPERS[0]!.build, references: "loco" },
+        { id: "sky-plain", title: "Plain", build: SKYSCRAPERS[0]!.build },
+      ];
+      const refs = generateReferences(out, designs, assets);
+      expect(refs.get("veh-loco")).toEqual([
+        { name: "native/side.bmp", url: "refs/veh-loco/native/side.bmp", bytes: 3 },
+        { name: "photo.JPG", url: "refs/veh-loco/photo.JPG", bytes: 3 },
+      ]);
+      expect(refs.get("sky-plain")).toEqual([]);
+      expect(fs.readFileSync(path.join(out, "refs/veh-loco/native/side.bmp"), "utf8")).toBe("bmp");
+      expect(fs.existsSync(path.join(out, "refs", "gone"))).toBe(false);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
 });

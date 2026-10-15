@@ -4,7 +4,7 @@
 **Code** - `generator/cd150.ts`, `generator/cd150Comparison.ts`, `generator/cd150Report.ts`.
 **See also** - [source notes](SOURCES.md), [vehicle reference](../../docs/models/vehicles.md).
 
-Model geometry revision (SHA-256 of comparison GLB): `8e06382db67521034bb08d9d614d7035f98cfb1b2ca0786e6cd4185c26e5f7bf`.
+Model geometry revision (SHA-256 of comparison GLB): `c627ba398ecdf6bf9a637e9012fc2d658ab030f56259467276b225a8e3a935df`.
 
 Regenerate with `pnpm build:models && pnpm exec tsx generator/cd150Report.ts`.
 The initial authored model is the baseline; this is a new model, so no prior factory CD 150 existed.

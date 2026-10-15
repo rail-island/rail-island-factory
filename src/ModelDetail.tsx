@@ -2,11 +2,13 @@
 // arrows stepping through the CURRENT filtered and sorted list -- so "next" means
 // next in what the visitor is looking at. Escape goes back; the arrow keys step.
 //
-// The side panel has two tabs: the spec list, and the procedural source tree
-// (SourceTreePanel), fetched from tree/<id>.json only once that tab is open.
+// The side panel has up to three tabs: the spec list, the procedural source tree
+// (SourceTreePanel), fetched from tree/<id>.json only once that tab is open, and
+// the source images the model was made from (refs/<id>/..., listed in the catalog
+// record), shown only for a model that has any.
 
-import { For, Match, Suspense, Switch, createEffect, createMemo, createResource, lazy, onCleanup } from "solid-js";
-import { COLUMNS, type DetailTab, type Row } from "./catalogQuery";
+import { For, Match, Show, Suspense, Switch, createEffect, createMemo, createResource, lazy, onCleanup } from "solid-js";
+import { COLUMNS, formatBytes, type DetailTab, type Row } from "./catalogQuery";
 import { indexTree, type SourceTree } from "./sourceTreeView";
 import { FileCell } from "./ModelTable";
 import { SourceTreePanel } from "./SourceTreePanel";
@@ -54,6 +56,12 @@ export function ModelDetail(props: {
   });
 
   const specs = () => COLUMNS.filter((c) => c.key !== "title");
+  // An export built before source images existed has no list.
+  const references = () => props.record.references ?? [];
+  const tabs = () =>
+    ([["specs", "Specs"], ["source", "Source"], ["references", "Images"]] as const).filter(
+      ([tab]) => tab !== "references" || references().length > 0 || props.tab === "references",
+    );
 
   return (
     <section class="factory-detail" aria-label={props.record.title}>
@@ -78,7 +86,7 @@ export function ModelDetail(props: {
           </button>
         </div>
         <div class="factory-tabs" role="tablist">
-          <For each={[["specs", "Specs"], ["source", "Source"]] as const}>
+          <For each={tabs()}>
             {([tab, label]) => (
               <button
                 type="button"
@@ -109,6 +117,28 @@ export function ModelDetail(props: {
                 )}
               </For>
             </dl>
+          </Match>
+          <Match when={props.tab === "references"}>
+            <Show when={references().length > 0} fallback={<p class="factory-muted">This model has no source images.</p>}>
+              <ul class="factory-refs">
+                <For each={references()}>
+                  {(ref) => (
+                    <li class="factory-ref">
+                      <a href={`/${ref.url}`} target="_blank" rel="noopener" title="Open full size">
+                        <img
+                          src={`/${ref.url}`}
+                          alt={ref.name}
+                          loading="lazy"
+                          class={/\.(bmp|gif)$/i.test(ref.name) ? "factory-ref__img factory-ref__img--pixel" : "factory-ref__img"}
+                        />
+                      </a>
+                      <span class="factory-ref__name">{ref.name}</span>
+                      <span class="factory-muted">{formatBytes(ref.bytes)}</span>
+                    </li>
+                  )}
+                </For>
+              </ul>
+            </Show>
           </Match>
           <Match when={tree.error}>
             <p class="factory-error">{(tree.error as Error).message}</p>

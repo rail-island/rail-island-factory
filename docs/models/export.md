@@ -19,6 +19,7 @@ and `pnpm dev`) writes the gitignored `export/`:
 | `export/thumbs/<id>.png` | a 512 px square thumbnail, transparent background |
 | `export/js/<id>.js` | the model as one standalone JS file ([js-format.md](js-format.md)) |
 | `export/tree/<id>.json` | the procedural source tree, for the site only ([source-tree.md](source-tree.md)) |
+| `export/refs/<id>/...` | the design's source images, copied from `assets/<references>/`, for the site only |
 | `export/skyscrapers.meta.json` | one game-catalog entry per skyscraper - the import contract |
 | `export/vehicles.meta.json` | the same per vehicle, under `vehicles` |
 | `export/catalog.json` | what the site lists |
@@ -26,13 +27,19 @@ and `pnpm dev`) writes the gitignored `export/`:
 `export/` is also Vite's `publicDir`, so `vite build` copies it into `dist/` as
 it stands and the deployed site serves the very files the game would import, at
 `/glb/...`, `/js/...`, `/thumbs/...`, `/skyscrapers.meta.json`, `/vehicles.meta.json` and `/catalog.json` (and the
-site-only `/tree/...`, which the game ignores).
+site-only `/tree/...` and `/refs/...`, which the game ignores).
 
 **Incremental.** An unchanged design produces byte-identical GLB bytes; the
 generator then leaves the file and its thumbnail alone. The thumbnail - a
 software rasterizer, the slow part - is re-rendered only when the GLB changed or
 the PNG is missing. A JS file is rewritten only when its text changed. A file of a design that no longer exists is deleted, so a
 dropped id cannot linger. A tree file is rewritten only when its text changed.
+**Source images.** A design names its folder under `assets/` with
+`references` (`generator/design.ts`; the vehicles set it). `generateReferences`
+copies every `.bmp`, `.gif`, `.jpg`/`.jpeg`, `.png`, `.svg` and `.webp` in that
+folder, at any depth, to `export/refs/<id>/<path>` - other files (`SOURCES.md`,
+reference GLBs, XML, JSON) stay behind. A file is rewritten only when its bytes
+changed, and anything else under `export/refs/` is deleted.
 The JSON documents are rewritten every run and
 carry no timestamp, so they are deterministic too.
 
@@ -90,7 +97,9 @@ skyscrapers, then the vehicles. A record is its meta entry plus what
 only the built files know: `glbUrl`/`thumbUrl` (site-relative), `glbBytes`,
 `thumbBytes`, `glbGzipBytes`, `jsUrl`, `jsBytes`, `jsGzipBytes` (the standalone JS model, [js-format.md](js-format.md); gzip sizes are gzip -9), `triangles`, `vertices`, `primitives` (draw calls), `materials`, and
 the bounding-box extents `sizeX`/`sizeY`/`sizeZ` in metres (before
-`defaultScale`), rounded to the millimetre.
+`defaultScale`), rounded to the millimetre, and `references`: the source images
+as `{ name, url, bytes }` in name order (`name` is the path within the assets
+folder, `url` is `refs/<id>/<name>`), empty for a design without any.
 
 The counts come from `generator/glbStats.ts`: vertices and primitives from the
 JSON chunk, triangles and the box from the decoded triangle soup

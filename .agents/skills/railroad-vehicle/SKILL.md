@@ -6,7 +6,7 @@ description: Create or change procedural railway vehicles, including electric an
 # Railroad vehicle
 
 **Covers** - railway vehicle geometry, operating poses and verification.
-**Code** - `generator/vehicles.ts`, `generator/cd163.ts`, `test/models.test.ts`
+**Code** - `generator/vehicles.ts`, `generator/cd150.ts`, `generator/cd163.ts`, `test/models.test.ts`, `test/cd150.test.ts`
 **See also** - [vehicle reference](../../../docs/models/vehicles.md), [road-vehicle](../road-vehicle/SKILL.md), [vlakosimdb-transfer](../vlakosimdb-transfer/SKILL.md)
 
 This skill follows the repository's road-vehicle workflow, with railway-specific
@@ -44,8 +44,67 @@ documentation in English.
   them. Fit windows, plates, lamps and handrails to the actual supporting plane.
 - Distinguish the two sides and both ends: portholes, shutters, doors and markings
   need not be symmetric. Keep wheels, axle boxes and suspension connected.
-- Store photos, native source references and provenance under `assets/<name>/`.
-  For vlakosimdb input, follow its transfer skill and report measured residuals.
+- Store photos, native source references and provenance under `assets/<name>/`
+  (see "Reference images from the internet" below). For vlakosimdb input,
+  follow its transfer skill and report measured residuals.
+- Follow the livery's paint boundaries, not just the body edges: a colour band
+  can step or drop (the CD 150's green skirt is lowered between the bogies).
+
+## Reference images from the internet
+
+Do not model from memory or from one source alone. Before modelling (and when
+correcting proportions or livery), download a few reference images and commit
+them with the model:
+
+1. Search for at least two or three images: a side view, a front or three-quarter
+   view, and ideally a bogie or drawing with dimensions. Prefer Wikimedia
+   Commons and other sources with a clear free license (CC0, CC BY, CC BY-SA,
+   public domain); note the licence and author for every file.
+2. Pick images that match the modelled era and livery (number, emblem, colours).
+3. Store them under `assets/<name>/` with descriptive lowercase names
+   (`photo-150-222-side.jpg`, `drawing-bogie.png`). Downscale large photos to
+   about 1600 px on the long side so the repository stays small.
+4. Record each file in `assets/<name>/SOURCES.md`: original title, URL, author,
+   licence and what it was used for.
+5. Set `references: "<name>"` on the design in `VEHICLES`; the build copies the
+   folder's images to `export/refs/<id>/` and the catalog site shows them on the
+   model page's **Images** tab.
+6. Commit and push the images with the model change (they are source material,
+   not generated output).
+
+If the network or licences make a download impossible, say so to the user and
+list the references you would have used.
+
+## Running numbers of Czech locomotives
+
+Czech (and Slovak) traction units carry the CSD scheme valid since 1 January
+1988, still used by CD: **`ABC DEF-G`**, a space after the third digit and a
+hyphen before the check digit, e.g. `163 244-7`, `150 222-8`.
+
+- **A** - kind of vehicle: 0 unpowered trailer of a unit, 1 electric locomotive
+  DC (3 kV), 2 electric locomotive AC (25 kV 50 Hz), 3 multi-system electric
+  locomotive, 4 DC electric unit, 5 AC electric unit, 6 multi-system electric
+  unit, 7 diesel locomotive, 8 diesel railcar, 9 control car.
+- **BC** - with A, the class (`150`, `163`, `754`); a class split by later
+  rebuilds is written with a subclass, e.g. 150.2 for the 150 2xx units.
+- **DEF** - serial number within the class; standard gauge starts at 001
+  (801+ is broad gauge, 901+ and 951+ narrow gauge).
+- **G** - check digit over the six digits: from the right, multiply alternately
+  by 2 and 1 (rightmost digit by 2), add the digits of the products, and take
+  the difference to the next multiple of ten (0 when the sum already is one).
+  `163 244`: 8 + 4 + 4 + 3 + (1 + 2) + 1 = 23, so `-7`.
+
+Before 1988 CSD used the Kryspin designation, e.g. `E 499.2` for the class 150:
+a traction letter (E electric, T diesel), then the number of powered axles, a
+speed code ((digit + 3) x 10 km/h), an axle-load code (digit + 10 t), and after
+the dot the series. Newer vehicles also carry the 12-digit UIC/TSI number
+(vehicle type, country code 54 for the Czech Republic, the national number and
+its own check digit over all eleven digits); the models show the national number.
+
+**Every model shows one full, valid running number** on its plates (side and
+front), never just the class: choose a unit that existed in the modelled era
+and livery, note it in `SOURCES.md`, keep it in one constant (`CD150_NUMBER`,
+`NUMBER` in `cd163.ts`), and test its check digit.
 
 ## Electric locomotives and pantographs
 
@@ -74,7 +133,8 @@ parked, maintenance or other operating state overrides this default.
 
 ## Build and review
 
-1. Read the vehicle references and applicable repository instructions. Inspect
+1. Read the vehicle references and applicable repository instructions; download
+   images from the internet first when `assets/<name>/` has no photos. Inspect
    original XML profiles when available; use native-image measurement tables
    when transferring from vlakosimdb.
 2. Implement the design with `sweep`, `loft`, `block`, `slab` and named scopes.

@@ -145,13 +145,15 @@ export interface ViewState {
   dir: SortDir;
   /** The id of the model whose detail page is open, or null for the list. */
   model: string | null;
-  /** The model page's side panel: the spec list, or the procedural source tree. */
+  /** The model page's side panel: the spec list, the procedural source tree, or the source images. */
   tab: DetailTab;
   /** The selected source-tree node (its slash-path id), or null. Kept only on the source tab. */
   node: string | null;
 }
 
-export type DetailTab = "specs" | "source";
+export type DetailTab = "specs" | "source" | "references";
+
+const DETAIL_TABS: readonly DetailTab[] = ["specs", "source", "references"];
 
 export function parseView(search: string): ViewState {
   const p = new URLSearchParams(search);
@@ -160,7 +162,8 @@ export function parseView(search: string): ViewState {
   const dir: SortDir = rawDir === "asc" || rawDir === "desc" ? rawDir : column(sort)!.dir;
   const model = p.get("model") || null;
   // the tab and the node belong to an open model; a node only to the source tab
-  const tab: DetailTab = model && p.get("tab") === "source" ? "source" : "specs";
+  const rawTab = p.get("tab") as DetailTab | null;
+  const tab: DetailTab = model && rawTab && DETAIL_TABS.includes(rawTab) ? rawTab : "specs";
   const node = tab === "source" ? p.get("node") : null;
   return { q: p.get("q") ?? "", sort, dir, model, tab, node: node ?? null };
 }
@@ -173,10 +176,8 @@ export function serializeView(v: ViewState): string {
   if (v.dir !== (column(v.sort)?.dir ?? DEFAULT_DIR)) p.set("dir", v.dir);
   if (v.model) {
     p.set("model", v.model);
-    if (v.tab === "source") {
-      p.set("tab", "source");
-      if (v.node != null) p.set("node", v.node);
-    }
+    if (v.tab !== "specs") p.set("tab", v.tab);
+    if (v.tab === "source" && v.node != null) p.set("node", v.node);
   }
   const s = p.toString();
   return s ? `?${s}` : "";

@@ -443,6 +443,48 @@ body {
   outline-offset: -2px;
 }
 
+/* ------------------------------------------------------ the source images */
+
+.factory-refs {
+  display: grid;
+  gap: 12px;
+  margin: 8px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.factory-ref {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  align-items: baseline;
+  font-size: 13px;
+}
+
+.factory-ref a {
+  display: block;
+  width: 100%;
+}
+
+.factory-ref__img {
+  display: block;
+  width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  border-radius: var(--m-radius-sm);
+  background: rgb(30, 30, 35);
+}
+
+/* native low-resolution textures: show the pixels, do not blur them */
+.factory-ref__img--pixel {
+  image-rendering: pixelated;
+}
+
+.factory-ref__name {
+  overflow-wrap: anywhere;
+  color: var(--m-on-surface);
+}
+
 /* -------------------------------------------------------- the source tree */
 
 .factory-source__hint {

@@ -68,8 +68,13 @@ orbit, wheel or pinch to zoom, no pan), the build's thumbnail and every column a
 a spec list. Arrows step through the **current** filtered and sorted list;
 Escape, the app bar's back arrow or the browser's Back return to it.
 
-The side panel has two tabs: **Specs** (the thumbnail and the spec list) and
-**Source** (below).
+The side panel has up to three tabs: **Specs** (the thumbnail and the spec list),
+**Source** (below) and **Images** - the source images the model was made from
+(photos, drawings, native textures; the record's `references`,
+[../models/export.md](../models/export.md)). The Images tab appears only for a
+model that has any; each image is shown at the panel's width with its path and
+size and opens full size in a new tab. Low-resolution `.bmp`/`.gif` textures are
+scaled with `image-rendering: pixelated`, so their pixels stay sharp.
 
 `ModelViewer.tsx` (with its helper `viewerHighlight.ts`) is the only code
 importing three (plus `GLTFLoader` and `OrbitControls`), reached through a lazy import, so the list loads ~30 kB of
@@ -105,7 +110,7 @@ file says to run `pnpm build:models`.
 
 All state is in the query string (`parseView`/`serializeView` in
 `catalogQuery.ts`): `?q=` search, `?sort=` and `?dir=` ordering, `?model=` the
-open model, `?tab=source` its Source tab and `?node=` the selected tree node (kept
+open model, `?tab=source` or `?tab=references` its Source or Images tab and `?node=` the selected tree node (kept
 only with the Source tab; a node id no longer in the tree selects nothing). Defaults are left out, so the plain list is the bare URL. Opening and
 closing a model push a history entry and reset the tab and node; typing,
 sorting, stepping (which drops the node), switching tabs and selecting replace

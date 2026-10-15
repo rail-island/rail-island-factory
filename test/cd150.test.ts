@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { cd150 } from "../generator/cd150.ts";
+import { cd150, CD150_NUMBER } from "../generator/cd150.ts";
 import { cd150Comparison } from "../generator/cd150Comparison.ts";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles.ts";
 import {
@@ -122,5 +122,31 @@ describe("CD 150 transfer", () => {
       }
     }
     lengths.forEach((l) => expect(l).toBeCloseTo(Math.hypot(1.66, 0.26), 4));
+  });
+  it("carries a full running number with a valid check digit", () => {
+    expect(CD150_NUMBER).toMatch(/^150 \d{3}-\d$/);
+    const digits = [...CD150_NUMBER.replace(/\D/g, "")].map(Number);
+    // Weights 2, 1, 2, ... from the right of the six digits; digit sums of products.
+    const sum = digits
+      .slice(0, 6)
+      .reverse()
+      .reduce((a, d, i) => a + (i % 2 === 0 ? ((2 * d) % 10) + Math.floor((2 * d) / 10) : d), 0);
+    expect((10 - (sum % 10)) % 10).toBe(digits[6]);
+  });
+  it("lowers the green side skirt between the bogies", () => {
+    const mesh = cd150();
+    const { json, bin } = parseGlb(mesh.toGlb("test"));
+    const green = collectTriangles(json, bin)
+      .filter((t) => t.material === "green")
+      .flatMap((t) => t.p);
+    const lowest = (x0: number, x1: number) =>
+      Math.min(
+        ...green
+          .filter((p) => Math.abs(p[0]) >= x0 - 1e-4 && Math.abs(p[0]) <= x1 + 1e-4)
+          .map((p) => p[1]),
+      );
+    // Native side BMPs: the green drops 0.6 m above rail over source x=7.4..9.6.
+    expect(lowest(0, 1.1)).toBeCloseTo(0.6, 4);
+    expect(lowest(2.1, 7)).toBeGreaterThanOrEqual(1.2 - 1e-6);
   });
 });

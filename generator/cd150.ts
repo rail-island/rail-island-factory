@@ -3,7 +3,13 @@
 // No runtime textures or sibling database dependency. See assets/cd-150/SOURCES.md.
 import { MeshBuilder, ngon, type Ring } from "./meshBuilder.ts";
 import { block, side } from "./vehicleParts.ts";
-import { CD163_PALETTE, lettering, emblem, tubeX } from "./cd163.ts";
+import {
+  CD163_PALETTE,
+  lettering,
+  letteringWidth,
+  emblem,
+  tubeX,
+} from "./cd163.ts";
 
 const PALETTE = {
   ...CD163_PALETTE,
@@ -14,6 +20,10 @@ const PALETTE = {
   cooler: { color: "#afc2b0", roughness: 0.7 },
   pantograph: { color: "#c79912", metallic: 0.25, roughness: 0.6 },
 };
+
+// Running number in the 1988 CSD/CD scheme: class 150, serial 222 (the CD-era
+// 150.2 subclass), check digit 8 (see docs/models/vehicles.md, "Running numbers").
+export const CD150_NUMBER = "150 222-8";
 
 // Source plan tapers from 3.0 m across the machine room to 2.8 m at the noses.
 function halfWidth(x: number): number {
@@ -207,20 +217,38 @@ function body(m: MeshBuilder): void {
         });
       m.scope("number plate", () => {
         sideBox(m, "plate", s, -0.5, 2.0, 0.5, 2.3, 0.028);
+        const w = letteringWidth(CD150_NUMBER, 0.08, 0.025);
         m.facets(
           "white",
           lettering(
-            "150",
-            s < 0 ? 0.3 : -0.3,
-            2.035,
-            0.23,
-            0.16,
-            0.06,
+            CD150_NUMBER,
+            s < 0 ? w / 2 : -w / 2,
+            2.05,
+            0.2,
+            0.08,
+            0.025,
             s < 0,
           ).map(([x, y]) => [x, y, s * 1.534]),
           [0, 0, s],
         );
       });
+      // The green side skirt drops between the bogies: 0.6 m above rail over
+      // x=-1.1..1.1, rising at the native slope (0.3 m per 0.4 m) into the body.
+      m.scope("skirt", () =>
+        sidePanel(
+          m,
+          "green",
+          s,
+          [
+            [-1.1, 0.6],
+            [1.1, 0.6],
+            [2.03, 1.3],
+            [-2.03, 1.3],
+          ],
+          0.003,
+          0.04,
+        ),
+      );
       m.scope("emblem", () => {
         const x = s > 0 ? 3.3 : -4;
         m.facets(
@@ -326,11 +354,18 @@ function cab(m: MeshBuilder, e: number): void {
     m.scope("housing", () =>
       endPanel(m, "plate", e, rect(-0.5, 1.4, 0.5, 1.7), 0.035),
     );
+    const w = letteringWidth(CD150_NUMBER, 0.075, 0.022);
     m.facets(
       "white",
-      lettering("150", e > 0 ? 0.3 : -0.3, 1.44, 0.22, 0.16, 0.06, e > 0).map(
-        ([z, y]) => [e * (frontX(y, e) + 0.045), y, z],
-      ),
+      lettering(
+        CD150_NUMBER,
+        e > 0 ? w / 2 : -w / 2,
+        1.45,
+        0.2,
+        0.075,
+        0.022,
+        e > 0,
+      ).map(([z, y]) => [e * (frontX(y, e) + 0.045), y, z]),
       [e, 0, 0],
     );
   });

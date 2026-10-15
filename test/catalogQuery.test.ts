@@ -12,7 +12,7 @@ function rec(id: string, title: string, triangles: number, extra: Partial<Catalo
     defaultScale: 0.5, license: "CC0", author: "Rail Island", source: "Rail Island",
     glbUrl: `glb/${id}.glb`, thumbUrl: `thumbs/${id}.png`, glbBytes: triangles * 72, glbGzipBytes: triangles * 6, jsUrl: `js/${id}.js`,
     jsBytes: triangles * 2, jsGzipBytes: triangles, thumbBytes: 100,
-    triangles, vertices: triangles * 3, primitives: 3, materials: 3, sizeX: 20, sizeY: 80, sizeZ: 20,
+    triangles, vertices: triangles * 3, primitives: 3, materials: 3, sizeX: 20, sizeY: 80, sizeZ: 20, references: [],
     ...extra,
   };
 }
@@ -74,6 +74,13 @@ describe("the URL state", () => {
     expect(parseView(serializeView({ ...v, node: "" })).node).toBe("");
   });
 
+  it("carries the references tab of an open model, without a node", () => {
+    const v = { q: "", sort: DEFAULT_SORT, dir: "asc" as const, model: "veh-cd-150", tab: "references" as const, node: null };
+    expect(serializeView(v)).toBe("?model=veh-cd-150&tab=references");
+    expect(parseView(serializeView(v))).toEqual(v);
+    expect(parseView("?model=veh-cd-150&tab=references&node=crown")).toMatchObject({ tab: "references", node: null });
+    expect(serializeView({ ...v, node: "crown" })).toBe("?model=veh-cd-150&tab=references");
+  });
   it("drops a tab or node that has no model or no source tab to belong to", () => {
     expect(parseView("?tab=source&node=crown")).toMatchObject({ model: null, tab: "specs", node: null });
     expect(parseView("?model=sky-pagoda&node=crown")).toMatchObject({ tab: "specs", node: null });

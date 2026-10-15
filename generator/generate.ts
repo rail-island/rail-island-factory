@@ -7,6 +7,8 @@
 //                                   returning a THREE.Group (jsModel.ts)
 //   export/tree/<id>.json           the procedural source tree, for the site only
 //                                   (sourceTree.ts)
+//   export/refs/<id>/...            the design's source images, copied from
+//                                   assets/<references>/, for the site only
 //   export/skyscrapers.meta.json    the skyscrapers' catalog entries, for the game to import
 //   export/vehicles.meta.json       the vehicles' catalog entries, likewise
 //   export/catalog.json             what the site lists (catalog.ts)
@@ -34,13 +36,16 @@ import { glbStats } from "./glbStats.ts";
 import { JS_DIR, bundleDesign, gzipSize, writeIfChanged } from "./jsModel.ts";
 import { findCoplanarOverlaps, type CoplanarOverlap } from "./coplanar.ts";
 import {
-  CATALOG_FILE, META_FILE, VEHICLE_META_FILE, catalogRecord, exportMeta, exportVehicleMeta, metaEntry,
-  type ModelCatalog,
+  CATALOG_FILE, META_FILE, REFERENCE_EXTENSIONS, REFS_DIR, VEHICLE_META_FILE, catalogRecord, exportMeta,
+  exportVehicleMeta, metaEntry, type ModelCatalog, type ReferenceImage,
 } from "./catalog.ts";
 import { TREE_DIR, type SourceTree } from "./sourceTree.ts";
 import type { MeshBuilder } from "./meshBuilder.ts";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+/** The repository's reference material, one folder per model (ProceduralDesign.references). */
+export const ASSETS_DIR = path.join(REPO_ROOT, "assets");
 
 /** The export folder, and the site's publicDir. */
 export const EXPORT_DIR = path.join(REPO_ROOT, "export");
@@ -199,10 +204,62 @@ export async function generateJsModels(
   return out;
 }
 
+/** Every file under `dir`, as sorted forward-slash paths relative to it. */
+function listFiles(dir: string): string[] {
+  if (!fs.existsSync(dir)) return [];
+  return fs
+    .readdirSync(dir, { recursive: true, encoding: "utf8" })
+    .map((p) => p.split(path.sep).join("/"))
+    .filter((p) => fs.statSync(path.join(dir, p)).isFile())
+    .sort();
+}
+
+/**
+ * Copies each design's source images (assets/<references>/, any depth, the
+ * REFERENCE_EXTENSIONS) to `dir`/refs/<id>/, rewriting a file only when its
+ * bytes changed, and removes every other file under `dir`/refs. Returns each
+ * design's images in name order; a design without references gets none.
+ */
+export function generateReferences(
+  dir = EXPORT_DIR,
+  designs: readonly ProceduralDesign[] = [...DESIGNS.values()],
+  assetsDir = ASSETS_DIR,
+): Map<string, ReferenceImage[]> {
+  const refsDir = path.join(dir, REFS_DIR);
+  const out = new Map<string, ReferenceImage[]>();
+  const keep = new Set<string>();
+  for (const design of designs) {
+    const images: ReferenceImage[] = [];
+    if (design.references) {
+      const src = path.join(assetsDir, design.references);
+      for (const name of listFiles(src)) {
+        if (!REFERENCE_EXTENSIONS.some((ext) => name.toLowerCase().endsWith(ext))) continue;
+        const bytes = fs.readFileSync(path.join(src, name));
+        const rel = `${design.id}/${name}`;
+        const target = path.join(refsDir, rel);
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        if (!fs.existsSync(target) || !bytes.equals(fs.readFileSync(target))) fs.writeFileSync(target, bytes);
+        keep.add(rel);
+        images.push({ name, url: `${REFS_DIR}/${rel}`, bytes: bytes.length });
+      }
+    }
+    out.set(design.id, images);
+  }
+  for (const rel of listFiles(refsDir)) if (!keep.has(rel)) fs.rmSync(path.join(refsDir, rel));
+  // empty folders left by removed files, deepest first
+  const dirs = fs.existsSync(refsDir) ? fs.readdirSync(refsDir, { recursive: true, encoding: "utf8" }) : [];
+  for (const sub of dirs.sort().reverse()) {
+    const p = path.join(refsDir, sub);
+    if (fs.statSync(p).isDirectory() && fs.readdirSync(p).length === 0) fs.rmdirSync(p);
+  }
+  return out;
+}
+
 /** The whole export: the models, then the two meta.json files and the site's catalog.json. */
 export async function buildExport(dir = EXPORT_DIR): Promise<{ models: GeneratedModel[]; catalog: ModelCatalog; js: Map<string, string> }> {
   const models = generateModels(dir);
   const js = await generateJsModels(dir);
+  const refs = generateReferences(dir);
   const designs = [...DESIGNS.values()];
   fs.writeFileSync(path.join(dir, META_FILE), `${JSON.stringify(exportMeta(SKYSCRAPERS), null, 2)}\n`);
   fs.writeFileSync(path.join(dir, VEHICLE_META_FILE), `${JSON.stringify(exportVehicleMeta(VEHICLES), null, 2)}\n`);
@@ -221,7 +278,7 @@ export async function buildExport(dir = EXPORT_DIR): Promise<{ models: Generated
         jsBytes: Buffer.byteLength(jsText),
         jsGzipBytes: gzipSize(jsText),
         thumbBytes: fs.statSync(built.thumb).size,
-      });
+      }, refs.get(design.id));
     }),
   };
   fs.writeFileSync(path.join(dir, CATALOG_FILE), `${JSON.stringify(catalog, null, 2)}\n`);

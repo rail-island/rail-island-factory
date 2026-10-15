@@ -49,6 +49,15 @@ export interface VehicleExportMeta {
   vehicles: MetaEntry[];
 }
 
+/** One source image of a model (a photo, a drawing, a native texture). */
+export interface ReferenceImage {
+  /** Path within the design's assets folder, e.g. "native/z_inc.bmp". */
+  name: string;
+  /** Site-relative URL, e.g. "refs/veh-cd-150/native/z_inc.bmp". */
+  url: string;
+  bytes: number;
+}
+
 /** One row of the site's listing. */
 export interface CatalogRecord extends MetaEntry {
   /** Site-relative URLs, e.g. "glb/sky-pagoda.glb". */
@@ -70,6 +79,8 @@ export interface CatalogRecord extends MetaEntry {
   sizeX: number;
   sizeY: number;
   sizeZ: number;
+  /** The source images the model was made from, by name; empty when it has none. */
+  references: ReferenceImage[];
 }
 
 export interface ModelCatalog {
@@ -95,6 +106,10 @@ export interface BuiltFacts {
 export const META_FILE = "skyscrapers.meta.json";
 export const VEHICLE_META_FILE = "vehicles.meta.json";
 export const CATALOG_FILE = "catalog.json";
+/** The export's folder of source images, one subfolder per design id. */
+export const REFS_DIR = "refs";
+/** The file types copied as source images, all of which a browser shows in an <img>. */
+export const REFERENCE_EXTENSIONS = [".bmp", ".gif", ".jpeg", ".jpg", ".png", ".svg", ".webp"] as const;
 
 /** One design's entry, with the catalog fields of its family (the skyscrapers' by default). */
 export function metaEntry(design: ProceduralDesign, fields: CatalogFields = SKYSCRAPER_CATALOG): MetaEntry {
@@ -125,7 +140,7 @@ export function exportVehicleMeta(designs: readonly ProceduralDesign[]): Vehicle
 /** Rounded to the millimetre, so float noise does not reach the listing. */
 const mm = (v: number): number => Math.round(v * 1000) / 1000;
 
-export function catalogRecord(entry: MetaEntry, facts: BuiltFacts): CatalogRecord {
+export function catalogRecord(entry: MetaEntry, facts: BuiltFacts, references: ReferenceImage[] = []): CatalogRecord {
   return {
     ...entry,
     glbUrl: `glb/${entry.glb}`,
@@ -143,5 +158,6 @@ export function catalogRecord(entry: MetaEntry, facts: BuiltFacts): CatalogRecor
     sizeX: mm(facts.max[0] - facts.min[0]),
     sizeY: mm(facts.max[1] - facts.min[1]),
     sizeZ: mm(facts.max[2] - facts.min[2]),
+    references,
   };
 }
