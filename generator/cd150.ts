@@ -2,9 +2,10 @@
 // Source coordinates: (x, y, z) -> (x - 8.5, y, -z), metres.
 // No runtime textures or sibling database dependency. See assets/cd-150/SOURCES.md.
 import { MeshBuilder, ngon, type Ring } from "./meshBuilder.ts";
-import { block, side } from "./vehicleParts.ts";
+import { block, plate, side } from "./vehicleParts.ts";
 import {
   CD163_PALETTE,
+  coil,
   lettering,
   letteringWidth,
   emblem,
@@ -468,6 +469,10 @@ function cab(m: MeshBuilder, e: number): void {
     );
   });
 }
+// The running gear follows the photographs (assets/cd-150): spoked wheels,
+// axle boxes between paired primary coils on an equaliser, a side frame that
+// drops between the axles to carry the large secondary coils on a spring
+// plank, nose-hung traction motors, brake cylinders and sandboxes.
 function bogie(m: MeshBuilder, xc: number): void {
   const r = 0.625,
     ay = r * Math.cos(Math.PI / 24);
@@ -504,31 +509,69 @@ function bogie(m: MeshBuilder, xc: number): void {
             m.sweep("steel", "z", q, c, q, d);
           }
         });
-        block(
-          m,
-          "bogie",
-          x - 0.2,
-          x + 0.2,
-          ay - 0.14,
-          ay + 0.16,
-          ...side(s, 0.84, 1.06),
-        );
-        for (const d of [-0.38, 0.38]) {
-          for (let k = 0; k < 4; k++)
-            m.prism(
-              "spring",
-              ngon(10, 0.085, 0, x + d, s * 0.98),
-              0.63 + k * 0.045,
-              0.65 + k * 0.045,
-            );
-        }
+        m.scope("axle box", () => {
+          const box = ngon(8, 0.15, Math.PI / 8, x, ay);
+          const [c, d] = side(s, 0.835, 1.06);
+          m.sweep("bogie", "z", box, c, box, d);
+          block(m, "bogie", x - 0.17, x + 0.17, ay + 0.06, ay + 0.2, ...side(s, 0.87, 1.04)); // the guide under the frame
+          block(m, "underframe", x - 0.05, x + 0.05, ay - 0.05, ay + 0.05, ...side(s, 1.06, 1.08)); // its cover
+        });
+        m.scope("primary suspension", () => {
+          // the equaliser under the box, a coil at either end of it
+          block(m, "bogie", x - 0.5, x + 0.5, ay - 0.13, ay - 0.05, ...side(s, 0.92, 1.04));
+          for (const d of [-0.38, 0.38])
+            coil(m, "spring", x + d, s * 0.98, ay - 0.05, 0.84, 0.085, 2, 8);
+        });
       }
+      // the traction motor, nose-hung toward the bogie's centre
+      const motor = ngon(12, 0.34, 0, x - Math.sign(dx) * 0.6, 0.6);
+      m.sweep("bogie", "z", motor, -0.55, motor, 0.55);
     });
-  for (const s of [-1, 1]) {
-    block(m, "bogie", xc - 2.15, xc + 2.15, 0.82, 1.02, ...side(s, 0.92, 1.13));
-    block(m, "bogie", xc - 0.5, xc + 0.5, 0.5, 0.85, ...side(s, 0.94, 1.17));
-  }
-  block(m, "bogie", xc - 0.4, xc + 0.4, 0.86, 1.22, -0.94, 0.94);
+  m.scope("frame", () => {
+    for (const s of [-1, 1]) {
+      // the side frame in profile: level over the axle boxes, dropped between them
+      const top: Ring = [[-2.15, 1.02], [-1.15, 1.02], [-0.8, 0.86], [0.8, 0.86], [1.15, 1.02], [2.15, 1.02]];
+      const bottom: Ring = [[-2.15, 0.84], [-1.25, 0.84], [-0.85, 0.5], [0.85, 0.5], [1.25, 0.84], [2.15, 0.84]];
+      plate(
+        m,
+        "bogie",
+        top.map(([u, v]) => [xc + u, v]),
+        bottom.map(([u, v]) => [xc + u, v]),
+        ...side(s, 0.92, 1.1),
+      );
+      // the spring plank under the dropped centre, out to the secondary coils
+      block(m, "bogie", xc - 0.55, xc + 0.55, 0.42, 0.52, ...side(s, 0.94, 1.38));
+    }
+    for (const x of [xc - 0.55, xc + 0.55])
+      block(m, "bogie", x - 0.08, x + 0.08, 0.7, 0.9, -0.92, 0.92); // transoms
+    for (const x of [xc - 2.1, xc + 2.1])
+      block(m, "bogie", x - 0.05, x + 0.05, 0.78, 0.98, -1.0, 1.0); // headstocks
+  });
+  m.scope("secondary suspension", () => {
+    for (const s of [-1, 1]) {
+      for (const d of [-0.3, 0.3])
+        coil(m, "spring", xc + d, s * 1.2, 0.52, 0.94, 0.14, 3);
+      // the body's bracket over the coils
+      block(m, "underframe", xc - 0.5, xc + 0.5, 0.92, 0.96, ...side(s, 1.0, 1.4));
+    }
+  });
+  m.scope("brake cylinders", () => {
+    for (const s of [-1, 1])
+      for (const d of [-0.95, 0.95]) {
+        const cyl = ngon(8, 0.1, Math.PI / 8, xc + d, 0.72);
+        const [z0, z1] = side(s, 0.6, 0.9);
+        m.sweep("spring", "z", cyl, z0, cyl, z1);
+      }
+  });
+  m.scope("sandboxes", () => {
+    for (const o of [-1, 1]) {
+      const x = xc + o * 2.3;
+      for (const s of [-1, 1]) {
+        block(m, "bogie", x - 0.1, x + 0.1, 0.56, 0.9, ...side(s, 0.62, 0.9));
+        m.prism("underframe", ngon(6, 0.02, 0, x - o * 0.06, s * 0.74), 0.12, 0.58);
+      }
+    }
+  });
 }
 function pantograph(
   m: MeshBuilder,
@@ -627,8 +670,8 @@ export function cd150(): MeshBuilder {
   });
   m.scope("roof equipment", () => {
     m.scope("pantographs", () => {
-      m.scope("rear pantograph", () => pantograph(m, -4.25, -1, true));
-      m.scope("front pantograph", () => pantograph(m, 4.25, 1, false));
+      m.scope("rear pantograph", () => pantograph(m, -4.25, 1, true));
+      m.scope("front pantograph", () => pantograph(m, 4.25, -1, false));
     });
     m.scope("high voltage line", () => {
       for (const x of [-2.6, 2.6])

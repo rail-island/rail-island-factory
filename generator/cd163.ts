@@ -272,24 +272,27 @@ export function tubeX(m: MeshBuilder, mat: string, r: number, x0: number, y0: nu
   m.sweep(mat, "x", ngon(n, r, 0, z0, y0), x0, ngon(n, r, 0, z1, y1), x1);
 }
 
-/** A vertical coil spring: rings of alternating radius, `turns` of them, about (x, z). */
-function coil(m: MeshBuilder, mat: string, x: number, z: number, y0: number, y1: number, r: number, turns: number): void {
-  const h = (y1 - y0) / (2 * turns + 1);
-  for (let i = 0; i <= 2 * turns; i++) {
-    const rr = i % 2 === 0 ? r : r * 0.72;
-    m.prism(mat, ngon(10, rr, 0, x, z), y0 + i * h, y0 + (i + 1) * h);
+/**
+ * A vertical coil spring about (x, z): one n-gon tube whose radius swells and
+ * narrows `turns` times between y0 and y1, capped only on top (it stands on a seat).
+ */
+export function coil(m: MeshBuilder, mat: string, x: number, z: number, y0: number, y1: number, r: number, turns: number, n = 8): void {
+  const steps = 2 * turns + 1;
+  const ring = (i: number) => ngon(n, i % 2 === 0 ? r * 0.78 : r, Math.PI / n, x, z);
+  for (let i = 0; i < steps; i++) {
+    m.loft(mat, ring(i), y0 + ((y1 - y0) * i) / steps, ring(i + 1), y0 + ((y1 - y0) * (i + 1)) / steps, i === steps - 1);
   }
 }
 
 /** A post insulator standing on y0: a core with `sheds` discs and a steel cap. */
 function insulator(m: MeshBuilder, x: number, z: number, y0: number, y1: number, sheds: number): void {
-  m.prism("insulator", ngon(8, 0.04, 0, x, z), y0, y1 - 0.03);
+  m.prism("insulator", ngon(6, 0.04, 0, x, z), y0, y1 - 0.03);
   const span = y1 - y0 - 0.1;
   for (let i = 0; i < sheds; i++) {
     const y = y0 + 0.04 + (span * i) / Math.max(1, sheds - 1);
-    m.prism("insulator", ngon(10, 0.075, Math.PI / 10, x, z), y, y + 0.018);
+    m.prism("insulator", ngon(8, 0.075, Math.PI / 8, x, z), y, y + 0.018);
   }
-  m.prism("steel", ngon(8, 0.05, Math.PI / 8, x, z), y1 - 0.035, y1);
+  m.prism("steel", ngon(6, 0.05, Math.PI / 6, x, z), y1 - 0.035, y1);
 }
 
 // --- the body ---------------------------------------------------------------------
@@ -348,8 +351,8 @@ function body(m: MeshBuilder): void {
   m.scope("portholes", () => {
     for (const x of [-4.95, -3.45, 3.35, 4.85]) {
       for (const s of [1]) {
-        const rim = ngon(24, 0.375, 0, x, 2.85);
-        const pane = ngon(24, 0.35, 0, x, 2.85);
+        const rim = ngon(16, 0.375, 0, x, 2.85);
+        const pane = ngon(16, 0.35, 0, x, 2.85);
         const [r0, r1] = side(s, HW - 0.02, HW + 0.024);
         const [p0, p1] = side(s, HW - 0.005, HW + 0.036);
         m.sweep("rubber", "z", rim, r0, rim, r1);
@@ -363,9 +366,9 @@ function body(m: MeshBuilder): void {
     const wall = sideWall(-1);
     panel(m, "roof", wall, [[-5.80, 2.40], [5.70, 2.40], [5.70, 3.30], [-5.80, 3.30]], -0.018, 0.022);
     panel(m, "louvre", wall, [[-5.74, 2.46], [5.64, 2.46], [5.64, 3.24], [-5.74, 3.24]], 0.008, 0.029);
-    for (let i = 0; i < 88; i++) {
-      const x = -5.69 + i * 0.129;
-      panel(m, "slat", wall, [[x, 2.48], [x + 0.035, 2.48], [x + 0.035, 3.22], [x, 3.22]], 0.016, 0.043);
+    for (let i = 0; i < 33; i++) {
+      const x = -5.66 + i * 0.344;
+      panel(m, "slat", wall, [[x, 2.48], [x + 0.08, 2.48], [x + 0.08, 3.22], [x, 3.22]], 0.016, 0.043);
     }
     for (const x of [-3.95, -1.98, 0, 1.98, 3.95]) {
       block(m, "roof", x - 0.025, x + 0.025, 2.44, 3.26, ...side(-1, HW + 0.01, HW + 0.049));
@@ -387,7 +390,7 @@ function body(m: MeshBuilder): void {
           m.sweep(mat, "x", q, a, q, b);
         };
         onCant("louvre", 0.25, 0.75, x0, x1, -0.01, 0.012);
-        for (const t of [0.35, 0.55]) onCant("slat", t, t + 0.08, x0 + 0.04, x1 - 0.04, 0.005, 0.028);
+        onCant("slat", 0.42, 0.58, x0 + 0.04, x1 - 0.04, 0.005, 0.028);
       }
     }
   });
@@ -405,8 +408,8 @@ function body(m: MeshBuilder): void {
       const wall: Surface = { at: (u, v, d) => [u, y0 + (y1 - y0) * v + n[1] * d, z0 + (z1 - z0) * v + n[2] * d], n };
       for (const [x0, x1] of [[-2.12, -0.11], [0.01, 2.02]] as const) {
         panel(m, "louvre", wall, [[x0, 0.12], [x1, 0.12], [x1, 0.92], [x0, 0.92]], -0.01, 0.012);
-        for (let i = 0; i < 8; i++) {
-          const v = 0.17 + i * 0.095;
+        for (let i = 0; i < 6; i++) {
+          const v = 0.18 + i * 0.125;
           panel(m, "slat", wall, [[x0 + 0.03, v], [x1 - 0.03, v], [x1 - 0.03, v + 0.035], [x0 + 0.03, v + 0.035]], 0.004, 0.03);
         }
         // the frame's middle post
@@ -463,16 +466,16 @@ function cab(m: MeshBuilder, e: number): void {
     // the twin headlight in the green between the band and the windscreen
     panel(m, "rubber", screen, rrect(-0.30, 0.30, 2.40, 2.60, 0.040), -0.01, 0.05);
     for (const s of [-1, 1]) {
-      panel(m, "steel", screen, ngon(20, 0.09, 0, s * 0.11, 2.50), 0.035, 0.060);
-      panel(m, "lampHead", screen, ngon(20, 0.085, 0, s * 0.11, 2.50), 0.048, 0.070);
+      panel(m, "steel", screen, ngon(12, 0.09, 0, s * 0.11, 2.50), 0.035, 0.060);
+      panel(m, "lampHead", screen, ngon(12, 0.085, 0, s * 0.11, 2.50), 0.048, 0.070);
     }
     // a white and a red lamp low on each side, at the number plate's height
     for (const s of [-1, 1]) {
       for (const [z, mat] of [[s * 0.85, "lampHead"], [s * 1.25, "lampRed"]] as const) {
         // Both marker colours use the same housing and lens. Leave a green
         // margin below the band, and only a small gap above the buffer heads.
-        const rim = ngon(16, 0.15, 0, z, 1.50);
-        const lens = ngon(16, 0.100, 0, z, 1.50);
+        const rim = ngon(12, 0.15, 0, z, 1.50);
+        const lens = ngon(12, 0.100, 0, z, 1.50);
         panel(m, "rubber", front, rim, -0.01, 0.025);
         panel(m, mat, front, lens, 0.0, 0.037);
       }
@@ -571,8 +574,8 @@ function cab(m: MeshBuilder, e: number): void {
     block(m, "underframe", ...face(e, -0.12, 0.1), 0.8, Y_BOTTOM + 0.02, -1.32, 1.32);
     m.scope("buffers", () => {
       for (const z of [-0.875, 0.875]) {
-        const housing = ngon(12, 0.12, 0, z, 1.00);
-        const plunger = ngon(12, 0.085, 0, z, 1.00);
+        const housing = ngon(8, 0.12, Math.PI / 8, z, 1.00);
+        const plunger = ngon(8, 0.085, Math.PI / 8, z, 1.00);
         const [h0, h1] = face(e, 0.09, 0.32);
         const [p0, p1] = face(e, 0.31, 0.44);
         m.sweep("underframe", "x", housing, h0, housing, h1);
@@ -604,9 +607,9 @@ function cab(m: MeshBuilder, e: number): void {
   });
 
   m.scope("air reservoir", () => {
-    const tank = ngon(16, 0.25, 0, e * 7.0, 0.66);
+    const tank = ngon(10, 0.25, 0, e * 7.0, 0.66);
     m.sweep("steel", "z", tank, -1.15, tank, 1.15);
-    const strap = ngon(16, 0.262, 0, e * 7.0, 0.66);
+    const strap = ngon(10, 0.262, 0, e * 7.0, 0.66);
     for (const z of [-0.7, 0.7]) m.sweep("underframe", "z", strap, z - 0.03, strap, z + 0.03);
   });
 }
@@ -617,28 +620,26 @@ function bogie(m: MeshBuilder, xb: number): void {
   for (const dx of [-HALF_BASE, HALF_BASE]) {
     const ax = xb + dx;
     m.scope("wheelset", () => {
-      const axle = ngon(10, 0.085, 0, ax, AXLE_Y);
+      const axle = ngon(8, 0.085, 0, ax, AXLE_Y);
       m.sweep("steel", "z", axle, -1.0, axle, 1.0);
       for (const s of [-1, 1]) {
         const tread = ngon(WHEEL_N, WHEEL_R, Math.PI / WHEEL_N, ax, AXLE_Y);
-        const disc = ngon(20, 0.5, 0, ax, AXLE_Y);
-        const hub = ngon(12, 0.17, 0, ax, AXLE_Y);
-        const box = ngon(12, 0.16, Math.PI / 12, ax, AXLE_Y);
+        const disc = ngon(16, 0.5, 0, ax, AXLE_Y);
+        const box = ngon(8, 0.16, Math.PI / 8, ax, AXLE_Y);
         const sweepZ = (mat: string, ring: Ring, a: number, b: number) => {
           const [z0, z1] = side(s, a, b);
           m.sweep(mat, "z", ring, z0, ring, z1);
         };
         sweepZ("steel", tread, 0.665, 0.8);
         sweepZ("wheel", disc, 0.7, 0.812);
-        sweepZ("bogie", hub, 0.8, 0.86);
-        // the axle box outside the wheel, with its arms and primary springs
-        sweepZ("bogie", box, 0.85, 1.05);
+        // the axle box outside the wheel, from its hub, with its arms and primary springs
+        sweepZ("bogie", box, 0.79, 1.05);
         block(m, "bogie", ax - 0.2, ax + 0.2, AXLE_Y + 0.05, AXLE_Y + 0.2, ...side(s, 0.88, 1.03));
         block(m, "bogie", ax - 0.44, ax + 0.44, AXLE_Y - 0.1, AXLE_Y - 0.02, ...side(s, 0.9, 1.02));
-        for (const sx of [-0.34, 0.34]) coil(m, "spring", ax + sx, s * 0.96, AXLE_Y - 0.02, 0.86, 0.075, 3);
+        for (const sx of [-0.34, 0.34]) coil(m, "spring", ax + sx, s * 0.96, AXLE_Y - 0.02, 0.86, 0.075, 2, 6);
       }
       // the traction motor, hung toward the bogie's centre
-      const motor = ngon(14, 0.36, 0, ax - Math.sign(dx) * 0.62, 0.62);
+      const motor = ngon(12, 0.36, 0, ax - Math.sign(dx) * 0.62, 0.62);
       m.sweep("bogie", "z", motor, -0.5, motor, 0.5);
     });
   }
@@ -653,7 +654,7 @@ function bogie(m: MeshBuilder, xb: number): void {
   });
   m.scope("secondary suspension", () => {
     for (const s of [-1, 1]) {
-      for (const sx of [-0.3, 0.3]) coil(m, "spring", xb + sx, s * 1.2, 0.37, 0.97, 0.13, 6);
+      for (const sx of [-0.3, 0.3]) coil(m, "spring", xb + sx, s * 1.2, 0.37, 0.97, 0.13, 3);
       block(m, "underframe", xb - 0.55, xb + 0.55, 0.96, Y_BOTTOM + 0.02, ...side(s, 1.0, 1.42)); // the body's bracket
     }
   });
@@ -662,7 +663,7 @@ function bogie(m: MeshBuilder, xb: number): void {
       const x = xb + ox * 2.36;
       for (const s of [-1, 1]) {
         block(m, "bogie", x - 0.1, x + 0.1, 0.55, 0.92, ...side(s, 0.6, 0.9));
-        m.prism("underframe", ngon(6, 0.02, 0, x - ox * 0.06, s * 0.73), 0.1, 0.57);
+        m.prism("underframe", ngon(4, 0.02, Math.PI / 4, x - ox * 0.06, s * 0.73), 0.1, 0.57);
       }
     }
   });
@@ -671,9 +672,9 @@ function bogie(m: MeshBuilder, xb: number): void {
 function underframe(m: MeshBuilder): void {
   m.scope("air tanks", () => {
     for (const z of [-0.5, 0.5]) {
-      const tank = ngon(14, 0.21, 0, z, 0.7);
+      const tank = ngon(10, 0.21, 0, z, 0.7);
       m.sweep("steel", "x", tank, -1.5, tank, 1.5);
-      const strap = ngon(14, 0.222, 0, z, 0.7);
+      const strap = ngon(10, 0.222, 0, z, 0.7);
       for (const x of [-1.0, 1.0]) m.sweep("underframe", "x", strap, x - 0.03, strap, x + 0.03);
     }
   });
@@ -689,11 +690,15 @@ function underframe(m: MeshBuilder): void {
 
 // --- the roof equipment --------------------------------------------------------------
 
-/** A single-arm pantograph; h points to its hinge end, raised selects its working pose. */
+/**
+ * A single-arm pantograph; h points to its hinge end, raised selects its working pose.
+ * The hinges stand toward the middle of the locomotive and the knees point to the
+ * nearer cab end, as on the photographs.
+ */
 function pantograph(m: MeshBuilder, xc: number, h: number, raised: boolean): void {
   const y = PANTO_Y;
   m.scope("insulators", () => {
-    for (const dx of [-0.55, 0.55]) for (const z of [-0.48, 0.48]) insulator(m, xc + dx, z, Y_ROOF - 0.01, y, 3);
+    for (const dx of [-0.55, 0.55]) for (const z of [-0.48, 0.48]) insulator(m, xc + dx, z, Y_ROOF - 0.01, y, 2);
   });
   m.scope("base", () => {
     for (const z of [-0.48, 0.48]) block(m, "pantograph", xc - 0.7, xc + 0.7, y, y + 0.06, z - 0.03, z + 0.03);
@@ -751,14 +756,14 @@ function pantograph(m: MeshBuilder, xc: number, h: number, raised: boolean): voi
 
 function roofEquipment(m: MeshBuilder): void {
   m.scope("pantographs", () => {
-    for (const e of [-1, 1]) m.scope(e > 0 ? "front pantograph" : "rear pantograph", () => pantograph(m, e * PANTO_X, e, e < 0));
+    for (const e of [-1, 1]) m.scope(e > 0 ? "front pantograph" : "rear pantograph", () => pantograph(m, e * PANTO_X, -e, e < 0));
   });
   m.scope("high-voltage line", () => {
     // from pantograph to pantograph along one side of the roof, clear of the
     // folded arms, over the cooler box on post insulators
     const y = Y_COOLER + 0.19;
     const z = -0.62;
-    for (const x of [-2.9, 2.9]) insulator(m, x, z, Y_ROOF - 0.01, y - 0.02, 3);
+    for (const x of [-2.9, 2.9]) insulator(m, x, z, Y_ROOF - 0.01, y - 0.02, 2);
     for (const x of [-1.2, 1.2]) insulator(m, x, z, Y_COOLER - 0.01, y - 0.02, 2);
     for (const e of [-1, 1]) {
       tubeX(m, "copper", 0.022, e * 0.3, y, z, e * (PANTO_X - 0.62), y, z, 6);

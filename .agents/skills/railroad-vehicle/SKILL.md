@@ -15,9 +15,12 @@ documentation in English.
 
 ## Budget and model contract
 
-- At most **25,000 triangles per rail vehicle**, as enforced by the current
+- About **15,000 triangles per rail vehicle** at most, as enforced by the
   repository tests. There is no file-size budget. Spend detail on the silhouette,
-  cab, running gear and recognizable roof equipment.
+  cab, running gear and recognizable roof equipment; keep round parts as coarse
+  as their size allows (small lamps, tanks, axle boxes and pipes 6-12 sides,
+  wheels and portholes 16-24), build a coil spring as one lofted tube with a
+  top cap only (`coil` in `cd163.ts`), and drop faces hidden inside other parts.
 - Use deterministic, non-indexed triangle soups with flat normals stored per
   face. Every component belongs to a meaningful `m.scope(...)`.
 - Use stable `veh-` identifiers, never rename shipped models, and register the
@@ -112,7 +115,9 @@ and livery, note it in `SOURCES.md`, keep it in one constant (`CD150_NUMBER`,
 folded in its default displayed operating pose.** A specific user request for a
 parked, maintenance or other operating state overrides this default.
 
-1. Identify the source pantograph type and hinge orientation. Choose which end
+1. Identify the source pantograph type and hinge orientation from photographs.
+   On CD 150 and CD 163 the lower arm hinges toward the middle of the roof and
+   the knee points to the nearer cab end; test it in both poses. Choose which end
    is active from references or operating direction; state the choice. For CD
    163, the rear (-X) pantograph is raised and the front (+X) one is folded.
 2. Unfold the linkage around its pivots. Preserve arm lengths and joint

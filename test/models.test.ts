@@ -347,8 +347,9 @@ describe("the vehicles", () => {
       expect(Math.max(...fixed.map((n) => n.max![1]))).toBeLessThanOrEqual(4.7);
     }
     // the road-vehicle budget (.agents/skills/road-vehicle); a rail vehicle,
-    // much larger and seen closer along the track, gets 25k
-    expect(s.triangles).toBeLessThanOrEqual(rail ? 25_000 : 10_000);
+    // much larger and seen closer along the track, gets 15k
+    // (.agents/skills/railroad-vehicle)
+    expect(s.triangles).toBeLessThanOrEqual(rail ? 15_000 : 10_000);
     expect(faces(glb).length).toBe(s.triangles);
     const { json } = parseGlb(glb);
     // flat normals are stored, not left to the loader: a pipeline step that
@@ -408,7 +409,11 @@ describe("the vehicles", () => {
             return [x, ...[1, 2].map((axis) => (Math.min(...ring.map((p) => p[axis]!)) + Math.max(...ring.map((p) => p[axis]!))) / 2)];
           }).sort((a, b) => a[1]! - b[1]!);
           expect(Math.hypot(...centres[1]!.map((v, i) => v - centres[0]![i]!))).toBeCloseTo(length, 5);
-          if (arm === "lower") joints.push(centres[1]![1]!);
+          if (arm === "lower") {
+            joints.push(centres[1]![1]!);
+            // the hinge stands toward the middle, the knee points to the nearer cab end
+            expect(Math.abs(centres[1]![0]!)).toBeGreaterThan(Math.abs(centres[0]![0]!) + 0.3);
+          }
           else {
             expect(centres[0]![1]! - joints[0]!).toBeCloseTo(0.02, 5);
             expect(head.max![1] - centres[1]![1]!).toBeCloseTo(0.07, 4);
