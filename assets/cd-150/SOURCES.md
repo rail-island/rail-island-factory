@@ -64,7 +64,8 @@ than treating the painted boundary as an additional solid roof box.
   native yellow patches cannot establish lens colours or exact outlines.
 - Plates show the full running number `150 222-8`: a CD-era 150.2 unit with a
   valid check digit. The tiny native plate does not resolve digits, so the
-  serial is a representative choice, not read from the source. The shared CD
+  serial is a choice, not read from the source; 150 222 is a real unit in this
+  livery (`photo-150-222-front-three-quarter.jpg`). The shared CD
   outline approximates the native period badge.
 - The green side skirt drops to 0.6 m above rail between the bogies (source
   columns 74..95, rows 51..53 of both side BMPs), with sloped ends at columns
@@ -83,3 +84,24 @@ per-element residuals, generated views and the reproducible model hash.
 The source BMPs and XML are the evidence for this transfer. No independent
 photographic calibration was performed; unresolved raster details remain
 interpretations, not claims of photographic accuracy.
+
+## Photographs
+
+Downloaded from Wikimedia Commons for the model page's Images tab and visual
+checks; downscaled to at most 1600 px on the long side, otherwise unchanged.
+They were not used to re-fit the geometry, which stays calibrated to the native
+BMPs above. Licences require attribution (and share-alike for derivatives of
+the photographs themselves); the procedural model is not a derivative copy.
+
+- `photo-150-222-front-three-quarter.jpg` - "I10 333 Bf Zilina, 150 222.jpg" by Falk2, CC BY-SA 3.0,
+  https://commons.wikimedia.org/wiki/File%3AI10_333_Bf_%C5%BDilina%2C_150_222.jpg - 150 222 in the CD green/cream livery at Zilina, 2012 - the modelled unit: front mask, lamps, plate, emblem and skirt.
+- `photo-150-green-side-three-quarter.jpg` - "Electric locomotive class 150 of Ceske drahy.jpg" by Rainerhaufe, CC BY-SA 3.0,
+  https://commons.wikimedia.org/wiki/File%3AElectric_locomotive_class_150_of_%C4%8Cesk%C3%A9_dr%C3%A1hy.jpg - a class 150 in the green/cream livery, 2006 - side, cab door, band boundary and the green skirt lowered between the bogies.
+- `photo-150-209-front-depot.jpg` - "Lokomotivni depo Praha-Vrsovice, lokomotiva 150.209 (2).jpg" by Jan Polak, CC BY-SA 3.0,
+  https://commons.wikimedia.org/wiki/File%3ALokomotivn%C3%AD_depo_Praha-Vr%C5%A1ovice%2C_lokomotiva_150.209_%282%29.jpg - 150 209 lifted in Praha-Vrsovice depot, 2015 - straight front, green/cream mask, plate and emblem.
+- `photo-150-209-bogie.jpg` - "Lokomotivni depo Praha-Vrsovice, lokomotiva 150.209, podvozek (1).jpg" by Jan Polak, CC BY-SA 3.0,
+  https://commons.wikimedia.org/wiki/File%3ALokomotivn%C3%AD_depo_Praha-Vr%C5%A1ovice%2C_lokomotiva_150.209%2C_podvozek_%281%29.jpg - 150 209 bogie from below, 2015 - wheels, axle boxes, motor and suspension.
+- `photo-150-226-side.jpg` - "150 226-9 Bohumin.jpg" by Akjam-Sen, CC BY-SA 4.0,
+  https://commons.wikimedia.org/wiki/File%3A150_226-9_Bohumin.jpg - 150 226-9 at Bohumin, 2016 - near-orthogonal side (later blue livery, same body).
+- `photo-150-203-side.jpg` - "150 203 Chomutov.jpg" by Rainerhaufe, CC BY-SA 4.0,
+  https://commons.wikimedia.org/wiki/File%3A150_203_Chomutov.jpg - 150 203 at Chomutov, 2018 - side with the lowered skirt and roof equipment (later blue livery).
