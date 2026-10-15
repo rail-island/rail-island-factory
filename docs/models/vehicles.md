@@ -165,7 +165,8 @@ and rake, both cab setbacks and the upright skirt, the actual GLB surface
 distances of lower fittings, door/window alignment, equal marker sizes and
 clearances to the band, plate and buffers, snow-plough height and lean, buffer
 head sizes, upright
-badge proportions, and the different machine-room sides, alongside the overall
+badge proportions, the different machine-room sides and the intake shutters'
+regular grid (equal bays, evenly pitched slats, none crowding a post), alongside the overall
 dimensions, axle positions, triangle budget and coplanar-overlap checks.
 
 **The ids are stored in the game's saved maps**: never rename one that has

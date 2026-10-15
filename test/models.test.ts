@@ -586,6 +586,27 @@ describe("the vehicles", () => {
     expect(intake.min![1]).toBeGreaterThan(2.30); // clear of the livery band
   });
 
+  it("spaces the CD 163 intake shutter slats evenly, none crowding a frame post", () => {
+    const leaves = walk(designTree("veh-cd-163").root).filter((n): n is LeafNode => isLeaf(n) && n.id.startsWith("body/machine-room-intake/"));
+    const centre = (n: LeafNode) => (n.min![0] + n.max![0]) / 2;
+    const slats = leaves.filter((n) => n.material === "slat").map(centre).sort((a, b) => a - b);
+    const posts = leaves.filter((n) => n.material === "roof" && n.max![0] - n.min![0] < 0.1).map(centre).sort((a, b) => a - b);
+    expect(posts.length).toBeGreaterThan(2);
+    // equal bays between the posts
+    const bays = posts.slice(1).map((x, i) => x - posts[i]!);
+    for (const b of bays) expect(b).toBeCloseTo(bays[0]!, 2); // extents are stored to the millimetre
+    // within a bay the slats share one pitch, and the gap from a slat to a
+    // post is half that pitch, so no narrow sliver opens beside a post
+    const pitch = bays[0]! / (slats.filter((x) => x > posts[0]! && x < posts[1]!).length);
+    for (const x of slats) {
+      const nearest = Math.min(...posts.map((p) => Math.abs(p - x)));
+      expect(nearest).toBeGreaterThan(pitch / 2 - 0.005);
+    }
+    for (let i = 1; i < slats.length; i++) {
+      expect(slats[i]! - slats[i - 1]!).toBeCloseTo(pitch, 2);
+    }
+  });
+
   it("matches native CD 163 bitmap landmarks in orthographic projection", () => {
     // Original 30x60 / 170x60 BMP annotations, independent of generator values.
     // One native pixel is 0.10 m. Wider tolerances cover ambiguous buffer and

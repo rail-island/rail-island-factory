@@ -366,11 +366,18 @@ function body(m: MeshBuilder): void {
     const wall = sideWall(-1);
     panel(m, "roof", wall, [[-5.80, 2.40], [5.70, 2.40], [5.70, 3.30], [-5.80, 3.30]], -0.018, 0.022);
     panel(m, "louvre", wall, [[-5.74, 2.46], [5.64, 2.46], [5.64, 3.24], [-5.74, 3.24]], 0.008, 0.029);
-    for (let i = 0; i < 33; i++) {
-      const x = -5.66 + i * 0.344;
-      panel(m, "slat", wall, [[x, 2.48], [x + 0.08, 2.48], [x + 0.08, 3.22], [x, 3.22]], 0.016, 0.043);
+    // Six equal bays between evenly spaced posts, five evenly spaced slats in
+    // each, so the grid reads regular: no slat crowds a post.
+    const [x0, x1, bays, slats] = [-5.74, 5.64, 6, 5];
+    const bay = (x1 - x0) / bays;
+    for (let k = 0; k < bays; k++) {
+      for (let i = 0; i < slats; i++) {
+        const x = x0 + k * bay + (bay * (i + 0.5)) / slats - 0.04;
+        panel(m, "slat", wall, [[x, 2.48], [x + 0.08, 2.48], [x + 0.08, 3.22], [x, 3.22]], 0.016, 0.043);
+      }
     }
-    for (const x of [-3.95, -1.98, 0, 1.98, 3.95]) {
+    for (let k = 1; k < bays; k++) {
+      const x = x0 + k * bay;
       block(m, "roof", x - 0.025, x + 0.025, 2.44, 3.26, ...side(-1, HW + 0.01, HW + 0.049));
     }
   });
