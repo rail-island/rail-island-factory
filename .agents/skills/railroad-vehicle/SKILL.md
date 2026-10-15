@@ -15,8 +15,9 @@ documentation in English.
 
 ## Budget and model contract
 
-- About **15,000 triangles per rail vehicle** at most, as enforced by the
-  repository tests. There is no file-size budget. Spend detail on the silhouette,
+- Aim at about **15,000 triangles per rail vehicle**. A small overflow is fine
+  when it keeps a detail that matters (the tests cap it at 16,000); do not
+  thin out a fine, visible pattern such as shutter slats just to get under 15k. There is no file-size budget. Spend detail on the silhouette,
   cab, running gear and recognizable roof equipment; keep round parts as coarse
   as their size allows (small lamps, tanks, axle boxes and pipes 6-12 sides,
   wheels and portholes 16-24), build a coil spring as one lofted tube with a
