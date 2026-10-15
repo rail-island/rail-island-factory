@@ -117,3 +117,21 @@ the photographs themselves); the procedural model is not a derivative copy.
   https://commons.wikimedia.org/wiki/File%3A150_226-9_Bohumin.jpg - 150 226-9 at Bohumin, 2016 - near-orthogonal side (later blue livery, same body).
 - `photo-150-203-side.jpg` - "150 203 Chomutov.jpg" by Rainerhaufe, CC BY-SA 4.0,
   https://commons.wikimedia.org/wiki/File%3A150_203_Chomutov.jpg - 150 203 at Chomutov, 2018 - side with the lowered skirt and roof equipment (later blue livery).
+
+## Liveries (`livery` parameter)
+
+The other liveries of this design are read from their vlakosimdb side BMPs,
+kept unchanged under `native/liveries/<model>/` (`x_both.bmp`, `z_dec.bmp`,
+`z_inc.bmp`, from `janproch/vlakosimdb` commit
+`b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f`, `db/train/loco/electric/<model>/model/`).
+See docs/models/loco-liveries.md for the reading and the deviations.
+
+| model | author (vlakosimdb) | running number |
+|---|---|---|
+| `cd_151` | Vojtech Vohlidka | 151 012 - illustrative |
+| `cd_151_cez` | Vojtech Vohlidka | 151 019 - illustrative |
+| `zsr_350` | Jan Prochazka | 350 016 - illustrative |
+| `zsr_350_001` | Vojtech Vohlidka | 350 001 - the model's name |
+| `zsr_350_002` | Vojtech Vohlidka | 350 002 - the model's name |
+| `zsr_350_003` | Vojtech Vohlidka | 350 003 - the model's name |
+| `zsr_350_004` | Vojtech Vohlidka | 350 004 - the model's name |
