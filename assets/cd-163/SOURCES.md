@@ -45,3 +45,10 @@ factory uses these setbacks at its existing 2.38 m band top and 3.76 m eave,
 with a 1.20 m apron; these are not claims of an exact engineering drawing.
 The lower lamps and markings must follow the lower face rather than floating
 in front of it, while the buffer heads stay vertical.
+
+The front-mask spacing was also checked against `x_both.bmp` and its 4x
+version: each windscreen spans about 40% of the body width, the number-plate
+surround about 31%, and the twin upper headlight is narrower than half that
+surround. The front panes are 1.18 by 0.80 m, the plate surround 0.92 by
+0.22 m. Equal red/white marker housings leave a 0.25 m lateral gap to the
+plate and sit fully below the band. The two cab slopes remain unchanged.

@@ -64,7 +64,7 @@ const NUMBER = "163 244-7";
 const HALF = 7.9; // the projecting nose at the yellow band's upper edge; buffers reach 8.40
 const RAKE = 0.20; // upper setback, from the vlakosimdb side profile
 const LOWER_RAKE = 0.10; // lower setback to the apron above the buffer beam
-const CH = 0.22; // the cab ends' corner chamfer, in plan
+const CH = 0.12; // the cab ends' corner chamfer, in plan
 const HW = 1.47; // half the body's width (2.94 m)
 
 const Y_BOTTOM = 1.03; // the body's lower edge
@@ -434,32 +434,33 @@ function cab(m: MeshBuilder, e: number): void {
 
   m.scope("windscreen", () => {
     for (const s of [-1, 1]) {
-      const [f0, f1] = side(s, 0.055, 1.235);
-      const [g0, g1] = side(s, 0.078, 1.212);
-      const [z0, z1] = side(s, 0.105, 1.185);
-      panel(m, "yellow", screen, rrect(f0, f1, 2.64, 3.65, 0.095), -0.01, 0.015);
-      panel(m, "rubber", screen, rrect(g0, g1, 2.663, 3.627, 0.08), 0.006, 0.023);
-      panel(m, "glass", screen, rrect(z0, z1, 2.69, 3.60, 0.065), 0.012, 0.03);
+      const [f0, f1] = side(s, 0.055, 1.335);
+      const [g0, g1] = side(s, 0.078, 1.312);
+      const [z0, z1] = side(s, 0.105, 1.285);
+      panel(m, "yellow", screen, rrect(f0, f1, 2.71, 3.61, 0.095), -0.01, 0.015);
+      panel(m, "rubber", screen, rrect(g0, g1, 2.733, 3.587, 0.08), 0.006, 0.023);
+      panel(m, "glass", screen, rrect(z0, z1, 2.76, 3.56, 0.065), 0.012, 0.03);
       // Bottom-mounted wipers: spindle, arm and separate blade.
-      panel(m, "rubber", screen, bar(s * 0.42, 2.55, s * 0.62, 3.18, 0.018), 0.035, 0.046);
+      panel(m, "rubber", screen, bar(s * 0.42, 2.65, s * 0.62, 3.18, 0.018), 0.035, 0.046);
       panel(m, "rubber", screen, bar(s * 0.38, 2.94, s * 0.96, 3.41, 0.026), 0.035, 0.049);
-      panel(m, "steel", screen, bar(s * 0.46, 2.52, s * 1.10, 2.52, 0.022), 0.02, 0.037);
+      panel(m, "steel", screen, bar(s * 0.46, 2.65, s * 1.20, 2.65, 0.022), 0.02, 0.037);
     }
   });
 
   m.scope("lamps", () => {
     // the twin headlight in the green between the band and the windscreen
-    panel(m, "rubber", screen, rrect(-0.27, 0.27, 2.385, 2.595, 0.045), -0.01, 0.05);
+    panel(m, "rubber", screen, rrect(-0.22, 0.22, 2.43, 2.64, 0.045), -0.01, 0.05);
     for (const s of [-1, 1]) {
-      panel(m, "steel", screen, ngon(20, 0.105, 0, s * 0.122, 2.49), 0.035, 0.060);
-      panel(m, "lampHead", screen, ngon(20, 0.086, 0, s * 0.122, 2.49), 0.048, 0.070);
+      panel(m, "steel", screen, ngon(20, 0.09, 0, s * 0.10, 2.535), 0.035, 0.060);
+      panel(m, "lampHead", screen, ngon(20, 0.073, 0, s * 0.10, 2.535), 0.048, 0.070);
     }
     // a white and a red lamp low on each side, at the number plate's height
     for (const s of [-1, 1]) {
-      for (const [z, mat] of [[s * 0.77, "lampHead"], [s * 1.05, "lampRed"]] as const) {
-        const big = mat === "lampHead";
-        const rim = ngon(16, big ? 0.15 : 0.135, 0, z, 1.66);
-        const lens = ngon(16, big ? 0.118 : 0.103, 0, z, 1.66);
+      for (const [z, mat] of [[s * 0.86, "lampHead"], [s * 1.18, "lampRed"]] as const) {
+        // Both marker colours use the same housing and lens. Leave a green
+        // margin below the band, and only a small gap above the buffer heads.
+        const rim = ngon(16, 0.15, 0, z, 1.49);
+        const lens = ngon(16, 0.118, 0, z, 1.49);
         panel(m, "rubber", front, rim, -0.01, 0.025);
         panel(m, mat, front, lens, 0.0, 0.037);
       }
@@ -475,10 +476,10 @@ function cab(m: MeshBuilder, e: number): void {
 
   m.scope("front markings", () => {
     m.scope("number plate", () => {
-      panel(m, "steel", front, rrect(-0.53, 0.53, 1.52, 1.80, 0.018), -0.016, 0.014);
-      panel(m, "plate", front, rrect(-0.51, 0.51, 1.54, 1.78, 0.01), 0.006, 0.024);
-      const w = letteringWidth(NUMBER, 0.072, 0.027);
-      decal(m, "white", front, lettering(NUMBER, flip ? w / 2 : -w / 2, 1.575, 0.17, 0.072, 0.027, flip), 0.028);
+      panel(m, "steel", front, rrect(-0.46, 0.46, 1.38, 1.60, 0.018), -0.016, 0.014);
+      panel(m, "plate", front, rrect(-0.44, 0.44, 1.395, 1.585, 0.01), 0.006, 0.024);
+      const w = letteringWidth(NUMBER, 0.062, 0.022);
+      decal(m, "white", front, lettering(NUMBER, flip ? w / 2 : -w / 2, 1.415, 0.15, 0.062, 0.022, flip), 0.028);
     });
     m.scope("emblem", () => {
       const h = 0.43;
@@ -580,12 +581,13 @@ function cab(m: MeshBuilder, e: number): void {
   });
 
   m.scope("track clearers", () => {
-    // a broad yellow plate ahead of each rail, its foot swept forward, on a bracket under the buffer beam
-    const q: Ring = [[e * 7.86, 0.13], [e * 7.9, 0.13], [e * 7.875, 0.64], [e * 7.835, 0.64]];
+    // Low snow ploughs: the cutting edge leads the top by 170 mm, giving
+    // a visible rearward lean of about 24 degrees from vertical.
+    const q: Ring = [[e * 7.95, 0.10], [e * 7.99, 0.10], [e * 7.82, 0.49], [e * 7.78, 0.49]];
     for (const s of [-1, 1]) {
       const [z0, z1] = side(s, 0.20, 1.25);
       m.sweep("yellow", "z", q, z0, q, z1);
-      block(m, "underframe", ...face(e, -0.1, -0.04), 0.5, 0.82, ...side(s, 0.68, 0.78));
+      block(m, "underframe", ...face(e, -0.1, -0.04), 0.46, 0.82, ...side(s, 0.68, 0.78));
     }
   });
 

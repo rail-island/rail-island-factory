@@ -43,16 +43,26 @@ that apron the chassis skirt is upright. These two horizontal setbacks come
 from the original vlakosimdb `alongz/base` profile (see the reference notes),
 adapted to the factory model's band and roof heights. Each colour band is
 lofted between sections of this same profile; the yellow band also slopes.
-Each front glass is approximately 1.08 m wide and 0.91 m high, inside a thin
-metal surround and a separate rubber gasket. Side cab windows have a sloping
-leading edge so their upper corners stay on the flat wall behind the chamfer;
+Each front glass is approximately 1.18 m wide and 0.80 m high, inside a thin
+metal surround and a separate rubber gasket. The 120 mm corner chamfers leave
+room for the front frames to extend to 1.335 m either side of the centreline,
+so the windows read as wide rectangles close to the cab edges. Side cab windows
+have a sloping leading edge so their upper corners stay on the flat wall behind the chamfer;
 the narrow door glazing aligns with them. Bottom-mounted wipers and front
 handrails stand proud of the shell.
 
-The lower white marker lenses are 236 mm across; the upper twin light sits in
-its own housing below the windscreens. Buffer heads are rounded 550 by 420 mm
-plates at the standard 1,750 mm spacing, with separate housings and plungers;
-the locomotive stays 16.80 m long. Broad track clearers sit behind them.
+Both red and white lower marker lenses are 236 mm across, in identical 300 mm
+housings centred at 1.49 m above rail. Their centres sit 0.86 and 1.18 m either
+side of the centreline, leaving 250 mm between the number plate and the inner
+housing, and 20 mm between adjacent housings. The lamp housings leave about
+65 mm above the buffer heads and stay wholly below the yellow band. The number
+plate is lowered with the lamps and reduced to a 920 by 220 mm surround,
+matching the proportions in `x_both`. The upper twin light sits in a 440 mm
+wide housing above the band and below the windscreens, with at least 40 mm
+clearance from the band. Buffer heads are rounded 550 by 420 mm plates at the standard 1,750 mm spacing, with separate housings and plungers;
+the locomotive stays 16.80 m long. Broad snow ploughs sit behind them, spanning
+0.10 to 0.49 m above rail. Their cutting edges project 170 mm ahead of their
+tops, a rearward lean of approximately 24 degrees from vertical.
 Horizontal corrugations use approximately 145 mm pitch. Four 610 mm porthole
 glass panes occupy the +Z machine-room side, while the -Z side has framed
 vertical intake shutters, following the two vlakosimdb side elevations.
@@ -72,7 +82,9 @@ Coil springs and insulators are stacks of rings of alternating radius.
 
 Regression checks in `test/models.test.ts` cover the cab glazing aspect ratio
 and rake, both cab setbacks and the upright skirt, the actual GLB surface
-distances of lower fittings, door/window alignment, marker lens and buffer head sizes, upright
+distances of lower fittings, door/window alignment, equal marker sizes and
+clearances to the band, plate and buffers, snow-plough height and lean, buffer
+head sizes, upright
 badge proportions, and the different machine-room sides, alongside the overall
 dimensions, axle positions, triangle budget and coplanar-overlap checks.
 

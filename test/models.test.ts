@@ -373,7 +373,7 @@ describe("the vehicles", () => {
     expect(axles).toEqual([-5.75, -2.55, 2.55, 5.75]);
   });
 
-  it("keeps the CD 163 cab glazing tall and the nose raked like the photo references", () => {
+  it("keeps the CD 163 windscreens wide, near the cab edges, and raked", () => {
     const nodes = walk(designTree("veh-cd-163").root);
     for (const cab of ["front-cab", "rear-cab"]) {
       const panes = nodes.filter((n): n is LeafNode => isLeaf(n) && n.id.startsWith(`${cab}/windscreen/`) && n.material === "glass");
@@ -381,13 +381,17 @@ describe("the vehicles", () => {
       for (const pane of panes) {
         const height = pane.max![1] - pane.min![1];
         const width = pane.max![2] - pane.min![2];
-        // Photo proportions, not just overall loading gauge: the old squat
-        // panes were only 0.70 m high and almost twice as wide as high.
-        expect(height).toBeGreaterThan(0.9);
-        expect(width / height).toBeGreaterThan(1.0);
-        expect(width / height).toBeLessThan(1.3);
+        // Wide rectangles near the outer cab edges, rather than near-square
+        // panes surrounded by a broad green border.
+        expect(height).toBeGreaterThan(0.75);
+        expect(height).toBeLessThan(0.85);
+        expect(width / height).toBeGreaterThan(1.4);
+        expect(width / height).toBeLessThan(1.6);
+        const outer = Math.max(Math.abs(pane.min![2]), Math.abs(pane.max![2]));
+        expect(outer).toBeGreaterThan(1.26);
+        expect(outer).toBeLessThan(1.31);
         // The reference upper profile recedes 0.20 m over the whole cab.
-        expect(pane.max![0] - pane.min![0]).toBeGreaterThan(0.12);
+        expect(pane.max![0] - pane.min![0]).toBeGreaterThan(0.11);
         expect(pane.max![0] - pane.min![0]).toBeLessThan(0.20);
       }
       for (const side of ["left-side", "right-side"]) {
@@ -458,6 +462,61 @@ describe("the vehicles", () => {
       expect(aspect).toBeLessThan(1.35);
       expect(badge.min![1]).toBeGreaterThan(1.8);
       expect(badge.max![1]).toBeLessThan(2.38); // contained in the yellow band
+    }
+  });
+
+  it("keeps equal marker lamps clear of the yellow band and close above the buffers, with low tilted ploughs", () => {
+    const nodes = walk(designTree("veh-cd-163").root);
+    const { json, bin } = parseGlb(designGlb("veh-cd-163"));
+    const yellow = collectTriangles(json, bin).filter((t) => t.material === "yellow");
+    for (const cab of ["front-cab", "rear-cab"]) {
+      const lamps = nodes.filter((n): n is LeafNode => isLeaf(n) && n.id.startsWith(`${cab}/lamps/`));
+      const markers = lamps.filter((n) => ["lampHead", "lampRed"].includes(n.material) && n.max![1] < 2);
+      expect(markers).toHaveLength(4);
+      expect(markers.filter((n) => n.material === "lampRed")).toHaveLength(2);
+      for (const lens of markers) {
+        expect(lens.max![2] - lens.min![2]).toBeCloseTo(0.236, 3);
+        expect(lens.max![1] - lens.min![1]).toBeCloseTo(markers[0]!.max![1] - markers[0]!.min![1], 3);
+      }
+      const buffers = nodes.find((n) => n.id === `${cab}/buffer-beam/buffers`)!;
+      const numberPlate = nodes.find((n) => n.id === `${cab}/front-markings/number-plate`)!;
+      expect(numberPlate.max![2] - numberPlate.min![2]).toBeLessThan(0.95);
+      expect(numberPlate.max![1] - numberPlate.min![1]).toBeLessThan(0.24);
+      const upperHousing = lamps.find((n) => n.material === "rubber" && n.min![1] > 2)!;
+      expect(upperHousing.max![2] - upperHousing.min![2]).toBeLessThan(0.46);
+      const rims = lamps.filter((n) => n.material === "rubber" && n.max![1] < 2);
+      for (const side of [-1, 1]) {
+        const onSide = rims.filter((n) => side * (n.min![2] + n.max![2]) > 0)
+          .sort((a, b) => Math.abs(a.min![2] + a.max![2]) - Math.abs(b.min![2] + b.max![2]));
+        expect(onSide).toHaveLength(2);
+        const inner = onSide[0]!, outer = onSide[1]!;
+        const innerEdge = Math.min(Math.abs(inner.min![2]), Math.abs(inner.max![2]));
+        expect(innerEdge - Math.max(Math.abs(numberPlate.min![2]), Math.abs(numberPlate.max![2]))).toBeGreaterThan(0.24);
+        const separation = Math.min(Math.abs(outer.min![2]), Math.abs(outer.max![2])) - Math.max(Math.abs(inner.min![2]), Math.abs(inner.max![2]));
+        expect(separation).toBeGreaterThan(0.015);
+      }
+      for (const lamp of lamps) {
+        if (lamp.max![1] < 2) {
+          expect(lamp.max![1]).toBeLessThan(1.78 - 0.10);
+          if (lamp.material === "rubber") {
+            const gap = lamp.min![1] - buffers.max![1];
+            expect(gap).toBeGreaterThan(0.04);
+            expect(gap).toBeLessThan(0.10);
+          }
+        } else {
+          expect(lamp.min![1]).toBeGreaterThan(2.38 + 0.04);
+        }
+      }
+      const plates = nodes.filter((n): n is LeafNode => isLeaf(n) && n.id.startsWith(`${cab}/track-clearers/`) && n.material === "yellow");
+      expect(plates).toHaveLength(2);
+      for (const plate of plates) {
+        expect(plate.min![1]).toBeCloseTo(0.10, 3);
+        expect(plate.max![1]).toBeCloseTo(0.49, 3);
+        const vertices = yellow.slice(plate.tri[0], plate.tri[0] + plate.tri[1]).flatMap((t) => t.p);
+        const e = cab === "front-cab" ? 1 : -1;
+        const reach = (y: number) => Math.max(...vertices.filter((p) => Math.abs(p[1] - y) < 1e-5).map((p) => e * p[0]));
+        expect(reach(0.10) - reach(0.49)).toBeCloseTo(0.17, 4);
+      }
     }
   });
 
