@@ -6,7 +6,7 @@
 // outside observer, as the BMP is). End canvases are seen from outside: the rear
 // (-X) end u = 10 * (z + 1.5), the front (+X) end u = 10 * (1.5 - z).
 import fs from "node:fs";
-import { CSD_COACHES } from "./csdCoaches.ts";
+import { CSD_TRANSFERS, transferBuild, type CsdTransfer } from "./csdCoaches.ts";
 import { collectTriangles, parseGlb } from "./glbTriangles.ts";
 import { isLeaf, type LeafNode, type TreeNode } from "./sourceTree.ts";
 
@@ -39,15 +39,27 @@ export function bmpSize(file: URL): [number, number] {
   return [b.readInt32LE(18), Math.abs(b.readInt32LE(22))];
 }
 
-export function readLandmarks(folder: string): CoachLandmark[] {
-  return (JSON.parse(fs.readFileSync(new URL(`assets/${folder}/native/landmarks.json`, ROOT), "utf8")) as { annotations: CoachLandmark[] }).annotations;
+/** A transfer by its vlakosimdb key ("csd_a"). */
+export function transfer(key: string): CsdTransfer {
+  const t = CSD_TRANSFERS.find((c) => c.key === key);
+  if (!t) throw new Error(`no CSD transfer ${key}`);
+  return t;
 }
 
-/** The comparison rows of one coach (its folder name, e.g. "csd-a"). */
-export function coachComparison(folder: string): CoachComparisonRow[] {
-  const coach = CSD_COACHES.find((c) => c.folder === folder);
-  if (!coach) throw new Error(`no CSD coach ${folder}`);
-  const mesh = coach.build();
+/** A file of a transfer's native folder, e.g. "landmarks.json". */
+export function nativeFile(t: CsdTransfer, name: string): URL {
+  return new URL(`assets/${t.folder}/${t.native}/${name}`, ROOT);
+}
+
+export function readLandmarks(key: string): CoachLandmark[] {
+  return (JSON.parse(fs.readFileSync(nativeFile(transfer(key), "landmarks.json"), "utf8")) as { annotations: CoachLandmark[] }).annotations;
+}
+
+/** The comparison rows of one transferred vehicle (its vlakosimdb key, e.g. "csd_a"). */
+export function coachComparison(key: string): CoachComparisonRow[] {
+  const coach = transfer(key);
+  const folder = key;
+  const mesh = transferBuild(coach);
   const leaves: LeafNode[] = [];
   const walk = (n: TreeNode): void => {
     if (isLeaf(n)) leaves.push(n);
@@ -64,10 +76,10 @@ export function coachComparison(folder: string): CoachComparisonRow[] {
   }
   const sizes = new Map<string, [number, number]>();
   const size = (view: string) => {
-    if (!sizes.has(view)) sizes.set(view, bmpSize(new URL(`assets/${folder}/native/${view}.bmp`, ROOT)));
+    if (!sizes.has(view)) sizes.set(view, bmpSize(nativeFile(coach, `${view}.bmp`)));
     return sizes.get(view)!;
   };
-  return readLandmarks(folder).map((row) => {
+  return readLandmarks(key).map((row) => {
     const nodes = leaves.filter((n) => row.nodes.some((id) => n.id === id || n.id.startsWith(id + "/")));
     if (!nodes.length) throw new Error(`${folder}: missing landmark ${row.id}: ${row.nodes.join(", ")}`);
     const points = nodes.flatMap((n) => byMaterial.get(n.material)!.slice(n.tri[0], n.tri[0] + n.tri[1])).flatMap((t) => t.p);

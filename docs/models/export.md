@@ -90,6 +90,11 @@ building import reading `skyscrapers.meta.json` therefore never sees a truck.
 Nothing reads this file yet either; the game's vehicle import will decide its
 final fields.
 
+A **parametric** model's entry also carries `params`: its enum parameters as
+`{ name, title, values: [{ value, title }], default }`. Its GLB and thumbnail
+are the default build; the JS model builds the other combinations
+([parameters.md](parameters.md)). A fixed model's entry has no `params` key.
+
 ## `catalog.json` (the site's data)
 
 `{ version: 1, records: CatalogRecord[] }`, one record per design - the

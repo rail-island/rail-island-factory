@@ -54,7 +54,8 @@ body {
 
 .factory-btn,
 .factory-dir,
-.factory-sortctl select {
+.factory-sortctl select,
+.factory-param select {
   min-height: 44px;
   min-width: 44px;
   padding: 8px 10px;
@@ -142,6 +143,7 @@ body {
 
 .factory-search:focus,
 .factory-sortctl select:focus,
+.factory-param select:focus,
 .factory-dir:focus-visible,
 .factory-btn:focus-visible {
   outline: none;
@@ -387,6 +389,40 @@ body {
   margin: 12px 0;
   border-radius: var(--m-radius-sm);
   background: rgb(30, 30, 35);
+}
+
+.factory-params {
+  border: 1px solid var(--m-outline);
+  border-radius: var(--m-radius-sm);
+  padding: 8px 12px 10px;
+  margin: 0 0 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.factory-params legend {
+  padding: 0 4px;
+  color: var(--m-on-surface-variant);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.factory-param {
+  display: grid;
+  grid-template-columns: minmax(0, 7rem) minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.factory-param select {
+  min-width: 0;
+  background: var(--m-surface);
+}
+
+.factory-params__note {
+  margin: 0;
+  font-size: 0.85rem;
 }
 
 .factory-specs {

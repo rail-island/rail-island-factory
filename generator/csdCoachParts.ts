@@ -8,6 +8,7 @@ import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "./meshBuilder.t
 import type { Vec3 } from "./meshCore.ts";
 import { block, side } from "./vehicleParts.ts";
 import { lettering, letteringWidth } from "./cd163.ts";
+import { strokeText, strokeWidth } from "./strokeFont.ts";
 
 export type Pt = [number, number];
 
@@ -276,13 +277,40 @@ export class Coach {
     for (const y of [y0 + 0.02, y1 - 0.04]) block(m, "steel", this.X(x) - 0.014, this.X(x) + 0.014, y, y + 0.02, ...side(s, hw - 0.01, hw + 0.032));
   }
 
-  /** A door: a dark seam over the box and the leaf, in `paint`, just inside it. */
+  /**
+   * A door: a dark seam over the box and the leaf just inside it, in `paint`, or
+   * with `paint` "bands" in the body's own paint bands (a cream-over-red door).
+   */
   door(v: Volume, s: number, b: Box, paint: string, opts: { end?: boolean; seam?: number } = {}): void {
     const sw = opts.seam ?? 0.025;
     const draw = (mat: string, bb: Box, proud: number, depth = 0.04) =>
       opts.end ? this.endPanel(v, mat, s, bb, proud, depth) : this.sidePanel(v, mat, s, bb, proud, depth);
     this.m.scope("outline", () => draw("seam", b, 0.006));
-    this.m.scope("leaf", () => draw(paint, { x0: b.x0 + sw, y0: b.y0 + sw, x1: b.x1 - sw, y1: b.y1 - sw }, 0.01, 0.003));
+    const leaf = { x0: b.x0 + sw, y0: b.y0 + sw, x1: b.x1 - sw, y1: b.y1 - sw };
+    this.m.scope("leaf", () => {
+      if (paint !== "bands") draw(paint, leaf, 0.01, 0.003);
+      else
+        for (const [y0, y1, mat] of v.bands) {
+          const [a, c] = [Math.max(y0, leaf.y0), Math.min(y1, leaf.y1)];
+          if (c - a > 1e-6) draw(mat, { ...leaf, y0: a, y1: c }, 0.01, 0.003);
+        }
+    });
+  }
+
+  /**
+   * Painted lettering on side s: each line centred at source x, its foot at y,
+   * h tall, reading left to right from outside on both sides.
+   */
+  inscription(v: Volume, s: number, x: number, lines: Array<{ text: string; y: number; h: number }>, proud = 0.006): void {
+    const hw0 = halfWidth(v);
+    for (const line of lines) {
+      const w = line.h * 0.58;
+      const gap = line.h * 0.16;
+      const width = strokeWidth(line.text, w, gap);
+      const z = s * ((sectionHalf(v.section, line.y + line.h / 2) * lerp(v.plan, x)) / hw0 + proud);
+      const u0 = this.X(x) + (s > 0 ? -width / 2 : width / 2);
+      this.m.facets("marking", strokeText(line.text, u0, line.y, line.h, w, gap, s < 0).map(([u, vv]): Vec3 => [u, vv, z]), [0, 0, s]);
+    }
   }
 
   /** Class numerals ("1", "2") on side s, centred at source x, its foot at y. */

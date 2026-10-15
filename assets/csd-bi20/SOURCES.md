@@ -2,7 +2,7 @@
 
 **Covers** - provenance, coordinate conversion and reconstruction choices.
 **Code** - `generator/csdCoaches.ts`, `generator/csdCoachParts.ts`, `native/landmarks.json`.
-**See also** - [comparison](COMPARISON.md), [CSD coaches](../../docs/models/csd-coaches.md).
+**See also** - [comparison](COMPARISON.md), [photos](PHOTOS.md), [CSD coaches](../../docs/models/csd-coaches.md).
 
 ## Original evidence
 
@@ -21,6 +21,14 @@ Source `(x, y, z)` is Factory `(x - centre, y, z)`, metres, with `centre` the mi
 - Volumes: compartments x 1.1..11.5 (2.8 m wide, 0.8..3.3 m), a roof over 0.3..12.3 (3.0 m wide, to 3.8 m), platforms 0.3..1.1 and 11.5..12.3. The XML roof crown is asymmetric (-0.4 / +0.5 m); the model centres it at +/-0.45 m.
 - Six compartment doors from column 16 at a 17-pixel pitch with brass-framed drop windows; class numerals "2" on the end doors. Platform railings from the XML `gear` shape.
 - Author Jan Prochazka (vehicle.xml). The XML has no buffers; the model adds standard buffers 0.3 m beyond the platforms (12.6 m over buffers).
+
+## Running number
+
+`Bi 3-1820`, "ČSD" above it, on the panel between the third and fourth compartment doors. Illustrative: no photograph of the type was found, so the number only follows the older national format seen on the photographed `Ddk 6-3777` and `Bam 5159`; it is not a verified unit.
+
+## Photo check
+
+No photograph of a CSD compartment coach of this type was found. A Prussian compartment coach is kept as a type reference only: it confirms a door to every compartment and the long footboard under the doors, which the native BMP paints as a dark line at 1.0..1.1 m and the model now carries. See [PHOTOS.md](PHOTOS.md) for every photograph's source, author and licence.
 
 ## Measurement record
 

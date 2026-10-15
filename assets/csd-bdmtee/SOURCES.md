@@ -2,7 +2,7 @@
 
 **Covers** - provenance, coordinate conversion and reconstruction choices.
 **Code** - `generator/csdCoaches.ts`, `generator/csdCoachParts.ts`, `native/landmarks.json`.
-**See also** - [comparison](COMPARISON.md), [CSD coaches](../../docs/models/csd-coaches.md).
+**See also** - [comparison](COMPARISON.md), [photos](PHOTOS.md), [CSD coaches](../../docs/models/csd-coaches.md).
 
 ## Original evidence
 
@@ -21,6 +21,14 @@ Source `(x, y, z)` is Factory `(x - centre, y, z)`, metres, with `centre` the mi
 - Section `alongx`: 3.0 m wide from 0.9 to 3.2 m, roof to 4.0 m. Plan `alongy`: 2.8 m at x 0.2 and 26.2, 3.0 m from 0.3 to 26.1.
 - `z_dec` and `z_inc` are byte-identical. Fourteen windows (one frosted) rows 20..30; double doors at columns 63..83 and 181..201 reaching 0.6 m (XML `door2` steps at 6.3..8.3 and 18.1..20.1 m). Seven roof ventilators from the XML `roof` polygons.
 - Axles at source x 2.45, 4.95, 21.45, 23.95 m.
+
+## Running number
+
+`50 54 22-44 268-9`, "ČSD" above it: legible on `photo-bdmtee-50-54-22-44-268-9-side-brno-2009.jpg`; the check digit is valid. That coach is a later Bdmtee275 rebuild of the type, so the number is a real unit of the family rather than of the exact original series.
+
+## Photo check
+
+The photographs (all in later liveries) confirm the window grouping and the two double doors set about a quarter of the length in from each end; the green livery of the model follows the native BMP. See [PHOTOS.md](PHOTOS.md) for every photograph's source, author and licence.
 
 ## Measurement record
 

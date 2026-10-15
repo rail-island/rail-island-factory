@@ -2,7 +2,7 @@
 
 **Covers** - provenance, coordinate conversion and reconstruction choices.
 **Code** - `generator/csdCoaches.ts`, `generator/csdCoachParts.ts`, `native/landmarks.json`.
-**See also** - [comparison](COMPARISON.md), [CSD coaches](../../docs/models/csd-coaches.md).
+**See also** - [comparison](COMPARISON.md), [photos](PHOTOS.md), [CSD coaches](../../docs/models/csd-coaches.md).
 
 ## Original evidence
 
@@ -21,6 +21,14 @@ Source `(x, y, z)` is Factory `(x - centre, y, z)`, metres, with `centre` the mi
 - Three XML volumes: the main body (x 1.4..14.2, 3.0 m wide, 1.1..3.3 m), the vestibules (x 0.4..1.4 and 14.2..15.2, 2.4 m wide) and a roof shape over 0.4..15.2 with rounded plan corners rising to 3.8 m.
 - Seven windows from column 26 at a 17-pixel pitch and a frosted toilet window at 15..21, rows 9..18; vestibule side doors at columns 5..14 and 142..151 (their edges are shaded, +/- two pixels).
 - Axles at source x 3.1 and 12.5 m; buffer heads at 0.05 and 15.55; a cross tank from the XML `frame` octagon at x 10.2..10.8.
+
+## Running number
+
+`Be 2-4157`, "ČSD" above it. Illustrative: no photograph of the type was found, so the number only follows the older national format seen on the photographed `Ddk 6-3777` and `Bam 5159`; it is not a verified unit.
+
+## Photo check
+
+No photograph of the type was found. Two close-ups of the similar preserved Ce 3-2252 are kept as detail references; they confirm the ventilator hoods above the windows that the native BMP paints at rows 7..8, which the model now carries. See [PHOTOS.md](PHOTOS.md) for every photograph's source, author and licence.
 
 ## Measurement record
 

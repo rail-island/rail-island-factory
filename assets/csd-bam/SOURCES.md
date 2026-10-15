@@ -2,7 +2,7 @@
 
 **Covers** - provenance, coordinate conversion and reconstruction choices.
 **Code** - `generator/csdCoaches.ts`, `generator/csdCoachParts.ts`, `native/landmarks.json`.
-**See also** - [comparison](COMPARISON.md), [CSD coaches](../../docs/models/csd-coaches.md).
+**See also** - [comparison](COMPARISON.md), [photos](PHOTOS.md), [CSD coaches](../../docs/models/csd-coaches.md).
 
 ## Original evidence
 
@@ -21,6 +21,14 @@ Source `(x, y, z)` is Factory `(x - centre, y, z)`, metres, with `centre` the mi
 - Section `alongx` with a lower tumblehome to 0.4 m; the body is 0.9 to 3.8 m high. Plan `alongy`: half widths 1.1, 1.3, 1.4, 1.5 m at x 0.7, 0.8, 1.0, 2.1 (mirrored at 20.2..21.6). Elevation `alongz`: roof from 3.4 m at the ends to 3.8 m by x 1.6.
 - Twelve windows from column 24 at a 15-pixel pitch, rows 10..19; doors at columns 12..20 and 203..211. Short end gangways from the XML `box` shape (x 0.3..0.7, |z| 0.4..0.45, y 1.2..2.4).
 - Axles at source x 2.35, 5.15, 17.15, 19.95 m; buffer heads at x 0.05 and 22.25.
+
+## Running number
+
+`Bam 5159`, "ČSD" above it: legible on `photo-bam-5159-side-praha-2014.jpg` (a preserved coach of the type, in the older national numbering without a check digit).
+
+## Photo check
+
+The photographs confirm the red body, the cream window band, the grey roof, the yellow class numerals and the door window filling the leaf above a red lower door; the door leaves were corrected from all-red to the body's bands. They show a large black gangway diaphragm on the end, where the model keeps the XML's short gangway frame. See [PHOTOS.md](PHOTOS.md) for every photograph's source, author and licence.
 
 ## Measurement record
 

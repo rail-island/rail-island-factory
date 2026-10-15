@@ -17,7 +17,7 @@
 
 import { SKYSCRAPER_CATALOG } from "./skyscrapers.ts";
 import { VEHICLE_CATALOG } from "./vehicles.ts";
-import type { CatalogFields, ProceduralDesign } from "./design.ts";
+import type { CatalogFields, ParamSpec, ProceduralDesign } from "./design.ts";
 
 /** One model as the game's building catalog would hold it. */
 export interface MetaEntry {
@@ -35,6 +35,12 @@ export interface MetaEntry {
   license: string;
   author: string;
   source: string;
+  /**
+   * A parametric model's enum parameters (design.ts). The GLB and thumbnail are
+   * built with each parameter's default; the JS model builds any combination.
+   * Absent for a fixed model.
+   */
+  params?: ParamSpec[];
 }
 
 export interface ExportMeta {
@@ -124,6 +130,7 @@ export function metaEntry(design: ProceduralDesign, fields: CatalogFields = SKYS
     license: fields.license,
     author: fields.author,
     source: fields.source,
+    ...(design.params?.length ? { params: design.params.map((p) => ({ ...p, values: p.values.map((v) => ({ ...v })) })) } : {}),
   };
 }
 

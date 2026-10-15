@@ -2,7 +2,7 @@
 
 **Covers** - provenance, coordinate conversion and reconstruction choices.
 **Code** - `generator/csdCoaches.ts`, `generator/csdCoachParts.ts`, `native/landmarks.json`.
-**See also** - [comparison](COMPARISON.md), [CSD coaches](../../docs/models/csd-coaches.md).
+**See also** - [comparison](COMPARISON.md), [photos](PHOTOS.md), [CSD coaches](../../docs/models/csd-coaches.md).
 
 ## Original evidence
 
@@ -21,6 +21,14 @@ Source `(x, y, z)` is Factory `(x - centre, y, z)`, metres, with `centre` the mi
 - Section `alongx`: 3.0 m wide from 0.8 to 3.2 m, roof to 3.7 m. Plan `alongy` rounds the ends: half widths 0.6, 1.1, 1.4, 1.5 m at x 0.4, 0.5, 0.7, 1.2 (and the mirror at 17.9..18.7). Elevation `alongz` slopes the nose from 1.9 m at x 0.4 to 3.2 m at 0.5 and the roof down from 3.7 m.
 - `z_both` paints both sides; `x_both` both ends. Bands: cream over 1.8 m, a grey moulding 1.7..1.8 m, red 0.9..1.7 m, a cream lining and a cream skirt (x 5.0..14.1, down to 0.4 m) between the bogies.
 - Axles at source x 2.15, 4.25, 14.85, 16.95 m; buffers at y 0.9 m (XML frame octagons).
+
+## Running number
+
+`70 54 28-05 676-0`, "ČSD" above it: legible on `photo-balm-020-original-livery-side-2016.jpg`, a Balm in the original cream and red livery; the check digit is valid. (`photo-balm-28-05179-side-1991.jpg` shows the same type as Bix 70 54 28-05 179-5.)
+
+## Photo check
+
+The original-livery photographs confirm the cream skirt between the bogies, the cream lining at its foot, the grey moulding under the windows, the drop-light sash bars, the wrap-round cab windows and the red buffer beam. They also showed that the door leaves are cream above and red below, as the native BMP paints them; the first build had them all cream and was corrected (the leaves now follow the body's bands). The photographs place the "ČSD" block beside a door; the model keeps it at the native texture's centre mark. See [PHOTOS.md](PHOTOS.md) for every photograph's source, author and licence.
 
 ## Measurement record
 

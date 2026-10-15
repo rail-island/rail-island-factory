@@ -6,9 +6,14 @@
 // (SourceTreePanel), fetched from tree/<id>.json only once that tab is open, and
 // the source images the model was made from (refs/<id>/..., listed in the catalog
 // record), shown only for a model that has any.
+//
+// A parametric model gets a Parameters block above the tabs: a <select> per enum
+// parameter. Choosing a value rebuilds the preview from the model's JS module
+// (ModelViewer); the source tree describes the default build, so its highlight
+// and picking pause while another value is chosen.
 
 import { For, Match, Show, Suspense, Switch, createEffect, createMemo, createResource, lazy, onCleanup } from "solid-js";
-import { COLUMNS, formatBytes, type DetailTab, type Row } from "./catalogQuery";
+import { COLUMNS, effectiveParams, formatBytes, isDefaultParams, nonDefaultParams, type DetailTab, type Row } from "./catalogQuery";
 import { indexTree, type SourceTree } from "./sourceTreeView";
 import { FileCell } from "./ModelTable";
 import { SourceTreePanel } from "./SourceTreePanel";
@@ -37,7 +42,13 @@ export function ModelDetail(props: {
   node: string | null;
   onTab: (tab: DetailTab) => void;
   onNode: (id: string | null) => void;
+  /** The chosen parameter values (from the URL), and the setter, which keeps only non-defaults. */
+  params: Record<string, string>;
+  onParams: (params: Record<string, string>) => void;
 }) {
+  const values = createMemo(() => effectiveParams(props.record, props.params));
+  const atDefaults = createMemo(() => isDefaultParams(props.record, values()));
+  const choose = (name: string, value: string) => props.onParams(nonDefaultParams(props.record, { ...values(), [name]: value }));
   const [tree] = createResource(() => (props.tab === "source" ? props.record.id : false), loadTree);
   // Only this model's tree: after a step the previous one lingers until the next lands.
   const index = createMemo(() => {
@@ -69,7 +80,8 @@ export function ModelDetail(props: {
         <Suspense fallback={<div class="factory-viewer factory-viewer--pending" />}>
           <ModelViewer
             record={props.record}
-            tree={props.tab === "source" ? index() : null}
+            params={values()}
+            tree={props.tab === "source" && atDefaults() ? index() : null}
             selected={props.node}
             onPick={props.onNode}
           />
@@ -85,6 +97,24 @@ export function ModelDetail(props: {
             &rarr;
           </button>
         </div>
+        <Show when={(props.record.params ?? []).length > 0}>
+          <fieldset class="factory-params">
+            <legend>Parameters</legend>
+            <For each={props.record.params ?? []}>
+              {(p) => (
+                <label class="factory-param">
+                  <span>{p.title}</span>
+                  <select id={`param-${p.name}`} value={values()[p.name]} onChange={(e) => choose(p.name, e.currentTarget.value)}>
+                    <For each={p.values}>{(v) => <option value={v.value}>{v.value === p.default ? `${v.title} (default)` : v.title}</option>}</For>
+                  </select>
+                </label>
+              )}
+            </For>
+            <Show when={!atDefaults()}>
+              <p class="factory-muted factory-params__note">Built in the browser from the JS model; the GLB, thumbnail and source tree are the defaults.</p>
+            </Show>
+          </fieldset>
+        </Show>
         <div class="factory-tabs" role="tablist">
           <For each={tabs()}>
             {([tab, label]) => (
@@ -143,7 +173,16 @@ export function ModelDetail(props: {
           <Match when={tree.error}>
             <p class="factory-error">{(tree.error as Error).message}</p>
           </Match>
-          <Match when={index()}>{(ix) => <SourceTreePanel index={ix()} selected={props.node} onSelect={props.onNode} />}</Match>
+          <Match when={index()}>
+            {(ix) => (
+              <>
+                <Show when={!atDefaults()}>
+                  <p class="factory-muted">The source tree is the default build's; highlight and picking return with the default parameters.</p>
+                </Show>
+                <SourceTreePanel index={ix()} selected={props.node} onSelect={props.onNode} />
+              </>
+            )}
+          </Match>
           <Match when={true}>
             <p class="factory-muted">Loading the source tree...</p>
           </Match>

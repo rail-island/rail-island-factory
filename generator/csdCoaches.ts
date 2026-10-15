@@ -9,7 +9,7 @@
 import { ngon, type MeshBuilder } from "./meshBuilder.ts";
 import { block, side } from "./vehicleParts.ts";
 import { Coach, px, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
-import type { CatalogFields } from "./design.ts";
+import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues } from "./design.ts";
 
 /** The game-catalog fields of the coaches: rail vehicles in their own pool. */
 export const COACH_CATALOG: CatalogFields = {
@@ -20,6 +20,41 @@ export const COACH_CATALOG: CatalogFields = {
   author: "Rail Island",
   source: "Rail Island",
 };
+
+/**
+ * The running number each coach carries under "CSD" (C with a caron) on both sides, and where it
+ * came from. UIC numbers (12 digits) carry a check digit; the older national
+ * numbers (class, district digit, serial) do not. See docs/models/csd-coaches.md.
+ */
+export const RUNNING_NUMBERS = {
+  classA: { number: "51 54 19-41 068-0", source: "Commons description of photo-a-51-54-19-41-068-0-side-praha-2009.jpg (not legible in the photo)" },
+  classB: { number: "51 54 20-41 866-4", source: "read from photo-b-y-side-praha-2014.jpg; the serial's first digit is blurred, 866 is the reading the printed check digit 4 confirms" },
+  balm: { number: "70 54 28-05 676-0", source: "legible on photo-balm-020-original-livery-side-2016.jpg (Balm in the original livery)" },
+  bam: { number: "Bam 5159", source: "legible on photo-bam-5159-side-praha-2014.jpg" },
+  bdmtee: { number: "50 54 22-44 268-9", source: "legible on photo-bdmtee-50-54-22-44-268-9-side-brno-2009.jpg (a later Bdmtee275 rebuild of the type)" },
+  bmo: { number: "50 54 26-18 134-1", source: "legible on photo-bmto-side-praha-2014.jpg (now Bmto292)" },
+  be31: { number: "Be 2-4157", source: "illustrative: no photo of the type; the national format of the photographed Ddk 6-3777 and Bam 5159" },
+  bi20: { number: "Bi 3-1820", source: "illustrative: no photo of the type; the national format of the photographed Ddk 6-3777 and Bam 5159" },
+  dsk: { number: "Dsk 4-1210", source: "illustrative: no photo of the type; the national format of the photographed Ddk 6-3777 and Bam 5159" },
+} as const;
+
+/** The UIC check digit of a 12-digit coach number's first 11 digits (weights 2, 1, 2, ... from the right; digit sums). */
+export function uicCheckDigit(number: string): number {
+  const d = [...number.replace(/\D/g, "")].slice(0, 11).map(Number);
+  const sum = d.reverse().reduce((a, x, i) => a + (i % 2 === 0 ? Math.floor((2 * x) / 10) + ((2 * x) % 10) : x), 0);
+  return (10 - (sum % 10)) % 10;
+}
+
+/** The railway's lettering, "CSD" with a caron on the C. */
+const CSD = "\u010cSD";
+
+/** "CSD" (C with a caron) over the running number, as the coaches carry it on both sides. */
+function numberPlate(c: Coach, v: Volume, x: number, y: number, number: string, h = 0.11, proud = 0.006): SideWork {
+  return (s) =>
+    c.m.scope("running number", () =>
+      c.inscription(v, s, x, [{ text: CSD, y: y + h * 1.55, h: h * 1.4 }, { text: number, y, h }], proud),
+    );
+}
 
 type PxBox = [number, number, number, number];
 
@@ -151,6 +186,8 @@ function yCoach(kind: "A" | "B"): MeshBuilder {
         m.scope("handrails", () => {
           for (const x of [1.57, 22.87]) c.handrail(body, s, x, 1.3, 2.05);
         }),
+      // native rows 30..35 carry the centre inscription
+      numberPlate(c, body, 12.25, 1.45, RUNNING_NUMBERS[kind === "A" ? "classA" : "classB"].number),
     );
   });
   for (const e of [-1, 1])
@@ -195,8 +232,24 @@ function yCoach(kind: "A" | "B"): MeshBuilder {
   return m;
 }
 
-export const csdA = (): MeshBuilder => yCoach("A");
-export const csdB = (): MeshBuilder => yCoach("B");
+/** The classic green Y-type coach's one parameter: the 1st class A or the 2nd class B. */
+export const CLASSIC_GREEN_PARAMS: readonly ParamSpec[] = [
+  {
+    name: "variant",
+    title: "Variant",
+    default: "classA",
+    values: [
+      { value: "classA", title: "Class A (1st class, 9 compartments)" },
+      { value: "classB", title: "Class B (2nd class, 10 compartments)" },
+    ],
+  },
+];
+
+/** CSD A and CSD B as one parametric design (vlakosimdb csd_a, csd_b): `variant` picks the class. */
+export function csdClassicGreenCoach(params?: ParamValues): MeshBuilder {
+  const { variant } = resolveParams(CLASSIC_GREEN_PARAMS, params);
+  return yCoach(variant === "classA" ? "A" : "B");
+}
 
 // --- Bdmtee (26.4 m, two pairs of double doors) ---------------------------------
 
@@ -240,6 +293,7 @@ export function csdBdmtee(): MeshBuilder {
         m.scope("handrails", () => {
           for (const x of [0.4, 26.0]) c.handrail(body, s, x, 1.5, 2.4);
         }),
+      numberPlate(c, body, 12.8, 1.38, RUNNING_NUMBERS.bdmtee.number),
     );
     m.scope("door aprons", () => {
       for (const [a, b] of [[6.3, 8.3], [18.1, 20.1]]) {
@@ -341,6 +395,11 @@ export function csdBmo(): MeshBuilder {
           for (const b of [[98, 21, 125, 22], [104, 23, 124, 24], [111, 25, 125, 26], [143, 21, 171, 22], [145, 23, 165, 24], [145, 25, 159, 26]] as PxBox[])
             c.sidePanel(body, "yellow", s, px(b, H), 0.006, 0.004);
         }),
+      // the emblem's "CSD" (C with a caron) between the wings, the number under it
+      (s) =>
+        m.scope("running number", () =>
+          c.inscription(body, s, 13.4, [{ text: CSD, y: 2.47, h: 0.33 }, { text: RUNNING_NUMBERS.bmo.number, y: 2.24, h: 0.1 }], 0.008),
+        ),
     );
   });
   for (const e of [-1, 1])
@@ -407,12 +466,13 @@ export function csdBalm(): MeshBuilder {
       doors(c, body, H, [
         { box: [55, 10, 63, 31], glass: [[57, 11, 61, 21]] },
         { box: [128, 10, 136, 31], glass: [[130, 11, 134, 21]] },
-      ], "cream", { fw: 0.04 }),
+      ], "bands", { fw: 0.04 }),
       (s) => m.scope("gutter", () => c.sidePanel(body, "frame", s, px([12, 8, 179, 9], H), 0.02, 0.05)),
       (s) =>
         m.scope("class marks", () => {
           for (const x of [7.0, 12.25]) c.numeral(body, s, "2", x, 1.12, 0.48);
         }),
+      numberPlate(c, body, 9.55, 1.15, RUNNING_NUMBERS.balm.number, 0.1),
     );
     m.scope("skirts", () => {
       c.sideSweep("cream", [[5.0, 0.8], [14.1, 0.8], [13.8, 0.4], [5.3, 0.4]], -1.45, 1.45);
@@ -432,7 +492,7 @@ export function csdBalm(): MeshBuilder {
           m.scope(`window ${k + 1}`, () => c.window(body, e, fb(b), { end: true, fw: 0.07 }));
       });
       m.scope("end door", () => {
-        c.door(body, e, fb(fpx([11, 10, 19, 30], H)), "cream", { end: true });
+        c.door(body, e, fb(fpx([11, 10, 19, 30], H)), "bands", { end: true });
         m.scope("window", () => c.window(body, e, fb(fpx([13, 11, 17, 18], H)), { end: true, fw: 0.04 }));
       });
       m.scope("lamps", () => {
@@ -481,11 +541,12 @@ export function csdBam(): MeshBuilder {
       doors(c, body, H, [
         { box: [12, 8, 20, 31], glass: [[13, 9, 19, 19]] },
         { box: [203, 8, 211, 31], glass: [[204, 9, 210, 19]] },
-      ], "red", { fw: 0.04 }),
+      ], "bands", { fw: 0.04 }),
       (s) =>
         m.scope("class marks", () => {
           for (const x of [4.35, 17.85]) c.numeral(body, s, "2", x, 1.45, 0.4);
         }),
+      numberPlate(c, body, 11.15, 1.32, RUNNING_NUMBERS.bam.number),
     );
     m.scope("skirts", () => {
       c.sideSweep("red", [[10.1, 0.4], [12.8, 0.4], [13.0, 0.9], [9.9, 0.9]], -1.45, 1.45);
@@ -505,7 +566,7 @@ export function csdBam(): MeshBuilder {
           m.scope(`window ${k + 1}`, () => c.window(body, e, fb(b), { end: true, fw: 0.06 }));
       });
       m.scope("end door", () => {
-        c.door(body, e, fb([11, 8, 19, 27]), "red", { end: true });
+        c.door(body, e, fb([11, 8, 19, 27]), "bands", { end: true });
         m.scope("window", () => c.window(body, e, fb([12, 10, 18, 19]), { end: true, fw: 0.04 }));
       });
       m.scope("gangway", () => {
@@ -577,6 +638,13 @@ export function csdBe31(): MeshBuilder {
       (s) =>
         m.scope("class marks", () => {
           for (const x of [3.25, 12.15]) c.numeral(main, s, "2", x, 1.48, 0.4);
+        }),
+      numberPlate(c, main, 8.2, 1.45, RUNNING_NUMBERS.be31.number, 0.1),
+      // the ventilator hood over each compartment window: native rows 7..8
+      // (the hoods of the Ce 3-2252 detail photograph)
+      (s) =>
+        m.scope("window hoods", () => {
+          for (let k = 0; k < 7; k++) c.sidePanel(main, "frame", s, px([29 + 17 * k, 7, 34 + 17 * k, 9], H), 0.05, 0.06);
         }),
     );
   });
@@ -668,6 +736,8 @@ export function csdBi20(): MeshBuilder {
         m.scope("class marks", () => {
           for (const x of [2.05, 10.55]) c.numeral(body, s, "2", x, 1.55, 0.4, 0.015);
         }),
+      // on the panel between the third and fourth compartment doors
+      numberPlate(c, body, 6.25, 1.5, RUNNING_NUMBERS.bi20.number, 0.09),
     );
   });
   for (const e of [-1, 1])
@@ -704,6 +774,12 @@ export function csdBi20(): MeshBuilder {
   m.scope("underframe", () => {
     for (const s of sides) c.sideSweep("underframe", [[4.5, 0.8], [6.4, 0.5], [8.3, 0.8]], ...side(s, 1.15, 1.22));
     block(m, "underframe", c.X(6.35), c.X(6.45), 0.5, 0.8, -1.2, 1.2);
+    // the long footboard under the compartment doors: the native side's dark line
+    // at 1.0..1.1 m (rows 29..30), as on compartment coaches (photo, type reference)
+    for (const s of sides) {
+      block(m, "floor", c.X(1.5), c.X(11.1), 0.94, 0.98, ...side(s, 1.36, 1.54));
+      for (const x of [1.7, 4.2, 6.3, 8.4, 10.9]) block(m, "underframe", c.X(x) - 0.03, c.X(x) + 0.03, 0.82, 0.94, ...side(s, 1.3, 1.5));
+    }
   });
   m.scope("running gear", () => {
     m.scope("axle 1", () => c.axle(2.4, 0.45, 0.8));
@@ -751,7 +827,7 @@ export function csdDsk(): MeshBuilder {
     m.scope("van", () => c.volume(body));
     m.scope("roof", () => c.volume(roof));
     m.scope("platform", () => c.volume(floor));
-    onSides(c, windows(c, body, H, [[8, 10, 15, 20], [29, 10, 36, 20], [60, 10, 67, 20]], { fw: 0.08 }), (s) => {
+    onSides(c, windows(c, body, H, [[8, 10, 15, 20], [29, 10, 36, 20], [60, 10, 67, 20]], { fw: 0.08 }), numberPlate(c, body, 1.1, 1.5, RUNNING_NUMBERS.dsk.number, 0.09, 0.009), (s) => {
         m.scope("sliding door", () => {
           c.door(body, s, px([39, 8, 57, 28], H), "green");
           c.sidePanel(body, "post", s, { x0: 4.75, y0: 1.225, x1: 4.85, y1: 3.175 }, 0.016);
@@ -834,15 +910,49 @@ export function csdDsk(): MeshBuilder {
   return m;
 }
 
-/** The coaches with their ids, titles and centres (source x of the buffer midpoint) for the comparison. */
+/** The coach designs: ids, titles, builders, parameters, reference folders. */
 export const CSD_COACHES = [
-  { id: "veh-csd-a", title: "CSD A", folder: "csd-a", build: csdA, centre: 12.25 },
-  { id: "veh-csd-b", title: "CSD B", folder: "csd-b", build: csdB, centre: 12.25 },
-  { id: "veh-csd-balm", title: "CSD Balm", folder: "csd-balm", build: csdBalm, centre: 9.55 },
-  { id: "veh-csd-bam", title: "CSD Bam", folder: "csd-bam", build: csdBam, centre: 11.15 },
-  { id: "veh-csd-bdmtee", title: "CSD Bdmtee", folder: "csd-bdmtee", build: csdBdmtee, centre: 13.2 },
-  { id: "veh-csd-be31", title: "CSD Be31", folder: "csd-be31", build: csdBe31, centre: 7.8 },
-  { id: "veh-csd-bi20", title: "CSD Bi20", folder: "csd-bi20", build: csdBi20, centre: 6.3 },
-  { id: "veh-csd-bmo", title: "CSD Bmo", folder: "csd-bmo", build: csdBmo, centre: 13.4 },
-  { id: "veh-csd-dsk", title: "CSD Dsk", folder: "csd-dsk", build: csdDsk, centre: 5.25 },
+  { id: "veh-csd-classic-green-coach", title: "CSD Classic Green Coach", folder: "csd-classic-green", build: csdClassicGreenCoach, params: CLASSIC_GREEN_PARAMS },
+  { id: "veh-csd-balm", title: "CSD Balm", folder: "csd-balm", build: csdBalm },
+  { id: "veh-csd-bam", title: "CSD Bam", folder: "csd-bam", build: csdBam },
+  { id: "veh-csd-bdmtee", title: "CSD Bdmtee", folder: "csd-bdmtee", build: csdBdmtee },
+  { id: "veh-csd-be31", title: "CSD Be31", folder: "csd-be31", build: csdBe31 },
+  { id: "veh-csd-bi20", title: "CSD Bi20", folder: "csd-bi20", build: csdBi20 },
+  { id: "veh-csd-bmo", title: "CSD Bmo", folder: "csd-bmo", build: csdBmo },
+  { id: "veh-csd-dsk", title: "CSD Dsk", folder: "csd-dsk", build: csdDsk },
 ] as const;
+
+/**
+ * One transferred vlakosimdb vehicle, for the measured comparison: the design and
+ * parameters that build it, where its native files are (assets/<folder>/<native>)
+ * and the source x of its buffer midpoint (the model's x = 0).
+ */
+export interface CsdTransfer {
+  /** The vlakosimdb folder name, e.g. "csd_a". */
+  key: string;
+  title: string;
+  id: string;
+  params?: ParamValues;
+  folder: string;
+  native: string;
+  centre: number;
+  /** The comparison table, relative to assets/<folder>/. */
+  report: string;
+}
+
+export const CSD_TRANSFERS: readonly CsdTransfer[] = [
+  { key: "csd_a", title: "CSD A", id: "veh-csd-classic-green-coach", params: { variant: "classA" }, folder: "csd-classic-green", native: "native/csd_a", centre: 12.25, report: "COMPARISON-class-a.md" },
+  { key: "csd_b", title: "CSD B", id: "veh-csd-classic-green-coach", params: { variant: "classB" }, folder: "csd-classic-green", native: "native/csd_b", centre: 12.25, report: "COMPARISON-class-b.md" },
+  { key: "csd_balm", title: "CSD Balm", id: "veh-csd-balm", folder: "csd-balm", native: "native", centre: 9.55, report: "COMPARISON.md" },
+  { key: "csd_bam", title: "CSD Bam", id: "veh-csd-bam", folder: "csd-bam", native: "native", centre: 11.15, report: "COMPARISON.md" },
+  { key: "csd_bdmtee", title: "CSD Bdmtee", id: "veh-csd-bdmtee", folder: "csd-bdmtee", native: "native", centre: 13.2, report: "COMPARISON.md" },
+  { key: "csd_be31", title: "CSD Be31", id: "veh-csd-be31", folder: "csd-be31", native: "native", centre: 7.8, report: "COMPARISON.md" },
+  { key: "csd_bi20", title: "CSD Bi20", id: "veh-csd-bi20", folder: "csd-bi20", native: "native", centre: 6.3, report: "COMPARISON.md" },
+  { key: "csd_bmo", title: "CSD Bmo", id: "veh-csd-bmo", folder: "csd-bmo", native: "native", centre: 13.4, report: "COMPARISON.md" },
+  { key: "csd_dsk", title: "CSD Dsk", id: "veh-csd-dsk", folder: "csd-dsk", native: "native", centre: 5.25, report: "COMPARISON.md" },
+];
+
+/** The builder of a transfer's design. */
+export function transferBuild(t: CsdTransfer): MeshBuilder {
+  return CSD_COACHES.find((c) => c.id === t.id)!.build(t.params);
+}

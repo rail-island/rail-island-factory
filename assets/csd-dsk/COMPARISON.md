@@ -4,9 +4,9 @@
 **Code** - `generator/csdCoaches.ts`, `generator/csdCoachComparison.ts`, `generator/csdCoachReport.ts`.
 **See also** - [source notes](SOURCES.md), [CSD coaches](../../docs/models/csd-coaches.md).
 
-Model geometry revision (SHA-256 of comparison GLB): `b9f0b6ded8a14b2f4694853712b49a7bb98cd7169539f82eb3aa2d0a9cf660dc`.
+Model geometry revision (SHA-256 of comparison GLB): `a8ff927f73aa76ea5765863930042d1bc771010baec0692337c1b9b2e9e80dc8`.
 
-Regenerate with `pnpm exec tsx generator/csdCoachReport.ts csd-dsk`. The baseline is the first authored geometry (`native/baseline.json`); baseline and final use the same annotations.
+Regenerate with `pnpm exec tsx generator/csdCoachReport.ts csd_dsk`. The baseline is the first authored geometry (`native/baseline.json`); baseline and final use the same annotations.
 
 Canvases: sides 11 x 4 m (110 x 40 px), ends 3 x 4 m (30 x 40 px), including empty space, 0.1 m a pixel. Origin top left; x right, y down. Side u = 10 * source x = 10 * (Factory X + 5.25); both sides keep increasing source x, so the left (-Z) elevation is mirrored relative to an outside observer, as its BMP is. Ends are seen from outside: rear u = 10 * (z + 1.5), front u = 10 * (1.5 - z). v = 10 * (4 - y).
 
@@ -24,11 +24,11 @@ One pixel is 0.909 pp horizontally on the sides, 3.333 pp horizontally on the en
 
 Annotated views (generated locally, not committed):
 
-- z_both, right: [native](../../export/review/csd-dsk/z_both-right-native.svg), [model](../../export/review/csd-dsk/z_both-right-model.svg)
-- z_both, left: [native](../../export/review/csd-dsk/z_both-left-native.svg), [model](../../export/review/csd-dsk/z_both-left-model.svg)
-- x_inc, front: [native](../../export/review/csd-dsk/x_inc-front-native.svg), [model](../../export/review/csd-dsk/x_inc-front-model.svg)
-- x_dec, rear: [native](../../export/review/csd-dsk/x_dec-rear-native.svg), [model](../../export/review/csd-dsk/x_dec-rear-model.svg)
-- [Three-quarter view](../../export/review/csd-dsk/three-quarter.png), [thumbnail](../../export/thumbs/veh-csd-dsk.png)
+- z_both, right: [native](../../export/review/csd_dsk/z_both-right-native.svg), [model](../../export/review/csd_dsk/z_both-right-model.svg)
+- z_both, left: [native](../../export/review/csd_dsk/z_both-left-native.svg), [model](../../export/review/csd_dsk/z_both-left-model.svg)
+- x_inc, front: [native](../../export/review/csd_dsk/x_inc-front-native.svg), [model](../../export/review/csd_dsk/x_inc-front-model.svg)
+- x_dec, rear: [native](../../export/review/csd_dsk/x_dec-rear-native.svg), [model](../../export/review/csd_dsk/x_dec-rear-model.svg)
+- [Three-quarter view](../../export/review/csd_dsk/three-quarter.png), [thumbnail](../../export/thumbs/veh-csd-dsk.png)
 
 | ID | View | Element | Native pixel edges | Mesh scope(s) | Source % (x,y,w,h) | Model % | Signed delta (pp) | Baseline abs. mean (pp) | Final abs. mean (pp) | Uncertainty |
 |---|---|---|---|---|---|---|---|---:|---:|---|

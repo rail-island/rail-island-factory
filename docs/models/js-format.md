@@ -5,7 +5,7 @@
 the measured sizes.
 **Code** - `generator/jsModel.ts`, `generator/threeBuilder.ts`, `generator/meshCore.ts`,
 `generator/generate.ts` (`generateJsModels`), `test/jsModel.test.ts`
-**See also** - [export.md](export.md), [skyscrapers.md](skyscrapers.md), [vehicles.md](vehicles.md),
+**See also** - [parameters.md](parameters.md), [export.md](export.md), [skyscrapers.md](skyscrapers.md), [vehicles.md](vehicles.md),
 [../site/catalog-site.md](../site/catalog-site.md)
 
 ## What it is
@@ -27,6 +27,9 @@ scene.add(build(THREE)); // a THREE.Group named after the model id
   are the palette's sRGB hex, so three's colour management converts them to the linear value the GLB stores.
   A model with parts (the truck, [vehicles.md](vehicles.md)) has a child `Group` per part, named after it and
   positioned at its pivot, its meshes relative to that pivot - the GLB's nodes.
+- **Parameters.** The module also exports `params`, the design's enum parameters (`[]` for a fixed design),
+  and `build(THREE, params)` builds any combination of their values; `build(THREE)` builds the defaults, the
+  GLB's model, and an unknown name or value throws ([parameters.md](parameters.md)).
 - **The same triangles.** The positions and normals equal the GLB's, not an approximation: it is the same
   algorithm running on the same geometry code.
 
@@ -41,7 +44,7 @@ scene.add(build(THREE)); // a THREE.Group named after the model id
 | `MeshBuilder` (lean) | `threeBuilder.ts` | `toGroup(THREE, name)` |
 
 `jsModel.ts` bundles one design with esbuild: an entry imports the design's build function (each design is an
-exported function of `skyscrapers.ts` or `vehicles.ts`) and exports `build(THREE)`; a plugin resolves the
+exported function of `skyscrapers.ts` or `vehicles.ts`) and exports `params` and `build(THREE, params)`; a plugin resolves the
 design's `./meshBuilder.ts` import to `threeBuilder.ts`, so the recorder and the GLB writer never reach the
 file. Output is minified ES2022 with a one-line banner, deterministic, and rewritten only when its text changed.
 `pnpm build:models` writes it after the GLBs (`generateJsModels`) and deletes the file of a dropped design.

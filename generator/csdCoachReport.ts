@@ -1,14 +1,15 @@
 // Review views and measured comparison tables of the CSD coaches (csdCoaches.ts).
-// Run: pnpm exec tsx generator/csdCoachReport.ts [csd-a ...]  (all coaches by default)
+// Run: pnpm exec tsx generator/csdCoachReport.ts [csd_a ...]  (all transfers by default)
 //
-// Writes, per coach, export/review/<folder>/ (orthographic model views with the
-// native annotation boxes, the native BMPs with the same boxes, a shaded
-// three-quarter view; generated, not committed) and assets/<folder>/COMPARISON.md.
+// Writes, per transferred vehicle, export/review/<key>/ (orthographic model views
+// with the native annotation boxes, the native BMPs with the same boxes, a shaded
+// three-quarter view; generated, not committed) and its comparison table
+// (assets/<folder>/<report>, csdCoaches.ts CSD_TRANSFERS).
 import fs from "node:fs";
 import { createHash } from "node:crypto";
 import { PNG } from "pngjs";
-import { CSD_COACHES } from "./csdCoaches.ts";
-import { coachComparison, meanAbsoluteError, type CoachComparisonRow } from "./csdCoachComparison.ts";
+import { CSD_TRANSFERS, transferBuild } from "./csdCoaches.ts";
+import { coachComparison, meanAbsoluteError, nativeFile, transfer, type CoachComparisonRow } from "./csdCoachComparison.ts";
 import { collectTriangles, parseGlb } from "./glbTriangles.ts";
 
 const ROOT = new URL("../", import.meta.url);
@@ -53,17 +54,19 @@ function raster(tris: Tri[], W: number, H: number, project: (p: P3) => number[],
 
 const fmt = (xs: number[]) => xs.map((x) => x.toFixed(3)).join(", ");
 
-function report(folder: string): string[] {
-  const coach = CSD_COACHES.find((c) => c.folder === folder)!;
+function report(key: string): string[] {
+  const coach = transfer(key);
+  const folder = key;
   const dir = new URL(`export/review/${folder}/`, ROOT);
   fs.mkdirSync(dir, { recursive: true });
-  const rows = coachComparison(folder);
-  const baseline = JSON.parse(fs.readFileSync(new URL(`assets/${folder}/native/baseline.json`, ROOT), "utf8")) as Array<{ id: string; delta: number[] }>;
-  const mesh = coach.build();
+  const rows = coachComparison(key);
+  const baseline = JSON.parse(fs.readFileSync(nativeFile(coach, "baseline.json"), "utf8")) as Array<{ id: string; delta: number[] }>;
+  const mesh = transferBuild(coach);
   const bytes = mesh.toGlb(`${coach.title} comparison`);
   const revision = createHash("sha256").update(bytes).digest("hex");
   const { json, bin } = parseGlb(bytes);
   const tree = mesh.sourceTree(coach.id, coach.title);
+  const variant = coach.params ? ` Built with ${Object.entries(coach.params).map(([k, v]) => `\`${k}=${v}\``).join(", ")} of \`${coach.id}\`.` : "";
   const colors = new Map(tree.materials.map((m, i) => [m, tree.colors[i]!]));
   const tris: Tri[] = collectTriangles(json, bin).map((t) => {
     const hex = colors.get(t.material)!.slice(1);
@@ -96,7 +99,7 @@ function report(folder: string): string[] {
       .join("");
     const svg = (inside: string) => `<svg xmlns="http://www.w3.org/2000/svg" width="${cw * scale}" height="${ch * scale}" viewBox="0 0 ${cw} ${ch}"><rect width="100%" height="100%" fill="#e5e7eb"/>${inside}</svg>`;
     fs.writeFileSync(new URL(`${name}-model.svg`, dir), svg(`<image width="${cw}" height="${ch}" href="data:image/png;base64,${png.toString("base64")}"/>${boxes}`));
-    const bmp = fs.readFileSync(new URL(`assets/${folder}/native/${view}.bmp`, ROOT)).toString("base64");
+    const bmp = fs.readFileSync(nativeFile(coach, `${view}.bmp`)).toString("base64");
     fs.writeFileSync(new URL(`${name}-native.svg`, dir), svg(`<image width="${cw}" height="${ch}" href="data:image/bmp;base64,${bmp}" style="image-rendering:pixelated"/>${boxes}`));
     links.push(`- ${view}, ${where}: [native](../../export/review/${folder}/${name}-native.svg), [model](../../export/review/${folder}/${name}-model.svg)`);
   }
@@ -144,7 +147,7 @@ function report(folder: string): string[] {
     "",
     `Model geometry revision (SHA-256 of comparison GLB): \`${revision}\`.`,
     "",
-    `Regenerate with \`pnpm exec tsx generator/csdCoachReport.ts ${folder}\`. The baseline is the first authored geometry (\`native/baseline.json\`); baseline and final use the same annotations.`,
+    `Regenerate with \`pnpm exec tsx generator/csdCoachReport.ts ${key}\`. The baseline is the first authored geometry (\`${coach.native}/baseline.json\`); baseline and final use the same annotations.${variant}`,
     "",
     `Canvases: sides ${sw / 10} x ${sh / 10} m (${sw} x ${sh} px), ends 3 x ${sh / 10} m (30 x ${sh} px), including empty space, 0.1 m a pixel. Origin top left; x right, y down. Side u = 10 * source x = 10 * (Factory X + ${coach.centre}); both sides keep increasing source x, so the left (-Z) elevation is mirrored relative to an outside observer, as its BMP is. Ends are seen from outside: rear u = 10 * (z + 1.5), front u = 10 * (1.5 - z). v = 10 * (${sh / 10} - y).`,
     "",
@@ -163,9 +166,9 @@ function report(folder: string): string[] {
     ...rows.map((r) => `| ${r.id} | ${r.view}, ${r.side ?? r.end} | ${r.element} | ${r.box.join(", ")} | ${r.nodes.map((n) => "`" + n + "`").join(", ")} | ${fmt(r.sourcePercent)} | ${fmt(r.modelPercent)} | ${fmt(r.delta)} | ${meanAbsoluteError([base(r)]).toFixed(3)} | ${meanAbsoluteError([r]).toFixed(3)} | ${r.uncertainty} |`),
     "",
   ];
-  fs.writeFileSync(new URL(`assets/${folder}/COMPARISON.md`, ROOT), lines.join("\n"));
+  fs.writeFileSync(new URL(`assets/${coach.folder}/${coach.report}`, ROOT), lines.join("\n"));
   return [`${coach.title}: ${rows.length} boxes, baseline ${meanAbsoluteError(rows.map(base)).toFixed(3)} pp, final ${meanAbsoluteError(rows).toFixed(3)} pp`];
 }
 
 const wanted = process.argv.slice(2);
-for (const c of CSD_COACHES) if (!wanted.length || wanted.includes(c.folder)) console.log(report(c.folder).join("\n"));
+for (const c of CSD_TRANSFERS) if (!wanted.length || wanted.includes(c.key)) console.log(report(c.key).join("\n"));

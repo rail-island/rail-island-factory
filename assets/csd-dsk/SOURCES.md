@@ -2,7 +2,7 @@
 
 **Covers** - provenance, coordinate conversion and reconstruction choices.
 **Code** - `generator/csdCoaches.ts`, `generator/csdCoachParts.ts`, `native/landmarks.json`.
-**See also** - [comparison](COMPARISON.md), [CSD coaches](../../docs/models/csd-coaches.md).
+**See also** - [comparison](COMPARISON.md), [photos](PHOTOS.md), [CSD coaches](../../docs/models/csd-coaches.md).
 
 ## Original evidence
 
@@ -21,6 +21,14 @@ Source `(x, y, z)` is Factory `(x - centre, y, z)`, metres, with `centre` the mi
 - Volumes: the van x 0.6..9.1 (2.8 m wide, 0.8..3.3 m), a roof over 0.6..10.0 and a platform floor 9.1..10.0. `x_dec` paints the plain x = 0 end (Factory rear), `x_inc` the platform end wall with its door (Factory front).
 - Three small windows, a sliding door at columns 39..57, framing posts and two diagonal braces per side from `z_both`; diagonals on both ends from the end BMPs. Lookout duckets from the XML (x 8.0..9.1 at the body, 8.3..8.8 at the face).
 - Axles at source x 1.9 and 8.1 m; buffer heads at 0 and 10.5.
+
+## Running number
+
+`Dsk 4-1210`, "ČSD" above it. Illustrative: the class and numbering format follow the photographed CSD luggage van `Ddk 6-3777` (`photo-luggage-van-two-axle-luzna-2006.jpg`), but the serial is not a verified unit.
+
+## Photo check
+
+The only photograph is a similar preserved two-axle wooden CSD luggage van (`Ddk 6-3777`): it confirms the planked green body, the framing, the end platform with railings and the "ČSD" lettering over the number on the lower side; its exact class differs, so it was not used to refit the model. See [PHOTOS.md](PHOTOS.md) for every photograph's source, author and licence.
 
 ## Measurement record
 

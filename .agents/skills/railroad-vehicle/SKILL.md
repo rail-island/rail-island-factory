@@ -111,6 +111,18 @@ front), never just the class: choose a unit that existed in the modelled era
 and livery, note it in `SOURCES.md`, keep it in one constant (`CD150_NUMBER`,
 `NUMBER` in `cd163.ts`), and test its check digit.
 
+**Coaches and wagons** carry their number on the body side, under the railway's
+lettering ("CSD" with the caron, painted, not on plates): a 12-digit UIC number
+(`51 54 19-41 068-0`; the check digit uses the same weights over the first eleven
+digits) or, for older vehicles, the national number (class, district digit,
+serial: `Ddk 6-3777`, no check digit). Prefer a number legible on a photograph of
+the type; when none exists, use an illustrative number in the right format and
+say so in `SOURCES.md` (`RUNNING_NUMBERS` in `csdCoaches.ts`).
+
+**Variants of one body** (classes, window layouts) are one parametric design with
+enum parameters, not separate models: the export holds the default build and the
+JS model builds the others (docs/models/parameters.md).
+
 ## Electric locomotives and pantographs
 
 **An electric locomotive with two pantographs must have one raised and the other
