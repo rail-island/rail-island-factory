@@ -701,7 +701,7 @@ describe("generateModels", () => {
     }
   });
 
-  it("writes a GLB and a thumbnail per design, skips an unchanged one, and prunes a dropped one", () => {
+  it("writes a GLB and a thumbnail per design, skips an unchanged one, and prunes a dropped one", async () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "factory-"));
     try {
       fs.mkdirSync(path.join(dir, "glb"));
@@ -720,8 +720,10 @@ describe("generateModels", () => {
       expect(fs.existsSync(path.join(dir, "tree", "sky-retired.json"))).toBe(false);
       expect(fs.existsSync(path.join(dir, "glb", "sky-retired.glb"))).toBe(false);
       expect(fs.existsSync(path.join(dir, "thumbs", "sky-retired.png"))).toBe(false);
-      // a second run finds nothing to rewrite, and leaves the thumbnails alone
+      // a second run finds nothing to rewrite, and leaves the thumbnails alone;
+      // each run is long, so let vitest's RPC replies in between (test/setup.ts)
       const mtime = fs.statSync(first[0]!.thumb).mtimeMs;
+      await new Promise<void>((resolve) => setImmediate(resolve));
       expect(generateModels(dir).every((b) => !b.changed)).toBe(true);
       expect(fs.statSync(first[0]!.thumb).mtimeMs).toBe(mtime);
     } finally {
