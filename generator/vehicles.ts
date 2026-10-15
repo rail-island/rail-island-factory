@@ -15,6 +15,7 @@ import { CD163_PARAMS, CD263_PARAMS, cd163, cd263 } from "./cd163Family.ts";
 import { COACH_CATALOG } from "./csdCoaches.ts";
 import { COACH_DESIGNS } from "./coachTransfers.ts";
 import { WAGON_CATALOG, WAGON_DESIGNS } from "./wagons.ts";
+import { STEAM_CATALOG, STEAM_DESIGNS } from "./steamLocos.ts";
 
 // re-exported: a design's JS bundle imports its build function from this module
 export { cd163, cd263 };
@@ -23,6 +24,7 @@ export { csdClassicGreenCoach, csdBalm, csdBam, csdBdmtee, csdBe31, csdBi20, csd
 export { bmoCoach } from "./bmoCoach.ts";
 export { cdGreenWhiteCoach } from "./cdGreenWhiteCoach.ts";
 export { nasFlatWagon, uaOpenWagon, easOpenWagon, rajHopperWagon, rahTankWagon } from "./wagons.ts";
+export { csd386, csd433, csd456, csd475, csd477, csd498, csd556, csd636, csdM112 } from "./steamLocos.ts";
 
 // Chrome is only mildly metallic: the game and the site light models without an
 // environment map, so a fully metallic surface would render nearly black.
@@ -400,4 +402,5 @@ export const VEHICLES: ProceduralDesign[] = [
   { id: "veh-cd-263", title: "CD 263 / 371 / 372", build: cd263, params: CD263_PARAMS, catalog: RAIL_CATALOG, references: "cd-263" },
   ...COACH_DESIGNS.map((c): ProceduralDesign => ({ id: c.id, title: c.title, build: c.build, catalog: COACH_CATALOG, references: c.folder, ...(c.params ? { params: c.params } : {}) })),
   ...WAGON_DESIGNS.map((w): ProceduralDesign => ({ id: w.id, title: w.title, build: w.build, catalog: WAGON_CATALOG, references: w.folder, ...(w.params ? { params: w.params } : {}) })),
+  ...STEAM_DESIGNS.map((d): ProceduralDesign => ({ id: d.id, title: d.title, build: d.build, catalog: STEAM_CATALOG, references: d.folder, ...(d.params ? { params: d.params } : {}) })),
 ];

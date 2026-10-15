@@ -82,7 +82,7 @@ describe("standalone JS models", () => {
       const text = await jsOf(id);
       const code = text.replace(/^\/\/.*\n/, ""); // the banner comment
       expect(code).not.toMatch(/\bimport\s*[\w{*"'(]/);
-      expect(code).not.toMatch(/node:|require\(/);
+      expect(code).not.toMatch(/["']node:|require\(/);
       expect(text).toMatch(/export\s*\{[^}]*\bas default\b/);
       expect(Buffer.byteLength(text)).toBeLessThan(designGlb(id).length);
     });

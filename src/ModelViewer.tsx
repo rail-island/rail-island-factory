@@ -12,6 +12,12 @@
 // build(THREE, params)), fetched once per model. The camera keeps its place
 // while only the parameters change.
 //
+// A model with animation clips (a steam locomotive's running gear: wheelsets,
+// rods and valve gear, docs/models/animation.md) gets Start and Stop buttons.
+// Start plays every clip in a loop through an AnimationMixer and runs a render
+// loop only while it plays; Stop halts it where it is. A new model or parameter
+// choice stops the animation.
+//
 // With a source tree (the model page's Source tab) it also highlights the
 // selected node -- its triangles glow, everything else turns into a faint ghost --
 // and a click that is not a drag picks the leaf under the cursor. The GLB has one
@@ -20,7 +26,7 @@
 
 import { createEffect, createSignal, onCleanup, onMount, Show } from "solid-js";
 import {
-  AmbientLight, Box3, BufferAttribute, BufferGeometry, Color, DirectionalLight, Group, Mesh, MeshStandardMaterial, PerspectiveCamera,
+  AmbientLight, AnimationClip, AnimationMixer, Box3, QuaternionKeyframeTrack, VectorKeyframeTrack, BufferAttribute, BufferGeometry, Color, DirectionalLight, Group, Mesh, MeshStandardMaterial, PerspectiveCamera,
   Raycaster, Scene, Vector2, Vector3, WebGLRenderer, type Object3D,
 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -33,7 +39,7 @@ const loader = new GLTFLoader();
 
 type JsBuild = (three: object, params?: Record<string, string>) => Object3D;
 /** The classes a model's JS module uses: all it needs of three. */
-const THREE_SUBSET = { Group, Mesh, BufferGeometry, BufferAttribute, MeshStandardMaterial };
+const THREE_SUBSET = { Group, Mesh, BufferGeometry, BufferAttribute, MeshStandardMaterial, AnimationClip, QuaternionKeyframeTrack, VectorKeyframeTrack };
 const modules = new Map<string, Promise<JsBuild>>();
 
 /** A model's standalone JS module, loaded once: fetched as text and imported from a blob URL. */
@@ -56,10 +62,17 @@ function jsModule(url: string): Promise<JsBuild> {
   return p;
 }
 
-/** The model as the page should show it: the GLB at the defaults, else a JS build of the chosen values. */
-async function loadModel(record: CatalogRecord, params: Record<string, string>): Promise<Object3D> {
-  if (isDefaultParams(record, params)) return (await loader.loadAsync(`/${record.glbUrl}`)).scene as Object3D;
-  return (await jsModule(`/${record.jsUrl}`))(THREE_SUBSET, params);
+/**
+ * The model as the page should show it: the GLB at the defaults, else a JS build
+ * of the chosen values; with its animation clips (none for most models).
+ */
+async function loadModel(record: CatalogRecord, params: Record<string, string>): Promise<{ object: Object3D; clips: AnimationClip[] }> {
+  if (isDefaultParams(record, params)) {
+    const gltf = await loader.loadAsync(`/${record.glbUrl}`);
+    return { object: gltf.scene as Object3D, clips: gltf.animations };
+  }
+  const object = (await jsModule(`/${record.jsUrl}`))(THREE_SUBSET, params);
+  return { object, clips: object.animations };
 }
 
 function disposeModel(obj: Object3D): void {
@@ -103,6 +116,41 @@ export function ModelViewer(props: {
   const [failed, setFailed] = createSignal(false);
   // Bumped when a model lands, so the highlight effect re-runs on the new parts.
   const [loaded, setLoaded] = createSignal(0);
+  // The current model's animation clips, and whether they are playing.
+  const [clips, setClips] = createSignal<AnimationClip[]>([]);
+  const [running, setRunning] = createSignal(false);
+  let mixer: AnimationMixer | null = null;
+  let animRaf = 0;
+  let lastFrame = 0;
+
+  const tick = (now: number) => {
+    animRaf = requestAnimationFrame(tick);
+    mixer?.update(Math.min(0.1, (now - lastFrame) / 1000));
+    lastFrame = now;
+    render();
+  };
+  const start = () => {
+    if (!current || running() || clips().length === 0) return;
+    if (!mixer) {
+      mixer = new AnimationMixer(current);
+      for (const clip of clips()) mixer.clipAction(clip).play();
+    }
+    setRunning(true);
+    lastFrame = performance.now();
+    animRaf = requestAnimationFrame(tick);
+  };
+  const stop = () => {
+    if (animRaf) cancelAnimationFrame(animRaf);
+    animRaf = 0;
+    setRunning(false);
+  };
+  /** Stops and forgets the animation of the model being replaced. */
+  const dropAnimation = () => {
+    stop();
+    mixer?.stopAllAction();
+    mixer = null;
+    setClips([]);
+  };
 
   const disposeParts = () => {
     for (const p of parts) {
@@ -186,6 +234,7 @@ export function ModelViewer(props: {
     canvas.addEventListener("pointerup", onUp);
 
     onCleanup(() => {
+      dropAnimation();
       if (resizeRaf) cancelAnimationFrame(resizeRaf);
       ro.disconnect();
       canvas.removeEventListener("pointerdown", onDown);
@@ -207,12 +256,13 @@ export function ModelViewer(props: {
     setBusy(true);
     setFailed(false);
     loadModel(record, params).then(
-      (group) => {
+      ({ object: group, clips: loadedClips }) => {
         if (mine !== token || !scene || !camera || !controls) {
           disposeModel(group);
           return;
         }
         setBusy(false);
+        dropAnimation();
         if (current) {
           scene.remove(current);
           applyHighlight(parts, null); // hand the built materials back, so dispose finds them
@@ -220,6 +270,7 @@ export function ModelViewer(props: {
           disposeModel(current);
         }
         current = group;
+        setClips(loadedClips);
         parts = makeParts(group);
         scene.add(group);
         if (framed === record.id) {
@@ -269,6 +320,16 @@ export function ModelViewer(props: {
   return (
     <div class="factory-viewer" ref={pane}>
       <canvas ref={canvas} class="factory-viewer__canvas" />
+      <Show when={clips().length > 0}>
+        <div class="factory-viewer__controls" role="group" aria-label="Animation">
+          <button type="button" class="factory-btn" onClick={start} disabled={running()}>
+            Start
+          </button>
+          <button type="button" class="factory-btn" onClick={stop} disabled={!running()}>
+            Stop
+          </button>
+        </div>
+      </Show>
       <Show when={busy()}>
         <div class="factory-viewer__overlay">Loading...</div>
       </Show>

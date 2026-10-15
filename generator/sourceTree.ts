@@ -29,7 +29,7 @@ export interface ScopeNode extends NodeExtent {
   children: TreeNode[];
 }
 
-export type PrimitiveKind = "tri" | "quad" | "cap" | "loft" | "prism" | "spire" | "box" | "sweep" | "slab" | "facets";
+export type PrimitiveKind = "tri" | "quad" | "cap" | "loft" | "prism" | "spire" | "box" | "sweep" | "slab" | "facets" | "tube";
 
 export type ArgValue = number | boolean | number[];
 

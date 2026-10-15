@@ -6,7 +6,7 @@
 import { MeshCore } from "./meshCore.ts";
 
 export { chamferedRect, grow, ngon, rect, scaleRing } from "./meshCore.ts";
-export type { MaterialSpec, Ring, SweepAxis } from "./meshCore.ts";
+export type { AnimationClipSpec, AnimationTrack, MaterialSpec, Ring, SweepAxis } from "./meshCore.ts";
 
 /** The three.js namespace, or any object with the classes toGroup() uses. */
 export type ThreeNamespace = typeof import("three");
@@ -65,6 +65,13 @@ export class MeshBuilder extends MeshCore {
         holder.add(mesh);
       });
     }
+    root.animations = this.clips.map((clip) => new THREE.AnimationClip(
+      clip.name,
+      clip.times[clip.times.length - 1]!,
+      clip.tracks.map((t) => t.path === "rotation"
+        ? new THREE.QuaternionKeyframeTrack(`${t.node}.quaternion`, clip.times, t.values)
+        : new THREE.VectorKeyframeTrack(`${t.node}.position`, clip.times, t.values)),
+    ));
     return root;
   }
 }

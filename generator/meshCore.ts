@@ -25,6 +25,25 @@ export interface MaterialSpec {
 
 export type Vec3 = [number, number, number];
 
+/**
+ * One animated property of a part's node (see MeshCore.part), sampled at its
+ * clip's times: a rotation is 4 numbers a sample (an x, y, z, w quaternion about
+ * the node's origin, the part's pivot), a translation 3 (the node's position,
+ * the pivot itself at rest).
+ */
+export interface AnimationTrack {
+  node: string;
+  path: "rotation" | "translation";
+  values: number[];
+}
+
+/** A looping animation of a model's parts: shared sample times from 0, linear in between. */
+export interface AnimationClipSpec {
+  name: string;
+  times: number[];
+  tracks: AnimationTrack[];
+}
+
 /** A regular n-gon of radius r about (cx, cz), first corner at angle `rot`. */
 export function ngon(n: number, r: number, rot = 0, cx = 0, cz = 0): Ring {
   const ring: Ring = [];
@@ -75,6 +94,8 @@ export class MeshCore {
   /** Per material: positions and normals, 9 numbers a triangle, and each triangle's part (-1 for none). */
   protected readonly groups = new Map<string, { pos: number[]; nrm: number[]; part: number[] }>();
   protected readonly parts: Array<{ name: string; pivot: Vec3 }> = [];
+  /** The model's animation clips (see `animate`). */
+  protected readonly clips: AnimationClipSpec[] = [];
   /** The part being drawn, or -1. */
   protected currentPart = -1;
   /** How many scopes are open. */
@@ -119,6 +140,31 @@ export class MeshCore {
     } finally {
       this.currentPart = -1;
     }
+  }
+
+  /**
+   * Adds an animation clip that moves the model's parts: a steam locomotive's
+   * wheelsets and rods. Every track names a part already drawn; the times start
+   * at 0 and rise; each track holds one value per time. Node names are what
+   * three.js binds tracks by, so a part an animation moves must be named without
+   * spaces or dots.
+   */
+  animate(clip: AnimationClipSpec): void {
+    if (this.clips.some((c) => c.name === clip.name)) throw new Error(`animation "${clip.name}" added twice`);
+    const t = clip.times;
+    if (t.length < 2 || t[0] !== 0 || t.some((v, i) => i > 0 && v <= t[i - 1]!)) throw new Error(`animation "${clip.name}": times must start at 0 and rise`);
+    for (const track of clip.tracks) {
+      if (!this.parts.some((p) => p.name === track.node)) throw new Error(`animation "${clip.name}": no part "${track.node}"`);
+      if (/[\s.:/\[\]]/.test(track.node)) throw new Error(`animated part "${track.node}" has a name three.js cannot bind`);
+      const width = track.path === "rotation" ? 4 : 3;
+      if (track.values.length !== width * t.length) throw new Error(`animation "${clip.name}": ${track.node} ${track.path} has ${track.values.length} values for ${t.length} times`);
+    }
+    this.clips.push(clip);
+  }
+
+  /** The animation clips added so far. */
+  animations(): readonly AnimationClipSpec[] {
+    return this.clips;
   }
 
   tri(mat: string, a: Vec3, b: Vec3, c: Vec3): void {
@@ -267,6 +313,42 @@ export class MeshCore {
       if (n[0] * normal[0] + n[1] * normal[1] + n[2] * normal[2] >= 0) this.tri(mat, a, b, c);
       else this.tri(mat, a, c, b);
     }
+  }
+
+  /**
+   * A hollow cylinder lying along the horizontal `axis` from a0 to a1: a ring of
+   * outer radius `ro` and inner radius `ri` about (c, y) -- c is x for a tube
+   * along z, z for one along x -- as `n` facets, first corner at angle `rot`
+   * (0 = +x or +z, counter-clockwise toward +y). Outer walls face out, the bore
+   * faces the axis, and the two ring faces close the ends unless `ends` is false.
+   * A wheel's tyre, through which its spokes show.
+   */
+  tube(mat: string, axis: SweepAxis, c: number, y: number, ro: number, ri: number, a0: number, a1: number, n: number, rot = 0, ends = true): void {
+    if (a1 < a0) [a0, a1] = [a1, a0];
+    const P = (r: number, a: number, w: number): Vec3 =>
+      axis === "z" ? [c + r * Math.cos(a), y + r * Math.sin(a), w] : [w, y + r * Math.sin(a), c + r * Math.cos(a)];
+    const radial = (a: number, sign: number): Vec3 => (axis === "z" ? [sign * Math.cos(a), sign * Math.sin(a), 0] : [0, sign * Math.sin(a), sign * Math.cos(a)]);
+    const along: Vec3 = axis === "z" ? [0, 0, 1] : [1, 0, 0];
+    for (let i = 0; i < n; i++) {
+      const a = rot + (i / n) * Math.PI * 2;
+      const b = rot + ((i + 1) / n) * Math.PI * 2;
+      const mid = (a + b) / 2;
+      this.orientedQuad(mat, P(ro, a, a0), P(ro, b, a0), P(ro, b, a1), P(ro, a, a1), radial(mid, 1));
+      this.orientedQuad(mat, P(ri, a, a0), P(ri, b, a0), P(ri, b, a1), P(ri, a, a1), radial(mid, -1));
+      if (ends) {
+        this.orientedQuad(mat, P(ro, a, a1), P(ro, b, a1), P(ri, b, a1), P(ri, a, a1), along);
+        this.orientedQuad(mat, P(ro, a, a0), P(ro, b, a0), P(ri, b, a0), P(ri, a, a0), [-along[0], -along[1], -along[2]]);
+      }
+    }
+  }
+
+  /** A planar quad wound so its face looks along `n`. */
+  protected orientedQuad(mat: string, a: Vec3, b: Vec3, c: Vec3, d: Vec3, n: Vec3): void {
+    const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+    const v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+    const f = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+    if (f[0] * n[0] + f[1] * n[1] + f[2] * n[2] >= 0) this.quad(mat, a, b, c, d);
+    else this.quad(mat, a, d, c, b);
   }
 
   /**
