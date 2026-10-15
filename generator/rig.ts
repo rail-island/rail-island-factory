@@ -219,18 +219,36 @@ export function drawJoint(m: { tri(mat: string, a: Vec3, b: Vec3, c: Vec3): void
 //
 // Typed structurally, so this file needs no three.js: any Object3D will do.
 
-interface Attr { array: ArrayLike<number> & { [i: number]: number }; count: number; needsUpdate: boolean }
+interface Attr {
+  array: ArrayLike<number> & { [i: number]: number };
+  count: number;
+  needsUpdate: boolean;
+  normalized?: boolean;
+  isInterleavedBufferAttribute?: boolean;
+}
+interface Geom {
+  index: unknown;
+  userData: Record<string, unknown>;
+  getAttribute(name: string): Attr | undefined;
+  computeBoundingSphere(): void;
+  computeBoundingBox?(): void;
+  clone(): Geom;
+  setFromPoints(points: Array<{ x: number; y: number; z: number }>): unknown;
+  computeVertexNormals(): void;
+  addGroup(start: number, count: number, materialIndex?: number): void;
+}
 interface Obj {
   name: string;
+  uuid: string;
   isMesh?: boolean;
   children: Obj[];
   userData: Record<string, unknown>;
-  position: { set(x: number, y: number, z: number): unknown };
-  rotation: { set(x: number, y: number, z: number): unknown };
+  position: { x: number; y: number; z: number; set(x: number, y: number, z: number): unknown };
+  rotation: { y: number; set(x: number, y: number, z: number): unknown };
   matrixWorld: { elements: ArrayLike<number> };
   updateMatrixWorld(force?: boolean): void;
   getObjectByName(name: string): Obj | undefined;
-  geometry?: { getAttribute(name: string): Attr | undefined; computeBoundingSphere(): void; computeBoundingBox?(): void };
+  geometry?: Geom;
   material?: { name: string } | Array<{ name: string }>;
 }
 
@@ -276,10 +294,40 @@ function node(root: Obj, name: string): Obj {
 }
 
 /**
+ * The joint mesh's geometry, made this mesh's own on its first re-draw. three's
+ * clone() shares one geometry between every copy of a model, and every vehicle
+ * bends its own joint: a geometry another mesh already claimed is copied. One an
+ * importer welded (indexed) or quantized (integer or interleaved attributes) is
+ * replaced by a plain float triangle list, the layout the GLB was written in.
+ */
+function ownGeometry(mesh: Obj, count: number, materialIndex: number): Geom {
+  let g = mesh.geometry!;
+  const plain = (x: Attr | undefined): boolean =>
+    !!x && x.array instanceof Float32Array && !x.normalized && !x.isInterleavedBufferAttribute && x.count === count;
+  const nrm = g.getAttribute("normal");
+  if (g.index || !plain(g.getAttribute("position")) || (nrm && !plain(nrm))) {
+    const fresh = new (g.constructor as new () => Geom)();
+    fresh.setFromPoints(Array.from({ length: count }, () => ({ x: 0, y: 0, z: 0 })));
+    fresh.computeVertexNormals();
+    if (Array.isArray(mesh.material)) fresh.addGroup(0, count, materialIndex);
+    g = fresh;
+    mesh.geometry = g;
+  } else if (g.userData.rigOwner !== undefined && g.userData.rigOwner !== mesh.uuid) {
+    g = g.clone();
+    mesh.geometry = g;
+  }
+  g.userData.rigOwner = mesh.uuid;
+  return g;
+}
+
+/**
  * Re-draws joint `index` between its two section nodes, wherever they are now:
- * writes the positions and normals of the joint node's meshes in place (the
- * triangle count never changes). The sections may be posed any way -- by pose(),
- * or by the game's own chain -- as long as their world matrices are current.
+ * writes the positions and normals of the joint's mesh in place (the triangle
+ * count never changes). The sections may be posed any way -- by pose(), or by the
+ * game's own chain -- as long as their world matrices are current. The mesh is
+ * the joint node or a child of it (an importer may move a posable node's mesh
+ * onto a child), drawn in its own frame; each copy of a model owns its joint from
+ * its first re-draw on (ownGeometry).
  */
 export function renderJoint(root: Obj, index: number, rig?: VehicleRig): void {
   const r = rigOf(root, rig);
@@ -288,19 +336,18 @@ export function renderJoint(root: Obj, index: number, rig?: VehicleRig): void {
   const holder = node(root, j.node);
   const a = node(root, r.sections[j.sections[0]]!.node);
   const b = node(root, r.sections[j.sections[1]]!.node);
-  root.updateMatrixWorld(true);
-  const local = invertAffine(holder.matrixWorld.elements);
-  const tris = jointTriangles(j, r.sections, mul(local, a.matrixWorld.elements), mul(local, b.matrixWorld.elements));
   const meshes: Obj[] = [];
   if (holder.isMesh) meshes.push(holder);
   for (const c of holder.children) if (c.isMesh) meshes.push(c);
-  const mesh = meshes.find((x) => {
-    const mat = Array.isArray(x.material) ? x.material[0] : x.material;
-    return mat?.name === j.material;
-  });
-  const pos = mesh?.geometry?.getAttribute("position");
-  const nrm = mesh?.geometry?.getAttribute("normal");
-  if (!mesh || !pos || pos.count !== tris.length) throw new Error(`joint ${index}: no "${j.material}" mesh of ${tris.length} vertices`);
+  const named = (x: { name: string } | undefined): boolean => x?.name === j.material;
+  const mesh = meshes.find((x) => (Array.isArray(x.material) ? x.material.some(named) : named(x.material)));
+  if (!mesh?.geometry) throw new Error(`joint ${index}: no "${j.material}" mesh`);
+  root.updateMatrixWorld(true);
+  const local = invertAffine(mesh.matrixWorld.elements);
+  const tris = jointTriangles(j, r.sections, mul(local, a.matrixWorld.elements), mul(local, b.matrixWorld.elements));
+  const g = ownGeometry(mesh, tris.length, Array.isArray(mesh.material) ? mesh.material.findIndex(named) : 0);
+  const pos = g.getAttribute("position")!;
+  const nrm = g.getAttribute("normal");
   for (let t = 0; t + 2 < tris.length; t += 3) {
     const [p, q, s] = [tris[t]!, tris[t + 1]!, tris[t + 2]!];
     const u = [q[0] - p[0], q[1] - p[1], q[2] - p[2]];
@@ -317,15 +364,17 @@ export function renderJoint(root: Obj, index: number, rig?: VehicleRig): void {
   }
   pos.needsUpdate = true;
   if (nrm) nrm.needsUpdate = true;
-  mesh.geometry!.computeBoundingSphere();
-  mesh.geometry!.computeBoundingBox?.();
+  g.computeBoundingSphere();
+  g.computeBoundingBox?.();
 }
 
 /**
  * Poses a built model (the GLB's scene or the JS module's group) in place: turns
- * the steered wheels, lays the sections out as a hinged chain from the first
- * one's rest place, and re-draws every joint. `{}` is the rest pose. The rig is
- * the model's own (`userData.rig`) unless one is given.
+ * the steered wheels, lays the sections out as a hinged chain from wherever the
+ * first one is (its node's position and yaw; at rest, its rest place), and
+ * re-draws every joint. `{}` is the rest pose. The rig is the model's own
+ * (`userData.rig`, which a parametric build carries for its own parameters)
+ * unless one is given.
  */
 export function pose(root: Obj, p: VehiclePose = {}, rig?: VehicleRig): void {
   const r = rigOf(root, rig);
@@ -334,8 +383,9 @@ export function pose(root: Obj, p: VehiclePose = {}, rig?: VehicleRig): void {
     r.steer.axles.forEach((a, k) => a.nodes.forEach((name, i) => node(root, name).rotation.set(0, angles[k]![i]!, 0)));
   }
   const sections = r.sections ?? [];
-  let yaw = 0;
-  let at: Vec3 = sections[0]?.pivot ?? [0, 0, 0];
+  const first = sections[0] ? node(root, sections[0].node) : undefined;
+  let yaw = first ? first.rotation.y : 0;
+  let at: Vec3 = first ? [first.position.x, first.position.y, first.position.z] : [0, 0, 0];
   for (let i = 1; i < sections.length; i++) {
     // the hinge, carried by the section ahead (posed at `at`, turned by `yaw`)
     const [px, py, pz] = sections[i - 1]!.pivot;

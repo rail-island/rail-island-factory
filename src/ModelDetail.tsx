@@ -1,6 +1,7 @@
 // One model as a page: the interactive 3D preview and the whole spec sheet, with
 // arrows stepping through the CURRENT filtered and sorted list -- so "next" means
-// next in what the visitor is looking at. Escape goes back; the arrow keys step.
+// next in what the visitor is looking at. Escape goes back; the arrow keys step,
+// unless a slider or a select has the focus (pageKey).
 //
 // The side panel has up to three tabs: the spec list, the procedural source tree
 // (SourceTreePanel), fetched from tree/<id>.json only once that tab is open, and
@@ -18,7 +19,7 @@
 
 import { For, Match, Show, Suspense, Switch, createEffect, createMemo, createResource, createSignal, lazy, on, onCleanup } from "solid-js";
 import {
-  COLUMNS, effectiveParams, formatBytes, isDefaultParams, nonDefaultParams, poseControls, poseOf,
+  COLUMNS, effectiveParams, formatBytes, isDefaultParams, nonDefaultParams, pageKey, poseControls, poseOf,
   type DetailTab, type PoseValues, type Row,
 } from "./catalogQuery";
 import { indexTree, type SourceTree } from "./sourceTreeView";
@@ -70,9 +71,9 @@ export function ModelDetail(props: {
 
   createEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") props.onClose();
-      else if (e.key === "ArrowLeft") props.onStep(-1);
-      else if (e.key === "ArrowRight") props.onStep(1);
+      const action = pageKey(e.key, e.target);
+      if (action === "close") props.onClose();
+      else if (action !== null) props.onStep(action);
     };
     window.addEventListener("keydown", onKey);
     onCleanup(() => window.removeEventListener("keydown", onKey));

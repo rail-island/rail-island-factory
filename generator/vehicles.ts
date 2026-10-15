@@ -303,9 +303,10 @@ function trailer(m: MeshBuilder): void {
   m.scope("body", () => {
     block(m, "aluminum", back, TRAILER_FRONT, TRAILER_FLOOR, TRAILER_TOP - 0.03, -TRAILER_HW, TRAILER_HW);
     // the rails run from the rear frame to 1 cm short of the front, which the
-    // body's front face owns
+    // body's front face owns; they start 1 cm above the fifth wheel's top, so
+    // nothing on the tractor below it meets them as the trailer swings
     const r0 = TRAILER_REAR + 0.12;
-    block(m, "darkMetal", r0, TRAILER_FRONT - 0.01, TRAILER_FLOOR - 0.05, 1.32, -1.3, 1.3);
+    block(m, "darkMetal", r0, TRAILER_FRONT - 0.01, PIVOT[1] + 0.01, 1.32, -1.3, 1.3);
     block(m, "aluminum", r0, TRAILER_FRONT - 0.01, TRAILER_TOP - 0.08, TRAILER_TOP, -1.3, 1.3);
   });
   m.scope("side posts", () => {

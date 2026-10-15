@@ -45,8 +45,14 @@ clearance, measured in plan from the pivot:
 | cistern | 1.98 m (the tank's front head) | 2.15 m (the cab's back) |
 | reefer | 2.07 m (the refrigeration unit) | 2.52 m (the cab's back) |
 
-Both landing gears sit behind the tractor's rear wheels; `test/rig.test.ts` checks the swing for
-every semi. The webapp's current `articulation` entries name the reference GLBs' own nodes
+What of a trailer hangs below the fifth wheel's top stays outside the circle the tractor's rear
+corners sweep about the king pin (`C_SWING` 1.95 m for the cistern, whose light bar's corners reach
+1.85 m; `R_SWING` 1.65 m for the reefer, whose mudflaps reach 1.55 m): the cistern's landing gear
+and the front end of its discharge manifold (the side guards' front post stands behind the gear),
+the reefer's landing gear. The reefer's frame rails start 1 cm above the fifth wheel, clear of the
+tractor's mudguards and fuel tank below. `test/rig.test.ts` swings every semi's trailer to a third,
+two thirds and all of its 75 degrees either way and finds no trailer triangle cutting a tractor or
+wheel triangle. The webapp's current `articulation` entries name the reference GLBs' own nodes
 (`kingpin`, `axle_0`...); a factory GLB has its part nodes and a `rig` naming them
 ([vehicle-rig.md](vehicle-rig.md)), which the import can read instead.
 
@@ -56,11 +62,12 @@ Every truck's steered wheels are parts of their own inside the tractor's (or the
 each turning about its centre ([vehicle-rig.md](vehicle-rig.md)): the semis' front axle, and both
 front axles of the 8x4 mixer, whose wheels aim at one turning centre on the line midway along the
 rear tandem (wheelbases 6.10 and 4.25 m), the second axle turning less. The mixer is therefore
-a `body` part with its four steered wheels inside, no longer a single node. This family is
-authored with +Z to the vehicle's left, so its steered nodes are named for that frame
-(`wheel-front-right` is the one at -Z, which the rig lists first) and a positive steering angle -
-toward -Z, as everywhere - turns these trucks right. Each inner wheel locks at 40 degrees; the semis'
-trailers swing 75 degrees either way.
+a `body` part with its four steered wheels inside, no longer a single node. Whatever this file's
+comments call +Z, the steered nodes are named as on every road vehicle, in the factory's frame:
+`wheel-front-left` at -Z (which the rig lists first), and a positive steering angle turns the
+wheels toward -Z, counter-clockwise from above. Each inner wheel locks at 40 degrees, the tyre
+clearing the engine block, which stands between the front wheels (the cistern's 1.10 m wide, the
+reefer's 1.20 m); the semis' trailers swing 75 degrees either way.
 
 ## The cab-over shell
 

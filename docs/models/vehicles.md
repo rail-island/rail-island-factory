@@ -202,10 +202,12 @@ smooths every hard edge) can get them wrong.
 
 ## Steered front wheels
 
-Every road vehicle's two front wheels are parts of their own, children of the
-front body's node (`truck`, a bus's `body` or `section0`), named
-`wheel-front-left` (-Z) and `wheel-front-right` (+Z), each with its pivot at the
-wheel's centre: the game turns a wheel by rotating its node about its own Y axis,
+Every road vehicle's front wheels are parts of their own, children of the
+front body's node (`truck`, a bus's `body` or `section0`), named for the
+factory's frame on every vehicle: `wheel-front-left` at -Z and
+`wheel-front-right` at +Z (the 8x4 mixer's second steered axle
+`wheel-front-2-left` and `-right`; the rig's `steer.axles[].nodes` list each
+pair, the -Z wheel first), each with its pivot at the wheel's centre: the game turns a wheel by rotating its node about its own Y axis,
 as it spins the wind turbine's rotor. `steeredWheels()` (`vehicleParts.ts`) draws
 them; the axle beam stays in the body. The model's `rig` names them, with the
 inner wheel's lock, the wheelbase and the track for Ackermann angles
@@ -242,9 +244,11 @@ then a child of the parent's node (the steered wheels inside the truck).
 The American truck's king pin is at x = 1.05 m, on the fifth wheel's top
 (y = 1.18 m), 0.6 m behind the trailer's front. Its front corners sweep a
 1.43 m circle about it and the sleeper starts 1.55 m ahead, so the trailer can
-swing without touching the tractor; the landing gear stands behind the
-tractor's rear wheels. Both are tested. Its rig hinges the trailer at the king
-pin and allows 75 degrees either way; the model page's Trailer slider swings it.
+swing without touching the tractor; nothing of the trailer hangs below the fifth
+wheel's top ahead of the landing gear (the body's rails start 1 cm above it), and
+the landing gear stands behind the tractor's rear wheels. Its rig hinges the
+trailer at the king pin and allows 75 degrees either way, which `test/rig.test.ts`
+checks triangle by triangle; the model page's Trailer slider swings it.
 
 ## Conventions
 

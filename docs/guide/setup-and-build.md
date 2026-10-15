@@ -65,9 +65,11 @@ design is not re-rendered at all (see [../models/export.md](../models/export.md)
 - `test/viewerHighlight.test.ts` - the preview's highlight groups and picking, on
   real GLBs loaded with three's GLTFLoader (no WebGL).
 - `test/rig.test.ts` - steering, the joint renderer and `pose()` of every rigged road
-  vehicle ([../models/vehicle-rig.md](../models/vehicle-rig.md)).
+  vehicle, and the trailers' and steered tyres' clearance, triangle against triangle
+  with the helpers in `test/collision.ts` ([../models/vehicle-rig.md](../models/vehicle-rig.md)).
 - `test/buses.test.ts` - the vlakosimdb buses' lengths, axles, doors, arches, road
-  envelope and joints ([../models/buses.md](../models/buses.md)).
+  envelope and joints, and closed bodies: no ray from outside sees the inside of a
+  face ([../models/buses.md](../models/buses.md)).
 
 Most tests are synchronous and CPU-bound. `test/setup.ts` (`setupFiles` in
 `vite.config.ts`) yields one macrotask after every test, because Vitest reads its

@@ -104,8 +104,14 @@ block: a Steering slider and one per hinge of an articulated body ("Trailer",
 Moving one loads the model's JS module once and calls its `pose()` on the preview
 - the GLB's scene or the parametric JS build - which turns the steered wheels,
 swings the sections about their hinges and re-draws the joints: the same code the
-game is to call ([../models/vehicle-rig.md](../models/vehicle-rig.md)). The pose is
-page state only, back to rest for every model, and never in the URL.
+game is to call ([../models/vehicle-rig.md](../models/vehicle-rig.md)). It poses
+with the preview's own rig (`posePreview`): a non-default variant's hinges are its
+own, not the record's (the default build's), which only sets the sliders' limits.
+Only the model on screen is posed - after a step the previous one stays until the
+next lands - and a failed module load shows the error until a pose succeeds. The
+pose is page state only, back to rest for every model, and never in the URL. While
+a slider (or a parameter's select) has the focus the arrow keys are its own; they
+step through the list only otherwise (`pageKey`).
 
 `ModelViewer.tsx` (with its helper `viewerHighlight.ts`) is the only code
 importing three (plus `GLTFLoader` and `OrbitControls`), reached through a lazy import, so the list loads ~30 kB of

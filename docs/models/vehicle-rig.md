@@ -1,7 +1,7 @@
 # Vehicle rig
 
 **Covers** - what of a road vehicle the game may move after loading it: the steered front wheels, an articulated vehicle's sections and the joints (bellows) between them; how they are laid out as GLB nodes, the `rig` that names them in the GLB, the meta entry and the JS model, the pose and joint functions the JS model exports, and the model page's Pose sliders.
-**Code** - `generator/rig.ts`, `generator/trucks.ts` (`steered`), `generator/meshCore.ts` (`part` with a parent), `generator/meshBuilder.ts` (`toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/vehicleParts.ts` (`steeredWheels`), `generator/busAssembly.ts`, `generator/jsModel.ts`, `generator/catalog.ts` (`MetaEntry.rig`), `src/catalogQuery.ts` (`poseControls`, `poseOf`, `steerLockDeg`), `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `test/rig.test.ts`
+**Code** - `generator/rig.ts`, `generator/trucks.ts` (`steered`), `generator/meshCore.ts` (`part` with a parent), `generator/meshBuilder.ts` (`toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/vehicleParts.ts` (`steeredWheels`), `generator/busAssembly.ts`, `generator/jsModel.ts`, `generator/catalog.ts` (`MetaEntry.rig`), `src/catalogQuery.ts` (`poseControls`, `poseOf`, `steerLockDeg`, `posePreview`, `previewKey`, `pageKey`), `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `test/rig.test.ts`, `test/collision.ts`
 **See also** - [vehicles.md](vehicles.md), [buses.md](buses.md), [js-format.md](js-format.md), [export.md](export.md), [../site/catalog-site.md](../site/catalog-site.md)
 
 ## The idea
@@ -16,7 +16,7 @@ and a `rig` says which.
 
 | What | Nodes | How it moves |
 |---|---|---|
-| steered wheels | `wheel-front-left`, `wheel-front-right` (a second steered axle's `wheel-front-2-left`, ...), children of the front body's node | each turns about its own +Y; its origin is the wheel's centre (on the steering axis) |
+| steered wheels | `wheel-front-left` at -Z, `wheel-front-right` at +Z on every road vehicle (a second steered axle's `wheel-front-2-left`, ...), children of the front body's node | each turns about its own +Y; its origin is the wheel's centre (on the steering axis) |
 | sections | `section0`, `section1`, ... (the American truck: `truck`, `trailer`) | section i turns about its origin, the hinge with section i - 1, which section i - 1 carries |
 | joints | `joint0`, ... between sections i and i + 1 | not rigid: re-drawn between the two sections wherever they are (`renderJoint`) |
 
@@ -52,11 +52,12 @@ interface VehicleRig {
   cross-section, the number of outer ridges and their depth. The GLB holds its rest
   pose, drawn by the same function the game calls.
 
-The rig travels three ways, all the default build's: the GLB's **scene extras**
-(`scenes[0].extras.rig`, which three's GLTFLoader puts in `scene.userData.rig`), the
-JS model's group (`group.userData.rig`, for any parameter combination) and the
-vehicle's **meta entry** (`vehicles.meta.json`, `rig`). A model without one has no
-`rig` key and unchanged bytes.
+The rig travels three ways: the GLB's **scene extras** (`scenes[0].extras.rig`,
+which three's GLTFLoader puts in `scene.userData.rig`) and the vehicle's **meta
+entry** (`vehicles.meta.json`, `rig`) carry the default build's; the JS model's
+group carries the rig of the parameters it was built with (`group.userData.rig`) -
+a Karosa Long variant's hinge and joint faces are its own. Pose a model with the
+rig it carries. A model without one has no `rig` key and unchanged bytes.
 
 ## Parts with a parent
 
@@ -82,8 +83,7 @@ Every steered wheel aims at one turning centre on the line of the axle the vehic
 turns about (Ackermann): `steerAngles(steer, angle)` gives each axle's pair of Y
 rotations, the -Z wheel first, for the angle of a virtual wheel midway along the
 front axle - positive counter-clockwise from above, toward -Z, which is a left turn in
-the factory's frame (the reproduced trucks, authored with +Z left, turn right; their
-nodes are named for their own frame). The inner wheels turn tighter, and a second
+the factory's frame for every road vehicle. The inner wheels turn tighter, and a second
 steered axle, nearer the turning line, less than the first. `steerLock(steer)` is
 the largest such angle, the one that brings the front inner wheel to `maxAngleDeg`. A wheel only ever
 turns about its own vertical, so nothing else of it moves: the tyre, disc and hub
@@ -95,16 +95,35 @@ stay round its centre. The front wheel arches are long enough for the tyre at lo
 or the JS group, both carry the nodes and the rig:
 
 1. turns the steered wheels (`steerAngles`);
-2. keeps section 0 where it is and lays every section behind it out as a chain: the
-   hinge of section i is where section i - 1 now carries it, and section i's yaw is
-   section i - 1's plus `bend[i - 1]` (radians, + counter-clockwise from above);
+2. keeps section 0 where it is - its node's position and yaw, at rest its rest
+   place - and lays every section behind it out as a chain: the hinge of section i
+   is where section i - 1 now carries it, and section i's yaw is section i - 1's plus
+   `bend[i - 1]` (radians, + counter-clockwise from above);
 3. re-draws every joint (`renderJoint`). `pose(group, {})` is the rest pose.
 
 The game is expected to pose the sections itself, on the road, as it does today; it
 then calls `renderJoint(group, i)` for each joint. That reads the two section nodes'
 **world matrices**, so it works however they got there - nested, re-parented into
-wrappers, scaled - and writes the joint mesh's positions and normals in place: the
-triangle count never changes, so nothing is re-allocated per frame.
+wrappers, scaled - and writes the joint mesh's positions and normals in place, in
+the mesh's own frame: the triangle count never changes, so nothing is re-allocated
+per frame.
+
+**Each copy owns its joint.** three's `clone()` shares a geometry between every copy
+of a loaded model, and every vehicle bends its own joint, so the first re-draw of a
+copy's joint makes the geometry that copy's (`ownGeometry`: a geometry another mesh
+already wrote is cloned once; the game's ArticulatedBus clones its bellows for the
+same reason). A copy shows the template's joint until its own first re-draw.
+
+### Importing
+
+The game re-encodes every GLB (weld, then meshopt quantization). For a rigged
+vehicle that is fine as long as every rig node - the sections, the steered wheels
+and the joints - is passed to the encode as a **pivot node**, so quantization does
+not move its origin (which is the rotation axis). The joint mesh itself may be
+welded and quantized, or moved onto a child node whose matrix carries the
+dequantization: `renderJoint` finds the mesh under the joint node, works in that
+mesh's frame, and the first time replaces a welded (indexed) or quantized geometry
+with a plain float triangle list of the joint's own layout.
 
 `jointTriangles(joint, sections, ma, mb)` is the joint itself, three.js-free: rings
 of the cross-section stacked from the front face (t = 0) to the rear face (t = 1),
@@ -137,7 +156,9 @@ A rigged model's page has a **Pose** block above the tabs: a Steering slider
 (plus or minus the steering lock, degrees) and one per hinge - "Trailer" for a
 semi-truck, "Joint" for a two-section bus, "Joint 1", "Joint 2" beyond. Moving one fetches
 the model's JS module once and calls its `pose()` on the preview (the GLB at the
-default parameters, the JS build otherwise); Reset returns to rest. The pose is not
+default parameters, the JS build otherwise) with the preview's own rig
+(`posePreview`), and only on the model the page shows now (`previewKey`); Reset
+returns to rest. The pose is not
 in the URL, and the thumbnail, specs and source tree stay the rest pose's. The slider
 limits come from the catalog record's `rig` (`poseControls`); `steerLockDeg` repeats
 `steerLock`'s formula because the site may import only types from `generator/`, and a
@@ -148,9 +169,16 @@ test holds the two equal.
 `test/rig.test.ts`: Ackermann angles meet at one centre and reach the lock, a second
 steered axle aimed at the same centre; a joint stays sealed to both sections under
 arbitrary matrices and winds outward; every road vehicle is rigged, its steered
-wheels are children of the front body, mirrored and `track` apart, axles front first;
-`pose()` on the JS module turns every wheel by `steerAngles` and keeps every hinge
-where both of its sections put it; every semi-trailer swings clear of its tractor;
-the site's sliders and units.
+wheels are children of the front body, named `-left` at -Z, mirrored and `track`
+apart, axles front first; `pose()` on the JS module turns every wheel by
+`steerAngles`, keeps every hinge where both of its sections put it, draws every joint
+where `jointTriangles` puts it in world space (inside a scaled, rotated parent too)
+and returns to the build's geometry at rest; two copies of a model bend their own
+joints; a joint welded, quantized and moved onto a child node, as the game's encode
+leaves it, re-draws sealed; the chain follows a moved section 0; a three-section
+vehicle, loaded through GLTFLoader, bends at both hinges; every semi-trailer swings
+clear of its tractor and every steered tyre clears the body at full lock, checked
+triangle against triangle (`test/collision.ts`); the site poses a non-default
+variant with its own rig, and its sliders, preview key and arrow keys.
 `test/jsModel.test.ts` checks the JS group's node nesting and `userData.rig` against
 the GLB's nodes and scene extras; `test/export.test.ts` the meta entries' `rig`.
