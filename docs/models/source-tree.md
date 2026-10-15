@@ -70,8 +70,10 @@ LeafNode  = { id, kind, material, args, tri: [first, count], triangles, min?, ma
   material too. In a model with **parts** (an articulated vehicle's `truck` and
   `trailer`, [vehicles.md](vehicles.md)) a material has a primitive in each
   part's node; `tri` then counts across them in node order - the truck's
-  triangles of that material first, then the trailer's. Each part is also a
-  top-level scope.
+  triangles of that material first, then the trailer's. A part inside another
+  part's node (a steered wheel inside its body, [vehicle-rig.md](vehicle-rig.md))
+  is drawn right after its parent, so drawing order and depth-first node order
+  agree. Each part is also a top-level scope.
 - `args` are the call's arguments rounded to the millimetre; a ring is recorded
   as its point count (`ring`, `lower`, `upper`).
 - `triangles`, `min`, `max` are the node's extent in metres (absent when it drew

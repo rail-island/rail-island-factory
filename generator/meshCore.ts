@@ -11,6 +11,8 @@
 // Units are metres, +Y up, base at y = 0. The game's catalog recentres a model on
 // its footprint, so a design need not be centred on the origin.
 
+import type { VehicleRig } from "./rig.ts";
+
 export type Ring = Array<[number, number]>; // (x, z) points, counter-clockwise seen from above
 
 /** The horizontal axis a sweep runs along (see MeshCore.sweep). */
@@ -74,7 +76,14 @@ export function scaleRing(ring: Ring, s: number): Ring {
 export class MeshCore {
   /** Per material: positions and normals, 9 numbers a triangle, and each triangle's part (-1 for none). */
   protected readonly groups = new Map<string, { pos: number[]; nrm: number[]; part: number[] }>();
-  protected readonly parts: Array<{ name: string; pivot: Vec3 }> = [];
+  /** The named parts in drawing order; `parent` indexes this list, -1 for a top-level part. */
+  protected readonly parts: Array<{ name: string; pivot: Vec3; parent: number }> = [];
+  /**
+   * What of the model the game may move (rig.ts): its steered wheels, sections
+   * and joints. Set by the design; written into the GLB's scene extras, the JS
+   * group's userData and the meta entry. Null for a model without one.
+   */
+  rig: VehicleRig | null = null;
   /** The part being drawn, or -1. */
   protected currentPart = -1;
   /** How many scopes are open. */
@@ -105,20 +114,45 @@ export class MeshCore {
   /**
    * Draws `fn` as a named part of the model: its own node in the GLB, translated
    * to `pivot` (see toGlb) -- an articulated vehicle's truck and trailer, the
-   * trailer's pivot its rotation point. Draw in world coordinates as usual. Parts
-   * are top level, used once each, one after another; once a model has parts,
-   * every triangle must be in one. A part is also a scope of the source tree.
+   * trailer's pivot its rotation point; a steered wheel, its pivot the wheel's
+   * centre. Draw in world coordinates as usual. Parts are drawn at top level,
+   * used once each, one after another; once a model has parts, every triangle
+   * must be in one. A part is also a scope of the source tree.
+   *
+   * A part may name a `parent`, an earlier part: its node is then a child of the
+   * parent's node, so it moves with it (a steered wheel with its section). The
+   * parts after a parent must all be its descendants until its last child is
+   * drawn, so the drawing order is the node tree's depth-first order -- the
+   * order the GLB's triangles are numbered in.
    */
-  part<T>(name: string, pivot: Vec3, fn: () => T): T {
+  part<T>(name: string, pivot: Vec3, fn: () => T, parent?: string): T {
     if (this.drawing || this.depth > 0 || this.currentPart >= 0) throw new Error("part() must be top level");
     if (this.parts.some((p) => p.name === name)) throw new Error(`part "${name}" drawn twice`);
-    this.parts.push({ name, pivot });
+    let up = -1;
+    if (parent !== undefined) {
+      up = this.parts.findIndex((p) => p.name === parent);
+      if (up < 0) throw new Error(`part "${name}": no earlier part "${parent}"`);
+      for (let k = up + 1; k < this.parts.length; k++) {
+        let a = this.parts[k]!.parent;
+        while (a >= 0 && a !== up) a = this.parts[a]!.parent;
+        if (a !== up) throw new Error(`part "${name}" must follow its parent "${parent}" and the parent's other descendants`);
+      }
+    }
+    this.parts.push({ name, pivot, parent: up });
     this.currentPart = this.parts.length - 1;
     try {
       return this.scope(name, fn);
     } finally {
       this.currentPart = -1;
     }
+  }
+
+  /** A part's translation within its parent's node: its pivot less the parent's. */
+  protected partOffset(index: number): Vec3 {
+    const p = this.parts[index]!;
+    if (p.parent < 0) return p.pivot;
+    const q = this.parts[p.parent]!.pivot;
+    return [p.pivot[0] - q[0], p.pivot[1] - q[1], p.pivot[2] - q[2]];
   }
 
   tri(mat: string, a: Vec3, b: Vec3, c: Vec3): void {

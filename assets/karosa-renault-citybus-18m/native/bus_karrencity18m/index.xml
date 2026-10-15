@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="Windows-1250"?>
+<motocar author="Vojtěch Vohlídka" default="0" email="xxvojtikxx@seznam.cz" maxspeed="50" name="BUS_KarRenCity18m" pas_wi="2.4" pas_y1="0.3" pas_y2="2.8" path="" power="120" roadstyle="road" style="bus2c" title="KarosaRenaultCityBus18m" tramspace="" weight="15" yd_rel="1" yd_s1="-1.5" yd_s2="1.5" yd_t1="0" yd_t2="20" ydecfile="model/y_dec.bmp" zd_rel="1" zd_s1="0" zd_s2="4" zd_t1="0" zd_t2="20" zdecfile="model/z_dec.bmp" zi_rel="1" zi_s1="0" zi_s2="4" zi_t1="0" zi_t2="20" zincfile="model/z_inc.bmp"/>

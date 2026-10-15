@@ -42,6 +42,7 @@ import { AIRCRAFT } from "./aircraft.ts";
 import { SHIPS } from "./ships.ts";
 import { CABLE_CABINS } from "./cableCabins.ts";
 import { TRUCKS } from "./trucks.ts";
+import { CITY_BUS_DESIGNS, KAROSA_DESIGNS } from "./buses.ts";
 import { VILLAGE_HOUSES } from "./village.ts";
 import type { ProceduralDesign } from "./design.ts";
 import { glbStats } from "./glbStats.ts";
@@ -53,6 +54,7 @@ import {
 } from "./catalog.ts";
 import { TREE_DIR, type SourceTree } from "./sourceTree.ts";
 import type { MeshBuilder } from "./meshBuilder.ts";
+import type { VehicleRig } from "./rig.ts";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -79,6 +81,8 @@ const FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: st
   { designs: VILLAGE_HOUSES, source: "village.ts", meta: "village" },
   { designs: VEHICLES, source: "vehicles.ts", meta: "vehicles" },
   { designs: TRUCKS, source: "trucks.ts", meta: "vehicles" },
+  { designs: KAROSA_DESIGNS, source: "karosa.ts", meta: "vehicles" },
+  { designs: CITY_BUS_DESIGNS, source: "cityBuses.ts", meta: "vehicles" },
   { designs: AIRCRAFT, source: "aircraft.ts", meta: "vehicles" },
   { designs: SHIPS, source: "ships.ts", meta: "vehicles" },
   { designs: CABLE_CABINS, source: "cableCabins.ts", meta: "vehicles" },
@@ -149,7 +153,7 @@ export class ZFightingError extends Error {
 }
 
 /** Every design's GLB bytes, after checking none of them z-fights. */
-function buildAll(designs: readonly ProceduralDesign[]): Array<{ design: ProceduralDesign; bytes: Uint8Array; triangles: number; tree: SourceTree }> {
+function buildAll(designs: readonly ProceduralDesign[]): Array<{ design: ProceduralDesign; bytes: Uint8Array; triangles: number; tree: SourceTree; rig: VehicleRig | null }> {
   const built = designs.map((design) => {
     const model = design.build();
     return {
@@ -157,6 +161,7 @@ function buildAll(designs: readonly ProceduralDesign[]): Array<{ design: Procedu
       bytes: toGlb(design.id, model),
       triangles: model.triangleCount(),
       tree: model.sourceTree(design.id, design.title),
+      rig: model.rig,
     };
   });
   const found = new Map<string, CoplanarOverlap[]>();
@@ -174,6 +179,8 @@ export interface GeneratedModel {
   thumb: string; // absolute path
   tree: string; // absolute path
   triangles: number;
+  /** The model's rig (rig.ts), or null. */
+  rig: VehicleRig | null;
   /** False when the GLB came out byte-identical to the one already on disk. */
   changed: boolean;
 }
@@ -198,7 +205,7 @@ export function generateModels(
   fs.mkdirSync(thumbDir, { recursive: true });
   fs.mkdirSync(treeDir, { recursive: true });
   const out: GeneratedModel[] = [];
-  for (const { design, bytes, triangles, tree: sourceTree } of built) {
+  for (const { design, bytes, triangles, tree: sourceTree, rig } of built) {
     const glb = path.join(glbDir, `${design.id}.glb`);
     const thumb = path.join(thumbDir, `${design.id}.png`);
     const tree = path.join(treeDir, `${design.id}.json`);
@@ -210,7 +217,7 @@ export function generateModels(
     if (changed || !fs.existsSync(thumb)) {
       fs.writeFileSync(thumb, PNG.sync.write(renderGlbThumb(glb, THUMB_SIZE)));
     }
-    out.push({ id: design.id, glb, thumb, tree, triangles, changed });
+    out.push({ id: design.id, glb, thumb, tree, triangles, rig, changed });
   }
   for (const [sub, ext] of [[glbDir, ".glb"], [thumbDir, ".png"], [treeDir, ".json"]] as const) {
     for (const name of fs.readdirSync(sub)) {
@@ -304,7 +311,8 @@ export async function buildExport(dir = EXPORT_DIR): Promise<{ models: Generated
   const designs = [...DESIGNS.values()];
   fs.writeFileSync(path.join(dir, META_FILE), `${JSON.stringify(exportMeta(BUILDINGS), null, 2)}\n`);
   fs.writeFileSync(path.join(dir, VILLAGE_META_FILE), `${JSON.stringify(exportMeta(VILLAGE_HOUSES), null, 2)}\n`);
-  fs.writeFileSync(path.join(dir, VEHICLE_META_FILE), `${JSON.stringify(exportVehicleMeta(ALL_VEHICLES), null, 2)}\n`);
+  const rigs = new Map(models.flatMap((m) => (m.rig ? [[m.id, m.rig] as const] : [])));
+  fs.writeFileSync(path.join(dir, VEHICLE_META_FILE), `${JSON.stringify(exportVehicleMeta(ALL_VEHICLES, rigs), null, 2)}\n`);
   const catalog: ModelCatalog = {
     version: 1,
     records: designs.map((design) => {
@@ -313,7 +321,7 @@ export async function buildExport(dir = EXPORT_DIR): Promise<{ models: Generated
       const stats = glbStats(bytes);
       const fields = design.catalog ?? (VEHICLE_IDS.has(design.id) ? VEHICLE_CATALOG : SKYSCRAPER_CATALOG);
       const jsText = js.get(design.id)!;
-      return catalogRecord(metaEntry(design, fields), {
+      return catalogRecord(metaEntry(design, fields, built.rig), {
         ...stats,
         glbBytes: bytes.length,
         glbGzipBytes: gzipSize(bytes),

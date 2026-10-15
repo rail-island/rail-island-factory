@@ -1,17 +1,18 @@
 # Vehicles
 
 **Covers** - the procedurally generated road and rail vehicles (an articulated American
-truck, the CD 150, CD 163, CD 230 and CD 263 electric locomotives the CSD and CD coaches and the freight wagons), their triangle budget and conventions, articulated vehicles'
-truck and trailer parts, the `sweep` primitive they are mostly built from, and
+truck, the trucks reproduced from the game, the buses from vlakosimdb, the CD 150, CD 163, CD 230 and CD 263 electric locomotives, the CSD and CD coaches and the freight wagons), their triangle budget and conventions, articulated vehicles'
+parts and steered front wheels, the `sweep` primitive they are mostly built from, and
 how to add one.
 **Code** - `generator/vehicles.ts`, `generator/cd150.ts`, `generator/cd150Comparison.ts`, `generator/cd150Report.ts`, `test/cd150.test.ts`, `generator/cd163.ts`, `generator/cd163Family.ts`, `generator/cd230.ts`, `generator/cdLogo.ts`, `generator/vehicleParts.ts`, `generator/design.ts`, `generator/meshCore.ts` (`sweep`, `part`), `generator/meshBuilder.ts` (`toGlb`), `src/viewerHighlight.ts`, `test/models.test.ts`, `test/cdLogo.test.ts`, `test/viewerHighlight.test.ts`, `.agents/skills/road-vehicle/SKILL.md`, `.agents/skills/railroad-vehicle/SKILL.md`, `.agents/skills/vlakosimdb-transfer/SKILL.md`
-**See also** - [loco-liveries.md](loco-liveries.md) (the locomotives' liveries and the CD 263), [cd-230.md](cd-230.md) (the laminatka), [csd-coaches.md](csd-coaches.md) (the CSD coaches), [wagons.md](wagons.md) (the freight wagons), [cd-green-white.md](cd-green-white.md), [bmo-double-deck.md](bmo-double-deck.md), [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md)
+**See also** - [buses.md](buses.md) (the buses), [vehicle-rig.md](vehicle-rig.md) (steered wheels, sections, joints), [trucks.md](trucks.md), [loco-liveries.md](loco-liveries.md) (the locomotives' liveries and the CD 263), [cd-230.md](cd-230.md) (the laminatka), [csd-coaches.md](csd-coaches.md) (the CSD coaches), [wagons.md](wagons.md) (the freight wagons), [cd-green-white.md](cd-green-white.md), [bmo-double-deck.md](bmo-double-deck.md), [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md)
 
 ## The designs
 
 | id | title | look |
 |---|---|---|
-| `veh-american-truck` | American Truck | articulated: a long-nose conventional tractor (chrome grille, sleeper, twin stacks, tandem drive axle) and a 53 ft dry van; 22.2 m, about 4,900 triangles |
+| `veh-american-truck` | American Truck | articulated: a long-nose conventional tractor (chrome grille, sleeper, twin stacks, tandem drive axle) and a 53 ft dry van; steered front wheels; 22.2 m, about 4,900 triangles |
+| `veh-karosa-short`, `veh-karosa-long`, ... | the buses | the vlakosimdb buses: two parametric Karosa families (rigid and articulated) and the single models; see [buses.md](buses.md) |
 | `veh-cd-150` | CD 150 / 151 / ZSR 350 | parametric (`livery`: cd150, the default, and the CD 151, 151 CEZ and five ZSR 350 liveries, [loco-liveries.md](loco-liveries.md)): rigid cream/green electric locomotive 150 222-8 reconstructed from native vlakosimdb XML/BMPs: tapered sloping cabs, a green skirt lowered between the bogies, opposite grille/window sides, asymmetric cooler and two linked-arm pantographs (rear raised, front folded, knees toward the cab ends), bogies with spoked wheels, axle boxes on equalisers with paired primary coils, a side frame dropped between the axles over large secondary coils, traction motors, brake cylinders and sandboxes; 16.80 m over buffers, 6.24 m operating height, about 12,600 triangles. [Source notes](../../assets/cd-150/SOURCES.md), [measured comparison](../../assets/cd-150/COMPARISON.md) |
 | `veh-cd-163` | CD 163 / 363 | parametric (`livery`: cd163, the default, and ten 162, 163, 362 and 363 liveries, [loco-liveries.md](loco-liveries.md)): rigid rail vehicle (`cd163.ts`, `cd163Family.ts`): the Czech Railways class 163 Bo'Bo' electric 163 244-7 in the green livery with the yellow band - ribbed sides, four portholes opposite continuous intake shutters, the raised cooler box and cant grilles, raked framed windscreens, an upright period CD monogram and condensed number plates, two single-arm pantographs on shedded insulators (rear raised, front folded, knees toward the cab ends), bogies with coil springs, axle boxes, motors and sandboxes; 16.80 m over the buffers, 5.74 m high with the rear collector raised, about 15,600 triangles. Modelled from photographs, the vlakosimdb elevation drawings and the official emblem (`assets/cd-163/`, see `SOURCES.md` there) |
 | `veh-cd-230` | CD 230 / 240 / 340 | parametric (`livery`: cd230, the default, cd240, cd240No047, cd340, [cd-230.md](cd-230.md)): the Skoda 47E "laminatka" 230 025-9 reconstructed from native vlakosimdb XML/BMPs and photographs: rounded glass-fibre noses with the wrap-round windscreen, headlight housing, vents, lip grilles and lamps laid on the curved skin, louvred machine-room band under six windows, portholed cab doors, diamond pantographs (rear raised, front folded), bogies with coils, motors and brake cylinders; 16.44 m over buffers, 5.87 m operating height, about 15,600 to 15,900 triangles. [Source notes](../../assets/cd-230/SOURCES.md), [measured comparison](../../assets/cd-230/COMPARISON.md) |
@@ -199,6 +200,19 @@ redundant - a loader could compute the same ones - but storing them means no
 step of the game's pipeline that recomputes normals on shared vertices (which
 smooths every hard edge) can get them wrong.
 
+## Steered front wheels
+
+Every road vehicle's two front wheels are parts of their own, children of the
+front body's node (`truck`, a bus's `body` or `section0`), named
+`wheel-front-left` (-Z) and `wheel-front-right` (+Z), each with its pivot at the
+wheel's centre: the game turns a wheel by rotating its node about its own Y axis,
+as it spins the wind turbine's rotor. `steeredWheels()` (`vehicleParts.ts`) draws
+them; the axle beam stays in the body. The model's `rig` names them, with the
+inner wheel's lock, the wheelbase and the track for Ackermann angles
+([vehicle-rig.md](vehicle-rig.md)). The truck's wheels lock at 40 degrees; the
+tyre turns inside the fender's arch (its farthest point stays 0.54 m from the
+wheel's centre, the arch's inside is 0.6 m out).
+
 ## Articulated vehicles: truck and trailer
 
 A tractor with a semi-trailer is one model with **two named parts**, divided at
@@ -219,11 +233,18 @@ material's triangle numbering runs across the parts in node order
 once a model has parts every triangle must be in one (`part()` and `toGlb`
 throw otherwise).
 
+An articulated bus is the same with more parts: `section0`, `section1`, ... each
+hinged at the middle of the gap the bellows covers, and a `joint<i>` part per gap
+whose triangles are drawn by the rig's joint renderer ([buses.md](buses.md),
+[vehicle-rig.md](vehicle-rig.md)). A part may also name a parent part: its node is
+then a child of the parent's node (the steered wheels inside the truck).
+
 The American truck's king pin is at x = 1.05 m, on the fifth wheel's top
 (y = 1.18 m), 0.6 m behind the trailer's front. Its front corners sweep a
 1.43 m circle about it and the sleeper starts 1.55 m ahead, so the trailer can
 swing without touching the tractor; the landing gear stands behind the
-tractor's rear wheels. Both are tested.
+tractor's rear wheels. Both are tested. Its rig hinges the trailer at the king
+pin and allows 75 degrees either way; the model page's Trailer slider swings it.
 
 ## Conventions
 
@@ -233,8 +254,9 @@ tractor's rear wheels. Both are tested.
 - Real proportions: the tests hold a vehicle under 2.7 m wide (2.6 m legal,
   plus mirrors) and 4.115 m high (13 ft 6 in), and longer than twice its width.
 - The GLB's generator string is `Rail Island procedural vehicle (<id>)`; a rigid
-  vehicle's one node is named `vehicle`, an articulated one's are `truck` and
-  `trailer`.
+  rail vehicle's one node is named `vehicle`; a road vehicle's are its parts
+  (`truck`, `trailer`, `body`, `section0`, `joint0`, and the steered wheels inside
+  the front one).
 - Chrome is only mildly metallic (0.45): the game and the site light models with
   no environment map, where a fully metallic surface renders nearly black.
 

@@ -71,10 +71,22 @@ describe("standalone JS models", () => {
         const want = colors.get(o.name)!;
         expect([c.r, c.g, c.b].map((v, k) => Math.abs(v - want[k]!)).every((d) => d < 1e-4)).toBe(true);
       });
-      const nodeNames = (glb.json.nodes ?? []).map((n) => (n as { name?: string }).name);
-      // an articulated vehicle's parts are child groups; a rigid vehicle's one node
-      // ("vehicle") is the group itself, its meshes the group's children
-      if (id.startsWith("veh-") && !(nodeNames.length === 1 && nodeNames[0] === "vehicle")) expect(group.children.map((c) => c.name)).toEqual(nodeNames);
+      const nodes = (glb.json.nodes ?? []) as Array<{ name?: string; children?: number[] }>;
+      const nodeNames = nodes.map((n) => n.name);
+      // a model's parts are child groups, nested as the GLB's nodes are; a rigid
+      // vehicle's one node ("vehicle") is the group itself, its meshes the group's children
+      if (id.startsWith("veh-") && !(nodeNames.length === 1 && nodeNames[0] === "vehicle")) {
+        const roots = (glb.json.scenes![0] as { nodes: number[] }).nodes;
+        expect(group.children.map((c) => c.name)).toEqual(roots.map((i) => nodeNames[i]));
+        nodes.forEach((n) => {
+          const holder = group.getObjectByName(n.name!)!;
+          const kids = holder.children.filter((c) => !(c instanceof THREE.Mesh)).map((c) => c.name);
+          expect(kids).toEqual((n.children ?? []).map((i) => nodeNames[i]));
+        });
+      }
+      // a rigged model's rig rides along, as the GLB's scene extras
+      const extras = (glb.json.scenes![0] as { extras?: { rig?: unknown } }).extras;
+      expect(group.userData.rig).toEqual(extras?.rig);
       expect(group.name).toBe(id);
     }, 30_000);
 
@@ -82,7 +94,7 @@ describe("standalone JS models", () => {
       const text = await jsOf(id);
       const code = text.replace(/^\/\/.*\n/, ""); // the banner comment
       expect(code).not.toMatch(/\bimport\s*[\w{*"'(]/);
-      expect(code).not.toMatch(/node:|require\(/);
+      expect(code).not.toMatch(/["'`]node:|require\(/); // a rig's { node: "..." } keys are data
       expect(text).toMatch(/export\s*\{[^}]*\bas default\b/);
       expect(Buffer.byteLength(text)).toBeLessThan(designGlb(id).length);
     });

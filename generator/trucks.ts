@@ -11,7 +11,9 @@
 //
 // The two semi-trucks are articulated: a "truck" part and a "trailer" part,
 // divided at the king pin on the fifth wheel's top, which the trailer's node
-// turns about (MeshBuilder.part). The mixer is rigid, one node.
+// turns about (MeshBuilder.part). The mixer is rigid, one "body" part. Every
+// steered wheel is a part of its own inside the tractor's or the body's node,
+// named in the rig the game turns them by (rig.ts, docs/models/vehicle-rig.md).
 //
 // The cabs are cab-overs drawn as a stack of lofts over a rounded plan ring
 // (`cabShell`): the front rakes back level by level and the roof edge rounds
@@ -22,7 +24,7 @@
 import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import type { CatalogFields, ProceduralDesign } from "./design.ts";
-import { arc, block, plate, side } from "./vehicleParts.ts";
+import { arc, block, plate, side, steeredWheels } from "./vehicleParts.ts";
 
 // Metals are only mildly metallic: the game and the site light models without
 // an environment map, so a fully metallic surface would render nearly black.
@@ -204,6 +206,15 @@ function axle(m: MeshBuilder, x: number, r: number, half: number, drive: boolean
   }
 }
 
+/**
+ * The steered wheels of axle x inside `parent`'s node (vehicle-rig.md). This
+ * family's frame has +Z to the vehicle's left, so the -Z wheel the rig lists
+ * first is the right one.
+ */
+function steered(m: MeshBuilder, parent: string, x: number, r: number, tyre: [number, number], suffix = ""): [string, string] {
+  return steeredWheels(m, parent, x, axleY(r), (s, z0, z1) => wheel(m, x, r, z0, z1, s), tyre, [`wheel-front${suffix}-right`, `wheel-front${suffix}-left`]);
+}
+
 /** A fender arched over the wheel at axle x: a bent plate from angle a0 to a1 (degrees, 0 = forward). */
 function archFender(m: MeshBuilder, mat: string, x: number, r: number, rIn: number, rOut: number, a0: number, a1: number, z0: number, z1: number): void {
   const d = Math.PI / 180;
@@ -268,10 +279,8 @@ function cisternTractor(m: MeshBuilder): void {
     });
   });
 
-  m.scope("front axle", () => {
-    axle(m, C_FRONT_AXLE, C_WHEEL_R, 0.95, false);
-    for (const s of [-1, 1]) m.scope(s > 0 ? "left wheel" : "right wheel", () => wheel(m, C_FRONT_AXLE, C_WHEEL_R, ...side(s, 0.89, 1.21), s));
-  });
+  // the front wheels steer: parts of their own (cisternSemiTruck), only the beam is here
+  m.scope("front axle", () => axle(m, C_FRONT_AXLE, C_WHEEL_R, 0.95, false));
   m.scope("drive axle", () => {
     axle(m, C_DRIVE_AXLE, C_WHEEL_R, 0.95, true);
     for (const s of [-1, 1]) {
@@ -436,10 +445,18 @@ function cisternTrailer(m: MeshBuilder): void {
   });
 }
 
+const C_FRONT_TYRE: [number, number] = [0.89, 1.21];
+
 export function cisternSemiTruck(): MeshBuilder {
   const m = new MeshBuilder(PALETTE);
   m.part("truck", [0, 0, 0], () => cisternTractor(m));
+  const nodes = steered(m, "truck", C_FRONT_AXLE, C_WHEEL_R, C_FRONT_TYRE);
   m.part("trailer", C_PIVOT, () => cisternTrailer(m));
+  m.rig = {
+    steer: { axles: [{ nodes, wheelbase: C_FRONT_AXLE - C_DRIVE_AXLE }], maxAngleDeg: 40, track: C_FRONT_TYRE[0] + C_FRONT_TYRE[1] },
+    sections: [{ node: "truck", pivot: [0, 0, 0] }, { node: "trailer", pivot: C_PIVOT }],
+    maxBendDeg: 75,
+  };
   return m;
 }
 
@@ -498,10 +515,8 @@ function mixerChassis(m: MeshBuilder): void {
     block(m, "white", -4.33, 1.87, 1.16, 1.29, -0.55, 0.55); // the subframe
   });
   m.scope("running gear", () => {
-    MX_FRONT_AXLES.forEach((x, i) => m.scope(`front axle ${i + 1}`, () => {
-      axle(m, x, MX_WHEEL_R, 0.95, false);
-      for (const s of [-1, 1]) m.scope(s > 0 ? "left wheel" : "right wheel", () => wheel(m, x, MX_WHEEL_R, ...side(s, 0.9, 1.22), s));
-    }));
+    // both front axles steer: their wheels are parts of their own (mixerTruck)
+    MX_FRONT_AXLES.forEach((x, i) => m.scope(`front axle ${i + 1}`, () => axle(m, x, MX_WHEEL_R, 0.95, false)));
     MX_REAR_AXLES.forEach((x, i) => m.scope(`drive axle ${i + 1}`, () => {
       axle(m, x, MX_WHEEL_R, 0.95, true);
       for (const s of [-1, 1]) {
@@ -706,11 +721,19 @@ function mixerBody(m: MeshBuilder): void {
   });
 }
 
+const MX_FRONT_TYRE: [number, number] = [0.9, 1.22];
+
 export function mixerTruck(): MeshBuilder {
   const m = new MeshBuilder(PALETTE);
-  m.scope("chassis", () => mixerChassis(m));
-  mixerCab(m);
-  m.scope("mixer", () => mixerBody(m));
+  m.part("body", [0, 0, 0], () => {
+    m.scope("chassis", () => mixerChassis(m));
+    mixerCab(m);
+    m.scope("mixer", () => mixerBody(m));
+  });
+  // an 8x4: both front axles steer, about the middle of the rear tandem
+  const pivot = (MX_REAR_AXLES[0]! + MX_REAR_AXLES[1]!) / 2;
+  const axles = MX_FRONT_AXLES.map((x, i) => ({ nodes: steered(m, "body", x, MX_WHEEL_R, MX_FRONT_TYRE, i ? "-2" : ""), wheelbase: x - pivot }));
+  m.rig = { steer: { axles, maxAngleDeg: 40, track: MX_FRONT_TYRE[0] + MX_FRONT_TYRE[1] } };
   return m;
 }
 
@@ -777,10 +800,8 @@ function reeferTractor(m: MeshBuilder): void {
     });
   });
 
-  m.scope("front axle", () => {
-    axle(m, R_FRONT_AXLE, R_WHEEL_R, 0.95, false);
-    for (const s of [-1, 1]) m.scope(s > 0 ? "left wheel" : "right wheel", () => wheel(m, R_FRONT_AXLE, R_WHEEL_R, ...side(s, 0.88, 1.22), s));
-  });
+  // the front wheels steer: parts of their own (reeferSemiTruck), only the beam is here
+  m.scope("front axle", () => axle(m, R_FRONT_AXLE, R_WHEEL_R, 0.95, false));
   m.scope("drive axle", () => {
     axle(m, R_DRIVE_AXLE, R_WHEEL_R, 0.95, true);
     for (const s of [-1, 1]) {
@@ -937,10 +958,18 @@ function reeferTrailer(m: MeshBuilder): void {
   });
 }
 
+const R_FRONT_TYRE: [number, number] = [0.88, 1.22];
+
 export function reeferSemiTruck(): MeshBuilder {
   const m = new MeshBuilder(PALETTE);
   m.part("truck", [0, 0, 0], () => reeferTractor(m));
+  const nodes = steered(m, "truck", R_FRONT_AXLE, R_WHEEL_R, R_FRONT_TYRE);
   m.part("trailer", R_PIVOT, () => reeferTrailer(m));
+  m.rig = {
+    steer: { axles: [{ nodes, wheelbase: R_FRONT_AXLE - R_DRIVE_AXLE }], maxAngleDeg: 40, track: R_FRONT_TYRE[0] + R_FRONT_TYRE[1] },
+    sections: [{ node: "truck", pivot: [0, 0, 0] }, { node: "trailer", pivot: R_PIVOT }],
+    maxBendDeg: 75,
+  };
   return m;
 }
 

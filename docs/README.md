@@ -11,6 +11,8 @@
 | [models/skyscrapers.md](models/skyscrapers.md) | the ten skyscraper designs, the mesh builder, adding a design |
 | [models/village.md](models/village.md) | the five parametric village houses in the Kenney style: plan families, the house builder, finish parameters, scale and tests |
 | [models/vehicles.md](models/vehicles.md) | the procedural road and rail vehicles, budgets, articulation, pantograph operating poses, native-reference calibration and adding a vehicle |
+| [models/buses.md](models/buses.md) | the buses from vlakosimdb: the Karosa short and long families, the single models, the shared bus builder, sources and tests |
+| [models/vehicle-rig.md](models/vehicle-rig.md) | what the game moves: steered front wheels, articulated sections and the joint renderer, the `rig`, `pose()` / `renderJoint()`, the Pose sliders |
 | [models/parameters.md](models/parameters.md) | parametric models: enum parameters, the default-only GLB, `params` in the meta entries and the JS model, the site's picker |
 | [models/csd-coaches.md](models/csd-coaches.md) | the CSD coaches from vlakosimdb: sources, the shared coach builder, deviations, the native-raster comparison and tests |
 | [models/cd-green-white.md](models/cd-green-white.md) | the parametric CD green and white coach: nine vlakosimdb coaches as one `variant` parameter |

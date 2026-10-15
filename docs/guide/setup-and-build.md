@@ -42,7 +42,7 @@ design is not re-rendered at all (see [../models/export.md](../models/export.md)
 
 ## Tests
 
-`pnpm test` runs these suites, among others:
+`pnpm test` runs every suite under `test/`, among them:
 
 - `test/models.test.ts` - the mesh builder winds faces outward (three.js culls
   back faces, so an inward wall is invisible in the game and the viewer), sweeps
@@ -64,3 +64,14 @@ design is not re-rendered at all (see [../models/export.md](../models/export.md)
 - `test/sourceTreeView.test.ts` - the Source tab's tree index, ranges and labels.
 - `test/viewerHighlight.test.ts` - the preview's highlight groups and picking, on
   real GLBs loaded with three's GLTFLoader (no WebGL).
+- `test/rig.test.ts` - steering, the joint renderer and `pose()` of every rigged road
+  vehicle ([../models/vehicle-rig.md](../models/vehicle-rig.md)).
+- `test/buses.test.ts` - the vlakosimdb buses' lengths, axles, doors, arches, road
+  envelope and joints ([../models/buses.md](../models/buses.md)).
+
+Most tests are synchronous and CPU-bound. `test/setup.ts` (`setupFiles` in
+`vite.config.ts`) yields one macrotask after every test, because Vitest reads its
+workers' progress-report replies only when the event loop turns: a chain of
+synchronous tests longer than 60 s otherwise fails the run with "Timeout calling
+onTaskUpdate" though every test passed. Keep any single test well under that, or
+`await` a `setImmediate` between its long steps (the `generateModels` test does).

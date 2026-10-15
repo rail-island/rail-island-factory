@@ -7,7 +7,7 @@ preview, and the URL state.
 `src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`,
 `src/SourceTreePanel.tsx`, `src/sourceTreeView.ts`, `src/Thumb.tsx`,
 `src/factory.css`, `src/boot.ts`, `src/bootEntry.ts`, `index.html`, `vite.config.ts`,
-`test/catalogQuery.test.ts`, `test/boot.test.ts`
+`test/catalogQuery.test.ts`, `test/boot.test.ts`, `test/rig.test.ts` (the Pose sliders)
 **See also** - [../models/export.md](../models/export.md), [../guide/deploy.md](../guide/deploy.md)
 
 The site is the factory's counterpart of the webapp Creator's model listing,
@@ -97,6 +97,15 @@ other than the defaults is built in the browser from the model's JS module
 instead of the GLB, keeping the camera; the thumbnail, specs and source tree stay
 the default build's, so tree highlight and picking pause until the defaults
 return ([../models/parameters.md](../models/parameters.md)).
+
+A **rigged** vehicle (its record has `rig`: every road vehicle) shows a **Pose**
+block: a Steering slider and one per hinge of an articulated body ("Trailer",
+"Joint", "Joint 1"...), in degrees, positive counter-clockwise seen from above, with a Reset button.
+Moving one loads the model's JS module once and calls its `pose()` on the preview
+- the GLB's scene or the parametric JS build - which turns the steered wheels,
+swings the sections about their hinges and re-draws the joints: the same code the
+game is to call ([../models/vehicle-rig.md](../models/vehicle-rig.md)). The pose is
+page state only, back to rest for every model, and never in the URL.
 
 `ModelViewer.tsx` (with its helper `viewerHighlight.ts`) is the only code
 importing three (plus `GLTFLoader` and `OrbitControls`), reached through a lazy import, so the list loads ~30 kB of

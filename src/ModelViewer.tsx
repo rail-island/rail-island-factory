@@ -12,6 +12,9 @@
 // build(THREE, params)), fetched once per model. The camera keeps its place
 // while only the parameters change.
 //
+// A rigged vehicle (steered wheels, an articulated body) is posed from the page's
+// sliders through its JS module's pose() -- the same code the game is to call.
+//
 // With a source tree (the model page's Source tab) it also highlights the
 // selected node -- its triangles glow, everything else turns into a faint ghost --
 // and a click that is not a drag picks the leaf under the cursor. The GLB has one
@@ -32,12 +35,17 @@ import { applyHighlight, makeParts, type Part } from "./viewerHighlight";
 const loader = new GLTFLoader();
 
 type JsBuild = (three: object, params?: Record<string, string>) => Object3D;
+/** A model's JS module: build(), and for a rigged model pose() (generator/rig.ts). */
+interface JsModule {
+  default: JsBuild;
+  pose?: (root: Object3D, pose: { steer: number; bend: number[] }, rig?: unknown) => void;
+}
 /** The classes a model's JS module uses: all it needs of three. */
 const THREE_SUBSET = { Group, Mesh, BufferGeometry, BufferAttribute, MeshStandardMaterial };
-const modules = new Map<string, Promise<JsBuild>>();
+const modules = new Map<string, Promise<JsModule>>();
 
 /** A model's standalone JS module, loaded once: fetched as text and imported from a blob URL. */
-function jsModule(url: string): Promise<JsBuild> {
+function jsModule(url: string): Promise<JsModule> {
   let p = modules.get(url);
   if (!p) {
     p = (async () => {
@@ -45,7 +53,7 @@ function jsModule(url: string): Promise<JsBuild> {
       if (!res.ok) throw new Error(`${url}: ${res.status}`);
       const blob = URL.createObjectURL(new Blob([await res.text()], { type: "text/javascript" }));
       try {
-        return ((await import(/* @vite-ignore */ blob)) as { default: JsBuild }).default;
+        return (await import(/* @vite-ignore */ blob)) as JsModule;
       } finally {
         URL.revokeObjectURL(blob);
       }
@@ -59,7 +67,7 @@ function jsModule(url: string): Promise<JsBuild> {
 /** The model as the page should show it: the GLB at the defaults, else a JS build of the chosen values. */
 async function loadModel(record: CatalogRecord, params: Record<string, string>): Promise<Object3D> {
   if (isDefaultParams(record, params)) return (await loader.loadAsync(`/${record.glbUrl}`)).scene as Object3D;
-  return (await jsModule(`/${record.jsUrl}`))(THREE_SUBSET, params);
+  return (await jsModule(`/${record.jsUrl}`)).default(THREE_SUBSET, params);
 }
 
 function disposeModel(obj: Object3D): void {
@@ -85,6 +93,8 @@ export function ModelViewer(props: {
   selected?: string | null;
   /** A click on the model: the leaf under the cursor, or null for a click on nothing. */
   onPick?: (id: string | null) => void;
+  /** A rigged model's pose (poseOf): its steering and hinge bends, radians. */
+  pose?: { steer: number; bend: number[] } | null;
 }) {
   let canvas!: HTMLCanvasElement;
   let pane!: HTMLDivElement;
@@ -94,6 +104,8 @@ export function ModelViewer(props: {
   let controls: OrbitControls | null = null;
   let current: Object3D | null = null;
   let parts: Part[] = [];
+  // The model the pose sliders last moved (it is no longer at rest).
+  let posedTarget: Object3D | null = null;
   // A slow load that resolves after the selection changed again is discarded.
   let token = 0;
   // The camera is framed when another model lands, not when a parameter changes.
@@ -254,6 +266,24 @@ export function ModelViewer(props: {
         setFailed(true);
       },
     );
+  });
+
+  // A rigged model is posed by its own JS module's pose(): the code the game calls.
+  // The GLB's scene carries the same nodes and rig (scene extras), so it poses too.
+  createEffect(() => {
+    loaded();
+    const pose = props.pose;
+    const record = props.record;
+    const target = current;
+    if (!pose || !record.rig || !target) return;
+    // a model that was never moved is at rest already: no need to fetch the module
+    if (posedTarget !== target && pose.steer === 0 && pose.bend.every((b) => b === 0)) return;
+    posedTarget = target;
+    void jsModule(`/${record.jsUrl}`).then((mod) => {
+      if (current !== target || !mod.pose) return;
+      mod.pose(target, pose, record.rig);
+      render();
+    }, () => setFailed(true));
   });
 
   createEffect(() => {
