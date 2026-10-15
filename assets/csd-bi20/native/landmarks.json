@@ -1,0 +1,551 @@
+{
+ "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/coach/csd_bi20/model",
+ "pixelMetres": 0.1,
+ "convention": "Pixel edges [left, top, right, bottom] on the native BMP; origin top left, x right, y down.",
+ "annotations": [
+  {
+   "id": "R01",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 1 outline",
+   "box": [
+    16,
+    7,
+    25,
+    28
+   ],
+   "nodes": [
+    "body/right-side/door-1/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R02",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 1 window 1 frame",
+   "box": [
+    17,
+    9,
+    24,
+    19
+   ],
+   "nodes": [
+    "body/right-side/door-1/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R03",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 2 outline",
+   "box": [
+    33,
+    7,
+    42,
+    28
+   ],
+   "nodes": [
+    "body/right-side/door-2/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R04",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 2 window 1 frame",
+   "box": [
+    34,
+    9,
+    41,
+    19
+   ],
+   "nodes": [
+    "body/right-side/door-2/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R05",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 3 outline",
+   "box": [
+    50,
+    7,
+    59,
+    28
+   ],
+   "nodes": [
+    "body/right-side/door-3/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R06",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 3 window 1 frame",
+   "box": [
+    51,
+    9,
+    58,
+    19
+   ],
+   "nodes": [
+    "body/right-side/door-3/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R07",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 4 outline",
+   "box": [
+    67,
+    7,
+    76,
+    28
+   ],
+   "nodes": [
+    "body/right-side/door-4/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R08",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 4 window 1 frame",
+   "box": [
+    68,
+    9,
+    75,
+    19
+   ],
+   "nodes": [
+    "body/right-side/door-4/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R09",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 5 outline",
+   "box": [
+    84,
+    7,
+    93,
+    28
+   ],
+   "nodes": [
+    "body/right-side/door-5/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R10",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 5 window 1 frame",
+   "box": [
+    85,
+    9,
+    92,
+    19
+   ],
+   "nodes": [
+    "body/right-side/door-5/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R11",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 6 outline",
+   "box": [
+    101,
+    7,
+    110,
+    28
+   ],
+   "nodes": [
+    "body/right-side/door-6/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R12",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 6 window 1 frame",
+   "box": [
+    102,
+    9,
+    109,
+    19
+   ],
+   "nodes": [
+    "body/right-side/door-6/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L01",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 1 outline",
+   "box": [
+    16,
+    7,
+    25,
+    28
+   ],
+   "nodes": [
+    "body/left-side/door-1/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L02",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 1 window 1 frame",
+   "box": [
+    17,
+    9,
+    24,
+    19
+   ],
+   "nodes": [
+    "body/left-side/door-1/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L03",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 2 outline",
+   "box": [
+    33,
+    7,
+    42,
+    28
+   ],
+   "nodes": [
+    "body/left-side/door-2/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L04",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 2 window 1 frame",
+   "box": [
+    34,
+    9,
+    41,
+    19
+   ],
+   "nodes": [
+    "body/left-side/door-2/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L05",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 3 outline",
+   "box": [
+    50,
+    7,
+    59,
+    28
+   ],
+   "nodes": [
+    "body/left-side/door-3/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L06",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 3 window 1 frame",
+   "box": [
+    51,
+    9,
+    58,
+    19
+   ],
+   "nodes": [
+    "body/left-side/door-3/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L07",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 4 outline",
+   "box": [
+    67,
+    7,
+    76,
+    28
+   ],
+   "nodes": [
+    "body/left-side/door-4/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L08",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 4 window 1 frame",
+   "box": [
+    68,
+    9,
+    75,
+    19
+   ],
+   "nodes": [
+    "body/left-side/door-4/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L09",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 5 outline",
+   "box": [
+    84,
+    7,
+    93,
+    28
+   ],
+   "nodes": [
+    "body/left-side/door-5/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L10",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 5 window 1 frame",
+   "box": [
+    85,
+    9,
+    92,
+    19
+   ],
+   "nodes": [
+    "body/left-side/door-5/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L11",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 6 outline",
+   "box": [
+    101,
+    7,
+    110,
+    28
+   ],
+   "nodes": [
+    "body/left-side/door-6/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L12",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 6 window 1 frame",
+   "box": [
+    102,
+    9,
+    109,
+    19
+   ],
+   "nodes": [
+    "body/left-side/door-6/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "B01",
+   "view": "x_both",
+   "end": "rear",
+   "element": "end door outline",
+   "box": [
+    10,
+    7,
+    20,
+    28
+   ],
+   "nodes": [
+    "rear-end/end-door/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Door frame read between the double outline columns; +/- one pixel."
+  },
+  {
+   "id": "B02",
+   "view": "x_both",
+   "end": "rear",
+   "element": "end door window",
+   "box": [
+    12,
+    9,
+    18,
+    19
+   ],
+   "nodes": [
+    "rear-end/end-door/window/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "B03",
+   "view": "x_both",
+   "end": "rear",
+   "element": "buffer head 1",
+   "box": [
+    3,
+    28,
+    8,
+    32
+   ],
+   "nodes": [
+    "rear-end/buffers/buffer-1/sweep-1"
+   ],
+   "tolerancePixels": 2.51,
+   "uncertainty": "Standard 1.75 m buffer spacing kept; the coarse raster places the heads wider. The XML has no buffers; the model adds them 0.3 m beyond the platforms."
+  },
+  {
+   "id": "B04",
+   "view": "x_both",
+   "end": "rear",
+   "element": "buffer head 2",
+   "box": [
+    22,
+    28,
+    27,
+    32
+   ],
+   "nodes": [
+    "rear-end/buffers/buffer-2/sweep-1"
+   ],
+   "tolerancePixels": 2.51,
+   "uncertainty": "Standard 1.75 m buffer spacing kept; the coarse raster places the heads wider. The XML has no buffers; the model adds them 0.3 m beyond the platforms."
+  },
+  {
+   "id": "F01",
+   "view": "x_both",
+   "end": "front",
+   "element": "end door outline",
+   "box": [
+    10,
+    7,
+    20,
+    28
+   ],
+   "nodes": [
+    "front-end/end-door/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Door frame read between the double outline columns; +/- one pixel."
+  },
+  {
+   "id": "F02",
+   "view": "x_both",
+   "end": "front",
+   "element": "end door window",
+   "box": [
+    12,
+    9,
+    18,
+    19
+   ],
+   "nodes": [
+    "front-end/end-door/window/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "F03",
+   "view": "x_both",
+   "end": "front",
+   "element": "buffer head 1",
+   "box": [
+    3,
+    28,
+    8,
+    32
+   ],
+   "nodes": [
+    "front-end/buffers/buffer-2/sweep-1"
+   ],
+   "tolerancePixels": 2.51,
+   "uncertainty": "Standard 1.75 m buffer spacing kept; the coarse raster places the heads wider. The XML has no buffers; the model adds them 0.3 m beyond the platforms."
+  },
+  {
+   "id": "F04",
+   "view": "x_both",
+   "end": "front",
+   "element": "buffer head 2",
+   "box": [
+    22,
+    28,
+    27,
+    32
+   ],
+   "nodes": [
+    "front-end/buffers/buffer-1/sweep-1"
+   ],
+   "tolerancePixels": 2.51,
+   "uncertainty": "Standard 1.75 m buffer spacing kept; the coarse raster places the heads wider. The XML has no buffers; the model adds them 0.3 m beyond the platforms."
+  }
+ ]
+}
