@@ -312,18 +312,19 @@ function citaroSpec(livery: "teal" | "blue"): CitySpec {
     livery: colours,
     nose: 0.1, tail: 11.8, length: 11.95,
     bodies: [[0.1, 11.8]],
-    axles: [{ u: 2.75, dual: false }, { u: 8.6, dual: true, drive: true }],
-    wheelRadius: 0.48, hw: 1.27, bottom: 0.27, belt: 1.0, eave: 2.88, roof: 3.0, tumble: 0.01, corner: 0.1,
+    // 5.845 m wheelbase, 2.869 m without the roof pod (pl.wikipedia); the overhang from the texture
+    axles: [{ at: 2.75, dual: false }, { at: 8.595, dual: true, drive: true }],
+    wheelRadius: 0.48, hw: 1.27, bottom: 0.27, belt: 1.0, eave: 2.74, roof: 2.869, tumble: 0.01, corner: 0.12,
     front: { from: 1.0, rake: 0.1, cap: 0.12, low: 0.18, chamfer: [0.3, 0.12] },
-    rear: { from: 2.7, rake: 0.05, cap: 0.15, low: 0.5, chamfer: [0.2, 0.08] },
+    rear: { from: 2.6, rake: 0.05, cap: 0.15, low: 0.5, chamfer: [0.2, 0.08] },
     paint: [
       { u0: 0, u1: 12, y0: 0.27, y1: 0.62, mat: "skirt" },
-      { u0: 0, u1: 12, y0: 1.02, y1: 2.78, mat: "band" },
+      { u0: 0, u1: 12, y0: 1.02, y1: 2.68, mat: "band" },
       { u0: 0, u1: 0.4, y0: 0.27, y1: 0.8, mat: "bumper" },
     ],
-    pane: { glass: [1.06, 2.72], inset: 0.02, glassMat: "glassDark" },
+    pane: { glass: [1.06, 2.62], inset: 0.02, glassMat: "glassDark" },
     pitch: 1.4,
-    door: { bottom: 0.3, top: 2.72, leafMat: "frame", panes: [[0.4, 2.62]], leafWidth: 0.66 },
+    door: { bottom: 0.3, top: 2.62, leafMat: "frame", panes: [[0.4, 2.54]], leafWidth: 0.66 },
     doors: [[0.75, 2.1], [6.4, 7.75]],
     windows: [[0.7, 11.2]],
     arch: { half: 0.6, side: 0.6, top: 1.04 },
@@ -333,27 +334,27 @@ function citaroSpec(livery: "teal" | "blue"): CitySpec {
       const { x } = c;
       c.d.fit("front", c.nose, () => {
         // the black panel over the windscreen holds the destination display
-        endSlab(c.m(), "band", c.frame, 1, -1.2, 1.2, 2.58, 2.86, 0.006);
-        endSlab(c.m(), "signText", c.frame, 1, -0.8, 0.8, 2.64, 2.8, 0.014);
-        windscreen(c, 1.12, 2.54, 1.14, null);
+        endSlab(c.m(), "band", c.frame, 1, -1.2, 1.2, 2.46, 2.72, 0.006);
+        endSlab(c.m(), "signText", c.frame, 1, -0.8, 0.8, 2.52, 2.66, 0.014);
+        windscreen(c, 1.12, 2.42, 1.14, null);
         cornerLamps(c, 0.52, 0.7, 0.36, 0.06);
         endSlab(c.m(), "grille", c.frame, 1, -0.5, 0.5, 0.82, 1.02, 0.012);
         endSlab(c.m(), "plate", c.frame, 1, -0.26, 0.26, 0.39, 0.51, 0.016);
       });
       c.d.fit("rear", c.tail, () => {
-        endSlab(c.m(), "glassDark", c.frame, -1, -1.0, 1.0, 1.95, 2.6, 0.02);
-        endSlab(c.m(), "signText", c.frame, -1, -0.5, 0.5, 2.64, 2.78, 0.012);
+        endSlab(c.m(), "glassDark", c.frame, -1, -1.0, 1.0, 1.9, 2.48, 0.02);
+        endSlab(c.m(), "signText", c.frame, -1, -0.5, 0.5, 2.52, 2.64, 0.012);
         for (let i = 0; i < 6; i++) endSlab(c.m(), "grille", c.frame, -1, -0.9, 0.9, 1.0 + i * 0.12, 1.06 + i * 0.12, 0.012);
         tailLamps(c, 0.62, 0.04);
         endSlab(c.m(), "plate", c.frame, -1, -0.26, 0.26, 0.4, 0.52, 0.016);
       });
       // the air-conditioning pod and the engine's intake tower at the rear left
-      roofBox(c, "roof", x(5.6), x(2.6), -0.85, 0.85, 3.2, "pod", 2.96);
+      roofBox(c, "roof", x(5.6), x(2.6), -0.85, 0.85, 3.1, "pod", 2.84);
       c.d.fit("intake tower", x(11.4), () => {
-        block(c.m(), "body", x(11.75), x(10.85), 2.7, 3.32, -1.25, -0.72);
-        for (let i = 0; i < 4; i++) block(c.m(), "grille", x(11.65), x(10.95), 2.8 + i * 0.12, 2.86 + i * 0.12, -1.265, -1.24);
+        block(c.m(), "body", x(11.75), x(10.85), 2.6, 3.2, -1.25, -0.72);
+        for (let i = 0; i < 4; i++) block(c.m(), "grille", x(11.65), x(10.95), 2.7 + i * 0.12, 2.76 + i * 0.12, -1.265, -1.24);
       });
-      earMirrors(c, 2.86, 0.2);
+      earMirrors(c, 2.74, 0.2);
     },
   };
 }
@@ -375,55 +376,58 @@ export function mbCitaroBlue(): MeshBuilder {
 
 function o345Spec(): CitySpec {
   return {
-    livery: { body: "#f4f4f1", rub: "#3c3c3c", bumper: "#4d5055", band: "#1d2023", pod: "#e7e8e6" },
+    livery: { body: "#f4f4f1", rub: "#3c3c3c", bumper: "#8a8d91", band: "#1d2023", pod: "#e7e8e6" },
     nose: 0.2, tail: 17.8, length: 17.94,
     bodies: [[0.2, 9.75], [11.25, 17.8]],
-    axles: [{ u: 2.85, dual: false }, { u: 8.75, dual: true }, { u: 14.75, dual: true, drive: true }],
-    wheelRadius: 0.5, hw: 1.25, bottom: 0.32, belt: 1.5, eave: 2.82, roof: 2.95, tumble: 0.03, corner: 0.12,
-    front: { from: 1.25, rake: 0.08, cap: 0.15, low: 0.2, chamfer: [0.25, 0.08] },
-    rear: { from: 2.6, rake: 0.06, cap: 0.15, low: 0.4, chamfer: [0.2, 0.08] },
+    // 5.725 m to the middle axle, 2.994 m high (pl.wikipedia); the rest from the texture
+    axles: [{ at: 2.69, dual: false }, { at: 8.415, dual: true }, { at: 14.83, dual: true, drive: true }],
+    wheelRadius: 0.5, hw: 1.25, bottom: 0.32, belt: 1.5, eave: 2.86, roof: 2.994, tumble: 0.03, corner: 0.12,
+    front: { from: 1.3, rake: 0.1, cap: 0.15, low: 0.2, chamfer: [0.3, 0.1] },
+    rear: { from: 2.6, rake: 0.06, cap: 0.15, low: 0.4, chamfer: [0.25, 0.1] },
     paint: [
       { u0: 0, u1: 18, y0: 0.76, y1: 0.84, mat: "rub" },
+      // the black band under the windscreen, the grey bumpers
+      { u0: 0, u1: 0.35, y0: 1.3, y1: 1.46, mat: "band" },
       { u0: 0, u1: 0.45, y0: 0.32, y1: 0.62, mat: "bumper" },
       { u0: 17.6, u1: 18, y0: 0.32, y1: 0.62, mat: "bumper" },
     ],
-    pane: { glass: [1.62, 2.62], surround: [1.56, 2.68], inset: 0.05 },
+    pane: { glass: [1.62, 2.66], surround: [1.56, 2.72], inset: 0.05 },
     pitch: 1.7,
-    door: { bottom: 0.36, top: 2.62, leafMat: "frame", panes: [[1.1, 2.54], [0.45, 1.02]], leafWidth: 0.62 },
-    doors: [[0.6, 2.2], [5.1, 6.7], [11.4, 13.0]],
+    door: { bottom: 0.36, top: 2.66, leafMat: "frame", panes: [[1.1, 2.58], [0.45, 1.02]], leafWidth: 0.62 },
+    // 2-2-2-2 (pl.wikipedia, the photographs); the texture leaves out the last
+    doors: [[0.6, 2.2], [5.1, 6.7], [11.4, 13.0], [15.9, 17.15]],
     windows: [[0.6, 9.6], [11.4, 17.2]],
     arch: { half: 0.62, side: 0.66, top: 1.1 },
     tyres: { single: [0.95, 1.21], inner: [0.62, 0.9], outer: [0.93, 1.21] },
-    bellows: { profile: [[-1.18, 0.45], [1.18, 0.45], [1.18, 2.6], [1.05, 2.8], [0, 2.86], [-1.05, 2.8], [-1.18, 2.6]], folds: 8, depth: 0.05 },
+    bellows: { profile: [[-1.18, 0.45], [1.18, 0.45], [1.18, 2.66], [1.05, 2.86], [0, 2.92], [-1.05, 2.86], [-1.18, 2.66]], folds: 8, depth: 0.05 },
     maxSteerDeg: 50,
     maxBendDeg: 50,
     details: (c) => {
       const { x } = c;
       c.d.fit("front", c.nose, () => {
-        endSlab(c.m(), "band", c.frame, 1, -1.2, 1.2, 2.45, 2.8, 0.006);
-        endSlab(c.m(), "signText", c.frame, 1, -0.8, 0.8, 2.52, 2.72, 0.014);
-        windscreen(c, 1.32, 2.4, 1.14, null);
-        endSlab(c.m(), "frame", c.frame, 1, -0.02, 0.02, 1.3, 2.42, 0.026);
-        for (const s of [-1, 1]) {
-          endSlab(c.m(), "lampHead", c.frame, 1, s * 0.95 - 0.2, s * 0.95 + 0.2, 0.72, 0.86, 0.014);
-          endSlab(c.m(), "lampAmber", c.frame, 1, s * 1.08 - 0.08, s * 1.08 + 0.08, 0.92, 1.02, 0.014);
+        // (photographs) one windscreen over the black band, the display behind its top
+        windscreen(c, 1.5, 2.74, 1.15, [2.42, 2.68]);
+        for (const sd of [-1, 1]) {
+          endSlab(c.m(), "frame", c.frame, 1, sd * 0.93 - 0.22, sd * 0.93 + 0.22, 0.76, 0.92, 0.008);
+          for (const dz of [-0.1, 0.1]) endLamp(c.m(), "lampHead", c.frame, 1, sd * 0.93 + dz, 0.84, 0.06, 0.016, undefined, 10);
+          endLamp(c.m(), "lampHead", c.frame, 1, sd * 0.93, 0.47, 0.045, 0.016, "frame", 8);
         }
-        endSlab(c.m(), "grille", c.frame, 1, -0.55, 0.55, 0.92, 1.18, 0.012);
         endSlab(c.m(), "plate", c.frame, 1, -0.26, 0.26, 0.38, 0.5, 0.016);
       });
       c.d.fit("rear", c.tail, () => {
-        endSlab(c.m(), "frame", c.frame, -1, -1.05, 1.05, 1.6, 2.66, 0.01);
-        endSlab(c.m(), "glass", c.frame, -1, -1.0, 1.0, 1.65, 2.6, 0.02);
+        endSlab(c.m(), "frame", c.frame, -1, -1.05, 1.05, 1.6, 2.7, 0.01);
+        endSlab(c.m(), "glass", c.frame, -1, -1.0, 1.0, 1.65, 2.64, 0.02);
         tailLamps(c, 0.66, 0.05);
         for (let i = 0; i < 5; i++) endSlab(c.m(), "grille", c.frame, -1, -0.8, 0.8, 0.95 + i * 0.1, 1.0 + i * 0.1, 0.012);
         endSlab(c.m(), "plate", c.frame, -1, -0.26, 0.26, 0.7, 0.82, 0.016);
       });
       // the engine's side grille, at the rear on the right
       c.d.fit("engine grille", x(17.3), () => {
-        for (let i = 0; i < 4; i++) sideSlab(c.m(), "grille", c.frame, 1, x(17.6), x(17.0), 0.95 + i * 0.12, 1.02 + i * 0.12, 0.012);
+        for (let i = 0; i < 4; i++) sideSlab(c.m(), "grille", c.frame, 1, x(17.6), x(17.25), 0.95 + i * 0.12, 1.02 + i * 0.12, 0.012);
       });
-      for (const [u0, u1] of [[1.2, 1.9], [6.0, 6.7], [12.5, 13.2]] as const) roofBox(c, "roof hatches", x(u1), x(u0), -0.4, 0.4, 3.0, "pod", 2.92);
-      armMirrors(c, 2.35);
+      roofBox(c, "roof", x(3.6), x(2.2), -0.6, 0.6, 3.16, "pod", 2.95);
+      for (const [u0, u1] of [[6.0, 6.7], [12.5, 13.2]] as const) roofBox(c, "roof hatches", x(u1), x(u0), -0.4, 0.4, 3.04, "pod", 2.95);
+      armMirrors(c, 2.45);
     },
   };
 }

@@ -61,8 +61,8 @@ describe("the buses", () => {
     }
   });
 
-  it("puts the Karosas' and the City Bus 12M's axles where the real buses have them", () => {
-    // front overhang and wheelbases, from the nose (cs.wikipedia)
+  it("puts the axles where the real buses have them", () => {
+    // front overhang and wheelbases, from the nose (cs.wikipedia, pl.wikipedia, the makers' data)
     const axlesOf = (id: string, params?: Record<string, string>): number[] => {
       const d = BUS_DESIGNS.find((x) => x.id === id)!;
       const nodes = walk(d.build(params).sourceTree(id, d.title).root);
@@ -76,6 +76,10 @@ describe("the buses", () => {
     expect(axlesOf("veh-karosa-long", { variant: "b741" })).toEqual([2.29, 7.89, 14.16]);
     expect(axlesOf("veh-karosa-long", { variant: "b961" })).toEqual([2.355, 7.955, 14.225]);
     expect(axlesOf("veh-karosa-renault-citybus-12m")).toEqual([2.71, 8.83]);
+    expect(axlesOf("veh-karosa-renault-citybus-18m")).toEqual([2.71, 8.065, 14.64]);
+    expect(axlesOf("veh-mb-citaro")).toEqual([2.75, 8.595]);
+    expect(axlesOf("veh-mb-o345-g")).toEqual([2.69, 8.415, 14.83]);
+    expect(axlesOf("veh-solaris-urbino-15")).toEqual([2.7, 9.5, 11.19]);
   });
 
   it.each(BUSES)("%s steers its front axle and puts its doors on the kerb (+z) side", (id) => {
