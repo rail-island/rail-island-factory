@@ -384,4 +384,4 @@ export const EMU680_DESIGNS: ProceduralDesign[] = [
   { id: "veh-cd-680", title: "CD 680 Pendolino", build: cd680, params: CD680_PARAMS, catalog: EMU_CATALOG, references: "cd-680" },
 ];
 
-export { LAYOUTS as PENDOLINO_LAYOUTS, bOf as pendolinoB, lengthOf as pendolinoLength };
+export { LAYOUTS as PENDOLINO_LAYOUTS, lengthOf as pendolinoLength };

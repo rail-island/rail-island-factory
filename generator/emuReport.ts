@@ -100,8 +100,8 @@ export function writeViews(mesh: MeshBuilder, id: string, dir: URL): void {
   const views: Array<[string, number, number, number]> = [
     ["side-right", 0, 0, 1800],
     ["side-left", 180, 0, 1800],
-    ["front", -90, 0, 500],
-    ["rear", 90, 0, 500],
+    ["front", 90, 0, 500],
+    ["rear", -90, 0, 500],
     ["three-quarter-front", -35, 22, 1600],
     ["three-quarter-rear", 145, 22, 1600],
     ["top", 0, 89.9, 1800],

@@ -13,7 +13,7 @@
 // to the published 4.635 m and the width to 2.82 m. Every car faces +X: a cab
 // car's cab is its +X end. See docs/models/czech-emus.md.
 
-import { ngon, type MaterialSpec, type MeshBuilder, type Ring } from "./meshBuilder.ts";
+import { ngon, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { Coach, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { emblem } from "./cd163.ts";
@@ -477,5 +477,5 @@ export const EMU471_DESIGNS: ProceduralDesign[] = [
   { id: "veh-cd-471", title: "CD 471 CityElefant", build: cd471, params: CD471_PARAMS, catalog: EMU_CATALOG, references: "cd-471" },
 ];
 
-export { LAYOUTS as ELEFANT_LAYOUTS, centreOf as elefantCentre, sb as elefantBox, BOGIES as ELEFANT_BOGIES, CAB_COUPLER as ELEFANT_CAB_COUPLER, BELLOWS as ELEFANT_BELLOWS };
-export type { CarLayout as ElefantLayout, Ring };
+export { LAYOUTS as ELEFANT_LAYOUTS, centreOf as elefantCentre };
+export type { CarLayout as ElefantLayout };
