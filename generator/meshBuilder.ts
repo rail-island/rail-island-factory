@@ -16,7 +16,7 @@ import { slug, type ArgValue, type NodeExtent, type PrimitiveKind, type ScopeNod
 import { MeshCore, type Ring, type SweepAxis, type Vec3 } from "./meshCore.ts";
 
 export { chamferedRect, grow, ngon, rect, scaleRing } from "./meshCore.ts";
-export type { MaterialSpec, Ring, SweepAxis } from "./meshCore.ts";
+export type { AnimationClipSpec, AnimationTrack, MaterialSpec, Ring, SweepAxis } from "./meshCore.ts";
 
 interface RawLeaf {
   kind: PrimitiveKind;
@@ -130,6 +130,14 @@ export class MeshBuilder extends MeshCore {
     this.leaf("facets", mat, () => ({ triangles: Math.floor(points.length / 3) }), () => super.facets(mat, points, normal));
   }
 
+  override tube(mat: string, axis: SweepAxis, c: number, y: number, ro: number, ri: number, a0: number, a1: number, n: number, rot = 0, ends = true): void {
+    this.leaf(
+      "tube", mat,
+      () => ({ axis: axis === "x" ? 0 : 2, c, y, ro, ri, a0: Math.min(a0, a1), a1: Math.max(a0, a1), n, ends }),
+      () => super.tube(mat, axis, c, y, ro, ri, a0, a1, n, rot, ends),
+    );
+  }
+
   override box(mat: string, cx: number, cz: number, w: number, d: number, y0: number, y1: number, ry = 0, top = true): void {
     this.leaf("box", mat, () => ({ cx, cz, w, d, y0, y1, ry, top }), () => super.box(mat, cx, cz, w, d, y0, y1, ry, top));
   }
@@ -203,6 +211,8 @@ export class MeshBuilder extends MeshCore {
    * mesh's positions relative to that pivot. Either way the primitives are
    * non-indexed triangle soups with flat per-face normals. A model with a rig
    * carries it as the scene's `extras.rig` (three's GLTFLoader: `scene.userData.rig`).
+   * Animation clips (see `animate`) become glTF animations of the part nodes,
+   * linearly interpolated.
    */
   toGlb(generator: string, name = "building"): Uint8Array {
     type Json = {
@@ -215,6 +225,7 @@ export class MeshBuilder extends MeshCore {
       accessors: unknown[];
       bufferViews: unknown[];
       buffers: Array<{ byteLength: number }>;
+      animations?: unknown[];
     };
     if (this.parts.length) {
       for (const g of this.groups.values()) {
@@ -245,22 +256,23 @@ export class MeshBuilder extends MeshCore {
     };
     const chunks: Buffer[] = [];
     let offset = 0;
-    const vec3Accessor = (data: number[], withBounds: boolean): number => {
+    const floatAccessor = (data: number[], width: 1 | 3 | 4, withBounds: boolean, vertexData = true): number => {
       const buf = Buffer.from(new Float32Array(data).buffer);
-      json.bufferViews.push({ buffer: 0, byteOffset: offset, byteLength: buf.length, target: 34962 });
+      json.bufferViews.push({ buffer: 0, byteOffset: offset, byteLength: buf.length, ...(vertexData ? { target: 34962 } : {}) });
       chunks.push(buf);
       offset += buf.length;
       const acc: Record<string, unknown> = {
-        bufferView: json.bufferViews.length - 1, componentType: 5126, count: data.length / 3, type: "VEC3",
+        bufferView: json.bufferViews.length - 1, componentType: 5126, count: data.length / width,
+        type: width === 1 ? "SCALAR" : width === 3 ? "VEC3" : "VEC4",
       };
       if (withBounds) {
-        const min = [Infinity, Infinity, Infinity];
-        const max = [-Infinity, -Infinity, -Infinity];
-        for (let i = 0; i < data.length; i += 3) {
-          for (let k = 0; k < 3; k++) {
-            const f = Math.fround(data[i + k]);
-            min[k] = Math.min(min[k], f);
-            max[k] = Math.max(max[k], f);
+        const min = new Array<number>(width).fill(Infinity);
+        const max = new Array<number>(width).fill(-Infinity);
+        for (let i = 0; i < data.length; i += width) {
+          for (let k = 0; k < width; k++) {
+            const f = Math.fround(data[i + k]!);
+            min[k] = Math.min(min[k]!, f);
+            max[k] = Math.max(max[k]!, f);
           }
         }
         acc.min = min;
@@ -269,6 +281,7 @@ export class MeshBuilder extends MeshCore {
       json.accessors.push(acc);
       return json.accessors.length - 1;
     };
+    const vec3Accessor = (data: number[], withBounds: boolean): number => floatAccessor(data, 3, withBounds);
     // Sorted by name so the output does not depend on the order a design happened
     // to touch its materials in -- the bytes are what the LOD cache keys on.
     const materials = [...this.groups.keys()].sort();
@@ -305,6 +318,15 @@ export class MeshBuilder extends MeshCore {
         json.meshes[u]!.primitives.push({ attributes: { POSITION: position, NORMAL: normal }, material: m });
       });
     });
+    // the animations: one shared time accessor per clip, a linear sampler per track
+    if (this.clips.length) {
+      json.animations = this.clips.map((clip) => {
+        const input = floatAccessor(clip.times, 1, true, false);
+        const samplers = clip.tracks.map((t) => ({ input, output: floatAccessor(t.values, t.path === "rotation" ? 4 : 3, false, false), interpolation: "LINEAR" }));
+        const channels = clip.tracks.map((t, i) => ({ sampler: i, target: { node: this.parts.findIndex((p) => p.name === t.node), path: t.path } }));
+        return { name: clip.name, channels, samplers };
+      });
+    }
     const bin = Buffer.concat(chunks); // float32 data, already 4-byte aligned
     json.buffers.push({ byteLength: bin.length });
     let text = Buffer.from(JSON.stringify(json));

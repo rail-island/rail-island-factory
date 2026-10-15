@@ -1,0 +1,117 @@
+{
+ "note": "Native pixel edges [left, top, right, bottom] on the vlakosimdb side view (0.1 m a pixel), read from the original BMP; nodes are source-tree scopes of the model at rest.",
+ "annotations": [
+  {
+   "id": "lead-wheel",
+   "view": "z_both",
+   "element": "leading wheel tyre",
+   "box": [
+    15,
+    51,
+    24,
+    60
+   ],
+   "nodes": [
+    "wheelset-1/right-wheel/tyre"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "wheel tyre; blurred low-resolution spokes, edges +-1 px"
+  },
+  {
+   "id": "driver-1",
+   "view": "z_both",
+   "element": "first coupled wheel tyre",
+   "box": [
+    39,
+    46,
+    54,
+    60
+   ],
+   "nodes": [
+    "wheelset-2/right-wheel/tyre"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "XML ground notch"
+  },
+  {
+   "id": "driver-5",
+   "view": "z_both",
+   "element": "fifth coupled wheel tyre",
+   "box": [
+    107,
+    46,
+    122,
+    60
+   ],
+   "nodes": [
+    "wheelset-6/right-wheel/tyre"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "XML ground notch"
+  },
+  {
+   "id": "chimney",
+   "view": "z_both",
+   "element": "chimney",
+   "box": [
+    17,
+    16,
+    24,
+    22
+   ],
+   "nodes": [
+    "body/chimney"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "XML other"
+  },
+  {
+   "id": "cab",
+   "view": "z_both",
+   "element": "cab with roof",
+   "box": [
+    118,
+    18,
+    148,
+    47
+   ],
+   "nodes": [
+    "body/cab"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "roof overhang not painted"
+  },
+  {
+   "id": "deflectors",
+   "view": "z_both",
+   "element": "smoke deflectors",
+   "box": [
+    3,
+    22,
+    27,
+    35
+   ],
+   "nodes": [
+    "body/smoke-deflectors"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "XML gear"
+  },
+  {
+   "id": "barrel",
+   "view": "z_both",
+   "element": "boiler barrel",
+   "box": [
+    27,
+    20,
+    119,
+    40
+   ],
+   "nodes": [
+    "body/boiler/barrel"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "XML base"
+  }
+ ]
+}

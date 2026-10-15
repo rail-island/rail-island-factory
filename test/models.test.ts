@@ -8,6 +8,7 @@ import path from "node:path";
 import { MeshBuilder, ngon, rect } from "../generator/meshBuilder";
 import { SKYSCRAPERS } from "../generator/skyscrapers";
 import { VEHICLES } from "../generator/vehicles";
+import { STEAM_LOCOS } from "../generator/steamLocos";
 import { ALL_VEHICLES, BUILDINGS, DESIGNS, ZFightingError, designGlb, designTree, generateModels } from "../generator/generate";
 import { VILLAGE_HOUSES } from "../generator/village";
 import { isLeaf, type LeafNode, type ScopeNode, type TreeNode } from "../generator/sourceTree";
@@ -331,7 +332,7 @@ describe("the vehicles", () => {
     expect(DESIGNS.size).toBe(BUILDINGS.length + VILLAGE_HOUSES.length + ALL_VEHICLES.length);
   });
 
-  it.each(VEHICLES.map((d) => [d.id] as const))("%s stands on its wheels, faces +x, fits its road or track and stays in budget", (id) => {
+  it.each([...VEHICLES, ...STEAM_LOCOS].map((d) => [d.id] as const))("%s stands on its wheels, faces +x, fits its road or track and stays in budget", (id) => {
     // Repository rail envelope: 3.1 m wide, 4.7 m excluding pantographs.
     // An active collector may reach the separate 6.5 m operating limit.
     const rail = DESIGNS.get(id)!.catalog?.category === "Rail vehicles";

@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="Windows-1250"?>
+<loco name="CSD_386" power="1100" maxspeed="110" weight="95" author="Paul Burton" email="pgb_454@hotmail.com" default="0" title="CSD 386" path="Loco/Steam" smoke_x="0.25" smoke_y="0.4" smoke="../smoke3"/>

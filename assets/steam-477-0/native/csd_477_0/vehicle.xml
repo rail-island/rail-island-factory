@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="Windows-1250"?>
+<loco author="Vojtěch Vohlídka" default="0" email="xxvojtikxx@seznam.cz" maxspeed="100" name="CSD_477_0" power="1540" rep.name="emptyobj.loco" weight="129" title="CSD 477.0" path="Loco/Steam" smoke_x="0.12" smoke_y="0.35" smoke="../smoke1">
+<smoke count="100" elem_size="0.05" end_a="0" end_b="0.4" end_g="0.4" end_r="0.4" fade_max="0.3" fade_min="0.1" interval="1" slow_down="0.5" start_a="1" start_b="0.2" start_g="0.2" start_r="0.2" vx_max="0.2" vx_min="-0.2" vy_max="0.5" vy_min="0" vz_max="0.2" vz_min="-0.2" x0="0.2" y0="0.4"/>
+</loco>

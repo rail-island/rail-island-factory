@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import * as THREE from "three";
 import { DESIGNS, designGlb, designSource, generateJsModels } from "../generator/generate";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles";
+import { readAccessor } from "../generator/glbParse";
 import { bundleDesign, gzipSize } from "../generator/jsModel";
 import { SKYSCRAPERS } from "../generator/skyscrapers";
 import fs from "node:fs";
@@ -89,6 +90,32 @@ describe("standalone JS models", () => {
       expect(group.userData.rig).toEqual(extras?.rig);
       expect(group.name).toBe(id);
     }, 30_000);
+
+    it(`${id}: build(THREE) carries the GLB's animation clips`, async () => {
+      const group = (await loadModel(await jsOf(id)))(THREE);
+      const { json, bin } = parseGlb(designGlb(id));
+      const g = json as unknown as {
+        nodes: Array<{ name: string }>;
+        animations?: Array<{ name: string; channels: Array<{ sampler: number; target: { node: number; path: string } }>; samplers: Array<{ input: number; output: number }> }>;
+      };
+      const anims = g.animations ?? [];
+      expect(group.animations.map((c) => c.name)).toEqual(anims.map((a) => a.name));
+      anims.forEach((a, i) => {
+        const clip = group.animations[i]!;
+        const times = readAccessor(json, bin, a.samplers[0]!.input);
+        expect(clip.duration).toBeCloseTo(times[times.length - 1]!, 5);
+        expect(clip.tracks.map((t) => t.name)).toEqual(
+          a.channels.map((c) => `${g.nodes[c.target.node]!.name}.${c.target.path === "rotation" ? "quaternion" : "position"}`),
+        );
+        clip.tracks.forEach((t, k) => {
+          const v = readAccessor(json, bin, a.samplers[a.channels[k]!.sampler]!.output);
+          expect(t.values.length).toBe(v.length);
+          t.values.forEach((x, n) => expect(x).toBeCloseTo(v[n]!, 4));
+        });
+        // every track binds to a node of the group
+        for (const t of clip.tracks) expect(group.getObjectByName(t.name.split(".")[0]!)).toBeDefined();
+      });
+    });
 
     it(`${id}: the file is standalone and smaller than the GLB`, async () => {
       const text = await jsOf(id);

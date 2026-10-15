@@ -1,0 +1,101 @@
+{
+ "note": "Native pixel edges [left, top, right, bottom] on the vlakosimdb side view (0.1 m a pixel), read from the original BMP; nodes are source-tree scopes of the model at rest.",
+ "annotations": [
+  {
+   "id": "van",
+   "view": "z_both",
+   "element": "van body",
+   "box": [
+    49,
+    17,
+    79,
+    39
+   ],
+   "nodes": [
+    "body/van-body"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "XML back"
+  },
+  {
+   "id": "roof",
+   "view": "z_both",
+   "element": "roof",
+   "box": [
+    31,
+    15,
+    81,
+    18
+   ],
+   "nodes": [
+    "body/roof"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "XML walk / back"
+  },
+  {
+   "id": "chimney",
+   "view": "z_both",
+   "element": "chimney",
+   "box": [
+    7,
+    11,
+    11,
+    28
+   ],
+   "nodes": [
+    "body/chimney"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "XML funnel"
+  },
+  {
+   "id": "dome",
+   "view": "z_both",
+   "element": "dome",
+   "box": [
+    19,
+    18,
+    27,
+    32
+   ],
+   "nodes": [
+    "body/domes"
+   ],
+   "tolerancePixels": 4,
+   "uncertainty": "XML dome clip 1.8..3.2 m; the foot inside the boiler is hidden, so the bottom edge is not measurable (model foot at 2.16 m)"
+  },
+  {
+   "id": "wheel-1",
+   "view": "z_both",
+   "element": "front wheel tyre",
+   "box": [
+    16,
+    42,
+    25,
+    50
+   ],
+   "nodes": [
+    "wheelset-1/right-wheel/tyre"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "wheel tyre; blurred low-resolution spokes, edges +-1 px"
+  },
+  {
+   "id": "wheel-2",
+   "view": "z_both",
+   "element": "rear wheel tyre",
+   "box": [
+    54,
+    42,
+    63,
+    50
+   ],
+   "nodes": [
+    "wheelset-2/right-wheel/tyre"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "wheel tyre; blurred low-resolution spokes, edges +-1 px"
+  }
+ ]
+}

@@ -123,7 +123,7 @@ describe("CD 230 laminatka transfer", () => {
             }
         }
     expect(checked).toBeGreaterThan(1000);
-  });
+  }, 30_000); // a ray per pixel over both cabs: about 4.5 s alone, more under a full parallel run
 
   it("carries a valid running number in every livery", () => {
     for (const [key, l] of Object.entries(CD230_LIVERIES)) {

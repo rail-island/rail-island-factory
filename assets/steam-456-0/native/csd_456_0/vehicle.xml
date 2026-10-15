@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="Windows-1250"?>
+<loco name="CSD_456_0" power="1550" maxspeed="100" weight="135" author="Zítko Petr" email="zitkovidomov@volny.cz" default="0" title="CSD_456.0" path="Loco/Steam" smoke_x="0.192" smoke_y="0.32" smoke="../smoke1"/>

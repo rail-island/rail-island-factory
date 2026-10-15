@@ -1,0 +1,149 @@
+{
+ "note": "Native pixel edges [left, top, right, bottom] on the vlakosimdb side view (0.1 m a pixel), read from the original BMP; nodes are source-tree scopes of the model at rest.",
+ "annotations": [
+  {
+   "id": "lead-wheel",
+   "view": "z_both",
+   "element": "leading wheel tyre",
+   "box": [
+    10,
+    51,
+    20,
+    60
+   ],
+   "nodes": [
+    "wheelset-1/right-wheel/tyre"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "wheel tyre; blurred low-resolution spokes, edges +-1 px"
+  },
+  {
+   "id": "driver-1",
+   "view": "z_both",
+   "element": "first coupled wheel tyre",
+   "box": [
+    30,
+    48,
+    42,
+    60
+   ],
+   "nodes": [
+    "wheelset-2/right-wheel/tyre"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "wheel tyre; blurred low-resolution spokes, edges +-1 px"
+  },
+  {
+   "id": "trail-wheel",
+   "view": "z_both",
+   "element": "trailing wheel tyre",
+   "box": [
+    98,
+    51,
+    107,
+    60
+   ],
+   "nodes": [
+    "wheelset-6/right-wheel/tyre"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "wheel tyre; blurred low-resolution spokes, edges +-1 px"
+  },
+  {
+   "id": "chimney",
+   "view": "z_both",
+   "element": "chimney with base flare",
+   "box": [
+    11,
+    17,
+    19,
+    25
+   ],
+   "nodes": [
+    "body/chimney"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "flare painted into the smokebox, +-1 px"
+  },
+  {
+   "id": "domes",
+   "view": "z_both",
+   "element": "three domes",
+   "box": [
+    24,
+    20,
+    66,
+    26
+   ],
+   "nodes": [
+    "body/domes"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "dome feet hidden in the boiler"
+  },
+  {
+   "id": "barrel",
+   "view": "z_both",
+   "element": "boiler barrel",
+   "box": [
+    20,
+    24,
+    73,
+    39
+   ],
+   "nodes": [
+    "body/boiler/barrel"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "lower edge hidden by the tanks; XML kotel"
+  },
+  {
+   "id": "tanks",
+   "view": "z_both",
+   "element": "side tanks",
+   "box": [
+    22,
+    33,
+    73,
+    44
+   ],
+   "nodes": [
+    "body/side-tanks"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "lower edge at the running board"
+  },
+  {
+   "id": "cab",
+   "view": "z_both",
+   "element": "cab with roof",
+   "box": [
+    73,
+    18,
+    99,
+    46
+   ],
+   "nodes": [
+    "body/cab"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "roof overhang not painted"
+  },
+  {
+   "id": "buffers",
+   "view": "z_both",
+   "element": "front buffers",
+   "box": [
+    0,
+    48,
+    6,
+    52
+   ],
+   "nodes": [
+    "body/front-draw-gear/buffers"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "dark heads on dark beam"
+  }
+ ]
+}

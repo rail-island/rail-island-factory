@@ -1,8 +1,8 @@
 # Vehicles
 
 **Covers** - the procedurally generated road and rail vehicles (an articulated American
-truck, the trucks reproduced from the game, the buses from vlakosimdb, the CD 150, CD 163, CD 230 and CD 263 electric locomotives, the CSD and CD coaches and the freight wagons), their triangle budget and conventions, articulated vehicles'
-parts and steered front wheels, the `sweep` primitive they are mostly built from, and
+truck, the trucks reproduced from the game, the buses from vlakosimdb, the CD 150, CD 163, CD 230 and CD 263 electric locomotives, the CSD and CD coaches, the freight wagons and the steam locomotives), their triangle budget and conventions, articulated vehicles'
+parts, steered front wheels and animated running gear, the `sweep` primitive they are mostly built from, and
 how to add one.
 **Code** - `generator/vehicles.ts`, `generator/cd150.ts`, `generator/cd150Comparison.ts`, `generator/cd150Report.ts`, `test/cd150.test.ts`, `generator/cd163.ts`, `generator/cd163Family.ts`, `generator/cd230.ts`, `generator/cdLogo.ts`, `generator/vehicleParts.ts`, `generator/design.ts`, `generator/meshCore.ts` (`sweep`, `part`), `generator/meshBuilder.ts` (`toGlb`), `src/viewerHighlight.ts`, `test/models.test.ts`, `test/cdLogo.test.ts`, `test/viewerHighlight.test.ts`, `.agents/skills/road-vehicle/SKILL.md`, `.agents/skills/railroad-vehicle/SKILL.md`, `.agents/skills/vlakosimdb-transfer/SKILL.md`
 **See also** - [buses.md](buses.md) (the buses), [vehicle-rig.md](vehicle-rig.md) (steered wheels, sections, joints), [trucks.md](trucks.md), [loco-liveries.md](loco-liveries.md) (the locomotives' liveries and the CD 263), [cd-230.md](cd-230.md) (the laminatka), [csd-coaches.md](csd-coaches.md) (the CSD coaches), [wagons.md](wagons.md) (the freight wagons), [cd-green-white.md](cd-green-white.md), [bmo-double-deck.md](bmo-double-deck.md), [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md)
@@ -22,6 +22,7 @@ how to add one.
 | `veh-bmo-double-deck-coach` | Bmo Double-Deck Coach | parametric (`livery` csd/cdBlue/cdBlueGrey/cdRedDoors = vlakosimdb CSD Bmo and CD Bmo#1..#3): the double-deck coach with a dropped centre, 26.8 m, about 6,500 to 6,800 triangles. See [bmo-double-deck.md](bmo-double-deck.md) |
 | `veh-cd-green-white-coach` | CD Green-White Coach | parametric (`variant` a/ab/b/bee/beel/bds/ds/bdmeer/bdmtee = vlakosimdb CD A ... CD Bdmtee): the CD green and white Y-type compartment coaches, luggage coach and van, and the 26.4 m BDmeer and Bdmtee; about 6,000 to 6,500 triangles. See [cd-green-white.md](cd-green-white.md) |
 | `veh-nas-flat-wagon`, `veh-ua-open-wagon`, `veh-eas-open-wagon` | Nas Flat Wagon, Ua Open Wagon, Eas Open Wagon | parametric (`cargo`: Nas empty/wood/tubes/reels, Ua empty/coal/wood/sand, Eas empty/wood/coal = the vlakosimdb load variants): a 20.9 m flat wagon with stakes and two high-sided open wagons, about 4,000 to 10,300 triangles. See [wagons.md](wagons.md) |
+| `veh-csd-433-0`, `veh-csd-456-0`, `veh-csd-475-1`, `veh-csd-477-0`, `veh-csd-498-1`, `veh-csd-556-0`, `veh-csd-636`, `veh-csd-386`, `veh-csd-m112` | CSD 433.0 ... CSD M 112.0 | the steam locomotives from vlakosimdb, their own family (`steamLocos.ts`): tank engines, tender engines with a `unit` parameter (`locomotive`, `tender`), a Mallet, a streamliner and a steam railcar, every wheelset and rod a part moved by the `running` animation clip; 3,000 to 14,400 triangles. See [steam-locomotives.md](steam-locomotives.md) and [animation.md](animation.md) |
 | `veh-raj-hopper-wagon`, `veh-rah-tank-wagon` | Raj Hopper Wagon, Rah Tank Wagon | rigid: the Raj with four yellow pressure-discharge hoppers and the silver CPAVEX ammonia tank wagon, about 4,200 and 4,400 triangles. See [wagons.md](wagons.md) |
 
 `VEHICLES` in `vehicles.ts` lists them as `{ id, title, build }`, the same
@@ -241,6 +242,11 @@ whose triangles are drawn by the rig's joint renderer ([buses.md](buses.md),
 [vehicle-rig.md](vehicle-rig.md)). A part may also name a parent part: its node is
 then a child of the parent's node (the steered wheels inside the truck).
 
+**Animated parts.** A rigid vehicle stays one node unless something must move.
+The steam locomotives are the exception: a static `body` part, then a part per
+wheelset, rod and valve-gear link, each pivoted at its joint and driven by an
+animation clip ([animation.md](animation.md)).
+
 The American truck's king pin is at x = 1.05 m, on the fifth wheel's top
 (y = 1.18 m), 0.6 m behind the trailer's front. Its front corners sweep a
 1.43 m circle about it and the sleeper starts 1.55 m ahead, so the trailer can
@@ -258,7 +264,8 @@ checks triangle by triangle; the model page's Trailer slider swings it.
 - Real proportions: the tests hold a vehicle under 2.7 m wide (2.6 m legal,
   plus mirrors) and 4.115 m high (13 ft 6 in), and longer than twice its width.
 - The GLB's generator string is `Rail Island procedural vehicle (<id>)`; a rigid
-  rail vehicle's one node is named `vehicle`; a road vehicle's are its parts
+  rail vehicle's one node is named `vehicle` (a steam locomotive's are `body`,
+  `wheelset-<n>` and its rods', `main-rod-right`, ...); a road vehicle's are its parts
   (`truck`, `trailer`, `body`, `section0`, `joint0`, and the steered wheels inside
   the front one).
 - Chrome is only mildly metallic (0.45): the game and the site light models with

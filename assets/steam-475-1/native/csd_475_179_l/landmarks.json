@@ -1,0 +1,117 @@
+{
+ "note": "Native pixel edges [left, top, right, bottom] on the vlakosimdb side view (0.1 m a pixel), read from the original BMP; nodes are source-tree scopes of the model at rest.",
+ "annotations": [
+  {
+   "id": "lead-wheel",
+   "view": "z_both",
+   "element": "first bogie wheel tyre",
+   "box": [
+    10,
+    41,
+    19,
+    50
+   ],
+   "nodes": [
+    "wheelset-1/right-wheel/tyre"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "wheel tyre; blurred low-resolution spokes, edges +-1 px"
+  },
+  {
+   "id": "driver-1",
+   "view": "z_both",
+   "element": "first coupled wheel tyre",
+   "box": [
+    40,
+    36,
+    55,
+    50
+   ],
+   "nodes": [
+    "wheelset-3/right-wheel/tyre"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "red wheels blurred together; texture diameter kept"
+  },
+  {
+   "id": "trail-wheel",
+   "view": "z_both",
+   "element": "trailing wheel tyre",
+   "box": [
+    105,
+    40,
+    116,
+    50
+   ],
+   "nodes": [
+    "wheelset-7/right-wheel/tyre"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "wheel tyre; blurred low-resolution spokes, edges +-1 px"
+  },
+  {
+   "id": "chimney",
+   "view": "z_both",
+   "element": "chimney",
+   "box": [
+    24,
+    10,
+    34,
+    15
+   ],
+   "nodes": [
+    "body/chimney"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "XML k1"
+  },
+  {
+   "id": "domes",
+   "view": "z_both",
+   "element": "domes",
+   "box": [
+    45,
+    11,
+    78,
+    15
+   ],
+   "nodes": [
+    "body/domes"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "XML k2..k4"
+  },
+  {
+   "id": "deflectors",
+   "view": "z_both",
+   "element": "smoke deflectors",
+   "box": [
+    11,
+    14,
+    42,
+    37
+   ],
+   "nodes": [
+    "body/smoke-deflectors"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "XML air; Wagner plates leaning in, drawn upright"
+  },
+  {
+   "id": "cab",
+   "view": "z_both",
+   "element": "cab with roof",
+   "box": [
+    101,
+    11,
+    128,
+    34
+   ],
+   "nodes": [
+    "body/cab"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "roof overhang not painted"
+  }
+ ]
+}

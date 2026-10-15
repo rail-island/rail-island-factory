@@ -1,0 +1,134 @@
+{
+ "note": "Native pixel edges [left, top, right, bottom] on the vlakosimdb side view (0.1 m a pixel), read from the original BMP; nodes are source-tree scopes of the model at rest.",
+ "annotations": [
+  {
+   "id": "lead-wheel",
+   "view": "z_both",
+   "element": "first bogie wheel tyre",
+   "box": [
+    3,
+    51,
+    12,
+    60
+   ],
+   "nodes": [
+    "wheelset-1/right-wheel/tyre"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "wheel tyre; blurred low-resolution spokes, edges +-1 px"
+  },
+  {
+   "id": "driver-1",
+   "view": "z_both",
+   "element": "first coupled wheel tyre",
+   "box": [
+    40,
+    44,
+    56,
+    60
+   ],
+   "nodes": [
+    "wheelset-3/right-wheel/tyre"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "XML ground notch 4.1..5.5"
+  },
+  {
+   "id": "driver-4",
+   "view": "z_both",
+   "element": "fourth coupled wheel tyre",
+   "box": [
+    97,
+    44,
+    113,
+    60
+   ],
+   "nodes": [
+    "wheelset-6/right-wheel/tyre"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "XML ground notch 9.8..11.2"
+  },
+  {
+   "id": "casing",
+   "view": "z_both",
+   "element": "top casing",
+   "box": [
+    14,
+    16,
+    105,
+    23
+   ],
+   "nodes": [
+    "body/top-casing"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "XML base"
+  },
+  {
+   "id": "tanks",
+   "view": "z_both",
+   "element": "side tanks",
+   "box": [
+    34,
+    30,
+    105,
+    43
+   ],
+   "nodes": [
+    "body/side-tanks"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "XML tendr"
+  },
+  {
+   "id": "cab",
+   "view": "z_both",
+   "element": "cab with roof",
+   "box": [
+    105,
+    15,
+    131,
+    43
+   ],
+   "nodes": [
+    "body/cab"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "roof overhang not painted"
+  },
+  {
+   "id": "bunker",
+   "view": "z_both",
+   "element": "bunker",
+   "box": [
+    131,
+    16,
+    160,
+    43
+   ],
+   "nodes": [
+    "body/bunker",
+    "body/bunker-top"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "XML tendr"
+  },
+  {
+   "id": "deflectors",
+   "view": "z_both",
+   "element": "smoke deflectors",
+   "box": [
+    3,
+    20,
+    28,
+    33
+   ],
+   "nodes": [
+    "body/smoke-deflectors"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "XML air, drawn upright"
+  }
+ ]
+}
