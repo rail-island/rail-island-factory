@@ -139,6 +139,27 @@ export const CD230_LIVERIES = {
     headlamp: "single",
     roofBox: true,
   },
+  // S 499.02 / CD 242, the steel-bodied sister of the 240 (Skoda 73E): the same
+  // outline, here in its cream and red paint with the yellow nose band. Bands
+  // from vlakosimdb's cd_242 (assets/cd-230/native/liveries/cd_242): its side
+  // BMP is 157 by 57 pixels on the 17 by 6 m canvas, row r spans
+  // 6.0 - (r + 1) * 0.105 to 6.0 - r * 0.105 m.
+  cd242: {
+    title: "CD 242 214, cream and red, yellow nose band",
+    source: "cd_242",
+    number: runningNumber("242", "214"),
+    numberSource: "242 214-5, photographed in this livery (photo-242-214-side.jpg)",
+    palette: { red: c("#d8140c"), cream: c("#f4f0bc"), yellow: c("#ecd404") },
+    side: [[1.2, 1.4, "red"], [1.4, 1.5, "silver"], [1.5, 2.2, "red"], [2.2, 3.8, "cream"], [3.8, 4.1, "roof"]],
+    cab: [[1.2, 1.4, "red"], [1.4, 1.5, "silver"], [1.5, 2.2, "red"], [2.2, 3.8, "cream"], [3.8, 4.1, "roof"]],
+    face: face([[1.2, 1.3, "red"], [1.3, 1.6, "yellow"], [1.6, 2.2, "red"], [2.2, 2.5, "cream"]], "cream"),
+    frame: "red",
+    plough: "red",
+    pillar: "cream",
+    ventRim: "cream",
+    headlamp: "single",
+    roofBox: true,
+  },
 } as const satisfies Record<string, Cd230Livery>;
 
 export const CD230_PARAMS: readonly ParamSpec[] = [{
