@@ -347,7 +347,7 @@
    "id": "R21",
    "view": "z_dec",
    "side": "right",
-   "element": "class plates",
+   "element": "class numerals",
    "box": [
     49,
     21,
@@ -355,10 +355,10 @@
     26
    ],
    "nodes": [
-    "body/right-side/class-plates"
+    "body/right-side/class-marks"
    ],
    "tolerancePixels": 1.01,
-   "uncertainty": "Bounds of the small class plates; +/- one pixel."
+   "uncertainty": "Bounds of the white class-numeral marks; the numerals are drawn inside them; +/- one pixel."
   },
   {
    "id": "L01",
@@ -704,7 +704,7 @@
    "id": "L21",
    "view": "z_inc",
    "side": "left",
-   "element": "class plates",
+   "element": "class numerals",
    "box": [
     49,
     21,
@@ -712,10 +712,10 @@
     26
    ],
    "nodes": [
-    "body/left-side/class-plates"
+    "body/left-side/class-marks"
    ],
    "tolerancePixels": 1.01,
-   "uncertainty": "Bounds of the small class plates; +/- one pixel."
+   "uncertainty": "Bounds of the white class-numeral marks; the numerals are drawn inside them; +/- one pixel."
   },
   {
    "id": "B01",

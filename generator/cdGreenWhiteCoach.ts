@@ -59,7 +59,10 @@ interface DoorSpec {
 interface SideSpec {
   windows: Win[];
   doors: DoorSpec[];
-  /** Small class plates beside the toilets (native 3 by 5 pixel boxes). */
+  /**
+   * The class numerals beside the toilets and by the doors: the white 3 by 5
+   * pixel marks of the native BMPs, a "1" on the A and a "2" on the others.
+   */
   signs: PxBox[];
   /** The CD emblem's box on the white band. */
   emblem: PxBox;
@@ -351,7 +354,7 @@ export function cdGreenWhiteCoach(params?: ParamValues): MeshBuilder {
     yellow: { color: "#d6cf1c", roughness: 0.5 },
     red: { color: "#c42a20", roughness: 0.5 },
     frame: { color: "#b0b0b0", metallic: 0.2, roughness: 0.45 },
-    sign: { color: "#f2f4f2", roughness: 0.5 },
+    classMark: { color: "#f2f4f2", roughness: 0.5 },
     marking: { color: "#1b1d1c", roughness: 0.6 },
   };
   const c = new Coach(palette, geo.length / 2);
@@ -395,8 +398,14 @@ export function cdGreenWhiteCoach(params?: ParamValues): MeshBuilder {
             if (d.glass.length === 2) m.scope("centre seam", () => c.sidePanel(body, "seam", s, { x0: mid - 0.02, y0: Math.max(b.y0, 0.9) + 0.03, x1: mid + 0.02, y1: b.y1 - 0.03 }, 0.016));
           }),
         );
+        // the white class numeral over each 3 by 5 pixel mark, centred in its box
         if (spec.signs.length)
-          m.scope("class plates", () => spec.signs.forEach((b) => c.sidePanel(body, "sign", s, px(b, H), 0.006, 0.004)));
+          m.scope("class marks", () =>
+            spec.signs.forEach((p) => {
+              const b = px(p, H);
+              c.numeral(body, s, variant === "a" ? "1" : "2", (b.x0 + b.x1) / 2, b.y0 + 0.02, b.y1 - b.y0 - 0.04, 0.004, "classMark");
+            }),
+          );
         if (v.bay)
           m.scope("lookout bay", () =>
             ([[33, 20, 35, 28], [36, 20, 40, 28], [41, 20, 43, 28]] as PxBox[]).forEach((b, i) =>

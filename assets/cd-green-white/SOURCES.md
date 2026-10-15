@@ -25,7 +25,7 @@ All native files come from `janproch/vlakosimdb` revision `b170acfe6dbd1e8e6f17d
 Side canvases are 250 (Y) or 270 (BDmeer, Bdmtee) by 50 pixels. `z_dec` paints the right (+Z) side, `z_inc` the left; both keep increasing source x, so the left elevation is mirrored relative to an outside observer.
 
 - Paint: roof light (240, 247, 240; Bee 207 grey; Beel 192, 192, 176) from the top to 3.2 m, green (0, 120, 0) from 1.9 to 3.2 m, white below to 0.9 m. A has the 1st class yellow line at 3.1..3.2 m over columns 15..230, AB over 133..230 (the 1st class half) with yellow class numerals beside the toilets. Ends green; the Beel's ends keep the roof, green and white bands. Bee and Beel have red end doors.
-- Windows, door windows and the small class plates are connected components of the window-frame pixels; door outlines are read from the dark seam columns and the leaf colour (the passenger doors' leaves are green also in the white band; the luggage doors of BDs, Ds and BDmeer, and the Ds's end door, are painted in the bands).
+- Windows, door windows and the white class-numeral marks are connected components of the window-frame pixels; door outlines are read from the dark seam columns and the leaf colour (the passenger doors' leaves are green also in the white band; the luggage doors of BDs, Ds and BDmeer, and the Ds's end door, are painted in the bands).
 - The Ds's `z_inc` is drawn about two pixels toward x = 0 against `z_dec`; the model keeps each side as measured, except the lookout bay, which stays at the XML position (its left-side boxes carry a 2.5-pixel tolerance).
 - The CD emblem sits on the white band near one end of each side (`[44, 33, 50, 37]` on most right sides); the running number is the small text in the middle of the white band.
 
@@ -34,7 +34,7 @@ Side canvases are 250 (Y) or 270 (BDmeer, Bdmtee) by 50 pixels. `z_dec` paints t
 - The lookout bay reaches 1.525 m from the centreline instead of the XML's 1.6 m, so it and its glass stay inside the repository's 3.1 m width envelope (as the CSD Dsk's duckets).
 - Buffers at the standard 1.75 m spacing, round 0.18 m tail lamps where the BMPs paint 2-pixel patches (y 1.5 m; Beel 1.75 m; Bdmtee 2.7 m), as on the CSD coaches.
 - Beel and BDmeer get a second, lower step under their low entrances; Bdmtee keeps the CSD Bdmtee's green aprons and step boards under its centre doors.
-- The smaller inscriptions are not modelled; the class plates are plain light panels.
+- The white 3 by 5 pixel marks beside the toilets (and Bdmtee's doors) are the class numerals: a white "1" on the A, "2" on the others, drawn in the stroke numerals of the CSD coaches. The A's "1" is narrower than its mark, so its landmark rows carry a 1.5-pixel tolerance. The smaller inscriptions are not modelled.
 
 ## Running numbers
 

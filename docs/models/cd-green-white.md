@@ -33,11 +33,12 @@ the optional yellow line and class numerals, the end wall and end door paint,
 the lamp height, the optional lookout bay, the XML roof ventilators and
 underframe boxes, and a `SideSpec` per side: windows (frosted where the native
 glass is white), doors (`green` passenger leaves, `bands` luggage doors), the
-small class plates and the emblem box. The right side is `z_dec`, the left
+white class numerals ("1" on the A, "2" on the others, drawn over the
+native 3 by 5 pixel marks beside the toilets and doors) and the emblem box. The right side is `z_dec`, the left
 `z_inc`, each as measured; they are not mirrored copies.
 
 The paint is three bands - white 0.9..1.9 m, green 1.9..3.2 m, roof above - plus
-decals (the yellow line, class plates, the CD emblem from `cd163.ts` and the
+decals (the yellow line, the white class numerals, the CD emblem from `cd163.ts` and the
 running number). Everything else - panels, windows with sash bars, doors,
 gangways, lamps, buffers, couplings, bogies - comes from the shared `Coach`
 builder ([csd-coaches.md](csd-coaches.md)).
@@ -63,26 +64,28 @@ builder ([csd-coaches.md](csd-coaches.md)).
 `assets/cd-green-white/native/cd_<variant>/landmarks.json` holds 455 native
 boxes (46 to 58 per variant): every window, door outline, door window, the class
 plates, lookout bay windows on both sides, and the gangway, end door, lamps and
-buffers at both ends. Windows, door windows and plates were found as connected
+buffers at both ends. Windows, door windows and class marks were found as connected
 components of the window-frame pixels; door outlines were read from the seam
 columns. Mean absolute error over (left, top, width, height), in percentage
 points of the canvas (`COMPARISON-<variant>.md`):
 
-| Variant | Boxes | pp |
-|---|---:|---:|
-| a | 48 | 0.230 |
-| ab | 46 | 0.240 |
-| b | 50 | 0.241 |
-| bee | 50 | 0.241 |
-| beel | 50 | 0.241 |
-| bds | 54 | 0.204 |
-| ds | 49 | 0.237 |
-| bdmeer | 50 | 0.221 |
-| bdmtee | 58 | 0.190 |
+| Variant | Boxes | Baseline (pp) | Final (pp) |
+|---|---:|---:|---:|
+| a | 48 | 0.230 | 0.255 |
+| ab | 46 | 0.240 | 0.240 |
+| b | 50 | 0.241 | 0.261 |
+| bee | 50 | 0.241 | 0.261 |
+| beel | 50 | 0.241 | 0.261 |
+| bds | 54 | 0.204 | 0.223 |
+| ds | 49 | 0.237 | 0.237 |
+| bdmeer | 50 | 0.221 | 0.240 |
+| bdmtee | 58 | 0.190 | 0.207 |
 
-The geometry was authored from the same boxes, so the baseline equals the final
-measurement; the largest residuals are the buffer heads (1.75 m spacing kept)
-and the 2-pixel lamps. Regenerate with
+The geometry was authored from the same boxes. The baseline drew the class marks
+as plates filling their boxes; the final draws them as numerals, which are
+narrower and a little shorter than the marks, hence the small increase; the largest residuals are the buffer heads (1.75 m spacing kept)
+and the 2-pixel lamps; the A's "1" is narrower than its 3-pixel mark (its
+rows carry a 1.5-pixel tolerance). Regenerate with
 `pnpm exec tsx generator/csdCoachReport.ts cd_a cd_ab ...`.
 
 ## Tests
@@ -91,5 +94,6 @@ and the 2-pixel lamps. Regenerate with
 XML length and axles, section height and width, the CD emblem reading correctly
 from outside and the running number on both sides, valid check digits, and the
 variant list (window counts, the lookout bay only on BDs and Ds, an invalid value
-rejected). `test/params.test.ts` builds every variant (determinism, no flicker,
+rejected), and the class marks drawn as white numerals (the "1" reading from
+outside on the A), not blank plates. `test/params.test.ts` builds every variant (determinism, no flicker,
 envelope, budget, GLB/JS agreement).

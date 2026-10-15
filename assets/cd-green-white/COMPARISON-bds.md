@@ -4,7 +4,7 @@
 **Code** - `generator/csdCoaches.ts`, `generator/csdCoachComparison.ts`, `generator/csdCoachReport.ts`.
 **See also** - [source notes](SOURCES.md), [CSD coaches](../../docs/models/csd-coaches.md).
 
-Model geometry revision (SHA-256 of comparison GLB): `f5ae8058514641b43e376c5437e5cadbd31fe41e490e2900079b6050fe1fd640`.
+Model geometry revision (SHA-256 of comparison GLB): `5462a79de478ce35428d41f9927a8eb7847109c0be474304a0ed124da9b9eefa`.
 
 Regenerate with `pnpm exec tsx generator/csdCoachReport.ts cd_bds`. The baseline is the first authored geometry (`native/cd_bds/baseline.json`); baseline and final use the same annotations. Built with `variant=bds` of `veh-cd-green-white-coach`.
 
@@ -14,11 +14,11 @@ Each vector is (left, top, width, height). Percentages are 100*x/W, 100*y/H, 100
 
 | View | Boxes | Baseline MAE (pp) | Final MAE (pp) |
 |---|---:|---:|---:|
-| z_dec, right | 19 | 0.000 | 0.000 |
-| z_inc, left | 19 | 0.000 | 0.000 |
+| z_dec, right | 19 | 0.000 | 0.026 |
+| z_inc, left | 19 | 0.000 | 0.026 |
 | x_both, rear | 8 | 0.690 | 0.690 |
 | x_both, front | 8 | 0.690 | 0.690 |
-| All | 54 | 0.204 | 0.204 |
+| All | 54 | 0.204 | 0.223 |
 
 One pixel is 0.400 pp horizontally on the sides, 3.333 pp horizontally on the ends and 2.000 pp vertically. The model was authored from these same measured boxes, so the residuals measure the transfer onto the XML body (tapered and rounded ends, sloped faces, 5 mm edge clearances) and the deliberate mechanical choices (1.75 m buffer spacing, round lamp lenses), not photographic accuracy.
 
@@ -47,7 +47,7 @@ Annotated views (generated locally, not committed):
 | R13 | z_dec, right | door 3 outline | 69, 18, 86, 38 | `body/right-side/door-3/outline` | 27.600, 36.000, 6.800, 40.000 | 27.600, 36.000, 6.800, 40.000 | 0.000, -0.000, -0.000, 0.000 | 0.000 | 0.000 | Door leaf edges read from the dark seam columns and the leaf colour; +/- two pixels. |
 | R14 | z_dec, right | door 3 window 1 frame | 72, 20, 76, 30 | `body/right-side/door-3/window-1/frame` | 28.800, 40.000, 1.600, 20.000 | 28.800, 40.000, 1.600, 20.000 | -0.000, 0.000, 0.000, 0.000 | 0.000 | 0.000 | Connected component of window-frame pixels on the native BMP; +/- one pixel. |
 | R15 | z_dec, right | door 3 window 2 frame | 79, 20, 83, 29 | `body/right-side/door-3/window-2/frame` | 31.600, 40.000, 1.600, 18.000 | 31.600, 40.000, 1.600, 18.000 | 0.000, 0.000, -0.000, 0.000 | 0.000 | 0.000 | Connected component of window-frame pixels on the native BMP; +/- one pixel. |
-| R16 | z_dec, right | class plates | 215, 21, 218, 26 | `body/right-side/class-plates` | 86.000, 42.000, 1.200, 10.000 | 86.000, 42.000, 1.200, 10.000 | 0.000, -0.000, 0.000, 0.000 | 0.000 | 0.000 | Bounds of the small class plates; +/- one pixel. |
+| R16 | z_dec, right | class numerals | 215, 21, 218, 26 | `body/right-side/class-marks` | 86.000, 42.000, 1.200, 10.000 | 86.133, 42.538, 0.935, 8.924 | 0.133, 0.538, -0.265, -1.076 | 0.000 | 0.503 | Bounds of the white class-numeral marks; the numerals are drawn inside them; +/- one pixel. |
 | R17 | z_dec, right | lookout bay window 1 | 33, 20, 35, 28 | `body/right-side/lookout-bay/window-1/frame` | 13.200, 40.000, 0.800, 16.000 | 13.200, 40.000, 0.800, 16.000 | 0.000, 0.000, -0.000, -0.000 | 0.000 | 0.000 | Connected component of window-frame pixels on the native BMP; +/- one pixel. |
 | R18 | z_dec, right | lookout bay window 2 | 36, 20, 40, 28 | `body/right-side/lookout-bay/window-2/frame` | 14.400, 40.000, 1.600, 16.000 | 14.400, 40.000, 1.600, 16.000 | 0.000, 0.000, -0.000, -0.000 | 0.000 | 0.000 | Connected component of window-frame pixels on the native BMP; +/- one pixel. |
 | R19 | z_dec, right | lookout bay window 3 | 41, 20, 43, 28 | `body/right-side/lookout-bay/window-3/frame` | 16.400, 40.000, 0.800, 16.000 | 16.400, 40.000, 0.800, 16.000 | 0.000, 0.000, -0.000, -0.000 | 0.000 | 0.000 | Connected component of window-frame pixels on the native BMP; +/- one pixel. |
@@ -66,7 +66,7 @@ Annotated views (generated locally, not committed):
 | L13 | z_inc, left | door 3 outline | 69, 18, 86, 38 | `body/left-side/door-3/outline` | 27.600, 36.000, 6.800, 40.000 | 27.600, 36.000, 6.800, 40.000 | 0.000, -0.000, -0.000, 0.000 | 0.000 | 0.000 | Door leaf edges read from the dark seam columns and the leaf colour; +/- two pixels. |
 | L14 | z_inc, left | door 3 window 1 frame | 72, 20, 76, 29 | `body/left-side/door-3/window-1/frame` | 28.800, 40.000, 1.600, 18.000 | 28.800, 40.000, 1.600, 18.000 | -0.000, 0.000, 0.000, 0.000 | 0.000 | 0.000 | Connected component of window-frame pixels on the native BMP; +/- one pixel. |
 | L15 | z_inc, left | door 3 window 2 frame | 79, 20, 83, 30 | `body/left-side/door-3/window-2/frame` | 31.600, 40.000, 1.600, 20.000 | 31.600, 40.000, 1.600, 20.000 | 0.000, 0.000, -0.000, 0.000 | 0.000 | 0.000 | Connected component of window-frame pixels on the native BMP; +/- one pixel. |
-| L16 | z_inc, left | class plates | 215, 21, 218, 26 | `body/left-side/class-plates` | 86.000, 42.000, 1.200, 10.000 | 86.000, 42.000, 1.200, 10.000 | 0.000, -0.000, 0.000, 0.000 | 0.000 | 0.000 | Bounds of the small class plates; +/- one pixel. |
+| L16 | z_inc, left | class numerals | 215, 21, 218, 26 | `body/left-side/class-marks` | 86.000, 42.000, 1.200, 10.000 | 86.133, 42.538, 0.935, 8.924 | 0.133, 0.538, -0.265, -1.076 | 0.000 | 0.503 | Bounds of the white class-numeral marks; the numerals are drawn inside them; +/- one pixel. |
 | L17 | z_inc, left | lookout bay window 1 | 33, 20, 35, 28 | `body/left-side/lookout-bay/window-1/frame` | 13.200, 40.000, 0.800, 16.000 | 13.200, 40.000, 0.800, 16.000 | 0.000, 0.000, -0.000, -0.000 | 0.000 | 0.000 | Connected component of window-frame pixels on the native BMP; +/- one pixel. |
 | L18 | z_inc, left | lookout bay window 2 | 36, 20, 40, 28 | `body/left-side/lookout-bay/window-2/frame` | 14.400, 40.000, 1.600, 16.000 | 14.400, 40.000, 1.600, 16.000 | 0.000, 0.000, -0.000, -0.000 | 0.000 | 0.000 | Connected component of window-frame pixels on the native BMP; +/- one pixel. |
 | L19 | z_inc, left | lookout bay window 3 | 41, 20, 43, 28 | `body/left-side/lookout-bay/window-3/frame` | 16.400, 40.000, 0.800, 16.000 | 16.400, 40.000, 0.800, 16.000 | 0.000, 0.000, -0.000, -0.000 | 0.000 | 0.000 | Connected component of window-frame pixels on the native BMP; +/- one pixel. |

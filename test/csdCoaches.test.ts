@@ -276,4 +276,36 @@ describe("CSD coaches transferred from vlakosimdb", () => {
     };
     for (const l of ["cdBlue", "cdBlueGrey", "cdRedDoors"]) expect(bounds(l)).toEqual(bounds("csd"));
   });
+
+  // regression: the white 3 by 5 pixel marks beside the toilets were first drawn
+  // as blank plates; they are the class numerals, "1" on the A and "2" on the others
+  it("draws the green and white coaches' class marks as white numerals, not blank plates", () => {
+    const d = VEHICLES.find((v) => v.id === "veh-cd-green-white-coach")!;
+    for (const variant of ["a", "b", "bee", "beel", "bds", "bdmeer", "bdmtee"]) {
+      const mesh = d.build({ variant });
+      const nodes = leaves(mesh.sourceTree(d.id, d.title).root);
+      expect(nodes.some((n) => n.material === "sign"), variant).toBe(false);
+      const { json, bin } = parseGlb(mesh.toGlb(d.title));
+      const tris = collectTriangles(json, bin).filter((t) => t.material === "classMark");
+      for (const side of ["right", "left"]) {
+        const marks = nodes.filter((n) => n.id.startsWith(`body/${side}-side/class-marks/`) && n.material === "classMark");
+        expect(marks.length, `${variant} ${side}`).toBeGreaterThan(0);
+        for (const n of marks) {
+          const ps = tris.slice(n.tri[0], n.tri[0] + n.tri[1]).flatMap((t) => t.p);
+          const [y0, y1] = [n.min![1], n.max![1]];
+          const at = (a: number, b: number) => {
+            const sel = ps.filter((p) => p[1] >= y0 + a * (y1 - y0) && p[1] <= y0 + b * (y1 - y0));
+            return sel.reduce((s, p) => s + p[0], 0) / sel.length;
+          };
+          // the A's "1" reads from outside: its flag leans left of its foot, toward
+          // -X on the right side and +X on the left
+          const [flag, foot] = [at(0.7, 0.8), at(0, 0.1)];
+          if (variant === "a") {
+            if (side === "right") expect(flag).toBeLessThan(foot);
+            else expect(flag).toBeGreaterThan(foot);
+          }
+        }
+      }
+    }
+  });
 });

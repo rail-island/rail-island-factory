@@ -4,7 +4,7 @@
 **Code** - `generator/csdCoaches.ts`, `generator/csdCoachComparison.ts`, `generator/csdCoachReport.ts`.
 **See also** - [source notes](SOURCES.md), [CSD coaches](../../docs/models/csd-coaches.md).
 
-Model geometry revision (SHA-256 of comparison GLB): `f6f969986e1b287e48eed6b653540165b06383a2f64277fda39403fe03362f6b`.
+Model geometry revision (SHA-256 of comparison GLB): `c8eac45e2382e441688966508c53e1d2545de8f3e1ceba82fd7a8713993a32c2`.
 
 Regenerate with `pnpm exec tsx generator/csdCoachReport.ts cd_bdmeer`. The baseline is the first authored geometry (`native/cd_bdmeer/baseline.json`); baseline and final use the same annotations. Built with `variant=bdmeer` of `veh-cd-green-white-coach`.
 
@@ -14,11 +14,11 @@ Each vector is (left, top, width, height). Percentages are 100*x/W, 100*y/H, 100
 
 | View | Boxes | Baseline MAE (pp) | Final MAE (pp) |
 |---|---:|---:|---:|
-| z_dec, right | 17 | 0.000 | 0.000 |
-| z_inc, left | 17 | 0.000 | 0.000 |
+| z_dec, right | 17 | 0.000 | 0.029 |
+| z_inc, left | 17 | 0.000 | 0.029 |
 | x_both, rear | 8 | 0.690 | 0.690 |
 | x_both, front | 8 | 0.690 | 0.690 |
-| All | 50 | 0.221 | 0.221 |
+| All | 50 | 0.221 | 0.240 |
 
 One pixel is 0.370 pp horizontally on the sides, 3.333 pp horizontally on the ends and 2.000 pp vertically. The model was authored from these same measured boxes, so the residuals measure the transfer onto the XML body (tapered and rounded ends, sloped faces, 5 mm edge clearances) and the deliberate mechanical choices (1.75 m buffer spacing, round lamp lenses), not photographic accuracy.
 
@@ -48,7 +48,7 @@ Annotated views (generated locally, not committed):
 | R14 | z_dec, right | door 2 window 2 frame | 79, 20, 83, 30 | `body/right-side/door-2/window-2/frame` | 29.259, 40.000, 1.481, 20.000 | 29.259, 40.000, 1.481, 20.000 | -0.000, 0.000, 0.000, 0.000 | 0.000 | 0.000 | Connected component of window-frame pixels on the native BMP; +/- one pixel. |
 | R15 | z_dec, right | door 3 outline | 249, 19, 259, 44 | `body/right-side/door-3/outline` | 92.222, 38.000, 3.704, 50.000 | 92.222, 38.000, 3.704, 50.000 | -0.000, 0.000, 0.000, -0.000 | 0.000 | 0.000 | Door leaf edges read from the dark seam columns and the leaf colour; +/- two pixels. |
 | R16 | z_dec, right | door 3 window 1 frame | 251, 20, 256, 30 | `body/right-side/door-3/window-1/frame` | 92.963, 40.000, 1.852, 20.000 | 92.963, 40.000, 1.852, 20.000 | -0.000, 0.000, 0.000, 0.000 | 0.000 | 0.000 | Connected component of window-frame pixels on the native BMP; +/- one pixel. |
-| R17 | z_dec, right | class plates | 221, 21, 224, 26 | `body/right-side/class-plates` | 81.852, 42.000, 1.111, 10.000 | 81.852, 42.000, 1.111, 10.000 | -0.000, -0.000, 0.000, 0.000 | 0.000 | 0.000 | Bounds of the small class plates; +/- one pixel. |
+| R17 | z_dec, right | class numerals | 221, 21, 224, 26 | `body/right-side/class-marks` | 81.852, 42.000, 1.111, 10.000 | 81.975, 42.538, 0.865, 8.924 | 0.123, 0.538, -0.246, -1.076 | 0.000 | 0.496 | Bounds of the white class-numeral marks; the numerals are drawn inside them; +/- one pixel. |
 | L01 | z_inc, left | window 1 frame | 25, 19, 38, 30 | `body/left-side/window-1/frame` | 9.259, 38.000, 4.815, 22.000 | 9.259, 38.000, 4.815, 22.000 | 0.000, 0.000, 0.000, -0.000 | 0.000 | 0.000 | Connected component of window-frame pixels on the native BMP; +/- one pixel. |
 | L02 | z_inc, left | window 2 frame | 44, 19, 57, 30 | `body/left-side/window-2/frame` | 16.296, 38.000, 4.815, 22.000 | 16.296, 38.000, 4.815, 22.000 | -0.000, 0.000, 0.000, -0.000 | 0.000 | 0.000 | Connected component of window-frame pixels on the native BMP; +/- one pixel. |
 | L03 | z_inc, left | window 3 frame | 112, 19, 125, 30 | `body/left-side/window-3/frame` | 41.481, 38.000, 4.815, 22.000 | 41.481, 38.000, 4.815, 22.000 | 0.000, 0.000, 0.000, -0.000 | 0.000 | 0.000 | Connected component of window-frame pixels on the native BMP; +/- one pixel. |
@@ -65,7 +65,7 @@ Annotated views (generated locally, not committed):
 | L14 | z_inc, left | door 2 window 2 frame | 79, 20, 83, 30 | `body/left-side/door-2/window-2/frame` | 29.259, 40.000, 1.481, 20.000 | 29.259, 40.000, 1.481, 20.000 | -0.000, 0.000, 0.000, 0.000 | 0.000 | 0.000 | Connected component of window-frame pixels on the native BMP; +/- one pixel. |
 | L15 | z_inc, left | door 3 outline | 249, 19, 259, 44 | `body/left-side/door-3/outline` | 92.222, 38.000, 3.704, 50.000 | 92.222, 38.000, 3.704, 50.000 | -0.000, 0.000, 0.000, -0.000 | 0.000 | 0.000 | Door leaf edges read from the dark seam columns and the leaf colour; +/- two pixels. |
 | L16 | z_inc, left | door 3 window 1 frame | 251, 20, 256, 30 | `body/left-side/door-3/window-1/frame` | 92.963, 40.000, 1.852, 20.000 | 92.963, 40.000, 1.852, 20.000 | -0.000, 0.000, 0.000, 0.000 | 0.000 | 0.000 | Connected component of window-frame pixels on the native BMP; +/- one pixel. |
-| L17 | z_inc, left | class plates | 221, 21, 224, 26 | `body/left-side/class-plates` | 81.852, 42.000, 1.111, 10.000 | 81.852, 42.000, 1.111, 10.000 | -0.000, -0.000, 0.000, 0.000 | 0.000 | 0.000 | Bounds of the small class plates; +/- one pixel. |
+| L17 | z_inc, left | class numerals | 221, 21, 224, 26 | `body/left-side/class-marks` | 81.852, 42.000, 1.111, 10.000 | 81.975, 42.538, 0.865, 8.924 | 0.123, 0.538, -0.246, -1.076 | 0.000 | 0.496 | Bounds of the white class-numeral marks; the numerals are drawn inside them; +/- one pixel. |
 | B01 | x_both, rear | gangway frame | 7, 17, 23, 37 | `rear-end/gangway` | 23.333, 34.000, 53.333, 40.000 | 23.333, 34.000, 53.333, 40.000 | -0.000, 0.000, 0.000, 0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. |
 | B02 | x_both, rear | end door outline | 9, 19, 21, 37 | `rear-end/end-door/outline` | 30.000, 38.000, 40.000, 36.000 | 30.000, 38.000, 40.000, 36.000 | -0.000, 0.000, 0.000, -0.000 | 0.000 | 0.000 | Door between the gangway posts; the raster shows the frame, not the leaf edge. |
 | B03 | x_both, rear | end door window 1 | 10, 20, 13, 29 | `rear-end/end-door/window-1/frame` | 33.333, 40.000, 10.000, 18.000 | 33.333, 40.000, 10.000, 18.000 | 0.000, 0.000, -0.000, 0.000 | 0.000 | 0.000 | Native pixel edge estimate; +/- one pixel. |
