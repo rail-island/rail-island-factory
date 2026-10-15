@@ -51,12 +51,27 @@ missing file with `index.html`, so the response type is checked too).
   plus the sorted-by column when it is something else, so a reorder never hides
   the number behind it.
 - **The toolbar** (sticky) holds the search box, a sort `<select>` over every
-  column, a direction toggle and the totals (models and triangles listed).
+  column, a direction toggle, the filter chip rows and the totals (models and triangles listed).
 
 **Columns are data** (`COLUMNS` in `catalogQuery.ts`): the table, the cards, the
 sort control, the comparator and the model page's spec list all read the one
 list. Text columns start ascending, numbers descending; a missing value sorts
 last in both directions; ties fall back to title, then id.
+
+**Filter chips** (`GROUPS`, `chipRows` in `catalogQuery.ts`) are the webapp
+Creator's, without its origin row (Common / Mine / Community / Archive): the
+factory has one origin. The first row is All plus one chip per fleet - Trains,
+Road vehicles, Trams, Ships, Aircraft, Cable cars, Buildings - offered only when
+it has models. A record's category picks its fleet (`Rail vehicles` is Trains,
+`Road vehicles` is Road vehicles, any category that is not a vehicle one is a
+building's). Under a pick, a second row splits it by the vehicle's `group`
+(Locomotive, Coach, Truck, ...) or the building's category, and a third splits a
+building category by city pool. A lower row appears only when it offers a choice,
+leads with its own All, and is cleared when the row above changes; picking the
+picked chip clears it. The chips are derived from every model, not the searched
+ones, so they hold still while somebody types; a picked chip that matches nothing
+(an old link) is still offered so it can be switched off. Values the Creator
+names get its label (`loco` reads Locomotive); any other reads as itself.
 
 **Search** matches every whitespace-separated word, case-insensitively, against
 title, id, category, pool, author, license and source.
@@ -116,7 +131,8 @@ file says to run `pnpm build:models`.
 ## URL state
 
 All state is in the query string (`parseView`/`serializeView` in
-`catalogQuery.ts`): `?q=` search, `?sort=` and `?dir=` ordering, `?model=` the
+`catalogQuery.ts`): `?q=` search, `?cat=`, `?sub=` and `?sub2=` the three chip
+rows (the Creator's names; a lower one only under the one above), `?sort=` and `?dir=` ordering, `?model=` the
 open model, `?tab=source` or `?tab=references` its Source or Images tab and `?node=` the selected tree node (kept
 only with the Source tab; a node id no longer in the tree selects nothing), and
 `?p.<name>=<value>` a parametric model's non-default values (an unknown name or value falls back to the default). Defaults are left out, so the plain list is the bare URL. Opening and

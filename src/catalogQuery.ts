@@ -104,9 +104,135 @@ export function compareRows(a: Row, b: Row, col: Column, dir: SortDir): number {
   return collator.compare(a.title, b.title) || collator.compare(a.id, b.id);
 }
 
-export function queryRows(rows: readonly Row[], q: string, sort: string, dir: SortDir): Row[] {
+export function queryRows(rows: readonly Row[], q: string, sort: string, dir: SortDir, path: ChipPath = NO_CHIPS): Row[] {
   const col = column(sort) ?? column(DEFAULT_SORT)!;
-  return rows.filter((r) => matches(r, q)).sort((a, b) => compareRows(a, b, col, dir));
+  return rows.filter((r) => onPath(r, path) && matches(r, q)).sort((a, b) => compareRows(a, b, col, dir));
+}
+
+// --------------------------------------------------------------- the chips
+
+/**
+ * The filter chips, as the webapp Creator draws them (without its origin switch:
+ * everything here is the factory's own). The first row is one chip per fleet plus
+ * one for every building; under a pick, a second row splits it by type (a
+ * vehicle's group, a building's category) and a third by what is left (a
+ * building's city pool). The first row's order and labels are the Creator's.
+ */
+export interface Group {
+  id: string;
+  label: string;
+}
+
+export const GROUPS: readonly Group[] = [
+  { id: "train", label: "Trains" },
+  { id: "moto", label: "Road vehicles" },
+  { id: "tram", label: "Trams" },
+  { id: "ship", label: "Ships" },
+  { id: "aircraft", label: "Aircraft" },
+  { id: "cablecar", label: "Cable cars" },
+  { id: "building", label: "Buildings" },
+];
+
+const GROUP_IDS = new Set(GROUPS.map((g) => g.id));
+
+/** The vehicle categories a record can carry, by first-row chip. Any other category is a building's. */
+const VEHICLE_CATEGORIES: ReadonlyMap<string, string> = new Map([
+  ["Rail vehicles", "train"],
+  ["Road vehicles", "moto"],
+  ["Trams", "tram"],
+  ["Ships", "ship"],
+  ["Aircraft", "aircraft"],
+  ["Cable cars", "cablecar"],
+]);
+
+export function groupOf(r: CatalogRecord): string {
+  return VEHICLE_CATEGORIES.get(r.category) ?? "building";
+}
+
+/** The chip a model lands on when it has no value for a level, so every model is reachable through the chips. */
+export const OTHER_CHIP = "other";
+
+/** The second chip level: a vehicle's group (loco, coach, truck, ...), a building's category. */
+export function level2Of(r: CatalogRecord): string {
+  return (groupOf(r) === "building" ? r.category : r.group) || OTHER_CHIP;
+}
+
+/** The third chip level: a building's city pool. A vehicle has nothing finer. */
+export function level3Of(r: CatalogRecord): string {
+  return (groupOf(r) === "building" ? r.group : "") || OTHER_CHIP;
+}
+
+/** What the three chip rows have picked: one value per row at most, null for All. */
+export interface ChipPath {
+  group: string | null;
+  l2: string | null;
+  l3: string | null;
+}
+
+export const NO_CHIPS: ChipPath = { group: null, l2: null, l3: null };
+
+function onPath(r: CatalogRecord, path: ChipPath): boolean {
+  if (path.group !== null && groupOf(r) !== path.group) return false;
+  if (path.l2 !== null && level2Of(r) !== path.l2) return false;
+  return path.l3 === null || level3Of(r) === path.l3;
+}
+
+/** The chips each row offers. A row with nothing to offer is empty. */
+export interface ChipRows {
+  groups: string[];
+  l2: string[];
+  l3: string[];
+}
+
+/**
+ * Which chips each row offers, derived from every row (not the search, so the
+ * chips hold still while somebody types). A first-row chip is offered only for a
+ * group that has models; a lower row appears only under a pick and only when it
+ * would offer a choice. A PICKED chip is always offered, even when nothing matches
+ * it (an old link), so it can be switched off.
+ */
+export function chipRows(rows: readonly CatalogRecord[], path: ChipPath): ChipRows {
+  const groups = new Set<string>();
+  const l2 = new Set<string>();
+  const l3 = new Set<string>();
+  for (const r of rows) {
+    const g = groupOf(r);
+    groups.add(g);
+    if (g !== path.group) continue;
+    const v2 = level2Of(r);
+    l2.add(v2);
+    if (v2 !== path.l2) continue;
+    l3.add(level3Of(r));
+  }
+  const offer = (found: Set<string>, picked: string | null, parent: string | null): string[] => {
+    if (parent === null) return [];
+    if (picked !== null) found.add(picked);
+    return found.size > 1 || picked !== null ? [...found].sort((a, b) => collator.compare(chipLabel(a), chipLabel(b))) : [];
+  };
+  return {
+    groups: GROUPS.map((g) => g.id).filter((id) => groups.has(id) || id === path.group),
+    l2: offer(l2, path.l2, path.group),
+    l3: offer(l3, path.l3, path.l2),
+  };
+}
+
+/** Labels of the lower-row values the Creator names; any other value reads as itself. */
+const CHIP_LABELS: Readonly<Record<string, string>> = {
+  loco: "Locomotive",
+  diesel: "Diesel",
+  electric: "Electric",
+  steam: "Steam",
+  coach: "Coach",
+  dmu: "DMU",
+  emu: "EMU",
+  metro: "Metro",
+  truck: "Truck",
+  tram: "Tram",
+  other: "Other",
+};
+
+export function chipLabel(value: string): string {
+  return CHIP_LABELS[value] ?? value;
 }
 
 export function formatNumber(n: number): string {
@@ -136,10 +262,10 @@ export function cellFile(r: CatalogRecord, col: Column): { href: string; name: s
 // ------------------------------------------------------------- the URL state
 
 /**
- * What the query string carries: the search, the ordering and the open model. All
+ * What the query string carries: the search, the chips, the ordering and the open model. All
  * of it lives in the URL so back/forward walks it and a link can share a model.
  */
-export interface ViewState {
+export interface ViewState extends ChipPath {
   q: string;
   sort: string;
   dir: SortDir;
@@ -169,13 +295,36 @@ export function parseView(search: string): ViewState {
   const node = tab === "source" ? p.get("node") : null;
   const params: Record<string, string> = {};
   if (model) for (const [k, v] of p) if (k.startsWith("p.") && k.length > 2 && v) params[k.slice(2)] = v;
-  return { q: p.get("q") ?? "", sort, dir, model, tab, node: node ?? null, params };
+  // the chips as the Creator writes them: ?cat=<group>&sub=<l2>&sub2=<l3>, each only under the one above
+  const group = readChip(p.get("cat"));
+  const l2 = group !== null && GROUP_IDS.has(group) ? readChip(p.get("sub")) : null;
+  const l3 = l2 !== null ? readChip(p.get("sub2")) : null;
+  return {
+    q: p.get("q") ?? "",
+    group: group !== null && GROUP_IDS.has(group) ? group : null,
+    l2,
+    l3,
+    sort,
+    dir,
+    model,
+    tab,
+    node: node ?? null,
+    params,
+  };
+}
+
+/** A chip value from the address bar, sanitized by shape: one that matches nothing simply lists nothing. */
+function readChip(raw: string | null): string | null {
+  return raw && raw.length <= 40 ? raw : null;
 }
 
 /** The inverse of parseView; defaults are left out, so the bare list is a bare `?`-less URL. */
 export function serializeView(v: ViewState): string {
   const p = new URLSearchParams();
   if (v.q) p.set("q", v.q);
+  if (v.group) p.set("cat", v.group);
+  if (v.group && v.l2) p.set("sub", v.l2);
+  if (v.group && v.l2 && v.l3) p.set("sub2", v.l3);
   if (v.sort !== DEFAULT_SORT) p.set("sort", v.sort);
   if (v.dir !== (column(v.sort)?.dir ?? DEFAULT_DIR)) p.set("dir", v.dir);
   if (v.model) {
