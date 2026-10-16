@@ -104,8 +104,8 @@ const DOORS_810: Array<{ door: PxBox; glass: PxBox }> = [
 ];
 
 const FRONT_810: EndItem[] = [
-  { kind: "lamp", box: [1, 23, 5, 26], name: "lamp" },
-  { kind: "lamp", box: [25, 23, 29, 26], name: "lamp" },
+  { kind: "lamp", box: [0.2, 23, 5.8, 26], name: "lamp" },
+  { kind: "lamp", box: [24.2, 23, 29.8, 26], name: "lamp" },
 ];
 
 function cd810Car(livery: Cd810Livery): MeshBuilder {
@@ -147,10 +147,10 @@ function cd810Car(livery: Cd810Livery): MeshBuilder {
       const plane = { x0: car.X(tip), y0: 2.0, x1: car.X(back), y1: 2.9 };
       m.scope("visor", () => visor(car, e, tip, back, paint.bands.find(([a, b]) => a <= 2.5 && b > 2.5)![2]));
       m.scope("windscreen", () => {
-        for (const [i, [za, zb]] of ([[0.15, 1.22], [-1.22, -0.15]] as const).entries())
+        for (const [i, [za, zb]] of ([[0.12, 1.22], [-1.22, -0.12]] as const).entries())
           m.scope(`pane ${i + 1}`, () => {
             m.scope("frame", () => slopePanel(m, "frame", e, plane, za, zb, 2.02, 2.88, 0.008, 0.01));
-            m.scope("glass", () => slopePanel(m, "glass", e, plane, za + 0.05, zb - 0.05, 2.07, 2.83, 0.016, 0.006));
+            m.scope("glass", () => slopePanel(m, "glass", e, plane, za + 0.02, zb - 0.02, 2.04, 2.68, 0.016, 0.006));
           });
       });
       if (paint.front) {

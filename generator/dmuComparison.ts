@@ -12,6 +12,9 @@ import { collectTriangles, parseGlb } from "./glbTriangles.ts";
 import { isLeaf, type LeafNode, type TreeNode } from "./sourceTree.ts";
 import { CZ_DMUS } from "./czDmus.ts";
 import { K810 } from "./dmu810.ts";
+import { K131 } from "./dmuM131.ts";
+import { K240 } from "./dmuM240.ts";
+import { K296 } from "./dmuM296.ts";
 
 /** side: the side BMP on the +Z side (z_dec or z_both); front: the front BMP of the +X end, seen from ahead. */
 export type View = "side" | "front";
@@ -54,8 +57,36 @@ export const DMU_COMPARED: ComparedCar[] = [
     id: "veh-cd-810", params: {}, title: "CD 810 604-8 (red)", folder: "cd-810", key: "cd_810_1", report: "COMPARISON.md",
     project: frame(K810, 1, 1, 6.65, 4, 4),
     canvas: { side: [140, 40], front: [30, 40] },
-    files: { side: "native/cd_810_1/z_dec.bmp", front: "native/cd_810_1/x_both.bmp" },
+    files: { side: "native/cd_810_1/z_dec.bmp", front: "native/cd_810_1/2x_both.bmp" },
     mapping: "side column = 10 (x / 1.04824 + 6.65) (the XML body scaled to the published 13.103 m), row = 10 (4 - y); front column = 10 (1.5 - z), row = 10 (4 - y)",
+  },
+  {
+    id: "veh-cd-843", params: {}, title: "CD 843 024-1 (motor car)", folder: "cd-843", key: "cd_843", report: "COMPARISON.md",
+    project: frame(1, 1, 1, 12.05, 5, 5),
+    canvas: { side: [250, 50], front: [30, 50] },
+    files: { side: "native/cd_843/843_z_both.bmp", front: "native/cd_843/843_x_both.bmp" },
+    mapping: "side column = 10 (x + 12.05) (unscaled: the XML's 24.1 m body is the published one), row = 10 (5 - y); front column = 10 (1.5 - z), row = 10 (5 - y)",
+  },
+  {
+    id: "veh-csd-m131", params: {}, title: "CSD M 131.1238 (motor car)", folder: "csd-m131", key: "csd_m131", report: "COMPARISON.md",
+    project: frame(K131, 1, 1, 5.85, 5, 5),
+    canvas: { side: [140, 50], front: [30, 50] },
+    files: { side: "native/csd_m131/z_both.bmp", front: "native/csd_m131/x_both.bmp" },
+    mapping: "side column = 10 (x / 1.05217 + 5.85) (the XML scaled to the published 12.1 m over the buffers), row = 10 (5 - y); front column = 10 (1.5 - z), row = 10 (5 - y)",
+  },
+  {
+    id: "veh-csd-m240", params: {}, title: "CSD M 240.0113", folder: "csd-m240", key: "csd_m240", report: "COMPARISON.md",
+    project: frame(K240, 1, 1, 9.55, 4, 4),
+    canvas: { side: [191, 40], front: [30, 40] },
+    files: { side: "native/csd_m240/z_both.bmp", front: "native/csd_m240/x_both.bmp" },
+    mapping: "side column = 10 (x / 0.97368 + 9.55) (the XML scaled to the published 18.5 m over the buffers), row = 10 (4 - y); front column = 10 (1.5 - z), row = 10 (4 - y)",
+  },
+  {
+    id: "veh-csd-m296", params: {}, title: "CSD M 296.1028", folder: "csd-m296", key: "csd_m296", report: "COMPARISON.md",
+    project: frame(K296, 1, 1, 12.45, 5, 5),
+    canvas: { side: [250, 50], front: [30, 50] },
+    files: { side: "native/csd_m296/z_both.bmp", front: "native/csd_m296/x_dec.bmp" },
+    mapping: "side column = 10 (x / 1.00772 + 12.45) (the XML scaled to the published 24.79 m over the buffers), row = 10 (5 - y); front column = 10 (1.5 - z), row = 10 (5 - y)",
   },
 ];
 

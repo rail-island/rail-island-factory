@@ -134,8 +134,8 @@ const CAB_FRONT: EndItem[] = [
   { kind: "panel", box: [19, 29, 30, 30], mat: "darkRed", name: "line" },
   { kind: "panel", box: [0, 31, 11, 32], mat: "darkRed", name: "line" },
   { kind: "panel", box: [19, 31, 30, 32], mat: "darkRed", name: "line" },
-  { kind: "lamp", box: [1, 35, 5, 39], name: "lamp" },
-  { kind: "lamp", box: [25, 35, 29, 39], name: "lamp" },
+  { kind: "lamp", box: [1, 34, 5, 40], name: "lamp" },
+  { kind: "lamp", box: [25, 34, 29, 40], name: "lamp" },
   { kind: "lamp", box: [13, 37, 17, 39], name: "lamp", mat: "lampRed" },
 ];
 

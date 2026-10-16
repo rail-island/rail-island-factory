@@ -26,7 +26,10 @@ and `veh-cd-263` (`livery`, [loco-liveries.md](loco-liveries.md)), `veh-cd-110` 
 (`livery`: black, redLining) and the five steam locomotives with a tender (`unit`: locomotive, the
 default, or tender - [steam-locomotives.md](steam-locomotives.md)), and the two Czech electric units,
 `veh-cd-471` (`unit`: motorCar, trailer, drivingTrailer; `variant`: cd471, cd675) and `veh-cd-680`
-(`unit`: endCar, car683, car685, car686) ([czech-emus.md](czech-emus.md)). The five village houses are
+(`unit`: endCar, car683, car685, car686) ([czech-emus.md](czech-emus.md)), and the Czech diesel railcars
+`veh-cd-810` (`variant`: cd810, cd812, cd912; `livery`: red, yellowBand, blueWhite, ivoryBand, read by the
+810 only), `veh-cd-843` (`unit`: motorCar, drivingTrailer, trailer), `veh-csd-m131` (`unit`: motorCar,
+trailer) and `veh-csd-m296` (`variant`: m296, cd853, cd854) ([czech-dmus.md](czech-dmus.md)). The five village houses are
 parametric too, with up to six parameters each ([village.md](village.md)). A variant may change more than
 paint: the green and white coach's variants have their own lengths and
 layouts, and a `unit` value is a different vehicle. The first was `veh-csd-classic-green-coach` with one parameter:

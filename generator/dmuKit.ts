@@ -103,7 +103,7 @@ export class Car {
       bands: v.bands.map(([a, b, mat]): [number, number, string] => [a * ky, b * ky, mat]),
       ...(v.endPaint ? { endPaint: v.endPaint } : {}),
     };
-    loft(this.c, out);
+    this.m.scope("shell", () => loft(this.c, out));
     return out;
   }
 

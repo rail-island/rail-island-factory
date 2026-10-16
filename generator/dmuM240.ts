@@ -58,7 +58,6 @@ const FRONT: EndItem[] = [
   { kind: "panel", box: [10.5, 10, 19.5, 29], mat: "doorGrey", name: "door frame", proud: 0.006 },
   { kind: "panel", box: [11.2, 10.9, 18.8, 28.3], mat: "doorRed", name: "door leaf", proud: 0.009 },
   { kind: "window", box: [12, 11, 18, 18], mat: "frameGrey", name: "door window", fw: 0.04 },
-  { kind: "lamp", box: [12.5, 8.3, 17.5, 10.5], name: "top lamp" },
   { kind: "lamp", box: [4, 24, 7, 27], name: "lamp" },
   { kind: "lamp", box: [23, 24, 26, 27], name: "lamp" },
 ];
@@ -82,7 +81,15 @@ export function m240(): MeshBuilder {
         m.scope("running number", () => sideNumber(car, body, s, [84, 24, 104, 27], M240_NUMBER, "cream"));
       });
   });
-  for (const e of [1, -1]) m.scope(e > 0 ? "front end" : "rear end", () => endItems(car, body, e, FRONT));
+  for (const e of [1, -1])
+    m.scope(e > 0 ? "front end" : "rear end", () => {
+      endItems(car, body, e, FRONT);
+      // the headlamp on the roof dome over the end door (x_both rows 4..8)
+      m.scope("top lamp", () => {
+        const x = car.X(e > 0 ? 18.7 - 0.02 : 0.42);
+        block(m, "lampWhite", Math.min(x, x - e * 0.2), Math.max(x, x - e * 0.2), 3.22, 3.58, -0.2, 0.2);
+      });
+    });
   m.scope("buffers", () => buffersBoth(car, [0.05, 19.05], [0.4, 18.7], 0.9));
   m.scope("running gear", () => {
     // a trailing bogie under the -X end and the powered one (B') under the +X end

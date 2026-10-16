@@ -139,6 +139,8 @@ export function m296(params?: ParamValues): MeshBuilder {
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
         m.scope("windows", () => sideItems(car, body, s, L.windows));
+        // the radiator grille on the roof's side slope over the engine (XML `roof` clip 2.3..5.2 m)
+        m.scope("radiator grille", () => sideItems(car, body, s, [{ kind: "panel", box: [21, 12, 52, 18], mat: "black", name: "grille" }]));
         m.scope("doors", () =>
           L.doors.forEach((d, i) =>
             m.scope(`door ${i + 1}`, () => {
@@ -182,8 +184,7 @@ export function m296(params?: ParamValues): MeshBuilder {
   );
   m.scope("roof equipment", () => {
     m.scope("radiator", () => {
-      block(m, "roofDark", car.X(2.3), car.X(5.2), 4.0, 4.18, -0.75, 0.75);
-      for (let i = 0; i < 6; i++) block(m, "black", car.X(2.45 + i * 0.47), car.X(2.75 + i * 0.47), 4.18, 4.2, -0.65, 0.65);
+      block(m, "roofDark", car.X(2.3), car.X(5.2), 4.0, 4.16, -0.75, 0.75);
     });
     m.scope("exhaust", () => exhaust(car, 10.15, 0, 4.05, 4.25, 0.1));
   });

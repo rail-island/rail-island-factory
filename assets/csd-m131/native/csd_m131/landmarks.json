@@ -1,0 +1,17 @@
+{
+  "source": "janproch/vlakosimdb db/train/dmu/m131/csd_m131/model (z_both 140 x 50, x_both 30 x 50, 0.1 m a pixel; the side's x scaled by 1.05217 to the published 12.1 m over the buffers)",
+  "annotations": [
+    {"id": "S01", "view": "side", "box": [21, 23, 30, 32], "nodes": ["body/right-side/windows/window-1/frame"], "tolerancePixels": 1.5, "uncertainty": "First saloon window, grey frame."},
+    {"id": "S02", "view": "side", "box": [49, 23, 58, 32], "nodes": ["body/right-side/windows/window-3/frame"], "tolerancePixels": 1.5, "uncertainty": "Third window."},
+    {"id": "S03", "view": "side", "box": [77, 23, 86, 32], "nodes": ["body/right-side/windows/window-5/frame"], "tolerancePixels": 1.5, "uncertainty": "Fifth window."},
+    {"id": "S04", "view": "side", "box": [100, 23, 107, 32], "nodes": ["body/right-side/windows/end-window-1/frame"], "tolerancePixels": 1.5, "uncertainty": "Window beyond the +X door."},
+    {"id": "S05", "view": "side", "box": [10, 23, 18, 42], "nodes": ["body/right-side/doors/door-1/outline"], "tolerancePixels": 1.5, "uncertainty": "Door near the -X end, dark red outline."},
+    {"id": "S06", "view": "side", "box": [90, 23, 98, 42], "nodes": ["body/right-side/doors/door-2/outline"], "tolerancePixels": 1.5, "uncertainty": "Door near the +X end."},
+    {"id": "S07", "view": "side", "box": [12, 25, 16, 32], "nodes": ["body/right-side/doors/door-1/glass/frame"], "tolerancePixels": 1.5, "uncertainty": "Door window."},
+    {"id": "S08", "view": "side", "box": [26, 15, 95, 17], "nodes": ["roof-equipment/radiator"], "tolerancePixels": 1.5, "uncertainty": "Roof radiator, seen over the roof edge; the BMP draws it to 9.5 m, the XML `str` clip to 9.0 m (the model follows the BMP)."},
+    {"id": "F01", "view": "front", "box": [3, 23, 11, 32], "nodes": ["front-end/fittings/window-1"], "tolerancePixels": 1.5, "uncertainty": "Left end window, wrapping round the rounded end."},
+    {"id": "F02", "view": "front", "box": [19, 23, 27, 32], "nodes": ["front-end/fittings/window-2"], "tolerancePixels": 1.5, "uncertainty": "Right end window."},
+    {"id": "F03", "view": "front", "box": [12, 23, 18, 41], "nodes": ["front-end/end-door"], "tolerancePixels": 1.5, "uncertainty": "End door standing proud of the rounded end (XML `dve` clip, 0.9 to 2.3 m), carried up to the BMP frame at 2.75 m."},
+    {"id": "F04", "view": "front", "box": [4, 37, 6, 39], "nodes": ["front-end/fittings/lamp-1"], "tolerancePixels": 1.5, "uncertainty": "White lamp, a 2 x 2 px patch; the model's housing is 0.3 m."}
+  ]
+}

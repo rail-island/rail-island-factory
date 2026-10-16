@@ -1,0 +1,20 @@
+{
+  "source": "janproch/vlakosimdb db/train/dmu/csd_m296/model (z_both 250 x 50, x_dec 30 x 50, 0.1 m a pixel; the side's x scaled by 1.00772 to the published 24.79 m over the buffers)",
+  "annotations": [
+    {"id": "S01", "view": "side", "box": [28, 20, 41, 30], "nodes": ["body/right-side/windows/window-1/frame"], "tolerancePixels": 1.5, "uncertainty": "First window, grey frame with sash bar."},
+    {"id": "S02", "view": "side", "box": [111, 20, 124, 30], "nodes": ["body/right-side/windows/window-3/frame"], "tolerancePixels": 1.5, "uncertainty": "Saloon window."},
+    {"id": "S03", "view": "side", "box": [201, 20, 214, 30], "nodes": ["body/right-side/windows/window-8/frame"], "tolerancePixels": 1.5, "uncertainty": "Last saloon window."},
+    {"id": "S04", "view": "side", "box": [88, 20, 95, 30], "nodes": ["body/right-side/windows/small-window-1/frame"], "tolerancePixels": 1.5, "uncertainty": "Small window."},
+    {"id": "S05", "view": "side", "box": [228, 19, 234, 29], "nodes": ["body/right-side/windows/cab-window-1/frame"], "tolerancePixels": 1.5, "uncertainty": "Cab side window at +X."},
+    {"id": "S06", "view": "side", "box": [71, 20, 84, 39], "nodes": ["body/right-side/doors/door-2/outline"], "tolerancePixels": 1.5, "uncertainty": "Luggage double door with two narrow windows; lower edge estimated."},
+    {"id": "S07", "view": "side", "box": [94, 18, 101, 40], "nodes": ["body/right-side/doors/door-3/outline"], "tolerancePixels": 1.5, "uncertainty": "Passenger door, edges at columns 94 and 100."},
+    {"id": "S08", "view": "side", "box": [216, 18, 224, 40], "nodes": ["body/right-side/doors/door-4/outline"], "tolerancePixels": 1.5, "uncertainty": "Passenger door near +X."},
+    {"id": "S09", "view": "side", "box": [6, 19, 243, 31], "nodes": ["shell/cream-band"], "tolerancePixels": 1.5, "uncertainty": "Cream window band 2.0 to 3.2 m (rows 19 to 30)."},
+    {"id": "S10", "view": "side", "box": [21, 12, 52, 18], "nodes": ["body/right-side/radiator-grille"], "tolerancePixels": 1.5, "uncertainty": "Radiator grille on the roof's side slope (XML `roof` clip 2.3 to 5.2 m)."},
+    {"id": "F01", "view": "front", "box": [0, 18, 8, 29], "nodes": ["front-end/window-1"], "tolerancePixels": 1.5, "uncertainty": "Left cab window."},
+    {"id": "F02", "view": "front", "box": [22, 18, 30, 29], "nodes": ["front-end/window-2"], "tolerancePixels": 1.5, "uncertainty": "Right cab window."},
+    {"id": "F03", "view": "front", "box": [8, 18, 22, 31], "nodes": ["front-end/gangway-door-1"], "tolerancePixels": 1.5, "uncertainty": "Gangway door pair with its frame."},
+    {"id": "F04", "view": "front", "box": [2, 33, 8, 36], "nodes": ["front-end/lamp-1"], "tolerancePixels": 1.5, "uncertainty": "Lamp housing."},
+    {"id": "F05", "view": "front", "box": [22, 33, 28, 36], "nodes": ["front-end/lamp-2"], "tolerancePixels": 1.5, "uncertainty": "As F04."}
+  ]
+}

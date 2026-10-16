@@ -93,12 +93,12 @@ export function m131(params?: ParamValues): MeshBuilder {
       m.scope("end door", () => {
         // the end door stands 0.1 m proud of the rounded end (XML `dve`)
         const x = car.X(e > 0 ? 11.2 : 0.5);
-        block(m, "doorRed", Math.min(x - e * 0.05, x + e * 0.1), Math.max(x - e * 0.05, x + e * 0.1), 0.9, 2.3, -0.3, 0.3);
+        block(m, "doorRed", Math.min(x - e * 0.05, x + e * 0.1), Math.max(x - e * 0.05, x + e * 0.1), 0.9, 2.75, -0.3, 0.3);
       });
-      m.scope("lamps", () => endItems(car, body, e, FRONT));
+      m.scope("fittings", () => endItems(car, body, e, FRONT));
       m.scope("door window", () => {
         const x = car.X(e > 0 ? 11.2 : 0.5) + e * 0.1;
-        block(m, "glass", Math.min(x, x + e * 0.01), Math.max(x, x + e * 0.01), 1.95, 2.25, -0.22, 0.22);
+        block(m, "glass", Math.min(x, x + e * 0.01), Math.max(x, x + e * 0.01), 2.15, 2.6, -0.22, 0.22);
       });
       m.scope("top lamp", () => {
         const x = car.X(e > 0 ? 11.15 : 0.55);
@@ -117,7 +117,7 @@ export function m131(params?: ParamValues): MeshBuilder {
       ]),
     );
     m.scope("roof equipment", () => {
-      m.scope("radiator", () => block(m, "roofDark", car.X(2.6), car.X(9.0), 3.28, 3.5, -0.4, 0.4));
+      m.scope("radiator", () => block(m, "roofDark", car.X(2.6), car.X(9.5), 3.28, 3.5, -0.4, 0.4));
       for (const z of [-1.05, 1.05]) m.scope(z > 0 ? "right exhaust" : "left exhaust", () => exhaust(car, 1.75, z, 3.0, 3.5, 0.05));
     });
   } else m.scope("underframe", () => underBoxes(car, [{ name: "battery box", x0: 4.6, x1: 6.6, y0: 0.4, y1: 0.79, hw: 0.7, mat: "tank" }]));

@@ -1,0 +1,20 @@
+{
+  "source": "janproch/vlakosimdb db/train/dmu/cd_843/model (843_z_both 250 x 50, 843_x_both 30 x 50, 0.1 m a pixel; unscaled)",
+  "annotations": [
+    {"id": "S01", "view": "side", "box": [74, 22, 87, 33], "nodes": ["body/right-side/windows/window-1/frame"], "tolerancePixels": 1.5, "uncertainty": "First saloon window, grey frame with a sash bar."},
+    {"id": "S02", "view": "side", "box": [138, 22, 151, 33], "nodes": ["body/right-side/windows/window-5/frame"], "tolerancePixels": 1.5, "uncertainty": "Fifth saloon window."},
+    {"id": "S03", "view": "side", "box": [208, 22, 221, 33], "nodes": ["body/right-side/windows/window-7/frame"], "tolerancePixels": 1.5, "uncertainty": "Last saloon window."},
+    {"id": "S04", "view": "side", "box": [44, 22, 51, 33], "nodes": ["body/right-side/windows/toilet-window-1/frame"], "tolerancePixels": 1.5, "uncertainty": "Toilet window."},
+    {"id": "S05", "view": "side", "box": [182, 26, 189, 33], "nodes": ["body/right-side/windows/high-window-1/frame"], "tolerancePixels": 1.5, "uncertainty": "High small window; frame colour estimated."},
+    {"id": "S06", "view": "side", "box": [0, 20, 6, 29], "nodes": ["body/right-side/windows/cab-window-1/frame"], "tolerancePixels": 1.5, "uncertainty": "Cab side window at the -X end."},
+    {"id": "S07", "view": "side", "box": [18, 20, 29, 41], "nodes": ["body/right-side/doors/door-3/outline"], "tolerancePixels": 1.5, "uncertainty": "Double door behind the -X cab (dark red edges)."},
+    {"id": "S08", "view": "side", "box": [61, 21, 70, 47], "nodes": ["body/right-side/doors/door-4/outline"], "tolerancePixels": 1.5, "uncertainty": "Single door; reaches below the floor to the step."},
+    {"id": "S09", "view": "side", "box": [155, 21, 172, 47], "nodes": ["body/right-side/doors/door-5/outline"], "tolerancePixels": 1.5, "uncertainty": "Double door."},
+    {"id": "S10", "view": "side", "box": [0, 34, 241, 40], "nodes": ["shell/cream-band"], "tolerancePixels": 1.5, "uncertainty": "Cream band 1.0 to 1.6 m."},
+    {"id": "F01", "view": "front", "box": [2, 17, 9, 29], "nodes": ["front-end/cab/window-1"], "tolerancePixels": 1.5, "uncertainty": "Left front window."},
+    {"id": "F02", "view": "front", "box": [21, 17, 28, 29], "nodes": ["front-end/cab/window-2"], "tolerancePixels": 1.5, "uncertainty": "Right front window."},
+    {"id": "F03", "view": "front", "box": [11, 17, 19, 40], "nodes": ["front-end/cab/door-outline-1"], "tolerancePixels": 1.5, "uncertainty": "Front door with its frame."},
+    {"id": "F04", "view": "front", "box": [1, 34, 5, 40], "nodes": ["front-end/cab/lamp-1"], "tolerancePixels": 1.5, "uncertainty": "Lamp housing on the cream band."},
+    {"id": "F05", "view": "front", "box": [25, 34, 29, 40], "nodes": ["front-end/cab/lamp-2"], "tolerancePixels": 1.5, "uncertainty": "As F04."}
+  ]
+}
