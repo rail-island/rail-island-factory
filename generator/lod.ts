@@ -324,6 +324,7 @@ const FAMILIES: Record<string, readonly string[]> = {
   ],
   "dieselLocos": [
     "cd-750",
+    "cd-749",
     "cd-781",
     "csd-t679-0",
     "csd-t499",
