@@ -28,9 +28,11 @@ export interface KarosaVariant {
   source: string;
   series: Series;
   livery: Livery;
-  /** The doors on the right (kerb) side, [from, to] in u. */
-  doors: Array<[number, number]>;
-  /** The grey roof of the B 941 E. */
+  /** The doors on the right (kerb) side, [from, to] in u, and a door's leaves when not two. */
+  doors: Array<[number, number, number?]>;
+  /** The B 931's bumpers, grey in its native files (the E's and the 951's are in the livery). */
+  greyBumpers?: boolean;
+  /** The B 941 E's grey roof (its native left side, z_dec, greys the roof's edge where the B 941's is white). */
   greyRoof?: boolean;
 }
 
@@ -38,8 +40,8 @@ export const KAROSA_SHORT: readonly KarosaVariant[] = [
   { value: "b731", title: "B 731 (city, three doors)", source: "bus_kar_b731", series: "700", livery: "red", doors: [[0.5, 1.5], [5.2, 6.6], [9.3, 10.7]] },
   { value: "b732", title: "B 732 (city, three doors)", source: "bus_kar_b732", series: "700", livery: "red", doors: [[0.5, 1.5], [5.2, 6.7], [9.4, 10.7]] },
   { value: "c734", title: "C 734 (suburban, two doors)", source: "bus_kar_c734#1", series: "700", livery: "blue", doors: [[0.5, 1.5], [6.2, 7.3]] },
-  { value: "lc735", title: "LC 735 (intercity coach, two doors)", source: "bus_kar_lc735#1", series: "700", livery: "orange", doors: [[0.5, 1.5], [9.2, 10.0]] },
-  { value: "b931", title: "B 931 (city, three doors)", source: "bus_kar_b931", series: "900", livery: "red", doors: [[0.6, 1.6], [5.3, 6.7], [9.4, 10.8]] },
+  { value: "lc735", title: "LC 735 (intercity coach, two doors)", source: "bus_kar_lc735#1", series: "700", livery: "orange", doors: [[0.5, 1.5], [9.2, 10.0, 1]] },
+  { value: "b931", title: "B 931 (city, three doors)", source: "bus_kar_b931", series: "900", livery: "red", doors: [[0.6, 1.6], [5.3, 6.7], [9.4, 10.8]], greyBumpers: true },
   { value: "b931e", title: "B 931 E (city, three doors)", source: "bus_kar_b931e", series: "900", livery: "red", doors: [[0.6, 1.6], [5.3, 6.7], [9.4, 10.8]] },
   { value: "b951e", title: "B 951 E (city, three doors)", source: "bus_kar_b951e", series: "951", livery: "red", doors: [[0.6, 1.6], [5.3, 6.7], [9.4, 10.8]] },
 ];
@@ -144,6 +146,7 @@ export function karosaBus(variant: KarosaVariant, long: boolean): MeshBuilder {
   ];
 
   const stripe = "stripe";
+  const bumper = variant.greyBumpers ? "bumperGrey" : stripe;
   const paint: Paint[] = [
     { x0: tail - 1, x1: nose + 1, y0: 1.4, y1: 1.7, mat: stripe },
     { x0: tail - 1, x1: nose + 1, y0: 0.8, y1: 0.9, mat: "rub" },
@@ -168,7 +171,7 @@ export function karosaBus(variant: KarosaVariant, long: boolean): MeshBuilder {
   // (native BMPs: glass 1.9..2.7 m in a dark surround 1.8..2.8 m, the upper part a
   // top-hung vent; photographs: two-leaf folding doors, glazed in two panes)
   const PANE: PaneStyle = { glass: [1.92, 2.68], surround: [1.78, 2.8], vent: 2.42 };
-  const DOOR: DoorStyle = { bottom: BOTTOM + 0.08, top: 2.72, leafMat: "doorFrame", panes: [[1.15, 2.6], [0.45, 1.05]], surround: "frame", leafWidth: 0.7 };
+  const DOOR: DoorStyle = { bottom: BOTTOM + 0.08, top: 2.72, leafMat: "doorFrame", panes: [[1.15, 2.6], [0.45, 1.05]], surround: "frame", leaves: 2 };
   /** Fills u0..u1 on side `s` with panes. */
   const windowRun = (s: number, u0: number, u1: number): void => draft.run(s, x(u1), x(u0), PANE);
   const bodyRanges = K.f.bodies;
@@ -187,7 +190,7 @@ export function karosaBus(variant: KarosaVariant, long: boolean): MeshBuilder {
     if (b0 === K.f.nose) draft.pane(-1, x(1.4), x(0.55), { ...PANE, vent: undefined });
     windowRun(-1, start, end);
   }
-  for (const [d0, d1] of variant.doors) draft.door(x(d1), x(d0), DOOR);
+  for (const [d0, d1, leaves] of variant.doors) draft.door(x(d1), x(d0), DOOR, 1, leaves);
 
   // --- the nose ---------------------------------------------------------------------
   // (photographs: a near-upright windscreen down to 1.65 m over a white strip, a
@@ -229,7 +232,7 @@ export function karosaBus(variant: KarosaVariant, long: boolean): MeshBuilder {
         for (const [z0, z1] of [[-0.95, -0.3], [0.2, 0.85]] as const) endSlab(m(), "grille", frame, 1, z0, z1, 1.14, 1.22, 0.008);
       }
       const front = nose + 0.08;
-      block(m(), "stripe", nose - 0.05, front, 0.33, 0.98, -1.24, 1.24);
+      block(m(), bumper, nose - 0.05, front, 0.33, 0.98, -1.24, 1.24);
       for (const s of [-1, 1]) {
         block(m(), "frame", front - 0.01, front + 0.008, 0.71, 0.89, s * 0.93 - 0.11, s * 0.93 + 0.11);
         block(m(), "lampHead", front, front + 0.015, 0.74, 0.86, s * 0.93 - 0.08, s * 0.93 + 0.08);
@@ -273,12 +276,16 @@ export function karosaBus(variant: KarosaVariant, long: boolean): MeshBuilder {
       endSlab(m(), "lampRed", frame, -1, z - 0.08, z + 0.08, 0.88, 1.05, 0.014);
       endSlab(m(), "lampHead", frame, -1, z - 0.08, z + 0.08, 0.77, 0.87, 0.014);
     }
-    block(m(), "stripe", tail - 0.07, tail + 0.03, 0.33, 0.56, -1.24, 1.24);
+    block(m(), bumper, tail - 0.07, tail + 0.03, 0.33, 0.56, -1.24, 1.24);
     for (const s of [-1, 1]) block(m(), "lampRed", tail - 0.085, tail - 0.065, 0.4, 0.48, s * 1.0 - 0.04, s * 1.0 + 0.04);
   });
-  // the engine's side grille, low on the right behind the last door
-  fit("engine grille", tail + 0.8, () => {
-    for (let i = 0; i < 5; i++) sideSlab(m(), "grille", frame, 1, tail + 0.25, tail + 1.35, 0.4 + i * 0.09, 0.45 + i * 0.09, 0.012);
+  // the engine's side grille, low on the right behind the last door (a short
+  // three-door Karosa's rear door reaches to within 0.9 m of the tail)
+  const lastDoor = Math.min(...variant.doors.map(([, d1]) => x(d1)));
+  const g1 = Math.min(tail + 1.35, lastDoor - 0.06);
+  const g0 = g1 - tail > 0.9 ? tail + 0.25 : tail + 0.1;
+  fit("engine grille", (g0 + g1) / 2, () => {
+    for (let i = 0; i < 5; i++) sideSlab(m(), "grille", frame, 1, g0, g1, 0.4 + i * 0.09, 0.45 + i * 0.09, 0.012);
   });
 
   // --- roof, mirrors, markers -------------------------------------------------------
@@ -304,6 +311,7 @@ export function karosaBus(variant: KarosaVariant, long: boolean): MeshBuilder {
       maskGrey: "#7d8186",
       maskBlack: "#1d1e21",
       roofHatch: "#d9dbdb",
+      bumperGrey: "#808285",
       roofGrey: "#a7aaad",
     }),
     section, side, plan, base: "body", paint, arches, bodies,

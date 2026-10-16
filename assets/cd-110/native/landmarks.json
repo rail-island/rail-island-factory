@@ -1,0 +1,21 @@
+{
+  "source": "janproch/vlakosimdb db/train/loco/electric/cd_110 046-0/model (x_both 30 x 60, z_both 144 x 60, 0.1 m a pixel)",
+  "annotations": [
+    { "id": "F01", "view": "x_front", "box": [2, 18, 14, 27], "nodes": ["cab/front-windows/right"], "tolerancePixels": 1.5, "uncertainty": "Cab front window over the hood, frame and glass; the native window is drawn 0.2 m taller, the model's cab roof is held at 4.3 m for the published 4.65 m folded height." },
+    { "id": "F02", "view": "x_front", "box": [16, 18, 29, 27], "nodes": ["cab/front-windows/left"], "tolerancePixels": 1.5, "uncertainty": "As F01, the other pane." },
+    { "id": "F03", "view": "x_front", "box": [0, 15, 30, 27], "nodes": ["cab/shell/front/band-3"], "tolerancePixels": 2.5, "uncertainty": "The cream upper cab; the native cab top stands at 4.5 m, the model's at 4.3 m (deliberate, see F01)." },
+    { "id": "F04", "view": "x_front", "box": [4, 34, 26, 38], "nodes": ["front-hood/hood/front/band-1"], "tolerancePixels": 1.01, "uncertainty": "The cream band across the hood end, 2.2 to 2.6 m." },
+    { "id": "F05", "view": "x_front", "box": [11, 41, 19, 44], "nodes": ["front-hood/hood-end/number-plate"], "tolerancePixels": 1.01, "uncertainty": "Black plate frame with the number; +/- one pixel." },
+    { "id": "F06", "view": "x_front", "box": [5, 43, 8, 46], "nodes": ["front-hood/hood-end/lamps/right-lamp"], "tolerancePixels": 1.01, "uncertainty": "Low marker lamp, the 3 x 3 px lens with its ring." },
+    { "id": "F07", "view": "x_front", "box": [2, 52, 28, 58], "nodes": ["underframe/front-end/plough"], "tolerancePixels": 1.5, "uncertainty": "The yellow buffer-beam skirt; the native paints two blocks under the buffers, the model one plate." },
+    { "id": "S01", "view": "z_right", "box": [61, 18, 64, 27], "nodes": ["cab/right-side/windows/window-4"], "tolerancePixels": 1.5, "uncertainty": "Narrow cab side window toward the front hood." },
+    { "id": "S02", "view": "z_right", "box": [66, 18, 72, 27], "nodes": ["cab/right-side/windows/window-3"], "tolerancePixels": 1.5, "uncertainty": "Cab side window; the native cab is drawn 0.1 m off centre, the model keeps it symmetric." },
+    { "id": "S03", "view": "z_right", "box": [74, 18, 80, 27], "nodes": ["cab/right-side/windows/window-2"], "tolerancePixels": 1.5, "uncertainty": "As S02." },
+    { "id": "S04", "view": "z_right", "box": [81, 18, 84, 27], "nodes": ["cab/right-side/windows/window-1"], "tolerancePixels": 1.5, "uncertainty": "As S01, toward the rear hood." },
+    { "id": "S05", "view": "z_right", "box": [63, 29, 72, 45], "nodes": ["cab/right-side/door"], "tolerancePixels": 1.5, "uncertainty": "The cab door's seams between native columns 63 and 71, rows 29-44; the handrails stand just outside it." },
+    { "id": "S06", "view": "z_right", "box": [75, 35, 84, 38], "nodes": ["cab/right-side/number-plate"], "tolerancePixels": 1.01, "uncertainty": "Black side plate; +/- one pixel." },
+    { "id": "S07", "view": "z_right", "box": [49, 29, 57, 45], "nodes": ["front-hood/right-louvres/louvre-9"], "tolerancePixels": 1.5, "uncertainty": "Tall louvre on the full-width block beside the cab." },
+    { "id": "S08", "view": "z_right", "box": [20, 29, 27, 34], "nodes": ["front-hood/right-louvres/louvre-4"], "tolerancePixels": 1.5, "uncertainty": "Outermost upper hood louvre over the cream band." },
+    { "id": "S09", "view": "z_right", "box": [27, 38, 34, 45], "nodes": ["front-hood/right-louvres/louvre-8"], "tolerancePixels": 1.5, "uncertainty": "Lower louvre on the cabinet under the ramp." }
+  ]
+}

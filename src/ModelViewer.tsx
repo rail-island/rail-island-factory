@@ -34,7 +34,7 @@ import {
 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { isDefaultParams, type CatalogRecord } from "./catalogQuery";
+import { isDefaultParams, posePreview, previewKey, type CatalogRecord } from "./catalogQuery";
 import { leafAt, rangesOf, type TreeIndex } from "./sourceTreeView";
 import { applyHighlight, makeParts, type Part } from "./viewerHighlight";
 
@@ -44,7 +44,7 @@ type JsBuild = (three: object, params?: Record<string, string>) => Object3D;
 /** A model's JS module: build(), and for a rigged model pose() (generator/rig.ts). */
 interface JsModule {
   default: JsBuild;
-  pose?: (root: Object3D, pose: { steer: number; bend: number[] }, rig?: unknown) => void;
+  pose?: (root: Object3D, pose: { steer: number; bend: number[] }) => void;
 }
 /** The classes a model's JS module uses: all it needs of three. */
 const THREE_SUBSET = { Group, Mesh, BufferGeometry, BufferAttribute, MeshStandardMaterial, AnimationClip, QuaternionKeyframeTrack, VectorKeyframeTrack };
@@ -116,6 +116,8 @@ export function ModelViewer(props: {
   let camera: PerspectiveCamera | null = null;
   let controls: OrbitControls | null = null;
   let current: Object3D | null = null;
+  // The model and parameter values `current` was built for (previewKey).
+  let currentKey: string | null = null;
   let parts: Part[] = [];
   // The model the pose sliders last moved (it is no longer at rest).
   let posedTarget: Object3D | null = null;
@@ -258,12 +260,14 @@ export function ModelViewer(props: {
       if (current) disposeModel(current);
       renderer?.dispose();
       renderer = scene = camera = controls = current = null;
+      currentKey = null;
     });
   });
 
   createEffect(() => {
     const record = props.record;
     const params = { ...(props.params ?? {}) };
+    const key = previewKey(record.id, params);
     const mine = ++token;
     setBusy(true);
     setFailed(false);
@@ -282,6 +286,7 @@ export function ModelViewer(props: {
           disposeModel(current);
         }
         current = group;
+        currentKey = key;
         setClips(loadedClips);
         parts = makeParts(group);
         scene.add(group);
@@ -319,22 +324,32 @@ export function ModelViewer(props: {
     );
   });
 
-  // A rigged model is posed by its own JS module's pose(): the code the game calls.
-  // The GLB's scene carries the same nodes and rig (scene extras), so it poses too.
+  // A rigged model is posed by its own JS module's pose(): the code the game calls,
+  // with the preview's own rig -- the GLB's scene carries it (scene extras), a JS
+  // build the one of its parameters (posePreview). Only the model the page shows
+  // now is posed: after a step or a parameter change the previous one stays on
+  // screen until the next lands, and must not be posed with the next one's rig.
   createEffect(() => {
     loaded();
     const pose = props.pose;
     const record = props.record;
+    const key = previewKey(record.id, props.params ?? {});
     const target = current;
-    if (!pose || !record.rig || !target) return;
+    if (!pose || !record.rig || !target || currentKey !== key) return;
     // a model that was never moved is at rest already: no need to fetch the module
     if (posedTarget !== target && pose.steer === 0 && pose.bend.every((b) => b === 0)) return;
     posedTarget = target;
     void jsModule(`/${record.jsUrl}`).then((mod) => {
-      if (current !== target || !mod.pose) return;
-      mod.pose(target, pose, record.rig);
+      if (current !== target) return;
+      try {
+        if (posePreview(mod, target, pose)) setFailed(false);
+      } catch {
+        setFailed(true);
+      }
       render();
-    }, () => setFailed(true));
+    }, () => {
+      if (current === target) setFailed(true);
+    });
   });
 
   createEffect(() => {

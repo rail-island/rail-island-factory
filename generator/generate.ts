@@ -40,11 +40,14 @@ import { LANDMARKS } from "./landmarks.ts";
 import { STATIONS } from "./stations.ts";
 import { AIRCRAFT } from "./aircraft.ts";
 import { SHIPS } from "./ships.ts";
+import { EMU471_DESIGNS } from "./emu471.ts";
+import { EMU680_DESIGNS } from "./emu680.ts";
 import { CABLE_CABINS } from "./cableCabins.ts";
 import { TRUCKS } from "./trucks.ts";
 import { TRAM_DESIGNS } from "./trams.ts";
 import { METRO_DESIGNS } from "./metro.ts";
 import { STEAM_LOCOS } from "./steamLocos.ts";
+import { CZ_ELECTRICS } from "./czElectrics.ts";
 import { CITY_BUS_DESIGNS, KAROSA_DESIGNS } from "./buses.ts";
 import { VILLAGE_HOUSES } from "./village.ts";
 import type { ProceduralDesign } from "./design.ts";
@@ -84,12 +87,15 @@ const FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: st
   { designs: VILLAGE_HOUSES, source: "village.ts", meta: "village" },
   { designs: VEHICLES, source: "vehicles.ts", meta: "vehicles" },
   { designs: STEAM_LOCOS, source: "steamLocos.ts", meta: "vehicles" },
+  { designs: CZ_ELECTRICS, source: "czElectrics.ts", meta: "vehicles" },
   { designs: TRUCKS, source: "trucks.ts", meta: "vehicles" },
   { designs: KAROSA_DESIGNS, source: "karosa.ts", meta: "vehicles" },
   { designs: CITY_BUS_DESIGNS, source: "cityBuses.ts", meta: "vehicles" },
   { designs: AIRCRAFT, source: "aircraft.ts", meta: "vehicles" },
   { designs: SHIPS, source: "ships.ts", meta: "vehicles" },
   { designs: CABLE_CABINS, source: "cableCabins.ts", meta: "vehicles" },
+  { designs: EMU471_DESIGNS, source: "emu471.ts", meta: "vehicles" },
+  { designs: EMU680_DESIGNS, source: "emu680.ts", meta: "vehicles" },
   { designs: TRAM_DESIGNS, source: "trams.ts", meta: "vehicles" },
   { designs: METRO_DESIGNS, source: "metro.ts", meta: "vehicles" },
 ];

@@ -41,7 +41,12 @@ the split. Every triangle must sit in a part once parts are used. Rules:
   the pivot to anything on the tractor above the fifth wheel (the sleeper's
   back); keep at least 10 cm;
 - nothing of the trailer reaches into the tractor, and the trailer's landing
-  gear sits behind the tractor's rear wheels.
+  gear sits behind the tractor's rear wheels;
+- everything of the trailer **below the fifth wheel's top** (frame rails, landing
+  gear, pipes) stays outside the circle the tractor's rear corners, mudguards and
+  mudflaps sweep about the pivot, or the trailer cuts them at a few degrees of
+  bend; `test/rig.test.ts` swings every semi to its `maxBendDeg` and checks it
+  triangle against triangle.
 
 ## Steered front wheels (every road vehicle)
 
@@ -53,10 +58,13 @@ the game can steer them by turning a node, as it spins the wind turbine's rotor:
 - then `steeredWheels(m, "body", axleX, axleY, drawWheel, [zInner, zOuter])`
   (`vehicleParts.ts`): it draws `wheel-front-left` and `wheel-front-right` as
   child parts with their pivots at the wheel centres;
-- set `m.rig = { steer: { nodes, maxAngleDeg, wheelbase, track }, ... }`
-  (`rig.ts`); the inner wheel's lock is about 40 degrees for a truck, 50 for a bus;
+- set `m.rig = { steer: { axles: [{ nodes, wheelbase }], maxAngleDeg, track }, ... }`
+  (`rig.ts`), `nodes` the pair `steeredWheels()` returns (the -Z wheel first, always
+  named `-left`); the inner wheel's lock is about 40 degrees for a truck, 50 for a bus;
 - check the tyre at lock clears the fender or arch: a tyre only turns about its
-  own vertical, so its farthest point stays `hypot(r, width / 2)` from its centre.
+  own vertical, so its farthest point stays `hypot(r, width / 2)` from its centre;
+  inboard it swings in toward the engine or frame, which must stay narrower than
+  the tyre's path at lock (`test/rig.test.ts` checks every road vehicle at lock).
 
 A rigid vehicle (bus, van, box truck) is then the body part with the two wheels in
 it, and no sections.

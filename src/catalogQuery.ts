@@ -407,3 +407,38 @@ export function poseOf(r: CatalogRecord, values: PoseValues): { steer: number; b
   const hinges = Math.max(0, (r.rig?.sections?.length ?? 0) - 1);
   return { steer: rad(values.steer ?? 0), bend: Array.from({ length: hinges }, (_, i) => rad(values[`bend${i}`] ?? 0)) };
 }
+
+/**
+ * Poses the preview through the model's JS module with the preview's OWN rig
+ * (`userData.rig`): the GLB's scene carries the default build's, a JS build the
+ * rig of its own parameters -- a non-default Karosa Long's hinge and joint faces
+ * are not the default's. The catalog record's rig is for the sliders' limits only.
+ * Returns whether the module could pose it.
+ */
+export function posePreview<T>(
+  mod: { pose?: (root: T, pose: { steer: number; bend: number[] }) => void },
+  target: T,
+  pose: { steer: number; bend: number[] },
+): boolean {
+  if (!mod.pose) return false;
+  mod.pose(target, pose);
+  return true;
+}
+
+/** Which model and parameter values a preview was built for, as one comparable string. */
+export function previewKey(id: string, params: Record<string, string>): string {
+  return `${id}?${JSON.stringify(Object.keys(params).sort().map((k) => [k, params[k]]))}`;
+}
+
+/**
+ * What a key does on the model page: Escape closes it, the left and right arrows
+ * step through the list -- except while a form control has the focus, whose own
+ * arrows they are (a Pose slider, a parameter's select). Null for anything else.
+ */
+export function pageKey(key: string, target: unknown): "close" | -1 | 1 | null {
+  if (key === "Escape") return "close";
+  const t = target as { tagName?: unknown; isContentEditable?: unknown } | null;
+  const control = !!t && (t.isContentEditable === true || (typeof t.tagName === "string" && /^(INPUT|SELECT|TEXTAREA)$/i.test(t.tagName)));
+  if (control) return null;
+  return key === "ArrowLeft" ? -1 : key === "ArrowRight" ? 1 : null;
+}

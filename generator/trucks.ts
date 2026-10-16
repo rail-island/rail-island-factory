@@ -207,12 +207,12 @@ function axle(m: MeshBuilder, x: number, r: number, half: number, drive: boolean
 }
 
 /**
- * The steered wheels of axle x inside `parent`'s node (vehicle-rig.md). This
- * family's frame has +Z to the vehicle's left, so the -Z wheel the rig lists
- * first is the right one.
+ * The steered wheels of axle x inside `parent`'s node (vehicle-rig.md), named as
+ * every road vehicle's are, in the factory's frame: the -Z wheel, which the rig
+ * lists first, is `wheel-front-left` -- whatever this file's comments call +Z.
  */
 function steered(m: MeshBuilder, parent: string, x: number, r: number, tyre: [number, number], suffix = ""): [string, string] {
-  return steeredWheels(m, parent, x, axleY(r), (s, z0, z1) => wheel(m, x, r, z0, z1, s), tyre, [`wheel-front${suffix}-right`, `wheel-front${suffix}-left`]);
+  return steeredWheels(m, parent, x, axleY(r), (s, z0, z1) => wheel(m, x, r, z0, z1, s), tyre, [`wheel-front${suffix}-left`, `wheel-front${suffix}-right`]);
 }
 
 /** A fender arched over the wheel at axle x: a bent plate from angle a0 to a1 (degrees, 0 = forward). */
@@ -251,6 +251,12 @@ const C_CAB: Level[] = [
 ];
 /** The rotation point: the king pin, on the fifth wheel's top, on the centre line. */
 const C_PIVOT: Vec3 = [3.1, 1.15, 0];
+/**
+ * How far from the king pin, in plan, the tractor reaches below the fifth wheel's
+ * top (its rear light bar's corners, 1.85 m) plus a margin: the trailer keeps
+ * whatever hangs that low outside this circle, so it swings clear.
+ */
+const C_SWING = 1.95;
 
 function cisternTractor(m: MeshBuilder): void {
   m.scope("chassis", () => {
@@ -260,7 +266,8 @@ function cisternTractor(m: MeshBuilder): void {
     m.scope("crossmembers", () => {
       for (const x of [1.8, 3.7, 5.1]) block(m, "chassis", x - 0.05, x + 0.05, 0.78, 0.98, -0.38, 0.38);
     });
-    m.scope("engine", () => block(m, "chassis", 5.4, 7.45, 0.62, 1.14, -1.0, 1.0));
+    // between the front wheels, clear of the tyres swung to full lock (inner face 0.89)
+    m.scope("engine", () => block(m, "chassis", 5.4, 7.45, 0.62, 1.14, -0.55, 0.55));
     m.scope("fifth wheel", () => {
       const [x, y] = C_PIVOT;
       block(m, "chassis", x - 0.5, x + 0.5, 1.02, 1.07, -0.42, 0.42);
@@ -400,16 +407,19 @@ function cisternTrailer(m: MeshBuilder): void {
       for (const s of [-1, 1]) block(m, "chassis", -7.8, -3.1, 1.05, 1.5, ...side(s, 0.45, 0.56));
     });
     m.scope("discharge manifold", () => {
+      // it hangs below the fifth wheel's top, so it stops behind the tractor's swing (C_SWING)
       const pipe = ngon(8, 0.06, Math.PI / 8, 0, 1.13);
-      m.sweep("steel", "x", pipe, -5.9, pipe, 1.7);
-      for (const x of [2.9, 0.05, -2.85, -5.75]) m.prism("steel", ngon(8, 0.06, 0, x, 0), 1.13, 1.45);
+      m.sweep("steel", "x", pipe, -5.9, pipe, C_PIVOT[0] - C_SWING);
+      for (const x of [C_PIVOT[0] - C_SWING - 0.06, 0.05, -2.85, -5.75]) m.prism("steel", ngon(8, 0.06, 0, x, 0), 1.13, 1.45);
     });
     m.scope("landing gear", () => {
+      // outside the circle the tractor's rear corners swing through (C_SWING)
+      const x = C_PIVOT[0] - C_SWING - 0.06;
       for (const s of [-1, 1]) {
-        block(m, "chassis", 1.32, 1.48, 0.2, 1.56, ...side(s, 0.5, 0.62));
-        block(m, "chassis", 1.25, 1.55, 0.06, 0.2, ...side(s, 0.46, 0.66));
+        block(m, "chassis", x - 0.16, x, 0.2, 1.56, ...side(s, 0.5, 0.62));
+        block(m, "chassis", x - 0.23, x + 0.07, 0.06, 0.2, ...side(s, 0.46, 0.66));
       }
-      block(m, "chassis", 1.37, 1.43, 0.77, 0.83, -0.5, 0.5);
+      block(m, "chassis", x - 0.11, x - 0.05, 0.77, 0.83, -0.5, 0.5);
     });
   });
   C_TRAILER_AXLES.forEach((x, i) => m.scope(`axle ${i + 1}`, () => {
@@ -427,8 +437,9 @@ function cisternTrailer(m: MeshBuilder): void {
   });
   m.scope("side guards", () => {
     for (const s of [-1, 1]) {
-      for (const y of [0.6, 0.9]) block(m, "steel", -3.65, 1.1, y - 0.03, y + 0.03, ...side(s, 1.14, 1.22));
-      for (const x of [-3.5, -1.3, 0.95]) {
+      // the front post stands behind the landing gear
+      for (const y of [0.6, 0.9]) block(m, "steel", -3.65, 0.9, y - 0.03, y + 0.03, ...side(s, 1.14, 1.22));
+      for (const x of [-3.5, -1.3, 0.75]) {
         block(m, "steel", x - 0.03, x + 0.03, 0.55, 1.24, ...side(s, 1.1, 1.18));
         block(m, "steel", x - 0.03, x + 0.03, 1.24, 1.3, ...side(s, 0.5, 1.18));
       }
@@ -759,13 +770,16 @@ const R_CAB: Level[] = [
   { y: 4.0, xf: 7.8, hw: 1.04, rf: 0.24 },
 ];
 const R_PIVOT: Vec3 = [3.73, 1.14, 0];
+/** As C_SWING: the reefer tractor's mudflap corners reach 1.55 m from the king pin. */
+const R_SWING = 1.65;
 
 function reeferTractor(m: MeshBuilder): void {
   m.scope("chassis", () => {
     m.scope("frame rails", () => {
       for (const s of [-1, 1]) block(m, "trim", 2.58, 8.08, 0.72, 1.0, ...side(s, 0.4, 0.5));
     });
-    m.scope("engine", () => block(m, "chassis", 6.3, 8.1, 0.55, 1.14, -0.85, 0.85));
+    // between the front wheels, clear of the tyres swung to full lock (inner face 0.88)
+    m.scope("engine", () => block(m, "chassis", 6.3, 8.1, 0.55, 1.14, -0.6, 0.6));
     m.scope("fifth wheel", () => {
       const [x, y] = R_PIVOT;
       block(m, "chassis", x - 0.45, x + 0.45, 1.0, 1.05, -0.9, 0.9);
@@ -911,15 +925,18 @@ function reeferTrailer(m: MeshBuilder): void {
     }
   });
   m.scope("underframe", () => {
-    for (const s of [-1, 1]) block(m, "trim", -8.21, 4.98, 1.05, BOX_Y0 - 0.004, ...side(s, 0.44, 0.56));
+    // above the fifth wheel's top, so nothing on the tractor below it meets them as the trailer swings
+    for (const s of [-1, 1]) block(m, "trim", -8.21, 4.98, R_PIVOT[1] + 0.01, BOX_Y0 - 0.004, ...side(s, 0.44, 0.56));
     block(m, "trim", 3.19, 5.08, 1.15, BOX_Y0 - 0.004, -1.0, 1.0); // the gooseneck plate
     m.prism("alloy", ngon(8, 0.05, 0, R_PIVOT[0], 0), 1.0, 1.16); // the king pin
     m.scope("landing gear", () => {
+      // outside the circle the tractor's rear corners swing through (R_SWING)
+      const x = R_PIVOT[0] - Math.sqrt(R_SWING ** 2 - 0.78 ** 2);
       for (const s of [-1, 1]) {
-        block(m, "alloy", 2.29, 2.4, 0.12, 1.2, ...side(s, 0.85, 0.97));
-        block(m, "trim", 2.2, 2.49, 0.04, 0.12, ...side(s, 0.78, 1.04));
+        block(m, "alloy", x - 0.2, x - 0.09, 0.12, 1.2, ...side(s, 0.85, 0.97));
+        block(m, "trim", x - 0.29, x, 0.04, 0.12, ...side(s, 0.78, 1.04));
       }
-      block(m, "trim", 2.32, 2.37, 0.6, 0.66, -0.85, 0.85);
+      block(m, "trim", x - 0.17, x - 0.12, 0.6, 0.66, -0.85, 0.85);
     });
     m.scope("side guards", () => {
       for (const s of [-1, 1]) for (const y of [0.9, 1.17]) block(m, "trim", -4.02, 1.89, y - 0.05, y + 0.05, ...side(s, 1.18, 1.22));

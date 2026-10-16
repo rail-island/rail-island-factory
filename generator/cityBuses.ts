@@ -8,7 +8,8 @@
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { Arch, Paint } from "./busBody.ts";
 import { BusDraft, type Axle, type DoorStyle, type PaneStyle } from "./busAssembly.ts";
-import { busPalette, endLamp, endSlab, mirror, sideSlab, type BusFrame } from "./busKit.ts";
+import { bentSlab, busPalette, endLamp, endSlab, mirror, sideSlab, type BusFrame } from "./busKit.ts";
+import type { Vec3 } from "./meshCore.ts";
 import { block } from "./vehicleParts.ts";
 
 /** What a fitting callback gets: the draft, the source-to-factory mapping and the body's measures. */
@@ -216,7 +217,7 @@ function windscreen(c: CityCtx, y0: number, y1: number, half: number, sign: [num
 
 const KR_LIVERY = { body: "#f4f4f1", red: "#d3252b", band: "#1f2326", bumper: "#d3252b", pod: "#eeefed", bellows: "#2c2d30" };
 const KR_PANE: PaneStyle = { glass: [1.3, 2.62], surround: [1.26, 2.66], inset: 0.03, surroundMat: "band" };
-const KR_DOOR: DoorStyle = { bottom: 0.3, top: 2.62, leafMat: "frame", panes: [[0.42, 2.54]], leafWidth: 0.62 };
+const KR_DOOR: DoorStyle = { bottom: 0.3, top: 2.62, leafMat: "frame", panes: [[0.42, 2.54]], leaves: 2 };
 
 function karosaRenaultSpec(long: boolean): CitySpec {
   const tail = long ? 19.3 : 12.8;
@@ -319,7 +320,8 @@ function citaroSpec(livery: "teal" | "blue"): CitySpec {
     rear: { from: 2.6, rake: 0.05, cap: 0.15, low: 0.5, chamfer: [0.2, 0.08] },
     paint: [
       { u0: 0, u1: 12, y0: 0.27, y1: 0.62, mat: "skirt" },
-      { u0: 0, u1: 12, y0: 1.02, y1: 2.68, mat: "band" },
+      // the glazing band ends 0.2 m short of the tail: the rear is the body colour (native rear)
+      { u0: 0, u1: 11.6, y0: 1.02, y1: 2.68, mat: "band" },
       { u0: 0, u1: 0.4, y0: 0.27, y1: 0.8, mat: "bumper" },
     ],
     pane: { glass: [1.06, 2.62], inset: 0.02, glassMat: "glassDark" },
@@ -393,9 +395,10 @@ function o345Spec(): CitySpec {
     ],
     pane: { glass: [1.62, 2.66], surround: [1.56, 2.72], inset: 0.05 },
     pitch: 1.7,
-    door: { bottom: 0.36, top: 2.66, leafMat: "frame", panes: [[1.1, 2.58], [0.45, 1.02]], leafWidth: 0.62 },
+    door: { bottom: 0.36, top: 2.66, leafMat: "frame", panes: [[1.1, 2.58], [0.45, 1.02]], leaves: 2 },
     // 2-2-2-2 (pl.wikipedia, the photographs); the texture leaves out the last
-    doors: [[0.6, 2.2], [5.1, 6.7], [11.4, 13.0], [15.9, 17.15]],
+    // double doors 1.25 m wide (pl.wikipedia), with their frames 1.3 m
+    doors: [[0.75, 2.05], [5.25, 6.55], [11.55, 12.85], [15.85, 17.15]],
     windows: [[0.6, 9.6], [11.4, 17.2]],
     arch: { half: 0.62, side: 0.66, top: 1.1 },
     tyres: { single: [0.95, 1.21], inner: [0.62, 0.9], outer: [0.93, 1.21] },
@@ -412,7 +415,7 @@ function o345Spec(): CitySpec {
           for (const dz of [-0.1, 0.1]) endLamp(c.m(), "lampHead", c.frame, 1, sd * 0.93 + dz, 0.84, 0.06, 0.016, undefined, 10);
           endLamp(c.m(), "lampHead", c.frame, 1, sd * 0.93, 0.47, 0.045, 0.016, "frame", 8);
         }
-        endSlab(c.m(), "plate", c.frame, 1, -0.26, 0.26, 0.38, 0.5, 0.016);
+        endSlab(c.m(), "plate", c.frame, 1, -0.26, 0.26, 0.45, 0.57, 0.016);
       });
       c.d.fit("rear", c.tail, () => {
         endSlab(c.m(), "frame", c.frame, -1, -1.05, 1.05, 1.6, 2.7, 0.01);
@@ -461,7 +464,7 @@ function urbinoSpec(): CitySpec {
     ],
     pane: { glass: [1.14, 2.54], surround: [1.08, 2.6], inset: 0.05, surroundMat: "band", glassMat: "glassLight" },
     pitch: 1.3,
-    door: { bottom: 0.3, top: 2.56, leafMat: "band", panes: [[0.42, 2.48]], leafWidth: 0.68 },
+    door: { bottom: 0.3, top: 2.56, leafMat: "band", panes: [[0.42, 2.48]], leaves: 2 },
     doors: [[0.2, 1.7], [5.2, 6.7], [11.7, 13.2]],
     windows: [[0.2, 13.5]],
     arch: { half: 0.58, side: 0.6, top: 1.02 },
@@ -512,8 +515,9 @@ function bus1Spec(): CitySpec {
     front: { from: 1.3, rake: 0.18, cap: 0.15, low: 0.15, chamfer: [0.2, 0.08] },
     rear: { from: 2.7, rake: 0.05, cap: 0.12, low: 0.4, chamfer: [0.2, 0.08] },
     paint: [
-      { u0: 10.9, u1: 12, y0: 0.32, y1: 3.1, mat: "mint" },
       { u0: -1, u1: 12, y0: 1.6, y1: 2.78, mat: "band" },
+      // after the band, so the tail is mint all over (native rear)
+      { u0: 10.9, u1: 12, y0: 0.32, y1: 3.1, mat: "mint" },
       { u0: -1, u1: 0.35, y0: 0.32, y1: 0.6, mat: "bumper" },
     ],
     pane: { glass: [1.7, 2.7], surround: [1.64, 2.76], inset: 0.04, glassMat: "glassLight" },
@@ -526,21 +530,24 @@ function bus1Spec(): CitySpec {
     maxSteerDeg: 45,
     details: (c) => {
       const { x } = c;
-      // the mint sweep: a band rising from the front wheel to the tail, both sides
-      c.d.fit("sweep", x(6), () => {
+      // the mint sweep under the windows, its lower edge falling from u 5.75 to the
+      // tail as the native z_inc/z_dec draw it, held above the rear arch's crown
+      // (the texture paints over the wheel); one closed strip (bentSlab), both sides
+      c.d.fit("sweep", x(8), () => {
+        const lower: Array<[number, number]> = [[5.75, 1.45], [7.3, 1.18], [8.8, 1.18], [9.5, 0.6], [10.25, 0.45], [11.0, 0.32]];
         for (const s of [-1, 1]) {
-          const pts: Array<[number, number]> = [[x(3.5), 1.55], [x(11.0), 1.6], [x(11.0), 0.5], [x(9.5), 0.9]];
-          c.m().slab("mint", pts.map(([px, py]): [number, number, number] => [px, py, s * (c.hw + 0.006)]), [0, 0, -s * 0.03]);
+          const z = s * (c.hw + 0.006);
+          bentSlab(c.m(), "mint", lower.map(([u, y]): [Vec3, Vec3] => [[x(u), 1.58, z], [x(u), y, z]]), [0, 0, -s * 0.03]);
         }
       });
       c.d.fit("front", c.nose, () => {
         windscreen(c, 1.45, 2.68, 1.08, [2.42, 2.64]);
         for (const s of [-1, 1]) endSlab(c.m(), "lampHead", c.frame, 1, s * 0.9 - 0.14, s * 0.9 + 0.14, 0.6, 0.72, 0.014);
-        endSlab(c.m(), "plate", c.frame, 1, -0.26, 0.26, 0.36, 0.48, 0.016);
+        endSlab(c.m(), "plate", c.frame, 1, -0.26, 0.26, 0.42, 0.54, 0.016);
       });
       c.d.fit("rear", c.tail, () => {
         tailLamps(c, 0.7, 0.04);
-        endSlab(c.m(), "plate", c.frame, -1, -0.26, 0.26, 0.5, 0.62, 0.016);
+        endSlab(c.m(), "plate", c.frame, -1, -0.26, 0.26, 0.57, 0.69, 0.016);
       });
       armMirrors(c, 2.4);
     },

@@ -18,7 +18,7 @@ so they are a design of their own built by the same code.
 |---|---|---|---|
 | `veh-cd-163` | CD 163 / 363 | `cd163`, `cd162`, `cd162No022`, `cd163No022`, `cd163No021`, `cd362`, `cd362No054`, `cd363`, `cd363No044`, `cd363No037`, `cd363No009` | 15,300 to 16,000 |
 | `veh-cd-263` | CD 263 / 371 / 372 | `cd263`, `cd263No015`, `cd371No002`, `cd371No005`, `cd372` | 15,200 to 15,500 |
-| `veh-cd-230` | CD 230 / 240 / 340 | `cd230`, `cd240`, `cd240No047`, `cd340` - its own body and livery model, see [cd-230.md](cd-230.md) | 15,600 to 15,900 |
+| `veh-cd-230` | CD 230 / 240 / 340 | `cd230`, `cd240`, `cd240No047`, `cd340`, `cd242` - its own body and livery model, see [cd-230.md](cd-230.md) | 15,600 to 15,900 |
 | `veh-cd-150` | CD 150 / 151 / ZSR 350 | `cd150`, `cd151`, `cd151Cez`, `zsr350`, `zsr350No001` ... `zsr350No004` | 12,100 to 12,600 |
 
 A value names its vlakosimdb model: `cd363No044` is `cd_363.044`, `zsr350No001`
