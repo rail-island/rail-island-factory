@@ -64,6 +64,7 @@ import { CZ_DMUS } from "./czDmus.ts";
 import { SMALL_DIESELS } from "./smallDiesels.ts";
 import { CITY_BUS_DESIGNS, KAROSA_DESIGNS } from "./buses.ts";
 import { VILLAGE_HOUSES } from "./village.ts";
+import { COMMERCIAL_BUILDINGS } from "./commercial.ts";
 import type { ProceduralDesign } from "./design.ts";
 import { glbStats } from "./glbStats.ts";
 import { JS_DIR, bundleDesign, gzipSize, writeIfChanged } from "./jsModel.ts";
@@ -94,6 +95,7 @@ const THUMB_SIZE = 512;
  */
 const FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: string; meta: "buildings" | "village" | "vehicles" }> = [
   { designs: SKYSCRAPERS, source: "skyscrapers.ts", meta: "buildings" },
+  { designs: COMMERCIAL_BUILDINGS, source: "commercial.ts", meta: "buildings" },
   { designs: CHURCHES, source: "churches.ts", meta: "buildings" },
   { designs: CATHEDRALS, source: "cathedrals.ts", meta: "buildings" },
   { designs: LANDMARKS, source: "landmarks.ts", meta: "buildings" },
