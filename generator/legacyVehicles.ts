@@ -1,3 +1,4 @@
+import { lodBox, lodLoft, lodCylinder } from './lodPrimitives.ts';
 // Metre-scale replacements for the remaining hand-authored transport models.
 import { MeshBuilder, ngon, chamferedRect, type Ring } from './meshBuilder.ts';
 import { beam, panel } from './towerParts.ts';
@@ -62,6 +63,26 @@ export function oceanLiner():MeshBuilder {
 }
 export const LEGACY_VEHICLES:ProceduralDesign[]=[
   {id:'veh-cabin-classic',title:'Classic Cable Car Cabin',build:classicCabin,catalog:{category:'Cable car',group:'cablecar',defaultScale:1,license:'CC0',author:'Rail Island',source:'Rail Island'}},
-  {id:'veh-boeing-737',title:'Boeing 737-800',build:boeing737,catalog:{category:'Aircraft',yaw:0,group:'aircraft',defaultScale:1,license:'CC0',author:'Rail Island',source:'Rail Island'}},
-  {id:'veh-ocean-liner',title:'Ocean Liner',build:oceanLiner,catalog:{category:'Ships',yaw:0,group:'ships',defaultScale:1,license:'CC0',author:'Rail Island',source:'Rail Island'}},
+  {id:'veh-boeing-737',title:'Boeing 737-800',build:boeing737,buildLod:boeing737Lod,catalog:{category:'Aircraft',yaw:0,group:'aircraft',defaultScale:1,license:'CC0',author:'Rail Island',source:'Rail Island'}},
+  {id:'veh-ocean-liner',title:'Ocean Liner',build:oceanLiner,buildLod:oceanLinerLod,catalog:{category:'Ships',yaw:0,group:'ships',defaultScale:1,license:'CC0',author:'Rail Island',source:'Rail Island'}},
 ];
+
+export function boeing737Lod(): MeshBuilder {
+  const m=new MeshBuilder(palette);
+  const stations=[[-19.75,.08,.08,3.1],[-14.75,1.88,2,3.6],[9.25,1.88,2,3.6],[19.75,.08,.08,4.4]];
+  for(let i=1;i<stations.length;i++){const a=stations[i-1],b=stations[i];m.sweep('white','x',ellipse(0,a[3],a[1],a[2],6),a[0],ellipse(0,b[3],b[1],b[2],6),b[0],true);}
+  for(const s of [-1,1]){
+    m.slab('white',[[-4,2.8,s*1.5],[4,2.8,s*17.9],[6,2.8,s*17.9],[5,2.8,s*1.5]],[0,.22,0]);
+    m.slab('white',[[13,4.5,s*.7],[17,4.5,s*7],[19,4.5,s*7],[18,4.5,s*.7]],[0,.18,0]);
+    m.sweep('white','x',ellipse(s*5.4,1.8,1,1,6),-4,ellipse(s*5.4,1.8,.7,.7,6),0);
+  }
+  m.slab('blue',[[12,5.2,-.12],[17,12.5,-.12],[19,12.5,-.12],[19.5,5.2,-.12]],[0,0,.24]);return m;
+}
+export function oceanLinerLod(): MeshBuilder {
+  const m=new MeshBuilder(palette);
+  const plan=(length:number,width:number):Ring=>[[-length/2,0],[-length*.35,width/2],[length*.35,width/2],[length/2,0],[length*.35,-width/2],[-length*.35,-width/2]];
+  lodLoft(m,'hull',plan(260,24),0,plan(269,28),16);
+  lodBox(m,'white',0,0,200,24,16,20);lodBox(m,'white',0,0,152,20,20,26.1);
+  for(const x of [-55,-18,19,56])lodCylinder(m,'red',x,0,4,26.1,44,4);
+  return m;
+}

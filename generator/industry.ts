@@ -1,3 +1,4 @@
+import { lodBox, lodLoft, lodCylinder } from './lodPrimitives.ts';
 // Industrial architecture in metres. See docs/models/industry.md.
 import { MeshBuilder, ngon, type Ring } from './meshBuilder.ts';
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign, type CatalogFields } from './design.ts';
@@ -226,7 +227,8 @@ export function industrialWind(given?: ParamValues): MeshBuilder {
   m.animate({ name: 'wind', times: [0, 2, 4, 6], tracks: [{ node: 'rotor', path: 'rotation', values: [0,0,0,1, 0,0,-Math.sin(Math.PI/3),Math.cos(Math.PI/3), 0,0,-Math.sin(2*Math.PI/3),Math.cos(2*Math.PI/3), 0,0,0,-1] }] });
   return m;
 }
-const design = (id: string, title: string, build: ProceduralDesign['build'], params: ParamSpec[]): ProceduralDesign => ({ id, title, build, params, catalog: INDUSTRY_CATALOG, ...(params.includes(FINISH) ? { finishParams: ['finish'] } : {}) });
+const lowBuilders: Record<string, ProceduralDesign['build']> = {industrialMill:industrialMillLod,industrialHall:industrialHallLod,industrialSaw:industrialSawLod,industrialWarehouse:industrialWarehouseLod,industrialChimney:industrialChimneyLod,industrialTank:industrialTankLod,industrialFoundry:industrialFoundryLod,industrialPower:industrialPowerLod,industrialProcess:industrialProcessLod,industrialOilPump:industrialOilPumpLod,industrialWind:industrialWindLod};
+const design = (id: string, title: string, build: ProceduralDesign['build'], params: ParamSpec[]): ProceduralDesign => ({ id, title, build, buildLod:lowBuilders[build.name], lodTriangles: /power-plant|chemical-factory/.test(id) ? 500 : 100, params, catalog: INDUSTRY_CATALOG, ...(params.includes(FINISH) ? { finishParams: ['finish'] } : {}) });
 export const INDUSTRY: readonly ProceduralDesign[] = [
   design('ind-building-a', 'Brick manufacturing mill', industrialMill, BUILDING_PARAMS),
   design('ind-building-h', 'Ventilated assembly hall', industrialHall, BUILDING_PARAMS),
@@ -240,3 +242,73 @@ export const INDUSTRY: readonly ProceduralDesign[] = [
   design('industry-oil-pump', 'Oil pumpjack', industrialOilPump, MACHINE_PARAMS),
   design('industry-wind-turbine', 'Wind turbine', industrialWind, MACHINE_PARAMS),
 ];
+
+// Explicit distant silhouettes: no facade panels, pipework, ladders or railings.
+function lowStack(m:MeshBuilder,x:number,z:number,h:number,material='wall'):void {
+  lodLoft(m,material,ngon(6,1.35,0,x,z),1.05,ngon(6,.75,0,x,z),h+1.05);
+}
+function lowHall(m:MeshBuilder,w:number,d:number,h:number,roof='flat'):void {
+  lodBox(m,'wall',0,0,w,d,.35,h);
+  if(roof==='gable')m.sweep('roof','z',[[-w/2,h],[w/2,h],[0,h+3]],-d/2,[[-w/2,h],[w/2,h],[0,h+3]],d/2);
+  else lodBox(m,'roof',0,0,w,d,h,h+.3);
+}
+function lowBuilding(kind:string,given?:ParamValues):MeshBuilder {
+  const p=resolveParams(BUILDING_PARAMS,given),m=model(p.finish),w=p.size==='extended'?24:16;
+  lowHall(m,w,kind==='warehouse'?18:14,kind==='mill'?12:kind==='foundry'?10:6,kind==='hall'?'gable':'flat');
+  if(kind==='mill')lowStack(m,-w/2-2.4,-4,22);
+  if(kind==='foundry')for(const x of [-w/2+2,0,w/2-2])lowStack(m,x,-10,24,'light');
+  return m;
+}
+export function industrialMillLod(p?:ParamValues):MeshBuilder{return lowBuilding('mill',p);}
+export function industrialHallLod(p?:ParamValues):MeshBuilder{return lowBuilding('hall',p);}
+export function industrialSawLod(given?:ParamValues):MeshBuilder{
+  const p=resolveParams(BUILDING_PARAMS,given),m=model(p.finish),w=p.size==='extended'?24:16;
+  lodBox(m,'wall',0,0,w,14,.35,6);
+  for(let x=-w/2;x<w/2-.1;x+=4){const ring:Ring=[[x,6],[x+3.95,6],[x+3.95,8.3]];m.sweep('roof','z',ring,-7,ring,7);}
+  return m;
+}
+export function industrialWarehouseLod(p?:ParamValues):MeshBuilder{return lowBuilding('warehouse',p);}
+export function industrialFoundryLod(p?:ParamValues):MeshBuilder{return lowBuilding('foundry',p);}
+export function industrialChimneyLod(given?:ParamValues):MeshBuilder{
+  const p=resolveParams(CHIMNEY_PARAMS,given),m=model();lowStack(m,0,0,p.height==='short'?14:p.height==='medium'?26:40,p.style==='brick'?'wall':'light');return m;
+}
+export function industrialTankLod(given?:ParamValues):MeshBuilder {
+  const p=resolveParams(TANK_PARAMS,given),m=model();
+  if(p.layout==='horizontal'){const ring=ngon(8,2.4,0,0,3.7);m.sweep('light','x',ring,-5,ring,5);}
+  else for(const x of p.layout==='cluster'?[-3.5,3.5]:[0])lodCylinder(m,'light',x,0,2.4,.76,8.6,8);
+  return m;
+}
+function lowCooling(m:MeshBuilder,x:number,z:number):void{
+  const a=ngon(8,5.5,0,x,z),b=ngon(8,3,0,x,z),c=ngon(8,3.7,0,x,z);
+  m.loft('concrete',a,.5,b,13,false);m.loft('concrete',b,13,c,20,true);m.cap('concrete',a,.5,false);
+}
+export function industrialPowerLod(given?:ParamValues):MeshBuilder {
+  const p=resolveParams(POWER_PARAMS,given),m=model('cream');lowHall(m,16,12,8,'gable');lowCooling(m,-15,-8);
+  if(p.type==='nuclear'){lowCooling(m,15,-8);lodCylinder(m,'light',0,-12,4,.36,9,8);}
+  else lowStack(m,15,-8,28,'light');
+  if(p.type==='coal')lodBox(m,'dark',-14,7,9,7,.4,3.4);
+  return m;
+}
+export function industrialProcessLod(given?:ParamValues):MeshBuilder {
+  const p=resolveParams(PROCESS_PARAMS,given),m=model('blue');
+  for(let i=0;i<3;i++){const x=-11+i*7;lodCylinder(m,'light',x,8,2.5,.76,7.6,8);lodCylinder(m,'light',x,-6,1.6,.76,(p.type==='refinery'?18:12)+i*2+1.6,8);}
+  lodBox(m,'wall',13,6,6,9,.36,4.3);if(p.type==='refinery')lowStack(m,13,-8,23,'light');return m;
+}
+export function industrialOilPumpLod(given?:ParamValues):MeshBuilder {
+  const p=resolveParams(MACHINE_PARAMS,given),m=model(),h=p.size==='large'?9:6;
+  for(const z of [-1.3,1.3]){
+    m.slab('steel',[[-2,.4,z],[-.8,h,z],[-.4,h,z],[-1.6,.4,z]],[0,0,.22]);
+    m.slab('steel',[[.6,.4,z],[-.4,h,z],[0,h,z],[1,.4,z]],[0,0,.22]);
+  }
+  m.slab('steel',[[-5,h+.5,-.35],[5,h+1,-.35],[5,h+1.6,-.35],[-5,h+1.1,-.35]],[0,0,.7]);
+  m.slab('red',[[4.5,h+1,-.6],[5.5,h+1.8,-.6],[6,h+.8,-.6],[5.7,h-1,-.6],[4.9,h-1,-.6]],[0,0,1.2]);
+  lodBox(m,'roof',-4,0,2.5,2,.36,1.4);return m;
+}
+export function industrialWindLod(given?:ParamValues):MeshBuilder {
+  const p=resolveParams(MACHINE_PARAMS,given),m=model(),h=p.size==='large'?42:28,r=h*.4;
+  lodLoft(m,'light',ngon(6,1.4),.35,ngon(6,.65),h);lodBox(m,'light',0,-.8,2.4,4,h-.6,h+1);
+  for(let i=0;i<3;i++){
+    const a=i*Math.PI*2/3,point=(x:number,y:number):[number,number,number]=>[x*Math.cos(a)-y*Math.sin(a),h+x*Math.sin(a)+y*Math.cos(a),1.8];
+    m.slab('light',[point(-.45,.65),point(-.25,r),point(.22,r),point(.65,3)],[0,0,.2]);
+  }return m;
+}

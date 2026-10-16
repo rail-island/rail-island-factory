@@ -1,3 +1,4 @@
+import { lodBox } from './lodPrimitives.ts';
 // The secular landmarks modelled on the photos in assets/: the Brandenburg Gate,
 // the Louvre Pyramid and the White House. See docs/models/landmarks.md.
 //
@@ -735,7 +736,16 @@ export const LANDMARK_CATALOG: CatalogFields = {
 
 /** Every design of the family, by catalog id; `references` is the folder of its source photos under assets/. */
 export const LANDMARKS: ProceduralDesign[] = [
-  { id: "bld-brandenburg-gate", title: "Brandenburg Gate", build: brandenburgGate, references: "brandenburg-gate", catalog: LANDMARK_CATALOG },
+  { id: "bld-brandenburg-gate", title: "Brandenburg Gate", build: brandenburgGate, buildLod: brandenburgGateLod, references: "brandenburg-gate", catalog: LANDMARK_CATALOG },
   { id: "bld-louvre-pyramid", title: "Louvre Pyramid", build: louvrePyramid, references: "louvre-pyramid", catalog: LANDMARK_CATALOG },
   { id: "bld-white-house", title: "White House", build: whiteHouse, references: "white-house", catalog: LANDMARK_CATALOG },
 ];
+
+export function brandenburgGateLod(): MeshBuilder {
+  const m=new MeshBuilder(PALETTE);
+  for(const x of GATE_PIERS) lodBox(m,'sandstone',x,0,1.66,7.1,1.25,14.63);
+  lodBox(m,'sandstone',0,0,34.9,9.5,14.63,18.28);
+  lodBox(m,'sandstone',0,0,30.8,7.9,18.28,22.9);
+  for(const s of [-1,1])lodBox(m,'sandstone',s*25.1,0,15,5.7,0,11);
+  return m;
+}

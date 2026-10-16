@@ -8,7 +8,7 @@ import * as THREE from "three";
 import { DESIGNS, designGlb, designSource, generateJsModels } from "../generator/generate";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles";
 import { readAccessor } from "../generator/glbParse";
-import { lodBudget } from "../generator/lod";
+import { buildLodModel } from "../generator/lodModel";
 import { bundleDesign, gzipSize } from "../generator/jsModel";
 import { SKYSCRAPERS } from "../generator/skyscrapers";
 import fs from "node:fs";
@@ -128,7 +128,7 @@ describe("standalone JS models", () => {
       // One JS module now supplies two resolutions. Compare its size with
       // the equivalent pair of binary assets, including small fixed designs.
       const design = DESIGNS.get(id)!;
-      const low = (design.buildLod?.() ?? design.build()).lowDetail(lodBudget(design)).toGlb(id);
+      const low = buildLodModel(design).toGlb(id);
       expect(Buffer.byteLength(text)).toBeLessThan(designGlb(proceduralId(id)).length + low.length);
     });
   }

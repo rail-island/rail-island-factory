@@ -2,9 +2,15 @@ import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { DESIGNS, designSource } from '../generator/generate';
 import { bundleDesign } from '../generator/jsModel';
-import { lodBudget, simplifyLod } from '../generator/lod';
+import { lodBudget, buildLodGeometry, lodRecipe } from '../generator/lod';
 import { previewKey } from '../src/catalogQuery';
 import { glbStats } from '../generator/glbStats';
+
+import { buildLodModel } from '../generator/lodModel';
+import { coverageCombinations } from '../generator/design';
+import { findCoplanarOverlaps } from '../generator/coplanar';
+import { collectTriangles, parseGlb } from '../generator/glbTriangles';
+import { MeshBuilder } from '../generator/meshBuilder';
 
 interface Module {
   default: (three: typeof THREE, params?: Record<string,string>, lod?: boolean) => THREE.Group;
@@ -27,7 +33,7 @@ function triangles(group: THREE.Group): number {
 
 describe('low detail exports', () => {
   for (const [id, d] of DESIGNS) {
-    it(`${id}: standalone LOD and every individual parameter value stay inside the budget`, async () => {
+    it(`${id}: standalone LOD matches the static silhouette and stays inside its budget`, async () => {
       const text = await bundleDesign(d, designSource(id));
       const mod = await import(/* @vite-ignore */ `data:text/javascript;base64,${Buffer.from(text).toString('base64')}`) as Module;
       expect(mod.lodTriangleBudget).toBe(lodBudget(d));
@@ -37,27 +43,46 @@ describe('low detail exports', () => {
       expect(low.name).toBe(id);
       expect(triangles(low)).toBeGreaterThan(0);
       expect(triangles(low)).toBeLessThanOrEqual(lodBudget(d));
-      const expected = (d.buildLod?.() ?? d.build()).lowDetail(lodBudget(d));
+      const expected = buildLodModel(d);
       expect(triangles(low)).toBe(expected.triangleCount());
-      const again = (d.buildLod?.() ?? d.build()).lowDetail(lodBudget(d));
+      const again = buildLodModel(d);
       expect(again.toGlb('determinism')).toEqual(expected.toGlb('determinism'));
-      const fullBox = new THREE.Box3().setFromObject(full), lowBox = new THREE.Box3().setFromObject(low);
-      expect(fullBox.expandByScalar(.001).containsBox(lowBox)).toBe(true);
-      // All pivots survive, including nodes whose small visual detail was removed.
-      full.traverse(o => { if(o instanceof THREE.Group && o !== full) expect(low.getObjectByName(o.name)).toBeDefined(); });
+      expect(low.animations).toHaveLength(0);
+      expect(low.userData.rig).toBeUndefined();
+      low.traverse(o => { if (o !== low) expect(o).toBeInstanceOf(THREE.Mesh); });
+      const {json,bin} = parseGlb(expected.toGlb(id));
+      const reference = new Map<string, number[]>();
+      for (const f of collectTriangles(json,bin)) {
+        const points = reference.get(f.material) ?? []; points.push(...f.p.flat()); reference.set(f.material,points);
+      }
+      low.traverse(o => {
+        if (!(o instanceof THREE.Mesh)) return;
+        const got = Array.from(o.geometry.getAttribute('position').array as Float32Array), want = reference.get(o.name)!;
+        expect(got.length).toBe(want.length);
+        expect(Math.max(...got.map((v,i)=>Math.abs(v-want[i])))).toBeLessThan(1e-5);
+      });
       if (mod.pose) {
         const before = low.toJSON();
         mod.pose(low, {steer:.4,bend:[.3,.2]});
         mod.renderJoint?.(low,0);
         expect(low.toJSON()).toEqual(before);
       }
-      for(const p of d.params ?? []) for(const value of p.values) {
-        if(value.value === p.default) continue;
-        const mesh = mod.default(THREE, {[p.name]:value.value}, true);
-        expect(triangles(mesh), `${p.name}=${value.value}`).toBeGreaterThan(0);
-        expect(triangles(mesh), `${p.name}=${value.value}`).toBeLessThanOrEqual(lodBudget(d));
-      }
+
     });
+    for (const values of coverageCombinations(d.params,d.finishParams)) {
+      it(`${id}: no flicker or detail fragments for ${JSON.stringify(values)}`, () => {
+        const model = buildLodModel(d,values), glb = model.toGlb(id);
+        expect(model.triangleCount()).toBeGreaterThan(0);
+        expect(model.triangleCount()).toBeLessThanOrEqual(lodBudget(d));
+        expect(findCoplanarOverlaps(glb)).toEqual([]);
+        const {json,bin} = parseGlb(glb), faces=collectTriangles(json,bin);
+        expect(faces.every(f=>f.p.flat().every(Number.isFinite))).toBe(true);
+        expect(model.animations()).toEqual([]);
+        if (id.startsWith('proc-vehicle-')) {
+          expect(faces.some(f=>/glass|window|rubber|tyre|lamp|logo|badge|number/i.test(f.material))).toBe(false);
+        }
+      });
+    }
   }
   it('keeps the Eiffel Tower continuous from its piers to the antenna', () => {
     const d = DESIGNS.get('proc-building-tower-eiffel')!;
@@ -72,7 +97,38 @@ describe('low detail exports', () => {
     expect(previewKey('model',{},true)).not.toBe(previewKey('model',{}));
     expect(previewKey('model',{b:'2',a:'1'},true)).toBe(previewKey('model',{a:'1',b:'2'},true));
   });
-  it('rejects invalid simplification budgets', () => {
-    for(const budget of [-1,0,3,4.5,NaN,Infinity]) expect(()=>simplifyLod([],budget)).toThrow('invalid LOD budget');
+  it('rejects invalid silhouette budgets', () => {
+    for(const budget of [-1,0,3,4.5,NaN,Infinity]) expect(()=>buildLodGeometry([],budget,{family:'test',vehicle:false,include:'.*',depth:0})).toThrow('invalid LOD budget');
+  });
+});
+
+
+describe('structural selection regressions', () => {
+  it('removes windows, logos and every undercarriage part before building a closed body', () => {
+    const m = new MeshBuilder({paint:{color:'#aa2233'},detail:{color:'#334455'}});
+    m.scope('body',()=>{
+      m.box('paint',0,0,20,3,1.2,4);
+      for(const name of ['windows','logos','rail posts'])m.scope(name,()=>m.box('detail',0,0,30,5,0,5));
+    });
+    for(const name of ['underframe','bogies','wheelset','pantograph','coupler'])m.scope(name,()=>m.box('detail',0,0,40,7,-1,6));
+    m.lowDetail(faces=>buildLodGeometry(faces,100,lodRecipe(DESIGNS.get('proc-vehicle-cd-163')!)));
+    const stats=glbStats(m.toGlb('test'));
+    expect(stats.min).toEqual([-10,expect.closeTo(1.2,5),-1.5]);
+    expect(stats.max).toEqual([10,4,1.5]);
+    expect(stats.triangles).toBe(12);
+    const {json,bin}=parseGlb(m.toGlb('test'));
+    expect(collectTriangles(json,bin).every(f=>f.material==='paint')).toBe(true);
+  });
+  for(const id of ['cd-742','db-212','cd-771','csd-386'])it(`${id} retains its long hood or boiler instead of only a cab`,()=>{
+    const d=DESIGNS.get(`proc-vehicle-${id}`)!,full=glbStats(d.build().toGlb('full')),low=glbStats(buildLodModel(d).toGlb('low'));
+    expect(low.max[0]-low.min[0]).toBeGreaterThan((full.max[0]-full.min[0])*.75);
+  });
+  it('keeps the Colosseum arena open',()=>{
+    const d=DESIGNS.get('proc-building-hist-colosseum')!;
+    const {json,bin}=parseGlb(buildLodModel(d).toGlb('low'));
+    for(const f of collectTriangles(json,bin))for(const p of f.p)expect(Math.hypot(p[0]/94,p[2]/78)).toBeGreaterThan(.51);
+  });
+  it('requires an explicit recipe for new families',()=>{
+    expect(()=>lodRecipe({id:'new-unreviewed-model',title:'New',build:()=>new MeshBuilder({})})).toThrow('No reviewed LOD family');
   });
 });

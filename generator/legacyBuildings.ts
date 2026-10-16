@@ -1,3 +1,4 @@
+import { lodBox, lodLoft, lodCylinder } from './lodPrimitives.ts';
 // Remaining historical families, drawn in metres with a grounded origin.
 import { MeshBuilder, ngon, rect } from './meshBuilder.ts';
 import { arch, panel, beam, TOWER_PALETTE } from './towerParts.ts';
@@ -84,9 +85,51 @@ export function stationHotel():MeshBuilder {
   });return m;
 }
 export const LEGACY_BUILDINGS:ProceduralDesign[]=[
-  {id:'bld-castle',title:'Castle',build:castle,params:CASTLE_PARAMS},
-  {id:'bld-hist-colosseum',title:'Colosseum',build:colosseum},
-  {id:'bld-hist-pagoda',title:'Pagoda',build:pagoda},
-  {id:'bld-hist-palace',title:'Palace',build:palace},
-  {id:'bld-station-hotel',title:'Station Hotel',build:stationHotel},
+  {id:'bld-castle',title:'Castle',build:castle,buildLod:castleLod,params:CASTLE_PARAMS},
+  {id:'bld-hist-colosseum',title:'Colosseum',build:colosseum,buildLod:colosseumLod},
+  {id:'bld-hist-pagoda',title:'Pagoda',build:pagoda,buildLod:pagodaLod},
+  {id:'bld-hist-palace',title:'Palace',build:palace,buildLod:palaceLod},
+  {id:'bld-station-hotel',title:'Station Hotel',build:stationHotel,buildLod:stationHotelLod},
 ].map(d=>({...d,catalog:{category:d.id==='bld-station-hotel'?'Station':'Historical',group:d.id==='bld-station-hotel'?'station':'hist_center',defaultScale:1,license:'CC0',author:'Rail Island',source:'Rail Island procedural reconstruction'}}));
+
+// Preserve the large openings, separate towers and tiered roofs at map scale.
+export function castleLod(given?: ParamValues): MeshBuilder {
+  const p=resolveParams(CASTLE_PARAMS,given),m=new MeshBuilder(palette),keep=p.layout==='keep',fort=p.layout==='fortress';
+  const w=keep?30:64,d=keep?26:54,h=fort?9:15;
+  lodBox(m,'stone',0,-d/2,w,2.5,0,h);
+  for(const x of [-w/2,w/2]) lodBox(m,'stone',x,0,2.5,d,0,h);
+  for(const s of [-1,1]) lodBox(m,'stone',s*(w/4+2),d/2,w/2-4,2.5,0,h);
+  lodBox(m,'stone',0,d/2,8,2.5,7,h);
+  for(const x of [-w/2,w/2])for(const z of [-d/2,d/2])lodCylinder(m,'stone',x,z,3.6,0,h+4,8);
+  if(!fort){lodBox(m,'stone',0,-6,16,15,0,h+9);lodCylinder(m,'stone',-7,-10,3,h+9,h+14,8);m.spire('tile',ngon(8,3.6,0,-7,-10),h+14,h+21);m.cap('tile',ngon(8,3.6,0,-7,-10),h+14,false);}
+  return m;
+}
+export function colosseumLod(): MeshBuilder {
+  const m=new MeshBuilder(palette),n=16;
+  for(let i=0;i<n;i++){
+    const a=-i*Math.PI*2/n,b=-(i+1)*Math.PI*2/n;
+    const point=(t:number,r:number,y:number):[number,number,number]=>[94*r*Math.cos(t),y,78*r*Math.sin(t)];
+    const oa=point(a,1,0),ob=point(b,1,0),ia=point(a,.52,0),ib=point(b,.52,0);
+    const oat=point(a,1,36),obt=point(b,1,36),iat=point(a,.52,8),ibt=point(b,.52,8);
+    m.quad('sandstone',oa,ob,obt,oat);m.quad('sandstone',ib,ia,iat,ibt);
+    m.quad('sandstone',oat,obt,ibt,iat);m.quad('sandstone',ob,oa,ia,ib);
+  }return m;
+}
+export function pagodaLod(): MeshBuilder {
+  const m=new MeshBuilder(palette);
+  for(let i=0;i<3;i++){const w=18-i*4,y=i*8;lodBox(m,'plaster',0,0,w,w,y,y+5);lodLoft(m,'roof',rect(w+5,w+5),y+5,rect(w-3,w-3),y+8);}
+  m.spire('roof',rect(11,11),24,31);m.cap('roof',rect(11,11),24,false);return m;
+}
+export function palaceLod(): MeshBuilder {
+  const m=new MeshBuilder(palette);
+  lodBox(m,'sandstone',0,0,72,58,0,11);lodBox(m,'sandstone',0,-8,40,30,11,22);
+  lodLoft(m,'tile',rect(43,33,0,-8),22,rect(25,18,0,-8),29);
+  for(const x of [-30,30])for(const z of [-24,24]){lodBox(m,'sandstone',x,z,7,7,11,26);m.spire('tile',ngon(6,4,0,x,z),26,32);m.cap('tile',ngon(6,4,0,x,z),26,false);}
+  lodCylinder(m,'sandstone',0,-8,4,29,45,8);m.spire('gold',ngon(8,4.5,0,0,-8),45,52);m.cap('gold',ngon(8,4.5,0,0,-8),45,false);return m;
+}
+export function stationHotelLod(): MeshBuilder {
+  const m=new MeshBuilder(palette);
+  lodBox(m,'plaster',0,0,34,10,0,5.2);
+  lodLoft(m,'roof',rect(36,12),5.2,rect(36,.1),8.5);
+  lodBox(m,'plaster',-10,0,10,10,5.3,10);lodLoft(m,'roof',rect(12,12,-10,0),10,rect(.1,12,-10,0),14);return m;
+}
