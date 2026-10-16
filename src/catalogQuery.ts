@@ -71,8 +71,8 @@ export function column(key: string): Column | undefined {
 
 /**
  * Attach the search haystack, once, when the catalog lands. A parametric model is
- * found by its variants too: each parameter value's title and token, so "Bardotka"
- * finds the CD 749 / 750 family that draws it as one of its liveries.
+ * found by its variants too: each parameter value's title and token, so "green cream"
+ * finds the CD 749 Bardotka that wears it as one of its liveries.
  */
 export function prepareRows(records: readonly CatalogRecord[]): Row[] {
   return records.map((r) => ({

@@ -52,7 +52,8 @@ declaration order, the first the default unless noted.
 | `veh-karosa-long` | `variant`: b741, b941, b941e, b961 | [buses.md](buses.md) |
 | `veh-cd-471` | `unit`: motorCar, trailer, drivingTrailer; `variant`: cd471, cd675 | [czech-emus.md](czech-emus.md) |
 | `veh-cd-680` | `unit`: endCar, car683, car685, car686 | [czech-emus.md](czech-emus.md) |
-| `veh-cd-750` | `livery`: cd750, cd750No308, cd753, cd754, cd754No013, cd749 | [diesel-locos.md](diesel-locos.md) |
+| `veh-cd-750` | `livery`: cd750, cd750No308, cd753, cd754, cd754No013 | [diesel-locos.md](diesel-locos.md) |
+| `veh-cd-749` | `livery`: cd749, cd749No264, cd749No121 | [diesel-locos.md](diesel-locos.md) |
 | `veh-cd-781` | `livery`: cd781, cd781No462 | [diesel-locos.md](diesel-locos.md) |
 | `veh-cd-771` | `livery`: cd771, cd771No235, cd771No421 (default cd771No235) | [diesel-locos.md](diesel-locos.md) |
 | `veh-tatra-t3` | `variant`: t3, t3m, t3prototype | [trams.md](trams.md) |

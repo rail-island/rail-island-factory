@@ -42,18 +42,18 @@ describe("queryRows", () => {
 
   it("finds a parametric model by the title or token of one of its variants", () => {
     const rows = prepareRows([
-      rec("proc-vehicle-cd-750", "CD 749 / 750 / 753 / 754", 9000, {
+      rec("proc-vehicle-cd-749", "CD 749 Bardotka", 9000, {
         category: "Rail vehicles", group: "loco", traction: "diesel",
-        params: [{ name: "livery", title: "Livery", default: "cd750", values: [
-          { value: "cd750", title: "CD 750, blue" },
-          { value: "cd749", title: "CD 749 (Bardotka), red and grey" },
+        params: [{ name: "livery", title: "Livery", default: "cd749", values: [
+          { value: "cd749", title: "CD 749, red and grey" },
+          { value: "cd749No264", title: "CD 749 264, green and cream" },
         ] }],
       }),
       ...ROWS,
     ]);
-    expect(queryRows(rows, "bardotka", "title", "asc").map((r) => r.id)).toEqual(["proc-vehicle-cd-750"]);
-    expect(queryRows(rows, "cd749", "title", "asc").map((r) => r.id)).toEqual(["proc-vehicle-cd-750"]);
-    expect(queryRows(rows, "diesel", "title", "asc").map((r) => r.id)).toEqual(["proc-vehicle-cd-750"]);
+    expect(queryRows(rows, "green cream", "title", "asc").map((r) => r.id)).toEqual(["proc-vehicle-cd-749"]);
+    expect(queryRows(rows, "cd749no264", "title", "asc").map((r) => r.id)).toEqual(["proc-vehicle-cd-749"]);
+    expect(queryRows(rows, "diesel", "title", "asc").map((r) => r.id)).toEqual(["proc-vehicle-cd-749"]);
   });
 
   it("breaks ties on the title, so the order is total", () => {

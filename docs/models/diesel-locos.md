@@ -1,14 +1,15 @@
 # Czech mainline diesel locomotives
 
-**Covers** - the five diesel designs transferred from vlakosimdb: the T 478 family `veh-cd-750` (CD 749 / 750 / 753 / 754, two bodies on one `livery` parameter), the M62 `veh-cd-781`, the T 679.0 `veh-csd-t679-0`, the T 499.0 `veh-csd-t499` and the hood unit `veh-cd-771`; the shared diesel toolkit (the carbody lofted in plan, panels on its ends and sides, Bo'Bo' and Co'Co' bogies), liveries, the native comparison, deviations and tests.
-**Code** - `generator/dieselLocos.ts` (`DIESEL_LOCOS`), `generator/dieselParts.ts`, `generator/cd750.ts`, `generator/cd781.ts`, `generator/csdT679.ts`, `generator/csdT499.ts`, `generator/cd771.ts`, `generator/dieselComparison.ts`, `generator/dieselReport.ts`, `test/dieselLocos.test.ts`, `assets/cd-750/`, `assets/cd-781/`, `assets/csd-t679/`, `assets/csd-t499/`, `assets/cd-771/`
+**Covers** - the six diesel designs transferred from vlakosimdb: the T 478 "Brejlovec" `veh-cd-750` (CD 750 / 753 / 754) and "Bardotka" `veh-cd-749` (CD 749), two bodies drawn by one builder, the M62 `veh-cd-781`, the T 679.0 `veh-csd-t679-0`, the T 499.0 `veh-csd-t499` and the hood unit `veh-cd-771`; the shared diesel toolkit (the carbody lofted in plan, panels on its ends and sides, Bo'Bo' and Co'Co' bogies), liveries, the native comparison, deviations and tests.
+**Code** - `generator/dieselLocos.ts` (`DIESEL_LOCOS`), `generator/dieselParts.ts`, `generator/cd750.ts`, `generator/cd749.ts`, `generator/cd781.ts`, `generator/csdT679.ts`, `generator/csdT499.ts`, `generator/cd771.ts`, `generator/dieselComparison.ts`, `generator/dieselReport.ts`, `test/dieselLocos.test.ts`, `assets/cd-750/`, `assets/cd-781/`, `assets/csd-t679/`, `assets/csd-t499/`, `assets/cd-771/`
 **See also** - [vehicles.md](vehicles.md), [parameters.md](parameters.md), [loco-liveries.md](loco-liveries.md), [cd-230.md](cd-230.md), [the vlakosimdb-transfer skill](../../.agents/skills/vlakosimdb-transfer/SKILL.md), [the railroad-vehicle skill](../../.agents/skills/railroad-vehicle/SKILL.md)
 
 ## The designs
 
 | id | title | `livery` values (vlakosimdb model) | over buffers | triangles |
 |---|---|---|---|---|
-| `veh-cd-750` | CD 749 / 750 / 753 / 754 | `cd750` (default, `cd_750`), `cd750No308` (`cd_750_308`), `cd753` (`cd_753`), `cd754` (`cd_754`), `cd754No013` (`cd_754_013`), `cd749` (`cd_749`, the Bardotka body) | 16.54 m (749: 16.50 m) | 10,500 .. 11,000 |
+| `veh-cd-750` | CD 750 / 753 / 754 Brejlovec | `cd750` (default, `cd_750`), `cd750No308` (`cd_750_308`), `cd753` (`cd_753`), `cd754` (`cd_754`), `cd754No013` (`cd_754_013`) | 16.54 m | 10,500 .. 11,000 |
+| `veh-cd-749` | CD 749 Bardotka | `cd749` (default, `cd_749`), `cd749No264` and `cd749No121` (from photographs, on the `cd_749` body) | 16.50 m | 10,400 .. 10,600 |
 | `veh-cd-781` | CD 781 Sergej | `cd781` (default, `cd_781`), `cd781No462` (`cd_781_462`) | 17.55 m | 12,500 .. 12,700 |
 | `veh-csd-t679-0` | CSD T 679.0 Pomeranc | fixed (`csd_t_679`) | 18.00 m | 10,500 |
 | `veh-csd-t499` | CSD T 499.0 / CD 759 Kyklop | fixed (`csd_t499`) | 17.84 m | 9,700 |
@@ -27,15 +28,23 @@ webapp's `db/archived.json`. The vlakosimdb model `csd_t_679` turned out not to
 be the T 679.1 (M62, `veh-cd-781`) but the T 679.0 "Pomeranc"
 (`assets/csd-t679/SOURCES.md`), so it is its own design.
 
-### One parameter, two bodies
+### Two designs, one builder
 
 The T 478.3 / 478.4 "Brejlovec" (753, 750, 754) and the T 478.1 "Bardotka" (749)
 share the frame, bogies and machine room but not the cab: the Brejlovec has a
 square face with a 0.1 m V and the roof sloping down to a headlight housing; the
 Bardotka's nose leans out 0.4 m under the windscreen and the roof's brow
-overhangs it. Each livery names its body (`Cd750Livery.body`), so one `livery`
-parameter covers both without a `variant` whose combinations with the liveries
-would build bodies in paint they never wore. The ids and values are contract.
+overhangs it. A different body makes a different model, so they are two designs:
+`veh-cd-750` (`cd750.ts`) and `veh-cd-749` (`cd749.ts`), each with its own
+`livery` parameter. Both are drawn by `buildT478` in `cd750.ts`; each livery
+names its body (`Cd750Livery.body`). The ids and values are contract.
+
+The CD 749 was once a `cd749` livery of `veh-cd-750`; the legacy models
+`train-loco-diesel-cd-749` and `cd-751` now map to `veh-cd-749` with its default
+livery (`generator/legacyTargets.json`). Of its liveries, `cd749` (grey and red)
+is the vlakosimdb `cd_749`; `cd749No264` (green and cream with the maroon roof,
+749 264-8) and `cd749No121` (navy, red and cream, 749 121-0) were read from
+photographs (`assets/cd-750/SOURCES.md`, `PHOTOS.md`).
 
 ## The diesel toolkit (`dieselParts.ts`)
 
@@ -114,7 +123,8 @@ The remaining larger rows are the deliberate departures below.
 `test/dieselLocos.test.ts`: ids, titles and parameters; every livery within the
 envelope and the 16,000 triangle cap, on the rails and centred; the published
 length over buffers, pivots, axle positions, wheel size and gauge; the
-Bardotka's nose and brow against its windscreen; every native landmark within
+Bardotka's nose and brow against its windscreen in every 749 livery and the
+Brejlovec body in every 750 one; the 749 liveries' nose and side colours; every native landmark within
 its stated pixel tolerance and each design's MAE under 1.1 pp; valid running
 numbers. `test/models.test.ts` and `test/params.test.ts` cover the designs with
 the other models (determinism, flicker, envelope, the JS model).
