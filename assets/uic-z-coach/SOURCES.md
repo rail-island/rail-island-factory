@@ -1,6 +1,6 @@
 # UIC-Z Coach source references
 
-**Covers** - provenance, coordinate conversion, measurements and reconstruction choices of the CD UIC-Z coaches (Ampz, Bmz, WRRmz) and how further operators fit in.
+**Covers** - provenance, coordinate conversion, measurements and reconstruction choices of the UIC-Z coaches: CD (Ampz, Bmz, WRRmz), DB IC (Ampz, Bmpz, WRmz) and OBB (Ampz, Bmpz, WRmz).
 **Code** - `generator/uicZCoach.ts`, `generator/liveryCoach.ts`, `native/<key>/landmarks.json`.
 **See also** - [photos](PHOTOS.md), [Czech and Slovak coaches](../../docs/models/czsk-coaches.md).
 
@@ -25,7 +25,7 @@ Side canvases 270 by 40 pixels (27 x 4 m), end canvases 30 by 40.
 
 ## Choices and deviations
 
-- The parameter is the kind of coach (`firstClass`, `secondClass`, `restaurant`) rather than the class code, so each operator's coach of that kind (CD Bmz, DB Bmpz) is the same value; an `operator` parameter (default `cd`) is to be added with the DB and OBB liveries. A parameter needs two values, so it is not declared yet.
+- The parameter is the kind of coach (`firstClass`, `secondClass`, `restaurant`) rather than the class code, so each operator's coach of that kind (CD Bmz, DB Bmpz) is the same value; the `operator` parameter (default `cd`, then `db`, `obb`) picks the livery and layout.
 - Plug doors are leaves on the skin reaching 0.5 m with two steps in the skirt recess behind them.
 
 ## Running numbers
@@ -35,3 +35,17 @@ Side canvases 270 by 40 pixels (27 x 4 m), end canvases 30 by 40.
 ## Photo check
 
 The Ampz photograph shows this very livery: red window band with the yellow line, light grey lower body, red plug door, grey end with the red end door. See [PHOTOS.md](PHOTOS.md).
+
+## DB IC and OBB coaches
+
+Native files: `db/train/coach/db_ic_ampz`, `db_ic_bmpz`, `db_ic_wrmz`, `obb_ampz`, `obb_bmpz`, `obb_wrmz` at the same vlakosimdb revision, author Karola Meyer; each `native/<key>/` keeps `vehicle.xml`, `index.xml` and the original BMPs (`x_dec`/`x_inc` ends, identical, `y_dec` roof, `z_dec` right, `z_inc` left).
+
+- XML: one coarse file for all six: section 3.0 m wide reaching down to the rail (no separate skirt or bogies, which the textures draw), the same plan and roof as the CD file (26.4 m over buffers, 4.0 m roof); the DB WRmz 26.9 m long, the OBB WRmz 26.4 m. The model builds them on the CD body (`body(length)`, skirt, 19.0 m / 19.5 m bogie centres), so only the paint and the openings differ; the DB WRmz keeps the XML's 26.9 m like the CD WRRmz.
+- Side canvases 270 by 40 px (27 x 4 m), end canvases 30 by 40 px with the same gangway, red end door and lamps as the CD end BMP (`Z_END`).
+- DB IC: white (255) body, roof grey to 3.3 m, red (255, 0, 0) stripe 1.3..1.6 m (rows 24..26), white doors with a narrow window and the stripe across them, a grey door foot; class numerals on plates beside the toilets; the DB mark (white patch in the stripe, 0.6 x 0.3 m); Ampz: a white gap in the stripe near the middle, toilet windows drawn clear (frosted in the model, after the Avmz photograph); WRmz: one passenger door per side at opposite ends, the service door outline (seams only) at the other end, a white "Bordrestaurant" gap in the stripe, two kitchen boxes on the roof (`y_dec`).
+- OBB: roof to 3.4 m, a red line 3.1..3.4 m, the dark grey (64) window band 1.9..3.1 m, red (255, 0, 0) below to 0.9 m; doors in the same bands; white "1"/"2" numerals (2 to 3 px patches), blue pictograms; Ampz: the yellow first class line at 3.1..3.2 m; WRmz: one door at the front end only, three lower kitchen windows at the rear; the OBB mark is a simplified white patch of three slanted bars.
+- Windows, doors, signs, emblems and painted areas: connected runs of non-paint pixels in the window rows (`landmarks.json` of each key).
+
+Running numbers (`UIC_Z_NUMBERS.db`, `.obb`): OBB Bmpz 73 81 21-91 111-4 and OBB WRmz 61 81 88-90 203-4 from Commons file titles; the DB numbers and the OBB Ampz are illustrative numbers of their series with computed check digits.
+
+Photos: [PHOTOS.md](PHOTOS.md); the DB ones show the BMPs' livery, the OBB ones later liveries of the same bodies.

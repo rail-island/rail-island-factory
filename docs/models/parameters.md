@@ -29,6 +29,7 @@ restaurant; default secondClass; an `operator` parameter is planned - [czsk-coac
 abn, bdnrf; `livery`: vr, iv), `veh-db-dosto` (`variant`: firstClass, secondClass, drivingTrailer;
 default secondClass) and `veh-dr-sbahn-berlin` (`variant`: coach, drivingTrailer)
 ([german-coaches.md](german-coaches.md)), the three freight wagons with a
+restaurant; default secondClass; `operator`: cd, db, obb; default cd - [czsk-coaches.md](czsk-coaches.md)), the three freight wagons with a
 `cargo` (default empty; [wagons.md](wagons.md)), the Sqns container wagon (`cargo`: empty, maersk) and the
 Pao flat wagon (`cargo`: tubes, the default, or karosaB951), the Habis (`livery`: tw1, tw2), Faccs
 (`livery`: cd, viamont) and Falls (`livery`: cd, sd, viamont) wagons ([freight-wagons.md](freight-wagons.md)),
