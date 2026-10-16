@@ -54,6 +54,7 @@ import { DIESEL_LOCOS } from "./dieselLocos.ts";
 import { TRUCKS } from "./trucks.ts";
 import { TRAM_DESIGNS } from "./trams.ts";
 import { METRO_DESIGNS } from "./metro.ts";
+import { CZSK_COACHES } from "./czskCoaches.ts";
 import { STEAM_LOCOS } from "./steamLocos.ts";
 import { CZ_ELECTRICS } from "./czElectrics.ts";
 import { FREIGHT_WAGONS } from "./freightWagons.ts";
@@ -122,6 +123,7 @@ const FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: st
   { designs: MDMOT_DESIGNS, source: "mavMdmot.ts", meta: "vehicles" },
   { designs: ICE1_DESIGNS, source: "ice1.ts", meta: "vehicles" },
   { designs: TGV_DESIGNS, source: "tgv.ts", meta: "vehicles" },
+  { designs: CZSK_COACHES, source: "czskCoaches.ts", meta: "vehicles" },
 ];
 
 /** Every building design: the skyscrapers, then the landmarks and stations (skyscrapers.meta.json). */

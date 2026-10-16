@@ -1,6 +1,6 @@
 # CD green and white coaches
 
-**Covers** - the parametric `veh-cd-green-white-coach`: the nine CD green and white coaches transferred from vlakosimdb (cd_a, cd_ab, cd_b, cd_bee, cd_beel, cd_bds, cd_ds, cd_bdmeer, cd_bdmtee) as values of one `variant` parameter, their bodies, per-side layouts, paint, running numbers, deviations, the measured comparison and tests.
+**Covers** - the parametric `veh-cd-green-white-coach`: the nine CD green and white coaches transferred from vlakosimdb (cd_a, cd_ab, cd_b, cd_bee, cd_beel, cd_bds, cd_ds, cd_bdmeer, cd_bdmtee) and the blue and white Bee (cd_bee001) as values of one `variant` parameter, their bodies, per-side layouts, paint, running numbers, deviations, the measured comparison and tests.
 **Code** - `generator/cdGreenWhiteCoach.ts`, `generator/csdCoachParts.ts`, `generator/coachTransfers.ts`, `test/csdCoaches.test.ts`, `assets/cd-green-white/`
 **See also** - [csd-coaches.md](csd-coaches.md) (the shared builder, coordinates, comparison method), [bmo-double-deck.md](bmo-double-deck.md), [parameters.md](parameters.md), [the vlakosimdb-transfer skill](../../.agents/skills/vlakosimdb-transfer/SKILL.md)
 
@@ -20,8 +20,9 @@
 | `ds` | cd_ds | Y 24.5 m | luggage van: lookout bay, two double luggage doors, four small windows | about 6,100 |
 | `bdmeer` | cd_bdmeer | 26.4 m | open coach with a luggage double door, low entrances at the very ends | about 6,100 |
 | `bdmtee` | cd_bdmtee | 26.4 m | open coach, two double doors set in from the ends (the CSD Bdmtee body) | about 6,500 |
+| `beeBlue` | cd_bee001 | Y 24.5 m | the Bee in blue and white: vlakosimdb's CD Bee 001 is the Bee's texture with blue for its green (pixel for pixel), so it is the `bee` layout with the `green` material in blue | about 6,100 |
 
-All nine are 3.09 m wide at most, wheels on y = 0, buffers at 1.0 m, standard
+All ten are 3.09 m wide at most, wheels on y = 0, buffers at 1.0 m, standard
 1.75 m buffer spacing, Goerlitz-style bogies 2.5 m wheelbase (Y: 17.1 m apart;
 26.4 m bodies: 19.0 m apart).
 
@@ -80,6 +81,7 @@ points of the canvas (`COMPARISON-<variant>.md`):
 | ds | 49 | 0.237 | 0.237 |
 | bdmeer | 50 | 0.221 | 0.240 |
 | bdmtee | 58 | 0.190 | 0.207 |
+| beeBlue (cd_bee001) | 50 | 0.261 | 0.261 |
 
 The geometry was authored from the same boxes. The baseline drew the class marks
 as plates filling their boxes; the final draws them as numerals, which are

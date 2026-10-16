@@ -13,6 +13,7 @@ import { WAGON_DESIGNS } from "./wagons.ts";
 import { WAGON_TRANSFERS } from "./wagonTransfers.ts";
 import { FREIGHT_WAGONS } from "./freightWagons.ts";
 import { FREIGHT_TRANSFERS } from "./freightTransfers.ts";
+import { CZSK_COACHES, CZSK_TRANSFERS } from "./czskCoaches.ts";
 
 /** A coach design: id, title, builder, parameters and its reference folder (assets/<folder>/). */
 export interface CoachDesign {
@@ -96,12 +97,14 @@ export const COACH_TRANSFERS: readonly CoachTransfer[] = [
   greenWhite("ds", "CD Ds"),
   greenWhite("bdmeer", "CD BDmeer", 13.2),
   greenWhite("bdmtee", "CD Bdmtee", 13.2),
+  // vlakosimdb's CD Bee 001: the Bee's layout in blue and white (variant beeBlue)
+  { ...greenWhite("beeBlue", "CD Bee 001"), key: "cd_bee001", native: "native/cd_bee001" },
 ];
 
 /** Every transferred vlakosimdb vehicle with a measured comparison: the coaches, then the freight wagons (wagonTransfers.ts). */
-export const ALL_TRANSFERS: readonly CoachTransfer[] = [...COACH_TRANSFERS, ...WAGON_TRANSFERS, ...FREIGHT_TRANSFERS];
+export const ALL_TRANSFERS: readonly CoachTransfer[] = [...COACH_TRANSFERS, ...WAGON_TRANSFERS, ...FREIGHT_TRANSFERS, ...CZSK_TRANSFERS];
 
 /** The builder of a transfer's design. */
 export function transferBuild(t: CoachTransfer): MeshBuilder {
-  return [...COACH_DESIGNS, ...WAGON_DESIGNS, ...FREIGHT_WAGONS].find((c) => c.id === t.id)!.build(t.params);
+  return [...COACH_DESIGNS, ...WAGON_DESIGNS, ...FREIGHT_WAGONS, ...CZSK_COACHES].find((c) => c.id === t.id)!.build(t.params);
 }

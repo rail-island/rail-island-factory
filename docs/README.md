@@ -15,7 +15,8 @@
 | [models/vehicle-rig.md](models/vehicle-rig.md) | what the game moves: steered front wheels, articulated sections and the joint renderer, the `rig`, `pose()` / `renderJoint()`, the Pose sliders |
 | [models/parameters.md](models/parameters.md) | parametric models: enum parameters, the default-only GLB, `params` in the meta entries and the JS model, the site's picker |
 | [models/csd-coaches.md](models/csd-coaches.md) | the CSD coaches from vlakosimdb: sources, the shared coach builder, deviations, the native-raster comparison and tests |
-| [models/cd-green-white.md](models/cd-green-white.md) | the parametric CD green and white coach: nine vlakosimdb coaches as one `variant` parameter |
+| [models/cd-green-white.md](models/cd-green-white.md) | the parametric CD green and white coach: ten vlakosimdb coaches (the blue Bee 001 among them) as one `variant` parameter |
+| [models/czsk-coaches.md](models/czsk-coaches.md) | the Czech and Slovak coaches in later liveries: `veh-cd-y-coach`, `veh-zsr-coach`, `veh-uic-z-coach`, their livery builder and comparison |
 | [models/loco-liveries.md](models/loco-liveries.md) | the parametric locomotives: CD 150 / 151 / ZSR 350, CD 163 / 363 and CD 263 / 371 / 372 liveries, the livery model, cab paint, the 263's machine room |
 | [models/cd-230.md](models/cd-230.md) | the parametric CD 230 / 240 / 340 / 242 "laminatka": the rounded nose, the face laid on the curved skin, five liveries, the native comparison |
 | [models/mainline-electrics.md](models/mainline-electrics.md) | the six-axle Czech and the German and Austrian electric locomotives from vlakosimdb: CD 180 / 181 / 182, DNT 184.5, DB 111, DR 243 / DB 143 / 112, OBB 1012 and 1040, the data-driven box-cab builder, the native comparison |
