@@ -1,0 +1,7 @@
+Stone Turret - webapp reference thumbnail
+Author: Kenney
+License: CC0
+Source: https://poly.pizza/m/5lvG0WtuTU
+Copied from rail-island-webapp/db/buildings/thumbs/tower-kenney.webp.
+Used to guide a new procedural reconstruction, not embedded in its geometry.
+License URL: https://creativecommons.org/publicdomain/zero/1.0/

@@ -14,6 +14,9 @@ import has to change.
 [ships.md](ships.md), [cable-cabins.md](cable-cabins.md), [trucks.md](trucks.md),
 [export.md](export.md)
 
+The eight third-party Towers are documented separately in [towers.md](towers.md).
+They retain their existing `tower-*` ids and convert authoring units to metres.
+
 ## Where they come from
 
 The webapp (`rail-island-webapp`) ships a set of models authored as GLB by hand from

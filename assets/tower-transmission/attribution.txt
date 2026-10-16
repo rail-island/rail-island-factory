@@ -1,0 +1,7 @@
+Transmission Tower - webapp reference thumbnail
+Author: iPoly3D
+License: CC0
+Source: https://poly.pizza/m/TYK3rPu7E5
+Copied from rail-island-webapp/db/buildings/thumbs/tower-transmission.webp.
+Used to guide a new procedural reconstruction, not embedded in its geometry.
+License URL: https://creativecommons.org/publicdomain/zero/1.0/

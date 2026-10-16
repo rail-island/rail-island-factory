@@ -42,6 +42,7 @@
 | [models/cathedrals.md](models/cathedrals.md) | St Basil's Cathedral and St Nicholas Church |
 | [models/gothic-cathedrals.md](models/gothic-cathedrals.md) | Notre-Dame and Prague Castle's St Vitus: Gothic geometry, references, axes and the 30,000-triangle budget |
 | [models/landmarks.md](models/landmarks.md) | the Brandenburg Gate, the Louvre Pyramid and the White House |
+| [models/towers.md](models/towers.md) | all eight Towers: procedural designs, parameters, budgets, reference attribution and scale conversion |
 | [models/stations.md](models/stations.md) | the four station buildings: Prague main station, the station building, the Mikulasovice halt, the suburban station |
 | [models/aircraft.md](models/aircraft.md) | the Aero A.10, the Airbus A380 and the light jet, their gear parts |
 | [models/ships.md](models/ships.md) | the cruise ferry, the hydrofoil and the passenger ferry, their waterlines |

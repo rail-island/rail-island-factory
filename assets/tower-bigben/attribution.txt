@@ -1,0 +1,7 @@
+Big Ben - webapp reference thumbnail
+Author: Daqian Dong
+License: CC-BY-3.0
+Source: https://poly.pizza/m/8PaQZ_nLFIQ
+Copied from rail-island-webapp/db/buildings/thumbs/tower-bigben.webp.
+Used to guide a new procedural reconstruction, not embedded in its geometry.
+License URL: https://creativecommons.org/licenses/by/3.0/

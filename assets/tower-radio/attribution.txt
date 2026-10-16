@@ -1,0 +1,7 @@
+Radio Tower - webapp reference thumbnail
+Author: Poly by Google
+License: CC-BY-3.0
+Source: https://poly.pizza/m/eWEYV9ppUjv
+Copied from rail-island-webapp/db/buildings/thumbs/tower-radio.webp.
+Used to guide a new procedural reconstruction, not embedded in its geometry.
+License URL: https://creativecommons.org/licenses/by/3.0/

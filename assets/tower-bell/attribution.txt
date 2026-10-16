@@ -1,0 +1,7 @@
+Bell Tower - webapp reference thumbnail
+Author: Quaternius
+License: CC0
+Source: https://poly.pizza/m/ux44tbeQvj
+Copied from rail-island-webapp/db/buildings/thumbs/tower-bell.webp.
+Used to guide a new procedural reconstruction, not embedded in its geometry.
+License URL: https://creativecommons.org/publicdomain/zero/1.0/

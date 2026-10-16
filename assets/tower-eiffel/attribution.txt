@@ -1,0 +1,7 @@
+Eiffel Tower - webapp reference thumbnail
+Author: Scott Marshall
+License: CC-BY-3.0
+Source: https://poly.pizza/m/aIpJchqtRTg
+Copied from rail-island-webapp/db/buildings/thumbs/tower-eiffel.webp.
+Used to guide a new procedural reconstruction, not embedded in its geometry.
+License URL: https://creativecommons.org/licenses/by/3.0/
