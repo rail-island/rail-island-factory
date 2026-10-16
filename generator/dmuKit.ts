@@ -1,6 +1,6 @@
 // Shared parts of the Czech diesel railcars and multiple units transferred from
-// vlakosimdb in one package (docs/models/czech-dmus.md): the CD 810 / 812 / 912
-// (dmu810.ts), the CD 843 / 943 / 043 (dmu843.ts), the CSD M 131.1 Hurvinek and
+// vlakosimdb in one package (docs/models/czech-dmus.md): the CD 810 (dmu810.ts),
+// the CD 812 / 912 (dmu812.ts), the CD 843 / 943 / 043 (dmu843.ts), the CSD M 131.1 Hurvinek and
 // its M 031 trailer (dmuM131.ts), the CSD M 240.0 (dmuM240.ts) and the CSD
 // M 296.1 / CD 853 / 854 (dmuM296.ts). Bodies are lofted by the coach builder
 // (csdCoachParts.ts) from the XML `alongx` section, `alongy` plan and `alongz`

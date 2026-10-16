@@ -351,6 +351,7 @@ const FAMILIES: Record<string, readonly string[]> = {
   ],
   "czDmus": [
     "cd-810",
+    "cd-812",
     "cd-843",
     "csd-m131",
     "csd-m240",
@@ -404,6 +405,8 @@ export function lodRecipe(design: ProceduralDesign): LodRecipe {
       return recipe('^(body|truck|trailer|section[0-9]+)(/|$)',1);
     }
     if (family === 'cableCabins' || family === 'legacyVehicles') return recipe('^body(/|$)',0);
+    // The 810's and 812's cab ends are their own painted noses (cabNose.ts), not part of the shell.
+    if (id === 'cd-810' || id === 'cd-812') return recipe('^(shell|front end/skin|rear end/skin)(/|$)',1);
     if (design.catalog?.group === 'wagon') return recipe('^(body|open body|hoppers?|tank|cargo|load|deck|low deck)(/|$)',1);
     // Coaches, units, trams and box locomotives form one uninterrupted shell.
     // Including the structural cab/nose closes shaped ends without copying glazing.

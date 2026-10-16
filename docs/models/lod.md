@@ -40,7 +40,9 @@ silhouette is defined. Recipes select complete bodies, roofs, hoods, boilers,
 wings and building masses using the generator's named scopes. Windows, logos,
 lettering, posts, railings and small fixtures are discarded before reconstruction.
 Vehicle wheels, bogies, underframes, couplers, pantographs and moving equipment are
-excluded. An empty flat wagon is represented by a single thin cargo deck.
+excluded. An empty flat wagon is represented by a single thin cargo deck. The CD 810's and CD 812 / 912's cab ends are painted
+noses of their own (`cabNose.ts`), so their recipe takes the shell and both
+noses' skins as three masses, tip to tip.
 
 Each selected mass becomes a new closed convex envelope, sampled in 8, 14 or 26
 support directions. Whole planar faces have one finish; roof materials take

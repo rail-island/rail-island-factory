@@ -62,7 +62,8 @@ declaration order, the first the default unless noted.
 | `veh-cd-451` | `unit`: motorCar, trailer | [czech-emus-classic.md](czech-emus-classic.md) |
 | `veh-cd-460` | `unit`: motorCar, trailer; `livery`: cd, cd003, cd007, csd | [czech-emus-classic.md](czech-emus-classic.md) |
 | `veh-cd-470` | `unit`: motorCar, trailer | [czech-emus-classic.md](czech-emus-classic.md) |
-| `veh-cd-810` | `variant`: cd810, cd812, cd912; `livery`: red, yellowBand, blueWhite, ivoryBand | [czech-dmus.md](czech-dmus.md) |
+| `veh-cd-810` | `livery`: red, yellowBand, blueWhite, ivoryBand | [czech-dmus.md](czech-dmus.md) |
+| `veh-cd-812` | `unit`: motorCar, drivingTrailer | [czech-dmus.md](czech-dmus.md) |
 | `veh-cd-843` | `unit`: motorCar, drivingTrailer, trailer | [czech-dmus.md](czech-dmus.md) |
 | `veh-csd-m131` | `unit`: motorCar, trailer | [czech-dmus.md](czech-dmus.md) |
 | `veh-csd-m296` | `variant`: m296, cd853, cd854 | [czech-dmus.md](czech-dmus.md) |

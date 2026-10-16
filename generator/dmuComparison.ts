@@ -12,6 +12,7 @@ import { collectTriangles, parseGlb } from "./glbTriangles.ts";
 import { isLeaf, type LeafNode, type TreeNode } from "./sourceTree.ts";
 import { CZ_DMUS } from "./czDmus.ts";
 import { K810 } from "./dmu810.ts";
+import { K812 } from "./dmu812.ts";
 import { K131 } from "./dmuM131.ts";
 import { K240 } from "./dmuM240.ts";
 import { K296 } from "./dmuM296.ts";
@@ -54,11 +55,18 @@ function frame(kx: number, ky: number, kz: number, centre: number, sideH: number
 
 export const DMU_COMPARED: ComparedCar[] = [
   {
-    id: "proc-vehicle-cd-810", params: {}, title: "CD 810 604-8 (red)", folder: "cd-810", key: "cd_810_1", report: "COMPARISON.md",
+    id: "proc-vehicle-cd-810", params: {}, title: "CD 810 604-9 (red)", folder: "cd-810", key: "cd_810_1", report: "COMPARISON.md",
     project: frame(K810, 1, 1, 6.65, 4, 4),
     canvas: { side: [140, 40], front: [30, 40] },
     files: { side: "native/cd_810_1/z_dec.bmp", front: "native/cd_810_1/2x_both.bmp" },
     mapping: "side column = 10 (x / 1.04824 + 6.65) (the XML body scaled to the published 13.103 m), row = 10 (4 - y); front column = 10 (1.5 - z), row = 10 (4 - y)",
+  },
+  {
+    id: "proc-vehicle-cd-812", params: {}, title: "CD 812 613-8 (motor car)", folder: "cd-812", key: "cd_812_613", report: "COMPARISON.md",
+    project: frame(K812, 1, 1, 7.5, 6, 6),
+    canvas: { side: [160, 60], front: [30, 60] },
+    files: { side: "native/cd_812_613/z_dec.bmp", front: "native/cd_812_613/x_both.bmp" },
+    mapping: "side column = 10 (x / 0.96467 + 7.5) (the XML scaled to the published 14.47 m over the buffers), row = 10 (6 - y); the front is compared with photographs, not the BMP",
   },
   {
     id: "proc-vehicle-cd-843", params: {}, title: "CD 843 024-1 (motor car)", folder: "cd-843", key: "cd_843", report: "COMPARISON.md",
