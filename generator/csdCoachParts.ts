@@ -39,6 +39,11 @@ export interface Volume {
   bands: Array<[number, number, string]>;
   /** The end walls' paint, a slab over each end cap. Omit to leave the band colours. */
   endPaint?: string;
+  /**
+   * Leave out the end cap of a band the elevation clips away at that end (a
+   * sloped nose's upper bands), instead of a 2 mm sliver at the clamp height.
+   */
+  trimCaps?: boolean;
 }
 
 export const COACH_PALETTE: Record<string, MaterialSpec> = {
@@ -159,6 +164,7 @@ export class Coach {
         }
         for (const x of [xs[0]!, xs[xs.length - 1]!]) {
           const s = x === xs[0] ? -1 : 1;
+          if (v.trimCaps && (hiAt(v, x) <= y0 + 1e-6 || loAt(v, x) >= y1 - 1e-6)) continue;
           m.slab(mat, at(poly, x, y0, y1).map(([z, y]): Vec3 => [this.X(x), y, z]), [-s * 0.002, 0, 0]);
         }
       });

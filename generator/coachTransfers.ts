@@ -14,6 +14,7 @@ import { WAGON_TRANSFERS } from "./wagonTransfers.ts";
 import { FREIGHT_WAGONS } from "./freightWagons.ts";
 import { FREIGHT_TRANSFERS } from "./freightTransfers.ts";
 import { CZSK_COACHES, CZSK_TRANSFERS } from "./czskCoaches.ts";
+import { GERMAN_COACHES, GERMAN_TRANSFERS } from "./germanCoaches.ts";
 
 /** A coach design: id, title, builder, parameters and its reference folder (assets/<folder>/). */
 export interface CoachDesign {
@@ -107,4 +108,6 @@ export const ALL_TRANSFERS: readonly CoachTransfer[] = [...COACH_TRANSFERS, ...W
 /** The builder of a transfer's design. */
 export function transferBuild(t: CoachTransfer): MeshBuilder {
   return [...COACH_DESIGNS, ...WAGON_DESIGNS, ...FREIGHT_WAGONS, ...CZSK_COACHES].find((c) => c.id === t.id)!.build(t.params);
+export const ALL_TRANSFERS: readonly CoachTransfer[] = [...COACH_TRANSFERS, ...WAGON_TRANSFERS, ...FREIGHT_TRANSFERS, ...GERMAN_TRANSFERS];
+  return [...COACH_DESIGNS, ...WAGON_DESIGNS, ...FREIGHT_WAGONS, ...GERMAN_COACHES].find((c) => c.id === t.id)!.build(t.params);
 }

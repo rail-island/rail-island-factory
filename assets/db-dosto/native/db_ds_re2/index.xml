@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="Windows-1250"?>
+<simplemodel rep.name="emptyobj.simplemodel" name="model" xsize="27" ysize="5" zsize="3" glomodel.loadchild="model" edit_along="2" version="1.0">
+<alongx edit_jumpx="0.1" edit_jumpy="0.1" edit_scale="34" edit_dx="318" edit_dy="387" edit_incdec="0">
+<clip>
+<polygon apply="base">
+<point x="-1.5" y="0"/>
+<point x="1.5" y="0"/>
+<point x="1.5" y="3.4"/>
+<point x="1" y="4.3"/>
+<point x="0.3" y="4.8"/>
+<point x="-0.3" y="4.8"/>
+<point x="-1" y="4.2"/>
+<point x="-1.5" y="3.4"/>
+</polygon>
+</clip>
+</alongx>
+<alongy edit_jumpx="0.1" edit_jumpy="0.1" edit_scale="25" edit_dx="75" edit_dy="236" edit_incdec="0">
+<clip>
+<polygon apply="base">
+<point x="0" y="-1.5"/>
+<point x="27" y="-1.5"/>
+<point x="27" y="1.5"/>
+<point x="0" y="1.5"/>
+</polygon>
+</clip>
+</alongy>
+<alongz edit_jumpx="0.1" edit_jumpy="0.1" edit_scale="28" edit_dx="-222" edit_dy="414" edit_incdec="0">
+<clip>
+<polygon apply="base">
+<point x="0.5" y="0"/>
+<point x="26" y="0"/>
+<point x="26.6" y="0.9"/>
+<point x="26.6" y="4.6"/>
+<point x="0.2" y="4.6"/>
+<point x="0.2" y="1"/>
+</polygon>
+</clip>
+</alongz>
+<inlines/>
+<crook/>
+<model rep.name="">
+<polygon nx="-0" ny="1" nz="-0" culling="1">
+<vertex x="26" y="0" z="-1.5" s="0" t="0"/>
+<vertex x="26" y="0" z="1.5" s="0" t="0"/>
+<vertex x="0.5" y="0" z="1.5" s="0" t="0"/>
+<vertex x="0.5" y="0" z="-1.5" s="0" t="0"/>
+</polygon>
+<polygon nx="-0" ny="-0" nz="-1" culling="1" texture="pack:z_both.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="26" y="0" z="1.5" s="0.962963" t="0"/>
+<vertex x="26.6" y="0.9" z="1.5" s="0.985185" t="0.18"/>
+<vertex x="26.6" y="3.4" z="1.5" s="0.985185" t="0.68"/>
+<vertex x="0.2" y="3.4" z="1.5" s="0.007407" t="0.68"/>
+<vertex x="0.2" y="1" z="1.5" s="0.007407" t="0.2"/>
+<vertex x="0.5" y="0" z="1.5" s="0.018519" t="0"/>
+</polygon>
+<polygon nx="-0" ny="-0.485643" nz="-0.874157" culling="1" texture="pack:z_both.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="26.6" y="3.4" z="1.5" s="0.985185" t="0.68"/>
+<vertex x="26.6" y="4.3" z="1" s="0.985185" t="0.86"/>
+<vertex x="0.2" y="4.3" z="1" s="0.007407" t="0.86"/>
+<vertex x="0.2" y="3.4" z="1.5" s="0.007407" t="0.68"/>
+</polygon>
+<polygon nx="-0" ny="-0.813733" nz="-0.581238" culling="1" texture="pack:y_dec.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="26.6" y="4.3" z="1" s="0.985185" t="0.833333"/>
+<vertex x="26.6" y="4.6" z="0.58" s="0.985185" t="0.693333"/>
+<vertex x="0.2" y="4.6" z="0.58" s="0.007407" t="0.693333"/>
+<vertex x="0.2" y="4.3" z="1" s="0.007407" t="0.833333"/>
+</polygon>
+<polygon nx="-0" ny="-0.759257" nz="0.650791" culling="1" texture="pack:y_dec.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="0.2" y="4.2" z="-1" s="0.007407" t="0.166667"/>
+<vertex x="0.2" y="4.6" z="-0.533333" s="0.007407" t="0.322222"/>
+<vertex x="26.6" y="4.6" z="-0.533333" s="0.985185" t="0.322222"/>
+<vertex x="26.6" y="4.2" z="-1" s="0.985185" t="0.166667"/>
+</polygon>
+<polygon nx="-0" ny="-0.529999" nz="0.847998" culling="1" texture="pack:z_both.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="26.6" y="4.2" z="-1" s="0.985185" t="0.84"/>
+<vertex x="26.6" y="3.4" z="-1.5" s="0.985185" t="0.68"/>
+<vertex x="0.2" y="3.4" z="-1.5" s="0.007407" t="0.68"/>
+<vertex x="0.2" y="4.2" z="-1" s="0.007407" t="0.84"/>
+</polygon>
+<polygon nx="-0" ny="-0" nz="1" culling="1" texture="pack:z_both.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="0.5" y="0" z="-1.5" s="0.018519" t="0"/>
+<vertex x="0.2" y="1" z="-1.5" s="0.007407" t="0.2"/>
+<vertex x="0.2" y="3.4" z="-1.5" s="0.007407" t="0.68"/>
+<vertex x="26.6" y="3.4" z="-1.5" s="0.985185" t="0.68"/>
+<vertex x="26.6" y="0.9" z="-1.5" s="0.985185" t="0.18"/>
+<vertex x="26" y="0" z="-1.5" s="0.962963" t="0"/>
+</polygon>
+<polygon nx="-0.83205" ny="0.5547" nz="-0" culling="1" texture="pack:x_both.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="26.6" y="0.9" z="-1.5" s="0" t="0.18"/>
+<vertex x="26.6" y="0.9" z="1.5" s="1" t="0.18"/>
+<vertex x="26" y="0" z="1.5" s="1" t="0"/>
+<vertex x="26" y="0" z="-1.5" s="0" t="0"/>
+</polygon>
+<polygon nx="-1" ny="-0" nz="-0" culling="1" texture="pack:x_both.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="26.6" y="0.9" z="1.5" s="1" t="0.18"/>
+<vertex x="26.6" y="0.9" z="-1.5" s="0" t="0.18"/>
+<vertex x="26.6" y="3.4" z="-1.5" s="0" t="0.68"/>
+<vertex x="26.6" y="4.2" z="-1" s="0.166667" t="0.84"/>
+<vertex x="26.6" y="4.6" z="-0.533333" s="0.322222" t="0.92"/>
+<vertex x="26.6" y="4.6" z="0.58" s="0.693333" t="0.92"/>
+<vertex x="26.6" y="4.3" z="1" s="0.833333" t="0.86"/>
+<vertex x="26.6" y="3.4" z="1.5" s="1" t="0.68"/>
+</polygon>
+<polygon nx="-0" ny="-1" nz="-0" culling="1" texture="pack:y_dec.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="26.6" y="4.6" z="0.58" s="0.985185" t="0.693333"/>
+<vertex x="26.6" y="4.6" z="-0.533333" s="0.985185" t="0.322222"/>
+<vertex x="0.2" y="4.6" z="-0.533333" s="0.007407" t="0.322222"/>
+<vertex x="0.2" y="4.6" z="0.58" s="0.007407" t="0.693333"/>
+</polygon>
+<polygon nx="1" ny="-0" nz="-0" culling="1" texture="pack:x_both.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="0.2" y="4.6" z="0.58" s="0.693333" t="0.92"/>
+<vertex x="0.2" y="4.6" z="-0.533333" s="0.322222" t="0.92"/>
+<vertex x="0.2" y="4.2" z="-1" s="0.166667" t="0.84"/>
+<vertex x="0.2" y="3.4" z="-1.5" s="0" t="0.68"/>
+<vertex x="0.2" y="1" z="-1.5" s="0" t="0.2"/>
+<vertex x="0.2" y="1" z="1.5" s="1" t="0.2"/>
+<vertex x="0.2" y="3.4" z="1.5" s="1" t="0.68"/>
+<vertex x="0.2" y="4.3" z="1" s="0.833333" t="0.86"/>
+</polygon>
+<polygon nx="0.957826" ny="0.287348" nz="-0" culling="1" texture="pack:x_both.bmp" texture.transparent="0" r="1" g="1" b="1">
+<vertex x="0.2" y="1" z="1.5" s="1" t="0.2"/>
+<vertex x="0.2" y="1" z="-1.5" s="0" t="0.2"/>
+<vertex x="0.5" y="0" z="-1.5" s="0" t="0"/>
+<vertex x="0.5" y="0" z="1.5" s="1" t="0"/>
+</polygon>
+</model>
+<colorizes>
+<colorize dirs="1;1;0;0;0;0" texture="pack:x_both.bmp" texx1="-1.5" texy1="0" texx2="1.5" texy2="5"/>
+<colorize dirs="0;0;0;1;0;0" texture="pack:y_dec.bmp" texx1="0" texy1="-1.5" texx2="27" texy2="1.5"/>
+<colorize dirs="0;0;0;0;1;1;" texture="pack:z_both.bmp" texx1="0" texy1="0" texx2="27" texy2="5"/>
+</colorizes>
+<shapes>
+<shape name="base" type="clip"/>
+</shapes>
+<noise/>
+</simplemodel>
