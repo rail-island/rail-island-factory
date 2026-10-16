@@ -4,8 +4,7 @@
 //   steered wheels   a node per steered wheel, a pair per steered axle (a bus has
 //                    one axle, an 8x4 truck two), each with its origin on the
 //                    wheel's steering axis (the wheel's centre). The game turns a
-//                    wheel by writing the node's Y rotation -- the way it spins the
-//                    wind turbine's rotor node -- and steerAngles() gives the
+//                    wheel by writing the node's Y rotation, and steerAngles() gives the
 //                    angles (Ackermann: every wheel aims at one turning centre).
 //   sections         an articulated vehicle's rigid bodies, front first, each a
 //                    node whose origin is its hinge with the body ahead (the first's

@@ -6,11 +6,10 @@
 
 ## The idea
 
-The game already animates models by moving named nodes rather than playing clips:
-it spins the wind turbine's rotor by writing one Euler angle on a node whose origin
-sits on the rotation axis, and it poses an articulated bus as a hinged chain of
-section nodes with a bellows re-skinned between them every frame
-(rail-island-webapp, `render/SpinController.ts` and `models/ArticulatedBus.ts`).
+Besides playing clips ([animation.md](animation.md)), the game moves named nodes
+directly: it poses an articulated bus as a hinged chain of section nodes with a
+bellows re-skinned between them every frame, and turns steered wheels by writing a
+node's rotation (rail-island-webapp, `models/ArticulatedBus.ts`).
 A factory vehicle is built for exactly that: everything that moves is its own node,
 and a `rig` says which.
 

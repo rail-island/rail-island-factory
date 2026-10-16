@@ -106,6 +106,8 @@ describe("the running animation", () => {
     expect(times.length).toBe(N_SAMPLES + 1);
     const ref = spec.gear.wheels[spec.gear.reference]!;
     expect(times[times.length - 1]).toBeCloseTo((Math.PI * ref.d) / RUNNING_SPEED, 5);
+    // the consumer plays it by distance travelled, at the reference speed
+    expect((json as { scenes: Array<{ extras?: { clipDrives?: unknown } }> }).scenes[0]!.extras?.clipDrives).toEqual({ [RUNNING_CLIP]: { drive: "distance", speed: RUNNING_SPEED } });
     // every part but the body is animated, and every sampler is linear and shares the times
     const animated = new Set(a.channels.map((c) => g.nodes[c.target.node]!.name));
     expect(g.nodes.map((n) => n.name).filter((n) => !animated.has(n))).toEqual(["body"]);

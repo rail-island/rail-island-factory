@@ -515,7 +515,7 @@ export class RunningGear {
         }, false);
       }
     }
-    m.animate({ name: RUNNING_CLIP, times: this.times, tracks });
+    m.animate({ name: RUNNING_CLIP, times: this.times, tracks, drive: { drive: "distance", speed: RUNNING_SPEED } });
   }
 
   /**

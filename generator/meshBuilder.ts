@@ -214,13 +214,13 @@ export class MeshBuilder extends MeshCore {
    * a model that smokes its emitters as `extras.emitters`, a fountain its water as
    * `extras.fountain`.
    * Animation clips (see `animate`) become glTF animations of the part nodes,
-   * linearly interpolated.
+   * linearly interpolated, and what plays each is the scene's `extras.clipDrives`.
    */
   toGlb(generator: string, name = "building"): Uint8Array {
     type Json = {
       asset: { version: string; generator: string };
       scene: number;
-      scenes: Array<{ nodes: number[]; extras?: { rig?: unknown; emitters?: unknown; fountain?: unknown } }>;
+      scenes: Array<{ nodes: number[]; extras?: { rig?: unknown; emitters?: unknown; fountain?: unknown; clipDrives?: unknown } }>;
       nodes: Array<{ mesh: number; name: string; translation?: Vec3; children?: number[] }>;
       meshes: Array<{ name: string; primitives: unknown[] }>;
       materials: unknown[];
@@ -238,12 +238,13 @@ export class MeshBuilder extends MeshCore {
     const units = this.parts.length
       ? this.parts.map((p, i) => ({ name: p.name, pivot: p.pivot, index: i }))
       : [{ name, pivot: [0, 0, 0] as Vec3, index: -1 }];
+    const drives = this.clipDrives();
     const json: Json = {
       asset: { version: "2.0", generator },
       scene: 0,
       scenes: [{
         nodes: units.map((_, i) => i).filter((i) => !this.parts.length || this.parts[i]!.parent < 0),
-        ...(this.rig || this.emitterList.length || this.water ? { extras: { ...(this.rig ? { rig: this.rig } : {}), ...(this.emitterList.length ? { emitters: this.emitterList } : {}), ...(this.water ? { fountain: this.water } : {}) } } : {}),
+        ...(this.rig || this.emitterList.length || this.water || drives ? { extras: { ...(this.rig ? { rig: this.rig } : {}), ...(this.emitterList.length ? { emitters: this.emitterList } : {}), ...(this.water ? { fountain: this.water } : {}), ...(drives ? { clipDrives: drives } : {}) } } : {}),
       }],
       nodes: units.map((u, i) => {
         if (!this.parts.length) return { mesh: i, name: u.name };

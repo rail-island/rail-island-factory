@@ -28,8 +28,8 @@ families, rather than twenty minor variations of the same box.
 | industry-factory-a | industry-factory-a,b,c | Heavy works with three stacks; two sizes and three finishes |
 | industry-power-plant | industry-power-plant, coal-plant, nuclear-plant | Thermal/coal/nuclear installations, cooling towers, turbine hall and switchyard |
 | chemical-factory | chemical-factory, oil-refinery | Chemical/refinery process train, columns, platforms, pipe rack and storage |
-| industry-oil-pump | industry-oil-pump | Two sizes, open trestle, crank wheels, connecting rods and horsehead |
-| industry-wind-turbine | industry-wind-turbine | Two heights, tapered mast, nacelle and three-blade animated rotor |
+| industry-oil-pump | industry-oil-pump | Two sizes, open trestle, crank wheels on the gear reducer, pitman arms and horsehead; the `pumping` clip moves the mechanism ([animation.md](animation.md)) |
+| industry-wind-turbine | industry-wind-turbine | Two heights, tapered mast, nacelle and three-blade rotor turned by the `wind` clip ([animation.md](animation.md)) |
 
 ## Geometry and export
 

@@ -6,7 +6,7 @@
 import { MeshCore } from "./meshCore.ts";
 
 export { chamferedRect, grow, ngon, rect, scaleRing } from "./meshCore.ts";
-export type { AnimationClipSpec, AnimationTrack, Emitter, FountainWater, MaterialSpec, Ring, SweepAxis, WaterJet, WaterPool } from "./meshCore.ts";
+export type { AnimationClipSpec, ClipDrive, AnimationTrack, Emitter, FountainWater, MaterialSpec, Ring, SweepAxis, WaterJet, WaterPool } from "./meshCore.ts";
 
 /** The three.js namespace, or any object with the classes toGroup() uses. */
 export type ThreeNamespace = typeof import("three");
@@ -84,6 +84,9 @@ export class MeshBuilder extends MeshCore {
     if (this.emitterList.length) root.userData.emitters = JSON.parse(JSON.stringify(this.emitterList));
     // a fountain's water: its pools and jets (MeshCore.pool / jet), model coordinates
     if (this.water) root.userData.fountain = JSON.parse(JSON.stringify(this.water));
+    // what plays each clip (MeshCore.clipDrives): a time loop or the distance travelled
+    const drives = this.clipDrives();
+    if (drives) root.userData.clipDrives = drives;
     return root;
   }
 }
