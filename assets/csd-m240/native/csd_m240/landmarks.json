@@ -1,0 +1,19 @@
+{
+  "source": "janproch/vlakosimdb db/train/dmu/csd_m240/model (z_both 191 x 40, x_both 30 x 40, 0.1 m a pixel; the side's x scaled by 0.97368 to the published 18.5 m over the buffers)",
+  "annotations": [
+    {"id": "S01", "view": "side", "box": [81, 10, 94, 21], "nodes": ["body/right-side/windows/window-1/frame"], "tolerancePixels": 1.5, "uncertainty": "First large saloon window with sash bar."},
+    {"id": "S02", "view": "side", "box": [154, 10, 167, 21], "nodes": ["body/right-side/windows/window-5/frame"], "tolerancePixels": 1.5, "uncertainty": "Last large window."},
+    {"id": "S03", "view": "side", "box": [46, 10, 53, 21], "nodes": ["body/right-side/windows/end-window-1/frame"], "tolerancePixels": 1.5, "uncertainty": "Small window behind the -X doors."},
+    {"id": "S04", "view": "side", "box": [3, 10, 11, 21], "nodes": ["body/right-side/windows/cab-window-1/frame"], "tolerancePixels": 1.5, "uncertainty": "Cab side window; the BMP wraps it round the rounded end, the model keeps it on the side from column 7."},
+    {"id": "S05", "view": "side", "box": [24, 9, 36, 32], "nodes": ["body/right-side/doors/door-2/outline"], "tolerancePixels": 1.5, "uncertainty": "Double entrance door near -X; leaf split estimated."},
+    {"id": "S06", "view": "side", "box": [55, 10, 63, 32], "nodes": ["body/right-side/doors/door-3/outline"], "tolerancePixels": 1.5, "uncertainty": "Single door, grey frame."},
+    {"id": "S07", "view": "side", "box": [128, 10, 136, 32], "nodes": ["body/right-side/doors/door-4/outline"], "tolerancePixels": 1.5, "uncertainty": "Single door near +X."},
+    {"id": "S08", "view": "side", "box": [70, 11, 74, 21], "nodes": ["body/right-side/windows/narrow-window-1/frame"], "tolerancePixels": 1.5, "uncertainty": "Narrow window."},
+    {"id": "S09", "view": "side", "box": [4, 22, 187, 32], "nodes": ["shell/red-band"], "tolerancePixels": 1.5, "uncertainty": "Red band 0.9 to 1.85 m."},
+    {"id": "F01", "view": "front", "box": [0, 10, 10, 21], "nodes": ["front-end/window-1"], "tolerancePixels": 1.5, "uncertainty": "Left end window wrapping round the corner."},
+    {"id": "F02", "view": "front", "box": [20, 10, 30, 21], "nodes": ["front-end/window-2"], "tolerancePixels": 1.5, "uncertainty": "Right end window."},
+    {"id": "F03", "view": "front", "box": [11, 10, 19, 29], "nodes": ["front-end/door-frame-1"], "tolerancePixels": 1.5, "uncertainty": "End door frame."},
+    {"id": "F04", "view": "front", "box": [13, 4, 17, 8], "nodes": ["front-end/top-lamp"], "tolerancePixels": 1.5, "uncertainty": "Headlamp on the roof dome over the end door."},
+    {"id": "F05", "view": "front", "box": [4, 24, 7, 27], "nodes": ["front-end/lamp-1"], "tolerancePixels": 1.5, "uncertainty": "Lamp on the red band."}
+  ]
+}

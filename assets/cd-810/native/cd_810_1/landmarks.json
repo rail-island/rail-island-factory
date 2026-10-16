@@ -1,0 +1,22 @@
+{
+  "source": "janproch/vlakosimdb db/train/dmu/cd_810#1/model (z_dec 140 x 40, 2x_both 30 x 40, 0.1 m a pixel; the side's x scaled by 1.04824 to the published 13.103 m body)",
+  "annotations": [
+    {"id": "S01", "view": "side", "box": [22, 11, 36, 20], "nodes": ["body/right-side/windows/window-1/frame"], "tolerancePixels": 1.5, "uncertainty": "First saloon window, light grey frame over the cream band."},
+    {"id": "S02", "view": "side", "box": [52, 11, 66, 20], "nodes": ["body/right-side/windows/window-3/frame"], "tolerancePixels": 1.5, "uncertainty": "Third saloon window."},
+    {"id": "S03", "view": "side", "box": [97, 11, 111, 20], "nodes": ["body/right-side/windows/window-6/frame"], "tolerancePixels": 1.5, "uncertainty": "Last saloon window."},
+    {"id": "S04", "view": "side", "box": [7, 11, 12, 20], "nodes": ["body/right-side/windows/end-window-1/frame"], "tolerancePixels": 1.5, "uncertainty": "Cab-end window beside the -X door."},
+    {"id": "S05", "view": "side", "box": [122, 11, 127, 20], "nodes": ["body/right-side/windows/end-window-2/frame"], "tolerancePixels": 1.5, "uncertainty": "Cab-end window beside the +X door."},
+    {"id": "S06", "view": "side", "box": [13, 10, 21, 35], "nodes": ["body/right-side/doors/door-1/outline"], "tolerancePixels": 1.5, "uncertainty": "Folding door, olive frame above the band, dark red edges below; reaches the step at 0.5 m."},
+    {"id": "S07", "view": "side", "box": [112, 10, 120, 35], "nodes": ["body/right-side/doors/door-2/outline"], "tolerancePixels": 1.5, "uncertainty": "As S06."},
+    {"id": "S08", "view": "side", "box": [15, 12, 19, 20], "nodes": ["body/right-side/doors/door-1/glass/frame"], "tolerancePixels": 1.5, "uncertainty": "Door window."},
+    {"id": "S09", "view": "side", "box": [32, 23, 38, 27], "nodes": ["body/right-side/emblem"], "tolerancePixels": 1.5, "uncertainty": "White CD emblem; the model draws the emblem 90 % of the box high at its proportions."},
+    {"id": "S10", "view": "side", "box": [4, 10, 129, 21], "nodes": ["shell/cream-band"], "tolerancePixels": 1.5, "uncertainty": "Cream window band 1.9 to 3.0 m from end wall to end wall."},
+    {"id": "F01", "view": "front", "box": [2, 13, 14, 20], "nodes": ["front-end/windscreen/pane-1/glass"], "tolerancePixels": 1.5, "uncertainty": "Left windscreen glass (seen from ahead); the model holds the pane within the 0.1 m corner chamfer, the BMP runs it out to column 2."},
+    {"id": "F02", "view": "front", "box": [18, 13, 30, 20], "nodes": ["front-end/windscreen/pane-2/glass"], "tolerancePixels": 1.5, "uncertainty": "Right windscreen glass; the BMP runs it to the canvas edge."},
+    {"id": "F03", "view": "front", "box": [0, 23, 6, 26], "nodes": ["front-end/lamps/lamp-1"], "tolerancePixels": 1.5, "uncertainty": "Twin lamp housing on the yellow band (grey and white pixels)."},
+    {"id": "F04", "view": "front", "box": [24, 23, 30, 26], "nodes": ["front-end/lamps/lamp-2"], "tolerancePixels": 1.5, "uncertainty": "As F03."},
+    {"id": "F05", "view": "front", "box": [0, 23, 30, 26], "nodes": ["front-end/front-band"], "tolerancePixels": 1.01, "uncertainty": "Yellow front band 1.4 to 1.7 m (XML `light` clip)."},
+    {"id": "F06", "view": "front", "box": [12, 8, 18, 11], "nodes": ["front-end/top-lamp"], "tolerancePixels": 1.5, "uncertainty": "Top lamp on the visor."},
+    {"id": "F07", "view": "front", "box": [0, 8, 30, 11], "nodes": ["front-end/visor"], "tolerancePixels": 1.5, "uncertainty": "Cream visor over the raked windscreens; the model's reaches the 3.3 m crown (row 7), the BMP paints rows 8 to 10."}
+  ]
+}

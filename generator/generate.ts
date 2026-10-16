@@ -54,6 +54,7 @@ import { STEAM_LOCOS } from "./steamLocos.ts";
 import { CZ_ELECTRICS } from "./czElectrics.ts";
 import { FREIGHT_WAGONS } from "./freightWagons.ts";
 import { MAINLINE_ELECTRICS } from "./mainlineElectrics.ts";
+import { CZ_DMUS } from "./czDmus.ts";
 import { CITY_BUS_DESIGNS, KAROSA_DESIGNS } from "./buses.ts";
 import { VILLAGE_HOUSES } from "./village.ts";
 import type { ProceduralDesign } from "./design.ts";
@@ -110,6 +111,7 @@ const FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: st
   { designs: EMU451_DESIGNS, source: "emu451.ts", meta: "vehicles" },
   { designs: EMU460_DESIGNS, source: "emu460.ts", meta: "vehicles" },
   { designs: EMU470_DESIGNS, source: "emu470.ts", meta: "vehicles" },
+  { designs: CZ_DMUS, source: "czDmus.ts", meta: "vehicles" },
 ];
 
 /** Every building design: the skyscrapers, then the landmarks and stations (skyscrapers.meta.json). */
