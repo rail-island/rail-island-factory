@@ -173,6 +173,10 @@ export function endBuffers(c: Coach, e: number, beam: number, face: number, y: n
 
 /** A bogie (the coach builder's) with traction motors when `motor`. */
 export function emuBogie(c: Coach, bc: number, wb: number, r: number, top: number, motor: boolean): void {
+  c.m.bogie(() => emuBogieGeometry(c, bc, wb, r, top, motor));
+}
+
+function emuBogieGeometry(c: Coach, bc: number, wb: number, r: number, top: number, motor: boolean): void {
   const m = c.m;
   c.bogie(bc, wb, r, top);
   if (motor)

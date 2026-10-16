@@ -149,6 +149,20 @@ export class MeshBuilder extends MeshCore {
    */
   sourceTree(id: string, title: string): SourceTree {
     const materials = [...this.groups.keys()].sort();
+    // The GLB writes a material's triangles node by node (outputUnits); a leaf's
+    // range is drawn inside one node, so it moves as a block to where its node's
+    // triangles start -- a bogie drawn amid its body's triangles, say.
+    const units = this.outputUnits(title);
+    const rank = new Map(units.map((u, i) => [u.index, i]));
+    const moved = new Map<string, number[]>();
+    for (const mat of materials) {
+      const parts = this.groups.get(mat)!.part;
+      const counts = units.map(() => 0);
+      for (const p of parts) counts[rank.get(p) ?? 0]!++;
+      const start = counts.map((_, i) => counts.slice(0, i).reduce((a, b) => a + b, 0));
+      moved.set(mat, parts.map((p) => start[rank.get(p) ?? 0]!++));
+    }
+    const at = (mat: string, first: number): number => (first < this.groups.get(mat)!.part.length ? moved.get(mat)![first]! : first);
     const extentOf = (mat: string, first: number, count: number): NodeExtent => {
       if (count === 0) return { triangles: 0 };
       const pos = this.groups.get(mat)!.pos;
@@ -184,7 +198,7 @@ export class MeshBuilder extends MeshCore {
           let seg = `${c.kind}-${n}`;
           for (let k = 2; taken.has(seg); k++) seg = `${c.kind}-${n}-${k}`;
           taken.add(seg);
-          children.push({ id: join(seg), kind: c.kind, material: c.material, args: c.args, tri: [c.first, c.count], ...extentOf(c.material, c.first, c.count) });
+          children.push({ id: join(seg), kind: c.kind, material: c.material, args: c.args, tri: [c.count ? at(c.material, c.first) : c.first, c.count], ...extentOf(c.material, c.first, c.count) });
         } else {
           const base = slug(c.name);
           let seg = base;
@@ -229,27 +243,22 @@ export class MeshBuilder extends MeshCore {
       buffers: Array<{ byteLength: number }>;
       animations?: unknown[];
     };
-    if (this.parts.length) {
-      for (const g of this.groups.values()) {
-        if (g.part.includes(-1)) throw new Error("a model with parts drew a triangle outside any part");
-      }
-    }
-    // a model without parts is one unit holding every triangle (part index -1)
-    const units = this.parts.length
-      ? this.parts.map((p, i) => ({ name: p.name, pivot: p.pivot, index: i }))
-      : [{ name, pivot: [0, 0, 0] as Vec3, index: -1 }];
+    // a model without parts is one unit holding every triangle (part index -1);
+    // a rigid rail vehicle with bogies, a body unit and a unit per bogie
+    const units = this.outputUnits(name);
+    const nodeOf = (part: number): number => units.findIndex((u) => u.index === part);
     const drives = this.clipDrives();
     const json: Json = {
       asset: { version: "2.0", generator },
       scene: 0,
       scenes: [{
-        nodes: units.map((_, i) => i).filter((i) => !this.parts.length || this.parts[i]!.parent < 0),
+        nodes: units.map((_, i) => i).filter((i) => units[i]!.index < 0 || this.parts[units[i]!.index]!.parent < 0),
         ...(this.rig || this.emitterList.length || this.water || drives ? { extras: { ...(this.rig ? { rig: this.rig } : {}), ...(this.emitterList.length ? { emitters: this.emitterList } : {}), ...(this.water ? { fountain: this.water } : {}), ...(drives ? { clipDrives: drives } : {}) } } : {}),
       }],
       nodes: units.map((u, i) => {
-        if (!this.parts.length) return { mesh: i, name: u.name };
-        const children = this.parts.map((p, k) => (p.parent === i ? k : -1)).filter((k) => k >= 0);
-        return { mesh: i, name: u.name, translation: this.partOffset(i), ...(children.length ? { children } : {}) };
+        if (u.index < 0) return { mesh: i, name: u.name };
+        const children = this.parts.map((p, k) => (p.parent === u.index ? nodeOf(k) : -1)).filter((k) => k >= 0);
+        return { mesh: i, name: u.name, translation: this.partOffset(u.index), ...(children.length ? { children } : {}) };
       }),
       meshes: units.map((u) => ({ name: u.name, primitives: [] })),
       materials: [],
@@ -304,7 +313,7 @@ export class MeshBuilder extends MeshCore {
         const g = this.groups.get(mat)!;
         let pos: number[] = g.pos;
         let nrm: number[] = g.nrm;
-        if (unit.index >= 0) {
+        if (unit.index >= 0 || units.length > 1) {
           pos = [];
           nrm = [];
           for (let t = 0; t < g.part.length; t++) {
@@ -326,7 +335,7 @@ export class MeshBuilder extends MeshCore {
       json.animations = this.clips.map((clip) => {
         const input = floatAccessor(clip.times, 1, true, false);
         const samplers = clip.tracks.map((t) => ({ input, output: floatAccessor(t.values, t.path === "rotation" ? 4 : 3, false, false), interpolation: "LINEAR" }));
-        const channels = clip.tracks.map((t, i) => ({ sampler: i, target: { node: this.parts.findIndex((p) => p.name === t.node), path: t.path } }));
+        const channels = clip.tracks.map((t, i) => ({ sampler: i, target: { node: nodeOf(this.parts.findIndex((p) => p.name === t.node)), path: t.path } }));
         return { name: clip.name, channels, samplers };
       });
     }

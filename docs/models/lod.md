@@ -42,7 +42,9 @@ lettering, posts, railings and small fixtures are discarded before reconstructio
 Vehicle wheels, bogies, underframes, couplers, pantographs and moving equipment are
 excluded. An empty flat wagon is represented by a single thin cargo deck. The CD 810's and CD 812 / 912's cab ends are painted
 noses of their own (`cabNose.ts`), so their recipe takes the shell and both
-noses' skins as three masses, tip to tip.
+noses' skins as three masses, tip to tip. The TGV's power car is one merged shell; its articulated
+trailer set is one shell per car (per section), so each car's distant mass stays
+whole.
 
 Each selected mass becomes a new closed convex envelope, sampled in 8, 14 or 26
 support directions. Whole planar faces have one finish; roof materials take

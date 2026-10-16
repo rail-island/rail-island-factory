@@ -1,7 +1,7 @@
 # Vehicle rig
 
-**Covers** - what of a road vehicle or an articulated tram the game may move after loading it: the steered front wheels, an articulated vehicle's sections and the joints (bellows) between them; how they are laid out as GLB nodes, the `rig` that names them in the GLB, the meta entry and the JS model, the pose and joint functions the JS model exports, and the model page's Pose sliders.
-**Code** - `generator/rig.ts`, `generator/trucks.ts` (`steered`), `generator/meshCore.ts` (`part` with a parent), `generator/meshBuilder.ts` (`toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/vehicleParts.ts` (`steeredWheels`), `generator/busAssembly.ts`, `generator/tramKit.ts` (`articulate`), `generator/jsModel.ts`, `generator/catalog.ts` (`MetaEntry.rig`), `src/catalogQuery.ts` (`poseControls`, `poseOf`, `steerLockDeg`, `posePreview`, `previewKey`, `pageKey`), `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `test/rig.test.ts`, `test/collision.ts`
+**Covers** - what of a vehicle the game may move after loading it: the steered front wheels, an articulated vehicle's sections and the joints (bellows) between them, a rail vehicle's supports and turning bogies; how they are laid out as GLB nodes, the `rig` that names them in the GLB, the meta entry and the JS model, the pose and joint functions the JS model exports, and the model page's Pose sliders.
+**Code** - `generator/rig.ts`, `generator/trucks.ts` (`steered`), `generator/meshCore.ts` (`part` with a parent, `bogie`, `axleAt`, the `rig` accessor), `generator/meshBuilder.ts` (`toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/vehicleParts.ts` (`steeredWheels`), `generator/busAssembly.ts`, `generator/tramKit.ts` (`articulate`), `generator/jsModel.ts`, `generator/catalog.ts` (`MetaEntry.rig`), `generator/tgv.ts` (the articulated trailer set), `src/catalogQuery.ts` (`poseControls`, `poseOf`, `steerLockDeg`, `posePreview`, `previewKey`, `pageKey`), `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `test/rig.test.ts`, `test/railSupports.test.ts`, `test/collision.ts`
 **See also** - [vehicles.md](vehicles.md), [buses.md](buses.md), [js-format.md](js-format.md), [export.md](export.md), [../site/catalog-site.md](../site/catalog-site.md)
 
 ## The idea
@@ -18,16 +18,17 @@ and a `rig` says which.
 | steered wheels | `wheel-front-left` at -Z, `wheel-front-right` at +Z on every road vehicle (a second steered axle's `wheel-front-2-left`, ...), children of the front body's node | each turns about its own +Y; its origin is the wheel's centre (on the steering axis) |
 | sections | `section0`, `section1`, ... (the American truck: `truck`, `trailer`) | section i turns about its origin, the hinge with section i - 1, which section i - 1 carries |
 | joints | `joint0`, ... between sections i and i + 1 | not rigid: re-drawn between the two sections wherever they are (`renderJoint`) |
+| bogies | `bogie0`, `bogie1`, ... on a rail vehicle, top-level nodes | each is placed on the track at its own distance and turned to it; its origin is its centre on the track centre line at axle height |
 
 A rigid vehicle has a body node (`body` for a bus and the mixer) holding the steered
 wheels and no sections. A semi-truck is two sections (tractor and trailer, hinged at
 the king pin) and no joint. Every road vehicle has a rig - the American truck, the
 three trucks reproduced from the game ([trucks.md](trucks.md)) and the buses
-([buses.md](buses.md)). The articulated trams - the KT8D5, KT4 and GT4
-([trams.md](trams.md)) - are the one rail use: sections and joints, no `steer` (a
-rail vehicle follows the track); their sections carry their own bogies, and the
-site shows only the joint sliders. Every other rail vehicle, and the air and water
-vehicles, has none: a rigid locomotive, coach or tram stays one node.
+([buses.md](buses.md)). Every rail vehicle has one too: its **supports** (below),
+and no `steer` (a rail vehicle follows the track). The articulated trams - the
+KT8D5, KT4 and GT4 ([trams.md](trams.md)) - and the TGV's trailer set
+([foreign-units.md](foreign-units.md)) also have sections and joints; the site shows
+only the joint sliders. The air and water vehicles have none.
 
 ## The rig
 
@@ -36,6 +37,7 @@ right), limits in degrees:
 
 ```ts
 interface VehicleRig {
+  supports?: Array<{ x; node?; axles; sections: number[] }>;  // a rail vehicle's, by x
   steer?: { axles: Array<{ nodes: [atMinusZ, atPlusZ]; wheelbase }>; maxAngleDeg; track };
   sections?: Array<{ node; pivot: [x, y, z] }>;      // front first; pivot = the node's rest origin
   joints?: Array<{ node; sections: [front, rear]; front; rear; profile: Array<[z, y]>; folds; depth; material }>;
@@ -61,6 +63,41 @@ entry** (`vehicles.meta.json`, `rig`) carry the default build's; the JS model's
 group carries the rig of the parameters it was built with (`group.userData.rig`) -
 a Karosa Long variant's hinge and joint faces are its own. Pose a model with the
 rig it carries. A model without one has no `rig` key and unchanged bytes.
+
+## Rail supports and turning bogies
+
+A rail vehicle tells the game where it rides on the track. `rig.supports` lists, by
+model x, every point it stands on:
+
+- a **bogie** - two or three axles close together, the four- and six-axle vehicles
+  and the Bo'Bo'Bo' DNT 184.5 - with `node` naming its own top-level node, pivoted
+  at `(x, axle height, 0)`, `x` the mean of its axles;
+- a **lone wheelset** outside any bogie - a two-axle coach, wagon or railcar, a
+  small diesel's rigid axles, a steam locomotive's wheelsets - without `node`;
+  per section only the outermost two are listed.
+
+`sections` names the sections a support carries: `[0]` on a rigid vehicle, the
+section it is drawn in on an articulated one, and two neighbours for a **bogie under
+a joint** (the KT8D5's two middle bogies, the TGV set's Jacobs bogies). The game puts
+each section on the track by its two outermost supports; a section with fewer hangs
+on its joints, and a middle support follows without constraining the body. Each
+bogie node is posed on the track at its own distance and turned to it, so on a curve
+it turns under the body.
+
+Nothing declares a support by hand. A bogie builder draws inside `m.bogie(fn)`,
+which moves every triangle drawn in `fn` into the next `bogie<n>` node (a builder
+drawn inside another bogie's is the same bogie; `bogie(fn, { sections })` names a
+joint bogie's two sections). A scope named `wheelset` records its axle when it
+closes - the centre of its triangles - and `axleAt(x, y)` records one drawn
+otherwise (the steam locomotives' wheelset parts, the legacy two-axle wagons'). The
+`rig` accessor of the mesh builder then works the supports out from what was drawn,
+so a model that draws no wheelset has none and its bytes are unchanged.
+
+A rigid rail vehicle with bogies is a body node named `vehicle` (the JS group: the
+body's meshes on the group itself) plus a node per bogie; the GLB writes a
+material's triangles node by node, and the source tree's ranges follow
+([source-tree.md](source-tree.md)). The distant model (`lowDetail`) has no parts and
+no rig: the game turns bogies in the near model only.
 
 ## Parts with a parent
 

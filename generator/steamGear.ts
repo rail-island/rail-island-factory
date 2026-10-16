@@ -409,6 +409,7 @@ export class RunningGear {
       const ay = axleHeight(w);
       const engine = this.engineOf(i);
       m.part(name, [X, ay, 0], () => {
+        m.axleAt(X, ay);
         m.scope("axle", () => {
           const axle = ngon(8, 0.085, 0, X, ay);
           m.sweep("steel", "z", axle, -Z.tyre0 - 0.004, axle, Z.tyre0 + 0.004);

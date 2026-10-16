@@ -47,6 +47,10 @@ export class Wagon extends Coach {
    * axle boxes, side frames with their spring nests, a bolster and brake blocks.
    */
   freightBogie(xc: number, wb: number, r = WAGON_WHEEL_R): void {
+    this.m.bogie(() => this.freightBogieGeometry(xc, wb, r));
+  }
+
+  private freightBogieGeometry(xc: number, wb: number, r: number): void {
     const m = this.m;
     const ay = r * Math.cos(Math.PI / 24);
     for (const dx of [-wb / 2, wb / 2]) m.scope("wheelset", () => this.wheelset(this.X(xc + dx), r));

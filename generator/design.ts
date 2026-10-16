@@ -29,6 +29,30 @@ export interface ParamSpec {
   values: ParamValue[];
   /** One of `values`: what the exported GLB is built with. */
   default: string;
+  /**
+   * Set when the parameter applies only to some values of an earlier one (a
+   * TGV's car count to its trailer set, not its power car): elsewhere it is
+   * absent -- not resolved, not combined, not shown, not part of a key.
+   */
+  when?: ParamCondition;
+  /**
+   * Values a design no longer offers, each with the values that replace it (the
+   * TGV's single coaches, `unit: coach`, now a one-car set: `{ unit: "set", cars:
+   * "1" }`). A saved map may still name one; resolving reads it as its
+   * replacement, and nothing lists or combines it.
+   */
+  retired?: Record<string, ParamValues>;
+}
+
+/** The values of an earlier parameter under which a parameter applies. */
+export interface ParamCondition {
+  name: string;
+  values: string[];
+}
+
+/** Whether a parameter applies to the values chosen so far (see ParamSpec.when). */
+export function paramApplies(spec: ParamSpec, chosen: ParamValues): boolean {
+  return !spec.when || spec.when.values.includes(chosen[spec.when.name] ?? "");
 }
 
 /** Chosen parameter values by name. */
@@ -71,8 +95,13 @@ export function resolveParams(specs: readonly ParamSpec[], given: ParamValues = 
   for (const name of Object.keys(given)) {
     if (!specs.some((s) => s.name === name)) throw new Error(`unknown parameter "${name}"`);
   }
+  for (const s of specs) {
+    const retired = s.retired?.[given[s.name] ?? ""];
+    if (retired) given = { ...given, ...retired };
+  }
   const out: ParamValues = {};
   for (const s of specs) {
+    if (!paramApplies(s, out)) continue;
     const v = given[s.name] ?? s.default;
     if (!s.values.some((x) => x.value === v)) {
       throw new Error(`parameter "${s.name}" has no value "${v}" (expected ${s.values.map((x) => x.value).join(", ")})`);
@@ -87,7 +116,7 @@ export function paramCombinations(specs: readonly ParamSpec[] = []): ParamValues
   let out: ParamValues[] = [{}];
   for (const s of specs) {
     const ordered = [s.default, ...s.values.map((v) => v.value).filter((v) => v !== s.default)];
-    out = out.flatMap((combo) => ordered.map((v) => ({ ...combo, [s.name]: v })));
+    out = out.flatMap((combo) => (paramApplies(s, combo) ? ordered.map((v) => ({ ...combo, [s.name]: v })) : [combo]));
   }
   return out;
 }
@@ -104,6 +133,7 @@ export function coverageCombinations(specs: readonly ParamSpec[] = [], finish: r
   const out = shapes.map((c) => ({ ...defaults, ...c }));
   for (const s of specs) {
     if (!finish.includes(s.name)) continue;
+    if (!paramApplies(s, defaults)) continue;
     for (const v of s.values) if (v.value !== s.default) out.push({ ...defaults, [s.name]: v.value });
   }
   return out;

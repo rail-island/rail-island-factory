@@ -360,11 +360,16 @@ export function serializeView(v: ViewState): string {
 /**
  * A parametric record's values: each declared parameter takes the chosen value
  * when its enum lists it, else its default; names it does not declare are
- * dropped. A fixed record has none.
+ * dropped, and so is a parameter whose condition (`when`) the values before it
+ * do not meet. A fixed record has none.
  */
 export function effectiveParams(r: CatalogRecord, chosen: Record<string, string>): Record<string, string> {
   const out: Record<string, string> = {};
-  for (const p of r.params ?? []) out[p.name] = p.values.some((v) => v.value === chosen[p.name]) ? chosen[p.name]! : p.default;
+  for (const p of r.params ?? []) {
+    // a conditional parameter (a TGV's car count) is absent where it does not apply
+    if (p.when && !p.when.values.includes(out[p.when.name] ?? "")) continue;
+    out[p.name] = p.values.some((v) => v.value === chosen[p.name]) ? chosen[p.name]! : p.default;
+  }
   return out;
 }
 

@@ -1,10 +1,8 @@
 // The TGV, the French high-speed train: one design `veh-tgv` whose `unit`
-// picks the car - the power car with its nose at +X (the default), the end
-// coach that couples to a power car (R1 / R8) or an intermediate coach - and
-// whose `livery` picks the TGV Sud-Est (PSE) in its original orange, white and
-// grey, or the TGV Atlantique in silver and blue. A set is power car, end
-// coach, intermediate coaches, end coach and power car, every car facing the
-// same way as the first power car, the last end coach and power car turned.
+// picks the power car with its nose at +X (the default) or the articulated
+// trailer set, `cars` the set's length (1 .. 6 cars) and `livery` the TGV
+// Sud-Est (PSE) in its original orange, white and grey, or the TGV Atlantique
+// in silver and blue. A train is power car, trailer set and power car turned.
 //
 // Reconstructed from the native vlakosimdb XML and BMPs in assets/tgv/native:
 // the PSE power car (db/train/emu/tgv/tgv_loco: its model is a baked polygon
@@ -16,13 +14,14 @@
 // raised roof runs 2.1 m further back, its pantograph stands 0.5 m further
 // back) and in the paint, so the power car follows the livery there.
 //
-// The coaches are articulated: neighbouring coaches share a Jacobs bogie under
-// their joint. Each coach is built as one car that carries the bogie under its
-// -X joint (the end coach also its own bogie at the power car), so a set
-// coupled in one direction has one bogie at every joint. Lengths are the
-// published ones: power car 22.15 m over couplers, end coach 21.845 m from its
-// coupler to the joint, intermediate coach 18.7 m between joints; widths 2.814 m
-// and 2.904 m, heights 4.10 m and 3.42 m. See docs/models/foreign-units.md.
+// The trailer set is articulated: end coach, intermediate coaches and the end
+// coach turned, each car a section (tramKit.ts articulate), one Jacobs bogie
+// under each joint carrying the cars on either side (MeshCore.bogie), the end
+// coaches on their own bogie by the power car. A set of one car is an end coach
+// on its own bogie at both ends. Lengths are the published ones: power car
+// 22.15 m over couplers, end coach 21.845 m from its coupler to the joint,
+// intermediate coach 18.7 m between joints; widths 2.814 m and 2.904 m, heights
+// 4.10 m and 3.42 m. See docs/models/foreign-units.md.
 
 import { ngon, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
 import { coil } from "./cd163.ts";
@@ -31,16 +30,30 @@ import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign 
 import { block, side } from "./vehicleParts.ts";
 import { centreCoupler, EMU_CATALOG, enumParam, pantograph, slopePanel } from "./emuParts.ts";
 import { bOf, sideBox, spacedLetters, toBody, unitBogie, type PxBox, type SideMap } from "./unitParts.ts";
+import { articulate } from "./tramKit.ts";
 
-export type TgvUnit = "powerCar" | "endCoach" | "coach";
+/** A car of the TGV: the power car, or one of the trailer set's (the end coach couples to a power car). */
+export type TgvCar = "powerCar" | "endCoach" | "coach";
+/** What the design builds: the power car or a trailer set. */
+export type TgvUnit = "powerCar" | "set";
 export type TgvLivery = "pse" | "atlantique";
 
+/** The trailer set's longest length: six cars. */
+export const TGV_MAX_CARS = 6;
+
 export const TGV_PARAMS: readonly ParamSpec[] = [
-  enumParam("unit", "Car", {
-    powerCar: "Power car (cab, pantograph)",
-    endCoach: "End coach (R1 / R8, couples to a power car)",
-    coach: "Intermediate coach (articulated)",
-  }),
+  {
+    ...enumParam("unit", "Car", {
+      powerCar: "Power car (cab, pantograph)",
+      set: "Trailer set (articulated coaches on shared Jacobs bogies)",
+    }),
+    // the single end and intermediate coaches of before the set: each a one-car set now
+    retired: { endCoach: { unit: "set", cars: "1" }, coach: { unit: "set", cars: "1" } },
+  },
+  {
+    ...enumParam("cars", "Trailer cars", Object.fromEntries(Array.from({ length: TGV_MAX_CARS }, (_, i) => [String(i + 1), i === 0 ? "1 car (its own bogie at each end)" : `${i + 1} cars`]))),
+    when: { name: "unit", values: ["set"] },
+  },
   enumParam("livery", "Livery", {
     pse: "TGV Sud-Est: orange, white and grey (vlakosimdb tgv_loco, tgv_vag#1, tgv_vag#2)",
     atlantique: "TGV Atlantique: silver and blue (vlakosimdb tgv_at_loco, tgv_at_ch1, tgv_at_ch2)",
@@ -63,13 +76,13 @@ const K_X_COACH = TGV_COACH_LENGTH / 18.5;
 export const TGV_K_Y_COACH = 3.42 / 3.6;
 const K_Z_COACH = 2.904 / 3.0;
 
-export const TGV_MAPS: Record<TgvUnit, SideMap> = {
+export const TGV_MAPS: Record<TgvCar, SideMap> = {
   powerCar: { x0: 22.0, H: 6, k: K_X_POWER },
   endCoach: { x0: 21.6, H: 5, k: K_X_END, kY: TGV_K_Y_COACH },
   coach: { x0: 18.65, H: 5, k: K_X_COACH, kY: TGV_K_Y_COACH },
 };
 
-export function tgvLength(unit: TgvUnit): number {
+export function tgvLength(unit: TgvCar): number {
   return unit === "powerCar" ? TGV_POWER_LENGTH : unit === "endCoach" ? TGV_END_LENGTH : TGV_COACH_LENGTH;
 }
 
@@ -143,6 +156,7 @@ const PALETTE: Record<string, MaterialSpec> = {
   motor: { color: "#2e3033", roughness: 0.8 },
   rubber: { color: "#1c1c1e", roughness: 0.95 },
   equipment: { color: "#2f282f", roughness: 0.8 },
+  bellows: { color: "#1c1c1e", roughness: 0.95 },
 };
 
 /** The XML alongx section (both clips, the body to 3.5 m and the roof to 4.1 m), widths scaled. */
@@ -179,7 +193,7 @@ export function tgv(params?: ParamValues): MeshBuilder {
   const p = resolveParams(TGV_PARAMS, params);
   const unit = p.unit as TgvUnit;
   const L = LIVERIES[p.livery as TgvLivery];
-  return unit === "powerCar" ? powerCar(L) : trailer(unit, L);
+  return unit === "powerCar" ? powerCar(L) : trailerSet(Number(p.cars), L);
 }
 
 function powerCar(L: Livery): MeshBuilder {
@@ -300,27 +314,103 @@ const TRAILERS: Record<"endCoach" | "coach", TrailerLayout> = {
   },
 };
 
-function trailer(unit: "endCoach" | "coach", L: Livery): MeshBuilder {
+/**
+ * The trailer set of `n` cars (1 .. TGV_MAX_CARS), centred on x = 0 with its
+ * front end coach at +X: end coach, intermediate coaches, the end coach turned,
+ * each car a section (articulate), one Jacobs bogie under each joint carrying
+ * the two cars on either side. One car is an end coach on its own bogie at
+ * each end, coupled at both.
+ */
+function trailerSet(n: number, L: Livery): MeshBuilder {
+  const palette = { ...PALETTE, ...L.palette };
+  if (n === 1) {
+    const c = new Coach(palette, TGV_END_LENGTH / 2);
+    drawTrailer(c, "endCoach", L, "coupler");
+    return c.m;
+  }
+  const kinds: TgvCar[] = Array.from({ length: n }, (_, k) => (k === 0 || k === n - 1 ? "endCoach" : "coach"));
+  const total = kinds.reduce((t, k) => t + tgvLength(k), 0);
+  let hi = total / 2;
+  const cars = kinds.map((kind, k) => {
+    const len = tgvLength(kind);
+    const car = { kind, len, lo: hi - len, hi, turned: k === n - 1 };
+    hi -= len;
+    return car;
+  });
+  let shared: MeshBuilder | undefined;
+  const coaches = cars.map((car) => {
+    const cx = (car.lo + car.hi) / 2;
+    // a car facing +X maps body b = len to its front end; the turned one is drawn about its centre, then turned
+    const c = new Coach(palette, car.turned ? car.len / 2 - cx : car.len - car.hi, shared);
+    shared = c.m;
+    return c;
+  });
+  const m = shared!;
+  const ky = TGV_K_Y_COACH;
+  const sections = cars.map((car, k) => {
+    const c = coaches[k]!;
+    const map = TGV_MAPS[car.kind];
+    const [front, rear] = TRAILER_WALLS[car.kind as "endCoach" | "coach"];
+    const cx = (car.lo + car.hi) / 2;
+    const f = c.X(bOf(map, front));
+    const r = c.X(bOf(map, rear));
+    const [x1, x0] = car.turned ? [2 * cx - r, 2 * cx - f] : [f, r];
+    return {
+      x0,
+      x1,
+      draw: () => {
+        m.scope(`car ${k + 1}`, () => {
+          if (car.turned) m.turned(cx, () => drawTrailer(c, car.kind as "endCoach" | "coach", L, "joint"));
+          else drawTrailer(c, car.kind as "endCoach" | "coach", L, "joint");
+        });
+        // the Jacobs bogie under the joint behind this car, carrying it and the next
+        if (k + 1 < n) m.scope(`jacobs bogie ${k + 1}`, () => m.bogie(() => {
+          jacobsHalf(c, car.lo, 1);
+          jacobsHalf(c, car.lo, -1);
+        }, { sections: [k, k + 1] }));
+      },
+    };
+  });
+  const hw = 0.75;
+  articulate({ m }, sections, 1.0 * ky, {
+    profile: [[-hw, 1.1 * ky], [hw, 1.1 * ky], [hw, 3.25 * ky], [hw - 0.15, 3.4 * ky], [-hw + 0.15, 3.4 * ky], [-hw, 3.25 * ky]],
+    folds: 3,
+    depth: 0.03,
+  }, 12, cars.slice(0, -1).map((car) => car.lo));
+  return m;
+}
+
+/** The trailers' body ends (source x): the end coach from its coupler end (0.1) to the joint wall (21.3). */
+const TRAILER_WALLS: Record<"endCoach" | "coach", [number, number]> = { endCoach: [0.1, 21.3], coach: [0.3, 18.5] };
+
+/**
+ * One trailer car with its front at body b = length (+X): its body, sides and
+ * ends and, on an end coach, its own bogie by the power car. A joint end is the
+ * bare wall (the set's bellows close it, the Jacobs bogie is the set's); a
+ * coupler end -- the end coach's front, and both ends of a one-car set -- has the
+ * gangway and centre coupler, and at the rear its own bogie.
+ */
+function drawTrailer(c: Coach, unit: "endCoach" | "coach", L: Livery, rearEnd: "joint" | "coupler"): void {
   const map = TGV_MAPS[unit];
   const T = TRAILERS[unit];
   const length = tgvLength(unit);
   const ky = TGV_K_Y_COACH;
-  const c = new Coach({ ...PALETTE, ...L.palette }, length / 2);
   const m = c.m;
   const B = (x: number) => bOf(map, x);
   const box = (b: PxBox) => sideBox(map, b);
   const bands = scaleBands(L.coach, ky);
-  // the body's ends (source x): the end coach from its coupler end (0.1) to the joint wall (21.3)
-  const [front, rear] = unit === "endCoach" ? [0.1, 21.3] : [0.3, 18.5];
+  const [front, rear] = TRAILER_WALLS[unit];
   // openings over the bogies: the shared one at each joint, the end coach's own one at 3.05 m
   const reach = TGV_TRAILER_WHEELBASE / 2 + 0.46 + 0.12;
-  const bJoint = reach;
   const bFront = unit === "endCoach" ? B(END_BOGIE_X) : length;
+  // a coupled rear rides on a bogie mirroring the front one
+  const bRear = length - bFront;
   // over the bogies the body stands on 1.0 m (source), clear of the 920 mm wheels
+  const rearProfile: Pt[] = rearEnd === "joint"
+    ? [[B(rear), 1.0 * ky], [reach, 1.0 * ky], [reach + 0.3, 0.2 * ky]]
+    : [[B(rear), 0.2 * ky], [bRear - reach - 0.2, 0.2 * ky], [bRear - reach, 1.0 * ky], [bRear + reach, 1.0 * ky], [bRear + reach + 0.3, 0.2 * ky]];
   const bottom: Pt[] = [
-    [B(rear), 1.0 * ky],
-    [bJoint, 1.0 * ky],
-    [bJoint + 0.3, 0.2 * ky],
+    ...rearProfile,
     [bFront - reach - 0.3, 0.2 * ky],
     [bFront - reach, 1.0 * ky],
     ...(unit === "endCoach" ? ([[bFront + reach, 1.0 * ky], [bFront + reach + 0.2, 0.2 * ky], [B(front), 0.2 * ky]] as Pt[]) : ([[B(front), 1.0 * ky]] as Pt[])),
@@ -355,40 +445,40 @@ function trailer(unit: "endCoach" | "coach", L: Livery): MeshBuilder {
           });
       });
   });
-  // the joints: bellows to the joint plane, the articulation's coupler; the end coach's coupler to the power car
+  // a coupler end: the gangway's rubber to the end face and the centre coupler
   const gangway = (e: number, wall: number, face: number) =>
     m.scope("gangway", () => {
       const [a, b] = [c.X(wall) - e * 0.02, c.X(face)].sort((p, q) => p - q) as [number, number];
       for (const z of [-1, 1]) block(m, "rubber", a, b, 1.1 * ky, 3.4 * ky, ...side(z, 0.5, 0.75));
       block(m, "rubber", a, b, 3.2 * ky, 3.4 * ky, -0.5, 0.5);
     });
-  m.scope("rear end", () => gangway(-1, B(rear), 0));
-  m.scope("front end", () => {
-    if (unit === "coach") gangway(1, B(front), length);
-    else {
+  if (rearEnd === "coupler")
+    m.scope("rear end", () => {
+      gangway(-1, B(rear), 0.02);
+      m.scope("coupler", () => centreCoupler(m, -1, c.X(B(rear) + 0.9), c.X(0), 1.0));
+    });
+  if (unit === "endCoach")
+    m.scope("front end", () => {
       gangway(1, B(front), length - 0.02);
       m.scope("coupler", () => centreCoupler(m, 1, c.X(B(front) - 0.9), c.X(length), 1.0));
-    }
-  });
+    });
   m.scope("running gear", () => {
-    // half of each shared Jacobs bogie: the next coach carries the other half
-    m.scope("rear jacobs half", () => jacobsHalf(c, c.X(0), 1));
-    if (unit === "coach") m.scope("front jacobs half", () => jacobsHalf(c, c.X(length), -1));
-    if (unit === "endCoach") m.scope("bogie", () => unitBogie(c, c.X(B(END_BOGIE_X)), { wb: TGV_TRAILER_WHEELBASE, r: 0.46, motor: true, top: 0.88 * ky, air: true, frame: 1.0 }));
+    const own = (b: number) => unitBogie(c, c.X(b), { wb: TGV_TRAILER_WHEELBASE, r: 0.46, motor: true, top: 0.88 * ky, air: true, frame: 1.0 });
+    if (unit === "endCoach") m.scope("bogie", () => own(bFront));
+    if (rearEnd === "coupler") m.scope("rear bogie", () => own(bRear));
     m.scope("underframe", () => {
       const mid = (B(rear) + B(front)) / 2;
       for (const d of [-1.4, 0, 1.4]) block(m, "equipment", c.X(mid + d - 0.55), c.X(mid + d + 0.55), 0.25, 0.86 * ky, -0.95, 0.95);
     });
   });
-  return m;
 }
 
 /**
  * Half a Jacobs bogie at a joint (Factory x `xj`), reaching into the car along
  * d: one wheelset 1.5 m from the joint, its axle boxes and primary coils, the
  * side frame and the bolster up to the joint plane, and the air spring beside
- * it. Two coupled coaches' halves make the whole bogie, 3.0 m wheelbase on
- * 920 mm wheels, centred on the joint; nothing crosses the joint plane.
+ * it. A Jacobs bogie is the two halves either side of the joint, 3.0 m
+ * wheelbase on 920 mm wheels, centred on it.
  */
 function jacobsHalf(c: Coach, xj: number, d: number): void {
   const m = c.m;

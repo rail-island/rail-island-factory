@@ -85,12 +85,15 @@ The KT8D5, KT4 and GT4 use the vehicle rig ([vehicle-rig.md](vehicle-rig.md)) wi
 steering: `articulate()` draws each rigid body as a part `section0`, `section1`, ...
 (front first; a section's pivot is its hinge with the one ahead, in the middle of
 the gap, at floor height) and each bellows as a part `joint0`, ... drawn by
-`drawJoint`. Everything of a section - its body, sides, ends, roof equipment and
-bogies - is inside its part, so it moves with it.
+`drawJoint`. Everything of a section - its body, sides, ends and roof equipment -
+is inside its part, so it moves with it. The bogies are their own nodes and the
+rig's supports ([vehicle-rig.md](vehicle-rig.md#rail-supports-and-turning-bogies)):
+a bogie carries the section it is drawn in, or both neighbours when it stands under
+a joint.
 
 | design | sections (source x) | bogies | max bend |
 |---|---|---|---|
-| KT8D5 | 0.5..10.5, 11.2..17.1, 17.8..27.8 | one under each outer cab end; the middle section carries the two under the joints | 40 deg |
+| KT8D5 | 0.5..10.5, 11.2..17.1, 17.8..27.8 | one under each outer cab end and one under each joint, carrying both its neighbours | 40 deg |
 | KT4 | 0.5..10.6, 11.5..21.7 | one under the middle of each | 40 deg |
 | GT4 | 0.3..7.1, 7.4..14.4 | one under each, 10.0 m apart | 35 deg |
 

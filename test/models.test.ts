@@ -369,11 +369,11 @@ describe("the vehicles", () => {
     expect((json as { asset: { generator: string } }).asset.generator).toBe(`Rail Island procedural vehicle (${id})`);
   });
 
-  it("ships the CD 163 as a rigid rail vehicle on standard gauge", () => {
+  it("ships the CD 163 as a rigid rail vehicle on two turning bogies on standard gauge", () => {
     const d = VEHICLES.find((v) => v.id === "proc-vehicle-cd-163")!;
     expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "loco", traction: "electric" });
     const { json } = parseGlb(designGlb(proceduralId(d.id)));
-    expect((json as { nodes: Array<{ name: string }> }).nodes.map((n) => n.name)).toEqual(["vehicle"]);
+    expect((json as { nodes: Array<{ name: string }> }).nodes.map((n) => n.name)).toEqual(["vehicle", "bogie0", "bogie1"]);
     const s = glbStats(designGlb(proceduralId(d.id)));
     expect(s.max[0] - s.min[0]).toBeCloseTo(16.8, 2); // over the buffers
     expect(s.max[0] + s.min[0]).toBeCloseTo(0, 5); // centred along x

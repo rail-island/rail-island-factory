@@ -15,7 +15,7 @@
 // source -z side, painted by z_inc; the front (+X) is the x_inc end. A 180
 // degree turn about Y, so nothing is mirrored. See docs/models/trams.md.
 
-import { ngon, type MaterialSpec, type Ring } from "./meshBuilder.ts";
+import { ngon, type MaterialSpec, type MeshBuilder, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { Coach, sectionHalf, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { block } from "./vehicleParts.ts";
@@ -280,6 +280,10 @@ export class Tram extends Coach {
 
   /** A tram bogie at source x, wheelset centres `wb` apart (Factory metres), wheels of radius r, its bolster up to Factory `top`. */
   tramBogie(x: number, wb: number, r: number, top: number): void {
+    this.m.bogie(() => this.tramBogieGeometry(x, wb, r, top));
+  }
+
+  private tramBogieGeometry(x: number, wb: number, r: number, top: number): void {
     this.bogie(this.fx(x), wb, r, top);
     // the traction motors and their drum brakes between the wheelsets
     const m = this.m;
@@ -405,14 +409,15 @@ export interface TramSection {
 
 /**
  * Draws an articulated tram: every section a part ("section0" front first, its
- * pivot the hinge with the section ahead, at `hingeY` in the middle of the gap),
+ * pivot the hinge with the section ahead, at `hingeY` in the middle of the gap
+ * unless `hinges` gives each hinge's x -- a Jacobs bogie's centre),
  * then every bellows a part of its own, and sets the rig. See vehicle-rig.md.
  */
-export function articulate(t: Tram, sections: TramSection[], hingeY: number, bellows: { profile: Array<[number, number]>; folds: number; depth: number }, maxBendDeg: number): VehicleRig {
+export function articulate(t: { m: MeshBuilder }, sections: TramSection[], hingeY: number, bellows: { profile: Array<[number, number]>; folds: number; depth: number }, maxBendDeg: number, hinges?: number[]): VehicleRig {
   const m = t.m;
   const rigSections: SectionRig[] = sections.map((s, i) => ({
     node: `section${i}`,
-    pivot: i === 0 ? [0, 0, 0] : [(sections[i - 1]!.x0 + s.x1) / 2, hingeY, 0],
+    pivot: i === 0 ? [0, 0, 0] : [hinges?.[i - 1] ?? (sections[i - 1]!.x0 + s.x1) / 2, hingeY, 0],
   }));
   sections.forEach((s, i) => m.part(rigSections[i]!.node, rigSections[i]!.pivot as Vec3, s.draw));
   const joints: JointRig[] = [];

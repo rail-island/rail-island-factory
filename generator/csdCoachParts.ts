@@ -121,8 +121,9 @@ const stations = (v: Volume): number[] =>
 
 export class Coach {
   readonly m: MeshBuilder;
-  constructor(palette: Record<string, MaterialSpec>, readonly centre: number) {
-    this.m = new MeshBuilder({ ...COACH_PALETTE, ...palette });
+  /** A coach drawing into its own builder, or into `m` (another car of the same articulated set). */
+  constructor(palette: Record<string, MaterialSpec>, readonly centre: number, m?: MeshBuilder) {
+    this.m = m ?? new MeshBuilder({ ...COACH_PALETTE, ...palette });
   }
 
   /** Source x to Factory x. */
@@ -360,6 +361,10 @@ export class Coach {
    * frames with coil springs, and a bolster up to `top`.
    */
   bogie(xc: number, wb: number, r: number, top: number): void {
+    this.m.bogie(() => this.bogieGeometry(xc, wb, r, top));
+  }
+
+  private bogieGeometry(xc: number, wb: number, r: number, top: number): void {
     const m = this.m;
     const ay = r * Math.cos(Math.PI / 24);
     const x = this.X(xc);

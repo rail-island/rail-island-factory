@@ -615,6 +615,10 @@ function cab(m: MeshBuilder, e: number, livery: Cd150Livery): void {
 // drops between the axles to carry the large secondary coils on a spring
 // plank, nose-hung traction motors, brake cylinders and sandboxes.
 function bogie(m: MeshBuilder, xc: number): void {
+  m.bogie(() => bogieGeometry(m, xc));
+}
+
+function bogieGeometry(m: MeshBuilder, xc: number): void {
   const r = 0.625,
     ay = r * Math.cos(Math.PI / 24);
   for (const dx of [-1.65, 1.65])

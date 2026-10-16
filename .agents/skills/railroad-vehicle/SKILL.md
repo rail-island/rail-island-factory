@@ -29,10 +29,16 @@ documentation in English.
   and the appropriate group; CD 163 uses `loco`, the CSD coaches `coach`
   (`COACH_CATALOG`), the freight wagons `wagon` (`WAGON_CATALOG`). A wagon's
   load variants are one design with a `cargo` parameter (docs/models/wagons.md).
-- A rigid locomotive or wagon remains one node unless its consumer explicitly
-  needs articulated parts. Do not apply the road truck/trailer split to a train.
-  If articulation is required, place pivots at the actual bogie or coupling
-  rotation centres and verify clearance through the intended motion.
+- Draw every bogie (two or three axles close together) inside `m.bogie(() => ...)`
+  and every wheelset in a scope named `wheelset` (or record it with
+  `m.axleAt(x, y)`): the bogie becomes its own turning node and the rig's
+  `supports` - where the game puts the vehicle on the track - are worked out from
+  them (docs/models/vehicle-rig.md). A bogie under an articulated joint names the
+  two sections it carries: `m.bogie(fn, { sections: [i, i + 1] })`. Otherwise a
+  rigid locomotive or wagon remains one body node. Do not apply the road
+  truck/trailer split to a train. If articulation is required, place pivots at
+  the actual bogie or coupling rotation centres and verify clearance through the
+  intended motion.
 
 ## Coordinates and proportions
 
@@ -137,7 +143,7 @@ valve gear are parts animated by the `running` clip (`steamGear.ts`,
 docs/models/animation.md): keep each moving piece in its own z plane, keep
 spoke counts so a tyre has twice the spokes in facets, and check posed frames
 (`poseGlb`) for flicker as `test/steam.test.ts` does. A rigid vehicle without
-moving parts stays one node.
+moving parts stays one body node plus its bogie nodes.
 
 ## Electric locomotives and pantographs
 

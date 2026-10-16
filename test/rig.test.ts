@@ -181,7 +181,7 @@ async function loadGlb(bytes: Uint8Array): Promise<THREE.Group> {
 }
 
 describe("the rigged vehicles", () => {
-  it("are every road vehicle, steered, and the articulated rail vehicles, sections and joints only", () => {
+  it("are every road vehicle, steered, and every rail vehicle, its supports and, articulated, sections and joints", () => {
     const road = ALL_VEHICLES.filter((d) => (d.catalog?.category ?? "Road vehicles") === "Road vehicles").map((d) => d.id);
     expect(STEERED.map(([id]) => id)).toEqual(road);
     expect(road).toContain("proc-vehicle-american-truck");
@@ -192,9 +192,12 @@ describe("the rigged vehicles", () => {
       const rig = d.build().rig!;
       expect(d.catalog?.category).toBe("Rail vehicles");
       expect(rig.steer).toBeUndefined();
-      expect(rig.sections!.length).toBeGreaterThanOrEqual(2);
-      expect(rig.joints).toHaveLength(rig.sections!.length - 1);
+      expect(rig.supports!.length).toBeGreaterThanOrEqual(2);
+      if (!rig.sections) continue;
+      expect(rig.sections.length).toBeGreaterThanOrEqual(2);
+      expect(rig.joints).toHaveLength(rig.sections.length - 1);
     }
+    expect(rail.filter((id) => DESIGNS.get(proceduralId(id))!.build().rig!.sections)).toEqual(expect.arrayContaining(["proc-vehicle-tatra-kt8", "proc-vehicle-tatra-kt4", "proc-vehicle-kvag-gt4"]));
   });
 
   it.each(STEERED)("%s: its steered wheels are child nodes of the front body, pivoting at their centres", (id) => {

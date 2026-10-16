@@ -323,6 +323,10 @@ function cabEnd(m: MeshBuilder, s: LocoSpec, sp: ShellSpec, e: number, vB: reado
 
 /** A three-axle bogie (Co): wheelsets with axle boxes and coils, a long plate frame dipping between the wheels. */
 export function bogie3(m: MeshBuilder, b: BogieSpec): void {
+  m.bogie(() => bogie3Geometry(m, b));
+}
+
+function bogie3Geometry(m: MeshBuilder, b: BogieSpec): void {
   const { xc, wheelR: R, frameTop: ft } = b;
   const N = 20;
   const ay = R * Math.cos(Math.PI / N);

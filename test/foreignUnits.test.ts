@@ -56,9 +56,13 @@ describe("the foreign multiple units", () => {
     expect(spec(MDMOT_PARAMS)).toEqual([["unit", "motorCar", ["motorCar", "trailerAx", "trailerBx", "drivingTrailer"]]]);
     expect(spec(ICE1_PARAMS)).toEqual([["unit", "powerCar", ["powerCar", "coach", "restaurant"]]]);
     expect(spec(TGV_PARAMS)).toEqual([
-      ["unit", "powerCar", ["powerCar", "endCoach", "coach"]],
+      ["unit", "powerCar", ["powerCar", "set"]],
+      ["cars", "1", ["1", "2", "3", "4", "5", "6"]],
       ["livery", "pse", ["pse", "atlantique"]],
     ]);
+    // the car count applies to the trailer set only
+    expect(TGV_PARAMS[1]!.when).toEqual({ name: "unit", values: ["set"] });
+    expect(paramCombinations(TGV_PARAMS)).toHaveLength(2 + 6 * 2);
   });
 
   for (const d of designs)
@@ -69,7 +73,8 @@ describe("the foreign multiple units", () => {
       expect(s.max[0]).toBeCloseTo(-s.min[0], 5);
       expect(s.max[2] - s.min[2]).toBeLessThanOrEqual(3.1);
       expect(s.max[1]).toBeLessThanOrEqual(6.5);
-      expect(s.triangles).toBeLessThanOrEqual(16_000);
+      // an articulated set is several cars: the budget is per car
+      expect(s.triangles).toBeLessThanOrEqual(combo.unit === "set" ? Math.max(16_000, 4_000 * Number(combo.cars)) : 16_000);
       expect(s.triangles).toBeGreaterThan(2_000);
       const fixed = nodes.filter((n) => !n.id.startsWith("roof-equipment/pantographs/") && n.tri[1] > 0);
       expect(Math.max(...fixed.map((n) => n.max![1]))).toBeLessThanOrEqual(4.7);
@@ -193,34 +198,56 @@ describe("the foreign multiple units", () => {
       return Math.min(...n.map((x) => x.min![0]));
     };
     expect(high("atlantique")).toBeLessThan(high("pse") - 1.5);
-    for (const [unit, length] of [["endCoach", TGV_END_LENGTH], ["coach", TGV_COACH_LENGTH]] as const) {
-      const { stats: s, nodes } = built(tgv({ unit }), "proc-vehicle-tgv");
+    for (const cars of [1, 2, 3, 6]) {
+      const { stats: s, nodes } = built(tgv({ unit: "set", cars: String(cars) }), "proc-vehicle-tgv");
+      const length = cars === 1 ? TGV_END_LENGTH : 2 * TGV_END_LENGTH + (cars - 2) * TGV_COACH_LENGTH;
       expect(s.max[0] - s.min[0]).toBeCloseTo(length, 3);
-      expect(bounds(nodes, /^body\/[a-z-]*band/).max[2] * 2).toBeCloseTo(2.904, 3);
-      expect(bounds(nodes, /^body\/[a-z-]*band/).max[1]).toBeLessThanOrEqual(unit === "coach" ? 3.42 + 1e-6 : 3.9);
+      const band = bounds(nodes, /(^|\/)body\/[a-z-]*band/);
+      expect(band.max[2] * 2).toBeCloseTo(2.904, 3);
+      expect(band.max[1]).toBeLessThanOrEqual(3.9);
     }
   });
 
-  it("TGV: two coupled coaches' Jacobs halves make one 3.0 m bogie centred on their joint", () => {
-    const coach = built(tgv({ unit: "coach" }), "proc-vehicle-tgv");
-    const L = TGV_COACH_LENGTH;
-    // one wheelset 1.5 m inside each joint, nothing beyond the joints
-    expect(axles(coach.nodes)).toEqual([-L / 2 + 1.5, L / 2 - 1.5].map((x) => Math.round(x * 1000) / 1000));
-    expect(coach.stats.min[0]).toBeCloseTo(-L / 2, 5);
-    expect(coach.stats.max[0]).toBeCloseTo(L / 2, 5);
-    // the coach ahead (shifted by L) puts its rear half's wheelset 1.5 m on the other side of the joint
-    const joint = L / 2;
-    const ahead = axles(coach.nodes).map((x) => x + L);
-    const own = axles(coach.nodes);
-    expect(ahead[0]! - joint).toBeCloseTo(1.5, 3);
-    expect(joint - own[1]!).toBeCloseTo(1.5, 3);
-    // the end coach: its own bogie near the power car (+X), half a Jacobs bogie at -X
-    const end = built(tgv({ unit: "endCoach" }), "proc-vehicle-tgv");
-    const ea = axles(end.nodes);
-    expect(ea.length).toBe(3);
-    expect(ea[0]).toBeCloseTo(-TGV_END_LENGTH / 2 + 1.5, 3);
-    expect(ea[2]! - ea[1]!).toBeCloseTo(3.0, 3);
-    expect(bounds(end.nodes, /^front-end\/coupler\//).max[0]).toBeCloseTo(end.stats.max[0], 2);
+  it("TGV: the trailer set rides on Jacobs bogies under its joints, each carrying the cars either side", () => {
+    for (const cars of [2, 3, 6]) {
+      const m = tgv({ unit: "set", cars: String(cars), livery: "atlantique" });
+      const rig = m.rig!;
+      expect(rig.sections).toHaveLength(cars);
+      expect(rig.joints).toHaveLength(cars - 1);
+      const supports = [...rig.supports!].sort((a, b) => b.x - a.x);
+      // the end coaches' own bogies at the ends, a Jacobs bogie under every joint
+      expect(supports).toHaveLength(cars + 1);
+      expect(supports.every((p) => p.node && p.axles === 2)).toBe(true);
+      expect(supports[0]!.sections).toEqual([0]);
+      expect(supports[cars]!.sections).toEqual([cars - 1]);
+      for (let k = 1; k < cars; k++) {
+        expect(supports[k]!.sections).toEqual([k - 1, k]);
+        // the hinge is the Jacobs bogie's centre, on the joint plane
+        expect(rig.sections![k]!.pivot[0]).toBeCloseTo(supports[k]!.x, 3);
+      }
+      const length = 2 * TGV_END_LENGTH + (cars - 2) * TGV_COACH_LENGTH;
+      expect(supports[1]!.x).toBeCloseTo(length / 2 - TGV_END_LENGTH, 3);
+      // a Jacobs bogie is a 3.0 m bogie centred on its joint
+      const a = axles(leaves(m.sourceTree("x", "x").root));
+      expect(a).toHaveLength(2 * (cars + 1));
+      expect(a.some((x) => Math.abs(x - (supports[1]!.x - 1.5)) < 1e-3)).toBe(true);
+      expect(a.some((x) => Math.abs(x - (supports[1]!.x + 1.5)) < 1e-3)).toBe(true);
+    }
+    // the set's last end coach is the first one turned: its coupler at -X
+    const set = built(tgv({ unit: "set", cars: "3" }), "proc-vehicle-tgv");
+    expect(bounds(set.nodes, /^section2\/car-3\/front-end\/coupler\//).min[0]).toBeCloseTo(set.stats.min[0], 2);
+    expect(bounds(set.nodes, /^section0\/car-1\/front-end\/coupler\//).max[0]).toBeCloseTo(set.stats.max[0], 2);
+  });
+
+  it("TGV: a one-car set is an end coach on its own bogie at each end, coupled at both", () => {
+    const one = tgv({ unit: "set", cars: "1" });
+    const rig = one.rig!;
+    expect(rig.sections).toBeUndefined();
+    expect(rig.supports!.map((p) => [p.axles, p.sections])).toEqual([[2, [0]], [2, [0]]]);
+    expect(rig.supports![0]!.x).toBeCloseTo(-rig.supports![1]!.x, 3);
+    const b = built(one, "proc-vehicle-tgv");
+    expect(bounds(b.nodes, /^front-end\/coupler\//).max[0]).toBeCloseTo(b.stats.max[0], 2);
+    expect(bounds(b.nodes, /^rear-end\/coupler\//).min[0]).toBeCloseTo(b.stats.min[0], 2);
   });
 
   it.each(UNIT_TRANSFERS.map((t) => [t.key] as const))("%s matches its native BMP landmarks within their pixel tolerances once the documented scales are undone", (key) => {

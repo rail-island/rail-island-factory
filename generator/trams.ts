@@ -241,7 +241,7 @@ export function tatraT6(): MeshBuilder {
 }
 
 // ---------------------------------------------------------------------------
-// Tatra KT8D5: three sections, the middle one on two bogies under the joints
+// Tatra KT8D5: three sections on two end bogies and two bogies under the joints
 // ---------------------------------------------------------------------------
 
 export type Kt8Livery = "redWhite" | "red" | "modern";
@@ -348,7 +348,9 @@ export function tatraKt8(params?: ParamValues): MeshBuilder {
     m.scope("running gear", () => {
       KT8_BOGIES.forEach((x, k) => {
         const own = i === 1 ? k === 1 || k === 2 : i === 0 ? k === 0 : k === 3;
-        if (own) m.scope(`bogie ${k + 1}`, () => t.tramBogie(x, 1.9, TRAM_WHEEL_R, t.fy(0.7)));
+        // the middle section draws the two bogies under the joints, each carrying both its neighbours
+        const carries = k === 1 ? [0, 1] : k === 2 ? [1, 2] : undefined;
+        if (own) m.scope(`bogie ${k + 1}`, () => m.bogie(() => t.tramBogie(x, 1.9, TRAM_WHEEL_R, t.fy(0.7)), carries ? { sections: carries } : {}));
       });
     });
   };

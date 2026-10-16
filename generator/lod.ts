@@ -403,6 +403,8 @@ export function lodRecipe(design: ProceduralDesign): LodRecipe {
     if (id === 'pao-flat-wagon') return recipe('^(frame/deck|cargo)(/|$)',1,{allow:'^frame/deck'});
     if (id === 'muv-69') return recipe('^(cab|underframe/deck)(/|$)',1,{allow:'^underframe/deck'});
     if (family === 'trams') return recipe('^(body|section[0-9]+/body)(/|$)',1);
+    // The power car is one shell; a trailer set is a shell per car (its sections).
+    if (family === 'tgv') return recipe('^(body|cab|nose|roof|section[0-9]+/car [0-9]+/body)(/|$)',1,{merge:'^(body|cab|nose|roof)(/|$)'});
     if (family === 'smallDiesels') return recipe('^body/((long |short )?hood|cab|body|shell)(/|$)',2);
     if (id === 'cd-771') return recipe('^(short hood|long hood|cab)(/|$)',1);
     if (family === 'czElectrics' && id === 'cd-110') return recipe('^(cab|rear hood|front hood)(/|$)',1);

@@ -801,6 +801,10 @@ function cab(m: MeshBuilder, e: number, st: Style): void {
 // --- the running gear ---------------------------------------------------------------
 
 function bogie(m: MeshBuilder, xb: number): void {
+  m.bogie(() => bogieGeometry(m, xb));
+}
+
+function bogieGeometry(m: MeshBuilder, xb: number): void {
   for (const dx of [-HALF_BASE, HALF_BASE]) {
     const ax = xb + dx;
     m.scope("wheelset", () => {

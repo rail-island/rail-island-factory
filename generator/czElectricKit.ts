@@ -300,6 +300,10 @@ export interface BogieSpec {
 }
 /** A two-axle bogie: wheelsets with axle boxes and coils, plate side frames, bolster coils, brake cylinders. */
 export function bogie(m: MeshBuilder, b: BogieSpec): void {
+  m.bogie(() => bogieGeometry(m, b));
+}
+
+function bogieGeometry(m: MeshBuilder, b: BogieSpec): void {
   const { xc, halfBase: hb, wheelR: R, frameTop: ft } = b;
   const N = 20;
   const ay = R * Math.cos(Math.PI / N);

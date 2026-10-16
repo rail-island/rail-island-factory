@@ -25,11 +25,6 @@ export class MeshBuilder extends MeshCore {
   toGroup(THREE: ThreeNamespace, name = "model"): InstanceType<ThreeNamespace["Group"]> {
     const root = new THREE.Group();
     root.name = name;
-    if (this.parts.length) {
-      for (const g of this.groups.values()) {
-        if (g.part.includes(-1)) throw new Error("a model with parts drew a triangle outside any part");
-      }
-    }
     const materials = [...this.groups.keys()].sort();
     const standard = materials.map((mat) => {
       const spec = this.palette[mat]!;
@@ -37,9 +32,8 @@ export class MeshBuilder extends MeshCore {
       m.name = mat;
       return m;
     });
-    const units = this.parts.length
-      ? this.parts.map((p, index) => ({ name: p.name, pivot: p.pivot, index }))
-      : [{ name, pivot: [0, 0, 0] as [number, number, number], index: -1 }];
+    // a rigid rail vehicle with bogies: its body's meshes on the root, a Group per bogie
+    const units = this.outputUnits(name);
     const holders: Array<InstanceType<ThreeNamespace["Group"]>> = [];
     for (const unit of units) {
       const holder = unit.index >= 0 ? new THREE.Group() : root;
@@ -49,14 +43,14 @@ export class MeshBuilder extends MeshCore {
         holder.position.set(at[0], at[1], at[2]);
         const parent = this.parts[unit.index]!.parent;
         (parent >= 0 ? holders[parent]! : root).add(holder);
-        holders.push(holder);
+        holders[unit.index] = holder;
       }
       materials.forEach((mat, m) => {
         const g = this.groups.get(mat)!;
         const pos: number[] = [];
         const nrm: number[] = [];
         for (let t = 0; t < g.part.length; t++) {
-          if (unit.index >= 0 && g.part[t] !== unit.index) continue;
+          if (g.part[t] !== unit.index && (unit.index >= 0 || units.length > 1)) continue;
           for (let k = 0; k < 9; k++) {
             pos.push(g.pos[t * 9 + k]! - unit.pivot[k % 3]!);
             nrm.push(g.nrm[t * 9 + k]!);
