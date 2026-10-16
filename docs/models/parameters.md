@@ -23,7 +23,7 @@ and `veh-cd-263` (`livery`, [loco-liveries.md](loco-liveries.md)), `veh-cd-110` 
 [cd-green-white.md](cd-green-white.md)), the Czech and Slovak coaches `veh-cd-y-coach`
 (`variant`: bcc, beer, bnb, wrrm; default bcc), `veh-zsr-coach` (`variant`: a, ab, b, bh, bds,
 bdmeer, wrrm, apee; default b) and `veh-uic-z-coach` (`variant`: firstClass, secondClass,
-restaurant; default secondClass; an `operator` parameter is planned - [czsk-coaches.md](czsk-coaches.md)), the three freight wagons with a
+restaurant; default secondClass; `operator`: cd, db, obb; default cd - [czsk-coaches.md](czsk-coaches.md)), the three freight wagons with a
 `cargo` (default empty; [wagons.md](wagons.md)), the Sqns container wagon (`cargo`: empty, maersk) and the
 Pao flat wagon (`cargo`: tubes, the default, or karosaB951), the Habis (`livery`: tw1, tw2), Faccs
 (`livery`: cd, viamont) and Falls (`livery`: cd, sd, viamont) wagons ([freight-wagons.md](freight-wagons.md)),
