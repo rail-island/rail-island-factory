@@ -23,6 +23,7 @@ function spinner<T extends MeshBuilder | ThreeMeshBuilder>(m: T): T {
       { node: "arm", path: "rotation", values: [...q(0), ...q(-Math.PI), ...q(-2 * Math.PI)] },
       { node: "arm", path: "translation", values: [0, 1, 0, 0, 1.5, 0, 0, 1, 0] },
     ],
+    drive: { drive: "time" },
   });
   return m;
 }
@@ -46,6 +47,24 @@ describe("animation clips", () => {
     expect(readAccessor(json, bin, a.samplers[1]!.output)).toEqual([0, 1, 0, 0, 1.5, 0, 0, 1, 0]);
   });
 
+  it("carry what plays each clip in the scene extras and the JS model's userData", () => {
+    const { json } = parseGlb(spinner(new MeshBuilder(PALETTE)).toGlb("t"));
+    expect((json as { scenes: Array<{ extras?: { clipDrives?: unknown } }> }).scenes[0]!.extras?.clipDrives).toEqual({ spin: { drive: "time" } });
+    const g = spinner(new ThreeMeshBuilder(PALETTE)).toGroup(THREE);
+    expect(g.userData.clipDrives).toEqual({ spin: { drive: "time" } });
+    const plain = new MeshBuilder(PALETTE);
+    plain.box("a", 0, 0, 1, 1, 0, 1);
+    expect((parseGlb(plain.toGlb("t")).json as { scenes: Array<{ extras?: unknown }> }).scenes[0]!.extras).toBeUndefined();
+  });
+
+  it("refuse a clip without a valid drive", () => {
+    const m = new MeshBuilder(PALETTE);
+    m.part("ok", [0, 0, 0], () => m.box("a", 3, 0, 1, 1, 0, 1));
+    const tracks = [{ node: "ok", path: "rotation" as const, values: [0, 0, 0, 1, 0, 0, 0, 1] }];
+    expect(() => m.animate({ name: "x", times: [0, 1], tracks, drive: { drive: "distance", speed: 0 } })).toThrow(/drive/);
+    expect(() => m.animate({ name: "x", times: [0, 1], tracks } as never)).toThrow(/drive/);
+  });
+
   it("leave a model without clips byte-identical in layout (no animations key)", () => {
     const m = new MeshBuilder(PALETTE);
     m.box("a", 0, 0, 1, 1, 0, 1);
@@ -56,10 +75,10 @@ describe("animation clips", () => {
     const m = new MeshBuilder(PALETTE);
     m.part("a b", [0, 0, 0], () => m.box("a", 0, 0, 1, 1, 0, 1));
     m.part("ok", [0, 0, 0], () => m.box("a", 3, 0, 1, 1, 0, 1));
-    expect(() => m.animate({ name: "x", times: [0, 1], tracks: [{ node: "nope", path: "translation", values: [0, 0, 0, 0, 0, 0] }] })).toThrow(/no part/);
-    expect(() => m.animate({ name: "x", times: [0, 1], tracks: [{ node: "a b", path: "translation", values: [0, 0, 0, 0, 0, 0] }] })).toThrow(/cannot bind/);
-    expect(() => m.animate({ name: "x", times: [0, 1], tracks: [{ node: "ok", path: "rotation", values: [0, 0, 0, 1] }] })).toThrow(/values/);
-    expect(() => m.animate({ name: "x", times: [0.5, 1], tracks: [] })).toThrow(/start at 0/);
+    expect(() => m.animate({ name: "x", times: [0, 1], tracks: [{ node: "nope", path: "translation", values: [0, 0, 0, 0, 0, 0] }] , drive: { drive: "time" } })).toThrow(/no part/);
+    expect(() => m.animate({ name: "x", times: [0, 1], tracks: [{ node: "a b", path: "translation", values: [0, 0, 0, 0, 0, 0] }] , drive: { drive: "time" } })).toThrow(/cannot bind/);
+    expect(() => m.animate({ name: "x", times: [0, 1], tracks: [{ node: "ok", path: "rotation", values: [0, 0, 0, 1] }] , drive: { drive: "time" } })).toThrow(/values/);
+    expect(() => m.animate({ name: "x", times: [0.5, 1], tracks: [] , drive: { drive: "time" } })).toThrow(/start at 0/);
   });
 
   it("become three.js clips binding the group's part nodes", () => {

@@ -92,11 +92,22 @@ export interface FountainWater {
   jets: WaterJet[];
 }
 
+/**
+ * What advances a clip in the consumer (docs/models/animation.md): `time` loops it
+ * at its own duration, whatever the model is doing (a wind turbine's rotor);
+ * `distance` ties it to how far the model travels - one loop per `speed` m/s times
+ * the clip's duration in metres, so it is played at `timeScale = speed / this.speed`
+ * (signed: backwards in reverse, still when the vehicle stands).
+ */
+export type ClipDrive = { drive: "time" } | { drive: "distance"; speed: number };
+
 /** A looping animation of a model's parts: shared sample times from 0, linear in between. */
 export interface AnimationClipSpec {
   name: string;
   times: number[];
   tracks: AnimationTrack[];
+  /** What plays it (see ClipDrive). */
+  drive: ClipDrive;
 }
 
 /** A regular n-gon of radius r about (cx, cz), first corner at angle `rot`. */
@@ -243,6 +254,7 @@ export class MeshCore {
     if (this.clips.some((c) => c.name === clip.name)) throw new Error(`animation "${clip.name}" added twice`);
     const t = clip.times;
     if (t.length < 2 || t[0] !== 0 || t.some((v, i) => i > 0 && v <= t[i - 1]!)) throw new Error(`animation "${clip.name}": times must start at 0 and rise`);
+    if (clip.drive?.drive !== "time" && !(clip.drive?.drive === "distance" && clip.drive.speed > 0)) throw new Error(`animation "${clip.name}": drive must be time, or distance with a positive speed`);
     for (const track of clip.tracks) {
       if (!this.parts.some((p) => p.name === track.node)) throw new Error(`animation "${clip.name}": no part "${track.node}"`);
       if (/[\s.:/\[\]]/.test(track.node)) throw new Error(`animated part "${track.node}" has a name three.js cannot bind`);
@@ -308,6 +320,18 @@ export class MeshCore {
   /** The animation clips added so far. */
   animations(): readonly AnimationClipSpec[] {
     return this.clips;
+  }
+
+  /**
+   * What plays each clip, by clip name: what the GLB's scene extras and the JS
+   * model's `userData` carry as `clipDrives`, since three.js keeps no extras on a
+   * clip. Null without clips, so a static model's output is unchanged.
+   */
+  clipDrives(): Record<string, ClipDrive> | null {
+    if (!this.clips.length) return null;
+    const out: Record<string, ClipDrive> = {};
+    for (const c of this.clips) out[c.name] = c.drive.drive === "time" ? { drive: "time" } : { drive: "distance", speed: c.drive.speed };
+    return out;
   }
 
   /** A part's translation within its parent's node: its pivot less the parent's. */
