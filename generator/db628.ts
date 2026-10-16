@@ -1,9 +1,11 @@
 // The DB 628, the two-car diesel railcar of the Deutsche Bundesbahn's branch
-// lines: one design `veh-db-628` that builds the 628.2 motor car, its cab at +X
-// and the short-coupled inner end at -X, in the mint-turquoise livery of the
-// 1990s (vlakosimdb db_628, the default) or DB Regio's traffic red (db_628vr).
-// vlakosimdb's two folders are one body and layout in two paints, so they are
-// the values of `livery`; it has no 928 driving trailer.
+// lines: one design `veh-db-628` whose `unit` builds the 628.2 motor car (the
+// default), its cab at +X and the short-coupled inner end at -X, or one of the
+// n-Wagen coaches that run with it in the game's sets (Bn, ABn and the BDnrf
+// driving trailer, dbNWagen.ts), in the mint-turquoise livery of the 1990s
+// (vlakosimdb db_628, db_*iv, the default) or DB Regio's traffic red (db_628vr,
+// db_*vr). vlakosimdb's two 628 folders are one body and layout in two paints,
+// so they are the values of `livery`; it has no 928 driving trailer.
 //
 // Reconstructed from the native vlakosimdb XML and BMPs in assets/db-628/native:
 // the XML `alongx` box section (rounded at the roof edge after the photographs),
@@ -18,13 +20,21 @@ import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign 
 import { block, side } from "./vehicleParts.ts";
 import { blockX, centreCoupler, DMU_CATALOG, enumParam, slopePanel, tractionNumber } from "./emuParts.ts";
 import { bOf, roofBox, sideBox, toBody, unitBogie, type PxBox, type SideMap } from "./unitParts.ts";
+import { nWagen, type NWagenLivery, type NWagenVariant } from "./dbNWagen.ts";
 
 export type Db628Livery = "mint" | "red";
+export type Db628Unit = "motorCar" | NWagenVariant;
 
 export const DB628_PARAMS: readonly ParamSpec[] = [
+  enumParam("unit", "Car", {
+    motorCar: "Motor car 628.2 (cab, short coupling)",
+    bn: "Bn coach (2nd class, n-Wagen)",
+    abn: "ABn coach (1st and 2nd class, n-Wagen)",
+    bdnrf: "BDnrf driving trailer (Karlsruher Kopf, luggage room, n-Wagen)",
+  }),
   enumParam("livery", "Livery", {
-    mint: "Mint turquoise and light grey (1990s, vlakosimdb db_628)",
-    red: "DB Regio traffic red (vlakosimdb db_628vr)",
+    mint: "Mint turquoise and light grey (1990s, vlakosimdb db_628, db_*iv)",
+    red: "DB Regio traffic red (vlakosimdb db_628vr, db_*vr)",
   }),
 ];
 
@@ -126,9 +136,15 @@ const DOORS: Array<{ door: PxBox; glass: PxBox[] }> = [
   { door: [205, 20, 216, 44], glass: [[207, 21, 214, 31], [207, 35.2, 214, 41]] },
 ];
 
-/** The DB 628.2 motor car in one of its liveries. */
+/** The n-Wagen paint of each 628 livery: the coaches' iv is the 628's mint, their vr its traffic red. */
+export const DB628_COACH_LIVERY: Record<Db628Livery, NWagenLivery> = { mint: "iv", red: "vr" };
+
+/** One car of the DB 628 set in one of its liveries: the 628.2 motor car or an n-Wagen coach. */
 export function db628(params?: ParamValues): MeshBuilder {
-  const livery = resolveParams(DB628_PARAMS, params).livery as Db628Livery;
+  const p = resolveParams(DB628_PARAMS, params);
+  const unit = p.unit as Db628Unit;
+  const livery = p.livery as Db628Livery;
+  if (unit !== "motorCar") return nWagen({ variant: unit, livery: DB628_COACH_LIVERY[livery] });
   const L = LIVERIES[livery];
   const c = new Coach({ ...PALETTE, ...L.palette }, DB628_LENGTH / 2);
   const m = c.m;
@@ -281,5 +297,5 @@ function innerEnd(c: Coach, v: Volume): void {
 }
 
 export const DB628_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-db-628", title: "DB 628", build: db628, params: DB628_PARAMS, catalog: DMU_CATALOG, references: "db-628" },
+  { id: "proc-vehicle-db-628", title: "DB 628", build: db628, params: DB628_PARAMS, catalog: DMU_CATALOG, references: ["db-628", "db-n-wagen"] },
 ];

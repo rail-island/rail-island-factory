@@ -53,6 +53,17 @@ describe('legacy references and procedural IDs',()=>{
   }
   expect(table.entries['moto-bus-kar-b961']!.params).toMatchObject({variant:'b961'});
  });
+ it('maps both DB 628 sets (the 628 and its n-Wagen coaches) onto the cars of the one DB 628 design',()=>{
+  const sets = {
+   mint: {'train-dmu-db-628':'motorCar','train-coach-db-bnvriv':'bn','train-coach-db-abnvriv':'abn','train-coach-db-bdnrfiv':'bdnrf'},
+   red: {'train-dmu-db-628vr':'motorCar','train-coach-db-bnvr':'bn','train-coach-db-abnvr':'abn','train-coach-db-bdnrf':'bdnrf'},
+  };
+  for (const [livery, cars] of Object.entries(sets))
+   for (const [id, unit] of Object.entries(cars)) {
+    expect(table.entries[id]!.modelId, id).toBe('proc-vehicle-db-628');
+    expect(table.entries[id]!.params, id).toEqual({unit, livery});
+   }
+ });
  it('keeps unknown uploads and unknown procedural IDs distinguishable from known legacy IDs',()=>{
   expect(resolveModelReference(table,models,'user-upload-id')).toBeUndefined();
   expect(resolveModelReference(table,models,'__proto__')).toBeUndefined();

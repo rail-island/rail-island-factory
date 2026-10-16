@@ -4,6 +4,7 @@
 import { describe, expect, it } from "vitest";
 import { paramCombinations, type ParamValues } from "../generator/design";
 import { DB628_BOGIES, DB628_DESIGNS, DB628_PARAMS, DB628_WHEELBASE, db628 } from "../generator/db628";
+import { nWagen } from "../generator/dbNWagen";
 import { MDMOT_DESIGNS, MDMOT_PARAMS, mavMdmot } from "../generator/mavMdmot";
 import { ICE1_DESIGNS, ICE1_PARAMS, ice1 } from "../generator/ice1";
 import { TGV_COACH_LENGTH, TGV_DESIGNS, TGV_END_LENGTH, TGV_PARAMS, TGV_POWER_LENGTH, tgv } from "../generator/tgv";
@@ -41,11 +42,17 @@ describe("the foreign multiple units", () => {
     expect(designs.map((d) => d.id)).toEqual(["proc-vehicle-db-628", "proc-vehicle-mav-mdmot", "proc-vehicle-ice-1", "proc-vehicle-tgv"]);
     for (const d of designs) {
       // DB 628 and MAV MDmot are diesel units, ICE 1 and TGV electric
-      expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "unit", traction: /^(db-628|mav-mdmot)$/.test(d.references!) ? "diesel" : "electric" });
-      expect(d.references).toMatch(/^(db-628|mav-mdmot|ice-1|tgv)$/);
+      const folder = [d.references!].flat()[0]!;
+      expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "unit", traction: /^(db-628|mav-mdmot)$/.test(folder) ? "diesel" : "electric" });
+      expect(folder).toMatch(/^(db-628|mav-mdmot|ice-1|tgv)$/);
     }
+    // the 628 set's n-Wagen coaches bring their own photographs and native textures
+    expect(DB628_DESIGNS[0]!.references).toEqual(["db-628", "db-n-wagen"]);
     const spec = (ps: typeof DB628_PARAMS) => ps.map((p) => [p.name, p.default, p.values.map((v) => v.value)]);
-    expect(spec(DB628_PARAMS)).toEqual([["livery", "mint", ["mint", "red"]]]);
+    expect(spec(DB628_PARAMS)).toEqual([
+      ["unit", "motorCar", ["motorCar", "bn", "abn", "bdnrf"]],
+      ["livery", "mint", ["mint", "red"]],
+    ]);
     expect(spec(MDMOT_PARAMS)).toEqual([["unit", "motorCar", ["motorCar", "trailerAx", "trailerBx", "drivingTrailer"]]]);
     expect(spec(ICE1_PARAMS)).toEqual([["unit", "powerCar", ["powerCar", "coach", "restaurant"]]]);
     expect(spec(TGV_PARAMS)).toEqual([
@@ -89,6 +96,16 @@ describe("the foreign multiple units", () => {
     expect(mats("mint").has("mint")).toBe(true);
     expect(mats("red").has("mint")).toBe(false);
     expect(mats("red").has("red")).toBe(true);
+  });
+
+  it("DB 628: the set's coaches are the n-Wagen in the matching paint (iv with mint, vr with red)", () => {
+    for (const unit of ["bn", "abn", "bdnrf"])
+      for (const [livery, paint] of [["mint", "iv"], ["red", "vr"]] as const) {
+        const glb = db628({ unit, livery }).toGlb("x");
+        expect(Buffer.from(glb).equals(Buffer.from(nWagen({ variant: unit, livery: paint }).toGlb("x"))), `${unit} ${livery}`).toBe(true);
+      }
+    expect(db628({ unit: "abn", livery: "mint" }).sourceTree("x", "x").materials).toContain("mint");
+    expect(db628({ unit: "abn", livery: "red" }).sourceTree("x", "x").materials).not.toContain("mint");
   });
 
   it("DB 628: running numbers with valid check digits", () => {

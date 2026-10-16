@@ -65,14 +65,13 @@ declaration order, the first the default unless noted.
 | `veh-cd-843` | `unit`: motorCar, drivingTrailer, trailer | [czech-dmus.md](czech-dmus.md) |
 | `veh-csd-m131` | `unit`: motorCar, trailer | [czech-dmus.md](czech-dmus.md) |
 | `veh-csd-m296` | `variant`: m296, cd853, cd854 | [czech-dmus.md](czech-dmus.md) |
-| `veh-db-628` | `livery`: mint, red | [foreign-units.md](foreign-units.md) |
+| `veh-db-628` | `unit`: motorCar, bn, abn, bdnrf; `livery`: mint, red | [foreign-units.md](foreign-units.md) |
 | `veh-mav-mdmot` | `unit`: motorCar, trailerAx, trailerBx, drivingTrailer | [foreign-units.md](foreign-units.md) |
 | `veh-ice-1` | `unit`: powerCar, coach, restaurant | [foreign-units.md](foreign-units.md) |
 | `veh-tgv` | `unit`: powerCar, endCoach, coach; `livery`: pse, atlantique | [foreign-units.md](foreign-units.md) |
 | `veh-cd-y-coach` | `variant`: bcc, beer, bnb, wrrm | [czsk-coaches.md](czsk-coaches.md) |
 | `veh-zsr-coach` | `variant`: a, ab, b, bh, bds, bdmeer, wrrm, apee (default b) | [czsk-coaches.md](czsk-coaches.md) |
 | `veh-uic-z-coach` | `variant`: firstClass, secondClass, restaurant (default secondClass); `operator`: cd, db, obb | [czsk-coaches.md](czsk-coaches.md) |
-| `veh-db-n-wagen` | `variant`: bn, abn, bdnrf; `livery`: vr, iv | [german-coaches.md](german-coaches.md) |
 | `veh-db-dosto` | `variant`: firstClass, secondClass, drivingTrailer (default secondClass) | [german-coaches.md](german-coaches.md) |
 | `veh-dr-sbahn-berlin` | `variant`: coach, drivingTrailer | [german-coaches.md](german-coaches.md) |
 

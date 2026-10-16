@@ -53,10 +53,11 @@ export interface ProceduralDesign {
   finishParams?: readonly string[];
   /**
    * The folder under assets/ holding the design's source images (photos, drawings,
-   * native textures). The build copies them to export/refs/<id>/ and the site
-   * shows them on the model page.
+   * native textures), or several folders when the design merges models with their
+   * own material. The build copies them to export/refs/<id>/ (a second or later
+   * folder's files under its own name) and the site shows them on the model page.
    */
-  references?: string;
+  references?: string | readonly string[];
   /** Catalog fields that replace the family's (a rail vehicle among the road vehicles). */
   catalog?: CatalogFields;
 }

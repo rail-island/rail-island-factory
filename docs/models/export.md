@@ -36,9 +36,12 @@ software rasterizer, the slow part - is re-rendered only when the GLB changed or
 the PNG is missing. A JS file is rewritten only when its text changed. A file of a design that no longer exists is deleted, so a
 dropped id cannot linger. A tree file is rewritten only when its text changed.
 **Source images.** A design names its folder under `assets/` with
-`references` (`generator/design.ts`; the vehicles set it). `generateReferences`
-copies every `.bmp`, `.gif`, `.jpg`/`.jpeg`, `.png`, `.svg` and `.webp` in that
-folder, at any depth, to `export/refs/<id>/<path>` - other files (`SOURCES.md`,
+`references` (`generator/design.ts`; the vehicles set it), or a list of folders
+when it merges models with their own material (the DB 628 and its n-Wagen
+coaches). `generateReferences` copies every `.bmp`, `.gif`, `.jpg`/`.jpeg`,
+`.png`, `.svg` and `.webp` in the folders, at any depth, to
+`export/refs/<id>/<path>` (a second or later folder's files to
+`export/refs/<id>/<folder>/<path>`) - other files (`SOURCES.md`,
 reference GLBs, XML, JSON) stay behind. A file is rewritten only when its bytes
 changed, and anything else under `export/refs/` is deleted.
 The JSON documents are rewritten every run and

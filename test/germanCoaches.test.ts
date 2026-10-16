@@ -8,6 +8,7 @@ import { proceduralId } from "../generator/modelId.ts";
 import { describe, expect, it } from "vitest";
 import { GERMAN_COACHES, GERMAN_TRANSFERS } from "../generator/germanCoaches";
 import { N_WAGEN_NUMBERS, N_WAGEN_PARAMS } from "../generator/dbNWagen";
+import { DB628_DESIGNS } from "../generator/db628";
 import { DOSTO_NUMBERS } from "../generator/dbDoubleDeck";
 import { DR_DOUBLE_DECK_NUMBERS } from "../generator/drDoubleDeck";
 import { noseTop } from "../generator/germanCoachParts";
@@ -20,7 +21,7 @@ import { DESIGNS } from "../generator/generate";
 import { isLeaf, type LeafNode, type TreeNode } from "../generator/sourceTree";
 
 const leaves = (n: TreeNode): LeafNode[] => (isLeaf(n) ? [n] : n.children.flatMap(leaves));
-const design = (id: string) => GERMAN_COACHES.find((d) => d.id === id)!;
+const design = (id: string) => [...GERMAN_COACHES, ...DB628_DESIGNS].find((d) => d.id === id)!;
 function build(id: string, params?: ParamValues) {
   const d = design(id);
   const mesh = d.build(params);
@@ -46,19 +47,21 @@ const MECHANICS: Record<string, { length: number; axles: number[]; wheel: number
 };
 
 describe("German coaches transferred from vlakosimdb", () => {
-  it("are three parametric rail coaches with their references, registered for the build and the comparison", () => {
-    expect(GERMAN_COACHES.map((d) => d.id)).toEqual(["proc-vehicle-db-n-wagen", "proc-vehicle-db-dosto", "proc-vehicle-dr-sbahn-berlin"]);
+  it("are two parametric rail coaches and the DB 628 set's n-Wagen, registered for the build and the comparison", () => {
+    expect(GERMAN_COACHES.map((d) => d.id)).toEqual(["proc-vehicle-db-dosto", "proc-vehicle-dr-sbahn-berlin"]);
     for (const d of GERMAN_COACHES) {
       expect(DESIGNS.get(proceduralId(d.id))).toBe(d);
       expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "coach" });
-      expect(d.references).toMatch(/^(db-n-wagen|db-dosto|dr-sbahn-berlin)$/);
+      expect(d.references).toMatch(/^(db-dosto|dr-sbahn-berlin)$/);
     }
-    expect(paramCombinations(design("proc-vehicle-db-n-wagen").params)).toHaveLength(6);
+    // the n-Wagen is no design of its own: the 628's coach cars, three per livery
+    expect(DESIGNS.has("proc-vehicle-db-n-wagen")).toBe(false);
+    expect(paramCombinations(design("proc-vehicle-db-628").params).filter((c) => c.unit !== "motorCar")).toHaveLength(6);
     expect(N_WAGEN_PARAMS.map((p) => [p.name, p.default])).toEqual([["variant", "bn"], ["livery", "vr"]]);
     expect(design("proc-vehicle-db-dosto").params!.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([["variant", "secondClass", ["firstClass", "secondClass", "drivingTrailer"]]]);
     expect(design("proc-vehicle-dr-sbahn-berlin").params!.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([["variant", "coach", ["coach", "drivingTrailer"]]]);
     for (const t of GERMAN_TRANSFERS) expect(ALL_TRANSFERS).toContain(t);
-    expect(() => design("proc-vehicle-db-n-wagen").build({ livery: "blue" })).toThrow();
+    expect(() => design("proc-vehicle-db-628").build({ unit: "bn", livery: "blue" })).toThrow();
   });
 
   it.each(GERMAN_TRANSFERS.map((t) => [t.key] as const))("%s matches the native BMP landmarks within their pixel tolerances", (key) => {
@@ -93,14 +96,14 @@ describe("German coaches transferred from vlakosimdb", () => {
   });
 
   it("n-Wagen: one 2.8 m body, the Bdnrf's Karlsruher Kopf sloping back from its 0.3 m tip; window counts by variant", () => {
-    const bn = build("proc-vehicle-db-n-wagen");
+    const bn = build("proc-vehicle-db-628", { unit: "bn", livery: "red" });
     const body = bounds(bn.nodes, /^body\/[a-z]+-band/);
     expect(body.max[2] - body.min[2]).toBeCloseTo(2.8, 3);
     expect(body.max[1]).toBeCloseTo(3.9, 3);
     const windows = (nodes: LeafNode[]) => new Set(nodes.filter((n) => /^body\/right-side\/window-\d+\/frame\//.test(n.id)).map((n) => n.id.split("/")[2])).size;
     expect(windows(bn.nodes)).toBe(14);
-    expect(windows(build("proc-vehicle-db-n-wagen", { variant: "abn" }).nodes)).toBe(13);
-    const cab = build("proc-vehicle-db-n-wagen", { variant: "bdnrf" });
+    expect(windows(build("proc-vehicle-db-628", { unit: "abn", livery: "red" }).nodes)).toBe(13);
+    const cab = build("proc-vehicle-db-628", { unit: "bdnrf", livery: "red" });
     expect(windows(cab.nodes)).toBe(11);
     // the windscreens lean back: their top edge is further from the tip than their foot
     const ws = bounds(cab.nodes, /^rear-end\/cab\/windscreen\/window-1\/frame\//);
@@ -114,8 +117,8 @@ describe("German coaches transferred from vlakosimdb", () => {
 
   it("n-Wagen: the liveries repaint one body", () => {
     for (const variant of ["bn", "abn", "bdnrf"]) {
-      const vr = build("proc-vehicle-db-n-wagen", { variant, livery: "vr" });
-      const iv = build("proc-vehicle-db-n-wagen", { variant, livery: "iv" });
+      const vr = build("proc-vehicle-db-628", { unit: variant, livery: "red" });
+      const iv = build("proc-vehicle-db-628", { unit: variant, livery: "mint" });
       const frames = (nodes: LeafNode[]) => nodes.filter((n) => /\/window-\d+\/frame\//.test(n.id)).map((n) => `${n.id} ${n.min!.map((x) => x.toFixed(3))}`);
       expect(frames(iv.nodes)).toEqual(frames(vr.nodes));
       const mats = (nodes: LeafNode[]) => new Set(nodes.map((n) => n.material));

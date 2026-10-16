@@ -1,20 +1,26 @@
 # German coaches
 
-**Covers** - the three German passenger coach designs transferred from vlakosimdb: the DB n-Wagen (`veh-db-n-wagen`, six vlakosimdb coaches as `variant` x `livery`), the DB Regio double-deck coach (`veh-db-dosto`) and the DR double-deck coach in the Berlin livery (`veh-dr-sbahn-berlin`); their sources, builders, choices, the native comparison and tests.
-**Code** - `generator/germanCoaches.ts`, `generator/dbNWagen.ts`, `generator/dbDoubleDeck.ts`, `generator/drDoubleDeck.ts`, `generator/germanCoachParts.ts`, `generator/csdCoachParts.ts`, `test/germanCoaches.test.ts`, `assets/db-n-wagen/`, `assets/db-dosto/`, `assets/dr-sbahn-berlin/`
-**See also** - [csd-coaches.md](csd-coaches.md) (the shared `Coach` builder, coordinates, the comparison method), [bmo-double-deck.md](bmo-double-deck.md) (the CSD member of the Goerlitz double-deck family), [parameters.md](parameters.md), [vehicles.md](vehicles.md), [the vlakosimdb-transfer skill](../../.agents/skills/vlakosimdb-transfer/SKILL.md)
+**Covers** - the German passenger coaches transferred from vlakosimdb: the DB n-Wagen (six vlakosimdb coaches, built as the `unit` x `livery` coach cars of `veh-db-628`), the DB Regio double-deck coach (`veh-db-dosto`) and the DR double-deck coach in the Berlin livery (`veh-dr-sbahn-berlin`); their sources, builders, choices, the native comparison and tests.
+**Code** - `generator/germanCoaches.ts`, `generator/dbNWagen.ts`, `generator/db628.ts` (the n-Wagen's design), `generator/dbDoubleDeck.ts`, `generator/drDoubleDeck.ts`, `generator/germanCoachParts.ts`, `generator/csdCoachParts.ts`, `test/germanCoaches.test.ts`, `assets/db-n-wagen/`, `assets/db-dosto/`, `assets/dr-sbahn-berlin/`
+**See also** - [foreign-units.md](foreign-units.md) (the DB 628 design the n-Wagen belong to), [csd-coaches.md](csd-coaches.md) (the shared `Coach` builder, coordinates, the comparison method), [bmo-double-deck.md](bmo-double-deck.md) (the CSD member of the Goerlitz double-deck family), [parameters.md](parameters.md), [vehicles.md](vehicles.md), [the vlakosimdb-transfer skill](../../.agents/skills/vlakosimdb-transfer/SKILL.md)
 
 ## The designs
 
-All three are rigid (one GLB node), `category: "Rail vehicles"`, `group: "coach"`
-(`COACH_CATALOG`), registered as one family in `generate.ts` (`GERMAN_COACHES`), and
-far inside the coach budget (about 6,700 to 7,500 triangles). The source revision is
+All three are rigid (one GLB node) and far inside the coach budget (about 6,700
+to 7,500 triangles). The DB
+Regio and DR double-deck coaches are `category: "Rail vehicles"`, `group: "coach"`
+(`COACH_CATALOG`), registered as one family in `generate.ts` (`GERMAN_COACHES`).
+The n-Wagen is no design of its own: the game runs its six coaches as the DB 628's
+sets (the mint 628 with the iv coaches, the red 628vr with the vr ones), so
+`dbNWagen.ts` builds them as the coach cars of `veh-db-628` (`unit` bn, abn, bdnrf;
+the 628's `livery` mint paints them iv, red paints them vr), filed with the 628 as
+a diesel unit ([foreign-units.md](foreign-units.md)). The source revision is
 vlakosimdb `b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f`; all eleven vehicles are by
 Karola Meyer.
 
 | id | title | parameters (vlakosimdb) | over buffers | running gear |
 |---|---|---|---|---|
-| `veh-db-n-wagen` | DB n-Wagen (Silberling) | `variant`: `bn` (default; db_bnvr, db_bnvriv), `abn` (db_abnvr, db_abnvriv), `bdnrf` (db_bdnrf, db_bdnrfiv); `livery`: `vr` (default, verkehrsrot), `iv` (light grey, mint turquoise band) | 26.4 m | bogies 19.0 m apart, 2.5 m wheelbase, 950 mm wheels |
+| `veh-db-628` (the coach cars) | DB 628 | `unit`: `bn` (db_bnvr, db_bnvriv), `abn` (db_abnvr, db_abnvriv), `bdnrf` (db_bdnrf, db_bdnrfiv); `livery`: `red` (verkehrsrot, the n-Wagen's vr), `mint` (default; light grey, mint turquoise band, the n-Wagen's iv) | 26.4 m | bogies 19.0 m apart, 2.5 m wheelbase, 950 mm wheels |
 | `veh-db-dosto` | DB Regio Double-Deck Coach | `variant`: `firstClass` (db_ds_re1), `secondClass` (default; db_ds_re2), `drivingTrailer` (db_ds_re2_s) | 26.8 m (driving trailer 27.2 m) | bogies 20.0 m apart, 2.5 m wheelbase, 920 mm wheels |
 | `veh-dr-sbahn-berlin` | DR Double-Deck Coach (Berlin S-Bahn livery) | `variant`: `coach` (default; dr_sds_b), `drivingTrailer` (dr_sds_s, the DBmq) | 27.0 m | bogies 20.0 m apart, 2.5 m wheelbase, 900 mm wheels |
 

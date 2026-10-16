@@ -1,7 +1,7 @@
 # Foreign multiple units
 
-**Covers** - the parametric `veh-db-628` (DB 628, two liveries), `veh-mav-mdmot` (MAV MDmot, four cars), `veh-ice-1` (ICE 1, three cars) and `veh-tgv` (TGV, three cars in two liveries) from vlakosimdb: what each parameter value builds, how the cars couple (the TGV's shared Jacobs bogies), the scales from the XML to the published dimensions, the shared parts, the measured comparison and the tests.
-**Code** - `generator/db628.ts`, `generator/mavMdmot.ts`, `generator/ice1.ts`, `generator/tgv.ts`, `generator/unitParts.ts`, `generator/unitComparison.ts`, `generator/unitReport.ts`, `generator/unitViews.ts`, `generator/csdCoachParts.ts` (the body builder), `generator/emuParts.ts` (pantograph, centre coupler, sloped panels), `test/foreignUnits.test.ts`, `assets/db-628/`, `assets/mav-mdmot/`, `assets/ice-1/`, `assets/tgv/`
+**Covers** - the parametric `veh-db-628` (DB 628: the motor car and the set's three n-Wagen coaches, two liveries), `veh-mav-mdmot` (MAV MDmot, four cars), `veh-ice-1` (ICE 1, three cars) and `veh-tgv` (TGV, three cars in two liveries) from vlakosimdb: what each parameter value builds, how the cars couple (the TGV's shared Jacobs bogies), the scales from the XML to the published dimensions, the shared parts, the measured comparison and the tests.
+**Code** - `generator/db628.ts`, `generator/dbNWagen.ts` (the 628's coach cars), `generator/mavMdmot.ts`, `generator/ice1.ts`, `generator/tgv.ts`, `generator/unitParts.ts`, `generator/unitComparison.ts`, `generator/unitReport.ts`, `generator/unitViews.ts`, `generator/csdCoachParts.ts` (the body builder), `generator/emuParts.ts` (pantograph, centre coupler, sloped panels), `test/foreignUnits.test.ts`, `assets/db-628/`, `assets/mav-mdmot/`, `assets/ice-1/`, `assets/tgv/`
 **See also** - [czech-emus.md](czech-emus.md) (the same method for the CD 471 and CD 680), [vehicles.md](vehicles.md), [parameters.md](parameters.md), [csd-coaches.md](csd-coaches.md) (the coach builder and the comparison method), [DB 628 sources](../../assets/db-628/SOURCES.md), [MDmot sources](../../assets/mav-mdmot/SOURCES.md), [ICE 1 sources](../../assets/ice-1/SOURCES.md), [TGV sources](../../assets/tgv/SOURCES.md)
 
 ## The designs
@@ -14,8 +14,12 @@ couple the cars of a set in any order and turn a car to face the other way.
 
 | design | parameter | value | vlakosimdb | car |
 |---|---|---|---|---|
-| `veh-db-628` "DB 628" | `livery` | `mint` (default) | dmu/db_628 | the 628.2 motor car in mint turquoise, pale blue and light grey (DB, 1990s), 628 289-1 |
-| | | `red` | dmu/db_628vr | the same car in DB Regio traffic red with the first-class line, 628 305-5 |
+| `veh-db-628` "DB 628" | `unit` | `motorCar` (default) | dmu/db_628, db_628vr | the 628.2 motor car: cab at +X, the short coupling at -X |
+| | | `bn` | coach/db_bnvriv, db_bnvr | n-Wagen Bn, 2nd class ([german-coaches.md](german-coaches.md)) |
+| | | `abn` | coach/db_abnvriv, db_abnvr | n-Wagen ABn, 1st and 2nd class |
+| | | `bdnrf` | coach/db_bdnrfiv, db_bdnrf | n-Wagen BDnrf driving trailer, the Karlsruher Kopf at -X |
+| | `livery` | `mint` (default) | db_628, db_*iv | mint turquoise, pale blue and light grey (DB, 1990s); the motor car 628 289-1 |
+| | | `red` | db_628vr, db_*vr | DB Regio traffic red; the motor car 628 305-5 with the first-class line |
 | `veh-mav-mdmot` "MAV MDmot" | `unit` | `motorCar` (default) | dmu/mav_mdmot | the short twin-cab baggage motor car MDmot, radiator hump, machine-room windows and grilles |
 | | | `trailerAx` | dmu/mav_ax | first-class trailer Ax |
 | | | `trailerBx` | dmu/mav_bx | second-class trailer Bx (its first window frosted) |
@@ -32,7 +36,13 @@ couple the cars of a set in any order and turn a car to face the other way.
 `db_628vr` is not the 928 driving trailer: its XML and BMPs repeat the 628 motor
 car's cab, doors and windows in the red paint (its plan runs to 25 m but its
 elevation stops at the same 22.1 m), so it is a `livery`. vlakosimdb has no 928;
-the set's other half is not built. The MDmot class name is MAV's own (the cars
+the set's other half is not built. The game instead runs each 628 with three
+n-Wagen coaches in its paint (the webapp's packages: the mint 628 with the iv Bn,
+ABn and BDnrf, the 628vr with the vr ones), so those coaches are the design's other
+`unit` values: `db628()` hands them to `nWagen()` (dbNWagen.ts), the 628's `mint`
+painting them iv and `red` vr. Their geometry, sources and comparison are in
+[german-coaches.md](german-coaches.md); the design's references are both
+`assets/db-628/` and `assets/db-n-wagen/`. The MDmot class name is MAV's own (the cars
 were delivered as MDa); the trailers keep their MAV class letters as values.
 
 The archived Eurostar and Shinkansen (`train-emu-eurostar-*`,

@@ -329,7 +329,8 @@ function listFiles(dir: string): string[] {
 
 /**
  * Copies each design's source images (assets/<references>/, any depth, the
- * REFERENCE_EXTENSIONS) to `dir`/refs/<id>/, rewriting a file only when its
+ * REFERENCE_EXTENSIONS; a second or later folder's files under <folder>/) to
+ * `dir`/refs/<id>/, rewriting a file only when its
  * bytes changed, and removes every other file under `dir`/refs. Returns each
  * design's images in name order; a design without references gets none.
  */
@@ -343,11 +344,13 @@ export function generateReferences(
   const keep = new Set<string>();
   for (const design of designs) {
     const images: ReferenceImage[] = [];
-    if (design.references) {
-      const src = path.join(assetsDir, design.references);
-      for (const name of listFiles(src)) {
+    const folders = typeof design.references === "string" ? [design.references] : (design.references ?? []);
+    for (const [k, folder] of folders.entries()) {
+      const src = path.join(assetsDir, folder);
+      for (const file of listFiles(src)) {
+        const name = k === 0 ? file : `${folder}/${file}`;
         if (!REFERENCE_EXTENSIONS.some((ext) => name.toLowerCase().endsWith(ext))) continue;
-        const bytes = fs.readFileSync(path.join(src, name));
+        const bytes = fs.readFileSync(path.join(src, file));
         const rel = `${design.id}/${name}`;
         const target = path.join(refsDir, rel);
         fs.mkdirSync(path.dirname(target), { recursive: true });

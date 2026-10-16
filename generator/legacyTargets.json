@@ -692,26 +692,26 @@
     "quality": "reproduction"
   },
   "train-coach-db-bnvr": {
-    "designId": "veh-db-n-wagen",
+    "designId": "veh-db-628",
     "params": {
-      "variant": "bn",
-      "livery": "vr"
+      "unit": "bn",
+      "livery": "red"
     },
     "quality": "reproduction"
   },
   "train-coach-db-abnvr": {
-    "designId": "veh-db-n-wagen",
+    "designId": "veh-db-628",
     "params": {
-      "variant": "abn",
-      "livery": "vr"
+      "unit": "abn",
+      "livery": "red"
     },
     "quality": "reproduction"
   },
   "train-coach-db-bdnrf": {
-    "designId": "veh-db-n-wagen",
+    "designId": "veh-db-628",
     "params": {
-      "variant": "bdnrf",
-      "livery": "vr"
+      "unit": "bdnrf",
+      "livery": "red"
     },
     "quality": "reproduction"
   },
@@ -877,7 +877,10 @@
   },
   "train-dmu-db-628": {
     "designId": "veh-db-628",
-    "params": {},
+    "params": {
+      "unit": "motorCar",
+      "livery": "mint"
+    },
     "quality": "reproduction"
   },
   "train-dmu-mav-mdmot": {
@@ -2466,26 +2469,26 @@
     "quality": "reproduction"
   },
   "train-coach-db-abnvriv": {
-    "designId": "veh-db-n-wagen",
+    "designId": "veh-db-628",
     "params": {
-      "variant": "abn",
-      "livery": "iv"
+      "unit": "abn",
+      "livery": "mint"
     },
     "quality": "reproduction"
   },
   "train-coach-db-bdnrfiv": {
-    "designId": "veh-db-n-wagen",
+    "designId": "veh-db-628",
     "params": {
-      "variant": "bdnrf",
-      "livery": "iv"
+      "unit": "bdnrf",
+      "livery": "mint"
     },
     "quality": "reproduction"
   },
   "train-coach-db-bnvriv": {
-    "designId": "veh-db-n-wagen",
+    "designId": "veh-db-628",
     "params": {
-      "variant": "bn",
-      "livery": "iv"
+      "unit": "bn",
+      "livery": "mint"
     },
     "quality": "reproduction"
   },
@@ -2570,6 +2573,7 @@
   "train-dmu-db-628vr": {
     "designId": "veh-db-628",
     "params": {
+      "unit": "motorCar",
       "livery": "red"
     },
     "quality": "reproduction"

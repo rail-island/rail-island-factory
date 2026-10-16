@@ -15,6 +15,7 @@ import { FREIGHT_WAGONS } from "./freightWagons.ts";
 import { FREIGHT_TRANSFERS } from "./freightTransfers.ts";
 import { CZSK_COACHES, CZSK_TRANSFERS } from "./czskCoaches.ts";
 import { GERMAN_COACHES, GERMAN_TRANSFERS } from "./germanCoaches.ts";
+import { DB628_DESIGNS } from "./db628.ts";
 
 /** A coach design: id, title, builder, parameters and its reference folder (assets/<folder>/). */
 export interface CoachDesign {
@@ -105,7 +106,7 @@ export const COACH_TRANSFERS: readonly CoachTransfer[] = [
 /** Every transferred vlakosimdb vehicle with a measured comparison: the coaches, then the freight wagons (wagonTransfers.ts). */
 export const ALL_TRANSFERS: readonly CoachTransfer[] = [...COACH_TRANSFERS, ...WAGON_TRANSFERS, ...FREIGHT_TRANSFERS, ...CZSK_TRANSFERS, ...GERMAN_TRANSFERS];
 
-/** The builder of a transfer's design. */
+/** The builder of a transfer's design (the n-Wagen are cars of the DB 628 design). */
 export function transferBuild(t: CoachTransfer): MeshBuilder {
-  return [...COACH_DESIGNS, ...WAGON_DESIGNS, ...FREIGHT_WAGONS, ...CZSK_COACHES, ...GERMAN_COACHES].find((c) => c.id === t.id)!.build(t.params);
+  return [...COACH_DESIGNS, ...WAGON_DESIGNS, ...FREIGHT_WAGONS, ...CZSK_COACHES, ...GERMAN_COACHES, ...DB628_DESIGNS].find((c) => c.id === t.id)!.build(t.params);
 }
