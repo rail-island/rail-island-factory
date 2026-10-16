@@ -9,7 +9,7 @@ export interface LegacyModelEntry {
   sourceDefaultScale:number;
   archived:boolean;
   quality:string;
-  scaleAxis:'height'|'length'|'game';
+  scaleAxis:'height'|'footprint'|'length'|'game';
   sourceSize:[number,number,number];
   targetSize:[number,number,number];
   reason?:string;

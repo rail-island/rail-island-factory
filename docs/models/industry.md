@@ -42,8 +42,9 @@ structure in the factory's source tree. Geometry is shared by GLB and standalone
 JS exports; only default variants have static thumbnails and GLBs.
 
 The turbine's rotor node is retained and a six-second looping GLB animation turns
-it. The pumpjack is static. Smoke/steam emitters are not part of the factory's
-current export schema and are not copied from the old geometry's coordinates.
+it. The pumpjack is static. Every chimney, cooling tower and flare stack carries its
+own emitter where it is drawn ([emitters.md](emitters.md)); nothing is copied from
+the old geometry's coordinates.
 
 ## Future game import and saved maps
 
@@ -55,7 +56,8 @@ removed or renamed anything in the webapp. The existing game IDs remain intact.
 When importing separately, retain legacy saved-map IDs through aliases or an
 explicit migration. Do not simply overwrite old GLBs: these designs use metres,
 new origins/footprints and defaultScale 1, unlike the heterogeneous old meshes.
-Recompute old placement scales, smoke/steam outlets and collision footprints.
+Recompute old placement scales and collision footprints; smoke/steam outlets come
+from the emitters.
 The old turbine spin metadata must not run simultaneously with the new animation.
 The table consolidates visual types rather than promising identical dimensions.
 

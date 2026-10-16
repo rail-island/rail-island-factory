@@ -53,6 +53,7 @@
 | [models/ships.md](models/ships.md) | the cruise ferry, the hydrofoil and the passenger ferry, their waterlines |
 | [models/cable-cabins.md](models/cable-cabins.md) | the aerial tramway car and the small gondola, their rope and sill datums |
 | [models/trucks.md](models/trucks.md) | the cistern semi-truck, the concrete mixer and the reefer semi-truck |
+| [models/emitters.md](models/emitters.md) | where models smoke, steam and flare: `emit`, the exported emitters, who gives them off |
 | [models/js-format.md](models/js-format.md) | the standalone JS model (`export/js/<id>.js`, `build(THREE)`), how it is bundled, the sizes |
 | [models/source-tree.md](models/source-tree.md) | the procedural source tree: scopes, `export/tree/<id>.json`, highlight and picking |
 | [models/export.md](models/export.md) | the export folder: GLBs, thumbnails, `skyscrapers.meta.json`, `village.meta.json`, `vehicles.meta.json`, `catalog.json` |

@@ -136,6 +136,7 @@ function body(m: MeshBuilder, l: Cd704Livery): void {
         numberText(m, "digits", at, n, l.number, 0, 1.47, 0.12, 0.024, e > 0);
       });
     });
+  m.emit("smoke", [-2.0, 2.85, 0.35], 0.09);
   m.scope("exhaust", () => m.prism("exhaust", ngon(10, 0.09, 0, -2.0, 0.35), 2.55, 2.85));
 }
 

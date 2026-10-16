@@ -33,10 +33,23 @@ export function buildLegacyMapping(designs: ReadonlyMap<string, ProceduralDesign
     const before = axis === 'height' ? source.sizeY : source.sizeX;
     const after = axis === 'height' ? size[1]! : size[Math.abs(design.catalog?.yaw ?? 0) % 180 === 90 ? 2 : 0]!;
     if (!(before > 0 && after > 0)) throw new Error(`Invalid bounds for ${source.id}`);
+    // A building keeps its height unless that would give it a bigger plan than the
+    // old model's: a saved map's footprint, blocking and neighbours are the old
+    // model's, so the plan area is capped there (scale^2 * target area <= source
+    // area) and the building comes out lower instead.
+    let scale = axis === 'game' ? 1 : before / after;
+    let scaleAxis: 'height' | 'length' | 'game' | 'footprint' = axis;
+    if (axis === 'height') {
+      const fit = Math.sqrt((source.sizeX * source.sizeZ) / (size[0]! * size[2]!));
+      if (fit < scale) {
+        scale = fit;
+        scaleAxis = 'footprint';
+      }
+    }
     entries[source.id] = {
-      modelId, params, scale: axis === 'game' ? 1 : before / after,
+      modelId, params, scale,
       sourceDefaultScale: source.defaultScale ?? 1,
-      archived: source.archived, quality: target.quality, scaleAxis: axis,
+      archived: source.archived, quality: target.quality, scaleAxis,
       sourceSize: [source.sizeX,source.sizeY,source.sizeZ], targetSize: size as [number,number,number],
       ...(target.reason ? { reason:target.reason } : {}),
     };

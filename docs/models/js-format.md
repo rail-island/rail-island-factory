@@ -31,6 +31,8 @@ scene.add(build(THREE)); // a THREE.Group named after the model id
 - **The rig.** A rigged vehicle's group carries `userData.rig`, and its module also exports `pose`,
   `renderJoint`, `steerAngles`, `steerLock` and `jointTriangles`: the code that turns its wheels, bends its
   sections and re-draws its joints ([vehicle-rig.md](vehicle-rig.md)).
+- **Emitters.** A model that smokes, steams or flares carries `userData.emitters`, the mouths of its
+  stacks for the parameters it was built with ([emitters.md](emitters.md)).
 - **Animations.** The group's `animations` holds the GLB's clips as `THREE.AnimationClip`s (a steam
   locomotive's `running`, [animation.md](animation.md)); an animated model's namespace also needs
   `AnimationClip`, `QuaternionKeyframeTrack` and `VectorKeyframeTrack`.

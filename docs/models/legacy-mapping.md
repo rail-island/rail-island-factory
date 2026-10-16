@@ -41,7 +41,9 @@ that unit; old placement factors such as 1.88 are not baked into the new geometr
 except the Eiffel Tower's explicit 0.55 placement preference; its geometry is still
 330 m high. The game owns sizing for road/rail vehicles and cable cabins, which have
 no exported defaultScale. Native vehicle orientation remains explicit in `yaw`
-where applicable, in degrees, using the existing game's convention.
+where applicable, in degrees, using the existing game's convention. A cable cabin
+runs along X in the game; the aerial tramway car is modelled long along Z and so
+carries `yaw: 90`, as the old model did.
 
 ## Export and runtime
 
@@ -53,13 +55,18 @@ The build adds two standalone files:
 
 Each entry includes `modelId`, complete `params`, `scale`, `sourceDefaultScale`,
 `archived`, `quality`, `scaleAxis`, and the source/target native dimensions.
-For a building, `scale = sourceHeight / targetHeight`. For an aircraft or ship,
+For a building, `scale = sourceHeight / targetHeight` (`scaleAxis = "height"`),
+unless that gives the building a bigger plan than the old model's: then
+`scale = sqrt(sourceW * sourceD / (targetW * targetD))`, so the plan area equals the
+old one and the building comes out lower (`scaleAxis = "footprint"`). A saved map
+keeps the old model's footprint and blocking, so a larger plan would spill into its
+neighbours. For an aircraft or ship,
 `scale = sourceBuiltLength / targetLength` along its yaw-adjusted longitudinal axis.
 For all other vehicles `scale = 1` and `scaleAxis = "game"`.
 
 Uniform scaling cannot retain every dimension when substituting a differently
-proportioned model. Buildings preserve height, aircraft and ships preserve length;
-width/depth can change. Both bounding boxes are included for review. This is an
+proportioned model. Buildings preserve height up to the old plan area, aircraft and
+ships preserve length; width/depth can change. Both bounding boxes are included for review. This is an
 explicit approximation, not an anisotropic deformation of a model.
 
 ```js

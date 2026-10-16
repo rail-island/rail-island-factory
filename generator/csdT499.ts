@@ -95,6 +95,7 @@ function roof(m: MeshBuilder): void {
   m.scope("fans", () => {
     for (const x of [3.2, 4.3, 13.2, 14.3]) roofFan(m, X(x), 0, 4.27, 0.38);
   });
+  m.emit("smoke", [(X(8.3) + X(9.2)) / 2, 4.4, 0], 0.3);
   m.scope("exhaust", () => block(m, "exhaust", X(8.3), X(9.2), 4.26, 4.4, -0.3, 0.3));
   horn(m, 1, X(15.8), 0.3, 4.2);
   horn(m, -1, X(1.7), -0.3, 4.2);

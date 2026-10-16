@@ -16,6 +16,28 @@ describe('legacy references and procedural IDs',()=>{
   expect(sources.filter(s=>s.archived)).toHaveLength(77);
   for(const s of sources){const e=table.entries[s.id]!;expect(e.archived).toBe(s.archived);expect(models.has(e.modelId)).toBe(true);expect(isProceduralId(e.modelId)).toBe(true);expect(Number.isFinite(e.scale)&&e.scale>0).toBe(true);}
  });
+ it('never gives an old building a bigger plan than the old model had',()=>{
+  // A saved map keeps the old model's footprint and blocking, so a mapped building
+  // whose plan grew spilled into its neighbours (85 of 177 did, ind-building-n 20x).
+  for(const s of sources.filter(s=>s.kind==='building')){
+   const e=table.entries[s.id]!;
+   const area=e.targetSize[0]*e.scale*e.targetSize[2]*e.scale;
+   expect(area,s.id).toBeLessThanOrEqual(s.sizeX*s.sizeZ*(1+1e-9));
+   if(e.scaleAxis==='height') expect(e.scale*e.targetSize[1]).toBeCloseTo(s.sizeY,6);
+   else {expect(e.scaleAxis,s.id).toBe('footprint');expect(area/(s.sizeX*s.sizeZ)).toBeCloseTo(1,9);expect(e.scale*e.targetSize[1]).toBeLessThan(s.sizeY);}
+  }
+  expect(table.entries['ind-building-n']!.scaleAxis).toBe('footprint');
+ });
+ it('turns a cable cabin so it runs the way the old one did',()=>{
+  // The tramway car is modelled long along Z; the game runs a cabin along X, as the
+  // old cablecar-cabin (9.33 x 2.97 in plan) did.
+  for(const s of sources.filter(s=>s.category==='cablecar')){
+   const e=table.entries[s.id]!;const yaw=models.get(e.modelId)!.yaw??0;
+   const quarter=Math.abs(yaw)%180===90;
+   const [tx,,tz]=e.targetSize;const [x,z]=quarter?[tz,tx]:[tx,tz];
+   expect(x>=z,s.id).toBe(s.sizeX>=s.sizeZ);
+  }
+ });
  it('has no ambiguity between old tower/industry GLBs and new procedures',()=>{
   expect(isProceduralId('tower-eiffel')).toBe(false);
   expect(isProceduralId('chemical-factory')).toBe(false);

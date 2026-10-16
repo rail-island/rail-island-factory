@@ -496,7 +496,10 @@ function cfFunnel(m: MeshBuilder): void {
     for (const [mat, y0, y1] of bands) m.loft(mat, ring(y0), y0, ring(y1), y1, mat === "blackTrim");
   });
   m.scope("exhaust pipes", () => {
-    for (const z of [-0.7, 0.7]) m.prism("blackTrim", ngon(10, 0.42, 0, -24.4, z), 39.8, 41.3);
+    for (const z of [-0.7, 0.7]) {
+      m.emit("smoke", [-24.4, 41.3, z], 0.42);
+      m.prism("blackTrim", ngon(10, 0.42, 0, -24.4, z), 39.8, 41.3);
+    }
   });
   m.scope("emblem", () => {
     // a red diamond outline on the white band, both sides
@@ -996,6 +999,7 @@ export function passengerFerry(): MeshBuilder {
         for (const z of [-11, -9.5]) spindle(m, "lakeWhite", "z", side * 2.55, 7.95, [[z - 0.55, 0.06, 0.06], [z - 0.5, 0.33, 0.33], [z + 0.5, 0.33, 0.33], [z + 0.55, 0.06, 0.06]], 10);
       }
     });
+    m.emit("smoke", [0, 10.0, -8.0], 0.25);
     m.scope("exhaust stack", () => m.prism("lakeSteel", ngon(10, 0.25, 0, 0, -8.0), 7.6, 10.0));
   });
 

@@ -578,6 +578,7 @@ export function facePlate(m: MeshBuilder, e: number, face: number, text: string,
 
 /** An exhaust stack: a short rectangular or round chimney on the roof at (x, z). */
 export function exhaust(m: MeshBuilder, x: number, z: number, y0: number, y1: number, w: number, d: number): void {
+  m.emit("smoke", [x, y1, z], Math.min(w, d) / 2);
   m.scope("exhaust", () => {
     block(m, "exhaust", x - w / 2, x + w / 2, y0, y1, z - d / 2, z + d / 2);
   });
