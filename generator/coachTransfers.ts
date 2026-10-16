@@ -2,7 +2,7 @@
 // (csdCoachComparison.ts, csdCoachReport.ts): the CSD coaches (csdCoaches.ts),
 // the Bmo double-deck coach in its four liveries (bmoCoach.ts) and the CD green
 // and white coaches (cdGreenWhiteCoach.ts); ALL_TRANSFERS adds the freight
-// wagons (wagonTransfers.ts). See docs/models/csd-coaches.md.
+// wagons (wagonTransfers.ts, freightTransfers.ts). See docs/models/csd-coaches.md.
 
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamSpec, ParamValues } from "./design.ts";
@@ -11,6 +11,8 @@ import { BMO_PARAMS, bmoCoach } from "./bmoCoach.ts";
 import { GREEN_WHITE_PARAMS, cdGreenWhiteCoach } from "./cdGreenWhiteCoach.ts";
 import { WAGON_DESIGNS } from "./wagons.ts";
 import { WAGON_TRANSFERS } from "./wagonTransfers.ts";
+import { FREIGHT_WAGONS } from "./freightWagons.ts";
+import { FREIGHT_TRANSFERS } from "./freightTransfers.ts";
 
 /** A coach design: id, title, builder, parameters and its reference folder (assets/<folder>/). */
 export interface CoachDesign {
@@ -97,9 +99,9 @@ export const COACH_TRANSFERS: readonly CoachTransfer[] = [
 ];
 
 /** Every transferred vlakosimdb vehicle with a measured comparison: the coaches, then the freight wagons (wagonTransfers.ts). */
-export const ALL_TRANSFERS: readonly CoachTransfer[] = [...COACH_TRANSFERS, ...WAGON_TRANSFERS];
+export const ALL_TRANSFERS: readonly CoachTransfer[] = [...COACH_TRANSFERS, ...WAGON_TRANSFERS, ...FREIGHT_TRANSFERS];
 
 /** The builder of a transfer's design. */
 export function transferBuild(t: CoachTransfer): MeshBuilder {
-  return [...COACH_DESIGNS, ...WAGON_DESIGNS].find((c) => c.id === t.id)!.build(t.params);
+  return [...COACH_DESIGNS, ...WAGON_DESIGNS, ...FREIGHT_WAGONS].find((c) => c.id === t.id)!.build(t.params);
 }

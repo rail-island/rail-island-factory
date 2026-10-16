@@ -1,0 +1,240 @@
+{
+ "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/truck/n_sqns-full#1/model",
+ "pixelMetres": 0.1,
+ "convention": "Pixel edges [left, top, right, bottom] on the native BMP; origin top left, x right, y down.",
+ "annotations": [
+  {
+   "id": "R01",
+   "view": "z_dec",
+   "side": "right",
+   "element": "side beam with end beams",
+   "box": [
+    5,
+    28,
+    193,
+    31
+   ],
+   "nodes": [
+    "frame/right-side/side-beam",
+    "frame/right-side/flange",
+    "rear-end/buffer-beam",
+    "front-end/buffer-beam"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Rows 28..30 from column 5 to 192 (0.5..19.3 m), the end beams included; the model end beams reach 0.85 m."
+  },
+  {
+   "id": "R02",
+   "view": "z_dec",
+   "side": "right",
+   "element": "container pin 1",
+   "box": [
+    5,
+    27,
+    7,
+    28
+   ],
+   "nodes": [
+    "frame/right-side/pins/pin-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R03",
+   "view": "z_dec",
+   "side": "right",
+   "element": "container pin 7",
+   "box": [
+    191,
+    27,
+    193,
+    28
+   ],
+   "nodes": [
+    "frame/right-side/pins/pin-7"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R04",
+   "view": "z_dec",
+   "side": "right",
+   "element": "container",
+   "box": [
+    39,
+    2,
+    158,
+    27
+   ],
+   "nodes": [
+    "cargo/box",
+    "cargo/frame",
+    "cargo/corner-castings"
+   ],
+   "tolerancePixels": 3.61,
+   "uncertainty": "The model carries an ISO 40 ft box (12.19 x 2.44 x 2.59 m) on the pins at 1.3 m; the BMP paints 11.9 x 2.5 m from 1.3 m."
+  },
+  {
+   "id": "R05",
+   "view": "z_dec",
+   "side": "right",
+   "element": "Maersk star square",
+   "box": [
+    47,
+    6,
+    62,
+    21
+   ],
+   "nodes": [
+    "cargo/right-side-livery/star-square"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "The light blue square with the white seven-pointed star."
+  },
+  {
+   "id": "R06",
+   "view": "z_dec",
+   "side": "right",
+   "element": "MAERSK lettering",
+   "box": [
+    70,
+    8,
+    143,
+    20
+   ],
+   "nodes": [
+    "cargo/right-side-livery/lettering"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Bold black capitals 1.2 m tall; the stroke font is thinner than the painted letters."
+  },
+  {
+   "id": "L01",
+   "view": "z_inc",
+   "side": "left",
+   "element": "side beam with end beams",
+   "box": [
+    5,
+    28,
+    193,
+    31
+   ],
+   "nodes": [
+    "frame/left-side/side-beam",
+    "frame/left-side/flange",
+    "rear-end/buffer-beam",
+    "front-end/buffer-beam"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Rows 28..30 from column 5 to 192 (0.5..19.3 m), the end beams included; the model end beams reach 0.85 m."
+  },
+  {
+   "id": "L02",
+   "view": "z_inc",
+   "side": "left",
+   "element": "container pin 1",
+   "box": [
+    5,
+    27,
+    7,
+    28
+   ],
+   "nodes": [
+    "frame/left-side/pins/pin-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L03",
+   "view": "z_inc",
+   "side": "left",
+   "element": "container pin 7",
+   "box": [
+    191,
+    27,
+    193,
+    28
+   ],
+   "nodes": [
+    "frame/left-side/pins/pin-7"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L04",
+   "view": "z_inc",
+   "side": "left",
+   "element": "container",
+   "box": [
+    39,
+    2,
+    158,
+    27
+   ],
+   "nodes": [
+    "cargo/box",
+    "cargo/frame",
+    "cargo/corner-castings"
+   ],
+   "tolerancePixels": 3.61,
+   "uncertainty": "The model carries an ISO 40 ft box (12.19 x 2.44 x 2.59 m) on the pins at 1.3 m; the BMP paints 11.9 x 2.5 m from 1.3 m."
+  },
+  {
+   "id": "L05",
+   "view": "z_inc",
+   "side": "left",
+   "element": "Maersk star square",
+   "box": [
+    135,
+    6,
+    150,
+    21
+   ],
+   "nodes": [
+    "cargo/left-side-livery/star-square"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "The light blue square with the white seven-pointed star."
+  },
+  {
+   "id": "L06",
+   "view": "z_inc",
+   "side": "left",
+   "element": "MAERSK lettering",
+   "box": [
+    54,
+    8,
+    127,
+    20
+   ],
+   "nodes": [
+    "cargo/left-side-livery/lettering"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Bold black capitals 1.2 m tall; the stroke font is thinner than the painted letters."
+  },
+  {
+   "id": "E01",
+   "view": "x_both",
+   "end": "rear",
+   "element": "container end",
+   "box": [
+    2,
+    2,
+    28,
+    27
+   ],
+   "nodes": [
+    "cargo/box",
+    "cargo/frame",
+    "cargo/corner-castings"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "The model carries an ISO 40 ft box (12.19 x 2.44 x 2.59 m) on the pins at 1.3 m; the BMP paints 11.9 x 2.5 m from 1.3 m."
+  }
+ ]
+}

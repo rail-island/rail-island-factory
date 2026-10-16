@@ -1,0 +1,143 @@
+{
+ "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/truck/n_wap-full#2/model",
+ "pixelMetres": 0.1,
+ "convention": "Pixel edges [left, top, right, bottom] on the native BMP; origin top left, x right, y down.",
+ "annotations": [
+  {
+   "id": "R01",
+   "view": "z_both",
+   "side": "right",
+   "element": "upper bulge",
+   "box": [
+    9,
+    9,
+    133,
+    20
+   ],
+   "nodes": [
+    "body/upper"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Rows 9..19; at row 15 (3.5 m) the BMP spans columns 10..131."
+  },
+  {
+   "id": "R02",
+   "view": "z_both",
+   "side": "right",
+   "element": "flap 1",
+   "box": [
+    15,
+    24,
+    67,
+    38
+   ],
+   "nodes": [
+    "body/right-side-flaps/flap-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R03",
+   "view": "z_both",
+   "side": "right",
+   "element": "flap 2",
+   "box": [
+    75,
+    24,
+    127,
+    38
+   ],
+   "nodes": [
+    "body/right-side-flaps/flap-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R04",
+   "view": "z_both",
+   "side": "right",
+   "element": "centre post",
+   "box": [
+    68,
+    20,
+    74,
+    41
+   ],
+   "nodes": [
+    "body/right-side-flaps/post"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Columns 68..73 at row 30."
+  },
+  {
+   "id": "L01",
+   "view": "z_both",
+   "side": "left",
+   "element": "upper bulge",
+   "box": [
+    9,
+    9,
+    133,
+    20
+   ],
+   "nodes": [
+    "body/upper"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Rows 9..19; at row 15 (3.5 m) the BMP spans columns 10..131."
+  },
+  {
+   "id": "L02",
+   "view": "z_both",
+   "side": "left",
+   "element": "flap 1",
+   "box": [
+    15,
+    24,
+    67,
+    38
+   ],
+   "nodes": [
+    "body/left-side-flaps/flap-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L03",
+   "view": "z_both",
+   "side": "left",
+   "element": "flap 2",
+   "box": [
+    75,
+    24,
+    127,
+    38
+   ],
+   "nodes": [
+    "body/left-side-flaps/flap-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L04",
+   "view": "z_both",
+   "side": "left",
+   "element": "centre post",
+   "box": [
+    68,
+    20,
+    74,
+    41
+   ],
+   "nodes": [
+    "body/left-side-flaps/post"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Columns 68..73 at row 30."
+  }
+ ]
+}

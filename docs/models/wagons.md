@@ -2,7 +2,7 @@
 
 **Covers** - the five freight wagons transferred from vlakosimdb (Nas, Ua, Eas, Raj, Rah), the `cargo` parameter of the first three, the shared wagon parts, the native-raster comparison and the tests.
 **Code** - `generator/wagons.ts`, `generator/wagonParts.ts`, `generator/wagonTransfers.ts`, `generator/coachTransfers.ts` (`ALL_TRANSFERS`), `generator/csdCoachComparison.ts`, `generator/csdCoachReport.ts`, `generator/strokeFont.ts`, `test/wagons.test.ts`
-**See also** - [vehicles.md](vehicles.md), [parameters.md](parameters.md), [csd-coaches.md](csd-coaches.md) (the comparison method), the sources under `assets/wagon-<name>/` (`SOURCES.md`, `COMPARISON*.md`)
+**See also** - [freight-wagons.md](freight-wagons.md) (the container, flat, sliding-wall and hopper wagons that build on these parts), [vehicles.md](vehicles.md), [parameters.md](parameters.md), [csd-coaches.md](csd-coaches.md) (the comparison method), the sources under `assets/wagon-<name>/` (`SOURCES.md`, `COMPARISON*.md`)
 
 ## The designs
 

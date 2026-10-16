@@ -1,0 +1,215 @@
+{
+ "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/truck/n_pao-full#1/model",
+ "pixelMetres": 0.1,
+ "convention": "Pixel edges [left, top, right, bottom] on the native BMP; origin top left, x right, y down.",
+ "annotations": [
+  {
+   "id": "R01",
+   "view": "z_both",
+   "side": "right",
+   "element": "frame side",
+   "box": [
+    5,
+    8,
+    147,
+    15
+   ],
+   "nodes": [
+    "frame/right-side/solebar",
+    "frame/right-side/deck-edge",
+    "frame/right-side/fishbelly"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Deck edge row 8, solebar and fishbelly down to row 14 (0.5 m)."
+  },
+  {
+   "id": "R02",
+   "view": "z_both",
+   "side": "right",
+   "element": "rear buffers",
+   "box": [
+    0,
+    8,
+    5,
+    12
+   ],
+   "nodes": [
+    "rear-end/buffers"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R03",
+   "view": "z_both",
+   "side": "right",
+   "element": "front buffers",
+   "box": [
+    147,
+    8,
+    153,
+    12
+   ],
+   "nodes": [
+    "front-end/buffers"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "The BMP paints the buffers from 14.7 m; the model beam ends the deck at 14.8 m."
+  },
+  {
+   "id": "R04",
+   "view": "z_both",
+   "side": "right",
+   "element": "tube bundle",
+   "box": [
+    28,
+    3,
+    125,
+    6
+   ],
+   "nodes": [
+    "cargo/tubes"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "XML `load` 2.8..12.5 m, 1.4..1.7 m; 21 tubes 0.12 m across in three layers."
+  },
+  {
+   "id": "R05",
+   "view": "z_both",
+   "side": "right",
+   "element": "timber bolster 1",
+   "box": [
+    38,
+    6,
+    48,
+    8
+   ],
+   "nodes": [
+    "cargo/bolsters/bolster-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R06",
+   "view": "z_both",
+   "side": "right",
+   "element": "timber bolster 2",
+   "box": [
+    105,
+    6,
+    115,
+    8
+   ],
+   "nodes": [
+    "cargo/bolsters/bolster-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L01",
+   "view": "z_both",
+   "side": "left",
+   "element": "frame side",
+   "box": [
+    5,
+    8,
+    147,
+    15
+   ],
+   "nodes": [
+    "frame/left-side/solebar",
+    "frame/left-side/deck-edge",
+    "frame/left-side/fishbelly"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Deck edge row 8, solebar and fishbelly down to row 14 (0.5 m)."
+  },
+  {
+   "id": "L02",
+   "view": "z_both",
+   "side": "left",
+   "element": "rear buffers",
+   "box": [
+    0,
+    8,
+    5,
+    12
+   ],
+   "nodes": [
+    "rear-end/buffers"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L03",
+   "view": "z_both",
+   "side": "left",
+   "element": "front buffers",
+   "box": [
+    147,
+    8,
+    153,
+    12
+   ],
+   "nodes": [
+    "front-end/buffers"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "The BMP paints the buffers from 14.7 m; the model beam ends the deck at 14.8 m."
+  },
+  {
+   "id": "L04",
+   "view": "z_both",
+   "side": "left",
+   "element": "tube bundle",
+   "box": [
+    28,
+    3,
+    125,
+    6
+   ],
+   "nodes": [
+    "cargo/tubes"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "XML `load` 2.8..12.5 m, 1.4..1.7 m; 21 tubes 0.12 m across in three layers."
+  },
+  {
+   "id": "L05",
+   "view": "z_both",
+   "side": "left",
+   "element": "timber bolster 1",
+   "box": [
+    38,
+    6,
+    48,
+    8
+   ],
+   "nodes": [
+    "cargo/bolsters/bolster-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L06",
+   "view": "z_both",
+   "side": "left",
+   "element": "timber bolster 2",
+   "box": [
+    105,
+    6,
+    115,
+    8
+   ],
+   "nodes": [
+    "cargo/bolsters/bolster-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  }
+ ]
+}
