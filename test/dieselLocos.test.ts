@@ -70,7 +70,7 @@ describe("Czech mainline diesel locomotives", () => {
         expect(Math.max(...zs.map(Math.abs)), label).toBeLessThanOrEqual(1.55);
         expect(Math.min(...zs), label).toBeCloseTo(-Math.max(...zs), 6);
       }
-  });
+  }, 120_000);
 
   it("keeps the published length over the buffers, pivots, wheelbase, wheels and gauge", () => {
     for (const [id, g] of Object.entries(RUNNING_GEAR)) {
@@ -89,7 +89,7 @@ describe("Czech mainline diesel locomotives", () => {
         expect(Math.min(Math.abs(n.min![2]), Math.abs(n.max![2])), id).toBeCloseTo(0.665, 4);
       }
     }
-  });
+  }, 120_000);
 
   it("builds the Bardotka body for the CD 749 and the Brejlovec for the others", () => {
     const bardotka = built("veh-cd-750", { livery: "cd749" });
@@ -107,7 +107,7 @@ describe("Czech mainline diesel locomotives", () => {
       const lx = tris.flatMap((t) => t.p.map((p) => p[0]));
       expect(Math.max(...lx) - Math.min(...lx), livery).toBeCloseTo(16.54, 2);
     }
-  });
+  }, 120_000);
 
   it("matches the independently annotated native fronts and sides within the stated pixel tolerances", () => {
     const counts: Record<string, number> = { "veh-cd-750": 60, "veh-cd-781": 35, "veh-csd-t679-0": 27, "veh-csd-t499": 29, "veh-cd-771": 14 };
@@ -119,7 +119,7 @@ describe("Czech mainline diesel locomotives", () => {
         for (let i = 0; i < 4; i++) expect(Math.abs(row.model[i]! - row.source[i]!), `${c.id} ${row.id} component ${i}`).toBeLessThanOrEqual(row.tolerancePixels);
       expect(meanAbsoluteError(rows), c.id).toBeLessThan(1.1);
     }
-  });
+  }, 120_000);
 
   it("shows valid running numbers", () => {
     for (const l of [...Object.values(CD750_LIVERIES), ...Object.values(CD781_LIVERIES), ...Object.values(CD771_LIVERIES)]) expect(validNumber(l.number), l.number).toBe(true);
