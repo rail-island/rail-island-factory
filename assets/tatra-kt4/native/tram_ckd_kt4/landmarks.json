@@ -1,0 +1,281 @@
+{
+ "note": "Tatra KT4 (tram_ckd_kt4)",
+ "convention": "pixel edges [left, top, right, bottom], origin top left, x right, y down; 0.1 source m a pixel",
+ "annotations": [
+  {
+   "id": "bodyA",
+   "element": "section A body",
+   "view": "z_inc",
+   "box": [
+    4,
+    7,
+    107,
+    35
+   ],
+   "nodes": [
+    "section0/body"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "the roof line row 7 is drawn over the 3.2 m roof"
+  },
+  {
+   "id": "bodyB",
+   "element": "section B body",
+   "view": "z_inc",
+   "box": [
+    115,
+    7,
+    217,
+    35
+   ],
+   "nodes": [
+    "section1/body"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "the roof line row 7 is drawn over the 3.2 m roof"
+  },
+  {
+   "id": "joint",
+   "element": "joint bellows",
+   "view": "z_inc",
+   "box": [
+    106,
+    7,
+    115,
+    35
+   ],
+   "nodes": [
+    "joint0"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "the bellows' ridges stand out of the outline"
+  },
+  {
+   "id": "belt",
+   "element": "red belt (section A)",
+   "view": "z_inc",
+   "box": [
+    4,
+    25,
+    106,
+    32
+   ],
+   "nodes": [
+    "section0/body/front-cab/red-band",
+    "section0/body/saloon/red-band"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "d1",
+   "element": "door 1",
+   "view": "z_inc",
+   "box": [
+    20,
+    10,
+    37,
+    35
+   ],
+   "nodes": [
+    "section0/right-side/doors/door-1/outline"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "d2",
+   "element": "door 2",
+   "view": "z_inc",
+   "box": [
+    80,
+    10,
+    97,
+    35
+   ],
+   "nodes": [
+    "section0/right-side/doors/door-2/outline"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "d3",
+   "element": "door 3",
+   "view": "z_inc",
+   "box": [
+    124,
+    10,
+    141,
+    35
+   ],
+   "nodes": [
+    "section1/right-side/doors/door-1/outline"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "d4",
+   "element": "door 4",
+   "view": "z_inc",
+   "box": [
+    184,
+    10,
+    201,
+    35
+   ],
+   "nodes": [
+    "section1/right-side/doors/door-2/outline"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "w2",
+   "element": "window 2",
+   "view": "z_inc",
+   "box": [
+    39,
+    10,
+    58,
+    23
+   ],
+   "nodes": [
+    "section0/right-side/windows/window-2/frame"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "w3",
+   "element": "window 3",
+   "view": "z_inc",
+   "box": [
+    59,
+    10,
+    78,
+    23
+   ],
+   "nodes": [
+    "section0/right-side/windows/window-3/frame"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "w6",
+   "element": "window 6 (section B)",
+   "view": "z_inc",
+   "box": [
+    143,
+    10,
+    162,
+    23
+   ],
+   "nodes": [
+    "section1/right-side/windows/window-2/frame"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "w7",
+   "element": "window 7 (section B)",
+   "view": "z_inc",
+   "box": [
+    163,
+    10,
+    182,
+    23
+   ],
+   "nodes": [
+    "section1/right-side/windows/window-3/frame"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "bogie1",
+   "element": "bogie A wheels",
+   "view": "z_inc",
+   "box": [
+    44,
+    32,
+    72,
+    40
+   ],
+   "nodes": [
+    "section0/running-gear/bogie/wheelset",
+    "section0/running-gear/bogie/wheelset-2"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "real 700 mm wheels"
+  },
+  {
+   "id": "bogie2",
+   "element": "bogie B wheels",
+   "view": "z_inc",
+   "box": [
+    148,
+    32,
+    177,
+    40
+   ],
+   "nodes": [
+    "section1/running-gear/bogie/wheelset",
+    "section1/running-gear/bogie/wheelset-2"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "real 700 mm wheels"
+  },
+  {
+   "id": "roofbox",
+   "element": "roof resistor box (section B)",
+   "view": "z_inc",
+   "box": [
+    163,
+    3,
+    178,
+    7
+   ],
+   "nodes": [
+    "section1/roof-equipment/resistor-box"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "windscreen",
+   "element": "windscreen",
+   "view": "x_inc",
+   "box": [
+    0,
+    8,
+    30,
+    18
+   ],
+   "nodes": [
+    "section0/body/front-cab/glass-band"
+   ],
+   "tolerancePixels": 3,
+   "uncertainty": "the end BMP's bands disagree with the side's; the side's heights were kept"
+  },
+  {
+   "id": "front-belt",
+   "element": "front red belt",
+   "view": "x_inc",
+   "box": [
+    0,
+    20,
+    30,
+    26
+   ],
+   "nodes": [
+    "section0/body/front-cab/red-band"
+   ],
+   "tolerancePixels": 3,
+   "uncertainty": "the end BMP's bands disagree with the side's; the side's heights were kept"
+  }
+ ]
+}

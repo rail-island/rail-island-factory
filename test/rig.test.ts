@@ -121,6 +121,8 @@ async function moduleOf(id: string): Promise<Module> {
 }
 
 const RIGGED = ALL_VEHICLES.filter((d) => d.build().rig !== null).map((d) => [d.id] as const);
+/** The rigged vehicles with steered wheels: every road vehicle (an articulated tram has none). */
+const STEERED = RIGGED.filter(([id]) => DESIGNS.get(id)!.build().rig!.steer !== undefined);
 const ARTICULATED = RIGGED.filter(([id]) => (DESIGNS.get(id)!.build().rig!.joints ?? []).length > 0);
 
 /** A joint's mesh: the joint node, or the child holding its material. */
@@ -178,13 +180,23 @@ async function loadGlb(bytes: Uint8Array): Promise<THREE.Group> {
 }
 
 describe("the rigged vehicles", () => {
-  it("are every road vehicle", () => {
+  it("are every road vehicle, steered, and the articulated rail vehicles, sections and joints only", () => {
     const road = ALL_VEHICLES.filter((d) => (d.catalog?.category ?? "Road vehicles") === "Road vehicles").map((d) => d.id);
-    expect(RIGGED.map(([id]) => id)).toEqual(road);
+    expect(STEERED.map(([id]) => id)).toEqual(road);
     expect(road).toContain("veh-american-truck");
+    const rail = RIGGED.map(([id]) => id).filter((id) => !road.includes(id));
+    expect(rail).toEqual(expect.arrayContaining(["veh-tatra-kt8", "veh-tatra-kt4", "veh-kvag-gt4"]));
+    for (const id of rail) {
+      const d = DESIGNS.get(id)!;
+      const rig = d.build().rig!;
+      expect(d.catalog?.category).toBe("Rail vehicles");
+      expect(rig.steer).toBeUndefined();
+      expect(rig.sections!.length).toBeGreaterThanOrEqual(2);
+      expect(rig.joints).toHaveLength(rig.sections!.length - 1);
+    }
   });
 
-  it.each(RIGGED)("%s: its steered wheels are child nodes of the front body, pivoting at their centres", (id) => {
+  it.each(STEERED)("%s: its steered wheels are child nodes of the front body, pivoting at their centres", (id) => {
     const rig = DESIGNS.get(id)!.build().rig!;
     const { json } = parseGlb(designGlb(id));
     const nodes = json.nodes as Array<{ name: string; children?: number[]; translation?: number[] }>;
@@ -218,8 +230,10 @@ describe("the rigged vehicles", () => {
     const hinges = Math.max(0, (rig.sections?.length ?? 0) - 1);
     const bend = Array.from({ length: hinges }, (_, i) => (i % 2 ? -1 : 1) * 0.4);
     mod.pose(group, { steer: 0.3, bend });
-    const angles = steerAngles(rig.steer!, 0.3);
-    rig.steer!.axles.forEach((a, k) => a.nodes.forEach((n, i) => expect(group.getObjectByName(n)!.rotation.y).toBeCloseTo(angles[k]![i]!, 9)));
+    if (rig.steer) {
+      const angles = steerAngles(rig.steer, 0.3);
+      rig.steer.axles.forEach((a, k) => a.nodes.forEach((n, i) => expect(group.getObjectByName(n)!.rotation.y).toBeCloseTo(angles[k]![i]!, 9)));
+    }
     group.updateMatrixWorld(true);
     const sections = rig.sections ?? [];
     for (let i = 1; i < sections.length; i++) {
@@ -236,7 +250,7 @@ describe("the rigged vehicles", () => {
     expectSealed(group, rig);
     // back to rest: the build's geometry again
     mod.pose(group, {});
-    for (const a of rig.steer!.axles) for (const n of a.nodes) expect(group.getObjectByName(n)!.rotation.y).toBe(0);
+    for (const a of rig.steer?.axles ?? []) for (const n of a.nodes) expect(group.getObjectByName(n)!.rotation.y).toBe(0);
     const fresh = mod.default(THREE);
     for (const s of sections) {
       const n = group.getObjectByName(s.node)!;
@@ -362,7 +376,7 @@ describe("a vehicle of three sections", () => {
 
 /** A posed model's triangles by rig node: every rig node, and the front body or the root. */
 function ownedTriangles(group: THREE.Object3D, rig: VehicleRig): Array<{ t: Tri; owner: string }> {
-  const nodes = new Set([...(rig.sections ?? []).map((s) => s.node), ...(rig.joints ?? []).map((j) => j.node), ...rig.steer!.axles.flatMap((a) => a.nodes), group.name]);
+  const nodes = new Set([...(rig.sections ?? []).map((s) => s.node), ...(rig.joints ?? []).map((j) => j.node), ...(rig.steer?.axles ?? []).flatMap((a) => a.nodes), group.name]);
   return worldTriangles(group, nodes);
 }
 
@@ -410,7 +424,7 @@ describe("the semi-trucks", () => {
 describe("the steered wheels", () => {
   // at the steering lock no tyre, disc or hub cuts into the body; the axle beam's
   // end, which reaches into the hub, turns with nothing
-  it.each(RIGGED)("%s clears the body at full lock", async (id) => {
+  it.each(STEERED)("%s clears the body at full lock", async (id) => {
     const mod = await moduleOf(id);
     const group = mod.default(THREE);
     const rig = group.userData.rig as VehicleRig;

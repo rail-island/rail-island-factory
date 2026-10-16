@@ -1,7 +1,7 @@
 # Vehicle rig
 
-**Covers** - what of a road vehicle the game may move after loading it: the steered front wheels, an articulated vehicle's sections and the joints (bellows) between them; how they are laid out as GLB nodes, the `rig` that names them in the GLB, the meta entry and the JS model, the pose and joint functions the JS model exports, and the model page's Pose sliders.
-**Code** - `generator/rig.ts`, `generator/trucks.ts` (`steered`), `generator/meshCore.ts` (`part` with a parent), `generator/meshBuilder.ts` (`toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/vehicleParts.ts` (`steeredWheels`), `generator/busAssembly.ts`, `generator/jsModel.ts`, `generator/catalog.ts` (`MetaEntry.rig`), `src/catalogQuery.ts` (`poseControls`, `poseOf`, `steerLockDeg`, `posePreview`, `previewKey`, `pageKey`), `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `test/rig.test.ts`, `test/collision.ts`
+**Covers** - what of a road vehicle or an articulated tram the game may move after loading it: the steered front wheels, an articulated vehicle's sections and the joints (bellows) between them; how they are laid out as GLB nodes, the `rig` that names them in the GLB, the meta entry and the JS model, the pose and joint functions the JS model exports, and the model page's Pose sliders.
+**Code** - `generator/rig.ts`, `generator/trucks.ts` (`steered`), `generator/meshCore.ts` (`part` with a parent), `generator/meshBuilder.ts` (`toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/vehicleParts.ts` (`steeredWheels`), `generator/busAssembly.ts`, `generator/tramKit.ts` (`articulate`), `generator/jsModel.ts`, `generator/catalog.ts` (`MetaEntry.rig`), `src/catalogQuery.ts` (`poseControls`, `poseOf`, `steerLockDeg`, `posePreview`, `previewKey`, `pageKey`), `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `test/rig.test.ts`, `test/collision.ts`
 **See also** - [vehicles.md](vehicles.md), [buses.md](buses.md), [js-format.md](js-format.md), [export.md](export.md), [../site/catalog-site.md](../site/catalog-site.md)
 
 ## The idea
@@ -24,7 +24,11 @@ A rigid vehicle has a body node (`body` for a bus and the mixer) holding the ste
 wheels and no sections. A semi-truck is two sections (tractor and trailer, hinged at
 the king pin) and no joint. Every road vehicle has a rig - the American truck, the
 three trucks reproduced from the game ([trucks.md](trucks.md)) and the buses
-([buses.md](buses.md)); the rail, air and water vehicles have none.
+([buses.md](buses.md)). The articulated trams - the KT8D5, KT4 and GT4
+([trams.md](trams.md)) - are the one rail use: sections and joints, no `steer` (a
+rail vehicle follows the track); their sections carry their own bogies, and the
+site shows only the joint sliders. Every other rail vehicle, and the air and water
+vehicles, has none: a rigid locomotive, coach or tram stays one node.
 
 ## The rig
 
@@ -168,7 +172,8 @@ test holds the two equal.
 
 `test/rig.test.ts`: Ackermann angles meet at one centre and reach the lock, a second
 steered axle aimed at the same centre; a joint stays sealed to both sections under
-arbitrary matrices and winds outward; every road vehicle is rigged, its steered
+arbitrary matrices and winds outward; every road vehicle is rigged and steered, the other rigged vehicles
+are articulated rail vehicles with sections and joints and no steering; steered
 wheels are children of the front body, named `-left` at -Z, mirrored and `track`
 apart, axles front first; `pose()` on the JS module turns every wheel by
 `steerAngles`, keeps every hinge where both of its sections put it, draws every joint

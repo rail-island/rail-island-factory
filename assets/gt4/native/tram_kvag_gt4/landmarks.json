@@ -1,0 +1,248 @@
+{
+ "note": "GT4 (tram_kvag_gt4): one rigid car in the source, articulated in the model",
+ "convention": "pixel edges [left, top, right, bottom], origin top left, x right, y down; 0.1 source m a pixel",
+ "annotations": [
+  {
+   "id": "bodyA",
+   "element": "front section body",
+   "view": "z_inc",
+   "box": [
+    3,
+    5,
+    71,
+    37
+   ],
+   "nodes": [
+    "section0/body"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "the source car has no joint: the model's is cut in at 7.1..7.4 m"
+  },
+  {
+   "id": "bodyB",
+   "element": "rear section body",
+   "view": "z_inc",
+   "box": [
+    74,
+    5,
+    144,
+    37
+   ],
+   "nodes": [
+    "section1/body"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "the source car has no joint: the model's is cut in at 7.1..7.4 m"
+  },
+  {
+   "id": "red-upper",
+   "element": "upper red line (front section)",
+   "view": "z_inc",
+   "box": [
+    8,
+    24,
+    71,
+    26
+   ],
+   "nodes": [
+    "section0/body/saloon/red-band-2"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "red-lower",
+   "element": "lower red line (front section)",
+   "view": "z_inc",
+   "box": [
+    8,
+    33,
+    71,
+    34
+   ],
+   "nodes": [
+    "section0/body/saloon/red-band"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "d1",
+   "element": "door 1",
+   "view": "z_inc",
+   "box": [
+    8,
+    12,
+    25,
+    37
+   ],
+   "nodes": [
+    "section0/right-side/doors/door-1/outline"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "d2",
+   "element": "door 2",
+   "view": "z_inc",
+   "box": [
+    62,
+    12,
+    79,
+    37
+   ],
+   "nodes": [
+    "section1/right-side/doors/door-1/outline"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "moved deliberately 1.3 m back, behind the joint"
+  },
+  {
+   "id": "d3",
+   "element": "door 3",
+   "view": "z_inc",
+   "box": [
+    123,
+    12,
+    140,
+    37
+   ],
+   "nodes": [
+    "section1/right-side/doors/door-2/outline"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "w1",
+   "element": "window 1",
+   "view": "z_inc",
+   "box": [
+    25,
+    13,
+    46,
+    23
+   ],
+   "nodes": [
+    "section0/right-side/windows/window-1/frame"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "w2",
+   "element": "window 2",
+   "view": "z_inc",
+   "box": [
+    46,
+    13,
+    61,
+    23
+   ],
+   "nodes": [
+    "section0/right-side/windows/window-2/frame"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "w5",
+   "element": "window 5",
+   "view": "z_inc",
+   "box": [
+    107,
+    13,
+    123,
+    23
+   ],
+   "nodes": [
+    "section1/right-side/windows/window-2/frame"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "clear pixel edges"
+  },
+  {
+   "id": "bogie1",
+   "element": "front bogie wheels",
+   "view": "z_inc",
+   "box": [
+    27,
+    37,
+    52,
+    40
+   ],
+   "nodes": [
+    "section0/running-gear/bogie/wheelset",
+    "section0/running-gear/bogie/wheelset-2"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "the BMP shows only the wheels' tops; the model's bogies stand 10.0 m apart, as published"
+  },
+  {
+   "id": "bogie2",
+   "element": "rear bogie wheels",
+   "view": "z_inc",
+   "box": [
+    92,
+    37,
+    117,
+    40
+   ],
+   "nodes": [
+    "section1/running-gear/bogie/wheelset",
+    "section1/running-gear/bogie/wheelset-2"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "the BMP shows only the wheels' tops; the model's bogies stand 10.0 m apart, as published"
+  },
+  {
+   "id": "windscreen",
+   "element": "windscreen",
+   "view": "x_inc",
+   "box": [
+    1,
+    13,
+    29,
+    22
+   ],
+   "nodes": [
+    "section0/body/front-cab/glass-band"
+   ],
+   "tolerancePixels": 2,
+   "uncertainty": "the end BMP is projected over the tapered sides as well; rows match, the width is the canvas's"
+  },
+  {
+   "id": "front-red-upper",
+   "element": "front upper red line",
+   "view": "x_inc",
+   "box": [
+    0,
+    23,
+    30,
+    25
+   ],
+   "nodes": [
+    "section0/body/front-cab/red-band-2"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "the end BMP is projected over the tapered sides as well; rows match, the width is the canvas's"
+  },
+  {
+   "id": "front-red-lower",
+   "element": "front lower red line",
+   "view": "x_inc",
+   "box": [
+    0,
+    32,
+    30,
+    33
+   ],
+   "nodes": [
+    "section0/body/front-cab/red-band"
+   ],
+   "tolerancePixels": 1,
+   "uncertainty": "the end BMP is projected over the tapered sides as well; rows match, the width is the canvas's"
+  }
+ ]
+}

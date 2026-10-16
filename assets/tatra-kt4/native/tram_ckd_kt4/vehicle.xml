@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="Windows-1250"?>
+<motocar author="Jan Prochazka" default="0" email="zputil@centrum.cz" maxspeed="60" name="TRAM_CKD_Kt4" pas_wi="2.2" pas_y1="0.3" pas_y2="3" path="Tram" power="100" roadstyle="tram" style="tram2c" title="Tram CKD Kt4" tramspace="" weight="12" yd_rel="1" yd_s1="-1.5" yd_s2="1.5" yd_t1="0" yd_t2="22" ydecfile="model/y_dec.bmp" zd_rel="1" zd_s1="0" zd_s2="4" zd_t1="0" zd_t2="22" zdecfile="model/z_dec.bmp" zi_rel="1" zi_s1="0" zi_s2="4" zi_t1="0" zi_t2="22" zincfile="model/z_inc.bmp"/>

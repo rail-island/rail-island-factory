@@ -29,7 +29,9 @@ and the two Karosa bus families,
 (`livery`: black, redLining) and the five steam locomotives with a tender (`unit`: locomotive, the
 default, or tender - [steam-locomotives.md](steam-locomotives.md)), and the two Czech electric units,
 `veh-cd-471` (`unit`: motorCar, trailer, drivingTrailer; `variant`: cd471, cd675) and `veh-cd-680`
-(`unit`: endCar, car683, car685, car686) ([czech-emus.md](czech-emus.md)). The five village houses are
+(`unit`: endCar, car683, car685, car686) ([czech-emus.md](czech-emus.md)), and the trams and metro, `veh-tatra-t3` (`variant`: t3, t3m, t3prototype),
+`veh-tatra-kt8` (`livery`: redWhite, red, modern) and `veh-metro-81-71` (`unit`: headCar, middleCar)
+([trams.md](trams.md)). The five village houses are
 parametric too, with up to six parameters each ([village.md](village.md)). A variant may change more than
 default, or tender - [steam-locomotives.md](steam-locomotives.md)). The five village houses are
 parametric too, with up to six parameters each ([village.md](village.md)). The diesel locomotives
