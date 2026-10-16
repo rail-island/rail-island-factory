@@ -44,7 +44,8 @@ export const PALETTE: Record<string, MaterialSpec> = {
 /** Shared city-building choices; the original finish keeps each design's identity. */
 export const SKYSCRAPER_PARAMS: readonly ParamSpec[] = [
   { name: "size", title: "Size", default: "standard", values: [
-    { value: "compact", title: "Compact" }, { value: "standard", title: "Standard" },
+    { value: "lowrise", title: "Low-rise" }, { value: "compact", title: "Compact" },
+    { value: "medium", title: "Medium" }, { value: "standard", title: "Standard" },
     { value: "landmark", title: "Landmark" },
   ] },
   { name: "glazing", title: "Glass colour", default: "original", values: [
@@ -57,13 +58,29 @@ export const SKYSCRAPER_PARAMS: readonly ParamSpec[] = [
   ] },
 ];
 
+const TWISTED_PARAMS: readonly ParamSpec[] = [...SKYSCRAPER_PARAMS,
+  { name: "twist", title: "Twist", default: "quarter", values: [
+    { value: "straight", title: "Straight" }, { value: "quarter", title: "Quarter turn" },
+    { value: "half", title: "Half turn" },
+  ] },
+];
+const TERRACED_PARAMS: readonly ParamSpec[] = [...SKYSCRAPER_PARAMS,
+  { name: "terraces", title: "Terrace count", default: "5", values:
+    [3, 4, 5, 6].map((n) => ({ value: String(n), title: String(n) })) },
+  { name: "terraceUse", title: "Terrace use", default: "gardens", values: [
+    { value: "gardens", title: "Gardens" }, { value: "seating", title: "Seating" },
+    { value: "solar", title: "Solar panels" },
+  ] },
+];
+
 export const SKYSCRAPER_FINISH_PARAMS = ["glazing", "structure"] as const;
 
 /** Each design chooses a storey count; all geometry stays in unscaled metres. */
 class TowerMesh extends MeshBuilder {
   private readonly size: string;
-  constructor(params?: ParamValues) {
-    const p = resolveParams(SKYSCRAPER_PARAMS, params);
+  readonly choices: ParamValues;
+  constructor(params?: ParamValues, specs: readonly ParamSpec[] = SKYSCRAPER_PARAMS) {
+    const p = resolveParams(specs, params);
     const pal = Object.fromEntries(Object.entries(PALETTE).map(([key, spec]) => [key, { ...spec }]));
     const glass: Record<string, [string, string]> = {
       blue: ["#5388b8", "#203b60"], jade: ["#76b4a3", "#285c59"], bronze: ["#c6a779", "#66503e"],
@@ -81,11 +98,12 @@ class TowerMesh extends MeshBuilder {
     }
     super(pal);
     this.size = p.size!;
+    this.choices = p;
   }
 
   /** Add or remove complete floors, keeping floor pitch and detail dimensions fixed. */
   floors(standard: number): number {
-    return Math.max(1, Math.round(standard * (this.size === "compact" ? 0.75 : this.size === "landmark" ? 1.12 : 1)));
+    return Math.max(1, Math.round(standard * ({ lowrise: 0.4, compact: 0.6, medium: 0.8, standard: 1, landmark: 1.2 }[this.size] ?? 1)));
   }
 }
 
@@ -444,11 +462,11 @@ export function twinTowers(params?: ParamValues): MeshBuilder {
 
 /** A white-and-teal tower whose floor plates turn a little each storey. */
 export function twisted(params?: ParamValues): MeshBuilder {
-  const m = new TowerMesh(params);
+  const m = new TowerMesh(params, TWISTED_PARAMS);
   m.scope("plinth", () => m.box("dark", 0, 0, 28, 28, 0, 6));
   const floors = m.floors(36);
   const fh = 3.6;
-  const turn = Math.PI / 2;
+  const turn = m.choices.twist === "straight" ? 0 : m.choices.twist === "half" ? Math.PI : Math.PI / 2;
   m.scope("floors", () => {
     for (let i = 0; i < floors; i++) {
       m.scope(`floor ${i + 1}`, () => {
@@ -505,7 +523,7 @@ export function darkSlab(params?: ParamValues): MeshBuilder {
     m.scope("roof", () => m.box("bronze", 0, 0, w - 1.6, d - 1.6, top + 7, top + 8));
   });
   entrance(m, d / 2 - 1.5, 0.6, "bronze");
-  facadePanels(m, rect(w, d), 8, top, 3.8, 9, "glassDark");
+  facadePanels(m, rect(w, d), 8, top, 3.8, 8, "glassDark");
   m.scope("bronze sunshades", () => {
     for (const sign of [-1, 1]) {
       for (let y = 19; y < top - 2; y += 11.4) m.box("bronze", 0, sign * (d / 2 + 0.55), w + 0.5, 1.2, y, y + 0.22);
@@ -582,33 +600,40 @@ export function bullet(params?: ParamValues): MeshBuilder {
 
 /** A glass tower stepping back in green roof terraces towards one corner. */
 export function terraced(params?: ParamValues): MeshBuilder {
-  const m = new TowerMesh(params);
-  m.scope("plinth", () => m.box("stone", 0, 0, 30, 30, 0, 5));
+  const m = new TowerMesh(params, TERRACED_PARAMS);
+  const count = Number(m.choices.terraces);
+  const width = 12 + (count - 1) * 4;
+  const use = m.choices.terraceUse;
+  m.scope("plinth", () => m.box("stone", 0, 0, width + 2, width + 2, 0, 5));
   let level = 5;
-  const steps: Array<[number, number, number, number, number]> = [
-    // width, depth, centre x/z, standard storeys
-    [28, 28, 0, 0, 8], [24, 24, -2, -2, 7], [20, 20, -4, -4, 7],
-    [16, 16, -6, -6, 6], [12, 12, -8, -8, 4],
-  ].map(([w, d, cx, cz, floors]) => {
-    const top = level + m.floors(floors!) * 3.6 + 0.2;
+  const steps: Array<[number, number, number, number, number]> = Array.from({ length: count }, (_, i) => {
+    // Fixed four-metre setbacks leave usable decks and a twelve-metre top floor.
+    const standard = count === 5 ? [8, 7, 7, 6, 4][i]! : Math.floor(32 / count) + (i < 32 % count ? 1 : 0);
+    const top = level + m.floors(standard) * 3.6 + 0.2;
     level = top + 0.8;
-    return [w!, d!, cx!, cz!, top];
+    return [width - i * 4, width - i * 4, -i * 2, -i * 2, top];
   });
   let y = 5;
   steps.forEach(([w, d, cx, cz, top], i) => m.scope(`step ${i + 1}`, () => {
     curtainWall(m, "glassGreen", "white", cx, cz, w, d, y, top, { floor: 3.6, bays: 5 });
     m.scope("cornice", () => m.box("white", cx, cz, w + 0.8, d + 0.8, top, top + 0.8));
-    // a planted terrace on the step: a lawn and a few tree crowns
+    // Keep each deck usable: planting, benches or panel racks on the exposed edges.
     m.scope("terrace", () => {
-      m.box("roofGreen", cx, cz, w - 1, d - 1, top + 0.8, top + 1.2);
+      m.box(use === "gardens" ? "roofGreen" : "stone", cx, cz, w - 1, d - 1, top + 0.8, top + 1.2);
       for (const [tx, tz] of [[w / 2 - 2.5, d / 2 - 2.5], [w / 2 - 2.5, -d / 2 + 4], [-w / 2 + 4, d / 2 - 2.5]]) {
-        m.spire("roofGreen", ngon(6, 1.5, 0, cx + tx, cz + tz), top + 1.2, top + 4.5);
+        if (use === "gardens") m.spire("roofGreen", ngon(6, 1.5, 0, cx + tx, cz + tz), top + 1.2, top + 4.5);
+        else m.scope(use === "seating" ? "bench" : "solar panel", () => {
+          const x = cx + tx, z = cz + tz, base = top + 1.2;
+          for (const dx of [-0.8, 0.8]) m.box("steel", x + dx, z, 0.15, 0.6, base, base + 0.5);
+          m.box(use === "seating" ? "stoneDark" : "glassBlack", x, z, 2.2, 1, base + 0.5, base + 0.65);
+          if (use === "seating") m.box("stoneDark", x, z - 0.45, 2.2, 0.15, base + 0.65, base + 1.2);
+        });
       }
     });
     y = top + 0.8;
   }));
-  mast(m, -8, -8, steps[steps.length - 1]![4] + 1.2, 14, 0.35);
-  entrance(m, 15, 0, "white");
+  mast(m, -(count - 1) * 2, -(count - 1) * 2, steps[count - 1]![4] + 1.2, 14, 0.35);
+  entrance(m, width / 2 + 1, 0, "white");
   steps.forEach(([w, d, cx, cz, top], i) => m.scope(`garden deck ${i + 1}`, () => {
     const baseY = i === 0 ? 5 : steps[i - 1]![4] + 0.8;
     facadePanels(m, rect(w, d, cx, cz), baseY, top, 3.6, 5);
@@ -616,8 +641,8 @@ export function terraced(params?: ParamValues): MeshBuilder {
     for (const x of [cx - w / 2 + 1, cx + w / 2 - 1]) m.box("steel", x, cz + d / 2 - 0.25, 0.15, 0.15, top + 1.2, top + 2.5);
     m.box("steel", cx, cz + d / 2 - 0.25, w - 1.8, 0.14, top + 2.4, top + 2.55);
     m.box("steel", cx + w / 2 - 0.25, cz, 0.14, d - 1.8, top + 2.4, top + 2.55);
-    planter(m, cx + w / 2 - 1.3, cz + 0.5, top + 1.2, 1.5, 4);
-    planter(m, cx, cz + d / 2 - 1.2, top + 1.2, Math.min(6, w / 2), 1.2);
+    if (use === "gardens") planter(m, cx + w / 2 - 1.3, cz + 0.5, top + 1.2, 1.5, 4);
+    if (use === "gardens") planter(m, cx, cz + d / 2 - 1.2, top + 1.2, Math.min(6, w / 2), 1.2);
   }));
   return m;
 }
@@ -691,9 +716,9 @@ export const SKYSCRAPERS: ProceduralDesign[] = [
   { params: SKYSCRAPER_PARAMS, finishParams: SKYSCRAPER_FINISH_PARAMS, id: "sky-pagoda", title: "Pagoda Tower", build: pagoda },
   { params: SKYSCRAPER_PARAMS, finishParams: SKYSCRAPER_FINISH_PARAMS, id: "sky-brick-residential", title: "Brick Apartment Tower", build: brickResidential },
   { params: SKYSCRAPER_PARAMS, finishParams: SKYSCRAPER_FINISH_PARAMS, id: "sky-twin-towers", title: "Twin Towers", build: twinTowers },
-  { params: SKYSCRAPER_PARAMS, finishParams: SKYSCRAPER_FINISH_PARAMS, id: "sky-twisted", title: "Twisting Tower", build: twisted },
+  { params: TWISTED_PARAMS, finishParams: SKYSCRAPER_FINISH_PARAMS, id: "sky-twisted", title: "Twisting Tower", build: twisted },
   { params: SKYSCRAPER_PARAMS, finishParams: SKYSCRAPER_FINISH_PARAMS, id: "sky-dark-slab", title: "Black Glass Slab", build: darkSlab },
   { params: SKYSCRAPER_PARAMS, finishParams: SKYSCRAPER_FINISH_PARAMS, id: "sky-bullet", title: "Bullet Tower", build: bullet },
-  { params: SKYSCRAPER_PARAMS, finishParams: SKYSCRAPER_FINISH_PARAMS, id: "sky-terraced", title: "Terraced Green Tower", build: terraced },
+  { params: TERRACED_PARAMS, finishParams: SKYSCRAPER_FINISH_PARAMS, id: "sky-terraced", title: "Terraced Green Tower", build: terraced },
   { params: SKYSCRAPER_PARAMS, finishParams: SKYSCRAPER_FINISH_PARAMS, id: "sky-pyramid", title: "Pyramid Tower", build: pyramid },
 ];

@@ -2,7 +2,7 @@
 // variant with its standalone browser model and checks determinism and flicker.
 import { describe, expect, it } from "vitest";
 import { SKYSCRAPERS } from "../generator/skyscrapers";
-import { paramCombinations } from "../generator/design";
+import { coverageCombinations, paramCombinations } from "../generator/design";
 import { glbStats } from "../generator/glbStats";
 import { parseGlb } from "../generator/glbTriangles";
 import { type ScopeNode, type TreeNode } from "../generator/sourceTree";
@@ -20,17 +20,17 @@ function paneHeights(root: TreeNode): number[] {
 }
 
 describe("parametric skyscrapers", () => {
-  it("retain the ten shipped identities and offer 36 variants each", () => {
+  it("retain the ten shipped identities and offer five heights and design-specific variants", () => {
     expect(SKYSCRAPERS.map((d) => d.id)).toEqual([
       "sky-glass-office", "sky-art-deco", "sky-pagoda", "sky-brick-residential",
       "sky-twin-towers", "sky-twisted", "sky-dark-slab", "sky-bullet", "sky-terraced", "sky-pyramid",
     ]);
-    for (const d of SKYSCRAPERS) expect(paramCombinations(d.params)).toHaveLength(36);
+    for (const d of SKYSCRAPERS) expect(paramCombinations(d.params)).toHaveLength(d.id === "sky-terraced" ? 720 : d.id === "sky-twisted" ? 180 : 60);
   });
 
   it("joins the bullet tower's tip to its last glass band", () => {
     const d = SKYSCRAPERS.find((d) => d.id === "sky-bullet")!;
-    for (const size of ["compact", "standard", "landmark"]) {
+    for (const size of ["lowrise", "compact", "medium", "standard", "landmark"]) {
       const tree = d.build({ size }).sourceTree(d.id, d.title);
       const bands = tree.root.children.find((n) => "name" in n && n.name === "glass bands")!;
       const tip = tree.root.children.find((n) => "name" in n && n.name === "tip")!;
@@ -38,19 +38,49 @@ describe("parametric skyscrapers", () => {
     }
   });
 
+  it("terrace count and use change actual decks and furniture", () => {
+    const d = SKYSCRAPERS.find((d) => d.id === "sky-terraced")!;
+    for (const terraces of ["3", "4", "5", "6"]) {
+      for (const terraceUse of ["gardens", "seating", "solar"]) {
+        const root = d.build({ terraces, terraceUse }).sourceTree(d.id, d.title).root;
+        expect(scopes(root, ["terrace"])).toHaveLength(Number(terraces));
+        expect(scopes(root, ["bench"])).toHaveLength(terraceUse === "seating" ? Number(terraces) * 3 : 0);
+        expect(scopes(root, ["solar panel"])).toHaveLength(terraceUse === "solar" ? Number(terraces) * 3 : 0);
+        expect(scopes(root, ["planter"])).toHaveLength(terraceUse === "gardens" ? Number(terraces) * 2 : 0);
+      }
+    }
+  });
+
+  it("twist changes floor orientation without changing height or floor count", () => {
+    const d = SKYSCRAPERS.find((d) => d.id === "sky-twisted")!;
+    const variants = ["straight", "quarter", "half"].map((twist) => d.build({ twist }));
+    const stats = variants.map((m) => glbStats(m.toGlb(d.id)));
+    expect(new Set(stats.map((s) => s.max[1])).size).toBe(1);
+    expect(new Set(stats.map((s) => s.triangles)).size).toBe(1);
+    const bytes = variants.map((m) => Buffer.from(m.toGlb(d.id)).toString("base64"));
+    expect(new Set(bytes).size).toBe(3);
+  });
+
   for (const d of SKYSCRAPERS) {
-    it(`${d.id}: each size stays grounded, tall and within 10,000 triangles`, () => {
-      const variants = ["compact", "standard", "landmark"].map((size) => d.build({ size }));
+    it(`${d.id}: every shape combination respects the triangle budget`, () => {
+      for (const combo of coverageCombinations(d.params, d.finishParams)) {
+        const stats = glbStats(d.build(combo).toGlb(d.id));
+        expect(stats.triangles, JSON.stringify(combo)).toBeLessThanOrEqual(10_000);
+      }
+    });
+
+    it(`${d.id}: each size stays grounded and within 10,000 triangles`, () => {
+      const variants = ["lowrise", "compact", "medium", "standard", "landmark"].map((size) => d.build({ size }));
       const stats = variants.map((m) => glbStats(m.toGlb(d.id)));
-      expect(stats[0]!.max[1]).toBeLessThan(stats[1]!.max[1]);
-      expect(stats[1]!.max[1]).toBeLessThan(stats[2]!.max[1]);
-      // A larger building contains additional geometry, not stretched triangles.
-      expect(stats[0]!.triangles).toBeLessThan(stats[1]!.triangles);
-      expect(stats[1]!.triangles).toBeLessThan(stats[2]!.triangles);
+      expect(stats[4]!.max[1] / stats[0]!.max[1]).toBeGreaterThan(1.7);
+      for (let i = 1; i < stats.length; i++) {
+        expect(stats[i]!.max[1]).toBeGreaterThan(stats[i - 1]!.max[1]);
+        expect(stats[i]!.triangles).toBeGreaterThan(stats[i - 1]!.triangles);
+      }
       for (const [index, m] of variants.entries()) {
         const s = stats[index]!;
         expect(s.min[1]).toBe(0);
-        expect(s.max[1]).toBeGreaterThan(2 * Math.max(s.max[0] - s.min[0], s.max[2] - s.min[2]));
+        expect(s.max[1]).toBeGreaterThan(30);
         expect(s.triangles).toBeLessThanOrEqual(10_000);
         const tree = m.sourceTree(d.id, d.title);
         for (const axis of [0, 1, 2] as const) {
@@ -66,7 +96,7 @@ describe("parametric skyscrapers", () => {
       const groups = scopes(base, ["floor bands", "bands", "floors", "glass bands"]);
       const counts: number[] = [];
       expect(groups.length).toBeGreaterThan(0);
-      for (const size of ["compact", "standard", "landmark"]) {
+      for (const size of ["lowrise", "compact", "medium", "standard", "landmark"]) {
         const root = d.build({ size }).sourceTree(d.id, d.title).root;
         const entry = scopes(root, ["entrance"])[0]!;
         expect(entry.min).toEqual(entrance.min);
@@ -87,8 +117,7 @@ describe("parametric skyscrapers", () => {
           }
         }
       }
-      expect(counts[0]).toBeLessThan(counts[1]!);
-      expect(counts[1]).toBeLessThan(counts[2]!);
+      for (let i = 1; i < counts.length; i++) expect(counts[i]).toBeGreaterThan(counts[i - 1]!);
     });
 
     it(`${d.id}: finishes change colours without moving geometry or leaking palette state`, () => {

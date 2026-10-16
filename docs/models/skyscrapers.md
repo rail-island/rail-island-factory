@@ -35,13 +35,14 @@ shipped.
 
 ## Parameters and budget
 
-Each tower has **36 combinations**, available in the existing catalog parameter
+Each tower has **five height choices and 60 finish/height combinations**
+(180 for Twisting Tower and 720 for Terraced Green Tower including their extra controls), available in the existing catalog parameter
 pickers and standalone JS models, just like the village houses. Model ids stay
 unchanged. Exports contain the default GLB and thumbnail plus the parameter specs.
 
 | Parameter | Values | Default |
 |---|---|---|
-| `size` | `compact`, `standard`, `landmark` | `standard` |
+| `size` | `lowrise`, `compact`, `medium`, `standard`, `landmark` | `standard` |
 | `glazing` | `original`, `blue`, `jade`, `bronze` | `original` |
 | `structure` | `original`, `limestone`, `graphite` | `original` |
 
@@ -50,22 +51,35 @@ light glazing and its darker panels; cladding changes the structural and masonry
 materials. Planting and warning lights retain their colours. These two finish
 parameters never move vertices, and palettes are copied per build.
 
-Size selects the number of complete storeys, with approximately three quarters
-of the standard storeys for compact and 12% more for landmark (rounded per
-shaft or tier). Every model is still built in metres with the same catalog
-`defaultScale` of 0.5. There is no size-dependent geometry or scene scaling.
-The footprint, floor pitch, window height, doors, balcony dimensions, framing
-thickness and rooftop details keep their physical dimensions. Roofs and crowns
-move onto the resulting shaft; the twin towers' bridge follows the top of their
-first drum. Tapered and twisting designs keep their silhouette by distributing
-their profile or turn over the selected number of fixed-height storeys.
+Size selects complete storeys at approximately 40%, 60%, 80%, 100% and
+120% of the standard count (rounded per shaft or tier). All geometry stays in
+metres with the same catalog `defaultScale` of 0.5. Floor pitch, window height,
+doors, balconies and framing retain their physical dimensions. Crowns and
+bridges follow the selected floors; tapered profiles distribute over them.
+The low-rise options can be wider than they are tall.
 
-For example, the twisting tower has 27, 36 or 40 storeys at 3.6 metres per
-storey; its 19-metre glass floor plates, entry door and rooftop equipment have
-the same dimensions for every size. All sizes remain grounded and taller than
-twice their largest footprint dimension. Regression tests compare the actual
-rendered floor spacing, entrance bounds and window heights across sizes, and
-require larger variants to contain more floors and triangles.
+For example, Twisting Tower offers 14, 22, 29, 36 and 43 floors at 3.6 metres
+per floor. Its `twist` control selects `straight`, `quarter` (default) or `half`:
+the total rotation changes while floor heights and plate dimensions stay fixed.
+
+Terraced Green Tower has two additional shape controls:
+
+| Parameter | Values | Default |
+|---|---|---|
+| `terraces` | `3`, `4`, `5`, `6` | `5` |
+| `terraceUse` | `gardens`, `seating`, `solar` | `gardens` |
+
+Each terrace has four metres of setback and the top tier remains twelve metres
+wide. Adding terraces adds horizontal bays to the lower tiers (20 to 32 metres
+at the base), while distributing roughly 32 standard storeys across the tiers.
+Size then changes their storey counts. The plinth, entrance and roof mast follow
+the resulting footprint. Gardens have lawns, trees and raised planters; seating
+has paved decks and benches; solar decks have panel racks. Railings remain on
+all decks. These are geometry parameters, not finish-only options.
+
+Regression tests compare actual floor spacing, entrance bounds and window
+heights across sizes, check each terrace count and its furniture, and cover
+all shape combinations through deterministic and standalone JS builds.
 
 Each variant may use **up to 10,000 triangles**. Detail goes into visible facade
 panels, fins, balcony edges, roof gardens and entrances rather than subdividing
