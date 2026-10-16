@@ -20,7 +20,7 @@ and `pnpm dev`) writes the gitignored `export/`:
 | `export/js/<id>.js` | the model as one standalone JS file ([js-format.md](js-format.md)) |
 | `export/tree/<id>.json` | the procedural source tree, for the site only ([source-tree.md](source-tree.md)) |
 | `export/refs/<id>/...` | the design's source images, copied from `assets/<references>/`, for the site only |
-| `export/skyscrapers.meta.json` | one game-catalog entry per building (skyscrapers, landmarks, stations) - the import contract |
+| `export/skyscrapers.meta.json` | one game-catalog entry per building (skyscrapers, commercial families, landmarks, stations) - the import contract |
 | `export/village.meta.json` | the same per village house, under `buildings` |
 | `export/vehicles.meta.json` | the same per vehicle, under `vehicles` |
 | `export/catalog.json` | what the site lists |
@@ -85,6 +85,13 @@ what goes into it. Nothing reads this file yet: it exists for a webapp-side
 import that mirrors `glb/`, `thumbs/` and this file into the game's building
 catalog, the way the webapp already imports vehicles from vlakosimdb's export.
 Changing a field here is a contract change for that importer.
+
+The five parametric commercial families ([commercial.md](commercial.md)) are
+also in `BUILDINGS` and this file, using `COMMERCIAL_CATALOG`: category
+`Commercial`, group `comm_classic`, scale 1.88 and their declared parameters.
+One default GLB represents each family; the JS model builds the 600 variants
+per family on demand. These are original models rather than replacements of
+the webapp's `comm-building-a` through `-n` ids.
 
 ## `village.meta.json`
 
