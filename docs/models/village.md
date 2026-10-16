@@ -1,7 +1,7 @@
 # Village houses
 
-**Covers** - the five parametric village houses: the Kenney style they follow, the plan families and their parameters, the house builder (volumes, roofs, openings, details), the finish parameters, the mirror, dimensions and budget, the catalog fields and the tests.
-**Code** - `generator/village.ts`, `generator/design.ts` (`finishParams`, `coverageCombinations`), `generator/generate.ts`, `generator/catalog.ts` (`VILLAGE_META_FILE`), `test/village.test.ts`, `test/params.test.ts`
+**Covers** - the seven parametric village houses: the Kenney and Quaternius styles they follow, the plan families and their parameters, the house builder (volumes, roofs, openings, details), the finish parameters, the mirror, dimensions and budget, the catalog fields and the tests.
+**Code** - `generator/village.ts`, `generator/timberCottages.ts`, `generator/design.ts` (`finishParams`, `coverageCombinations`), `generator/generate.ts`, `generator/catalog.ts` (`VILLAGE_META_FILE`), `test/village.test.ts`, `test/params.test.ts`
 **See also** - [parameters.md](parameters.md), [skyscrapers.md](skyscrapers.md), [export.md](export.md), [source-tree.md](source-tree.md)
 
 ## The style
@@ -18,13 +18,48 @@ and a consistent look -
 - **orange planters** with round bushes, porches on thin posts, the odd solar
   panel, and a few flat-roofed modern houses with dark cladding.
 
-The factory's houses are not copies of those models. They are five plan families
+The factory's five suburban houses are not copies of those models. They are plan families
 drawn with that vocabulary, each with enum parameters, so five ids stand for
 3,640 variants. They are modelled in metres and use more of the budget
 (1,400 to 5,600 triangles a variant) on gutters, transoms, door panels, wall
 lamps, shutters, flower boxes and battens.
 
-## The designs
+## Timber cottages (Quaternius-inspired)
+
+The webapp's `cottage-quaternius-a`, `-b`, and `-c` thumbnails and GLBs
+provide the style reference: steep terracotta barrel tiles, oversized oak
+bargeboards and ridge beams, pale plaster with exposed timber framing, plank
+doors, and grey stone bases. A is a compact cottage, B a wider roof composition,
+and C a tall stone-based house. These are original procedural designs, not
+mesh copies or one-to-one replacements; their catalog attribution is Rail Island.
+
+| id | plan | variants | triangle range |
+|---|---|---|---|
+| `village-timber-cottage` | 7 x 6.6 m, one storey, front gable | 864 | 6,180-6,300 |
+| `village-timber-house` | 7.8 x 8.6 m, two storeys, stone ground floor | 864 | 9,180-9,300 |
+
+Both offer `pitch` steep/gentle, `framing` braced/simple, `entrance`
+porch/step/awning, and `chimney` stone/none: 24 shape combinations each.
+Finishes multiply these by 36: `roof` terracotta/ochre/slate/moss,
+`walls` ivory/cream/sage, and `timber` oak/walnut/weathered. Defaults are
+listed first. All 1,728 new variants stay below 10,000 triangles per building.
+The complete village collection now has 5,368 variants across seven ids.
+
+`timberCottages.ts` builds these separately from the suburban house builder,
+preserving the existing five designs. Most of the budget goes to individual
+convex barrel tiles: 240 on the cottage and 336 on the house. Solid backing
+closes the tile gaps, with separate timber gable trims and a raised ridge beam.
+Other details include corner quoins, framed windows with divided glazing,
+shutters with iron straps, separate door planks, and an optional capped chimney.
+The three entrance choices change the canopy and porch supports. Geometry and
+material order are deterministic; every component is in a named source scope.
+
+They use category `Village` and group `village_red`, matching the references'
+village pool, with the existing metre scale and GLB/standalone JS exports,
+parameter picker and `village.meta.json`. Existing saved-map ids and parameter
+values remain unchanged. Import into the webapp is a separate operation.
+
+## The suburban designs
 
 Every design has a `roof` colour and a `walls` colour parameter (the modern house
 has `cladding` instead of `roof`), listed in the table as *finish*.
@@ -89,8 +124,8 @@ it. They are real parameters - in the meta entry, the JS model and the site's
 picker like any other - but they change no vertex, so the tests do not multiply
 the shape combinations by them: `coverageCombinations(params, finishParams)`
 returns every shape combination at the default finish, then each other finish
-value on the default shape. For the five houses that is 187 builds instead of
-3,640. `test/village.test.ts` checks the claim: every finish value leaves every
+value on the default shape. For the five suburban houses that is 187 builds instead of
+3,640; the two timber houses add 62 builds instead of 1,728. `test/village.test.ts` checks the claim: every finish value leaves every
 material's vertices where they were and changes at least one colour.
 
 ## Size and catalog
@@ -98,7 +133,7 @@ material's vertices where they were and changes at least one colour.
 Modelled in metres, base at y = 0, the street front facing +z; with plinth,
 porch and annex the footprints run from about 7.4 x 8.4 m to 15.8 x 10.9 m, and
 the tops from 4.3 m (the one-storey modern house's parapet) to 13.7 m (the
-three-storey narrow house's chimney). `VILLAGE_CATALOG` gives every house category `Village`, group
+three-storey narrow house's chimney). `VILLAGE_CATALOG` gives the suburban houses category `Village`, group
 `village` (the webapp's village pool), `defaultScale` 1.88 - the game's studs
 per metre, which the webapp's own metre-modelled buildings use - and the Rail
 Island attribution. The houses are written to their own
@@ -106,7 +141,7 @@ Island attribution. The houses are written to their own
 
 ## Tests
 
-`test/village.test.ts`: the five ids and their catalog fields, at least 2,000
+`test/village.test.ts`: the seven ids and their catalog fields, at least 2,000
 variants in all, every shape combination standing on y = 0 at house size and
 under 10,000 triangles, the finish parameters recolouring without moving a
 vertex, the side parameter mirroring the L-house and the family house, and the

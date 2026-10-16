@@ -1,4 +1,4 @@
-// The procedural village houses: five parametric designs in the style of the
+// The suburban village houses: five parametric designs in the style of the
 // game's Kenney suburban houses (village-building-type-a .. -u in the webapp) --
 // off-white walls on a dark plinth, a dark band between the storeys, chunky
 // rounded window frames with light blue glass, thick overhanging roofs, chimney
@@ -6,12 +6,18 @@
 // and its enum parameters pick the storeys, the roof, the entrance and the
 // extras, plus the roof and wall colours. See docs/models/village.md.
 //
+// Two Quaternius-inspired timber families are registered below; their builder
+// lives in timberCottages.ts.
+//
 // Modelled in metres, base at y = 0, the street front facing +z. Every design is
 // deterministic. The ids (and the parameter names and values) are stored in the
 // game's saved maps, so none is renamed once shipped.
 
 import { MeshBuilder, chamferedRect, ngon, rect, type MaterialSpec, type Ring } from "./meshBuilder.ts";
 import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
+
+import { TIMBER_COTTAGE_PARAMS, villageTimberCottage, villageTimberHouse } from "./timberCottages.ts";
+export { villageTimberCottage, villageTimberHouse } from "./timberCottages.ts";
 
 type Vec3 = [number, number, number];
 
@@ -98,7 +104,7 @@ const CHIMNEY_PARAM: ParamSpec = {
  * The parameters that only recolour a house: they change no geometry, so the
  * tests build their values one at a time rather than every combination.
  */
-export const VILLAGE_FINISH_PARAMS: readonly string[] = ["roof", "walls", "cladding"];
+export const VILLAGE_FINISH_PARAMS: readonly string[] = ["roof", "walls", "cladding", "timber"];
 
 // --- dimensions ---------------------------------------------------------------------
 
@@ -1094,11 +1100,15 @@ export const VILLAGE_CATALOG: CatalogFields = {
   source: "Rail Island",
 };
 
+export const TIMBER_CATALOG: CatalogFields = { ...VILLAGE_CATALOG, group: "village_red" };
+
 /** Every procedural village house, by catalog id. The ids are stored in saved maps. */
 export const VILLAGE_HOUSES: ProceduralDesign[] = [
+  { id: "village-timber-cottage", title: "Village Timber Cottage", build: villageTimberCottage, params: TIMBER_COTTAGE_PARAMS },
+  { id: "village-timber-house", title: "Village Timber House", build: villageTimberHouse, params: TIMBER_COTTAGE_PARAMS },
   { id: "village-cottage", title: "Village Cottage", build: villageCottage, params: COTTAGE_PARAMS },
   { id: "village-l-house", title: "Village L-House", build: villageLHouse, params: L_HOUSE_PARAMS },
   { id: "village-family-house", title: "Village Family House", build: villageFamilyHouse, params: FAMILY_HOUSE_PARAMS },
   { id: "village-modern-house", title: "Village Modern House", build: villageModernHouse, params: MODERN_HOUSE_PARAMS },
   { id: "village-narrow-house", title: "Village Narrow House", build: villageNarrowHouse, params: NARROW_HOUSE_PARAMS },
-].map((d) => ({ ...d, catalog: VILLAGE_CATALOG, finishParams: d.params.map((p) => p.name).filter((n) => VILLAGE_FINISH_PARAMS.includes(n)) }));
+].map((d) => ({ ...d, catalog: d.id.startsWith("village-timber-") ? TIMBER_CATALOG : VILLAGE_CATALOG, finishParams: d.params.map((p) => p.name).filter((n) => VILLAGE_FINISH_PARAMS.includes(n)) }));

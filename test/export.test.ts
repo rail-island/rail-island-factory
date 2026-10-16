@@ -49,7 +49,7 @@ describe("exportMeta for the village houses", () => {
         id: d.id,
         title: d.title,
         category: "Village",
-        group: "village",
+        group: d.id.startsWith("village-timber-") ? "village_red" : "village",
         glb: `${d.id}.glb`,
         thumb: `${d.id}.png`,
         defaultScale: 1.88,

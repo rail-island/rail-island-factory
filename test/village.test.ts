@@ -1,10 +1,10 @@
-// The procedural village houses (generator/village.ts): five parametric plan
-// families in the style of the webapp's Kenney village houses. The parametric
+// The procedural village houses: seven parametric plan families in the style
+// of the webapp's Kenney suburban houses and Quaternius timber cottages. The parametric
 // suite (params.test.ts) builds every shape combination for flicker and checks
 // the JS model; this file holds what is particular to the houses.
 
 import { describe, expect, it } from "vitest";
-import { VILLAGE_CATALOG, VILLAGE_FINISH_PARAMS, VILLAGE_HOUSES } from "../generator/village";
+import { TIMBER_CATALOG, VILLAGE_CATALOG, VILLAGE_FINISH_PARAMS, VILLAGE_HOUSES } from "../generator/village";
 import { DESIGNS } from "../generator/generate";
 import { coverageCombinations, paramCombinations, type ParamValues } from "../generator/design";
 import { exportMeta } from "../generator/catalog";
@@ -30,18 +30,19 @@ function colours(d: ProceduralDesign, combo: ParamValues): Map<string, string> {
 }
 
 describe("the village houses", () => {
-  it("are five parametric designs with unique village- ids, in the Village category", () => {
+  it("are seven parametric designs with unique village- ids, in the Village category", () => {
     expect(VILLAGE_HOUSES.map((d) => d.id)).toEqual([
+      "village-timber-cottage", "village-timber-house",
       "village-cottage", "village-l-house", "village-family-house", "village-modern-house", "village-narrow-house",
     ]);
     for (const d of VILLAGE_HOUSES) {
       expect(DESIGNS.get(d.id)).toBe(d);
-      expect(d.catalog).toEqual(VILLAGE_CATALOG);
+      expect(d.catalog).toEqual(d.id.startsWith("village-timber-") ? TIMBER_CATALOG : VILLAGE_CATALOG);
       expect(d.params?.length).toBeGreaterThan(0);
     }
     expect(VILLAGE_CATALOG).toMatchObject({ category: "Village", group: "village" });
     // the export entries carry the village fields, not the skyscrapers'
-    for (const e of exportMeta(VILLAGE_HOUSES).buildings) expect(e).toMatchObject({ category: "Village", group: "village", defaultScale: 1.88 });
+    for (const e of exportMeta(VILLAGE_HOUSES).buildings) expect(e).toMatchObject({ category: "Village", group: e.id.startsWith("village-timber-") ? "village_red" : "village", defaultScale: 1.88 });
   });
 
   it("offer far more variants than designs", () => {
@@ -82,6 +83,20 @@ describe("the village houses", () => {
       }
     });
   }
+
+  it("adds 1,728 distinct timber variants with effective shape controls", () => {
+    const timber = VILLAGE_HOUSES.filter(d => d.id.startsWith("village-timber-"));
+    expect(timber).toHaveLength(2);
+    for (const d of timber) {
+      expect(paramCombinations(d.params)).toHaveLength(864);
+      const shapes = coverageCombinations(d.params, d.finishParams).slice(0, 24);
+      const meshes = new Set(shapes.map(p => Buffer.from(d.build(p).toGlb(d.id)).toString("base64")));
+      expect(meshes.size).toBe(24);
+      const steep = glbStats(d.build({ pitch: "steep" }).toGlb(d.id));
+      const gentle = glbStats(d.build({ pitch: "gentle" }).toGlb(d.id));
+      expect(steep.max[1]).toBeGreaterThan(gentle.max[1] + 0.8);
+    }
+  });
 
   it("mirror the L-house and the family house with their side parameter", () => {
     for (const id of ["village-l-house", "village-family-house"]) {
