@@ -4,7 +4,7 @@
 **Code** - `generator/smallDieselComparison.ts`, `generator/smallDieselReport.ts`, `test/smallDiesels.test.ts`
 **See also** - [SOURCES.md](SOURCES.md), [docs/models/small-diesels.md](../../docs/models/small-diesels.md)
 
-Model GLB sha256 `a53f75ed399f` (the default build measured). Mapping: side column px = 10 (x + 7), row = 10 (5 - y); end column = 15 - 10 z, row = 10 (5 - y). Canvases: z_right 140 x 50 px (`native/z_both.bmp`), x_front 30 x 50 px (`native/x_both.bmp`).
+Model GLB sha256 `21483598fa45` (the default build measured). Mapping: side column px = 10 (x + 7), row = 10 (5 - y); end column = 15 - 10 z, row = 10 (5 - y). Canvases: z_right 140 x 50 px (`native/z_both.bmp`), x_front 30 x 50 px (`native/x_both.bmp`).
 
 Each vector is (left, top, width, height) in native pixels; percentages are 100*x/W, 100*y/H, 100*w/W, 100*h/H of the view's canvas, origin top left, X right, Y down. Delta = model minus source in percentage points. MAE = sum(|delta|) / (4 * boxes). Model boxes are the bounds of the actual GLB vertices of the named scopes, orthographically projected, occluded vertices included.
 

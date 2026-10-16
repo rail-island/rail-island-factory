@@ -76,7 +76,7 @@ function body(m: MeshBuilder): void {
           numberText(m, "white", at, n, CD710_NUMBER, px(52.5), 2.475, 0.13, 0.024, s < 0);
         });
         m.scope("handrails", () => {
-          for (const x of [px(45.6) - 0.07, px(55.4) + 0.07]) tubeSeg(m, "steel", [x, 1.35, s * 1.56], [x, 2.6, s * 1.56], 0.016);
+          for (const x of [px(45.6) - 0.07, px(55.4) + 0.07]) tubeSeg(m, "steel", [x, 1.35, s * 1.53], [x, 2.6, s * 1.53], 0.016);
         });
       });
     for (const e of [-1, 1])

@@ -1,7 +1,7 @@
 # Parametric models
 
 **Covers** - designs with enum parameters: how a design declares them, what the export holds (one GLB per design, built with the defaults), how the meta and catalog entries and the standalone JS model expose them, the site's parameter picker, and the tests.
-**Code** - `generator/steamLocos.ts` (`UNIT_PARAM`, `CSD433_PARAMS`), `generator/design.ts` (`ParamSpec`, `resolveParams`, `paramCombinations`, `coverageCombinations`), `generator/village.ts` (the village houses' params), `generator/catalog.ts` (`MetaEntry.params`), `generator/jsModel.ts`, `generator/csdCoaches.ts` (`CLASSIC_GREEN_PARAMS`), `generator/bmoCoach.ts` (`BMO_PARAMS`), `generator/cdGreenWhiteCoach.ts` (`GREEN_WHITE_PARAMS`), `generator/wagons.ts` (`NAS_PARAMS`, `UA_PARAMS`, `EAS_PARAMS`), `generator/cd163Family.ts` (`CD163_PARAMS`, `CD263_PARAMS`), `generator/cd150.ts` (`CD150_PARAMS`), `generator/cd110.ts` (`CD110_PARAMS`), `generator/cd130.ts` (`CD130_PARAMS`), `generator/karosa.ts` (`KAROSA_SHORT_PARAMS`, `KAROSA_LONG_PARAMS`), `generator/emu471.ts` (`CD471_PARAMS`), `generator/emu680.ts` (`CD680_PARAMS`), `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/catalogQuery.ts` (`effectiveParams`, `isDefaultParams`), `test/params.test.ts`
+**Code** - `generator/steamLocos.ts` (`UNIT_PARAM`, `CSD433_PARAMS`), `generator/design.ts` (`ParamSpec`, `resolveParams`, `paramCombinations`, `coverageCombinations`), `generator/village.ts` (the village houses' params), `generator/catalog.ts` (`MetaEntry.params`), `generator/jsModel.ts`, `generator/csdCoaches.ts` (`CLASSIC_GREEN_PARAMS`), `generator/bmoCoach.ts` (`BMO_PARAMS`), `generator/cdGreenWhiteCoach.ts` (`GREEN_WHITE_PARAMS`), `generator/wagons.ts` (`NAS_PARAMS`, `UA_PARAMS`, `EAS_PARAMS`), `generator/cd163Family.ts` (`CD163_PARAMS`, `CD263_PARAMS`), `generator/cd150.ts` (`CD150_PARAMS`), `generator/cd704.ts` (`CD704_PARAMS`), `generator/cd742.ts` (`CD742_PARAMS`), `generator/db212.ts` (`DB212_PARAMS`), `generator/cd110.ts` (`CD110_PARAMS`), `generator/cd130.ts` (`CD130_PARAMS`), `generator/karosa.ts` (`KAROSA_SHORT_PARAMS`, `KAROSA_LONG_PARAMS`), `generator/emu471.ts` (`CD471_PARAMS`), `generator/emu680.ts` (`CD680_PARAMS`), `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/catalogQuery.ts` (`effectiveParams`, `isDefaultParams`), `test/params.test.ts`
 **See also** - [export.md](export.md), [js-format.md](js-format.md), [csd-coaches.md](csd-coaches.md), [village.md](village.md), [buses.md](buses.md), [steam-locomotives.md](steam-locomotives.md), [../site/catalog-site.md](../site/catalog-site.md)
 
 ## The idea
@@ -26,7 +26,9 @@ and `veh-cd-263` (`livery`, [loco-liveries.md](loco-liveries.md)), `veh-cd-110` 
 (`livery`: black, redLining) and the five steam locomotives with a tender (`unit`: locomotive, the
 default, or tender - [steam-locomotives.md](steam-locomotives.md)), and the two Czech electric units,
 `veh-cd-471` (`unit`: motorCar, trailer, drivingTrailer; `variant`: cd471, cd675) and `veh-cd-680`
-(`unit`: endCar, car683, car685, car686) ([czech-emus.md](czech-emus.md)). The five village houses are
+(`unit`: endCar, car683, car685, car686) ([czech-emus.md](czech-emus.md)), and the small diesels
+`veh-cd-704` (`livery`: cd704, t2380), `veh-cd-742` (`variant`: viamont742, viamont740, cd743) and `veh-db-212`
+(`livery`: oldRed, oceanBlue, trafficRed) ([small-diesels.md](small-diesels.md)). The five village houses are
 parametric too, with up to six parameters each ([village.md](village.md)). A variant may change more than
 paint: the green and white coach's variants have their own lengths and
 layouts, and a `unit` value is a different vehicle. The first was `veh-csd-classic-green-coach` with one parameter:

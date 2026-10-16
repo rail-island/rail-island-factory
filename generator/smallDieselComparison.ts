@@ -11,6 +11,9 @@ import { isLeaf, type LeafNode, type TreeNode } from "./sourceTree.ts";
 import { cd704 } from "./cd704.ts";
 import { cd710 } from "./cd710.ts";
 import { cd714 } from "./cd714.ts";
+import { cd742, nativeY } from "./cd742.ts";
+import { db212 } from "./db212.ts";
+import { muv69, nativeY as muvY } from "./muv69.ts";
 
 /**
  * x_front: the end BMP at the +X end, seen from ahead; x_rear: at the -X end;
@@ -67,6 +70,33 @@ export const COMPARED: readonly ComparedDesign[] = [
     canvas: { x_front: [30, 50], z_right: [140, 50] },
     files: { x_front: "native/x_both.bmp", z_right: "native/z_both.bmp" },
     mapping: "side column px = 10 (x + 7), row = 10 (5 - y); end column = 15 - 10 z, row = 10 (5 - y)",
+  },
+  {
+    id: "veh-cd-742", title: "Viamont 742 507", folder: "cd-742", build: () => cd742(), depth,
+    project: (v, p) => {
+      const q: Vec3 = [p[0], nativeY(p[1]), p[2]];
+      return v.startsWith("x") ? end(v, q, 30, 5) : [10 * (6.7 - p[0]), 10 * (5 - q[1])];
+    },
+    canvas: { x_front: [30, 50], z_left: [140, 50] },
+    files: { x_front: "native/viamont_742.507/x_both.bmp", z_left: "native/viamont_742.507/z_dec.bmp" },
+    mapping: "the source's x flipped (its +z side, z_dec, is the model's -Z side): side column px = 10 (6.7 - x); heights above the 1.8 m deck scaled: native y = 1.8 + (y - 1.8) / 0.9286, row = 10 (5 - native y); end column = 15 - 10 z",
+  },
+  {
+    id: "veh-db-212", title: "DB 212 325", folder: "db-212", build: () => db212(), depth,
+    project: (v, p) => (v.startsWith("x") ? end(v, p, 30, 5) : [10 * (p[0] + 6.05), 10 * (5 - p[1])]),
+    canvas: { x_front: [30, 50], z_right: [140, 50] },
+    files: { x_front: "native/db_212/x_both.bmp", z_right: "native/db_212/z_both.bmp" },
+    mapping: "side column px = 10 (x + 6.05), row = 10 (5 - y); end column = 15 - 10 z, row = 10 (5 - y)",
+  },
+  {
+    id: "veh-muv-69", title: "MUV 69", folder: "muv-69", build: () => muv69(), depth,
+    project: (v, p) => {
+      const q: Vec3 = [p[0], muvY(p[1]), p[2]];
+      return v.startsWith("x") ? end(v, q, 30, 5) : [(62 / 6) * (3.05 - p[0]), 10 * (5 - q[1])];
+    },
+    canvas: { x_front: [30, 50], z_left: [62, 50] },
+    files: { x_front: "native/x_inc.bmp", z_left: "native/z_dec.bmp" },
+    mapping: "the source's x flipped (its +z side, z_dec, is the model's -Z side): side column px = (62 / 6) (3.05 - x); native y = 0.8 + (y - 1.05) / 1.1875 above the 1.05 m deck and 0.8 y / 1.05 below it, row = 10 (5 - native y); end column = 15 - 10 z",
   },
 ];
 
