@@ -71,7 +71,8 @@ placement compensation without rewriting saved maps.
   stay valid for the reproduction. `test/referenceModels.test.ts` holds the references'
   boxes and fails any axis more than 10 % off; most designs are within about 1 %.
   St Vitus's more articulated transept is about 4 % wider than its reference.
-- **Triangle budgets** (same test): trucks 12,000, cable cabins 8,000, aircraft 20,000,
+- **Building authoring budget:** new or reworked large landmarks use **20,000-30,000 triangles** per model; row houses stay at or below **10,000**. See the [building skill](../../.agents/skills/building/SKILL.md) and [Historical models](historical.md).
+- **Existing reproduction test ceilings** (same test): trucks 12,000, cable cabins 8,000, aircraft 20,000,
   Notre-Dame and St Vitus 30,000, everything else 40,000. Most reproductions use well under half of their reference's count
   (the Brandenburg Gate's reference has 217,000).
 - **Look.** The reference's massing and colour scheme, with detail taken from the photos

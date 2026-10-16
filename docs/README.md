@@ -7,6 +7,7 @@
 | File | What it covers |
 |---|---|
 | [models/legacy-mapping.md](models/legacy-mapping.md) | Complete Creator mapping, canonical procedural IDs, metre units and runtime compatibility |
+| [models/historical.md](models/historical.md) | Detailed Pagoda and Castle, building budgets and authoring skill |
 | [models/remaining-models.md](models/remaining-models.md) | Remaining fountains, historical buildings, aircraft, liner, cabin and freight variants |
 | [guide/setup-and-build.md](guide/setup-and-build.md) | installing, the scripts, what `pnpm build` produces, tests |
 | [guide/deploy.md](guide/deploy.md) | the Cloudflare Worker, the GitHub Actions workflows, secrets |
