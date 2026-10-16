@@ -58,6 +58,40 @@ export interface Emitter {
   part?: string;
 }
 
+/**
+ * A fountain's still water: a surface at height `y` bounded by `ring` (model
+ * coordinates, counter-clockwise seen from above, like every Ring), the inside of
+ * the basin or bowl it fills.
+ */
+export interface WaterPool {
+  y: number;
+  ring: Array<[number, number]>;
+}
+
+/**
+ * A fountain's jet: it leaves its nozzle at `at`, climbs `rise` above it and comes
+ * down at height `land`, `reach` away horizontally along `dir` ([dx, dz], unit) --
+ * reach 0 is a plain vertical jet falling back on itself. `radius` is its thickness.
+ */
+export interface WaterJet {
+  at: Vec3;
+  dir?: [number, number];
+  rise: number;
+  reach: number;
+  land: number;
+  radius: number;
+}
+
+/**
+ * What of a fountain moves: its pools and jets, and the style the game picks a
+ * fountain by ("classical", "modern", "sculptural"). The model is the stone.
+ */
+export interface FountainWater {
+  style: string;
+  pools: WaterPool[];
+  jets: WaterJet[];
+}
+
 /** A looping animation of a model's parts: shared sample times from 0, linear in between. */
 export interface AnimationClipSpec {
   name: string;
@@ -126,6 +160,8 @@ export class MeshCore {
   protected readonly clips: AnimationClipSpec[] = [];
   /** Where the model smokes, steams or flares (see `emit`). */
   protected readonly emitterList: Emitter[] = [];
+  /** A fountain's water (see `pool` and `jet`), or null for anything else. */
+  protected water: FountainWater | null = null;
   /** The part being drawn, or -1. */
   protected currentPart = -1;
   /** How many scopes are open. */
@@ -232,6 +268,36 @@ export class MeshCore {
       ...(kind === "flame" ? { dir: flame!.dir ?? [0, 1, 0], height: flame!.height, color: flame!.color } : {}),
       ...(part !== undefined ? { part } : {}),
     });
+  }
+
+  /**
+   * Records a fountain's still water: the surface at `y` inside `ring`. Called where
+   * the basin or bowl is drawn, so the water and the stone cannot disagree.
+   */
+  pool(ring: Ring, y: number): void {
+    if (ring.length < 3 || !Number.isFinite(y)) throw new Error("pool(): needs a ring and a height");
+    this.fountainWater().pools.push({ y, ring: ring.map(([x, z]) => [x, z] as [number, number]) });
+  }
+
+  /** Records a fountain's jet (see WaterJet), from the nozzle drawn there. */
+  jet(j: WaterJet): void {
+    if (!(j.radius > 0) || !(j.rise >= 0) || !(j.reach >= 0) || j.at.some((v) => !Number.isFinite(v))) throw new Error("jet(): bad jet");
+    this.fountainWater().jets.push({ ...j, at: [...j.at] as Vec3, ...(j.dir ? { dir: [...j.dir] as [number, number] } : {}) });
+  }
+
+  /** Names the fountain's style (the game picks fountains by it). */
+  fountainStyle(style: string): void {
+    this.fountainWater().style = style;
+  }
+
+  /** The fountain's water, or null when the model recorded none. */
+  fountain(): FountainWater | null {
+    return this.water;
+  }
+
+  private fountainWater(): FountainWater {
+    if (!this.water) this.water = { style: "classical", pools: [], jets: [] };
+    return this.water;
   }
 
   /** The emitters recorded so far, in drawing order. */

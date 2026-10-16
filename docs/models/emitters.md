@@ -1,13 +1,14 @@
-# Emitters: where models smoke, steam and flare
+# Emitters: where models smoke, steam, flare and pour water
 
 **Covers** - the emitters a model carries: the mouth of every chimney, cooling tower, gas flare,
 locomotive exhaust and ship funnel, as points the game starts its smoke, steam and flames from;
-how a design records one, where the export carries them, and the checks.
+a fountain's water (pools and jets); how a design records them, where the export carries them,
+and the checks.
 **Code** - `generator/meshCore.ts` (`Emitter`, `emit`, `emitters`), `generator/threeBuilder.ts`,
 `generator/meshBuilder.ts`, `generator/industry.ts`, `generator/steamParts.ts`,
 `generator/dieselParts.ts`, `generator/dmuKit.ts`, `generator/ships.ts`,
-`generator/legacyVehicles.ts`, `test/emitters.test.ts`
-**See also** - [js-format.md](js-format.md), [industry.md](industry.md),
+`generator/legacyVehicles.ts`, `generator/fountains.ts`, `test/emitters.test.ts`
+**See also** - [js-format.md](js-format.md), [industry.md](industry.md), [remaining-models.md](remaining-models.md),
 [steam-locomotives.md](steam-locomotives.md), [ships.md](ships.md), [legacy-mapping.md](legacy-mapping.md)
 
 ## What an emitter is
@@ -45,12 +46,38 @@ plant's `type`). Nothing is derived from an old model's coordinates.
 Diesel exhausts are `smoke` with a small radius; whether and how a consumer draws them is the
 consumer's call. A tender, a coach or an electric gives none.
 
+## Fountain water
+
+A fountain's stone is its model; the water the game animates is recorded beside it, where the
+basin, bowl and nozzle are drawn:
+
+```ts
+interface FountainWater {
+  style: "classical" | "modern" | "sculptural";  // what the game picks a fountain by
+  pools: Array<{ y: number; ring: [x, z][] }>;   // a still surface at y inside ring
+  jets: Array<{
+    at: [x, y, z];          // the nozzle
+    dir?: [dx, dz];         // the way it arcs (absent: straight up)
+    rise: number;           // how far above the nozzle it climbs
+    reach: number;          // how far it lands, along dir
+    land: number;           // the height it lands at -- a pool's y
+    radius: number;         // its thickness
+  }>;
+}
+```
+
+`m.pool(ring, y)` and `m.jet({...})` record them (`m.fountainStyle(style)` names the style). The
+pool ring is exactly the basin's inner ring, so the water's outline follows the stone whatever its
+shape (a disc, a square, an octagon). The basin's water stands 0.1 m below its rim, and the static
+water face of the model sits at the same height.
+
 ## Where it is exported
 
-- **JS module** - `build(THREE, params)` returns a group whose `userData.emitters` lists them, for
-  exactly the parameters it was built with ([js-format.md](js-format.md)).
-- **GLB** - the scene's `extras.emitters` (three's GLTFLoader: `scene.userData.emitters`), for the
-  default parameters.
+- **JS module** - `build(THREE, params)` returns a group whose `userData.emitters` lists them, and
+  a fountain's `userData.fountain` its water, for exactly the parameters it was built with
+  ([js-format.md](js-format.md)).
+- **GLB** - the scene's `extras.emitters` and `extras.fountain` (three's GLTFLoader:
+  `scene.userData`), for the default parameters.
 
 The low-detail build carries none; a consumer reads them from the full build.
 
@@ -60,4 +87,6 @@ The low-detail build carries none; a consumer reads them from the full build.
 emitter to sit on a mouth: geometry at its height within twice its radius, and nothing covering it.
 It also requires the chimneys, power plants, foundry, mill, process plant, ships with funnels and
 every steam locomotive to emit, the refinery to flare, and the chimney's smoke to rise with its
-`height`.
+`height`. For the fountains it requires each to state its style, pools and jets, a drawn water
+face at every pool, a nozzle under every jet, and every jet to land inside a pool at that pool's
+height; nothing else states fountain water.
