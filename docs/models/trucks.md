@@ -3,7 +3,7 @@
 **Covers** - the procedural European trucks that replace the webapp's hand-authored truck GLBs: the
 MAN cistern semi-truck, the 8x4 concrete mixer and the white reefer semi-truck - their references,
 dimensions, datums, articulation, budget and deviations, and the cab-over shell they share.
-**Code** - `generator/trucks.ts`, `generator/vehicleParts.ts` (`steeredWheels`), `generator/rig.ts`, `generator/meshCore.ts` (`loft`, `sweep`, `slab`, `facets`, `part`), `test/referenceModels.test.ts`, `test/models.test.ts`, `.agents/skills/road-vehicle/SKILL.md`
+**Code** - `generator/trucks.ts`, `generator/photoTrucks.ts`, `generator/vehicleParts.ts` (`steeredWheels`), `generator/rig.ts`, `generator/meshCore.ts` (`loft`, `sweep`, `slab`, `facets`, `part`), `test/referenceModels.test.ts`, `test/models.test.ts`, `.agents/skills/road-vehicle/SKILL.md`
 **See also** - [vehicles.md](vehicles.md) (the American truck, articulation, `sweep`), [vehicle-rig.md](vehicle-rig.md) (steered wheels and the trailer hinge), [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md)
 
 ## The designs
@@ -98,3 +98,28 @@ leaves the plane.
 the truck budget of **12,000 triangles**; `test/models.test.ts` checks the scopes, the source tree and
 z-fighting. Look at a design with a compare render (reference left, procedural right) and at the
 trailer swung, per the road-vehicle skill.
+
+## Photo-based rigid trucks
+
+`PHOTO_TRUCKS` in `generator/photoTrucks.ts` adds three original procedural
+models to the factory catalog; these are not replacements for shipped IDs.
+
+| id | appearance | triangles | axles |
+|---|---|---|---|
+| `proc-vehicle-tatra-815-tipper` | faded red Tatra 815, open ribbed tipper bed, tall headboard, spare wheel, round lights and TATRA lettering | 3,658 | 3 |
+| `proc-vehicle-praga-rv` | olive Praga RV, long bonnet, split windscreen, radiator bars, separate headlights and canvas canopy | 4,328 | 3 |
+| `proc-vehicle-mercedes-atego-1224` | blue Atego 1224, light grey curtain body, buckles, rear door hardware, silver cab stripe and front badge | 3,540 | 2 |
+
+All use metres, +X forward, +Y up, +Z right, with 16-sided tyres standing on
+y = 0. Each has a rigid `body` and two child front wheel nodes, a 40-degree
+inner steering lock, and a wheelbase measured to the centre of the rear axle(s).
+The Praga frame is narrowed to clear the steered tyres. The existing truck LOD
+recipe is registered for all three. The tipper bed is fixed, not animated.
+
+The user supplied one three-quarter photograph per model. Reference provenance,
+missing photo files and limitations are recorded in each `assets/<name>/SOURCES.md`.
+The saved PNGs are explicitly named `model-preview-*`, including a back-face
+culled steering-lock render; they are not presented as source photographs.
+Additional reference downloads were blocked by the environment proxy. Dimensions
+are visual estimates, especially unseen rear details. Materials are solid colour;
+fine rust, cloth wrinkles, tyre tread and interiors are simplified or omitted.

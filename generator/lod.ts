@@ -285,6 +285,9 @@ const FAMILIES: Record<string, readonly string[]> = {
     "muv-69"
   ],
   "trucks": [
+    "tatra-815-tipper",
+    "praga-rv",
+    "mercedes-atego-1224",
     "cistern-semi-truck",
     "mixer-truck",
     "reefer-semi-truck"
