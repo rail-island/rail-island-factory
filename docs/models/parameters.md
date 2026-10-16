@@ -1,7 +1,7 @@
 # Parametric models
 
 **Covers** - designs with enum parameters: how a design declares them, what the export holds (one GLB per design, built with the defaults), how the meta and catalog entries and the standalone JS model expose them, the site's parameter picker, and the tests.
-**Code** - `generator/steamLocos.ts` (`UNIT_PARAM`, `CSD433_PARAMS`), `generator/design.ts` (`ParamSpec`, `resolveParams`, `paramCombinations`, `coverageCombinations`), `generator/village.ts` (the village houses' params), `generator/catalog.ts` (`MetaEntry.params`), `generator/jsModel.ts`, `generator/csdCoaches.ts` (`CLASSIC_GREEN_PARAMS`), `generator/bmoCoach.ts` (`BMO_PARAMS`), `generator/cdGreenWhiteCoach.ts` (`GREEN_WHITE_PARAMS`), `generator/wagons.ts` (`NAS_PARAMS`, `UA_PARAMS`, `EAS_PARAMS`), `generator/cd163Family.ts` (`CD163_PARAMS`, `CD263_PARAMS`), `generator/cd150.ts` (`CD150_PARAMS`), `generator/cd110.ts` (`CD110_PARAMS`), `generator/cd130.ts` (`CD130_PARAMS`), `generator/karosa.ts` (`KAROSA_SHORT_PARAMS`, `KAROSA_LONG_PARAMS`), `generator/emu471.ts` (`CD471_PARAMS`), `generator/emu680.ts` (`CD680_PARAMS`), `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/catalogQuery.ts` (`effectiveParams`, `isDefaultParams`), `test/params.test.ts`, `generator/freightWagons.ts` (`SQNS_PARAMS`, `PAO_PARAMS`, `HABIS_PARAMS`), `generator/hopperWagons.ts` (`FACCS_PARAMS`, `FALLS_PARAMS`), `generator/emu451.ts` (`CD451_PARAMS`), `generator/emu460.ts` (`CD460_PARAMS`), `generator/emu470.ts` (`CD470_PARAMS`), `generator/cd704.ts` (`CD704_PARAMS`), `generator/cd742.ts` (`CD742_PARAMS`), `generator/db212.ts` (`DB212_PARAMS`), `generator/cdYCoach.ts` (`CD_Y_PARAMS`), `generator/zsrCoach.ts` (`ZSR_PARAMS`), `generator/uicZCoach.ts` (`UIC_Z_PARAMS`)
+**Code** - `generator/steamLocos.ts` (`UNIT_PARAM`, `CSD433_PARAMS`), `generator/design.ts` (`ParamSpec`, `resolveParams`, `paramCombinations`, `coverageCombinations`), `generator/village.ts` (the village houses' params), `generator/skyscrapers.ts` (the towers' params), `generator/catalog.ts` (`MetaEntry.params`), `generator/jsModel.ts`, `generator/csdCoaches.ts` (`CLASSIC_GREEN_PARAMS`), `generator/bmoCoach.ts` (`BMO_PARAMS`), `generator/cdGreenWhiteCoach.ts` (`GREEN_WHITE_PARAMS`), `generator/wagons.ts` (`NAS_PARAMS`, `UA_PARAMS`, `EAS_PARAMS`), `generator/cd163Family.ts` (`CD163_PARAMS`, `CD263_PARAMS`), `generator/cd150.ts` (`CD150_PARAMS`), `generator/cd110.ts` (`CD110_PARAMS`), `generator/cd130.ts` (`CD130_PARAMS`), `generator/karosa.ts` (`KAROSA_SHORT_PARAMS`, `KAROSA_LONG_PARAMS`), `generator/emu471.ts` (`CD471_PARAMS`), `generator/emu680.ts` (`CD680_PARAMS`), `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/catalogQuery.ts` (`effectiveParams`, `isDefaultParams`), `test/params.test.ts`, `generator/freightWagons.ts` (`SQNS_PARAMS`, `PAO_PARAMS`, `HABIS_PARAMS`), `generator/hopperWagons.ts` (`FACCS_PARAMS`, `FALLS_PARAMS`), `generator/emu451.ts` (`CD451_PARAMS`), `generator/emu460.ts` (`CD460_PARAMS`), `generator/emu470.ts` (`CD470_PARAMS`), `generator/cd704.ts` (`CD704_PARAMS`), `generator/cd742.ts` (`CD742_PARAMS`), `generator/db212.ts` (`DB212_PARAMS`), `generator/cdYCoach.ts` (`CD_Y_PARAMS`), `generator/zsrCoach.ts` (`ZSR_PARAMS`), `generator/uicZCoach.ts` (`UIC_Z_PARAMS`)
 **See also** - [export.md](export.md), [js-format.md](js-format.md), [csd-coaches.md](csd-coaches.md), [village.md](village.md), [buses.md](buses.md), [steam-locomotives.md](steam-locomotives.md), [../site/catalog-site.md](../site/catalog-site.md)
 
 ## The idea
@@ -83,6 +83,11 @@ layouts, and a `unit` value is a different vehicle. The first was `veh-csd-class
 | name | values | default |
 |---|---|---|
 | `variant` | `classA` (Class A, 1st class, 9 compartments), `classB` (Class B, 2nd class, 10 compartments) | `classA` |
+
+The ten skyscrapers are also parametric: `size`, `glazing` and `structure`
+offer 60 combinations per tower. Twisting Tower adds `twist` (180 combinations);
+Terraced Green Tower adds `terraces` and `terraceUse` (720 combinations).
+See [skyscrapers.md](skyscrapers.md).
 
 ## Declaring parameters
 

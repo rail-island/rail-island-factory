@@ -123,7 +123,11 @@ describe("parametric models", () => {
       for (const combo of coverageCombinations(d.params, d.finishParams)) {
         const want = new Map<string, number[]>();
         const glb = parseGlb(d.build(combo).toGlb(d.id));
-        for (const t of collectTriangles(glb.json, glb.bin)) want.set(t.material, [...(want.get(t.material) ?? []), ...t.p.flat()]);
+        for (const t of collectTriangles(glb.json, glb.bin)) {
+          const list = want.get(t.material) ?? [];
+          for (const point of t.p) list.push(...point);
+          want.set(t.material, list);
+        }
         const got = groupVertices(mod.default(THREE, combo));
         expect([...got.keys()].sort()).toEqual([...want.keys()].sort());
         for (const [mat, pos] of want) {
