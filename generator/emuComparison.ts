@@ -13,6 +13,10 @@ import { collectTriangles, parseGlb } from "./glbTriangles.ts";
 import { isLeaf, type LeafNode, type TreeNode } from "./sourceTree.ts";
 import { EMU471_DESIGNS, elefantCentre, ELEFANT_LAYOUTS, K_Y, K_Z } from "./emu471.ts";
 import { EMU680_DESIGNS, K_X_END, K_Z as K_Z_680, PENDOLINO_LAYOUTS, pendolinoLength } from "./emu680.ts";
+import { EMU451_DESIGNS, frame451 } from "./emu451.ts";
+import { EMU460_DESIGNS, frame460 } from "./emu460.ts";
+import { EMU470_DESIGNS, frame470 } from "./emu470.ts";
+import type { CarFrame } from "./emuClassicKit.ts";
 import type { CoachLandmark, CoachComparisonRow } from "./csdCoachComparison.ts";
 
 export { meanAbsoluteError, bmpSize } from "./csdCoachComparison.ts";
@@ -80,9 +84,32 @@ export const EMU_TRANSFERS: readonly EmuTransfer[] = [
     kY: 1,
     kZ: K_Z_680,
   },
+  classic("cd_451", "CD 451 motor car", "veh-cd-451", { unit: "motorCar" }, "cd-451", frame451("motorCar")),
+  classic("cd_460", "CD 460 motor car", "veh-cd-460", { unit: "motorCar", livery: "cd" }, "cd-460", frame460("motorCar")),
+  classic("cd_470", "CD 470 motor car", "veh-cd-470", { unit: "motorCar" }, "cd-470", frame470("motorCar")),
 ];
 
-const DESIGNS: readonly ProceduralDesign[] = [...EMU471_DESIGNS, ...EMU680_DESIGNS];
+/** A car of the older units (emuClassicKit.ts): its cab at source x 0, body metres b = kx * (srcEnd - x). */
+function classic(key: string, title: string, id: string, params: ParamValues, folder: string, frame: { F: CarFrame; centre: number }): EmuTransfer {
+  const { F, centre } = frame;
+  return {
+    key,
+    title,
+    id,
+    params,
+    folder,
+    native: `native/${key}`,
+    report: "COMPARISON.md",
+    side: (x) => 10 * (F.kx * F.srcEnd - (x + centre)),
+    sideUnscaled: (x) => 10 * (F.srcEnd - (x + centre) / F.kx),
+    sideRule: `u = 10 * (${(F.kx * F.srcEnd).toFixed(3)} - (Factory X + ${centre.toFixed(3)})): the BMP has the cab at column 0, the model at +X`,
+    kX: F.kx,
+    kY: 1,
+    kZ: 1,
+  };
+}
+
+const DESIGNS: readonly ProceduralDesign[] = [...EMU471_DESIGNS, ...EMU680_DESIGNS, ...EMU451_DESIGNS, ...EMU460_DESIGNS, ...EMU470_DESIGNS];
 
 export function emuTransfer(key: string): EmuTransfer {
   const t = EMU_TRANSFERS.find((x) => x.key === key);

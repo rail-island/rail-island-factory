@@ -1,0 +1,415 @@
+{
+ "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/emu/cd 451/cd_451/model",
+ "pixelMetres": 0.1,
+ "convention": "Pixel edges [left, top, right, bottom] on the native BMP; origin top left, x right, y down.",
+ "annotations": [
+  {
+   "id": "S01",
+   "view": "em475_z_both",
+   "side": "right",
+   "element": "louvre 1 panel",
+   "box": [
+    26,
+    28,
+    34,
+    36
+   ],
+   "nodes": [
+    "body/right-side/louvres/louvre-1/panel"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "S02",
+   "view": "em475_z_both",
+   "side": "right",
+   "element": "louvre 3 panel",
+   "box": [
+    44,
+    28,
+    52,
+    36
+   ],
+   "nodes": [
+    "body/right-side/louvres/louvre-3/panel"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "S03",
+   "view": "em475_z_both",
+   "side": "right",
+   "element": "machine room door outline",
+   "box": [
+    35,
+    36,
+    52,
+    47
+   ],
+   "nodes": [
+    "body/right-side/machine-room-door/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Grey outline on grey; bottom edge +/- one pixel."
+  },
+  {
+   "id": "S04",
+   "view": "em475_z_both",
+   "side": "right",
+   "element": "window behind the louvres, frame",
+   "box": [
+    55,
+    28,
+    62,
+    36
+   ],
+   "nodes": [
+    "body/right-side/windows/cab-end-window/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "S05",
+   "view": "em475_z_both",
+   "side": "right",
+   "element": "door 1 outline",
+   "box": [
+    70,
+    31,
+    87,
+    55
+   ],
+   "nodes": [
+    "body/right-side/doors/door-1/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "S06",
+   "view": "em475_z_both",
+   "side": "right",
+   "element": "door 1, first window",
+   "box": [
+    72,
+    37,
+    77,
+    46
+   ],
+   "nodes": [
+    "body/right-side/doors/door-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "S07",
+   "view": "em475_z_both",
+   "side": "right",
+   "element": "window 1 (small) frame",
+   "box": [
+    93,
+    36,
+    101,
+    46
+   ],
+   "nodes": [
+    "body/right-side/windows/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "S08",
+   "view": "em475_z_both",
+   "side": "right",
+   "element": "window 2 frame",
+   "box": [
+    105,
+    36,
+    117,
+    46
+   ],
+   "nodes": [
+    "body/right-side/windows/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "S09",
+   "view": "em475_z_both",
+   "side": "right",
+   "element": "window 4 frame",
+   "box": [
+    137,
+    36,
+    149,
+    46
+   ],
+   "nodes": [
+    "body/right-side/windows/window-4/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "S10",
+   "view": "em475_z_both",
+   "side": "right",
+   "element": "window 6 (small) frame",
+   "box": [
+    169,
+    36,
+    177,
+    46
+   ],
+   "nodes": [
+    "body/right-side/windows/window-6/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "S11",
+   "view": "em475_z_both",
+   "side": "right",
+   "element": "door 2 outline",
+   "box": [
+    183,
+    31,
+    200,
+    55
+   ],
+   "nodes": [
+    "body/right-side/doors/door-2/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "S12",
+   "view": "em475_z_both",
+   "side": "right",
+   "element": "inner end window 1 frame",
+   "box": [
+    207,
+    29,
+    213,
+    39
+   ],
+   "nodes": [
+    "body/right-side/windows/window-7/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "S13",
+   "view": "em475_z_both",
+   "side": "right",
+   "element": "inner end window 2 frame",
+   "box": [
+    216,
+    29,
+    228,
+    39
+   ],
+   "nodes": [
+    "body/right-side/windows/window-8/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "S14",
+   "view": "em475_z_both",
+   "side": "right",
+   "element": "luggage door outline",
+   "box": [
+    232,
+    28,
+    245,
+    49
+   ],
+   "nodes": [
+    "body/right-side/doors/luggage-door/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Grey outline on grey; +/- one pixel."
+  },
+  {
+   "id": "S15",
+   "view": "em475_z_both",
+   "side": "right",
+   "element": "roof ventilator housing",
+   "box": [
+    92,
+    17,
+    181,
+    21
+   ],
+   "nodes": [
+    "roof-equipment/ventilator"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "The BMP shows its visible top; the model's measured bounds include its foot inside the roof."
+  },
+  {
+   "id": "F01",
+   "view": "em475_x_inc",
+   "end": "front",
+   "element": "windscreen (glass band of the nose)",
+   "box": [
+    0,
+    28,
+    30,
+    35
+   ],
+   "nodes": [
+    "body/nose/glass-band"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Light glass on the BMP; the band's top +/- one pixel."
+  },
+  {
+   "id": "F02",
+   "view": "em475_x_inc",
+   "end": "front",
+   "element": "roof lamp housing",
+   "box": [
+    10,
+    23,
+    20,
+    27
+   ],
+   "nodes": [
+    "cab/top-lamp"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "Dark housing; the XML raises it to 3.9 m, the model keeps it at 3.82 m so it still stands over the 3.8 m cab roof behind it."
+  },
+  {
+   "id": "F03",
+   "view": "em475_x_inc",
+   "end": "front",
+   "element": "lamp pod (left in the BMP), white lens",
+   "box": [
+    2,
+    44,
+    4,
+    46
+   ],
+   "nodes": [
+    "cab/lamp-pods/right/sweep-2"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "A 2 x 2 pixel lens; the model's round lens is 0.3 m across."
+  },
+  {
+   "id": "F04",
+   "view": "em475_x_inc",
+   "end": "front",
+   "element": "lamp pod (left in the BMP), red lens",
+   "box": [
+    3,
+    47,
+    4,
+    49
+   ],
+   "nodes": [
+    "cab/lamp-pods/right/sweep-3"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "A 1 x 2 pixel lens."
+  },
+  {
+   "id": "F05",
+   "view": "em475_x_inc",
+   "end": "front",
+   "element": "lamp pod (left in the BMP)",
+   "box": [
+    1,
+    42,
+    6,
+    49
+   ],
+   "nodes": [
+    "cab/lamp-pods/right/sweep-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "F06",
+   "view": "em475_x_inc",
+   "end": "front",
+   "element": "CD emblem",
+   "box": [
+    13,
+    41,
+    18,
+    45
+   ],
+   "nodes": [
+    "cab/emblem"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "F07",
+   "view": "em475_x_inc",
+   "end": "front",
+   "element": "coupler head",
+   "box": [
+    12,
+    48,
+    18,
+    55
+   ],
+   "nodes": [
+    "cab/coupler/head"
+   ],
+   "tolerancePixels": 2.61,
+   "uncertainty": "Mechanical constraint: the Scharfenberg head is 0.34 m wide (emuParts centreCoupler); the BMP paints the whole draw gear dark on the dark apron."
+  },
+  {
+   "id": "R01",
+   "view": "em475_x_dec",
+   "end": "rear",
+   "element": "end door outline",
+   "box": [
+    10,
+    26,
+    21,
+    45
+   ],
+   "nodes": [
+    "rear-end/end-door/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R02",
+   "view": "em475_x_dec",
+   "end": "rear",
+   "element": "marker lamp (left in the BMP)",
+   "box": [
+    6,
+    43,
+    8,
+    44
+   ],
+   "nodes": [
+    "rear-end/marker-lamps/sweep-1"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "A 2 x 1 pixel lamp."
+  }
+ ]
+}
