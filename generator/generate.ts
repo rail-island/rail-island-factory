@@ -44,6 +44,7 @@ import { EMU471_DESIGNS } from "./emu471.ts";
 import { EMU451_DESIGNS } from "./emu451.ts";
 import { EMU460_DESIGNS } from "./emu460.ts";
 import { EMU470_DESIGNS } from "./emu470.ts";
+import { GERMAN_COACHES } from "./germanCoaches.ts";
 import { EMU680_DESIGNS } from "./emu680.ts";
 import { CABLE_CABINS } from "./cableCabins.ts";
 import { DIESEL_LOCOS } from "./dieselLocos.ts";
@@ -108,6 +109,7 @@ const FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: st
   { designs: EMU451_DESIGNS, source: "emu451.ts", meta: "vehicles" },
   { designs: EMU460_DESIGNS, source: "emu460.ts", meta: "vehicles" },
   { designs: EMU470_DESIGNS, source: "emu470.ts", meta: "vehicles" },
+  { designs: GERMAN_COACHES, source: "germanCoaches.ts", meta: "vehicles" },
 ];
 
 /** Every building design: the skyscrapers, then the landmarks and stations (skyscrapers.meta.json). */

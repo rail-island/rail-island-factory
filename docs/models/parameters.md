@@ -19,7 +19,10 @@ and `veh-cd-263` (`livery`, [loco-liveries.md](loco-liveries.md)), `veh-cd-110` 
 `veh-bmo-double-deck-coach` (`livery`: csd, cdBlue, cdBlueGrey, cdRedDoors;
 [bmo-double-deck.md](bmo-double-deck.md)), `veh-cd-green-white-coach`
 (`variant`: a, ab, b, bee, beel, bds, ds, bdmeer, bdmtee; default b;
-[cd-green-white.md](cd-green-white.md)), the three freight wagons with a
+[cd-green-white.md](cd-green-white.md)), the German coaches `veh-db-n-wagen` (`variant`: bn,
+abn, bdnrf; `livery`: vr, iv), `veh-db-dosto` (`variant`: firstClass, secondClass, drivingTrailer;
+default secondClass) and `veh-dr-sbahn-berlin` (`variant`: coach, drivingTrailer)
+([german-coaches.md](german-coaches.md)), the three freight wagons with a
 `cargo` (default empty; [wagons.md](wagons.md)), the Sqns container wagon (`cargo`: empty, maersk) and the
 Pao flat wagon (`cargo`: tubes, the default, or karosaB951), the Habis (`livery`: tw1, tw2), Faccs
 (`livery`: cd, viamont) and Falls (`livery`: cd, sd, viamont) wagons ([freight-wagons.md](freight-wagons.md)),

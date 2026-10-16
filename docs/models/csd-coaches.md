@@ -84,7 +84,9 @@ designs, the Bmo and the CD green and white coach).
   Y-coaches' ends taper 3.0 to 2.8 m and drop their roof 0.2 m, the Balm's ends
   round in plan and slope down to a 1.9 m nose tip, the Bmo's floor drops from
   0.9 m to 0.2 m between the bogies. Each paint band of the section is one open
-  sweep per station segment, closed only by end-cap slabs. Be31 (main body,
+  sweep per station segment, closed only by end-cap slabs (`trimCaps` leaves out
+  the caps of bands a sloped nose clips away at its tip; the German coaches' cabs,
+  [german-coaches.md](german-coaches.md)). Be31 (main body,
   narrower vestibules, roof), Bi20 (compartments, roof, platforms) and Dsk (van,
   roof, platform) are several volumes.
 - **Panels.** `sidePanel` lays a box from a side BMP on the skin, split at plan
