@@ -17,7 +17,7 @@ describe("the rail vehicles' classification", () => {
     const units: Record<string, string> = {
       "proc-vehicle-cd-471": "electric", "proc-vehicle-cd-680": "electric", "proc-vehicle-cd-451": "electric",
       "proc-vehicle-cd-460": "electric", "proc-vehicle-cd-470": "electric", "proc-vehicle-ice-1": "electric", "proc-vehicle-tgv": "electric",
-      "proc-vehicle-cd-810": "diesel", "proc-vehicle-cd-843": "diesel", "proc-vehicle-csd-m131": "diesel", "proc-vehicle-csd-m240": "diesel",
+      "proc-vehicle-cd-810": "diesel", "proc-vehicle-cd-812": "diesel", "proc-vehicle-cd-843": "diesel", "proc-vehicle-csd-m131": "diesel", "proc-vehicle-csd-m240": "diesel",
       "proc-vehicle-csd-m296": "diesel", "proc-vehicle-db-628": "diesel", "proc-vehicle-mav-mdmot": "diesel",
       "proc-vehicle-csd-m112": "steam",
     };

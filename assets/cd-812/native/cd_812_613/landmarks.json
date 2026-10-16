@@ -1,0 +1,16 @@
+{
+  "source": "janproch/vlakosimdb db/train/dmu/812/cd_812.613/model (z_dec 160 x 60, 0.1 m a pixel; x scaled by 14.47 / 15 to the published length over the buffers). Side only: the cab noses follow photographs (assets/cd-812/PHOTOS.md), not the 30 px front BMP.",
+  "annotations": [
+    {"id": "S01", "view": "side", "box": [31, 30, 44, 39], "nodes": ["body/right-side/windows/window-1/frame"], "tolerancePixels": 1.5, "uncertainty": "First saloon window, light grey frame."},
+    {"id": "S02", "view": "side", "box": [61, 30, 74, 39], "nodes": ["body/right-side/windows/window-3/frame"], "tolerancePixels": 1.5, "uncertainty": "Third saloon window."},
+    {"id": "S03", "view": "side", "box": [106, 30, 119, 39], "nodes": ["body/right-side/windows/window-6/frame"], "tolerancePixels": 1.5, "uncertainty": "Last saloon window."},
+    {"id": "S04", "view": "side", "box": [76, 30, 89, 39], "nodes": ["body/right-side/windows/window-4/frame"], "tolerancePixels": 1.5, "uncertainty": "Fourth saloon window, over the destination display."},
+    {"id": "S05", "view": "side", "box": [18, 28, 28, 55], "nodes": ["body/right-side/doors/door-1/outline"], "tolerancePixels": 1.5, "uncertainty": "Green folding door behind the -X cab, down to the skirt's foot at 0.5 m."},
+    {"id": "S06", "view": "side", "box": [122, 28, 132, 55], "nodes": ["body/right-side/doors/door-2/outline"], "tolerancePixels": 1.5, "uncertainty": "As S05 behind the +X cab."},
+    {"id": "S07", "view": "side", "box": [20, 32, 26, 42], "nodes": ["body/right-side/doors/door-1/glass-1/frame"], "tolerancePixels": 1.5, "uncertainty": "Door window."},
+    {"id": "S08", "view": "side", "box": [47, 42, 55, 47], "nodes": ["body/right-side/emblem"], "tolerancePixels": 1.5, "uncertainty": "Black CD emblem on the white band; the model draws the emblem 90 % of the box high at its proportions."},
+    {"id": "S09", "view": "side", "box": [76, 41, 88, 45], "nodes": ["body/right-side/display"], "tolerancePixels": 1.5, "uncertainty": "Destination display (black with yellow pixels)."},
+    {"id": "S10", "view": "side", "box": [5, 48, 145, 49], "nodes": ["shell/greyline-band", "front-end/skin/grey-line", "rear-end/skin/grey-line"], "tolerancePixels": 1.5, "uncertainty": "Dark grey line under the white band, end to end; the cab ends' skins carry it round the noses."},
+    {"id": "S11", "view": "side", "box": [4, 24, 146, 47], "nodes": ["shell/green-band", "front-end/skin/green", "rear-end/skin/green"], "tolerancePixels": 1.5, "uncertainty": "Green: window band, roof and the cab noses, tip to tip, down to the sweep's foot at the noses (row 47, 1.3 m; the doors excluded) up to the roof (row 24, 3.6 m; the XML section's crown is 3.7 m)."}
+  ]
+}

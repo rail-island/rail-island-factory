@@ -2490,16 +2490,16 @@
     "quality": "reproduction"
   },
   "train-dmu-812-cd-812-613": {
-    "designId": "veh-cd-810",
+    "designId": "veh-cd-812",
     "params": {
-      "variant": "cd812"
+      "unit": "motorCar"
     },
     "quality": "reproduction"
   },
   "train-dmu-812-cd-912-001": {
-    "designId": "veh-cd-810",
+    "designId": "veh-cd-812",
     "params": {
-      "variant": "cd912"
+      "unit": "drivingTrailer"
     },
     "quality": "reproduction"
   },

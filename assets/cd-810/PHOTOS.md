@@ -1,6 +1,6 @@
-# CD 810 / 812 / 912 - reference photos
+# CD 810 - reference photos
 
-One parametric model, `veh-cd-810` ([sources](SOURCES.md)). All files were downloaded from Wikimedia Commons (rendered by `w/thumb.php`), downscaled to at most 1600 px on the long side and saved as JPEG (quality 85). Titles are given in ASCII transliteration; the page URL is the exact percent-encoded title.
+One parametric model, `veh-cd-810`; the 812 / 912 photos are in [cd-812](../cd-812/PHOTOS.md) ([sources](SOURCES.md)). All files were downloaded from Wikimedia Commons (rendered by `w/thumb.php`), downscaled to at most 1600 px on the long side and saved as JPEG (quality 85). Titles are given in ASCII transliteration; the page URL is the exact percent-encoded title.
 
 ## photo-810-cercany.jpg
 
@@ -29,11 +29,29 @@ One parametric model, `veh-cd-810` ([sources](SOURCES.md)). All files were downl
 - Date: 1996-04-19
 - Shows: 810 225-3 in the red and yellow band paint, three-quarter front: the two windscreens, the twin lamps on the yellow band, the top lamps, the buffers and coupling. The yellowBand livery's number.
 
-## photo-812-esmeralda.jpg
+## photo-810-545-front.jpg
 
-- Commons title: File:CzechMU812Esmeralda.jpg
-- Page: https://commons.wikimedia.org/wiki/File:CzechMU812Esmeralda.jpg
+- Commons title: File:Motorovy vuz 810 545-4.jpg
+- Page: https://commons.wikimedia.org/wiki/File:Motorov%C3%BD_v%C5%AFz_810_545-4.jpg
+- Author: Technickykrouzek
+- Licence: CC BY-SA 4.0
+- Date: 2009-07-14
+- Shows: 810 545-4 in the red and ivory paint, three-quarter front: the two windscreens in light rubber either side of the red pillar, the red roof cap with the twin top lamps in their black housing, the protruding lamp housings on the ivory band, the emblem and the number, the buffer beam and the plough. The main source of the face; the ivoryBand livery's number.
+
+## photo-810-287-plough.jpg
+
+- Commons title: File:Cd810-287-3a.jpg
+- Page: https://commons.wikimedia.org/wiki/File:Cd810-287-3a.jpg
 - Author: Radouch
-- Licence: GFDL, CC BY-SA 3.0 (migrated), CC BY 2.5
-- Date: 2005-04-16
-- Shows: 812 613-8 "Esmeralda": the rounded front with the large windscreen, the light grey mask with the lamps and the CD emblem, the green sweep over white, the yellow apron edge.
+- Licence: CC BY 2.5
+- Date: 2006-05-19
+- Shows: 810 287-3 three-quarter: the snow plough under the buffer beam with its yellow edge, the rounded corners, the ivory band on the face and the side.
+
+## photo-810-563-nachod.jpg
+
+- Commons title: File:CD Class 810, Nachod.jpg
+- Page: https://commons.wikimedia.org/wiki/File:%C4%8CD_Class_810,_N%C3%A1chod.jpg
+- Author: Tomas Sagner
+- Licence: CC BY-SA 3.0
+- Date: 2008-05-17
+- Shows: 810 563-7 in the blue and white paint: the yellow lamp band on the face, the white upper face and the blue lower one, the plough's yellow edge.

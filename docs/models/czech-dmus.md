@@ -1,8 +1,8 @@
 # Czech diesel railcars
 
-**Covers** - the five Czech diesel railcar designs transferred from vlakosimdb: `veh-cd-810` (CD 810 / 812 / 912), `veh-cd-843` (CD 843 / 943 / 043), `veh-csd-m131` (CSD M 131.1 Hurvinek and its trailer), `veh-csd-m240` (CSD M 240.0) and `veh-csd-m296` (CSD M 296.1 / CD 853 / 854): what each parameter value builds, the railcar kit, the scales to the published dimensions, the measured comparison and the tests.
-**Code** - `generator/czDmus.ts` (the family), `generator/dmuKit.ts`, `generator/dmu810.ts`, `generator/dmu843.ts`, `generator/dmuM131.ts`, `generator/dmuM240.ts`, `generator/dmuM296.ts`, `generator/dmuComparison.ts`, `generator/dmuReport.ts`, `generator/csdCoachParts.ts` (the coach builder), `test/czechDmus.test.ts`, `assets/cd-810/`, `assets/cd-843/`, `assets/csd-m131/`, `assets/csd-m240/`, `assets/csd-m296/`
-**See also** - [vehicles.md](vehicles.md), [parameters.md](parameters.md), [czech-emus.md](czech-emus.md) (the electric units and the same body builder), [csd-coaches.md](csd-coaches.md) (the coach builder and the comparison method), the source notes of [CD 810](../../assets/cd-810/SOURCES.md), [CD 843](../../assets/cd-843/SOURCES.md), [M 131.1](../../assets/csd-m131/SOURCES.md), [M 240.0](../../assets/csd-m240/SOURCES.md), [M 296.1](../../assets/csd-m296/SOURCES.md)
+**Covers** - the six Czech diesel railcar designs transferred from vlakosimdb: `veh-cd-810` (CD 810), `veh-cd-812` (CD 812 / 912 Esmeralda), `veh-cd-843` (CD 843 / 943 / 043), `veh-csd-m131` (CSD M 131.1 Hurvinek and its trailer), `veh-csd-m240` (CSD M 240.0) and `veh-csd-m296` (CSD M 296.1 / CD 853 / 854): what each parameter value builds, the railcar kit, the photographed cab faces (`cabNose.ts`), the scales to the published dimensions, the measured comparison and the tests.
+**Code** - `generator/czDmus.ts` (the family), `generator/dmuKit.ts`, `generator/cabNose.ts`, `generator/dmu810.ts`, `generator/dmu812.ts`, `generator/dmu843.ts`, `generator/dmuM131.ts`, `generator/dmuM240.ts`, `generator/dmuM296.ts`, `generator/dmuComparison.ts`, `generator/dmuReport.ts`, `generator/csdCoachParts.ts` (the coach builder), `test/czechDmus.test.ts`, `assets/cd-810/`, `assets/cd-812/`, `assets/cd-843/`, `assets/csd-m131/`, `assets/csd-m240/`, `assets/csd-m296/`
+**See also** - [vehicles.md](vehicles.md), [parameters.md](parameters.md), [czech-emus.md](czech-emus.md) (the electric units and the same body builder), [csd-coaches.md](csd-coaches.md) (the coach builder and the comparison method), the source notes of [CD 810](../../assets/cd-810/SOURCES.md), [CD 812](../../assets/cd-812/SOURCES.md), [CD 843](../../assets/cd-843/SOURCES.md), [M 131.1](../../assets/csd-m131/SOURCES.md), [M 240.0](../../assets/csd-m240/SOURCES.md), [M 296.1](../../assets/csd-m296/SOURCES.md)
 
 ## The designs
 
@@ -12,13 +12,12 @@ centred between its buffer faces, so the cars of a set couple in any order.
 
 | design | parameter | value | vlakosimdb (db/train/dmu/...) | vehicle |
 |---|---|---|---|---|
-| `veh-cd-810` "CD 810 / 812 / 912" | `variant` | `cd810` (default) | cd_810#1..#4 | the two-axle railcar (CSD M 152.0) |
-| | | `cd812` | 812/cd_812.613 | the 812 "Esmeralda", the one 810 rebuilt in 2001 with new ends |
-| | | `cd912` | 812/cd_912.001 | its driving trailer (Bfbdtanx 792), with the low centre door |
-| | `livery` | `red` (default) | cd_810#1 | red with a cream window band |
+| `veh-cd-810` "CD 810" | `livery` | `red` (default) | cd_810#1 | the two-axle railcar (CSD M 152.0), red with a cream window band |
 | | | `yellowBand` | cd_810#2 | red with the yellow band (810 225-3) |
-| | | `blueWhite` | cd_810#3 | blue and white, yellow end corners |
-| | | `ivoryBand` | cd_810#4 | red with an ivory band |
+| | | `blueWhite` | cd_810#3 | blue and white with the yellow lamp band |
+| | | `ivoryBand` | cd_810#4 | red with an ivory band (810 545-4) |
+| `veh-cd-812` "CD 812 / 912 Esmeralda" | `unit` | `motorCar` (default) | 812/cd_812.613 | the 812 "Esmeralda", the one 810 rebuilt in 2001 with new noses |
+| | | `drivingTrailer` | 812/cd_912.001 | its driving trailer 912 001 (Bfbdtanx 792), with the low centre door |
 | `veh-cd-843` "CD 843 / 943 / 043" | `unit` | `motorCar` (default) | cd_843 | the 843 motor car, a cab at each end |
 | | | `drivingTrailer` | 843/cd_943 | the 943 driving trailer, cab at +X, gangway at -X |
 | | | `trailer` | 843/cd_btn753-043 | the 043 trailer, gangways at both ends |
@@ -31,11 +30,13 @@ centred between its buffer faces, so the cars of a set couple in any order.
 
 Choices:
 
-- **810, 812 and 912 are one design.** vlakosimdb's 812 and 912 share one XML
-  (rounded ends, 14 m body) and the 812 is a rebuilt 810; the variant changes the
-  body and keeps the running gear. `livery` names the four vlakosimdb 810 paints
-  and is ignored by the 812 and 912, which have one paint. The title is not
-  "Regionova": that is the 814 / 914, which vlakosimdb does not carry here.
+- **The 810 and the 812 / 912 are two designs.** The 812 is a rebuilt 810, but
+  its laminate noses, its length, its livery and its trailer share nothing with
+  the 810's body any more, so `veh-cd-812` is its own design whose `unit` picks
+  the motor car or the driving trailer (the steam locomotives' tenders and the
+  843's cars do the same). Until this split they were `variant` values of
+  `veh-cd-810`; the game's legacy ids of the 812 and 912 now map to `veh-cd-812`
+  (`legacyTargets.json`). The title is not "Regionova": that is the 814 / 914.
   db/train/dmu/810/* (the archived 810 and its trailers) is out of scope.
 - **The 843 family is one design**, its cars the `unit` values. The motor car
   comes from cd_843 (24.1 m, the only motor car in the database; dmu/843 holds just
@@ -53,8 +54,8 @@ Choices:
 
 | design, car | over the buffers | triangles |
 |---|---|---|
-| CD 810 (each livery) | 13.97 m | about 4,000 to 4,300 |
-| CD 812, 912 | 14.47 m | about 4,700 and 4,500 |
+| CD 810 (each livery) | 13.97 m | about 9,200 to 9,900 |
+| CD 812, 912 | 14.47 m | about 14,700 and 14,400 |
 | CD 843, 943, 043 | 25.20 m | about 6,300, 5,600 and 5,100 |
 | CSD M 131.1, M 031 | 12.10 m | about 4,000 and 3,900 |
 | CSD M 240.0 | 18.50 m | about 6,400 |
@@ -79,26 +80,82 @@ Choices:
   The single-arm pantograph and the centre coupler of the electric units are not
   needed; `tractionNumber()` and `enumParam()` are re-exported from `emuParts.ts`.
 
-## CD 810 / 812 / 912
+## The cab faces (`cabNose.ts`)
 
-The 810's body is the XML section (walls to 3.0 m, roof to 3.3 m), the plan's
-end chamfers (eased from 1.0 to 1.25 m half width so the windscreens stay on the
-body) and the elevation: the floor at 0.8 m drops to 0.45 m at the door steps,
-the windscreens rake back 0.1 m from 2.0 to 2.9 m under a separate visor in the
-window band's colour, as the XML's second roof clip draws it. The windscreen
-panes lie on the raked plane (`slopePanel`); the twin lamps on the front band,
-the top lamp on the visor. Lengths are scaled by 13.103 / 12.5 to the published
-body (13.97 m over the buffers); the axles stand 8.0 m apart (published) on
-840 mm wheels with leaf springs. Paint is horizontal bands per livery, the red
-livery's yellow front band and the blue-white's yellow end corners as panels.
+vlakosimdb's fronts are 30 px wide; they place windows and lamps but cannot
+show a face's shape, and the 812's is far from the real one. The 810 and 812 /
+912 cab ends are therefore drawn from photographs (each folder's PHOTOS.md) by
+`CabNose`: one painted surface over the face, its rounded corners and the cab
+sides back to a join, where the body volume takes over with the same section.
 
-The 812 / 912 body follows its XML: the rounded nose (half width 0.5 m at the
-tip, 1.3 m 0.1 m back), the roof rounding into the nose from 2.6 m and the aprons
-down to 0.25 m; lengths scaled to the published 14.47 m over the buffers. The
-windscreen lies on two planes up the nose; the light grey mask, the lamps and the
-yellow apron edge are end panels; the green sweeps down over the white band at
-the ends in steps. The 912 has the low windows and the double centre door its BMP
-draws, and no roof equipment.
+- **Geometry.** Horizontal slices from the bottom row to the crown, each a
+  rounded rectangle seen from above: the centreline face's distance back from
+  the tip (`profile`, by height: an upright apron, a raked windscreen, the roof
+  rounding to the crown), the body's half width (`half`, its section), the plan
+  corner's radius and an optional plan bulge. Across a slice, u runs over the
+  face (|u| <= 1), the corner arc (1..2), a straight run back to `dSide` (2..3)
+  and the cab side to `dJoin` (3..4). Crown and bottom caps close it.
+- **Paint.** A base material and layers on top of it, each a predicate on a
+  surface point (height, distance back, lateral position, side or face) that
+  holds on one height interval at each u. The grid's columns are refined until
+  every layer boundary is straight within 12 mm, each cell is cut along the
+  boundaries, and cells of one colour are merged, so a rounded windscreen, a
+  lamp mask wrapping into the corners or a livery sweep is an exact boundary on
+  the curved skin. Everything inside a coarse cell is mapped bilinearly onto its
+  corners, so the refined pieces leave no cracks. A layer's pieces are drawn in
+  a scope of its name (`front-end/skin/mask`), which the comparison measures.
+- **Fittings** stand on the surface's local frame: `plate` (a housing, a tail
+  lamp), `lamp` (a bezel and its lens), `decal` (the CD emblem, the running
+  number, wipers), each following the face.
+- The plough or apron under the face is a second, smaller `CabNose` tucked 5 mm
+  inside the first, closed at its back.
+
+## CD 810
+
+The body between the cab ends is the XML section (walls to 3.0 m, roof to 3.3 m)
+with the floor at 0.8 m dropping to 0.45 m at the door steps; lengths scaled by
+13.103 / 12.5 to the published body (13.97 m over the buffers); the axles 8.0 m
+apart (published) on 840 mm wheels with leaf springs; windows, doors and
+markings from the z_dec boxes.
+
+Each cab end, after 810 545-4 and 810 287-3: a flat face with 0.13 m plan
+corners, joining the body at the end windows' front edge; two windscreens 1.25 m
+wide either side of a 0.14 m body-coloured pillar, from the sill (2.0 m) to
+2.94 m, raked back 75 mm, in light grey rubber with a wiper each; the roof cap
+rounding back to the crown with the twin top lamps in a black oval housing; on
+the lamp band a protruding housing at each side with a white inner and a red
+outer lamp, the CD emblem between them and the running number under the left;
+the buffer beam with the coupling and hoses; and the snow plough under it, from
+0.74 m down to 0.18 m, its foot 60 mm ahead of the face and narrowed to 2.0 m,
+with a yellow edge. The liveries' lamp bands follow the photographs (from the
+sill down to 1.35 or 1.4 m, on the face and the sides alike) and wrap round the
+corners; the red livery keeps vlakosimdb's yellow front band (1.4 to 1.7 m)
+under its cream upper face, the blue-white its white upper face over the yellow
+band and the blue below.
+
+## CD 812 / 912 Esmeralda
+
+The body between the noses follows the XML and the BMP: the section with the
+skirt tucked in below 1.2 m and the roof rounding to the 3.7 m crown, the skirt
+to 0.5 m cut up over the wheels, grey to 1.12 m, a dark grey line, white to
+1.9 m and green above; lengths scaled to the published 14.47 m over the buffers;
+axles at the XML's 3.35 and 11.6 m. The 812 carries its exhaust, cooler and
+engine; the 912 has the low windows and the double centre door its BMP draws,
+and no engine or roof equipment.
+
+Each nose, after 812 613-8 and 912 001-5, runs 1.2 m from its tip to the body:
+the apron upright to the buffer beam, the face raked 0.15 m up to the lamp
+mask's top, the windscreen at about 21 degrees, the roof rounding back to the
+crown; 0.36 m plan corners and a 40 mm bulge. The windscreen is nearly the
+face's width with its top falling toward the corners, in a black frame, with
+the silver roof cap and top lamp over it; the silver lamp mask under it wraps
+into the corners with the larger upper and smaller lower lamps at each side, the
+CD emblem and a small plate; the running number on the green below; the white
+sweeps down from 1.9 m at the cab door to 1.32 m round the corner, over the
+grey line and the grey skirt; the cab side window sits behind the corner, the
+mirrors folded against the sides. Under the face the grey apron reaches 0.24 m
+with the yellow edge between the buffers and the coupling slot; small red tail
+lamps sit low on the corners.
 
 ## CD 843 / 943 / 043
 
@@ -151,17 +208,26 @@ and front), orthographically from the GLB's vertices with the documented scales
 undone. `pnpm exec tsx generator/dmuReport.ts` writes `COMPARISON.md` in each
 folder (the first run recorded `baseline.json`); `--views <id> <dir> [k=v ...]`
 writes orthographic and three-quarter review views and prints the triangle count
-and any coplanar overlap. At the current revision: 810 0.99 -> 0.60 pp, 843 0.21
--> 0.01, M 131 0.59 -> 0.22, M 240 0.66 -> 0.33, M 296 0.35 pp. The rows left
-outside their tolerance are deliberate and named in each table.
+and any coplanar overlap. At the current revision: 810 0.89 -> 0.75 pp, 812
+1.16 -> 0.20 pp, 843 0.21 -> 0.01, M 131 0.59 -> 0.22, M 240 0.66 -> 0.33, M 296
+0.35 pp. The 810's and 812's baselines are the models before their cab faces were
+redrawn, measured on the same annotations. The 812 is compared on its side only
+(11 boxes): its face follows photographs, not the BMP. The 810's windscreen rows
+(F01, F02) stand 0.2 m taller than the BMP's, as photographed; its F07 was
+re-annotated from the strip over the windscreens to the whole cream upper face,
+the visor no longer being a part of its own. The rows left outside their
+tolerance are deliberate and named in each table.
 
 ## Tests
 
-`test/czechDmus.test.ts`: the five designs and their parameters; every
+`test/czechDmus.test.ts`: the six designs and their parameters; every
 combination within 16,000 triangles, on the rail, centred, within 3.1 m and
 4.7 m, its length over the buffers and its axles' positions, gauge and wheel
 radii; the 843's three cars sharing the 24.1 m body and which carry cabs; the
 trailers without engines and roof equipment; the 810 liveries sharing the body
-and the 812 / 912 their longer one; the running numbers' check digits; every
+and the 812 / 912 their longer one; the cab faces' parts (the 810's plough, its
+foot 0.18 m over the rail and ahead of the face, and its two windscreen panes;
+the 812 / 912's apron to 0.24 m, the windscreen 2.4 m wide over the lamp mask);
+the running numbers' check digits; every
 default car within its landmarks' pixel tolerances and MAE limit. `test/params.test.ts`
 and `test/models.test.ts` cover every design generically.
