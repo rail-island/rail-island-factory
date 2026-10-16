@@ -66,7 +66,8 @@ the native mapping.
 - **end items** (`EndItem`, u = z): windscreens with wipers, lamps, paint,
   grilles and the number plate, laid with `surfacePanel` so they follow the
   raked and curved ends - an item is cut at the end plan's corners at every
-  height it spans;
+  height it spans, and paint is cut into slabs at the profile's kinks so a
+  slanted edge (the 112's chevron, the 1012's sweeps) stays on the skin;
 - **running gear** - the kit's two-axle `bogie`, or `bogie3` (three wheelsets on
   a long dipping plate frame) for the Co'Co' 180; the kit's `buffers`; a plough;
 - **roof** - trapezoidal boxes, an optional high-voltage line, and the kit's
@@ -114,9 +115,8 @@ the corners where the corners carry the side's paint.
 - The DNT prototypes `#1` and `#2` draw the grilles on the other side and a
   slightly longer rake; the design keeps one body and changes the paint.
 - The OBB 1012's asymmetric sweeps are drawn alike at both ends (the native's
-  front one), cut where the side meets the rounded nose; its emblem is a plain
-  white panel.
-- Emblems are plain panels; lettering other than the running number, cab
+  front one), cut where the side meets the rounded nose.
+- Emblems are plain panels (the 1012's a slanted one); lettering other than the running number, cab
   interiors, cables and hoses are not modelled.
 
 ## Left out

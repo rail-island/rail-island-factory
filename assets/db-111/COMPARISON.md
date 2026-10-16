@@ -4,7 +4,7 @@
 **Code** - `generator/mainlineComparison.ts`, `generator/mainlineReport.ts`, `test/mainlineElectrics.test.ts`
 **See also** - [SOURCES.md](SOURCES.md), [docs/models/mainline-electrics.md](../../docs/models/mainline-electrics.md)
 
-Model revision: `a9eb5f3` (measured when this file was written). Mapping: side column px = 83.65 - 10 x, row = 10 (6 - y); front column = 10 (1.5 - z). Canvases: x_front 30 x 60 px (`native/db_111/x_both.bmp`), z_right 170 x 60 px (`native/db_111/z_dec.bmp`).
+Model revision: `9cec458` (measured when this file was written). Mapping: side column px = 83.65 - 10 x, row = 10 (6 - y); front column = 10 (1.5 - z). Canvases: x_front 30 x 60 px (`native/db_111/x_both.bmp`), z_right 170 x 60 px (`native/db_111/z_dec.bmp`).
 
 Each vector is (left, top, width, height) in native pixels; percentages are 100*x/W, 100*y/H, 100*w/W, 100*h/H of the view's canvas, origin top left. Delta = model minus source in percentage points. MAE = sum(|delta|) / (4 * boxes). Model boxes are the bounds of the actual GLB vertices of the named scopes, occluded vertices included.
 

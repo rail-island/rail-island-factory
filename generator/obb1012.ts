@@ -59,7 +59,7 @@ const SPEC: LocoSpec = {
     // the red machine room (columns 51-141, rows 24-38) with its light grey line (row 40) and the white emblem
     { kind: "paint", name: "machine room", x: cols(51, 142), y: [row(39), row(24)], mat: "red" },
     { kind: "paint", name: "line", x: cols(55, 138), y: [row(41), row(40)], mat: "lightGrey" },
-    { kind: "paint", name: "emblem", x: cols(90, 104), y: [row(37), row(30)], mat: "white", layer: 1 },
+    { kind: "paint", name: "emblem", x: cols(88, 106), y: [row(37), row(29)], poly: [pt(100, 37), pt(88, 37), pt(94, 29), pt(106, 29)], mat: "white", layer: 1 },
     { kind: "paint", name: "cab sweep", x: cols(10, 50), y: [row(42), row(26)], poly: WEDGE, mat: "red", mirror: true },
     // the grilles along the leaning upper sides (rows 16-23)
     { kind: "grille", name: "roof grille", x: cols(55, 138), y: [3.85, 4.17], slats: "v", pitch: 0.12 },

@@ -144,6 +144,40 @@ function outline(x: Span, y: Span, r = 0, poly?: Ring): Ring {
   return poly ?? (r > 0 ? roundRect(x[0], x[1], y[0], y[1], r) : rect(x[0], y[0], x[1], y[1]));
 }
 
+/** Clips a convex (u, v) outline to v0 <= v <= v1. */
+function clipV(poly: Ring, v0: number, v1: number): Ring {
+  let out: Ring = poly;
+  for (const [lim, keep] of [[v0, 1], [v1, -1]] as const) {
+    const src = out;
+    out = [];
+    for (let i = 0; i < src.length; i++) {
+      const a = src[i]!, b = src[(i + 1) % src.length]!;
+      const ina = keep * (a[1] - lim) >= 0, inb = keep * (b[1] - lim) >= 0;
+      if (ina) out.push(a);
+      if (ina !== inb) {
+        const t = (lim - a[1]) / (b[1] - a[1]);
+        out.push([a[0] + t * (b[0] - a[0]), lim]);
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * Paint: a convex outline cut into slabs at the profile's kinks, so an outline
+ * whose slanted edge crosses a kink still lies on the skin (surfacePanel only
+ * splits rows a whole column spans).
+ */
+function paint(m: MeshBuilder, mat: string, at: Place, n: Vec3, poly: Ring, d0: number, d1: number, uB: readonly number[], vB: readonly number[]): void {
+  const vs = poly.map((p) => p[1]);
+  const lo = Math.min(...vs), hi = Math.max(...vs);
+  const cuts = [lo, ...vB.filter((h) => h > lo + 1e-4 && h < hi - 1e-4), hi];
+  for (let i = 1; i < cuts.length; i++) {
+    const piece = clipV(poly, cuts[i - 1]!, cuts[i]!);
+    if (piece.length >= 3) surfacePanel(m, mat, at, n, piece, d0, d1, uB, vB);
+  }
+}
+
 const mirrorRing = (q: Ring): Ring => q.map(([u, v]) => [-u, v] as [number, number]).reverse();
 
 /** A framed window: frame, glass, an optional bar. */
@@ -194,7 +228,7 @@ function sides(m: MeshBuilder, s: LocoSpec, sp: ShellSpec, vB: readonly number[]
                 break;
               case "paint": {
                 const d = 0.003 + 0.002 * (it.layer ?? 0);
-                surfacePanel(m, mat, at, n, outline(x, it.y, r, poly), d - 0.002, d, [], vB);
+                paint(m, mat, at, n, outline(x, it.y, r, poly), d - 0.002, d, [], vB);
                 break;
               }
               case "panel":
@@ -255,7 +289,7 @@ function cabEnd(m: MeshBuilder, s: LocoSpec, sp: ShellSpec, e: number, vB: reado
           break;
         case "paint": {
           const d = 0.003 + 0.002 * (it.layer ?? 0);
-          surfacePanel(m, it.mat ?? "white", at, n, outline(z, it.y, 0, poly), d - 0.002, d, uB, vB);
+          paint(m, it.mat ?? "white", at, n, outline(z, it.y, 0, poly), d - 0.002, d, uB, vB);
           break;
         }
         case "grille":
