@@ -1,0 +1,416 @@
+<?xml version="1.0" encoding="Windows-1250"?>
+<simplemodel name="tgv" edit_along="0" xsize="22" ysize="6" zsize="3" glomodel.loadchild="model" version="1.0">
+<alongx edit_jumpx="0.1" edit_jumpy="0.1" edit_scale="36" edit_dx="200" edit_dy="348" edit_incdec="1">
+<clip>
+<polygon apply="base">
+<point x="-1.1" y="0"/>
+<point x="1.1" y="0"/>
+<point x="1.5" y="0.9"/>
+<point x="1.5" y="2.6"/>
+<point x="1.4" y="3.4"/>
+<point x="1.3" y="3.5"/>
+<point x="-1.3" y="3.5"/>
+<point x="-1.4" y="3.4"/>
+<point x="-1.5" y="2.6"/>
+<point x="-1.5" y="0.9"/>
+</polygon>
+<polygon apply="base">
+<point x="-1.2" y="3.9"/>
+<point x="-1.3" y="3.5"/>
+<point x="1.3" y="3.5"/>
+<point x="1.2" y="3.9"/>
+<point x="0.9" y="4.1"/>
+<point x="-0.8" y="4.1"/>
+</polygon>
+<polygon apply="gear">
+<point x="-1.1" y="0.3"/>
+<point x="-1.2" y="0.9"/>
+<point x="-1.2" y="3.3"/>
+<point x="-0.8" y="3.8"/>
+<point x="0.8" y="3.8"/>
+<point x="1.2" y="3.3"/>
+<point x="1.2" y="0.9"/>
+<point x="1.1" y="0.3"/>
+</polygon>
+<polygon apply="gear">
+<point x="-0.7" y="0"/>
+<point x="-0.7" y="0.3"/>
+<point x="-0.9" y="0.3"/>
+<point x="-0.9" y="0"/>
+</polygon>
+<polygon apply="gear">
+<point x="0.7" y="0"/>
+<point x="0.7" y="0.3"/>
+<point x="0.9" y="0.3"/>
+<point x="0.9" y="0"/>
+</polygon>
+</clip>
+</alongx>
+<alongy edit_jumpx="0.1" edit_jumpy="0.1" edit_scale="40" edit_dx="-1904" edit_dy="90" edit_incdec="1">
+<clip>
+<polygon apply="base">
+<point x="1.8" y="-1.4"/>
+<point x="2.6" y="-1.5"/>
+<point x="21.9" y="-1.5"/>
+<point x="21.9" y="1.5"/>
+<point x="2.6" y="1.5"/>
+<point x="1.8" y="1.4"/>
+<point x="0.6" y="1"/>
+<point x="0.2" y="0.6"/>
+<point x="0.1" y="0.1"/>
+<point x="0.1" y="-0.1"/>
+<point x="0.2" y="-0.6"/>
+<point x="0.6" y="-1"/>
+</polygon>
+<polygon apply="base">
+<point x="21.9" y="0.3"/>
+<point x="21.9" y="-0.3"/>
+<point x="22" y="-0.3"/>
+<point x="22" y="0.3"/>
+</polygon>
+</clip>
+</alongy>
+<alongz edit_jumpx="0.1" edit_jumpy="0.1" edit_scale="37" edit_dx="-1149" edit_dy="370" edit_incdec="0">
+<clip>
+<polygon apply="base">
+<point x="2.6" y="2.6"/>
+<point x="1.3" y="2.1"/>
+<point x="0.1" y="1.3"/>
+<point x="0.4" y="0.9"/>
+<point x="0.9" y="0.6"/>
+<point x="2.6" y="0.6"/>
+</polygon>
+<polygon apply="base">
+<point x="11.7" y="3.6"/>
+<point x="4.4" y="3.6"/>
+<point x="3.8" y="3.4"/>
+<point x="2.6" y="2.6"/>
+<point x="2.6" y="0.9"/>
+<point x="11.7" y="0.9"/>
+</polygon>
+<polygon apply="base">
+<point x="21.9" y="3.7"/>
+<point x="16.4" y="3.7"/>
+<point x="16.4" y="3.4"/>
+<point x="21.9" y="3.4"/>
+</polygon>
+<polygon apply="base">
+<point x="11.7" y="0.9"/>
+<point x="21.9" y="0.9"/>
+<point x="21.9" y="3.4"/>
+<point x="11.7" y="3.4"/>
+</polygon>
+<polygon apply="base">
+<point x="0.7" y="0.2"/>
+<point x="1.3" y="0.9"/>
+<point x="3.2" y="0.9"/>
+<point x="2.9" y="0.2"/>
+</polygon>
+<polygon apply="base">
+<point x="11.7" y="3.4"/>
+<point x="11.7" y="3.9"/>
+<point x="13.2" y="4.1"/>
+<point x="16.4" y="4.1"/>
+<point x="16.4" y="3.4"/>
+</polygon>
+<polygon apply="base">
+<point x="11.7" y="3.6"/>
+<point x="5.6" y="3.6"/>
+<point x="6.2" y="3.9"/>
+<point x="11.7" y="3.9"/>
+</polygon>
+<polygon apply="base">
+<point x="0.9" y="0.4"/>
+<point x="0.9" y="0.6"/>
+<point x="2.6" y="0.6"/>
+<point x="2.6" y="0.4"/>
+</polygon>
+<polygon apply="base">
+<point x="7.4" y="0.2"/>
+<point x="16.799999" y="0.2"/>
+<point x="17.1" y="0.9"/>
+<point x="7.1" y="0.9"/>
+</polygon>
+<polygon apply="base">
+<point x="21.299999" y="0.2"/>
+<point x="21" y="0.9"/>
+<point x="21.9" y="0.9"/>
+<point x="21.9" y="0.2"/>
+</polygon>
+<polygon apply="gear">
+<point x="3" y="0.5"/>
+<point x="3.2" y="0.9"/>
+<point x="7.1" y="0.9"/>
+<point x="7.3" y="0.5"/>
+<point x="5.8" y="0.3"/>
+<point x="4.5" y="0.3"/>
+</polygon>
+<polygon apply="gear">
+<point x="4.2" y="0.5"/>
+<point x="3.1" y="0.5"/>
+<point x="3.4" y="0"/>
+<point x="3.9" y="0"/>
+</polygon>
+<polygon apply="gear">
+<point x="7.3" y="0.5"/>
+<point x="6.1" y="0.5"/>
+<point x="6.4" y="0"/>
+<point x="6.9" y="0"/>
+</polygon>
+<polygon apply="gear">
+<point x="17" y="0.6"/>
+<point x="17.1" y="0.9"/>
+<point x="21" y="0.9"/>
+<point x="21.200001" y="0.6"/>
+<point x="19.700001" y="0.3"/>
+<point x="18.4" y="0.3"/>
+</polygon>
+<polygon apply="gear">
+<point x="17.299999" y="0"/>
+<point x="17" y="0.6"/>
+<point x="18.1" y="0.6"/>
+<point x="17.799999" y="0"/>
+</polygon>
+<polygon apply="gear">
+<point x="20.299999" y="0"/>
+<point x="20" y="0.6"/>
+<point x="21.200001" y="0.6"/>
+<point x="20.799999" y="0"/>
+</polygon>
+<polygon apply="gear">
+<point x="17.200001" y="3.7"/>
+<point x="17.5" y="3.8"/>
+<point x="21" y="3.8"/>
+<point x="21.299999" y="3.7"/>
+</polygon>
+<polygon apply="base">
+<point x="22" y="1.1"/>
+<point x="21.9" y="1.1"/>
+<point x="21.9" y="0.5"/>
+<point x="22" y="0.5"/>
+</polygon>
+</clip>
+</alongz>
+<inlines>
+<inline name="pant1" comment="trolej" sx="2.021811" sy="1.590355" sz="1.273099" tx="19.018616" ty="3.798999" tz="-0.835551" what="1" when="1">
+<args b="" g="" r=""/>
+</inline>
+<inline name="pant1" comment="stazeny" sx="-2.312666" sy="0.283386" sz="1.1" tx="18.888948" ty="3.823648" tz="-0.698477" what="1" when="1">
+<args b="" g="" r=""/>
+</inline>
+</inlines>
+<crook/>
+<cpom>
+<colorize dirs="1;0;0;0;0;0;" texture="pack:tgv_x_inc.bmp" texx1="-1.5" texy1="0" texx2="1.5" texy2="6" transp="0" xscale="" yscale="" transparent="0" material="0" stamp="0" cond="" rkoef="" gkoef="" bkoef="" stampcntx="" stampcnty="" stampspacex="" stampspacey="" stampdist="" denylight="0"/>
+<colorize dirs="0;1;0;0;0;0;" texture="pack:tgv_x_dec.bmp" texx1="-1.5" texy1="0" texx2="1.5" texy2="6" transp="0" xscale="" yscale="" transparent="0" material="0" stamp="0" cond="" rkoef="" gkoef="" bkoef="" stampcntx="" stampcnty="" stampspacex="" stampspacey="" stampdist="" denylight="0"/>
+<colorize dirs="0;0;0;1;0;0;" texture="pack:tgv_y_dec.bmp" texx1="0" texy1="-1.5" texx2="22" texy2="1.5" transp="0" xscale="" yscale="" transparent="0" material="0" stamp="0" cond="" rkoef="" gkoef="" bkoef="" stampcntx="" stampcnty="" stampspacex="" stampspacey="" stampdist="" denylight="0"/>
+<colorize dirs="0;0;0;0;1;0;" texture="pack:tgv_z_inc.bmp" texx1="0" texy1="0" texx2="22" texy2="6" transp="0" xscale="" yscale="" transparent="0" material="0" stamp="0" cond="" rkoef="" gkoef="" bkoef="" stampcntx="" stampcnty="" stampspacex="" stampspacey="" stampdist="" denylight="0"/>
+<colorize texx1="0" texy1="-1.5" texx2="22" texy2="1.5" texture="pack:tgv_y_inc.bmp" transp="0" xscale="" yscale="" transparent="0" dirs="0;0;1;0;0;0;" material="0" stamp="0" cond="" rkoef="" gkoef="" bkoef="" stampcntx="" stampcnty="" stampspacex="" stampspacey="" stampdist="" denylight="0"/>
+<colorize texx1="0" texy1="0" texx2="22" texy2="6" texture="pack:tgv_z_dec.bmp" transp="0" xscale="" yscale="" transparent="0" dirs="0;0;0;0;0;1;" material="0" stamp="0" cond="" rkoef="" gkoef="" bkoef="" stampcntx="" stampcnty="" stampspacex="" stampspacey="" stampdist="" denylight="0"/>
+</cpom>
+<shapes>
+<shape name="base" type="clip"/>
+<shape type="clip" name="gear"/>
+</shapes>
+<noise/>
+<clip>
+<x>
+<polygon apply="base">
+<point x="-1.1" y="0"/>
+<point x="1.1" y="0"/>
+<point x="1.5" y="0.9"/>
+<point x="1.5" y="2.6"/>
+<point x="1.4" y="3.4"/>
+<point x="1.3" y="3.5"/>
+<point x="-1.3" y="3.5"/>
+<point x="-1.4" y="3.4"/>
+<point x="-1.5" y="2.6"/>
+<point x="-1.5" y="0.9"/>
+</polygon>
+<polygon apply="base">
+<point x="-1.2" y="3.9"/>
+<point x="-1.3" y="3.5"/>
+<point x="1.3" y="3.5"/>
+<point x="1.2" y="3.9"/>
+<point x="0.9" y="4.1"/>
+<point x="-0.8" y="4.1"/>
+</polygon>
+<polygon apply="gear">
+<point x="-1.1" y="0.3"/>
+<point x="-1.2" y="0.9"/>
+<point x="-1.2" y="3.3"/>
+<point x="-0.8" y="3.8"/>
+<point x="0.8" y="3.8"/>
+<point x="1.2" y="3.3"/>
+<point x="1.2" y="0.9"/>
+<point x="1.1" y="0.3"/>
+</polygon>
+<polygon apply="gear">
+<point x="-0.7" y="0"/>
+<point x="-0.7" y="0.3"/>
+<point x="-0.9" y="0.3"/>
+<point x="-0.9" y="0"/>
+</polygon>
+<polygon apply="gear">
+<point x="0.7" y="0"/>
+<point x="0.7" y="0.3"/>
+<point x="0.9" y="0.3"/>
+<point x="0.9" y="0"/>
+</polygon>
+</x>
+<y>
+<polygon apply="base">
+<point x="1.8" y="-1.4"/>
+<point x="2.6" y="-1.5"/>
+<point x="21.9" y="-1.5"/>
+<point x="21.9" y="1.5"/>
+<point x="2.6" y="1.5"/>
+<point x="1.8" y="1.4"/>
+<point x="0.6" y="1"/>
+<point x="0.2" y="0.6"/>
+<point x="0.1" y="0.1"/>
+<point x="0.1" y="-0.1"/>
+<point x="0.2" y="-0.6"/>
+<point x="0.6" y="-1"/>
+</polygon>
+<polygon apply="base">
+<point x="21.9" y="0.3"/>
+<point x="21.9" y="-0.3"/>
+<point x="22" y="-0.3"/>
+<point x="22" y="0.3"/>
+</polygon>
+</y>
+<z>
+<polygon apply="base">
+<point x="2.6" y="2.6"/>
+<point x="1.3" y="2.1"/>
+<point x="0.1" y="1.3"/>
+<point x="0.4" y="0.9"/>
+<point x="0.9" y="0.6"/>
+<point x="2.6" y="0.6"/>
+</polygon>
+<polygon apply="base">
+<point x="11.7" y="3.6"/>
+<point x="4.4" y="3.6"/>
+<point x="3.8" y="3.4"/>
+<point x="2.6" y="2.6"/>
+<point x="2.6" y="0.9"/>
+<point x="11.7" y="0.9"/>
+</polygon>
+<polygon apply="base">
+<point x="21.9" y="3.7"/>
+<point x="16.4" y="3.7"/>
+<point x="16.4" y="3.4"/>
+<point x="21.9" y="3.4"/>
+</polygon>
+<polygon apply="base">
+<point x="11.7" y="0.9"/>
+<point x="21.9" y="0.9"/>
+<point x="21.9" y="3.4"/>
+<point x="11.7" y="3.4"/>
+</polygon>
+<polygon apply="base">
+<point x="0.7" y="0.2"/>
+<point x="1.3" y="0.9"/>
+<point x="3.2" y="0.9"/>
+<point x="2.9" y="0.2"/>
+</polygon>
+<polygon apply="base">
+<point x="11.7" y="3.4"/>
+<point x="11.7" y="3.9"/>
+<point x="13.2" y="4.1"/>
+<point x="16.4" y="4.1"/>
+<point x="16.4" y="3.4"/>
+</polygon>
+<polygon apply="base">
+<point x="11.7" y="3.6"/>
+<point x="5.6" y="3.6"/>
+<point x="6.2" y="3.9"/>
+<point x="11.7" y="3.9"/>
+</polygon>
+<polygon apply="base">
+<point x="0.9" y="0.4"/>
+<point x="0.9" y="0.6"/>
+<point x="2.6" y="0.6"/>
+<point x="2.6" y="0.4"/>
+</polygon>
+<polygon apply="base">
+<point x="7.4" y="0.2"/>
+<point x="16.799999" y="0.2"/>
+<point x="17.1" y="0.9"/>
+<point x="7.1" y="0.9"/>
+</polygon>
+<polygon apply="base">
+<point x="21.299999" y="0.2"/>
+<point x="21" y="0.9"/>
+<point x="21.9" y="0.9"/>
+<point x="21.9" y="0.2"/>
+</polygon>
+<polygon apply="gear">
+<point x="3" y="0.5"/>
+<point x="3.2" y="0.9"/>
+<point x="7.1" y="0.9"/>
+<point x="7.3" y="0.5"/>
+<point x="5.8" y="0.3"/>
+<point x="4.5" y="0.3"/>
+</polygon>
+<polygon apply="gear">
+<point x="4.2" y="0.5"/>
+<point x="3.1" y="0.5"/>
+<point x="3.4" y="0"/>
+<point x="3.9" y="0"/>
+</polygon>
+<polygon apply="gear">
+<point x="7.3" y="0.5"/>
+<point x="6.1" y="0.5"/>
+<point x="6.4" y="0"/>
+<point x="6.9" y="0"/>
+</polygon>
+<polygon apply="gear">
+<point x="17" y="0.6"/>
+<point x="17.1" y="0.9"/>
+<point x="21" y="0.9"/>
+<point x="21.200001" y="0.6"/>
+<point x="19.700001" y="0.3"/>
+<point x="18.4" y="0.3"/>
+</polygon>
+<polygon apply="gear">
+<point x="17.299999" y="0"/>
+<point x="17" y="0.6"/>
+<point x="18.1" y="0.6"/>
+<point x="17.799999" y="0"/>
+</polygon>
+<polygon apply="gear">
+<point x="20.299999" y="0"/>
+<point x="20" y="0.6"/>
+<point x="21.200001" y="0.6"/>
+<point x="20.799999" y="0"/>
+</polygon>
+<polygon apply="gear">
+<point x="17.200001" y="3.7"/>
+<point x="17.5" y="3.8"/>
+<point x="21" y="3.8"/>
+<point x="21.299999" y="3.7"/>
+</polygon>
+<polygon apply="base">
+<point x="22" y="1.1"/>
+<point x="21.9" y="1.1"/>
+<point x="21.9" y="0.5"/>
+<point x="22" y="0.5"/>
+</polygon>
+</z>
+</clip>
+<editprops side="0">
+<x dx="200" dy="348" jumpx="0.1" jumpy="0.1" scale="36" incdec="1"/>
+<y dx="-1904" dy="90" jumpx="0.1" jumpy="0.1" scale="40" incdec="1"/>
+<z dx="-1149" dy="370" jumpx="0.1" jumpy="0.1" scale="37" incdec="0"/>
+</editprops>
+<colorizes>
+<xinc type="texture" texture="pack:tgv_x_inc.bmp" x1="-1.5" y1="0" x2="1.5" y2="6" dir="0"/>
+<xdec type="texture" texture="pack:tgv_x_dec.bmp" x1="-1.5" y1="0" x2="1.5" y2="6" dir="1"/>
+<ydec type="texture" texture="pack:tgv_y_dec.bmp" x1="0" y1="-1.5" x2="22" y2="1.5" dir="3"/>
+<zinc type="texture" texture="pack:tgv_z_inc.bmp" x1="0" y1="0" x2="22" y2="6" dir="4"/>
+<yinc type="texture" texture="pack:tgv_y_inc.bmp" x1="0" y1="-1.5" x2="22" y2="1.5" dir="2"/>
+<zdec type="texture" texture="pack:tgv_z_dec.bmp" x1="0" y1="0" x2="22" y2="6" dir="5"/>
+</colorizes>
+</simplemodel>

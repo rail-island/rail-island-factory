@@ -1,7 +1,8 @@
 // A small stroke font for painted inscriptions: the digits, the hyphen and the
 // letters the CSD coaches' running numbers and "CSD" (C with a caron) lettering need,
 // and the capitals of the wagons' "RIV" and "CPAVEX" (C with a caron) lettering,
-// the dot and M of the steam locomotives' numbers ("433.049", "M 112.001"). Each glyph
+// the dot and M of the steam locomotives' numbers ("433.049", "M 112.001"), and the
+// G and T of the TGV's lettering (tgv.ts). Each glyph
 // is polylines in a unit cell (x right 0..1, y up 0..1, the caron above 1);
 // strokeText turns them into thin bars, triangles in (u, v), for MeshCore.facets.
 // No `node:` imports: it is bundled into the standalone JS models.
@@ -30,10 +31,12 @@ const GLYPHS: Record<string, Glyph> = {
   A: [[[0.1, 0], [0.5, 1], [0.9, 0]], [[0.27, 0.42], [0.73, 0.42]]],
   D: [[[0.15, 0], [0.15, 1], [0.6, 1], [0.85, 0.75], [0.85, 0.25], [0.6, 0], [0.15, 0]]],
   E: [[[0.85, 1], [0.15, 1], [0.15, 0], [0.85, 0]], [[0.15, 0.52], [0.7, 0.52]]],
+  G: [[[0.85, 0.85], [0.7, 1], [0.3, 1], [0.15, 0.85], [0.15, 0.15], [0.3, 0], [0.7, 0], [0.85, 0.15], [0.85, 0.45], [0.55, 0.45]]],
   I: [[[0.5, 0], [0.5, 1]], [[0.3, 1], [0.7, 1]], [[0.3, 0], [0.7, 0]]],
   M: [[[0.12, 0], [0.12, 1], [0.5, 0.42], [0.88, 1], [0.88, 0]]],
   P: [[[0.15, 0], [0.15, 1], [0.68, 1], [0.85, 0.85], [0.85, 0.62], [0.68, 0.48], [0.15, 0.48]]],
   R: [[[0.15, 0], [0.15, 1], [0.68, 1], [0.85, 0.85], [0.85, 0.62], [0.68, 0.48], [0.15, 0.48]], [[0.5, 0.48], [0.85, 0]]],
+  T: [[[0.1, 1], [0.9, 1]], [[0.5, 1], [0.5, 0]]],
   S: [[[0.85, 0.85], [0.7, 1], [0.3, 1], [0.15, 0.85], [0.15, 0.66], [0.3, 0.53], [0.7, 0.47], [0.85, 0.34], [0.85, 0.15], [0.7, 0], [0.3, 0], [0.15, 0.15]]],
   V: [[[0.1, 1], [0.5, 0], [0.9, 1]]],
   X: [[[0.12, 0], [0.88, 1]], [[0.12, 1], [0.88, 0]]],

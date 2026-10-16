@@ -42,6 +42,10 @@ import { AIRCRAFT } from "./aircraft.ts";
 import { SHIPS } from "./ships.ts";
 import { EMU471_DESIGNS } from "./emu471.ts";
 import { EMU680_DESIGNS } from "./emu680.ts";
+import { DB628_DESIGNS } from "./db628.ts";
+import { MDMOT_DESIGNS } from "./mavMdmot.ts";
+import { ICE1_DESIGNS } from "./ice1.ts";
+import { TGV_DESIGNS } from "./tgv.ts";
 import { CABLE_CABINS } from "./cableCabins.ts";
 import { TRUCKS } from "./trucks.ts";
 import { STEAM_LOCOS } from "./steamLocos.ts";
@@ -94,6 +98,10 @@ const FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: st
   { designs: CABLE_CABINS, source: "cableCabins.ts", meta: "vehicles" },
   { designs: EMU471_DESIGNS, source: "emu471.ts", meta: "vehicles" },
   { designs: EMU680_DESIGNS, source: "emu680.ts", meta: "vehicles" },
+  { designs: DB628_DESIGNS, source: "db628.ts", meta: "vehicles" },
+  { designs: MDMOT_DESIGNS, source: "mavMdmot.ts", meta: "vehicles" },
+  { designs: ICE1_DESIGNS, source: "ice1.ts", meta: "vehicles" },
+  { designs: TGV_DESIGNS, source: "tgv.ts", meta: "vehicles" },
 ];
 
 /** Every building design: the skyscrapers, then the landmarks and stations (skyscrapers.meta.json). */
