@@ -1,0 +1,20 @@
+{
+  "source": "janproch/vlakosimdb db/train/loco/electric/dnt_184.5/model (x_both 30 x 60, z_dec 204 x 60, 0.1 m a pixel)",
+  "annotations": [
+    {"id": "F01", "view": "x_front", "box": [1, 25, 14, 34], "nodes": ["front-cab/windscreen-right/frame"], "tolerancePixels": 1.5, "uncertainty": "Left windscreen seen from ahead."},
+    {"id": "F02", "view": "x_front", "box": [16, 25, 29, 34], "nodes": ["front-cab/windscreen-left/frame"], "tolerancePixels": 1.5, "uncertainty": "Right windscreen seen from ahead."},
+    {"id": "F03", "view": "x_front", "box": [11, 35, 18, 38], "nodes": ["front-cab/headlight-panel"], "tolerancePixels": 1.01, "uncertainty": "The grey panel round the twin headlight."},
+    {"id": "F04", "view": "x_front", "box": [0, 38, 30, 44], "nodes": ["body/shell/front/band-1", "body/shell/side-right/band-1", "body/shell/side-left/band-1"], "tolerancePixels": 1.5, "uncertainty": "Cream band across the end, rows 38-43; the chamfered corners carry the side bands."},
+    {"id": "F05", "view": "x_front", "box": [12, 47, 18, 49], "nodes": ["front-cab/number-plate"], "tolerancePixels": 1.5, "uncertainty": "Red plate low on the end."},
+    {"id": "F06", "view": "x_front", "box": [27, 44, 30, 46], "nodes": ["front-cab/lamp-left"], "tolerancePixels": 1.5, "uncertainty": "White marker lamp, 3 x 2 px: position only."},
+    {"id": "S01", "view": "z_right", "box": [48, 26, 61, 36], "nodes": ["sides/right-side/window-1/frame"], "tolerancePixels": 1.01, "uncertainty": "Large machine-room window."},
+    {"id": "S02", "view": "z_right", "box": [78, 28, 89, 36], "nodes": ["sides/right-side/window-2/frame"], "tolerancePixels": 1.01, "uncertainty": "Small divided window."},
+    {"id": "S03", "view": "z_right", "box": [114, 28, 125, 36], "nodes": ["sides/right-side/window-3/frame"], "tolerancePixels": 1.01, "uncertainty": "Small divided window."},
+    {"id": "S04", "view": "z_right", "box": [142, 26, 155, 36], "nodes": ["sides/right-side/window-4/frame"], "tolerancePixels": 1.01, "uncertainty": "Large machine-room window."},
+    {"id": "S05", "view": "z_right", "box": [17, 25, 25, 48], "nodes": ["sides/right-side/door-front/seams"], "tolerancePixels": 1.5, "uncertainty": "Cab door between the handrails; its outline is faint."},
+    {"id": "S06", "view": "z_right", "box": [5, 38, 198, 44], "nodes": ["body/shell/side-right/band-1"], "tolerancePixels": 2.0, "uncertainty": "Cream band; its ends follow the raked nose."},
+    {"id": "S07", "view": "z_right", "box": [97, 40, 106, 42], "nodes": ["sides/right-side/number-plate"], "tolerancePixels": 1.01, "uncertainty": "Yellow number plate."},
+    {"id": "S08", "view": "z_right", "box": [89, 14, 114, 20], "nodes": ["roof-equipment/middle-cover"], "tolerancePixels": 1.01, "uncertainty": "The middle roof cover."},
+    {"id": "S09", "view": "z_right", "box": [61, 15, 89, 20], "nodes": ["roof-equipment/front-cover"], "tolerancePixels": 1.01, "uncertainty": "The front roof cover."}
+  ]
+}

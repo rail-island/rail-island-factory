@@ -1,0 +1,18 @@
+{
+  "source": "janproch/vlakosimdb db/train/loco/electric/obb_1040/model (x_both 30 x 60, z_both 170 x 60, 0.1 m a pixel; x scaled by 1.0504)",
+  "annotations": [
+    {"id": "F01", "view": "x_front", "box": [2, 23, 14, 33], "nodes": ["front-cab/windscreen-right/frame"], "tolerancePixels": 1.5, "uncertainty": "Left windscreen seen from ahead, dark red frame."},
+    {"id": "F02", "view": "x_front", "box": [16, 23, 28, 33], "nodes": ["front-cab/windscreen-left/frame"], "tolerancePixels": 1.5, "uncertainty": "Right windscreen seen from ahead."},
+    {"id": "F03", "view": "x_front", "box": [23, 38, 26, 42], "nodes": ["front-cab/headlight-left"], "tolerancePixels": 1.01, "uncertainty": "Headlight."},
+    {"id": "F04", "view": "x_front", "box": [13, 38, 18, 42], "nodes": ["front-cab/emblem"], "tolerancePixels": 1.01, "uncertainty": "The OBB emblem."},
+    {"id": "F05", "view": "x_front", "box": [0, 33, 30, 34], "nodes": ["body/shell/front/band-1", "body/shell/side-right/band-1", "body/shell/side-left/band-1"], "tolerancePixels": 1.01, "uncertainty": "The yellow line; the corners of the V carry the side bands."},
+    {"id": "S01", "view": "z_right", "box": [41, 27, 48, 32], "nodes": ["sides/right-side/window-1/frame"], "tolerancePixels": 1.01, "uncertainty": "Window."},
+    {"id": "S02", "view": "z_right", "box": [83, 27, 90, 32], "nodes": ["sides/right-side/window-2/frame"], "tolerancePixels": 1.01, "uncertainty": "Window."},
+    {"id": "S03", "view": "z_right", "box": [32, 26, 39, 33], "nodes": ["sides/right-side/louvre-1"], "tolerancePixels": 1.01, "uncertainty": "Louvre panel."},
+    {"id": "S04", "view": "z_right", "box": [92, 26, 99, 33], "nodes": ["sides/right-side/louvre-6"], "tolerancePixels": 1.01, "uncertainty": "Louvre panel."},
+    {"id": "S05", "view": "z_right", "box": [101, 24, 108, 44], "nodes": ["sides/right-side/door-front/seams"], "tolerancePixels": 2.0, "uncertainty": "Cab door between the handrails; top and bottom estimated."},
+    {"id": "S06", "view": "z_right", "box": [11, 33, 121, 34], "nodes": ["body/shell/side-right/band-1"], "tolerancePixels": 2.5, "uncertainty": "The yellow line, round the corners of the V."},
+    {"id": "S07", "view": "z_right", "box": [8, 44, 123, 50], "nodes": ["body/frame"], "tolerancePixels": 1.5, "uncertainty": "The grey frame."},
+    {"id": "S08", "view": "z_right", "box": [95, 38, 100, 42], "nodes": ["sides/right-side/emblem"], "tolerancePixels": 1.01, "uncertainty": "The OBB emblem."}
+  ]
+}
