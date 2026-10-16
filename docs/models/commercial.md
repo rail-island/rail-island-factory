@@ -114,3 +114,6 @@ The existing model and export tests cover scopes and the generated files.
 After `pnpm build:models`, inspect `export/thumbs/comm-*.png` headlessly;
 also inspect non-default balcony, setback, roof and finish choices when
 changing this kit. Browser automation is unnecessary.
+
+The eleven additional [street and historic families](commercial-streets.md) use
+separate `commercial-` IDs and include a complete legacy inventory.

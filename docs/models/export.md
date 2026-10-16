@@ -165,3 +165,6 @@ pnpm exec tsx generator/renderGlbThumb.ts export/glb/sky-pagoda.glb /tmp/pagoda.
 suggested procedural family and parameters. It is exported for a separate,
 explicit game import; it does not change saved maps. See [industry.md](industry.md)
 for scale, emitter, collision and animation migration requirements.
+
+The additional [Commercial street families](commercial-streets.md) also use this
+buildings export. Their legacy inventory is not an active game migration.

@@ -1,0 +1,2213 @@
+{
+  "version": 1,
+  "purpose": "Review inventory and provisional correspondence, NOT an active save migration. Source: webapp db/buildings/buildings.meta.json and all 82 Commercial GLBs.",
+  "models": [
+    {
+      "legacyId": "comm-building-a",
+      "title": "A",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-modern",
+      "params": {
+        "storeys": "3",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 1252,
+      "sourceMin": [
+        -0.44179391860961914,
+        0,
+        -0.4699999690055847
+      ],
+      "sourceMax": [
+        0.4417939782142639,
+        1.2929999828338623,
+        0.4700000286102295
+      ],
+      "sourceDefaultScale": 17,
+      "sourceSha256": "7d1a93f5cb040310d221f2612fee3aa9801cc55ea5155dbfd38223e43eac8849",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/city-kit-commercial"
+    },
+    {
+      "legacyId": "oldtown-gabled",
+      "title": "Arcade House",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-gable",
+      "params": {
+        "storeys": "3",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 5160,
+      "sourceMin": [
+        -1.7919329404830933,
+        -0.022055000066757202,
+        -1.2430800199508667
+      ],
+      "sourceMax": [
+        1.7919329404830933,
+        4.945555210113525,
+        1.2430800199508667
+      ],
+      "sourceDefaultScale": 4.3,
+      "sourceSha256": "c2a8a568585f842431070b83a7944f99745cc0b6146710e49c4acec9e0250af8",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/buildings.html"
+    },
+    {
+      "legacyId": "comm-building-b",
+      "title": "B",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-balcony",
+      "params": {
+        "storeys": "3",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 1276,
+      "sourceMin": [
+        -0.48500001430511475,
+        0,
+        -0.4699999690055847
+      ],
+      "sourceMax": [
+        0.4850000739097595,
+        1.2929999828338623,
+        0.4700000286102295
+      ],
+      "sourceDefaultScale": 16.5,
+      "sourceSha256": "49be8165d865649698de0622efd4a87fc58db52c843e12dabbee1fef781917da",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/city-kit-commercial"
+    },
+    {
+      "legacyId": "street-block-balcony",
+      "title": "Balcony Block",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-tenement",
+      "params": {
+        "storeys": "4",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 5204,
+      "sourceMin": [
+        -1.0793230533599854,
+        -0.0032450000289827585,
+        -1.0773019790649414
+      ],
+      "sourceMax": [
+        1.0793230533599854,
+        4.209280014038086,
+        1.4304269552230835
+      ],
+      "sourceDefaultScale": 6.2,
+      "sourceSha256": "aea0d0d3741bc43e8700fec81f08ff99e968cf9ee2a7dfa5cba31e3b5daaa246",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/ultimatetexturedbuildings.html"
+    },
+    {
+      "legacyId": "street-house-balcony",
+      "title": "Balcony House",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-balcony",
+      "params": {
+        "storeys": "3",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 4210,
+      "sourceMin": [
+        -1.0793230533599854,
+        -0.0032450000289827585,
+        -1.0773019790649414
+      ],
+      "sourceMax": [
+        1.0793230533599854,
+        2.9408249855041504,
+        1.454872965812683
+      ],
+      "sourceDefaultScale": 6.2,
+      "sourceSha256": "a2b97b00b9fcf1d0748a11fc69a151c52f557e54530b2c2726178301e2f8e059",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/ultimatetexturedbuildings.html"
+    },
+    {
+      "legacyId": "oldtown-baroque",
+      "title": "Baroque House",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-baroque",
+      "params": {
+        "storeys": "3",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 9740,
+      "sourceMin": [
+        -2.3218960762023926,
+        -0.014585000462830067,
+        -1.9278960227966309
+      ],
+      "sourceMax": [
+        2.3218960762023926,
+        5.471932888031006,
+        1.9278960227966309
+      ],
+      "sourceDefaultScale": 4.3,
+      "sourceSha256": "e1873c44c53df4cb6f8fc91831090a25b087cb745cdda6e340cf3705112565ff",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/buildings.html"
+    },
+    {
+      "legacyId": "street-house-round",
+      "title": "Barrel Roof House",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-barrel",
+      "params": {
+        "storeys": "3",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 2714,
+      "sourceMin": [
+        -1.0557429790496826,
+        -0.015193000435829163,
+        -1.0628880262374878
+      ],
+      "sourceMax": [
+        1.0557429790496826,
+        2.884186029434204,
+        1.0628880262374878
+      ],
+      "sourceDefaultScale": 6.2,
+      "sourceSha256": "6b456e8147f3cad1ce6ca2a6d2258a0e7cc4234d23e67c4feb9dbc59338cceaf",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/ultimatetexturedbuildings.html"
+    },
+    {
+      "legacyId": "street-shop-round",
+      "title": "Barrel Roof Store",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-barrel",
+      "params": {
+        "storeys": "2",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 2408,
+      "sourceMin": [
+        -1.051156997680664,
+        -0.015193000435829163,
+        -1.0628880262374878
+      ],
+      "sourceMax": [
+        1.0355700254440308,
+        2.3679211139678955,
+        1.0628880262374878
+      ],
+      "sourceDefaultScale": 6.2,
+      "sourceSha256": "a1d5ff8d62a47e6d04d8674f6f7d4703f0be7d7ac49f3f3a149f8c4c3e7c252f",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/ultimatetexturedbuildings.html"
+    },
+    {
+      "legacyId": "street-house-b",
+      "title": "Brick Street House",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-brick",
+      "params": {
+        "storeys": "3",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 4106,
+      "sourceMin": [
+        -1.0793230533599854,
+        -0.015193000435829163,
+        -1.0773019790649414
+      ],
+      "sourceMax": [
+        1.0793230533599854,
+        2.7472710609436035,
+        1.0975559949874878
+      ],
+      "sourceDefaultScale": 6.2,
+      "sourceSha256": "a51436ab2051590d0ee0da3131521e3296b5cb405db7f0602bdf7e1d93b415aa",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/ultimatetexturedbuildings.html"
+    },
+    {
+      "legacyId": "oldtown-terrace",
+      "title": "Burgher House",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-terrace",
+      "params": {
+        "storeys": "3",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 16620,
+      "sourceMin": [
+        -1.8737469911575317,
+        -0.0011439999798312783,
+        -1.371791958808899
+      ],
+      "sourceMax": [
+        1.8737469911575317,
+        4.662140846252441,
+        1.371791958808899
+      ],
+      "sourceDefaultScale": 4.3,
+      "sourceSha256": "6df3f938299979bceea296b7202cab92f10f91007b06c2414510051efba663c1",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/buildings.html"
+    },
+    {
+      "legacyId": "oldtown-terrace-wide",
+      "title": "Burgher Row",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-terrace",
+      "params": {
+        "storeys": "3",
+        "width": "wide",
+        "finish": "original"
+      },
+      "sourceTriangles": 41788,
+      "sourceMin": [
+        -3.9957120418548584,
+        -0.011250000447034836,
+        -1.371791958808899
+      ],
+      "sourceMax": [
+        3.9957120418548584,
+        4.660079002380371,
+        1.371791958808899
+      ],
+      "sourceDefaultScale": 4.3,
+      "sourceSha256": "162c17492ae3f85be0eb21dde3c8ae64269763d02e88a4d29dc67158e752ef89",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/buildings.html"
+    },
+    {
+      "legacyId": "comm-building-c",
+      "title": "C",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-modern",
+      "params": {
+        "storeys": "2",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 1195,
+      "sourceMin": [
+        -0.44179391860961914,
+        0,
+        -0.5450000166893005
+      ],
+      "sourceMax": [
+        0.4417939782142639,
+        0.8930000066757202,
+        0.5450000762939453
+      ],
+      "sourceDefaultScale": 14.7,
+      "sourceSha256": "b18ca265fb0ca118a9c0d7ce869e63e4e345cc3c385062239c549b45928dbd63",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/city-kit-commercial"
+    },
+    {
+      "legacyId": "street-house-center",
+      "title": "Central Bay House",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-brick",
+      "params": {
+        "storeys": "3",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 3282,
+      "sourceMin": [
+        -1.210574984550476,
+        -0.004311999771744013,
+        -1.0773019790649414
+      ],
+      "sourceMax": [
+        1.210574984550476,
+        2.7321949005126953,
+        1.4212030172348022
+      ],
+      "sourceDefaultScale": 6.2,
+      "sourceSha256": "ede0e3d7862392861c62aba9e10e31dfc390a7aa8c18a1cbdf295c94bbb5138b",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/ultimatetexturedbuildings.html"
+    },
+    {
+      "legacyId": "street-tenement-center",
+      "title": "Central Bay Tenement",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-tenement",
+      "params": {
+        "storeys": "5",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 6314,
+      "sourceMin": [
+        -1.210574984550476,
+        -0.004311999771744013,
+        -1.0773019790649414
+      ],
+      "sourceMax": [
+        1.210574984550476,
+        5.087525844573975,
+        1.454872965812683
+      ],
+      "sourceDefaultScale": 6.2,
+      "sourceSha256": "143e789f5c06de9d0ee5d739068f673204717576d522421005ffb519c7953036",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/ultimatetexturedbuildings.html"
+    },
+    {
+      "legacyId": "oldtown-classical-wide",
+      "title": "Classical House",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-classical",
+      "params": {
+        "storeys": "3",
+        "width": "wide",
+        "finish": "original"
+      },
+      "sourceTriangles": 7004,
+      "sourceMin": [
+        -2.3525989055633545,
+        -0.013387000188231468,
+        -2.195307970046997
+      ],
+      "sourceMax": [
+        2.3525989055633545,
+        5.663981914520264,
+        2.195307970046997
+      ],
+      "sourceDefaultScale": 4.3,
+      "sourceSha256": "d7ddce790d1a932447aaf9d7dddb743c78c99bd2b137a5cdef5d91e43945aca3",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/buildings.html"
+    },
+    {
+      "legacyId": "street-house-columns",
+      "title": "Columned House",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-classical",
+      "params": {
+        "storeys": "3",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 3620,
+      "sourceMin": [
+        -1.0793230533599854,
+        -0.011435000225901604,
+        -1.0773019790649414
+      ],
+      "sourceMax": [
+        1.0793230533599854,
+        2.7572810649871826,
+        1.4115020036697388
+      ],
+      "sourceDefaultScale": 6.2,
+      "sourceSha256": "0031824c40a501e32b5df65eb3f34af5acbc0f0d7f42eea7170445bfc7ec0d37",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/ultimatetexturedbuildings.html"
+    },
+    {
+      "legacyId": "comm-building-d",
+      "title": "D",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-modern",
+      "params": {
+        "storeys": "3",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 1100,
+      "sourceMin": [
+        -0.41999998688697815,
+        0,
+        -0.4500000476837158
+      ],
+      "sourceMax": [
+        0.4200000464916229,
+        1.2929999828338623,
+        0.4499998092651367
+      ],
+      "sourceDefaultScale": 17.8,
+      "sourceSha256": "b6fe77ffe9d042a18337e52c2573d9436e522d2dddc4bf3fcfbe90c5a06f6289",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/city-kit-commercial"
+    },
+    {
+      "legacyId": "street-house-double",
+      "title": "Double House",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-brick",
+      "params": {
+        "storeys": "3",
+        "width": "wide",
+        "finish": "original"
+      },
+      "sourceTriangles": 4062,
+      "sourceMin": [
+        -1.0318950414657593,
+        -0.0032450000289827585,
+        -1.0773019790649414
+      ],
+      "sourceMax": [
+        1.3892539739608765,
+        2.7420880794525146,
+        1.454872965812683
+      ],
+      "sourceDefaultScale": 6.2,
+      "sourceSha256": "774eb8c94d11a7161344adf13a2e9ff2e5101645bc892ee4b5b374f1a2e9fade",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/ultimatetexturedbuildings.html"
+    },
+    {
+      "legacyId": "comm-building-e",
+      "title": "E",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-annex",
+      "params": {
+        "storeys": "2",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 1509,
+      "sourceMin": [
+        -0.8199999928474426,
+        0,
+        -0.5039456486701965
+      ],
+      "sourceMax": [
+        0.8200000524520874,
+        0.8930000066757202,
+        0.5039458870887756
+      ],
+      "sourceDefaultScale": 17.3,
+      "sourceSha256": "04f52d0f52d473bfc7b70b9f53a2ce44e251d205fa929b18f45ff097547a5759",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/city-kit-commercial"
+    },
+    {
+      "legacyId": "comm-building-f",
+      "title": "F",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-modern",
+      "params": {
+        "storeys": "4",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 1794,
+      "sourceMin": [
+        -0.42000001668930054,
+        0,
+        -0.5149999856948853
+      ],
+      "sourceMax": [
+        0.42000001668930054,
+        1.693000078201294,
+        0.5150002241134644
+      ],
+      "sourceDefaultScale": 15.5,
+      "sourceSha256": "d2975a01a9facf19b52ef86df3e3b8a17800784ab1fbdd24af90002a091cbede",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/city-kit-commercial"
+    },
+    {
+      "legacyId": "comm-building-g",
+      "title": "G",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-balcony",
+      "params": {
+        "storeys": "4",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 2006,
+      "sourceMin": [
+        -0.48500001430511475,
+        0,
+        -0.460999995470047
+      ],
+      "sourceMax": [
+        0.48500001430511475,
+        1.693000078201294,
+        0.4610002040863037
+      ],
+      "sourceDefaultScale": 16.5,
+      "sourceSha256": "d4453af5b0f5fa4b7380902f4f740670ed10b32ecdcc119dbfbfadcb66ed28ca",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/city-kit-commercial"
+    },
+    {
+      "legacyId": "oldtown-gabled-wide",
+      "title": "Gabled Burgher House",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-gable",
+      "params": {
+        "storeys": "3",
+        "width": "wide",
+        "finish": "original"
+      },
+      "sourceTriangles": 15072,
+      "sourceMin": [
+        -2.8582310676574707,
+        -0.012899000197649002,
+        -1.1097400188446045
+      ],
+      "sourceMax": [
+        2.8582310676574707,
+        5.9046711921691895,
+        1.1097400188446045
+      ],
+      "sourceDefaultScale": 4.3,
+      "sourceSha256": "8de59d1de2b271c3f8f2f23afbeeb03c70a055b8de74953613bc2d9e29362522",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/buildings.html"
+    },
+    {
+      "legacyId": "street-shop-gable",
+      "title": "Gabled Store",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-shop",
+      "params": {
+        "storeys": "2",
+        "width": "standard",
+        "finish": "original",
+        "roof": "pitched"
+      },
+      "sourceTriangles": 1684,
+      "sourceMin": [
+        -1.0526249408721924,
+        0.010967999696731567,
+        -1.1900650262832642
+      ],
+      "sourceMax": [
+        1.0526249408721924,
+        2.0355279445648193,
+        1.1900650262832642
+      ],
+      "sourceDefaultScale": 6.2,
+      "sourceSha256": "05e566376d8114d3247d50102a4939879f3dbd6474f4c3d25900a76d20facec7",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/ultimatetexturedbuildings.html"
+    },
+    {
+      "legacyId": "street-house-gable",
+      "title": "Gabled Street House",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-brick",
+      "params": {
+        "storeys": "3",
+        "width": "standard",
+        "finish": "original",
+        "roof": "pitched"
+      },
+      "sourceTriangles": 3200,
+      "sourceMin": [
+        -1.0793230533599854,
+        -0.015193000435829163,
+        -1.1900650262832642
+      ],
+      "sourceMax": [
+        1.0793230533599854,
+        3.1180520057678223,
+        1.1900650262832642
+      ],
+      "sourceDefaultScale": 6.2,
+      "sourceSha256": "0dc190aeec98b2eaf0be7d3946adc703c62423dcfa6ac3c15da99f2f21dc41d4",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/ultimatetexturedbuildings.html"
+    },
+    {
+      "legacyId": "comm-building-h",
+      "title": "H",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-modern",
+      "params": {
+        "storeys": "3",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 1512,
+      "sourceMin": [
+        -0.44179391860961914,
+        0,
+        -0.5039456486701965
+      ],
+      "sourceMax": [
+        0.44179391860961914,
+        1.2929999828338623,
+        0.5039454698562622
+      ],
+      "sourceDefaultScale": 15.9,
+      "sourceSha256": "e51dceb9b1a6126ad843ad8d607d9535fdbdc1644d54ee882995a750d89ec74c",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/city-kit-commercial"
+    },
+    {
+      "legacyId": "street-house-annex",
+      "title": "House with Annex",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-annex",
+      "params": {
+        "storeys": "3",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 5646,
+      "sourceMin": [
+        -2.3936049938201904,
+        -0.0059739998541772366,
+        -1.2728220224380493
+      ],
+      "sourceMax": [
+        1.0746150016784668,
+        2.7513070106506348,
+        1.2593530416488647
+      ],
+      "sourceDefaultScale": 6.2,
+      "sourceSha256": "d1ac2a4cf2d140941c08381e6b6e1c81147a44a610831d42c8fab3743703fa7f",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/ultimatetexturedbuildings.html"
+    },
+    {
+      "legacyId": "comm-building-i",
+      "title": "I",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-modern",
+      "params": {
+        "storeys": "4",
+        "width": "wide",
+        "finish": "original"
+      },
+      "sourceTriangles": 2544,
+      "sourceMin": [
+        -0.6200000047683716,
+        0,
+        -0.6509999632835388
+      ],
+      "sourceMax": [
+        0.6200000643730164,
+        1.6800000667572021,
+        0.6510000228881836
+      ],
+      "sourceDefaultScale": 12.3,
+      "sourceSha256": "197d67757a34b108c0dee0e2b933c69f2a597eb645f55eb5060eb2e3e0afc3e7",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/city-kit-commercial"
+    },
+    {
+      "legacyId": "comm-building-j",
+      "title": "J",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-balcony",
+      "params": {
+        "storeys": "4",
+        "width": "wide",
+        "finish": "original"
+      },
+      "sourceTriangles": 5246,
+      "sourceMin": [
+        -1.041793942451477,
+        0,
+        -0.6700000166893005
+      ],
+      "sourceMax": [
+        1.0417940616607666,
+        1.693000078201294,
+        0.6700000166893005
+      ],
+      "sourceDefaultScale": 14.9,
+      "sourceSha256": "469871a679b5476e91188318df76c9c7bb88f74a6c8b94677db2d70e63cde720",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/city-kit-commercial"
+    },
+    {
+      "legacyId": "comm-building-k",
+      "title": "K",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-modern",
+      "params": {
+        "storeys": "3",
+        "width": "wide",
+        "finish": "original"
+      },
+      "sourceTriangles": 2960,
+      "sourceMin": [
+        -1.041793942451477,
+        0,
+        -0.47099998593330383
+      ],
+      "sourceMax": [
+        1.0417940616607666,
+        1.4700000286102295,
+        0.4709998071193695
+      ],
+      "sourceDefaultScale": 12.3,
+      "sourceSha256": "e72397a75641330aff6e0282b0b38117567dc4233c7b2567cdf682df7e5b95f4",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/city-kit-commercial"
+    },
+    {
+      "legacyId": "comm-building-l",
+      "title": "L",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-modern",
+      "params": {
+        "storeys": "5",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 3512,
+      "sourceMin": [
+        -0.6850000023841858,
+        0,
+        -0.7009999752044678
+      ],
+      "sourceMax": [
+        0.6850000023841858,
+        2.2699999809265137,
+        0.7010000348091125
+      ],
+      "sourceDefaultScale": 11.4,
+      "sourceSha256": "4ef7f0ad9a7cfeb46826add2fdb3e5c295331f39a62e3d1fdc918c71082647b9",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/city-kit-commercial"
+    },
+    {
+      "legacyId": "citykit-large-building-1",
+      "title": "Large 1",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-balcony",
+      "params": {
+        "storeys": "4",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 950,
+      "sourceMin": [
+        -0.550000011920929,
+        0,
+        -0.41999998688697815
+      ],
+      "sourceMax": [
+        0.41999998688697815,
+        1.6799999475479126,
+        0.41999998688697815
+      ],
+      "sourceDefaultScale": 14.4,
+      "sourceSha256": "ee7f9f845f3af76afb25f9c238c0fd52da500cab2d7b55200387edde6cc56e20",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-large-building-2",
+      "title": "Large 2",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-modern",
+      "params": {
+        "storeys": "4",
+        "width": "wide",
+        "finish": "original"
+      },
+      "sourceTriangles": 1388,
+      "sourceMin": [
+        -1.0199999809265137,
+        -5.639932896936113e-18,
+        -0.42500001192092896
+      ],
+      "sourceMax": [
+        1.0199999809265137,
+        1.5,
+        0.41999998688697815
+      ],
+      "sourceDefaultScale": 13.3,
+      "sourceSha256": "ae5dec9ad99229c23943af2d5db4390dbdda63edf7e7135a6eabcfa4c1d845c6",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-large-building-3",
+      "title": "Large 3",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-modern",
+      "params": {
+        "storeys": "4",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 840,
+      "sourceMin": [
+        -0.41999998688697815,
+        0,
+        -0.41999998688697815
+      ],
+      "sourceMax": [
+        0.41999998688697815,
+        1.6799999475479126,
+        0.41999998688697815
+      ],
+      "sourceDefaultScale": 16.7,
+      "sourceSha256": "62d9abc50e9bfe1710e665a469f87aac61f39be2f57a4d25fde0b5654b38ebb1",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-large-building-4",
+      "title": "Large 4",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-modern",
+      "params": {
+        "storeys": "5",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 1608,
+      "sourceMin": [
+        -0.6200000047683716,
+        0,
+        -0.7200000286102295
+      ],
+      "sourceMax": [
+        0.6200000047683716,
+        2.0799999237060547,
+        0.6200000047683716
+      ],
+      "sourceDefaultScale": 15.2,
+      "sourceSha256": "4c33eac1c9942ff961387a62f852eb470f379f3f20f11f3f39719dad2bf82468",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-large-building-5",
+      "title": "Large 5",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-modern",
+      "params": {
+        "storeys": "4",
+        "width": "wide",
+        "finish": "original"
+      },
+      "sourceTriangles": 1400,
+      "sourceMin": [
+        -0.6200000047683716,
+        0,
+        -0.6200000047683716
+      ],
+      "sourceMax": [
+        0.6200000047683716,
+        1.6799999475479126,
+        0.6200000047683716
+      ],
+      "sourceDefaultScale": 15,
+      "sourceSha256": "1a567f92d4aa65651dd976d4d1ea81c237bc29e6cd7b3b2d14054b78a726c6d8",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-large-building-6",
+      "title": "Large 6",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-annex",
+      "params": {
+        "storeys": "5",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 2138,
+      "sourceMin": [
+        -1.5,
+        -1.804779056415148e-16,
+        -1
+      ],
+      "sourceMax": [
+        0.8200001120567322,
+        2.4800000190734863,
+        0.8200001120567322
+      ],
+      "sourceDefaultScale": 17.3,
+      "sourceSha256": "01191982d8e79b8f4e6b1f0cbe1cd4b5ab3ab1066e7415ff7c06c7019cfc0261",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-large-building-7",
+      "title": "Large 7",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-balcony",
+      "params": {
+        "storeys": "4",
+        "width": "wide",
+        "finish": "original"
+      },
+      "sourceTriangles": 2364,
+      "sourceMin": [
+        -1.0199999809265137,
+        -5.639932896936113e-18,
+        -0.6200000047683716
+      ],
+      "sourceMax": [
+        1.0199999809265137,
+        1.6799999475479126,
+        0.6200000047683716
+      ],
+      "sourceDefaultScale": 19.5,
+      "sourceSha256": "c37d37d49c96f79784800a6755ee9ad393e2f4544137d5f17d7f5da6b211ef7f",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-low-building-1",
+      "title": "Low 1",
+      "status": "deferred",
+      "reason": "Simple tower deliberately excluded; retain legacy GLB until a separate skyscraper mapping is chosen.",
+      "targetId": null,
+      "params": {},
+      "sourceTriangles": 180,
+      "sourceMin": [
+        -0.25,
+        0,
+        -0.25
+      ],
+      "sourceMax": [
+        0.25,
+        2.2249999046325684,
+        0.25
+      ],
+      "sourceDefaultScale": 28,
+      "sourceSha256": "a81a8d143332cbaf4daa0fe8108c0b3629f623b396014392af044e6fac828b7e",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-low-building-2",
+      "title": "Low 2",
+      "status": "deferred",
+      "reason": "Simple tower deliberately excluded; retain legacy GLB until a separate skyscraper mapping is chosen.",
+      "targetId": null,
+      "params": {},
+      "sourceTriangles": 178,
+      "sourceMin": [
+        -0.25,
+        0,
+        -0.25
+      ],
+      "sourceMax": [
+        0.25,
+        1.975000023841858,
+        0.25
+      ],
+      "sourceDefaultScale": 28,
+      "sourceSha256": "d4b44d13cc656070a652c565434c18008f53eb4446654849576919864eac7b8b",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-low-building-3",
+      "title": "Low 3",
+      "status": "deferred",
+      "reason": "Simple tower deliberately excluded; retain legacy GLB until a separate skyscraper mapping is chosen.",
+      "targetId": null,
+      "params": {},
+      "sourceTriangles": 140,
+      "sourceMin": [
+        -0.25,
+        0,
+        -0.25
+      ],
+      "sourceMax": [
+        0.25,
+        1.850000023841858,
+        0.25
+      ],
+      "sourceDefaultScale": 28,
+      "sourceSha256": "5cec85fa77f938391223bffa3039ba12147116ee8105ae56fa0371ff53790502",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-low-building-4",
+      "title": "Low 4",
+      "status": "deferred",
+      "reason": "Simple tower deliberately excluded; retain legacy GLB until a separate skyscraper mapping is chosen.",
+      "targetId": null,
+      "params": {},
+      "sourceTriangles": 160,
+      "sourceMin": [
+        -0.25,
+        0,
+        -0.25
+      ],
+      "sourceMax": [
+        0.25,
+        1.75,
+        0.25
+      ],
+      "sourceDefaultScale": 28,
+      "sourceSha256": "ebba72da7f6438464c154e190cc29817ec627c028572d3da9436deb08e732dad",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-low-building-5",
+      "title": "Low 5",
+      "status": "deferred",
+      "reason": "Simple tower deliberately excluded; retain legacy GLB until a separate skyscraper mapping is chosen.",
+      "targetId": null,
+      "params": {},
+      "sourceTriangles": 124,
+      "sourceMin": [
+        -0.25,
+        0,
+        -0.25
+      ],
+      "sourceMax": [
+        0.25,
+        1.774999976158142,
+        0.25
+      ],
+      "sourceDefaultScale": 28,
+      "sourceSha256": "802c5ce850b7dbfe3175bd1ac1581de9c3a22732602a234a201fbc06dae35ef7",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-low-building-6",
+      "title": "Low 6",
+      "status": "deferred",
+      "reason": "Simple tower deliberately excluded; retain legacy GLB until a separate skyscraper mapping is chosen.",
+      "targetId": null,
+      "params": {},
+      "sourceTriangles": 128,
+      "sourceMin": [
+        -0.25,
+        0,
+        -0.25
+      ],
+      "sourceMax": [
+        0.25,
+        2.25,
+        0.25
+      ],
+      "sourceDefaultScale": 28,
+      "sourceSha256": "a9c2670878e72315a4b44836e09d65fb0e59af6887602595f822fb99ef71e664",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-low-building-7",
+      "title": "Low 7",
+      "status": "deferred",
+      "reason": "Simple tower deliberately excluded; retain legacy GLB until a separate skyscraper mapping is chosen.",
+      "targetId": null,
+      "params": {},
+      "sourceTriangles": 156,
+      "sourceMin": [
+        -0.25,
+        0,
+        -0.25
+      ],
+      "sourceMax": [
+        0.25,
+        2,
+        0.25
+      ],
+      "sourceDefaultScale": 28,
+      "sourceSha256": "998a083102ecd846f61bff90e329b3321f699e7c5c80d6dc55c209c345ded574",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-low-building-8",
+      "title": "Low 8",
+      "status": "deferred",
+      "reason": "Simple tower deliberately excluded; retain legacy GLB until a separate skyscraper mapping is chosen.",
+      "targetId": null,
+      "params": {},
+      "sourceTriangles": 268,
+      "sourceMin": [
+        -0.25,
+        0,
+        -0.25
+      ],
+      "sourceMax": [
+        0.25,
+        2.0999999046325684,
+        0.25
+      ],
+      "sourceDefaultScale": 28,
+      "sourceSha256": "163fc505646c0ff577147387314a2e43eba7c7833fbca62411fe6006cdd46de1",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-low-building-9",
+      "title": "Low 9",
+      "status": "deferred",
+      "reason": "Simple tower deliberately excluded; retain legacy GLB until a separate skyscraper mapping is chosen.",
+      "targetId": null,
+      "params": {},
+      "sourceTriangles": 92,
+      "sourceMin": [
+        -0.25,
+        0,
+        -0.25
+      ],
+      "sourceMax": [
+        0.25,
+        1.75,
+        0.25
+      ],
+      "sourceDefaultScale": 28,
+      "sourceSha256": "8dd587defd5439bcad4da311f47e7e78e0f0189f295d9c53ad0e62dd65df3147",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-low-wide-1",
+      "title": "Low Wide 1",
+      "status": "deferred",
+      "reason": "Simple tower deliberately excluded; retain legacy GLB until a separate skyscraper mapping is chosen.",
+      "targetId": null,
+      "params": {},
+      "sourceTriangles": 194,
+      "sourceMin": [
+        -0.5,
+        0,
+        -0.25
+      ],
+      "sourceMax": [
+        0.5,
+        1.149999976158142,
+        0.25
+      ],
+      "sourceDefaultScale": 14,
+      "sourceSha256": "39525fc836199f158e658782527d7536d24b0649eccea7d9a26d0840a89f6a74",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-low-wide-2",
+      "title": "Low Wide 2",
+      "status": "deferred",
+      "reason": "Simple tower deliberately excluded; retain legacy GLB until a separate skyscraper mapping is chosen.",
+      "targetId": null,
+      "params": {},
+      "sourceTriangles": 124,
+      "sourceMin": [
+        -0.5,
+        0,
+        -0.25
+      ],
+      "sourceMax": [
+        0.5,
+        1.100000023841858,
+        0.25
+      ],
+      "sourceDefaultScale": 14,
+      "sourceSha256": "c332bcbf6275fc3250ccb069af35a3121ee865ffcf0ab6865bb4c72d204cdd57",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "comm-building-m",
+      "title": "M",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-modern",
+      "params": {
+        "storeys": "5",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 3740,
+      "sourceMin": [
+        -0.6200000643730164,
+        0,
+        -0.6209999918937683
+      ],
+      "sourceMax": [
+        0.6200000643730164,
+        3.1500000953674316,
+        0.6210001707077026
+      ],
+      "sourceDefaultScale": 12.9,
+      "sourceSha256": "3c11958db4bdd4a787ce3a61d6d95990e358350a811fb89204009d2eafd69ec0",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/city-kit-commercial"
+    },
+    {
+      "legacyId": "street-house",
+      "title": "Main Street House",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-brick",
+      "params": {
+        "storeys": "3",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 3536,
+      "sourceMin": [
+        -1.0793230533599854,
+        -0.0032450000289827585,
+        -1.0773019790649414
+      ],
+      "sourceMax": [
+        1.0793230533599854,
+        2.7420880794525146,
+        1.454872965812683
+      ],
+      "sourceDefaultScale": 6.2,
+      "sourceSha256": "e0c2620a259a938d07b4a3730dd317f9d139b0e8a7db7c132055e5aee0afe9e1",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/ultimatetexturedbuildings.html"
+    },
+    {
+      "legacyId": "street-shop",
+      "title": "Main Street Store",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-shop",
+      "params": {
+        "storeys": "2",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 2824,
+      "sourceMin": [
+        -1.0770800113677979,
+        -0.015193000435829163,
+        -1.0770800113677979
+      ],
+      "sourceMax": [
+        1.0770800113677979,
+        1.657052993774414,
+        1.0975559949874878
+      ],
+      "sourceDefaultScale": 6.2,
+      "sourceSha256": "2761a5d0827c0910b56b3d130109f1c92a2735599a9c7a330710f6705a9fbaef",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/ultimatetexturedbuildings.html"
+    },
+    {
+      "legacyId": "comm-building-n",
+      "title": "N",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-annex",
+      "params": {
+        "storeys": "5",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 4350,
+      "sourceMin": [
+        -1.1600000858306885,
+        0,
+        -0.9100000262260437
+      ],
+      "sourceMax": [
+        1.160000205039978,
+        2.4800000190734863,
+        0.9100000262260437
+      ],
+      "sourceDefaultScale": 13.4,
+      "sourceSha256": "ee1cc547abd233e7b2a865af4c0bc8ff7e970823e5cf297813a9ed99e6ae3903",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/city-kit-commercial"
+    },
+    {
+      "legacyId": "oldtown-classical",
+      "title": "Narrow Classical House",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-classical",
+      "params": {
+        "storeys": "4",
+        "width": "narrow",
+        "finish": "original"
+      },
+      "sourceTriangles": 5242,
+      "sourceMin": [
+        -1.5261019468307495,
+        -0.013387000188231468,
+        -2.200654983520508
+      ],
+      "sourceMax": [
+        1.5261019468307495,
+        5.663981914520264,
+        2.195307970046997
+      ],
+      "sourceDefaultScale": 4.3,
+      "sourceSha256": "a0aea5eeaa9744d7ceaead888e29fc0640b281b2c3fb7b51a36d81b4f882af93",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/buildings.html"
+    },
+    {
+      "legacyId": "street-tenement-roof",
+      "title": "Roofed Tenement",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-tenement",
+      "params": {
+        "storeys": "5",
+        "width": "standard",
+        "finish": "original",
+        "roof": "pitched"
+      },
+      "sourceTriangles": 12638,
+      "sourceMin": [
+        -3.4139130115509033,
+        -0.02457999996840954,
+        -1.0773030519485474
+      ],
+      "sourceMax": [
+        3.4139130115509033,
+        5.658881187438965,
+        1.6190199851989746
+      ],
+      "sourceDefaultScale": 6.2,
+      "sourceSha256": "61767a2441863542a876b2f6128af0f2ba72a52168ff0dc2a53b0b8526a42779",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/ultimatetexturedbuildings.html"
+    },
+    {
+      "legacyId": "citykit-sign-hospital-1",
+      "title": "Sign Hospital 1",
+      "status": "deferred",
+      "reason": "Standalone sign, not a building; retain legacy object.",
+      "targetId": null,
+      "params": {},
+      "sourceTriangles": 92,
+      "sourceMin": [
+        -0.02500000037252903,
+        0,
+        -0.20000000298023224
+      ],
+      "sourceMax": [
+        0.02500000037252903,
+        0.4000000059604645,
+        0.20000000298023224
+      ],
+      "sourceDefaultScale": 35,
+      "sourceSha256": "194e6d0e87d6030ea4d147ff61e7ce08912163e162cfb2ca5a701ebccc3c7435",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "street-house-sign",
+      "title": "Signed House",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-brick",
+      "params": {
+        "storeys": "3",
+        "width": "standard",
+        "finish": "sand"
+      },
+      "sourceTriangles": 3260,
+      "sourceMin": [
+        -1.0770800113677979,
+        -0.015193000435829163,
+        -1.0770800113677979
+      ],
+      "sourceMax": [
+        1.0770800113677979,
+        2.742089033126831,
+        1.0770800113677979
+      ],
+      "sourceDefaultScale": 6.2,
+      "sourceSha256": "0fd39271655badf72ee3e7f8d2ace799ef91f79be0fc624e3a712d83333200fe",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/ultimatetexturedbuildings.html"
+    },
+    {
+      "legacyId": "street-shop-sign",
+      "title": "Signed Store",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-shop",
+      "params": {
+        "storeys": "2",
+        "width": "standard",
+        "finish": "sand"
+      },
+      "sourceTriangles": 2426,
+      "sourceMin": [
+        -1.0770800113677979,
+        -0.015193000435829163,
+        -1.0770800113677979
+      ],
+      "sourceMax": [
+        1.0770809650421143,
+        1.7785890102386475,
+        1.0770800113677979
+      ],
+      "sourceDefaultScale": 6.2,
+      "sourceSha256": "59ab9daf1559239d6c1c4edd36468906c987aed8d2e455b492c0a4bdd23c00ee",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/ultimatetexturedbuildings.html"
+    },
+    {
+      "legacyId": "citykit-skyscraper-1",
+      "title": "Skyscraper 1",
+      "status": "deferred",
+      "reason": "Simple tower deliberately excluded; retain legacy GLB until a separate skyscraper mapping is chosen.",
+      "targetId": null,
+      "params": {},
+      "sourceTriangles": 732,
+      "sourceMin": [
+        -0.6200000047683716,
+        -1.6362509989492684e-16,
+        -0.6200000047683716
+      ],
+      "sourceMax": [
+        0.6200000047683716,
+        4.480000019073486,
+        0.6200000047683716
+      ],
+      "sourceDefaultScale": 11.3,
+      "sourceSha256": "9e4587c640afbb45b3def91b3a9fd40c7b705391c9668e304f245886d1cb1cdd",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-skyscraper-2",
+      "title": "Skyscraper 2",
+      "status": "deferred",
+      "reason": "Simple tower deliberately excluded; retain legacy GLB until a separate skyscraper mapping is chosen.",
+      "targetId": null,
+      "params": {},
+      "sourceTriangles": 986,
+      "sourceMin": [
+        -0.6200000047683716,
+        0,
+        -0.7478913068771362
+      ],
+      "sourceMax": [
+        0.6200000047683716,
+        5.5,
+        0.6200000047683716
+      ],
+      "sourceDefaultScale": 10.2,
+      "sourceSha256": "bc14d7ede562bd87c9d0a3c5a85c8a20eb54e8b63b084ae4a9f0b55c96e42efe",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-skyscraper-3",
+      "title": "Skyscraper 3",
+      "status": "deferred",
+      "reason": "Simple tower deliberately excluded; retain legacy GLB until a separate skyscraper mapping is chosen.",
+      "targetId": null,
+      "params": {},
+      "sourceTriangles": 572,
+      "sourceMin": [
+        -0.6200000047683716,
+        -1.2022240344150706e-31,
+        -0.6200000047683716
+      ],
+      "sourceMax": [
+        0.6200000047683716,
+        2.880000114440918,
+        0.6200000047683716
+      ],
+      "sourceDefaultScale": 11.3,
+      "sourceSha256": "6137b8892acea9711f305d8c7f2adafb0eec5d51ec489fd8c3cb754fac28b080",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-skyscraper-4",
+      "title": "Skyscraper 4",
+      "status": "deferred",
+      "reason": "Simple tower deliberately excluded; retain legacy GLB until a separate skyscraper mapping is chosen.",
+      "targetId": null,
+      "params": {},
+      "sourceTriangles": 956,
+      "sourceMin": [
+        -0.6200000047683716,
+        -2.003706968919774e-32,
+        -0.7478913068771362
+      ],
+      "sourceMax": [
+        0.6200000047683716,
+        4.079999923706055,
+        0.6200000047683716
+      ],
+      "sourceDefaultScale": 10.2,
+      "sourceSha256": "0bfb0aed157d0a3964f22b827a485af2b78c120bf0f7b0b374bc35175b474e3f",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-skyscraper-5",
+      "title": "Skyscraper 5",
+      "status": "deferred",
+      "reason": "Simple tower deliberately excluded; retain legacy GLB until a separate skyscraper mapping is chosen.",
+      "targetId": null,
+      "params": {},
+      "sourceTriangles": 456,
+      "sourceMin": [
+        -0.6200000047683716,
+        -1.804779056415148e-16,
+        -0.6200000047683716
+      ],
+      "sourceMax": [
+        0.6200000047683716,
+        4.079999923706055,
+        0.6200000047683716
+      ],
+      "sourceDefaultScale": 11.3,
+      "sourceSha256": "43bbf6529e19c16ecfdf7ea563c63a1a46311997c6da5508a40d0977f927750c",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-skyscraper-6",
+      "title": "Skyscraper 6",
+      "status": "deferred",
+      "reason": "Simple tower deliberately excluded; retain legacy GLB until a separate skyscraper mapping is chosen.",
+      "targetId": null,
+      "params": {},
+      "sourceTriangles": 1578,
+      "sourceMin": [
+        -0.6200000047683716,
+        0,
+        -0.6200000047683716
+      ],
+      "sourceMax": [
+        0.6200000047683716,
+        3.1500000953674316,
+        0.6200000047683716
+      ],
+      "sourceDefaultScale": 11.3,
+      "sourceSha256": "e361d6b6724ac0d17810a5fc92725a728eb87ebeb02066ff11809d5ab4202756",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "comm-building-skyscraper-a",
+      "title": "Skyscraper A",
+      "status": "deferred",
+      "reason": "Simple tower deliberately excluded; retain legacy GLB until a separate skyscraper mapping is chosen.",
+      "targetId": null,
+      "params": {},
+      "sourceTriangles": 1292,
+      "sourceMin": [
+        -0.680000364780426,
+        0,
+        -0.6800000667572021
+      ],
+      "sourceMax": [
+        0.6799994111061096,
+        2.879999876022339,
+        0.6800000667572021
+      ],
+      "sourceDefaultScale": 11.8,
+      "sourceSha256": "15edfe22b37deddc681db129723feba2751f449747f79b45a42f448ee528946c",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/city-kit-commercial"
+    },
+    {
+      "legacyId": "comm-building-skyscraper-b",
+      "title": "Skyscraper B",
+      "status": "deferred",
+      "reason": "Simple tower deliberately excluded; retain legacy GLB until a separate skyscraper mapping is chosen.",
+      "targetId": null,
+      "params": {},
+      "sourceTriangles": 1592,
+      "sourceMin": [
+        -0.6800006031990051,
+        0,
+        -0.6799999475479126
+      ],
+      "sourceMax": [
+        0.6799991726875305,
+        4.480000019073486,
+        0.6800000071525574
+      ],
+      "sourceDefaultScale": 11.8,
+      "sourceSha256": "7ecf245b943f9aba56ab909eddcfda62ba89fc5ee9d7d659625aa8bef819fe60",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/city-kit-commercial"
+    },
+    {
+      "legacyId": "comm-building-skyscraper-c",
+      "title": "Skyscraper C",
+      "status": "deferred",
+      "reason": "Simple tower deliberately excluded; retain legacy GLB until a separate skyscraper mapping is chosen.",
+      "targetId": null,
+      "params": {},
+      "sourceTriangles": 1704,
+      "sourceMin": [
+        -0.6399999856948853,
+        0,
+        -0.6939456462860107
+      ],
+      "sourceMax": [
+        0.6399996876716614,
+        4.079999923706055,
+        0.6939457058906555
+      ],
+      "sourceDefaultScale": 11.5,
+      "sourceSha256": "800a2eefcf22dab0751f2ce1ee5a52fecc8cca220043b19d97ba0aec76c0bb47",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/city-kit-commercial"
+    },
+    {
+      "legacyId": "comm-building-skyscraper-d",
+      "title": "Skyscraper D",
+      "status": "deferred",
+      "reason": "Simple tower deliberately excluded; retain legacy GLB until a separate skyscraper mapping is chosen.",
+      "targetId": null,
+      "params": {},
+      "sourceTriangles": 1892,
+      "sourceMin": [
+        -0.6400001049041748,
+        0,
+        -0.6939456462860107
+      ],
+      "sourceMax": [
+        0.6399996876716614,
+        5.469999313354492,
+        0.6939457058906555
+      ],
+      "sourceDefaultScale": 11.5,
+      "sourceSha256": "c88ab6d74cd7fd7da505378cb5cb8f836e5eb59e8da8e5aa4d6b43dd9fe1625b",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/city-kit-commercial"
+    },
+    {
+      "legacyId": "comm-building-skyscraper-e",
+      "title": "Skyscraper E",
+      "status": "deferred",
+      "reason": "Simple tower deliberately excluded; retain legacy GLB until a separate skyscraper mapping is chosen.",
+      "targetId": null,
+      "params": {},
+      "sourceTriangles": 1156,
+      "sourceMin": [
+        -0.6474997997283936,
+        0,
+        -0.6210000514984131
+      ],
+      "sourceMax": [
+        0.6475000381469727,
+        4.079999923706055,
+        0.6210001707077026
+      ],
+      "sourceDefaultScale": 12.4,
+      "sourceSha256": "e140a666867c7d95bf97d6f68c21d564769895c9f9c198c5c9294598b984dd70",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/city-kit-commercial"
+    },
+    {
+      "legacyId": "street-block-slim",
+      "title": "Slim Block",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-brick",
+      "params": {
+        "storeys": "4",
+        "width": "narrow",
+        "finish": "original"
+      },
+      "sourceTriangles": 3716,
+      "sourceMin": [
+        -0.5472319722175598,
+        -0.015193000435829163,
+        -1.0773019790649414
+      ],
+      "sourceMax": [
+        0.5683469772338867,
+        3.9767680168151855,
+        1.0773019790649414
+      ],
+      "sourceDefaultScale": 6.2,
+      "sourceSha256": "d047aaf206dd12fe9c1d12a6b3802bfd78ec53943a68f33420ff1c9c9d3b5c94",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/ultimatetexturedbuildings.html"
+    },
+    {
+      "legacyId": "street-house-slim",
+      "title": "Slim House",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-brick",
+      "params": {
+        "storeys": "3",
+        "width": "narrow",
+        "finish": "original"
+      },
+      "sourceTriangles": 2884,
+      "sourceMin": [
+        -0.5472319722175598,
+        -0.015193000435829163,
+        -1.0773019790649414
+      ],
+      "sourceMax": [
+        0.5683469772338867,
+        2.7420880794525146,
+        1.0773019790649414
+      ],
+      "sourceDefaultScale": 6.2,
+      "sourceSha256": "419100048fe2e87f400e55690ccce9b18168cddc0d73f55e8a9e141a7309abf0",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/ultimatetexturedbuildings.html"
+    },
+    {
+      "legacyId": "citykit-small-building-1",
+      "title": "Small 1",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-modern",
+      "params": {
+        "storeys": "3",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 548,
+      "sourceMin": [
+        -0.41999998688697815,
+        0,
+        -0.5199999809265137
+      ],
+      "sourceMax": [
+        0.41999998688697815,
+        1.2799999713897705,
+        0.41999998688697815
+      ],
+      "sourceDefaultScale": 14.9,
+      "sourceSha256": "3948f8dedc972be9c83917c2565eb63f6d5ee10541e606e496873e4202b311df",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-small-building-2",
+      "title": "Small 2",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-modern",
+      "params": {
+        "storeys": "3",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 550,
+      "sourceMin": [
+        -0.41999998688697815,
+        0,
+        -0.5199999809265137
+      ],
+      "sourceMax": [
+        0.41999998688697815,
+        1.2799999713897705,
+        0.41999998688697815
+      ],
+      "sourceDefaultScale": 18,
+      "sourceSha256": "8e6396f6b358fcb4027424f305ff30d30d869fe13569d40e383820f2ee0c3dce",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-small-building-3",
+      "title": "Small 3",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-modern",
+      "params": {
+        "storeys": "2",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 410,
+      "sourceMin": [
+        -0.41999998688697815,
+        0,
+        -0.5199999809265137
+      ],
+      "sourceMax": [
+        0.41999998688697815,
+        0.8799998760223389,
+        0.41999998688697815
+      ],
+      "sourceDefaultScale": 14.9,
+      "sourceSha256": "089b251fd12c2a892fbcc8134f9ee0c7d24afd336defa6784e113c17231a9ed9",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-small-building-4",
+      "title": "Small 4",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-modern",
+      "params": {
+        "storeys": "3",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 536,
+      "sourceMin": [
+        -0.41999998688697815,
+        0,
+        -0.41999998688697815
+      ],
+      "sourceMax": [
+        0.41999998688697815,
+        1.2799999713897705,
+        0.41999998688697815
+      ],
+      "sourceDefaultScale": 16.7,
+      "sourceSha256": "4457070570a87c72fc5e67b7b6b5074cc9586db7f580ad48c0a7ab98d1d16bb5",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-small-building-5",
+      "title": "Small 5",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-annex",
+      "params": {
+        "storeys": "2",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 694,
+      "sourceMin": [
+        -0.8200001120567322,
+        0,
+        -0.5478913187980652
+      ],
+      "sourceMax": [
+        0.8200001120567322,
+        0.8799998760223389,
+        0.41999998688697815
+      ],
+      "sourceDefaultScale": 16.5,
+      "sourceSha256": "7aa00a1bee1828e5518426cf85f744c9ffd142d66850ff0ae08fca2c27a09757",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "citykit-small-building-6",
+      "title": "Small 6",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-modern",
+      "params": {
+        "storeys": "3",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 660,
+      "sourceMin": [
+        -0.41999998688697815,
+        -8.014827287931921e-32,
+        -0.5478913187980652
+      ],
+      "sourceMax": [
+        0.41999998688697815,
+        1.2799999713897705,
+        0.41999998688697815
+      ],
+      "sourceDefaultScale": 14.5,
+      "sourceSha256": "3bff3cd9b826e471469a9eb0931bd7dc9812becd63cb46a57f2af57ff14c0cb7",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Kenney",
+      "sourceUrl": "https://poly.pizza/bundle/City-Kit-0CkvGrBJ0u"
+    },
+    {
+      "legacyId": "street-block-small",
+      "title": "Small Block",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-brick",
+      "params": {
+        "storeys": "4",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 3352,
+      "sourceMin": [
+        -0.9620519876480103,
+        -0.013159000314772129,
+        -1.1306190490722656
+      ],
+      "sourceMax": [
+        0.9468269944190979,
+        3.8353800773620605,
+        0.8442180156707764
+      ],
+      "sourceDefaultScale": 6.2,
+      "sourceSha256": "9a824be97b506d93093e7171d91f8c7284fd119055019c135ace21719591b801",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/ultimatetexturedbuildings.html"
+    },
+    {
+      "legacyId": "street-house-stairs",
+      "title": "Stoop House",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-brick",
+      "params": {
+        "storeys": "3",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 4116,
+      "sourceMin": [
+        -1.0793230533599854,
+        -0.0032450000289827585,
+        -1.0773019790649414
+      ],
+      "sourceMax": [
+        1.0793230533599854,
+        2.7420880794525146,
+        1.454872965812683
+      ],
+      "sourceDefaultScale": 6.2,
+      "sourceSha256": "ba03c1fffb5185eb7566be63d9777f7e62f0845c20bba993f0ba100e19803f0e",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/ultimatetexturedbuildings.html"
+    },
+    {
+      "legacyId": "street-tenement",
+      "title": "Tenement",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-tenement",
+      "params": {
+        "storeys": "5",
+        "width": "standard",
+        "finish": "original"
+      },
+      "sourceTriangles": 6862,
+      "sourceMin": [
+        -1.0318950414657593,
+        -0.0032450000289827585,
+        -1.0773019790649414
+      ],
+      "sourceMax": [
+        1.3892539739608765,
+        5.088593006134033,
+        1.454872965812683
+      ],
+      "sourceDefaultScale": 6.2,
+      "sourceSha256": "07a4e47d5b9989740eba8853baf0b05e6b681b9228f369a090287dd49859d0c5",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/ultimatetexturedbuildings.html"
+    },
+    {
+      "legacyId": "street-house-wide-doors",
+      "title": "Wide Double House",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-brick",
+      "params": {
+        "storeys": "3",
+        "width": "wide",
+        "finish": "original"
+      },
+      "sourceTriangles": 7838,
+      "sourceMin": [
+        -3.4139130115509033,
+        -0.015751000493764877,
+        -1.0773019790649414
+      ],
+      "sourceMax": [
+        3.4139130115509033,
+        2.7321949005126953,
+        1.177994966506958
+      ],
+      "sourceDefaultScale": 6.2,
+      "sourceSha256": "64fc0e49caebffb8b7e70bdee37ae031de7583237421a4445a0ba4d99ed4c58c",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/ultimatetexturedbuildings.html"
+    },
+    {
+      "legacyId": "street-house-wide",
+      "title": "Wide Street House",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-brick",
+      "params": {
+        "storeys": "3",
+        "width": "wide",
+        "finish": "original"
+      },
+      "sourceTriangles": 5044,
+      "sourceMin": [
+        -1.9126060009002686,
+        -0.015751000493764877,
+        -1.0773019790649414
+      ],
+      "sourceMax": [
+        1.9126060009002686,
+        2.7321949005126953,
+        1.177996039390564
+      ],
+      "sourceDefaultScale": 6.2,
+      "sourceSha256": "57542de44b33719baad490671e3043bb75e4f35c99c7a3daf784fde2e179ae54",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/ultimatetexturedbuildings.html"
+    },
+    {
+      "legacyId": "street-tenement-wide",
+      "title": "Wide Tenement",
+      "status": "covered",
+      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "targetId": "commercial-tenement",
+      "params": {
+        "storeys": "5",
+        "width": "wide",
+        "finish": "original"
+      },
+      "sourceTriangles": 13564,
+      "sourceMin": [
+        -3.4139130115509033,
+        -0.02457999996840954,
+        -1.0773019790649414
+      ],
+      "sourceMax": [
+        3.4139130115509033,
+        5.1267991065979,
+        1.6190210580825806
+      ],
+      "sourceDefaultScale": 6.2,
+      "sourceSha256": "5dd84cb15e3b80c24916fdddf82fa4e3486061583fd0034288a0c2e7705422fb",
+      "sourceLicense": "CC0",
+      "sourceAuthor": "Quaternius",
+      "sourceUrl": "https://quaternius.com/packs/ultimatetexturedbuildings.html"
+    }
+  ]
+}

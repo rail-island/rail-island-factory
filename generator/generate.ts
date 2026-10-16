@@ -34,6 +34,7 @@ import { PNG } from "pngjs";
 import { renderGlbThumb } from "./renderGlbThumb.ts";
 import { SKYSCRAPERS, SKYSCRAPER_CATALOG } from "./skyscrapers.ts";
 import { VEHICLES, VEHICLE_CATALOG } from "./vehicles.ts";
+import { COMMERCIAL } from "./commercialStreets.ts";
 import { CHURCHES } from "./churches.ts";
 import { CATHEDRALS } from "./cathedrals.ts";
 import { GOTHIC_CATHEDRALS } from "./gothicCathedrals.ts";
@@ -99,6 +100,7 @@ const THUMB_SIZE = 512;
  */
 const FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: string; meta: "buildings" | "village" | "vehicles" }> = [
   { designs: SKYSCRAPERS, source: "skyscrapers.ts", meta: "buildings" },
+  { designs: COMMERCIAL, source: "commercialStreets.ts", meta: "buildings" },
   { designs: COMMERCIAL_BUILDINGS, source: "commercial.ts", meta: "buildings" },
   { designs: CHURCHES, source: "churches.ts", meta: "buildings" },
   { designs: CATHEDRALS, source: "cathedrals.ts", meta: "buildings" },
