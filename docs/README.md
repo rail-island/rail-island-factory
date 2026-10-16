@@ -20,6 +20,8 @@
 | [models/cd-230.md](models/cd-230.md) | the parametric CD 230 / 240 / 340 / 242 "laminatka": the rounded nose, the face laid on the curved skin, five liveries, the native comparison |
 | [models/cz-electrics.md](models/cz-electrics.md) | the Czech electric locomotives from vlakosimdb: CD 110 / 111 / 210, CD 123 / 130, CD 140, CD 169, the shared shell and pantograph kit, the native comparison |
 | [models/czech-emus.md](models/czech-emus.md) | the parametric Czech electric units: the CD 471 CityElefant (three cars, the vlakosimdb CD 675 as a variant) and the CD 680 Pendolino (four cars) as `unit` values, the shared EMU parts, the native comparison |
+| [models/cd-230.md](models/cd-230.md) | the parametric CD 230 / 240 / 340 "laminatka": the rounded nose, the face laid on the curved skin, four liveries, the native comparison |
+| [models/diesel-locos.md](models/diesel-locos.md) | the Czech mainline diesel locomotives from vlakosimdb: CD 749 / 750 / 753 / 754, CD 781, T 679.0, T 499.0 and CD 771; the shared diesel toolkit, liveries, the native comparison and tests |
 | [models/bmo-double-deck.md](models/bmo-double-deck.md) | the parametric Bmo double-deck coach: the CSD and three CD liveries as one `livery` parameter |
 | [models/steam-locomotives.md](models/steam-locomotives.md) | the nine steam locomotives from vlakosimdb, locomotive and tender as `unit` variants, the shared builder, deviations, the native comparison and tests |
 | [models/animation.md](models/animation.md) | animation clips of parts, the steam locomotives' running-gear clip and its timing contract, the site's Start and Stop buttons |

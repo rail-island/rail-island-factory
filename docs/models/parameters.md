@@ -31,6 +31,11 @@ default, or tender - [steam-locomotives.md](steam-locomotives.md)), and the two 
 `veh-cd-471` (`unit`: motorCar, trailer, drivingTrailer; `variant`: cd471, cd675) and `veh-cd-680`
 (`unit`: endCar, car683, car685, car686) ([czech-emus.md](czech-emus.md)). The five village houses are
 parametric too, with up to six parameters each ([village.md](village.md)). A variant may change more than
+default, or tender - [steam-locomotives.md](steam-locomotives.md)). The five village houses are
+parametric too, with up to six parameters each ([village.md](village.md)). The diesel locomotives
+`veh-cd-750` (`livery`: cd750, cd750No308, cd753, cd754, cd754No013, cd749 - the last on the
+Bardotka body), `veh-cd-781` (`livery`: cd781, cd781No462) and `veh-cd-771` (`livery`: cd771,
+cd771No235, the default, cd771No421) are parametric as well ([diesel-locos.md](diesel-locos.md)). A variant may change more than
 paint: the green and white coach's variants have their own lengths and
 layouts, and a `unit` value is a different vehicle. The first was `veh-csd-classic-green-coach` with one parameter:
 
