@@ -66,3 +66,45 @@ describe("the Boeing 737-800", () => {
     expect(width).toBeGreaterThan(1.65);
   });
 });
+
+const wideBodies = [
+  ["proc-vehicle-mcdonnell-douglas-md11", 61.21, 51.66, 17.6],
+  ["proc-vehicle-boeing-747", 70.66, 64.44, 19.41],
+  ["proc-vehicle-airbus-beluga", 56.15, 44.84, 17.24],
+] as const;
+
+describe("new wide-body aircraft", () => {
+  for (const [id, length, span, height] of wideBodies) {
+    const d = design(id);
+    for (const livery of d.params?.[0]?.values.map(v => v.value) ?? [undefined]) {
+      it(`${id} / ${livery ?? "Airbus"} has finite geometry, real dimensions, retractable gear and no flicker`, () => {
+        const g = d.build(livery ? { livery } : undefined).toGlb(id);
+        const stats = glbStats(g);
+        expect(stats.triangles).toBeLessThanOrEqual(BUDGET);
+        expect(stats.max[0] - stats.min[0]).toBeCloseTo(length, 2);
+        expect(stats.max[2] - stats.min[2]).toBeCloseTo(span, 2);
+        expect(stats.min[1]).toBeCloseTo(0, 3);
+        expect(stats.max[1]).toBeCloseTo(height, 2);
+        const { json, bin } = parseGlb(g);
+        expect(collectTriangles(json, bin).every(t => t.p.every(p => p.every(Number.isFinite)))).toBe(true);
+        expect(json.nodes?.map(n => (n as { name?: string }).name)).toEqual(expect.arrayContaining(["airframe", "gear"]));
+        expect(findCoplanarOverlaps(g)).toEqual([]);
+        expect(d.build(livery ? { livery } : undefined).toGlb(id)).toEqual(g);
+      });
+    }
+  }
+  it("offers three operator liveries plus neutral on each passenger airliner", () => {
+    expect(liveries(wideBodies[0][0])).toEqual(["neutral", "klm", "swissair", "fedex"]);
+    expect(liveries(wideBodies[1][0])).toEqual(["neutral", "britishAirways", "lufthansa", "klm"]);
+    expect(design(wideBodies[2][0]).params).toBeUndefined();
+  });
+  it("removes passenger windows from the FedEx freighter", () => {
+    const d = design(wideBodies[0][0]);
+    const windows = (livery: string) => {
+      const { json, bin } = parseGlb(d.build({ livery }).toGlb(d.id));
+      return collectTriangles(json, bin).filter(t => t.color[0] < 0.01 && t.color[2] < 0.02 && t.p.every(p => p[1] > 5.8 && p[1] < 6.4 && p[0] > -15 && p[0] < 15));
+    };
+    expect(windows("neutral").length).toBeGreaterThan(100);
+    expect(windows("fedex")).toHaveLength(0);
+  });
+});

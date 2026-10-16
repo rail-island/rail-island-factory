@@ -1,7 +1,7 @@
 # Aircraft
 
-**Covers** - the four procedural aircraft (the Aero A.10 biplane, the Airbus A380, the
-Boeing 737-800 and the light business jet), the reference GLBs and photos they reproduce,
+**Covers** - the seven procedural aircraft (the Aero A.10 biplane, the Airbus A380, the
+Boeing 737-800, MD-11, Boeing 747-400, Airbus Beluga and the light business jet), the reference GLBs and photos they reproduce,
 their axes, datums, sizes and triangle budget, the airline liveries of the A380 and the
 737, the retractable-gear parts, the body/decal technique they are built with, and where
 they deviate from the references.
@@ -10,7 +10,7 @@ they deviate from the references.
 
 ## The designs
 
-Each design replaces the hand-authored GLB of the same name in the game's model
+The original designs replace the hand-authored GLB of the same name in the game's model
 database (`rail-island-webapp/db/aircraft/glb/<name>.glb`), so it keeps that model's
 axes, nose direction and bounding box: the game's `yaw` and `targetLength` in
 `db/aircraft/aircraft.meta.json` are measured off them. `AIRCRAFT` in
@@ -92,7 +92,7 @@ their doors.
 
 ## Liveries
 
-The A380 and the 737 take a `livery` parameter (a finish parameter); its first value,
+The A380, 737, MD-11 and 747 take a `livery` parameter (a finish parameter); its first value,
 `neutral`, is the default, so the exported GLB of the A380 is the same as before the
 liveries existed. The others reproduce the colour fields of the main carriers'
 schemes, with simplified tail emblems and no titles:
@@ -114,7 +114,7 @@ lies flat on the skin); and the cowl and winglet materials.
 ## Retractable gear: the parts
 
 The game hides the GLB node named exactly **`gear`** in flight (see the `_comment`
-of `aircraft.meta.json`). The A380, the 737 and the light jet are therefore drawn as two
+of `aircraft.meta.json`). All jets are therefore drawn as two
 `MeshBuilder.part`s, both with pivot `[0, 0, 0]`:
 
 - `airframe` - everything that stays visible;
@@ -153,3 +153,37 @@ ever and has no parts.
 - The light jet adds the photo's red cheatline and winglet band, a drooped nose and a
   raked windscreen (the reference's fuselage is a plain body of revolution), and has
   twin nose wheels where the reference has one.
+
+
+## New wide-body aircraft
+
+The MD-11, 747-400 and original Beluga (A300-600ST, not BelugaXL) are new
+factory designs, not replacements for game assets. They use metres, nose +X,
+yaw 180, wings on Z, and wheels on y = 0. Each has `airframe` and `gear` parts
+and belongs to the aircraft LOD family. Publishing them to the game remains a
+separate import step.
+
+| Design id | Length / span / height (m) | Finishes |
+|---|---|---|
+| `proc-vehicle-mcdonnell-douglas-md11` | 61.21 / 51.66 / 17.60 | neutral, KLM, Swissair classic, FedEx Express |
+| `proc-vehicle-boeing-747` | 70.66 / 64.44 / 19.41 | neutral, British Airways, Lufthansa, KLM |
+| `proc-vehicle-airbus-beluga` | 56.15 / 44.84 / 17.24 | Airbus Transport International white and blue |
+
+The MD-11 has two underwing engines, a straight-through tail engine, winglets,
+two four-wheel main bogies and a two-wheel centre gear. FedEx represents the
+freighter and omits passenger windows. Swissair uses a red cheatline, silver
+belly and engines, and a white cross on a red tail; KLM uses a blue upper
+fuselage and simplified white crown; FedEx uses a purple fin and orange accent.
+
+The 747 has a raised forward upper deck integrated into the fuselage sections,
+two rows of windows forward, four turbofans, winglets and four four-wheel main
+bogies. British Airways has a blue belly and simplified Union flag tail;
+Lufthansa has a white fuselage and blue fin with a simplified white crane ring.
+
+The Beluga has a wide, high cargo crown, a low cockpit ahead of the cargo door,
+two engines and auxiliary vertical fins on the horizontal stabilizer. It has
+no passenger windows or airline selector. These are stylized procedural models;
+operator titles and detailed logos are omitted. Nose profiles use closely
+spaced curved sections and a short cap. All finishes remain below 10,000
+triangles, with finite geometry, real bounding dimensions and no coplanar
+material overlaps checked in `test/aircraft.test.ts`.

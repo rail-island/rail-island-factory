@@ -308,6 +308,9 @@ const FAMILIES: Record<string, readonly string[]> = {
     "aero-a10",
     "airbus-a380",
     "boeing-737",
+    "mcdonnell-douglas-md11",
+    "boeing-747",
+    "airbus-beluga",
     "light-jet"
   ],
   "ships": [

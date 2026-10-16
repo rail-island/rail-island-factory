@@ -1,5 +1,5 @@
-// The procedural aircraft: the 1922 Aero A.10 biplane airliner, the Airbus A380,
-// the Boeing 737-800 and a Learjet-like light business jet; the two airliners in
+// The procedural aircraft: Aero A.10, A380, 737-800, MD-11, 747-400,
+// Beluga A300-600ST and a light business jet; passenger airliners in
 // airline liveries (a `livery` parameter). See docs/models/aircraft.md and the
 // aircraft skill (.agents/skills/aircraft): 10,000 triangles per aircraft.
 //
@@ -1673,7 +1673,177 @@ export function lightJet(): MeshBuilder {
   return m;
 }
 
-/** The catalog fields of the family (meta.json, catalog.ts); a design may override the scale. */
+// --- wide-body additions: MD-11, 747-400 and A300-600ST ---------------------------
+// Real dimensions in metres; all three face +X. Profiles are intentionally
+// separate: the 747 upper deck and Beluga cargo crown are part of the skin.
+type WideType = "md11" | "b747" | "beluga";
+const MD11_LIVERIES: Record<string, Livery> = {
+  neutral: A380_LIVERIES.neutral!,
+  klm: {
+    title: "KLM", colors: { klmBlue: { color: "#009cde", roughness: 0.4 } },
+    skin: (s) => s > -0.25 ? "klmBlue" : "white",
+    fin: [[0, "klmBlue"]], cowl: "white", winglet: "klmBlue",
+    finArt: [{ mat: "white", polys: [[[0.25, 15], [0.75, 15], [0.75, 15.3], [0.25, 15.3]], [[0.3, 15.6], [0.7, 15.6], [0.78, 16.7], [0.5, 16.1], [0.22, 16.7]]] }],
+  },
+  swissair: {
+    title: "Swissair (classic)", colors: { swissRed: { color: "#d71920", roughness: 0.4 } },
+    skin: (s) => s < -0.5 ? "alloy" : "white",
+    stripes: [{ mat: "swissRed", a0: -22, a1: 24, y0: 6.1, y1: 6.5 }],
+    fin: [[0, "swissRed"]], cowl: "alloy", winglet: "swissRed",
+    finArt: [{ mat: "white", polys: [[[0.4, 14.1], [0.6, 14.1], [0.6, 17.2], [0.4, 17.2]], [[0.22, 15.2], [0.78, 15.2], [0.78, 16.1], [0.22, 16.1]]] }],
+  },
+  fedex: {
+    title: "FedEx Express (freighter)", colors: { fedexPurple: { color: "#4d148c", roughness: 0.4 }, fedexOrange: { color: "#ff6600", roughness: 0.4 } },
+    fin: [[0, "fedexPurple"]], cowl: "white", winglet: "fedexPurple",
+    finArt: [{ mat: "fedexOrange", polys: [[[0.28, 14.3], [0.72, 14.3], [0.72, 15.1], [0.28, 15.1]]] }],
+  },
+};
+const B747_LIVERIES: Record<string, Livery> = {
+  neutral: A380_LIVERIES.neutral!,
+  britishAirways: { ...A380_LIVERIES.britishAirways!, stripes: [], finArt: unionFlag(0.12, 0.95, 10, 18.8, "white", "baRed") },
+  lufthansa: { ...A380_LIVERIES.lufthansa!, skin: () => "white", finArt: [
+    { mat: "white", polys: Array.from({ length: 16 }, (_, i): P2[] => {
+      const a = i * Math.PI / 8, b = (i + 1) * Math.PI / 8;
+      return [[0.5 + 0.29 * Math.cos(a), 15.3 + 2 * Math.sin(a)], [0.5 + 0.29 * Math.cos(b), 15.3 + 2 * Math.sin(b)], [0.5 + 0.24 * Math.cos(b), 15.3 + 1.7 * Math.sin(b)], [0.5 + 0.24 * Math.cos(a), 15.3 + 1.7 * Math.sin(a)]];
+    }) },
+    { mat: "white", polys: [[[0.3, 15.7], [0.65, 14.7], [0.7, 15], [0.38, 16.1]]] },
+  ] },
+  klm: MD11_LIVERIES.klm!,
+};
+const MD11_PARAMS = [liveryParam(MD11_LIVERIES)];
+const B747_PARAMS = [liveryParam(B747_LIVERIES)];
+const BELUGA_LIVERY: Livery = {
+  title: "Airbus Transport International", colors: { airbusBlue: { color: "#003b71", roughness: 0.4 } },
+  skin: (s) => s < -0.65 ? "airbusBlue" : "white",
+  fin: [[0, "airbusBlue"]], cowl: "white", winglet: "airbusBlue",
+};
+
+function wideBody(kind: WideType, l: Livery, cargo = false): MeshBuilder {
+  const jumbo = kind === "b747", beluga = kind === "beluga";
+  const length = jumbo ? 70.66 : beluga ? 56.15 : 61.21;
+  const span = jumbo ? 64.44 : beluga ? 44.84 : 51.66;
+  const height = jumbo ? 19.41 : beluga ? 17.24 : 17.6;
+  const half = length / 2, cy = jumbo ? 5.5 : 5.1;
+  const radius = jumbo ? 3.25 : beluga ? 2.82 : 3.01;
+  // x, half-width, lower skin, upper skin, widest-section height.
+  const rows: number[][] = [
+    [-half + 0.12, 0.15, cy + 0.6, cy + 1.0, cy + 0.8],
+    [-half + 3, 0.8, cy - 0.1, cy + 1.7, cy + 0.8],
+    [-half + 8, radius * 0.7, cy - 1.5, cy + 2.3, cy + 0.4],
+    [-half + 13, radius, cy - radius, cy + radius, cy],
+    [half - 12, radius, cy - radius, cy + radius, cy],
+  ];
+  if (jumbo) {
+    rows.splice(4, 0, [6, radius, cy - radius, cy + radius, cy], [13, radius, cy - radius, 10.4, cy]);
+    rows[rows.length - 1]![3] = 10.4;
+  }
+  if (beluga) {
+    for (let i = 2; i < rows.length; i++) { rows[i]![1] = i === 2 ? 3.5 : 3.95; rows[i]![3] = i === 2 ? 10.5 : 12.8; rows[i]![4] = 7; }
+    rows.push([half - 7, 3.9, 2.35, 12.8, 7], [half - 4, 3.4, 2.65, 12.1, 7], [half - 2.7, 2.4, 2.9, 10.3, 6]);
+  }
+  const start = beluga ? 2.6 : jumbo ? 8 : 6;
+  for (const d of [start, start * 0.7, start * 0.4, start * 0.2, start * 0.08, 0.06]) {
+    const t = d / start;
+    const w = radius * Math.sqrt(1 - (1 - t) ** 2);
+    const mid = beluga ? 4.7 : cy - 0.35 * (1 - t);
+    const crown = jumbo ? 4.9 : radius;
+    rows.push([half - d, w, mid - radius * Math.sqrt(t), mid + (beluga ? 2.7 : crown) * Math.sqrt(t), mid]);
+  }
+  const fus: Station[] = rows.map(([a, hw, lo, hi, mid]) => ({ a: a!, sec: oval(32, 0, mid!, hw!, hi! - mid!, mid! - lo!, 2.1) }));
+  const m = new MeshBuilder(liveryPalette(l));
+  const engineMats = { cowl: l.cowl, lip: "alloy", duct: "darkGrey", fan: "glass", nozzle: "metalGrey", plug: "darkGrey" };
+  m.part("airframe", [0, 0, 0], () => {
+    m.scope("fuselage", () => {
+      m.scope("skin", () => paintedBody(m, "x", fus, l.skin ?? (() => "white")));
+      m.scope("nose", () => fan(m, "white", "x", fus.at(-1)!.sec, fus.at(-1)!.a, 1, [half, beluga ? 4.7 : cy - 0.35, 0]));
+      m.scope("tail cone", () => fan(m, "alloy", "x", fus[0]!.sec, fus[0]!.a, -1, [-half, cy + 0.8, 0]));
+      for (const side of [-1, 1]) {
+        m.scope("cabin windows", () => {
+          if (beluga || cargo) return;
+          for (const [lo, hi, y] of [[-half + 14, half - 12, cy + 1], ...(jumbo ? [[14, half - 10, 8.8]] : [])]) {
+            const pts: Vec3[] = [];
+            for (let x = lo!; x < hi!; x += 0.7) {
+              if ([-half + 14, 2, half - 13].some(d => Math.abs(d - x) < 0.7)) continue;
+              pts.push(...skinDecal("x", fus, ovalOutline(x, y!, 0.16, 0.21, 8), side, 0.035, 2));
+            }
+            m.facets("glass", pts, [0, 0, side]);
+          }
+        });
+        m.scope("cockpit", () => {
+          const y = jumbo ? 8.1 : beluga ? 5.6 : 6.4;
+          const x = half - (beluga ? 2.5 : 5);
+          m.facets("glass", skinDecal("x", fus, [[x - 1.7, y], [x + 0.8, y - 0.1], [x + 0.5, y + 0.65], [x - 1.5, y + 0.8]], side, 0.045, 4, 6), [0, 0, side]);
+          const screen = gridTris((u, v) => skinEnd("x", fus, side * lerp(0.08, 1.2, u), lerp(y, y + 0.6, v), half - start, half, 0.05), 6, 4);
+          m.facets("glass", screen, [0.8, 0.4, side * 0.3]);
+        });
+        m.scope("doors", () => {
+          for (const x of beluga ? [half - 4] : [-half + 14, 2, half - 13]) {
+            m.facets("door", skinDecal("x", fus, [[x - 0.45, cy - 1], [x + 0.45, cy - 1], [x + 0.45, cy + 1.5], [x - 0.45, cy + 1.5]], side, 0.025, 4), [0, 0, side]);
+          }
+        });
+        m.scope("cheatline", () => { for (const stripe of l.stripes ?? []) m.facets(stripe.mat, skinStripe("x", fus, stripe.a0, stripe.a1, stripe.y0, stripe.y1, side, 0.055), [0, 0, side]); });
+      }
+    });
+    m.scope("wings", () => {
+      for (const side of [-1, 1]) m.scope(side > 0 ? "right wing" : "left wing", () => {
+        const tip = span / 2 - (beluga ? 0 : 0.4);
+        const stations: WingStation[] = [
+          { s: side * 0.6, lead: 6, chord: jumbo ? 16 : 12, thick: 1.3, mid: 2.8 },
+          { s: side * 7, lead: 2.7, chord: 9, thick: 0.9, mid: 3.2 },
+          { s: side * tip, lead: -tip * 0.44, chord: 2, thick: 0.18, mid: 5.2 },
+        ];
+        wing(m, "alloy", "z", stations);
+        if (!beluga) m.scope("winglet", () => fin(m, l.winglet, "x", [[5.2, -tip * 0.44, 2, 0.16, side * tip], [7.2, -tip * 0.44 - 0.7, 1, 0.08, side * (span / 2 - 0.04)]]));
+        for (const z of jumbo ? [10, 19] : [beluga ? 7.5 : 9]) m.scope(`engine ${z}`, () => {
+          const lead = z < 7 ? 3 : 2.7 + (z - 7) / (tip - 7) * (-tip * 0.44 - 2.7);
+          const x = lead + 2.5, y = 2.4 + z * 0.04;
+          fin(m, "alloy", "x", [[y, x - 0.5, 4, 0.35, side * z], [3.4 + z * 0.05, x - 1, 4, 0.4, side * z]]);
+          nacelle(m, "x", 1, { c: [side * z, y], front: x, back: x - 4.4, r: beluga ? 1.12 : 1.35, nozzle: 0.8, plug: 0.6, mats: engineMats });
+        });
+      });
+    });
+    m.scope("tail", () => {
+      const root = -half + (jumbo ? 17 : 13);
+      m.scope("fin", () => liveryFin(m, l, "x", [[cy + 1, root, 11, 0.65, 0], [height, -half + 5, 4, 0.2, 0]]));
+      for (const side of [-1, 1]) {
+        const tailSpan = jumbo ? 11 : beluga ? 9 : 10;
+        const y = beluga ? 8.5 : 6.5;
+        m.scope("tailplane", () => wing(m, "alloy", "z", [{ s: side * 0.4, lead: -half + 10, chord: 7, thick: 0.65, mid: y }, { s: side * tailSpan, lead: -half + 3, chord: 2, thick: 0.15, mid: y + 0.8 }]));
+        if (beluga) m.scope("auxiliary fin", () => fin(m, l.winglet, "x", [[7.8, -half + 4, 3, 0.18, side * 8], [12.2, -half + 2.6, 1.5, 0.1, side * 8]]));
+      }
+      if (!jumbo && !beluga) m.scope("engine 2", () => nacelle(m, "x", 1, { c: [0, 10.3], front: -half + 11, back: -half + 3, r: 1.45, nozzle: 1, plug: 0.5, mats: engineMats }));
+    });
+  });
+  m.part("gear", [0, 0, 0], () => {
+    const leg = (name: string, x: number, z: number, pairs: number, r: number): void => m.scope(name, () => {
+      const y = axleY(0, r);
+      rod(m, "alloy", [x, 2.9, z], [x, y, z], 0.14, 8);
+      block(m, "door", x - 0.65, x + 0.65, 1.9, 2.9, z + 0.3, z + 0.38);
+      if (pairs > 1) rod(m, "steel", [x - 0.7, y, z], [x + 0.7, y, z], 0.13);
+      for (let i = 0; i < pairs; i++) {
+        const a = x + (i - (pairs - 1) / 2) * 1.4;
+        rod(m, "alloy", [a, y, z - 0.5], [a, y, z + 0.5], 0.1);
+        for (const side of [-1, 1]) wheel(m, "z", z + side * 0.45 - 0.18, z + side * 0.45 + 0.18, [a, y], r, r * 0.45, "alloy");
+      }
+    });
+    leg("nose gear", half - (jumbo ? 10 : 7), 0, 1, 0.46);
+    for (const side of [-1, 1]) leg(side > 0 ? "right main gear" : "left main gear", -3, side * (jumbo ? 5.5 : 4.5), 2, 0.65);
+    if (jumbo) for (const side of [-1, 1]) leg(`body gear ${side}`, -6, side * 1.8, 2, 0.65);
+    else if (!beluga) leg("centre gear", -5, 0, 1, 0.65);
+  });
+  return m;
+}
+
+export function mcdonnellDouglasMd11(params?: ParamValues): MeshBuilder {
+  const key = resolveParams(MD11_PARAMS, params).livery!;
+  return wideBody("md11", MD11_LIVERIES[key]!, key === "fedex");
+}
+export function boeing747(params?: ParamValues): MeshBuilder {
+  return wideBody("b747", B747_LIVERIES[resolveParams(B747_PARAMS, params).livery!]!);
+}
+export function airbusBeluga(): MeshBuilder { return wideBody("beluga", BELUGA_LIVERY); }
+
+/** Shared aircraft catalog fields; individual designs supply their yaw. */
 export const AIRCRAFT_CATALOG: CatalogFields = {
   category: "Aircraft",
   group: "aircraft",
@@ -1685,6 +1855,9 @@ export const AIRCRAFT_CATALOG: CatalogFields = {
 
 /** Every design of the family, by catalog id; `references` is the folder of its source photos under assets/. */
 export const AIRCRAFT: ProceduralDesign[] = [
+  { id: "proc-vehicle-mcdonnell-douglas-md11", title: "McDonnell Douglas MD-11", build: mcdonnellDouglasMd11, params: MD11_PARAMS, finishParams: ["livery"], catalog: { ...AIRCRAFT_CATALOG, yaw: 180 } },
+  { id: "proc-vehicle-boeing-747", title: "Boeing 747-400", build: boeing747, params: B747_PARAMS, finishParams: ["livery"], catalog: { ...AIRCRAFT_CATALOG, yaw: 180 } },
+  { id: "proc-vehicle-airbus-beluga", title: "Airbus Beluga A300-600ST", build: airbusBeluga, catalog: { ...AIRCRAFT_CATALOG, yaw: 180 } },
   { id: "proc-vehicle-aero-a10", title: "Aero A.10", build: aeroA10, references: "aero-a10", catalog: { ...AIRCRAFT_CATALOG, yaw:270 } },
   { id: "proc-vehicle-airbus-a380", title: "Airbus A380", build: airbusA380, params: A380_PARAMS, finishParams: ["livery"], references: "airbus-a380", catalog: { ...AIRCRAFT_CATALOG, yaw:270 } },
   { id: "proc-vehicle-boeing-737", title: "Boeing 737-800", build: boeing737, params: B737_PARAMS, finishParams: ["livery"], catalog: { ...AIRCRAFT_CATALOG, yaw: 0 } },
