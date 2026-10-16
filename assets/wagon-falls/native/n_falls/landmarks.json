@@ -1,0 +1,179 @@
+{
+ "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/truck/n_falls/model",
+ "pixelMetres": 0.1,
+ "convention": "Pixel edges [left, top, right, bottom] on the native BMP; origin top left, x right, y down.",
+ "annotations": [
+  {
+   "id": "R01",
+   "view": "z_dec",
+   "side": "right",
+   "element": "upper bulge",
+   "box": [
+    1,
+    17,
+    129,
+    30
+   ],
+   "nodes": [
+    "body/upper"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R02",
+   "view": "z_dec",
+   "side": "right",
+   "element": "lower body, first half",
+   "box": [
+    4,
+    31,
+    61,
+    51
+   ],
+   "nodes": [
+    "body/lower/half-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R03",
+   "view": "z_dec",
+   "side": "right",
+   "element": "lower body, second half",
+   "box": [
+    69,
+    31,
+    126,
+    51
+   ],
+   "nodes": [
+    "body/lower/half-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R04",
+   "view": "z_dec",
+   "side": "right",
+   "element": "centre post",
+   "box": [
+    61,
+    30,
+    69,
+    51
+   ],
+   "nodes": [
+    "body/lower/centre-post"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "From the XML gap between the lower halves (6.1..6.9 m)."
+  },
+  {
+   "id": "L01",
+   "view": "z_inc",
+   "side": "left",
+   "element": "upper bulge",
+   "box": [
+    1,
+    17,
+    129,
+    30
+   ],
+   "nodes": [
+    "body/upper"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L02",
+   "view": "z_inc",
+   "side": "left",
+   "element": "lower body, first half",
+   "box": [
+    4,
+    31,
+    61,
+    51
+   ],
+   "nodes": [
+    "body/lower/half-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L03",
+   "view": "z_inc",
+   "side": "left",
+   "element": "lower body, second half",
+   "box": [
+    69,
+    31,
+    126,
+    51
+   ],
+   "nodes": [
+    "body/lower/half-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L04",
+   "view": "z_inc",
+   "side": "left",
+   "element": "centre post",
+   "box": [
+    61,
+    30,
+    69,
+    51
+   ],
+   "nodes": [
+    "body/lower/centre-post"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "From the XML gap between the lower halves (6.1..6.9 m)."
+  },
+  {
+   "id": "E01",
+   "view": "x_dec",
+   "end": "rear",
+   "element": "rear end of the body",
+   "box": [
+    0,
+    17,
+    30,
+    51
+   ],
+   "nodes": [
+    "body/lower",
+    "body/upper"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "x_dec rows 17..51."
+  },
+  {
+   "id": "E02",
+   "view": "x_inc",
+   "end": "front",
+   "element": "front end of the body",
+   "box": [
+    0,
+    17,
+    30,
+    51
+   ],
+   "nodes": [
+    "body/lower",
+    "body/upper"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "x_inc rows 17..51; the ladder and railing are in front of it."
+  }
+ ]
+}

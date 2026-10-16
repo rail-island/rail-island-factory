@@ -1,0 +1,283 @@
+{
+ "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/truck/n_hadgs/model",
+ "pixelMetres": 0.1,
+ "convention": "Pixel edges [left, top, right, bottom] on the native BMP; origin top left, x right, y down.",
+ "annotations": [
+  {
+   "id": "R01",
+   "view": "z_both",
+   "side": "right",
+   "element": "body",
+   "box": [
+    3,
+    1,
+    165,
+    34
+   ],
+   "nodes": [
+    "body/shell",
+    "body/roof",
+    "body/roof-ends"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Rows 1..33; the XML roof ridge is at 4.3 m (row 0), the BMP paints from row 1."
+  },
+  {
+   "id": "R02",
+   "view": "z_both",
+   "side": "right",
+   "element": "roof band",
+   "box": [
+    5,
+    1,
+    164,
+    4
+   ],
+   "nodes": [
+    "body/roof"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Rows 1..3 (3.9..4.2 m), columns 5..163: the roof ends at 0.3..0.5 and 16.4..16.5 m are body colour, as in the model."
+  },
+  {
+   "id": "R03",
+   "view": "z_both",
+   "side": "right",
+   "element": "post at 1.6 m",
+   "box": [
+    16,
+    6,
+    17,
+    33
+   ],
+   "nodes": [
+    "body/right-side/ribs/rib-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R04",
+   "view": "z_both",
+   "side": "right",
+   "element": "post at 7.2 m",
+   "box": [
+    72,
+    7,
+    73,
+    32
+   ],
+   "nodes": [
+    "body/right-side/ribs/rib-4"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R05",
+   "view": "z_both",
+   "side": "right",
+   "element": "post at 9.7 m",
+   "box": [
+    97,
+    7,
+    98,
+    32
+   ],
+   "nodes": [
+    "body/right-side/ribs/rib-8"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R06",
+   "view": "z_both",
+   "side": "right",
+   "element": "post at 15.1 m",
+   "box": [
+    151,
+    6,
+    152,
+    33
+   ],
+   "nodes": [
+    "body/right-side/ribs/rib-10"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R07",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 1 stiffener at 3.1 m",
+   "box": [
+    31,
+    7,
+    32,
+    33
+   ],
+   "nodes": [
+    "body/right-side/door-1/frame/stiffener-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R08",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 2 stiffener at 10.9 m",
+   "box": [
+    109,
+    7,
+    110,
+    32
+   ],
+   "nodes": [
+    "body/right-side/door-2/frame/stiffener-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L01",
+   "view": "z_both",
+   "side": "left",
+   "element": "body",
+   "box": [
+    3,
+    1,
+    165,
+    34
+   ],
+   "nodes": [
+    "body/shell",
+    "body/roof",
+    "body/roof-ends"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Rows 1..33; the XML roof ridge is at 4.3 m (row 0), the BMP paints from row 1."
+  },
+  {
+   "id": "L02",
+   "view": "z_both",
+   "side": "left",
+   "element": "roof band",
+   "box": [
+    5,
+    1,
+    164,
+    4
+   ],
+   "nodes": [
+    "body/roof"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Rows 1..3 (3.9..4.2 m), columns 5..163: the roof ends at 0.3..0.5 and 16.4..16.5 m are body colour, as in the model."
+  },
+  {
+   "id": "L03",
+   "view": "z_both",
+   "side": "left",
+   "element": "post at 1.6 m",
+   "box": [
+    16,
+    6,
+    17,
+    33
+   ],
+   "nodes": [
+    "body/left-side/ribs/rib-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L04",
+   "view": "z_both",
+   "side": "left",
+   "element": "post at 7.2 m",
+   "box": [
+    72,
+    7,
+    73,
+    32
+   ],
+   "nodes": [
+    "body/left-side/ribs/rib-4"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L05",
+   "view": "z_both",
+   "side": "left",
+   "element": "post at 9.7 m",
+   "box": [
+    97,
+    7,
+    98,
+    32
+   ],
+   "nodes": [
+    "body/left-side/ribs/rib-8"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L06",
+   "view": "z_both",
+   "side": "left",
+   "element": "post at 15.1 m",
+   "box": [
+    151,
+    6,
+    152,
+    33
+   ],
+   "nodes": [
+    "body/left-side/ribs/rib-10"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L07",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 1 stiffener at 3.1 m",
+   "box": [
+    31,
+    7,
+    32,
+    33
+   ],
+   "nodes": [
+    "body/left-side/door-1/frame/stiffener-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L08",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 2 stiffener at 10.9 m",
+   "box": [
+    109,
+    7,
+    110,
+    32
+   ],
+   "nodes": [
+    "body/left-side/door-2/frame/stiffener-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  }
+ ]
+}

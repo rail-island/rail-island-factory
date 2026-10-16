@@ -46,6 +46,7 @@ import { CABLE_CABINS } from "./cableCabins.ts";
 import { TRUCKS } from "./trucks.ts";
 import { STEAM_LOCOS } from "./steamLocos.ts";
 import { CZ_ELECTRICS } from "./czElectrics.ts";
+import { FREIGHT_WAGONS } from "./freightWagons.ts";
 import { CITY_BUS_DESIGNS, KAROSA_DESIGNS } from "./buses.ts";
 import { VILLAGE_HOUSES } from "./village.ts";
 import type { ProceduralDesign } from "./design.ts";
@@ -86,6 +87,7 @@ const FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: st
   { designs: VEHICLES, source: "vehicles.ts", meta: "vehicles" },
   { designs: STEAM_LOCOS, source: "steamLocos.ts", meta: "vehicles" },
   { designs: CZ_ELECTRICS, source: "czElectrics.ts", meta: "vehicles" },
+  { designs: FREIGHT_WAGONS, source: "freightWagons.ts", meta: "vehicles" },
   { designs: TRUCKS, source: "trucks.ts", meta: "vehicles" },
   { designs: KAROSA_DESIGNS, source: "karosa.ts", meta: "vehicles" },
   { designs: CITY_BUS_DESIGNS, source: "cityBuses.ts", meta: "vehicles" },

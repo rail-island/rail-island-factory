@@ -1,0 +1,221 @@
+{
+ "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/truck/n_habis_tw1/model",
+ "pixelMetres": 0.1,
+ "convention": "Pixel edges [left, top, right, bottom] on the native BMP; origin top left, x right, y down.",
+ "annotations": [
+  {
+   "id": "R01",
+   "view": "z_dec",
+   "side": "right",
+   "element": "roof and top rail band",
+   "box": [
+    5,
+    9,
+    227,
+    18
+   ],
+   "nodes": [
+    "body/roof",
+    "body/right-side/top-rail"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "The light band rows 9..17: roof slope and top rail (XML base2 3.2..4.1 m)."
+  },
+  {
+   "id": "R02",
+   "view": "z_dec",
+   "side": "right",
+   "element": "sliding walls with posts and rails",
+   "box": [
+    5,
+    18,
+    227,
+    39
+   ],
+   "nodes": [
+    "body/wall-1",
+    "body/wall-2",
+    "body/centre-post",
+    "body/right-side/posts",
+    "body/right-side/bottom-rail"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Wall panels rows 18..36 and the bottom rail rows 37..38."
+  },
+  {
+   "id": "R03",
+   "view": "z_dec",
+   "side": "right",
+   "element": "TRANSWAGGON plate",
+   "box": [
+    87,
+    23,
+    146,
+    30
+   ],
+   "nodes": [
+    "body/right-side/name-plate"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R04",
+   "view": "z_dec",
+   "side": "right",
+   "element": "label board",
+   "box": [
+    7,
+    19,
+    19,
+    37
+   ],
+   "nodes": [
+    "body/right-side/label-board"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "The light label board at the -x end (+z side), the +x end (-z side); rows 36..37 meet the data panel."
+  },
+  {
+   "id": "R05",
+   "view": "z_dec",
+   "side": "right",
+   "element": "black data panel",
+   "box": [
+    18,
+    34,
+    34,
+    38
+   ],
+   "nodes": [
+    "body/right-side/data-panel"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R06",
+   "view": "z_dec",
+   "side": "right",
+   "element": "underframe and fishbelly",
+   "box": [
+    5,
+    39,
+    227,
+    47
+   ],
+   "nodes": [
+    "underframe"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Rows 39..46, columns 5..226 (0.5..22.7 m); the end frames' feet at 0.3..0.5 and 22.7..22.9 m share the colour."
+  },
+  {
+   "id": "L01",
+   "view": "z_inc",
+   "side": "left",
+   "element": "roof and top rail band",
+   "box": [
+    5,
+    9,
+    227,
+    18
+   ],
+   "nodes": [
+    "body/roof",
+    "body/left-side/top-rail"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "The light band rows 9..17: roof slope and top rail (XML base2 3.2..4.1 m)."
+  },
+  {
+   "id": "L02",
+   "view": "z_inc",
+   "side": "left",
+   "element": "sliding walls with posts and rails",
+   "box": [
+    5,
+    18,
+    227,
+    39
+   ],
+   "nodes": [
+    "body/wall-1",
+    "body/wall-2",
+    "body/centre-post",
+    "body/left-side/posts",
+    "body/left-side/bottom-rail"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Wall panels rows 18..36 and the bottom rail rows 37..38."
+  },
+  {
+   "id": "L03",
+   "view": "z_inc",
+   "side": "left",
+   "element": "TRANSWAGGON plate",
+   "box": [
+    86,
+    23,
+    145,
+    30
+   ],
+   "nodes": [
+    "body/left-side/name-plate"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L04",
+   "view": "z_inc",
+   "side": "left",
+   "element": "label board",
+   "box": [
+    210,
+    19,
+    225,
+    37
+   ],
+   "nodes": [
+    "body/left-side/label-board"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "The light label board at the -x end (+z side), the +x end (-z side); rows 36..37 meet the data panel."
+  },
+  {
+   "id": "L05",
+   "view": "z_inc",
+   "side": "left",
+   "element": "black data panel",
+   "box": [
+    198,
+    34,
+    214,
+    38
+   ],
+   "nodes": [
+    "body/left-side/data-panel"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L06",
+   "view": "z_inc",
+   "side": "left",
+   "element": "underframe and fishbelly",
+   "box": [
+    5,
+    39,
+    227,
+    47
+   ],
+   "nodes": [
+    "underframe"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Rows 39..46, columns 5..226 (0.5..22.7 m); the end frames' feet at 0.3..0.5 and 22.7..22.9 m share the colour."
+  }
+ ]
+}

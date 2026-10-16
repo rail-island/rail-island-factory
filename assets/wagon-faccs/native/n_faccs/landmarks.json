@@ -1,0 +1,313 @@
+{
+ "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/truck/n_faccs/model",
+ "pixelMetres": 0.1,
+ "convention": "Pixel edges [left, top, right, bottom] on the native BMP; origin top left, x right, y down.",
+ "annotations": [
+  {
+   "id": "R01",
+   "view": "z_both",
+   "side": "right",
+   "element": "hopper body",
+   "box": [
+    20,
+    0,
+    108,
+    30
+   ],
+   "nodes": [
+    "hopper/body"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "XML `box` 2.0..10.8 m at the top, down to 1.2 m; braces and end frames paint the same brown."
+  },
+  {
+   "id": "R02",
+   "view": "z_both",
+   "side": "right",
+   "element": "underframe",
+   "box": [
+    1,
+    30,
+    126,
+    33
+   ],
+   "nodes": [
+    "underframe/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R03",
+   "view": "z_both",
+   "side": "right",
+   "element": "discharge chute 1",
+   "box": [
+    44,
+    33,
+    62,
+    41
+   ],
+   "nodes": [
+    "underframe/chutes/chute-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "From the XML `unload` 4.4..6.2 m, 0.1..0.9 m."
+  },
+  {
+   "id": "R04",
+   "view": "z_both",
+   "side": "right",
+   "element": "discharge chute 2",
+   "box": [
+    66,
+    33,
+    84,
+    41
+   ],
+   "nodes": [
+    "underframe/chutes/chute-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "From the XML `unload` 6.6..8.4 m, 0.1..0.9 m."
+  },
+  {
+   "id": "R05",
+   "view": "z_both",
+   "side": "right",
+   "element": "rear end wall",
+   "box": [
+    2,
+    19,
+    3,
+    30
+   ],
+   "nodes": [
+    "underframe/rear-end-frame/end-wall"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R06",
+   "view": "z_both",
+   "side": "right",
+   "element": "front end wall",
+   "box": [
+    125,
+    19,
+    126,
+    30
+   ],
+   "nodes": [
+    "underframe/front-end-frame/end-wall"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R07",
+   "view": "z_both",
+   "side": "right",
+   "element": "stiffener at 4.0 m",
+   "box": [
+    40,
+    0,
+    41,
+    17
+   ],
+   "nodes": [
+    "hopper/right-side-stiffeners/stiffener-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R08",
+   "view": "z_both",
+   "side": "right",
+   "element": "stiffener at 6.2 m",
+   "box": [
+    62,
+    0,
+    63,
+    29
+   ],
+   "nodes": [
+    "hopper/right-side-stiffeners/stiffener-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R09",
+   "view": "z_both",
+   "side": "right",
+   "element": "stiffener at 8.7 m",
+   "box": [
+    87,
+    0,
+    88,
+    17
+   ],
+   "nodes": [
+    "hopper/right-side-stiffeners/stiffener-4"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L01",
+   "view": "z_both",
+   "side": "left",
+   "element": "hopper body",
+   "box": [
+    20,
+    0,
+    108,
+    30
+   ],
+   "nodes": [
+    "hopper/body"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "XML `box` 2.0..10.8 m at the top, down to 1.2 m; braces and end frames paint the same brown."
+  },
+  {
+   "id": "L02",
+   "view": "z_both",
+   "side": "left",
+   "element": "underframe",
+   "box": [
+    1,
+    30,
+    126,
+    33
+   ],
+   "nodes": [
+    "underframe/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L03",
+   "view": "z_both",
+   "side": "left",
+   "element": "discharge chute 1",
+   "box": [
+    44,
+    33,
+    62,
+    41
+   ],
+   "nodes": [
+    "underframe/chutes/chute-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "From the XML `unload` 4.4..6.2 m, 0.1..0.9 m."
+  },
+  {
+   "id": "L04",
+   "view": "z_both",
+   "side": "left",
+   "element": "discharge chute 2",
+   "box": [
+    66,
+    33,
+    84,
+    41
+   ],
+   "nodes": [
+    "underframe/chutes/chute-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "From the XML `unload` 6.6..8.4 m, 0.1..0.9 m."
+  },
+  {
+   "id": "L05",
+   "view": "z_both",
+   "side": "left",
+   "element": "rear end wall",
+   "box": [
+    2,
+    19,
+    3,
+    30
+   ],
+   "nodes": [
+    "underframe/rear-end-frame/end-wall"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L06",
+   "view": "z_both",
+   "side": "left",
+   "element": "front end wall",
+   "box": [
+    125,
+    19,
+    126,
+    30
+   ],
+   "nodes": [
+    "underframe/front-end-frame/end-wall"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L07",
+   "view": "z_both",
+   "side": "left",
+   "element": "stiffener at 4.0 m",
+   "box": [
+    40,
+    0,
+    41,
+    17
+   ],
+   "nodes": [
+    "hopper/left-side-stiffeners/stiffener-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L08",
+   "view": "z_both",
+   "side": "left",
+   "element": "stiffener at 6.2 m",
+   "box": [
+    62,
+    0,
+    63,
+    29
+   ],
+   "nodes": [
+    "hopper/left-side-stiffeners/stiffener-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L09",
+   "view": "z_both",
+   "side": "left",
+   "element": "stiffener at 8.7 m",
+   "box": [
+    87,
+    0,
+    88,
+    17
+   ],
+   "nodes": [
+    "hopper/left-side-stiffeners/stiffener-4"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  }
+ ]
+}

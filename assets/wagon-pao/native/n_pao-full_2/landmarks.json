@@ -1,0 +1,397 @@
+{
+ "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/truck/n_pao-full#2/model",
+ "pixelMetres": 0.1,
+ "convention": "Pixel edges [left, top, right, bottom] on the native BMP; origin top left, x right, y down.",
+ "annotations": [
+  {
+   "id": "R01",
+   "view": "z_both",
+   "side": "right",
+   "element": "frame side",
+   "box": [
+    5,
+    8,
+    147,
+    15
+   ],
+   "nodes": [
+    "frame/right-side/solebar",
+    "frame/right-side/deck-edge",
+    "frame/right-side/fishbelly"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Deck edge row 8, solebar and fishbelly down to row 14 (0.5 m)."
+  },
+  {
+   "id": "R02",
+   "view": "z_both",
+   "side": "right",
+   "element": "rear buffers",
+   "box": [
+    0,
+    8,
+    5,
+    12
+   ],
+   "nodes": [
+    "rear-end/buffers"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R03",
+   "view": "z_both",
+   "side": "right",
+   "element": "front buffers",
+   "box": [
+    147,
+    8,
+    153,
+    12
+   ],
+   "nodes": [
+    "front-end/buffers"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "The BMP paints the buffers from 14.7 m; the model beam ends the deck at 14.8 m."
+  },
+  {
+   "id": "R04",
+   "view": "z_both",
+   "side": "right",
+   "element": "bus body",
+   "box": [
+    19,
+    -26,
+    138,
+    8
+   ],
+   "nodes": [
+    "cargo/body",
+    "cargo/livery",
+    "cargo/windows",
+    "cargo/doors",
+    "cargo/roof",
+    "cargo/lamps",
+    "cargo/wheels"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "From the inline bus BMP (z_dec, z_inc 120 x 40 px), moved by the inline placement tx 1.9, ty 1.2: wagon column = bus column + 19, wagon row = bus row - 32. The XML body is 11.7 m long; the BMP paints 11.9 m with the tail lamps."
+  },
+  {
+   "id": "R05",
+   "view": "z_both",
+   "side": "right",
+   "element": "bus waist band",
+   "box": [
+    24,
+    -9,
+    131,
+    -5
+   ],
+   "nodes": [
+    "cargo/livery/waist-band"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "From the inline bus BMP (z_dec, z_inc 120 x 40 px), moved by the inline placement tx 1.9, ty 1.2: wagon column = bus column + 19, wagon row = bus row - 32."
+  },
+  {
+   "id": "R06",
+   "view": "z_both",
+   "side": "right",
+   "element": "bus skirt between the axles",
+   "box": [
+    51,
+    0,
+    95,
+    5
+   ],
+   "nodes": [
+    "cargo/livery/skirt-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "From the inline bus BMP (z_dec, z_inc 120 x 40 px), moved by the inline placement tx 1.9, ty 1.2: wagon column = bus column + 19, wagon row = bus row - 32."
+  },
+  {
+   "id": "R07",
+   "view": "z_both",
+   "side": "right",
+   "element": "bus window 2",
+   "box": [
+    36,
+    -19,
+    53,
+    -10
+   ],
+   "nodes": [
+    "cargo/windows/window-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "From the inline bus BMP (z_dec, z_inc 120 x 40 px), moved by the inline placement tx 1.9, ty 1.2: wagon column = bus column + 19, wagon row = bus row - 32."
+  },
+  {
+   "id": "R08",
+   "view": "z_both",
+   "side": "right",
+   "element": "bus window 5",
+   "box": [
+    93,
+    -19,
+    110,
+    -10
+   ],
+   "nodes": [
+    "cargo/windows/window-5"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "From the inline bus BMP (z_dec, z_inc 120 x 40 px), moved by the inline placement tx 1.9, ty 1.2: wagon column = bus column + 19, wagon row = bus row - 32."
+  },
+  {
+   "id": "R09",
+   "view": "z_both",
+   "side": "right",
+   "element": "bus front wheel",
+   "box": [
+    39,
+    -2,
+    50,
+    8
+   ],
+   "nodes": [
+    "cargo/wheels/front-wheel"
+   ],
+   "tolerancePixels": 1.21,
+   "uncertainty": "From the inline bus BMP (z_dec, z_inc 120 x 40 px), moved by the inline placement tx 1.9, ty 1.2: wagon column = bus column + 19, wagon row = bus row - 32. A 16-gon of 1 m; the BMP paints 1.1 m."
+  },
+  {
+   "id": "R10",
+   "view": "z_both",
+   "side": "right",
+   "element": "bus rear wheel",
+   "box": [
+    96,
+    -2,
+    107,
+    8
+   ],
+   "nodes": [
+    "cargo/wheels/rear-wheel"
+   ],
+   "tolerancePixels": 1.21,
+   "uncertainty": "From the inline bus BMP (z_dec, z_inc 120 x 40 px), moved by the inline placement tx 1.9, ty 1.2: wagon column = bus column + 19, wagon row = bus row - 32. A 16-gon of 1 m; the BMP paints 1.1 m."
+  },
+  {
+   "id": "L01",
+   "view": "z_both",
+   "side": "left",
+   "element": "frame side",
+   "box": [
+    5,
+    8,
+    147,
+    15
+   ],
+   "nodes": [
+    "frame/left-side/solebar",
+    "frame/left-side/deck-edge",
+    "frame/left-side/fishbelly"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Deck edge row 8, solebar and fishbelly down to row 14 (0.5 m)."
+  },
+  {
+   "id": "L02",
+   "view": "z_both",
+   "side": "left",
+   "element": "rear buffers",
+   "box": [
+    0,
+    8,
+    5,
+    12
+   ],
+   "nodes": [
+    "rear-end/buffers"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L03",
+   "view": "z_both",
+   "side": "left",
+   "element": "front buffers",
+   "box": [
+    147,
+    8,
+    153,
+    12
+   ],
+   "nodes": [
+    "front-end/buffers"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "The BMP paints the buffers from 14.7 m; the model beam ends the deck at 14.8 m."
+  },
+  {
+   "id": "L04",
+   "view": "z_both",
+   "side": "left",
+   "element": "bus body",
+   "box": [
+    19,
+    -26,
+    138,
+    8
+   ],
+   "nodes": [
+    "cargo/body",
+    "cargo/livery",
+    "cargo/windows",
+    "cargo/doors",
+    "cargo/roof",
+    "cargo/lamps",
+    "cargo/wheels"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "From the inline bus BMP (z_dec, z_inc 120 x 40 px), moved by the inline placement tx 1.9, ty 1.2: wagon column = bus column + 19, wagon row = bus row - 32. The XML body is 11.7 m long; the BMP paints 11.9 m with the tail lamps."
+  },
+  {
+   "id": "L05",
+   "view": "z_both",
+   "side": "left",
+   "element": "bus waist band",
+   "box": [
+    24,
+    -9,
+    131,
+    -5
+   ],
+   "nodes": [
+    "cargo/livery/waist-band"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "From the inline bus BMP (z_dec, z_inc 120 x 40 px), moved by the inline placement tx 1.9, ty 1.2: wagon column = bus column + 19, wagon row = bus row - 32."
+  },
+  {
+   "id": "L06",
+   "view": "z_both",
+   "side": "left",
+   "element": "bus skirt between the axles",
+   "box": [
+    51,
+    0,
+    95,
+    5
+   ],
+   "nodes": [
+    "cargo/livery/skirt-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "From the inline bus BMP (z_dec, z_inc 120 x 40 px), moved by the inline placement tx 1.9, ty 1.2: wagon column = bus column + 19, wagon row = bus row - 32."
+  },
+  {
+   "id": "L07",
+   "view": "z_both",
+   "side": "left",
+   "element": "bus window 2",
+   "box": [
+    36,
+    -19,
+    53,
+    -10
+   ],
+   "nodes": [
+    "cargo/windows/window-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "From the inline bus BMP (z_dec, z_inc 120 x 40 px), moved by the inline placement tx 1.9, ty 1.2: wagon column = bus column + 19, wagon row = bus row - 32."
+  },
+  {
+   "id": "L08",
+   "view": "z_both",
+   "side": "left",
+   "element": "bus window 5",
+   "box": [
+    93,
+    -19,
+    110,
+    -10
+   ],
+   "nodes": [
+    "cargo/windows/window-5"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "From the inline bus BMP (z_dec, z_inc 120 x 40 px), moved by the inline placement tx 1.9, ty 1.2: wagon column = bus column + 19, wagon row = bus row - 32."
+  },
+  {
+   "id": "L09",
+   "view": "z_both",
+   "side": "left",
+   "element": "bus front wheel",
+   "box": [
+    39,
+    -2,
+    50,
+    8
+   ],
+   "nodes": [
+    "cargo/wheels/front-wheel"
+   ],
+   "tolerancePixels": 1.21,
+   "uncertainty": "From the inline bus BMP (z_dec, z_inc 120 x 40 px), moved by the inline placement tx 1.9, ty 1.2: wagon column = bus column + 19, wagon row = bus row - 32. A 16-gon of 1 m; the BMP paints 1.1 m."
+  },
+  {
+   "id": "L10",
+   "view": "z_both",
+   "side": "left",
+   "element": "bus rear wheel",
+   "box": [
+    96,
+    -2,
+    107,
+    8
+   ],
+   "nodes": [
+    "cargo/wheels/rear-wheel"
+   ],
+   "tolerancePixels": 1.21,
+   "uncertainty": "From the inline bus BMP (z_dec, z_inc 120 x 40 px), moved by the inline placement tx 1.9, ty 1.2: wagon column = bus column + 19, wagon row = bus row - 32. A 16-gon of 1 m; the BMP paints 1.1 m."
+  },
+  {
+   "id": "L11",
+   "view": "z_both",
+   "side": "left",
+   "element": "bus door 2",
+   "box": [
+    69,
+    -21,
+    90,
+    5
+   ],
+   "nodes": [
+    "cargo/doors/door-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "From the inline bus BMP (z_dec, z_inc 120 x 40 px), moved by the inline placement tx 1.9, ty 1.2: wagon column = bus column + 19, wagon row = bus row - 32. The door glass and its seam (z_inc columns 50..70)."
+  },
+  {
+   "id": "L12",
+   "view": "z_both",
+   "side": "left",
+   "element": "bus door 3",
+   "box": [
+    110,
+    -21,
+    131,
+    5
+   ],
+   "nodes": [
+    "cargo/doors/door-3"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "From the inline bus BMP (z_dec, z_inc 120 x 40 px), moved by the inline placement tx 1.9, ty 1.2: wagon column = bus column + 19, wagon row = bus row - 32. The door glass and its seam (z_inc columns 91..111)."
+  }
+ ]
+}

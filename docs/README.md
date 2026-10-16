@@ -24,6 +24,7 @@
 | [models/steam-locomotives.md](models/steam-locomotives.md) | the nine steam locomotives from vlakosimdb, locomotive and tender as `unit` variants, the shared builder, deviations, the native comparison and tests |
 | [models/animation.md](models/animation.md) | animation clips of parts, the steam locomotives' running-gear clip and its timing contract, the site's Start and Stop buttons |
 | [models/wagons.md](models/wagons.md) | the five freight wagons from vlakosimdb (Nas, Ua, Eas, Raj, Rah), three of them parametric by `cargo`: sources, the shared wagon parts, the native-raster comparison and tests |
+| [models/freight-wagons.md](models/freight-wagons.md) | the Sqns container, Pao flat, Habis sliding-wall, Hadgs covered hopper and Faccs, Falls and Wap hopper wagons from vlakosimdb, by `cargo` and `livery`: the JT7 clip solid, loads, deviations, the native comparison and tests |
 | [models/reproductions.md](models/reproductions.md) | the 23 reproductions of the webapp's hand-authored models: photos, ids, same-size rule, budgets, what a webapp import must change |
 | [models/churches.md](models/churches.md) | the baroque church, the Vrchlabi church and the twin-tower baroque church |
 | [models/cathedrals.md](models/cathedrals.md) | St Basil's Cathedral and St Nicholas Church |

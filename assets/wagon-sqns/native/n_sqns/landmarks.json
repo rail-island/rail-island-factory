@@ -1,0 +1,353 @@
+{
+ "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/truck/n_sqns/model",
+ "pixelMetres": 0.1,
+ "convention": "Pixel edges [left, top, right, bottom] on the native BMP; origin top left, x right, y down.",
+ "annotations": [
+  {
+   "id": "R01",
+   "view": "z_both",
+   "side": "right",
+   "element": "side beam with end beams",
+   "box": [
+    5,
+    28,
+    193,
+    31
+   ],
+   "nodes": [
+    "frame/right-side/side-beam",
+    "frame/right-side/flange",
+    "rear-end/buffer-beam",
+    "front-end/buffer-beam"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Rows 28..30 from column 5 to 192 (0.5..19.3 m), the end beams included; the model end beams reach 0.85 m."
+  },
+  {
+   "id": "R02",
+   "view": "z_both",
+   "side": "right",
+   "element": "fishbelly",
+   "box": [
+    47,
+    31,
+    151,
+    35
+   ],
+   "nodes": [
+    "frame/right-side/fishbelly"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "From the XML alongz outline (4.7..15.1 m down to 0.5 m); the BMP paints its lighter lower flange rows 33..34 from column 57 to 140."
+  },
+  {
+   "id": "R03",
+   "view": "z_both",
+   "side": "right",
+   "element": "container pin 1",
+   "box": [
+    5,
+    27,
+    7,
+    28
+   ],
+   "nodes": [
+    "frame/right-side/pins/pin-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R04",
+   "view": "z_both",
+   "side": "right",
+   "element": "container pin 2",
+   "box": [
+    36,
+    27,
+    38,
+    28
+   ],
+   "nodes": [
+    "frame/right-side/pins/pin-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R05",
+   "view": "z_both",
+   "side": "right",
+   "element": "container pin 4",
+   "box": [
+    98,
+    27,
+    100,
+    28
+   ],
+   "nodes": [
+    "frame/right-side/pins/pin-4"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R06",
+   "view": "z_both",
+   "side": "right",
+   "element": "container pin 7",
+   "box": [
+    191,
+    27,
+    193,
+    28
+   ],
+   "nodes": [
+    "frame/right-side/pins/pin-7"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R07",
+   "view": "z_both",
+   "side": "right",
+   "element": "handbrake wheel",
+   "box": [
+    60,
+    30,
+    65,
+    35
+   ],
+   "nodes": [
+    "frame/right-side/handbrake"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Yellow 0.4 m wheel, a 10-gon in the model."
+  },
+  {
+   "id": "R08",
+   "view": "z_both",
+   "side": "right",
+   "element": "rear buffers",
+   "box": [
+    0,
+    28,
+    4,
+    32
+   ],
+   "nodes": [
+    "rear-end/buffers"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R09",
+   "view": "z_both",
+   "side": "right",
+   "element": "front buffers",
+   "box": [
+    195,
+    28,
+    198,
+    32
+   ],
+   "nodes": [
+    "front-end/buffers"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "The BMP paints 0.3 m buffer stubs; the model keeps the standard 0.5 m buffers from the 19.3 m beam."
+  },
+  {
+   "id": "L01",
+   "view": "z_both",
+   "side": "left",
+   "element": "side beam with end beams",
+   "box": [
+    5,
+    28,
+    193,
+    31
+   ],
+   "nodes": [
+    "frame/left-side/side-beam",
+    "frame/left-side/flange",
+    "rear-end/buffer-beam",
+    "front-end/buffer-beam"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Rows 28..30 from column 5 to 192 (0.5..19.3 m), the end beams included; the model end beams reach 0.85 m."
+  },
+  {
+   "id": "L02",
+   "view": "z_both",
+   "side": "left",
+   "element": "fishbelly",
+   "box": [
+    47,
+    31,
+    151,
+    35
+   ],
+   "nodes": [
+    "frame/left-side/fishbelly"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "From the XML alongz outline (4.7..15.1 m down to 0.5 m); the BMP paints its lighter lower flange rows 33..34 from column 57 to 140."
+  },
+  {
+   "id": "L03",
+   "view": "z_both",
+   "side": "left",
+   "element": "container pin 1",
+   "box": [
+    5,
+    27,
+    7,
+    28
+   ],
+   "nodes": [
+    "frame/left-side/pins/pin-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L04",
+   "view": "z_both",
+   "side": "left",
+   "element": "container pin 2",
+   "box": [
+    36,
+    27,
+    38,
+    28
+   ],
+   "nodes": [
+    "frame/left-side/pins/pin-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L05",
+   "view": "z_both",
+   "side": "left",
+   "element": "container pin 4",
+   "box": [
+    98,
+    27,
+    100,
+    28
+   ],
+   "nodes": [
+    "frame/left-side/pins/pin-4"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L06",
+   "view": "z_both",
+   "side": "left",
+   "element": "container pin 7",
+   "box": [
+    191,
+    27,
+    193,
+    28
+   ],
+   "nodes": [
+    "frame/left-side/pins/pin-7"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L07",
+   "view": "z_both",
+   "side": "left",
+   "element": "handbrake wheel",
+   "box": [
+    60,
+    30,
+    65,
+    35
+   ],
+   "nodes": [
+    "frame/left-side/handbrake"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Yellow 0.4 m wheel, a 10-gon in the model."
+  },
+  {
+   "id": "L08",
+   "view": "z_both",
+   "side": "left",
+   "element": "rear buffers",
+   "box": [
+    0,
+    28,
+    4,
+    32
+   ],
+   "nodes": [
+    "rear-end/buffers"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "L09",
+   "view": "z_both",
+   "side": "left",
+   "element": "front buffers",
+   "box": [
+    195,
+    28,
+    198,
+    32
+   ],
+   "nodes": [
+    "front-end/buffers"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "The BMP paints 0.3 m buffer stubs; the model keeps the standard 0.5 m buffers from the 19.3 m beam."
+  },
+  {
+   "id": "E01",
+   "view": "x_both",
+   "end": "rear",
+   "element": "rear buffer beam, buffers and coupling",
+   "box": [
+    0,
+    27,
+    30,
+    33
+   ],
+   "nodes": [
+    "rear-end"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Row 27 is the end beam pins; the beam and buffers rows 28..32."
+  },
+  {
+   "id": "E02",
+   "view": "x_both",
+   "end": "front",
+   "element": "front buffer beam, buffers and coupling",
+   "box": [
+    0,
+    27,
+    30,
+    33
+   ],
+   "nodes": [
+    "front-end"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Row 27 is the end beam pins; the beam and buffers rows 28..32."
+  }
+ ]
+}
