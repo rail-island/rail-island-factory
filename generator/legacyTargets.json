@@ -1184,10 +1184,8 @@
     "quality": "reproduction"
   },
   "train-loco-diesel-cd-749": {
-    "designId": "veh-cd-750",
-    "params": {
-      "livery": "cd749"
-    },
+    "designId": "veh-cd-749",
+    "params": {},
     "quality": "reproduction"
   },
   "train-loco-diesel-cd-781": {
@@ -3542,10 +3540,8 @@
     "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
   },
   "train-loco-diesel-cd-751": {
-    "designId": "veh-cd-750",
-    "params": {
-      "livery": "cd749"
-    },
+    "designId": "veh-cd-749",
+    "params": {},
     "quality": "substitute",
     "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
   },

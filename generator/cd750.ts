@@ -1,9 +1,10 @@
 // The CKD T 478.x Bo'Bo' diesel-electric locomotives of CSD / CD: the T 478.3
 // "Brejlovec" (CD 753, rebuilt with electric train heating as the 750) and the
-// T 478.4 (CD 754) on one body, and the T 478.1 "Bardotka" or "Zamracena"
-// (CD 751, rebuilt as the 749) on its own -- one design, `livery`, whose value
-// also picks the body. Reconstructed from the native JT7 XML and BMPs of six
-// vlakosimdb models (assets/cd-750/native) and photographs (assets/cd-750/*.jpg).
+// T 478.4 (CD 754) on one body -- this design, `livery` -- and the T 478.1
+// "Bardotka" or "Zamracena" (CD 751, rebuilt as the 749) on its own body, its
+// own design in cd749.ts. Both are drawn by `buildT478` here, the livery naming
+// its body. Reconstructed from the native JT7 XML and BMPs of six vlakosimdb
+// models (assets/cd-750/native) and photographs (assets/cd-750/*.jpg).
 //
 // Source coordinates: x along the body from the end the side BMP draws at its
 // left, y up, z across; Factory X = x - centre, so a side BMP column c lies at
@@ -141,23 +142,6 @@ export const CD750_LIVERIES = {
     housing: "white",
     emblem: "black",
   },
-  cd749: {
-    title: "CD 749 (Bardotka), red and grey",
-    source: "cd_749",
-    body: "bardotka",
-    number: runningNumber("749", "264"),
-    numberSource: "749 264-8, photographed with this body (photo-749-264-side.jpg); the native plate does not resolve digits",
-    palette: { red: C("#a00000"), grey: C("#b0b7b0"), rib: C("#7f787f") },
-    face: [[1.6, 3.7, "grey"], [3.7, 5, "red"]],
-    side: [[1.6, 2.6, "grey"], [2.6, 5, "red"]],
-    cab: [[1.6, 3.7, "grey"], [3.7, 5, "red"]],
-    roof: "red",
-    frame: "black",
-    plough: "red",
-    screen: "rib",
-    housing: "grey",
-    emblem: "black",
-  },
 } as const satisfies Record<string, Cd750Livery>;
 
 export const CD750_PARAMS: readonly ParamSpec[] = [{
@@ -248,10 +232,14 @@ function planBodyOf(g: Geometry, l: Cd750Livery): PlanBody {
 
 // ---------------------------------------------------------------------------
 
-/** The CD 750 / 753 / 754 / 749 in one of its liveries; the default is a CD 750 in green and grey. */
+/** The CD 750 / 753 / 754 in one of its liveries; the default is a CD 750 in green and grey. */
 export function cd750(params?: ParamValues): MeshBuilder {
   const { livery: key } = resolveParams(CD750_PARAMS, params);
-  const l: Cd750Livery = CD750_LIVERIES[key as keyof typeof CD750_LIVERIES];
+  return buildT478(CD750_LIVERIES[key as keyof typeof CD750_LIVERIES]);
+}
+
+/** A T 478 in livery `l`, on the body the livery names (the CD 749's design uses it too). */
+export function buildT478(l: Cd750Livery): MeshBuilder {
   const g = geometryOf(l);
   const m = new MeshBuilder({ ...DIESEL_PALETTE, ...l.palette, grey: C("#9da2a4"), cream: C("#efe7bf"), ...l.palette });
   const X = (sx: number) => sx - g.centre;

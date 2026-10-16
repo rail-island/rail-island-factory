@@ -78,8 +78,8 @@ names get its label (`loco` reads Locomotive); any other reads as itself.
 
 **Search** matches every whitespace-separated word, case-insensitively, against
 title, id, category, pool, traction, author, license and source, and against
-every parameter value's title and token - so `Bardotka` finds the CD 749 / 750
-family, whose `livery` parameter draws it.
+every parameter value's title and token - so `green cream` finds the CD 749
+Bardotka, whose `livery` parameter draws it.
 
 ## The model page
 
