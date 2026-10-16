@@ -55,8 +55,8 @@ rest of the catalog.
 | `veh-mixer-truck` | `trucks/mixer-truck` | `mixer-truck/` | `trucks.ts` |
 | `veh-reefer-semi-truck` | `trucks/reefer-semi-truck` | `reefer-semi-truck/` | `trucks.ts` |
 
-The Boeing 737, ocean liner and classic cabin are now covered by
-[remaining-models.md](remaining-models.md).
+The ocean liner and classic cabin are now covered by
+[remaining-models.md](remaining-models.md), the Boeing 737 by [aircraft.md](aircraft.md).
 
 **Ids.** Exported models use `proc-building-` and `proc-vehicle-` prefixes.
 The legacy mapping retains every old GLB ID and supplies target parameters and

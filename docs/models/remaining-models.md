@@ -33,9 +33,8 @@ The classic cabin has a glazed body, rounded corners, cream framing, red lining,
 four hanger braces and a two-wheel rope carriage. Body dimensions follow the old
 native model (3.78 by 2.58 m); the rope wheels are at y=5.62 m.
 
-The Boeing 737-800 uses a 39.5 m fuselage, swept 35.8 m wings, two underwing engines
-with intake fans, winglets, tailplanes and a separate `gear` part. It faces -X,
-so its exported yaw is 0. The four-funnel ocean liner is 269 m long with a 28 m
+The Boeing 737-800 now lives with the other aircraft in `aircraft.ts`
+([aircraft.md](aircraft.md)); it still faces -X with yaw 0. The four-funnel ocean liner is 269 m long with a 28 m
 beam, tiered deckhouses, lifeboats, masts and stays. This replaces the old game-sized
 liner with metre geometry; the legacy mapping compensates only old placements.
 

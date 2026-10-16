@@ -52,7 +52,7 @@ random subset of original triangles survives. Multiple volumes preserve the
 separate hoods of shunters, articulated vehicle bodies and architectural tiers.
 
 A design can instead supply `buildLod`, exported from the same source module.
-Dedicated silhouettes cover the Boeing, ocean liner, cruise ferry, industrial models, castle,
+Dedicated silhouettes cover the ocean liner, cruise ferry, industrial models, castle,
 Colosseum, pagoda, palace, station hotel, Brandenburg Gate, St Basil's Cathedral,
 transmission tower and Eiffel Tower. Open courtyards, the Colosseum arena,
 individual rotor blades, wings, chimneys and domes remain distinct. Power and

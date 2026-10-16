@@ -1,5 +1,7 @@
-// The procedural aircraft: the 1922 Aero A.10 biplane airliner, the Airbus A380
-// and a Learjet-like light business jet. See docs/models/aircraft.md.
+// The procedural aircraft: the 1922 Aero A.10 biplane airliner, the Airbus A380,
+// the Boeing 737-800 and a Learjet-like light business jet; the two airliners in
+// airline liveries (a `livery` parameter). See docs/models/aircraft.md and the
+// aircraft skill (.agents/skills/aircraft): 10,000 triangles per aircraft.
 //
 // Each design reproduces the hand-authored GLB of the same name in the webapp's
 // model database (rail-island-webapp db/aircraft/glb), procedurally: the same
@@ -27,7 +29,7 @@
 
 import { MeshBuilder, ngon, type MaterialSpec, type Ring, type SweepAxis } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
-import type { CatalogFields, ProceduralDesign } from "./design.ts";
+import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { block } from "./vehicleParts.ts";
 
 // The colours are the reference models' own. Metal is only mildly metallic:
@@ -425,13 +427,14 @@ interface NacelleSpec {
   r: number;
   nozzle: number; // the nozzle's length behind the cowl
   plug: number; // how far the plug sticks out of the nozzle
+  squash?: number; // the depth below the axis as a fraction of `r` (the 737's flat-bottomed intake); 1 = round
   mats: { cowl: string; lip: string; duct: string; fan: string; nozzle: string; plug: string };
 }
 
 function nacelle(m: MeshBuilder, axis: SweepAxis, dir: number, n: NacelleSpec, sides = 20): void {
   const len = Math.abs(n.front - n.back);
   const a = (f: number): number => n.front - dir * f * len;
-  const ring = (rr: number): Sec => circle(sides, n.c[0], n.c[1], rr);
+  const ring = (rr: number): Sec => oval(sides, n.c[0], n.c[1], rr, rr, rr * (n.squash ?? 1));
   m.scope("cowl", () => {
     const prof: Array<[number, number]> = [[0, 0.84], [0.05, 0.95], [0.16, 1], [0.6, 1], [0.86, 0.93], [1, 0.82]];
     body(m, n.mats.cowl, axis, prof.map(([f, k]) => ({ a: a(f), sec: ring(n.r * k) })));
@@ -450,6 +453,201 @@ function nacelle(m: MeshBuilder, axis: SweepAxis, dir: number, n: NacelleSpec, s
     annulus(m, n.mats.duct, axis, ring(n.r * 0.6), ring(n.r * 0.36), end, -dir);
     fan(m, n.mats.plug, axis, ring(n.r * 0.36), end, -dir, at(axis, end - dir * n.plug, n.c));
   });
+}
+
+// --- liveries ----------------------------------------------------------------------------
+//
+// The airliners come in airline liveries (a `livery` parameter): the colours of
+// the main carriers' schemes, without their titles and with simplified logos.
+// A livery paints the fuselage skin by height and position (`paintedBody`: each
+// triangle of the sweep takes its own material, so a colour boundary runs along
+// a section edge and needs no decal), adds thin cheatlines as decals
+// (`skinStripe`), paints the fin in horizontal bands (`paintedFin`) and lays
+// flat-coloured shapes on both sides of it (`finDecal`), and picks the engine
+// cowls' and winglets' colours.
+
+/** An airline livery of one aircraft type. */
+interface Livery {
+  /** What the picker shows, e.g. "Lufthansa (2018)". */
+  title: string;
+  /** The livery's own materials, added to the palette. */
+  colors: Record<string, MaterialSpec>;
+  /**
+   * The fuselage skin's material at height `s` on the section (-1 at the keel,
+   * 0 at the widest point, 1 at the crown) and position `a` along the axis;
+   * absent for a plain white fuselage.
+   */
+  skin?: (s: number, a: number) => string;
+  /** Painted lines on both sides of the fuselage: from a0 to a1, between heights y0 and y1. */
+  stripes?: Array<{ mat: string; a0: number; a1: number; y0: number; y1: number }>;
+  /** The fin's colour bands: [lowest height, material], rising; the first starts at the root. */
+  fin: Array<[number, string]>;
+  /**
+   * Shapes on both sides of the fin, each a list of convex outlines in (fraction
+   * of the chord from the leading edge, height); later shapes lie over earlier ones.
+   */
+  finArt?: Array<{ mat: string; polys: P2[][] }>;
+  /** The engine cowls' material. */
+  cowl: string;
+  /** The winglets' (737) or wingtip fences' (A380) material. */
+  winglet: string;
+}
+
+/** The `livery` parameter of a design with these liveries, the first one the default. */
+function liveryParam(liveries: Record<string, Livery>): ParamSpec {
+  const values = Object.entries(liveries).map(([value, l]) => ({ value, title: l.title }));
+  return { name: "livery", title: "Livery", default: values[0]!.value, values };
+}
+
+/** The design's palette with the livery's materials. */
+const liveryPalette = (l: Livery): Record<string, MaterialSpec> => ({ ...PALETTE, ...l.colors });
+
+/**
+ * The skin of a body in a livery: the same surface as `body` (open sweeps between
+ * the stations), but every triangle takes the material `paint` gives for its
+ * height on the section (the sine of its edge's angle: -1 at the keel, 1 at the
+ * crown) and its position along the axis. The sections must be `oval`s.
+ */
+function paintedBody(m: MeshBuilder, axis: SweepAxis, st: Station[], paint: (s: number, a: number) => string): void {
+  for (let i = 0; i + 1 < st.length; i++) {
+    const s0 = st[i]!;
+    const s1 = st[i + 1]!;
+    const n = s0.sec.length;
+    const c0 = centroid(s0.sec);
+    const c1 = centroid(s1.sec);
+    for (let k = 0; k < n; k++) {
+      const j = (k + 1) % n;
+      const p0 = at(axis, s0.a, s0.sec[k]!);
+      const p1 = at(axis, s0.a, s0.sec[j]!);
+      const q0 = at(axis, s1.a, s1.sec[k]!);
+      const q1 = at(axis, s1.a, s1.sec[j]!);
+      // the edge between points k and k + 1 of an oval lies at angle (k + 1) / n of a turn
+      const s = Math.sin(((k + 1) / n) * Math.PI * 2);
+      const tris: Array<[Vec3[], number]> = [[[p0, p1, q1], 1 / 3], [[p0, q1, q0], 2 / 3]];
+      for (const [tri, f] of tris) {
+        const a = lerp(s0.a, s1.a, f);
+        const mid: Vec3 = [(tri[0]![0] + tri[1]![0] + tri[2]![0]) / 3, (tri[0]![1] + tri[1]![1] + tri[2]![1]) / 3, (tri[0]![2] + tri[1]![2] + tri[2]![2]) / 3];
+        const c = at(axis, a, [lerp(c0[0], c1[0], f), lerp(c0[1], c1[1], f)]);
+        m.facets(paint(s, a), tri, sub3(mid, c));
+      }
+    }
+  }
+}
+
+/**
+ * A painted line along the side `side` of body `st`, `off` proud of the skin:
+ * from a0 to a1 between heights y0 and y1, cut at the body's stations so it
+ * follows the skin.
+ */
+function skinStripe(axis: SweepAxis, st: Station[], a0: number, a1: number, y0: number, y1: number, side: number, off: number): Vec3[] {
+  const lo = Math.min(a0, a1);
+  const hi = Math.max(a0, a1);
+  const cuts = [lo, ...st.map((x) => x.a).filter((a) => a > lo && a < hi), hi].sort((a, b) => a - b);
+  const out: Vec3[] = [];
+  for (let i = 0; i + 1 < cuts.length; i++) {
+    const [ca, cb] = [cuts[i]!, cuts[i + 1]!];
+    out.push(...fanTris([skinY(axis, st, ca, y0, side, off), skinY(axis, st, cb, y0, side, off), skinY(axis, st, cb, y1, side, off), skinY(axis, st, ca, y1, side, off)]));
+  }
+  return out;
+}
+
+/** A fin ring: (height, leading edge, chord, thickness, centre across the chord), as `fin` takes them. */
+type FinRing = [number, number, number, number, number];
+
+/** The fin's ring at height y, interpolated as the loft between the two rings draws it. */
+function finRingAt(rings: FinRing[], y: number): FinRing {
+  for (let i = 0; i + 1 < rings.length; i++) {
+    const r0 = rings[i]!;
+    const r1 = rings[i + 1]!;
+    if (y > r1[0] && i + 2 < rings.length) continue;
+    const t = (y - r0[0]) / (r1[0] - r0[0]);
+    return r0.map((v, k) => lerp(v, r1[k]!, t)) as FinRing;
+  }
+  return rings[0]!;
+}
+
+/** A fin in the livery's colour bands: `fin` with rings added at the bands' edges. */
+function paintedFin(m: MeshBuilder, chordAxis: SweepAxis, rings: FinRing[], bands: Array<[number, string]>, dir = 1): void {
+  if (bands.length === 1) {
+    fin(m, bands[0]![1], chordAxis, rings, dir);
+    return;
+  }
+  const y0 = rings[0]![0];
+  const y1 = rings[rings.length - 1]![0];
+  const ys = [...new Set([...rings.map((r) => r[0]), ...bands.map((b) => b[0]).filter((y) => y > y0 && y < y1)])].sort((a, b) => a - b);
+  const rs = ys.map((y) => finRingAt(rings, y));
+  for (let i = 0; i + 1 < rs.length; i++) {
+    const mid = (rs[i]![0] + rs[i + 1]![0]) / 2;
+    let mat = bands[0]![1];
+    for (const [from, b] of bands) if (mid >= from) mat = b;
+    fin(m, mat, chordAxis, [rs[i]!, rs[i + 1]!], dir, i + 2 === rs.length);
+  }
+}
+
+/**
+ * The point of the fin's skin at chord fraction `f` (0 at the leading edge) and
+ * height y, on side `side` across the chord, `off` proud: the foil's half
+ * thickness there, which is piecewise linear in f (`foil`).
+ */
+function finSkin(chordAxis: SweepAxis, rings: FinRing[], dir: number, f: number, y: number, side: number, off: number): Vec3 {
+  const [, lead, chord, thick, c] = finRingAt(rings, y);
+  const knots: Array<[number, number]> = [[0, 0], [0.08, side > 0 ? 0.4 : 0.38], [0.35, 0.5], [1, 0]];
+  let h = 0;
+  for (let i = 0; i + 1 < knots.length; i++) {
+    const [fa, ha] = knots[i]!;
+    const [fb, hb] = knots[i + 1]!;
+    if (f >= fa && f <= fb) h = lerp(ha, hb, (f - fa) / (fb - fa));
+  }
+  const lateral = c + side * (h * thick + off);
+  const u = lead - dir * f * chord;
+  return chordAxis === "z" ? [lateral, y, u] : [u, y, lateral];
+}
+
+/** The part of convex outline `poly` on the side of f = cut that `keep` gives (-1 below, 1 above). */
+function clipF(poly: P2[], cut: number, keep: number): P2[] {
+  const out: P2[] = [];
+  for (let i = 0; i < poly.length; i++) {
+    const p = poly[i]!;
+    const q = poly[(i + 1) % poly.length]!;
+    const ip = (p[0] - cut) * keep >= 0;
+    const iq = (q[0] - cut) * keep >= 0;
+    if (ip) out.push(p);
+    if (ip !== iq) {
+      const t = (cut - p[0]) / (q[0] - p[0]);
+      out.push([cut, lerp(p[1], q[1], t)]);
+    }
+  }
+  return out;
+}
+
+/**
+ * Flat-coloured shapes on both sides of a fin (a logo, a flag), each convex
+ * outline in (chord fraction, height) cut where the foil's thickness bends so
+ * every piece lies flat on the skin; `off` proud of it.
+ */
+function finDecal(m: MeshBuilder, mat: string, chordAxis: SweepAxis, rings: FinRing[], dir: number, polys: P2[][], off: number): void {
+  const cuts = [0.08, 0.2, 0.35, 0.55, 0.75];
+  for (const side of [-1, 1]) {
+    const pts: Vec3[] = [];
+    for (const poly of polys) {
+      let pieces = [poly];
+      for (const c of cuts) pieces = pieces.flatMap((p) => [clipF(p, c, -1), clipF(p, c, 1)]).filter((p) => p.length >= 3);
+      for (const p of pieces) pts.push(...fanTris(p.map(([f, y]) => finSkin(chordAxis, rings, dir, f, y, side, off))));
+    }
+    m.facets(mat, pts, chordAxis === "z" ? [side, 0, 0] : [0, 0, side]);
+  }
+}
+
+/** A livery's fin: its bands, then its shapes, each a little further off the skin than the last. */
+function liveryFin(m: MeshBuilder, l: Livery, chordAxis: SweepAxis, rings: FinRing[], dir = 1): void {
+  paintedFin(m, chordAxis, rings, l.fin, dir);
+  const art = l.finArt ?? [];
+  if (art.length > 0) m.scope("fin art", () => art.forEach((a, i) => finDecal(m, a.mat, chordAxis, rings, dir, a.polys, 0.03 + 0.012 * i)));
+}
+
+/** A circle's outline in (chord fraction, height): `n` points about (f, y), `rf` across the chord, `ry` up. */
+function finDisc(f: number, y: number, rf: number, ry: number, n = 16): P2[] {
+  return ovalOutline(f, y, rf, ry, n);
 }
 
 // --- the Aero A.10 ---------------------------------------------------------------------
@@ -698,20 +896,119 @@ const A380_WING: WingStation[] = [
   { s: 35.8, lead: -17.7, chord: 3.7, thick: 0.55, mid: 6.97 },
   { s: 39.43, lead: -20.1, chord: 2.7, thick: 0.39, mid: 7.32 },
 ];
+const A380_FIN: FinRing[] = [[8.5, -22.8, 12.9, 1.5, 0], [16.0, -27.9, 8.6, 1.0, 0], [23.5, -32.9, 4.9, 0.5, 0]];
 /** The engines: x, height of the axis, intake z. */
 const A380_ENGINES: Array<[number, number, number]> = [[12.6, 2.45, 4.27], [22.6, 3.49, -2.05]];
 const A380_ENGINE_R = 1.68;
+
+/** A Union flag on a fin, filling (f0..f1, y0..y1): the base is the fin's own blue. */
+function unionFlag(f0: number, f1: number, y0: number, y1: number, white: string, red: string): Array<{ mat: string; polys: P2[][] }> {
+  const map = (poly: P2[]): P2[] => poly.map(([u, v]) => [lerp(f0, f1, u), lerp(y0, y1, v)]);
+  const diagonals = (w: number): P2[][] => [
+    [[0, 0], [w, 0], [1, 1 - w], [1, 1], [1 - w, 1], [0, w]],
+    [[0, 1 - w], [1 - w, 0], [1, 0], [1, w], [w, 1], [0, 1]],
+  ];
+  const cross = (hu: number, hv: number): P2[][] => [
+    [[0, 0.5 - hv], [1, 0.5 - hv], [1, 0.5 + hv], [0, 0.5 + hv]],
+    [[0.5 - hu, 0], [0.5 + hu, 0], [0.5 + hu, 1], [0.5 - hu, 1]],
+  ];
+  return [
+    { mat: white, polys: diagonals(0.16).map(map) },
+    { mat: red, polys: diagonals(0.06).map(map) },
+    { mat: white, polys: cross(0.1, 0.12).map(map) },
+    { mat: red, polys: cross(0.05, 0.06).map(map) },
+  ];
+}
+
+/** The A380's liveries; the first, the reference's own neutral scheme, is the default. */
+const A380_LIVERIES: Record<string, Livery> = {
+  neutral: { title: "Neutral (white, navy fin)", colors: {}, fin: [[0, "navy"]], cowl: "white", winglet: "alloy" },
+  emirates: {
+    // the UAE flag on the fin: green, white and black, the red bar at its leading edge
+    title: "Emirates",
+    colors: { aeRed: { color: "#d71a21", roughness: 0.4 }, aeGreen: { color: "#00843d", roughness: 0.4 }, aeBlack: { color: "#1c1c1c", roughness: 0.4 } },
+    fin: [[0, "aeBlack"], [15.4, "white"], [19.5, "aeGreen"]],
+    finArt: [{ mat: "aeRed", polys: [[[0, 9.8], [0.26, 9.8], [0.26, 23.5], [0, 23.5]]] }],
+    cowl: "white",
+    winglet: "alloy",
+  },
+  singapore: {
+    // the blue fin with the yellow bird, the blue and yellow line along the lower fuselage
+    title: "Singapore Airlines",
+    colors: { sqBlue: { color: "#1d2f6f", roughness: 0.4 }, sqYellow: { color: "#f5b335", roughness: 0.4 } },
+    stripes: [
+      { mat: "sqBlue", a0: -22, a1: 31, y0: 4.2, y1: 4.6 },
+      { mat: "sqYellow", a0: -22, a1: 31, y0: 4.02, y1: 4.16 },
+    ],
+    fin: [[0, "sqBlue"]],
+    finArt: [{
+      mat: "sqYellow",
+      polys: [
+        [[0.3, 16.2], [0.72, 14.6], [0.8, 15.0], [0.42, 16.7]],
+        [[0.44, 16.1], [0.62, 15.4], [0.8, 19.3], [0.7, 19.5]],
+        [[0.5, 15.8], [0.64, 15.3], [0.96, 17.6], [0.9, 17.9]],
+      ],
+    }],
+    cowl: "white",
+    winglet: "alloy",
+  },
+  qantas: {
+    // the red fin with the white kangaroo, a silver band from the fin onto the rear fuselage
+    title: "Qantas",
+    colors: { qfRed: { color: "#e2001a", roughness: 0.4 }, qfSilver: { color: "#b8bdc3", metallic: 0.3, roughness: 0.4 } },
+    skin: (s, a) => (s > 0.3 && a < -21 - (1 - s) * 7 ? "qfSilver" : "white"),
+    fin: [[0, "qfRed"]],
+    finArt: [{
+      mat: "white",
+      polys: [
+        [[0.32, 16.2], [0.5, 15.0], [0.66, 15.6], [0.62, 17.4], [0.45, 18.0], [0.33, 17.3]],
+        [[0.6, 15.3], [0.9, 13.2], [0.97, 13.5], [0.66, 15.9]],
+        [[0.5, 15.0], [0.56, 13.9], [0.75, 13.6], [0.66, 15.6]],
+        [[0.33, 17.3], [0.45, 18.0], [0.36, 19.6], [0.26, 19.8], [0.22, 19.1]],
+      ],
+    }],
+    cowl: "white",
+    winglet: "alloy",
+  },
+  lufthansa: {
+    // the 2018 scheme: the dark blue fin running down onto the rear fuselage, the crane's ring
+    title: "Lufthansa",
+    colors: { lhBlue: { color: "#0a1d4d", roughness: 0.4 } },
+    skin: (s, a) => (s > -0.6 && a < -21 - (1 - s) * 4 ? "lhBlue" : "white"),
+    fin: [[0, "lhBlue"]],
+    finArt: [
+      { mat: "white", polys: [finDisc(0.5, 17.4, 0.3, 2.3)] },
+      { mat: "lhBlue", polys: [finDisc(0.5, 17.4, 0.26, 2.0)] },
+      { mat: "white", polys: [[[0.36, 17.6], [0.6, 16.4], [0.66, 16.8], [0.42, 18.1]], [[0.46, 17.5], [0.52, 17.2], [0.44, 19.0], [0.4, 18.9]]] },
+    ],
+    cowl: "white",
+    winglet: "alloy",
+  },
+  britishAirways: {
+    // white over a midnight blue belly, the red speedmarque, the Union flag on the fin
+    title: "British Airways",
+    colors: { baBlue: { color: "#1b2a59", roughness: 0.4 }, baRed: { color: "#d2121b", roughness: 0.4 } },
+    skin: (s) => (s < -0.5 ? "baBlue" : "white"),
+    stripes: [{ mat: "baRed", a0: 12, a1: 29, y0: 4.45, y1: 4.7 }],
+    fin: [[0, "baBlue"]],
+    finArt: unionFlag(0.12, 0.98, 12.2, 22.6, "white", "baRed"),
+    cowl: "white",
+    winglet: "alloy",
+  },
+};
+const A380_PARAMS: readonly ParamSpec[] = [liveryParam(A380_LIVERIES)];
 
 /** The A380's fuselage stations. */
 function a380Fuselage(): Station[] {
   return A380_FUSELAGE.map(([z, hw, lo, hi, mw]) => ({ a: z, sec: oval(32, 0, mw, hw, hi - mw, mw - lo, 2.1) }));
 }
 
-function a380Airframe(m: MeshBuilder): void {
+function a380Airframe(m: MeshBuilder, l: Livery): void {
   const fus = a380Fuselage();
   m.scope("fuselage", () => {
     m.scope("skin", () => {
-      body(m, "white", "z", fus);
+      if (l.skin) paintedBody(m, "z", fus, l.skin);
+      else body(m, "white", "z", fus);
       fan(m, "white", "z", fus[fus.length - 1]!.sec, 36, 1, A380_NOSE);
       fan(m, "white", "z", fus[0]!.sec, -36.3, -1);
     });
@@ -775,6 +1072,13 @@ function a380Airframe(m: MeshBuilder): void {
         fan(m, "white", "z", st[st.length - 1]!.sec, 8.3, 1);
       }
     });
+    if (l.stripes) {
+      m.scope("cheatline", () => {
+        for (const st of l.stripes!) {
+          for (const s of [-1, 1]) m.facets(st.mat, skinStripe("z", fus, st.a0, st.a1, st.y0, st.y1, s, 0.015), [s, 0, 0]);
+        }
+      });
+    }
     m.scope("APU exhaust", () => {
       const r = circle(10, 0, 8.8, 0.4);
       m.sweep("alloy", "z", r, -37.6, r, -36.0);
@@ -788,7 +1092,7 @@ function a380Airframe(m: MeshBuilder): void {
         m.scope("wingtip fence", () => {
           const outline: Array<[number, number]> = [[-20.12, 7.3], [-21.6, 6.63], [-22.68, 6.75], [-22.68, 8.66], [-21.9, 8.4]];
           const x0 = s > 0 ? 38.98 : -39.24;
-          m.slab("alloy", outline.map(([z, y]): Vec3 => [x0, y, z]), [0.26, 0, 0]);
+          m.slab(l.winglet, outline.map(([z, y]): Vec3 => [x0, y, z]), [0.26, 0, 0]);
         });
         m.scope("flap track fairings", () => {
           for (const x of [7.5, 16.5, 23.5, 30.5]) {
@@ -808,7 +1112,7 @@ function a380Airframe(m: MeshBuilder): void {
         A380_ENGINES.forEach(([x, y, z], i) => m.scope(`engine ${i + 1}`, () => {
           nacelle(m, "z", 1, {
             c: [s * x, y], front: z, back: z - 5.0, r: A380_ENGINE_R, nozzle: 2.5, plug: 1.4,
-            mats: { cowl: "white", lip: "alloy", duct: "glass", fan: "glass", nozzle: "alloy", plug: "navy" },
+            mats: { cowl: l.cowl, lip: "alloy", duct: "glass", fan: "glass", nozzle: "alloy", plug: "navy" },
           }, 24);
           m.scope("pylon", () => {
             const w = wingAt(A380_WING, x);
@@ -829,9 +1133,7 @@ function a380Airframe(m: MeshBuilder): void {
       ];
       for (const s of [-1, 1]) wing(m, "alloy", "x", half.map((w) => ({ ...w, s: s * w.s })));
     });
-    m.scope("fin", () => {
-      fin(m, "navy", "z", [[8.5, -22.8, 12.9, 1.5, 0], [16.0, -27.9, 8.6, 1.0, 0], [23.5, -32.9, 4.9, 0.5, 0]]);
-    });
+    m.scope("fin", () => liveryFin(m, l, "z", A380_FIN));
   });
 }
 
@@ -867,10 +1169,324 @@ function a380Gear(m: MeshBuilder): void {
   }
 }
 
-export function airbusA380(): MeshBuilder {
-  const m = new MeshBuilder(PALETTE);
-  m.part("airframe", [0, 0, 0], () => a380Airframe(m));
+export function airbusA380(params?: ParamValues): MeshBuilder {
+  const l = A380_LIVERIES[resolveParams(A380_PARAMS, params).livery!]!;
+  const m = new MeshBuilder(liveryPalette(l));
+  m.part("airframe", [0, 0, 0], () => a380Airframe(m, l));
   m.part("gear", [0, 0, 0], () => a380Gear(m));
+  return m;
+}
+
+// --- the Boeing 737-800 ------------------------------------------------------------------
+//
+// The narrow-body airliner at its real size: 39.5 m long, 35.8 m across the
+// winglets, 12.55 m to the fin tip. It keeps the axes of the model it replaced
+// (nose at -X, wings along Z, yaw 0) but is drawn nose at +X, like the light jet,
+// in a builder that turns everything 180 degrees about Y (`TurnedBuilder`).
+//
+// A 32-point oval fuselage measured off the 737's drawings: the long parallel
+// cabin, the tail cone sweeping up to the APU exhaust, and the 737's nose -- the
+// crown falling in a steep windscreen to a rounded radome below the cabin's
+// axis, the keel rising gently to meet it. Six cockpit windows (the two flat
+// windscreen panes on the nose and two side panes a side), a row of cabin
+// windows broken by the doors and the overwing exits, a belly fairing, a
+// cranked swept wing with dihedral and blended winglets, flap-track fairings,
+// CFM56 nacelles with their flat-bottomed intakes on short pylons, a fin with
+// its dorsal fillet, the tailplane. The gear -- a twin-wheel nose leg and two
+// twin-wheel main legs -- is the part "gear", the rest is "airframe".
+
+/** Draws everything turned 180 degrees about Y: a model drawn nose at +X comes out nose at -X. */
+class TurnedBuilder extends MeshBuilder {
+  constructor(palette: Record<string, MaterialSpec>) {
+    super(palette);
+    this.frame = ([x, y, z]) => [-x, y, -z];
+  }
+}
+
+/** (x, half-width, bottom, top, height of the widest point) of the cabin and the tail cone, tail first; drawn nose at +X. */
+const B737_FUSELAGE: Array<[number, number, number, number, number]> = [
+  [-19.5, 0.36, 4.25, 4.85, 4.55], [-18.6, 0.72, 3.85, 4.95, 4.45], [-17, 1.15, 3.2, 5.08, 4.25],
+  [-15, 1.5, 2.55, 5.18, 3.95], [-12.5, 1.76, 1.9, 5.24, 3.6], [-10, 1.86, 1.45, 5.26, 3.35],
+  [-7.5, 1.88, 1.25, 5.26, 3.25], [12.0, 1.88, 1.25, 5.26, 3.25],
+];
+/**
+ * The nose, x = 12 to the radome's tip: superellipse profiles closing on the tip
+ * at (19.74, 2.7) -- the crown falling from x = 14.2 through the windscreen, the
+ * sides from 13.2, the keel rising from 12.0 -- sampled densest at the tip.
+ */
+function b737Nose(): Array<[number, number, number, number, number]> {
+  const tip = 19.74;
+  const ty = 2.7;
+  const close = (x: number, x0: number, p: number): number => {
+    const u = Math.min(1, Math.max(0, (x - x0) / (tip - x0)));
+    return Math.pow(1 - Math.pow(u, p), 1 / p);
+  };
+  const out: Array<[number, number, number, number, number]> = [];
+  for (const t of [0.12, 0.26, 0.4, 0.52, 0.62, 0.71, 0.79, 0.86, 0.915, 0.955, 0.985]) {
+    const x = lerp(12.0, tip, t);
+    const mw = lerp(3.25, ty, Math.pow(t, 1.6));
+    const hi = ty + (5.26 - ty) * close(x, 14.2, 1.45);
+    const lo = ty - (ty - 1.25) * close(x, 12.0, 2.0);
+    out.push([x, 1.88 * close(x, 13.2, 1.75), lo, hi, Math.min(Math.max(mw, lo + 0.05), hi - 0.05)]);
+  }
+  return out;
+}
+const B737_NOSE: Vec3 = [19.74, 2.7, 0];
+const B737_WING: WingStation[] = [
+  { s: 0, lead: 3.3, chord: 8.1, thick: 0.95, mid: 2.0 },
+  { s: 1.9, lead: 2.6, chord: 7.3, thick: 0.85, mid: 2.1 },
+  { s: 5.5, lead: 0.75, chord: 5.0, thick: 0.6, mid: 2.48 },
+  { s: 17.0, lead: -5.3, chord: 1.3, thick: 0.16, mid: 3.7 },
+];
+const B737_FIN: FinRing[] = [[4.8, -9.4, 9.4, 0.45, 0], [5.7, -11.9, 7.0, 0.62, 0], [12.55, -16.7, 2.3, 0.22, 0]];
+/** The engine: lateral position, height of the axis, intake x. */
+const B737_ENGINE = { z: 4.9, y: 1.42, x: 4.7, r: 0.96 };
+/** The cabin windows' centre line, and the doors and overwing exits that break the row. */
+const B737_WINDOW_Y = 3.55;
+const B737_DOORS = [13.25, -11.3];
+const B737_EXITS = [0.25, -0.75];
+
+/** The 737's liveries; the first, the neutral scheme of the model it replaced, is the default. */
+const B737_LIVERIES: Record<string, Livery> = {
+  neutral: { title: "Neutral (white, navy fin)", colors: {}, fin: [[0, "navy"]], cowl: "white", winglet: "navy" },
+  ryanair: {
+    // white over a dark blue belly, the blue fin with the yellow harp, blue engines
+    title: "Ryanair",
+    colors: { frBlue: { color: "#073590", roughness: 0.4 }, frYellow: { color: "#f1c933", roughness: 0.4 } },
+    skin: (s) => (s < -0.3 ? "frBlue" : "white"),
+    fin: [[0, "frBlue"]],
+    finArt: [{
+      mat: "frYellow",
+      polys: [
+        [[0.3, 8.2], [0.42, 7.6], [0.5, 7.7], [0.4, 8.4]],
+        [[0.36, 7.9], [0.44, 7.7], [0.66, 10.1], [0.58, 10.3]],
+        [[0.3, 8.2], [0.4, 8.3], [0.62, 10.2], [0.56, 10.4]],
+      ],
+    }],
+    cowl: "frBlue",
+    winglet: "frBlue",
+  },
+  southwest: {
+    // the Heart scheme: bold blue over a silver belly, the sunrise yellow and warm red
+    // stripes between, the same three colours across the fin
+    title: "Southwest Airlines",
+    colors: {
+      wnBlue: { color: "#304cb2", roughness: 0.4 }, wnRed: { color: "#c8102e", roughness: 0.4 },
+      wnYellow: { color: "#ffbf27", roughness: 0.4 }, wnSilver: { color: "#c3c8ce", metallic: 0.3, roughness: 0.4 },
+    },
+    skin: (s) => (s > -0.1 ? "wnBlue" : s > -0.3 ? "wnYellow" : s > -0.45 ? "wnRed" : "wnSilver"),
+    fin: [[0, "wnBlue"], [7.0, "wnRed"], [8.1, "wnYellow"], [9.2, "wnBlue"]],
+    cowl: "wnBlue",
+    winglet: "wnBlue",
+  },
+  united: {
+    // the 2019 scheme: white over a runway grey belly with the rhapsody blue swoop,
+    // the blue fin with its lighter globe, blue engines and winglets
+    title: "United Airlines",
+    colors: {
+      uaBlue: { color: "#0033a0", roughness: 0.4 }, uaSky: { color: "#1f6fc5", roughness: 0.4 },
+      uaGrey: { color: "#8e959c", roughness: 0.45 }, uaRhapsody: { color: "#0c2340", roughness: 0.4 },
+    },
+    skin: (s) => (s < -0.3 ? "uaGrey" : "white"),
+    stripes: [{ mat: "uaRhapsody", a0: -13, a1: 16.5, y0: 2.72, y1: 2.86 }],
+    fin: [[0, "uaBlue"]],
+    finArt: [
+      { mat: "uaSky", polys: [finDisc(0.5, 8.9, 0.3, 1.45)] },
+      { mat: "white", polys: [[[0.22, 8.75], [0.78, 8.75], [0.78, 8.95], [0.22, 8.95]], [[0.47, 7.55], [0.53, 7.55], [0.53, 10.3], [0.47, 10.3]]] },
+    ],
+    cowl: "uaBlue",
+    winglet: "uaBlue",
+  },
+  klm: {
+    // sky blue over a white belly, the dark blue cheatline between, the crown on the fin
+    title: "KLM",
+    colors: { klBlue: { color: "#00a1de", roughness: 0.4 }, klDark: { color: "#003082", roughness: 0.4 } },
+    skin: (s) => (s > -0.1 ? "klBlue" : s > -0.3 ? "klDark" : "white"),
+    fin: [[0, "klBlue"]],
+    finArt: [{
+      mat: "white",
+      polys: [
+        [[0.3, 8.6], [0.7, 8.6], [0.66, 9.0], [0.34, 9.0]],
+        [[0.34, 9.0], [0.42, 9.0], [0.38, 9.6]],
+        [[0.46, 9.0], [0.54, 9.0], [0.5, 9.8]],
+        [[0.58, 9.0], [0.66, 9.0], [0.62, 9.6]],
+      ],
+    }],
+    cowl: "klBlue",
+    winglet: "klBlue",
+  },
+  turkish: {
+    // white with the red fin and the white roundel with its red bird
+    title: "Turkish Airlines",
+    colors: { tkRed: { color: "#c8102e", roughness: 0.4 }, tkGrey: { color: "#9aa0a6", roughness: 0.45 } },
+    skin: (s) => (s < -0.75 ? "tkGrey" : "white"),
+    fin: [[0, "tkRed"]],
+    finArt: [
+      { mat: "white", polys: [finDisc(0.5, 8.9, 0.3, 1.45)] },
+      { mat: "tkRed", polys: [[[0.34, 9.1], [0.62, 8.2], [0.7, 8.4], [0.42, 9.4]], [[0.44, 9.0], [0.54, 8.7], [0.64, 9.9], [0.58, 10.0]]] },
+    ],
+    cowl: "white",
+    winglet: "tkRed",
+  },
+};
+const B737_PARAMS: readonly ParamSpec[] = [liveryParam(B737_LIVERIES)];
+
+function b737Fuselage(): Station[] {
+  return [...B737_FUSELAGE, ...b737Nose()].map(([x, hw, lo, hi, mw]) => ({ a: x, sec: oval(32, 0, mw, hw, hi - mw, mw - lo, 2.1) }));
+}
+
+function b737Airframe(m: MeshBuilder, l: Livery): void {
+  const fus = b737Fuselage();
+  const nose = fus[fus.length - 1]!;
+  const tail = fus[0]!;
+  m.scope("fuselage", () => {
+    m.scope("skin", () => {
+      if (l.skin) paintedBody(m, "x", fus, l.skin);
+      else body(m, "white", "x", fus);
+    });
+    m.scope("radome", () => fan(m, "white", "x", nose.sec, nose.a, 1, B737_NOSE));
+    m.scope("tail cone", () => fan(m, "white", "x", tail.sec, tail.a, -1, [-19.62, 4.55, 0]));
+    m.scope("APU exhaust", () => {
+      const r = circle(10, 0, 4.55, 0.17);
+      m.sweep("darkGrey", "x", r, -19.74, r, -19.4);
+    });
+    m.scope("cabin windows", () => {
+      // a window every 0.51 m (20 in), broken at the doors and the overwing exits
+      for (const s of [-1, 1]) {
+        const pts: Vec3[] = [];
+        for (let x = 12.2; x >= -10.6; x -= 0.508) {
+          if (B737_EXITS.some((e) => Math.abs(x - e) < 0.36)) continue;
+          pts.push(...skinDecal("x", fus, ovalOutline(x, B737_WINDOW_Y, 0.12, 0.17, 8), s, 0.03, 2));
+        }
+        m.facets("glass", pts, [0, 0, s]);
+      }
+    });
+    m.scope("doors", () => {
+      for (const s of [-1, 1]) {
+        const pts: Vec3[] = [];
+        const panel = (x: number, w: number, y0: number, y1: number): void => {
+          pts.push(...gridTris((u, v) => skinY("x", fus, lerp(x - w / 2, x + w / 2, u), lerp(y0, y1, v), s, 0.025), 1, 3));
+        };
+        for (const x of B737_DOORS) panel(x, 0.86, 2.4, 4.25);
+        for (const x of B737_EXITS) panel(x, 0.52, 3.0, 4.0);
+        m.facets("door", pts, [0, 0, s]);
+      }
+    });
+    m.scope("cockpit windows", () => {
+      for (const s of [-1, 1]) {
+        // the two side panes a side, raked to follow the windscreen frame
+        const panes: P2[][] = [
+          [[16.42, 4.03], [17.12, 4.03], [16.98, 4.47], [16.5, 4.55]],
+          [[15.7, 4.05], [16.24, 4.05], [16.3, 4.58], [15.78, 4.6]],
+        ];
+        const pts: Vec3[] = [];
+        for (const p of panes) pts.push(...skinDecal("x", fus, p, s, 0.03, 3, 2));
+        m.facets("glass", pts, [0, 0, s]);
+        // the flat windscreen pane on the nose, from the centre post to the side pane
+        const screen = gridTris((u, v) => skinEnd("x", fus, s * lerp(0.07, 1.02, u), lerp(lerp(4.0, 4.06, u), lerp(4.6, 4.5, u), v), 15, 19.74, 0.04), 6, 4);
+        m.facets("glass", screen, [0.8, 0.5, s * 0.4]);
+      }
+    });
+    if (l.stripes) {
+      m.scope("cheatline", () => {
+        for (const st of l.stripes!) {
+          for (const s of [-1, 1]) m.facets(st.mat, skinStripe("x", fus, st.a0, st.a1, st.y0, st.y1, s, 0.015), [0, 0, s]);
+        }
+      });
+    }
+    m.scope("belly fairing", () => {
+      const st: Station[] = [[-6.6, 0.25, 0.15], [-5.5, 1.3, 0.42], [-3, 2.05, 0.55], [1.5, 2.0, 0.55], [4.0, 1.4, 0.45], [5.2, 0.25, 0.2]]
+        .map(([x, hw, dy]) => ({ a: x!, sec: oval(16, 0, 1.52, hw!, dy!, dy!) }));
+      body(m, "belly", "x", st);
+      fan(m, "belly", "x", st[0]!.sec, st[0]!.a, -1);
+      fan(m, "belly", "x", st[st.length - 1]!.sec, st[st.length - 1]!.a, 1);
+    });
+  });
+
+  m.scope("wings", () => {
+    for (const s of [-1, 1]) {
+      m.scope(s > 0 ? "right wing" : "left wing", () => {
+        m.scope("wing", () => wing(m, "alloy", "z", B737_WING.map((w) => ({ ...w, s: s * w.s }))));
+        m.scope("winglet", () => {
+          // the blended winglet: a curve up out of the tip, then canted slightly outward
+          const rings: FinRing[] = [[3.66, -5.32, 1.3, 0.16, s * 16.98], [3.95, -5.58, 1.08, 0.14, s * 17.3], [4.45, -5.95, 0.84, 0.11, s * 17.5], [6.12, -6.95, 0.42, 0.06, s * 17.86]];
+          fin(m, l.winglet, "x", rings);
+        });
+        m.scope("flap track fairings", () => {
+          for (const z of [6.5, 9.6, 12.7]) {
+            const w = wingAt(B737_WING, z);
+            const te = w.lead - w.chord;
+            const yb = w.mid - w.thick * 0.42;
+            const len = Math.min(2.6, w.chord * 0.7);
+            const st: Station[] = [[te + len * 0.55, 0.06], [te + len * 0.3, 0.15], [te - len * 0.05, 0.17], [te - len * 0.45, 0.04]]
+              .map(([x, r]) => ({ a: x!, sec: oval(6, s * z, yb - (0.12 * r!) / 0.17, r! * 0.75, r!, r!) }));
+            body(m, "alloy", "x", st);
+            fan(m, "alloy", "x", st[0]!.sec, st[0]!.a, 1);
+            fan(m, "alloy", "x", st[3]!.sec, st[3]!.a, -1);
+          }
+        });
+        m.scope("engine", () => {
+          const e = B737_ENGINE;
+          nacelle(m, "x", 1, {
+            c: [s * e.z, e.y], front: e.x, back: 1.2, r: e.r, nozzle: 1.15, plug: 0.55, squash: 0.85,
+            mats: { cowl: l.cowl, lip: "alloy", duct: "glass", fan: "glass", nozzle: "alloy", plug: "darkGrey" },
+          }, 24);
+          m.scope("pylon", () => {
+            const w = wingAt(B737_WING, e.z);
+            const yb = w.mid - w.thick * 0.3;
+            const back = w.lead - w.chord * 0.6;
+            const sec: Sec = [[3.6, 2.25], [w.lead - 0.3, yb + 0.3], [back, yb + 0.15], [back, yb - 0.05], [0.6, 1.9]];
+            m.sweep("white", "z", sec, s * e.z - 0.17, sec, s * e.z + 0.17);
+          });
+        });
+      });
+    }
+  });
+
+  m.scope("tail", () => {
+    m.scope("tailplane", () => {
+      const half: WingStation[] = [
+        { s: 0, lead: -13.9, chord: 4.6, thick: 0.45, mid: 4.35 },
+        { s: 7.17, lead: -18.0, chord: 1.3, thick: 0.12, mid: 5.0 },
+      ];
+      for (const s of [-1, 1]) wing(m, "alloy", "z", half.map((w) => ({ ...w, s: s * w.s })));
+    });
+    m.scope("fin", () => liveryFin(m, l, "x", B737_FIN));
+  });
+}
+
+function b737Gear(m: MeshBuilder): void {
+  const tyreN = 16;
+  m.scope("nose gear", () => {
+    const r = 0.35;
+    const x = 14.0;
+    const yc = axleY(0, r, tyreN);
+    rod(m, "alloy", [x, 1.4, 0], [x, yc, 0], 0.09, 8);
+    const ax = circle(8, x, yc, 0.05);
+    m.sweep("alloy", "z", ax, -0.27, ax, 0.27);
+    for (const s of [-1, 1]) wheel(m, "z", ...(s > 0 ? [0.1, 0.32] : [-0.32, -0.1]) as [number, number], [x, yc], r, 0.16, "alloy", tyreN);
+  });
+  for (const s of [-1, 1]) {
+    m.scope(s > 0 ? "right main gear" : "left main gear", () => {
+      const r = 0.56;
+      const x = -1.6;
+      const z = s * 2.86;
+      const yc = axleY(0, r, tyreN);
+      rod(m, "alloy", [x, 2.0, z], [x, yc, z], 0.13, 8);
+      rod(m, "alloy", [x + 0.05, 1.9, s * 1.75], [x, 1.1, z], 0.06, 6);
+      const ax = circle(8, x, yc, 0.07);
+      m.sweep("alloy", "z", ax, z - 0.5, ax, z + 0.5);
+      wheel(m, "z", z - 0.66, z - 0.22, [x, yc], r, 0.26, "alloy", tyreN);
+      wheel(m, "z", z + 0.22, z + 0.66, [x, yc], r, 0.26, "alloy", tyreN);
+    });
+  }
+}
+
+export function boeing737(params?: ParamValues): MeshBuilder {
+  const l = B737_LIVERIES[resolveParams(B737_PARAMS, params).livery!]!;
+  const m = new TurnedBuilder(liveryPalette(l));
+  m.part("airframe", [0, 0, 0], () => b737Airframe(m, l));
+  m.part("gear", [0, 0, 0], () => b737Gear(m));
   return m;
 }
 
@@ -1070,6 +1686,7 @@ export const AIRCRAFT_CATALOG: CatalogFields = {
 /** Every design of the family, by catalog id; `references` is the folder of its source photos under assets/. */
 export const AIRCRAFT: ProceduralDesign[] = [
   { id: "proc-vehicle-aero-a10", title: "Aero A.10", build: aeroA10, references: "aero-a10", catalog: { ...AIRCRAFT_CATALOG, yaw:270 } },
-  { id: "proc-vehicle-airbus-a380", title: "Airbus A380", build: airbusA380, references: "airbus-a380", catalog: { ...AIRCRAFT_CATALOG, yaw:270 } },
+  { id: "proc-vehicle-airbus-a380", title: "Airbus A380", build: airbusA380, params: A380_PARAMS, finishParams: ["livery"], references: "airbus-a380", catalog: { ...AIRCRAFT_CATALOG, yaw:270 } },
+  { id: "proc-vehicle-boeing-737", title: "Boeing 737-800", build: boeing737, params: B737_PARAMS, finishParams: ["livery"], catalog: { ...AIRCRAFT_CATALOG, yaw: 0 } },
   { id: "proc-vehicle-light-jet", title: "Light Jet", build: lightJet, references: "light-jet", catalog: { ...AIRCRAFT_CATALOG, yaw:180 } },
 ];

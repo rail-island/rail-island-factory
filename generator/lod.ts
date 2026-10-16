@@ -218,7 +218,6 @@ const FAMILIES: Record<string, readonly string[]> = {
   ],
   "legacyVehicles": [
     "cabin-classic",
-    "boeing-737",
     "ocean-liner"
   ],
   "vehicles": [
@@ -305,6 +304,7 @@ const FAMILIES: Record<string, readonly string[]> = {
   "aircraft": [
     "aero-a10",
     "airbus-a380",
+    "boeing-737",
     "light-jet"
   ],
   "ships": [

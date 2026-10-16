@@ -63,6 +63,9 @@ document that owns it in the same change.** Conventions:
 - **`railroad-vehicle`** (`.agents/skills/railroad-vehicle/`) - use it whenever a
   railway vehicle is added or changed: rail dimensions, running gear, one raised
   pantograph on two-pantograph electric locomotives, and headless checks.
+- **`aircraft`** (`.agents/skills/aircraft/`) - use it whenever an aircraft or an
+  airline livery is added or changed: the 10,000-triangle budget, bodies and decals,
+  the airframe/gear parts, liveries and headless checks.
 - **`vlakosimdb-transfer`** (`.agents/skills/vlakosimdb-transfer/`) - use it when
   reconstructing or correcting a vehicle from vlakosimdb: XML shapes, original
   BMP measurements, comparison-table optimization and presentation to the user.

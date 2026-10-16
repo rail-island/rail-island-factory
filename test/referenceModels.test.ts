@@ -47,7 +47,7 @@ function budget(id: string): number {
   if (/notre-dame|prague-castle-st-vitus/.test(id)) return 30000;
   if (/truck/.test(id)) return 12000;
   if (/cabin/.test(id)) return 8000;
-  if (/a10|a380|jet/.test(id)) return 20000;
+  if (/a10|a380|jet/.test(id)) return 10000;
   return 40000;
 }
 

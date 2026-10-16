@@ -22,30 +22,6 @@ export function classicCabin():MeshBuilder {
     for(const x of [-.53,.53]){const wheel=ngon(20,.24,Math.PI/20,x,5.62);m.sweep('steel','z',wheel,-.17,wheel,.17);const hub=ngon(16,.11,0,x,5.62);m.sweep('dark','z',hub,-.19,hub,.19);}
   });return m;
 }
-function ellipse(z:number,y:number,rz:number,ry:number,n=24):Ring {return Array.from({length:n},(_,i)=>{const a=-i*Math.PI*2/n;return [z+rz*Math.cos(a),y+ry*Math.sin(a)];});}
-export function boeing737():MeshBuilder {
-  const m=new MeshBuilder(palette);
-  m.part('airframe',[0,0,0],()=>{
-    m.scope('fuselage',()=>{
-      const stations=[[0,.08,.08,3.1],[2,1.3,1.4,3.5],[5,1.88,2,3.6],[29,1.88,2,3.6],[35,1.1,1.3,4],[39.5,.08,.08,4.4]];
-      for(let i=1;i<stations.length;i++){const a=stations[i-1]!,b=stations[i]!;m.sweep('white','x',ellipse(0,a[3]!,a[1]!,a[2]!),a[0]!-19.75,ellipse(0,b[3]!,b[1]!,b[2]!),b[0]!-19.75,false);}
-      for(const s of [-1,1])for(let x=-12;x<12;x+=.65)m.box('glass',x,s*1.87,.27,.035,4.02,4.42);
-      for(const s of [-1,1])m.slab('glass',[[-18,3.9,s*.65],[-16.6,4.7,s*1.05],[-15.8,4.7,s*1.48],[-16.2,3.9,s*1.45]],[0,.02,s*.03]);
-    });
-    m.scope('wings',()=>{for(const s of [-1,1]){
-      m.slab('white',[[-4,2.8,s*1.5],[4,2.8,s*17.9],[6,2.8,s*17.9],[5,2.8,s*1.5]],[0,.22,0]);
-      m.slab('blue',[[4,3,s*17.9],[4.8,5.6,s*17.65],[5.8,5.6,s*17.65],[6,3,s*17.9]],[0,0,s*.12]);
-      m.slab('white',[[13,4.5,s*.7],[17,4.5,s*7],[19,4.5,s*7],[18,4.5,s*.7]],[0,.18,0]);
-      m.box('steel',-1.03,s*5.4,2,.28,1.8,2.8);
-      const front=ellipse(s*5.4,1.8,1,1),back=ellipse(s*5.4,1.8,.7,.7);
-      m.sweep('white','x',front,-4,back,0);m.sweep('dark','x',ellipse(s*5.4,1.8,.86,.86),-4.04,ellipse(s*5.4,1.8,.86,.86),-4.02);
-      for(let i=0;i<16;i++){const a=i*Math.PI/8;beam(m,'steel',[-4.06,1.8,s*5.4],[-4.06,1.8+Math.sin(a)*.8,s*5.4+Math.cos(a)*.8],.05);}
-    }m.slab('blue',[[12,5.2,-.12],[17,12.5,-.12],[19,12.5,-.12],[19.5,5.2,-.12]],[0,0,.24]);});
-  });
-  m.part('gear',[0,0,0],()=>{m.scope('landing-gear',()=>{for(const [x,z] of [[-14,0],[2,-2],[2,2]]){
-    beam(m,'steel',[x!,.45,z!],[x!,2.6,z!],.12);for(const s of [-1,1]){const r=ellipse(x!,.44,.44,.44,16);m.sweep('dark','z',r,z!+s*.15-.12,r,z!+s*.15+.12);}
-  }});});return m;
-}
 export function oceanLiner():MeshBuilder {
   const m=new MeshBuilder(palette);
   const plan=(length:number,width:number):Ring=>[[-length/2,0],[-length*.43,width*.42],[-length*.30,width/2],[length*.34,width/2],[length*.47,width*.24],[length/2,0],[length*.47,-width*.24],[length*.34,-width/2],[-length*.30,-width/2],[-length*.43,-width*.42]];
@@ -63,21 +39,9 @@ export function oceanLiner():MeshBuilder {
 }
 export const LEGACY_VEHICLES:ProceduralDesign[]=[
   {id:'veh-cabin-classic',title:'Classic Cable Car Cabin',build:classicCabin,catalog:{category:'Cable car',group:'cablecar',defaultScale:1,license:'CC0',author:'Rail Island',source:'Rail Island'}},
-  {id:'veh-boeing-737',title:'Boeing 737-800',build:boeing737,buildLod:boeing737Lod,catalog:{category:'Aircraft',yaw:0,group:'aircraft',defaultScale:1,license:'CC0',author:'Rail Island',source:'Rail Island'}},
   {id:'veh-ocean-liner',title:'Ocean Liner',build:oceanLiner,buildLod:oceanLinerLod,catalog:{category:'Ships',yaw:0,group:'ships',defaultScale:1,license:'CC0',author:'Rail Island',source:'Rail Island'}},
 ];
 
-export function boeing737Lod(): MeshBuilder {
-  const m=new MeshBuilder(palette);
-  const stations=[[-19.75,.08,.08,3.1],[-14.75,1.88,2,3.6],[9.25,1.88,2,3.6],[19.75,.08,.08,4.4]];
-  for(let i=1;i<stations.length;i++){const a=stations[i-1],b=stations[i];m.sweep('white','x',ellipse(0,a[3],a[1],a[2],6),a[0],ellipse(0,b[3],b[1],b[2],6),b[0],true);}
-  for(const s of [-1,1]){
-    m.slab('white',[[-4,2.8,s*1.5],[4,2.8,s*17.9],[6,2.8,s*17.9],[5,2.8,s*1.5]],[0,.22,0]);
-    m.slab('white',[[13,4.5,s*.7],[17,4.5,s*7],[19,4.5,s*7],[18,4.5,s*.7]],[0,.18,0]);
-    m.sweep('white','x',ellipse(s*5.4,1.8,1,1,6),-4,ellipse(s*5.4,1.8,.7,.7,6),0);
-  }
-  m.slab('blue',[[12,5.2,-.12],[17,12.5,-.12],[19,12.5,-.12],[19.5,5.2,-.12]],[0,0,.24]);return m;
-}
 export function oceanLinerLod(): MeshBuilder {
   const m=new MeshBuilder(palette);
   const plan=(length:number,width:number):Ring=>[[-length/2,0],[-length*.35,width/2],[length*.35,width/2],[length/2,0],[length*.35,-width/2],[-length*.35,-width/2]];
