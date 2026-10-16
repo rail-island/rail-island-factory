@@ -77,3 +77,50 @@ describe("emitters", () => {
     expect(built(DESIGNS.get("proc-building-village-cottage")!).emitters).toEqual([]);
   });
 });
+
+describe("fountain water", () => {
+  const inside = (ring: Array<[number, number]>, x: number, z: number): boolean => {
+    let hit = false;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const [xi, zi] = ring[i]!, [xj, zj] = ring[j]!;
+      if ((zi > z) !== (zj > z) && x < ((xj - xi) * (z - zi)) / (zj - zi) + xi) hit = true;
+    }
+    return hit;
+  };
+  const fountains = [...DESIGNS.values()].filter((d) => /fountain/.test(d.id));
+
+  it("is stated by every fountain, and by nothing else", () => {
+    expect(fountains.map((d) => d.id).sort()).toEqual(["proc-building-fountain-classical", "proc-building-fountain-modern", "proc-building-fountain-obelisk"]);
+    const styles = fountains.map((d) => d.build().fountain()?.style).sort();
+    expect(styles).toEqual(["classical", "modern", "sculptural"]);
+    for (const d of DESIGNS.values()) if (!fountains.includes(d) && combos(d).length <= 1) expect(d.build().fountain(), d.id).toBeNull();
+  });
+
+  it("fills its basins and lands every jet on water", () => {
+    for (const d of fountains) {
+      const m = d.build();
+      const w = m.fountain()!;
+      const pos = m.positions();
+      expect(w.pools.length, d.id).toBeGreaterThan(0);
+      expect(w.jets.length, d.id).toBeGreaterThan(0);
+      // a pool lies on stone: geometry at its rim height or above around it
+      for (const p of w.pools) {
+        let below = false;
+        for (let i = 0; i < pos.length; i += 3) if (Math.abs(pos[i + 1]! - p.y) < 0.02 && inside(p.ring, pos[i]! * 0.99, pos[i + 2]! * 0.99)) below = true;
+        expect(below, `${d.id} pool at ${p.y}: no water surface drawn there`).toBe(true);
+      }
+      for (const j of w.jets) {
+        const [x, y, z] = j.at;
+        // from a nozzle: geometry within a few centimetres
+        let nozzle = false;
+        for (let i = 0; i < pos.length; i += 3) if (Math.hypot(pos[i]! - x, pos[i + 1]! - y, pos[i + 2]! - z) < 0.25) nozzle = true;
+        expect(nozzle, `${d.id} jet at ${j.at}: no nozzle`).toBe(true);
+        const lx = x + (j.dir?.[0] ?? 0) * j.reach;
+        const lz = z + (j.dir?.[1] ?? 0) * j.reach;
+        const target = w.pools.find((p) => Math.abs(p.y - j.land) < 1e-6);
+        expect(target, `${d.id} jet at ${j.at} lands at ${j.land}, on no pool`).toBeTruthy();
+        expect(inside(target!.ring, lx, lz), `${d.id} jet at ${j.at} lands outside its pool`).toBe(true);
+      }
+    }
+  });
+});

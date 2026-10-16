@@ -9,7 +9,10 @@ Three fountains retain their recognizable layouts and real sizes: classical
 6.7 m round tiered fountain, 6.4 m square modern basin with nine nozzles, and
 6.6 m octagonal obelisk fountain. The classical bowls have shaped undersides,
 raised lips, inset water and pedestal fluting. Basins have a bevelled plinth and
-contrasting coping; nozzles have bronze footings. Water jets remain a game effect.
+contrasting coping; nozzles have bronze footings. The game animates the water, but
+where it is - each pool's surface and outline, each jet's nozzle, arc and landing,
+and the fountain's style - is the factory's, recorded where the stone is drawn
+([emitters.md](emitters.md)).
 
 The castle is one parametric family with `layout=courtyard|keep|fortress`.
 It has curtain walls, an actual gate opening, projecting round corner towers,

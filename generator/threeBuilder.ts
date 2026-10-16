@@ -6,7 +6,7 @@
 import { MeshCore } from "./meshCore.ts";
 
 export { chamferedRect, grow, ngon, rect, scaleRing } from "./meshCore.ts";
-export type { AnimationClipSpec, AnimationTrack, Emitter, MaterialSpec, Ring, SweepAxis } from "./meshCore.ts";
+export type { AnimationClipSpec, AnimationTrack, Emitter, FountainWater, MaterialSpec, Ring, SweepAxis, WaterJet, WaterPool } from "./meshCore.ts";
 
 /** The three.js namespace, or any object with the classes toGroup() uses. */
 export type ThreeNamespace = typeof import("three");
@@ -18,7 +18,7 @@ export class MeshBuilder extends MeshCore {
    * parts (see `part`) each part is a Group named after it, positioned at its
    * pivot (a child part inside its parent's Group), its meshes' positions
    * relative to that pivot. A rigged model's group carries `userData.rig`, a model
-   * that smokes `userData.emitters`. Non-indexed
+   * that smokes `userData.emitters`, a fountain `userData.fountain`. Non-indexed
    * triangle soups with flat per-face normals, MeshStandardMaterial colours from
    * the palette's sRGB hex: the same data toGlb writes.
    */
@@ -82,6 +82,8 @@ export class MeshBuilder extends MeshCore {
     if (this.rig) root.userData.rig = JSON.parse(JSON.stringify(this.rig));
     // where the model smokes, steams or flares (MeshCore.emit), model coordinates
     if (this.emitterList.length) root.userData.emitters = JSON.parse(JSON.stringify(this.emitterList));
+    // a fountain's water: its pools and jets (MeshCore.pool / jet), model coordinates
+    if (this.water) root.userData.fountain = JSON.parse(JSON.stringify(this.water));
     return root;
   }
 }
