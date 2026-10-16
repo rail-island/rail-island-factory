@@ -1,0 +1,20 @@
+{
+  "source": "janproch/vlakosimdb db/train/loco/electric/db_111/model (x_both 30 x 60, z_dec 170 x 60, 0.1 m a pixel)",
+  "annotations": [
+    {"id": "F01", "view": "x_front", "box": [2, 26, 14, 33], "nodes": ["front-cab/windscreen-right/frame"], "tolerancePixels": 1.5, "uncertainty": "Left windscreen seen from ahead."},
+    {"id": "F02", "view": "x_front", "box": [16, 26, 28, 33], "nodes": ["front-cab/windscreen-left/frame"], "tolerancePixels": 1.5, "uncertainty": "Right windscreen seen from ahead."},
+    {"id": "F03", "view": "x_front", "box": [20, 37, 30, 40], "nodes": ["front-cab/white-band-left"], "tolerancePixels": 1.5, "uncertainty": "White band right of the emblem."},
+    {"id": "F04", "view": "x_front", "box": [0, 37, 10, 40], "nodes": ["front-cab/white-band-right"], "tolerancePixels": 1.5, "uncertainty": "White band left of the emblem."},
+    {"id": "F05", "view": "x_front", "box": [22, 43, 25, 46], "nodes": ["front-cab/headlight-left"], "tolerancePixels": 1.5, "uncertainty": "Headlight, a few pixels: position only."},
+    {"id": "F06", "view": "x_front", "box": [26, 44, 29, 46], "nodes": ["front-cab/tail-lamp-left"], "tolerancePixels": 1.5, "uncertainty": "Red tail lamp, a few pixels: position only."},
+    {"id": "S01", "view": "z_right", "box": [33, 25, 65, 32], "nodes": ["sides/right-side/grille-bank-front"], "tolerancePixels": 1.01, "uncertainty": "Front grille bank."},
+    {"id": "S02", "view": "z_right", "box": [103, 25, 135, 32], "nodes": ["sides/right-side/grille-bank-rear"], "tolerancePixels": 1.5, "uncertainty": "Rear grille bank; the native texture is centred half a pixel off."},
+    {"id": "S03", "view": "z_right", "box": [65, 25, 77, 33], "nodes": ["sides/right-side/window-1/frame"], "tolerancePixels": 1.5, "uncertainty": "Window, the frames of neighbours shared."},
+    {"id": "S04", "view": "z_right", "box": [77, 25, 90, 33], "nodes": ["sides/right-side/window-2/frame"], "tolerancePixels": 1.5, "uncertainty": "Window."},
+    {"id": "S05", "view": "z_right", "box": [90, 25, 103, 33], "nodes": ["sides/right-side/window-3/frame"], "tolerancePixels": 1.5, "uncertainty": "Window."},
+    {"id": "S06", "view": "z_right", "box": [17, 26, 22, 32], "nodes": ["sides/right-side/cab-window-front"], "tolerancePixels": 1.01, "uncertainty": "Cab side window."},
+    {"id": "S07", "view": "z_right", "box": [23, 25, 32, 47], "nodes": ["sides/right-side/door-front/seams"], "tolerancePixels": 1.5, "uncertainty": "Cab door between its seams at columns 23 and 31."},
+    {"id": "S08", "view": "z_right", "box": [81, 37, 86, 41], "nodes": ["sides/right-side/emblem"], "tolerancePixels": 1.01, "uncertainty": "The DB emblem."},
+    {"id": "S09", "view": "z_right", "box": [79, 46, 89, 48], "nodes": ["sides/right-side/number"], "tolerancePixels": 1.5, "uncertainty": "Painted running number."}
+  ]
+}

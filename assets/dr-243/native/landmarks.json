@@ -1,0 +1,19 @@
+{
+  "source": "janproch/vlakosimdb db/train/loco/electric/dr_243/model (x_both 30 x 60, z_dec 170 x 60, 0.1 m a pixel)",
+  "annotations": [
+    {"id": "F01", "view": "x_front", "box": [1, 25, 15, 34], "nodes": ["front-cab/windscreen-right/frame"], "tolerancePixels": 1.5, "uncertainty": "Left windscreen seen from ahead."},
+    {"id": "F02", "view": "x_front", "box": [15, 25, 29, 34], "nodes": ["front-cab/windscreen-left/frame"], "tolerancePixels": 1.5, "uncertainty": "Right windscreen seen from ahead."},
+    {"id": "F03", "view": "x_front", "box": [13, 34, 17, 36], "nodes": ["front-cab/top-headlight"], "tolerancePixels": 1.5, "uncertainty": "Headlight under the windscreens."},
+    {"id": "F04", "view": "x_front", "box": [0, 43, 30, 47], "nodes": ["body/shell/front/band-1", "body/shell/side-right/band-1", "body/shell/side-left/band-1"], "tolerancePixels": 1.5, "uncertainty": "White band with the lamps, rows 43-46; the rounded corners carry the side bands (the white line)."},
+    {"id": "F05", "view": "x_front", "box": [26, 44, 29, 46], "nodes": ["front-cab/tail-lamp-left"], "tolerancePixels": 1.5, "uncertainty": "Red tail lamp: position only."},
+    {"id": "S01", "view": "z_right", "box": [15, 26, 22, 34], "nodes": ["sides/right-side/cab-window-front"], "tolerancePixels": 1.01, "uncertainty": "Cab side window with its frame."},
+    {"id": "S02", "view": "z_right", "box": [146, 26, 153, 34], "nodes": ["sides/right-side/cab-window-rear"], "tolerancePixels": 1.5, "uncertainty": "Rear cab window; the texture is a pixel off symmetry."},
+    {"id": "S03", "view": "z_right", "box": [30, 25, 37, 47], "nodes": ["sides/right-side/door-front/seams"], "tolerancePixels": 1.5, "uncertainty": "Cab door, its seams faint."},
+    {"id": "S04", "view": "z_right", "box": [40, 24, 129, 45], "nodes": ["sides/right-side/ribs-1"], "tolerancePixels": 1.5, "uncertainty": "The ribbed machine room."},
+    {"id": "S05", "view": "z_right", "box": [28, 21, 69, 24], "nodes": ["sides/right-side/roof-grille-1"], "tolerancePixels": 1.01, "uncertainty": "Grille on the roof's edge."},
+    {"id": "S06", "view": "z_right", "box": [73, 21, 100, 24], "nodes": ["sides/right-side/roof-grille-2"], "tolerancePixels": 1.01, "uncertainty": "Grille on the roof's edge."},
+    {"id": "S07", "view": "z_right", "box": [112, 21, 141, 24], "nodes": ["sides/right-side/roof-grille-3"], "tolerancePixels": 1.01, "uncertainty": "Grille on the roof's edge."},
+    {"id": "S08", "view": "z_right", "box": [80, 41, 89, 44], "nodes": ["sides/right-side/number"], "tolerancePixels": 1.01, "uncertainty": "Black number plate."},
+    {"id": "S09", "view": "z_right", "box": [8, 45, 160, 46], "nodes": ["body/shell/side-right/band-1"], "tolerancePixels": 2.0, "uncertainty": "The white line; its ends round the corners."}
+  ]
+}

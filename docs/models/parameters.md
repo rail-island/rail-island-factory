@@ -14,7 +14,8 @@ the parameter values pick the variant.
 
 Many designs are parametric, among them the locomotives `veh-cd-150`, `veh-cd-163`
 and `veh-cd-263` (`livery`, [loco-liveries.md](loco-liveries.md)), `veh-cd-110` and
-`veh-cd-130` (`livery`, [cz-electrics.md](cz-electrics.md)),
+`veh-cd-130` (`livery`, [cz-electrics.md](cz-electrics.md)), `veh-cd-180`, `veh-dnt-184-5`,
+`veh-db-111` and `veh-dr-243` (`livery`, [mainline-electrics.md](mainline-electrics.md)),
 `veh-csd-classic-green-coach` (below),
 `veh-bmo-double-deck-coach` (`livery`: csd, cdBlue, cdBlueGrey, cdRedDoors;
 [bmo-double-deck.md](bmo-double-deck.md)), `veh-cd-green-white-coach`

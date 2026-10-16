@@ -1,0 +1,22 @@
+{
+  "source": "janproch/vlakosimdb db/train/loco/electric/cd_181/model (x_both 30 x 60, z_dec 220 x 60, 0.1 m a pixel)",
+  "annotations": [
+    {"id": "F01", "view": "x_front", "box": [3, 26, 14, 35], "nodes": ["front-cab/windscreen-right/frame"], "tolerancePixels": 1.5, "uncertainty": "Left windscreen seen from ahead, light frame included."},
+    {"id": "F02", "view": "x_front", "box": [16, 26, 27, 35], "nodes": ["front-cab/windscreen-left/frame"], "tolerancePixels": 1.5, "uncertainty": "Right windscreen seen from ahead."},
+    {"id": "F03", "view": "x_front", "box": [13, 20, 17, 24], "nodes": ["front-cab/roof-headlight"], "tolerancePixels": 2.0, "uncertainty": "Roof headlight; the native box includes its dark housing."},
+    {"id": "F04", "view": "x_front", "box": [11, 36, 20, 39], "nodes": ["front-cab/number-plate"], "tolerancePixels": 1.01, "uncertainty": "Red plate under the windscreens."},
+    {"id": "F05", "view": "x_front", "box": [0, 25, 30, 36], "nodes": ["body/shell/front/band-5", "body/shell/side-right/band-4", "body/shell/side-left/band-4"], "tolerancePixels": 1.5, "uncertainty": "Cream band across the end, rows 25-35; the rounded corners carry the side bands."},
+    {"id": "F06", "view": "x_front", "box": [0, 37, 30, 45], "nodes": ["body/shell/front/band-3", "body/shell/side-right/band-2", "body/shell/side-left/band-2"], "tolerancePixels": 1.5, "uncertainty": "Green band between the grey lines, rows 37-44; the corners carry the side bands."},
+    {"id": "F07", "view": "x_front", "box": [24, 39, 27, 42], "nodes": ["front-cab/lamp-1"], "tolerancePixels": 1.5, "uncertainty": "A white cross, 3 x 3 px: position only."},
+    {"id": "S01", "view": "z_right", "box": [35, 26, 46, 35], "nodes": ["sides/right-side/window-1/frame"], "tolerancePixels": 1.01, "uncertainty": "Machine-room window with its light frame."},
+    {"id": "S02", "view": "z_right", "box": [56, 26, 67, 35], "nodes": ["sides/right-side/window-2/frame"], "tolerancePixels": 1.01, "uncertainty": "Divided window."},
+    {"id": "S03", "view": "z_right", "box": [76, 26, 87, 35], "nodes": ["sides/right-side/window-3/frame"], "tolerancePixels": 1.01, "uncertainty": "Divided window."},
+    {"id": "S04", "view": "z_right", "box": [99, 26, 110, 35], "nodes": ["sides/right-side/window-4/frame"], "tolerancePixels": 1.01, "uncertainty": "Window."},
+    {"id": "S05", "view": "z_right", "box": [121, 26, 132, 35], "nodes": ["sides/right-side/window-5/frame"], "tolerancePixels": 1.01, "uncertainty": "Window."},
+    {"id": "S06", "view": "z_right", "box": [142, 26, 153, 35], "nodes": ["sides/right-side/window-6/frame"], "tolerancePixels": 1.01, "uncertainty": "Window."},
+    {"id": "S07", "view": "z_right", "box": [19, 26, 25, 35], "nodes": ["sides/right-side/door-front/window"], "tolerancePixels": 1.01, "uncertainty": "Cab door window; the model insets it 0.1 m from the door's seams."},
+    {"id": "S08", "view": "z_right", "box": [17, 25, 27, 48], "nodes": ["sides/right-side/door-front/seams"], "tolerancePixels": 1.01, "uncertainty": "Cab door between its seams at columns 17 and 26."},
+    {"id": "S09", "view": "z_right", "box": [88, 40, 98, 43], "nodes": ["sides/right-side/number-plate"], "tolerancePixels": 1.01, "uncertainty": "Red number plate."},
+    {"id": "S10", "view": "z_right", "box": [12, 25, 176, 36], "nodes": ["body/shell/side-right/band-4"], "tolerancePixels": 2.01, "uncertainty": "Cream band; its ends follow the rounded nose, ambiguous by a pixel or two."}
+  ]
+}

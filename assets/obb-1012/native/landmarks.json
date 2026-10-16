@@ -1,0 +1,14 @@
+{
+  "source": "janproch/vlakosimdb db/train/loco/electric/obb 1012/model (x_both 30 x 60 on 3 x 6 m; z_both 193 x 58 on 18 x 6 m, x scaled by 1.064)",
+  "annotations": [
+    {"id": "F01", "view": "x_front", "box": [1, 23, 29, 35], "nodes": ["front-cab/windscreen/frame"], "tolerancePixels": 1.5, "uncertainty": "The wide windscreen."},
+    {"id": "F02", "view": "x_front", "box": [0, 39, 30, 46], "nodes": ["body/shell/front/band-1"], "tolerancePixels": 1.5, "uncertainty": "The red band across the nose."},
+    {"id": "F03", "view": "x_front", "box": [17, 41, 29, 44], "nodes": ["front-cab/lamp-cluster-left"], "tolerancePixels": 1.5, "uncertainty": "Right lamp cluster seen from ahead."},
+    {"id": "F04", "view": "x_front", "box": [1, 41, 13, 44], "nodes": ["front-cab/lamp-cluster-right"], "tolerancePixels": 1.5, "uncertainty": "Left lamp cluster seen from ahead."},
+    {"id": "S01", "view": "z_right", "box": [51, 24, 142, 39], "nodes": ["sides/right-side/machine-room"], "tolerancePixels": 1.01, "uncertainty": "The red machine room."},
+    {"id": "S02", "view": "z_right", "box": [55, 40, 138, 41], "nodes": ["sides/right-side/line"], "tolerancePixels": 1.01, "uncertainty": "The light grey line under it."},
+    {"id": "S03", "view": "z_right", "box": [23, 25, 28, 32], "nodes": ["sides/right-side/cab-window-front"], "tolerancePixels": 1.01, "uncertainty": "Cab side window."},
+    {"id": "S04", "view": "z_right", "box": [55, 17, 138, 21], "nodes": ["sides/right-side/roof-grille"], "tolerancePixels": 1.5, "uncertainty": "Grilles on the leaning upper side."},
+    {"id": "S05", "view": "z_right", "box": [5, 44, 188, 49], "nodes": ["body/frame"], "tolerancePixels": 2.0, "uncertainty": "The grey skirt."}
+  ]
+}
