@@ -3,6 +3,7 @@
 
 import { describe, expect, it } from "vitest";
 import { parseGlb } from "../generator/glbTriangles";
+import { generateInSubprocess } from "./generateSubprocess";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -24,6 +25,7 @@ describe("exportMeta", () => {
       expect(b).toEqual({
         id: b.id,
         title: SKYSCRAPERS.find((d) => d.id === b.id)!.title,
+        params: SKYSCRAPERS.find((d) => d.id === b.id)!.params,
         category: "Commercial",
         group: "skyscraper_c",
         glb: `${b.id}.glb`,
@@ -132,7 +134,7 @@ describe("buildExport", () => {
   it("writes the meta.json files and catalog.json that agree with the files beside them", async () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "factory-export-"));
     try {
-      await buildExport(dir);
+      await generateInSubprocess(dir, "export");
       const meta = JSON.parse(fs.readFileSync(path.join(dir, META_FILE), "utf8")) as ExportMeta;
       const catalog = JSON.parse(fs.readFileSync(path.join(dir, CATALOG_FILE), "utf8")) as ModelCatalog;
       const vehicles = JSON.parse(fs.readFileSync(path.join(dir, VEHICLE_META_FILE), "utf8")) as VehicleExportMeta;

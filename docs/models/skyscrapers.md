@@ -2,7 +2,7 @@
 
 **Covers** - the ten procedurally generated skyscrapers, the mesh builder they
 are made with, and how to add or change a design.
-**Code** - `generator/skyscrapers.ts`, `generator/meshCore.ts`, `generator/meshBuilder.ts`, `generator/coplanar.ts`, `test/models.test.ts`
+**Code** - `generator/skyscrapers.ts`, `generator/meshCore.ts`, `generator/meshBuilder.ts`, `generator/coplanar.ts`, `test/models.test.ts`, `test/skyscrapers.test.ts`
 **See also** - [export.md](export.md), [source-tree.md](source-tree.md), [vehicles.md](vehicles.md), [../site/catalog-site.md](../site/catalog-site.md)
 
 ## The designs
@@ -12,18 +12,18 @@ and a crown:
 
 | id | title | look |
 |---|---|---|
-| `sky-glass-office` | Glass Office Tower | square blue curtain wall, stone podium, plant floor, mast |
-| `sky-art-deco` | Art Deco Tower | five stone setbacks with dark window strips, steel spire |
-| `sky-pagoda` | Pagoda Tower | octagonal gold-glass segments, each flared with a rim |
-| `sky-brick-residential` | Brick Apartment Tower | brick piers, balconies, water tank on the roof |
-| `sky-twin-towers` | Twin Towers | two stepped glass drums with spires, a sky bridge between |
-| `sky-twisted` | Twisting Tower | teal floors turning a quarter turn over the height |
-| `sky-dark-slab` | Black Glass Slab | black glass and bronze mullions on a plaza |
-| `sky-bullet` | Bullet Tower | round, swelling then curving to a tip, banded glass, spiral ribs |
-| `sky-terraced` | Terraced Green Tower | glass steps receding to one corner, planted terraces |
-| `sky-pyramid` | Pyramid Tower | white tapering pyramid with two lift-shaft wings |
+| `sky-glass-office` | Glass Office Tower | segmented blue curtain wall, entry canopy, sky-garden belt, crown blades and mast |
+| `sky-art-deco` | Art Deco Tower | five stone setbacks, individual window panels, bronze setback ribs, fluted crown and steel spire |
+| `sky-pagoda` | Pagoda Tower | octagonal gold-glass segments, flared rims, bronze buttresses and entry canopy |
+| `sky-brick-residential` | Brick Apartment Tower | brick piers, window panels, balconies with return rails, roof garden and water tank |
+| `sky-twin-towers` | Twin Towers | two stepped glass drums with vertical fins, spires and a framed sky bridge |
+| `sky-twisted` | Twisting Tower | teal floors turning a quarter turn, corner fins, segmented glazing and rooftop pergola |
+| `sky-dark-slab` | Black Glass Slab | patterned black glazing, bronze mullions and projecting sunshades, planted plaza |
+| `sky-bullet` | Bullet Tower | swelling glass body, crossing spiral ribs and a double observation band |
+| `sky-terraced` | Terraced Green Tower | segmented glass steps, terrace rails, raised planters and clustered shrubs |
+| `sky-pyramid` | Pyramid Tower | white tapering pyramid, dense facade ribs, lift-shaft wings and entry canopy |
 
-`SKYSCRAPERS` in `skyscrapers.ts` lists them as `{ id, title, build }` (the
+`SKYSCRAPERS` in `skyscrapers.ts` lists them as `{ id, title, build, params, finishParams }` (the
 `ProceduralDesign` of `design.ts`).
 `SKYSCRAPER_CATALOG` beside it holds the game-catalog fields they all share -
 category `Commercial`, city pool `skyscraper_c`, `defaultScale` 0.5, CC0 by Rail
@@ -32,6 +32,37 @@ Island - which the build writes into each model's meta.json entry
 
 **The ids are stored in the game's saved maps**: never rename one that has
 shipped.
+
+## Parameters and budget
+
+Each tower has **36 combinations**, available in the existing catalog parameter
+pickers and standalone JS models, just like the village houses. Model ids stay
+unchanged. Exports contain the default GLB and thumbnail plus the parameter specs.
+
+| Parameter | Values | Default |
+|---|---|---|
+| `size` | `compact`, `standard`, `landmark` | `standard` |
+| `glazing` | `original`, `blue`, `jade`, `bronze` | `original` |
+| `structure` | `original`, `limestone`, `graphite` | `original` |
+
+Original finishes preserve each tower's own palette. Glass colour changes both
+light glazing and its darker panels; cladding changes the structural and masonry
+materials. Planting and warning lights retain their colours. These two finish
+parameters never move vertices, and palettes are copied per build.
+
+Size scales the complete design, including its entrance, balconies and crown:
+compact uses 85% of the standard footprint dimensions and 80% height; landmark
+uses 115% footprint dimensions and 125% height. It changes proportions without
+adding floors. The local `TowerMesh` frame applies the same transform to recorded
+GLB geometry and standalone browser geometry, with normals recalculated from the
+transformed triangles. All sizes remain grounded and taller than twice their
+largest footprint dimension.
+
+Each variant may use **up to 10,000 triangles**. Detail goes into visible facade
+panels, fins, balcony edges, roof gardens and entrances rather than subdividing
+flat walls. The tests cover all sizes and finishes, check palette isolation,
+source bounds, determinism and z-fighting, and compare the browser model with
+the generator. See [parameters.md](parameters.md) for the shared export contract.
 
 ## The mesh builder
 
@@ -66,8 +97,8 @@ footprint, so a design need not be centred on the origin.
 **Determinism.** Materials are written in name order and nothing carries a
 timestamp, so the same code gives the same bytes. The GLB's `asset.generator`
 string is `Rail Island procedural building (<id>)`, unchanged from when the
-designs lived in the webapp, so a model built here is byte-identical to one built
-there - which keeps the game's LOD proxy cache (keyed on the GLB bytes) hitting.
+designs lived in the webapp, so unchanged designs retain their cache identity.
+Architectural changes alter the GLB bytes and invalidate the game's LOD proxy cache for the changed design.
 
 ## Flicker (z-fighting)
 
@@ -124,11 +155,11 @@ where the model is ([../site/catalog-site.md](../site/catalog-site.md)).
    check that the model is the right way up and reads well - or open it in
    `pnpm dev` and orbit it.
 3. `pnpm test` - each model must stand on y = 0, be taller than twice its width,
-   stay under 4,000 triangles and have no z-fighting faces (the build already
+   stay at or below 10,000 triangles and have no z-fighting faces (the build already
    refuses the last; see "Flicker" above for how to resolve a report).
 
-Keep a design's triangle count in the low thousands: the game draws these many
-times over in a big city. Most of the budget goes on repeated floor slabs and
-piers, so tune their step and count first.
+Keep repeated details economical: the game draws these many times over in a
+big city. The 10,000-triangle limit applies to every parameter combination, not
+just the default. Tune panel density and floor-band counts before adding detail.
 
 The meta.json entry follows automatically; nothing else is hand-maintained.

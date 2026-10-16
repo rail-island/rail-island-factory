@@ -25,8 +25,9 @@ packages `pnpm.onlyBuiltDependencies` allows.
 | `pnpm deploy` | `pnpm build` and `wrangler deploy` from a workstation (CI normally does it) |
 
 `export/`, `dist/` and `.wrangler/` are gitignored: everything in them is
-regenerated from the code. A full model build takes a few seconds; an unchanged
-design is not re-rendered at all (see [../models/export.md](../models/export.md)).
+regenerated from the code. A cold full model build can take a few minutes to
+check and render every design; an unchanged design is not re-rendered at all
+(see [../models/export.md](../models/export.md)).
 
 ## Layout
 
@@ -42,6 +43,13 @@ design is not re-rendered at all (see [../models/export.md](../models/export.md)
 
 ## Tests
 
+Full-catalog integration tests run the initial synchronous thumbnail render in
+an actual Node subprocess (`test/generateSubprocess.ts`), keeping Vitest's worker
+responsive to runner messages. The model suite also yields between its
+synchronous geometry checks so runner replies are processed. The assertions
+still check all generated files, repeatability and pruning; no model builds are mocked. These checks can take a
+few minutes.
+
 `pnpm test` runs every suite under `test/` with a 120 s default test timeout
 (`vite.config.ts`): many tests build every design, and the catalog keeps growing.
 Among them:
@@ -49,7 +57,7 @@ Among them:
 - `test/models.test.ts` - the mesh builder winds faces outward (three.js culls
   back faces, so an inward wall is invisible in the game and the viewer), sweeps
   included; every skyscraper stands on y = 0, is taller than twice its width and
-  stays under 4,000 triangles, every vehicle stands on its wheels, faces +x,
+  stays at or below 10,000 triangles, every vehicle stands on its wheels, faces +x,
   fits a US road and its 10,000-triangle budget and stores flat normals, the
   articulated truck splits at the king pin and its trailer swings clear; parts;
   no design z-fights; the bytes are deterministic; the generator writes, skips and prunes;
