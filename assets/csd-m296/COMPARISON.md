@@ -4,7 +4,7 @@
 **Code** - `generator/dmuComparison.ts`, `generator/dmuReport.ts`, `test/czechDmus.test.ts`
 **See also** - [SOURCES.md](SOURCES.md), [docs/models/czech-dmus.md](../../docs/models/czech-dmus.md)
 
-Model revision: `979f87d` (measured when this file was written). Mapping: side column = 10 (x / 1.00772 + 12.45) (the XML scaled to the published 24.79 m over the buffers), row = 10 (5 - y); front column = 10 (1.5 - z), row = 10 (5 - y). Canvases: side 250 x 50 px (`native/csd_m296/z_both.bmp`), front 30 x 50 px (`native/csd_m296/x_dec.bmp`).
+Model revision: `d8ba830` (measured when this file was written). Mapping: side column = 10 (x / 1.00772 + 12.45) (the XML scaled to the published 24.79 m over the buffers), row = 10 (5 - y); front column = 10 (1.5 - z), row = 10 (5 - y). Canvases: side 250 x 50 px (`native/csd_m296/z_both.bmp`), front 30 x 50 px (`native/csd_m296/x_dec.bmp`).
 
 Each vector is (left, top, width, height) in native pixels; percentages are 100*x/W, 100*y/H, 100*w/W, 100*h/H of the view's canvas, origin top left. Delta = model minus source in percentage points. MAE = sum(|delta|) / (4 * boxes). Model boxes are the bounds of the actual GLB vertices of the named scopes, projected orthographically with the documented scales undone, occluded vertices included.
 
