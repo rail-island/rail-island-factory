@@ -48,10 +48,6 @@ document that owns it in the same change.** Conventions:
 
 ## Git
 
-- **Commit and push straight to `master`.** Do not create `claude/...` or other
-  feature branches, and do not open pull requests. The factory is not public:
-  a push to `master` deploys the catalog site, it does not ship anything to
-  players.
 - **Publishing to the game is a separate, standalone step** (the webapp's
   import of the export folder). Never do it as part of a factory change unless
   asked to.
