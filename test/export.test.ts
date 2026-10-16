@@ -175,7 +175,7 @@ describe("buildExport", () => {
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
-  }, 240_000);
+  }, 900_000); // builds the whole export, which grows with every design
 });
 
 describe("generateReferences", () => {
