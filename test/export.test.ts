@@ -9,7 +9,7 @@ import os from "node:os";
 import path from "node:path";
 import { SKYSCRAPERS } from "../generator/skyscrapers";
 import { VEHICLES } from "../generator/vehicles";
-import { lodBudget } from "../generator/lod";
+import { buildLodModel } from "../generator/lodModel";
 import { ALL_VEHICLES, BUILDINGS, DESIGNS, buildExport, generateReferences } from "../generator/generate";
 import { VILLAGE_HOUSES } from "../generator/village";
 import {
@@ -160,7 +160,7 @@ describe("buildExport", () => {
         expect(fs.statSync(path.join(dir, r.thumbUrl)).size).toBe(r.thumbBytes);
         expect(fs.statSync(path.join(dir, r.jsUrl)).size).toBe(r.jsBytes);
         const design = DESIGNS.get(r.id)!;
-        const lodBytes = (design.buildLod?.() ?? design.build()).lowDetail(lodBudget(design)).toGlb(r.id).length;
+        const lodBytes = buildLodModel(design).toGlb(r.id).length;
         expect(r.jsBytes).toBeLessThan(r.glbBytes + lodBytes);
         expect(r.triangles).toBeGreaterThan(0);
         const listed = meta.buildings.find((b) => b.id === r.id)

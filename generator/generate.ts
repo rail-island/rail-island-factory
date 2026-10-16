@@ -78,6 +78,8 @@ import { CITY_BUS_DESIGNS, KAROSA_DESIGNS } from "./buses.ts";
 import { VILLAGE_HOUSES } from "./village.ts";
 import { COMMERCIAL_BUILDINGS } from "./commercial.ts";
 import type { ProceduralDesign } from "./design.ts";
+import { buildLodModel } from "./lodModel.ts";
+import { lodBudget } from "./lod.ts";
 import { glbStats } from "./glbStats.ts";
 import { JS_DIR, bundleDesign, gzipSize, writeIfChanged } from "./jsModel.ts";
 import { findCoplanarOverlaps, type CoplanarOverlap } from "./coplanar.ts";
@@ -233,6 +235,13 @@ function buildAll(designs: readonly ProceduralDesign[]): Array<{ design: Procedu
   for (const b of built) {
     const overlaps = findCoplanarOverlaps(b.bytes);
     if (overlaps.length) found.set(b.design.id, overlaps);
+  }
+  if (found.size) throw new ZFightingError(found);
+  for (const {design} of built) {
+    const low = buildLodModel(design);
+    if (!low.triangleCount() || low.triangleCount() > lodBudget(design)) throw new Error(`${design.id}: invalid LOD triangle count ${low.triangleCount()}`);
+    const overlaps = findCoplanarOverlaps(low.toGlb(design.id));
+    if (overlaps.length) found.set(`${design.id} (LOD)`, overlaps);
   }
   if (found.size) throw new ZFightingError(found);
   return built;

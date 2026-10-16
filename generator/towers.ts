@@ -309,6 +309,25 @@ export const TOWERS:readonly ProceduralDesign[]=[
   entry('tower-radio','Radio Tower',radioTower,37,51.99029,RADIO,'Poly by Google'),
   entry('tower-stone','Stone Tower',stoneTower,21.6,41.66234,FORT),
   entry('tower-kenney','Stone Turret',stoneTurret,13.5,34.6981,TURRET),
-  entry('tower-transmission','Transmission Tower',transmissionTower,38.017048,48.56582,POWER),
+  { ...entry('tower-transmission','Transmission Tower',transmissionTower,38.017048,48.56582,POWER), buildLod: transmissionTowerLod },
   entry('tower-watch','Watch Tower',watchTower,21.6,55.87389,FORT),
 ];
+
+/** Four open legs and broad crossarms keep a pylon recognisable from above. */
+export function transmissionTowerLod(given?:ParamValues):MeshBuilder {
+  const p=resolveParams(POWER,given),m=model(),h=+p.bays!*5;
+  for(const x of [-1,1])for(const z of [-1,1]){
+    beam(m,'steel',[x*4,.8,z*4],[x*.35,h+8,z*.35],.5);
+  }
+  for(const s of [-1,1]){
+    beam(m,'steel',[-4,.8,s*4],[1.1,h,s*1.1],.35);
+    beam(m,'steel',[s*4,.8,4],[s*1.1,h,-1.1],.35);
+  }
+  for(let k=0;k<+p.arms!;k++){
+    const y=h-10+k*6,w=7-k*.8;
+    beam(m,'steel',[-w,y,0],[w,y,0],.5);
+    beam(m,'steel',[-w,y,0],[0,y+2,0],.35);
+    beam(m,'steel',[0,y+2,0],[w,y,0],.35);
+  }
+  return m;
+}

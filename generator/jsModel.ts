@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 import { build, type Plugin } from "esbuild";
 import type { ProceduralDesign } from "./design.ts";
 
-import { lodBudget } from "./lod.ts";
+import { lodBudget, lodRecipe } from "./lod.ts";
 
 const GENERATOR_DIR = path.dirname(fileURLToPath(import.meta.url));
 
@@ -42,10 +42,11 @@ export async function bundleDesign(design: ProceduralDesign, source: string): Pr
     stdin: {
       contents: [
         `import { ${fn} as design${design.buildLod ? `, ${design.buildLod.name} as designLod` : ""} } from ${JSON.stringify(`./${source}`)};`,
+        ...(!design.buildLod ? ['import { buildLodGeometry } from "./lod.ts";'] : []),
         // a parametric design's enum parameters, [] for a fixed one; build() takes the chosen values
         `export const params = ${JSON.stringify(design.params ?? [])};`,
         `export const lodTriangleBudget = ${lodBudget(design)};`,
-        `export default function build(THREE, values, lod = false) { if (typeof lod !== "boolean") throw new Error("lod must be a boolean"); const mesh = ${design.buildLod ? "lod ? designLod(values) : design(values)" : "design(values)"}; if (lod) mesh.lowDetail(lodTriangleBudget); const group = mesh.toGroup(THREE, ${JSON.stringify(design.id)}); group.userData.lod = lod; return group; }`,
+        `export default function build(THREE, values, lod = false) { if (typeof lod !== "boolean") throw new Error("lod must be a boolean"); const mesh = ${design.buildLod ? "lod ? designLod(values) : design(values)" : "design(values)"}; ${design.buildLod ? "" : `if (lod) mesh.lowDetail(faces => buildLodGeometry(faces, lodTriangleBudget, ${JSON.stringify(lodRecipe(design))}));`} const group = mesh.toGroup(THREE, ${JSON.stringify(design.id)}); group.userData.lod = lod; return group; }`,
         ...(rigged ? [`export { pose, renderJoint, steerAngles, steerLock, jointTriangles } from "./rig.ts";`] : []),
       ].join("\n"),
       resolveDir: GENERATOR_DIR,

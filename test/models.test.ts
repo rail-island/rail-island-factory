@@ -707,6 +707,21 @@ describe("generateModels", () => {
     }
   });
 
+  it("refuses flickering LOD even when full detail is valid, before writing anything", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "factory-lod-zfight-"));
+    const build = () => {
+      const m = new MeshBuilder({ a: { color: "#ff0000" }, b: { color: "#0000ff" } });
+      m.box("a", 0, 0, 10, 10, 0, 5); return m;
+    };
+    try {
+      const design = { id:"lod-flicker", title:"LOD flicker", build, buildLod:()=>{
+        const m=build(); m.box("b",0,0,4,4,2,5); return m;
+      }};
+      expect(()=>generateModels(dir,[design])).toThrow(/lod-flicker \(LOD\)/);
+      expect(fs.readdirSync(dir)).toEqual([]);
+    } finally { fs.rmSync(dir,{recursive:true,force:true}); }
+  });
+
   it("writes a GLB and a thumbnail per design, skips an unchanged one, and prunes a dropped one", async () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "factory-"));
     try {

@@ -11,7 +11,7 @@
 // Units are metres, +Y up, base at y = 0. The game's catalog recentres a model on
 // its footprint, so a design need not be centred on the origin.
 
-import { simplifyLod, type LodFace } from "./lod.ts";
+import type { LodFace } from "./lod.ts";
 import type { VehicleRig } from "./rig.ts";
 
 export type Ring = Array<[number, number]>; // (x, z) points, counter-clockwise seen from above
@@ -95,7 +95,7 @@ export function scaleRing(ring: Ring, s: number): Ring {
 
 export class MeshCore {
   /** Per material: positions and normals, 9 numbers a triangle, and each triangle's part (-1 for none). */
-  protected readonly groups = new Map<string, { pos: number[]; nrm: number[]; part: number[] }>();
+  protected readonly groups = new Map<string, { pos: number[]; nrm: number[]; part: number[]; scope: number[] }>();
   /** The named parts in drawing order; `parent` indexes this list, -1 for a top-level part. */
   protected readonly parts: Array<{ name: string; pivot: Vec3; parent: number }> = [];
   /**
@@ -119,17 +119,24 @@ export class MeshCore {
    */
   protected frame: (p: Vec3) => Vec3 = (p) => p;
 
+  private readonly lodScopes: Array<{ path: string[]; ids: number[] }> = [{ path: [], ids: [] }];
+  private lodScope = 0;
+
   constructor(protected readonly palette: Record<string, MaterialSpec>) {}
 
   /** Runs `fn` inside a named scope; a recording subclass turns the scopes into a source tree. */
   scope<T>(name: string, fn: () => T): T {
-    void name;
     if (this.drawing) throw new Error("scope() inside a primitive call");
+    const parent = this.lodScope;
+    const id = this.lodScopes.length;
+    this.lodScopes.push({ path: [...this.lodScopes[parent].path, name], ids: [...this.lodScopes[parent].ids, id] });
+    this.lodScope = id;
     this.depth++;
     try {
       return fn();
     } finally {
       this.depth--;
+      this.lodScope = parent;
     }
   }
 
@@ -211,8 +218,9 @@ export class MeshCore {
     const l = Math.hypot(n[0], n[1], n[2]);
     if (l < 1e-9) return; // degenerate
     let g = this.groups.get(mat);
-    if (!g) this.groups.set(mat, (g = { pos: [], nrm: [], part: [] }));
+    if (!g) this.groups.set(mat, (g = { pos: [], nrm: [], part: [], scope: [] }));
     g.part.push(this.currentPart);
+    g.scope.push(this.lodScope);
     for (const p of [a, b, c]) {
       g.pos.push(p[0], p[1], p[2]);
       g.nrm.push(n[0] / l, n[1] / l, n[2] / l);
@@ -394,16 +402,20 @@ export class MeshCore {
     this.prism(mat, rect(w, d, cx, cz, ry), y0, y1, top);
   }
 
-  /** Replace only geometry; named nodes, pivots, rig and clips stay intact. */
-  lowDetail(budget: number): this {
+  /** Replace detailed geometry and motion with static, closed structural masses. */
+  lowDetail(reconstruct: (faces: LodFace[]) => LodFace[]): this {
     const faces: LodFace[] = [];
     for (const [material, g] of this.groups) {
       for (let t = 0; t < g.part.length; t++) {
         const points = [0, 1, 2].map(k => g.pos.slice(t * 9 + k * 3, t * 9 + k * 3 + 3)) as LodFace['points'];
-        faces.push({ points, material, part: g.part[t] });
+        const scope = this.lodScopes[g.scope[t]];
+        faces.push({ points, material, part: g.part[t], path: scope.path, scopeIds: scope.ids });
       }
     }
-    const reduced = simplifyLod(faces, budget);
+    const reduced = reconstruct(faces);
+    this.parts.length = 0;
+    this.clips.length = 0;
+    this.rig = null;
     this.groups.clear();
     for (const f of reduced) {
       this.currentPart = f.part;
