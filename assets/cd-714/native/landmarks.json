@@ -1,0 +1,21 @@
+{
+  "source": "janproch/vlakosimdb db/train/loco/diesel/cd_714/model (x_both 30 x 50, z_both 140 x 50, 0.1 m a pixel)",
+  "annotations": [
+    {"id": "S01", "view": "z_right", "box": [78, 12, 84.5, 19], "nodes": ["body/cab/right-side/window-1/frame"], "tolerancePixels": 1.01, "uncertainty": "Rear cab side window with its frames (columns 78-84); the frame columns 84 and 90 are shared, split between neighbours."},
+    {"id": "S02", "view": "z_right", "box": [84.5, 12, 90.5, 19], "nodes": ["body/cab/right-side/window-2/frame"], "tolerancePixels": 1.01, "uncertainty": "Middle window, over the door; it shares the frame columns 84 and 90."},
+    {"id": "S03", "view": "z_right", "box": [90.5, 12, 97, 19], "nodes": ["body/cab/right-side/window-3/frame"], "tolerancePixels": 1.01, "uncertainty": "Front cab side window."},
+    {"id": "S04", "view": "z_right", "box": [72, 8, 103, 12], "nodes": ["body/cab/roof"], "tolerancePixels": 1.01, "uncertainty": "The flared cab roof: rows 8-9 its top, rows 10-11 its dark fascia (XML cab clip 3.8..4.2 m, 7.3..10.2 m)."},
+    {"id": "S05", "view": "z_right", "box": [83, 26, 92, 28], "nodes": ["body/cab/right-side/number-plate"], "tolerancePixels": 1.01, "uncertainty": "The blue number plate on the cab side."},
+    {"id": "S06", "view": "z_right", "box": [7, 18, 132, 35], "nodes": ["body/hood/side-right"], "tolerancePixels": 1.01, "uncertainty": "The blue hood side, its red end columns excluded (XML base 0.7..13.2 m, 1.5..3.2 m)."},
+    {"id": "S07", "view": "z_right", "box": [77, 12, 98, 35], "nodes": ["body/cab/shell/side-right"], "tolerancePixels": 1.01, "uncertainty": "The red cab side under the roof (XML cab 7.7..9.8 m)."},
+    {"id": "S08", "view": "z_right", "box": [75, 6, 79, 18], "nodes": ["body/exhaust"], "tolerancePixels": 1.01, "uncertainty": "The exhaust stack beside the cab, rows 6-17 (photographs: a tall black stack)."},
+    {"id": "S09", "view": "z_right", "box": [14.5, 40, 24.5, 50], "nodes": ["underframe/bogies/rear-bogie/wheelset/sweep-2"], "tolerancePixels": 1.51, "uncertainty": "Rear wheel: centre column 19.5 from its lower rows (48-49) and the 1.0 m wheel; the published 7.60 m pivots and 2.40 m bogies, centred on the body where the native bogies sit 0.09 m toward -X."},
+    {"id": "S10", "view": "z_right", "box": [114, 40, 124, 50], "nodes": ["underframe/bogies/front-bogie/wheelset-2/sweep-2"], "tolerancePixels": 1.51, "uncertainty": "Front wheel, centre column 119; as S09."},
+    {"id": "S11", "view": "z_right", "box": [53, 39, 79, 46], "nodes": ["underframe/fuel-tank/sweep-1"], "tolerancePixels": 1.01, "uncertainty": "The fuel tank between the bogies."},
+    {"id": "F01", "view": "x_front", "box": [5, 20, 25, 29], "nodes": ["body/front-end/white-v"], "tolerancePixels": 1.01, "uncertainty": "The white V on the red hood end, rows 20-28; the native fills its lower half, photographs show the open V."},
+    {"id": "F02", "view": "x_front", "box": [6, 29, 8, 31], "nodes": ["body/front-end/lamps/right-white"], "tolerancePixels": 1.01, "uncertainty": "White lamp, a 2 x 2 px patch."},
+    {"id": "F03", "view": "x_front", "box": [6, 32, 8, 34], "nodes": ["body/front-end/lamps/right-red"], "tolerancePixels": 1.01, "uncertainty": "Red lamp under it."},
+    {"id": "F04", "view": "x_front", "box": [2, 47, 28, 49], "nodes": ["underframe/front-end/plough/sweep-2"], "tolerancePixels": 1.01, "uncertainty": "The yellow plough edge, rows 47-48."},
+    {"id": "F05", "view": "x_front", "box": [0, 35, 30, 46], "nodes": ["underframe/frame", "underframe/front-end/plough/sweep-1"], "tolerancePixels": 1.01, "uncertainty": "The grey frame and buffer beam, rows 35-45."}
+  ]
+}
