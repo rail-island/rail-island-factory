@@ -211,14 +211,19 @@ winglets and four four-wheel main bogies. British Airways has a blue belly and
 simplified Union flag tail; Lufthansa has a white fuselage and blue fin with a
 simplified white crane ring.
 
-The Beluga keeps the A300's lower fuselage and its cockpit lowered under the
-cargo floor: a short nose bullet with the windscreen at its top, and right behind
-it the cargo door's rounded forehead rising almost vertically to the bulge's
-crown, which peaks a third of the way back and slopes down over the raised tail
-cone. Its section is an inverted pear (the bulge's lobe over the A300's). It has
-the A300-600's wingtip fences, the enlarged fin and the endplate fins on the
-tailplane. The livery is white with the tail cone and fin in Airbus blue (the blue
-sweeps up and back from the keel) and "AIRBUS BELUGA" titles along the bulge on
+The Beluga's front is unlike an ordinary airliner's: the lower fuselage runs
+forward as a long, narrow bill whose chin rises gently over the last 17 m to a
+low tip (4.4 m), and the cockpit sits tucked low on top of it, below the
+fuselage's upper line. Right above the windscreen the cargo door's forehead
+slants up and back at about 50 degrees and rounds over into the bulge's crown,
+which runs level and slopes down over the raised tail cone. The Beluga's lobes
+are keyframed curves from tip to tail. Its section is an inverted pear (the
+bulge's lobe over the A300's). It has the A300-600's wingtip fences, the
+enlarged fin and the endplate fins on the tailplane. The livery is white with the
+tail cone and fin in Airbus blue. The blue starts behind a slanted plane (a
+livery's `cut`, drawn by `cutBody`, which clips every skin triangle the plane
+crosses), so its edge is one straight diagonal from the keel at x = -16 up and
+back, not a staircase of whole triangles. "AIRBUS BELUGA" titles run along the bulge on
 both sides, drawn with the stroke font (`strokeFont.ts`) and split into short
 triangles (`splitLong`) so the flat letters follow the curved skin. It has no
 passenger windows or airline selector. The other wide bodies omit operator

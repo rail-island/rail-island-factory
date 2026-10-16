@@ -141,4 +141,25 @@ describe("the wide bodies' shapes", () => {
     expect(titles.filter((tr) => tr.p[0]![2] > 0).length).toBeGreaterThan(200);
     expect(titles.filter((tr) => tr.p[0]![2] < 0).length).toBeGreaterThan(200);
   });
+
+  it("tucks the Beluga's cockpit low under a slanted forehead", () => {
+    const t = tris("proc-vehicle-airbus-beluga");
+    // 1.5 m behind the tip the cockpit roof is still low (5.5 m), 3.5 m behind it
+    // the forehead has climbed to about 8 m rather than standing as a dome
+    expect(slice(t, 26.3, 26.8).top).toBeLessThan(5.8);
+    expect(slice(t, 24.2, 24.8).top).toBeGreaterThan(7.6);
+    expect(slice(t, 24.2, 24.8).top).toBeLessThan(9.2);
+    // the bill is narrow: 3 m behind the tip it is under 4 m wide
+    expect(slice(t, 24.9, 25.4, 2, 5).width).toBeLessThan(4);
+  });
+
+  it("cuts the Beluga's blue tail along a straight diagonal, not in whole triangles", () => {
+    const t = tris("proc-vehicle-airbus-beluga");
+    const blue = t.filter((tr) => tr.color[2] > 0.05 && tr.color[0] < 0.01 && tr.p.every((p) => Math.abs(p[2]) > 0.6 && Math.abs(p[2]) < 4 && p[0] < -10));
+    expect(blue.length).toBeGreaterThan(50);
+    for (const tr of blue) for (const p of tr.p) expect(p[0]).toBeLessThanOrEqual(-16 - 0.8 * (p[1] - 2) + 1e-4);
+    // and the white skin right ahead of the cut reaches the plane
+    const white = t.filter((tr) => tr.color[0] > 0.8 && tr.p.every((p) => Math.abs(p[2]) > 0.6 && p[0] < -10));
+    expect(white.some((tr) => tr.p.some((p) => Math.abs(p[0] - (-16 - 0.8 * (p[1] - 2))) < 1e-4))).toBe(true);
+  });
 });
