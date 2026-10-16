@@ -10,6 +10,9 @@
 //                    node whose origin is its hinge with the body ahead (the first's
 //                    is the model origin). They form a hinged chain: section i
 //                    turns about its hinge, which section i - 1 carries.
+//   supports         a rail vehicle's bogies and lone wheelsets (MeshCore.bogie):
+//                    where it rides on the track. A bogie is its own node,
+//                    pivoted at its centre, which the game turns to the track.
 //   joints           the bellows between two sections, its own node. It is not
 //                    rigid: renderJoint() re-draws it between the two section nodes
 //                    wherever they are -- every vertex rides both sections, blended
@@ -75,8 +78,27 @@ export interface JointRig {
   material: string;
 }
 
+/**
+ * One point a rail vehicle rides on: a bogie's pivot (the mean of its axles), or
+ * a wheelset outside any bogie. The game puts a section on the track by its two
+ * outermost supports; a bogie node, posed on the track at its own distance and
+ * turned to it, follows. A section with fewer than two hangs on its joints.
+ */
+export interface RailSupport {
+  /** Model x of the support, metres. */
+  x: number;
+  /** The bogie's node, pivoted at (x, axle height, 0); absent for a lone wheelset. */
+  node?: string;
+  /** How many axles it has. */
+  axles: number;
+  /** The sections it carries (indices into `sections`; [0] for a rigid vehicle); two for a bogie under a joint. */
+  sections: number[];
+}
+
 /** Everything of a vehicle the game may move. */
 export interface VehicleRig {
+  /** A rail vehicle's supports, by x. */
+  supports?: RailSupport[];
   steer?: SteerRig;
   /** An articulated vehicle's bodies, front first (at least two when present). */
   sections?: SectionRig[];

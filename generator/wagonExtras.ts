@@ -8,7 +8,7 @@ const BODY:ParamSpec[]=[{name:'body',title:'Body',default:'box',values:[{value:'
 const palette={body:{color:'#934b34'},rib:{color:'#ad6044'},roof:{color:'#665b53'},cream:{color:'#dddcc7'},frame:{color:'#292a29'},ink:{color:'#e4dec8'},glass:{color:'#647a81'}};
 function chassis(c:Wagon,length:number,axles:number[],bogies=false):void {
  const m=c.m;
- m.scope('underframe',()=>{c.box('frame',.5,length-.5,.78,1.1,-1.3,1.3);for(const x of axles){if(bogies)c.freightBogie(x,1.9);else c.wheelset(c.X(x),.46);}});
+ m.scope('underframe',()=>{c.box('frame',.5,length-.5,.78,1.1,-1.3,1.3);for(const x of axles){if(bogies)c.freightBogie(x,1.9);else{c.wheelset(c.X(x),.46);m.axleAt(c.X(x),.46*Math.cos(Math.PI/24));}}});
  for(const s of [-1,1])m.scope(s>0?'front gear':'rear gear',()=>c.drawGear(s,s>0?length:0,s>0?length-.45:.45,s>0?length-.5:.5,.8,1.1,1.4,'frame'));
 }
 export function coveredWagon(given?:ParamValues):MeshBuilder {

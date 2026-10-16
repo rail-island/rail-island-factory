@@ -2743,16 +2743,18 @@
   "train-emu-tgv-tgv-at-ch1": {
     "designId": "veh-tgv",
     "params": {
+      "cars": "1",
       "livery": "atlantique",
-      "unit": "endCoach"
+      "unit": "set"
     },
     "quality": "reproduction"
   },
   "train-emu-tgv-tgv-at-ch2": {
     "designId": "veh-tgv",
     "params": {
+      "cars": "1",
       "livery": "atlantique",
-      "unit": "coach"
+      "unit": "set"
     },
     "quality": "reproduction"
   },
@@ -2767,16 +2769,18 @@
   "train-emu-tgv-tgv-vag-1": {
     "designId": "veh-tgv",
     "params": {
+      "cars": "1",
       "livery": "pse",
-      "unit": "endCoach"
+      "unit": "set"
     },
     "quality": "reproduction"
   },
   "train-emu-tgv-tgv-vag-2": {
     "designId": "veh-tgv",
     "params": {
+      "cars": "1",
       "livery": "pse",
-      "unit": "coach"
+      "unit": "set"
     },
     "quality": "reproduction"
   },
@@ -3480,7 +3484,8 @@
   "train-emu-eurostar-eurostar-car-1": {
     "designId": "veh-tgv",
     "params": {
-      "unit": "coach"
+      "cars": "1",
+      "unit": "set"
     },
     "quality": "substitute",
     "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
@@ -3488,7 +3493,8 @@
   "train-emu-eurostar-eurostar-car-2": {
     "designId": "veh-tgv",
     "params": {
-      "unit": "coach"
+      "cars": "1",
+      "unit": "set"
     },
     "quality": "substitute",
     "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
@@ -3496,7 +3502,8 @@
   "train-emu-eurostar-eurostar-car-3": {
     "designId": "veh-tgv",
     "params": {
-      "unit": "coach"
+      "cars": "1",
+      "unit": "set"
     },
     "quality": "substitute",
     "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."

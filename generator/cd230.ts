@@ -762,6 +762,10 @@ const HALF_BASE = 1.4; // 2.80 m bogie wheelbase
 const WHEEL_R = 0.625;
 const WHEEL_N = 20;
 function bogie(m: MeshBuilder, xc: number): void {
+  m.bogie(() => bogieGeometry(m, xc));
+}
+
+function bogieGeometry(m: MeshBuilder, xc: number): void {
   const ay = WHEEL_R * Math.cos(Math.PI / WHEEL_N);
   for (const dx of [-HALF_BASE, HALF_BASE])
     m.scope("wheelset", () => {

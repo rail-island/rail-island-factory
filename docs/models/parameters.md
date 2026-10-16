@@ -70,7 +70,7 @@ declaration order, the first the default unless noted.
 | `veh-db-628` | `unit`: motorCar, bn, abn, bdnrf; `livery`: mint, red | [foreign-units.md](foreign-units.md) |
 | `veh-mav-mdmot` | `unit`: motorCar, trailerAx, trailerBx, drivingTrailer | [foreign-units.md](foreign-units.md) |
 | `veh-ice-1` | `unit`: powerCar, coach, restaurant | [foreign-units.md](foreign-units.md) |
-| `veh-tgv` | `unit`: powerCar, endCoach, coach; `livery`: pse, atlantique | [foreign-units.md](foreign-units.md) |
+| `veh-tgv` | `unit`: powerCar, set; `cars`: 1 .. 6, with `unit` set only (default 1); `livery`: pse, atlantique | [foreign-units.md](foreign-units.md) |
 | `veh-cd-y-coach` | `variant`: bcc, beer, bnb, wrrm | [czsk-coaches.md](czsk-coaches.md) |
 | `veh-zsr-coach` | `variant`: a, ab, b, bh, bds, bdmeer, wrrm, apee (default b) | [czsk-coaches.md](czsk-coaches.md) |
 | `veh-uic-z-coach` | `variant`: firstClass, secondClass, restaurant (default secondClass); `operator`: cd, db, obb | [czsk-coaches.md](czsk-coaches.md) |
@@ -110,6 +110,19 @@ export function csdClassicGreenCoach(params?: ParamValues): MeshBuilder {
   return yCoach(variant === "classA" ? "A" : "B");
 }
 ```
+
+A parameter may apply to some values of an earlier one only: `when: { name,
+values }` (the TGV's `cars`, `when: { name: "unit", values: ["set"] }`). Where the
+condition fails the parameter is absent - `resolveParams` drops it (a value given
+for it is ignored), `paramCombinations` does not vary it, the site hides its
+picker and it is no part of a reference key - so the power car keeps its keys.
+
+A value a design no longer offers can be **retired** rather than dropped:
+`retired: { <value>: { <name>: <value>, ... } }` on its parameter maps it to the
+values that replace it (the TGV's `unit: coach` and `unit: endCoach` to `{ unit:
+set, cars: 1 }`). `resolveParams` reads a retired value as its replacement; it is
+in no list, combination or picker. The game resolves a saved map's old key the same
+way, without rewriting it.
 
 Names are lower camel case (`variant`), values are alphanumeric tokens
 (`classA`). Both are contract: a saved map may store them, so treat them like

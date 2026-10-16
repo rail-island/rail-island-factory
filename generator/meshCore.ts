@@ -12,7 +12,7 @@
 // its footprint, so a design need not be centred on the origin.
 
 import type { LodFace } from "./lod.ts";
-import type { VehicleRig } from "./rig.ts";
+import type { RailSupport, VehicleRig } from "./rig.ts";
 
 export type Ring = Array<[number, number]>; // (x, z) points, counter-clockwise seen from above
 
@@ -156,17 +156,33 @@ export function scaleRing(ring: Ring, s: number): Ring {
   return ring.map(([x, z]) => [cx + (x - cx) * s, cz + (z - cz) * s]);
 }
 
+/** Rounds to a millimetre (a rail support's position). */
+function round3(v: number): number {
+  return Math.round(v * 1000) / 1000;
+}
+
 export class MeshCore {
   /** Per material: positions and normals, 9 numbers a triangle, and each triangle's part (-1 for none). */
   protected readonly groups = new Map<string, { pos: number[]; nrm: number[]; part: number[]; scope: number[] }>();
-  /** The named parts in drawing order; `parent` indexes this list, -1 for a top-level part. */
-  protected readonly parts: Array<{ name: string; pivot: Vec3; parent: number }> = [];
   /**
-   * What of the model the game may move (rig.ts): its steered wheels, sections
-   * and joints. Set by the design; written into the GLB's scene extras, the JS
-   * group's userData and the meta entry. Null for a model without one.
+   * The named parts in drawing order; `parent` indexes this list, -1 for a
+   * top-level part. A `bogie` part is a rail bogie (see `bogie`): always top level.
    */
-  rig: VehicleRig | null = null;
+  protected readonly parts: Array<{ name: string; pivot: Vec3; parent: number; bogie?: boolean }> = [];
+  /** The rig the design set (see `rig`). */
+  private ownRig: VehicleRig | null = null;
+  /**
+   * A rail vehicle's wheelsets, recorded as their scopes close (see `scope` and
+   * `axleAt`): the axle's centre, the bogie it is in (an index into `railBogies`,
+   * -1 for none) and the top-level part it was drawn in (null for none).
+   */
+  private readonly railAxles: Array<{ x: number; y: number; bogie: number; owner: string | null }> = [];
+  /** A rail vehicle's bogies (see `bogie`): their part, owner part and the sections they carry. */
+  private readonly railBogies: Array<{ part: number; owner: string | null; sections?: number[] }> = [];
+  /** The bounds of each open "wheelset" scope's triangles, innermost last. */
+  private readonly wheelsetBounds: Array<{ min: Vec3; max: Vec3 }> = [];
+  /** The bogie being drawn (an index into `railBogies`), or -1. */
+  private currentBogie = -1;
   /** The model's animation clips (see `animate`). */
   protected readonly clips: AnimationClipSpec[] = [];
   /** Where the model smokes, steams or flares (see `emit`). */
@@ -191,6 +207,126 @@ export class MeshCore {
 
   constructor(protected readonly palette: Record<string, MaterialSpec>) {}
 
+  /**
+   * What of the model the game may move (rig.ts): its steered wheels, sections
+   * and joints, set by the design, and -- for a rail vehicle, one that drew
+   * wheelsets -- the supports it rides on, worked out from the wheelsets and
+   * bogies drawn (see `bogie`). Written into the GLB's scene extras, the JS
+   * group's userData and the meta entry. Null for a model without one.
+   */
+  get rig(): VehicleRig | null {
+    const supports = this.railSupports();
+    if (!supports) return this.ownRig;
+    return { ...(this.ownRig ?? {}), supports };
+  }
+
+  set rig(rig: VehicleRig | null) {
+    this.ownRig = rig;
+  }
+
+  /**
+   * Draws `fn` as one rail bogie: its own top-level node (no scope of the source
+   * tree: the builder names its own), named `bogie<n>` in drawing order and pivoted on the track centre line at its wheelsets' mean
+   * axle position, so the game can turn it under the body. Unlike `part` it may
+   * be called anywhere -- inside scopes, inside a section part -- and it takes
+   * every triangle drawn in `fn` out of the part around it. The wheelsets drawn
+   * inside (scopes named "wheelset", or `axleAt`) are its axles; it needs at
+   * least one. `sections` names the sections it carries (indices into the rig's
+   * sections): by default the one it is drawn in (0 for a rigid vehicle); a
+   * bogie under a joint carries two.
+   */
+  bogie<T>(fn: () => T, opts: { sections?: number[] } = {}): T {
+    if (this.drawing) throw new Error("bogie() inside a primitive call");
+    // a bogie builder drawn inside another's (a tram's motors round the coach bogie) is the same bogie
+    if (this.currentBogie >= 0) return fn();
+    const outer = this.currentPart;
+    const owner = outer >= 0 ? this.parts[outer]!.name : null;
+    const index = this.railBogies.length;
+    const name = `bogie${index}`;
+    this.parts.push({ name, pivot: [0, 0, 0], parent: -1, bogie: true });
+    const part = this.parts.length - 1;
+    this.railBogies.push({ part, owner, ...(opts.sections ? { sections: [...opts.sections] } : {}) });
+    this.currentPart = part;
+    this.currentBogie = index;
+    try {
+      return fn();
+    } finally {
+      this.currentPart = outer;
+      this.currentBogie = -1;
+      const axles = this.railAxles.filter((a) => a.bogie === index);
+      if (!axles.length) throw new Error(`${name}: no wheelset drawn inside`);
+      const x = axles.reduce((t, a) => t + a.x, 0) / axles.length;
+      const y = axles.reduce((t, a) => t + a.y, 0) / axles.length;
+      this.parts[part]!.pivot = [round3(x), round3(y), 0];
+    }
+  }
+
+  /**
+   * Draws `fn` turned 180 degrees about the vertical line through x = `cx`, z = 0
+   * (x mirrored about cx, z negated: a rotation, so faces stay wound outward) --
+   * the last car of a set, facing the other way.
+   */
+  turned<T>(cx: number, fn: () => T): T {
+    const outer = this.frame;
+    this.frame = ([x, y, z]) => outer([2 * cx - x, y, -z]);
+    try {
+      return fn();
+    } finally {
+      this.frame = outer;
+    }
+  }
+
+  /**
+   * Records a rail wheelset whose geometry is not drawn in a "wheelset" scope (a
+   * steam locomotive's wheelset part): its axle's centre, model coordinates.
+   */
+  axleAt(x: number, y: number): void {
+    const owner = this.currentPart >= 0 && !this.parts[this.currentPart]!.bogie ? this.parts[this.currentPart]!.name : this.ownerOfBogie();
+    this.railAxles.push({ x, y, bogie: this.currentBogie, owner });
+  }
+
+  /** The part a wheelset drawn now belongs to: the bogie's owner inside a bogie. */
+  private ownerOfBogie(): string | null {
+    if (this.currentBogie >= 0) return this.railBogies[this.currentBogie]!.owner;
+    return this.currentPart >= 0 ? this.parts[this.currentPart]!.name : null;
+  }
+
+  /**
+   * The supports a rail vehicle rides on (rig.ts RailSupport), from the wheelsets
+   * and bogies drawn: one per bogie, and per section its outermost wheelsets
+   * outside any bogie (a two-axle wagon's axles, a steam locomotive's end
+   * wheelsets). Null for a model that drew no wheelset.
+   */
+  private railSupports(): RailSupport[] | null {
+    if (!this.railAxles.length) return null;
+    const sections = this.ownRig?.sections;
+    const sectionOf = (owner: string | null): number => {
+      if (!sections) return 0;
+      const i = sections.findIndex((s) => s.node === owner);
+      if (i < 0) throw new Error(`a wheelset drawn outside any section (in ${owner ?? "no part"})`);
+      return i;
+    };
+    const out: RailSupport[] = [];
+    this.railBogies.forEach((b, i) => {
+      const axles = this.railAxles.filter((a) => a.bogie === i).length;
+      const p = this.parts[b.part]!;
+      out.push({ x: p.pivot[0], node: p.name, axles, sections: b.sections ?? [sectionOf(b.owner)] });
+    });
+    const free = new Map<number, number[]>();
+    for (const a of this.railAxles) {
+      if (a.bogie >= 0) continue;
+      const s = sectionOf(a.owner);
+      free.set(s, [...(free.get(s) ?? []), a.x]);
+    }
+    for (const [s, xs] of [...free].sort((a, b) => a[0] - b[0])) {
+      const lo = Math.min(...xs);
+      const hi = Math.max(...xs);
+      out.push({ x: round3(lo), axles: 1, sections: [s] });
+      if (hi - lo > 1e-3) out.push({ x: round3(hi), axles: 1, sections: [s] });
+    }
+    return out.sort((a, b) => a.x - b.x);
+  }
+
   /** Runs `fn` inside a named scope; a recording subclass turns the scopes into a source tree. */
   scope<T>(name: string, fn: () => T): T {
     if (this.drawing) throw new Error("scope() inside a primitive call");
@@ -199,11 +335,17 @@ export class MeshCore {
     this.lodScopes.push({ path: [...this.lodScopes[parent].path, name], ids: [...this.lodScopes[parent].ids, id] });
     this.lodScope = id;
     this.depth++;
+    const wheelset = name === "wheelset";
+    if (wheelset) this.wheelsetBounds.push({ min: [Infinity, Infinity, Infinity], max: [-Infinity, -Infinity, -Infinity] });
     try {
       return fn();
     } finally {
       this.depth--;
       this.lodScope = parent;
+      if (wheelset) {
+        const b = this.wheelsetBounds.pop()!;
+        if (b.min[0] <= b.max[0]) this.axleAt(round3((b.min[0] + b.max[0]) / 2), round3((b.min[1] + b.max[1]) / 2));
+      }
     }
   }
 
@@ -334,6 +476,21 @@ export class MeshCore {
     return out;
   }
 
+  /**
+   * The model's output nodes in order: without parts one unit holding every
+   * triangle (index -1); with parts a unit per part -- and, first, a body unit
+   * (index -1) holding the triangles outside any part when the only parts are
+   * bogies (a rigid rail vehicle's body). Throws for a triangle outside any part
+   * of a model with other parts.
+   */
+  protected outputUnits(name: string): Array<{ name: string; pivot: Vec3; index: number }> {
+    if (!this.parts.length) return [{ name, pivot: [0, 0, 0], index: -1 }];
+    const loose = [...this.groups.values()].some((g) => g.part.includes(-1));
+    if (loose && this.parts.some((p) => !p.bogie)) throw new Error("a model with parts drew a triangle outside any part");
+    const parts = this.parts.map((p, index) => ({ name: p.name, pivot: p.pivot, index }));
+    return loose ? [{ name, pivot: [0, 0, 0], index: -1 }, ...parts] : parts;
+  }
+
   /** A part's translation within its parent's node: its pivot less the parent's. */
   protected partOffset(index: number): Vec3 {
     const p = this.parts[index]!;
@@ -357,6 +514,12 @@ export class MeshCore {
     for (const p of [a, b, c]) {
       g.pos.push(p[0], p[1], p[2]);
       g.nrm.push(n[0] / l, n[1] / l, n[2] / l);
+      for (const w of this.wheelsetBounds) {
+        for (let k = 0; k < 3; k++) {
+          if (p[k]! < w.min[k]!) w.min[k] = p[k]!;
+          if (p[k]! > w.max[k]!) w.max[k] = p[k]!;
+        }
+      }
     }
   }
 
@@ -549,6 +712,8 @@ export class MeshCore {
     this.parts.length = 0;
     this.clips.length = 0;
     this.rig = null;
+    this.railAxles.length = 0;
+    this.railBogies.length = 0;
     this.groups.clear();
     for (const f of reduced) {
       this.currentPart = f.part;

@@ -70,6 +70,10 @@ export interface BogieSpec {
  * when powered. Treads on y = 0.
  */
 export function unitBogie(c: Coach, x: number, b: BogieSpec): void {
+  c.m.bogie(() => unitBogieGeometry(c, x, b));
+}
+
+function unitBogieGeometry(c: Coach, x: number, b: BogieSpec): void {
   const m = c.m;
   const ay = b.r * Math.cos(Math.PI / 24);
   const fz = b.frame ?? 1.0;

@@ -408,6 +408,10 @@ export interface BogieSpec {
 
 /** A bogie centred at xc: wheelsets, axle boxes, a cast side frame with pedestals, springs, brake cylinders. */
 export function bogie(m: MeshBuilder, xc: number, b: BogieSpec): void {
+  m.bogie(() => bogieGeometry(m, xc, b));
+}
+
+function bogieGeometry(m: MeshBuilder, xc: number, b: BogieSpec): void {
   const N = 20;
   const ay = b.wheelR * Math.cos(Math.PI / N);
   const [fz0, fz1] = b.frameZ;

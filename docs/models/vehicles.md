@@ -269,6 +269,8 @@ whose triangles are drawn by the rig's joint renderer ([buses.md](buses.md),
 then a child of the parent's node (the steered wheels inside the truck).
 
 **Animated parts.** A rigid vehicle stays one node unless something must move.
+A rail vehicle's turning bogies are such nodes (`bogie0`, ..., beside its `vehicle`
+body; [vehicle-rig.md](vehicle-rig.md#rail-supports-and-turning-bogies)).
 The steam locomotives are the exception: a static `body` part, then a part per
 wheelset, rod and valve-gear link, each pivoted at its joint and driven by an
 animation clip ([animation.md](animation.md)).
@@ -290,7 +292,7 @@ checks triangle by triangle; the model page's Trailer slider swings it.
 - Real proportions: the tests hold a vehicle under 2.7 m wide (2.6 m legal,
   plus mirrors) and 4.115 m high (13 ft 6 in), and longer than twice its width.
 - The GLB's generator string is `Rail Island procedural vehicle (<id>)`; a rigid
-  rail vehicle's one node is named `vehicle` (a steam locomotive's are `body`,
+  rail vehicle's body node is named `vehicle`, beside its `bogie<n>` nodes (a steam locomotive's are `body`,
   `wheelset-<n>` and its rods', `main-rod-right`, ...); a road vehicle's are its parts
   (`truck`, `trailer`, `body`, `section0`, `joint0`, and the steered wheels inside
   the front one).

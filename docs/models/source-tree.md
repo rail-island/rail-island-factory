@@ -73,7 +73,10 @@ LeafNode  = { id, kind, material, args, tri: [first, count], triangles, min?, ma
   triangles of that material first, then the trailer's. A part inside another
   part's node (a steered wheel inside its body, [vehicle-rig.md](vehicle-rig.md))
   is drawn right after its parent, so drawing order and depth-first node order
-  agree. Each part is also a top-level scope.
+  agree. Each part is also a top-level scope. A rail bogie's node
+  ([vehicle-rig.md](vehicle-rig.md#rail-supports-and-turning-bogies)) is drawn amid
+  its body's triangles; a leaf never straddles two nodes, so `sourceTree()` moves
+  each leaf's range as a block to where its node's triangles start.
 - `args` are the call's arguments rounded to the millimetre; a ring is recorded
   as its point count (`ring`, `lower`, `upper`).
 - `triangles`, `min`, `max` are the node's extent in metres (absent when it drew

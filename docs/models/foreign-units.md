@@ -1,6 +1,6 @@
 # Foreign multiple units
 
-**Covers** - the parametric `veh-db-628` (DB 628: the motor car and the set's three n-Wagen coaches, two liveries), `veh-mav-mdmot` (MAV MDmot, four cars), `veh-ice-1` (ICE 1, three cars) and `veh-tgv` (TGV, three cars in two liveries) from vlakosimdb: what each parameter value builds, how the cars couple (the TGV's shared Jacobs bogies), the scales from the XML to the published dimensions, the shared parts, the measured comparison and the tests.
+**Covers** - the parametric `veh-db-628` (DB 628: the motor car and the set's three n-Wagen coaches, two liveries), `veh-mav-mdmot` (MAV MDmot, four cars), `veh-ice-1` (ICE 1, three cars) and `veh-tgv` (TGV: the power car and the articulated trailer set of 1 to 6 cars, in two liveries) from vlakosimdb: what each parameter value builds, how the cars couple (the TGV set's Jacobs bogies), the scales from the XML to the published dimensions, the shared parts, the measured comparison and the tests.
 **Code** - `generator/db628.ts`, `generator/dbNWagen.ts` (the 628's coach cars), `generator/mavMdmot.ts`, `generator/ice1.ts`, `generator/tgv.ts`, `generator/unitParts.ts`, `generator/unitComparison.ts`, `generator/unitReport.ts`, `generator/unitViews.ts`, `generator/csdCoachParts.ts` (the body builder), `generator/emuParts.ts` (pantograph, centre coupler, sloped panels), `test/foreignUnits.test.ts`, `assets/db-628/`, `assets/mav-mdmot/`, `assets/ice-1/`, `assets/tgv/`
 **See also** - [czech-emus.md](czech-emus.md) (the same method for the CD 471 and CD 680), [vehicles.md](vehicles.md), [parameters.md](parameters.md), [csd-coaches.md](csd-coaches.md) (the coach builder and the comparison method), [DB 628 sources](../../assets/db-628/SOURCES.md), [MDmot sources](../../assets/mav-mdmot/SOURCES.md), [ICE 1 sources](../../assets/ice-1/SOURCES.md), [TGV sources](../../assets/tgv/SOURCES.md)
 
@@ -28,8 +28,8 @@ couple the cars of a set in any order and turn a car to face the other way.
 | | | `coach` | emu/ice/ice car | intermediate coach 802: the dark window band |
 | | | `restaurant` | emu/ice/ice restaurant | restaurant car 804: the raised roof with clerestory lights, the kitchen door |
 | `veh-tgv` "TGV" | `unit` | `powerCar` (default) | emu/tgv/tgv_loco, tgv_at_loco | power car: nose at +X, one raised pantograph |
-| | | `endCoach` | emu/tgv/tgv_vag#1, tgv_at_ch1 | end coach (R1 / R8): its own bogie and coupler at the power car (+X), the vestibule's doors, the louvred fairing |
-| | | `coach` | emu/tgv/tgv_vag#2, tgv_at_ch2 | intermediate coach: half a Jacobs bogie at each joint |
+| | | `set` | emu/tgv/tgv_vag#1, tgv_vag#2, tgv_at_ch1, tgv_at_ch2 | the articulated trailer set: end coach (R1: its own bogie and coupler at the power car, the vestibule's doors, the louvred fairing), intermediate coaches, the end coach turned; a Jacobs bogie under each joint |
+| | `cars` (with `set` only) | `1` (default) .. `6` | | the set's car count; one car is an end coach on its own bogie and coupler at both ends |
 | | `livery` | `pse` (default) | tgv_loco, tgv_vag#1, tgv_vag#2 | TGV Sud-Est: orange, white and the grey band; the machine room's vertical louvres |
 | | | `atlantique` | tgv_at_loco, tgv_at_ch1, tgv_at_ch2 | TGV Atlantique: silver and blue, the longer raised roof |
 
@@ -57,8 +57,8 @@ The archived Eurostar and Shinkansen (`train-emu-eurostar-*`,
 | ICE 1 power car | 20.56 m over couplers | about 6,400 |
 | ICE 1 coach, restaurant | 26.40 m over couplers | about 4,700 and 5,100 |
 | TGV power car (PSE, Atlantique) | 22.15 m over couplers | about 7,900 and 6,100 |
-| TGV end coach | 21.845 m, coupler to joint | about 4,500 to 4,600 |
-| TGV coach | 18.70 m, joint to joint | about 2,700 to 2,800 |
+| TGV trailer set, 1 car | 21.845 m over couplers | about 5,400 to 5,600 |
+| TGV trailer set, n cars | 2 x 21.845 m + (n - 2) x 18.70 m | about 9,000 (2 cars) to 20,300 (6 cars) |
 
 ## How the cars couple
 
@@ -71,17 +71,19 @@ The archived Eurostar and Shinkansen (`train-emu-eurostar-*`,
 - **ICE 1**: centre couplers. The power car's nose has none (its coupler hides
   behind a cover); its rear coupler face is 20.56 m behind the nose. The coaches'
   bellows and couplers reach their 26.40 m ends.
-- **TGV**: the power car's rear and the end coach's +X end meet at centre
-  couplers. Between the coaches the joints are articulated: neighbouring coaches
-  share a Jacobs bogie centred under their joint. Each coach is built with **half
-  of that bogie at each of its joints** - one wheelset 1.5 m inside the joint, its
-  axle boxes, the side frame and the bolster up to the joint plane and the air
-  spring beside it - and nothing crosses the plane. Two coaches coupled at their
-  joint planes make the whole 3.0 m bogie, centred on the joint; a coach alone
-  still stands on a wheelset at each end. The end coach has one half at its -X
-  joint and its own full bogie (the motor bogie of the PSE's R1) 3.05 m (source)
-  from its coupler. A set is power car, end coach, coaches, end coach turned,
-  power car turned.
+- **TGV**: a train is power car, trailer set, power car turned; the power cars'
+  rears and the set's ends meet at centre couplers. The trailer set (`unit: set`)
+  is one articulated vehicle: end coach, `cars - 2` intermediate coaches and the
+  end coach turned (drawn turned about its centre, `MeshCore.turned`), each car a
+  section (`section0` at +X, `articulate()` from the tram kit), bellows between
+  the cars' walls, the hinges on the joint planes. Under each joint one **Jacobs
+  bogie** - a wheelset 1.5 m either side, the side frames, the bolster and the air
+  springs, 3.0 m wheelbase on 920 mm wheels - is a turning node carrying the cars on
+  both sides; each end coach has its own full bogie (the motor bogie of the PSE's
+  R1) 3.05 m (source) from its coupler. A one-car set is an end coach with a
+  coupler, gangway and its own bogie at both ends. The old single-car values
+  `endCoach` and `coach` are gone: the game reads a stored one as a one-car set,
+  and the legacy vlakosimdb coaches map to it.
 
 ## DB 628
 
@@ -194,6 +196,8 @@ height, bogies, cab at +X and both liveries sharing one body; the running number
 check digits; the MDmot's lengths over buffers, widths, bogie spacings, buffers,
 cabs and the Bx's frosted window; the ICE's lengths, pivots, raised pantograph,
 roofs and clerestory; the TGV's lengths, widths, heights, pivots, pantograph and
-the Atlantique's longer raised roof; two coaches' Jacobs halves making one 3.0 m
-bogie on their joint; and each default car within its landmarks' tolerances once
+the Atlantique's longer raised roof; the trailer set's sections, joints and Jacobs
+bogies (each carrying its two cars, its hinge on the joint plane), the turned last
+end coach and the one-car set's bogies and couplers at both ends (a set is held to
+4,000 triangles a car, at least 16,000); and each default car within its landmarks' tolerances once
 the documented scales are undone.

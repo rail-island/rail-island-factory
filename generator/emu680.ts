@@ -212,6 +212,10 @@ export function cd680(params?: ParamValues): MeshBuilder {
  * with its secondary springs and actuators, and yaw dampers outside the frame.
  */
 function tiltingBogie(c: Coach, x: number): void {
+  c.m.bogie(() => tiltingBogieGeometry(c, x));
+}
+
+function tiltingBogieGeometry(c: Coach, x: number): void {
   const m = c.m;
   const wb = 2.7;
   const r = 0.445;

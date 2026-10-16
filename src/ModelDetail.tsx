@@ -123,7 +123,7 @@ export function ModelDetail(props: {
         <Show when={(props.record.params ?? []).length > 0}>
           <fieldset class="factory-params">
             <legend>Parameters</legend>
-            <For each={props.record.params ?? []}>
+            <For each={(props.record.params ?? []).filter((p) => values()[p.name] !== undefined)}>
               {(p) => (
                 <label class="factory-param">
                   <span>{p.title}</span>
