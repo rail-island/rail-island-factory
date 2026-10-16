@@ -59,6 +59,7 @@ import { CZ_ELECTRICS } from "./czElectrics.ts";
 import { FREIGHT_WAGONS } from "./freightWagons.ts";
 import { MAINLINE_ELECTRICS } from "./mainlineElectrics.ts";
 import { CZ_DMUS } from "./czDmus.ts";
+import { SMALL_DIESELS } from "./smallDiesels.ts";
 import { CITY_BUS_DESIGNS, KAROSA_DESIGNS } from "./buses.ts";
 import { VILLAGE_HOUSES } from "./village.ts";
 import type { ProceduralDesign } from "./design.ts";
@@ -101,6 +102,7 @@ const FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: st
   { designs: CZ_ELECTRICS, source: "czElectrics.ts", meta: "vehicles" },
   { designs: FREIGHT_WAGONS, source: "freightWagons.ts", meta: "vehicles" },
   { designs: MAINLINE_ELECTRICS, source: "mainlineElectrics.ts", meta: "vehicles" },
+  { designs: SMALL_DIESELS, source: "smallDiesels.ts", meta: "vehicles" },
   { designs: TRUCKS, source: "trucks.ts", meta: "vehicles" },
   { designs: KAROSA_DESIGNS, source: "karosa.ts", meta: "vehicles" },
   { designs: CITY_BUS_DESIGNS, source: "cityBuses.ts", meta: "vehicles" },

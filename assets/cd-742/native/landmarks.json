@@ -1,0 +1,23 @@
+{
+  "source": "janproch/vlakosimdb db/train/loco/diesel/viamont_742.507/model (x_both 30 x 50, z_dec 140 x 50, 0.1 m a pixel; the side's x flipped, the heights above 1.8 m scaled by 0.9286)",
+  "annotations": [
+    {"id": "S01", "view": "z_left", "box": [38, 9, 42, 20], "nodes": ["body/cab/left-side/window-1/frame"], "tolerancePixels": 1.01, "uncertainty": "Cab side window toward the long hood: dark blue glass in columns 38-41, black frame rows 9 and 19."},
+    {"id": "S02", "view": "z_left", "box": [30, 9, 34, 20], "nodes": ["body/cab/left-side/window-2/frame"], "tolerancePixels": 1.01, "uncertainty": "The door's window."},
+    {"id": "S03", "view": "z_left", "box": [22, 9, 26, 20], "nodes": ["body/cab/left-side/window-3/frame"], "tolerancePixels": 1.01, "uncertainty": "Cab side window toward the short hood."},
+    {"id": "S04", "view": "z_left", "box": [27, 24, 37, 27], "nodes": ["body/cab/left-side/number-plate"], "tolerancePixels": 1.01, "uncertainty": "The dark plate under the windows, rows 24-26; its digits do not resolve."},
+    {"id": "S05", "view": "z_left", "box": [20, 4, 44, 32], "nodes": ["body/cab/shell"], "tolerancePixels": 1.01, "uncertainty": "The cab (XML cab 2.0..4.4 m, deck to 4.6 m), its chamfered corners included."},
+    {"id": "S06", "view": "z_left", "box": [44, 9, 130, 17], "nodes": ["body/long-hood/side-left/band-2"], "tolerancePixels": 1.01, "uncertainty": "The black Viamont band on the long hood, rows 9-16 (3.3..4.1 m)."},
+    {"id": "S07", "view": "z_left", "box": [44, 29, 130, 32], "nodes": ["body/long-hood/side-left/band-0"], "tolerancePixels": 1.01, "uncertainty": "The low black band over the deck, rows 29-31."},
+    {"id": "S08", "view": "z_left", "box": [3, 32, 131, 38], "nodes": ["underframe/frame"], "tolerancePixels": 1.01, "uncertainty": "The yellow frame, rows 32-37 (XML base 0.3..13.1 m, 1.2..1.8 m)."},
+    {"id": "S09", "view": "z_left", "box": [54, 38, 80, 46], "nodes": ["underframe/fuel-tank/sweep-1"], "tolerancePixels": 1.01, "uncertainty": "The fuel tank between the bogies (XML under 5.4..8.0 m)."},
+    {"id": "S10", "view": "z_left", "box": [15.5, 40, 25.5, 50], "nodes": ["underframe/bogies/front-bogie/wheelset-2/sweep-2"], "tolerancePixels": 1.51, "uncertainty": "Front outer wheel: centre column 20.5 from its lower rows and the 1.0 m wheel; the published 6.70 m pivots against the native 7.0 m."},
+    {"id": "S11", "view": "z_left", "box": [108.5, 40, 118.5, 50], "nodes": ["underframe/bogies/rear-bogie/wheelset/sweep-2"], "tolerancePixels": 1.51, "uncertainty": "Rear outer wheel, centre column 113.5; as S10."},
+    {"id": "F01", "view": "x_front", "box": [13, 5, 17, 9], "nodes": ["body/front-end/top-lamp"], "tolerancePixels": 1.01, "uncertainty": "The round lamp at the top of the short hood end, its housing rows 5-8."},
+    {"id": "F02", "view": "x_front", "box": [6, 20, 7, 22], "nodes": ["body/front-end/lamps/right"], "tolerancePixels": 1.51, "uncertainty": "Upper corner lamp, a 1 x 2 px patch; a round lamp 0.2 m across."},
+    {"id": "F03", "view": "x_front", "box": [6, 28, 7, 29], "nodes": ["body/front-end/lamps/right-red"], "tolerancePixels": 1.01, "uncertainty": "Red lamp, one pixel."},
+    {"id": "F04", "view": "x_front", "box": [6, 30, 7, 31], "nodes": ["body/front-end/lamps/right-white"], "tolerancePixels": 1.01, "uncertainty": "White lamp, one pixel."},
+    {"id": "F05", "view": "x_front", "box": [11, 26, 19, 32], "nodes": ["body/front-end/grille"], "tolerancePixels": 1.01, "uncertainty": "The dark grille in the middle of the hood end, rows 26-31."},
+    {"id": "F06", "view": "x_front", "box": [5, 9, 25, 17], "nodes": ["body/short-hood/front/band-2"], "tolerancePixels": 1.01, "uncertainty": "The black band across the hood end, rows 9-16."},
+    {"id": "F07", "view": "x_front", "box": [0, 43, 30, 49], "nodes": ["underframe/front-end/plough"], "tolerancePixels": 1.01, "uncertainty": "The striped plough, rows 43-48."}
+  ]
+}

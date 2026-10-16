@@ -1,0 +1,20 @@
+{
+  "source": "janproch/vlakosimdb db/train/loco/diesel/db_212/model (x_both 30 x 50, z_both 140 x 50, 0.1 m a pixel); db_212bb and db_212nr share the geometry",
+  "annotations": [
+    {"id": "S01", "view": "z_right", "box": [59, 12, 63.5, 18], "nodes": ["body/cab/right-side/window-1/frame"], "tolerancePixels": 1.01, "uncertainty": "Cab side window: glass columns 60-62, frame columns 59 and 63 (shared with the next window, split between them)."},
+    {"id": "S02", "view": "z_right", "box": [63.5, 12, 69.5, 18], "nodes": ["body/cab/right-side/window-2/frame"], "tolerancePixels": 1.01, "uncertainty": "The door's window, glass columns 64-68."},
+    {"id": "S03", "view": "z_right", "box": [69.5, 12, 76.5, 18], "nodes": ["body/cab/right-side/window-3/frame"], "tolerancePixels": 1.01, "uncertainty": "Front cab side window, glass columns 70-75."},
+    {"id": "S04", "view": "z_right", "box": [51, 7, 85, 12], "nodes": ["body/cab/roof"], "tolerancePixels": 1.01, "uncertainty": "The overhanging cab roof, rows 7-11 (XML haus: 5.2..8.4 m at 4.3 m)."},
+    {"id": "S05", "view": "z_right", "box": [6, 20, 54.5, 21], "nodes": ["body/long-hood/side-right/band-1"], "tolerancePixels": 1.01, "uncertainty": "The cream line along the long hood, row 20 (2.9..3.0 m)."},
+    {"id": "S06", "view": "z_right", "box": [4, 35, 116, 36], "nodes": ["underframe/frame/line/facets-2"], "tolerancePixels": 1.01, "uncertainty": "The light line on the frame's top edge, row 35."},
+    {"id": "S07", "view": "z_right", "box": [6, 17, 54.5, 35], "nodes": ["body/long-hood/side-right"], "tolerancePixels": 1.01, "uncertainty": "The long hood side, deck to its 3.3 m top (XML base); it meets the cab at column 54.5."},
+    {"id": "S08", "view": "z_right", "box": [54.5, 12, 82.5, 35], "nodes": ["body/cab/shell"], "tolerancePixels": 1.01, "uncertainty": "The cab under the roof, its chamfered corners included: the texture's cab columns 54-82 (the XML haus clip draws it 2.4 m long)."},
+    {"id": "S09", "view": "z_right", "box": [13.75, 40.5, 23.25, 50], "nodes": ["underframe/bogies/rear-bogie/wheelset/sweep-2"], "tolerancePixels": 1.51, "uncertainty": "Rear outer wheel, centre column 18.5 from its lower rows and the 0.95 m wheel; the published 6.00 m pivots against the native 6.2 m."},
+    {"id": "F01", "view": "x_front", "box": [10, 21, 21, 35], "nodes": ["body/front-end/grille"], "tolerancePixels": 1.01, "uncertainty": "The radiator grille on the hood end, columns 10-20, rows 21-34."},
+    {"id": "F02", "view": "x_front", "box": [6, 29, 8, 31], "nodes": ["body/front-end/lamps/right-white"], "tolerancePixels": 1.01, "uncertainty": "White lamp, a 2 x 2 px patch."},
+    {"id": "F03", "view": "x_front", "box": [6, 32, 8, 34], "nodes": ["body/front-end/lamps/right-red"], "tolerancePixels": 1.01, "uncertainty": "Red lamp."},
+    {"id": "F04", "view": "x_front", "box": [4, 12, 13, 18], "nodes": ["body/cab/front-windows/right/frame"], "tolerancePixels": 1.01, "uncertainty": "Cab front window over the hood, frame columns 4 and 12; its lower rows (to 3.2 m) hide behind the hood top."},
+    {"id": "F05", "view": "x_front", "box": [0, 20, 30, 21], "nodes": ["body/short-hood/front/band-1", "body/cab/shell/front/band-1"], "tolerancePixels": 1.01, "uncertainty": "The cream line across the hood end and the cab front, row 20."},
+    {"id": "F06", "view": "x_front", "box": [0, 35, 30, 36], "nodes": ["underframe/frame/line/facets-4"], "tolerancePixels": 1.01, "uncertainty": "The frame's light line across the end, row 35."}
+  ]
+}

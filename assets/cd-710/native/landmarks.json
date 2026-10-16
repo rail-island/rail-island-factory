@@ -1,0 +1,21 @@
+{
+  "source": "janproch/vlakosimdb db/train/loco/diesel/cd_710.620-6/model (x_both 30 x 42, z_both 100 x 42, 0.1 m a pixel)",
+  "annotations": [
+    {"id": "S01", "view": "z_right", "box": [40, 9, 44, 15], "nodes": ["body/cab/right-side/window-1/frame"], "tolerancePixels": 1.01, "uncertainty": "Narrow rear cab window, glass columns 40-43 (41-43 in the top rows: it lies on the cab's inward lean)."},
+    {"id": "S02", "view": "z_right", "box": [46, 9, 55, 15], "nodes": ["body/cab/right-side/window-2/frame"], "tolerancePixels": 1.01, "uncertainty": "The door's tall window with its dark frame (column 46)."},
+    {"id": "S03", "view": "z_right", "box": [57, 9, 61, 15], "nodes": ["body/cab/right-side/window-3/frame"], "tolerancePixels": 1.01, "uncertainty": "Front cab window."},
+    {"id": "S04", "view": "z_right", "box": [37, 5, 63, 8], "nodes": ["body/cab/sun-roof"], "tolerancePixels": 1.01, "uncertainty": "The grey sun roof (XML umbrela, 3.8..6.3 m), rows 5-7."},
+    {"id": "S05", "view": "z_right", "box": [6, 19, 84, 23], "nodes": ["body/hood/side-right/band-1"], "tolerancePixels": 1.01, "uncertainty": "The yellow band on the hood, rows 19-22 (1.9..2.3 m)."},
+    {"id": "S06", "view": "z_right", "box": [6, 14, 84, 30], "nodes": ["body/hood/side-right"], "tolerancePixels": 1.51, "uncertainty": "The hood side (XML box 0.6..8.4 m, 1.2..2.7 m); the texture paints one row more over the arched top."},
+    {"id": "S07", "view": "z_right", "box": [4, 30, 86, 33], "nodes": ["underframe/frame"], "tolerancePixels": 1.01, "uncertainty": "The grey frame under the deck, the 8.2 m frame (XML base 0.4..8.6 m)."},
+    {"id": "S08", "view": "z_right", "box": [0, 30, 4, 33], "nodes": ["underframe/rear-end/buffers/left", "underframe/rear-end/buffers/right"], "tolerancePixels": 2.51, "uncertainty": "Rear buffer: the native buffers are 0.4 m long (9.0 m over them); the published 9.44 m puts the face 2.2 px further out."},
+    {"id": "S09", "view": "z_right", "box": [18, 33, 27, 42], "nodes": ["underframe/running-gear/wheelset/sweep-2"], "tolerancePixels": 2.51, "uncertainty": "Rear wheel outline (centre column 22); the published 2.2 + 2.0 m axle spacing against the native 2.5 + 1.95 m, the last two axles kept on the native ones."},
+    {"id": "S10", "view": "z_right", "box": [43, 33, 52, 42], "nodes": ["underframe/running-gear/wheelset-2/sweep-2"], "tolerancePixels": 2.01, "uncertainty": "Middle wheel (centre column 47); as S09."},
+    {"id": "F01", "view": "x_front", "box": [2, 9, 12, 15], "nodes": ["body/cab/front-windows/right/frame"], "tolerancePixels": 1.01, "uncertainty": "Cab front window over the hood, seen from ahead (+Z on the left)."},
+    {"id": "F02", "view": "x_front", "box": [18, 9, 28, 15], "nodes": ["body/cab/front-windows/left/frame"], "tolerancePixels": 1.01, "uncertainty": "As F01."},
+    {"id": "F03", "view": "x_front", "box": [14, 15, 16, 17], "nodes": ["body/front-end/top-lamp"], "tolerancePixels": 1.01, "uncertainty": "The top lamp on the hood end, a 2 x 2 px patch; photographs show a large round lamp."},
+    {"id": "F04", "view": "x_front", "box": [6, 27, 8, 29], "nodes": ["body/front-end/lamps/right"], "tolerancePixels": 1.01, "uncertainty": "Low lamp at the hood end's corner."},
+    {"id": "F05", "view": "x_front", "box": [0, 19, 30, 23], "nodes": ["body/hood/front/band-1", "body/cab/shell/front/band-1"], "tolerancePixels": 1.01, "uncertainty": "The yellow band across the hood end and the cab front beside it."},
+    {"id": "F06", "view": "x_front", "box": [0, 33, 30, 39], "nodes": ["underframe/front-end/buffer-beam"], "tolerancePixels": 1.01, "uncertainty": "The deep buffer beam in red and white stripes, rows 33-38."}
+  ]
+}
