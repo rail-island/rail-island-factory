@@ -18,6 +18,12 @@ Unchanged original low-resolution BMPs (`x_both.bmp` 30 x 60, `z_dec.bmp` and
 | `native/cd_371_002/` | CD 371 002, Vojtech Vohlidka | `cd371No002` | 371 002 - the model's name |
 | `native/cd_371.005/` | CD 371.005, Borek Hudak | `cd371No005` | 371 005 - the model's name |
 | `native/cd_372/` | CD 372, Borek Hudak | `cd372` | 372 011 - illustrative |
+| `native/db_180/` | DB AG 180, Vojtech Vohlidka | `db180` | 180 008 - illustrative |
+| `native/db ag_180/` | DB AG 180, Borek Hudak | `dbAg180` | 180 014 - illustrative |
+
+The DB 180 (DR 230) is the CD 372 under its German number; the two DB models
+draw the 372's body (grille banks on `z_dec`, windows on `z_inc`). Their band
+rows in column 60: 27-50 red, row 42 white (1.7-1.8 m).
 
 Measured from `cd_263` (pixel-edge boxes, x = column / 10 - 8.5 m, y = 6.0 - row / 10 m):
 

@@ -222,6 +222,35 @@ export const CD263_LIVERIES = {
     numberSource: ILLUSTRATIVE,
     livery: { ...CD163_GREEN, number: runningNumber("372", "011"), palette: { ...LIGHT_ROOF, ...red263("#c0151a") }, bands: banded("red", "yellow") },
   },
+  // The DB 180 is the DR 230 / CD 372 (Skoda 66E); vlakosimdb draws both on the 372 body.
+  db180: {
+    title: "DB 180 008, red, white line",
+    source: "db_180",
+    numberSource: ILLUSTRATIVE,
+    livery: {
+      number: runningNumber("180", "008"),
+      // rows 27-50 red (ribs #b80000 / #900000), the white line at row 42; red up to the roof
+      palette: { red: c("#a80000"), roof: { color: "#8c1010", roughness: 0.7 } },
+      bands: [[1.03, 1.7, "red"], [1.7, 1.8, "white"], [1.8, 3.7, "red"]],
+      frame: "rubber",
+      sideEmblem: false,
+      frontEmblem: false,
+    },
+  },
+  dbAg180: {
+    title: "DB AG 180 014, orient red, white line",
+    source: "db ag_180",
+    numberSource: ILLUSTRATIVE,
+    livery: {
+      number: runningNumber("180", "014"),
+      // rows 27-50 orient red (#9c1212 / #650c0c), the white line at row 42; the light grey roof
+      palette: { ...LIGHT_ROOF, red: c("#821010") },
+      bands: [[1.03, 1.7, "red"], [1.7, 1.8, "white"], [1.8, 3.7, "red"]],
+      frame: "rubber",
+      sideEmblem: false,
+      frontEmblem: false,
+    },
+  },
 } as const satisfies Record<string, FamilyLivery>;
 
 function liveryParam(liveries: Record<string, FamilyLivery>, def: string): ParamSpec[] {
