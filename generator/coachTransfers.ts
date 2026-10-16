@@ -103,11 +103,9 @@ export const COACH_TRANSFERS: readonly CoachTransfer[] = [
 ];
 
 /** Every transferred vlakosimdb vehicle with a measured comparison: the coaches, then the freight wagons (wagonTransfers.ts). */
-export const ALL_TRANSFERS: readonly CoachTransfer[] = [...COACH_TRANSFERS, ...WAGON_TRANSFERS, ...FREIGHT_TRANSFERS, ...CZSK_TRANSFERS];
+export const ALL_TRANSFERS: readonly CoachTransfer[] = [...COACH_TRANSFERS, ...WAGON_TRANSFERS, ...FREIGHT_TRANSFERS, ...CZSK_TRANSFERS, ...GERMAN_TRANSFERS];
 
 /** The builder of a transfer's design. */
 export function transferBuild(t: CoachTransfer): MeshBuilder {
-  return [...COACH_DESIGNS, ...WAGON_DESIGNS, ...FREIGHT_WAGONS, ...CZSK_COACHES].find((c) => c.id === t.id)!.build(t.params);
-export const ALL_TRANSFERS: readonly CoachTransfer[] = [...COACH_TRANSFERS, ...WAGON_TRANSFERS, ...FREIGHT_TRANSFERS, ...GERMAN_TRANSFERS];
-  return [...COACH_DESIGNS, ...WAGON_DESIGNS, ...FREIGHT_WAGONS, ...GERMAN_COACHES].find((c) => c.id === t.id)!.build(t.params);
+  return [...COACH_DESIGNS, ...WAGON_DESIGNS, ...FREIGHT_WAGONS, ...CZSK_COACHES, ...GERMAN_COACHES].find((c) => c.id === t.id)!.build(t.params);
 }
