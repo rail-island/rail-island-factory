@@ -13,6 +13,7 @@ import type { MeshBuilder } from "./meshBuilder.ts";
 import { EMU_TRANSFERS, emuBuild, emuComparison, emuNativeFile, emuTransfer, meanAbsoluteError } from "./emuComparison.ts";
 import { EMU471_DESIGNS } from "./emu471.ts";
 import { EMU680_DESIGNS } from "./emu680.ts";
+import { EMU451_DESIGNS } from "./emu451.ts";
 
 const ROOT = new URL("../", import.meta.url);
 type P3 = readonly number[];
@@ -193,12 +194,15 @@ function report(key: string): string {
   return `${t.title}: ${rows.length} boxes, baseline ${meanAbsoluteError(rows.map((r) => base(r.id))).toFixed(3)} pp, final ${meanAbsoluteError(rows).toFixed(3)} pp`;
 }
 
-const args = process.argv.slice(2);
-if (args[0] === "--views") {
-  const [, id, out, ...kv] = args;
-  const d = [...EMU471_DESIGNS, ...EMU680_DESIGNS].find((x) => x.id === id)!;
-  const params = Object.fromEntries(kv.map((s) => s.split("=") as [string, string]));
-  writeViews(d.build(params), id!, new URL(out!.endsWith("/") ? out! : out! + "/", `file://${process.cwd()}/`));
-} else {
-  for (const t of EMU_TRANSFERS) if (!args.length || args.includes(t.key)) console.log(report(t.key));
+// run only as a script, so the views can be imported
+if (process.argv[1]?.endsWith("emuReport.ts")) {
+  const args = process.argv.slice(2);
+  if (args[0] === "--views") {
+    const [, id, out, ...kv] = args;
+    const d = [...EMU471_DESIGNS, ...EMU680_DESIGNS, ...EMU451_DESIGNS].find((x) => x.id === id)!;
+    const params = Object.fromEntries(kv.map((s) => s.split("=") as [string, string]));
+    writeViews(d.build(params), id!, new URL(out!.endsWith("/") ? out! : out! + "/", `file://${process.cwd()}/`));
+  } else {
+    for (const t of EMU_TRANSFERS) if (!args.length || args.includes(t.key)) console.log(report(t.key));
+  }
 }
