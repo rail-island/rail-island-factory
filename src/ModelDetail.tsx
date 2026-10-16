@@ -54,6 +54,8 @@ export function ModelDetail(props: {
   params: Record<string, string>;
   onParams: (params: Record<string, string>) => void;
 }) {
+  const [lod, setLod] = createSignal(false);
+  const [triangles, setTriangles] = createSignal<number>();
   const values = createMemo(() => effectiveParams(props.record, props.params));
   const atDefaults = createMemo(() => isDefaultParams(props.record, values()));
   const choose = (name: string, value: string) => props.onParams(nonDefaultParams(props.record, { ...values(), [name]: value }));
@@ -93,8 +95,10 @@ export function ModelDetail(props: {
         <Suspense fallback={<div class="factory-viewer factory-viewer--pending" />}>
           <ModelViewer
             record={props.record}
+            lod={lod()}
+            onTriangles={setTriangles}
             params={values()}
-            tree={props.tab === "source" && atDefaults() ? index() : null}
+            tree={props.tab === "source" && atDefaults() && !lod() ? index() : null}
             selected={props.node}
             onPick={props.onNode}
             pose={posed()}
@@ -111,6 +115,11 @@ export function ModelDetail(props: {
             &rarr;
           </button>
         </div>
+        <label class="factory-param">
+          <span>Low level of detail</span>
+          <input type="checkbox" checked={lod()} onChange={(e) => setLod(e.currentTarget.checked)} />
+        </label>
+        <p class="factory-muted" aria-live="polite">Preview: {triangles() ?? "..."} triangles{lod() ? " (LOD)" : " (full detail)"}</p>
         <Show when={(props.record.params ?? []).length > 0}>
           <fieldset class="factory-params">
             <legend>Parameters</legend>
@@ -129,7 +138,7 @@ export function ModelDetail(props: {
             </Show>
           </fieldset>
         </Show>
-        <Show when={controls().length > 0}>
+        <Show when={controls().length > 0 && !lod()}>
           <fieldset class="factory-params factory-pose">
             <legend>Pose</legend>
             <For each={controls()}>
@@ -218,8 +227,8 @@ export function ModelDetail(props: {
           <Match when={index()}>
             {(ix) => (
               <>
-                <Show when={!atDefaults()}>
-                  <p class="factory-muted">The source tree is the default build's; highlight and picking return with the default parameters.</p>
+                <Show when={!atDefaults() || lod()}>
+                  <p class="factory-muted">The source tree is the default build's; highlight and picking return with the default parameters and full detail.</p>
                 </Show>
                 <SourceTreePanel index={ix()} selected={props.node} onSelect={props.onNode} />
               </>

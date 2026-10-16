@@ -122,6 +122,29 @@ export function eiffelTower(given?:ParamValues):MeshBuilder{
   });return m;
 }
 
+/** Distant silhouette: four solid tapered piers, decks and a continuous crown. */
+export function eiffelTowerLod(given?: ParamValues): MeshBuilder {
+  resolveParams([], given);
+  const m = model();
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    m.box('stone', sx * 52, sz * 52, 21, 21, 0, 5);
+    const stages = [[5, 52, 8.5], [28, 42, 7], [57, 29, 5], [115, 16, 3.4]];
+    for (let k = 0; k < stages.length - 1; k++) {
+      const [y0, c0, r0] = stages[k], [y1, c1, r1] = stages[k + 1];
+      m.loft('iron', rect(r0 * 2, r0 * 2, sx * c0, sz * c0), y0,
+        rect(r1 * 2, r1 * 2, sx * c1, sz * c1), y1);
+    }
+  }
+  for (const [y, w] of [[57, 72], [115, 42], [276, 13]]) band(m, 'iron', w, y, 3);
+  m.loft('iron', rect(32, 32), 118, rect(15, 15), 190);
+  m.loft('iron', rect(15, 15), 190, rect(7.6, 7.6), 276);
+  band(m, 'dark', 8.8, 279, 5);
+  m.loft('iron', rect(9, 9), 284, rect(3.8, 3.8), 296);
+  m.prism('iron', ngon(4, 1.5), 296, 314);
+  m.prism('steel', ngon(4, .6), 314, 330);
+  return m;
+}
+
 export function bellTower(given?:ParamValues):MeshBuilder{
   const p=resolveParams(BELL,given),n=+p.storeys!,m=model(p.roof),h=n*4.8;
   m.scope('Stone and timber storeys',()=>{
@@ -282,7 +305,7 @@ const entry=(id:string,title:string,build:ProceduralDesign['build'],_height:numb
 export const TOWERS:readonly ProceduralDesign[]=[
   entry('tower-bell','Bell Tower',bellTower,24.584785,34.18117,BELL),
   entry('tower-bigben','Big Ben',bigBen,96,81.52325,CLOCK,'Daqian Dong'),
-  entry('tower-eiffel','Eiffel Tower',eiffelTower,330,183.02439,undefined,'Scott Marshall'),
+  { ...entry('tower-eiffel','Eiffel Tower',eiffelTower,330,183.02439,undefined,'Scott Marshall'), buildLod: eiffelTowerLod },
   entry('tower-radio','Radio Tower',radioTower,37,51.99029,RADIO,'Poly by Google'),
   entry('tower-stone','Stone Tower',stoneTower,21.6,41.66234,FORT),
   entry('tower-kenney','Stone Turret',stoneTurret,13.5,34.6981,TURRET),

@@ -444,8 +444,8 @@ export function posePreview<T>(
 }
 
 /** Which model and parameter values a preview was built for, as one comparable string. */
-export function previewKey(id: string, params: Record<string, string>): string {
-  return `${id}?${JSON.stringify(Object.keys(params).sort().map((k) => [k, params[k]]))}`;
+export function previewKey(id: string, params: Record<string, string>, lod = false): string {
+  return `${id}?${JSON.stringify(Object.keys(params).sort().map((k) => [k, params[k]]))}${lod ? "&lod=true" : ""}`;
 }
 
 /**

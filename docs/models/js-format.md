@@ -80,5 +80,13 @@ trusts the factory's build.
 
 `test/jsModel.test.ts` loads each design's bundle, builds it with the real three.js and compares every triangle
 (world space, per material), the colours and the part nodes with the design's GLB; checks the file has no import
-and no Node API, is smaller than the GLB, is deterministic, and that the recorder and GLB writer are absent; and
+and no Node API, is smaller than the equivalent full-detail and LOD GLBs together, is deterministic, and that the recorder and GLB writer are absent; and
 that `generateJsModels` writes, skips and prunes.
+
+## Low level of detail
+
+Every standalone JS model accepts `build(THREE, params, lod = false)`. Set the third
+argument to `true` for its budgeted distant mesh. The factory detail view exposes
+this through **Low level of detail** and reports the preview triangle count.
+LOD rig posing is static; full-detail GLBs and source trees are unchanged.
+See [lod.md](lod.md) for budgets, geometry and verification.

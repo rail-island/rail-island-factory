@@ -40,7 +40,7 @@ import { applyHighlight, makeParts, type Part } from "./viewerHighlight";
 
 const loader = new GLTFLoader();
 
-type JsBuild = (three: object, params?: Record<string, string>) => Object3D;
+type JsBuild = (three: object, params?: Record<string, string>, lod?: boolean) => Object3D;
 /** A model's JS module: build(), and for a rigged model pose() (generator/rig.ts). */
 interface JsModule {
   default: JsBuild;
@@ -74,12 +74,12 @@ function jsModule(url: string): Promise<JsModule> {
  * The model as the page should show it: the GLB at the defaults, else a JS build
  * of the chosen values; with its animation clips (none for most models).
  */
-async function loadModel(record: CatalogRecord, params: Record<string, string>): Promise<{ object: Object3D; clips: AnimationClip[] }> {
-  if (isDefaultParams(record, params)) {
+async function loadModel(record: CatalogRecord, params: Record<string, string>, lod = false): Promise<{ object: Object3D; clips: AnimationClip[] }> {
+  if (!lod && isDefaultParams(record, params)) {
     const gltf = await loader.loadAsync(`/${record.glbUrl}`);
     return { object: gltf.scene as Object3D, clips: gltf.animations };
   }
-  const object = (await jsModule(`/${record.jsUrl}`)).default(THREE_SUBSET, params);
+  const object = (await jsModule(`/${record.jsUrl}`)).default(THREE_SUBSET, params, lod);
   return { object, clips: object.animations };
 }
 
@@ -98,6 +98,8 @@ const CLICK_SLOP = 5;
 
 export function ModelViewer(props: {
   record: CatalogRecord;
+  lod?: boolean;
+  onTriangles?: (count: number) => void;
   /** A parametric model's chosen values (effectiveParams); {} for the defaults. */
   params?: Record<string, string>;
   /** The model's source tree, when the page shows it; null turns highlight and picking off. */
@@ -267,11 +269,12 @@ export function ModelViewer(props: {
   createEffect(() => {
     const record = props.record;
     const params = { ...(props.params ?? {}) };
-    const key = previewKey(record.id, params);
+    const lod = props.lod ?? false;
+    const key = previewKey(record.id, params, lod);
     const mine = ++token;
     setBusy(true);
     setFailed(false);
-    loadModel(record, params).then(
+    loadModel(record, params, lod).then(
       ({ object: group, clips: loadedClips }) => {
         if (mine !== token || !scene || !camera || !controls) {
           disposeModel(group);
@@ -285,6 +288,11 @@ export function ModelViewer(props: {
           disposeParts();
           disposeModel(current);
         }
+        let triangles = 0;
+        group.traverse((o) => {
+          if (o instanceof Mesh) triangles += (o.geometry.index?.count ?? o.geometry.getAttribute("position").count) / 3;
+        });
+        props.onTriangles?.(triangles);
         current = group;
         currentKey = key;
         setClips(loadedClips);
@@ -333,9 +341,9 @@ export function ModelViewer(props: {
     loaded();
     const pose = props.pose;
     const record = props.record;
-    const key = previewKey(record.id, props.params ?? {});
+    const key = previewKey(record.id, props.params ?? {}, props.lod);
     const target = current;
-    if (!pose || !record.rig || !target || currentKey !== key) return;
+    if (props.lod || !pose || !record.rig || !target || currentKey !== key) return;
     // a model that was never moved is at rest already: no need to fetch the module
     if (posedTarget !== target && pose.steer === 0 && pose.bend.every((b) => b === 0)) return;
     posedTarget = target;

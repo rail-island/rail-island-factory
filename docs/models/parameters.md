@@ -169,3 +169,11 @@ defaults; `test/csdCoaches.test.ts` the classic coach's two window layouts and
 its measured comparison per variant.
 
 The former Nas tram load and Pao Karosa bus load are intentionally omitted. Legacy IDs map to their corresponding empty wagon with scale multiplier 1.
+
+## Low level of detail
+
+Every standalone JS model accepts `build(THREE, params, lod = false)`. Set the third
+argument to `true` for its budgeted distant mesh. The factory detail view exposes
+this through **Low level of detail** and reports the preview triangle count.
+LOD rig posing is static; full-detail GLBs and source trees are unchanged.
+See [lod.md](lod.md) for budgets, geometry and verification.

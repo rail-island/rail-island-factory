@@ -166,3 +166,11 @@ closing a model push a history entry and reset the tab and node; typing,
 sorting, stepping (which drops the node), switching tabs and selecting replace
 the current one, so Back does not replay keystrokes. An unknown `?model=` shows
 "No model" with a link back.
+
+## Low level of detail
+
+Every standalone JS model accepts `build(THREE, params, lod = false)`. Set the third
+argument to `true` for its budgeted distant mesh. The factory detail view exposes
+this through **Low level of detail** and reports the preview triangle count.
+LOD rig posing is static; full-detail GLBs and source trees are unchanged.
+See [../models/lod.md](../models/lod.md) for budgets, geometry and verification.

@@ -106,3 +106,11 @@ names in older tables identify the original models. See [legacy-mapping.md](lega
 for the authoritative ID, scale and runtime conversion contract. Ground vehicles
 have no exported `defaultScale`; buildings, aircraft and ships use 1 except the
 Eiffel Tower placement exception.
+
+## Low level of detail
+
+Every standalone JS model accepts `build(THREE, params, lod = false)`. Set the third
+argument to `true` for its budgeted distant mesh. The factory detail view exposes
+this through **Low level of detail** and reports the preview triangle count.
+LOD rig posing is static; full-detail GLBs and source trees are unchanged.
+See [lod.md](lod.md) for budgets, geometry and verification.

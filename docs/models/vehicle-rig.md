@@ -187,3 +187,11 @@ triangle against triangle (`test/collision.ts`); the site poses a non-default
 variant with its own rig, and its sliders, preview key and arrow keys.
 `test/jsModel.test.ts` checks the JS group's node nesting and `userData.rig` against
 the GLB's nodes and scene extras; `test/export.test.ts` the meta entries' `rig`.
+
+## Low level of detail
+
+Every standalone JS model accepts `build(THREE, params, lod = false)`. Set the third
+argument to `true` for its budgeted distant mesh. The factory detail view exposes
+this through **Low level of detail** and reports the preview triangle count.
+LOD rig posing is static; full-detail GLBs and source trees are unchanged.
+See [lod.md](lod.md) for budgets, geometry and verification.

@@ -8,6 +8,7 @@ import * as THREE from "three";
 import { DESIGNS, designGlb, designSource, generateJsModels } from "../generator/generate";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles";
 import { readAccessor } from "../generator/glbParse";
+import { lodBudget } from "../generator/lod";
 import { bundleDesign, gzipSize } from "../generator/jsModel";
 import { SKYSCRAPERS } from "../generator/skyscrapers";
 import fs from "node:fs";
@@ -118,13 +119,17 @@ describe("standalone JS models", () => {
       });
     });
 
-    it(`${id}: the file is standalone and smaller than the GLB`, async () => {
+    it(`${id}: the file is standalone and smaller than equivalent full and LOD GLBs`, async () => {
       const text = await jsOf(id);
       const code = text.replace(/^\/\/.*\n/, ""); // the banner comment
       expect(code).not.toMatch(/\bimport\s*[\w{*"'(]/);
       expect(code).not.toMatch(/["'`]node:|require\(/); // a rig's { node: "..." } keys are data
       expect(text).toMatch(/export\s*\{[^}]*\bas default\b/);
-      expect(Buffer.byteLength(text)).toBeLessThan(designGlb(proceduralId(id)).length);
+      // One JS module now supplies two resolutions. Compare its size with
+      // the equivalent pair of binary assets, including small fixed designs.
+      const design = DESIGNS.get(id)!;
+      const low = (design.buildLod?.() ?? design.build()).lowDetail(lodBudget(design)).toGlb(id);
+      expect(Buffer.byteLength(text)).toBeLessThan(designGlb(proceduralId(id)).length + low.length);
     });
   }
 
