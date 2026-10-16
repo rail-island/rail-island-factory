@@ -42,5 +42,8 @@ export default defineConfig({
     environment: "node",
     include: ["test/**/*.test.ts"],
     setupFiles: ["test/setup.ts"],
+    // Many tests loop over every design, which grows with the catalog; 5 s is too
+    // tight for a full parallel run on a small machine.
+    testTimeout: 120_000,
   },
 });

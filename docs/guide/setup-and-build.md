@@ -42,7 +42,9 @@ design is not re-rendered at all (see [../models/export.md](../models/export.md)
 
 ## Tests
 
-`pnpm test` runs every suite under `test/`, among them:
+`pnpm test` runs every suite under `test/` with a 120 s default test timeout
+(`vite.config.ts`): many tests build every design, and the catalog keeps growing.
+Among them:
 
 - `test/models.test.ts` - the mesh builder winds faces outward (three.js culls
   back faces, so an inward wall is invisible in the game and the viewer), sweeps
