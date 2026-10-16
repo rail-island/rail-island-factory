@@ -12,6 +12,7 @@ how to add one.
 
 | id | title | look |
 |---|---|---|
+| `proc-vehicle-tatra-815-tipper`, `proc-vehicle-praga-rv`, `proc-vehicle-mercedes-atego-1224` | Tatra 815 Tipper, Praga RV, Mercedes-Benz Atego 1224 | three photo-based rigid trucks with steered front wheels; see [trucks.md](trucks.md#photo-based-rigid-trucks) |
 | `veh-american-truck` | American Truck | articulated: a long-nose conventional tractor (chrome grille, sleeper, twin stacks, tandem drive axle) and a 53 ft dry van; steered front wheels; 22.2 m, about 4,900 triangles |
 | `veh-karosa-short`, `veh-karosa-long`, ... | the buses | the vlakosimdb buses: two parametric Karosa families (rigid and articulated) and the single models; see [buses.md](buses.md) |
 | `veh-cd-150` | CD 150 / 151 / ZSR 350 | parametric (`livery`: cd150, the default, and the CD 151, 151 CEZ and five ZSR 350 liveries, [loco-liveries.md](loco-liveries.md)): rigid cream/green electric locomotive 150 222-8 reconstructed from native vlakosimdb XML/BMPs: tapered sloping cabs, a green skirt lowered between the bogies, opposite grille/window sides, asymmetric cooler and two linked-arm pantographs (rear raised, front folded, knees toward the cab ends), bogies with spoked wheels, axle boxes on equalisers with paired primary coils, a side frame dropped between the axles over large secondary coils, traction motors, brake cylinders and sandboxes; 16.80 m over buffers, 6.24 m operating height, about 12,600 triangles. [Source notes](../../assets/cd-150/SOURCES.md), [measured comparison](../../assets/cd-150/COMPARISON.md) |

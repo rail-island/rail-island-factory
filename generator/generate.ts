@@ -65,6 +65,7 @@ import { TGV_DESIGNS } from "./tgv.ts";
 import { CABLE_CABINS } from "./cableCabins.ts";
 import { DIESEL_LOCOS } from "./dieselLocos.ts";
 import { TRUCKS } from "./trucks.ts";
+import { PHOTO_TRUCKS } from "./photoTrucks.ts";
 import { TRAM_DESIGNS } from "./trams.ts";
 import { METRO_DESIGNS } from "./metro.ts";
 import { CZSK_COACHES } from "./czskCoaches.ts";
@@ -130,6 +131,7 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: MAINLINE_ELECTRICS, source: "mainlineElectrics.ts", meta: "vehicles" },
   { designs: SMALL_DIESELS, source: "smallDiesels.ts", meta: "vehicles" },
   { designs: TRUCKS, source: "trucks.ts", meta: "vehicles" },
+  { designs: PHOTO_TRUCKS, source: "photoTrucks.ts", meta: "vehicles" },
   { designs: KAROSA_DESIGNS, source: "karosa.ts", meta: "vehicles" },
   { designs: CITY_BUS_DESIGNS, source: "cityBuses.ts", meta: "vehicles" },
   { designs: AIRCRAFT, source: "aircraft.ts", meta: "vehicles" },
