@@ -6,7 +6,7 @@
 
 ## The designs
 
-All four are rigid Bo'Bo' rail vehicles in `RAIL_CATALOG` (group `loco`),
+All four are rigid Bo'Bo' rail vehicles in `ELECTRIC_LOCO_CATALOG` (group `loco`, traction `electric`),
 registered as one family in `generate.ts` (`czElectrics.ts`, which also exports
 their build functions for the JS models).
 

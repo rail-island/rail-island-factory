@@ -40,6 +40,22 @@ describe("queryRows", () => {
     expect(queryRows(ROWS, "nothing", "title", "asc")).toEqual([]);
   });
 
+  it("finds a parametric model by the title or token of one of its variants", () => {
+    const rows = prepareRows([
+      rec("proc-vehicle-cd-750", "CD 749 / 750 / 753 / 754", 9000, {
+        category: "Rail vehicles", group: "loco", traction: "diesel",
+        params: [{ name: "livery", title: "Livery", default: "cd750", values: [
+          { value: "cd750", title: "CD 750, blue" },
+          { value: "cd749", title: "CD 749 (Bardotka), red and grey" },
+        ] }],
+      }),
+      ...ROWS,
+    ]);
+    expect(queryRows(rows, "bardotka", "title", "asc").map((r) => r.id)).toEqual(["proc-vehicle-cd-750"]);
+    expect(queryRows(rows, "cd749", "title", "asc").map((r) => r.id)).toEqual(["proc-vehicle-cd-750"]);
+    expect(queryRows(rows, "diesel", "title", "asc").map((r) => r.id)).toEqual(["proc-vehicle-cd-750"]);
+  });
+
   it("breaks ties on the title, so the order is total", () => {
     const tied = prepareRows([rec("b", "Beta", 5), rec("a", "Alpha", 5)]);
     expect(compareRows(tied[0]!, tied[1]!, column("triangles")!, "desc")).toBeGreaterThan(0);
@@ -63,34 +79,63 @@ describe("the filter chips", () => {
   const MIXED = prepareRows([
     ...ROWS,
     rec("proc-vehicle-american-truck", "American Truck", 9000, { category: "Road vehicles", group: "truck" }),
-    rec("proc-vehicle-cd-150", "CD 150", 8000, { category: "Rail vehicles", group: "loco" }),
-    rec("proc-vehicle-cd-163", "CD 163", 8100, { category: "Rail vehicles", group: "loco" }),
+    rec("proc-vehicle-cd-150", "CD 150", 8000, { category: "Rail vehicles", group: "loco", traction: "electric" }),
+    rec("proc-vehicle-cd-163", "CD 163", 8100, { category: "Rail vehicles", group: "loco", traction: "electric" }),
     rec("veh-bmo", "Bmo", 7000, { category: "Rail vehicles", group: "coach" }),
     rec("sky-village", "Village Tower", 500, { category: "Village", group: "village" }),
+    rec("sky-village-red", "Red Village House", 400, { category: "Village", group: "village_red" }),
   ]);
   const ids = (path: Partial<typeof NO_CHIPS>) => queryRows(MIXED, "", "title", "asc", { ...NO_CHIPS, ...path }).map((r) => r.id);
 
   it("files vehicles under their fleet and everything else under Buildings", () => {
-    expect(MIXED.map(groupOf)).toEqual(["building", "building", "building", "moto", "train", "train", "train", "building"]);
+    expect(MIXED.map(groupOf)).toEqual(["building", "building", "building", "moto", "train", "train", "train", "building", "building"]);
+  });
+
+  it("files a cable car cabin under Cable cars, not Buildings (its category is the singular 'Cable car')", () => {
+    expect(groupOf(rec("proc-vehicle-gondola-cabin", "Small Gondola", 900, { category: "Cable car", group: "cabin" }))).toBe("cablecar");
+    expect(groupOf(rec("proc-vehicle-cabin-classic", "Classic Cabin", 900, { category: "Cable car", group: "cablecar" }))).toBe("cablecar");
+  });
+
+  it("files a tram under Trams, though its category is Rail vehicles", () => {
+    expect(groupOf(rec("proc-vehicle-tatra-t3", "Tatra T3", 9000, { category: "Rail vehicles", group: "tram" }))).toBe("tram");
   });
 
   it("offers only the fleets that have models, in the Creator's order, and no lower row without a pick", () => {
     expect(chipRows(MIXED, NO_CHIPS)).toEqual({ groups: ["train", "moto", "building"], l2: [], l3: [] });
   });
 
-  it("splits a fleet by its group, and a building by category, then city pool", () => {
+  it("splits a fleet by its group and a building by category, with no city-pool row", () => {
     expect(chipRows(MIXED, { ...NO_CHIPS, group: "train" })).toEqual({ groups: ["train", "moto", "building"], l2: ["coach", "loco"], l3: [] });
     expect(chipRows(MIXED, { ...NO_CHIPS, group: "building" }).l2).toEqual(["Commercial", "Village"]);
-    // one city pool under Commercial is no choice, so no third row
-    expect(chipRows(MIXED, { group: "building", l2: "Commercial", l3: null }).l3).toEqual([]);
+    // two city pools under Village are still no third row
+    expect(chipRows(MIXED, { group: "building", l2: "Village", l3: null }).l3).toEqual([]);
     // a fleet of one type has no second row
     expect(chipRows(MIXED, { ...NO_CHIPS, group: "moto" }).l2).toEqual([]);
+  });
+
+  it("splits locomotives and units by traction, and keeps units apart from locomotives", () => {
+    const fleet = prepareRows([
+      rec("loco-e", "CD 150", 1, { category: "Rail vehicles", group: "loco", traction: "electric" }),
+      rec("loco-d", "CD 750", 1, { category: "Rail vehicles", group: "loco", traction: "diesel" }),
+      rec("loco-s", "CSD 433.0", 1, { category: "Rail vehicles", group: "loco", traction: "steam" }),
+      rec("unit-e", "CD 471 CityElefant", 1, { category: "Rail vehicles", group: "unit", traction: "electric" }),
+      rec("unit-d", "CD 810", 1, { category: "Rail vehicles", group: "unit", traction: "diesel" }),
+      rec("coach", "Bmo", 1, { category: "Rail vehicles", group: "coach" }),
+    ]);
+    expect(chipRows(fleet, { ...NO_CHIPS, group: "train" }).l2).toEqual(["coach", "loco", "unit"]);
+    expect(chipRows(fleet, { group: "train", l2: "loco", l3: null }).l3).toEqual(["diesel", "electric", "steam"]);
+    expect(chipRows(fleet, { group: "train", l2: "unit", l3: null }).l3).toEqual(["diesel", "electric"]);
+    expect(chipRows(fleet, { group: "train", l2: "coach", l3: null }).l3).toEqual([]);
+    const pick = (l2: string, l3: string) => queryRows(fleet, "", "title", "asc", { group: "train", l2, l3 }).map((r) => r.id);
+    expect(pick("loco", "steam")).toEqual(["loco-s"]);
+    expect(pick("unit", "electric")).toEqual(["unit-e"]);
+    expect(chipLabel("unit")).toBe("Unit");
   });
 
   it("filters the listing by the picked chips", () => {
     expect(ids({ group: "train" })).toEqual(["veh-bmo", "proc-vehicle-cd-150", "proc-vehicle-cd-163"]);
     expect(ids({ group: "train", l2: "loco" })).toEqual(["proc-vehicle-cd-150", "proc-vehicle-cd-163"]);
-    expect(ids({ group: "building", l2: "Village" })).toEqual(["sky-village"]);
+    expect(ids({ group: "building", l2: "Village" })).toEqual(["sky-village-red", "sky-village"]);
     expect(ids({ group: "ship" })).toEqual([]);
   });
 

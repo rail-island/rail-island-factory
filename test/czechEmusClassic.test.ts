@@ -47,7 +47,7 @@ const DESIGNS = [...EMU451_DESIGNS, ...EMU460_DESIGNS, ...EMU470_DESIGNS];
 describe("the older Czech electric units", () => {
   it("are three parametric rail designs with their reference folders", () => {
     expect(DESIGNS.map((d) => d.id)).toEqual(["proc-vehicle-cd-451", "proc-vehicle-cd-460", "proc-vehicle-cd-470"]);
-    for (const d of DESIGNS) expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "loco" });
+    for (const d of DESIGNS) expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "unit", traction: "electric" });
     expect(DESIGNS.map((d) => d.references)).toEqual(["cd-451", "cd-460", "cd-470"]);
     expect(CD451_PARAMS.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([["unit", "motorCar", ["motorCar", "trailer"]]]);
     expect(CD460_PARAMS.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([

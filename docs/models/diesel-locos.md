@@ -14,8 +14,8 @@
 | `veh-csd-t499` | CSD T 499.0 / CD 759 Kyklop | fixed (`csd_t499`) | 17.84 m | 9,700 |
 | `veh-cd-771` | CD 770 / 771 Cmelak | `cd771No235` (default, `cd_771.235`), `cd771` (`cd 771`), `cd771No421` (`cd_771.421`) | 17.25 m | 9,100 .. 9,300 |
 
-All are rigid rail vehicles (one node, no parts), `RAIL_CATALOG` (`Rail
-vehicles`, group `loco`), standard gauge, wheel contact at y = 0, within the
+All are rigid rail vehicles (one node, no parts), `DIESEL_LOCO_CATALOG` (`Rail
+vehicles`, group `loco`, traction `diesel`), standard gauge, wheel contact at y = 0, within the
 3.1 m by 4.7 m envelope. Diesel locomotives have no pantographs; each has its
 exhaust, horns, roof fans or hatches, bogies with springs, brake cylinders and
 traction motors, a fuel tank and air reservoirs. `DIESEL_LOCOS` is registered as

@@ -10,6 +10,9 @@
 
 import type { MeshBuilder } from "./meshBuilder.ts";
 
+/** What drives a powered rail vehicle. */
+export type Traction = "electric" | "diesel" | "steam";
+
 /** One value of an enum parameter. */
 export interface ParamValue {
   /** The stable token, e.g. "classA": what a caller passes and a saved map would store. */
@@ -111,6 +114,8 @@ export interface CatalogFields {
   yaw?: number;
   category: string;
   group: string;
+  /** A powered rail vehicle's traction (a locomotive's, a unit's); absent for anything else. */
+  traction?: Traction;
   defaultScale: number;
   license: string;
   author: string;

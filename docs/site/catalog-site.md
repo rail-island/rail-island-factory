@@ -63,10 +63,13 @@ Creator's, without its origin row (Common / Mine / Community / Archive): the
 factory has one origin. The first row is All plus one chip per fleet - Trains,
 Road vehicles, Trams, Ships, Aircraft, Cable cars, Buildings - offered only when
 it has models. A record's category picks its fleet (`Rail vehicles` is Trains,
-`Road vehicles` is Road vehicles, any category that is not a vehicle one is a
-building's). Under a pick, a second row splits it by the vehicle's `group`
-(Locomotive, Coach, Truck, ...) or the building's category, and a third splits a
-building category by city pool. A lower row appears only when it offers a choice,
+except a `tram` group, which is Trams; `Road vehicles` is Road vehicles; `Cable
+car` is Cable cars; any category that is not a vehicle one is a building's).
+Under a pick, a second row splits it by the vehicle's `group` (Locomotive, Unit,
+Coach, Wagon, Metro, Bus, Truck) or the building's category; Ships, Aircraft,
+Cable cars and Trams have no second row. A third row splits a Locomotive or a
+Unit by its `traction` (Electric, Diesel, Steam); buildings have no city-pool
+row. A lower row appears only when it offers a choice,
 leads with its own All, and is cleared when the row above changes; picking the
 picked chip clears it. The chips are derived from every model, not the searched
 ones, so they hold still while somebody types; a picked chip that matches nothing
@@ -74,7 +77,9 @@ ones, so they hold still while somebody types; a picked chip that matches nothin
 names get its label (`loco` reads Locomotive); any other reads as itself.
 
 **Search** matches every whitespace-separated word, case-insensitively, against
-title, id, category, pool, author, license and source.
+title, id, category, pool, traction, author, license and source, and against
+every parameter value's title and token - so `Bardotka` finds the CD 749 / 750
+family, whose `livery` parameter draws it.
 
 ## The model page
 

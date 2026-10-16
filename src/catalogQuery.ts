@@ -69,11 +69,18 @@ export function column(key: string): Column | undefined {
   return BY_KEY.get(key);
 }
 
-/** Attach the search haystack, once, when the catalog lands. */
+/**
+ * Attach the search haystack, once, when the catalog lands. A parametric model is
+ * found by its variants too: each parameter value's title and token, so "Bardotka"
+ * finds the CD 749 / 750 family that draws it as one of its liveries.
+ */
 export function prepareRows(records: readonly CatalogRecord[]): Row[] {
   return records.map((r) => ({
     ...r,
-    hay: [r.title, r.id, r.category, r.group, r.author, r.license, r.source].join(" ").toLowerCase(),
+    hay: [
+      r.title, r.id, r.category, r.group, r.traction ?? "", r.author, r.license, r.source,
+      ...(r.params ?? []).flatMap((p) => p.values.flatMap((v) => [v.title, v.value])),
+    ].join(" ").toLowerCase(),
   }));
 }
 
@@ -115,8 +122,8 @@ export function queryRows(rows: readonly Row[], q: string, sort: string, dir: So
  * The filter chips, as the webapp Creator draws them (without its origin switch:
  * everything here is the factory's own). The first row is one chip per fleet plus
  * one for every building; under a pick, a second row splits it by type (a
- * vehicle's group, a building's category) and a third by what is left (a
- * building's city pool). The first row's order and labels are the Creator's.
+ * vehicle's group, a building's category) and a third, under a locomotive or a
+ * unit, by traction. The first row's order and labels are the Creator's.
  */
 export interface Group {
   id: string;
@@ -143,23 +150,31 @@ const VEHICLE_CATEGORIES: ReadonlyMap<string, string> = new Map([
   ["Ships", "ship"],
   ["Aircraft", "aircraft"],
   ["Cable cars", "cablecar"],
+  ["Cable car", "cablecar"],
 ]);
 
+/** The first-row chip: a tram is filed with the rail vehicles but listed with the trams. */
 export function groupOf(r: CatalogRecord): string {
-  return VEHICLE_CATEGORIES.get(r.category) ?? "building";
+  const g = VEHICLE_CATEGORIES.get(r.category) ?? "building";
+  return g === "train" && r.group === "tram" ? "tram" : g;
 }
+
+/** The fleets whose models are all one kind, so a second row would only split near-synonyms (ship / ships). */
+const NO_LEVEL2: ReadonlySet<string> = new Set(["ship", "aircraft", "cablecar", "tram"]);
 
 /** The chip a model lands on when it has no value for a level, so every model is reachable through the chips. */
 export const OTHER_CHIP = "other";
 
-/** The second chip level: a vehicle's group (loco, coach, truck, ...), a building's category. */
+/** The second chip level: a vehicle's group (loco, unit, coach, truck, ...), a building's category. */
 export function level2Of(r: CatalogRecord): string {
-  return (groupOf(r) === "building" ? r.category : r.group) || OTHER_CHIP;
+  const g = groupOf(r);
+  if (NO_LEVEL2.has(g)) return OTHER_CHIP;
+  return (g === "building" ? r.category : r.group) || OTHER_CHIP;
 }
 
-/** The third chip level: a building's city pool. A vehicle has nothing finer. */
+/** The third chip level: a locomotive's or a unit's traction. Nothing else has a finer split. */
 export function level3Of(r: CatalogRecord): string {
-  return (groupOf(r) === "building" ? r.group : "") || OTHER_CHIP;
+  return (groupOf(r) === "train" ? r.traction : "") || OTHER_CHIP;
 }
 
 /** What the three chip rows have picked: one value per row at most, null for All. */
@@ -219,6 +234,9 @@ export function chipRows(rows: readonly CatalogRecord[], path: ChipPath): ChipRo
 /** Labels of the lower-row values the Creator names; any other value reads as itself. */
 const CHIP_LABELS: Readonly<Record<string, string>> = {
   loco: "Locomotive",
+  unit: "Unit",
+  wagon: "Wagon",
+  bus: "Bus",
   diesel: "Diesel",
   electric: "Electric",
   steam: "Steam",

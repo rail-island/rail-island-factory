@@ -43,7 +43,7 @@ describe("small and shunting diesels from vlakosimdb", () => {
     expect(values("proc-vehicle-cd-742")).toEqual([["variant", "viamont742", ["viamont742", "viamont740", "cd743"]]]);
     expect(values("proc-vehicle-db-212")).toEqual([["livery", "oldRed", ["oldRed", "oceanBlue", "trafficRed"]]]);
     for (const id of ["proc-vehicle-cd-710", "proc-vehicle-cd-714", "proc-vehicle-muv-69"]) expect(values(id)).toBeUndefined();
-    for (const d of SMALL_DIESELS) expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "loco" });
+    for (const d of SMALL_DIESELS) expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "loco", traction: "diesel" });
   });
 
   for (const d of SMALL_DIESELS)

@@ -32,6 +32,12 @@ export const RAIL_CATALOG: CatalogFields = {
   source: "Rail Island",
 };
 
+/** An electric locomotive's catalog fields. */
+export const ELECTRIC_LOCO_CATALOG: CatalogFields = { ...RAIL_CATALOG, traction: "electric" };
+
+/** A diesel locomotive's catalog fields. */
+export const DIESEL_LOCO_CATALOG: CatalogFields = { ...RAIL_CATALOG, traction: "diesel" };
+
 export const CD163_PALETTE: Record<string, MaterialSpec> = {
   green: { color: "#245b42", metallic: 0.1, roughness: 0.5 },
   yellow: { color: "#c6a84c", metallic: 0.1, roughness: 0.5 },

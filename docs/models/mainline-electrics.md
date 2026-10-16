@@ -6,7 +6,7 @@
 
 ## The designs
 
-All six are rigid rail vehicles in `RAIL_CATALOG` (group `loco`), registered as
+All six are rigid rail vehicles in `ELECTRIC_LOCO_CATALOG` (group `loco`, traction `electric`), registered as
 one family in `generate.ts` (`mainlineElectrics.ts`, which also exports their
 build functions for the JS models). A `livery` value names its vlakosimdb model.
 

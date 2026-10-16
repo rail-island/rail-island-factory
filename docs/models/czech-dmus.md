@@ -75,7 +75,7 @@ Choices:
   boxes, each a named scope; end items are laid shallow enough that no face meets
   the end cap's own slab.
 - `sideEmblem()`, `sideNumber()`, `buffersBoth()`, `underBoxes()`, `tankX()`,
-  `exhaust()` and the catalog fields `DMU_CATALOG` (rail vehicles, group `loco`).
+  `exhaust()` and the catalog fields `DMU_CATALOG` (rail vehicles, group `unit`, traction `diesel`).
   The single-arm pantograph and the centre coupler of the electric units are not
   needed; `tractionNumber()` and `enumParam()` are re-exported from `emuParts.ts`.
 

@@ -53,7 +53,7 @@ describe("Czech mainline diesel locomotives", () => {
     expect(design("proc-vehicle-cd-771").params![0]!.values.map((v) => v.value)).toEqual(["cd771", "cd771No235", "cd771No421"]);
     expect(design("proc-vehicle-csd-t679-0").params).toBeUndefined();
     expect(design("proc-vehicle-csd-t499").params).toBeUndefined();
-    for (const d of DIESEL_LOCOS) expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "loco" });
+    for (const d of DIESEL_LOCOS) expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "loco", traction: "diesel" });
   });
 
   it("builds every livery inside the 3.1 m by 4.7 m envelope and the triangle budget, standing on the rails", () => {

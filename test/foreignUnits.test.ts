@@ -40,7 +40,8 @@ describe("the foreign multiple units", () => {
   it("are four parametric rail designs with their reference folders and defaults", () => {
     expect(designs.map((d) => d.id)).toEqual(["proc-vehicle-db-628", "proc-vehicle-mav-mdmot", "proc-vehicle-ice-1", "proc-vehicle-tgv"]);
     for (const d of designs) {
-      expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "loco" });
+      // DB 628 and MAV MDmot are diesel units, ICE 1 and TGV electric
+      expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "unit", traction: /^(db-628|mav-mdmot)$/.test(d.references!) ? "diesel" : "electric" });
       expect(d.references).toMatch(/^(db-628|mav-mdmot|ice-1|tgv)$/);
     }
     const spec = (ps: typeof DB628_PARAMS) => ps.map((p) => [p.name, p.default, p.values.map((v) => v.value)]);

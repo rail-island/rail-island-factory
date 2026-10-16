@@ -19,7 +19,7 @@ import { ngon, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
 import { Coach, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
-import { blockX, EMU_CATALOG, enumParam, slopePanel } from "./emuParts.ts";
+import { blockX, DMU_CATALOG, enumParam, slopePanel } from "./emuParts.ts";
 import { bOf, sideBox, unitBogie, type PxBox, type SideMap } from "./unitParts.ts";
 
 export type MdmotUnit = "motorCar" | "trailerAx" | "trailerBx" | "drivingTrailer";
@@ -448,7 +448,7 @@ function motorRoof(c: Coach, L: CarLayout): void {
 }
 
 export const MDMOT_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-mav-mdmot", title: "MAV MDmot", build: mavMdmot, params: MDMOT_PARAMS, catalog: EMU_CATALOG, references: "mav-mdmot" },
+  { id: "proc-vehicle-mav-mdmot", title: "MAV MDmot", build: mavMdmot, params: MDMOT_PARAMS, catalog: DMU_CATALOG, references: "mav-mdmot" },
 ];
 
 export { LAYOUTS as MDMOT_LAYOUTS };

@@ -41,7 +41,7 @@ describe("Czech electric locomotives from vlakosimdb", () => {
     expect(CZ_ELECTRICS[1]!.params![0]!.default).toBe("cd130");
     expect(CZ_ELECTRICS[2]!.params).toBeUndefined();
     expect(CZ_ELECTRICS[3]!.params).toBeUndefined();
-    for (const d of CZ_ELECTRICS) expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "loco" });
+    for (const d of CZ_ELECTRICS) expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "loco", traction: "electric" });
   });
 
   for (const d of CZ_ELECTRICS)

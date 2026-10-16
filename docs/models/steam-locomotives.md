@@ -8,7 +8,8 @@
 
 Sixteen vlakosimdb vehicles become nine designs, registered as their own family
 (`STEAM_LOCOS` in `generate.ts`, source module `steamLocos.ts`), all
-`category: "Rail vehicles"`, `group: "loco"` (`STEAM_CATALOG`). A locomotive
+`category: "Rail vehicles"`, `group: "loco"`, `traction: "steam"`
+(`STEAM_CATALOG`); the M 112.0 railcar is `group: "unit"` (`STEAM_RAILCAR_CATALOG`). A locomotive
 that runs with a tender is **one design with a `unit` parameter** - `locomotive`
 (the default, the exported GLB) or `tender` (built by the JS model,
 [parameters.md](parameters.md)); the tender variant is +X toward the

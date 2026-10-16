@@ -19,11 +19,15 @@ import { mirrored, type Pt, type Steam } from "./steamParts.ts";
 export const STEAM_CATALOG: CatalogFields = {
   category: "Rail vehicles",
   group: "loco",
+  traction: "steam",
   defaultScale: 1,
   license: "CC0",
   author: "Rail Island",
   source: "Rail Island",
 };
+
+/** A steam railcar's: a powered unit that carries passengers, filed with the units. */
+export const STEAM_RAILCAR_CATALOG: CatalogFields = { ...STEAM_CATALOG, group: "unit" };
 
 /** The `unit` parameter of a locomotive with a tender. */
 export const UNIT_PARAM: ParamSpec = {
@@ -793,6 +797,8 @@ export interface SteamDesign {
   folder: string;
   build: (params?: ParamValues) => MeshBuilder;
   params?: readonly ParamSpec[];
+  /** A railcar (powered, carries passengers): filed under the units, not the locomotives. */
+  railcar?: boolean;
 }
 
 export const STEAM_DESIGNS: readonly SteamDesign[] = [
@@ -804,7 +810,7 @@ export const STEAM_DESIGNS: readonly SteamDesign[] = [
   { id: "proc-vehicle-csd-556-0", title: "CSD 556.0", folder: "steam-556-0", build: csd556, params: [UNIT_PARAM] },
   { id: "proc-vehicle-csd-636", title: "CSD 636 Mallet", folder: "steam-636", build: csd636, params: [UNIT_PARAM] },
   { id: "proc-vehicle-csd-386", title: "CSD 386 Streamlined", folder: "steam-386", build: csd386, params: [UNIT_PARAM] },
-  { id: "proc-vehicle-csd-m112", title: "CSD M 112.0 Steam Railcar", folder: "steam-m112", build: csdM112 },
+  { id: "proc-vehicle-csd-m112", title: "CSD M 112.0 Steam Railcar", folder: "steam-m112", build: csdM112, railcar: true },
 ];
 
 /**
@@ -812,7 +818,7 @@ export const STEAM_DESIGNS: readonly SteamDesign[] = [
  * module, so the standalone JS models of the other vehicles do not carry it.
  */
 export const STEAM_LOCOS: ProceduralDesign[] = STEAM_DESIGNS.map((d) => ({
-  id: d.id, title: d.title, build: d.build, catalog: STEAM_CATALOG, references: d.folder, ...(d.params ? { params: d.params } : {}),
+  id: d.id, title: d.title, build: d.build, catalog: d.railcar ? STEAM_RAILCAR_CATALOG : STEAM_CATALOG, references: d.folder, ...(d.params ? { params: d.params } : {}),
 }));
 
 /** The spec a steam design builds for the given parameters (tests and the comparison read it). */

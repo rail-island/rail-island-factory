@@ -371,7 +371,7 @@ describe("the vehicles", () => {
 
   it("ships the CD 163 as a rigid rail vehicle on standard gauge", () => {
     const d = VEHICLES.find((v) => v.id === "proc-vehicle-cd-163")!;
-    expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "loco" });
+    expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "loco", traction: "electric" });
     const { json } = parseGlb(designGlb(proceduralId(d.id)));
     expect((json as { nodes: Array<{ name: string }> }).nodes.map((n) => n.name)).toEqual(["vehicle"]);
     const s = glbStats(designGlb(proceduralId(d.id)));

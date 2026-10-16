@@ -95,6 +95,7 @@ describe("exportVehicleMeta", () => {
         title: VEHICLES.find((d) => d.id === v.id)!.title,
         category: VEHICLES.find((d) => d.id === v.id)!.catalog?.category ?? "Road vehicles",
         group: VEHICLES.find((d) => d.id === v.id)!.catalog?.group ?? "truck",
+        ...(VEHICLES.find((d) => d.id === v.id)!.catalog?.traction ? { traction: VEHICLES.find((d) => d.id === v.id)!.catalog!.traction } : {}),
         glb: `${v.id}.glb`,
         thumb: `${v.id}.png`,
         license: "CC0",

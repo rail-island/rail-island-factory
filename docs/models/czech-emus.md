@@ -84,7 +84,7 @@ published 27.7 m and 25.9 m and narrows them to 2.8 m. Heights are the XML's.
 - `centreCoupler()`: a Scharfenberg-type coupler head on its draw bar.
 - `slopePanel()`: a flat panel on a sloped cab front given as a plane in the side view.
 - `tractionNumber()` / `tractionCheckDigit()`: the CSD/CD running number and its check digit.
-- `enumParam()`, `EMU_CATALOG` (rail vehicles, group `loco`).
+- `enumParam()`, `EMU_CATALOG` (rail vehicles, group `unit`, traction `electric`).
 
 ## Measured comparison
 

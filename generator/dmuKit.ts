@@ -16,19 +16,10 @@ import type { Vec3 } from "./meshCore.ts";
 import { Coach, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { emblem } from "./cd163.ts";
 import { block, side } from "./vehicleParts.ts";
-import type { CatalogFields } from "./design.ts";
 
 export { enumParam, slopePanel, tractionNumber, tractionCheckDigit } from "./emuParts.ts";
 
-/** The catalog fields of the railcars: rail traction vehicles, like the locomotives and the electric units. */
-export const DMU_CATALOG: CatalogFields = {
-  category: "Rail vehicles",
-  group: "loco",
-  defaultScale: 1,
-  license: "CC0",
-  author: "Rail Island",
-  source: "Rail Island",
-};
+export { DMU_CATALOG } from "./emuParts.ts";
 
 /** Native pixel edges [left, top, right, bottom]. */
 export type PxBox = [number, number, number, number];

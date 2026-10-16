@@ -117,6 +117,12 @@ building import reading `skyscrapers.meta.json` therefore never sees a truck.
 Nothing reads this file yet either; the game's vehicle import will decide its
 final fields.
 
+A **locomotive** (group `loco`) or a **unit** (group `unit`: powered and carrying
+passengers - the electric and diesel multiple units, the railcars, the ICE 1 and
+TGV sets) also carries `traction`: `electric`, `diesel` or `steam`. Its catalog
+fields set it (`ELECTRIC_LOCO_CATALOG`, `DIESEL_LOCO_CATALOG`, `STEAM_CATALOG`,
+`EMU_CATALOG`, `DMU_CATALOG`, `STEAM_RAILCAR_CATALOG`); no other entry has the key.
+
 A **parametric** model's entry also carries `params`: its enum parameters as
 `{ name, title, values: [{ value, title }], default }`. Its GLB and thumbnail
 are the default build; the JS model builds the other combinations

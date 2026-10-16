@@ -16,7 +16,7 @@ import { ngon, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
 import { Coach, type Pt, type Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
-import { blockX, centreCoupler, EMU_CATALOG, enumParam, slopePanel, tractionNumber } from "./emuParts.ts";
+import { blockX, centreCoupler, DMU_CATALOG, enumParam, slopePanel, tractionNumber } from "./emuParts.ts";
 import { bOf, roofBox, sideBox, toBody, unitBogie, type PxBox, type SideMap } from "./unitParts.ts";
 
 export type Db628Livery = "mint" | "red";
@@ -281,5 +281,5 @@ function innerEnd(c: Coach, v: Volume): void {
 }
 
 export const DB628_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-db-628", title: "DB 628", build: db628, params: DB628_PARAMS, catalog: EMU_CATALOG, references: "db-628" },
+  { id: "proc-vehicle-db-628", title: "DB 628", build: db628, params: DB628_PARAMS, catalog: DMU_CATALOG, references: "db-628" },
 ];

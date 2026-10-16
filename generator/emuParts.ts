@@ -11,15 +11,19 @@ import { block, side } from "./vehicleParts.ts";
 import { tubeX } from "./cd163.ts";
 import type { CatalogFields, ParamSpec } from "./design.ts";
 
-/** The catalog fields of a multiple unit's cars: rail traction vehicles, like the locomotives. */
+/** The catalog fields of an electric multiple unit's cars: a powered unit that carries passengers. */
 export const EMU_CATALOG: CatalogFields = {
   category: "Rail vehicles",
-  group: "loco",
+  group: "unit",
+  traction: "electric",
   defaultScale: 1,
   license: "CC0",
   author: "Rail Island",
   source: "Rail Island",
 };
+
+/** The catalog fields of a diesel railcar or diesel multiple unit. */
+export const DMU_CATALOG: CatalogFields = { ...EMU_CATALOG, traction: "diesel" };
 
 /** The CSD/CD check digit of a six-digit traction number (weights 2, 1, ... from the right; digit sums). */
 export function tractionCheckDigit(six: string): number {

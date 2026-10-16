@@ -30,8 +30,10 @@ export interface MetaEntry {
   id: string;
   title: string;
   category: string;
-  /** The city block pool the model is drawn from. */
+  /** The city block pool the model is drawn from; a vehicle's type (loco, unit, coach, ...). */
   group: string;
+  /** A locomotive's or a unit's traction: electric, diesel or steam. */
+  traction?: string;
   /** File name within the export's glb/ folder. */
   glb: string;
   /** File name within the export's thumbs/ folder. */
@@ -138,6 +140,7 @@ export function metaEntry(design: ProceduralDesign, fields: CatalogFields = SKYS
     ...(fields.yaw !== undefined ? { yaw:fields.yaw } : {}),
     category: fields.category,
     group: fields.group,
+    ...(fields.traction ? { traction: fields.traction } : {}),
     glb: `${proceduralId(design.id)}.glb`,
     thumb: `${proceduralId(design.id)}.png`,
     ...(["Road vehicles", "Rail vehicles", "Cable car"].includes(fields.category) ? {} : { defaultScale: fields.defaultScale }),

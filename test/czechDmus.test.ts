@@ -47,7 +47,7 @@ describe("Czech diesel railcars from vlakosimdb", () => {
     expect(values("proc-vehicle-csd-m131")).toEqual([["unit", "motorCar", ["motorCar", "trailer"]]]);
     expect(values("proc-vehicle-csd-m240")).toEqual([]);
     expect(values("proc-vehicle-csd-m296")).toEqual([["variant", "m296", ["m296", "cd853", "cd854"]]]);
-    for (const d of CZ_DMUS) expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "loco" });
+    for (const d of CZ_DMUS) expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "unit", traction: "diesel" });
   });
 
   for (const d of CZ_DMUS)

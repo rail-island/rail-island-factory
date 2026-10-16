@@ -52,7 +52,7 @@ describe("mainline electric locomotives from vlakosimdb", () => {
     expect(MAINLINE_ELECTRICS[3]!.params![0]!.default).toBe("dr243");
     expect(MAINLINE_ELECTRICS[4]!.params).toBeUndefined();
     expect(MAINLINE_ELECTRICS[5]!.params).toBeUndefined();
-    for (const d of MAINLINE_ELECTRICS) expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "loco" });
+    for (const d of MAINLINE_ELECTRICS) expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "loco", traction: "electric" });
   });
 
   for (const d of MAINLINE_ELECTRICS)
