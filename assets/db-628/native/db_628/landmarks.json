@@ -1,0 +1,356 @@
+{
+ "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/dmu/db_628/model",
+ "pixelMetres": 0.1,
+ "convention": "Pixel edges [left, top, right, bottom] on the native BMP; origin top left, x right, y down. A row with metresPerRow uses that row height (the DB 628's 60-row end views are mapped onto 5 m).",
+ "annotations": [
+  {
+   "id": "P01",
+   "view": "843_z_both",
+   "side": "right",
+   "element": "cab side window (frame)",
+   "box": [
+    10,
+    21,
+    16,
+    31
+   ],
+   "nodes": [
+    "body/right-side/cab-window/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P02",
+   "view": "843_z_both",
+   "side": "right",
+   "element": "door 1 (outline)",
+   "box": [
+    17,
+    20,
+    28,
+    44
+   ],
+   "nodes": [
+    "body/right-side/doors/door-1/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P03",
+   "view": "843_z_both",
+   "side": "right",
+   "element": "door 1 upper window (frame)",
+   "box": [
+    19,
+    21,
+    26,
+    31
+   ],
+   "nodes": [
+    "body/right-side/doors/door-1/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P04",
+   "view": "843_z_both",
+   "side": "right",
+   "element": "door 1 lower window (frame)",
+   "box": [
+    19,
+    35,
+    26,
+    41
+   ],
+   "nodes": [
+    "body/right-side/doors/door-1/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P05",
+   "view": "843_z_both",
+   "side": "right",
+   "element": "window 1 (frame)",
+   "box": [
+    38,
+    21,
+    50,
+    31
+   ],
+   "nodes": [
+    "body/right-side/windows/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P06",
+   "view": "843_z_both",
+   "side": "right",
+   "element": "window 5 (frame)",
+   "box": [
+    117,
+    21,
+    129,
+    31
+   ],
+   "nodes": [
+    "body/right-side/windows/window-5/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P07",
+   "view": "843_z_both",
+   "side": "right",
+   "element": "window 9 (frame)",
+   "box": [
+    185,
+    21,
+    197,
+    31
+   ],
+   "nodes": [
+    "body/right-side/windows/window-9/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P08",
+   "view": "843_z_both",
+   "side": "right",
+   "element": "door 2 (outline)",
+   "box": [
+    205,
+    20,
+    216,
+    44
+   ],
+   "nodes": [
+    "body/right-side/doors/door-2/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P09",
+   "view": "843_z_both",
+   "side": "right",
+   "element": "DB logo",
+   "box": [
+    79,
+    36,
+    82,
+    38
+   ],
+   "nodes": [
+    "body/right-side/logo"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P10",
+   "view": "843_z_both",
+   "side": "right",
+   "element": "fuel filler panel",
+   "box": [
+    59,
+    32,
+    64,
+    41
+   ],
+   "nodes": [
+    "body/right-side/fuel-filler"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P11",
+   "view": "843_z_both",
+   "side": "right",
+   "element": "mint band (body, from the cab side window's column)",
+   "box": [
+    9,
+    19,
+    221,
+    32
+   ],
+   "nodes": [
+    "body/mint-band"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P12",
+   "view": "843_z_both",
+   "side": "right",
+   "element": "pale blue line",
+   "box": [
+    9,
+    32,
+    221,
+    35
+   ],
+   "nodes": [
+    "body/paleblue-band"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P13",
+   "view": "843_z_both",
+   "side": "right",
+   "element": "roof's grey edge",
+   "box": [
+    14,
+    12,
+    221,
+    15
+   ],
+   "nodes": [
+    "body/roof-band"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "The roof's curve is shaded in three greys; the edge is +/- one pixel, the nose end two.",
+   "constraint": "The model's roof follows the XML elevation down to the cab front at 0.9 m; the BMP's grey starts 0.5 m further back."
+  },
+  {
+   "id": "P14",
+   "view": "843_z_both",
+   "side": "right",
+   "element": "cab bogie wheels",
+   "box": [
+    25,
+    43,
+    54,
+    50
+   ],
+   "nodes": [
+    "running-gear/bogie-1/wheelset",
+    "running-gear/bogie-1/wheelset-2"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "Texture-painted running gear on a dark ground; the extent is +/- two pixels.",
+   "constraint": "Wheels of the published 770 mm diameter on the BMP's axle columns; the painted wheels are drawn larger."
+  },
+  {
+   "id": "P15",
+   "view": "843_z_both",
+   "side": "right",
+   "element": "inner bogie wheels",
+   "box": [
+    178,
+    43,
+    205,
+    50
+   ],
+   "nodes": [
+    "running-gear/bogie-2/wheelset",
+    "running-gear/bogie-2/wheelset-2"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "Texture-painted running gear on a dark ground; the extent is +/- two pixels."
+  },
+  {
+   "id": "F01",
+   "view": "843_x_both",
+   "end": "front",
+   "element": "windscreen (black)",
+   "box": [
+    1,
+    22,
+    29,
+    35
+   ],
+   "nodes": [
+    "cab/windscreen"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel.",
+   "metresPerRow": 0.08333333333333333
+  },
+  {
+   "id": "F02",
+   "view": "843_x_both",
+   "end": "front",
+   "element": "front's pale blue line",
+   "box": [
+    0,
+    40,
+    30,
+    42
+   ],
+   "nodes": [
+    "body/nose/paleblue-band"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel.",
+   "metresPerRow": 0.08333333333333333
+  },
+  {
+   "id": "F03",
+   "view": "843_x_both",
+   "end": "front",
+   "element": "front's light grey",
+   "box": [
+    0,
+    42,
+    30,
+    50
+   ],
+   "nodes": [
+    "body/nose/nosegrey-band"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel.",
+   "metresPerRow": 0.08333333333333333
+  },
+  {
+   "id": "R01",
+   "view": "843_x_a",
+   "end": "rear",
+   "element": "gangway frame",
+   "box": [
+    7,
+    21,
+    23,
+    50
+   ],
+   "nodes": [
+    "rear-end/gangway"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel.",
+   "metresPerRow": 0.08333333333333333
+  },
+  {
+   "id": "R02",
+   "view": "843_x_a",
+   "end": "rear",
+   "element": "gangway door (outline)",
+   "box": [
+    9,
+    23,
+    21,
+    41
+   ],
+   "nodes": [
+    "rear-end/end-door/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel.",
+   "metresPerRow": 0.08333333333333333
+  }
+ ]
+}

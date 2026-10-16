@@ -13,7 +13,7 @@ import { isLeaf, type LeafNode, type TreeNode } from "./sourceTree.ts";
 import type { CoachComparisonRow, CoachLandmark } from "./csdCoachComparison.ts";
 import { bmpSize } from "./csdCoachComparison.ts";
 import { DB628_DESIGNS, DB628_LENGTH, DB628_MAP } from "./db628.ts";
-import { MDMOT_DESIGNS, MDMOT_MAPS, mdmotLength } from "./mavMdmot.ts";
+import { MDMOT_DESIGNS, MDMOT_K_Y, MDMOT_K_Z, MDMOT_MAPS, mdmotLength } from "./mavMdmot.ts";
 import { ICE1_DESIGNS, ICE1_MAPS, ice1Length, ICE1_K_Y } from "./ice1.ts";
 import { TGV_DESIGNS, TGV_MAPS, tgvLength, TGV_K_Y_POWER } from "./tgv.ts";
 
@@ -55,9 +55,9 @@ const tgv = TGV_MAPS.powerCar;
 
 export const UNIT_TRANSFERS: readonly UnitTransfer[] = [
   { key: "db_628", title: "DB 628 motor car", id: "veh-db-628", params: { livery: "mint" }, folder: "db-628", native: "native/db_628", report: "COMPARISON.md", ...db, kX: 1, kY: 1, kZ: 1, files: "`generator/db628.ts`" },
-  { key: "mav_mdmot", title: "MAV MDmot motor car", id: "veh-mav-mdmot", params: { unit: "motorCar" }, folder: "mav-mdmot", native: "native/mav_mdmot", report: "COMPARISON.md", ...sideFns(md.x0, mdmotLength("motorCar")), kX: 1, kY: 1, kZ: 1, files: "`generator/mavMdmot.ts`" },
+  { key: "mav_mdmot", title: "MAV MDmot motor car", id: "veh-mav-mdmot", params: { unit: "motorCar" }, folder: "mav-mdmot", native: "native/mav_mdmot", report: "COMPARISON.md", ...sideFns(md.x0, mdmotLength("motorCar")), kX: 1, kY: MDMOT_K_Y, kZ: MDMOT_K_Z, files: "`generator/mavMdmot.ts`" },
   { key: "ice_loco", title: "ICE 1 power car", id: "veh-ice-1", params: { unit: "powerCar" }, folder: "ice-1", native: "native/ice_loco", report: "COMPARISON.md", ...sideFns(ice.x0, ice1Length("powerCar")), kX: 1, kY: ICE1_K_Y, kZ: 1, files: "`generator/ice1.ts`" },
-  { key: "tgv_loco", title: "TGV PSE power car", id: "veh-tgv", params: { unit: "powerCar", livery: "pse" }, folder: "tgv", native: "native/tgv_loco", report: "COMPARISON.md", ...sideFns(tgv.x0, tgvLength("powerCar")), kX: 1, kY: TGV_K_Y_POWER, kZ: 1, files: "`generator/tgv.ts`" },
+  { key: "tgv_loco", title: "TGV PSE power car", id: "veh-tgv", params: { unit: "powerCar", livery: "pse" }, folder: "tgv", native: "native/tgv_loco", report: "COMPARISON.md", ...sideFns(tgv.x0, tgvLength("powerCar"), tgv.k), kX: tgv.k ?? 1, kY: TGV_K_Y_POWER, kZ: 1, files: "`generator/tgv.ts`" },
 ];
 
 const DESIGNS: readonly ProceduralDesign[] = [...DB628_DESIGNS, ...MDMOT_DESIGNS, ...ICE1_DESIGNS, ...TGV_DESIGNS];
@@ -110,11 +110,13 @@ export function unitComparison(key: string, unscaled = false): CoachComparisonRo
     if (!nodes.length) throw new Error(`${key}: missing landmark ${row.id}: ${row.nodes.join(", ")}`);
     const points = nodes.flatMap((n) => byMaterial.get(n.material)!.slice(n.tri[0], n.tri[0] + n.tri[1])).flatMap((x) => x.p);
     const canvas = size(row.view);
-    const H = canvas[1] / 10;
+    // a canvas's rows are 0.1 m unless its colorize maps them otherwise (the DB 628's 60-row ends span 5 m)
+    const my = (row as CoachLandmark & { metresPerRow?: number }).metresPerRow ?? 0.1;
+    const H = canvas[1] * my;
     const half = canvas[0] / 20;
     const [ky, kz] = unscaled ? [t.kY, t.kZ] : [1, 1];
     const u = points.map((p) => (row.end ? (row.end === "rear" ? 10 * (p[2] / kz + half) : 10 * (half - p[2] / kz)) : unscaled ? t.sideUnscaled(p[0]) : t.side(p[0])));
-    const v = points.map((p) => 10 * (H - p[1] / ky));
+    const v = points.map((p) => (H - p[1] / ky) / my);
     const box = [Math.min(...u), Math.min(...v), Math.max(...u), Math.max(...v)];
     const dims = (b: number[]) => [b[0]!, b[1]!, b[2]! - b[0]!, b[3]! - b[1]!];
     const source = dims(row.box);

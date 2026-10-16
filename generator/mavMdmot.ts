@@ -108,6 +108,8 @@ interface CarLayout {
 export const MDMOT_K_Y = 1.07;
 const K_Y = MDMOT_K_Y;
 const K_Z_MOTOR = MDMOT_WIDTH / 2.8;
+/** The motor car's width scale (its XML section is 2.8 m wide), for the comparison. */
+export const MDMOT_K_Z = K_Z_MOTOR;
 const K_Z_TRAILER = MDMOT_WIDTH / 2.9;
 
 /** The motor car's XML section, centred (vlakosimdb's is 0.1 m off), at the published width. */
@@ -395,11 +397,12 @@ function cabEnd(c: Coach, L: CarLayout, cab: CarLayout["cabs"][number]): void {
   });
   m.scope("number plate", () => slopePanel(m, "plate", e, lean, e * fz(12), e * fz(21), fy(26), fy(23), 0.008, 0.006));
   // the roof headlight in its housing over the windscreens (x_both columns 14..18, rows 4..10)
+  // its face stands at the windscreen's top edge, its housing reaches back over the roof's slope
   m.scope("top lamp", () => {
-    const x = c.X(B(cab.face.screen[2])) - e * 0.25;
-    blockX(m, "darkRed", x - e * 0.25, x + e * 0.2, 3.2 * K_Y, 3.68 * K_Y, -0.22, 0.22);
-    const lens = ngon(10, 0.13, 0, 0, 3.44 * K_Y);
-    m.sweep("lampWhite", "x", lens, x + e * 0.2, lens, x + e * 0.215);
+    const x = c.X(B(cab.face.screen[2]));
+    blockX(m, "darkRed", x - e * 0.37, x + e * 0.02, 3.0 * K_Y, 3.6 * K_Y, -0.2, 0.2);
+    const lens = ngon(10, 0.13, 0, 0, 3.3 * K_Y);
+    m.sweep("lampWhite", "x", lens, x + e * 0.02, lens, x + e * 0.035);
   });
 }
 

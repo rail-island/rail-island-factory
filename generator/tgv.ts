@@ -30,7 +30,7 @@ import { Coach, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
 import { centreCoupler, EMU_CATALOG, enumParam, pantograph, slopePanel } from "./emuParts.ts";
-import { bOf, sideBox, toBody, unitBogie, type PxBox, type SideMap } from "./unitParts.ts";
+import { bOf, sideBox, spacedLetters, toBody, unitBogie, type PxBox, type SideMap } from "./unitParts.ts";
 
 export type TgvUnit = "powerCar" | "endCoach" | "coach";
 export type TgvLivery = "pse" | "atlantique";
@@ -228,16 +228,18 @@ function powerCar(L: Livery): MeshBuilder {
         m.scope("louvres", () => {
           // the machine room's vertical louvres in the band (columns 65..170 and 204..209)
           if (L.louvres)
-            for (const [a, b] of [[65, 170], [204, 210]] as const) {
-            c.sidePanel(body, "louvre", s, box([a, 33.5, b, 44.5]), 0.004, 0.02);
-            for (let u = a + 0.5; u < b - 1; u += 2) c.sidePanel(body, "band", s, box([u, 34, u + 1, 44]), 0.008, 0.003);
-          }
-          // the raised roof's side grille (rows 22..26)
-          c.sidePanel(body, "louvre", s, box([64, 22.4, 134, 25.8]), 0.006, 0.02);
+            ([[65, 170], [204, 210]] as const).forEach(([a, b], i) =>
+              m.scope(`louvre ${i + 1}`, () => {
+                c.sidePanel(body, "louvre", s, box([a, 33.5, b, 44.5]), 0.004, 0.02);
+                for (let u = a + 0.5; u < b - 1; u += 2) c.sidePanel(body, "band", s, box([u, 34, u + 1, 44]), 0.008, 0.003);
+              }),
+            );
         });
+        // the raised roof's side grille (rows 22..26)
+        m.scope("roof grille", () => c.sidePanel(body, "louvre", s, box([64, 22.4, 134, 25.8]), 0.006, 0.02));
         m.scope("lettering", () => {
           const b = box([179, 33.5, 204, 40.5]);
-          c.inscription(body, s, (b.x0 + b.x1) / 2, [{ text: "TGV", y: b.y0, h: b.y1 - b.y0 }], 0.012, "lettering");
+          spacedLetters(c, body, s, "TGV", b, "lettering", 0.012);
         });
       });
   });
@@ -271,7 +273,8 @@ function powerCar(L: Livery): MeshBuilder {
     m.scope("pantographs", () => m.scope("pantograph", () => pantograph(m, { x: X(px), roof, hinge: -1, raised: true, rise: 1.0 })));
   });
   m.scope("running gear", () => {
-    TGV_POWER_BOGIES.forEach((x, i) => m.scope(`bogie ${i + 1}`, () => unitBogie(c, X(x), { wb: 3.0, r: 0.46, motor: true, top: 0.9, frame: 1.0 })));
+    // the XML's gear clips reach 0.65 m beyond the axles: the long side frames of the Y 230 motor bogie
+    TGV_POWER_BOGIES.forEach((x, i) => m.scope(`bogie ${i + 1}`, () => unitBogie(c, X(x), { wb: 3.0, r: 0.46, motor: true, top: 0.9, frame: 1.0, overhang: 0.62 })));
     m.scope("transformer", () => block(m, "equipment", X(15.2), X(9.0), 0.3, 0.9, -1.05, 1.05));
   });
   return m;

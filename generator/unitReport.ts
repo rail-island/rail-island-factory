@@ -37,13 +37,14 @@ function report(key: string): string {
     const [v, where] = k.split("|") as [string, string];
     const rs = rows.filter((r) => r.view === v && (r.side ?? r.end) === where);
     const [cw, ch] = rs[0]!.canvas;
-    const H = ch / 10;
+    const my = (rs[0] as { metresPerRow?: number }).metresPerRow ?? 0.1;
+    const H = ch * my;
     const end = where === "front" || where === "rear";
     const project = (p: P3) => {
       // drawn with the documented scales undone, so the model overlays its BMP
       const u = end ? (where === "rear" ? 10 * (p[2]! / t.kZ + cw / 20) : 10 * (cw / 20 - p[2]! / t.kZ)) : t.sideUnscaled(p[0]!);
       const depth = end ? (where === "rear" ? -p[0]! : p[0]!) : where === "right" ? p[2]! : -p[2]!;
-      return [u * scale, 10 * (H - p[1]! / t.kY) * scale, depth];
+      return [u * scale, ((H - p[1]! / t.kY) / my) * scale, depth];
     };
     const png = PNG.sync.write(raster(tris, cw * scale, ch * scale, project, (x) => x.rgb));
     const name = `${v}-${where}`;
@@ -78,9 +79,9 @@ function report(key: string): string {
     "",
     `Model geometry revision (SHA-256 of comparison GLB): \`${revision}\`.`,
     "",
-    `Regenerate with \`pnpm exec tsx generator/unitReport.ts ${key}\`. The baseline is the first authored geometry (\`${t.native}/baseline.json\`); baseline and final use the same annotations. Built with ${Object.entries(t.params).map(([k, v]) => `\`${k}=${v}\``).join(", ")} of \`${t.id}\`.`,
+    `Regenerate with \`pnpm exec tsx generator/unitReport.ts ${key}\`. The baseline is the geometry when the annotations were fixed (\`${t.native}/baseline.json\`); baseline and final use the same annotations. Built with ${Object.entries(t.params).map(([k, v]) => `\`${k}=${v}\``).join(", ")} of \`${t.id}\`.`,
     "",
-    `Canvases: sides ${sw / 10} x ${sh / 10} m (${sw} x ${sh} px), ends ${(rows.find((r) => r.end)?.canvas[0] ?? 30) / 10} x ${sh / 10} m, including empty space, 0.1 m a pixel. Origin top left; x right, y down. Side ${t.sideRule}; both sides use the same mapping, so the left (-Z) elevation is mirrored relative to an outside observer, as its BMP is. Ends are seen from outside: rear u = 10 * (z + W / 20), front u = 10 * (W / 20 - z), W the end canvas's width in pixels. v = 10 * (H - y), physical heights: no scale is undone.`,
+    `Canvases: sides ${sw / 10} x ${sh / 10} m (${sw} x ${sh} px), ends ${(rows.find((r) => r.end)?.canvas[0] ?? 30) / 10} x ${sh / 10} m, including empty space, 0.1 m a pixel (an annotation with a metresPerRow field gives its canvas's row height). Origin top left; x right, y down. Side ${t.sideRule}; both sides use the same mapping, so the left (-Z) elevation is mirrored relative to an outside observer, as its BMP is. Ends are seen from outside: rear u = 10 * (z + W / 20), front u = 10 * (W / 20 - z), W the end canvas's width in pixels. v = 10 * (H - y), physical heights: no scale is undone.`,
     "",
     "Each vector is (left, top, width, height). Percentages are 100*x/W, 100*y/H, 100*w/W, 100*h/H of the native canvas. Signed delta = model minus source in percentage points. MAE = sum(abs(delta)) / (4 * number of boxes). Model boxes are the bounds of actual GLB vertices of the named scopes, occluded vertices included. Only the original BMPs define the measurements, never the 4x textures.",
     "",

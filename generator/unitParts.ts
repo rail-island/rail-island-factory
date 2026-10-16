@@ -7,7 +7,9 @@
 
 import { ngon, type MeshBuilder, type Ring } from "./meshBuilder.ts";
 import { coil } from "./cd163.ts";
-import type { Box, Coach, Pt } from "./csdCoachParts.ts";
+import { sectionHalf, type Box, type Coach, type Pt, type Volume } from "./csdCoachParts.ts";
+import { strokeText } from "./strokeFont.ts";
+import type { Vec3 } from "./meshCore.ts";
 import { block, side } from "./vehicleParts.ts";
 
 /** A native pixel box [left, top, right, bottom], pixel edges, origin top left. */
@@ -58,6 +60,8 @@ export interface BogieSpec {
   air?: boolean;
   /** Half the side frames' spacing (m), default 1.0. */
   frame?: number;
+  /** How far the side frames reach beyond the axles (m), default 0.42. */
+  overhang?: number;
 }
 
 /**
@@ -70,12 +74,13 @@ export function unitBogie(c: Coach, x: number, b: BogieSpec): void {
   const ay = b.r * Math.cos(Math.PI / 24);
   const fz = b.frame ?? 1.0;
   const h = b.wb / 2;
+  const over = b.overhang ?? 0.42;
   for (const dx of [-h, h]) m.scope("wheelset", () => c.wheelset(x + dx, b.r));
   m.scope("frame", () => {
     for (const s of [-1, 1]) {
       // the side frame: high over the axle boxes, dropped between them
-      block(m, "bogie", x - h - 0.42, x - h + 0.25, ay + 0.06, ay + 0.24, ...side(s, fz - 0.07, fz + 0.07));
-      block(m, "bogie", x + h - 0.25, x + h + 0.42, ay + 0.06, ay + 0.24, ...side(s, fz - 0.07, fz + 0.07));
+      block(m, "bogie", x - h - over, x - h + 0.25, ay + 0.06, ay + 0.24, ...side(s, fz - 0.07, fz + 0.07));
+      block(m, "bogie", x + h - 0.25, x + h + over, ay + 0.06, ay + 0.24, ...side(s, fz - 0.07, fz + 0.07));
       block(m, "bogie", x - h + 0.25, x + h - 0.25, ay - 0.08, ay + 0.12, ...side(s, fz - 0.07, fz + 0.07));
       for (const dx of [-h, h]) {
         // the axle box and its pair of primary coils
@@ -120,4 +125,31 @@ export function endLamp(m: MeshBuilder, mat: string, e: number, x0: number, z: n
 export function roofBox(m: MeshBuilder, mat: string, xa: number, xb: number, y0: number, w: number, h: number, inset = 0.15): void {
   const ring: Ring = [[-w / 2, y0], [w / 2, y0], [w / 2 - inset, y0 + h], [-w / 2 + inset, y0 + h]];
   m.sweep(mat, "x", ring, Math.min(xa, xb), ring, Math.max(xa, xb));
+}
+
+/**
+ * Painted capitals fitted to a side box (the vlakosimdb liveries' wide-set
+ * "ICE" and "TGV"): the letters' ink, strokes included, spans the box's width
+ * and height, reading left to right from outside on both sides.
+ */
+export function spacedLetters(c: Coach, v: Volume, s: number, text: string, b: Box, mat: string, proud: number): void {
+  const stroke = (b.y1 - b.y0) * 0.1;
+  const h = b.y1 - b.y0 - stroke;
+  // the ink's width is linear in the glyph width w (the gap between letters is 0.2 w)
+  const span = (w: number) => {
+    const us = strokeText(text, 0, 0, h, w, 0.2 * w, false, stroke).map((p) => p[0]);
+    return [Math.min(...us), Math.max(...us)] as const;
+  };
+  const [a1, b1] = span(1);
+  const [a2, b2] = span(2);
+  const slope = b2 - a2 - (b1 - a1);
+  const w = (b.x1 - b.x0 - (b1 - a1 - slope)) / slope;
+  const [lo] = span(w);
+  // the body's skin at the letters' height (a constant plan: these bodies are straight there)
+  const hw0 = Math.max(...v.section.map((p) => Math.abs(p[0])));
+  const planHalf = v.plan[v.plan.length - 1]![1];
+  const z = s * ((sectionHalf(v.section, (b.y0 + b.y1) / 2) * planHalf) / hw0 + proud);
+  // the ink's left end at the box's left edge as seen from outside: low x on the +z side, high x on the -z side
+  const u0 = s > 0 ? c.X(b.x0) - lo : c.X(b.x1) + lo;
+  c.m.facets(mat, strokeText(text, u0, b.y0 + stroke / 2, h, w, 0.2 * w, s < 0, stroke).map(([u, vv]): Vec3 => [u, vv, z]), [0, 0, s]);
 }

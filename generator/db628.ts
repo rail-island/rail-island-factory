@@ -221,13 +221,20 @@ function cab(c: Coach): void {
     slopePanel(m, "glass", 1, upper, fz(2), fz(28), fy(34.4), fy(22.8), 0.014, 0.006);
     slopePanel(m, "cabBlack", 1, upper, fz(15.5), fz(14.5), fy(34.4), fy(22.8), 0.02, 0.004);
   });
-  m.scope("top lamp", () => {
-    slopePanel(m, "cabBlack", 1, upper, fz(13.6), fz(16.4), 3.2, 3.36, 0.008, 0.01);
-    slopePanel(m, "lampWhite", 1, upper, fz(14), fz(16), 3.22, 3.34, 0.016, 0.006);
+  // the photographs: the third headlight in the middle under the windscreen, the DB logo low between the lamps
+  m.scope("centre lamp", () => {
+    const ring = (r: number) => Array.from({ length: 12 }, (_, i): [number, number] => [Math.cos((i * Math.PI) / 6) * r, 1.9 + Math.sin((i * Math.PI) / 6) * r]);
+    const at = (y: number) => upper.x0 + ((y - upper.y0) / (upper.y1 - upper.y0)) * (upper.x1 - upper.x0);
+    for (const [mat, r, d0, d1] of [["white", 0.13, 0.004, 0.012], ["lampWhite", 0.09, 0.012, 0.02]] as const) {
+      // a disc on the sloped front: each rim point pushed out along the slope's normal
+      const n = [1.7, -0.7].map((v) => v / Math.hypot(1.7, 0.7)) as [number, number];
+      const pts = ring(r).map(([z, y]): [number, number, number] => [at(y) + n[0] * d1, y + n[1] * d1, z]);
+      m.slab(mat, pts, [-n[0] * (d1 - d0), -n[1] * (d1 - d0), 0]);
+    }
   });
   m.scope("logo", () => {
-    slopePanel(m, "white", 1, upper, fz(13.2), fz(16.8), 1.76, 2.0, 0.006, 0.004);
-    slopePanel(m, "dbRed", 1, upper, fz(13.6), fz(16.4), 1.79, 1.97, 0.01, 0.003);
+    slopePanel(m, "white", 1, lower, fz(13.4), fz(16.6), 1.2, 1.38, 0.006, 0.004);
+    slopePanel(m, "dbRed", 1, lower, fz(13.8), fz(16.2), 1.23, 1.35, 0.01, 0.003);
   });
   m.scope("lamps", () => {
     for (const [k, s] of [-1, 1].entries())

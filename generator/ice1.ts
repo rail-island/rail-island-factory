@@ -9,8 +9,8 @@
 // sections, the `alongz` elevations (the power car's sloped nose and its
 // skirts, the restaurant's raised roof) and the windows, doors, grilles and the
 // red stripe laid from native pixel boxes, 0.1 m a pixel. Lengths are the
-// published ones (power car 20.56 m, coaches 26.40 m over couplers), widths
-// 3.07 m and 3.02 m, heights 3.84 m and 4.295 m; bogie pivots 11.46 m on the
+// published ones (power car 20.56 m, coaches 26.40 m over couplers), width
+// 3.02 m, heights 3.84 m and 4.295 m; bogie pivots 11.46 m on the
 // power car (published) and 19.0 m on the coaches. See docs/models/foreign-units.md.
 
 import { ngon, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
@@ -18,7 +18,7 @@ import { Coach, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
 import { centreCoupler, EMU_CATALOG, enumParam, pantograph, slopePanel } from "./emuParts.ts";
-import { bOf, roofBox, sideBox, unitBogie, type PxBox, type SideMap } from "./unitParts.ts";
+import { bOf, roofBox, sideBox, spacedLetters, unitBogie, type PxBox, type SideMap } from "./unitParts.ts";
 
 export type Ice1Unit = "powerCar" | "coach" | "restaurant";
 
@@ -59,7 +59,8 @@ const PALETTE: Record<string, MaterialSpec> = {
   equipment: { color: "#3b3d40", roughness: 0.8 },
 };
 
-const POWER_K_Z = 3.07 / 3.0;
+/** The train's published 3.02 m (the power car is given as "up to 3.07 m"; with its fittings the 3.1 m envelope holds). */
+const POWER_K_Z = 3.02 / 3.0;
 const COACH_K_Z = 3.02 / 3.0;
 /** The XML section (alongx), its width scaled; the restaurant's roof rises to 4.3 m. */
 const section = (kz: number, roof: Pt[]): Pt[] => {
@@ -83,8 +84,8 @@ interface CarLayout {
   kZ: number;
 }
 
-/** Power car: the nose tip at source x 0 is +X; 20.56 m to the rear coupler face. */
-const POWER_MAP: SideMap = { x0: 20.56, H: 3.8, kY: ICE1_K_Y };
+/** Power car: the nose tip at source x 0 is +X, 20.55 m from the rear coupler face; the front logo makes the 20.56 m. */
+const POWER_MAP: SideMap = { x0: 20.55, H: 3.8, kY: ICE1_K_Y };
 /** Coaches: 26.4 m over the couplers, source x 0 .. 26.4. */
 const COACH_MAP: SideMap = { x0: 26.4, H: 4.3 };
 
@@ -154,7 +155,7 @@ function powerCar(): MeshBuilder {
         });
         m.scope("lettering", () => {
           const b = box([90, 7, 112, 20]);
-          c.inscription(body, s, (b.x0 + b.x1) / 2, [{ text: "ICE", y: b.y0, h: b.y1 - b.y0 }], 0.006, "lettering");
+          spacedLetters(c, body, s, "ICE", b, "lettering", 0.006);
         });
       });
   });
@@ -171,9 +172,9 @@ function powerCar(): MeshBuilder {
     m.scope("lamps", () => {
       for (const [k, s] of [-1, 1].entries())
         m.scope(`lamp ${k + 1}`, () => {
-          slopePanel(m, "frame", 1, lower, s * 0.5, s * 1.18, 1.52, 1.74, 0.006, 0.01);
-          slopePanel(m, "lampYellow", 1, lower, s * 0.78, s * 1.1, 1.55, 1.71, 0.014, 0.006);
-          slopePanel(m, "lampRed", 1, lower, s * 0.56, s * 0.72, 1.57, 1.69, 0.014, 0.006);
+          slopePanel(m, "frame", 1, lower, s * 0.55, s * 1.25, 1.52, 1.74, 0.006, 0.01);
+          slopePanel(m, "lampYellow", 1, lower, s * 0.83, s * 1.17, 1.55, 1.71, 0.014, 0.006);
+          slopePanel(m, "lampRed", 1, lower, s * 0.61, s * 0.77, 1.57, 1.69, 0.014, 0.006);
         });
       slopePanel(m, "frame", 1, lower, -0.4, 0.4, 1.56, 1.7, 0.008, 0.01);
       for (const y of [1.585, 1.625, 1.665]) slopePanel(m, "grille", 1, lower, -0.36, 0.36, y, y + 0.018, 0.012, 0.004);
