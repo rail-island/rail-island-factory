@@ -421,6 +421,8 @@ export const CABLE_CABIN_CATALOG: CatalogFields = {
 
 /** Every design of the family, by catalog id; `references` is the folder of its source photos under assets/. */
 export const CABLE_CABINS: ProceduralDesign[] = [
-  { id: "proc-vehicle-cablecar-cabin", title: "Aerial Tramway Car", build: cablecarCabin, references: "cablecar-cabin", catalog: CABLE_CABIN_CATALOG },
+  // Modelled long along Z; the game runs a cabin along X, so it is turned a quarter
+  // (the old cablecar-cabin model carried the same yaw).
+  { id: "proc-vehicle-cablecar-cabin", title: "Aerial Tramway Car", build: cablecarCabin, references: "cablecar-cabin", catalog: { ...CABLE_CABIN_CATALOG, yaw: 90 } },
   { id: "proc-vehicle-gondola-cabin", title: "Small Gondola", build: gondolaCabin, references: "gondola-cabin", catalog: CABLE_CABIN_CATALOG },
 ];
