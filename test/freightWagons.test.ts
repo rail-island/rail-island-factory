@@ -1,3 +1,4 @@
+import { proceduralId } from "../generator/modelId.ts";
 import fs from "node:fs";
 import { describe, it, expect } from "vitest";
 import { FREIGHT_WAGONS, HABIS_PARAMS, PAO_PARAMS, SQNS_PARAMS, SQNS_PINS } from "../generator/freightWagons";
@@ -23,13 +24,13 @@ const values = (specs: readonly { values: Array<{ value: string }> }[]) => specs
 // Length over the buffer heads and the axle centres (Factory x) of each design: the XML
 // bumpers and the wheel contact points of its geometry (see each SOURCES.md).
 const MECHANICS: Record<string, { length: number; axles: number[] }> = {
-  "veh-sqns-container-wagon": { length: 19.8, axles: [-8.05, -6.25, 6.25, 8.05] },
-  "veh-pao-flat-wagon": { length: 15.3, axles: [-6.0, -4.1, 4.1, 6.0] },
-  "veh-habis-sliding-wall-wagon": { length: 23.2, axles: [-9.65, -7.85, 7.95, 9.75] },
-  "veh-hadgs-hopper-wagon": { length: 16.8, axles: [-6.4, -4.6, 4.5, 6.3] },
-  "veh-faccs-hopper-wagon": { length: 12.8, axles: [-5.15, -3.15, 3.15, 5.15] },
-  "veh-falls-hopper-wagon": { length: 13.5, axles: [-5.3, -3.3, 2.8, 4.8] },
-  "veh-wap-hopper-wagon": { length: 13.5, axles: [-4.2, -2.2, 2.9, 4.9] },
+  "proc-vehicle-sqns-container-wagon": { length: 19.8, axles: [-8.05, -6.25, 6.25, 8.05] },
+  "proc-vehicle-pao-flat-wagon": { length: 15.3, axles: [-6.0, -4.1, 4.1, 6.0] },
+  "proc-vehicle-habis-sliding-wall-wagon": { length: 23.2, axles: [-9.65, -7.85, 7.95, 9.75] },
+  "proc-vehicle-hadgs-hopper-wagon": { length: 16.8, axles: [-6.4, -4.6, 4.5, 6.3] },
+  "proc-vehicle-faccs-hopper-wagon": { length: 12.8, axles: [-5.15, -3.15, 3.15, 5.15] },
+  "proc-vehicle-falls-hopper-wagon": { length: 13.5, axles: [-5.3, -3.3, 2.8, 4.8] },
+  "proc-vehicle-wap-hopper-wagon": { length: 13.5, axles: [-4.2, -2.2, 2.9, 4.9] },
 };
 
 describe("container, flat, sliding-wall and hopper wagons transferred from vlakosimdb", () => {
@@ -37,20 +38,20 @@ describe("container, flat, sliding-wall and hopper wagons transferred from vlako
     expect(FREIGHT_WAGONS.map((d) => d.id)).toEqual(Object.keys(MECHANICS));
     for (const d of FREIGHT_WAGONS) {
       expect(ALL_VEHICLES).toContain(d);
-      expect(designSource(d.id)).toBe("freightWagons.ts");
+      expect(designSource(proceduralId(d.id))).toBe("freightWagons.ts");
       expect(d.catalog).toEqual(WAGON_CATALOG);
       for (const f of ["SOURCES.md", "PHOTOS.md"]) expect(fs.existsSync(new URL(`../assets/${d.references}/${f}`, import.meta.url)), `${d.id} ${f}`).toBe(true);
     }
     expect(values(SQNS_PARAMS)).toEqual(["empty", "maersk"]);
-    expect(values(PAO_PARAMS)).toEqual(["tubes", "karosaB951"]);
+    expect(values(PAO_PARAMS)).toEqual(["empty", "tubes"]);
     expect(values(HABIS_PARAMS)).toEqual(["tw1", "tw2"]);
     expect(values(FACCS_PARAMS)).toEqual(["cd", "viamont"]);
     expect(values(FALLS_PARAMS)).toEqual(["cd", "sd", "viamont"]);
     expect(SQNS_PARAMS[0]).toMatchObject({ name: "cargo", default: "empty" });
     expect(PAO_PARAMS[0]).toMatchObject({ name: "cargo", default: "tubes" });
     for (const p of [HABIS_PARAMS, FACCS_PARAMS, FALLS_PARAMS]) expect(p[0]!.name).toBe("livery");
-    expect(design("veh-hadgs-hopper-wagon").params).toBeUndefined();
-    expect(design("veh-wap-hopper-wagon").params).toBeUndefined();
+    expect(design("proc-vehicle-hadgs-hopper-wagon").params).toBeUndefined();
+    expect(design("proc-vehicle-wap-hopper-wagon").params?.[0]).toMatchObject({name:"cargo",default:"coal"});
     // the liveries name the vlakosimdb folder each one comes from
     expect(FACCS_LIVERIES.map((l) => l.source)).toEqual(["n_faccs", "viamont_faccs"]);
     expect(FALLS_LIVERIES.map((l) => l.source)).toEqual(["n_falls", "sd_falls", "viamont_falls"]);
@@ -63,7 +64,7 @@ describe("container, flat, sliding-wall and hopper wagons transferred from vlako
       expect(FREIGHT_TRANSFERS.some((t) => t.id === d.id && JSON.stringify(t.params ?? {}) === JSON.stringify(defaults)), d.id).toBe(true);
     }
     // every cargo of the two loaded designs is one compared vlakosimdb vehicle
-    for (const id of ["veh-sqns-container-wagon", "veh-pao-flat-wagon"])
+    for (const id of ["proc-vehicle-sqns-container-wagon"])
       expect(FREIGHT_TRANSFERS.filter((t) => t.id === id).map((t) => t.params!.cargo)).toEqual(values(design(id).params!));
   });
 
@@ -109,41 +110,31 @@ describe("container, flat, sliding-wall and hopper wagons transferred from vlako
     }
   });
 
-  it("carries exactly its own load: nothing on the empty Sqns, a 40 ft Maersk box on the pins, tubes or a bus on the Pao", () => {
+  it("carries exactly its own load: nothing on the empty Sqns, a 40 ft Maersk box on the pins, tubes or an empty deck on the Pao", () => {
     const top = (nodes: LeafNode[]) => Math.max(...nodes.map((n) => n.max![1]));
-    expect(tree("veh-sqns-container-wagon").filter((n) => n.id.startsWith("cargo/"))).toEqual([]);
-    const box = tree("veh-sqns-container-wagon", { cargo: "maersk" }).filter((n) => n.id.startsWith("cargo/box/"));
+    expect(tree("proc-vehicle-sqns-container-wagon").filter((n) => n.id.startsWith("cargo/"))).toEqual([]);
+    const box = tree("proc-vehicle-sqns-container-wagon", { cargo: "maersk" }).filter((n) => n.id.startsWith("cargo/box/"));
     expect(Math.max(...box.map((n) => n.max![0])) - Math.min(...box.map((n) => n.min![0]))).toBeCloseTo(12.192, 3);
     expect(Math.min(...box.map((n) => n.min![1]))).toBeCloseTo(1.303, 3);
     expect(top(box)).toBeCloseTo(1.3 + 2.591 - 0.003, 3);
     // the pins under the box's corner castings: the box ends over the 3.6 and 16.0 m pins
     expect(Math.min(...box.map((n) => n.min![0])) + 9.9).toBeGreaterThan(SQNS_PINS[1]!);
     expect(Math.max(...box.map((n) => n.max![0])) + 9.9).toBeLessThan(SQNS_PINS[5]! + 0.2);
-    const tubes = tree("veh-pao-flat-wagon").filter((n) => n.id.startsWith("cargo/"));
+    const tubes = tree("proc-vehicle-pao-flat-wagon").filter((n) => n.id.startsWith("cargo/"));
     expect(top(tubes)).toBeGreaterThan(1.68);
     expect(top(tubes)).toBeLessThanOrEqual(1.75); // the XML `load` hull reaches 1.7 m
-    const bus = tree("veh-pao-flat-wagon", { cargo: "karosaB951" }).filter((n) => n.id.startsWith("cargo/"));
-    expect(bus.some((n) => n.id.startsWith("cargo/tubes/"))).toBe(false);
-    // the inline bus at tx 1.9, ty 1.2: its 11.7 m body from source x 2.0 and its roof box at 3.36 m over the deck
-    const body = bus.filter((n) => n.id.startsWith("cargo/body/"));
-    expect(Math.min(...body.map((n) => n.min![0])) + 7.65).toBeCloseTo(2.0, 5);
-    expect(Math.max(...body.map((n) => n.max![0])) + 7.65).toBeCloseTo(13.6, 5);
-    expect(top(bus)).toBeCloseTo(1.2 + 3.36, 5);
-    // the bus's wheels stand on the deck
-    const wheels = bus.filter((n) => n.id.startsWith("cargo/wheels/") && n.material === "tyre");
-    expect(wheels).toHaveLength(4);
-    for (const w of wheels) expect(w.min![1]).toBeCloseTo(1.204, 5);
+    expect(tree("proc-vehicle-pao-flat-wagon", { cargo: "empty" }).filter((n) => n.id.startsWith("cargo/"))).toHaveLength(0);
   });
 
   it("varies a livery's paint only: each livery builds the same faces in other colours", () => {
-    for (const id of ["veh-habis-sliding-wall-wagon", "veh-faccs-hopper-wagon"]) {
+    for (const id of ["proc-vehicle-habis-sliding-wall-wagon", "proc-vehicle-faccs-hopper-wagon"]) {
       const [a, b] = paramCombinations(design(id).params).map((p) => design(id).build(p).sourceTree(id, id));
       const shape = (t: typeof a) => leaves(t!.root).filter((n) => !n.id.includes("viamont")).map((n) => [n.id, n.min, n.max]);
       expect(shape(b)).toEqual(shape(a));
       expect(b!.colors).not.toEqual(a!.colors);
     }
     // the Falls liveries share the body; SD and Viamont add the lower panels
-    const falls = paramCombinations(FALLS_PARAMS).map((p) => leaves(design("veh-falls-hopper-wagon").build(p).sourceTree("f", "f").root).filter((n) => n.id.startsWith("body/upper/") || n.id.startsWith("body/lower/")));
+    const falls = paramCombinations(FALLS_PARAMS).map((p) => leaves(design("proc-vehicle-falls-hopper-wagon").build(p).sourceTree("f", "f").root).filter((n) => n.id.startsWith("body/upper/") || n.id.startsWith("body/lower/")));
     expect(falls[1]!.map((n) => [n.id, n.min, n.max])).toEqual(falls[0]!.map((n) => [n.id, n.min, n.max]));
     expect(falls[2]!.map((n) => [n.id, n.min, n.max])).toEqual(falls[0]!.map((n) => [n.id, n.min, n.max]));
   });
@@ -164,8 +155,8 @@ describe("container, flat, sliding-wall and hopper wagons transferred from vlako
 
   it("reads MAERSK and TRANSWAGGON from outside on both sides", () => {
     for (const [id, params, prefix] of [
-      ["veh-sqns-container-wagon", { cargo: "maersk" }, (s: string) => `cargo/${s}-side-livery/lettering/`],
-      ["veh-habis-sliding-wall-wagon", undefined, (s: string) => `body/${s}-side/name-plate/`],
+      ["proc-vehicle-sqns-container-wagon", { cargo: "maersk" }, (s: string) => `cargo/${s}-side-livery/lettering/`],
+      ["proc-vehicle-habis-sliding-wall-wagon", undefined, (s: string) => `body/${s}-side/name-plate/`],
     ] as const) {
       for (const side of ["right", "left"]) {
         const ink = tree(id, params).filter((n) => n.id.startsWith(prefix(side)) && n.material === "ink");

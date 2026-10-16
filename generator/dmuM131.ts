@@ -125,5 +125,5 @@ export function m131(params?: ParamValues): MeshBuilder {
 }
 
 export const M131_DESIGNS: ProceduralDesign[] = [
-  { id: "veh-csd-m131", title: "CSD M 131.1 Hurvinek", build: m131, params: M131_PARAMS, catalog: DMU_CATALOG, references: "csd-m131" },
+  { id: "proc-vehicle-csd-m131", title: "CSD M 131.1 Hurvinek", build: m131, params: M131_PARAMS, catalog: DMU_CATALOG, references: "csd-m131" },
 ];

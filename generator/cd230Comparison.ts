@@ -40,7 +40,7 @@ export function cd230Comparison(build = cd230) {
     if (isLeaf(n)) leaves.push(n);
     else n.children.forEach(walk);
   };
-  walk(mesh.sourceTree("veh-cd-230", "CD 230").root);
+  walk(mesh.sourceTree("proc-vehicle-cd-230", "CD 230").root);
   const { json, bin } = parseGlb(mesh.toGlb("CD 230 comparison"));
   const tris = collectTriangles(json, bin);
   const byMaterial = new Map<string, typeof tris>();

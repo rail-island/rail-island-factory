@@ -20,7 +20,7 @@ and approximate massing; the photographs guide the west facade and southern towe
 `GOTHIC_CATHEDRALS` is registered in `generate.ts`, so the normal build produces
 GLBs, standalone JS models, source trees, thumbnails, reference images and
 building catalog entries. Both use `Historical` / `hist_center`, `defaultScale`
-0.9 and CC0 / Rail Island, matching the reference catalog. The ids are stable.
+1 and CC0 / Rail Island. The ids are stable.
 
 ## Coordinates and budget
 
@@ -79,3 +79,11 @@ material conflicts, facade directions and actual openings between the belfry
 piers. The shared JS-model suite also checks exported JS/GLB geometry parity.
 Review `export/thumbs/bld-notre-dame.png` and
 `export/thumbs/bld-prague-castle-st-vitus.png` after `pnpm build:models`.
+
+## Procedural export contract
+
+All current export IDs use `proc-building-` or `proc-vehicle-`; source/reference
+names in older tables identify the original models. See [legacy-mapping.md](legacy-mapping.md)
+for the authoritative ID, scale and runtime conversion contract. Ground vehicles
+have no exported `defaultScale`; buildings, aircraft and ships use 1 except the
+Eiffel Tower placement exception.

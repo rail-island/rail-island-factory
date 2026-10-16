@@ -35,24 +35,24 @@ function validNumber(n: string): boolean {
 
 // over the buffers, the pivots and the axle offsets in each bogie (published, see the SOURCES.md files)
 const RUNNING_GEAR: Record<string, { length: number; pivot: number; axles: number[]; wheelR: number }> = {
-  "veh-cd-750": { length: 16.54, pivot: 4.5, axles: [-1.2, 1.2], wheelR: 0.5 },
-  "veh-cd-781": { length: 17.55, pivot: 4.3, axles: [-2.1, 0, 2.1], wheelR: 0.525 },
-  "veh-csd-t679-0": { length: 18.0, pivot: 4.78, axles: [-2.0, 0, 2.0], wheelR: 0.5 },
-  "veh-csd-t499": { length: 17.84, pivot: 5.0, axles: [-1.3, 1.3], wheelR: 0.5 },
-  "veh-cd-771": { length: 17.25, pivot: 4.33, axles: [-2.0, 0, 2.0], wheelR: 0.525 },
+  "proc-vehicle-cd-750": { length: 16.54, pivot: 4.5, axles: [-1.2, 1.2], wheelR: 0.5 },
+  "proc-vehicle-cd-781": { length: 17.55, pivot: 4.3, axles: [-2.1, 0, 2.1], wheelR: 0.525 },
+  "proc-vehicle-csd-t679-0": { length: 18.0, pivot: 4.78, axles: [-2.0, 0, 2.0], wheelR: 0.5 },
+  "proc-vehicle-csd-t499": { length: 17.84, pivot: 5.0, axles: [-1.3, 1.3], wheelR: 0.5 },
+  "proc-vehicle-cd-771": { length: 17.25, pivot: 4.33, axles: [-2.0, 0, 2.0], wheelR: 0.525 },
 };
 
 describe("Czech mainline diesel locomotives", () => {
   it("are the five designs with their ids, titles and default parameters", () => {
-    expect(DIESEL_LOCOS.map((d) => d.id)).toEqual(["veh-cd-750", "veh-cd-781", "veh-csd-t679-0", "veh-csd-t499", "veh-cd-771"]);
+    expect(DIESEL_LOCOS.map((d) => d.id)).toEqual(["proc-vehicle-cd-750", "proc-vehicle-cd-781", "proc-vehicle-csd-t679-0", "proc-vehicle-csd-t499", "proc-vehicle-cd-771"]);
     expect(DIESEL_LOCOS.map((d) => d.title)).toEqual(["CD 749 / 750 / 753 / 754", "CD 781 Sergej", "CSD T 679.0 Pomeranc", "CSD T 499.0 / CD 759 Kyklop", "CD 770 / 771 Cmelak"]);
-    expect(design("veh-cd-750").params![0]).toMatchObject({ name: "livery", default: "cd750" });
-    expect(design("veh-cd-750").params![0]!.values.map((v) => v.value)).toEqual(["cd750", "cd750No308", "cd753", "cd754", "cd754No013", "cd749"]);
-    expect(design("veh-cd-781").params![0]!.values.map((v) => v.value)).toEqual(["cd781", "cd781No462"]);
-    expect(design("veh-cd-771").params![0]).toMatchObject({ name: "livery", default: "cd771No235" });
-    expect(design("veh-cd-771").params![0]!.values.map((v) => v.value)).toEqual(["cd771", "cd771No235", "cd771No421"]);
-    expect(design("veh-csd-t679-0").params).toBeUndefined();
-    expect(design("veh-csd-t499").params).toBeUndefined();
+    expect(design("proc-vehicle-cd-750").params![0]).toMatchObject({ name: "livery", default: "cd750" });
+    expect(design("proc-vehicle-cd-750").params![0]!.values.map((v) => v.value)).toEqual(["cd750", "cd750No308", "cd753", "cd754", "cd754No013", "cd749"]);
+    expect(design("proc-vehicle-cd-781").params![0]!.values.map((v) => v.value)).toEqual(["cd781", "cd781No462"]);
+    expect(design("proc-vehicle-cd-771").params![0]).toMatchObject({ name: "livery", default: "cd771No235" });
+    expect(design("proc-vehicle-cd-771").params![0]!.values.map((v) => v.value)).toEqual(["cd771", "cd771No235", "cd771No421"]);
+    expect(design("proc-vehicle-csd-t679-0").params).toBeUndefined();
+    expect(design("proc-vehicle-csd-t499").params).toBeUndefined();
     for (const d of DIESEL_LOCOS) expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "loco" });
   });
 
@@ -92,7 +92,7 @@ describe("Czech mainline diesel locomotives", () => {
   }, 120_000);
 
   it("builds the Bardotka body for the CD 749 and the Brejlovec for the others", () => {
-    const bardotka = built("veh-cd-750", { livery: "cd749" });
+    const bardotka = built("proc-vehicle-cd-750", { livery: "cd749" });
     const xs = bardotka.tris.flatMap((t) => t.p.map((p) => p[0]));
     expect(Math.max(...xs) - Math.min(...xs)).toBeCloseTo(16.5, 2);
     // the brow over the windscreen overhangs the glass's top (XML alongz: 0.2 m ahead at 3.72 m),
@@ -103,14 +103,14 @@ describe("Czech mainline diesel locomotives", () => {
     expect(front("red", 3.72, 3.9)).toBeGreaterThan(glassTop + 0.15);
     expect(front("grey", 2.6, 2.75)).toBeGreaterThan(glassFoot + 0.3);
     for (const livery of Object.keys(CD750_LIVERIES).filter((k) => k !== "cd749")) {
-      const { tris } = built("veh-cd-750", { livery });
+      const { tris } = built("proc-vehicle-cd-750", { livery });
       const lx = tris.flatMap((t) => t.p.map((p) => p[0]));
       expect(Math.max(...lx) - Math.min(...lx), livery).toBeCloseTo(16.54, 2);
     }
   }, 120_000);
 
   it("matches the independently annotated native fronts and sides within the stated pixel tolerances", () => {
-    const counts: Record<string, number> = { "veh-cd-750": 60, "veh-cd-781": 35, "veh-csd-t679-0": 27, "veh-csd-t499": 29, "veh-cd-771": 14 };
+    const counts: Record<string, number> = { "proc-vehicle-cd-750": 60, "proc-vehicle-cd-781": 35, "proc-vehicle-csd-t679-0": 27, "proc-vehicle-csd-t499": 29, "proc-vehicle-cd-771": 14 };
     for (const c of DIESEL_COMPARISONS) {
       const rows = dieselComparison(c);
       expect(rows, c.id).toHaveLength(counts[c.id]!);

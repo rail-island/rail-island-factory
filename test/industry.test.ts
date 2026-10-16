@@ -1,3 +1,4 @@
+import { proceduralId } from "../generator/modelId.ts";
 import { expect, it } from 'vitest';
 import { INDUSTRY } from '../generator/industry.ts';
 import { INDUSTRY_MIGRATION } from '../generator/industryMigration.ts';
@@ -34,7 +35,7 @@ for (const d of INDUSTRY) it(`${d.id}: all variants deterministic, grounded and 
   expect(shapes.size).toBe(paramCombinations(d.params).length);
 });
 it('exports a separate animated turbine rotor', () => {
-  const d = INDUSTRY.find(d => d.id === 'industry-wind-turbine')!;
+  const d = INDUSTRY.find(d => proceduralId(d.id) === 'proc-building-industry-wind-turbine')!;
   const { json } = parseGlb(d.build().toGlb('wind'));
   const animated = json as unknown as { nodes: { name?: string }[]; animations: unknown[] };
   expect(animated.nodes.some(n => n.name === 'rotor')).toBe(true);

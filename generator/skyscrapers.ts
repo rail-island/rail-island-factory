@@ -703,7 +703,7 @@ export function pyramid(params?: ParamValues): MeshBuilder {
 export const SKYSCRAPER_CATALOG: CatalogFields = {
   category: "Commercial",
   group: "skyscraper_c",
-  defaultScale: 0.5,
+  defaultScale: 1,
   license: "CC0",
   author: "Rail Island",
   source: "Rail Island",

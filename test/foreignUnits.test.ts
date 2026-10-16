@@ -38,7 +38,7 @@ const designs = [...DB628_DESIGNS, ...MDMOT_DESIGNS, ...ICE1_DESIGNS, ...TGV_DES
 
 describe("the foreign multiple units", () => {
   it("are four parametric rail designs with their reference folders and defaults", () => {
-    expect(designs.map((d) => d.id)).toEqual(["veh-db-628", "veh-mav-mdmot", "veh-ice-1", "veh-tgv"]);
+    expect(designs.map((d) => d.id)).toEqual(["proc-vehicle-db-628", "proc-vehicle-mav-mdmot", "proc-vehicle-ice-1", "proc-vehicle-tgv"]);
     for (const d of designs) {
       expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "loco" });
       expect(d.references).toMatch(/^(db-628|mav-mdmot|ice-1|tgv)$/);
@@ -68,7 +68,7 @@ describe("the foreign multiple units", () => {
     });
 
   it("DB 628: 22.70 m from the cab's buffers to the short coupling, the 628.2's bogies, both liveries one body", () => {
-    const { stats: s, nodes } = built(db628(), "veh-db-628");
+    const { stats: s, nodes } = built(db628(), "proc-vehicle-db-628");
     expect(s.max[0] - s.min[0]).toBeCloseTo(22.7, 3);
     const body = bounds(nodes, /^body\/[a-z-]*band/);
     expect(body.max[2] - body.min[2]).toBeCloseTo(3.0, 3);
@@ -81,7 +81,7 @@ describe("the foreign multiple units", () => {
     expect(bounds(nodes, /^cab\/buffers\//).max[0]).toBeCloseTo(s.max[0], 5);
     expect(bounds(nodes, /^rear-end\/coupler\//).min[0]).toBeCloseTo(s.min[0], 5);
     expect(bounds(nodes, /^cab\/windscreen/).min[0]).toBeGreaterThan(9.5);
-    const red = built(db628({ livery: "red" }), "veh-db-628");
+    const red = built(db628({ livery: "red" }), "proc-vehicle-db-628");
     expect(red.stats.min).toEqual(s.min);
     expect(red.stats.max).toEqual(s.max);
     const mats = (livery: string) => new Set(db628({ livery }).sourceTree("x", "x").materials);
@@ -108,7 +108,7 @@ describe("the foreign multiple units", () => {
       ["drivingTrailer", 22.06, 15.5, 2.5],
     ] as const;
     for (const [unit, length, pivots, wb] of cases) {
-      const { stats: s, nodes } = built(mavMdmot({ unit }), "veh-mav-mdmot");
+      const { stats: s, nodes } = built(mavMdmot({ unit }), "proc-vehicle-mav-mdmot");
       expect(s.max[0] - s.min[0]).toBeCloseTo(length, 3);
       const body = bounds(nodes, /^body\/[a-z-]*band/);
       expect(body.max[2] - body.min[2]).toBeCloseTo(2.85, 3);
@@ -133,7 +133,7 @@ describe("the foreign multiple units", () => {
   });
 
   it("ICE 1: 20.56 m power car with its 11.46 m pivots and one raised pantograph; 26.4 m coaches, the restaurant's 4.3 m roof", () => {
-    const p = built(ice1(), "veh-ice-1");
+    const p = built(ice1(), "proc-vehicle-ice-1");
     expect(p.stats.max[0] - p.stats.min[0]).toBeCloseTo(20.56, 3);
     const pa = axles(p.nodes);
     expect(pa[1]! - pa[0]!).toBeCloseTo(3.0, 3);
@@ -144,7 +144,7 @@ describe("the foreign multiple units", () => {
     expect(head.max[0]).toBeLessThan(-4); // over the rear bogie: the nose is at +X
     expect(bounds(p.nodes, /^cab\/windscreen/).min[0]).toBeGreaterThan(7);
     for (const [unit, roof] of [["coach", 3.8], ["restaurant", 4.3]] as const) {
-      const { stats: s, nodes } = built(ice1({ unit }), "veh-ice-1");
+      const { stats: s, nodes } = built(ice1({ unit }), "proc-vehicle-ice-1");
       expect(s.max[0] - s.min[0]).toBeCloseTo(26.4, 3);
       expect(bounds(nodes, /^body\/[a-z-]*band/).max[1]).toBeCloseTo(roof, 3);
       const a = axles(nodes);
@@ -158,7 +158,7 @@ describe("the foreign multiple units", () => {
 
   it("TGV: published lengths, the power car's 14.0 m pivots and raised pantograph, the livery's roof", () => {
     for (const livery of ["pse", "atlantique"] as const) {
-      const { stats: s, nodes } = built(tgv({ livery }), "veh-tgv");
+      const { stats: s, nodes } = built(tgv({ livery }), "proc-vehicle-tgv");
       expect(s.max[0] - s.min[0]).toBeCloseTo(TGV_POWER_LENGTH, 3);
       expect(bounds(nodes, /^body\/[a-z-]*band/).max[1]).toBeCloseTo(4.1, 3);
       expect(bounds(nodes, /^body\/[a-z-]*band/).max[2] * 2).toBeCloseTo(2.814, 3);
@@ -176,7 +176,7 @@ describe("the foreign multiple units", () => {
     };
     expect(high("atlantique")).toBeLessThan(high("pse") - 1.5);
     for (const [unit, length] of [["endCoach", TGV_END_LENGTH], ["coach", TGV_COACH_LENGTH]] as const) {
-      const { stats: s, nodes } = built(tgv({ unit }), "veh-tgv");
+      const { stats: s, nodes } = built(tgv({ unit }), "proc-vehicle-tgv");
       expect(s.max[0] - s.min[0]).toBeCloseTo(length, 3);
       expect(bounds(nodes, /^body\/[a-z-]*band/).max[2] * 2).toBeCloseTo(2.904, 3);
       expect(bounds(nodes, /^body\/[a-z-]*band/).max[1]).toBeLessThanOrEqual(unit === "coach" ? 3.42 + 1e-6 : 3.9);
@@ -184,7 +184,7 @@ describe("the foreign multiple units", () => {
   });
 
   it("TGV: two coupled coaches' Jacobs halves make one 3.0 m bogie centred on their joint", () => {
-    const coach = built(tgv({ unit: "coach" }), "veh-tgv");
+    const coach = built(tgv({ unit: "coach" }), "proc-vehicle-tgv");
     const L = TGV_COACH_LENGTH;
     // one wheelset 1.5 m inside each joint, nothing beyond the joints
     expect(axles(coach.nodes)).toEqual([-L / 2 + 1.5, L / 2 - 1.5].map((x) => Math.round(x * 1000) / 1000));
@@ -197,7 +197,7 @@ describe("the foreign multiple units", () => {
     expect(ahead[0]! - joint).toBeCloseTo(1.5, 3);
     expect(joint - own[1]!).toBeCloseTo(1.5, 3);
     // the end coach: its own bogie near the power car (+X), half a Jacobs bogie at -X
-    const end = built(tgv({ unit: "endCoach" }), "veh-tgv");
+    const end = built(tgv({ unit: "endCoach" }), "proc-vehicle-tgv");
     const ea = axles(end.nodes);
     expect(ea.length).toBe(3);
     expect(ea[0]).toBeCloseTo(-TGV_END_LENGTH / 2 + 1.5, 3);

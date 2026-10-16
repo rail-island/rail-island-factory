@@ -27,22 +27,22 @@ const valid = (number: string): boolean => {
 
 // published dimensions (assets/<folder>/SOURCES.md): over the buffers or couplers, the axles' x, the wheel radius, the height
 const SPECS: Record<string, { lob: number; axles: number[]; r: number; height: [number, number] }> = {
-  "veh-cd-704": { lob: 7.5, axles: [-1.6, 1.6], r: 0.5, height: [3.55, 3.75] },
-  "veh-cd-710": { lob: 9.44, axles: [-2.05, 0.15, 2.15], r: 0.5, height: [3.6, 3.8] },
-  "veh-cd-714": { lob: 14.24, axles: [-5.0, -2.6, 2.6, 5.0], r: 0.5, height: [4.2, 4.45] },
-  "veh-cd-742": { lob: 13.6, axles: [-4.55, -2.15, 2.15, 4.55], r: 0.5, height: [4.4, 4.5] },
-  "veh-db-212": { lob: 12.3, axles: [-4.1, -1.9, 1.9, 4.1], r: 0.475, height: [4.25, 4.35] },
-  "veh-muv-69": { lob: 6.76, axles: [-2.127, 1.598], r: 0.28, height: [2.9, 3.15] },
+  "proc-vehicle-cd-704": { lob: 7.5, axles: [-1.6, 1.6], r: 0.5, height: [3.55, 3.75] },
+  "proc-vehicle-cd-710": { lob: 9.44, axles: [-2.05, 0.15, 2.15], r: 0.5, height: [3.6, 3.8] },
+  "proc-vehicle-cd-714": { lob: 14.24, axles: [-5.0, -2.6, 2.6, 5.0], r: 0.5, height: [4.2, 4.45] },
+  "proc-vehicle-cd-742": { lob: 13.6, axles: [-4.55, -2.15, 2.15, 4.55], r: 0.5, height: [4.4, 4.5] },
+  "proc-vehicle-db-212": { lob: 12.3, axles: [-4.1, -1.9, 1.9, 4.1], r: 0.475, height: [4.25, 4.35] },
+  "proc-vehicle-muv-69": { lob: 6.76, axles: [-2.127, 1.598], r: 0.28, height: [2.9, 3.15] },
 };
 
 describe("small and shunting diesels from vlakosimdb", () => {
   it("registers the six designs with their parameters and defaults", () => {
-    expect(SMALL_DIESELS.map((d) => d.id)).toEqual(["veh-cd-704", "veh-cd-710", "veh-cd-714", "veh-cd-742", "veh-db-212", "veh-muv-69"]);
+    expect(SMALL_DIESELS.map((d) => d.id)).toEqual(["proc-vehicle-cd-704", "proc-vehicle-cd-710", "proc-vehicle-cd-714", "proc-vehicle-cd-742", "proc-vehicle-db-212", "proc-vehicle-muv-69"]);
     const values = (id: string) => SMALL_DIESELS.find((d) => d.id === id)!.params?.map((p) => [p.name, p.default, p.values.map((v) => v.value)]);
-    expect(values("veh-cd-704")).toEqual([["livery", "cd704", ["cd704", "t2380"]]]);
-    expect(values("veh-cd-742")).toEqual([["variant", "viamont742", ["viamont742", "viamont740", "cd743"]]]);
-    expect(values("veh-db-212")).toEqual([["livery", "oldRed", ["oldRed", "oceanBlue", "trafficRed"]]]);
-    for (const id of ["veh-cd-710", "veh-cd-714", "veh-muv-69"]) expect(values(id)).toBeUndefined();
+    expect(values("proc-vehicle-cd-704")).toEqual([["livery", "cd704", ["cd704", "t2380"]]]);
+    expect(values("proc-vehicle-cd-742")).toEqual([["variant", "viamont742", ["viamont742", "viamont740", "cd743"]]]);
+    expect(values("proc-vehicle-db-212")).toEqual([["livery", "oldRed", ["oldRed", "oceanBlue", "trafficRed"]]]);
+    for (const id of ["proc-vehicle-cd-710", "proc-vehicle-cd-714", "proc-vehicle-muv-69"]) expect(values(id)).toBeUndefined();
     for (const d of SMALL_DIESELS) expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "loco" });
   });
 
@@ -101,7 +101,7 @@ describe("small and shunting diesels from vlakosimdb", () => {
 
   it("gives the 740 its low, wide short hood and the 710 its coupling rods", () => {
     const top = (params: ParamValues) => {
-      const hood = build("veh-cd-742", params).nodes.filter((n) => n.id.startsWith("body/short-hood/"));
+      const hood = build("proc-vehicle-cd-742", params).nodes.filter((n) => n.id.startsWith("body/short-hood/"));
       return [Math.max(...hood.map((n) => n.max![1])), Math.max(...hood.map((n) => n.max![2]))];
     };
     const [h742, w742] = top({ variant: "viamont742" });
@@ -110,7 +110,7 @@ describe("small and shunting diesels from vlakosimdb", () => {
     expect(h740).toBeLessThan(3.2);
     expect(w740).toBeCloseTo(1.15, 5);
     expect(w742).toBeCloseTo(1.0, 5);
-    const rods = build("veh-cd-710").nodes.filter((n) => n.id.includes("/rods/coupling-rod"));
+    const rods = build("proc-vehicle-cd-710").nodes.filter((n) => n.id.includes("/rods/coupling-rod"));
     expect(rods).toHaveLength(2);
     for (const r of rods) {
       expect(r.min![0]).toBeLessThan(-2.05);

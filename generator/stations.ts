@@ -1198,8 +1198,8 @@ export const STATION_CATALOG: CatalogFields = {
 
 /** Every design of the family, by catalog id; `references` is the folder of its source photos under assets/. */
 export const STATIONS: ProceduralDesign[] = [
-  { id: "bld-prague-main-station", title: "Prague Main Station", build: pragueMainStation, references: "prague-main-station", catalog: { ...STATION_CATALOG, defaultScale: 1.3 } },
-  { id: "bld-station-building", title: "Station Building", build: stationBuilding, references: "station-building", catalog: { ...STATION_CATALOG, defaultScale: 1.88 } },
-  { id: "bld-station-halt", title: "Station Halt", build: stationHalt, references: "station-halt", catalog: { ...STATION_CATALOG, defaultScale: 1.88 } },
-  { id: "bld-suburban-station", title: "Suburban Station", build: suburbanStation, references: "suburban-station", catalog: { ...STATION_CATALOG, defaultScale: 1.88 } },
+  { id: "bld-prague-main-station", title: "Prague Main Station", build: pragueMainStation, references: "prague-main-station", catalog: { ...STATION_CATALOG, defaultScale: 1 } },
+  { id: "bld-station-building", title: "Station Building", build: stationBuilding, references: "station-building", catalog: { ...STATION_CATALOG, defaultScale: 1 } },
+  { id: "bld-station-halt", title: "Station Halt", build: stationHalt, references: "station-halt", catalog: { ...STATION_CATALOG, defaultScale: 1 } },
+  { id: "bld-suburban-station", title: "Suburban Station", build: suburbanStation, references: "suburban-station", catalog: { ...STATION_CATALOG, defaultScale: 1 } },
 ];

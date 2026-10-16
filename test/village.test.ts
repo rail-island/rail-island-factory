@@ -1,3 +1,4 @@
+import { proceduralId } from "../generator/modelId.ts";
 // The procedural village houses: seven parametric plan families in the style
 // of the webapp's Kenney suburban houses and Quaternius timber cottages. The parametric
 // suite (params.test.ts) builds every shape combination for flicker and checks
@@ -32,17 +33,17 @@ function colours(d: ProceduralDesign, combo: ParamValues): Map<string, string> {
 describe("the village houses", () => {
   it("are seven parametric designs with unique village- ids, in the Village category", () => {
     expect(VILLAGE_HOUSES.map((d) => d.id)).toEqual([
-      "village-timber-cottage", "village-timber-house",
-      "village-cottage", "village-l-house", "village-family-house", "village-modern-house", "village-narrow-house",
+      "proc-building-village-timber-cottage", "proc-building-village-timber-house",
+      "proc-building-village-cottage", "proc-building-village-l-house", "proc-building-village-family-house", "proc-building-village-modern-house", "proc-building-village-narrow-house",
     ]);
     for (const d of VILLAGE_HOUSES) {
-      expect(DESIGNS.get(d.id)).toBe(d);
-      expect(d.catalog).toEqual(d.id.startsWith("village-timber-") ? TIMBER_CATALOG : VILLAGE_CATALOG);
+      expect(DESIGNS.get(proceduralId(d.id))).toBe(d);
+      expect(d.catalog).toEqual(d.id.startsWith("proc-building-village-timber-") ? TIMBER_CATALOG : VILLAGE_CATALOG);
       expect(d.params?.length).toBeGreaterThan(0);
     }
     expect(VILLAGE_CATALOG).toMatchObject({ category: "Village", group: "village" });
     // the export entries carry the village fields, not the skyscrapers'
-    for (const e of exportMeta(VILLAGE_HOUSES).buildings) expect(e).toMatchObject({ category: "Village", group: e.id.startsWith("village-timber-") ? "village_red" : "village", defaultScale: 1.88 });
+    for (const e of exportMeta(VILLAGE_HOUSES).buildings) expect(e).toMatchObject({ category: "Village", group: e.id.startsWith("proc-building-village-timber-") ? "village_red" : "village", defaultScale: 1 });
   });
 
   it("offer far more variants than designs", () => {
@@ -85,7 +86,7 @@ describe("the village houses", () => {
   }
 
   it("adds 1,728 distinct timber variants with effective shape controls", () => {
-    const timber = VILLAGE_HOUSES.filter(d => d.id.startsWith("village-timber-"));
+    const timber = VILLAGE_HOUSES.filter(d => d.id.startsWith("proc-building-village-timber-"));
     expect(timber).toHaveLength(2);
     for (const d of timber) {
       expect(paramCombinations(d.params)).toHaveLength(864);
@@ -99,8 +100,8 @@ describe("the village houses", () => {
   });
 
   it("mirror the L-house and the family house with their side parameter", () => {
-    for (const id of ["village-l-house", "village-family-house"]) {
-      const d = DESIGNS.get(id)!;
+    for (const id of ["proc-building-village-l-house", "proc-building-village-family-house"]) {
+      const d = DESIGNS.get(proceduralId(id))!;
       const left = glbStats(d.build({ side: "left" }).toGlb(id));
       const right = glbStats(d.build({ side: "right" }).toGlb(id));
       expect(left.min[0]).toBeCloseTo(-right.max[0], 4);
@@ -110,17 +111,17 @@ describe("the village houses", () => {
   });
 
   it("put their shape options into the geometry", () => {
-    const tris = (id: string, combo: ParamValues): number => DESIGNS.get(id)!.build(combo).triangleCount();
-    const height = (id: string, combo: ParamValues): number => glbStats(DESIGNS.get(id)!.build(combo).toGlb(id)).max[1];
-    expect(height("village-cottage", { storeys: "two" })).toBeGreaterThan(height("village-cottage", { storeys: "one" }) + 2);
-    expect(height("village-narrow-house", { storeys: "three" })).toBeGreaterThan(height("village-narrow-house", { storeys: "two" }) + 2);
-    expect(tris("village-cottage", { dormers: "dormers" })).toBeGreaterThan(tris("village-cottage", { dormers: "none" }));
-    expect(tris("village-narrow-house", { shutters: "shutters" })).toBeGreaterThan(tris("village-narrow-house", { shutters: "none" }));
-    expect(tris("village-modern-house", { solar: "panels" })).toBeGreaterThan(tris("village-modern-house", { solar: "none" }));
-    const materials = (id: string, combo: ParamValues): string[] => [...colours(DESIGNS.get(id)!, combo).keys()];
-    expect(materials("village-family-house", { annex: "garage" })).toContain("garageDoor");
-    expect(materials("village-family-house", { annex: "terrace" })).not.toContain("garageDoor");
-    expect(materials("village-l-house", { extras: "solar" })).toContain("solar");
-    expect(materials("village-cottage", { entrance: "garden" })).toContain("flowers");
+    const tris = (id: string, combo: ParamValues): number => DESIGNS.get(proceduralId(id))!.build(combo).triangleCount();
+    const height = (id: string, combo: ParamValues): number => glbStats(DESIGNS.get(proceduralId(id))!.build(combo).toGlb(id)).max[1];
+    expect(height("proc-building-village-cottage", { storeys: "two" })).toBeGreaterThan(height("proc-building-village-cottage", { storeys: "one" }) + 2);
+    expect(height("proc-building-village-narrow-house", { storeys: "three" })).toBeGreaterThan(height("proc-building-village-narrow-house", { storeys: "two" }) + 2);
+    expect(tris("proc-building-village-cottage", { dormers: "dormers" })).toBeGreaterThan(tris("proc-building-village-cottage", { dormers: "none" }));
+    expect(tris("proc-building-village-narrow-house", { shutters: "shutters" })).toBeGreaterThan(tris("proc-building-village-narrow-house", { shutters: "none" }));
+    expect(tris("proc-building-village-modern-house", { solar: "panels" })).toBeGreaterThan(tris("proc-building-village-modern-house", { solar: "none" }));
+    const materials = (id: string, combo: ParamValues): string[] => [...colours(DESIGNS.get(proceduralId(id))!, combo).keys()];
+    expect(materials("proc-building-village-family-house", { annex: "garage" })).toContain("garageDoor");
+    expect(materials("proc-building-village-family-house", { annex: "terrace" })).not.toContain("garageDoor");
+    expect(materials("proc-building-village-l-house", { extras: "solar" })).toContain("solar");
+    expect(materials("proc-building-village-cottage", { entrance: "garden" })).toContain("flowers");
   });
 });

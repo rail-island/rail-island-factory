@@ -55,7 +55,7 @@ export const EMU_TRANSFERS: readonly EmuTransfer[] = [
   {
     key: "cd_471",
     title: "CD 471 motor car",
-    id: "veh-cd-471",
+    id: "proc-vehicle-cd-471",
     params: { unit: "motorCar", variant: "cd471" },
     folder: "cd-471",
     native: "native/cd_471",
@@ -71,7 +71,7 @@ export const EMU_TRANSFERS: readonly EmuTransfer[] = [
   {
     key: "cd_681",
     title: "CD 681 end car",
-    id: "veh-cd-680",
+    id: "proc-vehicle-cd-680",
     params: { unit: "endCar" },
     folder: "cd-680",
     native: "native/cd_681",
@@ -84,9 +84,9 @@ export const EMU_TRANSFERS: readonly EmuTransfer[] = [
     kY: 1,
     kZ: K_Z_680,
   },
-  classic("cd_451", "CD 451 motor car", "veh-cd-451", { unit: "motorCar" }, "cd-451", frame451("motorCar")),
-  classic("cd_460", "CD 460 motor car", "veh-cd-460", { unit: "motorCar", livery: "cd" }, "cd-460", frame460("motorCar")),
-  classic("cd_470", "CD 470 motor car", "veh-cd-470", { unit: "motorCar" }, "cd-470", frame470("motorCar")),
+  classic("cd_451", "CD 451 motor car", "proc-vehicle-cd-451", { unit: "motorCar" }, "cd-451", frame451("motorCar")),
+  classic("cd_460", "CD 460 motor car", "proc-vehicle-cd-460", { unit: "motorCar", livery: "cd" }, "cd-460", frame460("motorCar")),
+  classic("cd_470", "CD 470 motor car", "proc-vehicle-cd-470", { unit: "motorCar" }, "cd-470", frame470("motorCar")),
 ];
 
 /** A car of the older units (emuClassicKit.ts): its cab at source x 0, body metres b = kx * (srcEnd - x). */

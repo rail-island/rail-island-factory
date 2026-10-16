@@ -417,7 +417,7 @@ function jacobsHalf(c: Coach, xj: number, d: number): void {
 }
 
 export const TGV_DESIGNS: ProceduralDesign[] = [
-  { id: "veh-tgv", title: "TGV", build: tgv, params: TGV_PARAMS, catalog: EMU_CATALOG, references: "tgv" },
+  { id: "proc-vehicle-tgv", title: "TGV", build: tgv, params: TGV_PARAMS, catalog: EMU_CATALOG, references: "tgv" },
 ];
 
 export type { Box };

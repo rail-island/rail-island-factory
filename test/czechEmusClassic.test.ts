@@ -46,7 +46,7 @@ const DESIGNS = [...EMU451_DESIGNS, ...EMU460_DESIGNS, ...EMU470_DESIGNS];
 
 describe("the older Czech electric units", () => {
   it("are three parametric rail designs with their reference folders", () => {
-    expect(DESIGNS.map((d) => d.id)).toEqual(["veh-cd-451", "veh-cd-460", "veh-cd-470"]);
+    expect(DESIGNS.map((d) => d.id)).toEqual(["proc-vehicle-cd-451", "proc-vehicle-cd-460", "proc-vehicle-cd-470"]);
     for (const d of DESIGNS) expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "loco" });
     expect(DESIGNS.map((d) => d.references)).toEqual(["cd-451", "cd-460", "cd-470"]);
     expect(CD451_PARAMS.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([["unit", "motorCar", ["motorCar", "trailer"]]]);
@@ -74,7 +74,7 @@ describe("the older Czech electric units", () => {
   it("CD 451: the four-car set is the published 95.29 m over the couplers; low floor, bogies and the roof", () => {
     expect(2 * length451("motorCar") + 2 * length451("trailer")).toBeCloseTo(95.29, 3);
     for (const unit of ["motorCar", "trailer"] as const) {
-      const { stats: s, nodes } = built(cd451({ unit }), "veh-cd-451");
+      const { stats: s, nodes } = built(cd451({ unit }), "proc-vehicle-cd-451");
       expect(s.max[0] - s.min[0]).toBeCloseTo(length451(unit), 3);
       const body = bounds(nodes, /^body\/[a-z-]*band\//);
       expect(body.max[2] - body.min[2]).toBeCloseTo(3.0, 3);
@@ -94,7 +94,7 @@ describe("the older Czech electric units", () => {
   });
 
   it("CD 451: the motor car has one raised diamond pantograph over its inner bogie, the cab and coupler at +X", () => {
-    const { stats: s, nodes } = built(cd451(), "veh-cd-451");
+    const { stats: s, nodes } = built(cd451(), "proc-vehicle-cd-451");
     const h = heads(nodes);
     expect(h.length).toBe(1);
     expect(h[0]!.top).toBeGreaterThan(5.5);
@@ -107,7 +107,7 @@ describe("the older Czech electric units", () => {
 
   it("CD 460: five 24.5 m cars make the published 122.5 m set; the cab's windscreen leans forward over the lower front", () => {
     expect(2 * length460("motorCar") + 3 * length460("trailer")).toBeCloseTo(122.5, 3);
-    const { stats: s, nodes } = built(cd460(), "veh-cd-460");
+    const { stats: s, nodes } = built(cd460(), "proc-vehicle-cd-460");
     expect(s.max[0] - s.min[0]).toBeCloseTo(24.5, 3);
     const body = bounds(nodes, /^body\/[a-z-]*band\//);
     expect(body.max[1]).toBeCloseTo(4.0, 3);
@@ -127,7 +127,7 @@ describe("the older Czech electric units", () => {
 
   it("CD 460: the motor car has two pantographs, exactly one raised: the inner one, or the cab one on 460 007", () => {
     for (const livery of ["cd", "cd003", "cd007", "csd"] as const) {
-      const h = heads(built(cd460({ livery }), "veh-cd-460").nodes);
+      const h = heads(built(cd460({ livery }), "proc-vehicle-cd-460").nodes);
       expect(h.length).toBe(2);
       const up = h.filter((p) => p.top > 5.5);
       expect(up.length).toBe(1);
@@ -157,7 +157,7 @@ describe("the older Czech electric units", () => {
   it("CD 470: 26.4 m cars make the published 132 m set; the double-deck trailer reaches 4.7 m with two rows of windows", () => {
     expect(2 * length470("motorCar") + 3 * length470("trailer")).toBeCloseTo(132, 3);
     for (const unit of ["motorCar", "trailer"] as const) {
-      const { stats: s, nodes } = built(cd470({ unit }), "veh-cd-470");
+      const { stats: s, nodes } = built(cd470({ unit }), "proc-vehicle-cd-470");
       expect(s.max[0] - s.min[0]).toBeCloseTo(26.4, 3);
       const body = bounds(nodes, /^body\/[a-z-]*band\//);
       expect(body.max[1]).toBeCloseTo(unit === "motorCar" ? 4.1 : 4.7, 3);
@@ -175,7 +175,7 @@ describe("the older Czech electric units", () => {
   });
 
   it("CD 470: the motor car's rear pantograph is raised, the cab one folded; the inner end rises to the trailer's roof", () => {
-    const { nodes } = built(cd470(), "veh-cd-470");
+    const { nodes } = built(cd470(), "proc-vehicle-cd-470");
     const h = heads(nodes).sort((p, q) => p.x - q.x);
     expect(h.length).toBe(2);
     expect(h[0]!.top).toBeGreaterThan(5.5);

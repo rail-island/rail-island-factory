@@ -1,3 +1,4 @@
+import { proceduralId } from "./modelId.ts";
 // Prints a design's source-tree scope ids (no leaves) with their model extents,
 // for writing landmark files. Node only:
 //
@@ -10,7 +11,7 @@ if (process.argv[1] && process.argv[1].endsWith("treeIds.ts")) {
   const [id, ...rest] = process.argv.slice(2);
   const params = Object.fromEntries(rest.filter((a) => a.includes("=")).map((a) => a.split("=") as [string, string]));
   const filter = rest.find((a) => !a.includes("="));
-  const d = DESIGNS.get(id!);
+  const d = DESIGNS.get(proceduralId(id!));
   if (!d) throw new Error(`no design ${id}`);
   const tree = d.build(params).sourceTree(d.id, d.title);
   const f = (v: number | undefined) => (v === undefined ? "?" : v.toFixed(3));

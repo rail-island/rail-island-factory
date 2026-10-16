@@ -43,28 +43,28 @@ const front = (p: Vec3, rowsPerMetre = 10, top = 6): [number, number] => [10 * (
 
 export const COMPARED: readonly ComparedDesign[] = [
   {
-    id: "veh-cd-110", title: "CD 110 046-0", folder: "cd-110", build: () => cd110(),
+    id: "proc-vehicle-cd-110", title: "CD 110 046-0", folder: "cd-110", build: () => cd110(),
     project: (v, p) => (v === "x_front" ? front(p) : [72 - 10 * p[0], 10 * (6 - p[1])]),
     canvas: { x_front: [30, 60], z_right: [144, 60] },
     files: { x_front: "native/cd_110_046/x_both.bmp", z_right: "native/cd_110_046/z_both.bmp" },
     mapping: "side column px = 72 - 10 x, row = 10 (6 - y); front column = 10 (1.5 - z)",
   },
   {
-    id: "veh-cd-130", title: "CD 130 036-7", folder: "cd-130", build: () => cd130(),
+    id: "proc-vehicle-cd-130", title: "CD 130 036-7", folder: "cd-130", build: () => cd130(),
     project: (v, p) => (v === "x_front" ? front(p) : [79.5 - 10 * p[0], 10 * (6 - p[1])]),
     canvas: { x_front: [30, 60], z_right: [170, 60] },
     files: { x_front: "native/cd_130/x_both.bmp", z_right: "native/cd_130/z_both.bmp" },
     mapping: "side column px = 79.5 - 10 x, row = 10 (6 - y); front column = 10 (1.5 - z)",
   },
   {
-    id: "veh-cd-140", title: "CD 140 040", folder: "cd-140", build: () => cd140(),
+    id: "proc-vehicle-cd-140", title: "CD 140 040", folder: "cd-140", build: () => cd140(),
     project: (v, p) => (v === "x_front" ? front(p) : [85.5 - p[0] / (0.1 * (14.5 / 16.1)), 10 * (6 - p[1])]),
     canvas: { x_front: [30, 60], z_right: [180, 60] },
     files: { x_front: "native/x_both.bmp", z_right: "native/z_both.bmp" },
     mapping: "side column px = 85.5 - x / 0.09006 (the native body scaled to the published 14.50 m), row = 10 (6 - y); front column = 10 (1.5 - z)",
   },
   {
-    id: "veh-cd-169", title: "CD 169 001", folder: "cd-169", build: () => cd169(),
+    id: "proc-vehicle-cd-169", title: "CD 169 001", folder: "cd-169", build: () => cd169(),
     project: (v, p) => (v === "x_front" ? front(p) : [90 - p[0] / (0.1 * (16.7 / 17.2)), 10 * (6 - p[1])]),
     canvas: { x_front: [30, 60], z_right: [180, 60] },
     files: { x_front: "native/x_both.bmp", z_right: "native/z_both.bmp" },

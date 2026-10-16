@@ -107,6 +107,8 @@ export function coverageCombinations(specs: readonly ParamSpec[] = [], finish: r
  * the on-map size, and the attribution.
  */
 export interface CatalogFields {
+  /** Degrees about Y to match the consumer vehicle forward convention. */
+  yaw?: number;
   category: string;
   group: string;
   defaultScale: number;

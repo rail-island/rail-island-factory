@@ -26,7 +26,7 @@ and a crown:
 `SKYSCRAPERS` in `skyscrapers.ts` lists them as `{ id, title, build, params, finishParams }` (the
 `ProceduralDesign` of `design.ts`).
 `SKYSCRAPER_CATALOG` beside it holds the game-catalog fields they all share -
-category `Commercial`, city pool `skyscraper_c`, `defaultScale` 0.5, CC0 by Rail
+category `Commercial`, city pool `skyscraper_c`, `defaultScale` 1, CC0 by Rail
 Island - which the build writes into each model's meta.json entry
 ([export.md](export.md)).
 
@@ -53,7 +53,7 @@ parameters never move vertices, and palettes are copied per build.
 
 Size selects complete storeys at approximately 40%, 60%, 80%, 100% and
 120% of the standard count (rounded per shaft or tier). All geometry stays in
-metres with the same catalog `defaultScale` of 0.5. Floor pitch, window height,
+metres with the same catalog `defaultScale` of 1. Floor pitch, window height,
 doors, balconies and framing retain their physical dimensions. Crowns and
 bridges follow the selected floors; tapered profiles distribute over them.
 The low-rise options can be wider than they are tall.
@@ -186,3 +186,11 @@ big city. The 10,000-triangle limit applies to every parameter combination, not
 just the default. Tune panel density and floor-band counts before adding detail.
 
 The meta.json entry follows automatically; nothing else is hand-maintained.
+
+## Procedural export contract
+
+All current export IDs use `proc-building-` or `proc-vehicle-`; source/reference
+names in older tables identify the original models. See [legacy-mapping.md](legacy-mapping.md)
+for the authoritative ID, scale and runtime conversion contract. Ground vehicles
+have no exported `defaultScale`; buildings, aircraft and ships use 1 except the
+Eiffel Tower placement exception.

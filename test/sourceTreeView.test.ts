@@ -1,3 +1,4 @@
+import { proceduralId } from "../generator/modelId.ts";
 // The model page's source-tree logic (src/sourceTreeView.ts), on a small
 // hand-made tree and on a real design's.
 
@@ -37,7 +38,7 @@ describe("indexTree", () => {
 
   it("owns every triangle of a real design", () => {
     for (const d of SKYSCRAPERS) {
-      const ix = indexTree(designTree(d.id));
+      const ix = indexTree(designTree(proceduralId(d.id)));
       for (const [, owners] of ix.owner) expect(owners.includes(-1)).toBe(false);
     }
   });
@@ -60,7 +61,7 @@ describe("rangesOf", () => {
   // one run: the preview's highlight costs at most two draw groups per material.
   it("gives every scope of a real design one run per material", () => {
     for (const d of SKYSCRAPERS) {
-      const ix = indexTree(designTree(d.id));
+      const ix = indexTree(designTree(proceduralId(d.id)));
       for (const [id, n] of ix.byId) {
         if ("kind" in n) continue;
         for (const [, runs] of rangesOf(ix, id)) expect(runs.length).toBe(1);

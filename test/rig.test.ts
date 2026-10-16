@@ -1,3 +1,4 @@
+import { proceduralId } from "../generator/modelId.ts";
 // The vehicle rig (generator/rig.ts): the steered wheels, the hinged chain of an
 // articulated vehicle's sections, and the joint drawn between them -- on the JS
 // module's group, which is what the game and the site pose.
@@ -114,7 +115,7 @@ type Module = {
 const MODULES = new Map<string, Module>();
 async function moduleOf(id: string): Promise<Module> {
   if (!MODULES.has(id)) {
-    const text = await bundleDesign(DESIGNS.get(id)!, designSource(id));
+    const text = await bundleDesign(DESIGNS.get(proceduralId(id))!, designSource(proceduralId(id)));
     MODULES.set(id, (await import(/* @vite-ignore */ `data:text/javascript;base64,${Buffer.from(text).toString("base64")}`)) as Module);
   }
   return MODULES.get(id)!;
@@ -122,8 +123,8 @@ async function moduleOf(id: string): Promise<Module> {
 
 const RIGGED = ALL_VEHICLES.filter((d) => d.build().rig !== null).map((d) => [d.id] as const);
 /** The rigged vehicles with steered wheels: every road vehicle (an articulated tram has none). */
-const STEERED = RIGGED.filter(([id]) => DESIGNS.get(id)!.build().rig!.steer !== undefined);
-const ARTICULATED = RIGGED.filter(([id]) => (DESIGNS.get(id)!.build().rig!.joints ?? []).length > 0);
+const STEERED = RIGGED.filter(([id]) => DESIGNS.get(proceduralId(id))!.build().rig!.steer !== undefined);
+const ARTICULATED = RIGGED.filter(([id]) => (DESIGNS.get(proceduralId(id))!.build().rig!.joints ?? []).length > 0);
 
 /** A joint's mesh: the joint node, or the child holding its material. */
 function jointMesh(root: THREE.Object3D, j: JointRig): THREE.Mesh {
@@ -183,11 +184,11 @@ describe("the rigged vehicles", () => {
   it("are every road vehicle, steered, and the articulated rail vehicles, sections and joints only", () => {
     const road = ALL_VEHICLES.filter((d) => (d.catalog?.category ?? "Road vehicles") === "Road vehicles").map((d) => d.id);
     expect(STEERED.map(([id]) => id)).toEqual(road);
-    expect(road).toContain("veh-american-truck");
+    expect(road).toContain("proc-vehicle-american-truck");
     const rail = RIGGED.map(([id]) => id).filter((id) => !road.includes(id));
-    expect(rail).toEqual(expect.arrayContaining(["veh-tatra-kt8", "veh-tatra-kt4", "veh-kvag-gt4"]));
+    expect(rail).toEqual(expect.arrayContaining(["proc-vehicle-tatra-kt8", "proc-vehicle-tatra-kt4", "proc-vehicle-kvag-gt4"]));
     for (const id of rail) {
-      const d = DESIGNS.get(id)!;
+      const d = DESIGNS.get(proceduralId(id))!;
       const rig = d.build().rig!;
       expect(d.catalog?.category).toBe("Rail vehicles");
       expect(rig.steer).toBeUndefined();
@@ -197,8 +198,8 @@ describe("the rigged vehicles", () => {
   });
 
   it.each(STEERED)("%s: its steered wheels are child nodes of the front body, pivoting at their centres", (id) => {
-    const rig = DESIGNS.get(id)!.build().rig!;
-    const { json } = parseGlb(designGlb(id));
+    const rig = DESIGNS.get(proceduralId(id))!.build().rig!;
+    const { json } = parseGlb(designGlb(proceduralId(id)));
     const nodes = json.nodes as Array<{ name: string; children?: number[]; translation?: number[] }>;
     const front = rig.sections?.[0]?.node ?? nodes[0]!.name;
     const parent = nodes.find((n) => n.name === front)!;
@@ -299,7 +300,7 @@ describe("the rigged vehicles", () => {
     // what the game's GLB encode does: a posable node's mesh moved onto a child,
     // its positions welded (indexed) and quantized to normalized int16, the
     // dequantization folded into that child's matrix
-    const mod = await moduleOf("veh-karosa-long");
+    const mod = await moduleOf("proc-vehicle-karosa-long");
     const group = mod.default(THREE, { variant: "b961" });
     const rig = group.userData.rig as VehicleRig;
     const j = rig.joints![0]!;
@@ -397,10 +398,10 @@ function newClashes(rest: Array<{ t: Tri; owner: string }>, posed: Array<{ t: Tr
 }
 
 describe("the semi-trucks", () => {
-  const SEMIS = RIGGED.filter(([id]) => DESIGNS.get(id)!.build().rig!.sections?.[1]?.node === "trailer");
+  const SEMIS = RIGGED.filter(([id]) => DESIGNS.get(proceduralId(id))!.build().rig!.sections?.[1]?.node === "trailer");
 
   it("are the American truck and the two reproduced from the game", () => {
-    expect(SEMIS.map(([id]) => id).sort()).toEqual(["veh-american-truck", "veh-cistern-semi-truck", "veh-reefer-semi-truck"]);
+    expect(SEMIS.map(([id]) => id).sort()).toEqual(["proc-vehicle-american-truck", "proc-vehicle-cistern-semi-truck", "proc-vehicle-reefer-semi-truck"]);
   });
 
   // nothing of the trailer cuts through the tractor or its wheels at any bend up to the rig's limit
@@ -456,8 +457,8 @@ describe("the site's pose sliders", () => {
   });
 
   it("pose a non-default build with its own rig, not the catalog record's default one", async () => {
-    const mod = await moduleOf("veh-karosa-long");
-    const record = { rig: DESIGNS.get("veh-karosa-long")!.build().rig } as CatalogRecord;
+    const mod = await moduleOf("proc-vehicle-karosa-long");
+    const record = { rig: DESIGNS.get(proceduralId("proc-vehicle-karosa-long"))!.build().rig } as CatalogRecord;
     const group = mod.default(THREE, { variant: "b941" });
     const own = group.userData.rig as VehicleRig;
     // the variant's hinge is not the default's, which is what the record holds

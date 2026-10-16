@@ -113,7 +113,7 @@ export function writeViews(mesh: MeshBuilder, id: string, dir: URL): void {
 }
 
 /** The older units' modules, which their reports name. */
-const CLASSIC: Record<string, string> = { "veh-cd-451": "emu451.ts", "veh-cd-460": "emu460.ts", "veh-cd-470": "emu470.ts" };
+const CLASSIC: Record<string, string> = { "proc-vehicle-cd-451": "emu451.ts", "proc-vehicle-cd-460": "emu460.ts", "proc-vehicle-cd-470": "emu470.ts" };
 
 const fmt = (xs: number[]) => xs.map((x) => x.toFixed(3)).join(", ");
 

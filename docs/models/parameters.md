@@ -37,7 +37,7 @@ declaration order, the first the default unless noted.
 | `veh-cd-110` | `livery`: cd110, cd111, cd210 | [cz-electrics.md](cz-electrics.md) |
 | `veh-cd-130` | `livery`: cd130, cd123, cd123No019 | [cz-electrics.md](cz-electrics.md) |
 | `veh-sqns-container-wagon` | `cargo`: empty, maersk | [freight-wagons.md](freight-wagons.md) |
-| `veh-pao-flat-wagon` | `cargo`: tubes, karosaB951 | [freight-wagons.md](freight-wagons.md) |
+| `veh-pao-flat-wagon` | `cargo`: empty, tubes | [freight-wagons.md](freight-wagons.md) |
 | `veh-habis-sliding-wall-wagon` | `livery`: tw1, tw2 | [freight-wagons.md](freight-wagons.md) |
 | `veh-faccs-hopper-wagon` | `livery`: cd, viamont | [freight-wagons.md](freight-wagons.md) |
 | `veh-falls-hopper-wagon` | `livery`: cd, sd, viamont | [freight-wagons.md](freight-wagons.md) |
@@ -167,3 +167,5 @@ that the JS model's `build(THREE, combination)` draws the generator's triangles.
 `test/catalogQuery.test.ts` covers the URL round trip and the site's fallback to
 defaults; `test/csdCoaches.test.ts` the classic coach's two window layouts and
 its measured comparison per variant.
+
+The former Nas tram load and Pao Karosa bus load are intentionally omitted. Legacy IDs map to their corresponding empty wagon with scale multiplier 1.

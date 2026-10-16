@@ -1,17 +1,18 @@
 {
-  "version": 1,
-  "purpose": "Review inventory and provisional correspondence, NOT an active save migration. Source: webapp db/buildings/buildings.meta.json and all 82 Commercial GLBs.",
+  "version": 2,
+  "purpose": "Architectural correspondence for the legacy runtime mapping export. Covered rows specify every family parameter; source bounds and scales support conversion. Deferred towers and hospital sign are resolved by the global mapping.",
   "models": [
     {
       "legacyId": "comm-building-a",
       "title": "A",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-modern",
       "params": {
         "storeys": "3",
         "width": "standard",
-        "finish": "original"
+        "finish": "original",
+        "awning": "green"
       },
       "sourceTriangles": 1252,
       "sourceMin": [
@@ -34,7 +35,7 @@
       "legacyId": "oldtown-gabled",
       "title": "Arcade House",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-gable",
       "params": {
         "storeys": "3",
@@ -62,7 +63,7 @@
       "legacyId": "comm-building-b",
       "title": "B",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-balcony",
       "params": {
         "storeys": "3",
@@ -90,12 +91,14 @@
       "legacyId": "street-block-balcony",
       "title": "Balcony Block",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-tenement",
       "params": {
         "storeys": "4",
         "width": "standard",
-        "finish": "original"
+        "finish": "original",
+        "roof": "flat",
+        "entrance": "level"
       },
       "sourceTriangles": 5204,
       "sourceMin": [
@@ -118,7 +121,7 @@
       "legacyId": "street-house-balcony",
       "title": "Balcony House",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-balcony",
       "params": {
         "storeys": "3",
@@ -146,7 +149,7 @@
       "legacyId": "oldtown-baroque",
       "title": "Baroque House",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-baroque",
       "params": {
         "storeys": "3",
@@ -174,7 +177,7 @@
       "legacyId": "street-house-round",
       "title": "Barrel Roof House",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-barrel",
       "params": {
         "storeys": "3",
@@ -202,7 +205,7 @@
       "legacyId": "street-shop-round",
       "title": "Barrel Roof Store",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-barrel",
       "params": {
         "storeys": "2",
@@ -230,12 +233,15 @@
       "legacyId": "street-house-b",
       "title": "Brick Street House",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-brick",
       "params": {
         "storeys": "3",
         "width": "standard",
-        "finish": "original"
+        "finish": "original",
+        "roof": "flat",
+        "entrance": "level",
+        "sign": "none"
       },
       "sourceTriangles": 4106,
       "sourceMin": [
@@ -258,7 +264,7 @@
       "legacyId": "oldtown-terrace",
       "title": "Burgher House",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-terrace",
       "params": {
         "storeys": "3",
@@ -286,7 +292,7 @@
       "legacyId": "oldtown-terrace-wide",
       "title": "Burgher Row",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-terrace",
       "params": {
         "storeys": "3",
@@ -314,12 +320,13 @@
       "legacyId": "comm-building-c",
       "title": "C",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-modern",
       "params": {
         "storeys": "2",
         "width": "standard",
-        "finish": "original"
+        "finish": "original",
+        "awning": "green"
       },
       "sourceTriangles": 1195,
       "sourceMin": [
@@ -342,12 +349,15 @@
       "legacyId": "street-house-center",
       "title": "Central Bay House",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-brick",
       "params": {
         "storeys": "3",
         "width": "standard",
-        "finish": "original"
+        "finish": "sand",
+        "roof": "flat",
+        "entrance": "stoop",
+        "sign": "none"
       },
       "sourceTriangles": 3282,
       "sourceMin": [
@@ -370,12 +380,14 @@
       "legacyId": "street-tenement-center",
       "title": "Central Bay Tenement",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-tenement",
       "params": {
         "storeys": "5",
         "width": "standard",
-        "finish": "original"
+        "finish": "sage",
+        "roof": "flat",
+        "entrance": "stoop"
       },
       "sourceTriangles": 6314,
       "sourceMin": [
@@ -398,7 +410,7 @@
       "legacyId": "oldtown-classical-wide",
       "title": "Classical House",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-classical",
       "params": {
         "storeys": "3",
@@ -426,7 +438,7 @@
       "legacyId": "street-house-columns",
       "title": "Columned House",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-classical",
       "params": {
         "storeys": "3",
@@ -454,12 +466,13 @@
       "legacyId": "comm-building-d",
       "title": "D",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-modern",
       "params": {
         "storeys": "3",
         "width": "standard",
-        "finish": "original"
+        "finish": "original",
+        "awning": "green"
       },
       "sourceTriangles": 1100,
       "sourceMin": [
@@ -482,12 +495,15 @@
       "legacyId": "street-house-double",
       "title": "Double House",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-brick",
       "params": {
         "storeys": "3",
-        "width": "wide",
-        "finish": "original"
+        "width": "standard",
+        "finish": "sage",
+        "roof": "flat",
+        "entrance": "paired",
+        "sign": "none"
       },
       "sourceTriangles": 4062,
       "sourceMin": [
@@ -510,7 +526,7 @@
       "legacyId": "comm-building-e",
       "title": "E",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-annex",
       "params": {
         "storeys": "2",
@@ -538,12 +554,13 @@
       "legacyId": "comm-building-f",
       "title": "F",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-modern",
       "params": {
         "storeys": "4",
         "width": "standard",
-        "finish": "original"
+        "finish": "original",
+        "awning": "green"
       },
       "sourceTriangles": 1794,
       "sourceMin": [
@@ -566,7 +583,7 @@
       "legacyId": "comm-building-g",
       "title": "G",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-balcony",
       "params": {
         "storeys": "4",
@@ -594,7 +611,7 @@
       "legacyId": "oldtown-gabled-wide",
       "title": "Gabled Burgher House",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-gable",
       "params": {
         "storeys": "3",
@@ -622,13 +639,15 @@
       "legacyId": "street-shop-gable",
       "title": "Gabled Store",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-shop",
       "params": {
         "storeys": "2",
         "width": "standard",
         "finish": "original",
-        "roof": "pitched"
+        "roof": "pitched",
+        "awning": "none",
+        "sign": "none"
       },
       "sourceTriangles": 1684,
       "sourceMin": [
@@ -651,13 +670,15 @@
       "legacyId": "street-house-gable",
       "title": "Gabled Street House",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-brick",
       "params": {
         "storeys": "3",
         "width": "standard",
         "finish": "original",
-        "roof": "pitched"
+        "roof": "pitched",
+        "entrance": "level",
+        "sign": "none"
       },
       "sourceTriangles": 3200,
       "sourceMin": [
@@ -680,12 +701,13 @@
       "legacyId": "comm-building-h",
       "title": "H",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-modern",
       "params": {
         "storeys": "3",
         "width": "standard",
-        "finish": "original"
+        "finish": "original",
+        "awning": "green"
       },
       "sourceTriangles": 1512,
       "sourceMin": [
@@ -708,7 +730,7 @@
       "legacyId": "street-house-annex",
       "title": "House with Annex",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-annex",
       "params": {
         "storeys": "3",
@@ -736,12 +758,13 @@
       "legacyId": "comm-building-i",
       "title": "I",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-modern",
       "params": {
         "storeys": "4",
         "width": "wide",
-        "finish": "original"
+        "finish": "original",
+        "awning": "green"
       },
       "sourceTriangles": 2544,
       "sourceMin": [
@@ -764,7 +787,7 @@
       "legacyId": "comm-building-j",
       "title": "J",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-balcony",
       "params": {
         "storeys": "4",
@@ -792,12 +815,13 @@
       "legacyId": "comm-building-k",
       "title": "K",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-modern",
       "params": {
         "storeys": "3",
         "width": "wide",
-        "finish": "original"
+        "finish": "original",
+        "awning": "green"
       },
       "sourceTriangles": 2960,
       "sourceMin": [
@@ -820,12 +844,13 @@
       "legacyId": "comm-building-l",
       "title": "L",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-modern",
       "params": {
         "storeys": "5",
         "width": "standard",
-        "finish": "original"
+        "finish": "original",
+        "awning": "green"
       },
       "sourceTriangles": 3512,
       "sourceMin": [
@@ -848,7 +873,7 @@
       "legacyId": "citykit-large-building-1",
       "title": "Large 1",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-balcony",
       "params": {
         "storeys": "4",
@@ -876,12 +901,13 @@
       "legacyId": "citykit-large-building-2",
       "title": "Large 2",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-modern",
       "params": {
         "storeys": "4",
         "width": "wide",
-        "finish": "original"
+        "finish": "original",
+        "awning": "green"
       },
       "sourceTriangles": 1388,
       "sourceMin": [
@@ -904,12 +930,13 @@
       "legacyId": "citykit-large-building-3",
       "title": "Large 3",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-modern",
       "params": {
         "storeys": "4",
         "width": "standard",
-        "finish": "original"
+        "finish": "original",
+        "awning": "green"
       },
       "sourceTriangles": 840,
       "sourceMin": [
@@ -932,12 +959,13 @@
       "legacyId": "citykit-large-building-4",
       "title": "Large 4",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-modern",
       "params": {
         "storeys": "5",
         "width": "standard",
-        "finish": "original"
+        "finish": "original",
+        "awning": "green"
       },
       "sourceTriangles": 1608,
       "sourceMin": [
@@ -960,12 +988,13 @@
       "legacyId": "citykit-large-building-5",
       "title": "Large 5",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-modern",
       "params": {
         "storeys": "4",
         "width": "wide",
-        "finish": "original"
+        "finish": "original",
+        "awning": "green"
       },
       "sourceTriangles": 1400,
       "sourceMin": [
@@ -988,7 +1017,7 @@
       "legacyId": "citykit-large-building-6",
       "title": "Large 6",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-annex",
       "params": {
         "storeys": "5",
@@ -1016,7 +1045,7 @@
       "legacyId": "citykit-large-building-7",
       "title": "Large 7",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-balcony",
       "params": {
         "storeys": "4",
@@ -1308,12 +1337,13 @@
       "legacyId": "comm-building-m",
       "title": "M",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-modern",
       "params": {
         "storeys": "5",
         "width": "standard",
-        "finish": "original"
+        "finish": "original",
+        "awning": "green"
       },
       "sourceTriangles": 3740,
       "sourceMin": [
@@ -1336,12 +1366,15 @@
       "legacyId": "street-house",
       "title": "Main Street House",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-brick",
       "params": {
         "storeys": "3",
         "width": "standard",
-        "finish": "original"
+        "finish": "original",
+        "roof": "flat",
+        "entrance": "stoop",
+        "sign": "none"
       },
       "sourceTriangles": 3536,
       "sourceMin": [
@@ -1364,12 +1397,15 @@
       "legacyId": "street-shop",
       "title": "Main Street Store",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-shop",
       "params": {
         "storeys": "2",
         "width": "standard",
-        "finish": "original"
+        "finish": "original",
+        "roof": "flat",
+        "awning": "none",
+        "sign": "none"
       },
       "sourceTriangles": 2824,
       "sourceMin": [
@@ -1392,7 +1428,7 @@
       "legacyId": "comm-building-n",
       "title": "N",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-annex",
       "params": {
         "storeys": "5",
@@ -1420,7 +1456,7 @@
       "legacyId": "oldtown-classical",
       "title": "Narrow Classical House",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-classical",
       "params": {
         "storeys": "4",
@@ -1448,13 +1484,14 @@
       "legacyId": "street-tenement-roof",
       "title": "Roofed Tenement",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-tenement",
       "params": {
         "storeys": "5",
-        "width": "standard",
+        "width": "extraWide",
         "finish": "original",
-        "roof": "pitched"
+        "roof": "pitched",
+        "entrance": "paired"
       },
       "sourceTriangles": 12638,
       "sourceMin": [
@@ -1501,12 +1538,15 @@
       "legacyId": "street-house-sign",
       "title": "Signed House",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-brick",
       "params": {
         "storeys": "3",
         "width": "standard",
-        "finish": "sand"
+        "finish": "sand",
+        "roof": "flat",
+        "entrance": "level",
+        "sign": "board"
       },
       "sourceTriangles": 3260,
       "sourceMin": [
@@ -1529,12 +1569,15 @@
       "legacyId": "street-shop-sign",
       "title": "Signed Store",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-shop",
       "params": {
         "storeys": "2",
         "width": "standard",
-        "finish": "sand"
+        "finish": "sand",
+        "roof": "flat",
+        "awning": "none",
+        "sign": "board"
       },
       "sourceTriangles": 2426,
       "sourceMin": [
@@ -1821,12 +1864,15 @@
       "legacyId": "street-block-slim",
       "title": "Slim Block",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-brick",
       "params": {
         "storeys": "4",
         "width": "narrow",
-        "finish": "original"
+        "finish": "sand",
+        "roof": "flat",
+        "entrance": "level",
+        "sign": "none"
       },
       "sourceTriangles": 3716,
       "sourceMin": [
@@ -1849,12 +1895,15 @@
       "legacyId": "street-house-slim",
       "title": "Slim House",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-brick",
       "params": {
         "storeys": "3",
         "width": "narrow",
-        "finish": "original"
+        "finish": "sand",
+        "roof": "flat",
+        "entrance": "level",
+        "sign": "none"
       },
       "sourceTriangles": 2884,
       "sourceMin": [
@@ -1877,12 +1926,13 @@
       "legacyId": "citykit-small-building-1",
       "title": "Small 1",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-modern",
       "params": {
         "storeys": "3",
         "width": "standard",
-        "finish": "original"
+        "finish": "original",
+        "awning": "green"
       },
       "sourceTriangles": 548,
       "sourceMin": [
@@ -1905,12 +1955,13 @@
       "legacyId": "citykit-small-building-2",
       "title": "Small 2",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-modern",
       "params": {
         "storeys": "3",
         "width": "standard",
-        "finish": "original"
+        "finish": "original",
+        "awning": "green"
       },
       "sourceTriangles": 550,
       "sourceMin": [
@@ -1933,12 +1984,13 @@
       "legacyId": "citykit-small-building-3",
       "title": "Small 3",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-modern",
       "params": {
         "storeys": "2",
         "width": "standard",
-        "finish": "original"
+        "finish": "original",
+        "awning": "green"
       },
       "sourceTriangles": 410,
       "sourceMin": [
@@ -1961,12 +2013,13 @@
       "legacyId": "citykit-small-building-4",
       "title": "Small 4",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-modern",
       "params": {
         "storeys": "3",
         "width": "standard",
-        "finish": "original"
+        "finish": "original",
+        "awning": "green"
       },
       "sourceTriangles": 536,
       "sourceMin": [
@@ -1989,7 +2042,7 @@
       "legacyId": "citykit-small-building-5",
       "title": "Small 5",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-annex",
       "params": {
         "storeys": "2",
@@ -2017,12 +2070,13 @@
       "legacyId": "citykit-small-building-6",
       "title": "Small 6",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-modern",
       "params": {
         "storeys": "3",
         "width": "standard",
-        "finish": "original"
+        "finish": "original",
+        "awning": "green"
       },
       "sourceTriangles": 660,
       "sourceMin": [
@@ -2045,12 +2099,15 @@
       "legacyId": "street-block-small",
       "title": "Small Block",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-brick",
       "params": {
         "storeys": "4",
         "width": "standard",
-        "finish": "original"
+        "finish": "sand",
+        "roof": "flat",
+        "entrance": "level",
+        "sign": "none"
       },
       "sourceTriangles": 3352,
       "sourceMin": [
@@ -2073,12 +2130,15 @@
       "legacyId": "street-house-stairs",
       "title": "Stoop House",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-brick",
       "params": {
         "storeys": "3",
         "width": "standard",
-        "finish": "original"
+        "finish": "sand",
+        "roof": "flat",
+        "entrance": "stoop",
+        "sign": "none"
       },
       "sourceTriangles": 4116,
       "sourceMin": [
@@ -2101,12 +2161,14 @@
       "legacyId": "street-tenement",
       "title": "Tenement",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-tenement",
       "params": {
         "storeys": "5",
         "width": "standard",
-        "finish": "original"
+        "finish": "original",
+        "roof": "flat",
+        "entrance": "stoop"
       },
       "sourceTriangles": 6862,
       "sourceMin": [
@@ -2129,12 +2191,15 @@
       "legacyId": "street-house-wide-doors",
       "title": "Wide Double House",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-brick",
       "params": {
         "storeys": "3",
-        "width": "wide",
-        "finish": "original"
+        "width": "extraWide",
+        "finish": "original",
+        "roof": "flat",
+        "entrance": "paired",
+        "sign": "none"
       },
       "sourceTriangles": 7838,
       "sourceMin": [
@@ -2157,12 +2222,15 @@
       "legacyId": "street-house-wide",
       "title": "Wide Street House",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-brick",
       "params": {
         "storeys": "3",
         "width": "wide",
-        "finish": "original"
+        "finish": "sage",
+        "roof": "flat",
+        "entrance": "level",
+        "sign": "none"
       },
       "sourceTriangles": 5044,
       "sourceMin": [
@@ -2185,12 +2253,14 @@
       "legacyId": "street-tenement-wide",
       "title": "Wide Tenement",
       "status": "covered",
-      "reason": "Approximate architectural family; calibrate scale and orientation at import.",
+      "reason": "Matched architectural family, storeys and facade proportions; explicit parameters preserve entrances, roof and signage where supported. Dimensions are approximate; conversion scale is computed in the global export.",
       "targetId": "commercial-tenement",
       "params": {
         "storeys": "5",
-        "width": "wide",
-        "finish": "original"
+        "width": "extraWide",
+        "finish": "original",
+        "roof": "flat",
+        "entrance": "paired"
       },
       "sourceTriangles": 13564,
       "sourceMin": [

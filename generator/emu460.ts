@@ -299,4 +299,4 @@ export const frame460 = (unit: Unit460): { F: CarFrame; centre: number } => ({ F
 /** Every car and livery, for the tests. */
 export const CARS_460: ReadonlyArray<[Unit460, Livery460]> = (["motorCar", "trailer"] as const).flatMap((u) => (["cd", "cd003", "cd007", "csd"] as const).map((l): [Unit460, Livery460] => [u, l]));
 
-export const EMU460_DESIGNS: ProceduralDesign[] = [{ id: "veh-cd-460", title: "CD 460", build: cd460, params: CD460_PARAMS, catalog: EMU_CATALOG, references: "cd-460" }];
+export const EMU460_DESIGNS: ProceduralDesign[] = [{ id: "proc-vehicle-cd-460", title: "CD 460", build: cd460, params: CD460_PARAMS, catalog: EMU_CATALOG, references: "cd-460" }];

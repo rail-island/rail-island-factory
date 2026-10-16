@@ -273,10 +273,10 @@ export function transmissionTower(given?:ParamValues):MeshBuilder{
   });return m;
 }
 
-// The old GLBs use arbitrary authoring units. Keep their placed HEIGHT via
-// defaultScale, while exporting centred, grounded geometry in metres.
-const entry=(id:string,title:string,build:ProceduralDesign['build'],height:number,placedHeight:number,params?:ParamSpec[],credit?:string):ProceduralDesign=>({
-  id,title,build,params,references:id,catalog:{category:'Towers',group:'towers',defaultScale:placedHeight/height,
+// Geometry is centred, grounded and in metres. Legacy placement compensation
+// lives in legacy-models.json; Eiffel alone has an exceptional display scale.
+const entry=(id:string,title:string,build:ProceduralDesign['build'],_height:number,_placedHeight:number,params?:ParamSpec[],credit?:string):ProceduralDesign=>({
+  id,title,build,params,references:id,catalog:{category:'Towers',group:'towers',defaultScale:id==='tower-eiffel'?0.55:1,
     license:credit?'CC-BY-3.0':'CC0',author:credit?`Rail Island; reference: ${credit}`:'Rail Island',source:'Rail Island procedural reconstruction; see docs/models/towers.md'},
 });
 export const TOWERS:readonly ProceduralDesign[]=[

@@ -1,3 +1,4 @@
+import { proceduralId } from "../generator/modelId.ts";
 // The German coaches (generator/germanCoaches.ts): the DB n-Wagen, the DB Regio
 // double-deck coach and the DR double-deck coach in the Berlin livery. The shared
 // contract (envelope, budget, determinism, flicker, every parameter combination)
@@ -46,18 +47,18 @@ const MECHANICS: Record<string, { length: number; axles: number[]; wheel: number
 
 describe("German coaches transferred from vlakosimdb", () => {
   it("are three parametric rail coaches with their references, registered for the build and the comparison", () => {
-    expect(GERMAN_COACHES.map((d) => d.id)).toEqual(["veh-db-n-wagen", "veh-db-dosto", "veh-dr-sbahn-berlin"]);
+    expect(GERMAN_COACHES.map((d) => d.id)).toEqual(["proc-vehicle-db-n-wagen", "proc-vehicle-db-dosto", "proc-vehicle-dr-sbahn-berlin"]);
     for (const d of GERMAN_COACHES) {
-      expect(DESIGNS.get(d.id)).toBe(d);
+      expect(DESIGNS.get(proceduralId(d.id))).toBe(d);
       expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "coach" });
       expect(d.references).toMatch(/^(db-n-wagen|db-dosto|dr-sbahn-berlin)$/);
     }
-    expect(paramCombinations(design("veh-db-n-wagen").params)).toHaveLength(6);
+    expect(paramCombinations(design("proc-vehicle-db-n-wagen").params)).toHaveLength(6);
     expect(N_WAGEN_PARAMS.map((p) => [p.name, p.default])).toEqual([["variant", "bn"], ["livery", "vr"]]);
-    expect(design("veh-db-dosto").params!.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([["variant", "secondClass", ["firstClass", "secondClass", "drivingTrailer"]]]);
-    expect(design("veh-dr-sbahn-berlin").params!.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([["variant", "coach", ["coach", "drivingTrailer"]]]);
+    expect(design("proc-vehicle-db-dosto").params!.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([["variant", "secondClass", ["firstClass", "secondClass", "drivingTrailer"]]]);
+    expect(design("proc-vehicle-dr-sbahn-berlin").params!.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([["variant", "coach", ["coach", "drivingTrailer"]]]);
     for (const t of GERMAN_TRANSFERS) expect(ALL_TRANSFERS).toContain(t);
-    expect(() => design("veh-db-n-wagen").build({ livery: "blue" })).toThrow();
+    expect(() => design("proc-vehicle-db-n-wagen").build({ livery: "blue" })).toThrow();
   });
 
   it.each(GERMAN_TRANSFERS.map((t) => [t.key] as const))("%s matches the native BMP landmarks within their pixel tolerances", (key) => {
@@ -92,14 +93,14 @@ describe("German coaches transferred from vlakosimdb", () => {
   });
 
   it("n-Wagen: one 2.8 m body, the Bdnrf's Karlsruher Kopf sloping back from its 0.3 m tip; window counts by variant", () => {
-    const bn = build("veh-db-n-wagen");
+    const bn = build("proc-vehicle-db-n-wagen");
     const body = bounds(bn.nodes, /^body\/[a-z]+-band/);
     expect(body.max[2] - body.min[2]).toBeCloseTo(2.8, 3);
     expect(body.max[1]).toBeCloseTo(3.9, 3);
     const windows = (nodes: LeafNode[]) => new Set(nodes.filter((n) => /^body\/right-side\/window-\d+\/frame\//.test(n.id)).map((n) => n.id.split("/")[2])).size;
     expect(windows(bn.nodes)).toBe(14);
-    expect(windows(build("veh-db-n-wagen", { variant: "abn" }).nodes)).toBe(13);
-    const cab = build("veh-db-n-wagen", { variant: "bdnrf" });
+    expect(windows(build("proc-vehicle-db-n-wagen", { variant: "abn" }).nodes)).toBe(13);
+    const cab = build("proc-vehicle-db-n-wagen", { variant: "bdnrf" });
     expect(windows(cab.nodes)).toBe(11);
     // the windscreens lean back: their top edge is further from the tip than their foot
     const ws = bounds(cab.nodes, /^rear-end\/cab\/windscreen\/window-1\/frame\//);
@@ -113,8 +114,8 @@ describe("German coaches transferred from vlakosimdb", () => {
 
   it("n-Wagen: the liveries repaint one body", () => {
     for (const variant of ["bn", "abn", "bdnrf"]) {
-      const vr = build("veh-db-n-wagen", { variant, livery: "vr" });
-      const iv = build("veh-db-n-wagen", { variant, livery: "iv" });
+      const vr = build("proc-vehicle-db-n-wagen", { variant, livery: "vr" });
+      const iv = build("proc-vehicle-db-n-wagen", { variant, livery: "iv" });
       const frames = (nodes: LeafNode[]) => nodes.filter((n) => /\/window-\d+\/frame\//.test(n.id)).map((n) => `${n.id} ${n.min!.map((x) => x.toFixed(3))}`);
       expect(frames(iv.nodes)).toEqual(frames(vr.nodes));
       const mats = (nodes: LeafNode[]) => new Set(nodes.map((n) => n.material));
@@ -125,7 +126,7 @@ describe("German coaches transferred from vlakosimdb", () => {
   });
 
   it("double-deck coaches drop the lower deck between the bogies and keep the single-level ends", () => {
-    for (const [id, centre, drop, end] of [["veh-db-dosto", 13.4, 0.5, 0.9], ["veh-dr-sbahn-berlin", 13.5, 0.5, 1.0]] as const) {
+    for (const [id, centre, drop, end] of [["proc-vehicle-db-dosto", 13.4, 0.5, 0.9], ["proc-vehicle-dr-sbahn-berlin", 13.5, 0.5, 1.0]] as const) {
       const { nodes } = build(id);
       const bands = nodes.filter((n) => /^body\/[a-z-]+-band\//.test(n.id) && n.min);
       const at = (x: number) => Math.min(...bands.filter((n) => n.min![0] <= x - centre && n.max![0] >= x - centre).map((n) => n.min![1]));
@@ -141,7 +142,7 @@ describe("German coaches transferred from vlakosimdb", () => {
   });
 
   it("the DB driving trailer's cab slopes back along its XML elevation without bands standing proud of it", () => {
-    const { nodes } = build("veh-db-dosto", { variant: "drivingTrailer" });
+    const { nodes } = build("proc-vehicle-db-dosto", { variant: "drivingTrailer" });
     const bands = nodes.filter((n) => /^body\/[a-z-]+-band\//.test(n.id) && n.min);
     // the XML elevation (db_ds_re2_s alongz, here in re2 columns, 0.2 m on): the
     // front at height y; Factory x = that x - 13.6. No band piece may reach ahead of
@@ -161,7 +162,7 @@ describe("German coaches transferred from vlakosimdb", () => {
   });
 
   it("the DR driving trailer has the DBmq's flat cab end with two windscreens at x = 0", () => {
-    const { nodes } = build("veh-dr-sbahn-berlin", { variant: "drivingTrailer" });
+    const { nodes } = build("proc-vehicle-dr-sbahn-berlin", { variant: "drivingTrailer" });
     const g1 = bounds(nodes, /^rear-end\/cab\/windscreen\/glass-1\//);
     const g2 = bounds(nodes, /^rear-end\/cab\/windscreen\/glass-2\//);
     expect(g1.n).toBeGreaterThan(0);

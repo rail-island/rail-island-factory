@@ -27,8 +27,8 @@ export interface CoachDesign {
 
 /** The coach designs beyond the CSD ones: parametric, several vlakosimdb vehicles each. */
 export const CD_COACHES: readonly CoachDesign[] = [
-  { id: "veh-bmo-double-deck-coach", title: "Bmo Double-Deck Coach", folder: "bmo-double-deck", build: bmoCoach, params: BMO_PARAMS },
-  { id: "veh-cd-green-white-coach", title: "CD Green-White Coach", folder: "cd-green-white", build: cdGreenWhiteCoach, params: GREEN_WHITE_PARAMS },
+  { id: "proc-vehicle-bmo-double-deck-coach", title: "Bmo Double-Deck Coach", folder: "bmo-double-deck", build: bmoCoach, params: BMO_PARAMS },
+  { id: "proc-vehicle-cd-green-white-coach", title: "CD Green-White Coach", folder: "cd-green-white", build: cdGreenWhiteCoach, params: GREEN_WHITE_PARAMS },
 ];
 
 /** Every coach design, in catalog order. */
@@ -57,7 +57,7 @@ export interface CoachTransfer {
 const greenWhite = (variant: string, title: string, centre = 12.25): CoachTransfer => ({
   key: `cd_${variant}`,
   title,
-  id: "veh-cd-green-white-coach",
+  id: "proc-vehicle-cd-green-white-coach",
   params: { variant },
   folder: "cd-green-white",
   native: `native/cd_${variant}`,
@@ -68,7 +68,7 @@ const greenWhite = (variant: string, title: string, centre = 12.25): CoachTransf
 const bmo = (key: string, title: string, livery: string): CoachTransfer => ({
   key,
   title,
-  id: "veh-bmo-double-deck-coach",
+  id: "proc-vehicle-bmo-double-deck-coach",
   params: { livery },
   folder: "bmo-double-deck",
   native: `native/${key}`,
@@ -77,18 +77,18 @@ const bmo = (key: string, title: string, livery: string): CoachTransfer => ({
 });
 
 export const COACH_TRANSFERS: readonly CoachTransfer[] = [
-  { key: "csd_a", title: "CSD A", id: "veh-csd-classic-green-coach", params: { variant: "classA" }, folder: "csd-classic-green", native: "native/csd_a", centre: 12.25, report: "COMPARISON-class-a.md" },
-  { key: "csd_b", title: "CSD B", id: "veh-csd-classic-green-coach", params: { variant: "classB" }, folder: "csd-classic-green", native: "native/csd_b", centre: 12.25, report: "COMPARISON-class-b.md" },
-  { key: "csd_balm", title: "CSD Balm", id: "veh-csd-balm", folder: "csd-balm", native: "native", centre: 9.55, report: "COMPARISON.md" },
-  { key: "csd_bam", title: "CSD Bam", id: "veh-csd-bam", folder: "csd-bam", native: "native", centre: 11.15, report: "COMPARISON.md" },
-  { key: "csd_bdmtee", title: "CSD Bdmtee", id: "veh-csd-bdmtee", folder: "csd-bdmtee", native: "native", centre: 13.2, report: "COMPARISON.md" },
-  { key: "csd_be31", title: "CSD Be31", id: "veh-csd-be31", folder: "csd-be31", native: "native", centre: 7.8, report: "COMPARISON.md" },
-  { key: "csd_bi20", title: "CSD Bi20", id: "veh-csd-bi20", folder: "csd-bi20", native: "native", centre: 6.3, report: "COMPARISON.md" },
+  { key: "csd_a", title: "CSD A", id: "proc-vehicle-csd-classic-green-coach", params: { variant: "classA" }, folder: "csd-classic-green", native: "native/csd_a", centre: 12.25, report: "COMPARISON-class-a.md" },
+  { key: "csd_b", title: "CSD B", id: "proc-vehicle-csd-classic-green-coach", params: { variant: "classB" }, folder: "csd-classic-green", native: "native/csd_b", centre: 12.25, report: "COMPARISON-class-b.md" },
+  { key: "csd_balm", title: "CSD Balm", id: "proc-vehicle-csd-balm", folder: "csd-balm", native: "native", centre: 9.55, report: "COMPARISON.md" },
+  { key: "csd_bam", title: "CSD Bam", id: "proc-vehicle-csd-bam", folder: "csd-bam", native: "native", centre: 11.15, report: "COMPARISON.md" },
+  { key: "csd_bdmtee", title: "CSD Bdmtee", id: "proc-vehicle-csd-bdmtee", folder: "csd-bdmtee", native: "native", centre: 13.2, report: "COMPARISON.md" },
+  { key: "csd_be31", title: "CSD Be31", id: "proc-vehicle-csd-be31", folder: "csd-be31", native: "native", centre: 7.8, report: "COMPARISON.md" },
+  { key: "csd_bi20", title: "CSD Bi20", id: "proc-vehicle-csd-bi20", folder: "csd-bi20", native: "native", centre: 6.3, report: "COMPARISON.md" },
   bmo("csd_bmo", "CSD Bmo", "csd"),
   bmo("cd_bmo_1", "CD Bmo#1", "cdBlue"),
   bmo("cd_bmo_2", "CD Bmo#2", "cdBlueGrey"),
   bmo("cd_bmo_3", "CD Bmo#3", "cdRedDoors"),
-  { key: "csd_dsk", title: "CSD Dsk", id: "veh-csd-dsk", folder: "csd-dsk", native: "native", centre: 5.25, report: "COMPARISON.md" },
+  { key: "csd_dsk", title: "CSD Dsk", id: "proc-vehicle-csd-dsk", folder: "csd-dsk", native: "native", centre: 5.25, report: "COMPARISON.md" },
   greenWhite("a", "CD A"),
   greenWhite("ab", "CD AB"),
   greenWhite("b", "CD B"),

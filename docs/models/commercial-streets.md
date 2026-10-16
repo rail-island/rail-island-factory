@@ -1,11 +1,12 @@
 # Commercial street and historic buildings
 
-**Covers** - eleven procedural families, their parameters, the complete legacy Commercial inventory and the deferred save-map migration.
+**Covers** - eleven procedural families, their parameters, the complete legacy Commercial inventory and the legacy runtime correspondence.
 **Code** - `generator/commercialStreets.ts`, `generator/generate.ts`, `assets/commercial/inventory.json`, `test/commercialStreets.test.ts`
 **See also** - [parameters.md](parameters.md), [export.md](export.md), [skyscrapers.md](skyscrapers.md)
 
-These eleven `commercial-` families complement the five existing `comm-`
-[Commercial families](commercial.md); the existing IDs and geometry are preserved.
+These eleven street-house families complement the five existing
+[Commercial families](commercial.md). Their local generator keys use
+`commercial-`; the central registry assigns namespaced procedural IDs.
 
 ## Scope and references
 
@@ -18,17 +19,17 @@ The source thumbnails for the 59 covered buildings are grouped under
 No source GLB, external image service or webapp checkout is needed to build.
 
 The new models are approximate architectural families, not one-for-one replicas.
-There are 59 provisional correspondences. The 22 simple tower models
+There are 59 explicit architectural correspondences. The 22 simple tower models
 (`citykit-low-*`, `citykit-skyscraper-*`, `comm-building-skyscraper-*`) and the
 standalone `citykit-sign-hospital-1` are explicitly deferred. Existing factory
 skyscrapers remain available; no new trivial tower has been added.
 
 ## Families
 
-All IDs start with `commercial-`. Every model is in the site's **Commercial**
+Local generator keys start with `commercial-`. Every model is in the site's **Commercial**
 category and exports with the buildings in `skyscrapers.meta.json`. The catalog
-has `group: commercial` and `defaultScale: 1.88`; that is a new-model placement
-scale, not a conversion of a legacy instance's saved scale.
+has `group: commercial` and `defaultScale: 1`; that is a new-model placement
+scale. Geometry uses metres with 3.2 m storeys; legacy instance scaling is handled by the central conversion export.
 
 | Suffix | Architecture | Main legacy coverage |
 |---|---|---|
@@ -47,12 +48,15 @@ scale, not a conversion of a legacy instance's saved scale.
 ## Parameters and geometry
 
 - `storeys`: 2, 3, 4 or 5; the low shop has 1 or 2. Floor height is 3.2 m.
-- `width`: narrow (2 bays), standard (3), wide (5), at 2.7 m per bay.
+- `width`: narrow (2 bays), standard (3), wide (5), at 2.7 m per bay. Brick houses and tenements also offer extraWide (8 bays) for long street rows.
 - `finish`: original, sand, sage or brick. This changes material colour only.
 - `awning`: green, ochre or none, on modern shop houses and low shops.
 - `roof`: flat or pitched, on brick houses, tenements and shops.
 
-There are 816 exposed parameter combinations. Geometry is in metres, grounded
+- `entrance`: level, stoop or paired, on brick houses and tenements. Stoops have three 15 cm risers; paired entrances serve double houses and long rows.
+- `sign`: none or board, on brick houses and shops.
+
+Geometry is in metres, grounded
 at Y=0, with the street facade facing +Z. Modern buildings have an 8 m main depth,
 historic families 9 m. A wing or balcony adds to that footprint. All combinations
 stay below 10,000 triangles. More triangles are not added just to fill a budget.
@@ -64,28 +68,33 @@ Named scopes expose masonry, windows, roofs, arcades, gables and wings in the
 factory's source-tree viewer. Exported JS uses the same code as the GLB builder;
 no generator implementation is imported into the site bundle.
 
-## Future legacy import
+## Legacy runtime correspondence
 
-`assets/commercial/inventory.json` is a **review inventory**, not an active
-migration table. Covered rows propose a `targetId` and valid `params`; deferred
-rows have no target. Keep every old ID readable until a webapp-side importer is
-implemented. The current change does not change saved maps or the webapp.
+`assets/commercial/inventory.json` version 2 is the architectural input to the
+central legacy mapping export. Its 82 `models` rows keep `legacyId`, `status`,
+`targetId`, `params`, source bounds, source default scale and source attribution.
+The 59 covered rows specify **every** parameter rather than inheriting defaults,
+so a later catalog default change cannot silently alter existing maps. The 23
+excluded rows remain in the audit inventory; the central mapping resolves these
+against the other factory families.
 
-The future importer must:
+The source thumbnails were reviewed by facade structure, not just name. The
+ordinary double house keeps the standard footprint with paired entrances; the
+wide double house and long tenements use eight bays. Stoop houses have steps,
+shop-sign variants have a sign board, and gabled variants retain pitched roofs.
+Finish choices distinguish sage houses from sand and brick families. This reuses
+eleven architectural generators rather than adding a generator per old GLB.
 
-1. Resolve a legacy ID to the proposed family and parameters, allowing manual
-   corrections after side-by-side review in the actual game.
-2. Calibrate footprint, orientation and height using `sourceMin`, `sourceMax`,
-   the legacy `sourceDefaultScale` and the generated variant's bounds. Do not
-   copy a saved scale numerically: source GLBs use different unit scales. Decide
-   explicitly how to handle aspect-ratio differences and per-instance overrides.
-3. Preserve placement and rotation and retain deferred GLBs as fallbacks. Run
-   old-map fixtures before replacing any existing ID.
+The central export owns the final namespaced procedural IDs and conversion
+`scale`. The consumer identifies old GLB IDs separately from procedural IDs,
+resolves the old ID on the fly, and multiplies the saved instance scale by that
+conversion factor. These families do not mutate saved maps.
 
-Simplifications include regularized floor spacing and footprints, fewer facade
-bays on very wide rows, shared window proportions, and approximate central bays,
-stoops and signs. These are suitable starting families for later mapping, not
-claims of exact silhouette or dimension parity.
+Simplifications include regularized floor spacing and footprints, shared window
+proportions, and approximate central bays and roof details. A scalar conversion
+cannot preserve all dimensions when a source has different aspect ratios. The
+geometry is built in real metres; historical oversized placement defaults are
+not baked into the new mesh.
 
 ## Verification
 

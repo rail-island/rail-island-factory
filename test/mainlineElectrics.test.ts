@@ -30,17 +30,17 @@ const axlesAt = (pivot: number, half: number, axles = [-half, half]) => [-pivot,
 
 // published dimensions (assets/<folder>/SOURCES.md): over the buffers, the axles' x, the wheel radius, the pantograph kind
 const SPECS: Record<string, { lob: number; axles: (p: ParamValues) => number[]; r: number; diamond: boolean }> = {
-  "veh-cd-180": { lob: 18.8, axles: () => axlesAt(4.1, 2.4, [-2.4, 0, 2.4]), r: 0.625, diamond: true },
-  "veh-dnt-184-5": { lob: 20.346, axles: () => [...axlesAt(5.5, 1.55), -1.55, 1.55].sort((a, b) => a - b), r: 0.625, diamond: false },
-  "veh-db-111": { lob: 16.75, axles: () => axlesAt(3.95, 1.7), r: 0.625, diamond: false },
-  "veh-dr-243": { lob: 16.64, axles: (p) => axlesAt(p.livery === "db112" ? 4.2 : 4.25, 1.65), r: 0.625, diamond: false },
-  "veh-obb-1012": { lob: 19.3, axles: () => axlesAt(4.95, 1.4), r: 0.575, diamond: false },
-  "veh-obb-1040": { lob: 12.92, axles: () => axlesAt(3.8, 1.2), r: 0.65, diamond: true },
+  "proc-vehicle-cd-180": { lob: 18.8, axles: () => axlesAt(4.1, 2.4, [-2.4, 0, 2.4]), r: 0.625, diamond: true },
+  "proc-vehicle-dnt-184-5": { lob: 20.346, axles: () => [...axlesAt(5.5, 1.55), -1.55, 1.55].sort((a, b) => a - b), r: 0.625, diamond: false },
+  "proc-vehicle-db-111": { lob: 16.75, axles: () => axlesAt(3.95, 1.7), r: 0.625, diamond: false },
+  "proc-vehicle-dr-243": { lob: 16.64, axles: (p) => axlesAt(p.livery === "db112" ? 4.2 : 4.25, 1.65), r: 0.625, diamond: false },
+  "proc-vehicle-obb-1012": { lob: 19.3, axles: () => axlesAt(4.95, 1.4), r: 0.575, diamond: false },
+  "proc-vehicle-obb-1040": { lob: 12.92, axles: () => axlesAt(3.8, 1.2), r: 0.65, diamond: true },
 };
 
 describe("mainline electric locomotives from vlakosimdb", () => {
   it("registers the six designs with their parameters and defaults", () => {
-    expect(MAINLINE_ELECTRICS.map((d) => d.id)).toEqual(["veh-cd-180", "veh-dnt-184-5", "veh-db-111", "veh-dr-243", "veh-obb-1012", "veh-obb-1040"]);
+    expect(MAINLINE_ELECTRICS.map((d) => d.id)).toEqual(["proc-vehicle-cd-180", "proc-vehicle-dnt-184-5", "proc-vehicle-db-111", "proc-vehicle-dr-243", "proc-vehicle-obb-1012", "proc-vehicle-obb-1040"]);
     const values = (i: number) => MAINLINE_ELECTRICS[i]!.params![0]!.values.map((v) => v.value);
     expect(values(0)).toEqual(["cd180", "cd181", "cd181Okd", "cd182"]);
     expect(MAINLINE_ELECTRICS[0]!.params![0]!.default).toBe("cd181");
@@ -119,15 +119,15 @@ describe("mainline electric locomotives from vlakosimdb", () => {
 
   it("lays each side's own equipment", () => {
     // DNT 184.5: windows on the right (+z), grille bays on the left; the CD 180 its louvre banks
-    const dnt = build("veh-dnt-184-5").nodes;
+    const dnt = build("proc-vehicle-dnt-184-5").nodes;
     expect(dnt.some((n) => n.id.startsWith("sides/right-side/window-1/"))).toBe(true);
     expect(dnt.some((n) => n.id.startsWith("sides/left-side/window-1/"))).toBe(false);
     expect(dnt.filter((n) => n.id.startsWith("sides/left-side/grille-") && n.id.endsWith("/louvre/facets-1")).length).toBe(10);
-    const cd180 = build("veh-cd-180", { livery: "cd180" }).nodes;
+    const cd180 = build("proc-vehicle-cd-180", { livery: "cd180" }).nodes;
     expect(cd180.some((n) => n.id.startsWith("sides/right-side/louvre-4/"))).toBe(true);
-    expect(build("veh-cd-180").nodes.some((n) => n.id.startsWith("sides/right-side/louvre-"))).toBe(false);
+    expect(build("proc-vehicle-cd-180").nodes.some((n) => n.id.startsWith("sides/right-side/louvre-"))).toBe(false);
     // the DB 112's pivots 8.4 m apart against the 243's 8.5 m
-    const pivots = (p: ParamValues) => build("veh-dr-243", p).nodes.filter((n) => n.id.startsWith("bogies/front-bogie/frame/")).map((n) => (n.min![0] + n.max![0]) / 2);
+    const pivots = (p: ParamValues) => build("proc-vehicle-dr-243", p).nodes.filter((n) => n.id.startsWith("bogies/front-bogie/frame/")).map((n) => (n.min![0] + n.max![0]) / 2);
     expect(Math.max(...pivots({ livery: "dr243" })) - Math.max(...pivots({ livery: "db112" }))).toBeCloseTo(0.05, 3);
   });
 });

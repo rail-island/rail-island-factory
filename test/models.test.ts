@@ -1,3 +1,4 @@
+import { proceduralId } from "../generator/modelId.ts";
 // The procedurally authored models (generator/): the mesh builder's winding, each
 // design's shape and budget, and the generator's output on disk.
 
@@ -242,18 +243,18 @@ describe("the designs", () => {
   // tier's dark core, its stone piers and its cornice all ended at one height.
   // The glass office, apartment, black slab and terraced towers had smaller cases.
   it.each(ALL_IDS)("%s has no z-fighting faces", (id) => {
-    expect(findCoplanarOverlaps(designGlb(id))).toEqual([]);
+    expect(findCoplanarOverlaps(designGlb(proceduralId(id)))).toEqual([]);
   });
 
   it("include ten skyscrapers, with unique sky- ids", () => {
     expect(SKYSCRAPERS.length).toBe(10);
     const ids = SKYSCRAPERS.map((d) => d.id);
     expect(new Set(ids).size).toBe(ids.length);
-    for (const id of ids) expect(id).toMatch(/^sky-[a-z0-9]+(-[a-z0-9]+)*$/);
+    for (const id of ids) expect(id).toMatch(/^proc-building-sky-[a-z0-9]+(-[a-z0-9]+)*$/);
   });
 
   it.each(SKYSCRAPERS.map((d) => [d.id] as const))("skyscraper %s stands on y = 0, is tall and stays in budget", (id) => {
-    const glb = designGlb(id);
+    const glb = designGlb(proceduralId(id));
     const s = glbStats(glb);
     expect(s.min[1]).toBeCloseTo(0, 5);
     const h = s.max[1] - s.min[1];
@@ -264,18 +265,18 @@ describe("the designs", () => {
   });
 
   it.each(ALL_IDS)("%s generates deterministic GLB bytes for the game's LOD cache", (id) => {
-    expect(Buffer.from(designGlb(id)).equals(Buffer.from(designGlb(id)))).toBe(true);
+    expect(Buffer.from(designGlb(proceduralId(id))).equals(Buffer.from(designGlb(proceduralId(id))))).toBe(true);
   });
 
   it("throws on an unknown id", () => {
-    expect(() => designGlb("sky-nope")).toThrow(/no procedural model/);
-    expect(() => designTree("sky-nope")).toThrow(/no procedural model/);
+    expect(() => designGlb(proceduralId("sky-nope"))).toThrow(/no procedural model/);
+    expect(() => designTree(proceduralId("sky-nope"))).toThrow(/no procedural model/);
   });
 
   // The site's source tree is only readable when every primitive sits in a
   // named scope: a design must not draw straight under its root.
   it.each(ALL_IDS)("%s draws every primitive inside a named scope", (id) => {
-    const tree = designTree(id);
+    const tree = designTree(proceduralId(id));
     expect(tree.root.children.length).toBeGreaterThan(0);
     expect(tree.root.children.filter(isLeaf).map((l) => l.id)).toEqual([]);
     const ids = walk(tree.root).map((n) => n.id);
@@ -285,8 +286,8 @@ describe("the designs", () => {
   // The site highlights and picks through the leaves' triangle ranges, so they
   // must tile each material's GLB primitive exactly and point at the right faces.
   it.each(ALL_IDS)("%s has a tree whose triangle ranges match its GLB", (id) => {
-    const tree = designTree(id);
-    const { json, bin } = parseGlb(designGlb(id));
+    const tree = designTree(proceduralId(id));
+    const { json, bin } = parseGlb(designGlb(proceduralId(id)));
     const byMat = new Map<string, ReturnType<typeof collectTriangles>>();
     for (const t of collectTriangles(json, bin)) {
       if (!byMat.has(t.material)) byMat.set(t.material, []);
@@ -294,7 +295,7 @@ describe("the designs", () => {
     }
     // a model with parts visits its materials node by node, so compare as sets
     expect(tree.materials).toEqual([...byMat.keys()].sort());
-    expect(tree.triangles).toBe(glbStats(designGlb(id)).triangles);
+    expect(tree.triangles).toBe(glbStats(designGlb(proceduralId(id))).triangles);
     expect(tree.root.triangles).toBe(tree.triangles);
     const leaves = walk(tree.root).filter(isLeaf);
     for (const mat of tree.materials) {
@@ -319,19 +320,18 @@ describe("the designs", () => {
   });
 
   it.each(ALL_IDS)("%s records the same source tree every time", (id) => {
-    expect(JSON.stringify(designTree(id))).toBe(JSON.stringify(designTree(id)));
+    expect(JSON.stringify(designTree(proceduralId(id)))).toBe(JSON.stringify(designTree(proceduralId(id))));
   });
 });
 
 describe("the vehicles", () => {
   it("have unique veh- ids that no building shares", () => {
     const ids = ALL_VEHICLES.map((d) => d.id);
-    expect(ids).toContain("veh-american-truck");
+    expect(ids).toContain("proc-vehicle-american-truck");
     expect(new Set(ids).size).toBe(ids.length);
-    for (const id of ids) expect(id).toMatch(/^veh-[a-z0-9]+(-[a-z0-9]+)*$/);
+    for (const id of ids) expect(id).toMatch(/^proc-vehicle-[a-z0-9]+(-[a-z0-9]+)*$/);
     for (const d of BUILDINGS) {
-      if (d.catalog?.group === "industry") expect(d.id).toMatch(/^(ind|industry|chemical)-[a-z0-9]+(-[a-z0-9]+)*$/);
-      else expect(d.id).toMatch(/^(sky|bld|comm|commercial|tower)-[a-z0-9]+(-[a-z0-9]+)*$/);
+      expect(d.id).toMatch(/^proc-building-[a-z0-9]+(-[a-z0-9]+)*$/);
     }
     expect(DESIGNS.size).toBe(BUILDINGS.length + VILLAGE_HOUSES.length + ALL_VEHICLES.length);
   });
@@ -339,8 +339,8 @@ describe("the vehicles", () => {
   it.each([...VEHICLES, ...STEAM_LOCOS].map((d) => [d.id] as const))("%s stands on its wheels, faces +x, fits its road or track and stays in budget", (id) => {
     // Repository rail envelope: 3.1 m wide, 4.7 m excluding pantographs.
     // An active collector may reach the separate 6.5 m operating limit.
-    const rail = DESIGNS.get(id)!.catalog?.category === "Rail vehicles";
-    const glb = designGlb(id);
+    const rail = DESIGNS.get(proceduralId(id))!.catalog?.category === "Rail vehicles";
+    const glb = designGlb(proceduralId(id));
     const s = glbStats(glb);
     expect(s.min[1]).toBeCloseTo(0, 5);
     const length = s.max[0] - s.min[0];
@@ -350,7 +350,7 @@ describe("the vehicles", () => {
     expect(width).toBeLessThanOrEqual(rail ? 3.1 : 2.7); // 2.6 m legal road width, mirrors aside
     expect(s.max[1]).toBeLessThanOrEqual(rail ? 6.5 : 4.115); // raised collector or road height
     if (rail) {
-      const fixed = walk(designTree(id).root).filter((n) => isLeaf(n) && !n.id.startsWith("roof-equipment/pantographs/"));
+      const fixed = walk(designTree(proceduralId(id)).root).filter((n) => isLeaf(n) && !n.id.startsWith("roof-equipment/pantographs/"));
       expect(Math.max(...fixed.map((n) => n.max![1]))).toBeLessThanOrEqual(4.7);
     }
     // the road-vehicle budget (.agents/skills/road-vehicle); a rail vehicle,
@@ -370,16 +370,16 @@ describe("the vehicles", () => {
   });
 
   it("ships the CD 163 as a rigid rail vehicle on standard gauge", () => {
-    const d = VEHICLES.find((v) => v.id === "veh-cd-163")!;
+    const d = VEHICLES.find((v) => v.id === "proc-vehicle-cd-163")!;
     expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "loco" });
-    const { json } = parseGlb(designGlb(d.id));
+    const { json } = parseGlb(designGlb(proceduralId(d.id)));
     expect((json as { nodes: Array<{ name: string }> }).nodes.map((n) => n.name)).toEqual(["vehicle"]);
-    const s = glbStats(designGlb(d.id));
+    const s = glbStats(designGlb(proceduralId(d.id)));
     expect(s.max[0] - s.min[0]).toBeCloseTo(16.8, 2); // over the buffers
     expect(s.max[0] + s.min[0]).toBeCloseTo(0, 5); // centred along x
     // the bogies: 8.30 m between the pivots, 3.20 m wheelbase, so the four
     // axles stand at +-2.55 and +-5.75 m
-    const tree = designTree(d.id);
+    const tree = designTree(proceduralId(d.id));
     // each wheelset's first primitive is its axle
     const axleLeaves = walk(tree.root).filter((n) => /\/wheelset(-\d+)?\/sweep-1$/.test(n.id));
     const axles = axleLeaves.map((n) => Math.round(((n.min![0] + n.max![0]) / 2) * 100) / 100).sort((a, b) => a - b);
@@ -387,8 +387,8 @@ describe("the vehicles", () => {
   });
 
   it("raises only the rear CD 163 pantograph with connected, constant-length arms and a level head", () => {
-    const nodes = walk(designTree("veh-cd-163").root);
-    const { json, bin } = parseGlb(designGlb("veh-cd-163"));
+    const nodes = walk(designTree(proceduralId("proc-vehicle-cd-163")).root);
+    const { json, bin } = parseGlb(designGlb(proceduralId("proc-vehicle-cd-163")));
     const triangles = collectTriangles(json, bin);
     const metal = triangles.filter((t) => t.material === "pantograph");
     const roots = nodes.filter((n) => /^roof-equipment\/pantographs\/(front|rear)-pantograph$/.test(n.id));
@@ -431,7 +431,7 @@ describe("the vehicles", () => {
   });
 
   it("keeps the CD 163 windscreens wide, near the cab edges, and raked", () => {
-    const nodes = walk(designTree("veh-cd-163").root);
+    const nodes = walk(designTree(proceduralId("proc-vehicle-cd-163")).root);
     for (const cab of ["front-cab", "rear-cab"]) {
       const panes = nodes.filter((n): n is LeafNode => isLeaf(n) && n.id.startsWith(`${cab}/windscreen/`) && n.material === "glass");
       expect(panes).toHaveLength(2);
@@ -465,8 +465,8 @@ describe("the vehicles", () => {
   });
 
   it("recedes above AND below the CD 163 nose and keeps its fittings on the sloped skin", () => {
-    const nodes = walk(designTree("veh-cd-163").root);
-    const { json, bin } = parseGlb(designGlb("veh-cd-163"));
+    const nodes = walk(designTree(proceduralId("proc-vehicle-cd-163")).root);
+    const { json, bin } = parseGlb(designGlb(proceduralId("proc-vehicle-cd-163")));
     const triangles = collectTriangles(json, bin);
     const materials = new Map([...new Set(triangles.map((t) => t.material))].map((mat) => [mat, triangles.filter((t) => t.material === mat)]));
     const scoped = (id: string) => nodes.filter((n): n is LeafNode => isLeaf(n) && n.id.startsWith(id + "/"))
@@ -504,7 +504,7 @@ describe("the vehicles", () => {
   });
 
   it("gives the CD 163 substantial marker lamps, rounded buffer heads and an upright badge", () => {
-    const nodes = walk(designTree("veh-cd-163").root);
+    const nodes = walk(designTree(proceduralId("proc-vehicle-cd-163")).root);
     for (const cab of ["front-cab", "rear-cab"]) {
       const markers = nodes.filter((n): n is LeafNode => isLeaf(n) && n.id.startsWith(`${cab}/lamps/`) && n.material === "lampHead" && n.max![1] < 2);
       expect(markers).toHaveLength(2);
@@ -525,8 +525,8 @@ describe("the vehicles", () => {
   });
 
   it("keeps equal marker lamps clear of the yellow band and close above the buffers, with low tilted ploughs", () => {
-    const nodes = walk(designTree("veh-cd-163").root);
-    const { json, bin } = parseGlb(designGlb("veh-cd-163"));
+    const nodes = walk(designTree(proceduralId("proc-vehicle-cd-163")).root);
+    const { json, bin } = parseGlb(designGlb(proceduralId("proc-vehicle-cd-163")));
     const yellow = collectTriangles(json, bin).filter((t) => t.material === "yellow");
     for (const cab of ["front-cab", "rear-cab"]) {
       const lamps = nodes.filter((n): n is LeafNode => isLeaf(n) && n.id.startsWith(`${cab}/lamps/`));
@@ -580,7 +580,7 @@ describe("the vehicles", () => {
   });
 
   it("distinguishes the CD 163 porthole side from the opposite intake shutters", () => {
-    const nodes = walk(designTree("veh-cd-163").root);
+    const nodes = walk(designTree(proceduralId("proc-vehicle-cd-163")).root);
     const panes = nodes.filter((n): n is LeafNode => isLeaf(n) && n.id.startsWith("body/portholes/") && n.material === "glass");
     expect(panes).toHaveLength(4);
     for (const pane of panes) {
@@ -600,8 +600,8 @@ describe("the vehicles", () => {
     const reference = JSON.parse(fs.readFileSync(new URL("../assets/cd-163/native/landmarks.json", import.meta.url), "utf8")) as {
       annotations: Array<{ id: string; view: string; box: number[]; nodes: string[]; tolerancePixels: number }>;
     };
-    const nodes = walk(designTree("veh-cd-163").root).filter(isLeaf);
-    const { json, bin } = parseGlb(designGlb("veh-cd-163"));
+    const nodes = walk(designTree(proceduralId("proc-vehicle-cd-163")).root).filter(isLeaf);
+    const { json, bin } = parseGlb(designGlb(proceduralId("proc-vehicle-cd-163")));
     const triangles = collectTriangles(json, bin);
     const materials = new Map([...new Set(triangles.map((t) => t.material))].map((mat) => [mat, triangles.filter((t) => t.material === mat)]));
     expect(reference.annotations).toHaveLength(50);
@@ -630,7 +630,7 @@ describe("the vehicles", () => {
   });
 
   it("puts the truck's grille at the +x end, ahead of the front axle", () => {
-    const tree = designTree("veh-american-truck");
+    const tree = designTree(proceduralId("proc-vehicle-american-truck"));
     const byId = new Map(walk(tree.root).map((n) => [n.id, n]));
     const grille = byId.get("truck/grille")!;
     const axle = byId.get("truck/front-axle")!;
@@ -642,7 +642,7 @@ describe("the vehicles", () => {
   // An articulated vehicle is two named parts divided at the rotation point:
   // the game turns the trailer by rotating its node about the node's origin.
   it("splits the articulated truck into a truck and a trailer node, the trailer's at the king pin", () => {
-    const { json } = parseGlb(designGlb("veh-american-truck"));
+    const { json } = parseGlb(designGlb(proceduralId("proc-vehicle-american-truck")));
     const nodes = (json as { nodes: Array<{ name: string; translation?: number[]; children?: number[] }> }).nodes;
     // the steered front wheels are children of the truck's node
     expect(nodes.map((n) => n.name)).toEqual(["truck", "wheel-front-left", "wheel-front-right", "trailer"]);
@@ -651,7 +651,7 @@ describe("the vehicles", () => {
     expect(nodes[0]!.translation).toEqual([0, 0, 0]);
     const pivot = nodes[3]!.translation!;
     expect(pivot[2]).toBe(0); // on the centre line
-    const tree = designTree("veh-american-truck");
+    const tree = designTree(proceduralId("proc-vehicle-american-truck"));
     expect(tree.root.children.map((c) => c.id)).toEqual(["truck", "wheel-front-left", "wheel-front-right", "trailer"]);
     const byId = new Map(walk(tree.root).map((n) => [n.id, n]));
     // the king pin rides on the fifth wheel's top, within its plate
@@ -662,9 +662,9 @@ describe("the vehicles", () => {
   });
 
   it("lets the trailer swing clear of the sleeper", () => {
-    const tree = designTree("veh-american-truck");
+    const tree = designTree(proceduralId("proc-vehicle-american-truck"));
     const byId = new Map(walk(tree.root).map((n) => [n.id, n]));
-    const { json } = parseGlb(designGlb("veh-american-truck"));
+    const { json } = parseGlb(designGlb(proceduralId("proc-vehicle-american-truck")));
     const pivot = (json as { nodes: Array<{ name: string; translation?: number[] }> }).nodes.find((n) => n.name === "trailer")!.translation!;
     const body = byId.get("trailer/body")!;
     const sleeper = byId.get("truck/sleeper")!;
@@ -721,7 +721,7 @@ describe("generateModels", () => {
       for (const b of first) {
         expect(b.changed).toBe(true);
         expect(fs.readFileSync(b.thumb).subarray(1, 4).toString()).toBe("PNG");
-        expect(JSON.parse(fs.readFileSync(b.tree, "utf8"))).toEqual(designTree(b.id));
+        expect(JSON.parse(fs.readFileSync(b.tree, "utf8"))).toEqual(designTree(proceduralId(b.id)));
       }
       expect(fs.existsSync(path.join(dir, "tree", "sky-retired.json"))).toBe(false);
       expect(fs.existsSync(path.join(dir, "glb", "sky-retired.glb"))).toBe(false);

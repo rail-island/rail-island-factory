@@ -884,7 +884,7 @@ export function stNicholasChurch(): MeshBuilder {
 export const CATHEDRAL_CATALOG: CatalogFields = {
   category: "Historical",
   group: "hist_center",
-  defaultScale: 1.88,
+  defaultScale: 1,
   license: "CC0",
   author: "Rail Island",
   source: "Rail Island",

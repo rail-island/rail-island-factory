@@ -78,8 +78,8 @@ const SECTIONS: Record<string, { top: number; half: number }> = {
 
 describe("CSD coaches transferred from vlakosimdb", () => {
   it("are registered as rail coaches with stable ids and their native references", () => {
-    expect(CSD_COACHES.map((c) => c.id)).toEqual(["veh-csd-classic-green-coach", "veh-csd-balm", "veh-csd-bam", "veh-csd-bdmtee", "veh-csd-be31", "veh-csd-bi20", "veh-csd-dsk"]);
-    expect(CD_COACHES.map((c) => c.id)).toEqual(["veh-bmo-double-deck-coach", "veh-cd-green-white-coach"]);
+    expect(CSD_COACHES.map((c) => c.id)).toEqual(["proc-vehicle-csd-classic-green-coach", "proc-vehicle-csd-balm", "proc-vehicle-csd-bam", "proc-vehicle-csd-bdmtee", "proc-vehicle-csd-be31", "proc-vehicle-csd-bi20", "proc-vehicle-csd-dsk"]);
+    expect(CD_COACHES.map((c) => c.id)).toEqual(["proc-vehicle-bmo-double-deck-coach", "proc-vehicle-cd-green-white-coach"]);
     for (const c of [...CSD_COACHES, ...CD_COACHES]) {
       const d = VEHICLES.find((v) => v.id === c.id)!;
       expect(d.catalog).toEqual(COACH_CATALOG);
@@ -150,7 +150,7 @@ describe("CSD coaches transferred from vlakosimdb", () => {
   });
 
   it("builds CSD A and CSD B as the two variants of the classic green coach", () => {
-    const d = VEHICLES.find((v) => v.id === "veh-csd-classic-green-coach")!;
+    const d = VEHICLES.find((v) => v.id === "proc-vehicle-csd-classic-green-coach")!;
     expect(d.params).toEqual([expect.objectContaining({ name: "variant", default: "classA", values: [expect.objectContaining({ value: "classA" }), expect.objectContaining({ value: "classB" })] })]);
     const windows = (variant: string) =>
       leaves(d.build({ variant }).sourceTree(d.id, d.title).root).filter((n) => /^body\/right-side\/window-\d+\/frame\//.test(n.id)).map((n) => n.id.split("/")[2]);
@@ -249,7 +249,7 @@ describe("CSD coaches transferred from vlakosimdb", () => {
   });
 
   it("builds the ten CD green and white coaches (the blue Bee 001 among them) as the variants of one design", () => {
-    const d = VEHICLES.find((v) => v.id === "veh-cd-green-white-coach")!;
+    const d = VEHICLES.find((v) => v.id === "proc-vehicle-cd-green-white-coach")!;
     expect(d.params![0]!.values.map((v) => v.value)).toEqual(["a", "ab", "b", "bee", "beel", "bds", "ds", "bdmeer", "bdmtee", "beeBlue"]);
     const count = (variant: string) =>
       new Set(leaves(d.build({ variant }).sourceTree(d.id, d.title).root).filter((n) => /^body\/right-side\/window-\d+\/frame\//.test(n.id)).map((n) => n.id.split("/")[2])).size;
@@ -262,7 +262,7 @@ describe("CSD coaches transferred from vlakosimdb", () => {
   });
 
   it("paints the Bmo in its four liveries on one body", () => {
-    const d = VEHICLES.find((v) => v.id === "veh-bmo-double-deck-coach")!;
+    const d = VEHICLES.find((v) => v.id === "proc-vehicle-bmo-double-deck-coach")!;
     expect(d.params![0]!.values.map((v) => v.value)).toEqual(["csd", "cdBlue", "cdBlueGrey", "cdRedDoors"]);
     const mats = (livery: string) => new Set(leaves(d.build({ livery }).sourceTree(d.id, d.title).root).map((n) => n.material));
     expect(mats("csd").has("yellow")).toBe(true);
@@ -280,7 +280,7 @@ describe("CSD coaches transferred from vlakosimdb", () => {
   // regression: the white 3 by 5 pixel marks beside the toilets were first drawn
   // as blank plates; they are the class numerals, "1" on the A and "2" on the others
   it("draws the green and white coaches' class marks as white numerals, not blank plates", () => {
-    const d = VEHICLES.find((v) => v.id === "veh-cd-green-white-coach")!;
+    const d = VEHICLES.find((v) => v.id === "proc-vehicle-cd-green-white-coach")!;
     for (const variant of ["a", "b", "bee", "beel", "bds", "bdmeer", "bdmtee"]) {
       const mesh = d.build({ variant });
       const nodes = leaves(mesh.sourceTree(d.id, d.title).root);

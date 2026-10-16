@@ -528,11 +528,11 @@ interface TramDesign {
 }
 
 export const TRAM_DESIGN_LIST: readonly TramDesign[] = [
-  { id: "veh-tatra-t3", title: "Tatra T3", folder: "tatra-t3", build: tatraT3, params: T3_PARAMS },
-  { id: "veh-tatra-t6", title: "Tatra T6A5", folder: "tatra-t6", build: tatraT6 },
-  { id: "veh-tatra-kt8", title: "Tatra KT8D5", folder: "tatra-kt8", build: tatraKt8, params: KT8_PARAMS },
-  { id: "veh-tatra-kt4", title: "Tatra KT4", folder: "tatra-kt4", build: tatraKt4 },
-  { id: "veh-kvag-gt4", title: "GT4", folder: "gt4", build: gt4Tram },
+  { id: "proc-vehicle-tatra-t3", title: "Tatra T3", folder: "tatra-t3", build: tatraT3, params: T3_PARAMS },
+  { id: "proc-vehicle-tatra-t6", title: "Tatra T6A5", folder: "tatra-t6", build: tatraT6 },
+  { id: "proc-vehicle-tatra-kt8", title: "Tatra KT8D5", folder: "tatra-kt8", build: tatraKt8, params: KT8_PARAMS },
+  { id: "proc-vehicle-tatra-kt4", title: "Tatra KT4", folder: "tatra-kt4", build: tatraKt4 },
+  { id: "proc-vehicle-kvag-gt4", title: "GT4", folder: "gt4", build: gt4Tram },
 ];
 
 export const TRAM_DESIGNS: ProceduralDesign[] = TRAM_DESIGN_LIST.map((d) => ({

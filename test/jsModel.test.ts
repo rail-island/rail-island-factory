@@ -1,3 +1,4 @@
+import { proceduralId } from "../generator/modelId.ts";
 // The standalone JS models (generator/jsModel.ts): each export/js/<id>.js is the
 // design's own code, so the THREE.Group it builds must carry the very triangles of
 // the design's GLB -- and the file must really be standalone.
@@ -40,7 +41,7 @@ function groupTriangles(group: THREE.Group): Map<string, number[]> {
 
 const JS = new Map<string, string>();
 async function jsOf(id: string): Promise<string> {
-  if (!JS.has(id)) JS.set(id, await bundleDesign(DESIGNS.get(id)!, designSource(id)));
+  if (!JS.has(id)) JS.set(id, await bundleDesign(DESIGNS.get(proceduralId(id))!, designSource(proceduralId(id))));
   return JS.get(id)!;
 }
 
@@ -48,7 +49,7 @@ describe("standalone JS models", () => {
   for (const id of DESIGNS.keys()) {
     it(`${id}: build(THREE) draws the GLB's triangles, colours and nodes`, async () => {
       const group = (await loadModel(await jsOf(id)))(THREE);
-      const glb = parseGlb(designGlb(id));
+      const glb = parseGlb(designGlb(proceduralId(id)));
       const expected = new Map<string, number[]>();
       const colors = new Map<string, number[]>();
       for (const t of collectTriangles(glb.json, glb.bin)) {
@@ -93,7 +94,7 @@ describe("standalone JS models", () => {
 
     it(`${id}: build(THREE) carries the GLB's animation clips`, async () => {
       const group = (await loadModel(await jsOf(id)))(THREE);
-      const { json, bin } = parseGlb(designGlb(id));
+      const { json, bin } = parseGlb(designGlb(proceduralId(id)));
       const g = json as unknown as {
         nodes: Array<{ name: string }>;
         animations?: Array<{ name: string; channels: Array<{ sampler: number; target: { node: number; path: string } }>; samplers: Array<{ input: number; output: number }> }>;
@@ -123,12 +124,12 @@ describe("standalone JS models", () => {
       expect(code).not.toMatch(/\bimport\s*[\w{*"'(]/);
       expect(code).not.toMatch(/["'`]node:|require\(/); // a rig's { node: "..." } keys are data
       expect(text).toMatch(/export\s*\{[^}]*\bas default\b/);
-      expect(Buffer.byteLength(text)).toBeLessThan(designGlb(id).length);
+      expect(Buffer.byteLength(text)).toBeLessThan(designGlb(proceduralId(id)).length);
     });
   }
 
   it("leaves the recorder and the GLB writer out of the bundle", async () => {
-    const text = await jsOf("sky-pyramid");
+    const text = await jsOf("proc-building-sky-pyramid");
     expect(text).not.toContain("glTF");
     expect(text).not.toContain("baseColorFactor");
     expect(text).not.toContain("MeshBuilder");

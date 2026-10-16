@@ -14,8 +14,8 @@ import { cd169 } from "./cd169.ts";
 export { cd110, cd130, cd140, cd169 };
 
 export const CZ_ELECTRICS: readonly ProceduralDesign[] = [
-  { id: "veh-cd-110", title: "CD 110 / 111 / 210", build: cd110, params: CD110_PARAMS, catalog: RAIL_CATALOG, references: "cd-110" },
-  { id: "veh-cd-130", title: "CD 123 / 130", build: cd130, params: CD130_PARAMS, catalog: RAIL_CATALOG, references: "cd-130" },
-  { id: "veh-cd-140", title: "CD 140 bobina", build: cd140, catalog: RAIL_CATALOG, references: "cd-140" },
-  { id: "veh-cd-169", title: "CD 169", build: cd169, catalog: RAIL_CATALOG, references: "cd-169" },
+  { id: "proc-vehicle-cd-110", title: "CD 110 / 111 / 210", build: cd110, params: CD110_PARAMS, catalog: RAIL_CATALOG, references: "cd-110" },
+  { id: "proc-vehicle-cd-130", title: "CD 123 / 130", build: cd130, params: CD130_PARAMS, catalog: RAIL_CATALOG, references: "cd-130" },
+  { id: "proc-vehicle-cd-140", title: "CD 140 bobina", build: cd140, catalog: RAIL_CATALOG, references: "cd-140" },
+  { id: "proc-vehicle-cd-169", title: "CD 169", build: cd169, catalog: RAIL_CATALOG, references: "cd-169" },
 ];

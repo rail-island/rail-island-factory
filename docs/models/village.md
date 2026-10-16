@@ -134,9 +134,7 @@ Modelled in metres, base at y = 0, the street front facing +z; with plinth,
 porch and annex the footprints run from about 7.4 x 8.4 m to 15.8 x 10.9 m, and
 the tops from 4.3 m (the one-storey modern house's parapet) to 13.7 m (the
 three-storey narrow house's chimney). `VILLAGE_CATALOG` gives the suburban houses category `Village`, group
-`village` (the webapp's village pool), `defaultScale` 1.88 - the game's studs
-per metre, which the webapp's own metre-modelled buildings use - and the Rail
-Island attribution. The houses are written to their own
+`village` (the webapp's village pool), `defaultScale` 1 and the Rail Island attribution. The houses are written to their own
 `export/village.meta.json` in the `buildings` shape ([export.md](export.md)).
 
 ## Tests
@@ -156,3 +154,11 @@ Add a value to a parameter (never rename one) or a function and an entry to
 `VILLAGE_HOUSES`, keep every primitive in a named scope, run `pnpm test` and
 look at the thumbnail after `pnpm build:models`. A new colour-only parameter
 belongs in `VILLAGE_FINISH_PARAMS`, and only if it moves nothing.
+
+## Procedural export contract
+
+All current export IDs use `proc-building-` or `proc-vehicle-`; source/reference
+names in older tables identify the original models. See [legacy-mapping.md](legacy-mapping.md)
+for the authoritative ID, scale and runtime conversion contract. Ground vehicles
+have no exported `defaultScale`; buildings, aircraft and ships use 1 except the
+Eiffel Tower placement exception.

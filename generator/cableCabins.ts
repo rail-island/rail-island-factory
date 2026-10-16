@@ -421,6 +421,6 @@ export const CABLE_CABIN_CATALOG: CatalogFields = {
 
 /** Every design of the family, by catalog id; `references` is the folder of its source photos under assets/. */
 export const CABLE_CABINS: ProceduralDesign[] = [
-  { id: "veh-cablecar-cabin", title: "Aerial Tramway Car", build: cablecarCabin, references: "cablecar-cabin", catalog: CABLE_CABIN_CATALOG },
-  { id: "veh-gondola-cabin", title: "Small Gondola", build: gondolaCabin, references: "gondola-cabin", catalog: CABLE_CABIN_CATALOG },
+  { id: "proc-vehicle-cablecar-cabin", title: "Aerial Tramway Car", build: cablecarCabin, references: "cablecar-cabin", catalog: CABLE_CABIN_CATALOG },
+  { id: "proc-vehicle-gondola-cabin", title: "Small Gondola", build: gondolaCabin, references: "gondola-cabin", catalog: CABLE_CABIN_CATALOG },
 ];

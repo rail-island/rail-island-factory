@@ -1,3 +1,4 @@
+import { proceduralId } from "../generator/modelId.ts";
 // Skyscraper-specific contracts; params.test.ts also compares every covered
 // variant with its standalone browser model and checks determinism and flicker.
 import { describe, expect, it } from "vitest";
@@ -21,15 +22,15 @@ function paneHeights(root: TreeNode): number[] {
 
 describe("parametric skyscrapers", () => {
   it("retain the ten shipped identities and offer five heights and design-specific variants", () => {
-    expect(SKYSCRAPERS.map((d) => d.id)).toEqual([
-      "sky-glass-office", "sky-art-deco", "sky-pagoda", "sky-brick-residential",
-      "sky-twin-towers", "sky-twisted", "sky-dark-slab", "sky-bullet", "sky-terraced", "sky-pyramid",
+    expect(SKYSCRAPERS.map((d) => proceduralId(d.id))).toEqual([
+      "proc-building-sky-glass-office", "proc-building-sky-art-deco", "proc-building-sky-pagoda", "proc-building-sky-brick-residential",
+      "proc-building-sky-twin-towers", "proc-building-sky-twisted", "proc-building-sky-dark-slab", "proc-building-sky-bullet", "proc-building-sky-terraced", "proc-building-sky-pyramid",
     ]);
-    for (const d of SKYSCRAPERS) expect(paramCombinations(d.params)).toHaveLength(d.id === "sky-terraced" ? 720 : d.id === "sky-twisted" ? 180 : 60);
+    for (const d of SKYSCRAPERS) expect(paramCombinations(d.params)).toHaveLength(proceduralId(d.id) === "proc-building-sky-terraced" ? 720 : proceduralId(d.id) === "proc-building-sky-twisted" ? 180 : 60);
   });
 
   it("joins the bullet tower's tip to its last glass band", () => {
-    const d = SKYSCRAPERS.find((d) => d.id === "sky-bullet")!;
+    const d = SKYSCRAPERS.find((d) => proceduralId(d.id) === "proc-building-sky-bullet")!;
     for (const size of ["lowrise", "compact", "medium", "standard", "landmark"]) {
       const tree = d.build({ size }).sourceTree(d.id, d.title);
       const bands = tree.root.children.find((n) => "name" in n && n.name === "glass bands")!;
@@ -39,7 +40,7 @@ describe("parametric skyscrapers", () => {
   });
 
   it("terrace count and use change actual decks and furniture", () => {
-    const d = SKYSCRAPERS.find((d) => d.id === "sky-terraced")!;
+    const d = SKYSCRAPERS.find((d) => proceduralId(d.id) === "proc-building-sky-terraced")!;
     for (const terraces of ["3", "4", "5", "6"]) {
       for (const terraceUse of ["gardens", "seating", "solar"]) {
         const root = d.build({ terraces, terraceUse }).sourceTree(d.id, d.title).root;
@@ -52,7 +53,7 @@ describe("parametric skyscrapers", () => {
   });
 
   it("twist changes floor orientation without changing height or floor count", () => {
-    const d = SKYSCRAPERS.find((d) => d.id === "sky-twisted")!;
+    const d = SKYSCRAPERS.find((d) => proceduralId(d.id) === "proc-building-sky-twisted")!;
     const variants = ["straight", "quarter", "half"].map((twist) => d.build({ twist }));
     const stats = variants.map((m) => glbStats(m.toGlb(d.id)));
     expect(new Set(stats.map((s) => s.max[1])).size).toBe(1);

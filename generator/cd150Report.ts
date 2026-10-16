@@ -18,7 +18,7 @@ const bytes = mesh.toGlb("CD 150 comparison");
 const revision = createHash("sha256").update(bytes).digest("hex");
 const { json, bin } = parseGlb(bytes);
 const triangles = collectTriangles(json, bin);
-const tree = mesh.sourceTree("veh-cd-150", "CD 150");
+const tree = mesh.sourceTree("proc-vehicle-cd-150", "CD 150");
 const colors = new Map(tree.materials.map((m, i) => [m, tree.colors[i]!]));
 const metric = (rs: typeof rows) =>
   rs.reduce((sum, r) => sum + r.delta.reduce((a, x) => a + Math.abs(x), 0), 0) /

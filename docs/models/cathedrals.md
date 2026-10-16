@@ -14,7 +14,7 @@ photo it reproduces, its datums, size, triangle count and deliberate deviations.
 | `bld-st-nicholas-church` | St Nicholas Church | `st-nicholas-church.glb` | `assets/st-nicholas-church/` |
 
 `CATHEDRALS` lists them; `CATHEDRAL_CATALOG` holds their shared catalog fields
-(category `Historical`, pool `hist_center`, `defaultScale` 1.88, CC0 by Rail
+(category `Historical`, pool `hist_center`, `defaultScale` 1, CC0 by Rail
 Island). The webapp's `defaultScale` is measured off the reference's size, so
 each design keeps the reference's bounding box and axes
 (`test/referenceModels.test.ts`, 10 % per axis; both are within 0.5 %).
@@ -95,3 +95,11 @@ Deviations: the reference's small eastern gable roof over the apse is merged
 into the apse roof; the low parapet wall behind the towers (hidden in the
 reference too) is left out. Statues are simple figures (about 60 triangles each
 against the reference's 712).
+
+## Procedural export contract
+
+All current export IDs use `proc-building-` or `proc-vehicle-`; source/reference
+names in older tables identify the original models. See [legacy-mapping.md](legacy-mapping.md)
+for the authoritative ID, scale and runtime conversion contract. Ground vehicles
+have no exported `defaultScale`; buildings, aircraft and ships use 1 except the
+Eiffel Tower placement exception.

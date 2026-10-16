@@ -2,13 +2,11 @@
 // (freightWagons.ts, hopperWagons.ts): the JT7 clip solid -- the intersection
 // of an `alongx` section, an `alongz` elevation and an `alongy` plan, each a
 // convex polygon, which is how a vlakosimdb simplemodel shapes its bodies --
-// bold painted lettering, the Maersk star, a 40 ft container and the Karosa
-// B 951 bus carried by the Pao. Built on the wagons' Wagon (wagonParts.ts), in
+// bold painted lettering, the Maersk star and a 40 ft container. Built on the wagons' Wagon (wagonParts.ts), in
 // source coordinates: x along the wagon from 0, y up from the rail, +z the
 // z_dec side. See docs/models/freight-wagons.md.
 
 import type { Vec3 } from "./meshCore.ts";
-import { ngon } from "./meshBuilder.ts";
 import { Wagon } from "./wagonParts.ts";
 import { strokeText } from "./strokeFont.ts";
 
@@ -297,93 +295,4 @@ export function container40(c: Wagon, xc: number, y0: number): { x0: number; x1:
         for (const s of [-1, 1]) c.sideBox("containerFrame", s, x, x + 0.18, y, y + 0.12, half - 0.15, half + 0.035);
   });
   return { x0, x1, y1, half };
-}
-
-/** The Karosa B 951's upper section (XML alongx `base` above the wheel arches): half width z against y over the deck. */
-const BUS_UPPER: Pt[] = [[1.25, 1.05], [1.25, 1.5], [1.18, 2.9], [1.08, 3.0], [0.6, 3.08], [-0.6, 3.08], [-1.08, 3.0], [-1.18, 2.9], [-1.25, 1.5], [-1.25, 1.05]];
-/** The body below the waist between and outside the wheel arches (u, metres from the nose). */
-const BUS_LOWER: Pt[] = [[0.6, 1.95], [3.15, 7.65], [8.85, 11.7]];
-/** The axles (u) and wheel radius: the XML arches 2.0..3.1 and 7.7..8.8. */
-const BUS_AXLES = [2.55, 8.25];
-
-/**
- * The Karosa B 951 city bus the Pao carries (n_pao-full#2's inline `bus`, placed
- * at tx 1.9, ty 1.2): a low-poly body from the inline's XML -- the section, the
- * raked windscreen over 0.1..0.6, the rear at 11.7 -- in the red and white
- * livery, its windows, three doors on the -z (kerb) side, four wheels on the
- * deck in open arches. The bus faces -x as the inline does; (bx, by) is the
- * inline's origin, u the inline's x.
- */
-export function karosaB951(c: Wagon, bx: number, by: number): void {
-  const m = c.m;
-  const X = (u: number) => c.X(bx + u);
-  const lift = (r: Pt[]) => r.map(([z, y]): [number, number] => [z, y + by]);
-  m.scope("body", () => {
-    m.scope("upper", () => {
-      // 0.6..11.7 at full section; the nose 0.1..0.6 rakes the windscreen back from 1.5 m to the roof
-      m.sweep("busWhite", "x", lift(BUS_UPPER), X(0.6), lift(BUS_UPPER), X(11.7));
-      const nose = BUS_UPPER.map(([z, y]): [number, number] => [z * 0.92, y <= 1.05 ? y : 1.45 + (y - 1.5) * 0.06]);
-      m.sweep("busWhite", "x", lift(nose), X(0.1), lift(BUS_UPPER), X(0.6));
-    });
-    m.scope("lower", () => {
-      for (const [u0, u1] of BUS_LOWER) c.box("busWhite", bx + u0, bx + u1, by + 0.3, by + 1.05, -1.25, 1.25);
-      c.box("busWhite", bx + 0.1, bx + 0.6, by + 0.3, by + 1.05, -1.15, 1.15);
-    });
-  });
-  // the paint and glass bands, slabs on the flat sides (|z| 1.25) and ends
-  const sides = (mat: string, u0: number, u1: number, y0: number, y1: number, proud = 0.008) => {
-    for (const s of [-1, 1]) c.sideBox(mat, s, bx + u0, bx + u1, by + y0, by + y1, 1.25 - 0.01, 1.25 + proud);
-  };
-  m.scope("livery", () => {
-    BUS_LOWER.forEach(([u0, u1], i) => m.scope(`skirt ${i + 1}`, () => sides("busRed", u0 + 0.005, u1 - 0.005, 0.31, 0.8)));
-    m.scope("waist band", () => sides("busRed", 0.55, 11.18, 1.4, 1.7));
-    m.scope("rear", () => c.box("busRed", bx + 11.7 - 0.01, bx + 11.71, by + 0.31, by + 0.8, -1.2, 1.2));
-    // the rear bumper (XML base 11.7..11.8, 0.5..0.7 m)
-    m.scope("rear bumper", () => c.box("busGrey", bx + 11.71, bx + 11.8, by + 0.5, by + 0.7, -1.2, 1.2));
-    m.scope("front", () => c.box("busRed", bx + 0.09, bx + 0.11, by + 0.31, by + 0.6, -1.1, 1.1));
-  });
-  m.scope("windows", () => {
-    // the side windows 1.8..2.7 m over the bus floor, a pier between each (native bus z_dec columns 8..114, rows 13..21)
-    ([[0.8, 1.4], [1.7, 3.4], [3.6, 5.3], [5.5, 7.2], [7.4, 9.1], [9.3, 11.0]] as Array<[number, number]>).forEach(([u0, u1], i) => m.scope(`window ${i + 1}`, () => sides("busGlass", u0, u1, 1.8, 2.7, 0.012)));
-    m.scope("rear window", () => c.box("busGlass", bx + 11.7, bx + 11.712, by + 2.0, by + 2.75, -0.55, 0.55));
-    m.scope("windscreen", () => {
-      // on the raked nose: from (0.1, 1.5) to (0.6, 3.0) in (u, y), 2 cm proud
-      const pts: Vec3[] = [];
-      const P = (t: number, z: number): Vec3 => [X(0.1 + 0.5 * t) - 0.02, by + 1.5 + 1.45 * t, z];
-      const zw = (t: number) => (0.92 + 0.08 * t) * 1.08;
-      pts.push(P(0.08, -zw(0.08)), P(0.08, zw(0.08)), P(0.9, zw(0.9)), P(0.08, -zw(0.08)), P(0.9, zw(0.9)), P(0.9, -zw(0.9)));
-      m.facets("busGlass", pts, [-0.95, 0.31, 0]);
-    });
-  });
-  m.scope("doors", () => {
-    // three two-leaf doors on the -z side (native bus z_inc columns 6..109), from the floor to the roof line
-    ([[0.7, 1.7], [5.0, 7.1], [9.1, 11.2]] as Array<[number, number]>).forEach(([u0, u1], i) =>
-      m.scope(`door ${i + 1}`, () => {
-        c.sideBox("busGlass", -1, bx + u0, bx + u1, by + 1.0, by + 2.9, 1.25 - 0.005, 1.25 + 0.016);
-        c.sideBox("busDoor", -1, bx + (u0 + u1) / 2 - 0.03, bx + (u0 + u1) / 2 + 0.03, by + 0.32, by + 2.9, 1.25 + 0.014, 1.25 + 0.022);
-      }),
-    );
-  });
-  m.scope("roof", () => {
-    // the roof hatches and the front destination box (XML `roof`, `roof2`)
-    for (const [u0, u1] of [[2.3, 3.2], [6.8, 7.7], [8.5, 9.4]] as Array<[number, number]>) c.box("busGrey", bx + u0, bx + u1, by + 3.06, by + 3.18, -0.35, 0.35);
-    c.box("busGrey", bx + 1.5, bx + 2.1, by + 3.06, by + 3.36, -0.4, 0.4);
-  });
-  m.scope("lamps", () => {
-    for (const z of [-0.95, 0.95]) c.box("busLamp", bx + 0.085, bx + 0.1, by + 0.68, by + 0.82, z - 0.12, z + 0.12);
-    for (const z of [-1.0, 1.0]) c.box("busTail", bx + 11.7, bx + 11.715, by + 0.68, by + 0.86, z - 0.1, z + 0.1);
-  });
-  m.scope("wheels", () => {
-    const r = 0.5;
-    const ay = by + 0.004 + r * Math.cos(Math.PI / 16);
-    for (const [i, u] of BUS_AXLES.entries())
-      for (const s of [-1, 1]) m.scope(i === 0 ? "front wheel" : "rear wheel", () => {
-        const tyre = ngon(16, r, Math.PI / 16, X(u), ay);
-        const [z0, z1] = s > 0 ? [0.95, 1.2] : [-1.2, -0.95];
-        m.sweep("tyre", "z", tyre, z0, tyre, z1);
-        const hub = ngon(8, 0.28, 0, X(u), ay);
-        const [h0, h1] = s > 0 ? [1.2, 1.215] : [-1.215, -1.2];
-        m.sweep("busGrey", "z", hub, h0, hub, h1);
-      });
-  });
 }

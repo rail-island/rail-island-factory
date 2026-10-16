@@ -227,7 +227,7 @@ function trailer(): MeshBuilder {
 /** Every car, for the tests. */
 export const CARS_451: readonly Unit451[] = ["motorCar", "trailer"];
 
-export const EMU451_DESIGNS: ProceduralDesign[] = [{ id: "veh-cd-451", title: "CD 451 Zabotlam", build: cd451, params: CD451_PARAMS, catalog: EMU_CATALOG, references: "cd-451" }];
+export const EMU451_DESIGNS: ProceduralDesign[] = [{ id: "proc-vehicle-cd-451", title: "CD 451 Zabotlam", build: cd451, params: CD451_PARAMS, catalog: EMU_CATALOG, references: "cd-451" }];
 
 /** A car's source mapping and the body x of its centre, for the comparison. */
 export const frame451 = (unit: Unit451): { F: CarFrame; centre: number } => ({ F: CARS[unit].F, centre: (CARS[unit].front + CARS[unit].rear) / 2 });

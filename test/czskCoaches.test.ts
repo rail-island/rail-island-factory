@@ -1,3 +1,4 @@
+import { proceduralId } from "../generator/modelId.ts";
 import { describe, it, expect } from "vitest";
 import { CZSK_COACHES, CZSK_TRANSFERS } from "../generator/czskCoaches";
 import { ALL_TRANSFERS, transferBuild } from "../generator/coachTransfers";
@@ -53,12 +54,12 @@ const MECHANICS: Record<string, { length: number; axles: number[]; top: number }
 
 describe("Czech and Slovak coaches (CD Y, ZSR, UIC-Z)", () => {
   it("are registered as parametric rail coaches with their references and transfers", () => {
-    expect(CZSK_COACHES.map((d) => d.id)).toEqual(["veh-cd-y-coach", "veh-zsr-coach", "veh-uic-z-coach"]);
+    expect(CZSK_COACHES.map((d) => d.id)).toEqual(["proc-vehicle-cd-y-coach", "proc-vehicle-zsr-coach", "proc-vehicle-uic-z-coach"]);
     for (const d of CZSK_COACHES) {
-      expect(DESIGNS.get(d.id)).toBe(d);
+      expect(DESIGNS.get(proceduralId(d.id))).toBe(d);
       expect(VEHICLES.some((v) => v.id === d.id)).toBe(false);
       expect(d.catalog).toEqual(COACH_CATALOG);
-      expect(d.references).toBe({ "veh-cd-y-coach": "cd-y-coach", "veh-zsr-coach": "zsr-coach", "veh-uic-z-coach": "uic-z-coach" }[d.id]);
+      expect(d.references).toBe({ "proc-vehicle-cd-y-coach": "cd-y-coach", "proc-vehicle-zsr-coach": "zsr-coach", "proc-vehicle-uic-z-coach": "uic-z-coach" }[d.id]);
     }
     for (const t of CZSK_TRANSFERS) expect(ALL_TRANSFERS).toContain(t);
     // every parameter combination of every design is one transferred vlakosimdb vehicle
@@ -68,9 +69,9 @@ describe("Czech and Slovak coaches (CD Y, ZSR, UIC-Z)", () => {
   });
 
   it("keeps the parameter contract and defaults", () => {
-    expect(design("veh-cd-y-coach").params!.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([["variant", "bcc", ["bcc", "beer", "bnb", "wrrm"]]]);
-    expect(design("veh-zsr-coach").params!.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([["variant", "b", ["a", "ab", "b", "bh", "bds", "bdmeer", "wrrm", "apee"]]]);
-    expect(design("veh-uic-z-coach").params!.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([
+    expect(design("proc-vehicle-cd-y-coach").params!.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([["variant", "bcc", ["bcc", "beer", "bnb", "wrrm"]]]);
+    expect(design("proc-vehicle-zsr-coach").params!.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([["variant", "b", ["a", "ab", "b", "bh", "bds", "bdmeer", "wrrm", "apee"]]]);
+    expect(design("proc-vehicle-uic-z-coach").params!.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([
       ["variant", "secondClass", ["firstClass", "secondClass", "restaurant"]],
       ["operator", "cd", ["cd", "db", "obb"]],
     ]);
@@ -133,34 +134,34 @@ describe("Czech and Slovak coaches (CD Y, ZSR, UIC-Z)", () => {
 
   it("lays out each variant's windows and doors as its native BMP does", () => {
     // two toilets and ten compartments (Bcc, Beer, ZSR B, Bh); Bnb one toilet and eleven bays
-    expect(["bcc", "beer", "bnb", "wrrm"].map((v) => windowCount("veh-cd-y-coach", { variant: v }))).toEqual([12, 12, 12, 10]);
-    expect(["a", "ab", "b", "bh", "bds", "bdmeer", "wrrm", "apee"].map((v) => windowCount("veh-zsr-coach", { variant: v }))).toEqual([11, 11, 12, 12, 8, 9, 10, 12]);
-    expect(["firstClass", "secondClass", "restaurant"].map((v) => windowCount("veh-uic-z-coach", { variant: v }))).toEqual([13, 13, 9]);
+    expect(["bcc", "beer", "bnb", "wrrm"].map((v) => windowCount("proc-vehicle-cd-y-coach", { variant: v }))).toEqual([12, 12, 12, 10]);
+    expect(["a", "ab", "b", "bh", "bds", "bdmeer", "wrrm", "apee"].map((v) => windowCount("proc-vehicle-zsr-coach", { variant: v }))).toEqual([11, 11, 12, 12, 8, 9, 10, 12]);
+    expect(["firstClass", "secondClass", "restaurant"].map((v) => windowCount("proc-vehicle-uic-z-coach", { variant: v }))).toEqual([13, 13, 9]);
     // the dining cars have a passenger door at one end only, and barred kitchen windows
     const doors = (id: string, variant: string) => new Set(nodesOf(id, { variant }).filter((n) => /^body\/right-side\/door-\d+\//.test(n.id)).map((n) => n.id.split("/")[2])).size;
-    expect([doors("veh-cd-y-coach", "wrrm"), doors("veh-zsr-coach", "wrrm"), doors("veh-uic-z-coach", "restaurant"), doors("veh-uic-z-coach", "firstClass")]).toEqual([1, 1, 1, 2]);
-    expect(nodesOf("veh-cd-y-coach", { variant: "wrrm" }).some((n) => n.id.startsWith("body/right-side/window-1/bars/"))).toBe(true);
+    expect([doors("proc-vehicle-cd-y-coach", "wrrm"), doors("proc-vehicle-zsr-coach", "wrrm"), doors("proc-vehicle-uic-z-coach", "restaurant"), doors("proc-vehicle-uic-z-coach", "firstClass")]).toEqual([1, 1, 1, 2]);
+    expect(nodesOf("proc-vehicle-cd-y-coach", { variant: "wrrm" }).some((n) => n.id.startsWith("body/right-side/window-1/bars/"))).toBe(true);
     // only the BDs has the guard's lookout bay; only the UIC-Z coaches a skirt
-    expect(nodesOf("veh-zsr-coach", { variant: "bds" }).some((n) => n.id.startsWith("body/lookout-bay/"))).toBe(true);
-    expect(nodesOf("veh-zsr-coach", { variant: "b" }).some((n) => n.id.startsWith("body/lookout-bay/"))).toBe(false);
-    expect(nodesOf("veh-uic-z-coach", { variant: "secondClass" }).some((n) => n.id.startsWith("skirt/"))).toBe(true);
+    expect(nodesOf("proc-vehicle-zsr-coach", { variant: "bds" }).some((n) => n.id.startsWith("body/lookout-bay/"))).toBe(true);
+    expect(nodesOf("proc-vehicle-zsr-coach", { variant: "b" }).some((n) => n.id.startsWith("body/lookout-bay/"))).toBe(false);
+    expect(nodesOf("proc-vehicle-uic-z-coach", { variant: "secondClass" }).some((n) => n.id.startsWith("skirt/"))).toBe(true);
   });
 
   it("paints the liveries: first class lines, ZSR stripes, the WRRm diagonals", () => {
     const mats = (id: string, variant: string) => new Set(nodesOf(id, { variant }).filter((n) => n.id.includes("/paint/")).map((n) => n.material));
-    expect(mats("veh-zsr-coach", "a").has("yellow")).toBe(true);
-    expect(mats("veh-zsr-coach", "b").has("yellow")).toBe(false);
-    expect(mats("veh-zsr-coach", "b")).toEqual(new Set(["white", "pink", "darkRed"]));
-    expect(mats("veh-uic-z-coach", "firstClass").has("yellow")).toBe(true);
-    expect(mats("veh-uic-z-coach", "secondClass").has("yellow")).toBe(false);
-    expect(mats("veh-cd-y-coach", "wrrm")).toEqual(new Set(["red"]));
-    expect(mats("veh-cd-y-coach", "beer")).toEqual(new Set(["navy", "red"]));
+    expect(mats("proc-vehicle-zsr-coach", "a").has("yellow")).toBe(true);
+    expect(mats("proc-vehicle-zsr-coach", "b").has("yellow")).toBe(false);
+    expect(mats("proc-vehicle-zsr-coach", "b")).toEqual(new Set(["white", "pink", "darkRed"]));
+    expect(mats("proc-vehicle-uic-z-coach", "firstClass").has("yellow")).toBe(true);
+    expect(mats("proc-vehicle-uic-z-coach", "secondClass").has("yellow")).toBe(false);
+    expect(mats("proc-vehicle-cd-y-coach", "wrrm")).toEqual(new Set(["red"]));
+    expect(mats("proc-vehicle-cd-y-coach", "beer")).toEqual(new Set(["navy", "red"]));
   });
 
   // the DB IC and OBB coaches came in as the `operator` parameter: every CD
   // combination (and so the default build) keeps its GLB bytes
   it("keeps the CD UIC-Z coaches byte for byte under the operator parameter", () => {
-    const d = design("veh-uic-z-coach");
+    const d = design("proc-vehicle-uic-z-coach");
     const sha = (p?: Record<string, string>) => createHash("sha256").update(d.build(p).toGlb(d.title)).digest("hex");
     expect(sha()).toBe("0c2924c0bb4137e20c05379b597b3bfcdc2d0d423750167d6ac60aca4220eb5d");
     expect(sha({ variant: "firstClass", operator: "cd" })).toBe("c8304dcacf77ef192a9865633e83c6b4c86421749937c4f3088a07abbba69b41");
@@ -170,7 +171,7 @@ describe("Czech and Slovak coaches (CD Y, ZSR, UIC-Z)", () => {
   });
 
   it("lays out the DB IC and OBB coaches as their native BMPs do", () => {
-    const id = "veh-uic-z-coach";
+    const id = "proc-vehicle-uic-z-coach";
     const count = (operator: string, variant: string, side: string) => windowCount(id, { operator, variant }, side);
     // DB: Ampz two toilets and nine bays, Bmpz two toilets and eleven, WRmz thirteen on the right and eight on the left
     expect(["firstClass", "secondClass", "restaurant"].map((v) => [count("db", v, "right"), count("db", v, "left")])).toEqual([[11, 11], [13, 13], [13, 8]]);
@@ -187,7 +188,7 @@ describe("Czech and Slovak coaches (CD Y, ZSR, UIC-Z)", () => {
   });
 
   it("paints the DB IC and OBB liveries", () => {
-    const id = "veh-uic-z-coach";
+    const id = "proc-vehicle-uic-z-coach";
     const colour = (operator: string, mat: string) => {
       const t = design(id).build({ operator }).sourceTree(id, "UIC-Z Coach");
       return t.colors[t.materials.indexOf(mat)];
@@ -212,7 +213,7 @@ describe("Czech and Slovak coaches (CD Y, ZSR, UIC-Z)", () => {
   // the blue and white CD Bee 001 is a value of the green and white design: the
   // Bee's layout with its green in blue, and the Bee itself unchanged
   it("builds vlakosimdb's CD Bee 001 as the green and white design's beeBlue", () => {
-    const d = VEHICLES.find((v) => v.id === "veh-cd-green-white-coach")!;
+    const d = VEHICLES.find((v) => v.id === "proc-vehicle-cd-green-white-coach")!;
     const tree = (variant: string) => leaves(d.build({ variant }).sourceTree(d.id, d.title).root);
     const ids = (variant: string) => tree(variant).filter((n) => !n.id.includes("running-number")).map((n) => `${n.id}:${n.tri[1]}`);
     expect(ids("beeBlue")).toEqual(ids("bee"));

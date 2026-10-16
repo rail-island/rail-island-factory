@@ -46,7 +46,7 @@ const LOAD_TOP: Record<string, [number, number]> = {
 
 describe("freight wagons transferred from vlakosimdb", () => {
   it("are registered as rail wagons with stable ids, their references and a cargo parameter", () => {
-    expect(WAGON_DESIGNS.map((w) => w.id)).toEqual(["veh-nas-flat-wagon", "veh-ua-open-wagon", "veh-eas-open-wagon", "veh-raj-hopper-wagon", "veh-rah-tank-wagon"]);
+    expect(WAGON_DESIGNS.map((w) => w.id)).toEqual(["proc-vehicle-nas-flat-wagon", "proc-vehicle-ua-open-wagon", "proc-vehicle-eas-open-wagon", "proc-vehicle-raj-hopper-wagon", "proc-vehicle-rah-tank-wagon"]);
     for (const w of WAGON_DESIGNS) {
       const d = VEHICLES.find((v) => v.id === w.id)!;
       expect(d.catalog).toEqual(WAGON_CATALOG);
@@ -108,7 +108,7 @@ describe("freight wagons transferred from vlakosimdb", () => {
   });
 
   it("builds the empty wagon by default and refuses a cargo it does not carry", () => {
-    for (const [id, missing] of [["veh-nas-flat-wagon", "coal"], ["veh-ua-open-wagon", "reels"], ["veh-eas-open-wagon", "sand"]] as const) {
+    for (const [id, missing] of [["proc-vehicle-nas-flat-wagon", "coal"], ["proc-vehicle-ua-open-wagon", "reels"], ["proc-vehicle-eas-open-wagon", "sand"]] as const) {
       const d = WAGON_DESIGNS.find((w) => w.id === id)!;
       expect(Buffer.from(d.build().toGlb(id)).equals(Buffer.from(d.build({ cargo: "empty" }).toGlb(id)))).toBe(true);
       expect(() => d.build({ cargo: missing })).toThrow(/no value/);

@@ -30,7 +30,7 @@ describe("exportMeta", () => {
         group: "skyscraper_c",
         glb: `${b.id}.glb`,
         thumb: `${b.id}.png`,
-        defaultScale: 0.5,
+        defaultScale: 1,
         license: "CC0",
         author: "Rail Island",
         source: "Rail Island",
@@ -51,10 +51,10 @@ describe("exportMeta for the village houses", () => {
         id: d.id,
         title: d.title,
         category: "Village",
-        group: d.id.startsWith("village-timber-") ? "village_red" : "village",
+        group: d.id.startsWith("proc-building-village-timber-") ? "village_red" : "village",
         glb: `${d.id}.glb`,
         thumb: `${d.id}.png`,
-        defaultScale: 1.88,
+        defaultScale: 1,
         license: "CC0",
         author: "Rail Island",
         source: "Rail Island",
@@ -73,11 +73,11 @@ describe("the buildings' meta", () => {
     expect(new Set(meta.buildings.map((b) => b.id)).size).toBe(BUILDINGS.length);
     for (const b of meta.buildings) {
       const d = BUILDINGS.find((x) => x.id === b.id)!;
-      if (b.id.startsWith("sky-")) expect(b.category).toBe("Commercial");
+      if (b.id.startsWith("proc-building-sky-")) expect(b.category).toBe("Commercial");
       else expect([b.category, b.group, b.defaultScale]).toEqual([d.catalog!.category, d.catalog!.group, d.catalog!.defaultScale]);
     }
-    expect(meta.buildings.find((b) => b.id === "bld-prague-main-station")).toMatchObject({ category: "Station", defaultScale: 1.3 });
-    expect(meta.buildings.find((b) => b.id === "bld-white-house")).toMatchObject({ category: "Historical", group: "hist_center", defaultScale: 1.88 });
+    expect(meta.buildings.find((b) => b.id === "proc-building-prague-main-station")).toMatchObject({ category: "Station", defaultScale: 1 });
+    expect(meta.buildings.find((b) => b.id === "proc-building-white-house")).toMatchObject({ category: "Historical", group: "hist_center", defaultScale: 1 });
   });
 });
 
@@ -97,7 +97,6 @@ describe("exportVehicleMeta", () => {
         group: VEHICLES.find((d) => d.id === v.id)!.catalog?.group ?? "truck",
         glb: `${v.id}.glb`,
         thumb: `${v.id}.png`,
-        defaultScale: 1,
         license: "CC0",
         author: "Rail Island",
         source: "Rail Island",
@@ -109,9 +108,9 @@ describe("exportVehicleMeta", () => {
 
   it("lists a rigged vehicle's rig, and no rig key for the others", () => {
     const rig = { steer: { axles: [{ nodes: ["wheel-front-left", "wheel-front-right"] as [string, string], wheelbase: 5 }], maxAngleDeg: 40, track: 2 } };
-    const meta = exportVehicleMeta(VEHICLES, new Map([["veh-american-truck", rig]]));
-    expect(meta.vehicles.find((v) => v.id === "veh-american-truck")!.rig).toEqual(rig);
-    expect(meta.vehicles.filter((v) => v.rig).map((v) => v.id)).toEqual(["veh-american-truck"]);
+    const meta = exportVehicleMeta(VEHICLES, new Map([["proc-vehicle-american-truck", rig]]));
+    expect(meta.vehicles.find((v) => v.id === "proc-vehicle-american-truck")!.rig).toEqual(rig);
+    expect(meta.vehicles.filter((v) => v.rig).map((v) => v.id)).toEqual(["proc-vehicle-american-truck"]);
   });
 });
 
@@ -151,7 +150,7 @@ describe("buildExport", () => {
         const { json } = parseGlb(fs.readFileSync(path.join(dir, "glb", v.glb)));
         expect((json.scenes![0] as { extras?: { rig?: unknown } }).extras?.rig).toEqual(v.rig);
       }
-      expect(vehicles.vehicles.find((v) => v.id === "veh-american-truck")!.rig!.steer!.axles[0]!.nodes).toEqual(["wheel-front-left", "wheel-front-right"]);
+      expect(vehicles.vehicles.find((v) => v.id === "proc-vehicle-american-truck")!.rig!.steer!.axles[0]!.nodes).toEqual(["wheel-front-left", "wheel-front-right"]);
       expect(catalog.version).toBe(1);
       expect(catalog.records.map((r) => r.id)).toEqual([...DESIGNS.keys()]);
       for (const r of catalog.records) {
@@ -165,11 +164,11 @@ describe("buildExport", () => {
           ?? vehicles.vehicles.find((v) => v.id === r.id);
         expect(r).toMatchObject(listed!);
         // a skyscraper is tall; the landmarks and stations need not be
-        if (r.id.startsWith("sky-")) expect(r.sizeY).toBeGreaterThan(2 * Math.max(r.sizeX, r.sizeZ));
+        if (r.id.startsWith("proc-building-sky-")) expect(r.sizeY).toBeGreaterThan(2 * Math.max(r.sizeX, r.sizeZ));
         for (const ref of r.references) expect(fs.statSync(path.join(dir, ref.url)).size).toBe(ref.bytes);
       }
       // the CD 150's native BMPs reach the site
-      expect(catalog.records.find((r) => r.id === "veh-cd-150")!.references.map((x) => x.name)).toContain("native/z_inc.bmp");
+      expect(catalog.records.find((r) => r.id === "proc-vehicle-cd-150")!.references.map((x) => x.name)).toContain("native/z_inc.bmp");
       // deterministic: a second build writes the same documents
       const before = fs.readFileSync(path.join(dir, CATALOG_FILE), "utf8");
       await buildExport(dir);

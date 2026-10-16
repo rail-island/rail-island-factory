@@ -52,9 +52,9 @@ describe("Gothic cathedrals", () => {
     for (const design of GOTHIC_CATHEDRALS) {
       const tree = design.build().sourceTree(design.id, design.title);
       const front = tree.root.children.find(n => n.id === "west-facade")!;
-      if (design.id === "bld-notre-dame") expect(front.min![2]).toBeGreaterThan(40);
+      if (design.build === notreDame) expect(front.min![2]).toBeGreaterThan(40);
       else expect(front.max![0]).toBeLessThan(-48);
-      expect(design.catalog?.defaultScale).toBe(0.9);
+      expect(design.catalog?.defaultScale).toBe(1);
     }
   });
 });

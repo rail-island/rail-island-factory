@@ -45,10 +45,9 @@ microwave dishes or suspended insulator strings, rather than opaque tapered boxe
 These sources have incompatible authoring units and several have displaced origins.
 The new factory models are in metres, grounded at y=0, with their structural shafts
 centred at x=z=0. Asymmetric dishes, banners and stairs can extend the bounds.
-`defaultScale = original GLB height * original defaultScale / new default height`
-preserves the height of the default model when placed. Increasing storeys or bays
-makes a taller tower at the same scale. Footprint proportions are deliberately
-reconstructed rather than copying the original coordinate offsets or bounding boxes.
+`defaultScale` is now 1 except the Eiffel Tower's 0.55. Legacy placement
+compensation lives in [legacy-mapping.md](legacy-mapping.md), multiplied by each
+old instance's stored scale. New procedural IDs cannot be mistaken for old GLBs.
 
 | Id | Original placed height | New default height (metres) |
 |---|---:|---:|
@@ -99,3 +98,11 @@ combination for finite grounded geometry, the 10k triangle ceiling, determinism 
 coplanar material conflicts, and checks default placed heights. The shared
 parameter tests compare standalone JS vertices with GLB vertices for every variant.
 Run `pnpm typecheck`, `pnpm test`, `pnpm build`; inspect all eight generated thumbnails.
+
+## Procedural export contract
+
+All current export IDs use `proc-building-` or `proc-vehicle-`; source/reference
+names in older tables identify the original models. See [legacy-mapping.md](legacy-mapping.md)
+for the authoritative ID, scale and runtime conversion contract. Ground vehicles
+have no exported `defaultScale`; buildings, aircraft and ships use 1 except the
+Eiffel Tower placement exception.

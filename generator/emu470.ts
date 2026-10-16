@@ -250,4 +250,4 @@ export const frame470 = (unit: Unit470): { F: CarFrame; centre: number } => ({ F
 /** Every car, for the tests. */
 export const CARS_470: readonly Unit470[] = ["motorCar", "trailer"];
 
-export const EMU470_DESIGNS: ProceduralDesign[] = [{ id: "veh-cd-470", title: "CD 470", build: cd470, params: CD470_PARAMS, catalog: EMU_CATALOG, references: "cd-470" }];
+export const EMU470_DESIGNS: ProceduralDesign[] = [{ id: "proc-vehicle-cd-470", title: "CD 470", build: cd470, params: CD470_PARAMS, catalog: EMU_CATALOG, references: "cd-470" }];

@@ -28,25 +28,25 @@ const r3 = (x: number) => Math.round(x * 1000) / 1000;
 
 // published lengths over the buffers and the axles' x (assets/<folder>/SOURCES.md), wheel radii
 const SPECS: Record<string, (p: ParamValues) => { lob: number; axles: number[]; radii: number[] }> = {
-  "veh-cd-810": (p) =>
+  "proc-vehicle-cd-810": (p) =>
     p.variant === "cd812" || p.variant === "cd912"
       ? { lob: 14.47, axles: [(3.35 - 7.5) * K812, (11.6 - 7.5) * K812], radii: [0.42] }
       : { lob: 13.97, axles: [-4.0, 4.0], radii: [0.42] },
-  "veh-cd-843": (p) => ({ lob: 25.2, axles: [-9.8, -7.4, 7.4, 9.8], radii: p.unit === "trailer" || p.unit === "drivingTrailer" ? [0.42] : [0.46] }),
-  "veh-csd-m131": () => ({ lob: 12.1, axles: [(2.3 - 5.85) * K131, (9.0 - 5.85) * K131], radii: [0.45] }),
-  "veh-csd-m240": () => ({ lob: 18.5, axles: [-6.183 - 1.0, -6.183 + 1.0, 6.183 - 1.05, 6.183 + 1.05], radii: [0.45] }),
-  "veh-csd-m296": () => ({ lob: 24.79, axles: [-9.8, -7.4, 7.4, 9.8], radii: [0.46, 0.42] }),
+  "proc-vehicle-cd-843": (p) => ({ lob: 25.2, axles: [-9.8, -7.4, 7.4, 9.8], radii: p.unit === "trailer" || p.unit === "drivingTrailer" ? [0.42] : [0.46] }),
+  "proc-vehicle-csd-m131": () => ({ lob: 12.1, axles: [(2.3 - 5.85) * K131, (9.0 - 5.85) * K131], radii: [0.45] }),
+  "proc-vehicle-csd-m240": () => ({ lob: 18.5, axles: [-6.183 - 1.0, -6.183 + 1.0, 6.183 - 1.05, 6.183 + 1.05], radii: [0.45] }),
+  "proc-vehicle-csd-m296": () => ({ lob: 24.79, axles: [-9.8, -7.4, 7.4, 9.8], radii: [0.46, 0.42] }),
 };
 
 describe("Czech diesel railcars from vlakosimdb", () => {
   it("registers the five designs with their parameters and defaults", () => {
-    expect(CZ_DMUS.map((d) => d.id)).toEqual(["veh-cd-810", "veh-cd-843", "veh-csd-m131", "veh-csd-m240", "veh-csd-m296"]);
+    expect(CZ_DMUS.map((d) => d.id)).toEqual(["proc-vehicle-cd-810", "proc-vehicle-cd-843", "proc-vehicle-csd-m131", "proc-vehicle-csd-m240", "proc-vehicle-csd-m296"]);
     const values = (id: string) => (CZ_DMUS.find((d) => d.id === id)!.params ?? []).map((p) => [p.name, p.default, p.values.map((v) => v.value)]);
-    expect(values("veh-cd-810")).toEqual([["variant", "cd810", ["cd810", "cd812", "cd912"]], ["livery", "red", ["red", "yellowBand", "blueWhite", "ivoryBand"]]]);
-    expect(values("veh-cd-843")).toEqual([["unit", "motorCar", ["motorCar", "drivingTrailer", "trailer"]]]);
-    expect(values("veh-csd-m131")).toEqual([["unit", "motorCar", ["motorCar", "trailer"]]]);
-    expect(values("veh-csd-m240")).toEqual([]);
-    expect(values("veh-csd-m296")).toEqual([["variant", "m296", ["m296", "cd853", "cd854"]]]);
+    expect(values("proc-vehicle-cd-810")).toEqual([["variant", "cd810", ["cd810", "cd812", "cd912"]], ["livery", "red", ["red", "yellowBand", "blueWhite", "ivoryBand"]]]);
+    expect(values("proc-vehicle-cd-843")).toEqual([["unit", "motorCar", ["motorCar", "drivingTrailer", "trailer"]]]);
+    expect(values("proc-vehicle-csd-m131")).toEqual([["unit", "motorCar", ["motorCar", "trailer"]]]);
+    expect(values("proc-vehicle-csd-m240")).toEqual([]);
+    expect(values("proc-vehicle-csd-m296")).toEqual([["variant", "m296", ["m296", "cd853", "cd854"]]]);
     for (const d of CZ_DMUS) expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "loco" });
   });
 
@@ -78,11 +78,11 @@ describe("Czech diesel railcars from vlakosimdb", () => {
 
   it("builds the 843's three cars to one 24.1 m body and 17.2 m bogie pivots", () => {
     for (const unit of ["motorCar", "drivingTrailer", "trailer"]) {
-      const body = build("veh-cd-843", { unit }).nodes.filter((n) => n.id.startsWith("shell/"));
+      const body = build("proc-vehicle-cd-843", { unit }).nodes.filter((n) => n.id.startsWith("shell/"));
       expect(Math.max(...body.map((n) => n.max![0])) - Math.min(...body.map((n) => n.min![0])), unit).toBeCloseTo(24.1, 3);
     }
     // the cabs: two on the motor car, one at +X on the driving trailer, none on the trailer
-    const cabs = (unit: string) => ["front-end", "rear-end"].filter((e) => build("veh-cd-843", { unit }).nodes.some((n) => n.id.startsWith(`${e}/cab/`)));
+    const cabs = (unit: string) => ["front-end", "rear-end"].filter((e) => build("proc-vehicle-cd-843", { unit }).nodes.some((n) => n.id.startsWith(`${e}/cab/`)));
     expect(cabs("motorCar")).toEqual(["front-end", "rear-end"]);
     expect(cabs("drivingTrailer")).toEqual(["front-end"]);
     expect(cabs("trailer")).toEqual([]);
@@ -90,17 +90,17 @@ describe("Czech diesel railcars from vlakosimdb", () => {
 
   it("keeps the motor cars' engines and roof equipment off their trailers", () => {
     const has = (id: string, params: ParamValues, prefix: string) => build(id, params).nodes.some((n) => n.id.startsWith(prefix));
-    expect(has("veh-csd-m131", { unit: "motorCar" }, "roof-equipment/radiator")).toBe(true);
-    expect(has("veh-csd-m131", { unit: "trailer" }, "roof-equipment/")).toBe(false);
-    expect(has("veh-cd-843", { unit: "motorCar" }, "underframe/power-pack-1")).toBe(true);
-    expect(has("veh-cd-843", { unit: "trailer" }, "underframe/power-pack-1")).toBe(false);
-    expect(has("veh-cd-810", { variant: "cd812" }, "roof-equipment/exhaust")).toBe(true);
-    expect(has("veh-cd-810", { variant: "cd912" }, "roof-equipment/")).toBe(false);
+    expect(has("proc-vehicle-csd-m131", { unit: "motorCar" }, "roof-equipment/radiator")).toBe(true);
+    expect(has("proc-vehicle-csd-m131", { unit: "trailer" }, "roof-equipment/")).toBe(false);
+    expect(has("proc-vehicle-cd-843", { unit: "motorCar" }, "underframe/power-pack-1")).toBe(true);
+    expect(has("proc-vehicle-cd-843", { unit: "trailer" }, "underframe/power-pack-1")).toBe(false);
+    expect(has("proc-vehicle-cd-810", { variant: "cd812" }, "roof-equipment/exhaust")).toBe(true);
+    expect(has("proc-vehicle-cd-810", { variant: "cd912" }, "roof-equipment/")).toBe(false);
   });
 
   it("gives the 810 liveries the same body and the 812 / 912 their longer one", () => {
     const length = (params: ParamValues) => {
-      const body = build("veh-cd-810", params).nodes.filter((n) => n.id.startsWith("shell/"));
+      const body = build("proc-vehicle-cd-810", params).nodes.filter((n) => n.id.startsWith("shell/"));
       return Math.max(...body.map((n) => n.max![0])) - Math.min(...body.map((n) => n.min![0]));
     };
     for (const livery of ["red", "yellowBand", "blueWhite", "ivoryBand"]) expect(length({ livery })).toBeCloseTo(13.103, 2);
@@ -125,8 +125,8 @@ describe("Czech diesel railcars from vlakosimdb", () => {
 
   it("matches the annotated native landmarks of each default car", () => {
     // the rows the model departs from on purpose, documented in assets/<folder>/COMPARISON.md
-    const known = new Set(["veh-cd-810 S09", "veh-cd-810 F02", "veh-csd-m240 S04"]);
-    const limits: Record<string, number> = { "veh-cd-810": 0.8, "veh-cd-843": 0.2, "veh-csd-m131": 0.4, "veh-csd-m240": 0.5, "veh-csd-m296": 0.5 };
+    const known = new Set(["proc-vehicle-cd-810 S09", "proc-vehicle-cd-810 F02", "proc-vehicle-csd-m240 S04"]);
+    const limits: Record<string, number> = { "proc-vehicle-cd-810": 0.8, "proc-vehicle-cd-843": 0.2, "proc-vehicle-csd-m131": 0.4, "proc-vehicle-csd-m240": 0.5, "proc-vehicle-csd-m296": 0.5 };
     expect(DMU_COMPARED.map((d) => d.id)).toEqual(CZ_DMUS.map((d) => d.id));
     for (const d of DMU_COMPARED) {
       const rows = compare(d);

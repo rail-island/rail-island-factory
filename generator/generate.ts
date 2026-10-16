@@ -28,6 +28,9 @@
 //
 //   pnpm build:models
 import fs from "node:fs";
+import { buildLegacyMapping } from "./legacyMapping.ts";
+import { build as bundleRuntime } from "esbuild";
+import { proceduralId } from "./modelId.ts";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { PNG } from "pngjs";
@@ -35,6 +38,10 @@ import { renderGlbThumb } from "./renderGlbThumb.ts";
 import { SKYSCRAPERS, SKYSCRAPER_CATALOG } from "./skyscrapers.ts";
 import { VEHICLES, VEHICLE_CATALOG } from "./vehicles.ts";
 import { COMMERCIAL } from "./commercialStreets.ts";
+import { WAGON_EXTRAS } from "./wagonExtras.ts";
+import { LEGACY_VEHICLES } from "./legacyVehicles.ts";
+import { LEGACY_BUILDINGS } from "./legacyBuildings.ts";
+import { FOUNTAINS } from "./fountains.ts";
 import { CHURCHES } from "./churches.ts";
 import { CATHEDRALS } from "./cathedrals.ts";
 import { GOTHIC_CATHEDRALS } from "./gothicCathedrals.ts";
@@ -98,10 +105,14 @@ const THUMB_SIZE = 512;
  * functions (the JS bundle's entry) and the meta file it is listed in: the
  * buildings', the village houses' own, or the vehicles'.
  */
-const FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: string; meta: "buildings" | "village" | "vehicles" }> = [
+const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: string; meta: "buildings" | "village" | "vehicles" }> = [
   { designs: SKYSCRAPERS, source: "skyscrapers.ts", meta: "buildings" },
   { designs: COMMERCIAL, source: "commercialStreets.ts", meta: "buildings" },
   { designs: COMMERCIAL_BUILDINGS, source: "commercial.ts", meta: "buildings" },
+  { designs: WAGON_EXTRAS, source: "wagonExtras.ts", meta: "vehicles" },
+  { designs: LEGACY_VEHICLES, source: "legacyVehicles.ts", meta: "vehicles" },
+  { designs: LEGACY_BUILDINGS, source: "legacyBuildings.ts", meta: "buildings" },
+  { designs: FOUNTAINS, source: "fountains.ts", meta: "buildings" },
   { designs: CHURCHES, source: "churches.ts", meta: "buildings" },
   { designs: CATHEDRALS, source: "cathedrals.ts", meta: "buildings" },
   { designs: GOTHIC_CATHEDRALS, source: "gothicCathedrals.ts", meta: "buildings" },
@@ -139,6 +150,9 @@ const FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: st
   { designs: GERMAN_COACHES, source: "germanCoaches.ts", meta: "vehicles" },
 ];
 
+const FAMILIES = RAW_FAMILIES.map(f => ({ ...f, designs: f.designs.map(d => { d.id = proceduralId(d.id); return d; }) }));
+const VILLAGE_DESIGNS = FAMILIES.filter(f => f.meta === "village").flatMap(f => f.designs);
+
 /** Every building design: the skyscrapers, then the landmarks and stations (skyscrapers.meta.json). */
 export const BUILDINGS: readonly ProceduralDesign[] = FAMILIES.filter((f) => f.meta === "buildings").flatMap((f) => f.designs);
 
@@ -146,7 +160,7 @@ export const BUILDINGS: readonly ProceduralDesign[] = FAMILIES.filter((f) => f.m
 export const ALL_VEHICLES: readonly ProceduralDesign[] = FAMILIES.filter((f) => f.meta === "vehicles").flatMap((f) => f.designs);
 
 /** Every design, by id: the buildings, the village houses (village.meta.json), then the vehicles. */
-export const DESIGNS: ReadonlyMap<string, ProceduralDesign> = new Map([...BUILDINGS, ...VILLAGE_HOUSES, ...ALL_VEHICLES].map((d) => [d.id, d]));
+export const DESIGNS: ReadonlyMap<string, ProceduralDesign> = new Map([...BUILDINGS, ...VILLAGE_DESIGNS, ...ALL_VEHICLES].map((d) => [d.id, d]));
 
 const VEHICLE_IDS = new Set(ALL_VEHICLES.map((d) => d.id));
 
@@ -361,7 +375,7 @@ export async function buildExport(dir = EXPORT_DIR): Promise<{ models: Generated
   const refs = generateReferences(dir);
   const designs = [...DESIGNS.values()];
   fs.writeFileSync(path.join(dir, META_FILE), `${JSON.stringify(exportMeta(BUILDINGS), null, 2)}\n`);
-  fs.writeFileSync(path.join(dir, VILLAGE_META_FILE), `${JSON.stringify(exportMeta(VILLAGE_HOUSES), null, 2)}\n`);
+  fs.writeFileSync(path.join(dir, VILLAGE_META_FILE), `${JSON.stringify(exportMeta(VILLAGE_DESIGNS), null, 2)}\n`);
   const rigs = new Map(models.flatMap((m) => (m.rig ? [[m.id, m.rig] as const] : [])));
   fs.writeFileSync(path.join(dir, VEHICLE_META_FILE), `${JSON.stringify(exportVehicleMeta(ALL_VEHICLES, rigs), null, 2)}\n`);
   fs.writeFileSync(path.join(dir, "industry-migration.json"), `${JSON.stringify({ version: 1, entries: INDUSTRY_MIGRATION }, null, 2)}\n`);
@@ -383,6 +397,9 @@ export async function buildExport(dir = EXPORT_DIR): Promise<{ models: Generated
       }, refs.get(design.id));
     }),
   };
+  const mapping = buildLegacyMapping(DESIGNS);
+  fs.writeFileSync(path.join(dir, "legacy-models.json"), `${JSON.stringify(mapping, null, 2)}\n`);
+  await bundleRuntime({ entryPoints:[path.join(REPO_ROOT,"generator/modelReference.ts")], outfile:path.join(dir,"model-reference.js"), bundle:true, format:"esm", platform:"neutral", target:"es2022" });
   fs.writeFileSync(path.join(dir, CATALOG_FILE), `${JSON.stringify(catalog, null, 2)}\n`);
   return { models, catalog, js };
 }

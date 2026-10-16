@@ -409,11 +409,11 @@ export const VEHICLE_CATALOG: CatalogFields = {
 
 /** Every procedural vehicle, by catalog id. The ids are stored in saved maps. */
 export const VEHICLES: ProceduralDesign[] = [
-  { id: "veh-american-truck", title: "American Truck", build: americanTruck, references: "american-truck" },
-  { id: "veh-cd-150", title: "CD 150 / 151 / ZSR 350", build: cd150, params: CD150_PARAMS, catalog: RAIL_CATALOG, references: "cd-150" },
-  { id: "veh-cd-163", title: "CD 163 / 363", build: cd163, params: CD163_PARAMS, catalog: RAIL_CATALOG, references: "cd-163" },
-  { id: "veh-cd-230", title: "CD 230 / 240 / 340", build: cd230, params: CD230_PARAMS, catalog: RAIL_CATALOG, references: "cd-230" },
-  { id: "veh-cd-263", title: "CD 263 / 371 / 372", build: cd263, params: CD263_PARAMS, catalog: RAIL_CATALOG, references: "cd-263" },
+  { id: "proc-vehicle-american-truck", title: "American Truck", build: americanTruck, references: "american-truck" },
+  { id: "proc-vehicle-cd-150", title: "CD 150 / 151 / ZSR 350", build: cd150, params: CD150_PARAMS, catalog: RAIL_CATALOG, references: "cd-150" },
+  { id: "proc-vehicle-cd-163", title: "CD 163 / 363", build: cd163, params: CD163_PARAMS, catalog: RAIL_CATALOG, references: "cd-163" },
+  { id: "proc-vehicle-cd-230", title: "CD 230 / 240 / 340", build: cd230, params: CD230_PARAMS, catalog: RAIL_CATALOG, references: "cd-230" },
+  { id: "proc-vehicle-cd-263", title: "CD 263 / 371 / 372", build: cd263, params: CD263_PARAMS, catalog: RAIL_CATALOG, references: "cd-263" },
   ...COACH_DESIGNS.map((c): ProceduralDesign => ({ id: c.id, title: c.title, build: c.build, catalog: COACH_CATALOG, references: c.folder, ...(c.params ? { params: c.params } : {}) })),
   ...WAGON_DESIGNS.map((w): ProceduralDesign => ({ id: w.id, title: w.title, build: w.build, catalog: WAGON_CATALOG, references: w.folder, ...(w.params ? { params: w.params } : {}) })),
 ];

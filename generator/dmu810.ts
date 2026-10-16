@@ -334,5 +334,5 @@ export const CD810_BUILDS: ReadonlyArray<[Cd810Variant, Cd810Livery]> = [
 ];
 
 export const DMU810_DESIGNS: ProceduralDesign[] = [
-  { id: "veh-cd-810", title: "CD 810 / 812 / 912", build: cd810, params: CD810_PARAMS, catalog: DMU_CATALOG, references: "cd-810" },
+  { id: "proc-vehicle-cd-810", title: "CD 810 / 812 / 912", build: cd810, params: CD810_PARAMS, catalog: DMU_CATALOG, references: "cd-810" },
 ];

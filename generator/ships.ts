@@ -1068,7 +1068,7 @@ export const SHIP_CATALOG: CatalogFields = {
 
 /** Every design of the family, by catalog id; `references` is the folder of its source photos under assets/. */
 export const SHIPS: ProceduralDesign[] = [
-  { id: "veh-cruise-ferry", title: "Cruise Ferry", build: cruiseFerry, references: "cruise-ferry", catalog: SHIP_CATALOG },
-  { id: "veh-hydrofoil-ferry", title: "Hydrofoil Ferry", build: hydrofoilFerry, references: "hydrofoil-ferry", catalog: SHIP_CATALOG },
-  { id: "veh-passenger-ferry", title: "Passenger Ferry", build: passengerFerry, references: "passenger-ferry", catalog: SHIP_CATALOG },
+  { id: "proc-vehicle-cruise-ferry", title: "Cruise Ferry", build: cruiseFerry, references: "cruise-ferry", catalog: { ...SHIP_CATALOG, yaw:180 } },
+  { id: "proc-vehicle-hydrofoil-ferry", title: "Hydrofoil Ferry", build: hydrofoilFerry, references: "hydrofoil-ferry", catalog: { ...SHIP_CATALOG, yaw:180 } },
+  { id: "proc-vehicle-passenger-ferry", title: "Passenger Ferry", build: passengerFerry, references: "passenger-ferry", catalog: { ...SHIP_CATALOG, yaw:270 } },
 ];

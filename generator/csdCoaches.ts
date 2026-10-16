@@ -821,11 +821,11 @@ export function csdDsk(): MeshBuilder {
 
 /** The coach designs: ids, titles, builders, parameters, reference folders. */
 export const CSD_COACHES = [
-  { id: "veh-csd-classic-green-coach", title: "CSD Classic Green Coach", folder: "csd-classic-green", build: csdClassicGreenCoach, params: CLASSIC_GREEN_PARAMS },
-  { id: "veh-csd-balm", title: "CSD Balm", folder: "csd-balm", build: csdBalm },
-  { id: "veh-csd-bam", title: "CSD Bam", folder: "csd-bam", build: csdBam },
-  { id: "veh-csd-bdmtee", title: "CSD Bdmtee", folder: "csd-bdmtee", build: csdBdmtee },
-  { id: "veh-csd-be31", title: "CSD Be31", folder: "csd-be31", build: csdBe31 },
-  { id: "veh-csd-bi20", title: "CSD Bi20", folder: "csd-bi20", build: csdBi20 },
-  { id: "veh-csd-dsk", title: "CSD Dsk", folder: "csd-dsk", build: csdDsk },
+  { id: "proc-vehicle-csd-classic-green-coach", title: "CSD Classic Green Coach", folder: "csd-classic-green", build: csdClassicGreenCoach, params: CLASSIC_GREEN_PARAMS },
+  { id: "proc-vehicle-csd-balm", title: "CSD Balm", folder: "csd-balm", build: csdBalm },
+  { id: "proc-vehicle-csd-bam", title: "CSD Bam", folder: "csd-bam", build: csdBam },
+  { id: "proc-vehicle-csd-bdmtee", title: "CSD Bdmtee", folder: "csd-bdmtee", build: csdBdmtee },
+  { id: "proc-vehicle-csd-be31", title: "CSD Be31", folder: "csd-be31", build: csdBe31 },
+  { id: "proc-vehicle-csd-bi20", title: "CSD Bi20", folder: "csd-bi20", build: csdBi20 },
+  { id: "proc-vehicle-csd-dsk", title: "CSD Dsk", folder: "csd-dsk", build: csdDsk },
 ] as const;

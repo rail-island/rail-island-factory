@@ -448,7 +448,7 @@ function motorRoof(c: Coach, L: CarLayout): void {
 }
 
 export const MDMOT_DESIGNS: ProceduralDesign[] = [
-  { id: "veh-mav-mdmot", title: "MAV MDmot", build: mavMdmot, params: MDMOT_PARAMS, catalog: EMU_CATALOG, references: "mav-mdmot" },
+  { id: "proc-vehicle-mav-mdmot", title: "MAV MDmot", build: mavMdmot, params: MDMOT_PARAMS, catalog: EMU_CATALOG, references: "mav-mdmot" },
 ];
 
 export { LAYOUTS as MDMOT_LAYOUTS };

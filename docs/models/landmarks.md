@@ -21,7 +21,7 @@ are in `assets/<name>/`.
 
 The budget is the 40 000 triangles that `referenceModels.test.ts` allows for a
 building. All three share `LANDMARK_CATALOG`: category `Historical`, city pool
-`hist_center`, `defaultScale` 1.88, CC0 by Rail Island.
+`hist_center`, `defaultScale` 1, CC0 by Rail Island.
 
 ## Brandenburg Gate
 
@@ -102,3 +102,11 @@ East and West wings run along X.
   north (-Z) side. The real colonnades face the gardens.
 - The pyramid's sill is darker than the reference's (from the photo), and its glass
   and lattice keep the reference's colours.
+
+## Procedural export contract
+
+All current export IDs use `proc-building-` or `proc-vehicle-`; source/reference
+names in older tables identify the original models. See [legacy-mapping.md](legacy-mapping.md)
+for the authoritative ID, scale and runtime conversion contract. Ground vehicles
+have no exported `defaultScale`; buildings, aircraft and ships use 1 except the
+Eiffel Tower placement exception.

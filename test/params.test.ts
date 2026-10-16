@@ -1,3 +1,4 @@
+import { proceduralId } from "../generator/modelId.ts";
 // Parametric models (generator/design.ts): enum parameters with defaults. The
 // export builds the defaults; every combination must build as cleanly, and the
 // standalone JS model must build any of them exactly as the generator does.
@@ -118,7 +119,7 @@ describe("parametric models", () => {
     }, 30_000); // the heavier locomotives take a few seconds for all their liveries
 
     it(`${d.id}: the JS model exports its parameters and builds every combination like the generator`, async () => {
-      const mod = await loadModule(await bundleDesign(d, designSource(d.id)));
+      const mod = await loadModule(await bundleDesign(d, designSource(proceduralId(d.id))));
       expect(mod.params).toEqual(d.params);
       for (const combo of coverageCombinations(d.params, d.finishParams)) {
         const want = new Map<string, number[]>();

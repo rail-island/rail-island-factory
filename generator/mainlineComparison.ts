@@ -25,22 +25,22 @@ const design = (id: string, title: string, folder: string, build: () => ReturnTy
 });
 
 export const MAINLINE_COMPARED: readonly ComparedDesign[] = [
-  design("veh-cd-180", "CD 181 105", "cd-181", () => cd181(), side(94, 10), 220,
+  design("proc-vehicle-cd-180", "CD 181 105", "cd-181", () => cd181(), side(94, 10), 220,
     { x_front: "native/cd_181/x_both.bmp", z_right: "native/cd_181/z_dec.bmp" },
     "side column px = 94 - 10 x, row = 10 (6 - y); front column = 10 (1.5 - z)"),
-  design("veh-dnt-184-5", "DNT 184 503", "dnt-184", () => dnt184(), side(101.5, 10), 204,
+  design("proc-vehicle-dnt-184-5", "DNT 184 503", "dnt-184", () => dnt184(), side(101.5, 10), 204,
     { x_front: "native/dnt_184.5/x_both.bmp", z_right: "native/dnt_184.5/z_dec.bmp" },
     "side column px = 101.5 - 10 x, row = 10 (6 - y); front column = 10 (1.5 - z)"),
-  design("veh-db-111", "DB 111 024", "db-111", () => db111(), side(83.65, 10), 170,
+  design("proc-vehicle-db-111", "DB 111 024", "db-111", () => db111(), side(83.65, 10), 170,
     { x_front: "native/db_111/x_both.bmp", z_right: "native/db_111/z_dec.bmp" },
     "side column px = 83.65 - 10 x, row = 10 (6 - y); front column = 10 (1.5 - z)"),
-  design("veh-dr-243", "DR 243 864", "dr-243", () => dr243(), side(84, 10), 170,
+  design("proc-vehicle-dr-243", "DR 243 864", "dr-243", () => dr243(), side(84, 10), 170,
     { x_front: "native/dr_243/x_both.bmp", z_right: "native/dr_243/z_dec.bmp" },
     "side column px = 84 - 10 x, row = 10 (6 - y); front column = 10 (1.5 - z)"),
-  design("veh-obb-1012", "OBB 1012.001", "obb-1012", () => obb1012(), side(96.5, 1 / ((18 / 193) * OBB1012_SCALE), 58 / 6), 193,
+  design("proc-vehicle-obb-1012", "OBB 1012.001", "obb-1012", () => obb1012(), side(96.5, 1 / ((18 / 193) * OBB1012_SCALE), 58 / 6), 193,
     { x_front: "native/x_both.bmp", z_right: "native/z_both.bmp" },
     "side column px = 96.5 - x / 0.09923 (the native body scaled to the published 18.3 m), row = (6 - y) / 0.10345; front column = 10 (1.5 - z)", 58),
-  design("veh-obb-1040", "OBB 1040 013", "obb-1040", () => obb1040(), side(65.5, -1 / (0.1 * OBB1040_SCALE)), 170,
+  design("proc-vehicle-obb-1040", "OBB 1040 013", "obb-1040", () => obb1040(), side(65.5, -1 / (0.1 * OBB1040_SCALE)), 170,
     { x_front: "native/x_both.bmp", z_right: "native/z_both.bmp" },
     "side column px = 65.5 + x / 0.10504 (the native body scaled to the published 12.92 m over the buffers), row = 10 (6 - y); front column = 10 (1.5 - z)"),
 ];

@@ -19,14 +19,14 @@ function rec(id: string, title: string, triangles: number, extra: Partial<Catalo
 }
 
 const ROWS = prepareRows([
-  rec("sky-pagoda", "Pagoda Tower", 912),
-  rec("sky-art-deco", "Art Deco Tower", 1272),
-  rec("sky-twin-towers", "Twin Towers", 2930, { license: "CC-BY" }),
+  rec("proc-building-sky-pagoda", "Pagoda Tower", 912),
+  rec("proc-building-sky-art-deco", "Art Deco Tower", 1272),
+  rec("proc-building-sky-twin-towers", "Twin Towers", 2930, { license: "CC-BY" }),
 ]);
 
 describe("queryRows", () => {
   it("sorts by title by default", () => {
-    expect(queryRows(ROWS, "", DEFAULT_SORT, "asc").map((r) => r.id)).toEqual(["sky-art-deco", "sky-pagoda", "sky-twin-towers"]);
+    expect(queryRows(ROWS, "", DEFAULT_SORT, "asc").map((r) => r.id)).toEqual(["proc-building-sky-art-deco", "proc-building-sky-pagoda", "proc-building-sky-twin-towers"]);
   });
 
   it("sorts numbers numerically in both directions", () => {
@@ -35,8 +35,8 @@ describe("queryRows", () => {
   });
 
   it("matches every word of the search, case-insensitively, across fields", () => {
-    expect(queryRows(ROWS, "TOWER deco", "title", "asc").map((r) => r.id)).toEqual(["sky-art-deco"]);
-    expect(queryRows(ROWS, "cc-by", "title", "asc").map((r) => r.id)).toEqual(["sky-twin-towers"]);
+    expect(queryRows(ROWS, "TOWER deco", "title", "asc").map((r) => r.id)).toEqual(["proc-building-sky-art-deco"]);
+    expect(queryRows(ROWS, "cc-by", "title", "asc").map((r) => r.id)).toEqual(["proc-building-sky-twin-towers"]);
     expect(queryRows(ROWS, "nothing", "title", "asc")).toEqual([]);
   });
 
@@ -62,9 +62,9 @@ describe("cellText", () => {
 describe("the filter chips", () => {
   const MIXED = prepareRows([
     ...ROWS,
-    rec("veh-american-truck", "American Truck", 9000, { category: "Road vehicles", group: "truck" }),
-    rec("veh-cd-150", "CD 150", 8000, { category: "Rail vehicles", group: "loco" }),
-    rec("veh-cd-163", "CD 163", 8100, { category: "Rail vehicles", group: "loco" }),
+    rec("proc-vehicle-american-truck", "American Truck", 9000, { category: "Road vehicles", group: "truck" }),
+    rec("proc-vehicle-cd-150", "CD 150", 8000, { category: "Rail vehicles", group: "loco" }),
+    rec("proc-vehicle-cd-163", "CD 163", 8100, { category: "Rail vehicles", group: "loco" }),
     rec("veh-bmo", "Bmo", 7000, { category: "Rail vehicles", group: "coach" }),
     rec("sky-village", "Village Tower", 500, { category: "Village", group: "village" }),
   ]);
@@ -88,8 +88,8 @@ describe("the filter chips", () => {
   });
 
   it("filters the listing by the picked chips", () => {
-    expect(ids({ group: "train" })).toEqual(["veh-bmo", "veh-cd-150", "veh-cd-163"]);
-    expect(ids({ group: "train", l2: "loco" })).toEqual(["veh-cd-150", "veh-cd-163"]);
+    expect(ids({ group: "train" })).toEqual(["veh-bmo", "proc-vehicle-cd-150", "proc-vehicle-cd-163"]);
+    expect(ids({ group: "train", l2: "loco" })).toEqual(["proc-vehicle-cd-150", "proc-vehicle-cd-163"]);
     expect(ids({ group: "building", l2: "Village" })).toEqual(["sky-village"]);
     expect(ids({ group: "ship" })).toEqual([]);
   });
@@ -116,36 +116,36 @@ describe("the filter chips", () => {
 describe("the URL state", () => {
   it("round-trips, leaving defaults out", () => {
     expect(serializeView(parseView(""))).toBe("");
-    const v = { q: "tower", ...NO_CHIPS, sort: "triangles", dir: "asc" as const, model: "sky-pagoda", tab: "specs" as const, node: null, params: {} };
+    const v = { q: "tower", ...NO_CHIPS, sort: "triangles", dir: "asc" as const, model: "proc-building-sky-pagoda", tab: "specs" as const, node: null, params: {} };
     expect(parseView(serializeView(v))).toEqual(v);
   });
 
   it("carries the source tab and the selected node of an open model", () => {
-    const v = { q: "", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "sky-art-deco", tab: "source" as const, node: "tier-3/piers", params: {} };
-    expect(serializeView(v)).toBe("?model=sky-art-deco&tab=source&node=tier-3%2Fpiers");
+    const v = { q: "", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "proc-building-sky-art-deco", tab: "source" as const, node: "tier-3/piers", params: {} };
+    expect(serializeView(v)).toBe("?model=proc-building-sky-art-deco&tab=source&node=tier-3%2Fpiers");
     expect(parseView(serializeView(v))).toEqual(v);
     // the root scope's id is the empty string, and still a selection
-    expect(parseView("?model=sky-pagoda&tab=source&node=").node).toBe("");
+    expect(parseView("?model=proc-building-sky-pagoda&tab=source&node=").node).toBe("");
     expect(parseView(serializeView({ ...v, node: "" })).node).toBe("");
   });
 
   it("carries the references tab of an open model, without a node", () => {
-    const v = { q: "", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "veh-cd-150", tab: "references" as const, node: null, params: {} };
-    expect(serializeView(v)).toBe("?model=veh-cd-150&tab=references");
+    const v = { q: "", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "proc-vehicle-cd-150", tab: "references" as const, node: null, params: {} };
+    expect(serializeView(v)).toBe("?model=proc-vehicle-cd-150&tab=references");
     expect(parseView(serializeView(v))).toEqual(v);
-    expect(parseView("?model=veh-cd-150&tab=references&node=crown")).toMatchObject({ tab: "references", node: null });
-    expect(serializeView({ ...v, node: "crown" })).toBe("?model=veh-cd-150&tab=references");
+    expect(parseView("?model=proc-vehicle-cd-150&tab=references&node=crown")).toMatchObject({ tab: "references", node: null });
+    expect(serializeView({ ...v, node: "crown" })).toBe("?model=proc-vehicle-cd-150&tab=references");
   });
   it("drops a tab or node that has no model or no source tab to belong to", () => {
     expect(parseView("?tab=source&node=crown")).toMatchObject({ model: null, tab: "specs", node: null, params: {} });
-    expect(parseView("?model=sky-pagoda&node=crown")).toMatchObject({ tab: "specs", node: null });
-    expect(parseView("?model=sky-pagoda&tab=bogus")).toMatchObject({ tab: "specs", node: null });
-    expect(serializeView({ q: "", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc", model: "sky-pagoda", tab: "specs", node: "crown", params: {} })).toBe("?model=sky-pagoda");
+    expect(parseView("?model=proc-building-sky-pagoda&node=crown")).toMatchObject({ tab: "specs", node: null });
+    expect(parseView("?model=proc-building-sky-pagoda&tab=bogus")).toMatchObject({ tab: "specs", node: null });
+    expect(serializeView({ q: "", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc", model: "proc-building-sky-pagoda", tab: "specs", node: "crown", params: {} })).toBe("?model=proc-building-sky-pagoda");
   });
 
   it("carries a parametric model's chosen values, only with an open model", () => {
-    const v = { q: "", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "veh-csd-classic-green-coach", tab: "specs" as const, node: null, params: { variant: "classB" } };
-    expect(serializeView(v)).toBe("?model=veh-csd-classic-green-coach&p.variant=classB");
+    const v = { q: "", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "proc-vehicle-csd-classic-green-coach", tab: "specs" as const, node: null, params: { variant: "classB" } };
+    expect(serializeView(v)).toBe("?model=proc-vehicle-csd-classic-green-coach&p.variant=classB");
     expect(parseView(serializeView(v))).toEqual(v);
     expect(parseView("?p.variant=classB").params).toEqual({});
     expect(serializeView({ ...v, model: null })).toBe("");
@@ -180,14 +180,14 @@ describe("parameters", () => {
 describe("downloads", () => {
   it("makes the GLB and JS sizes links to their files, and no other column", () => {
     const r = ROWS[0]!;
-    expect(cellFile(r, column("glbBytes")!)).toEqual({ href: "/glb/sky-pagoda.glb", name: "sky-pagoda.glb" });
-    expect(cellFile(r, column("jsBytes")!)).toEqual({ href: "/js/sky-pagoda.js", name: "sky-pagoda.js" });
+    expect(cellFile(r, column("glbBytes")!)).toEqual({ href: "/glb/proc-building-sky-pagoda.glb", name: "proc-building-sky-pagoda.glb" });
+    expect(cellFile(r, column("jsBytes")!)).toEqual({ href: "/js/proc-building-sky-pagoda.js", name: "proc-building-sky-pagoda.js" });
     for (const c of COLUMNS.filter((c) => c.key !== "glbBytes" && c.key !== "jsBytes")) expect(cellFile(r, c)).toBeNull();
   });
 
   it("lists the JS size and the gzip sizes as sortable columns", () => {
     expect(column("jsBytes")!.table).toBe(true);
     const sorted = queryRows(ROWS, "", "jsGzipBytes", "desc").map((r) => r.id);
-    expect(sorted).toEqual(["sky-twin-towers", "sky-art-deco", "sky-pagoda"]);
+    expect(sorted).toEqual(["proc-building-sky-twin-towers", "proc-building-sky-art-deco", "proc-building-sky-pagoda"]);
   });
 });

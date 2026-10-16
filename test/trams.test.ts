@@ -1,3 +1,4 @@
+import { proceduralId } from "../generator/modelId.ts";
 // The trams and the metro car transferred from vlakosimdb (generator/trams.ts,
 // generator/metro.ts, generator/tramKit.ts): every parameter combination in the
 // rail envelope, the published dimensions the drawings are mapped onto, one
@@ -24,7 +25,7 @@ const walk = (n: TreeNode): TreeNode[] => (isLeaf(n) ? [n] : [n, ...n.children.f
 type Box = { min: number[]; max: number[] };
 /** The union extent of the tree nodes whose ids match `test`. */
 function extent(id: string, test: (nodeId: string) => boolean, params?: ParamValues): Box {
-  const tree = DESIGNS.get(id)!.build(params).sourceTree(id, id);
+  const tree = DESIGNS.get(proceduralId(id))!.build(params).sourceTree(id, id);
   const nodes = walk(tree.root).filter((n) => test(n.id) && n.min && n.max);
   if (!nodes.length) throw new Error(`${id}: nothing matches`);
   return {
@@ -36,8 +37,8 @@ const centreX = (b: Box) => (b.min[0]! + b.max[0]!) / 2;
 
 describe("the tram and metro designs", () => {
   it("are registered rail vehicles with stable ids and their defaults", () => {
-    expect(TRAM_DESIGNS.map((d) => d.id)).toEqual(["veh-tatra-t3", "veh-tatra-t6", "veh-tatra-kt8", "veh-tatra-kt4", "veh-kvag-gt4"]);
-    expect(METRO_DESIGNS.map((d) => d.id)).toEqual(["veh-metro-81-71"]);
+    expect(TRAM_DESIGNS.map((d) => d.id)).toEqual(["proc-vehicle-tatra-t3", "proc-vehicle-tatra-t6", "proc-vehicle-tatra-kt8", "proc-vehicle-tatra-kt4", "proc-vehicle-kvag-gt4"]);
+    expect(METRO_DESIGNS.map((d) => d.id)).toEqual(["proc-vehicle-metro-81-71"]);
     for (const d of TRAM_DESIGNS) expect(d.catalog).toBe(TRAM_CATALOG);
     expect(METRO_DESIGNS[0]!.catalog).toBe(METRO_CATALOG);
     for (const d of DESIGNS_HERE) {
@@ -45,14 +46,14 @@ describe("the tram and metro designs", () => {
       expect(d.catalog?.category).toBe("Rail vehicles");
       expect(d.references).toBeTruthy();
     }
-    const params = (id: string) => resolveParams(DESIGNS.get(id)!.params ?? []);
-    expect(params("veh-tatra-t3")).toEqual({ variant: "t3" });
-    expect(DESIGNS.get("veh-tatra-t3")!.params![0]!.values.map((v) => v.value)).toEqual(["t3", "t3m", "t3prototype"]);
-    expect(params("veh-tatra-kt8")).toEqual({ livery: "redWhite" });
-    expect(DESIGNS.get("veh-tatra-kt8")!.params![0]!.values.map((v) => v.value)).toEqual(["redWhite", "red", "modern"]);
-    expect(params("veh-metro-81-71")).toEqual({ unit: "headCar" });
-    expect(DESIGNS.get("veh-metro-81-71")!.params![0]!.values.map((v) => v.value)).toEqual(["headCar", "middleCar"]);
-    expect(DESIGNS.get("veh-tatra-t6")!.params).toBeUndefined();
+    const params = (id: string) => resolveParams(DESIGNS.get(proceduralId(id))!.params ?? []);
+    expect(params("proc-vehicle-tatra-t3")).toEqual({ variant: "t3" });
+    expect(DESIGNS.get(proceduralId("proc-vehicle-tatra-t3"))!.params![0]!.values.map((v) => v.value)).toEqual(["t3", "t3m", "t3prototype"]);
+    expect(params("proc-vehicle-tatra-kt8")).toEqual({ livery: "redWhite" });
+    expect(DESIGNS.get(proceduralId("proc-vehicle-tatra-kt8"))!.params![0]!.values.map((v) => v.value)).toEqual(["redWhite", "red", "modern"]);
+    expect(params("proc-vehicle-metro-81-71")).toEqual({ unit: "headCar" });
+    expect(DESIGNS.get(proceduralId("proc-vehicle-metro-81-71"))!.params![0]!.values.map((v) => v.value)).toEqual(["headCar", "middleCar"]);
+    expect(DESIGNS.get(proceduralId("proc-vehicle-tatra-t6"))!.params).toBeUndefined();
   });
 
   it.each(COMBOS.map((c) => [c.label, c] as const))("%s builds on its wheels, inside the rail envelope and budget, without flicker", (_, { d, p }) => {
@@ -75,30 +76,30 @@ describe("the tram and metro designs", () => {
 describe("the published dimensions", () => {
   const body = (id: string, params?: ParamValues) => extent(id, (n) => /^(section\d\/)?body$/.test(n), params);
   const bogies = (id: string) => {
-    const tree = DESIGNS.get(id)!.build().sourceTree(id, id);
+    const tree = DESIGNS.get(proceduralId(id))!.build().sourceTree(id, id);
     return walk(tree.root).filter((n) => /running-gear\/bogie(-\d)?$/.test(n.id)).map((n) => centreX(n as Box)).sort((a, b) => b - a);
   };
 
   it("maps the T3 onto 14.0 m by 2.5 m, 3.05 m high, its bogie pivots 6.4 m apart", () => {
-    const b = body("veh-tatra-t3");
+    const b = body("proc-vehicle-tatra-t3");
     expect(b.max[0]! - b.min[0]!).toBeCloseTo(14.0, 1);
     expect(b.max[2]! - b.min[2]!).toBeCloseTo(2.5, 2);
     expect(b.max[1]!).toBeCloseTo(3.05, 2);
-    const [f, r] = bogies("veh-tatra-t3");
+    const [f, r] = bogies("proc-vehicle-tatra-t3");
     expect(f! - r!).toBeCloseTo(6.4, 1);
     expect(T3_MAP.kx).toBeCloseTo(14.0 / 14.8, 9);
   });
 
   it("keeps the T3 variants on one body, the prototype's ends blunter", () => {
-    const t3 = body("veh-tatra-t3", { variant: "t3" });
-    const t3m = body("veh-tatra-t3", { variant: "t3m" });
+    const t3 = body("proc-vehicle-tatra-t3", { variant: "t3" });
+    const t3m = body("proc-vehicle-tatra-t3", { variant: "t3m" });
     expect(t3m).toEqual(t3);
-    const front = (variant: string) => extent("veh-tatra-t3", (n) => n === "body/front-cab", { variant });
+    const front = (variant: string) => extent("proc-vehicle-tatra-t3", (n) => n === "body/front-cab", { variant });
     expect(front("t3prototype").max[2]!).toBeGreaterThan(front("t3").max[2]!);
   });
 
   it("maps the T6A5 onto 14.7 m by 2.5 m and 3.165 m", () => {
-    const b = body("veh-tatra-t6");
+    const b = body("proc-vehicle-tatra-t6");
     expect(b.max[0]! - b.min[0]!).toBeCloseTo(14.7, 1);
     expect(b.max[2]! - b.min[2]!).toBeCloseTo(2.5, 2);
     expect(b.max[1]!).toBeCloseTo(3.165, 2);
@@ -106,40 +107,40 @@ describe("the published dimensions", () => {
   });
 
   it("maps the KT8D5 onto 30.3 m over its three bodies, 2.48 m wide, on four bogies", () => {
-    const b = body("veh-tatra-kt8");
+    const b = body("proc-vehicle-tatra-kt8");
     expect(b.max[0]! - b.min[0]!).toBeCloseTo(30.3, 1);
     expect(b.max[2]! - b.min[2]!).toBeCloseTo(2.48, 2);
     expect(b.max[1]!).toBeCloseTo(3.145, 2);
-    const xs = bogies("veh-tatra-kt8");
+    const xs = bogies("proc-vehicle-tatra-kt8");
     expect(xs).toHaveLength(4);
     xs.forEach((x, i) => expect(x).toBeCloseTo((KT8_MAP.c - KT8_BOGIES[i]!) * KT8_MAP.kx, 2));
   });
 
   it("maps the KT4 onto 18.11 m and 2.2 m, a bogie under each section", () => {
-    const b = body("veh-tatra-kt4");
+    const b = body("proc-vehicle-tatra-kt4");
     expect(b.max[0]! - b.min[0]!).toBeCloseTo(18.11, 1);
     expect(b.max[2]! - b.min[2]!).toBeCloseTo(2.2, 2);
-    const xs = bogies("veh-tatra-kt4");
+    const xs = bogies("proc-vehicle-tatra-kt4");
     xs.forEach((x, i) => expect(x).toBeCloseTo((KT4_MAP.c - KT4_BOGIES[i]!) * KT4_MAP.kx, 2));
   });
 
   it("gives the GT4 18.8 m over the couplings, 2.2 m width and 10.0 m between the bogie pivots", () => {
-    const s = glbStats(DESIGNS.get("veh-kvag-gt4")!.build().toGlb("gt4"));
+    const s = glbStats(DESIGNS.get(proceduralId("proc-vehicle-kvag-gt4"))!.build().toGlb("gt4"));
     expect(s.max[0] - s.min[0]).toBeCloseTo(18.8, 1);
-    expect(body("veh-kvag-gt4").max[2]! * 2).toBeCloseTo(2.2, 2);
-    const [f, r] = bogies("veh-kvag-gt4");
+    expect(body("proc-vehicle-kvag-gt4").max[2]! * 2).toBeCloseTo(2.2, 2);
+    const [f, r] = bogies("proc-vehicle-kvag-gt4");
     expect(f! - r!).toBeCloseTo(10.0, 1);
     expect((GT4_BOGIES[1]! - GT4_BOGIES[0]!) * GT4_MAP.kx).toBeCloseTo(10.0, 1);
   });
 
   it("gives the 81-71 19.21 m over the couplers, 2.7 m width, 12.6 m between the bogie pivots, for both cars", () => {
     for (const unit of ["headCar", "middleCar"]) {
-      const s = glbStats(DESIGNS.get("veh-metro-81-71")!.build({ unit }).toGlb("metro"));
+      const s = glbStats(DESIGNS.get(proceduralId("proc-vehicle-metro-81-71"))!.build({ unit }).toGlb("metro"));
       expect(s.max[0] - s.min[0]).toBeCloseTo(unit === "headCar" ? 19.21 : 19.21 * 19.8 / 20, 1);
-      const b = body("veh-metro-81-71", { unit });
+      const b = body("proc-vehicle-metro-81-71", { unit });
       expect(b.max[2]! - b.min[2]!).toBeCloseTo(2.7, 2);
       expect(b.max[1]!).toBeCloseTo(3.65, 2);
-      const tree = DESIGNS.get("veh-metro-81-71")!.build({ unit }).sourceTree("m", "m");
+      const tree = DESIGNS.get(proceduralId("proc-vehicle-metro-81-71"))!.build({ unit }).sourceTree("m", "m");
       const xs = walk(tree.root).filter((n) => /running-gear\/bogie-\d$/.test(n.id)).map((n) => centreX(n as Box));
       expect(Math.abs(xs[0]! - xs[1]!)).toBeCloseTo(METRO_PIVOTS, 2);
     }
@@ -163,7 +164,7 @@ describe("the published dimensions", () => {
 describe("the pantographs", () => {
   /** Each pantograph scope's collector height. */
   const collectors = (id: string, params?: ParamValues) => {
-    const tree = DESIGNS.get(id)!.build(params).sourceTree(id, id);
+    const tree = DESIGNS.get(proceduralId(id))!.build(params).sourceTree(id, id);
     return walk(tree.root)
       .filter((n) => /roof-equipment\/pantographs\/[^/]+$/.test(n.id))
       .map((n) => ({ id: n.id, head: extent(id, (x) => x === n.id + "/collector", params).max[1]! }));
@@ -177,12 +178,12 @@ describe("the pantographs", () => {
       expect(Math.abs(raised[0]!.head - TRAM_WIRE)).toBeLessThan(0.02);
       // a second collector (the KT8D5's rear one) is folded down on its roof
       for (const h of heads.filter((x) => x.head <= 5)) expect(h.head).toBeLessThan(4.0);
-      expect(heads.length).toBe(id === "veh-tatra-kt8" ? 2 : 1);
+      expect(heads.length).toBe(id === "proc-vehicle-tatra-kt8" ? 2 : 1);
     },
   );
 
   it("leaves the metro car without one: it runs on a third rail", () => {
-    const tree = DESIGNS.get("veh-metro-81-71")!.build().sourceTree("m", "m");
+    const tree = DESIGNS.get(proceduralId("proc-vehicle-metro-81-71"))!.build().sourceTree("m", "m");
     expect(walk(tree.root).some((n) => n.id.includes("pantograph"))).toBe(false);
     expect(walk(tree.root).filter((n) => n.id.endsWith("current-collectors"))).toHaveLength(2);
   });
@@ -190,13 +191,13 @@ describe("the pantographs", () => {
 
 describe("the articulated trams", () => {
   const cases = [
-    ["veh-tatra-kt8", 3, [[0], [1, 2], [3]]],
-    ["veh-tatra-kt4", 2, [[0], [1]]],
-    ["veh-kvag-gt4", 2, [[0], [1]]],
+    ["proc-vehicle-tatra-kt8", 3, [[0], [1, 2], [3]]],
+    ["proc-vehicle-tatra-kt4", 2, [[0], [1]]],
+    ["proc-vehicle-kvag-gt4", 2, [[0], [1]]],
   ] as const;
 
   it.each(cases)("%s is %i sections and their joints, each bogie riding its own section", (id, n, owners) => {
-    const m = DESIGNS.get(id)!.build();
+    const m = DESIGNS.get(proceduralId(id))!.build();
     const rig = m.rig!;
     expect(rig.steer).toBeUndefined();
     expect(rig.sections!.map((s) => s.node)).toEqual(Array.from({ length: n }, (_, i) => `section${i}`));

@@ -281,5 +281,5 @@ function innerEnd(c: Coach, v: Volume): void {
 }
 
 export const DB628_DESIGNS: ProceduralDesign[] = [
-  { id: "veh-db-628", title: "DB 628", build: db628, params: DB628_PARAMS, catalog: EMU_CATALOG, references: "db-628" },
+  { id: "proc-vehicle-db-628", title: "DB 628", build: db628, params: DB628_PARAMS, catalog: EMU_CATALOG, references: "db-628" },
 ];

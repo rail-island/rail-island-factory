@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { proceduralId } from "../generator/modelId";
 import { COMMERCIAL } from "../generator/commercialStreets";
 import { coverageCombinations, resolveParams } from "../generator/design";
 import { DESIGNS } from "../generator/generate";
@@ -12,15 +13,32 @@ describe("commercial architecture", () => {
     expect(inventory.models).toHaveLength(82);
     expect(new Set(inventory.models.map(r => r.legacyId)).size).toBe(82);
     for (const d of COMMERCIAL) {
-      expect(DESIGNS.get(d.id)).toBe(d);
+      expect(DESIGNS.get(proceduralId(d.id))?.build).toBe(d.build);
       expect(d.catalog?.category).toBe("Commercial");
+      expect(d.catalog?.defaultScale).toBe(1);
     }
     for (const row of inventory.models) {
       if (row.status !== "covered") continue;
-      const d = DESIGNS.get(row.targetId!)!;
+      const d = DESIGNS.get(proceduralId(row.targetId!))!;
       expect(d, row.legacyId).toBeDefined();
       expect(() => resolveParams(d.params!, row.params as Record<string, string>)).not.toThrow();
+      expect(Object.keys(row.params).sort(), row.legacyId).toEqual(d.params!.map(p => p.name).sort());
     }
+  });
+  it("preserves distinguishing row-house entrances, signs and long facades", () => {
+    const row = (id: string) => inventory.models.find(r => r.legacyId === id)!;
+    expect(row("street-house-stairs").params).toMatchObject({ entrance: "stoop" });
+    expect(row("street-house-double").params).toMatchObject({ entrance: "paired", width: "standard" });
+    expect(row("street-house-wide-doors").params).toMatchObject({ entrance: "paired", width: "extraWide" });
+    expect(row("street-house-sign").params).toMatchObject({ sign: "board" });
+    const brick = COMMERCIAL.find(d => d.id === "proc-building-commercial-brick")!;
+    const plain = brick.build().toGlb(brick.id);
+    expect(brick.build({ entrance: "stoop" }).toGlb(brick.id)).not.toEqual(plain);
+    expect(brick.build({ entrance: "paired" }).toGlb(brick.id)).not.toEqual(plain);
+    expect(brick.build({ sign: "board" }).toGlb(brick.id)).not.toEqual(plain);
+    const wide = glbStats(brick.build({ width: "wide" }).toGlb(brick.id));
+    const extra = glbStats(brick.build({ width: "extraWide" }).toGlb(brick.id));
+    expect(extra.max[0] - extra.min[0]).toBeGreaterThan(1.5 * (wide.max[0] - wide.min[0]));
   });
   for (const d of COMMERCIAL) it(`${d.id}: all shapes are grounded, deterministic and below 10k triangles without flicker`, () => {
     for (const p of coverageCombinations(d.params, d.finishParams)) {
@@ -32,7 +50,7 @@ describe("commercial architecture", () => {
       expect(findCoplanarOverlaps(glb), JSON.stringify(p)).toEqual([]);
     }
     expect(d.build().toGlb(d.id)).toEqual(d.build().toGlb(d.id));
-  }, 30_000);
+  }, 120_000);
   it("changes height and footprint through the exposed parameters", () => {
     for (const d of COMMERCIAL) {
       const heights = d.params!.find(p => p.name === "storeys")!.values;

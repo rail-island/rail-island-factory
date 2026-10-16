@@ -1,3 +1,4 @@
+import { proceduralId } from "../generator/modelId.ts";
 // The preview's source-tree highlight and picking (src/viewerHighlight.ts,
 // src/sourceTreeView.ts) on a real design's GLB, loaded the way the site loads
 // it -- three's GLTFLoader -- but without a WebGL context.
@@ -10,7 +11,7 @@ import { applyHighlight, makeParts } from "../src/viewerHighlight";
 import { indexTree, leafAt, rangesOf } from "../src/sourceTreeView";
 
 async function load(id: string): Promise<Object3D> {
-  const bytes = designGlb(id);
+  const bytes = designGlb(proceduralId(id));
   const buf = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
   const gltf = await new GLTFLoader().parseAsync(buf as ArrayBuffer, "");
   gltf.scene.updateMatrixWorld(true);
@@ -19,9 +20,9 @@ async function load(id: string): Promise<Object3D> {
 
 describe("the preview's highlight", () => {
   it("glows the selected node's triangles, ghosts the rest, and restores the model", async () => {
-    const scene = await load("sky-art-deco");
+    const scene = await load("proc-building-sky-art-deco");
     const parts = makeParts(scene);
-    const index = indexTree(designTree("sky-art-deco"));
+    const index = indexTree(designTree(proceduralId("proc-building-sky-art-deco")));
     expect(parts.map((p) => p.name).sort()).toEqual(index.tree.materials);
 
     applyHighlight(parts, rangesOf(index, "tier-2/piers"));
@@ -50,7 +51,7 @@ describe("the preview's highlight", () => {
   });
 
   it("ghosts everything for a node that drew nothing or is not in the tree", async () => {
-    const parts = makeParts(await load("sky-pagoda"));
+    const parts = makeParts(await load("proc-building-sky-pagoda"));
     applyHighlight(parts, new Map());
     for (const p of parts) expect(p.mesh.material).toBe(p.ghost);
   });
@@ -59,12 +60,12 @@ describe("the preview's highlight", () => {
 // An articulated vehicle has a mesh per material in each part's node, and the
 // tree numbers a material's triangles across both: each mesh carries an offset.
 describe("a model with parts", () => {
-  const id = "veh-american-truck";
+  const id = "proc-vehicle-american-truck";
 
   it("glows a trailer node's triangles in the trailer's meshes only", async () => {
     const scene = await load(id);
     const parts = makeParts(scene);
-    const index = indexTree(designTree(id));
+    const index = indexTree(designTree(proceduralId(id)));
     const truckMeshes = new Set<Object3D>();
     scene.getObjectByName("truck")!.traverse((o) => truckMeshes.add(o));
     const ranges = rangesOf(index, "trailer/axle-1");
@@ -88,7 +89,7 @@ describe("a model with parts", () => {
   it("maps a ray into a trailer tail light to that leaf, past the truck's red lamps", async () => {
     const scene = await load(id);
     const parts = makeParts(scene);
-    const index = indexTree(designTree(id));
+    const index = indexTree(designTree(proceduralId(id)));
     const light = index.leaves.find((l) => l.id.startsWith("trailer/rear/tail-lights/"))!;
     const centre = new Box3(new Vector3(...light.min!), new Vector3(...light.max!)).getCenter(new Vector3());
     const hit = new Raycaster(new Vector3(centre.x - 20, centre.y, centre.z), new Vector3(1, 0, 0)).intersectObject(scene, true)[0]!;
@@ -103,10 +104,10 @@ describe("picking", () => {
   // The face index a raycast reports must be the triangle index the tree's
   // ranges use, or a click would select the wrong part.
   it("maps a ray hitting the mast's warning light to that leaf", async () => {
-    const id = "sky-glass-office";
+    const id = "proc-building-sky-glass-office";
     const scene = await load(id);
     const parts = makeParts(scene);
-    const index = indexTree(designTree(id));
+    const index = indexTree(designTree(proceduralId(id)));
     const light = index.leaves.find((l) => l.material === "red")!;
     const centre = new Box3(new Vector3(...light.min!), new Vector3(...light.max!)).getCenter(new Vector3());
     const ray = new Raycaster(new Vector3(centre.x, centre.y + 50, centre.z), new Vector3(0, -1, 0));
@@ -119,10 +120,10 @@ describe("picking", () => {
   });
 
   it("maps a ray into the podium to a podium leaf", async () => {
-    const id = "sky-glass-office";
+    const id = "proc-building-sky-glass-office";
     const scene = await load(id);
     const parts = makeParts(scene);
-    const index = indexTree(designTree(id));
+    const index = indexTree(designTree(proceduralId(id)));
     // from the side, at 2 m: the dark plinth box of the podium
     const hit = new Raycaster(new Vector3(100, 2, 0.3), new Vector3(-1, 0, 0)).intersectObject(scene, true)[0]!;
     const part = parts.find((p) => p.mesh === hit.object)!;

@@ -65,7 +65,7 @@ The same top-level shape as the webapp's `db/buildings/buildings.meta.json`:
       "group": "skyscraper_c",
       "glb": "sky-glass-office.glb",
       "thumb": "sky-glass-office.png",
-      "defaultScale": 0.5,
+      "defaultScale": 1,
       "license": "CC0",
       "author": "Rail Island",
       "source": "Rail Island"
@@ -88,7 +88,7 @@ Changing a field here is a contract change for that importer.
 
 The five parametric commercial families ([commercial.md](commercial.md)) are
 also in `BUILDINGS` and this file, using `COMMERCIAL_CATALOG`: category
-`Commercial`, group `comm_classic`, scale 1.88 and their declared parameters.
+`Commercial`, group `comm_classic`, scale 1 and their declared parameters.
 One default GLB represents each family; the JS model builds the 600 variants
 per family on demand. These are original models rather than replacements of
 the webapp's `comm-building-a` through `-n` ids.
@@ -98,7 +98,7 @@ the webapp's `comm-building-a` through `-n` ids.
 The village houses ([village.md](village.md)) are buildings of their own
 family: `exportMeta(VILLAGE_HOUSES)` writes them in exactly the
 `skyscrapers.meta.json` shape, under `buildings`, each entry with the fields of
-`VILLAGE_CATALOG` (category `Village`, group `village`, `defaultScale` 1.88) and
+`VILLAGE_CATALOG` (category `Village`, group `village`, `defaultScale` 1) and
 its `params`. In `generate.ts` they are the one family whose `meta` is
 `village`, so they are not among `BUILDINGS`. A separate file lets the game
 import the houses into its village pool without touching the other buildings.
@@ -168,3 +168,11 @@ for scale, emitter, collision and animation migration requirements.
 
 The additional [Commercial street families](commercial-streets.md) also use this
 buildings export. Their legacy inventory is not an active game migration.
+
+## Procedural export contract
+
+All current export IDs use `proc-building-` or `proc-vehicle-`; source/reference
+names in older tables identify the original models. See [legacy-mapping.md](legacy-mapping.md)
+for the authoritative ID, scale and runtime conversion contract. Ground vehicles
+have no exported `defaultScale`; buildings, aircraft and ships use 1 except the
+Eiffel Tower placement exception.

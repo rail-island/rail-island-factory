@@ -1,10 +1,10 @@
 // Commercial plan families. Metres, ground at y=0, street front at +Z.
-// Source inventory and provisional legacy correspondence: docs/models/commercial.md.
+// Source inventory and provisional legacy correspondence: docs/models/commercial-streets.md.
 import { MeshBuilder, rect, type Ring } from "./meshBuilder.ts";
 import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 
 export const COMMERCIAL_CATALOG: CatalogFields = {
-  category: "Commercial", group: "commercial", defaultScale: 1.88,
+  category: "Commercial", group: "commercial", defaultScale: 1,
   license: "CC0", author: "Rail Island", source: "Procedural commercial architecture; Kenney and Quaternius reference silhouettes",
 };
 type Style = "modern" | "balcony" | "annex" | "brick" | "tenement" | "shop" | "barrel" | "terrace" | "gable" | "baroque" | "classical";
@@ -15,8 +15,10 @@ const historic = (s: Style) => ["terrace", "gable", "baroque", "classical"].incl
 function specs(s: Style): ParamSpec[] {
   return [
     option("storeys", "Storeys", s === "shop" ? ["1", "2"] : ["2", "3", "4", "5"], s === "tenement" ? "5" : s === "shop" ? "1" : "3"),
-    option("width", "Facade width", ["narrow", "standard", "wide"], "standard"),
+    option("width", "Facade width", ["narrow", "standard", "wide", ...(["brick", "tenement"].includes(s) ? ["extraWide"] : [])], "standard"),
     option("finish", "Facade finish", ["original", "sand", "sage", "brick"], "original"),
+    ...(["brick", "tenement"].includes(s) ? [option("entrance", "Street entrance", ["level", "stoop", "paired"], "level")] : []),
+    ...(["brick", "shop"].includes(s) ? [option("sign", "Shop sign", ["none", "board"], "none")] : []),
     ...(["shop", "brick", "tenement"].includes(s) ? [option("roof", "Roof form", ["flat", "pitched"], "flat")] : []),
     ...(s === "shop" || s === "modern" ? [option("awning", "Shop canopy", ["green", "ochre", "none"], "green")] : []),
   ];
@@ -80,7 +82,7 @@ function roof(m: MeshBuilder, s: Style, w: number, d: number, y: number) {
 }
 function buildCommercial(s: Style, given?: ParamValues): MeshBuilder {
   const p = resolveParams(specs(s), given);
-  const n = Number(p.storeys), bays = p.width === "narrow" ? 2 : p.width === "wide" ? 5 : 3;
+  const n = Number(p.storeys), bays = p.width === "narrow" ? 2 : p.width === "wide" ? 5 : p.width === "extraWide" ? 8 : 3;
   const w = bays * 2.7, d = historic(s) ? 9 : 8, floor = 3.2, h = n * floor + 0.45;
   const colours: Record<string, string> = { sand: "#d6c8a5", sage: "#748e83", brick: "#975b49", original: historic(s) ? "#c7bba2" : ["modern", "balcony", "annex"].includes(s) ? "#e6e2dd" : "#995e50" };
   const m = new MeshBuilder({ wall: { color: colours[p.finish] }, trim: { color: "#e4dbc6" },
@@ -110,8 +112,12 @@ function buildCommercial(s: Style, given?: ParamValues): MeshBuilder {
         const u = -span / 2 + (i + 0.5) * span / count;
         const front = axis === "z" && sign === 1;
         const yy = 0.45 + f * floor;
-        if (front && f === 0 && (["modern", "shop", "annex", "balcony", "gable"].includes(s) || i === Math.floor(count / 2))) {
+        if (front && f === 0 && (["modern", "shop", "annex", "balcony", "gable"].includes(s) || (p.entrance === "paired" ? i === Math.floor(count / 3) || i === Math.floor(2 * count / 3) : i === Math.floor(count / 2)))) {
           const shop = ["modern", "shop", "annex", "balcony"].includes(s);
+          if (!shop && p.entrance !== "level" && p.entrance !== undefined) {
+            // Three 15 cm risers reach the masonry plinth without scaling the house.
+            for (let step = 0; step < 3; step++) m.box("stone", u, at + 0.9 - step * 0.22, 1.65, 0.44, step * 0.15, (step + 1) * 0.15);
+          }
           panel(m, shop ? "glass" : "door", axis, sign, at, u, yy + 0.05, shop ? 2.15 : 1.2, 2.45, 0.10);
           panel(m, "trim", axis, sign, at, u, yy + 2.52, shop ? 2.35 : 1.5, 0.18, 0.15);
           panel(m, "frame", axis, sign, at, u, yy + 0.12, 0.07, 2.32, 0.17);
@@ -125,6 +131,10 @@ function buildCommercial(s: Style, given?: ParamValues): MeshBuilder {
         }
       }
     }
+  });
+  if (p.sign === "board") m.scope("shop sign", () => {
+    m.box("door", 0, d / 2 + 0.35, Math.min(w - 1, 4.8), 0.16, 3.06, 3.48);
+    m.box("trim", 0, d / 2 + 0.45, Math.min(w - 1.2, 4.6), 0.05, 3.14, 3.4);
   });
   m.scope("roof and equipment", () => roof(m, p.roof === "pitched" ? "terrace" : s, w, d, h));
   if (s === "gable") m.scope("arcaded ground floor", () => {

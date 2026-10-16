@@ -18,6 +18,7 @@
 //
 // Neither carries a timestamp: the build is deterministic and so are these.
 
+import { proceduralId } from "./modelId.ts";
 import { SKYSCRAPER_CATALOG } from "./skyscrapers.ts";
 import { VEHICLE_CATALOG } from "./vehicles.ts";
 import type { CatalogFields, ParamSpec, ProceduralDesign } from "./design.ts";
@@ -25,6 +26,7 @@ import type { VehicleRig } from "./rig.ts";
 
 /** One model as the game's building catalog would hold it. */
 export interface MetaEntry {
+  yaw?: number;
   id: string;
   title: string;
   category: string;
@@ -35,7 +37,7 @@ export interface MetaEntry {
   /** File name within the export's thumbs/ folder. */
   thumb: string;
   /** On-map size multiplier. */
-  defaultScale: number;
+  defaultScale?: number;
   license: string;
   author: string;
   source: string;
@@ -131,13 +133,14 @@ export const REFERENCE_EXTENSIONS = [".bmp", ".gif", ".jpeg", ".jpg", ".png", ".
 /** One design's entry, with the catalog fields of its family (the skyscrapers' by default) and its built rig. */
 export function metaEntry(design: ProceduralDesign, fields: CatalogFields = SKYSCRAPER_CATALOG, rig: VehicleRig | null = null): MetaEntry {
   return {
-    id: design.id,
+    id: proceduralId(design.id),
     title: design.title,
+    ...(fields.yaw !== undefined ? { yaw:fields.yaw } : {}),
     category: fields.category,
     group: fields.group,
-    glb: `${design.id}.glb`,
-    thumb: `${design.id}.png`,
-    defaultScale: fields.defaultScale,
+    glb: `${proceduralId(design.id)}.glb`,
+    thumb: `${proceduralId(design.id)}.png`,
+    ...(["Road vehicles", "Rail vehicles", "Cable car"].includes(fields.category) ? {} : { defaultScale: fields.defaultScale }),
     license: fields.license,
     author: fields.author,
     source: fields.source,

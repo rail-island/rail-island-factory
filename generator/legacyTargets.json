@@ -1,0 +1,3782 @@
+{
+  "aero-a10": {
+    "designId": "veh-aero-a10",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "airbus-a380": {
+    "designId": "veh-airbus-a380",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "baroque-church": {
+    "designId": "bld-baroque-church",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "brandenburg-gate": {
+    "designId": "bld-brandenburg-gate",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "cablecar-cabin": {
+    "designId": "veh-cablecar-cabin",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "chemical-factory": {
+    "designId": "chemical-factory",
+    "params": {
+      "type": "chemical"
+    },
+    "quality": "family"
+  },
+  "church-vrchlabi": {
+    "designId": "bld-church-vrchlabi",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "cruise-ferry": {
+    "designId": "veh-cruise-ferry",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "gondola-cabin": {
+    "designId": "veh-gondola-cabin",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "hydrofoil-ferry": {
+    "designId": "veh-hydrofoil-ferry",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "ind-building-a": {
+    "designId": "ind-building-a",
+    "params": {
+      "size": "extended",
+      "finish": "brick"
+    },
+    "quality": "family"
+  },
+  "ind-building-h": {
+    "designId": "ind-building-h",
+    "params": {
+      "size": "compact",
+      "finish": "blue"
+    },
+    "quality": "family"
+  },
+  "ind-building-k": {
+    "designId": "ind-building-k",
+    "params": {
+      "size": "compact",
+      "finish": "blue"
+    },
+    "quality": "family"
+  },
+  "ind-building-s": {
+    "designId": "ind-building-s",
+    "params": {
+      "size": "extended",
+      "finish": "blue"
+    },
+    "quality": "family"
+  },
+  "ind-chimney-basic": {
+    "designId": "ind-chimney-basic",
+    "params": {
+      "height": "tall",
+      "style": "striped"
+    },
+    "quality": "family"
+  },
+  "ind-detail-tank": {
+    "designId": "ind-detail-tank",
+    "params": {
+      "layout": "horizontal"
+    },
+    "quality": "family"
+  },
+  "industry-factory-a": {
+    "designId": "industry-factory-a",
+    "params": {
+      "size": "compact",
+      "finish": "blue"
+    },
+    "quality": "family"
+  },
+  "industry-oil-pump": {
+    "designId": "industry-oil-pump",
+    "params": {
+      "size": "compact"
+    },
+    "quality": "family"
+  },
+  "industry-power-plant": {
+    "designId": "industry-power-plant",
+    "params": {
+      "type": "thermal"
+    },
+    "quality": "family"
+  },
+  "industry-wind-turbine": {
+    "designId": "industry-wind-turbine",
+    "params": {
+      "size": "compact"
+    },
+    "quality": "family"
+  },
+  "light-jet": {
+    "designId": "veh-light-jet",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "louvre-pyramid": {
+    "designId": "bld-louvre-pyramid",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "notre-dame": {
+    "designId": "bld-notre-dame",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "passenger-ferry": {
+    "designId": "veh-passenger-ferry",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "prague-castle-st-vitus": {
+    "designId": "bld-prague-castle-st-vitus",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "prague-main-station": {
+    "designId": "bld-prague-main-station",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "st-basils-cathedral": {
+    "designId": "bld-st-basils-cathedral",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "st-nicholas-church": {
+    "designId": "bld-st-nicholas-church",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "station-building": {
+    "designId": "bld-station-building",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "station-halt": {
+    "designId": "bld-station-halt",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "suburban-station": {
+    "designId": "bld-suburban-station",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "tower-bell": {
+    "designId": "tower-bell",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "tower-bigben": {
+    "designId": "tower-bigben",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "tower-eiffel": {
+    "designId": "tower-eiffel",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "tower-kenney": {
+    "designId": "tower-kenney",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "tower-radio": {
+    "designId": "tower-radio",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "tower-stone": {
+    "designId": "tower-stone",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "tower-transmission": {
+    "designId": "tower-transmission",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "tower-watch": {
+    "designId": "tower-watch",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "twin-tower-baroque-church": {
+    "designId": "bld-twin-tower-baroque-church",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "white-house": {
+    "designId": "bld-white-house",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-coach-csd-a": {
+    "designId": "veh-csd-classic-green-coach",
+    "params": {
+      "variant": "classA"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-csd-b": {
+    "designId": "veh-csd-classic-green-coach",
+    "params": {
+      "variant": "classB"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-csd-balm": {
+    "designId": "veh-csd-balm",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-coach-csd-bam": {
+    "designId": "veh-csd-bam",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-coach-csd-bdmtee": {
+    "designId": "veh-csd-bdmtee",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-coach-csd-be31": {
+    "designId": "veh-csd-be31",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-coach-csd-bi20": {
+    "designId": "veh-csd-bi20",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-coach-csd-bmo": {
+    "designId": "veh-bmo-double-deck-coach",
+    "params": {
+      "livery": "csd"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-cd-bmo-1": {
+    "designId": "veh-bmo-double-deck-coach",
+    "params": {
+      "livery": "cdBlue"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-cd-bmo-2": {
+    "designId": "veh-bmo-double-deck-coach",
+    "params": {
+      "livery": "cdBlueGrey"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-cd-bmo-3": {
+    "designId": "veh-bmo-double-deck-coach",
+    "params": {
+      "livery": "cdRedDoors"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-csd-dsk": {
+    "designId": "veh-csd-dsk",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-coach-cd-a": {
+    "designId": "veh-cd-green-white-coach",
+    "params": {
+      "variant": "a"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-cd-ab": {
+    "designId": "veh-cd-green-white-coach",
+    "params": {
+      "variant": "ab"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-cd-b": {
+    "designId": "veh-cd-green-white-coach",
+    "params": {
+      "variant": "b"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-cd-bee": {
+    "designId": "veh-cd-green-white-coach",
+    "params": {
+      "variant": "bee"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-cd-beel": {
+    "designId": "veh-cd-green-white-coach",
+    "params": {
+      "variant": "beel"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-cd-bds": {
+    "designId": "veh-cd-green-white-coach",
+    "params": {
+      "variant": "bds"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-cd-ds": {
+    "designId": "veh-cd-green-white-coach",
+    "params": {
+      "variant": "ds"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-cd-bdmeer": {
+    "designId": "veh-cd-green-white-coach",
+    "params": {
+      "variant": "bdmeer"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-cd-bdmtee": {
+    "designId": "veh-cd-green-white-coach",
+    "params": {
+      "variant": "bdmtee"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-cd-bee001": {
+    "designId": "veh-cd-green-white-coach",
+    "params": {
+      "variant": "beeBlue"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-n-nas": {
+    "designId": "veh-nas-flat-wagon",
+    "params": {
+      "cargo": "empty"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-n-nas-2": {
+    "designId": "veh-nas-flat-wagon",
+    "params": {
+      "cargo": "empty"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-n-nas-full-1": {
+    "designId": "veh-nas-flat-wagon",
+    "params": {
+      "cargo": "wood"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-n-nas-full-2": {
+    "designId": "veh-nas-flat-wagon",
+    "params": {
+      "cargo": "tubes"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-n-nas-full-3": {
+    "designId": "veh-nas-flat-wagon",
+    "params": {
+      "cargo": "reels"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-n-ua-empty": {
+    "designId": "veh-ua-open-wagon",
+    "params": {
+      "cargo": "empty"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-n-ua-1": {
+    "designId": "veh-ua-open-wagon",
+    "params": {
+      "cargo": "coal"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-n-ua-2": {
+    "designId": "veh-ua-open-wagon",
+    "params": {
+      "cargo": "wood"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-n-ua-3": {
+    "designId": "veh-ua-open-wagon",
+    "params": {
+      "cargo": "sand"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-n-eas": {
+    "designId": "veh-eas-open-wagon",
+    "params": {
+      "cargo": "empty"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-n-eas-drevo": {
+    "designId": "veh-eas-open-wagon",
+    "params": {
+      "cargo": "wood"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-n-eas-uhlo": {
+    "designId": "veh-eas-open-wagon",
+    "params": {
+      "cargo": "coal"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-n-raj": {
+    "designId": "veh-raj-hopper-wagon",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-truck-n-raj-2": {
+    "designId": "veh-raj-hopper-wagon",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-truck-n-rah-1": {
+    "designId": "veh-rah-tank-wagon",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-truck-n-rah-1-2": {
+    "designId": "veh-rah-tank-wagon",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-truck-n-sqns": {
+    "designId": "veh-sqns-container-wagon",
+    "params": {
+      "cargo": "empty"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-n-sqns-full-1": {
+    "designId": "veh-sqns-container-wagon",
+    "params": {
+      "cargo": "maersk"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-n-pao-full-1": {
+    "designId": "veh-pao-flat-wagon",
+    "params": {
+      "cargo": "tubes"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-n-pao-full-2": {
+    "designId": "veh-pao-flat-wagon",
+    "params": {
+      "cargo": "empty"
+    },
+    "quality": "substitute",
+    "reason": "Transported tram/bus intentionally omitted; use the corresponding empty wagon."
+  },
+  "train-truck-n-habis-tw1": {
+    "designId": "veh-habis-sliding-wall-wagon",
+    "params": {
+      "livery": "tw1"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-n-hadgs": {
+    "designId": "veh-hadgs-hopper-wagon",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-truck-n-faccs": {
+    "designId": "veh-faccs-hopper-wagon",
+    "params": {
+      "livery": "cd"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-n-falls": {
+    "designId": "veh-falls-hopper-wagon",
+    "params": {
+      "livery": "cd"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-n-wap-full-2": {
+    "designId": "veh-wap-hopper-wagon",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-coach-cd-bcc": {
+    "designId": "veh-cd-y-coach",
+    "params": {
+      "variant": "bcc"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-cd-beer": {
+    "designId": "veh-cd-y-coach",
+    "params": {
+      "variant": "beer"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-cd-bnb": {
+    "designId": "veh-cd-y-coach",
+    "params": {
+      "variant": "bnb"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-cd-wrrm": {
+    "designId": "veh-cd-y-coach",
+    "params": {
+      "variant": "wrrm"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-zsr-a": {
+    "designId": "veh-zsr-coach",
+    "params": {
+      "variant": "a"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-zsr-ab": {
+    "designId": "veh-zsr-coach",
+    "params": {
+      "variant": "ab"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-zsr-b": {
+    "designId": "veh-zsr-coach",
+    "params": {
+      "variant": "b"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-zsr-bh": {
+    "designId": "veh-zsr-coach",
+    "params": {
+      "variant": "bh"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-zsr-bds": {
+    "designId": "veh-zsr-coach",
+    "params": {
+      "variant": "bds"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-zsr-bdmeer": {
+    "designId": "veh-zsr-coach",
+    "params": {
+      "variant": "bdmeer"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-zsr-wrrm": {
+    "designId": "veh-zsr-coach",
+    "params": {
+      "variant": "wrrm"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-zsr-apee": {
+    "designId": "veh-zsr-coach",
+    "params": {
+      "variant": "apee"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-cd-ampz": {
+    "designId": "veh-uic-z-coach",
+    "params": {
+      "variant": "firstClass"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-cd-bmz": {
+    "designId": "veh-uic-z-coach",
+    "params": {
+      "variant": "secondClass"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-cd-wrrmz": {
+    "designId": "veh-uic-z-coach",
+    "params": {
+      "variant": "restaurant"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-db-ic-ampz": {
+    "designId": "veh-uic-z-coach",
+    "params": {
+      "variant": "firstClass",
+      "operator": "db"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-db-ic-bmpz": {
+    "designId": "veh-uic-z-coach",
+    "params": {
+      "variant": "secondClass",
+      "operator": "db"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-db-ic-wrmz": {
+    "designId": "veh-uic-z-coach",
+    "params": {
+      "variant": "restaurant",
+      "operator": "db"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-obb-ampz": {
+    "designId": "veh-uic-z-coach",
+    "params": {
+      "variant": "firstClass",
+      "operator": "obb"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-obb-bmpz": {
+    "designId": "veh-uic-z-coach",
+    "params": {
+      "variant": "secondClass",
+      "operator": "obb"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-obb-wrmz": {
+    "designId": "veh-uic-z-coach",
+    "params": {
+      "variant": "restaurant",
+      "operator": "obb"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-db-bnvr": {
+    "designId": "veh-db-n-wagen",
+    "params": {
+      "variant": "bn",
+      "livery": "vr"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-db-abnvr": {
+    "designId": "veh-db-n-wagen",
+    "params": {
+      "variant": "abn",
+      "livery": "vr"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-db-bdnrf": {
+    "designId": "veh-db-n-wagen",
+    "params": {
+      "variant": "bdnrf",
+      "livery": "vr"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-db-ds-re1": {
+    "designId": "veh-db-dosto",
+    "params": {
+      "variant": "firstClass"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-db-ds-re2": {
+    "designId": "veh-db-dosto",
+    "params": {
+      "variant": "secondClass"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-db-ds-re2-s": {
+    "designId": "veh-db-dosto",
+    "params": {
+      "variant": "drivingTrailer"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-dr-sds-b": {
+    "designId": "veh-dr-sbahn-berlin",
+    "params": {
+      "variant": "coach"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-dr-sds-s": {
+    "designId": "veh-dr-sbahn-berlin",
+    "params": {
+      "variant": "drivingTrailer"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-steam-csd-433-0": {
+    "designId": "veh-csd-433-0",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-steam-csd-433-0-2": {
+    "designId": "veh-csd-433-0",
+    "params": {
+      "livery": "redLining"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-steam-csd-456-0": {
+    "designId": "veh-csd-456-0",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-steam-csd-475-179-l": {
+    "designId": "veh-csd-475-1",
+    "params": {
+      "unit": "locomotive"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-steam-csd-475-179-t": {
+    "designId": "veh-csd-475-1",
+    "params": {
+      "unit": "tender"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-steam-csd-477-0": {
+    "designId": "veh-csd-477-0",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-steam-csd-498-1": {
+    "designId": "veh-csd-498-1",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-steam-csd-498-1-t": {
+    "designId": "veh-csd-498-1",
+    "params": {
+      "unit": "tender"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-steam-csd-556-0": {
+    "designId": "veh-csd-556-0",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-steam-csd-556-0-t": {
+    "designId": "veh-csd-556-0",
+    "params": {
+      "unit": "tender"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-steam-csd-636": {
+    "designId": "veh-csd-636",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-steam-tender-csd-636tend": {
+    "designId": "veh-csd-636",
+    "params": {
+      "unit": "tender"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-steam-csd-386": {
+    "designId": "veh-csd-386",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-steam-tender-csd-386tend": {
+    "designId": "veh-csd-386",
+    "params": {
+      "unit": "tender"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-steam-csd-m112": {
+    "designId": "veh-csd-m112",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "tram-tram-ckd-t3": {
+    "designId": "veh-tatra-t3",
+    "params": {
+      "variant": "t3"
+    },
+    "quality": "reproduction"
+  },
+  "tram-tram-ckd-t6": {
+    "designId": "veh-tatra-t6",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "tram-tram-ckd-kt8": {
+    "designId": "veh-tatra-kt8",
+    "params": {
+      "livery": "redWhite"
+    },
+    "quality": "reproduction"
+  },
+  "tram-tram-ckd-kt4": {
+    "designId": "veh-tatra-kt4",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "tram-tram-kvag-gt4": {
+    "designId": "veh-kvag-gt4",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-metro-mmz-m-mmz-81-71l": {
+    "designId": "veh-metro-81-71",
+    "params": {
+      "unit": "headCar"
+    },
+    "quality": "reproduction"
+  },
+  "train-dmu-db-628": {
+    "designId": "veh-db-628",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-dmu-mav-mdmot": {
+    "designId": "veh-mav-mdmot",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-emu-ice-ice-loco": {
+    "designId": "veh-ice-1",
+    "params": {
+      "unit": "powerCar"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-tgv-tgv-loco": {
+    "designId": "veh-tgv",
+    "params": {
+      "livery": "pse",
+      "unit": "powerCar"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-cd-471-cd-471": {
+    "designId": "veh-cd-471",
+    "params": {
+      "variant": "cd471",
+      "unit": "motorCar"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-cd-680-cd-681": {
+    "designId": "veh-cd-680",
+    "params": {
+      "unit": "endCar"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-cd-451-cd-451": {
+    "designId": "veh-cd-451",
+    "params": {
+      "unit": "motorCar"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-cd-460-cd-460": {
+    "designId": "veh-cd-460",
+    "params": {
+      "unit": "motorCar",
+      "livery": "cd"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-cd-470-cd-470": {
+    "designId": "veh-cd-470",
+    "params": {
+      "unit": "motorCar"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-150": {
+    "designId": "veh-cd-150",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-151": {
+    "designId": "veh-cd-150",
+    "params": {
+      "livery": "cd151"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-151-cez": {
+    "designId": "veh-cd-150",
+    "params": {
+      "livery": "cd151Cez"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-zsr-350": {
+    "designId": "veh-cd-150",
+    "params": {
+      "livery": "zsr350"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-163": {
+    "designId": "veh-cd-163",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-162": {
+    "designId": "veh-cd-163",
+    "params": {
+      "livery": "cd162"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-362": {
+    "designId": "veh-cd-163",
+    "params": {
+      "livery": "cd362"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-363": {
+    "designId": "veh-cd-163",
+    "params": {
+      "livery": "cd363"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-230": {
+    "designId": "veh-cd-230",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-240": {
+    "designId": "veh-cd-230",
+    "params": {
+      "livery": "cd240"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-340": {
+    "designId": "veh-cd-230",
+    "params": {
+      "livery": "cd340"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-242": {
+    "designId": "veh-cd-230",
+    "params": {
+      "livery": "cd242"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-263": {
+    "designId": "veh-cd-263",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-372": {
+    "designId": "veh-cd-263",
+    "params": {
+      "livery": "cd372"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-db-180": {
+    "designId": "veh-cd-263",
+    "params": {
+      "livery": "db180"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-db-ag-180": {
+    "designId": "veh-cd-263",
+    "params": {
+      "livery": "dbAg180"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-110": {
+    "designId": "veh-cd-110",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-111": {
+    "designId": "veh-cd-110",
+    "params": {
+      "livery": "cd111"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-210": {
+    "designId": "veh-cd-110",
+    "params": {
+      "livery": "cd210"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-130": {
+    "designId": "veh-cd-130",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-123": {
+    "designId": "veh-cd-130",
+    "params": {
+      "livery": "cd123"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-180": {
+    "designId": "veh-cd-180",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-181": {
+    "designId": "veh-cd-180",
+    "params": {
+      "livery": "cd181"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-181-okd": {
+    "designId": "veh-cd-180",
+    "params": {
+      "livery": "cd181Okd"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-182": {
+    "designId": "veh-cd-180",
+    "params": {
+      "livery": "cd182"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-dnt-184-5": {
+    "designId": "veh-dnt-184-5",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-electric-db-111": {
+    "designId": "veh-db-111",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-electric-db-111-bb": {
+    "designId": "veh-db-111",
+    "params": {
+      "livery": "db111Bb"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-db-111-s": {
+    "designId": "veh-db-111",
+    "params": {
+      "livery": "db111S"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-dr-243": {
+    "designId": "veh-dr-243",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-electric-db-143": {
+    "designId": "veh-dr-243",
+    "params": {
+      "livery": "db143"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-db-143vr": {
+    "designId": "veh-dr-243",
+    "params": {
+      "livery": "db143vr"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-db-112": {
+    "designId": "veh-dr-243",
+    "params": {
+      "livery": "db112"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-diesel-cd-704": {
+    "designId": "veh-cd-704",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-emu-cd-675-cd-675": {
+    "designId": "veh-cd-471",
+    "params": {
+      "variant": "cd675",
+      "unit": "motorCar"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-diesel-cd-750": {
+    "designId": "veh-cd-750",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-diesel-cd-753": {
+    "designId": "veh-cd-750",
+    "params": {
+      "livery": "cd753"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-diesel-cd-754": {
+    "designId": "veh-cd-750",
+    "params": {
+      "livery": "cd754"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-diesel-cd-749": {
+    "designId": "veh-cd-750",
+    "params": {
+      "livery": "cd749"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-diesel-cd-781": {
+    "designId": "veh-cd-781",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-diesel-cd-771": {
+    "designId": "veh-cd-771",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-dmu-cd-854": {
+    "designId": "veh-csd-m296",
+    "params": {
+      "variant": "cd854"
+    },
+    "quality": "reproduction"
+  },
+  "comm-building-a": {
+    "designId": "commercial-modern",
+    "params": {
+      "storeys": "3",
+      "width": "standard",
+      "finish": "original",
+      "awning": "green"
+    },
+    "quality": "family"
+  },
+  "oldtown-gabled": {
+    "designId": "commercial-gable",
+    "params": {
+      "storeys": "3",
+      "width": "standard",
+      "finish": "original"
+    },
+    "quality": "family"
+  },
+  "comm-building-b": {
+    "designId": "commercial-balcony",
+    "params": {
+      "storeys": "3",
+      "width": "standard",
+      "finish": "original"
+    },
+    "quality": "family"
+  },
+  "street-block-balcony": {
+    "designId": "commercial-tenement",
+    "params": {
+      "storeys": "4",
+      "width": "standard",
+      "finish": "original",
+      "roof": "flat",
+      "entrance": "level"
+    },
+    "quality": "family"
+  },
+  "street-house-balcony": {
+    "designId": "commercial-balcony",
+    "params": {
+      "storeys": "3",
+      "width": "standard",
+      "finish": "original"
+    },
+    "quality": "family"
+  },
+  "oldtown-baroque": {
+    "designId": "commercial-baroque",
+    "params": {
+      "storeys": "3",
+      "width": "standard",
+      "finish": "original"
+    },
+    "quality": "family"
+  },
+  "street-house-round": {
+    "designId": "commercial-barrel",
+    "params": {
+      "storeys": "3",
+      "width": "standard",
+      "finish": "original"
+    },
+    "quality": "family"
+  },
+  "street-shop-round": {
+    "designId": "commercial-barrel",
+    "params": {
+      "storeys": "2",
+      "width": "standard",
+      "finish": "original"
+    },
+    "quality": "family"
+  },
+  "street-house-b": {
+    "designId": "commercial-brick",
+    "params": {
+      "storeys": "3",
+      "width": "standard",
+      "finish": "original",
+      "roof": "flat",
+      "entrance": "level",
+      "sign": "none"
+    },
+    "quality": "family"
+  },
+  "oldtown-terrace": {
+    "designId": "commercial-terrace",
+    "params": {
+      "storeys": "3",
+      "width": "standard",
+      "finish": "original"
+    },
+    "quality": "family"
+  },
+  "oldtown-terrace-wide": {
+    "designId": "commercial-terrace",
+    "params": {
+      "storeys": "3",
+      "width": "wide",
+      "finish": "original"
+    },
+    "quality": "family"
+  },
+  "comm-building-c": {
+    "designId": "commercial-modern",
+    "params": {
+      "storeys": "2",
+      "width": "standard",
+      "finish": "original",
+      "awning": "green"
+    },
+    "quality": "family"
+  },
+  "street-house-center": {
+    "designId": "commercial-brick",
+    "params": {
+      "storeys": "3",
+      "width": "standard",
+      "finish": "sand",
+      "roof": "flat",
+      "entrance": "stoop",
+      "sign": "none"
+    },
+    "quality": "family"
+  },
+  "street-tenement-center": {
+    "designId": "commercial-tenement",
+    "params": {
+      "storeys": "5",
+      "width": "standard",
+      "finish": "sage",
+      "roof": "flat",
+      "entrance": "stoop"
+    },
+    "quality": "family"
+  },
+  "oldtown-classical-wide": {
+    "designId": "commercial-classical",
+    "params": {
+      "storeys": "3",
+      "width": "wide",
+      "finish": "original"
+    },
+    "quality": "family"
+  },
+  "street-house-columns": {
+    "designId": "commercial-classical",
+    "params": {
+      "storeys": "3",
+      "width": "standard",
+      "finish": "original"
+    },
+    "quality": "family"
+  },
+  "comm-building-d": {
+    "designId": "commercial-modern",
+    "params": {
+      "storeys": "3",
+      "width": "standard",
+      "finish": "original",
+      "awning": "green"
+    },
+    "quality": "family"
+  },
+  "street-house-double": {
+    "designId": "commercial-brick",
+    "params": {
+      "storeys": "3",
+      "width": "standard",
+      "finish": "sage",
+      "roof": "flat",
+      "entrance": "paired",
+      "sign": "none"
+    },
+    "quality": "family"
+  },
+  "comm-building-e": {
+    "designId": "commercial-annex",
+    "params": {
+      "storeys": "2",
+      "width": "standard",
+      "finish": "original"
+    },
+    "quality": "family"
+  },
+  "comm-building-f": {
+    "designId": "commercial-modern",
+    "params": {
+      "storeys": "4",
+      "width": "standard",
+      "finish": "original",
+      "awning": "green"
+    },
+    "quality": "family"
+  },
+  "comm-building-g": {
+    "designId": "commercial-balcony",
+    "params": {
+      "storeys": "4",
+      "width": "standard",
+      "finish": "original"
+    },
+    "quality": "family"
+  },
+  "oldtown-gabled-wide": {
+    "designId": "commercial-gable",
+    "params": {
+      "storeys": "3",
+      "width": "wide",
+      "finish": "original"
+    },
+    "quality": "family"
+  },
+  "street-shop-gable": {
+    "designId": "commercial-shop",
+    "params": {
+      "storeys": "2",
+      "width": "standard",
+      "finish": "original",
+      "roof": "pitched",
+      "awning": "none",
+      "sign": "none"
+    },
+    "quality": "family"
+  },
+  "street-house-gable": {
+    "designId": "commercial-brick",
+    "params": {
+      "storeys": "3",
+      "width": "standard",
+      "finish": "original",
+      "roof": "pitched",
+      "entrance": "level",
+      "sign": "none"
+    },
+    "quality": "family"
+  },
+  "comm-building-h": {
+    "designId": "commercial-modern",
+    "params": {
+      "storeys": "3",
+      "width": "standard",
+      "finish": "original",
+      "awning": "green"
+    },
+    "quality": "family"
+  },
+  "street-house-annex": {
+    "designId": "commercial-annex",
+    "params": {
+      "storeys": "3",
+      "width": "standard",
+      "finish": "original"
+    },
+    "quality": "family"
+  },
+  "comm-building-i": {
+    "designId": "commercial-modern",
+    "params": {
+      "storeys": "4",
+      "width": "wide",
+      "finish": "original",
+      "awning": "green"
+    },
+    "quality": "family"
+  },
+  "comm-building-j": {
+    "designId": "commercial-balcony",
+    "params": {
+      "storeys": "4",
+      "width": "wide",
+      "finish": "original"
+    },
+    "quality": "family"
+  },
+  "comm-building-k": {
+    "designId": "commercial-modern",
+    "params": {
+      "storeys": "3",
+      "width": "wide",
+      "finish": "original",
+      "awning": "green"
+    },
+    "quality": "family"
+  },
+  "comm-building-l": {
+    "designId": "commercial-modern",
+    "params": {
+      "storeys": "5",
+      "width": "standard",
+      "finish": "original",
+      "awning": "green"
+    },
+    "quality": "family"
+  },
+  "citykit-large-building-1": {
+    "designId": "commercial-balcony",
+    "params": {
+      "storeys": "4",
+      "width": "standard",
+      "finish": "original"
+    },
+    "quality": "family"
+  },
+  "citykit-large-building-2": {
+    "designId": "commercial-modern",
+    "params": {
+      "storeys": "4",
+      "width": "wide",
+      "finish": "original",
+      "awning": "green"
+    },
+    "quality": "family"
+  },
+  "citykit-large-building-3": {
+    "designId": "commercial-modern",
+    "params": {
+      "storeys": "4",
+      "width": "standard",
+      "finish": "original",
+      "awning": "green"
+    },
+    "quality": "family"
+  },
+  "citykit-large-building-4": {
+    "designId": "commercial-modern",
+    "params": {
+      "storeys": "5",
+      "width": "standard",
+      "finish": "original",
+      "awning": "green"
+    },
+    "quality": "family"
+  },
+  "citykit-large-building-5": {
+    "designId": "commercial-modern",
+    "params": {
+      "storeys": "4",
+      "width": "wide",
+      "finish": "original",
+      "awning": "green"
+    },
+    "quality": "family"
+  },
+  "citykit-large-building-6": {
+    "designId": "commercial-annex",
+    "params": {
+      "storeys": "5",
+      "width": "standard",
+      "finish": "original"
+    },
+    "quality": "family"
+  },
+  "citykit-large-building-7": {
+    "designId": "commercial-balcony",
+    "params": {
+      "storeys": "4",
+      "width": "wide",
+      "finish": "original"
+    },
+    "quality": "family"
+  },
+  "comm-building-m": {
+    "designId": "commercial-modern",
+    "params": {
+      "storeys": "5",
+      "width": "standard",
+      "finish": "original",
+      "awning": "green"
+    },
+    "quality": "family"
+  },
+  "street-house": {
+    "designId": "commercial-brick",
+    "params": {
+      "storeys": "3",
+      "width": "standard",
+      "finish": "original",
+      "roof": "flat",
+      "entrance": "stoop",
+      "sign": "none"
+    },
+    "quality": "family"
+  },
+  "street-shop": {
+    "designId": "commercial-shop",
+    "params": {
+      "storeys": "2",
+      "width": "standard",
+      "finish": "original",
+      "roof": "flat",
+      "awning": "none",
+      "sign": "none"
+    },
+    "quality": "family"
+  },
+  "comm-building-n": {
+    "designId": "commercial-annex",
+    "params": {
+      "storeys": "5",
+      "width": "standard",
+      "finish": "original"
+    },
+    "quality": "family"
+  },
+  "oldtown-classical": {
+    "designId": "commercial-classical",
+    "params": {
+      "storeys": "4",
+      "width": "narrow",
+      "finish": "original"
+    },
+    "quality": "family"
+  },
+  "street-tenement-roof": {
+    "designId": "commercial-tenement",
+    "params": {
+      "storeys": "5",
+      "width": "extra-wide",
+      "finish": "original",
+      "roof": "pitched",
+      "entrance": "paired"
+    },
+    "quality": "family"
+  },
+  "street-house-sign": {
+    "designId": "commercial-brick",
+    "params": {
+      "storeys": "3",
+      "width": "standard",
+      "finish": "sand",
+      "roof": "flat",
+      "entrance": "level",
+      "sign": "board"
+    },
+    "quality": "family"
+  },
+  "street-shop-sign": {
+    "designId": "commercial-shop",
+    "params": {
+      "storeys": "2",
+      "width": "standard",
+      "finish": "sand",
+      "roof": "flat",
+      "awning": "none",
+      "sign": "board"
+    },
+    "quality": "family"
+  },
+  "street-block-slim": {
+    "designId": "commercial-brick",
+    "params": {
+      "storeys": "4",
+      "width": "narrow",
+      "finish": "sand",
+      "roof": "flat",
+      "entrance": "level",
+      "sign": "none"
+    },
+    "quality": "family"
+  },
+  "street-house-slim": {
+    "designId": "commercial-brick",
+    "params": {
+      "storeys": "3",
+      "width": "narrow",
+      "finish": "sand",
+      "roof": "flat",
+      "entrance": "level",
+      "sign": "none"
+    },
+    "quality": "family"
+  },
+  "citykit-small-building-1": {
+    "designId": "commercial-modern",
+    "params": {
+      "storeys": "3",
+      "width": "standard",
+      "finish": "original",
+      "awning": "green"
+    },
+    "quality": "family"
+  },
+  "citykit-small-building-2": {
+    "designId": "commercial-modern",
+    "params": {
+      "storeys": "3",
+      "width": "standard",
+      "finish": "original",
+      "awning": "green"
+    },
+    "quality": "family"
+  },
+  "citykit-small-building-3": {
+    "designId": "commercial-modern",
+    "params": {
+      "storeys": "2",
+      "width": "standard",
+      "finish": "original",
+      "awning": "green"
+    },
+    "quality": "family"
+  },
+  "citykit-small-building-4": {
+    "designId": "commercial-modern",
+    "params": {
+      "storeys": "3",
+      "width": "standard",
+      "finish": "original",
+      "awning": "green"
+    },
+    "quality": "family"
+  },
+  "citykit-small-building-5": {
+    "designId": "commercial-annex",
+    "params": {
+      "storeys": "2",
+      "width": "standard",
+      "finish": "original"
+    },
+    "quality": "family"
+  },
+  "citykit-small-building-6": {
+    "designId": "commercial-modern",
+    "params": {
+      "storeys": "3",
+      "width": "standard",
+      "finish": "original",
+      "awning": "green"
+    },
+    "quality": "family"
+  },
+  "street-block-small": {
+    "designId": "commercial-brick",
+    "params": {
+      "storeys": "4",
+      "width": "standard",
+      "finish": "sand",
+      "roof": "flat",
+      "entrance": "level",
+      "sign": "none"
+    },
+    "quality": "family"
+  },
+  "street-house-stairs": {
+    "designId": "commercial-brick",
+    "params": {
+      "storeys": "3",
+      "width": "standard",
+      "finish": "sand",
+      "roof": "flat",
+      "entrance": "stoop",
+      "sign": "none"
+    },
+    "quality": "family"
+  },
+  "street-tenement": {
+    "designId": "commercial-tenement",
+    "params": {
+      "storeys": "5",
+      "width": "standard",
+      "finish": "original",
+      "roof": "flat",
+      "entrance": "stoop"
+    },
+    "quality": "family"
+  },
+  "street-house-wide-doors": {
+    "designId": "commercial-brick",
+    "params": {
+      "storeys": "3",
+      "width": "extra-wide",
+      "finish": "original",
+      "roof": "flat",
+      "entrance": "paired",
+      "sign": "none"
+    },
+    "quality": "family"
+  },
+  "street-house-wide": {
+    "designId": "commercial-brick",
+    "params": {
+      "storeys": "3",
+      "width": "wide",
+      "finish": "sage",
+      "roof": "flat",
+      "entrance": "level",
+      "sign": "none"
+    },
+    "quality": "family"
+  },
+  "street-tenement-wide": {
+    "designId": "commercial-tenement",
+    "params": {
+      "storeys": "5",
+      "width": "extra-wide",
+      "finish": "original",
+      "roof": "flat",
+      "entrance": "paired"
+    },
+    "quality": "family"
+  },
+  "ind-chimney-large": {
+    "designId": "ind-chimney-basic",
+    "params": {
+      "height": "short",
+      "style": "steel"
+    },
+    "quality": "family"
+  },
+  "ind-chimney-medium": {
+    "designId": "ind-chimney-basic",
+    "params": {
+      "height": "medium",
+      "style": "striped"
+    },
+    "quality": "family"
+  },
+  "ind-chimney-small": {
+    "designId": "ind-chimney-basic",
+    "params": {
+      "height": "short",
+      "style": "steel"
+    },
+    "quality": "family"
+  },
+  "coal-plant": {
+    "designId": "industry-power-plant",
+    "params": {
+      "type": "coal"
+    },
+    "quality": "family"
+  },
+  "ind-building-b": {
+    "designId": "ind-building-a",
+    "params": {
+      "size": "extended",
+      "finish": "brick"
+    },
+    "quality": "family"
+  },
+  "ind-building-c": {
+    "designId": "ind-building-s",
+    "params": {
+      "size": "compact",
+      "finish": "blue"
+    },
+    "quality": "family"
+  },
+  "ind-building-d": {
+    "designId": "ind-building-a",
+    "params": {
+      "size": "compact",
+      "finish": "brick"
+    },
+    "quality": "family"
+  },
+  "ind-building-e": {
+    "designId": "ind-building-s",
+    "params": {
+      "size": "compact",
+      "finish": "blue"
+    },
+    "quality": "family"
+  },
+  "ind-building-f": {
+    "designId": "ind-building-a",
+    "params": {
+      "size": "extended",
+      "finish": "brick"
+    },
+    "quality": "family"
+  },
+  "ind-building-g": {
+    "designId": "ind-building-a",
+    "params": {
+      "size": "compact",
+      "finish": "brick"
+    },
+    "quality": "family"
+  },
+  "ind-building-i": {
+    "designId": "ind-building-h",
+    "params": {
+      "size": "compact",
+      "finish": "blue"
+    },
+    "quality": "family"
+  },
+  "ind-building-j": {
+    "designId": "ind-building-h",
+    "params": {
+      "size": "compact",
+      "finish": "blue"
+    },
+    "quality": "family"
+  },
+  "ind-building-l": {
+    "designId": "ind-building-a",
+    "params": {
+      "size": "extended",
+      "finish": "brick"
+    },
+    "quality": "family"
+  },
+  "ind-building-m": {
+    "designId": "ind-building-k",
+    "params": {
+      "size": "compact",
+      "finish": "blue"
+    },
+    "quality": "family"
+  },
+  "ind-building-n": {
+    "designId": "ind-building-k",
+    "params": {
+      "size": "compact",
+      "finish": "blue"
+    },
+    "quality": "family"
+  },
+  "ind-building-o": {
+    "designId": "ind-building-a",
+    "params": {
+      "size": "compact",
+      "finish": "brick"
+    },
+    "quality": "family"
+  },
+  "ind-building-p": {
+    "designId": "ind-building-s",
+    "params": {
+      "size": "extended",
+      "finish": "blue"
+    },
+    "quality": "family"
+  },
+  "ind-building-q": {
+    "designId": "ind-building-s",
+    "params": {
+      "size": "extended",
+      "finish": "blue"
+    },
+    "quality": "family"
+  },
+  "ind-building-r": {
+    "designId": "ind-building-s",
+    "params": {
+      "size": "extended",
+      "finish": "blue"
+    },
+    "quality": "family"
+  },
+  "ind-building-t": {
+    "designId": "ind-building-s",
+    "params": {
+      "size": "compact",
+      "finish": "blue"
+    },
+    "quality": "family"
+  },
+  "industry-factory-b": {
+    "designId": "industry-factory-a",
+    "params": {
+      "size": "extended",
+      "finish": "cream"
+    },
+    "quality": "family"
+  },
+  "industry-factory-c": {
+    "designId": "industry-factory-a",
+    "params": {
+      "size": "extended",
+      "finish": "brick"
+    },
+    "quality": "family"
+  },
+  "nuclear-plant": {
+    "designId": "industry-power-plant",
+    "params": {
+      "type": "nuclear"
+    },
+    "quality": "family"
+  },
+  "oil-refinery": {
+    "designId": "chemical-factory",
+    "params": {
+      "type": "refinery"
+    },
+    "quality": "family"
+  },
+  "moto-truck-american-semi": {
+    "designId": "veh-american-truck",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "moto-truck-cistern-semi": {
+    "designId": "veh-cistern-semi-truck",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "moto-truck-mixer": {
+    "designId": "veh-mixer-truck",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "moto-truck-reefer-semi": {
+    "designId": "veh-reefer-semi-truck",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "moto-bus-1": {
+    "designId": "veh-bus-1",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "moto-bus-karrencity12m": {
+    "designId": "veh-karosa-renault-citybus-12m",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "moto-bus-karrencity18m": {
+    "designId": "veh-karosa-renault-citybus-18m",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "moto-bus-mb-citaro": {
+    "designId": "veh-mb-citaro",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "moto-bus-mb-citarob": {
+    "designId": "veh-mb-citaro-blue",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "moto-bus-mb-o345": {
+    "designId": "veh-mb-o345-g",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "moto-solaris-urbino-15": {
+    "designId": "veh-solaris-urbino-15",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "cottage-creativetrio": {
+    "designId": "village-timber-cottage",
+    "params": {},
+    "quality": "family"
+  },
+  "cottage-quaternius-a": {
+    "designId": "village-timber-cottage",
+    "params": {},
+    "quality": "family"
+  },
+  "cottage-quaternius-b": {
+    "designId": "village-timber-house",
+    "params": {},
+    "quality": "family"
+  },
+  "cottage-quaternius-c": {
+    "designId": "village-timber-house",
+    "params": {},
+    "quality": "family"
+  },
+  "fountain-classical": {
+    "designId": "bld-fountain-classical",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "fountain-modern": {
+    "designId": "bld-fountain-modern",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "fountain-obelisk": {
+    "designId": "bld-fountain-obelisk",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "moto-bus-kar-b731": {
+    "designId": "veh-karosa-short",
+    "params": {
+      "variant": "b731"
+    },
+    "quality": "reproduction"
+  },
+  "moto-bus-kar-b732": {
+    "designId": "veh-karosa-short",
+    "params": {
+      "variant": "b732"
+    },
+    "quality": "reproduction"
+  },
+  "moto-bus-kar-b741": {
+    "designId": "veh-karosa-long",
+    "params": {
+      "variant": "b741"
+    },
+    "quality": "reproduction"
+  },
+  "moto-bus-kar-b931": {
+    "designId": "veh-karosa-short",
+    "params": {
+      "variant": "b931"
+    },
+    "quality": "reproduction"
+  },
+  "moto-bus-kar-b931e": {
+    "designId": "veh-karosa-short",
+    "params": {
+      "variant": "b931e"
+    },
+    "quality": "reproduction"
+  },
+  "moto-bus-kar-b941": {
+    "designId": "veh-karosa-long",
+    "params": {
+      "variant": "b941"
+    },
+    "quality": "reproduction"
+  },
+  "moto-bus-kar-b941e": {
+    "designId": "veh-karosa-long",
+    "params": {
+      "variant": "b941e"
+    },
+    "quality": "reproduction"
+  },
+  "moto-bus-kar-b951e": {
+    "designId": "veh-karosa-short",
+    "params": {
+      "variant": "b951e"
+    },
+    "quality": "reproduction"
+  },
+  "moto-bus-kar-b961": {
+    "designId": "veh-karosa-long",
+    "params": {
+      "variant": "b961"
+    },
+    "quality": "reproduction"
+  },
+  "moto-bus-kar-c734-1": {
+    "designId": "veh-karosa-short",
+    "params": {
+      "variant": "c734"
+    },
+    "quality": "reproduction"
+  },
+  "moto-bus-kar-lc735-1": {
+    "designId": "veh-karosa-short",
+    "params": {
+      "variant": "lc735"
+    },
+    "quality": "reproduction"
+  },
+  "village-building-type-a": {
+    "designId": "village-cottage",
+    "params": {
+      "storeys": "one"
+    },
+    "quality": "family"
+  },
+  "village-building-type-b": {
+    "designId": "village-cottage",
+    "params": {
+      "storeys": "two"
+    },
+    "quality": "family"
+  },
+  "village-building-type-c": {
+    "designId": "village-cottage",
+    "params": {
+      "storeys": "two"
+    },
+    "quality": "family"
+  },
+  "village-building-type-d": {
+    "designId": "village-cottage",
+    "params": {
+      "storeys": "two"
+    },
+    "quality": "family"
+  },
+  "village-building-type-e": {
+    "designId": "village-cottage",
+    "params": {
+      "storeys": "two"
+    },
+    "quality": "family"
+  },
+  "village-building-type-f": {
+    "designId": "village-l-house",
+    "params": {
+      "storeys": "two"
+    },
+    "quality": "family"
+  },
+  "village-building-type-g": {
+    "designId": "village-cottage",
+    "params": {
+      "storeys": "one"
+    },
+    "quality": "family"
+  },
+  "village-building-type-h": {
+    "designId": "village-cottage",
+    "params": {
+      "storeys": "one"
+    },
+    "quality": "family"
+  },
+  "village-building-type-i": {
+    "designId": "village-cottage",
+    "params": {
+      "storeys": "one"
+    },
+    "quality": "family"
+  },
+  "village-building-type-j": {
+    "designId": "village-cottage",
+    "params": {
+      "storeys": "one"
+    },
+    "quality": "family"
+  },
+  "village-building-type-k": {
+    "designId": "village-narrow-house",
+    "params": {
+      "storeys": "two"
+    },
+    "quality": "family"
+  },
+  "village-building-type-l": {
+    "designId": "village-narrow-house",
+    "params": {
+      "storeys": "two"
+    },
+    "quality": "family"
+  },
+  "village-building-type-m": {
+    "designId": "village-l-house",
+    "params": {
+      "storeys": "one"
+    },
+    "quality": "family"
+  },
+  "village-building-type-n": {
+    "designId": "village-l-house",
+    "params": {
+      "storeys": "two"
+    },
+    "quality": "family"
+  },
+  "village-building-type-o": {
+    "designId": "village-cottage",
+    "params": {
+      "storeys": "two"
+    },
+    "quality": "family"
+  },
+  "village-building-type-p": {
+    "designId": "village-cottage",
+    "params": {
+      "storeys": "one"
+    },
+    "quality": "family"
+  },
+  "village-building-type-q": {
+    "designId": "village-cottage",
+    "params": {
+      "storeys": "one"
+    },
+    "quality": "family"
+  },
+  "village-building-type-r": {
+    "designId": "village-narrow-house",
+    "params": {
+      "storeys": "two"
+    },
+    "quality": "family"
+  },
+  "village-building-type-s": {
+    "designId": "village-cottage",
+    "params": {
+      "storeys": "two"
+    },
+    "quality": "family"
+  },
+  "village-building-type-t": {
+    "designId": "village-l-house",
+    "params": {
+      "storeys": "two"
+    },
+    "quality": "family"
+  },
+  "village-building-type-u": {
+    "designId": "village-cottage",
+    "params": {
+      "storeys": "two"
+    },
+    "quality": "family"
+  },
+  "train-loco-electric-zsr-350-001": {
+    "designId": "veh-cd-150",
+    "params": {
+      "livery": "zsr350No001"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-zsr-350-002": {
+    "designId": "veh-cd-150",
+    "params": {
+      "livery": "zsr350No002"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-zsr-350-003": {
+    "designId": "veh-cd-150",
+    "params": {
+      "livery": "zsr350No003"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-zsr-350-004": {
+    "designId": "veh-cd-150",
+    "params": {
+      "livery": "zsr350No004"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-162-022": {
+    "designId": "veh-cd-163",
+    "params": {
+      "livery": "cd162No022"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-163-022": {
+    "designId": "veh-cd-163",
+    "params": {
+      "livery": "cd163No022"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-163-021": {
+    "designId": "veh-cd-163",
+    "params": {
+      "livery": "cd163No021"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-362-054": {
+    "designId": "veh-cd-163",
+    "params": {
+      "livery": "cd362No054"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-363-044": {
+    "designId": "veh-cd-163",
+    "params": {
+      "livery": "cd363No044"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-363-037": {
+    "designId": "veh-cd-163",
+    "params": {
+      "livery": "cd363No037"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-363-009": {
+    "designId": "veh-cd-163",
+    "params": {
+      "livery": "cd363No009"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-240-047": {
+    "designId": "veh-cd-230",
+    "params": {
+      "livery": "cd240No047"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-263-015": {
+    "designId": "veh-cd-263",
+    "params": {
+      "livery": "cd263No015"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-371-002": {
+    "designId": "veh-cd-263",
+    "params": {
+      "livery": "cd371No002"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-371-005": {
+    "designId": "veh-cd-263",
+    "params": {
+      "livery": "cd371No005"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-dnt-184-5-1": {
+    "designId": "veh-dnt-184-5",
+    "params": {
+      "livery": "dnt1845No1"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-dnt-184-5-2": {
+    "designId": "veh-dnt-184-5",
+    "params": {
+      "livery": "dnt1845No2"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-diesel-cd-750-308": {
+    "designId": "veh-cd-750",
+    "params": {
+      "livery": "cd750No308"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-diesel-cd-754-013": {
+    "designId": "veh-cd-750",
+    "params": {
+      "livery": "cd754No013"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-diesel-cd-781-462": {
+    "designId": "veh-cd-781",
+    "params": {
+      "livery": "cd781No462"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-diesel-cd-771-235": {
+    "designId": "veh-cd-771",
+    "params": {
+      "livery": "cd771No235"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-diesel-cd-771-421": {
+    "designId": "veh-cd-771",
+    "params": {
+      "livery": "cd771No421"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-db-abnvriv": {
+    "designId": "veh-db-n-wagen",
+    "params": {
+      "variant": "abn",
+      "livery": "iv"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-db-bdnrfiv": {
+    "designId": "veh-db-n-wagen",
+    "params": {
+      "variant": "bdnrf",
+      "livery": "iv"
+    },
+    "quality": "reproduction"
+  },
+  "train-coach-db-bnvriv": {
+    "designId": "veh-db-n-wagen",
+    "params": {
+      "variant": "bn",
+      "livery": "iv"
+    },
+    "quality": "reproduction"
+  },
+  "train-dmu-812-cd-812-613": {
+    "designId": "veh-cd-810",
+    "params": {
+      "variant": "cd812"
+    },
+    "quality": "reproduction"
+  },
+  "train-dmu-812-cd-912-001": {
+    "designId": "veh-cd-810",
+    "params": {
+      "variant": "cd912"
+    },
+    "quality": "reproduction"
+  },
+  "train-dmu-843-cd-943": {
+    "designId": "veh-cd-843",
+    "params": {
+      "unit": "drivingTrailer"
+    },
+    "quality": "reproduction"
+  },
+  "train-dmu-843-cd-btn753-043": {
+    "designId": "veh-cd-843",
+    "params": {
+      "unit": "trailer"
+    },
+    "quality": "reproduction"
+  },
+  "train-dmu-cd-810-1": {
+    "designId": "veh-cd-810",
+    "params": {
+      "livery": "red"
+    },
+    "quality": "reproduction"
+  },
+  "train-dmu-cd-810-2": {
+    "designId": "veh-cd-810",
+    "params": {
+      "livery": "yellowBand"
+    },
+    "quality": "reproduction"
+  },
+  "train-dmu-cd-810-3": {
+    "designId": "veh-cd-810",
+    "params": {
+      "livery": "blueWhite"
+    },
+    "quality": "reproduction"
+  },
+  "train-dmu-cd-810-4": {
+    "designId": "veh-cd-810",
+    "params": {
+      "livery": "ivoryBand"
+    },
+    "quality": "reproduction"
+  },
+  "train-dmu-cd-843": {
+    "designId": "veh-cd-843",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-dmu-csd-853": {
+    "designId": "veh-csd-m296",
+    "params": {
+      "variant": "cd853"
+    },
+    "quality": "reproduction"
+  },
+  "train-dmu-csd-m240": {
+    "designId": "veh-csd-m240",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-dmu-csd-m296": {
+    "designId": "veh-csd-m296",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-dmu-db-628vr": {
+    "designId": "veh-db-628",
+    "params": {
+      "livery": "red"
+    },
+    "quality": "reproduction"
+  },
+  "train-dmu-m131-csd-m031": {
+    "designId": "veh-csd-m131",
+    "params": {
+      "unit": "trailer"
+    },
+    "quality": "reproduction"
+  },
+  "train-dmu-m131-csd-m131": {
+    "designId": "veh-csd-m131",
+    "params": {
+      "unit": "motorCar"
+    },
+    "quality": "reproduction"
+  },
+  "train-dmu-mav-ax": {
+    "designId": "veh-mav-mdmot",
+    "params": {
+      "unit": "trailerAx"
+    },
+    "quality": "reproduction"
+  },
+  "train-dmu-mav-btx": {
+    "designId": "veh-mav-mdmot",
+    "params": {
+      "unit": "drivingTrailer"
+    },
+    "quality": "reproduction"
+  },
+  "train-dmu-mav-bx": {
+    "designId": "veh-mav-mdmot",
+    "params": {
+      "unit": "trailerBx"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-cd-451-cd-051": {
+    "designId": "veh-cd-451",
+    "params": {
+      "unit": "trailer"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-cd-460-cd-060": {
+    "designId": "veh-cd-460",
+    "params": {
+      "unit": "trailer",
+      "livery": "cd"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-cd-460-cd-460-003-4": {
+    "designId": "veh-cd-460",
+    "params": {
+      "unit": "motorCar",
+      "livery": "cd003"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-cd-460-cd-460-007-4": {
+    "designId": "veh-cd-460",
+    "params": {
+      "unit": "motorCar",
+      "livery": "cd007"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-cd-470-cd-070": {
+    "designId": "veh-cd-470",
+    "params": {
+      "unit": "trailer"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-cd-471-cd-071": {
+    "designId": "veh-cd-471",
+    "params": {
+      "variant": "cd471",
+      "unit": "trailer"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-cd-471-cd-971": {
+    "designId": "veh-cd-471",
+    "params": {
+      "variant": "cd471",
+      "unit": "drivingTrailer"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-cd-675-cd-075": {
+    "designId": "veh-cd-471",
+    "params": {
+      "variant": "cd675",
+      "unit": "trailer"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-cd-675-cd-975": {
+    "designId": "veh-cd-471",
+    "params": {
+      "variant": "cd675",
+      "unit": "drivingTrailer"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-cd-680-cd-683": {
+    "designId": "veh-cd-680",
+    "params": {
+      "unit": "car683"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-cd-680-cd-685": {
+    "designId": "veh-cd-680",
+    "params": {
+      "unit": "car685"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-cd-680-cd-686": {
+    "designId": "veh-cd-680",
+    "params": {
+      "unit": "car686"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-csd-460-csd-060-045": {
+    "designId": "veh-cd-460",
+    "params": {
+      "unit": "trailer",
+      "livery": "csd"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-csd-460-csd-460-045": {
+    "designId": "veh-cd-460",
+    "params": {
+      "unit": "motorCar",
+      "livery": "csd"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-csd-460-csd-460-052": {
+    "designId": "veh-cd-460",
+    "params": {
+      "unit": "motorCar",
+      "livery": "csd"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-ice-ice-car": {
+    "designId": "veh-ice-1",
+    "params": {
+      "unit": "coach"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-ice-ice-restaurant": {
+    "designId": "veh-ice-1",
+    "params": {
+      "unit": "restaurant"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-tgv-tgv-at-ch1": {
+    "designId": "veh-tgv",
+    "params": {
+      "livery": "atlantique",
+      "unit": "endCoach"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-tgv-tgv-at-ch2": {
+    "designId": "veh-tgv",
+    "params": {
+      "livery": "atlantique",
+      "unit": "coach"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-tgv-tgv-at-loco": {
+    "designId": "veh-tgv",
+    "params": {
+      "livery": "atlantique",
+      "unit": "powerCar"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-tgv-tgv-vag-1": {
+    "designId": "veh-tgv",
+    "params": {
+      "livery": "pse",
+      "unit": "endCoach"
+    },
+    "quality": "reproduction"
+  },
+  "train-emu-tgv-tgv-vag-2": {
+    "designId": "veh-tgv",
+    "params": {
+      "livery": "pse",
+      "unit": "coach"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-diesel-cd-710-620-6": {
+    "designId": "veh-cd-710",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-diesel-cd-714": {
+    "designId": "veh-cd-714",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-diesel-cd-743-002": {
+    "designId": "veh-cd-742",
+    "params": {
+      "variant": "cd743"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-diesel-csd-t-679": {
+    "designId": "veh-csd-t679-0",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-diesel-csd-t238-0": {
+    "designId": "veh-cd-704",
+    "params": {
+      "livery": "t2380"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-diesel-csd-t499": {
+    "designId": "veh-csd-t499",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-diesel-db-212": {
+    "designId": "veh-db-212",
+    "params": {
+      "livery": "oldRed"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-diesel-db-212bb": {
+    "designId": "veh-db-212",
+    "params": {
+      "livery": "oceanBlue"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-diesel-db-212nr": {
+    "designId": "veh-db-212",
+    "params": {
+      "livery": "trafficRed"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-diesel-viamont-740-627": {
+    "designId": "veh-cd-742",
+    "params": {
+      "variant": "viamont740"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-diesel-viamont-742-507": {
+    "designId": "veh-cd-742",
+    "params": {
+      "variant": "viamont742"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-110-046-0": {
+    "designId": "veh-cd-110",
+    "params": {
+      "livery": "cd110"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-123-019-2": {
+    "designId": "veh-cd-130",
+    "params": {
+      "livery": "cd123No019"
+    },
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-140": {
+    "designId": "veh-cd-140",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-140-040": {
+    "designId": "veh-cd-140",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-electric-cd-169": {
+    "designId": "veh-cd-169",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-electric-obb-1012": {
+    "designId": "veh-obb-1012",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-electric-obb-1040": {
+    "designId": "veh-obb-1040",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-muv-muv-69": {
+    "designId": "veh-muv-69",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-loco-steam-csd-433": {
+    "designId": "veh-csd-433-0",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-metro-mmz-m-mmz-81-71v": {
+    "designId": "veh-metro-81-71",
+    "params": {
+      "unit": "middleCar"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-n-habis-tw2": {
+    "designId": "veh-habis-sliding-wall-wagon",
+    "params": {
+      "livery": "tw2"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-sd-falls": {
+    "designId": "veh-falls-hopper-wagon",
+    "params": {
+      "livery": "sd"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-viamont-faccs": {
+    "designId": "veh-faccs-hopper-wagon",
+    "params": {
+      "livery": "viamont"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-viamont-falls": {
+    "designId": "veh-falls-hopper-wagon",
+    "params": {
+      "livery": "viamont"
+    },
+    "quality": "reproduction"
+  },
+  "tram-tram-ckd-kt8-2": {
+    "designId": "veh-tatra-kt8",
+    "params": {
+      "livery": "red"
+    },
+    "quality": "reproduction"
+  },
+  "tram-tram-ckd-kt8m": {
+    "designId": "veh-tatra-kt8",
+    "params": {
+      "livery": "modern"
+    },
+    "quality": "reproduction"
+  },
+  "tram-tram-ckd-t3m": {
+    "designId": "veh-tatra-t3",
+    "params": {
+      "variant": "t3m"
+    },
+    "quality": "reproduction"
+  },
+  "tram-tram-ckd-t3x": {
+    "designId": "veh-tatra-t3",
+    "params": {
+      "variant": "t3prototype"
+    },
+    "quality": "reproduction"
+  },
+  "citykit-low-building-1": {
+    "designId": "sky-glass-office",
+    "params": {
+      "size": "lowrise"
+    },
+    "quality": "substitute",
+    "reason": "Intentionally omitted simple commercial model."
+  },
+  "citykit-low-building-2": {
+    "designId": "sky-glass-office",
+    "params": {
+      "size": "lowrise"
+    },
+    "quality": "substitute",
+    "reason": "Intentionally omitted simple commercial model."
+  },
+  "citykit-low-building-3": {
+    "designId": "sky-glass-office",
+    "params": {
+      "size": "lowrise"
+    },
+    "quality": "substitute",
+    "reason": "Intentionally omitted simple commercial model."
+  },
+  "citykit-low-building-4": {
+    "designId": "sky-glass-office",
+    "params": {
+      "size": "lowrise"
+    },
+    "quality": "substitute",
+    "reason": "Intentionally omitted simple commercial model."
+  },
+  "citykit-low-building-5": {
+    "designId": "sky-glass-office",
+    "params": {
+      "size": "lowrise"
+    },
+    "quality": "substitute",
+    "reason": "Intentionally omitted simple commercial model."
+  },
+  "citykit-low-building-6": {
+    "designId": "sky-glass-office",
+    "params": {
+      "size": "lowrise"
+    },
+    "quality": "substitute",
+    "reason": "Intentionally omitted simple commercial model."
+  },
+  "citykit-low-building-7": {
+    "designId": "sky-glass-office",
+    "params": {
+      "size": "lowrise"
+    },
+    "quality": "substitute",
+    "reason": "Intentionally omitted simple commercial model."
+  },
+  "citykit-low-building-8": {
+    "designId": "sky-glass-office",
+    "params": {
+      "size": "lowrise"
+    },
+    "quality": "substitute",
+    "reason": "Intentionally omitted simple commercial model."
+  },
+  "citykit-low-building-9": {
+    "designId": "sky-glass-office",
+    "params": {
+      "size": "lowrise"
+    },
+    "quality": "substitute",
+    "reason": "Intentionally omitted simple commercial model."
+  },
+  "citykit-low-wide-1": {
+    "designId": "sky-glass-office",
+    "params": {
+      "size": "lowrise"
+    },
+    "quality": "substitute",
+    "reason": "Intentionally omitted simple commercial model."
+  },
+  "citykit-low-wide-2": {
+    "designId": "sky-glass-office",
+    "params": {
+      "size": "lowrise"
+    },
+    "quality": "substitute",
+    "reason": "Intentionally omitted simple commercial model."
+  },
+  "citykit-sign-hospital-1": {
+    "designId": "sky-glass-office",
+    "params": {
+      "size": "lowrise"
+    },
+    "quality": "substitute",
+    "reason": "Intentionally omitted simple commercial model."
+  },
+  "citykit-skyscraper-1": {
+    "designId": "sky-glass-office",
+    "params": {
+      "size": "lowrise"
+    },
+    "quality": "substitute",
+    "reason": "Intentionally omitted simple commercial model."
+  },
+  "citykit-skyscraper-2": {
+    "designId": "sky-glass-office",
+    "params": {
+      "size": "lowrise"
+    },
+    "quality": "substitute",
+    "reason": "Intentionally omitted simple commercial model."
+  },
+  "citykit-skyscraper-3": {
+    "designId": "sky-glass-office",
+    "params": {
+      "size": "lowrise"
+    },
+    "quality": "substitute",
+    "reason": "Intentionally omitted simple commercial model."
+  },
+  "citykit-skyscraper-4": {
+    "designId": "sky-glass-office",
+    "params": {
+      "size": "lowrise"
+    },
+    "quality": "substitute",
+    "reason": "Intentionally omitted simple commercial model."
+  },
+  "citykit-skyscraper-5": {
+    "designId": "sky-glass-office",
+    "params": {
+      "size": "lowrise"
+    },
+    "quality": "substitute",
+    "reason": "Intentionally omitted simple commercial model."
+  },
+  "citykit-skyscraper-6": {
+    "designId": "sky-glass-office",
+    "params": {
+      "size": "lowrise"
+    },
+    "quality": "substitute",
+    "reason": "Intentionally omitted simple commercial model."
+  },
+  "comm-building-skyscraper-a": {
+    "designId": "sky-glass-office",
+    "params": {
+      "size": "lowrise"
+    },
+    "quality": "substitute",
+    "reason": "Intentionally omitted simple commercial model."
+  },
+  "comm-building-skyscraper-b": {
+    "designId": "sky-glass-office",
+    "params": {
+      "size": "lowrise"
+    },
+    "quality": "substitute",
+    "reason": "Intentionally omitted simple commercial model."
+  },
+  "comm-building-skyscraper-c": {
+    "designId": "sky-glass-office",
+    "params": {
+      "size": "lowrise"
+    },
+    "quality": "substitute",
+    "reason": "Intentionally omitted simple commercial model."
+  },
+  "comm-building-skyscraper-d": {
+    "designId": "sky-glass-office",
+    "params": {
+      "size": "lowrise"
+    },
+    "quality": "substitute",
+    "reason": "Intentionally omitted simple commercial model."
+  },
+  "comm-building-skyscraper-e": {
+    "designId": "sky-glass-office",
+    "params": {
+      "size": "lowrise"
+    },
+    "quality": "substitute",
+    "reason": "Intentionally omitted simple commercial model."
+  },
+  "hist-cathedral": {
+    "designId": "bld-notre-dame",
+    "params": {},
+    "quality": "family"
+  },
+  "hist-church": {
+    "designId": "bld-baroque-church",
+    "params": {},
+    "quality": "family"
+  },
+  "hist-castle": {
+    "designId": "bld-castle",
+    "params": {
+      "layout": "courtyard"
+    },
+    "quality": "family"
+  },
+  "hist-castle-keep": {
+    "designId": "bld-castle",
+    "params": {
+      "layout": "keep"
+    },
+    "quality": "family"
+  },
+  "hist-fortress": {
+    "designId": "bld-castle",
+    "params": {
+      "layout": "fortress"
+    },
+    "quality": "family"
+  },
+  "medieval-castle": {
+    "designId": "bld-castle",
+    "params": {
+      "layout": "courtyard"
+    },
+    "quality": "family"
+  },
+  "hist-colosseum": {
+    "designId": "bld-hist-colosseum",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "hist-pagoda": {
+    "designId": "bld-hist-pagoda",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "hist-palace": {
+    "designId": "bld-hist-palace",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "station-hotel": {
+    "designId": "bld-station-hotel",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "boeing-737": {
+    "designId": "veh-boeing-737",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "ocean-liner": {
+    "designId": "veh-ocean-liner",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "cabin-classic": {
+    "designId": "veh-cabin-classic",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-truck-n-lp-2": {
+    "designId": "veh-legacy-covered-wagon",
+    "params": {
+      "body": "beer"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-n-z-2": {
+    "designId": "veh-legacy-covered-wagon",
+    "params": {
+      "body": "box"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-n-zaz-2": {
+    "designId": "veh-legacy-covered-wagon",
+    "params": {
+      "body": "sliding"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-n-vte-2": {
+    "designId": "veh-legacy-open-wagon",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-truck-n-uaaikk": {
+    "designId": "veh-legacy-heavy-wagon",
+    "params": {},
+    "quality": "reproduction"
+  },
+  "train-truck-n-pao-2": {
+    "designId": "veh-pao-flat-wagon",
+    "params": {
+      "cargo": "empty"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-n-wap-2": {
+    "designId": "veh-wap-hopper-wagon",
+    "params": {
+      "cargo": "empty"
+    },
+    "quality": "reproduction"
+  },
+  "train-truck-n-nas-full-4": {
+    "designId": "veh-nas-flat-wagon",
+    "params": {
+      "cargo": "empty"
+    },
+    "quality": "substitute",
+    "reason": "Transported tram/bus intentionally omitted; use the corresponding empty wagon."
+  },
+  "train-760-mm-csd-tu47-0001": {
+    "designId": "veh-cd-710",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-760-mm-csd-tu47-0002": {
+    "designId": "veh-cd-710",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-760-mm-csd-u46": {
+    "designId": "veh-csd-433-0",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-760-mm-csd-ubalm": {
+    "designId": "veh-csd-balm",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-760-mm-csd-ug": {
+    "designId": "veh-legacy-covered-wagon",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-760-mm-csd-uoplena": {
+    "designId": "veh-nas-flat-wagon",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-760-mm-csd-uoplenb": {
+    "designId": "veh-nas-flat-wagon",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-760-mm-csd-uoplenf": {
+    "designId": "veh-nas-flat-wagon",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-coach-cd-a-old": {
+    "designId": "veh-cd-green-white-coach",
+    "params": {
+      "variant": "a"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-coach-cd-aee": {
+    "designId": "veh-cd-green-white-coach",
+    "params": {
+      "variant": "a"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-coach-cd-aeel": {
+    "designId": "veh-cd-green-white-coach",
+    "params": {
+      "variant": "a"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-coach-cd-b-old": {
+    "designId": "veh-cd-green-white-coach",
+    "params": {
+      "variant": "b"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-coach-cd-baafx-1": {
+    "designId": "veh-csd-balm",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-coach-cd-baafx-3": {
+    "designId": "veh-csd-balm",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-coach-cd-baafx-4": {
+    "designId": "veh-csd-balm",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-coach-cd-bifx": {
+    "designId": "veh-csd-balm",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-coach-cd-bix": {
+    "designId": "veh-csd-balm",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-coach-cd-bmee": {
+    "designId": "veh-cd-green-white-coach",
+    "params": {
+      "variant": "b"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-coach-cd-bpb": {
+    "designId": "veh-bmo-double-deck-coach",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-coach-cd-bt": {
+    "designId": "veh-csd-balm",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-coach-cd-post": {
+    "designId": "veh-csd-dsk",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-coach-cd-wlab": {
+    "designId": "veh-cd-green-white-coach",
+    "params": {
+      "variant": "b"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-coach-cd-wlabmee": {
+    "designId": "veh-cd-green-white-coach",
+    "params": {
+      "variant": "b"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-coach-zsr-wlab": {
+    "designId": "veh-zsr-coach",
+    "params": {
+      "variant": "b"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-db-143-119": {
+    "designId": "veh-dr-243",
+    "params": {
+      "livery": "db143"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-default-loco": {
+    "designId": "veh-cd-163",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-dmu-810-cd-810-1": {
+    "designId": "veh-cd-810",
+    "params": {
+      "livery": "red"
+    },
+    "quality": "substitute",
+    "reason": "Archived alias of the matching CD 810 livery."
+  },
+  "train-dmu-810-cd-810-2": {
+    "designId": "veh-cd-810",
+    "params": {
+      "livery": "yellowBand"
+    },
+    "quality": "substitute",
+    "reason": "Archived alias of the matching CD 810 livery."
+  },
+  "train-dmu-810-cd-810-3": {
+    "designId": "veh-cd-810",
+    "params": {
+      "livery": "blueWhite"
+    },
+    "quality": "substitute",
+    "reason": "Archived alias of the matching CD 810 livery."
+  },
+  "train-dmu-810-cd-810-4": {
+    "designId": "veh-cd-810",
+    "params": {
+      "livery": "ivoryBand"
+    },
+    "quality": "substitute",
+    "reason": "Archived alias of the matching CD 810 livery."
+  },
+  "train-emu-eurostar-eurostar-car-1": {
+    "designId": "veh-tgv",
+    "params": {
+      "unit": "coach"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-emu-eurostar-eurostar-car-2": {
+    "designId": "veh-tgv",
+    "params": {
+      "unit": "coach"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-emu-eurostar-eurostar-car-3": {
+    "designId": "veh-tgv",
+    "params": {
+      "unit": "coach"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-emu-eurostar-eurostar-loco": {
+    "designId": "veh-tgv",
+    "params": {
+      "unit": "powerCar"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-emu-shinkansen-bullet-car-1": {
+    "designId": "veh-cd-680",
+    "params": {
+      "unit": "car683"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-emu-shinkansen-bullet-car-2": {
+    "designId": "veh-cd-680",
+    "params": {
+      "unit": "car683"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-emu-shinkansen-bullet-end-car": {
+    "designId": "veh-cd-680",
+    "params": {
+      "unit": "endCar"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-loco-diesel-cd-704-red": {
+    "designId": "veh-cd-704",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-loco-diesel-cd-751": {
+    "designId": "veh-cd-750",
+    "params": {
+      "livery": "cd749"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-loco-electric-cd-141": {
+    "designId": "veh-cd-140",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-loco-electric-cd-141-017": {
+    "designId": "veh-cd-140",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-loco-electric-csd-131": {
+    "designId": "veh-cd-130",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-loco-electric-db-143-007": {
+    "designId": "veh-dr-243",
+    "params": {
+      "livery": "db143"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-loco-electric-db-156a": {
+    "designId": "veh-dr-243",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-loco-electric-zsr-255": {
+    "designId": "veh-cd-230",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-tram-rtram-t6": {
+    "designId": "veh-tatra-t6",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-truck-n-habbilns": {
+    "designId": "veh-habis-sliding-wall-wagon",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-truck-n-lp": {
+    "designId": "veh-legacy-covered-wagon",
+    "params": {
+      "body": "beer"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-truck-n-lp-prazdroj": {
+    "designId": "veh-legacy-covered-wagon",
+    "params": {
+      "body": "beer"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-truck-n-pao": {
+    "designId": "veh-pao-flat-wagon",
+    "params": {
+      "cargo": "empty"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-truck-n-ra-1": {
+    "designId": "veh-rah-tank-wagon",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-truck-n-ra-2": {
+    "designId": "veh-rah-tank-wagon",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-truck-n-ra-3": {
+    "designId": "veh-rah-tank-wagon",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-truck-n-sqs": {
+    "designId": "veh-sqns-container-wagon",
+    "params": {
+      "cargo": "empty"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-truck-n-sqs-full-1": {
+    "designId": "veh-sqns-container-wagon",
+    "params": {
+      "cargo": "maersk"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-truck-n-sqs-full-2": {
+    "designId": "veh-sqns-container-wagon",
+    "params": {
+      "cargo": "maersk"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-truck-n-sqs-full-3": {
+    "designId": "veh-sqns-container-wagon",
+    "params": {
+      "cargo": "maersk"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-truck-n-sqs-full-4": {
+    "designId": "veh-sqns-container-wagon",
+    "params": {
+      "cargo": "maersk"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-truck-n-sqs-full-5": {
+    "designId": "veh-sqns-container-wagon",
+    "params": {
+      "cargo": "maersk"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-truck-n-sqs-full-6": {
+    "designId": "veh-sqns-container-wagon",
+    "params": {
+      "cargo": "maersk"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-truck-n-sqs-full-7": {
+    "designId": "veh-sqns-container-wagon",
+    "params": {
+      "cargo": "maersk"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-truck-n-vte": {
+    "designId": "veh-legacy-open-wagon",
+    "params": {},
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-truck-n-wap": {
+    "designId": "veh-wap-hopper-wagon",
+    "params": {
+      "cargo": "empty"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-truck-n-wap-full-1": {
+    "designId": "veh-wap-hopper-wagon",
+    "params": {
+      "cargo": "coal"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-truck-n-wap-full-3": {
+    "designId": "veh-wap-hopper-wagon",
+    "params": {
+      "cargo": "coal"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-truck-n-z": {
+    "designId": "veh-legacy-covered-wagon",
+    "params": {
+      "body": "box"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-truck-n-zaz": {
+    "designId": "veh-legacy-covered-wagon",
+    "params": {
+      "body": "sliding"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-truck-n-zts": {
+    "designId": "veh-legacy-covered-wagon",
+    "params": {
+      "body": "box"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-truck-n-zts-orlen": {
+    "designId": "veh-legacy-covered-wagon",
+    "params": {
+      "body": "box"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-truck-n-ztsc": {
+    "designId": "veh-legacy-covered-wagon",
+    "params": {
+      "body": "box"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  },
+  "train-truck-n-ztsc-post": {
+    "designId": "veh-legacy-covered-wagon",
+    "params": {
+      "body": "box"
+    },
+    "quality": "substitute",
+    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+  }
+}

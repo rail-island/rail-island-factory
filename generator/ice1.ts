@@ -306,5 +306,5 @@ function grille(c: Coach, v: Volume, s: number, b: Box): void {
 }
 
 export const ICE1_DESIGNS: ProceduralDesign[] = [
-  { id: "veh-ice-1", title: "ICE 1", build: ice1, params: ICE1_PARAMS, catalog: EMU_CATALOG, references: "ice-1" },
+  { id: "proc-vehicle-ice-1", title: "ICE 1", build: ice1, params: ICE1_PARAMS, catalog: EMU_CATALOG, references: "ice-1" },
 ];

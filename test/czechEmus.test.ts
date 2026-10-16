@@ -36,7 +36,7 @@ describe("the Czech electric units", () => {
   const designs = [...EMU471_DESIGNS, ...EMU680_DESIGNS];
 
   it("are two parametric rail designs with their reference folders", () => {
-    expect(designs.map((d) => d.id)).toEqual(["veh-cd-471", "veh-cd-680"]);
+    expect(designs.map((d) => d.id)).toEqual(["proc-vehicle-cd-471", "proc-vehicle-cd-680"]);
     for (const d of designs) {
       expect(d.catalog).toMatchObject({ category: "Rail vehicles" });
       expect(d.references).toMatch(/^cd-(471|680)$/);
@@ -64,7 +64,7 @@ describe("the Czech electric units", () => {
 
   it("CD 471: 26.05 m cab cars and a 25.7 m trailer over their couplers, 4.635 m high, 2.82 m wide", () => {
     for (const [unit, length] of [["motorCar", 26.05], ["trailer", 25.7], ["drivingTrailer", 26.05]] as const) {
-      const { stats: s, nodes } = built(cd471({ unit }), "veh-cd-471");
+      const { stats: s, nodes } = built(cd471({ unit }), "proc-vehicle-cd-471");
       expect(s.max[0] - s.min[0]).toBeCloseTo(length, 3);
       const body = bounds(nodes, /^body\/[a-z-]*band/);
       expect(body.max[1]).toBeCloseTo(4.635, 3);
@@ -80,7 +80,7 @@ describe("the Czech electric units", () => {
   });
 
   it("CD 471: the low floor between the bogies drops to 0.2 m (scaled), the ends stay at 0.9 m", () => {
-    const { nodes } = built(cd471(), "veh-cd-471");
+    const { nodes } = built(cd471(), "proc-vehicle-cd-471");
     const skirt = bounds(nodes, /^body\/skirtdark-band\/sweep-/);
     expect(skirt.min[1]).toBeCloseTo(0.2 * K_Y, 3);
     // the drop spans the XML's 14.9 m between the slopes (body 5.0 .. 19.9 m)
@@ -95,7 +95,7 @@ describe("the Czech electric units", () => {
 
   it("CD 471: only the motor car has a pantograph, raised over the inner bogie; the cabs face +X", () => {
     for (const unit of ["motorCar", "trailer", "drivingTrailer"] as const) {
-      const { stats: s, nodes } = built(cd471({ unit }), "veh-cd-471");
+      const { stats: s, nodes } = built(cd471({ unit }), "proc-vehicle-cd-471");
       const panto = nodes.filter((n) => n.id.startsWith("roof-equipment/pantographs/"));
       if (unit === "motorCar") {
         const head = bounds(nodes, /^roof-equipment\/pantographs\/pantograph\/head\//);
@@ -132,7 +132,7 @@ describe("the Czech electric units", () => {
 
   it("CD 680: 27.7 m end car and 25.9 m intermediate cars, 2.8 m wide, the tapered tilting body", () => {
     for (const [unit, length] of [["endCar", 27.7], ["car683", 25.9], ["car685", 25.9], ["car686", 25.9]] as const) {
-      const { stats: s, nodes } = built(cd680({ unit }), "veh-cd-680");
+      const { stats: s, nodes } = built(cd680({ unit }), "proc-vehicle-cd-680");
       expect(s.max[0] - s.min[0]).toBeCloseTo(length, 3);
       const body = bounds(nodes, /^body\/[a-z-]*band/);
       expect(body.max[2] - body.min[2]).toBeCloseTo(2.8, 3);

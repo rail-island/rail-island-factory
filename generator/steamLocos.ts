@@ -796,15 +796,15 @@ export interface SteamDesign {
 }
 
 export const STEAM_DESIGNS: readonly SteamDesign[] = [
-  { id: "veh-csd-433-0", title: "CSD 433.0", folder: "steam-433-0", build: csd433, params: CSD433_PARAMS },
-  { id: "veh-csd-456-0", title: "CSD 456.0", folder: "steam-456-0", build: csd456 },
-  { id: "veh-csd-475-1", title: "CSD 475.1", folder: "steam-475-1", build: csd475, params: [UNIT_PARAM] },
-  { id: "veh-csd-477-0", title: "CSD 477.0", folder: "steam-477-0", build: csd477 },
-  { id: "veh-csd-498-1", title: "CSD 498.1", folder: "steam-498-1", build: csd498, params: [UNIT_PARAM] },
-  { id: "veh-csd-556-0", title: "CSD 556.0", folder: "steam-556-0", build: csd556, params: [UNIT_PARAM] },
-  { id: "veh-csd-636", title: "CSD 636 Mallet", folder: "steam-636", build: csd636, params: [UNIT_PARAM] },
-  { id: "veh-csd-386", title: "CSD 386 Streamlined", folder: "steam-386", build: csd386, params: [UNIT_PARAM] },
-  { id: "veh-csd-m112", title: "CSD M 112.0 Steam Railcar", folder: "steam-m112", build: csdM112 },
+  { id: "proc-vehicle-csd-433-0", title: "CSD 433.0", folder: "steam-433-0", build: csd433, params: CSD433_PARAMS },
+  { id: "proc-vehicle-csd-456-0", title: "CSD 456.0", folder: "steam-456-0", build: csd456 },
+  { id: "proc-vehicle-csd-475-1", title: "CSD 475.1", folder: "steam-475-1", build: csd475, params: [UNIT_PARAM] },
+  { id: "proc-vehicle-csd-477-0", title: "CSD 477.0", folder: "steam-477-0", build: csd477 },
+  { id: "proc-vehicle-csd-498-1", title: "CSD 498.1", folder: "steam-498-1", build: csd498, params: [UNIT_PARAM] },
+  { id: "proc-vehicle-csd-556-0", title: "CSD 556.0", folder: "steam-556-0", build: csd556, params: [UNIT_PARAM] },
+  { id: "proc-vehicle-csd-636", title: "CSD 636 Mallet", folder: "steam-636", build: csd636, params: [UNIT_PARAM] },
+  { id: "proc-vehicle-csd-386", title: "CSD 386 Streamlined", folder: "steam-386", build: csd386, params: [UNIT_PARAM] },
+  { id: "proc-vehicle-csd-m112", title: "CSD M 112.0 Steam Railcar", folder: "steam-m112", build: csdM112 },
 ];
 
 /**
@@ -819,15 +819,15 @@ export const STEAM_LOCOS: ProceduralDesign[] = STEAM_DESIGNS.map((d) => ({
 export function steamSpec(id: string, params?: ParamValues): LocoSpec {
   const unit = (specs: [() => LocoSpec, () => LocoSpec]) => (resolveParams([UNIT_PARAM], params).unit === "tender" ? specs[1]() : specs[0]());
   switch (id) {
-    case "veh-csd-433-0": return csd433Spec(resolveParams(CSD433_PARAMS, params).livery!);
-    case "veh-csd-456-0": return csd456Spec();
-    case "veh-csd-475-1": return unit([csd475Spec, csd475TenderSpec]);
-    case "veh-csd-477-0": return csd477Spec();
-    case "veh-csd-498-1": return unit([csd498Spec, csd498TenderSpec]);
-    case "veh-csd-556-0": return unit([csd556Spec, csd556TenderSpec]);
-    case "veh-csd-636": return unit([csd636Spec, csd636TenderSpec]);
-    case "veh-csd-386": return unit([csd386Spec, csd386TenderSpec]);
-    case "veh-csd-m112": return csdM112Spec();
+    case "proc-vehicle-csd-433-0": return csd433Spec(resolveParams(CSD433_PARAMS, params).livery!);
+    case "proc-vehicle-csd-456-0": return csd456Spec();
+    case "proc-vehicle-csd-475-1": return unit([csd475Spec, csd475TenderSpec]);
+    case "proc-vehicle-csd-477-0": return csd477Spec();
+    case "proc-vehicle-csd-498-1": return unit([csd498Spec, csd498TenderSpec]);
+    case "proc-vehicle-csd-556-0": return unit([csd556Spec, csd556TenderSpec]);
+    case "proc-vehicle-csd-636": return unit([csd636Spec, csd636TenderSpec]);
+    case "proc-vehicle-csd-386": return unit([csd386Spec, csd386TenderSpec]);
+    case "proc-vehicle-csd-m112": return csdM112Spec();
     default: throw new Error(`no steam design ${id}`);
   }
 }

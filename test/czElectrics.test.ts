@@ -26,15 +26,15 @@ const valid = (number: string): boolean => {
 
 // published dimensions (assets/<folder>/SOURCES.md): over the buffers, the axles' x, the wheel radius
 const SPECS: Record<string, { lob: number; axles: (p: ParamValues) => number[]; r: number; pantographs: number }> = {
-  "veh-cd-110": { lob: 14.4, axles: () => [-4.55, -1.75, 1.75, 4.55], r: 0.525, pantographs: 1 },
-  "veh-cd-130": { lob: 17.21, axles: (p) => (p.livery === "cd130" ? [-5.685, -2.485, 2.485, 5.685] : [-5.75, -2.42, 2.42, 5.75]), r: 0.625, pantographs: 2 },
-  "veh-cd-140": { lob: 15.74, axles: () => [-5.75, -2.42, 2.42, 5.75], r: 0.625, pantographs: 2 },
-  "veh-cd-169": { lob: 18.0, axles: () => [-5.6, -3.1, 3.1, 5.6], r: 0.625, pantographs: 2 },
+  "proc-vehicle-cd-110": { lob: 14.4, axles: () => [-4.55, -1.75, 1.75, 4.55], r: 0.525, pantographs: 1 },
+  "proc-vehicle-cd-130": { lob: 17.21, axles: (p) => (p.livery === "cd130" ? [-5.685, -2.485, 2.485, 5.685] : [-5.75, -2.42, 2.42, 5.75]), r: 0.625, pantographs: 2 },
+  "proc-vehicle-cd-140": { lob: 15.74, axles: () => [-5.75, -2.42, 2.42, 5.75], r: 0.625, pantographs: 2 },
+  "proc-vehicle-cd-169": { lob: 18.0, axles: () => [-5.6, -3.1, 3.1, 5.6], r: 0.625, pantographs: 2 },
 };
 
 describe("Czech electric locomotives from vlakosimdb", () => {
   it("registers the four designs with their parameters and defaults", () => {
-    expect(CZ_ELECTRICS.map((d) => d.id)).toEqual(["veh-cd-110", "veh-cd-130", "veh-cd-140", "veh-cd-169"]);
+    expect(CZ_ELECTRICS.map((d) => d.id)).toEqual(["proc-vehicle-cd-110", "proc-vehicle-cd-130", "proc-vehicle-cd-140", "proc-vehicle-cd-169"]);
     expect(CZ_ELECTRICS[0]!.params![0]!.values.map((v) => v.value)).toEqual(["cd110", "cd111", "cd210"]);
     expect(CZ_ELECTRICS[0]!.params![0]!.default).toBe("cd110");
     expect(CZ_ELECTRICS[1]!.params![0]!.values.map((v) => v.value)).toEqual(["cd130", "cd123", "cd123No019"]);
@@ -89,7 +89,7 @@ describe("Czech electric locomotives from vlakosimdb", () => {
 
   it("keeps the single-arm pantographs' arm lengths in both poses", () => {
     // the CD 130's arms: the lower A-frame and the upper tubes are the same length raised and folded
-    const { tris, nodes } = build("veh-cd-130");
+    const { tris, nodes } = build("proc-vehicle-cd-130");
     const length = (id: string) => {
       const n = nodes.find((x) => x.id === id)!;
       const ps = tris.filter((t) => t.material === n.material).slice(n.tri[0], n.tri[0] + n.tri[1]).flatMap((t) => t.p);
@@ -128,9 +128,9 @@ describe("Czech electric locomotives from vlakosimdb", () => {
 
   it("gives the CD 123 liveries diamond pantographs and the 210 its AC breaker", () => {
     const arms = (id: string, params: ParamValues) => build(id, params).nodes.filter((n) => n.id.startsWith("roof-equipment/pantographs/rear-pantograph/arms/")).length;
-    expect(arms("veh-cd-130", { livery: "cd123" })).toBe(8); // four lower and four upper diamond arms
-    expect(build("veh-cd-130", { livery: "cd130" }).nodes.some((n) => n.id.startsWith("roof-equipment/pantographs/rear-pantograph/arms/lower-arms/"))).toBe(true); // the single-arm A-frame
-    expect(build("veh-cd-110", { livery: "cd210" }).nodes.some((n) => n.id.startsWith("roof-equipment/main-breaker"))).toBe(true);
-    expect(build("veh-cd-110", { livery: "cd110" }).nodes.some((n) => n.id.startsWith("roof-equipment/main-breaker"))).toBe(false);
+    expect(arms("proc-vehicle-cd-130", { livery: "cd123" })).toBe(8); // four lower and four upper diamond arms
+    expect(build("proc-vehicle-cd-130", { livery: "cd130" }).nodes.some((n) => n.id.startsWith("roof-equipment/pantographs/rear-pantograph/arms/lower-arms/"))).toBe(true); // the single-arm A-frame
+    expect(build("proc-vehicle-cd-110", { livery: "cd210" }).nodes.some((n) => n.id.startsWith("roof-equipment/main-breaker"))).toBe(true);
+    expect(build("proc-vehicle-cd-110", { livery: "cd110" }).nodes.some((n) => n.id.startsWith("roof-equipment/main-breaker"))).toBe(false);
   });
 });

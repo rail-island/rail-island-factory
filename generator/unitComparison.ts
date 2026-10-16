@@ -54,10 +54,10 @@ const ice = ICE1_MAPS.powerCar;
 const tgv = TGV_MAPS.powerCar;
 
 export const UNIT_TRANSFERS: readonly UnitTransfer[] = [
-  { key: "db_628", title: "DB 628 motor car", id: "veh-db-628", params: { livery: "mint" }, folder: "db-628", native: "native/db_628", report: "COMPARISON.md", ...db, kX: 1, kY: 1, kZ: 1, files: "`generator/db628.ts`" },
-  { key: "mav_mdmot", title: "MAV MDmot motor car", id: "veh-mav-mdmot", params: { unit: "motorCar" }, folder: "mav-mdmot", native: "native/mav_mdmot", report: "COMPARISON.md", ...sideFns(md.x0, mdmotLength("motorCar")), kX: 1, kY: MDMOT_K_Y, kZ: MDMOT_K_Z, files: "`generator/mavMdmot.ts`" },
-  { key: "ice_loco", title: "ICE 1 power car", id: "veh-ice-1", params: { unit: "powerCar" }, folder: "ice-1", native: "native/ice_loco", report: "COMPARISON.md", ...sideFns(ice.x0, ice1Length("powerCar")), kX: 1, kY: ICE1_K_Y, kZ: 1, files: "`generator/ice1.ts`" },
-  { key: "tgv_loco", title: "TGV PSE power car", id: "veh-tgv", params: { unit: "powerCar", livery: "pse" }, folder: "tgv", native: "native/tgv_loco", report: "COMPARISON.md", ...sideFns(tgv.x0, tgvLength("powerCar"), tgv.k), kX: tgv.k ?? 1, kY: TGV_K_Y_POWER, kZ: 1, files: "`generator/tgv.ts`" },
+  { key: "db_628", title: "DB 628 motor car", id: "proc-vehicle-db-628", params: { livery: "mint" }, folder: "db-628", native: "native/db_628", report: "COMPARISON.md", ...db, kX: 1, kY: 1, kZ: 1, files: "`generator/db628.ts`" },
+  { key: "mav_mdmot", title: "MAV MDmot motor car", id: "proc-vehicle-mav-mdmot", params: { unit: "motorCar" }, folder: "mav-mdmot", native: "native/mav_mdmot", report: "COMPARISON.md", ...sideFns(md.x0, mdmotLength("motorCar")), kX: 1, kY: MDMOT_K_Y, kZ: MDMOT_K_Z, files: "`generator/mavMdmot.ts`" },
+  { key: "ice_loco", title: "ICE 1 power car", id: "proc-vehicle-ice-1", params: { unit: "powerCar" }, folder: "ice-1", native: "native/ice_loco", report: "COMPARISON.md", ...sideFns(ice.x0, ice1Length("powerCar")), kX: 1, kY: ICE1_K_Y, kZ: 1, files: "`generator/ice1.ts`" },
+  { key: "tgv_loco", title: "TGV PSE power car", id: "proc-vehicle-tgv", params: { unit: "powerCar", livery: "pse" }, folder: "tgv", native: "native/tgv_loco", report: "COMPARISON.md", ...sideFns(tgv.x0, tgvLength("powerCar"), tgv.k), kX: tgv.k ?? 1, kY: TGV_K_Y_POWER, kZ: 1, files: "`generator/tgv.ts`" },
 ];
 
 const DESIGNS: readonly ProceduralDesign[] = [...DB628_DESIGNS, ...MDMOT_DESIGNS, ...ICE1_DESIGNS, ...TGV_DESIGNS];

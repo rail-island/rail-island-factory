@@ -16,10 +16,10 @@ import { muv69 } from "./muv69.ts";
 export { cd704, cd710, cd714, cd742, db212, muv69 };
 
 export const SMALL_DIESELS: readonly ProceduralDesign[] = [
-  { id: "veh-cd-704", title: "CD 704 / CSD T 234.0", build: cd704, params: CD704_PARAMS, catalog: RAIL_CATALOG, references: "cd-704" },
-  { id: "veh-cd-710", title: "CD 710 Rosnicka", build: cd710, catalog: RAIL_CATALOG, references: "cd-710" },
-  { id: "veh-cd-714", title: "CD 714", build: cd714, catalog: RAIL_CATALOG, references: "cd-714" },
-  { id: "veh-cd-742", title: "CD 740 / 742 / 743", build: cd742, params: CD742_PARAMS, catalog: RAIL_CATALOG, references: "cd-742" },
-  { id: "veh-db-212", title: "DB V 100 / 212", build: db212, params: DB212_PARAMS, catalog: RAIL_CATALOG, references: "db-212" },
-  { id: "veh-muv-69", title: "MUV 69", build: muv69, catalog: RAIL_CATALOG, references: "muv-69" },
+  { id: "proc-vehicle-cd-704", title: "CD 704 / CSD T 234.0", build: cd704, params: CD704_PARAMS, catalog: RAIL_CATALOG, references: "cd-704" },
+  { id: "proc-vehicle-cd-710", title: "CD 710 Rosnicka", build: cd710, catalog: RAIL_CATALOG, references: "cd-710" },
+  { id: "proc-vehicle-cd-714", title: "CD 714", build: cd714, catalog: RAIL_CATALOG, references: "cd-714" },
+  { id: "proc-vehicle-cd-742", title: "CD 740 / 742 / 743", build: cd742, params: CD742_PARAMS, catalog: RAIL_CATALOG, references: "cd-742" },
+  { id: "proc-vehicle-db-212", title: "DB V 100 / 212", build: db212, params: DB212_PARAMS, catalog: RAIL_CATALOG, references: "db-212" },
+  { id: "proc-vehicle-muv-69", title: "MUV 69", build: muv69, catalog: RAIL_CATALOG, references: "muv-69" },
 ];

@@ -1002,7 +1002,7 @@ export const TRUCK_CATALOG: CatalogFields = {
 
 /** Every design of the family, by catalog id; `references` is the folder of its source photos under assets/. */
 export const TRUCKS: ProceduralDesign[] = [
-  { id: "veh-cistern-semi-truck", title: "Cistern Semi-Truck", build: cisternSemiTruck, references: "cistern-semi-truck", catalog: TRUCK_CATALOG },
-  { id: "veh-mixer-truck", title: "Concrete Mixer Truck", build: mixerTruck, references: "mixer-truck", catalog: TRUCK_CATALOG },
-  { id: "veh-reefer-semi-truck", title: "Reefer Semi-Truck", build: reeferSemiTruck, references: "reefer-semi-truck", catalog: TRUCK_CATALOG },
+  { id: "proc-vehicle-cistern-semi-truck", title: "Cistern Semi-Truck", build: cisternSemiTruck, references: "cistern-semi-truck", catalog: TRUCK_CATALOG },
+  { id: "proc-vehicle-mixer-truck", title: "Concrete Mixer Truck", build: mixerTruck, references: "mixer-truck", catalog: TRUCK_CATALOG },
+  { id: "proc-vehicle-reefer-semi-truck", title: "Reefer Semi-Truck", build: reeferSemiTruck, references: "reefer-semi-truck", catalog: TRUCK_CATALOG },
 ];

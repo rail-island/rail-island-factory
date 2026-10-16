@@ -1085,16 +1085,11 @@ export function villageNarrowHouse(params?: ParamValues): MeshBuilder {
 
 // --- the catalog ----------------------------------------------------------------------
 
-/**
- * The game-catalog fields every village house shares. Modelled in metres, so the
- * scale is the game's 1.88 studs per metre -- the webapp's own metre-modelled
- * buildings use it, and it puts these houses next to the Kenney village houses
- * at about their size.
- */
+/** Village geometry is in metres; legacy placement factors live in the mapping. */
 export const VILLAGE_CATALOG: CatalogFields = {
   category: "Village",
   group: "village",
-  defaultScale: 1.88,
+  defaultScale: 1,
   license: "CC0",
   author: "Rail Island",
   source: "Rail Island",

@@ -727,7 +727,7 @@ export function whiteHouse(): MeshBuilder {
 export const LANDMARK_CATALOG: CatalogFields = {
   category: "Historical",
   group: "hist_center",
-  defaultScale: 1.88,
+  defaultScale: 1,
   license: "CC0",
   author: "Rail Island",
   source: "Rail Island",

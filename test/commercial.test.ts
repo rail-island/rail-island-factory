@@ -1,3 +1,4 @@
+import { proceduralId } from "../generator/modelId.ts";
 import { describe, expect, it } from "vitest";
 import { COMMERCIAL_BUILDINGS, COMMERCIAL_CATALOG } from "../generator/commercial";
 import { coverageCombinations, paramCombinations, type ParamValues, type ProceduralDesign } from "../generator/design";
@@ -19,14 +20,14 @@ function shape(d: ProceduralDesign, values: ParamValues): Map<string, number[]> 
 describe("the commercial buildings", () => {
   it("exports five original commercial families in the classic city pool, with 3,000 selectable variants", () => {
     expect(COMMERCIAL_BUILDINGS.map((d) => d.id)).toEqual([
-      "comm-corner-shop", "comm-balcony-house", "comm-market-block", "comm-terrace-house", "comm-office-house",
+      "proc-building-comm-corner-shop", "proc-building-comm-balcony-house", "proc-building-comm-market-block", "proc-building-comm-terrace-house", "proc-building-comm-office-house",
     ]);
     expect(COMMERCIAL_BUILDINGS.reduce((n, d) => n + paramCombinations(d.params).length, 0)).toBe(3000);
-    expect(COMMERCIAL_CATALOG).toMatchObject({ category: "Commercial", group: "comm_classic", defaultScale: 1.88 });
+    expect(COMMERCIAL_CATALOG).toMatchObject({ category: "Commercial", group: "comm_classic", defaultScale: 1 });
     const exported = exportMeta(BUILDINGS).buildings;
     for (const d of COMMERCIAL_BUILDINGS) {
-      expect(DESIGNS.get(d.id)).toBe(d);
-      expect(designSource(d.id)).toBe("commercial.ts");
+      expect(DESIGNS.get(proceduralId(d.id))).toBe(d);
+      expect(designSource(proceduralId(d.id))).toBe("commercial.ts");
       expect(exported.find((e) => e.id === d.id)).toMatchObject({ ...COMMERCIAL_CATALOG, params: d.params });
     }
   });

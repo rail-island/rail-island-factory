@@ -29,13 +29,12 @@ const freight = (key: string, title: string, id: string, folder: string, centre:
 });
 
 export const FREIGHT_TRANSFERS: readonly CoachTransfer[] = [
-  freight("n_sqns", "Sqns", "veh-sqns-container-wagon", "wagon-sqns", 9.9, { cargo: "empty" }, "COMPARISON-empty.md"),
-  freight("n_sqns-full_1", "Sqns + Maersk", "veh-sqns-container-wagon", "wagon-sqns", 9.9, { cargo: "maersk" }, "COMPARISON-maersk.md"),
-  freight("n_pao-full_1", "Pao + Tubes", "veh-pao-flat-wagon", "wagon-pao", 7.65, { cargo: "tubes" }, "COMPARISON-tubes.md"),
-  freight("n_pao-full_2", "Pao + Karosa B951", "veh-pao-flat-wagon", "wagon-pao", 7.65, { cargo: "karosaB951" }, "COMPARISON-karosaB951.md"),
-  freight("n_habis_tw1", "Habis Transwaggon 1", "veh-habis-sliding-wall-wagon", "wagon-habis", 11.6, { livery: "tw1" }),
-  freight("n_hadgs", "Hadgs", "veh-hadgs-hopper-wagon", "wagon-hadgs", 8.4),
-  freight("n_faccs", "N_Faccs", "veh-faccs-hopper-wagon", "wagon-faccs", 6.4, { livery: "cd" }),
-  freight("n_falls", "N_Falls", "veh-falls-hopper-wagon", "wagon-falls", 6.75, { livery: "cd" }),
-  freight("n_wap-full_2", "Wap - full#2", "veh-wap-hopper-wagon", "wagon-wap", 6.75),
+  freight("n_sqns", "Sqns", "proc-vehicle-sqns-container-wagon", "wagon-sqns", 9.9, { cargo: "empty" }, "COMPARISON-empty.md"),
+  freight("n_sqns-full_1", "Sqns + Maersk", "proc-vehicle-sqns-container-wagon", "wagon-sqns", 9.9, { cargo: "maersk" }, "COMPARISON-maersk.md"),
+  freight("n_pao-full_1", "Pao + Tubes", "proc-vehicle-pao-flat-wagon", "wagon-pao", 7.65, { cargo: "tubes" }, "COMPARISON-tubes.md"),
+  freight("n_habis_tw1", "Habis Transwaggon 1", "proc-vehicle-habis-sliding-wall-wagon", "wagon-habis", 11.6, { livery: "tw1" }),
+  freight("n_hadgs", "Hadgs", "proc-vehicle-hadgs-hopper-wagon", "wagon-hadgs", 8.4),
+  freight("n_faccs", "N_Faccs", "proc-vehicle-faccs-hopper-wagon", "wagon-faccs", 6.4, { livery: "cd" }),
+  freight("n_falls", "N_Falls", "proc-vehicle-falls-hopper-wagon", "wagon-falls", 6.75, { livery: "cd" }),
+  freight("n_wap-full_2", "Wap - full#2", "proc-vehicle-wap-hopper-wagon", "wagon-wap", 6.75, { cargo: "coal" }),
 ];

@@ -17,10 +17,10 @@ import { obb1040 } from "./obb1040.ts";
 export { cd181, dnt184, db111, dr243, obb1012, obb1040 };
 
 export const MAINLINE_ELECTRICS: readonly ProceduralDesign[] = [
-  { id: "veh-cd-180", title: "CD 180 / 181 / 182", build: cd181, params: CD181_PARAMS, catalog: RAIL_CATALOG, references: "cd-181" },
-  { id: "veh-dnt-184-5", title: "DNT 184.5", build: dnt184, params: DNT184_PARAMS, catalog: RAIL_CATALOG, references: "dnt-184" },
-  { id: "veh-db-111", title: "DB 111", build: db111, params: DB111_PARAMS, catalog: RAIL_CATALOG, references: "db-111" },
-  { id: "veh-dr-243", title: "DR 243 / DB 143 / 112", build: dr243, params: DR243_PARAMS, catalog: RAIL_CATALOG, references: "dr-243" },
-  { id: "veh-obb-1012", title: "OBB 1012", build: obb1012, catalog: RAIL_CATALOG, references: "obb-1012" },
-  { id: "veh-obb-1040", title: "OBB 1040", build: obb1040, catalog: RAIL_CATALOG, references: "obb-1040" },
+  { id: "proc-vehicle-cd-180", title: "CD 180 / 181 / 182", build: cd181, params: CD181_PARAMS, catalog: RAIL_CATALOG, references: "cd-181" },
+  { id: "proc-vehicle-dnt-184-5", title: "DNT 184.5", build: dnt184, params: DNT184_PARAMS, catalog: RAIL_CATALOG, references: "dnt-184" },
+  { id: "proc-vehicle-db-111", title: "DB 111", build: db111, params: DB111_PARAMS, catalog: RAIL_CATALOG, references: "db-111" },
+  { id: "proc-vehicle-dr-243", title: "DR 243 / DB 143 / 112", build: dr243, params: DR243_PARAMS, catalog: RAIL_CATALOG, references: "dr-243" },
+  { id: "proc-vehicle-obb-1012", title: "OBB 1012", build: obb1012, catalog: RAIL_CATALOG, references: "obb-1012" },
+  { id: "proc-vehicle-obb-1040", title: "OBB 1040", build: obb1040, catalog: RAIL_CATALOG, references: "obb-1040" },
 ];

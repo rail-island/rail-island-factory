@@ -51,28 +51,28 @@ const end = (v: View, p: Vec3, w: number, top: number): [number, number] => [v =
 
 export const COMPARED: readonly ComparedDesign[] = [
   {
-    id: "veh-cd-704", title: "CD 704", folder: "cd-704", build: () => cd704(), depth,
+    id: "proc-vehicle-cd-704", title: "CD 704", folder: "cd-704", build: () => cd704(), depth,
     project: (v, p) => (v.startsWith("x") ? end(v, p, 28, 4) : [10 * (p[0] + 3.75), 10 * (4 - p[1])]),
     canvas: { x_front: [28, 40], z_right: [80, 40] },
     files: { x_front: "native/cd_704/x_both.bmp", z_right: "native/cd_704/z_both.bmp" },
     mapping: "side column px = 10 (x + 3.75), row = 10 (4 - y); end column = 14 - 10 z, row = 10 (4 - y)",
   },
   {
-    id: "veh-cd-710", title: "CD 710 620-6", folder: "cd-710", build: () => cd710(), depth,
+    id: "proc-vehicle-cd-710", title: "CD 710 620-6", folder: "cd-710", build: () => cd710(), depth,
     project: (v, p) => (v.startsWith("x") ? end(v, p, 30, 4.2) : [10 * (p[0] + 4.5), 10 * (4.2 - p[1])]),
     canvas: { x_front: [30, 42], z_right: [100, 42] },
     files: { x_front: "native/x_both.bmp", z_right: "native/z_both.bmp" },
     mapping: "side column px = 10 (x + 4.5), row = 10 (4.2 - y); end column = 15 - 10 z, row = 10 (4.2 - y)",
   },
   {
-    id: "veh-cd-714", title: "CD 714 017-1", folder: "cd-714", build: () => cd714(), depth,
+    id: "proc-vehicle-cd-714", title: "CD 714 017-1", folder: "cd-714", build: () => cd714(), depth,
     project: (v, p) => (v.startsWith("x") ? end(v, p, 30, 5) : [10 * (p[0] + 7), 10 * (5 - p[1])]),
     canvas: { x_front: [30, 50], z_right: [140, 50] },
     files: { x_front: "native/x_both.bmp", z_right: "native/z_both.bmp" },
     mapping: "side column px = 10 (x + 7), row = 10 (5 - y); end column = 15 - 10 z, row = 10 (5 - y)",
   },
   {
-    id: "veh-cd-742", title: "Viamont 742 507", folder: "cd-742", build: () => cd742(), depth,
+    id: "proc-vehicle-cd-742", title: "Viamont 742 507", folder: "cd-742", build: () => cd742(), depth,
     project: (v, p) => {
       const q: Vec3 = [p[0], nativeY(p[1]), p[2]];
       return v.startsWith("x") ? end(v, q, 30, 5) : [10 * (6.7 - p[0]), 10 * (5 - q[1])];
@@ -82,14 +82,14 @@ export const COMPARED: readonly ComparedDesign[] = [
     mapping: "the source's x flipped (its +z side, z_dec, is the model's -Z side): side column px = 10 (6.7 - x); heights above the 1.8 m deck scaled: native y = 1.8 + (y - 1.8) / 0.9286, row = 10 (5 - native y); end column = 15 - 10 z",
   },
   {
-    id: "veh-db-212", title: "DB 212 325", folder: "db-212", build: () => db212(), depth,
+    id: "proc-vehicle-db-212", title: "DB 212 325", folder: "db-212", build: () => db212(), depth,
     project: (v, p) => (v.startsWith("x") ? end(v, p, 30, 5) : [10 * (p[0] + 6.05), 10 * (5 - p[1])]),
     canvas: { x_front: [30, 50], z_right: [140, 50] },
     files: { x_front: "native/db_212/x_both.bmp", z_right: "native/db_212/z_both.bmp" },
     mapping: "side column px = 10 (x + 6.05), row = 10 (5 - y); end column = 15 - 10 z, row = 10 (5 - y)",
   },
   {
-    id: "veh-muv-69", title: "MUV 69", folder: "muv-69", build: () => muv69(), depth,
+    id: "proc-vehicle-muv-69", title: "MUV 69", folder: "muv-69", build: () => muv69(), depth,
     project: (v, p) => {
       const q: Vec3 = [p[0], muvY(p[1]), p[2]];
       return v.startsWith("x") ? end(v, q, 30, 5) : [(62 / 6) * (3.05 - p[0]), 10 * (5 - q[1])];

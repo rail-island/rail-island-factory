@@ -27,8 +27,8 @@ const walk = (n: TreeNode): TreeNode[] => (isLeaf(n) ? [n] : [n, ...n.children.f
 describe("the steam designs", () => {
   it("are registered as rail vehicles with stable ids", () => {
     expect(STEAM_DESIGNS.map((d) => d.id)).toEqual([
-      "veh-csd-433-0", "veh-csd-456-0", "veh-csd-475-1", "veh-csd-477-0", "veh-csd-498-1",
-      "veh-csd-556-0", "veh-csd-636", "veh-csd-386", "veh-csd-m112",
+      "proc-vehicle-csd-433-0", "proc-vehicle-csd-456-0", "proc-vehicle-csd-475-1", "proc-vehicle-csd-477-0", "proc-vehicle-csd-498-1",
+      "proc-vehicle-csd-556-0", "proc-vehicle-csd-636", "proc-vehicle-csd-386", "proc-vehicle-csd-m112",
     ]);
     for (const d of STEAM_DESIGNS) {
       expect(ALL_VEHICLES).toContain(STEAM_LOCOS.find((x) => x.id === d.id));
@@ -41,7 +41,7 @@ describe("the steam designs", () => {
 
   it("make every locomotive with a tender one design with a `unit` parameter, the locomotive by default", () => {
     const withTender = STEAM_DESIGNS.filter((d) => d.params?.some((p) => p.name === "unit")).map((d) => d.id);
-    expect(withTender).toEqual(["veh-csd-475-1", "veh-csd-498-1", "veh-csd-556-0", "veh-csd-636", "veh-csd-386"]);
+    expect(withTender).toEqual(["proc-vehicle-csd-475-1", "proc-vehicle-csd-498-1", "proc-vehicle-csd-556-0", "proc-vehicle-csd-636", "proc-vehicle-csd-386"]);
     expect(UNIT_PARAM.default).toBe("locomotive");
     expect(UNIT_PARAM.values.map((v) => v.value)).toEqual(["locomotive", "tender"]);
     for (const id of withTender) {
@@ -52,7 +52,7 @@ describe("the steam designs", () => {
       expect(tender.triangleCount()).not.toBe(loco);
       // a tender has no boiler, a locomotive has one
       expect(walk(tender.sourceTree(id, "t").root).some((n) => n.id === "body/boiler")).toBe(false);
-      if (id !== "veh-csd-386") expect(walk(d.build().sourceTree(id, "l").root).some((n) => n.id === "body/boiler")).toBe(true);
+      if (id !== "proc-vehicle-csd-386") expect(walk(d.build().sourceTree(id, "l").root).some((n) => n.id === "body/boiler")).toBe(true);
     }
   });
 

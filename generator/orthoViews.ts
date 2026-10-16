@@ -1,3 +1,4 @@
+import { proceduralId } from "./modelId.ts";
 // Orthographic review views of a design (side, front, rear, top, three-quarter
 // thumbnail) rendered headlessly to PNGs, for checking a vehicle against its
 // drawings and photographs. Node only:
@@ -81,7 +82,7 @@ if (process.argv[1] && process.argv[1].endsWith("orthoViews.ts")) {
   const [id, out, ...rest] = process.argv.slice(2);
   if (!id || !out) throw new Error("usage: tsx generator/orthoViews.ts <id> <out-dir> [name=value ...]");
   const params = Object.fromEntries(rest.map((a) => a.split("=") as [string, string]));
-  const design = DESIGNS.get(id);
+  const design = DESIGNS.get(proceduralId(id));
   if (!design) throw new Error(`no design ${id}`);
   const m = design.build(params);
   const glb = m.toGlb(`preview (${id})`, id);

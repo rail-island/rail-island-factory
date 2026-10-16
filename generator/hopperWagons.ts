@@ -292,7 +292,9 @@ const WAP_UPPER: Clip = {
 };
 
 /** The loaded Wap self-discharging hopper (vlakosimdb n_wap-full#2). */
-export function wapHopperWagon(): MeshBuilder {
+export const WAP_PARAMS: ParamSpec[] = [{name:"cargo",title:"Cargo",default:"coal",values:[{value:"coal",title:"Loaded"},{value:"empty",title:"Empty"}]}];
+export function wapHopperWagon(given?: ParamValues): MeshBuilder {
+  const {cargo} = resolveParams(WAP_PARAMS, given);
   const c = new Wagon(WAP_PALETTE, 6.75);
   const m = c.m;
   m.scope("body", () => {
@@ -306,7 +308,7 @@ export function wapHopperWagon(): MeshBuilder {
         m.scope("rail", () => c.sideBox("shade", s, 1.4, 12.8, 2.95, 3.02, 1.4, 1.46));
       });
     // the gravel heaped above the rim (XML `load`: up to 4.5 m)
-    m.scope("load", () => {
+    if (cargo === "coal") m.scope("load", () => {
       const elev: Pt[] = [[1.4, 4.1], [3.2, 4.5], [5.2, 4.1], [6.1, 4.4], [9.1, 4.5], [12.8, 4.1]];
       const sect: Pt[] = [[-1.1, 4.1], [-0.9, 4.1], [-0.1, 4.5], [0.5, 4.4], [0.9, 4.1], [1.1, 4.1]];
       c.heap("gravel", 0.9, 13.3, 1.1, 24, 8, (x, z) => Math.max(4.1, Math.min(lerp(elev, x), lerp(sect, z))));

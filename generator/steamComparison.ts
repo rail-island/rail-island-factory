@@ -32,21 +32,21 @@ const t = (key: string, title: string, id: string, folder: string, heads: [numbe
 });
 
 export const STEAM_TRANSFERS: readonly SteamTransfer[] = [
-  t("csd_433_0", "CSD 433.0", "veh-csd-433-0", "steam-433-0", [0, 12.06], { livery: "black" }),
-  t("csd_433_0_2", "CSD 433.0#2", "veh-csd-433-0", "steam-433-0", [0, 12.06], { livery: "redLining" }),
-  t("csd_456_0", "CSD 456.0", "veh-csd-456-0", "steam-456-0", [0, 14.95]),
-  t("csd_475_179_l", "CSD 475.179 L", "veh-csd-475-1", "steam-475-1", [0, 13.0], { unit: "locomotive" }),
-  t("csd_475_179_t", "CSD 475.179 T", "veh-csd-475-1", "steam-475-1", [-0.3, 7.12], { unit: "tender" }),
-  t("csd_477_0", "CSD 477.0", "veh-csd-477-0", "steam-477-0", [0.05, 16.92], undefined, "steam1_z_both"),
-  t("csd_498_1", "CSD 498.1", "veh-csd-498-1", "steam-498-1", [0.05, 18.1], { unit: "locomotive" }),
-  t("csd_498_1_t", "CSD 498.1 T", "veh-csd-498-1", "steam-498-1", [-0.3, 8.62], { unit: "tender" }),
-  t("csd_556_0", "CSD 556.0", "veh-csd-556-0", "steam-556-0", [0, 14.95], { unit: "locomotive" }),
-  t("csd_556_0_t", "CSD 556.0 T", "veh-csd-556-0", "steam-556-0", [-0.2, 8.22], { unit: "tender" }),
-  t("csd_636", "CSD 636 Mallet", "veh-csd-636", "steam-636", [0, 15.1], { unit: "locomotive" }),
-  t("csd_636tend", "CSD 636 Tender", "veh-csd-636", "steam-636", [-0.3, 7.8], { unit: "tender" }),
-  t("csd_386", "CSD 386", "veh-csd-386", "steam-386", [0.1, 15.1], { unit: "locomotive" }),
-  t("csd_386tend", "CSD 386 Tender", "veh-csd-386", "steam-386", [-0.3, 8.3], { unit: "tender" }),
-  t("csd_m112", "CSD M112", "veh-csd-m112", "steam-m112", [0, 8.4]),
+  t("csd_433_0", "CSD 433.0", "proc-vehicle-csd-433-0", "steam-433-0", [0, 12.06], { livery: "black" }),
+  t("csd_433_0_2", "CSD 433.0#2", "proc-vehicle-csd-433-0", "steam-433-0", [0, 12.06], { livery: "redLining" }),
+  t("csd_456_0", "CSD 456.0", "proc-vehicle-csd-456-0", "steam-456-0", [0, 14.95]),
+  t("csd_475_179_l", "CSD 475.179 L", "proc-vehicle-csd-475-1", "steam-475-1", [0, 13.0], { unit: "locomotive" }),
+  t("csd_475_179_t", "CSD 475.179 T", "proc-vehicle-csd-475-1", "steam-475-1", [-0.3, 7.12], { unit: "tender" }),
+  t("csd_477_0", "CSD 477.0", "proc-vehicle-csd-477-0", "steam-477-0", [0.05, 16.92], undefined, "steam1_z_both"),
+  t("csd_498_1", "CSD 498.1", "proc-vehicle-csd-498-1", "steam-498-1", [0.05, 18.1], { unit: "locomotive" }),
+  t("csd_498_1_t", "CSD 498.1 T", "proc-vehicle-csd-498-1", "steam-498-1", [-0.3, 8.62], { unit: "tender" }),
+  t("csd_556_0", "CSD 556.0", "proc-vehicle-csd-556-0", "steam-556-0", [0, 14.95], { unit: "locomotive" }),
+  t("csd_556_0_t", "CSD 556.0 T", "proc-vehicle-csd-556-0", "steam-556-0", [-0.2, 8.22], { unit: "tender" }),
+  t("csd_636", "CSD 636 Mallet", "proc-vehicle-csd-636", "steam-636", [0, 15.1], { unit: "locomotive" }),
+  t("csd_636tend", "CSD 636 Tender", "proc-vehicle-csd-636", "steam-636", [-0.3, 7.8], { unit: "tender" }),
+  t("csd_386", "CSD 386", "proc-vehicle-csd-386", "steam-386", [0.1, 15.1], { unit: "locomotive" }),
+  t("csd_386tend", "CSD 386 Tender", "proc-vehicle-csd-386", "steam-386", [-0.3, 8.3], { unit: "tender" }),
+  t("csd_m112", "CSD M112", "proc-vehicle-csd-m112", "steam-m112", [0, 8.4]),
 ];
 
 export interface SteamLandmark {

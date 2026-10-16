@@ -55,13 +55,12 @@ rest of the catalog.
 | `veh-mixer-truck` | `trucks/mixer-truck` | `mixer-truck/` | `trucks.ts` |
 | `veh-reefer-semi-truck` | `trucks/reefer-semi-truck` | `reefer-semi-truck/` | `trucks.ts` |
 
-The webapp's `boeing-737`, `ocean-liner` and `cabin-classic` have no source photo here
-and no reproduction yet.
+The Boeing 737, ocean liner and classic cabin are now covered by
+[remaining-models.md](remaining-models.md).
 
-**Ids.** The factory's prefix (`bld-` for a building, `veh-` for a vehicle) plus the
-webapp model's GLB name, as `veh-american-truck` stands for the webapp's
-`american-semi-truck`. The ids are stored in saved maps once imported, so they are never
-renamed.
+**Ids.** Exported models use `proc-building-` and `proc-vehicle-` prefixes.
+The legacy mapping retains every old GLB ID and supplies target parameters and
+placement compensation without rewriting saved maps.
 
 ## The rules they share
 
@@ -100,3 +99,11 @@ that name nodes must be rewritten when these models are imported:
   measured off an older, taller model); the reproduction follows the meta numbers, so the
   rope runs through the grip and the door sill meets the platform
   ([cable-cabins.md](cable-cabins.md)).
+
+## Procedural export contract
+
+All current export IDs use `proc-building-` or `proc-vehicle-`; source/reference
+names in older tables identify the original models. See [legacy-mapping.md](legacy-mapping.md)
+for the authoritative ID, scale and runtime conversion contract. Ground vehicles
+have no exported `defaultScale`; buildings, aircraft and ships use 1 except the
+Eiffel Tower placement exception.

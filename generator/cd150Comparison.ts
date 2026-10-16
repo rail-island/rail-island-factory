@@ -27,7 +27,7 @@ export function cd150Comparison() {
     else n.children.forEach(walk);
   };
   const mesh = cd150();
-  walk(mesh.sourceTree("veh-cd-150", "CD 150").root);
+  walk(mesh.sourceTree("proc-vehicle-cd-150", "CD 150").root);
   const { json, bin } = parseGlb(mesh.toGlb("CD 150 comparison"));
   const tris = collectTriangles(json, bin);
   const materials = new Map(

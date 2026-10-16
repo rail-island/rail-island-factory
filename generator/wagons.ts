@@ -658,9 +658,9 @@ export interface WagonDesign {
 
 /** Every wagon design, in catalog order. The ids are stored in saved maps. */
 export const WAGON_DESIGNS: readonly WagonDesign[] = [
-  { id: "veh-nas-flat-wagon", title: "Nas Flat Wagon", folder: "wagon-nas", build: nasFlatWagon, params: NAS_PARAMS },
-  { id: "veh-ua-open-wagon", title: "Ua Open Wagon", folder: "wagon-ua", build: uaOpenWagon, params: UA_PARAMS },
-  { id: "veh-eas-open-wagon", title: "Eas Open Wagon", folder: "wagon-eas", build: easOpenWagon, params: EAS_PARAMS },
-  { id: "veh-raj-hopper-wagon", title: "Raj Hopper Wagon", folder: "wagon-raj", build: rajHopperWagon },
-  { id: "veh-rah-tank-wagon", title: "Rah Tank Wagon", folder: "wagon-rah", build: rahTankWagon },
+  { id: "proc-vehicle-nas-flat-wagon", title: "Nas Flat Wagon", folder: "wagon-nas", build: nasFlatWagon, params: NAS_PARAMS },
+  { id: "proc-vehicle-ua-open-wagon", title: "Ua Open Wagon", folder: "wagon-ua", build: uaOpenWagon, params: UA_PARAMS },
+  { id: "proc-vehicle-eas-open-wagon", title: "Eas Open Wagon", folder: "wagon-eas", build: easOpenWagon, params: EAS_PARAMS },
+  { id: "proc-vehicle-raj-hopper-wagon", title: "Raj Hopper Wagon", folder: "wagon-raj", build: rajHopperWagon },
+  { id: "proc-vehicle-rah-tank-wagon", title: "Rah Tank Wagon", folder: "wagon-rah", build: rahTankWagon },
 ];

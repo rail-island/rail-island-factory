@@ -27,7 +27,7 @@ const WIDTH = param("width", "Width", [["compact", "Two bays"], ["broad", "Three
 const ROOF = param("roof", "Roof use", [["plant", "Plant and vents"], ["garden", "Roof garden"]]);
 export const COMMERCIAL_FINISH_PARAMS: readonly string[] = ["walls", "accent"];
 export const COMMERCIAL_CATALOG: CatalogFields = {
-  category: "Commercial", group: "comm_classic", defaultScale: 1.88,
+  category: "Commercial", group: "comm_classic", defaultScale: 1,
   license: "CC0", author: "Rail Island", source: "Rail Island",
 };
 

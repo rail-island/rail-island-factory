@@ -247,5 +247,5 @@ function apron(car: Car, e: number, tip: number): void {
 export const CD843_UNITS: readonly Cd843Unit[] = ["motorCar", "drivingTrailer", "trailer"];
 
 export const DMU843_DESIGNS: ProceduralDesign[] = [
-  { id: "veh-cd-843", title: "CD 843 / 943 / 043", build: cd843, params: CD843_PARAMS, catalog: DMU_CATALOG, references: "cd-843" },
+  { id: "proc-vehicle-cd-843", title: "CD 843 / 943 / 043", build: cd843, params: CD843_PARAMS, catalog: DMU_CATALOG, references: "cd-843" },
 ];

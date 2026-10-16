@@ -14,7 +14,7 @@ The vlakosimdb wagons the game has archived are not transferred (below).
 | id | vlakosimdb | parameter | over buffers | triangles |
 |---|---|---|---|---|
 | `veh-sqns-container-wagon` | `n_sqns`, `n_sqns-full#1` | `cargo`: `empty` (default), `maersk` (a Maersk 40 ft box) | 19.8 m | 3,500 / 5,100 |
-| `veh-pao-flat-wagon` | `n_pao-full#1`, `n_pao-full#2` | `cargo`: `tubes` (default), `karosaB951` (a Karosa B 951 bus) | 15.3 m | 5,100 / 4,800 |
+| `veh-pao-flat-wagon` | `n_pao`, `n_pao-full#1` | `cargo`: `tubes` (default), `empty` | 15.3 m | 5,100 / 4,800 |
 | `veh-habis-sliding-wall-wagon` | `n_habis_tw1`, `n_habis_tw2` | `livery`: `tw1` (default, grey), `tw2` (weathered brown) | 23.2 m | 4,100 |
 | `veh-hadgs-hopper-wagon` | `n_hadgs` | - | 16.8 m | 4,000 |
 | `veh-faccs-hopper-wagon` | `n_faccs`, `viamont_faccs` | `livery`: `cd` (default), `viamont` | 12.8 m | 3,900 / 4,000 |
@@ -70,7 +70,7 @@ correctly); `x_dec` paints the x = 0 end, `x_inc` the other.
   chosen stroke, reading from outside; `maerskStar` - the light blue square with
   a seven-pointed star; `container40` - an ISO 40 ft box with corrugated sides,
   corner posts and castings, end ribs and the door end's locking bars;
-  `karosaB951` - the low-poly bus.
+  The former bus-load helper has been removed.
 - `FREIGHT_NUMBERS` - the running numbers, 12-digit UIC numbers with valid check
   digits (from photographs where legible), and `numberLines`.
 
@@ -116,7 +116,7 @@ the inline placement onto the wagon canvas (rows above the canvas are negative).
 | vehicle | boxes | final MAE (pp) |
 |---|---:|---:|
 | Sqns / Sqns + Maersk | 20 / 13 | 0.292 / 0.653 |
-| Pao + Tubes / Pao + Karosa B951 | 12 / 22 | 0.476 / 0.647 |
+| Pao + Tubes | 12 | 0.476 |
 | Habis Transwaggon 1 | 12 | 0.042 |
 | Hadgs | 16 | 0.306 |
 | N_Faccs | 18 | 0.086 |
@@ -142,3 +142,5 @@ a livery changes only paint, the running numbers' check digits on both sides,
 MAERSK and TRANSWAGGON reading from outside, and that the clip solid refuses a
 concave view. `test/models.test.ts` and `test/params.test.ts` cover every
 design's determinism, source tree, JS model and parameters.
+
+The former Nas tram load and Pao Karosa bus load are intentionally omitted. Legacy IDs map to their corresponding empty wagon with scale multiplier 1.

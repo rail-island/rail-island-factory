@@ -146,7 +146,7 @@ function leaves(n: TreeNode): LeafNode[] {
 }
 
 describe("CD 263 / 371 / 372", () => {
-  const nodes = leaves(cd263().sourceTree("veh-cd-263", "CD 263").root);
+  const nodes = leaves(cd263().sourceTree("proc-vehicle-cd-263", "CD 263").root);
 
   it("has grille banks on the right and windows on the left, and no 163 portholes or shutters", () => {
     expect(nodes.some((n) => n.id.includes("portholes") || n.id.includes("intake"))).toBe(false);

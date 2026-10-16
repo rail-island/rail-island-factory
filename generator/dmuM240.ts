@@ -113,5 +113,5 @@ export function m240(): MeshBuilder {
 }
 
 export const M240_DESIGNS: ProceduralDesign[] = [
-  { id: "veh-csd-m240", title: "CSD M 240.0 Singrovka", build: m240, catalog: DMU_CATALOG, references: "csd-m240" },
+  { id: "proc-vehicle-csd-m240", title: "CSD M 240.0 Singrovka", build: m240, catalog: DMU_CATALOG, references: "csd-m240" },
 ];

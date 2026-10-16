@@ -290,7 +290,7 @@ export function pragueCastleStVitus(): MeshBuilder {
 }
 
 export const GOTHIC_CATALOG: CatalogFields = {
-  category: "Historical", group: "hist_center", defaultScale: 0.9,
+  category: "Historical", group: "hist_center", defaultScale: 1,
   license: "CC0", author: "Rail Island", source: "Rail Island",
 };
 

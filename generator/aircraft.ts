@@ -1069,7 +1069,7 @@ export const AIRCRAFT_CATALOG: CatalogFields = {
 
 /** Every design of the family, by catalog id; `references` is the folder of its source photos under assets/. */
 export const AIRCRAFT: ProceduralDesign[] = [
-  { id: "veh-aero-a10", title: "Aero A.10", build: aeroA10, references: "aero-a10", catalog: AIRCRAFT_CATALOG },
-  { id: "veh-airbus-a380", title: "Airbus A380", build: airbusA380, references: "airbus-a380", catalog: AIRCRAFT_CATALOG },
-  { id: "veh-light-jet", title: "Light Jet", build: lightJet, references: "light-jet", catalog: AIRCRAFT_CATALOG },
+  { id: "proc-vehicle-aero-a10", title: "Aero A.10", build: aeroA10, references: "aero-a10", catalog: { ...AIRCRAFT_CATALOG, yaw:270 } },
+  { id: "proc-vehicle-airbus-a380", title: "Airbus A380", build: airbusA380, references: "airbus-a380", catalog: { ...AIRCRAFT_CATALOG, yaw:270 } },
+  { id: "proc-vehicle-light-jet", title: "Light Jet", build: lightJet, references: "light-jet", catalog: { ...AIRCRAFT_CATALOG, yaw:180 } },
 ];

@@ -92,8 +92,8 @@ Measured triangle ranges across every architectural combination:
 ## Catalog and export
 
 `COMMERCIAL_CATALOG` supplies category `Commercial`, group `comm_classic`,
-`defaultScale` 1.88 (game studs per metre), CC0, author/source Rail Island.
-The scale follows the Factory village houses and metre-modelled buildings;
+`defaultScale` 1 (metre geometry), CC0, author/source Rail Island.
+The scale follows the Factory metre convention;
 the tiny source Kenney meshes' scale of 17 is not applicable to these meshes.
 
 The family is registered in `FAMILIES` as `commercial.ts`, meta `buildings`.
@@ -117,3 +117,11 @@ changing this kit. Browser automation is unnecessary.
 
 The eleven additional [street and historic families](commercial-streets.md) use
 separate `commercial-` IDs and include a complete legacy inventory.
+
+## Procedural export contract
+
+All current export IDs use `proc-building-` or `proc-vehicle-`; source/reference
+names in older tables identify the original models. See [legacy-mapping.md](legacy-mapping.md)
+for the authoritative ID, scale and runtime conversion contract. Ground vehicles
+have no exported `defaultScale`; buildings, aircraft and ships use 1 except the
+Eiffel Tower placement exception.

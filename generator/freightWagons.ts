@@ -2,7 +2,7 @@
 // vlakosimdb, and (from hopperWagons.ts) the open hoppers -- seven designs:
 //
 //   veh-sqns-container-wagon      n_sqns, n_sqns-full#1           `cargo`: empty, maersk
-//   veh-pao-flat-wagon            n_pao-full#1, n_pao-full#2      `cargo`: tubes, karosaB951
+//   veh-pao-flat-wagon            n_pao-full#1, n_pao-full#2      `cargo`: empty, tubes
 //   veh-habis-sliding-wall-wagon  n_habis_tw1, n_habis_tw2        `livery`: tw1, tw2
 //   veh-hadgs-hopper-wagon        n_hadgs                         fixed
 //   veh-faccs-hopper-wagon        n_faccs, viamont_faccs          `livery`: cd, viamont
@@ -22,16 +22,18 @@ import type { ParamSpec, ParamValues, ProceduralDesign } from "./design.ts";
 import { resolveParams } from "./design.ts";
 import { WAGON_CATALOG } from "./wagons.ts";
 import { Wagon } from "./wagonParts.ts";
-import { FREIGHT_NUMBERS, boldText, clipSolid, container40, karosaB951, maerskStar, numberLines, type Pt } from "./freightWagonParts.ts";
+import { FREIGHT_NUMBERS, boldText, clipSolid, container40, maerskStar, numberLines, type Pt } from "./freightWagonParts.ts";
 import { faccsHopperWagon, fallsHopperWagon, wapHopperWagon, FACCS_PARAMS, FALLS_PARAMS } from "./hopperWagons.ts";
+import { WAP_PARAMS } from "./hopperWagons.ts";
 
 export { faccsHopperWagon, fallsHopperWagon, wapHopperWagon } from "./hopperWagons.ts";
+
 
 export const SQNS_PARAMS: readonly ParamSpec[] = [
   { name: "cargo", title: "Cargo", default: "empty", values: [{ value: "empty", title: "Empty (Sqns)" }, { value: "maersk", title: "Maersk 40 ft container (Sqns + Maersk)" }] },
 ];
 export const PAO_PARAMS: readonly ParamSpec[] = [
-  { name: "cargo", title: "Cargo", default: "tubes", values: [{ value: "tubes", title: "Steel tubes (Pao + Tubes)" }, { value: "karosaB951", title: "Karosa B 951 bus (Pao + Karosa B951)" }] },
+  { name: "cargo", title: "Cargo", default: "tubes", values: [{ value: "empty", title: "Empty" },{ value: "tubes", title: "Steel tubes (Pao + Tubes)" }] },
 ];
 export const HABIS_PARAMS: readonly ParamSpec[] = [
   { name: "livery", title: "Livery", default: "tw1", values: [{ value: "tw1", title: "Transwaggon, grey (Habis Transwaggon 1)" }, { value: "tw2", title: "Transwaggon, weathered brown (Habis Transwaggon 2)" }] },
@@ -48,13 +50,6 @@ const FREIGHT_PALETTE: Record<string, MaterialSpec> = {
   containerFrame: { color: "#9a9896", metallic: 0.2, roughness: 0.55 },
   maerskBlue: { color: "#8fa8c2", roughness: 0.5 },
   ink: { color: "#141414", roughness: 0.6 },
-  busWhite: { color: "#f0f0ee", roughness: 0.45 },
-  busRed: { color: "#e01818", roughness: 0.45 },
-  busGlass: { color: "#7fa59c", metallic: 0.2, roughness: 0.2 },
-  busDoor: { color: "#5a5c5e", roughness: 0.5 },
-  busGrey: { color: "#8e9092", roughness: 0.6 },
-  busLamp: { color: "#f3f5f6", roughness: 0.2 },
-  busTail: { color: "#c8202c", roughness: 0.3 },
   tyre: { color: "#2a2a2c", roughness: 0.9 },
 };
 
@@ -177,14 +172,6 @@ export function paoFlatWagon(params?: ParamValues): MeshBuilder {
             c.tube((k + layer) % 3 ? "tube" : "tubeDark", "bore", 2.8 + (k % 2) * 0.02, 12.5 - ((k + 1) % 2) * 0.02, z, y, r, 0.012, 8);
           }
         });
-      });
-    });
-  if (cargo === "karosaB951")
-    m.scope("cargo", () => {
-      // the bus on the deck, chocked at its wheels (n_pao-full#2's inline `bus` at tx 1.9, ty 1.2)
-      karosaB951(c, 1.9, 1.2);
-      m.scope("chocks", () => {
-        for (const u of [2.55, 8.25]) for (const d of [-0.62, 0.52]) for (const s of [-1, 1]) c.sideBox("bolster", s, 1.9 + u + d, 1.9 + u + d + 0.1, 1.205, 1.38, 0.95, 1.2);
       });
     });
   return m;
@@ -401,13 +388,13 @@ interface FreightDesign {
 }
 
 const DESIGNS: readonly FreightDesign[] = [
-  { id: "veh-sqns-container-wagon", title: "Sqns Container Wagon", folder: "wagon-sqns", build: sqnsContainerWagon, params: SQNS_PARAMS },
-  { id: "veh-pao-flat-wagon", title: "Pao Flat Wagon", folder: "wagon-pao", build: paoFlatWagon, params: PAO_PARAMS },
-  { id: "veh-habis-sliding-wall-wagon", title: "Habis Sliding-Wall Wagon", folder: "wagon-habis", build: habisSlidingWallWagon, params: HABIS_PARAMS },
-  { id: "veh-hadgs-hopper-wagon", title: "Hadgs Covered Hopper Wagon", folder: "wagon-hadgs", build: hadgsHopperWagon },
-  { id: "veh-faccs-hopper-wagon", title: "Faccs Hopper Wagon", folder: "wagon-faccs", build: faccsHopperWagon, params: FACCS_PARAMS },
-  { id: "veh-falls-hopper-wagon", title: "Falls Hopper Wagon", folder: "wagon-falls", build: fallsHopperWagon, params: FALLS_PARAMS },
-  { id: "veh-wap-hopper-wagon", title: "Wap Hopper Wagon", folder: "wagon-wap", build: wapHopperWagon },
+  { id: "proc-vehicle-sqns-container-wagon", title: "Sqns Container Wagon", folder: "wagon-sqns", build: sqnsContainerWagon, params: SQNS_PARAMS },
+  { id: "proc-vehicle-pao-flat-wagon", title: "Pao Flat Wagon", folder: "wagon-pao", build: paoFlatWagon, params: PAO_PARAMS },
+  { id: "proc-vehicle-habis-sliding-wall-wagon", title: "Habis Sliding-Wall Wagon", folder: "wagon-habis", build: habisSlidingWallWagon, params: HABIS_PARAMS },
+  { id: "proc-vehicle-hadgs-hopper-wagon", title: "Hadgs Covered Hopper Wagon", folder: "wagon-hadgs", build: hadgsHopperWagon },
+  { id: "proc-vehicle-faccs-hopper-wagon", title: "Faccs Hopper Wagon", folder: "wagon-faccs", build: faccsHopperWagon, params: FACCS_PARAMS },
+  { id: "proc-vehicle-falls-hopper-wagon", title: "Falls Hopper Wagon", folder: "wagon-falls", build: fallsHopperWagon, params: FALLS_PARAMS },
+  { id: "proc-vehicle-wap-hopper-wagon", title: "Wap Hopper Wagon", folder: "wagon-wap", build: wapHopperWagon, params: WAP_PARAMS },
 ];
 
 /** Every freight wagon design of this family, in catalog order. The ids are stored in saved maps. */

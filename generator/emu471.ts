@@ -474,7 +474,7 @@ function innerEnd(c: Coach, v: Volume, L: CarLayout, e: number): void {
 export const ELEFANT_CARS: ReadonlyArray<[ElefantUnit, ElefantVariant]> = (["motorCar", "trailer", "drivingTrailer"] as const).flatMap((u) => (["cd471", "cd675"] as const).map((v): [ElefantUnit, ElefantVariant] => [u, v]));
 
 export const EMU471_DESIGNS: ProceduralDesign[] = [
-  { id: "veh-cd-471", title: "CD 471 CityElefant", build: cd471, params: CD471_PARAMS, catalog: EMU_CATALOG, references: "cd-471" },
+  { id: "proc-vehicle-cd-471", title: "CD 471 CityElefant", build: cd471, params: CD471_PARAMS, catalog: EMU_CATALOG, references: "cd-471" },
 ];
 
 export { LAYOUTS as ELEFANT_LAYOUTS, centreOf as elefantCentre };

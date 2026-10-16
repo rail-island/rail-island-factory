@@ -115,3 +115,11 @@ couple of centimetres apart.
   block capitals without the diacritics or "dolni nadrazi".
 - **Suburban station**: the reference has no SUBURBAN STATION board; it is added from
   the illustration, sitting over the canopy below the hall windows.
+
+## Procedural export contract
+
+All current export IDs use `proc-building-` or `proc-vehicle-`; source/reference
+names in older tables identify the original models. See [legacy-mapping.md](legacy-mapping.md)
+for the authoritative ID, scale and runtime conversion contract. Ground vehicles
+have no exported `defaultScale`; buildings, aircraft and ships use 1 except the
+Eiffel Tower placement exception.

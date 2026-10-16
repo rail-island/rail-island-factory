@@ -1,3 +1,4 @@
+import { proceduralId } from "../generator/modelId.ts";
 // The buses from vlakosimdb (generator/buses.ts, karosa.ts, cityBuses.ts): real
 // lengths, the steered axle and its wheels, doors on the kerb side, articulated
 // sections whose joints seal their gaps, and wheels that fit their arches at lock.
@@ -23,15 +24,15 @@ function walk(n: TreeNode, out: TreeNode[] = []): TreeNode[] {
 
 /** The real buses' lengths over the body, metres, at the default parameters (assets/<folder>/SOURCES.md). */
 const LENGTH: Record<string, number> = {
-  "veh-karosa-short": 10.975,
-  "veh-karosa-long": 17.355,
-  "veh-karosa-renault-citybus-12m": 11.99,
-  "veh-karosa-renault-citybus-18m": 17.8,
-  "veh-mb-citaro": 11.95,
-  "veh-mb-citaro-blue": 11.95,
-  "veh-mb-o345-g": 17.94,
-  "veh-solaris-urbino-15": 14.59,
-  "veh-bus-1": 11.3,
+  "proc-vehicle-karosa-short": 10.975,
+  "proc-vehicle-karosa-long": 17.355,
+  "proc-vehicle-karosa-renault-citybus-12m": 11.99,
+  "proc-vehicle-karosa-renault-citybus-18m": 17.8,
+  "proc-vehicle-mb-citaro": 11.95,
+  "proc-vehicle-mb-citaro-blue": 11.95,
+  "proc-vehicle-mb-o345-g": 17.94,
+  "proc-vehicle-solaris-urbino-15": 14.59,
+  "proc-vehicle-bus-1": 11.3,
 };
 
 const BUSES = BUS_DESIGNS.map((d) => [d.id] as const);
@@ -73,15 +74,15 @@ describe("the buses", () => {
       const centres = nodes.filter((n) => !isLeaf(n) && /(^|\/)(front-axle|axle-\d+)$/.test(n.id)).map((n) => (n.min![0] + n.max![0]) / 2);
       return centres.map((c) => Math.round((nose - c) * 1000) / 1000).sort((a, b) => a - b);
     };
-    expect(axlesOf("veh-karosa-short", { variant: "b731" })).toEqual([2.29, 7.89]);
-    expect(axlesOf("veh-karosa-short", { variant: "b931" })).toEqual([2.355, 7.955]);
-    expect(axlesOf("veh-karosa-long", { variant: "b741" })).toEqual([2.29, 7.89, 14.16]);
-    expect(axlesOf("veh-karosa-long", { variant: "b961" })).toEqual([2.355, 7.955, 14.225]);
-    expect(axlesOf("veh-karosa-renault-citybus-12m")).toEqual([2.71, 8.83]);
-    expect(axlesOf("veh-karosa-renault-citybus-18m")).toEqual([2.71, 8.065, 14.64]);
-    expect(axlesOf("veh-mb-citaro")).toEqual([2.75, 8.595]);
-    expect(axlesOf("veh-mb-o345-g")).toEqual([2.69, 8.415, 14.83]);
-    expect(axlesOf("veh-solaris-urbino-15")).toEqual([2.7, 9.5, 11.19]);
+    expect(axlesOf("proc-vehicle-karosa-short", { variant: "b731" })).toEqual([2.29, 7.89]);
+    expect(axlesOf("proc-vehicle-karosa-short", { variant: "b931" })).toEqual([2.355, 7.955]);
+    expect(axlesOf("proc-vehicle-karosa-long", { variant: "b741" })).toEqual([2.29, 7.89, 14.16]);
+    expect(axlesOf("proc-vehicle-karosa-long", { variant: "b961" })).toEqual([2.355, 7.955, 14.225]);
+    expect(axlesOf("proc-vehicle-karosa-renault-citybus-12m")).toEqual([2.71, 8.83]);
+    expect(axlesOf("proc-vehicle-karosa-renault-citybus-18m")).toEqual([2.71, 8.065, 14.64]);
+    expect(axlesOf("proc-vehicle-mb-citaro")).toEqual([2.75, 8.595]);
+    expect(axlesOf("proc-vehicle-mb-o345-g")).toEqual([2.69, 8.415, 14.83]);
+    expect(axlesOf("proc-vehicle-solaris-urbino-15")).toEqual([2.7, 9.5, 11.19]);
   });
 
   it.each(BUSES)("%s steers its front axle and puts its doors on the kerb (+z) side", (id) => {
@@ -141,14 +142,14 @@ describe("the articulated buses", () => {
   const ARTICULATED = BUS_DESIGNS.filter((d) => d.build().rig!.sections).map((d) => [d.id] as const);
 
   it("are the Karosa long, the City Bus 18M and the O 345 G", () => {
-    expect(ARTICULATED.map(([id]) => id)).toEqual(["veh-karosa-long", "veh-karosa-renault-citybus-18m", "veh-mb-o345-g"]);
+    expect(ARTICULATED.map(([id]) => id)).toEqual(["proc-vehicle-karosa-long", "proc-vehicle-karosa-renault-citybus-18m", "proc-vehicle-mb-o345-g"]);
   });
 
   it.each(ARTICULATED)("%s: one joint per gap, hinged in its middle, its faces on the sections' ends", (id) => {
     const rig = BUS_DESIGNS.find((d) => d.id === id)!.build().rig!;
     const sections = rig.sections!;
     expect(rig.joints!.length).toBe(sections.length - 1);
-    const tree = designTree(id);
+    const tree = designTree(proceduralId(id));
     const byId = new Map(walk(tree.root).map((n) => [n.id, n]));
     rig.joints!.forEach((j, i) => {
       const front = byId.get(`${sections[i]!.node}/shell`)!;
@@ -167,7 +168,7 @@ describe("the articulated buses", () => {
   });
 
   it.each(ARTICULATED)("%s: the GLB has a node per section and joint, and the joint is its own mesh", (id) => {
-    const { json, bin } = parseGlb(designGlb(id));
+    const { json, bin } = parseGlb(designGlb(proceduralId(id)));
     const names = (json.nodes as Array<{ name: string }>).map((n) => n.name);
     const rig = BUS_DESIGNS.find((d) => d.id === id)!.build().rig!;
     for (const s of rig.sections!) expect(names).toContain(s.node);
@@ -337,19 +338,19 @@ describe("the bus bodies", () => {
   });
 
   it("lays its slabs across the shell's corners without sinking: a Karosa door's surround, the O 345 G's and Bus 1's plates", () => {
-    const karosa = trianglesOf(BUS_DESIGNS.find((d) => d.id === "veh-karosa-short")!.build({ variant: "b731" }));
+    const karosa = trianglesOf(BUS_DESIGNS.find((d) => d.id === "proc-vehicle-karosa-short")!.build({ variant: "b731" }));
     const door = karosa.filter((t) => /right-doors/.test(t.leaf)).flatMap((t) => t.p);
     const x0 = Math.min(...door.map((p) => p[0]));
     // the surround's strip beside the leaves, at every height across the belt corner
     for (const y of [0.6, 1.2, 1.45, 1.55, 2.0, 2.5]) expect(firstHit(karosa, [x0 + 0.015, y, 5], [0, 0, -1])?.material, `y ${y}`).toBe("frame");
-    for (const [id, end, y] of [["veh-mb-o345-g", 1, 0.51], ["veh-bus-1", 1, 0.48], ["veh-bus-1", -1, 0.63]] as const) {
+    for (const [id, end, y] of [["proc-vehicle-mb-o345-g", 1, 0.51], ["proc-vehicle-bus-1", 1, 0.48], ["proc-vehicle-bus-1", -1, 0.63]] as const) {
       const tris = trianglesOf(BUS_DESIGNS.find((d) => d.id === id)!.build());
       expect(firstHit(tris, [end * 30, y, 0.1], [-end, 0, 0])?.material, `${id} ${end}`).toBe("plate");
     }
   });
 
   it("paints what the native files show: grilles behind the last door, the B 931's grey bumpers, the B 941 E's grey roof, the Citaro's and Bus 1's tails", () => {
-    for (const b of BUILDS.filter((x) => x.id === "veh-karosa-short" || x.id === "veh-karosa-long")) {
+    for (const b of BUILDS.filter((x) => x.id === "proc-vehicle-karosa-short" || x.id === "proc-vehicle-karosa-long")) {
       const nodes = walk(b.m().sourceTree(b.id, b.label).root);
       const grille = nodes.find((n) => /(^|\/)engine-grille$/.test(n.id))!;
       const doors = nodes.filter((n) => !isLeaf(n) && /(^|\/)right-doors(-\d+)?$/.test(n.id));
@@ -358,10 +359,10 @@ describe("the bus bodies", () => {
       expect(mats.has("bumperGrey"), b.label).toBe(b.params.variant === "b931");
       expect(mats.has("roofGrey"), b.label).toBe(b.params.variant === "b941e");
     }
-    const citaro = trianglesOf(BUS_DESIGNS.find((d) => d.id === "veh-mb-citaro")!.build());
+    const citaro = trianglesOf(BUS_DESIGNS.find((d) => d.id === "proc-vehicle-mb-citaro")!.build());
     expect(firstHit(citaro, [-30, 0.85, 0.3], [1, 0, 0])?.material).toBe("body");
     expect(firstHit(citaro, [-30, 2.55, 0.9], [1, 0, 0])?.material).toBe("body");
-    const bus1 = trianglesOf(BUS_DESIGNS.find((d) => d.id === "veh-bus-1")!.build());
+    const bus1 = trianglesOf(BUS_DESIGNS.find((d) => d.id === "proc-vehicle-bus-1")!.build());
     expect(firstHit(bus1, [-30, 2.2, 0.3], [1, 0, 0])?.material).toBe("mint");
   });
 });

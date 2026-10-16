@@ -49,27 +49,27 @@ export interface DieselComparisonConfig {
 
 export const DIESEL_COMPARISONS: readonly DieselComparisonConfig[] = [
   {
-    id: "veh-cd-750", title: "CD 750 (Brejlovec), default livery", folder: "cd-750", source: "cd_750", build: () => cd750(),
+    id: "proc-vehicle-cd-750", title: "CD 750 (Brejlovec), default livery", folder: "cd-750", source: "cd_750", build: () => cd750(),
     side: [160, 50], front: [30, 50], sourceX: (x) => x + 7.65,
     mapping: "source x = Factory x + 7.65; the side canvas is 16 x 5 m, the front 3 x 5 m",
   },
   {
-    id: "veh-cd-781", title: "CD 781, default livery", folder: "cd-781", source: "cd_781", build: () => cd781(),
+    id: "proc-vehicle-cd-781", title: "CD 781, default livery", folder: "cd-781", source: "cd_781", build: () => cd781(),
     side: [180, 50], front: [30, 50], sourceX: (x) => x + 8.8,
     mapping: "source x = Factory x + 8.8; the side canvas is 18 x 5 m, the front 3 x 5 m",
   },
   {
-    id: "veh-csd-t679-0", title: "CSD T 679.0", folder: "csd-t679", source: "csd_t_679", build: () => csdT6790(),
+    id: "proc-vehicle-csd-t679-0", title: "CSD T 679.0", folder: "csd-t679", source: "csd_t_679", build: () => csdT6790(),
     side: [190, 44], front: [30, 44], sourceX: (x) => x / T679_K + 9.45,
     mapping: `source x = Factory x / ${T679_K} + 9.45 (the drawing is scaled to the published 18.0 m over the buffers); the side canvas is 19 x 4.4 m, the front 3 x 4.4 m`,
   },
   {
-    id: "veh-csd-t499", title: "CSD T 499.0", folder: "csd-t499", source: "csd_t499", build: () => csdT499(),
+    id: "proc-vehicle-csd-t499", title: "CSD T 499.0", folder: "csd-t499", source: "csd_t499", build: () => csdT499(),
     side: [180, 50], front: [30, 50], sourceX: (x) => x + 8.75,
     mapping: "source x = Factory x + 8.75; the side canvas is 18 x 5 m, the front 3 x 5 m",
   },
   {
-    id: "veh-cd-771", title: "CD 771 235, default livery", folder: "cd-771", source: "cd_771.235", build: () => cd771(),
+    id: "proc-vehicle-cd-771", title: "CD 771 235, default livery", folder: "cd-771", source: "cd_771.235", build: () => cd771(),
     side: [180, 60], front: [30, 60], sourceX: (x) => 8.8 - x / CD771_K, flipped: true,
     mapping: `source x = 8.8 - Factory x / ${CD771_K} (the short hood toward +X; the drawing is scaled to the published 17.24 m over the buffers); the side canvas is 18 x 6 m, the front 3 x 6 m`,
   },

@@ -1,3 +1,4 @@
+import { proceduralId } from "./modelId.ts";
 // The measured comparison of the trams and the metro car with their vlakosimdb
 // drawings (trams.ts, metro.ts): native pixel boxes on the side and end BMPs in
 // assets/<folder>/native/<key>/landmarks.json against the orthographic extents
@@ -33,12 +34,12 @@ export interface TramTransfer {
 }
 
 export const TRAM_TRANSFERS: readonly TramTransfer[] = [
-  { key: "tram_ckd_t3", source: "tram/tram_ckd_t3", title: "Tatra T3", id: "veh-tatra-t3", params: { variant: "t3" }, folder: "tatra-t3", map: T3_MAP },
-  { key: "tram_ckd_t6", source: "tram/tram_ckd_t6", title: "Tatra T6A5", id: "veh-tatra-t6", folder: "tatra-t6", map: T6_MAP },
-  { key: "tram_ckd_kt8", source: "tram/tram_ckd_kt8", title: "Tatra KT8D5", id: "veh-tatra-kt8", params: { livery: "redWhite" }, folder: "tatra-kt8", map: KT8_MAP },
-  { key: "tram_ckd_kt4", source: "tram/tram_ckd_kt4", title: "Tatra KT4", id: "veh-tatra-kt4", folder: "tatra-kt4", map: KT4_MAP },
-  { key: "tram_kvag_gt4", source: "tram/tram_kvag_gt4", title: "GT4", id: "veh-kvag-gt4", folder: "gt4", map: GT4_MAP },
-  { key: "m_mmz_81-71l", source: "train/metro/mmz/m_mmz_81-71l", title: "Metro 81-71 head car", id: "veh-metro-81-71", params: { unit: "headCar" }, folder: "metro-81-71", map: METRO_MAP },
+  { key: "tram_ckd_t3", source: "tram/tram_ckd_t3", title: "Tatra T3", id: "proc-vehicle-tatra-t3", params: { variant: "t3" }, folder: "tatra-t3", map: T3_MAP },
+  { key: "tram_ckd_t6", source: "tram/tram_ckd_t6", title: "Tatra T6A5", id: "proc-vehicle-tatra-t6", folder: "tatra-t6", map: T6_MAP },
+  { key: "tram_ckd_kt8", source: "tram/tram_ckd_kt8", title: "Tatra KT8D5", id: "proc-vehicle-tatra-kt8", params: { livery: "redWhite" }, folder: "tatra-kt8", map: KT8_MAP },
+  { key: "tram_ckd_kt4", source: "tram/tram_ckd_kt4", title: "Tatra KT4", id: "proc-vehicle-tatra-kt4", folder: "tatra-kt4", map: KT4_MAP },
+  { key: "tram_kvag_gt4", source: "tram/tram_kvag_gt4", title: "GT4", id: "proc-vehicle-kvag-gt4", folder: "gt4", map: GT4_MAP },
+  { key: "m_mmz_81-71l", source: "train/metro/mmz/m_mmz_81-71l", title: "Metro 81-71 head car", id: "proc-vehicle-metro-81-71", params: { unit: "headCar" }, folder: "metro-81-71", map: METRO_MAP },
 ];
 
 export type TramView = "z_inc" | "z_dec" | "z_both" | "x_inc" | "x_dec" | "x_both";
@@ -84,7 +85,7 @@ export function readTramLandmarks(key: string): TramLandmark[] {
 /** The comparison rows of one transfer. */
 export function tramComparison(key: string): TramComparisonRow[] {
   const tr = tramTransfer(key);
-  const design = DESIGNS.get(tr.id)!;
+  const design = DESIGNS.get(proceduralId(tr.id))!;
   const tree = design.build(tr.params).sourceTree(tr.id, tr.title);
   const leaves: LeafNode[] = [];
   const walk = (n: TreeNode): void => {
