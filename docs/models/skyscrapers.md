@@ -50,13 +50,22 @@ light glazing and its darker panels; cladding changes the structural and masonry
 materials. Planting and warning lights retain their colours. These two finish
 parameters never move vertices, and palettes are copied per build.
 
-Size scales the complete design, including its entrance, balconies and crown:
-compact uses 85% of the standard footprint dimensions and 80% height; landmark
-uses 115% footprint dimensions and 125% height. It changes proportions without
-adding floors. The local `TowerMesh` frame applies the same transform to recorded
-GLB geometry and standalone browser geometry, with normals recalculated from the
-transformed triangles. All sizes remain grounded and taller than twice their
-largest footprint dimension.
+Size selects the number of complete storeys, with approximately three quarters
+of the standard storeys for compact and 12% more for landmark (rounded per
+shaft or tier). Every model is still built in metres with the same catalog
+`defaultScale` of 0.5. There is no size-dependent geometry or scene scaling.
+The footprint, floor pitch, window height, doors, balcony dimensions, framing
+thickness and rooftop details keep their physical dimensions. Roofs and crowns
+move onto the resulting shaft; the twin towers' bridge follows the top of their
+first drum. Tapered and twisting designs keep their silhouette by distributing
+their profile or turn over the selected number of fixed-height storeys.
+
+For example, the twisting tower has 27, 36 or 40 storeys at 3.6 metres per
+storey; its 19-metre glass floor plates, entry door and rooftop equipment have
+the same dimensions for every size. All sizes remain grounded and taller than
+twice their largest footprint dimension. Regression tests compare the actual
+rendered floor spacing, entrance bounds and window heights across sizes, and
+require larger variants to contain more floors and triangles.
 
 Each variant may use **up to 10,000 triangles**. Detail goes into visible facade
 panels, fins, balcony edges, roof gardens and entrances rather than subdividing

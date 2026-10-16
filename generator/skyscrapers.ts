@@ -59,8 +59,9 @@ export const SKYSCRAPER_PARAMS: readonly ParamSpec[] = [
 
 export const SKYSCRAPER_FINISH_PARAMS = ["glazing", "structure"] as const;
 
-/** Local affine frame: sizes affect the GLB, source bounds and browser model alike. */
+/** Each design chooses a storey count; all geometry stays in unscaled metres. */
 class TowerMesh extends MeshBuilder {
+  private readonly size: string;
   constructor(params?: ParamValues) {
     const p = resolveParams(SKYSCRAPER_PARAMS, params);
     const pal = Object.fromEntries(Object.entries(PALETTE).map(([key, spec]) => [key, { ...spec }]));
@@ -79,8 +80,12 @@ class TowerMesh extends MeshBuilder {
       for (const key of ["bronze", "stoneDark", "brick"]) pal[key]!.color = dark;
     }
     super(pal);
-    const [width, height] = p.size === "compact" ? [0.85, 0.8] : p.size === "landmark" ? [1.15, 1.25] : [1, 1];
-    this.frame = ([x, y, z]) => [x * width, y * height, z * width];
+    this.size = p.size!;
+  }
+
+  /** Add or remove complete floors, keeping floor pitch and detail dimensions fixed. */
+  floors(standard: number): number {
+    return Math.max(1, Math.round(standard * (this.size === "compact" ? 0.75 : this.size === "landmark" ? 1.12 : 1)));
   }
 }
 
@@ -204,31 +209,34 @@ function entrance(m: MeshBuilder, front: number, y: number, material = "steel"):
 /** A square blue-glass office tower: stone podium, curtain wall, crown, mast. */
 export function glassOffice(params?: ParamValues): MeshBuilder {
   const m = new TowerMesh(params);
+  const floors = m.floors(29);
+  const top = 12 + floors * 4;
+  const belt = 12 + (Math.floor(floors / 2) + 1) * 4;
   m.scope("podium", () => {
     m.box("dark", 0, 0, 30, 30, 0, 4);
     m.box("glassDark", 0, 0, 29, 29, 4, 11);
     m.box("slab", 0, 0, 30.5, 30.5, 11, 12);
   });
   m.scope("shaft", () => {
-    curtainWall(m, "glass", "steel", 0, 0, 22, 22, 12, 128, { bays: 6 });
-    m.box("slab", 0, 0, 23, 23, 128, 128.6);
+    curtainWall(m, "glass", "steel", 0, 0, 22, 22, 12, top, { bays: 6 });
+    m.box("slab", 0, 0, 23, 23, top, top + 0.6);
   });
   m.scope("crown", () => {
-    m.box("glassDark", 0, 0, 19, 19, 128, 136);
-    floorBands(m, "steel", rect(19, 19), 128, 136, 2, 0.3, 0.3);
-    m.box("steel", 0, 0, 20, 20, 136, 137);
-    m.box("dark", 0, 0, 9, 9, 137, 141);
+    m.box("glassDark", 0, 0, 19, 19, top, top + 8);
+    floorBands(m, "steel", rect(19, 19), top, top + 8, 2, 0.3, 0.3);
+    m.box("steel", 0, 0, 20, 20, top + 8, top + 9);
+    m.box("dark", 0, 0, 9, 9, top + 9, top + 13);
   });
-  mast(m, 0, 0, 141, 22);
+  mast(m, 0, 0, top + 13, 22);
   entrance(m, 15, 0);
   m.scope("sky garden belt", () => {
-    m.box("steel", 0, 0, 25, 25, 71, 72);
-    for (const z of [-11.8, 11.8]) planter(m, 0, z, 72, 8, 1.3);
-    for (const x of [-11.8, 11.8]) m.box("steel", x, 0, 0.6, 22, 72, 78);
+    m.box("steel", 0, 0, 25, 25, belt - 1, belt);
+    for (const z of [-11.8, 11.8]) planter(m, 0, z, belt, 8, 1.3);
+    for (const x of [-11.8, 11.8]) m.box("steel", x, 0, 0.6, 22, belt, belt + 6);
   });
-  facadePanels(m, rect(22, 22), 12, 128, 4, 6);
+  facadePanels(m, rect(22, 22), 12, top, 4, 6);
   m.scope("crown blades", () => {
-    for (const x of [-8, -4, 0, 4, 8]) m.box("crown", x, 0, 0.35, 20.8, 130, 140 - Math.abs(x) * 0.35);
+    for (const x of [-8, -4, 0, 4, 8]) m.box("crown", x, 0, 0.35, 20.8, top + 2, top + 12 - Math.abs(x) * 0.35);
   });
   return m;
 }
@@ -237,14 +245,17 @@ export function glassOffice(params?: ParamValues): MeshBuilder {
 export function artDeco(params?: ParamValues): MeshBuilder {
   const m = new TowerMesh(params);
   m.scope("plinth", () => m.box("stoneDark", 0, 0, 33, 29, 0, 4));
+  let level = 4;
   const tiers: Array<[number, number, number, number, number]> = [
-    // w, d, y0, y1, bays
-    [31, 27, 4, 30, 6],
-    [25, 22, 30, 82, 5],
-    [20, 17, 82, 112, 4],
-    [15, 13, 112, 128, 3],
-    [10, 9, 128, 138, 2],
-  ];
+    // width, depth, standard storeys, bays
+    [31, 27, 7, 6], [25, 22, 14, 5], [20, 17, 8, 4],
+    [15, 13, 4, 3], [10, 9, 3, 2],
+  ].map(([w, d, floors, bays]) => {
+    const bottom = level;
+    level += m.floors(floors!) * 3.6 + 1.2;
+    return [w!, d!, bottom, level, bays!];
+  });
+  const top = level;
   tiers.forEach(([w, d, y0, y1, bays], i) => m.scope(`tier ${i + 1}`, () => {
     // the cornice caps the tier: the core has no roof and the piers stop under
     // it, or three roofs would share one height and z-fight
@@ -255,9 +266,9 @@ export function artDeco(params?: ParamValues): MeshBuilder {
   }));
   m.scope("crown", () => {
     const oct = ngon(8, 4.2, Math.PI / 8);
-    m.loft("crown", oct, 138, scaleRing(oct, 0.7), 146);
-    m.loft("crown", scaleRing(oct, 0.7), 146, scaleRing(oct, 0.42), 152);
-    m.scope("spire", () => m.spire("crown", scaleRing(oct, 0.3), 152, 178));
+    m.loft("crown", oct, top, scaleRing(oct, 0.7), top + 8);
+    m.loft("crown", scaleRing(oct, 0.7), top + 8, scaleRing(oct, 0.42), top + 14);
+    m.scope("spire", () => m.spire("crown", scaleRing(oct, 0.3), top + 14, top + 40));
   });
   entrance(m, 14.5, 0, "bronze");
   tiers.forEach(([w, d, y0, y1, bays], i) => m.scope(`tier ${i + 1} details`, () => {
@@ -268,7 +279,7 @@ export function artDeco(params?: ParamValues): MeshBuilder {
     }
   }));
   m.scope("crown flutes", () => {
-    for (const [x, z] of ngon(8, 3.9, Math.PI / 8)) m.box("bronze", x, z, 0.45, 0.45, 138, 148);
+    for (const [x, z] of ngon(8, 3.9, Math.PI / 8)) m.box("bronze", x, z, 0.45, 0.45, top, top + 10);
   });
   return m;
 }
@@ -277,6 +288,7 @@ export function artDeco(params?: ParamValues): MeshBuilder {
 export function pagoda(params?: ParamValues): MeshBuilder {
   const m = new TowerMesh(params);
   const rot = Math.PI / 8;
+  const segmentHeight = (i: number): number => m.floors(5 - Math.floor(i / 3)) * 3 + 2;
   m.scope("base", () => {
     m.prism("stone", ngon(8, 17, rot), 0, 6);
     m.prism("stoneDark", ngon(8, 13.5, rot), 6, 9);
@@ -285,7 +297,7 @@ export function pagoda(params?: ParamValues): MeshBuilder {
   let r = 12.5;
   for (let i = 0; i < 7; i++) {
     m.scope(`segment ${i + 1}`, () => {
-      const h = 17 - i;
+      const h = segmentHeight(i);
       const r1 = r * 1.06; // each segment flares outward, like a stacked pagoda
       m.scope("glass", () => m.loft("glassGold", ngon(8, r, rot), y, ngon(8, r1, rot), y + h, false));
       m.scope("bands", () => {
@@ -308,7 +320,7 @@ export function pagoda(params?: ParamValues): MeshBuilder {
   let fy = 9, fr = 12.5;
   m.scope("segment buttresses", () => {
     for (let i = 0; i < 7; i++) {
-      const h = 17 - i;
+      const h = segmentHeight(i);
       const lower = ngon(8, fr + 0.35, rot), upper = ngon(8, fr * 1.06 + 0.35, rot);
       for (let j = 0; j < 8; j++) {
         const a = lower[j]!, b = upper[j]!;
@@ -327,7 +339,7 @@ export function brickResidential(params?: ParamValues): MeshBuilder {
   const m = new TowerMesh(params);
   const w = 24;
   const d = 18;
-  const top = 92;
+  const top = 7 + m.floors(26) * 3.2 + 1.8;
   m.scope("plinth", () => m.box("stone", 0, 0, w + 1, d + 1, 0, 7));
   m.scope("shaft", () => {
     m.scope("core", () => m.box("window", 0, 0, w, d, 7, top, 0, false));
@@ -378,6 +390,8 @@ export function brickResidential(params?: ParamValues): MeshBuilder {
 /** Twin round towers of stepped glass drums joined by a sky bridge. */
 export function twinTowers(params?: ParamValues): MeshBuilder {
   const m = new TowerMesh(params);
+  const drums = [14, 7, 4, 2].map((floors) => m.floors(floors) * 4 + 2);
+  const bridge = 10 + drums[0]! - 2;
   m.scope("podium", () => {
     m.box("dark", 0, 0, 44, 22, 0, 4);
     m.box("glassDark", 0, 0, 43, 21, 4, 9);
@@ -387,7 +401,7 @@ export function twinTowers(params?: ParamValues): MeshBuilder {
     m.scope(sx < 0 ? "west tower" : "east tower", () => {
       let r = 9.5;
       let y = 10;
-      [58, 30, 18, 10].forEach((h, i) => m.scope(`drum ${i + 1}`, () => {
+      drums.forEach((h, i) => m.scope(`drum ${i + 1}`, () => {
         const ring = ngon(16, r, 0, sx, 0);
         m.prism("glass", ring, y, y + h, false);
         floorBands(m, "steel", ring, y, y + h, 4, 0.4, 0.25);
@@ -398,13 +412,13 @@ export function twinTowers(params?: ParamValues): MeshBuilder {
       m.scope("spire", () => m.spire("crown", ngon(16, r, 0, sx, 0), y, y + 28));
     });
   }
-  // the bridge between the 15th and 16th floors, on a pair of struts
+  // The bridge follows the upper floors of the first drum, with fixed-size framing.
   m.scope("sky bridge", () => {
-    m.box("steel", 0, 0, 15, 4.2, 66, 70.5);
-    m.box("glassDark", 0, 0, 15.2, 3.2, 66.6, 69.9);
+    m.box("steel", 0, 0, 15, 4.2, bridge, bridge + 4.5);
+    m.box("glassDark", 0, 0, 15.2, 3.2, bridge + 0.6, bridge + 3.9);
     m.scope("struts", () => {
       for (const s of [-1, 1]) {
-        m.loft("steel", rect(1, 1, s * 3.5, 0), 66, rect(1, 1, s * 5.8, 0), 52, false);
+        m.loft("steel", rect(1, 1, s * 3.5, 0), bridge, rect(1, 1, s * 5.8, 0), bridge - 14, false);
       }
     });
   });
@@ -412,7 +426,7 @@ export function twinTowers(params?: ParamValues): MeshBuilder {
   m.scope("tower ribs", () => {
     for (const sx of [-12, 12]) {
       let y = 10, r = 9.5;
-      for (const h of [58, 30, 18, 10]) {
+      for (const h of drums) {
         ringFins(m, ngon(16, r, 0, sx, 0), y, y + h);
         y += h + 1.2;
         r *= 0.8;
@@ -421,8 +435,8 @@ export function twinTowers(params?: ParamValues): MeshBuilder {
   });
   m.scope("bridge frame", () => {
     for (const sign of [-1, 1]) {
-      for (let x = -6; x <= 6; x += 2) m.box("crown", x, sign * 1.72, 0.18, 0.2, 66.7, 69.8);
-      m.box("crown", 0, sign * 1.72, 14.4, 0.2, 69.8, 70.1);
+      for (let x = -6; x <= 6; x += 2) m.box("crown", x, sign * 1.72, 0.18, 0.2, bridge + 0.7, bridge + 3.8);
+      m.box("crown", 0, sign * 1.72, 14.4, 0.2, bridge + 3.8, bridge + 4.1);
     }
   });
   return m;
@@ -432,7 +446,7 @@ export function twinTowers(params?: ParamValues): MeshBuilder {
 export function twisted(params?: ParamValues): MeshBuilder {
   const m = new TowerMesh(params);
   m.scope("plinth", () => m.box("dark", 0, 0, 28, 28, 0, 6));
-  const floors = 36;
+  const floors = m.floors(36);
   const fh = 3.6;
   const turn = Math.PI / 2;
   m.scope("floors", () => {
@@ -471,6 +485,7 @@ export function darkSlab(params?: ParamValues): MeshBuilder {
   const m = new TowerMesh(params);
   const w = 28;
   const d = 15;
+  const top = 8 + m.floors(29) * 3.8 + 1.8;
   m.scope("plaza", () => m.box("stone", 0, 0, w + 10, d + 10, 0, 0.6));
   m.scope("lobby", () => {
     m.box("glass", 0, 0, w - 3, d - 3, 0.6, 8, 0, false);
@@ -479,21 +494,21 @@ export function darkSlab(params?: ParamValues): MeshBuilder {
     });
   });
   m.scope("shaft", () => {
-    m.scope("glass", () => m.box("glassBlack", 0, 0, w, d, 8, 120, 0, false));
-    floorBands(m, "bronze", rect(w, d), 8, 120, 3.8, 0.35, 0.12);
-    piers(m, "bronze", 0, 0, w, d, 8, 120, 9, 0.25, 0.4);
-    m.scope("cornice", () => m.box("bronze", 0, 0, w + 0.6, d + 0.6, 120, 121));
+    m.scope("glass", () => m.box("glassBlack", 0, 0, w, d, 8, top, 0, false));
+    floorBands(m, "bronze", rect(w, d), 8, top, 3.8, 0.35, 0.12);
+    piers(m, "bronze", 0, 0, w, d, 8, top, 9, 0.25, 0.4);
+    m.scope("cornice", () => m.box("bronze", 0, 0, w + 0.6, d + 0.6, top, top + 1));
   });
   m.scope("plant floor", () => {
-    m.scope("glass", () => m.box("glassBlack", 0, 0, w - 2, d - 2, 121, 127, 0, false));
-    piers(m, "bronze", 0, 0, w - 2, d - 2, 121, 127, 18, 0.4, 0.3);
-    m.scope("roof", () => m.box("bronze", 0, 0, w - 1.6, d - 1.6, 127, 128));
+    m.scope("glass", () => m.box("glassBlack", 0, 0, w - 2, d - 2, top + 1, top + 7, 0, false));
+    piers(m, "bronze", 0, 0, w - 2, d - 2, top + 1, top + 7, 18, 0.4, 0.3);
+    m.scope("roof", () => m.box("bronze", 0, 0, w - 1.6, d - 1.6, top + 7, top + 8));
   });
   entrance(m, d / 2 - 1.5, 0.6, "bronze");
-  facadePanels(m, rect(w, d), 8, 120, 3.8, 9, "glassDark");
+  facadePanels(m, rect(w, d), 8, top, 3.8, 9, "glassDark");
   m.scope("bronze sunshades", () => {
     for (const sign of [-1, 1]) {
-      for (let y = 19; y < 118; y += 11.4) m.box("bronze", 0, sign * (d / 2 + 0.55), w + 0.5, 1.2, y, y + 0.22);
+      for (let y = 19; y < top - 2; y += 11.4) m.box("bronze", 0, sign * (d / 2 + 0.55), w + 0.5, 1.2, y, y + 0.22);
     }
   });
   m.scope("plaza planting", () => {
@@ -508,7 +523,8 @@ export function bullet(params?: ParamValues): MeshBuilder {
   const n = 20;
   m.scope("plinth", () => m.prism("dark", ngon(n, 15, 0), 0, 4));
   // radius as a function of height: swells a little, then curves into the tip
-  const H = 140;
+  const floors = m.floors(33);
+  const H = 4 + (floors + 1) * 4;
   const radius = (y: number): number => {
     const t = y / H;
     return 12 * (1 + 0.18 * Math.sin(Math.PI * Math.min(t, 0.55) / 1.1)) * Math.sqrt(Math.max(0, 1 - Math.pow(Math.max(0, t - 0.55) / 0.45, 2)));
@@ -556,9 +572,10 @@ export function bullet(params?: ParamValues): MeshBuilder {
     }
   });
   m.scope("observation band", () => {
-    const r = radius(112) + 0.5;
-    m.prism("crown", ngon(n, r), 115.2, 115.7);
-    m.prism("crown", ngon(n, r - 0.5), 119.1, 119.6);
+    const level = 4 + Math.floor(floors * 0.82) * 4;
+    const r = radius(level) + 0.5;
+    m.prism("crown", ngon(n, r), level + 3.2, level + 3.7);
+    m.prism("crown", ngon(n, r - 0.5), level + 7.1, level + 7.6);
   });
   return m;
 }
@@ -567,14 +584,16 @@ export function bullet(params?: ParamValues): MeshBuilder {
 export function terraced(params?: ParamValues): MeshBuilder {
   const m = new TowerMesh(params);
   m.scope("plinth", () => m.box("stone", 0, 0, 30, 30, 0, 5));
+  let level = 5;
   const steps: Array<[number, number, number, number, number]> = [
-    // w, d, cx, cz, top
-    [28, 28, 0, 0, 34],
-    [24, 24, -2, -2, 62],
-    [20, 20, -4, -4, 88],
-    [16, 16, -6, -6, 110],
-    [12, 12, -8, -8, 126],
-  ];
+    // width, depth, centre x/z, standard storeys
+    [28, 28, 0, 0, 8], [24, 24, -2, -2, 7], [20, 20, -4, -4, 7],
+    [16, 16, -6, -6, 6], [12, 12, -8, -8, 4],
+  ].map(([w, d, cx, cz, floors]) => {
+    const top = level + m.floors(floors!) * 3.6 + 0.2;
+    level = top + 0.8;
+    return [w!, d!, cx!, cz!, top];
+  });
   let y = 5;
   steps.forEach(([w, d, cx, cz, top], i) => m.scope(`step ${i + 1}`, () => {
     curtainWall(m, "glassGreen", "white", cx, cz, w, d, y, top, { floor: 3.6, bays: 5 });
@@ -588,7 +607,7 @@ export function terraced(params?: ParamValues): MeshBuilder {
     });
     y = top + 0.8;
   }));
-  mast(m, -8, -8, 127.2, 14, 0.35);
+  mast(m, -8, -8, steps[steps.length - 1]![4] + 1.2, 14, 0.35);
   entrance(m, 15, 0, "white");
   steps.forEach(([w, d, cx, cz, top], i) => m.scope(`garden deck ${i + 1}`, () => {
     const baseY = i === 0 ? 5 : steps[i - 1]![4] + 0.8;
@@ -606,9 +625,9 @@ export function terraced(params?: ParamValues): MeshBuilder {
 /** A white tapering pyramid tower with two side wings and a spire. */
 export function pyramid(params?: ParamValues): MeshBuilder {
   const m = new TowerMesh(params);
-  const H = 140;
+  const spireFrom = 1 + m.floors(28) * 4;
+  const H = spireFrom + 28;
   const base = 26;
-  const spireFrom = 112;
   const at = (y: number): number => base * (1 - (y / H) * 0.92);
   m.scope("plinth", () => m.box("dark", 0, 0, base + 3, base + 3, 0, 1));
   // window bands: alternating white and dark rings, every floor
@@ -627,14 +646,15 @@ export function pyramid(params?: ParamValues): MeshBuilder {
   // the two wings that carry the lift shafts, from mid-height to the spire
   for (const s of [-1, 1]) {
     m.scope(s < 0 ? "west wing" : "east wing", () => {
-      const x0 = s * at(60) / 2;
+      const wingFrom = 1 + Math.floor(m.floors(28) / 2) * 4;
+      const x0 = s * at(wingFrom) / 2;
       const x1 = s * at(spireFrom) / 2;
-      m.loft("white", rect(3.2, 6, x0 + s * 1.2, 0), 60, rect(2.6, 4.5, x1 + s * 1.0, 0), spireFrom + 6);
+      m.loft("white", rect(3.2, 6, x0 + s * 1.2, 0), wingFrom, rect(2.6, 4.5, x1 + s * 1.0, 0), spireFrom + 6);
     });
   }
   entrance(m, base / 2 + 1.5, 0, "white");
   m.scope("tapered facade ribs", () => {
-    for (let y = 1; y < 109; y += 4) {
+    for (let y = 1; y < spireFrom - 3; y += 4) {
       const s0 = at(y), s1 = at(y + 4);
       for (const sign of [-1, 1]) {
         for (const t of [-0.7, -0.35, 0, 0.35, 0.7]) {

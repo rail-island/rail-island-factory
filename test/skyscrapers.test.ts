@@ -5,6 +5,19 @@ import { SKYSCRAPERS } from "../generator/skyscrapers";
 import { paramCombinations } from "../generator/design";
 import { glbStats } from "../generator/glbStats";
 import { parseGlb } from "../generator/glbTriangles";
+import { type ScopeNode, type TreeNode } from "../generator/sourceTree";
+
+/** Actual rendered extents, including any transforms, rather than primitive arguments. */
+function scopes(node: TreeNode, names: readonly string[]): ScopeNode[] {
+  if (!("children" in node)) return [];
+  return [...(names.includes(node.name) ? [node] : []), ...node.children.flatMap((child) => scopes(child, names))];
+}
+
+function paneHeights(root: TreeNode): number[] {
+  return [...new Set(scopes(root, ["facade panels"]).flatMap((group) => group.children.map((pane) =>
+    Math.round((pane.max![1] - pane.min![1]) * 100) / 100,
+  )))].sort((a, b) => a - b);
+}
 
 describe("parametric skyscrapers", () => {
   it("retain the ten shipped identities and offer 36 variants each", () => {
@@ -27,25 +40,55 @@ describe("parametric skyscrapers", () => {
 
   for (const d of SKYSCRAPERS) {
     it(`${d.id}: each size stays grounded, tall and within 10,000 triangles`, () => {
-      const standard = glbStats(d.build().toGlb(d.id));
-      for (const [size, width, height] of [["compact", 0.85, 0.8], ["standard", 1, 1], ["landmark", 1.15, 1.25]] as const) {
-        const m = d.build({ size });
-        const s = glbStats(m.toGlb(d.id));
+      const variants = ["compact", "standard", "landmark"].map((size) => d.build({ size }));
+      const stats = variants.map((m) => glbStats(m.toGlb(d.id)));
+      expect(stats[0]!.max[1]).toBeLessThan(stats[1]!.max[1]);
+      expect(stats[1]!.max[1]).toBeLessThan(stats[2]!.max[1]);
+      // A larger building contains additional geometry, not stretched triangles.
+      expect(stats[0]!.triangles).toBeLessThan(stats[1]!.triangles);
+      expect(stats[1]!.triangles).toBeLessThan(stats[2]!.triangles);
+      for (const [index, m] of variants.entries()) {
+        const s = stats[index]!;
         expect(s.min[1]).toBe(0);
-        expect(s.max[1]).toBeCloseTo(standard.max[1] * height, 4);
-        for (const axis of [0, 2] as const) {
-          expect(s.min[axis]).toBeCloseTo(standard.min[axis] * width, 4);
-          expect(s.max[axis]).toBeCloseTo(standard.max[axis] * width, 4);
-        }
         expect(s.max[1]).toBeGreaterThan(2 * Math.max(s.max[0] - s.min[0], s.max[2] - s.min[2]));
         expect(s.triangles).toBeLessThanOrEqual(10_000);
-        expect(s.triangles).toBe(standard.triangles);
         const tree = m.sourceTree(d.id, d.title);
         for (const axis of [0, 1, 2] as const) {
           expect(Math.abs(tree.root.min![axis] - s.min[axis])).toBeLessThan(0.0006);
           expect(Math.abs(tree.root.max![axis] - s.max[axis])).toBeLessThan(0.0006);
         }
       }
+    });
+
+    it(`${d.id}: size adds storeys with fixed pitch, window height and human-sized entrances`, () => {
+      const base = d.build().sourceTree(d.id, d.title).root;
+      const entrance = scopes(base, ["entrance"])[0]!;
+      const groups = scopes(base, ["floor bands", "bands", "floors", "glass bands"]);
+      const counts: number[] = [];
+      expect(groups.length).toBeGreaterThan(0);
+      for (const size of ["compact", "standard", "landmark"]) {
+        const root = d.build({ size }).sourceTree(d.id, d.title).root;
+        const entry = scopes(root, ["entrance"])[0]!;
+        expect(entry.min).toEqual(entrance.min);
+        expect(entry.max).toEqual(entrance.max);
+        const door = entry.children.find((n) => "material" in n && n.material === "glassDark")!;
+        expect(door.max![1] - door.min![1]).toBeCloseTo(3.5, 3);
+        expect(paneHeights(root)).toEqual(paneHeights(base));
+        const variantGroups = scopes(root, ["floor bands", "bands", "floors", "glass bands"]);
+        counts.push(variantGroups.reduce((count, group) => count + group.children.length, 0));
+        for (const group of variantGroups) {
+          const original = groups.find((g) => g.id === group.id)!;
+          expect(original).toBeDefined();
+          if (group.children.length < 2 || original.children.length < 2) continue;
+          const pitch = original.children[1]!.min![1] - original.children[0]!.min![1];
+          for (let floor = 1; floor < group.children.length; floor++) {
+            const actual = group.children[floor]!.min![1] - group.children[floor - 1]!.min![1];
+            expect(actual).toBeCloseTo(pitch, 2);
+          }
+        }
+      }
+      expect(counts[0]).toBeLessThan(counts[1]!);
+      expect(counts[1]).toBeLessThan(counts[2]!);
     });
 
     it(`${d.id}: finishes change colours without moving geometry or leaking palette state`, () => {
