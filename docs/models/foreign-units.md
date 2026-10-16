@@ -172,8 +172,8 @@ published bogie pivots, the 628's 770 mm wheels, the TGV's cab side windows kept
 on the vertical wall). `pnpm exec tsx generator/unitReport.ts` writes
 `COMPARISON.md` in each folder and review views to `export/review/<key>/`;
 `--views <id> <dir> k=v` renders any build. At the current revision, with the
-documented scales undone: the 628 0.20 pp, the MDmot 0.28 pp, the ICE 0.35 pp,
-the TGV 0.78 pp.
+documented scales undone: the 628 0.20 pp, the MDmot 0.28 pp, the ICE 0.78 pp
+(most of it the published bogie pivots), the TGV 0.35 pp.
 
 ## Tests
 
