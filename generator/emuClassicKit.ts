@@ -132,8 +132,9 @@ export interface GangwayOpts {
   /** Height of the coupler bar and of the buffers (if any). */
   couplerY: number;
   buffers?: { y: number; head: "round" | "rect" };
-  /** Marker lamps' height; omitted: none. */
+  /** Marker lamps' height; omitted: none. Their distance from the centre line (default 1.1 m). */
   markerY?: number;
+  markerZ?: number;
 }
 
 /** An inner end: gangway bellows, the end door, marker lamps, a short coupler bar and buffers if any. */
@@ -151,7 +152,7 @@ export function gangwayEnd(c: Coach, v: Volume, o: GangwayOpts): void {
   m.scope("end door", () => c.door(v, e, o.door, o.doorPaint, { end: true, seam: 0.03 }));
   if (o.markerY !== undefined)
     m.scope("marker lamps", () => {
-      for (const z of [-1.1, 1.1]) {
+      for (const z of [-1, 1].map((k) => k * (o.markerZ ?? 1.1))) {
         const ring = ngon(8, 0.05, 0, z, o.markerY!);
         m.sweep("lampRed", "x", ring, X(wall) + e * 0.002, ring, X(wall) + e * 0.03);
       }

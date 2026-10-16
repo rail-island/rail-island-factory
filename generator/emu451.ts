@@ -139,7 +139,7 @@ function motorCar(): MeshBuilder {
     const plane = { x0: X(0.5), y0: 1.2, x1: X(1.1), y1: 3.3 };
     const xAt = (y: number) => plane.x0 + ((y - plane.y0) / (plane.y1 - plane.y0)) * (plane.x1 - plane.x0);
     m.scope("windscreen pillar", () => slopePanel(m, "cabBlack", 1, plane, -0.05, 0.05, 2.5, 3.25, 0.012, 0.01));
-    m.scope("emblem", () => frontEmblem(m, "blue", 1.72, 0.3, xAt));
+    m.scope("emblem", () => frontEmblem(m, "blue", 1.53, 0.33, xAt));
     m.scope("running number", () => frontNumber(m, "letteringDark", NUMBERS_451.motorCar, 0, 1.36, 0.12, xAt));
     // the lamp pods (XML `light`): z 0.95 .. 1.5, 1.0 .. 1.8 m, from source x 0.7 back into the nose
     m.scope("lamp pods", () => {
@@ -153,18 +153,18 @@ function motorCar(): MeshBuilder {
     });
     // the roof lamp housing (XML `light`, x 1.1 .. 2.4) and its lamp
     m.scope("top lamp", () => {
-      c.sideSweep("roof", polyB(F, [[1.1, 3.3], [2.35, 3.3], [2.35, 3.9], [1.6, 3.9], [1.1, 3.75]]), -0.45, 0.45);
+      c.sideSweep("roof", polyB(F, [[1.1, 3.3], [2.35, 3.3], [2.35, 3.82], [1.5, 3.82], [1.1, 3.72]]), -0.45, 0.45);
       lens(m, "lampWhite", X(1.1), 0, 3.55, 0.12);
     });
     // the apron under the nose (XML base 0.6 .. 2.6, 0.5 .. 0.8 m), black as x_inc paints it
     m.scope("apron", () => c.sideSweep("apron", polyB(F, [[0.6, 0.8], [2.6, 0.8], [2.2, 0.5], [0.9, 0.5]]), -1.25, 1.25));
-    m.scope("coupler", () => centreCoupler(m, 1, X(1.2), c.X(car.front), 0.8));
+    m.scope("coupler", () => centreCoupler(m, 1, X(1.2), c.X(car.front), 0.9));
   });
-  m.scope("rear end", () => gangwayEnd(c, body, { wall: 0, e: -1, face: BELLOWS * K_X, door: { x0: -0.45, x1: 0.45, y0: 1.4, y1: 3.3 }, doorPaint: "blue", couplerY: 0.75, markerY: 1.7 }));
+  m.scope("rear end", () => gangwayEnd(c, body, { wall: 0, e: -1, face: BELLOWS * K_X, door: { x0: -0.55, x1: 0.55, y0: 1.5, y1: 3.4 }, doorPaint: "blue", couplerY: 0.75, markerY: 1.65, markerZ: 0.8 }));
   m.scope("roof equipment", () => {
     // the ventilator housing over the passenger saloon (XML roof, 9.3 .. 18.1 m, to 4.2 m)
     m.scope("ventilator", () => {
-      const ring = (top: number): Array<[number, number]> => [[-0.8, 3.7], [0.8, 3.7], [0.8, top - 0.15], [0.6, top], [-0.6, top], [-0.8, top - 0.15]];
+      const ring = (top: number): Array<[number, number]> => [[-0.8, 3.78], [0.8, 3.78], [0.8, Math.max(3.82, top - 0.15)], [0.6, top], [-0.6, top], [-0.8, Math.max(3.82, top - 0.15)]];
       m.sweep("roofTop", "x", ring(3.9), X(18.1), ring(4.2), X(17.8));
       m.sweep("roofTop", "x", ring(4.2), X(17.8), ring(4.2), X(9.6));
       m.sweep("roofTop", "x", ring(4.2), X(9.6), ring(3.9), X(9.3));
@@ -229,4 +229,5 @@ export const CARS_451: readonly Unit451[] = ["motorCar", "trailer"];
 
 export const EMU451_DESIGNS: ProceduralDesign[] = [{ id: "veh-cd-451", title: "CD 451 Zabotlam", build: cd451, params: CD451_PARAMS, catalog: EMU_CATALOG, references: "cd-451" }];
 
-export { CARS as CARS_451_FRAMES };
+/** A car's source mapping and the body x of its centre, for the comparison. */
+export const frame451 = (unit: Unit451): { F: CarFrame; centre: number } => ({ F: CARS[unit].F, centre: (CARS[unit].front + CARS[unit].rear) / 2 });

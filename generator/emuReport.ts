@@ -14,6 +14,8 @@ import { EMU_TRANSFERS, emuBuild, emuComparison, emuNativeFile, emuTransfer, mea
 import { EMU471_DESIGNS } from "./emu471.ts";
 import { EMU680_DESIGNS } from "./emu680.ts";
 import { EMU451_DESIGNS } from "./emu451.ts";
+import { EMU460_DESIGNS } from "./emu460.ts";
+import { EMU470_DESIGNS } from "./emu470.ts";
 
 const ROOT = new URL("../", import.meta.url);
 type P3 = readonly number[];
@@ -110,6 +112,9 @@ export function writeViews(mesh: MeshBuilder, id: string, dir: URL): void {
   for (const [name, yaw, pitch, w] of views) fs.writeFileSync(new URL(`${name}.png`, dir), PNG.sync.write(view(tris, yaw, pitch, w)));
 }
 
+/** The older units' modules, which their reports name. */
+const CLASSIC: Record<string, string> = { "veh-cd-451": "emu451.ts", "veh-cd-460": "emu460.ts", "veh-cd-470": "emu470.ts" };
+
 const fmt = (xs: number[]) => xs.map((x) => x.toFixed(3)).join(", ");
 
 function report(key: string): string {
@@ -166,8 +171,9 @@ function report(key: string): string {
     `# ${t.title} native reference comparison`,
     "",
     "**Covers** - native pixel annotations, baseline and final orthographic errors.",
-    "**Code** - `generator/emu471.ts`, `generator/emu680.ts`, `generator/emuComparison.ts`, `generator/emuReport.ts`.",
-    "**See also** - [source notes](SOURCES.md), [Czech electric units](../../docs/models/czech-emus.md).",
+    ...(CLASSIC[t.id]
+      ? [`**Code** - \`generator/${CLASSIC[t.id]}\`, \`generator/emuClassicKit.ts\`, \`generator/emuComparison.ts\`, \`generator/emuReport.ts\`.`, "**See also** - [source notes](SOURCES.md), [older Czech electric units](../../docs/models/czech-emus-classic.md)."]
+      : ["**Code** - `generator/emu471.ts`, `generator/emu680.ts`, `generator/emuComparison.ts`, `generator/emuReport.ts`.", "**See also** - [source notes](SOURCES.md), [Czech electric units](../../docs/models/czech-emus.md)."]),
     "",
     `Model geometry revision (SHA-256 of comparison GLB): \`${revision}\`.`,
     "",
@@ -199,7 +205,7 @@ if (process.argv[1]?.endsWith("emuReport.ts")) {
   const args = process.argv.slice(2);
   if (args[0] === "--views") {
     const [, id, out, ...kv] = args;
-    const d = [...EMU471_DESIGNS, ...EMU680_DESIGNS, ...EMU451_DESIGNS].find((x) => x.id === id)!;
+    const d = [...EMU471_DESIGNS, ...EMU680_DESIGNS, ...EMU451_DESIGNS, ...EMU460_DESIGNS, ...EMU470_DESIGNS].find((x) => x.id === id)!;
     const params = Object.fromEntries(kv.map((s) => s.split("=") as [string, string]));
     writeViews(d.build(params), id!, new URL(out!.endsWith("/") ? out! : out! + "/", `file://${process.cwd()}/`));
   } else {

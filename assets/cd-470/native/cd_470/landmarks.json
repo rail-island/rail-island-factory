@@ -1,0 +1,382 @@
+{
+ "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/emu/cd 470/cd_470/model",
+ "pixelMetres": 0.1,
+ "convention": "Pixel edges [left, top, right, bottom] on the native BMP; origin top left, x right, y down.",
+ "annotations": [
+  {
+   "id": "S01",
+   "view": "z_both",
+   "side": "right",
+   "element": "cab side window",
+   "box": [
+    5,
+    29,
+    9,
+    34
+   ],
+   "nodes": [
+    "body/right-side/cab-window/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Small window beside the cab door; +/- one pixel."
+  },
+  {
+   "id": "S02",
+   "view": "z_both",
+   "side": "right",
+   "element": "cab door outline",
+   "box": [
+    10,
+    28,
+    17,
+    51
+   ],
+   "nodes": [
+    "body/right-side/cab-door/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Traced from the door's handrails; +/- one pixel."
+  },
+  {
+   "id": "S03",
+   "view": "z_both",
+   "side": "right",
+   "element": "louvre 1 (machine room)",
+   "box": [
+    38,
+    29,
+    51,
+    47
+   ],
+   "nodes": [
+    "body/right-side/louvres/louvre-1/panel"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "S04",
+   "view": "z_both",
+   "side": "right",
+   "element": "window 1 (small) frame",
+   "box": [
+    54,
+    29,
+    59,
+    40
+   ],
+   "nodes": [
+    "body/right-side/windows/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "S05",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 1 outline",
+   "box": [
+    64,
+    34,
+    79,
+    56
+   ],
+   "nodes": [
+    "body/right-side/doors/door-1/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "S06",
+   "view": "z_both",
+   "side": "right",
+   "element": "window 2 frame",
+   "box": [
+    81,
+    36,
+    94,
+    47
+   ],
+   "nodes": [
+    "body/right-side/windows/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "S07",
+   "view": "z_both",
+   "side": "right",
+   "element": "window 4 frame",
+   "box": [
+    116,
+    36,
+    129,
+    47
+   ],
+   "nodes": [
+    "body/right-side/windows/window-4/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "S08",
+   "view": "z_both",
+   "side": "right",
+   "element": "window 6 frame",
+   "box": [
+    150,
+    36,
+    163,
+    47
+   ],
+   "nodes": [
+    "body/right-side/windows/window-6/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "S09",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 2 outline",
+   "box": [
+    165,
+    34,
+    180,
+    56
+   ],
+   "nodes": [
+    "body/right-side/doors/door-2/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "S10",
+   "view": "z_both",
+   "side": "right",
+   "element": "window 7 frame",
+   "box": [
+    186,
+    29,
+    194,
+    38
+   ],
+   "nodes": [
+    "body/right-side/windows/window-7/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "S11",
+   "view": "z_both",
+   "side": "right",
+   "element": "window 8 frame",
+   "box": [
+    197,
+    29,
+    210,
+    38
+   ],
+   "nodes": [
+    "body/right-side/windows/window-8/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "S12",
+   "view": "z_both",
+   "side": "right",
+   "element": "louvre 2 (inner end)",
+   "box": [
+    214,
+    29,
+    222,
+    47
+   ],
+   "nodes": [
+    "body/right-side/louvres/louvre-2/panel"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "S13",
+   "view": "z_both",
+   "side": "right",
+   "element": "yellow band",
+   "box": [
+    17,
+    27,
+    243,
+    33
+   ],
+   "nodes": [
+    "body/yellow-band"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "The BMP starts the band behind the cab door; the model's body band starts at the cab section."
+  },
+  {
+   "id": "S14",
+   "view": "z_both",
+   "side": "right",
+   "element": "raised roof at the inner end",
+   "box": [
+    214,
+    13,
+    243,
+    19
+   ],
+   "nodes": [
+    "roof-equipment/raised-roof"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "The model follows the BMP, which draws it from column 214; the XML clips it from 22.6 m (column 226)."
+  },
+  {
+   "id": "F01",
+   "view": "x_inc",
+   "end": "front",
+   "element": "windscreen frame",
+   "box": [
+    3,
+    24,
+    27,
+    35
+   ],
+   "nodes": [
+    "cab/windscreen/slab-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "F02",
+   "view": "x_inc",
+   "end": "front",
+   "element": "windscreen pane (left in the BMP)",
+   "box": [
+    4,
+    25,
+    14,
+    34
+   ],
+   "nodes": [
+    "cab/windscreen/slab-3"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "F03",
+   "view": "x_inc",
+   "end": "front",
+   "element": "windscreen pane (right in the BMP)",
+   "box": [
+    16,
+    25,
+    26,
+    34
+   ],
+   "nodes": [
+    "cab/windscreen/slab-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "F04",
+   "view": "x_inc",
+   "end": "front",
+   "element": "top lamp",
+   "box": [
+    13,
+    21,
+    17,
+    23
+   ],
+   "nodes": [
+    "cab/top-lamp"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "A 4 x 2 pixel lamp."
+  },
+  {
+   "id": "F05",
+   "view": "x_inc",
+   "end": "front",
+   "element": "white lamp (left in the BMP)",
+   "box": [
+    2,
+    40,
+    4,
+    42
+   ],
+   "nodes": [
+    "cab/lamps/right/sweep-1"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "A 2 x 2 pixel lamp."
+  },
+  {
+   "id": "F06",
+   "view": "x_inc",
+   "end": "front",
+   "element": "red lamp (left in the BMP)",
+   "box": [
+    2,
+    43,
+    4,
+    45
+   ],
+   "nodes": [
+    "cab/lamps/right/sweep-2"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "A 2 x 2 pixel lamp."
+  },
+  {
+   "id": "F07",
+   "view": "x_inc",
+   "end": "front",
+   "element": "yellow band",
+   "box": [
+    0,
+    39,
+    30,
+    46
+   ],
+   "nodes": [
+    "body/cab/yellow-band",
+    "body/lower-front/yellow-band"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "R01",
+   "view": "x_dec",
+   "end": "rear",
+   "element": "end door outline",
+   "box": [
+    9,
+    27,
+    21,
+    46
+   ],
+   "nodes": [
+    "rear-end/end-door/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  }
+ ]
+}

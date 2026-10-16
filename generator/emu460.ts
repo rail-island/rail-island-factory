@@ -170,7 +170,7 @@ function car(unit: Unit460, livery: Livery460): MeshBuilder {
   if (motor) m.scope("cab", () => cab(c, cabUpper, cabLower, number));
   for (const e of motor ? [-1] : [-1, 1])
     m.scope(e > 0 ? "front end" : "rear end", () =>
-      gangwayEnd(c, body, { wall: e > 0 ? bOf(F, 0.2) : 0, e, face: 0.2, door: { x0: -0.45, x1: 0.45, y0: 1.3, y1: 3.2 }, doorPaint: "doorRed", couplerY: 0.95, markerY: 1.4 }),
+      gangwayEnd(c, body, { wall: e > 0 ? bOf(F, 0.2) : 0, e, face: 0.2, door: { x0: -0.6, x1: 0.6, y0: 1.6, y1: 3.1 }, doorPaint: "doorRed", couplerY: 0.95, markerY: 1.4, markerZ: 1.0 }),
     );
   m.scope("underframe", () => {
     if (motor) {
@@ -259,9 +259,9 @@ function cab(c: Coach, upper: Volume, lower: Volume, number: string): void {
   const X = (x: number) => c.X(bOf(F, x));
   const plane = { x0: X(0.6), y0: 1.8, x1: X(0.3), y1: 3.6 };
   m.scope("windscreen", () => {
-    slopePanel(m, "cabBlack", 1, plane, -0.9, 0.9, 2.32, 3.12, 0.006, 0.01);
+    slopePanel(m, "cabBlack", 1, plane, -0.92, 0.92, 2.28, 3.12, 0.006, 0.01);
     // x_dec columns 5..14 and 16..25, rows 19..27
-    for (const [z0, z1] of [[-0.86, -0.12], [0.12, 0.86]]) slopePanel(m, "glass", 1, plane, z0, z1, 2.38, 3.06, 0.014, 0.006);
+    for (const [z0, z1] of [[-0.88, -0.1], [0.1, 0.88]]) slopePanel(m, "glass", 1, plane, z0, z1, 2.32, 3.08, 0.014, 0.006);
   });
   m.scope("running number", () => frontNumber(m, "letteringDark", number, 0.6, 1.02, 0.1, () => X(0.4)));
   // the grille box under the windscreen (XML `b`: 0.4 .. 0.6 m, 1.8 .. 2.2 m, z +-0.6)
@@ -271,11 +271,11 @@ function cab(c: Coach, upper: Volume, lower: Volume, number: string): void {
   });
   m.scope("lower grille", () => c.endPanel(lower, "grille", 1, { x0: -0.6, x1: 0.6, y0: 1.4, y1: 1.76 }, 0.008, 0.02));
   m.scope("lamps", () => {
-    // x_dec columns 3..5 (red) and 6..8 (head), rows 33..35
+    // x_dec columns 3..5 (red) and 6..8 (head), rows 33..35; the red lens kept on the chamfered corner
     for (const s of [1, -1])
       m.scope(s > 0 ? "right" : "left", () => {
-        lens(m, "lampRed", X(0.4), s * 1.0, 1.6, 0.085);
-        lens(m, "lampWhite", X(0.4), s * 0.72, 1.6, 0.095);
+        lens(m, "lampRed", X(0.4), s * 1.06, 1.6, 0.08);
+        lens(m, "lampWhite", X(0.4), s * 0.8, 1.6, 0.095);
       });
   });
   m.scope("top lamp", () => {
@@ -292,6 +292,9 @@ function cab(c: Coach, upper: Volume, lower: Volume, number: string): void {
     c.handrail(upper, s, (b.x0 + b.x1) / 2, 1.95, 3.1);
   });
 }
+
+/** A car's source mapping and the body x of its centre, for the comparison. */
+export const frame460 = (unit: Unit460): { F: CarFrame; centre: number } => ({ F, centre: (FACES[unit][0] + FACES[unit][1]) / 2 });
 
 /** Every car and livery, for the tests. */
 export const CARS_460: ReadonlyArray<[Unit460, Livery460]> = (["motorCar", "trailer"] as const).flatMap((u) => (["cd", "cd003", "cd007", "csd"] as const).map((l): [Unit460, Livery460] => [u, l]));
