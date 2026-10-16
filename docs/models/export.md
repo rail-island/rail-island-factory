@@ -158,3 +158,10 @@ mesh builder writes no textures. Standalone:
 ```bash
 pnpm exec tsx generator/renderGlbThumb.ts export/glb/sky-pagoda.glb /tmp/pagoda.png 256
 ```
+
+## Industry migration manifest
+
+`industry-migration.json` lists the 35 audited Industry source IDs and their
+suggested procedural family and parameters. It is exported for a separate,
+explicit game import; it does not change saved maps. See [industry.md](industry.md)
+for scale, emitter, collision and animation migration requirements.

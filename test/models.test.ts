@@ -329,7 +329,10 @@ describe("the vehicles", () => {
     expect(ids).toContain("veh-american-truck");
     expect(new Set(ids).size).toBe(ids.length);
     for (const id of ids) expect(id).toMatch(/^veh-[a-z0-9]+(-[a-z0-9]+)*$/);
-    for (const d of BUILDINGS) expect(d.id).toMatch(/^(sky|bld|comm)-[a-z0-9]+(-[a-z0-9]+)*$/);
+    for (const d of BUILDINGS) {
+      if (d.catalog?.group === "industry") expect(d.id).toMatch(/^(ind|industry|chemical)-[a-z0-9]+(-[a-z0-9]+)*$/);
+      else expect(d.id).toMatch(/^(sky|bld|comm)-[a-z0-9]+(-[a-z0-9]+)*$/);
+    }
     expect(DESIGNS.size).toBe(BUILDINGS.length + VILLAGE_HOUSES.length + ALL_VEHICLES.length);
   });
 

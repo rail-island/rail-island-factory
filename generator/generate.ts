@@ -38,6 +38,8 @@ import { CHURCHES } from "./churches.ts";
 import { CATHEDRALS } from "./cathedrals.ts";
 import { GOTHIC_CATHEDRALS } from "./gothicCathedrals.ts";
 import { LANDMARKS } from "./landmarks.ts";
+import { INDUSTRY_MIGRATION } from "./industryMigration.ts";
+import { INDUSTRY } from "./industry.ts";
 import { STATIONS } from "./stations.ts";
 import { AIRCRAFT } from "./aircraft.ts";
 import { SHIPS } from "./ships.ts";
@@ -101,6 +103,7 @@ const FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: st
   { designs: CATHEDRALS, source: "cathedrals.ts", meta: "buildings" },
   { designs: GOTHIC_CATHEDRALS, source: "gothicCathedrals.ts", meta: "buildings" },
   { designs: LANDMARKS, source: "landmarks.ts", meta: "buildings" },
+  { designs: INDUSTRY, source: "industry.ts", meta: "buildings" },
   { designs: STATIONS, source: "stations.ts", meta: "buildings" },
   { designs: VILLAGE_HOUSES, source: "village.ts", meta: "village" },
   { designs: VEHICLES, source: "vehicles.ts", meta: "vehicles" },
@@ -357,6 +360,7 @@ export async function buildExport(dir = EXPORT_DIR): Promise<{ models: Generated
   fs.writeFileSync(path.join(dir, VILLAGE_META_FILE), `${JSON.stringify(exportMeta(VILLAGE_HOUSES), null, 2)}\n`);
   const rigs = new Map(models.flatMap((m) => (m.rig ? [[m.id, m.rig] as const] : [])));
   fs.writeFileSync(path.join(dir, VEHICLE_META_FILE), `${JSON.stringify(exportVehicleMeta(ALL_VEHICLES, rigs), null, 2)}\n`);
+  fs.writeFileSync(path.join(dir, "industry-migration.json"), `${JSON.stringify({ version: 1, entries: INDUSTRY_MIGRATION }, null, 2)}\n`);
   const catalog: ModelCatalog = {
     version: 1,
     records: designs.map((design) => {
