@@ -31,6 +31,7 @@ import { MeshBuilder, ngon, type MaterialSpec, type Ring, type SweepAxis } from 
 import type { Vec3 } from "./meshCore.ts";
 import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { block } from "./vehicleParts.ts";
+import { strokeText, strokeWidth } from "./strokeFont.ts";
 
 // The colours are the reference models' own. Metal is only mildly metallic:
 // the game lights models without an environment map.
@@ -221,16 +222,27 @@ function insideSec(sec: Sec, p: P2): boolean {
   return true;
 }
 
+/** Whether p is inside a section that may be slightly concave (the wide bodies' waisted ones): the crossing rule. */
+function insideAny(sec: Sec, p: P2): boolean {
+  let inside = false;
+  for (let i = 0, j = sec.length - 1; i < sec.length; j = i++) {
+    const a = sec[i]!;
+    const b = sec[j]!;
+    if (a[1] > p[1] !== b[1] > p[1] && p[0] < a[0] + ((p[1] - a[1]) * (b[0] - a[0])) / (b[1] - a[1])) inside = !inside;
+  }
+  return inside;
+}
+
 /**
  * The skin of a nose or tail: the point at lateral `u` and height `y` where the
  * body ends between `aIn` (inside) and `aOut` (outside), pushed `off` further out.
  */
-function skinEnd(axis: SweepAxis, st: Station[], u: number, y: number, aIn: number, aOut: number, off: number): Vec3 {
+function skinEnd(axis: SweepAxis, st: Station[], u: number, y: number, aIn: number, aOut: number, off: number, inside = insideSec): Vec3 {
   let lo = aIn;
   let hi = aOut;
   for (let k = 0; k < 40; k++) {
     const mid = (lo + hi) / 2;
-    if (insideSec(secAt(st, mid), [u, y])) lo = mid;
+    if (inside(secAt(st, mid), [u, y])) lo = mid;
     else hi = mid;
   }
   return at(axis, lo + Math.sign(aOut - aIn) * off, [u, y]);
@@ -1673,29 +1685,322 @@ export function lightJet(): MeshBuilder {
   return m;
 }
 
-// --- wide-body additions: MD-11, 747-400 and A300-600ST ---------------------------
-// Real dimensions in metres; all three face +X. Profiles are intentionally
-// separate: the 747 upper deck and Beluga cargo crown are part of the skin.
+// --- the wide bodies: MD-11, 747-400 and Beluga A300-600ST ---------------------------
+//
+// Three factory designs (not replacements of game assets), real size, nose at +X,
+// wings along Z, wheels on y = 0. A fuselage section here is the convex hull of
+// two egg-shaped LOBES: the lower one is the ordinary round fuselage, the upper
+// one the 747's upper deck or the Beluga's cargo bulge (absent on the MD-11), so
+// the 747 grows its hump and the Beluga its inverted-pear section and whale
+// forehead out of the same loft. Each lobe's crown, keel, width and widest height
+// are functions of the distance `d` behind the nose tip: superellipse closures
+// towards the tip (the 737's nose technique) and smooth keyframed curves along
+// the tail cone, sampled densest where the profile bends.
+
+/** A lobe of a wide-body section: an egg, `hw` half-wide at height `mid`, `top` above and `bot` below it. */
+interface Lobe { mid: number; hw: number; top: number; bot: number }
+
+/** The point of `l` whose outward normal is (cos t, sin t). */
+function lobePoint(l: Lobe, t: number): P2 {
+  const nx = Math.cos(t);
+  const ny = Math.sin(t);
+  const b = ny >= 0 ? l.top : l.bot;
+  const k = Math.hypot(l.hw * nx, b * ny) || 1;
+  return [(l.hw * l.hw * nx) / k, l.mid + (b * b * ny) / k];
+}
+
+/**
+ * The lobes' outline as an `n`-point section: point k lies where the outline's
+ * normal is at (k + 0.5) / n of a turn, as `oval` places its points, so
+ * `paintedBody` paints it by height like an oval. It is the lobes' convex hull
+ * with the switch between them blended over `soft` metres of their support
+ * values: a smooth, slightly waisted join instead of a hull whose seam jumps
+ * between points from one station to the next.
+ */
+function hullSec(n: number, lobes: Lobe[], soft = 0.3): Sec {
+  const out: Sec = [];
+  for (let k = 0; k < n; k++) {
+    const t = ((k + 0.5) / n) * Math.PI * 2;
+    const pts = lobes.map((l) => lobePoint(l, t));
+    const h = pts.map((p) => p[0] * Math.cos(t) + p[1] * Math.sin(t));
+    const top = Math.max(...h);
+    const w = h.map((v) => Math.exp((v - top) / soft));
+    const sum = w.reduce((a, b) => a + b, 0);
+    out.push([pts.reduce((a, p, i) => a + p[0] * w[i]!, 0) / sum, pts.reduce((a, p, i) => a + p[1] * w[i]!, 0) / sum]);
+  }
+  return out;
+}
+
+/** A lobe from its keel, crown, half-width and widest height (kept strictly between keel and crown). */
+function lobe(keel: number, crown: number, hw: number, mid: number): Lobe {
+  const m = Math.min(Math.max(mid, keel + 0.01), crown - 0.01);
+  return { mid: m, hw: Math.max(hw, 0.01), top: Math.max(crown - m, 0.01), bot: Math.max(m - keel, 0.01) };
+}
+
+/** The superellipse closure towards a tip: 1 at and beyond `full`, 0 at `tip`, with a vertical tangent there. */
+function closeTo(d: number, tip: number, full: number, p: number): number {
+  if (d >= full) return 1;
+  if (d <= tip) return 0;
+  const u = (full - d) / (full - tip);
+  return Math.pow(1 - Math.pow(u, p), 1 / p);
+}
+
+/** A smooth monotone curve through keyframes (d, value), held flat beyond the ends (Fritsch-Carlson). */
+function curve(keys: Array<[number, number]>): (d: number) => number {
+  const n = keys.length;
+  const dx = keys.slice(1).map(([d], i) => d - keys[i]![0]);
+  const sl = keys.slice(1).map(([, v], i) => (v - keys[i]![1]) / dx[i]!);
+  const m = keys.map((_, i) => {
+    if (i === 0) return sl[0]!;
+    if (i === n - 1) return sl[n - 2]!;
+    const a = sl[i - 1]!;
+    const b = sl[i]!;
+    return a * b <= 0 ? 0 : (3 * (dx[i - 1]! + dx[i]!)) / ((2 * dx[i]! + dx[i - 1]!) / a + (dx[i]! + 2 * dx[i - 1]!) / b);
+  });
+  return (d) => {
+    if (d <= keys[0]![0]) return keys[0]![1];
+    if (d >= keys[n - 1]![0]) return keys[n - 1]![1];
+    let i = 0;
+    while (d > keys[i + 1]![0]) i++;
+    const h = dx[i]!;
+    const t = (d - keys[i]![0]) / h;
+    const [y0, y1] = [keys[i]![1], keys[i + 1]![1]];
+    return (2 * t ** 3 - 3 * t * t + 1) * y0 + (t ** 3 - 2 * t * t + t) * h * m[i]! + (-2 * t ** 3 + 3 * t * t) * y1 + (t ** 3 - t * t) * h * m[i + 1]!;
+  };
+}
+
+/** A smoothstep from 0 at a to 1 at b. */
+const smooth = (d: number, a: number, b: number): number => {
+  const t = Math.min(1, Math.max(0, (d - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};
+
+/** Triangles in (u, v) halved along their longest edge until none is longer than `max`: a flat decal that follows a curved skin. */
+function splitLong(tris: P2[], max: number): P2[] {
+  const out: P2[] = [];
+  const split = (a: P2, b: P2, c: P2): void => {
+    const e: Array<[P2, P2, P2]> = [[a, b, c], [b, c, a], [c, a, b]];
+    const len = e.map(([p, q]) => Math.hypot(q[0] - p[0], q[1] - p[1]));
+    const i = len.indexOf(Math.max(...len));
+    if (len[i]! <= max) {
+      out.push(a, b, c);
+      return;
+    }
+    const [p, q, r] = e[i]!;
+    const mid: P2 = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
+    split(p, mid, r);
+    split(mid, q, r);
+  };
+  for (let i = 0; i + 2 < tris.length; i += 3) split(tris[i]!, tris[i + 1]!, tris[i + 2]!);
+  return out;
+}
+
 type WideType = "md11" | "b747" | "beluga";
+
+/** Everything that differs between the three wide bodies. */
+interface WideSpec {
+  length: number;
+  span: number;
+  height: number;
+  /** The nose tip's height, and the tail cone's last point. */
+  tipY: number;
+  tailY: number;
+  /** The section's lobes at distance d behind the nose tip. */
+  lobes: (d: number) => Lobe[];
+  /** Station distances behind the nose tip, densest at the nose and the tail. */
+  stations: number[];
+  /** Points per section. */
+  n: number;
+  wing: WingStation[];
+  /** The winglet (a blended, canted fin) or the wingtip fence. */
+  winglet: "canted" | "upper-lower" | "fence";
+  engines: Array<{ s: number; r: number; ahead: number; len: number; drop: number }>;
+  tailplane: WingStation[];
+  fin: FinRing[];
+  /** The belly fairing under the wing box: from x0 to x1, half-width, height of its centre, depth. */
+  belly: { x0: number; x1: number; hw: number; y: number; dy: number };
+  /** Cabin window rows: height and the stretch along x; the doors that break them. */
+  windows: Array<{ y: number; x0: number; x1: number }>;
+  doors: Array<{ x: number; y0: number; y1: number }>;
+  /** The windscreen: heights at the centre post, the stretch across, and side panes in (x, y). */
+  screen: { y0: number; y1: number; u1: number; aIn: number };
+  sidePanes: P2[][];
+  gear: { nose: [number, number]; mains: Array<{ x: number; z: number; axles: number }>; r: number; noseR: number; top: (x: number, z: number) => number };
+}
+
+/** The McDonnell Douglas MD-11: 61.21 m, the DC-10's round nose, a trijet with its third engine in the fin root. */
+function md11Spec(): WideSpec {
+  const tipY = 4.25;
+  const [keelB, crownB, cy, r] = [1.99, 8.01, 5.0, 3.01];
+  const keelT = curve([[40, keelB], [46, 2.35], [52, 3.35], [57, 4.65], [61.21, 5.95]]);
+  const crownT = curve([[49, crownB], [53, 7.85], [57, 7.35], [61.21, 6.6]]);
+  const hwT = curve([[42, r], [48, 2.7], [53, 2.05], [57.5, 1.15], [61.21, 0.3]]);
+  return {
+    length: 61.21, span: 51.66, height: 17.6, tipY, tailY: 6.28, n: 36,
+    lobes: (d) => {
+      const keel = d < 20 ? tipY - (tipY - keelB) * closeTo(d, 0, 5.8, 2.1) : keelT(d);
+      const crown = d < 20 ? tipY + (crownB - tipY) * closeTo(d, 0, 9.2, 1.5) : crownT(d);
+      const hw = d < 20 ? r * closeTo(d, 0, 7.4, 1.85) : hwT(d);
+      const mid = d < 20 ? lerp(cy, tipY, Math.pow(Math.max(0, 1 - d / 9), 1.6)) : lerp(cy, (keel + crown) / 2, smooth(d, 40, 52));
+      return [lobe(keel, crown, hw, mid)];
+    },
+    stations: [0.03, 0.1, 0.22, 0.4, 0.65, 0.98, 1.4, 1.9, 2.5, 3.2, 4.0, 4.9, 5.9, 7.0, 8.2, 9.4, 30, 40, 43, 46, 48.5, 51, 53, 55, 56.8, 58.3, 59.5, 60.4, 61.0, 61.18],
+    wing: [
+      { s: 0, lead: 8.6, chord: 12.4, thick: 1.6, mid: 2.85 },
+      { s: 9.4, lead: 1.3, chord: 6.3, thick: 0.85, mid: 3.68 },
+      { s: 25.5, lead: -11.4, chord: 2.3, thick: 0.25, mid: 5.06 },
+    ],
+    winglet: "upper-lower",
+    engines: [{ s: 8.6, r: 1.36, ahead: 3.9, len: 4.6, drop: 1.25 }],
+    tailplane: [
+      { s: 0, lead: -18.2, chord: 7.4, thick: 0.72, mid: 6.15 },
+      { s: 9.0, lead: -25.0, chord: 2.3, thick: 0.18, mid: 6.95 },
+    ],
+    fin: [[10.2, -17.8, 7.4, 0.8, 0], [17.6, -23.9, 3.4, 0.28, 0]],
+    belly: { x0: -6.5, x1: 9.8, hw: 2.45, y: 2.05, dy: 0.6 },
+    windows: [{ y: 6.1, x0: -19.5, x1: 22.8 }],
+    doors: [{ x: 23.6, y0: 4.15, y1: 6.75 }, { x: 13.0, y0: 4.15, y1: 6.75 }, { x: -3.2, y0: 4.15, y1: 6.75 }, { x: -19.9, y0: 4.15, y1: 6.75 }],
+    screen: { y0: 5.75, y1: 6.38, u1: 1.18, aIn: 22 },
+    sidePanes: [[[26.75, 5.82], [27.4, 5.82], [27.3, 6.36], [26.8, 6.42]], [[25.95, 5.85], [26.55, 5.85], [26.55, 6.45], [26.0, 6.45]]],
+    gear: {
+      nose: [24.9, 0], r: 0.66, noseR: 0.5,
+      mains: [{ x: 0.2, z: 5.29, axles: 2 }, { x: -0.9, z: 0, axles: 1 }],
+      top: (_x, z) => (z === 0 ? 2.3 : 3.0),
+    },
+  };
+}
+
+/** The Boeing 747-400: 70.66 m, the main deck's round section with the upper deck's hump on its forward third. */
+function b747Spec(): WideSpec {
+  const tipY = 4.55;
+  const [keelB, crownB, cy, r] = [2.15, 8.95, 5.55, 3.25];
+  const keelT = curve([[44, keelB], [50, 2.6], [56, 3.75], [62, 5.15], [67.5, 6.45], [70.66, 7.05]]);
+  const crownT = curve([[53, crownB], [59, 8.7], [65, 8.15], [70.66, 7.65]]);
+  const hwT = curve([[47, r], [53, 3.0], [59, 2.45], [64, 1.65], [68, 0.9], [70.66, 0.3]]);
+  const humpCrown = curve([[22.5, 10.42], [26, 10.15], [29, 9.45], [32, 8.75]]);
+  const humpHw = curve([[22.5, 2.55], [32, 2.2]]);
+  const [d0, yF] = [0.55, 5.45];
+  return {
+    length: 70.66, span: 64.44, height: 19.41, tipY, tailY: 7.35, n: 40,
+    lobes: (d) => {
+      const keel = d < 20 ? tipY - (tipY - keelB) * closeTo(d, 0, 7.2, 2.0) : keelT(d);
+      const crown = d < 20 ? tipY + (crownB - tipY) * closeTo(d, 0, 10.5, 1.6) : crownT(d);
+      const hw = d < 20 ? r * closeTo(d, 0, 9.2, 1.9) : hwT(d);
+      const mid = d < 20 ? lerp(cy, tipY, Math.pow(Math.max(0, 1 - d / 10), 1.5)) : lerp(cy, (keel + crown) / 2, smooth(d, 44, 58));
+      const lower = lobe(keel, crown, hw, mid);
+      if (d > 33 || d <= d0) return [lower];
+      // the upper deck: a blunt dome from its front point (d0, yF) above the nose
+      // bullet, past the steep windscreen to the hump's level crown
+      const uCrown = d < 22.5 ? yF + (10.42 - yF) * closeTo(d, d0, 12, 1.75) : humpCrown(d);
+      const uKeel = d < 22.5 ? yF - (yF - 5.3) * closeTo(d, d0, 6, 2.0) : 5.3;
+      const uHw = d < 22.5 ? 2.55 * closeTo(d, d0, 9.5, 2.0) : humpHw(d);
+      return [lower, lobe(uKeel, uCrown, uHw, uKeel + (uCrown - uKeel) * 0.48)];
+    },
+    stations: [0.03, 0.1, 0.22, 0.4, 0.55, 0.62, 0.75, 0.95, 1.2, 1.5, 1.85, 2.2, 2.75, 3.4, 4.15, 5.0, 5.9, 7.0, 8.3, 9.8, 11.5, 13, 20, 22.5, 24.5, 26.5, 28.3, 30, 31.6, 33, 44, 47.5, 51, 54, 57, 60, 62.8, 65.3, 67.4, 69, 70.1, 70.62],
+    wing: [
+      { s: 0, lead: 10.2, chord: 16.6, thick: 1.95, mid: 3.15 },
+      { s: 12.0, lead: 0.1, chord: 7.7, thick: 0.95, mid: 4.6 },
+      { s: 31.15, lead: -16.0, chord: 3.7, thick: 0.34, mid: 6.9 },
+    ],
+    winglet: "canted",
+    engines: [{ s: 11.9, r: 1.32, ahead: 3.5, len: 4.9, drop: 1.25 }, { s: 21.0, r: 1.32, ahead: 3.4, len: 4.9, drop: 1.05 }],
+    tailplane: [
+      { s: 0, lead: -20.2, chord: 9.6, thick: 0.85, mid: 6.55 },
+      { s: 11.08, lead: -29.1, chord: 2.7, thick: 0.2, mid: 7.85 },
+    ],
+    fin: [[7.55, -16.2, 13.6, 1.05, 0], [19.41, -27.7, 4.5, 0.3, 0]],
+    belly: { x0: -8.0, x1: 12.4, hw: 2.75, y: 2.2, dy: 0.62 },
+    windows: [{ y: 6.05, x0: -24.0, x1: 26.4 }, { y: 9.35, x0: 13.4, x1: 25.4 }],
+    doors: [{ x: 26.6, y0: 4.6, y1: 6.95 }, { x: 16.4, y0: 4.6, y1: 6.95 }, { x: 4.6, y0: 4.6, y1: 6.95 }, { x: -9.9, y0: 4.6, y1: 6.95 }, { x: -22.4, y0: 4.6, y1: 6.95 }],
+    screen: { y0: 8.72, y1: 9.18, u1: 1.08, aIn: 26 },
+    sidePanes: [[[29.6, 8.62], [30.35, 8.62], [30.25, 9.02], [29.65, 9.05]]],
+    gear: {
+      nose: [25.8, 0], r: 0.62, noseR: 0.6,
+      mains: [{ x: 1.6, z: 5.5, axles: 2 }, { x: -1.4, z: 1.9, axles: 2 }],
+      top: (_x, z) => (z < 3 ? 2.4 : 3.3),
+    },
+  };
+}
+
+/**
+ * The Beluga A300-600ST: 56.15 m, the A300's lower fuselage and lowered cockpit
+ * under a 7.7 m cargo bulge whose rounded forehead -- the upward-opening cargo
+ * door -- rises steeply right behind the windscreen, then runs level and slopes
+ * down over the tail cone to the raised tail.
+ */
+function belugaSpec(): WideSpec {
+  const tipY = 3.95;
+  const [keelB, cy, r] = [1.93, 4.75, 2.82];
+  const crownB = cy + r;
+  const keelT = curve([[32, keelB], [38, 2.3], [44, 3.25], [50, 4.55], [54, 5.55], [56.15, 6.05]]);
+  const crownT = curve([[42, crownB], [50, 7.25], [54, 6.95], [56.15, 6.72]]);
+  const hwT = curve([[36, r], [44, 2.45], [50, 1.6], [54, 0.8], [56.15, 0.3]]);
+  // the cargo bulge, its front point at (d0, yF)
+  const [d0, yF] = [1.25, 7.05];
+  const [uCrownB, uKeelB, uHwB] = [11.62, 4.35, 3.86];
+  const uCrownT = curve([[29, uCrownB], [35, 11.3], [41, 10.35], [47, 8.95], [52, 7.65], [56.15, 6.72]]);
+  const uHwT = curve([[31, uHwB], [37, 3.62], [43, 3.0], [49, 1.95], [53.5, 0.95], [56.15, 0.3]]);
+  const uKeelT = curve([[30, uKeelB], [40, 4.6], [48, 5.35], [56.15, 6.05]]);
+  return {
+    length: 56.15, span: 44.84, height: 17.24, tipY, tailY: 6.4, n: 40,
+    lobes: (d) => {
+      const keel = d < 20 ? tipY - (tipY - keelB) * closeTo(d, 0, 4.8, 2.0) : keelT(d);
+      const crown = d < 20 ? tipY + (crownB - tipY) * closeTo(d, 0, 5.4, 1.45) : crownT(d);
+      const hw = d < 20 ? r * closeTo(d, 0, 4.6, 1.8) : hwT(d);
+      const mid = d < 20 ? lerp(cy, tipY, Math.pow(Math.max(0, 1 - d / 5), 1.5)) : lerp(cy, (keel + crown) / 2, smooth(d, 34, 50));
+      const lower = lobe(keel, crown, hw, mid);
+      if (d <= d0) return [lower];
+      const uCrown = d < 20 ? yF + (uCrownB - yF) * closeTo(d, d0, 9.5, 2.4) : uCrownT(d);
+      const uKeel = d < 20 ? yF - (yF - uKeelB) * closeTo(d, d0, 6.5, 2.2) : uKeelT(d);
+      const uHw = d < 20 ? uHwB * closeTo(d, d0, 7.5, 2.5) : uHwT(d);
+      return [lower, lobe(uKeel, uCrown, uHw, uKeel + (uCrown - uKeel) * 0.45)];
+    },
+    stations: [0.03, 0.1, 0.22, 0.38, 0.58, 0.82, 1.08, 1.25, 1.32, 1.45, 1.65, 1.9, 2.25, 2.7, 3.25, 3.9, 4.7, 5.6, 6.6, 7.8, 9.1, 10.5, 12, 20, 29, 32, 35, 37.5, 39.5, 41.2, 42.4, 43.6, 44.8, 46, 47.2, 48.4, 49.6, 50.8, 52, 53.1, 54.1, 55, 55.6, 56.12],
+    wing: [
+      { s: 0, lead: 8.3, chord: 11.0, thick: 1.4, mid: 2.75 },
+      { s: 8.6, lead: 3.0, chord: 6.1, thick: 0.75, mid: 3.53 },
+      { s: 22.42, lead: -5.6, chord: 2.5, thick: 0.22, mid: 4.78 },
+    ],
+    winglet: "fence",
+    engines: [{ s: 7.6, r: 1.25, ahead: 3.9, len: 4.3, drop: 1.0 }],
+    tailplane: [
+      { s: 0, lead: -17.0, chord: 7.0, thick: 0.75, mid: 5.75 },
+      { s: 8.6, lead: -22.4, chord: 2.7, thick: 0.22, mid: 6.05 },
+    ],
+    fin: [[6.6, -15.2, 11.5, 0.95, 0], [10.6, -18.0, 8.5, 0.72, 0], [17.24, -23.5, 4.0, 0.28, 0]],
+    belly: { x0: -4.5, x1: 9.2, hw: 2.25, y: 1.95, dy: 0.55 },
+    windows: [],
+    doors: [{ x: 22.4, y0: 3.2, y1: 4.95 }],
+    screen: { y0: 4.78, y1: 5.32, u1: 1.15, aIn: 24 },
+    sidePanes: [[[26.3, 4.82], [26.95, 4.82], [26.85, 5.3], [26.35, 5.38]]],
+    gear: {
+      nose: [19.8, 0], r: 0.62, noseR: 0.46,
+      mains: [{ x: 1.2, z: 4.8, axles: 2 }],
+      top: (_x, z) => (z === 0 ? 2.3 : 2.9),
+    },
+  };
+}
+
 const MD11_LIVERIES: Record<string, Livery> = {
   neutral: A380_LIVERIES.neutral!,
   klm: {
-    title: "KLM", colors: { klmBlue: { color: "#009cde", roughness: 0.4 } },
-    skin: (s) => s > -0.25 ? "klmBlue" : "white",
+    // the 1990s scheme: sky blue over a white belly, the dark blue line between, the crown on the fin
+    title: "KLM", colors: { klmBlue: { color: "#009cde", roughness: 0.4 }, klmDark: { color: "#003082", roughness: 0.4 } },
+    skin: (s) => (s > -0.05 ? "klmBlue" : s > -0.25 ? "klmDark" : "white"),
     fin: [[0, "klmBlue"]], cowl: "white", winglet: "klmBlue",
     finArt: [{ mat: "white", polys: [[[0.25, 15], [0.75, 15], [0.75, 15.3], [0.25, 15.3]], [[0.3, 15.6], [0.7, 15.6], [0.78, 16.7], [0.5, 16.1], [0.22, 16.7]]] }],
   },
   swissair: {
     title: "Swissair (classic)", colors: { swissRed: { color: "#d71920", roughness: 0.4 } },
-    skin: (s) => s < -0.5 ? "alloy" : "white",
-    stripes: [{ mat: "swissRed", a0: -22, a1: 24, y0: 6.1, y1: 6.5 }],
+    skin: (s) => (s < -0.5 ? "alloy" : "white"),
+    stripes: [{ mat: "swissRed", a0: -27, a1: 26, y0: 5.4, y1: 5.72 }],
     fin: [[0, "swissRed"]], cowl: "alloy", winglet: "swissRed",
-    finArt: [{ mat: "white", polys: [[[0.4, 14.1], [0.6, 14.1], [0.6, 17.2], [0.4, 17.2]], [[0.22, 15.2], [0.78, 15.2], [0.78, 16.1], [0.22, 16.1]]] }],
+    finArt: [{ mat: "white", polys: [[[0.4, 13.5], [0.6, 13.5], [0.6, 16.6], [0.4, 16.6]], [[0.22, 14.6], [0.78, 14.6], [0.78, 15.5], [0.22, 15.5]]] }],
   },
   fedex: {
     title: "FedEx Express (freighter)", colors: { fedexPurple: { color: "#4d148c", roughness: 0.4 }, fedexOrange: { color: "#ff6600", roughness: 0.4 } },
     fin: [[0, "fedexPurple"]], cowl: "white", winglet: "fedexPurple",
-    finArt: [{ mat: "fedexOrange", polys: [[[0.28, 14.3], [0.72, 14.3], [0.72, 15.1], [0.28, 15.1]]] }],
+    finArt: [{ mat: "fedexOrange", polys: [[[0.28, 13.6], [0.72, 13.6], [0.72, 14.4], [0.28, 14.4]]] }],
   },
 };
 const B747_LIVERIES: Record<string, Livery> = {
@@ -1703,7 +2008,8 @@ const B747_LIVERIES: Record<string, Livery> = {
   britishAirways: { ...A380_LIVERIES.britishAirways!, stripes: [], finArt: unionFlag(0.12, 0.95, 10, 18.8, "white", "baRed") },
   lufthansa: { ...A380_LIVERIES.lufthansa!, skin: () => "white", finArt: [
     { mat: "white", polys: Array.from({ length: 16 }, (_, i): P2[] => {
-      const a = i * Math.PI / 8, b = (i + 1) * Math.PI / 8;
+      const a = (i * Math.PI) / 8;
+      const b = ((i + 1) * Math.PI) / 8;
       return [[0.5 + 0.29 * Math.cos(a), 15.3 + 2 * Math.sin(a)], [0.5 + 0.29 * Math.cos(b), 15.3 + 2 * Math.sin(b)], [0.5 + 0.24 * Math.cos(b), 15.3 + 1.7 * Math.sin(b)], [0.5 + 0.24 * Math.cos(a), 15.3 + 1.7 * Math.sin(a)]];
     }) },
     { mat: "white", polys: [[[0.3, 15.7], [0.65, 14.7], [0.7, 15], [0.38, 16.1]]] },
@@ -1712,124 +2018,164 @@ const B747_LIVERIES: Record<string, Livery> = {
 };
 const MD11_PARAMS = [liveryParam(MD11_LIVERIES)];
 const B747_PARAMS = [liveryParam(B747_LIVERIES)];
+/** Airbus Transport International: white, the tail cone and fin in Airbus blue, "AIRBUS BELUGA" titles. */
 const BELUGA_LIVERY: Livery = {
-  title: "Airbus Transport International", colors: { airbusBlue: { color: "#003b71", roughness: 0.4 } },
-  skin: (s) => s < -0.65 ? "airbusBlue" : "white",
+  title: "Airbus Transport International", colors: { airbusBlue: { color: "#00205b", roughness: 0.4 } },
+  // the blue sweeps up and back over the tail cone, from the keel at x = -16.5 to the crown at x = -21.5
+  skin: (s, a) => (a < lerp(-16.5, -21.5, (s + 1) / 2) ? "airbusBlue" : "white"),
   fin: [[0, "airbusBlue"]], cowl: "white", winglet: "airbusBlue",
 };
+/** The Beluga's titles on the cargo bulge: centre along x, baseline height, letter height. */
+const BELUGA_TITLES = { text: "AIRBUS BELUGA", x: 4.5, y: 7.15, h: 1.75 };
 
 function wideBody(kind: WideType, l: Livery, cargo = false): MeshBuilder {
-  const jumbo = kind === "b747", beluga = kind === "beluga";
-  const length = jumbo ? 70.66 : beluga ? 56.15 : 61.21;
-  const span = jumbo ? 64.44 : beluga ? 44.84 : 51.66;
-  const height = jumbo ? 19.41 : beluga ? 17.24 : 17.6;
-  const half = length / 2, cy = jumbo ? 5.5 : 5.1;
-  const radius = jumbo ? 3.25 : beluga ? 2.82 : 3.01;
-  // x, half-width, lower skin, upper skin, widest-section height.
-  const rows: number[][] = [
-    [-half + 0.12, 0.15, cy + 0.6, cy + 1.0, cy + 0.8],
-    [-half + 3, 0.8, cy - 0.1, cy + 1.7, cy + 0.8],
-    [-half + 8, radius * 0.7, cy - 1.5, cy + 2.3, cy + 0.4],
-    [-half + 13, radius, cy - radius, cy + radius, cy],
-    [half - 12, radius, cy - radius, cy + radius, cy],
-  ];
-  if (jumbo) {
-    rows.splice(4, 0, [6, radius, cy - radius, cy + radius, cy], [13, radius, cy - radius, 10.4, cy]);
-    rows[rows.length - 1]![3] = 10.4;
-  }
-  if (beluga) {
-    for (let i = 2; i < rows.length; i++) { rows[i]![1] = i === 2 ? 3.5 : 3.95; rows[i]![3] = i === 2 ? 10.5 : 12.8; rows[i]![4] = 7; }
-    rows.push([half - 7, 3.9, 2.35, 12.8, 7], [half - 4, 3.4, 2.65, 12.1, 7], [half - 2.7, 2.4, 2.9, 10.3, 6]);
-  }
-  const start = beluga ? 2.6 : jumbo ? 8 : 6;
-  for (const d of [start, start * 0.7, start * 0.4, start * 0.2, start * 0.08, 0.06]) {
-    const t = d / start;
-    const w = radius * Math.sqrt(1 - (1 - t) ** 2);
-    const mid = beluga ? 4.7 : cy - 0.35 * (1 - t);
-    const crown = jumbo ? 4.9 : radius;
-    rows.push([half - d, w, mid - radius * Math.sqrt(t), mid + (beluga ? 2.7 : crown) * Math.sqrt(t), mid]);
-  }
-  const fus: Station[] = rows.map(([a, hw, lo, hi, mid]) => ({ a: a!, sec: oval(32, 0, mid!, hw!, hi! - mid!, mid! - lo!, 2.1) }));
+  const spec = kind === "md11" ? md11Spec() : kind === "b747" ? b747Spec() : belugaSpec();
+  const half = spec.length / 2;
+  const fus: Station[] = [...spec.stations].reverse().map((d) => ({ a: half - d, sec: hullSec(spec.n, spec.lobes(d)) }));
   const m = new MeshBuilder(liveryPalette(l));
   const engineMats = { cowl: l.cowl, lip: "alloy", duct: "darkGrey", fan: "glass", nozzle: "metalGrey", plug: "darkGrey" };
+  const tipW = spec.wing[spec.wing.length - 1]!;
   m.part("airframe", [0, 0, 0], () => {
     m.scope("fuselage", () => {
       m.scope("skin", () => paintedBody(m, "x", fus, l.skin ?? (() => "white")));
-      m.scope("nose", () => fan(m, "white", "x", fus.at(-1)!.sec, fus.at(-1)!.a, 1, [half, beluga ? 4.7 : cy - 0.35, 0]));
-      m.scope("tail cone", () => fan(m, "alloy", "x", fus[0]!.sec, fus[0]!.a, -1, [-half, cy + 0.8, 0]));
-      for (const side of [-1, 1]) {
-        m.scope("cabin windows", () => {
-          if (beluga || cargo) return;
-          for (const [lo, hi, y] of [[-half + 14, half - 12, cy + 1], ...(jumbo ? [[14, half - 10, 8.8]] : [])]) {
-            const pts: Vec3[] = [];
-            for (let x = lo!; x < hi!; x += 0.7) {
-              if ([-half + 14, 2, half - 13].some(d => Math.abs(d - x) < 0.7)) continue;
-              pts.push(...skinDecal("x", fus, ovalOutline(x, y!, 0.16, 0.21, 8), side, 0.035, 2));
+      m.scope("radome", () => fan(m, "white", "x", fus[fus.length - 1]!.sec, fus[fus.length - 1]!.a, 1, [half, spec.tipY, 0]));
+      m.scope("tail cone", () => fan(m, l.skin ? l.skin(0, -half) : "white", "x", fus[0]!.sec, fus[0]!.a, -1, [-half, spec.tailY, 0]));
+      m.scope("cabin windows", () => {
+        if (cargo) return;
+        for (const side of [-1, 1]) {
+          const pts: Vec3[] = [];
+          for (const row of spec.windows) {
+            for (let x = row.x1; x >= row.x0; x -= 0.53) {
+              if (spec.doors.some((dr) => Math.abs(dr.x - x) < 0.85)) continue;
+              pts.push(...skinDecal("x", fus, ovalOutline(x, row.y, 0.15, 0.21, 6), side, 0.035, 1));
             }
-            m.facets("glass", pts, [0, 0, side]);
           }
-        });
-        m.scope("cockpit", () => {
-          const y = jumbo ? 8.1 : beluga ? 5.6 : 6.4;
-          const x = half - (beluga ? 2.5 : 5);
-          m.facets("glass", skinDecal("x", fus, [[x - 1.7, y], [x + 0.8, y - 0.1], [x + 0.5, y + 0.65], [x - 1.5, y + 0.8]], side, 0.045, 4, 6), [0, 0, side]);
-          const screen = gridTris((u, v) => skinEnd("x", fus, side * lerp(0.08, 1.2, u), lerp(y, y + 0.6, v), half - start, half, 0.05), 6, 4);
-          m.facets("glass", screen, [0.8, 0.4, side * 0.3]);
-        });
-        m.scope("doors", () => {
-          for (const x of beluga ? [half - 4] : [-half + 14, 2, half - 13]) {
-            m.facets("door", skinDecal("x", fus, [[x - 0.45, cy - 1], [x + 0.45, cy - 1], [x + 0.45, cy + 1.5], [x - 0.45, cy + 1.5]], side, 0.025, 4), [0, 0, side]);
-          }
-        });
-        m.scope("cheatline", () => { for (const stripe of l.stripes ?? []) m.facets(stripe.mat, skinStripe("x", fus, stripe.a0, stripe.a1, stripe.y0, stripe.y1, side, 0.055), [0, 0, side]); });
-      }
+          if (pts.length) m.facets("glass", pts, [0, 0, side]);
+        }
+      });
+      m.scope("doors", () => {
+        for (const side of [-1, 1]) {
+          const pts: Vec3[] = [];
+          for (const dr of spec.doors) pts.push(...gridTris((u, v) => skinY("x", fus, lerp(dr.x - 0.5, dr.x + 0.5, u), lerp(dr.y0, dr.y1, v), side, 0.04), 3, 6));
+          m.facets("door", pts, [0, 0, side]);
+        }
+      });
+      m.scope("cockpit windows", () => {
+        const sc = spec.screen;
+        for (const side of [-1, 1]) {
+          const pts: Vec3[] = [];
+          for (const p of spec.sidePanes) pts.push(...skinDecal("x", fus, p, side, 0.035, 3, 2));
+          m.facets("glass", pts, [0, 0, side]);
+          const screen = gridTris((u, v) => skinEnd("x", fus, side * lerp(0.07, sc.u1, u), lerp(lerp(sc.y0, sc.y0 + 0.05, u), lerp(sc.y1, sc.y1 - 0.08, u), v), sc.aIn, half, 0.045, insideAny), 6, 4);
+          m.facets("glass", screen, [0.8, 0.5, side * 0.4]);
+        }
+      });
+      if (l.stripes?.length) m.scope("cheatline", () => {
+        for (const st of l.stripes!) for (const side of [-1, 1]) m.facets(st.mat, skinStripe("x", fus, st.a0, st.a1, st.y0, st.y1, side, 0.055), [0, 0, side]);
+      });
+      if (kind === "beluga") m.scope("titles", () => {
+        // read from the nose aft on the left (-Z) side, from the tail forward on the right
+        const t = BELUGA_TITLES;
+        const [w, gap] = [t.h * 0.72, t.h * 0.2];
+        const width = strokeWidth(t.text, w, gap);
+        for (const side of [-1, 1]) {
+          const uv = strokeText(t.text, side > 0 ? t.x - width / 2 : t.x + width / 2, t.y, t.h, w, gap, side < 0, t.h * 0.17);
+          m.facets("airbusBlue", splitLong(uv, 0.7).map(([u, v]) => skinY("x", fus, u, v, side, 0.04)), [0, 0, side]);
+        }
+      });
+      m.scope("belly fairing", () => {
+        const b = spec.belly;
+        const st: Station[] = [[0, 0.15, 0.3], [0.08, 0.6, 0.7], [0.25, 1, 1], [0.75, 1, 1], [0.92, 0.65, 0.75], [1, 0.15, 0.3]]
+          .map(([f, w, h]) => ({ a: lerp(b.x0, b.x1, f!), sec: oval(16, 0, b.y + b.dy * (1 - h!) * 0.5, b.hw * w!, b.dy * h!, b.dy * h!) }));
+        body(m, "belly", "x", st);
+        fan(m, "belly", "x", st[0]!.sec, st[0]!.a, -1);
+        fan(m, "belly", "x", st[st.length - 1]!.sec, st[st.length - 1]!.a, 1);
+      });
     });
     m.scope("wings", () => {
       for (const side of [-1, 1]) m.scope(side > 0 ? "right wing" : "left wing", () => {
-        const tip = span / 2 - (beluga ? 0 : 0.4);
-        const stations: WingStation[] = [
-          { s: side * 0.6, lead: 6, chord: jumbo ? 16 : 12, thick: 1.3, mid: 2.8 },
-          { s: side * 7, lead: 2.7, chord: 9, thick: 0.9, mid: 3.2 },
-          { s: side * tip, lead: -tip * 0.44, chord: 2, thick: 0.18, mid: 5.2 },
-        ];
-        wing(m, "alloy", "z", stations);
-        if (!beluga) m.scope("winglet", () => fin(m, l.winglet, "x", [[5.2, -tip * 0.44, 2, 0.16, side * tip], [7.2, -tip * 0.44 - 0.7, 1, 0.08, side * (span / 2 - 0.04)]]));
-        for (const z of jumbo ? [10, 19] : [beluga ? 7.5 : 9]) m.scope(`engine ${z}`, () => {
-          const lead = z < 7 ? 3 : 2.7 + (z - 7) / (tip - 7) * (-tip * 0.44 - 2.7);
-          const x = lead + 2.5, y = 2.4 + z * 0.04;
-          fin(m, "alloy", "x", [[y, x - 0.5, 4, 0.35, side * z], [3.4 + z * 0.05, x - 1, 4, 0.4, side * z]]);
-          nacelle(m, "x", 1, { c: [side * z, y], front: x, back: x - 4.4, r: beluga ? 1.12 : 1.35, nozzle: 0.8, plug: 0.6, mats: engineMats });
+        m.scope("wing", () => wing(m, "alloy", "z", spec.wing.map((w) => ({ ...w, s: side * w.s }))));
+        m.scope("winglet", () => {
+          const edge = spec.span / 2;
+          const [tl, tc, ty] = [tipW.lead, tipW.chord, tipW.mid];
+          if (spec.winglet === "canted") {
+            // the 747-400's winglet, canted 29 degrees outward and swept back
+            fin(m, l.winglet, "x", [[ty - 0.05, tl - 0.05, tc * 0.95, 0.2, side * (tipW.s - 0.05)], [ty + 0.6, tl - 0.75, tc * 0.7, 0.15, side * (tipW.s + 0.3)], [ty + 1.95, tl - 2.4, 1.05, 0.08, side * (edge - 0.04)]]);
+          } else if (spec.winglet === "upper-lower") {
+            // the MD-11's upper winglet and the small lower one
+            fin(m, l.winglet, "x", [[ty - 0.05, tl - 0.15, tc * 0.85, 0.18, side * (edge - 0.09)], [ty + 2.4, tl - 2.0, 0.85, 0.08, side * (edge - 0.04)]]);
+            fin(m, l.winglet, "x", [[ty - 0.95, tl - 0.75, 0.55, 0.08, side * (edge - 0.07)], [ty + 0.05, tl - 0.35, 0.95, 0.14, side * (edge - 0.09)]], 1, false);
+          } else {
+            // the A300-600's small wingtip fence above and below the tip
+            fin(m, l.winglet, "x", [[ty - 0.55, tl + 0.05, 0.7, 0.08, side * (edge - 0.05)], [ty + 0.05, tl + 0.25, 1.2, 0.1, side * (edge - 0.06)], [ty + 0.75, tl - 0.15, 0.6, 0.07, side * (edge - 0.05)]]);
+          }
         });
+        m.scope("flap track fairings", () => {
+          for (const f of [0.3, 0.5, 0.7]) {
+            const z = lerp(spec.wing[1]!.s * 0.6, tipW.s, f) - 2;
+            const w = wingAt(spec.wing, z);
+            const te = w.lead - w.chord;
+            const yb = w.mid - w.thick * 0.4;
+            const len = Math.min(3.4, w.chord * 0.75);
+            const st: Station[] = [[te + len * 0.55, 0.08], [te + len * 0.3, 0.2], [te - len * 0.05, 0.22], [te - len * 0.42, 0.05]]
+              .map(([x, rr]) => ({ a: x!, sec: oval(6, side * z, yb - rr! * 0.75, rr! * 0.75, rr!, rr!) }));
+            body(m, "alloy", "x", st);
+            fan(m, "alloy", "x", st[0]!.sec, st[0]!.a, 1);
+            fan(m, "alloy", "x", st[3]!.sec, st[3]!.a, -1);
+          }
+        });
+        spec.engines.forEach((e, i) => m.scope(`engine ${i + 1}`, () => {
+          const w = wingAt(spec.wing, e.s);
+          const lower = w.mid - w.thick * 0.42;
+          const y = lower - e.drop;
+          const front = w.lead + e.ahead;
+          const back = front - e.len;
+          nacelle(m, "x", 1, { c: [side * e.s, y], front, back, r: e.r, nozzle: 1.2, plug: 0.6, mats: engineMats }, 24);
+          m.scope("pylon", () => {
+            const sec: Sec = [[front - 1.1, y + e.r * 0.9], [back + 0.4, y + e.r * 0.75], [w.lead - w.chord * 0.55, lower + 0.15], [w.lead + 0.2, lower + 0.3]];
+            m.sweep(l.cowl === "white" ? "white" : "alloy", "z", sec, side * e.s - 0.22, sec, side * e.s + 0.22);
+          });
+        }));
       });
     });
     m.scope("tail", () => {
-      const root = -half + (jumbo ? 17 : 13);
-      m.scope("fin", () => liveryFin(m, l, "x", [[cy + 1, root, 11, 0.65, 0], [height, -half + 5, 4, 0.2, 0]]));
+      m.scope("fin", () => liveryFin(m, l, "x", spec.fin));
       for (const side of [-1, 1]) {
-        const tailSpan = jumbo ? 11 : beluga ? 9 : 10;
-        const y = beluga ? 8.5 : 6.5;
-        m.scope("tailplane", () => wing(m, "alloy", "z", [{ s: side * 0.4, lead: -half + 10, chord: 7, thick: 0.65, mid: y }, { s: side * tailSpan, lead: -half + 3, chord: 2, thick: 0.15, mid: y + 0.8 }]));
-        if (beluga) m.scope("auxiliary fin", () => fin(m, l.winglet, "x", [[7.8, -half + 4, 3, 0.18, side * 8], [12.2, -half + 2.6, 1.5, 0.1, side * 8]]));
+        m.scope("tailplane", () => wing(m, "alloy", "z", spec.tailplane.map((w) => ({ ...w, s: side * w.s }))));
+        if (kind === "beluga") m.scope("auxiliary fin", () => {
+          // the endplate fins on the tailplane's tips
+          const tp = spec.tailplane[1]!;
+          fin(m, l.winglet, "x", [[tp.mid - 0.05, tp.lead + 0.1, tp.chord + 0.2, 0.2, side * (tp.s - 0.12)], [tp.mid + 1.2, tp.lead - 0.35, 2.4, 0.17, side * (tp.s - 0.1)], [tp.mid + 2.9, tp.lead - 1.25, 1.45, 0.1, side * (tp.s - 0.08)]]);
+        });
       }
-      if (!jumbo && !beluga) m.scope("engine 2", () => nacelle(m, "x", 1, { c: [0, 10.3], front: -half + 11, back: -half + 3, r: 1.45, nozzle: 1, plug: 0.5, mats: engineMats }));
+      if (kind === "md11") m.scope("engine 2", () => {
+        // the centre engine, straight through the fin root above the tail cone
+        nacelle(m, "x", 1, { c: [0, 9.55], front: -15.6, back: -21.9, r: 1.36, nozzle: 1.5, plug: 0.5, mats: engineMats }, 24);
+        m.scope("pylon", () => fin(m, "white", "x", [[7.3, -15.4, 10.2, 2.1, 0], [9.6, -16.2, 9.0, 1.7, 0]]));
+      });
     });
   });
   m.part("gear", [0, 0, 0], () => {
-    const leg = (name: string, x: number, z: number, pairs: number, r: number): void => m.scope(name, () => {
+    const g = spec.gear;
+    const leg = (name: string, x: number, z: number, axles: number, r: number): void => m.scope(name, () => {
       const y = axleY(0, r);
-      rod(m, "alloy", [x, 2.9, z], [x, y, z], 0.14, 8);
-      block(m, "door", x - 0.65, x + 0.65, 1.9, 2.9, z + 0.3, z + 0.38);
-      if (pairs > 1) rod(m, "steel", [x - 0.7, y, z], [x + 0.7, y, z], 0.13);
-      for (let i = 0; i < pairs; i++) {
-        const a = x + (i - (pairs - 1) / 2) * 1.4;
-        rod(m, "alloy", [a, y, z - 0.5], [a, y, z + 0.5], 0.1);
-        for (const side of [-1, 1]) wheel(m, "z", z + side * 0.45 - 0.18, z + side * 0.45 + 0.18, [a, y], r, r * 0.45, "alloy");
+      const top = g.top(x, Math.abs(z));
+      rod(m, "alloy", [x, top, z], [x, y + 0.15, z], axles > 1 ? 0.16 : 0.12, 8);
+      if (axles > 1) {
+        rod(m, "steel", [x - 0.85, y, z], [x + 0.85, y, z], 0.12);
+        block(m, "door", x - 0.7, x + 0.7, top - 1.0, top - 0.1, z + Math.sign(z || 1) * 0.55, z + Math.sign(z || 1) * 0.6);
+      }
+      for (let i = 0; i < axles; i++) {
+        const a = x + (i - (axles - 1) / 2) * 1.5;
+        rod(m, "alloy", [a, y, z - 0.55], [a, y, z + 0.55], 0.09);
+        for (const s of [-1, 1]) wheel(m, "z", z + s * 0.52 - 0.19, z + s * 0.52 + 0.19, [a, y], r, r * 0.45, "alloy");
       }
     });
-    leg("nose gear", half - (jumbo ? 10 : 7), 0, 1, 0.46);
-    for (const side of [-1, 1]) leg(side > 0 ? "right main gear" : "left main gear", -3, side * (jumbo ? 5.5 : 4.5), 2, 0.65);
-    if (jumbo) for (const side of [-1, 1]) leg(`body gear ${side}`, -6, side * 1.8, 2, 0.65);
-    else if (!beluga) leg("centre gear", -5, 0, 1, 0.65);
+    leg("nose gear", g.nose[0], g.nose[1], 1, g.noseR);
+    for (const mg of g.mains) {
+      if (mg.z === 0) leg("centre gear", mg.x, 0, mg.axles, g.r);
+      else for (const side of [-1, 1]) leg(`${side > 0 ? "right" : "left"} ${mg.z < 3 ? "body" : "main"} gear`, mg.x, side * mg.z, mg.axles, g.r);
+    }
   });
   return m;
 }

@@ -5,7 +5,7 @@ Boeing 737-800, MD-11, Boeing 747-400, Airbus Beluga and the light business jet)
 their axes, datums, sizes and triangle budget, the airline liveries of the A380 and the
 737, the retractable-gear parts, the body/decal technique they are built with, and where
 they deviate from the references.
-**Code** - `generator/aircraft.ts`, `generator/meshCore.ts` (`sweep`, `loft`, `slab`, `facets`, `part`), `generator/vehicleParts.ts` (`block`), `test/referenceModels.test.ts`, `test/aircraft.test.ts`, `test/models.test.ts`, `test/jsModel.test.ts`, `.agents/skills/aircraft/SKILL.md`
+**Code** - `generator/aircraft.ts`, `generator/strokeFont.ts` (the Beluga's titles), `generator/meshCore.ts` (`sweep`, `loft`, `slab`, `facets`, `part`), `generator/vehicleParts.ts` (`block`), `test/referenceModels.test.ts`, `test/aircraft.test.ts`, `test/models.test.ts`, `test/jsModel.test.ts`, `.agents/skills/aircraft/SKILL.md`
 **See also** - [vehicles.md](vehicles.md) (the road and rail vehicles, `sweep`, parts), [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md)
 
 ## The designs
@@ -169,21 +169,60 @@ separate import step.
 | `proc-vehicle-boeing-747` | 70.66 / 64.44 / 19.41 | neutral, British Airways, Lufthansa, KLM |
 | `proc-vehicle-airbus-beluga` | 56.15 / 44.84 / 17.24 | Airbus Transport International white and blue |
 
-The MD-11 has two underwing engines, a straight-through tail engine, winglets,
-two four-wheel main bogies and a two-wheel centre gear. FedEx represents the
-freighter and omits passenger windows. Swissair uses a red cheatline, silver
-belly and engines, and a white cross on a red tail; KLM uses a blue upper
-fuselage and simplified white crown; FedEx uses a purple fin and orange accent.
+### How the wide bodies are shaped
 
-The 747 has a raised forward upper deck integrated into the fuselage sections,
-two rows of windows forward, four turbofans, winglets and four four-wheel main
-bogies. British Airways has a blue belly and simplified Union flag tail;
-Lufthansa has a white fuselage and blue fin with a simplified white crane ring.
+A wide-body fuselage section is the outline of two egg-shaped **lobes** (`hullSec`):
+the lower lobe is the round fuselage, the upper one the 747's upper deck or the
+Beluga's cargo bulge (the MD-11 has none). The outline is their convex hull with
+the switch between the lobes blended over 0.3 m, so the join is a smooth, slightly
+waisted flank and the seam never jumps between section points from one station to
+the next. Point k of every section sits where the outline's normal is at
+(k + 0.5) / n of a turn, as on an `oval`, so `paintedBody` paints it by height.
+Each lobe's keel, crown, half-width and widest height are functions of the
+distance behind the nose tip: superellipse closures (`closeTo`) towards the tip,
+which give a blunt nose with a vertical tangent, and monotone keyframed curves
+(`curve`) along the tail cone. Stations are densest at the nose and along the
+tail cone. Because a blended section can be slightly concave, the windscreen
+(`skinEnd`) uses the crossing rule (`insideAny`) instead of the convex test.
 
-The Beluga has a wide, high cargo crown, a low cockpit ahead of the cargo door,
-two engines and auxiliary vertical fins on the horizontal stabilizer. It has
-no passenger windows or airline selector. These are stylized procedural models;
-operator titles and detailed logos are omitted. Nose profiles use closely
-spaced curved sections and a short cap. All finishes remain below 10,000
-triangles, with finite geometry, real bounding dimensions and no coplanar
-material overlaps checked in `test/aircraft.test.ts`.
+Reference dimensions used (metres, gear down):
+
+| | MD-11 | 747-400 | Beluga A300-600ST |
+|---|---|---|---|
+| fuselage | 6.02 round, keel 1.99 | 6.5 wide, main deck crown 8.95, hump crown 10.42 | A300 lobe 5.64 under a 7.7 m bulge, crown 11.62 |
+| nose tip height | 4.25 | 4.55 | 3.95 (lowered cockpit) |
+| wing | LE sweep ~38 deg, crank at 9.4 m, upper and lower winglets | LE sweep ~40 deg, crank at 12 m, winglets canted out 29 deg | LE sweep ~32 deg, crank at 8.6 m, wingtip fences |
+| engines (semi-span) | 8.6 and the centre engine through the fin root | 11.9 and 21.0 | 7.6 |
+| gear | nose, two 4-wheel bogies (track 10.6), 2-wheel centre leg | nose, wing bogies at 5.5 and body bogies at 1.9 | nose, two 4-wheel bogies (track 9.6) |
+
+The MD-11 has the DC-10's round nose, a long tail cone ending under the centre
+engine, the centre engine on a broad fairing with the fin rising from its top,
+winglets above and below the tip, and a belly fairing under the wing box. FedEx
+represents the freighter and omits passenger windows. Swissair uses a red
+cheatline under the windows, silver belly and engines, and a white cross on a red
+tail; KLM uses sky blue over a white belly with a dark blue line between and a
+simplified white crown; FedEx uses a purple fin and orange accent.
+
+The 747's upper deck is a blunt dome rising from just above the nose bullet past
+the steeply raked windscreen to the hump's level crown, which runs back to about
+the wing root and fairs into the main deck crown by d = 32 m. Two window rows
+(main and upper deck), five doors a side, four turbofans on pylons, canted
+winglets and four four-wheel main bogies. British Airways has a blue belly and
+simplified Union flag tail; Lufthansa has a white fuselage and blue fin with a
+simplified white crane ring.
+
+The Beluga keeps the A300's lower fuselage and its cockpit lowered under the
+cargo floor: a short nose bullet with the windscreen at its top, and right behind
+it the cargo door's rounded forehead rising almost vertically to the bulge's
+crown, which peaks a third of the way back and slopes down over the raised tail
+cone. Its section is an inverted pear (the bulge's lobe over the A300's). It has
+the A300-600's wingtip fences, the enlarged fin and the endplate fins on the
+tailplane. The livery is white with the tail cone and fin in Airbus blue (the blue
+sweeps up and back from the keel) and "AIRBUS BELUGA" titles along the bulge on
+both sides, drawn with the stroke font (`strokeFont.ts`) and split into short
+triangles (`splitLong`) so the flat letters follow the curved skin. It has no
+passenger windows or airline selector. The other wide bodies omit operator
+titles and detailed logos. All finishes remain below 10,000 triangles (the
+British Airways 747 is the largest, about 9,900), with finite geometry, real
+bounding dimensions and no coplanar material overlaps checked in
+`test/aircraft.test.ts`.

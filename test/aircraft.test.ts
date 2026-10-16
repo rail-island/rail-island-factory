@@ -108,3 +108,37 @@ describe("new wide-body aircraft", () => {
     expect(windows("fedex")).toHaveLength(0);
   });
 });
+
+describe("the wide bodies' shapes", () => {
+  const tris = (id: string) => {
+    const { json, bin } = parseGlb(design(id).build().toGlb(id));
+    return collectTriangles(json, bin);
+  };
+  /** The highest and the widest point of the fuselage triangles in a slice across x. */
+  const slice = (t: ReturnType<typeof tris>, x0: number, x1: number, y0 = 0, y1 = 99) => {
+    const pts = t.flatMap((tr) => tr.p).filter((p) => p[0] >= x0 && p[0] <= x1 && p[1] > y0 && p[1] < y1 && Math.abs(p[2]) < 4.5);
+    return { top: Math.max(...pts.map((p) => p[1])), width: 2 * Math.max(...pts.map((p) => Math.abs(p[2]))) };
+  };
+
+  it("gives the 747 its upper-deck hump over the forward fuselage only", () => {
+    const t = tris("proc-vehicle-boeing-747");
+    expect(slice(t, 14, 16, 3).top).toBeGreaterThan(10.3);
+    expect(slice(t, -9, -7, 3).top).toBeLessThan(9.1);
+  });
+
+  it("gives the Beluga its cargo bulge, low cockpit and AIRBUS BELUGA titles", () => {
+    const t = tris("proc-vehicle-airbus-beluga");
+    // the bulge: about 7.7 m wide and its crown at 11.6 m, over the A300's 5.6 m lower lobe
+    expect(slice(t, -2, 9, 6).width).toBeGreaterThan(7.5);
+    expect(slice(t, -2, 9, 6).top).toBeGreaterThan(11.4);
+    expect(slice(t, 18, 20, 2.5, 4.5).width).toBeLessThan(5.8);
+    // the cockpit windscreen sits low on the nose, under the forehead
+    const glass = t.filter((tr) => tr.color[0] < 0.02 && tr.color[2] < 0.03 && tr.p.every((p) => p[0] > 25));
+    expect(glass.length).toBeGreaterThan(20);
+    expect(Math.max(...glass.flatMap((tr) => tr.p.map((p) => p[1])))).toBeLessThan(5.6);
+    // the titles: navy strokes along both sides of the bulge
+    const titles = t.filter((tr) => tr.color[2] > 0.05 && tr.color[0] < 0.01 && tr.p.every((p) => p[1] > 7 && p[1] < 9.1 && p[0] > -7 && p[0] < 16));
+    expect(titles.filter((tr) => tr.p[0]![2] > 0).length).toBeGreaterThan(200);
+    expect(titles.filter((tr) => tr.p[0]![2] < 0).length).toBeGreaterThan(200);
+  });
+});

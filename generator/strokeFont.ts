@@ -1,10 +1,10 @@
 // A small stroke font for painted inscriptions: the digits, the hyphen and the
 // letters the CSD coaches' running numbers and "CSD" (C with a caron) lettering need,
 // and the capitals of the wagons' "RIV" and "CPAVEX" (C with a caron) lettering,
-// the dot and M of the steam locomotives' numbers ("433.049", "M 112.001"), and
-// the freight wagons' "MAERSK", "TRANSWAGGON" and "VIAMONT". Each glyph
-// the dot and M of the steam locomotives' numbers ("433.049", "M 112.001"), and the
-// G and T of the TGV's lettering (tgv.ts). Each glyph
+// the dot and M of the steam locomotives' numbers ("433.049", "M 112.001"), the
+// freight wagons' "MAERSK", "TRANSWAGGON" and "VIAMONT", the G and T of the TGV's
+// lettering (tgv.ts) and the L and U of the Beluga's "AIRBUS BELUGA" titles
+// (aircraft.ts). Each glyph
 // is polylines in a unit cell (x right 0..1, y up 0..1, the caron above 1);
 // strokeText turns them into thin bars, triangles in (u, v), for MeshCore.facets.
 // No `node:` imports: it is bundled into the standalone JS models.
@@ -46,6 +46,9 @@ const GLYPHS: Record<string, Glyph> = {
   K: [[[0.15, 0], [0.15, 1]], [[0.85, 1], [0.15, 0.4]], [[0.38, 0.6], [0.85, 0]]],
   N: [[[0.15, 0], [0.15, 1], [0.85, 0], [0.85, 1]]],
   O: [[[0.3, 0], [0.7, 0], [0.85, 0.15], [0.85, 0.85], [0.7, 1], [0.3, 1], [0.15, 0.85], [0.15, 0.15], [0.3, 0]]],
+  // the Beluga's "AIRBUS BELUGA" (aircraft.ts)
+  L: [[[0.15, 1], [0.15, 0], [0.85, 0]]],
+  U: [[[0.15, 1], [0.15, 0.22], [0.32, 0], [0.68, 0], [0.85, 0.22], [0.85, 1]]],
   W: [[[0.05, 1], [0.27, 0], [0.5, 0.65], [0.73, 0], [0.95, 1]]],
   a: [[[0.2, 0.55], [0.35, 0.65], [0.7, 0.65], [0.82, 0.52], [0.82, 0]], [[0.82, 0.38], [0.35, 0.38], [0.18, 0.25], [0.18, 0.12], [0.32, 0], [0.65, 0], [0.82, 0.15]]],
   e: [[[0.18, 0.35], [0.82, 0.35], [0.82, 0.5], [0.68, 0.65], [0.32, 0.65], [0.18, 0.5], [0.18, 0.15], [0.32, 0], [0.75, 0]]],
