@@ -31,13 +31,17 @@ export function stationHotel():MeshBuilder {
     for(const x of [-13,-10,-7]){panel(m,'timber',0,x,7,1.4,2,5.03);panel(m,'blue',0,x,7.12,1.1,1.75,5.05);}
   });return m;
 }
+// Plain literals, no .map(): a call at module scope cannot be tree-shaken, so each
+// standalone JS model (jsModel.ts) would carry every builder of this module.
+const HIST_CATALOG = {category:'Historical',group:'hist_center',defaultScale:1,license:'CC0',author:'Rail Island',source:'Rail Island procedural reconstruction'};
+const STATION_CATALOG = {category:'Station',group:'station',defaultScale:1,license:'CC0',author:'Rail Island',source:'Rail Island procedural reconstruction'};
 export const LEGACY_BUILDINGS:ProceduralDesign[]=[
-  {id:'bld-castle',title:'Castle',build:castle,buildLod:castleLod,params:CASTLE_PARAMS},
-  {id:'bld-hist-colosseum',title:'Colosseum',build:colosseum,buildLod:colosseumLod},
-  {id:'bld-hist-pagoda',title:'Pagoda',build:pagoda,buildLod:pagodaLod},
-  {id:'bld-hist-palace',title:'Palace',build:palace,buildLod:palaceLod},
-  {id:'bld-station-hotel',title:'Station Hotel',build:stationHotel,buildLod:stationHotelLod},
-].map(d=>({...d,catalog:{category:d.id==='bld-station-hotel'?'Station':'Historical',group:d.id==='bld-station-hotel'?'station':'hist_center',defaultScale:1,license:'CC0',author:'Rail Island',source:'Rail Island procedural reconstruction'}}));
+  {id:'bld-castle',title:'Castle',build:castle,buildLod:castleLod,params:CASTLE_PARAMS,catalog:HIST_CATALOG},
+  {id:'bld-hist-colosseum',title:'Colosseum',build:colosseum,buildLod:colosseumLod,catalog:HIST_CATALOG},
+  {id:'bld-hist-pagoda',title:'Pagoda',build:pagoda,buildLod:pagodaLod,catalog:HIST_CATALOG},
+  {id:'bld-hist-palace',title:'Palace',build:palace,buildLod:palaceLod,catalog:HIST_CATALOG},
+  {id:'bld-station-hotel',title:'Station Hotel',build:stationHotel,buildLod:stationHotelLod,catalog:STATION_CATALOG},
+];
 
 // Preserve the large openings, separate towers and tiered roofs at map scale.
 export function colosseumLod(): MeshBuilder {
