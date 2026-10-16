@@ -1,7 +1,7 @@
 # Low level of detail
 
 **Covers** - distant geometry for every standalone JS export, triangle budgets and the factory preview switch.
-**Code** - `generator/lod.ts`, `generator/meshCore.ts`, `generator/jsModel.ts`, `generator/towers.ts`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `test/lod.test.ts`.
+**Code** - `generator/lod.ts`, `generator/lodHull.ts`, `generator/lodModel.ts`, `generator/lodPrimitives.ts`, `generator/meshCore.ts`, `generator/jsModel.ts`, `generator/towers.ts`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `test/lod.test.ts`.
 **See also** - [js-format.md](js-format.md), [parameters.md](parameters.md), [vehicle-rig.md](vehicle-rig.md), [../site/catalog-site.md](../site/catalog-site.md).
 
 ## Consumer API
@@ -34,29 +34,37 @@ metadata and source tree remain the full-resolution defaults.
 
 ## Geometry
 
-The generic path builds the chosen design, welds coincident vertices within each
-movable part, selects connected components by spatial significance, and collapses
-edges using area-weighted quadric errors. Open edges have perpendicular constraints
-to retain facade panels. Endpoint-only collapse stays within the original bounds;
-flat normals are recomputed. Small details may disappear. Materials of surviving
-faces are retained, but lettering, individual windows and running gear are not
-promised at these distant-view budgets.
+LOD uses reviewed structural recipes rather than polygon decimation. Each catalog
+family is explicitly mapped in `lod.ts`; adding an unknown family fails until its
+silhouette is defined. Recipes select complete bodies, roofs, hoods, boilers,
+wings and building masses using the generator's named scopes. Windows, logos,
+lettering, posts, railings and small fixtures are discarded before reconstruction.
+Vehicle wheels, bogies, underframes, couplers, pantographs and moving equipment are
+excluded. An empty flat wagon is represented by a single thin cargo deck.
 
-The process is deterministic and has no browser or Node dependencies. The generated
-module includes the simplifier, so all parameter combinations can produce LOD. It
-currently builds full geometry before reducing it; the saving is in rendered
-triangles, not in initial generation time. Consumers should cache built variants.
+Each selected mass becomes a new closed convex envelope, sampled in 8, 14 or 26
+support directions. Whole planar faces have one finish; roof materials take
+precedence over horizontal trim. Coplanar structural surfaces receive a common
+finish, preventing different colours from competing in the depth buffer. No
+random subset of original triangles survives. Multiple volumes preserve the
+separate hoods of shunters, articulated vehicle bodies and architectural tiers.
 
-A design may supply `buildLod`, exported by the same source module, for a dedicated
-silhouette. Eiffel Tower uses this path: solid tapered piers, observation decks and
-a continuous upper tower replace individual lattice beams. Its LOD does not build
-the full model first.
+A design can instead supply `buildLod`, exported from the same source module.
+Dedicated silhouettes cover the Boeing, ocean liner, cruise ferry, industrial models, castle,
+Colosseum, pagoda, palace, station hotel, Brandenburg Gate, St Basil's Cathedral,
+transmission tower and Eiffel Tower. Open courtyards, the Colosseum arena,
+individual rotor blades, wings, chimneys and domes remain distinct. Power and
+chemical plants and Prague main station use the large-complex-building budget
+of 500 triangles. Dedicated builders resolve the same parameters as full detail.
 
-Part names, pivots and animation tracks survive simplification. Steering and joint
-posing are intentionally static in LOD: `pose` and `renderJoint` return without
-changing it. This prevents a joint redraw from recreating full-detail bellows or
-requiring a mesh that simplification removed. Rebuild at full resolution to pose
-these rigs. Animation clips that only transform existing nodes retain their counts.
+The process is deterministic. Generic recipes build the full geometry first,
+then reconstruct the silhouette; their saving is in rendering, not initial
+generation time. Dedicated builders construct only the low-detail geometry.
+Consumers should cache built variants.
+
+LOD is entirely static: no rig, part nodes or animation clips remain. `pose` and
+`renderJoint` return without changing it. Rebuild at full resolution to animate or
+pose a vehicle. Full-detail geometry, source trees and the existing API are unchanged.
 
 ## Factory GUI
 
@@ -73,9 +81,16 @@ restores them. No browser automation is required for headless verification.
 
 ## Verification
 
-`test/lod.test.ts` builds every default LOD through its standalone export and checks
-the global budget, finite geometry, normals, bounds and node preservation. It also
-checks every individual non-default enum value, the static rig contract, preview
-identity and invalid budgets. Existing JS tests continue to compare default export
-geometry against the unchanged GLBs. Review representative full/LOD renders when
-changing simplification or adding a dedicated silhouette.
+`test/lod.test.ts` compares every standalone default LOD with its generator
+geometry and checks deterministic output, unit normals and the static rig contract.
+It builds every combination of shape parameters, plus each finish choice, and
+checks triangle budgets, finite coordinates, missing detail materials and the
+same coplanar-overlap detector used for full models. Regressions specifically
+cover omitted hoods/boilers, excluded running gear and the open Colosseum arena.
+
+`generateModels` checks both full detail and LOD for flickering surfaces before
+writing any export file. Tests also inject a valid full model with a deliberately
+flickering LOD to verify that this guard cannot silently skip the low variant.
+Existing JS tests continue to compare full-detail geometry with its GLB.
+Review full/LOD contact sheets for all models and representative non-default
+variants when changing recipes; triangle counts alone do not establish visual quality.

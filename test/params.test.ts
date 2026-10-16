@@ -134,7 +134,9 @@ describe("parametric models", () => {
         for (const [mat, pos] of want) {
           const have = got.get(mat)!;
           expect(have.length).toBe(pos.length);
-          expect(Math.max(...pos.map((p, i) => Math.abs(p - have[i]!)))).toBeLessThan(1e-5);
+          // Landmark material groups can exceed the engine argument-count limit.
+          const maxError = pos.reduce((maximum, p, i) => Math.max(maximum, Math.abs(p - have[i]!)), 0);
+          expect(maxError).toBeLessThan(1e-5);
         }
       }
       expect(() => mod.default(THREE, { variant: "nope" })).toThrow();

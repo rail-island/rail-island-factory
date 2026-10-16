@@ -1,3 +1,4 @@
+import { lodBox, lodLoft } from './lodPrimitives.ts';
 // The procedural ships: a Viking Line style cruise ferry, a Soviet Kometa
 // hydrofoil and a white lake passenger motor ship, modelled on the photos in
 // assets/<folder>/ and reproducing the hand-authored GLBs of the same names in
@@ -1068,7 +1069,19 @@ export const SHIP_CATALOG: CatalogFields = {
 
 /** Every design of the family, by catalog id; `references` is the folder of its source photos under assets/. */
 export const SHIPS: ProceduralDesign[] = [
-  { id: "proc-vehicle-cruise-ferry", title: "Cruise Ferry", build: cruiseFerry, references: "cruise-ferry", catalog: { ...SHIP_CATALOG, yaw:180 } },
+  { id: "proc-vehicle-cruise-ferry", title: "Cruise Ferry", build: cruiseFerry, buildLod: cruiseFerryLod, references: "cruise-ferry", catalog: { ...SHIP_CATALOG, yaw:180 } },
   { id: "proc-vehicle-hydrofoil-ferry", title: "Hydrofoil Ferry", build: hydrofoilFerry, references: "hydrofoil-ferry", catalog: { ...SHIP_CATALOG, yaw:180 } },
   { id: "proc-vehicle-passenger-ferry", title: "Passenger Ferry", build: passengerFerry, references: "passenger-ferry", catalog: { ...SHIP_CATALOG, yaw:270 } },
 ];
+
+/** Stepped decks keep the bow and bridge distinct, within the ordinary ship budget. */
+export function cruiseFerryLod(): MeshBuilder {
+  const m=new MeshBuilder(PALETTE);
+  const plan:Ring=[[-77.5,-8],[-77.5,8],[-55,12.5],[50,12.5],[77.5,0],[50,-12.5],[-55,-12.5]];
+  lodLoft(m,'hullRed',plan.map(([x,z])=>[x*.97,z*.75]),0,plan,13.2);
+  lodBox(m,'whitePaint',-4,0,140,22,13.2,26.4);
+  lodBox(m,'whitePaint',30,0,49,20,26.4,32.4);
+  lodBox(m,'whitePaint',30,0,30,17,32.4,40);
+  lodBox(m,'funnelGreen',-23,0,8,5,26.4,40);
+  return m;
+}

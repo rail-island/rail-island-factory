@@ -1,3 +1,4 @@
+import { lodBox, lodCylinder } from './lodPrimitives.ts';
 // The two big domed landmarks of the historical centre, modelled on the photos in
 // assets/: St Basil's Cathedral on Moscow's Red Square and St Nicholas Church on
 // Prague's Old Town Square. See docs/models/cathedrals.md.
@@ -528,20 +529,7 @@ export function stBasilsCathedral(): MeshBuilder {
   const m = new MeshBuilder(BASIL);
   podium(m);
   centralTower(m);
-  const big = { ap: 3.7, belt: 9.07, win: [12.3, 14.5] as [number, number], winStep: 1, drumR: 2.67 };
-  const side = { ...big, top: 18.97, koko: 21.21, drumTop: 25.55, domeR: 4.63, domeTop: 31.15, crossTop: 33.5 };
-  const axial = { ...big, top: 18.17, koko: 20.41, belt: 8.8, win: [11.85, 14.05] as [number, number], drumTop: 24.75, domeR: 4.46, domeTop: 30.35, crossTop: 32.7 };
-  const small = { ap: 2.6, top: 15.47, koko: 17.71, belt: 7.88, win: [10.3, 12.6] as [number, number], winStep: 2, drumR: 1.93, drumTop: 21.05, domeR: 3.35, domeTop: 25.15, crossTop: 27.5 };
-  const chapels: Chapel[] = [
-    { name: "north chapel", cx: 9, cz: BZ, ...side, dome: { a: "blue", b: "cream", kind: "spiral" } },
-    { name: "south chapel", cx: -9, cz: BZ, ...side, dome: { a: "red", b: "cream", kind: "spiral", twist: -1.5 } },
-    { name: "east chapel", cx: 0, cz: BZ + 9, ...axial, dome: { a: "green", b: "ochre", kind: "spiral", twist: -1.5 } },
-    { name: "west chapel", cx: 0, cz: BZ - 9, ...axial, dome: { a: "green", b: "ochre", kind: "check" } },
-    { name: "north-east chapel", cx: 5.59, cz: 3.69, ...small, dome: { a: "green", b: "cream", kind: "check" } },
-    { name: "south-east chapel", cx: -5.59, cz: 3.69, ...small, dome: { a: "ochre", b: "green", kind: "spiral" } },
-    { name: "south-west chapel", cx: -5.59, cz: -7.49, ...small, dome: { a: "blue", b: "blue", kind: "plain" } },
-    { name: "north-west chapel", cx: 5.59, cz: -7.49, ...small, dome: { a: "red", b: "green", kind: "check" } },
-  ];
+  const chapels = basilChapels();
   for (const c of chapels) chapel(m, c);
   bellTower(m);
   return m;
@@ -892,6 +880,41 @@ export const CATHEDRAL_CATALOG: CatalogFields = {
 
 /** Every design of the family, by catalog id; `references` is the folder of its source photos under assets/. */
 export const CATHEDRALS: ProceduralDesign[] = [
-  { id: "bld-st-basils-cathedral", title: "St Basil's Cathedral", build: stBasilsCathedral, references: "st-basils-cathedral", catalog: CATHEDRAL_CATALOG },
+  { id: "bld-st-basils-cathedral", title: "St Basil's Cathedral", build: stBasilsCathedral, buildLod: stBasilsCathedralLod, references: "st-basils-cathedral", catalog: CATHEDRAL_CATALOG },
   { id: "bld-st-nicholas-church", title: "St Nicholas Church", build: stNicholasChurch, references: "st-nicholas-church", catalog: CATHEDRAL_CATALOG },
 ];
+
+function basilChapels(): Chapel[] {
+  const big = { ap: 3.7, belt: 9.07, win: [12.3, 14.5] as [number, number], winStep: 1, drumR: 2.67 };
+  const side = { ...big, top: 18.97, koko: 21.21, drumTop: 25.55, domeR: 4.63, domeTop: 31.15, crossTop: 33.5 };
+  const axial = { ...big, top: 18.17, koko: 20.41, belt: 8.8, win: [11.85, 14.05] as [number, number], drumTop: 24.75, domeR: 4.46, domeTop: 30.35, crossTop: 32.7 };
+  const small = { ap: 2.6, top: 15.47, koko: 17.71, belt: 7.88, win: [10.3, 12.6] as [number, number], winStep: 2, drumR: 1.93, drumTop: 21.05, domeR: 3.35, domeTop: 25.15, crossTop: 27.5 };
+  return [
+    { name: "north chapel", cx: 9, cz: BZ, ...side, dome: { a: "blue", b: "cream", kind: "spiral" } },
+    { name: "south chapel", cx: -9, cz: BZ, ...side, dome: { a: "red", b: "cream", kind: "spiral", twist: -1.5 } },
+    { name: "east chapel", cx: 0, cz: BZ + 9, ...axial, dome: { a: "green", b: "ochre", kind: "spiral", twist: -1.5 } },
+    { name: "west chapel", cx: 0, cz: BZ - 9, ...axial, dome: { a: "green", b: "ochre", kind: "check" } },
+    { name: "north-east chapel", cx: 5.59, cz: 3.69, ...small, dome: { a: "green", b: "cream", kind: "check" } },
+    { name: "south-east chapel", cx: -5.59, cz: 3.69, ...small, dome: { a: "ochre", b: "green", kind: "spiral" } },
+    { name: "south-west chapel", cx: -5.59, cz: -7.49, ...small, dome: { a: "blue", b: "blue", kind: "plain" } },
+    { name: "north-west chapel", cx: 5.59, cz: -7.49, ...small, dome: { a: "red", b: "green", kind: "check" } },
+  ];
+}
+
+function lowOnion(m:MeshBuilder,mat:string,x:number,z:number,r0:number,r:number,y:number,top:number):void {
+  const base=ngon(6,r0,0,x,z),wide=ngon(6,r,0,x,z),middle=y+(top-y)*.35;
+  m.loft(mat,base,y,wide,middle,false);m.spire(mat,wide,middle,top);m.cap(mat,base,y,false);
+}
+export function stBasilsCathedralLod(): MeshBuilder {
+  const m=new MeshBuilder(BASIL);
+  lodCylinder(m,'brick',0,BZ,16,0,DECK,8);
+  lodCylinder(m,'brick',0,BZ,5.4,DECK,26.82,8);
+  m.spire('brick',ngon(8,4.1,0,0,BZ),26.82,46.5);m.cap('brick',ngon(8,4.1,0,0,BZ),26.82,false);
+  for(const c of basilChapels()){
+    lodCylinder(m,'brick',c.cx,c.cz,c.ap,DECK,c.drumTop,6);
+    lowOnion(m,c.dome.a,c.cx,c.cz,c.drumR,c.domeR,c.drumTop,c.domeTop);
+  }
+  lodBox(m,'brick',-4.56,9.63,3.8,3.8,DECK,20.17);
+  m.spire('roofGreen',rect(4,4,-4.56,9.63),20.17,27);m.cap('roofGreen',rect(4,4,-4.56,9.63),20.17,false);
+  return m;
+}

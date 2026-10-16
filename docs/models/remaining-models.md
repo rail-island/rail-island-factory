@@ -13,16 +13,19 @@ contrasting coping; nozzles have bronze footings. Water jets remain a game effec
 
 The castle is one parametric family with `layout=courtyard|keep|fortress`.
 It has curtain walls, an actual gate opening, projecting round corner towers,
-crenellations, arrow slits and (except the low fortress) a central keep. The old
+crenellations, arrow slits and (except the low fortress) a tall roofed tower and great hall. The old
 castle/medieval-castle pair uses the courtyard family; the keep and fortress use
 their corresponding layouts. These are architectural reinterpretations, not exact
 copies of each old castle's individual tower arrangement.
 
 Other additions are an open oval Colosseum with three arcade tiers and seating,
-a three-storey pagoda, an onion-roof palace silhouette and a station hotel with
+a three-storey pagoda with curved tile roofs and timber galleries, an onion-roof palace silhouette and a station hotel with
 its taller end block. The old generic cathedral and church map to existing gothic
 and baroque families. Real-world landmark dimensions are approximate except where
 an explicit dimension is documented in the owning family reference.
+
+Detailed geometry, budgets and references for Castle and Pagoda are documented in
+[historical.md](historical.md).
 
 ## Air, water and rope
 
