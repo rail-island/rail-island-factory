@@ -81,7 +81,7 @@ const PAINTS: Record<Livery460, Paint> = {
   },
 };
 
-/** The running number a car carries: `460 071-4`, its trailer `063 071-0`. */
+/** The running number a car carries: `460 071-4`, its trailer `063 071-5`. */
 export function number460(livery: Livery460, unit: Unit460): string {
   return tractionNumber(unit === "motorCar" ? "460" : "063", PAINTS[livery].serial);
 }

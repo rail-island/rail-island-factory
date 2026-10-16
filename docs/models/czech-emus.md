@@ -2,7 +2,7 @@
 
 **Covers** - the parametric `veh-cd-471` (CD 471 CityElefant: three cars, two variants) and `veh-cd-680` (CD 680 Pendolino: four cars) from vlakosimdb: what each parameter value builds, the shared EMU parts, the scales from the XML to the published dimensions, the measured comparison and the tests.
 **Code** - `generator/emu471.ts`, `generator/emu680.ts`, `generator/emuParts.ts`, `generator/emuComparison.ts`, `generator/emuReport.ts`, `generator/csdCoachParts.ts` (the body builder), `test/czechEmus.test.ts`, `assets/cd-471/`, `assets/cd-680/`
-**See also** - [vehicles.md](vehicles.md), [parameters.md](parameters.md), [csd-coaches.md](csd-coaches.md) (the coach builder and the comparison method), [bmo-double-deck.md](bmo-double-deck.md), [CD 471 sources](../../assets/cd-471/SOURCES.md), [CD 680 sources](../../assets/cd-680/SOURCES.md)
+**See also** - [czech-emus-classic.md](czech-emus-classic.md) (the CD 451, 460 and 470), [vehicles.md](vehicles.md), [parameters.md](parameters.md), [csd-coaches.md](csd-coaches.md) (the coach builder and the comparison method), [bmo-double-deck.md](bmo-double-deck.md), [CD 471 sources](../../assets/cd-471/SOURCES.md), [CD 680 sources](../../assets/cd-680/SOURCES.md)
 
 ## The designs
 
