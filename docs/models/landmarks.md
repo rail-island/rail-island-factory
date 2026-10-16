@@ -1,7 +1,7 @@
 # Landmarks
 
-**Covers** - the three procedurally generated secular landmarks (Brandenburg Gate, Louvre Pyramid, White House): what each reproduces, its dimensions, datums, triangle budget and where it departs from its reference.
-**Code** - `generator/landmarks.ts`, `test/referenceModels.test.ts`, `test/models.test.ts`
+**Covers** - the four procedurally generated secular landmarks (Brandenburg Gate, Louvre Pyramid, White House, Colosseum): what each reproduces, its dimensions, datums, triangle budget and where it departs from its reference.
+**Code** - `generator/landmarks.ts`, `generator/colosseum.ts`, `test/colosseum.test.ts`, `test/referenceModels.test.ts`, `test/models.test.ts`
 **See also** - [skyscrapers.md](skyscrapers.md) (the mesh builder and its no-z-fighting rule), [source-tree.md](source-tree.md), [export.md](export.md)
 
 ## The designs
@@ -110,3 +110,41 @@ names in older tables identify the original models. See [legacy-mapping.md](lega
 for the authoritative ID, scale and runtime conversion contract. Ground vehicles
 have no exported `defaultScale`; buildings, aircraft and ships use 1 except the
 Eiffel Tower placement exception.
+
+## Colosseum
+
+`proc-building-hist-colosseum` replaces the earlier simple procedural model.
+It remains registered in `legacyBuildings.ts`, which re-exports its detailed
+builder from `colosseum.ts`. The existing legacy mapping from `hist-colosseum`
+is unchanged; authoring units are metres and exported `defaultScale` is 1.
+The coarse LOD keeps an open arena and follows the high surviving north wall
+and lower south wall. This factory change does not publish to the game.
+
+The present-day ruin is 188 x 158 m on plan, 48 m high, centred on the origin
+with its base at zero. The long axis is X; the high surviving outer facade is
+on -Z, exposing the interior from the catalog camera. The model uses 29,498
+triangles and five rough stone/brick/earth materials, within the requested
+20,000-30,000 triangle budget. The geometry is an architectural interpretation,
+not a measured archaeological survey or photogrammetry mesh.
+
+- Eighty bays around the elliptical inner wall, with two levels of genuinely
+  open arches and deep intrados surfaces.
+- Three partially surviving outer arcade storeys, engaged columns, projecting
+  cornices, and an attic with rectangular openings and stepped broken ends.
+- Nine interrupted cavea terraces, radial access stairs, a raised arena rim,
+  and exposed longitudinal hypogeum corridors with transverse cell walls.
+- Adjacent masonry wedges omit their buried radial faces. Arch spandrels omit
+  internal slice faces to spend the budget on visible geometry.
+- Deterministic generation, a fixed triangle budget and flicker checks are
+  covered by `test/colosseum.test.ts`.
+
+Photo references were downloaded for local study from
+[nfasano/colosseum_ticket_tracker](https://github.com/nfasano/colosseum_ticket_tracker),
+`figures/Colosseum_in_Rome_wikipedia_image.jpg` (exterior) and
+`figures/Colosseum_in_Rome_inside_view_flickr.jpg` (interior).
+That repository attributes them to Wikipedia and Flickr but does not identify
+full original photographer/license details, so they are not redistributed in
+this factory's public Images tab or embedded in the model. The exterior informed
+the arcade tiers, engaged columns and attic; the interior informed the second
+inner arcade, exposed hypogeum and interrupted terraces. Additional reference:
+[outer and inner wall, AlexanderVanLoon](https://commons.wikimedia.org/wiki/File:Colosseum_exterior,_inner_and_outer_wall_AvL.jpg).

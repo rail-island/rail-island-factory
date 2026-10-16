@@ -1,3 +1,5 @@
+import { colosseum } from './colosseum.ts';
+export { colosseum } from './colosseum.ts';
 import { lodBox, lodLoft, lodCylinder } from './lodPrimitives.ts';
 // Remaining historical families, drawn in metres with a grounded origin.
 import { MeshBuilder, ngon, rect } from './meshBuilder.ts';
@@ -34,24 +36,6 @@ export function castle(given?:ParamValues):MeshBuilder {
     for(const y of [5,10,15,20])if(y<h+7)for(const x of [-5,0,5])arch(m,'dark',0,x,y,.8,1.7,1.52);
     crenels(m,0,-6,16,15,h+9);});tower(m,-7,-10,3,h+14,true);}
   return m;
-}
-export function colosseum():MeshBuilder {
-  const m=new MeshBuilder(palette),segments=64;
-  // Open oval arcades; each bay has real gaps between its piers.
-  m.scope('arcades',()=>{for(let tier=0;tier<3;tier++)for(let i=0;i<segments;i++){
-    const a=i*Math.PI*2/segments,b=(i+1)*Math.PI*2/segments,y=tier*12;
-    const pt=(t:number,r:number,h:number):[number,number,number]=>[Math.cos(t)*94*r,h,Math.sin(t)*78*r];
-    beam(m,'sandstone',pt(a,1,y),pt(a,1,y+10),2.1);
-    beam(m,'sandstone',pt(a,1,y+10),pt(b,1,y+10),3);
-    beam(m,'trim',pt(a,1.008,y+12),pt(b,1.008,y+12),1.2);
-    // Arch springers angle toward the soffit without filling the opening.
-    beam(m,'sandstone',pt(a,1,y+7),pt((a+b)/2,1,y+10),1.1);
-    beam(m,'sandstone',pt((a+b)/2,1,y+10),pt(b,1,y+7),1.1);
-  }});
-  m.scope('seating',()=>{for(let row=0;row<8;row++){
-    const r=.52+row*.05,y=row*1.7;
-    for(let i=0;i<segments;i++){const a=i*Math.PI*2/segments,b=(i+1)*Math.PI*2/segments; m.quad('light',[94*r*Math.cos(a),y,78*r*Math.sin(a)],[94*r*Math.cos(b),y,78*r*Math.sin(b)],[94*(r+.05)*Math.cos(b),y,78*(r+.05)*Math.sin(b)],[94*(r+.05)*Math.cos(a),y,78*(r+.05)*Math.sin(a)]);}
-  }});return m;
 }
 export function pagoda():MeshBuilder {
   const m=new MeshBuilder(palette);
@@ -108,9 +92,10 @@ export function colosseumLod(): MeshBuilder {
   const m=new MeshBuilder(palette),n=16;
   for(let i=0;i<n;i++){
     const a=-i*Math.PI*2/n,b=-(i+1)*Math.PI*2/n;
-    const point=(t:number,r:number,y:number):[number,number,number]=>[94*r*Math.cos(t),y,78*r*Math.sin(t)];
+    const point=(t:number,r:number,y:number):[number,number,number]=>[94*r*Math.cos(t),y,79*r*Math.sin(t)];
     const oa=point(a,1,0),ob=point(b,1,0),ia=point(a,.52,0),ib=point(b,.52,0);
-    const oat=point(a,1,36),obt=point(b,1,36),iat=point(a,.52,8),ibt=point(b,.52,8);
+    const height=(t:number)=>Math.sin(t)<-0.01?48:23.2;
+    const oat=point(a,1,height(a)),obt=point(b,1,height(b)),iat=point(a,.52,8),ibt=point(b,.52,8);
     m.quad('sandstone',oa,ob,obt,oat);m.quad('sandstone',ib,ia,iat,ibt);
     m.quad('sandstone',oat,obt,ibt,iat);m.quad('sandstone',ob,oa,ia,ib);
   }return m;
