@@ -11,6 +11,8 @@ import { DESIGNS, designGlb } from "../generator/generate";
 import { glbStats } from "../generator/glbStats";
 
 const REFERENCE: Record<string, { min: number[]; max: number[]; triangles: number }> = {
+  "bld-notre-dame": { min: [-25.9043,0,-57.9210], max: [25.9043,94.2,57.8536], triangles: 35428 },
+  "bld-prague-castle-st-vitus": { min: [-66.7,0,-19.8], max: [57.9963,91.6,22.3], triangles: 21148 },
   "bld-baroque-church": { min: [-9.65,0,-19.7], max: [9.65,42.3,19.7], triangles: 7852 },
   "bld-brandenburg-gate": { min: [-33.05,0,-4.8], max: [33.05,30.37,4.91], triangles: 217392 },
   "bld-church-vrchlabi": { min: [-12.17,0,-25.33], max: [12.17,62.3,25.33], triangles: 12416 },
@@ -41,6 +43,7 @@ const SIZE_TOLERANCE = 0.1;
 
 /** The triangle budget of each family, whatever the hand-authored model spent. */
 function budget(id: string): number {
+  if (/notre-dame|prague-castle-st-vitus/.test(id)) return 30000;
   if (/truck/.test(id)) return 12000;
   if (/cabin/.test(id)) return 8000;
   if (/a10|a380|jet/.test(id)) return 20000;

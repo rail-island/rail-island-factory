@@ -1,0 +1,925 @@
+{
+ "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/coach/db_ic_bmpz/model",
+ "pixelMetres": 0.1,
+ "convention": "Pixel edges [left, top, right, bottom] on the native BMP; origin top left, x right, y down.",
+ "annotations": [
+  {
+   "id": "R01",
+   "view": "z_dec",
+   "side": "right",
+   "element": "window 1 frame",
+   "box": [
+    16,
+    10,
+    25,
+    20
+   ],
+   "nodes": [
+    "body/right-side/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "R02",
+   "view": "z_dec",
+   "side": "right",
+   "element": "window 2 frame",
+   "box": [
+    35,
+    10,
+    45,
+    20
+   ],
+   "nodes": [
+    "body/right-side/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "R03",
+   "view": "z_dec",
+   "side": "right",
+   "element": "window 3 frame",
+   "box": [
+    49,
+    10,
+    64,
+    20
+   ],
+   "nodes": [
+    "body/right-side/window-3/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "R04",
+   "view": "z_dec",
+   "side": "right",
+   "element": "window 4 frame",
+   "box": [
+    68,
+    10,
+    83,
+    20
+   ],
+   "nodes": [
+    "body/right-side/window-4/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "R05",
+   "view": "z_dec",
+   "side": "right",
+   "element": "window 5 frame",
+   "box": [
+    87,
+    10,
+    102,
+    20
+   ],
+   "nodes": [
+    "body/right-side/window-5/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "R06",
+   "view": "z_dec",
+   "side": "right",
+   "element": "window 6 frame",
+   "box": [
+    106,
+    10,
+    121,
+    20
+   ],
+   "nodes": [
+    "body/right-side/window-6/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "R07",
+   "view": "z_dec",
+   "side": "right",
+   "element": "window 7 frame",
+   "box": [
+    125,
+    10,
+    140,
+    20
+   ],
+   "nodes": [
+    "body/right-side/window-7/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "R08",
+   "view": "z_dec",
+   "side": "right",
+   "element": "window 8 frame",
+   "box": [
+    144,
+    10,
+    159,
+    20
+   ],
+   "nodes": [
+    "body/right-side/window-8/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "R09",
+   "view": "z_dec",
+   "side": "right",
+   "element": "window 9 frame",
+   "box": [
+    163,
+    10,
+    178,
+    20
+   ],
+   "nodes": [
+    "body/right-side/window-9/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "R10",
+   "view": "z_dec",
+   "side": "right",
+   "element": "window 10 frame",
+   "box": [
+    182,
+    10,
+    197,
+    20
+   ],
+   "nodes": [
+    "body/right-side/window-10/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "R11",
+   "view": "z_dec",
+   "side": "right",
+   "element": "window 11 frame",
+   "box": [
+    201,
+    10,
+    216,
+    20
+   ],
+   "nodes": [
+    "body/right-side/window-11/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "R12",
+   "view": "z_dec",
+   "side": "right",
+   "element": "window 12 frame",
+   "box": [
+    220,
+    10,
+    230,
+    20
+   ],
+   "nodes": [
+    "body/right-side/window-12/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "R13",
+   "view": "z_dec",
+   "side": "right",
+   "element": "window 13 frame",
+   "box": [
+    239,
+    10,
+    248,
+    20
+   ],
+   "nodes": [
+    "body/right-side/window-13/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "R14",
+   "view": "z_dec",
+   "side": "right",
+   "element": "door 1 outline",
+   "box": [
+    5,
+    9,
+    14,
+    34
+   ],
+   "nodes": [
+    "body/right-side/door-1/outline"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "Door edges read from the seam columns and the leaf colour; +/- two pixels."
+  },
+  {
+   "id": "R15",
+   "view": "z_dec",
+   "side": "right",
+   "element": "door 1 window 1 frame",
+   "box": [
+    7,
+    11,
+    12,
+    20
+   ],
+   "nodes": [
+    "body/right-side/door-1/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edges of the door window; +/- one pixel."
+  },
+  {
+   "id": "R16",
+   "view": "z_dec",
+   "side": "right",
+   "element": "door 2 outline",
+   "box": [
+    250,
+    9,
+    259,
+    34
+   ],
+   "nodes": [
+    "body/right-side/door-2/outline"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "Door edges read from the seam columns and the leaf colour; +/- two pixels."
+  },
+  {
+   "id": "R17",
+   "view": "z_dec",
+   "side": "right",
+   "element": "door 2 window 1 frame",
+   "box": [
+    252,
+    11,
+    257,
+    20
+   ],
+   "nodes": [
+    "body/right-side/door-2/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edges of the door window; +/- one pixel."
+  },
+  {
+   "id": "R18",
+   "view": "z_dec",
+   "side": "right",
+   "element": "class marks",
+   "box": [
+    29,
+    11,
+    236,
+    16
+   ],
+   "nodes": [
+    "body/right-side/class-marks"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "Union of the class-mark patches; the numerals are drawn narrower than a plate."
+  },
+  {
+   "id": "R19",
+   "view": "z_dec",
+   "side": "right",
+   "element": "emblem",
+   "box": [
+    231,
+    24,
+    237,
+    27
+   ],
+   "nodes": [
+    "body/right-side/emblem"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "The emblem patch; the drawn emblem keeps its own proportions."
+  },
+  {
+   "id": "L01",
+   "view": "z_inc",
+   "side": "left",
+   "element": "window 1 frame",
+   "box": [
+    16,
+    10,
+    25,
+    20
+   ],
+   "nodes": [
+    "body/left-side/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "L02",
+   "view": "z_inc",
+   "side": "left",
+   "element": "window 2 frame",
+   "box": [
+    34,
+    10,
+    44,
+    20
+   ],
+   "nodes": [
+    "body/left-side/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "L03",
+   "view": "z_inc",
+   "side": "left",
+   "element": "window 3 frame",
+   "box": [
+    48,
+    10,
+    63,
+    20
+   ],
+   "nodes": [
+    "body/left-side/window-3/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "L04",
+   "view": "z_inc",
+   "side": "left",
+   "element": "window 4 frame",
+   "box": [
+    67,
+    10,
+    82,
+    20
+   ],
+   "nodes": [
+    "body/left-side/window-4/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "L05",
+   "view": "z_inc",
+   "side": "left",
+   "element": "window 5 frame",
+   "box": [
+    86,
+    10,
+    101,
+    20
+   ],
+   "nodes": [
+    "body/left-side/window-5/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "L06",
+   "view": "z_inc",
+   "side": "left",
+   "element": "window 6 frame",
+   "box": [
+    105,
+    10,
+    120,
+    20
+   ],
+   "nodes": [
+    "body/left-side/window-6/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "L07",
+   "view": "z_inc",
+   "side": "left",
+   "element": "window 7 frame",
+   "box": [
+    124,
+    10,
+    139,
+    20
+   ],
+   "nodes": [
+    "body/left-side/window-7/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "L08",
+   "view": "z_inc",
+   "side": "left",
+   "element": "window 8 frame",
+   "box": [
+    143,
+    10,
+    158,
+    20
+   ],
+   "nodes": [
+    "body/left-side/window-8/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "L09",
+   "view": "z_inc",
+   "side": "left",
+   "element": "window 9 frame",
+   "box": [
+    162,
+    10,
+    177,
+    20
+   ],
+   "nodes": [
+    "body/left-side/window-9/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "L10",
+   "view": "z_inc",
+   "side": "left",
+   "element": "window 10 frame",
+   "box": [
+    181,
+    10,
+    196,
+    20
+   ],
+   "nodes": [
+    "body/left-side/window-10/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "L11",
+   "view": "z_inc",
+   "side": "left",
+   "element": "window 11 frame",
+   "box": [
+    200,
+    10,
+    215,
+    20
+   ],
+   "nodes": [
+    "body/left-side/window-11/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "L12",
+   "view": "z_inc",
+   "side": "left",
+   "element": "window 12 frame",
+   "box": [
+    219,
+    10,
+    229,
+    20
+   ],
+   "nodes": [
+    "body/left-side/window-12/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "L13",
+   "view": "z_inc",
+   "side": "left",
+   "element": "window 13 frame",
+   "box": [
+    239,
+    10,
+    248,
+    20
+   ],
+   "nodes": [
+    "body/left-side/window-13/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the non-paint pixels in the window rows; +/- one pixel."
+  },
+  {
+   "id": "L14",
+   "view": "z_inc",
+   "side": "left",
+   "element": "door 1 outline",
+   "box": [
+    5,
+    9,
+    14,
+    34
+   ],
+   "nodes": [
+    "body/left-side/door-1/outline"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "Door edges read from the seam columns and the leaf colour; +/- two pixels."
+  },
+  {
+   "id": "L15",
+   "view": "z_inc",
+   "side": "left",
+   "element": "door 1 window 1 frame",
+   "box": [
+    7,
+    11,
+    12,
+    20
+   ],
+   "nodes": [
+    "body/left-side/door-1/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edges of the door window; +/- one pixel."
+  },
+  {
+   "id": "L16",
+   "view": "z_inc",
+   "side": "left",
+   "element": "door 2 outline",
+   "box": [
+    250,
+    9,
+    259,
+    34
+   ],
+   "nodes": [
+    "body/left-side/door-2/outline"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "Door edges read from the seam columns and the leaf colour; +/- two pixels."
+  },
+  {
+   "id": "L17",
+   "view": "z_inc",
+   "side": "left",
+   "element": "door 2 window 1 frame",
+   "box": [
+    252,
+    11,
+    257,
+    20
+   ],
+   "nodes": [
+    "body/left-side/door-2/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edges of the door window; +/- one pixel."
+  },
+  {
+   "id": "L18",
+   "view": "z_inc",
+   "side": "left",
+   "element": "class marks",
+   "box": [
+    28,
+    11,
+    235,
+    16
+   ],
+   "nodes": [
+    "body/left-side/class-marks"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "Union of the class-mark patches; the numerals are drawn narrower than a plate."
+  },
+  {
+   "id": "L19",
+   "view": "z_inc",
+   "side": "left",
+   "element": "emblem",
+   "box": [
+    27,
+    24,
+    33,
+    27
+   ],
+   "nodes": [
+    "body/left-side/emblem"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "The emblem patch; the drawn emblem keeps its own proportions."
+  },
+  {
+   "id": "B01",
+   "view": "x_dec",
+   "end": "rear",
+   "element": "gangway frame",
+   "box": [
+    7,
+    7,
+    23,
+    29
+   ],
+   "nodes": [
+    "rear-end/gangway"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "B02",
+   "view": "x_dec",
+   "end": "rear",
+   "element": "end door outline",
+   "box": [
+    9,
+    9,
+    21,
+    24
+   ],
+   "nodes": [
+    "rear-end/end-door/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Door between the gangway posts; +/- one pixel."
+  },
+  {
+   "id": "B03",
+   "view": "x_dec",
+   "end": "rear",
+   "element": "end door window 1",
+   "box": [
+    10,
+    11,
+    13,
+    18
+   ],
+   "nodes": [
+    "rear-end/end-door/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "B04",
+   "view": "x_dec",
+   "end": "rear",
+   "element": "end door window 2",
+   "box": [
+    17,
+    11,
+    20,
+    18
+   ],
+   "nodes": [
+    "rear-end/end-door/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "B05",
+   "view": "x_dec",
+   "end": "rear",
+   "element": "lamp 1",
+   "box": [
+    4,
+    17,
+    6,
+    19
+   ],
+   "nodes": [
+    "rear-end/tail-lamps/lamp-1"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "Two-pixel lamp patch; a round lens is kept."
+  },
+  {
+   "id": "B06",
+   "view": "x_dec",
+   "end": "rear",
+   "element": "lamp 2",
+   "box": [
+    24,
+    17,
+    26,
+    19
+   ],
+   "nodes": [
+    "rear-end/tail-lamps/lamp-2"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "Two-pixel lamp patch; a round lens is kept."
+  },
+  {
+   "id": "B07",
+   "view": "x_dec",
+   "end": "rear",
+   "element": "buffer head 1",
+   "box": [
+    2,
+    28,
+    7,
+    32
+   ],
+   "nodes": [
+    "rear-end/buffers/buffer-1/sweep-1"
+   ],
+   "tolerancePixels": 2.51,
+   "uncertainty": "Standard 1.75 m buffer spacing kept; the coarse raster places the heads wider."
+  },
+  {
+   "id": "B08",
+   "view": "x_dec",
+   "end": "rear",
+   "element": "buffer head 2",
+   "box": [
+    23,
+    28,
+    28,
+    32
+   ],
+   "nodes": [
+    "rear-end/buffers/buffer-2/sweep-1"
+   ],
+   "tolerancePixels": 2.51,
+   "uncertainty": "Standard 1.75 m buffer spacing kept; the coarse raster places the heads wider."
+  },
+  {
+   "id": "F01",
+   "view": "x_inc",
+   "end": "front",
+   "element": "gangway frame",
+   "box": [
+    7,
+    7,
+    23,
+    29
+   ],
+   "nodes": [
+    "front-end/gangway"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "F02",
+   "view": "x_inc",
+   "end": "front",
+   "element": "end door outline",
+   "box": [
+    9,
+    9,
+    21,
+    24
+   ],
+   "nodes": [
+    "front-end/end-door/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Door between the gangway posts; +/- one pixel."
+  },
+  {
+   "id": "F03",
+   "view": "x_inc",
+   "end": "front",
+   "element": "end door window 1",
+   "box": [
+    10,
+    11,
+    13,
+    18
+   ],
+   "nodes": [
+    "front-end/end-door/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "F04",
+   "view": "x_inc",
+   "end": "front",
+   "element": "end door window 2",
+   "box": [
+    17,
+    11,
+    20,
+    18
+   ],
+   "nodes": [
+    "front-end/end-door/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "F05",
+   "view": "x_inc",
+   "end": "front",
+   "element": "lamp 1",
+   "box": [
+    4,
+    17,
+    6,
+    19
+   ],
+   "nodes": [
+    "front-end/tail-lamps/lamp-2"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "Two-pixel lamp patch; a round lens is kept."
+  },
+  {
+   "id": "F06",
+   "view": "x_inc",
+   "end": "front",
+   "element": "lamp 2",
+   "box": [
+    24,
+    17,
+    26,
+    19
+   ],
+   "nodes": [
+    "front-end/tail-lamps/lamp-1"
+   ],
+   "tolerancePixels": 1.51,
+   "uncertainty": "Two-pixel lamp patch; a round lens is kept."
+  },
+  {
+   "id": "F07",
+   "view": "x_inc",
+   "end": "front",
+   "element": "buffer head 1",
+   "box": [
+    2,
+    28,
+    7,
+    32
+   ],
+   "nodes": [
+    "front-end/buffers/buffer-2/sweep-1"
+   ],
+   "tolerancePixels": 2.51,
+   "uncertainty": "Standard 1.75 m buffer spacing kept; the coarse raster places the heads wider."
+  },
+  {
+   "id": "F08",
+   "view": "x_inc",
+   "end": "front",
+   "element": "buffer head 2",
+   "box": [
+    23,
+    28,
+    28,
+    32
+   ],
+   "nodes": [
+    "front-end/buffers/buffer-1/sweep-1"
+   ],
+   "tolerancePixels": 2.51,
+   "uncertainty": "Standard 1.75 m buffer spacing kept; the coarse raster places the heads wider."
+  }
+ ]
+}

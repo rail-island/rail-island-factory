@@ -8,7 +8,8 @@ import { UIC_Z_NUMBERS } from "../generator/uicZCoach";
 import { coachComparison, readLandmarks } from "../generator/csdCoachComparison";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles";
 import { glbStats } from "../generator/glbStats";
-import { paramCombinations } from "../generator/design";
+import { createHash } from "node:crypto";
+import { paramCombinations, resolveParams } from "../generator/design";
 import { isLeaf, type LeafNode, type TreeNode } from "../generator/sourceTree";
 import { VEHICLES } from "../generator/vehicles";
 import { DESIGNS } from "../generator/generate";
@@ -42,6 +43,12 @@ const MECHANICS: Record<string, { length: number; axles: number[]; top: number }
   cd_ampz: { length: 26.4, axles: L264_AXLES, top: 4.0 },
   cd_bmz: { length: 26.4, axles: L264_AXLES, top: 4.0 },
   cd_wrrmz: { length: 26.9, axles: [-11.0, -8.5, 8.5, 11.0], top: 4.0 },
+  db_ic_ampz: { length: 26.4, axles: L264_AXLES, top: 4.0 },
+  db_ic_bmpz: { length: 26.4, axles: L264_AXLES, top: 4.0 },
+  db_ic_wrmz: { length: 26.9, axles: [-11.0, -8.5, 8.5, 11.0], top: 4.0 },
+  obb_ampz: { length: 26.4, axles: L264_AXLES, top: 4.0 },
+  obb_bmpz: { length: 26.4, axles: L264_AXLES, top: 4.0 },
+  obb_wrmz: { length: 26.4, axles: L264_AXLES, top: 4.0 },
 };
 
 describe("Czech and Slovak coaches (CD Y, ZSR, UIC-Z)", () => {
@@ -54,21 +61,25 @@ describe("Czech and Slovak coaches (CD Y, ZSR, UIC-Z)", () => {
       expect(d.references).toBe({ "veh-cd-y-coach": "cd-y-coach", "veh-zsr-coach": "zsr-coach", "veh-uic-z-coach": "uic-z-coach" }[d.id]);
     }
     for (const t of CZSK_TRANSFERS) expect(ALL_TRANSFERS).toContain(t);
-    // every value of every design is one transferred vlakosimdb vehicle
+    // every parameter combination of every design is one transferred vlakosimdb vehicle
+    const key = (p: Record<string, string>) => JSON.stringify(Object.entries(p).sort());
     for (const d of CZSK_COACHES)
-      expect(CZSK_TRANSFERS.filter((t) => t.id === d.id).map((t) => t.params!.variant).sort()).toEqual(d.params![0]!.values.map((v) => v.value).sort());
+      expect(CZSK_TRANSFERS.filter((t) => t.id === d.id).map((t) => key(resolveParams(d.params!, t.params))).sort()).toEqual(paramCombinations(d.params).map(key).sort());
   });
 
   it("keeps the parameter contract and defaults", () => {
     expect(design("veh-cd-y-coach").params!.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([["variant", "bcc", ["bcc", "beer", "bnb", "wrrm"]]]);
     expect(design("veh-zsr-coach").params!.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([["variant", "b", ["a", "ab", "b", "bh", "bds", "bdmeer", "wrrm", "apee"]]]);
-    expect(design("veh-uic-z-coach").params!.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([["variant", "secondClass", ["firstClass", "secondClass", "restaurant"]]]);
+    expect(design("veh-uic-z-coach").params!.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([
+      ["variant", "secondClass", ["firstClass", "secondClass", "restaurant"]],
+      ["operator", "cd", ["cd", "db", "obb"]],
+    ]);
     for (const d of CZSK_COACHES) expect(() => d.build({ variant: "nope" })).toThrow(/no value "nope"/);
   });
 
-  it.each(CZSK_COACHES.flatMap((d) => paramCombinations(d.params).map((p) => [d.id, p.variant!] as const)))("%s %s builds inside the envelope and budget", (id, variant) => {
+  it.each(CZSK_COACHES.flatMap((d) => paramCombinations(d.params).map((p) => [d.id, JSON.stringify(p)] as const)))("%s %s builds inside the envelope and budget", (id, params) => {
     const d = design(id);
-    const s = glbStats(d.build({ variant }).toGlb(d.title));
+    const s = glbStats(d.build(JSON.parse(params) as Record<string, string>).toGlb(d.title));
     expect(s.triangles).toBeLessThan(9000);
     expect(s.min[1]).toBeCloseTo(0, 5);
     expect(s.max[1]).toBeLessThan(4.7);
@@ -101,7 +112,7 @@ describe("Czech and Slovak coaches (CD Y, ZSR, UIC-Z)", () => {
   });
 
   it("carries valid UIC running numbers on both sides", () => {
-    const all = [...Object.values(CD_Y_NUMBERS), ...Object.values(ZSR_NUMBERS), ...Object.values(UIC_Z_NUMBERS.cd)];
+    const all = [...Object.values(CD_Y_NUMBERS), ...Object.values(ZSR_NUMBERS), ...Object.values(UIC_Z_NUMBERS).flatMap((o) => Object.values(o))];
     for (const { number } of all) {
       expect(number).toMatch(/^\d{2} \d{2} \d{2}-\d{2} \d{3}-\d$/);
       expect(uicCheckDigit(number), number).toBe(Number(number.slice(-1)));
@@ -109,6 +120,9 @@ describe("Czech and Slovak coaches (CD Y, ZSR, UIC-Z)", () => {
     // Czech coaches carry 54, Slovak ones 56
     for (const { number } of Object.values(ZSR_NUMBERS)) expect(number.slice(3, 5)).toBe("56");
     for (const { number } of [...Object.values(CD_Y_NUMBERS), ...Object.values(UIC_Z_NUMBERS.cd)]) expect(number.slice(3, 5)).toBe("54");
+    // German coaches 80, Austrian ones 81
+    for (const { number } of Object.values(UIC_Z_NUMBERS.db)) expect(number.slice(3, 5)).toBe("80");
+    for (const { number } of Object.values(UIC_Z_NUMBERS.obb)) expect(number.slice(3, 5)).toBe("81");
     for (const t of CZSK_TRANSFERS)
       for (const side of ["right", "left"]) {
         const n = leaves(transferBuild(t).sourceTree(t.id, t.title).root);
@@ -141,6 +155,58 @@ describe("Czech and Slovak coaches (CD Y, ZSR, UIC-Z)", () => {
     expect(mats("veh-uic-z-coach", "secondClass").has("yellow")).toBe(false);
     expect(mats("veh-cd-y-coach", "wrrm")).toEqual(new Set(["red"]));
     expect(mats("veh-cd-y-coach", "beer")).toEqual(new Set(["navy", "red"]));
+  });
+
+  // the DB IC and OBB coaches came in as the `operator` parameter: every CD
+  // combination (and so the default build) keeps its GLB bytes
+  it("keeps the CD UIC-Z coaches byte for byte under the operator parameter", () => {
+    const d = design("veh-uic-z-coach");
+    const sha = (p?: Record<string, string>) => createHash("sha256").update(d.build(p).toGlb(d.title)).digest("hex");
+    expect(sha()).toBe("0c2924c0bb4137e20c05379b597b3bfcdc2d0d423750167d6ac60aca4220eb5d");
+    expect(sha({ variant: "firstClass", operator: "cd" })).toBe("c8304dcacf77ef192a9865633e83c6b4c86421749937c4f3088a07abbba69b41");
+    expect(sha({ variant: "restaurant" })).toBe("1a85a692bc503bb873562d27dc161871b9b7316c813fc4e818fe1270d6a8ff72");
+    expect(sha({ operator: "db" })).not.toBe(sha());
+    expect(() => d.build({ operator: "sncf" })).toThrow(/no value "sncf"/);
+  });
+
+  it("lays out the DB IC and OBB coaches as their native BMPs do", () => {
+    const id = "veh-uic-z-coach";
+    const count = (operator: string, variant: string, side: string) => windowCount(id, { operator, variant }, side);
+    // DB: Ampz two toilets and nine bays, Bmpz two toilets and eleven, WRmz thirteen on the right and eight on the left
+    expect(["firstClass", "secondClass", "restaurant"].map((v) => [count("db", v, "right"), count("db", v, "left")])).toEqual([[11, 11], [13, 13], [13, 8]]);
+    // OBB: Ampz eleven, Bmpz twelve, WRmz eleven and ten
+    expect(["firstClass", "secondClass", "restaurant"].map((v) => [count("obb", v, "right"), count("obb", v, "left")])).toEqual([[11, 11], [12, 12], [11, 10]]);
+    const doors = (operator: string, variant: string, side: string) =>
+      new Set(nodesOf(id, { operator, variant }).filter((n) => n.id.startsWith(`body/${side}-side/door-`)).map((n) => n.id.split("/")[2])).size;
+    expect([doors("db", "secondClass", "right"), doors("db", "restaurant", "right"), doors("db", "restaurant", "left"), doors("obb", "restaurant", "right"), doors("obb", "firstClass", "left")]).toEqual([2, 1, 1, 1, 2]);
+    // the DB dining car's service doors are seams only, across from its passenger door
+    expect(nodesOf(id, { operator: "db", variant: "restaurant" }).some((n) => n.id.startsWith("body/left-side/seams/"))).toBe(true);
+    // the OBB dining car has its one entrance at the front end only
+    const steps = nodesOf(id, { operator: "obb", variant: "restaurant" }).filter((n) => n.id.includes("-end/steps/")).map((n) => n.id.split("/")[0]);
+    expect(new Set(steps)).toEqual(new Set(["front-end"]));
+  });
+
+  it("paints the DB IC and OBB liveries", () => {
+    const id = "veh-uic-z-coach";
+    const colour = (operator: string, mat: string) => {
+      const t = design(id).build({ operator }).sourceTree(id, "UIC-Z Coach");
+      return t.colors[t.materials.indexOf(mat)];
+    };
+    const bands = (operator: string) => new Set(nodesOf(id, { operator, variant: "secondClass" }).filter((n) => /^body\/[a-zA-Z]+-band\//.test(n.id)).map((n) => n.material));
+    expect(bands("db")).toEqual(new Set(["white", "red", "roof"]));
+    expect(bands("obb")).toEqual(new Set(["red", "grey", "roof"]));
+    expect(colour("db", "white")).toBe("#f2f2f2");
+    expect(colour("obb", "grey")).toBe("#404040");
+    const mats = (operator: string, variant: string) => new Set(nodesOf(id, { operator, variant }).filter((n) => n.id.includes("/paint/")).map((n) => n.material));
+    // OBB first class: the yellow line; DB Ampz and WRmz: white gaps in the stripe
+    expect(mats("obb", "firstClass")).toEqual(new Set(["yellow"]));
+    expect(mats("obb", "secondClass").has("yellow")).toBe(false);
+    expect(mats("db", "firstClass")).toEqual(new Set(["white"]));
+    expect(mats("db", "restaurant")).toEqual(new Set(["white"]));
+    // the operators' marks: the DB letters and frame on a plate, the OBB mark in white
+    const emblem = (operator: string) => new Set(nodesOf(id, { operator, variant: "secondClass" }).filter((n) => n.id.startsWith("body/right-side/emblem")).map((n) => n.material));
+    expect(emblem("db")).toEqual(new Set(["plate", "red"]));
+    expect(emblem("obb")).toEqual(new Set(["white"]));
   });
 
   // the blue and white CD Bee 001 is a value of the green and white design: the

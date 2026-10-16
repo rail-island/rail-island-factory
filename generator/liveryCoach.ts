@@ -14,6 +14,7 @@ import type { Vec3 } from "./meshCore.ts";
 import { block, side } from "./vehicleParts.ts";
 import { Coach, px, sectionHalf, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { emblem } from "./cd163.ts";
+import { strokeText, strokeWidth } from "./strokeFont.ts";
 import { endName, fpx, headstock, lamp, mirror, roofVents, sides, sideName, type PxBox } from "./csdCoaches.ts";
 
 /** A window box, optionally with frosted glass (the toilets). */
@@ -81,8 +82,11 @@ export interface LiveryCoachSpec {
   endPaint?: string;
   endDoor: string;
   end: EndSpec;
-  /** The emblem kind and its height (CD: the cd163 emblem; ZSR: a simplified ZSR mark). */
-  emblem?: { kind: "cd" | "zsr"; mat: string };
+  /**
+   * The emblem kind (CD: the cd163 emblem; ZSR: a simplified ZSR mark; DB: the
+   * framed letters on a plate, `plate` its material; OBB: a simplified mark).
+   */
+  emblem?: { kind: "cd" | "zsr" | "db" | "obb"; mat: string; plate?: string };
   number: string;
   numberMat: string;
   /** The running number's foot, metres. */
@@ -291,10 +295,41 @@ export function buildLiveryCoach(spec: LiveryCoachSpec): MeshBuilder {
               // read left to right from outside: toward +x on the +z side, toward -x on the -z side
               const u0 = s > 0 ? c.X(x0) : c.X(x0 + w);
               m.facets(spec.emblem!.mat, emblem(u0, (b.y0 + b.y1) / 2 - h / 2, h, s < 0).map(([u, vv]): Vec3 => [u, vv, z]), [0, 0, s]);
-            } else {
+            } else if (spec.emblem!.kind === "zsr") {
               const hh = b.y1 - b.y0;
               const w = Math.max(hh * 1.3, b.x1 - b.x0);
               m.facets(spec.emblem!.mat, zsrMark(c.X((b.x0 + b.x1) / 2 - w / 2), b.y0, hh, w).map(([u, vv]): Vec3 => [u, vv, z]), [0, 0, s]);
+            } else if (spec.emblem!.kind === "db") {
+              // the plate, then its frame and the letters a millimetre further out
+              const z2 = z + s * 0.001;
+              const [u0, u1] = [c.X(b.x0), c.X(b.x1)];
+              const rect = (a: number, bb: number, v0: number, v1: number, zz: number): Vec3[] => [[a, v0, zz], [bb, v0, zz], [bb, v1, zz], [a, v0, zz], [bb, v1, zz], [a, v1, zz]];
+              m.facets(spec.emblem!.plate ?? "plate", rect(u0, u1, b.y0, b.y1, z), [0, 0, s]);
+              const t = (b.y1 - b.y0) * 0.1;
+              const frame = [...rect(u0, u1, b.y0, b.y0 + t, z2), ...rect(u0, u1, b.y1 - t, b.y1, z2), ...rect(u0, u0 + t, b.y0 + t, b.y1 - t, z2), ...rect(u1 - t, u1, b.y0 + t, b.y1 - t, z2)];
+              m.facets(spec.emblem!.mat, frame, [0, 0, s]);
+              const lh = (b.y1 - b.y0) * 0.56;
+              const lw = lh * 0.62;
+              const width = strokeWidth("DB", lw, lh * 0.12);
+              const mid = (b.x0 + b.x1) / 2;
+              const start = s > 0 ? c.X(mid) - width / 2 : c.X(mid) + width / 2;
+              m.facets(spec.emblem!.mat, strokeText("DB", start, (b.y0 + b.y1) / 2 - lh / 2, lh, lw, lh * 0.12, s < 0, lh * 0.16).map(([u, vv]): Vec3 => [u, vv, z2]), [0, 0, s]);
+            } else {
+              // three slanted bars rising toward the coach's front on both sides
+              const hh = b.y1 - b.y0;
+              const w = b.x1 - b.x0;
+              const bar = hh / 5;
+              const tris: Vec3[] = [];
+              for (let k = 0; k < 3; k++) {
+                const v0 = b.y0 + k * 2 * bar;
+                const lean = w * 0.18;
+                const xa = b.x0 + w * 0.08 * k;
+                const xb = b.x1 - w * 0.08 * (2 - k);
+                const q: Pt[] = [[xa, v0], [xb - lean, v0], [xb, v0 + bar], [xa + lean, v0 + bar]];
+                const p3 = q.map(([x, y]): Vec3 => [c.X(x), y, z]);
+                tris.push(p3[0]!, p3[1]!, p3[2]!, p3[0]!, p3[2]!, p3[3]!);
+              }
+              m.facets(spec.emblem!.mat, tris, [0, 0, s]);
             }
           });
         m.scope("running number", () => c.inscription(body, s, sp.numberAt / 10, [{ text: spec.number, y: spec.numberY, h: 0.1 }], 0.008, spec.numberMat));

@@ -2,6 +2,7 @@
 // design's shape and budget, and the generator's output on disk.
 
 import { describe, expect, it } from "vitest";
+import { generateInSubprocess } from "./generateSubprocess";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -258,12 +259,12 @@ describe("the designs", () => {
     const h = s.max[1] - s.min[1];
     const w = Math.max(s.max[0] - s.min[0], s.max[2] - s.min[2]);
     expect(h).toBeGreaterThan(2 * w); // a skyscraper, not a block
-    expect(s.triangles).toBeLessThanOrEqual(4000);
+    expect(s.triangles).toBeLessThanOrEqual(10_000);
     expect(faces(glb).length).toBe(s.triangles);
   });
 
-  it("generate the same bytes every time, so the game's LOD cache can key on them", () => {
-    for (const d of DESIGNS.values()) expect(Buffer.from(designGlb(d.id)).equals(Buffer.from(designGlb(d.id)))).toBe(true);
+  it.each(ALL_IDS)("%s generates deterministic GLB bytes for the game's LOD cache", (id) => {
+    expect(Buffer.from(designGlb(id)).equals(Buffer.from(designGlb(id)))).toBe(true);
   });
 
   it("throws on an unknown id", () => {
@@ -317,8 +318,8 @@ describe("the designs", () => {
     }
   });
 
-  it("record the same source tree every time", () => {
-    for (const d of DESIGNS.values()) expect(JSON.stringify(designTree(d.id))).toBe(JSON.stringify(designTree(d.id)));
+  it.each(ALL_IDS)("%s records the same source tree every time", (id) => {
+    expect(JSON.stringify(designTree(id))).toBe(JSON.stringify(designTree(id)));
   });
 });
 
@@ -328,7 +329,7 @@ describe("the vehicles", () => {
     expect(ids).toContain("veh-american-truck");
     expect(new Set(ids).size).toBe(ids.length);
     for (const id of ids) expect(id).toMatch(/^veh-[a-z0-9]+(-[a-z0-9]+)*$/);
-    for (const d of BUILDINGS) expect(d.id).toMatch(/^(sky|bld)-[a-z0-9]+(-[a-z0-9]+)*$/);
+    for (const d of BUILDINGS) expect(d.id).toMatch(/^(sky|bld|comm)-[a-z0-9]+(-[a-z0-9]+)*$/);
     expect(DESIGNS.size).toBe(BUILDINGS.length + VILLAGE_HOUSES.length + ALL_VEHICLES.length);
   });
 
@@ -712,7 +713,7 @@ describe("generateModels", () => {
       fs.writeFileSync(path.join(dir, "thumbs", "sky-retired.png"), "stale");
       fs.mkdirSync(path.join(dir, "tree"));
       fs.writeFileSync(path.join(dir, "tree", "sky-retired.json"), "stale");
-      const first = generateModels(dir);
+      const first = await generateInSubprocess(dir, "models");
       expect(first.map((b) => b.id).sort()).toEqual([...DESIGNS.keys()].sort());
       for (const b of first) {
         expect(b.changed).toBe(true);

@@ -55,4 +55,10 @@ export const CZSK_TRANSFERS: readonly CoachTransfer[] = [
   t("cd_ampz", "CD Ampz", "veh-uic-z-coach", "uic-z-coach", { variant: "firstClass" }, 13.2, "COMPARISON-ampz.md"),
   t("cd_bmz", "CD Bmz", "veh-uic-z-coach", "uic-z-coach", { variant: "secondClass" }, 13.2, "COMPARISON-bmz.md"),
   t("cd_wrrmz", "CD WRRmz", "veh-uic-z-coach", "uic-z-coach", { variant: "restaurant" }, 13.45, "COMPARISON-wrrmz.md"),
+  t("db_ic_ampz", "DB IC Ampz", "veh-uic-z-coach", "uic-z-coach", { variant: "firstClass", operator: "db" }, 13.2, "COMPARISON-db-ampz.md"),
+  t("db_ic_bmpz", "DB IC Bmpz", "veh-uic-z-coach", "uic-z-coach", { variant: "secondClass", operator: "db" }, 13.2, "COMPARISON-db-bmpz.md"),
+  t("db_ic_wrmz", "DB IC WRmz", "veh-uic-z-coach", "uic-z-coach", { variant: "restaurant", operator: "db" }, 13.45, "COMPARISON-db-wrmz.md"),
+  t("obb_ampz", "OBB Ampz", "veh-uic-z-coach", "uic-z-coach", { variant: "firstClass", operator: "obb" }, 13.2, "COMPARISON-obb-ampz.md"),
+  t("obb_bmpz", "OBB Bmpz", "veh-uic-z-coach", "uic-z-coach", { variant: "secondClass", operator: "obb" }, 13.2, "COMPARISON-obb-bmpz.md"),
+  t("obb_wrmz", "OBB WRmz", "veh-uic-z-coach", "uic-z-coach", { variant: "restaurant", operator: "obb" }, 13.2, "COMPARISON-obb-wrmz.md"),
 ];

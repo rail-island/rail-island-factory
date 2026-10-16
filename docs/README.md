@@ -10,13 +10,14 @@
 | [guide/deploy.md](guide/deploy.md) | the Cloudflare Worker, the GitHub Actions workflows, secrets |
 | [models/skyscrapers.md](models/skyscrapers.md) | the ten skyscraper designs, the mesh builder, adding a design |
 | [models/village.md](models/village.md) | the seven parametric village houses in the Kenney and Quaternius styles: plan families, the house builder, finish parameters, scale and tests |
+| [models/commercial.md](models/commercial.md) | five Kenney-style commercial families with 3,000 architectural and finish variants, a 10,000-triangle ceiling, catalog and export |
 | [models/vehicles.md](models/vehicles.md) | the procedural road and rail vehicles, budgets, articulation, pantograph operating poses, native-reference calibration and adding a vehicle |
 | [models/buses.md](models/buses.md) | the buses from vlakosimdb: the Karosa short and long families, the single models, the shared bus builder, sources and tests |
 | [models/vehicle-rig.md](models/vehicle-rig.md) | what the game moves: steered front wheels, articulated sections and the joint renderer, the `rig`, `pose()` / `renderJoint()`, the Pose sliders |
 | [models/parameters.md](models/parameters.md) | parametric models: enum parameters, the default-only GLB, `params` in the meta entries and the JS model, the site's picker |
 | [models/csd-coaches.md](models/csd-coaches.md) | the CSD coaches from vlakosimdb: sources, the shared coach builder, deviations, the native-raster comparison and tests |
 | [models/cd-green-white.md](models/cd-green-white.md) | the parametric CD green and white coach: ten vlakosimdb coaches (the blue Bee 001 among them) as one `variant` parameter |
-| [models/czsk-coaches.md](models/czsk-coaches.md) | the Czech and Slovak coaches in later liveries: `veh-cd-y-coach`, `veh-zsr-coach`, `veh-uic-z-coach`, their livery builder and comparison |
+| [models/czsk-coaches.md](models/czsk-coaches.md) | the Czech and Slovak coaches in later liveries: `veh-cd-y-coach`, `veh-zsr-coach`, `veh-uic-z-coach` (with its DB IC and OBB operators), their livery builder and comparison |
 | [models/loco-liveries.md](models/loco-liveries.md) | the parametric locomotives: CD 150 / 151 / ZSR 350, CD 163 / 363 and CD 263 / 371 / 372 liveries, the livery model, cab paint, the 263's machine room |
 | [models/cd-230.md](models/cd-230.md) | the parametric CD 230 / 240 / 340 / 242 "laminatka": the rounded nose, the face laid on the curved skin, five liveries, the native comparison |
 | [models/mainline-electrics.md](models/mainline-electrics.md) | the six-axle Czech and the German and Austrian electric locomotives from vlakosimdb: CD 180 / 181 / 182, DNT 184.5, DB 111, DR 243 / DB 143 / 112, OBB 1012 and 1040, the data-driven box-cab builder, the native comparison |
@@ -35,9 +36,10 @@
 | [models/animation.md](models/animation.md) | animation clips of parts, the steam locomotives' running-gear clip and its timing contract, the site's Start and Stop buttons |
 | [models/wagons.md](models/wagons.md) | the five freight wagons from vlakosimdb (Nas, Ua, Eas, Raj, Rah), three of them parametric by `cargo`: sources, the shared wagon parts, the native-raster comparison and tests |
 | [models/freight-wagons.md](models/freight-wagons.md) | the Sqns container, Pao flat, Habis sliding-wall, Hadgs covered hopper and Faccs, Falls and Wap hopper wagons from vlakosimdb, by `cargo` and `livery`: the JT7 clip solid, loads, deviations, the native comparison and tests |
-| [models/reproductions.md](models/reproductions.md) | the 23 reproductions of the webapp's hand-authored models: photos, ids, same-size rule, budgets, what a webapp import must change |
+| [models/reproductions.md](models/reproductions.md) | the 25 reproductions of the webapp's hand-authored models: photos, ids, same-size rule, budgets, what a webapp import must change |
 | [models/churches.md](models/churches.md) | the baroque church, the Vrchlabi church and the twin-tower baroque church |
 | [models/cathedrals.md](models/cathedrals.md) | St Basil's Cathedral and St Nicholas Church |
+| [models/gothic-cathedrals.md](models/gothic-cathedrals.md) | Notre-Dame and Prague Castle's St Vitus: Gothic geometry, references, axes and the 30,000-triangle budget |
 | [models/landmarks.md](models/landmarks.md) | the Brandenburg Gate, the Louvre Pyramid and the White House |
 | [models/stations.md](models/stations.md) | the four station buildings: Prague main station, the station building, the Mikulasovice halt, the suburban station |
 | [models/aircraft.md](models/aircraft.md) | the Aero A.10, the Airbus A380 and the light jet, their gear parts |

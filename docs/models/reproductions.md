@@ -1,14 +1,15 @@
 # Reproductions of the webapp's models
 
-**Covers** - the 23 procedural models that reproduce hand-authored GLBs of the webapp's
+**Covers** - the 25 procedural models that reproduce hand-authored GLBs of the webapp's
 model database: which photo and which webapp model each comes from, the ids, the shared
 rules (same axes and size as the reference, triangle budgets), and what a later webapp
 import has to change.
-**Code** - `generator/churches.ts`, `generator/cathedrals.ts`, `generator/landmarks.ts`,
+**Code** - `generator/churches.ts`, `generator/cathedrals.ts`, `generator/gothicCathedrals.ts`, `generator/gothicParts.ts`, `generator/landmarks.ts`,
 `generator/stations.ts`, `generator/aircraft.ts`, `generator/ships.ts`,
 `generator/cableCabins.ts`, `generator/trucks.ts`, `generator/generate.ts` (`FAMILIES`,
 `BUILDINGS`, `ALL_VEHICLES`, `designSource`), `test/referenceModels.test.ts`, `assets/<model>/`
 **See also** - [churches.md](churches.md), [cathedrals.md](cathedrals.md),
+[gothic-cathedrals.md](gothic-cathedrals.md),
 [landmarks.md](landmarks.md), [stations.md](stations.md), [aircraft.md](aircraft.md),
 [ships.md](ships.md), [cable-cabins.md](cable-cabins.md), [trucks.md](trucks.md),
 [export.md](export.md)
@@ -30,6 +31,8 @@ rest of the catalog.
 | `bld-twin-tower-baroque-church` | `buildings/twin-tower-baroque-church` | `twin-tower-baroque-church/` | `churches.ts` |
 | `bld-st-basils-cathedral` | `buildings/st-basils-cathedral` | `st-basils-cathedral/` | `cathedrals.ts` |
 | `bld-st-nicholas-church` | `buildings/st-nicholas-church` | `st-nicholas-church/` | `cathedrals.ts` |
+| `bld-notre-dame` | `buildings/notre-dame` | `notre-dame/` | `gothicCathedrals.ts` |
+| `bld-prague-castle-st-vitus` | `buildings/prague-castle-st-vitus` | `prague-castle-st-vitus/` | `gothicCathedrals.ts` |
 | `bld-brandenburg-gate` | `buildings/brandenburg-gate` | `brandenburg-gate/` | `landmarks.ts` |
 | `bld-louvre-pyramid` | `buildings/louvre-pyramid` | `louvre-pyramid/` | `landmarks.ts` |
 | `bld-white-house` | `buildings/white-house` | `white-house/` | `landmarks.ts` |
@@ -64,9 +67,10 @@ renamed.
   measured off those bounds - a building's `defaultScale`, an aircraft's or ship's `yaw`
   and `targetLength`, a ship's `draftFrac`, a cabin's `ropeFrac` and `boardFrac` - so they
   stay valid for the reproduction. `test/referenceModels.test.ts` holds the references'
-  boxes and fails any axis more than 10 % off; the designs are within about 1 %.
+  boxes and fails any axis more than 10 % off; most designs are within about 1 %.
+  St Vitus's more articulated transept is about 4 % wider than its reference.
 - **Triangle budgets** (same test): trucks 12,000, cable cabins 8,000, aircraft 20,000,
-  everything else 40,000. Most reproductions use well under half of their reference's count
+  Notre-Dame and St Vitus 30,000, everything else 40,000. Most reproductions use well under half of their reference's count
   (the Brandenburg Gate's reference has 217,000).
 - **Look.** The reference's massing and colour scheme, with detail taken from the photos
   where the reference lacks it; each family doc lists its deviations.
