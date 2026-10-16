@@ -1,0 +1,19 @@
+{
+  "source": "janproch/vlakosimdb db/train/loco/electric/cd_140_040/model (x_both 30 x 60, z_both 180 x 60, 0.1 m a pixel; the side's x scaled by 0.9006 to the published body)",
+  "annotations": [
+    {"id": "F01", "view": "x_front", "box": [3, 26, 14, 33], "nodes": ["front-cab/windscreen/right-pane/frame"], "tolerancePixels": 1.01, "uncertainty": "Windscreen pane with its frame."},
+    {"id": "F02", "view": "x_front", "box": [16, 26, 27, 33], "nodes": ["front-cab/windscreen/left-pane/frame"], "tolerancePixels": 1.01, "uncertainty": "As F01."},
+    {"id": "F03", "view": "x_front", "box": [7, 38, 23, 45], "nodes": ["front-cab/whiskers/white"], "tolerancePixels": 1.5, "uncertainty": "The white V below the white band; its pale blue edge (native colour #a8c0d8) is a separate panel."},
+    {"id": "F04", "view": "x_front", "box": [10, 45, 20, 47], "nodes": ["front-cab/number-plate"], "tolerancePixels": 1.01, "uncertainty": "Red plate under the V's tip."},
+    {"id": "F05", "view": "x_front", "box": [4, 43, 6, 45], "nodes": ["front-cab/lamps/right-lamp"], "tolerancePixels": 1.5, "uncertainty": "Low lamp, a 2 x 2 px patch; the XML light clip gives a 0.3 m lens."},
+    {"id": "F06", "view": "x_front", "box": [13, 22, 17, 25], "nodes": ["front-cab/lamps/top-lamp"], "tolerancePixels": 1.01, "uncertainty": "Top lamp over the windscreen."},
+    {"id": "S01", "view": "z_right", "box": [37, 26, 45, 34], "nodes": ["sides/right-side/portholes/porthole-1"], "tolerancePixels": 1.01, "uncertainty": "Porthole with its rim."},
+    {"id": "S02", "view": "z_right", "box": [73, 26, 81, 34], "nodes": ["sides/right-side/portholes/porthole-3"], "tolerancePixels": 1.01, "uncertainty": "Porthole with its rim."},
+    {"id": "S03", "view": "z_right", "box": [127, 26, 135, 34], "nodes": ["sides/right-side/portholes/porthole-6"], "tolerancePixels": 1.01, "uncertainty": "Porthole with its rim."},
+    {"id": "S04", "view": "z_right", "box": [18, 26, 24, 34], "nodes": ["sides/right-side/front-cab/door/window"], "tolerancePixels": 1.01, "uncertainty": "Cab door window."},
+    {"id": "S05", "view": "z_right", "box": [72, 40, 81, 43], "nodes": ["sides/right-side/number-plate"], "tolerancePixels": 1.01, "uncertainty": "Red side plate, off the middle as drawn."},
+    {"id": "S06", "view": "z_right", "box": [5, 35, 166, 36], "nodes": ["body/shell/side-right/band-3", "body/shell/front/band-3", "body/shell/rear/band-3"], "tolerancePixels": 1.01, "uncertainty": "The pale blue line under the light band, 2.4 to 2.5 m, round the whole body."},
+    {"id": "S07", "view": "z_right", "box": [5, 37, 166, 38], "nodes": ["body/shell/side-right/band-1", "body/shell/front/band-1", "body/shell/rear/band-1"], "tolerancePixels": 1.01, "uncertainty": "The white line over the dark blue lower body, round the whole body."},
+    {"id": "S08", "view": "z_right", "box": [55, 17, 116, 19], "nodes": ["roof-equipment/resistor-box/loft-2", "roof-equipment/resistor-box/slats"], "tolerancePixels": 1.5, "uncertainty": "The upper part of the resistor box with its slats (XML roof clip 5.5..11.6 m, scaled)."}
+  ]
+}

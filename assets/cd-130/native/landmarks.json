@@ -1,0 +1,21 @@
+{
+  "source": "janproch/vlakosimdb db/train/loco/electric/cd_130/model (x_both 30 x 60, z_both 170 x 60, 0.1 m a pixel)",
+  "annotations": [
+    {"id": "F01", "view": "x_front", "box": [11, 20, 19, 25], "nodes": ["front-cab/headlight"], "tolerancePixels": 3.0, "uncertainty": "Round headlight housing on the roof leading edge. The native 8 x 5 px box includes the grey dome around it; photographs show a round housing about 0.5 m across, which the model keeps."},
+    {"id": "F02", "view": "x_front", "box": [0, 25, 13, 34], "nodes": ["front-cab/windscreen/right-pane/rubber"], "tolerancePixels": 1.5, "uncertainty": "Windscreen pane with its rubber; the native trim strip runs across the whole face at rows 25 and 33."},
+    {"id": "F03", "view": "x_front", "box": [17, 25, 30, 34], "nodes": ["front-cab/windscreen/left-pane/rubber"], "tolerancePixels": 1.5, "uncertainty": "As F02, the other pane."},
+    {"id": "F04", "view": "x_front", "box": [10, 36, 19, 38], "nodes": ["front-cab/number-plate"], "tolerancePixels": 1.01, "uncertainty": "Red plate at the cream/green boundary; +/- one pixel."},
+    {"id": "F05", "view": "x_front", "box": [5, 38, 7, 40], "nodes": ["front-cab/lamps/lamp-1"], "tolerancePixels": 1.01, "uncertainty": "Outer lamp, a 2 x 2 px patch: position only."},
+    {"id": "F06", "view": "x_front", "box": [0, 45, 30, 48], "nodes": ["body/shell/front/band-0"], "tolerancePixels": 1.01, "uncertainty": "The yellow band across the nose, 1.2 to 1.5 m."},
+    {"id": "F07", "view": "x_front", "box": [3, 48, 9, 52], "nodes": ["front-cab/lower-end/buffers/right/head"], "tolerancePixels": 2.0, "uncertainty": "Buffer head ring, drawn 0.6 m across; the model keeps 0.4 m heads at the standard 1.75 m spacing."},
+    {"id": "S01", "view": "z_right", "box": [38, 27, 48, 35], "nodes": ["sides/right-side/windows/window-1"], "tolerancePixels": 1.01, "uncertainty": "Large machine-room window, frame and glass."},
+    {"id": "S02", "view": "z_right", "box": [63, 30, 73, 35], "nodes": ["sides/right-side/windows/window-2"], "tolerancePixels": 1.01, "uncertainty": "Small machine-room window."},
+    {"id": "S03", "view": "z_right", "box": [87, 30, 97, 35], "nodes": ["sides/right-side/windows/window-3"], "tolerancePixels": 1.01, "uncertainty": "Small machine-room window."},
+    {"id": "S04", "view": "z_right", "box": [112, 27, 122, 35], "nodes": ["sides/right-side/windows/window-4"], "tolerancePixels": 1.01, "uncertainty": "Large machine-room window."},
+    {"id": "S05", "view": "z_right", "box": [12, 26, 18, 34], "nodes": ["sides/right-side/front-cab/door/window"], "tolerancePixels": 1.01, "uncertainty": "Cab door window at the front end."},
+    {"id": "S06", "view": "z_right", "box": [76, 41, 85, 44], "nodes": ["sides/right-side/number-plate"], "tolerancePixels": 1.01, "uncertainty": "Red side plate; +/- one pixel."},
+    {"id": "S07", "view": "z_right", "box": [0, 25, 160, 37], "nodes": ["body/shell/side-right/band-1", "body/shell/front/band-2", "body/shell/rear/band-2"], "tolerancePixels": 1.5, "uncertainty": "The cream upper band, 2.3 to 3.5 m, over the whole side including the rounded corners (painted with the ends)."},
+    {"id": "S08", "view": "z_right", "box": [55, 16, 104, 20], "nodes": ["roof-equipment/roof-hump"], "tolerancePixels": 2.0, "uncertainty": "Raised middle of the roof, top at 4.4 m (XML roof clip); its lower edge disappears into the roof's curve, so only the top and ends are sharp."},
+    {"id": "S09", "view": "z_right", "box": [158, 48, 164, 52], "nodes": ["rear-cab/lower-end/buffers/left"], "tolerancePixels": 2.0, "uncertainty": "The buffers drawn at one end of the native side only; the model's are 0.62 m long to the published 17.21 m over the buffers."}
+  ]
+}

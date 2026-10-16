@@ -19,6 +19,15 @@ Vojtech Vohladka (the original spelling is kept in the Windows-1250 files):
   original textures and metadata, and the 240's `index.xml`. The four models
   share every clip profile; the 240 family differs only in its roof clips (a box
   at source x 6.1..7.3 and the breaker at 8.5..9.8 instead of 7.3..8.6).
+- `native/liveries/cd_242`: the CD 242 (S 499.02, Skoda 73E, the 240's
+  steel-bodied sister; model by Vojtech Vohlidka): textures, metadata and its
+  `index.xml`. Its XML is a plain box (one clip per axis) with two `pantdbl`
+  inlines, so it gives the paint only; the `cd242` livery keeps the laminatka
+  outline and the 240 family's roof box. Its side BMP is 157 x 57 pixels on the
+  17 x 6 m canvas (0.108 x 0.105 m a pixel): cream above 2.2 m, red below with a
+  light line at 1.4 to 1.5 m; the front (`x_both`, 0.1 m a pixel) adds the
+  yellow band from 1.3 to 1.6 m. Number 242 214-5, photographed in this livery
+  (`photo-242-214-side.jpg`).
 
 No `_4x` or other enhanced texture was used for measurement or shipped. The
 model uses procedural surfaces and solid-colour materials only.
@@ -35,6 +44,8 @@ All from Wikimedia Commons, downscaled to 1280 px by Commons' thumbnailer.
 | `photo-240-144-front-three-quarter.jpg` | [20200118-Railtrans-240144 No.1 end.jpg](https://commons.wikimedia.org/wiki/File:20200118-Railtrans-240144_No.1_end.jpg) | Alex Noble, 2020 | WTFPL | the face's details: vent rims, oval lip grilles, single headlight, lamp housings and steps |
 | `photo-240-005-three-quarter.jpg` | [Locomotive 240 005-9 at Bratislava hlavná stanica.jpg](https://commons.wikimedia.org/wiki/File:Locomotive_240_005-9_at_Bratislava_hlavn%C3%A1_stanica.jpg) | Maksym Kozlenko, 2018 | CC BY-SA 4.0 | hood painted in the body colour, rectangular buffer heads, plough |
 | `photo-240-082-three-quarter.jpg` | [Laminátka.JPG](https://commons.wikimedia.org/wiki/File:Lamin%C3%A1tka.JPG) | Balogh Zsolt, 2006 | public domain | the 240 in red and yellow, the diamond pantograph |
+| `photo-242-214-side.jpg` | [242 214 Cheb.jpg](https://commons.wikimedia.org/wiki/File:242_214_Cheb.jpg) | Steffen Mokosch, 2001 | GFDL (relicensed CC BY-SA 3.0) | the 242's cream and red livery with the yellow nose band, the number 242 214-5 |
+| `photo-242-282-side.jpg` | [15.02.92 Ceske Budejovice 242.282 (11355707036).jpg](https://commons.wikimedia.org/wiki/File:15.02.92_%C4%8Cesk%C3%A9_Bud%C4%9Bjovice_242.282_%2811355707036%29.jpg) | Phil Richards, 1992 | CC BY-SA 2.0 | the 242's steel body in profile, roof equipment (in the earlier orange and yellow) |
 
 Dimensions: 16.44 m over the buffers (cs.wikipedia, Lokomotiva 230 and 240);
 15.20 m body, 3.02 m wide, 7.80 m between the pivots, 2.80 m bogie wheelbase

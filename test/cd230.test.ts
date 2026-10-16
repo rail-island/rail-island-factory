@@ -134,10 +134,11 @@ describe("CD 230 laminatka transfer", () => {
     }
     expect(CD230_LIVERIES.cd230.number).toBe("230 025-9");
     expect(CD230_LIVERIES.cd340.number).toBe("340 062-9");
+    expect(CD230_LIVERIES.cd242.number).toBe("242 214-5");
   });
 
-  it("builds every livery within the rail budget, with the 240 family's roof box only on the 240s and 340", () => {
-    expect(CD230_PARAMS[0]!.values.map((v) => v.value)).toEqual(["cd230", "cd240", "cd240No047", "cd340"]);
+  it("builds every livery within the rail budget, with the 240 family's roof box only on the 240s, 340 and 242", () => {
+    expect(CD230_PARAMS[0]!.values.map((v) => v.value)).toEqual(["cd230", "cd240", "cd240No047", "cd340", "cd242"]);
     for (const livery of Object.keys(CD230_LIVERIES)) {
       const { mesh, nodes } = triangles({ livery });
       expect(mesh.triangleCount(), livery).toBeLessThanOrEqual(16000);

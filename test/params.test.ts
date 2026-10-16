@@ -115,7 +115,7 @@ describe("parametric models", () => {
         }
         if (JSON.stringify(combo) === JSON.stringify(paramCombinations(d.params)[0])) expect(Buffer.from(glb).equals(Buffer.from(defaults))).toBe(true);
       }
-    });
+    }, 30_000); // the heavier locomotives take a few seconds for all their liveries
 
     it(`${d.id}: the JS model exports its parameters and builds every combination like the generator`, async () => {
       const mod = await loadModule(await bundleDesign(d, designSource(d.id)));

@@ -1,0 +1,21 @@
+{
+  "source": "janproch/vlakosimdb db/train/loco/electric/cd_169/model (x_both 30 x 60, z_both 180 x 60, 0.1 m a pixel; the side's x scaled by 0.971 to the published body)",
+  "annotations": [
+    {"id": "F01", "view": "x_front", "box": [2, 26, 15, 35], "nodes": ["front-cab/windscreen/right-pane/rubber"], "tolerancePixels": 1.01, "uncertainty": "Windscreen pane with its rubber, on the raked face."},
+    {"id": "F02", "view": "x_front", "box": [15, 26, 28, 35], "nodes": ["front-cab/windscreen/left-pane/rubber"], "tolerancePixels": 1.01, "uncertainty": "As F01."},
+    {"id": "F03", "view": "x_front", "box": [0, 41, 30, 45], "nodes": ["body/shell/front/band-1"], "tolerancePixels": 1.01, "uncertainty": "The dark buffer band across the nose, 1.5 to 1.9 m."},
+    {"id": "F04", "view": "x_front", "box": [2, 42, 4, 44], "nodes": ["front-cab/lamps/lamp-1"], "tolerancePixels": 1.5, "uncertainty": "Outer lamp in the dark band, a 2 x 2 px patch."},
+    {"id": "F05", "view": "x_front", "box": [12, 35, 18, 39], "nodes": ["front-cab/headlight"], "tolerancePixels": 1.01, "uncertainty": "The twin headlight box under the windscreen (photographs of 169 001-5); the number plate sits in the dark band between the lamps."},
+    {"id": "F06", "view": "x_front", "box": [10, 21, 20, 24], "nodes": ["front-cab/roof-vent"], "tolerancePixels": 1.01, "uncertainty": "The louvred vent on the roof leading edge (photographs of 169 001-5; the native draws it light grey)."},
+    {"id": "S01", "view": "z_right", "box": [25, 42, 151, 44], "nodes": ["sides/right-side/stripe/blue"], "tolerancePixels": 1.01, "uncertainty": "Blue stripe."},
+    {"id": "S02", "view": "z_right", "box": [25, 41, 151, 45], "nodes": ["sides/right-side/stripe/white"], "tolerancePixels": 1.01, "uncertainty": "White stripe edges."},
+    {"id": "S03", "view": "z_right", "box": [115, 21, 152, 26], "nodes": ["sides/right-side/roof-grilles/grille-1"], "tolerancePixels": 1.01, "uncertainty": "Roof-edge grille on the chamfer, rear section."},
+    {"id": "S04", "view": "z_right", "box": [67, 21, 114, 26], "nodes": ["sides/right-side/roof-grilles/grille-2"], "tolerancePixels": 1.01, "uncertainty": "Middle grille."},
+    {"id": "S05", "view": "z_right", "box": [28, 21, 66, 26], "nodes": ["sides/right-side/roof-grilles/grille-3"], "tolerancePixels": 1.01, "uncertainty": "Front grille."},
+    {"id": "S06", "view": "z_right", "box": [17, 28, 25, 48], "nodes": ["sides/right-side/door"], "tolerancePixels": 1.5, "uncertainty": "Cab door between the handrails at native columns 17 and 24; the bottom is estimated from the handrail lines."},
+    {"id": "S07", "view": "z_right", "box": [18, 28, 24, 35], "nodes": ["sides/right-side/door/window"], "tolerancePixels": 1.01, "uncertainty": "Door window."},
+    {"id": "S08", "view": "z_right", "box": [162, 28, 170, 35], "nodes": ["sides/right-side/roundel"], "tolerancePixels": 1.01, "uncertainty": "The maker's roundel at the rear end."},
+    {"id": "S09", "view": "z_right", "box": [84, 37, 95, 40], "nodes": ["sides/right-side/number-plate"], "tolerancePixels": 1.01, "uncertainty": "Side plate."},
+    {"id": "S10", "view": "z_right", "box": [69, 17, 112, 21], "nodes": ["roof-equipment/roof-cover/loft-1"], "tolerancePixels": 2.0, "uncertainty": "The raised roof cover (XML roof clip 6.9..11.1 m, 3.9..4.3 m); its native edge is ragged."}
+  ]
+}
