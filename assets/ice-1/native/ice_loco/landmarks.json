@@ -1,0 +1,231 @@
+{
+ "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/emu/ice/ice loco/model",
+ "pixelMetres": 0.1,
+ "convention": "Pixel edges [left, top, right, bottom] on the native BMP; origin top left, x right, y down. A row with metresPerRow uses that row height (the DB 628's 60-row end views are mapped onto 5 m).",
+ "annotations": [
+  {
+   "id": "P01",
+   "view": "z_inc",
+   "side": "right",
+   "element": "cab side window",
+   "box": [
+    19,
+    9,
+    23,
+    13
+   ],
+   "nodes": [
+    "body/right-side/cab-window/frame"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "A trapezoid on the nose's slope; its box +/- two pixels."
+  },
+  {
+   "id": "P02",
+   "view": "z_inc",
+   "side": "right",
+   "element": "front grille 1",
+   "box": [
+    35,
+    7,
+    48,
+    13
+   ],
+   "nodes": [
+    "body/right-side/grilles/grille-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P03",
+   "view": "z_inc",
+   "side": "right",
+   "element": "front grille 2",
+   "box": [
+    49,
+    7,
+    62,
+    13
+   ],
+   "nodes": [
+    "body/right-side/grilles/grille-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P04",
+   "view": "z_inc",
+   "side": "right",
+   "element": "side door (outline)",
+   "box": [
+    62,
+    14,
+    71,
+    28
+   ],
+   "nodes": [
+    "body/right-side/door/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P05",
+   "view": "z_inc",
+   "side": "right",
+   "element": "ICE lettering",
+   "box": [
+    90,
+    7,
+    112,
+    20
+   ],
+   "nodes": [
+    "body/right-side/lettering"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P06",
+   "view": "z_inc",
+   "side": "right",
+   "element": "rear grille 1",
+   "box": [
+    160,
+    7,
+    173,
+    14
+   ],
+   "nodes": [
+    "body/right-side/grilles/grille-3"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P07",
+   "view": "z_inc",
+   "side": "right",
+   "element": "rear grille 2",
+   "box": [
+    174,
+    7,
+    187,
+    14
+   ],
+   "nodes": [
+    "body/right-side/grilles/grille-4"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P08",
+   "view": "z_inc",
+   "side": "right",
+   "element": "DB logo on the stripe",
+   "box": [
+    178,
+    23,
+    186,
+    27
+   ],
+   "nodes": [
+    "body/right-side/logo"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P09",
+   "view": "z_inc",
+   "side": "right",
+   "element": "red stripe",
+   "box": [
+    3,
+    23,
+    206,
+    26
+   ],
+   "nodes": [
+    "body/red-band"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "The stripe thins toward the nose tip; +/- two pixels there.",
+   "constraint": "The stripe is a paint band that wraps round the nose, as the photographs show; the BMP stops it 0.3 m short of the tip."
+  },
+  {
+   "id": "P10",
+   "view": "z_inc",
+   "side": "right",
+   "element": "front bogie (painted frame)",
+   "box": [
+    26,
+    33,
+    69,
+    38
+   ],
+   "nodes": [
+    "running-gear/bogie-1/frame"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "Texture-painted running gear on a dark ground; the extent is +/- two pixels.",
+   "constraint": "Bogie pivots 11.46 m apart (published) against vlakosimdb's 12.6 m, 3.0 m wheelbase."
+  },
+  {
+   "id": "P11",
+   "view": "z_inc",
+   "side": "right",
+   "element": "rear bogie (painted frame)",
+   "box": [
+    151,
+    33,
+    196,
+    38
+   ],
+   "nodes": [
+    "running-gear/bogie-2/frame"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "Texture-painted running gear on a dark ground; the extent is +/- two pixels.",
+   "constraint": "Bogie pivots 11.46 m apart (published) against vlakosimdb's 12.6 m, 3.0 m wheelbase."
+  },
+  {
+   "id": "F01",
+   "view": "x_inc",
+   "end": "front",
+   "element": "headlight 1",
+   "box": [
+    3,
+    21,
+    10,
+    23
+   ],
+   "nodes": [
+    "cab/lamps/lamp-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "F02",
+   "view": "x_inc",
+   "end": "front",
+   "element": "headlight 2",
+   "box": [
+    21,
+    21,
+    28,
+    23
+   ],
+   "nodes": [
+    "cab/lamps/lamp-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  }
+ ]
+}

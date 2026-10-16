@@ -1,0 +1,195 @@
+{
+ "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/emu/tgv/tgv_loco/model",
+ "pixelMetres": 0.1,
+ "convention": "Pixel edges [left, top, right, bottom] on the native BMP; origin top left, x right, y down. A row with metresPerRow uses that row height (the DB 628's 60-row end views are mapped onto 5 m).",
+ "annotations": [
+  {
+   "id": "P01",
+   "view": "tgv_z_dec",
+   "side": "right",
+   "element": "cab side windows",
+   "box": [
+    30,
+    28,
+    49,
+    34
+   ],
+   "nodes": [
+    "body/right-side/cab-windows/frame"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "Dark windows on the nose's dark shading; the front edge +/- two pixels.",
+   "constraint": "The BMP paints the windscreen's side view on the slope ahead of the cab wall; the model's side windows stay on the vertical wall, where the cab's roof is above them."
+  },
+  {
+   "id": "P02",
+   "view": "tgv_z_dec",
+   "side": "right",
+   "element": "cab door (outline)",
+   "box": [
+    58,
+    30,
+    64,
+    47
+   ],
+   "nodes": [
+    "body/right-side/cab-door/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P03",
+   "view": "tgv_z_dec",
+   "side": "right",
+   "element": "machine room louvres",
+   "box": [
+    65,
+    33,
+    170,
+    45
+   ],
+   "nodes": [
+    "body/right-side/louvres/louvre-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P04",
+   "view": "tgv_z_dec",
+   "side": "right",
+   "element": "roof grille",
+   "box": [
+    64,
+    22,
+    134,
+    26
+   ],
+   "nodes": [
+    "body/right-side/roof-grille"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P05",
+   "view": "tgv_z_dec",
+   "side": "right",
+   "element": "TGV lettering",
+   "box": [
+    179,
+    33,
+    204,
+    41
+   ],
+   "nodes": [
+    "body/right-side/lettering"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P06",
+   "view": "tgv_z_dec",
+   "side": "right",
+   "element": "grey band",
+   "box": [
+    58,
+    33,
+    219,
+    45
+   ],
+   "nodes": [
+    "body/band-band"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P07",
+   "view": "tgv_z_dec",
+   "side": "right",
+   "element": "orange upper band",
+   "box": [
+    58,
+    26,
+    219,
+    32
+   ],
+   "nodes": [
+    "body/orangelight-band"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P08",
+   "view": "tgv_z_dec",
+   "side": "right",
+   "element": "white band under the grey",
+   "box": [
+    58,
+    45,
+    219,
+    49
+   ],
+   "nodes": [
+    "body/white-band"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P09",
+   "view": "tgv_z_dec",
+   "side": "right",
+   "element": "orange line",
+   "box": [
+    58,
+    49,
+    219,
+    51
+   ],
+   "nodes": [
+    "body/orangeline-band"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P10",
+   "view": "tgv_z_dec",
+   "side": "right",
+   "element": "front bogie (XML gear clip)",
+   "box": [
+    30,
+    51,
+    73,
+    60
+   ],
+   "nodes": [
+    "running-gear/bogie-1"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "The XML's gear clip (frame and wheels, x 3.0..7.3 m); the BMP's wheels are painted dark on dark."
+  },
+  {
+   "id": "P11",
+   "view": "tgv_z_dec",
+   "side": "right",
+   "element": "rear bogie (XML gear clip)",
+   "box": [
+    170,
+    51,
+    212,
+    60
+   ],
+   "nodes": [
+    "running-gear/bogie-2"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "The XML's gear clip (x 17.0..21.2 m)."
+  }
+ ]
+}

@@ -1,0 +1,279 @@
+{
+ "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/dmu/mav_mdmot/model",
+ "pixelMetres": 0.1,
+ "convention": "Pixel edges [left, top, right, bottom] on the native BMP; origin top left, x right, y down. A row with metresPerRow uses that row height (the DB 628's 60-row end views are mapped onto 5 m).",
+ "annotations": [
+  {
+   "id": "P01",
+   "view": "z_both",
+   "side": "right",
+   "element": "cab side window (frame)",
+   "box": [
+    12,
+    12,
+    17,
+    19
+   ],
+   "nodes": [
+    "body/right-side/windows/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P02",
+   "view": "z_both",
+   "side": "right",
+   "element": "cab door (outline)",
+   "box": [
+    23,
+    11,
+    28,
+    29
+   ],
+   "nodes": [
+    "body/right-side/doors/door-1/outline"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "The door's edges are inferred from its window and the handrail; +/- two pixels."
+  },
+  {
+   "id": "P03",
+   "view": "z_both",
+   "side": "right",
+   "element": "cab door window (frame)",
+   "box": [
+    24,
+    12,
+    27,
+    19
+   ],
+   "nodes": [
+    "body/right-side/doors/door-1/window/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P04",
+   "view": "z_both",
+   "side": "right",
+   "element": "compartment window by the cab door",
+   "box": [
+    30,
+    12,
+    33,
+    19
+   ],
+   "nodes": [
+    "body/right-side/windows/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P05",
+   "view": "z_both",
+   "side": "right",
+   "element": "machine room window 1",
+   "box": [
+    48,
+    12,
+    55,
+    19
+   ],
+   "nodes": [
+    "body/right-side/windows/window-3/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P06",
+   "view": "z_both",
+   "side": "right",
+   "element": "grille 1",
+   "box": [
+    58,
+    12,
+    69,
+    19
+   ],
+   "nodes": [
+    "body/right-side/grilles/grille-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P07",
+   "view": "z_both",
+   "side": "right",
+   "element": "machine room window 2",
+   "box": [
+    72,
+    12,
+    78,
+    19
+   ],
+   "nodes": [
+    "body/right-side/windows/window-4/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P08",
+   "view": "z_both",
+   "side": "right",
+   "element": "grille 2",
+   "box": [
+    81,
+    12,
+    92,
+    19
+   ],
+   "nodes": [
+    "body/right-side/grilles/grille-2"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P09",
+   "view": "z_both",
+   "side": "right",
+   "element": "machine room window 3",
+   "box": [
+    95,
+    12,
+    102,
+    19
+   ],
+   "nodes": [
+    "body/right-side/windows/window-5/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P10",
+   "view": "z_both",
+   "side": "right",
+   "element": "second cab's side window",
+   "box": [
+    133,
+    12,
+    138,
+    19
+   ],
+   "nodes": [
+    "body/right-side/windows/window-7/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P11",
+   "view": "z_both",
+   "side": "right",
+   "element": "radiator louvre on the hump",
+   "box": [
+    46,
+    5,
+    54,
+    10
+   ],
+   "nodes": [
+    "body/right-side/roof-louvres/louvre-1"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "P12",
+   "view": "z_both",
+   "side": "right",
+   "element": "red body band",
+   "box": [
+    12,
+    11,
+    138,
+    29
+   ],
+   "nodes": [
+    "body/red-band"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "The band's ends meet the cab fronts' shading; +/- two pixels at the ends."
+  },
+  {
+   "id": "F01",
+   "view": "x_both",
+   "end": "front",
+   "element": "windscreens (frame)",
+   "box": [
+    4,
+    12,
+    28,
+    18
+   ],
+   "nodes": [
+    "front-end/windscreens"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "F02",
+   "view": "x_both",
+   "end": "front",
+   "element": "number plate",
+   "box": [
+    12,
+    23,
+    21,
+    26
+   ],
+   "nodes": [
+    "front-end/number-plate"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Native pixel edge estimate; +/- one pixel."
+  },
+  {
+   "id": "F03",
+   "view": "x_both",
+   "end": "front",
+   "element": "cream lamp band",
+   "box": [
+    2,
+    23,
+    30,
+    28
+   ],
+   "nodes": [
+    "body/cab-1/cream-band"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "The band's rounded corners are shaded; +/- two pixels across."
+  },
+  {
+   "id": "F04",
+   "view": "x_both",
+   "end": "front",
+   "element": "roof headlight housing",
+   "box": [
+    14,
+    4,
+    18,
+    10
+   ],
+   "nodes": [
+    "front-end/top-lamp"
+   ],
+   "tolerancePixels": 2.01,
+   "uncertainty": "A small painted housing; its depth on the roof is not drawn."
+  }
+ ]
+}
