@@ -26,7 +26,10 @@ function rail(m: MeshBuilder, x: number, z: number, w: number, y: number): void 
   for (let a = -w / 2; a <= w / 2; a += 2) m.box('yellow', x + a, z, .09, .09, y, y + 1.05);
   for (const h of [.5, 1]) m.box('yellow', x, z, w, .08, y + h, y + h + .08);
 }
-function stack(m: MeshBuilder, x: number, z: number, h: number, style = 'brick', y = .35): void {
+/** A chimney; it smokes from its mouth, or burns as a gas flare when `flare` is set. */
+function stack(m: MeshBuilder, x: number, z: number, h: number, style = 'brick', y = .35, flare = false): void {
+  if (flare) m.emit('flame', [x, y + h + .7, z], .59, { height: 5, color: '#ff8a2a' });
+  else m.emit('smoke', [x, y + h + .7, z], .59);
   m.scope('Chimney and service ladder', () => {
     cyl(m, 'concrete', x, z, 2, y, .7);
     const radius = (t: number) => 1.35 - .6 * t;
@@ -140,6 +143,7 @@ export function industrialTank(given?: ParamValues): MeshBuilder {
   });
 }
 function coolingTower(m: MeshBuilder, x: number, z: number): void {
+  m.emit('steam', [x, 20, z], 3.1);
   const ys = [.5, 2, 5, 9, 13, 17, 20], rs = [5.5, 5.2, 4.3, 3.3, 3, 3.3, 3.7];
   for (let i = 0; i < ys.length - 1; i++) m.loft('concrete', ngon(32, rs[i]!, 0, x, z), ys[i]!, ngon(32, rs[i + 1]!, 0, x, z), ys[i + 1]!, false);
   m.loft('light', ngon(32, 3.7, 0, x, z), 20, ngon(32, 3.4, 0, x, z), 20, false);
@@ -178,7 +182,10 @@ export function industrialProcess(given?: ParamValues): MeshBuilder {
     m.sweep('steel', 'z', pipe, 1.5, pipe, 5.6);
     cyl(m, 'yellow', x, 3, .35, 1.4, .15, 12);
   }
-  if (p.type === 'refinery') stack(m, 13, -8, 23, 'steel');
+  // A refinery's stack is its gas flare; a chemical plant vents steam from the two
+  // tallest distillation columns.
+  if (p.type === 'refinery') stack(m, 13, -8, 23, 'steel', .35, true);
+  else for (const i of [1, 2]) m.emit('steam', [-11 + i * 7, 12 + i * 2 + 2.06, -6], .3);
   return m;
   });
 }

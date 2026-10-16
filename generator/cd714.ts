@@ -109,6 +109,7 @@ function body(m: MeshBuilder): void {
         });
       });
     });
+  m.emit("smoke", [px(77), 4.4, 0], 0.18);
   m.scope("exhaust", () => m.prism("exhaust", ngon(12, 0.18, 0, px(77), 0), 3.15, 4.4));
 }
 

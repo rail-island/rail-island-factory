@@ -40,6 +40,24 @@ export interface AnimationTrack {
   values: number[];
 }
 
+/**
+ * Where the model gives off smoke, steam or a gas flare: the mouth of a chimney,
+ * the top of a cooling tower, the tip of a flare stack. Model coordinates (metres,
+ * the model's own frame, like its triangles), the point the effect starts from.
+ * `radius` is the mouth's; a flame also has the direction it burns, its height and
+ * colour. `part` names the part it was placed in, for a model with parts, so a
+ * consumer posing the model can carry the point with that part.
+ */
+export interface Emitter {
+  kind: "smoke" | "steam" | "flame";
+  at: Vec3;
+  radius: number;
+  dir?: Vec3;
+  height?: number;
+  color?: string;
+  part?: string;
+}
+
 /** A looping animation of a model's parts: shared sample times from 0, linear in between. */
 export interface AnimationClipSpec {
   name: string;
@@ -106,6 +124,8 @@ export class MeshCore {
   rig: VehicleRig | null = null;
   /** The model's animation clips (see `animate`). */
   protected readonly clips: AnimationClipSpec[] = [];
+  /** Where the model smokes, steams or flares (see `emit`). */
+  protected readonly emitterList: Emitter[] = [];
   /** The part being drawn, or -1. */
   protected currentPart = -1;
   /** How many scopes are open. */
@@ -194,6 +214,29 @@ export class MeshCore {
       if (track.values.length !== width * t.length) throw new Error(`animation "${clip.name}": ${track.node} ${track.path} has ${track.values.length} values for ${t.length} times`);
     }
     this.clips.push(clip);
+  }
+
+  /**
+   * Records an emitter (see Emitter): where the game should start the smoke, steam
+   * or flame of this model. Called where the stack is drawn, so a parameter that
+   * moves or heightens the stack moves its smoke with it.
+   */
+  emit(kind: Emitter["kind"], at: Vec3, radius: number, flame?: { dir?: Vec3; height: number; color: string }): void {
+    if (!(radius > 0) || at.some((v) => !Number.isFinite(v))) throw new Error(`emit(${kind}): bad point or radius`);
+    if (kind === "flame" && !flame) throw new Error("emit(flame) needs a height and colour");
+    const part = this.currentPart >= 0 ? this.parts[this.currentPart]!.name : undefined;
+    this.emitterList.push({
+      kind,
+      at: [...at] as Vec3,
+      radius,
+      ...(kind === "flame" ? { dir: flame!.dir ?? [0, 1, 0], height: flame!.height, color: flame!.color } : {}),
+      ...(part !== undefined ? { part } : {}),
+    });
+  }
+
+  /** The emitters recorded so far, in drawing order. */
+  emitters(): readonly Emitter[] {
+    return this.emitterList;
   }
 
   /** The animation clips added so far. */
@@ -424,6 +467,13 @@ export class MeshCore {
     }
     this.currentPart = -1;
     return this;
+  }
+
+  /** Every triangle corner drawn so far, model coordinates, x,y,z flat (tests, audits). */
+  positions(): number[] {
+    const out: number[] = [];
+    for (const g of this.groups.values()) for (const v of g.pos) out.push(v);
+    return out;
   }
 
   triangleCount(): number {

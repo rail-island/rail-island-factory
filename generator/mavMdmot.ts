@@ -440,7 +440,10 @@ function motorRoof(c: Coach, L: CarLayout): void {
     }
   });
   m.scope("exhaust stacks", () => {
-    for (const [x0, x1] of [[7.2, 7.5], [7.7, 8.0], [8.2, 8.5]] as const) block(m, "roofDark", X(x1), X(x0), 3.45 * K_Y, 3.72 * K_Y, -0.18, 0.18);
+    for (const [x0, x1] of [[7.2, 7.5], [7.7, 8.0], [8.2, 8.5]] as const) {
+      m.emit("smoke", [(X(x0) + X(x1)) / 2, 3.72 * K_Y, 0], 0.15);
+      block(m, "roofDark", X(x1), X(x0), 3.45 * K_Y, 3.72 * K_Y, -0.18, 0.18);
+    }
   });
   m.scope("horns", () => {
     for (const x of [2.2, 12.8]) m.sweep("roofDark", "x", ngon(8, 0.05, 0, 0.35, 3.58 * K_Y), X(x) - 0.2, ngon(8, 0.09, 0, 0.35, 3.58 * K_Y), X(x) + 0.2);

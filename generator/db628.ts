@@ -176,6 +176,7 @@ export function db628(params?: ParamValues): MeshBuilder {
   m.scope("roof equipment", () => {
     m.scope("air conditioning", () => roofBox(m, "roof", c.X(B(18.0)), c.X(B(14.6)), 3.78, 1.6, 0.22));
     m.scope("radiator", () => roofBox(m, "roof", c.X(B(9.5)), c.X(B(7.2)), 3.78, 1.9, 0.3, 0.2));
+    m.emit("smoke", [c.X(B(8.0)), 4.15, 0.55], 0.08);
     m.scope("exhaust", () => m.prism("cabBlack", ngon(10, 0.08, 0, c.X(B(8.0)), 0.55), 3.9, 4.15));
   });
   m.scope("running gear", () => {

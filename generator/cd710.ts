@@ -114,6 +114,7 @@ function body(m: MeshBuilder): void {
         numberText(m, "white", at, n, CD710_NUMBER, 0, 1.61, 0.11, 0.024, e > 0);
       });
     });
+  m.emit("smoke", [-3.2, 2.95, 0], 0.1);
   m.scope("exhaust", () => m.prism("exhaust", ngon(10, 0.1, 0, -3.2, 0), 2.6, 2.95));
 }
 

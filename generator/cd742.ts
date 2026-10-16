@@ -187,6 +187,7 @@ function body(m: MeshBuilder, v: Cd742Variant): void {
         }
       });
     });
+  m.emit("smoke", [px(60), TOP + 0.08, 0], 0.12);
   m.scope("exhaust", () => m.prism("exhaust", ngon(10, 0.12, 0, px(60), 0), TOP - 0.05, TOP + 0.08));
 }
 

@@ -6,7 +6,7 @@
 import { MeshCore } from "./meshCore.ts";
 
 export { chamferedRect, grow, ngon, rect, scaleRing } from "./meshCore.ts";
-export type { AnimationClipSpec, AnimationTrack, MaterialSpec, Ring, SweepAxis } from "./meshCore.ts";
+export type { AnimationClipSpec, AnimationTrack, Emitter, MaterialSpec, Ring, SweepAxis } from "./meshCore.ts";
 
 /** The three.js namespace, or any object with the classes toGroup() uses. */
 export type ThreeNamespace = typeof import("three");
@@ -17,7 +17,8 @@ export class MeshBuilder extends MeshCore {
    * material name order. Without parts the meshes are the group's children; with
    * parts (see `part`) each part is a Group named after it, positioned at its
    * pivot (a child part inside its parent's Group), its meshes' positions
-   * relative to that pivot. A rigged model's group carries `userData.rig`. Non-indexed
+   * relative to that pivot. A rigged model's group carries `userData.rig`, a model
+   * that smokes `userData.emitters`. Non-indexed
    * triangle soups with flat per-face normals, MeshStandardMaterial colours from
    * the palette's sRGB hex: the same data toGlb writes.
    */
@@ -79,6 +80,8 @@ export class MeshBuilder extends MeshCore {
     ));
     // a deep copy, as GLTFLoader hands the GLB's scene extras over
     if (this.rig) root.userData.rig = JSON.parse(JSON.stringify(this.rig));
+    // where the model smokes, steams or flares (MeshCore.emit), model coordinates
+    if (this.emitterList.length) root.userData.emitters = JSON.parse(JSON.stringify(this.emitterList));
     return root;
   }
 }

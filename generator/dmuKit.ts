@@ -233,6 +233,7 @@ export function tankX(car: Car, x0: number, x1: number, y: number, z: number, r:
 
 /** An exhaust stack standing on the roof at source x, z from y0 to y1 (model metres). */
 export function exhaust(car: Car, x: number, z: number, y0: number, y1: number, r = 0.07): void {
+  car.m.emit("smoke", [car.X(x), y1, z], r);
   car.m.prism("exhaust", ngon(8, r, Math.PI / 8, car.X(x), z), y0, y1);
 }
 

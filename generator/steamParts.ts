@@ -184,6 +184,8 @@ export class Steam {
 
   /** A chimney at source x from the boiler (base y0) to `top`, radius r, with a lip and a base flare. */
   chimney(x: number, y0: number, top: number, r: number): void {
+    // the exhaust leaves the chimney's mouth
+    this.m.emit("smoke", [this.X(x), top, 0], r);
     this.m.scope("chimney", () => {
       this.cylY("smokebox", x, 0, y0, top - 0.08, r, 14, false);
       this.cylY("smokebox", x, 0, top - 0.08, top, r + 0.05, 14);

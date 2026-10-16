@@ -98,6 +98,7 @@ export function csdT6790(): MeshBuilder {
 
 function roof(m: MeshBuilder): void {
   // the exhaust (XML "kom": source x 9.0 .. 9.4, z 0.7 .. 0.9, to 4.4 m) and roof hatches over the engine
+  m.emit("smoke", [(X(9.0) + X(9.4)) / 2, 4.42, 0.8], 0.15);
   m.scope("exhaust", () => block(m, "exhaust", X(9.0), X(9.4), 4.2, 4.42, 0.65, 0.95));
   m.scope("hatches", () => {
     for (const [a, b] of [[5.9, 8.4], [10.4, 12.9]]) block(m, "cream", X(a), X(b), 4.25, 4.33, -0.75, 0.75);

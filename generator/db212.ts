@@ -163,6 +163,7 @@ function body(m: MeshBuilder, l: Db212Livery): void {
         }
       });
     });
+  m.emit("smoke", [-1.6, 3.42, 0], 0.1);
   m.scope("exhaust", () => m.prism("exhaust", ngon(10, 0.1, 0, -1.6, 0), 3.25, 3.42));
 }
 

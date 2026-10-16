@@ -54,7 +54,7 @@ export function oceanLiner():MeshBuilder {
     const len=200-i*24,w=24-i*2,y=16.1+i*3.4;m.prism('white',plan(len,w),y,y+3);m.prism('deck',plan(len+1,w+1),y+3,y+3.2);
     for(const s of [-1,1])for(let x=-len*.30;x<len*.30;x+=3)m.box('glass',x,s*(w/2+.02),1.1,.03,y+.9,y+2);
   }});
-  m.scope('funnels',()=>{for(const x of [-55,-18,19,56]){m.prism('red',ngon(20,4,0,x,0),26.1,41);m.prism('dark',ngon(20,4.1,0,x,0),41,44);for(const s of [-1,1])beam(m,'steel',[x,38,s*3.6],[x+8,26,s*10],.12);}});
+  m.scope('funnels',()=>{for(const x of [-55,-18,19,56]){m.emit('smoke',[x,44,0],4);m.prism('red',ngon(20,4,0,x,0),26.1,41);m.prism('dark',ngon(20,4.1,0,x,0),41,44);for(const s of [-1,1])beam(m,'steel',[x,38,s*3.6],[x+8,26,s*10],.12);}});
   m.scope('fittings',()=>{
     for(const x of [-99,99]){beam(m,'brass',[x,16.1,0],[x,45,0],.45);beam(m,'brass',[x,38,-8],[x,38,8],.25);for(const s of [-1,1])beam(m,'steel',[x,43,0],[x-s*15,16,s*7],.09);}
     for(const s of [-1,1])for(let x=-65;x<=65;x+=13){m.loft('ivory',plan(9,2).map(([u,v])=>[u+x,v+s*10]),26.5,plan(10,2.4).map(([u,v])=>[u+x,v+s*10]),27.5);}

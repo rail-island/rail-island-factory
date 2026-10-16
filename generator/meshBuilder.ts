@@ -210,7 +210,8 @@ export class MeshBuilder extends MeshCore {
    * the part's pivot (within its parent part's node, for a child part), its
    * mesh's positions relative to that pivot. Either way the primitives are
    * non-indexed triangle soups with flat per-face normals. A model with a rig
-   * carries it as the scene's `extras.rig` (three's GLTFLoader: `scene.userData.rig`).
+   * carries it as the scene's `extras.rig` (three's GLTFLoader: `scene.userData.rig`),
+   * a model that smokes its emitters as `extras.emitters`.
    * Animation clips (see `animate`) become glTF animations of the part nodes,
    * linearly interpolated.
    */
@@ -218,7 +219,7 @@ export class MeshBuilder extends MeshCore {
     type Json = {
       asset: { version: string; generator: string };
       scene: number;
-      scenes: Array<{ nodes: number[]; extras?: { rig: unknown } }>;
+      scenes: Array<{ nodes: number[]; extras?: { rig?: unknown; emitters?: unknown } }>;
       nodes: Array<{ mesh: number; name: string; translation?: Vec3; children?: number[] }>;
       meshes: Array<{ name: string; primitives: unknown[] }>;
       materials: unknown[];
@@ -241,7 +242,7 @@ export class MeshBuilder extends MeshCore {
       scene: 0,
       scenes: [{
         nodes: units.map((_, i) => i).filter((i) => !this.parts.length || this.parts[i]!.parent < 0),
-        ...(this.rig ? { extras: { rig: this.rig } } : {}),
+        ...(this.rig || this.emitterList.length ? { extras: { ...(this.rig ? { rig: this.rig } : {}), ...(this.emitterList.length ? { emitters: this.emitterList } : {}) } } : {}),
       }],
       nodes: units.map((u, i) => {
         if (!this.parts.length) return { mesh: i, name: u.name };
