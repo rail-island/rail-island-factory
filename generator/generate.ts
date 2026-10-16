@@ -36,6 +36,7 @@ import { SKYSCRAPERS, SKYSCRAPER_CATALOG } from "./skyscrapers.ts";
 import { VEHICLES, VEHICLE_CATALOG } from "./vehicles.ts";
 import { CHURCHES } from "./churches.ts";
 import { CATHEDRALS } from "./cathedrals.ts";
+import { GOTHIC_CATHEDRALS } from "./gothicCathedrals.ts";
 import { LANDMARKS } from "./landmarks.ts";
 import { STATIONS } from "./stations.ts";
 import { AIRCRAFT } from "./aircraft.ts";
@@ -98,6 +99,7 @@ const FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: st
   { designs: COMMERCIAL_BUILDINGS, source: "commercial.ts", meta: "buildings" },
   { designs: CHURCHES, source: "churches.ts", meta: "buildings" },
   { designs: CATHEDRALS, source: "cathedrals.ts", meta: "buildings" },
+  { designs: GOTHIC_CATHEDRALS, source: "gothicCathedrals.ts", meta: "buildings" },
   { designs: LANDMARKS, source: "landmarks.ts", meta: "buildings" },
   { designs: STATIONS, source: "stations.ts", meta: "buildings" },
   { designs: VILLAGE_HOUSES, source: "village.ts", meta: "village" },

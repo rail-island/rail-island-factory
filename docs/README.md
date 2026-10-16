@@ -36,9 +36,10 @@
 | [models/animation.md](models/animation.md) | animation clips of parts, the steam locomotives' running-gear clip and its timing contract, the site's Start and Stop buttons |
 | [models/wagons.md](models/wagons.md) | the five freight wagons from vlakosimdb (Nas, Ua, Eas, Raj, Rah), three of them parametric by `cargo`: sources, the shared wagon parts, the native-raster comparison and tests |
 | [models/freight-wagons.md](models/freight-wagons.md) | the Sqns container, Pao flat, Habis sliding-wall, Hadgs covered hopper and Faccs, Falls and Wap hopper wagons from vlakosimdb, by `cargo` and `livery`: the JT7 clip solid, loads, deviations, the native comparison and tests |
-| [models/reproductions.md](models/reproductions.md) | the 23 reproductions of the webapp's hand-authored models: photos, ids, same-size rule, budgets, what a webapp import must change |
+| [models/reproductions.md](models/reproductions.md) | the 25 reproductions of the webapp's hand-authored models: photos, ids, same-size rule, budgets, what a webapp import must change |
 | [models/churches.md](models/churches.md) | the baroque church, the Vrchlabi church and the twin-tower baroque church |
 | [models/cathedrals.md](models/cathedrals.md) | St Basil's Cathedral and St Nicholas Church |
+| [models/gothic-cathedrals.md](models/gothic-cathedrals.md) | Notre-Dame and Prague Castle's St Vitus: Gothic geometry, references, axes and the 30,000-triangle budget |
 | [models/landmarks.md](models/landmarks.md) | the Brandenburg Gate, the Louvre Pyramid and the White House |
 | [models/stations.md](models/stations.md) | the four station buildings: Prague main station, the station building, the Mikulasovice halt, the suburban station |
 | [models/aircraft.md](models/aircraft.md) | the Aero A.10, the Airbus A380 and the light jet, their gear parts |
