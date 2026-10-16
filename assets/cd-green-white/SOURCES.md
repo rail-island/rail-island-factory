@@ -61,3 +61,7 @@ The Bdmtee photographs confirm the green window band between the light upper bod
 ## Measurement record
 
 `native/cd_<variant>/landmarks.json` holds 46 to 58 native pixel-edge boxes per variant (455 in all) with model scopes, tolerances and uncertainty, built by component detection on the native BMPs; `baseline.json` is the first authored geometry's measurement. `COMPARISON-<variant>.md` lists the normalized errors and the signed residual of every box with the model revision.
+
+## The blue and white Bee (cd_bee001)
+
+`native/cd_bee001/` keeps vlakosimdb's `db/train/coach/cd_bee001` (CD Bee 001, author Vojtech Vohlidka), same revision. Its XML is identical to cd_bee's, and its BMPs are cd_bee's pixel for pixel with the green (0, 120, 0) and its shades replaced by blue (64, 64, 255); the red end doors stay. It is therefore the variant `beeBlue`: the Bee's measured layout with the `green` material in blue (#3c44e6), and the same landmarks as cd_bee. Running number 51 54 20-41 790-6, illustrative.

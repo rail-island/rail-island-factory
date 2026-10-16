@@ -1,5 +1,5 @@
-// The CD green and white coaches: nine vlakosimdb vehicles (cd_a, cd_ab, cd_b,
-// cd_bee, cd_beel, cd_bds, cd_ds, cd_bdmeer, cd_bdmtee) as one parametric design.
+// The CD green and white coaches: ten vlakosimdb vehicles (cd_a, cd_ab, cd_b,
+// cd_bee, cd_beel, cd_bds, cd_ds, cd_bdmeer, cd_bdmtee and the blue cd_bee001) as one parametric design.
 // Seven share the 24.5 m UIC-Y body of the CSD A and B, BDmeer and Bdmtee the
 // 26.4 m bodies of their XML. Bodies follow the XML alongx/alongy/alongz
 // profiles; windows, doors and paint follow boxes measured on the native BMPs
@@ -15,7 +15,7 @@ import { emblem } from "./cd163.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import { endName, fpx, gangway, headstock, lamp, mirror, roofVents, sides, sideName, Y_SECTION, type PxBox } from "./csdCoaches.ts";
 
-export type GreenWhiteVariant = "a" | "ab" | "b" | "bee" | "beel" | "bds" | "ds" | "bdmeer" | "bdmtee";
+export type GreenWhiteVariant = "a" | "ab" | "b" | "bee" | "beel" | "bds" | "ds" | "bdmeer" | "bdmtee" | "beeBlue";
 
 export const GREEN_WHITE_PARAMS: readonly ParamSpec[] = [
   {
@@ -32,6 +32,7 @@ export const GREEN_WHITE_PARAMS: readonly ParamSpec[] = [
       { value: "ds", title: "Ds (luggage van)" },
       { value: "bdmeer", title: "BDmeer (26.4 m, 2nd class with a luggage compartment)" },
       { value: "bdmtee", title: "Bdmtee (26.4 m open coach, two double doors)" },
+      { value: "beeBlue", title: "Bee in blue and white (vlakosimdb CD Bee 001)" },
     ],
   },
 ];
@@ -47,16 +48,17 @@ export const GREEN_WHITE_NUMBERS: Record<GreenWhiteVariant, { number: string; so
   ds: { number: "51 54 92-41 030-0", source: "illustrative, CD Ds series; no legible photograph" },
   bdmeer: { number: "50 54 82-44 017-7", source: "illustrative; no legible photograph" },
   bdmtee: { number: "50 54 22-44 268-9", source: "legible on photo-bdmtee-50-54-22-44-268-9-side-brno-2009.jpg (CD green and white)" },
+  beeBlue: { number: "51 54 20-41 790-6", source: "illustrative, CD Bee243 series in blue and white; no legible photograph" },
 };
 
 type Win = PxBox | [PxBox, "frosted"];
-interface DoorSpec {
+export interface DoorSpec {
   box: PxBox;
   glass: PxBox[];
   /** "green" a green leaf (the passenger doors), "bands" in the body's bands (the luggage doors). */
   paint: "green" | "bands";
 }
-interface SideSpec {
+export interface SideSpec {
   windows: Win[];
   doors: DoorSpec[];
   /**
@@ -67,7 +69,7 @@ interface SideSpec {
   /** The CD emblem's box on the white band. */
   emblem: PxBox;
 }
-interface VariantSpec {
+export interface VariantSpec {
   body: "y" | "bdmeer" | "bdmtee";
   roof: string;
   /** The first class's yellow line under the roof: native columns. */
@@ -87,24 +89,24 @@ interface VariantSpec {
   left: SideSpec;
 }
 
-const range = (n: number, x0: number, step: number, w: number, y0 = 19, y1 = 30): PxBox[] =>
+export const range = (n: number, x0: number, step: number, w: number, y0 = 19, y1 = 30): PxBox[] =>
   Array.from({ length: n }, (_, k): PxBox => [x0 + step * k, y0, x0 + step * k + w, y1]);
-const F = (b: PxBox): Win => [b, "frosted"];
+const F =(b: PxBox): Win => [b, "frosted"];
 const endDoor = (box: PxBox, glass: PxBox, paint: DoorSpec["paint"] = "green"): DoorSpec => ({ box, glass: [glass], paint });
 const luggageDoor = (box: PxBox, glass: PxBox[]): DoorSpec => ({ box, glass, paint: "bands" });
 
-const Y_VENTS: Array<[number, number]> = [[3.6, 4.2], [7.8, 8.4], [12.0, 12.6], [16.2, 16.8], [20.4, 21.0]];
-const Y_UNDERFRAME_A: Pt[][] = [
+export const Y_VENTS: Array<[number, number]> = [[3.6, 4.2], [7.8, 8.4], [12.0, 12.6], [16.2, 16.8], [20.4, 21.0]];
+export const Y_UNDERFRAME_A: Pt[][] = [
   [[7.2, 0.4], [8.7, 0.4], [8.7, 0.9], [7.2, 0.9]],
   [[11.3, 0.6], [11.8, 0.4], [12.7, 0.4], [12.8, 0.5], [12.8, 0.9], [11.3, 0.9]],
   [[13.4, 0.4], [18.5, 0.4], [18.5, 0.9], [13.4, 0.9]],
 ];
-const Y_UNDERFRAME_B: Pt[][] = [
+export const Y_UNDERFRAME_B: Pt[][] = [
   [[6.3, 0.3], [10.9, 0.3], [10.9, 0.9], [6.3, 0.9]],
   [[11.4, 0.6], [13.1, 0.6], [13.1, 0.9], [11.4, 0.9]],
   [[14.2, 0.4], [18.5, 0.4], [18.5, 0.9], [14.2, 0.9]],
 ];
-const LUGGAGE_UNDERFRAME: Pt[][] = [
+export const LUGGAGE_UNDERFRAME: Pt[][] = [
   [[7.0, 0.5], [8.5, 0.5], [8.5, 0.9], [7.0, 0.9]],
   [[11.3, 0.6], [11.8, 0.4], [12.7, 0.4], [12.9, 0.5], [12.9, 0.9], [11.3, 0.9]],
   [[13.4, 0.4], [15.5, 0.4], [15.5, 0.9], [13.4, 0.9]],
@@ -114,7 +116,8 @@ const ROOF = "#eef4ee";
 const Y_DOORS_RIGHT = [endDoor([5, 18, 15, 38], [8, 20, 13, 29]), endDoor([230, 18, 240, 38], [232, 20, 237, 29])];
 const Y_SIGNS: PxBox[] = [[27, 21, 30, 26], [215, 21, 218, 26]];
 
-const VARIANTS: Record<GreenWhiteVariant, VariantSpec> = {
+/** The measured layout of each variant; the blue Bee (beeBlue) is the Bee's, recoloured. */
+export const VARIANTS: Record<Exclude<GreenWhiteVariant, "beeBlue">, VariantSpec> = {
   a: {
     body: "y",
     roof: ROOF,
@@ -314,7 +317,7 @@ const VARIANTS: Record<GreenWhiteVariant, VariantSpec> = {
 };
 
 /** The XML bodies: length over buffers, section, plan, elevation top, bogie centres. */
-const BODIES = {
+export const BODIES = {
   y: {
     length: 24.5,
     section: Y_SECTION,
@@ -344,11 +347,13 @@ const EMBLEM_W = ((us: number[]) => Math.max(...us) - Math.min(...us))(emblem(0,
 /** One CD green and white coach (vlakosimdb cd_<variant>). */
 export function cdGreenWhiteCoach(params?: ParamValues): MeshBuilder {
   const variant = resolveParams(GREEN_WHITE_PARAMS, params).variant as GreenWhiteVariant;
-  const v = VARIANTS[variant];
+  // vlakosimdb's CD Bee 001 is the Bee's texture with blue for its green: the
+  // same measured layout, the "green" material in blue
+  const v = VARIANTS[variant === "beeBlue" ? "bee" : variant];
   const geo = BODIES[v.body];
   const H = 5;
   const palette: Record<string, MaterialSpec> = {
-    green: { color: variant === "ab" ? "#1f701f" : "#0d7a1a", roughness: 0.55 },
+    green: { color: variant === "ab" ? "#1f701f" : variant === "beeBlue" ? "#3c44e6" : "#0d7a1a", roughness: 0.55 },
     white: { color: "#e9eee9", roughness: 0.55 },
     roof: { color: v.roof, roughness: 0.7 },
     yellow: { color: "#d6cf1c", roughness: 0.5 },

@@ -1,0 +1,1350 @@
+{
+ "source": "janproch/vlakosimdb@b170acfe6dbd1e8e6f17dd3bfd19bafa3d2fc94f:db/train/coach/db_ds_re2_s/model",
+ "pixelMetres": 0.1,
+ "convention": "Pixel edges [left, top, right, bottom] on the native BMP; origin top left, x right, y down.",
+ "annotations": [
+  {
+   "id": "R01",
+   "view": "z_both",
+   "side": "right",
+   "element": "upper deck window 1 frame",
+   "box": [
+    54,
+    10,
+    62,
+    19
+   ],
+   "nodes": [
+    "body/right-side/upper-deck/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R02",
+   "view": "z_both",
+   "side": "right",
+   "element": "upper deck window 2 frame",
+   "box": [
+    66,
+    10,
+    79,
+    19
+   ],
+   "nodes": [
+    "body/right-side/upper-deck/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R03",
+   "view": "z_both",
+   "side": "right",
+   "element": "upper deck window 3 frame",
+   "box": [
+    83,
+    10,
+    96,
+    19
+   ],
+   "nodes": [
+    "body/right-side/upper-deck/window-3/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R04",
+   "view": "z_both",
+   "side": "right",
+   "element": "upper deck window 4 frame",
+   "box": [
+    100,
+    10,
+    113,
+    19
+   ],
+   "nodes": [
+    "body/right-side/upper-deck/window-4/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R05",
+   "view": "z_both",
+   "side": "right",
+   "element": "upper deck window 5 frame",
+   "box": [
+    117,
+    10,
+    130,
+    19
+   ],
+   "nodes": [
+    "body/right-side/upper-deck/window-5/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R06",
+   "view": "z_both",
+   "side": "right",
+   "element": "upper deck window 6 frame",
+   "box": [
+    134,
+    10,
+    147,
+    19
+   ],
+   "nodes": [
+    "body/right-side/upper-deck/window-6/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R07",
+   "view": "z_both",
+   "side": "right",
+   "element": "upper deck window 7 frame",
+   "box": [
+    151,
+    10,
+    164,
+    19
+   ],
+   "nodes": [
+    "body/right-side/upper-deck/window-7/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R08",
+   "view": "z_both",
+   "side": "right",
+   "element": "upper deck window 8 frame",
+   "box": [
+    168,
+    10,
+    181,
+    19
+   ],
+   "nodes": [
+    "body/right-side/upper-deck/window-8/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R09",
+   "view": "z_both",
+   "side": "right",
+   "element": "upper deck window 9 frame",
+   "box": [
+    185,
+    10,
+    198,
+    19
+   ],
+   "nodes": [
+    "body/right-side/upper-deck/window-9/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R10",
+   "view": "z_both",
+   "side": "right",
+   "element": "upper deck window 10 frame",
+   "box": [
+    202,
+    10,
+    210,
+    19
+   ],
+   "nodes": [
+    "body/right-side/upper-deck/window-10/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R11",
+   "view": "z_both",
+   "side": "right",
+   "element": "lower deck window 1 frame",
+   "box": [
+    83,
+    31,
+    96,
+    40
+   ],
+   "nodes": [
+    "body/right-side/lower-deck/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R12",
+   "view": "z_both",
+   "side": "right",
+   "element": "lower deck window 2 frame",
+   "box": [
+    100,
+    31,
+    113,
+    40
+   ],
+   "nodes": [
+    "body/right-side/lower-deck/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R13",
+   "view": "z_both",
+   "side": "right",
+   "element": "lower deck window 3 frame",
+   "box": [
+    117,
+    31,
+    130,
+    40
+   ],
+   "nodes": [
+    "body/right-side/lower-deck/window-3/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R14",
+   "view": "z_both",
+   "side": "right",
+   "element": "lower deck window 4 frame",
+   "box": [
+    134,
+    31,
+    147,
+    40
+   ],
+   "nodes": [
+    "body/right-side/lower-deck/window-4/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R15",
+   "view": "z_both",
+   "side": "right",
+   "element": "lower deck window 5 frame",
+   "box": [
+    151,
+    31,
+    164,
+    40
+   ],
+   "nodes": [
+    "body/right-side/lower-deck/window-5/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R16",
+   "view": "z_both",
+   "side": "right",
+   "element": "lower deck window 6 frame",
+   "box": [
+    168,
+    31,
+    181,
+    40
+   ],
+   "nodes": [
+    "body/right-side/lower-deck/window-6/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R17",
+   "view": "z_both",
+   "side": "right",
+   "element": "end section window 1 frame",
+   "box": [
+    30,
+    20,
+    43,
+    29
+   ],
+   "nodes": [
+    "body/right-side/end-sections/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R18",
+   "view": "z_both",
+   "side": "right",
+   "element": "end section window 2 frame",
+   "box": [
+    221,
+    20,
+    234,
+    29
+   ],
+   "nodes": [
+    "body/right-side/end-sections/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R19",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 1 outline",
+   "box": [
+    54,
+    23,
+    71,
+    45
+   ],
+   "nodes": [
+    "body/right-side/door-1/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Door outline read from the seam and edge columns of the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R20",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 1 window 1",
+   "box": [
+    57,
+    26,
+    61,
+    41
+   ],
+   "nodes": [
+    "body/right-side/door-1/window-1/frame"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R21",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 1 window 2",
+   "box": [
+    64,
+    26,
+    68,
+    41
+   ],
+   "nodes": [
+    "body/right-side/door-1/window-2/frame"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R22",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 2 outline",
+   "box": [
+    193,
+    23,
+    210,
+    45
+   ],
+   "nodes": [
+    "body/right-side/door-2/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Door outline read from the seam and edge columns of the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R23",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 2 window 1",
+   "box": [
+    196,
+    26,
+    200,
+    41
+   ],
+   "nodes": [
+    "body/right-side/door-2/window-1/frame"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R24",
+   "view": "z_both",
+   "side": "right",
+   "element": "door 2 window 2",
+   "box": [
+    203,
+    26,
+    207,
+    41
+   ],
+   "nodes": [
+    "body/right-side/door-2/window-2/frame"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R25",
+   "view": "z_both",
+   "side": "right",
+   "element": "lower class numeral 1",
+   "box": [
+    80,
+    32,
+    82,
+    39
+   ],
+   "nodes": [
+    "body/right-side/class-signs/sign-1/lower"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "A 2 to 4 pixel painted mark; the model draws the glyph, not the mark's box; +/- one pixel."
+  },
+  {
+   "id": "R26",
+   "view": "z_both",
+   "side": "right",
+   "element": "lower class numeral 2",
+   "box": [
+    181,
+    32,
+    183,
+    39
+   ],
+   "nodes": [
+    "body/right-side/class-signs/sign-2/lower"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "A 2 to 4 pixel painted mark; the model draws the glyph, not the mark's box; +/- one pixel."
+  },
+  {
+   "id": "R27",
+   "view": "z_both",
+   "side": "right",
+   "element": "destination display",
+   "box": [
+    134,
+    23,
+    147,
+    27
+   ],
+   "nodes": [
+    "body/right-side/destination-display"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R28",
+   "view": "z_both",
+   "side": "right",
+   "element": "grille panel outline",
+   "box": [
+    4,
+    17,
+    21,
+    39
+   ],
+   "nodes": [
+    "body/right-side/grille-panel/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Door outline read from the seam and edge columns of the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R29",
+   "view": "z_both",
+   "side": "right",
+   "element": "cab side window",
+   "box": [
+    248,
+    19,
+    259,
+    29
+   ],
+   "nodes": [
+    "body/right-side/cab/window-1/frame"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R30",
+   "view": "z_both",
+   "side": "right",
+   "element": "first class line",
+   "box": [
+    72,
+    19,
+    192,
+    20
+   ],
+   "nodes": [
+    "body/right-side/first-class-line"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "R31",
+   "view": "z_both",
+   "side": "right",
+   "element": "DB logo",
+   "box": [
+    181,
+    21,
+    189,
+    26
+   ],
+   "nodes": [
+    "body/right-side/db-logo/frame"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "The logo's outline pixels; +/- one pixel."
+  },
+  {
+   "id": "R32",
+   "view": "z_both",
+   "side": "right",
+   "element": "upper class numeral 1",
+   "box": [
+    80,
+    11,
+    82,
+    18
+   ],
+   "nodes": [
+    "body/right-side/class-signs/sign-1/upper"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "A 2 to 4 pixel painted mark; the model draws the glyph, not the mark's box; +/- one pixel."
+  },
+  {
+   "id": "R33",
+   "view": "z_both",
+   "side": "right",
+   "element": "upper class numeral 2",
+   "box": [
+    182,
+    11,
+    184,
+    18
+   ],
+   "nodes": [
+    "body/right-side/class-signs/sign-2/upper"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "A 2 to 4 pixel painted mark; the model draws the glyph, not the mark's box; +/- one pixel."
+  },
+  {
+   "id": "L01",
+   "view": "z_both",
+   "side": "left",
+   "element": "upper deck window 1 frame",
+   "box": [
+    54,
+    10,
+    62,
+    19
+   ],
+   "nodes": [
+    "body/left-side/upper-deck/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L02",
+   "view": "z_both",
+   "side": "left",
+   "element": "upper deck window 2 frame",
+   "box": [
+    66,
+    10,
+    79,
+    19
+   ],
+   "nodes": [
+    "body/left-side/upper-deck/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L03",
+   "view": "z_both",
+   "side": "left",
+   "element": "upper deck window 3 frame",
+   "box": [
+    83,
+    10,
+    96,
+    19
+   ],
+   "nodes": [
+    "body/left-side/upper-deck/window-3/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L04",
+   "view": "z_both",
+   "side": "left",
+   "element": "upper deck window 4 frame",
+   "box": [
+    100,
+    10,
+    113,
+    19
+   ],
+   "nodes": [
+    "body/left-side/upper-deck/window-4/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L05",
+   "view": "z_both",
+   "side": "left",
+   "element": "upper deck window 5 frame",
+   "box": [
+    117,
+    10,
+    130,
+    19
+   ],
+   "nodes": [
+    "body/left-side/upper-deck/window-5/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L06",
+   "view": "z_both",
+   "side": "left",
+   "element": "upper deck window 6 frame",
+   "box": [
+    134,
+    10,
+    147,
+    19
+   ],
+   "nodes": [
+    "body/left-side/upper-deck/window-6/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L07",
+   "view": "z_both",
+   "side": "left",
+   "element": "upper deck window 7 frame",
+   "box": [
+    151,
+    10,
+    164,
+    19
+   ],
+   "nodes": [
+    "body/left-side/upper-deck/window-7/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L08",
+   "view": "z_both",
+   "side": "left",
+   "element": "upper deck window 8 frame",
+   "box": [
+    168,
+    10,
+    181,
+    19
+   ],
+   "nodes": [
+    "body/left-side/upper-deck/window-8/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L09",
+   "view": "z_both",
+   "side": "left",
+   "element": "upper deck window 9 frame",
+   "box": [
+    185,
+    10,
+    198,
+    19
+   ],
+   "nodes": [
+    "body/left-side/upper-deck/window-9/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L10",
+   "view": "z_both",
+   "side": "left",
+   "element": "upper deck window 10 frame",
+   "box": [
+    202,
+    10,
+    210,
+    19
+   ],
+   "nodes": [
+    "body/left-side/upper-deck/window-10/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L11",
+   "view": "z_both",
+   "side": "left",
+   "element": "lower deck window 1 frame",
+   "box": [
+    83,
+    31,
+    96,
+    40
+   ],
+   "nodes": [
+    "body/left-side/lower-deck/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L12",
+   "view": "z_both",
+   "side": "left",
+   "element": "lower deck window 2 frame",
+   "box": [
+    100,
+    31,
+    113,
+    40
+   ],
+   "nodes": [
+    "body/left-side/lower-deck/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L13",
+   "view": "z_both",
+   "side": "left",
+   "element": "lower deck window 3 frame",
+   "box": [
+    117,
+    31,
+    130,
+    40
+   ],
+   "nodes": [
+    "body/left-side/lower-deck/window-3/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L14",
+   "view": "z_both",
+   "side": "left",
+   "element": "lower deck window 4 frame",
+   "box": [
+    134,
+    31,
+    147,
+    40
+   ],
+   "nodes": [
+    "body/left-side/lower-deck/window-4/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L15",
+   "view": "z_both",
+   "side": "left",
+   "element": "lower deck window 5 frame",
+   "box": [
+    151,
+    31,
+    164,
+    40
+   ],
+   "nodes": [
+    "body/left-side/lower-deck/window-5/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L16",
+   "view": "z_both",
+   "side": "left",
+   "element": "lower deck window 6 frame",
+   "box": [
+    168,
+    31,
+    181,
+    40
+   ],
+   "nodes": [
+    "body/left-side/lower-deck/window-6/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L17",
+   "view": "z_both",
+   "side": "left",
+   "element": "end section window 1 frame",
+   "box": [
+    30,
+    20,
+    43,
+    29
+   ],
+   "nodes": [
+    "body/left-side/end-sections/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L18",
+   "view": "z_both",
+   "side": "left",
+   "element": "end section window 2 frame",
+   "box": [
+    221,
+    20,
+    234,
+    29
+   ],
+   "nodes": [
+    "body/left-side/end-sections/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L19",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 1 outline",
+   "box": [
+    54,
+    23,
+    71,
+    45
+   ],
+   "nodes": [
+    "body/left-side/door-1/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Door outline read from the seam and edge columns of the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L20",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 1 window 1",
+   "box": [
+    57,
+    26,
+    61,
+    41
+   ],
+   "nodes": [
+    "body/left-side/door-1/window-1/frame"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L21",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 1 window 2",
+   "box": [
+    64,
+    26,
+    68,
+    41
+   ],
+   "nodes": [
+    "body/left-side/door-1/window-2/frame"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L22",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 2 outline",
+   "box": [
+    193,
+    23,
+    210,
+    45
+   ],
+   "nodes": [
+    "body/left-side/door-2/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Door outline read from the seam and edge columns of the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L23",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 2 window 1",
+   "box": [
+    196,
+    26,
+    200,
+    41
+   ],
+   "nodes": [
+    "body/left-side/door-2/window-1/frame"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L24",
+   "view": "z_both",
+   "side": "left",
+   "element": "door 2 window 2",
+   "box": [
+    203,
+    26,
+    207,
+    41
+   ],
+   "nodes": [
+    "body/left-side/door-2/window-2/frame"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L25",
+   "view": "z_both",
+   "side": "left",
+   "element": "lower class numeral 1",
+   "box": [
+    80,
+    32,
+    82,
+    39
+   ],
+   "nodes": [
+    "body/left-side/class-signs/sign-1/lower"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "A 2 to 4 pixel painted mark; the model draws the glyph, not the mark's box; +/- one pixel."
+  },
+  {
+   "id": "L26",
+   "view": "z_both",
+   "side": "left",
+   "element": "lower class numeral 2",
+   "box": [
+    181,
+    32,
+    183,
+    39
+   ],
+   "nodes": [
+    "body/left-side/class-signs/sign-2/lower"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "A 2 to 4 pixel painted mark; the model draws the glyph, not the mark's box; +/- one pixel."
+  },
+  {
+   "id": "L27",
+   "view": "z_both",
+   "side": "left",
+   "element": "destination display",
+   "box": [
+    134,
+    23,
+    147,
+    27
+   ],
+   "nodes": [
+    "body/left-side/destination-display"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L28",
+   "view": "z_both",
+   "side": "left",
+   "element": "grille panel outline",
+   "box": [
+    4,
+    17,
+    21,
+    39
+   ],
+   "nodes": [
+    "body/left-side/grille-panel/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Door outline read from the seam and edge columns of the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L29",
+   "view": "z_both",
+   "side": "left",
+   "element": "cab side window",
+   "box": [
+    248,
+    19,
+    259,
+    29
+   ],
+   "nodes": [
+    "body/left-side/cab/window-1/frame"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L30",
+   "view": "z_both",
+   "side": "left",
+   "element": "first class line",
+   "box": [
+    72,
+    19,
+    192,
+    20
+   ],
+   "nodes": [
+    "body/left-side/first-class-line"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "L31",
+   "view": "z_both",
+   "side": "left",
+   "element": "DB logo",
+   "box": [
+    181,
+    21,
+    189,
+    26
+   ],
+   "nodes": [
+    "body/left-side/db-logo/frame"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "The logo's outline pixels; +/- one pixel."
+  },
+  {
+   "id": "L32",
+   "view": "z_both",
+   "side": "left",
+   "element": "upper class numeral 1",
+   "box": [
+    80,
+    11,
+    82,
+    18
+   ],
+   "nodes": [
+    "body/left-side/class-signs/sign-1/upper"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "A 2 to 4 pixel painted mark; the model draws the glyph, not the mark's box; +/- one pixel."
+  },
+  {
+   "id": "L33",
+   "view": "z_both",
+   "side": "left",
+   "element": "upper class numeral 2",
+   "box": [
+    182,
+    11,
+    184,
+    18
+   ],
+   "nodes": [
+    "body/left-side/class-signs/sign-2/upper"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "A 2 to 4 pixel painted mark; the model draws the glyph, not the mark's box; +/- one pixel."
+  },
+  {
+   "id": "B01",
+   "view": "x_both1",
+   "end": "rear",
+   "element": "gangway frame",
+   "box": [
+    7,
+    18,
+    22,
+    37
+   ],
+   "nodes": [
+    "rear-end/gangway"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "The black gangway field; the model's UIC gangway frame."
+  },
+  {
+   "id": "B02",
+   "view": "x_both1",
+   "end": "rear",
+   "element": "end door outline",
+   "box": [
+    10,
+    23,
+    19,
+    36
+   ],
+   "nodes": [
+    "rear-end/end-door/outline"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Door outline read from the seam and edge columns of the native BMP; +/- one pixel."
+  },
+  {
+   "id": "B03",
+   "view": "x_both1",
+   "end": "rear",
+   "element": "end door window 1",
+   "box": [
+    11,
+    24,
+    13,
+    31
+   ],
+   "nodes": [
+    "rear-end/end-door/window-1/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "B04",
+   "view": "x_both1",
+   "end": "rear",
+   "element": "end door window 2",
+   "box": [
+    16,
+    24,
+    18,
+    31
+   ],
+   "nodes": [
+    "rear-end/end-door/window-2/frame"
+   ],
+   "tolerancePixels": 1.01,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "B05",
+   "view": "x_both1",
+   "end": "rear",
+   "element": "tail lamp 1",
+   "box": [
+    2,
+    32,
+    5,
+    35
+   ],
+   "nodes": [
+    "rear-end/tail-lamps/lamp-1"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "A 2 to 3 pixel lamp patch; the model keeps a round lens of standard size."
+  },
+  {
+   "id": "B06",
+   "view": "x_both1",
+   "end": "rear",
+   "element": "tail lamp 2",
+   "box": [
+    24,
+    32,
+    27,
+    35
+   ],
+   "nodes": [
+    "rear-end/tail-lamps/lamp-2"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "A 2 to 3 pixel lamp patch; the model keeps a round lens of standard size."
+  },
+  {
+   "id": "B07",
+   "view": "x_both1",
+   "end": "rear",
+   "element": "buffer 1 head",
+   "box": [
+    3,
+    38,
+    7,
+    41
+   ],
+   "nodes": [
+    "rear-end/buffers/buffer-1"
+   ],
+   "tolerancePixels": 2.5,
+   "uncertainty": "Buffer head; the model keeps the standard 1.75 m buffer spacing, the coarse BMP paints the heads about 2 m apart."
+  },
+  {
+   "id": "B08",
+   "view": "x_both1",
+   "end": "rear",
+   "element": "buffer 2 head",
+   "box": [
+    23,
+    38,
+    27,
+    41
+   ],
+   "nodes": [
+    "rear-end/buffers/buffer-2"
+   ],
+   "tolerancePixels": 2.5,
+   "uncertainty": "Buffer head; the model keeps the standard 1.75 m buffer spacing, the coarse BMP paints the heads about 2 m apart."
+  },
+  {
+   "id": "F01",
+   "view": "x_both",
+   "end": "front",
+   "element": "windscreen frame",
+   "box": [
+    6,
+    20,
+    25,
+    34
+   ],
+   "nodes": [
+    "front-end/cab/windscreen/frame"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "Connected component of the frame pixels on the native BMP; +/- one pixel."
+  },
+  {
+   "id": "F02",
+   "view": "x_both",
+   "end": "front",
+   "element": "head lamp 1",
+   "box": [
+    22,
+    35,
+    24,
+    36
+   ],
+   "nodes": [
+    "front-end/cab/lamps/lamp-1/head"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "A 2 to 3 pixel lamp patch; the model keeps a round lens of standard size."
+  },
+  {
+   "id": "F03",
+   "view": "x_both",
+   "end": "front",
+   "element": "head lamp 2",
+   "box": [
+    7,
+    35,
+    9,
+    36
+   ],
+   "nodes": [
+    "front-end/cab/lamps/lamp-2/head"
+   ],
+   "tolerancePixels": 1.5,
+   "uncertainty": "A 2 to 3 pixel lamp patch; the model keeps a round lens of standard size."
+  },
+  {
+   "id": "F04",
+   "view": "x_both",
+   "end": "front",
+   "element": "buffer 1 head",
+   "box": [
+    23,
+    38,
+    27,
+    41
+   ],
+   "nodes": [
+    "front-end/buffers/buffer-1"
+   ],
+   "tolerancePixels": 2.5,
+   "uncertainty": "Buffer head; the model keeps the standard 1.75 m buffer spacing, the coarse BMP paints the heads about 2 m apart."
+  },
+  {
+   "id": "F05",
+   "view": "x_both",
+   "end": "front",
+   "element": "buffer 2 head",
+   "box": [
+    3,
+    38,
+    7,
+    41
+   ],
+   "nodes": [
+    "front-end/buffers/buffer-2"
+   ],
+   "tolerancePixels": 2.5,
+   "uncertainty": "Buffer head; the model keeps the standard 1.75 m buffer spacing, the coarse BMP paints the heads about 2 m apart."
+  }
+ ]
+}

@@ -49,7 +49,7 @@ const MECHANICS: Record<string, { length: number; axles: number[] }> = {
   "cd_bmo_2": { length: 26.8, axles: [-11.15, -8.65, 8.65, 11.15] },
   "cd_bmo_3": { length: 26.8, axles: [-11.15, -8.65, 8.65, 11.15] },
   "csd_dsk": { length: 10.5, axles: [-3.35, 2.85] },
-  ...Object.fromEntries(["a", "ab", "b", "bee", "beel", "bds", "ds"].map((v) => [`cd_${v}`, { length: 24.5, axles: [-9.8, -7.3, 7.3, 9.8] }])),
+  ...Object.fromEntries(["a", "ab", "b", "bee", "beel", "bds", "ds", "bee001"].map((v) => [`cd_${v}`, { length: 24.5, axles: [-9.8, -7.3, 7.3, 9.8] }])),
   "cd_bdmeer": { length: 26.4, axles: [-10.75, -8.25, 8.25, 10.75] },
   "cd_bdmtee": { length: 26.4, axles: [-10.75, -8.25, 8.25, 10.75] },
 };
@@ -68,7 +68,7 @@ const SECTIONS: Record<string, { top: number; half: number }> = {
   "cd_bmo_2": { top: 4.6, half: 1.5 },
   "cd_bmo_3": { top: 4.6, half: 1.5 },
   "csd_dsk": { top: 3.8, half: 1.5 },
-  ...Object.fromEntries(["a", "ab", "b", "bee", "beel", "bds", "ds"].map((v) => [`cd_${v}`, { top: 4.2, half: 1.5 }])),
+  ...Object.fromEntries(["a", "ab", "b", "bee", "beel", "bds", "ds", "bee001"].map((v) => [`cd_${v}`, { top: 4.2, half: 1.5 }])),
   // the guard's lookout bay, 1.525 m (the XML's 1.6 m kept inside the 3.1 m envelope)
   "cd_bds": { top: 4.2, half: 1.525 },
   "cd_ds": { top: 4.2, half: 1.525 },
@@ -248,9 +248,9 @@ describe("CSD coaches transferred from vlakosimdb", () => {
     }
   });
 
-  it("builds the nine CD green and white coaches as the variants of one design", () => {
+  it("builds the ten CD green and white coaches (the blue Bee 001 among them) as the variants of one design", () => {
     const d = VEHICLES.find((v) => v.id === "veh-cd-green-white-coach")!;
-    expect(d.params![0]!.values.map((v) => v.value)).toEqual(["a", "ab", "b", "bee", "beel", "bds", "ds", "bdmeer", "bdmtee"]);
+    expect(d.params![0]!.values.map((v) => v.value)).toEqual(["a", "ab", "b", "bee", "beel", "bds", "ds", "bdmeer", "bdmtee", "beeBlue"]);
     const count = (variant: string) =>
       new Set(leaves(d.build({ variant }).sourceTree(d.id, d.title).root).filter((n) => /^body\/right-side\/window-\d+\/frame\//.test(n.id)).map((n) => n.id.split("/")[2])).size;
     // two toilets plus nine compartments (A, AB), ten (B, Bee, Beel); Bdmtee's fourteen

@@ -16,7 +16,8 @@
 | [models/vehicle-rig.md](models/vehicle-rig.md) | what the game moves: steered front wheels, articulated sections and the joint renderer, the `rig`, `pose()` / `renderJoint()`, the Pose sliders |
 | [models/parameters.md](models/parameters.md) | parametric models: enum parameters, the default-only GLB, `params` in the meta entries and the JS model, the site's picker |
 | [models/csd-coaches.md](models/csd-coaches.md) | the CSD coaches from vlakosimdb: sources, the shared coach builder, deviations, the native-raster comparison and tests |
-| [models/cd-green-white.md](models/cd-green-white.md) | the parametric CD green and white coach: nine vlakosimdb coaches as one `variant` parameter |
+| [models/cd-green-white.md](models/cd-green-white.md) | the parametric CD green and white coach: ten vlakosimdb coaches (the blue Bee 001 among them) as one `variant` parameter |
+| [models/czsk-coaches.md](models/czsk-coaches.md) | the Czech and Slovak coaches in later liveries: `veh-cd-y-coach`, `veh-zsr-coach`, `veh-uic-z-coach` (with its DB IC and OBB operators), their livery builder and comparison |
 | [models/loco-liveries.md](models/loco-liveries.md) | the parametric locomotives: CD 150 / 151 / ZSR 350, CD 163 / 363 and CD 263 / 371 / 372 liveries, the livery model, cab paint, the 263's machine room |
 | [models/cd-230.md](models/cd-230.md) | the parametric CD 230 / 240 / 340 / 242 "laminatka": the rounded nose, the face laid on the curved skin, five liveries, the native comparison |
 | [models/mainline-electrics.md](models/mainline-electrics.md) | the six-axle Czech and the German and Austrian electric locomotives from vlakosimdb: CD 180 / 181 / 182, DNT 184.5, DB 111, DR 243 / DB 143 / 112, OBB 1012 and 1040, the data-driven box-cab builder, the native comparison |
@@ -28,6 +29,7 @@
 | [models/czech-emus-classic.md](models/czech-emus-classic.md) | the older Czech electric units from vlakosimdb: the CD 451 "zabotlam" and the CD 470 double-deck prototype (motor car, trailer) and the CD 460 (motor car, trailer; four liveries), their shared kit, the scales and the native comparison |
 | [models/czech-dmus.md](models/czech-dmus.md) | the Czech diesel railcars from vlakosimdb: CD 810 / 812 / 912, CD 843 / 943 / 043, CSD M 131.1 with its trailer, CSD M 240.0, CSD M 296.1 / CD 853 / 854; the railcar kit, the native comparison |
 | [models/small-diesels.md](models/small-diesels.md) | the small and shunting diesels from vlakosimdb: CD 704 / T 238.0, CD 710, CD 714, CD 740 / 742 / 743, DB V 100 / 212 and the MUV 69 track motor car, the shared hood and running-gear kit, the native comparison |
+| [models/german-coaches.md](models/german-coaches.md) | the German coaches from vlakosimdb: the DB n-Wagen (Bn, ABn, the Karlsruher Kopf driving trailer; two liveries), the DB Regio and the DR double-deck coaches with their driving trailers; sloped-nose panels, the native comparison and tests |
 | [models/bmo-double-deck.md](models/bmo-double-deck.md) | the parametric Bmo double-deck coach: the CSD and three CD liveries as one `livery` parameter |
 | [models/steam-locomotives.md](models/steam-locomotives.md) | the nine steam locomotives from vlakosimdb, locomotive and tender as `unit` variants, the shared builder, deviations, the native comparison and tests |
 | [models/trams.md](models/trams.md) | the trams and the metro car from vlakosimdb: Tatra T3, T6A5, KT8D5 and KT4, the GT4, the 81-71; the tram builder, the drawing-to-published map, articulated sections, pantographs, the native comparison and tests |
