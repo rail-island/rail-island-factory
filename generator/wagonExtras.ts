@@ -4,7 +4,7 @@ import { Wagon } from './wagonParts.ts';
 import { WAGON_CATALOG } from './wagons.ts';
 import { numberLines } from './freightWagonParts.ts';
 import { resolveParams, type ParamValues, type ParamSpec, type ProceduralDesign } from './design.ts';
-const BODY:ParamSpec[]=[{name:'body',title:'Body',default:'box',values:[{value:'box',title:'Z covered wagon'},{value:'beer',title:'Lp refrigerated wagon'},{value:'sliding',title:'Zaz bogie covered wagon'}]}];
+const BODY:ParamSpec[]=[{name:'body',title:'Body',default:'box',values:[{value:'box',title:'Z'},{value:'beer',title:'Lp'},{value:'sliding',title:'Zaz'}]}];
 const palette={body:{color:'#934b34'},rib:{color:'#ad6044'},roof:{color:'#665b53'},cream:{color:'#dddcc7'},frame:{color:'#292a29'},ink:{color:'#e4dec8'},glass:{color:'#647a81'}};
 function chassis(c:Wagon,length:number,axles:number[],bogies=false):void {
  const m=c.m;

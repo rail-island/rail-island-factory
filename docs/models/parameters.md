@@ -102,8 +102,8 @@ first; the tests build each one.
 ```ts
 export const CLASSIC_GREEN_PARAMS: readonly ParamSpec[] = [
   { name: "variant", title: "Variant", default: "classA",
-    values: [{ value: "classA", title: "Class A (1st class, 9 compartments)" },
-             { value: "classB", title: "Class B (2nd class, 10 compartments)" }] },
+    values: [{ value: "classA", title: "Class A" },
+             { value: "classB", title: "Class B" }] },
 ];
 export function csdClassicGreenCoach(params?: ParamValues): MeshBuilder {
   const { variant } = resolveParams(CLASSIC_GREEN_PARAMS, params);
@@ -123,6 +123,13 @@ values that replace it (the TGV's `unit: coach` and `unit: endCoach` to `{ unit:
 set, cars: 1 }`). `resolveParams` reads a retired value as its replacement; it is
 in no list, combination or picker. The game resolves a saved map's old key the same
 way, without rewriting it.
+
+**Titles are short labels**, because the game shows every value as a button:
+at most 16 characters, unique within their parameter, no explanations,
+dimensions or source names - "Power car", "Trailer set", "TGV Atlantique",
+"CD 163 021", "Logs". A livery is named either by its operator and number or by
+its colour, not both. `test/params.test.ts` enforces the length and uniqueness.
+A title is display text only: changing it never affects a saved map.
 
 Names are lower camel case (`variant`), values are alphanumeric tokens
 (`classA`). Both are contract: a saved map may store them, so treat them like

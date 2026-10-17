@@ -25,9 +25,9 @@ export const DOSTO_PARAMS: readonly ParamSpec[] = [
     title: "Variant",
     default: "secondClass",
     values: [
-      { value: "firstClass", title: "1st class upper deck, 2nd class lower deck (DB DS Re 1Kl)" },
-      { value: "secondClass", title: "2nd class (DB DS Re 2Kl)" },
-      { value: "drivingTrailer", title: "Driving trailer, sloped cab (DB DS Re 2Kl S)" },
+      { value: "firstClass", title: "1st/2nd class" },
+      { value: "secondClass", title: "2nd class" },
+      { value: "drivingTrailer", title: "Driving trailer" },
     ],
   },
 ];

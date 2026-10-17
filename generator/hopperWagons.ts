@@ -73,11 +73,11 @@ function loadSurface(c: Wagon, mat: string, x0: number, x1: number, half: number
 
 export const FACCS_LIVERIES: readonly HopperLivery[] = [
   {
-    value: "cd", title: "CD brown (N_Faccs)", source: "n_faccs",
+    value: "cd", title: "CD", source: "n_faccs",
     paint: { upper: { color: "#622500", roughness: 0.7 }, shade: { color: "#481c00", roughness: 0.75 }, lower: { color: "#2f1300", roughness: 0.8 }, frame: { color: "#3c3c3c", roughness: 0.8 } },
   },
   {
-    value: "viamont", title: "Viamont yellow (Viamont Faccs)", source: "viamont_faccs",
+    value: "viamont", title: "Viamont", source: "viamont_faccs",
     paint: { upper: { color: "#e8e201", roughness: 0.6 }, shade: { color: "#c8c301", roughness: 0.65 }, lower: { color: "#b5b001", roughness: 0.7 }, frame: { color: "#3c3c3c", roughness: 0.8 } },
   },
 ];
@@ -189,15 +189,15 @@ export function faccsHopperWagon(params?: ParamValues): MeshBuilder {
 
 export const FALLS_LIVERIES: readonly HopperLivery[] = [
   {
-    value: "cd", title: "CD brown (N_Falls)", source: "n_falls",
+    value: "cd", title: "CD", source: "n_falls",
     paint: { upper: { color: "#7e3a12", roughness: 0.7 }, lower: { color: "#773711", roughness: 0.7 }, shade: { color: "#5f2d0e", roughness: 0.75 }, panel: { color: "#773711", roughness: 0.7 }, frame: { color: "#29242c", roughness: 0.8 }, letter2: { color: "#f2f2f2", roughness: 0.6 } },
   },
   {
-    value: "sd", title: "Severoceske doly green and grey (SD_Falls)", source: "sd_falls",
+    value: "sd", title: "SD", source: "sd_falls",
     paint: { upper: { color: "#008000", roughness: 0.6 }, lower: { color: "#007000", roughness: 0.6 }, shade: { color: "#005e00", roughness: 0.65 }, panel: { color: "#a8a8a8", roughness: 0.6 }, frame: { color: "#29242c", roughness: 0.8 }, letter2: { color: "#151515", roughness: 0.6 } },
   },
   {
-    value: "viamont", title: "Viamont grey and black (Viamont Falls)", source: "viamont_falls",
+    value: "viamont", title: "Viamont", source: "viamont_falls",
     paint: { upper: { color: "#adadad", roughness: 0.6 }, lower: { color: "#1a1a22", roughness: 0.7 }, shade: { color: "#959595", roughness: 0.65 }, panel: { color: "#1a1a22", roughness: 0.7 }, frame: { color: "#29242c", roughness: 0.8 }, letter2: { color: "#c0c0c0", roughness: 0.6 } },
   },
 ];

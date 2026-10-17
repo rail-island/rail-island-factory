@@ -27,14 +27,14 @@ export type Db628Unit = "motorCar" | NWagenVariant;
 
 export const DB628_PARAMS: readonly ParamSpec[] = [
   enumParam("unit", "Car", {
-    motorCar: "Motor car 628.2 (cab, short coupling)",
-    bn: "Bn coach (2nd class, n-Wagen)",
-    abn: "ABn coach (1st and 2nd class, n-Wagen)",
-    bdnrf: "BDnrf driving trailer (Karlsruher Kopf, luggage room, n-Wagen)",
+    motorCar: "Motor car",
+    bn: "Bn",
+    abn: "ABn",
+    bdnrf: "BDnrf",
   }),
   enumParam("livery", "Livery", {
-    mint: "Mint turquoise and light grey (1990s, vlakosimdb db_628, db_*iv)",
-    red: "DB Regio traffic red (vlakosimdb db_628vr, db_*vr)",
+    mint: "Mint",
+    red: "Traffic red",
   }),
 ];
 

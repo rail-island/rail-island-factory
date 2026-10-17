@@ -19,8 +19,8 @@ export type M131Unit = "motorCar" | "trailer";
 
 export const M131_PARAMS: readonly ParamSpec[] = [
   enumParam("unit", "Car", {
-    motorCar: "Motor car M 131.1",
-    trailer: "Trailer M 031 (vlakosimdb)",
+    motorCar: "Motor car",
+    trailer: "Trailer",
   }),
 ];
 

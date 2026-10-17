@@ -27,14 +27,14 @@ export type Livery460 = "cd" | "cd003" | "cd007" | "csd";
 
 export const CD460_PARAMS: readonly ParamSpec[] = [
   enumParam("unit", "Car", {
-    motorCar: "Motor car 460 (cab, two pantographs)",
-    trailer: "Trailer 063 (vlakosimdb CD 060)",
+    motorCar: "Motor car",
+    trailer: "Trailer",
   }),
   enumParam("livery", "Livery", {
-    cd: "CD grey and blue (460 071)",
-    cd003: "CD grey and blue, 460 003",
-    cd007: "CD grey and blue, 460 007 (cab pantograph raised)",
-    csd: "CSD cream and green (460 045)",
+    cd: "460 071",
+    cd003: "460 003",
+    cd007: "460 007",
+    csd: "CSD",
   }),
 ];
 

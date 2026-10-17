@@ -27,9 +27,9 @@ export const UIC_Z_PARAMS: readonly ParamSpec[] = [
     title: "Variant",
     default: "secondClass",
     values: [
-      { value: "firstClass", title: "1st class (Ampz)" },
-      { value: "secondClass", title: "2nd class (Bmz, Bmpz)" },
-      { value: "restaurant", title: "Dining car (WRRmz, WRmz)" },
+      { value: "firstClass", title: "1st class" },
+      { value: "secondClass", title: "2nd class" },
+      { value: "restaurant", title: "Dining car" },
     ],
   },
   {
@@ -37,9 +37,9 @@ export const UIC_Z_PARAMS: readonly ParamSpec[] = [
     title: "Operator",
     default: "cd",
     values: [
-      { value: "cd", title: "CD (red and grey)" },
-      { value: "db", title: "DB IC (white and red)" },
-      { value: "obb", title: "OBB (red and grey)" },
+      { value: "cd", title: "CD" },
+      { value: "db", title: "DB" },
+      { value: "obb", title: "OBB" },
     ],
   },
 ];

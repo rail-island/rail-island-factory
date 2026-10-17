@@ -42,9 +42,9 @@ export const T3_PARAMS: readonly ParamSpec[] = [{
   name: "variant",
   title: "Variant",
   values: [
-    { value: "t3", title: "T3 (red and cream)" },
-    { value: "t3m", title: "T3M (thyristor control, LED destination)" },
-    { value: "t3prototype", title: "T3 prototype (blue and yellow)" },
+    { value: "t3", title: "T3" },
+    { value: "t3m", title: "T3M" },
+    { value: "t3prototype", title: "Prototype" },
   ],
   default: "t3",
 }];
@@ -252,7 +252,7 @@ export const KT8_PARAMS: readonly ParamSpec[] = [{
   values: [
     { value: "redWhite", title: "Red and white" },
     { value: "red", title: "All red" },
-    { value: "modern", title: "Modern (grey window band)" },
+    { value: "modern", title: "Modern" },
   ],
   default: "redWhite",
 }];

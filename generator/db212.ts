@@ -38,7 +38,7 @@ export interface Db212Livery {
 
 export const DB212_LIVERIES = {
   oldRed: {
-    title: "DB 212 325, old red with cream lines",
+    title: "Old red",
     source: "db_212",
     number: runningNumber("212", "325"),
     numberSource: "illustrative, a unit photographed in the old red in 2019 (212 325-5); the DB computer number's check digit is the same scheme",
@@ -46,7 +46,7 @@ export const DB212_LIVERIES = {
     sideLine: "line", endLine: "line",
   },
   oceanBlue: {
-    title: "DB 212 364, ocean blue and beige",
+    title: "Ocean blue",
     source: "db_212bb",
     number: runningNumber("212", "364"),
     numberSource: "illustrative, a unit photographed in ocean blue and beige in 1993 (212 364)",
@@ -54,7 +54,7 @@ export const DB212_LIVERIES = {
     sideLine: "line", endLine: "line",
   },
   trafficRed: {
-    title: "DB 212 376, traffic red",
+    title: "Traffic red",
     source: "db_212nr",
     number: runningNumber("212", "376"),
     numberSource: "illustrative, a unit photographed in traffic red (212 376-8)",

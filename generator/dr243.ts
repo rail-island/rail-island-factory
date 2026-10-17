@@ -37,7 +37,7 @@ interface Livery {
 
 export const DR243_LIVERIES = {
   dr243: {
-    title: "DR 243 864, red, white line",
+    title: "DR 243",
     source: "dr_243",
     number: runningNumber("243", "864"),
     numberSource: "photo-243-864.jpg, in this livery",
@@ -51,7 +51,7 @@ export const DR243_LIVERIES = {
     pivot: 4.25,
   },
   db143: {
-    title: "DB 143 617, S-Bahn orange and white",
+    title: "DB 143 S-Bahn",
     source: "db_143",
     number: runningNumber("143", "617"),
     numberSource: "illustrative, a unit photographed in S-Bahn paint",
@@ -63,7 +63,7 @@ export const DR243_LIVERIES = {
     pivot: 4.25,
   },
   db143vr: {
-    title: "DB 143 837, verkehrsrot",
+    title: "DB 143",
     source: "db_143vr",
     number: runningNumber("143", "837"),
     numberSource: "illustrative, a unit photographed in verkehrsrot",
@@ -75,7 +75,7 @@ export const DR243_LIVERIES = {
     pivot: 4.25,
   },
   db112: {
-    title: "DB 112 139, red, white chevron",
+    title: "DB 112",
     source: "db_112",
     number: runningNumber("112", "139"),
     numberSource: "illustrative, an ex-DR 212 of the class",

@@ -43,7 +43,7 @@ export interface Cd130Livery {
 const ROOF: Band = [3.5, 4.5, "roof"];
 export const CD130_LIVERIES = {
   cd130: {
-    title: "CD 130 036, cream and green",
+    title: "CD 130",
     source: "cd_130",
     number: runningNumber("130", "036"),
     numberSource: "130 036-7, photographed in this livery (photo-130-036-front.jpg)",
@@ -56,7 +56,7 @@ export const CD130_LIVERIES = {
     halfBase: 1.6,
   },
   cd123: {
-    title: "CD 123 008, pale and dark green, yellow lines",
+    title: "CD 123",
     source: "cd_123",
     number: runningNumber("123", "008"),
     numberSource: "illustrative, a unit of the class (photographed as 123 008 in Praha-Smichov); the native plate does not resolve digits",
@@ -69,7 +69,7 @@ export const CD130_LIVERIES = {
     halfBase: 1.665,
   },
   cd123No019: {
-    title: "CD 123 019, two greens, salmon line",
+    title: "CD 123 019",
     source: "cd_123-019-2",
     number: runningNumber("123", "019"),
     numberSource: "the vlakosimdb model's name",

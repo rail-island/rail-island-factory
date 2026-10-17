@@ -10,7 +10,7 @@ const palette: Record<string, MaterialSpec> = {
   paving: {color:'#a89d87'}, tile: {color:'#804837'},
 };
 export const CASTLE_PARAMS: ParamSpec[] = [{name:'layout',title:'Layout',default:'courtyard',values:[
-  {value:'courtyard',title:'Courtyard castle'}, {value:'keep',title:'Fortified keep'}, {value:'fortress',title:'Low fortress'},
+  {value:'courtyard',title:'Courtyard'}, {value:'keep',title:'Fortified keep'}, {value:'fortress',title:'Low fortress'},
  ]},
   {name:'walls',title:'Battlements',default:'crenellated',values:[{value:'crenellated',title:'Crenellated'},{value:'machicolated',title:'Machicolated'}]},
   {name:'roof',title:'Tower roofs',default:'conical',values:[{value:'conical',title:'Conical'},{value:'hipped',title:'Pyramidal'}]},

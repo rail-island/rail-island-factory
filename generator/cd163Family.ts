@@ -41,25 +41,25 @@ const ILLUSTRATIVE = "illustrative, a unit of the class; the native plate does n
 
 export const CD163_LIVERIES = {
   cd163: {
-    title: "CD 163 244, green, yellow band",
+    title: "CD 163",
     source: "cd_163",
     numberSource: "photo-163-244-front.jpg",
     livery: CD163_GREEN,
   },
   cd162: {
-    title: "CD 162 035, green, yellow band",
+    title: "CD 162",
     source: "cd_162",
     numberSource: ILLUSTRATIVE,
     livery: { ...CD163_GREEN, number: runningNumber("162", "035") },
   },
   cd162No022: {
-    title: "CD 162 022, green, yellow band, light roof",
+    title: "CD 162 022",
     source: "cd_162.022",
     numberSource: FROM_NAME,
     livery: { ...CD163_GREEN, number: runningNumber("162", "022"), palette: LIGHT_ROOF },
   },
   cd163No022: {
-    title: "CD 163 022, green, pale yellow band",
+    title: "CD 163 022",
     source: "cd_163.022",
     numberSource: FROM_NAME,
     livery: {
@@ -71,7 +71,7 @@ export const CD163_LIVERIES = {
     },
   },
   cd163No021: {
-    title: "CD 163 021, turquoise, cream band",
+    title: "CD 163 021",
     source: "cd_163_021",
     numberSource: FROM_NAME,
     livery: {
@@ -83,7 +83,7 @@ export const CD163_LIVERIES = {
     },
   },
   cd362: {
-    title: "CD 362 024, blue, yellow band",
+    title: "CD 362",
     source: "cd_362",
     numberSource: ILLUSTRATIVE,
     livery: {
@@ -96,7 +96,7 @@ export const CD163_LIVERIES = {
     },
   },
   cd362No054: {
-    title: "CD 362 054, blue, yellow band, light roof",
+    title: "CD 362 054",
     source: "cd_362.054",
     numberSource: FROM_NAME,
     livery: {
@@ -109,7 +109,7 @@ export const CD163_LIVERIES = {
     },
   },
   cd363: {
-    title: "CD 363 060, blue, cream band",
+    title: "CD 363",
     source: "cd_363",
     numberSource: ILLUSTRATIVE,
     livery: {
@@ -121,7 +121,7 @@ export const CD163_LIVERIES = {
     },
   },
   cd363No044: {
-    title: "CD 363 044, blue, cream band, light roof",
+    title: "CD 363 044",
     source: "cd_363.044",
     numberSource: FROM_NAME,
     livery: {
@@ -133,7 +133,7 @@ export const CD163_LIVERIES = {
     },
   },
   cd363No037: {
-    title: "CD 363 037, silver and blue, blue cab ends, red pantographs",
+    title: "CD 363 037",
     source: "cd_363_037",
     numberSource: FROM_NAME,
     livery: {
@@ -157,7 +157,7 @@ export const CD163_LIVERIES = {
     },
   },
   cd363No009: {
-    title: "CD 363 009, red, dark grey window band",
+    title: "CD 363 009",
     source: "cd_363_009",
     numberSource: FROM_NAME,
     livery: {
@@ -178,19 +178,19 @@ const red263 = (red: string): Record<string, MaterialSpec> => ({ red: c(red) });
 
 export const CD263_LIVERIES = {
   cd263: {
-    title: "CD 263 002, red, yellow band",
+    title: "CD 263",
     source: "cd_263",
     numberSource: ILLUSTRATIVE,
     livery: { ...CD163_GREEN, number: runningNumber("263", "002"), palette: red263("#c8161a"), bands: banded("red", "yellow") },
   },
   cd263No015: {
-    title: "CD 263 015, red, yellow band, light roof",
+    title: "CD 263 015",
     source: "cd_263.015",
     numberSource: FROM_NAME,
     livery: { ...CD163_GREEN, number: runningNumber("263", "015"), palette: { ...LIGHT_ROOF, ...red263("#c8161a") }, bands: banded("red", "yellow") },
   },
   cd371No002: {
-    title: "CD 371 002, red, cream band with a yellow line",
+    title: "CD 371 002",
     source: "cd_371_002",
     numberSource: FROM_NAME,
     livery: {
@@ -203,7 +203,7 @@ export const CD263_LIVERIES = {
     },
   },
   cd371No005: {
-    title: "CD 371 005, red, cream band, four side windows",
+    title: "CD 371 005",
     source: "cd_371.005",
     numberSource: FROM_NAME,
     layout: "371",
@@ -217,14 +217,14 @@ export const CD263_LIVERIES = {
     },
   },
   cd372: {
-    title: "CD 372 011, red, yellow band",
+    title: "CD 372",
     source: "cd_372",
     numberSource: ILLUSTRATIVE,
     livery: { ...CD163_GREEN, number: runningNumber("372", "011"), palette: { ...LIGHT_ROOF, ...red263("#c0151a") }, bands: banded("red", "yellow") },
   },
   // The DB 180 is the DR 230 / CD 372 (Skoda 66E); vlakosimdb draws both on the 372 body.
   db180: {
-    title: "DB 180 008, red, white line",
+    title: "DB 180",
     source: "db_180",
     numberSource: ILLUSTRATIVE,
     livery: {
@@ -238,7 +238,7 @@ export const CD263_LIVERIES = {
     },
   },
   dbAg180: {
-    title: "DB AG 180 014, orient red, white line",
+    title: "DB AG 180",
     source: "db ag_180",
     numberSource: ILLUSTRATIVE,
     livery: {

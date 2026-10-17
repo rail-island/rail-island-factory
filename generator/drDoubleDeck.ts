@@ -24,8 +24,8 @@ export const DR_DOUBLE_DECK_PARAMS: readonly ParamSpec[] = [
     title: "Variant",
     default: "coach",
     values: [
-      { value: "coach", title: "2nd class coach (DR S-Bahn Berlin)" },
-      { value: "drivingTrailer", title: "DBmq driving trailer (DR S-Bahn Berlin S)" },
+      { value: "coach", title: "Coach" },
+      { value: "drivingTrailer", title: "Driving trailer" },
     ],
   },
 ];

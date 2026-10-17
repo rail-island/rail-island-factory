@@ -24,9 +24,9 @@ export type Ice1Unit = "powerCar" | "coach" | "restaurant";
 
 export const ICE1_PARAMS: readonly ParamSpec[] = [
   enumParam("unit", "Car", {
-    powerCar: "Power car 401 (cab, pantograph)",
-    coach: "Intermediate coach 802",
-    restaurant: "Restaurant car 804 (raised roof)",
+    powerCar: "Power car",
+    coach: "Coach",
+    restaurant: "Restaurant car",
   }),
 ];
 

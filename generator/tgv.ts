@@ -44,19 +44,19 @@ export const TGV_MAX_CARS = 6;
 export const TGV_PARAMS: readonly ParamSpec[] = [
   {
     ...enumParam("unit", "Car", {
-      powerCar: "Power car (cab, pantograph)",
-      set: "Trailer set (articulated coaches on shared Jacobs bogies)",
+      powerCar: "Power car",
+      set: "Trailer set",
     }),
     // the single end and intermediate coaches of before the set: each a one-car set now
     retired: { endCoach: { unit: "set", cars: "1" }, coach: { unit: "set", cars: "1" } },
   },
   {
-    ...enumParam("cars", "Trailer cars", Object.fromEntries(Array.from({ length: TGV_MAX_CARS }, (_, i) => [String(i + 1), i === 0 ? "1 car (its own bogie at each end)" : `${i + 1} cars`]))),
+    ...enumParam("cars", "Trailer cars", Object.fromEntries(Array.from({ length: TGV_MAX_CARS }, (_, i) => [String(i + 1), i === 0 ? "1 car" : `${i + 1} cars`]))),
     when: { name: "unit", values: ["set"] },
   },
   enumParam("livery", "Livery", {
-    pse: "TGV Sud-Est: orange, white and grey (vlakosimdb tgv_loco, tgv_vag#1, tgv_vag#2)",
-    atlantique: "TGV Atlantique: silver and blue (vlakosimdb tgv_at_loco, tgv_at_ch1, tgv_at_ch2)",
+    pse: "TGV Sud-Est",
+    atlantique: "TGV Atlantique",
   }),
 ];
 

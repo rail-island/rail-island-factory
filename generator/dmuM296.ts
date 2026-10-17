@@ -25,9 +25,9 @@ export type M296Variant = "m296" | "cd853" | "cd854";
 
 export const M296_PARAMS: readonly ParamSpec[] = [
   enumParam("variant", "Vehicle", {
-    m296: "CSD M 296.1 (1969)",
-    cd853: "CD 853 (renumbered, 1988)",
-    cd854: "CD 854 (rebuilt, 1997)",
+    m296: "M 296.1",
+    cd853: "CD 853",
+    cd854: "CD 854",
   }),
 ];
 

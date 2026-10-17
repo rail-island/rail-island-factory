@@ -25,10 +25,10 @@ export type PendolinoUnit = "endCar" | "car683" | "car685" | "car686";
 
 export const CD680_PARAMS: readonly ParamSpec[] = [
   enumParam("unit", "Car", {
-    endCar: "End car 681 (cab, pantograph)",
-    car683: "Intermediate car 683 (kitchen section)",
-    car685: "Intermediate car 685 (pantograph)",
-    car686: "Intermediate car 686",
+    endCar: "End car",
+    car683: "Car 683",
+    car685: "Car 685",
+    car686: "Car 686",
   }),
 ];
 

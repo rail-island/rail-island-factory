@@ -27,8 +27,8 @@ export type Unit451 = "motorCar" | "trailer";
 
 export const CD451_PARAMS: readonly ParamSpec[] = [
   enumParam("unit", "Car", {
-    motorCar: "Motor car 451 (cab, pantograph)",
-    trailer: "Trailer 051",
+    motorCar: "Motor car",
+    trailer: "Trailer",
   }),
 ];
 

@@ -10,7 +10,7 @@ const palette:Record<string,MaterialSpec>={
 export const PALACE_PARAMS:ParamSpec[]=[
   {name:'walls',title:'Parapets',default:'balustrade',values:[{value:'balustrade',title:'Balustraded'},{value:'crenellated',title:'Crenellated'}]},
   {name:'roof',title:'Roof profile',default:'onion',values:[{value:'onion',title:'Onion domes'},{value:'conical',title:'Conical spires'}]},
-  {name:'towers',title:'Corner towers',default:'square',values:[{value:'square',title:'Square pavilions'},{value:'round',title:'Round turrets'}]},
+  {name:'towers',title:'Corner towers',default:'square',values:[{value:'square',title:'Square'},{value:'round',title:'Round'}]},
   {name:'windows',title:'Windows',default:'arched',values:[{value:'arched',title:'Arched'},{value:'rectangular',title:'Rectangular'}]},
 ];
 // Open frames: relief is built around the glazing rather than stacked flat panels.

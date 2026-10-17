@@ -61,7 +61,7 @@ const c = (color: string, roughness = 0.6): MaterialSpec => ({ color, roughness 
 
 export const CD150_LIVERIES = {
   cd150: {
-    title: "CD 150 222, cream and green",
+    title: "CD 150",
     source: "cd_150",
     number: CD150_NUMBER,
     numberSource: "a CD-era 150.2 unit; the native plate does not resolve digits",
@@ -72,7 +72,7 @@ export const CD150_LIVERIES = {
     frontEmblem: true,
   },
   cd151: {
-    title: "CD 151 012, cream and dark green",
+    title: "CD 151",
     source: "cd_151",
     number: runningNumber("151", "012"),
     numberSource: "illustrative, a unit of the class",
@@ -84,7 +84,7 @@ export const CD150_LIVERIES = {
     frontEmblem: true,
   },
   cd151Cez: {
-    title: "CD 151 CEZ, blue advertising livery",
+    title: "CD 151 CEZ",
     source: "cd_151_cez",
     number: runningNumber("151", "019"),
     numberSource: "illustrative; the advertising artwork itself is not modelled",
@@ -95,7 +95,7 @@ export const CD150_LIVERIES = {
     frontEmblem: true,
   },
   zsr350: {
-    title: "ZSR 350 016, cream and blue, yellow cab stripe",
+    title: "ZSR 350",
     source: "zsr_350",
     number: runningNumber("350", "016"),
     numberSource: "illustrative, a unit of the class",
@@ -108,7 +108,7 @@ export const CD150_LIVERIES = {
     frontEmblem: false,
   },
   zsr350No001: {
-    title: "ZSR 350 001, pearl and dark grey, yellow cab ends",
+    title: "ZSR 350 001",
     source: "zsr_350_001",
     number: runningNumber("350", "001"),
     numberSource: "the vlakosimdb model's name",
@@ -121,7 +121,7 @@ export const CD150_LIVERIES = {
     frontEmblem: false,
   },
   zsr350No002: {
-    title: "ZSR 350 002, red and white",
+    title: "ZSR 350 002",
     source: "zsr_350_002",
     number: runningNumber("350", "002"),
     numberSource: "the vlakosimdb model's name",
@@ -133,7 +133,7 @@ export const CD150_LIVERIES = {
     frontEmblem: false,
   },
   zsr350No003: {
-    title: "ZSR 350 003, blue, yellow band",
+    title: "ZSR 350 003",
     source: "zsr_350_003",
     number: runningNumber("350", "003"),
     numberSource: "the vlakosimdb model's name",
@@ -145,7 +145,7 @@ export const CD150_LIVERIES = {
     frontEmblem: false,
   },
   zsr350No004: {
-    title: "ZSR 350 004, dark blue, white cab ends",
+    title: "ZSR 350 004",
     source: "zsr_350_004",
     number: runningNumber("350", "004"),
     numberSource: "the vlakosimdb model's name",

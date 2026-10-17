@@ -74,7 +74,7 @@ const face = (bands: Band[], hood: string): Band[] => [...bands, [2.5, 3.62, "ri
 
 export const CD230_LIVERIES = {
   cd230: {
-    title: "CD 230 025, red and yellow",
+    title: "CD 230",
     source: "cd_230",
     number: runningNumber("230", "025"),
     numberSource: "230 025-9, photographed in this livery (photo-230-025-front.jpg)",
@@ -90,7 +90,7 @@ export const CD230_LIVERIES = {
     roofBox: false,
   },
   cd240: {
-    title: "CD 240 048, cream and red, yellow band",
+    title: "CD 240",
     source: "cd_240",
     number: runningNumber("240", "048"),
     numberSource: "illustrative, a unit of the class; the native plate does not resolve digits",
@@ -106,7 +106,7 @@ export const CD230_LIVERIES = {
     roofBox: true,
   },
   cd240No047: {
-    title: "CD 240 047, red and cream, red and white stripes",
+    title: "CD 240 047",
     source: "cd_240_047",
     number: runningNumber("240", "047"),
     numberSource: "the vlakosimdb model's name",
@@ -123,7 +123,7 @@ export const CD230_LIVERIES = {
     roofBox: true,
   },
   cd340: {
-    title: "CD 340 062, blue and cream",
+    title: "CD 340",
     source: "cd_340",
     number: runningNumber("340", "062"),
     numberSource: "340 062-9, photographed in this livery (photo-340-062-three-quarter.jpg)",
@@ -145,7 +145,7 @@ export const CD230_LIVERIES = {
   // BMP is 157 by 57 pixels on the 17 by 6 m canvas, row r spans
   // 6.0 - (r + 1) * 0.105 to 6.0 - r * 0.105 m.
   cd242: {
-    title: "CD 242 214, cream and red, yellow nose band",
+    title: "CD 242",
     source: "cd_242",
     number: runningNumber("242", "214"),
     numberSource: "242 214-5, photographed in this livery (photo-242-214-side.jpg)",

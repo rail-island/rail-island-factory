@@ -37,7 +37,7 @@ const C = (hex: string) => paint(hex);
 
 export const CD781_LIVERIES = {
   cd781: {
-    title: "CD 781, red with the yellow band",
+    title: "CD 781",
     source: "cd_781",
     number: runningNumber("781", "529"),
     numberSource: "781 529-3, photographed in red (photo-781-529-side.jpg); the native plate does not resolve digits",
@@ -51,7 +51,7 @@ export const CD781_LIVERIES = {
     roof: "roofGrey",
   },
   cd781No462: {
-    title: "CD 781 462, red with the cream sweep",
+    title: "CD 781 462",
     source: "cd_781_462",
     number: runningNumber("781", "462"),
     numberSource: "the vlakosimdb model's name",

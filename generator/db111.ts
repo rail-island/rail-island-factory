@@ -34,7 +34,7 @@ interface Livery {
 
 export const DB111_LIVERIES = {
   db111: {
-    title: "DB 111 024, verkehrsrot",
+    title: "Traffic red",
     source: "db_111",
     number: runningNumber("111", "024"),
     numberSource: "illustrative, a unit of the class (most ended in verkehrsrot)",
@@ -49,7 +49,7 @@ export const DB111_LIVERIES = {
     ],
   },
   db111Bb: {
-    title: "DB 111 174, ozeanblau-beige",
+    title: "Ocean blue",
     source: "db_111_bb",
     number: runningNumber("111", "174"),
     numberSource: "photo-111-174-blue-beige.jpg",
@@ -59,7 +59,7 @@ export const DB111_LIVERIES = {
     end: [[1.2, 1.6, "grey"], [1.6, 2.1, "blue"], [2.1, 4.0, "beige"]],
   },
   db111S: {
-    title: "DB 111 143, S-Bahn orange and white",
+    title: "S-Bahn",
     source: "db_111_s",
     number: runningNumber("111", "143"),
     numberSource: "illustrative, one of the S-Bahn Rhein-Ruhr units 111 111-188",
