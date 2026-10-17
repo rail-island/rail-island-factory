@@ -69,6 +69,12 @@ describe("LOD kit shell", () => {
     expect(flat.triangleCount()).toBeLessThan(vee.triangleCount());
   });
 
+  it("closes a vee-nosed shell to a ridge without NaN", () => {
+    const m = new MeshBuilder(PALETTE);
+    lodShell(m, { ...SHELL, hw: [[1, 1.5], [3.6, 1.5], [4.2, 0]], setback: [[1, 0.8], [4.2, 0.8]] });
+    expect(faces(m).every((f) => f.p.flat().every(Number.isFinite))).toBe(true);
+  });
+
   it("paints the cab sections in their own bands", () => {
     const m = new MeshBuilder(PALETTE);
     lodShell(m, { ...SHELL, cab: { x: 6, side: [[1, 3.6, "white"], [3.6, 4.2, "grey"]] } });

@@ -14,6 +14,7 @@ import { resolveParams } from "./design.ts";
 import type { MeshBuilder } from "./meshBuilder.ts";
 import { buildLoco, type LocoSpec } from "./steamLoco.ts";
 import { mirrored, type Pt, type Steam } from "./steamParts.ts";
+import { steamLocoLod } from "./lodSteam.ts";
 
 /** The catalog fields of the steam locomotives and tenders. */
 export const STEAM_CATALOG: CatalogFields = {
@@ -790,12 +791,43 @@ export function csdM112(): MeshBuilder {
   return buildLoco(csdM112Spec());
 }
 
+// the distant models (lodSteam.ts): one adapter reading each design's spec
+export function csd433Lod(params?: ParamValues): MeshBuilder {
+  return steamLocoLod(steamSpec("proc-vehicle-csd-433-0", params));
+}
+export function csd456Lod(params?: ParamValues): MeshBuilder {
+  return steamLocoLod(steamSpec("proc-vehicle-csd-456-0", params));
+}
+export function csd475Lod(params?: ParamValues): MeshBuilder {
+  return steamLocoLod(steamSpec("proc-vehicle-csd-475-1", params));
+}
+export function csd477Lod(params?: ParamValues): MeshBuilder {
+  return steamLocoLod(steamSpec("proc-vehicle-csd-477-0", params));
+}
+export function csd498Lod(params?: ParamValues): MeshBuilder {
+  return steamLocoLod(steamSpec("proc-vehicle-csd-498-1", params));
+}
+export function csd556Lod(params?: ParamValues): MeshBuilder {
+  return steamLocoLod(steamSpec("proc-vehicle-csd-556-0", params));
+}
+export function csd636Lod(params?: ParamValues): MeshBuilder {
+  return steamLocoLod(steamSpec("proc-vehicle-csd-636", params));
+}
+export function csd386Lod(params?: ParamValues): MeshBuilder {
+  return steamLocoLod(steamSpec("proc-vehicle-csd-386", params));
+}
+export function csdM112Lod(params?: ParamValues): MeshBuilder {
+  return steamLocoLod(steamSpec("proc-vehicle-csd-m112", params));
+}
+
 /** Every steam design: id, title, builder, parameters and its reference folder. */
 export interface SteamDesign {
   id: string;
   title: string;
   folder: string;
   build: (params?: ParamValues) => MeshBuilder;
+  /** Its distant model (lodSteam.ts). */
+  buildLod: (params?: ParamValues) => MeshBuilder;
   params?: readonly ParamSpec[];
   /** A railcar (powered, carries passengers): filed under the units, not the locomotives. */
   railcar?: boolean;
@@ -870,15 +902,15 @@ const CSD_386_GAME: GameProperties = {
 };
 
 export const STEAM_DESIGNS: readonly SteamDesign[] = [
-  { id: "proc-vehicle-csd-433-0", game: CSD_433_0_GAME, title: "CSD 433.0", folder: "steam-433-0", build: csd433, params: CSD433_PARAMS },
-  { id: "proc-vehicle-csd-456-0", game: { weight: 135, power: 1550, maxspeed: 100, accel: null }, title: "CSD 456.0", folder: "steam-456-0", build: csd456 },
-  { id: "proc-vehicle-csd-475-1", game: CSD_475_1_GAME, title: "CSD 475.1", folder: "steam-475-1", build: csd475, params: [UNIT_PARAM] },
-  { id: "proc-vehicle-csd-477-0", game: { weight: 129, power: 1540, maxspeed: 100, accel: null }, title: "CSD 477.0", folder: "steam-477-0", build: csd477 },
-  { id: "proc-vehicle-csd-498-1", game: CSD_498_1_GAME, title: "CSD 498.1", folder: "steam-498-1", build: csd498, params: [UNIT_PARAM] },
-  { id: "proc-vehicle-csd-556-0", game: CSD_556_0_GAME, title: "CSD 556.0", folder: "steam-556-0", build: csd556, params: [UNIT_PARAM] },
-  { id: "proc-vehicle-csd-636", game: CSD_636_GAME, title: "CSD 636 Mallet", folder: "steam-636", build: csd636, params: [UNIT_PARAM] },
-  { id: "proc-vehicle-csd-386", game: CSD_386_GAME, title: "CSD 386 Streamlined", folder: "steam-386", build: csd386, params: [UNIT_PARAM] },
-  { id: "proc-vehicle-csd-m112", game: { weight: 30, power: 120, maxspeed: 75, accel: null }, title: "CSD M 112.0 Steam Railcar", folder: "steam-m112", build: csdM112, railcar: true },
+  { id: "proc-vehicle-csd-433-0", game: CSD_433_0_GAME, title: "CSD 433.0", folder: "steam-433-0", build: csd433, buildLod: csd433Lod, params: CSD433_PARAMS },
+  { id: "proc-vehicle-csd-456-0", game: { weight: 135, power: 1550, maxspeed: 100, accel: null }, title: "CSD 456.0", folder: "steam-456-0", build: csd456, buildLod: csd456Lod },
+  { id: "proc-vehicle-csd-475-1", game: CSD_475_1_GAME, title: "CSD 475.1", folder: "steam-475-1", build: csd475, buildLod: csd475Lod, params: [UNIT_PARAM] },
+  { id: "proc-vehicle-csd-477-0", game: { weight: 129, power: 1540, maxspeed: 100, accel: null }, title: "CSD 477.0", folder: "steam-477-0", build: csd477, buildLod: csd477Lod },
+  { id: "proc-vehicle-csd-498-1", game: CSD_498_1_GAME, title: "CSD 498.1", folder: "steam-498-1", build: csd498, buildLod: csd498Lod, params: [UNIT_PARAM] },
+  { id: "proc-vehicle-csd-556-0", game: CSD_556_0_GAME, title: "CSD 556.0", folder: "steam-556-0", build: csd556, buildLod: csd556Lod, params: [UNIT_PARAM] },
+  { id: "proc-vehicle-csd-636", game: CSD_636_GAME, title: "CSD 636 Mallet", folder: "steam-636", build: csd636, buildLod: csd636Lod, params: [UNIT_PARAM] },
+  { id: "proc-vehicle-csd-386", game: CSD_386_GAME, title: "CSD 386 Streamlined", folder: "steam-386", build: csd386, buildLod: csd386Lod, params: [UNIT_PARAM] },
+  { id: "proc-vehicle-csd-m112", game: { weight: 30, power: 120, maxspeed: 75, accel: null }, title: "CSD M 112.0 Steam Railcar", folder: "steam-m112", build: csdM112, buildLod: csdM112Lod, railcar: true },
 ];
 
 /**
@@ -886,7 +918,7 @@ export const STEAM_DESIGNS: readonly SteamDesign[] = [
  * module, so the standalone JS models of the other vehicles do not carry it.
  */
 export const STEAM_LOCOS: ProceduralDesign[] = STEAM_DESIGNS.map((d) => ({
-  id: d.id, title: d.title, build: d.build, game: d.game, catalog: d.railcar ? STEAM_RAILCAR_CATALOG : STEAM_CATALOG, references: d.folder, ...(d.params ? { params: d.params } : {}),
+  id: d.id, title: d.title, build: d.build, buildLod: d.buildLod, game: d.game, catalog: d.railcar ? STEAM_RAILCAR_CATALOG : STEAM_CATALOG, references: d.folder, ...(d.params ? { params: d.params } : {}),
 }));
 
 /** The spec a steam design builds for the given parameters (tests and the comparison read it). */

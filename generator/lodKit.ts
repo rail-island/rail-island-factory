@@ -369,7 +369,9 @@ export function lodShell(m: MeshBuilder, sh: LodShell, tol = 0, flat = false): v
         for (const [a, b] of spans) {
           const pt = (u: number | null, y: number, side: number): Vec3 => {
             const z = u === null ? side * hw(y) : Math.max(-hw(y), Math.min(hw(y), u));
-            return [xc + e * (tip(y) - (sb(y) * Math.abs(z)) / hw(y)), y, z];
+            // where the section closes to a ridge (hw = 0) the vee has met its corner
+            const w = hw(y);
+            return [xc + e * (tip(y) - (w > 1e-9 ? (sb(y) * Math.abs(z)) / w : sb(y))), y, z];
           };
           const q = [pt(a, ya, -1), pt(b, ya, 1), pt(b, yb, 1), pt(a, yb, -1)];
           lodPolygon(m, mat, [q[0]!, q[1]!, q[2]!], [e, 0, 0]);
