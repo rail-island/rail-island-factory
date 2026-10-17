@@ -15,7 +15,7 @@ const C = (hex: string) => paint(hex);
 
 export const CD749_LIVERIES = {
   cd749: {
-    title: "CD 749, red and grey",
+    title: "CD 749",
     source: "cd_749",
     body: "bardotka",
     number: runningNumber("749", "107"),
@@ -32,7 +32,7 @@ export const CD749_LIVERIES = {
     emblem: "black",
   },
   cd749No264: {
-    title: "CD 749 264, green and cream",
+    title: "CD 749 264",
     source: "cd_749",
     body: "bardotka",
     number: runningNumber("749", "264"),
@@ -51,7 +51,7 @@ export const CD749_LIVERIES = {
     emblem: "black",
   },
   cd749No121: {
-    title: "CD 749 121, blue, red and cream",
+    title: "CD 749 121",
     source: "cd_749",
     body: "bardotka",
     number: runningNumber("749", "121"),

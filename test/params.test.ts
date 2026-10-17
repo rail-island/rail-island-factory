@@ -78,6 +78,9 @@ describe("parametric models", () => {
         expect(p.values.length).toBeGreaterThanOrEqual(2);
         expect(new Set(p.values.map((v) => v.value)).size).toBe(p.values.length);
         for (const v of p.values) expect(v.value).toMatch(/^[A-Za-z0-9]+$/);
+        // the game shows each value as a button: a short label, not a description
+        for (const v of p.values) expect(v.title.length, `${d.id} ${p.name}=${v.value}`).toBeLessThanOrEqual(16);
+        expect(new Set(p.values.map((v) => v.title)).size, `${d.id} ${p.name} titles`).toBe(p.values.length);
         expect(p.values.map((v) => v.value)).toContain(p.default);
       }
       for (const name of d.finishParams ?? []) expect(names).toContain(name);

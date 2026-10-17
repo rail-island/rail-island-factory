@@ -62,7 +62,7 @@ const VIAMONT_END: Band[] = [yb(1.8, 2.1, "black"), yb(2.1, 3.4, "body"), yb(3.4
 
 export const CD742_VARIANTS = {
   viamont742: {
-    title: "Viamont 742 507, yellow and black",
+    title: "Viamont 742",
     source: "viamont_742.507",
     number: runningNumber("742", "507"),
     numberSource: "the vlakosimdb model's name; the check digit by the 1988 scheme",
@@ -70,7 +70,7 @@ export const CD742_VARIANTS = {
     plough: ["hazardBlack", "hazardYellow"],
   },
   viamont740: {
-    title: "Viamont 740 627 (T 448.0, low short hood)",
+    title: "Viamont 740",
     source: "viamont_740.627",
     number: runningNumber("740", "627"),
     numberSource: "the vlakosimdb model's name; the check digit by the 1988 scheme",
@@ -78,7 +78,7 @@ export const CD742_VARIANTS = {
     plough: ["hazardBlack", "hazardYellow"],
   },
   cd743: {
-    title: "CD 743 002 (T 466.3), blue and white",
+    title: "CD 743",
     source: "cd_743_002",
     number: runningNumber("743", "002"),
     numberSource: "the vlakosimdb model's name; the check digit by the 1988 scheme",

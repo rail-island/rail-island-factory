@@ -37,20 +37,20 @@ export interface KarosaVariant {
 }
 
 export const KAROSA_SHORT: readonly KarosaVariant[] = [
-  { value: "b731", title: "B 731 (city, three doors)", source: "bus_kar_b731", series: "700", livery: "red", doors: [[0.5, 1.5], [5.2, 6.6], [9.3, 10.7]] },
-  { value: "b732", title: "B 732 (city, three doors)", source: "bus_kar_b732", series: "700", livery: "red", doors: [[0.5, 1.5], [5.2, 6.7], [9.4, 10.7]] },
-  { value: "c734", title: "C 734 (suburban, two doors)", source: "bus_kar_c734#1", series: "700", livery: "blue", doors: [[0.5, 1.5], [6.2, 7.3]] },
-  { value: "lc735", title: "LC 735 (intercity coach, two doors)", source: "bus_kar_lc735#1", series: "700", livery: "orange", doors: [[0.5, 1.5], [9.2, 10.0, 1]] },
-  { value: "b931", title: "B 931 (city, three doors)", source: "bus_kar_b931", series: "900", livery: "red", doors: [[0.6, 1.6], [5.3, 6.7], [9.4, 10.8]], greyBumpers: true },
-  { value: "b931e", title: "B 931 E (city, three doors)", source: "bus_kar_b931e", series: "900", livery: "red", doors: [[0.6, 1.6], [5.3, 6.7], [9.4, 10.8]] },
-  { value: "b951e", title: "B 951 E (city, three doors)", source: "bus_kar_b951e", series: "951", livery: "red", doors: [[0.6, 1.6], [5.3, 6.7], [9.4, 10.8]] },
+  { value: "b731", title: "B 731", source: "bus_kar_b731", series: "700", livery: "red", doors: [[0.5, 1.5], [5.2, 6.6], [9.3, 10.7]] },
+  { value: "b732", title: "B 732", source: "bus_kar_b732", series: "700", livery: "red", doors: [[0.5, 1.5], [5.2, 6.7], [9.4, 10.7]] },
+  { value: "c734", title: "C 734", source: "bus_kar_c734#1", series: "700", livery: "blue", doors: [[0.5, 1.5], [6.2, 7.3]] },
+  { value: "lc735", title: "LC 735", source: "bus_kar_lc735#1", series: "700", livery: "orange", doors: [[0.5, 1.5], [9.2, 10.0, 1]] },
+  { value: "b931", title: "B 931", source: "bus_kar_b931", series: "900", livery: "red", doors: [[0.6, 1.6], [5.3, 6.7], [9.4, 10.8]], greyBumpers: true },
+  { value: "b931e", title: "B 931 E", source: "bus_kar_b931e", series: "900", livery: "red", doors: [[0.6, 1.6], [5.3, 6.7], [9.4, 10.8]] },
+  { value: "b951e", title: "B 951 E", source: "bus_kar_b951e", series: "951", livery: "red", doors: [[0.6, 1.6], [5.3, 6.7], [9.4, 10.8]] },
 ];
 
 export const KAROSA_LONG: readonly KarosaVariant[] = [
-  { value: "b741", title: "B 741 (articulated, four doors)", source: "bus_kar_b741", series: "700", livery: "red", doors: [[0.5, 1.5], [5.3, 6.7], [12.0, 13.4], [15.4, 16.6]] },
-  { value: "b941", title: "B 941 (articulated, four doors)", source: "bus_kar_b941", series: "900", livery: "red", doors: [[0.5, 1.6], [5.2, 6.7], [11.9, 13.4], [15.3, 16.6]] },
-  { value: "b941e", title: "B 941 E (articulated, four doors)", source: "bus_kar_b941e", series: "900", livery: "red", doors: [[0.5, 1.6], [5.2, 6.7], [11.9, 13.4], [15.3, 16.6]], greyRoof: true },
-  { value: "b961", title: "B 961 (articulated, four doors)", source: "bus_kar_b961", series: "951", livery: "red", doors: [[0.5, 1.6], [5.2, 6.7], [11.9, 13.4], [15.3, 16.6]] },
+  { value: "b741", title: "B 741", source: "bus_kar_b741", series: "700", livery: "red", doors: [[0.5, 1.5], [5.3, 6.7], [12.0, 13.4], [15.4, 16.6]] },
+  { value: "b941", title: "B 941", source: "bus_kar_b941", series: "900", livery: "red", doors: [[0.5, 1.6], [5.2, 6.7], [11.9, 13.4], [15.3, 16.6]] },
+  { value: "b941e", title: "B 941 E", source: "bus_kar_b941e", series: "900", livery: "red", doors: [[0.5, 1.6], [5.2, 6.7], [11.9, 13.4], [15.3, 16.6]], greyRoof: true },
+  { value: "b961", title: "B 961", source: "bus_kar_b961", series: "951", livery: "red", doors: [[0.5, 1.6], [5.2, 6.7], [11.9, 13.4], [15.3, 16.6]] },
 ];
 
 const variantParam = (variants: readonly KarosaVariant[], def: string): ParamSpec => ({

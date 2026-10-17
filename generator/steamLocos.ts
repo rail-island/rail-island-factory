@@ -64,8 +64,8 @@ export const CSD433_PARAMS: readonly ParamSpec[] = [
     title: "Livery",
     default: "black",
     values: [
-      { value: "black", title: "Black (csd_433_0)" },
-      { value: "redLining", title: "Black with red lining (csd_433_0#2)" },
+      { value: "black", title: "Black" },
+      { value: "redLining", title: "Red lining" },
     ],
   },
 ];

@@ -238,8 +238,8 @@ export const CLASSIC_GREEN_PARAMS: readonly ParamSpec[] = [
     title: "Variant",
     default: "classA",
     values: [
-      { value: "classA", title: "Class A (1st class, 9 compartments)" },
-      { value: "classB", title: "Class B (2nd class, 10 compartments)" },
+      { value: "classA", title: "Class A" },
+      { value: "classB", title: "Class B" },
     ],
   },
 ];

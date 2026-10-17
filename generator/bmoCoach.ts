@@ -27,10 +27,10 @@ export const BMO_PARAMS: readonly ParamSpec[] = [
     title: "Livery",
     default: "csd",
     values: [
-      { value: "csd", title: "CSD blue and beige (CSD Bmo)" },
-      { value: "cdBlue", title: "CD blue, grey doors (CD Bmo#1)" },
-      { value: "cdBlueGrey", title: "CD blue and grey, blue doors (CD Bmo#2)" },
-      { value: "cdRedDoors", title: "CD blue and grey, red doors (CD Bmo#3)" },
+      { value: "csd", title: "CSD" },
+      { value: "cdBlue", title: "CD blue" },
+      { value: "cdBlueGrey", title: "CD blue-grey" },
+      { value: "cdRedDoors", title: "CD red doors" },
     ],
   },
 ];

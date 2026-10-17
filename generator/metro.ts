@@ -28,8 +28,8 @@ export const METRO_PARAMS: readonly ParamSpec[] = [{
   name: "unit",
   title: "Unit",
   values: [
-    { value: "headCar", title: "Head car (81-717, with a cab)" },
-    { value: "middleCar", title: "Middle car (81-714)" },
+    { value: "headCar", title: "Head car" },
+    { value: "middleCar", title: "Middle car" },
   ],
   default: "headCar",
 }];

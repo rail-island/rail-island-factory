@@ -43,7 +43,7 @@ export interface Cd110Livery {
 const BODY: Band = [1.4, 3.3, "body"];
 export const CD110_LIVERIES = {
   cd110: {
-    title: "CD 110 046, red, cream cab",
+    title: "CD 110",
     source: "cd_110 046-0",
     number: runningNumber("110", "046"),
     numberSource: "the vlakosimdb model's name",
@@ -55,7 +55,7 @@ export const CD110_LIVERIES = {
     acRoof: false,
   },
   cd111: {
-    title: "CD 111 006, green, orange ends",
+    title: "CD 111",
     source: "cd_111",
     number: runningNumber("111", "006"),
     numberSource: "illustrative, a unit of the class (photographed as 111 006-3); the native plate does not resolve digits",
@@ -67,7 +67,7 @@ export const CD110_LIVERIES = {
     acRoof: false,
   },
   cd210: {
-    title: "CD 210 021, blue, cream band",
+    title: "CD 210",
     source: "cd_210",
     number: runningNumber("210", "021"),
     numberSource: "illustrative, a unit of the class (photographed as 210 021 in Plzen); the native plate does not resolve digits",

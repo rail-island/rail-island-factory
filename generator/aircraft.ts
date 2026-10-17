@@ -940,7 +940,7 @@ function unionFlag(f0: number, f1: number, y0: number, y1: number, white: string
 
 /** The A380's liveries; the first, the reference's own neutral scheme, is the default. */
 const A380_LIVERIES: Record<string, Livery> = {
-  neutral: { title: "Neutral (white, navy fin)", colors: {}, fin: [[0, "navy"]], cowl: "white", winglet: "alloy" },
+  neutral: { title: "Neutral", colors: {}, fin: [[0, "navy"]], cowl: "white", winglet: "alloy" },
   emirates: {
     // the UAE flag on the fin: green, white and black, the red bar at its leading edge
     title: "Emirates",
@@ -952,7 +952,7 @@ const A380_LIVERIES: Record<string, Livery> = {
   },
   singapore: {
     // the blue fin with the yellow bird, the blue and yellow line along the lower fuselage
-    title: "Singapore Airlines",
+    title: "Singapore",
     colors: { sqBlue: { color: "#1d2f6f", roughness: 0.4 }, sqYellow: { color: "#f5b335", roughness: 0.4 } },
     stripes: [
       { mat: "sqBlue", a0: -22, a1: 31, y0: 4.2, y1: 4.6 },
@@ -1266,7 +1266,7 @@ const B737_EXITS = [0.25, -0.75];
 
 /** The 737's liveries; the first, the neutral scheme of the model it replaced, is the default. */
 const B737_LIVERIES: Record<string, Livery> = {
-  neutral: { title: "Neutral (white, navy fin)", colors: {}, fin: [[0, "navy"]], cowl: "white", winglet: "navy" },
+  neutral: { title: "Neutral", colors: {}, fin: [[0, "navy"]], cowl: "white", winglet: "navy" },
   ryanair: {
     // white over a dark blue belly, the blue fin with the yellow harp, blue engines
     title: "Ryanair",
@@ -1287,7 +1287,7 @@ const B737_LIVERIES: Record<string, Livery> = {
   southwest: {
     // the Heart scheme: bold blue over a silver belly, the sunrise yellow and warm red
     // stripes between, the same three colours across the fin
-    title: "Southwest Airlines",
+    title: "Southwest",
     colors: {
       wnBlue: { color: "#304cb2", roughness: 0.4 }, wnRed: { color: "#c8102e", roughness: 0.4 },
       wnYellow: { color: "#ffbf27", roughness: 0.4 }, wnSilver: { color: "#c3c8ce", metallic: 0.3, roughness: 0.4 },
@@ -1300,7 +1300,7 @@ const B737_LIVERIES: Record<string, Livery> = {
   united: {
     // the 2019 scheme: white over a runway grey belly with the rhapsody blue swoop,
     // the blue fin with its lighter globe, blue engines and winglets
-    title: "United Airlines",
+    title: "United",
     colors: {
       uaBlue: { color: "#0033a0", roughness: 0.4 }, uaSky: { color: "#1f6fc5", roughness: 0.4 },
       uaGrey: { color: "#8e959c", roughness: 0.45 }, uaRhapsody: { color: "#0c2340", roughness: 0.4 },
@@ -1335,7 +1335,7 @@ const B737_LIVERIES: Record<string, Livery> = {
   },
   turkish: {
     // white with the red fin and the white roundel with its red bird
-    title: "Turkish Airlines",
+    title: "Turkish",
     colors: { tkRed: { color: "#c8102e", roughness: 0.4 }, tkGrey: { color: "#9aa0a6", roughness: 0.45 } },
     skin: (s) => (s < -0.75 ? "tkGrey" : "white"),
     fin: [[0, "tkRed"]],
@@ -2043,14 +2043,14 @@ const MD11_LIVERIES: Record<string, Livery> = {
     finArt: [{ mat: "white", polys: [[[0.25, 15], [0.75, 15], [0.75, 15.3], [0.25, 15.3]], [[0.3, 15.6], [0.7, 15.6], [0.78, 16.7], [0.5, 16.1], [0.22, 16.7]]] }],
   },
   swissair: {
-    title: "Swissair (classic)", colors: { swissRed: { color: "#d71920", roughness: 0.4 } },
+    title: "Swissair", colors: { swissRed: { color: "#d71920", roughness: 0.4 } },
     skin: (s) => (s < -0.5 ? "alloy" : "white"),
     stripes: [{ mat: "swissRed", a0: -27, a1: 26, y0: 5.4, y1: 5.72 }],
     fin: [[0, "swissRed"]], cowl: "alloy", winglet: "swissRed",
     finArt: [{ mat: "white", polys: [[[0.4, 13.5], [0.6, 13.5], [0.6, 16.6], [0.4, 16.6]], [[0.22, 14.6], [0.78, 14.6], [0.78, 15.5], [0.22, 15.5]]] }],
   },
   fedex: {
-    title: "FedEx Express (freighter)", colors: { fedexPurple: { color: "#4d148c", roughness: 0.4 }, fedexOrange: { color: "#ff6600", roughness: 0.4 } },
+    title: "FedEx", colors: { fedexPurple: { color: "#4d148c", roughness: 0.4 }, fedexOrange: { color: "#ff6600", roughness: 0.4 } },
     fin: [[0, "fedexPurple"]], cowl: "white", winglet: "fedexPurple",
     finArt: [{ mat: "fedexOrange", polys: [[[0.28, 13.6], [0.72, 13.6], [0.72, 14.4], [0.28, 14.4]]] }],
   },

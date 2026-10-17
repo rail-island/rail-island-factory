@@ -40,7 +40,7 @@ const C = (hex: string) => paint(hex);
 
 export const CD771_LIVERIES = {
   cd771: {
-    title: "CD 771, green with the white band",
+    title: "CD 771",
     source: "cd 771",
     number: runningNumber("771", "099"),
     numberSource: "771 099-9, a unit photographed in green (photo-771-099-three-quarter.jpg); the native plate does not resolve digits",
@@ -54,7 +54,7 @@ export const CD771_LIVERIES = {
     rails: "handrail",
   },
   cd771No235: {
-    title: "CD 771 235, green with the cream band",
+    title: "CD 771 235",
     source: "cd_771.235",
     number: runningNumber("771", "235"),
     numberSource: "the vlakosimdb model's name",
@@ -68,7 +68,7 @@ export const CD771_LIVERIES = {
     rails: "handrail",
   },
   cd771No421: {
-    title: "CD 771 421, red with the grey roof",
+    title: "CD 771 421",
     source: "cd_771.421",
     number: runningNumber("771", "421"),
     numberSource: "the vlakosimdb model's name",

@@ -26,10 +26,10 @@ export type MdmotUnit = "motorCar" | "trailerAx" | "trailerBx" | "drivingTrailer
 
 export const MDMOT_PARAMS: readonly ParamSpec[] = [
   enumParam("unit", "Car", {
-    motorCar: "Motor car MDmot (two cabs, baggage room)",
-    trailerAx: "First-class trailer Ax",
-    trailerBx: "Second-class trailer Bx",
-    drivingTrailer: "Driving trailer Btx (cab, baggage room)",
+    motorCar: "Motor car",
+    trailerAx: "Ax",
+    trailerBx: "Bx",
+    drivingTrailer: "Driving trailer",
   }),
 ];
 

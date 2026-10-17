@@ -30,10 +30,10 @@ export type Cd810Livery = "red" | "yellowBand" | "blueWhite" | "ivoryBand";
 
 export const CD810_PARAMS: readonly ParamSpec[] = [
   enumParam("livery", "Livery", {
-    red: "Red with a cream window band (vlakosimdb cd_810#1)",
-    yellowBand: "Red with a yellow band (cd_810#2)",
-    blueWhite: "Blue and white (cd_810#3)",
-    ivoryBand: "Red with an ivory band (cd_810#4)",
+    red: "Cream band",
+    yellowBand: "Yellow band",
+    blueWhite: "Blue and white",
+    ivoryBand: "Ivory band",
   }),
 ];
 

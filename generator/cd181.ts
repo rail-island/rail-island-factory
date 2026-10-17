@@ -41,7 +41,7 @@ const LINE = c("#d0ccd0");
 
 export const CD181_LIVERIES = {
   cd180: {
-    title: "CD 180 001, two greens, louvred sides",
+    title: "CD 180",
     source: "cd_180",
     number: runningNumber("180", "001"),
     numberSource: "photo-180-001.jpg (the preserved prototype)",
@@ -52,7 +52,7 @@ export const CD181_LIVERIES = {
     room: "180",
   },
   cd181: {
-    title: "CD 181 105, cream and green",
+    title: "CD 181",
     source: "cd_181",
     number: runningNumber("181", "105"),
     numberSource: "photo-181-105-side.jpg, in this livery",
@@ -63,7 +63,7 @@ export const CD181_LIVERIES = {
     room: "181",
   },
   cd181Okd: {
-    title: "OKD 181 056, cream and blue",
+    title: "OKD 181",
     source: "cd_181-okd",
     number: runningNumber("181", "056"),
     numberSource: "illustrative, one of the class; OKD Doprava ran two ex-CD units from 1998",
@@ -79,7 +79,7 @@ export const CD181_LIVERIES = {
     room: "181",
   },
   cd182: {
-    title: "CD 182 099, cream, yellow and green",
+    title: "CD 182",
     source: "cd_182",
     number: runningNumber("182", "099"),
     numberSource: "photo-182-099.jpg",

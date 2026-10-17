@@ -30,13 +30,13 @@ export interface Cd704Livery {
 
 export const CD704_LIVERIES = {
   cd704: {
-    title: "CD 704 014, blue with a yellow band",
+    title: "CD 704",
     source: "cd_704",
     number: runningNumber("704", "014"),
     numberSource: "illustrative, a unit photographed in 2025 (704 014-0); the native plate does not resolve digits",
   },
   t2380: {
-    title: "CSD T 238.0 / 704 518, the industrial version",
+    title: "T 238.0",
     source: "csd_t238_0",
     number: runningNumber("704", "518"),
     numberSource: "a T 238.0 renumbered into the 704.5 series (Commons category CZ 704 518 - 0); the native textures are cd_704's",

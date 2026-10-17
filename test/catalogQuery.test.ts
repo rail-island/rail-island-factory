@@ -45,13 +45,13 @@ describe("queryRows", () => {
       rec("proc-vehicle-cd-749", "CD 749 Bardotka", 9000, {
         category: "Rail vehicles", group: "loco", traction: "diesel",
         params: [{ name: "livery", title: "Livery", default: "cd749", values: [
-          { value: "cd749", title: "CD 749, red and grey" },
-          { value: "cd749No264", title: "CD 749 264, green and cream" },
+          { value: "cd749", title: "CD 749" },
+          { value: "cd749No264", title: "CD 749 264" },
         ] }],
       }),
       ...ROWS,
     ]);
-    expect(queryRows(rows, "green cream", "title", "asc").map((r) => r.id)).toEqual(["proc-vehicle-cd-749"]);
+    expect(queryRows(rows, "749 264", "title", "asc").map((r) => r.id)).toEqual(["proc-vehicle-cd-749"]);
     expect(queryRows(rows, "cd749no264", "title", "asc").map((r) => r.id)).toEqual(["proc-vehicle-cd-749"]);
     expect(queryRows(rows, "diesel", "title", "asc").map((r) => r.id)).toEqual(["proc-vehicle-cd-749"]);
   });

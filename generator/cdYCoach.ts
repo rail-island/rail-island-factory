@@ -21,10 +21,10 @@ export const CD_Y_PARAMS: readonly ParamSpec[] = [
     title: "Variant",
     default: "bcc",
     values: [
-      { value: "bcc", title: "Bcc (couchette coach, blue and white)" },
-      { value: "beer", title: "Beer (2nd class, white with dark blue and red ends)" },
-      { value: "bnb", title: "Bnb (2nd class, cream and red, 4.0 m roof)" },
-      { value: "wrrm", title: "WRRm (26.4 m dining car, white with a red band)" },
+      { value: "bcc", title: "Bcc" },
+      { value: "beer", title: "Beer" },
+      { value: "bnb", title: "Bnb" },
+      { value: "wrrm", title: "WRRm" },
     ],
   },
 ];

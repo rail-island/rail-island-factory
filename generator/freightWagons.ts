@@ -30,13 +30,13 @@ export { faccsHopperWagon, fallsHopperWagon, wapHopperWagon } from "./hopperWago
 
 
 export const SQNS_PARAMS: readonly ParamSpec[] = [
-  { name: "cargo", title: "Cargo", default: "empty", values: [{ value: "empty", title: "Empty (Sqns)" }, { value: "maersk", title: "Maersk 40 ft container (Sqns + Maersk)" }] },
+  { name: "cargo", title: "Cargo", default: "empty", values: [{ value: "empty", title: "Empty" }, { value: "maersk", title: "Maersk" }] },
 ];
 export const PAO_PARAMS: readonly ParamSpec[] = [
-  { name: "cargo", title: "Cargo", default: "tubes", values: [{ value: "empty", title: "Empty" },{ value: "tubes", title: "Steel tubes (Pao + Tubes)" }] },
+  { name: "cargo", title: "Cargo", default: "tubes", values: [{ value: "empty", title: "Empty" },{ value: "tubes", title: "Steel tubes" }] },
 ];
 export const HABIS_PARAMS: readonly ParamSpec[] = [
-  { name: "livery", title: "Livery", default: "tw1", values: [{ value: "tw1", title: "Transwaggon, grey (Habis Transwaggon 1)" }, { value: "tw2", title: "Transwaggon, weathered brown (Habis Transwaggon 2)" }] },
+  { name: "livery", title: "Livery", default: "tw1", values: [{ value: "tw1", title: "Grey" }, { value: "tw2", title: "Brown" }] },
 ];
 
 const sideName = (s: number) => (s > 0 ? "right side" : "left side");

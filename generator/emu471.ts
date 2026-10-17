@@ -31,13 +31,13 @@ export type ElefantVariant = "cd471" | "cd675";
 
 export const CD471_PARAMS: readonly ParamSpec[] = [
   enumParam("unit", "Car", {
-    motorCar: "Motor car 471 (cab, pantograph)",
-    trailer: "Trailer 071",
-    drivingTrailer: "Driving trailer 971 (cab)",
+    motorCar: "Motor car",
+    trailer: "Trailer",
+    drivingTrailer: "Driving trailer",
   }),
   enumParam("variant", "Variant", {
-    cd471: "CD 471 CityElefant (blue and white)",
-    cd675: "CD 675 / 075 / 975 (vlakosimdb, red and white)",
+    cd471: "CityElefant",
+    cd675: "CD 675",
   }),
 ];
 

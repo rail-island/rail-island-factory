@@ -57,7 +57,7 @@ const C = (hex: string) => paint(hex);
 
 export const CD750_LIVERIES = {
   cd750: {
-    title: "CD 750, green and grey with the yellow sweep",
+    title: "CD 750",
     source: "cd_750",
     body: "brejlovec",
     number: runningNumber("750", "330"),
@@ -75,7 +75,7 @@ export const CD750_LIVERIES = {
     emblem: "black",
   },
   cd750No308: {
-    title: "CD 750 308, red with the yellow sweep",
+    title: "CD 750 308",
     source: "cd_750_308",
     body: "brejlovec",
     number: runningNumber("750", "308"),
@@ -93,7 +93,7 @@ export const CD750_LIVERIES = {
     emblem: "white",
   },
   cd753: {
-    title: "CD 753, red with the cream band",
+    title: "CD 753",
     source: "cd_753",
     body: "brejlovec",
     number: runningNumber("753", "286"),
@@ -109,7 +109,7 @@ export const CD750_LIVERIES = {
     emblem: "black",
   },
   cd754: {
-    title: "CD 754, red and yellow with the grey roof",
+    title: "CD 754",
     source: "cd_754",
     body: "brejlovec",
     number: runningNumber("754", "046"),
@@ -126,7 +126,7 @@ export const CD750_LIVERIES = {
     emblem: "black",
   },
   cd754No013: {
-    title: "CD 754 013, blue and yellow",
+    title: "CD 754 013",
     source: "cd_754_013",
     body: "brejlovec",
     number: runningNumber("754", "013"),

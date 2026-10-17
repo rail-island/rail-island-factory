@@ -32,7 +32,7 @@ interface Livery {
 
 export const DNT184_LIVERIES = {
   dnt1845: {
-    title: "DNT 184 503, dark green, cream band",
+    title: "DNT 184 503",
     source: "dnt_184.5",
     number: runningNumber("184", "503"),
     numberSource: "photo-184-503.jpg",
@@ -42,7 +42,7 @@ export const DNT184_LIVERIES = {
     end: [[0.9, 1.6, "green"], [1.6, 2.2, "cream"], [2.2, 3.6, "green"], [3.6, 4.0, "roofEdge"]],
   },
   dnt1845No1: {
-    title: "DNT 184 501, light green, beige roof",
+    title: "DNT 184 501",
     source: "dnt_184_5#1",
     number: runningNumber("184", "501"),
     numberSource: "illustrative, the first prototype; vlakosimdb names the model #1",
@@ -53,7 +53,7 @@ export const DNT184_LIVERIES = {
     end: [[0.9, 1.6, "olive"], [1.6, 2.2, "cream"], [2.2, 3.75, "olive"], [3.75, 4.0, "roofEdge"]],
   },
   dnt1845No2: {
-    title: "DNT 184 502, light green, beige roof (160 km/h gearing)",
+    title: "DNT 184 502",
     source: "dnt_184_5#2",
     number: runningNumber("184", "502"),
     numberSource: "illustrative, the second prototype; vlakosimdb names the model #2",

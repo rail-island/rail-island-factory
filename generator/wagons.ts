@@ -46,9 +46,9 @@ const cargoParam = (values: Array<[string, string]>): readonly ParamSpec[] => [
   { name: "cargo", title: "Cargo", default: "empty", values: values.map(([value, title]) => ({ value, title })) },
 ];
 
-export const NAS_PARAMS = cargoParam([["empty", "Empty (Nas)"], ["wood", "Logs (Nas + Wood)"], ["tubes", "Steel tubes (Nas + Tubes)"], ["reels", "Cable reels (Nas + Reels)"]]);
-export const UA_PARAMS = cargoParam([["empty", "Empty (Ua Empty)"], ["coal", "Coal (Ua Coal)"], ["wood", "Logs (Ua Wood)"], ["sand", "Sand (Ua + Sand)"]]);
-export const EAS_PARAMS = cargoParam([["empty", "Empty (Eas)"], ["wood", "Logs (Eas-drevo)"], ["coal", "Coal (Eas-uhli)"]]);
+export const NAS_PARAMS = cargoParam([["empty", "Empty"], ["wood", "Logs"], ["tubes", "Steel tubes"], ["reels", "Cable reels"]]);
+export const UA_PARAMS = cargoParam([["empty", "Empty"], ["coal", "Coal"], ["wood", "Logs"], ["sand", "Sand"]]);
+export const EAS_PARAMS = cargoParam([["empty", "Empty"], ["wood", "Logs"], ["coal", "Coal"]]);
 
 const lerp = (pts: Array<[number, number]>, x: number): number => {
   if (x <= pts[0]![0]) return pts[0]![1];
