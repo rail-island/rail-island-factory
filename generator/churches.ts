@@ -338,7 +338,9 @@ export function baroqueChurch(): MeshBuilder {
       m.box("stone", 0, -3.8, 19.3, 31.8, 2.65, 3.0);
     });
     m.scope("stair", () => {
-      for (let k = 0; k < 9; k++) m.box("stone", 0, 11.67 + 0.85 * k + 0.425, 6.4, 0.85, 0, 2.7 - 0.3 * k);
+      // 20 risers of 15 cm from the street up to the 3 m terrace
+      const tread = 7.65 / 19;
+      for (let k = 0; k < 19; k++) m.box("stone", 0, 11.67 + tread * (k + 0.5), 6.4, tread, 0, 2.85 - 0.15 * k);
       const wall: Ring = [[11.1, 0], [19.7, 0], [19.7, 0.9], [12.0, 3.3], [11.1, 3.3]];
       for (const s of [-1, 1]) m.sweep("stone", "x", wall, s * 3.2, wall, s * 3.9);
     });
@@ -415,10 +417,12 @@ export function baroqueChurch(): MeshBuilder {
       }
     });
     m.scope("portal", () => {
-      m.box("stone", 0, 9.95, 6.2, 1.7, 3, 3.5);
-      panel(m, "trim", front, roundArch(0, 4.4, 3.5, 6.9, 10), -0.05, 0.25);
-      panel(m, "slate", front, roundArch(0, 3.4, 3.52, 6.18, 10), 0.15, 0.33);
-      m.box("trim", 0, 9.4, 5.6, 1.0, 10.53, 11.08);
+      // a 2.2 x 4.2 m door on a one-riser step, a hood above it, a window over the hood
+      m.box("stone", 0, 9.95, 6.2, 1.7, 3, 3.18);
+      panel(m, "trim", front, roundArch(0, 3.2, 3.18, 4.9, 10), -0.05, 0.25);
+      panel(m, "slate", front, roundArch(0, 2.2, 3.2, 4.2, 10), 0.15, 0.33);
+      m.box("trim", 0, 9.4, 4.2, 1.0, 8.2, 8.75);
+      windowOn(m, front, 0, 9.4, 1.6, 2.0, win);
     });
     m.scope("niche", () => {
       panel(m, "glass", front, roundArch(0, 2.2, 13.0, 3.4, 8), -0.05, 0.12);

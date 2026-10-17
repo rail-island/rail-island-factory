@@ -518,42 +518,45 @@ export function stationBuilding(): MeshBuilder {
   });
 
   m.scope("pavilion", () => {
+    // a 3.3 m ground storey and a 3 m upper storey under the gable: eaves E, ridge R
+    const E = 6.85;
+    const R = 8.45;
     m.box("stone", -0.29, -1.18, 6.6, 8.1, 0, 0.62);
-    m.box("ochre", -0.29, -1.18, 6.4, 7.9, 0.62, 6.3, 0, false);
-    m.box("plaster", -0.29, -1.18, 6.6, 8.1, 4.2, 4.36);
-    m.box("plaster", -0.29, -1.18, 6.9, 8.4, 6.05, 6.27);
+    m.box("ochre", -0.29, -1.18, 6.4, 7.9, 0.62, 7.0, 0, false);
+    m.box("plaster", -0.29, -1.18, 6.6, 8.1, 3.85, 4.01);
+    m.box("plaster", -0.29, -1.18, 6.9, 8.4, E - 0.1, E + 0.12);
     m.scope("roof", () => {
-      gableHipRoofZ(m, "tile", -4.04, 3.46, -5.62, 3.27, 6.15, 8.02, 2.6, 0.2);
-      gableWallZ(m, "ochre", -3.49, 2.91, 6.26, 7.6, 0.0, 3.0);
+      gableHipRoofZ(m, "tile", -4.04, 3.46, -5.62, 3.27, E, R, 2.6, 0.2);
+      gableWallZ(m, "ochre", -3.49, 2.91, E + 0.11, E + 0.11 + 1.15, 0.0, 3.0);
     });
     m.scope("gable", () => {
       const g = wall("+z", 3.0);
-      bargeboards(m, "green", -4.04, 3.46, 6.15, 8.02, 3.42, 0.14, 0.24);
-      wallArc(m, "green", g, -0.29, 6.85, 0.46, 0.55, 0, Math.PI * 2, 20, -0.02, 0.07);
-      wallDisc(m, "plaster", g, -0.29, 6.85, 0.47, 20, -0.03, 0.05);
-      m.prism("green", ngon(6, 0.08, 0, -0.29, 3.35), 7.9, 8.53);
+      bargeboards(m, "green", -4.04, 3.46, E, R, 3.42, 0.14, 0.24);
+      wallArc(m, "green", g, -0.29, E + 0.6, 0.38, 0.46, 0, Math.PI * 2, 20, -0.02, 0.07);
+      wallDisc(m, "plaster", g, -0.29, E + 0.6, 0.39, 20, -0.03, 0.05);
+      m.prism("green", ngon(6, 0.08, 0, -0.29, 3.35), R - 0.12, R + 0.51);
       m.scope("fretwork", () => {
         // white lattice under the bargeboards, as on the photo
         for (const s of [-1, 1]) {
           for (let i = 1; i <= 4; i++) {
             const x = -0.29 + s * i * 0.72;
-            const top = 8.02 - (i * 0.72 * (8.02 - 6.15)) / 3.75 - 0.26;
+            const top = R - (i * 0.72 * (R - E)) / 3.75 - 0.26;
             onWall(m, "plaster", g, x - 0.05, x + 0.05, top - 0.35, top, 0.06, 0.12);
           }
         }
       });
     });
     m.scope("upper windows", () => {
-      for (const u of [-2.29, -0.29, 1.71]) windowOn(m, pav, u, 4.55, 0.82, 1.25, win);
-      for (const u of [-1.98, 1.42]) windowOn(m, pavRear, u, 4.55, 0.82, 1.25, win);
+      for (const u of [-2.29, -0.29, 1.71]) windowOn(m, pav, u, 4.85, 0.82, 1.4, win);
+      for (const u of [-1.98, 1.42]) windowOn(m, pavRear, u, 4.85, 0.82, 1.4, win);
     });
     m.scope("station sign", () => {
-      onWall(m, "green", pav, -1.59, 1.01, 4.0, 4.52, 0.12, 0.22);
-      lettering(m, "plaster", pav, "STATION", -0.29, 4.26, 0.26, 0.2, 0.25);
+      onWall(m, "green", pav, -1.59, 1.01, 4.08, 4.58, 0.12, 0.22);
+      lettering(m, "plaster", pav, "STATION", -0.29, 4.33, 0.26, 0.2, 0.25);
     });
     m.scope("chimney", () => {
-      m.box("ochre", -2.19, -3.33, 0.66, 0.66, 6.6, 7.9);
-      m.box("stone", -2.19, -3.33, 0.86, 0.86, 7.9, 8.04);
+      m.box("ochre", -2.19, -3.33, 0.66, 0.66, 7.3, 8.5);
+      m.box("stone", -2.19, -3.33, 0.86, 0.86, 8.5, 8.64);
     });
   });
 
@@ -973,10 +976,12 @@ function pragueWing(m: MeshBuilder, s: number): void {
     });
   });
   m.scope("windows", () => {
-    for (const y of [4.0, 9.5]) for (const x of [cx + s * 0.0, cx + s * 3.6]) windowOn(m, front, x, y, 1.7, 3.0, win);
+    // floors at about 3.3, 8.35 (the band) and 12.2: a 5 m piano nobile, then two 3.85 m storeys
+    const tall = (y: number, top: number): number => (y > 12 ? 2.2 : y > 8 ? 2.6 : top);
+    for (const y of [4.0, 9.0]) for (const x of [cx + s * 0.0, cx + s * 3.6]) windowOn(m, front, x, y, 1.7, tall(y, 3.0), win);
     for (const y of [12.9]) for (const x of [cx, cx + s * 3.6]) windowOn(m, front, x, y + 0.1, 1.7, 2.2, { ...win, head: undefined });
-    for (const y of [4.0, 9.5, 12.9]) for (const u of [-6.1, -1.5, 3.1]) windowOn(m, side, u, y, 1.7, y > 12 ? 2.2 : 3.0, win);
-    for (const y of [4.05, 9.55, 12.9]) for (const x of [x0 + 2.4, cx, x1 - 2.4]) windowOn(m, rear, x, y, 1.7, y > 12 ? 2.2 : 2.9, win);
+    for (const y of [4.0, 9.0, 12.9]) for (const u of [-6.1, -1.5, 3.1]) windowOn(m, side, u, y, 1.7, tall(y, 3.0), win);
+    for (const y of [4.05, 9.05, 12.9]) for (const x of [x0 + 2.4, cx, x1 - 2.4]) windowOn(m, rear, x, y, 1.7, tall(y, 2.9), win);
   });
   m.scope("arcade", () => {
     for (const x of [cx, cx + s * 3.6, cx - s * 3.6]) {
