@@ -49,24 +49,42 @@ describe('low detail exports', () => {
       const again = buildLodModel(d);
       expect(again.toGlb('determinism')).toEqual(expected.toGlb('determinism'));
       expect(low.animations).toHaveLength(0);
-      expect(low.userData.rig).toBeUndefined();
-      low.traverse(o => { if (o !== low) expect(o).toBeInstanceOf(THREE.Mesh); });
-      const {json,bin} = parseGlb(expected.toGlb(id));
-      const reference = new Map<string, number[]>();
-      for (const f of collectTriangles(json,bin)) {
-        const points = reference.get(f.material) ?? []; points.push(...f.p.flat()); reference.set(f.material,points);
+      // a LOD is static but for an articulated vehicle's sections and joints (no supports, no steering)
+      const rig = low.userData.rig;
+      if (rig !== undefined) {
+        expect(Object.keys(rig).sort()).toEqual(['joints','maxBendDeg','sections']);
+        expect(rig.sections.length).toBeGreaterThan(1);
       }
+      low.traverse(o => { if (o !== low && !(o instanceof THREE.Mesh)) expect(o.name).toMatch(/^(section|joint)[0-9]+$/); });
+      // the same triangles, in model space, as the generator's GLB (compared as sets: node order may differ)
+      const {json,bin} = parseGlb(expected.toGlb(id));
+      const key = (p: number[]) => p.map(v => v.toFixed(4)).join(',');
+      const reference = new Map<string, string[]>();
+      for (const f of collectTriangles(json,bin)) {
+        const list = reference.get(f.material) ?? []; list.push(f.p.map(key).join('|')); reference.set(f.material,list);
+      }
+      const got = new Map<string, string[]>();
+      low.updateMatrixWorld(true);
       low.traverse(o => {
         if (!(o instanceof THREE.Mesh)) return;
-        const got = Array.from(o.geometry.getAttribute('position').array as Float32Array), want = reference.get(o.name)!;
-        expect(got.length).toBe(want.length);
-        expect(Math.max(...got.map((v,i)=>Math.abs(v-want[i])))).toBeLessThan(1e-5);
+        const pos = o.geometry.getAttribute('position'), v = new THREE.Vector3();
+        const list = got.get(o.name) ?? [];
+        for (let i = 0; i < pos.count; i += 3) {
+          const tri: string[] = [];
+          for (let k = 0; k < 3; k++) { v.fromBufferAttribute(pos, i + k).applyMatrix4(o.matrixWorld); tri.push(key([v.x, v.y, v.z])); }
+          list.push(tri.join('|'));
+        }
+        got.set(o.name, list);
       });
+      expect([...got.keys()].sort()).toEqual([...reference.keys()].sort());
+      for (const [mat, list] of got) expect([...list].sort()).toEqual([...reference.get(mat)!].sort());
       if (mod.pose) {
         const before = low.toJSON();
         mod.pose(low, {steer:.4,bend:[.3,.2]});
         mod.renderJoint?.(low,0);
-        expect(low.toJSON()).toEqual(before);
+        // posing moves an articulated LOD's sections and nothing of a static one
+        if (rig === undefined) expect(low.toJSON()).toEqual(before);
+        else expect(low.getObjectByName('section1')!.rotation.y).not.toBe(0);
       }
 
     });

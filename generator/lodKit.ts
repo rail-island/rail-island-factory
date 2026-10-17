@@ -13,6 +13,7 @@
 
 import { MeshBuilder, type MaterialSpec } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
+import { drawJoint, type JointRig, type SectionRig } from "./rig.ts";
 
 // --- bands ----------------------------------------------------------------------------
 
@@ -264,6 +265,8 @@ export interface LodShell {
   endWindows?: readonly LodRect[];
   /** Which ends are drawn: a hood abutting a cab hides one. Default both. */
   ends?: readonly number[];
+  /** The section of an articulated LOD it belongs to (LodSpec.sections); default 0. */
+  section?: number;
 }
 
 /** A face cell: from u0 to u1 (null: the outline's own edge), one material. */
@@ -390,12 +393,43 @@ export function lodShell(m: MeshBuilder, sh: LodShell, tol = 0, flat = false): v
 export interface LodPart {
   draw: (m: MeshBuilder) => void;
   optional?: number;
+  /** The section of an articulated LOD it belongs to (LodSpec.sections); default 0. */
+  section?: number;
+}
+
+/**
+ * An articulated LOD's sections (docs/models/vehicle-rig.md): section i is the
+ * node `section<i>` pivoted at its hinge with section i - 1, and a bellows joins
+ * each covered gap, drawn by the rig's own `drawJoint` so the game re-skins it.
+ */
+export interface LodSections {
+  /** The sections' pivots, front first; the first is [0, 0, 0]. */
+  pivots: Vec3[];
+  /** The bellows of each covered gap: the sections it joins, its faces' x and its cross-section (z, y). */
+  joints: Array<{ sections: [number, number]; front: number; rear: number; profile: Array<[number, number]> }>;
+  maxBendDeg: number;
+  /** The bellows' material (in the palette). */
+  material?: string;
 }
 
 export interface LodSpec {
   palette: Record<string, MaterialSpec>;
   shells: LodShell[];
   parts: LodPart[];
+  sections?: LodSections;
+}
+
+/** Draws an articulated LOD's sections and joints, `draw(i)` drawing section i, and sets its rig. */
+function drawSections(m: MeshBuilder, sp: LodSections, draw: (i: number) => void): void {
+  const rigSections: SectionRig[] = sp.pivots.map((pivot, i) => ({ node: `section${i}`, pivot }));
+  rigSections.forEach((s, i) => m.part(s.node, s.pivot as Vec3, () => draw(i)));
+  const joints: JointRig[] = sp.joints.map((j, i) => ({
+    node: `joint${i}`, sections: j.sections, front: j.front, rear: j.rear, profile: j.profile,
+    // one fold: the fewest rings the rig draws (2 x 2 triangles per profile edge)
+    folds: 1, depth: 0, material: sp.material ?? "bellows",
+  }));
+  for (const j of joints) m.part(j.node, [0, 0, 0], () => drawJoint(m, j, rigSections));
+  m.rig = { sections: rigSections, joints, maxBendDeg: sp.maxBendDeg };
 }
 
 /** The profile's detail, step by step: how far the tables may be simplified, and whether a vee nose is flattened. */
@@ -423,8 +457,13 @@ export function fitLod(spec: LodSpec, budget: number): MeshBuilder {
     const m = new MeshBuilder({ ...LOD_PALETTE, ...spec.palette });
     const gone = new Set(optional.slice(0, dropped).filter((o) => !back.has(o)).flatMap((o) => [o.part, o.win]));
     const keep = (ws?: readonly LodRect[]) => ws?.filter((w) => !gone.has(w));
-    m.scope("body", () => { for (const sh of shells) lodShell(m, { ...sh, sideWindows: keep(sh.sideWindows), endWindows: keep(sh.endWindows) }, ...PROFILE[tol]!); });
-    m.scope("parts", () => { for (const p of spec.parts) if (!gone.has(p)) p.draw(m); });
+    const draw = (section: number | null) => {
+      const mine = (x: { section?: number }) => section === null || (x.section ?? 0) === section;
+      m.scope("body", () => { for (const sh of shells) if (mine(sh)) lodShell(m, { ...sh, sideWindows: keep(sh.sideWindows), endWindows: keep(sh.endWindows) }, ...PROFILE[tol]!); });
+      m.scope("parts", () => { for (const p of spec.parts) if (mine(p) && !gone.has(p)) p.draw(m); });
+    };
+    if (spec.sections) drawSections(m, spec.sections, draw);
+    else draw(null);
     return m;
   };
   for (;;) {
@@ -506,4 +545,71 @@ export function windowBands(rects: ReadonlyArray<{ u: readonly [number, number];
     } else out.push({ u: [r.u[0], r.u[1]], y: [r.y[0], r.y[1]] });
   }
   return out.map((o) => ({ ...o, mat }));
+}
+
+// --- generic solids -----------------------------------------------------------------------------
+
+/** A vertical prism over the convex ring (x, z) from y0 to y1: walls and top, no bottom. */
+export function lodPrism(m: MeshBuilder, mat: string, ring: ReadonlyArray<readonly [number, number]>, y0: number, y1: number, top: string = mat): void {
+  const cx = ring.reduce((s, p) => s + p[0], 0) / ring.length, cz = ring.reduce((s, p) => s + p[1], 0) / ring.length;
+  for (let i = 0; i < ring.length; i++) {
+    const [a, b] = [ring[i]!, ring[(i + 1) % ring.length]!];
+    lodPolygon(m, mat, [[a[0], y0, a[1]], [b[0], y0, b[1]], [b[0], y1, b[1]], [a[0], y1, a[1]]], [(a[0] + b[0]) / 2 - cx, 0, (a[1] + b[1]) / 2 - cz]);
+  }
+  lodPolygon(m, top, ring.map(([x, z]): Vec3 => [x, y1, z]), [0, 1, 0]);
+}
+
+/** A regular n-gon (x, z) about (cx, cz), radius r. */
+export function lodNgon(n: number, r: number, cx = 0, cz = 0, rot = 0): Array<[number, number]> {
+  return Array.from({ length: n }, (_, i) => {
+    const a = rot + (2 * Math.PI * i) / n;
+    return [cx + r * Math.cos(a), cz + r * Math.sin(a)] as [number, number];
+  });
+}
+
+/** A road vehicle's wheel from afar: an n-gon prism across z from z0 to z1 (outer face and tread), its inner face left out. */
+export function lodWheel(m: MeshBuilder, mat: string, x: number, r: number, z0: number, z1: number, n = 6): void {
+  const y = r * Math.cos(Math.PI / n);
+  const ring = lodNgon(n, r, x, y, Math.PI / n);
+  const outer = Math.abs(z1) > Math.abs(z0) ? z1 : z0, inner = outer === z1 ? z0 : z1;
+  for (let i = 0; i < n; i++) {
+    const [a, b] = [ring[i]!, ring[(i + 1) % n]!];
+    lodPolygon(m, mat, [[a[0], a[1], inner], [b[0], b[1], inner], [b[0], b[1], outer], [a[0], a[1], outer]], [(a[0] + b[0]) / 2 - x, (a[1] + b[1]) / 2 - y, 0]);
+  }
+  lodPolygon(m, mat, ring.map(([px, py]): Vec3 => [px, py, outer]), [0, 0, Math.sign(outer)]);
+}
+
+/** A gabled roof over the rectangle x0..x1, z0..z1 from eave y0 to ridge y1, the ridge along `axis`: two slopes and two gables. */
+export function lodGableRoof(m: MeshBuilder, mat: string, gable: string, x0: number, x1: number, z0: number, z1: number, y0: number, y1: number, axis: "x" | "z" = "x"): void {
+  if (axis === "x") {
+    const zm = (z0 + z1) / 2;
+    lodPolygon(m, mat, [[x0, y0, z1], [x1, y0, z1], [x1, y1, zm], [x0, y1, zm]], [0, 1, 1]);
+    lodPolygon(m, mat, [[x0, y0, z0], [x1, y0, z0], [x1, y1, zm], [x0, y1, zm]], [0, 1, -1]);
+    lodPolygon(m, gable, [[x0, y0, z0], [x0, y0, z1], [x0, y1, zm]], [-1, 0, 0]);
+    lodPolygon(m, gable, [[x1, y0, z0], [x1, y0, z1], [x1, y1, zm]], [1, 0, 0]);
+  } else {
+    const xm = (x0 + x1) / 2;
+    lodPolygon(m, mat, [[x1, y0, z0], [x1, y0, z1], [xm, y1, z1], [xm, y1, z0]], [1, 1, 0]);
+    lodPolygon(m, mat, [[x0, y0, z0], [x0, y0, z1], [xm, y1, z1], [xm, y1, z0]], [-1, 1, 0]);
+    lodPolygon(m, gable, [[x0, y0, z0], [x1, y0, z0], [xm, y1, z0]], [0, 0, -1]);
+    lodPolygon(m, gable, [[x0, y0, z1], [x1, y0, z1], [xm, y1, z1]], [0, 0, 1]);
+  }
+}
+
+/** A hipped roof (or pyramid when the ridge shrinks to a point) over x0..x1, z0..z1: the eave rectangle to a ridge `inset` in from each end. */
+export function lodHipRoof(m: MeshBuilder, mat: string, x0: number, x1: number, z0: number, z1: number, y0: number, y1: number, inset: number): void {
+  const zm = (z0 + z1) / 2, along = x1 - x0 >= z1 - z0;
+  const [r0, r1]: Vec3[] = along
+    ? [[x0 + inset, y1, zm], [x1 - inset, y1, zm]]
+    : [[(x0 + x1) / 2, y1, z0 + inset], [(x0 + x1) / 2, y1, z1 - inset]];
+  const c: Vec3[] = [[x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1]];
+  const cx = (x0 + x1) / 2;
+  const faces: Vec3[][] = along
+    ? [[c[0]!, c[1]!, r1, r0], [c[1]!, c[2]!, r1], [c[2]!, c[3]!, r0, r1], [c[3]!, c[0]!, r0]]
+    : [[c[0]!, c[1]!, r0], [c[1]!, c[2]!, r1, r0], [c[2]!, c[3]!, r1], [c[3]!, c[0]!, r0, r1]];
+  for (const f of faces) {
+    const mx = f.reduce((s, p) => s + p[0], 0) / f.length, mz = f.reduce((s, p) => s + p[2], 0) / f.length;
+    const pts = f.filter((p, i) => f.findIndex((q) => q[0] === p[0] && q[1] === p[1] && q[2] === p[2]) === i);
+    if (pts.length >= 3) lodPolygon(m, mat, pts, [mx - cx, 1, mz - zm]);
+  }
 }
