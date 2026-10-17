@@ -16,6 +16,8 @@
 import { MeshBuilder, chamferedRect, ngon, rect, type MaterialSpec, type Ring } from "./meshBuilder.ts";
 import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 
+import { villageTimberCottageLod, villageTimberHouseLod, villageCottageLod, villageLHouseLod, villageFamilyHouseLod, villageModernHouseLod, villageNarrowHouseLod, villageAlpineHutLod } from "./lodBuildings.ts";
+export { villageTimberCottageLod, villageTimberHouseLod, villageCottageLod, villageLHouseLod, villageFamilyHouseLod, villageModernHouseLod, villageNarrowHouseLod, villageAlpineHutLod } from "./lodBuildings.ts";
 import { TIMBER_COTTAGE_PARAMS, villageTimberCottage, villageTimberHouse } from "./timberCottages.ts";
 export { villageTimberCottage, villageTimberHouse } from "./timberCottages.ts";
 import { ALPINE_HUT_PARAMS, villageAlpineHut } from "./alpineHut.ts";
@@ -26,7 +28,7 @@ type Vec3 = [number, number, number];
 // --- colours ------------------------------------------------------------------------
 
 /** The roof colours, by parameter value. Green is the Kenney houses' own. */
-const ROOF_COLOURS: Record<string, string> = {
+export const ROOF_COLOURS: Record<string, string> = {
   green: "#4dbd84",
   red: "#c4553e",
   brown: "#8b5e3c",
@@ -35,7 +37,7 @@ const ROOF_COLOURS: Record<string, string> = {
 };
 
 /** The wall render colours, by parameter value. */
-const WALL_COLOURS: Record<string, string> = {
+export const WALL_COLOURS: Record<string, string> = {
   white: "#eeedf0",
   cream: "#f2e6c4",
   ochre: "#e2bf78",
@@ -44,7 +46,7 @@ const WALL_COLOURS: Record<string, string> = {
 };
 
 /** The modern house's cladding colours, by parameter value. */
-const CLADDING_COLOURS: Record<string, string> = {
+export const CLADDING_COLOURS: Record<string, string> = {
   anthracite: "#3f4350",
   timber: "#9a6b45",
   sand: "#c9b48e",
@@ -52,7 +54,7 @@ const CLADDING_COLOURS: Record<string, string> = {
 };
 
 /** Every house's palette: `roof`, `wall` and `cladding` take the chosen colours. */
-function palette(roof: string, wall: string, cladding = "#3f4350"): Record<string, MaterialSpec> {
+export function palette(roof: string, wall: string, cladding = "#3f4350"): Record<string, MaterialSpec> {
   return {
     roof: { color: roof, roughness: 0.7 },
     wall: { color: wall },
@@ -111,20 +113,20 @@ export const VILLAGE_FINISH_PARAMS: readonly string[] = ["roof", "walls", "cladd
 // --- dimensions ---------------------------------------------------------------------
 
 /** Top of the plinth, where the walls and the ground-floor doors start. */
-const PL = 0.5;
+export const PL = 0.5;
 /** Floor-to-floor height. */
-const ST = 3;
+export const ST = 3;
 /** The chamfer of the wall corners. */
-const CH = 0.15;
+export const CH = 0.15;
 /** Roof thickness (along its normal), and how far it overhangs the walls. */
-const RT = 0.25;
-const OH = 0.45;
+export const RT = 0.25;
+export const OH = 0.45;
 /** Window sill and height above a storey's floor. */
 const WIN_Y = 0.85;
 const WIN_H = 1.45;
 
 /** The storey's floor level, storey 0 the ground floor. */
-const floorY = (storey: number): number => PL + storey * ST;
+export const floorY = (storey: number): number => PL + storey * ST;
 
 // --- the house builder ----------------------------------------------------------------
 
@@ -135,10 +137,10 @@ interface Face {
   at: number;
 }
 
-type RoofKind = "gable" | "hip" | "flat" | "none";
+export type RoofKind = "gable" | "hip" | "flat" | "none";
 
 /** One box-shaped block of a house, from the plinth to its eaves, and its roof. */
-interface Volume {
+export interface Volume {
   cx: number;
   cz: number;
   /** Extent along x and along z. */
@@ -167,7 +169,7 @@ interface Volume {
  * The mesh builder plus a mirror: a design draws its plan once, and the `side`
  * parameters mirror it in x. Every point and ring goes through here.
  */
-class House {
+export class House {
   readonly m: MeshBuilder;
   /** Shutters beside every ordinary window. */
   shutters = false;
@@ -659,7 +661,7 @@ function circle(u: number, y: number, r: number, n: number): Array<[number, numb
 }
 
 /** A volume of `storeys` floors with bands between them. */
-function volume(cx: number, cz: number, w: number, d: number, storeys: number, roof: RoofKind, axis: "x" | "z", pitch = 0.8): Volume {
+export function volume(cx: number, cz: number, w: number, d: number, storeys: number, roof: RoofKind, axis: "x" | "z", pitch = 0.8): Volume {
   return {
     cx, cz, w, d, roof, axis, pitch,
     eave: floorY(storeys),
@@ -671,7 +673,7 @@ function volume(cx: number, cz: number, w: number, d: number, storeys: number, r
  * The knee wall of a one-storey pitched-roof house: its eaves sit 40 cm above
  * the storey, so the overhang and the gutters clear the window heads.
  */
-const knee = (storeys: number): number => (storeys === 1 ? 0.4 : 0);
+export const knee = (storeys: number): number => (storeys === 1 ? 0.4 : 0);
 
 /** Windows spread over a storey of a face at the given `u` positions. */
 function windows(h: House, f: Face, storey: number, us: number[], w = 1.3): void {
@@ -1101,12 +1103,12 @@ export const TIMBER_CATALOG: CatalogFields = { ...VILLAGE_CATALOG, group: "villa
 
 /** Every procedural village house, by catalog id. The ids are stored in saved maps. */
 export const VILLAGE_HOUSES: ProceduralDesign[] = [
-  { id: "village-timber-cottage", title: "Village Timber Cottage", build: villageTimberCottage, params: TIMBER_COTTAGE_PARAMS },
-  { id: "village-timber-house", title: "Village Timber House", build: villageTimberHouse, params: TIMBER_COTTAGE_PARAMS },
-  { id: "village-cottage", title: "Village Cottage", build: villageCottage, params: COTTAGE_PARAMS },
-  { id: "village-l-house", title: "Village L-House", build: villageLHouse, params: L_HOUSE_PARAMS },
-  { id: "village-family-house", title: "Village Family House", build: villageFamilyHouse, params: FAMILY_HOUSE_PARAMS },
-  { id: "village-modern-house", title: "Village Modern House", build: villageModernHouse, params: MODERN_HOUSE_PARAMS },
-  { id: "village-narrow-house", title: "Village Narrow House", build: villageNarrowHouse, params: NARROW_HOUSE_PARAMS },
-  { id: "village-alpine-hut", title: "Alpine Hut", build: villageAlpineHut, params: ALPINE_HUT_PARAMS, references: "alpine-hut" },
+  { id: "village-timber-cottage", title: "Village Timber Cottage", build: villageTimberCottage, buildLod: villageTimberCottageLod, params: TIMBER_COTTAGE_PARAMS },
+  { id: "village-timber-house", title: "Village Timber House", build: villageTimberHouse, buildLod: villageTimberHouseLod, params: TIMBER_COTTAGE_PARAMS },
+  { id: "village-cottage", title: "Village Cottage", build: villageCottage, buildLod: villageCottageLod, params: COTTAGE_PARAMS },
+  { id: "village-l-house", title: "Village L-House", build: villageLHouse, buildLod: villageLHouseLod, params: L_HOUSE_PARAMS },
+  { id: "village-family-house", title: "Village Family House", build: villageFamilyHouse, buildLod: villageFamilyHouseLod, params: FAMILY_HOUSE_PARAMS },
+  { id: "village-modern-house", title: "Village Modern House", build: villageModernHouse, buildLod: villageModernHouseLod, params: MODERN_HOUSE_PARAMS },
+  { id: "village-narrow-house", title: "Village Narrow House", build: villageNarrowHouse, buildLod: villageNarrowHouseLod, params: NARROW_HOUSE_PARAMS },
+  { id: "village-alpine-hut", title: "Alpine Hut", build: villageAlpineHut, buildLod: villageAlpineHutLod, params: ALPINE_HUT_PARAMS, references: "alpine-hut" },
 ].map((d) => ({ ...d, catalog: d.id.startsWith("village-timber-") ? TIMBER_CATALOG : VILLAGE_CATALOG, finishParams: d.params.map((p) => p.name).filter((n) => VILLAGE_FINISH_PARAMS.includes(n)) }));

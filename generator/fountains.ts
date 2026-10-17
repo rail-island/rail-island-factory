@@ -3,7 +3,9 @@
 // (MeshCore.pool / jet, docs/models/emitters.md), so the two always agree.
 import { MeshBuilder, ngon, rect, type Ring } from './meshBuilder.ts';
 import type { ProceduralDesign } from './design.ts';
-const palette = { stone:{color:'#d9d5c4'}, water:{color:'#7397a3',roughness:.2}, bronze:{color:'#859e86'}, granite:{color:'#a89b94'}, trim:{color:'#eee8d7'}, dark:{color:'#b4aa95'} };
+import { classicalFountainLod, modernFountainLod, obeliskFountainLod } from './lodBuildings.ts';
+export { classicalFountainLod, modernFountainLod, obeliskFountainLod } from './lodBuildings.ts';
+export const palette = { stone:{color:'#d9d5c4'}, water:{color:'#7397a3',roughness:.2}, bronze:{color:'#859e86'}, granite:{color:'#a89b94'}, trim:{color:'#eee8d7'}, dark:{color:'#b4aa95'} };
 function basin(m:MeshBuilder, outer:Ring, inner:Ring, height:number):void {
   m.scope('basin',()=>{
     m.loft('dark',outer.map(([x,z])=>[x*1.025,z*1.025]),0,outer,.08,false);
@@ -62,7 +64,7 @@ export function obeliskFountain():MeshBuilder {
   return m;
 }
 export const FOUNTAINS:ProceduralDesign[]=[
-  {id:'bld-fountain-classical',title:'Classical Fountain',build:classicalFountain},
-  {id:'bld-fountain-modern',title:'Modern Fountain',build:modernFountain},
-  {id:'bld-fountain-obelisk',title:'Obelisk Fountain',build:obeliskFountain},
+  {id:'bld-fountain-classical',title:'Classical Fountain',build:classicalFountain,buildLod:classicalFountainLod},
+  {id:'bld-fountain-modern',title:'Modern Fountain',build:modernFountain,buildLod:modernFountainLod},
+  {id:'bld-fountain-obelisk',title:'Obelisk Fountain',build:obeliskFountain,buildLod:obeliskFountainLod},
 ].map(d=>({...d,catalog:{category:'Decor',group:'decor',defaultScale:1,license:'CC0',author:'Rail Island',source:'Rail Island'}}));

@@ -18,6 +18,8 @@
 import { MeshBuilder, ngon, rect, type MaterialSpec, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { arc, block } from "./vehicleParts.ts";
+import { pragueMainStationLod, stationBuildingLod, stationHaltLod, suburbanStationLod } from "./lodBuildings.ts";
+export { pragueMainStationLod, stationBuildingLod, stationHaltLod, suburbanStationLod } from "./lodBuildings.ts";
 import type { CatalogFields, ProceduralDesign } from "./design.ts";
 
 // --- walls -----------------------------------------------------------------------
@@ -290,7 +292,7 @@ function lettering(m: MeshBuilder, mat: string, w: Wall, text: string, u: number
 
 // --- the halt: Mikulasovice dolni nadrazi --------------------------------------------
 
-const HALT: Record<string, MaterialSpec> = {
+export const HALT: Record<string, MaterialSpec> = {
   plinth: { color: "#8b8477" },
   stucco: { color: "#ecdfbd" },
   band: { color: "#e2d2ab" },
@@ -444,7 +446,7 @@ export function stationHalt(): MeshBuilder {
 
 // --- the station building ------------------------------------------------------------
 
-const STUCCO: Record<string, MaterialSpec> = {
+export const STUCCO: Record<string, MaterialSpec> = {
   stone: { color: "#b6af9f" },
   ochre: { color: "#e8a22b" },
   plaster: { color: "#f1e9d8" },
@@ -675,7 +677,7 @@ export function stationBuilding(): MeshBuilder {
 
 // --- the suburban station ------------------------------------------------------------
 
-const SUBURBAN: Record<string, MaterialSpec> = {
+export const SUBURBAN: Record<string, MaterialSpec> = {
   stone: { color: "#b3aca0" },
   forecourt: { color: "#a39c90" },
   brick: { color: "#9c4a3d" },
@@ -836,7 +838,7 @@ export function suburbanStation(): MeshBuilder {
 
 // --- Prague main station (the Fanta building) ----------------------------------------
 
-const PRAGUE: Record<string, MaterialSpec> = {
+export const PRAGUE: Record<string, MaterialSpec> = {
   stone: { color: "#e7e0ce" },
   trim: { color: "#cabfa8" },
   glazing: { color: "#39454f", roughness: 0.3 },
@@ -1203,8 +1205,8 @@ export const STATION_CATALOG: CatalogFields = {
 
 /** Every design of the family, by catalog id; `references` is the folder of its source photos under assets/. */
 export const STATIONS: ProceduralDesign[] = [
-  { id: "bld-prague-main-station", title: "Prague Main Station", build: pragueMainStation, references: "prague-main-station", catalog: { ...STATION_CATALOG, defaultScale: 1 } },
-  { id: "bld-station-building", title: "Station Building", build: stationBuilding, references: "station-building", catalog: { ...STATION_CATALOG, defaultScale: 1 } },
-  { id: "bld-station-halt", title: "Station Halt", build: stationHalt, references: "station-halt", catalog: { ...STATION_CATALOG, defaultScale: 1 } },
-  { id: "bld-suburban-station", title: "Suburban Station", build: suburbanStation, references: "suburban-station", catalog: { ...STATION_CATALOG, defaultScale: 1 } },
+  { id: "bld-prague-main-station", title: "Prague Main Station", build: pragueMainStation, buildLod: pragueMainStationLod, references: "prague-main-station", catalog: { ...STATION_CATALOG, defaultScale: 1 } },
+  { id: "bld-station-building", title: "Station Building", build: stationBuilding, buildLod: stationBuildingLod, references: "station-building", catalog: { ...STATION_CATALOG, defaultScale: 1 } },
+  { id: "bld-station-halt", title: "Station Halt", build: stationHalt, buildLod: stationHaltLod, references: "station-halt", catalog: { ...STATION_CATALOG, defaultScale: 1 } },
+  { id: "bld-suburban-station", title: "Suburban Station", build: suburbanStation, buildLod: suburbanStationLod, references: "suburban-station", catalog: { ...STATION_CATALOG, defaultScale: 1 } },
 ];

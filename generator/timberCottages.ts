@@ -16,9 +16,9 @@ export const TIMBER_COTTAGE_PARAMS: readonly ParamSpec[] = [
   choice("walls", "Plaster colour", ["ivory", "cream", "sage"]),
   choice("timber", "Timber finish", ["oak", "walnut", "weathered"]),
 ];
-const roofs: Record<string, string> = { terracotta: "#c76750", ochre: "#be914e", slate: "#64768b", moss: "#73865a" };
-const walls: Record<string, string> = { ivory: "#e5e1d2", cream: "#e8d5ab", sage: "#c3cdb4" };
-const timbers: Record<string, string> = { oak: "#927044", walnut: "#624835", weathered: "#858072" };
+export const roofs: Record<string, string> = { terracotta: "#c76750", ochre: "#be914e", slate: "#64768b", moss: "#73865a" };
+export const walls: Record<string, string> = { ivory: "#e5e1d2", cream: "#e8d5ab", sage: "#c3cdb4" };
+export const timbers: Record<string, string> = { oak: "#927044", walnut: "#624835", weathered: "#858072" };
 
 function cottage(tall: boolean, values?: ParamValues): MeshBuilder {
   const p = resolveParams(TIMBER_COTTAGE_PARAMS, values);
