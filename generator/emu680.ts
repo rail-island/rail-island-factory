@@ -14,6 +14,7 @@
 // See docs/models/czech-emus.md.
 
 import { ngon, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
+import type { GameProperties } from "./design.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { Coach, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { emblem } from "./cd163.ts";
@@ -384,8 +385,20 @@ function gangwayEnd(c: Coach, v: Volume, e: number, gum: number): void {
   });
 }
 
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const CD_680_GAME: GameProperties = {
+  weight: 40,
+  power: 1500,
+  maxspeed: 160,
+  accel: null,
+  variants: [
+    { params: { unit: "car683" }, power: 0, maxspeed: 230 },
+    { params: { unit: "car686" }, power: 0, maxspeed: 230 },
+  ],
+};
+
 export const EMU680_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-cd-680", title: "CD 680 Pendolino", build: cd680, params: CD680_PARAMS, catalog: EMU_CATALOG, references: "cd-680" },
+  { id: "proc-vehicle-cd-680", game: CD_680_GAME, title: "CD 680 Pendolino", build: cd680, params: CD680_PARAMS, catalog: EMU_CATALOG, references: "cd-680" },
 ];
 
 export { LAYOUTS as PENDOLINO_LAYOUTS, lengthOf as pendolinoLength };

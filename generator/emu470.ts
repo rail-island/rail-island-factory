@@ -14,6 +14,7 @@
 // motor car's cab is its +X end. See docs/models/czech-emus-classic.md.
 
 import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
+import type { GameProperties } from "./design.ts";
 import { Coach, type Pt, type Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { blockX, EMU_CATALOG, enumParam, pantograph, slopePanel, tractionNumber } from "./emuParts.ts";
@@ -250,4 +251,15 @@ export const frame470 = (unit: Unit470): { F: CarFrame; centre: number } => ({ F
 /** Every car, for the tests. */
 export const CARS_470: readonly Unit470[] = ["motorCar", "trailer"];
 
-export const EMU470_DESIGNS: ProceduralDesign[] = [{ id: "proc-vehicle-cd-470", title: "CD 470", build: cd470, params: CD470_PARAMS, catalog: EMU_CATALOG, references: "cd-470" }];
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const CD_470_GAME: GameProperties = {
+  weight: 70,
+  power: 1000,
+  maxspeed: 120,
+  accel: null,
+  variants: [
+    { params: { unit: "trailer" }, weight: 55, power: 0 },
+  ],
+};
+
+export const EMU470_DESIGNS: ProceduralDesign[] = [{ id: "proc-vehicle-cd-470", game: CD_470_GAME, title: "CD 470", build: cd470, params: CD470_PARAMS, catalog: EMU_CATALOG, references: "cd-470" }];

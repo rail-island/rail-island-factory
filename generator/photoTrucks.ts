@@ -188,7 +188,7 @@ export function pragaRv(){return build('praga', praga);}
 export function mercedesAtego1224(){return build('atego', atego);}
 const catalog = {category:'Road vehicles',group:'truck',defaultScale:1,license:'CC0',author:'Rail Island',source:'Rail Island'};
 export const PHOTO_TRUCKS: ProceduralDesign[] = [
-  {id:'proc-vehicle-tatra-815-tipper',title:'Tatra 815 Tipper',build:tatra815Tipper,references:'tatra-815-tipper',catalog},
-  {id:'proc-vehicle-praga-rv',title:'Praga RV',build:pragaRv,references:'praga-rv',catalog},
-  {id:'proc-vehicle-mercedes-atego-1224',title:'Mercedes-Benz Atego 1224',build:mercedesAtego1224,references:'mercedes-atego-1224',catalog},
+  {id:'proc-vehicle-tatra-815-tipper',game:{ weight: 15, power: 250, maxspeed: 80, accel: null },title:'Tatra 815 Tipper',build:tatra815Tipper,references:'tatra-815-tipper',catalog},
+  {id:'proc-vehicle-praga-rv',game:{ weight: 15, power: 250, maxspeed: 80, accel: null },title:'Praga RV',build:pragaRv,references:'praga-rv',catalog},
+  {id:'proc-vehicle-mercedes-atego-1224',game:{ weight: 15, power: 250, maxspeed: 80, accel: null },title:'Mercedes-Benz Atego 1224',build:mercedesAtego1224,references:'mercedes-atego-1224',catalog},
 ];

@@ -47,12 +47,12 @@ missing file with `index.html`, so the response type is checked too).
   96 x 60 box. The model page shows a side view at 16 px per metre (half its
   pixels, never wider than the panel), so vehicles compare by length.
 - **Wide (900 px and up): a table.** Thumbnail, title with the id beneath it, city
-  pool, triangles, vertices, GLB size, JS size, primitives, materials, width, depth,
+  pool, triangles, vertices, JS size, primitives, materials, width, depth,
   height and license. Every header sorts; a second click flips the direction.
-  **The GLB and JS sizes are links**: a click downloads that file (`glb/<id>.glb`,
-  `js/<id>.js`, [../models/js-format.md](../models/js-format.md)) without opening the model. The model page's
-  spec list links them too and adds the gzip sizes.
-- **Narrow: cards.** Title and pool chip, then triangles, vertices and GLB size -
+  **The JS size is a link**: a click downloads the model's file (`js/<id>.js`,
+  [../models/js-format.md](../models/js-format.md)) without opening the model. The model page's
+  spec list links it too and adds the gzip size. There is no GLB to download.
+- **Narrow: cards.** Title and pool chip, then triangles, vertices and JS size -
   plus the sorted-by column when it is something else, so a reorder never hides
   the number behind it.
 - **The toolbar** (sticky) holds the search box, a sort `<select>` over every
@@ -102,9 +102,8 @@ size and opens full size in a new tab. Low-resolution `.bmp`/`.gif` textures are
 scaled with `image-rendering: pixelated`, so their pixels stay sharp.
 
 A **parametric** model (one whose record has `params`) shows a Parameters block
-above the tabs: a `<select>` per enum parameter, its default marked. Any choice
-other than the defaults is built in the browser from the model's JS module
-instead of the GLB, keeping the camera; the thumbnail, specs and source tree stay
+above the tabs: a `<select>` per enum parameter, its default marked. Each choice
+is built in the browser from the model's JS module, keeping the camera; the thumbnail, specs and source tree stay
 the default build's, so tree highlight and picking pause until the defaults
 return ([../models/parameters.md](../models/parameters.md)).
 
@@ -112,7 +111,7 @@ A **rigged** vehicle (its record has `rig`: every road vehicle) shows a **Pose**
 block: a Steering slider and one per hinge of an articulated body ("Trailer",
 "Joint", "Joint 1"...), in degrees, positive counter-clockwise seen from above, with a Reset button.
 Moving one loads the model's JS module once and calls its `pose()` on the preview
-- the GLB's scene or the parametric JS build - which turns the steered wheels,
+- its JS build - which turns the steered wheels,
 swings the sections about their hinges and re-draws the joints: the same code the
 game is to call ([../models/vehicle-rig.md](../models/vehicle-rig.md)). It poses
 with the preview's own rig (`posePreview`): a non-default variant's hinges are its
@@ -130,14 +129,15 @@ another model or parameter choice stops them
 ([../models/animation.md](../models/animation.md)).
 
 `ModelViewer.tsx` (with its helper `viewerHighlight.ts`) is the only code
-importing three (plus `GLTFLoader` and `OrbitControls`), reached through a lazy import, so the list loads ~30 kB of
+importing three (plus `OrbitControls`), reached through a lazy import, so the list loads ~30 kB of
 script and the renderer arrives only when a model opens. It renders on demand
 (no damping, no idle loop), follows its pane with a ResizeObserver, frames the
 model on each selection, and discards a load that resolves after the selection
 moved on. On each framing it also fits the camera's `near`/`far` to the model
 (near a twentieth of the closest zoom, far past the farthest): depth precision
 goes with far/near, and a fixed 0.1..5000 range wasted it and let surfaces a few
-centimetres apart flicker. It shows the GLB exactly as built - no `defaultScale` applied.
+centimetres apart flicker. It shows the model exactly as its JS module builds it - every model, at any
+parameters, the same file the game draws; no `defaultScale` applied.
 
 ## The Source tab
 
@@ -177,5 +177,5 @@ the current one, so Back does not replay keystrokes. An unknown `?model=` shows
 Every standalone JS model accepts `build(THREE, params, lod = false)`. Set the third
 argument to `true` for its budgeted distant mesh. The factory detail view exposes
 this through **Low level of detail** and reports the preview triangle count.
-LOD rig posing is static; full-detail GLBs and source trees are unchanged.
+LOD rig posing is static; full-detail models and source trees are unchanged.
 See [../models/lod.md](../models/lod.md) for budgets, geometry and verification.

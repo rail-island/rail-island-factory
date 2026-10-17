@@ -14,6 +14,7 @@
 // car's cab is its +X end. See docs/models/czech-emus.md.
 
 import { ngon, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
+import type { GameProperties } from "./design.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { Coach, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { emblem } from "./cd163.ts";
@@ -473,8 +474,22 @@ function innerEnd(c: Coach, v: Volume, L: CarLayout, e: number): void {
 /** Every car and variant, for the tests: [unit, variant]. */
 export const ELEFANT_CARS: ReadonlyArray<[ElefantUnit, ElefantVariant]> = (["motorCar", "trailer", "drivingTrailer"] as const).flatMap((u) => (["cd471", "cd675"] as const).map((v): [ElefantUnit, ElefantVariant] => [u, v]));
 
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const CD_471_GAME: GameProperties = {
+  weight: 70,
+  power: 1000,
+  maxspeed: 140,
+  accel: null,
+  variants: [
+    { params: { variant: "cd675" }, maxspeed: 160 },
+    { params: { unit: "drivingTrailer", variant: "cd675" }, maxspeed: 160 },
+    { params: { unit: "trailer", variant: "cd675" }, weight: 50, power: 0, maxspeed: 160 },
+    { params: { unit: "trailer" }, weight: 50, power: 0 },
+  ],
+};
+
 export const EMU471_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-cd-471", title: "CD 471 CityElefant", build: cd471, params: CD471_PARAMS, catalog: EMU_CATALOG, references: "cd-471" },
+  { id: "proc-vehicle-cd-471", game: CD_471_GAME, title: "CD 471 CityElefant", build: cd471, params: CD471_PARAMS, catalog: EMU_CATALOG, references: "cd-471" },
 ];
 
 export { LAYOUTS as ELEFANT_LAYOUTS, centreOf as elefantCentre };

@@ -29,6 +29,11 @@ documentation in English.
   and the appropriate group; CD 163 uses `loco`, the CSD coaches `coach`
   (`COACH_CATALOG`), the freight wagons `wagon` (`WAGON_CATALOG`). A wagon's
   load variants are one design with a `cargo` parameter (docs/models/wagons.md).
+- State the vehicle's **game properties** on the design: `game: { weight, power,
+  maxspeed, accel }` (tonnes, kW, km/h, m/s2; `null` where none, a coach's power
+  0), plus `variants` for liveries or units whose figures differ. The build fails
+  without them (docs/models/game-properties.md). Take real figures from the
+  vehicle's sources, as the existing designs do.
 - Draw every bogie (two or three axles close together) inside `m.bogie(() => ...)`
   and every wheelset in a scope named `wheelset` (or record it with
   `m.axleAt(x, y)`): the bogie becomes its own turning node and the rig's

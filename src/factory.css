@@ -692,7 +692,7 @@ body {
   }
 }
 
-/* A GLB or JS size in the table or the spec list: a link that downloads the file. */
+/* A JS size in the table or the spec list: a link that downloads the file. */
 .factory-download {
   color: var(--m-primary, inherit);
   text-decoration: underline dotted;

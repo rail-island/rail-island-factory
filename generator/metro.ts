@@ -191,5 +191,5 @@ export function metro8171(params?: ParamValues): MeshBuilder {
 }
 
 export const METRO_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-metro-81-71", title: "Metro 81-71", build: metro8171, params: METRO_PARAMS, catalog: METRO_CATALOG, references: "metro-81-71" },
+  { id: "proc-vehicle-metro-81-71", game: { weight: 35, power: 300, maxspeed: 80, accel: null }, title: "Metro 81-71", build: metro8171, params: METRO_PARAMS, catalog: METRO_CATALOG, references: "metro-81-71" },
 ];

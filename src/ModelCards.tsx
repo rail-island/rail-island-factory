@@ -1,13 +1,13 @@
 // The narrow layout: two lines per model -- what it is, then a wrapping row of
 // labelled facts -- so nothing needs a sideways scroll on a phone. The stat row
-// always shows triangles, vertices and GLB size, plus the column being sorted by
+// always shows triangles, vertices and JS size, plus the column being sorted by
 // when that is something else, so a reorder never hides the number behind it.
 
 import { For, Show } from "solid-js";
 import { cellText, column, formatBytes, formatNumber, type Row } from "./catalogQuery";
 import { Thumb } from "./Thumb";
 
-const ALWAYS = ["triangles", "vertices", "glbBytes"];
+const ALWAYS = ["triangles", "vertices", "jsBytes"];
 
 export function ModelCards(props: { rows: readonly Row[]; sort: string; onOpen: (r: Row) => void }) {
   const extra = () => (ALWAYS.includes(props.sort) || props.sort === "title" ? undefined : column(props.sort));
@@ -31,7 +31,7 @@ export function ModelCards(props: { rows: readonly Row[]; sort: string; onOpen: 
                     <b>{formatNumber(r.vertices)}</b> verts
                   </span>
                   <span>
-                    <b>{formatBytes(r.glbBytes)}</b>
+                    <b>{formatBytes(r.jsBytes)}</b>
                   </span>
                   <Show when={extra()}>
                     {(c) => (

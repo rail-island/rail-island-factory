@@ -2254,11 +2254,11 @@ export const AIRCRAFT_CATALOG: CatalogFields = {
 
 /** Every design of the family, by catalog id; `references` is the folder of its source photos under assets/. */
 export const AIRCRAFT: ProceduralDesign[] = [
-  { id: "proc-vehicle-mcdonnell-douglas-md11", title: "McDonnell Douglas MD-11", build: mcdonnellDouglasMd11, params: MD11_PARAMS, finishParams: ["livery"], catalog: { ...AIRCRAFT_CATALOG, yaw: 180 } },
-  { id: "proc-vehicle-boeing-747", title: "Boeing 747-400", build: boeing747, params: B747_PARAMS, finishParams: ["livery"], catalog: { ...AIRCRAFT_CATALOG, yaw: 180 } },
-  { id: "proc-vehicle-airbus-beluga", title: "Airbus Beluga A300-600ST", build: airbusBeluga, catalog: { ...AIRCRAFT_CATALOG, yaw: 180 } },
-  { id: "proc-vehicle-aero-a10", title: "Aero A.10", build: aeroA10, references: "aero-a10", catalog: { ...AIRCRAFT_CATALOG, yaw:270 } },
-  { id: "proc-vehicle-airbus-a380", title: "Airbus A380", build: airbusA380, params: A380_PARAMS, finishParams: ["livery"], references: "airbus-a380", catalog: { ...AIRCRAFT_CATALOG, yaw:270 } },
-  { id: "proc-vehicle-boeing-737", title: "Boeing 737-800", build: boeing737, params: B737_PARAMS, finishParams: ["livery"], catalog: { ...AIRCRAFT_CATALOG, yaw: 0 } },
-  { id: "proc-vehicle-light-jet", title: "Light Jet", build: lightJet, references: "light-jet", catalog: { ...AIRCRAFT_CATALOG, yaw:180 } },
+  { id: "proc-vehicle-mcdonnell-douglas-md11", game: { weight: 60, power: 2000, maxspeed: 800, accel: 4 }, title: "McDonnell Douglas MD-11", build: mcdonnellDouglasMd11, params: MD11_PARAMS, finishParams: ["livery"], catalog: { ...AIRCRAFT_CATALOG, yaw: 180 } },
+  { id: "proc-vehicle-boeing-747", game: { weight: 60, power: 2000, maxspeed: 800, accel: 4 }, title: "Boeing 747-400", build: boeing747, params: B747_PARAMS, finishParams: ["livery"], catalog: { ...AIRCRAFT_CATALOG, yaw: 180 } },
+  { id: "proc-vehicle-airbus-beluga", game: { weight: 60, power: 2000, maxspeed: 800, accel: 4 }, title: "Airbus Beluga A300-600ST", build: airbusBeluga, catalog: { ...AIRCRAFT_CATALOG, yaw: 180 } },
+  { id: "proc-vehicle-aero-a10", game: { weight: 2, power: 240, maxspeed: 150, accel: 3, sizeClass: "small" }, title: "Aero A.10", build: aeroA10, references: "aero-a10", catalog: { ...AIRCRAFT_CATALOG, yaw:270 } },
+  { id: "proc-vehicle-airbus-a380", game: { weight: 560, power: 12000, maxspeed: 1020, accel: 3.5, sizeClass: "big" }, title: "Airbus A380", build: airbusA380, params: A380_PARAMS, finishParams: ["livery"], references: "airbus-a380", catalog: { ...AIRCRAFT_CATALOG, yaw:270 } },
+  { id: "proc-vehicle-boeing-737", game: { weight: 80, power: 2400, maxspeed: 880, accel: 4, sizeClass: "medium" }, title: "Boeing 737-800", build: boeing737, params: B737_PARAMS, finishParams: ["livery"], catalog: { ...AIRCRAFT_CATALOG, yaw: 0 } },
+  { id: "proc-vehicle-light-jet", game: { weight: 10, power: 400, maxspeed: 700, accel: 7, sizeClass: "small" }, title: "Light Jet", build: lightJet, references: "light-jet", catalog: { ...AIRCRAFT_CATALOG, yaw:180 } },
 ];

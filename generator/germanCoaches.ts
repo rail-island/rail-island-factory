@@ -17,8 +17,8 @@ import { DOSTO_PARAMS, dbDosto } from "./dbDoubleDeck.ts";
 import { DR_DOUBLE_DECK_PARAMS, drDoubleDeck } from "./drDoubleDeck.ts";
 
 export const GERMAN_COACHES: readonly ProceduralDesign[] = [
-  { id: "proc-vehicle-db-dosto", title: "DB Regio Double-Deck Coach", build: dbDosto, params: DOSTO_PARAMS, catalog: COACH_CATALOG, references: "db-dosto" },
-  { id: "proc-vehicle-dr-sbahn-berlin", title: "DR Double-Deck Coach (Berlin S-Bahn livery)", build: drDoubleDeck, params: DR_DOUBLE_DECK_PARAMS, catalog: COACH_CATALOG, references: "dr-sbahn-berlin" },
+  { id: "proc-vehicle-db-dosto", game: { weight: 80, power: 0, maxspeed: 120, accel: null }, title: "DB Regio Double-Deck Coach", build: dbDosto, params: DOSTO_PARAMS, catalog: COACH_CATALOG, references: "db-dosto" },
+  { id: "proc-vehicle-dr-sbahn-berlin", game: { weight: 80, power: 0, maxspeed: 120, accel: null }, title: "DR Double-Deck Coach (Berlin S-Bahn livery)", build: drDoubleDeck, params: DR_DOUBLE_DECK_PARAMS, catalog: COACH_CATALOG, references: "dr-sbahn-berlin" },
 ];
 
 const GERMAN_DOC = {

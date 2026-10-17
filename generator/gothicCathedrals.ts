@@ -295,6 +295,6 @@ export const GOTHIC_CATALOG: CatalogFields = {
 };
 
 export const GOTHIC_CATHEDRALS: ProceduralDesign[] = [
-  { id: "bld-notre-dame", title: "Notre-Dame", build: notreDame, references: "notre-dame", catalog: GOTHIC_CATALOG },
-  { id: "bld-prague-castle-st-vitus", title: "Prague Castle (St Vitus)", build: pragueCastleStVitus, references: "prague-castle-st-vitus", catalog: GOTHIC_CATALOG },
+  { id: "bld-notre-dame", game: { plaza: { cities: ["city"], layouts: ["rect"], fit: "footprint" } }, title: "Notre-Dame", build: notreDame, references: "notre-dame", catalog: GOTHIC_CATALOG },
+  { id: "bld-prague-castle-st-vitus", game: { plaza: { cities: ["city"], layouts: ["rect"], fit: "footprint" } }, title: "Prague Castle (St Vitus)", build: pragueCastleStVitus, references: "prague-castle-st-vitus", catalog: GOTHIC_CATALOG },
 ];

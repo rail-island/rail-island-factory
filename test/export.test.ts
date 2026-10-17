@@ -12,7 +12,7 @@ import path from "node:path";
 import { SKYSCRAPERS } from "../generator/skyscrapers";
 import { VEHICLES } from "../generator/vehicles";
 import { buildLodModel } from "../generator/lodModel";
-import { ALL_VEHICLES, BUILDINGS, DESIGNS, buildExport, generateReferences } from "../generator/generate";
+import { ALL_VEHICLES, BUILDINGS, DESIGNS, buildExport, designGlb, generateReferences } from "../generator/generate";
 import { VILLAGE_HOUSES } from "../generator/village";
 import {
   CATALOG_FILE, META_FILE, VEHICLE_META_FILE, VILLAGE_META_FILE, catalogRecord, exportMeta, exportVehicleMeta, isSideViewCategory, metaEntry,
@@ -31,7 +31,7 @@ describe("exportMeta", () => {
         params: SKYSCRAPERS.find((d) => d.id === b.id)!.params,
         category: "Skyscrapers",
         group: "skyscraper_c",
-        glb: `${b.id}.glb`,
+        js: `${b.id}.js`,
         thumb: `${b.id}.png`,
         defaultScale: 1,
         license: "CC0",
@@ -55,7 +55,7 @@ describe("exportMeta for the village houses", () => {
         title: d.title,
         category: "Village",
         group: d.id.startsWith("proc-building-village-timber-") ? "village_red" : "village",
-        glb: `${d.id}.glb`,
+        js: `${d.id}.js`,
         thumb: `${d.id}.png`,
         defaultScale: 1,
         license: "CC0",
@@ -99,13 +99,14 @@ describe("exportVehicleMeta", () => {
         category: VEHICLES.find((d) => d.id === v.id)!.catalog?.category ?? "Road vehicles",
         group: VEHICLES.find((d) => d.id === v.id)!.catalog?.group ?? "truck",
         ...(VEHICLES.find((d) => d.id === v.id)!.catalog?.traction ? { traction: VEHICLES.find((d) => d.id === v.id)!.catalog!.traction } : {}),
-        glb: `${v.id}.glb`,
+        js: `${v.id}.js`,
         thumb: `${v.id}.png`,
         license: "CC0",
         author: "Rail Island",
         source: "Rail Island",
         // a parametric vehicle lists its enum parameters; a fixed one has no key
         ...(VEHICLES.find((d) => d.id === v.id)!.params ? { params: VEHICLES.find((d) => d.id === v.id)!.params } : {}),
+        game: VEHICLES.find((d) => d.id === v.id)!.game,
       });
     }
   });
@@ -118,15 +119,51 @@ describe("exportVehicleMeta", () => {
   });
 });
 
+describe("game properties", () => {
+  // What the game needs beyond geometry is the factory's: every vehicle states its
+  // running figures, and the build refuses one that does not.
+  it("are in every vehicle's meta entry, and only plaza/block in a building's", () => {
+    for (const v of exportVehicleMeta(ALL_VEHICLES).vehicles) {
+      expect(v.game, v.id).toBeDefined();
+      for (const k of ["weight", "power", "maxspeed", "accel"] as const) expect(v.game, `${v.id} ${k}`).toHaveProperty(k);
+    }
+    for (const b of exportMeta(BUILDINGS).buildings) {
+      if (b.game) expect(Object.keys(b.game).every((k) => k === "plaza" || k === "block"), b.id).toBe(true);
+    }
+    expect(exportMeta(BUILDINGS).buildings.find((b) => b.id === "proc-building-brandenburg-gate")!.game).toEqual({
+      plaza: { cities: ["city"], layouts: ["rect"], fit: "footprint" },
+    });
+    // the per-variant figures: the CD 162 runs at 140 km/h, the 163 at 120
+    const cd163 = exportVehicleMeta(ALL_VEHICLES).vehicles.find((v) => v.id === "proc-vehicle-cd-163")!.game!;
+    expect(cd163.maxspeed).toBe(120);
+    expect(cd163.variants!.find((x) => x.params.livery === "cd162")!.maxspeed).toBe(140);
+  });
+
+  it("refuse a vehicle without them, or with a figure or variant that is wrong", () => {
+    const base = { id: "proc-vehicle-test", title: "Test", build: SKYSCRAPERS[0]!.build };
+    const params = [{ name: "livery", title: "Livery", default: "red", values: [{ value: "red", title: "Red" }, { value: "blue", title: "Blue" }] }];
+    const physics = { weight: 80, power: 3000, maxspeed: 120, accel: null };
+    expect(() => exportVehicleMeta([base])).toThrow(/proc-vehicle-test: game properties missing/);
+    expect(() => exportVehicleMeta([{ ...base, game: { weight: 80, power: 3000, maxspeed: 120 } }])).toThrow(/lack "accel"/);
+    expect(() => exportVehicleMeta([{ ...base, game: { ...physics, power: Number.NaN } }])).toThrow(/invalid "power"/);
+    expect(() => exportVehicleMeta([{ ...base, params, game: { ...physics, variants: [{ params: { livery: "green" }, maxspeed: 140 }] } }])).toThrow(/does not resolve/);
+    expect(() => exportVehicleMeta([{ ...base, params, game: { ...physics, variants: [{ params: { livery: "red" }, maxspeed: 140 }] } }])).toThrow(/at the default/);
+    expect(() => exportVehicleMeta([{ ...base, params, game: { ...physics, variants: [{ params: { livery: "blue" } }, { params: { livery: "blue" } }] } }])).toThrow(/twice/);
+    expect(exportVehicleMeta([{ ...base, params, game: { ...physics, variants: [{ params: { livery: "blue" }, maxspeed: 140 }] } }]).vehicles[0]!.game!.variants).toHaveLength(1);
+    expect(() => exportMeta([{ ...base, id: "proc-building-test", game: { ...physics } }])).toThrow(/of a building may hold only plaza and block/);
+  });
+});
+
 describe("catalogRecord", () => {
   it("joins the meta entry with the built facts and the site URLs", () => {
     const r = catalogRecord(metaEntry(SKYSCRAPERS[0]!), {
-      glbBytes: 1000, glbGzipBytes: 300, jsBytes: 80, jsGzipBytes: 50, thumbBytes: 200, triangles: 12, vertices: 36, primitives: 2, materials: 2,
+      jsBytes: 80, jsGzipBytes: 50, thumbBytes: 200, triangles: 12, vertices: 36, primitives: 2, materials: 2,
       min: [-1.0004, 0, -2], max: [1, 30.1234567, 2],
     });
-    expect(r.glbUrl).toBe(`glb/${SKYSCRAPERS[0]!.id}.glb`);
     expect(r.jsUrl).toBe(`js/${SKYSCRAPERS[0]!.id}.js`);
-    expect([r.glbGzipBytes, r.jsBytes, r.jsGzipBytes]).toEqual([300, 80, 50]);
+    expect([r.jsBytes, r.jsGzipBytes]).toEqual([80, 50]);
+    expect(r).not.toHaveProperty("glbUrl");
+    expect(r).not.toHaveProperty("glbBytes");
     expect(r.thumbUrl).toBe(`thumbs/${SKYSCRAPERS[0]!.id}.png`);
     expect([r.sizeX, r.sizeY, r.sizeZ]).toEqual([2, 30.123, 4]);
     expect(r.triangles).toBe(12);
@@ -144,14 +181,14 @@ describe("buildExport", () => {
       const village = JSON.parse(fs.readFileSync(path.join(dir, VILLAGE_META_FILE), "utf8")) as ExportMeta;
       expect(meta).toEqual(exportMeta(BUILDINGS));
       expect(village).toEqual(exportMeta(VILLAGE_HOUSES));
-      // a rigged vehicle's entry carries its rig, the one its GLB's scene holds
+      // a rigged vehicle's entry carries its rig, the one its built model holds
       const rigs = new Map(ALL_VEHICLES.flatMap((d) => {
         const rig = d.build().rig;
         return rig ? [[d.id, rig] as const] : [];
       }));
       // a road or rail vehicle's thumbnail is a side view, framed as its meta says
       const sides = new Map(ALL_VEHICLES.flatMap((d) =>
-        isSideViewCategory(d.catalog?.category ?? "Road vehicles") ? [[d.id, glbSideFrame(path.join(dir, "glb", `${d.id}.glb`))] as const] : []));
+        isSideViewCategory(d.catalog?.category ?? "Road vehicles") ? [[d.id, glbSideFrame(designGlb(d.id))] as const] : []));
       expect(vehicles).toEqual(exportVehicleMeta(ALL_VEHICLES, rigs, sides));
       for (const v of vehicles.vehicles) {
         const png = PNG.sync.read(fs.readFileSync(path.join(dir, "thumbs", v.thumb)));
@@ -166,20 +203,21 @@ describe("buildExport", () => {
         }
       }
       expect(meta.buildings.every((b) => !b.thumbSide)).toBe(true);
+      // no GLB is exported; the in-memory one carries the rig the meta lists
+      expect(fs.existsSync(path.join(dir, "glb"))).toBe(false);
       for (const v of vehicles.vehicles) {
-        const { json } = parseGlb(fs.readFileSync(path.join(dir, "glb", v.glb)));
+        const { json } = parseGlb(designGlb(v.id));
         expect((json.scenes![0] as { extras?: { rig?: unknown } }).extras?.rig).toEqual(v.rig);
       }
       expect(vehicles.vehicles.find((v) => v.id === "proc-vehicle-american-truck")!.rig!.steer!.axles[0]!.nodes).toEqual(["wheel-front-left", "wheel-front-right"]);
       expect(catalog.version).toBe(1);
       expect(catalog.records.map((r) => r.id)).toEqual([...DESIGNS.keys()]);
       for (const r of catalog.records) {
-        expect(fs.statSync(path.join(dir, r.glbUrl)).size).toBe(r.glbBytes);
         expect(fs.statSync(path.join(dir, r.thumbUrl)).size).toBe(r.thumbBytes);
         expect(fs.statSync(path.join(dir, r.jsUrl)).size).toBe(r.jsBytes);
         const design = DESIGNS.get(r.id)!;
         const lodBytes = buildLodModel(design).toGlb(r.id).length;
-        expect(r.jsBytes).toBeLessThan(r.glbBytes + lodBytes);
+        expect(r.jsBytes).toBeLessThan(designGlb(r.id).length + lodBytes);
         expect(r.triangles).toBeGreaterThan(0);
         const listed = meta.buildings.find((b) => b.id === r.id)
           ?? village.buildings.find((b) => b.id === r.id)

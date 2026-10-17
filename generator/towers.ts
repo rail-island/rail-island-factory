@@ -1,5 +1,6 @@
 // All eight webapp Towers, rebuilt from primitives; see docs/models/towers.md.
 import { MeshBuilder, ngon, rect } from './meshBuilder.ts';
+import type { GameProperties } from './design.ts';
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from './design.ts';
 import { arch, bar, beam, dial, face, panel, TAU, TOWER_PALETTE } from './towerParts.ts';
 import type { Vec3 } from './meshCore.ts';
@@ -302,10 +303,15 @@ const entry=(id:string,title:string,build:ProceduralDesign['build'],_height:numb
   id,title,build,params,references:id,catalog:{category:'Towers',group:'towers',defaultScale:id==='tower-eiffel'?0.55:1,
     license:credit?'CC-BY-3.0':'CC0',author:credit?`Rail Island; reference: ${credit}`:'Rail Island',source:'Rail Island procedural reconstruction; see docs/models/towers.md'},
 });
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const TOWER_EIFFEL_GAME: GameProperties = {
+  block: { rects: [{ x: -0.385, z: -0.385, w: 0.23, d: 0.23 }, { x: 0.385, z: -0.385, w: 0.23, d: 0.23 }, { x: -0.385, z: 0.385, w: 0.23, d: 0.23 }, { x: 0.385, z: 0.385, w: 0.23, d: 0.23 }] },
+};
+
 export const TOWERS:readonly ProceduralDesign[]=[
   entry('tower-bell','Bell Tower',bellTower,24.584785,34.18117,BELL),
   entry('tower-bigben','Big Ben',bigBen,96,81.52325,CLOCK,'Daqian Dong'),
-  { ...entry('tower-eiffel','Eiffel Tower',eiffelTower,330,183.02439,undefined,'Scott Marshall'), buildLod: eiffelTowerLod },
+  { ...entry('tower-eiffel','Eiffel Tower',eiffelTower,330,183.02439,undefined,'Scott Marshall'), game: TOWER_EIFFEL_GAME, buildLod: eiffelTowerLod },
   entry('tower-radio','Radio Tower',radioTower,37,51.99029,RADIO,'Poly by Google'),
   entry('tower-stone','Stone Tower',stoneTower,21.6,41.66234,FORT),
   entry('tower-kenney','Stone Turret',stoneTurret,13.5,34.6981,TURRET),

@@ -16,6 +16,7 @@
 // See docs/models/czech-emus-classic.md.
 
 import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
+import type { GameProperties } from "./design.ts";
 import { Coach, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { diamond } from "./czElectricKit.ts";
@@ -299,4 +300,19 @@ export const frame460 = (unit: Unit460): { F: CarFrame; centre: number } => ({ F
 /** Every car and livery, for the tests. */
 export const CARS_460: ReadonlyArray<[Unit460, Livery460]> = (["motorCar", "trailer"] as const).flatMap((u) => (["cd", "cd003", "cd007", "csd"] as const).map((l): [Unit460, Livery460] => [u, l]));
 
-export const EMU460_DESIGNS: ProceduralDesign[] = [{ id: "proc-vehicle-cd-460", title: "CD 460", build: cd460, params: CD460_PARAMS, catalog: EMU_CATALOG, references: "cd-460" }];
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const CD_460_GAME: GameProperties = {
+  weight: 40,
+  power: 1000,
+  maxspeed: 120,
+  accel: null,
+  variants: [
+    { params: { livery: "csd" }, maxspeed: 110 },
+    { params: { livery: "cd003", unit: "trailer" }, power: 0 },
+    { params: { livery: "cd007", unit: "trailer" }, power: 0 },
+    { params: { livery: "csd", unit: "trailer" }, power: 0, maxspeed: 110 },
+    { params: { unit: "trailer" }, power: 0 },
+  ],
+};
+
+export const EMU460_DESIGNS: ProceduralDesign[] = [{ id: "proc-vehicle-cd-460", game: CD_460_GAME, title: "CD 460", build: cd460, params: CD460_PARAMS, catalog: EMU_CATALOG, references: "cd-460" }];

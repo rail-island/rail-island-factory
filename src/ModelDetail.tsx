@@ -26,7 +26,7 @@ import { indexTree, type SourceTree } from "./sourceTreeView";
 import { FileCell } from "./ModelTable";
 import { SourceTreePanel } from "./SourceTreePanel";
 
-// three, GLTFLoader and OrbitControls arrive only once somebody opens a model.
+// three and OrbitControls arrive only once somebody opens a model.
 const ModelViewer = lazy(() => import("./ModelViewer").then((m) => ({ default: m.ModelViewer })));
 
 async function loadTree(id: string): Promise<SourceTree> {
@@ -134,7 +134,7 @@ export function ModelDetail(props: {
               )}
             </For>
             <Show when={!atDefaults()}>
-              <p class="factory-muted factory-params__note">Built in the browser from the JS model; the GLB, thumbnail and source tree are the defaults.</p>
+              <p class="factory-muted factory-params__note">The thumbnail and source tree show the defaults.</p>
             </Show>
           </fieldset>
         </Show>

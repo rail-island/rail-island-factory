@@ -282,7 +282,7 @@ export const INDUSTRY: readonly ProceduralDesign[] = [
   design('industry-power-plant', 'Power generation plant', industrialPower, POWER_PARAMS),
   design('chemical-factory', 'Chemical and refining plant', industrialProcess, PROCESS_PARAMS),
   design('industry-oil-pump', 'Oil pumpjack', industrialOilPump, MACHINE_PARAMS),
-  design('industry-wind-turbine', 'Wind turbine', industrialWind, MACHINE_PARAMS),
+  { ...design('industry-wind-turbine', 'Wind turbine', industrialWind, MACHINE_PARAMS), game: { block: { rects: [{ x: 0, z: 0, w: 0.2, d: 0.59 }] } } },
 ];
 
 // Explicit distant silhouettes: no facade panels, pipework, ladders or railings.

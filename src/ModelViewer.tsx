@@ -1,4 +1,4 @@
-// The 3D half of a model's detail page: the GLB exactly as built, drag to orbit,
+// The 3D half of a model's detail page: the model exactly as built, drag to orbit,
 // wheel or pinch to zoom. The ONLY module that imports three, reached through a
 // dynamic import from ModelDetail, so a visitor who only reads the list never
 // downloads a renderer.
@@ -7,10 +7,10 @@
 // drag or zoom emits "change" and the scene renders once. A ResizeObserver keeps
 // the canvas matched to its pane. The model is framed on every selection change.
 //
-// A parametric model at its default parameters shows its GLB; any other choice
-// is built in the browser by the model's standalone JS module (js/<id>.js,
-// build(THREE, params)), fetched once per model. The camera keeps its place
-// while only the parameters change.
+// Every model is built in the browser by its standalone JS module (js/<id>.js,
+// build(THREE, params, lod)), fetched once per model -- the same file the game
+// draws; there is no GLB. The camera keeps its place while only the parameters
+// change.
 //
 // A model with animation clips (a steam locomotive's running gear: wheelsets,
 // rods and valve gear, docs/models/animation.md) gets Start and Stop buttons.
@@ -23,7 +23,7 @@
 //
 // With a source tree (the model page's Source tab) it also highlights the
 // selected node -- its triangles glow, everything else turns into a faint ghost --
-// and a click that is not a drag picks the leaf under the cursor. The GLB has one
+// and a click that is not a drag picks the leaf under the cursor. The model has one
 // mesh per material and the tree's triangle ranges index into them, so both work
 // through draw groups and the face index; nothing is split or re-uploaded.
 
@@ -32,13 +32,10 @@ import {
   AmbientLight, AnimationClip, AnimationMixer, Box3, QuaternionKeyframeTrack, VectorKeyframeTrack, BufferAttribute, BufferGeometry, Color, DirectionalLight, Group, Mesh, MeshStandardMaterial, PerspectiveCamera,
   Raycaster, Scene, Vector2, Vector3, WebGLRenderer, type Object3D,
 } from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { isDefaultParams, posePreview, previewKey, type CatalogRecord } from "./catalogQuery";
+import { posePreview, previewKey, type CatalogRecord } from "./catalogQuery";
 import { leafAt, rangesOf, type TreeIndex } from "./sourceTreeView";
 import { applyHighlight, makeParts, type Part } from "./viewerHighlight";
-
-const loader = new GLTFLoader();
 
 type JsBuild = (three: object, params?: Record<string, string>, lod?: boolean) => Object3D;
 /** A model's JS module: build(), and for a rigged model pose() (generator/rig.ts). */
@@ -71,14 +68,10 @@ function jsModule(url: string): Promise<JsModule> {
 }
 
 /**
- * The model as the page should show it: the GLB at the defaults, else a JS build
- * of the chosen values; with its animation clips (none for most models).
+ * The model as the page should show it: a JS build of the chosen values, with its
+ * animation clips (none for most models).
  */
 async function loadModel(record: CatalogRecord, params: Record<string, string>, lod = false): Promise<{ object: Object3D; clips: AnimationClip[] }> {
-  if (!lod && isDefaultParams(record, params)) {
-    const gltf = await loader.loadAsync(`/${record.glbUrl}`);
-    return { object: gltf.scene as Object3D, clips: gltf.animations };
-  }
   const object = (await jsModule(`/${record.jsUrl}`)).default(THREE_SUBSET, params, lod);
   return { object, clips: object.animations };
 }
@@ -333,8 +326,8 @@ export function ModelViewer(props: {
   });
 
   // A rigged model is posed by its own JS module's pose(): the code the game calls,
-  // with the preview's own rig -- the GLB's scene carries it (scene extras), a JS
-  // build the one of its parameters (posePreview). Only the model the page shows
+  // with the preview's own rig -- each JS build carries the one of its parameters
+  // (posePreview). Only the model the page shows
   // now is posed: after a step or a parameter change the previous one stays on
   // screen until the next lands, and must not be posed with the next one's rig.
   createEffect(() => {

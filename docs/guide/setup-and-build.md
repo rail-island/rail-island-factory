@@ -33,7 +33,7 @@ check and render every design; an unchanged design is not re-rendered at all
 
 | Path | What lives there |
 |---|---|
-| `generator/` | Node-only: the mesh builder, the designs, the GLB reader, the thumbnail rasterizer, the export writer |
+| `generator/` | Node-only: the mesh builder, the designs, the in-memory GLB writer and reader, the thumbnail rasterizer, the export writer |
 | `src/` | the Solid site |
 | `test/` | Vitest suites, all in the node environment |
 | `.github/workflows/` | `deploy.yml` and `test.yml` |
@@ -67,13 +67,14 @@ Among them:
   shape on y = 0 at house size and under 10,000 triangles, finish parameters
   that only recolour, the side mirror ([../models/village.md](../models/village.md)).
 - `test/export.test.ts` - `skyscrapers.meta.json`, `village.meta.json`, `vehicles.meta.json` and `catalog.json` match the
-  designs and the files beside them, and a rebuild writes the same documents.
+  designs and the files beside them, no GLB is written, every vehicle carries its game properties
+  ([../models/game-properties.md](../models/game-properties.md)), and a rebuild writes the same documents.
 - `test/jsModel.test.ts` - each design's standalone JS model builds the GLB's triangles, colours and parts
   with real three.js, and is standalone and smaller ([../models/js-format.md](../models/js-format.md)).
 - `test/catalogQuery.test.ts` - the site's search, sort, formatting, URL state and download links.
 - `test/sourceTreeView.test.ts` - the Source tab's tree index, ranges and labels.
 - `test/viewerHighlight.test.ts` - the preview's highlight groups and picking, on
-  real GLBs loaded with three's GLTFLoader (no WebGL).
+  real designs built by their JS modules as the site builds them (no WebGL).
 - `test/rig.test.ts` - steering, the joint renderer and `pose()` of every rigged road
   vehicle, and the trailers' and steered tyres' clearance, triangle against triangle
   with the helpers in `test/collision.ts` ([../models/vehicle-rig.md](../models/vehicle-rig.md)).

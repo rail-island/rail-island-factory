@@ -7,7 +7,7 @@
 // (vehicle-rig.md). See docs/models/trams.md.
 
 import type { MeshBuilder } from "./meshBuilder.ts";
-import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
+import { resolveParams, type CatalogFields, type GameProperties, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import type { Volume } from "./csdCoachParts.ts";
 import { Tram, articulate, type Pt, type PxBox, type SourceVolume, type TramMap } from "./tramKit.ts";
 
@@ -527,17 +527,19 @@ interface TramDesign {
   folder: string;
   build: (params?: ParamValues) => MeshBuilder;
   params?: readonly ParamSpec[];
+  /** What the game needs of it beyond its geometry (design.ts GameProperties). */
+  game: GameProperties;
 }
 
 export const TRAM_DESIGN_LIST: readonly TramDesign[] = [
-  { id: "proc-vehicle-tatra-t3", title: "Tatra T3", folder: "tatra-t3", build: tatraT3, params: T3_PARAMS },
-  { id: "proc-vehicle-tatra-t6", title: "Tatra T6A5", folder: "tatra-t6", build: tatraT6 },
-  { id: "proc-vehicle-tatra-kt8", title: "Tatra KT8D5", folder: "tatra-kt8", build: tatraKt8, params: KT8_PARAMS },
-  { id: "proc-vehicle-tatra-kt4", title: "Tatra KT4", folder: "tatra-kt4", build: tatraKt4 },
-  { id: "proc-vehicle-kvag-gt4", title: "GT4", folder: "gt4", build: gt4Tram },
+  { id: "proc-vehicle-tatra-t3", game: { weight: 16.5, power: 176, maxspeed: 50, accel: null }, title: "Tatra T3", folder: "tatra-t3", build: tatraT3, params: T3_PARAMS },
+  { id: "proc-vehicle-tatra-t6", game: { weight: 17, power: 180, maxspeed: 50, accel: null }, title: "Tatra T6A5", folder: "tatra-t6", build: tatraT6 },
+  { id: "proc-vehicle-tatra-kt8", game: { weight: 30, power: 200, maxspeed: 50, accel: null }, title: "Tatra KT8D5", folder: "tatra-kt8", build: tatraKt8, params: KT8_PARAMS },
+  { id: "proc-vehicle-tatra-kt4", game: { weight: 12, power: 100, maxspeed: 60, accel: null }, title: "Tatra KT4", folder: "tatra-kt4", build: tatraKt4 },
+  { id: "proc-vehicle-kvag-gt4", game: { weight: 20, power: 100, maxspeed: 60, accel: null }, title: "GT4", folder: "gt4", build: gt4Tram },
 ];
 
 export const TRAM_DESIGNS: ProceduralDesign[] = TRAM_DESIGN_LIST.map((d) => ({
-  id: d.id, title: d.title, build: d.build, catalog: TRAM_CATALOG, references: d.folder, ...(d.params ? { params: d.params } : {}),
+  id: d.id, title: d.title, build: d.build, game: d.game, catalog: TRAM_CATALOG, references: d.folder, ...(d.params ? { params: d.params } : {}),
 }));
 

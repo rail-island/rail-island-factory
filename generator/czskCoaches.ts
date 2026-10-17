@@ -4,7 +4,7 @@
 // vehicles they transfer, for the measured comparison (csdCoachComparison.ts).
 // See docs/models/czsk-coaches.md.
 
-import type { ProceduralDesign } from "./design.ts";
+import type { GameProperties, ProceduralDesign } from "./design.ts";
 import type { CoachTransfer } from "./coachTransfers.ts";
 import { COACH_CATALOG } from "./csdCoaches.ts";
 import { CD_Y_PARAMS, cdYCoach } from "./cdYCoach.ts";
@@ -14,10 +14,33 @@ import { UIC_Z_PARAMS, uicZCoach } from "./uicZCoach.ts";
 // the builders, re-exported: the standalone JS models (jsModel.ts) import them from this family module
 export { cdYCoach, zsrCoach, uicZCoach };
 
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const CD_Y_COACH_GAME: GameProperties = {
+  weight: 40,
+  power: 0,
+  maxspeed: 140,
+  accel: null,
+  variants: [
+    { params: { variant: "beer" }, maxspeed: 160 },
+    { params: { variant: "bnb" }, maxspeed: 120 },
+  ],
+};
+
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const ZSR_COACH_GAME: GameProperties = {
+  weight: 40,
+  power: 0,
+  maxspeed: 140,
+  accel: null,
+  variants: [
+    { params: { variant: "bdmeer" }, maxspeed: 160 },
+  ],
+};
+
 export const CZSK_COACHES: readonly ProceduralDesign[] = [
-  { id: "proc-vehicle-cd-y-coach", title: "CD Y Coach", build: cdYCoach, params: CD_Y_PARAMS, references: "cd-y-coach", catalog: COACH_CATALOG },
-  { id: "proc-vehicle-zsr-coach", title: "ZSR Coach", build: zsrCoach, params: ZSR_PARAMS, references: "zsr-coach", catalog: COACH_CATALOG },
-  { id: "proc-vehicle-uic-z-coach", title: "UIC-Z Coach", build: uicZCoach, params: UIC_Z_PARAMS, references: "uic-z-coach", catalog: COACH_CATALOG },
+  { id: "proc-vehicle-cd-y-coach", game: CD_Y_COACH_GAME, title: "CD Y Coach", build: cdYCoach, params: CD_Y_PARAMS, references: "cd-y-coach", catalog: COACH_CATALOG },
+  { id: "proc-vehicle-zsr-coach", game: ZSR_COACH_GAME, title: "ZSR Coach", build: zsrCoach, params: ZSR_PARAMS, references: "zsr-coach", catalog: COACH_CATALOG },
+  { id: "proc-vehicle-uic-z-coach", game: { weight: 46, power: 0, maxspeed: 200, accel: null }, title: "UIC-Z Coach", build: uicZCoach, params: UIC_Z_PARAMS, references: "uic-z-coach", catalog: COACH_CATALOG },
 ];
 
 const DOC = {

@@ -52,6 +52,9 @@ The game hides the node named exactly `gear` in flight. Fixed gear: no parts.
   yaw is measured off them. The 737 is drawn nose +X in a `TurnedBuilder`,
   which turns it to the nose -X of the model it replaced (yaw 0).
 - Ids are stored in saved maps: never rename one.
+- State the game properties on the design: `game: { weight, power, maxspeed,
+  accel }` and the airport class `sizeClass` (`small`, `medium`, `big`); the build
+  fails without them (docs/models/game-properties.md).
 
 ## Liveries
 

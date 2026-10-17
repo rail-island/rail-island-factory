@@ -4,7 +4,7 @@
 // unit. Registered in generate.ts as one family: a design's standalone JS model
 // imports its builder by name from this module (docs/models/diesel-locos.md).
 
-import type { ProceduralDesign } from "./design.ts";
+import type { GameProperties, ProceduralDesign } from "./design.ts";
 import { DIESEL_LOCO_CATALOG } from "./cd163.ts";
 import { CD750_PARAMS, cd750 } from "./cd750.ts";
 import { CD749_PARAMS, cd749 } from "./cd749.ts";
@@ -16,11 +16,34 @@ import { CD771_PARAMS, cd771 } from "./cd771.ts";
 // re-exported: a design's JS bundle imports its build function from this module
 export { cd750, cd749, cd781, csdT6790, csdT499, cd771 };
 
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const CD_750_GAME: GameProperties = {
+  weight: 74,
+  power: 1325,
+  maxspeed: 100,
+  accel: null,
+  variants: [
+    { params: { livery: "cd754No013" }, power: 1470 },
+    { params: { livery: "cd754" }, power: 1470 },
+  ],
+};
+
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const CD_771_GAME: GameProperties = {
+  weight: 123,
+  power: 740,
+  maxspeed: 95,
+  accel: null,
+  variants: [
+    { params: { livery: "cd771No421" }, weight: 114, power: 1350, maxspeed: 90 },
+  ],
+};
+
 export const DIESEL_LOCOS: ProceduralDesign[] = [
-  { id: "proc-vehicle-cd-750", title: "CD 750 / 753 / 754 Brejlovec", build: cd750, params: CD750_PARAMS, catalog: DIESEL_LOCO_CATALOG, references: "cd-750" },
-  { id: "proc-vehicle-cd-749", title: "CD 749 Bardotka", build: cd749, params: CD749_PARAMS, catalog: DIESEL_LOCO_CATALOG, references: "cd-750" },
-  { id: "proc-vehicle-cd-781", title: "CD 781 Sergej", build: cd781, params: CD781_PARAMS, catalog: DIESEL_LOCO_CATALOG, references: "cd-781" },
-  { id: "proc-vehicle-csd-t679-0", title: "CSD T 679.0 Pomeranc", build: csdT6790, catalog: DIESEL_LOCO_CATALOG, references: "csd-t679" },
-  { id: "proc-vehicle-csd-t499", title: "CSD T 499.0 / CD 759 Kyklop", build: csdT499, catalog: DIESEL_LOCO_CATALOG, references: "csd-t499" },
-  { id: "proc-vehicle-cd-771", title: "CD 770 / 771 Cmelak", build: cd771, params: CD771_PARAMS, catalog: DIESEL_LOCO_CATALOG, references: "cd-771" },
+  { id: "proc-vehicle-cd-750", game: CD_750_GAME, title: "CD 750 / 753 / 754 Brejlovec", build: cd750, params: CD750_PARAMS, catalog: DIESEL_LOCO_CATALOG, references: "cd-750" },
+  { id: "proc-vehicle-cd-749", game: { weight: 72, power: 1102, maxspeed: 100, accel: null }, title: "CD 749 Bardotka", build: cd749, params: CD749_PARAMS, catalog: DIESEL_LOCO_CATALOG, references: "cd-750" },
+  { id: "proc-vehicle-cd-781", game: { weight: 116, power: 1470, maxspeed: 100, accel: null }, title: "CD 781 Sergej", build: cd781, params: CD781_PARAMS, catalog: DIESEL_LOCO_CATALOG, references: "cd-781" },
+  { id: "proc-vehicle-csd-t679-0", game: { weight: 114, power: 1470, maxspeed: 100, accel: null }, title: "CSD T 679.0 Pomeranc", build: csdT6790, catalog: DIESEL_LOCO_CATALOG, references: "csd-t679" },
+  { id: "proc-vehicle-csd-t499", game: { weight: 76, power: 3000, maxspeed: 140, accel: null }, title: "CSD T 499.0 / CD 759 Kyklop", build: csdT499, catalog: DIESEL_LOCO_CATALOG, references: "csd-t499" },
+  { id: "proc-vehicle-cd-771", game: CD_771_GAME, title: "CD 770 / 771 Cmelak", build: cd771, params: CD771_PARAMS, catalog: DIESEL_LOCO_CATALOG, references: "cd-771" },
 ];

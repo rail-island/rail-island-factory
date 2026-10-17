@@ -7,7 +7,7 @@
 // maps, so a design is never renamed once shipped.
 
 import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "./meshBuilder.ts";
-import type { CatalogFields, ProceduralDesign } from "./design.ts";
+import type { CatalogFields, GameProperties, ProceduralDesign } from "./design.ts";
 import { arc, block, plate, side, steeredWheels } from "./vehicleParts.ts";
 import { CD150_PARAMS, cd150 } from "./cd150.ts";
 import { CD230_PARAMS, cd230 } from "./cd230.ts";
@@ -407,13 +407,77 @@ export const VEHICLE_CATALOG: CatalogFields = {
   source: "Rail Island",
 };
 
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const CD_150_GAME: GameProperties = {
+  weight: 84,
+  power: 4000,
+  maxspeed: 140,
+  accel: null,
+  variants: [
+    { params: { livery: "cd151Cez" }, maxspeed: 160 },
+    { params: { livery: "cd151" }, weight: 87, maxspeed: 160 },
+    { params: { livery: "zsr350No001" }, weight: 87, maxspeed: 160 },
+    { params: { livery: "zsr350No002" }, weight: 87, maxspeed: 160 },
+    { params: { livery: "zsr350No003" }, weight: 87, maxspeed: 160 },
+    { params: { livery: "zsr350No004" }, weight: 87, maxspeed: 160 },
+    { params: { livery: "zsr350" }, weight: 87, maxspeed: 160 },
+  ],
+};
+
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const CD_163_GAME: GameProperties = {
+  weight: 85,
+  power: 3480,
+  maxspeed: 120,
+  accel: null,
+  variants: [
+    { params: { livery: "cd162No022" }, maxspeed: 140 },
+    { params: { livery: "cd162" }, maxspeed: 140 },
+    { params: { livery: "cd362No054" }, power: 3060, maxspeed: 140 },
+    { params: { livery: "cd362" }, weight: 87, power: 3060, maxspeed: 140 },
+    { params: { livery: "cd363No009" }, weight: 87, power: 3060 },
+    { params: { livery: "cd363No037" }, weight: 87, power: 3060 },
+    { params: { livery: "cd363No044" }, power: 3060 },
+    { params: { livery: "cd363" }, weight: 86, power: 3060 },
+  ],
+};
+
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const CD_230_GAME: GameProperties = {
+  weight: 85,
+  power: 3080,
+  maxspeed: 110,
+  accel: null,
+  variants: [
+    { params: { livery: "cd240No047" }, maxspeed: 120 },
+    { params: { livery: "cd240" }, maxspeed: 120 },
+    { params: { livery: "cd242" }, weight: 84, power: 2472, maxspeed: 120 },
+    { params: { livery: "cd340" }, maxspeed: 120 },
+  ],
+};
+
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const CD_263_GAME: GameProperties = {
+  weight: 85,
+  power: 3060,
+  maxspeed: 120,
+  accel: null,
+  variants: [
+    { params: { livery: "cd371No002" }, weight: 86, power: 3080, maxspeed: 160 },
+    { params: { livery: "cd371No005" }, weight: 84, power: 3080, maxspeed: 160 },
+    { params: { livery: "cd372" }, weight: 82 },
+    { params: { livery: "db180" }, weight: 86 },
+    { params: { livery: "dbAg180" }, weight: 86 },
+  ],
+};
+
 /** Every procedural vehicle, by catalog id. The ids are stored in saved maps. */
 export const VEHICLES: ProceduralDesign[] = [
-  { id: "proc-vehicle-american-truck", title: "American Truck", build: americanTruck, references: "american-truck" },
-  { id: "proc-vehicle-cd-150", title: "CD 150 / 151 / ZSR 350", build: cd150, params: CD150_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-150" },
-  { id: "proc-vehicle-cd-163", title: "CD 163 / 363", build: cd163, params: CD163_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-163" },
-  { id: "proc-vehicle-cd-230", title: "CD 230 / 240 / 340", build: cd230, params: CD230_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-230" },
-  { id: "proc-vehicle-cd-263", title: "CD 263 / 371 / 372", build: cd263, params: CD263_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-263" },
-  ...COACH_DESIGNS.map((c): ProceduralDesign => ({ id: c.id, title: c.title, build: c.build, catalog: COACH_CATALOG, references: c.folder, ...(c.params ? { params: c.params } : {}) })),
-  ...WAGON_DESIGNS.map((w): ProceduralDesign => ({ id: w.id, title: w.title, build: w.build, catalog: WAGON_CATALOG, references: w.folder, ...(w.params ? { params: w.params } : {}) })),
+  { id: "proc-vehicle-american-truck", game: { weight: 36, power: 375, maxspeed: 90, accel: null }, title: "American Truck", build: americanTruck, references: "american-truck" },
+  { id: "proc-vehicle-cd-150", game: CD_150_GAME, title: "CD 150 / 151 / ZSR 350", build: cd150, params: CD150_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-150" },
+  { id: "proc-vehicle-cd-163", game: CD_163_GAME, title: "CD 163 / 363", build: cd163, params: CD163_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-163" },
+  { id: "proc-vehicle-cd-230", game: CD_230_GAME, title: "CD 230 / 240 / 340", build: cd230, params: CD230_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-230" },
+  { id: "proc-vehicle-cd-263", game: CD_263_GAME, title: "CD 263 / 371 / 372", build: cd263, params: CD263_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-263" },
+  ...COACH_DESIGNS.map((c): ProceduralDesign => ({ id: c.id, title: c.title, build: c.build, game: c.game, catalog: COACH_CATALOG, references: c.folder, ...(c.params ? { params: c.params } : {}) })),
+  ...WAGON_DESIGNS.map((w): ProceduralDesign => ({ id: w.id, title: w.title, build: w.build, game: w.game, catalog: WAGON_CATALOG, references: w.folder, ...(w.params ? { params: w.params } : {}) })),
 ];

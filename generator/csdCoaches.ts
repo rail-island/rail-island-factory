@@ -821,11 +821,11 @@ export function csdDsk(): MeshBuilder {
 
 /** The coach designs: ids, titles, builders, parameters, reference folders. */
 export const CSD_COACHES = [
-  { id: "proc-vehicle-csd-classic-green-coach", title: "CSD Classic Green Coach", folder: "csd-classic-green", build: csdClassicGreenCoach, params: CLASSIC_GREEN_PARAMS },
-  { id: "proc-vehicle-csd-balm", title: "CSD Balm", folder: "csd-balm", build: csdBalm },
-  { id: "proc-vehicle-csd-bam", title: "CSD Bam", folder: "csd-bam", build: csdBam },
-  { id: "proc-vehicle-csd-bdmtee", title: "CSD Bdmtee", folder: "csd-bdmtee", build: csdBdmtee },
-  { id: "proc-vehicle-csd-be31", title: "CSD Be31", folder: "csd-be31", build: csdBe31 },
-  { id: "proc-vehicle-csd-bi20", title: "CSD Bi20", folder: "csd-bi20", build: csdBi20 },
-  { id: "proc-vehicle-csd-dsk", title: "CSD Dsk", folder: "csd-dsk", build: csdDsk },
+  { id: "proc-vehicle-csd-classic-green-coach", game: { weight: 40, power: 0, maxspeed: 140, accel: null }, title: "CSD Classic Green Coach", folder: "csd-classic-green", build: csdClassicGreenCoach, params: CLASSIC_GREEN_PARAMS },
+  { id: "proc-vehicle-csd-balm", game: { weight: 29, power: 0, maxspeed: 120, accel: null }, title: "CSD Balm", folder: "csd-balm", build: csdBalm },
+  { id: "proc-vehicle-csd-bam", game: { weight: 30, power: 0, maxspeed: 100, accel: null }, title: "CSD Bam", folder: "csd-bam", build: csdBam },
+  { id: "proc-vehicle-csd-bdmtee", game: { weight: 46, power: 0, maxspeed: 160, accel: null }, title: "CSD Bdmtee", folder: "csd-bdmtee", build: csdBdmtee },
+  { id: "proc-vehicle-csd-be31", game: { weight: 20, power: 0, maxspeed: 80, accel: null }, title: "CSD Be31", folder: "csd-be31", build: csdBe31 },
+  { id: "proc-vehicle-csd-bi20", game: { weight: 10, power: 0, maxspeed: 80, accel: null }, title: "CSD Bi20", folder: "csd-bi20", build: csdBi20 },
+  { id: "proc-vehicle-csd-dsk", game: { weight: 10, power: 0, maxspeed: 80, accel: null }, title: "CSD Dsk", folder: "csd-dsk", build: csdDsk },
 ] as const;

@@ -84,6 +84,125 @@ export interface ProceduralDesign {
   references?: string | readonly string[];
   /** Catalog fields that replace the family's (a rail vehicle among the road vehicles). */
   catalog?: CatalogFields;
+  /**
+   * What the game needs of the model beyond its geometry (GameProperties).
+   * Required for a vehicle; a building sets it only for plaza or block rules.
+   */
+  game?: GameProperties;
+}
+
+/**
+ * A vehicle's running figures, in the game's units: weight in tonnes, power in
+ * kW, top speed in km/h, acceleration in m/s2. null where the game has no figure
+ * (a coach's power, a cable car cabin's weight). Every key is required, so a
+ * vehicle states each one, even as null.
+ */
+export interface VehiclePhysics {
+  weight: number | null;
+  power: number | null;
+  maxspeed: number | null;
+  accel: number | null;
+}
+
+/** A vehicle's game properties that may differ per parameter variant. */
+export interface VehicleGameFields extends VehiclePhysics {
+  /** Fraction of the model's height below the waterline. Ships only. */
+  draftFrac?: number;
+  /** Fraction of the model's height at the rope. Cable car cabins only. */
+  ropeFrac?: number;
+  /** Fraction of the model's height at the door sill. Cable car cabins only. */
+  boardFrac?: number;
+  /** The largest airport class the airframe needs: "small" | "medium" | "big". Aircraft only. */
+  sizeClass?: string;
+}
+
+/** The game properties of one parameter variant: the fields that differ from the design's. */
+export type VehicleGameVariant = { params: ParamValues } & Partial<VehicleGameFields>;
+
+/** Which main squares a landmark may stand on (the webapp's core/city/CityPlaza.ts PlazaUse). */
+export interface PlazaUse {
+  cities: string[];
+  layouts?: Array<"rect" | "radial">;
+  fit?: "square" | "footprint";
+  fullBlocks?: boolean;
+  round?: boolean;
+  apron?: number;
+}
+
+/** What of a building's footprint blocks rails and roads, as fractions of its plan (the webapp's BuildingBlockShape). */
+export interface BlockShape {
+  rects: Array<{ x: number; z: number; w: number; d: number }>;
+}
+
+/**
+ * What the game needs of a model beyond its geometry, exported in its meta.json
+ * entry (catalog.ts). Taken over once from the game's old hand-authored models
+ * (docs/models/game-properties.md); a new design states its own.
+ */
+export interface GameProperties extends Partial<VehicleGameFields> {
+  /**
+   * The vehicle's on-map size factor, where the game does not derive it from the
+   * legacy table (a ship's or aircraft's length scale). Absent means 1.
+   */
+  scale?: number;
+  /**
+   * Parameter variants whose figures differ from the design's: `params` is the
+   * variant's non-default selection, matched exactly; only the differing fields
+   * are listed.
+   */
+  variants?: VehicleGameVariant[];
+  /** A landmark's main-square rules. Buildings only. */
+  plaza?: PlazaUse;
+  /** A building's blocking footprint. Buildings only. */
+  block?: BlockShape;
+}
+
+const PHYSICS_KEYS = ["weight", "power", "maxspeed", "accel"] as const;
+const VEHICLE_KEYS = [...PHYSICS_KEYS, "scale", "draftFrac", "ropeFrac", "boardFrac", "sizeClass", "variants"];
+
+/**
+ * Checks a design's game properties (GameProperties): a vehicle must have them,
+ * with every running figure stated (a number or null), and each variant must name
+ * a real, non-default parameter selection, at most once; a building may carry only
+ * plaza and block rules. Throws, naming the design, so the build fails before
+ * anything incomplete reaches the export.
+ */
+export function checkGameProperties(design: ProceduralDesign, vehicle: boolean): void {
+  const game = design.game;
+  const fail = (why: string): never => {
+    throw new Error(`${design.id}: game properties ${why} (docs/models/game-properties.md)`);
+  };
+  if (!vehicle) {
+    if (game && Object.keys(game).some((k) => k !== "plaza" && k !== "block")) fail("of a building may hold only plaza and block");
+    return;
+  }
+  if (!game) return fail("missing: a vehicle states its weight, power, maxspeed and accel");
+  if (game.plaza || game.block) fail("of a vehicle hold no plaza or block");
+  for (const k of PHYSICS_KEYS) {
+    const v = game[k];
+    if (v === undefined) fail(`lack "${k}" (use null for none)`);
+    if (v !== null && (typeof v !== "number" || !Number.isFinite(v) || v < 0)) fail(`have an invalid "${k}": ${String(v)}`);
+  }
+  const specs = design.params ?? [];
+  const seen = new Set<string>();
+  for (const variant of game.variants ?? []) {
+    const names = Object.keys(variant.params);
+    if (!names.length) fail("list a variant without parameters");
+    let resolved: ParamValues;
+    try {
+      resolved = resolveParams(specs, variant.params);
+    } catch (e) {
+      return fail(`list a variant that does not resolve: ${(e as Error).message}`);
+    }
+    for (const name of names) {
+      if (resolved[name] !== variant.params[name]) fail(`list a variant whose "${name}" does not apply`);
+      if (specs.find((s) => s.name === name)!.default === variant.params[name]) fail(`list a variant at the default "${name}"`);
+    }
+    const key = JSON.stringify(Object.entries(variant.params).sort());
+    if (seen.has(key)) fail(`list the variant ${key} twice`);
+    seen.add(key);
+    if (Object.keys(variant).some((k) => k !== "params" && !VEHICLE_KEYS.includes(k))) fail("list a variant with an unknown field");
+  }
 }
 
 /**

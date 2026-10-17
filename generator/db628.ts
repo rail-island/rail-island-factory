@@ -15,6 +15,7 @@
 // coupling (the 628.2 set is 45.40 m over buffers). See docs/models/foreign-units.md.
 
 import { ngon, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
+import type { GameProperties } from "./design.ts";
 import { Coach, type Pt, type Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
@@ -297,6 +298,22 @@ function innerEnd(c: Coach, v: Volume): void {
   m.scope("coupler", () => centreCoupler(m, -1, X(wall + 0.5), X(0), 0.95));
 }
 
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const DB_628_GAME: GameProperties = {
+  weight: 56,
+  power: 423,
+  maxspeed: 100,
+  accel: null,
+  variants: [
+    { params: { livery: "red", unit: "abn" }, weight: 46, power: 0, maxspeed: 160 },
+    { params: { unit: "abn" }, weight: 46, power: 0, maxspeed: 160 },
+    { params: { livery: "red", unit: "bdnrf" }, weight: 46, power: 0, maxspeed: 160 },
+    { params: { unit: "bdnrf" }, weight: 46, power: 0, maxspeed: 160 },
+    { params: { livery: "red", unit: "bn" }, weight: 46, power: 0, maxspeed: 160 },
+    { params: { unit: "bn" }, weight: 46, power: 0, maxspeed: 160 },
+  ],
+};
+
 export const DB628_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-db-628", title: "DB 628", build: db628, params: DB628_PARAMS, catalog: DMU_CATALOG, references: ["db-628", "db-n-wagen"] },
+  { id: "proc-vehicle-db-628", game: DB_628_GAME, title: "DB 628", build: db628, params: DB628_PARAMS, catalog: DMU_CATALOG, references: ["db-628", "db-n-wagen"] },
 ];

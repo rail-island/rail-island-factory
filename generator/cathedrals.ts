@@ -883,8 +883,8 @@ export const CATHEDRAL_CATALOG: CatalogFields = {
 
 /** Every design of the family, by catalog id; `references` is the folder of its source photos under assets/. */
 export const CATHEDRALS: ProceduralDesign[] = [
-  { id: "bld-st-basils-cathedral", title: "St Basil's Cathedral", build: stBasilsCathedral, buildLod: stBasilsCathedralLod, references: "st-basils-cathedral", catalog: CATHEDRAL_CATALOG },
-  { id: "bld-st-nicholas-church", title: "St Nicholas Church", build: stNicholasChurch, references: "st-nicholas-church", catalog: CATHEDRAL_CATALOG },
+  { id: "bld-st-basils-cathedral", game: { plaza: { cities: ["town", "city"], layouts: ["radial"] } }, title: "St Basil's Cathedral", build: stBasilsCathedral, buildLod: stBasilsCathedralLod, references: "st-basils-cathedral", catalog: CATHEDRAL_CATALOG },
+  { id: "bld-st-nicholas-church", game: { plaza: { cities: ["town", "city"] } }, title: "St Nicholas Church", build: stNicholasChurch, references: "st-nicholas-church", catalog: CATHEDRAL_CATALOG },
 ];
 
 function basilChapels(): Chapel[] {

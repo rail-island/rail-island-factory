@@ -45,8 +45,6 @@ export const COLUMNS: readonly Column[] = [
   { key: "group", label: "City pool", unit: null, type: "text", dir: "asc", table: true, value: (r) => r.group },
   { key: "triangles", label: "Triangles", unit: null, type: "num", dir: "desc", table: true, value: (r) => r.triangles },
   { key: "vertices", label: "Vertices", unit: null, type: "num", dir: "desc", table: true, value: (r) => r.vertices },
-  { key: "glbBytes", label: "GLB", unit: null, type: "bytes", dir: "desc", table: true, value: (r) => r.glbBytes, file: (r) => r.glbUrl },
-  { key: "glbGzipBytes", label: "GLB gzip", unit: null, type: "bytes", dir: "desc", table: false, value: (r) => r.glbGzipBytes },
   { key: "jsBytes", label: "JS", unit: null, type: "bytes", dir: "desc", table: true, value: (r) => r.jsBytes, file: (r) => r.jsUrl },
   { key: "jsGzipBytes", label: "JS gzip", unit: null, type: "bytes", dir: "desc", table: false, value: (r) => r.jsGzipBytes },
   { key: "primitives", label: "Prims", unit: null, type: "num", dir: "desc", table: true, value: (r) => r.primitives },
@@ -380,7 +378,7 @@ export function nonDefaultParams(r: CatalogRecord, values: Record<string, string
   return out;
 }
 
-/** True when every parameter is at its default, i.e. the exported GLB is the model. */
+/** True when every parameter is at its default, i.e. the thumbnail and source tree show the model. */
 export function isDefaultParams(r: CatalogRecord, values: Record<string, string>): boolean {
   return Object.keys(nonDefaultParams(r, effectiveParams(r, values))).length === 0;
 }
@@ -433,7 +431,7 @@ export function poseOf(r: CatalogRecord, values: PoseValues): { steer: number; b
 
 /**
  * Poses the preview through the model's JS module with the preview's OWN rig
- * (`userData.rig`): the GLB's scene carries the default build's, a JS build the
+ * (`userData.rig`): each JS build carries the
  * rig of its own parameters -- a non-default Karosa Long's hinge and joint faces
  * are not the default's. The catalog record's rig is for the sliders' limits only.
  * Returns whether the module could pose it.

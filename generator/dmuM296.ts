@@ -194,5 +194,5 @@ export function m296(params?: ParamValues): MeshBuilder {
 export const M296_VARIANTS: readonly M296Variant[] = ["m296", "cd853", "cd854"];
 
 export const M296_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-csd-m296", title: "CSD M 296.1 / CD 853 / 854", build: m296, params: M296_PARAMS, catalog: DMU_CATALOG, references: "csd-m296" },
+  { id: "proc-vehicle-csd-m296", game: { weight: 57, power: 592, maxspeed: 120, accel: null }, title: "CSD M 296.1 / CD 853 / 854", build: m296, params: M296_PARAMS, catalog: DMU_CATALOG, references: "csd-m296" },
 ];

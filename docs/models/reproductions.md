@@ -88,7 +88,7 @@ the vehicles into `vehicles.meta.json` as `Aircraft`, `Ships`, `Cable car` and
 
 ## What a webapp import has to change
 
-The factory's GLB has one node per part, not the reference's named sub-nodes, so entries
+The factory's model (its JS build) has one node per part, not the reference's named sub-nodes, so entries
 that name nodes must be rewritten when these models are imported:
 
 - **Trucks.** `trucks.meta.json`'s `articulation` names nodes such as `kingpin`,

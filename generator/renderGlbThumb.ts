@@ -1,4 +1,5 @@
-// Offline thumbnail renderer for a GLB: a tiny software rasterizer (no WebGL, no
+// Offline thumbnail renderer for a GLB -- the build's in-memory bytes, or a file
+// for the CLI: a tiny software rasterizer (no WebGL, no
 // browser) that reads the model's triangles and baseColorFactor materials and
 // shades them. The background is transparent, so the PNG drops onto any card
 // colour. Pure Node (pngjs). Two views:
@@ -13,7 +14,9 @@
 //    framed (webapp src/models/modelThumbRender.ts), so the webapp can ship it
 //    in place of rendering the default variant itself.
 //
-//   pnpm exec tsx generator/renderGlbThumb.ts <model.glb> <out.png> [size|side]
+//   pnpm exec tsx generator/renderGlbThumb.ts <design id | model.glb> <out.png> [size|side]
+//
+// A design id is built in memory (the export holds no GLB files).
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -182,16 +185,19 @@ function rasterize(
   return png;
 }
 
-function readTriangles(glbPath: string): Tri[] {
-  const { json, bin } = parseGlb(fs.readFileSync(glbPath));
+/** A GLB: its bytes, or the path of a file holding them. */
+export type GlbSource = Uint8Array | string;
+
+function readTriangles(glb: GlbSource): Tri[] {
+  const { json, bin } = parseGlb(typeof glb === "string" ? fs.readFileSync(glb) : glb);
   const tris = collectTriangles(json, bin);
-  if (tris.length === 0) throw new Error(`${path.basename(glbPath)} has no triangles`);
+  if (tris.length === 0) throw new Error(`${typeof glb === "string" ? path.basename(glb) : "the GLB"} has no triangles`);
   return tris;
 }
 
-/** Render the GLB at `glbPath` as a `size` x `size` RGBA PNG, in the three-quarter view. */
-export function renderGlbThumb(glbPath: string, size: number): PNG {
-  const tris = readTriangles(glbPath);
+/** Render the GLB as a `size` x `size` RGBA PNG, in the three-quarter view. */
+export function renderGlbThumb(glb: GlbSource, size: number): PNG {
+  const tris = readTriangles(glb);
   const { min: mn, max: mx } = triBounds(tris);
   const center: Vec3 = [(mn[0] + mx[0]) / 2, (mn[1] + mx[1]) / 2, (mn[2] + mx[2]) / 2];
   const maxDim = Math.max(mx[0] - mn[0], mx[1] - mn[1], mx[2] - mn[2]) || 1;
@@ -271,19 +277,19 @@ export function sideFrame(minX: number, maxX: number): SideFrame & { width: numb
   };
 }
 
-/** The side frame of the GLB at `glbPath`, without rendering it. */
-export function glbSideFrame(glbPath: string): SideFrame {
-  const { min, max } = triBounds(readTriangles(glbPath));
+/** The side frame of the GLB, without rendering it. */
+export function glbSideFrame(glb: GlbSource): SideFrame {
+  const { min, max } = triBounds(readTriangles(glb));
   const { widthM, heightM, bottomM } = sideFrame(min[0], max[0]);
   return { widthM, heightM, bottomM };
 }
 
 /**
- * Render the GLB at `glbPath` -- a road or rail vehicle built nose-first along +X
- * -- in the side view: seen from its -Z flank, nose on the left, orthographic.
+ * Render the GLB -- a road or rail vehicle built nose-first along +X -- in the
+ * side view: seen from its -Z flank, nose on the left, orthographic.
  */
-export function renderGlbSideThumb(glbPath: string): { png: PNG; frame: SideFrame } {
-  const tris = readTriangles(glbPath);
+export function renderGlbSideThumb(glb: GlbSource): { png: PNG; frame: SideFrame } {
+  const tris = readTriangles(glb);
   const { min, max } = triBounds(tris);
   const f = sideFrame(min[0], max[0]);
   const right = max[0] + SIDE_MARGIN_M; // the nose's end of the frame, drawn at the left edge
@@ -305,10 +311,12 @@ export function renderGlbSideThumb(glbPath: string): { png: PNG; frame: SideFram
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const [glbArg, outArg, sizeArg] = process.argv.slice(2);
   if (!glbArg || !outArg) {
-    console.error("usage: tsx generator/renderGlbThumb.ts <model.glb> <out.png> [size|side]");
+    console.error("usage: tsx generator/renderGlbThumb.ts <design id | model.glb> <out.png> [size|side]");
     process.exit(1);
   }
-  const png = sizeArg === "side" ? renderGlbSideThumb(glbArg).png : renderGlbThumb(glbArg, sizeArg ? Number(sizeArg) : 512);
+  // a design id is built here; imported lazily, as generate.ts imports this module
+  const glb: GlbSource = glbArg.toLowerCase().endsWith(".glb") ? glbArg : (await import("./generate.ts")).designGlb(glbArg);
+  const png = sizeArg === "side" ? renderGlbSideThumb(glb).png : renderGlbThumb(glb, sizeArg ? Number(sizeArg) : 512);
   fs.mkdirSync(path.dirname(outArg), { recursive: true });
   fs.writeFileSync(outArg, PNG.sync.write(png));
   console.log(`wrote ${outArg} (${png.width}x${png.height})`);

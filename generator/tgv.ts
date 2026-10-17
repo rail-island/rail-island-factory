@@ -24,6 +24,7 @@
 // 4.10 m and 3.42 m. See docs/models/foreign-units.md.
 
 import { ngon, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
+import type { GameProperties } from "./design.ts";
 import { coil } from "./cd163.ts";
 import { Coach, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
@@ -506,8 +507,31 @@ function jacobsHalf(c: Coach, xj: number, d: number): void {
   });
 }
 
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const TGV_GAME: GameProperties = {
+  weight: 40,
+  power: 3240,
+  maxspeed: 280,
+  accel: null,
+  variants: [
+    { params: { livery: "atlantique" }, maxspeed: 300 },
+    { params: { cars: "2", livery: "atlantique", unit: "set" }, power: 0, maxspeed: 300 },
+    { params: { cars: "2", unit: "set" }, power: 0, maxspeed: 300 },
+    { params: { cars: "3", livery: "atlantique", unit: "set" }, power: 0, maxspeed: 300 },
+    { params: { cars: "3", unit: "set" }, power: 0, maxspeed: 300 },
+    { params: { cars: "4", livery: "atlantique", unit: "set" }, power: 0, maxspeed: 300 },
+    { params: { cars: "4", unit: "set" }, power: 0, maxspeed: 300 },
+    { params: { cars: "5", livery: "atlantique", unit: "set" }, power: 0, maxspeed: 300 },
+    { params: { cars: "5", unit: "set" }, power: 0, maxspeed: 300 },
+    { params: { cars: "6", livery: "atlantique", unit: "set" }, power: 0, maxspeed: 300 },
+    { params: { cars: "6", unit: "set" }, power: 0, maxspeed: 300 },
+    { params: { livery: "atlantique", unit: "set" }, power: 0, maxspeed: 300 },
+    { params: { unit: "set" }, power: 0 },
+  ],
+};
+
 export const TGV_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-tgv", title: "TGV", build: tgv, params: TGV_PARAMS, catalog: EMU_CATALOG, references: "tgv" },
+  { id: "proc-vehicle-tgv", game: TGV_GAME, title: "TGV", build: tgv, params: TGV_PARAMS, catalog: EMU_CATALOG, references: "tgv" },
 ];
 
 export type { Box };

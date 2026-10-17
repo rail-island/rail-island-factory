@@ -1073,9 +1073,9 @@ export const SHIP_CATALOG: CatalogFields = {
 
 /** Every design of the family, by catalog id; `references` is the folder of its source photos under assets/. */
 export const SHIPS: ProceduralDesign[] = [
-  { id: "proc-vehicle-cruise-ferry", title: "Cruise Ferry", build: cruiseFerry, buildLod: cruiseFerryLod, references: "cruise-ferry", catalog: { ...SHIP_CATALOG, yaw:180 } },
-  { id: "proc-vehicle-hydrofoil-ferry", title: "Hydrofoil Ferry", build: hydrofoilFerry, references: "hydrofoil-ferry", catalog: { ...SHIP_CATALOG, yaw:180 } },
-  { id: "proc-vehicle-passenger-ferry", title: "Passenger Ferry", build: passengerFerry, references: "passenger-ferry", catalog: { ...SHIP_CATALOG, yaw:270 } },
+  { id: "proc-vehicle-cruise-ferry", game: { weight: 220, power: 1600, maxspeed: 40, accel: 0.5, draftFrac: 0.17 }, title: "Cruise Ferry", build: cruiseFerry, buildLod: cruiseFerryLod, references: "cruise-ferry", catalog: { ...SHIP_CATALOG, yaw:180 } },
+  { id: "proc-vehicle-hydrofoil-ferry", game: { weight: 30, power: 600, maxspeed: 70, accel: 1.5, draftFrac: 0.28 }, title: "Hydrofoil Ferry", build: hydrofoilFerry, references: "hydrofoil-ferry", catalog: { ...SHIP_CATALOG, yaw:180 } },
+  { id: "proc-vehicle-passenger-ferry", game: { weight: 60, power: 400, maxspeed: 28, accel: 0.9, draftFrac: 0.15 }, title: "Passenger Ferry", build: passengerFerry, references: "passenger-ferry", catalog: { ...SHIP_CATALOG, yaw:270 } },
 ];
 
 /** Stepped decks keep the bow and bridge distinct, within the ordinary ship budget. */

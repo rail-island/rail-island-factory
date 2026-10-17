@@ -722,7 +722,7 @@ describe("generateModels", () => {
     } finally { fs.rmSync(dir,{recursive:true,force:true}); }
   });
 
-  it("writes a GLB and a thumbnail per design, skips an unchanged one, and prunes a dropped one", async () => {
+  it("writes a thumbnail and no GLB per design, skips an unchanged one, and prunes a dropped one", async () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "factory-"));
     try {
       fs.mkdirSync(path.join(dir, "glb"));
@@ -739,7 +739,8 @@ describe("generateModels", () => {
         expect(JSON.parse(fs.readFileSync(b.tree, "utf8"))).toEqual(designTree(proceduralId(b.id)));
       }
       expect(fs.existsSync(path.join(dir, "tree", "sky-retired.json"))).toBe(false);
-      expect(fs.existsSync(path.join(dir, "glb", "sky-retired.glb"))).toBe(false);
+      // an old export's glb/ folder is removed: there is no GLB output
+      expect(fs.existsSync(path.join(dir, "glb"))).toBe(false);
       expect(fs.existsSync(path.join(dir, "thumbs", "sky-retired.png"))).toBe(false);
       // a second run finds nothing to rewrite, and leaves the thumbnails alone;
       // each run is long, so let vitest's RPC replies in between (test/setup.ts)

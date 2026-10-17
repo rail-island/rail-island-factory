@@ -115,9 +115,12 @@ If downloading is not possible, tell the user and list what you would have used.
 ## Steps
 
 1. Download reference images if `assets/<name>/` has none (above). Look at the
-   references in `assets/<name>/` (photos; render a reference GLB
-   with `pnpm exec tsx generator/renderGlbThumb.ts <glb> <out.png> 512`).
-2. Write or change the design in `vehicles.ts`; add a new one to `VEHICLES`.
+   references in `assets/<name>/` (photos; render a reference GLB file, or any
+   design by id, with `pnpm exec tsx generator/renderGlbThumb.ts <glb | id> <out.png> 512`).
+2. Write or change the design in `vehicles.ts`; add a new one to `VEHICLES`, with
+   its game properties - `game: { weight, power, maxspeed, accel }` (tonnes, kW,
+   km/h, m/s2; `null` where none). The build fails without them
+   (docs/models/game-properties.md).
 3. `pnpm build:models` - read the triangle count; fix any z-fighting report.
 4. Look at `export/thumbs/<id>.png`, and render more views (side, front, rear,
    top) from a scratch copy of `renderGlbThumb.ts` with a different `VIEW_DIR`.
