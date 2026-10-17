@@ -737,8 +737,8 @@ export const LANDMARK_CATALOG: CatalogFields = {
 /** Every design of the family, by catalog id; `references` is the folder of its source photos under assets/. */
 export const LANDMARKS: ProceduralDesign[] = [
   { id: "bld-brandenburg-gate", game: { plaza: { cities: ["city"], layouts: ["rect"], fit: "footprint" } }, title: "Brandenburg Gate", build: brandenburgGate, buildLod: brandenburgGateLod, references: "brandenburg-gate", catalog: LANDMARK_CATALOG },
-  { id: "bld-louvre-pyramid", game: { plaza: { cities: ["town", "city"], layouts: ["rect"], fullBlocks: true } }, title: "Louvre Pyramid", build: louvrePyramid, references: "louvre-pyramid", catalog: LANDMARK_CATALOG },
-  { id: "bld-white-house", game: { plaza: { cities: ["city"], layouts: ["rect"], fit: "footprint" } }, title: "White House", build: whiteHouse, references: "white-house", catalog: LANDMARK_CATALOG },
+  { id: "bld-louvre-pyramid", game: { plaza: { cities: ["town", "city"], layouts: ["rect"], fullBlocks: true } }, title: "Louvre Pyramid", build: louvrePyramid, buildLod: louvrePyramidLod, references: "louvre-pyramid", catalog: LANDMARK_CATALOG },
+  { id: "bld-white-house", game: { plaza: { cities: ["city"], layouts: ["rect"], fit: "footprint" } }, title: "White House", build: whiteHouse, buildLod: whiteHouseLod, references: "white-house", catalog: LANDMARK_CATALOG },
 ];
 
 export function brandenburgGateLod(): MeshBuilder {
@@ -747,5 +747,71 @@ export function brandenburgGateLod(): MeshBuilder {
   lodBox(m,'sandstone',0,0,34.9,9.5,14.63,18.28);
   lodBox(m,'sandstone',0,0,30.8,7.9,18.28,22.9);
   for(const s of [-1,1])lodBox(m,'sandstone',s*25.1,0,15,5.7,0,11);
+  return m;
+}
+
+/** The LOD's palette: the pyramid's glass becomes a pane colour of the same tint (a distant model has no windows). */
+const LOD_PALETTE_LANDMARKS: Record<string, MaterialSpec> = { ...PALETTE, pane: PALETTE.glass! };
+
+export function louvrePyramidLod(): MeshBuilder {
+  const m = new MeshBuilder(LOD_PALETTE_LANDMARKS);
+  const h = 17.71, y0 = 0.5, apexY = 22.08;
+  m.box("paving", 0, 0, 38.82, 38.82, 0, y0);
+  m.spire("pane", rect(2 * h, 2 * h), y0, apexY);
+  for (const s of [-1, 1]) {
+    span(m, "sill", -18.04, 18.04, y0, 1.06, s > 0 ? 17.48 : -18.04, s > 0 ? 18.04 : -17.48);
+    span(m, "sill", s > 0 ? 17.48 : -18.04, s > 0 ? 18.04 : -17.48, y0, 1.06, -17.48, 17.48);
+  }
+  // every third lattice bar of each face, as a flat strip on the glass
+  const apex: Vec3 = [0, apexY, 0];
+  const corners: Vec3[] = [[-h, y0, h], [h, y0, h], [h, y0, -h], [-h, y0, -h]];
+  for (let f = 0; f < 4; f++) {
+    const B0 = corners[f]!, B1 = corners[(f + 1) % 4]!;
+    const n = unit(cross(sub(B1, B0), sub(apex, B0)));
+    const off = (p: Vec3): Vec3 => add(p, mul(n, 0.07));
+    const strip = (a: Vec3, b: Vec3, w: number): void => {
+      const across = mul(unit(cross(n, sub(b, a))), w / 2);
+      m.facets("steel", [off(sub(a, across)), off(add(a, across)), off(add(b, across)), off(sub(a, across)), off(add(b, across)), off(sub(b, across))], n);
+    };
+    for (let k = 3; k < 18; k += 3) {
+      const p0 = lerp3(B0, B1, k / 18);
+      strip(p0, lerp3(B0, apex, k / 18), 0.3);
+      strip(p0, lerp3(B1, apex, 1 - k / 18), 0.3);
+    }
+    strip(add(B0, mul(n, 0.02)), add(apex, mul(n, 0.02)), 0.5);
+  }
+  return m;
+}
+
+export function whiteHouseLod(): MeshBuilder {
+  const m = new MeshBuilder(PALETTE);
+  span(m, "aquia", -28.25, 28.25, 0, 0.75, -15.25, 15.25);
+  // the residence: walls, cornice, leaded roof and chimneys
+  span(m, "aquia", -26.0, 26.0, 0.75, 15.4, -13.0, 13.0, false);
+  span(m, "trim", -26.8, 26.8, 15.4, 16.5, -13.8, 13.8);
+  span(m, "leadRoof", -25.8, 25.8, 16.5, 16.8, -12.8, 12.8);
+  for (const x of [-21.0, -12.5, 12.5, 21.0]) for (const z of [-7.5, 7.5]) span(m, "aquia", x - 1.0, x + 1.0, 16.8, 19.7, z - 0.68, z + 0.68);
+  // the south bow under its columned portico
+  m.prism("aquia", bowRing(9.0, 0, 9.0, 8), 0.75, 15.4, false);
+  m.prism("aquia", bowRing(12.1, 0, 9.0, 8, 0.4), 0.75, 4.9);
+  for (let k = 0; k < 6; k++) {
+    const a = Math.PI / 2 + (k - 2.5) * 0.36;
+    m.prism("trim", circle(6, 0.74, 10.7 * Math.cos(a), 9.0 + 10.7 * Math.sin(a)), 4.9, 15.15, false);
+  }
+  m.prism("trim", bowRing(12.45, 0, 9.0, 8, 0.4), 15.15, 17.06);
+  // the north portico: columns, entablature and pediment
+  span(m, "aquia", -9.2, 9.2, 0, 0.75, -20.0, -13.0);
+  for (const x of [-7.0, -2.35, 2.35, 7.0]) m.prism("trim", circle(6, 0.82, x, -18.7), 0.75, 14.15, false);
+  span(m, "trim", -9.8, 9.8, 14.15, 16.21, -20.3, -13.0);
+  m.slab("trim", [[-9.8, 16.21, -20.3], [9.8, 16.21, -20.3], [0, 19.31, -20.3]], [0, 0, 7.3]);
+  // the low wings, their colonnades and end pavilions
+  for (const s of [-1, 1]) {
+    const X = (a: number, b: number): [number, number] => (s > 0 ? [a, b] : [-b, -a]);
+    span(m, "aquia", ...X(26.0, 45.0), 0, 5.4, -7.25, 1.25, false);
+    span(m, "trim", ...X(25.6, 45.4), 5.4, 5.9, -8.55, 1.65);
+    for (let k = 0; k < 7; k += 2) m.prism("trim", circle(4, 0.42, s * (28.4 + 2.6 * k), -7.95), 0, 5.4, false);
+    span(m, "aquia", ...X(45.0, 54.2), 0, 7.8, -8.75, 2.75, false);
+    span(m, "trim", ...X(44.6, 54.6), 7.8, 8.3, -9.15, 3.15);
+  }
   return m;
 }

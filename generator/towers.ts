@@ -4,6 +4,7 @@ import type { GameProperties } from './design.ts';
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from './design.ts';
 import { arch, bar, beam, dial, face, panel, TAU, TOWER_PALETTE } from './towerParts.ts';
 import type { Vec3 } from './meshCore.ts';
+import { lodGableRoof, lodPolygon } from './lodKit.ts';
 const spec=(name:string,title:string,values:string[],def=values[0]!):ParamSpec=>({name,title,default:def,values:values.map(value=>({value,title:value}))});
 const CLOCK:ParamSpec[]=[{name:'time',title:'Clock time',default:'time1010',values:[{value:'time1010',title:'10:10'},{value:'time0300',title:'3:00'}]}];
 const BELL=[spec('storeys','Storeys',['3','4','5']),spec('roof','Roof finish',['teal','red'])];
@@ -309,14 +310,14 @@ const TOWER_EIFFEL_GAME: GameProperties = {
 };
 
 export const TOWERS:readonly ProceduralDesign[]=[
-  entry('tower-bell','Bell Tower',bellTower,24.584785,34.18117,BELL),
-  entry('tower-bigben','Big Ben',bigBen,96,81.52325,CLOCK,'Daqian Dong'),
+  { ...entry('tower-bell','Bell Tower',bellTower,24.584785,34.18117,BELL), buildLod: bellTowerLod },
+  { ...entry('tower-bigben','Big Ben',bigBen,96,81.52325,CLOCK,'Daqian Dong'), buildLod: bigBenLod },
   { ...entry('tower-eiffel','Eiffel Tower',eiffelTower,330,183.02439,undefined,'Scott Marshall'), game: TOWER_EIFFEL_GAME, buildLod: eiffelTowerLod },
-  entry('tower-radio','Radio Tower',radioTower,37,51.99029,RADIO,'Poly by Google'),
-  entry('tower-stone','Stone Tower',stoneTower,21.6,41.66234,FORT),
-  entry('tower-kenney','Stone Turret',stoneTurret,13.5,34.6981,TURRET),
+  { ...entry('tower-radio','Radio Tower',radioTower,37,51.99029,RADIO,'Poly by Google'), buildLod: radioTowerLod },
+  { ...entry('tower-stone','Stone Tower',stoneTower,21.6,41.66234,FORT), buildLod: stoneTowerLod },
+  { ...entry('tower-kenney','Stone Turret',stoneTurret,13.5,34.6981,TURRET), buildLod: stoneTurretLod },
   { ...entry('tower-transmission','Transmission Tower',transmissionTower,38.017048,48.56582,POWER), buildLod: transmissionTowerLod },
-  entry('tower-watch','Watch Tower',watchTower,21.6,55.87389,FORT),
+  { ...entry('tower-watch','Watch Tower',watchTower,21.6,55.87389,FORT), buildLod: watchTowerLod },
 ];
 
 /** Four open legs and broad crossarms keep a pylon recognisable from above. */
@@ -334,6 +335,109 @@ export function transmissionTowerLod(given?:ParamValues):MeshBuilder {
     beam(m,'steel',[-w,y,0],[w,y,0],.5);
     beam(m,'steel',[-w,y,0],[0,y+2,0],.35);
     beam(m,'steel',[0,y+2,0],[w,y,0],.35);
+  }
+  return m;
+}
+
+// --- the distant models: masses, roofs, spires and colours, no windows (docs/models/lod.md) ---
+
+/** A flat quad on side `s` of a tower, `out` metres from its axis, facing out: a clock face or a banner from afar. */
+function faceQuad(m:MeshBuilder,mat:string,s:number,x0:number,x1:number,y0:number,y1:number,out:number):void{
+  m.quad(mat,face(s,x0,y0,out),face(s,x1,y0,out),face(s,x1,y1,out),face(s,x0,y1,out));
+}
+
+export function bellTowerLod(given?:ParamValues):MeshBuilder{
+  const p=resolveParams(BELL,given),n=+p.storeys!,m=model(p.roof),h=n*4.8;
+  band(m,'stone',9,0,.7);m.prism('stone',rect(7.4,7.4),.7,h,false);
+  // the timber sill of each storey
+  for(let k=0;k<n;k++)m.prism('timber',rect(8.2,8.2),k*4.8+.8,k*4.8+1.18,false);
+  band(m,'timber',8.4,h,.5);
+  for(const x of [-3.4,3.4])for(const z of [-3.4,3.4])m.prism('timber',rect(.55,.55,x,z),h+.5,h+4.6,false);
+  m.prism('timber',rect(7.4,7.4),h+4.6,h+4.93,false);
+  m.loft('gold',ngon(8,1.3),h+1.3,ngon(8,.8),h+2.2,false);m.spire('gold',ngon(8,.8),h+2.2,h+3.5);
+  lodGableRoof(m,'roof','roof',-4.7,4.7,-4.5,4.5,h+4.93,h+10,'z');
+  return m;
+}
+
+export function bigBenLod(given?:ParamValues):MeshBuilder{
+  resolveParams(CLOCK,given);const m=model();
+  band(m,'sandstone',13.8,0,1.8);band(m,'light',13,1.8,.7);
+  m.prism('sandstone',rect(12,12),2.5,68.9,false);
+  for(const y of [5,12.6,20.2,27.8,35.4,43]) m.prism('light',rect(12.6,12.6),y,y+.45,false);
+  for(const x of [-5.8,5.8])for(const z of [-5.8,5.8])m.prism('light',rect(1.1,1.1,x,z),2.5,70.8,false);
+  m.prism('light',rect(13.2,13.2),54.9,56,false);
+  for(let s=0;s<4;s++){faceQuad(m,'light',s,-5.35,5.35,57.1,66.6,6.04);faceQuad(m,'clock',s,-4.1,4.1,57.7,65.9,6.08);}
+  m.prism('light',rect(13.2,13.2),67.9,68.65);
+  m.prism('sandstone',rect(10.8,10.8),68.9,76.6,false);
+  m.prism('light',rect(12.3,12.3),76.6,77.3,false);
+  m.loft('dark',rect(11.8,11.8),77.3,rect(5,5),86.8);
+  band(m,'gold',5.4,86.9,.3);m.prism('dark',rect(4.4,4.4),87.2,90.7);
+  m.spire('dark',rect(5.3,5.3),90.7,95);m.spire('gold',ngon(6,.32),94.5,96);
+  for(const x of [-5.65,5.65])for(const z of [-5.65,5.65]){
+    m.prism('light',rect(.9,.9,x,z),76.9,80.1,false);m.spire('gold',rect(1.2,1.2,x,z),80.1,84);
+  }
+  return m;
+}
+
+/** A fortress tower from afar: shaft, machicolations, parapet and merlons, banners and (the watch tower) corner turrets. */
+function fortressLod(given:ParamValues|undefined,watch:boolean):MeshBuilder{
+  const p=resolveParams(FORT,given),m=model(),h=+p.storeys!*6;
+  band(m,'stone',watch?13:10,0,1);m.prism('stone',rect(8.8,8.8),1,h-1.8,false);
+  // the pale corner quoins
+  for(const x of [-4.15,4.15])for(const z of [-4.15,4.15])m.prism('trim',rect(.9,.9,x,z),1,h-1.8,false);
+  m.prism('trim',rect(9.5,9.5),h-1.8,h-.4,false);
+  band(m,'trim',10.5,h-.4,.6);m.prism('stone',rect(10.3,10.3),h+.2,h+1.7,false);
+  m.cap('dark',rect(10.3,10.3),h+1.7);
+  for(let s=0;s<4;s++)for(const x of [-4.35,-1.45,1.45,4.35]){
+    if(s%2&&Math.abs(x)>4)continue; // a corner merlon belongs to the front and back
+    const pos=face(s,x,0,4.45);m.box('trim',pos[0],pos[2],1.4,1.4,h+1.7,h+3.6);
+  }
+  if(p.banners!=='none')for(const s of [0,2])faceQuad(m,p.banners==='blue'?'blue':'red',s,-2.8,-1.2,h-5.5,h-.4,4.55);
+  m.box('stone',0,6,3.6,2.56,0,.6);
+  if(watch)for(const x of [-5.6,5.6])for(const z of [-5.6,5.6]){
+    m.box('trim',x,z,1.2,1.2,1,2.8);m.spire('roof',ngon(8,.7,0,x,z),2.8,5);
+  }
+  return m;
+}
+export function stoneTowerLod(p?:ParamValues):MeshBuilder{return fortressLod(p,false);}
+export function watchTowerLod(p?:ParamValues):MeshBuilder{return fortressLod(p,true);}
+
+export function stoneTurretLod(given?:ParamValues):MeshBuilder{
+  const p=resolveParams(TURRET,given),m=model(),h=+p.storeys!*5,n=+p.battlements!,oct=(r:number)=>ngon(8,r,Math.PI/8);
+  m.prism('trim',oct(6),0,1.2);m.prism('stone',oct(5.4),1.2,h,false);
+  for(let y=5;y<h;y+=5)m.prism('timber',oct(5.8),y,y+.4);
+  for(let i=0;i<8;i++){
+    const a=i*TAU/8,x=5.3*Math.cos(a),z=5.3*Math.sin(a);
+    m.loft('trim',rect(1.2,1.6,x,z,-a),.2,rect(.7,1,x,z,-a),2.6);
+  }
+  m.loft('trim',oct(5.4),h,oct(6.1),h+1.2,false);
+  m.prism('stone',oct(6.1),h+1.2,h+2,false);m.cap('dark',oct(6.1),h+2);
+  for(let i=0;i<n;i++){const a=i*TAU/n;m.box('trim',5.5*Math.cos(a),5.5*Math.sin(a),1.5,1.5,h+2,h+3.5,-a);}
+  return m;
+}
+
+export function radioTowerLod(given?:ParamValues):MeshBuilder{
+  const p=resolveParams(RADIO,given),m=model(),n=+p.bays!,h=n*4,r=2.3;
+  for(const x of [-r,r])for(const z of [-r,r])m.box('stone',x,z,1.2,1.2,0,1);
+  for(let i=0;i<n;i++){
+    const mat=i%2?'white':'red',y0=1.1+i*4,y1=4.9+i*4;
+    // the corner legs' two outer faces, and one diagonal brace on each face (outside only)
+    for(const x of [-r,r])for(const z of [-r,r]){
+      const sx=Math.sign(x),sz=Math.sign(z),o=.15;
+      lodPolygon(m,mat,[[x+sx*o,y0-.2,z-o],[x+sx*o,y0-.2,z+o],[x+sx*o,y1,z+o],[x+sx*o,y1,z-o]],[sx,0,0]);
+      lodPolygon(m,mat,[[x-o,y0-.2,z+sz*o],[x+o,y0-.2,z+sz*o],[x+o,y1,z+sz*o],[x-o,y1,z+sz*o]],[0,0,sz]);
+    }
+    for(let s=0;s<4;s++){
+      const a=face(s,-r,y0,r+.16),b=face(s,-r+.6,y0,r+.16),c=face(s,r,y1,r+.16),d=face(s,r-.6,y1,r+.16);
+      m.quad(mat,a,b,c,d);
+    }
+  }
+  band(m,'steel',5,h+1,.2);
+  m.prism('white',ngon(6,.12),h+1.2,h+5,false);
+  for(let i=0;i<+p.dishes!;i++){
+    const s=i%4,y=h*(.42+i*.14),ring=ngon(8,1.4).map(([u,v])=>face(s,u,y+v,3.72));
+    const back=ring.map(([x,yy,z]):Vec3=>{const d=face(s,0,0,.32);return [x-d[0],yy,z-d[2]];});
+    for(let k=1;k<7;k++){m.tri('white',ring[0]!,ring[k]!,ring[k+1]!);m.tri('white',back[0]!,back[k+1]!,back[k]!);}
   }
   return m;
 }

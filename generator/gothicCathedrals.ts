@@ -289,12 +289,122 @@ export function pragueCastleStVitus(): MeshBuilder {
   return m;
 }
 
+// --- the distant models -------------------------------------------------------------
+//
+// Masses, roofs, towers and spires from the same dimensions and the same Gothic
+// frame as the full models, without windows, tracery, portals or statues
+// (docs/models/lod.md). `vesselLod` and `transeptLod` serve both cathedrals.
+
+/** The nave, aisles, buttress piers and polygonal choir of `vessel`, as solid masses under their roofs. */
+function vesselLod(g: Gothic, prague: boolean): void {
+  const front = prague ? 44.5 : 44;
+  const back = prague ? -44.5 : -37;
+  const half = prague ? 7.6 : 9.5;
+  const aisle = prague ? 15.2 : 18.0;
+  const eave = prague ? 33 : 34;
+  const ridge = prague ? 41.6 : 45;
+  const mid = (front + back) / 2;
+  g.box("stone", 0, mid, half * 2, front - back, 0, eave + 0.12, 0, false);
+  for (const s of [-1, 1]) {
+    g.box("stone", s * (half + aisle) / 2, mid, aisle - half, front - back, 0, 16.8, 0, false);
+    g.slab("roof", [[s * (half - 0.1), 23.2, front - 0.12], [s * (aisle + 0.4), 17.1, front - 0.12], [s * (aisle + 0.4), 17.1, back + 0.15], [s * (half - 0.1), 23.2, back + 0.15]], [0, -0.25, 0]);
+    // the buttress piers and their pinnacles, every other or third bay
+    const bays = prague ? [31, 7, -35] : [38, 20, 2, -29];
+    const outer = prague ? 18.0 : 22;
+    for (const z of bays) {
+      g.box("stone", s * outer, z - 3.6, 1.65, 3.0, 0.1, 23.5, s * PI / 2);
+      pinnacleLod(g, s * outer, z - 3.6, 1.4, 23.5, 29.1);
+    }
+  }
+  g.roof(0, mid, half * 2 + 0.7, front - back, eave + 0.12, ridge);
+  const ring = (r: number): Ring => apse(r, back, 5);
+  g.loft("stone", ring(aisle), 0, ring(aisle), 16.8, false);
+  g.loft("roof", apse(aisle + 0.35, back + 0.04, 5), 17.1, apse(half - 0.04, back + 0.04, 5), 23.2, false);
+  g.loft("stone", ring(half), 16.8, ring(half), eave + 0.12, false);
+  const roofRing = apse(half + 0.35, back - 0.02, 5);
+  for (let i = 0; i + 1 < roofRing.length; i++) {
+    const a = roofRing[i]!, b = roofRing[i + 1]!;
+    g.m.facets("roof", [g.p([a[0], eave + 0.12, a[1]]), g.p([b[0], eave + 0.12, b[1]]), g.p([0, ridge, back])], [0, 1, 0]);
+  }
+}
+
+/** The transept of `transept`: its mass, roof and corner pinnacles. */
+function transeptLod(g: Gothic, prague: boolean): void {
+  const z = prague ? -19.5 : -8;
+  const width = prague ? 40.8 : 49.4;
+  const depth = prague ? 14 : 15;
+  const eave = prague ? 33 : 34;
+  g.box("stone", 0, z, width, depth, 0.04, eave + 0.16, 0, false);
+  g.roof(0, z, width + 0.4, depth + 0.6, eave + 0.16, prague ? 41 : 45.05, true);
+  for (const s of [-1, 1]) for (const dz of [-depth / 2 + 0.5, depth / 2 - 0.5]) {
+    g.box("stone", s * width / 2, z + dz, 1.3, 1.6, 0.1, eave + 0.4, 0, false);
+    g.spire("stone", [[s * width / 2 - 0.65, z + dz - 0.8], [s * width / 2 + 0.65, z + dz - 0.8], [s * width / 2 + 0.65, z + dz + 0.8], [s * width / 2 - 0.65, z + dz + 0.8]], eave + 0.4, eave + 6.4);
+  }
+}
+
+/** A square pyramid of side w about (x, z), from y0 to y1: a pinnacle from afar. */
+function pinnacleLod(g: Gothic, x: number, z: number, w: number, y0: number, y1: number): void {
+  g.spire("stone", [[x - w / 2, z - w / 2], [x + w / 2, z - w / 2], [x + w / 2, z + w / 2], [x - w / 2, z + w / 2]], y0, y1);
+}
+
+export function notreDameLod(): MeshBuilder {
+  const m = new MeshBuilder(GOTHIC_PALETTE), g = new Gothic(m);
+  vesselLod(g, false);
+  transeptLod(g, false);
+  // the west front and its two towers with flat leaded roofs
+  g.box("stone", 0, 49, 43, 12, 0, 40, 0, false);
+  for (const y of [15.8, 33.4]) g.box("trim", 0, 49, 44.2, 13.2, y, y + 0.55);
+  g.box("trim", 0, 49, 44.2, 13.2, 39.5, 40.05);
+  for (const x of [-14.6, 14.6]) {
+    g.box("stone", x, 48.8, 13.6, 11.0, 40.05, 68.3, 0, false);
+    g.box("trim", x, 48.8, 14.7, 12.1, 68.3, 69.1);
+    for (const dx of [-6.3, 6.3]) for (const dz of [-5.0, 5.0]) g.box("stone", x + dx, 48.8 + dz, 1.2, 1.2, 68.3, 70.6, 0, false);
+  }
+  // the crossing fleche
+  g.loft("lead", ngon(8, 4.7, PI / 8, 0, -8), 42.8, ngon(8, 3.3, PI / 8, 0, -8), 49.8, false);
+  g.loft("roof", ngon(8, 3.3, PI / 8, 0, -8), 49.8, ngon(8, 2.8, PI / 8, 0, -8), 62, false);
+  g.spire("roof", ngon(8, 3.0, PI / 8, 0, -8), 62, 91.4);
+  return m;
+}
+
+export function pragueCastleStVitusLod(): MeshBuilder {
+  const m = new MeshBuilder({ ...GOTHIC_PALETTE, stone: { color: "#b4ac99", roughness: 0.95 } });
+  const g = new Gothic(m, -PI / 2, -4.5);
+  vesselLod(g, true);
+  transeptLod(g, true);
+  // the west front's gable between the two spired towers
+  g.box("stone", 0, 51, 12.5, 13, 0.05, 40);
+  g.slab("stone", [[-6.25, 40, 57.5], [6.25, 40, 57.5], [0, 49, 57.5]], [0, 0, -13]);
+  for (const x of [-10.5, 10.5]) {
+    g.box("stone", x, 51, 13, 13, 0, 44, 0, false);
+    g.box("trim", x, 51, 14.3, 14.3, 44, 45.1);
+    g.box("stone", x, 51, 10.5, 10.5, 45.1, 53.15, 0, false);
+    g.spire("roof", ngon(8, 6.1, PI / 8, x, 51), 53.15, 83.3);
+    for (const dx of [-5.9, 5.9]) for (const dz of [-5.9, 5.9]) pinnacleLod(g, x + dx, 51 + dz, 1.4, 45.1, 61.3);
+  }
+  // the great south tower and its copper helm
+  const x = 14, z = -2.5;
+  g.box("stone", x, z, 14, 14, 0, 52, 0, false);
+  g.box("trim", x, z, 16.6, 16.6, 52, 53.5);
+  g.box("stone", x, z, 14.7, 14.7, 53.5, 56.4);
+  const profile: Array<[number, number]> = [[56.4, 7.0], [58.0, 7.3], [62.5, 4.2], [67.7, 2.2]];
+  for (let i = 0; i + 1 < profile.length; i++) {
+    const a = profile[i]!, b = profile[i + 1]!;
+    g.loft("copper", ngon(10, a[1], 0, x, z), a[0], ngon(10, b[1], 0, x, z), b[0], false);
+  }
+  g.loft("recess", ngon(4, 1.8, PI / 4, x, z), 67.7, ngon(4, 1.8, PI / 4, x, z), 74.3, false);
+  g.loft("copper", ngon(8, 2.4, 0, x, z), 74.3, ngon(8, 1.35, 0, x, z), 77.3, false);
+  g.spire("copper", ngon(8, 1.35, 0, x, z), 77.3, 88.5);
+  for (const dx of [-5.8, 5.8]) for (const dz of [-5.8, 5.8]) g.spire("copper", ngon(4, 1.25, PI / 4, x + dx, z + dz), 56.4, 61.5);
+  return m;
+}
+
 export const GOTHIC_CATALOG: CatalogFields = {
   category: "Historical", group: "hist_center", defaultScale: 1,
   license: "CC0", author: "Rail Island", source: "Rail Island",
 };
 
 export const GOTHIC_CATHEDRALS: ProceduralDesign[] = [
-  { id: "bld-notre-dame", game: { plaza: { cities: ["city"], layouts: ["rect"], fit: "footprint" } }, title: "Notre-Dame", build: notreDame, references: "notre-dame", catalog: GOTHIC_CATALOG },
-  { id: "bld-prague-castle-st-vitus", game: { plaza: { cities: ["city"], layouts: ["rect"], fit: "footprint" } }, title: "Prague Castle (St Vitus)", build: pragueCastleStVitus, references: "prague-castle-st-vitus", catalog: GOTHIC_CATALOG },
+  { id: "bld-notre-dame", game: { plaza: { cities: ["city"], layouts: ["rect"], fit: "footprint" } }, title: "Notre-Dame", build: notreDame, buildLod: notreDameLod, references: "notre-dame", catalog: GOTHIC_CATALOG },
+  { id: "bld-prague-castle-st-vitus", game: { plaza: { cities: ["city"], layouts: ["rect"], fit: "footprint" } }, title: "Prague Castle (St Vitus)", build: pragueCastleStVitus, buildLod: pragueCastleStVitusLod, references: "prague-castle-st-vitus", catalog: GOTHIC_CATALOG },
 ];
