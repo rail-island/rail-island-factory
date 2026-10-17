@@ -1,9 +1,10 @@
 # Aircraft
 
-**Covers** - the seven procedural aircraft (the Aero A.10 biplane, the Airbus A380, the
-Boeing 737-800, MD-11, Boeing 747-400, Airbus Beluga and the light business jet), the reference GLBs and photos they reproduce,
+**Covers** - the eight procedural aircraft (the Aero A.10 biplane, the Airbus A380, the
+Boeing 737-800, MD-11, Boeing 747-400, Airbus Beluga, the light business jet and the small
+two-seat airplane), the reference GLBs and photos they reproduce,
 their axes, datums, sizes and triangle budget, the airline liveries of the A380 and the
-737, the retractable-gear parts, the body/decal technique they are built with, and where
+737, the small airplane's colours, the retractable-gear parts, the body/decal technique they are built with, and where
 they deviate from the references.
 **Code** - `generator/aircraft.ts`, `generator/strokeFont.ts` (the Beluga's titles), `generator/meshCore.ts` (`sweep`, `loft`, `slab`, `facets`, `part`), `generator/vehicleParts.ts` (`block`), `test/referenceModels.test.ts`, `test/aircraft.test.ts`, `test/models.test.ts`, `test/jsModel.test.ts`, `.agents/skills/aircraft/SKILL.md`
 **See also** - [vehicles.md](vehicles.md) (the road and rail vehicles, `sweep`, parts), [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md)
@@ -24,8 +25,10 @@ saved maps: never rename one.**
 | `veh-airbus-a380` | `airbus-a380.glb` | `assets/airbus-a380/` | fuselage on Z, nose +Z, wings on X | 78.86 / 23.50 / 74.30 | about 8 800 (16 748) |
 | `veh-boeing-737` | (the earlier factory model) | - | fuselage on X, nose -X, wings on Z | 39.48 / 12.55 / 35.78 | about 4 500 |
 | `veh-light-jet` | `light-jet.glb` | `assets/light-jet/` | fuselage on X, nose +X, wings on Z | 17.60 / 6.16 / 15.30 | about 3 250 (15 064) |
+| `veh-small-airplane` | `assets/small-airplane/small-airplane.glb` (community model, not a game asset) | `assets/small-airplane/` | fuselage on Z, nose +Z, wings on X | 8.76 / 2.17 / 7.46 | about 3 050 (20 006) |
 
 The A.10, the A380 and the light jet match the reference bounds to the centimetre;
+the small airplane is within 1% of its inspiration model's (`test/aircraft.test.ts`);
 the 737 has the real aircraft's size. The budget is **10 000 triangles per aircraft**,
 every livery included (`test/aircraft.test.ts`, `test/referenceModels.test.ts`, the
 `aircraft` skill).
@@ -89,6 +92,40 @@ fin with a dorsal fillet, the T-tailplane and its bullet fairing, ventral strake
 a dorsal antenna. Its datum is the reference's: the fuselage axis on y = 0 and the
 (tall) gear reaching y = -2.55, the twin nose wheels and the two main legs with
 their doors.
+
+### Small airplane
+
+A two-seat light sport aircraft after the community model the user supplied
+(`assets/small-airplane/small-airplane.glb`, see its `SOURCES.md`); it does not
+replace a game asset. It keeps that model's axes and size: nose (the spinner tip) at
++Z, z 3.74; wings along X, 8.76 m across the navigation lights; 2.17 m to the fin tip;
+wheels on y = 0. Parts, front to back:
+
+- a white **spinner** and a **three-blade propeller** (0.81 m radius, broadest at a
+  third of the span, twisted from 43 to 14 degrees of pitch), each blade a loft of
+  six-point airfoils along its radius;
+- the **fuselage**, 14 stations of a 28-point superellipse (exponent 2.3): the
+  cowling with a chin intake and two cooling inlets on its front face and two exhaust
+  stubs under it, the 1.12 m wide cabin, the tail cone rising to y 1.22. It is painted
+  by `paintedBody`: the `color` above, white below the widest point, with a white
+  cheatline decal that follows the centre line down the tail cone;
+- the **bubble canopy**, a body of eight oval stations whose lower half sinks into the
+  fuselage, with a windscreen arch and a centre bow in the `color`; a dorsal antenna;
+- the **low wing** (1.42 m root chord, 1.0 m at the tip, 3.5 degrees of dihedral)
+  through the fuselage, with the hinge lines of the flaps and ailerons as decals on
+  the upper skin, a pitot tube under the left wing and the **navigation lights**: red
+  on the left wing (+X), green on the right, white on the tail;
+- the **tailplane** with the elevator hinge line, the swept **fin** with its dorsal
+  fillet, white with a coloured tip band, and the rudder hinge line;
+- the fixed **tricycle undercarriage**: spring legs from the wing roots to the main
+  wheels (track 2.32 m), the nose leg 1.85 m ahead, all three wheels in coloured
+  teardrop **spats** with the tyres showing below.
+
+The `color` parameter (finish) is `blue` (the reference's, default), `red`, `yellow`
+or `green`. The gear is fixed, so the model has **no parts**. Deviations from the
+inspiration model: its navigation lights were swapped (red on the right wing); here
+red is on the left as on a real aircraft. The canopy is opaque tinted glass, like the
+other aircraft's glazing, and there is no cabin interior.
 
 ## Liveries
 
