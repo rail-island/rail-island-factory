@@ -2,7 +2,7 @@ import { proceduralId } from "../generator/modelId.ts";
 // Skyscraper-specific contracts; params.test.ts also compares every covered
 // variant with its standalone browser model and checks determinism and flicker.
 import { describe, expect, it } from "vitest";
-import { SKYSCRAPERS } from "../generator/skyscrapers";
+import { SKYSCRAPERS, SKYSCRAPER_CATALOG } from "../generator/skyscrapers";
 import { coverageCombinations, paramCombinations } from "../generator/design";
 import { glbStats } from "../generator/glbStats";
 import { parseGlb } from "../generator/glbTriangles";
@@ -20,18 +20,42 @@ function paneHeights(root: TreeNode): number[] {
   )))].sort((a, b) => a - b);
 }
 
+const SIZES = ["compact", "medium", "standard", "landmark"];
+const HEIGHTS = [50, 60, 70, 80];
+
+/** Plan extent of the main massing (everything but the entrance canopy, which stands in front). */
+function planArea(root: TreeNode): number {
+  const parts = root.children.filter((n) => !("name" in n && n.name === "entrance"));
+  const lo = [Infinity, Infinity], hi = [-Infinity, -Infinity];
+  for (const n of parts) for (const [i, axis] of [0, 2].entries()) {
+    lo[i] = Math.min(lo[i]!, n.min![axis]!);
+    hi[i] = Math.max(hi[i]!, n.max![axis]!);
+  }
+  return (hi[0]! - lo[0]!) * (hi[1]! - lo[1]!);
+}
+
 describe("parametric skyscrapers", () => {
-  it("retain the ten shipped identities and offer five heights and design-specific variants", () => {
+  it("are their own Skyscrapers category, apart from the commercial buildings", () => {
+    expect(SKYSCRAPER_CATALOG.category).toBe("Skyscrapers");
+  });
+
+  it("retire the low-rise size to the 50 m tower", () => {
+    const d = SKYSCRAPERS[0]!;
+    expect(d.params!.find((p) => p.name === "size")!.values.map((v) => v.value)).toEqual(SIZES);
+    expect(Buffer.from(d.build({ size: "lowrise" }).toGlb(d.id)).equals(Buffer.from(d.build({ size: "compact" }).toGlb(d.id)))).toBe(true);
+  });
+
+  it("retain the ten shipped identities and offer four heights and design-specific variants", () => {
     expect(SKYSCRAPERS.map((d) => proceduralId(d.id))).toEqual([
       "proc-building-sky-glass-office", "proc-building-sky-art-deco", "proc-building-sky-pagoda", "proc-building-sky-brick-residential",
       "proc-building-sky-twin-towers", "proc-building-sky-twisted", "proc-building-sky-dark-slab", "proc-building-sky-bullet", "proc-building-sky-terraced", "proc-building-sky-pyramid",
     ]);
-    for (const d of SKYSCRAPERS) expect(paramCombinations(d.params)).toHaveLength(proceduralId(d.id) === "proc-building-sky-terraced" ? 720 : proceduralId(d.id) === "proc-building-sky-twisted" ? 180 : 60);
+    for (const d of SKYSCRAPERS) expect(paramCombinations(d.params)).toHaveLength(proceduralId(d.id) === "proc-building-sky-terraced" ? 576 : proceduralId(d.id) === "proc-building-sky-twisted" ? 144 : 48);
   });
 
   it("joins the bullet tower's tip to its last glass band", () => {
     const d = SKYSCRAPERS.find((d) => proceduralId(d.id) === "proc-building-sky-bullet")!;
-    for (const size of ["lowrise", "compact", "medium", "standard", "landmark"]) {
+    for (const size of SIZES) {
       const tree = d.build({ size }).sourceTree(d.id, d.title);
       const bands = tree.root.children.find((n) => "name" in n && n.name === "glass bands")!;
       const tip = tree.root.children.find((n) => "name" in n && n.name === "tip")!;
@@ -70,18 +94,19 @@ describe("parametric skyscrapers", () => {
       }
     });
 
-    it(`${d.id}: each size stays grounded and within 10,000 triangles`, () => {
-      const variants = ["lowrise", "compact", "medium", "standard", "landmark"].map((size) => d.build({ size }));
+    it(`${d.id}: each size reaches its height on a smaller footprint, grounded and within budget`, () => {
+      const variants = SIZES.map((size) => d.build({ size }));
       const stats = variants.map((m) => glbStats(m.toGlb(d.id)));
-      expect(stats[4]!.max[1] / stats[0]!.max[1]).toBeGreaterThan(1.7);
+      const areas = variants.map((m) => planArea(m.sourceTree(d.id, d.title).root));
       for (let i = 1; i < stats.length; i++) {
         expect(stats[i]!.max[1]).toBeGreaterThan(stats[i - 1]!.max[1]);
         expect(stats[i]!.triangles).toBeGreaterThan(stats[i - 1]!.triangles);
+        expect(areas[i]).toBeGreaterThan(areas[i - 1]! * 1.1);
       }
       for (const [index, m] of variants.entries()) {
         const s = stats[index]!;
         expect(s.min[1]).toBe(0);
-        expect(s.max[1]).toBeGreaterThan(30);
+        expect(Math.abs(s.max[1] - HEIGHTS[index]!), SIZES[index]).toBeLessThanOrEqual(2.5);
         expect(s.triangles).toBeLessThanOrEqual(10_000);
         const tree = m.sourceTree(d.id, d.title);
         for (const axis of [0, 1, 2] as const) {
@@ -94,24 +119,24 @@ describe("parametric skyscrapers", () => {
     it(`${d.id}: size adds storeys with fixed pitch, window height and human-sized entrances`, () => {
       const base = d.build().sourceTree(d.id, d.title).root;
       const entrance = scopes(base, ["entrance"])[0]!;
+      const extent = (n: TreeNode): number[] => [0, 1, 2].map((a) => Math.round((n.max![a]! - n.min![a]!) * 1000) / 1000);
       const groups = scopes(base, ["floor bands", "bands", "floors", "glass bands"]);
+      const pitches = new Map(groups.filter((g) => g.children.length >= 2).map((g) => [g.id.replace(/\d+/g, "#"), g.children[1]!.min![1] - g.children[0]!.min![1]]));
       const counts: number[] = [];
       expect(groups.length).toBeGreaterThan(0);
-      for (const size of ["lowrise", "compact", "medium", "standard", "landmark"]) {
+      for (const size of SIZES) {
         const root = d.build({ size }).sourceTree(d.id, d.title).root;
         const entry = scopes(root, ["entrance"])[0]!;
-        expect(entry.min).toEqual(entrance.min);
-        expect(entry.max).toEqual(entrance.max);
+        expect(extent(entry)).toEqual(extent(entrance));
+        expect(entry.min![1]).toBe(entrance.min![1]);
         const door = entry.children.find((n) => "material" in n && n.material === "glassDark")!;
         expect(door.max![1] - door.min![1]).toBeCloseTo(3.5, 3);
         expect(paneHeights(root)).toEqual(paneHeights(base));
         const variantGroups = scopes(root, ["floor bands", "bands", "floors", "glass bands"]);
         counts.push(variantGroups.reduce((count, group) => count + group.children.length, 0));
         for (const group of variantGroups) {
-          const original = groups.find((g) => g.id === group.id)!;
-          expect(original).toBeDefined();
-          if (group.children.length < 2 || original.children.length < 2) continue;
-          const pitch = original.children[1]!.min![1] - original.children[0]!.min![1];
+          const pitch = pitches.get(group.id.replace(/\d+/g, "#"));
+          if (group.children.length < 2 || pitch === undefined) continue;
           for (let floor = 1; floor < group.children.length; floor++) {
             const actual = group.children[floor]!.min![1] - group.children[floor - 1]!.min![1];
             expect(actual).toBeCloseTo(pitch, 2);

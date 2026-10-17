@@ -64,7 +64,7 @@ The same top-level shape as the webapp's `db/buildings/buildings.meta.json`:
     {
       "id": "sky-glass-office",
       "title": "Glass Office Tower",
-      "category": "Commercial",
+      "category": "Skyscrapers",
       "group": "skyscraper_c",
       "glb": "sky-glass-office.glb",
       "thumb": "sky-glass-office.png",
