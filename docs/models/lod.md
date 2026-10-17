@@ -1,7 +1,7 @@
 # Low level of detail
 
 **Covers** - distant geometry for every standalone JS export, triangle budgets and the factory preview switch.
-**Code** - `generator/lod.ts`, `generator/cd163.ts` (`cd163LodBody`), `generator/cd163Family.ts`, `generator/lodHull.ts`, `generator/lodModel.ts`, `generator/lodPrimitives.ts`, `generator/meshCore.ts`, `generator/jsModel.ts`, `generator/towers.ts`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `test/lod.test.ts`.
+**Code** - `generator/lod.ts`, `generator/lodKit.ts`, `generator/cd163.ts` (`cd163LodBody`), `generator/cd163Family.ts`, `generator/boxLocoKit.ts` (`boxLocoLod`), `generator/mainlineElectrics.ts`, `test/lodKit.test.ts`, `generator/lodHull.ts`, `generator/lodModel.ts`, `generator/lodPrimitives.ts`, `generator/meshCore.ts`, `generator/jsModel.ts`, `generator/towers.ts`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `test/lod.test.ts`.
 **See also** - [js-format.md](js-format.md), [parameters.md](parameters.md), [vehicle-rig.md](vehicle-rig.md), [../site/catalog-site.md](../site/catalog-site.md).
 
 ## Consumer API
@@ -61,18 +61,40 @@ individual rotor blades, wings, chimneys and domes remain distinct. Power and
 chemical plants and Prague main station use the large-complex-building budget
 of 500 triangles. Dedicated builders resolve the same parameters as full detail.
 
-The CD 163 / 363 and CD 263 / 371 / 372 (every livery of both designs) share
-`cd163LodBody`, at most 100 triangles: the body's raked ends and flat sides are
-painted in the livery's colour bands (a livery's own cab paint on the cab
-sections and ends), with the grey side apron under the eave, the roof hip, the
-raised cooler box, a dark block per bogie and one for the equipment between
-them (so the body stands on the rail instead of floating), the raised rear
-pantograph as thin rods with its collector bar, and a low ridge for the folded
-front one. The body is open below. When a livery's bands do not fit, the folded
-pantograph goes first, then the band that shows least: the thinnest, a cab band
-counting half (it then shows the machine room's colours at its height), the
-grey apron counting as a band. Windows and markings are left out as in every
-vehicle LOD, and all machine-room layouts look alike from afar.
+### The shared vehicle kit
+
+Dedicated vehicle LODs are being moved onto one shared kit, `lodKit.ts`
+(docs/specs/2026-10-17-dedicated-model-lods.md), family by family; until a family
+has its adapter it keeps the generic hull above. Done so far: the CD 163 / 363
+and CD 263 / 371 / 372 (`cd163LodBody`) and the mainline electrics built from a
+`LocoSpec` - CD 180 / 181 / 182, DNT 184.5, DB 111, DR 243 / DB 143 / 112, OBB 1012
+and 1040 (`boxLocoLod`), every livery.
+
+- **Shell** (`lodShell`): the body as a stack of plan rings from the family's own
+  profile tables - the end's centre line `tip(y)`, the half width `hw(y)` and,
+  for a rounded or pointed nose, the corners' setback, drawn as a vee. Sides and
+  ends are painted in the livery's colour bands; a livery's cab paint covers the
+  cab sections of the sides. The crown is capped, the bottom is open. Faces of
+  different colours never share a plane.
+- **Windows**: windscreens and window bands in one dark material, `lodGlass`
+  (`LOD_GLASS`) - the only glass a vehicle LOD may use (`test/lod.test.ts`).
+  `windowBands` joins a split windscreen into one band; a windscreen within
+  0.2 m of the corners spans the whole end. Small windows (a cab's side
+  windows) are optional parts.
+- **Parts**: `lodBogie` (a dark block narrowing toward the rail), `lodSideBox`
+  (frame, equipment), `lodRoofBox` (roof covers, cooler boxes), `lodPantograph`
+  (raised: two arms as rods without their downward face and the collector as a
+  ridged bar; folded: a low ridge). One pantograph is raised, the rear one, as in
+  full detail.
+- **Fitting** (`fitLod`): the family states what is optional; the kit builds
+  the LOD and, while it is over its budget, gives up in this order: the optional
+  parts (lowest rank first: the folded pantograph, small windows, short roof
+  boxes, the frame strip, the underframe equipment), the profile's detail (its
+  tables simplified within 0.03 to 0.4 m, a vee nose flattened halfway back),
+  the least visible colour band (the thinnest; a band painted on sides and ends
+  alike goes from both, an end or cab band counts half and a cab band then shows
+  the machine room's colours), then the smallest window. Optional parts that
+  fit again afterwards come back. The result is deterministic.
 
 The process is deterministic. Generic recipes build the full geometry first,
 then reconstruct the silhouette; their saving is in rendering, not initial

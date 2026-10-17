@@ -19,6 +19,7 @@ import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "./meshBuilder.t
 import type { Vec3 } from "./meshCore.ts";
 import { block, plate, side } from "./vehicleParts.ts";
 import { coil, tubeX, type Band } from "./cd163.ts";
+import { fitLod, lodBogie, lodPantograph, lodRoofBox, lodSideBox, windowBands, type LodPart, type LodShell, type Table as LodTable } from "./lodKit.ts";
 import {
   KIT_PALETTE, bogie, buffers, diamond, insulator, kinks, lerpTable, numberOn, onEnd, onSide, rect, roundRect, shell, singleArm,
   surfacePanel, sweepZ, type Place, type ShellSpec,
@@ -427,4 +428,55 @@ export function buildBoxLoco(s: LocoSpec): MeshBuilder {
     }
   });
   return m;
+}
+
+// --- low level of detail ------------------------------------------------------------
+
+/**
+ * A box locomotive for distant views (the shared kit, lodKit.ts): the shell
+ * from the same profile tables and paint, a vee nose where the end's plan sets
+ * its corners back, the windscreens as one band per end, the cab side windows
+ * (optional, the smallest first), the frame, a block per bogie, the equipment
+ * between them, the roof boxes (short ones optional) and the pantographs, the
+ * rear raised and the front folded (optional). Within `budget` triangles.
+ */
+export function boxLocoLod(s: LocoSpec, budget = 100): MeshBuilder {
+  const hw = (y: number) => lerpTable(s.hw, y);
+  const ys = kinks(s.tip, s.hw).filter((y) => y >= s.y0);
+  const setback: LodTable = ys.map((y) => { const plan = s.endPlan(y, hw(y)); return [y, plan[plan.length - 1]![1]] as const; });
+  const vee = setback.some(([, b]) => b > 0.12);
+  const ends = windowBands(s.endItems.filter((i) => i.kind === "window").map((i) => ({ u: i.z, y: i.y })), 0.4);
+  const sides = s.sideItems.filter((i) => i.kind === "window").flatMap((i) =>
+    windowBands([{ u: i.x, y: i.y }], 0).map((w) => ({ ...w, mirror: i.mirror, sides: i.sides, optional: (w.u[1] - w.u[0]) * (w.y[1] - w.y[0]) })));
+  const shell: LodShell = {
+    y0: s.y0, tip: s.tip, hw: s.hw, ...(vee ? { setback } : {}),
+    side: s.side, end: s.end, roof: s.roof,
+    sideWindows: sides, endWindows: ends,
+  };
+  const p = s.pantograph;
+  const parts: LodPart[] = [
+    { optional: 40, draw: (m) => m.scope("frame", () => {
+      const f = s.frame;
+      lodSideBox(m, f.mat, [[-f.half, f.y0], [f.half, f.y0], [f.half, f.y1], [-f.half, f.y1]], -f.hw, f.hw);
+    }) },
+    { draw: (m) => m.scope("running gear", () => {
+      for (const b of s.bogies) {
+        const reach = Math.max(...b.axles.map(Math.abs)) + b.wheelR + 0.2;
+        lodBogie(m, b.xc, reach, s.frame.y0);
+      }
+    }) },
+    ...(s.underItems?.length ? [{ optional: 50, draw: (m: MeshBuilder) => m.scope("equipment", () => {
+      const it = s.underItems!;
+      const [x0, x1] = [Math.min(...it.map((u) => u[0])), Math.max(...it.map((u) => u[1]))];
+      const [y0, w] = [Math.min(...it.map((u) => u[2])), Math.max(...it.map((u) => u[4]))];
+      lodSideBox(m, "underframe", [[x0, y0], [x1, y0], [x1, s.frame.y0], [x0, s.frame.y0]], -w, w);
+    }) }] : []),
+    ...s.roofItems.map((r): LodPart => ({
+      ...(r.x[1] - r.x[0] < 2 ? { optional: 10 + (r.x[1] - r.x[0]) } : {}),
+      draw: (m) => m.scope(r.name, () => lodRoofBox(m, r.mat, r.x[0], r.x[1], r.w[0], r.w[1], r.y[0], r.y[1])),
+    })),
+    { draw: (m) => m.scope("raised pantograph", () => lodPantograph(m, { x: -p.x, roofY: p.roofY, baseY: p.baseY, h: 1, raised: true, raisedTop: 5.87, lower: p.lower, upper: p.upper })) },
+    { optional: 0, draw: (m) => m.scope("folded pantograph", () => lodPantograph(m, { x: p.x, roofY: p.roofY, baseY: p.baseY, h: -1, raised: false, raisedTop: 5.87 })) },
+  ];
+  return fitLod({ palette: { ...KIT_PALETTE, ...s.palette }, shells: [shell], parts }, budget);
 }

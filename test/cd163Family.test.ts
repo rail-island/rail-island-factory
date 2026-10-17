@@ -241,15 +241,19 @@ describe("CD 163 family low level of detail", () => {
       expect(faceAt(green, 0, 3.6, s * 1.47, [0, 0, s])).toBe("roof"); // the grey side apron
     }
     for (const e of [-1, 1]) expect(faceAt(green, e * 7.85, 2.0, 0, [e, 0, 0])).toBe("yellow");
-    // the 371 002 keeps its thin yellow line between the cream and the red
-    expect(faceAt(cd263Lod({ livery: "cd371No002" }), 0, 2.1, 1.47, [0, 0, 1])).toBe("yellow");
+    // the windscreens: one dark band across each end
+    for (const e of [-1, 1]) expect(faceAt(green, e * 7.8, 3.0, 0, [e, 0, 0])).toBe("lodGlass");
+    // the 371 002 keeps its cream band; its thin yellow line gives way before the windscreens (windows go last)
+    const l371 = cd263Lod({ livery: "cd371No002" });
+    expect(faceAt(l371, 0, 1.7, 1.47, [0, 0, 1])).toBe("cream");
+    expect(faceAt(l371, 7.8, 3.0, 0, [1, 0, 0])).toBe("lodGlass");
   });
 
   it("keeps the 363 009's red cabs against the charcoal machine-room band", () => {
     const m = cd163Lod({ livery: "cd363No009" });
     expect(faceAt(m, 0, 2.8, 1.47, [0, 0, 1])).toBe("charcoal");
     expect(faceAt(m, 7.0, 2.8, 1.47, [0, 0, 1])).toBe("red");
-    expect(faceAt(m, 7.8, 2.8, 0, [1, 0, 0])).toBe("red");
+    expect(faceAt(m, 7.85, 2.5, 0, [1, 0, 0])).toBe("red");
     expect(faceAt(m, 0, 1.1, -1.47, [0, 0, -1])).toBe("charcoal");
   });
 });

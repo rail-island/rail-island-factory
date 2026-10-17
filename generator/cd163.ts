@@ -21,6 +21,7 @@ import type { Vec3 } from "./meshCore.ts";
 import type { CatalogFields } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
 import { CD_EMBLEM, triangulate } from "./cdLogo.ts";
+import { fitLod, LOD_GLASS, lodBands, lodBogie, lodPantograph, lodRoofBox, lodSideBox, type LodBand, type LodPart, type LodShell } from "./lodKit.ts";
 
 /** The catalog fields of a rail vehicle, in place of the road vehicles'. */
 export const RAIL_CATALOG: CatalogFields = {
@@ -984,252 +985,35 @@ export function cd163Body(livery: Cd163Livery, layout: Cd163Layout): MeshBuilder
 /** The CD 163 body's distant-view budget: the rail vehicles' 100 triangles (docs/models/lod.md). */
 export const CD163_LOD_TRIANGLES = 100;
 
-/** The front of the distant body at height y: the full profile without the 17 cm upright apron. */
-function lodX(y: number): number {
-  if (y >= Y_NOSE) return frontX(y);
-  return HALF - LOWER_RAKE * (Y_NOSE - y) / (Y_NOSE - Y_BOTTOM);
-}
-
-/** `bands` clipped to y0..y1, gaps closed and neighbours of one colour joined. */
-function lodBands(bands: readonly Band[], y0: number, y1: number): Band[] {
-  const out: Band[] = [];
-  for (const [, b, mat] of bandPieces(bands, y0, y1)) {
-    const last = out[out.length - 1];
-    if (last && last[2] === mat) out[out.length - 1] = [last[0], b, mat];
-    else out.push([last ? last[1] : y0, b, mat]);
-  }
-  out[out.length - 1] = [out[out.length - 1]![0], y1, out[out.length - 1]![2]];
-  return out;
-}
-
-/** `bands` with band i painted over by its thicker neighbour. */
-function mergeBand(bands: readonly Band[], i: number): Band[] {
-  const t = (k: number) => (bands[k] ? bands[k]![1] - bands[k]![0] : -1);
-  const into = t(i - 1) >= t(i + 1) ? i - 1 : i + 1;
-  const out = bands.map((b, k): Band => (k === i ? [b[0], b[1], bands[into]![2]] : b));
-  return lodBands(out, out[0]![0], out[out.length - 1]![1]);
-}
-
-/** One planar convex polygon, wound so that it faces `n`. */
-function lodPolygon(m: MeshBuilder, mat: string, pts: Vec3[], n: Vec3): void {
-  const [a, b, c] = [pts[0]!, pts[1]!, pts[2]!];
-  const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-  const v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
-  const d = (u[1]! * v[2]! - u[2]! * v[1]!) * n[0] + (u[2]! * v[0]! - u[0]! * v[2]!) * n[1] + (u[0]! * v[1]! - u[1]! * v[0]!) * n[2];
-  const ring = d < 0 ? [...pts].reverse() : pts;
-  for (let k = 1; k + 1 < ring.length; k++) m.tri(mat, ring[0]!, ring[k]!, ring[k + 1]!);
-}
-
-/** A quad section (x, y) swept across z0..z1: both sides and both ends, no top or bottom (hidden). */
-function lodSideBox(m: MeshBuilder, mat: string, sec: Array<[number, number]>, z0: number, z1: number, ends = true): void {
-  for (const z of [z0, z1]) lodPolygon(m, mat, sec.map(([x, y]): Vec3 => [x, y, z]), [0, 0, Math.sign(z)]);
-  if (!ends) return;
-  // sec runs bottom-rear, bottom-front, top-front, top-rear: the rear and front walls
-  for (const [i, j, nx] of [[0, 3, -1], [1, 2, 1]] as const) {
-    const [p, q] = [sec[i]!, sec[j]!];
-    lodPolygon(m, mat, [[p[0], p[1], z0], [p[0], p[1], z1], [q[0], q[1], z1], [q[0], q[1], z0]], [nx, 0, 0]);
-  }
-}
-
-/** A three-sided rod from p to q, r thick, open-ended: a pantograph arm seen from afar. */
-function lodRod(m: MeshBuilder, mat: string, p: Vec3, q: Vec3, r: number): void {
-  const d = [q[0] - p[0], q[1] - p[1], q[2] - p[2]];
-  const l = Math.hypot(...d);
-  const t = d.map((x) => x / l);
-  // the directions across it: z (the arms stand in an x-y plane) and the one completing the frame
-  const a = [0, 0, 1];
-  const b = [t[1]! * a[2]! - t[2]! * a[1]!, t[2]! * a[0]! - t[0]! * a[2]!, t[0]! * a[1]! - t[1]! * a[0]!];
-  const off = (k: number): Vec3 => {
-    const ang = (2 * Math.PI * k) / 3 + Math.PI / 2;
-    return [0, 1, 2].map((i) => r * (Math.cos(ang) * a[i]! + Math.sin(ang) * b[i]!)) as Vec3;
-  };
-  for (let k = 0; k < 3; k++) {
-    const [o0, o1] = [off(k), off(k + 1)];
-    const n = [0, 1, 2].map((i) => o0[i]! + o1[i]!) as Vec3;
-    lodPolygon(m, mat, [
-      [p[0] + o0[0], p[1] + o0[1], p[2] + o0[2]], [p[0] + o1[0], p[1] + o1[1], p[2] + o1[2]],
-      [q[0] + o1[0], q[1] + o1[1], q[2] + o1[2]], [q[0] + o0[0], q[1] + o0[1], q[2] + o0[2]],
-    ], n);
-  }
-}
-
-/** The wall across z (-hz..hz) on the edge i-j of the triangle `tri` (x, y), facing away from its centre. */
-function lodWall(m: MeshBuilder, tri: Array<[number, number]>, i: number, j: number, hz: number): void {
-  const [p, q] = [tri[i]!, tri[j]!];
-  const [cx, cy] = [tri.reduce((s, v) => s + v[0], 0) / 3, tri.reduce((s, v) => s + v[1], 0) / 3];
-  const n: Vec3 = [(p[0] + q[0]) / 2 - cx, (p[1] + q[1]) / 2 - cy, 0];
-  lodPolygon(m, "pantograph", [[p[0], p[1], -hz], [q[0], q[1], -hz], [q[0], q[1], hz], [p[0], p[1], hz]], n);
-}
-
-/** The colour bands a distant body is painted in: the sides', the cabs' and the grey side apron. */
-interface LodPaint {
-  body: Band[];
-  cab: Band[];
-  apron: boolean;
-}
-
 /**
- * The body shell in `paint`: the sides from the machine room's and the cab
- * sections' bands, the raked ends from the cabs' bands and the grey side apron
- * under the eave. It is open below, over the running gear: the game's camera
- * never looks up at a distant locomotive.
- */
-function lodShell(m: MeshBuilder, paint: LodPaint): void {
-  const top = paint.apron ? Y_SIDE_EAVE : Y_EAVE;
-  const clip = (bands: readonly Band[]) => lodBands(bands, Y_BOTTOM, top);
-  const [body, cabSide] = [clip(paint.body), clip(paint.cab)];
-  const hs = splitHeights([...body, ...cabSide], Y_BOTTOM, top, []);
-  // the side between y0 and y1 from x = -xa (rear) to +xb (front), its ends on the cab profile
-  const sidePiece = (s: number, mat: string, y0: number, y1: number, rear: number | null, front: number | null) => {
-    const pts: Vec3[] = [];
-    const xr = (y: number) => (rear ?? -lodX(y));
-    const xf = (y: number) => (front ?? lodX(y));
-    pts.push([xr(y0), y0, s * HW], [xf(y0), y0, s * HW]);
-    if (front === null && y0 < Y_NOSE && y1 > Y_NOSE) pts.push([HALF, Y_NOSE, s * HW]);
-    pts.push([xf(y1), y1, s * HW], [xr(y1), y1, s * HW]);
-    if (rear === null && y0 < Y_NOSE && y1 > Y_NOSE) pts.push([-HALF, Y_NOSE, s * HW]);
-    lodPolygon(m, mat, pts, [0, 0, s]);
-  };
-  // join layers whose two colours both continue: fewer, taller side polygons
-  const layers: Array<[number, number, string, string]> = [];
-  for (let i = 1; i < hs.length; i++) {
-    const [y0, y1] = [hs[i - 1]!, hs[i]!];
-    const mid = (y0 + y1) / 2;
-    const [bm, cm] = [bandAt(body, mid)[2], bandAt(cabSide, mid)[2]];
-    const last = layers[layers.length - 1];
-    if (last && last[2] === bm && last[3] === cm) last[1] = y1;
-    else layers.push([y0, y1, bm, cm]);
-  }
-  for (const s of [-1, 1]) {
-    for (const [y0, y1, bm, cm] of layers) {
-      if (bm === cm) { sidePiece(s, bm, y0, y1, null, null); continue; }
-      sidePiece(s, cm, y0, y1, null, -CAB_X);
-      sidePiece(s, bm, y0, y1, -CAB_X, CAB_X);
-      sidePiece(s, cm, y0, y1, CAB_X, null);
-    }
-    if (paint.apron) sidePiece(s, "roof", Y_SIDE_EAVE, Y_EAVE, null, null);
-  }
-  // the ends, split at the nose where the two slopes meet
-  const ends = lodBands(paint.cab, Y_BOTTOM, Y_EAVE);
-  for (const e of [-1, 1]) {
-    for (const [a, b, mat] of ends) {
-      for (const [y0, y1] of [[a, Math.min(b, Y_NOSE)], [Math.max(a, Y_NOSE), b]] as const) {
-        if (y1 <= y0 + 1e-9) continue;
-        const [x0, x1] = [e * lodX(y0), e * lodX(y1)];
-        lodPolygon(m, mat, [[x0, y0, -HW], [x0, y0, HW], [x1, y1, HW], [x1, y1, -HW]], [e, 0, 0]);
-      }
-    }
-  }
-}
-
-/** The roof hip, the raised cooler box, the bogies, the equipment between them and the pantographs. */
-function lodFixtures(m: MeshBuilder, foldedPantograph: boolean): void {
-  m.scope("roof", () => {
-    const eave = frontX(Y_EAVE);
-    const rect = (x: number, z: number): Ring => outward([[x, -z], [x, z], [-x, z], [-x, -z]]);
-    m.loft("roof", rect(eave, HW), Y_EAVE, rect(eave - 0.42, ROOF_HW), Y_ROOF);
-  });
-  m.scope("cooler box", () => {
-    const foot = HW + 0.04;
-    const [x0, x1] = [-COOLER_X - 0.05, COOLER_X - 0.05];
-    const sec = (x: number): Vec3[] => [[x, COOLER_FOOT, -foot], [x, COOLER_FOOT, foot], [x, Y_COOLER, foot - 0.22], [x, Y_COOLER, -foot + 0.22]];
-    const [r, f] = [sec(x0), sec(x1)];
-    lodPolygon(m, "roof", r, [-1, 0, 0]);
-    lodPolygon(m, "roof", f, [1, 0, 0]);
-    lodPolygon(m, "roof", [r[1]!, f[1]!, f[2]!, r[2]!], [0, 0.2, 1]);
-    lodPolygon(m, "roof", [r[0]!, f[0]!, f[3]!, r[3]!], [0, 0.2, -1]);
-    lodPolygon(m, "roof", [r[2]!, f[2]!, f[3]!, r[3]!], [0, 1, 0]);
-  });
-  m.scope("running gear", () => {
-    // each bogie a dark block, narrowing toward the rail like its wheels; the
-    // equipment boxes and air tanks one block between them
-    for (const xb of [-BOGIE_X, BOGIE_X]) {
-      lodSideBox(m, "bogie", [[xb - 1.75, 0.08], [xb + 1.75, 0.08], [xb + 2.1, Y_BOTTOM], [xb - 2.1, Y_BOTTOM]], -1.12, 1.12);
-    }
-    lodSideBox(m, "underframe", [[-1.45, 0.5], [1.45, 0.5], [1.45, Y_BOTTOM], [-1.45, Y_BOTTOM]], -1.38, 1.38);
-  });
-  m.scope("pantographs", () => {
-    // the rear collector raised: the same linkage as the full model's, arms as thin rods
-    const xc = -PANTO_X;
-    const y = PANTO_Y;
-    const xh = xc + 0.55;
-    const hx = xc + 0.15;
-    const headY = y + 0.33 + 1.10;
-    const dx = -0.40;
-    const dy = headY - 0.02 - (y + 0.11);
-    const distance = Math.hypot(dx, dy);
-    const lower2 = 1.60 ** 2 + 0.11 ** 2;
-    const upper2 = 1.20 ** 2 + 0.09 ** 2;
-    const along = (lower2 - upper2 + distance ** 2) / (2 * distance);
-    const across = Math.sqrt(lower2 - along ** 2);
-    const kx = xh + (along * dx - across * dy) / distance;
-    const ky = y + 0.11 + (along * dy + across * dx) / distance;
-    lodRod(m, "pantograph", [xh, Y_ROOF - 0.02, 0], [kx, ky, 0], 0.08);
-    lodRod(m, "pantograph", [kx, ky, 0], [hx, headY, 0], 0.06);
-    // the collector head: a ridged bar across the track, its flat underside left out
-    const bar: Array<[number, number]> = [[hx - 0.15, headY - 0.02], [hx + 0.15, headY - 0.02], [hx, headY + 0.07]];
-    lodWall(m, bar, 1, 2, 0.92);
-    lodWall(m, bar, 2, 0, 0.92);
-    // the front one folded: a low ridge over its base frame
-    if (foldedPantograph) {
-      const x = PANTO_X;
-      const ridge: Array<[number, number]> = [[x - 0.7, Y_ROOF - 0.02], [x + 1.05, Y_ROOF - 0.02], [x + 0.2, y + 0.24]];
-      lodPolygon(m, "pantograph", ridge.map(([u, v]): Vec3 => [u, v, -0.62]), [0, 0, -1]);
-      lodPolygon(m, "pantograph", ridge.map(([u, v]): Vec3 => [u, v, 0.62]), [0, 0, 1]);
-      lodWall(m, ridge, 0, 2, 0.62);
-      lodWall(m, ridge, 2, 1, 0.62);
-    }
-  });
-}
-
-/**
- * The CD 163 body in `livery` for distant views, at most `budget` triangles:
- * the same outline, colour bands, cooler box, bogies and raised rear pantograph
- * as the full model, without windows, markings or fittings (docs/models/lod.md).
- * A livery with more bands than the budget holds loses its thinnest ones first
- * (and the folded front pantograph before any band); every machine-room layout
- * looks the same from afar.
+ * The CD 163 body in `livery` for distant views (the shared kit, lodKit.ts): the
+ * raked ends without the 17 cm upright apron, the roof as one hip, sides and
+ * ends painted in the livery's bands and cab paint, the grey side apron, the
+ * windscreens, the cooler box, a block per bogie and one for the equipment
+ * between them, the raised rear pantograph and the folded front one. Every
+ * machine-room layout looks the same from afar.
  */
 export function cd163LodBody(livery: Cd163Livery, budget = CD163_LOD_TRIANGLES): MeshBuilder {
-  const palette = { ...CD163_PALETTE, ...livery.palette };
-  const body = lodBands(livery.bands, Y_BOTTOM, Y_EAVE);
-  let paint: LodPaint = { body, cab: livery.cabBands ? lodBands(livery.cabBands, Y_BOTTOM, Y_EAVE) : body, apron: true };
-  const build = (p: LodPaint, folded: boolean): MeshBuilder => {
-    const m = new MeshBuilder(palette);
-    m.scope("body", () => lodShell(m, p));
-    lodFixtures(m, folded);
-    return m;
+  const roofTop = (bands: readonly Band[], top: number): LodBand[] => [...lodBands(bands, Y_BOTTOM, top), [top, Y_ROOF, "roof"]];
+  const cab = livery.cabBands ?? livery.bands;
+  const shell: LodShell = {
+    y0: Y_BOTTOM,
+    tip: [[Y_BOTTOM, HALF - LOWER_RAKE], [Y_NOSE, HALF], [Y_EAVE, frontX(Y_EAVE)], [Y_ROOF, frontX(Y_EAVE) - 0.42]],
+    hw: [[Y_BOTTOM, HW], [Y_EAVE, HW], [Y_ROOF, ROOF_HW]],
+    side: roofTop(livery.bands, Y_SIDE_EAVE),
+    end: roofTop(cab, Y_EAVE),
+    ...(livery.cabBands ? { cab: { x: CAB_X, side: roofTop(livery.cabBands, Y_SIDE_EAVE) } } : {}),
+    roof: "roof",
+    endWindows: [{ u: [-1.3, 1.3], y: [2.7, 3.4], mat: LOD_GLASS }],
   };
-  for (;;) {
-    for (const folded of [true, false]) {
-      const m = build(paint, folded);
-      if (m.triangleCount() <= budget) return m;
-    }
-    // paint over the band that shows least: thin, and on the short cab sections rather than the long sides
-    const shared = paint.cab === paint.body;
-    const candidates: Array<[score: number, apply: () => LodPaint]> = [];
-    if (paint.apron) candidates.push([Y_EAVE - Y_SIDE_EAVE, () => ({ ...paint, apron: false })]);
-    paint.body.forEach(([a, b], i) => {
-      if (paint.body.length < 2) return;
-      candidates.push([(b - a) * (shared ? 1.5 : 1), () => {
-        const merged = mergeBand(paint.body, i);
-        return { ...paint, body: merged, cab: shared ? merged : paint.cab };
-      }]);
-    });
-    // a cab band given up shows the machine room's colours at its height
-    if (!shared) paint.cab.forEach(([a, b, mat], i) => {
-      if (bandPieces(paint.body, a, b).every(([, , bm]) => bm === mat)) return;
-      candidates.push([(b - a) * 0.5, () => {
-        const cab = [...paint.cab.slice(0, i), ...lodBands(paint.body, a, b), ...paint.cab.slice(i + 1)];
-        const merged = lodBands(cab, Y_BOTTOM, Y_EAVE);
-        const same = merged.length === paint.body.length && merged.every((x, k) => x.every((v, j) => v === paint.body[k]![j]));
-        return { ...paint, cab: same ? paint.body : merged };
-      }]);
-    });
-    if (!candidates.length) throw new Error(`the CD 163 LOD does not fit ${budget} triangles`);
-    // the first of equal scores: stable and deterministic
-    let best = candidates[0]!;
-    for (const c of candidates) if (c[0] < best[0] - 1e-9) best = c;
-    paint = best[1]();
-  }
+  const parts: LodPart[] = [
+    { draw: (m) => m.scope("cooler box", () => lodRoofBox(m, "roof", -COOLER_X - 0.05, COOLER_X - 0.05, HW + 0.04, HW + 0.04 - 0.22, COOLER_FOOT, Y_COOLER)) },
+    { draw: (m) => m.scope("running gear", () => {
+      for (const xb of [-BOGIE_X, BOGIE_X]) lodBogie(m, xb, 2.1, Y_BOTTOM);
+      lodSideBox(m, "underframe", [[-1.45, 0.5], [1.45, 0.5], [1.45, Y_BOTTOM], [-1.45, Y_BOTTOM]], -1.38, 1.38);
+    }) },
+    { draw: (m) => m.scope("raised pantograph", () => lodPantograph(m, { x: -PANTO_X, roofY: Y_ROOF, baseY: PANTO_Y, h: 1, raised: true, raisedTop: 5.74, lower: Math.hypot(1.6, 0.11), upper: Math.hypot(1.2, 0.09) })) },
+    { optional: 0, draw: (m) => m.scope("folded pantograph", () => lodPantograph(m, { x: PANTO_X, roofY: Y_ROOF, baseY: PANTO_Y, h: -1, raised: false, raisedTop: 5.74 })) },
+  ];
+  return fitLod({ palette: { ...CD163_PALETTE, ...livery.palette }, shells: [shell], parts }, budget);
 }

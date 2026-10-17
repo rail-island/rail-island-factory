@@ -11,6 +11,7 @@ import { coverageCombinations } from '../generator/design';
 import { findCoplanarOverlaps } from '../generator/coplanar';
 import { collectTriangles, parseGlb } from '../generator/glbTriangles';
 import { MeshBuilder } from '../generator/meshBuilder';
+import { LOD_GLASS } from '../generator/lodKit';
 
 interface Module {
   default: (three: typeof THREE, params?: Record<string,string>, lod?: boolean) => THREE.Group;
@@ -79,7 +80,8 @@ describe('low detail exports', () => {
         expect(faces.every(f=>f.p.flat().every(Number.isFinite))).toBe(true);
         expect(model.animations()).toEqual([]);
         if (id.startsWith('proc-vehicle-')) {
-          expect(faces.some(f=>/glass|window|rubber|tyre|lamp|logo|badge|number/i.test(f.material))).toBe(false);
+          // detail materials never reach a LOD; the one dark LOD glass of windscreens and window bands may
+          expect(faces.some(f=>f.material!==LOD_GLASS&&/glass|window|rubber|tyre|lamp|logo|badge|number/i.test(f.material))).toBe(false);
         }
       });
     }
