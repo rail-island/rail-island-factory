@@ -166,8 +166,12 @@ function curtainWall(
   });
 }
 
-/** Segmented curtain-wall panels, inset between floor bands and piers. */
-function facadePanels(m: MeshBuilder, ring: Ring, y0: number, y1: number, step: number, bays: number, material = "glassDark"): void {
+/**
+ * Segmented curtain-wall panels, inset between floor bands and piers. `flat`
+ * draws each as one outward quad instead of a thin box, for a tower whose
+ * every-floor panels would otherwise outgrow the budget.
+ */
+function facadePanels(m: MeshBuilder, ring: Ring, y0: number, y1: number, step: number, bays: number, material = "glassDark", flat = false): void {
   m.scope("facade panels", () => {
     for (let y = y0 + 0.8, floor = 0; y + step < y1; y += step, floor++) {
       for (let edge = 0; edge < ring.length; edge++) {
@@ -180,6 +184,14 @@ function facadePanels(m: MeshBuilder, ring: Ring, y0: number, y1: number, step: 
         for (let bay = 0; bay < bays; bay++) {
           if ((bay + floor + edge) % 3 === 0) continue;
           const t = (bay + 0.5) / bays;
+          if (flat) {
+            // the outer face of the box below: 0.13 out from the wall
+            const ox = -dz / length * 0.13, oz = dx / length * 0.13;
+            const hx = dx / length * (length / bays * 0.31), hz = dz / length * (length / bays * 0.31);
+            const cx = a[0] + dx * t + ox, cz = a[1] + dz * t + oz, top = y + step * 0.52;
+            m.quad(material, [cx - hx, y, cz - hz], [cx + hx, y, cz + hz], [cx + hx, top, cz + hz], [cx - hx, top, cz - hz]);
+            continue;
+          }
           m.box(material, a[0] + dx * t - dz / length * 0.08,
             a[1] + dz * t + dx / length * 0.08,
             length / bays * 0.62, 0.1, y, y + step * 0.52, angle);
@@ -391,7 +403,8 @@ export function brickResidential(params?: ParamValues): MeshBuilder {
     });
   });
   entrance(m, d / 2 + 0.5, 0, "dark");
-  facadePanels(m, rect(w, d), 7, top, 6.4, 8, "glass");
+  // one window panel a floor, between the 3.2 m floor bands
+  facadePanels(m, rect(w, d), 7, top, 3.2, 8, "glass", true);
   m.scope("balcony returns", () => {
     for (let y = 10.2, floor = 0; y < top - 3; y += 3.2, floor++) {
       for (const sign of floor % 2 ? [1] : [-1, 1]) {

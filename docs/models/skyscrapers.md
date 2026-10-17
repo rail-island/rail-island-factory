@@ -2,7 +2,7 @@
 
 **Covers** - the ten procedurally generated skyscrapers, the mesh builder they
 are made with, and how to add or change a design.
-**Code** - `generator/skyscrapers.ts`, `generator/meshCore.ts`, `generator/meshBuilder.ts`, `generator/coplanar.ts`, `test/models.test.ts`, `test/skyscrapers.test.ts`
+**Code** - `generator/skyscrapers.ts`, `generator/meshCore.ts`, `generator/meshBuilder.ts`, `generator/coplanar.ts`, `test/models.test.ts`, `test/skyscrapers.test.ts`, `test/buildingScale.test.ts`
 **See also** - [export.md](export.md), [source-tree.md](source-tree.md), [vehicles.md](vehicles.md), [../site/catalog-site.md](../site/catalog-site.md)
 
 ## The designs
@@ -15,7 +15,7 @@ and a crown:
 | `sky-glass-office` | Glass Office Tower | segmented blue curtain wall, entry canopy, sky-garden belt, crown blades and mast |
 | `sky-art-deco` | Art Deco Tower | five stone setbacks, individual window panels, bronze setback ribs, fluted crown and steel spire |
 | `sky-pagoda` | Pagoda Tower | octagonal gold-glass segments, flared rims, bronze buttresses and entry canopy |
-| `sky-brick-residential` | Brick Apartment Tower | brick piers, window panels, balconies with return rails, roof garden and water tank |
+| `sky-brick-residential` | Brick Apartment Tower | brick piers, a window panel a storey (flat quads, to stay in budget), balconies with return rails, roof garden and water tank |
 | `sky-twin-towers` | Twin Towers | two stepped glass drums with vertical fins, spires and a framed sky bridge |
 | `sky-twisted` | Twisting Tower | teal floors turning a quarter turn, corner fins, segmented glazing and rooftop pergola |
 | `sky-dark-slab` | Black Glass Slab | patterned black glazing, bronze mullions and projecting sunshades, planted plaza |
