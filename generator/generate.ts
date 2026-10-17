@@ -85,7 +85,7 @@ import { SMALL_DIESELS } from "./smallDiesels.ts";
 import { CITY_BUS_DESIGNS, KAROSA_DESIGNS } from "./buses.ts";
 import { VILLAGE_HOUSES } from "./village.ts";
 import { COMMERCIAL_BUILDINGS } from "./commercial.ts";
-import type { CatalogFields, ProceduralDesign } from "./design.ts";
+import type { CatalogFields, ParamValues, ProceduralDesign } from "./design.ts";
 import { buildLodModel } from "./lodModel.ts";
 import { lodBudget } from "./lod.ts";
 import { glbStats, type GlbStats } from "./glbStats.ts";
@@ -210,11 +210,18 @@ function toGlb(id: string, model: MeshBuilder): Uint8Array {
     : model.toGlb(`Rail Island procedural building (${id})`);
 }
 
-/** The GLB bytes of one design. Throws on an unknown id. */
-export function designGlb(id: string): Uint8Array {
+/** The GLB bytes of one design, built with `params` (defaults when absent). Throws on an unknown id. */
+export function designGlb(id: string, params?: ParamValues): Uint8Array {
   const design = DESIGNS.get(id);
   if (!design) throw new Error(`no procedural model "${id}"`);
-  return toGlb(id, design.build());
+  return toGlb(id, design.build(params));
+}
+
+/** Whether the build draws a design's thumbnail in the side view (a road or rail vehicle). */
+export function designUsesSideView(id: string): boolean {
+  const design = DESIGNS.get(id);
+  if (!design) throw new Error(`no procedural model "${id}"`);
+  return isSideViewCategory(catalogFields(design).category);
 }
 
 /** The procedural source tree of one design. Throws on an unknown id. */

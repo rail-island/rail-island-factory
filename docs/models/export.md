@@ -3,9 +3,9 @@
 **Covers** - what `pnpm build:models` writes (no GLB files: a model ships as its JS
 file), the `skyscrapers.meta.json`, `village.meta.json` and `vehicles.meta.json`
 contracts the game imports, the site's `catalog.json`, the in-memory GLB the build
-analyses, and the offline thumbnail renderer.
-**Code** - `generator/generate.ts`, `generator/catalog.ts`, `generator/renderGlbThumb.ts`,
-`generator/jsModel.ts`, `generator/glbStats.ts`, `test/thumbnails.test.ts`, `generator/coplanar.ts`, `generator/glbTriangles.ts`, `generator/glbParse.ts`, `test/export.test.ts`
+analyses, the offline thumbnail renderer and the contact sheet.
+**Code** - `generator/generate.ts`, `generator/catalog.ts`, `generator/renderGlbThumb.ts`, `generator/contactSheet.ts`,
+`generator/jsModel.ts`, `generator/glbStats.ts`, `test/thumbnails.test.ts`, `test/contactSheet.test.ts`, `generator/coplanar.ts`, `generator/glbTriangles.ts`, `generator/glbParse.ts`, `test/export.test.ts`
 **See also** - [skyscrapers.md](skyscrapers.md), [village.md](village.md), [vehicles.md](vehicles.md), [game-properties.md](game-properties.md), [../site/catalog-site.md](../site/catalog-site.md),
 [../guide/setup-and-build.md](../guide/setup-and-build.md)
 
@@ -214,6 +214,33 @@ pnpm exec tsx generator/renderGlbThumb.ts proc-vehicle-cd-150 /tmp/cd150.png sid
 `test/thumbnails.test.ts` pins the side framing (scale, height window, nose on
 the left); `test/export.test.ts` checks every exported thumbnail against its
 entry's `thumbSide`.
+
+### Contact sheet
+
+`generator/contactSheet.ts` puts many thumbnails on one labelled PNG, on an opaque
+background, so a model's variants or a set of models can be sent to the user in
+the chat as a single image (AGENTS.md, "Show the user the model"). It is a review
+tool only; the build does not call it. A source is a design id, a prefix of ids
+ending in `*`, a design with parameters (`id?name=value&...`, checked against its
+`params`), or a `.glb` or `.png` file (a before render, a reference photo):
+
+```bash
+# every variant the tests build (coverageCombinations) - can be many
+pnpm exec tsx generator/contactSheet.ts /tmp/shop.png --variants proc-building-commercial-shop
+# only the named parameters combined, the others at their defaults
+pnpm exec tsx generator/contactSheet.ts /tmp/shop.png --vary finish,awning proc-building-commercial-shop
+# a family side by side, and one design with parameters
+pnpm exec tsx generator/contactSheet.ts /tmp/cd1.png 'proc-vehicle-cd-1*' 'proc-building-commercial-shop?storeys=2'
+```
+
+`--view auto` (the default) picks the build's view per design (side for road and
+rail vehicles); `--view 3q` or `side` forces one. Side views on a sheet share one
+scale, shrunk so the longest fits a cell, so lengths compare; three-quarter views
+are rendered at the cell size. `--cols` and `--cell` (px, default 384, or 800 with
+side views) set the grid. Each label is the id and the parameters that differ from
+the defaults, in a built-in 5x7 pixel font (upper case); `--no-labels` leaves them
+out (the README's showcase images, `docs/images/`, are made so). Above 24 images it warns
+that the sheet is too dense to read; narrow it with `--vary` or split it.
 
 ## Industry migration manifest
 

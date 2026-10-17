@@ -93,3 +93,26 @@ document that owns it in the same change.** Conventions:
 **Headless verification only**: do not drive a real browser (no dev server +
 browser automation) unless the task is about browser tooling and the user agreed
 first. The user runs the browser checks.
+
+## Show the user the model
+
+Whenever you create a model, change one or add variants (liveries, shapes,
+parameter presets), **send the user images of the result in the chat** before
+you finish. The user often works from the web or mobile chat with no
+development environment, so the images you send are the only way they see the
+model and decide what to improve; a path to `export/thumbs/` is not enough.
+
+- Render headlessly (`pnpm build:models` for `export/thumbs/<id>.png`, plus
+  `pnpm exec tsx generator/renderGlbThumb.ts <id> <out.png> 512|side` and
+  scratch copies of it with another `VIEW_DIR` for front, rear, top or
+  close-up views). Write the PNGs to your scratchpad or another directory the
+  user can open, never into the repository.
+- Send them as files with the chat's file-sending tool (in Claude Code:
+  `SendUserFile`, `display: "render"`), not only as paths in the text.
+- Send at least the three-quarter view and, for a vehicle, the side view; for
+  a change, a before/after pair; for variants, every variant (one image each,
+  or one labelled sheet from `generator/contactSheet.ts` when there are many:
+  `--vary <param,...>` or `--variants`; docs/models/export.md). Add views the change is about
+  (a steered or articulated pose, a raised pantograph, a detail close-up).
+- Caption each image with the model id and the view, and say in the reply what
+  you would improve next, so the user can pick from it.

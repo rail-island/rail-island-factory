@@ -12,6 +12,9 @@ import { ModelTable } from "./ModelTable";
 import { ModelCards } from "./ModelCards";
 import { ModelDetail } from "./ModelDetail";
 
+/** Where the "Add your model" link goes: the repository's README, written for a first-time contributor. */
+const ADD_MODEL_URL = "https://github.com/rail-island/rail-island-factory#readme";
+
 async function loadCatalog(): Promise<Row[]> {
   const res = await fetch("/catalog.json");
   // `vite` serves index.html for a missing file, so check the type as well.
@@ -90,7 +93,10 @@ export function App() {
           </button>
         ) : null}
         <h1 class="factory-bar__title">{open()?.title ?? "Rail Island Factory"}</h1>
-        <span class="factory-muted factory-bar__sub">{open() ? open()!.id : "procedurally generated models"}</span>
+        <Show when={open()}>{(record) => <span class="factory-muted factory-bar__sub">{record().id}</span>}</Show>
+        <a class="factory-bar__add" href={ADD_MODEL_URL} target="_blank" rel="noopener">
+          Add your model
+        </a>
       </header>
       <main class="factory-main">
         <Switch>

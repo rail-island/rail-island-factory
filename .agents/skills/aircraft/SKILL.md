@@ -87,4 +87,5 @@ simplified tail emblem; no titles, lettering or trademarked logos in detail.
    with a different `VIEW_DIR` (and a bounding box to zoom on the nose), every
    livery side by side. Do not use a browser.
 4. `pnpm typecheck`, `pnpm test`, `pnpm build`; look at `export/thumbs/<id>.png`.
+   Send the user the rendered views in the chat (AGENTS.md, "Show the user the model").
 5. Update `docs/models/aircraft.md` in the same change.

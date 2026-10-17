@@ -32,6 +32,13 @@ white page. So `index.html` carries, without waiting for anything else:
   Failed images (a missing thumbnail) and the browsers' benign "ResizeObserver
   loop" notice are left out; each message shows once, at most ten.
 
+## The app bar
+
+The bar at the top shows "Rail Island Factory" (on a model page, the model's title,
+its id and a back arrow) and, on the right, an **Add your model** link to the
+repository's README on GitHub - the landing page for someone who wants to make a
+model (`ADD_MODEL_URL` in `App.tsx`).
+
 ## Data
 
 `App.tsx` fetches `/catalog.json` ([../models/export.md](../models/export.md))

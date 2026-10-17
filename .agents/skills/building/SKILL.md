@@ -14,5 +14,6 @@ description: Create or improve procedural buildings in Rail Island Factory, espe
 - Update the dedicated LOD silhouette with any massing change; Historical LOD stays within 500 triangles. Preserve full-detail/LOD parameter behavior.
 - Register designs in the existing family and preserve catalog metadata. Update the owning English document and `docs/README.md`; factory changes do not implicitly authorize importing assets into the game.
 - Test all shape variants: triangle budget, finite/nondegenerate geometry, grounded bounds, deterministic GLB bytes, coplanar overlap detection and important openings. Verify standalone JS/GLB parity where available. Run `pnpm typecheck`, `pnpm test`, `pnpm build`; inspect generated thumbnails headlessly. No real-browser automation for model work.
+- Send the user the rendered views in the chat (AGENTS.md, "Show the user the model").
 
 Reference: `docs/models/historical.md` and `docs/models/export.md`.
