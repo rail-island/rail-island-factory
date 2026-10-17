@@ -18,6 +18,8 @@ import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, ty
 
 import { TIMBER_COTTAGE_PARAMS, villageTimberCottage, villageTimberHouse } from "./timberCottages.ts";
 export { villageTimberCottage, villageTimberHouse } from "./timberCottages.ts";
+import { ALPINE_HUT_PARAMS, villageAlpineHut } from "./alpineHut.ts";
+export { villageAlpineHut } from "./alpineHut.ts";
 
 type Vec3 = [number, number, number];
 
@@ -104,7 +106,7 @@ const CHIMNEY_PARAM: ParamSpec = {
  * The parameters that only recolour a house: they change no geometry, so the
  * tests build their values one at a time rather than every combination.
  */
-export const VILLAGE_FINISH_PARAMS: readonly string[] = ["roof", "walls", "cladding", "timber"];
+export const VILLAGE_FINISH_PARAMS: readonly string[] = ["roof", "walls", "cladding", "timber", "accent"];
 
 // --- dimensions ---------------------------------------------------------------------
 
@@ -1106,4 +1108,5 @@ export const VILLAGE_HOUSES: ProceduralDesign[] = [
   { id: "village-family-house", title: "Village Family House", build: villageFamilyHouse, params: FAMILY_HOUSE_PARAMS },
   { id: "village-modern-house", title: "Village Modern House", build: villageModernHouse, params: MODERN_HOUSE_PARAMS },
   { id: "village-narrow-house", title: "Village Narrow House", build: villageNarrowHouse, params: NARROW_HOUSE_PARAMS },
+  { id: "village-alpine-hut", title: "Alpine Hut", build: villageAlpineHut, params: ALPINE_HUT_PARAMS, references: "alpine-hut" },
 ].map((d) => ({ ...d, catalog: d.id.startsWith("village-timber-") ? TIMBER_CATALOG : VILLAGE_CATALOG, finishParams: d.params.map((p) => p.name).filter((n) => VILLAGE_FINISH_PARAMS.includes(n)) }));
