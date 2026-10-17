@@ -5,12 +5,14 @@
 // All of its state is the URL's query string (catalogQuery.ts parseView), so the
 // browser's back button walks it and a model page can be linked to.
 
-import { For, Match, Show, Switch, createMemo, createResource, createSignal, onCleanup, onMount } from "solid-js";
+import { For, Match, Show, Switch, createEffect, createMemo, createResource, createSignal, onCleanup, onMount } from "solid-js";
 import { COLUMNS, GROUPS, chipLabel, chipRows, parseView, prepareRows, queryRows, serializeView, type Column, type Row, type ViewState } from "./catalogQuery";
 import type { ModelCatalog } from "../generator/catalog.ts";
 import { ModelTable } from "./ModelTable";
 import { ModelCards } from "./ModelCards";
 import { ModelDetail } from "./ModelDetail";
+import { ExportPanel } from "./ExportPanel";
+import { EMPTY_EXPORT, addEntry, entryFor, hasEntry, loadExport, saveExport, type ExportState } from "./exportList";
 
 /** Where the "Add your model" link goes: the repository's README, written for a first-time contributor. */
 const ADD_MODEL_URL = "https://github.com/rail-island/rail-island-factory#readme";
@@ -28,6 +30,22 @@ export function App() {
   const [rows] = createResource(loadCatalog);
   const [view, setView] = createSignal<ViewState>(parseView(location.search));
   const [wide, setWide] = createSignal(true);
+  // The export list (exportList.ts): read from storage once the catalog lands, written back on every change.
+  const [exportState, setExportState] = createSignal<ExportState>(EMPTY_EXPORT);
+  const [exportLoaded, setExportLoaded] = createSignal(false);
+  const [exportDropped, setExportDropped] = createSignal(0);
+  const [exportOpen, setExportOpen] = createSignal(false);
+  createEffect(() => {
+    const list = rows();
+    if (!list || exportLoaded()) return;
+    const { state, dropped } = loadExport(list);
+    setExportState(state);
+    setExportDropped(dropped);
+    setExportLoaded(true);
+  });
+  createEffect(() => {
+    if (exportLoaded()) saveExport(exportState());
+  });
 
   onMount(() => {
     const mq = window.matchMedia("(min-width: 900px)");
@@ -97,6 +115,16 @@ export function App() {
         <a class="factory-bar__add" href={ADD_MODEL_URL} target="_blank" rel="noopener">
           Add your model
         </a>
+        <button
+          type="button"
+          class="factory-bar__export"
+          classList={{ "factory-bar__export--on": exportOpen() }}
+          aria-pressed={exportOpen()}
+          disabled={!exportLoaded()}
+          onClick={() => setExportOpen(!exportOpen())}
+        >
+          Export ({exportState().entries.length})
+        </button>
       </header>
       <main class="factory-main">
         <Switch>
@@ -128,6 +156,8 @@ export function App() {
                 onNode={(node) => update({ node })}
                 params={view().params}
                 onParams={(params) => update({ params, node: null })}
+                exported={hasEntry(exportState().entries, entryFor(record(), view().params))}
+                onAddExport={() => setExportState(addEntry(exportState(), entryFor(record(), view().params)))}
               />
             )}
           </Match>
@@ -188,6 +218,16 @@ export function App() {
           </Match>
         </Switch>
       </main>
+      <Show when={exportOpen() && exportLoaded()}>
+        <ExportPanel
+          rows={rows() ?? []}
+          state={exportState()}
+          onState={setExportState}
+          dropped={exportDropped()}
+          onDismissDropped={() => setExportDropped(0)}
+          onClose={() => setExportOpen(false)}
+        />
+      </Show>
     </div>
   );
 }

@@ -742,3 +742,128 @@ body {
   justify-content: space-between;
   gap: 8px;
 }
+
+/* -------------------------------------------------------------- the export */
+
+.factory-bar__export {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border: 1px solid var(--m-outline);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.factory-bar__export:hover,
+.factory-bar__export--on {
+  background: var(--m-state-hover);
+  border-color: var(--m-primary);
+}
+
+.factory-detail__export {
+  width: 100%;
+}
+
+.factory-export {
+  position: fixed;
+  z-index: 10;
+  top: var(--m-bar-h);
+  right: 0;
+  bottom: 0;
+  width: min(440px, 100vw);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 16px 24px;
+  background: var(--m-surface-1);
+  border-left: 1px solid var(--m-outline-variant);
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.35);
+}
+
+.factory-export__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.factory-export__head h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.factory-export__notice {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--m-radius-sm);
+  background: var(--m-secondary-container);
+  color: var(--m-on-secondary-container);
+}
+
+.factory-export__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.factory-export__item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 4px;
+  border-radius: var(--m-radius-sm);
+  background: var(--m-surface-2);
+}
+
+.factory-export__item--off {
+  opacity: 0.55;
+}
+
+.factory-export__name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.factory-export__choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+}
+
+.factory-export__go {
+  border-color: var(--m-primary);
+  color: var(--m-primary);
+  font-weight: 500;
+}
+
+.factory-export__progress {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 10px;
+  align-items: center;
+}
+
+.factory-export__progress progress {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.factory-export__report p {
+  margin: 0;
+}
+
+.factory-export__foot {
+  margin: 0;
+  font-size: 13px;
+}

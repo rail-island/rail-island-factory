@@ -85,7 +85,7 @@ import { SMALL_DIESELS } from "./smallDiesels.ts";
 import { CITY_BUS_DESIGNS, KAROSA_DESIGNS } from "./buses.ts";
 import { VILLAGE_HOUSES } from "./village.ts";
 import { COMMERCIAL_BUILDINGS } from "./commercial.ts";
-import type { CatalogFields, ParamValues, ProceduralDesign } from "./design.ts";
+import { checkOpenttdProperties, type CatalogFields, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { buildLodModel } from "./lodModel.ts";
 import { lodBudget } from "./lod.ts";
 import { glbStats, type GlbStats } from "./glbStats.ts";
@@ -451,6 +451,7 @@ export async function buildExport(dir = EXPORT_DIR): Promise<{ models: Generated
   const sides = new Map(models.flatMap((m) => (m.side ? [[m.id, m.side] as const] : [])));
   fs.writeFileSync(path.join(dir, VEHICLE_META_FILE), `${JSON.stringify(exportVehicleMeta(ALL_VEHICLES, rigs, sides), null, 2)}\n`);
   fs.writeFileSync(path.join(dir, "industry-migration.json"), `${JSON.stringify({ version: 1, entries: INDUSTRY_MIGRATION }, null, 2)}\n`);
+  for (const design of designs) checkOpenttdProperties(design, ALL_VEHICLES.includes(design));
   const catalog: ModelCatalog = {
     version: 1,
     records: designs.map((design) => {
@@ -461,7 +462,7 @@ export async function buildExport(dir = EXPORT_DIR): Promise<{ models: Generated
         jsBytes: Buffer.byteLength(jsText),
         jsGzipBytes: gzipSize(jsText),
         thumbBytes: fs.statSync(built.thumb).size,
-      }, refs.get(design.id));
+      }, refs.get(design.id), design.openttd);
     }),
   };
   const mapping = buildLegacyMapping(DESIGNS);

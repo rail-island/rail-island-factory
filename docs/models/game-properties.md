@@ -8,7 +8,7 @@ checked and exported, and where today's values came from.
 **Code** - `generator/design.ts` (`GameProperties`, `checkGameProperties`),
 `generator/catalog.ts` (`metaEntry`, `exportMeta`, `exportVehicleMeta`), every
 design module's `game` field, `test/export.test.ts`
-**See also** - [export.md](export.md), [parameters.md](parameters.md),
+**See also** - [export.md](export.md), [../site/openttd-export.md](../site/openttd-export.md) (the optional `openttd` block for the GRF export), [parameters.md](parameters.md),
 [legacy-mapping.md](legacy-mapping.md), [vehicles.md](vehicles.md),
 [reproductions.md](reproductions.md)
 
@@ -70,6 +70,14 @@ A building sets `game` only for its placement rules, in the webapp's shapes:
 - **`block`** (`BlockShape`): the rectangles of its plan that block rails and roads, as fractions of the plan. Examples are the Eiffel Tower's four legs and the wind turbine's mast.
 
 Fifteen landmarks, churches and industrial buildings carry one.
+
+## OpenTTD
+
+A vehicle may also declare `openttd` (introduction year, lives, costs, capacity,
+cargo, climates, rail type, refits, with its own `variants`): what the site's GRF
+export needs beyond these figures. It is optional, reaches only `catalog.json`
+and is checked by `checkOpenttdProperties`; see
+[../site/openttd-export.md](../site/openttd-export.md).
 
 ## Checks
 

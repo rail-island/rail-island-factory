@@ -7,7 +7,7 @@
 // maps, so a design is never renamed once shipped.
 
 import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "./meshBuilder.ts";
-import type { CatalogFields, GameProperties, ParamValues, ProceduralDesign } from "./design.ts";
+import type { CatalogFields, GameProperties, OpenttdProperties, ParamValues, ProceduralDesign } from "./design.ts";
 import { arc, block, plate, side, steeredWheels } from "./vehicleParts.ts";
 import { CD150_PARAMS, cd150, cd150Lod } from "./cd150.ts";
 import { CD230_PARAMS, cd230, cd230Lod } from "./cd230.ts";
@@ -498,6 +498,14 @@ const CD_150_GAME: GameProperties = {
   ],
 };
 
+/** What an OpenTTD GRF export needs of it beyond `game` (design.ts OpenttdProperties). */
+const CD_163_OPENTTD: OpenttdProperties = {
+  introYear: 1984,
+  vehicleLife: 40,
+  railType: "ELRL",
+  variants: [{ params: { livery: "cd362" }, introYear: 1990 }],
+};
+
 /** What the game needs of it beyond its geometry (design.ts GameProperties). */
 const CD_163_GAME: GameProperties = {
   weight: 85,
@@ -549,7 +557,7 @@ const CD_263_GAME: GameProperties = {
 export const VEHICLES: ProceduralDesign[] = [
   { id: "proc-vehicle-american-truck", game: { weight: 36, power: 375, maxspeed: 90, accel: null }, title: "American Truck", build: americanTruck, buildLod: americanTruckLod, references: "american-truck" },
   { id: "proc-vehicle-cd-150", game: CD_150_GAME, title: "CD 150 / 151 / ZSR 350", build: cd150, buildLod: cd150Lod, params: CD150_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-150" },
-  { id: "proc-vehicle-cd-163", game: CD_163_GAME, title: "CD 163 / 363", build: cd163, buildLod: cd163Lod, params: CD163_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-163" },
+  { id: "proc-vehicle-cd-163", game: CD_163_GAME, openttd: CD_163_OPENTTD, title: "CD 163 / 363", build: cd163, buildLod: cd163Lod, params: CD163_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-163" },
   { id: "proc-vehicle-cd-230", game: CD_230_GAME, title: "CD 230 / 240 / 340", build: cd230, buildLod: cd230Lod, params: CD230_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-230" },
   { id: "proc-vehicle-cd-263", game: CD_263_GAME, title: "CD 263 / 371 / 372", build: cd263, buildLod: cd263Lod, params: CD263_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-263" },
   ...COACH_DESIGNS.map((c): ProceduralDesign => ({ id: c.id, title: c.title, build: c.build, buildLod: COACH_LODS[c.id], game: c.game, catalog: COACH_CATALOG, references: c.folder, ...(c.params ? { params: c.params } : {}) })),

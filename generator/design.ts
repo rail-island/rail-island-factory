@@ -89,6 +89,114 @@ export interface ProceduralDesign {
    * Required for a vehicle; a building sets it only for plaza or block rules.
    */
   game?: GameProperties;
+  /**
+   * What an OpenTTD GRF export needs of a vehicle beyond `game`: dates, costs,
+   * capacity, climates (OpenttdProperties). Optional: the site fills every missing
+   * field from the vehicle's category (docs/site/openttd-export.md).
+   */
+  openttd?: OpenttdProperties;
+}
+
+/** An OpenTTD climate a vehicle is offered in. */
+export type OpenttdClimate = "temperate" | "arctic" | "tropical" | "toyland";
+
+/** OpenTTD's cargo classes, for a vehicle's refits. */
+export const OPENTTD_CARGO_CLASSES = [
+  "passengers", "mail", "express", "armoured", "bulk", "piece", "liquid", "refrigerated", "hazardous", "covered",
+] as const;
+export type OpenttdCargoClass = (typeof OPENTTD_CARGO_CLASSES)[number];
+
+/** The OpenTTD figures one design or variant may state; each is optional. */
+export interface OpenttdFields {
+  /** Year the vehicle is introduced. */
+  introYear?: number;
+  /** Years a single vehicle lasts before it is old (1..255). */
+  vehicleLife?: number;
+  /** Years the model is offered for (1..255). */
+  modelLife?: number;
+  /** How fast reliability drops (0..255; OpenTTD's default is about 20). */
+  reliabilityDecay?: number;
+  /** Purchase cost factor (0..255). */
+  costFactor?: number;
+  /** Running cost factor (0..255). */
+  runningCostFactor?: number;
+  /** Cargo capacity in units of `cargo` (0..255; ships and aircraft up to 65535). */
+  capacity?: number;
+  /** The default cargo, as OpenTTD's four-letter label: PASS, MAIL, GOOD, COAL, ... */
+  cargo?: string;
+  climates?: OpenttdClimate[];
+  /** A train's rail type label: RAIL, ELRL, MONO or MGLV. */
+  railType?: string;
+  /** The cargo classes the vehicle can be refitted to. */
+  refitClasses?: OpenttdCargoClass[];
+}
+
+/** A variant's OpenTTD figures: the fields that differ from the design's. */
+export type OpenttdVariant = { params: ParamValues } & OpenttdFields;
+
+/** What an OpenTTD GRF export needs of a vehicle (ProceduralDesign.openttd). */
+export interface OpenttdProperties extends OpenttdFields {
+  /** Parameter variants whose figures differ, matched like GameProperties.variants. */
+  variants?: OpenttdVariant[];
+}
+
+const OPENTTD_RANGES: Record<string, [number, number]> = {
+  introYear: [1, 5000000], vehicleLife: [1, 255], modelLife: [1, 255], reliabilityDecay: [0, 255],
+  costFactor: [0, 255], runningCostFactor: [0, 255], capacity: [0, 65535],
+};
+const OPENTTD_CLIMATES: readonly string[] = ["temperate", "arctic", "tropical", "toyland"];
+
+/**
+ * Checks a design's optional OpenTTD properties (OpenttdProperties): only a
+ * vehicle may carry them, every figure is an integer in its range, labels are four
+ * printable ASCII characters, and each variant names a real, non-default parameter
+ * selection at most once. Throws, naming the design.
+ */
+export function checkOpenttdProperties(design: ProceduralDesign, vehicle: boolean): void {
+  const ottd = design.openttd;
+  if (!ottd) return;
+  const fail = (why: string): never => {
+    throw new Error(`${design.id}: openttd properties ${why} (docs/site/openttd-export.md)`);
+  };
+  if (!vehicle) fail("belong to vehicles only");
+  const checkFields = (f: OpenttdFields & { params?: ParamValues; variants?: unknown }, where: string) => {
+    for (const [k, v] of Object.entries(f)) {
+      if (k === "params" || k === "variants") continue;
+      if (k in OPENTTD_RANGES) {
+        const [lo, hi] = OPENTTD_RANGES[k]!;
+        if (typeof v !== "number" || !Number.isInteger(v) || v < lo || v > hi) fail(`${where}have an invalid "${k}": ${String(v)}`);
+      } else if (k === "cargo" || k === "railType") {
+        if (typeof v !== "string" || !/^[\x20-\x7e]{4}$/.test(v)) fail(`${where}have an invalid "${k}" label: ${String(v)}`);
+      } else if (k === "climates") {
+        if (!Array.isArray(v) || v.some((c) => !OPENTTD_CLIMATES.includes(c as string))) fail(`${where}list an unknown climate`);
+      } else if (k === "refitClasses") {
+        if (!Array.isArray(v) || v.some((c) => !(OPENTTD_CARGO_CLASSES as readonly string[]).includes(c as string))) fail(`${where}list an unknown cargo class`);
+      } else {
+        fail(`${where}have an unknown field "${k}"`);
+      }
+    }
+  };
+  checkFields(ottd, "");
+  const specs = design.params ?? [];
+  const seen = new Set<string>();
+  for (const variant of ottd.variants ?? []) {
+    const names = Object.keys(variant.params);
+    if (!names.length) fail("list a variant without parameters");
+    let resolved: ParamValues;
+    try {
+      resolved = resolveParams(specs, variant.params);
+    } catch (e) {
+      return fail(`list a variant that does not resolve: ${(e as Error).message}`);
+    }
+    for (const name of names) {
+      if (resolved[name] !== variant.params[name]) fail(`list a variant whose "${name}" does not apply`);
+      if (specs.find((s) => s.name === name)!.default === variant.params[name]) fail(`list a variant at the default "${name}"`);
+    }
+    const key = JSON.stringify(Object.entries(variant.params).sort());
+    if (seen.has(key)) fail(`list the variant ${key} twice`);
+    seen.add(key);
+    checkFields(variant, `variant ${key}: `);
+  }
 }
 
 /**

@@ -21,7 +21,7 @@
 import { proceduralId } from "./modelId.ts";
 import { SKYSCRAPER_CATALOG } from "./skyscrapers.ts";
 import { VEHICLE_CATALOG } from "./vehicles.ts";
-import { checkGameProperties, type CatalogFields, type GameProperties, type ParamSpec, type ProceduralDesign } from "./design.ts";
+import { checkGameProperties, type CatalogFields, type GameProperties, type OpenttdProperties, type ParamSpec, type ProceduralDesign } from "./design.ts";
 import type { VehicleRig } from "./rig.ts";
 
 /** What a side-view thumbnail spans, in metres (renderGlbThumb.ts SideFrame). */
@@ -128,6 +128,12 @@ export interface CatalogRecord extends MetaEntry {
   sizeZ: number;
   /** The source images the model was made from, by name; empty when it has none. */
   references: ReferenceImage[];
+  /**
+   * A vehicle's declared OpenTTD figures (design.ts OpenttdProperties), for the
+   * site's GRF export only -- not part of the game's meta.json. Absent when the
+   * design declares none; the site then uses its category defaults.
+   */
+  openttd?: OpenttdProperties;
 }
 
 export interface ModelCatalog {
@@ -215,7 +221,7 @@ const r4 = (v: number): number => Math.round(v * 1e4) / 1e4;
 /** Rounded to the millimetre, so float noise does not reach the listing. */
 const mm = (v: number): number => Math.round(v * 1000) / 1000;
 
-export function catalogRecord(entry: MetaEntry, facts: BuiltFacts, references: ReferenceImage[] = []): CatalogRecord {
+export function catalogRecord(entry: MetaEntry, facts: BuiltFacts, references: ReferenceImage[] = [], openttd?: OpenttdProperties): CatalogRecord {
   return {
     ...entry,
     thumbUrl: `thumbs/${entry.thumb}`,
@@ -231,5 +237,6 @@ export function catalogRecord(entry: MetaEntry, facts: BuiltFacts, references: R
     sizeY: mm(facts.max[1] - facts.min[1]),
     sizeZ: mm(facts.max[2] - facts.min[2]),
     references,
+    ...(openttd ? { openttd: JSON.parse(JSON.stringify(openttd)) as OpenttdProperties } : {}),
   };
 }
