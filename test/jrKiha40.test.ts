@@ -37,6 +37,11 @@ describe("the JR KiHa 40", () => {
       expect(findCoplanarOverlaps(glb)).toEqual([]);
     });
 
+  it("labels its liveries short enough for the game's buttons", () => {
+    // regression: the first labels ("JR Hokkaido (cream, green and blue)") broke the 16-character limit
+    for (const v of KIHA40_PARAMS[0]!.values) expect(v.title.length, v.value).toBeLessThanOrEqual(16);
+  });
+
   it("rides on two bogies 14.3 m apart, each with two wheelsets", () => {
     const m = kiha40();
     const rig = m.rig!;

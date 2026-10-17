@@ -29,9 +29,9 @@ export const KIHA40_WHEEL_R = 0.43;
 
 export const KIHA40_PARAMS: readonly ParamSpec[] = [
   enumParam("livery", "Livery", {
-    hokkaido: "JR Hokkaido (cream, green and blue)",
-    tarako: "JNR vermilion (tarako)",
-    jnr: "JNR general (cream and red)",
+    hokkaido: "JR Hokkaido",
+    tarako: "JNR vermilion",
+    jnr: "JNR cream-red",
   }),
 ];
 export type Kiha40Livery = "hokkaido" | "tarako" | "jnr";
