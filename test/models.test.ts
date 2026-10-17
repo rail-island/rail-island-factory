@@ -259,7 +259,7 @@ describe("the designs", () => {
     expect(s.min[1]).toBeCloseTo(0, 5);
     const h = s.max[1] - s.min[1];
     const w = Math.max(s.max[0] - s.min[0], s.max[2] - s.min[2]);
-    expect(h).toBeGreaterThan(2 * w); // a skyscraper, not a block
+    expect(h).toBeGreaterThan(1.5 * w); // a skyscraper, not a block (the twin towers share a wide podium)
     expect(s.triangles).toBeLessThanOrEqual(10_000);
     expect(faces(glb).length).toBe(s.triangles);
   });

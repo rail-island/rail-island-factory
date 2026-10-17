@@ -3,6 +3,8 @@
 
 import { describe, expect, it } from "vitest";
 import { parseGlb } from "../generator/glbTriangles";
+import { PNG } from "pngjs";
+import { SIDE_MAX_PX, SIDE_PX_PER_M, glbSideFrame } from "../generator/renderGlbThumb";
 import { generateInSubprocess } from "./generateSubprocess";
 import fs from "node:fs";
 import os from "node:os";
@@ -13,7 +15,7 @@ import { buildLodModel } from "../generator/lodModel";
 import { ALL_VEHICLES, BUILDINGS, DESIGNS, buildExport, generateReferences } from "../generator/generate";
 import { VILLAGE_HOUSES } from "../generator/village";
 import {
-  CATALOG_FILE, META_FILE, VEHICLE_META_FILE, VILLAGE_META_FILE, catalogRecord, exportMeta, exportVehicleMeta, metaEntry,
+  CATALOG_FILE, META_FILE, VEHICLE_META_FILE, VILLAGE_META_FILE, catalogRecord, exportMeta, exportVehicleMeta, isSideViewCategory, metaEntry,
   type ExportMeta, type ModelCatalog, type VehicleExportMeta,
 } from "../generator/catalog";
 
@@ -27,7 +29,7 @@ describe("exportMeta", () => {
         id: b.id,
         title: SKYSCRAPERS.find((d) => d.id === b.id)!.title,
         params: SKYSCRAPERS.find((d) => d.id === b.id)!.params,
-        category: "Commercial",
+        category: "Skyscrapers",
         group: "skyscraper_c",
         glb: `${b.id}.glb`,
         thumb: `${b.id}.png`,
@@ -74,7 +76,7 @@ describe("the buildings' meta", () => {
     expect(new Set(meta.buildings.map((b) => b.id)).size).toBe(BUILDINGS.length);
     for (const b of meta.buildings) {
       const d = BUILDINGS.find((x) => x.id === b.id)!;
-      if (b.id.startsWith("proc-building-sky-")) expect(b.category).toBe("Commercial");
+      if (b.id.startsWith("proc-building-sky-")) expect(b.category).toBe("Skyscrapers");
       else expect([b.category, b.group, b.defaultScale]).toEqual([d.catalog!.category, d.catalog!.group, d.catalog!.defaultScale]);
     }
     expect(meta.buildings.find((b) => b.id === "proc-building-prague-main-station")).toMatchObject({ category: "Station", defaultScale: 1 });
@@ -147,7 +149,23 @@ describe("buildExport", () => {
         const rig = d.build().rig;
         return rig ? [[d.id, rig] as const] : [];
       }));
-      expect(vehicles).toEqual(exportVehicleMeta(ALL_VEHICLES, rigs));
+      // a road or rail vehicle's thumbnail is a side view, framed as its meta says
+      const sides = new Map(ALL_VEHICLES.flatMap((d) =>
+        isSideViewCategory(d.catalog?.category ?? "Road vehicles") ? [[d.id, glbSideFrame(path.join(dir, "glb", `${d.id}.glb`))] as const] : []));
+      expect(vehicles).toEqual(exportVehicleMeta(ALL_VEHICLES, rigs, sides));
+      for (const v of vehicles.vehicles) {
+        const png = PNG.sync.read(fs.readFileSync(path.join(dir, "thumbs", v.thumb)));
+        if (isSideViewCategory(v.category)) {
+          expect(v.thumbSide).toBeDefined();
+          const { widthM, heightM } = v.thumbSide!;
+          const ppm = Math.min(SIDE_PX_PER_M, SIDE_MAX_PX / widthM);
+          expect([png.width, png.height]).toEqual([Math.round(widthM * ppm), Math.round(heightM * ppm)]);
+        } else {
+          expect(v.thumbSide).toBeUndefined();
+          expect(png.width).toBe(png.height);
+        }
+      }
+      expect(meta.buildings.every((b) => !b.thumbSide)).toBe(true);
       for (const v of vehicles.vehicles) {
         const { json } = parseGlb(fs.readFileSync(path.join(dir, "glb", v.glb)));
         expect((json.scenes![0] as { extras?: { rig?: unknown } }).extras?.rig).toEqual(v.rig);
@@ -167,8 +185,8 @@ describe("buildExport", () => {
           ?? village.buildings.find((b) => b.id === r.id)
           ?? vehicles.vehicles.find((v) => v.id === r.id);
         expect(r).toMatchObject(listed!);
-        // a skyscraper is tall; the landmarks and stations need not be
-        if (r.id.startsWith("proc-building-sky-")) expect(r.sizeY).toBeGreaterThan(2 * Math.max(r.sizeX, r.sizeZ));
+        // a skyscraper is tall (the twin towers' podium is the widest); the landmarks and stations need not be
+        if (r.id.startsWith("proc-building-sky-")) expect(r.sizeY).toBeGreaterThan(1.5 * Math.max(r.sizeX, r.sizeZ));
         for (const ref of r.references) expect(fs.statSync(path.join(dir, ref.url)).size).toBe(ref.bytes);
       }
       // the CD 150's native BMPs reach the site

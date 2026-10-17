@@ -184,7 +184,14 @@ export function ModelDetail(props: {
         </div>
         <Switch>
           <Match when={props.tab === "specs"}>
-            <img class="factory-detail__thumb" src={`/${props.record.thumbUrl}`} alt={`${props.record.title} thumbnail`} width="160" height="160" />
+            {/* A side view at 16 px per metre (half its pixels), so vehicles compare by length. */}
+            <img
+              class="factory-detail__thumb"
+              src={`/${props.record.thumbUrl}`}
+              alt={`${props.record.title} thumbnail`}
+              width={props.record.thumbSide ? Math.round(props.record.thumbSide.widthM * 16) : 160}
+              height={props.record.thumbSide ? Math.round(props.record.thumbSide.heightM * 16) : 160}
+            />
             <dl class="factory-specs">
               <For each={specs()}>
                 {(c) => (

@@ -2,7 +2,7 @@
 
 **Covers** - the ten procedurally generated skyscrapers, the mesh builder they
 are made with, and how to add or change a design.
-**Code** - `generator/skyscrapers.ts`, `generator/meshCore.ts`, `generator/meshBuilder.ts`, `generator/coplanar.ts`, `test/models.test.ts`, `test/skyscrapers.test.ts`
+**Code** - `generator/skyscrapers.ts`, `generator/meshCore.ts`, `generator/meshBuilder.ts`, `generator/coplanar.ts`, `test/models.test.ts`, `test/skyscrapers.test.ts`, `test/buildingScale.test.ts`
 **See also** - [export.md](export.md), [source-tree.md](source-tree.md), [vehicles.md](vehicles.md), [../site/catalog-site.md](../site/catalog-site.md)
 
 ## The designs
@@ -15,7 +15,7 @@ and a crown:
 | `sky-glass-office` | Glass Office Tower | segmented blue curtain wall, entry canopy, sky-garden belt, crown blades and mast |
 | `sky-art-deco` | Art Deco Tower | five stone setbacks, individual window panels, bronze setback ribs, fluted crown and steel spire |
 | `sky-pagoda` | Pagoda Tower | octagonal gold-glass segments, flared rims, bronze buttresses and entry canopy |
-| `sky-brick-residential` | Brick Apartment Tower | brick piers, window panels, balconies with return rails, roof garden and water tank |
+| `sky-brick-residential` | Brick Apartment Tower | brick piers, a window panel a storey (flat quads, to stay in budget), balconies with return rails, roof garden and water tank |
 | `sky-twin-towers` | Twin Towers | two stepped glass drums with vertical fins, spires and a framed sky bridge |
 | `sky-twisted` | Twisting Tower | teal floors turning a quarter turn, corner fins, segmented glazing and rooftop pergola |
 | `sky-dark-slab` | Black Glass Slab | patterned black glazing, bronze mullions and projecting sunshades, planted plaza |
@@ -26,7 +26,8 @@ and a crown:
 `SKYSCRAPERS` in `skyscrapers.ts` lists them as `{ id, title, build, params, finishParams }` (the
 `ProceduralDesign` of `design.ts`).
 `SKYSCRAPER_CATALOG` beside it holds the game-catalog fields they all share -
-category `Commercial`, city pool `skyscraper_c`, `defaultScale` 1, CC0 by Rail
+category `Skyscrapers` (their own chip in the site's Buildings row, apart from
+the commercial street buildings), city pool `skyscraper_c`, `defaultScale` 1, CC0 by Rail
 Island - which the build writes into each model's meta.json entry
 ([export.md](export.md)).
 
@@ -35,31 +36,40 @@ shipped.
 
 ## Parameters and budget
 
-Each tower has **five height choices and 60 finish/height combinations**
-(180 for Twisting Tower and 720 for Terraced Green Tower including their extra controls), available in the existing catalog parameter
+Each tower has **four sizes and 48 finish/size combinations**
+(144 for Twisting Tower and 576 for Terraced Green Tower including their extra controls), available in the existing catalog parameter
 pickers and standalone JS models, just like the village houses. Model ids stay
 unchanged. Exports contain the default GLB and thumbnail plus the parameter specs.
 
 | Parameter | Values | Default |
 |---|---|---|
-| `size` | `lowrise`, `compact`, `medium`, `standard`, `landmark` | `standard` |
+| `size` | `compact` (50 m), `medium` (60 m), `standard` (70 m), `landmark` (80 m) | `standard` |
 | `glazing` | `original`, `blue`, `jade`, `bronze` | `original` |
 | `structure` | `original`, `limestone`, `graphite` | `original` |
+
+The former `lowrise` size is retired to `compact`, so a saved map that stored it
+still resolves ([parameters.md](parameters.md)).
 
 Original finishes preserve each tower's own palette. Glass colour changes both
 light glazing and its darker panels; cladding changes the structural and masonry
 materials. Planting and warning lights retain their colours. These two finish
 parameters never move vertices, and palettes are copied per build.
 
-Size selects complete storeys at approximately 40%, 60%, 80%, 100% and
-120% of the standard count (rounded per shaft or tier). All geometry stays in
-metres with the same catalog `defaultScale` of 1. Floor pitch, window height,
-doors, balconies and framing retain their physical dimensions. Crowns and
-bridges follow the selected floors; tapered profiles distribute over them.
-The low-rise options can be wider than they are tall.
+**Size sets the overall height and the footprint, at real measures.** Each size
+is an overall height - spire, mast or crown included - and a footprint factor
+(0.7, 0.8, 0.9 and 1 for 50 to 80 m) applied to every plan dimension: podium,
+shaft, tiers, drums and their spacing. `TowerMesh.floors(pitch, fixed)` fits whole
+storeys into the height left after the plinth, crown and spire, and
+`TowerMesh.bays(n)` keeps the window bay width, so a smaller tower has fewer
+floors and fewer windows, never smaller ones. Floor pitch, window height, doors,
+balconies, benches and framing retain their physical dimensions; spires and
+masts are a share of the overall height. Multi-part towers spread their storeys
+over their tiers, segments or drums by weight with `split()`, at least one each;
+the Pagoda Tower has three to five segments by size and the Twin Towers three
+drums. Every size lands within 2.5 m of its height (tested).
 
-For example, Twisting Tower offers 14, 22, 29, 36 and 43 floors at 3.6 metres
-per floor. Its `twist` control selects `straight`, `quarter` (default) or `half`:
+For example, Twisting Tower offers 9, 11, 14 and 16 floors at 3.6 metres
+per floor, on plates of 13.3 to 19 metres. Its `twist` control selects `straight`, `quarter` (default) or `half`:
 the total rotation changes while floor heights and plate dimensions stay fixed.
 
 Terraced Green Tower has two additional shape controls:
@@ -69,16 +79,16 @@ Terraced Green Tower has two additional shape controls:
 | `terraces` | `3`, `4`, `5`, `6` | `5` |
 | `terraceUse` | `gardens`, `seating`, `solar` | `gardens` |
 
-Each terrace has four metres of setback and the top tier remains twelve metres
-wide. Adding terraces adds horizontal bays to the lower tiers (20 to 32 metres
-at the base), while distributing roughly 32 standard storeys across the tiers.
-Size then changes their storey counts. The plinth, entrance and roof mast follow
+Each terrace has a setback of 3 metres plus the footprint factor (3.7 to 4 m, a
+usable deck) and the top tier is twelve metres wide at 80 m, scaled with the
+footprint. Adding terraces adds horizontal bays to the lower tiers, while the
+storeys that fit the height are distributed across the tiers. The plinth, entrance and roof mast follow
 the resulting footprint. Gardens have lawns, trees and raised planters; seating
 has paved decks and benches; solar decks have panel racks. Railings remain on
 all decks. These are geometry parameters, not finish-only options.
 
-Regression tests compare actual floor spacing, entrance bounds and window
-heights across sizes, check each terrace count and its furniture, and cover
+Regression tests check each size's overall height and shrinking footprint,
+compare actual floor spacing, entrance dimensions and window heights across sizes, check each terrace count and its furniture, and cover
 all shape combinations through deterministic and standalone JS builds.
 
 Each variant may use **up to 10,000 triangles**. Detail goes into visible facade
@@ -177,7 +187,7 @@ where the model is ([../site/catalog-site.md](../site/catalog-site.md)).
 2. `pnpm build:models`, then look at `export/thumbs/<id>.png` - the headless
    check that the model is the right way up and reads well - or open it in
    `pnpm dev` and orbit it.
-3. `pnpm test` - each model must stand on y = 0, be taller than twice its width,
+3. `pnpm test` - each model must stand on y = 0, reach each size's height,
    stay at or below 10,000 triangles and have no z-fighting faces (the build already
    refuses the last; see "Flicker" above for how to resolve a report).
 
