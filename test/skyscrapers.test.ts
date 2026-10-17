@@ -24,7 +24,7 @@ const SIZES = ["compact", "medium", "standard", "landmark"];
 const HEIGHTS = [50, 60, 70, 80];
 
 /** Plan extent of the main massing (everything but the entrance canopy, which stands in front). */
-function planArea(root: TreeNode): number {
+function planArea(root: ScopeNode): number {
   const parts = root.children.filter((n) => !("name" in n && n.name === "entrance"));
   const lo = [Infinity, Infinity], hi = [-Infinity, -Infinity];
   for (const n of parts) for (const [i, axis] of [0, 2].entries()) {
