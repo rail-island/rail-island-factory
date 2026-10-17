@@ -111,7 +111,8 @@ model and decide what to improve; a path to `export/thumbs/` is not enough.
   `SendUserFile`, `display: "render"`), not only as paths in the text.
 - Send at least the three-quarter view and, for a vehicle, the side view; for
   a change, a before/after pair; for variants, every variant (one image each,
-  or one combined sheet when there are many). Add views the change is about
+  or one labelled sheet from `generator/contactSheet.ts` when there are many:
+  `--vary <param,...>` or `--variants`; docs/models/export.md). Add views the change is about
   (a steered or articulated pose, a raised pantograph, a detail close-up).
 - Caption each image with the model id and the view, and say in the reply what
   you would improve next, so the user can pick from it.
