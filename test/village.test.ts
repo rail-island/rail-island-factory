@@ -31,10 +31,11 @@ function colours(d: ProceduralDesign, combo: ParamValues): Map<string, string> {
 }
 
 describe("the village houses", () => {
-  it("are seven parametric designs with unique village- ids, in the Village category", () => {
+  it("are eight parametric designs with unique village- ids, in the Village category", () => {
     expect(VILLAGE_HOUSES.map((d) => d.id)).toEqual([
       "proc-building-village-timber-cottage", "proc-building-village-timber-house",
       "proc-building-village-cottage", "proc-building-village-l-house", "proc-building-village-family-house", "proc-building-village-modern-house", "proc-building-village-narrow-house",
+      "proc-building-village-alpine-hut",
     ]);
     for (const d of VILLAGE_HOUSES) {
       expect(DESIGNS.get(proceduralId(d.id))).toBe(d);
@@ -123,5 +124,24 @@ describe("the village houses", () => {
     expect(materials("proc-building-village-family-house", { annex: "terrace" })).not.toContain("garageDoor");
     expect(materials("proc-building-village-l-house", { extras: "solar" })).toContain("solar");
     expect(materials("proc-building-village-cottage", { entrance: "garden" })).toContain("flowers");
+  });
+
+  it("build the alpine hut's balcony, season and storeys into the geometry", () => {
+    const id = "proc-building-village-alpine-hut";
+    const d = DESIGNS.get(proceduralId(id))!;
+    expect(d.references).toBe("alpine-hut");
+    expect(paramCombinations(d.params)).toHaveLength((3 + 1) * 2 * 2 * 2 * 4 * 3 * 3 * 3);
+    // the balcony applies to the two-storey hut only
+    expect(paramCombinations(d.params).filter((c) => c.storeys === "one").every((c) => c.balcony === undefined)).toBe(true);
+    const stats = (combo: ParamValues) => glbStats(d.build(combo).toGlb(id));
+    expect(stats({ storeys: "two" }).max[1]).toBeGreaterThan(stats({ storeys: "one" }).max[1] + 1.5);
+    // a wrap-round balcony widens the roof
+    expect(stats({ balcony: "wrap" }).max[0]).toBeGreaterThan(stats({ balcony: "front" }).max[0] + 0.5);
+    expect(stats({ balcony: "front" }).max[2]).toBeGreaterThan(stats({ balcony: "none" }).max[2] + 0.4);
+    const materials = (combo: ParamValues): string[] => [...colours(d, combo).keys()];
+    expect(materials({ season: "winter" })).toContain("snow");
+    expect(materials({ season: "summer" })).not.toContain("snow");
+    expect(materials({ season: "summer" })).toContain("flower");
+    expect(d.build({ chimney: "stone" }).triangleCount()).toBeGreaterThan(d.build({ chimney: "none" }).triangleCount());
   });
 });

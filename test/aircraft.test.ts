@@ -163,3 +163,43 @@ describe("the wide bodies' shapes", () => {
     expect(white.some((tr) => tr.p.some((p) => Math.abs(p[0] - (-16 - 0.8 * (p[1] - 2))) < 1e-4))).toBe(true);
   });
 });
+
+describe("the small airplane", () => {
+  const id = "proc-vehicle-small-airplane";
+  // the bounds of the community model in assets/small-airplane/small-airplane.glb
+  const REF = { min: [-4.38, 0, -3.74], max: [4.38, 2.17, 3.74] };
+  const colors = (): string[] => design(id).params!.find((p) => p.name === "color")!.values.map((v) => v.value);
+
+  it("defaults to blue and offers four colours", () => {
+    expect(colors()).toEqual(["blue", "red", "yellow", "green"]);
+    expect(design(id).params![0]!.default).toBe("blue");
+  });
+
+  it.each(colors().map((c) => [c] as const))("in %s keeps the reference's axes and size, stays in budget and does not flicker", (color) => {
+    const glb = design(id).build({ color }).toGlb(id);
+    const s = glbStats(glb);
+    expect(s.triangles).toBeLessThanOrEqual(BUDGET);
+    for (let k = 0; k < 3; k++) {
+      const want = REF.max[k]! - REF.min[k]!;
+      expect(Math.abs(s.max[k] - s.min[k] - want) / want).toBeLessThanOrEqual(0.05);
+    }
+    expect(s.min[1]).toBeCloseTo(0, 2);
+    expect(findCoplanarOverlaps(glb)).toEqual([]);
+  });
+
+  it("points its nose at +Z (the white spinner) and has the red light on the left wing (+X)", () => {
+    const { json, bin } = parseGlb(design(id).build().toGlb(id));
+    const t = collectTriangles(json, bin);
+    const zMax = Math.max(...t.flatMap((tr) => tr.p.map((p) => p[2])));
+    const nose = t.filter((tr) => tr.p.some((p) => p[2] > zMax - 0.01));
+    expect(nose.length).toBeGreaterThan(0);
+    expect(nose.every((tr) => tr.color[0] > 0.8 && tr.color[1] > 0.8)).toBe(true);
+    const red = t.filter((tr) => tr.color[0] > 0.7 && tr.color[1] < 0.1 && tr.color[2] < 0.1);
+    expect(red.length).toBeGreaterThan(0);
+    expect(red.every((tr) => tr.p.every((p) => p[0] > 4))).toBe(true);
+  });
+
+  it("is deterministic", () => {
+    expect(design(id).build({ color: "yellow" }).toGlb(id)).toEqual(design(id).build({ color: "yellow" }).toGlb(id));
+  });
+});

@@ -1,5 +1,5 @@
 // The procedural aircraft: Aero A.10, A380, 737-800, MD-11, 747-400,
-// Beluga A300-600ST and a light business jet; passenger airliners in
+// Beluga A300-600ST, a light business jet and a small two-seat airplane; passenger airliners in
 // airline liveries (a `livery` parameter). See docs/models/aircraft.md and the
 // aircraft skill (.agents/skills/aircraft): 10,000 triangles per aircraft.
 //
@@ -2242,6 +2242,274 @@ export function boeing747(params?: ParamValues): MeshBuilder {
 }
 export function airbusBeluga(): MeshBuilder { return wideBody("beluga", BELUGA_LIVERY); }
 
+// --- the small airplane ----------------------------------------------------------------
+//
+// A two-seat light sport aircraft after the community model in
+// assets/small-airplane/ (not a game asset it replaces): 7.48 m long, 8.76 m
+// across, 2.17 m to the fin tip, nose at +Z, wings along X, wheels on y = 0, as
+// the reference. A slim fuselage whose cowling runs into a bubble canopy and a
+// tapering tail cone, a low wing with dihedral, ailerons and flaps, a three-blade
+// propeller on a spinner, the tailplane and a swept fin with its dorsal fillet,
+// a fixed tricycle undercarriage on spring legs with wheel spats, and the
+// navigation lights (red on the left wing, +X, green on the right). The
+// `color` parameter paints the fuselage, the spats and the fin tip; the belly,
+// the wings and the tail are white. The gear is fixed, so the model has no parts.
+
+/** The fuselage: (z, half-width, bottom, top, height of the widest point). */
+const SMALL_FUSELAGE: Array<[number, number, number, number, number]> = [
+  [3.4, 0.3, 0.74, 1.26, 1.0], [3.3, 0.38, 0.67, 1.33, 1.0], [3.12, 0.45, 0.6, 1.41, 1.0],
+  [2.85, 0.5, 0.55, 1.47, 0.99], [2.5, 0.53, 0.51, 1.51, 0.98], [2.1, 0.55, 0.49, 1.53, 0.97],
+  [1.2, 0.56, 0.47, 1.53, 0.96], [0.3, 0.55, 0.47, 1.51, 0.96], [-0.4, 0.5, 0.5, 1.49, 0.98],
+  [-1.2, 0.39, 0.6, 1.44, 1.03], [-2.0, 0.28, 0.72, 1.4, 1.08], [-2.8, 0.18, 0.86, 1.37, 1.14],
+  [-3.35, 0.1, 0.99, 1.35, 1.19], [-3.58, 0.05, 1.08, 1.33, 1.22],
+];
+const SMALL_TAIL_TIP: Vec3 = [0, 1.22, -3.66];
+/** The bubble canopy: (z, half-width, height above y = 1.40); its lower half sinks into the fuselage. */
+const SMALL_CANOPY: Array<[number, number, number]> = [
+  [2.18, 0.2, 0.06], [2.0, 0.36, 0.2], [1.7, 0.47, 0.34], [1.25, 0.52, 0.44], [0.75, 0.52, 0.45],
+  [0.25, 0.48, 0.39], [-0.15, 0.37, 0.26], [-0.42, 0.2, 0.1],
+];
+const SMALL_CANOPY_Y = 1.4;
+/** The wing (half span): span position, leading edge, chord, thickness; the chord line rises 3.5 degrees. */
+const SMALL_WING: Array<[number, number, number, number]> = [
+  [0, 0.82, 1.42, 0.18], [1.0, 0.8, 1.38, 0.17], [4.18, 0.64, 1.0, 0.11], [4.3, 0.58, 0.84, 0.07],
+];
+const smallWingMid = (s: number): number => 0.62 + Math.abs(s) * 0.061;
+const SMALL_TAILPLANE: Array<[number, number, number, number]> = [
+  [0, -2.55, 0.86, 0.09], [1.3, -2.68, 0.62, 0.06], [1.42, -2.75, 0.48, 0.04],
+];
+const SMALL_TAILPLANE_Y = 1.24;
+const SMALL_FIN: FinRing[] = [
+  [1.25, -2.3, 1.42, 0.12, 0], [1.45, -2.62, 1.1, 0.11, 0], [2.1, -3.02, 0.64, 0.07, 0], [2.17, -3.1, 0.5, 0.05, 0],
+];
+/** The propeller hub: the spinner's axis. */
+const SMALL_HUB: Vec3 = [0, 1.0, 3.47];
+/** The undercarriage: main wheels' half track and z, the nose wheel's z, the wheel radii. */
+const SMALL_GEAR = { track: 1.16, mainZ: 0.2, mainR: 0.2, noseZ: 2.05, noseR: 0.17 };
+
+const SMALL_COLORS: Record<string, { title: string; color: string }> = {
+  blue: { title: "Blue", color: "#3e74b4" },
+  red: { title: "Red", color: "#b8262c" },
+  yellow: { title: "Yellow", color: "#e3ad1e" },
+  green: { title: "Green", color: "#2d7a49" },
+};
+const SMALL_PARAMS: readonly ParamSpec[] = [{
+  name: "color", title: "Colour", default: "blue",
+  values: Object.entries(SMALL_COLORS).map(([value, c]) => ({ value, title: c.title })),
+}];
+const SMALL_PALETTE: Record<string, MaterialSpec> = {
+  ...PALETTE,
+  planeWhite: { color: "#f3f4f5", roughness: 0.35 },
+  canopy: { color: "#2e4456", metallic: 0.2, roughness: 0.1 },
+  navRed: { color: "#e8392a", roughness: 0.3 },
+  navGreen: { color: "#36d35c", roughness: 0.3 },
+  navWhite: { color: "#fffbe8", roughness: 0.3 },
+};
+
+function smallStations(): Station[] {
+  return SMALL_FUSELAGE.map(([z, hw, lo, hi, mw]) => ({ a: z, sec: oval(28, 0, mw, hw, hi - mw, mw - lo, 2.3) }));
+}
+
+/** The point of the wing's upper skin at span position s and chord fraction f (aft of the thickest point). */
+function smallWingTop(st: WingStation[], s: number, f: number, off: number): Vec3 {
+  const w = wingAt(st, s);
+  return [s, w.mid + (0.5 * w.thick * (1 - f)) / 0.65 + off, w.lead - f * w.chord];
+}
+
+/** A propeller blade along the radius at angle `theta` about the hub, its chord pitched toward +Z. */
+function smallBlade(m: MeshBuilder, mat: string, theta: number): void {
+  const r: Vec3 = [Math.cos(theta), Math.sin(theta), 0];
+  const t: Vec3 = [-Math.sin(theta), Math.cos(theta), 0];
+  const [cx, cy, cz] = SMALL_HUB;
+  const point = (h: number, u: number, v: number, p: number): Vec3 => {
+    const a = u * Math.cos(p) - v * Math.sin(p);
+    const b = u * Math.sin(p) + v * Math.cos(p);
+    return [cx + h * r[0] + a * t[0], cy + h * r[1] + a * t[1], cz + b];
+  };
+  // (radius, chord, thickness, pitch): broadest at a third of the span, twisted toward the tip
+  const span: Array<[number, number, number, number]> = [
+    [0.12, 0.1, 0.05, 0.75], [0.3, 0.14, 0.035, 0.55], [0.6, 0.12, 0.022, 0.36], [0.76, 0.08, 0.015, 0.28], [0.81, 0.04, 0.01, 0.25],
+  ];
+  const rings = span.map(([h, c, th, p]) => foil(c / 2, c, th, 0).map(([u, v]) => point(h, u, v, p)));
+  for (let i = 0; i + 1 < rings.length; i++) {
+    const a = rings[i]!;
+    const b = rings[i + 1]!;
+    const hm = (span[i]![0] + span[i + 1]![0]) / 2;
+    const axis: Vec3 = [cx + hm * r[0], cy + hm * r[1], cz];
+    for (let k = 0; k < a.length; k++) {
+      const j = (k + 1) % a.length;
+      const mid: Vec3 = [(a[k]![0] + b[j]![0]) / 2, (a[k]![1] + b[j]![1]) / 2, (a[k]![2] + b[j]![2]) / 2];
+      m.facets(mat, [a[k]!, a[j]!, b[j]!, a[k]!, b[j]!, b[k]!], sub3(mid, axis));
+    }
+  }
+  m.facets(mat, fanTris(rings[rings.length - 1]!), r);
+}
+
+/** A wheel spat: a teardrop fairing along z about the axle at (x, y, z), the tyre's bottom showing under it. */
+function smallSpat(m: MeshBuilder, x: number, y: number, z: number, hw: number, len: number): void {
+  // (position along the length, width, height above and depth below the axle, as fractions)
+  const rows: Array<[number, number, number, number]> = [
+    [0.42, 0.45, 0.6, 0.35], [0.3, 0.85, 0.9, 0.7], [0.1, 1, 1, 1], [-0.25, 0.95, 0.95, 0.9], [-0.5, 0.6, 0.65, 0.6], [-0.66, 0.25, 0.35, 0.3],
+  ];
+  const st: Station[] = rows.map(([f, w, top, bot]) => ({ a: z + f * len, sec: oval(14, x, y + 0.02, hw * w, 0.24 * top, 0.12 * bot) }));
+  body(m, "trim", "z", st);
+  fan(m, "trim", "z", st[0]!.sec, st[0]!.a, 1, [x, y + 0.03, z + 0.5 * len]);
+  fan(m, "trim", "z", st[st.length - 1]!.sec, st[st.length - 1]!.a, -1, [x, y + 0.04, z - 0.74 * len]);
+}
+
+/** Both halves of a wing or tailplane from its half-span stations, joined at the centre. */
+function smallSpan(rows: Array<[number, number, number, number]>, mid: (s: number) => number): WingStation[] {
+  const out: WingStation[] = [];
+  for (const s of [-1, 1]) {
+    const half = rows.map(([d, lead, chord, thick]): WingStation => ({ s: s * d, lead, chord, thick, mid: mid(d) }));
+    out.push(...(s < 0 ? half.reverse().slice(0, -1) : half));
+  }
+  return out;
+}
+
+export function smallAirplane(params?: ParamValues): MeshBuilder {
+  const p = resolveParams(SMALL_PARAMS, params);
+  const m = new MeshBuilder({ ...SMALL_PALETTE, trim: { color: SMALL_COLORS[p.color!]!.color, roughness: 0.35 } });
+  const fus = smallStations();
+  const mid = (z: number): number => centroid(secAt(fus, z))[1];
+
+  m.scope("fuselage", () => {
+    m.scope("skin", () => {
+      // painted: the colour above, a white belly below
+      paintedBody(m, "z", fus, (s) => (s < -0.3 ? "planeWhite" : "trim"));
+      fan(m, "trim", "z", fus[fus.length - 1]!.sec, fus[fus.length - 1]!.a, -1, SMALL_TAIL_TIP);
+    });
+    m.scope("cheatline", () => {
+      // a white line along each side, following the fuselage's centre line down the tail cone
+      const cuts = [3.2, ...SMALL_FUSELAGE.map((r) => r[0]).filter((z) => z < 3.2 && z > -3.2), -3.2];
+      const w = (z: number): number => 0.035 * (z > 0 ? 1 : 1 + z / 6);
+      for (const side of [-1, 1]) {
+        const pts: Vec3[] = [];
+        const at = (z: number, k: number): Vec3 => skinY("z", fus, z, mid(z) + 0.05 + k * w(z), side, 0.008);
+        for (let i = 0; i + 1 < cuts.length; i++) {
+          const [za, zb] = [cuts[i]!, cuts[i + 1]!];
+          pts.push(...fanTris([at(za, -1), at(zb, -1), at(zb, 1), at(za, 1)]));
+        }
+        m.facets("planeWhite", pts, [side, 0, 0]);
+      }
+    });
+    m.scope("canopy", () => {
+      const st: Station[] = SMALL_CANOPY.map(([z, hw, top]) => ({ a: z, sec: oval(28, 0, SMALL_CANOPY_Y, hw, top, 0.36) }));
+      body(m, "canopy", "z", st);
+      fan(m, "canopy", "z", st[0]!.sec, st[0]!.a, 1, [0, SMALL_CANOPY_Y + 0.03, 2.3]);
+      fan(m, "canopy", "z", st[st.length - 1]!.sec, st[st.length - 1]!.a, -1, [0, SMALL_CANOPY_Y + 0.02, -0.52]);
+      // the windscreen arch and the centre bow: bands of the canopy's own section, a little proud
+      const grow = (sec: Sec): Sec => sec.map(([u, y]) => [u * 1.025, SMALL_CANOPY_Y + (y - SMALL_CANOPY_Y) * 1.025]);
+      for (const [z0, z1] of [[1.88, 1.96], [0.9, 0.98]] as const) {
+        const band: Station[] = [{ a: z0, sec: grow(secAt(st, z0)) }, { a: z1, sec: grow(secAt(st, z1)) }];
+        body(m, "trim", "z", band);
+        fan(m, "trim", "z", band[0]!.sec, z0, -1);
+        fan(m, "trim", "z", band[1]!.sec, z1, 1);
+      }
+    });
+    m.scope("antenna", () => rod(m, "darkGrey", [0, 1.4, -0.95], [0, 1.72, -1.1], 0.012, 4));
+    m.scope("tail light", () => m.box("navWhite", 0, -3.665, 0.04, 0.03, 1.2, 1.25));
+  });
+
+  m.scope("engine", () => {
+    m.scope("cowling front", () => {
+      fan(m, "trim", "z", fus[0]!.sec, fus[0]!.a, 1);
+      // the chin intake and two cooling inlets beside the spinner
+      const front = (pts: P2[]): Vec3[] => fanTris(pts.map(([x, y]): Vec3 => [x, y, 3.405]));
+      m.facets("slot", [
+        ...front(ovalOutline(0, 0.84, 0.13, 0.05, 10)),
+        ...front(ovalOutline(-0.235, 1.07, 0.035, 0.035, 8)), ...front(ovalOutline(0.235, 1.07, 0.035, 0.035, 8)),
+      ], [0, 0, 1]);
+    });
+    m.scope("exhaust", () => {
+      for (const s of [-1, 1]) rod(m, "steel", [s * 0.14, 0.62, 2.9], [s * 0.16, 0.5, 2.72], 0.028, 6);
+    });
+  });
+
+  m.scope("propeller", () => {
+    m.scope("spinner", () => {
+      const [cx, cy] = SMALL_HUB;
+      const rows: Array<[number, number]> = [[3.38, 0.19], [3.52, 0.175], [3.62, 0.13], [3.69, 0.07]];
+      const st: Station[] = rows.map(([z, rr]) => ({ a: z, sec: circle(16, cx, cy, rr) }));
+      body(m, "planeWhite", "z", st);
+      fan(m, "planeWhite", "z", st[st.length - 1]!.sec, 3.69, 1, [cx, cy, 3.74]);
+    });
+    m.scope("blades", () => {
+      for (let k = 0; k < 3; k++) smallBlade(m, "darkGrey", Math.PI / 2 + (k * 2 * Math.PI) / 3);
+    });
+  });
+
+  const wingSt = smallSpan(SMALL_WING, smallWingMid);
+  m.scope("wings", () => {
+    m.scope("wing", () => wing(m, "planeWhite", "x", wingSt));
+    m.scope("control surfaces", () => {
+      // hinge lines of the flaps and the ailerons on the upper skin, and their ends
+      const pts: Vec3[] = [];
+      const line = (s0: number, s1: number, f0: number, f1: number): void => {
+        // in short pieces, so the line hugs the skin's triangles
+        const n = Math.max(1, Math.ceil(Math.abs(s1 - s0) / 0.2));
+        for (let i = 0; i < n; i++) {
+          const [a, b] = [lerp(s0, s1, i / n), lerp(s0, s1, (i + 1) / n)];
+          pts.push(...fanTris([smallWingTop(wingSt, a, f0, 0.012), smallWingTop(wingSt, b, f0, 0.012), smallWingTop(wingSt, b, f1, 0.012), smallWingTop(wingSt, a, f1, 0.012)]));
+        }
+      };
+      for (const s of [-1, 1]) {
+        for (const [a, b] of [[0.75, 2.0], [2.06, 4.0]] as const) {
+          line(s * a, s * b, 0.73, 0.755);
+          for (const e of [a, b]) line(s * (e - 0.015), s * (e + 0.015), 0.755, 0.995);
+        }
+      }
+      m.facets("darkGrey", pts, [0, 1, 0]);
+    });
+    m.scope("navigation lights", () => {
+      const w = wingAt(wingSt, 4.24);
+      for (const s of [-1, 1]) m.box(s > 0 ? "navRed" : "navGreen", s * 4.33, w.lead - 0.12, 0.1, 0.16, w.mid - 0.03, w.mid + 0.05);
+    });
+    m.scope("pitot tube", () => {
+      const y = smallWingMid(2.8) - 0.07;
+      rod(m, "steel", [2.8, y + 0.04, 0.3], [2.8, y - 0.08, 0.32], 0.01, 4);
+      rod(m, "steel", [2.8, y - 0.08, 0.2], [2.8, y - 0.08, 0.62], 0.012, 6);
+    });
+  });
+
+  m.scope("tail", () => {
+    m.scope("tailplane", () => {
+      const st = smallSpan(SMALL_TAILPLANE, () => SMALL_TAILPLANE_Y);
+      wing(m, "planeWhite", "x", st);
+      const pts: Vec3[] = [];
+      const top = (s: number, f: number): Vec3 => smallWingTop(st, s, f, 0.01);
+      for (const s of [-1, 1]) pts.push(...fanTris([top(s * 0.2, 0.63), top(s * 1.28, 0.63), top(s * 1.28, 0.66), top(s * 0.2, 0.66)]));
+      m.facets("darkGrey", pts, [0, 1, 0]);
+    });
+    m.scope("fin and rudder", () => {
+      paintedFin(m, "z", SMALL_FIN, [[1.25, "planeWhite"], [1.92, "trim"]]);
+      const [y0, lead, chord, thick, c] = SMALL_FIN[0]!;
+      m.cap("planeWhite", ccw(foil(lead, chord, thick, c).map(([u, t]): [number, number] => [t, u])), y0, false);
+      finDecal(m, "darkGrey", "z", SMALL_FIN, 1, [[[0.7, 1.3], [0.715, 1.3], [0.715, 1.9], [0.7, 1.9]]], 0.004);
+    });
+  });
+
+  m.scope("undercarriage", () => {
+    const g = SMALL_GEAR;
+    for (const s of [-1, 1]) {
+      m.scope(s > 0 ? "left main gear" : "right main gear", () => {
+        const x = s * g.track;
+        const yc = axleY(0, g.mainR);
+        rod(m, "alloy", [s * 0.42, 0.58, 0.3], [x, yc + 0.12, g.mainZ], 0.035, 6);
+        wheel(m, "x", x - 0.06, x + 0.06, [g.mainZ, yc], g.mainR, 0.1, "alloy");
+        smallSpat(m, x, yc, g.mainZ, 0.1, 0.62);
+      });
+    }
+    m.scope("nose gear", () => {
+      const yc = axleY(0, g.noseR);
+      rod(m, "alloy", [0, 0.62, 2.18], [0, yc + 0.12, g.noseZ], 0.035, 6);
+      wheel(m, "x", -0.05, 0.05, [g.noseZ, yc], g.noseR, 0.08, "alloy");
+      smallSpat(m, 0, yc, g.noseZ, 0.09, 0.52);
+    });
+  });
+  return m;
+}
+
 /** Shared aircraft catalog fields; individual designs supply their yaw. */
 export const AIRCRAFT_CATALOG: CatalogFields = {
   category: "Aircraft",
@@ -2261,4 +2529,5 @@ export const AIRCRAFT: ProceduralDesign[] = [
   { id: "proc-vehicle-airbus-a380", title: "Airbus A380", build: airbusA380, params: A380_PARAMS, finishParams: ["livery"], references: "airbus-a380", catalog: { ...AIRCRAFT_CATALOG, yaw:270 } },
   { id: "proc-vehicle-boeing-737", title: "Boeing 737-800", build: boeing737, params: B737_PARAMS, finishParams: ["livery"], catalog: { ...AIRCRAFT_CATALOG, yaw: 0 } },
   { id: "proc-vehicle-light-jet", title: "Light Jet", build: lightJet, references: "light-jet", catalog: { ...AIRCRAFT_CATALOG, yaw:180 } },
+  { id: "proc-vehicle-small-airplane", title: "Small Airplane", build: smallAirplane, params: SMALL_PARAMS, finishParams: ["color"], references: "small-airplane", catalog: { ...AIRCRAFT_CATALOG, yaw: 270 } },
 ];

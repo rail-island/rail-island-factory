@@ -110,6 +110,8 @@ correcting one), download a few reference images and commit them:
    **Images** tab.
 5. Commit and push the images together with the model change.
 
+Files the user uploads to `assets/_tmp/` (an inspiration GLB, a photo) are inputs for one model: `git mv` them into `assets/<name>/` in the same change and list them in `SOURCES.md` too.
+
 If downloading is not possible, tell the user and list what you would have used.
 
 ## Steps

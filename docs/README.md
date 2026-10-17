@@ -13,7 +13,7 @@
 | [guide/deploy.md](guide/deploy.md) | the Cloudflare Worker, the GitHub Actions workflows, secrets |
 | [models/lod.md](models/lod.md) | Low-detail JS variants, triangle budgets, structural silhouettes, flicker checks and preview toggle |
 | [models/skyscrapers.md](models/skyscrapers.md) | the ten skyscraper designs, their four sizes, the mesh builder, adding a design |
-| [models/village.md](models/village.md) | the seven parametric village houses in the Kenney and Quaternius styles: plan families, the house builder, finish parameters, scale and tests |
+| [models/village.md](models/village.md) | the eight parametric village houses in the Kenney and Quaternius styles and the alpine hut: plan families, the house builder, finish parameters, scale and tests |
 | [models/commercial-streets.md](models/commercial-streets.md) | eleven additional street and historic commercial families, the 82-object legacy inventory and provisional mapping |
 | [models/commercial.md](models/commercial.md) | five Kenney-style commercial families with 3,000 architectural and finish variants, a 10,000-triangle ceiling, catalog and export |
 | [models/industry.md](models/industry.md) | Industry audit, eleven procedural families, budgets and future migration mapping |
@@ -35,6 +35,7 @@
 | [models/czech-emus-classic.md](models/czech-emus-classic.md) | the older Czech electric units from vlakosimdb: the CD 451 "zabotlam" and the CD 470 double-deck prototype (motor car, trailer) and the CD 460 (motor car, trailer; four liveries), their shared kit, the scales and the native comparison |
 | [models/czech-dmus.md](models/czech-dmus.md) | the Czech diesel railcars from vlakosimdb: CD 810, CD 812 / 912 Esmeralda, CD 843 / 943 / 043, CSD M 131.1 with its trailer, CSD M 240.0, CSD M 296.1 / CD 853 / 854; the railcar kit, the photographed cab faces, the native comparison |
 | [models/small-diesels.md](models/small-diesels.md) | the small and shunting diesels from vlakosimdb: CD 704 / T 238.0, CD 710, CD 714, CD 740 / 742 / 743, DB V 100 / 212 and the MUV 69 track motor car, the shared hood and running-gear kit, the native comparison |
+| [models/jr-kiha40.md](models/jr-kiha40.md) | the JR KiHa 40 diesel railcar in the JR Hokkaido, JNR vermilion and JNR general liveries: references, dimensions, the railcar kit with a metric frame, the gauge and the tests |
 | [models/german-coaches.md](models/german-coaches.md) | the German coaches from vlakosimdb: the DB n-Wagen (Bn, ABn, the Karlsruher Kopf driving trailer; two liveries), the DB Regio and the DR double-deck coaches with their driving trailers; sloped-nose panels, the native comparison and tests |
 | [models/bmo-double-deck.md](models/bmo-double-deck.md) | the parametric Bmo double-deck coach: the CSD and three CD liveries as one `livery` parameter |
 | [models/steam-locomotives.md](models/steam-locomotives.md) | the nine steam locomotives from vlakosimdb, locomotive and tender as `unit` variants, the shared builder, deviations, the native comparison and tests |
@@ -49,9 +50,9 @@
 | [models/landmarks.md](models/landmarks.md) | the Brandenburg Gate, the Louvre Pyramid and the White House |
 | [models/towers.md](models/towers.md) | all eight Towers: procedural designs, parameters, budgets, reference attribution and scale conversion |
 | [models/stations.md](models/stations.md) | the four station buildings: Prague main station, the station building, the Mikulasovice halt, the suburban station |
-| [models/aircraft.md](models/aircraft.md) | the Aero A.10, the Airbus A380, the Boeing 737-800 and the light jet, airline liveries, their gear parts |
+| [models/aircraft.md](models/aircraft.md) | the Aero A.10, the Airbus A380, the Boeing 737-800, the MD-11, 747-400 and Beluga, the light jet and the small two-seat airplane, airline liveries, their gear parts |
 | [models/ships.md](models/ships.md) | the cruise ferry, the hydrofoil and the passenger ferry, their waterlines |
-| [models/cable-cabins.md](models/cable-cabins.md) | the aerial tramway car and the small gondola, their rope and sill datums |
+| [models/cable-cabins.md](models/cable-cabins.md) | the aerial tramway car, the small gondola and the parametric chairlift chair (seats, bubble, colour), their rope, sill and seat datums |
 | [models/trucks.md](models/trucks.md) | the cistern semi-truck, the concrete mixer and the reefer semi-truck |
 | [models/emitters.md](models/emitters.md) | where models smoke, steam and flare, and a fountain's water: `emit`, `pool`, `jet`, the export |
 | [models/js-format.md](models/js-format.md) | the standalone JS model (`export/js/<id>.js`, `build(THREE)`), how it is bundled, the sizes |

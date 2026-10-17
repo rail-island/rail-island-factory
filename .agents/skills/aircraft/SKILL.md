@@ -74,6 +74,10 @@ simplified tail emblem; no titles, lettering or trademarked logos in detail.
 
 1. Find references (photos, dimension drawings) and the real dimensions:
    length, span (with winglets), height, fuselage width, gear track and base.
+   Store them in git: a user-supplied GLB or photo (`git mv` it out of the
+   `assets/_tmp/` inbox) and any downloaded photo go to `assets/<name>/`, each
+   listed in `assets/<name>/SOURCES.md` (file, origin or URL, author, licence,
+   use); set `references: "<name>"` on the design.
 2. Write or change the design in `aircraft.ts`; add a new one to `AIRCRAFT`
    and its id to the `aircraft` family in `generator/lod.ts`.
 3. Render views headlessly: a scratch copy of `generator/renderGlbThumb.ts`
