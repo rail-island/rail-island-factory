@@ -11,6 +11,7 @@ import { emuComparison, EMU_TRANSFERS } from "../generator/emuComparison";
 import { glbStats } from "../generator/glbStats";
 import { isLeaf, type LeafNode, type TreeNode } from "../generator/sourceTree";
 import type { MeshBuilder } from "../generator/meshBuilder";
+import { sample } from "./catalogCache";
 
 function leaves(n: TreeNode): LeafNode[] {
   return isLeaf(n) ? [n] : n.children.flatMap(leaves);
@@ -58,7 +59,7 @@ describe("the older Czech electric units", () => {
   });
 
   for (const d of DESIGNS)
-    it.each(paramCombinations(d.params).map((c) => [JSON.stringify(c), c] as const))(`${d.id} %s stands on the rail, centred, inside the envelope and the budget`, (_, combo: ParamValues) => {
+    it.each(sample(paramCombinations(d.params)).map((c) => [JSON.stringify(c), c] as const))(`${d.id} %s stands on the rail, centred, inside the envelope and the budget`, (_, combo: ParamValues) => {
       const { stats: s, nodes } = built(d.build(combo), d.id);
       expect(s.min[1]).toBeCloseTo(0, 5);
       expect(s.min[2]).toBeCloseTo(-s.max[2], 5);

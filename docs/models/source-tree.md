@@ -38,7 +38,7 @@ nest; a loop opens one per iteration (`` m.scope(`tier ${i + 1}`, ...) ``).
 Recording only observes: it never changes what is drawn or in which order, so
 the GLB bytes are the same with or without scopes (tested).
 
-**Every primitive must sit in a scope.** `test/models.test.ts` fails when a
+**Every primitive must sit in a scope.** The catalog sweep (`test/catalogSweep.ts`) fails when a
 design draws straight under its root, so a new design cannot ship an
 unreadable tree. The shared helpers open their own scope, so calling one
 directly from a design is enough for its primitives.
@@ -82,7 +82,7 @@ LeafNode  = { id, kind, material, args, tri: [first, count], triangles, min?, ma
 - `triangles`, `min`, `max` are the node's extent in metres (absent when it drew
   nothing); a scope's is the union of its children's.
 
-`test/models.test.ts` checks, for every design, that the leaves' ranges tile
+The catalog sweep (`test/catalogSweep.ts`) checks, for every design, that the leaves' ranges tile
 each material's primitive exactly and that each leaf's box matches the GLB's
 triangles in its range.
 

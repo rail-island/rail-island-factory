@@ -42,8 +42,13 @@ export default defineConfig({
     environment: "node",
     include: ["test/**/*.test.ts"],
     setupFiles: ["test/setup.ts"],
-    // Many tests loop over every design, which grows with the catalog; 5 s is too
-    // tight for a full parallel run on a small machine.
+    // The files share their worker's modules: the generator is loaded once per
+    // worker, not once per file, and test/catalogCache.ts keeps each design's
+    // build and JS bundle for every file that worker runs (docs/guide/setup-and-build.md).
+    isolate: false,
+    // Every core: the tests are CPU-bound and the main process only reports.
+    maxWorkers: "100%",
+    // Some tests build whole families; 5 s is too tight on a small machine.
     testTimeout: 120_000,
   },
 });

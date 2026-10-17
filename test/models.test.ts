@@ -3,7 +3,7 @@ import { proceduralId } from "../generator/modelId.ts";
 // design's shape and budget, and the generator's output on disk.
 
 import { describe, expect, it } from "vitest";
-import { generateInSubprocess } from "./generateSubprocess";
+import { built, glbOf } from "./catalogCache";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -235,16 +235,9 @@ describe("findCoplanarOverlaps", () => {
   });
 });
 
-/** Every design's id, skyscrapers and vehicles alike, for the checks they share. */
-const ALL_IDS = [...DESIGNS.keys()].map((id) => [id] as const);
-
 describe("the designs", () => {
-  // Regression: the art deco tower's roofs flickered seen from above -- each
-  // tier's dark core, its stone piers and its cornice all ended at one height.
-  // The glass office, apartment, black slab and terraced towers had smaller cases.
-  it.each(ALL_IDS)("%s has no z-fighting faces", (id) => {
-    expect(findCoplanarOverlaps(designGlb(proceduralId(id)))).toEqual([]);
-  });
+  // Every design's z-fighting, determinism and source-tree checks: the catalog
+  // sweep (test/catalogSweep.ts).
 
   it("include ten skyscrapers, with unique sky- ids", () => {
     expect(SKYSCRAPERS.length).toBe(10);
@@ -254,7 +247,7 @@ describe("the designs", () => {
   });
 
   it.each(SKYSCRAPERS.map((d) => [d.id] as const))("skyscraper %s stands on y = 0, is tall and stays in budget", (id) => {
-    const glb = designGlb(proceduralId(id));
+    const glb = glbOf(proceduralId(id));
     const s = glbStats(glb);
     expect(s.min[1]).toBeCloseTo(0, 5);
     const h = s.max[1] - s.min[1];
@@ -264,63 +257,9 @@ describe("the designs", () => {
     expect(faces(glb).length).toBe(s.triangles);
   });
 
-  it.each(ALL_IDS)("%s generates deterministic GLB bytes for the game's LOD cache", (id) => {
-    expect(Buffer.from(designGlb(proceduralId(id))).equals(Buffer.from(designGlb(proceduralId(id))))).toBe(true);
-  });
-
   it("throws on an unknown id", () => {
     expect(() => designGlb(proceduralId("sky-nope"))).toThrow(/no procedural model/);
     expect(() => designTree(proceduralId("sky-nope"))).toThrow(/no procedural model/);
-  });
-
-  // The site's source tree is only readable when every primitive sits in a
-  // named scope: a design must not draw straight under its root.
-  it.each(ALL_IDS)("%s draws every primitive inside a named scope", (id) => {
-    const tree = designTree(proceduralId(id));
-    expect(tree.root.children.length).toBeGreaterThan(0);
-    expect(tree.root.children.filter(isLeaf).map((l) => l.id)).toEqual([]);
-    const ids = walk(tree.root).map((n) => n.id);
-    expect(new Set(ids).size).toBe(ids.length);
-  });
-
-  // The site highlights and picks through the leaves' triangle ranges, so they
-  // must tile each material's GLB primitive exactly and point at the right faces.
-  it.each(ALL_IDS)("%s has a tree whose triangle ranges match its GLB", (id) => {
-    const tree = designTree(proceduralId(id));
-    const { json, bin } = parseGlb(designGlb(proceduralId(id)));
-    const byMat = new Map<string, ReturnType<typeof collectTriangles>>();
-    for (const t of collectTriangles(json, bin)) {
-      if (!byMat.has(t.material)) byMat.set(t.material, []);
-      byMat.get(t.material)!.push(t);
-    }
-    // a model with parts visits its materials node by node, so compare as sets
-    expect(tree.materials).toEqual([...byMat.keys()].sort());
-    expect(tree.triangles).toBe(glbStats(designGlb(proceduralId(id))).triangles);
-    expect(tree.root.triangles).toBe(tree.triangles);
-    const leaves = walk(tree.root).filter(isLeaf);
-    for (const mat of tree.materials) {
-      const ranges = leaves.filter((l) => l.material === mat).map((l) => l.tri).sort((a, b) => a[0] - b[0]);
-      let next = 0;
-      for (const [first, count] of ranges) {
-        expect(first).toBe(next);
-        next += count;
-      }
-      expect(next).toBe(byMat.get(mat)!.length);
-    }
-    for (const leaf of leaves) {
-      if (leaf.tri[1] === 0) continue;
-      const tris = byMat.get(leaf.material)!.slice(leaf.tri[0], leaf.tri[0] + leaf.tri[1]);
-      for (let k = 0; k < 3; k++) {
-        const lo = Math.min(...tris.flatMap((t) => t.p.map((p) => p[k]!)));
-        const hi = Math.max(...tris.flatMap((t) => t.p.map((p) => p[k]!)));
-        expect(Math.abs(lo - leaf.min![k]!)).toBeLessThan(0.002);
-        expect(Math.abs(hi - leaf.max![k]!)).toBeLessThan(0.002);
-      }
-    }
-  });
-
-  it.each(ALL_IDS)("%s records the same source tree every time", (id) => {
-    expect(JSON.stringify(designTree(proceduralId(id)))).toBe(JSON.stringify(designTree(proceduralId(id))));
   });
 });
 
@@ -340,7 +279,7 @@ describe("the vehicles", () => {
     // Repository rail envelope: 3.1 m wide, 4.7 m excluding pantographs.
     // An active collector may reach the separate 6.5 m operating limit.
     const rail = DESIGNS.get(proceduralId(id))!.catalog?.category === "Rail vehicles";
-    const glb = designGlb(proceduralId(id));
+    const glb = glbOf(proceduralId(id));
     const s = glbStats(glb);
     expect(s.min[1]).toBeCloseTo(0, 5);
     const length = s.max[0] - s.min[0];
@@ -723,7 +662,11 @@ describe("generateModels", () => {
     } finally { fs.rmSync(dir,{recursive:true,force:true}); }
   });
 
-  it("writes a thumbnail and no GLB per design, skips an unchanged one, and prunes a dropped one", async () => {
+  // A few designs stand for the catalog: a skyscraper, a village house and a
+  // rigged vehicle (the build itself writes them all).
+  const SAMPLE = ["proc-building-sky-pyramid", "proc-building-village-cottage", "proc-vehicle-american-truck"].map((id) => DESIGNS.get(id)!);
+
+  it("writes a thumbnail and no GLB per design, skips an unchanged one, and prunes a dropped one", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "factory-"));
     try {
       fs.mkdirSync(path.join(dir, "glb"));
@@ -732,25 +675,23 @@ describe("generateModels", () => {
       fs.writeFileSync(path.join(dir, "thumbs", "sky-retired.png"), "stale");
       fs.mkdirSync(path.join(dir, "tree"));
       fs.writeFileSync(path.join(dir, "tree", "sky-retired.json"), "stale");
-      const first = await generateInSubprocess(dir, "models");
-      expect(first.map((b) => b.id).sort()).toEqual([...DESIGNS.keys()].sort());
+      const first = generateModels(dir, SAMPLE);
+      expect(first.map((b) => b.id).sort()).toEqual(SAMPLE.map((d) => d.id).sort());
       for (const b of first) {
         expect(b.changed).toBe(true);
         expect(fs.readFileSync(b.thumb).subarray(1, 4).toString()).toBe("PNG");
-        expect(JSON.parse(fs.readFileSync(b.tree, "utf8"))).toEqual(designTree(proceduralId(b.id)));
+        expect(JSON.parse(fs.readFileSync(b.tree, "utf8"))).toEqual(built(b.id).tree);
       }
       expect(fs.existsSync(path.join(dir, "tree", "sky-retired.json"))).toBe(false);
       // an old export's glb/ folder is removed: there is no GLB output
       expect(fs.existsSync(path.join(dir, "glb"))).toBe(false);
       expect(fs.existsSync(path.join(dir, "thumbs", "sky-retired.png"))).toBe(false);
-      // a second run finds nothing to rewrite, and leaves the thumbnails alone;
-      // each run is long, so let vitest's RPC replies in between (test/setup.ts)
+      // a second run finds nothing to rewrite, and leaves the thumbnails alone
       const mtime = fs.statSync(first[0]!.thumb).mtimeMs;
-      await new Promise<void>((resolve) => setImmediate(resolve));
-      expect(generateModels(dir).every((b) => !b.changed)).toBe(true);
+      expect(generateModels(dir, SAMPLE).every((b) => !b.changed)).toBe(true);
       expect(fs.statSync(first[0]!.thumb).mtimeMs).toBe(mtime);
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
-  }, 900_000); // builds the whole export, which grows with every design
+  });
 });

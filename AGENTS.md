@@ -90,7 +90,11 @@ document that owns it in the same change.** Conventions:
 
 ## Verify changes
 
-`pnpm typecheck`, `pnpm test` and `pnpm build`. For a model change, also look at
+`pnpm typecheck`, `pnpm test` and `pnpm build`. `pnpm test` takes about three
+minutes: it checks each design's defaults and a fixed sample of its other
+parameter combinations; after changing a design's parameters or a shared
+builder, also run `TEST_ALL_VARIANTS=1 pnpm test`, which checks every one
+(docs/guide/setup-and-build.md). For a model change, also look at
 `export/thumbs/<id>.png` after `pnpm build:models`.
 
 **Headless verification only**: do not drive a real browser (no dev server +

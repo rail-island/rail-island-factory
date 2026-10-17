@@ -95,7 +95,7 @@ leaves the plane.
 ## Checks
 
 `test/referenceModels.test.ts` holds each truck to its reference's bounding box (10% per axis) and to
-the truck budget of **12,000 triangles**; `test/models.test.ts` checks the scopes, the source tree and
+the truck budget of **12,000 triangles**; the catalog sweep (`test/catalogSweep.ts`) checks the scopes, the source tree and
 z-fighting. Look at a design with a compare render (reference left, procedural right) and at the
 trailer swung, per the road-vehicle skill.
 

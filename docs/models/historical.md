@@ -57,7 +57,7 @@ target **20,000-30,000 triangles**, including all shape combinations. Geometry
 must improve silhouette or visible architectural detail rather than inflate counts.
 
 Castle's 48 combinations contain **20,034-25,626 triangles**. Palace's 16
-combinations contain **23,927-29,453 triangles**. Tests cover every combination:
+combinations contain **23,927-29,453 triangles**. Tests cover the defaults and a fixed sample of the other combinations (every one with `TEST_ALL_VARIANTS=1`, [../guide/setup-and-build.md](../guide/setup-and-build.md)):
 budget, deterministic GLB bytes, finite nondegenerate geometry, ground contact,
 no coplanar material overlaps, and the open castle gate / palace loggia bays.
 The shared parameter suite also compares standalone JS geometry against GLB.

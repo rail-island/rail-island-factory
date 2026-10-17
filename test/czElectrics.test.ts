@@ -8,6 +8,7 @@ import { COMPARED, compare } from "../generator/czElectricComparison.ts";
 import { paramCombinations, type ParamValues } from "../generator/design.ts";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles.ts";
 import { isLeaf, type LeafNode, type TreeNode } from "../generator/sourceTree.ts";
+import { sample } from "./catalogCache";
 
 function leaves(n: TreeNode): LeafNode[] {
   return isLeaf(n) ? [n] : n.children.flatMap(leaves);
@@ -45,7 +46,7 @@ describe("Czech electric locomotives from vlakosimdb", () => {
   });
 
   for (const d of CZ_ELECTRICS)
-    for (const params of paramCombinations(d.params))
+    for (const params of sample(paramCombinations(d.params)))
       it(`${d.id} ${JSON.stringify(params)}: length, running gear, envelope, budget and pantographs`, () => {
         const spec = SPECS[d.id]!;
         const { mesh, tris, nodes } = build(d.id, params);

@@ -8,6 +8,7 @@ import { glbStats } from '../generator/glbStats';
 import { LOD_GLASS } from '../generator/lodKit';
 import { coachLod } from '../generator/lodClassic';
 import { csdBalm } from '../generator/csdCoaches';
+import { sample } from './catalogCache';
 
 // The classic group's dedicated LODs (lodClassic.ts): the CD 150 and CD 230, the
 // coaches of the CSD coach kit, the freight wagons and the American truck.
@@ -33,7 +34,7 @@ describe('classic LODs', () => {
     it(`${id}: every variant fits its budget well, without flicker, standing on the rail or road`, () => {
       expect(d.buildLod).toBeDefined();
       const budget = lodBudget(d);
-      for (const values of coverageCombinations(d.params, d.finishParams)) {
+      for (const values of sample(coverageCombinations(d.params, d.finishParams))) {
         const m = d.buildLod(values);
         const n = m.triangleCount();
         expect(n).toBeLessThanOrEqual(budget);

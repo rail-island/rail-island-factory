@@ -116,7 +116,7 @@ boiler (636 chimney and domes, M112 dome); the uncertainty column says so.
 five tender locomotives (default locomotive, the tender has no boiler); every
 wheel standing on the rail with flat-topped tyres at standard back-to-back;
 every landmark within its tolerance; the running numbers; and the animation
-([animation.md](animation.md)). `test/models.test.ts` and
-`test/params.test.ts` cover determinism, flicker, the 3.1 m by 4.7 m envelope
-and the 16,000-triangle budget for every combination, `test/jsModel.test.ts` the
+([animation.md](animation.md)). The catalog sweep (`test/catalogSweep.ts`)
+covers determinism, flicker, the 3.1 m by 4.7 m envelope
+and the 16,000-triangle budget for the defaults and a fixed sample of the other combinations (every one with `TEST_ALL_VARIANTS=1`, [../guide/setup-and-build.md](../guide/setup-and-build.md)), and the
 JS model's triangles and clips.

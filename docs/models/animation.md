@@ -142,5 +142,5 @@ the envelope; the clip's `distance` drive at `RUNNING_SPEED`.
 `test/pumpjack.test.ts`: the pitman arm, beam tail and crank keep their lengths at
 every sample, the beam rocks both ways and returns, one `time` clip on the four
 moving parts, no z-fighting and nothing below ground at every sixth sample, and a
-static low-detail build. `test/jsModel.test.ts` checks that every design's JS model builds
+static low-detail build. The catalog sweep (`test/catalogSweep.ts`) checks that every design's JS model builds
 the GLB's clips track for track.

@@ -165,8 +165,8 @@ material pair and plane. It runs twice over:
   anything and throws a `ZFightingError` listing each offender (design, material
   pair, plane, overlap area). The deploy does not wait for the tests, so this is
   what keeps a flickering model off the site and out of the export;
-- **in the tests** - `test/models.test.ts` asserts no overlaps for every design,
-  plus the detector's own cases and the build guard.
+- **in the tests** - the catalog sweep (`test/catalogSweep.ts`) asserts no overlaps
+  for every design; `test/models.test.ts` holds the detector's own cases and the build guard.
 
 The detector buckets faces by exact plane (rounded to a millimetre), which is the
 case that fights - the designs place coplanar faces at exactly equal

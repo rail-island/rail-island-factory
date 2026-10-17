@@ -14,6 +14,7 @@ import { jointTriangles, steerLock } from "../generator/rig";
 import { isLeaf, type ScopeNode, type TreeNode } from "../generator/sourceTree";
 import type { MeshBuilder } from "../generator/meshBuilder";
 import { insideSeen, type Tri, type V3 } from "./collision";
+import { sample } from "./catalogCache";
 
 /** Every node of a tree, depth first. */
 function walk(n: TreeNode, out: TreeNode[] = []): TreeNode[] {
@@ -53,7 +54,7 @@ describe("the buses", () => {
 
   it.each(BUSES)("%s is as long as the real bus, bumpers and mirrors aside, in every variant", (id) => {
     const d = BUS_DESIGNS.find((x) => x.id === id)!;
-    for (const params of paramCombinations(d.params)) {
+    for (const params of sample(paramCombinations(d.params))) {
       const want = params.variant ? KAROSA[params.variant]! : LENGTH[id]!;
       const tree = d.build(params).sourceTree(id, d.title);
       // the shells alone: every section's body
@@ -87,7 +88,7 @@ describe("the buses", () => {
 
   it.each(BUSES)("%s steers its front axle and puts its doors on the kerb (+z) side", (id) => {
     const d = BUS_DESIGNS.find((x) => x.id === id)!;
-    for (const params of paramCombinations(d.params)) {
+    for (const params of sample(paramCombinations(d.params))) {
       const m = d.build(params);
       const rig = m.rig!;
       const tree = m.sourceTree(id, d.title);
@@ -128,7 +129,7 @@ describe("the buses", () => {
 
   it.each(BUSES)("%s fits the road and the budget in every variant", (id) => {
     const d = BUS_DESIGNS.find((x) => x.id === id)!;
-    for (const params of paramCombinations(d.params)) {
+    for (const params of sample(paramCombinations(d.params))) {
       const s = glbStats(d.build(params).toGlb("t", "vehicle"));
       expect(s.min[1]).toBeCloseTo(0, 5);
       expect(s.max[2] - s.min[2]).toBeLessThanOrEqual(2.7);
@@ -259,7 +260,7 @@ function inside(tris: readonly { p: Tri }[], p: V3): boolean {
 }
 
 /** Every bus and Karosa variant, built. */
-const BUILDS = BUS_DESIGNS.flatMap((d) => paramCombinations(d.params).map((params) => ({ id: d.id, params, label: params.variant ? `${d.id} ${params.variant}` : d.id, m: () => d.build(params) })));
+const BUILDS = BUS_DESIGNS.flatMap((d) => sample(paramCombinations(d.params)).map((params) => ({ id: d.id, params, label: params.variant ? `${d.id} ${params.variant}` : d.id, m: () => d.build(params) })));
 
 describe("the bus bodies", () => {
   // three.js culls back faces: a ray from outside whose first face looks away has

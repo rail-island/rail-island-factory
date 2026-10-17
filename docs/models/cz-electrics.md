@@ -121,5 +121,5 @@ triangle budget, and the collectors (two: the rear raised to 5.87 m and the
 front folded, level strips; one: raised); constant single-arm arm lengths in
 both poses; every native landmark within its tolerance; valid running numbers;
 diamond pantographs on the 123 liveries and the breaker on the 210.
-`test/models.test.ts` and `test/params.test.ts` cover the designs with the
+The catalog sweep (`test/catalogSweep.ts`) covers the designs with the
 others (determinism, flicker, the JS model).

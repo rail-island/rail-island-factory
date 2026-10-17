@@ -126,6 +126,6 @@ and was not converted.
 parameter combination the length over the buffers, the axle positions, wheel
 contact and gauge, the height, the 3.1 m width and the triangle budget; every
 native landmark within its tolerance; valid running numbers; the 740's low,
-wide short hood and the 710's coupling rods. `test/models.test.ts` and
-`test/params.test.ts` cover the designs with the others (determinism,
+wide short hood and the 710's coupling rods. The catalog sweep (`test/catalogSweep.ts`)
+covers the designs with the others (determinism,
 flicker, the JS model).

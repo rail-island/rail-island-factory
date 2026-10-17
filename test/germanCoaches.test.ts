@@ -19,6 +19,7 @@ import { paramCombinations, type ParamValues } from "../generator/design";
 import { glbStats } from "../generator/glbStats";
 import { DESIGNS } from "../generator/generate";
 import { isLeaf, type LeafNode, type TreeNode } from "../generator/sourceTree";
+import { sample } from "./catalogCache";
 
 const leaves = (n: TreeNode): LeafNode[] => (isLeaf(n) ? [n] : n.children.flatMap(leaves));
 const design = (id: string) => [...GERMAN_COACHES, ...DB628_DESIGNS].find((d) => d.id === id)!;
@@ -180,7 +181,7 @@ describe("German coaches transferred from vlakosimdb", () => {
       expect(uicCheckDigit(number), number).toBe(Number(number.slice(-1)));
     }
     for (const d of GERMAN_COACHES)
-      for (const p of paramCombinations(d.params)) {
+      for (const p of sample(paramCombinations(d.params))) {
         const t = d.build(p).triangleCount();
         expect(t, `${d.id} ${JSON.stringify(p)}`).toBeLessThan(12000);
       }

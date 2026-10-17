@@ -11,6 +11,7 @@ import { coverageCombinations, paramCombinations, type ParamValues } from "../ge
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { glbStats } from "../generator/glbStats";
 import { collectTriangles, parseGlb, type Tri } from "../generator/glbTriangles";
+import { sample } from "./catalogCache";
 
 const ID = "proc-vehicle-chairlift-chair";
 const glb = (combo: ParamValues): Uint8Array => chairliftChair(combo).toGlb(ID);
@@ -44,7 +45,7 @@ describe("the chairlift chair", () => {
   });
 
   it("stays within the 8,000-triangle cabin budget and does not flicker in any variant", () => {
-    for (const combo of coverageCombinations(CHAIRLIFT_PARAMS, ["color"])) {
+    for (const combo of sample(coverageCombinations(CHAIRLIFT_PARAMS, ["color"]))) {
       const g = glb(combo);
       expect(glbStats(g).triangles, JSON.stringify(combo)).toBeLessThanOrEqual(8000);
       expect(findCoplanarOverlaps(g), JSON.stringify(combo)).toEqual([]);
@@ -56,7 +57,7 @@ describe("the chairlift chair", () => {
   });
 
   it("keeps the rope at y 3.60 along x and the seat top at 0.62, whatever the variant", () => {
-    for (const combo of coverageCombinations(CHAIRLIFT_PARAMS, ["color"])) {
+    for (const combo of sample(coverageCombinations(CHAIRLIFT_PARAMS, ["color"]))) {
       const ts = tris(combo);
       const rope = ts.filter((t) => t.material === "rubber");
       const [y0, y1] = span(rope, 1);

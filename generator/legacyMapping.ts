@@ -4,14 +4,23 @@ import targets from './legacyTargets.json';
 import commercial from '../assets/commercial/inventory.json';
 import { glbStats } from './glbStats.ts';
 import { proceduralId } from './modelId.ts';
-import { resolveParams, type ProceduralDesign } from './design.ts';
+import { resolveParams, type ParamValues, type ProceduralDesign } from './design.ts';
 import type { LegacyModelTable } from './modelReference.ts';
 
-export function buildLegacyMapping(designs: ReadonlyMap<string, ProceduralDesign>): LegacyModelTable {
-  const entries: LegacyModelTable['entries'] = {};
-  const measured = new Map<string, number[]>();
-  const correspondence = targets as Record<string, {designId:string; params:Record<string,string>; quality:string; reason?:string}>;
-  for (const source of sources) {
+/** A model's box size, as the table measures it: its GLB's extents along x, y and z. */
+export type MeasureModel = (design: ProceduralDesign, params: ParamValues, modelId: string) => number[];
+
+export const measureModel: MeasureModel = (design, params, modelId) => {
+  const stats = glbStats(design.build(params).toGlb(modelId));
+  return stats.max.map((v, i) => v - stats.min[i]!);
+};
+
+type Correspondence = Record<string, {designId:string; params:Record<string,string>; quality:string; reason?:string}>;
+
+/** Each legacy model's target: its design and resolved values, in the table's order. */
+export function legacyTargets(designs: ReadonlyMap<string, ProceduralDesign>) {
+  const correspondence = targets as Correspondence;
+  return sources.map((source) => {
     const stored = correspondence[source.id];
     if (!stored) throw new Error(`Missing legacy mapping: ${source.id}`);
     const street = commercial.models.find(x => x.legacyId === source.id && x.status === 'covered');
@@ -20,11 +29,23 @@ export function buildLegacyMapping(designs: ReadonlyMap<string, ProceduralDesign
     const design = designs.get(modelId);
     if (!design) throw new Error(`Missing target for ${source.id}: ${modelId}`);
     const params = resolveParams(design.params ?? [], target.params as Record<string,string>);
+    return { source, target, modelId, design, params };
+  });
+}
+
+/**
+ * The legacy table: every old model id onto its design, values and scale.
+ * `measure` sizes a target model (once per design and values); the tests pass
+ * one that reads sizes they measured ahead.
+ */
+export function buildLegacyMapping(designs: ReadonlyMap<string, ProceduralDesign>, measure: MeasureModel = measureModel): LegacyModelTable {
+  const entries: LegacyModelTable['entries'] = {};
+  const measured = new Map<string, number[]>();
+  for (const { source, target, modelId, design, params } of legacyTargets(designs)) {
     const cacheKey = JSON.stringify([modelId, params]);
     let size = measured.get(cacheKey);
     if (!size) {
-      const stats = glbStats(design.build(params).toGlb(modelId));
-      size = stats.max.map((v, i) => v - stats.min[i]!);
+      size = measure(design, params, modelId);
       measured.set(cacheKey, size);
     }
     // Uniform scale cannot preserve three differing proportions. Preserve building

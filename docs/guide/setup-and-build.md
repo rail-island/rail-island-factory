@@ -43,48 +43,77 @@ check and render every design; an unchanged design is not re-rendered at all
 
 ## Tests
 
-Full-catalog integration tests run the initial synchronous thumbnail render in
-an actual Node subprocess (`test/generateSubprocess.ts`), keeping Vitest's worker
-responsive to runner messages. The model suite also yields between its
-synchronous geometry checks so runner replies are processed. The assertions
-still check all generated files, repeatability and pruning; no model builds are mocked. These checks can take a
-few minutes.
+`pnpm test` runs every suite under `test/` and takes **about three minutes** on a
+four-core machine (`vite.config.ts`). Three things keep it there:
 
-`pnpm test` runs every suite under `test/` with a 120 s default test timeout
-(`vite.config.ts`): many tests build every design, and the catalog keeps growing.
-Among them:
+- **Shared workers.** `isolate: false` runs the files of a worker in one module
+  registry: the generator is loaded once per worker, not once per file, and
+  `maxWorkers: "100%"` uses every core.
+- **One build per design.** `test/catalogCache.ts` keeps each design's default
+  build (GLB bytes, triangles, rig, source tree), its LOD and its bundled JS
+  module, so the files a worker runs share them. The checks every design gets
+  run in **one pass per design** (`test/catalogSweep.ts`), split into eight
+  files, `test/catalog-1.test.ts` .. `test/catalog-8.test.ts`, by position in the
+  catalog: no z-fighting; deterministic GLB bytes and source tree; every
+  primitive in a named scope and the tree's ranges tiling the GLB; the JS model
+  building the GLB's triangles, colours, nodes, rig and clips, standalone and
+  smaller than the full and LOD GLBs; the standalone LOD as the generator builds
+  it, in budget; a rigged vehicle's `pose()`.
+- **Sampled variants.** A test that builds a design's parameter combinations
+  checks the defaults and three others spread evenly through the list, the same
+  ones every run (`variantsUnderTest` and `sample` in `test/catalogCache.ts`):
+  the sweep's flicker, envelope and JS-against-generator checks, the LOD
+  checks, and the family suites' per-variant loops. **`TEST_ALL_VARIANTS=1 pnpm
+  test` checks every combination** - run it after changing a design's
+  parameters or a shared builder; it takes far longer.
 
+The whole-export tests export a few designs, not the catalog: `buildExport` and
+`generateModels` take a design list, and `pnpm build` (which runs the same code
+on every design, z-fighting guard included) covers the rest. Among the suites:
+
+- `test/catalogSweep.ts` (via `test/catalog-*.test.ts`) - the per-design checks above.
 - `test/models.test.ts` - the mesh builder winds faces outward (three.js culls
   back faces, so an inward wall is invisible in the game and the viewer), sweeps
-  included; every skyscraper stands on y = 0, is taller than twice its width and
-  stays at or below 10,000 triangles, every vehicle stands on its wheels, faces +x,
-  fits a US road and its 10,000-triangle budget and stores flat normals, the
-  articulated truck splits at the king pin and its trailer swings clear; parts;
-  no design z-fights; the bytes are deterministic; the generator writes, skips and prunes;
-  every primitive sits in a scope and the source tree's triangle ranges match
-  the GLB.
+  included; `findCoplanarOverlaps` finds and ignores the right faces; every
+  skyscraper stands on y = 0, is taller than twice its width and stays at or
+  below 10,000 triangles, every vehicle stands on its wheels, faces +x, fits a
+  US road and its 10,000-triangle budget and stores flat normals, the
+  articulated truck splits at the king pin and its trailer swings clear; the
+  generator refuses a z-fighting design, writes, skips and prunes.
 - `test/village.test.ts` - the village houses: ids and catalog fields, every
   shape on y = 0 at house size and under 10,000 triangles, finish parameters
   that only recolour, the side mirror ([../models/village.md](../models/village.md)).
 - `test/export.test.ts` - `skyscrapers.meta.json`, `village.meta.json`, `vehicles.meta.json` and `catalog.json` match the
   designs and the files beside them, no GLB is written, every vehicle carries its game properties
   ([../models/game-properties.md](../models/game-properties.md)), and a rebuild writes the same documents.
-- `test/jsModel.test.ts` - each design's standalone JS model builds the GLB's triangles, colours and parts
-  with real three.js, and is standalone and smaller ([../models/js-format.md](../models/js-format.md)).
+- `test/jsModel.test.ts` - the bundler: no recorder or GLB writer in a bundle,
+  deterministic bundles and `generateJsModels` ([../models/js-format.md](../models/js-format.md)).
+- `test/params.test.ts` - parameter resolution and enumeration, valid enums and
+  the meta entries' parameters ([../models/parameters.md](../models/parameters.md)).
 - `test/catalogQuery.test.ts` - the site's search, sort, formatting, URL state and download links.
 - `test/sourceTreeView.test.ts` - the Source tab's tree index, ranges and labels.
 - `test/viewerHighlight.test.ts` - the preview's highlight groups and picking, on
   real designs built by their JS modules as the site builds them (no WebGL).
-- `test/rig.test.ts` - steering, the joint renderer and `pose()` of every rigged road
-  vehicle, and the trailers' and steered tyres' clearance, triangle against triangle
+- `test/rig.test.ts` - steering, the joint renderer and the articulated vehicles'
+  joints, and the trailers' and steered tyres' clearance, triangle against triangle
   with the helpers in `test/collision.ts` ([../models/vehicle-rig.md](../models/vehicle-rig.md)).
 - `test/buses.test.ts` - the vlakosimdb buses' lengths, axles, doors, arches, road
   envelope and joints, and closed bodies: no ray from outside sees the inside of a
   face ([../models/buses.md](../models/buses.md)).
+- `test/openttdGrf.test.ts`, `test/openttdExport.test.ts`, `test/exportList.test.ts` -
+  the site's export ([../site/openttd-export.md](../site/openttd-export.md)).
 
 Most tests are synchronous and CPU-bound. `test/setup.ts` (`setupFiles` in
 `vite.config.ts`) yields one macrotask after every test, because Vitest reads its
 workers' progress-report replies only when the event loop turns: a chain of
 synchronous tests longer than 60 s otherwise fails the run with "Timeout calling
 onTaskUpdate" though every test passed. Keep any single test well under that, or
-`await` a `setImmediate` between its long steps (the `generateModels` test does).
+`await` a `setImmediate` between its long steps. The same goes for work a file
+does while it registers its tests: `warm()` in `test/catalogCache.ts` builds
+designs ahead with a yield between them (the catalog files and
+`test/rig.test.ts` use it), and `test/modelReference.test.ts` measures the
+legacy table's models in an awaited loop.
+
+Since a worker's files share their modules, a test must not depend on a module's
+state as another file leaves it: `generate.ts` turns every design's id into its
+procedural id on import, so compare ids through `proceduralId`.

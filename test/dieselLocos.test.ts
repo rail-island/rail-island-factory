@@ -10,6 +10,7 @@ import { DIESEL_COMPARISONS, dieselComparison, meanAbsoluteError } from "../gene
 import { paramCombinations, type ParamValues } from "../generator/design.ts";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles.ts";
 import { isLeaf, type LeafNode, type TreeNode } from "../generator/sourceTree.ts";
+import { sample } from "./catalogCache";
 
 function leaves(n: TreeNode): LeafNode[] {
   return isLeaf(n) ? [n] : n.children.flatMap(leaves);
@@ -62,7 +63,7 @@ describe("Czech mainline diesel locomotives", () => {
 
   it("builds every livery inside the 3.1 m by 4.7 m envelope and the triangle budget, standing on the rails", () => {
     for (const d of DIESEL_LOCOS)
-      for (const params of paramCombinations(d.params)) {
+      for (const params of sample(paramCombinations(d.params))) {
         const { mesh, tris } = built(d.id, params);
         const label = `${d.id} ${JSON.stringify(params)}`;
         expect(mesh.triangleCount(), label).toBeLessThanOrEqual(16_000);

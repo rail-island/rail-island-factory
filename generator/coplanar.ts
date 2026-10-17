@@ -4,9 +4,9 @@
 // flickers as the camera moves. (Overlaps of one material are invisible --
 // both sides of the fight are the same colour -- and are not reported.)
 //
-// Run on every design twice over: by test/models.test.ts, and by the build
-// itself (generate.ts), which refuses to write an export with a flickering
-// model -- the deploy does not wait for the tests. Works on any GLB the
+// Run on every design twice over: by the tests (test/catalogSweep.ts), and by
+// the build itself (generate.ts), which refuses to write an export with a
+// flickering model -- the deploy does not wait for the tests. Works on any GLB the
 // triangle reader understands.
 import { collectTriangles, parseGlb } from "./glbTriangles.ts";
 
@@ -107,12 +107,22 @@ export function findCoplanarOverlaps(glb: Uint8Array, minArea = 1e-3): CoplanarO
       const poly = f.p.map((p): V2 => [p[u], p[v]]);
       return area2(poly) < 0 ? poly.reverse() : poly;
     };
-    const flat = group.map((f) => ({ f, poly: to2(f) }));
+    // Sweep and prune: sorted by their left edge, a triangle is clipped only
+    // against those whose boxes overlap its own -- the others share no area. A
+    // big plane (a fuselage's flank, a cathedral's floor) has thousands.
+    const flat = group.map((f) => {
+      const poly = to2(f);
+      return {
+        f, poly,
+        minU: Math.min(poly[0][0], poly[1][0], poly[2][0]), maxU: Math.max(poly[0][0], poly[1][0], poly[2][0]),
+        minV: Math.min(poly[0][1], poly[1][1], poly[2][1]), maxV: Math.max(poly[0][1], poly[1][1], poly[2][1]),
+      };
+    }).sort((a, b) => a.minU - b.minU);
     for (let i = 0; i < flat.length; i++) {
-      for (let j = i + 1; j < flat.length; j++) {
-        const a = flat[i];
+      const a = flat[i];
+      for (let j = i + 1; j < flat.length && flat[j].minU <= a.maxU; j++) {
         const b = flat[j];
-        if (a.f.mat === b.f.mat) continue;
+        if (a.f.mat === b.f.mat || b.minV > a.maxV || b.maxV < a.minV) continue;
         const area = Math.abs(area2(clipPolygon(a.poly, b.poly)));
         if (area < minArea) continue;
         const d = n[0] * a.f.p[0][0] + n[1] * a.f.p[0][1] + n[2] * a.f.p[0][2];

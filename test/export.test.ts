@@ -5,14 +5,13 @@ import { describe, expect, it } from "vitest";
 import { parseGlb } from "../generator/glbTriangles";
 import { PNG } from "pngjs";
 import { SIDE_MAX_PX, SIDE_PX_PER_M, glbSideFrame } from "../generator/renderGlbThumb";
-import { generateInSubprocess } from "./generateSubprocess";
+import { built, glbOf, lodGlbOf } from "./catalogCache";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { SKYSCRAPERS } from "../generator/skyscrapers";
 import { VEHICLES } from "../generator/vehicles";
-import { buildLodModel } from "../generator/lodModel";
-import { ALL_VEHICLES, BUILDINGS, DESIGNS, buildExport, designGlb, generateReferences } from "../generator/generate";
+import { ALL_VEHICLES, BUILDINGS, DESIGNS, buildExport, generateReferences } from "../generator/generate";
 import { VILLAGE_HOUSES } from "../generator/village";
 import {
   CATALOG_FILE, META_FILE, VEHICLE_META_FILE, VILLAGE_META_FILE, catalogRecord, exportMeta, exportVehicleMeta, isSideViewCategory, metaEntry,
@@ -171,25 +170,31 @@ describe("catalogRecord", () => {
 });
 
 describe("buildExport", () => {
+  // A few designs stand for the catalog: a skyscraper, a village house, a rigged
+  // road vehicle and a rail vehicle with source images (the build exports them all).
+  const SAMPLE = ["proc-building-sky-pyramid", "proc-building-village-cottage", "proc-vehicle-american-truck", "proc-vehicle-cd-150"].map((id) => DESIGNS.get(id)!);
+  const inSample = <T extends { id: string }>(list: readonly T[]) => list.filter((d) => SAMPLE.some((x) => x.id === d.id));
+
   it("writes the meta.json files and catalog.json that agree with the files beside them", async () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "factory-export-"));
     try {
-      await generateInSubprocess(dir, "export");
+      await buildExport(dir, SAMPLE);
       const meta = JSON.parse(fs.readFileSync(path.join(dir, META_FILE), "utf8")) as ExportMeta;
       const catalog = JSON.parse(fs.readFileSync(path.join(dir, CATALOG_FILE), "utf8")) as ModelCatalog;
       const vehicles = JSON.parse(fs.readFileSync(path.join(dir, VEHICLE_META_FILE), "utf8")) as VehicleExportMeta;
       const village = JSON.parse(fs.readFileSync(path.join(dir, VILLAGE_META_FILE), "utf8")) as ExportMeta;
-      expect(meta).toEqual(exportMeta(BUILDINGS));
-      expect(village).toEqual(exportMeta(VILLAGE_HOUSES));
+      expect(meta).toEqual(exportMeta(inSample(BUILDINGS)));
+      expect(village).toEqual(exportMeta(inSample(VILLAGE_HOUSES)));
       // a rigged vehicle's entry carries its rig, the one its built model holds
-      const rigs = new Map(ALL_VEHICLES.flatMap((d) => {
-        const rig = d.build().rig;
+      const rigs = new Map(inSample(ALL_VEHICLES).flatMap((d) => {
+        const rig = built(d.id).rig;
         return rig ? [[d.id, rig] as const] : [];
       }));
       // a road or rail vehicle's thumbnail is a side view, framed as its meta says
-      const sides = new Map(ALL_VEHICLES.flatMap((d) =>
-        isSideViewCategory(d.catalog?.category ?? "Road vehicles") ? [[d.id, glbSideFrame(designGlb(d.id))] as const] : []));
-      expect(vehicles).toEqual(exportVehicleMeta(ALL_VEHICLES, rigs, sides));
+      const sides = new Map(inSample(ALL_VEHICLES).flatMap((d) =>
+        isSideViewCategory(d.catalog?.category ?? "Road vehicles") ? [[d.id, glbSideFrame(glbOf(d.id))] as const] : []));
+      expect(vehicles).toEqual(exportVehicleMeta(inSample(ALL_VEHICLES), rigs, sides));
+      expect(vehicles.vehicles.map((v) => v.id).sort()).toEqual(["proc-vehicle-american-truck", "proc-vehicle-cd-150"]);
       for (const v of vehicles.vehicles) {
         const png = PNG.sync.read(fs.readFileSync(path.join(dir, "thumbs", v.thumb)));
         if (isSideViewCategory(v.category)) {
@@ -206,18 +211,16 @@ describe("buildExport", () => {
       // no GLB is exported; the in-memory one carries the rig the meta lists
       expect(fs.existsSync(path.join(dir, "glb"))).toBe(false);
       for (const v of vehicles.vehicles) {
-        const { json } = parseGlb(designGlb(v.id));
+        const { json } = parseGlb(glbOf(v.id));
         expect((json.scenes![0] as { extras?: { rig?: unknown } }).extras?.rig).toEqual(v.rig);
       }
       expect(vehicles.vehicles.find((v) => v.id === "proc-vehicle-american-truck")!.rig!.steer!.axles[0]!.nodes).toEqual(["wheel-front-left", "wheel-front-right"]);
       expect(catalog.version).toBe(1);
-      expect(catalog.records.map((r) => r.id)).toEqual([...DESIGNS.keys()]);
+      expect(catalog.records.map((r) => r.id)).toEqual(SAMPLE.map((d) => d.id));
       for (const r of catalog.records) {
         expect(fs.statSync(path.join(dir, r.thumbUrl)).size).toBe(r.thumbBytes);
         expect(fs.statSync(path.join(dir, r.jsUrl)).size).toBe(r.jsBytes);
-        const design = DESIGNS.get(r.id)!;
-        const lodBytes = buildLodModel(design).toGlb(r.id).length;
-        expect(r.jsBytes).toBeLessThan(designGlb(r.id).length + lodBytes);
+        expect(r.jsBytes).toBeLessThan(glbOf(r.id).length + lodGlbOf(r.id).length);
         expect(r.triangles).toBeGreaterThan(0);
         const listed = meta.buildings.find((b) => b.id === r.id)
           ?? village.buildings.find((b) => b.id === r.id)
@@ -231,12 +234,12 @@ describe("buildExport", () => {
       expect(catalog.records.find((r) => r.id === "proc-vehicle-cd-150")!.references.map((x) => x.name)).toContain("native/z_inc.bmp");
       // deterministic: a second build writes the same documents
       const before = fs.readFileSync(path.join(dir, CATALOG_FILE), "utf8");
-      await buildExport(dir);
+      await buildExport(dir, SAMPLE);
       expect(fs.readFileSync(path.join(dir, CATALOG_FILE), "utf8")).toBe(before);
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
-  }, 900_000); // builds the whole export, which grows with every design
+  });
 });
 
 describe("generateReferences", () => {

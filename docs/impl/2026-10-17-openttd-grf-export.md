@@ -33,7 +33,17 @@ Area: catalog site (`src/`: model page, app bar, export panel, export run, `src/
   rasterizer standing in for WebGL) were loaded in OpenTTD 13.4 with a test AI
   that builds track, road and the exported vehicles: no load warnings, correct
   names and figures, articulated trains and buses, sprites aligned on the track.
-  `pnpm typecheck`, `pnpm test` and `pnpm build` (results in the hand-back).
+  `pnpm typecheck` and `pnpm build` pass; `pnpm test` passes (3,872 tests, after
+  the suite was redesigned to run in under three minutes - see Follow-up changes).
+
+## Follow-up changes
+
+1. Make the test suite run in under five minutes. The full suite had grown past
+   40 minutes; it now runs in about 2.5 minutes on four cores: shared workers
+   (`isolate: false`), one build and bundle per design (`test/catalogCache.ts`), the
+   per-design checks in one sharded pass (`test/catalogSweep.ts`), sampled variants
+   (`TEST_ALL_VARIANTS=1` for all), whole-export tests on a few designs, and a
+   sweep-and-prune prefilter in the z-fighting detector (docs/guide/setup-and-build.md).
 
 ## How to test
 

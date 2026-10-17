@@ -130,7 +130,7 @@ stairs are left out.
 
 ## Checking a change
 
-Run `pnpm exec vitest run test/referenceModels.test.ts test/models.test.ts -t ferry`
-(size, budget, z-fighting) and `pnpm exec vitest run test/jsModel.test.ts -t ferry`,
+Run `pnpm exec vitest run test/referenceModels.test.ts -t ferry` (size, budget)
+and `pnpm exec vitest run catalog -t ferry` (z-fighting, the JS model; the catalog sweep),
 then compare the thumbnail with the reference after `pnpm build:models`. A hull
 change must keep each `draftFrac` waterline on its paint line (table above).

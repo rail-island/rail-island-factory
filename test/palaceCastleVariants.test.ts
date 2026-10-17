@@ -7,6 +7,7 @@ import { glbStats } from '../generator/glbStats';
 import { collectTriangles, parseGlb } from '../generator/glbTriangles';
 import { findCoplanarOverlaps } from '../generator/coplanar';
 import { DESIGNS } from '../generator/generate';
+import { sample } from './catalogCache';
 
 describe('Castle and Palace architectural variants',()=>{
   for(const [id,build,lod,specs] of [
@@ -22,7 +23,7 @@ describe('Castle and Palace architectural variants',()=>{
         expect(Buffer.from(build({[spec.name]:value.value}).toGlb(id)).equals(defaults)).toBe(false);
       }
     });
-    for(const p of paramCombinations(specs))it(`${id}: ${Object.values(p).join('/')}`,()=>{
+    for(const p of sample(paramCombinations(specs)))it(`${id}: ${Object.values(p).join('/')}`,()=>{
       const bytes=build(p).toGlb(id),stats=glbStats(bytes);
       expect(stats.triangles).toBeGreaterThanOrEqual(20000);
       expect(stats.triangles).toBeLessThanOrEqual(30000);

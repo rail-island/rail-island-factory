@@ -15,6 +15,7 @@ import { coachComparison, readLandmarks } from "../generator/csdCoachComparison"
 import { glbStats } from "../generator/glbStats";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { isLeaf, type LeafNode, type TreeNode } from "../generator/sourceTree";
+import { sample } from "./catalogCache";
 
 const leaves = (n: TreeNode): LeafNode[] => (isLeaf(n) ? [n] : n.children.flatMap(leaves));
 const design = (id: string) => FREIGHT_WAGONS.find((d) => d.id === id)!;
@@ -77,7 +78,7 @@ describe("container, flat, sliding-wall and hopper wagons transferred from vlako
       for (let i = 0; i < 4; i++) expect(Math.abs(r.model[i]! - r.source[i]!), `${r.id} (${r.element}) component ${i}`).toBeLessThanOrEqual(r.tolerancePixels);
   });
 
-  it.each(FREIGHT_WAGONS.flatMap((d) => coverageCombinations(d.params, d.finishParams).map((p) => [d.id, JSON.stringify(p)] as const)))(
+  it.each(FREIGHT_WAGONS.flatMap((d) => sample(coverageCombinations(d.params, d.finishParams)).map((p) => [d.id, JSON.stringify(p)] as const)))(
     "%s %s builds inside the rail envelope and budget, without flicker",
     (id, params) => {
       const glb = design(id).build(JSON.parse(params)).toGlb(id, "vehicle");
@@ -92,7 +93,7 @@ describe("container, flat, sliding-wall and hopper wagons transferred from vlako
   );
 
   it.each(Object.entries(MECHANICS))("%s keeps the XML length over buffers, its axle positions and 920 mm wheels on the rail", (id, want) => {
-    for (const params of paramCombinations(design(id).params)) {
+    for (const params of sample(paramCombinations(design(id).params))) {
       const mesh = design(id).build(params);
       const s = glbStats(mesh.toGlb(id, "vehicle"));
       expect(s.max[0] - s.min[0]).toBeCloseTo(want.length, 3);

@@ -102,8 +102,8 @@ All in `generator/churches.ts`:
 ## Checking
 
 ```
-pnpm exec vitest run test/referenceModels.test.ts test/models.test.ts -t church
-pnpm exec vitest run test/jsModel.test.ts -t church
+pnpm exec vitest run test/referenceModels.test.ts -t church
+pnpm exec vitest run catalog -t church
 ```
 
 Look at `export/thumbs/<id>.png` after `pnpm build:models`.

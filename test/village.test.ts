@@ -12,6 +12,7 @@ import { exportMeta } from "../generator/catalog";
 import { glbStats } from "../generator/glbStats";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles";
 import type { ProceduralDesign } from "../generator/design";
+import { sample } from "./catalogCache";
 
 /** The triangles' corner positions per material, in draw order. */
 function positions(d: ProceduralDesign, combo: ParamValues): Map<string, number[]> {
@@ -54,7 +55,7 @@ describe("the village houses", () => {
 
   for (const d of VILLAGE_HOUSES) {
     it(`${d.id}: every shape stands on its plinth, is house-sized and stays under 10,000 triangles`, () => {
-      for (const combo of coverageCombinations(d.params, d.finishParams)) {
+      for (const combo of sample(coverageCombinations(d.params, d.finishParams))) {
         const s = glbStats(d.build(combo).toGlb(d.id));
         expect(s.min[1]).toBeCloseTo(0, 5);
         expect(s.triangles).toBeLessThanOrEqual(10_000);

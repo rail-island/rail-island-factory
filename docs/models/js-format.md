@@ -84,10 +84,10 @@ trusts the factory's build.
 
 ## Tests
 
-`test/jsModel.test.ts` loads each design's bundle, builds it with the real three.js and compares every triangle
-(world space, per material), the colours and the part nodes with the design's GLB; checks the file has no import
-and no Node API, is smaller than the equivalent full-detail and LOD GLBs together, is deterministic, and that the recorder and GLB writer are absent; and
-that `generateJsModels` writes, skips and prunes.
+The catalog sweep (`test/catalogSweep.ts`) loads each design's bundle, builds it with the real three.js and compares every triangle
+(world space, per material), the colours, the clips and the rig with the design's GLB, and checks the file has no import
+and no Node API and is smaller than the equivalent full-detail and LOD GLBs together. `test/jsModel.test.ts` checks that a bundle
+is deterministic, that the recorder and GLB writer are absent, and that `generateJsModels` writes, skips and prunes.
 
 ## Low level of detail
 

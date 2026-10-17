@@ -6,6 +6,7 @@ import { BUILDINGS, DESIGNS, designSource } from "../generator/generate";
 import { exportMeta } from "../generator/catalog";
 import { glbStats } from "../generator/glbStats";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles";
+import { sample } from "./catalogCache";
 
 function shape(d: ProceduralDesign, values: ParamValues): Map<string, number[]> {
   const { json, bin } = parseGlb(d.build(values).toGlb(d.id));
@@ -34,7 +35,7 @@ describe("the commercial buildings", () => {
 
   for (const d of COMMERCIAL_BUILDINGS) {
     it(`${d.id}: every shape is finite, grounded, commercial-sized and within 10,000 triangles`, () => {
-      for (const values of coverageCombinations(d.params, d.finishParams)) {
+      for (const values of sample(coverageCombinations(d.params, d.finishParams))) {
         const { json, bin } = parseGlb(d.build(values).toGlb(d.id));
         const triangles = collectTriangles(json, bin);
         expect(triangles.every((t) => t.p.flat().every(Number.isFinite))).toBe(true);

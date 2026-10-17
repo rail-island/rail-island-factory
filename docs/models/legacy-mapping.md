@@ -50,6 +50,11 @@ carries `yaw: 90`, as the old model did.
 The build adds two standalone files:
 
 - `legacy-models.json`: version 1, `entries` keyed by the unchanged old game ID.
+  It maps onto the whole catalog, so an export narrowed to a few designs
+  (`buildExport(dir, designs)`, as the tests use it) leaves it out. Each target is
+  sized from its GLB (`measureModel`); `buildLegacyMapping` takes another measure,
+  which `test/modelReference.test.ts` uses to size the targets (`legacyTargets`)
+  ahead in an awaited loop.
 - `model-reference.js`: the pure `resolveModelReference` helper; no THREE, filesystem,
   network or model geometry dependency.
 

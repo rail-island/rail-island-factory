@@ -11,7 +11,7 @@ it('covers the 35 audited Industry entries with valid target parameters', () => 
   expect(new Set(INDUSTRY_MIGRATION.map(e => e.sourceId)).size).toBe(35);
   expect(INDUSTRY_MIGRATION.filter(e => e.sourceGroup === 'industry')).toHaveLength(31);
   for (const entry of INDUSTRY_MIGRATION) {
-    const d = INDUSTRY.find(d => d.id === entry.designId)!;
+    const d = INDUSTRY.find(d => proceduralId(d.id) === proceduralId(entry.designId))!;
     expect(d).toBeDefined();
     expect(() => resolveParams(d.params ?? [], entry.params)).not.toThrow();
   }

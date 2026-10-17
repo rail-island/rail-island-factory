@@ -106,5 +106,5 @@ two decks' windows, the motor car's single raised pantograph over the inner
 bogie, the cabs facing +X, the CD 675 sharing the 471's bounds; the running
 numbers' check digits; the 680's lengths, width, tumblehome, roof, 2.7 m
 wheelbase and which cars carry a pantograph; and both default cars within their
-landmarks' pixel tolerances. `test/params.test.ts` and `test/models.test.ts`
-cover every design generically.
+landmarks' pixel tolerances. The catalog sweep (`test/catalogSweep.ts`)
+covers every design generically.

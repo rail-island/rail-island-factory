@@ -229,5 +229,5 @@ and the 812 / 912 their longer one; the cab faces' parts (the 810's plough, its
 foot 0.18 m over the rail and ahead of the face, and its two windscreen panes;
 the 812 / 912's apron to 0.24 m, the windscreen 2.4 m wide over the lamp mask);
 the running numbers' check digits; every
-default car within its landmarks' pixel tolerances and MAE limit. `test/params.test.ts`
-and `test/models.test.ts` cover every design generically.
+default car within its landmarks' pixel tolerances and MAE limit. The catalog sweep (`test/catalogSweep.ts`)
+covers every design generically.

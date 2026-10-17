@@ -159,5 +159,5 @@ opening; a slab across a corner of the shell
 stays on it (a Karosa door's surround, the O 345 G's and Bus 1's plates); the
 grilles, bumpers and tails follow the native files.
 The shared suites cover the rest: flicker, determinism, the source tree, the JS model
-(`test/models.test.ts`, `test/params.test.ts`, `test/jsModel.test.ts`) and the rig
-(`test/rig.test.ts`).
+(the catalog sweep, `test/catalogSweep.ts`, which also poses every rigged bus) and
+the joints (`test/rig.test.ts`).

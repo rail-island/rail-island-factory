@@ -110,4 +110,4 @@ sharing one body; the 470's raised rear and folded cab pantograph, its raised in
 roof, its two rows of trailer windows and buffers at every end; the running numbers'
 check digits; and a few landmarks of each default car within their pixel tolerances.
 `test/czechEmus.test.ts` checks every landmark of every transferred car;
-`test/params.test.ts` and `test/models.test.ts` cover every design generically.
+The catalog sweep (`test/catalogSweep.ts`) covers every design generically.
