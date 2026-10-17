@@ -2,87 +2,107 @@
 
 Spec: docs/specs/2026-10-17-dedicated-model-lods.md
 Date: 2026-10-17
-Status: partially implemented
-Area: generator (lodKit, cd163, boxLocoKit, mainline electrics), tests, docs/models/lod.md
+Status: implemented
+Area: generator (lodKit and nine family LOD adapters, rig, lod budget, jsModel, design), tests, docs/models/lod.md, docs/models/vehicle-rig.md, AGENTS.md, skills
 
 ## What was done
 
-Phase 1 and the first rail batch of the spec's plan; the spec's review gate
-(user approves each batch's contact sheets) stops here until the batch is approved.
+Every one of the 193 designs now has its own `buildLod`; the generic convex-hull
+LOD (`lod.ts` recipes, `lodHull.ts`, `MeshCore.lowDetail`) is removed and
+`ProceduralDesign.buildLod` is required, so a model without one does not compile.
 
-- **Shared vehicle LOD kit**, `generator/lodKit.ts`: the painted shell
-  (`lodShell`: plan rings from a family's own profile tables, vee noses, colour
-  bands, cab paint, windows), the one LOD glass material (`LOD_GLASS`), parts
-  (`lodBogie`, `lodSideBox`, `lodRoofBox`, `lodRod`, `lodPantograph`),
-  `windowBands`, band clipping and merging, and `fitLod` with the shared fitting
-  order: optional parts, profile detail, least visible band, windows; optional
-  parts come back when room is made.
-- **CD 163 / 263 moved onto the kit** (`cd163LodBody`), now with windscreens.
-- **Batch 1: the mainline electrics** - CD 180 / 181 / 182, DNT 184.5, DB 111,
-  DR 243 / DB 143 / 112, OBB 1012, OBB 1040 - through one adapter, `boxLocoLod`
-  in `boxLocoKit.ts`, reading the same `LocoSpec` the full model is built from;
-  each design gets a `buildLod` (`cd181Lod`, ...).
-- **Test rule relaxed** as the spec decided: a vehicle LOD may use exactly the
-  `lodGlass` material; all other detail materials stay banned.
-- Every livery of the 8 designs: 84-100 triangles, no coplanar overlaps.
-- Docs: `docs/models/lod.md` ("The shared vehicle kit").
-- Checks: `pnpm typecheck` clean, `pnpm test` 53 files / 5103 tests passed, `pnpm build` succeeded.
+- **Shared kit** `generator/lodKit.ts`: the painted shell from profile tables
+  (`lodShell`: vee noses, colour bands, cab paint, windows in the one `lodGlass`),
+  parts (bogies, boxes, roof boxes, rods, pantographs, wheels, roofs, prisms),
+  `windowBands`, and `fitLod` with the shared fitting order (optional parts,
+  profile detail, least visible band, windows; optional parts come back when they
+  fit) and `LodSpec.sections` for articulated vehicles.
+- **Budgets** (`lodBudget`): 100 per vehicle and ordinary building, min(300, 100 n)
+  for an articulated vehicle with n sections, 200 aircraft, 500 landmarks.
+- **Articulated LODs bend**: section nodes at the full rig's pivots and bellows
+  drawn by `drawJoint`; the group carries a rig of sections, joints and
+  maxBendDeg, and `pose` / `renderJoint` now bend a LOD that has one (`rig.ts`).
+- **Family adapters**, one per kit, built in batches:
+  - `lodLocos.ts`: Czech electrics, mainline and small diesels (16 designs).
+  - `lodClassic.ts`: CD 150, CD 230, CSD / Bmo / green-white coaches, vehicles.ts
+    wagons, American truck (17).
+  - `lodUnits.ts`: DMUs, EMUs, DB 628, ICE 1, TGV, KiHa 40, MDmot, 81-71 metro (17).
+  - `lodTrams.ts`: trams, CZ/SK coaches, German double-deck coaches (10).
+  - `lodSteam.ts`: steam locomotives and tenders, freight wagons (19).
+  - `lodRoad.ts`: buses and trucks (15).
+  - `lodAir.ts`: aircraft, ferries, cable car cabins (14).
+  - `lodBuildings.ts` (shared building solids) with `lodCommercial.ts`,
+    `lodStreets.ts`, `lodVillage.ts`, `lodStations.ts`, `lodFountains.ts`:
+    commercial houses and streets, village houses, stations, fountains (31).
+  - `lodLandmarks.ts`: churches, cathedrals, landmarks, towers, skyscrapers (24).
+  - CD 163 / 263 and the mainline electrics on the kit directly (`cd163LodBody`,
+    `boxLocoLod`).
+- Full models are unchanged: each batch compared full GLB bytes before and after
+  its refactors.
+- Docs: `docs/models/lod.md` (rewritten: geometry, kit, families, rig contract),
+  `docs/models/vehicle-rig.md`, `AGENTS.md` and the four modelling skills.
+- Checks: `pnpm typecheck` clean; `pnpm test` 62 files / 6448 tests passed; `pnpm build` succeeded.
+
+## Follow-up changes
+
+1. "Make it all; report each batch sheet but do not wait": the review gate became
+   a report - every batch's full/LOD contact sheet was sent as it finished and the
+   next went on without waiting; the batches ran in parallel.
 
 ## How to test
 
-**Automated coverage.** No E2E framework exists (headless only, AGENTS.md).
-`test/lodKit.test.ts` covers the kit (tables, window bands, shell painting, vee
-noses, cab paint, the fitting order, determinism); `test/lod.test.ts` checks every
-design's LOD budget, flicker and materials for every parameter combination;
-`test/cd163Family.test.ts` checks the CD 163 family's bands, cab paint and
-windscreens. Run `pnpm test`.
+**Automated coverage.** No E2E framework (headless only, AGENTS.md).
+`test/lod.test.ts` builds every design's standalone JS LOD and every parameter
+combination: budget, flicker, banned materials, model-space parity with the
+generator, determinism, and the rig contract (posing bends articulated LODs and
+leaves static ones untouched). `test/lodKit.test.ts` covers the kit;
+`test/lod-<group>.test.ts` (locos, classic, units, trams, steam, road, air,
+buildings, landmarks) check each family. Run `pnpm test`.
 
 **Setup.** `pnpm install`, `pnpm build:models`, `pnpm dev`.
 
 **Steps.**
-1. Open the catalog, choose Rail vehicles, open "CD 180 / 181 / 182".
-2. Tick **Low level of detail** in the model detail panel.
-3. Observe: the body in the livery's colour bands, a dark windscreen band on
-   each end, bogie blocks down to the rail, the rear pantograph raised; the
-   triangle count shown is at most 100.
-4. Switch the Livery to each value; the LOD repaints and stays within 100.
-5. Repeat for DNT 184.5, DB 111, DR 243 / DB 143 / 112, OBB 1012, OBB 1040,
-   CD 163 / 363 and CD 263 / 371 / 372.
+1. Open any model in the catalog and tick **Low level of detail**.
+2. Observe the distant model: its silhouette, colours as bands, for vehicles the
+   dark windscreens and window bands and running gear down to the rail or road;
+   the shown triangle count is within the budget (100 / 200 / 300 / 500).
+3. Change each parameter (livery, variant, finish); the LOD follows it.
+4. In a consumer, build `proc-vehicle-tatra-kt8` with `lod = true` and call the
+   module's `pose(group, { bend: [0.3, 0.2] })`: the sections turn and the
+   bellows re-draw; `proc-vehicle-cd-163` with `lod = true` stays unchanged.
 
-**Also worth trying.** A many-band livery (CD 182, CD 363 037, CD 371 002): thin
-lines give way first, the windscreen stays. Every other vehicle still shows the
-old one-colour hull: its batch is not done yet.
+**Also worth trying.** A many-band livery (CD 182, CD 363 037) gives thin lines up
+first; the TGV with 6 cars stays within 300; a winter alpine hut, a fountain and
+Prague main station (500).
 
 ## What is missing
 
-- Phase 1's rig extension (articulated LODs keeping section nodes and joints):
-  deferred to the batch with the first articulated vehicles (trams, units,
-  articulated buses), where it can be tested on real sections.
-- Budgets of 100 per section with a cap of 300: come with the same batch.
-- Phases 2-7 except batch 1: the other rail families, road vehicles, aircraft,
-  ships, cable cars, ordinary buildings, landmarks / towers / skyscrapers, and
-  removing the generic hull. Gated on the user's approval of each batch.
+Nothing of the spec's plan is left out. The factory site's pose sliders are still
+disabled in LOD mode (the spec did not ask for them).
 
 ## Known problems
 
-- Session rules required work on the session branch `claude/relaxed-lovelace-uc67bc`,
-  not a fresh `claude/<feature>-xxxxxx` branch.
-- Thin livery lines (CD 371 002's yellow line, DB 111's grey skirt) give way
-  before windows because the spec puts windows last.
-- The spec's fitting order does not name profile detail; the kit inserts it
-  between optional parts and bands (a profile kink costs as much as a band).
-- Small side windows are treated as optional parts, not windows, so a 100-triangle
-  loco does not give up all its paint for a 0.4 m2 cab window.
-- Paint that is not a horizontal band (OBB 1012's red side swoosh) cannot be shown.
-- Buffers and couplers are not drawn: a LOD loco is about 1 m shorter over its body.
+- Session rules required the session branch `claude/relaxed-lovelace-uc67bc`, not a fresh one.
+- The game (`rail-island-webapp`) must pose articulated LODs; until it does they show straight.
+- `lodBudget` counts sections on the default build; the TGV (default: power car) sets `lodTriangles: 300`.
+- The spec's fitting order is extended: profile detail between optional parts and bands; small windows are optional parts.
+- Thin livery lines and non-band paint (swooshes, V stripes, diagonal stripes, aircraft cheatlines) are often lost.
+- Retractable aircraft gear is left out of LOD (a static LOD cannot retract it); fixed gear stays.
+- Skyscraper facades read as stripes; some simple models use well under their budget (bell tower, Louvre, tenders).
+- Several adapters carry generic helpers of their own (`lodBlock` appears in more than one file); not yet merged into lodKit.
+- Semi-trucks have no bellows (as in full detail), so `renderJoint` is not called for them.
 
 ## Recommended follow-ups
 
-- Approve or correct batch 1, then continue with the Czech electrics (CD 110 / 130 / 140 / 169, CD 150, CD 230).
-- Implement the section rig for LOD together with the trams batch, and tell the webapp to pose LOD models.
-- Consider a slanted-band shell primitive for swoosh liveries (1012, Taurus-like units).
+- Teach the webapp to pose articulated LOD models (sections and joints) like full ones.
+- Move the duplicated generic helpers (`lodBlock`, `lodRoadWheel`, `lodEndsShell`, `lodStack`, `overlay`) into lodKit.
+- Make `lodBudget` take the section count of the selected parameters instead of the default build.
+- Add a slanted-band shell primitive for sweep liveries.
+- Enable the site's pose sliders for articulated LODs.
 
 ## Changelog
 
-- Distant views of the CD 163 / 263 and the mainline electric locomotives show
-  their livery, windscreens, bogies and raised pantograph instead of a one-colour block.
+- Every model's distant view is its own low-detail model: vehicles show their
+  livery, windscreens, windows, running gear and pantographs; buildings their
+  masses, roofs and colours; landmarks their towers, spires and domes.
+- Articulated buses, trams and trainsets bend in their distant view too.
