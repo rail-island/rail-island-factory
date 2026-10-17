@@ -4,7 +4,7 @@
 stucco station building, the Mikulasovice halt and the red-brick suburban station):
 their reference GLBs and photos, dimensions and datums, triangle counts, the facade
 and roof helpers they share, and where they deviate from the references.
-**Code** - `generator/stations.ts`, `test/referenceModels.test.ts`, `test/models.test.ts`, `test/jsModel.test.ts`
+**Code** - `generator/stations.ts`, `test/referenceModels.test.ts`, `test/buildingScale.test.ts`, `test/models.test.ts`, `test/jsModel.test.ts`
 **See also** - [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [source-tree.md](source-tree.md), [export.md](export.md), [js-format.md](js-format.md)
 
 ## The designs
@@ -41,13 +41,15 @@ corner pilasters, clocks on the front and the outer side, a balustraded cornice,
 round belvedere with eight windows, a ribbed copper dome (33-37.3 m), a blue glazed
 lantern and a gilt finial and orb (top 42.1 m). The side wings (x +-19.5..31.5,
 z -10..7, 16 m plus attic and slate mansard with three dormers) have an arcaded
-ground floor and a red attic panel; low link blocks fill the gaps behind the towers.
+ground floor, a 5 m piano nobile and two 3.85 m storeys (window sills at 4.0, 9.0
+and 12.9 m, the floor band at 8.0-8.35 m) and a red attic panel; low link blocks fill the gaps behind the towers.
 
 ### Station building
 
 The yellow-ochre (`#e8a22b`) stucco station of the photo `styled-station.png`. A
 long single-storey block (x -13.29..8.71) under a low red hip roof with a scalloped
-green frieze; a two-storey pavilion in the middle (front at z = 2.77) with a front
+green frieze; a two-storey pavilion in the middle (front at z = 2.77; a 3.3 m ground storey
+with its band at 3.85-4.01 m, a 3 m upper storey to the eaves at 6.85 m) with a front
 gable, green bargeboards, a white medallion, white fretwork, three shuttered windows
 and a green STATION sign; a gabled end pavilion on the +X end (x 8.61..13.21) with a
 green frieze, a flag and shuttered windows. Along the platform: seven green double

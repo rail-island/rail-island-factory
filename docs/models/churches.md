@@ -4,7 +4,7 @@
 neo-Gothic church in Vrchlabi, a twin-tower baroque church): what each models,
 its reference GLB and photo, dimensions, datums, budget and deviations, and the
 facade helpers they share.
-**Code** - `generator/churches.ts`, `test/referenceModels.test.ts`, `test/models.test.ts`, `test/jsModel.test.ts`
+**Code** - `generator/churches.ts`, `test/referenceModels.test.ts`, `test/buildingScale.test.ts`, `test/models.test.ts`, `test/jsModel.test.ts`
 **See also** - [skyscrapers.md](skyscrapers.md), [cathedrals.md](cathedrals.md), [landmarks.md](landmarks.md), [export.md](export.md), [source-tree.md](source-tree.md)
 
 ## The designs
@@ -15,7 +15,8 @@ model's axes, orientation and bounding box (test/referenceModels.test.ts allows
 10% per axis; all three are within 0.6%), its massing and its colour scheme, and
 takes detail the reference lacks from the source photo in `assets/<name>/`.
 Units are metres, +Y up, the base on y = 0. Catalog fields are shared
-(`CHURCH_CATALOG`: Historical, `hist_center`, default scale 0.9).
+(`CHURCH_CATALOG`: Historical, `hist_center`, default scale 1; the old 0.9 placement
+of the webapp's GLBs is a legacy mapping factor, [legacy-mapping.md](legacy-mapping.md)).
 
 | id | reference / photo | faces | size x * y * z (m) | triangles (ref) |
 |---|---|---|---|---|
@@ -28,12 +29,12 @@ The budget is the building cap of 40,000 triangles; all three stay far below it.
 ### Baroque Church (`baroqueChurch`)
 
 A cream village church on a hill. A stone terrace (y 0-3, the full footprint)
-carries the church; a nine-step stair with sloping side walls runs down the +z
-end to z = 19.7, with a statue on a pedestal at each side of its top (from the
+carries the church; a stair of twenty 15 cm risers with sloping side walls runs
+down the +z end to z = 19.7, with a statue on a pedestal at each side of its top (from the
 photo). The nave (12 m wide, walls to 14 m, slate ridge 17.9 m) has three
 round-headed windows and white pilasters a side and ends in a round apse under a
-half cone. The front: a core with paired pilasters, a round-arched portal on a
-platform, a cornice band, a niche with a statue and a top cornice at 19.75 m;
+half cone. The front: a core with paired pilasters, a round-arched portal (a 2.2 x 4.2 m door on
+a one-riser step) under a hood with a round-headed window above it, a cornice band, a niche with a statue and a top cornice at 19.75 m;
 lower wings with cornices, scroll volutes rising to the core and small dark
 obelisks on the wing corners (the photo's finials; the reference has statues
 there). The tower is a chamfered square (7.66 m, centre z = 5.9) with diagonal

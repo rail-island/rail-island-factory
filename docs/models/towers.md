@@ -1,6 +1,6 @@
 # Towers
 **Covers** - the eight models in the webapp's Towers group, their parameters, scale conversion and source attribution.
-**Code** - `generator/towers.ts`, `generator/towerParts.ts`, `generator/generate.ts`, `test/towers.test.ts`, `assets/tower-*/`
+**Code** - `generator/towers.ts`, `generator/towerParts.ts`, `generator/generate.ts`, `test/towers.test.ts`, `test/buildingScale.test.ts`, `assets/tower-*/`
 **See also** - [parameters.md](parameters.md), [export.md](export.md), [reproductions.md](reproductions.md)
 
 ## Catalog and geometry
@@ -35,8 +35,9 @@ not an animation. Small facade ornament is planar; silhouette ribs have depth.
 The Eiffel Tower has four separate tapered truss piers, curved decorative arches,
 three observation levels (the lower two are open-centred walkways), an open upper lattice and antenna. The bell tower keeps
 the timber/stone character and steep teal gable of its reference, with an open
-belfry and a visible bell. The stone towers keep their square crenellated form;
-the watch tower adds its wider base and corner ornaments. The Kenney turret stays
+belfry and a visible bell. The stone towers keep their square crenellated form,
+6 m keep storeys (the shipped heights depend on them) and a 1.8 x 2.9 m arched
+ground door on each face; the watch tower adds its wider base and corner ornaments. The Kenney turret stays
 an intentionally simple octagonal drum. Technical towers have individual braces,
 microwave dishes or suspended insulator strings, rather than opaque tapered boxes.
 

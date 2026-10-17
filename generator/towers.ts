@@ -189,7 +189,7 @@ function fortress(given:ParamValues|undefined,watch:boolean):MeshBuilder{
   m.scope('Masonry and corner quoins',()=>{
     band(m,'stone',watch?13:10,0,1);band(m,'stone',8.8,1,h-1);
     for(let s=0;s<4;s++){
-      arch(m,'dark',s,0,1,2.1,4,4.425);
+      arch(m,'dark',s,0,1,1.8,2.9,4.425);
       for(let k=1;k<+p.storeys!;k++)arch(m,'dark',s,0,k*6+1,1,3,4.425);
       for(const x of [-4.15,4.15])for(let y=1.1;y<h-.5;y+=1.4)panel(m,'trim',s,x,y,.7,.75,4.44,.12);
       for(let y=1.5;y<h-1;y+=1.6)for(let x=-2.8;x<3;x+=1.9){const bx=x+(Math.round(y)%2)*.25;if(Math.abs(bx)>1.5)panel(m,'trim',s,bx,y,.7,.23,4.46);}
