@@ -492,16 +492,18 @@ function podium(m: MeshBuilder): void {
         const f = edgeWall(P, i);
         if (f.n[2] > 0.9) continue; // the stairs come up this face
         for (const u of [-1.55, 1.55]) {
-          panel(m, "white", f, archPts(1.7, 0.75, 2.78, u), 0.04);
-          panel(m, "window", f, archPts(1.15, 0.9, 2.58, u), 0.08);
+          panel(m, "white", f, archPts(1.7, 0.55, 2.9, u), 0.04);
+          panel(m, "window", f, archPts(1.15, 0.7, 2.72, u), 0.08);
         }
       }
     });
   });
   m.scope("stairs", () => {
-    for (let k = 0; k < 7; k++) {
-      const z1 = 18 - k * 0.95;
-      m.box("stone", 0, z1 - 0.5, 6.2 - k * 0.15, 1.0, 0, 0.58 + k * 0.55);
+    // 23 risers of 17 cm up to the deck, on 30 cm treads, narrowing towards the top
+    const n = 22;
+    const tread = 6.7 / n;
+    for (let k = 0; k < n; k++) {
+      m.box("stone", 0, 18 - tread * (k + 0.5), 6.2 - (k * 0.9) / (n - 1), tread, 0, ((k + 1) * DECK) / (n + 1));
     }
   });
   m.scope("porch", () => {
@@ -809,36 +811,37 @@ export function stNicholasChurch(): MeshBuilder {
   m.scope("great dome", () => {
     const cx = 2.27;
     const d = ngon(24, 6.3, 0, cx, 0);
+    // a tall drum puts the cross 1 m under the towers' crosses, as on the real church (46.5 / 47.5 m)
     m.scope("drum", () => {
-      m.prism("white", d, 17.6, 22.25, false);
-      m.prism("grey", ngon(24, 6.75, 0, cx, 0), 22.25, 23.15);
+      m.prism("white", d, 17.6, 26.25, false);
+      m.prism("grey", ngon(24, 6.75, 0, cx, 0), 26.25, 27.15);
       for (let k = 0; k < 8; k++) {
         const f = edgeWall(d, 3 * k + 1);
-        panel(m, "grey", f, archPts(2.1, 18.6, 21.95), 0.03);
-        panel(m, "glass", f, archPts(1.6, 18.8, 21.75), 0.07);
+        panel(m, "grey", f, archPts(2.1, 19.0, 25.95), 0.03);
+        panel(m, "glass", f, archPts(1.6, 19.2, 25.75), 0.07);
         const a = (k * Math.PI) / 4;
         const px = cx + 6.8 * Math.cos(a);
         const pz = -6.8 * Math.sin(a);
-        m.box("white", px, pz, 1.05, 0.8, 17.6, 21.7, a);
-        m.box("grey", cx + 6.85 * Math.cos(a), -6.85 * Math.sin(a), 1.15, 0.95, 21.7, 22.25, a);
+        m.box("white", px, pz, 1.05, 0.8, 17.6, 25.7, a);
+        m.box("grey", cx + 6.85 * Math.cos(a), -6.85 * Math.sin(a), 1.15, 0.95, 25.7, 26.25, a);
       }
     });
     m.scope("shell", () => {
       const prof: Pt[] = [[6.29, 0], [6.15, 1.05], [5.75, 2.05], [5.05, 2.95], [4.1, 3.75], [2.95, 4.45], [1.85, 4.95]];
-      lathe(m, cx, 0, 23.15, prof, { n: 48, mat: ribbed(4), group: 4 });
+      lathe(m, cx, 0, 27.15, prof, { n: 48, mat: ribbed(4), group: 4 });
     });
     m.scope("lantern", () => {
       const l = polyAp(8, 2.05, cx, 0);
-      m.prism("white", l, 27.0, 30.15, false);
-      m.prism("grey", polyAp(8, 2.4, cx, 0), 30.15, 30.65);
-      for (let i = 0; i < 8; i += 2) panel(m, "glass", edgeWall(l, i), archPts(0.9, 28.2, 29.9), 0.04);
+      m.prism("white", l, 31.0, 34.15, false);
+      m.prism("grey", polyAp(8, 2.4, cx, 0), 34.15, 34.65);
+      for (let i = 0; i < 8; i += 2) panel(m, "glass", edgeWall(l, i), archPts(0.9, 32.2, 33.9), 0.04);
     });
-    m.scope("cupola", () => cupola(m, cx, 0, 30.65, 1.95, 2.13, 33.21, 24));
+    m.scope("cupola", () => cupola(m, cx, 0, 34.65, 1.95, 2.13, 37.21, 24));
     m.scope("finial", () => {
-      ball(m, "gilt", cx, 33.5, 0, 0.42);
-      m.prism("gilt", ngon(4, 0.11, Math.PI / 4, cx, 0), 33.85, 35.65);
+      ball(m, "gilt", cx, 37.5, 0, 0.42);
+      m.prism("gilt", ngon(4, 0.11, Math.PI / 4, cx, 0), 37.85, 39.65);
     });
-    latinCross(m, cx, 0, 35.4, 36.8);
+    latinCross(m, cx, 0, 39.4, 40.8);
   });
 
   m.scope("apse turret", () => {

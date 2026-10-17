@@ -3,7 +3,7 @@
 **Covers** - the two big domed landmarks of the historical centre, St Basil's
 Cathedral and St Nicholas Church: what each design models, the reference GLB and
 photo it reproduces, its datums, size, triangle count and deliberate deviations.
-**Code** - `generator/cathedrals.ts`, `test/referenceModels.test.ts`, `test/models.test.ts`
+**Code** - `generator/cathedrals.ts`, `test/referenceModels.test.ts`, `test/buildingScale.test.ts`, `test/models.test.ts`
 **See also** - [skyscrapers.md](skyscrapers.md) (the mesh builder), [source-tree.md](source-tree.md), [export.md](export.md)
 
 ## The family
@@ -45,9 +45,9 @@ About 25 300 triangles (budget 40 000; the reference has 140 576, most of them i
 its 12 288-triangle domes).
 
 - **Podium**: a 16-sided brick plinth (stone footing, white cornice) with an
-  arcade of arched white-framed openings on every face but the front, the stone
-  terrace deck at y = 3.94 that every church stands on, seven front steps out to
-  z = 18 and a porch of four white pillars, arches and a green tent with a gilt orb.
+  arcade of arched white-framed openings (2 m glass) on every face but the front,
+  the stone terrace deck at y = 3.94 that every church stands on, a front stair of
+  23 risers of 17 cm on 30 cm treads out to z = 18 and a porch of four white pillars, arches and a green tent with a gilt orb.
 - **Central tower**: an octagonal brick body (white base, belt, cornice, corner
   pilasters, keel-arched windows), a ring of kokoshnik gables, the tent base with
   windows, the tall brick tent with white ribs and rows of white lozenges, a
@@ -87,8 +87,11 @@ x = -19), the round apse at +x. Size 39.75 x 41.78 x 18.20 m (reference
 - **Two towers**: square shafts with corner pilasters, banded, arched windows,
   a clock face on the front, an octagonal drum, ribbed copper onion, lantern,
   cupola, gilt orb, spire and cross at 41.78 m.
-- **Great dome** on a 24-sided drum (eight windows, eight radial pilasters),
-  ribbed copper shell, lantern, cupola, orb, spire and cross at 36.8 m.
+- **Great dome** on a tall 24-sided drum (17.6-26.25 m, eight windows, eight
+  radial pilasters), ribbed copper shell, lantern, cupola, orb, spire and cross at
+  40.8 m: 1 m under the towers' crosses, as on the real church (dome 46.5 m,
+  towers 47.5 m). The whole church is about 0.88 of the real one, the
+  reference's size, which the export contract keeps.
 - **Apse turret** on the south side with its own drum, onion, lantern and cupola.
 
 Deviations: the reference's small eastern gable roof over the apse is merged
