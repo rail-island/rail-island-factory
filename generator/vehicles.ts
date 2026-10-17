@@ -7,24 +7,32 @@
 // maps, so a design is never renamed once shipped.
 
 import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "./meshBuilder.ts";
-import type { CatalogFields, GameProperties, ProceduralDesign } from "./design.ts";
+import type { CatalogFields, GameProperties, ParamValues, ProceduralDesign } from "./design.ts";
 import { arc, block, plate, side, steeredWheels } from "./vehicleParts.ts";
-import { CD150_PARAMS, cd150 } from "./cd150.ts";
-import { CD230_PARAMS, cd230 } from "./cd230.ts";
+import { CD150_PARAMS, cd150, cd150Lod } from "./cd150.ts";
+import { CD230_PARAMS, cd230, cd230Lod } from "./cd230.ts";
 import { ELECTRIC_LOCO_CATALOG } from "./cd163.ts";
-import { CD163_PARAMS, CD263_PARAMS, cd163, cd263 } from "./cd163Family.ts";
+import { CD163_PARAMS, CD263_PARAMS, cd163, cd163Lod, cd263, cd263Lod } from "./cd163Family.ts";
 import { COACH_CATALOG } from "./csdCoaches.ts";
 import { COACH_DESIGNS } from "./coachTransfers.ts";
 import { WAGON_CATALOG, WAGON_DESIGNS } from "./wagons.ts";
+import { COACH_LODS, lodPanels, lodSweep } from "./lodClassic.ts";
+import { lodBlock, lodWheel, LOD_GLASS, fitLod, lodPolygon, type LodPart } from "./lodKit.ts";
 
 // re-exported: a design's JS bundle imports its build function from this module
-export { cd163, cd263 };
-export { cd150 } from "./cd150.ts";
-export { cd230 } from "./cd230.ts";
+export { cd163, cd163Lod, cd263, cd263Lod };
+export { cd150, cd150Lod } from "./cd150.ts";
+export { cd230, cd230Lod } from "./cd230.ts";
 export { csdClassicGreenCoach, csdBalm, csdBam, csdBdmtee, csdBe31, csdBi20, csdDsk } from "./csdCoaches.ts";
 export { bmoCoach } from "./bmoCoach.ts";
+export {
+  csdClassicGreenCoachLod, csdBalmLod, csdBamLod, csdBdmteeLod, csdBe31Lod, csdBi20Lod, csdDskLod, bmoCoachLod, cdGreenWhiteCoachLod,
+} from "./lodClassic.ts";
 export { cdGreenWhiteCoach } from "./cdGreenWhiteCoach.ts";
-export { nasFlatWagon, uaOpenWagon, easOpenWagon, rajHopperWagon, rahTankWagon } from "./wagons.ts";
+export {
+  nasFlatWagon, uaOpenWagon, easOpenWagon, rajHopperWagon, rahTankWagon,
+  nasFlatWagonLod, uaOpenWagonLod, easOpenWagonLod, rajHopperWagonLod, rahTankWagonLod,
+} from "./wagons.ts";
 
 // Chrome is only mildly metallic: the game and the site light models without an
 // environment map, so a fully metallic surface would render nearly black.
@@ -394,6 +402,72 @@ export function americanTruck(): MeshBuilder {
   return m;
 }
 
+// --- the American truck's low level of detail ---------------------------------------
+
+/** The LOD's tyres: a dark material whose name the LOD rules allow (rubber is a detail material). */
+const LOD_TRUCK_PALETTE: Record<string, MaterialSpec> = { ...VEHICLE_PALETTE, tread: { color: "#1c1c1e", roughness: 0.95 } };
+
+/**
+ * The American truck for distant views (lodClassic.ts helpers on the shared
+ * kit): two sections like the full rig, the tractor and the trailer turning
+ * about the king pin. The tractor: frame rails, the long hood, the chrome
+ * grille and bumper, the front fenders, the cab with its raked windscreen and
+ * side windows, the high sleeper, the stacks (their outer and forward faces) and
+ * fuel tanks (optional) and its
+ * six wheels; the trailer: the van with its dark lower rail, its four wheels
+ * and the landing gear (optional). Static wheels, the front ones straight.
+ */
+export function americanTruckLod(_params?: ParamValues, budget = 200): MeshBuilder {
+  const cab: Ring = [[CAB_X0, BODY_Y], [CAB_X1, BODY_Y], [CAB_X1, 2.08], [5.28, 2.78], [5.15, CAB_TOP], [CAB_X0, CAB_TOP]];
+  const sleeper: Ring = [[2.6, BODY_Y], [4.15, BODY_Y], [4.15, 3.15], [3.9, 3.55], [2.6, 3.6]];
+  const hood: Ring = [[-0.62, FRAME_TOP], [0.62, FRAME_TOP], [0.62, 1.96], [0.5, 2.08], [-0.5, 2.08], [-0.62, 1.96]];
+  const fender: Ring = [[5.3, 0.8], [6.35, 1.16], [7.55, 1.16], [7.72, 0.82]];
+  const R = 0.56;
+  const tractor: LodPart[] = [
+    { draw: (m) => m.scope("frame rails", () => lodBlock(m, 0, 8.13, 0.72, FRAME_TOP, -0.48, 0.48, { side: "darkMetal", end: null, top: null })) },
+    { draw: (m) => m.scope("hood", () => lodSweep(m, "x", hood, 5.35, HOOD_X1, "paint", null, true)) },
+    { draw: (m) => m.scope("grille", () => lodBlock(m, 7.95, 8.16, 0.8, 2.06, -0.63, 0.63, { side: null, end: "chrome", top: "chrome" })) },
+    { draw: (m) => m.scope("bumper", () => lodBlock(m, 8.13, 8.45, 0.42, 0.78, -1.22, 1.22, { side: "chrome" })) },
+    { draw: (m) => m.scope("front fenders", () => { for (const s of [-1, 1]) lodSweep(m, "z", fender, ...side(s, 0.5, 1.22), "paint", s > 0 ? [null, "paint"] : ["paint", null], true); }) },
+    { draw: (m) => m.scope("cab", () => {
+      // the raked edge is the windscreen
+      lodSweep(m, "z", cab, -1.0, 1.0, (x, y) => (x > 5.2 && y > 2.1 && y < 2.8 ? LOD_GLASS : "paint"), "paint", true);
+      lodPanels(m, LOD_GLASS, [[4.45, 5.15, 2.1, 2.7]], 1.01);
+    }) },
+    { draw: (m) => m.scope("sleeper", () => {
+      lodSweep(m, "z", sleeper, -1.12, 1.12, "paint", "paint", true);
+      lodPanels(m, LOD_GLASS, [[3.2, 3.6, 2.7, 3.0]], 1.13);
+    }) },
+    // each stack as its outer and forward faces: a chrome post from afar
+    { optional: 10, draw: (m) => m.scope("exhaust stacks", () => {
+      for (const s of [-1, 1]) {
+        const [z0, z1] = side(s, 1.03, 1.17);
+        lodPolygon(m, "chrome", [[4.17, 2.0, s * 1.17], [4.31, 2.0, s * 1.17], [4.31, 4.05, s * 1.17], [4.17, 4.05, s * 1.17]], [0, 0, s]);
+        lodPolygon(m, "chrome", [[4.31, 2.0, z0], [4.31, 2.0, z1], [4.31, 4.05, z1], [4.31, 4.05, z0]], [1, 0, 0]);
+      }
+    }) },
+    { optional: 5, draw: (m) => m.scope("fuel tanks", () => { for (const s of [-1, 1]) lodBlock(m, 2.95, 4.4, 0.45, 1.0, ...side(s, 0.55, 1.12), { side: "chrome" }); }) },
+    { draw: (m) => m.scope("wheels", () => {
+      for (const s of [-1, 1]) {
+        lodWheel(m, "tread", FRONT_AXLE, R, ...side(s, FRONT_TYRE[0], FRONT_TYRE[1]), 6, "lower");
+        for (const x of DRIVE_AXLES) lodWheel(m, "tread", x, R, ...side(s, 0.56, 1.15), 6, "lower");
+      }
+    }) },
+  ];
+  const trailer: LodPart[] = [
+    { draw: (m) => m.scope("van", () => lodSweep(m, "x", [[-1.3, PIVOT[1] + 0.01], [1.3, PIVOT[1] + 0.01], [1.3, TRAILER_TOP], [-1.3, TRAILER_TOP]], TRAILER_REAR, TRAILER_FRONT,
+      [[0, 1.32, "darkMetal"], [1.32, TRAILER_TOP, "aluminum"]], "aluminum", true)) },
+    { draw: (m) => m.scope("wheels", () => { for (const s of [-1, 1]) for (const x of TRAILER_AXLES) lodWheel(m, "tread", x, R, ...side(s, 0.56, 1.15), 6, "lower"); }) },
+    { optional: 8, draw: (m) => m.scope("landing gear", () => lodBlock(m, -0.66, -0.54, 0.25, TRAILER_FLOOR, -1.07, 1.07, { side: "darkMetal", top: null })) },
+  ];
+  return fitLod({
+    palette: LOD_TRUCK_PALETTE,
+    shells: [],
+    parts: [...tractor.map((p) => ({ ...p, section: 0 })), ...trailer.map((p) => ({ ...p, section: 1 }))],
+    sections: { pivots: [[0, 0, 0], PIVOT], joints: [], maxBendDeg: 75 },
+  }, budget);
+}
+
 /**
  * The game-catalog fields every procedural vehicle shares, written into each
  * one's entry of vehicles.meta.json (catalog.ts).
@@ -473,11 +547,11 @@ const CD_263_GAME: GameProperties = {
 
 /** Every procedural vehicle, by catalog id. The ids are stored in saved maps. */
 export const VEHICLES: ProceduralDesign[] = [
-  { id: "proc-vehicle-american-truck", game: { weight: 36, power: 375, maxspeed: 90, accel: null }, title: "American Truck", build: americanTruck, references: "american-truck" },
-  { id: "proc-vehicle-cd-150", game: CD_150_GAME, title: "CD 150 / 151 / ZSR 350", build: cd150, params: CD150_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-150" },
-  { id: "proc-vehicle-cd-163", game: CD_163_GAME, title: "CD 163 / 363", build: cd163, params: CD163_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-163" },
-  { id: "proc-vehicle-cd-230", game: CD_230_GAME, title: "CD 230 / 240 / 340", build: cd230, params: CD230_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-230" },
-  { id: "proc-vehicle-cd-263", game: CD_263_GAME, title: "CD 263 / 371 / 372", build: cd263, params: CD263_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-263" },
-  ...COACH_DESIGNS.map((c): ProceduralDesign => ({ id: c.id, title: c.title, build: c.build, game: c.game, catalog: COACH_CATALOG, references: c.folder, ...(c.params ? { params: c.params } : {}) })),
-  ...WAGON_DESIGNS.map((w): ProceduralDesign => ({ id: w.id, title: w.title, build: w.build, game: w.game, catalog: WAGON_CATALOG, references: w.folder, ...(w.params ? { params: w.params } : {}) })),
+  { id: "proc-vehicle-american-truck", game: { weight: 36, power: 375, maxspeed: 90, accel: null }, title: "American Truck", build: americanTruck, buildLod: americanTruckLod, references: "american-truck" },
+  { id: "proc-vehicle-cd-150", game: CD_150_GAME, title: "CD 150 / 151 / ZSR 350", build: cd150, buildLod: cd150Lod, params: CD150_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-150" },
+  { id: "proc-vehicle-cd-163", game: CD_163_GAME, title: "CD 163 / 363", build: cd163, buildLod: cd163Lod, params: CD163_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-163" },
+  { id: "proc-vehicle-cd-230", game: CD_230_GAME, title: "CD 230 / 240 / 340", build: cd230, buildLod: cd230Lod, params: CD230_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-230" },
+  { id: "proc-vehicle-cd-263", game: CD_263_GAME, title: "CD 263 / 371 / 372", build: cd263, buildLod: cd263Lod, params: CD263_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-263" },
+  ...COACH_DESIGNS.map((c): ProceduralDesign => ({ id: c.id, title: c.title, build: c.build, buildLod: COACH_LODS[c.id], game: c.game, catalog: COACH_CATALOG, references: c.folder, ...(c.params ? { params: c.params } : {}) })),
+  ...WAGON_DESIGNS.map((w): ProceduralDesign => ({ id: w.id, title: w.title, build: w.build, buildLod: w.buildLod, game: w.game, catalog: WAGON_CATALOG, references: w.folder, ...(w.params ? { params: w.params } : {}) })),
 ];

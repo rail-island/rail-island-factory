@@ -14,7 +14,7 @@ import type { MeshBuilder } from "./meshBuilder.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import { runningNumber, type Band } from "./cd163.ts";
 import { c } from "./czElectricKit.ts";
-import { buildBoxLoco, type EndItem, type LocoSpec, type SideItem } from "./boxLocoKit.ts";
+import { boxLocoLod, buildBoxLoco, type EndItem, type LocoSpec, type SideItem } from "./boxLocoKit.ts";
 
 const px = (p: number) => (84 - p) / 10;
 const cols = (a: number, b: number): [number, number] => [px(b), px(a)];
@@ -159,4 +159,10 @@ function spec(l: Livery): LocoSpec {
 export function dr243(params?: ParamValues): MeshBuilder {
   const { livery } = resolveParams(DR243_PARAMS, params);
   return buildBoxLoco(spec(DR243_LIVERIES[livery as keyof typeof DR243_LIVERIES]));
+}
+
+/** The same locomotive for distant views (docs/models/lod.md). */
+export function dr243Lod(params?: ParamValues): MeshBuilder {
+  const { livery } = resolveParams(DR243_PARAMS, params);
+  return boxLocoLod(spec(DR243_LIVERIES[livery as keyof typeof DR243_LIVERIES]));
 }

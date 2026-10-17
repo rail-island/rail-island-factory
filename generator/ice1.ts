@@ -20,6 +20,8 @@ import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign 
 import { block, side } from "./vehicleParts.ts";
 import { centreCoupler, EMU_CATALOG, enumParam, pantograph, slopePanel } from "./emuParts.ts";
 import { bOf, roofBox, sideBox, spacedLetters, unitBogie, type PxBox, type SideMap } from "./unitParts.ts";
+import { LOD_GLASS } from "./lodKit.ts";
+import { bogieParts, coachBody, fitUnit, pantographParts, roofPart, skirtParts } from "./lodUnits.ts";
 
 export type Ice1Unit = "powerCar" | "coach" | "restaurant";
 
@@ -107,6 +109,38 @@ export const ICE1_POWER_BOGIES: [number, number] = [5.27, 16.73];
 export const ICE1_COACH_BOGIES: [number, number] = [3.7, 22.7];
 
 /** A car of the ICE 1. */
+/**
+ * A car of the ICE 1 for distant views (lodUnits.ts): the power car's long
+ * sloping nose with its windscreen, the bodies' sections and the red and pink
+ * band, the coaches' dark window band and the restaurant's raised roof, the
+ * skirts between and beyond the bogies, the bogies, the power car's roof
+ * hatches and its raised pantograph.
+ */
+export function ice1Lod(params?: ParamValues): MeshBuilder {
+  const unit = resolveParams(ICE1_PARAMS, params).unit as Ice1Unit;
+  const L = LAYOUTS[unit];
+  const centre = L.length / 2;
+  const X = (x: number) => bOf(L.map, x) - centre;
+  const power = unit === "powerCar";
+  const v = power ? powerVolume() : coachVolume(unit);
+  const rect = (b: PxBox) => { const r = sideBox(L.map, b); return { u: [r.x0 - centre, r.x1 - centre] as const, y: [r.y0, r.y1] as const, mat: LOD_GLASS }; };
+  const windows = power ? [] : unit === "coach" ? [rect([15, 13, 250, 22])] : [rect([21, 13, 80, 22]), rect([164, 13, 244, 22])];
+  const body = coachBody([{ v, X: (b) => b - centre }], { y0: 0.5, windows, ...(power ? { frontWindows: [{ u: [-1.18, 1.18], y: [2.3, 3.32], mat: LOD_GLASS }] } : {}) });
+  const bogies = power ? ICE1_POWER_BOGIES : ICE1_COACH_BOGIES;
+  return fitUnit({
+    palette: PALETTE,
+    bodies: [body],
+    parts: [
+      ...bogieParts(bogies.map((x) => [X(x), (power ? 1.5 + 0.52 : 1.25 + 0.46) + 0.2] as const), 0.5),
+      ...skirtParts((v.bottom ?? []).map(([b, y]): Pt => [b - centre, y]), 0.5, 1.5 * L.kZ - 0.02, "skirt"),
+      ...(power ? [
+        roofPart("roofGrey", X(14.5), X(3.6), 0.7, 0.65, 3.78, 3.84),
+        ...pantographParts([X(17.4)], 3.83, 4.05, 5.0),
+      ] : []),
+    ],
+  }, 100);
+}
+
 export function ice1(params?: ParamValues): MeshBuilder {
   const unit = resolveParams(ICE1_PARAMS, params).unit as Ice1Unit;
   return unit === "powerCar" ? powerCar() : coach(unit);
@@ -124,16 +158,14 @@ function withEdges(pts: Pt[], bands: Array<[number, number, string]>): Pt[] {
   return out;
 }
 
-function powerCar(): MeshBuilder {
+/** The power car's body: the nose sloping from the coupler to the roof, the skirts between and beyond the bogies. */
+function powerVolume(): Volume {
   const L = LAYOUTS.powerCar;
-  const c = new Coach(PALETTE, L.length / 2);
-  const m = c.m;
   const B = (x: number) => bOf(L.map, x);
   const asc = (pts: Pt[]) => pts.map(([x, y]): Pt => [B(x), y]).sort((a, b) => a[0] - b[0]);
-  const box = (b: PxBox) => sideBox(L.map, b);
   const bands = powerBands();
   const [b1, b2] = ICE1_POWER_BOGIES;
-  const body: Volume = {
+  return {
     name: "body",
     section: L.section,
     // the XML plan's rounded nose (half widths 1.1, 1.3, 1.5 at 0, 0.1, 0.3 m)
@@ -143,6 +175,33 @@ function powerCar(): MeshBuilder {
     bottom: asc(withEdges([[0, 0.9], [0.4, 0.3], [0.9, 0.1], [b1 - 2.07, 0.1], [b1 - 2.02, 0.5], [b1 + 2.02, 0.5], [b1 + 2.07, 0.1], [b2 - 2.07, 0.1], [b2 - 2.02, 0.5], [b2 + 2.02, 0.5], [b2 + 2.07, 0.1], [20.5, 0.1]], bands)),
     bands,
   };
+}
+
+/** A coach's body: the restaurant's raised roof, the skirts between and beyond the bogies. */
+function coachVolume(unit: "coach" | "restaurant"): Volume {
+  const L = LAYOUTS[unit];
+  const B = (x: number) => bOf(L.map, x);
+  const asc = (pts: Pt[]) => pts.map(([x, y]): Pt => [B(x), y]).sort((a, b) => a[0] - b[0]);
+  const bands = coachBands(unit === "restaurant" ? 4.3 : 3.8);
+  const [b1, b2] = ICE1_COACH_BOGIES;
+  return {
+    name: "body",
+    section: L.section,
+    plan: asc([[0.15, 1.5 * L.kZ], [26.25, 1.5 * L.kZ]]),
+    // the restaurant's raised roof (XML: 3.8 m at the ends, 4.3 m from 2.0 to 24.4 m)
+    ...(unit === "restaurant" ? { top: asc([[0.15, 3.8], [2.0, 4.3], [24.4, 4.3], [26.25, 3.8]]) } : {}),
+    bottom: asc([[0.15, 0.1], [b1 - 1.85, 0.1], [b1 - 1.8, 0.5], [b1 + 1.8, 0.5], [b1 + 1.85, 0.1], [b2 - 1.85, 0.1], [b2 - 1.8, 0.5], [b2 + 1.8, 0.5], [b2 + 1.85, 0.1], [26.25, 0.1]]),
+    bands,
+  };
+}
+
+function powerCar(): MeshBuilder {
+  const L = LAYOUTS.powerCar;
+  const c = new Coach(PALETTE, L.length / 2);
+  const m = c.m;
+  const B = (x: number) => bOf(L.map, x);
+  const box = (b: PxBox) => sideBox(L.map, b);
+  const body = powerVolume();
   m.scope("body", () => {
     c.volume(body);
     for (const s of [1, -1])
@@ -217,20 +276,8 @@ function coach(unit: "coach" | "restaurant"): MeshBuilder {
   const c = new Coach(PALETTE, L.length / 2);
   const m = c.m;
   const B = (x: number) => bOf(L.map, x);
-  const asc = (pts: Pt[]) => pts.map(([x, y]): Pt => [B(x), y]).sort((a, b) => a[0] - b[0]);
   const box = (b: PxBox) => sideBox(L.map, b);
-  const roof = unit === "restaurant" ? 4.3 : 3.8;
-  const bands = coachBands(roof);
-  const [b1, b2] = ICE1_COACH_BOGIES;
-  const body: Volume = {
-    name: "body",
-    section: L.section,
-    plan: asc([[0.15, 1.5 * L.kZ], [26.25, 1.5 * L.kZ]]),
-    // the restaurant's raised roof (XML: 3.8 m at the ends, 4.3 m from 2.0 to 24.4 m)
-    ...(unit === "restaurant" ? { top: asc([[0.15, 3.8], [2.0, 4.3], [24.4, 4.3], [26.25, 3.8]]) } : {}),
-    bottom: asc([[0.15, 0.1], [b1 - 1.85, 0.1], [b1 - 1.8, 0.5], [b1 + 1.8, 0.5], [b1 + 1.85, 0.1], [b2 - 1.85, 0.1], [b2 - 1.8, 0.5], [b2 + 1.8, 0.5], [b2 + 1.85, 0.1], [26.25, 0.1]]),
-    bands,
-  };
+  const body = coachVolume(unit);
   m.scope("body", () => {
     c.volume(body);
     for (const s of [1, -1]) m.scope(s > 0 ? "right side" : "left side", () => coachSide(c, body, unit, s, box));
@@ -319,5 +366,5 @@ const ICE_1_GAME: GameProperties = {
 };
 
 export const ICE1_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-ice-1", game: ICE_1_GAME, title: "ICE 1", build: ice1, params: ICE1_PARAMS, catalog: EMU_CATALOG, references: "ice-1" },
+  { id: "proc-vehicle-ice-1", game: ICE_1_GAME, title: "ICE 1", build: ice1, buildLod: ice1Lod, params: ICE1_PARAMS, catalog: EMU_CATALOG, references: "ice-1" },
 ];

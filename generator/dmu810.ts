@@ -15,7 +15,7 @@
 
 import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
 import { ngon } from "./meshBuilder.ts";
-import type { Pt } from "./csdCoachParts.ts";
+import type { Pt, Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { block } from "./vehicleParts.ts";
 import { emblem } from "./cd163.ts";
@@ -23,8 +23,10 @@ import { strokeText } from "./strokeFont.ts";
 import { CabNose, inRoundRect, type NoseLayer, type NoseQuery } from "./cabNose.ts";
 import {
   Car, DMU_CATALOG, buffersBoth, enumParam, exhaust, sideEmblem, sideItems, sideNumber, tractionNumber, underBoxes,
-  type PxBox, type SideItem,
+  DMU_PALETTE, type CarFrame, type PxBox, type SideItem,
 } from "./dmuKit.ts";
+import { LOD_GLASS } from "./lodKit.ts";
+import { axleParts, dmuBody, fitUnit, noseEnd, paintOver, roofPart, underPart } from "./lodUnits.ts";
 
 export type Cd810Livery = "red" | "yellowBand" | "blueWhite" | "ivoryBand";
 
@@ -220,19 +222,26 @@ const sideInk = (p: Paint): string => {
   return mat === "red" || mat === "blue" ? "lettering" : "letteringDark";
 };
 
-function cd810Car(livery: Cd810Livery): MeshBuilder {
-  const paint = PAINTS[livery];
-  const car = new Car({ ...paint.palette, ploughEdge: c("#f2c40f"), hoseRed: c("#a5241e", 0.6) }, { kx: K810, ky: 1, kz: 1, centre: 6.65, sideH: 4, frontH: 4 });
-  const m = car.m;
+/** The body between the cab ends; the floor at 0.8 m drops to 0.45 m at the steps. */
+function body810(paint: Paint): Volume {
   const d = 0.01;
-  // the floor at 0.8 m drops to 0.45 m at the steps
-  const body = car.volume({
+  return {
     name: "body",
     section: SECTION_810,
     plan: [[JOIN_SRC, 1.5], [13.3 - JOIN_SRC, 1.5]],
     bottom: [[JOIN_SRC, 0.7], [1.3 - d, 0.7], [1.3, 0.45], [2.1, 0.45], [2.1 + d, 0.7], [2.3, 0.8], [11.0, 0.8], [11.2 - d, 0.7], [11.2, 0.45], [12.0, 0.45], [12.0 + d, 0.7], [13.3 - JOIN_SRC, 0.7]],
     bands: paint.bands,
-  });
+  };
+}
+
+/** The frame of the 810's native canvases. */
+const FRAME_810: CarFrame = { kx: K810, ky: 1, kz: 1, centre: 6.65, sideH: 4, frontH: 4 };
+
+function cd810Car(livery: Cd810Livery): MeshBuilder {
+  const paint = PAINTS[livery];
+  const car = new Car({ ...paint.palette, ploughEdge: c("#f2c40f"), hoseRed: c("#a5241e", 0.6) }, FRAME_810);
+  const m = car.m;
+  const body = car.volume(body810(paint));
   const number = cd810Number(livery);
   m.scope("body", () => {
     for (const s of [1, -1])
@@ -275,6 +284,32 @@ export function cd810(params?: ParamValues): MeshBuilder {
   return cd810Car(p.livery as Cd810Livery);
 }
 
+/**
+ * The 810 for distant views (lodUnits.ts): the body's section and bands, both
+ * cab noses from their profile (the face upright to the sill, the windscreens
+ * raked, the roof cap) painted in the livery's face colours with the lamp
+ * band, the windscreens and the side window band, the two axles, the
+ * underframe equipment and the ventilator.
+ */
+export function cd810Lod(params?: ParamValues): MeshBuilder {
+  const livery = resolveParams(CD810_PARAMS, params).livery as Cd810Livery;
+  const p = PAINTS[livery];
+  const face = paintOver([[0.7, SILL, p.lower], [SILL, 3.0, p.upper], [3.0, 3.3, p.roof]], p.band, ...(p.strip ? [p.strip] : []));
+  const screen = [{ u: [-PANE.outer, PANE.outer] as const, y: [PANE.y0, PANE.y1] as const, mat: LOD_GLASS }];
+  const nose = (e: number) => noseEnd({ e, xTip: X_TIP, profile: PROFILE, half: HALF, corner: CORNER, rows: ROWS }, face, screen);
+  const X = (x: number) => (x - FRAME_810.centre) * K810;
+  const body = dmuBody(FRAME_810, body810(p), { y0: 0.7, items: WINDOWS_810, front: nose(1), rear: nose(-1) });
+  return fitUnit({
+    palette: { ...DMU_PALETTE, ...p.palette },
+    bodies: [body],
+    parts: [
+      axleParts([[-4.0, 0.42], [4.0, 0.42]], 0.7),
+      underPart(X(3.0), X(9.6), 0.25, 0.7, 1.2),
+      roofPart("grey", X(8.2), X(8.6), 0.15, 0.15, 3.25, 3.42),
+    ],
+  }, 100);
+}
+
 export const DMU810_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-cd-810", game: { weight: 24, power: 155, maxspeed: 80, accel: null }, title: "CD 810", build: cd810, params: CD810_PARAMS, catalog: DMU_CATALOG, references: "cd-810" },
+  { id: "proc-vehicle-cd-810", game: { weight: 24, power: 155, maxspeed: 80, accel: null }, title: "CD 810", build: cd810, buildLod: cd810Lod, params: CD810_PARAMS, catalog: DMU_CATALOG, references: "cd-810" },
 ];

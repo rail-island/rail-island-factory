@@ -11,7 +11,6 @@
 // Units are metres, +Y up, base at y = 0. The game's catalog recentres a model on
 // its footprint, so a design need not be centred on the origin.
 
-import type { LodFace } from "./lod.ts";
 import type { RailSupport, VehicleRig } from "./rig.ts";
 
 export type Ring = Array<[number, number]>; // (x, z) points, counter-clockwise seen from above
@@ -696,32 +695,6 @@ export class MeshCore {
    */
   box(mat: string, cx: number, cz: number, w: number, d: number, y0: number, y1: number, ry = 0, top = true): void {
     this.prism(mat, rect(w, d, cx, cz, ry), y0, y1, top);
-  }
-
-  /** Replace detailed geometry and motion with static, closed structural masses. */
-  lowDetail(reconstruct: (faces: LodFace[]) => LodFace[]): this {
-    const faces: LodFace[] = [];
-    for (const [material, g] of this.groups) {
-      for (let t = 0; t < g.part.length; t++) {
-        const points = [0, 1, 2].map(k => g.pos.slice(t * 9 + k * 3, t * 9 + k * 3 + 3)) as LodFace['points'];
-        const scope = this.lodScopes[g.scope[t]];
-        faces.push({ points, material, part: g.part[t], path: scope.path, scopeIds: scope.ids });
-      }
-    }
-    const reduced = reconstruct(faces);
-    this.parts.length = 0;
-    this.clips.length = 0;
-    this.rig = null;
-    this.railAxles.length = 0;
-    this.railBogies.length = 0;
-    this.groups.clear();
-    for (const f of reduced) {
-      this.currentPart = f.part;
-      // Bypass a recording subclass: the full-detail source tree is unchanged.
-      MeshCore.prototype.tri.call(this, f.material, ...f.points);
-    }
-    this.currentPart = -1;
-    return this;
   }
 
   /** Every triangle corner drawn so far, model coordinates, x,y,z flat (tests, audits). */

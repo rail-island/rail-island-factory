@@ -11,6 +11,7 @@ import type { MeshBuilder } from "./meshBuilder.ts";
 import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
 import { Tram, type Pt, type PxBox, type SourceVolume, type TramMap } from "./tramKit.ts";
+import { tramLod } from "./lodTrams.ts";
 
 /** The game-catalog fields of the metro: rail vehicles in their own pool. */
 export const METRO_CATALOG: CatalogFields = {
@@ -93,23 +94,55 @@ const CARS: Record<MetroUnit, MetroCar> = {
 /** Underfloor equipment boxes between the bogies (source x0, x1, bottom y), from the XML. */
 const EQUIPMENT: Array<[number, number, number]> = [[6.3, 7.0, 0.6], [7.0, 7.8, 0.3], [7.8, 10.8, 0.4], [10.8, 11.5, 0.3], [11.6, 12.0, 0.4], [12.1, 12.5, 0.5], [12.7, 13.4, 0.3], [13.4, 13.7, 0.4], [13.9, 14.2, 0.5]];
 
+const PALETTE = {
+  silver: { color: "#c3c8cc", metallic: 0.4, roughness: 0.4 },
+  rib: { color: "#9ea4a9", metallic: 0.4, roughness: 0.45 },
+  doorRed: { color: "#cf2a2a", roughness: 0.5 },
+  doorYellow: { color: "#e5bf1d", roughness: 0.5 },
+  mask: { color: "#3f4245", roughness: 0.6 },
+  shoe: { color: "#d5b51c", roughness: 0.6 },
+};
+// silver above a ribbed lower side, the roof grey over 3.4 m; the head car's cab paint
+const BANDS: Array<[number, number, string]> = [[0, 1.9, "rib"], [1.9, 3.4, "silver"], [3.4, 3.8, "roof"]];
+const CAB_BANDS: Array<[number, number, string]> = [[0, 1.55, "mask"], [1.55, 1.9, "silver"], [1.9, 2.95, "glass"], [2.95, 3.4, "silver"], [3.4, 3.8, "roof"]];
+
+/**
+ * A car of the 81-71 for distant views, by the tram kit's adapter (lodTrams.ts):
+ * the body with its rounded ends, the head car's cab paint and windscreen
+ * band, the side window bands, the roof vents and the bogies.
+ */
+export function metro8171Lod(params?: ParamValues): MeshBuilder {
+  const unit = resolveParams(METRO_PARAMS, params).unit as MetroUnit;
+  const car = CARS[unit];
+  const head = unit === "headCar";
+  const [a, b] = car.ends;
+  return tramLod({
+    map: { ...METRO_MAP, c: (car.couplers[0] + car.couplers[1]) / 2 },
+    palette: PALETTE,
+    section: SECTION,
+    body: car.body,
+    bodies: [[a, b]],
+    cabs: head ? [0.75, b] : [a, b],
+    main: BANDS,
+    cab: head ? CAB_BANDS : BANDS,
+    glass: ["glass"],
+    windows: { right: car.windows, left: car.windows },
+    roofBoxes: [4.5, 10, 15.5].map((x) => ({ x: [x - 0.4, x + 0.4] as [number, number], y: [3.66, 3.76] as [number, number], half: 0.25, optional: true })),
+    pantographs: [],
+    bogies: car.bogies.map((x) => ({ x, wb: METRO_WHEELBASE, r: METRO_WHEEL_R, top: 1.0 })),
+    wire: 5.5,
+  }, 100);
+}
+
 export function metro8171(params?: ParamValues): MeshBuilder {
   const unit = resolveParams(METRO_PARAMS, params).unit as MetroUnit;
   const car = CARS[unit];
   const head = unit === "headCar";
-  const t = new Tram({
-    silver: { color: "#c3c8cc", metallic: 0.4, roughness: 0.4 },
-    rib: { color: "#9ea4a9", metallic: 0.4, roughness: 0.45 },
-    doorRed: { color: "#cf2a2a", roughness: 0.5 },
-    doorYellow: { color: "#e5bf1d", roughness: 0.5 },
-    mask: { color: "#3f4245", roughness: 0.6 },
-    shoe: { color: "#d5b51c", roughness: 0.6 },
-  }, { ...METRO_MAP, c: (car.couplers[0] + car.couplers[1]) / 2 });
+  const t = new Tram(PALETTE, { ...METRO_MAP, c: (car.couplers[0] + car.couplers[1]) / 2 });
   const m = t.m;
   const [a, b] = car.ends;
-  // silver above a ribbed lower side, the roof grey over 3.4 m
-  const bands: Array<[number, number, string]> = [[0, 1.9, "rib"], [1.9, 3.4, "silver"], [3.4, 3.8, "roof"]];
-  const cabBands: Array<[number, number, string]> = [[0, 1.55, "mask"], [1.55, 1.9, "silver"], [1.9, 2.95, "glass"], [2.95, 3.4, "silver"], [3.4, 3.8, "roof"]];
+  const bands = BANDS;
+  const cabBands = CAB_BANDS;
   const vols = head
     ? [t.vol("cab", SECTION, car.body, a, 0.75, cabBands), t.vol("saloon", SECTION, car.body, 0.75, b, bands)]
     : [t.vol("saloon", SECTION, car.body, a, b, bands)];
@@ -191,5 +224,5 @@ export function metro8171(params?: ParamValues): MeshBuilder {
 }
 
 export const METRO_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-metro-81-71", game: { weight: 35, power: 300, maxspeed: 80, accel: null }, title: "Metro 81-71", build: metro8171, params: METRO_PARAMS, catalog: METRO_CATALOG, references: "metro-81-71" },
+  { id: "proc-vehicle-metro-81-71", game: { weight: 35, power: 300, maxspeed: 80, accel: null }, title: "Metro 81-71", build: metro8171, buildLod: metro8171Lod, params: METRO_PARAMS, catalog: METRO_CATALOG, references: "metro-81-71" },
 ];

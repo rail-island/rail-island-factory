@@ -3,6 +3,7 @@ import { MeshBuilder, ngon, type Ring, type MaterialSpec } from './meshBuilder.t
 import { block, side, arc, plate, steeredWheels } from './vehicleParts.ts';
 import { strokeText } from './strokeFont.ts';
 import type { ProceduralDesign } from './design.ts';
+import { blockPart, profileBody, sectionBody, truckLod } from './lodRoad.ts';
 
 const palette: Record<string, MaterialSpec> = {
   paint: { color: '#a84548', roughness: .72 }, bed: { color: '#86423d', roughness: .9 },
@@ -57,11 +58,16 @@ function chassis(m: MeshBuilder, s: Spec) {
 function arch(m: MeshBuilder, s: Spec, x: number, sign: number, mat: string) {
   plate(m, mat, arc(x, ay(s), s.r + .18, 0, Math.PI, 12), arc(x, ay(s), s.r + .12, 0, Math.PI, 12), ...side(sign, s.hw - .4, s.hw + .035));
 }
-function cabover(m: MeshBuilder, s: Spec) {
+/** A cab-over's measures: its back wall, roof, glass's bottom and side profile (x, y), swept across the cab. */
+function caboverShape(s: Spec) {
   const a = s.kind === 'atego'; const back = a ? 2.12 : 1.18; const top = a ? 2.93 : 3.04;
   const front = s.nose; const glassBottom = a ? 1.89 : 2.02;
+  const profile: Ring = [[back, 1.29], [front, 1.29], [front, glassBottom], [front - .23, top - .12], [front - .35, top], [back + .1, top], [back, top - .1]];
+  return { a, back, top, front, glassBottom, profile };
+}
+function cabover(m: MeshBuilder, s: Spec) {
+  const { a, back, top, front, glassBottom, profile } = caboverShape(s);
   m.scope('cab shell and glazing', () => {
-    const profile: Ring = [[back, 1.29], [front, 1.29], [front, glassBottom], [front - .23, top - .12], [front - .35, top], [back + .1, top], [back, top - .1]];
     m.sweep('paint', 'z', profile, -s.hw, profile, s.hw);
     const xf = (y: number) => front - .23 * (y - glassBottom) / (top - .12 - glassBottom);
     m.slab('glass', [[xf(glassBottom+.07)+.015,glassBottom+.07,-s.hw+.13],[xf(glassBottom+.07)+.015,glassBottom+.07,s.hw-.13],[xf(top-.19)+.015,top-.19,s.hw-.13],[xf(top-.19)+.015,top-.19,-s.hw+.13]], [-.035,0,0]);
@@ -118,9 +124,13 @@ function tatra(m: MeshBuilder, s: Spec) {
     block(m,'trim',1.05,1.15,1.35,3.22,.77,.86);
   });
 }
+/** The Praga's cab side profile (x, y), bonnet and canopy cross-sections (z, y). */
+const PRAGA_CAB: Ring = [[.35,1.08],[1.62,1.08],[1.62,2.41],[1.51,2.57],[.48,2.57],[.35,2.44]];
+const PRAGA_BONNET: Ring = [[-.57,1.03],[.57,1.03],[.57,1.86],[.45,2.02],[-.45,2.02],[-.57,1.86]];
+const PRAGA_CANOPY: Ring = [[-.98,1.85],[.98,1.85],[.98,2.58],[.88,2.88],[.58,3.02],[-.58,3.02],[-.88,2.88],[-.98,2.58]];
 function praga(m: MeshBuilder, s: Spec) {
   m.scope('rounded cab',()=>{
-    const p: Ring = [[.35,1.08],[1.62,1.08],[1.62,2.41],[1.51,2.57],[.48,2.57],[.35,2.44]];
+    const p = PRAGA_CAB;
     m.sweep('paint','z',p,-.94,p,.94);
     for(const sign of [-1,1]) {
       block(m,'glass',1.61,1.64,1.87,2.42,...side(sign,.055,.83));
@@ -134,7 +144,7 @@ function praga(m: MeshBuilder, s: Spec) {
     }
   });
   m.scope('long bonnet radiator and bumper',()=>{
-    const p: Ring = [[-.57,1.03],[.57,1.03],[.57,1.86],[.45,2.02],[-.45,2.02],[-.57,1.86]];
+    const p = PRAGA_BONNET;
     m.sweep('paint','x',p,1.6,p,2.91);
     block(m,'grille',2.9,2.935,1.02,1.85,-.49,.49);
     for(let z=-.43;z<.5;z+=.107) block(m,'rim',2.93,2.947,1.04,1.83,z,z+.015);
@@ -145,7 +155,7 @@ function praga(m: MeshBuilder, s: Spec) {
   });
   bed(m,s,.18,1.16,.69);
   m.scope('canvas canopy with bows and ties',()=>{
-    const p: Ring = [[-.98,1.85],[.98,1.85],[.98,2.58],[.88,2.88],[.58,3.02],[-.58,3.02],[-.88,2.88],[-.98,2.58]];
+    const p = PRAGA_CANOPY;
     m.sweep('canvas','x',p,s.end+.02,p,.16);
     for(const sign of [-1,1]) for(let x=s.end+.18;x<.16;x+=.55) {
       block(m,'trim',x,x+.025,1.72,1.95,...side(sign,.97,1.005));
@@ -172,10 +182,14 @@ function atego(m: MeshBuilder,s: Spec) {
     for(const y of [1.6,2.4,3.2]) for(const sign of [-1,1]) block(m,'rim',s.end-.075,s.end-.03,y,y+.055,...side(sign,.96,1.19));
   });
 }
-function build(kind: Kind, draw: (m: MeshBuilder, s: Spec) => void): MeshBuilder {
-  const s=specs[kind]; const colors={...palette};
+function colorsOf(kind: Kind): Record<string, MaterialSpec> {
+  const colors={...palette};
   if(kind==='praga') { colors.paint={color:'#747762'}; colors.bed={color:'#737561'}; colors.rim={color:'#737561'}; }
   if(kind==='atego') { colors.paint={color:'#008fc5'}; colors.canvas={color:'#d5d7d5',roughness:.92}; colors.rim={color:'#b8bfc3',metallic:.3}; }
+  return colors;
+}
+function build(kind: Kind, draw: (m: MeshBuilder, s: Spec) => void): MeshBuilder {
+  const s=specs[kind]; const colors=colorsOf(kind);
   const m=new MeshBuilder(colors);
   m.part('body',[0,0,0],()=>{ chassis(m,s); draw(m,s); });
   const tyre: [number,number]=[s.hw-.32,s.hw];
@@ -186,9 +200,69 @@ function build(kind: Kind, draw: (m: MeshBuilder, s: Spec) => void): MeshBuilder
 export function tatra815Tipper(){return build('tatra', tatra);}
 export function pragaRv(){return build('praga', praga);}
 export function mercedesAtego1224(){return build('atego', atego);}
+
+// --- from afar (lodRoad.ts truckLod) ---------------------------------------------------------
+//
+// The cab (a cab-over's profile carried down to its bumper, or the Praga's cab
+// and bonnet), the load as masses -- the tipper's body and headboard, the
+// canopy over its bed, the curtainside box --, the chassis between the wheels,
+// and a dark disc per wheel.
+
+/** The wheels of `s` as discs just outside its sides. */
+const lodWheels = (s: Spec) => ({ mat: 'trim', r: s.r, axles: [s.front, ...s.rear].map((x) => ({ x, z: s.hw + .04 })) });
+/** A cab-over from afar: its profile from the bumper up, the lower part dark, the windscreen, side windows and grille. */
+function caboverLod(s: Spec) {
+  const { back, top, front, glassBottom, profile } = caboverShape(s);
+  const low: Ring = profile.map(([x, y]) => [x, y === 1.29 ? .48 : y]);
+  return {
+    body: profileBody(low, s.hw, { side: [[.48, 1.29, 'trim'], [1.29, top, 'paint']], frontEnd: [[.48, .89, 'trim'], [.89, top, 'paint']], roof: 'paint' }),
+    windscreen: { half: s.hw - .13, y: [glassBottom + .07, top - .19] as const },
+    sideWindows: [{ x: [back + (s.kind === 'atego' ? .18 : .62), front - .42] as const, y: [glassBottom + .05, top - .2] as const }],
+    front: [{ half: .55, y: [1.38, s.kind === 'atego' ? 1.705 : 1.715] as const, mat: 'grille', optional: 15 }],
+  };
+}
+export function tatra815TipperLod(): MeshBuilder {
+  const s = specs.tatra;
+  return truckLod({
+    palette: colorsOf('tatra'), cab: caboverLod(s),
+    parts: [
+      blockPart('chassis', 'trim', [s.end + .12, 1.18], [.62, 1.36], [-.9, .9], { top: false }),
+      blockPart('tipper body', 'bed', [s.end, .83], [1.36, 2.41], [-s.hw, s.hw]),
+      blockPart('headboard', 'bed', [.77, 1.14], [2.41, 2.98], [-s.hw, s.hw], { optional: 18 }),
+    ],
+    wheels: lodWheels(s),
+  }, 100);
+}
+export function pragaRvLod(): MeshBuilder {
+  const s = specs.praga;
+  const cab = profileBody(PRAGA_CAB.map(([x, y]) => [x, y === 1.08 ? .73 : y] as [number, number]), .94, { side: [[.73, 2.57, 'paint']], roof: 'paint' });
+  return truckLod({
+    palette: colorsOf('praga'),
+    cab: { body: cab, windscreen: { half: .83, y: [1.87, 2.4] }, sideWindows: [{ x: [.49, 1.44], y: [1.86, 2.4] }] },
+    masses: [
+      { name: 'bonnet', body: sectionBody(PRAGA_BONNET, 1.6, 2.91, { side: [[1.03, 2.02, 'paint']], roof: 'paint', ends: [1] }), rects: [{ end: 1, u: [-.49, .49], y: [1.03, 1.84], mat: 'grille', optional: 16 }] },
+      { name: 'bed and canopy', body: sectionBody([[-s.hw, 1.16], [s.hw, 1.16], ...PRAGA_CANOPY.slice(2, 6), [-s.hw, 2.58]], s.end, .18, { side: [[1.16, 1.85, 'bed'], [1.85, 3.02, 'canvas']], roof: 'canvas' }) },
+    ],
+    parts: [
+      blockPart('fenders and running boards', 'paint', [.36, 2.7], [.73, 1.12], [-1.02, 1.02], { optional: 17 }),
+      blockPart('chassis', 'trim', [s.end + .12, .35], [.62, 1.16], [-.6, .6], { top: false }),
+    ],
+    wheels: lodWheels(s),
+  }, 100);
+}
+export function mercedesAtego1224Lod(): MeshBuilder {
+  const s = specs.atego;
+  const box: Ring = [[-1.23, 1.25], [1.23, 1.25], [1.23, 3.8], [-1.23, 3.8]];
+  return truckLod({
+    palette: colorsOf('atego'), cab: caboverLod(s),
+    masses: [{ name: 'curtainside body', body: sectionBody(box, s.end, 2, { side: [[1.25, 1.32, 'silver'], [1.32, 3.73, 'canvas'], [3.73, 3.8, 'silver']], frontEnd: [[1.25, 3.8, 'paint']], rearEnd: [[1.25, 3.8, 'silver']], roof: 'canvas' }) }],
+    parts: [blockPart('chassis', 'trim', [s.end + .1, 2.14], [.58, 1.25], [-1.06, 1.06], { top: false })],
+    wheels: lodWheels(s),
+  }, 100);
+}
 const catalog = {category:'Road vehicles',group:'truck',defaultScale:1,license:'CC0',author:'Rail Island',source:'Rail Island'};
 export const PHOTO_TRUCKS: ProceduralDesign[] = [
-  {id:'proc-vehicle-tatra-815-tipper',game:{ weight: 15, power: 250, maxspeed: 80, accel: null },title:'Tatra 815 Tipper',build:tatra815Tipper,references:'tatra-815-tipper',catalog},
-  {id:'proc-vehicle-praga-rv',game:{ weight: 15, power: 250, maxspeed: 80, accel: null },title:'Praga RV',build:pragaRv,references:'praga-rv',catalog},
-  {id:'proc-vehicle-mercedes-atego-1224',game:{ weight: 15, power: 250, maxspeed: 80, accel: null },title:'Mercedes-Benz Atego 1224',build:mercedesAtego1224,references:'mercedes-atego-1224',catalog},
+  {id:'proc-vehicle-tatra-815-tipper',game:{ weight: 15, power: 250, maxspeed: 80, accel: null },title:'Tatra 815 Tipper',build:tatra815Tipper,buildLod:tatra815TipperLod,references:'tatra-815-tipper',catalog},
+  {id:'proc-vehicle-praga-rv',game:{ weight: 15, power: 250, maxspeed: 80, accel: null },title:'Praga RV',build:pragaRv,buildLod:pragaRvLod,references:'praga-rv',catalog},
+  {id:'proc-vehicle-mercedes-atego-1224',game:{ weight: 15, power: 250, maxspeed: 80, accel: null },title:'Mercedes-Benz Atego 1224',build:mercedesAtego1224,buildLod:mercedesAtego1224Lod,references:'mercedes-atego-1224',catalog},
 ];

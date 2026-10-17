@@ -11,6 +11,7 @@
 
 import { MeshBuilder, ngon, type MaterialSpec } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
+import type { ParamValues } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
 import { runningNumber, type Band } from "./cd163.ts";
 import { bogie, buffers, onEnd, onSide, rect, shell, surfaceDecal } from "./czElectricKit.ts";
@@ -18,6 +19,7 @@ import {
   DIESEL_PALETTE, boxSpec, breaksOf, c, faceAt, grille, headlamp, numberText, pane, plate, railing, rolled, span, steps, tubeSeg,
   type BoxSpec,
 } from "./smallDieselKit.ts";
+import { boxLod, cutBox, locoLod, screen, sideWindows } from "./lodLocos.ts";
 
 /** 714 017-1: illustrative, a 714.0 photographed in this paint (assets/cd-714/PHOTOS.md). */
 export const CD714_NUMBER = runningNumber("714", "017");
@@ -165,4 +167,23 @@ export function cd714(): MeshBuilder {
   m.scope("body", () => body(m));
   m.scope("underframe", () => underframe(m));
   return m;
+}
+
+/** CD 714 017 for distant views (docs/models/lod.md, lodLocos.ts): the hood either side of the cab, the cab under its flared roof, the tall exhaust. */
+export function cd714Lod(_params?: ParamValues, budget = 100): MeshBuilder {
+  const cab = boxLod(CAB, {
+    endWindows: screen(0.12, 1.28, 3.2, 3.74),
+    sideWindows: sideWindows([[78, 84.4], [84.6, 90.4], [90.6, 97]].map(([a, b]) => ({ u: [px(a!), px(b!)] as const, y: [3.1, 3.76] as const }))),
+  });
+  return locoLod({
+    palette: PALETTE,
+    shells: [boxLod(cutBox(HOOD, HOOD.x0, CAB.x0)), boxLod(cutBox(HOOD, CAB.x1, HOOD.x1)), cab],
+    boxes: [
+      { name: "frame", mat: "frameGrey", x: [-FRAME, FRAME], y: [Y_FRAME, Y_DECK], w: 1.5 },
+      { name: "cab roof", mat: "roofGrey", x: [px(72), px(103)], y: [3.8, 4.2], w: [1.4, 1.1] },
+      { name: "fuel tank", mat: "underframe", x: [px(53), px(79)], y: [0.4, Y_FRAME], w: 1.1, top: false, optional: 35 },
+      { name: "exhaust", mat: "exhaust", x: [px(77) - 0.25, px(77) + 0.05], y: [3.15, 4.4], w: 0.16, optional: 15 },
+    ],
+    gear: [-1, 1].map((e) => ({ xc: e * PIVOT, half: 1.2 + 0.5 + 0.2, top: Y_FRAME })),
+  }, budget);
 }

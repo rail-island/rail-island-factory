@@ -22,6 +22,8 @@ import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign 
 import { block, side } from "./vehicleParts.ts";
 import { blockX, DMU_CATALOG, enumParam, slopePanel } from "./emuParts.ts";
 import { bOf, sideBox, unitBogie, type PxBox, type SideMap } from "./unitParts.ts";
+import { LOD_GLASS } from "./lodKit.ts";
+import { bogieParts, coachBody, fitUnit, roofPart, sideGlass, underPart } from "./lodUnits.ts";
 
 export type MdmotUnit = "motorCar" | "trailerAx" | "trailerBx" | "drivingTrailer";
 
@@ -264,12 +266,8 @@ export function mdmotLength(unit: MdmotUnit): number {
 
 export const MDMOT_MAPS: Record<MdmotUnit, SideMap> = { motorCar: MOTOR_MAP, trailerAx: TRAILER_MAP, trailerBx: TRAILER_MAP, drivingTrailer: BTX_MAP };
 
-/** A car of the MAV MDmot set. */
-export function mavMdmot(params?: ParamValues): MeshBuilder {
-  const unit = resolveParams(MDMOT_PARAMS, params).unit as MdmotUnit;
-  const L = LAYOUTS[unit];
-  const c = new Coach(PALETTE, L.length / 2);
-  const m = c.m;
+/** A car's volumes in body metres: the body, then each cab's nose. */
+function volumesMdmot(L: CarLayout): Volume[] {
   const B = (x: number) => bOf(L.map, x);
   const asc = (pts: Pt[]) => pts.map(([x, y]): Pt => [B(x), y * K_Y]).sort((a, b) => a[0] - b[0]);
   const ascPlan = (pts: Pt[]) => pts.map(([x, h]): Pt => [B(x), h]).sort((a, b) => a[0] - b[0]);
@@ -281,13 +279,20 @@ export function mavMdmot(params?: ParamValues): MeshBuilder {
     bottom: asc(L.bottom),
     bands: L.bands.map(([a, b, mat]): [number, number, string] => [a * K_Y, b * K_Y, mat]),
   };
+  return [body, ...L.cabs.map((cab): Volume => ({ name: "nose", section: L.section, plan: ascPlan(cab.plan.map(([x, h]): Pt => [x, h * L.kZ])), top: asc(cab.top), bottom: asc(cab.bottom), bands: NOSE_BANDS }))];
+}
+
+/** A car of the MAV MDmot set. */
+export function mavMdmot(params?: ParamValues): MeshBuilder {
+  const unit = resolveParams(MDMOT_PARAMS, params).unit as MdmotUnit;
+  const L = LAYOUTS[unit];
+  const c = new Coach(PALETTE, L.length / 2);
+  const m = c.m;
+  const B = (x: number) => bOf(L.map, x);
+  const [body, ...noses] = volumesMdmot(L);
   m.scope("body", () => {
     c.volume(body);
-    L.cabs.forEach((cab, i) =>
-      m.scope(L.cabs.length > 1 ? `cab ${i + 1}` : "cab", () =>
-        c.volume({ name: "nose", section: L.section, plan: ascPlan(cab.plan.map(([x, h]): Pt => [x, h * L.kZ])), top: asc(cab.top), bottom: asc(cab.bottom), bands: NOSE_BANDS }),
-      ),
-    );
+    noses.forEach((nose, i) => m.scope(L.cabs.length > 1 ? `cab ${i + 1}` : "cab", () => c.volume(nose)));
     for (const s of [1, -1]) m.scope(s > 0 ? "right side" : "left side", () => sideWork(c, body, L, s));
   });
   L.cabs.forEach((cab, i) => m.scope(i === 0 ? "front end" : "rear end", () => cabEnd(c, L, cab)));
@@ -451,6 +456,37 @@ function motorRoof(c: Coach, L: CarLayout): void {
   });
 }
 
+/**
+ * A car of the MDmot set for distant views (lodUnits.ts): the cab noses
+ * leaning forward to the windscreens with their cream and orange bands, the
+ * bodies' sections and bands, the side window band, the bogies and the
+ * underframe equipment.
+ */
+export function mavMdmotLod(params?: ParamValues): MeshBuilder {
+  const unit = resolveParams(MDMOT_PARAMS, params).unit as MdmotUnit;
+  const L = LAYOUTS[unit];
+  const centre = L.length / 2;
+  const X = (x: number) => bOf(L.map, x) - centre;
+  const place = (v: Volume) => ({ v, X: (b: number) => b - centre });
+  const vols = volumesMdmot(L);
+  const motor = unit === "motorCar";
+  const glass = [...L.windows.map((w) => w.box), ...L.doors.map((d) => d.glass)].map((b) => sideBox(L.map, b)).map((b) => ({ ...b, x0: b.x0 - centre, x1: b.x1 - centre }));
+  const screen = [{ u: [fz(28.4), fz(3.6)] as const, y: [fy(18.4), fy(11.6)] as const, mat: LOD_GLASS }];
+  const ends = (e: number) => (L.cabs.some((c) => (X(c.x0) + X(c.x1)) * e > 0) ? screen : undefined);
+  const [fw, rw] = [ends(1), ends(-1)];
+  const shell = coachBody(vols.map(place), { y0: motor ? 0.9 * K_Y : 1.0 * K_Y, main: 0, windows: sideGlass(glass, 0.6), ...(fw ? { frontWindows: fw } : {}), ...(rw ? { rearWindows: rw } : {}) });
+  return fitUnit({
+    palette: PALETTE,
+    bodies: [shell],
+    parts: [
+      ...bogieParts(L.bogies.x.map((x) => [X(x), L.bogies.wb / 2 + 0.46 + 0.2] as const), shell.y0),
+      motor ? underPart(-1.4, 1.4, 0.35, shell.y0, 0.9) : underPart(-2.6, 3.0, 0.45, shell.y0, 1.25),
+      // the motor car's roof hump over the radiators
+      ...(motor ? [{ ...roofPart("roof", X(6.3), X(4.6), 0.6 * K_Z_MOTOR, 0.6 * K_Z_MOTOR, 3.45 * K_Y, 3.8 * K_Y), optional: undefined }] : []),
+    ],
+  }, 100);
+}
+
 /** What the game needs of it beyond its geometry (design.ts GameProperties). */
 const MAV_MDMOT_GAME: GameProperties = {
   weight: 41,
@@ -465,7 +501,7 @@ const MAV_MDMOT_GAME: GameProperties = {
 };
 
 export const MDMOT_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-mav-mdmot", game: MAV_MDMOT_GAME, title: "MAV MDmot", build: mavMdmot, params: MDMOT_PARAMS, catalog: DMU_CATALOG, references: "mav-mdmot" },
+  { id: "proc-vehicle-mav-mdmot", game: MAV_MDMOT_GAME, title: "MAV MDmot", build: mavMdmot, buildLod: mavMdmotLod, params: MDMOT_PARAMS, catalog: DMU_CATALOG, references: "mav-mdmot" },
 ];
 
 export { LAYOUTS as MDMOT_LAYOUTS };

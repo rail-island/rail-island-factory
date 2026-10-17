@@ -17,6 +17,8 @@ import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
 import type { GameProperties } from "./design.ts";
 import { Coach, type Pt, type Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
+import { LOD_GLASS } from "./lodKit.ts";
+import { bogieParts, coachBody, fitUnit, pantographParts, roofPart, shifted, sideGlass } from "./lodUnits.ts";
 import { blockX, EMU_CATALOG, enumParam, pantograph, slopePanel, tractionNumber } from "./emuParts.ts";
 import { bOf, CLASSIC_PALETTE, emuBogie, endBuffers, frontNumber, gangwayEnd, lens, louvre, sb, toB, type CarFrame, type PxBox } from "./emuClassicKit.ts";
 
@@ -77,13 +79,9 @@ export function cd470(params?: ParamValues): MeshBuilder {
   return unit === "motorCar" ? motorCar() : trailer();
 }
 
-function motorCar(): MeshBuilder {
-  const car = CARS.motorCar;
-  const F = car.F;
-  const c = new Coach(PALETTE, (car.front + car.rear) / 2);
-  const m = c.m;
-  const box = (b: PxBox) => sb(F, b);
-  const X = (x: number) => c.X(bOf(F, x));
+/** The motor car's volumes: the body, the cab above the windscreen's foot and the face below it. */
+function motorVolumes(): { body: Volume; upper: Volume; lower: Volume } {
+  const F = CARS.motorCar.F;
   const body: Volume = {
     name: "body",
     section: SECTION_470,
@@ -92,7 +90,6 @@ function motorCar(): MeshBuilder {
     bands: [[0.3, 0.9, "skirt"], [0.9, 2.7, "green"], [2.7, 3.3, "yellow"], [3.3, 4.1, "darkGreen"]],
     endPaint: "green",
   };
-  // the cab section (source x 0.2 .. 1.7, back to the cab door as z_both paints it) in the front's bands (x_inc): the yellow band at 1.4 .. 2.1 m
   const upper: Volume = {
     name: "cab",
     section: SECTION_470,
@@ -109,6 +106,37 @@ function motorCar(): MeshBuilder {
     bottom: toB(F, [lowerAt(1.8), lowerAt(1.4), lowerAt(0.9), [1.7, 0.9]]),
     bands: [[0.9, 1.4, "green"], [1.4, 1.8, "yellow"]],
   };
+  return { body, upper, lower };
+}
+
+/** The trailer's double-deck body. */
+function trailerVolume(): Volume {
+  const F = CARS.trailer.F;
+  return {
+    name: "body",
+    section: SECTION_070,
+    plan: toB(F, [[0.2, 1.5], [24.3, 1.5]]),
+    bottom: toB(F, [[0.2, 0.9], [5.0, 0.9], [5.6, 0.3], [18.9, 0.3], [19.5, 0.9], [24.3, 0.9]]),
+    bands: [[0.3, 0.9, "skirt"], [0.9, 2.7, "green"], [2.7, 3.3, "yellow"], [3.3, 4.2, "darkGreen"], [4.2, 4.7, "roofGrey"]],
+    endPaint: "green",
+  };
+}
+
+/** The motor car's side windows, and the trailer's upper, lower and end windows (native boxes). */
+const WINDOWS_470: PxBox[] = [[54, 29, 59, 40], [81, 36, 94, 47], [99, 36, 112, 47], [116, 36, 129, 47], [133, 36, 146, 47], [150, 36, 163, 47], [186, 29, 194, 38], [197, 29, 210, 38]];
+const UPPER_070: PxBox[] = Array.from({ length: 9 }, (_, i): PxBox => [56 + 15 * i, 8, 69 + 15 * i, 17]);
+const LOWER_070: PxBox[] = Array.from({ length: 7 }, (_, i): PxBox => [71 + 15 * i, 26, 84 + 15 * i, 37]);
+const END_070: PxBox[] = [[8, 19, 21, 30], [24, 19, 37, 30], [40, 19, 47, 30], [198, 19, 205, 30], [208, 19, 221, 30], [224, 19, 237, 30]];
+
+function motorCar(): MeshBuilder {
+  const car = CARS.motorCar;
+  const F = car.F;
+  const c = new Coach(PALETTE, (car.front + car.rear) / 2);
+  const m = c.m;
+  const box = (b: PxBox) => sb(F, b);
+  const X = (x: number) => c.X(bOf(F, x));
+  const { body, upper, lower } = motorVolumes();
+  // the cab section (source x 0.2 .. 1.7, back to the cab door as z_both paints it) in the front's bands (x_inc): the yellow band at 1.4 .. 2.1 m
   m.scope("body", () => {
     c.volume(body);
     m.scope("cab", () => c.volume(upper));
@@ -125,7 +153,7 @@ function motorCar(): MeshBuilder {
           m.scope("louvre 2", () => louvre(c, body, s, box([214, 29, 222, 47]), "louvreGreen", 9));
         });
         m.scope("windows", () =>
-          ([[54, 29, 59, 40], [81, 36, 94, 47], [99, 36, 112, 47], [116, 36, 129, 47], [133, 36, 146, 47], [150, 36, 163, 47], [186, 29, 194, 38], [197, 29, 210, 38]] as PxBox[]).forEach((b, i) =>
+          WINDOWS_470.forEach((b, i) =>
             m.scope(`window ${i + 1}`, () => c.window(body, s, box(b), { fw: 0.07 })),
           ),
         );
@@ -199,26 +227,19 @@ function trailer(): MeshBuilder {
   const c = new Coach(PALETTE, (car.front + car.rear) / 2);
   const m = c.m;
   const box = (b: PxBox) => sb(F, b);
-  const body: Volume = {
-    name: "body",
-    section: SECTION_070,
-    plan: toB(F, [[0.2, 1.5], [24.3, 1.5]]),
-    bottom: toB(F, [[0.2, 0.9], [5.0, 0.9], [5.6, 0.3], [18.9, 0.3], [19.5, 0.9], [24.3, 0.9]]),
-    bands: [[0.3, 0.9, "skirt"], [0.9, 2.7, "green"], [2.7, 3.3, "yellow"], [3.3, 4.2, "darkGreen"], [4.2, 4.7, "roofGrey"]],
-    endPaint: "green",
-  };
+  const body = trailerVolume();
   m.scope("body", () => {
     c.volume(body);
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
         m.scope("upper windows", () => {
-          for (let i = 0; i < 9; i++) m.scope(`window ${i + 1}`, () => c.window(body, s, box([56 + 15 * i, 8, 69 + 15 * i, 17]), { fw: 0.07 }));
+          UPPER_070.forEach((b, i) => m.scope(`window ${i + 1}`, () => c.window(body, s, box(b), { fw: 0.07 })));
         });
         m.scope("lower windows", () => {
-          for (let i = 0; i < 7; i++) m.scope(`window ${i + 1}`, () => c.window(body, s, box([71 + 15 * i, 26, 84 + 15 * i, 37]), { fw: 0.07 }));
+          LOWER_070.forEach((b, i) => m.scope(`window ${i + 1}`, () => c.window(body, s, box(b), { fw: 0.07 })));
         });
         m.scope("end windows", () =>
-          ([[8, 19, 21, 30], [24, 19, 37, 30], [40, 19, 47, 30], [198, 19, 205, 30], [208, 19, 221, 30], [224, 19, 237, 30]] as PxBox[]).forEach((b, i) => m.scope(`window ${i + 1}`, () => c.window(body, s, box(b), { fw: 0.07 }))),
+          END_070.forEach((b, i) => m.scope(`window ${i + 1}`, () => c.window(body, s, box(b), { fw: 0.07 }))),
         );
         m.scope("doors", () =>
           ([[[54, 23, 69, 45], [[55, 27, 60, 38], [63, 27, 68, 38]]], [[176, 23, 191, 45], [[177, 27, 182, 38], [185, 27, 190, 38]]]] as Array<[PxBox, PxBox[]]>).forEach(([d, glass], i) =>
@@ -245,6 +266,41 @@ function trailer(): MeshBuilder {
   return m;
 }
 
+/**
+ * A car of the 470 for distant views (lodUnits.ts): the motor car's raked cab
+ * with its windscreen and paint, the trailer's double-deck section with both
+ * window rows, the bands, the bogies, the motor car's raised roof over its
+ * inner end and its raised rear pantograph.
+ */
+export function cd470Lod(params?: ParamValues): MeshBuilder {
+  const unit = resolveParams(CD470_PARAMS, params).unit as Unit470;
+  const car = CARS[unit];
+  const F = car.F;
+  const centre = (car.front + car.rear) / 2;
+  const X = (x: number) => bOf(F, x) - centre;
+  const place = (v: Volume) => ({ v, X: (b: number) => b - centre });
+  const glass = (boxes: PxBox[], rows = 1) => sideGlass(shifted(boxes.map((b) => sb(F, b)), centre), 0.6, rows);
+  if (unit === "trailer") {
+    const body = coachBody([place(trailerVolume())], { y0: 0.9, windows: glass([...UPPER_070, ...LOWER_070, ...END_070], 2) });
+    return fitUnit({ palette: PALETTE, bodies: [body], parts: bogieParts([[X(3.05), 1.85], [X(21.45), 1.85]], 0.9) }, 100);
+  }
+  const { body, upper, lower } = motorVolumes();
+  const shell = coachBody([place(body), place(upper), place(lower)], {
+    y0: 0.9, main: 0, windows: glass(WINDOWS_470), frontWindows: [{ u: [-1.2, 1.2], y: [2.5, 3.6], mat: LOD_GLASS }],
+  });
+  return fitUnit({
+    palette: PALETTE,
+    bodies: [shell],
+    parts: [
+      ...bogieParts([[X(3.55), 1.9], [X(20.95), 1.9]], 0.9),
+      // the raised roof over the inner end: given up before a colour band
+      { ...roofPart("roofGrey", X(24.27), X(21.7), 1.17, 0.6, 4.1, 4.7), optional: 45 },
+      roofPart("roofGrey", X(7.6), X(5.8), 0.4, 0.4, 4.1, 4.4),
+      ...pantographParts([X(20.4), X(2.8)], 4.1, 4.3, 5.9),
+    ],
+  }, 100);
+}
+
 /** A car's source mapping and the body x of its centre, for the comparison. */
 export const frame470 = (unit: Unit470): { F: CarFrame; centre: number } => ({ F: CARS[unit].F, centre: (CARS[unit].front + CARS[unit].rear) / 2 });
 
@@ -262,4 +318,4 @@ const CD_470_GAME: GameProperties = {
   ],
 };
 
-export const EMU470_DESIGNS: ProceduralDesign[] = [{ id: "proc-vehicle-cd-470", game: CD_470_GAME, title: "CD 470", build: cd470, params: CD470_PARAMS, catalog: EMU_CATALOG, references: "cd-470" }];
+export const EMU470_DESIGNS: ProceduralDesign[] = [{ id: "proc-vehicle-cd-470", game: CD_470_GAME, title: "CD 470", build: cd470, buildLod: cd470Lod, params: CD470_PARAMS, catalog: EMU_CATALOG, references: "cd-470" }];

@@ -1,4 +1,6 @@
 import { lodBox, lodLoft, lodCylinder } from './lodPrimitives.ts';
+import { cabinLod, lodBar, lodPlanRect, lodStack } from './lodAir.ts';
+import { lodBlock, LOD_GLASS } from './lodKit.ts';
 // Metre-scale replacements for the remaining hand-authored transport models.
 import { MeshBuilder, ngon, chamferedRect, type Ring } from './meshBuilder.ts';
 import { beam, panel } from './towerParts.ts';
@@ -38,7 +40,7 @@ export function oceanLiner():MeshBuilder {
   });return m;
 }
 export const LEGACY_VEHICLES:ProceduralDesign[]=[
-  {id:'veh-cabin-classic',game:{ weight: null, power: null, maxspeed: 22, accel: null, scale: 1.0582, ropeFrac: 0.9556, boardFrac: 0.0375 },title:'Classic Cable Car Cabin',build:classicCabin,catalog:{category:'Cable car',group:'cablecar',defaultScale:1,license:'CC0',author:'Rail Island',source:'Rail Island'}},
+  {id:'veh-cabin-classic',game:{ weight: null, power: null, maxspeed: 22, accel: null, scale: 1.0582, ropeFrac: 0.9556, boardFrac: 0.0375 },title:'Classic Cable Car Cabin',build:classicCabin,buildLod:classicCabinLod,catalog:{category:'Cable car',group:'cablecar',defaultScale:1,license:'CC0',author:'Rail Island',source:'Rail Island'}},
   {id:'veh-ocean-liner',game:{ weight: 400, power: 2400, maxspeed: 45, accel: 0.35, draftFrac: 0.16 },title:'Ocean Liner',build:oceanLiner,buildLod:oceanLinerLod,catalog:{category:'Ships',yaw:0,group:'ships',defaultScale:1,license:'CC0',author:'Rail Island',source:'Rail Island'}},
 ];
 
@@ -49,4 +51,31 @@ export function oceanLinerLod(): MeshBuilder {
   lodBox(m,'white',0,0,200,24,16,20);lodBox(m,'white',0,0,152,20,20,26.1);
   for(const x of [-55,-18,19,56])lodCylinder(m,'red',x,0,4,26.1,44,4);
   return m;
+}
+
+/**
+ * The classic cabin from afar (`cabinLod`, docs/models/lod.md): the ivory body
+ * round its glazing band, chamfered in plan as the full one, the roof box, the
+ * hanger's four struts gathered into a pyramid, the mast and the trolley with its
+ * wheels up to the full model's top. The 5 cm red stripes are too thin to read.
+ */
+export function classicCabinLod():MeshBuilder {
+  return cabinLod({
+    palette,
+    body:{
+      ring:(_d,detail)=>lodPlanRect(1.89,1.29,detail===0?.4:0),details:2,
+      stations:[[0,0],[2.79,0]],
+      bands:[[0,.29,'ivory'],[.29,2.55,LOD_GLASS],[2.55,2.79,'ivory']],
+      top:'ivory',bottom:'ivory',
+    },
+    parts:[
+      {draw:(m)=>{
+        lodBlock(m, -.35, .35, 2.79, 2.86, -.3, .3, { side: 'dark' });
+        lodStack(m,[[2.86,lodPlanRect(.9,.8)],[4.25,lodPlanRect(.1,.1)]],['steel'],null);
+        lodBar(m,'steel',[0,4.2,0],[0,5.4,0],.14,3);
+        lodBlock(m, -.75, .75, 5.38, 5.62, -.3, .3, { side: 'dark', bottom: 'dark' });
+        lodBlock(m, -.77, .77, 5.62, 5.86, -.17, .17, { side: 'steel' });
+      }},
+    ],
+  });
 }

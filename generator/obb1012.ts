@@ -13,7 +13,7 @@ import type { MeshBuilder } from "./meshBuilder.ts";
 import type { Ring } from "./meshBuilder.ts";
 import type { Band } from "./cd163.ts";
 import { c } from "./czElectricKit.ts";
-import { buildBoxLoco, type LocoSpec } from "./boxLocoKit.ts";
+import { boxLocoLod, buildBoxLoco, type LocoSpec } from "./boxLocoKit.ts";
 
 export const OBB1012_SCALE = 18.3 / 17.2;
 const px = (p: number) => (96.5 - p) * (18 / 193) * OBB1012_SCALE;
@@ -87,4 +87,9 @@ const SPEC: LocoSpec = {
 /** OBB 1012.001. */
 export function obb1012(): MeshBuilder {
   return buildBoxLoco({ ...SPEC, palette: { black: c("#1d1d1f", 0.7), ...SPEC.palette } });
+}
+
+/** The same locomotive for distant views (docs/models/lod.md). */
+export function obb1012Lod(): MeshBuilder {
+  return boxLocoLod({ ...SPEC, palette: { black: c("#1d1d1f", 0.7), ...SPEC.palette } });
 }

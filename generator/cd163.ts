@@ -21,6 +21,7 @@ import type { Vec3 } from "./meshCore.ts";
 import type { CatalogFields } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
 import { CD_EMBLEM, triangulate } from "./cdLogo.ts";
+import { fitLod, LOD_GLASS, lodBands, lodBogie, lodPantograph, lodRoofBox, lodSideBox, type LodBand, type LodPart, type LodShell } from "./lodKit.ts";
 
 /** The catalog fields of a rail vehicle, in place of the road vehicles'. */
 export const RAIL_CATALOG: CatalogFields = {
@@ -977,4 +978,42 @@ export function cd163Body(livery: Cd163Livery, layout: Cd163Layout): MeshBuilder
   });
   m.scope("underframe", () => underframe(m));
   return m;
+}
+
+// --- low level of detail ------------------------------------------------------------
+
+/** The CD 163 body's distant-view budget: the rail vehicles' 100 triangles (docs/models/lod.md). */
+export const CD163_LOD_TRIANGLES = 100;
+
+/**
+ * The CD 163 body in `livery` for distant views (the shared kit, lodKit.ts): the
+ * raked ends without the 17 cm upright apron, the roof as one hip, sides and
+ * ends painted in the livery's bands and cab paint, the grey side apron, the
+ * windscreens, the cooler box, a block per bogie and one for the equipment
+ * between them, the raised rear pantograph and the folded front one. Every
+ * machine-room layout looks the same from afar.
+ */
+export function cd163LodBody(livery: Cd163Livery, budget = CD163_LOD_TRIANGLES): MeshBuilder {
+  const roofTop = (bands: readonly Band[], top: number): LodBand[] => [...lodBands(bands, Y_BOTTOM, top), [top, Y_ROOF, "roof"]];
+  const cab = livery.cabBands ?? livery.bands;
+  const shell: LodShell = {
+    y0: Y_BOTTOM,
+    tip: [[Y_BOTTOM, HALF - LOWER_RAKE], [Y_NOSE, HALF], [Y_EAVE, frontX(Y_EAVE)], [Y_ROOF, frontX(Y_EAVE) - 0.42]],
+    hw: [[Y_BOTTOM, HW], [Y_EAVE, HW], [Y_ROOF, ROOF_HW]],
+    side: roofTop(livery.bands, Y_SIDE_EAVE),
+    end: roofTop(cab, Y_EAVE),
+    ...(livery.cabBands ? { cab: { x: CAB_X, side: roofTop(livery.cabBands, Y_SIDE_EAVE) } } : {}),
+    roof: "roof",
+    endWindows: [{ u: [-1.3, 1.3], y: [2.7, 3.4], mat: LOD_GLASS }],
+  };
+  const parts: LodPart[] = [
+    { draw: (m) => m.scope("cooler box", () => lodRoofBox(m, "roof", -COOLER_X - 0.05, COOLER_X - 0.05, HW + 0.04, HW + 0.04 - 0.22, COOLER_FOOT, Y_COOLER)) },
+    { draw: (m) => m.scope("running gear", () => {
+      for (const xb of [-BOGIE_X, BOGIE_X]) lodBogie(m, xb, 2.1, Y_BOTTOM);
+      lodSideBox(m, "underframe", [[-1.45, 0.5], [1.45, 0.5], [1.45, Y_BOTTOM], [-1.45, Y_BOTTOM]], -1.38, 1.38);
+    }) },
+    { draw: (m) => m.scope("raised pantograph", () => lodPantograph(m, { x: -PANTO_X, roofY: Y_ROOF, baseY: PANTO_Y, h: 1, raised: true, raisedTop: 5.74, lower: Math.hypot(1.6, 0.11), upper: Math.hypot(1.2, 0.09) })) },
+    { optional: 0, draw: (m) => m.scope("folded pantograph", () => lodPantograph(m, { x: PANTO_X, roofY: Y_ROOF, baseY: PANTO_Y, h: -1, raised: false, raisedTop: 5.74 })) },
+  ];
+  return fitLod({ palette: { ...CD163_PALETTE, ...livery.palette }, shells: [shell], parts }, budget);
 }

@@ -17,3 +17,11 @@ description: Create or improve procedural buildings in Rail Island Factory, espe
 - Send the user the rendered views in the chat (AGENTS.md, "Show the user the model").
 
 Reference: `docs/models/historical.md` and `docs/models/export.md`.
+
+## Low level of detail
+
+Every design needs its own `buildLod` (docs/models/lod.md); a design without one
+does not compile. Extend the family's LOD adapter (`generator/lod*.ts`) or build on
+the shared kit (`generator/lodKit.ts`): silhouette first, colours as bands, then
+no windows (100 triangles; 500 for landmarks, towers and skyscrapers); keep every parameter combination within its budget, and review a full/LOD
+contact sheet.

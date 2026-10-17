@@ -1,4 +1,6 @@
 import { lodBox, lodLoft } from './lodPrimitives.ts';
+import { lodBar, lodStack } from './lodAir.ts';
+import { lodBlock, LOD_GLASS, LOD_PALETTE, lodPolygon, lodRod } from './lodKit.ts';
 // The procedural ships: a Viking Line style cruise ferry, a Soviet Kometa
 // hydrofoil and a white lake passenger motor ship, modelled on the photos in
 // assets/<folder>/ and reproducing the hand-authored GLBs of the same names in
@@ -1074,8 +1076,8 @@ export const SHIP_CATALOG: CatalogFields = {
 /** Every design of the family, by catalog id; `references` is the folder of its source photos under assets/. */
 export const SHIPS: ProceduralDesign[] = [
   { id: "proc-vehicle-cruise-ferry", game: { weight: 220, power: 1600, maxspeed: 40, accel: 0.5, draftFrac: 0.17 }, title: "Cruise Ferry", build: cruiseFerry, buildLod: cruiseFerryLod, references: "cruise-ferry", catalog: { ...SHIP_CATALOG, yaw:180 } },
-  { id: "proc-vehicle-hydrofoil-ferry", game: { weight: 30, power: 600, maxspeed: 70, accel: 1.5, draftFrac: 0.28 }, title: "Hydrofoil Ferry", build: hydrofoilFerry, references: "hydrofoil-ferry", catalog: { ...SHIP_CATALOG, yaw:180 } },
-  { id: "proc-vehicle-passenger-ferry", game: { weight: 60, power: 400, maxspeed: 28, accel: 0.9, draftFrac: 0.15 }, title: "Passenger Ferry", build: passengerFerry, references: "passenger-ferry", catalog: { ...SHIP_CATALOG, yaw:270 } },
+  { id: "proc-vehicle-hydrofoil-ferry", game: { weight: 30, power: 600, maxspeed: 70, accel: 1.5, draftFrac: 0.28 }, title: "Hydrofoil Ferry", build: hydrofoilFerry, buildLod: hydrofoilFerryLod, references: "hydrofoil-ferry", catalog: { ...SHIP_CATALOG, yaw:180 } },
+  { id: "proc-vehicle-passenger-ferry", game: { weight: 60, power: 400, maxspeed: 28, accel: 0.9, draftFrac: 0.15 }, title: "Passenger Ferry", build: passengerFerry, buildLod: passengerFerryLod, references: "passenger-ferry", catalog: { ...SHIP_CATALOG, yaw:270 } },
 ];
 
 /** Stepped decks keep the bow and bridge distinct, within the ordinary ship budget. */
@@ -1087,5 +1089,94 @@ export function cruiseFerryLod(): MeshBuilder {
   lodBox(m,'whitePaint',30,0,49,20,26.4,32.4);
   lodBox(m,'whitePaint',30,0,30,17,32.4,40);
   lodBox(m,'funnelGreen',-23,0,8,5,26.4,40);
+  return m;
+}
+
+// --- the distant hydrofoil and passenger ferry --------------------------------------------
+//
+// As the cruise ferry's: the hull as plan rings stacked in its paint bands (the
+// full model's own plan, keel and section tables), the superstructure as prisms,
+// and the windows as bands of the one LOD glass a few centimetres off their walls.
+
+/** A hull's plan at the stations `ss` (rising), half-breadth `half(s)`: a station where it is nil is one point (a bow tip). */
+function lodPlan(ss: readonly number[], half: (s: number) => number, along: "x" | "z"): Array<[number, number]> {
+  const pts: Array<[number, number]> = [];
+  for (const s of ss) if (half(s) > 1e-3) pts.push([s, half(s)]);
+  for (const s of [...ss].reverse()) pts.push([s, half(s) > 1e-3 ? -half(s) : 0]);
+  const ring = pts.filter((p, i) => pts.findIndex((q) => q[0] === p[0] && q[1] === p[1]) === i);
+  return along === "x" ? ring : ring.map(([a, b]) => [b, a]);
+}
+
+/** A window band on a wall: the quad (a0..a1 along the length, y0..y1) at beam b, facing `side`, 3 cm proud. */
+function lodPane(m: MeshBuilder, F: Frame, a0: number, a1: number, y0: number, y1: number, b0: number, b1: number, side: number): void {
+  const [u0, u1] = [side * (b0 + 0.03), side * (b1 + 0.03)];
+  lodPolygon(m, LOD_GLASS, [F(a0, y0, u0), F(a1, y0, u1), F(a1, y1, u1), F(a0, y1, u0)], F(0, 0, side));
+}
+
+export function hydrofoilFerryLod(): MeshBuilder {
+  const m = new MeshBuilder({ ...LOD_PALETTE, ...PALETTE });
+  // the bow tip at height y: as far forward as the keel lies below it
+  const bow = (y: number): number => {
+    let x = 4;
+    while (x < 17.25 && hfKeel(x + 0.05) <= y) x += 0.05;
+    return x;
+  };
+  const ring = (y: number) => lodPlan([-17.25, 4, Math.min(9.75, bow(y) - 0.5), bow(y)], (s) => (s >= bow(y) - 1e-9 ? 0 : hfHalfBeam(s, Math.max(y, hfKeel(s) + 0.3))), "x");
+  m.scope("hull", () => lodStack(m, [1.9, 2.4, 4.05, 4.6].map((y) => [y, ring(y)] as const), ["signalRed", "hullWhite", "signalRed"], "foilDeck"));
+  m.scope("saloon", () => {
+    const w = (s: number): number => Math.min(2.4, 1.85 + (s + 15.55) * 0.7, hfPlan(s) - 0.2, 2.4 - Math.max(0, s - 8.5) * 0.3);
+    const xs = [-15.55, 8.5, 11.55];
+    lodStack(m, [[4.6, lodPlan(xs, w, "x")], [6.5, lodPlan(xs, w, "x")]], ["hullWhite"], "signalRed");
+    for (const side of [1, -1]) lodPane(m, ALONG_X, -14.1, 8.4, 5.2, 5.95, 2.4, 2.4, side);
+  });
+  m.scope("wheelhouse", () => {
+    // the profile swept across: white sides, the raked windscreen, the red roof (its back stands against the mast)
+    const hw = 1.65;
+    const p: Array<[number, number]> = [[4.45, 6.5], [9.9, 6.5], [9.4, 7.42], [4.45, 7.65]];
+    for (const z of [-hw, hw]) lodPolygon(m, "hullWhite", p.map(([x, y]): Vec3 => [x, y, z]), [0, 0, z]);
+    const wall = (i: number, j: number, mat: string, n: Vec3) => lodPolygon(m, mat, [[p[i]![0], p[i]![1], -hw], [p[j]![0], p[j]![1], -hw], [p[j]![0], p[j]![1], hw], [p[i]![0], p[i]![1], hw]], n);
+    wall(1, 2, LOD_GLASS, [1, 0.6, 0]);
+    wall(2, 3, "signalRed", [0.05, 1, 0]);
+  });
+  // the mast up to the radar, the full model's top
+  m.scope("mast", () => lodRod(m, "hullWhite", [3.25, 7.4, 0], [3.25, 8.63, 0], 0.12));
+  m.scope("foils", () => {
+    // each foil's top, a shallow V reaching y = 0, under a plate standing for its struts
+    const foil = (x0: number, x1: number, y: number, inner: number, span: number, tipY: number, struts: number) => {
+      const cs: Array<[number, number]> = [[-span, tipY], [-inner, y], [inner, y], [span, tipY]];
+      for (let i = 0; i + 1 < cs.length; i++) {
+        const [a, b] = [cs[i]!, cs[i + 1]!];
+        lodPolygon(m, "foilBlue", [[x0, a[1] + 0.12, a[0]], [x1, a[1] + 0.12, a[0]], [x1, b[1] + 0.12, b[0]], [x0, b[1] + 0.12, b[0]]], [0, 1, 0]);
+      }
+      const xm = (x0 + x1) / 2;
+      for (const [dx, n] of [[0.08, 1], [-0.08, -1]] as const) {
+        lodPolygon(m, "foilBlue", [[xm + dx, y + 0.12, -struts], [xm + dx, y + 0.12, struts], [xm + dx, 2.3, struts * 0.75], [xm + dx, 2.3, -struts * 0.75]], [n, 0, 0]);
+      }
+    };
+    foil(9.5, 10.63, 0.17, 2.45, 3.15, 0.53, 1.6);
+    foil(-12.2, -11.05, -0.12, 2.45, 3.9, 0.5, 2.3);
+  });
+  return m;
+}
+
+export function passengerFerryLod(): MeshBuilder {
+  const m = new MeshBuilder({ ...LOD_PALETTE, ...PALETTE });
+  const hull = (y: number) => lodPlan([-18.67, -17.07, 5.15, 14, 20.42], (s) => (s >= 20.42 ? 0 : s <= -18.6 ? 2.6 : pfHalfBeam(s, Math.max(y, 0.4))), "z");
+  // the boot stripe down to the keel: below it the hull lies under the waterline (draftFrac 0.15, y 2.0)
+  m.scope("hull", () => lodStack(m, [0, 2.2, 4.55].map((y) => [y, hull(y)] as const), ["bootStripe", "lakeWhite"], "lakeDeck"));
+  const sal = (s: number): number => Math.min(roundEnd(3.3, 0.6, s + 15.5), pfPlan(s) - 0.35);
+  m.scope("saloon", () => {
+    // the rounded aft end cut square a little inside it
+    const zs = [-15.3, -14.9, 5.15, 11.9];
+    lodStack(m, [[4.55, lodPlan(zs, sal, "z")], [7.6, lodPlan(zs, sal, "z")]], ["lakeWhite"], "lakeDeck");
+    for (const side of [1, -1]) lodPane(m, ALONG_Z, -14.9, 5.15, 5.47, 7.0, 3.3, 3.3, side);
+    lodPolygon(m, LOD_GLASS, [[-2.6, 5.5, 11.93], [2.6, 5.5, 11.93], [2.6, 7.0, 11.93], [-2.6, 7.0, 11.93]], [0, 0, 1]);
+  });
+  m.scope("upper house", () => {
+    lodBlock(m, -2.6, 2.6, 7.6, 9.95, -6.97, 5.15, { side: "lakeWhite" });
+    for (const side of [1, -1]) lodPane(m, ALONG_Z, -6.4, 5.0, 8.5, 9.5, 2.6, 2.6, side);
+    lodPolygon(m, LOD_GLASS, [[-2.5, 8.45, 5.18], [2.5, 8.45, 5.18], [2.5, 9.55, 5.18], [-2.5, 9.55, 5.18]], [0, 0, 1]);
+  });
+  m.scope("mast", () => lodBar(m, "lakeSteel", [0, 9.95, 3.15], [0, 13.314, 2.7], 0.12, 3));
   return m;
 }

@@ -24,6 +24,7 @@ import {
   DIESEL_PALETTE, boxSpec, breaksOf, c, faceAt, grille, hazardBeam, headlamp, numberText, pane, plate, railing, span, steps, tubeSeg,
   type BoxSpec,
 } from "./smallDieselKit.ts";
+import { boxLod, locoLod, screen, sideWindows } from "./lodLocos.ts";
 
 /** Model height of a native (viamont_742.507) height. */
 export const Y = (yn: number): number => (yn <= 1.8 ? yn : 1.8 + (yn - 1.8) * ((4.4 - 1.8) / (4.6 - 1.8)));
@@ -239,4 +240,26 @@ export function cd742(params?: ParamValues): MeshBuilder {
   m.scope("body", () => body(m, v));
   m.scope("underframe", () => underframe(m, v));
   return m;
+}
+
+/** The 740 / 742 / 743 for distant views (docs/models/lod.md, lodLocos.ts): the hoods, their ends against the cab hidden, and the cab. */
+export function cd742Lod(params?: ParamValues, budget = 100): MeshBuilder {
+  const { variant } = resolveParams(CD742_PARAMS, params);
+  const v: Cd742Variant = CD742_VARIANTS[variant as keyof typeof CD742_VARIANTS];
+  const { longHood, shortHood, cab } = specs(v);
+  const cb = boxLod(cab, {
+    // the front windows over the 740's low short hood; the others look into the hoods
+    ...(v.lowShortHood ? { endWindows: screen(0.28, 0.92, Y(3.4), Y(4.1), [1]) } : {}),
+    sideWindows: sideWindows([[42, 38], [34, 30], [26, 22]].map(([a, b]) => ({ u: [px(a!), px(b!)] as const, y: [Y(3.0), Y(4.1)] as const }))),
+  });
+  return locoLod({
+    palette: { ...DIESEL_PALETTE, ...v.palette },
+    shells: [boxLod(longHood), boxLod(shortHood), cb],
+    boxes: [
+      { name: "frame", mat: v.frame, x: [-FRAME, FRAME], y: [Y_FRAME, Y_DECK], w: 1.5 },
+      ...[-1, 1].map((e) => ({ name: "plough", mat: v.plough[0], x: span(e * (FRAME - 0.45), e * (FRAME - 0.1)), y: [0.1, 0.7] as const, w: 1.45, top: false as const, optional: 30 })),
+      { name: "fuel tank", mat: "underframe", x: [px(80), px(54)], y: [0.4, Y_FRAME], w: 1.35, top: false, optional: 35 },
+    ],
+    gear: [-1, 1].map((e) => ({ xc: e * PIVOT, half: 1.2 + 0.5 + 0.2, top: Y_FRAME })),
+  }, budget);
 }

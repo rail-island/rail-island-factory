@@ -16,7 +16,7 @@ import type { MeshBuilder } from "./meshBuilder.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import { runningNumber, type Band } from "./cd163.ts";
 import { c } from "./czElectricKit.ts";
-import { buildBoxLoco, type LocoSpec, type SideItem } from "./boxLocoKit.ts";
+import { boxLocoLod, buildBoxLoco, type LocoSpec, type SideItem } from "./boxLocoKit.ts";
 
 const px = (p: number) => (94 - p) / 10;
 /** A native column span (pixel edges) as an x span, low first. */
@@ -174,4 +174,10 @@ function spec(l: Livery): LocoSpec {
 export function cd181(params?: ParamValues): MeshBuilder {
   const { livery } = resolveParams(CD181_PARAMS, params);
   return buildBoxLoco(spec(CD181_LIVERIES[livery as keyof typeof CD181_LIVERIES]));
+}
+
+/** The same locomotive for distant views (docs/models/lod.md). */
+export function cd181Lod(params?: ParamValues): MeshBuilder {
+  const { livery } = resolveParams(CD181_PARAMS, params);
+  return boxLocoLod(spec(CD181_LIVERIES[livery as keyof typeof CD181_LIVERIES]));
 }

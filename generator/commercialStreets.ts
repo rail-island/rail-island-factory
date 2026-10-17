@@ -1,18 +1,20 @@
 // Commercial plan families. Metres, ground at y=0, street front at +Z.
 // Source inventory and provisional legacy correspondence: docs/models/commercial-streets.md.
-import { MeshBuilder, rect, type Ring } from "./meshBuilder.ts";
+import { MeshBuilder, rect, type MaterialSpec, type Ring } from "./meshBuilder.ts";
+import { commercialModernLod, commercialBalconyLod, commercialAnnexLod, commercialBrickLod, commercialTenementLod, commercialShopLod, commercialBarrelLod, commercialTerraceLod, commercialGableLod, commercialBaroqueLod, commercialClassicalLod } from "./lodStreets.ts";
+export { commercialModernLod, commercialBalconyLod, commercialAnnexLod, commercialBrickLod, commercialTenementLod, commercialShopLod, commercialBarrelLod, commercialTerraceLod, commercialGableLod, commercialBaroqueLod, commercialClassicalLod } from "./lodStreets.ts";
 import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 
 export const COMMERCIAL_CATALOG: CatalogFields = {
   category: "Commercial", group: "commercial", defaultScale: 1,
   license: "CC0", author: "Rail Island", source: "Procedural commercial architecture; Kenney and Quaternius reference silhouettes",
 };
-type Style = "modern" | "balcony" | "annex" | "brick" | "tenement" | "shop" | "barrel" | "terrace" | "gable" | "baroque" | "classical";
+export type Style = "modern" | "balcony" | "annex" | "brick" | "tenement" | "shop" | "barrel" | "terrace" | "gable" | "baroque" | "classical";
 const option = (name: string, title: string, values: string[], initial: string): ParamSpec => ({
   name, title, default: initial, values: values.map(value => ({ value, title: value[0].toUpperCase() + value.slice(1) })),
 });
-const historic = (s: Style) => ["terrace", "gable", "baroque", "classical"].includes(s);
-function specs(s: Style): ParamSpec[] {
+export const historic = (s: Style) => ["terrace", "gable", "baroque", "classical"].includes(s);
+export function specs(s: Style): ParamSpec[] {
   return [
     option("storeys", "Storeys", s === "shop" ? ["1", "2"] : ["2", "3", "4", "5"], s === "tenement" ? "5" : s === "shop" ? "1" : "3"),
     option("width", "Facade width", ["narrow", "standard", "wide", ...(["brick", "tenement"].includes(s) ? ["extraWide"] : [])], "standard"),
@@ -80,17 +82,21 @@ function roof(m: MeshBuilder, s: Style, w: number, d: number, y: number) {
     for (const x of [-0.22, 0.22]) m.box("roof", -w * 0.34 + x, -d * 0.23, 0.25, 0.3, y + 3.81, y + 4.14);
   }
 }
-function buildCommercial(s: Style, given?: ParamValues): MeshBuilder {
-  const p = resolveParams(specs(s), given);
-  const n = Number(p.storeys), bays = p.width === "narrow" ? 2 : p.width === "wide" ? 5 : p.width === "extraWide" ? 8 : 3;
-  const w = bays * 2.7, d = historic(s) ? 9 : 8, floor = 3.2, h = n * floor + 0.45;
+/** The palette of a style with the chosen finish and canopy (the LOD paints with it too). */
+export function streetPalette(s: Style, p: ParamValues): Record<string, MaterialSpec> {
   const colours: Record<string, string> = { sand: "#d6c8a5", sage: "#748e83", brick: "#975b49", original: historic(s) ? "#c7bba2" : ["modern", "balcony", "annex"].includes(s) ? "#e6e2dd" : "#995e50" };
-  const m = new MeshBuilder({ wall: { color: colours[p.finish] }, trim: { color: "#e4dbc6" },
+  return { wall: { color: colours[p.finish!]! }, trim: { color: "#e4dbc6" },
     frame: { color: "#eee9de" }, glass: { color: "#6089a4", roughness: 0.3 },
     roof: { color: s === "terrace" || s === "gable" ? "#985442" : "#48525d" },
     metal: { color: "#47515a" }, door: { color: "#684a36" },
     awning: { color: p.awning === "ochre" ? "#d6a84e" : "#459b81" }, stone: { color: "#8d8a83" },
-  });
+  };
+}
+function buildCommercial(s: Style, given?: ParamValues): MeshBuilder {
+  const p = resolveParams(specs(s), given);
+  const n = Number(p.storeys), bays = p.width === "narrow" ? 2 : p.width === "wide" ? 5 : p.width === "extraWide" ? 8 : 3;
+  const w = bays * 2.7, d = historic(s) ? 9 : 8, floor = 3.2, h = n * floor + 0.45;
+  const m = new MeshBuilder(streetPalette(s, p));
   m.scope("masonry and storey bands", () => {
     m.box("stone", 0, 0, w + 0.12, d + 0.12, 0, 0.45);
     m.box("wall", 0, 0, w, d, 0.45, h);
@@ -198,15 +204,15 @@ export function commercialTerrace(p?: ParamValues) { return buildCommercial("ter
 export function commercialGable(p?: ParamValues) { return buildCommercial("gable", p); }
 export function commercialBaroque(p?: ParamValues) { return buildCommercial("baroque", p); }
 export function commercialClassical(p?: ParamValues) { return buildCommercial("classical", p); }
-const definitions: [Style, string, ProceduralDesign["build"]][] = [
-  ["modern", "Modern Shop House", commercialModern], ["balcony", "Balcony Apartment House", commercialBalcony],
-  ["annex", "Shop House with Wing", commercialAnnex], ["brick", "Brick Street House", commercialBrick],
-  ["tenement", "Balcony Tenement", commercialTenement], ["shop", "Neighbourhood Store", commercialShop],
-  ["barrel", "Barrel Roof House", commercialBarrel], ["terrace", "Burgher Terrace", commercialTerrace],
-  ["gable", "Gabled Arcade House", commercialGable], ["baroque", "Baroque Townhouse", commercialBaroque],
-  ["classical", "Classical Townhouse", commercialClassical],
+const definitions: [Style, string, ProceduralDesign["build"], NonNullable<ProceduralDesign["buildLod"]>][] = [
+  ["modern", "Modern Shop House", commercialModern, commercialModernLod], ["balcony", "Balcony Apartment House", commercialBalcony, commercialBalconyLod],
+  ["annex", "Shop House with Wing", commercialAnnex, commercialAnnexLod], ["brick", "Brick Street House", commercialBrick, commercialBrickLod],
+  ["tenement", "Balcony Tenement", commercialTenement, commercialTenementLod], ["shop", "Neighbourhood Store", commercialShop, commercialShopLod],
+  ["barrel", "Barrel Roof House", commercialBarrel, commercialBarrelLod], ["terrace", "Burgher Terrace", commercialTerrace, commercialTerraceLod],
+  ["gable", "Gabled Arcade House", commercialGable, commercialGableLod], ["baroque", "Baroque Townhouse", commercialBaroque, commercialBaroqueLod],
+  ["classical", "Classical Townhouse", commercialClassical, commercialClassicalLod],
 ];
-export const COMMERCIAL: readonly ProceduralDesign[] = definitions.map(([s, title, build]) => ({
-  id: `commercial-${s}`, title, build, params: specs(s), finishParams: ["finish"],
+export const COMMERCIAL: readonly ProceduralDesign[] = definitions.map(([s, title, build, buildLod]) => ({
+  id: `commercial-${s}`, title, build, buildLod, params: specs(s), finishParams: ["finish"],
   catalog: COMMERCIAL_CATALOG, references: `commercial/${s}`,
 }));

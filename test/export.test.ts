@@ -140,7 +140,7 @@ describe("game properties", () => {
   });
 
   it("refuse a vehicle without them, or with a figure or variant that is wrong", () => {
-    const base = { id: "proc-vehicle-test", title: "Test", build: SKYSCRAPERS[0]!.build };
+    const base = { id: "proc-vehicle-test", title: "Test", build: SKYSCRAPERS[0]!.build, buildLod: SKYSCRAPERS[0]!.buildLod };
     const params = [{ name: "livery", title: "Livery", default: "red", values: [{ value: "red", title: "Red" }, { value: "blue", title: "Blue" }] }];
     const physics = { weight: 80, power: 3000, maxspeed: 120, accel: null };
     expect(() => exportVehicleMeta([base])).toThrow(/proc-vehicle-test: game properties missing/);
@@ -253,8 +253,8 @@ describe("generateReferences", () => {
       fs.mkdirSync(path.join(out, "refs", "gone"), { recursive: true });
       fs.writeFileSync(path.join(out, "refs", "gone", "old.png"), "png");
       const designs = [
-        { id: "veh-loco", title: "Loco", build: SKYSCRAPERS[0]!.build, references: "loco" },
-        { id: "sky-plain", title: "Plain", build: SKYSCRAPERS[0]!.build },
+        { id: "veh-loco", title: "Loco", build: SKYSCRAPERS[0]!.build, buildLod: SKYSCRAPERS[0]!.buildLod, references: "loco" },
+        { id: "sky-plain", title: "Plain", build: SKYSCRAPERS[0]!.build, buildLod: SKYSCRAPERS[0]!.buildLod },
       ];
       const refs = generateReferences(out, designs, assets);
       expect(refs.get("veh-loco")).toEqual([

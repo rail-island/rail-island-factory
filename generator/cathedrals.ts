@@ -22,6 +22,7 @@ import { lodBox, lodCylinder } from './lodPrimitives.ts';
 
 import { MeshBuilder, grow, ngon, rect, type MaterialSpec, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
+import { lodLathe } from "./lodLandmarks.ts";
 import type { CatalogFields, ProceduralDesign } from "./design.ts";
 
 // --- vector and outline helpers ------------------------------------------------------
@@ -884,7 +885,7 @@ export const CATHEDRAL_CATALOG: CatalogFields = {
 /** Every design of the family, by catalog id; `references` is the folder of its source photos under assets/. */
 export const CATHEDRALS: ProceduralDesign[] = [
   { id: "bld-st-basils-cathedral", game: { plaza: { cities: ["town", "city"], layouts: ["radial"] } }, title: "St Basil's Cathedral", build: stBasilsCathedral, buildLod: stBasilsCathedralLod, references: "st-basils-cathedral", catalog: CATHEDRAL_CATALOG },
-  { id: "bld-st-nicholas-church", game: { plaza: { cities: ["town", "city"] } }, title: "St Nicholas Church", build: stNicholasChurch, references: "st-nicholas-church", catalog: CATHEDRAL_CATALOG },
+  { id: "bld-st-nicholas-church", game: { plaza: { cities: ["town", "city"] } }, title: "St Nicholas Church", build: stNicholasChurch, buildLod: stNicholasChurchLod, references: "st-nicholas-church", catalog: CATHEDRAL_CATALOG },
 ];
 
 function basilChapels(): Chapel[] {
@@ -919,5 +920,61 @@ export function stBasilsCathedralLod(): MeshBuilder {
   }
   lodBox(m,'brick',-4.56,9.63,3.8,3.8,DECK,20.17);
   m.spire('roofGreen',rect(4,4,-4.56,9.63),20.17,27);m.cap('roofGreen',rect(4,4,-4.56,9.63),20.17,false);
+  return m;
+}
+
+/** A St Nicholas front tower from afar: white shaft and cornice, drum, copper onion, lantern and cupola. */
+function frontTowerLod(m: MeshBuilder, cx: number, cz: number): void {
+  m.box("white", cx, cz, 5.8, 5.8, 0, 24.0, 0, false);
+  m.box("grey", cx, cz, 6.9, 6.9, 24.0, 25.2);
+  m.prism("white", ngon(6, 3.05 / Math.cos(Math.PI / 6), 0, cx, cz), 25.2, 29.05, false);
+  lodLathe(m, "copper", cx, cz, [[3.55, 29.05], [3.6, 29.9], [2.6, 31.9], [1.1, 34.35]], 6, 0, false);
+  lodLathe(m, "white", cx, cz, [[1.3, 34.35], [1.3, 36.6]], 6, 0, false);
+  lodLathe(m, "copper", cx, cz, [[1.6, 36.6], [1.1, 38.3], [0, 39.3]], 6);
+  m.box("gilt", cx, cz, 0.2, 0.2, 39.3, 41.78, 0, false);
+}
+
+export function stNicholasChurchLod(): MeshBuilder {
+  const m = new MeshBuilder(NICHOLAS);
+  const XC = 11.08;
+  const apseRing = (r: number, x0: number, seg = 4): Ring => {
+    const pts: Ring = [[x0, r], [x0, -r]];
+    for (let k = 0; k <= seg; k++) {
+      const a = -Math.PI / 2 + (k / seg) * Math.PI;
+      pts.push([XC + r * Math.cos(a), r * Math.sin(a)]);
+    }
+    return orient(pts);
+  };
+  // the nave and the apse under red tile, on a grey plinth
+  m.box("grey", -1.92, 0, 28.2, 18.2, 0, 1.2);
+  m.box("white", -1.92, 0, 26.0, 16.0, 1.2, 16.8, 0, false);
+  m.box("grey", -1.92, 0, 27.1, 17.1, 16.8, 17.8);
+  const sec: Ring = [[-8.6, 17.78], [8.6, 17.78], [0, 22.4]];
+  m.sweep("tile", "x", sec, -15.02, sec, -2.62);
+  m.prism("white", apseRing(7.94, 10.5), 1.2, 17.8, false);
+  const steps: Array<[number, number]> = [[8.5, 17.8], [6.4, 20.9], [1.1, 22.2]];
+  for (let k = 0; k + 1 < steps.length; k++) {
+    m.loft("tile", apseRing(steps[k]![0], 2.58), steps[k]![1], apseRing(steps[k + 1]![0], 2.58), steps[k + 1]![1], k + 2 === steps.length);
+  }
+  // the convex front bay (its columns are the same white) and the domed attic
+  const bay = orient([[bayX(-6.1), -6.1], [bayX(0), 0], [bayX(6.1), 6.1], [-6.52, 6.1], [-6.52, -6.1]]);
+  m.prism("white", bay, 1.2, 21.1, false);
+  m.prism("grey", grow(bay, 0.55), 21.1, 22.2);
+  m.prism("white", ngon(6, 5.45, 0, -12.62, 0), 22.2, 25.8, false);
+  lodLathe(m, "copper", -12.62, 0, [[5.85, 25.8], [3.6, 27.7], [0, 28.33]], 6);
+  frontTowerLod(m, -14.62, -5.6);
+  frontTowerLod(m, -14.62, 5.6);
+  // the great dome: drum, ribbed shell, lantern and cupola
+  const cx = 2.27;
+  m.prism("white", ngon(10, 6.3, 0, cx, 0), 17.8, 26.25, false);
+  lodLathe(m, "copper", cx, 0, [[6.75, 26.25], [5.6, 29.6], [1.95, 32.1]], 10, 0, false);
+  m.prism("white", polyAp(6, 2.05, cx, 0), 31.0, 34.15, false);
+  m.prism("grey", polyAp(6, 2.4, cx, 0), 34.15, 34.65);
+  lodLathe(m, "copper", cx, 0, [[1.95, 34.65], [1.6, 36.2], [0, 37.6]], 6, Math.PI / 6);
+  m.box("gilt", cx, 0, 0.25, 0.25, 37.6, 40.8, 0, false);
+  // the apse turret
+  const tx = 10.08, tz = -6.42;
+  m.box("white", tx, tz, 3.4, 3.4, 0, 19.7);
+  lodLathe(m, "copper", tx, tz, [[1.9, 19.7], [1.7, 22.7], [0, 27.0]], 4, Math.PI / 4);
   return m;
 }

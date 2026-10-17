@@ -17,6 +17,8 @@ import type { Vec3 } from "./meshCore.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import { runningNumber, tubeX } from "./cd163.ts";
 import { strokeText, strokeWidth } from "./strokeFont.ts";
+import { LOD_GLASS, lodBands, type LodBand, type LodShell } from "./lodKit.ts";
+import { locoLod, sideWindows } from "./lodLocos.ts";
 import { DIESEL_PALETTE, block, bogie, buffers, coupling, extrude, paint, side, tankX, type BogieSpec } from "./dieselParts.ts";
 
 export interface Cd771Livery {
@@ -289,4 +291,47 @@ function underframe(m: MeshBuilder): void {
   m.scope("air reservoirs", () => {
     for (const s of [-1, 1]) tankX(m, "spring", X(10.6), X(10.0), s * 0.7, 0.95, 0.22);
   });
+}
+
+/**
+ * The CD 771 for distant views (docs/models/lod.md, lodLocos.ts): the short and
+ * the long hood (their ends against the cab hidden) and the cab as shells from
+ * the hood and cab sections, the walkway deck, the fuel tank and the bogies.
+ */
+export function cd771Lod(params?: ParamValues, budget = 100): MeshBuilder {
+  const { livery: key } = resolveParams(CD771_PARAMS, params);
+  const l: Cd771Livery = CD771_LIVERIES[key as keyof typeof CD771_LIVERIES];
+  // half widths from the sections' right halves (the cab's ridge kept 0.1 m wide: the shell needs a width)
+  const halfOf = (ring: Ring) => ring.filter(([z, y]) => z > 0 || y === Math.max(...ring.map((p) => p[1]))).map(([z, y]) => [y, Math.max(0.1, Math.abs(z))] as const)
+    .filter(([y], i, a) => i === 0 || y > a[i - 1]![0]);
+  const hoodSide: LodBand[] = [...lodBands(l.hood, DECK, 3.8), [3.8, HOOD_TOP, l.hoodRoof]];
+  // the hood ends: the core's colour under the roof's cap, the radiator grille in it
+  const hoodEnd: LodBand[] = [[DECK, 4.1, l.hood[0]![2]], [4.1, HOOD_TOP, l.hoodRoof]];
+  const hood = ([a, b]: [number, number], e: number): LodShell => {
+    const [x0, x1] = span(a, b);
+    return {
+      y0: DECK, xc: (x0 + x1) / 2, tip: [[DECK, (x1 - x0) / 2], [HOOD_TOP, (x1 - x0) / 2]], hw: halfOf(HOOD),
+      side: hoodSide, end: hoodEnd, roof: l.hoodRoof, ends: [e],
+      endWindows: [{ u: [-0.95, 0.95], y: [2.8, 3.8], mat: "grille", optional: 20 }],
+    };
+  };
+  const [c0, c1] = span(...CAB_X);
+  const cab: LodShell = {
+    y0: DECK, xc: (c0 + c1) / 2, tip: [[DECK, (c1 - c0) / 2], [4.6, (c1 - c0) / 2]], hw: halfOf(CAB),
+    side: [[DECK, 3.9, l.cab], [3.9, 4.6, l.cabRoof]], end: [[DECK, 3.9, l.cab], [3.9, 4.6, l.cabRoof]], roof: l.cabRoof,
+    endWindows: [-1, 1].map((s) => ({ u: s > 0 ? [1.04, 1.44] as const : [-1.44, -1.04] as const, y: [3.0, 3.8] as const, mat: LOD_GLASS, optional: 0.3 })),
+    sideWindows: sideWindows([{ u: span(3.4, 4.9), y: [3.0, 3.8] }]),
+  };
+  const [d0, d1] = span(0.4, 17.2);
+  const [t0, t1] = span(7.7, 9.9);
+  return locoLod({
+    palette: { ...DIESEL_PALETTE, ...l.palette },
+    shells: [hood(SHORT_HOOD, 1), hood(LONG_HOOD, -1), cab],
+    boxes: [
+      { name: "deck", mat: l.frame, x: [d0, d1], y: [1.25, DECK], w: 1.55 },
+      { name: "fuel tank", mat: "tank", x: [t0, t1], y: [0.32, 1.25], w: 1.45, top: false, optional: 35 },
+      ...[-1, 1].map((e) => ({ name: "end plate", mat: l.frame, x: e > 0 ? [d1 - 0.12, d1] as const : [d0, d0 + 0.12] as const, y: [0.32, 1.25] as const, w: 1.5, top: false as const, optional: 30 })),
+    ],
+    gear: [-1, 1].map((e) => ({ xc: e * 4.33, half: 2.0 + 0.525 + 0.2, top: 1.25 })),
+  }, budget);
 }

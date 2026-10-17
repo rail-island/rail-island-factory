@@ -18,8 +18,10 @@ import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign 
 import { block } from "./vehicleParts.ts";
 import {
   Car, DMU_CATALOG, buffersBoth, endItems, enumParam, exhaust, sideEmblem, sideItems, sideNumber, tractionNumber, underBoxes,
-  type EndItem, type PxBox, type SideItem,
+  DMU_PALETTE, type CarFrame, type EndItem, type PxBox, type SideItem,
 } from "./dmuKit.ts";
+import type { Volume } from "./csdCoachParts.ts";
+import { bogieParts, dmuBody, fitUnit, roofPart, underPart } from "./lodUnits.ts";
 
 export type M296Variant = "m296" | "cd853" | "cd854";
 
@@ -127,14 +129,18 @@ const FRONT: EndItem[] = [
   { kind: "lamp", box: [22, 33, 28, 36], name: "lamp" },
 ];
 
+/** The frame of the native canvases and the body in a paint. */
+const FRAME_296: CarFrame = { kx: K296, ky: 1, kz: 1, centre: CENTRE, sideH: 5, frontH: 5 };
+const body296 = (paint: Paint): Volume => ({ name: "body", section: SECTION, plan: PLAN, top: TOP, bottom: BOTTOM, bands: paint.bands });
+
 export function m296(params?: ParamValues): MeshBuilder {
   const p = resolveParams(M296_PARAMS, params);
   const variant = p.variant as M296Variant;
   const paint = PAINTS[variant];
   const L = variant === "cd854" ? LAYOUT_854 : LAYOUT_296;
-  const car = new Car(paint.palette, { kx: K296, ky: 1, kz: 1, centre: CENTRE, sideH: 5, frontH: 5 });
+  const car = new Car(paint.palette, FRAME_296);
   const m = car.m;
-  const body = car.volume({ name: "body", section: SECTION, plan: PLAN, top: TOP, bottom: BOTTOM, bands: paint.bands });
+  const body = car.volume(body296(paint));
   m.scope("body", () => {
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
@@ -191,8 +197,31 @@ export function m296(params?: ParamValues): MeshBuilder {
   return m;
 }
 
+/**
+ * The M 296.1, CD 853 or 854 for distant views (lodUnits.ts): the body with
+ * its rounded plan and roof ends in the variant's bands, the end windows and
+ * gangway door as one windscreen, the side window band, the bogies, the
+ * underframe equipment and the radiator.
+ */
+export function m296Lod(params?: ParamValues): MeshBuilder {
+  const variant = resolveParams(M296_PARAMS, params).variant as M296Variant;
+  const paint = PAINTS[variant];
+  const L = variant === "cd854" ? LAYOUT_854 : LAYOUT_296;
+  const X = (x: number) => (x - CENTRE) * K296;
+  const body = dmuBody(FRAME_296, body296(paint), { y0: 0.9, items: L.windows, cabs: [-1, 1], cabItems: FRONT });
+  return fitUnit({
+    palette: { ...DMU_PALETTE, ...paint.palette },
+    bodies: [body],
+    parts: [
+      ...bogieParts([[-M296_PIVOTS / 2, 1.2 + 0.46 + 0.2], [M296_PIVOTS / 2, 1.2 + 0.42 + 0.2]], 0.9),
+      underPart(X(6.1), X(17.1), 0.3, 0.9, 1.1),
+      roofPart("roofDark", X(2.3), X(5.2), 0.75, 0.75, 4.0, 4.16),
+    ],
+  }, 100);
+}
+
 export const M296_VARIANTS: readonly M296Variant[] = ["m296", "cd853", "cd854"];
 
 export const M296_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-csd-m296", game: { weight: 57, power: 592, maxspeed: 120, accel: null }, title: "CSD M 296.1 / CD 853 / 854", build: m296, params: M296_PARAMS, catalog: DMU_CATALOG, references: "csd-m296" },
+  { id: "proc-vehicle-csd-m296", game: { weight: 57, power: 592, maxspeed: 120, accel: null }, title: "CSD M 296.1 / CD 853 / 854", build: m296, buildLod: m296Lod, params: M296_PARAMS, catalog: DMU_CATALOG, references: "csd-m296" },
 ];

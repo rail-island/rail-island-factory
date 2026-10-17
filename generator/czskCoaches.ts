@@ -7,12 +7,12 @@
 import type { GameProperties, ProceduralDesign } from "./design.ts";
 import type { CoachTransfer } from "./coachTransfers.ts";
 import { COACH_CATALOG } from "./csdCoaches.ts";
-import { CD_Y_PARAMS, cdYCoach } from "./cdYCoach.ts";
-import { ZSR_PARAMS, zsrCoach } from "./zsrCoach.ts";
-import { UIC_Z_PARAMS, uicZCoach } from "./uicZCoach.ts";
+import { CD_Y_PARAMS, cdYCoach, cdYCoachLod } from "./cdYCoach.ts";
+import { ZSR_PARAMS, zsrCoach, zsrCoachLod } from "./zsrCoach.ts";
+import { UIC_Z_PARAMS, uicZCoach, uicZCoachLod } from "./uicZCoach.ts";
 
 // the builders, re-exported: the standalone JS models (jsModel.ts) import them from this family module
-export { cdYCoach, zsrCoach, uicZCoach };
+export { cdYCoach, zsrCoach, uicZCoach, cdYCoachLod, zsrCoachLod, uicZCoachLod };
 
 /** What the game needs of it beyond its geometry (design.ts GameProperties). */
 const CD_Y_COACH_GAME: GameProperties = {
@@ -38,9 +38,9 @@ const ZSR_COACH_GAME: GameProperties = {
 };
 
 export const CZSK_COACHES: readonly ProceduralDesign[] = [
-  { id: "proc-vehicle-cd-y-coach", game: CD_Y_COACH_GAME, title: "CD Y Coach", build: cdYCoach, params: CD_Y_PARAMS, references: "cd-y-coach", catalog: COACH_CATALOG },
-  { id: "proc-vehicle-zsr-coach", game: ZSR_COACH_GAME, title: "ZSR Coach", build: zsrCoach, params: ZSR_PARAMS, references: "zsr-coach", catalog: COACH_CATALOG },
-  { id: "proc-vehicle-uic-z-coach", game: { weight: 46, power: 0, maxspeed: 200, accel: null }, title: "UIC-Z Coach", build: uicZCoach, params: UIC_Z_PARAMS, references: "uic-z-coach", catalog: COACH_CATALOG },
+  { id: "proc-vehicle-cd-y-coach", game: CD_Y_COACH_GAME, title: "CD Y Coach", build: cdYCoach, buildLod: cdYCoachLod, params: CD_Y_PARAMS, references: "cd-y-coach", catalog: COACH_CATALOG },
+  { id: "proc-vehicle-zsr-coach", game: ZSR_COACH_GAME, title: "ZSR Coach", build: zsrCoach, buildLod: zsrCoachLod, params: ZSR_PARAMS, references: "zsr-coach", catalog: COACH_CATALOG },
+  { id: "proc-vehicle-uic-z-coach", game: { weight: 46, power: 0, maxspeed: 200, accel: null }, title: "UIC-Z Coach", build: uicZCoach, buildLod: uicZCoachLod, params: UIC_Z_PARAMS, references: "uic-z-coach", catalog: COACH_CATALOG },
 ];
 
 const DOC = {

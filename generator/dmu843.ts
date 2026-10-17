@@ -20,8 +20,10 @@ import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign 
 import { block } from "./vehicleParts.ts";
 import {
   Car, DMU_CATALOG, buffersBoth, endItems, enumParam, exhaust, sideEmblem, sideItems, sideNumber, tankX, tractionNumber, underBoxes,
-  type EndItem, type PxBox, type SideItem,
+  DMU_PALETTE, type CarFrame, type EndItem, type PxBox, type SideItem,
 } from "./dmuKit.ts";
+import { lodSideBox } from "./lodKit.ts";
+import { bogieParts, dmuBody, fitUnit, roofPart, underPart } from "./lodUnits.ts";
 
 export type Cd843Unit = "motorCar" | "drivingTrailer" | "trailer";
 
@@ -147,13 +149,11 @@ const GANGWAY_END: EndItem[] = [
   { kind: "window", box: [17, 29, 22, 42], name: "door window", fw: 0.04 },
 ];
 
-export function cd843(params?: ParamValues): MeshBuilder {
-  const p = resolveParams(CD843_PARAMS, params);
-  const unit = p.unit as Cd843Unit;
-  const L = LAYOUTS[unit];
-  const centre = (L.x0 + L.x1) / 2;
-  const car = new Car(PALETTE, { kx: L.kx, ky: 1, kz: 1, centre, sideH: L.sideH, frontH: L.frontH });
-  const m = car.m;
+/** A car's frame: its native canvases, centred between its end walls. */
+const frame843 = (L: Layout): CarFrame => ({ kx: L.kx, ky: 1, kz: 1, centre: (L.x0 + L.x1) / 2, sideH: L.sideH, frontH: L.frontH });
+
+/** A car's body: the plan's corners chamfered 0.1 m. */
+function body843(L: Layout): Volume {
   const xs = (b: number) => L.x0 + (b / BODY_843) * (L.x1 - L.x0); // body metres -> source x
   // the cab ends round the roof back 0.6 m from 3.55 m (the 843 XML's 0.8 m from 3.5 m)
   const cabTop = (e: number): Pt[] => {
@@ -163,13 +163,21 @@ export function cd843(params?: ParamValues): MeshBuilder {
   };
   const top: Pt[] = [...(L.cabs.includes(-1) ? cabTop(-1) : [[L.x0, 3.95] as Pt]), ...(L.cabs.includes(1) ? cabTop(1) : [[L.x1, 3.95] as Pt])];
   const r = 0.1 / L.kx; // the plan's corner chamfer, 0.1 m
-  const body: Volume = car.volume({
-    name: "body",
-    section: SECTION,
-    plan: [[L.x0, 1.4], [L.x0 + r, 1.5], [L.x1 - r, 1.5], [L.x1, 1.4]],
-    top,
-    bands: BANDS,
-  });
+  return { name: "body", section: SECTION, plan: [[L.x0, 1.4], [L.x0 + r, 1.5], [L.x1 - r, 1.5], [L.x1, 1.4]], top, bands: BANDS };
+}
+
+/** A cab front's items on a canvas `frontH` tall (the 843 front sits 10 rows higher on a 6 m canvas). */
+const cabFront = (frontH: number): EndItem[] => CAB_FRONT.map((it): EndItem => ({ ...it, box: [it.box[0], it.box[1] + 10 * (frontH - 5), it.box[2], it.box[3] + 10 * (frontH - 5)] }));
+
+export function cd843(params?: ParamValues): MeshBuilder {
+  const p = resolveParams(CD843_PARAMS, params);
+  const unit = p.unit as Cd843Unit;
+  const L = LAYOUTS[unit];
+  const centre = (L.x0 + L.x1) / 2;
+  const car = new Car(PALETTE, frame843(L));
+  const m = car.m;
+  const xs = (b: number) => L.x0 + (b / BODY_843) * (L.x1 - L.x0); // body metres -> source x
+  const body: Volume = car.volume(body843(L));
   m.scope("body", () => {
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
@@ -189,9 +197,7 @@ export function cd843(params?: ParamValues): MeshBuilder {
   for (const e of [1, -1])
     m.scope(e > 0 ? "front end" : "rear end", () => {
       if (L.cabs.includes(e)) {
-        const rows = L.frontH - 5; // the 843 front sits 10 rows higher on a 6 m canvas
-        const items = CAB_FRONT.map((it): EndItem => ({ ...it, box: [it.box[0], it.box[1] + 10 * rows, it.box[2], it.box[3] + 10 * rows] }));
-        m.scope("cab", () => endItems(car, body, e, items));
+        m.scope("cab", () => endItems(car, body, e, cabFront(L.frontH)));
         m.scope("apron", () => apron(car, e, e > 0 ? L.x1 : L.x0));
       } else {
         const rows = L.frontH - 6;
@@ -245,6 +251,36 @@ function apron(car: Car, e: number, tip: number): void {
   block(car.m, "yellow", a + 0.01, b - 0.01, 0.3, 0.38, -1.29, 1.29);
 }
 
+/**
+ * A car of the 843 family for distant views (lodUnits.ts): the body's section,
+ * bands and the roof sloping to each cab, the cab fronts' windows and door as
+ * one windscreen, the side window band, the deep red aprons under the cabs,
+ * the bogies, the underframe equipment and the air conditioning.
+ */
+export function cd843Lod(params?: ParamValues): MeshBuilder {
+  const unit = resolveParams(CD843_PARAMS, params).unit as Cd843Unit;
+  const L = LAYOUTS[unit];
+  const f = frame843(L);
+  const X = (x: number) => (x - f.centre) * L.kx;
+  const xs = (b: number) => L.x0 + (b / BODY_843) * (L.x1 - L.x0);
+  const body = dmuBody(f, body843(L), { items: L.windows, cabs: L.cabs, cabItems: cabFront(L.frontH) });
+  const half = 1.2 + (L.motor ? 0.46 : 0.42) + 0.2;
+  return fitUnit({
+    palette: { ...DMU_PALETTE, ...PALETTE },
+    bodies: [body],
+    parts: [
+      ...bogieParts([[-8.6, half], [8.6, half]], 0.8),
+      L.motor ? underPart(X(5.6), X(18.5), 0.3, 0.8, 1.15) : underPart(X(xs(9.0)), X(xs(15.6)), 0.4, 0.8, 1.0),
+      ...L.cabs.map((e) => ({ optional: 30, draw: (m: MeshBuilder) => m.scope("apron", () => {
+        const x1 = X(e > 0 ? L.x1 : L.x0) - e * 0.05;
+        const [a, b] = [x1 - e * 0.7, x1].sort((p, q) => p - q) as [number, number];
+        lodSideBox(m, "red", [[a, 0.38], [b, 0.38], [b, 0.8], [a, 0.8]], -1.3, 1.3);
+      }) })),
+      roofPart("roofGrey", X(xs(11.2)), X(xs(12.9)), 0.6, 0.6, 3.86, 4.08),
+    ],
+  }, 100);
+}
+
 export const CD843_UNITS: readonly Cd843Unit[] = ["motorCar", "drivingTrailer", "trailer"];
 
 /** What the game needs of it beyond its geometry (design.ts GameProperties). */
@@ -260,5 +296,5 @@ const CD_843_GAME: GameProperties = {
 };
 
 export const DMU843_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-cd-843", game: CD_843_GAME, title: "CD 843 / 943 / 043", build: cd843, params: CD843_PARAMS, catalog: DMU_CATALOG, references: "cd-843" },
+  { id: "proc-vehicle-cd-843", game: CD_843_GAME, title: "CD 843 / 943 / 043", build: cd843, buildLod: cd843Lod, params: CD843_PARAMS, catalog: DMU_CATALOG, references: "cd-843" },
 ];

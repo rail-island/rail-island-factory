@@ -65,10 +65,10 @@ export interface ProceduralDesign {
   build: (params?: ParamValues) => MeshBuilder;
   /** The design's enum parameters; absent for a fixed design. */
   params?: readonly ParamSpec[];
-  /** Optional hand-authored distant silhouette, exported from the same source module. */
-  buildLod?: (params?: ParamValues) => MeshBuilder;
+  /** The dedicated distant model (docs/models/lod.md), exported from the same source module. */
+  buildLod: (params?: ParamValues) => MeshBuilder;
   /** Total distant-mesh budget; defaults to the family policy in lod.ts. */
-  lodTriangles?: 100 | 200 | 500;
+  lodTriangles?: 100 | 200 | 300 | 500;
   /**
    * The names of the parameters that only recolour the model (a roof or wall
    * colour): they change no geometry, so the tests vary them one value at a

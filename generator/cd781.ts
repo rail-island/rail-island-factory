@@ -16,6 +16,7 @@ import {
   paint, planBody, plough, rect, side, sideDecal, sideGrille, sideHandrail, sidePlate, sideWindow, tankX,
   type Band, type BogieSpec, type PlanBody, type Wall,
 } from "./dieselParts.ts";
+import { locoLod, planBodyLod, screen, sideWindows } from "./lodLocos.ts";
 
 export interface Cd781Livery {
   title: string;
@@ -242,4 +243,30 @@ function underframe(m: MeshBuilder): void {
   m.scope("battery boxes", () => {
     for (const s of [-1, 1]) block(m, "underframe", X(6.8), X(7.5), 0.6, 1.0, ...side(s, 0.5, 1.2));
   });
+}
+
+/** The CD 781 for distant views (docs/models/lod.md, lodLocos.ts). */
+export function cd781Lod(params?: ParamValues, budget = 100): MeshBuilder {
+  const { livery: key } = resolveParams(CD781_PARAMS, params);
+  const l: Cd781Livery = CD781_LIVERIES[key as keyof typeof CD781_LIVERIES];
+  const shell = planBodyLod(body(l), {
+    endWindows: screen(0.01, 1.4, 2.92, 3.68),
+    sideWindows: [
+      ...sideWindows([{ u: [X(1.1), X(2.0)], y: [2.9, 3.5] }, { u: [X(2.38), X(2.82)], y: [2.95, 3.42] }], 0.4, true),
+      ...sideWindows([3.3, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0].map((x) => ({ u: [X(x), X(x + 0.62)] as const, y: [2.98, 3.42] as const })), 0.4),
+    ],
+  });
+  const beam = CENTRE - 0.5;
+  return locoLod({
+    palette: { ...DIESEL_PALETTE, grey: C("#808080"), silver: C("#c6c6ad"), darkSeam: C("#5a0c12"), ...l.palette },
+    shells: [shell],
+    boxes: [
+      { name: "frame", mat: "underframe", x: [-beam, beam], y: [1.0, 1.2], w: HALF * 0.92, top: false, optional: 40 },
+      ...[-1, 1].map((e) => ({ name: "plough", mat: l.plough, x: e > 0 ? [beam - 0.5, beam] as const : [-beam, -beam + 0.5] as const, y: [0.4, 1.0] as const, w: 1.45, top: false as const, optional: 30 })),
+      { name: "fuel tank", mat: "tank", x: [X(7.6), X(10.0)], y: [0.42, 1.0], w: 1.2, top: false, optional: 35 },
+      { name: "engine hatch", mat: l.roof, x: [X(6.1), X(9.6)], y: [4.32, 4.5], w: [0.85, 0.7], optional: 25 },
+      { name: "exhaust", mat: "exhaust", x: [X(10.95) - 0.45, X(10.95) + 0.45], y: [4.32, 4.52], w: 0.275, optional: 15 },
+    ],
+    gear: [-1, 1].map((e) => ({ xc: e * 4.3, half: 2.1 + 0.525 + 0.2, top: 1.0 })),
+  }, budget);
 }

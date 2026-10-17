@@ -3,6 +3,8 @@
 // balconies, colourful shop awnings and flat parapet roofs. Metres, +z street.
 import { MeshBuilder, chamferedRect, ngon, rect, type MaterialSpec } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
+import { balconyHouseLod, cornerShopLod, marketBlockLod, officeHouseLod, terraceHouseLod } from "./lodCommercial.ts";
+export { balconyHouseLod, cornerShopLod, marketBlockLod, officeHouseLod, terraceHouseLod } from "./lodCommercial.ts";
 import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 
 const option = (value: string, title: string) => ({ value, title });
@@ -31,23 +33,23 @@ export const COMMERCIAL_CATALOG: CatalogFields = {
   license: "CC0", author: "Rail Island", source: "Rail Island",
 };
 
-const SHOP_PARAMS = [param("storeys", "Storeys", [["three", "Three"], ["two", "Two"], ["four", "Four"]]), WIDTH, FRONTAGE, ROOF, ...FINISH];
-const BALCONY_PARAMS = [param("storeys", "Storeys", [["four", "Four"], ["three", "Three"], ["five", "Five"]]), WIDTH,
+export const SHOP_PARAMS = [param("storeys", "Storeys", [["three", "Three"], ["two", "Two"], ["four", "Four"]]), WIDTH, FRONTAGE, ROOF, ...FINISH];
+export const BALCONY_PARAMS = [param("storeys", "Storeys", [["four", "Four"], ["three", "Three"], ["five", "Five"]]), WIDTH,
   param("balconies", "Balconies", [["paired", "Balconies"], ["gallery", "Galleries"]]), ROOF, ...finishes("chalk", "gold")];
-const BLOCK_PARAMS = [param("storeys", "Storeys", [["three", "Three"], ["four", "Four"]]),
+export const BLOCK_PARAMS = [param("storeys", "Storeys", [["three", "Three"], ["four", "Four"]]),
   param("bays", "Shop bays", [["four", "Four"], ["five", "Five"], ["six", "Six"]]), FRONTAGE, ROOF, ...finishes("cream", "gold")];
-const TERRACE_PARAMS = [param("storeys", "Storeys", [["four", "Four"], ["three", "Three"], ["five", "Five"]]),
+export const TERRACE_PARAMS = [param("storeys", "Storeys", [["four", "Four"], ["three", "Three"], ["five", "Five"]]),
   param("setback", "Terrace plan", [["front", "Street terrace"], ["corner", "Corner terrace"]]), FRONTAGE,
   param("roof", "Terrace use", [["garden", "Pergola"], ["solar", "Solar panels"]]), ...FINISH];
-const OFFICE_PARAMS = [param("storeys", "Storeys", [["seven", "Seven"], ["five", "Five"], ["nine", "Nine"]]), WIDTH,
+export const OFFICE_PARAMS = [param("storeys", "Storeys", [["seven", "Seven"], ["five", "Five"], ["nine", "Nine"]]), WIDTH,
   param("facade", "Facade", [["grid", "Framed windows"], ["ribbon", "Ribbon glazing"]]), ROOF, ...finishes("charcoal", "blue")];
-const NUM: Record<string, number> = { two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, nine: 9 };
-const PL = 0.45;
-const ST = 3.25;
+export const NUM: Record<string, number> = { two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, nine: 9 };
+export const PL = 0.45;
+export const ST = 3.25;
 interface Face { axis: "x" | "z"; sign: 1 | -1; at: number }
 interface Footprint { w: number; d: number; x: number; z: number }
 
-function palette(p: ParamValues): Record<string, MaterialSpec> {
+export function palette(p: ParamValues): Record<string, MaterialSpec> {
   return {
     wall: { color: WALL_COLOURS[p.walls!]! }, accent: { color: ACCENT_COLOURS[p.accent!]! },
     trim: { color: "#484b5c" }, roof: { color: "#363a49" },
@@ -302,9 +304,9 @@ export function terraceHouse(given?: ParamValues): MeshBuilder {
 }
 
 export const COMMERCIAL_BUILDINGS: readonly ProceduralDesign[] = [
-  { id: "comm-corner-shop", title: "Corner Shop House", build: cornerShop, params: SHOP_PARAMS },
-  { id: "comm-balcony-house", title: "Balcony Shop House", build: balconyHouse, params: BALCONY_PARAMS },
-  { id: "comm-market-block", title: "Market Block", build: marketBlock, params: BLOCK_PARAMS },
-  { id: "comm-terrace-house", title: "Terraced Commercial House", build: terraceHouse, params: TERRACE_PARAMS },
-  { id: "comm-office-house", title: "Commercial Office House", build: officeHouse, params: OFFICE_PARAMS },
+  { id: "comm-corner-shop", title: "Corner Shop House", build: cornerShop, buildLod: cornerShopLod, params: SHOP_PARAMS },
+  { id: "comm-balcony-house", title: "Balcony Shop House", build: balconyHouse, buildLod: balconyHouseLod, params: BALCONY_PARAMS },
+  { id: "comm-market-block", title: "Market Block", build: marketBlock, buildLod: marketBlockLod, params: BLOCK_PARAMS },
+  { id: "comm-terrace-house", title: "Terraced Commercial House", build: terraceHouse, buildLod: terraceHouseLod, params: TERRACE_PARAMS },
+  { id: "comm-office-house", title: "Commercial Office House", build: officeHouse, buildLod: officeHouseLod, params: OFFICE_PARAMS },
 ].map((d) => ({ ...d, catalog: COMMERCIAL_CATALOG, finishParams: COMMERCIAL_FINISH_PARAMS }));

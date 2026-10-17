@@ -14,6 +14,7 @@ import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
 import type { Pt } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import type { PxBox } from "./csdCoaches.ts";
+import { liveryCoachLod } from "./lodTrams.ts";
 import { buildLiveryCoach, type BodyGeo, type DoorSpec, type EndSpec, type LiveryCoachSpec, type LiverySide, type Paint, type Win } from "./liveryCoach.ts";
 
 /** The kind of coach: the same three kinds every operator of the body runs. */
@@ -365,4 +366,10 @@ const SPECS: Record<UicZOperator, (variant: UicZVariant) => LiveryCoachSpec> = {
 export function uicZCoach(params?: ParamValues): MeshBuilder {
   const p = resolveParams(UIC_Z_PARAMS, params);
   return buildLiveryCoach(SPECS[p.operator as UicZOperator](p.variant as UicZVariant));
+}
+
+/** The same coach from afar (docs/models/lod.md): the livery coach adapter of lodTrams.ts. */
+export function uicZCoachLod(params?: ParamValues): MeshBuilder {
+  const p = resolveParams(UIC_Z_PARAMS, params);
+  return liveryCoachLod(SPECS[p.operator as UicZOperator](p.variant as UicZVariant));
 }

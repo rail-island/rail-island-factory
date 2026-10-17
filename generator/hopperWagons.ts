@@ -9,7 +9,8 @@ import { type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import type { ParamSpec, ParamValues } from "./design.ts";
 import { resolveParams } from "./design.ts";
-import { Wagon } from "./wagonParts.ts";
+import { WAGON_PALETTE, Wagon } from "./wagonParts.ts";
+import { blockPart, clipShell, drawGearLod, freightWagonLod, joinSameColour, roofBoxPart, wagonBogies, wagonBox } from "./lodSteam.ts";
 import { FREIGHT_NUMBERS, boldText, clipSolid, numberLines, surfaceStrip, type Clip, type Pt } from "./freightWagonParts.ts";
 import { strokeText as strokeLetters } from "./strokeFont.ts";
 
@@ -185,6 +186,30 @@ export function faccsHopperWagon(params?: ParamValues): MeshBuilder {
   return m;
 }
 
+/** The Faccs from afar (lodSteam.ts): the hopper with its darker lower slopes and the ballast top, frame, end frames, chutes and bogies. */
+export function faccsHopperWagonLod(params?: ParamValues): MeshBuilder {
+  const { livery } = resolveParams(FACCS_PARAMS, params);
+  const L = FACCS_LIVERIES.find((l) => l.value === livery)!;
+  const C = 6.4;
+  // the VIAMONT board on the upper side
+  const board = (s: number) => ({ u: [(s > 0 ? 6.7 : 3.0) - C, (s > 0 ? 9.9 : 6.2) - C] as const, y: [3.1, 3.75] as const, mat: "ink", sides: [s], optional: 40 });
+  const hopper = clipShell(C, [FACCS_LOWER, FACCS_UPPER], [[1.2, 2.1, "lower"], [2.1, 4.2, "upper"]], { end: [[1.2, 4.2, "upper"]], roof: "ballast" });
+  return freightWagonLod({
+    palette: { ...WAGON_PALETTE, ...HOPPER_PALETTE, ...L.paint },
+    shells: [
+      livery === "viamont" ? { ...hopper, sideWindows: [board(1), board(-1)] } : hopper,
+      wagonBox(C, 0.2, 12.6, [[0.9, 1.45], [1.2, 1.45]], [[0.9, 1.2, "frame"]]),
+    ],
+    parts: [
+      // the end frames: the end wall and its top rails at each end
+      roofBoxPart(C, "upper", 0.2, 0.3, 1.5, 1.5, 1.2, 2.3, 30),
+      roofBoxPart(C, "upper", 12.5, 12.6, 1.5, 1.5, 1.2, 2.3, 30),
+      blockPart(C, "lower", 4.4, 8.4, 0.1, 0.9, 1.4, 20),
+      wagonBogies(C, [[2.25, 2.0], [10.55, 2.0]], 0.9),
+    ],
+  });
+}
+
 // --- the Falls coal hopper --------------------------------------------------------
 
 export const FALLS_LIVERIES: readonly HopperLivery[] = [
@@ -269,6 +294,27 @@ export function fallsHopperWagon(params?: ParamValues): MeshBuilder {
   return m;
 }
 
+/** The Falls from afar (lodSteam.ts): the lower box with its panels, the upper bulge, the coal top, chutes, beams and bogies. */
+export function fallsHopperWagonLod(params?: ParamValues): MeshBuilder {
+  const { livery } = resolveParams(FALLS_PARAMS, params);
+  const L = FALLS_LIVERIES.find((l) => l.value === livery)!;
+  const C = 6.75;
+  const palette = { ...WAGON_PALETTE, ...HOPPER_PALETTE, ...L.paint };
+  const lower: Clip = { section: FALLS_LOWER_SECTION, elevation: [[0.4, 0.9], [12.6, 0.9], [12.6, 2.9], [0.4, 2.9]] };
+  const side = joinSameColour([[0.9, 1.2, "lower"], [1.2, 2.88, "panel"], [2.88, 2.95, "lower"], [2.95, 4.3, "upper"]], palette);
+  return freightWagonLod({
+    palette,
+    // the centre post between the two halves of the lower box
+    shells: [{ ...clipShell(C, [lower, FALLS_UPPER], side, { end: [[0.9, 2.95, "lower"], [2.95, 4.3, "upper"]], roof: "coal" }), sideWindows: [{ u: [6.1 - C, 6.9 - C] as const, y: [0.9, 2.95] as const, mat: "shade", optional: 35 }] }],
+    parts: [
+      blockPart(C, "frame", 2.6, 10.9, 0.55, 0.9, 1.3, 20),
+      roofBoxPart(C, "frame", 12.6, 13.2, 1.5, 1.5, 0.85, 0.95, 15),
+      drawGearLod(C, [[0.3, 0.4]], 0.85, 1.2, 1.45, "frame"),
+      wagonBogies(C, [[2.45, 2.0], [10.55, 2.0]], 0.9),
+    ],
+  });
+}
+
 // --- the Wap -----------------------------------------------------------------------
 
 const WAP_PALETTE: Record<string, MaterialSpec> = {
@@ -342,3 +388,19 @@ export function wapHopperWagon(given?: ParamValues): MeshBuilder {
   return m;
 }
 
+
+/** The Wap from afar (lodSteam.ts): the lower box and upper bulge, the gravel heaped above the rim (loaded), the brake platform and bogies. */
+export function wapHopperWagonLod(given?: ParamValues): MeshBuilder {
+  const { cargo } = resolveParams(WAP_PARAMS, given);
+  const C = 6.75;
+  // the post between the side flaps
+  const shells = [{ ...clipShell(C, [WAP_LOWER, WAP_UPPER], [[0.8, 3.0, "lower"], [3.0, 4.1, "upper"]], { roof: cargo === "coal" ? "gravel" : "shade" }), sideWindows: [{ u: [6.8 - C, 7.4 - C] as const, y: [0.9, 3.0] as const, mat: "shade", optional: 35 }] }];
+  const parts = [
+    blockPart(C, "shade", 0.5, 1.4, 1.2, 1.3, 1.4, 15),
+    drawGearLod(C, [[0.5, 0.6], [12.8, 13.0]], 0.8, 1.2, 1.4, "frame"),
+    wagonBogies(C, [[3.55, 2.0], [10.65, 2.0]], 0.8),
+  ];
+  // the heap above the rim
+  if (cargo === "coal") parts.push(roofBoxPart(C, "gravel", 1.4, 12.8, 1.1, 0.45, 4.1, 4.5, 45));
+  return freightWagonLod({ palette: { ...WAGON_PALETTE, ...WAP_PALETTE }, shells, parts });
+}

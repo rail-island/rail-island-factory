@@ -4,6 +4,10 @@
 import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { block, plate, side } from "./vehicleParts.ts";
+import {
+  LOD_GLASS, fitLod, lodBands, lodBogie, lodPantograph, lodRoofBox, lodSideBox, windowBands,
+  type LodBand, type LodPart, type LodRect, type LodShell,
+} from "./lodKit.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import {
   CD163_PALETTE,
@@ -867,4 +871,50 @@ export function cd150(params?: ParamValues): MeshBuilder {
     });
   });
   return m;
+}
+
+// --- low level of detail ------------------------------------------------------------
+
+/**
+ * The CD 150 for distant views (the shared kit, lodKit.ts): the shell from the
+ * end profile (`frontX`) rolling over into the roof, painted in the livery's
+ * bands and cab paint, the windscreens as one band per end, the machine room's
+ * windows and the cab doors' windows (optional, the smallest first), the right
+ * side's grilles and cooler skirt (optional), the frame and skirt, a block per
+ * bogie, the cooler on the roof, the raised rear pantograph and the folded
+ * front one (optional). Within `budget` triangles for every livery.
+ */
+export function cd150Lod(params?: ParamValues, budget = 100): MeshBuilder {
+  const { livery: key } = resolveParams(CD150_PARAMS, params);
+  const livery: Cd150Livery = CD150_LIVERIES[key as keyof typeof CD150_LIVERIES];
+  const roofed = (bands: readonly Band[]): LodBand[] => [...lodBands(bands, 1.2, 3.7), [3.7, 4.2, "roof"]];
+  const small = (w: LodRect): LodRect => ({ ...w, optional: (w.u[1] - w.u[0]) * (w.y[1] - w.y[0]) });
+  const shell: LodShell = {
+    y0: 1.2,
+    tip: [[1.2, 7.6], [1.6, 7.9], [1.9, 8.0], [2.7, 8.0], [3.7, frontX(3.7, 1)], [3.9, 7.0], [4.2, 5.8]],
+    // the plan's 0.1 m taper toward the noses is left out: the side stands 3 cm in
+    hw: [[1.2, 1.47], [3.7, 1.47], [3.9, 1.42], [4.2, 1.3]],
+    side: roofed(livery.bands),
+    end: roofed(livery.cabBands ?? livery.bands),
+    ...(livery.cabBands ? { cab: { x: CAB_X, side: roofed(livery.cabBands) } } : {}),
+    roof: "roof",
+    endWindows: windowBands([-1, 1].map((s) => ({ u: side(s, 0.1, 1.38), y: [2.8, 3.6] as const })), 0.4),
+    sideWindows: [
+      ...[-4.7, -1.7, 0.8, 3.8].map((x) => small({ u: [x, x + 0.9], y: [2.7, 3.3], mat: LOD_GLASS, sides: [-1] })),
+      small({ u: [6.1, 6.7], y: [2.7, 3.4], mat: LOD_GLASS, mirror: true }),
+      ...[[-5.5, -2.6], [2.6, 5.5]].map(([a, b]) => ({ u: [a!, b!] as const, y: [1.9, 3.5] as const, mat: "louvre", sides: [1], optional: 20 })),
+      { u: [-2.21, 2.21], y: [2.7, 3.7], mat: "cooler", sides: [1], optional: 25 },
+    ],
+  };
+  const pantograph = (m: MeshBuilder, x: number, h: number, raised: boolean) =>
+    lodPantograph(m, { x, roofY: 4.2, baseY: 4.35, h, raised, raisedTop: 6.24, lower: 1.66, upper: 1.66, halfHead: 0.9 });
+  const parts: LodPart[] = [
+    { draw: (m) => m.scope("frame", () => lodSideBox(m, livery.skirt, [[-7.8, 0.9], [7.8, 0.9], [7.8, 1.2], [-7.8, 1.2]], -1.36, 1.36)) },
+    { draw: (m) => m.scope("running gear", () => { for (const x of [-4.25, 4.15]) lodBogie(m, x, 2.3, 0.9, 1.1); }) },
+    { optional: 30, draw: (m) => m.scope("transformer", () => lodSideBox(m, "bogie", [[-1, 0.35], [1, 0.35], [1, 0.9], [-1, 0.9]], -1.25, 1.25)) },
+    { draw: (m) => m.scope("cooler", () => lodRoofBox(m, "cooler", -2.21, 2.21, 1.43, 0.6, 3.9, 4.6)) },
+    { draw: (m) => m.scope("raised pantograph", () => pantograph(m, -4.25, 1, true)) },
+    { optional: 0, draw: (m) => m.scope("folded pantograph", () => pantograph(m, 4.25, -1, false)) },
+  ];
+  return fitLod({ palette: { ...PALETTE, ...livery.palette }, shells: [shell], parts }, budget);
 }

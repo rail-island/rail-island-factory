@@ -1,7 +1,9 @@
 // Remaining freight body families from the native XML profiles.
 import { MeshBuilder, type Ring } from './meshBuilder.ts';
 import type { GameProperties } from './design.ts';
-import { Wagon } from './wagonParts.ts';
+import { WAGON_PALETTE, Wagon } from './wagonParts.ts';
+import { drawGearLod, freightWagonLod, openBoxPart, wagonAxles, wagonBogies, wagonBox, zSweep } from './lodSteam.ts';
+import type { LodPart } from './lodKit.ts';
 import { WAGON_CATALOG } from './wagons.ts';
 import { numberLines } from './freightWagonParts.ts';
 import { resolveParams, type ParamValues, type ParamSpec, type ProceduralDesign } from './design.ts';
@@ -63,6 +65,55 @@ export function heavyWagon():MeshBuilder {
  for(const s of [-1,1])m.scope('buffers',()=>c.drawGear(s,s>0?23.2:.9,s>0?22.75:1.35,s>0?22.7:1.4,.75,1.05,1.4,'frame'));
  return m;
 }
+// --- the distant models (lodSteam.ts) -------------------------------------------------
+
+/** The chassis from afar: two bogies or two wheelsets, and the beams at both ends. */
+function chassisLod(length:number,axles:number[],bogies=false):LodPart[] {
+ const C=length/2;
+ return [bogies?wagonBogies(C,axles.map(x=>[x,1.9] as const),.78):wagonAxles(C,axles,.78),drawGearLod(C,[[.45,.5],[length-.5,length-.45]],.8,1.1,1.4,'frame')];
+}
+/** The covered wagon from afar: frame, walls and roof as one shell in each body's colours. */
+export function coveredWagonLod(given?:ParamValues):MeshBuilder {
+ const {body}=resolveParams(BODY,given),beer=body==='beer',sliding=body==='sliding';
+ const length=beer?11.9:sliding?16.4:14,h=beer?4.1:sliding?4.2:3.9,wall=beer?3.5:sliding?3.7:3.4;
+ const hw=[[.78,1.4],[wall,1.4],[wall+.2,1.2],[h-.1,.7],[h,.2]] as const;
+ return freightWagonLod({
+  palette:{...WAGON_PALETTE,...palette,body:beer?palette.cream:palette.body},
+  shells:[wagonBox(length/2,.55,length-.55,hw,[[.78,1.1,'frame'],[1.1,wall,'body'],[wall,h,'roof']],{roof:'roof'})],
+  parts:chassisLod(length,beer?[2.45,9.45]:sliding?[2.75,13.65]:[3,11.1],sliding),
+ });
+}
+/** The Vte from afar: the floor on its frame and the open body, seen into from above. */
+export function vteWagonLod():MeshBuilder {
+ return freightWagonLod({
+  palette:{...WAGON_PALETTE,...palette},
+  shells:[wagonBox(4.9,.6,9.2,[[.78,1.45],[1.2,1.45]],[[.78,1.1,'frame'],[1.1,1.2,'body']],{roof:'body'})],
+  parts:[openBoxPart(4.9,'body',.6,9.2,1.45,1.2,2.8,.1),...chassisLod(9.8,[1.95,7.85])],
+ });
+}
+/** The Uaaikk from afar: the well deck as five convex pieces, the brakeman's cabin with its glass band, bogies and beams. */
+export function heavyWagonLod():MeshBuilder {
+ const C=12.05,X=(pts:Array<[number,number]>)=>pts.map(([x,y]):[number,number]=>[x-C,y]);
+ // the deck's pieces, front to rear: their tops, and the outer ends of the end decks
+ const pieces:Array<[Array<[number,number]>,number[]]>=[
+  [[[2.9,.9],[5.5,.9],[5.5,1.3],[2.9,1.3]],[2,3]],
+  [[[5.5,.9],[6.8,.2],[6.8,.6],[5.5,1.3]],[2]],
+  [[[6.8,.2],[17.4,.2],[17.4,.6],[6.8,.6]],[2]],
+  [[[17.4,.2],[18.7,.9],[18.7,1.3],[17.4,.6]],[2]],
+  [[[18.7,.9],[21.5,.9],[21.5,1.3],[18.7,1.3]],[1,2]],
+ ];
+ const glass:Array<[number,number,string]>=[[.8,1.5,'frame'],[1.5,2.3,'lodGlass'],[2.3,2.7,'frame']];
+ return freightWagonLod({
+  palette:{...WAGON_PALETTE,...palette},
+  shells:[wagonBox(C,1.2,1.9,[[.8,.9],[2.7,.9]],glass)],
+  parts:[
+   {draw:m=>m.scope('low deck',()=>{for(const [poly,walls] of pieces)zSweep(m,'body',X(poly),1.4,walls);})},
+   wagonBogies(C,[[3.15,2.5],[20.75,2.5]],.9),
+   drawGearLod(C,[[1.35,1.4],[22.7,22.75]],.75,1.05,1.4,'frame'),
+  ],
+ });
+}
+
 /** What the game needs of it beyond its geometry (design.ts GameProperties). */
 const LEGACY_COVERED_WAGON_GAME: GameProperties = {
   weight: 30,
@@ -76,7 +127,7 @@ const LEGACY_COVERED_WAGON_GAME: GameProperties = {
 };
 
 export const WAGON_EXTRAS:ProceduralDesign[]=[
- {id:'veh-legacy-covered-wagon',game:LEGACY_COVERED_WAGON_GAME,title:'Covered Freight Wagon',build:coveredWagon,params:BODY},
- {id:'veh-legacy-open-wagon',game:{ weight: 15, power: 0, maxspeed: 100, accel: null },title:'Vte Open Wagon',build:vteWagon},
- {id:'veh-legacy-heavy-wagon',game:{ weight: 49, power: 0, maxspeed: 90, accel: null },title:'Uaaikk Low Loader',build:heavyWagon},
+ {id:'veh-legacy-covered-wagon',game:LEGACY_COVERED_WAGON_GAME,title:'Covered Freight Wagon',build:coveredWagon,buildLod:coveredWagonLod,params:BODY},
+ {id:'veh-legacy-open-wagon',game:{ weight: 15, power: 0, maxspeed: 100, accel: null },title:'Vte Open Wagon',build:vteWagon,buildLod:vteWagonLod},
+ {id:'veh-legacy-heavy-wagon',game:{ weight: 49, power: 0, maxspeed: 90, accel: null },title:'Uaaikk Low Loader',build:heavyWagon,buildLod:heavyWagonLod},
 ].map(d=>({...d,catalog:WAGON_CATALOG,references:'remaining-wagons'}));

@@ -13,12 +13,12 @@
 import type { ProceduralDesign } from "./design.ts";
 import type { CoachTransfer } from "./coachTransfers.ts";
 import { COACH_CATALOG } from "./csdCoaches.ts";
-import { DOSTO_PARAMS, dbDosto } from "./dbDoubleDeck.ts";
-import { DR_DOUBLE_DECK_PARAMS, drDoubleDeck } from "./drDoubleDeck.ts";
+import { DOSTO_PARAMS, dbDosto, dbDostoLod } from "./dbDoubleDeck.ts";
+import { DR_DOUBLE_DECK_PARAMS, drDoubleDeck, drDoubleDeckLod } from "./drDoubleDeck.ts";
 
 export const GERMAN_COACHES: readonly ProceduralDesign[] = [
-  { id: "proc-vehicle-db-dosto", game: { weight: 80, power: 0, maxspeed: 120, accel: null }, title: "DB Regio Double-Deck Coach", build: dbDosto, params: DOSTO_PARAMS, catalog: COACH_CATALOG, references: "db-dosto" },
-  { id: "proc-vehicle-dr-sbahn-berlin", game: { weight: 80, power: 0, maxspeed: 120, accel: null }, title: "DR Double-Deck Coach (Berlin S-Bahn livery)", build: drDoubleDeck, params: DR_DOUBLE_DECK_PARAMS, catalog: COACH_CATALOG, references: "dr-sbahn-berlin" },
+  { id: "proc-vehicle-db-dosto", game: { weight: 80, power: 0, maxspeed: 120, accel: null }, title: "DB Regio Double-Deck Coach", build: dbDosto, buildLod: dbDostoLod, params: DOSTO_PARAMS, catalog: COACH_CATALOG, references: "db-dosto" },
+  { id: "proc-vehicle-dr-sbahn-berlin", game: { weight: 80, power: 0, maxspeed: 120, accel: null }, title: "DR Double-Deck Coach (Berlin S-Bahn livery)", build: drDoubleDeck, buildLod: drDoubleDeckLod, params: DR_DOUBLE_DECK_PARAMS, catalog: COACH_CATALOG, references: "dr-sbahn-berlin" },
 ];
 
 const GERMAN_DOC = {
@@ -53,5 +53,5 @@ export const GERMAN_TRANSFERS: readonly CoachTransfer[] = [
 ];
 
 // the builders by name, for the standalone JS models (jsModel.ts imports them from this module)
-export { dbDosto } from "./dbDoubleDeck.ts";
-export { drDoubleDeck } from "./drDoubleDeck.ts";
+export { dbDosto, dbDostoLod } from "./dbDoubleDeck.ts";
+export { drDoubleDeck, drDoubleDeckLod } from "./drDoubleDeck.ts";

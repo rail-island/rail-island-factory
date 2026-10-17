@@ -16,6 +16,7 @@
 
 import { MeshBuilder, chamferedRect, ngon, rect, type MaterialSpec, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
+import { lodLathe } from "./lodLandmarks.ts";
 import type { CatalogFields, ProceduralDesign } from "./design.ts";
 
 type P2 = [number, number];
@@ -918,7 +919,157 @@ export const CHURCH_CATALOG: CatalogFields = {
 
 /** Every design of the family, by catalog id; `references` is the folder of its source photos under assets/. */
 export const CHURCHES: ProceduralDesign[] = [
-  { id: "bld-baroque-church", game: { plaza: { cities: ["village", "town"] } }, title: "Baroque Church", build: baroqueChurch, references: "baroque-church", catalog: CHURCH_CATALOG },
-  { id: "bld-church-vrchlabi", game: { plaza: { cities: ["village", "town"] } }, title: "Vrchlabi Church", build: churchVrchlabi, references: "church-vrchlabi", catalog: CHURCH_CATALOG },
-  { id: "bld-twin-tower-baroque-church", game: { plaza: { cities: ["village", "town"] } }, title: "Twin-Tower Baroque Church", build: twinTowerBaroqueChurch, references: "twin-tower-baroque-church", catalog: CHURCH_CATALOG },
+  { id: "bld-baroque-church", game: { plaza: { cities: ["village", "town"] } }, title: "Baroque Church", build: baroqueChurch, buildLod: baroqueChurchLod, references: "baroque-church", catalog: CHURCH_CATALOG },
+  { id: "bld-church-vrchlabi", game: { plaza: { cities: ["village", "town"] } }, title: "Vrchlabi Church", build: churchVrchlabi, buildLod: churchVrchlabiLod, references: "church-vrchlabi", catalog: CHURCH_CATALOG },
+  { id: "bld-twin-tower-baroque-church", game: { plaza: { cities: ["village", "town"] } }, title: "Twin-Tower Baroque Church", build: twinTowerBaroqueChurch, buildLod: twinTowerBaroqueChurchLod, references: "twin-tower-baroque-church", catalog: CHURCH_CATALOG },
 ];
+
+// --- the distant models -------------------------------------------------------------------
+//
+// Masses, roofs, towers, domes and spires in the full models' colours and
+// dimensions, without windows, clocks, pilasters or statues (docs/models/lod.md).
+
+/** A gilded cross from afar: a post and a bar. */
+function crossLod(m: MeshBuilder, mat: string, cx: number, cz: number, y0: number, h: number): void {
+  const t = Math.max(0.12, h * 0.06);
+  m.box(mat, cx, cz, t, t, y0, y0 + h, 0, false);
+  m.box(mat, cx, cz, h * 0.45, t, y0 + h * 0.66, y0 + h * 0.66 + t, 0, false);
+}
+
+export function baroqueChurchLod(): MeshBuilder {
+  const m = new MeshBuilder(PALETTE);
+  const TZ = 5.9;
+  m.box("stone", 0, -3.8, 19.3, 31.8, 0, 3.0);
+  // the stair as one ramp from the street up to the terrace
+  const ramp: Ring = [[11.6, 0], [19.3, 0], [11.6, 2.85]];
+  m.sweep("stone", "x", ramp, -3.2, ramp, 3.2);
+  m.box("plaster", 0, -4.3, 12, 16, 3, 13.85, 0, false);
+  m.box("trim", 0, -4.3, 12.9, 16.9, 13.85, 14.45);
+  ridgeRoofZ(m, "slate", -6.6, 6.6, 14.5, 17.9, -12.3, 4.0);
+  m.prism("plaster", apseRing(0, -12.3, 6, 8, -1, 0.5), 3, 13.85, false);
+  m.prism("trim", apseRing(0, -12.3, 6.5, 8, -1, 0.6), 13.85, 14.45);
+  m.loft("slate", apseRing(0, -12.3, 6.5, 8, -1, 0.7), 14.5, apseRing(0, -12.3, 0, 8, -1, 0.7), 17.9, false);
+  // the front: its core, the low wings, cornices and volutes
+  m.box("plaster", 0, 6.3, 9.4, 5.6, 3, 18.5, 0, false);
+  for (const s of [-1, 1]) {
+    m.box("plaster", s * 6.2, 5.6, 3.6, 4.2, 3, 12.15, 0, false);
+    m.box("trim", s * 6.2, 5.6, 4.2, 4.8, 12.15, 12.85);
+    const volute: Ring = [[s * 8.0, 12.85], [s * 4.7, 12.85], [s * 4.7, 17.4]];
+    m.sweep("trim", "z", volute, 4.8, volute, 7.7);
+    m.spire("slate", rect(0.6, 0.6, s * 7.55, 7.3), 12.85, 15.9);
+  }
+  m.box("trim", 0, 6.3, 10.6, 6.6, 18.5, 19.3);
+  m.box("trim", 0, 6.3, 9.8, 5.9, 19.3, 19.75);
+  m.box("slate", 0, 9.3, 2.2, 0.4, 3, 7.4);
+  // the tower and its bell-shaped cap and lantern
+  const c = 2.26;
+  m.prism("trim", chamferedRect(8.3, 8.3, c + 0.2, 0, TZ), 19.75, 20.4);
+  m.prism("plaster", chamferedRect(7.66, 7.66, c, 0, TZ), 20.4, 26.8, false);
+  m.prism("trim", chamferedRect(8.68, 8.68, c + 0.25, 0, TZ), 26.8, 27.95);
+  lodLathe(m, "slate", 0, TZ, [[4.3, 27.95], [4.6, 28.5], [4.45, 30.3], [3.7, 32.3], [2.3, 33.9], [1.05, 34.6]], 12, 0, false);
+  m.prism("plaster", ngon(8, 1.05, Math.PI / 8, 0, TZ), 34.6, 37.28, false);
+  m.prism("trim", ngon(8, 1.5, Math.PI / 8, 0, TZ), 37.28, 37.63);
+  lodLathe(m, "slate", 0, TZ, [[1.25, 37.63], [1.3, 38.0], [0.75, 38.8], [0, 39.5]], 8);
+  m.box("gold", 0, TZ, 0.15, 0.15, 39.45, 40.6);
+  crossLod(m, "gold", 0, TZ, 40.6, 1.7);
+  return m;
+}
+
+export function churchVrchlabiLod(): MeshBuilder {
+  const m = new MeshBuilder(PALETTE);
+  const TZ = -15.83;
+  // the tower: brick shaft, sandstone string courses, corner buttresses
+  m.box("brickDark", 0, TZ, 9.8, 9.8, 0, 2.2);
+  m.box("brick", 0, TZ, 9.0, 9.0, 2.2, 36.7, 0, false);
+  m.box("sandstone", 0, TZ, 9.5, 9.5, 20.2, 20.75);
+  m.box("sandstone", 0, TZ, 9.2, 9.2, 28.75, 29.3);
+  m.box("brickDark", 0, TZ, 9.6, 9.6, 36.7, 37.6);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) m.box("brickDark", sx * 4.15, TZ + sz * 4.15, 1.9, 1.9, 0, 34.8);
+  m.box("brickDark", 0, TZ - 5.0, 4.6, 1.0, 0, 9.0);
+  m.box("paving", 0, -23.95, 10.5, 2.7, 0, 0.6);
+  // the octagonal spire and its four corner pinnacles
+  m.box("brickDark", 0, TZ, 7.6, 7.6, 37.6, 38.75, 0, false);
+  m.spire("spireSlate", ngon(8, 4.62 / Math.cos(Math.PI / 8), Math.PI / 8, 0, TZ), 38.75, 59.25);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    const x = sx * 3.95;
+    const z = TZ + sz * 3.95;
+    m.box("brickDark", x, z, 1.9, 1.9, 37.6, 40.0, 0, false);
+    m.spire("spireSlate", rect(1.9, 1.9, x, z), 40.0, 46.9);
+  }
+  crossLod(m, "iron", 0, TZ, 59.0, 3.3);
+  // the nave under its slate roof, the lean-to aisles, the front bays and the apse
+  const roofX = 8.2;
+  const g = gableSection(-7.5, 7.5, 0, -roofX, roofX, 15.5, 24.4);
+  m.sweep("brick", "z", g, -11.83, g, 18.17);
+  m.box("sandstone", 0, 3.1, 15.6, 29.7, 14.7, 15.2);
+  roofPlatesZ(m, "spireSlate", -roofX, roofX, 15.5, 24.4, -12.28, 18.62, 0.3);
+  for (const s of [-1, 1]) {
+    const wall: Ring = [[s * 7.25, 0], [s * 11.05, 0], [s * 11.05, 9.06], [s * 7.25, 12.95]];
+    m.sweep("brick", "z", wall, -11.83, wall, 14.77);
+    const roof: Ring = [[s * 11.5, 8.65], [s * 6.95, 13.3], [s * 6.95, 13.6], [s * 11.5, 8.95]];
+    m.sweep("spireSlate", "z", roof, -11.95, roof, 14.9);
+    for (const z of [-8.83, -3.68, 1.47, 6.62, 11.77]) m.box("brickDark", s * 11.5, z, 1.0, 1.5, 0, 8.6);
+    m.box("brick", s * 6.85, TZ, 5.1, 8.2, 0, 10.6, 0, false);
+    m.spire("spireSlate", rect(9.18, 9.18, s * 6.85, TZ), 10.5, 15.1);
+  }
+  const ring: Ring = [[-7.5, 11.67], [-7.5, 18.5], [-4.3, 24.66], [4.3, 24.66], [7.5, 18.5], [7.5, 11.67]];
+  m.prism("brick", ring, 0, 13.5, false);
+  const y = 13.4;
+  const e: Vec3[] = [[-8.1, y, 11.15], [-8.1, y, 18.35], [-4.65, y, 25.18], [4.65, y, 25.18], [8.1, y, 18.35], [8.1, y, 11.15]];
+  const r0: Vec3 = [0, 19.7, 11.15];
+  const r1: Vec3 = [0, 19.7, 19.4];
+  const inside: Vec3 = [0, 12, 17];
+  triOut(m, "spireSlate", e[0]!, e[1]!, r1, inside);
+  triOut(m, "spireSlate", e[0]!, r1, r0, inside);
+  for (let i = 1; i < 5; i++) triOut(m, "spireSlate", e[i]!, e[i + 1]!, r1, inside);
+  triOut(m, "spireSlate", e[5]!, r0, r1, inside);
+  return m;
+}
+
+/** One tower of the twin-tower church from afar: stucco shaft and dressings, copper drum, onion, lantern and needle spire (its cross too thin to keep). */
+function baroqueTowerLod(m: MeshBuilder, cx: number, cz: number): void {
+  m.box("plinth", cx, cz, 8.0, 8.0, 0, 1.4, 0, false);
+  m.box("stucco", cx, cz, 7.0, 7.0, 1.4, 28.8, 0, false);
+  m.box("dressing", cx, cz, 8.1, 8.1, 15.05, 15.75);
+  m.box("dressing", cx, cz, 8.6, 8.6, 28.8, 30.65);
+  const oct = (r: number) => ngon(8, r / Math.cos(Math.PI / 8), Math.PI / 8, cx, cz);
+  m.prism("copperBrown", oct(3.5), 30.65, 32.15, false);
+  lodLathe(m, "copper", cx, cz, [[3.62, 32.15], [3.7, 33.6], [2.4, 36.2], [0.72, 38.4]], 8, Math.PI / 8, false);
+  m.prism("ironDark", ngon(4, 1.2, Math.PI / 4, cx, cz), 38.4, 41.75, false);
+  lodLathe(m, "copper", cx, cz, [[1.5, 41.75], [0.45, 44.05], [0, 57.0]], 6);
+}
+
+export function twinTowerBaroqueChurchLod(): MeshBuilder {
+  const m = new MeshBuilder(PALETTE);
+  // the nave, its lean-to aisles and the rounded apse
+  const g = gableSection(-7.5, 7.5, 0, -8.0, 8.0, 18.0, 22.3);
+  m.box("plinth", 0, 1.15, 16, 27.3, 0, 1.4);
+  m.sweep("stucco", "z", g, -12.3, g, 14.5);
+  m.box("dressing", 0, 1.1, 15.8, 27.0, 17.2, 18.0, 0, false);
+  roofPlatesZ(m, "greyRoof", -8.0, 8.0, 18.0, 22.3, -12.6, 14.5, 0.3);
+  for (const s of [-1, 1]) {
+    m.box("stucco", s * 9.6, -1.2, 4.2, 20.0, 0, 9.48, 0, false);
+    m.box("dressing", s * 9.6, -1.2, 4.8, 20.5, 9.48, 10.03, 0, false);
+    const roof: Ring = [[s * 12.05, 10.0], [s * 7.15, 11.9], [s * 7.15, 12.15], [s * 12.05, 10.25]];
+    m.sweep("copper", "z", roof, -11.4, roof, 9.0);
+  }
+  const n = 4;
+  m.prism("stucco", apseRing(0, -16.2, 7.2, n, -1, 4.2), 0, 15.35, false);
+  m.prism("dressing", apseRing(0, -16.2, 7.7, n, -1, 4.1), 15.35, 16.05);
+  ridgeRoofZ(m, "greyRoof", -7.8, 7.8, 16.0, 22.2, -16.2, -12.0);
+  m.loft("greyRoof", apseRing(0, -16.2, 7.8, n, -1, 0.3), 16.0, apseRing(0, -16.2, 0, n, -1, 0.3), 22.2, false);
+  // the front between the towers: cornices, the portal and the curved gable
+  m.box("stucco", 0, 16.9, 11.5, 6.4, 0, 20.9, 0, false);
+  m.box("dressing", 0, 16.9, 13.0, 7.4, 20.9, 21.9);
+  const gable: Ring = [[-6.0, 21.9], [6.0, 21.9], [4.2, 23.8], [0, 24.5], [-4.2, 23.8]];
+  m.sweep("stucco", "z", gable, 19.0, gable, 20.35);
+  crossLod(m, "gilt", 0, 19.6, 24.5, 3.6);
+  baroqueTowerLod(m, -8.85, 16.3);
+  baroqueTowerLod(m, 8.85, 16.3);
+  // the side porches under hipped copper roofs
+  for (const s of [-1, 1]) {
+    m.box("stucco", s * 13.95, 15.9, 3.6, 6.6, 0, 8.6, 0, false);
+    hipRoof(m, "copper", s * 13.95, 15.9, 4.1, 7.0, 8.6, 10.1);
+  }
+  return m;
+}

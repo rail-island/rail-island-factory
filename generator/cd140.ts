@@ -12,12 +12,14 @@
 
 import { MeshBuilder, ngon, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
+import type { ParamValues } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
 import { runningNumber, tubeX, type Band } from "./cd163.ts";
 import {
   KIT_PALETTE, bogie, buffers, c, diamond, insulator, kinks, lerpTable, numberOn, onEnd, onSide, rect, roundRect, shell,
   surfaceDecal, surfacePanel, type ShellSpec,
 } from "./czElectricKit.ts";
+import { czShellLod, locoLod, screen, sideWindows } from "./lodLocos.ts";
 
 /** 140 040-?: the vlakosimdb model's name; the check digit by the 1988 scheme. */
 export const CD140_NUMBER = runningNumber("140", "040");
@@ -240,4 +242,26 @@ export function cd140(): MeshBuilder {
   });
   m.scope("roof equipment", () => roofEquipment(m));
   return m;
+}
+
+/** CD 140 040 for distant views (docs/models/lod.md, lodLocos.ts). */
+export function cd140Lod(_params?: ParamValues, budget = 100): MeshBuilder {
+  const shell = czShellLod(SPEC, {
+    endWindows: screen(0.1, 1.22, 2.68, 3.42),
+    sideWindows: [
+      ...sideWindows(PORTHOLES.map((x) => ({ u: [x - 0.3, x + 0.3] as const, y: [2.7, 3.3] as const })), 0),
+      ...sideWindows([{ u: [DOOR_WINDOW[0], DOOR_WINDOW[1]], y: [2.62, 3.38] }], 0, true),
+    ],
+  });
+  return locoLod({
+    palette: PALETTE,
+    shells: [shell],
+    boxes: [
+      { name: "frame", mat: "frameBlue", x: [-BODY, BODY], y: [Y_FRAME, Y_SHELL], w: 1.45, top: false, optional: 40 },
+      { name: "resistor box", mat: "roofBox", x: [BOX[0], BOX[1]], y: [3.8, 4.1], w: [1.0, 1.0] },
+      { name: "upper box", mat: "roofBox", x: [UPPER[0], UPPER[1]], y: [4.1, 4.2], w: [0.8, 0.8], optional: 20 },
+    ],
+    gear: [-1, 1].map((e) => ({ xc: e * 4.085, half: 1.665 + 0.625 + 0.2, top: Y_FRAME })),
+    pantographs: { x: PANTO_X, pair: true, roofY: 4.1, baseY: 4.34 },
+  }, budget);
 }

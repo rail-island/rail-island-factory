@@ -13,7 +13,7 @@
 import type { MeshBuilder } from "./meshBuilder.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import type { Arch, Paint } from "./busBody.ts";
-import { BusDraft, type Axle, type DoorStyle, type PaneStyle } from "./busAssembly.ts";
+import { BusDraft, type Axle, type BusSpec, type DoorStyle, type PaneStyle } from "./busAssembly.ts";
 import { busPalette, endLamp, endSlab, mirror, sideSlab } from "./busKit.ts";
 import { block } from "./vehicleParts.ts";
 
@@ -122,6 +122,18 @@ class Karosa {
 }
 
 export function karosaBus(variant: KarosaVariant, long: boolean): MeshBuilder {
+  const { draft, spec } = karosaDraft(variant, long);
+  return draft.build(spec);
+}
+
+/** The Karosa's distant model (lodRoad.ts busLod), from the same description. */
+export function karosaBusLod(variant: KarosaVariant, long: boolean): MeshBuilder {
+  const { draft, spec } = karosaDraft(variant, long);
+  return draft.buildLod(spec);
+}
+
+/** The draft of one Karosa: its fittings, and the shell and running gear to build it with. */
+function karosaDraft(variant: KarosaVariant, long: boolean): { draft: BusDraft; spec: Omit<BusSpec, "fittings"> } {
   const K = new Karosa(FRAMES[`${long ? "long" : "short"}${variant.series}`]!);
   const x = (u: number): number => K.x(u);
   const nose = x(K.f.nose);
@@ -196,9 +208,13 @@ export function karosaBus(variant: KarosaVariant, long: boolean): MeshBuilder {
   // (photographs: a near-upright windscreen down to 1.65 m over a white strip, a
   // livery-coloured panel with louvres, a black band holding round headlamps and
   // the grille, the bumper in the livery colour)
+  const wsTop = series === "951" ? 2.9 : 2.88;
+  const wsBottom = series === "700" ? 1.66 : 1.7;
+  draft.glaze(1, -1.15, 1.15, wsBottom, wsTop - 0.03);
+  // the bumpers, in the livery colour or grey
+  draft.endPaint(1, 0.33, series === "700" ? 0.62 : 0.98, series === "700" ? "stripe" : bumper);
+  draft.endPaint(-1, 0.33, 0.56, bumper);
   fit("front", nose, () => {
-    const wsTop = series === "951" ? 2.9 : 2.88;
-    const wsBottom = series === "700" ? 1.66 : 1.7;
     endSlab(m(), "frame", frame, 1, -1.21, 1.21, wsBottom - 0.04, wsTop + 0.02, 0.01);
     endSlab(m(), "glass", frame, 1, -1.15, 1.15, wsBottom, wsTop - 0.03, 0.02);
     // the destination display behind the windscreen's top, and the wipers at rest
@@ -252,6 +268,8 @@ export function karosaBus(variant: KarosaVariant, long: boolean): MeshBuilder {
   // --- the tail ---------------------------------------------------------------------
   // (photographs: a big rear window over the livery's belt, a vent on the left, the
   // engine flap with the plate, tail light columns at the corners)
+  if (series === "700") draft.glaze(-1, -1.04, 1.04, 1.99, 2.82);
+  else draft.glaze(-1, -0.87, 0.87, 2.13, 2.79);
   fit("rear", tail, () => {
     if (series === "700") {
       endSlab(m(), "frame", frame, -1, -1.1, 1.1, 1.93, 2.88, 0.01);
@@ -290,18 +308,22 @@ export function karosaBus(variant: KarosaVariant, long: boolean): MeshBuilder {
 
   // --- roof, mirrors, markers -------------------------------------------------------
   // (the XML's roof boxes; the 951 and 961 carry an air-conditioning pod at the front instead of the first)
-  if (series === "951") fit("roof", x(1.0), () => block(m(), "roofHatch", x(1.45), x(0.6), ROOF - 0.04, 3.32, -0.5, 0.5));
+  if (series === "951") {
+    draft.roofItem(x(1.45), x(0.6), -0.5, 0.5, ROOF - 0.04, 3.32, "roofHatch");
+    fit("roof", x(1.0), () => block(m(), "roofHatch", x(1.45), x(0.6), ROOF - 0.04, 3.32, -0.5, 0.5));
+  }
   for (const [u0, u1, h] of [[1.0, 1.4, 0.065], [3.4, 3.9, 0.065], [6.2, 6.8, 0.065], [8.7, 9.3, 0.065], [10.3, 10.9, 0.065], [12.4, 13.0, 0.065], [15.1, 15.7, 0.065]] as const) {
     if (series === "951" && u0 < 1.5) continue;
     if (u1 > K.f.tail - 0.4) continue;
     if (bodyRanges.every(([b0, b1]) => u0 < b0 + 0.2 || u1 > b1 - 0.2)) continue;
+    draft.roofItem(x(u1), x(u0), -0.4, 0.4, ROOF - 0.04, ROOF + h, "roofHatch");
     fit("roof hatches", x((u0 + u1) / 2), () => block(m(), "roofHatch", x(u1), x(u0), ROOF - 0.04, ROOF + h, -0.4, 0.4));
   }
   fit("mirrors", nose, () => {
     for (const s of [-1, 1]) mirror(m(), frame, s, nose, s > 0 ? 2.8 : 2.55, { h: 0.42, w: 0.2, drop: 0.06 });
   });
 
-  return draft.build({
+  return { draft, spec: {
     palette: busPalette({
       body: "#f4f4f1",
       stripe: liv.stripe,
@@ -321,7 +343,7 @@ export function karosaBus(variant: KarosaVariant, long: boolean): MeshBuilder {
     hingeY: 0.6,
     maxSteerDeg: 50,
     maxBendDeg: 50,
-  });
+  } };
 }
 
 export function karosaShort(params?: ParamValues): MeshBuilder {
@@ -334,3 +356,13 @@ export function karosaLong(params?: ParamValues): MeshBuilder {
   return karosaBus(KAROSA_LONG.find((v) => v.value === variant)!, true);
 }
 
+
+export function karosaShortLod(params?: ParamValues): MeshBuilder {
+  const { variant } = resolveParams(KAROSA_SHORT_PARAMS, params);
+  return karosaBusLod(KAROSA_SHORT.find((v) => v.value === variant)!, false);
+}
+
+export function karosaLongLod(params?: ParamValues): MeshBuilder {
+  const { variant } = resolveParams(KAROSA_LONG_PARAMS, params);
+  return karosaBusLod(KAROSA_LONG.find((v) => v.value === variant)!, true);
+}

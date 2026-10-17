@@ -14,7 +14,7 @@
 
 import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
-import { CD163_GREEN, cd163Body, runningNumber, type Band, type Cd163Layout, type Cd163Livery } from "./cd163.ts";
+import { CD163_GREEN, cd163Body, cd163LodBody, runningNumber, type Band, type Cd163Layout, type Cd163Livery } from "./cd163.ts";
 
 /** One livery: what the picker shows, the vlakosimdb model it comes from, and the paint. */
 interface FamilyLivery {
@@ -276,4 +276,16 @@ export function cd263(params?: ParamValues): MeshBuilder {
   const { livery } = resolveParams(CD263_PARAMS, params);
   const l: FamilyLivery = CD263_LIVERIES[livery as keyof typeof CD263_LIVERIES];
   return cd163Body(l.livery, l.layout ?? "263");
+}
+
+/** The CD 163 / 363 for distant views (docs/models/lod.md). */
+export function cd163Lod(params?: ParamValues): MeshBuilder {
+  const { livery } = resolveParams(CD163_PARAMS, params);
+  return cd163LodBody(CD163_LIVERIES[livery as keyof typeof CD163_LIVERIES].livery);
+}
+
+/** The CD 263 / 371 / 372 for distant views: from afar its machine room looks like the 163's. */
+export function cd263Lod(params?: ParamValues): MeshBuilder {
+  const { livery } = resolveParams(CD263_PARAMS, params);
+  return cd163LodBody(CD263_LIVERIES[livery as keyof typeof CD263_LIVERIES].livery);
 }

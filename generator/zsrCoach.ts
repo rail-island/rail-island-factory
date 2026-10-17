@@ -11,6 +11,7 @@ import type { Pt } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import type { PxBox } from "./csdCoaches.ts";
 import { BODIES, LUGGAGE_UNDERFRAME, Y_UNDERFRAME_A, Y_UNDERFRAME_B, Y_VENTS } from "./cdGreenWhiteCoach.ts";
+import { liveryCoachLod } from "./lodTrams.ts";
 import { buildLiveryCoach, Y_END, type BodyGeo, type DoorSpec, type LiveryCoachSpec, type LiverySide, type Paint, type Win } from "./liveryCoach.ts";
 
 export type ZsrVariant = "a" | "ab" | "b" | "bh" | "bds" | "bdmeer" | "wrrm" | "apee";
@@ -223,4 +224,9 @@ function variantSpec(variant: ZsrVariant): LiveryCoachSpec {
 export function zsrCoach(params?: ParamValues): MeshBuilder {
   const variant = resolveParams(ZSR_PARAMS, params).variant as ZsrVariant;
   return buildLiveryCoach(variantSpec(variant));
+}
+
+/** The same coach from afar (docs/models/lod.md): the livery coach adapter of lodTrams.ts. */
+export function zsrCoachLod(params?: ParamValues): MeshBuilder {
+  return liveryCoachLod(variantSpec(resolveParams(ZSR_PARAMS, params).variant as ZsrVariant));
 }

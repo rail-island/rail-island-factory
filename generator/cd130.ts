@@ -20,6 +20,7 @@ import {
   KIT_PALETTE, bogie, buffers, c, diamond, insulator, kinks, lerpTable, numberOn, onEnd, onSide, rect, roundRect, shell, singleArm,
   surfaceDecal, surfacePanel, type ShellSpec,
 } from "./czElectricKit.ts";
+import { czShellLod, locoLod, screen, sideWindows } from "./lodLocos.ts";
 
 export interface Cd130Livery {
   title: string;
@@ -302,4 +303,27 @@ export function cd130(params?: ParamValues): MeshBuilder {
   });
   m.scope("roof equipment", () => roofEquipment(m, l));
   return m;
+}
+
+/** The same locomotive for distant views (docs/models/lod.md, lodLocos.ts). */
+export function cd130Lod(params?: ParamValues, budget = 100): MeshBuilder {
+  const { livery: key } = resolveParams(CD130_PARAMS, params);
+  const l: Cd130Livery = CD130_LIVERIES[key as keyof typeof CD130_LIVERIES];
+  const shell = czShellLod(shellSpec(l), {
+    endWindows: screen(0.24, 1.42, 2.62, 3.42),
+    sideWindows: [
+      ...sideWindows(WINDOWS.map(([x0, x1, y0, y1]) => ({ u: [x0, x1] as const, y: [y0, y1] as const }))),
+      ...sideWindows([{ u: [DOOR_WINDOW[0], DOOR_WINDOW[1]], y: [DOOR_WINDOW[2], DOOR_WINDOW[3]] }], 0, true),
+    ],
+  });
+  return locoLod({
+    palette: { ...KIT_PALETTE, ...l.palette },
+    shells: [shell],
+    boxes: [
+      { name: "frame", mat: l.frame, x: [-BODY, BODY], y: [Y_FRAME, Y_SHELL], w: 1.47, top: false, optional: 40 },
+      { name: "roof hump", mat: "roof", x: [-HUMP, HUMP], y: [3.85, 4.4], w: [1.25, 0.85] },
+    ],
+    gear: [-1, 1].map((e) => ({ xc: e * 4.085, half: l.halfBase + 0.625 + 0.2, top: Y_FRAME })),
+    pantographs: { x: PANTO_X, pair: true, roofY: CROWN, baseY: l.pantograph === "diamond" ? 4.36 : 4.22 },
+  }, budget);
 }

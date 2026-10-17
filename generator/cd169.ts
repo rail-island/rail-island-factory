@@ -13,12 +13,14 @@
 
 import { MeshBuilder, ngon, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
+import type { ParamValues } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
 import { runningNumber, tubeX, type Band } from "./cd163.ts";
 import {
   KIT_PALETTE, bogie, buffers, c, insulator, kinks, lerpTable, numberOn, onEnd, onSide, rect, roundRect, shell, singleArm,
   surfaceDecal, surfacePanel, type ShellSpec,
 } from "./czElectricKit.ts";
+import { czShellLod, locoLod, screen, sideWindows } from "./lodLocos.ts";
 
 /** 169 001-4, the only unit. */
 export const CD169_NUMBER = runningNumber("169", "001");
@@ -208,4 +210,31 @@ export function cd169(): MeshBuilder {
   });
   m.scope("roof equipment", () => roofEquipment(m));
   return m;
+}
+
+/** CD 169 001 for distant views (docs/models/lod.md, lodLocos.ts): the white-blue-white stripe as side bands, the length of the body. */
+export function cd169Lod(_params?: ParamValues, budget = 100): MeshBuilder {
+  const [d0, d1] = [Math.min(DOOR[0], DOOR[1]), Math.max(DOOR[0], DOOR[1])];
+  const [w0, w1] = [Math.min(px(160), px(156)), Math.max(px(160), px(156))];
+  // the corners' 0.2 m chamfers drawn as a flat face
+  const shell = czShellLod(SPEC, {
+    setback: undefined,
+    side: [[0.8, 1.5, "red"], [1.5, 1.6, "stripeWhite"], [1.6, 1.8, "stripeBlue"], [1.8, 1.9, "stripeWhite"], [1.9, 4.0, "red"]],
+    endWindows: screen(0.06, 1.27, 2.55, 3.45),
+    // the door at one end and a cab window at the other, diagonally across
+    sideWindows: [1, -1].flatMap((s) => sideWindows([
+      { u: s > 0 ? [d0 + 0.1, d1 - 0.1] : [-d1 + 0.1, -d0 - 0.1], y: [2.55, 3.18] },
+      { u: s > 0 ? [w0, w1] : [-w1, -w0], y: [2.65, 3.25] },
+    ], 0, false, [s])),
+  });
+  return locoLod({
+    palette: PALETTE,
+    shells: [shell],
+    boxes: [
+      { name: "roof cover", mat: "roof", x: [-2.04, 2.04], y: [3.89, 4.3], w: [1.15, 0.8] },
+      { name: "equipment", mat: "underframe", x: [px(96), px(78)], y: [0.3, Y_SHELL], w: 1.1, top: false, optional: 50 },
+    ],
+    gear: [-1, 1].map((e) => ({ xc: e * 4.35, half: 1.25 + 0.625 + 0.2, top: Y_SHELL })),
+    pantographs: { x: PANTO_X, pair: true, roofY: 3.9, baseY: 4.05 },
+  }, budget);
 }

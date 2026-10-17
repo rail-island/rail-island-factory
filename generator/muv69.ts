@@ -15,6 +15,7 @@
 
 import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
+import type { ParamValues } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
 import type { Band } from "./cd163.ts";
 import { buffers, onEnd, onSide, rect, shell, surfaceDecal } from "./czElectricKit.ts";
@@ -22,6 +23,7 @@ import {
   DIESEL_PALETTE, axleGear, boxSpec, breaksOf, c, headlamp, pane, span, steps, tubeSeg, wallAt,
   type BoxSpec,
 } from "./smallDieselKit.ts";
+import { boxLod, locoLod, screen, sideWindows } from "./lodLocos.ts";
 
 const PALETTE: Record<string, MaterialSpec> = {
   ...DIESEL_PALETTE,
@@ -126,3 +128,20 @@ export function muv69(): MeshBuilder {
   return m;
 }
 
+
+/** The MUV 69 for distant views (docs/models/lod.md, lodLocos.ts): the cab, the frame with its deck, the wheelsets. */
+export function muv69Lod(_params?: ParamValues, budget = 100): MeshBuilder {
+  const cab = boxLod(CAB, {
+    endWindows: screen(0.05, 1.35, Y(1.7), Y(2.3)),
+    sideWindows: sideWindows([[12, 5], [21, 13], [24, 22]].map(([a, b]) => ({ u: [px(a!), px(b!)] as const, y: [Y(1.7), Y(2.3)] as const }))),
+  });
+  return locoLod({
+    palette: PALETTE,
+    shells: [cab],
+    boxes: [
+      { name: "frame", mat: "frameBlack", x: [-FRAME, FRAME], y: [Y_FRAME, Y_DECK], w: 1.35, top: "deck" },
+      ...[-1, 1].map((e) => ({ name: "buffer beam", mat: "frameBlack", x: span(e * (FRAME - 0.2), e * FRAME), y: [0.5, Y_FRAME] as const, w: 1.35, top: false as const, optional: 30 })),
+    ],
+    gear: [{ xc: (AXLES[0] + AXLES[1]) / 2, half: Math.abs(AXLES[1] - AXLES[0]) / 2 + WHEEL_R + 0.2, top: Y_FRAME }],
+  }, budget);
+}

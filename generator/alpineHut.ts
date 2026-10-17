@@ -26,10 +26,10 @@ export const ALPINE_HUT_PARAMS: readonly ParamSpec[] = [
   choice("accent", "Shutter colour", ["red", "green", "blue"]),
 ];
 
-const ROOFS: Record<string, string> = { green: "#1f5a52", red: "#8f2f26", slate: "#4b5866", brown: "#5c4031" };
-const WALLS: Record<string, string> = { white: "#e9ecee", cream: "#eadfc4", ochre: "#dcbf86" };
-const TIMBERS: Record<string, [string, string]> = { walnut: ["#4a2a1a", "#6b4630"], oak: ["#6e4a2a", "#8f6a43"], weathered: ["#4f4a44", "#706a61"] };
-const ACCENTS: Record<string, string> = { red: "#8e1f33", green: "#2f5e3c", blue: "#2c4f7c" };
+export const ROOFS: Record<string, string> = { green: "#1f5a52", red: "#8f2f26", slate: "#4b5866", brown: "#5c4031" };
+export const WALLS: Record<string, string> = { white: "#e9ecee", cream: "#eadfc4", ochre: "#dcbf86" };
+export const TIMBERS: Record<string, [string, string]> = { walnut: ["#4a2a1a", "#6b4630"], oak: ["#6e4a2a", "#8f6a43"], weathered: ["#4f4a44", "#706a61"] };
+export const ACCENTS: Record<string, string> = { red: "#8e1f33", green: "#2f5e3c", blue: "#2c4f7c" };
 
 type Face = "front" | "back" | "right" | "left";
 const EMBED: Record<string, number> = { glass: 0.01, trim: 0.02, iron: 0.025, accent: 0.03, flower: 0.035, leaf: 0.035, snow: 0.04, block: 0.015 };

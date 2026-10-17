@@ -11,7 +11,7 @@
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { Band } from "./cd163.ts";
 import { c } from "./czElectricKit.ts";
-import { buildBoxLoco, type LocoSpec, type SideItem } from "./boxLocoKit.ts";
+import { boxLocoLod, buildBoxLoco, type LocoSpec, type SideItem } from "./boxLocoKit.ts";
 
 export const OBB1040_SCALE = 12.92 / 12.3;
 const px = (p: number) => (p - 65.5) * 0.1 * OBB1040_SCALE;
@@ -77,4 +77,9 @@ const SPEC: LocoSpec = {
 /** OBB 1040 013-3. */
 export function obb1040(): MeshBuilder {
   return buildBoxLoco(SPEC);
+}
+
+/** The same locomotive for distant views (docs/models/lod.md). */
+export function obb1040Lod(): MeshBuilder {
+  return boxLocoLod(SPEC);
 }

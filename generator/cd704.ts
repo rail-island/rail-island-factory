@@ -19,6 +19,7 @@ import {
   DIESEL_PALETTE, axleGear, boxSpec, breaksOf, c, grille, headlamp, numberText, pane, plate, railing, rolled, span, steps, tubeSeg,
   type BoxSpec,
 } from "./smallDieselKit.ts";
+import { boxLod, cutBox, locoLod, screen, sideWindows } from "./lodLocos.ts";
 
 export interface Cd704Livery {
   title: string;
@@ -187,4 +188,23 @@ export function cd704(params?: ParamValues): MeshBuilder {
   m.scope("body", () => body(m, l));
   m.scope("underframe", () => underframe(m));
   return m;
+}
+
+/** The shunter for distant views (docs/models/lod.md, lodLocos.ts): the hood either side of the cab, the cab under its flared roof. */
+export function cd704Lod(_params?: ParamValues, budget = 100): MeshBuilder {
+  const cab = boxLod(CAB, {
+    endWindows: screen(0.15, 1.3, 2.6, 3.3),
+    sideWindows: sideWindows([[40, 46], [47, 52.4], [52.6, 58]].map(([a, b]) => ({ u: [px(a!), px(b!)] as const, y: [2.6, 3.3] as const }))),
+  });
+  return locoLod({
+    palette: PALETTE,
+    shells: [boxLod(cutBox(HOOD, HOOD.x0, CAB.x0)), boxLod(cutBox(HOOD, CAB.x1, HOOD.x1)), cab],
+    boxes: [
+      { name: "deck", mat: "frameGrey", x: [-FRAME, FRAME], y: [Y_FRAME, Y_DECK], w: 1.4 },
+      { name: "cab roof", mat: "roofGrey", x: [px(35), px(62)], y: [3.32, 3.6], w: [1.46, 1.1] },
+      ...[-1, 1].map((e) => ({ name: "buffer beam", mat: "frameGrey", x: span(e * (FRAME - 0.2), e * BEAM), y: [0.3, Y_FRAME] as const, w: 1.38, top: false as const, optional: 30 })),
+      { name: "exhaust", mat: "exhaust", x: [-2.09, -1.91], y: [2.55, 2.85], w: 0.09, zc: 0.35, optional: 10 },
+    ],
+    gear: [{ xc: 0, half: 1.6 + 0.5 + 0.2, top: Y_FRAME }],
+  }, budget);
 }

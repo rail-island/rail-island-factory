@@ -32,6 +32,8 @@ import { block, side } from "./vehicleParts.ts";
 import { centreCoupler, EMU_CATALOG, enumParam, pantograph, slopePanel } from "./emuParts.ts";
 import { bOf, sideBox, spacedLetters, toBody, unitBogie, type PxBox, type SideMap } from "./unitParts.ts";
 import { articulate } from "./tramKit.ts";
+import { LOD_GLASS, type LodPart, type LodSections } from "./lodKit.ts";
+import { bogieParts, coachBody, fitUnit, pantographParts, shiftBody, sideGlass, skirtParts, turnBody, type UnitBody } from "./lodUnits.ts";
 
 /** A car of the TGV: the power car, or one of the trailer set's (the end coach couples to a power car). */
 export type TgvCar = "powerCar" | "endCoach" | "coach";
@@ -197,16 +199,11 @@ export function tgv(params?: ParamValues): MeshBuilder {
   return unit === "powerCar" ? powerCar(L) : trailerSet(Number(p.cars), L);
 }
 
-function powerCar(L: Livery): MeshBuilder {
+/** The power car's volumes: the nose cone, the cab section and the body behind it. */
+function powerVolumes(L: Livery): { nose: Volume; cab: Volume; body: Volume } {
   const map = TGV_MAPS.powerCar;
-  const c = new Coach({ ...PALETTE, ...L.palette }, TGV_POWER_LENGTH / 2);
-  const m = c.m;
-  const B = (x: number) => bOf(map, x);
-  const X = (x: number) => c.X(B(x));
-  const box = (b: PxBox) => sideBox(map, b);
   const halfPlan = (pts: Pt[]) => toBody(map, pts.map(([x, h]): Pt => [x, h * K_Z_POWER]));
   const [b1, b2] = TGV_POWER_BOGIES;
-  // source.xml alongy: the pointed nose plan; alongz: the nose cone, the windscreen's slope, the roof
   const nose: Volume = {
     name: "nose",
     section: POWER_SECTION,
@@ -232,6 +229,18 @@ function powerCar(L: Livery): MeshBuilder {
     bottom: toBody(map, [[5.8, 0.95], [b1 + 2.0, 0.95], [b1 + 2.3, 0.2], [b2 - 2.3, 0.2], [b2 - 2.0, 0.95], [21.1, 0.95], [21.4, 0.2], [21.9, 0.2]]),
     bands: L.body,
   };
+  return { nose, cab, body };
+}
+
+function powerCar(L: Livery): MeshBuilder {
+  const map = TGV_MAPS.powerCar;
+  const c = new Coach({ ...PALETTE, ...L.palette }, TGV_POWER_LENGTH / 2);
+  const m = c.m;
+  const B = (x: number) => bOf(map, x);
+  const X = (x: number) => c.X(B(x));
+  const box = (b: PxBox) => sideBox(map, b);
+  // source.xml alongy: the pointed nose plan; alongz: the nose cone, the windscreen's slope, the roof
+  const { nose, cab, body } = powerVolumes(L);
   m.scope("body", () => {
     m.scope("nose", () => c.volume(nose));
     m.scope("cab section", () => c.volume(cab));
@@ -322,6 +331,98 @@ const TRAILERS: Record<"endCoach" | "coach", TrailerLayout> = {
  * the two cars on either side. One car is an end coach on its own bogie at
  * each end, coupled at both.
  */
+/**
+ * The TGV for distant views (lodUnits.ts): the power car's cone nose, cab and
+ * raised roof with its windscreen, livery bands and raised pantograph within
+ * 100 triangles; a trailer set as the full model's articulated sections (each
+ * car a section, pivoted on its Jacobs bogie, a plain bellows across each
+ * joint) within 100 triangles a car, 300 at most, its cars' inner ends left
+ * under the bellows, the band, window band and skirts given up alike on every
+ * car.
+ */
+export function tgvLod(params?: ParamValues): MeshBuilder {
+  const p = resolveParams(TGV_PARAMS, params);
+  const L = LIVERIES[p.livery as TgvLivery];
+  const palette = { ...PALETTE, ...L.palette };
+  if (p.unit === "powerCar") {
+    const map = TGV_MAPS.powerCar;
+    const centre = TGV_POWER_LENGTH / 2;
+    const X = (x: number) => bOf(map, x) - centre;
+    const { nose, cab, body } = powerVolumes(L);
+    const place = (v: Volume) => ({ v, X: (b: number) => b - centre });
+    const shell = coachBody([place(body), place(cab), place(nose)], { y0: 0.95, main: 0, frontWindows: [{ u: [-1.18, 1.18], y: [2.7, 3.32], mat: LOD_GLASS }] });
+    const [px, roof] = L.pantograph;
+    return fitUnit({
+      palette,
+      bodies: [shell],
+      parts: [
+        ...bogieParts(TGV_POWER_BOGIES.map((x) => [X(x), 1.5 + 0.46 + 0.3] as const), 0.95),
+        ...skirtParts((body.bottom ?? []).map(([b, y]): Pt => [b - centre, y]), 0.95, 1.5 * K_Z_POWER - 0.02, L.body[0]![2]),
+        ...pantographParts([X(px)], roof, roof + 0.2, roof + 1.25),
+      ],
+    }, 100);
+  }
+  const n = Number(p.cars);
+  const ky = TGV_K_Y_COACH;
+  const cars = n === 1 ? [{ kind: "endCoach" as TgvCar, len: TGV_END_LENGTH, lo: -TGV_END_LENGTH / 2, hi: TGV_END_LENGTH / 2, turned: false }] : setCars(n);
+  const bodies: UnitBody[] = [];
+  const walls: Array<[number, number]> = [];
+  const gear: Array<readonly [number, number, number]> = [];
+  const skirts: LodPart[] = [];
+  const half = TGV_TRAILER_WHEELBASE / 2 + 0.46 + 0.2;
+  cars.forEach((car, k) => {
+    const unit = car.kind as "endCoach" | "coach";
+    const map = TGV_MAPS[unit];
+    const cx = (car.lo + car.hi) / 2;
+    // the car laid out unturned over lo..hi, then turned about its middle if it is the set's rear
+    const X = (b: number) => b - car.len + car.hi;
+    const at = (x: number) => (car.turned ? 2 * cx - X(x) : X(x));
+    const { body, bFront, bRear } = trailerVolume(unit, L, n === 1 ? "coupler" : "joint");
+    const T = TRAILERS[unit];
+    const glass = [...T.windows, ...T.doors.map((d) => d.glass)].map((b) => sideBox(map, b)).map((b) => ({ ...b, x0: X(b.x0), x1: X(b.x1) }));
+    let ub = coachBody([{ v: body, X }], { y0: 1.0 * ky, windows: sideGlass(glass, 0.6), section: k });
+    // the ends inside the set stay under the bellows
+    ub = { ...ub, front: { ...ub.front, hidden: unit === "coach" && n > 1 }, rear: { ...ub.rear, hidden: n > 1 } };
+    bodies.push(car.turned ? turnBody(ub, cx) : shiftBody(ub, 0));
+    const [front, rear] = TRAILER_WALLS[unit];
+    walls.push([at(bOf(map, rear)), at(bOf(map, front))].sort((a, b) => a - b) as [number, number]);
+    skirts.push(...skirtParts((body.bottom ?? []).map(([b, y]): Pt => [at(b), y]), 1.0 * ky, 1.5 * K_Z_COACH - 0.02, L.coach[0]![2]).map((part) => ({ ...part, section: k })));
+    if (unit === "endCoach") gear.push([at(bFront), half, k]);
+    if (n === 1) gear.push([at(bRear), half, k]);
+    if (k + 1 < n) gear.push([car.lo, half, k]);
+  });
+  const sections: LodSections | undefined = n > 1 ? {
+    pivots: cars.map((_, i) => (i === 0 ? [0, 0, 0] : [cars[i - 1]!.lo, 1.0 * ky, 0])),
+    joints: cars.slice(0, -1).map((_, i) => ({
+      sections: [i, i + 1] as [number, number], front: walls[i]![0], rear: walls[i + 1]![1],
+      profile: [[-0.75, 1.1 * ky], [0.75, 1.1 * ky], [0.75, 3.4 * ky], [-0.75, 3.4 * ky]] as Array<[number, number]>,
+    })),
+    maxBendDeg: 12,
+  } : undefined;
+  return fitUnit({
+    palette,
+    bodies,
+    parts: [
+      ...bogieParts(gear, 1.0 * ky),
+      ...skirts,
+    ],
+    ...(sections ? { sections } : {}),
+  }, Math.min(300, 100 * n));
+}
+
+/** The cars of an n-car trailer set, front first: their kind, length, span (lo..hi) and whether turned (the rear end coach). */
+function setCars(n: number): Array<{ kind: TgvCar; len: number; lo: number; hi: number; turned: boolean }> {
+  const kinds: TgvCar[] = Array.from({ length: n }, (_, k) => (k === 0 || k === n - 1 ? "endCoach" : "coach"));
+  const total = kinds.reduce((t, k) => t + tgvLength(k), 0);
+  let hi = total / 2;
+  return kinds.map((kind, k) => {
+    const len = tgvLength(kind);
+    const car = { kind, len, lo: hi - len, hi, turned: k === n - 1 };
+    hi -= len;
+    return car;
+  });
+}
+
 function trailerSet(n: number, L: Livery): MeshBuilder {
   const palette = { ...PALETTE, ...L.palette };
   if (n === 1) {
@@ -329,15 +430,7 @@ function trailerSet(n: number, L: Livery): MeshBuilder {
     drawTrailer(c, "endCoach", L, "coupler");
     return c.m;
   }
-  const kinds: TgvCar[] = Array.from({ length: n }, (_, k) => (k === 0 || k === n - 1 ? "endCoach" : "coach"));
-  const total = kinds.reduce((t, k) => t + tgvLength(k), 0);
-  let hi = total / 2;
-  const cars = kinds.map((kind, k) => {
-    const len = tgvLength(kind);
-    const car = { kind, len, lo: hi - len, hi, turned: k === n - 1 };
-    hi -= len;
-    return car;
-  });
+  const cars = setCars(n);
   let shared: MeshBuilder | undefined;
   const coaches = cars.map((car) => {
     const cx = (car.lo + car.hi) / 2;
@@ -391,14 +484,12 @@ const TRAILER_WALLS: Record<"endCoach" | "coach", [number, number]> = { endCoach
  * coupler end -- the end coach's front, and both ends of a one-car set -- has the
  * gangway and centre coupler, and at the rear its own bogie.
  */
-function drawTrailer(c: Coach, unit: "endCoach" | "coach", L: Livery, rearEnd: "joint" | "coupler"): void {
+/** A trailer's body (body metres): the end coach's fairing, the skirts, cut up over its own bogies; and those bogies' centres. */
+function trailerVolume(unit: "endCoach" | "coach", L: Livery, rearEnd: "joint" | "coupler"): { body: Volume; bFront: number; bRear: number } {
   const map = TGV_MAPS[unit];
-  const T = TRAILERS[unit];
   const length = tgvLength(unit);
   const ky = TGV_K_Y_COACH;
-  const m = c.m;
   const B = (x: number) => bOf(map, x);
-  const box = (b: PxBox) => sideBox(map, b);
   const bands = scaleBands(L.coach, ky);
   const [front, rear] = TRAILER_WALLS[unit];
   // openings over the bogies: the shared one at each joint, the end coach's own one at 3.05 m
@@ -425,6 +516,19 @@ function drawTrailer(c: Coach, unit: "endCoach" | "coach", L: Livery, rearEnd: "
     bottom: bottom.sort((a, b) => a[0] - b[0]),
     bands,
   };
+  return { body, bFront, bRear };
+}
+
+function drawTrailer(c: Coach, unit: "endCoach" | "coach", L: Livery, rearEnd: "joint" | "coupler"): void {
+  const map = TGV_MAPS[unit];
+  const T = TRAILERS[unit];
+  const length = tgvLength(unit);
+  const ky = TGV_K_Y_COACH;
+  const m = c.m;
+  const B = (x: number) => bOf(map, x);
+  const box = (b: PxBox) => sideBox(map, b);
+  const [front, rear] = TRAILER_WALLS[unit];
+  const { body, bFront, bRear } = trailerVolume(unit, L, rearEnd);
   m.scope("body", () => {
     c.volume(body);
     for (const s of [1, -1])
@@ -531,7 +635,7 @@ const TGV_GAME: GameProperties = {
 };
 
 export const TGV_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-tgv", game: TGV_GAME, title: "TGV", build: tgv, params: TGV_PARAMS, catalog: EMU_CATALOG, references: "tgv" },
+  { id: "proc-vehicle-tgv", game: TGV_GAME, title: "TGV", build: tgv, buildLod: tgvLod, lodTriangles: 300, params: TGV_PARAMS, catalog: EMU_CATALOG, references: "tgv" },
 ];
 
 export type { Box };

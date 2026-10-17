@@ -21,12 +21,14 @@ import type { Vec3 } from "./meshCore.ts";
 import type { GameProperties, ParamSpec, ParamValues, ProceduralDesign } from "./design.ts";
 import { resolveParams } from "./design.ts";
 import { WAGON_CATALOG } from "./wagons.ts";
-import { Wagon } from "./wagonParts.ts";
+import { WAGON_PALETTE, Wagon } from "./wagonParts.ts";
+import { drawGearLod, freightWagonLod, openBoxPart, platesPart, roofBoxPart, wagonBogies, wagonBox } from "./lodSteam.ts";
+import type { LodShell } from "./lodKit.ts";
 import { FREIGHT_NUMBERS, boldText, clipSolid, container40, maerskStar, numberLines, type Pt } from "./freightWagonParts.ts";
-import { faccsHopperWagon, fallsHopperWagon, wapHopperWagon, FACCS_PARAMS, FALLS_PARAMS } from "./hopperWagons.ts";
+import { faccsHopperWagon, fallsHopperWagon, wapHopperWagon, faccsHopperWagonLod, fallsHopperWagonLod, wapHopperWagonLod, FACCS_PARAMS, FALLS_PARAMS } from "./hopperWagons.ts";
 import { WAP_PARAMS } from "./hopperWagons.ts";
 
-export { faccsHopperWagon, fallsHopperWagon, wapHopperWagon } from "./hopperWagons.ts";
+export { faccsHopperWagon, fallsHopperWagon, wapHopperWagon, faccsHopperWagonLod, fallsHopperWagonLod, wapHopperWagonLod } from "./hopperWagons.ts";
 
 
 export const SQNS_PARAMS: readonly ParamSpec[] = [
@@ -112,6 +114,30 @@ export function sqnsContainerWagon(params?: ParamValues): MeshBuilder {
   return m;
 }
 
+/** The Sqns from afar (lodSteam.ts): the open frame and fishbelly, bogies, beams, and the Maersk box with its star squares. */
+export function sqnsContainerWagonLod(params?: ParamValues): MeshBuilder {
+  const { cargo } = resolveParams(SQNS_PARAMS, params);
+  const C = 9.9;
+  const shells: LodShell[] = [];
+  if (cargo === "maersk") {
+    // the star square: the -x end of the +z side, the +x end of the -z side
+    const star = (s: number, x: number) => ({ u: [x - 0.725 - C, x + 0.725 - C] as const, y: [1.925, 3.375] as const, mat: "maerskBlue", sides: [s], optional: 40 });
+    shells.push(wagonBox(C, 9.9 - 6.096, 9.9 + 6.096, [[1.3, 1.219], [3.891, 1.219]], [[1.3, 3.891, "container"]], { sideWindows: [star(1, 5.45), star(-1, 14.25)] }));
+  }
+  return freightWagonLod({
+    palette: { ...WAGON_PALETTE, ...SQNS_PALETTE },
+    shells,
+    parts: [
+      // the open frame: side and end beams round the centre sill, the track seen between them
+      openBoxPart(C, "frame", 0.7, 19.1, 1.5, 0.9, 1.2, 0.2, "frameDark"),
+      roofBoxPart(C, "frameDark", 0.9, 18.9, 0.12, 0.12, 0.8, 1.15),
+      platesPart(C, "frame", [[4.7, 0.9], [6.3, 0.5], [13.4, 0.5], [15.1, 0.9]], 1.42),
+      wagonBogies(C, [[2.75, 1.8], [17.05, 1.8]], 0.9),
+      drawGearLod(C, [[0.5, 0.7], [19.1, 19.3]], 0.85, 1.2, 1.5, "frame"),
+    ],
+  });
+}
+
 // --- the Pao flat wagon -------------------------------------------------------------
 
 const PAO_PALETTE: Record<string, MaterialSpec> = {
@@ -175,6 +201,24 @@ export function paoFlatWagon(params?: ParamValues): MeshBuilder {
       });
     });
   return m;
+}
+
+/** The Pao from afar (lodSteam.ts): the deck over its solebars, fishbelly, bogies, beams and the tube bundle on its bolsters. */
+export function paoFlatWagonLod(params?: ParamValues): MeshBuilder {
+  const { cargo } = resolveParams(PAO_PARAMS, params);
+  const C = 7.65;
+  const shells = [wagonBox(C, 0.5, 14.8, [[0.7, 1.5], [1.2, 1.5]], [[0.7, 1.1, "frame"], [1.1, 1.2, "frameLight"]], { roof: "deck" })];
+  const parts = [
+    platesPart(C, "frame", [[3.8, 0.7], [4.9, 0.5], [10.4, 0.5], [11.5, 0.7]], 1.41),
+    wagonBogies(C, [[2.6, 1.9], [12.7, 1.9]], 0.7),
+    drawGearLod(C, [[0.45, 0.5], [14.8, 14.85]], 0.8, 1.19, 1.45, "frame"),
+  ];
+  if (cargo === "tubes") {
+    // three layers of tubes, 8, 7 and 6 across, on two bolsters
+    shells.push(wagonBox(C, 2.8, 12.5, [[1.4, 0.48], [1.4 + 0.12 + 2 * 0.06 * Math.sqrt(3), 0.36]], [[1.4, 1.75, "tube"]], { end: [[1.4, 1.75, "tubeDark"]] }));
+    for (const [x0, x1] of [[3.8, 4.8], [10.5, 11.5]] as Pt[]) parts.push(roofBoxPart(C, "bolster", x0, x1, 1.25, 1.25, 1.205, 1.4, 30));
+  }
+  return freightWagonLod({ palette: { ...WAGON_PALETTE, ...PAO_PALETTE }, shells, parts });
 }
 
 // --- the Habis sliding-wall wagon -----------------------------------------------------
@@ -263,6 +307,24 @@ export function habisSlidingWallWagon(params?: ParamValues): MeshBuilder {
     m.scope("bogie 2", () => c.freightBogie(20.45, 1.8));
   });
   return m;
+}
+
+/** The Habis from afar (lodSteam.ts): walls, light top rail and roof over the underframe, the name plate, fishbelly and bogies. */
+export function habisSlidingWallWagonLod(params?: ParamValues): MeshBuilder {
+  const { livery } = resolveParams(HABIS_PARAMS, params);
+  const C = 11.6;
+  const hw: Array<readonly [number, number]> = [[0.8, 1.5], [3.2, 1.5], [3.6, 1.3], [4.1, 0.5]];
+  const side: Array<[number, number, string]> = [[0.8, 1.1, "frame"], [1.1, 1.3, "post"], [1.3, 3.2, "wall"], [3.2, 3.32, "band"], [3.32, 4.1, "roof"]];
+  const plate = (s: number) => ({ u: [(s > 0 ? 8.7 : 8.6) - C, (s > 0 ? 14.6 : 14.5) - C] as const, y: [2.0, 2.7] as const, mat: "plate", sides: [s], optional: 35 });
+  return freightWagonLod({
+    palette: { ...WAGON_PALETTE, ...FREIGHT_PALETTE, ...HABIS_LIVERIES[livery]! },
+    shells: [wagonBox(C, 0.5, 22.7, hw, side, { end: [[0.8, 1.1, "frame"], [1.1, 3.2, "wall"], [3.2, 4.1, "roof"]], roof: "roof", sideWindows: [plate(1), plate(-1)] })],
+    parts: [
+      roofBoxPart(C, "frame", 0.6, 22.6, 0.4, 0.4, 4.08, 4.3, 30),
+      platesPart(C, "frame", [[5.2, 0.8], [6.1, 0.3], [17.0, 0.3], [18.0, 0.8]], 1.35),
+      wagonBogies(C, [[2.85, 1.8], [20.45, 1.8]], 0.8),
+    ],
+  });
 }
 
 // --- the Hadgs covered hopper ----------------------------------------------------------
@@ -378,25 +440,43 @@ export function hadgsHopperWagon(): MeshBuilder {
   return m;
 }
 
+/** The Hadgs from afar (lodSteam.ts): the body on its underframe, the roof colour above the shoulder, bogies and beams. */
+export function hadgsHopperWagonLod(): MeshBuilder {
+  const C = 8.4;
+  const hw: Array<readonly [number, number]> = [[0.65, 1.45], [3.7, 1.45], [3.9, 1.27], [4.2, 0.7], [4.3, 0.2]];
+  return freightWagonLod({
+    palette: { ...WAGON_PALETTE, ...HADGS_PALETTE },
+    shells: [wagonBox(C, 0.3, 16.5, hw, [[0.65, 0.8, "frame"], [0.8, 3.9, "body"], [3.9, 4.3, "roof"]], { roof: "roof" })],
+    parts: [
+      // the door rails, darker, framing the two sliding doors
+      platesPart(C, "ribShade", [[3.0, 3.6], [13.8, 3.6], [13.8, 3.7], [3.0, 3.7]], 1.5, 30),
+      wagonBogies(C, [[2.9, 1.8], [13.8, 1.8]], 0.65),
+      drawGearLod(C, [[0.2, 0.3], [16.5, 16.6]], 0.8, 1.1, 1.45, "frame"),
+    ],
+  });
+}
+
 /** A wagon design: id, title, builder, parameters and its reference folder (assets/<folder>/). */
 interface FreightDesign {
   id: string;
   title: string;
   folder: string;
   build: (params?: ParamValues) => MeshBuilder;
+  /** Its distant model (lodSteam.ts). */
+  buildLod: (params?: ParamValues) => MeshBuilder;
   params?: readonly ParamSpec[];
   /** What the game needs of it beyond its geometry (design.ts GameProperties). */
   game: GameProperties;
 }
 
 const DESIGNS: readonly FreightDesign[] = [
-  { id: "proc-vehicle-sqns-container-wagon", game: { weight: 25, power: 0, maxspeed: 120, accel: null, variants: [{ params: { cargo: "maersk" }, weight: 50 }] }, title: "Sqns Container Wagon", folder: "wagon-sqns", build: sqnsContainerWagon, params: SQNS_PARAMS },
-  { id: "proc-vehicle-pao-flat-wagon", game: { weight: 22, power: 0, maxspeed: 120, accel: null, variants: [{ params: { cargo: "empty" }, weight: 20 }] }, title: "Pao Flat Wagon", folder: "wagon-pao", build: paoFlatWagon, params: PAO_PARAMS },
-  { id: "proc-vehicle-habis-sliding-wall-wagon", game: { weight: 50, power: 0, maxspeed: 160, accel: null }, title: "Habis Sliding-Wall Wagon", folder: "wagon-habis", build: habisSlidingWallWagon, params: HABIS_PARAMS },
-  { id: "proc-vehicle-hadgs-hopper-wagon", game: { weight: 25, power: 0, maxspeed: 120, accel: null }, title: "Hadgs Covered Hopper Wagon", folder: "wagon-hadgs", build: hadgsHopperWagon },
-  { id: "proc-vehicle-faccs-hopper-wagon", game: { weight: 38, power: 0, maxspeed: 90, accel: null }, title: "Faccs Hopper Wagon", folder: "wagon-faccs", build: faccsHopperWagon, params: FACCS_PARAMS },
-  { id: "proc-vehicle-falls-hopper-wagon", game: { weight: 37, power: 0, maxspeed: 90, accel: null }, title: "Falls Hopper Wagon", folder: "wagon-falls", build: fallsHopperWagon, params: FALLS_PARAMS },
-  { id: "proc-vehicle-wap-hopper-wagon", game: { weight: 60, power: 0, maxspeed: 90, accel: null, variants: [{ params: { cargo: "empty" }, weight: 37 }] }, title: "Wap Hopper Wagon", folder: "wagon-wap", build: wapHopperWagon, params: WAP_PARAMS },
+  { id: "proc-vehicle-sqns-container-wagon", game: { weight: 25, power: 0, maxspeed: 120, accel: null, variants: [{ params: { cargo: "maersk" }, weight: 50 }] }, title: "Sqns Container Wagon", folder: "wagon-sqns", build: sqnsContainerWagon, buildLod: sqnsContainerWagonLod, params: SQNS_PARAMS },
+  { id: "proc-vehicle-pao-flat-wagon", game: { weight: 22, power: 0, maxspeed: 120, accel: null, variants: [{ params: { cargo: "empty" }, weight: 20 }] }, title: "Pao Flat Wagon", folder: "wagon-pao", build: paoFlatWagon, buildLod: paoFlatWagonLod, params: PAO_PARAMS },
+  { id: "proc-vehicle-habis-sliding-wall-wagon", game: { weight: 50, power: 0, maxspeed: 160, accel: null }, title: "Habis Sliding-Wall Wagon", folder: "wagon-habis", build: habisSlidingWallWagon, buildLod: habisSlidingWallWagonLod, params: HABIS_PARAMS },
+  { id: "proc-vehicle-hadgs-hopper-wagon", game: { weight: 25, power: 0, maxspeed: 120, accel: null }, title: "Hadgs Covered Hopper Wagon", folder: "wagon-hadgs", build: hadgsHopperWagon, buildLod: hadgsHopperWagonLod },
+  { id: "proc-vehicle-faccs-hopper-wagon", game: { weight: 38, power: 0, maxspeed: 90, accel: null }, title: "Faccs Hopper Wagon", folder: "wagon-faccs", build: faccsHopperWagon, buildLod: faccsHopperWagonLod, params: FACCS_PARAMS },
+  { id: "proc-vehicle-falls-hopper-wagon", game: { weight: 37, power: 0, maxspeed: 90, accel: null }, title: "Falls Hopper Wagon", folder: "wagon-falls", build: fallsHopperWagon, buildLod: fallsHopperWagonLod, params: FALLS_PARAMS },
+  { id: "proc-vehicle-wap-hopper-wagon", game: { weight: 60, power: 0, maxspeed: 90, accel: null, variants: [{ params: { cargo: "empty" }, weight: 37 }] }, title: "Wap Hopper Wagon", folder: "wagon-wap", build: wapHopperWagon, buildLod: wapHopperWagonLod, params: WAP_PARAMS },
 ];
 
 /** Every freight wagon design of this family, in catalog order. The ids are stored in saved maps. */
@@ -404,6 +484,7 @@ export const FREIGHT_WAGONS: readonly ProceduralDesign[] = DESIGNS.map((w) => ({
   id: w.id,
   title: w.title,
   build: w.build,
+  buildLod: w.buildLod,
   game: w.game,
   catalog: WAGON_CATALOG,
   references: w.folder,

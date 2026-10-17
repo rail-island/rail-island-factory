@@ -22,6 +22,9 @@ import { block, side } from "./vehicleParts.ts";
 import { blockX, centreCoupler, DMU_CATALOG, enumParam, slopePanel, tractionNumber } from "./emuParts.ts";
 import { bOf, roofBox, sideBox, toBody, unitBogie, type PxBox, type SideMap } from "./unitParts.ts";
 import { nWagen, type NWagenLivery, type NWagenVariant } from "./dbNWagen.ts";
+import { LOD_GLASS } from "./lodKit.ts";
+import { coachLod } from "./lodClassic.ts";
+import { bogieParts, coachBody, fitUnit, roofPart, sideGlass, skirtParts, underPart } from "./lodUnits.ts";
 
 export type Db628Livery = "mint" | "red";
 export type Db628Unit = "motorCar" | NWagenVariant;
@@ -140,15 +143,8 @@ const DOORS: Array<{ door: PxBox; glass: PxBox[] }> = [
 /** The n-Wagen paint of each 628 livery: the coaches' iv is the 628's mint, their vr its traffic red. */
 export const DB628_COACH_LIVERY: Record<Db628Livery, NWagenLivery> = { mint: "iv", red: "vr" };
 
-/** One car of the DB 628 set in one of its liveries: the 628.2 motor car or an n-Wagen coach. */
-export function db628(params?: ParamValues): MeshBuilder {
-  const p = resolveParams(DB628_PARAMS, params);
-  const unit = p.unit as Db628Unit;
-  const livery = p.livery as Db628Livery;
-  if (unit !== "motorCar") return nWagen({ variant: unit, livery: DB628_COACH_LIVERY[livery] });
-  const L = LIVERIES[livery];
-  const c = new Coach({ ...PALETTE, ...L.palette }, DB628_LENGTH / 2);
-  const m = c.m;
+/** The motor car's volumes: the raked nose and the body behind it. */
+function volumes628(L: Livery): { nose: Volume; body: Volume } {
   const nose: Volume = {
     name: "nose",
     section: DB628_SECTION,
@@ -167,6 +163,19 @@ export function db628(params?: ParamValues): MeshBuilder {
     bottom: toBody(DB628_MAP, [[22.1, 0.55], [20.6, 0.55], [20.5, 0.8], [3.0, 0.8], [2.9, 0.55], [1.7, 0.55], [0.9, 0.75]]),
     bands: L.bands,
   };
+  return { nose, body };
+}
+
+/** One car of the DB 628 set in one of its liveries: the 628.2 motor car or an n-Wagen coach. */
+export function db628(params?: ParamValues): MeshBuilder {
+  const p = resolveParams(DB628_PARAMS, params);
+  const unit = p.unit as Db628Unit;
+  const livery = p.livery as Db628Livery;
+  if (unit !== "motorCar") return nWagen({ variant: unit, livery: DB628_COACH_LIVERY[livery] });
+  const L = LIVERIES[livery];
+  const c = new Coach({ ...PALETTE, ...L.palette }, DB628_LENGTH / 2);
+  const m = c.m;
+  const { nose, body } = volumes628(L);
   m.scope("body", () => {
     m.scope("nose", () => c.volume(nose));
     c.volume(body);
@@ -192,6 +201,40 @@ export function db628(params?: ParamValues): MeshBuilder {
     });
   });
   return m;
+}
+
+/**
+ * A car of the 628 set for distant views (lodUnits.ts): the motor car's raked
+ * nose with its windscreen and nose paint, the body's section and bands, the
+ * side window band, the skirts at the ends, the bogies, the underframe
+ * equipment and the roof boxes; an n-Wagen coach through the classic coach
+ * adapter (lodClassic.ts), recorded from its own builder.
+ */
+export function db628Lod(params?: ParamValues): MeshBuilder {
+  const p = resolveParams(DB628_PARAMS, params);
+  const unit = p.unit as Db628Unit;
+  const livery = p.livery as Db628Livery;
+  if (unit !== "motorCar") return coachLod(() => nWagen({ variant: unit, livery: DB628_COACH_LIVERY[livery] }));
+  const L = LIVERIES[livery];
+  const centre = DB628_LENGTH / 2;
+  const X = (x: number) => B(x) - centre;
+  const { nose, body } = volumes628(L);
+  const place = (v: Volume) => ({ v, X: (b: number) => b - centre });
+  const glass = [...WINDOWS, ...DOORS.map((d) => d.glass[0]!)].map(box).map((b) => ({ ...b, x0: b.x0 - centre, x1: b.x1 - centre }));
+  const shell = coachBody([place(body), place(nose)], {
+    y0: 0.8, main: 0, windows: sideGlass(glass, 0.6), frontWindows: [{ u: [fz(28.8), fz(1.2)], y: [fy(35), fy(22)], mat: LOD_GLASS }],
+  });
+  return fitUnit({
+    palette: { ...PALETTE, ...L.palette },
+    bodies: [shell],
+    parts: [
+      ...bogieParts(DB628_BOGIES.map((x) => [X(x), DB628_WHEELBASE / 2 + 0.385 + 0.2] as const), 0.8),
+      ...skirtParts((body.bottom ?? []).map(([b, y]): Pt => [b - centre, y]), 0.8, 1.48, L.bands[0]![2]),
+      underPart(X(15.2), X(7.2), 0.3, 0.8, 1.25),
+      roofPart("roof", X(18.0), X(14.6), 0.8, 0.58, 3.78, 4.0),
+      roofPart("roof", X(9.5), X(7.2), 0.95, 0.75, 3.78, 4.08),
+    ],
+  }, 100);
 }
 
 /** Windows, doors, paint lines and markings on side s. */
@@ -315,5 +358,5 @@ const DB_628_GAME: GameProperties = {
 };
 
 export const DB628_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-db-628", game: DB_628_GAME, title: "DB 628", build: db628, params: DB628_PARAMS, catalog: DMU_CATALOG, references: ["db-628", "db-n-wagen"] },
+  { id: "proc-vehicle-db-628", game: DB_628_GAME, title: "DB 628", build: db628, buildLod: db628Lod, params: DB628_PARAMS, catalog: DMU_CATALOG, references: ["db-628", "db-n-wagen"] },
 ];

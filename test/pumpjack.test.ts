@@ -71,7 +71,7 @@ describe("the oil pumpjack", () => {
   });
 
   it("keeps the low-detail build static", () => {
-    const low = design.buildLod!();
+    const low = design.buildLod();
     expect(low.animations()).toEqual([]);
   });
 });

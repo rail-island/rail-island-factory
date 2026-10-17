@@ -17,7 +17,7 @@ function solid(w: number, h: number, rgb: [number, number, number]): PNG {
 const px = (png: PNG, x: number, y: number) => [...png.data.subarray((y * png.width + x) * 4, (y * png.width + x) * 4 + 4)];
 
 const design = (id: string, params?: ProceduralDesign["params"]): ProceduralDesign =>
-  ({ id, title: id, build: () => new MeshBuilder({}), params });
+  ({ id, title: id, build: () => new MeshBuilder({}), buildLod: () => new MeshBuilder({}), params });
 
 const DESIGNS = new Map<string, ProceduralDesign>([
   ["proc-a-1", design("proc-a-1", [

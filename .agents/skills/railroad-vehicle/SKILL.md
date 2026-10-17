@@ -200,3 +200,11 @@ parked, maintenance or other operating state overrides this default.
 6. Follow repository Git instructions: commit and push to `master`; do not
    commit generated `export/` or `dist/`. Importing into the game is a separate
    action and requires the user's instruction.
+
+## Low level of detail
+
+Every design needs its own `buildLod` (docs/models/lod.md); a design without one
+does not compile. Extend the family's LOD adapter (`generator/lod*.ts`) or build on
+the shared kit (`generator/lodKit.ts`): silhouette first, colours as bands, then
+windscreens and window bands in `LOD_GLASS`, running gear reaching the rail and the raised rear pantograph; keep every parameter combination within its budget, and review a full/LOD
+contact sheet.

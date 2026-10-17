@@ -19,6 +19,7 @@ import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign 
 import { diamond } from "./czElectricKit.ts";
 import { centreCoupler, EMU_CATALOG, enumParam, slopePanel, tractionNumber } from "./emuParts.ts";
 import { block, side } from "./vehicleParts.ts";
+import { bogieParts, coachBody, fitUnit, pantographParts, roofPart, sideGlass, underPart } from "./lodUnits.ts";
 import { bOf, CLASSIC_PALETTE, emuBogie, frontEmblem, frontNumber, gangwayEnd, lens, louvre, polyB, sb, sideNumber, toB, type CarFrame, type PxBox } from "./emuClassicKit.ts";
 
 /** The published 95.29 m of the set (two motor cars, two trailers) over the XML's 98.8 m. */
@@ -80,13 +81,14 @@ export function cd451(params?: ParamValues): MeshBuilder {
   return unit === "motorCar" ? motorCar() : trailer();
 }
 
-function motorCar(): MeshBuilder {
-  const car = CARS.motorCar;
-  const F = car.F;
-  const c = new Coach(PALETTE, (car.front + car.rear) / 2);
-  const m = c.m;
-  const box = (b: PxBox) => sb(F, b);
-  const X = (x: number) => c.X(bOf(F, x));
+/** The side windows (native boxes): the motor car's saloon, the trailer's saloon and end compartments. */
+const WINDOWS_451: PxBox[] = [[93, 36, 101, 46], [105, 36, 117, 46], [121, 36, 133, 46], [137, 36, 149, 46], [153, 36, 165, 46], [169, 36, 177, 46], [207, 29, 213, 39], [216, 29, 228, 39]];
+const WINDOWS_051: PxBox[] = [[74, 28, 83, 38], [89, 28, 101, 38], [107, 28, 119, 38], [126, 28, 138, 38], [144, 28, 156, 38], [162, 28, 171, 38]];
+const END_WINDOWS_051: PxBox[] = [[6, 21, 18, 31], [22, 21, 34, 31], [37, 21, 44, 31], [202, 21, 208, 31], [211, 21, 223, 31], [227, 21, 239, 31]];
+
+/** The motor car's volumes: the nose and the body behind it. */
+function motorVolumes(): { nose: Volume; body: Volume } {
+  const F = CARS.motorCar.F;
   // the nose (source x 0.5 .. 2.4): rounded plan, the raked face; its bands from x_inc
   const nose: Volume = {
     name: "nose",
@@ -106,6 +108,17 @@ function motorCar(): MeshBuilder {
     bands: [[0.4, 1.2, "blue"], [1.2, 2.2, "light"], [2.2, 3.3, "blue"], [3.3, 3.72, "roof"], [3.72, 3.8, "roofTop"]],
     endPaint: "blue",
   };
+  return { nose, body };
+}
+
+function motorCar(): MeshBuilder {
+  const car = CARS.motorCar;
+  const F = car.F;
+  const c = new Coach(PALETTE, (car.front + car.rear) / 2);
+  const m = c.m;
+  const box = (b: PxBox) => sb(F, b);
+  const X = (x: number) => c.X(bOf(F, x));
+  const { nose, body } = motorVolumes();
   m.scope("body", () => {
     m.scope("nose", () => c.volume(nose));
     c.volume(body);
@@ -117,7 +130,7 @@ function motorCar(): MeshBuilder {
         m.scope("louvres", () => ([[26, 28, 34, 36], [35, 28, 43, 36], [44, 28, 52, 36]] as PxBox[]).forEach((b, i) => m.scope(`louvre ${i + 1}`, () => louvre(c, body, s, box(b), "roof", 6))));
         m.scope("machine room door", () => c.door(body, s, box([35, 36, 52, 47]), "light", { seam: 0.03 }));
         m.scope("windows", () => {
-          const ws: Array<[PxBox, string]> = [[[55, 28, 62, 36], "cab end window"], ...([[93, 36, 101, 46], [105, 36, 117, 46], [121, 36, 133, 46], [137, 36, 149, 46], [153, 36, 165, 46], [169, 36, 177, 46], [207, 29, 213, 39], [216, 29, 228, 39]] as PxBox[]).map((b, i): [PxBox, string] => [b, `window ${i + 1}`])];
+          const ws: Array<[PxBox, string]> = [[[55, 28, 62, 36], "cab end window"], ...WINDOWS_451.map((b, i): [PxBox, string] => [b, `window ${i + 1}`])];
           for (const [b, name] of ws) m.scope(name, () => c.window(body, s, box(b), { fw: 0.08 }));
         });
         m.scope("doors", () => {
@@ -182,13 +195,10 @@ function motorCar(): MeshBuilder {
   return m;
 }
 
-function trailer(): MeshBuilder {
-  const car = CARS.trailer;
-  const F = car.F;
-  const c = new Coach(PALETTE, (car.front + car.rear) / 2);
-  const m = c.m;
-  const box = (b: PxBox) => sb(F, b);
-  const body: Volume = {
+/** The trailer's body. */
+function trailerVolume(): Volume {
+  const F = CARS.trailer.F;
+  return {
     name: "body",
     section: SECTION_051,
     plan: toB(F, [[0.2, 1.5], [24.3, 1.5]]),
@@ -197,12 +207,21 @@ function trailer(): MeshBuilder {
     bands: [[0.2, 1.0, "blue"], [1.0, 2.5, "light"], [2.5, 3.1, "blue"], [3.1, 3.7, "roof"], [3.7, 3.9, "roofTop"]],
     endPaint: "blue",
   };
+}
+
+function trailer(): MeshBuilder {
+  const car = CARS.trailer;
+  const F = car.F;
+  const c = new Coach(PALETTE, (car.front + car.rear) / 2);
+  const m = c.m;
+  const box = (b: PxBox) => sb(F, b);
+  const body = trailerVolume();
   m.scope("body", () => {
     c.volume(body);
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
-        m.scope("end windows", () => ([[6, 21, 18, 31], [22, 21, 34, 31], [37, 21, 44, 31], [202, 21, 208, 31], [211, 21, 223, 31], [227, 21, 239, 31]] as PxBox[]).forEach((b, i) => m.scope(`window ${i + 1}`, () => c.window(body, s, box(b), { fw: 0.08, ...(b[2] - b[0] > 8 ? { sash: 2.47 } : {}) }))));
-        m.scope("windows", () => ([[74, 28, 83, 38], [89, 28, 101, 38], [107, 28, 119, 38], [126, 28, 138, 38], [144, 28, 156, 38], [162, 28, 171, 38]] as PxBox[]).forEach((b, i) => m.scope(`window ${i + 1}`, () => c.window(body, s, box(b), { fw: 0.08, sash: 1.77 }))));
+        m.scope("end windows", () => END_WINDOWS_051.forEach((b, i) => m.scope(`window ${i + 1}`, () => c.window(body, s, box(b), { fw: 0.08, ...(b[2] - b[0] > 8 ? { sash: 2.47 } : {}) }))));
+        m.scope("windows", () => WINDOWS_051.forEach((b, i) => m.scope(`window ${i + 1}`, () => c.window(body, s, box(b), { fw: 0.08, sash: 1.77 }))));
         m.scope("doors", () =>
           ([[[50, 23, 67, 47], [[52, 29, 57, 38], [60, 29, 65, 38]]], [[178, 23, 195, 47], [[181, 29, 185, 38], [188, 29, 193, 38]]]] as Array<[PxBox, PxBox[]]>).forEach(([d, glass], i) =>
             m.scope(`door ${i + 1}`, () => {
@@ -225,6 +244,38 @@ function trailer(): MeshBuilder {
   return m;
 }
 
+/**
+ * A car of the 451 set for distant views (lodUnits.ts): the motor car's
+ * raked, rounded nose over the lamp pods with its wrapped windscreen band and
+ * paint, the bodies' sections and bands, the side window bands, the bogies,
+ * the apron, the ventilator housing and the raised pantograph.
+ */
+export function cd451Lod(params?: ParamValues): MeshBuilder {
+  const unit = resolveParams(CD451_PARAMS, params).unit as Unit451;
+  const car = CARS[unit];
+  const F = car.F;
+  const centre = (car.front + car.rear) / 2;
+  const X = (x: number) => bOf(F, x) - centre;
+  const place = (v: Volume) => ({ v, X: (b: number) => b - centre });
+  const glass = (boxes: PxBox[]) => sideGlass(boxes.map((b) => sb(F, b)).map((b) => ({ ...b, x0: b.x0 - centre, x1: b.x1 - centre })), 0.6);
+  if (unit === "trailer") {
+    const body = coachBody([place(trailerVolume())], { y0: 0.6, windows: glass([...WINDOWS_051, ...END_WINDOWS_051]) });
+    return fitUnit({ palette: PALETTE, bodies: [body], parts: bogieParts([[X(2.4), 1.85], [X(22.1), 1.85]], 0.6) }, 100);
+  }
+  const { nose, body } = motorVolumes();
+  const shell = coachBody([place(nose), place(body)], { y0: 0.8, main: 1, windows: glass(WINDOWS_451) });
+  return fitUnit({
+    palette: PALETTE,
+    bodies: [shell],
+    parts: [
+      ...bogieParts([[X(4.4), 1.95], [X(22.6), 1.95]], 0.8),
+      underPart(X(2.6), X(0.6), 0.5, 0.8, 1.25, 30, undefined, "apron"),
+      roofPart("roofTop", X(18.1), X(9.3), 0.8, 0.6, 3.78, 4.2),
+      ...pantographParts([X(22.64)], 3.8, 4.1, 5.75),
+    ],
+  }, 100);
+}
+
 /** Every car, for the tests. */
 export const CARS_451: readonly Unit451[] = ["motorCar", "trailer"];
 
@@ -239,7 +290,7 @@ const CD_451_GAME: GameProperties = {
   ],
 };
 
-export const EMU451_DESIGNS: ProceduralDesign[] = [{ id: "proc-vehicle-cd-451", game: CD_451_GAME, title: "CD 451 Zabotlam", build: cd451, params: CD451_PARAMS, catalog: EMU_CATALOG, references: "cd-451" }];
+export const EMU451_DESIGNS: ProceduralDesign[] = [{ id: "proc-vehicle-cd-451", game: CD_451_GAME, title: "CD 451 Zabotlam", build: cd451, buildLod: cd451Lod, params: CD451_PARAMS, catalog: EMU_CATALOG, references: "cd-451" }];
 
 /** A car's source mapping and the body x of its centre, for the comparison. */
 export const frame451 = (unit: Unit451): { F: CarFrame; centre: number } => ({ F: CARS[unit].F, centre: (CARS[unit].front + CARS[unit].rear) / 2 });
