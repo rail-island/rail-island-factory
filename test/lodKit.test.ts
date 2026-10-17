@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from "vitest";
 import { MeshBuilder } from "../generator/meshBuilder";
-import { fitLod, lodBands, lodShell, lodWheel, LOD_GLASS, LOD_PALETTE, mergeBand, simplifyTable, windowBands, type LodShell } from "../generator/lodKit";
+import { fitLod, fitParts, lodBands, lodShell, lodWheel, LOD_GLASS, LOD_PALETTE, mergeBand, simplifyTable, windowBands, type LodShell } from "../generator/lodKit";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { glbStats } from "../generator/glbStats";
@@ -132,5 +132,19 @@ describe("LOD kit solids", () => {
       expect(Math.min(...ys)).toBeCloseTo(0, 9);
       expect(ys.filter((y) => Math.abs(y) < 1e-9).length).toBeGreaterThan(2);
     }
+  });
+});
+
+describe("LOD kit parts-only fitting", () => {
+  it("gives optional parts up lowest rank first and brings back what fits", () => {
+    const box = (x: number) => (m: MeshBuilder) => m.box("dark", x, 0, 1, 1, 0, 1);
+    const parts = [{ draw: box(0) }, { optional: 1, draw: box(3) }, { optional: 2, draw: box(6) }];
+    const n = fitParts(PALETTE, [parts[0]!], 1000).triangleCount();
+    expect(fitParts(PALETTE, parts, 3 * n).triangleCount()).toBe(3 * n);
+    // room for two boxes: the rank-1 box goes first, the rank-2 box stays
+    const m = fitParts(PALETTE, parts, 2 * n);
+    expect(m.triangleCount()).toBe(2 * n);
+    expect(glbStats(m.toGlb("t")).max[0]).toBeCloseTo(6.5, 5);
+    expect(() => fitParts(PALETTE, parts, n - 1)).toThrow("does not fit");
   });
 });

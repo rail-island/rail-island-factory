@@ -522,6 +522,36 @@ export function fitLod(spec: LodSpec, budget: number): MeshBuilder {
   }
 }
 
+/**
+ * `fitLod` for a model made of parts only (a building): the optional parts give
+ * way lowest rank first, and come back afterwards where they fit. Kept apart from
+ * fitLod so a model without shells does not bundle the shell painter.
+ */
+export function fitParts(palette: Record<string, MaterialSpec>, parts: readonly LodPart[], budget: number): MeshBuilder {
+  const optional = parts.filter((p) => p.optional !== undefined).sort((a, b) => a.optional! - b.optional!);
+  const gone = new Set<LodPart>();
+  const build = (): MeshBuilder => {
+    const m = new MeshBuilder(palette);
+    m.scope("parts", () => { for (const p of parts) if (!gone.has(p)) p.draw(m); });
+    return m;
+  };
+  let m = build();
+  for (const o of optional) {
+    if (m.triangleCount() <= budget) break;
+    gone.add(o);
+    m = build();
+  }
+  if (m.triangleCount() > budget) throw new Error(`the LOD does not fit ${budget} triangles`);
+  for (const o of [...optional].reverse()) {
+    if (!gone.has(o)) continue;
+    gone.delete(o);
+    const more = build();
+    if (more.triangleCount() <= budget) m = more;
+    else gone.add(o);
+  }
+  return m;
+}
+
 // --- running gear -----------------------------------------------------------------------------
 
 /** A rail bogie from afar: a dark block narrowing toward the rail like its wheels, from the rail to `top`. */

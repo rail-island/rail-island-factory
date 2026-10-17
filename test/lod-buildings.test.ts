@@ -32,7 +32,7 @@ describe('ordinary building LODs', () => {
   for (const d of GROUP) {
     for (const v of coverageCombinations(d.params, d.finishParams)) {
       it(`${d.id} ${JSON.stringify(v)}: fits its budget, no windows, within the full model's bounds and colours`, () => {
-        const low = d.buildLod!(v), glb = low.toGlb('test'), budget = lodBudget(d);
+        const low = d.buildLod(v), glb = low.toGlb('test'), budget = lodBudget(d);
         expect(low.triangleCount()).toBeLessThanOrEqual(budget);
         expect(low.triangleCount()).toBeGreaterThan(budget * 0.3);
         expect(findCoplanarOverlaps(glb)).toEqual([]);
@@ -62,7 +62,7 @@ describe('ordinary building LODs', () => {
         const seen = new Set<string>();
         for (const { value } of spec.values) {
           const v: ParamValues = { ...resolveParams(d.params!, {}), [name]: value };
-          seen.add([...colours(d.buildLod!(v).toGlb('low')).values()].sort().join('|'));
+          seen.add([...colours(d.buildLod(v).toGlb('low')).values()].sort().join('|'));
         }
         expect(seen.size).toBe(spec.values.length);
       });
@@ -71,14 +71,14 @@ describe('ordinary building LODs', () => {
   it('mirrors the village houses with their side parameter', () => {
     for (const id of ['village-l-house', 'village-family-house']) {
       const d = VILLAGE_HOUSES.find(h => h.id.endsWith(id))!;
-      const [left, right] = (['left', 'right'] as const).map(side => glbStats(d.buildLod!({ side }).toGlb('low')));
+      const [left, right] = (['left', 'right'] as const).map(side => glbStats(d.buildLod({ side }).toGlb('low')));
       expect(left!.min[0]).toBeCloseTo(-right!.max[0], 4);
       expect(left!.max[0]).toBeCloseTo(-right!.min[0], 4);
       expect(left!.triangles).toBe(right!.triangles);
     }
   });
   it('keeps the shape options a distant viewer tells apart', () => {
-    const tris = (d: ProceduralDesign, v: ParamValues) => glbStats(d.buildLod!(v).toGlb('low'));
+    const tris = (d: ProceduralDesign, v: ParamValues) => glbStats(d.buildLod(v).toGlb('low'));
     const pitched = COMMERCIAL.find(d => d.id.endsWith('commercial-brick'))!;
     // a pitched roof rises over the flat roof's parapet
     expect(tris(pitched, { roof: 'pitched' }).max[1]).toBeGreaterThan(tris(pitched, { roof: 'flat' }).max[1] + 2);

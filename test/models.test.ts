@@ -691,6 +691,7 @@ describe("generateModels", () => {
           m.box("b", 0, 0, 4, 4, 20, 50); // roof flush with a's
           return m;
         },
+        buildLod: SKYSCRAPERS[0]!.buildLod,
       };
       let thrown: unknown;
       try {

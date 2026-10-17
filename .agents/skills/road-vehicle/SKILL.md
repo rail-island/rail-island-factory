@@ -134,3 +134,11 @@ If downloading is not possible, tell the user and list what you would have used.
 5. `pnpm typecheck`, `pnpm test`, `pnpm build`.
 6. Update `docs/models/vehicles.md` (the designs table, anything new), commit
    and push to `master`.
+
+## Low level of detail
+
+Every design needs its own `buildLod` (docs/models/lod.md); a design without one
+does not compile. Extend the family's LOD adapter (`generator/lod*.ts`) or build on
+the shared kit (`generator/lodKit.ts`): silhouette first, colours as bands, then
+windscreens and window bands in `LOD_GLASS` and wheels standing on the road; an articulated vehicle keeps its sections (`LodSpec.sections`); keep every parameter combination within its budget, and review a full/LOD
+contact sheet.

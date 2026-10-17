@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { DESIGNS, designSource } from '../generator/generate';
 import { bundleDesign } from '../generator/jsModel';
-import { lodBudget, buildLodGeometry, lodRecipe } from '../generator/lod';
+import { lodBudget } from '../generator/lod';
 import { previewKey } from '../src/catalogQuery';
 import { glbStats } from '../generator/glbStats';
 
@@ -10,7 +10,6 @@ import { buildLodModel } from '../generator/lodModel';
 import { coverageCombinations } from '../generator/design';
 import { findCoplanarOverlaps } from '../generator/coplanar';
 import { collectTriangles, parseGlb } from '../generator/glbTriangles';
-import { MeshBuilder } from '../generator/meshBuilder';
 import { LOD_GLASS } from '../generator/lodKit';
 
 interface Module {
@@ -106,7 +105,7 @@ describe('low detail exports', () => {
   }
   it('keeps the Eiffel Tower continuous from its piers to the antenna', () => {
     const d = DESIGNS.get('proc-building-tower-eiffel')!;
-    const m = d.buildLod!();
+    const m = d.buildLod();
     const stats = glbStats(m.toGlb('test'));
     expect(m.triangleCount()).toBeLessThanOrEqual(500);
     expect(stats.min[1]).toBe(0);
@@ -117,28 +116,10 @@ describe('low detail exports', () => {
     expect(previewKey('model',{},true)).not.toBe(previewKey('model',{}));
     expect(previewKey('model',{b:'2',a:'1'},true)).toBe(previewKey('model',{a:'1',b:'2'},true));
   });
-  it('rejects invalid silhouette budgets', () => {
-    for(const budget of [-1,0,3,4.5,NaN,Infinity]) expect(()=>buildLodGeometry([],budget,{family:'test',vehicle:false,include:'.*',depth:0})).toThrow('invalid LOD budget');
-  });
 });
 
 
-describe('structural selection regressions', () => {
-  it('removes windows, logos and every undercarriage part before building a closed body', () => {
-    const m = new MeshBuilder({paint:{color:'#aa2233'},detail:{color:'#334455'}});
-    m.scope('body',()=>{
-      m.box('paint',0,0,20,3,1.2,4);
-      for(const name of ['windows','logos','rail posts'])m.scope(name,()=>m.box('detail',0,0,30,5,0,5));
-    });
-    for(const name of ['underframe','bogies','wheelset','pantograph','coupler'])m.scope(name,()=>m.box('detail',0,0,40,7,-1,6));
-    m.lowDetail(faces=>buildLodGeometry(faces,100,lodRecipe(DESIGNS.get('proc-vehicle-cd-163')!)));
-    const stats=glbStats(m.toGlb('test'));
-    expect(stats.min).toEqual([-10,expect.closeTo(1.2,5),-1.5]);
-    expect(stats.max).toEqual([10,4,1.5]);
-    expect(stats.triangles).toBe(12);
-    const {json,bin}=parseGlb(m.toGlb('test'));
-    expect(collectTriangles(json,bin).every(f=>f.material==='paint')).toBe(true);
-  });
+describe('dedicated silhouette regressions', () => {
   for(const id of ['cd-742','db-212','cd-771','csd-386'])it(`${id} retains its long hood or boiler instead of only a cab`,()=>{
     const d=DESIGNS.get(`proc-vehicle-${id}`)!,full=glbStats(d.build().toGlb('full')),low=glbStats(buildLodModel(d).toGlb('low'));
     expect(low.max[0]-low.min[0]).toBeGreaterThan((full.max[0]-full.min[0])*.75);
@@ -147,8 +128,5 @@ describe('structural selection regressions', () => {
     const d=DESIGNS.get('proc-building-hist-colosseum')!;
     const {json,bin}=parseGlb(buildLodModel(d).toGlb('low'));
     for(const f of collectTriangles(json,bin))for(const p of f.p)expect(Math.hypot(p[0]/94,p[2]/78)).toBeGreaterThan(.51);
-  });
-  it('requires an explicit recipe for new families',()=>{
-    expect(()=>lodRecipe({id:'new-unreviewed-model',title:'New',build:()=>new MeshBuilder({})})).toThrow('No reviewed LOD family');
   });
 });

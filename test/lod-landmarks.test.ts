@@ -34,7 +34,7 @@ describe('landmark, tower and skyscraper LODs', () => {
   for (const d of GROUP) {
     for (const v of coverageCombinations(d.params, d.finishParams)) {
       it(`${d.id} ${JSON.stringify(v)}: fits 500 triangles, no windows, the full model's height and plan`, () => {
-        const low = d.buildLod!(v), glb = low.toGlb('test');
+        const low = d.buildLod(v), glb = low.toGlb('test');
         expect(low.triangleCount()).toBeLessThanOrEqual(500);
         expect(low.triangleCount()).toBeGreaterThan(100);
         expect(findCoplanarOverlaps(glb)).toEqual([]);
@@ -55,17 +55,17 @@ describe('landmark, tower and skyscraper LODs', () => {
   it('paints a skyscraper\'s glass as wall colour of the chosen glazing', () => {
     const office = SKYSCRAPERS.find(d => d.id.endsWith('sky-glass-office'))!;
     for (const glazing of ['original', 'jade', 'bronze']) {
-      const full = colours(office.build({ glazing }).toGlb('full')), low = colours(office.buildLod!({ glazing }).toGlb('low'));
+      const full = colours(office.build({ glazing }).toGlb('full')), low = colours(office.buildLod({ glazing }).toGlb('low'));
       expect(low.get('facade')).toBe(full.get('glass'));
       expect(low.get('facadeDark')).toBe(full.get('glassDark'));
     }
   });
   it('keeps the twisting tower\'s twist and the terraced tower\'s step count', () => {
     const twisted = SKYSCRAPERS.find(d => d.id.endsWith('sky-twisted'))!;
-    const straight = glbStats(twisted.buildLod!({ twist: 'straight' }).toGlb('a')), half = glbStats(twisted.buildLod!({ twist: 'half' }).toGlb('b'));
+    const straight = glbStats(twisted.buildLod({ twist: 'straight' }).toGlb('a')), half = glbStats(twisted.buildLod({ twist: 'half' }).toGlb('b'));
     expect(half.max[0]! - half.min[0]!).toBeGreaterThan(straight.max[0]! - straight.min[0]! + 1);
     const terraced = SKYSCRAPERS.find(d => d.id.endsWith('sky-terraced'))!;
-    const decks = (n: string) => terraced.buildLod!({ terraces: n }).triangleCount();
+    const decks = (n: string) => terraced.buildLod({ terraces: n }).triangleCount();
     expect(decks('6')).toBeGreaterThan(decks('3'));
   });
 });

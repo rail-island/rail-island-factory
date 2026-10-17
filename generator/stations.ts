@@ -18,8 +18,8 @@
 import { MeshBuilder, ngon, rect, type MaterialSpec, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { arc, block } from "./vehicleParts.ts";
-import { pragueMainStationLod, stationBuildingLod, stationHaltLod, suburbanStationLod } from "./lodBuildings.ts";
-export { pragueMainStationLod, stationBuildingLod, stationHaltLod, suburbanStationLod } from "./lodBuildings.ts";
+import { pragueMainStationLod, stationBuildingLod, stationHaltLod, suburbanStationLod } from "./lodStations.ts";
+export { pragueMainStationLod, stationBuildingLod, stationHaltLod, suburbanStationLod } from "./lodStations.ts";
 import type { CatalogFields, ProceduralDesign } from "./design.ts";
 
 // --- walls -----------------------------------------------------------------------

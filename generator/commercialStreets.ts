@@ -1,8 +1,8 @@
 // Commercial plan families. Metres, ground at y=0, street front at +Z.
 // Source inventory and provisional legacy correspondence: docs/models/commercial-streets.md.
 import { MeshBuilder, rect, type MaterialSpec, type Ring } from "./meshBuilder.ts";
-import { commercialModernLod, commercialBalconyLod, commercialAnnexLod, commercialBrickLod, commercialTenementLod, commercialShopLod, commercialBarrelLod, commercialTerraceLod, commercialGableLod, commercialBaroqueLod, commercialClassicalLod } from "./lodBuildings.ts";
-export { commercialModernLod, commercialBalconyLod, commercialAnnexLod, commercialBrickLod, commercialTenementLod, commercialShopLod, commercialBarrelLod, commercialTerraceLod, commercialGableLod, commercialBaroqueLod, commercialClassicalLod } from "./lodBuildings.ts";
+import { commercialModernLod, commercialBalconyLod, commercialAnnexLod, commercialBrickLod, commercialTenementLod, commercialShopLod, commercialBarrelLod, commercialTerraceLod, commercialGableLod, commercialBaroqueLod, commercialClassicalLod } from "./lodStreets.ts";
+export { commercialModernLod, commercialBalconyLod, commercialAnnexLod, commercialBrickLod, commercialTenementLod, commercialShopLod, commercialBarrelLod, commercialTerraceLod, commercialGableLod, commercialBaroqueLod, commercialClassicalLod } from "./lodStreets.ts";
 import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 
 export const COMMERCIAL_CATALOG: CatalogFields = {

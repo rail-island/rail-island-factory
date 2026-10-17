@@ -229,5 +229,9 @@ the GLB's nodes and scene extras; `test/export.test.ts` the meta entries' `rig`.
 Every standalone JS model accepts `build(THREE, params, lod = false)`. Set the third
 argument to `true` for its budgeted distant mesh. The factory detail view exposes
 this through **Low level of detail** and reports the preview triangle count.
-LOD rig posing is static; full-detail GLBs and source trees are unchanged.
+A rigid vehicle's LOD has no rig. An articulated vehicle's LOD keeps its sections
+(`section<i>` at the full rig's pivots) and joints (`joint<i>`), and its group
+carries a rig of `sections`, `joints` and `maxBendDeg` only, so `pose` and
+`renderJoint` bend it as the full model; its bogies and steered wheels do not
+turn. Full-detail GLBs and source trees are unchanged.
 See [lod.md](lod.md) for budgets, geometry and verification.

@@ -16,8 +16,8 @@
 import { MeshBuilder, chamferedRect, ngon, rect, type MaterialSpec, type Ring } from "./meshBuilder.ts";
 import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 
-import { villageTimberCottageLod, villageTimberHouseLod, villageCottageLod, villageLHouseLod, villageFamilyHouseLod, villageModernHouseLod, villageNarrowHouseLod, villageAlpineHutLod } from "./lodBuildings.ts";
-export { villageTimberCottageLod, villageTimberHouseLod, villageCottageLod, villageLHouseLod, villageFamilyHouseLod, villageModernHouseLod, villageNarrowHouseLod, villageAlpineHutLod } from "./lodBuildings.ts";
+import { villageTimberCottageLod, villageTimberHouseLod, villageCottageLod, villageLHouseLod, villageFamilyHouseLod, villageModernHouseLod, villageNarrowHouseLod, villageAlpineHutLod } from "./lodVillage.ts";
+export { villageTimberCottageLod, villageTimberHouseLod, villageCottageLod, villageLHouseLod, villageFamilyHouseLod, villageModernHouseLod, villageNarrowHouseLod, villageAlpineHutLod } from "./lodVillage.ts";
 import { TIMBER_COTTAGE_PARAMS, villageTimberCottage, villageTimberHouse } from "./timberCottages.ts";
 export { villageTimberCottage, villageTimberHouse } from "./timberCottages.ts";
 import { ALPINE_HUT_PARAMS, villageAlpineHut } from "./alpineHut.ts";

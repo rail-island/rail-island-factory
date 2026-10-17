@@ -16,3 +16,11 @@ description: Create or improve procedural buildings in Rail Island Factory, espe
 - Test all shape variants: triangle budget, finite/nondegenerate geometry, grounded bounds, deterministic GLB bytes, coplanar overlap detection and important openings. Verify standalone JS/GLB parity where available. Run `pnpm typecheck`, `pnpm test`, `pnpm build`; inspect generated thumbnails headlessly. No real-browser automation for model work.
 
 Reference: `docs/models/historical.md` and `docs/models/export.md`.
+
+## Low level of detail
+
+Every design needs its own `buildLod` (docs/models/lod.md); a design without one
+does not compile. Extend the family's LOD adapter (`generator/lod*.ts`) or build on
+the shared kit (`generator/lodKit.ts`): silhouette first, colours as bands, then
+no windows (100 triangles; 500 for landmarks, towers and skyscrapers); keep every parameter combination within its budget, and review a full/LOD
+contact sheet.

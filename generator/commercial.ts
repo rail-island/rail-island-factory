@@ -3,8 +3,8 @@
 // balconies, colourful shop awnings and flat parapet roofs. Metres, +z street.
 import { MeshBuilder, chamferedRect, ngon, rect, type MaterialSpec } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
-import { balconyHouseLod, cornerShopLod, marketBlockLod, officeHouseLod, terraceHouseLod } from "./lodBuildings.ts";
-export { balconyHouseLod, cornerShopLod, marketBlockLod, officeHouseLod, terraceHouseLod } from "./lodBuildings.ts";
+import { balconyHouseLod, cornerShopLod, marketBlockLod, officeHouseLod, terraceHouseLod } from "./lodCommercial.ts";
+export { balconyHouseLod, cornerShopLod, marketBlockLod, officeHouseLod, terraceHouseLod } from "./lodCommercial.ts";
 import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 
 const option = (value: string, title: string) => ({ value, title });

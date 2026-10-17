@@ -88,3 +88,11 @@ simplified tail emblem; no titles, lettering or trademarked logos in detail.
    livery side by side. Do not use a browser.
 4. `pnpm typecheck`, `pnpm test`, `pnpm build`; look at `export/thumbs/<id>.png`.
 5. Update `docs/models/aircraft.md` in the same change.
+
+## Low level of detail
+
+Every design needs its own `buildLod` (docs/models/lod.md); a design without one
+does not compile. Extend the family's LOD adapter (`generator/lod*.ts`) or build on
+the shared kit (`generator/lodKit.ts`): silhouette first, colours as bands, then
+the cockpit windscreen in `LOD_GLASS` (200 triangles, `airLod` in `generator/lodAir.ts`); keep every parameter combination within its budget, and review a full/LOD
+contact sheet.

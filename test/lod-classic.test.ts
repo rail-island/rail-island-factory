@@ -34,7 +34,7 @@ describe('classic LODs', () => {
       expect(d.buildLod).toBeDefined();
       const budget = lodBudget(d);
       for (const values of coverageCombinations(d.params, d.finishParams)) {
-        const m = d.buildLod!(values);
+        const m = d.buildLod(values);
         const n = m.triangleCount();
         expect(n).toBeLessThanOrEqual(budget);
         // a dedicated LOD uses its budget: no variant falls far below it
@@ -50,25 +50,25 @@ describe('classic LODs', () => {
   }
 
   it('keeps the electric locomotives\' liveries, windscreens and raised pantograph', () => {
-    const cd150 = materials(design('proc-vehicle-cd-150').buildLod!());
+    const cd150 = materials(design('proc-vehicle-cd-150').buildLod());
     for (const mat of ['green', 'cream', 'roof', 'cooler', 'pantograph', LOD_GLASS]) expect(cd150.get(mat)).toBeGreaterThan(0);
-    const cd230 = materials(design('proc-vehicle-cd-230').buildLod!());
+    const cd230 = materials(design('proc-vehicle-cd-230').buildLod());
     for (const mat of ['red', 'yellow', 'pantograph', LOD_GLASS]) expect(cd230.get(mat)).toBeGreaterThan(0);
-    const cd340 = materials(design('proc-vehicle-cd-230').buildLod!({ livery: 'cd340' }));
+    const cd340 = materials(design('proc-vehicle-cd-230').buildLod({ livery: 'cd340' }));
     expect(cd340.get('blue')).toBeGreaterThan(0);
     // the raised pantograph stands well above the roof
-    expect(glbStats(design('proc-vehicle-cd-150').buildLod!().toGlb('x')).max[1]).toBeGreaterThan(5.5);
+    expect(glbStats(design('proc-vehicle-cd-150').buildLod().toGlb('x')).max[1]).toBeGreaterThan(5.5);
   });
 
   it('paints the coaches in their bands, with a continuous window band and a roof', () => {
-    const y = materials(design('proc-vehicle-csd-classic-green-coach').buildLod!());
+    const y = materials(design('proc-vehicle-csd-classic-green-coach').buildLod());
     for (const mat of ['green', 'yellow', 'roof', LOD_GLASS]) expect(y.get(mat)).toBeGreaterThan(0);
-    const gw = materials(design('proc-vehicle-cd-green-white-coach').buildLod!({ variant: 'b' }));
+    const gw = materials(design('proc-vehicle-cd-green-white-coach').buildLod({ variant: 'b' }));
     for (const mat of ['green', 'white', 'roof', LOD_GLASS]) expect(gw.get(mat)).toBeGreaterThan(0);
     // the Be31's roof is a volume of its own over the compartments and vestibules
-    expect(materials(design('proc-vehicle-csd-be31').buildLod!()).get('roof')).toBeGreaterThan(0);
+    expect(materials(design('proc-vehicle-csd-be31').buildLod()).get('roof')).toBeGreaterThan(0);
     // the Bmo's well between its bogies reaches down to 0.2 m, its upper deck to 4.5 m
-    const bmo = glbStats(design('proc-vehicle-bmo-double-deck-coach').buildLod!().toGlb('x'));
+    const bmo = glbStats(design('proc-vehicle-bmo-double-deck-coach').buildLod().toGlb('x'));
     expect(bmo.max[1]).toBeCloseTo(4.5, 5);
   });
 
@@ -80,18 +80,18 @@ describe('classic LODs', () => {
 
   it('shows each wagon load in its own colours', () => {
     const nas = design('proc-vehicle-nas-flat-wagon');
-    expect(materials(nas.buildLod!({ cargo: 'tubes' })).get('tube')).toBeGreaterThan(0);
-    expect(materials(nas.buildLod!({ cargo: 'reels' })).get('reel')).toBeGreaterThan(0);
-    expect(materials(nas.buildLod!({ cargo: 'wood' })).get('logEnd')).toBeGreaterThan(0);
-    expect(materials(design('proc-vehicle-eas-open-wagon').buildLod!({ cargo: 'coal' })).get('coal')).toBeGreaterThan(0);
-    expect(materials(design('proc-vehicle-ua-open-wagon').buildLod!({ cargo: 'sand' })).get('sand')).toBeGreaterThan(0);
-    expect(materials(design('proc-vehicle-rah-tank-wagon').buildLod!()).get('band')).toBeGreaterThan(0);
+    expect(materials(nas.buildLod({ cargo: 'tubes' })).get('tube')).toBeGreaterThan(0);
+    expect(materials(nas.buildLod({ cargo: 'reels' })).get('reel')).toBeGreaterThan(0);
+    expect(materials(nas.buildLod({ cargo: 'wood' })).get('logEnd')).toBeGreaterThan(0);
+    expect(materials(design('proc-vehicle-eas-open-wagon').buildLod({ cargo: 'coal' })).get('coal')).toBeGreaterThan(0);
+    expect(materials(design('proc-vehicle-ua-open-wagon').buildLod({ cargo: 'sand' })).get('sand')).toBeGreaterThan(0);
+    expect(materials(design('proc-vehicle-rah-tank-wagon').buildLod()).get('band')).toBeGreaterThan(0);
   });
 
   it('keeps the truck and its trailer as two sections about the king pin', () => {
     const d = design('proc-vehicle-american-truck');
     expect(lodBudget(d)).toBe(200);
-    const m = d.buildLod!();
+    const m = d.buildLod();
     expect(m.rig?.sections?.map((s) => s.node)).toEqual(['section0', 'section1']);
     expect(m.rig?.sections?.[1]!.pivot).toEqual(d.build().rig!.sections![1]!.pivot);
     expect(m.rig?.steer).toBeUndefined();

@@ -47,6 +47,9 @@ document that owns it in the same change.** Conventions:
 - **Output stays deterministic**: no timestamps, no unordered iteration in what is
   written. A design's JS model and in-memory GLB bytes must not change unless the
   design changed.
+- **Every design supplies its own low level of detail** (`buildLod`, exported from
+  its source module; docs/models/lod.md): there is no generic fallback. Reuse the
+  family's LOD adapter or the shared kit (`generator/lodKit.ts`).
 - **Every vehicle states its game properties** (`game` on the design: weight,
   power, maxspeed, accel); the build fails without them.
 - **`export/` and `dist/` are generated and gitignored.** Never commit them.

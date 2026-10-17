@@ -3,8 +3,8 @@
 // (MeshCore.pool / jet, docs/models/emitters.md), so the two always agree.
 import { MeshBuilder, ngon, rect, type Ring } from './meshBuilder.ts';
 import type { ProceduralDesign } from './design.ts';
-import { classicalFountainLod, modernFountainLod, obeliskFountainLod } from './lodBuildings.ts';
-export { classicalFountainLod, modernFountainLod, obeliskFountainLod } from './lodBuildings.ts';
+import { classicalFountainLod, modernFountainLod, obeliskFountainLod } from './lodFountains.ts';
+export { classicalFountainLod, modernFountainLod, obeliskFountainLod } from './lodFountains.ts';
 export const palette = { stone:{color:'#d9d5c4'}, water:{color:'#7397a3',roughness:.2}, bronze:{color:'#859e86'}, granite:{color:'#a89b94'}, trim:{color:'#eee8d7'}, dark:{color:'#b4aa95'} };
 function basin(m:MeshBuilder, outer:Ring, inner:Ring, height:number):void {
   m.scope('basin',()=>{
