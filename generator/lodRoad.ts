@@ -17,7 +17,7 @@
 
 import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
-import { fitLod, lerp, lodBandAt, lodBands, lodPolygon, mergeBand, simplifyTable, type LodBand, type LodPart, type LodSections, type Table } from "./lodKit.ts";
+import { lodBlock, lodWheel, fitLod, lerp, lodBandAt, lodBands, lodPolygon, mergeBand, simplifyTable, type LodBand, type LodPart, type LodSections, type Table } from "./lodKit.ts";
 import { LOD_GLASS, windowBands } from "./lodKit.ts";
 import type { BusSpec } from "./busAssembly.ts";
 import { busSections } from "./busAssembly.ts";
@@ -222,22 +222,7 @@ export function lodTube(m: MeshBuilder, mat: string, rings: ReadonlyArray<readon
   });
 }
 
-/** A road wheel from afar: a dark n-gon disc in the plane z, facing out, its flat bottom on the road. */
-export function lodRoadWheel(m: MeshBuilder, mat: string, x: number, r: number, z: number, n = 6): void {
-  const y = r * Math.cos(Math.PI / n);
-  const pts = Array.from({ length: n }, (_, i): Vec3 => {
-    const a = 1.5 * Math.PI - Math.PI / n + (2 * Math.PI * i) / n;
-    return [x + r * Math.cos(a), y + r * Math.sin(a), z];
-  });
-  lodPolygon(m, mat, pts, [0, 0, Math.sign(z)]);
-}
 
-/** A box x0..x1, y0..y1, z0..z1: its four walls and top (no bottom), the ends left out unless `ends`. */
-export function lodBlock(m: MeshBuilder, mat: string, x0: number, x1: number, y0: number, y1: number, z0: number, z1: number, ends = true, topFace = true): void {
-  for (const [z, s] of [[z0, -1], [z1, 1]] as const) lodPolygon(m, mat, [[x0, y0, z], [x1, y0, z], [x1, y1, z], [x0, y1, z]], [0, 0, s]);
-  if (ends) for (const [x, s] of [[x0, -1], [x1, 1]] as const) lodPolygon(m, mat, [[x, y0, z0], [x, y0, z1], [x, y1, z1], [x, y1, z0]], [s, 0, 0]);
-  if (topFace) lodPolygon(m, mat, [[x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]], [0, 1, 0]);
-}
 
 // --- the shared fitting --------------------------------------------------------------------------
 
@@ -280,7 +265,7 @@ export function roadLod(spec: RoadLodSpec, budget: number): MeshBuilder {
   const sections = [...new Set(spec.wheels.at.map((w) => w.section ?? 0))];
   for (const s of sections) {
     parts.push({ section: s, draw: (m) => m.scope("wheels", () => {
-      for (const w of spec.wheels.at) if ((w.section ?? 0) === s) lodRoadWheel(m, spec.wheels.mat, w.x, w.r, w.z);
+      for (const w of spec.wheels.at) if ((w.section ?? 0) === s) lodWheel(m, spec.wheels.mat, w.x, w.r, w.z, w.z, 6, "none");
     }) });
   }
   parts.push(...(spec.parts ?? []));
@@ -422,7 +407,7 @@ export function busLod(spec: Omit<BusSpec, "fittings">, notes: BusLodNotes): Mes
     section: sectionOf((r.x[0] + r.x[1]) / 2),
     // the short and low boxes give way first
     optional: 10 + (r.x[1] - r.x[0]) * (r.y[1] - top),
-    draw: (m: MeshBuilder) => m.scope("roof equipment", () => lodBlock(m, r.mat, r.x[0], r.x[1], Math.min(r.y[0], top - 0.01), r.y[1], r.z[0], r.z[1])),
+    draw: (m: MeshBuilder) => m.scope("roof equipment", () => lodBlock(m, r.x[0], r.x[1], Math.min(r.y[0], top - 0.01), r.y[1], r.z[0], r.z[1], { side: r.mat })),
   }));
 
   const wz = lerp(hw, y0) + 0.03;
@@ -506,6 +491,6 @@ export function blockPart(name: string, mat: string, x: readonly [number, number
   return {
     ...(o.section !== undefined ? { section: o.section } : {}),
     ...(o.optional !== undefined ? { optional: o.optional } : {}),
-    draw: (m) => m.scope(name, () => lodBlock(m, mat, x[0], x[1], y[0], y[1], z[0], z[1], o.ends ?? true, o.top ?? true)),
+    draw: (m) => m.scope(name, () => lodBlock(m, x[0], x[1], y[0], y[1], z[0], z[1], { side: mat, end: o.ends ?? true ? mat : null, top: o.top ?? true ? mat : null })),
   };
 }

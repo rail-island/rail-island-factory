@@ -4,274 +4,25 @@
 // (germanCoachParts.ts). All three families build their bodies as volumes of
 // csdCoachParts.ts - an XML section scaled along a plan and clamped by an
 // elevation - so one reading serves them all: `volumeShell` turns a volume into
-// plan-ring tables an end at a time, and `lodEndsShell` draws a shell whose two
-// ends differ (a tram section's rounded cab end and flat joint end, a driving
-// trailer's sloped cab and flat gangway end), which the kit's symmetric
-// `lodShell` cannot. `fitEnds` fits such shells as `fitLod` fits the kit's own:
-// the optional parts, the profile's detail, the least visible colour band, then
-// the smallest window or painted stripe.
+// plan-ring tables an end at a time, for the kit's shell with two ends of its
+// own (a tram section's rounded cab end and flat joint end, a driving trailer's
+// sloped cab and flat gangway end), fitted by the kit's `fitLod`.
 //
 // Metres, +X forward, +Y up, +Z right, as the full models.
 
 import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import {
-  fitLod, lerp, lodBandAt, lodBands, lodBogie, lodPantograph, lodPolygon, lodRod, lodRoofBox, lodSideBox, mergeBand, simplifyTable, windowBands, LOD_GLASS,
-  type LodBand, type LodPart, type LodRect, type LodSections, type Table,
+  fitLod, lerp, lodBands, lodBogie, lodPantograph, lodPolygon, lodRod, lodRoofBox, lodSideBox, simplifyTable, windowBands, LOD_GLASS,
+  type LodBand, type LodEnd, type LodPart, type LodRect, type LodSections, type LodShell, type Table,
 } from "./lodKit.ts";
 import { COACH_PALETTE, px, sectionHalf, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { fpx, mirror, type PxBox } from "./csdCoaches.ts";
 import { knee, Tram, TRAM_PALETTE, type SourceVolume, type TramMap } from "./tramKit.ts";
 import type { LiveryCoachSpec } from "./liveryCoach.ts";
 
-// --- a shell with two different ends ----------------------------------------------------
-
-/** One end of a shell: the x of its centre line at height y and, for a vee nose, the corners' setback behind it. */
-export interface LodEnd {
-  /** [y, x], bottom first, absolute (the front's x > the rear's); the last height is the crown. */
-  tip: Table;
-  /** [y, setback] of the corners behind the tip; omitted for a flat end. */
-  setback?: Table;
-}
-
-/** A LodShell (lodKit.ts) whose front and rear ends are drawn from their own tables. */
-export interface LodEndsShell {
-  y0: number;
-  /** [y, half width], bottom first. */
-  hw: Table;
-  front: LodEnd;
-  rear: LodEnd;
-  side: readonly LodBand[];
-  end: readonly LodBand[];
-  /** The cab sections (x beyond `front`, x short of `rear`) painted in their own bands on the sides. */
-  cab?: { front?: number; rear?: number; side: readonly LodBand[] };
-  roof: string;
-  sideWindows?: readonly LodRect[];
-  endWindows?: readonly LodRect[];
-  ends?: readonly number[];
-  section?: number;
-}
-
-type Cell = [u0: number | null, u1: number | null, mat: string];
-
-function cells(base: string, regions: ReadonlyArray<readonly [number, number, string]>): Cell[] {
-  const cuts = [...new Set(regions.flatMap(([a, b]) => [a, b]))].sort((a, b) => a - b);
-  const bounds: Array<number | null> = [null, ...cuts, null];
-  const out: Cell[] = [];
-  for (let i = 1; i < bounds.length; i++) {
-    const [a, b] = [bounds[i - 1]!, bounds[i]!];
-    const mid = a === null ? (b ?? 0) - 1e3 : b === null ? a + 1e3 : (a + b) / 2;
-    let mat = base;
-    for (const [r0, r1, rm] of regions) if (mid > r0 && mid < r1) mat = rm;
-    const last = out[out.length - 1];
-    if (last && last[2] === mat) last[1] = b;
-    else out.push([a, b, mat]);
-  }
-  return out;
-}
-
-const sameCells = (a: Cell[], b: Cell[]) => a.length === b.length && a.every((c, k) => c[0] === b[k]![0] && c[1] === b[k]![1] && c[2] === b[k]![2]);
-const sameBands = (a: readonly LodBand[], b: readonly LodBand[]): boolean =>
-  a.length === b.length && a.every((x, k) => x[0] === b[k]![0] && x[1] === b[k]![1] && x[2] === b[k]![2]);
-
-function layers(hs: number[], kinks: Set<number>, at: (y0: number, y1: number) => Cell[]): Array<[number, number, Cell[]]> {
-  const out: Array<[number, number, Cell[]]> = [];
-  for (let i = 1; i < hs.length; i++) {
-    const [y0, y1] = [hs[i - 1]!, hs[i]!];
-    const c = at(y0, y1);
-    const last = out[out.length - 1];
-    if (last && !kinks.has(y0) && sameCells(last[2], c)) last[1] = y1;
-    else out.push([y0, y1, c]);
-  }
-  return out;
-}
-
-/**
- * Draws `sh` as `lodShell` draws a LodShell, each end from its own tables;
- * `tol` simplifies the tables first, `flat` draws a vee nose as a flat end
- * halfway back.
- */
-export function lodEndsShell(m: MeshBuilder, sh: LodEndsShell, tol = 0, flat = false): void {
-  const prep = (end: LodEnd, e: number) => {
-    const tip0: Table = flat && end.setback ? end.tip.map(([y, x]) => [y, x - (e * lerp(end.setback!, y)) / 2] as const) : end.tip;
-    return { tip: simplifyTable(tip0, tol), sb: end.setback && !flat ? simplifyTable(end.setback, tol) : null };
-  };
-  const F = prep(sh.front, 1), R = prep(sh.rear, -1);
-  const of = (e: number) => (e > 0 ? F : R);
-  const hwT = simplifyTable(sh.hw, tol);
-  const y0 = sh.y0, top = F.tip[F.tip.length - 1]![0];
-  const hw = (y: number) => lerp(hwT, y);
-  const tip = (e: number, y: number) => lerp(of(e).tip, y);
-  const sb = (e: number, y: number) => (of(e).sb ? lerp(of(e).sb!, y) : 0);
-  const corner = (e: number, y: number) => tip(e, y) - e * sb(e, y);
-  const kinks = new Set([...F.tip, ...R.tip, ...hwT, ...(F.sb ?? []), ...(R.sb ?? [])].map(([y]) => y).filter((y) => y > y0 && y < top));
-  const breaks = (bands: readonly LodBand[], wins: readonly LodRect[]) => [y0, top, ...kinks, ...bands.flatMap(([a, b]) => [a, b]), ...wins.flatMap((w) => [w.y[0], w.y[1]])];
-  const sorted = (ys: number[]) => [...new Set(ys.filter((y) => y >= y0 && y <= top).map((y) => Math.round(y * 1e6) / 1e6))].sort((a, b) => a - b);
-
-  // the sides: x cells between the two ends' corners
-  for (const s of [-1, 1]) {
-    const wins = (sh.sideWindows ?? []).filter((w) => !w.sides || w.sides.includes(s)).flatMap((w) => (w.mirror ? [w, { ...w, u: [-w.u[1], -w.u[0]] as const }] : [w]));
-    const hs = sorted(breaks([...sh.side, ...(sh.cab?.side ?? [])], wins));
-    const ls = layers(hs, kinks, (ya, yb) => {
-      const ym = (ya + yb) / 2;
-      const regions: Array<[number, number, string]> = [];
-      if (sh.cab) {
-        const cm = lodBandAt(sh.cab.side, ym);
-        if (cm !== lodBandAt(sh.side, ym)) {
-          if (sh.cab.rear !== undefined) regions.push([-1e3, sh.cab.rear, cm]);
-          if (sh.cab.front !== undefined) regions.push([sh.cab.front, 1e3, cm]);
-        }
-      }
-      for (const w of wins) if (w.y[0] <= ya + 1e-9 && w.y[1] >= yb - 1e-9) regions.push([w.u[0], w.u[1], w.mat]);
-      return cells(lodBandAt(sh.side, ym), regions);
-    });
-    for (const [ya, yb, cs] of ls) {
-      for (const [u0, u1, mat] of cs) {
-        const pt = (u: number | null, y: number, end: number): Vec3 => [u === null ? corner(end, y) : Math.max(corner(-1, y), Math.min(corner(1, y), u)), y, s * hw(y)];
-        lodPolygon(m, mat, [pt(u0, ya, -1), pt(u1, ya, 1), pt(u1, yb, 1), pt(u0, yb, -1)], [0, 0, s]);
-      }
-    }
-  }
-
-  // the ends: z cells across the face; a vee nose splits at the centre line
-  for (const e of sh.ends ?? [-1, 1]) {
-    const snap = (u: number, y: number) => (Math.abs(u) >= hw(y) - 0.2 ? Math.sign(u) * 1e3 : u);
-    const wins = (sh.endWindows ?? []).filter((w) => !w.ends || w.ends.includes(e)).map((w) => {
-      const u = e > 0 ? w.u : [-w.u[1], -w.u[0]];
-      const y = (w.y[0] + w.y[1]) / 2;
-      return { ...w, u: [snap(u[0]!, y), snap(u[1]!, y)] as readonly [number, number] };
-    });
-    const hs = sorted(breaks(sh.end, wins));
-    const ls = layers(hs, kinks, (ya, yb) => {
-      const regions: Array<[number, number, string]> = [];
-      for (const w of wins) if (w.y[0] <= ya + 1e-9 && w.y[1] >= yb - 1e-9) regions.push([w.u[0], w.u[1], w.mat]);
-      return cells(lodBandAt(sh.end, (ya + yb) / 2), regions);
-    });
-    const vee = of(e).sb !== null;
-    for (const [ya, yb, cs] of ls) {
-      for (const [u0, u1, mat] of cs) {
-        const spans: Array<[number | null, number | null]> = vee && (u0 === null || u0 < 0) && (u1 === null || u1 > 0) ? [[u0, 0], [0, u1]] : [[u0, u1]];
-        for (const [a, b] of spans) {
-          const pt = (u: number | null, y: number, side: number): Vec3 => {
-            const z = u === null ? side * hw(y) : Math.max(-hw(y), Math.min(hw(y), u));
-            return [tip(e, y) - (e * sb(e, y) * Math.abs(z)) / hw(y), y, z];
-          };
-          const q = [pt(a, ya, -1), pt(b, ya, 1), pt(b, yb, 1), pt(a, yb, -1)];
-          lodPolygon(m, mat, [q[0]!, q[1]!, q[2]!], [e, 0, 0]);
-          lodPolygon(m, mat, [q[0]!, q[2]!, q[3]!], [e, 0, 0]);
-        }
-      }
-    }
-  }
-
-  // the crown
-  const cw = hw(top);
-  const endPts = (e: number): Vec3[] => {
-    const [ct, cc] = [tip(e, top), corner(e, top)];
-    const pts: Vec3[] = Math.abs(ct - cc) > 1e-4 ? [[cc, top, -e * cw], [ct, top, 0], [cc, top, e * cw]] : [[ct, top, -e * cw], [ct, top, e * cw]];
-    return pts;
-  };
-  if (cw > 1e-6) lodPolygon(m, sh.roof, [...endPts(1), ...endPts(-1)], [0, 1, 0]);
-}
-
-// --- fitting ----------------------------------------------------------------------------
-
-/** The profile's detail, step by step (as lodKit.ts's fitLod). */
-const PROFILE: ReadonlyArray<readonly [tol: number, flat: boolean]> = [[0, false], [0.03, false], [0.08, false], [0.08, true], [0.15, true], [0.25, true], [0.4, true]];
-
-export interface LodEndsSpec {
-  palette: Record<string, MaterialSpec>;
-  shells: LodEndsShell[];
-  parts: LodPart[];
-  sections?: LodSections;
-}
-
-/**
- * Builds `spec` within `budget` triangles in the kit's order: `fitLod` gives up
- * the optional parts; when that is not enough, the shells give up their
- * profile's detail, then their least visible colour band (shells painted alike,
- * an articulated tram's sections, lose it together), then their smallest
- * window or stripe, and the optional parts that fit again come back.
- */
-export function fitEnds(spec: LodEndsSpec, budget: number): MeshBuilder {
-  let shells = spec.shells;
-  let tol = 0;
-  // the optional rectangles (small windows, doors), lowest rank first, and those given up
-  const optional = shells.flatMap((sh) => [...(sh.sideWindows ?? []), ...(sh.endWindows ?? [])]).filter((w) => w.optional !== undefined).sort((a, b) => a.optional! - b.optional!);
-  const gone = new Set<LodRect>();
-  const keep = (ws?: readonly LodRect[]) => ws?.filter((w) => !gone.has(w));
-  const attempt = (): MeshBuilder | null => {
-    const parts: LodPart[] = [
-      ...shells.map((sh): LodPart => ({ section: sh.section ?? 0, draw: (m) => m.scope("body", () => lodEndsShell(m, { ...sh, sideWindows: keep(sh.sideWindows), endWindows: keep(sh.endWindows) }, ...PROFILE[tol]!)) })),
-      ...spec.parts,
-    ];
-    try {
-      return fitLod({ palette: spec.palette, shells: [], parts, ...(spec.sections ? { sections: spec.sections } : {}) }, budget);
-    } catch (err) {
-      if (err instanceof Error && err.message.startsWith("the LOD does not fit")) return null;
-      throw err;
-    }
-  };
-  for (;;) {
-    let m = attempt();
-    if (m) {
-      // the optional rectangles that fit again come back, best first
-      for (const w of optional.filter((o) => gone.has(o)).reverse()) {
-        gone.delete(w);
-        const more = attempt();
-        if (more) m = more;
-        else gone.add(w);
-      }
-      return m;
-    }
-    const next = optional.find((o) => !gone.has(o));
-    if (next) { gone.add(next); continue; }
-    if (tol < PROFILE.length - 1) { tol++; continue; }
-    // the least visible band, from every shell painted alike
-    let best: { score: number; apply: () => void } | null = null;
-    const offer = (score: number, apply: () => void) => { if (!best || score < best.score - 1e-9) best = { score, apply }; };
-    shells.forEach((sh) => {
-      const patch = (alike: (x: LodEndsShell) => boolean, p: (x: LodEndsShell) => Partial<LodEndsShell>) => () => {
-        shells = shells.map((x) => (alike(x) ? { ...x, ...p(x) } : x));
-      };
-      const twin = (b: LodBand) => sh.end.findIndex((e) => e[0] === b[0] && e[1] === b[1] && e[2] === b[2]);
-      if (sh.side.length > 1) sh.side.forEach((b, i) => {
-        const j = sh.end.length > 1 ? twin(b) : -1;
-        offer((b[1] - b[0]) * (j >= 0 ? 1.5 : 1), j >= 0
-          ? patch((x) => sameBands(x.side, sh.side) && sameBands(x.end, sh.end), (x) => ({ side: mergeBand(x.side, i), end: mergeBand(x.end, j) }))
-          : patch((x) => sameBands(x.side, sh.side), (x) => ({ side: mergeBand(x.side, i) })));
-      });
-      if (sh.end.length > 1) sh.end.forEach((b, j) => {
-        if (sh.side.some((x) => x[0] === b[0] && x[1] === b[1] && x[2] === b[2])) return;
-        offer((b[1] - b[0]) * 0.5, patch((x) => sameBands(x.end, sh.end), (x) => ({ end: mergeBand(x.end, j) })));
-      });
-      if (sh.cab) sh.cab.side.forEach(([a, b, mat], i) => {
-        if (lodBands(sh.side, a, b).every(([, , bm]) => bm === mat)) return;
-        const cab = sh.cab!;
-        offer((b - a) * 0.5, patch((x) => !!x.cab && sameBands(x.cab.side, cab.side) && sameBands(x.side, sh.side), (x) => {
-          const merged = lodBands([...cab.side.slice(0, i), ...lodBands(x.side, a, b), ...cab.side.slice(i + 1)], cab.side[0]![0], cab.side[cab.side.length - 1]![1]);
-          return { cab: sameBands(merged, lodBands(x.side, merged[0]![0], merged[merged.length - 1]![1])) ? undefined : { ...x.cab!, side: merged } };
-        }));
-      });
-    });
-    if (best) { (best as { apply: () => void }).apply(); continue; }
-    // the smallest window or painted stripe
-    const area = (w: LodRect) => (w.u[1] - w.u[0]) * (w.y[1] - w.y[0]);
-    const wins = shells.flatMap((sh, k) => [
-      ...(sh.sideWindows ?? []).map((w) => ({ k, w, side: true })),
-      ...(sh.endWindows ?? []).map((w) => ({ k, w, side: false })),
-    ].filter(({ w }) => !gone.has(w)));
-    if (!wins.length) throw new Error(`the LOD does not fit ${budget} triangles`);
-    const small = wins.reduce((a, b) => (area(b.w) < area(a.w) - 1e-9 ? b : a));
-    shells = shells.map((sh, j) => j !== small.k ? sh : small.side
-      ? { ...sh, sideWindows: sh.sideWindows!.filter((w) => w !== small.w) }
-      : { ...sh, endWindows: sh.endWindows!.filter((w) => w !== small.w) });
-  }
-}
-
 // --- reading a volume ---------------------------------------------------------------------
 
-const lerpPts = (pts: Pt[], x: number): number => lerp(pts.map(([a, b]) => [a, b] as const), x);
 
 /** The tables of a csdCoachParts volume. */
 export interface VolumeTables {
@@ -305,7 +56,7 @@ export function volumeShell(v: Volume, opts: { X?: (x: number) => number; y0?: n
   if (opts.top === undefined && v.top) top = Math.min(top, Math.max(...v.top.map((p) => p[1])));
   const half = (y: number) => (sectionHalf(v.section, Math.min(Math.max(y, Math.min(...secYs) + 1e-6), secTop - 1e-6)) * H) / hw0;
   const stations = [...new Set([...v.plan, ...(v.top ?? []), ...(v.bottom ?? [])].map((p) => p[0]))].filter((x) => x >= xa - 1e-9 && x <= xb + 1e-9).sort((a, b) => a - b);
-  const inside = (x: number, y: number) => (!v.bottom || lerpPts(v.bottom, x) <= y + 1e-6) && (!v.top || lerpPts(v.top, x) >= y - 1e-6);
+  const inside = (x: number, y: number) => (!v.bottom || lerp(v.bottom, x) <= y + 1e-6) && (!v.top || lerp(v.top, x) >= y - 1e-6);
   // the extreme x inside the elevation at height y, toward end e
   const extreme = (y: number, e: number): number => {
     const cands = [...stations];
@@ -313,7 +64,7 @@ export function volumeShell(v: Volume, opts: { X?: (x: number) => number; y0?: n
       const [a, b] = [stations[i]!, stations[i + 1]!];
       for (const line of [v.top, v.bottom]) {
         if (!line) continue;
-        const [ya, yb] = [lerpPts(line, a), lerpPts(line, b)];
+        const [ya, yb] = [lerp(line, a), lerp(line, b)];
         if ((ya - y) * (yb - y) < 0) cands.push(a + ((y - ya) / (yb - ya)) * (b - a));
       }
     }
@@ -326,7 +77,7 @@ export function volumeShell(v: Volume, opts: { X?: (x: number) => number; y0?: n
     let area = 0;
     for (let i = 0; i + 1 < xs.length; i++) {
       const [a, b] = [xs[i]!, xs[i + 1]!];
-      area += ((H - lerpPts(v.plan, a) + H - lerpPts(v.plan, b)) / 2) * (b - a);
+      area += ((H - lerp(v.plan, a) + H - lerp(v.plan, b)) / 2) * (b - a);
     }
     return Math.min((2 * area) / H, 0.8 * Math.abs(x - mid));
   };
@@ -438,7 +189,7 @@ export function tramLod(spec: TramLodSpec, budget: number): MeshBuilder {
     const d = spec.bodies.map(([a, b]) => Math.min(Math.abs(x - a), Math.abs(x - b)));
     return d.indexOf(Math.min(...d));
   };
-  const shells: LodEndsShell[] = [];
+  const shells: LodShell[] = [];
   let crown = Infinity;
   spec.bodies.forEach(([a, b], i) => {
     const [frontCab, rearCab] = [i === 0, i === n - 1];
@@ -452,7 +203,10 @@ export function tramLod(spec: TramLodSpec, budget: number): MeshBuilder {
       y0: tab.y0, hw: tab.hw, front: tab.front, rear: tab.rear,
       side: glazed(scaled(spec.main), spec.glass, tab.y0, tab.top),
       end: glazed(scaled(spec.cab), spec.glass, tab.y0, tab.top),
-      ...(frontCab || rearCab ? { cab: { ...(frontCab ? { front: t.fx(spec.cabs[0]) } : {}), ...(rearCab ? { rear: t.fx(spec.cabs[1]) } : {}), side: glazed(scaled(spec.cab), spec.glass, tab.y0, tab.top) } } : {}),
+      ...(frontCab || rearCab ? { cabs: [
+        ...(frontCab ? [{ x0: t.fx(spec.cabs[0]), x1: 1e3, side: glazed(scaled(spec.cab), spec.glass, tab.y0, tab.top) }] : []),
+        ...(rearCab ? [{ x0: -1e3, x1: t.fx(spec.cabs[1]), side: glazed(scaled(spec.cab), spec.glass, tab.y0, tab.top) }] : []),
+      ] } : {}),
       roof: "roof",
       sideWindows: [...rects(spec.windows.right, 1), ...rects(spec.windows.left, -1)],
       ends: [...(rearCab ? [-1] : []), ...(frontCab ? [1] : [])],
@@ -486,7 +240,7 @@ export function tramLod(spec: TramLodSpec, budget: number): MeshBuilder {
       }),
     })),
   ];
-  return fitEnds({
+  return fitLod({
     palette: { ...TRAM_PALETTE, ...spec.palette },
     shells,
     parts,
@@ -544,7 +298,7 @@ export function liveryCoachLod(spec: LiveryCoachSpec, budget = 100): MeshBuilder
     const glass = sp.windows.filter((w) => typeof w[0] === "number" || (w as [PxBox, string])[1] !== "frosted").map((w) => px(typeof w[0] === "number" ? (w as PxBox) : (w as [PxBox, string])[0], H));
     return coachRects(X, s, glass, (sp.paint ?? []).filter((p) => !p.layer).map((p) => ({ box: paintBox(p, H), mat: p.mat })), 0.8);
   };
-  const shell: LodEndsShell = {
+  const shell: LodShell = {
     y0: tab.y0, hw: tab.hw, front: tab.front, rear: tab.rear,
     side: lodBands(spec.bands, tab.y0, tab.top),
     end: spec.endPaint ? [[tab.y0, tab.top, spec.endPaint]] : lodBands(spec.bands, tab.y0, tab.top),
@@ -567,7 +321,7 @@ export function liveryCoachLod(spec: LiveryCoachSpec, budget = 100): MeshBuilder
       draw: (m) => m.scope("roof boxes", () => lodRoofBox(m, spec.ventMat, X(a), X(b), half, half, tab.top - 0.05, Math.max(...geo.top.map((p) => p[1])) + h)),
     })),
   ];
-  return fitEnds({ palette: { ...COACH_PALETTE, ...spec.palette }, shells: [shell], parts }, budget);
+  return fitLod({ palette: { ...COACH_PALETTE, ...spec.palette }, shells: [shell], parts }, budget);
 }
 
 // --- the German double-deck coaches ----------------------------------------------------------
@@ -613,7 +367,7 @@ export function doubleDeckLod(spec: DoubleDeckLodSpec, budget = 100): MeshBuilde
     const b = spec.windscreen!.end > 0 ? mirror(fpx(spec.windscreen!.box, H)) : fpx(spec.windscreen!.box, H);
     return { u: [b.x0, b.x1] as const, y: [b.y0, b.y1] as const, mat: LOD_GLASS, ends: [spec.windscreen!.end] };
   })();
-  const shell: LodEndsShell = {
+  const shell: LodShell = {
     y0: tab.y0, hw: tab.hw, front: tab.front, rear: tab.rear,
     side: lodBands(v.bands, tab.y0, tab.top),
     end: v.endPaint ? [[tab.y0, tab.top, v.endPaint]] : lodBands(v.bands, tab.y0, tab.top),
@@ -648,5 +402,5 @@ export function doubleDeckLod(spec: DoubleDeckLodSpec, budget = 100): MeshBuilde
       lodSideBox(m, "underframe", [[X(x0), spec.equipment.y0], [X(x1), spec.equipment.y0], [X(x1), low], [X(x0), low]], -1.1, 1.1);
     }) },
   ];
-  return fitEnds({ palette: { ...COACH_PALETTE, ...spec.palette }, shells: [shell], parts }, budget);
+  return fitLod({ palette: { ...COACH_PALETTE, ...spec.palette }, shells: [shell], parts }, budget);
 }

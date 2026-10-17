@@ -1,6 +1,6 @@
 import { lodBox, lodLoft } from './lodPrimitives.ts';
-import { lodBar, lodBlock, lodStack } from './lodAir.ts';
-import { LOD_GLASS, LOD_PALETTE, lodPolygon, lodRod } from './lodKit.ts';
+import { lodBar, lodStack } from './lodAir.ts';
+import { lodBlock, LOD_GLASS, LOD_PALETTE, lodPolygon, lodRod } from './lodKit.ts';
 // The procedural ships: a Viking Line style cruise ferry, a Soviet Kometa
 // hydrofoil and a white lake passenger motor ship, modelled on the photos in
 // assets/<folder>/ and reproducing the hand-authored GLBs of the same names in
@@ -1173,7 +1173,7 @@ export function passengerFerryLod(): MeshBuilder {
     lodPolygon(m, LOD_GLASS, [[-2.6, 5.5, 11.93], [2.6, 5.5, 11.93], [2.6, 7.0, 11.93], [-2.6, 7.0, 11.93]], [0, 0, 1]);
   });
   m.scope("upper house", () => {
-    lodBlock(m, "lakeWhite", -2.6, 2.6, 7.6, 9.95, -6.97, 5.15);
+    lodBlock(m, -2.6, 2.6, 7.6, 9.95, -6.97, 5.15, { side: "lakeWhite" });
     for (const side of [1, -1]) lodPane(m, ALONG_Z, -6.4, 5.0, 8.5, 9.5, 2.6, 2.6, side);
     lodPolygon(m, LOD_GLASS, [[-2.5, 8.45, 5.18], [2.5, 8.45, 5.18], [2.5, 9.55, 5.18], [-2.5, 9.55, 5.18]], [0, 0, 1]);
   });

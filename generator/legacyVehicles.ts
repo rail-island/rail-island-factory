@@ -1,6 +1,6 @@
 import { lodBox, lodLoft, lodCylinder } from './lodPrimitives.ts';
-import { cabinLod, lodBar, lodBlock, lodPlanRect, lodStack } from './lodAir.ts';
-import { LOD_GLASS } from './lodKit.ts';
+import { cabinLod, lodBar, lodPlanRect, lodStack } from './lodAir.ts';
+import { lodBlock, LOD_GLASS } from './lodKit.ts';
 // Metre-scale replacements for the remaining hand-authored transport models.
 import { MeshBuilder, ngon, chamferedRect, type Ring } from './meshBuilder.ts';
 import { beam, panel } from './towerParts.ts';
@@ -70,11 +70,11 @@ export function classicCabinLod():MeshBuilder {
     },
     parts:[
       {draw:(m)=>{
-        lodBlock(m,'dark',-.35,.35,2.79,2.86,-.3,.3);
+        lodBlock(m, -.35, .35, 2.79, 2.86, -.3, .3, { side: 'dark' });
         lodStack(m,[[2.86,lodPlanRect(.9,.8)],[4.25,lodPlanRect(.1,.1)]],['steel'],null);
         lodBar(m,'steel',[0,4.2,0],[0,5.4,0],.14,3);
-        lodBlock(m,'dark',-.75,.75,5.38,5.62,-.3,.3,true);
-        lodBlock(m,'steel',-.77,.77,5.62,5.86,-.17,.17);
+        lodBlock(m, -.75, .75, 5.38, 5.62, -.3, .3, { side: 'dark', bottom: 'dark' });
+        lodBlock(m, -.77, .77, 5.62, 5.86, -.17, .17, { side: 'steel' });
       }},
     ],
   });

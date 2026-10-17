@@ -72,8 +72,10 @@ export function joinSameColour(bands: readonly LodBand[], palette: Record<string
 interface Extent { X0: number; X1: number; y0: number; top: number; hw: (y: number) => number; ys: number[] }
 
 const extentOf = (sh: LodShell): Extent => {
-  const xc = sh.xc ?? 0, t = Math.max(...sh.tip.map(([, v]) => v));
-  return { X0: xc - t, X1: xc + t, y0: sh.y0, top: sh.tip[sh.tip.length - 1]![0], hw: (y) => lerp(sh.hw, y), ys: sh.hw.map(([y]) => y) };
+  // the steam adapter's shells are all symmetric (tip from xc)
+  const tip = sh.tip!;
+  const xc = sh.xc ?? 0, t = Math.max(...tip.map(([, v]) => v));
+  return { X0: xc - t, X1: xc + t, y0: sh.y0, top: tip[tip.length - 1]![0], hw: (y) => lerp(sh.hw, y), ys: sh.hw.map(([y]) => y) };
 };
 
 /**
@@ -339,7 +341,7 @@ export function steamLodSpec(spec: LocoSpec, ring: (y: number, r: number) => Tab
     const [y0, top] = [hw[0]![0], hw[hw.length - 1]![0]];
     const mat = c.mat ?? "paint";
     // a streamlined cab carries its casing's stripes
-    const casing = volumes.reduce<LodShell | null>((a, s) => (!a || s.tip[s.tip.length - 1]![0] > a.tip[a.tip.length - 1]![0] ? s : a), null);
+    const casing = volumes.reduce<LodShell | null>((a, s) => (!a || extentOf(s).top > extentOf(a).top ? s : a), null);
     const side = joinSameColour(casing ? clipBands(casing.side, y0, top) : [[y0, top, mat]], palette);
     // the side windows as one band, its edges moved onto the profile's kinks nearby (no sliver layers)
     const snap = (y: number) => hw.reduce((a, [k]) => (Math.abs(k - y) < Math.abs(a - y) ? k : a), y);

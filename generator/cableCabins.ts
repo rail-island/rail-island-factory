@@ -26,8 +26,8 @@
 import { MeshBuilder, rect, type MaterialSpec, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { block } from "./vehicleParts.ts";
-import { cabinLod, lodBar, lodBlock, lodPlanRect, lodStack } from "./lodAir.ts";
-import { LOD_GLASS, lodPolygon } from "./lodKit.ts";
+import { cabinLod, lodBar, lodPlanRect, lodStack } from "./lodAir.ts";
+import { lodBlock, LOD_GLASS, lodPolygon } from "./lodKit.ts";
 import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 
 const PALETTE: Record<string, MaterialSpec> = {
@@ -665,17 +665,17 @@ export function cablecarCabinLod(): MeshBuilder {
     parts: [
       { draw: (m) => {
         // the yoke, the mast and the carriage with its sheaves up to the rope
-        lodBlock(m, "white", -0.75, 0.75, CAR.roof, 3.47, -1.2, 1.2);
+        lodBlock(m, -0.75, 0.75, CAR.roof, 3.47, -1.2, 1.2, { side: "white" });
         lodStack(m, [[3.47, [[0.36, -0.76], [0.36, 0.79], [-0.36, 0.79], [-0.36, -0.76]]], [6.22, [[0.28, -0.17], [0.28, 0.41], [-0.28, 0.41], [-0.28, -0.17]]]], ["white"], null);
-        lodBlock(m, "gear", -0.17, 0.17, 6.22, 6.36, -1.5, 1.7, true);
-        lodBlock(m, "white", -0.12, 0.12, 6.36, top, -1.42, 1.62);
+        lodBlock(m, -0.17, 0.17, 6.22, 6.36, -1.5, 1.7, { side: "gear", bottom: "gear" });
+        lodBlock(m, -0.12, 0.12, 6.36, top, -1.42, 1.62, { side: "white" });
       } },
       { optional: 3, draw: (m) => {
         lodBar(m, "white", [0, 3.4, 3.4], [0, 5.72, 0.3], 0.07, 3);
         lodBar(m, "white", [0, 3.4, -3.4], [0, 5.72, -0.24], 0.07, 3);
       } },
-      { optional: 2, draw: (m) => lodBlock(m, "gear", -0.55, 0.55, CAR.roof, 3.37, -3.85, -2.35) },
-      { optional: 1, draw: (m) => lodBlock(m, "gear", -0.4, 0.4, CAR.roof, 3.29, 2.7, 3.7) },
+      { optional: 2, draw: (m) => lodBlock(m, -0.55, 0.55, CAR.roof, 3.37, -3.85, -2.35, { side: "gear" }) },
+      { optional: 1, draw: (m) => lodBlock(m, -0.4, 0.4, CAR.roof, 3.29, 2.7, 3.7, { side: "gear" }) },
     ],
   });
 }
@@ -696,7 +696,7 @@ export function gondolaCabinLod(): MeshBuilder {
     parts: [{ draw: (m) => {
       lodBar(m, "steel", [0, 2.95, 0], [0, 3.92, 0], 0.12);
       // the grip, its carriage and the running wheels to their top
-      lodBlock(m, "trim", -0.46, 0.46, 3.9, 4.795, -0.13, 0.3, true);
+      lodBlock(m, -0.46, 0.46, 3.9, 4.795, -0.13, 0.3, { side: "trim", bottom: "trim" });
     } }],
   });
 }
@@ -717,7 +717,7 @@ export function chairliftChairLod(params?: ParamValues): MeshBuilder {
     parts: [
       { draw: (m) => {
         // the seat and the backrest, the cushions' colour in front, the shell behind
-        lodBlock(m, "seat", -hw, hw, frameY - 0.02, CHAIR.seat, backZ, frontZ, true);
+        lodBlock(m, -hw, hw, frameY - 0.02, CHAIR.seat, backZ, frontZ, { side: "seat", bottom: "seat" });
         const b0: Vec3 = [0, CHAIR.seat + 0.03, backZ + 0.03];
         const b1: Vec3 = [0, 1.3, backZ - 0.08];
         for (const [mat, d, nz] of [["seat", 0, 1], ["frame", -0.09, -1]] as const) {
@@ -728,7 +728,7 @@ export function chairliftChairLod(params?: ParamValues): MeshBuilder {
         lodBar(m, "steel", [-sx - 0.04, beamY, beamZ], [sx + 0.04, beamY, beamZ], 0.06, 3);
         lodBar(m, "steel", [0, CHAIR.rope - 0.14, 0], [0, 2.75, 0], 0.07, 3);
         lodBar(m, "steel", [0, 2.8, 0.03], [0, beamY, beamZ], 0.07, 3);
-        lodBlock(m, "trim", -0.42, 0.42, CHAIR.rope - 0.17, CHAIR.rope + 0.2, -0.11, 0.13, true);
+        lodBlock(m, -0.42, 0.42, CHAIR.rope - 0.17, CHAIR.rope + 0.2, -0.11, 0.13, { side: "trim", bottom: "trim" });
         // the footrest, its underside on the ground line
         lodBar(m, "trim", [-hw + 0.1, 0.04 * Math.SQRT1_2, 0.66], [hw - 0.1, 0.04 * Math.SQRT1_2, 0.66], 0.04);
       } },

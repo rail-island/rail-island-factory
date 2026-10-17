@@ -148,3 +148,55 @@ describe("LOD kit parts-only fitting", () => {
     expect(() => fitParts(PALETTE, parts, n - 1)).toThrow("does not fit");
   });
 });
+
+describe("LOD kit shells with two ends of their own", () => {
+  const twoEnds: LodShell = {
+    y0: 1, hw: [[1, 1.5], [3.6, 1.5], [4.2, 1.0]],
+    front: { tip: [[1, 8], [4.2, 7.6]], setback: [[1, 0.8], [4.2, 0.8]], paint: [[1, 4.2, "white"]] },
+    rear: { tip: [[1, -6], [4.2, -6]] },
+    side: [[1, 3.6, "red"], [3.6, 4.2, "grey"]], roof: "grey",
+    cabs: [{ x0: 5, x1: 1e3, side: [[1, 4.2, "white"]] }],
+  };
+  it("draws a vee nose at the front, a flat rear end, and cab paint over its x range", () => {
+    const m = new MeshBuilder(PALETTE);
+    lodShell(m, twoEnds);
+    expect(findCoplanarOverlaps(m.toGlb("t"))).toEqual([]);
+    const s = glbStats(m.toGlb("t"));
+    expect(s.min[0]).toBeCloseTo(-6, 5);
+    expect(s.max[0]).toBeCloseTo(8, 5);
+    const f = faces(m);
+    // the front's tip on the centre line, the rear end flat across
+    expect(f.flatMap((t) => t.p).filter((p) => p[0] > 7.99).every((p) => Math.abs(p[2]) < 1e-6)).toBe(true);
+    expect(f.filter((t) => t.p.every((p) => Math.abs(p[0] + 6) < 1e-6)).every((t) => t.material === "red" || t.material === "grey")).toBe(true);
+    // the side is white beyond x = 5, red short of it
+    const side = f.filter((t) => t.p.every((p) => Math.abs(p[2] - 1.5) < 1e-6 && p[1] > 1.5 && p[1] < 3.5));
+    expect(side.filter((t) => t.p.every((p) => p[0] >= 5 - 1e-6)).every((t) => t.material === "white")).toBe(true);
+    expect(side.filter((t) => t.p.every((p) => p[0] <= 5 + 1e-6)).every((t) => t.material === "red")).toBe(true);
+  });
+
+  it("gives a band up on every section of a set alike, but not on another shell of the same body", () => {
+    const band: LodShell = { ...SHELL, endWindows: [] };
+    const pair = (sections: [number, number]) => fitLod({
+      palette: PALETTE, parts: [],
+      shells: [{ ...band, xc: -9, section: sections[0] }, { ...band, xc: 9, section: sections[1] }],
+      ...(sections[1] === 1 ? { sections: { pivots: [[0, 0, 0], [0, 1, 0]], joints: [], maxBendDeg: 10 } } : {}),
+    }, 1000);
+    const whites = (m: MeshBuilder) => [-9, 9].map((xc) => faces(m).some((t) => t.material === "white" && t.p.every((p) => Math.abs(p[0] - xc) <= 8 + 1e-6)));
+    // tighten the budget until the white line first gives way, and see where it went
+    const firstLoss = (sections: [number, number]) => {
+      for (let budget = pair(sections).triangleCount(); ; budget--) {
+        const w = whites(fitLodPair(sections, budget));
+        if (!w.every(Boolean)) return w;
+      }
+    };
+    const fitLodPair = (sections: [number, number], budget: number) => fitLod({
+      palette: PALETTE, parts: [],
+      shells: [{ ...band, xc: -9, section: sections[0] }, { ...band, xc: 9, section: sections[1] }],
+      ...(sections[1] === 1 ? { sections: { pivots: [[0, 0, 0], [0, 1, 0]], joints: [], maxBendDeg: 10 } } : {}),
+    }, budget);
+    expect(whites(pair([0, 1]))).toEqual([true, true]);
+    // two sections of a set give the line up together; two shells of one body one at a time
+    expect(firstLoss([0, 1])).toEqual([false, false]);
+    expect(firstLoss([0, 0]).filter(Boolean)).toHaveLength(1);
+  });
+});

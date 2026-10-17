@@ -12,9 +12,8 @@
 // at y = 0, as the full models.
 
 import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
-import type { Vec3 } from "./meshCore.ts";
 import {
-  fitLod, lodBands, lodBogie, lodPantograph, lodPolygon, lodRoofBox, lodShell, lodSideBox, windowBands,
+  fitLod, lodBands, lodBlock, lodBogie, lodPantograph, lodRoofBox, lodShell, lodSideBox, windowBands,
   type LodBand, type LodPart, type LodRect, type LodShell, type Table,
 } from "./lodKit.ts";
 import type { ShellSpec } from "./czElectricKit.ts";
@@ -102,15 +101,6 @@ export const screen = (a: number, b: number, y0: number, y1: number, ends?: read
 
 // --- parts -------------------------------------------------------------------------------------
 
-/** A box x0..x1, y0..y1, z0..z1: sides, ends and (unless `top` is false) the top in `top`'s material; no bottom. */
-export function lodBlock(m: MeshBuilder, mat: string, x0: number, x1: number, y0: number, y1: number, z0: number, z1: number, top: string | false = mat): void {
-  const p = (x: number, y: number, z: number): Vec3 => [x, y, z];
-  lodPolygon(m, mat, [p(x0, y0, z0), p(x1, y0, z0), p(x1, y1, z0), p(x0, y1, z0)], [0, 0, -1]);
-  lodPolygon(m, mat, [p(x0, y0, z1), p(x1, y0, z1), p(x1, y1, z1), p(x0, y1, z1)], [0, 0, 1]);
-  lodPolygon(m, mat, [p(x0, y0, z0), p(x0, y0, z1), p(x0, y1, z1), p(x0, y1, z0)], [-1, 0, 0]);
-  lodPolygon(m, mat, [p(x1, y0, z0), p(x1, y0, z1), p(x1, y1, z1), p(x1, y1, z0)], [1, 0, 0]);
-  if (top !== false) lodPolygon(m, top, [p(x0, y1, z0), p(x1, y1, z0), p(x1, y1, z1), p(x0, y1, z1)], [0, 1, 0]);
-}
 
 /** A box of the LOD: a frame, a tank, a roof cover, an exhaust; `w` a half width or [at y0, at y1] (a tapering roof box, centred). */
 export interface LocoBox {
@@ -163,7 +153,7 @@ export function locoLod(s: LocoLodSpec, budget = 100): MeshBuilder {
       ...(b.optional !== undefined ? { optional: b.optional } : {}),
       draw: (m) => m.scope(b.name, () => {
         const zc = b.zc ?? 0;
-        if (typeof b.w === "number") lodBlock(m, b.mat, b.x[0], b.x[1], b.y[0], b.y[1], zc - b.w, zc + b.w, b.top ?? b.mat);
+        if (typeof b.w === "number") lodBlock(m, b.x[0], b.x[1], b.y[0], b.y[1], zc - b.w, zc + b.w, { side: b.mat, top: b.top === false ? null : b.top ?? b.mat });
         else if (b.top === false) lodSideBox(m, b.mat, [[b.x[0], b.y[0]], [b.x[1], b.y[0]], [b.x[1], b.y[1]], [b.x[0], b.y[1]]], -b.w[0], b.w[0]);
         else lodRoofBox(m, b.mat, b.x[0], b.x[1], b.w[0], b.w[1], b.y[0], b.y[1]);
       }),

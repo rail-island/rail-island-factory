@@ -27,7 +27,8 @@ describe('unit LODs', () => {
         // an articulated set gets 100 a car, 300 at most; a single car 100
         const cars = v.unit === 'set' ? Number(v.cars) : 1;
         expect(n).toBeLessThanOrEqual(Math.min(lodBudget(d), Math.min(300, 100 * cars)));
-        expect(n).toBeGreaterThan(Math.min(300, 100 * cars) * 0.7);
+        // at least 70 % (a plain trailer, the MDmot's, shows all it has in 70)
+        expect(n).toBeGreaterThanOrEqual(Math.min(300, 100 * cars) * 0.7);
         const f = faces(m);
         // the running gear stands on the rail
         expect(Math.min(...f.filter((t) => /bogie/.test(t.material)).flatMap((t) => t.p.map((p) => p[1])))).toBeLessThan(0.1);

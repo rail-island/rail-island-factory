@@ -9,22 +9,17 @@
 // car's volumes into a unit body (the section's half widths, each end's centre
 // line and the plan's rounding as the corners' setback, the bands as side and
 // end paint), `noseEnd` turns a cab nose's profile, half widths and corner
-// radii into an end. A unit body is drawn by the shared kit's `lodShell`; a
-// single-cab car's flat inner end is drawn here, the shell's sides clamped to
-// it, so the cab end keeps its nose and the inner end stays square.
-// `fitUnit` builds the LOD within its budget in the shared kit's order
-// (optional parts, profile detail, the least visible band, the smallest
-// window), giving up a band on every car of a set at once.
+// radii into an end. A unit body is the shared kit's shell with its two ends
+// from their own tables, so a single-cab car keeps its nose and a square inner
+// end; `fitUnit` fits it with the kit's `fitLod`.
 //
 // Metres, +X forward, +Y up, +Z right, as the full models.
 
 import { MeshBuilder, type MaterialSpec } from "./meshBuilder.ts";
-import type { Vec3 } from "./meshCore.ts";
 import {
-  LOD_GLASS, LOD_PALETTE, lerp, lodBandAt, lodBands, lodBogie, lodPantograph, lodPolygon, lodRoofBox, lodShell, lodSideBox, mergeBand,
-  simplifyTable, windowBands, type LodBand, type LodPart, type LodRect, type LodSections, type LodShell, type Table,
+  fitLod, LATE, LOD_GLASS, lerp, lodBandAt, lodBands, lodBogie, lodPantograph, lodRoofBox, lodSideBox, sameBands,
+  windowBands, type LodBand, type LodPart, type LodRect, type LodSections, type LodShell, type Table,
 } from "./lodKit.ts";
-import { drawJoint, type JointRig, type SectionRig } from "./rig.ts";
 import { sectionHalf, type Pt, type Volume } from "./csdCoachParts.ts";
 import type { NoseSpec } from "./cabNose.ts";
 import { frameMaps, scaleVolume, type CarFrame, type EndItem, type PxBox, type SideItem } from "./dmuKit.ts";
@@ -81,8 +76,6 @@ export interface UnitSpec {
   sections?: LodSections;
 }
 
-const flatEnd = (e: UnitEnd): boolean => !(e.setback ?? []).some(([, s]) => s > 1e-6) && e.tip.every(([, x]) => Math.abs(x - e.tip[0]![1]) < 1e-6);
-const sameBands = (a: readonly LodBand[], b: readonly LodBand[]): boolean => a.length === b.length && a.every((x, i) => x[0] === b[i]![0] && x[1] === b[i]![1] && x[2] === b[i]![2]);
 const tableYs = (...ts: Array<Table | undefined>): number[] => [...new Set(ts.flatMap((t) => (t ?? []).map(([y]) => y)))].sort((a, b) => a - b);
 
 /** A body mirrored front to back (x to -x). */
@@ -109,268 +102,49 @@ export function shiftBody(b: UnitBody, dx: number): UnitBody {
 /** A body turned end for end about x = cx (a set's rear car; the bodies are alike on both sides). */
 export const turnBody = (b: UnitBody, cx: number): UnitBody => shiftBody(mirrorBody(b), 2 * cx);
 
-/** How a body is drawn: a kit shell, mirrored or not, its sides clamped to a flat rear end. */
-interface Shell {
-  sh: LodShell;
-  mirror: boolean;
-  rear?: { x: number; paint: readonly LodBand[]; hidden: boolean };
-}
-
-/** The cab paint of a body as side rectangles, one per height its colour differs from the sides'. */
-function cabRects(b: UnitBody): LodRect[] {
-  const out: LodRect[] = [];
-  for (const c of b.cabs ?? []) {
-    const ys = [...new Set([...c.side, ...b.side].flatMap(([a, z]) => [a, z]))].sort((p, q) => p - q);
-    for (let i = 1; i < ys.length; i++) {
-      const [a, z] = [ys[i - 1]!, ys[i]!];
-      const mat = lodBandAt(c.side, (a + z) / 2);
-      if (mat === lodBandAt(b.side, (a + z) / 2)) continue;
-      const last = out[out.length - 1];
-      if (last && last.mat === mat && last.y[1] === a && last.u[0] === c.x0 && last.u[1] === c.x1) out[out.length - 1] = { ...last, y: [last.y[0], z] };
-      else out.push({ u: [c.x0, c.x1], y: [a, z], mat });
-    }
-  }
-  return out;
-}
-
-/** The kit shell of a body: symmetric ends as one shell; a flat end opposite a nose clamps the shell's sides. */
 /** An end shallower than this (its centre line's run and its corners' setback) is drawn flat opposite a nose. */
 const SHALLOW = 0.5;
 const depth = (e: UnitEnd): number => Math.max(Math.max(...e.tip.map(([, x]) => x)) - Math.min(...e.tip.map(([, x]) => x)), ...(e.setback ?? []).map(([, v]) => v));
 /** A shallow end as a flat one at its outermost point (sign: +1 the +X end). */
 const flatten = (e: UnitEnd, sign: number): UnitEnd => ({ ...e, tip: [[e.tip[0]![0], sign * Math.max(...e.tip.map(([, x]) => sign * x))]], setback: undefined });
 
-/** Heights rounded to 0.1 mm: the kit's shell rounds its breaks and then compares them with the rectangles' own edges. */
-const r4 = (y: number) => Math.round(y * 1e4) / 1e4;
-const roundBands = (bs: readonly LodBand[] | undefined): LodBand[] | undefined => bs && lodBands(bs.map(([a, z, mat]): LodBand => [r4(a), r4(z), mat]), r4(bs[0]![0]), r4(bs[bs.length - 1]![1]));
-const roundRects = (rs: readonly LodRect[] | undefined): LodRect[] | undefined => rs?.map((w) => ({ ...w, y: [r4(w.y[0]), r4(w.y[1])] }));
-const roundEnd = (e: UnitEnd): UnitEnd => ({
-  ...e, tip: e.tip.map(([y, x]) => [r4(y), x] as const), ...(e.setback ? { setback: e.setback.map(([y, v]) => [r4(y), v] as const) } : {}),
-  ...(e.paint ? { paint: roundBands(e.paint)! } : {}), ...(e.windows ? { windows: roundRects(e.windows)! } : {}),
-});
-
-function toShell(b1: UnitBody): Shell {
-  let b: UnitBody = {
-    ...b1, y0: r4(b1.y0), hw: b1.hw.map(([y, w]) => [r4(y), w] as const), side: roundBands(b1.side)!, front: roundEnd(b1.front), rear: roundEnd(b1.rear),
-    ...(b1.windows ? { windows: roundRects(b1.windows)! } : {}),
-    ...(b1.cabs ? { cabs: b1.cabs.map((c) => ({ ...c, side: roundBands(c.side)! })) } : {}),
-  };
-  // a nose opposite a shallow end (a rounded roof's last metre, a chamfered corner): that end flat
+/**
+ * A unit body as the kit's shell, each end from its own tables (a single-cab
+ * car's nose and flat inner end). A shallow end opposite a nose (a rounded
+ * roof's last metre, a chamfered corner) is drawn flat: from afar its kinks are
+ * not worth their layers.
+ */
+function toShell(b0: UnitBody): LodShell {
+  let b = b0;
   const dF = depth(b.front), dR = depth(b.rear);
   if (dF > SHALLOW && dR > 1e-6 && dR <= SHALLOW) b = { ...b, rear: flatten(b.rear, -1) };
   else if (dR > SHALLOW && dF > 1e-6 && dF <= SHALLOW) b = { ...b, front: flatten(b.front, 1) };
-  let mirror = false;
-  if (flatEnd(b.front) && !flatEnd(b.rear)) [b, mirror] = [mirrorBody(b), true];
+  // the kit's tables run from the bottom to the crown: a one-row (flat) end is stretched over it
   const top = b.hw[b.hw.length - 1]![0];
-  const ys = tableYs(b.front.tip, b.front.setback, b.rear.tip, b.rear.setback, b.hw);
-  const fx = (y: number) => lerp(b.front.tip, y), rx = (y: number) => lerp(b.rear.tip, y);
-  const fs = (y: number) => (b.front.setback ? lerp(b.front.setback, y) : 0), rs = (y: number) => (b.rear.setback ? lerp(b.rear.setback, y) : 0);
-  const xc0 = (fx(b.y0) + rx(b.y0)) / 2;
-  const shown = [...(b.rear.hidden ? [] : [-1]), ...(b.front.hidden ? [] : [1])];
-  const symmetric = ys.every((y) => Math.abs(fx(y) - xc0 - (xc0 - rx(y))) < 1e-6 && Math.abs(fs(y) - rs(y)) < 1e-6) && sameBands(b.front.paint ?? b.side, b.rear.paint ?? b.side);
-  const ends = [...(b.front.windows ?? []).map((w) => ({ ...w, ends: [1] })), ...(b.rear.windows ?? []).map((w) => ({ ...w, ends: [-1] }))];
-  // a pointed crown keeps a ridge 10 cm wide (the kit divides by the half width)
-  const base = { y0: b.y0, hw: b.hw.map(([y, w]) => [y, Math.max(w, 0.05)] as const), side: b.side, end: b.front.paint ?? b.side, roof: b.roof, sideWindows: [...cabRects(b), ...(b.windows ?? [])], endWindows: ends, section: b.section };
-  if (symmetric) {
-    const tip: Table = tableYs(b.front.tip, [[top, 0]]).filter((y) => y >= b.y0 && y <= top).map((y) => [y, fx(y) - xc0] as const);
-    return { sh: { ...base, xc: xc0, tip, ...(b.front.setback ? { setback: b.front.setback } : {}), ends: shown }, mirror };
-  }
-  // two noses a little unlike (a source's uneven stations): drawn alike, their mean
-  const near = ys.every((y) => Math.abs(fx(y) - xc0 - (xc0 - rx(y))) < 0.3 && Math.abs(fs(y) - rs(y)) < 0.3);
-  if (near && !flatEnd(b.front) && !flatEnd(b.rear) && sameBands(b.front.paint ?? b.side, b.rear.paint ?? b.side)) {
-    const span = ys.filter((y) => y >= b.y0 && y <= top);
-    const tip: Table = [...new Set([...span, top])].map((y) => [y, (fx(y) - rx(y)) / 2] as const);
-    const setback: Table = span.map((y) => [y, (fs(y) + rs(y)) / 2] as const);
-    return { sh: { ...base, xc: xc0, tip, ...(setback.some(([, v]) => v > 1e-6) ? { setback } : {}), ends: shown }, mirror };
-  }
-  if (!flatEnd(b.rear)) throw new Error("a unit body with two different noses");
-  // the shell's mirrored rear lies behind the flat end everywhere, so the sides clamp to it
-  const xr = b.rear.tip[0]![1];
-  const xc = (xr + Math.min(...ys.filter((y) => y >= b.y0 && y <= top).map((y) => fx(y) - fs(y)))) / 2;
-  const tip: Table = tableYs(b.front.tip, [[b.y0, 0], [top, 0]]).filter((y) => y >= b.y0 && y <= top).map((y) => [y, fx(y) - xc] as const);
+  const span = (t: Table): Table => tableYs(t, [[b.y0, 0], [top, 0]]).filter((y) => y >= b.y0 && y <= top).map((y) => [y, lerp(t, y)] as const);
+  const end = (e: UnitEnd) => ({ tip: span(e.tip), ...(e.setback ? { setback: e.setback } : {}), ...(e.paint ? { paint: e.paint } : {}) });
   return {
-    sh: { ...base, xc, tip, ...(b.front.setback ? { setback: b.front.setback } : {}), ends: shown.filter((e) => e > 0), endWindows: ends.filter((w) => w.ends[0] === 1) },
-    mirror, rear: { x: xr, paint: b.rear.paint ?? b.side, hidden: !!b.rear.hidden },
+    y0: b.y0, hw: b.hw, side: b.side, roof: b.roof,
+    front: end(b.front), rear: end(b.rear),
+    ...(b.cabs ? { cabs: b.cabs } : {}),
+    sideWindows: b.windows ?? [],
+    endWindows: [...(b.front.windows ?? []).map((w) => ({ ...w, ends: [1] })), ...(b.rear.windows ?? []).map((w) => ({ ...w, ends: [-1] }))],
+    ends: [...(b.rear.hidden ? [] : [-1]), ...(b.front.hidden ? [] : [1])],
+    ...(b.section !== undefined ? { section: b.section } : {}),
   };
-}
-
-const area2 = (a: Vec3, b: Vec3, c: Vec3): number => {
-  const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
-  return Math.hypot(u[1]! * v[2]! - u[2]! * v[1]!, u[2]! * v[0]! - u[0]! * v[2]!, u[0]! * v[1]! - u[1]! * v[0]!);
-};
-
-/** Draws a shell: the kit's lodShell through a filter that clamps, mirrors and drops collapsed triangles; then the flat rear end. */
-function drawShell(m: MeshBuilder, s: Shell, tol: number, flat: boolean): void {
-  const xc = s.sh.xc ?? 0;
-  const map = (p: Vec3): Vec3 => {
-    const x = s.rear && p[0] < xc ? Math.max(p[0], s.rear.x) : p[0];
-    return [s.mirror ? -x : x, p[1], p[2]];
-  };
-  const w = Object.create(m) as MeshBuilder;
-  w.tri = (mat: string, a: Vec3, b: Vec3, c: Vec3) => {
-    const [p, q, r] = [map(a), map(b), map(c)];
-    if (area2(p, q, r) < 1e-7) return;
-    if (s.mirror) m.tri(mat, p, r, q);
-    else m.tri(mat, p, q, r);
-  };
-  lodShell(w, s.sh, tol, flat);
-  if (!s.rear || s.rear.hidden) return;
-  // the flat rear end: one polygon per band, through the section's kinks
-  const hwT = simplifyTable(s.sh.hw, tol);
-  const top = s.sh.tip[s.sh.tip.length - 1]![0];
-  const kinks = hwT.map(([y]) => y);
-  for (const [a, z, mat] of lodBands(s.rear.paint, s.sh.y0, top)) {
-    const ys = [...new Set([a, ...kinks.filter((y) => y > a + 1e-9 && y < z - 1e-9), z])];
-    const right = ys.map((y): Vec3 => [s.rear!.x, y, lerp(hwT, y)]);
-    const left = [...ys].reverse().map((y): Vec3 => [s.rear!.x, y, -lerp(hwT, y)]);
-    const pts = [...right, ...left].filter((p, i, all) => i === 0 || Math.hypot(p[1] - all[i - 1]![1], p[2] - all[i - 1]![2]) > 1e-6);
-    if (pts.length > 2 && Math.hypot(pts[0]![1] - pts[pts.length - 1]![1], pts[0]![2] - pts[pts.length - 1]![2]) < 1e-6) pts.pop();
-    if (pts.length >= 3) lodPolygon(w, mat, pts, [-1, 0, 0]);
-  }
 }
 
 // --- fitting ----------------------------------------------------------------------------------
 
-/** An optional part ranked this or higher (a second window row) gives way after the profile's detail, before any colour band. */
-export const LATE = 100;
-
-/** The profile's detail, step by step, as the shared kit gives it up. */
-const PROFILE: ReadonlyArray<readonly [tol: number, flat: boolean]> = [[0, false], [0.03, false], [0.08, false], [0.08, true], [0.15, true], [0.25, true], [0.4, true], [0.7, true], [1.0, true]];
-
-const bandKey = (b: LodBand) => `${b[0]}|${b[1]}|${b[2]}`;
-
 /**
- * Builds `spec` within `budget` triangles, giving up detail in the shared
- * kit's order (lodKit.ts `fitLod`): the optional parts and small windows
- * (lowest `optional` first), the profile's finer kinks, the least visible
- * colour band (thin: end and cab bands count half) - given up on every body
- * that paints it, so the cars of a set stay alike - then the smallest window.
- * Optional parts that fit again afterwards come back. Deterministic.
+ * Builds `spec` within `budget` triangles with the shared kit's `fitLod`: the
+ * optional parts and small windows (second window rows ranked `LATE`, after
+ * the profile), the profile's finer kinks, the least visible colour band -
+ * given up on every car of a set alike, the roof band kept - then the smallest
+ * window. Deterministic.
  */
 export function fitUnit(spec: UnitSpec, budget: number): MeshBuilder {
-  let bodies = spec.bodies.map((b) => ({ ...b }));
-  type Optional = { rank: number; part?: LodPart; win?: LodRect };
-  const optional: Optional[] = [
-    ...spec.parts.filter((p) => p.optional !== undefined).map((p) => ({ rank: p.optional!, part: p })),
-    ...spec.bodies.flatMap((b) => [...(b.windows ?? []), ...(b.front.windows ?? []), ...(b.rear.windows ?? [])]).filter((w) => w.optional !== undefined).map((w) => ({ rank: w.optional!, win: w })),
-  ].sort((a, b) => a.rank - b.rank);
-  let dropped = 0;
-  const back = new Set<Optional>();
-  let tol = 0;
-  const build = (): MeshBuilder => {
-    const m = new MeshBuilder({ ...UNIT_LOD_PALETTE, ...LOD_PALETTE, ...spec.palette });
-    const gone = new Set(optional.slice(0, dropped).filter((o) => !back.has(o)).flatMap((o) => [o.part, o.win]));
-    const keep = (ws?: readonly LodRect[]) => ws?.filter((w) => !gone.has(w));
-    const draw = (section: number | null) => {
-      const mine = (x: { section?: number }) => section === null || (x.section ?? 0) === section;
-      m.scope("body", () => {
-        for (const b of bodies) if (mine(b)) drawShell(m, toShell({ ...b, windows: keep(b.windows), front: { ...b.front, windows: keep(b.front.windows) }, rear: { ...b.rear, windows: keep(b.rear.windows) } }), ...PROFILE[tol]!);
-      });
-      m.scope("parts", () => { for (const p of spec.parts) if (mine(p) && !gone.has(p)) p.draw(m); });
-    };
-    if (spec.sections) drawSections(m, spec.sections, draw);
-    else draw(null);
-    return m;
-  };
-  for (;;) {
-    const m = build();
-    if (m.triangleCount() <= budget) {
-      let best = m;
-      for (let i = dropped - 1; i >= 0; i--) {
-        back.add(optional[i]!);
-        const more = build();
-        if (more.triangleCount() <= budget) best = more;
-        else back.delete(optional[i]!);
-      }
-      return best;
-    }
-    // optional parts ranked LATE and above give way only after the profile's detail
-    if (dropped < optional.length && (optional[dropped]!.rank < LATE || tol === PROFILE.length - 1)) { dropped++; continue; }
-    if (tol < PROFILE.length - 1) { tol++; continue; }
-    // the least visible band, given up on every body painting it
-    let best: { score: number; apply: () => void } | null = null;
-    const offer = (score: number, apply: () => void) => { if (!best || score < best.score - 1e-9) best = { score, apply }; };
-    const ends = (b: UnitBody) => [b.front.paint, b.rear.paint].filter((p): p is readonly LodBand[] => !!p && p.length > 1);
-    for (const b0 of bodies) {
-      // the roof's band is seen from above whatever its height: it stays, and nothing is painted over by it
-      const crown = b0.hw[b0.hw.length - 1]![0];
-      // the eave: the highest height the body is still at its full width
-      const wmax = Math.max(...b0.hw.map(([, w]) => w));
-      const eave = Math.max(...b0.hw.filter(([, w]) => w >= wmax - 0.02).map(([y]) => y));
-      const roofBand = (bands: readonly LodBand[], i: number) => bands.length > 1 && i === bands.length - 1 && bands[i]![1] >= crown - 1e-6 && bands[i]![0] >= eave - 0.15;
-      const intoRoof = (bands: readonly LodBand[], i: number) => {
-        const t = (k: number) => (bands[k] ? bands[k]![1] - bands[k]![0] : -1);
-        return roofBand(bands, t(i - 1) >= t(i + 1) ? i - 1 : i + 1);
-      };
-      if (b0.side.length > 1) b0.side.forEach((band, i) => {
-        if (roofBand(b0.side, i) || intoRoof(b0.side, i)) return;
-        const key = bandKey(band);
-        const twin = ends(b0).some((p) => p.some((x) => bandKey(x) === key));
-        offer((band[1] - band[0]) * (twin ? 1.5 : 1), () => {
-          const merge = (p: readonly LodBand[] | undefined) => {
-            const i = p ? p.findIndex((x) => bandKey(x) === key) : -1;
-            return p && p.length > 1 && i >= 0 ? mergeBand(p, i) : p;
-          };
-          bodies = bodies.map((b) => ({ ...b, side: merge(b.side)!, front: { ...b.front, paint: merge(b.front.paint) }, rear: { ...b.rear, paint: merge(b.rear.paint) } }));
-        });
-      });
-      for (const p of ends(b0)) for (const band of p) {
-        const key = bandKey(band);
-        if (b0.side.some((x) => bandKey(x) === key)) continue;
-        offer((band[1] - band[0]) * 0.5, () => {
-          const merge = (q: readonly LodBand[] | undefined) => {
-            const i = q ? q.findIndex((x) => bandKey(x) === key) : -1;
-            return q && q.length > 1 && i >= 0 ? mergeBand(q, i) : q;
-          };
-          bodies = bodies.map((b) => ({ ...b, front: { ...b.front, paint: merge(b.front.paint) }, rear: { ...b.rear, paint: merge(b.rear.paint) } }));
-        });
-      }
-      // a cab band given up shows the sides' colours at its height
-      for (const c of b0.cabs ?? []) for (const band of c.side) {
-        const [a, z, mat] = band;
-        if (lodBands(b0.side, a, z).every(([, , bm]) => bm === mat)) continue;
-        const key = bandKey(band);
-        offer((z - a) * 0.5, () => {
-          bodies = bodies.map((b) => ({
-            ...b,
-            cabs: b.cabs?.map((cc) => {
-              const i = cc.side.findIndex((x) => bandKey(x) === key);
-              if (i < 0) return cc;
-              const side = lodBands([...cc.side.slice(0, i), ...lodBands(b.side, a, z), ...cc.side.slice(i + 1)], cc.side[0]![0], cc.side[cc.side.length - 1]![1]);
-              return { ...cc, side };
-            }),
-          }));
-        });
-      }
-    }
-    if (best) { (best as { apply: () => void }).apply(); continue; }
-    // the smallest window
-    type Win = { k: number; w: LodRect; where: "side" | "front" | "rear" };
-    const wins: Win[] = bodies.flatMap((b, k) => [
-      ...(b.windows ?? []).map((w): Win => ({ k, w, where: "side" })),
-      ...(b.front.windows ?? []).map((w): Win => ({ k, w, where: "front" })),
-      ...(b.rear.windows ?? []).map((w): Win => ({ k, w, where: "rear" })),
-    ]).filter(({ w }) => w.optional === undefined);
-    if (!wins.length) throw new Error(`the LOD does not fit ${budget} triangles`);
-    const area = (w: LodRect) => (w.u[1] - w.u[0]) * (w.y[1] - w.y[0]);
-    const small = wins.reduce((a, b) => (area(b.w) < area(a.w) - 1e-9 ? b : a));
-    bodies = bodies.map((b, j) => j !== small.k ? b
-      : small.where === "side" ? { ...b, windows: b.windows!.filter((w) => w !== small.w) }
-      : small.where === "front" ? { ...b, front: { ...b.front, windows: b.front.windows!.filter((w) => w !== small.w) } }
-      : { ...b, rear: { ...b.rear, windows: b.rear.windows!.filter((w) => w !== small.w) } });
-  }
-}
-
-/** An articulated LOD's sections and joints (as the shared kit draws them), `draw(i)` drawing section i. */
-function drawSections(m: MeshBuilder, sp: LodSections, draw: (i: number) => void): void {
-  const rigSections: SectionRig[] = sp.pivots.map((pivot, i) => ({ node: `section${i}`, pivot }));
-  rigSections.forEach((s, i) => m.part(s.node, s.pivot as Vec3, () => draw(i)));
-  const joints: JointRig[] = sp.joints.map((j, i) => ({
-    node: `joint${i}`, sections: j.sections, front: j.front, rear: j.rear, profile: j.profile,
-    folds: 1, depth: 0, material: sp.material ?? "bellows",
-  }));
-  for (const j of joints) m.part(j.node, [0, 0, 0], () => drawJoint(m, j, rigSections));
-  m.rig = { sections: rigSections, joints, maxBendDeg: sp.maxBendDeg };
+  return fitLod({ palette: { ...UNIT_LOD_PALETTE, ...spec.palette }, shells: spec.bodies.map(toShell), parts: spec.parts, ...(spec.sections ? { sections: spec.sections } : {}), coarse: true }, budget);
 }
 
 // --- adapters: the coach builder's volumes and the cab noses ------------------------------------
@@ -392,7 +166,6 @@ export function volumePaint(v: Volume, y0: number, top: number, map: (mat: strin
   return lodBands(v.bands.map(([a, b, mat]): LodBand => [a, b, map(mat)]), y0, top);
 }
 
-const lerpPts = (pts: readonly Pt[], x: number): number => lerp(pts.map(([a, b]) => [a, b] as const), x);
 
 /**
  * One end of a set of volumes (e = +1 the +X end): at each height the
@@ -408,7 +181,7 @@ function volumeEnd(vols: readonly PlacedVolume[], e: number, ys: readonly number
     for (const { v, X } of vols) {
       const plan = v.plan;
       const [p0, p1] = [plan[0]![0], plan[plan.length - 1]![0]];
-      const stand = (x: number) => (v.top ? lerpPts(v.top, x) >= y - 1e-6 : true) && (v.bottom ? lerpPts(v.bottom, x) <= y + 1e-6 : true);
+      const stand = (x: number) => (v.top ? lerp(v.top, x) >= y - 1e-6 : true) && (v.bottom ? lerp(v.bottom, x) <= y + 1e-6 : true);
       // the outermost standing x: sampled finely from the end inward
       const n = 400;
       let at: number | null = null;
@@ -435,7 +208,7 @@ function volumeEnd(vols: readonly PlacedVolume[], e: number, ys: readonly number
         const m = 200, span = Math.min(4, p1 - p0);
         for (let i = 0; i < m; i++) {
           const x = e > 0 ? xs - (span * (i + 0.5)) / m : xs + (span * (i + 0.5)) / m;
-          missing += Math.max(0, 1 - lerpPts(plan, x) / hw0) * (span / m);
+          missing += Math.max(0, 1 - lerp(plan, x) / hw0) * (span / m);
         }
         sb = 2 * missing;
       }
@@ -549,10 +322,9 @@ export function coachBody(vols: readonly PlacedVolume[], o: CoachBodyOpts = {}):
  */
 export function noseEnd(s: Pick<NoseSpec, "e" | "xTip" | "profile" | "half" | "corner" | "bulge" | "rows">, paint?: readonly LodBand[], windows?: readonly LodRect[]): UnitEnd {
   const ys = [...new Set([...s.profile.map((p) => p[0]), ...s.half.map((p) => p[0]), ...s.corner.map((p) => p[0])])].filter((y) => y >= s.rows[0]! - 1e-9 && y <= s.rows[s.rows.length - 1]! + 1e-9).sort((a, b) => a - b);
-  const at = (t: readonly Pt[], y: number) => lerpPts(t, y);
-  const tip: Table = ys.map((y) => [y, Math.round(s.e * (s.xTip - at(s.profile, y)) * 1e4) / 1e4] as const);
+  const tip: Table = ys.map((y) => [y, Math.round(s.e * (s.xTip - lerp(s.profile, y)) * 1e4) / 1e4] as const);
   const setback: Table = ys.map((y) => {
-    const hw = at(s.half, y), r = Math.min(at(s.corner, y), hw * 0.98), a = hw - r, b = s.bulge ?? 0;
+    const hw = lerp(s.half, y), r = Math.min(lerp(s.corner, y), hw * 0.98), a = hw - r, b = s.bulge ?? 0;
     return [y, Math.round(((2 * (b * a / 3 + b * r + r * r * (1 - Math.PI / 4))) / Math.max(hw, 1e-6)) * 1e4) / 1e4] as const;
   });
   return { tip, ...(setback.some(([, v]) => v > NOSE_VEE) ? { setback } : {}), ...(paint ? { paint } : {}), ...(windows ? { windows } : {}) };

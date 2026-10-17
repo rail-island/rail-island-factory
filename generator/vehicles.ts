@@ -16,8 +16,8 @@ import { CD163_PARAMS, CD263_PARAMS, cd163, cd163Lod, cd263, cd263Lod } from "./
 import { COACH_CATALOG } from "./csdCoaches.ts";
 import { COACH_DESIGNS } from "./coachTransfers.ts";
 import { WAGON_CATALOG, WAGON_DESIGNS } from "./wagons.ts";
-import { COACH_LODS, lodBlock, lodPanels, lodRoadWheel, lodSweep } from "./lodClassic.ts";
-import { LOD_GLASS, fitLod, lodPolygon, type LodPart } from "./lodKit.ts";
+import { COACH_LODS, lodPanels, lodSweep } from "./lodClassic.ts";
+import { lodBlock, lodWheel, LOD_GLASS, fitLod, lodPolygon, type LodPart } from "./lodKit.ts";
 
 // re-exported: a design's JS bundle imports its build function from this module
 export { cd163, cd163Lod, cd263, cd263Lod };
@@ -449,15 +449,15 @@ export function americanTruckLod(_params?: ParamValues, budget = 200): MeshBuild
     { optional: 5, draw: (m) => m.scope("fuel tanks", () => { for (const s of [-1, 1]) lodBlock(m, 2.95, 4.4, 0.45, 1.0, ...side(s, 0.55, 1.12), { side: "chrome" }); }) },
     { draw: (m) => m.scope("wheels", () => {
       for (const s of [-1, 1]) {
-        lodRoadWheel(m, "tread", FRONT_AXLE, R, ...side(s, FRONT_TYRE[0], FRONT_TYRE[1]));
-        for (const x of DRIVE_AXLES) lodRoadWheel(m, "tread", x, R, ...side(s, 0.56, 1.15));
+        lodWheel(m, "tread", FRONT_AXLE, R, ...side(s, FRONT_TYRE[0], FRONT_TYRE[1]), 6, "lower");
+        for (const x of DRIVE_AXLES) lodWheel(m, "tread", x, R, ...side(s, 0.56, 1.15), 6, "lower");
       }
     }) },
   ];
   const trailer: LodPart[] = [
     { draw: (m) => m.scope("van", () => lodSweep(m, "x", [[-1.3, PIVOT[1] + 0.01], [1.3, PIVOT[1] + 0.01], [1.3, TRAILER_TOP], [-1.3, TRAILER_TOP]], TRAILER_REAR, TRAILER_FRONT,
       [[0, 1.32, "darkMetal"], [1.32, TRAILER_TOP, "aluminum"]], "aluminum", true)) },
-    { draw: (m) => m.scope("wheels", () => { for (const s of [-1, 1]) for (const x of TRAILER_AXLES) lodRoadWheel(m, "tread", x, R, ...side(s, 0.56, 1.15)); }) },
+    { draw: (m) => m.scope("wheels", () => { for (const s of [-1, 1]) for (const x of TRAILER_AXLES) lodWheel(m, "tread", x, R, ...side(s, 0.56, 1.15), 6, "lower"); }) },
     { optional: 8, draw: (m) => m.scope("landing gear", () => lodBlock(m, -0.66, -0.54, 0.25, TRAILER_FLOOR, -1.07, 1.07, { side: "darkMetal", top: null })) },
   ];
   return fitLod({

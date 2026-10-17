@@ -6,7 +6,7 @@ import type { Vec3 } from "./meshCore.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import { lodPolygon, type LodBand, type LodPart } from "./lodKit.ts";
 import { BALCONY_PARAMS, BLOCK_PARAMS, NUM as K_NUM, OFFICE_PARAMS, PL as K_PL, SHOP_PARAMS, ST as K_ST, TERRACE_PARAMS, palette as kenneyPalette } from "./commercial.ts";
-import { bounds, faceQuad, lodPost, lodBox, part, fit, lodRect, lodWalls, lodCap, lodBlock, lodParapet } from "./lodBuildings.ts";
+import { bounds, faceQuad, lodPost, lodBox, part, fit, lodRect, lodWalls, lodCap, lodMass, lodParapet } from "./lodBuildings.ts";
 
 // --- the commercial house kit (commercial.ts) ----------------------------------------------------
 
@@ -111,7 +111,7 @@ export function terraceHouseLod(given?: ParamValues): MeshBuilder {
   const top = K_PL + floors * K_ST;
   const parts: LodPart[] = [
     part((m) => {
-      lodBlock(m, lodRect(lower.x, lower.z, lower.w, lower.d),
+      lodMass(m, lodRect(lower.x, lower.z, lower.w, lower.d),
         [[0, K_PL + K_ST, "trim"], [K_PL + K_ST, terraceY - 0.32, "wall"], [terraceY - 0.32, terraceY, "trim"]], "stone");
       kenneyMass(m, upper, [[terraceY, top, "wall"]], top);
     }),

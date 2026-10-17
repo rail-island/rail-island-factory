@@ -17,7 +17,7 @@ import type { Vec3 } from "./meshCore.ts";
 import type { ParamValues } from "./design.ts";
 import { Coach, sectionHalf, type Box, type Volume } from "./csdCoachParts.ts";
 import {
-  fitLod,
+  lodBlock, fitLod,
   lerp,
   LOD_GLASS,
   lodBandAt,
@@ -90,17 +90,6 @@ export function lodSweep(
     if (mat) lodPolygon(m, mat, sec.map(([u, v]) => P(u, v, a)), P(0, 0, d));
 }
 
-/** A box x0..x1, y0..y1, z0..z1 without its bottom: its long sides (z), its ends (x) and its top, each in its own material (null: left out). */
-export function lodBlock(
-  m: MeshBuilder,
-  x0: number, x1: number, y0: number, y1: number, z0: number, z1: number,
-  mats: { side?: string | null; end?: string | null; top?: string | null },
-): void {
-  const { side = null, end = side, top = side } = mats;
-  if (side) for (const [z, s] of [[z0, -1], [z1, 1]] as const) lodPolygon(m, side, [[x0, y0, z], [x1, y0, z], [x1, y1, z], [x0, y1, z]], [0, 0, s]);
-  if (end) for (const [x, s] of [[x0, -1], [x1, 1]] as const) lodPolygon(m, end, [[x, y0, z0], [x, y0, z1], [x, y1, z1], [x, y1, z0]], [s, 0, 0]);
-  if (top) lodPolygon(m, top, [[x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]], [0, 1, 0]);
-}
 
 /**
  * An open-topped box (an open wagon's body): its outer walls from y0 to y1 in
@@ -132,21 +121,6 @@ export function lodPanels(m: MeshBuilder, mat: string, rects: ReadonlyArray<read
     for (const s of [-1, 1]) lodPolygon(m, mat, [[x0, y0, s * z], [x1, y0, s * z], [x1, y1, s * z], [x0, y1, s * z]], [0, 0, s]);
 }
 
-/**
- * A road wheel from afar: a hexagon standing on its flat side, its outer face
- * and the two lower slanted faces of its tread (the flat bottom on the road,
- * the upper tread under the body and fenders and the inner face are not seen).
- */
-export function lodRoadWheel(m: MeshBuilder, mat: string, x: number, r: number, z0: number, z1: number): void {
-  const yc = r * Math.sin(Math.PI / 3);
-  const ring = Array.from({ length: 6 }, (_, i): [number, number] => [x + r * Math.cos((i * Math.PI) / 3), yc + r * Math.sin((i * Math.PI) / 3)]);
-  const outer = Math.abs(z1) > Math.abs(z0) ? z1 : z0, inner = outer === z1 ? z0 : z1;
-  for (const i of [3, 5]) {
-    const [a, b] = [ring[i]!, ring[(i + 1) % 6]!];
-    lodPolygon(m, mat, [[a[0], a[1], inner], [b[0], b[1], inner], [b[0], b[1], outer], [a[0], a[1], outer]], [(a[0] + b[0]) / 2 - x, (a[1] + b[1]) / 2 - yc, 0]);
-  }
-  lodPolygon(m, mat, ring.map(([px, py]): Vec3 => [px, py, outer]), [0, 0, Math.sign(outer)]);
-}
 
 // --- the freight wagons (wagons.ts) ----------------------------------------------------------
 

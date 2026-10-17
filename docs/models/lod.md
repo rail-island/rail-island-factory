@@ -59,11 +59,16 @@ wheels, electric stock carries its raised rear pantograph.
 (`boxLocoLod`) - use it directly, the families below through their adapters.
 
 - **Shell** (`lodShell`): the body as a stack of plan rings from the family's own
-  profile tables - the end's centre line `tip(y)`, the half width `hw(y)` and,
-  for a rounded or pointed nose, the corners' setback, drawn as a vee. Sides and
-  ends are painted in the livery's colour bands; a livery's cab paint covers the
-  cab sections of the sides. The crown is capped, the bottom is open. Faces of
-  different colours never share a plane.
+  profile tables - the half width `hw(y)` and each end's centre line and, for a
+  rounded or pointed nose, its corners' setback, drawn as a vee. A symmetric body
+  gives one end (`tip` from `xc`, `setback`); a body whose ends differ (a tram
+  section's cab and joint ends, a single-cab car's nose and square inner end, a
+  driving trailer) gives `front` and `rear`, each with its own tables, paint and
+  windscreens. Sides and ends are painted in the livery's colour bands; cab paint
+  covers the cab sections of the sides (`cab` for a symmetric body, `cabs` as x
+  ranges). An end can be hidden (a hood against its cab, an end inside a set).
+  The crown is capped, the bottom is open. Faces of different colours never share
+  a plane.
 - **Windows**: windscreens and window bands in one dark material, `lodGlass`
   (`LOD_GLASS`) - the only glass a vehicle LOD may use (`test/lod.test.ts`).
   `windowBands` joins a split windscreen into one band; a windscreen within
@@ -76,19 +81,28 @@ wheels, electric stock carries its raised rear pantograph.
   full detail.
 - **Fitting** (`fitLod`): the family states what is optional; the kit builds
   the LOD and, while it is over its budget, gives up in this order: the optional
-  parts (lowest rank first: the folded pantograph, small windows, short roof
-  boxes, the frame strip, the underframe equipment), the profile's detail (its
-  tables simplified within 0.03 to 0.4 m, a vee nose flattened halfway back),
-  the least visible colour band (the thinnest; a band painted on sides and ends
-  alike goes from both, an end or cab band counts half and a cab band then shows
-  the machine room's colours), then the smallest window. Optional parts that
-  fit again afterwards come back. The result is deterministic.
+  parts and small windows (lowest rank first: the folded pantograph, small
+  windows, short roof boxes, the frame strip, the underframe equipment; those
+  ranked `LATE` or higher, a second window row, only after the profile), the
+  profile's detail (its tables simplified within 0.03 to 0.4 m - to 1.0 m for a
+  `coarse` spec, a unit's long cars - a vee nose flattened halfway back), the
+  least visible colour band (the thinnest; a band painted on sides and ends alike
+  goes from both, an end or cab band counts half and a cab band then shows the
+  sides' colours; a band goes from every section of an articulated set alike,
+  while the shells of one body keep their own; a body's roof band stays), then
+  the smallest window. Optional parts that fit again afterwards come back. The
+  result is deterministic. `fitParts` does the same for a model of parts only (a
+  building) without bundling the shell painter.
 - **Sections** (`LodSpec.sections`): an articulated vehicle's LOD keeps one node
   per section (`section<i>`, pivoted at the full rig's hinges) and its bellows
   (`joint<i>`, drawn by the rig's own `drawJoint`), so the game poses and
-  re-skins it like the full model; bogies and steered wheels stay fixed.
-- **Solids**: `lodPrism`, `lodNgon`, `lodWheel` (standing on a flat side),
-  `lodGableRoof`, `lodHipRoof`, `lodRod`, `lodPolygon`.
+  re-skins it like the full model (`drawSections`); bogies and steered wheels
+  stay fixed.
+- **Solids**: `lodBlock` (a box, each face group in its own material or left
+  out), `lodPrism`, `lodNgon`, `lodWheel` (standing on a flat side; all, the
+  lower or none of its tread faces), `lodGableRoof`, `lodHipRoof`, `lodRod`,
+  `lodPolygon`. The family files keep only what is their own; what two families
+  need comes from here.
 
 ### The families
 
@@ -105,12 +119,12 @@ wheels, electric stock carries its raised rear pantograph.
   `wagonLod` draws open bodies, decks, the tank, hoppers and every load.
 - **Multiple units and railcars** (`lodUnits.ts`): `coachBody` reads each car's
   coach-builder volumes (rounded plans as vees, cab and nose paint), `dmuBody` the
-  DMU kit's windows, `noseEnd` the `cabNose` profiles; `fitUnit` gives a band up
-  on every car of a set alike and keeps the roof band. The TGV set keeps its
-  sections on the Jacobs bogies.
+  DMU kit's windows, `noseEnd` the `cabNose` profiles; each car is a kit shell
+  with its two ends of its own, fitted by `fitLod` (`coarse`). The TGV set keeps
+  its sections on the Jacobs bogies.
 - **Trams, CZ/SK and German coaches** (`lodTrams.ts`): `volumeShell` reads the
-  coach builder's volumes one end at a time, `lodEndsShell` / `fitEnds` draw
-  shells whose two ends differ; `tramLod` (the KT8, KT4 and GT4 keep their
+  coach builder's volumes one end at a time into kit shells with two ends of
+  their own; `tramLod` (the KT8, KT4 and GT4 keep their
   sections and bellows; the 81-71 metro uses it too), `liveryCoachLod`,
   `doubleDeckLod` (two window decks, the dropped belly, driving trailers).
 - **Steam locomotives and freight wagons** (`lodSteam.ts`): `steamLocoLod` reads

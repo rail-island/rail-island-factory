@@ -48,6 +48,17 @@ LOD (`lod.ts` recipes, `lodHull.ts`, `MeshCore.lowDetail`) is removed and
 1. "Make it all; report each batch sheet but do not wait": the review gate became
    a report - every batch's full/LOD contact sheet was sent as it finished and the
    next went on without waiting; the batches ran in parallel.
+2. "Move the duplicated helpers into lodKit": the kit's shell now takes two ends of
+   their own (`front` / `rear` with their own paint and windscreens) and cab paint
+   as x ranges, which replaced the trams' copy of the shell and fitting
+   (`lodEndsShell`, `fitEnds`) and the units' mirror-and-clamp workaround and
+   fitting copy; `fitLod` took over their rules (a band goes from every section
+   of a set alike, a body's roof band stays, `LATE` optional parts after the
+   profile, a `coarse` profile ladder for units). One `lodBlock` and one
+   `lodWheel` (with a tread option) replace the five box and two wheel helpers;
+   `drawSections`, `sameBands` and `lerp` replace their copies; the buildings'
+   banded block is `lodMass`. 63 designs' LODs changed slightly (checked on
+   before/after sheets); the full models are untouched.
 
 ## How to test
 
@@ -89,13 +100,13 @@ disabled in LOD mode (the spec did not ask for them).
 - Thin livery lines and non-band paint (swooshes, V stripes, diagonal stripes, aircraft cheatlines) are often lost.
 - Retractable aircraft gear is left out of LOD (a static LOD cannot retract it); fixed gear stays.
 - Skyscraper facades read as stripes; some simple models use well under their budget (bell tower, Louvre, tenders).
-- Several adapters carry generic helpers of their own (`lodBlock` appears in more than one file); not yet merged into lodKit.
+- The three readers of the coach builder's volumes (lodClassic, lodTrams, lodUnits) stay separate: each reads them for a different purpose.
 - Semi-trucks have no bellows (as in full detail), so `renderJoint` is not called for them.
 
 ## Recommended follow-ups
 
 - Teach the webapp to pose articulated LOD models (sections and joints) like full ones.
-- Move the duplicated generic helpers (`lodBlock`, `lodRoadWheel`, `lodEndsShell`, `lodStack`, `overlay`) into lodKit.
+- Consider one reader of the coach builder's volumes for the classic, tram and unit adapters.
 - Make `lodBudget` take the section count of the selected parameters instead of the default build.
 - Add a slanted-band shell primitive for sweep liveries.
 - Enable the site's pose sliders for articulated LODs.

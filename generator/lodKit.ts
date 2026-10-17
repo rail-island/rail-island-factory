@@ -54,7 +54,7 @@ export function mergeBand(bands: readonly LodBand[], i: number): LodBand[] {
 }
 
 /** Two band lists paint alike. */
-const sameBands = (a: readonly LodBand[], b: readonly LodBand[]): boolean =>
+export const sameBands = (a: readonly LodBand[], b: readonly LodBand[]): boolean =>
   a.length === b.length && a.every((x, k) => x[0] === b[k]![0] && x[1] === b[k]![1] && x[2] === b[k]![2]);
 
 // --- tables -----------------------------------------------------------------------------
@@ -239,34 +239,80 @@ export interface LodRect {
   optional?: number;
 }
 
+/** One end of a shell drawn from its own tables, in model x (a shell whose two ends differ). */
+export interface LodEnd {
+  /** [y, x] of the end's centre line in model x, bottom first; the last height is the crown. */
+  tip: Table;
+  /** [y, setback] of the corners behind the tip (toward the body's middle); omitted for a flat end. */
+  setback?: Table;
+  /** The end's paint, bottom first, to the crown; default the shell's `end`. */
+  paint?: readonly LodBand[];
+}
+
 /**
- * A body as a stack of plan rings: the end's centre line tip(y) from xc, the
- * half width hw(y), and the corner's setback behind the tip (a vee-shaped or
- * rounded nose seen from above becomes a vee). The bottom is open.
+ * A body as a stack of plan rings: the half width hw(y), and each end's centre
+ * line and its corners' setback behind it (a vee-shaped or rounded nose seen
+ * from above becomes a vee). A symmetric body gives one end as `tip` (|x| from
+ * `xc`) and `setback`; a body whose ends differ (a tram section's cab and joint
+ * ends, a driving trailer) gives `front` and `rear`. The bottom is open.
  */
 export interface LodShell {
   y0: number;
-  /** [y, |x|] of the end's centre line, bottom first; the last height is the crown. */
-  tip: Table;
   /** [y, half width], bottom first. */
   hw: Table;
-  /** [y, setback] of the corners behind the tip; omitted for a flat end. */
+  /** A symmetric body: [y, |x|] of both ends' centre line from `xc`, bottom first; the last height is the crown. */
+  tip?: Table;
+  /** A symmetric body: [y, setback] of the corners behind the tip; omitted for a flat end. */
   setback?: Table;
   xc?: number;
-  /** Paint of the sides and of the ends, bottom first, to the crown. */
+  /** A body whose ends differ: each end from its own tables. */
+  front?: LodEnd;
+  rear?: LodEnd;
+  /** Paint of the sides, bottom first, to the crown. */
   side: readonly LodBand[];
-  end: readonly LodBand[];
-  /** The cab sections (|x - xc| beyond `x`) painted in their own bands on the sides. */
+  /** Paint of the ends; default the sides'. */
+  end?: readonly LodBand[];
+  /** The cab sections of a symmetric body (|x - xc| beyond `x`) painted in their own bands on the sides. */
   cab?: { x: number; side: readonly LodBand[] };
+  /** Side paint of its own over model x0..x1 (cab sections, a driving trailer's cab). */
+  cabs?: ReadonlyArray<{ x0: number; x1: number; side: readonly LodBand[] }>;
   /** The crown's cap. */
   roof: string;
   /** Windows: on the sides (u = x) and on the ends (u = z seen from the front). */
   sideWindows?: readonly LodRect[];
   endWindows?: readonly LodRect[];
-  /** Which ends are drawn: a hood abutting a cab hides one. Default both. */
+  /** Which ends are drawn: a hood abutting a cab, an end inside an articulated set hides one. Default both. */
   ends?: readonly number[];
   /** The section of an articulated LOD it belongs to (LodSpec.sections); default 0. */
   section?: number;
+}
+
+/** An end in its general form: model x, its paint resolved. */
+interface GeneralEnd {
+  tip: Table;
+  setback?: Table;
+  paint: readonly LodBand[];
+}
+
+/** A shell in its general form: both ends in model x with their paint, the cab paint as x ranges. */
+type GeneralShell = Omit<LodShell, "tip" | "setback" | "xc" | "front" | "rear" | "end" | "cab" | "cabs"> & {
+  front: GeneralEnd;
+  rear: GeneralEnd;
+  cabs: ReadonlyArray<{ x0: number; x1: number; side: readonly LodBand[] }>;
+};
+
+function general(sh: LodShell): GeneralShell {
+  const { tip, setback, xc = 0, front, rear, end, cab, cabs, ...rest } = sh;
+  const paint = end ?? sh.side;
+  const own = (e: LodEnd | undefined, sign: number): GeneralEnd => {
+    if (e) return { tip: e.tip, paint: e.paint ?? paint, ...(e.setback ? { setback: e.setback } : {}) };
+    if (!tip) throw new Error("a LOD shell needs `tip` or both `front` and `rear`");
+    return { tip: tip.map(([y, x]) => [y, xc + sign * x] as const), paint, ...(setback ? { setback } : {}) };
+  };
+  return {
+    ...rest, front: own(front, 1), rear: own(rear, -1),
+    cabs: [...(cabs ?? []), ...(cab ? [{ x0: -1e3, x1: xc - cab.x, side: cab.side }, { x0: xc + cab.x, x1: 1e3, side: cab.side }] : [])],
+  };
 }
 
 /** A face cell: from u0 to u1 (null: the outline's own edge), one material. */
@@ -304,19 +350,25 @@ function layers(hs: number[], kinks: Set<number>, at: (y0: number, y1: number) =
   return out;
 }
 
-/** Draws `sh`; `tol` simplifies its profile tables first. */
+/** Draws `sh`; `tol` simplifies its profile tables first, `flat` draws a vee nose as a flat end halfway back. */
 export function lodShell(m: MeshBuilder, sh: LodShell, tol = 0, flat = false): void {
-  // flat: a vee nose drawn as a flat end halfway back
-  const tipT0 = flat && sh.setback ? sh.tip.map(([y, x]) => [y, x - lerp(sh.setback!, y) / 2] as const) : sh.tip;
-  const tipT = simplifyTable(tipT0, tol), hwT = simplifyTable(sh.hw, tol);
-  const sbT = sh.setback && !flat ? simplifyTable(sh.setback, tol) : null;
-  const y0 = sh.y0, top = tipT[tipT.length - 1]![0];
-  const xc = sh.xc ?? 0;
-  const tip = (y: number) => lerp(tipT, y);
+  drawShell(m, general(sh), tol, flat);
+}
+
+function drawShell(m: MeshBuilder, sh: GeneralShell, tol: number, flat: boolean): void {
+  const prep = (end: GeneralEnd, e: number) => {
+    const tip0: Table = flat && end.setback ? end.tip.map(([y, x]) => [y, x - (e * lerp(end.setback!, y)) / 2] as const) : end.tip;
+    return { tip: simplifyTable(tip0, tol), sb: end.setback && !flat ? simplifyTable(end.setback, tol) : null, paint: end.paint };
+  };
+  const F = prep(sh.front, 1), R = prep(sh.rear, -1);
+  const of = (e: number) => (e > 0 ? F : R);
+  const hwT = simplifyTable(sh.hw, tol);
+  const y0 = sh.y0, top = F.tip[F.tip.length - 1]![0];
   const hw = (y: number) => lerp(hwT, y);
-  const sb = (y: number) => (sbT ? lerp(sbT, y) : 0);
-  const corner = (y: number) => tip(y) - sb(y);
-  const kinks = new Set([...tipT, ...hwT, ...(sbT ?? [])].map(([y]) => y).filter((y) => y > y0 && y < top));
+  const tip = (e: number, y: number) => lerp(of(e).tip, y);
+  const sb = (e: number, y: number) => (of(e).sb ? lerp(of(e).sb!, y) : 0);
+  const corner = (e: number, y: number) => tip(e, y) - e * sb(e, y);
+  const kinks = new Set([...F.tip, ...R.tip, ...hwT, ...(F.sb ?? []), ...(R.sb ?? [])].map(([y]) => y).filter((y) => y > y0 && y < top));
   const breaks = (bands: readonly LodBand[], wins: readonly LodRect[]) => [
     y0, top, ...kinks,
     ...bands.flatMap(([a, b]) => [a, b]),
@@ -324,25 +376,26 @@ export function lodShell(m: MeshBuilder, sh: LodShell, tol = 0, flat = false): v
   ];
   const sorted = (ys: number[]) => [...new Set(ys.filter((y) => y >= y0 && y <= top).map((y) => Math.round(y * 1e6) / 1e6))].sort((a, b) => a - b);
 
-  // the sides: x cells between the profile's two corners
+  // the sides: x cells between the two ends' corners
   const sideW = sh.sideWindows ?? [];
   for (const s of [-1, 1]) {
     const wins = sideW.filter((w) => !w.sides || w.sides.includes(s)).flatMap((w) => (w.mirror ? [w, { ...w, u: [-w.u[1], -w.u[0]] as const }] : [w]));
-    const hs = sorted(breaks([...sh.side, ...(sh.cab?.side ?? [])], wins));
+    const hs = sorted(breaks([...sh.side, ...sh.cabs.flatMap((c) => c.side)], wins));
     const ls = layers(hs, kinks, (ya, yb) => {
       const ym = (ya + yb) / 2;
+      const base = lodBandAt(sh.side, ym);
       const regions: Array<[number, number, string]> = [];
-      if (sh.cab) {
-        const cm = lodBandAt(sh.cab.side, ym);
-        if (cm !== lodBandAt(sh.side, ym)) regions.push([-1e3, xc - sh.cab.x, cm], [xc + sh.cab.x, 1e3, cm]);
+      for (const c of sh.cabs) {
+        const cm = lodBandAt(c.side, ym);
+        if (cm !== base) regions.push([c.x0, c.x1, cm]);
       }
       // the layer heights are rounded to 1e-6 (sorted): a window edge between is the same height
       for (const w of wins) if (w.y[0] <= ya + 1e-6 && w.y[1] >= yb - 1e-6) regions.push([w.u[0], w.u[1], w.mat]);
-      return cells(lodBandAt(sh.side, ym), regions);
+      return cells(base, regions);
     });
     for (const [ya, yb, cs] of ls) {
       for (const [u0, u1, mat] of cs) {
-        const pt = (u: number | null, y: number, end: number): Vec3 => [u === null ? xc + end * corner(y) : Math.max(xc - corner(y), Math.min(xc + corner(y), u)), y, s * hw(y)];
+        const pt = (u: number | null, y: number, end: number): Vec3 => [u === null ? corner(end, y) : Math.max(corner(-1, y), Math.min(corner(1, y), u)), y, s * hw(y)];
         lodPolygon(m, mat, [pt(u0, ya, -1), pt(u1, ya, 1), pt(u1, yb, 1), pt(u0, yb, -1)], [0, 0, s]);
       }
     }
@@ -351,28 +404,30 @@ export function lodShell(m: MeshBuilder, sh: LodShell, tol = 0, flat = false): v
   // the ends: z cells across the face; a vee nose splits at the centre line
   for (const e of sh.ends ?? [-1, 1]) {
     // a windscreen within 0.2 m of the corners spans the whole face: one cell, not three
-    const snap = (u: number, y: number) => (Math.abs(u) >= lerp(hwT, y) - 0.2 ? Math.sign(u) * 1e3 : u);
+    const snap = (u: number, y: number) => (Math.abs(u) >= hw(y) - 0.2 ? Math.sign(u) * 1e3 : u);
     const wins = (sh.endWindows ?? []).filter((w) => !w.ends || w.ends.includes(e)).map((w) => {
       const u = e > 0 ? w.u : [-w.u[1], -w.u[0]];
       const y = (w.y[0] + w.y[1]) / 2;
       return { ...w, u: [snap(u[0]!, y), snap(u[1]!, y)] as readonly [number, number] };
     });
-    const hs = sorted(breaks(sh.end, wins));
+    const paint = of(e).paint;
+    const hs = sorted(breaks(paint, wins));
     const ls = layers(hs, kinks, (ya, yb) => {
       const regions: Array<[number, number, string]> = [];
       for (const w of wins) if (w.y[0] <= ya + 1e-6 && w.y[1] >= yb - 1e-6) regions.push([w.u[0], w.u[1], w.mat]);
-      return cells(lodBandAt(sh.end, (ya + yb) / 2), regions);
+      return cells(lodBandAt(paint, (ya + yb) / 2), regions);
     });
+    const vee = of(e).sb !== null;
     for (const [ya, yb, cs] of ls) {
       for (const [u0, u1, mat] of cs) {
         // the vee: split each cell at z = 0, where the plan kinks
-        const spans: Array<[number | null, number | null]> = sbT && (u0 === null || u0 < 0) && (u1 === null || u1 > 0) ? [[u0, 0], [0, u1]] : [[u0, u1]];
+        const spans: Array<[number | null, number | null]> = vee && (u0 === null || u0 < 0) && (u1 === null || u1 > 0) ? [[u0, 0], [0, u1]] : [[u0, u1]];
         for (const [a, b] of spans) {
           const pt = (u: number | null, y: number, side: number): Vec3 => {
             const z = u === null ? side * hw(y) : Math.max(-hw(y), Math.min(hw(y), u));
             // where the section closes to a ridge (hw = 0) the vee has met its corner
             const w = hw(y);
-            return [xc + e * (tip(y) - (w > 1e-9 ? (sb(y) * Math.abs(z)) / w : sb(y))), y, z];
+            return [tip(e, y) - e * (w > 1e-9 ? (sb(e, y) * Math.abs(z)) / w : sb(e, y)), y, z];
           };
           const q = [pt(a, ya, -1), pt(b, ya, 1), pt(b, yb, 1), pt(a, yb, -1)];
           lodPolygon(m, mat, [q[0]!, q[1]!, q[2]!], [e, 0, 0]);
@@ -382,12 +437,16 @@ export function lodShell(m: MeshBuilder, sh: LodShell, tol = 0, flat = false): v
     }
   }
 
-  // the crown
-  const [ct, cw, cc] = [tip(top), hw(top), corner(top)];
-  const ring: Vec3[] = sbT
-    ? [[xc + ct, top, 0], [xc + cc, top, cw], [xc - cc, top, cw], [xc - ct, top, 0], [xc - cc, top, -cw], [xc + cc, top, -cw]]
-    : [[xc + ct, top, -cw], [xc + ct, top, cw], [xc - ct, top, cw], [xc - ct, top, -cw]];
-  if (cw > 1e-6) lodPolygon(m, sh.roof, ring, [0, 1, 0]);
+  // the crown: from the front's centre line (or its -z corner) round by +z, the rear and -z
+  const cw = hw(top);
+  if (cw <= 1e-6) return;
+  const [ft, fc, rt, rc] = [tip(1, top), corner(1, top), tip(-1, top), corner(-1, top)];
+  const ring: Vec3[] = [
+    ...((F.sb ? [[ft, top, 0], [fc, top, cw]] : [[ft, top, -cw], [ft, top, cw]]) as Vec3[]),
+    ...((R.sb ? [[rc, top, cw], [rt, top, 0], [rc, top, -cw]] : [[rt, top, cw], [rt, top, -cw]]) as Vec3[]),
+    ...((F.sb ? [[fc, top, -cw]] : []) as Vec3[]),
+  ];
+  lodPolygon(m, sh.roof, ring, [0, 1, 0]);
 }
 
 // --- fitting --------------------------------------------------------------------------------
@@ -420,10 +479,12 @@ export interface LodSpec {
   shells: LodShell[];
   parts: LodPart[];
   sections?: LodSections;
+  /** The profile may be simplified within 0.7 and 1.0 m too before bands are given up (a unit's cars). */
+  coarse?: boolean;
 }
 
 /** Draws an articulated LOD's sections and joints, `draw(i)` drawing section i, and sets its rig. */
-function drawSections(m: MeshBuilder, sp: LodSections, draw: (i: number) => void): void {
+export function drawSections(m: MeshBuilder, sp: LodSections, draw: (i: number) => void): void {
   const rigSections: SectionRig[] = sp.pivots.map((pivot, i) => ({ node: `section${i}`, pivot }));
   rigSections.forEach((s, i) => m.part(s.node, s.pivot as Vec3, () => draw(i)));
   const joints: JointRig[] = sp.joints.map((j, i) => ({
@@ -435,34 +496,46 @@ function drawSections(m: MeshBuilder, sp: LodSections, draw: (i: number) => void
   m.rig = { sections: rigSections, joints, maxBendDeg: sp.maxBendDeg };
 }
 
-/** The profile's detail, step by step: how far the tables may be simplified, and whether a vee nose is flattened. */
-const PROFILE: ReadonlyArray<readonly [tol: number, flat: boolean]> = [[0, false], [0.03, false], [0.08, false], [0.08, true], [0.15, true], [0.25, true], [0.4, true]];
+/**
+ * The profile's detail, step by step: how far the tables may be simplified, and
+ * whether a vee nose is flattened. The last two steps only for a spec that
+ * allows them (`coarse`): a unit's long, smooth car, not a locomotive's cab.
+ */
+const PROFILE: ReadonlyArray<readonly [tol: number, flat: boolean]> = [[0, false], [0.03, false], [0.08, false], [0.08, true], [0.15, true], [0.25, true], [0.4, true], [0.7, true], [1.0, true]];
+const FINE_STEPS = 7;
+
+/** An optional part or window ranked this or higher (a second window row) gives way after the profile's detail, before any colour band. */
+export const LATE = 100;
+
+const bandKey = (b: LodBand) => `${b[0]}|${b[1]}|${b[2]}`;
 
 /**
  * Builds `spec` within `budget` triangles. Detail goes in a fixed order: the
- * optional parts (lowest `optional` first), the profile's finer kinks, the
- * least visible colour band (thin and short: end and cab bands count half),
- * then the smallest window. Deterministic.
+ * optional parts and small windows (lowest `optional` first; those ranked LATE
+ * or higher only after the profile), the profile's finer kinks, the least
+ * visible colour band (`leastVisibleBand`), then the smallest window. Optional
+ * parts that fit again afterwards come back. Deterministic.
  */
 export function fitLod(spec: LodSpec, budget: number): MeshBuilder {
-  let shells = spec.shells.map((s) => ({ ...s }));
+  let shells = spec.shells.map(general);
   // the optional parts and small windows, in the order they give way
   type Optional = { rank: number; part?: LodPart; win?: LodRect };
   const optional: Optional[] = [
     ...spec.parts.filter((p) => p.optional !== undefined).map((p) => ({ rank: p.optional!, part: p })),
-    ...spec.shells.flatMap((sh) => [...(sh.sideWindows ?? []), ...(sh.endWindows ?? [])]).filter((w) => w.optional !== undefined).map((w) => ({ rank: w.optional!, win: w })),
+    ...shells.flatMap((sh) => [...(sh.sideWindows ?? []), ...(sh.endWindows ?? [])]).filter((w) => w.optional !== undefined).map((w) => ({ rank: w.optional!, win: w })),
   ].sort((a, b) => a.rank - b.rank);
   let dropped = 0;
   // optional parts given up but brought back once the bands and profile have made room, best first
   const back = new Set<Optional>();
   let tol = 0;
+  const lastStep = (spec.coarse ? PROFILE.length : FINE_STEPS) - 1;
   const build = (): MeshBuilder => {
     const m = new MeshBuilder({ ...LOD_PALETTE, ...spec.palette });
     const gone = new Set(optional.slice(0, dropped).filter((o) => !back.has(o)).flatMap((o) => [o.part, o.win]));
     const keep = (ws?: readonly LodRect[]) => ws?.filter((w) => !gone.has(w));
     const draw = (section: number | null) => {
       const mine = (x: { section?: number }) => section === null || (x.section ?? 0) === section;
-      m.scope("body", () => { for (const sh of shells) if (mine(sh)) lodShell(m, { ...sh, sideWindows: keep(sh.sideWindows), endWindows: keep(sh.endWindows) }, ...PROFILE[tol]!); });
+      m.scope("body", () => { for (const sh of shells) if (mine(sh)) drawShell(m, { ...sh, sideWindows: keep(sh.sideWindows), endWindows: keep(sh.endWindows) }, ...PROFILE[tol]!); });
       m.scope("parts", () => { for (const p of spec.parts) if (mine(p) && !gone.has(p)) p.draw(m); });
     };
     if (spec.sections) drawSections(m, spec.sections, draw);
@@ -481,33 +554,10 @@ export function fitLod(spec: LodSpec, budget: number): MeshBuilder {
       }
       return best;
     }
-    if (dropped < optional.length) { dropped++; continue; }
-    if (tol < PROFILE.length - 1) { tol++; continue; }
-    // the least visible band of any shell
-    let best: { score: number; apply: () => void } | null = null;
-    const offer = (score: number, apply: () => void) => { if (!best || score < best.score - 1e-9) best = { score, apply }; };
-    shells.forEach((sh, k) => {
-      const set = (patch: Partial<LodShell>) => { shells = shells.map((x, j) => (j === k ? { ...x, ...patch } : x)); };
-      // a side band painted the same on the ends goes from both at once
-      const twin = (b: LodBand) => sh.end.findIndex((e) => e[0] === b[0] && e[1] === b[1] && e[2] === b[2]);
-      if (sh.side.length > 1) sh.side.forEach((b, i) => {
-        const j = sh.end.length > 1 ? twin(b) : -1;
-        offer((b[1] - b[0]) * (j >= 0 ? 1.5 : 1), () => set(j >= 0 ? { side: mergeBand(sh.side, i), end: mergeBand(sh.end, j) } : { side: mergeBand(sh.side, i) }));
-      });
-      if (sh.end.length > 1) sh.end.forEach((b, j) => {
-        if (sh.side.some((x) => x[0] === b[0] && x[1] === b[1] && x[2] === b[2])) return;
-        offer((b[1] - b[0]) * 0.5, () => set({ end: mergeBand(sh.end, j) }));
-      });
-      // a cab band given up shows the machine room's colours at its height
-      if (sh.cab) sh.cab.side.forEach(([a, b, mat], i) => {
-        if (lodBands(sh.side, a, b).every(([, , bm]) => bm === mat)) return;
-        offer((b - a) * 0.5, () => {
-          const merged = lodBands([...sh.cab!.side.slice(0, i), ...lodBands(sh.side, a, b), ...sh.cab!.side.slice(i + 1)], sh.cab!.side[0]![0], sh.cab!.side[sh.cab!.side.length - 1]![1]);
-          set({ cab: sameBands(merged, lodBands(sh.side, merged[0]![0], merged[merged.length - 1]![1])) ? undefined : { ...sh.cab!, side: merged } });
-        });
-      });
-    });
-    if (best) { (best as { apply: () => void }).apply(); continue; }
+    if (dropped < optional.length && (optional[dropped]!.rank < LATE || tol === lastStep)) { dropped++; continue; }
+    if (tol < lastStep) { tol++; continue; }
+    const band = leastVisibleBand(shells);
+    if (band) { shells = band(); continue; }
     // the smallest window
     const wins = shells.flatMap((sh, k) => [
       ...(sh.sideWindows ?? []).map((w) => ({ k, w, side: true })),
@@ -520,6 +570,69 @@ export function fitLod(spec: LodSpec, budget: number): MeshBuilder {
       ? { ...sh, sideWindows: sh.sideWindows!.filter((w) => w !== small.w) }
       : { ...sh, endWindows: sh.endWindows!.filter((w) => w !== small.w) });
   }
+}
+
+/**
+ * The least visible colour band of any shell, as the shells with it given up:
+ * a side band (counting 1.5 when the ends are painted with it too, and going
+ * from them as well), an end band (counting half) or a cab band (counting half;
+ * the cab then shows the sides' colours at its height). A band goes from the
+ * shell and from every other section's shell that paints it, so the cars of a
+ * set stay alike; the other shells of its own section keep theirs. A body's roof band -
+ * its top band from about its eave to its crown - stays, and nothing is painted
+ * over by it. Null when no band is left to give up.
+ */
+function leastVisibleBand(shells: readonly GeneralShell[]): (() => GeneralShell[]) | null {
+  let best: { score: number; apply: () => GeneralShell[] } | null = null;
+  const offer = (score: number, apply: () => GeneralShell[]) => { if (!best || score < best.score - 1e-9) best = { score, apply }; };
+  const merge = (bands: readonly LodBand[], key: string): readonly LodBand[] => {
+    const i = bands.findIndex((x) => bandKey(x) === key);
+    return bands.length > 1 && i >= 0 ? mergeBand(bands, i) : bands;
+  };
+  const inEnds = (sh: GeneralShell, key: string) => [sh.front.paint, sh.rear.paint].some((p) => p.length > 1 && p.some((x) => bandKey(x) === key));
+  for (const sh of shells) {
+    // the band goes from this shell and from the other sections' (the cars of a set alike), not from the
+    // other shells of its own section (a hood unit's cab and hoods keep their own)
+    const alike = (x: GeneralShell) => x === sh || (x.section ?? 0) !== (sh.section ?? 0);
+    const crown = sh.hw[sh.hw.length - 1]![0];
+    const wmax = Math.max(...sh.hw.map(([, w]) => w));
+    const eave = Math.max(...sh.hw.filter(([, w]) => w >= wmax - 0.02).map(([y]) => y));
+    const roofBand = (bands: readonly LodBand[], i: number) => bands.length > 1 && i === bands.length - 1 && bands[i]![1] >= crown - 1e-6 && bands[i]![0] >= eave - 0.15;
+    const intoRoof = (bands: readonly LodBand[], i: number) => {
+      const t = (k: number) => (bands[k] ? bands[k]![1] - bands[k]![0] : -1);
+      return roofBand(bands, t(i - 1) >= t(i + 1) ? i - 1 : i + 1);
+    };
+    const visible = (bands: readonly LodBand[], i: number) => bands.length > 1 && !roofBand(bands, i) && !intoRoof(bands, i);
+    sh.side.forEach((b, i) => {
+      if (!visible(sh.side, i)) return;
+      const key = bandKey(b);
+      const twin = inEnds(sh, key);
+      offer((b[1] - b[0]) * (twin ? 1.5 : 1), () => shells.map((x) => !alike(x) ? x : ({
+        ...x, side: merge(x.side, key),
+        ...(twin ? { front: { ...x.front, paint: merge(x.front.paint, key) }, rear: { ...x.rear, paint: merge(x.rear.paint, key) } } : {}),
+      })));
+    });
+    for (const p of [sh.front.paint, sh.rear.paint]) p.forEach((b, i) => {
+      const key = bandKey(b);
+      if (!visible(p, i) || sh.side.some((x) => bandKey(x) === key)) return;
+      offer((b[1] - b[0]) * 0.5, () => shells.map((x) => !alike(x) ? x : ({ ...x, front: { ...x.front, paint: merge(x.front.paint, key) }, rear: { ...x.rear, paint: merge(x.rear.paint, key) } })));
+    });
+    for (const c of sh.cabs) for (const b of c.side) {
+      const [a, z, mat] = b;
+      if (lodBands(sh.side, a, z).every(([, , bm]) => bm === mat)) continue;
+      const key = bandKey(b);
+      offer((z - a) * 0.5, () => shells.map((x) => !alike(x) ? x : ({
+        ...x,
+        cabs: x.cabs.map((cc) => {
+          const i = cc.side.findIndex((y) => bandKey(y) === key);
+          if (i < 0) return cc;
+          const side = lodBands([...cc.side.slice(0, i), ...lodBands(x.side, a, z), ...cc.side.slice(i + 1)], cc.side[0]![0], cc.side[cc.side.length - 1]![1]);
+          return { ...cc, side };
+        }).filter((cc) => !sameBands(cc.side, lodBands(x.side, cc.side[0]![0], cc.side[cc.side.length - 1]![1]))),
+      })));
+    }
+  }
+  return best ? (best as { apply: () => GeneralShell[] }).apply : null;
 }
 
 /**
@@ -600,17 +713,43 @@ export function lodNgon(n: number, r: number, cx = 0, cz = 0, rot = 0): Array<[n
   });
 }
 
-/** A road vehicle's wheel from afar: an n-gon prism across z from z0 to z1 (outer face and tread), its inner face left out. */
-export function lodWheel(m: MeshBuilder, mat: string, x: number, r: number, z0: number, z1: number, n = 6): void {
+/**
+ * A road vehicle's wheel from afar: an n-gon standing on a flat side at y = 0,
+ * its outer face at whichever of z0 and z1 lies further out. `tread` says which
+ * of its tread faces are drawn: all of them, the lower slanted ones only (the
+ * tyre's bulge seen from the side; the one on the road and those under the
+ * body are not), or none (a flat disc).
+ */
+export function lodWheel(m: MeshBuilder, mat: string, x: number, r: number, z0: number, z1: number, n = 6, tread: "all" | "lower" | "none" = "all"): void {
   const y = r * Math.cos(Math.PI / n);
   // a flat side, not a vertex, on the road
-  const ring = lodNgon(n, r, x, y, Math.PI / n - Math.PI / 2);
+  const ring = lodNgon(n, r, x, y, Math.PI / n - Math.PI / 2).map(([px, py]): [number, number] => [px, Math.abs(py) < 1e-9 ? 0 : py]);
   const outer = Math.abs(z1) > Math.abs(z0) ? z1 : z0, inner = outer === z1 ? z0 : z1;
-  for (let i = 0; i < n; i++) {
+  if (tread !== "none") for (let i = 0; i < n; i++) {
     const [a, b] = [ring[i]!, ring[(i + 1) % n]!];
-    lodPolygon(m, mat, [[a[0], a[1], inner], [b[0], b[1], inner], [b[0], b[1], outer], [a[0], a[1], outer]], [(a[0] + b[0]) / 2 - x, (a[1] + b[1]) / 2 - y, 0]);
+    const ny = (a[1] + b[1]) / 2 - y;
+    if (tread === "lower" && !(ny < -1e-6 && ny > -r * Math.cos(Math.PI / n) + 1e-6)) continue;
+    lodPolygon(m, mat, [[a[0], a[1], inner], [b[0], b[1], inner], [b[0], b[1], outer], [a[0], a[1], outer]], [(a[0] + b[0]) / 2 - x, ny, 0]);
   }
   lodPolygon(m, mat, ring.map(([px, py]): Vec3 => [px, py, outer]), [0, 0, Math.sign(outer)]);
+}
+
+/**
+ * A box x0..x1, y0..y1, z0..z1: its long sides (the z faces), its ends (the x
+ * faces), its top and its bottom, each in its own material; a face whose
+ * material is null is left out. The ends and top default to the sides'
+ * material, the bottom to none (it stands on something).
+ */
+export function lodBlock(
+  m: MeshBuilder,
+  x0: number, x1: number, y0: number, y1: number, z0: number, z1: number,
+  mats: { side?: string | null; end?: string | null; top?: string | null; bottom?: string | null },
+): void {
+  const { side = null, end = side, top = side, bottom = null } = mats;
+  if (side) for (const [z, s] of [[z0, -1], [z1, 1]] as const) lodPolygon(m, side, [[x0, y0, z], [x1, y0, z], [x1, y1, z], [x0, y1, z]], [0, 0, s]);
+  if (end) for (const [x, s] of [[x0, -1], [x1, 1]] as const) lodPolygon(m, end, [[x, y0, z0], [x, y0, z1], [x, y1, z1], [x, y1, z0]], [s, 0, 0]);
+  if (top) lodPolygon(m, top, [[x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]], [0, 1, 0]);
+  if (bottom) lodPolygon(m, bottom, [[x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1]], [0, -1, 0]);
 }
 
 /** A gabled roof over the rectangle x0..x1, z0..z1 from eave y0 to ridge y1, the ridge along `axis`: two slopes and two gables. */

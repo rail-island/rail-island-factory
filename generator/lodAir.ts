@@ -68,10 +68,6 @@ export function lodPlanRect(hx: number, hz: number, ch = 0, cx = 0, cz = 0): Arr
   return r.map(([x, z]) => [cx + x, cz + z]);
 }
 
-/** A box from y0 to y1 over x0..x1, z0..z1: four walls and the top, the bottom too unless `bottom` is false. */
-export function lodBlock(m: MeshBuilder, mat: string, x0: number, x1: number, y0: number, y1: number, z0: number, z1: number, bottom = false): void {
-  lodStack(m, [[y0, lodPlanRect((x1 - x0) / 2, (z1 - z0) / 2, 0, (x0 + x1) / 2, (z0 + z1) / 2)], [y1, lodPlanRect((x1 - x0) / 2, (z1 - z0) / 2, 0, (x0 + x1) / 2, (z0 + z1) / 2)]], [mat], mat, bottom ? mat : null);
-}
 
 /** An n-sided bar (4 by default: 8 triangles) from p to q, `r` from its axis to its corners, open-ended: a strut, a hanger arm. */
 export function lodBar(m: MeshBuilder, mat: string, p: Vec3, q: Vec3, r: number, n = 4): void {

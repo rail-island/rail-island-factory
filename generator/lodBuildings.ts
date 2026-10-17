@@ -54,7 +54,7 @@ export function lodCap(m: MeshBuilder, mat: string, ring: readonly XZ[], y: numb
 }
 
 /** A block: the walls of the ring in bands and a flat top. */
-export function lodBlock(m: MeshBuilder, ring: readonly XZ[], bands: readonly LodBand[], top: string, skip: readonly number[] = []): void {
+export function lodMass(m: MeshBuilder, ring: readonly XZ[], bands: readonly LodBand[], top: string, skip: readonly number[] = []): void {
   lodWalls(m, ring, bands, skip);
   lodCap(m, top, ring, bands[bands.length - 1]![1]);
 }
