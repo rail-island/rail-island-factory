@@ -6,7 +6,7 @@ preview, and the URL state.
 **Code** - `src/main.tsx`, `src/App.tsx`, `src/catalogQuery.ts`, `src/ModelTable.tsx`,
 `src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`,
 `src/SourceTreePanel.tsx`, `src/sourceTreeView.ts`, `src/Thumb.tsx`,
-`src/factory.css`, `src/boot.ts`, `src/bootEntry.ts`, `index.html`, `vite.config.ts`,
+`src/factory.css`, `src/favicon.svg`, `src/apple-touch-icon.png`, `src/boot.ts`, `src/bootEntry.ts`, `index.html`, `vite.config.ts`,
 `test/catalogQuery.test.ts`, `test/boot.test.ts`, `test/rig.test.ts` (the Pose sliders)
 **See also** - [../models/export.md](../models/export.md), [../guide/deploy.md](../guide/deploy.md)
 
@@ -38,6 +38,11 @@ The bar at the top shows "Rail Island Factory" (on a model page, the model's tit
 its id and a back arrow) and, on the right, an **Add your model** link to the
 repository's README on GitHub - the landing page for someone who wants to make a
 model (`ADD_MODEL_URL` in `App.tsx`).
+
+The favicon (`src/favicon.svg`) is a sawtooth-roofed factory with a chimney on a
+rail, in the site's colours; `src/apple-touch-icon.png` is the same drawing at
+180 px for a phone's home screen. `index.html` links both, so Vite hashes them
+into `dist/assets/` (the public folder is the generated export).
 
 ## Data
 

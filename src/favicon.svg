@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Rail Island Factory: a sawtooth-roofed factory with a chimney, on a rail -->
+  <rect width="32" height="32" rx="7" fill="#192c39"/>
+  <rect x="22" y="5" width="4" height="19" fill="#8fb6f2"/>
+  <path d="M5 24V14l6-4v4l6-4v4l6-4v14z" fill="#8fb6f2"/>
+  <rect x="8" y="17" width="3" height="3" fill="#192c39"/>
+  <rect x="14.5" y="17" width="3" height="3" fill="#192c39"/>
+  <rect x="4" y="25.5" width="24" height="2" rx="1" fill="#e9b949"/>
+</svg>
