@@ -1,6 +1,6 @@
 # Remove GLB processing
 
-Status: draft
+Status: agreed
 Date: 2026-10-17
 Area: rail-island-factory (generator, export, catalog site, tests, assets, skills, docs) and rail-island-webapp (asset build, Creator, catalogs, Worker, storage, tests, docs)
 
