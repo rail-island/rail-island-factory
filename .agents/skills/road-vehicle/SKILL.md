@@ -132,5 +132,6 @@ If downloading is not possible, tell the user and list what you would have used.
    articulated vehicle the trailer or rear section swung, clear of the front one
    and, for a bus, the bellows sealed.
 5. `pnpm typecheck`, `pnpm test`, `pnpm build`.
+   Send the user the rendered views in the chat (AGENTS.md, "Show the user the model").
 6. Update `docs/models/vehicles.md` (the designs table, anything new), commit
    and push to `master`.

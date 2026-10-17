@@ -136,6 +136,7 @@ texture canvases, not overall photographic accuracy. Its fixtures in
   database checkout or network access when the small fixtures can be retained.
 - Run the required build, type checks and tests; inspect generated thumbnails
   and all relevant views headlessly. Do not commit generated export artifacts.
+  Send the user the rendered views in the chat (AGENTS.md, "Show the user the model").
 - **Present the final comparison table to the user**, with before/after errors,
   annotated images, remaining uncertainties and verification results. Provide
   readable tables and links to complete Markdown/HTML/CSV artifacts as useful.
