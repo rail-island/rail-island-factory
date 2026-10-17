@@ -29,7 +29,7 @@ describe("exportMeta", () => {
         id: b.id,
         title: SKYSCRAPERS.find((d) => d.id === b.id)!.title,
         params: SKYSCRAPERS.find((d) => d.id === b.id)!.params,
-        category: "Commercial",
+        category: "Skyscrapers",
         group: "skyscraper_c",
         glb: `${b.id}.glb`,
         thumb: `${b.id}.png`,
@@ -76,7 +76,7 @@ describe("the buildings' meta", () => {
     expect(new Set(meta.buildings.map((b) => b.id)).size).toBe(BUILDINGS.length);
     for (const b of meta.buildings) {
       const d = BUILDINGS.find((x) => x.id === b.id)!;
-      if (b.id.startsWith("proc-building-sky-")) expect(b.category).toBe("Commercial");
+      if (b.id.startsWith("proc-building-sky-")) expect(b.category).toBe("Skyscrapers");
       else expect([b.category, b.group, b.defaultScale]).toEqual([d.catalog!.category, d.catalog!.group, d.catalog!.defaultScale]);
     }
     expect(meta.buildings.find((b) => b.id === "proc-building-prague-main-station")).toMatchObject({ category: "Station", defaultScale: 1 });
@@ -185,8 +185,8 @@ describe("buildExport", () => {
           ?? village.buildings.find((b) => b.id === r.id)
           ?? vehicles.vehicles.find((v) => v.id === r.id);
         expect(r).toMatchObject(listed!);
-        // a skyscraper is tall; the landmarks and stations need not be
-        if (r.id.startsWith("proc-building-sky-")) expect(r.sizeY).toBeGreaterThan(2 * Math.max(r.sizeX, r.sizeZ));
+        // a skyscraper is tall (the twin towers' podium is the widest); the landmarks and stations need not be
+        if (r.id.startsWith("proc-building-sky-")) expect(r.sizeY).toBeGreaterThan(1.5 * Math.max(r.sizeX, r.sizeZ));
         for (const ref of r.references) expect(fs.statSync(path.join(dir, ref.url)).size).toBe(ref.bytes);
       }
       // the CD 150's native BMPs reach the site
