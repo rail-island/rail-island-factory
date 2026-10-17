@@ -1,8 +1,8 @@
-# OpenTTD GRF export
+# OpenTTD GRF and GLB export
 
 Status: agreed
 Date: 2026-10-17
-Area: catalog site (`src/`: model page, app bar, export panel, browser rendering and GRF encoding), design metadata (`generator/design.ts` `openttd` block, `catalog.json`), docs
+Area: catalog site (`src/`: model page, app bar, export panel, browser rendering, GRF encoding, GLB/ZIP export), design metadata (`generator/design.ts` `openttd` block, `catalog.json`), docs
 
 ## Context of the change
 
@@ -28,6 +28,11 @@ Nothing in the repository writes sprites in OpenTTD's projection, encodes a
 GRF, or lets the user select several models in the listing. The listing has no
 selection state at all.
 
+The factory deliberately ships no GLB files (docs/specs/2026-10-17-remove-glb-processing.md,
+docs/models/export.md): the build serialises a design to GLB only in memory. A
+GLB download made by the user in the browser does not change that; the export
+folder and the game contract stay GLB-free.
+
 ## User request
 
 Is it possible to export models from Rail Island Factory into a format OpenTTD
@@ -41,6 +46,9 @@ Later, replacing the checkboxes: make it differently. Don't add checkboxes; on
 the model detail there should be an "Add to export" button, which adds the
 current variant to the export. The export can contain more variants of the
 same model. (This supersedes the checkbox and check-all-filtered request.)
+
+Then: add to the spec also exporting to a ZIP containing GLBs - the user
+chooses whether to export GLBs (packed in a ZIP) or a GRF.
 
 ## Decisions
 
@@ -157,6 +165,35 @@ the first version.
 
 **Answer: Fixed metres per tile.**
 
+### With a GLB option, which models get the "Add to export" button?
+| Option | What it means |
+|---|---|
+| All models | Every model, buildings and cable cars included; a GRF export skips non-vehicles with a notice |
+| Vehicles only, as before | One list for both formats, vehicles only |
+| Two separate lists | A GLB list (all models) and a GRF list (vehicles) |
+
+**Answer: All models.** This supersedes the earlier "All vehicles" answer for
+the button; the GRF still contains only vehicles.
+
+### How is each GLB made in the browser?
+| Option | What it means |
+|---|---|
+| three.js GLTFExporter | Build the JS module with the entry's params and export the Group with three's GLTFExporter; keeps parts and animation clips; bytes differ from the build's in-memory GLB |
+| Factory's own toGlb in the browser | Byte-identical to the build's GLB, but needs generator code in the browser (separate module per model, inside `js/<id>.js`, or relaxing the AGENTS.md rule) |
+
+**Answer: three.js GLTFExporter.** The user first chose the factory's own
+`toGlb`, then changed the answer after the AGENTS.md conflict (src/ may import
+only types from generator/) was raised.
+
+### What does the ZIP contain besides the GLBs?
+| Option | What it means |
+|---|---|
+| GLBs + manifest.json | Plus id, title, params, game properties, license per file |
+| GLBs only | Just the model files, named after id and variant |
+| GLBs + manifest + thumbnails | Also each model's PNG thumbnail |
+
+**Answer: GLBs only.**
+
 ## High-level plan
 
 1. **OpenTTD metadata.** Designs may carry an optional `openttd` block next to
@@ -166,14 +203,15 @@ the first version.
    missing field, so every vehicle resolves to a complete OpenTTD record. The
    build checks the declared values and carries the block into `catalog.json`.
    Depends on nothing; the rest reads it.
-2. **Export list and UI.** The model page of every vehicle (trains, trams, road
-   vehicles, ships, aircraft; not buildings or cable cars) gets an "Add to
+2. **Export list and UI.** The model page of every model gets an "Add to
    export" button that adds the model with its current parameter values; adding
    an identical entry again is a no-op, a different variant of the same model is
    a new entry. The app bar shows "Export (n)" from both the listing and the
    model page; it opens a side panel listing entries (thumbnail, title, variant
-   values) with remove, the set name and the Export .grf button. The list lives
-   in localStorage.
+   values) with remove, the set name and a format choice: **GRF** (OpenTTD) or
+   **ZIP of GLBs**, then Export. Entries the chosen format cannot take (a
+   building or cable car for GRF) are marked in the panel and skipped with a
+   notice. The list lives in localStorage.
 3. **Sprite rendering.** On export, each entry's JS module is loaded and built
    with its params; an offscreen three.js WebGL renderer with an orthographic
    camera at OpenTTD's dimetric angle renders the 8 view directions at 4x zoom,
@@ -187,10 +225,18 @@ the first version.
    property, sprite-set and graphics actions (Actions 0, 1, 2, 3, 4), including
    articulated parts. Vehicle ids are hashed from model id and params. The
    result is offered as a download `<set-name>.grf`.
-5. **Docs and tests.** A new docs file for the OpenTTD export, a row in
+5. **GLB ZIP export.** For the ZIP format each entry's JS module is built with
+   its params and serialised by three.js GLTFExporter (lazily loaded, binary
+   GLB, parts hierarchy and animation clips kept). The files are named
+   `<id>.glb` for the default variant and `<id>--<name>-<value>[...].glb` for a
+   variant (non-default params sorted by name), and packed with a small store-only
+   ZIP writer into `<set-name>.zip`, offered as a download. Nothing else goes
+   into the ZIP. Depends on 2 only, so it can ship before the GRF path.
+6. **Docs and tests.** A new docs file for the OpenTTD export, a row in
    `docs/README.md`, catalog-site.md and game-properties.md updated; tests for
    the encoder (byte layout, deterministic output, id hashing and collisions),
-   the fallback rules and the export-list storage round-trip.
+   the fallback rules, the export-list storage round-trip, the ZIP writer and
+   GLB file naming.
 
 ## Database and persistent storage
 
@@ -223,6 +269,11 @@ game's `vehicles.meta.json` is not changed.
   `nmlc` or the Node build, so the export follows exactly the variants the user
   picked without pre-rendering every combination. The encoder is a pure module so
   Vitest covers it without a browser.
+- **GLBs from three.js GLTFExporter, not the factory's `toGlb`.** Keeps the
+  rule that the browser never runs generator code and needs no second module
+  per model. The downloaded GLB is the JS model the game draws, but its bytes
+  differ from the build's in-memory GLB (node layout, material encoding).
+- **The export folder stays GLB-free.** GLBs exist only as the user's download.
 - **Direct GRF writing instead of NML.** No Python toolchain; the cost is
   owning a binary encoder for a subset of NewGRF actions.
 - **three.js WebGL for sprites,** reusing the preview's lazily loaded module
@@ -255,7 +306,15 @@ game's `vehicles.meta.json` is not changed.
   id space and probing that depends only on the colliding entries.
 - **Fallback balance** (medium): category defaults for cost, capacity and
   dates may play poorly. Mitigation: declare `openttd` on the most used vehicles.
-- **Licensing** (open question): distributing GRFs made from reproductions of
+- **GLB fidelity** (medium): GLTFExporter output differs from the factory's
+  GLB - colours (sRGB vs linear), flat normals, material names - and other tools
+  may show it slightly differently. Mitigation: a test that a re-imported GLB
+  has the JS build's triangle count and bounding box.
+- **ZIP size** (low): many detailed variants can reach tens of MB in memory.
+  Store-only ZIP keeps it simple; compression can follow.
+- **Licensing** (open question): GLBs carry each model's own license (the
+  catalog's `license`), not stated in a GLBs-only ZIP; the user must keep it.
+- **Licensing of GRFs** (open question): distributing GRFs made from reproductions of
   hand-authored game models and vlakosimdb-derived vehicles; the GRF is a
   personal download, publishing on BaNaNaS is the user's call.
 - **Open question:** the exact metres-per-tile value and how a multiple unit
@@ -270,5 +329,7 @@ game's `vehicles.meta.json` is not changed.
 - 8bpp sprites and company-colour masks.
 - Animated sprites (steam running gear), steered wheels and pose-dependent
   sprites.
+- A manifest, thumbnails or license file in the GLB ZIP.
+- Other 3D formats (OBJ, FBX, glTF with separate files).
 - NML source export, Node-side or CI-side GRF builds, publishing to BaNaNaS.
 - Sharing the export list by URL or across browsers.
