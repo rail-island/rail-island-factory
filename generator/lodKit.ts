@@ -336,7 +336,8 @@ export function lodShell(m: MeshBuilder, sh: LodShell, tol = 0, flat = false): v
         const cm = lodBandAt(sh.cab.side, ym);
         if (cm !== lodBandAt(sh.side, ym)) regions.push([-1e3, xc - sh.cab.x, cm], [xc + sh.cab.x, 1e3, cm]);
       }
-      for (const w of wins) if (w.y[0] <= ya + 1e-9 && w.y[1] >= yb - 1e-9) regions.push([w.u[0], w.u[1], w.mat]);
+      // the layer heights are rounded to 1e-6 (sorted): a window edge between is the same height
+      for (const w of wins) if (w.y[0] <= ya + 1e-6 && w.y[1] >= yb - 1e-6) regions.push([w.u[0], w.u[1], w.mat]);
       return cells(lodBandAt(sh.side, ym), regions);
     });
     for (const [ya, yb, cs] of ls) {
@@ -359,7 +360,7 @@ export function lodShell(m: MeshBuilder, sh: LodShell, tol = 0, flat = false): v
     const hs = sorted(breaks(sh.end, wins));
     const ls = layers(hs, kinks, (ya, yb) => {
       const regions: Array<[number, number, string]> = [];
-      for (const w of wins) if (w.y[0] <= ya + 1e-9 && w.y[1] >= yb - 1e-9) regions.push([w.u[0], w.u[1], w.mat]);
+      for (const w of wins) if (w.y[0] <= ya + 1e-6 && w.y[1] >= yb - 1e-6) regions.push([w.u[0], w.u[1], w.mat]);
       return cells(lodBandAt(sh.end, (ya + yb) / 2), regions);
     });
     for (const [ya, yb, cs] of ls) {

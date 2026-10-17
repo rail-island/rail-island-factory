@@ -17,6 +17,8 @@ import { ngon, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
 import type { GameProperties } from "./design.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { Coach, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
+import { LOD_GLASS } from "./lodKit.ts";
+import { bogieParts, coachBody, fitUnit, pantographParts, roofPart, skirtParts } from "./lodUnits.ts";
 import { emblem } from "./cd163.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
@@ -160,6 +162,78 @@ function sb(L: CarLayout, b: PxBox): Box {
   return { x0, x1, y0: H - b[3] / 10, y1: H - b[1] / 10 };
 }
 
+/** A car's body: from the gangway end (source 24.9) to the cab section or the far gangway (source 0.1). */
+function body680(L: CarLayout): Volume {
+  // the body from the gangway end (source 24.9) to the cab section or the far gangway (source 0.1)
+  const bodyEnd = L.cab ? 5.0 : 0.1;
+  const bottomSrc: Pt[] = L.cab
+    ? [[5.0, 0.8], [5.7, 0.8], [6.0, 0.2], [19.3, 0.2], [19.6, 0.8], [23.4, 0.8], [23.7, 0.2], [24.9, 0.2]]
+    : [[0.1, 0.2], [1.4, 0.2], [1.7, 0.8], [5.5, 0.8], [5.8, 0.2], [19.3, 0.2], [19.6, 0.8], [23.4, 0.8], [23.7, 0.2], [24.9, 0.2]];
+  return {
+    name: "body",
+    section: PENDOLINO_SECTION,
+    plan: [[bOf(L, 24.9), HALF], [bOf(L, bodyEnd), HALF]],
+    bottom: toB(L, bottomSrc),
+    bands: BODY_BANDS,
+    endPaint: "endWall",
+  };
+}
+
+/** The end car's nose and cab section, lofted from the XML (nose plan and elevation, columns 0..50). */
+function cabVolumes(L: CarLayout): { nose: Volume; cabBody: Volume } {
+  const bx = (x: number) => bOf(L, x);
+  // the nose's slope (XML 0.2 m back at 1.7 m to 1.8 m back at 3.4 m), with stations at the bands' edges
+  const slope = (y: number): Pt => [0.2 + ((y - 1.7) / 1.7) * 1.6, y];
+  const nose: Volume = {
+    name: "nose",
+    section: PENDOLINO_SECTION,
+    plan: toB(L, [[0, 0.5], [0.1, 1.1], [0.3, 1.3], [0.9, 1.4], [1.8, 1.5], [2.5, 1.5]]).map(([b, h]): Pt => [b, h * K_Z]),
+    top: toB(L, [[0, 1.1], [0.1, 1.5], [0.15, 1.6], [0.2, 1.7], slope(1.9), [1.8, 3.4], [2.0, 3.5], [2.4, 3.6], [2.5, 3.6]]),
+    bottom: toB(L, [[0, 0.9], [0.2, 0.7], [0.6, 0.6], [1.8, 0.5], [2.0, 0.8], [2.5, 0.8]]),
+    bands: NOSE_BANDS,
+  };
+  const cabBody: Volume = {
+    name: "cab section",
+    section: PENDOLINO_SECTION,
+    plan: [[bx(5.0), HALF], [bx(2.5), HALF]],
+    bottom: [[bx(5.0), 0.8], [bx(2.5), 0.8]],
+    bands: CAB_BANDS,
+  };
+  return { nose, cabBody };
+}
+
+/**
+ * A car of the Pendolino for distant views (lodUnits.ts): the tapered tilting
+ * section, the end car's long sloped nose with its windscreen and paint, the
+ * livery's bands, the window band, the skirts between and beyond the bogies,
+ * the bogies, the roof covers and the raised pantograph.
+ */
+export function cd680Lod(params?: ParamValues): MeshBuilder {
+  const unit = resolveParams(CD680_PARAMS, params).unit as PendolinoUnit;
+  const L = LAYOUTS[unit];
+  const centre = lengthOf(L) / 2;
+  const place = (v: Volume) => ({ v, X: (b: number) => b - centre });
+  const X = (x: number) => bOf(L, x) - centre;
+  const body = body680(L);
+  const vols = L.cab ? (({ nose, cabBody }) => [place(body), place(nose), place(cabBody)])(cabVolumes(L)) : [place(body)];
+  const fz = (u: number) => (1.5 - u / 10) * K_Z;
+  const shell = coachBody(vols, {
+    // the windows sit in the dark band between 1.9 and 3.0 m: from afar that band is the window band
+    y0: 0.8, main: 0,
+    ...(L.cab ? { frontWindows: [{ u: [fz(28), fz(2)], y: [H - 2.9, H - 1.9], mat: LOD_GLASS }] } : {}),
+  });
+  return fitUnit({
+    palette: PALETTE,
+    bodies: [shell],
+    parts: [
+      ...bogieParts(L.bogies.map((x) => [X(x), 2.0] as const), 0.8),
+      ...skirtParts((body.bottom ?? []).map(([b, y]): Pt => [b - centre, y]), 0.8, HALF - 0.02, "teal"),
+      ...L.boxes.map(([x0, x1]) => roofPart("roofBox", X(x1), X(x0), 1.0 * K_Z, 0.8 * K_Z, 3.5, 4.0)),
+      ...(L.pantograph ? pantographParts([X(21.8)], 3.6, 3.85, 4.95) : []),
+    ],
+  }, 100);
+}
+
 /** A car of the CD 680 Pendolino. */
 export function cd680(params?: ParamValues): MeshBuilder {
   const unit = resolveParams(CD680_PARAMS, params).unit as PendolinoUnit;
@@ -168,19 +242,7 @@ export function cd680(params?: ParamValues): MeshBuilder {
   const c = new Coach(PALETTE, len / 2);
   const m = c.m;
   const gum = 0.1 * L.k;
-  // the body from the gangway end (source 24.9) to the cab section or the far gangway (source 0.1)
-  const bodyEnd = L.cab ? 5.0 : 0.1;
-  const bottomSrc: Pt[] = L.cab
-    ? [[5.0, 0.8], [5.7, 0.8], [6.0, 0.2], [19.3, 0.2], [19.6, 0.8], [23.4, 0.8], [23.7, 0.2], [24.9, 0.2]]
-    : [[0.1, 0.2], [1.4, 0.2], [1.7, 0.8], [5.5, 0.8], [5.8, 0.2], [19.3, 0.2], [19.6, 0.8], [23.4, 0.8], [23.7, 0.2], [24.9, 0.2]];
-  const body: Volume = {
-    name: "body",
-    section: PENDOLINO_SECTION,
-    plan: [[bOf(L, 24.9), HALF], [bOf(L, bodyEnd), HALF]],
-    bottom: toB(L, bottomSrc),
-    bands: BODY_BANDS,
-    endPaint: "endWall",
-  };
+  const body = body680(L);
   m.scope("body", () => {
     c.volume(body);
     for (const s of [1, -1]) m.scope(s > 0 ? "right side" : "left side", () => sideWork(c, body, L, s));
@@ -302,23 +364,7 @@ function sideWork(c: Coach, v: Volume, L: CarLayout, s: number): void {
 function cab(c: Coach, L: CarLayout): void {
   const m = c.m;
   const bx = (x: number) => bOf(L, x);
-  // the nose's slope (XML 0.2 m back at 1.7 m to 1.8 m back at 3.4 m), with stations at the bands' edges
-  const slope = (y: number): Pt => [0.2 + ((y - 1.7) / 1.7) * 1.6, y];
-  const nose: Volume = {
-    name: "nose",
-    section: PENDOLINO_SECTION,
-    plan: toB(L, [[0, 0.5], [0.1, 1.1], [0.3, 1.3], [0.9, 1.4], [1.8, 1.5], [2.5, 1.5]]).map(([b, h]): Pt => [b, h * K_Z]),
-    top: toB(L, [[0, 1.1], [0.1, 1.5], [0.15, 1.6], [0.2, 1.7], slope(1.9), [1.8, 3.4], [2.0, 3.5], [2.4, 3.6], [2.5, 3.6]]),
-    bottom: toB(L, [[0, 0.9], [0.2, 0.7], [0.6, 0.6], [1.8, 0.5], [2.0, 0.8], [2.5, 0.8]]),
-    bands: NOSE_BANDS,
-  };
-  const cabBody: Volume = {
-    name: "cab section",
-    section: PENDOLINO_SECTION,
-    plan: [[bx(5.0), HALF], [bx(2.5), HALF]],
-    bottom: [[bx(5.0), 0.8], [bx(2.5), 0.8]],
-    bands: CAB_BANDS,
-  };
+  const { nose, cabBody } = cabVolumes(L);
   m.scope("nose", () => c.volume(nose));
   m.scope("cab section", () => c.volume(cabBody));
   const X = (x: number) => c.X(bx(x));
@@ -398,7 +444,7 @@ const CD_680_GAME: GameProperties = {
 };
 
 export const EMU680_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-cd-680", game: CD_680_GAME, title: "CD 680 Pendolino", build: cd680, params: CD680_PARAMS, catalog: EMU_CATALOG, references: "cd-680" },
+  { id: "proc-vehicle-cd-680", game: CD_680_GAME, title: "CD 680 Pendolino", build: cd680, buildLod: cd680Lod, params: CD680_PARAMS, catalog: EMU_CATALOG, references: "cd-680" },
 ];
 
 export { LAYOUTS as PENDOLINO_LAYOUTS, lengthOf as pendolinoLength };

@@ -20,6 +20,8 @@ import type { GameProperties } from "./design.ts";
 import { Coach, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { diamond } from "./czElectricKit.ts";
+import { LOD_GLASS } from "./lodKit.ts";
+import { bogieParts, coachBody, fitUnit, pantographParts, roofPart, shifted, sideGlass, underPart } from "./lodUnits.ts";
 import { EMU_CATALOG, enumParam, slopePanel, tractionNumber, blockX } from "./emuParts.ts";
 import { bOf, CLASSIC_PALETTE, emuBogie, endBuffers, frontNumber, gangwayEnd, lens, louvre, polyB, sb, sideEmblem, toB, type CarFrame, type PxBox } from "./emuClassicKit.ts";
 
@@ -114,13 +116,8 @@ export function cd460(params?: ParamValues): MeshBuilder {
   return car(p.unit as Unit460, p.livery as Livery460);
 }
 
-function car(unit: Unit460, livery: Livery460): MeshBuilder {
-  const paint = PAINTS[livery];
-  const [rear, front] = FACES[unit];
-  const c = new Coach({ ...PALETTE, ...paint.palette }, (rear + front) / 2);
-  const m = c.m;
-  const X = (x: number) => c.X(bOf(F, x));
-  const motor = unit === "motorCar";
+/** A car's volumes: the body and, on the motor car, the cab above the windscreen's foot and the lower front. */
+function volumes460(motor: boolean, paint: Paint): { body: Volume; cabUpper: Volume; cabLower: Volume } {
   const body: Volume = motor
     ? {
         name: "body",
@@ -159,6 +156,21 @@ function car(unit: Unit460, livery: Livery460): MeshBuilder {
     // only the bands below its 1.8 m top: a band above it would leave a sliver cap
     bands: paint.cab.filter(([y0]) => y0 < 1.8).map(([y0, y1, mat]): [number, number, string] => [y0, Math.min(y1, 1.8), mat]),
   };
+  return { body, cabUpper, cabLower };
+}
+
+/** The side windows (native boxes) of the motor car and of the trailer. */
+const WINDOWS_460: PxBox[] = [[42, 19, 55, 30], [117, 19, 130, 30], [134, 19, 147, 30], [151, 19, 164, 30], [168, 19, 181, 30], [185, 19, 198, 30], [202, 19, 215, 30], [219, 19, 226, 30]];
+const WINDOWS_060: PxBox[] = [[19, 19, 26, 30], [30, 19, 43, 30], [47, 19, 60, 30], [64, 19, 77, 30], [81, 19, 94, 30], [98, 19, 111, 30], [134, 19, 147, 30], [151, 19, 164, 30], [168, 19, 181, 30], [185, 19, 198, 30], [202, 19, 215, 30], [219, 19, 226, 30]];
+
+function car(unit: Unit460, livery: Livery460): MeshBuilder {
+  const paint = PAINTS[livery];
+  const [rear, front] = FACES[unit];
+  const c = new Coach({ ...PALETTE, ...paint.palette }, (rear + front) / 2);
+  const m = c.m;
+  const X = (x: number) => c.X(bOf(F, x));
+  const motor = unit === "motorCar";
+  const { body, cabUpper, cabLower } = volumes460(motor, paint);
   const number = number460(livery, unit);
   m.scope("body", () => {
     c.volume(body);
@@ -238,7 +250,7 @@ function motorSide(c: Coach, cabV: Volume, v: Volume, paint: Paint, s: number, n
     m.scope("door 2", () => door(c, v, s, [230, 18, 240, 39], [[232, 20, 236, 29]], paint.door));
   });
   m.scope("grille", () => louvre(c, v, s, sb(F, [105, 18, 114, 38]), "grille", 8));
-  m.scope("windows", () => windows(c, v, s, [[42, 19, 55, 30], [117, 19, 130, 30], [134, 19, 147, 30], [151, 19, 164, 30], [168, 19, 181, 30], [185, 19, 198, 30], [202, 19, 215, 30], [219, 19, 226, 30]]));
+  m.scope("windows", () => windows(c, v, s, WINDOWS_460));
   markings(c, v, paint, s, number, 160);
 }
 
@@ -250,7 +262,7 @@ function trailerSide(c: Coach, _cab: Volume, v: Volume, paint: Paint, s: number,
     m.scope("door 2", () => door(c, v, s, [114, 18, 131, 39], [[117, 20, 121, 29], [124, 20, 128, 29]], paint.door));
     m.scope("door 3", () => door(c, v, s, [230, 18, 240, 39], [[232, 20, 236, 29]], paint.door));
   });
-  m.scope("windows", () => windows(c, v, s, [[19, 19, 26, 30], [30, 19, 43, 30], [47, 19, 60, 30], [64, 19, 77, 30], [81, 19, 94, 30], [98, 19, 111, 30], [134, 19, 147, 30], [151, 19, 164, 30], [168, 19, 181, 30], [185, 19, 198, 30], [202, 19, 215, 30], [219, 19, 226, 30]]));
+  m.scope("windows", () => windows(c, v, s, WINDOWS_060));
   markings(c, v, paint, s, number, 160);
 }
 
@@ -294,6 +306,40 @@ function cab(c: Coach, upper: Volume, lower: Volume, number: string): void {
   });
 }
 
+/**
+ * A car of the 460 set for distant views (lodUnits.ts): the motor car's
+ * leaning cab with its windscreen and cab paint, the bodies' sections and the
+ * livery's bands, the side window band, the bogies, the motor car's equipment
+ * skirt, resistor box and two pantographs, the rear one raised.
+ */
+export function cd460Lod(params?: ParamValues): MeshBuilder {
+  const p = resolveParams(CD460_PARAMS, params);
+  const unit = p.unit as Unit460;
+  const paint = PAINTS[p.livery as Livery460];
+  const motor = unit === "motorCar";
+  const [rear, front] = FACES[unit];
+  const centre = (rear + front) / 2;
+  const X = (x: number) => bOf(F, x) - centre;
+  const place = (v: Volume) => ({ v, X: (b: number) => b - centre });
+  const { body, cabUpper, cabLower } = volumes460(motor, paint);
+  const windows = sideGlass(shifted((motor ? WINDOWS_460 : WINDOWS_060).map((b) => sb(F, b)), centre), 0.6);
+  const shell = coachBody(motor ? [place(body), place(cabUpper), place(cabLower)] : [place(body)], {
+    y0: 0.9, main: 0, windows, ...(motor ? { frontWindows: [{ u: [-0.92, 0.92], y: [2.28, 3.12], mat: LOD_GLASS }] } : {}),
+  });
+  return fitUnit({
+    palette: { ...PALETTE, ...paint.palette },
+    bodies: [shell],
+    parts: [
+      ...bogieParts((motor ? [3.6, 21.1] : [3.6, 20.85]).map((x) => [X(x), 1.25 + (motor ? 0.5 : 0.45) + 0.2] as const), 0.9),
+      ...(motor ? [
+        underPart(X(18.9), X(5.9), 0.2, 0.9, 1.45, 50, undefined, "skirt"),
+        roofPart("roofBox", X(12.8), X(8.7), 0.5, 0.4, 3.9, 4.5),
+        ...pantographParts([X(21.1), X(3.7)], 4.0, 4.25, 5.8),
+      ] : []),
+    ],
+  }, 100);
+}
+
 /** A car's source mapping and the body x of its centre, for the comparison. */
 export const frame460 = (unit: Unit460): { F: CarFrame; centre: number } => ({ F, centre: (FACES[unit][0] + FACES[unit][1]) / 2 });
 
@@ -315,4 +361,4 @@ const CD_460_GAME: GameProperties = {
   ],
 };
 
-export const EMU460_DESIGNS: ProceduralDesign[] = [{ id: "proc-vehicle-cd-460", game: CD_460_GAME, title: "CD 460", build: cd460, params: CD460_PARAMS, catalog: EMU_CATALOG, references: "cd-460" }];
+export const EMU460_DESIGNS: ProceduralDesign[] = [{ id: "proc-vehicle-cd-460", game: CD_460_GAME, title: "CD 460", build: cd460, buildLod: cd460Lod, params: CD460_PARAMS, catalog: EMU_CATALOG, references: "cd-460" }];

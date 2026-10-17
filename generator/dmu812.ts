@@ -24,8 +24,10 @@ import { strokeText } from "./strokeFont.ts";
 import { CabNose, inRoundRect, type NoseLayer, type NoseQuery, type NoseSpec } from "./cabNose.ts";
 import {
   Car, DMU_CATALOG, enumParam, exhaust, sideEmblem, sideItems, sideNumber, tractionNumber, underBoxes,
-  type PxBox, type SideItem,
+  DMU_PALETTE, type CarFrame, type PxBox, type SideItem,
 } from "./dmuKit.ts";
+import { LOD_GLASS } from "./lodKit.ts";
+import { axleParts, dmuBody, fitUnit, noseEnd, roofPart } from "./lodUnits.ts";
 
 export type Cd812Unit = "motorCar" | "drivingTrailer";
 
@@ -217,18 +219,22 @@ function nose(car: Car, e: number, number: string): void {
   });
 }
 
+/** The frame of the native canvases and the body between the noses. */
+const FRAME_812: CarFrame = { kx: K812, ky: 1, kz: 1, centre: 7.5, sideH: 6, frontH: 6 };
+const BODY_812: Volume = {
+  name: "body",
+  section: SECTION,
+  plan: [[JOIN_SRC, 1.5], [15 - JOIN_SRC, 1.5]],
+  bottom: BOTTOM,
+  bands: [[0.5, SKIRT_TOP, "skirtGrey"], [SKIRT_TOP, LINE_TOP, "greyLine"], [LINE_TOP, WHITE_TOP, "white"], [WHITE_TOP, 3.7, "green"]],
+};
+
 function esmeralda(unit: Cd812Unit): MeshBuilder {
   const trailer = unit === "drivingTrailer";
-  const car = new Car(PALETTE, { kx: K812, ky: 1, kz: 1, centre: 7.5, sideH: 6, frontH: 6 });
+  const car = new Car(PALETTE, FRAME_812);
   const m = car.m;
   const L = trailer ? LAYOUT_912 : LAYOUT_812;
-  const body: Volume = car.volume({
-    name: "body",
-    section: SECTION,
-    plan: [[JOIN_SRC, 1.5], [15 - JOIN_SRC, 1.5]],
-    bottom: BOTTOM,
-    bands: [[0.5, SKIRT_TOP, "skirtGrey"], [SKIRT_TOP, LINE_TOP, "greyLine"], [LINE_TOP, WHITE_TOP, "white"], [WHITE_TOP, 3.7, "green"]],
-  });
+  const body: Volume = car.volume(BODY_812);
   const number = cd812Number(unit);
   m.scope("body", () => {
     for (const s of [1, -1])
@@ -278,6 +284,31 @@ export function cd812(params?: ParamValues): MeshBuilder {
   return esmeralda(p.unit as Cd812Unit);
 }
 
+/**
+ * The 812 / 912 for distant views (lodUnits.ts): the body's section and bands,
+ * both noses from their profile (the upright apron, the raked mask and
+ * windscreen, the rounding roof) painted skirt grey, white, green and the
+ * silver mask and roof cap, the windscreens and the side window band, the
+ * two axles and the motor car's cooler.
+ */
+export function cd812Lod(params?: ParamValues): MeshBuilder {
+  const unit = resolveParams(CD812_PARAMS, params).unit as Cd812Unit;
+  const face: Array<[number, number, string]> = [[0.5, SKIRT_TOP, "skirtGrey"], [SKIRT_TOP, LINE_TOP, "greyLine"], [LINE_TOP, 1.32, "white"], [1.32, MASK.cy - MASK.hy, "green"], [MASK.cy - MASK.hy, 3.7, "silver"]];
+  const screen = [{ u: [-WS.half, WS.half] as const, y: [2.26, WS.top(0.8)] as const, mat: LOD_GLASS }];
+  const nose = (e: number) => noseEnd({ e, xTip: X_TIP, profile: PROFILE, half: HALF, corner: CORNER, bulge: 0.04, rows: ROWS }, face, screen);
+  const X = (x: number) => (x - FRAME_812.centre) * K812;
+  const L = unit === "drivingTrailer" ? LAYOUT_912 : LAYOUT_812;
+  const body = dmuBody(FRAME_812, BODY_812, { y0: 0.5, items: L.windows, front: nose(1), rear: nose(-1) });
+  return fitUnit({
+    palette: { ...DMU_PALETTE, ...PALETTE },
+    bodies: [body],
+    parts: [
+      axleParts([[X(3.35), 0.42], [X(11.6), 0.42]], 0.5),
+      ...(unit === "motorCar" ? [roofPart("grey", X(8.4), X(10.0), 0.6, 0.6, 3.68, 3.8)] : []),
+    ],
+  }, 100);
+}
+
 /** What the game needs of it beyond its geometry (design.ts GameProperties). */
 const CD_812_GAME: GameProperties = {
   weight: 20.7,
@@ -290,5 +321,5 @@ const CD_812_GAME: GameProperties = {
 };
 
 export const DMU812_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-cd-812", game: CD_812_GAME, title: "CD 812 / 912 Esmeralda", build: cd812, params: CD812_PARAMS, catalog: DMU_CATALOG, references: "cd-812" },
+  { id: "proc-vehicle-cd-812", game: CD_812_GAME, title: "CD 812 / 912 Esmeralda", build: cd812, buildLod: cd812Lod, params: CD812_PARAMS, catalog: DMU_CATALOG, references: "cd-812" },
 ];

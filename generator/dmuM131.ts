@@ -14,7 +14,9 @@ import type { GameProperties } from "./design.ts";
 import type { Pt } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { block } from "./vehicleParts.ts";
-import { Car, DMU_CATALOG, buffersBoth, endItems, enumParam, exhaust, sideItems, sideNumber, underBoxes, type EndItem, type SideItem } from "./dmuKit.ts";
+import { Car, DMU_CATALOG, DMU_PALETTE, buffersBoth, endItems, enumParam, exhaust, sideItems, sideNumber, underBoxes, type CarFrame, type EndItem, type SideItem } from "./dmuKit.ts";
+import type { Volume } from "./csdCoachParts.ts";
+import { axleParts, dmuBody, fitUnit, roofPart, underPart } from "./lodUnits.ts";
 
 export type M131Unit = "motorCar" | "trailer";
 
@@ -67,13 +69,17 @@ const FRONT: EndItem[] = [
   { kind: "panel", box: [20, 33.6, 25, 34.4], mat: "yellow", name: "stripe" },
 ];
 
+/** The frame of the native canvases and the body (both cars share them). */
+const FRAME_131: CarFrame = { kx: K131, ky: 1, kz: 1, centre: 5.85, sideH: 5, frontH: 5 };
+const BODY_131: Volume = { name: "body", section: SECTION, plan: PLAN, top: TOP, bottom: BOTTOM, bands: [[0.5, 2.9, "red"], [2.9, 3.3, "roofGrey"]] };
+
 export function m131(params?: ParamValues): MeshBuilder {
   const p = resolveParams(M131_PARAMS, params);
   const unit = p.unit as M131Unit;
   const motor = unit === "motorCar";
-  const car = new Car(PALETTE, { kx: K131, ky: 1, kz: 1, centre: 5.85, sideH: 5, frontH: 5 });
+  const car = new Car(PALETTE, FRAME_131);
   const m = car.m;
-  const body = car.volume({ name: "body", section: SECTION, plan: PLAN, top: TOP, bottom: BOTTOM, bands: [[0.5, 2.9, "red"], [2.9, 3.3, "roofGrey"]] });
+  const body = car.volume(BODY_131);
   m.scope("body", () => {
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
@@ -126,6 +132,26 @@ export function m131(params?: ParamValues): MeshBuilder {
 }
 
 /** What the game needs of it beyond its geometry (design.ts GameProperties). */
+/**
+ * The M 131.1 or its trailer for distant views (lodUnits.ts): the body with
+ * its rounded plan and roof ends, the end windows, the side window band, the
+ * two axles, the underframe equipment and the motor car's radiator.
+ */
+export function m131Lod(params?: ParamValues): MeshBuilder {
+  const motor = resolveParams(M131_PARAMS, params).unit === "motorCar";
+  const X = (x: number) => (x - FRAME_131.centre) * K131;
+  const body = dmuBody(FRAME_131, BODY_131, { y0: 0.8, items: WINDOWS, cabs: [-1, 1], cabItems: FRONT });
+  return fitUnit({
+    palette: { ...DMU_PALETTE, ...PALETTE },
+    bodies: [body],
+    parts: [
+      axleParts([[X(2.3), 0.45], [X(9.0), 0.45]], 0.8),
+      motor ? underPart(X(3.7), X(7.7), 0.3, 0.8, 0.9) : underPart(X(4.6), X(6.6), 0.4, 0.8, 0.7),
+      ...(motor ? [roofPart("roofDark", X(2.6), X(9.5), 0.4, 0.4, 3.28, 3.5)] : []),
+    ],
+  }, 100);
+}
+
 const CSD_M131_GAME: GameProperties = {
   weight: 25,
   power: 155,
@@ -137,5 +163,5 @@ const CSD_M131_GAME: GameProperties = {
 };
 
 export const M131_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-csd-m131", game: CSD_M131_GAME, title: "CSD M 131.1 Hurvinek", build: m131, params: M131_PARAMS, catalog: DMU_CATALOG, references: "csd-m131" },
+  { id: "proc-vehicle-csd-m131", game: CSD_M131_GAME, title: "CSD M 131.1 Hurvinek", build: m131, buildLod: m131Lod, params: M131_PARAMS, catalog: DMU_CATALOG, references: "csd-m131" },
 ];

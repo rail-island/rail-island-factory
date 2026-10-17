@@ -13,11 +13,12 @@
 // drawn on the game's standard-gauge wheelsets. See docs/models/jr-kiha40.md.
 
 import { ngon, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
-import type { Pt } from "./csdCoachParts.ts";
+import type { Pt, Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { block } from "./vehicleParts.ts";
 import { centreCoupler } from "./emuParts.ts";
-import { Car, DMU_CATALOG, endItems, enumParam, exhaust, handrails, sideItems, sideNumber, step, underBoxes, type EndItem, type PxBox, type SideItem } from "./dmuKit.ts";
+import { Car, DMU_CATALOG, DMU_PALETTE, endItems, enumParam, exhaust, handrails, sideItems, sideNumber, step, underBoxes, type CarFrame, type EndItem, type PxBox, type SideItem } from "./dmuKit.ts";
+import { bogieParts, dmuBody, fitUnit, roofPart, underPart } from "./lodUnits.ts";
 
 /** Body length (m) between the end faces; the couplers add 0.25 m at each end. */
 export const KIHA40_BODY = 20.8;
@@ -104,11 +105,15 @@ const FRONT: EndItem[] = [
   { kind: "panel", box: fb(-0.72, -0.6, 1.6, 1.72), mat: "hazard", name: "marker plate" },
 ];
 
+/** The frame of the canvases (1:1) and the body in a livery's bands. */
+const FRAME: CarFrame = { kx: 1, ky: 1, kz: 1, centre: KIHA40_BODY / 2, sideH: 4, frontH: 4 };
+const volume = (livery: Kiha40Livery): Volume => ({ name: "body", section: SECTION, plan: PLAN, top: TOP, bands: LIVERIES[livery].bands });
+
 function kiha40Car(livery: Kiha40Livery): MeshBuilder {
   const paint = LIVERIES[livery];
-  const car = new Car({ ...PALETTE, ...paint.palette }, { kx: 1, ky: 1, kz: 1, centre: KIHA40_BODY / 2, sideH: 4, frontH: 4 });
+  const car = new Car({ ...PALETTE, ...paint.palette }, FRAME);
   const m = car.m;
-  const body = car.volume({ name: "body", section: SECTION, plan: PLAN, top: TOP, bands: paint.bands });
+  const body = car.volume(volume(livery));
   m.scope("body", () => {
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
@@ -182,7 +187,27 @@ export function kiha40(params?: ParamValues): MeshBuilder {
   return kiha40Car(p.livery as Kiha40Livery);
 }
 
+/**
+ * The KiHa 40 for distant views (lodUnits.ts): the body with its rounded roof
+ * ends in the livery's bands, both ends' windscreens, the side window band, the
+ * bogies, the underframe equipment and the radiator.
+ */
+export function kiha40Lod(params?: ParamValues): MeshBuilder {
+  const livery = resolveParams(KIHA40_PARAMS, params).livery as Kiha40Livery;
+  const X = (x: number) => x - KIHA40_BODY / 2;
+  const body = dmuBody(FRAME, volume(livery), { y0: 1.0, items: WINDOWS, gap: 0.9, cabs: [-1, 1], cabItems: FRONT });
+  return fitUnit({
+    palette: { ...DMU_PALETTE, ...PALETTE, ...LIVERIES[livery].palette },
+    bodies: [body],
+    parts: [
+      ...bogieParts(KIHA40_BOGIES.map((x) => [X(x), KIHA40_WHEELBASE / 2 + KIHA40_WHEEL_R + 0.2] as const), 1.0),
+      underPart(X(5.0), X(15.6), 0.42, 1.0, 1.1),
+      roofPart("vent", X(14.2), X(16.2), 0.75, 0.75, 3.55, 3.86),
+    ],
+  }, 100);
+}
+
 export const KIHA40_DESIGNS: ProceduralDesign[] = [
   // JR Hokkaido's re-engined KiHa 40 1700: about 37 t, 243 kW (330 PS), 95 km/h
-  { id: "proc-vehicle-jr-kiha40", game: { weight: 37, power: 243, maxspeed: 95, accel: null }, title: "JR KiHa 40", build: kiha40, params: KIHA40_PARAMS, finishParams: ["livery"], catalog: DMU_CATALOG, references: "jr-kiha40" },
+  { id: "proc-vehicle-jr-kiha40", game: { weight: 37, power: 243, maxspeed: 95, accel: null }, title: "JR KiHa 40", build: kiha40, buildLod: kiha40Lod, params: KIHA40_PARAMS, finishParams: ["livery"], catalog: DMU_CATALOG, references: "jr-kiha40" },
 ];

@@ -13,7 +13,10 @@ import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
 import type { Pt } from "./csdCoachParts.ts";
 import type { ProceduralDesign } from "./design.ts";
 import { block } from "./vehicleParts.ts";
-import { Car, DMU_CATALOG, buffersBoth, endItems, exhaust, sideItems, sideNumber, underBoxes, type EndItem, type PxBox, type SideItem } from "./dmuKit.ts";
+import { Car, DMU_CATALOG, DMU_PALETTE, buffersBoth, endItems, exhaust, sideItems, sideNumber, underBoxes, type CarFrame, type EndItem, type PxBox, type SideItem } from "./dmuKit.ts";
+import type { Volume } from "./csdCoachParts.ts";
+import { lodSideBox } from "./lodKit.ts";
+import { bogieParts, dmuBody, fitUnit } from "./lodUnits.ts";
 
 /** The published 18.5 m over the buffers over the XML's 19.0 m. */
 export const K240 = 18.5 / 19.0;
@@ -62,10 +65,14 @@ const FRONT: EndItem[] = [
   { kind: "lamp", box: [23, 24, 26, 27], name: "lamp" },
 ];
 
+/** The frame of the native canvases and the body. */
+const FRAME_240: CarFrame = { kx: K240, ky: 1, kz: 1, centre: 9.55, sideH: 4, frontH: 4 };
+const BODY_240: Volume = { name: "body", section: SECTION, plan: PLAN, top: TOP, bottom: BOTTOM, bands: [[0.4, 0.9, "cream"], [0.9, 1.85, "red"], [1.85, 3.25, "cream"], [3.25, 3.7, "roofCream"]] };
+
 export function m240(): MeshBuilder {
-  const car = new Car(PALETTE, { kx: K240, ky: 1, kz: 1, centre: 9.55, sideH: 4, frontH: 4 });
+  const car = new Car(PALETTE, FRAME_240);
   const m = car.m;
-  const body = car.volume({ name: "body", section: SECTION, plan: PLAN, top: TOP, bottom: BOTTOM, bands: [[0.4, 0.9, "cream"], [0.9, 1.85, "red"], [1.85, 3.25, "cream"], [3.25, 3.7, "roofCream"]] });
+  const body = car.volume(BODY_240);
   m.scope("body", () => {
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
@@ -112,6 +119,25 @@ export function m240(): MeshBuilder {
   return m;
 }
 
+/**
+ * The M 240.0 for distant views (lodUnits.ts): the body with its rounded plan
+ * and roof ends over the bogies, its low floor between them as a cream block,
+ * the end windows and door as one windscreen, the side window band and the
+ * bogies.
+ */
+export function m240Lod(): MeshBuilder {
+  const X = (x: number) => (x - FRAME_240.centre) * K240;
+  const body = dmuBody(FRAME_240, BODY_240, { y0: 0.8, items: WINDOWS, cabs: [-1, 1], cabItems: FRONT });
+  return fitUnit({
+    palette: { ...DMU_PALETTE, ...PALETTE },
+    bodies: [body],
+    parts: [
+      ...bogieParts([[X(3.2), 1.65], [X(15.9), 1.7]], 0.8),
+      { draw: (m) => m.scope("low floor", () => lodSideBox(m, "cream", [[X(5.0), 0.8], [X(5.3), 0.4], [X(13.8), 0.4], [X(14.1), 0.8]], -1.3, 1.3, false)) },
+    ],
+  }, 100);
+}
+
 export const M240_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-csd-m240", game: { weight: 37, power: 250, maxspeed: 70, accel: null }, title: "CSD M 240.0 Singrovka", build: m240, catalog: DMU_CATALOG, references: "csd-m240" },
+  { id: "proc-vehicle-csd-m240", game: { weight: 37, power: 250, maxspeed: 70, accel: null }, title: "CSD M 240.0 Singrovka", build: m240, buildLod: m240Lod, catalog: DMU_CATALOG, references: "csd-m240" },
 ];

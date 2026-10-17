@@ -57,6 +57,35 @@ export interface CarFrame {
   frontH: number;
 }
 
+/** A volume in source metres scaled by the frame (in the coach builder's uncentred x). */
+export function scaleVolume(f: CarFrame, v: Volume): Volume {
+  const { kx, ky, kz } = f;
+  const xy = (p: Pt[]): Pt[] => p.map(([x, y]): Pt => [x * kx, y * ky]);
+  return {
+    name: v.name,
+    section: v.section.map(([z, y]): Pt => [z * kz, y * ky]),
+    plan: v.plan.map(([x, h]): Pt => [x * kx, h * kz]),
+    ...(v.top ? { top: xy(v.top) } : {}),
+    ...(v.bottom ? { bottom: xy(v.bottom) } : {}),
+    bands: v.bands.map(([a, b, mat]): [number, number, string] => [a * ky, b * ky, mat]),
+    ...(v.endPaint ? { endPaint: v.endPaint } : {}),
+  };
+}
+
+/** A frame's maps without a builder: source x to model x, side and front pixel boxes in model metres. */
+export function frameMaps(f: CarFrame): { X: (x: number) => number; side: (b: PxBox) => Box; front: (b: PxBox, e: number) => Box } {
+  const { kx, ky, kz, sideH, frontH } = f;
+  return {
+    X: (x) => (x - f.centre) * kx,
+    side: (b) => ({ x0: (kx * b[0]) / 10 - f.centre * kx, x1: (kx * b[2]) / 10 - f.centre * kx, y0: ky * (sideH - b[3] / 10), y1: ky * (sideH - b[1] / 10) }),
+    front: (b, e) => {
+      const z = (u: number) => e * kz * (1.5 - u / 10);
+      const [x0, x1] = [z(b[0]), z(b[2])].sort((p, q) => p - q) as [number, number];
+      return { x0, x1, y0: ky * (frontH - b[3] / 10), y1: ky * (frontH - b[1] / 10) };
+    },
+  };
+}
+
 /** A car: the coach builder and the frame its source coordinates are scaled by. */
 export class Car {
   readonly c: Coach;
@@ -83,17 +112,7 @@ export class Car {
 
   /** A volume in source metres, scaled to the model. */
   volume(v: Volume): Volume {
-    const { kx, ky, kz } = this.f;
-    const xy = (p: Pt[]): Pt[] => p.map(([x, y]): Pt => [x * kx, y * ky]);
-    const out: Volume = {
-      name: v.name,
-      section: v.section.map(([z, y]): Pt => [z * kz, y * ky]),
-      plan: v.plan.map(([x, h]): Pt => [x * kx, h * kz]),
-      ...(v.top ? { top: xy(v.top) } : {}),
-      ...(v.bottom ? { bottom: xy(v.bottom) } : {}),
-      bands: v.bands.map(([a, b, mat]): [number, number, string] => [a * ky, b * ky, mat]),
-      ...(v.endPaint ? { endPaint: v.endPaint } : {}),
-    };
+    const out = scaleVolume(this.f, v);
     this.m.scope("shell", () => loft(this.c, out));
     return out;
   }

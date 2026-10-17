@@ -69,6 +69,12 @@ describe("LOD kit shell", () => {
     expect(flat.triangleCount()).toBeLessThan(vee.triangleCount());
   });
 
+  it("keeps a window whose edges are not round numbers", () => {
+    const m = new MeshBuilder(PALETTE);
+    lodShell(m, { ...SHELL, sideWindows: [{ u: [-5, 5], y: [2.6000004, 3.2999996], mat: LOD_GLASS }] });
+    expect(faces(m).some((f) => f.material === LOD_GLASS && f.p.every((p) => Math.abs(p[2]) === 1.5))).toBe(true);
+  });
+
   it("closes a vee-nosed shell to a ridge without NaN", () => {
     const m = new MeshBuilder(PALETTE);
     lodShell(m, { ...SHELL, hw: [[1, 1.5], [3.6, 1.5], [4.2, 0]], setback: [[1, 0.8], [4.2, 0.8]] });

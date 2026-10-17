@@ -17,6 +17,8 @@ import { ngon, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
 import type { GameProperties } from "./design.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { Coach, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
+import { LOD_GLASS } from "./lodKit.ts";
+import { bogieParts, coachBody, fitUnit, pantographParts, shifted, sideGlass } from "./lodUnits.ts";
 import { emblem } from "./cd163.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
@@ -275,11 +277,9 @@ export function cd471(params?: ParamValues): MeshBuilder {
   return elefantCar(unit, variant);
 }
 
-function elefantCar(unit: ElefantUnit, variant: ElefantVariant): MeshBuilder {
+/** A car's body: the cab cars' nose, the motor car's pantograph well, the low floor between the bogies. */
+function volume471(unit: ElefantUnit, paint: Paint): Volume {
   const L = LAYOUTS[unit];
-  const paint = PAINTS[variant];
-  const c = new Coach({ ...PALETTE, ...paint.palette }, centreOf(L));
-  const m = c.m;
   const [l0, l1, l2, l3] = L.low;
   const plan: Pt[] = L.cab ? [[0, HALF], ...NOSE_PLAN.map(([x, h]): Pt => [x, h * K_Z])] : [[0, HALF], [L.length, HALF]];
   const top: Pt[] | undefined = unit === "motorCar"
@@ -287,7 +287,7 @@ function elefantCar(unit: ElefantUnit, variant: ElefantVariant): MeshBuilder {
     ? ys([[0, 4.8], [1.7, 4.8], [2.2, 4.2], [5.0, 4.2], [5.6, 4.8], ...NOSE_TOP])
     : L.cab ? ys([[0, 4.8], ...NOSE_TOP]) : undefined;
   const bottom: Pt[] = ys([[0, 0.9], [l0, 0.9], [l1, 0.2], [l2, 0.2], [l3, 0.9], ...(L.cab ? NOSE_BOTTOM : [[L.length, 0.9] as Pt])]);
-  const body: Volume = {
+  return {
     name: "body",
     section: ELEFANT_SECTION,
     plan,
@@ -296,6 +296,14 @@ function elefantCar(unit: ElefantUnit, variant: ElefantVariant): MeshBuilder {
     bands: [[0.2 * K_Y, 0.4 * K_Y, "skirtDark"], [0.4 * K_Y, 0.9 * K_Y, "skirt"], [0.9 * K_Y, 2.2 * K_Y, "white"], [2.2 * K_Y, 3.3 * K_Y, paint.band], [3.3 * K_Y, 4.8 * K_Y, "white"]],
     endPaint: "white",
   };
+}
+
+function elefantCar(unit: ElefantUnit, variant: ElefantVariant): MeshBuilder {
+  const L = LAYOUTS[unit];
+  const paint = PAINTS[variant];
+  const c = new Coach({ ...PALETTE, ...paint.palette }, centreOf(L));
+  const m = c.m;
+  const body = volume471(unit, paint);
   const box = (b: PxBox) => sb(L, b);
   const number = elefantNumber(variant, unit);
   m.scope("body", () => {
@@ -334,6 +342,33 @@ function elefantCar(unit: ElefantUnit, variant: ElefantVariant): MeshBuilder {
     );
   });
   return m;
+}
+
+/**
+ * A car of the CityElefant for distant views (lodUnits.ts): the double-deck
+ * section, the cab cars' raked nose with its windscreen, the livery's band
+ * between the decks, both window rows, the bogies and the motor car's raised
+ * pantograph.
+ */
+export function cd471Lod(params?: ParamValues): MeshBuilder {
+  const p = resolveParams(CD471_PARAMS, params);
+  const unit = p.unit as ElefantUnit;
+  const paint = PAINTS[p.variant as ElefantVariant];
+  const L = LAYOUTS[unit];
+  const centre = centreOf(L);
+  const windows = sideGlass(shifted([...L.upper, ...L.lower, ...L.ends].map((b) => sb(L, b)), centre), 0.6, 2);
+  const body = coachBody([{ v: volume471(unit, paint), X: (b) => b - centre }], {
+    y0: 0.9 * K_Y, windows, ...(L.cab ? { frontWindows: [{ u: [fz(26), fz(4)], y: [fy(36.9), fy(27)], mat: LOD_GLASS }] } : {}),
+  });
+  const half = (L.motor ? 1.3 : 1.2) + 0.66;
+  return fitUnit({
+    palette: { ...PALETTE, ...paint.palette },
+    bodies: [body],
+    parts: [
+      ...bogieParts(BOGIES.map((b) => [b - centre, half] as const), 0.9 * K_Y),
+      ...(unit === "motorCar" ? pantographParts([3.25 - centre], 4.2 * K_Y, 4.2 * K_Y + 0.25, 5.9) : []),
+    ],
+  }, 100);
 }
 
 /** Windows, doors, paint lines and markings on side s. */
@@ -489,7 +524,7 @@ const CD_471_GAME: GameProperties = {
 };
 
 export const EMU471_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-cd-471", game: CD_471_GAME, title: "CD 471 CityElefant", build: cd471, params: CD471_PARAMS, catalog: EMU_CATALOG, references: "cd-471" },
+  { id: "proc-vehicle-cd-471", game: CD_471_GAME, title: "CD 471 CityElefant", build: cd471, buildLod: cd471Lod, params: CD471_PARAMS, catalog: EMU_CATALOG, references: "cd-471" },
 ];
 
 export { LAYOUTS as ELEFANT_LAYOUTS, centreOf as elefantCentre };
