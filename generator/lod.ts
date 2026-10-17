@@ -366,6 +366,9 @@ const FAMILIES: Record<string, readonly string[]> = {
   "db628": [
     "db-628"
   ],
+  "jrKiha40": [
+    "jr-kiha40"
+  ],
   "mavMdmot": [
     "mav-mdmot"
   ],
