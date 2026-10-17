@@ -1,6 +1,6 @@
 # Parametric models
 
-**Covers** - designs with enum parameters: how a design declares them, what the export holds (one GLB per design, built with the defaults), how the meta and catalog entries and the standalone JS model expose them, the site's parameter picker, and the tests.
+**Covers** - designs with enum parameters: how a design declares them, what the export holds (one thumbnail and source tree per design, built with the defaults; the JS model builds any combination), how the meta and catalog entries and the standalone JS model expose them, the site's parameter picker, and the tests.
 **Code** - `generator/steamLocos.ts` (`UNIT_PARAM`, `CSD433_PARAMS`), `generator/design.ts` (`ParamSpec`, `resolveParams`, `paramCombinations`, `coverageCombinations`), `generator/village.ts` (the village houses' params), `generator/skyscrapers.ts` (the towers' params), `generator/catalog.ts` (`MetaEntry.params`), `generator/jsModel.ts`, `generator/csdCoaches.ts` (`CLASSIC_GREEN_PARAMS`), `generator/bmoCoach.ts` (`BMO_PARAMS`), `generator/cdGreenWhiteCoach.ts` (`GREEN_WHITE_PARAMS`), `generator/wagons.ts` (`NAS_PARAMS`, `UA_PARAMS`, `EAS_PARAMS`), `generator/cd163Family.ts` (`CD163_PARAMS`, `CD263_PARAMS`), `generator/cd150.ts` (`CD150_PARAMS`), `generator/cd110.ts` (`CD110_PARAMS`), `generator/cd130.ts` (`CD130_PARAMS`), `generator/karosa.ts` (`KAROSA_SHORT_PARAMS`, `KAROSA_LONG_PARAMS`), `generator/emu471.ts` (`CD471_PARAMS`), `generator/emu680.ts` (`CD680_PARAMS`), `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/catalogQuery.ts` (`effectiveParams`, `isDefaultParams`), `test/params.test.ts`, `generator/freightWagons.ts` (`SQNS_PARAMS`, `PAO_PARAMS`, `HABIS_PARAMS`), `generator/hopperWagons.ts` (`FACCS_PARAMS`, `FALLS_PARAMS`), `generator/emu451.ts` (`CD451_PARAMS`), `generator/emu460.ts` (`CD460_PARAMS`), `generator/emu470.ts` (`CD470_PARAMS`), `generator/cd704.ts` (`CD704_PARAMS`), `generator/cd742.ts` (`CD742_PARAMS`), `generator/db212.ts` (`DB212_PARAMS`), `generator/cdYCoach.ts` (`CD_Y_PARAMS`), `generator/zsrCoach.ts` (`ZSR_PARAMS`), `generator/uicZCoach.ts` (`UIC_Z_PARAMS`)
 **See also** - [export.md](export.md), [js-format.md](js-format.md), [csd-coaches.md](csd-coaches.md), [village.md](village.md), [buses.md](buses.md), [steam-locomotives.md](steam-locomotives.md), [../site/catalog-site.md](../site/catalog-site.md)
 
@@ -137,14 +137,14 @@ model ids and never rename a shipped one. A parameter needs at least two values.
 
 ## What the export holds
 
-- **One GLB, thumbnail and source tree per design**, built with every parameter at
+- **One thumbnail and source tree per design**, built with every parameter at
   its default (`build()` with no argument). There are no per-variant files.
 - **The meta entry** (`vehicles.meta.json`, `skyscrapers.meta.json`) and the
   site's `catalog.json` record carry `params`, a copy of the specs. A fixed
   design's entry has no `params` key at all, so its entry is unchanged.
 - **The standalone JS model** (`js/<id>.js`) exports `params` (the same specs,
   `[]` for a fixed design) beside its default `build(THREE, params)`, which builds
-  any combination: `build(THREE)` is the GLB's model, `build(THREE, { variant: "classB" })`
+  any combination: `build(THREE)` is the default model, `build(THREE, { variant: "classB" })`
   the other variant. An invalid value throws.
 
 ```js
@@ -160,9 +160,9 @@ chosen variant through the JS model; the factory does not publish to the game
 ## The site
 
 A parametric model's page shows a **Parameters** block above the side panel's
-tabs: one `<select>` per parameter, its default marked. At the defaults the
-preview is the GLB. Any other choice is built in the browser by the model's JS
-module, fetched once per model and imported from a blob URL, with only the
+tabs: one `<select>` per parameter, its default marked. Every choice, the
+defaults included, is built in the browser by the model's JS module, fetched once
+per model and imported from a blob URL, with only the
 three.js classes it needs (`ModelViewer.tsx`); the camera keeps its place while
 only the parameters change. The thumbnail, the spec list and the source tree
 describe the default build, so the Source tab's highlight and picking pause
@@ -196,5 +196,5 @@ The former Nas tram load and Pao Karosa bus load are intentionally omitted. Lega
 Every standalone JS model accepts `build(THREE, params, lod = false)`. Set the third
 argument to `true` for its budgeted distant mesh. The factory detail view exposes
 this through **Low level of detail** and reports the preview triangle count.
-LOD rig posing is static; full-detail GLBs and source trees are unchanged.
+LOD rig posing is static; full-detail models and source trees are unchanged.
 See [lod.md](lod.md) for budgets, geometry and verification.

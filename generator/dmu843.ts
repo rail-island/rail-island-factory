@@ -14,6 +14,7 @@
 // the buffers). See docs/models/czech-dmus.md.
 
 import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
+import type { GameProperties } from "./design.ts";
 import type { Pt, Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { block } from "./vehicleParts.ts";
@@ -246,6 +247,18 @@ function apron(car: Car, e: number, tip: number): void {
 
 export const CD843_UNITS: readonly Cd843Unit[] = ["motorCar", "drivingTrailer", "trailer"];
 
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const CD_843_GAME: GameProperties = {
+  weight: 56,
+  power: 423,
+  maxspeed: 100,
+  accel: null,
+  variants: [
+    { params: { unit: "drivingTrailer" }, weight: 25, power: 0, maxspeed: 120 },
+    { params: { unit: "trailer" }, weight: 25, power: 0, maxspeed: 120 },
+  ],
+};
+
 export const DMU843_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-cd-843", title: "CD 843 / 943 / 043", build: cd843, params: CD843_PARAMS, catalog: DMU_CATALOG, references: "cd-843" },
+  { id: "proc-vehicle-cd-843", game: CD_843_GAME, title: "CD 843 / 943 / 043", build: cd843, params: CD843_PARAMS, catalog: DMU_CATALOG, references: "cd-843" },
 ];

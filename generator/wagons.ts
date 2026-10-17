@@ -15,7 +15,7 @@
 
 import { ngon, rect, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
-import type { CatalogFields, ParamSpec, ParamValues } from "./design.ts";
+import type { CatalogFields, GameProperties, ParamSpec, ParamValues } from "./design.ts";
 import { resolveParams } from "./design.ts";
 import { Wagon } from "./wagonParts.ts";
 import { strokeText } from "./strokeFont.ts";
@@ -654,13 +654,53 @@ export interface WagonDesign {
   folder: string;
   build: (params?: ParamValues) => MeshBuilder;
   params?: readonly ParamSpec[];
+  /** What the game needs of it beyond its geometry (design.ts GameProperties). */
+  game: GameProperties;
 }
+
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const NAS_FLAT_WAGON_GAME: GameProperties = {
+  weight: 25,
+  power: 0,
+  maxspeed: 120,
+  accel: null,
+  variants: [
+    { params: { cargo: "reels" }, weight: 33 },
+    { params: { cargo: "wood" }, weight: 50 },
+    { params: { cargo: "tubes" }, weight: 35 },
+  ],
+};
+
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const UA_OPEN_WAGON_GAME: GameProperties = {
+  weight: 30,
+  power: 0,
+  maxspeed: 120,
+  accel: null,
+  variants: [
+    { params: { cargo: "coal" }, weight: 60 },
+    { params: { cargo: "wood" }, weight: 50 },
+    { params: { cargo: "sand" }, weight: 60 },
+  ],
+};
+
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const EAS_OPEN_WAGON_GAME: GameProperties = {
+  weight: 23.5,
+  power: 0,
+  maxspeed: 90,
+  accel: null,
+  variants: [
+    { params: { cargo: "coal" }, weight: 65.5 },
+    { params: { cargo: "wood" }, weight: 65.5 },
+  ],
+};
 
 /** Every wagon design, in catalog order. The ids are stored in saved maps. */
 export const WAGON_DESIGNS: readonly WagonDesign[] = [
-  { id: "proc-vehicle-nas-flat-wagon", title: "Nas Flat Wagon", folder: "wagon-nas", build: nasFlatWagon, params: NAS_PARAMS },
-  { id: "proc-vehicle-ua-open-wagon", title: "Ua Open Wagon", folder: "wagon-ua", build: uaOpenWagon, params: UA_PARAMS },
-  { id: "proc-vehicle-eas-open-wagon", title: "Eas Open Wagon", folder: "wagon-eas", build: easOpenWagon, params: EAS_PARAMS },
-  { id: "proc-vehicle-raj-hopper-wagon", title: "Raj Hopper Wagon", folder: "wagon-raj", build: rajHopperWagon },
-  { id: "proc-vehicle-rah-tank-wagon", title: "Rah Tank Wagon", folder: "wagon-rah", build: rahTankWagon },
+  { id: "proc-vehicle-nas-flat-wagon", game: NAS_FLAT_WAGON_GAME, title: "Nas Flat Wagon", folder: "wagon-nas", build: nasFlatWagon, params: NAS_PARAMS },
+  { id: "proc-vehicle-ua-open-wagon", game: UA_OPEN_WAGON_GAME, title: "Ua Open Wagon", folder: "wagon-ua", build: uaOpenWagon, params: UA_PARAMS },
+  { id: "proc-vehicle-eas-open-wagon", game: EAS_OPEN_WAGON_GAME, title: "Eas Open Wagon", folder: "wagon-eas", build: easOpenWagon, params: EAS_PARAMS },
+  { id: "proc-vehicle-raj-hopper-wagon", game: { weight: 50, power: 0, maxspeed: 90, accel: null }, title: "Raj Hopper Wagon", folder: "wagon-raj", build: rajHopperWagon },
+  { id: "proc-vehicle-rah-tank-wagon", game: { weight: 40, power: 0, maxspeed: 100, accel: null }, title: "Rah Tank Wagon", folder: "wagon-rah", build: rahTankWagon },
 ];

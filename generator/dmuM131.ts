@@ -10,6 +10,7 @@
 // over the buffers. See docs/models/czech-dmus.md.
 
 import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
+import type { GameProperties } from "./design.ts";
 import type { Pt } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { block } from "./vehicleParts.ts";
@@ -124,6 +125,17 @@ export function m131(params?: ParamValues): MeshBuilder {
   return m;
 }
 
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const CSD_M131_GAME: GameProperties = {
+  weight: 25,
+  power: 155,
+  maxspeed: 80,
+  accel: null,
+  variants: [
+    { params: { unit: "trailer" }, weight: 15, power: 0 },
+  ],
+};
+
 export const M131_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-csd-m131", title: "CSD M 131.1 Hurvinek", build: m131, params: M131_PARAMS, catalog: DMU_CATALOG, references: "csd-m131" },
+  { id: "proc-vehicle-csd-m131", game: CSD_M131_GAME, title: "CSD M 131.1 Hurvinek", build: m131, params: M131_PARAMS, catalog: DMU_CATALOG, references: "csd-m131" },
 ];

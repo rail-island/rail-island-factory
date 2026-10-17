@@ -9,9 +9,9 @@ import {
 
 function rec(id: string, title: string, triangles: number, extra: Partial<CatalogRecord> = {}): CatalogRecord {
   return {
-    id, title, category: "Commercial", group: "skyscraper_c", glb: `${id}.glb`, thumb: `${id}.png`,
+    id, title, category: "Commercial", group: "skyscraper_c", js: `${id}.js`, thumb: `${id}.png`,
     defaultScale: 0.5, license: "CC0", author: "Rail Island", source: "Rail Island",
-    glbUrl: `glb/${id}.glb`, thumbUrl: `thumbs/${id}.png`, glbBytes: triangles * 72, glbGzipBytes: triangles * 6, jsUrl: `js/${id}.js`,
+    thumbUrl: `thumbs/${id}.png`, jsUrl: `js/${id}.js`,
     jsBytes: triangles * 2, jsGzipBytes: triangles, thumbBytes: 100,
     triangles, vertices: triangles * 3, primitives: 3, materials: 3, sizeX: 20, sizeY: 80, sizeZ: 20, references: [],
     ...extra,
@@ -223,11 +223,11 @@ describe("parameters", () => {
 });
 
 describe("downloads", () => {
-  it("makes the GLB and JS sizes links to their files, and no other column", () => {
+  it("makes the JS size a link to its file, and no other column; there is no GLB", () => {
     const r = ROWS[0]!;
-    expect(cellFile(r, column("glbBytes")!)).toEqual({ href: "/glb/proc-building-sky-pagoda.glb", name: "proc-building-sky-pagoda.glb" });
+    expect(column("glbBytes")).toBeUndefined();
     expect(cellFile(r, column("jsBytes")!)).toEqual({ href: "/js/proc-building-sky-pagoda.js", name: "proc-building-sky-pagoda.js" });
-    for (const c of COLUMNS.filter((c) => c.key !== "glbBytes" && c.key !== "jsBytes")) expect(cellFile(r, c)).toBeNull();
+    for (const c of COLUMNS.filter((c) => c.key !== "jsBytes")) expect(cellFile(r, c)).toBeNull();
   });
 
   it("lists the JS size and the gzip sizes as sortable columns", () => {

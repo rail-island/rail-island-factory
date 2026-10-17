@@ -5,7 +5,7 @@
 // family in generate.ts; a design's JS bundle imports its build function from
 // this module. (The DB 180 is a livery of veh-cd-263, cd163Family.ts.)
 
-import type { ProceduralDesign } from "./design.ts";
+import type { GameProperties, ProceduralDesign } from "./design.ts";
 import { ELECTRIC_LOCO_CATALOG } from "./cd163.ts";
 import { CD181_PARAMS, cd181 } from "./cd181.ts";
 import { DNT184_PARAMS, dnt184 } from "./dnt184.ts";
@@ -16,11 +16,33 @@ import { obb1040 } from "./obb1040.ts";
 
 export { cd181, dnt184, db111, dr243, obb1012, obb1040 };
 
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const CD_180_GAME: GameProperties = {
+  weight: 120,
+  power: 2790,
+  maxspeed: 90,
+  accel: null,
+  variants: [
+    { params: { livery: "cd181Okd" }, weight: 124, power: 2470 },
+  ],
+};
+
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const DNT_184_5_GAME: GameProperties = {
+  weight: 120,
+  power: 5220,
+  maxspeed: 95,
+  accel: null,
+  variants: [
+    { params: { livery: "dnt1845No2" }, maxspeed: 160 },
+  ],
+};
+
 export const MAINLINE_ELECTRICS: readonly ProceduralDesign[] = [
-  { id: "proc-vehicle-cd-180", title: "CD 180 / 181 / 182", build: cd181, params: CD181_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-181" },
-  { id: "proc-vehicle-dnt-184-5", title: "DNT 184.5", build: dnt184, params: DNT184_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "dnt-184" },
-  { id: "proc-vehicle-db-111", title: "DB 111", build: db111, params: DB111_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "db-111" },
-  { id: "proc-vehicle-dr-243", title: "DR 243 / DB 143 / 112", build: dr243, params: DR243_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "dr-243" },
-  { id: "proc-vehicle-obb-1012", title: "OBB 1012", build: obb1012, catalog: ELECTRIC_LOCO_CATALOG, references: "obb-1012" },
-  { id: "proc-vehicle-obb-1040", title: "OBB 1040", build: obb1040, catalog: ELECTRIC_LOCO_CATALOG, references: "obb-1040" },
+  { id: "proc-vehicle-cd-180", game: CD_180_GAME, title: "CD 180 / 181 / 182", build: cd181, params: CD181_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-181" },
+  { id: "proc-vehicle-dnt-184-5", game: DNT_184_5_GAME, title: "DNT 184.5", build: dnt184, params: DNT184_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "dnt-184" },
+  { id: "proc-vehicle-db-111", game: { weight: 86, power: 3060, maxspeed: 120, accel: null }, title: "DB 111", build: db111, params: DB111_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "db-111" },
+  { id: "proc-vehicle-dr-243", game: { weight: 82, power: 3700, maxspeed: 120, accel: null }, title: "DR 243 / DB 143 / 112", build: dr243, params: DR243_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "dr-243" },
+  { id: "proc-vehicle-obb-1012", game: { weight: 85, power: 4000, maxspeed: 160, accel: null }, title: "OBB 1012", build: obb1012, catalog: ELECTRIC_LOCO_CATALOG, references: "obb-1012" },
+  { id: "proc-vehicle-obb-1040", game: { weight: 85, power: 3080, maxspeed: 110, accel: null }, title: "OBB 1040", build: obb1040, catalog: ELECTRIC_LOCO_CATALOG, references: "obb-1040" },
 ];

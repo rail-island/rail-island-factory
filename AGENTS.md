@@ -10,8 +10,11 @@ wheels and rods animate, docs/models/animation.md), and procedural reproductions
 game's hand-authored landmarks, stations, aircraft, ships, cable car cabins and trucks
 (docs/models/reproductions.md), plus a small airplane, a parametric chairlift chair and
 the JR KiHa 40 railcar. The build writes an
-export folder (GLBs, thumbnails, `skyscrapers.meta.json`, `village.meta.json`, `vehicles.meta.json`) that the game repository, `rail-island-webapp`, is meant
-to import - the factory is the source of these models, the game a consumer.
+export folder (standalone JS models, thumbnails, `skyscrapers.meta.json`, `village.meta.json`, `vehicles.meta.json`) that the game repository, `rail-island-webapp`,
+imports - the factory is the source of these models and of what the game needs of
+them (weight, power, speed, plaza rules: docs/models/game-properties.md), the game a
+consumer. **No GLB file is written**: the build serialises a design to GLB bytes
+only in memory, for its own thumbnails, stats, checks and tests (docs/models/export.md).
 
 ## Documentation (`docs/`)
 
@@ -42,7 +45,10 @@ document that owns it in the same change.** Conventions:
   no `node:` imports). Generator code must never reach the browser bundle.
 - **Model ids are stored in the game's saved maps** - never rename a shipped one.
 - **Output stays deterministic**: no timestamps, no unordered iteration in what is
-  written. A design's GLB bytes must not change unless the design changed.
+  written. A design's JS model and in-memory GLB bytes must not change unless the
+  design changed.
+- **Every vehicle states its game properties** (`game` on the design: weight,
+  power, maxspeed, accel); the build fails without them.
 - **`export/` and `dist/` are generated and gitignored.** Never commit them.
 - The site is **English only**; there is no i18n layer.
 - Every bug fix ships with a regression test in the suite that owns the behaviour.

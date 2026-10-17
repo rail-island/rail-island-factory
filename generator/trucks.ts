@@ -1002,7 +1002,7 @@ export const TRUCK_CATALOG: CatalogFields = {
 
 /** Every design of the family, by catalog id; `references` is the folder of its source photos under assets/. */
 export const TRUCKS: ProceduralDesign[] = [
-  { id: "proc-vehicle-cistern-semi-truck", title: "Cistern Semi-Truck", build: cisternSemiTruck, references: "cistern-semi-truck", catalog: TRUCK_CATALOG },
-  { id: "proc-vehicle-mixer-truck", title: "Concrete Mixer Truck", build: mixerTruck, references: "mixer-truck", catalog: TRUCK_CATALOG },
-  { id: "proc-vehicle-reefer-semi-truck", title: "Reefer Semi-Truck", build: reeferSemiTruck, references: "reefer-semi-truck", catalog: TRUCK_CATALOG },
+  { id: "proc-vehicle-cistern-semi-truck", game: { weight: 34, power: 330, maxspeed: 85, accel: null }, title: "Cistern Semi-Truck", build: cisternSemiTruck, references: "cistern-semi-truck", catalog: TRUCK_CATALOG },
+  { id: "proc-vehicle-mixer-truck", game: { weight: 32, power: 300, maxspeed: 80, accel: null }, title: "Concrete Mixer Truck", build: mixerTruck, references: "mixer-truck", catalog: TRUCK_CATALOG },
+  { id: "proc-vehicle-reefer-semi-truck", game: { weight: 30, power: 330, maxspeed: 90, accel: null }, title: "Reefer Semi-Truck", build: reeferSemiTruck, references: "reefer-semi-truck", catalog: TRUCK_CATALOG },
 ];

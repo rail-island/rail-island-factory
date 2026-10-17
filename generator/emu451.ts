@@ -13,6 +13,7 @@
 // docs/models/czech-emus-classic.md.
 
 import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
+import type { GameProperties } from "./design.ts";
 import { Coach, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { diamond } from "./czElectricKit.ts";
@@ -227,7 +228,18 @@ function trailer(): MeshBuilder {
 /** Every car, for the tests. */
 export const CARS_451: readonly Unit451[] = ["motorCar", "trailer"];
 
-export const EMU451_DESIGNS: ProceduralDesign[] = [{ id: "proc-vehicle-cd-451", title: "CD 451 Zabotlam", build: cd451, params: CD451_PARAMS, catalog: EMU_CATALOG, references: "cd-451" }];
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const CD_451_GAME: GameProperties = {
+  weight: 59,
+  power: 660,
+  maxspeed: 100,
+  accel: null,
+  variants: [
+    { params: { unit: "trailer" }, weight: 40, power: 0 },
+  ],
+};
+
+export const EMU451_DESIGNS: ProceduralDesign[] = [{ id: "proc-vehicle-cd-451", game: CD_451_GAME, title: "CD 451 Zabotlam", build: cd451, params: CD451_PARAMS, catalog: EMU_CATALOG, references: "cd-451" }];
 
 /** A car's source mapping and the body x of its centre, for the comparison. */
 export const frame451 = (unit: Unit451): { F: CarFrame; centre: number } => ({ F: CARS[unit].F, centre: (CARS[unit].front + CARS[unit].rear) / 2 });

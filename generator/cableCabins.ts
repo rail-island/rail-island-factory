@@ -653,10 +653,11 @@ export const CABLE_CABIN_CATALOG: CatalogFields = {
 export const CABLE_CABINS: ProceduralDesign[] = [
   // Modelled long along Z; the game runs a cabin along X, so it is turned a quarter
   // (the old cablecar-cabin model carried the same yaw).
-  { id: "proc-vehicle-cablecar-cabin", title: "Aerial Tramway Car", build: cablecarCabin, references: "cablecar-cabin", catalog: { ...CABLE_CABIN_CATALOG, yaw: 90 } },
-  { id: "proc-vehicle-gondola-cabin", title: "Small Gondola", build: gondolaCabin, references: "gondola-cabin", catalog: CABLE_CABIN_CATALOG },
+  { id: "proc-vehicle-cablecar-cabin", game: { weight: null, power: null, maxspeed: 30, accel: null, scale: 0.9195, ropeFrac: 0.9603, boardFrac: 0.1009 }, title: "Aerial Tramway Car", build: cablecarCabin, references: "cablecar-cabin", catalog: { ...CABLE_CABIN_CATALOG, yaw: 90 } },
+  { id: "proc-vehicle-gondola-cabin", game: { weight: null, power: null, maxspeed: 24, accel: null, scale: 1.4448, ropeFrac: 0.866, boardFrac: 0.109 }, title: "Small Gondola", build: gondolaCabin, references: "gondola-cabin", catalog: CABLE_CABIN_CATALOG },
   {
-    id: "proc-vehicle-chairlift-chair", title: "Chairlift Chair", build: chairliftChair, params: CHAIRLIFT_PARAMS,
+    // a detachable chair at 5 m/s; rope and boarding platform as docs/models/cable-cabins.md states them
+    id: "proc-vehicle-chairlift-chair", game: { weight: null, power: null, maxspeed: 18, accel: null, ropeFrac: 0.947, boardFrac: 0.045 }, title: "Chairlift Chair", build: chairliftChair, params: CHAIRLIFT_PARAMS,
     finishParams: ["color"], references: "chairlift", catalog: CABLE_CABIN_CATALOG,
   },
 ];

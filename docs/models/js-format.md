@@ -1,8 +1,8 @@
 # The standalone JS model format
 
-**Covers** - the second output of every design: `export/js/<id>.js`, one ES module with no imports whose
-`build(THREE)` returns a `THREE.Group`; how it is bundled, what it contains, how it relates to the GLB, and
-the measured sizes.
+**Covers** - the model as the export ships it: `export/js/<id>.js`, one ES module with no imports whose
+`build(THREE)` returns a `THREE.Group`; how it is bundled, what it contains, how it relates to the build's
+in-memory GLB, and the measured sizes.
 **Code** - `generator/jsModel.ts`, `generator/threeBuilder.ts`, `generator/meshCore.ts`,
 `generator/generate.ts` (`generateJsModels`), `test/jsModel.test.ts`
 **See also** - [vehicle-rig.md](vehicle-rig.md), [parameters.md](parameters.md), [export.md](export.md), [skyscrapers.md](skyscrapers.md), [vehicles.md](vehicles.md),
@@ -11,8 +11,9 @@ the measured sizes.
 ## What it is
 
 A model is a procedural program, so the compact file is the program: `export/js/<id>.js` is the design's own
-code, bundled with only the geometry it uses and minified. It is written next to the GLB, which stays the game's
-import format; nothing in the meta files or the game contract changes.
+code, bundled with only the geometry it uses and minified. It is the **only** form of the model the export holds:
+the game and the site both build from it, and there is no GLB file. (The build still writes each design to GLB
+bytes in memory, for its own analysis - [export.md](export.md).)
 
 ```js
 import build from "./sky-pyramid.js";
@@ -22,7 +23,7 @@ scene.add(build(THREE)); // a THREE.Group named after the model id
 
 - **No imports.** The three.js namespace is passed in, so the file works with any three.js copy and bundler.
   It needs `Group`, `Mesh`, `BufferGeometry`, `BufferAttribute` and `MeshStandardMaterial`.
-- **The Group.** Metres, +Y up, base at y = 0, like the GLB. One `Mesh` per material in material-name order
+- **The Group.** Metres, +Y up, base at y = 0, like the in-memory GLB. One `Mesh` per material in material-name order
   (mesh and material carry the material's name), non-indexed triangle soup with flat per-face normals. Colours
   are the palette's sRGB hex, so three's colour management converts them to the linear value the GLB stores.
   A model with parts (the truck, the buses, [vehicles.md](vehicles.md)) has a `Group` per part, named after it and
@@ -59,15 +60,15 @@ scene.add(build(THREE)); // a THREE.Group named after the model id
 exported function of `skyscrapers.ts` or `vehicles.ts`) and exports `params` and `build(THREE, params)`; a plugin resolves the
 design's `./meshBuilder.ts` import to `threeBuilder.ts`, so the recorder and the GLB writer never reach the
 file. Output is minified ES2022 with a one-line banner, deterministic, and rewritten only when its text changed.
-`pnpm build:models` writes it after the GLBs (`generateJsModels`) and deletes the file of a dropped design.
+`pnpm build:models` writes it after the thumbnails (`generateJsModels`) and deletes the file of a dropped design.
 
 A design must therefore stay free of Node-only imports and of anything that differs between runs.
 
 ## Sizes
 
-`pnpm build:models` prints GLB, gzipped GLB, JS and gzipped JS per model, and `catalog.json` carries them
-(`glbBytes`, `glbGzipBytes`, `jsUrl`, `jsBytes`, `jsGzipBytes`); the site's table lists GLB and JS and the model
-page lists all four. Measured at the time of writing:
+`pnpm build:models` prints JS and gzipped JS per model, and `catalog.json` carries them (`jsUrl`, `jsBytes`,
+`jsGzipBytes`); the site's table lists the JS size and the model page both. The GLB columns below were measured
+when the export still wrote GLB files, for comparison:
 
 | Model | GLB | GLB gzip | JS | JS gzip |
 |---|---|---|---|---|
@@ -93,5 +94,5 @@ that `generateJsModels` writes, skips and prunes.
 Every standalone JS model accepts `build(THREE, params, lod = false)`. Set the third
 argument to `true` for its budgeted distant mesh. The factory detail view exposes
 this through **Low level of detail** and reports the preview triangle count.
-LOD rig posing is static; full-detail GLBs and source trees are unchanged.
+LOD rig posing is static; full-detail models and source trees are unchanged.
 See [lod.md](lod.md) for budgets, geometry and verification.

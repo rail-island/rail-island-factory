@@ -1,5 +1,5 @@
 // The 3D preview's source-tree highlight, apart from the viewer so the tests can
-// drive it without a WebGL context: the GLB loads as one mesh per material, and
+// drive it without a WebGL context: the JS model builds one mesh per material, and
 // the tree's triangle ranges become draw groups on those meshes -- the selected
 // node's triangles glow, the rest turn into a faint ghost. Nothing is split or
 // re-uploaded; selecting nothing hands every mesh its built material back.
@@ -11,10 +11,10 @@
 import { Color, Mesh, MeshStandardMaterial, type Material, type Object3D } from "three";
 import type { TriRange } from "./sourceTreeView";
 
-/** One material's mesh of the loaded GLB, with its highlight and ghost variants. */
+/** One material's mesh of the built model, with its highlight and ghost variants. */
 export interface Part {
   mesh: Mesh;
-  /** The GLB material's name, which the source tree's ranges are keyed by. */
+  /** The material's name, which the source tree's ranges are keyed by. */
   name: string;
   /** How many triangles of this material earlier meshes (earlier parts) hold. */
   offset: number;

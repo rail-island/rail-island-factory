@@ -18,7 +18,7 @@
 
 import { ngon, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
-import type { ParamSpec, ParamValues, ProceduralDesign } from "./design.ts";
+import type { GameProperties, ParamSpec, ParamValues, ProceduralDesign } from "./design.ts";
 import { resolveParams } from "./design.ts";
 import { WAGON_CATALOG } from "./wagons.ts";
 import { Wagon } from "./wagonParts.ts";
@@ -385,16 +385,18 @@ interface FreightDesign {
   folder: string;
   build: (params?: ParamValues) => MeshBuilder;
   params?: readonly ParamSpec[];
+  /** What the game needs of it beyond its geometry (design.ts GameProperties). */
+  game: GameProperties;
 }
 
 const DESIGNS: readonly FreightDesign[] = [
-  { id: "proc-vehicle-sqns-container-wagon", title: "Sqns Container Wagon", folder: "wagon-sqns", build: sqnsContainerWagon, params: SQNS_PARAMS },
-  { id: "proc-vehicle-pao-flat-wagon", title: "Pao Flat Wagon", folder: "wagon-pao", build: paoFlatWagon, params: PAO_PARAMS },
-  { id: "proc-vehicle-habis-sliding-wall-wagon", title: "Habis Sliding-Wall Wagon", folder: "wagon-habis", build: habisSlidingWallWagon, params: HABIS_PARAMS },
-  { id: "proc-vehicle-hadgs-hopper-wagon", title: "Hadgs Covered Hopper Wagon", folder: "wagon-hadgs", build: hadgsHopperWagon },
-  { id: "proc-vehicle-faccs-hopper-wagon", title: "Faccs Hopper Wagon", folder: "wagon-faccs", build: faccsHopperWagon, params: FACCS_PARAMS },
-  { id: "proc-vehicle-falls-hopper-wagon", title: "Falls Hopper Wagon", folder: "wagon-falls", build: fallsHopperWagon, params: FALLS_PARAMS },
-  { id: "proc-vehicle-wap-hopper-wagon", title: "Wap Hopper Wagon", folder: "wagon-wap", build: wapHopperWagon, params: WAP_PARAMS },
+  { id: "proc-vehicle-sqns-container-wagon", game: { weight: 25, power: 0, maxspeed: 120, accel: null, variants: [{ params: { cargo: "maersk" }, weight: 50 }] }, title: "Sqns Container Wagon", folder: "wagon-sqns", build: sqnsContainerWagon, params: SQNS_PARAMS },
+  { id: "proc-vehicle-pao-flat-wagon", game: { weight: 22, power: 0, maxspeed: 120, accel: null, variants: [{ params: { cargo: "empty" }, weight: 20 }] }, title: "Pao Flat Wagon", folder: "wagon-pao", build: paoFlatWagon, params: PAO_PARAMS },
+  { id: "proc-vehicle-habis-sliding-wall-wagon", game: { weight: 50, power: 0, maxspeed: 160, accel: null }, title: "Habis Sliding-Wall Wagon", folder: "wagon-habis", build: habisSlidingWallWagon, params: HABIS_PARAMS },
+  { id: "proc-vehicle-hadgs-hopper-wagon", game: { weight: 25, power: 0, maxspeed: 120, accel: null }, title: "Hadgs Covered Hopper Wagon", folder: "wagon-hadgs", build: hadgsHopperWagon },
+  { id: "proc-vehicle-faccs-hopper-wagon", game: { weight: 38, power: 0, maxspeed: 90, accel: null }, title: "Faccs Hopper Wagon", folder: "wagon-faccs", build: faccsHopperWagon, params: FACCS_PARAMS },
+  { id: "proc-vehicle-falls-hopper-wagon", game: { weight: 37, power: 0, maxspeed: 90, accel: null }, title: "Falls Hopper Wagon", folder: "wagon-falls", build: fallsHopperWagon, params: FALLS_PARAMS },
+  { id: "proc-vehicle-wap-hopper-wagon", game: { weight: 60, power: 0, maxspeed: 90, accel: null, variants: [{ params: { cargo: "empty" }, weight: 37 }] }, title: "Wap Hopper Wagon", folder: "wagon-wap", build: wapHopperWagon, params: WAP_PARAMS },
 ];
 
 /** Every freight wagon design of this family, in catalog order. The ids are stored in saved maps. */
@@ -402,6 +404,7 @@ export const FREIGHT_WAGONS: readonly ProceduralDesign[] = DESIGNS.map((w) => ({
   id: w.id,
   title: w.title,
   build: w.build,
+  game: w.game,
   catalog: WAGON_CATALOG,
   references: w.folder,
   ...(w.params ? { params: w.params } : {}),

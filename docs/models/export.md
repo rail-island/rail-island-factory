@@ -1,11 +1,12 @@
 # The export folder
 
-**Covers** - what `pnpm build:models` writes, the `skyscrapers.meta.json`,
-`village.meta.json` and `vehicles.meta.json` contracts the game is meant to import, the site's `catalog.json`, and the offline
-thumbnail renderer.
+**Covers** - what `pnpm build:models` writes (no GLB files: a model ships as its JS
+file), the `skyscrapers.meta.json`, `village.meta.json` and `vehicles.meta.json`
+contracts the game imports, the site's `catalog.json`, the in-memory GLB the build
+analyses, and the offline thumbnail renderer.
 **Code** - `generator/generate.ts`, `generator/catalog.ts`, `generator/renderGlbThumb.ts`,
 `generator/jsModel.ts`, `generator/glbStats.ts`, `test/thumbnails.test.ts`, `generator/coplanar.ts`, `generator/glbTriangles.ts`, `generator/glbParse.ts`, `test/export.test.ts`
-**See also** - [skyscrapers.md](skyscrapers.md), [village.md](village.md), [vehicles.md](vehicles.md), [../site/catalog-site.md](../site/catalog-site.md),
+**See also** - [skyscrapers.md](skyscrapers.md), [village.md](village.md), [vehicles.md](vehicles.md), [game-properties.md](game-properties.md), [../site/catalog-site.md](../site/catalog-site.md),
 [../guide/setup-and-build.md](../guide/setup-and-build.md)
 
 ## What is written
@@ -15,9 +16,8 @@ and `pnpm dev`) writes the gitignored `export/`:
 
 | Path | What |
 |---|---|
-| `export/glb/<id>.glb` | the model (a vehicle's may have parts - [vehicles.md](vehicles.md) - and animation clips - [animation.md](animation.md)) |
 | `export/thumbs/<id>.png` | the thumbnail, transparent background: a road or rail vehicle's side view, everything else's 512 px square three-quarter view (see "Thumbnails" below) |
-| `export/js/<id>.js` | the model as one standalone JS file ([js-format.md](js-format.md)) |
+| `export/js/<id>.js` | the model: one standalone JS file, `build(THREE, params, lod)` ([js-format.md](js-format.md)); a vehicle's may have parts ([vehicles.md](vehicles.md)) and animation clips ([animation.md](animation.md)) |
 | `export/tree/<id>.json` | the procedural source tree, for the site only ([source-tree.md](source-tree.md)) |
 | `export/refs/<id>/...` | the design's source images, copied from `assets/<references>/`, for the site only |
 | `export/skyscrapers.meta.json` | one game-catalog entry per building (skyscrapers, commercial families, landmarks, stations) - the import contract |
@@ -26,14 +26,22 @@ and `pnpm dev`) writes the gitignored `export/`:
 | `export/catalog.json` | what the site lists |
 
 `export/` is also Vite's `publicDir`, so `vite build` copies it into `dist/` as
-it stands and the deployed site serves the very files the game would import, at
-`/glb/...`, `/js/...`, `/thumbs/...`, `/skyscrapers.meta.json`, `/village.meta.json`, `/vehicles.meta.json` and `/catalog.json` (and the
+it stands and the deployed site serves the very files the game imports, at
+`/js/...`, `/thumbs/...`, `/skyscrapers.meta.json`, `/village.meta.json`, `/vehicles.meta.json` and `/catalog.json` (and the
 site-only `/tree/...` and `/refs/...`, which the game ignores).
 
-**Incremental.** An unchanged design produces byte-identical GLB bytes; the
-generator then leaves the file and its thumbnail alone. The thumbnail - a
-software rasterizer, the slow part - is re-rendered only when the GLB changed,
-the PNG is missing or `THUMB_VERSION` (`generate.ts`) differs from the one
+**No GLB files.** The export holds no `glb/` folder (an old export's is deleted).
+The build still serialises every design to GLB bytes **in memory**
+(`MeshBuilder.toGlb`): that is the one form the thumbnail renderer, the catalog's
+counts, the z-fighting guard, the legacy table's sizes, the native comparisons
+and the tests read (`glbParse.ts`, `glbTriangles.ts`, `glbStats.ts`). Nothing of
+it reaches the export or the site.
+
+**Incremental.** An unchanged design produces byte-identical in-memory GLB bytes;
+`export/thumbs/.sources.json` records their SHA-256 per design, and the
+generator leaves the thumbnail of a design whose hash is unchanged alone. The
+thumbnail - a software rasterizer, the slow part - is re-rendered only when the
+model changed, the PNG is missing or `THUMB_VERSION` (`generate.ts`) differs from the one
 `export/thumbs/.version` records, which is how a change of framing or lighting
 reaches every unchanged design. A JS file is rewritten only when its text changed. A file of a design that no longer exists is deleted, so a
 dropped id cannot linger. A tree file is rewritten only when its text changed.
@@ -68,7 +76,7 @@ The same top-level shape as the webapp's `db/buildings/buildings.meta.json`:
       "title": "Glass Office Tower",
       "category": "Skyscrapers",
       "group": "skyscraper_c",
-      "glb": "sky-glass-office.glb",
+      "js": "sky-glass-office.js",
       "thumb": "sky-glass-office.png",
       "defaultScale": 1,
       "license": "CC0",
@@ -79,22 +87,23 @@ The same top-level shape as the webapp's `db/buildings/buildings.meta.json`:
 }
 ```
 
-`glb` and `thumb` are file names within the export's `glb/` and `thumbs/`. The
+`js` and `thumb` are file names within the export's `js/` and `thumbs/`. A
+building with plaza or block rules also carries `game`
+([game-properties.md](game-properties.md)). The
 entry is built by `metaEntry()` in `generator/catalog.ts` from a design and its
 family's catalog fields: `SKYSCRAPER_CATALOG` for the skyscrapers, the design's own
 `catalog` for the churches, cathedrals, landmarks and stations (category
 `Historical` / `Station`, their game pool and the `defaultScale` of the webapp model
 they reproduce - [reproductions.md](reproductions.md)). The file keeps its name
 from when it held only skyscrapers; `BUILDINGS` in `generator/generate.ts` lists
-what goes into it. Nothing reads this file yet: it exists for a webapp-side
-import that mirrors `glb/`, `thumbs/` and this file into the game's building
-catalog, the way the webapp already imports vehicles from vlakosimdb's export.
-Changing a field here is a contract change for that importer.
+what goes into it. The webapp's `pnpm import:factory` mirrors `js/`, `thumbs/`
+and the meta files into its `db/procedural/`; changing a field here is a contract
+change for that importer.
 
 The five parametric commercial families ([commercial.md](commercial.md)) are
 also in `BUILDINGS` and this file, using `COMMERCIAL_CATALOG`: category
 `Commercial`, group `comm_classic`, scale 1 and their declared parameters.
-One default GLB represents each family; the JS model builds the 600 variants
+One default thumbnail represents each family; the JS model builds the 600 variants
 per family on demand. These are original models rather than replacements of
 the webapp's `comm-building-a` through `-n` ids.
 
@@ -107,8 +116,6 @@ family: `exportMeta(VILLAGE_HOUSES)` writes them in exactly the
 its `params`. In `generate.ts` they are the one family whose `meta` is
 `village`, so they are not among `BUILDINGS`. A separate file lets the game
 import the houses into its village pool without touching the other buildings.
-Nothing reads it yet.
-
 ## `vehicles.meta.json`
 
 The vehicles ([vehicles.md](vehicles.md)) are not buildings, so they get their
@@ -119,8 +126,10 @@ design's own `catalog`: `Rail vehicles`, and for the reproductions of the webapp
 models `Aircraft`, `Ships` and `Cable car` ([reproductions.md](reproductions.md)).
 `ALL_VEHICLES` in `generator/generate.ts` lists what goes into it. A
 building import reading `skyscrapers.meta.json` therefore never sees a truck.
-Nothing reads this file yet either; the game's vehicle import will decide its
-final fields.
+Every vehicle entry carries `game`: its weight, power, top speed and
+acceleration, and where they apply its size factor, draft, rope and sill heights,
+airport class and per-variant figures ([game-properties.md](game-properties.md)).
+A vehicle design without them fails the build.
 
 A **locomotive** (group `loco`) or a **unit** (group `unit`: powered and carrying
 passengers - the electric and diesel multiple units, the railcars, the ICE 1 and
@@ -129,8 +138,8 @@ fields set it (`ELECTRIC_LOCO_CATALOG`, `DIESEL_LOCO_CATALOG`, `STEAM_CATALOG`,
 `EMU_CATALOG`, `DMU_CATALOG`, `STEAM_RAILCAR_CATALOG`); no other entry has the key.
 
 A **parametric** model's entry also carries `params`: its enum parameters as
-`{ name, title, values: [{ value, title }], default }`. Its GLB and thumbnail
-are the default build; the JS model builds the other combinations
+`{ name, title, values: [{ value, title }], default }`. Its thumbnail and
+source tree are the default build; the JS model builds the other combinations
 ([parameters.md](parameters.md)). A fixed model's entry has no `params` key.
 
 A **road or rail vehicle** (category `Road vehicles` or `Rail vehicles`,
@@ -142,11 +151,11 @@ default variant itself, to scale beside the cars it renders (see "Thumbnails" be
 Every other entry has no `thumbSide` key and a square thumbnail.
 
 A **rigged** vehicle - every road and rail vehicle - also carries
-`rig`: the GLB node names of its steered front wheels (road vehicles), a rail
+`rig`: the node names (of the JS model's group) of its steered front wheels (road vehicles), a rail
 vehicle's supports (where it rides on the track, its turning bogies' nodes) and,
 for an articulated vehicle, of its sections and joints, with the pivots, limits and
 joint shapes the game needs to move them ([vehicle-rig.md](vehicle-rig.md)). The same
-object is in the GLB's scene extras.
+object is the built group's `userData.rig`.
 The buses take `BUS_CATALOG` (category `Road vehicles`, group `bus`), the trams
 `TRAM_CATALOG` (`Rail vehicles`, group `tram`) and the metro car `METRO_CATALOG`
 (`Rail vehicles`, group `metro`) ([trams.md](trams.md)).
@@ -155,16 +164,16 @@ The buses take `BUS_CATALOG` (category `Road vehicles`, group `bus`), the trams
 
 `{ version: 1, records: CatalogRecord[] }`, one record per design - the
 skyscrapers, then the vehicles. A record is its meta entry plus what
-only the built files know: `glbUrl`/`thumbUrl` (site-relative), `glbBytes`,
-`thumbBytes`, `glbGzipBytes`, `jsUrl`, `jsBytes`, `jsGzipBytes` (the standalone JS model, [js-format.md](js-format.md); gzip sizes are gzip -9), `triangles`, `vertices`, `primitives` (draw calls), `materials`, and
+only the build knows: `thumbUrl` (site-relative), `thumbBytes`, `jsUrl`, `jsBytes`, `jsGzipBytes` (the standalone JS model, [js-format.md](js-format.md); gzip sizes are gzip -9), `triangles`, `vertices`, `primitives` (draw calls), `materials`, and
 the bounding-box extents `sizeX`/`sizeY`/`sizeZ` in metres (before
 `defaultScale`), rounded to the millimetre, and `references`: the source images
 as `{ name, url, bytes }` in name order (`name` is the path within the assets
 folder, `url` is `refs/<id>/<name>`), empty for a design without any.
 
-The counts come from `generator/glbStats.ts`: vertices and primitives from the
-JSON chunk, triangles and the box from the decoded triangle soup
-(`glbTriangles.ts`), so a node transform is honoured.
+The counts come from `generator/glbStats.ts` over the in-memory GLB: vertices and
+primitives from the JSON chunk, triangles and the box from the decoded triangle
+soup (`glbTriangles.ts`), so a node transform is honoured. There is no GLB size:
+the export has no GLB.
 
 ## Thumbnails
 
@@ -192,13 +201,14 @@ chosen by the design's catalog category (`isSideViewCategory`, `catalog.ts`):
   bounding box fills 90 % of the frame, lit by an ambient term plus a key and a
   fill light - the same setup as the game's in-app building thumbnails.
 
-What a side image spans is the meta entry's `thumbSide` (above); `glbSideFrame`
-works it out from the GLB without rendering, for a design whose thumbnail was not
-re-rendered. Standalone:
+The renderer reads GLB bytes - the build hands it the in-memory GLB, never a
+file. What a side image spans is the meta entry's `thumbSide` (above);
+`glbSideFrame` works it out without rendering, for a design whose thumbnail was
+not re-rendered. Standalone, by design id (built in memory) or a `.glb` file:
 
 ```bash
-pnpm exec tsx generator/renderGlbThumb.ts export/glb/sky-pagoda.glb /tmp/pagoda.png 256
-pnpm exec tsx generator/renderGlbThumb.ts export/glb/proc-vehicle-cd-150.glb /tmp/cd150.png side
+pnpm exec tsx generator/renderGlbThumb.ts proc-building-sky-pagoda /tmp/pagoda.png 256
+pnpm exec tsx generator/renderGlbThumb.ts proc-vehicle-cd-150 /tmp/cd150.png side
 ```
 
 `test/thumbnails.test.ts` pins the side framing (scale, height window, nose on

@@ -918,7 +918,7 @@ export const CHURCH_CATALOG: CatalogFields = {
 
 /** Every design of the family, by catalog id; `references` is the folder of its source photos under assets/. */
 export const CHURCHES: ProceduralDesign[] = [
-  { id: "bld-baroque-church", title: "Baroque Church", build: baroqueChurch, references: "baroque-church", catalog: CHURCH_CATALOG },
-  { id: "bld-church-vrchlabi", title: "Vrchlabi Church", build: churchVrchlabi, references: "church-vrchlabi", catalog: CHURCH_CATALOG },
-  { id: "bld-twin-tower-baroque-church", title: "Twin-Tower Baroque Church", build: twinTowerBaroqueChurch, references: "twin-tower-baroque-church", catalog: CHURCH_CATALOG },
+  { id: "bld-baroque-church", game: { plaza: { cities: ["village", "town"] } }, title: "Baroque Church", build: baroqueChurch, references: "baroque-church", catalog: CHURCH_CATALOG },
+  { id: "bld-church-vrchlabi", game: { plaza: { cities: ["village", "town"] } }, title: "Vrchlabi Church", build: churchVrchlabi, references: "church-vrchlabi", catalog: CHURCH_CATALOG },
+  { id: "bld-twin-tower-baroque-church", game: { plaza: { cities: ["village", "town"] } }, title: "Twin-Tower Baroque Church", build: twinTowerBaroqueChurch, references: "twin-tower-baroque-church", catalog: CHURCH_CATALOG },
 ];

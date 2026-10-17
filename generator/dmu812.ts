@@ -14,6 +14,7 @@
 // docs/models/czech-dmus.md.
 
 import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
+import type { GameProperties } from "./design.ts";
 import { ngon } from "./meshBuilder.ts";
 import type { Pt, Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
@@ -277,6 +278,17 @@ export function cd812(params?: ParamValues): MeshBuilder {
   return esmeralda(p.unit as Cd812Unit);
 }
 
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const CD_812_GAME: GameProperties = {
+  weight: 20.7,
+  power: 240,
+  maxspeed: 80,
+  accel: null,
+  variants: [
+    { params: { unit: "drivingTrailer" }, power: 0 },
+  ],
+};
+
 export const DMU812_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-cd-812", title: "CD 812 / 912 Esmeralda", build: cd812, params: CD812_PARAMS, catalog: DMU_CATALOG, references: "cd-812" },
+  { id: "proc-vehicle-cd-812", game: CD_812_GAME, title: "CD 812 / 912 Esmeralda", build: cd812, params: CD812_PARAMS, catalog: DMU_CATALOG, references: "cd-812" },
 ];

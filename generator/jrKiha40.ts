@@ -183,5 +183,6 @@ export function kiha40(params?: ParamValues): MeshBuilder {
 }
 
 export const KIHA40_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-jr-kiha40", title: "JR KiHa 40", build: kiha40, params: KIHA40_PARAMS, finishParams: ["livery"], catalog: DMU_CATALOG, references: "jr-kiha40" },
+  // JR Hokkaido's re-engined KiHa 40 1700: about 37 t, 243 kW (330 PS), 95 km/h
+  { id: "proc-vehicle-jr-kiha40", game: { weight: 37, power: 243, maxspeed: 95, accel: null }, title: "JR KiHa 40", build: kiha40, params: KIHA40_PARAMS, finishParams: ["livery"], catalog: DMU_CATALOG, references: "jr-kiha40" },
 ];

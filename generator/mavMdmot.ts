@@ -16,6 +16,7 @@
 // end) and the driving trailer's cab are at +X. See docs/models/foreign-units.md.
 
 import { ngon, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
+import type { GameProperties } from "./design.ts";
 import { Coach, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
@@ -450,8 +451,21 @@ function motorRoof(c: Coach, L: CarLayout): void {
   });
 }
 
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const MAV_MDMOT_GAME: GameProperties = {
+  weight: 41,
+  power: 590,
+  maxspeed: 100,
+  accel: null,
+  variants: [
+    { params: { unit: "trailerAx" }, power: 0 },
+    { params: { unit: "trailerBx" }, power: 0 },
+    { params: { unit: "drivingTrailer" }, power: 100 },
+  ],
+};
+
 export const MDMOT_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-mav-mdmot", title: "MAV MDmot", build: mavMdmot, params: MDMOT_PARAMS, catalog: DMU_CATALOG, references: "mav-mdmot" },
+  { id: "proc-vehicle-mav-mdmot", game: MAV_MDMOT_GAME, title: "MAV MDmot", build: mavMdmot, params: MDMOT_PARAMS, catalog: DMU_CATALOG, references: "mav-mdmot" },
 ];
 
 export { LAYOUTS as MDMOT_LAYOUTS };

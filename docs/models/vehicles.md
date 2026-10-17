@@ -346,6 +346,8 @@ Follow the applicable road or railroad vehicle skill linked above:
    Wrap every part in a named `m.scope(...)` - chassis, each axle, hood, cab - so
    the site's Source tab reads like the design. An articulated vehicle draws
    its tractor and trailer in `m.part("truck", ...)` and `m.part("trailer", pivot, ...)`.
+   Give it its game properties, `game: { weight, power, maxspeed, accel }`: the
+   build fails without them ([game-properties.md](game-properties.md)).
 2. `pnpm build:models`, then look at `export/thumbs/<id>.png` and the triangle
    count.
 3. `pnpm test` - every design's z-fighting, scope and source-tree checks run

@@ -9,7 +9,7 @@
 // Source x runs from the front buffer rearward; the model is +X forward, centred
 // between the buffer heads.
 
-import type { CatalogFields, ParamSpec, ParamValues, ProceduralDesign } from "./design.ts";
+import type { CatalogFields, GameProperties, ParamSpec, ParamValues, ProceduralDesign } from "./design.ts";
 import { resolveParams } from "./design.ts";
 import type { MeshBuilder } from "./meshBuilder.ts";
 import { buildLoco, type LocoSpec } from "./steamLoco.ts";
@@ -799,18 +799,86 @@ export interface SteamDesign {
   params?: readonly ParamSpec[];
   /** A railcar (powered, carries passengers): filed under the units, not the locomotives. */
   railcar?: boolean;
+  /** What the game needs of it beyond its geometry (design.ts GameProperties). */
+  game: GameProperties;
 }
 
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const CSD_433_0_GAME: GameProperties = {
+  weight: 55,
+  power: 500,
+  maxspeed: 60,
+  accel: null,
+  variants: [
+    { params: { livery: "redLining" }, weight: 75 },
+  ],
+};
+
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const CSD_475_1_GAME: GameProperties = {
+  weight: 109,
+  power: 1750,
+  maxspeed: 100,
+  accel: null,
+  variants: [
+    { params: { unit: "tender" }, weight: 60, power: 0 },
+  ],
+};
+
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const CSD_498_1_GAME: GameProperties = {
+  weight: 150,
+  power: 1200,
+  maxspeed: 120,
+  accel: null,
+  variants: [
+    { params: { unit: "tender" }, weight: 30, power: 0 },
+  ],
+};
+
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const CSD_556_0_GAME: GameProperties = {
+  weight: 125,
+  power: 1500,
+  maxspeed: 80,
+  accel: null,
+  variants: [
+    { params: { unit: "tender" }, weight: 60, power: 0 },
+  ],
+};
+
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const CSD_636_GAME: GameProperties = {
+  weight: 200,
+  power: 2100,
+  maxspeed: 60,
+  accel: null,
+  variants: [
+    { params: { unit: "tender" }, weight: 60, power: 0 },
+  ],
+};
+
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const CSD_386_GAME: GameProperties = {
+  weight: 95,
+  power: 1100,
+  maxspeed: 110,
+  accel: null,
+  variants: [
+    { params: { unit: "tender" }, weight: 60, power: 0 },
+  ],
+};
+
 export const STEAM_DESIGNS: readonly SteamDesign[] = [
-  { id: "proc-vehicle-csd-433-0", title: "CSD 433.0", folder: "steam-433-0", build: csd433, params: CSD433_PARAMS },
-  { id: "proc-vehicle-csd-456-0", title: "CSD 456.0", folder: "steam-456-0", build: csd456 },
-  { id: "proc-vehicle-csd-475-1", title: "CSD 475.1", folder: "steam-475-1", build: csd475, params: [UNIT_PARAM] },
-  { id: "proc-vehicle-csd-477-0", title: "CSD 477.0", folder: "steam-477-0", build: csd477 },
-  { id: "proc-vehicle-csd-498-1", title: "CSD 498.1", folder: "steam-498-1", build: csd498, params: [UNIT_PARAM] },
-  { id: "proc-vehicle-csd-556-0", title: "CSD 556.0", folder: "steam-556-0", build: csd556, params: [UNIT_PARAM] },
-  { id: "proc-vehicle-csd-636", title: "CSD 636 Mallet", folder: "steam-636", build: csd636, params: [UNIT_PARAM] },
-  { id: "proc-vehicle-csd-386", title: "CSD 386 Streamlined", folder: "steam-386", build: csd386, params: [UNIT_PARAM] },
-  { id: "proc-vehicle-csd-m112", title: "CSD M 112.0 Steam Railcar", folder: "steam-m112", build: csdM112, railcar: true },
+  { id: "proc-vehicle-csd-433-0", game: CSD_433_0_GAME, title: "CSD 433.0", folder: "steam-433-0", build: csd433, params: CSD433_PARAMS },
+  { id: "proc-vehicle-csd-456-0", game: { weight: 135, power: 1550, maxspeed: 100, accel: null }, title: "CSD 456.0", folder: "steam-456-0", build: csd456 },
+  { id: "proc-vehicle-csd-475-1", game: CSD_475_1_GAME, title: "CSD 475.1", folder: "steam-475-1", build: csd475, params: [UNIT_PARAM] },
+  { id: "proc-vehicle-csd-477-0", game: { weight: 129, power: 1540, maxspeed: 100, accel: null }, title: "CSD 477.0", folder: "steam-477-0", build: csd477 },
+  { id: "proc-vehicle-csd-498-1", game: CSD_498_1_GAME, title: "CSD 498.1", folder: "steam-498-1", build: csd498, params: [UNIT_PARAM] },
+  { id: "proc-vehicle-csd-556-0", game: CSD_556_0_GAME, title: "CSD 556.0", folder: "steam-556-0", build: csd556, params: [UNIT_PARAM] },
+  { id: "proc-vehicle-csd-636", game: CSD_636_GAME, title: "CSD 636 Mallet", folder: "steam-636", build: csd636, params: [UNIT_PARAM] },
+  { id: "proc-vehicle-csd-386", game: CSD_386_GAME, title: "CSD 386 Streamlined", folder: "steam-386", build: csd386, params: [UNIT_PARAM] },
+  { id: "proc-vehicle-csd-m112", game: { weight: 30, power: 120, maxspeed: 75, accel: null }, title: "CSD M 112.0 Steam Railcar", folder: "steam-m112", build: csdM112, railcar: true },
 ];
 
 /**
@@ -818,7 +886,7 @@ export const STEAM_DESIGNS: readonly SteamDesign[] = [
  * module, so the standalone JS models of the other vehicles do not carry it.
  */
 export const STEAM_LOCOS: ProceduralDesign[] = STEAM_DESIGNS.map((d) => ({
-  id: d.id, title: d.title, build: d.build, catalog: d.railcar ? STEAM_RAILCAR_CATALOG : STEAM_CATALOG, references: d.folder, ...(d.params ? { params: d.params } : {}),
+  id: d.id, title: d.title, build: d.build, game: d.game, catalog: d.railcar ? STEAM_RAILCAR_CATALOG : STEAM_CATALOG, references: d.folder, ...(d.params ? { params: d.params } : {}),
 }));
 
 /** The spec a steam design builds for the given parameters (tests and the comparison read it). */

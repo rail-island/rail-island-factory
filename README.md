@@ -8,8 +8,9 @@ Today it builds ten procedurally generated skyscrapers (50 to 80 m), five parame
 The eight models in the game's Towers group are also procedural, with configurable
 clock time, storeys, finishes, battlements, antennas and crossarms.
 Every model is written as
-a GLB with a thumbnail and a catalog entry, in an export folder that the game
-(`rail-island-webapp`) can import.
+a standalone JS module (`build(THREE)`) with a thumbnail and a catalog entry
+carrying what the game needs of it, in an export folder that the game
+(`rail-island-webapp`) imports. There are no GLB files.
 
 ## Tech stack
 
@@ -23,7 +24,7 @@ a GLB with a thumbnail and a catalog entry, in an export folder that the game
 
 ```bash
 pnpm install
-pnpm build:models   # generate export/ (GLBs, standalone JS models, thumbnails, meta.json, catalog.json)
+pnpm build:models   # generate export/ (standalone JS models, thumbnails, meta.json, catalog.json)
 pnpm dev            # the site on http://localhost:5173
 pnpm test           # Vitest
 pnpm build          # models + typecheck + production site in dist/

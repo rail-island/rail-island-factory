@@ -26,9 +26,9 @@ const HIST_CATALOG = {category:'Historical',group:'hist_center',defaultScale:1,l
 const STATION_CATALOG = {category:'Station',group:'station',defaultScale:1,license:'CC0',author:'Rail Island',source:'Rail Island procedural reconstruction'};
 export const LEGACY_BUILDINGS:ProceduralDesign[]=[
   {id:'bld-castle',title:'Castle',build:castle,buildLod:castleLod,params:CASTLE_PARAMS,catalog:HIST_CATALOG},
-  {id:'bld-hist-colosseum',title:'Colosseum',build:colosseum,buildLod:colosseumLod,catalog:HIST_CATALOG},
-  {id:'bld-hist-pagoda',title:'Pagoda',build:pagoda,buildLod:pagodaLod,catalog:HIST_CATALOG},
-  {id:'bld-hist-palace',title:'Palace',build:palace,buildLod:palaceLod,params:PALACE_PARAMS,catalog:HIST_CATALOG},
+  {id:'bld-hist-colosseum',game:{ plaza: { cities: ['city'], layouts: ['radial'], round: true, apron: 2 } },title:'Colosseum',build:colosseum,buildLod:colosseumLod,catalog:HIST_CATALOG},
+  {id:'bld-hist-pagoda',game:{ plaza: { cities: ['town'] } },title:'Pagoda',build:pagoda,buildLod:pagodaLod,catalog:HIST_CATALOG},
+  {id:'bld-hist-palace',game:{ plaza: { cities: ['city'], fit: 'footprint' } },title:'Palace',build:palace,buildLod:palaceLod,params:PALACE_PARAMS,catalog:HIST_CATALOG},
   {id:'bld-station-hotel',title:'Station Hotel',build:stationHotel,buildLod:stationHotelLod,catalog:STATION_CATALOG},
 ];
 

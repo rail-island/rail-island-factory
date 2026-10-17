@@ -5,7 +5,7 @@
 // wagons (wagonTransfers.ts, freightTransfers.ts). See docs/models/csd-coaches.md.
 
 import type { MeshBuilder } from "./meshBuilder.ts";
-import type { ParamSpec, ParamValues } from "./design.ts";
+import type { GameProperties, ParamSpec, ParamValues } from "./design.ts";
 import { CSD_COACHES } from "./csdCoaches.ts";
 import { BMO_PARAMS, bmoCoach } from "./bmoCoach.ts";
 import { GREEN_WHITE_PARAMS, cdGreenWhiteCoach } from "./cdGreenWhiteCoach.ts";
@@ -24,12 +24,29 @@ export interface CoachDesign {
   folder: string;
   build: (params?: ParamValues) => MeshBuilder;
   params?: readonly ParamSpec[];
+  /** What the game needs of it beyond its geometry (design.ts GameProperties). */
+  game: GameProperties;
 }
+
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const CD_GREEN_WHITE_COACH_GAME: GameProperties = {
+  weight: 40,
+  power: 0,
+  maxspeed: 140,
+  accel: null,
+  variants: [
+    { params: { variant: "bdmeer" }, maxspeed: 160 },
+    { params: { variant: "bdmtee" }, weight: 46, maxspeed: 160 },
+    { params: { variant: "beeBlue" }, maxspeed: 160 },
+    { params: { variant: "bee" }, maxspeed: 160 },
+    { params: { variant: "beel" }, maxspeed: 160 },
+  ],
+};
 
 /** The coach designs beyond the CSD ones: parametric, several vlakosimdb vehicles each. */
 export const CD_COACHES: readonly CoachDesign[] = [
-  { id: "proc-vehicle-bmo-double-deck-coach", title: "Bmo Double-Deck Coach", folder: "bmo-double-deck", build: bmoCoach, params: BMO_PARAMS },
-  { id: "proc-vehicle-cd-green-white-coach", title: "CD Green-White Coach", folder: "cd-green-white", build: cdGreenWhiteCoach, params: GREEN_WHITE_PARAMS },
+  { id: "proc-vehicle-bmo-double-deck-coach", game: { weight: 80, power: 0, maxspeed: 120, accel: null }, title: "Bmo Double-Deck Coach", folder: "bmo-double-deck", build: bmoCoach, params: BMO_PARAMS },
+  { id: "proc-vehicle-cd-green-white-coach", game: CD_GREEN_WHITE_COACH_GAME, title: "CD Green-White Coach", folder: "cd-green-white", build: cdGreenWhiteCoach, params: GREEN_WHITE_PARAMS },
 ];
 
 /** Every coach design, in catalog order. */

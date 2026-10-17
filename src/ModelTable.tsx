@@ -12,7 +12,7 @@ function ariaSort(active: boolean, dir: SortDir): "ascending" | "descending" | "
   return !active ? "none" : dir === "asc" ? "ascending" : "descending";
 }
 
-/** A cell's text; for a GLB or JS size, a link that downloads the file without opening the model. */
+/** A cell's text; for a JS size, a link that downloads the file without opening the model. */
 export function FileCell(props: { row: Row; col: Column }) {
   const file = () => cellFile(props.row, props.col);
   return (

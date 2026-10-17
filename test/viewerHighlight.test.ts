@@ -1,21 +1,23 @@
 import { proceduralId } from "../generator/modelId.ts";
 // The preview's source-tree highlight and picking (src/viewerHighlight.ts,
-// src/sourceTreeView.ts) on a real design's GLB, loaded the way the site loads
-// it -- three's GLTFLoader -- but without a WebGL context.
+// src/sourceTreeView.ts) on a real design, built the way the site builds it --
+// its standalone JS module's build(THREE) -- but without a WebGL context.
 
 import { describe, expect, it } from "vitest";
+import * as THREE from "three";
 import { Box3, Mesh, Raycaster, Vector3, type Object3D } from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { designGlb, designTree } from "../generator/generate";
+import { DESIGNS, designSource, designTree } from "../generator/generate";
+import { bundleDesign } from "../generator/jsModel";
 import { applyHighlight, makeParts } from "../src/viewerHighlight";
 import { indexTree, leafAt, rangesOf } from "../src/sourceTreeView";
 
 async function load(id: string): Promise<Object3D> {
-  const bytes = designGlb(proceduralId(id));
-  const buf = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
-  const gltf = await new GLTFLoader().parseAsync(buf as ArrayBuffer, "");
-  gltf.scene.updateMatrixWorld(true);
-  return gltf.scene;
+  const text = await bundleDesign(DESIGNS.get(proceduralId(id))!, designSource(proceduralId(id)));
+  const url = `data:text/javascript;base64,${Buffer.from(text).toString("base64")}`;
+  const build = ((await import(/* @vite-ignore */ url)) as { default: (three: typeof THREE) => Object3D }).default;
+  const scene = build(THREE);
+  scene.updateMatrixWorld(true);
+  return scene;
 }
 
 describe("the preview's highlight", () => {

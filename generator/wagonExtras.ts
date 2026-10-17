@@ -1,5 +1,6 @@
 // Remaining freight body families from the native XML profiles.
 import { MeshBuilder, type Ring } from './meshBuilder.ts';
+import type { GameProperties } from './design.ts';
 import { Wagon } from './wagonParts.ts';
 import { WAGON_CATALOG } from './wagons.ts';
 import { numberLines } from './freightWagonParts.ts';
@@ -62,8 +63,20 @@ export function heavyWagon():MeshBuilder {
  for(const s of [-1,1])m.scope('buffers',()=>c.drawGear(s,s>0?23.2:.9,s>0?22.75:1.35,s>0?22.7:1.4,.75,1.05,1.4,'frame'));
  return m;
 }
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const LEGACY_COVERED_WAGON_GAME: GameProperties = {
+  weight: 30,
+  power: 0,
+  maxspeed: 120,
+  accel: null,
+  variants: [
+    { params: { body: 'beer' }, maxspeed: 90 },
+    { params: { body: 'sliding' }, weight: 40 },
+  ],
+};
+
 export const WAGON_EXTRAS:ProceduralDesign[]=[
- {id:'veh-legacy-covered-wagon',title:'Covered Freight Wagon',build:coveredWagon,params:BODY},
- {id:'veh-legacy-open-wagon',title:'Vte Open Wagon',build:vteWagon},
- {id:'veh-legacy-heavy-wagon',title:'Uaaikk Low Loader',build:heavyWagon},
+ {id:'veh-legacy-covered-wagon',game:LEGACY_COVERED_WAGON_GAME,title:'Covered Freight Wagon',build:coveredWagon,params:BODY},
+ {id:'veh-legacy-open-wagon',game:{ weight: 15, power: 0, maxspeed: 100, accel: null },title:'Vte Open Wagon',build:vteWagon},
+ {id:'veh-legacy-heavy-wagon',game:{ weight: 49, power: 0, maxspeed: 90, accel: null },title:'Uaaikk Low Loader',build:heavyWagon},
 ].map(d=>({...d,catalog:WAGON_CATALOG,references:'remaining-wagons'}));

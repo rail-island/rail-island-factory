@@ -276,5 +276,5 @@ export function cd810(params?: ParamValues): MeshBuilder {
 }
 
 export const DMU810_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-cd-810", title: "CD 810", build: cd810, params: CD810_PARAMS, catalog: DMU_CATALOG, references: "cd-810" },
+  { id: "proc-vehicle-cd-810", game: { weight: 24, power: 155, maxspeed: 80, accel: null }, title: "CD 810", build: cd810, params: CD810_PARAMS, catalog: DMU_CATALOG, references: "cd-810" },
 ];

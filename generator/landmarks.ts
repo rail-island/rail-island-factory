@@ -736,9 +736,9 @@ export const LANDMARK_CATALOG: CatalogFields = {
 
 /** Every design of the family, by catalog id; `references` is the folder of its source photos under assets/. */
 export const LANDMARKS: ProceduralDesign[] = [
-  { id: "bld-brandenburg-gate", title: "Brandenburg Gate", build: brandenburgGate, buildLod: brandenburgGateLod, references: "brandenburg-gate", catalog: LANDMARK_CATALOG },
-  { id: "bld-louvre-pyramid", title: "Louvre Pyramid", build: louvrePyramid, references: "louvre-pyramid", catalog: LANDMARK_CATALOG },
-  { id: "bld-white-house", title: "White House", build: whiteHouse, references: "white-house", catalog: LANDMARK_CATALOG },
+  { id: "bld-brandenburg-gate", game: { plaza: { cities: ["city"], layouts: ["rect"], fit: "footprint" } }, title: "Brandenburg Gate", build: brandenburgGate, buildLod: brandenburgGateLod, references: "brandenburg-gate", catalog: LANDMARK_CATALOG },
+  { id: "bld-louvre-pyramid", game: { plaza: { cities: ["town", "city"], layouts: ["rect"], fullBlocks: true } }, title: "Louvre Pyramid", build: louvrePyramid, references: "louvre-pyramid", catalog: LANDMARK_CATALOG },
+  { id: "bld-white-house", game: { plaza: { cities: ["city"], layouts: ["rect"], fit: "footprint" } }, title: "White House", build: whiteHouse, references: "white-house", catalog: LANDMARK_CATALOG },
 ];
 
 export function brandenburgGateLod(): MeshBuilder {

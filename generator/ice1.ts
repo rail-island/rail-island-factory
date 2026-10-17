@@ -14,6 +14,7 @@
 // power car (published) and 19.0 m on the coaches. See docs/models/foreign-units.md.
 
 import { ngon, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
+import type { GameProperties } from "./design.ts";
 import { Coach, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
@@ -305,6 +306,18 @@ function grille(c: Coach, v: Volume, s: number, b: Box): void {
   }
 }
 
+/** What the game needs of it beyond its geometry (design.ts GameProperties). */
+const ICE_1_GAME: GameProperties = {
+  weight: 78,
+  power: 9600,
+  maxspeed: 280,
+  accel: null,
+  variants: [
+    { params: { unit: "coach" }, weight: 53, power: 0 },
+    { params: { unit: "restaurant" }, weight: 58, power: 0 },
+  ],
+};
+
 export const ICE1_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-ice-1", title: "ICE 1", build: ice1, params: ICE1_PARAMS, catalog: EMU_CATALOG, references: "ice-1" },
+  { id: "proc-vehicle-ice-1", game: ICE_1_GAME, title: "ICE 1", build: ice1, params: ICE1_PARAMS, catalog: EMU_CATALOG, references: "ice-1" },
 ];

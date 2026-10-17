@@ -22,9 +22,10 @@ cable cabin is 8,000 triangles.
 ## Datums
 
 The webapp positions a cabin by two fractions of the model's height, measured
-off the reference and kept in `db/cablecar/cablecar.meta.json`: `ropeFrac` (the
-rope through the sheaves or grip) and `boardFrac` (the door sill the station's
-boarding platform is built to). The models are drawn so both stay true:
+off the reference (once kept in the webapp's `db/cablecar/cablecar.meta.json`) and
+now stated in each design's game properties ([game-properties.md](game-properties.md)):
+`ropeFrac` (the rope through the sheaves or grip) and `boardFrac` (the door sill
+the station's boarding platform is built to). The models are drawn so both stay true:
 
 | design | height | rope | ropeFrac | sill | boardFrac |
 |---|---|---|---|---|---|

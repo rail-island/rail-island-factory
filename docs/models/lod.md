@@ -29,7 +29,7 @@ and materials, including a complete articulated bus. It is not a per-mesh allowa
 | Historical buildings (including the castle), towers and skyscrapers | 500 |
 
 A design can set `lodTriangles` to override its family policy. Stable model ids,
-scale, coordinates and parameter choices stay the same. The exported GLB, thumbnail,
+scale, coordinates and parameter choices stay the same. The thumbnail,
 metadata and source tree remain the full-resolution defaults.
 
 ## Geometry
