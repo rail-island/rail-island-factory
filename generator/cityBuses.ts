@@ -7,7 +7,7 @@
 
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { Arch, Paint } from "./busBody.ts";
-import { BusDraft, type Axle, type DoorStyle, type PaneStyle } from "./busAssembly.ts";
+import { BusDraft, type Axle, type BusSpec, type DoorStyle, type PaneStyle } from "./busAssembly.ts";
 import { bentSlab, busPalette, endLamp, endSlab, mirror, sideSlab, type BusFrame } from "./busKit.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { block } from "./vehicleParts.ts";
@@ -69,6 +69,18 @@ export interface CitySpec {
 
 /** Builds one city bus from its description. */
 export function cityBus(sp: CitySpec): MeshBuilder {
+  const { d, spec } = cityDraft(sp);
+  return d.build(spec);
+}
+
+/** The city bus's distant model (lodRoad.ts busLod), from the same description. */
+export function cityBusLod(sp: CitySpec): MeshBuilder {
+  const { d, spec } = cityDraft(sp);
+  return d.buildLod(spec);
+}
+
+/** The draft of one city bus: its fittings, and the shell and running gear to build it with. */
+function cityDraft(sp: CitySpec): { d: BusDraft; spec: Omit<BusSpec, "fittings"> } {
   const k = sp.length / (sp.tail - sp.nose);
   const x = (u: number): number => (sp.tail - u) * k;
   const nose = x(sp.nose);
@@ -112,7 +124,7 @@ export function cityBus(sp: CitySpec): MeshBuilder {
   for (const [d0, d1] of sp.doors) d.door(x(d1), x(d0), sp.door);
   sp.details({ d, m: () => d.m, frame: d.frame, x, nose, tail, hw });
 
-  return d.build({
+  return { d, spec: {
     palette: busPalette({ ...sp.livery }),
     section, side, plan, base: "body", paint, arches, bodies, axles,
     wheelRadius: sp.wheelRadius,
@@ -121,7 +133,7 @@ export function cityBus(sp: CitySpec): MeshBuilder {
     hingeY: 0.6,
     maxSteerDeg: sp.maxSteerDeg,
     ...(sp.maxBendDeg ? { maxBendDeg: sp.maxBendDeg } : {}),
-  });
+  } };
 }
 
 /**
@@ -141,6 +153,7 @@ function quarter(ca: number, cb: number, ra: number, rb: number, n: number): Arr
 
 /** A roof box (an air-conditioning unit, a hatch) over x0..x1, z0..z1, from the roof up to `top`. */
 export function roofBox(c: CityCtx, group: string, x0: number, x1: number, z0: number, z1: number, top: number, mat: string, base: number): void {
+  c.d.roofItem(x0, x1, z0, z1, base, top, mat);
   c.d.fit(group, (x0 + x1) / 2, () => block(c.m(), mat, x0, x1, base, top, z0, z1));
 }
 
@@ -194,8 +207,17 @@ function tailLamps(c: CityCtx, y0: number, inset: number, w = 0.16): void {
   }
 }
 
-/** The windscreen on the nose: a frame, the glass, a destination display behind its top, two wipers. */
-function windscreen(c: CityCtx, y0: number, y1: number, half: number, sign: [number, number] | null): void {
+/**
+ * The windscreen on the nose: a frame, the glass, a destination display behind
+ * its top, two wipers. Noted for the distant model now; drawn by the function
+ * it returns, in the nose's fitting.
+ */
+function windscreen(c: CityCtx, y0: number, y1: number, half: number, sign: [number, number] | null): () => void {
+  c.d.glaze(1, -half, half, y0, y1);
+  return () => drawWindscreen(c, y0, y1, half, sign);
+}
+
+function drawWindscreen(c: CityCtx, y0: number, y1: number, half: number, sign: [number, number] | null): void {
   endSlab(c.m(), "frame", c.frame, 1, -half - 0.05, half + 0.05, y0 - 0.04, y1 + 0.03, 0.01);
   endSlab(c.m(), "glass", c.frame, 1, -half, half, y0, y1, 0.02);
   if (sign) {
@@ -248,8 +270,11 @@ function karosaRenaultSpec(long: boolean): CitySpec {
     maxBendDeg: 50,
     details: (c) => {
       const { x } = c;
+      const ws = windscreen(c, 1.0, 2.5, 1.12, null);
+      c.d.roofItem(c.nose - 0.62, c.nose - 0.18, -1.16, 1.16, 2.5, 3.06, "band");
+      c.d.endPaint(-1, 0.7, 0.88, "band");
       c.d.fit("front", c.nose, () => {
-        windscreen(c, 1.0, 2.5, 1.12, null);
+        ws();
         // the destination box, proud of the windscreen's top and the roof
         block(c.m(), "band", c.nose - 0.62, c.nose - 0.18, 2.5, 3.06, -1.16, 1.16);
         block(c.m(), "signText", c.nose - 0.185, c.nose - 0.165, 2.72, 2.84, -0.7, 0.7);
@@ -261,6 +286,7 @@ function karosaRenaultSpec(long: boolean): CitySpec {
         }
         endSlab(c.m(), "plateYellow", c.frame, 1, -0.26, 0.26, 0.45, 0.57, 0.016);
       });
+      c.d.glaze(-1, -0.95, 0.95, 2.16, 2.48);
       c.d.fit("rear", c.tail, () => {
         endSlab(c.m(), "frame", c.frame, -1, -1.0, 1.0, 2.12, 2.52, 0.01);
         endSlab(c.m(), "glass", c.frame, -1, -0.95, 0.95, 2.16, 2.48, 0.02);
@@ -278,10 +304,13 @@ function karosaRenaultSpec(long: boolean): CitySpec {
       roofBox(c, "roof", long ? x(18.2) : x(11.7), long ? x(17.2) : x(10.7), -0.45, 0.45, 3.02, "pod", 2.9);
       if (long) {
         // the joint's ends faired up on the roof to its 3.185 m (the XML's roof2 ramps)
-        const ramp = (group: string, at: number, end: number, start: number): void => c.d.fit(group, at, () => {
+        const ramp = (group: string, at: number, end: number, start: number): void => {
+          c.d.roofItem(Math.min(end, (end + start) / 2), Math.max(end, (end + start) / 2), -1.05, 1.05, 2.86, 3.185, "pod");
+          c.d.fit(group, at, () => {
           const profile: Array<[number, number]> = [[end, 2.86], [end, 3.185], [end + (start - end) * 0.2, 3.185], [start, 2.86]];
           c.m().sweep("pod", "z", profile, -1.05, profile, 1.05);
-        });
+          });
+        };
         ramp("joint fairing", x(9.0), x(9.8) + 0.03, x(7.9));
         ramp("joint fairing", x(12.6), x(11.7) - 0.03, x(13.8));
       }
@@ -294,8 +323,16 @@ export function karosaRenault12(): MeshBuilder {
   return cityBus(karosaRenaultSpec(false));
 }
 
+export function karosaRenault12Lod(): MeshBuilder {
+  return cityBusLod(karosaRenaultSpec(false));
+}
+
 export function karosaRenault18(): MeshBuilder {
   return cityBus(karosaRenaultSpec(true));
+}
+
+export function karosaRenault18Lod(): MeshBuilder {
+  return cityBusLod(karosaRenaultSpec(true));
 }
 
 // --- the Mercedes-Benz Citaro (O 530) -----------------------------------------------
@@ -334,15 +371,17 @@ function citaroSpec(livery: "teal" | "blue"): CitySpec {
     maxSteerDeg: 50,
     details: (c) => {
       const { x } = c;
+      const ws = windscreen(c, 1.12, 2.42, 1.14, null);
       c.d.fit("front", c.nose, () => {
         // the black panel over the windscreen holds the destination display
         endSlab(c.m(), "band", c.frame, 1, -1.2, 1.2, 2.46, 2.72, 0.006);
         endSlab(c.m(), "signText", c.frame, 1, -0.8, 0.8, 2.52, 2.66, 0.014);
-        windscreen(c, 1.12, 2.42, 1.14, null);
+        ws();
         cornerLamps(c, 0.52, 0.7, 0.36, 0.06);
         endSlab(c.m(), "grille", c.frame, 1, -0.5, 0.5, 0.82, 1.02, 0.012);
         endSlab(c.m(), "plate", c.frame, 1, -0.26, 0.26, 0.39, 0.51, 0.016);
       });
+      c.d.glaze(-1, -1.0, 1.0, 1.9, 2.48);
       c.d.fit("rear", c.tail, () => {
         endSlab(c.m(), "glassDark", c.frame, -1, -1.0, 1.0, 1.9, 2.48, 0.02);
         endSlab(c.m(), "signText", c.frame, -1, -0.5, 0.5, 2.52, 2.64, 0.012);
@@ -352,6 +391,7 @@ function citaroSpec(livery: "teal" | "blue"): CitySpec {
       });
       // the air-conditioning pod and the engine's intake tower at the rear left
       roofBox(c, "roof", x(5.6), x(2.6), -0.85, 0.85, 3.1, "pod", 2.84);
+      c.d.roofItem(x(11.75), x(10.85), -1.25, -0.72, 2.6, 3.2, "body");
       c.d.fit("intake tower", x(11.4), () => {
         block(c.m(), "body", x(11.75), x(10.85), 2.6, 3.2, -1.25, -0.72);
         for (let i = 0; i < 4; i++) block(c.m(), "grille", x(11.65), x(10.95), 2.7 + i * 0.12, 2.76 + i * 0.12, -1.265, -1.24);
@@ -365,8 +405,16 @@ export function mbCitaro(): MeshBuilder {
   return cityBus(citaroSpec("teal"));
 }
 
+export function mbCitaroLod(): MeshBuilder {
+  return cityBusLod(citaroSpec("teal"));
+}
+
 export function mbCitaroBlue(): MeshBuilder {
   return cityBus(citaroSpec("blue"));
+}
+
+export function mbCitaroBlueLod(): MeshBuilder {
+  return cityBusLod(citaroSpec("blue"));
 }
 
 // --- the Mercedes-Benz O 345 G -------------------------------------------------------
@@ -407,9 +455,10 @@ function o345Spec(): CitySpec {
     maxBendDeg: 50,
     details: (c) => {
       const { x } = c;
+      const ws = windscreen(c, 1.5, 2.74, 1.15, [2.42, 2.68]);
       c.d.fit("front", c.nose, () => {
         // (photographs) one windscreen over the black band, the display behind its top
-        windscreen(c, 1.5, 2.74, 1.15, [2.42, 2.68]);
+        ws();
         for (const sd of [-1, 1]) {
           endSlab(c.m(), "frame", c.frame, 1, sd * 0.93 - 0.22, sd * 0.93 + 0.22, 0.76, 0.92, 0.008);
           for (const dz of [-0.1, 0.1]) endLamp(c.m(), "lampHead", c.frame, 1, sd * 0.93 + dz, 0.84, 0.06, 0.016, undefined, 10);
@@ -417,6 +466,7 @@ function o345Spec(): CitySpec {
         }
         endSlab(c.m(), "plate", c.frame, 1, -0.26, 0.26, 0.45, 0.57, 0.016);
       });
+      c.d.glaze(-1, -1.0, 1.0, 1.65, 2.64);
       c.d.fit("rear", c.tail, () => {
         endSlab(c.m(), "frame", c.frame, -1, -1.05, 1.05, 1.6, 2.7, 0.01);
         endSlab(c.m(), "glass", c.frame, -1, -1.0, 1.0, 1.65, 2.64, 0.02);
@@ -437,6 +487,10 @@ function o345Spec(): CitySpec {
 
 export function mbO345g(): MeshBuilder {
   return cityBus(o345Spec());
+}
+
+export function mbO345gLod(): MeshBuilder {
+  return cityBusLod(o345Spec());
 }
 
 // --- the Solaris Urbino 15 -----------------------------------------------------------
@@ -472,8 +526,9 @@ function urbinoSpec(): CitySpec {
     maxSteerDeg: 50,
     details: (c) => {
       const { x } = c;
+      const ws = windscreen(c, 1.24, 2.56, 1.18, [2.3, 2.52]);
       c.d.fit("front", c.nose, () => {
-        windscreen(c, 1.24, 2.56, 1.18, [2.3, 2.52]);
+        ws();
         // the cat's-eye clusters: three round lamps each side, a plate between
         for (const sd of [-1, 1]) {
           endSlab(c.m(), "frame", c.frame, 1, sd * 0.97 - 0.22, sd * 0.97 + 0.22, 0.87, 1.0, 0.008);
@@ -481,6 +536,7 @@ function urbinoSpec(): CitySpec {
         }
         endSlab(c.m(), "plate", c.frame, 1, -0.26, 0.26, 0.42, 0.54, 0.016);
       });
+      c.d.glaze(-1, -1.12, 1.12, 1.25, 2.45);
       c.d.fit("rear", c.tail, () => {
         endSlab(c.m(), "glassDark", c.frame, -1, -1.12, 1.12, 1.25, 2.45, 0.02);
         for (const sd of [-1, 1]) for (const y of [1.08, 2.58]) endLamp(c.m(), "lampRed", c.frame, -1, sd * 1.07, y, 0.06, 0.016, "frame", 8);
@@ -488,6 +544,8 @@ function urbinoSpec(): CitySpec {
         endSlab(c.m(), "plate", c.frame, -1, -0.26, 0.26, 0.66, 0.78, 0.016);
       });
       // the engine stands in a tower in the rear left corner: no window there
+      c.d.cover(-1, x(13.5), x(12.4));
+      c.d.endPaint(-1, 0.62, 0.96, "band");
       c.d.fit("engine tower", x(13.0), () => sideSlab(c.m(), "body", c.frame, -1, x(13.5), x(12.4), 1.06, 2.62, 0.03));
       roofBox(c, "roof", x(5.0), x(2.6), -0.8, 0.8, 3.1, "pod", 2.82);
       roofBox(c, "roof", x(13.6), x(12.4), -0.9, 0.9, 3.05, "pod", 2.82);
@@ -498,6 +556,10 @@ function urbinoSpec(): CitySpec {
 
 export function solarisUrbino15(): MeshBuilder {
   return cityBus(urbinoSpec());
+}
+
+export function solarisUrbino15Lod(): MeshBuilder {
+  return cityBusLod(urbinoSpec());
 }
 
 // --- Bus 1 -------------------------------------------------------------------------
@@ -533,6 +595,12 @@ function bus1Spec(): CitySpec {
       // the mint sweep under the windows, its lower edge falling from u 5.75 to the
       // tail as the native z_inc/z_dec draw it, held above the rear arch's crown
       // (the texture paints over the wheel); one closed strip (bentSlab), both sides
+      // from afar: the sweep as two convex pieces, the mint tail's last half metre of the sides
+      for (const s of [-1, 1]) {
+        c.d.sideShape(s, "mint", [[x(5.75), 1.58], [x(5.75), 1.45], [x(7.3), 1.18], [x(8.8), 1.18], [x(8.8), 1.58]]);
+        c.d.sideShape(s, "mint", [[x(8.8), 1.58], [x(8.8), 1.18], [x(9.5), 0.6], [x(11.0), 0.32], [x(11.0), 1.58]]);
+        c.d.sidePaint(s, "mint", [c.tail, x(10.9)], [0.32, 3.1]);
+      }
       c.d.fit("sweep", x(8), () => {
         const lower: Array<[number, number]> = [[5.75, 1.45], [7.3, 1.18], [8.8, 1.18], [9.5, 0.6], [10.25, 0.45], [11.0, 0.32]];
         for (const s of [-1, 1]) {
@@ -540,8 +608,9 @@ function bus1Spec(): CitySpec {
           bentSlab(c.m(), "mint", lower.map(([u, y]): [Vec3, Vec3] => [[x(u), 1.58, z], [x(u), y, z]]), [0, 0, -s * 0.03]);
         }
       });
+      const ws = windscreen(c, 1.45, 2.68, 1.08, [2.42, 2.64]);
       c.d.fit("front", c.nose, () => {
-        windscreen(c, 1.45, 2.68, 1.08, [2.42, 2.64]);
+        ws();
         for (const s of [-1, 1]) endSlab(c.m(), "lampHead", c.frame, 1, s * 0.9 - 0.14, s * 0.9 + 0.14, 0.6, 0.72, 0.014);
         endSlab(c.m(), "plate", c.frame, 1, -0.26, 0.26, 0.42, 0.54, 0.016);
       });
@@ -556,4 +625,8 @@ function bus1Spec(): CitySpec {
 
 export function bus1(): MeshBuilder {
   return cityBus(bus1Spec());
+}
+
+export function bus1Lod(): MeshBuilder {
+  return cityBusLod(bus1Spec());
 }

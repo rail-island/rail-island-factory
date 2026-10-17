@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from "vitest";
 import { MeshBuilder } from "../generator/meshBuilder";
-import { fitLod, lodBands, lodShell, LOD_GLASS, LOD_PALETTE, mergeBand, simplifyTable, windowBands, type LodShell } from "../generator/lodKit";
+import { fitLod, lodBands, lodShell, lodWheel, LOD_GLASS, LOD_PALETTE, mergeBand, simplifyTable, windowBands, type LodShell } from "../generator/lodKit";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { glbStats } from "../generator/glbStats";
@@ -108,5 +108,17 @@ describe("LOD kit fitting", () => {
     expect(m.triangleCount()).toBeLessThanOrEqual(n - 4);
     expect(m.toGlb("t")).toEqual(fitLod(spec, n - 4).toGlb("t"));
     expect(() => fitLod({ palette: PALETTE, shells: [SHELL], parts: [] }, 4)).toThrow("does not fit");
+  });
+});
+
+describe("LOD kit solids", () => {
+  it("stands a road wheel on a flat side at y = 0", () => {
+    for (const n of [5, 6, 8]) {
+      const m = new MeshBuilder(PALETTE);
+      lodWheel(m, "dark", 0, 0.5, 1.0, 1.3, n);
+      const ys = faces(m).flatMap((f) => f.p.map((p) => p[1]));
+      expect(Math.min(...ys)).toBeCloseTo(0, 9);
+      expect(ys.filter((y) => Math.abs(y) < 1e-9).length).toBeGreaterThan(2);
+    }
   });
 });

@@ -20,6 +20,10 @@ import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "./meshBuilder.t
 import type { Vec3 } from "./meshCore.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import { block, plate, side } from "./vehicleParts.ts";
+import {
+  fitLod, lodBogie, lodPantograph, lodRoofBox, lodSideBox, windowBands,
+  type LodPart, type LodShell,
+} from "./lodKit.ts";
 import { CD163_PALETTE, bandAt, coil, lettering, letteringWidth, runningNumber, tubeX, type Band } from "./cd163.ts";
 
 const c = (color: string, roughness = 0.5): MaterialSpec => ({ color, metallic: 0.1, roughness });
@@ -857,4 +861,43 @@ export function cd230(params?: ParamValues): MeshBuilder {
   m.scope("underframe", () => underframe(m));
   m.scope("roof equipment", () => roofEquipment(m, l));
   return m;
+}
+
+// ---------------------------------------------------------------------------
+// Low level of detail
+
+/**
+ * The laminatka for distant views (the shared kit, lodKit.ts): the shell from
+ * the same profile tables (TIP, HALF), its rounded noses as a vee 0.4 m deep,
+ * painted in the livery's side, cab and face bands; the wrap-round windscreen
+ * as one band per end, the louvred band and the row of top windows (optional),
+ * the frame, a block per bogie, the transformer tank (optional), the 240's roof
+ * box and the breaker (optional), the raised rear diamond pantograph and the
+ * folded front one (optional). Within `budget` triangles for every livery.
+ */
+export function cd230Lod(params?: ParamValues, budget = 100): MeshBuilder {
+  const { livery: key } = resolveParams(CD230_PARAMS, params);
+  const l: Cd230Livery = CD230_LIVERIES[key as keyof typeof CD230_LIVERIES];
+  const shell: LodShell = {
+    y0: Y_SHELL, tip: TIP, hw: HALF, setback: [[Y_SHELL, SETBACK], [Y_ROOF, SETBACK]],
+    side: l.side, end: l.face, cab: { x: CAB_X, side: l.cab }, roof: "roof",
+    endWindows: windowBands([-1, 1].map((s) => ({ u: side(s, PILLAR, 1.5), y: WS })), 0.4),
+    sideWindows: [
+      { u: GRILLE, y: [2.6, 3.3], mat: "louvre", optional: 20 },
+      ...windowBands(WINDOWS.map(([a, b]) => ({ u: fromSource(a, b), y: [3.4, 3.6] as const })), 0.6).map((w) => ({ ...w, optional: 15 })),
+    ],
+  };
+  const [b0, b1] = l.roofBox ? fromSource(8.5, 9.8) : fromSource(7.3, 8.6);
+  const pantograph = (m: MeshBuilder, x: number, h: number, raised: boolean) =>
+    lodPantograph(m, { x, roofY: Y_ROOF, baseY: PANTO_BASE, h, raised, raisedTop: PANTO_BASE + 1.57, lower: PANTO_ARM, upper: PANTO_ARM, halfHead: 0.9 });
+  const parts: LodPart[] = [
+    { draw: (m) => m.scope("frame", () => lodSideBox(m, l.frame, [[-7.6, Y_FRAME], [7.6, Y_FRAME], [7.6, Y_SHELL], [-7.6, Y_SHELL]], -1.5, 1.5)) },
+    { draw: (m) => m.scope("running gear", () => { for (const x of [-BOGIE_X, BOGIE_X]) lodBogie(m, x, HALF_BASE + WHEEL_R + 0.2, Y_FRAME, 1.1); }) },
+    { optional: 30, draw: (m) => m.scope("tank", () => { const [x0, x1] = fromSource(6.9, 8.3); lodSideBox(m, "slat", [[x0, 0.45], [x1, 0.45], [x1, Y_FRAME], [x0, Y_FRAME]], -1.1, 1.1); }) },
+    { optional: 10, draw: (m) => m.scope("breaker", () => lodRoofBox(m, "breaker", b0, b1, 0.12, 0.08, Y_ROOF - 0.02, 4.48)) },
+    ...(l.roofBox ? [{ optional: 12, draw: (m: MeshBuilder) => m.scope("roof box", () => { const [x0, x1] = fromSource(6.1, 7.3); lodRoofBox(m, "slat", x0, x1, 0.3, 0.3, Y_ROOF - 0.02, 4.45); }) }] : []),
+    { draw: (m) => m.scope("raised pantograph", () => pantograph(m, -PANTO_X, 1, true)) },
+    { optional: 0, draw: (m) => m.scope("folded pantograph", () => pantograph(m, PANTO_X, -1, false)) },
+  ];
+  return fitLod({ palette: { ...PALETTE, ...SHARED, ...l.palette }, shells: [shell], parts }, budget);
 }

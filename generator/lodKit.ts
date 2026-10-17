@@ -570,7 +570,8 @@ export function lodNgon(n: number, r: number, cx = 0, cz = 0, rot = 0): Array<[n
 /** A road vehicle's wheel from afar: an n-gon prism across z from z0 to z1 (outer face and tread), its inner face left out. */
 export function lodWheel(m: MeshBuilder, mat: string, x: number, r: number, z0: number, z1: number, n = 6): void {
   const y = r * Math.cos(Math.PI / n);
-  const ring = lodNgon(n, r, x, y, Math.PI / n);
+  // a flat side, not a vertex, on the road
+  const ring = lodNgon(n, r, x, y, Math.PI / n - Math.PI / 2);
   const outer = Math.abs(z1) > Math.abs(z0) ? z1 : z0, inner = outer === z1 ? z0 : z1;
   for (let i = 0; i < n; i++) {
     const [a, b] = [ring[i]!, ring[(i + 1) % n]!];

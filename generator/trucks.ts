@@ -25,6 +25,8 @@ import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "./meshBuilder.t
 import type { Vec3 } from "./meshCore.ts";
 import type { CatalogFields, ProceduralDesign } from "./design.ts";
 import { arc, block, plate, side, steeredWheels } from "./vehicleParts.ts";
+import { blockPart, levelCab, lodTube, sectionBody, truckLod } from "./lodRoad.ts";
+import type { LodSections } from "./lodKit.ts";
 
 // Metals are only mildly metallic: the game and the site light models without
 // an environment map, so a fully metallic surface would render nearly black.
@@ -471,6 +473,48 @@ export function cisternSemiTruck(): MeshBuilder {
   return m;
 }
 
+/**
+ * The semi-truck's sections from afar: the tractor and the trailer about the
+ * king pin, as in the full rig, and no joint (a semi-trailer's hitch has none).
+ */
+const semiSections = (pivot: Vec3): LodSections => ({
+  pivots: [[0, 0, 0], pivot],
+  joints: [],
+  maxBendDeg: 75,
+});
+
+/**
+ * The cistern semi-truck from afar (lodRoad.ts truckLod): the copper cab down to
+ * its bumper with the windscreen, side windows and grille, the chassis and the
+ * copper side skirt; the polished tank as an octagonal tube with pointed heads
+ * on its saddle and subframe, the walkway, the fenders over the trailer's axles.
+ */
+export function cisternSemiTruckLod(): MeshBuilder {
+  const T = { section: 1 };
+  return truckLod({
+    palette: PALETTE,
+    cab: {
+      body: levelCab(C_CAB_X0, C_CAB, { y: 0.44, top: 1.17, xf: 7.79 }, { side: [[0.44, 3.67, "copper"]], roof: "copper" }),
+      windscreen: { half: 1.03, y: [2.52, 3.33] },
+      sideWindows: [{ x: [5.86, frontAt(C_CAB, 2.9) - 0.24], y: [2.52, 3.26] }],
+      front: [{ half: 0.64, y: [1.36, 2.2], mat: "trim" }, { half: 0.74, y: [2.2, 2.29], mat: "steel", optional: 15 }],
+    },
+    parts: [
+      blockPart("chassis", "chassis", [1.58, 3.65], [0.7, 1.07], [-0.6, 0.6]),
+      blockPart("mudguards", "trim", [2.0, 3.2], [1.07, 1.13], [-1.29, 1.29], { optional: 13 }),
+      blockPart("side skirts", "copper", [3.65, 5.24], [0.5, 1.12], [-1.2, 1.2]),
+      { ...T, draw: (m) => m.scope("tank", () => lodTube(m, "steel", [[TANK_X1, TANK_R, TANK_Y], [TANK_X0, TANK_R, TANK_Y]], 8, ["cone", "cone"], 0.37)) },
+      blockPart("walkway", "chassis", [-6.7, 4.0], [3.54, 3.68], [-0.45, 0.45], { ...T, optional: 12 }),
+      blockPart("saddle", "chassis", [1.9, 4.3], [1.16, 1.52], [-0.55, 0.55], T),
+      blockPart("subframe", "chassis", [-7.8, -3.1], [1.05, 1.5], [-0.56, 0.56], T),
+      blockPart("fenders", "trim", [-7.52, -3.78], [0.96, 1.11], [-1.28, 1.28], T),
+      blockPart("equipment cabinet", "steelBand", [-2.2, -0.5], [0.85, 1.36], [-1.08, 1.08], { ...T, optional: 14 }),
+    ],
+    wheels: { mat: "chassis", r: C_WHEEL_R, axles: [{ x: C_FRONT_AXLE, z: 1.23 }, { x: C_DRIVE_AXLE, z: 1.27 }, ...C_TRAILER_AXLES.map((x) => ({ x, z: 1.24, section: 1 }))] },
+    sections: semiSections(C_PIVOT),
+  }, 200);
+}
+
 // --- the concrete mixer -------------------------------------------------------------
 //
 // An 8x4 MAN TGS mixer: a white cab-over cab with a grey lower band, grey
@@ -748,6 +792,33 @@ export function mixerTruck(): MeshBuilder {
   return m;
 }
 
+/**
+ * The mixer from afar (lodRoad.ts truckLod): the white cab on its grey lower
+ * band down to the bumper, the windscreen, visor and grille, the dark chassis
+ * with its side equipment, the drum as a hexagonal double cone tilted up to
+ * the rear, the hopper, four axles' wheels.
+ */
+export function mixerTruckLod(): MeshBuilder {
+  const ring = (x: number): [number, number, number] => [x, drumRadius(x), drumY(x)];
+  return truckLod({
+    palette: PALETTE,
+    cab: {
+      body: levelCab(MX_CAB_X0, MX_CAB, { y: 0.68, top: 1.5, xf: 5.05 }, { side: [[0.68, 1.5, "greyPlastic"], [1.5, 3.71, "white"]], roof: "white" }),
+      windscreen: { half: 1.04, y: [2.5, 3.4] },
+      sideWindows: [{ x: [2.82, frontAt(MX_CAB, 3.0) - 0.2], y: [2.55, 3.4] }],
+      front: [{ half: 0.75, y: [1.6, 2.36], mat: "trim", optional: 16 }, { half: 1.05, y: [3.45, 3.6], mat: "trim", optional: 15 }],
+    },
+    parts: [
+      blockPart("chassis", "chassis", [-4.33, 2.62], [0.58, 1.29], [-1.15, 1.15], { top: false, ends: false }),
+      { draw: (m) => m.scope("drum", () => lodTube(m, "white", [ring(1.45), ring(-0.5), ring(-3.6)], 6, ["none", "flat"])) },
+      // the rear pedestal with the hopper on it, its open top left out
+      blockPart("hopper", "white", [-4.75, -3.72], [1.29, 4.31], [-0.55, 0.55], { optional: 22, top: false }),
+      blockPart("water tank", "white", [1.95, 2.45], [2.46, 3.6], [-0.3, 0.3], { optional: 17 }),
+    ],
+    wheels: { mat: "chassis", r: MX_WHEEL_R, axles: [...MX_FRONT_AXLES, ...MX_REAR_AXLES].map((x) => ({ x, z: 1.33 })) },
+  }, 100);
+}
+
 // --- the reefer semi-truck ----------------------------------------------------------
 //
 // A white MAN TGA-style cab-over tractor with a high roof, a tinted visor
@@ -1002,7 +1073,44 @@ export const TRUCK_CATALOG: CatalogFields = {
 
 /** Every design of the family, by catalog id; `references` is the folder of its source photos under assets/. */
 export const TRUCKS: ProceduralDesign[] = [
-  { id: "proc-vehicle-cistern-semi-truck", game: { weight: 34, power: 330, maxspeed: 85, accel: null }, title: "Cistern Semi-Truck", build: cisternSemiTruck, references: "cistern-semi-truck", catalog: TRUCK_CATALOG },
-  { id: "proc-vehicle-mixer-truck", game: { weight: 32, power: 300, maxspeed: 80, accel: null }, title: "Concrete Mixer Truck", build: mixerTruck, references: "mixer-truck", catalog: TRUCK_CATALOG },
-  { id: "proc-vehicle-reefer-semi-truck", game: { weight: 30, power: 330, maxspeed: 90, accel: null }, title: "Reefer Semi-Truck", build: reeferSemiTruck, references: "reefer-semi-truck", catalog: TRUCK_CATALOG },
+  { id: "proc-vehicle-cistern-semi-truck", game: { weight: 34, power: 330, maxspeed: 85, accel: null }, title: "Cistern Semi-Truck", build: cisternSemiTruck, buildLod: cisternSemiTruckLod, references: "cistern-semi-truck", catalog: TRUCK_CATALOG },
+  { id: "proc-vehicle-mixer-truck", game: { weight: 32, power: 300, maxspeed: 80, accel: null }, title: "Concrete Mixer Truck", build: mixerTruck, buildLod: mixerTruckLod, references: "mixer-truck", catalog: TRUCK_CATALOG },
+  { id: "proc-vehicle-reefer-semi-truck", game: { weight: 30, power: 330, maxspeed: 90, accel: null }, title: "Reefer Semi-Truck", build: reeferSemiTruck, buildLod: reeferSemiTruckLod, references: "reefer-semi-truck", catalog: TRUCK_CATALOG },
 ];
+
+/**
+ * The reefer semi-truck from afar (lodRoad.ts truckLod): the white high-roof cab
+ * down to its bumper with the windscreen, the tinted visor and the grille, the
+ * blue skirt and the aluminium tank, the chassis; the white box between its
+ * aluminium rails with the refrigeration unit on its front wall, the underframe,
+ * the side guards and the fenders.
+ */
+export function reeferSemiTruckLod(): MeshBuilder {
+  const T = { section: 1 };
+  const box: Array<[number, number]> = [[-BOX_HW, BOX_Y0], [BOX_HW, BOX_Y0], [BOX_HW, BOX_Y1], [-BOX_HW, BOX_Y1]];
+  return truckLod({
+    palette: PALETTE,
+    cab: {
+      body: levelCab(R_CAB_X0, R_CAB, { y: 0.62, top: 1.32, xf: 8.45 }, { side: [[0.62, 4.0, "white"]], frontEnd: [[0.62, 0.72, "trim"], [0.72, 4.0, "white"]], roof: "white" }),
+      windscreen: { half: 1.06, y: [2.09, 3.19] },
+      sideWindows: [{ x: [6.75, frontAt(R_CAB, 2.7) - 0.2], y: [2.32, 3.12] }],
+      front: [{ half: 0.62, y: [1.6, 2.0], mat: "trim" }, { half: 1.05, y: [3.25, 3.45], mat: "visorTint", optional: 15 }],
+    },
+    masses: [{
+      name: "box", section: 1,
+      body: sectionBody(box, BOX_X0, BOX_X1, { side: [[BOX_Y0, BOX_Y0 + 0.1, "alloy"], [BOX_Y0 + 0.1, BOX_Y1 - 0.08, "white"], [BOX_Y1 - 0.08, BOX_Y1, "alloy"]], roof: "white" }),
+    }],
+    parts: [
+      blockPart("chassis", "trim", [2.58, 6.3], [0.72, 1.0], [-0.5, 0.5]),
+      blockPart("skirt", "blue", [4.28, 5.89], [0.55, 1.0], [-1.23, -0.5]),
+      blockPart("tank", "alloy", [4.43, 5.64], [0.5, 1.12], [0.5, 1.27]),
+      blockPart("refrigeration unit", "white", [5.1, 5.6], [1.65, 3.75], [-1.0, 1.0], T),
+      blockPart("unit grille", "trim", [5.59, 5.612], [1.8, 3.5], [-0.75, 0.75], { ...T, optional: 14 }),
+      blockPart("underframe", "trim", [-8.21, 4.98], [1.15, BOX_Y0], [-0.56, 0.56], { ...T, top: false }),
+      blockPart("side guards", "trim", [-4.02, 1.89], [0.85, 1.22], [-1.22, 1.22], { ...T, top: false, optional: 13 }),
+      blockPart("fenders", "trim", [-8.07, -4.16], [1.1, 1.18], [-1.25, 1.25], T),
+    ],
+    wheels: { mat: "chassis", r: R_WHEEL_R, axles: [{ x: R_FRONT_AXLE, z: 1.23 }, { x: R_DRIVE_AXLE, z: 1.27 }, ...R_TRAILER_AXLES.map((x) => ({ x, z: 1.26, section: 1 }))] },
+    sections: semiSections(R_PIVOT),
+  }, 200);
+}

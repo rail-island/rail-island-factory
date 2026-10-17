@@ -13,6 +13,7 @@ import { drawJoint, type JointRig, type SectionRig, type VehicleRig } from "./ri
 import { drawShell, halfWidth, type Arch, type Paint } from "./busBody.ts";
 import { AXLE_FACTOR, axleBeam, busWheel, onSide, sideSlab, type BusFrame } from "./busKit.ts";
 import { block, steeredWheels } from "./vehicleParts.ts";
+import { busLod, emptyBusLodNotes, type BusLodNotes } from "./lodRoad.ts";
 
 /** One axle: where it is, and what it carries. */
 export interface Axle {
@@ -64,6 +65,19 @@ function drawFittings(m: MeshBuilder, fittings: readonly Fitting[], lo: number, 
   });
 }
 
+/** The bus's sections: a rigid bus's "body", an articulated bus's "section<i>" pivoted at its hinge (the distant model's too, lodRoad.ts). */
+export function busSections(spec: Pick<BusSpec, "bodies" | "hingeY">): SectionRig[] {
+  const articulated = spec.bodies.length > 1;
+  const hingeY = spec.hingeY ?? 0.6;
+  return spec.bodies.map((_, i) => {
+    if (i === 0) return { node: articulated ? "section0" : "body", pivot: [0, 0, 0] };
+    const ahead = spec.bodies[i - 1]!;
+    // the hinge: the middle of the gap between this body's front and the one ahead's rear
+    const hi = spec.bodies[i]![1];
+    return { node: `section${i}`, pivot: [(ahead[0] + hi) / 2, hingeY, 0] };
+  });
+}
+
 /**
  * Builds the bus. `bind` receives the mesh builder before anything is drawn, so
  * the fittings' closures, written before it existed, can draw into it.
@@ -74,14 +88,7 @@ export function assembleBus(spec: BusSpec, bind?: (m: MeshBuilder) => void): Mes
   const articulated = spec.bodies.length > 1;
   const steer = spec.axles.find((a) => a.steer);
   if (!steer) throw new Error("a bus needs a steered axle");
-  const hingeY = spec.hingeY ?? 0.6;
-  const sections: SectionRig[] = spec.bodies.map((_, i) => {
-    if (i === 0) return { node: articulated ? "section0" : "body", pivot: [0, 0, 0] };
-    const ahead = spec.bodies[i - 1]!;
-    // the hinge: the middle of the gap between this body's front and the one ahead's rear
-    const hi = spec.bodies[i]![1];
-    return { node: `section${i}`, pivot: [(ahead[0] + hi) / 2, hingeY, 0] };
-  });
+  const sections = busSections(spec);
   const r = spec.wheelRadius;
   const ay = r * AXLE_FACTOR;
   let wheelNodes: [string, string] = ["", ""];
@@ -190,6 +197,8 @@ export interface DoorStyle {
  */
 export class BusDraft {
   readonly fittings: Fitting[] = [];
+  /** What the distant model keeps of the fittings (lodRoad.ts busLod), recorded beside them. */
+  readonly lod: BusLodNotes = emptyBusLodNotes();
   private builder: MeshBuilder | null = null;
 
   constructor(readonly frame: BusFrame) {}
@@ -207,6 +216,7 @@ export class BusDraft {
   /** One side window over x0..x1 on side `s` (+1 right, -1 left). */
   pane(s: number, x0: number, x1: number, st: PaneStyle): void {
     const inset = st.inset ?? 0.06;
+    this.lod.glass.push({ s, x: [x0 + inset, x1 - inset], y: [...st.glass] });
     this.fit(s > 0 ? "right windows" : "left windows", (x0 + x1) / 2, () => {
       if (st.surround) sideSlab(this.m, st.surroundMat ?? "frame", this.frame, s, x0, x1, st.surround[0], st.surround[1], 0.012);
       sideSlab(this.m, st.glassMat ?? "glass", this.frame, s, x0 + inset, x1 - inset, st.glass[0], st.glass[1], 0.022);
@@ -224,6 +234,7 @@ export class BusDraft {
   /** A passenger door over x0..x1 on side `s` (the right, +1, by default). */
   /** A door x0..x1 on side `s`: its leaves `leaves`, else the style's count, else as many as its leaf width needs. */
   door(x0: number, x1: number, st: DoorStyle, s = 1, leaves = st.leaves ?? Math.max(1, Math.ceil((x1 - x0 - 0.06) / (st.leafWidth ?? 0.62) - 1e-9))): void {
+    this.lod.doors.push({ s, x: [x0, x1], y: [st.bottom, st.top] });
     this.fit(s > 0 ? "right doors" : "left doors", (x0 + x1) / 2, () => {
       const m = this.m;
       if (st.surround) sideSlab(m, st.surround, this.frame, s, x0, x1, st.bottom - 0.04, st.top + 0.04, 0.01);
@@ -238,8 +249,42 @@ export class BusDraft {
     });
   }
 
+  /** Notes glass on an end (`end` +1 the nose, -1 the tail) for the distant model; draws nothing. */
+  glaze(end: number, z0: number, z1: number, y0: number, y1: number): void {
+    this.lod.ends.push({ end, z: [z0, z1], y: [y0, y1] });
+  }
+
+  /** Notes paint across an end the shell's panels do not carry (a bumper) for the distant model; draws nothing. */
+  endPaint(end: number, y0: number, y1: number, mat: string): void {
+    this.lod.endPaint.push({ end, y: [y0, y1], mat });
+  }
+
+  /** Notes a box on the roof for the distant model; draws nothing. */
+  roofItem(x0: number, x1: number, z0: number, z1: number, y0: number, y1: number, mat: string): void {
+    this.lod.roof.push({ x: [x0, x1], z: [z0, z1], y: [y0, y1], mat });
+  }
+
+  /** Notes a stretch of side `s` where something hides the windows, for the distant model; draws nothing. */
+  cover(s: number, x0: number, x1: number): void {
+    this.lod.covers.push({ s, x: [x0, x1] });
+  }
+
+  /** Notes paint laid on side `s` for the distant model, a rectangle or a convex outline (x, y); draws nothing. */
+  sidePaint(s: number, mat: string, x: [number, number], y: [number, number]): void {
+    this.lod.panels.push({ s, x, y, mat });
+  }
+
+  sideShape(s: number, mat: string, pts: Array<[number, number]>): void {
+    this.lod.shapes.push({ s, pts, mat });
+  }
+
   /** Builds the bus with these fittings. */
   build(spec: Omit<BusSpec, "fittings">): MeshBuilder {
     return assembleBus({ ...spec, fittings: this.fittings }, (b) => (this.builder = b));
+  }
+
+  /** Builds the bus's distant model (lodRoad.ts busLod) from the same description and the notes. */
+  buildLod(spec: Omit<BusSpec, "fittings">): MeshBuilder {
+    return busLod(spec, this.lod);
   }
 }

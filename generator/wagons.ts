@@ -17,7 +17,8 @@ import { ngon, rect, type MaterialSpec, type MeshBuilder } from "./meshBuilder.t
 import type { Vec3 } from "./meshCore.ts";
 import type { CatalogFields, GameProperties, ParamSpec, ParamValues } from "./design.ts";
 import { resolveParams } from "./design.ts";
-import { Wagon } from "./wagonParts.ts";
+import { WAGON_PALETTE, Wagon } from "./wagonParts.ts";
+import { wagonLod, type WagonLodItem } from "./lodClassic.ts";
 import { strokeText } from "./strokeFont.ts";
 
 /** The game-catalog fields of the wagons: rail vehicles in their own `wagon` group. */
@@ -647,12 +648,90 @@ export function rahTankWagon(): MeshBuilder {
   return m;
 }
 
+// --- low levels of detail ----------------------------------------------------------
+//
+// Each wagon's distant model (lodClassic.ts wagonLod): its body masses and load
+// from the same source dimensions as above, a dark block per bogie.
+
+/** The Eas from afar: the open body with its inside, its doors, the stanchions and underframe (optional) and the load. */
+export function easOpenWagonLod(params?: ParamValues): MeshBuilder {
+  const { cargo } = resolveParams(EAS_PARAMS, params);
+  const items: WagonLodItem[] = [
+    { name: "body", kind: "tub", x: [0.2, 13.7], y: [0.8, 3.3], hz: 1.45, t: 0.15, floor: 1.1, outer: "body", inner: "inside" },
+    { name: "underframe", optional: 10, kind: "block", x: [3.8, 10.0], y: [0.5, 0.8], z: 0.6, side: "underframe", top: null },
+    { name: "doors", kind: "panels", rects: EAS_DOORS.map(([a, , b]) => [a! + 0.1, b!, 1.2, 3.2] as const), z: 1.46, mat: "bodyLight" },
+    { name: "stanchions", optional: 15, kind: "panels", rects: EAS_POSTS.filter((x) => !EAS_DOORS.some((d) => d.includes(x))).map((x) => [x, x + 0.1, 0.9, 3.2] as const), z: 1.5, mat: "bodyDark" },
+  ];
+  if (cargo === "coal") items.push({ name: "cargo", kind: "heap", x: [0.4, 13.5], y: [3.15, 3.5], hz: 1.28, inset: 0.6, ridge: 0.4, mat: "coal" });
+  // the bundles lie across: their log ends face the sides
+  if (cargo === "wood") items.push({ name: "cargo", kind: "block", x: [0.3, 13.6], y: [3.15, 3.9], z: 1.27, side: "logEnd", end: "bark", top: "barkDark" });
+  return wagonLod({ palette: { ...WAGON_PALETTE, ...EAS_PALETTE }, centre: 6.95, bogies: [[2.35, 2.0], [11.45, 2.0]], items });
+}
+
+/** The Ua from afar: the open body with its inside, the stanchions and underframe (optional) and the load. */
+export function uaOpenWagonLod(params?: ParamValues): MeshBuilder {
+  const { cargo } = resolveParams(UA_PARAMS, params);
+  const items: WagonLodItem[] = [
+    { name: "body", kind: "tub", x: [0.5, 13.2], y: [0.8, 3.3], hz: 1.5, t: 0.2, floor: 1.1, outer: "body", inner: "inside" },
+    { name: "underframe", optional: 10, kind: "block", x: [3.6, 10.1], y: [0.5, 0.8], z: 0.9, side: "underframe", top: null },
+    { name: "stanchions", optional: 15, kind: "panels", rects: UA_POSTS.map(([x, w]) => [x, x + w, 0.9, 3.2] as const), z: 1.53, mat: "bodyLight" },
+  ];
+  if (cargo === "coal" || cargo === "sand") items.push({ name: "cargo", kind: "heap", x: [0.8, 12.9], y: [3.0, 3.65], hz: 1.28, inset: 1.2, ridge: 0.4, mat: cargo });
+  // the logs lie along the wagon: their ends face the ends
+  if (cargo === "wood") items.push({ name: "cargo", kind: "sweep", axis: "x", sec: [[-1.28, 3.03], [1.28, 3.03], [1.08, 3.61], [-1.08, 3.61]], a: [0.85, 12.85], wall: "bark", caps: "logEnd" });
+  return wagonLod({ palette: { ...WAGON_PALETTE, ...UA_PALETTE }, centre: 6.85, bogies: [[2.35, 1.8], [11.35, 1.8]], items });
+}
+
+/** The Nas from afar: the frame and deck, the fishbelly, the stakes, drop sides and end walls (optional) and the load. */
+export function nasFlatWagonLod(params?: ParamValues): MeshBuilder {
+  const { cargo } = resolveParams(NAS_PARAMS, params);
+  const items: WagonLodItem[] = [
+    { name: "frame", kind: "block", x: [0.6, 20.3], y: [0.8, 1.2], z: 1.44, side: "frame", top: "deck" },
+    { name: "fishbelly", kind: "profile", sec: [[6.1, 0.4], [15.0, 0.4], [16.4, 0.8], [4.8, 0.8]], hz: 1.42, mat: "frame" },
+    ...[-1, 1].map((s): WagonLodItem => ({ name: s > 0 ? "right drop side" : "left drop side", optional: 20, kind: "block", x: [0.6, 20.3], y: [1.2, 1.7], z: (s > 0 ? [1.36, 1.44] : [-1.44, -1.36]) as [number, number], side: "side", end: null, top: null })),
+    { name: "stakes", optional: 15, kind: "panels", rects: NAS_STAKES.map((x) => [x, x + 0.1, 0.7, 2.9] as const), z: 1.53, mat: "side" },
+    ...[[0.5, 0.6], [20.3, 20.4]].map(([a, b], i): WagonLodItem => ({ name: i ? "front end wall" : "rear end wall", optional: 25, kind: "block", x: [a!, b!], y: [1.2, 2.0], z: 1.4, side: null, end: "side", top: null })),
+  ];
+  if (cargo === "wood") items.push({ name: "cargo", kind: "sweep", axis: "x", sec: [[-1.4, 1.2], [1.4, 1.2], [0.6, 2.9], [-0.6, 2.9]], a: [2.82, 18.18], wall: "bark", caps: "logEnd" });
+  if (cargo === "tubes") items.push({ name: "cargo", kind: "sweep", axis: "x", sec: [[-1.4, 1.2], [1.4, 1.2], [1.4, 2.1], [0.95, 2.87], [-0.95, 2.87], [-1.4, 2.1]], a: [2.8, 18.3], wall: "tube", caps: "bore" });
+  if (cargo === "reels")
+    for (const x of [2.9, 5.8, 9.0, 11.9, 15.1, 18.0]) items.push({ name: "reel", kind: "block", x: [x - 0.9, x + 0.9], y: [1.2, 3.2], z: 1.0, side: "reel", end: "cable", top: "cable" });
+  return wagonLod({ palette: { ...WAGON_PALETTE, ...NAS_PALETTE }, centre: 10.45, bogies: [[2.65, 2.0], [18.35, 2.0]], items });
+}
+
+/** The Raj from afar: the frame, the red body, the centre sill (optional) and the four hoppers as pointed diamonds. */
+export function rajHopperWagonLod(): MeshBuilder {
+  const items: WagonLodItem[] = [
+    { name: "underframe", kind: "block", x: [1.2, 13.9], y: [0.8, 1.2], z: 1.5, side: "frame", top: null },
+    { name: "body", kind: "sweep", axis: "z", sec: [[1.3, 1.2], [13.8, 1.2], [13.1, 2.0], [1.9, 2.0]], a: [-1.4, 1.4], wall: "red", caps: "red" },
+    { name: "centre sill", optional: 10, kind: "profile", sec: [[5.4, 0.4], [9.8, 0.4], [12.7, 0.8], [2.5, 0.8]], hz: 0.45, mat: "frame" },
+    ...RAJ_HOPPERS.map((x, i): WagonLodItem => ({ name: `hopper ${i + 1}`, kind: "turned", x, rings: [[1.45, 2.0], [1.45, RAJ_PROFILE[2]![1]], [0, RAJ_PROFILE[4]![1]]], n: 4, mat: "hopper" })),
+  ];
+  return wagonLod({ palette: { ...WAGON_PALETTE, ...RAJ_PALETTE }, centre: 7.2, bogies: [[3.5, 1.9], [11.6, 1.9]], items });
+}
+
+/** The Rah from afar: the frame, the octagonal tank with its orange band, the dome, the black boards and the walkway (optional). */
+export function rahTankWagonLod(): MeshBuilder {
+  const r = RAH_PROFILE[1]![1];
+  const tank = ngon(8, r, Math.PI / 8, 0, RAH_AXIS).map(([z, y]) => [z, y] as const);
+  const items: WagonLodItem[] = [
+    { name: "underframe", kind: "block", x: [0.5, 12.2], y: [0.8, 1.2], z: 1.4, side: "frame" },
+    { name: "tank", kind: "sweep", axis: "x", sec: tank, a: [RAH_PROFILE[0]![0] + 0.1, RAH_PROFILE[3]![0] - 0.1], wall: [[1, RAH_BAND[0], "tank"], [RAH_BAND[0], RAH_BAND[1], "band"], [RAH_BAND[1], 4, "tank"]], caps: "tank" },
+    { name: "dome", kind: "sweep", axis: "x", sec: [[-0.4, 3.2], [0.4, 3.2], [0.3, 4.0], [-0.3, 4.0]], a: [6.0, 6.9], wall: "tank", caps: "tank" },
+    { name: "boards", kind: "panels", rects: [[1.6, 4.1, 1.2, 2.0], [8.2, 10.7, 1.2, 2.0]], z: 0.9, mat: "ink" },
+    { name: "walkway", optional: 10, kind: "block", x: [5.2, 7.7], y: [3.38, 3.42], z: 0.42, side: null, end: null, top: "grating" },
+  ];
+  return wagonLod({ palette: { ...WAGON_PALETTE, ...RAH_PALETTE }, centre: 6.35, bogies: [[2.675, 1.95], [9.6, 1.9]], items });
+}
+
 /** A wagon design: id, title, builder, parameters and its reference folder (assets/<folder>/). */
 export interface WagonDesign {
   id: string;
   title: string;
   folder: string;
   build: (params?: ParamValues) => MeshBuilder;
+  /** Its low level of detail (wagonLod). */
+  buildLod: (params?: ParamValues) => MeshBuilder;
   params?: readonly ParamSpec[];
   /** What the game needs of it beyond its geometry (design.ts GameProperties). */
   game: GameProperties;
@@ -698,9 +777,9 @@ const EAS_OPEN_WAGON_GAME: GameProperties = {
 
 /** Every wagon design, in catalog order. The ids are stored in saved maps. */
 export const WAGON_DESIGNS: readonly WagonDesign[] = [
-  { id: "proc-vehicle-nas-flat-wagon", game: NAS_FLAT_WAGON_GAME, title: "Nas Flat Wagon", folder: "wagon-nas", build: nasFlatWagon, params: NAS_PARAMS },
-  { id: "proc-vehicle-ua-open-wagon", game: UA_OPEN_WAGON_GAME, title: "Ua Open Wagon", folder: "wagon-ua", build: uaOpenWagon, params: UA_PARAMS },
-  { id: "proc-vehicle-eas-open-wagon", game: EAS_OPEN_WAGON_GAME, title: "Eas Open Wagon", folder: "wagon-eas", build: easOpenWagon, params: EAS_PARAMS },
-  { id: "proc-vehicle-raj-hopper-wagon", game: { weight: 50, power: 0, maxspeed: 90, accel: null }, title: "Raj Hopper Wagon", folder: "wagon-raj", build: rajHopperWagon },
-  { id: "proc-vehicle-rah-tank-wagon", game: { weight: 40, power: 0, maxspeed: 100, accel: null }, title: "Rah Tank Wagon", folder: "wagon-rah", build: rahTankWagon },
+  { id: "proc-vehicle-nas-flat-wagon", game: NAS_FLAT_WAGON_GAME, title: "Nas Flat Wagon", folder: "wagon-nas", build: nasFlatWagon, buildLod: nasFlatWagonLod, params: NAS_PARAMS },
+  { id: "proc-vehicle-ua-open-wagon", game: UA_OPEN_WAGON_GAME, title: "Ua Open Wagon", folder: "wagon-ua", build: uaOpenWagon, buildLod: uaOpenWagonLod, params: UA_PARAMS },
+  { id: "proc-vehicle-eas-open-wagon", game: EAS_OPEN_WAGON_GAME, title: "Eas Open Wagon", folder: "wagon-eas", build: easOpenWagon, buildLod: easOpenWagonLod, params: EAS_PARAMS },
+  { id: "proc-vehicle-raj-hopper-wagon", game: { weight: 50, power: 0, maxspeed: 90, accel: null }, title: "Raj Hopper Wagon", folder: "wagon-raj", build: rajHopperWagon, buildLod: rajHopperWagonLod },
+  { id: "proc-vehicle-rah-tank-wagon", game: { weight: 40, power: 0, maxspeed: 100, accel: null }, title: "Rah Tank Wagon", folder: "wagon-rah", build: rahTankWagon, buildLod: rahTankWagonLod },
 ];

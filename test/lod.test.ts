@@ -81,7 +81,7 @@ describe('low detail exports', () => {
       if (mod.pose) {
         const before = low.toJSON();
         mod.pose(low, {steer:.4,bend:[.3,.2]});
-        mod.renderJoint?.(low,0);
+        if (rig?.joints?.length) mod.renderJoint?.(low,0);
         // posing moves an articulated LOD's sections and nothing of a static one
         if (rig === undefined) expect(low.toJSON()).toEqual(before);
         else expect(low.getObjectByName('section1')!.rotation.y).not.toBe(0);
