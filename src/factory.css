@@ -229,6 +229,12 @@ body {
   background: rgb(30, 30, 35);
 }
 
+/* A side view: wide and short, the rail along the bottom. */
+.factory-thumb--side {
+  width: 144px;
+  object-position: center bottom;
+}
+
 /* ---------------------------------------------------------------- the table */
 
 /* The one thing allowed to scroll sideways, and only inside its own box. */
@@ -312,7 +318,7 @@ body {
 
 .factory-table thead th.factory-table__thumbcol,
 .factory-table td.factory-table__thumbcol {
-  width: 96px;
+  width: 144px;
   padding: 4px 6px;
 }
 
@@ -432,6 +438,8 @@ body {
 
 .factory-detail__thumb {
   display: block;
+  max-width: 100%;
+  height: auto;
   margin: 12px 0;
   border-radius: var(--m-radius-sm);
   background: rgb(30, 30, 35);

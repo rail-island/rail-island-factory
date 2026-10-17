@@ -24,6 +24,23 @@ import { VEHICLE_CATALOG } from "./vehicles.ts";
 import type { CatalogFields, ParamSpec, ProceduralDesign } from "./design.ts";
 import type { VehicleRig } from "./rig.ts";
 
+/** What a side-view thumbnail spans, in metres (renderGlbThumb.ts SideFrame). */
+export interface ThumbSide {
+  /** From the left edge to the right edge: the vehicle's length and both margins. */
+  widthM: number;
+  /** From the bottom edge to the top edge. */
+  heightM: number;
+  /** The bottom edge's height; the rail (or road) is at 0, -bottomM above it. */
+  bottomM: number;
+}
+
+/** The catalog categories whose thumbnail is a side view: the vehicles on a road or on rails. */
+export const SIDE_VIEW_CATEGORIES: readonly string[] = ["Road vehicles", "Rail vehicles"];
+
+export function isSideViewCategory(category: string): boolean {
+  return SIDE_VIEW_CATEGORIES.includes(category);
+}
+
 /** One model as the game's building catalog would hold it. */
 export interface MetaEntry {
   yaw?: number;
@@ -38,6 +55,13 @@ export interface MetaEntry {
   glb: string;
   /** File name within the export's thumbs/ folder. */
   thumb: string;
+  /**
+   * Present when the thumbnail is a SIDE view (a road or rail vehicle): an
+   * orthographic elevation, nose on the left, spanning these metres -- the game's
+   * own side-thumbnail framing, so it can draw the image to scale. Absent for the
+   * square three-quarter view.
+   */
+  thumbSide?: ThumbSide;
   /** On-map size multiplier. */
   defaultScale?: number;
   license: string;
@@ -133,7 +157,12 @@ export const REFS_DIR = "refs";
 export const REFERENCE_EXTENSIONS = [".bmp", ".gif", ".jpeg", ".jpg", ".png", ".svg", ".webp"] as const;
 
 /** One design's entry, with the catalog fields of its family (the skyscrapers' by default) and its built rig. */
-export function metaEntry(design: ProceduralDesign, fields: CatalogFields = SKYSCRAPER_CATALOG, rig: VehicleRig | null = null): MetaEntry {
+export function metaEntry(
+  design: ProceduralDesign,
+  fields: CatalogFields = SKYSCRAPER_CATALOG,
+  rig: VehicleRig | null = null,
+  side: ThumbSide | null = null,
+): MetaEntry {
   return {
     id: proceduralId(design.id),
     title: design.title,
@@ -143,6 +172,7 @@ export function metaEntry(design: ProceduralDesign, fields: CatalogFields = SKYS
     ...(fields.traction ? { traction: fields.traction } : {}),
     glb: `${proceduralId(design.id)}.glb`,
     thumb: `${proceduralId(design.id)}.png`,
+    ...(side ? { thumbSide: { widthM: r4(side.widthM), heightM: r4(side.heightM), bottomM: r4(side.bottomM) } } : {}),
     ...(["Road vehicles", "Rail vehicles", "Cable car"].includes(fields.category) ? {} : { defaultScale: fields.defaultScale }),
     license: fields.license,
     author: fields.author,
@@ -159,10 +189,24 @@ export function exportMeta(designs: readonly ProceduralDesign[]): ExportMeta {
   return { note: NOTE, count: designs.length, buildings: designs.map((d) => metaEntry(d, d.catalog ?? SKYSCRAPER_CATALOG)) };
 }
 
-/** The vehicles' meta; `rigs` holds each rigged design's built rig by id. */
-export function exportVehicleMeta(designs: readonly ProceduralDesign[], rigs: ReadonlyMap<string, VehicleRig> = new Map()): VehicleExportMeta {
-  return { note: NOTE, count: designs.length, vehicles: designs.map((d) => metaEntry(d, d.catalog ?? VEHICLE_CATALOG, rigs.get(d.id) ?? null)) };
+/**
+ * The vehicles' meta; `rigs` holds each rigged design's built rig by id, `sides`
+ * each side-view thumbnail's frame.
+ */
+export function exportVehicleMeta(
+  designs: readonly ProceduralDesign[],
+  rigs: ReadonlyMap<string, VehicleRig> = new Map(),
+  sides: ReadonlyMap<string, ThumbSide> = new Map(),
+): VehicleExportMeta {
+  return {
+    note: NOTE,
+    count: designs.length,
+    vehicles: designs.map((d) => metaEntry(d, d.catalog ?? VEHICLE_CATALOG, rigs.get(d.id) ?? null, sides.get(d.id) ?? null)),
+  };
 }
+
+/** Rounded to a tenth of a millimetre, so float noise does not reach the meta. */
+const r4 = (v: number): number => Math.round(v * 1e4) / 1e4;
 
 /** Rounded to the millimetre, so float noise does not reach the listing. */
 const mm = (v: number): number => Math.round(v * 1000) / 1000;
