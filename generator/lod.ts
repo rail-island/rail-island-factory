@@ -322,7 +322,8 @@ const FAMILIES: Record<string, readonly string[]> = {
   ],
   "cableCabins": [
     "cablecar-cabin",
-    "gondola-cabin"
+    "gondola-cabin",
+    "chairlift-chair"
   ],
   "emu471": [
     "cd-471"
