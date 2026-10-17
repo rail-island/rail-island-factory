@@ -46,6 +46,14 @@ document that owns it in the same change.** Conventions:
 - The site is **English only**; there is no i18n layer.
 - Every bug fix ships with a regression test in the suite that owns the behaviour.
 - Use ASCII in code and comments; no emoji.
+- **Source inspiration is stored in git.** Every reference a model is built
+  from - a user-supplied GLB or photo, a downloaded photo or drawing - lives in
+  `assets/<name>/` (one folder per model, named after it), is listed in
+  `assets/<name>/SOURCES.md` (file, origin or URL, author, licence, use) and is
+  committed with the model; the design points at it with `references: "<name>"`.
+  `assets/_tmp/` is only an inbox for user uploads: when you build a model from a
+  file there, `git mv` it into the model's folder in the same change, and never
+  leave downloaded references only in a scratch directory.
 
 ## Git
 

@@ -11,9 +11,9 @@
 | `bld-notre-dame` | Notre-Dame | `notre-dame.glb` | `assets/notre-dame/` |
 | `bld-prague-castle-st-vitus` | Prague Castle (St Vitus) | `prague-castle-st-vitus.glb` | `assets/prague-castle-st-vitus/` |
 
-The photos are the user-provided `assets/_tmp/notre-dame.png` and
-`assets/_tmp/prague-castle.png`, copied into each design's reference folder for the
-catalog Images tab. The originals remain intact. No downloaded mesh or image is
+The photos are the user-provided `assets/notre-dame/notre-dame.png` and
+`assets/prague-castle-st-vitus/prague-castle.png`, kept in each design's reference
+folder for the catalog Images tab. No downloaded mesh or image is
 needed to build either model. The existing webapp GLBs supply orientation, bounds
 and approximate massing; the photographs guide the west facade and southern tower.
 

@@ -35,6 +35,10 @@ text and repository documentation must remain in English.
   pixel boundaries; nearest-neighbour enlargement is allowed only as a viewing
   aid, without replacing the native coordinates.
 
+Photos you download or the user supplies (from the `assets/_tmp/` inbox) go to
+`assets/<name>/` with an entry in `assets/<name>/SOURCES.md` and are committed
+with the model, like the native rasters.
+
 ## 2. Establish coordinate and view mappings
 
 Read the actual XML mapping instead of assuming image dimensions equal vehicle
