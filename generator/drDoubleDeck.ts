@@ -14,6 +14,7 @@ import { block } from "./vehicleParts.ts";
 import { Coach, px, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import { endName, fpx, gangway, headstock, lamp, mirror, sideName, sides } from "./csdCoaches.ts";
+import { doubleDeckLod } from "./lodTrams.ts";
 import { sideWindows, type PxBox, type Win } from "./germanCoachParts.ts";
 
 export type DrDoubleDeckVariant = "coach" | "drivingTrailer";
@@ -49,10 +50,7 @@ const DOORS: Array<{ box: PxBox; glass: PxBox[]; seam: number; canopy: PxBox }> 
 const WINGS: PxBox[] = [[121, 23, 132, 24], [125, 25, 133, 26], [129, 27, 134, 28], [136, 27, 141, 28], [137, 25, 145, 26], [138, 23, 149, 24]];
 
 /** One DR double-deck coach in the Berlin livery (vlakosimdb dr_sds_b, dr_sds_s). */
-export function drDoubleDeck(params?: ParamValues): MeshBuilder {
-  const variant = resolveParams(DR_DOUBLE_DECK_PARAMS, params).variant as DrDoubleDeckVariant;
-  const cab = variant === "drivingTrailer";
-  const palette: Record<string, MaterialSpec> = {
+const PALETTE: Record<string, MaterialSpec> = {
     darkRed: { color: "#7e1416", roughness: 0.55 },
     cream: { color: "#efe6b4", roughness: 0.55 },
     grey: { color: "#b9bbb8", roughness: 0.6 },
@@ -60,18 +58,45 @@ export function drDoubleDeck(params?: ParamValues): MeshBuilder {
     frame: { color: "#6c6a4a", metallic: 0.2, roughness: 0.5 },
     door: { color: "#7e1416", roughness: 0.55 },
     marking: { color: "#efe6b4", roughness: 0.5 },
-  };
-  const c = new Coach(palette, 13.5);
-  const m = c.m;
+};
+
+/** The body volume; the driving trailer's flat cab end stands at x = 0.3. */
+function drBody(cab: boolean): Volume {
   const start = cab ? 0.3 : 0.2;
-  const body: Volume = {
+  return {
     name: "body",
     section: SECTION,
     plan: [[start, 1.5], [26.8, 1.5]],
     bottom: [[start, 1.0], [5.8, 1.0], [6.1, 0.5], [20.7, 0.5], [21.0, 1.0], [26.8, 1.0]],
     bands: [[0.5, 1.9, "darkRed"], [1.9, 3.0, "cream"], [3.0, 3.2, "darkRed"], [3.2, 4.6, "grey"]],
   };
-  const endWindows: Win[] = cab ? [[27, 22, 35, 31], [235, 22, 247, 31], [[253, 22, 261, 31], "frosted"]] : [[23, 22, 35, 31], [235, 22, 247, 31], [[253, 22, 261, 31], "frosted"]];
+}
+
+/** The end sections' windows (the driving trailer's first one shorter, behind its cab). */
+const drEndWindows = (cab: boolean): Win[] => cab ? [[27, 22, 35, 31], [235, 22, 247, 31], [[253, 22, 261, 31], "frosted"]] : [[23, 22, 35, 31], [235, 22, 247, 31], [[253, 22, 261, 31], "frosted"]];
+
+/** The same coach from afar (docs/models/lod.md): the double-deck adapter of lodTrams.ts. */
+export function drDoubleDeckLod(params?: ParamValues): MeshBuilder {
+  const cab = resolveParams(DR_DOUBLE_DECK_PARAMS, params).variant === "drivingTrailer";
+  return doubleDeckLod({
+    palette: PALETTE, centre: 13.5, body: drBody(cab), floor: 1.0, canvas: H,
+    windows: [...deck(11, 18), ...deck(31, 40), ...drEndWindows(cab), ...(cab ? ([[6, 20, 11, 29], [12, 20, 17, 29]] as PxBox[]) : [])],
+    doors: DOORS.map((d) => ({ box: d.box, mat: "door" })),
+    ...(cab ? { windscreen: { box: [1, 21, 29, 30] as PxBox, end: -1 } } : {}),
+    bogies: [3.5, 23.5].map((x) => ({ x, top: 1.0 })),
+    equipment: { x: [[6.3, 9.0], [10.0, 13.0], [14.0, 17.0], [18.0, 20.5]], y0: 0.26 },
+  });
+}
+
+export function drDoubleDeck(params?: ParamValues): MeshBuilder {
+  const variant = resolveParams(DR_DOUBLE_DECK_PARAMS, params).variant as DrDoubleDeckVariant;
+  const cab = variant === "drivingTrailer";
+  const palette = PALETTE;
+  const c = new Coach(palette, 13.5);
+  const m = c.m;
+  const start = cab ? 0.3 : 0.2;
+  const body = drBody(cab);
+  const endWindows = drEndWindows(cab);
   m.scope("body", () => {
     c.volume(body);
     for (const s of sides)

@@ -351,7 +351,8 @@ function ownGeometry(mesh: Obj, count: number, materialIndex: number): Geom {
  * its first re-draw on (ownGeometry).
  */
 export function renderJoint(root: Obj, index: number, rig?: VehicleRig): void {
-  if (root.userData.lod === true) return; // Distant geometry stays in its rest pose.
+  // a static LOD has no rig and stays in its rest pose; an articulated one keeps its sections and joints
+  if (root.userData.lod === true && !root.userData.rig) return;
   const r = rigOf(root, rig);
   const j = r.joints?.[index];
   if (!j || !r.sections) throw new Error(`the model has no joint ${index}`);
@@ -399,7 +400,7 @@ export function renderJoint(root: Obj, index: number, rig?: VehicleRig): void {
  * unless one is given.
  */
 export function pose(root: Obj, p: VehiclePose = {}, rig?: VehicleRig): void {
-  if (root.userData.lod === true) return;
+  if (root.userData.lod === true && !root.userData.rig) return;
   const r = rigOf(root, rig);
   if (r.steer) {
     const angles = steerAngles(r.steer, p.steer ?? 0);

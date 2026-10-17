@@ -26,6 +26,8 @@
 import { MeshBuilder, rect, type MaterialSpec, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { block } from "./vehicleParts.ts";
+import { cabinLod, lodBar, lodBlock, lodPlanRect, lodStack } from "./lodAir.ts";
+import { LOD_GLASS, lodPolygon } from "./lodKit.ts";
 import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 
 const PALETTE: Record<string, MaterialSpec> = {
@@ -639,6 +641,119 @@ export function chairliftChair(params?: ParamValues): MeshBuilder {
   return m;
 }
 
+// ---------------------------------------------------------------------------
+// the distant models
+//
+// Each cabin's low level of detail (docs/models/lod.md) is `cabinLod` fed with the
+// full model's datums: the body as plan rings in its colour bands, the glazing a
+// band of the one LOD glass, under coarse blocks for the hanger, the grip and the
+// running gear. Each keeps the full model's height range, so the game's ropeFrac
+// and boardFrac hang it the same way.
+
+export function cablecarCabinLod(): MeshBuilder {
+  const top = CAR.axis + 0.271;
+  return cabinLod({
+    palette: PALETTE,
+    body: {
+      // the plan: chamfered at its rounded corners, then a plain rectangle
+      ring: (d, detail) => lodPlanRect(CAR.hx - d, CAR.hz - d, detail === 0 ? CAR.corner * 0.6 : 0),
+      details: 2,
+      stations: [[0, 0.25], [0.8, 0], [2.75, 0], [CAR.roof, 0.18]],
+      bands: [[0, 0.8, "shell"], [0.8, 1.1, "stripe"], [1.1, 2.55, LOD_GLASS], [2.55, 2.75, "stripe"], [2.75, CAR.roof, "shell"]],
+      top: "shell", bottom: "shell",
+    },
+    parts: [
+      { draw: (m) => {
+        // the yoke, the mast and the carriage with its sheaves up to the rope
+        lodBlock(m, "white", -0.75, 0.75, CAR.roof, 3.47, -1.2, 1.2);
+        lodStack(m, [[3.47, [[0.36, -0.76], [0.36, 0.79], [-0.36, 0.79], [-0.36, -0.76]]], [6.22, [[0.28, -0.17], [0.28, 0.41], [-0.28, 0.41], [-0.28, -0.17]]]], ["white"], null);
+        lodBlock(m, "gear", -0.17, 0.17, 6.22, 6.36, -1.5, 1.7, true);
+        lodBlock(m, "white", -0.12, 0.12, 6.36, top, -1.42, 1.62);
+      } },
+      { optional: 3, draw: (m) => {
+        lodBar(m, "white", [0, 3.4, 3.4], [0, 5.72, 0.3], 0.07, 3);
+        lodBar(m, "white", [0, 3.4, -3.4], [0, 5.72, -0.24], 0.07, 3);
+      } },
+      { optional: 2, draw: (m) => lodBlock(m, "gear", -0.55, 0.55, CAR.roof, 3.37, -3.85, -2.35) },
+      { optional: 1, draw: (m) => lodBlock(m, "gear", -0.4, 0.4, CAR.roof, 3.29, 2.7, 3.7) },
+    ],
+  });
+}
+
+export function gondolaCabinLod(): MeshBuilder {
+  const ngon = (r: number, n: number): Array<[number, number]> => Array.from({ length: n }, (_, i) => polar(((i + 0.5) / n) * TAU, r));
+  const sides = [10, 8, 6];
+  return cabinLod({
+    palette: PALETTE,
+    body: {
+      ring: (r, detail) => ngon(r, sides[detail]!),
+      details: sides.length,
+      // the rounded bottom and the roof dome close to points under the hanger
+      stations: [[-0.1, 0], [0.28, 0.72], [0.43, 0.79], [1.04, 1.01], [2.6, 0.83], [3.07, 0]],
+      bands: [[-0.1, 0.28, "red"], [0.28, GON.sill, "trim"], [GON.sill, 1.04, "red"], [1.04, 2.6, LOD_GLASS], [2.6, 3.07, "red"]],
+      top: "red", bottom: "red",
+    },
+    parts: [{ draw: (m) => {
+      lodBar(m, "steel", [0, 2.95, 0], [0, 3.92, 0], 0.12);
+      // the grip, its carriage and the running wheels to their top
+      lodBlock(m, "trim", -0.46, 0.46, 3.9, 4.795, -0.13, 0.3, true);
+    } }],
+  });
+}
+
+export function chairliftChairLod(params?: ParamValues): MeshBuilder {
+  const p = resolveParams(CHAIRLIFT_PARAMS, params);
+  const colours = CHAIR_COLOURS[p.color!]!;
+  const hw = (Number(p.seats) * CHAIR.pitch) / 2;
+  const sx = hw + 0.07;
+  const { frameY, frontZ, backZ, beamY, beamZ, pivotY, pivotZ } = CHAIR;
+  return cabinLod({
+    palette: {
+      ...PALETTE,
+      cover: { color: colours.cover, metallic: 0.2, roughness: 0.12 },
+      seat: { color: colours.seat, metallic: 0.02, roughness: 0.75 },
+      frame: { color: "#2b2d30", metallic: 0.3, roughness: 0.5 },
+    },
+    parts: [
+      { draw: (m) => {
+        // the seat and the backrest, the cushions' colour in front, the shell behind
+        lodBlock(m, "seat", -hw, hw, frameY - 0.02, CHAIR.seat, backZ, frontZ, true);
+        const b0: Vec3 = [0, CHAIR.seat + 0.03, backZ + 0.03];
+        const b1: Vec3 = [0, 1.3, backZ - 0.08];
+        for (const [mat, d, nz] of [["seat", 0, 1], ["frame", -0.09, -1]] as const) {
+          lodPolygon(m, mat, [[-hw, b0[1], b0[2] + d], [hw, b0[1], b0[2] + d], [hw, b1[1], b1[2] + d], [-hw, b1[1], b1[2] + d]], [0, 0.15, nz]);
+        }
+        // the side frames from the beam down to the seat, the beam and the hanger up to the grip
+        for (const s of [-1, 1]) lodBar(m, "frame", [s * sx, beamY, beamZ], [s * sx, frameY, backZ], 0.04, 3);
+        lodBar(m, "steel", [-sx - 0.04, beamY, beamZ], [sx + 0.04, beamY, beamZ], 0.06, 3);
+        lodBar(m, "steel", [0, CHAIR.rope - 0.14, 0], [0, 2.75, 0], 0.07, 3);
+        lodBar(m, "steel", [0, 2.8, 0.03], [0, beamY, beamZ], 0.07, 3);
+        lodBlock(m, "trim", -0.42, 0.42, CHAIR.rope - 0.17, CHAIR.rope + 0.2, -0.11, 0.13, true);
+        // the footrest, its underside on the ground line
+        lodBar(m, "trim", [-hw + 0.1, 0.04 * Math.SQRT1_2, 0.66], [hw - 0.1, 0.04 * Math.SQRT1_2, 0.66], 0.04);
+      } },
+      { optional: 1, draw: (m) => {
+        // the safety bar across the laps and its arms to the pivots
+        lodBar(m, "trim", [-hw, 0.9, 0.62], [hw, 0.9, 0.62], 0.04, 3);
+        for (const s of [-1, 1]) lodBar(m, "trim", [s * hw, pivotY, pivotZ], [s * hw, 0.9, 0.62], 0.035, 3);
+      } },
+      ...(p.cover === "bubble" ? [{ draw: (m: MeshBuilder) => {
+        // the bubble: three facets of its arc about the pivot, outside and in, and its two ends
+        const angs = [100, 60, 20, -20].map((d) => (d * Math.PI) / 180);
+        const x = hw + 0.02;
+        for (const [r, sgn] of [[CHAIR.bubbleR, 1], [CHAIR.bubbleR - 0.025, -1]] as const) {
+          const pt = (a: number, px: number): Vec3 => [px, pivotY + r * Math.sin(a), pivotZ + r * Math.cos(a)];
+          for (let i = 0; i + 1 < angs.length; i++) {
+            const am = (angs[i]! + angs[i + 1]!) / 2;
+            lodPolygon(m, "cover", [pt(angs[i]!, -x), pt(angs[i]!, x), pt(angs[i + 1]!, x), pt(angs[i + 1]!, -x)], [0, sgn * Math.sin(am), sgn * Math.cos(am)]);
+          }
+          for (const s of [-1, 1]) lodPolygon(m, "cover", [[s * (x + 0.03 * sgn), pivotY, pivotZ], ...angs.map((a) => pt(a, s * (x + 0.03 * sgn)))], [s * sgn, 0, 0]);
+        }
+      } }] : []),
+    ],
+  });
+}
+
 /** The catalog fields of the family (meta.json, catalog.ts); a design may override the scale. */
 export const CABLE_CABIN_CATALOG: CatalogFields = {
   category: "Cable car",
@@ -653,11 +768,11 @@ export const CABLE_CABIN_CATALOG: CatalogFields = {
 export const CABLE_CABINS: ProceduralDesign[] = [
   // Modelled long along Z; the game runs a cabin along X, so it is turned a quarter
   // (the old cablecar-cabin model carried the same yaw).
-  { id: "proc-vehicle-cablecar-cabin", game: { weight: null, power: null, maxspeed: 30, accel: null, scale: 0.9195, ropeFrac: 0.9603, boardFrac: 0.1009 }, title: "Aerial Tramway Car", build: cablecarCabin, references: "cablecar-cabin", catalog: { ...CABLE_CABIN_CATALOG, yaw: 90 } },
-  { id: "proc-vehicle-gondola-cabin", game: { weight: null, power: null, maxspeed: 24, accel: null, scale: 1.4448, ropeFrac: 0.866, boardFrac: 0.109 }, title: "Small Gondola", build: gondolaCabin, references: "gondola-cabin", catalog: CABLE_CABIN_CATALOG },
+  { id: "proc-vehicle-cablecar-cabin", game: { weight: null, power: null, maxspeed: 30, accel: null, scale: 0.9195, ropeFrac: 0.9603, boardFrac: 0.1009 }, title: "Aerial Tramway Car", build: cablecarCabin, buildLod: cablecarCabinLod, references: "cablecar-cabin", catalog: { ...CABLE_CABIN_CATALOG, yaw: 90 } },
+  { id: "proc-vehicle-gondola-cabin", game: { weight: null, power: null, maxspeed: 24, accel: null, scale: 1.4448, ropeFrac: 0.866, boardFrac: 0.109 }, title: "Small Gondola", build: gondolaCabin, buildLod: gondolaCabinLod, references: "gondola-cabin", catalog: CABLE_CABIN_CATALOG },
   {
     // a detachable chair at 5 m/s; rope and boarding platform as docs/models/cable-cabins.md states them
-    id: "proc-vehicle-chairlift-chair", game: { weight: null, power: null, maxspeed: 18, accel: null, ropeFrac: 0.947, boardFrac: 0.045 }, title: "Chairlift Chair", build: chairliftChair, params: CHAIRLIFT_PARAMS,
+    id: "proc-vehicle-chairlift-chair", game: { weight: null, power: null, maxspeed: 18, accel: null, ropeFrac: 0.947, boardFrac: 0.045 }, title: "Chairlift Chair", build: chairliftChair, buildLod: chairliftChairLod, params: CHAIRLIFT_PARAMS,
     finishParams: ["color"], references: "chairlift", catalog: CABLE_CABIN_CATALOG,
   },
 ];

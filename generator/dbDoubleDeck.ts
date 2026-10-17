@@ -15,6 +15,7 @@ import { block } from "./vehicleParts.ts";
 import { Coach, px, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import { endName, fpx, gangway, headstock, lamp, mirror, sideName, sides } from "./csdCoaches.ts";
+import { doubleDeckLod } from "./lodTrams.ts";
 import { dbLogo, nosePanel, noseTop, sideWindows, skinNumeral, type PxBox, type Win } from "./germanCoachParts.ts";
 
 export type DostoVariant = "firstClass" | "secondClass" | "drivingTrailer";
@@ -73,10 +74,7 @@ const DOORS: Array<{ box: PxBox; glass: PxBox[]; seam: number }> = [
 const SIGNS_LOWER: Array<[number, number]> = [[82, 84], [183, 185]];
 
 /** One DB Regio double-deck coach (vlakosimdb db_ds_re1, db_ds_re2, db_ds_re2_s). */
-export function dbDosto(params?: ParamValues): MeshBuilder {
-  const variant = resolveParams(DOSTO_PARAMS, params).variant as DostoVariant;
-  const v = VARIANTS[variant];
-  const palette: Record<string, MaterialSpec> = {
+const PALETTE: Record<string, MaterialSpec> = {
     red: { color: "#d0131a", roughness: 0.5 },
     white: { color: "#e8eaea", roughness: 0.55 },
     grey: { color: "#9a9d9f", roughness: 0.6 },
@@ -87,21 +85,48 @@ export function dbDosto(params?: ParamValues): MeshBuilder {
     frame: { color: "#4a4c4e", metallic: 0.2, roughness: 0.5 },
     display: { color: "#f3f3f0", roughness: 0.4 },
     marking: { color: "#f4f4f4", roughness: 0.5 },
+};
+
+/** The body: its far end (the cab's nose on the driving trailer) and its volume. */
+function dostoBody(v: VariantSpec): { end: number; body: Volume } {
+  const end = v.cab ? 27.0 : 26.6;
+  return {
+    end,
+    body: {
+      name: "body",
+      section: DS_SECTION,
+      plan: [[0.2, 1.5], [end, 1.5]],
+      bottom: [[0.2, 0.9], [5.1, 0.9], [5.5, 0.5], [21.3, 0.5], [21.7, 0.9], [end, 0.9]],
+      // the cab's XML elevation (re2_s alongz +0.2 m): the windscreen slopes from (26.9, 2.0) to (26.4, 3.3)
+      ...(v.cab ? { trimCaps: true, top: noseTop([[0.2, 4.6], [25.0, 4.6], [26.4, 3.3], [26.9, 2.0], [27.0, 1.1]], BANDS) } : {}),
+      bands: BANDS,
+      endPaint: "red",
+    },
   };
+}
+
+/** The same coach from afar (docs/models/lod.md): the double-deck adapter of lodTrams.ts. */
+export function dbDostoLod(params?: ParamValues): MeshBuilder {
+  const v = VARIANTS[resolveParams(DOSTO_PARAMS, params).variant as DostoVariant];
+  const { body } = dostoBody(v);
+  return doubleDeckLod({
+    palette: PALETTE, centre: v.cab ? 13.6 : 13.4, body, floor: 0.9, canvas: H,
+    windows: [...UPPER, ...LOWER, ...(v.cab ? [END_SECTION[1]!, END_SECTION[2]!, [250, 19, 261, 29] as PxBox] : END_SECTION)],
+    doors: DOORS.map((d) => ({ box: d.box, mat: "door" })),
+    ...(v.cab ? { windscreen: { box: [6, 20, 25, 34] as PxBox, end: 1 } } : {}),
+    bogies: [3.4, 23.4].map((x) => ({ x, top: 0.9 })),
+    equipment: { x: [[5.6, 8.0], [9.0, 13.0], [14.0, 18.6], [19.2, 21.2]], y0: 0.24 },
+  });
+}
+
+export function dbDosto(params?: ParamValues): MeshBuilder {
+  const variant = resolveParams(DOSTO_PARAMS, params).variant as DostoVariant;
+  const v = VARIANTS[variant];
+  const palette = PALETTE;
   // the driving trailer's body is 0.4 m longer: its centre lies 0.2 m further along
   const c = new Coach(palette, v.cab ? 13.6 : 13.4);
   const m = c.m;
-  const end = v.cab ? 27.0 : 26.6;
-  const body: Volume = {
-    name: "body",
-    section: DS_SECTION,
-    plan: [[0.2, 1.5], [end, 1.5]],
-    bottom: [[0.2, 0.9], [5.1, 0.9], [5.5, 0.5], [21.3, 0.5], [21.7, 0.9], [end, 0.9]],
-    // the cab's XML elevation (re2_s alongz +0.2 m): the windscreen slopes from (26.9, 2.0) to (26.4, 3.3)
-    ...(v.cab ? { trimCaps: true, top: noseTop([[0.2, 4.6], [25.0, 4.6], [26.4, 3.3], [26.9, 2.0], [27.0, 1.1]], BANDS) } : {}),
-    bands: BANDS,
-    endPaint: "red",
-  };
+  const { end, body } = dostoBody(v);
   m.scope("body", () => {
     c.volume(body);
     for (const s of sides)

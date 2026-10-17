@@ -32,6 +32,8 @@ import type { Vec3 } from "./meshCore.ts";
 import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { block } from "./vehicleParts.ts";
 import { strokeText, strokeWidth } from "./strokeFont.ts";
+import { airLod, lodAxleWheel, lodBar, type AirEngine, type AirFin, type AirLodSpec, type AirWing } from "./lodAir.ts";
+import { LOD_GLASS, lodPolygon } from "./lodKit.ts";
 
 // The colours are the reference models' own. Metal is only mildly metallic:
 // the game lights models without an environment map.
@@ -697,7 +699,7 @@ function a10Stations(rows: Array<[number, number, number, number, number]>, n: n
   return rows.map(([z, hw, lo, hi, mw]) => ({ a: z, sec: oval(n, 0, mw, hw, hi - mw, mw - lo, e) }));
 }
 
-function a10Wing(m: MeshBuilder, w: typeof A10_LOWER): void {
+function a10WingStations(w: typeof A10_LOWER): WingStation[] {
   // a straight wing whose last metre rounds off in plan: the chord shrinks
   // from both edges, the leading edge more
   const tip: Array<[number, number, number]> = [[0.62, 0, 0], [0.3, 0.06, 0.03], [0.12, 0.2, 0.08], [0, 0.42, 0.2]];
@@ -708,8 +710,27 @@ function a10Wing(m: MeshBuilder, w: typeof A10_LOWER): void {
     }));
     st.push(...(s < 0 ? half.reverse() : half));
   }
-  wing(m, "fabric", "x", st);
+  return st;
 }
+
+function a10Wing(m: MeshBuilder, w: typeof A10_LOWER): void {
+  wing(m, "fabric", "x", a10WingStations(w));
+}
+
+/** The tailplane (both halves, tip to tip) and the fin and rudder. */
+function a10Tailplane(): WingStation[] {
+  const st: WingStation[] = [];
+  for (const s of [-1, 1]) {
+    const half: WingStation[] = [
+      { s: s * 2.24, lead: -4.35, chord: 0.55, thick: 0.05, mid: 2.375 },
+      { s: s * 2.05, lead: -4.05, chord: 1.1, thick: 0.12, mid: 2.375 },
+      { s: s * 1.5, lead: -3.91, chord: 1.28, thick: 0.18, mid: 2.375 },
+    ];
+    st.push(...(s < 0 ? half : half.reverse()));
+  }
+  return st;
+}
+const A10_FIN: FinRing[] = [[2.4, -4.01, 1.44, 0.18, 0], [3.3, -4.45, 1.14, 0.16, 0], [3.75, -4.85, 0.74, 0.12, 0], [3.99, -5.12, 0.3, 0.06, 0]];
 
 /** The lower and upper wing's spar z at the strut stations: (front, rear). */
 const A10_SPARS = { lower: [0.81, -0.36], upper: [0.81, -0.36] };
@@ -836,23 +857,8 @@ export function aeroA10(): MeshBuilder {
   });
 
   m.scope("tail", () => {
-    m.scope("tailplane", () => {
-      const st: WingStation[] = [];
-      for (const s of [-1, 1]) {
-        const half: WingStation[] = [
-          { s: s * 2.24, lead: -4.35, chord: 0.55, thick: 0.05, mid: 2.375 },
-          { s: s * 2.05, lead: -4.05, chord: 1.1, thick: 0.12, mid: 2.375 },
-          { s: s * 1.5, lead: -3.91, chord: 1.28, thick: 0.18, mid: 2.375 },
-        ];
-        st.push(...(s < 0 ? half : half.reverse()));
-      }
-      wing(m, "fabric", "x", st);
-    });
-    m.scope("fin and rudder", () => {
-      fin(m, "fabric", "z", [
-        [2.4, -4.01, 1.44, 0.18, 0], [3.3, -4.45, 1.14, 0.16, 0], [3.75, -4.85, 0.74, 0.12, 0], [3.99, -5.12, 0.3, 0.06, 0],
-      ]);
-    });
+    m.scope("tailplane", () => wing(m, "fabric", "x", a10Tailplane()));
+    m.scope("fin and rudder", () => fin(m, "fabric", "z", A10_FIN));
     m.scope("tail bracing", () => {
       for (const s of [-1, 1]) {
         rod(m, "steel", [s * 1.6, 2.42, -4.6], [s * 0.06, 3.6, -4.65], 0.012, 4);
@@ -913,6 +919,11 @@ const A380_WING: WingStation[] = [
   { s: 25.9, lead: -11.4, chord: 6.2, thick: 0.99, mid: 6.0 },
   { s: 35.8, lead: -17.7, chord: 3.7, thick: 0.55, mid: 6.97 },
   { s: 39.43, lead: -20.1, chord: 2.7, thick: 0.39, mid: 7.32 },
+];
+/** The tailplane's half, root to tip. */
+const A380_TAILPLANE: WingStation[] = [
+  { s: 0, lead: -24.4, chord: 7.8, thick: 1.14, mid: 7.45 },
+  { s: 15.15, lead: -35.0, chord: 3.0, thick: 0.3, mid: 8.82 },
 ];
 const A380_FIN: FinRing[] = [[8.5, -22.8, 12.9, 1.5, 0], [16.0, -27.9, 8.6, 1.0, 0], [23.5, -32.9, 4.9, 0.5, 0]];
 /** The engines: x, height of the axis, intake z. */
@@ -1145,11 +1156,7 @@ function a380Airframe(m: MeshBuilder, l: Livery): void {
 
   m.scope("tail", () => {
     m.scope("tailplane", () => {
-      const half: WingStation[] = [
-        { s: 0, lead: -24.4, chord: 7.8, thick: 1.14, mid: 7.45 },
-        { s: 15.15, lead: -35.0, chord: 3.0, thick: 0.3, mid: 8.82 },
-      ];
-      for (const s of [-1, 1]) wing(m, "alloy", "x", half.map((w) => ({ ...w, s: s * w.s })));
+      for (const s of [-1, 1]) wing(m, "alloy", "x", A380_TAILPLANE.map((w) => ({ ...w, s: s * w.s })));
     });
     m.scope("fin", () => liveryFin(m, l, "z", A380_FIN));
   });
@@ -1256,6 +1263,13 @@ const B737_WING: WingStation[] = [
   { s: 5.5, lead: 0.75, chord: 5.0, thick: 0.6, mid: 2.48 },
   { s: 17.0, lead: -5.3, chord: 1.3, thick: 0.16, mid: 3.7 },
 ];
+/** The tailplane's half, root to tip. */
+const B737_TAILPLANE: WingStation[] = [
+  { s: 0, lead: -13.9, chord: 4.6, thick: 0.45, mid: 4.35 },
+  { s: 7.17, lead: -18.0, chord: 1.3, thick: 0.12, mid: 5.0 },
+];
+/** The blended winglet on side s: a curve up out of the tip, then canted slightly outward. */
+const b737Winglet = (s: number): FinRing[] => [[3.66, -5.32, 1.3, 0.16, s * 16.98], [3.95, -5.58, 1.08, 0.14, s * 17.3], [4.45, -5.95, 0.84, 0.11, s * 17.5], [6.12, -6.95, 0.42, 0.06, s * 17.86]];
 const B737_FIN: FinRing[] = [[4.8, -9.4, 9.4, 0.45, 0], [5.7, -11.9, 7.0, 0.62, 0], [12.55, -16.7, 2.3, 0.22, 0]];
 /** The engine: lateral position, height of the axis, intake x. */
 const B737_ENGINE = { z: 4.9, y: 1.42, x: 4.7, r: 0.96 };
@@ -1426,9 +1440,7 @@ function b737Airframe(m: MeshBuilder, l: Livery): void {
       m.scope(s > 0 ? "right wing" : "left wing", () => {
         m.scope("wing", () => wing(m, "alloy", "z", B737_WING.map((w) => ({ ...w, s: s * w.s }))));
         m.scope("winglet", () => {
-          // the blended winglet: a curve up out of the tip, then canted slightly outward
-          const rings: FinRing[] = [[3.66, -5.32, 1.3, 0.16, s * 16.98], [3.95, -5.58, 1.08, 0.14, s * 17.3], [4.45, -5.95, 0.84, 0.11, s * 17.5], [6.12, -6.95, 0.42, 0.06, s * 17.86]];
-          fin(m, l.winglet, "x", rings);
+          fin(m, l.winglet, "x", b737Winglet(s));
         });
         m.scope("flap track fairings", () => {
           for (const z of [6.5, 9.6, 12.7]) {
@@ -1463,11 +1475,7 @@ function b737Airframe(m: MeshBuilder, l: Livery): void {
 
   m.scope("tail", () => {
     m.scope("tailplane", () => {
-      const half: WingStation[] = [
-        { s: 0, lead: -13.9, chord: 4.6, thick: 0.45, mid: 4.35 },
-        { s: 7.17, lead: -18.0, chord: 1.3, thick: 0.12, mid: 5.0 },
-      ];
-      for (const s of [-1, 1]) wing(m, "alloy", "z", half.map((w) => ({ ...w, s: s * w.s })));
+      for (const s of [-1, 1]) wing(m, "alloy", "z", B737_TAILPLANE.map((w) => ({ ...w, s: s * w.s })));
     });
     m.scope("fin", () => liveryFin(m, l, "x", B737_FIN));
   });
@@ -1531,6 +1539,15 @@ const JET_WING: WingStation[] = [
   { s: 7.2, lead: -2.64, chord: 1.16, thick: 0.13, mid: -0.12 },
 ];
 const JET_NACELLE = { x0: -3.05, x1: -5.9, y: 0.52, z: 1.72, r: 0.64 };
+const JET_FIN: FinRing[] = [[0.35, -4.4, 3.55, 0.4, 0], [1.1, -5.15, 2.87, 0.36, 0], [3.3, -6.7, 1.18, 0.26, 0]];
+const JET_TAILPLANE: WingStation[] = [
+  { s: 0, lead: -6.72, chord: 1.52, thick: 0.22, mid: 3.3 },
+  { s: 2.59, lead: -7.5, chord: 0.64, thick: 0.12, mid: 3.39 },
+];
+/** The winglet on side s, canted outward: its rings, painted white, red, white from the root. */
+const jetWinglet = (s: number): FinRing[] => [[-0.15, -2.58, 1.2, 0.16, s * 7.08], [0.5, -2.95, 0.74, 0.13, s * 7.37], [0.85, -3.13, 0.56, 0.11, s * 7.49], [1.17, -3.26, 0.47, 0.1, s * 7.6]];
+/** The tail bullet atop the fin: (x, radius) about its axis at y 3.32. */
+const JET_BULLET: Array<[number, number]> = [[-8.23, 0.06], [-7.95, 0.22], [-7.5, 0.29], [-6.95, 0.27], [-6.6, 0.15]];
 
 function jetFuselage(): Station[] {
   return JET_FUSELAGE.map(([x, r]) => ({ a: x, sec: circle(24, 0, jetDroop(x), r) }));
@@ -1604,8 +1621,7 @@ function jetAirframe(m: MeshBuilder): void {
         m.scope("wing", () => wing(m, "paint", "z", JET_WING.map((w) => ({ ...w, s: s * w.s }))));
         m.scope("winglet", () => {
           // canted outward, striped red as in the photo
-          const ring = (y: number, lead: number, chord: number, thick: number, z: number): [number, number, number, number, number] => [y, lead, chord, thick, s * z];
-          const rings = [ring(-0.15, -2.58, 1.2, 0.16, 7.08), ring(0.5, -2.95, 0.74, 0.13, 7.37), ring(0.85, -3.13, 0.56, 0.11, 7.49), ring(1.17, -3.26, 0.47, 0.1, 7.6)];
+          const rings = jetWinglet(s);
           const finRings = (rs: typeof rings, mat: string, top: boolean): void => {
             for (let i = 0; i + 1 < rs.length; i++) {
               const toRing = ([, lead, chord, thick, z]: [number, number, number, number, number]): Ring => ccw(foil(lead, chord, thick, z).map(([u, t]): [number, number] => [u, t]));
@@ -1638,20 +1654,16 @@ function jetAirframe(m: MeshBuilder): void {
 
   m.scope("tail", () => {
     m.scope("fin", () => {
-      fin(m, "red", "x", [[0.35, -4.4, 3.55, 0.4, 0], [1.1, -5.15, 2.87, 0.36, 0], [3.3, -6.7, 1.18, 0.26, 0]]);
+      fin(m, "red", "x", JET_FIN);
     });
     m.scope("tail bullet", () => {
-      const st: Station[] = [[-8.23, 0.06], [-7.95, 0.22], [-7.5, 0.29], [-6.95, 0.27], [-6.6, 0.15]].map(([x, r]) => ({ a: x!, sec: circle(14, 0, 3.32, r!) }));
+      const st: Station[] = JET_BULLET.map(([x, r]) => ({ a: x, sec: circle(14, 0, 3.32, r) }));
       body(m, "paint", "x", st);
       fan(m, "paint", "x", st[0]!.sec, -8.23, -1);
       fan(m, "paint", "x", st[4]!.sec, -6.6, 1, [-6.47, 3.32, 0]);
     });
     m.scope("tailplane", () => {
-      const half: WingStation[] = [
-        { s: 0, lead: -6.72, chord: 1.52, thick: 0.22, mid: 3.3 },
-        { s: 2.59, lead: -7.5, chord: 0.64, thick: 0.12, mid: 3.39 },
-      ];
-      for (const s of [-1, 1]) wing(m, "paint", "z", half.map((w) => ({ ...w, s: s * w.s })));
+      for (const s of [-1, 1]) wing(m, "paint", "z", JET_TAILPLANE.map((w) => ({ ...w, s: s * w.s })));
     });
   });
 }
@@ -2081,10 +2093,46 @@ const BELUGA_LIVERY: Livery = {
 /** The Beluga's titles on the cargo bulge: centre along x, baseline height, letter height. */
 const BELUGA_TITLES = { text: "AIRBUS BELUGA", x: 4.5, y: 7.15, h: 1.75 };
 
+/** The winglets of side `side`: the 747's canted one, the MD-11's upper and lower ones or the A300's fence; `top`: its tip closed. */
+function wideWinglets(spec: WideSpec, side: number): Array<{ rings: FinRing[]; top: boolean }> {
+  const tipW = spec.wing[spec.wing.length - 1]!;
+  const edge = spec.span / 2;
+  const [tl, tc, ty] = [tipW.lead, tipW.chord, tipW.mid];
+  if (spec.winglet === "canted") {
+    // the 747-400's winglet, canted 29 degrees outward and swept back
+    return [{ rings: [[ty - 0.05, tl - 0.05, tc * 0.95, 0.2, side * (tipW.s - 0.05)], [ty + 0.6, tl - 0.75, tc * 0.7, 0.15, side * (tipW.s + 0.3)], [ty + 1.95, tl - 2.4, 1.05, 0.08, side * (edge - 0.04)]], top: true }];
+  }
+  if (spec.winglet === "upper-lower") {
+    // the MD-11's upper winglet and the small lower one
+    return [
+      { rings: [[ty - 0.05, tl - 0.15, tc * 0.85, 0.18, side * (edge - 0.09)], [ty + 2.4, tl - 2.0, 0.85, 0.08, side * (edge - 0.04)]], top: true },
+      { rings: [[ty - 0.95, tl - 0.75, 0.55, 0.08, side * (edge - 0.07)], [ty + 0.05, tl - 0.35, 0.95, 0.14, side * (edge - 0.09)]], top: false },
+    ];
+  }
+  // the A300-600's small wingtip fence above and below the tip
+  return [{ rings: [[ty - 0.55, tl + 0.05, 0.7, 0.08, side * (edge - 0.05)], [ty + 0.05, tl + 0.25, 1.2, 0.1, side * (edge - 0.06)], [ty + 0.75, tl - 0.15, 0.6, 0.07, side * (edge - 0.05)]], top: true }];
+}
+
+/** The Beluga's endplate fin on the tailplane's tip of side `side`. */
+function belugaAuxFin(spec: WideSpec, side: number): FinRing[] {
+  const tp = spec.tailplane[1]!;
+  return [[tp.mid - 0.05, tp.lead + 0.1, tp.chord + 0.2, 0.2, side * (tp.s - 0.12)], [tp.mid + 1.2, tp.lead - 0.35, 2.4, 0.17, side * (tp.s - 0.1)], [tp.mid + 2.9, tp.lead - 1.25, 1.45, 0.1, side * (tp.s - 0.08)]];
+}
+
+/** The MD-11's centre engine through the fin root, and the fairing it sits in. */
+const MD11_TAIL_ENGINE = { c: [0, 9.55] as P2, front: -15.6, back: -21.9, r: 1.36 };
+const MD11_TAIL_PYLON: FinRing[] = [[7.3, -15.4, 10.2, 2.1, 0], [9.6, -16.2, 9.0, 1.7, 0]];
+
+/** The wide body's fuselage stations, tail first. */
+function wideFuselage(spec: WideSpec): Station[] {
+  const half = spec.length / 2;
+  return [...spec.stations].reverse().map((d) => ({ a: half - d, sec: hullSec(spec.n, spec.lobes(d)) }));
+}
+
 function wideBody(kind: WideType, l: Livery, cargo = false): MeshBuilder {
   const spec = kind === "md11" ? md11Spec() : kind === "b747" ? b747Spec() : belugaSpec();
   const half = spec.length / 2;
-  const fus: Station[] = [...spec.stations].reverse().map((d) => ({ a: half - d, sec: hullSec(spec.n, spec.lobes(d)) }));
+  const fus = wideFuselage(spec);
   const m = new MeshBuilder(liveryPalette(l));
   const engineMats = { cowl: l.cowl, lip: "alloy", duct: "darkGrey", fan: "glass", nozzle: "metalGrey", plug: "darkGrey" };
   const tipW = spec.wing[spec.wing.length - 1]!;
@@ -2149,19 +2197,7 @@ function wideBody(kind: WideType, l: Livery, cargo = false): MeshBuilder {
       for (const side of [-1, 1]) m.scope(side > 0 ? "right wing" : "left wing", () => {
         m.scope("wing", () => wing(m, "alloy", "z", spec.wing.map((w) => ({ ...w, s: side * w.s }))));
         m.scope("winglet", () => {
-          const edge = spec.span / 2;
-          const [tl, tc, ty] = [tipW.lead, tipW.chord, tipW.mid];
-          if (spec.winglet === "canted") {
-            // the 747-400's winglet, canted 29 degrees outward and swept back
-            fin(m, l.winglet, "x", [[ty - 0.05, tl - 0.05, tc * 0.95, 0.2, side * (tipW.s - 0.05)], [ty + 0.6, tl - 0.75, tc * 0.7, 0.15, side * (tipW.s + 0.3)], [ty + 1.95, tl - 2.4, 1.05, 0.08, side * (edge - 0.04)]]);
-          } else if (spec.winglet === "upper-lower") {
-            // the MD-11's upper winglet and the small lower one
-            fin(m, l.winglet, "x", [[ty - 0.05, tl - 0.15, tc * 0.85, 0.18, side * (edge - 0.09)], [ty + 2.4, tl - 2.0, 0.85, 0.08, side * (edge - 0.04)]]);
-            fin(m, l.winglet, "x", [[ty - 0.95, tl - 0.75, 0.55, 0.08, side * (edge - 0.07)], [ty + 0.05, tl - 0.35, 0.95, 0.14, side * (edge - 0.09)]], 1, false);
-          } else {
-            // the A300-600's small wingtip fence above and below the tip
-            fin(m, l.winglet, "x", [[ty - 0.55, tl + 0.05, 0.7, 0.08, side * (edge - 0.05)], [ty + 0.05, tl + 0.25, 1.2, 0.1, side * (edge - 0.06)], [ty + 0.75, tl - 0.15, 0.6, 0.07, side * (edge - 0.05)]]);
-          }
+          for (const w of wideWinglets(spec, side)) fin(m, l.winglet, "x", w.rings, 1, w.top);
         });
         m.scope("flap track fairings", () => {
           for (const f of [0.3, 0.5, 0.7]) {
@@ -2195,16 +2231,13 @@ function wideBody(kind: WideType, l: Livery, cargo = false): MeshBuilder {
       m.scope("fin", () => liveryFin(m, l, "x", spec.fin));
       for (const side of [-1, 1]) {
         m.scope("tailplane", () => wing(m, "alloy", "z", spec.tailplane.map((w) => ({ ...w, s: side * w.s }))));
-        if (kind === "beluga") m.scope("auxiliary fin", () => {
-          // the endplate fins on the tailplane's tips
-          const tp = spec.tailplane[1]!;
-          fin(m, l.winglet, "x", [[tp.mid - 0.05, tp.lead + 0.1, tp.chord + 0.2, 0.2, side * (tp.s - 0.12)], [tp.mid + 1.2, tp.lead - 0.35, 2.4, 0.17, side * (tp.s - 0.1)], [tp.mid + 2.9, tp.lead - 1.25, 1.45, 0.1, side * (tp.s - 0.08)]]);
-        });
+        if (kind === "beluga") m.scope("auxiliary fin", () => fin(m, l.winglet, "x", belugaAuxFin(spec, side)));
       }
       if (kind === "md11") m.scope("engine 2", () => {
         // the centre engine, straight through the fin root above the tail cone
-        nacelle(m, "x", 1, { c: [0, 9.55], front: -15.6, back: -21.9, r: 1.36, nozzle: 1.5, plug: 0.5, mats: engineMats }, 24);
-        m.scope("pylon", () => fin(m, "white", "x", [[7.3, -15.4, 10.2, 2.1, 0], [9.6, -16.2, 9.0, 1.7, 0]]));
+        const e = MD11_TAIL_ENGINE;
+        nacelle(m, "x", 1, { c: e.c, front: e.front, back: e.back, r: e.r, nozzle: 1.5, plug: 0.5, mats: engineMats }, 24);
+        m.scope("pylon", () => fin(m, "white", "x", MD11_TAIL_PYLON));
       });
     });
   });
@@ -2510,6 +2543,213 @@ export function smallAirplane(params?: ParamValues): MeshBuilder {
   return m;
 }
 
+// --- the distant models ----------------------------------------------------------------
+//
+// Every aircraft's low level of detail (docs/models/lod.md) is `airLod` fed with
+// the full model's own data: its fuselage stations, wing, tailplane and fin
+// tables, engine positions and the livery's skin, fin bands, cowl and winglet
+// colours. The skin is painted face by face as `paintedBody` paints it; the
+// windscreen's faces are the one LOD glass; fin art and thin cheatlines are left
+// out. A retractable gear is left out too (the static LOD has no "gear" node the
+// game could hide in flight); fixed gear stays.
+
+/** The livery's skin as the LOD paints it: by height on the section, or the wide bodies' slanted cut. */
+function lodSkin(l: Livery, base = "white"): AirLodSpec["paint"] {
+  return (s, a, p) => (l.cut && p[0] < l.cut.x0 - l.cut.slope * (p[1] - l.cut.y0) ? l.cut.mat : l.skin ? l.skin(s, a) : base);
+}
+
+/** Half wings, root to tip, drawn on both sides. */
+const halfWing = (axis: "x" | "z", stations: WingStation[], mat: string): AirWing => ({ axis, stations, mirror: true, mat });
+
+/** The fin in the livery's bands. */
+const liveryFinLod = (chordAxis: "x" | "z", rings: FinRing[], l: Livery): AirFin => ({ chordAxis, rings, bands: l.fin });
+
+/** A winglet on each side in the livery's winglet colour. */
+const wingletsLod = (rings: (s: number) => FinRing[], l: Livery, optional = 2): AirFin[] =>
+  [-1, 1].map((s) => ({ chordAxis: "x", rings: rings(s), bands: [[-1e3, l.winglet]], optional }));
+
+export function aeroA10Lod(): MeshBuilder {
+  const fus = [...a10Stations(A10_FUSELAGE.filter(([z]) => z < 3), 20, 3.2), ...a10Stations(A10_COWL, 20, 3.6)];
+  const lowerTop = A10_LOWER.y + A10_LOWER.thick * 0.45;
+  const upperBot = A10_UPPER.y - A10_UPPER.thick * 0.4;
+  const [px, py, pz] = A10_PROP;
+  return airLod({
+    palette: PALETTE, axis: "z", fuselage: fus,
+    paint: (_s, a) => (a > 3.0 ? "aluminium" : "fabric"), noseMat: "aluminium", tailMat: "fabric",
+    // the open cockpit behind the cabin, a dark opening in the deck
+    windscreen: { a0: -1.65, a1: -1.05, s: 0.9 },
+    wings: [
+      { axis: "x", stations: a10WingStations(A10_LOWER), mirror: false, mat: "fabric" },
+      { axis: "x", stations: a10WingStations(A10_UPPER), mirror: false, mat: "fabric" },
+      { axis: "x", stations: a10Tailplane(), mirror: false, mat: "fabric" },
+    ],
+    fins: [{ chordAxis: "z", rings: A10_FIN, bands: [[0, "fabric"]] }],
+    engines: [],
+    parts: [
+      // the undercarriage: a leg and a wheel a side
+      { draw: (m) => {
+        const r = 0.46;
+        for (const s of [-1, 1]) {
+          lodAxleWheel(m, "slot", "x", 1.15, r, r, s * 0.92, s * 1.14, 6);
+          lodBar(m, "steel", [s * 0.46, 1.42, 1.15], [s * 0.98, r, 1.15], 0.06, 3);
+        }
+      } },
+      // the interplane struts, one post a bay
+      { optional: 2, draw: (m) => {
+        for (const s of [-1, 1]) for (const x of A10_BAYS) lodBar(m, "steel", [s * x, lowerTop - 0.05, 0.25], [s * x, upperBot + 0.05, 0.25], 0.07, 3);
+      } },
+      // the propeller standing still: a blade up and down, a thin slab
+      { optional: 3, draw: (m) => {
+        for (const [z, nz] of [[pz + 0.03, 1], [pz - 0.03, -1]] as const) {
+          lodPolygon(m, "walnut", [[px - 0.11, py - 1.42, z], [px + 0.11, py - 1.42, z], [px + 0.11, py + 1.42, z], [px - 0.11, py + 1.42, z]], [0, 0, nz]);
+        }
+      } },
+    ],
+  });
+}
+
+export function airbusA380Lod(params?: ParamValues): MeshBuilder {
+  const l = A380_LIVERIES[resolveParams(A380_PARAMS, params).livery!]!;
+  const engines = A380_ENGINES.flatMap(([x, y, z]) => [-1, 1].map((s): AirEngine => ({
+    axis: "z", c: [s * x, y], front: z, back: z - 6.2, r: A380_ENGINE_R, cowl: l.cowl, intake: "darkGrey", nozzle: "alloy",
+  })));
+  return airLod({
+    palette: liveryPalette(l), axis: "z", fuselage: a380Fuselage(), nose: A380_NOSE, paint: lodSkin(l),
+    windscreen: { a0: 33.4, a1: 35.0, s: 0.5 },
+    wings: [halfWing("x", A380_WING, "alloy"), halfWing("x", A380_TAILPLANE, "alloy")],
+    fins: [
+      liveryFinLod("z", A380_FIN, l),
+      // the wingtip fences
+      ...[-1, 1].map((s): AirFin => ({ chordAxis: "z", rings: [[6.7, -20.6, 2.1, 0.26, s * 39.11], [8.6, -21.8, 0.9, 0.26, s * 39.11]], bands: [[-1e3, l.winglet]], optional: 2 })),
+    ],
+    engines,
+  });
+}
+
+export function boeing737Lod(params?: ParamValues): MeshBuilder {
+  const l = B737_LIVERIES[resolveParams(B737_PARAMS, params).livery!]!;
+  const e = B737_ENGINE;
+  return airLod({
+    palette: liveryPalette(l), builder: (p) => new TurnedBuilder(p), axis: "x",
+    fuselage: b737Fuselage(), nose: B737_NOSE, tail: [-19.62, 4.55, 0], paint: lodSkin(l), noseMat: "white", tailMat: "white",
+    windscreen: { a0: 15.6, a1: 17.3, s: 0.5 },
+    wings: [halfWing("z", B737_WING, "alloy"), halfWing("z", B737_TAILPLANE, "alloy")],
+    fins: [liveryFinLod("x", B737_FIN, l), ...wingletsLod(b737Winglet, l)],
+    engines: [-1, 1].map((s) => ({ axis: "x", c: [s * e.z, e.y], front: e.x, back: 0.6, r: e.r, cowl: l.cowl, intake: "darkGrey", nozzle: "alloy" })),
+  });
+}
+
+export function lightJetLod(): MeshBuilder {
+  const n = JET_NACELLE;
+  return airLod({
+    palette: PALETTE, axis: "x", fuselage: jetFuselage(),
+    nose: [8.8, jetDroop(8.8), 0], tail: [-8.8, 0, 0], tailMat: "darkGrey", paint: () => "paint",
+    windscreen: { a0: 5.72, a1: 6.55, s: 0.3 },
+    wings: [halfWing("z", JET_WING, "paint"), halfWing("z", JET_TAILPLANE, "paint")],
+    fins: [
+      { chordAxis: "x", rings: JET_FIN, bands: [[0, "red"]] },
+      ...[-1, 1].map((s): AirFin => ({ chordAxis: "x", rings: jetWinglet(s), bands: [[-1e3, "paint"], [0.5, "red"], [0.85, "paint"]], optional: 2 })),
+    ],
+    engines: [-1, 1].map((s) => ({ axis: "x", c: [s * n.z, n.y], front: n.x0, back: n.x1 - 0.3, r: n.r, cowl: "paint", intake: "darkGrey", nozzle: "darkGrey" })),
+    pods: [{ axis: "x", stations: JET_BULLET.map(([x, r]) => ({ a: x, sec: circle(12, 0, 3.32, r) })), mat: "paint", front: [-6.47, 3.32, 0], optional: 3 }],
+  });
+}
+
+/** The wide bodies' windscreens: the faces between a0 and a1 at section height s or more. */
+const WIDE_SCREEN: Record<WideType, { a0: number; a1: number; s: number }> = {
+  md11: { a0: 27.3, a1: 29.0, s: 0.45 },
+  b747: { a0: 30.3, a1: 31.9, s: 0.6 },
+  beluga: { a0: 26.6, a1: 27.7, s: 0.5 },
+};
+
+function wideLod(kind: WideType, l: Livery): MeshBuilder {
+  const spec = kind === "md11" ? md11Spec() : kind === "b747" ? b747Spec() : belugaSpec();
+  const half = spec.length / 2;
+  const engines: AirEngine[] = spec.engines.flatMap((e) => {
+    const w = wingAt(spec.wing, e.s);
+    const y = w.mid - w.thick * 0.42 - e.drop;
+    const front = w.lead + e.ahead;
+    return [-1, 1].map((s): AirEngine => ({ axis: "x", c: [s * e.s, y], front, back: front - e.len - 0.6, r: e.r, cowl: l.cowl, intake: "darkGrey", nozzle: "metalGrey" }));
+  });
+  const t = MD11_TAIL_ENGINE;
+  if (kind === "md11") engines.push({ axis: "x", c: t.c, front: t.front, back: t.back - 0.8, r: t.r, cowl: l.cowl, intake: "darkGrey", nozzle: "metalGrey" });
+  const fins: AirFin[] = [liveryFinLod("x", spec.fin, l)];
+  for (const s of [-1, 1]) fins.push(...wideWinglets(spec, s).map((w): AirFin => ({ chordAxis: "x", rings: w.rings, bands: [[-1e3, l.winglet]], top: w.top, optional: 2 })));
+  if (kind === "beluga") for (const s of [-1, 1]) fins.push({ chordAxis: "x", rings: belugaAuxFin(spec, s), bands: [[-1e3, l.winglet]], optional: 4 });
+  if (kind === "md11") fins.push({ chordAxis: "x", rings: MD11_TAIL_PYLON, bands: [[-1e3, "white"]] });
+  return airLod({
+    palette: liveryPalette(l), axis: "x", fuselage: wideFuselage(spec),
+    nose: [half, spec.tipY, 0], tail: [-half, spec.tailY, 0], noseMat: "white", tailMat: l.cut?.mat ?? (l.skin ? l.skin(0, -half) : "white"),
+    paint: lodSkin(l), windscreen: WIDE_SCREEN[kind],
+    // rings along the slanted cut, so its staircase follows the diagonal
+    keep: l.cut ? [0, 0.33, 0.67, 1].map((f) => l.cut!.x0 - l.cut!.slope * f * (spec.height * 0.55)) : [],
+    wings: [halfWing("z", spec.wing, "alloy"), halfWing("z", spec.tailplane, "alloy")],
+    fins, engines,
+  });
+}
+
+export function mcdonnellDouglasMd11Lod(params?: ParamValues): MeshBuilder {
+  return wideLod("md11", MD11_LIVERIES[resolveParams(MD11_PARAMS, params).livery!]!);
+}
+export function boeing747Lod(params?: ParamValues): MeshBuilder {
+  return wideLod("b747", B747_LIVERIES[resolveParams(B747_PARAMS, params).livery!]!);
+}
+export function airbusBelugaLod(): MeshBuilder { return wideLod("beluga", BELUGA_LIVERY); }
+
+export function smallAirplaneLod(params?: ParamValues): MeshBuilder {
+  const p = resolveParams(SMALL_PARAMS, params);
+  const g = SMALL_GEAR;
+  return airLod({
+    palette: { ...SMALL_PALETTE, trim: { color: SMALL_COLORS[p.color!]!.color, roughness: 0.35 } },
+    axis: "z", fuselage: smallStations().reverse(), tail: SMALL_TAIL_TIP, noseMat: "trim", tailMat: "trim",
+    paint: (s) => (s < -0.3 ? "planeWhite" : "trim"),
+    wings: [
+      { axis: "x", stations: smallSpan(SMALL_WING, smallWingMid), mirror: false, mat: "planeWhite" },
+      { axis: "x", stations: smallSpan(SMALL_TAILPLANE, () => SMALL_TAILPLANE_Y), mirror: false, mat: "planeWhite" },
+    ],
+    fins: [{ chordAxis: "z", rings: SMALL_FIN, bands: [[1.25, "planeWhite"], [1.92, "trim"]] }],
+    engines: [],
+    pods: [
+      // the bubble canopy, all glass
+      { axis: "z", stations: [...SMALL_CANOPY].reverse().map(([z, hw, top]) => ({ a: z, sec: oval(16, 0, SMALL_CANOPY_Y, hw, top, 0.36) })), mat: LOD_GLASS, front: [0, SMALL_CANOPY_Y + 0.03, 2.3], back: [0, SMALL_CANOPY_Y + 0.02, -0.52] },
+      { axis: "z", stations: [[3.38, 0.19], [3.62, 0.13]].map(([z, r]) => ({ a: z!, sec: circle(8, SMALL_HUB[0], SMALL_HUB[1], r!) })), mat: "planeWhite", front: [SMALL_HUB[0], SMALL_HUB[1], 3.74], sides: 5, optional: 1 },
+    ],
+    parts: [
+      // the wheel spats down to the ground, the colour of the fuselage
+      { draw: (m) => {
+        const spat = (x: number, z: number, hw: number, len: number, r: number) => {
+          const ring: Array<[number, number]> = [[x, z + 0.5 * len], [x + hw, z + 0.15 * len], [x + hw, z - 0.4 * len], [x, z - 0.7 * len], [x - hw, z - 0.4 * len], [x - hw, z + 0.15 * len]];
+          const y = axleY(0, r);
+          lodPolygon(m, "trim", ring.map(([px, pz]): Vec3 => [px, 0, pz]), [0, -1, 0]);
+          for (let i = 0; i < ring.length; i++) {
+            const [a, b] = [ring[i]!, ring[(i + 1) % ring.length]!];
+            lodPolygon(m, "trim", [[a[0], 0, a[1]], [b[0], 0, b[1]], [b[0], y + 0.24, b[1]], [a[0], y + 0.24, a[1]]], [(a[0] + b[0]) / 2 - x, 0, (a[1] + b[1]) / 2 - z]);
+          }
+          lodPolygon(m, "trim", ring.map(([px, pz]): Vec3 => [px, y + 0.24, pz]), [0, 1, 0]);
+        };
+        for (const s of [-1, 1]) spat(s * g.track, g.mainZ, 0.1, 0.62, g.mainR);
+        spat(0, g.noseZ, 0.09, 0.52, g.noseR);
+      } },
+      // the spring legs
+      { optional: 2, draw: (m) => {
+        for (const s of [-1, 1]) lodBar(m, "alloy", [s * 0.42, 0.58, 0.3], [s * g.track, axleY(0, g.mainR) + 0.2, g.mainZ], 0.04, 3);
+      } },
+      // the three-blade propeller standing still, a flat blade each
+      { optional: 1, draw: (m) => {
+        const [cx, cy, cz] = SMALL_HUB;
+        for (let k = 0; k < 3; k++) {
+          const t = Math.PI / 2 + (k * 2 * Math.PI) / 3;
+          const [c, sn] = [Math.cos(t), Math.sin(t)];
+          const q = (h: number, w: number): Vec3 => [cx + h * c - w * sn, cy + h * sn + w * c, cz + 0.02];
+          for (const [dz, nz] of [[0, 1], [-0.04, -1]] as const) {
+            lodPolygon(m, "darkGrey", [q(0.12, -0.06), q(0.12, 0.06), q(0.81, 0.03), q(0.81, -0.03)].map(([x, y, z]): Vec3 => [x, y, z + dz]), [0, 0, nz]);
+          }
+        }
+      } },
+    ],
+  });
+}
+
 /** Shared aircraft catalog fields; individual designs supply their yaw. */
 export const AIRCRAFT_CATALOG: CatalogFields = {
   category: "Aircraft",
@@ -2522,13 +2762,13 @@ export const AIRCRAFT_CATALOG: CatalogFields = {
 
 /** Every design of the family, by catalog id; `references` is the folder of its source photos under assets/. */
 export const AIRCRAFT: ProceduralDesign[] = [
-  { id: "proc-vehicle-mcdonnell-douglas-md11", game: { weight: 60, power: 2000, maxspeed: 800, accel: 4 }, title: "McDonnell Douglas MD-11", build: mcdonnellDouglasMd11, params: MD11_PARAMS, finishParams: ["livery"], catalog: { ...AIRCRAFT_CATALOG, yaw: 180 } },
-  { id: "proc-vehicle-boeing-747", game: { weight: 60, power: 2000, maxspeed: 800, accel: 4 }, title: "Boeing 747-400", build: boeing747, params: B747_PARAMS, finishParams: ["livery"], catalog: { ...AIRCRAFT_CATALOG, yaw: 180 } },
-  { id: "proc-vehicle-airbus-beluga", game: { weight: 60, power: 2000, maxspeed: 800, accel: 4 }, title: "Airbus Beluga A300-600ST", build: airbusBeluga, catalog: { ...AIRCRAFT_CATALOG, yaw: 180 } },
-  { id: "proc-vehicle-aero-a10", game: { weight: 2, power: 240, maxspeed: 150, accel: 3, sizeClass: "small" }, title: "Aero A.10", build: aeroA10, references: "aero-a10", catalog: { ...AIRCRAFT_CATALOG, yaw:270 } },
-  { id: "proc-vehicle-airbus-a380", game: { weight: 560, power: 12000, maxspeed: 1020, accel: 3.5, sizeClass: "big" }, title: "Airbus A380", build: airbusA380, params: A380_PARAMS, finishParams: ["livery"], references: "airbus-a380", catalog: { ...AIRCRAFT_CATALOG, yaw:270 } },
-  { id: "proc-vehicle-boeing-737", game: { weight: 80, power: 2400, maxspeed: 880, accel: 4, sizeClass: "medium" }, title: "Boeing 737-800", build: boeing737, params: B737_PARAMS, finishParams: ["livery"], catalog: { ...AIRCRAFT_CATALOG, yaw: 0 } },
-  { id: "proc-vehicle-light-jet", game: { weight: 10, power: 400, maxspeed: 700, accel: 7, sizeClass: "small" }, title: "Light Jet", build: lightJet, references: "light-jet", catalog: { ...AIRCRAFT_CATALOG, yaw:180 } },
+  { id: "proc-vehicle-mcdonnell-douglas-md11", game: { weight: 60, power: 2000, maxspeed: 800, accel: 4 }, title: "McDonnell Douglas MD-11", build: mcdonnellDouglasMd11, buildLod: mcdonnellDouglasMd11Lod, params: MD11_PARAMS, finishParams: ["livery"], catalog: { ...AIRCRAFT_CATALOG, yaw: 180 } },
+  { id: "proc-vehicle-boeing-747", game: { weight: 60, power: 2000, maxspeed: 800, accel: 4 }, title: "Boeing 747-400", build: boeing747, buildLod: boeing747Lod, params: B747_PARAMS, finishParams: ["livery"], catalog: { ...AIRCRAFT_CATALOG, yaw: 180 } },
+  { id: "proc-vehicle-airbus-beluga", game: { weight: 60, power: 2000, maxspeed: 800, accel: 4 }, title: "Airbus Beluga A300-600ST", build: airbusBeluga, buildLod: airbusBelugaLod, catalog: { ...AIRCRAFT_CATALOG, yaw: 180 } },
+  { id: "proc-vehicle-aero-a10", game: { weight: 2, power: 240, maxspeed: 150, accel: 3, sizeClass: "small" }, title: "Aero A.10", build: aeroA10, buildLod: aeroA10Lod, references: "aero-a10", catalog: { ...AIRCRAFT_CATALOG, yaw:270 } },
+  { id: "proc-vehicle-airbus-a380", game: { weight: 560, power: 12000, maxspeed: 1020, accel: 3.5, sizeClass: "big" }, title: "Airbus A380", build: airbusA380, buildLod: airbusA380Lod, params: A380_PARAMS, finishParams: ["livery"], references: "airbus-a380", catalog: { ...AIRCRAFT_CATALOG, yaw:270 } },
+  { id: "proc-vehicle-boeing-737", game: { weight: 80, power: 2400, maxspeed: 880, accel: 4, sizeClass: "medium" }, title: "Boeing 737-800", build: boeing737, buildLod: boeing737Lod, params: B737_PARAMS, finishParams: ["livery"], catalog: { ...AIRCRAFT_CATALOG, yaw: 0 } },
+  { id: "proc-vehicle-light-jet", game: { weight: 10, power: 400, maxspeed: 700, accel: 7, sizeClass: "small" }, title: "Light Jet", build: lightJet, buildLod: lightJetLod, references: "light-jet", catalog: { ...AIRCRAFT_CATALOG, yaw:180 } },
   // a 600 kg light sport aircraft: a Rotax 912 (73.5 kW), about 220 km/h
-  { id: "proc-vehicle-small-airplane", game: { weight: 0.6, power: 73.5, maxspeed: 220, accel: 3, sizeClass: "small" }, title: "Small Airplane", build: smallAirplane, params: SMALL_PARAMS, finishParams: ["color"], references: "small-airplane", catalog: { ...AIRCRAFT_CATALOG, yaw: 270 } },
+  { id: "proc-vehicle-small-airplane", game: { weight: 0.6, power: 73.5, maxspeed: 220, accel: 3, sizeClass: "small" }, title: "Small Airplane", build: smallAirplane, buildLod: smallAirplaneLod, params: SMALL_PARAMS, finishParams: ["color"], references: "small-airplane", catalog: { ...AIRCRAFT_CATALOG, yaw: 270 } },
 ];

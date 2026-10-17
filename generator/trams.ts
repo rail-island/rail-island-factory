@@ -10,6 +10,7 @@ import type { MeshBuilder } from "./meshBuilder.ts";
 import { resolveParams, type CatalogFields, type GameProperties, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import type { Volume } from "./csdCoachParts.ts";
 import { Tram, articulate, type Pt, type PxBox, type SourceVolume, type TramMap } from "./tramKit.ts";
+import { tramLod } from "./lodTrams.ts";
 
 /** The game-catalog fields of the trams: rail vehicles in their own pool. */
 export const TRAM_CATALOG: CatalogFields = {
@@ -106,18 +107,27 @@ const T3_DOORS: Array<{ box: PxBox; lights: PxBox[] }> = [14, 78, 126].map((u) =
   lights: [0, 4, 8, 12].map((d): PxBox => [u + 1 + d, 31, u + 4 + d, 50]),
 }));
 
+/** The T3's paint bands in source heights: the saloon's and the cabs'. */
+function t3Bands(L: T3Livery): { main: Band[]; cab: Band[] } {
+  return {
+    main: [[0, 0.95, L.skirt], [0.95, 1.8, L.belt], [1.8, 3.25, L.upper], [3.25, 3.6, L.roof]],
+    cab: [[0, 0.85, L.skirt], [0.85, 1.0, "bumper"], [1.0, 1.8, L.belt], [1.8, 1.9, L.upper], [1.9, 2.95, L.glass], [2.95, 3.25, L.upper], [3.25, 3.6, L.roof]],
+  };
+}
+
+const colors = (c: Record<string, string>) => Object.fromEntries(Object.entries(c).map(([k, v]) => [k, { color: v, roughness: 0.5 }]));
+
 export function tatraT3(params?: ParamValues): MeshBuilder {
   const variant = resolveParams(T3_PARAMS, params).variant as T3Variant;
   const L = T3_LIVERIES[variant];
   const proto = variant === "t3prototype";
-  const t = new Tram(Object.fromEntries(Object.entries(L.colors).map(([k, c]) => [k, { color: c, roughness: 0.5 }])), T3_MAP);
+  const t = new Tram(colors(L.colors), T3_MAP);
   const m = t.m;
   const section = proto ? T3X_SECTION : T3_SECTION;
   const body = proto ? T3X_BODY : T3_BODY;
   // paint bands in source heights: the belt 0.95..1.8, the cab glass 1.9..2.95
   // (the cabs carry the bumper strip, 0.85..1.0, round the end and back to the first door)
-  const main: Band[] = [[0, 0.95, L.skirt], [0.95, 1.8, L.belt], [1.8, 3.25, L.upper], [3.25, 3.6, L.roof]];
-  const cab: Band[] = [[0, 0.85, L.skirt], [0.85, 1.0, "bumper"], [1.0, 1.8, L.belt], [1.8, 1.9, L.upper], [1.9, 2.95, L.glass], [2.95, 3.25, L.upper], [3.25, 3.6, L.roof]];
+  const { main, cab } = t3Bands(L);
   const front = t.vol("front cab", section, body, 0.5, 1.2, cab);
   const mid = t.vol("saloon", section, body, 1.2, 14.45, main);
   const rear = t.vol("rear cab", section, body, 14.45, 15.3, cab);
@@ -171,6 +181,22 @@ export function tatraT3(params?: ParamValues): MeshBuilder {
   return m;
 }
 
+/** The T3 from afar (docs/models/lod.md): the tram adapter of lodTrams.ts fed with the full build's data. */
+export function tatraT3Lod(params?: ParamValues): MeshBuilder {
+  const variant = resolveParams(T3_PARAMS, params).variant as T3Variant;
+  const L = T3_LIVERIES[variant];
+  const proto = variant === "t3prototype";
+  return tramLod({
+    map: T3_MAP, palette: colors(L.colors), section: proto ? T3X_SECTION : T3_SECTION, body: proto ? T3X_BODY : T3_BODY,
+    bodies: [[0.5, 15.3]], cabs: [1.2, 14.45], ...t3Bands(L), glass: [L.glass],
+    windows: { right: T3_RIGHT_WINDOWS, left: T3_LEFT_WINDOWS },
+    roofBoxes: [{ x: [10.9, 12.6], y: [3.38, 3.8], half: 0.55 }, ...([[2, 3], [8.1, 9.1], [12.9, 13.8]] as const).map(([a, b]) => ({ x: [a, b] as [number, number], y: [3.38, 3.5] as [number, number], half: 0.35, optional: true }))],
+    pantographs: [{ kind: "diamond", x: 4.75, raised: true }],
+    bogies: [4.45, 11.25].map((x) => ({ x, wb: 1.9, r: TRAM_WHEEL_R, top: 0.7 })),
+    wire: TRAM_WIRE,
+  }, 100);
+}
+
 // ---------------------------------------------------------------------------
 // Tatra T6A5
 // ---------------------------------------------------------------------------
@@ -198,12 +224,15 @@ const T6_DOORS: Array<{ box: PxBox; lights: PxBox[] }> = [14, 72, 130].map((u) =
   lights: [[u + 2, 33, u + 7, 48], [u + 10, 33, u + 15, 48]],
 }));
 
+const T6_PALETTE = { cream: { color: "#ebe8dd", roughness: 0.5 }, red: { color: "#d2232a", roughness: 0.5 }, band: { color: "#68706d", roughness: 0.6 }, bumperGrey: { color: "#5d625d", roughness: 0.7 } };
+// the red belt 0.7..1.6, a white line, the grey window band 1.8..3.2 (z_inc rows 28..42), the roof
+const T6_MAIN: Band[] = [[0, 0.7, "cream"], [0.7, 1.6, "red"], [1.6, 1.8, "cream"], [1.8, 3.2, "band"], [3.2, 3.42, "cream"], [3.42, 3.9, "roof"]];
+const T6_CAB: Band[] = [[0, 0.72, "cream"], [0.72, 0.92, "bumperGrey"], [0.92, 1.58, "red"], [1.58, 1.7, "cream"], [1.7, 1.95, "band"], [1.95, 3.25, "glass"], [3.25, 3.42, "cream"], [3.42, 3.9, "roof"]];
+
 export function tatraT6(): MeshBuilder {
-  const t = new Tram({ cream: { color: "#ebe8dd", roughness: 0.5 }, red: { color: "#d2232a", roughness: 0.5 }, band: { color: "#68706d", roughness: 0.6 }, bumperGrey: { color: "#5d625d", roughness: 0.7 } }, T6_MAP);
+  const t = new Tram(T6_PALETTE, T6_MAP);
   const m = t.m;
-  // the red belt 0.7..1.6, a white line, the grey window band 1.8..3.2 (z_inc rows 28..42), the roof
-  const main: Band[] = [[0, 0.7, "cream"], [0.7, 1.6, "red"], [1.6, 1.8, "cream"], [1.8, 3.2, "band"], [3.2, 3.42, "cream"], [3.42, 3.9, "roof"]];
-  const cab: Band[] = [[0, 0.72, "cream"], [0.72, 0.92, "bumperGrey"], [0.92, 1.58, "red"], [1.58, 1.7, "cream"], [1.7, 1.95, "band"], [1.95, 3.25, "glass"], [3.25, 3.42, "cream"], [3.42, 3.9, "roof"]];
+  const [main, cab] = [T6_MAIN, T6_CAB];
   const front = t.vol("front cab", T6_SECTION, T6_BODY, 0.4, 1.3, cab);
   const mid = t.vol("saloon", T6_SECTION, T6_BODY, 1.3, 14.7, main);
   const rear = t.vol("rear cab", T6_SECTION, T6_BODY, 14.7, 15.6, cab);
@@ -238,6 +267,19 @@ export function tatraT6(): MeshBuilder {
     });
   });
   return m;
+}
+
+/** The T6A5 from afar (lodTrams.ts). */
+export function tatraT6Lod(): MeshBuilder {
+  return tramLod({
+    map: T6_MAP, palette: T6_PALETTE, section: T6_SECTION, body: T6_BODY,
+    bodies: [[0.4, 15.6]], cabs: [1.3, 14.7], main: T6_MAIN, cab: T6_CAB, glass: ["glass"],
+    windows: { right: T6_RIGHT_WINDOWS, left: T6_LEFT_WINDOWS },
+    roofBoxes: [{ x: [8.9, 12.4], y: [3.48, 3.8], half: 0.7 }, ...([[2.7, 3.7], [7.4, 8.4], [12.6, 13.6]] as const).map(([a, b]) => ({ x: [a, b] as [number, number], y: [3.48, 3.6] as [number, number], half: 0.4, optional: true }))],
+    pantographs: [{ kind: "single", x: 4.9, head: 4.4, raised: true }],
+    bogies: [4.5, 11.2].map((x) => ({ x, wb: 1.9, r: TRAM_WHEEL_R, top: 0.7 })),
+    wire: TRAM_WIRE,
+  }, 100);
 }
 
 // ---------------------------------------------------------------------------
@@ -298,14 +340,34 @@ const KT8_LIVERIES: Record<Kt8Livery, Kt8Paint> = {
   modern: { skirt: "white", belt: "red", upper: "white", band: "band", door: "white", frame: "frame", colors: { red: "#d52128", band: "#7b827b" } },
 };
 
+const kt8Palette = (P: Kt8Paint) => ({ ...colors(P.colors), darkGrey: { color: "#46494c", roughness: 0.7 } });
+
+/** The KT8D5's paint bands in source heights: the belt 0.9..1.8, the window band 1.85..3.15 (grey in the modern livery). */
+function kt8Bands(P: Kt8Paint): { main: Band[]; cab: Band[] } {
+  return {
+    main: [[0, 0.9, P.skirt], [0.9, 1.8, P.belt], [1.8, 1.88, P.upper], [1.88, 3.15, P.band], [3.15, 3.3, P.upper], [3.3, 3.6, "roof"]],
+    cab: [[0, 0.9, "darkGrey"], [0.9, 1.8, P.belt], [1.8, 1.9, P.upper], [1.9, 3.18, "glass"], [3.18, 3.3, P.upper], [3.3, 3.6, "roof"]],
+  };
+}
+
+/** The KT8D5's joints: the hinge height (source), the bellows' outline (Factory) and folds, the bend limit. */
+function kt8Joint(t: Tram) {
+  const hw = 1.12 * KT8_MAP.kz;
+  return {
+    hingeY: 0.9,
+    profile: [[-hw, t.fy(0.75)], [hw, t.fy(0.75)], [hw, t.fy(3.15)], [hw - 0.2, t.fy(3.3)], [-hw + 0.2, t.fy(3.3)], [-hw, t.fy(3.15)]] as Array<[number, number]>,
+    folds: 4,
+    depth: 0.045,
+    maxBendDeg: 40,
+  };
+}
+
 export function tatraKt8(params?: ParamValues): MeshBuilder {
   const livery = resolveParams(KT8_PARAMS, params).livery as Kt8Livery;
   const P = KT8_LIVERIES[livery];
-  const t = new Tram({ ...Object.fromEntries(Object.entries(P.colors).map(([k, c]) => [k, { color: c, roughness: 0.5 }])), darkGrey: { color: "#46494c", roughness: 0.7 } }, KT8_MAP);
+  const t = new Tram(kt8Palette(P), KT8_MAP);
   const m = t.m;
-  // the belt 0.9..1.8, the window band 1.85..3.15 (grey in the modern livery)
-  const main: Band[] = [[0, 0.9, P.skirt], [0.9, 1.8, P.belt], [1.8, 1.88, P.upper], [1.88, 3.15, P.band], [3.15, 3.3, P.upper], [3.3, 3.6, "roof"]];
-  const cab: Band[] = [[0, 0.9, "darkGrey"], [0.9, 1.8, P.belt], [1.8, 1.9, P.upper], [1.9, 3.18, "glass"], [3.18, 3.3, P.upper], [3.3, 3.6, "roof"]];
+  const { main, cab } = kt8Bands(P);
   const ranges = KT8_BODIES;
   const inside = (x: number, [a, b]: [number, number]) => x >= a - 0.05 && x <= b + 0.05;
   const sectionDraw = (i: number) => () => {
@@ -355,13 +417,30 @@ export function tatraKt8(params?: ParamValues): MeshBuilder {
     });
   };
   const sections = ranges.map(([a, b], i) => ({ x0: t.fx(b), x1: t.fx(a), draw: sectionDraw(i) }));
-  const hw = 1.12 * KT8_MAP.kz;
-  articulate(t, sections, t.fy(0.9), {
-    profile: [[-hw, t.fy(0.75)], [hw, t.fy(0.75)], [hw, t.fy(3.15)], [hw - 0.2, t.fy(3.3)], [-hw + 0.2, t.fy(3.3)], [-hw, t.fy(3.15)]],
-    folds: 4,
-    depth: 0.045,
-  }, 40);
+  const joint = kt8Joint(t);
+  articulate(t, sections, t.fy(joint.hingeY), joint, joint.maxBendDeg);
   return m;
+}
+
+/** The KT8D5 from afar (lodTrams.ts): three sections and two bellows, as the full rig. */
+export function tatraKt8Lod(params?: ParamValues): MeshBuilder {
+  const livery = resolveParams(KT8_PARAMS, params).livery as Kt8Livery;
+  const P = KT8_LIVERIES[livery];
+  return tramLod({
+    map: KT8_MAP, palette: kt8Palette(P), section: KT8_SECTION, body: KT8_BODY,
+    bodies: KT8_BODIES, cabs: [1.4, 26.9], ...kt8Bands(P), glass: ["glass"],
+    windows: { right: KT8_WINDOWS, left: KT8_WINDOWS },
+    roofBoxes: [
+      { x: [livery === "modern" ? 3.1 : 5.8, 10.3], y: [3.38, 3.7], half: 0.7 },
+      { x: [18, livery === "modern" ? 25.2 : 22.5], y: [3.38, 3.7], half: 0.7 },
+      ...([[1.1, 1.6], [26.7, 27.2]] as const).map(([a, b]) => ({ x: [a, b] as [number, number], y: [3.38, 3.8] as [number, number], half: 0.3, optional: true })),
+    ],
+    pantographs: [{ kind: "diamond", x: 3.75, raised: true }, { kind: "diamond", x: 24.55, raised: false }],
+    // the two bogies under the joints ride with the middle section, as in full detail
+    bogies: KT8_BOGIES.map((x, k) => ({ x, wb: 1.9, r: TRAM_WHEEL_R, top: 0.7, section: k === 0 ? 0 : k === 3 ? 2 : 1 })),
+    joint: kt8Joint(new Tram({}, KT8_MAP)),
+    wire: TRAM_WIRE,
+  }, 300);
 }
 
 // ---------------------------------------------------------------------------
@@ -394,12 +473,26 @@ const KT4_DOORS: Array<{ box: PxBox; lights: PxBox[] }> = [20, 80, 124, 184].map
   lights: [0, 4, 8, 12].map((d): PxBox => [u + 1 + d, 14, u + 4 + d, 31]),
 }));
 
+const KT4_PALETTE = { red: { color: "#d8232a", roughness: 0.5 } };
+// white with a red belt 0.8..1.5 and grey window surrounds
+const KT4_MAIN: Band[] = [[0, 0.8, "white"], [0.8, 1.5, "red"], [1.5, 3.12, "white"], [3.12, 3.6, "roof"]];
+const KT4_CAB: Band[] = [[0, 0.8, "white"], [0.8, 1.5, "red"], [1.5, 1.78, "white"], [1.78, 3.02, "glass"], [3.02, 3.12, "white"], [3.12, 3.6, "roof"]];
+
+/** The KT4's joint: hinge height (source), bellows outline (Factory) and folds, bend limit. */
+function kt4Joint(t: Tram) {
+  return {
+    hingeY: 0.9,
+    profile: [[-1.0, t.fy(0.6)], [1.0, t.fy(0.6)], [1.04, t.fy(1.7)], [0.85, t.fy(3.05)], [-0.85, t.fy(3.05)], [-1.04, t.fy(1.7)]] as Array<[number, number]>,
+    folds: 4,
+    depth: 0.04,
+    maxBendDeg: 40,
+  };
+}
+
 export function tatraKt4(): MeshBuilder {
-  const t = new Tram({ red: { color: "#d8232a", roughness: 0.5 } }, KT4_MAP);
+  const t = new Tram(KT4_PALETTE, KT4_MAP);
   const m = t.m;
-  // white with a red belt 0.8..1.5 and grey window surrounds
-  const main: Band[] = [[0, 0.8, "white"], [0.8, 1.5, "red"], [1.5, 3.12, "white"], [3.12, 3.6, "roof"]];
-  const cab: Band[] = [[0, 0.8, "white"], [0.8, 1.5, "red"], [1.5, 1.78, "white"], [1.78, 3.02, "glass"], [3.02, 3.12, "white"], [3.12, 3.6, "roof"]];
+  const [main, cab] = [KT4_MAIN, KT4_CAB];
   const inside = (x: number, [a, b]: [number, number]) => x >= a - 0.05 && x <= b + 0.05;
   const sectionDraw = (i: number) => () => {
     const [a, b] = KT4_BODIES[i]!;
@@ -433,12 +526,26 @@ export function tatraKt4(): MeshBuilder {
     m.scope("running gear", () => m.scope("bogie", () => t.tramBogie(KT4_BOGIES[i]!, 1.9, TRAM_WHEEL_R, t.fy(0.8))));
   };
   const sections = KT4_BODIES.map(([a, b], i) => ({ x0: t.fx(b), x1: t.fx(a), draw: sectionDraw(i) }));
-  articulate(t, sections, t.fy(0.9), {
-    profile: [[-1.0, t.fy(0.6)], [1.0, t.fy(0.6)], [1.04, t.fy(1.7)], [0.85, t.fy(3.05)], [-0.85, t.fy(3.05)], [-1.04, t.fy(1.7)]],
-    folds: 4,
-    depth: 0.04,
-  }, 40);
+  const joint = kt4Joint(t);
+  articulate(t, sections, t.fy(joint.hingeY), joint, joint.maxBendDeg);
   return m;
+}
+
+/** The KT4 from afar (lodTrams.ts): two sections and the bellows, as the full rig. */
+export function tatraKt4Lod(): MeshBuilder {
+  return tramLod({
+    map: KT4_MAP, palette: KT4_PALETTE, section: KT4_SECTION, body: KT4_BODY,
+    bodies: KT4_BODIES, cabs: [1.15, 21.05], main: KT4_MAIN, cab: KT4_CAB, glass: ["glass"],
+    windows: { right: KT4_RIGHT_WINDOWS, left: KT4_LEFT_WINDOWS },
+    roofBoxes: [
+      { x: [16.3, 17.7], y: [3.18, 3.6], half: 0.5 },
+      ...([[2.5, 3.0], [8.6, 9.3], [12.8, 13.5], [19.2, 19.7]] as const).map(([a, b]) => ({ x: [a, b] as [number, number], y: [3.18, 3.3] as [number, number], half: 0.3, optional: true })),
+    ],
+    pantographs: [{ kind: "diamond", x: 5.75, reach: 1.1, raised: true }],
+    bogies: KT4_BOGIES.map((x) => ({ x, wb: 1.9, r: TRAM_WHEEL_R, top: 0.8 })),
+    joint: kt4Joint(new Tram({}, KT4_MAP)),
+    wire: TRAM_WIRE,
+  }, 200);
 }
 
 // ---------------------------------------------------------------------------
@@ -473,13 +580,28 @@ const GT4_DOORS: Array<{ box: PxBox; lights: PxBox[] }> = [8, 75, 123].map((u) =
   lights: [[u + 1, 13, u + 8, 33], [u + 9, 13, u + 16, 33]],
 }));
 
+const GT4_PALETTE = { cream: { color: "#f3edc8", roughness: 0.5 }, red: { color: "#d8232a", roughness: 0.5 }, doorFrame: { color: "#7d7d7d", roughness: 0.6 } };
+// cream with two red lines, at 0.6..0.7 and 1.4..1.6 (z_inc rows 33 and 24..25)
+const GT4_LOWER: Band[] = [[0, 0.6, "cream"], [0.6, 0.7, "red"], [0.7, 1.4, "cream"], [1.4, 1.6, "red"]];
+const GT4_MAIN: Band[] = [...GT4_LOWER, [1.6, 3.1, "cream"], [3.1, 3.7, "roof"]];
+const GT4_CAB: Band[] = [...GT4_LOWER, [1.6, 1.75, "cream"], [1.75, 2.75, "glass"], [2.75, 3.1, "cream"], [3.1, 3.7, "roof"]];
+
+/** The GT4's joint: hinge height (source), bellows outline (Factory) and folds, bend limit. */
+function gt4Joint(t: Tram) {
+  const hw = 1.12 * GT4_MAP.kz;
+  return {
+    hingeY: 0.95,
+    profile: [[-hw, t.fy(0.55)], [hw, t.fy(0.55)], [hw, t.fy(1.8)], [hw * 0.86, t.fy(3.05)], [-hw * 0.86, t.fy(3.05)], [-hw, t.fy(1.8)]] as Array<[number, number]>,
+    folds: 2,
+    depth: 0.035,
+    maxBendDeg: 35,
+  };
+}
+
 export function gt4Tram(): MeshBuilder {
-  const t = new Tram({ cream: { color: "#f3edc8", roughness: 0.5 }, red: { color: "#d8232a", roughness: 0.5 }, doorFrame: { color: "#7d7d7d", roughness: 0.6 } }, GT4_MAP);
+  const t = new Tram(GT4_PALETTE, GT4_MAP);
   const m = t.m;
-  // cream with two red lines, at 0.6..0.7 and 1.4..1.6 (z_inc rows 33 and 24..25)
-  const lower: Band[] = [[0, 0.6, "cream"], [0.6, 0.7, "red"], [0.7, 1.4, "cream"], [1.4, 1.6, "red"]];
-  const main: Band[] = [...lower, [1.6, 3.1, "cream"], [3.1, 3.7, "roof"]];
-  const cab: Band[] = [...lower, [1.6, 1.75, "cream"], [1.75, 2.75, "glass"], [2.75, 3.1, "cream"], [3.1, 3.7, "roof"]];
+  const [main, cab] = [GT4_MAIN, GT4_CAB];
   const inside = (x: number, [a, b]: [number, number]) => x >= a - 0.05 && x <= b + 0.05;
   const sectionDraw = (i: number) => () => {
     const [a, b] = GT4_BODIES[i]!;
@@ -509,13 +631,23 @@ export function gt4Tram(): MeshBuilder {
     m.scope("running gear", () => m.scope("bogie", () => t.tramBogie(GT4_BOGIES[i]!, 1.7, TRAM_WHEEL_R, t.fy(0.65))));
   };
   const sections = GT4_BODIES.map(([a, b], i) => ({ x0: t.fx(b), x1: t.fx(a), draw: sectionDraw(i) }));
-  const hw = 1.12 * GT4_MAP.kz;
-  articulate(t, sections, t.fy(0.95), {
-    profile: [[-hw, t.fy(0.55)], [hw, t.fy(0.55)], [hw, t.fy(1.8)], [hw * 0.86, t.fy(3.05)], [-hw * 0.86, t.fy(3.05)], [-hw, t.fy(1.8)]],
-    folds: 2,
-    depth: 0.035,
-  }, 35);
+  const joint = gt4Joint(t);
+  articulate(t, sections, t.fy(joint.hingeY), joint, joint.maxBendDeg);
   return m;
+}
+
+/** The GT4 from afar (lodTrams.ts): two sections and the joint, as the full rig. */
+export function gt4TramLod(): MeshBuilder {
+  return tramLod({
+    map: GT4_MAP, palette: GT4_PALETTE, section: GT4_SECTION, body: GT4_BODY,
+    bodies: GT4_BODIES, cabs: [0.8, 14.0], main: GT4_MAIN, cab: GT4_CAB, glass: ["glass"],
+    windows: { right: GT4_RIGHT_WINDOWS, left: GT4_LEFT_WINDOWS },
+    roofBoxes: [{ x: [2.0, 6.9], y: [3.3, 3.6], half: 0.45 }, { x: [7.7, 9.4], y: [3.3, 3.6], half: 0.45 }],
+    pantographs: [{ kind: "diamond", x: 4.0, reach: 1.05, raised: true }],
+    bogies: GT4_BOGIES.map((x) => ({ x, wb: 1.7, r: TRAM_WHEEL_R, top: 0.65 })),
+    joint: gt4Joint(new Tram({}, GT4_MAP)),
+    wire: TRAM_WIRE,
+  }, 200);
 }
 
 // ---------------------------------------------------------------------------
@@ -526,20 +658,22 @@ interface TramDesign {
   title: string;
   folder: string;
   build: (params?: ParamValues) => MeshBuilder;
+  /** The distant model (docs/models/lod.md). */
+  buildLod: (params?: ParamValues) => MeshBuilder;
   params?: readonly ParamSpec[];
   /** What the game needs of it beyond its geometry (design.ts GameProperties). */
   game: GameProperties;
 }
 
 export const TRAM_DESIGN_LIST: readonly TramDesign[] = [
-  { id: "proc-vehicle-tatra-t3", game: { weight: 16.5, power: 176, maxspeed: 50, accel: null }, title: "Tatra T3", folder: "tatra-t3", build: tatraT3, params: T3_PARAMS },
-  { id: "proc-vehicle-tatra-t6", game: { weight: 17, power: 180, maxspeed: 50, accel: null }, title: "Tatra T6A5", folder: "tatra-t6", build: tatraT6 },
-  { id: "proc-vehicle-tatra-kt8", game: { weight: 30, power: 200, maxspeed: 50, accel: null }, title: "Tatra KT8D5", folder: "tatra-kt8", build: tatraKt8, params: KT8_PARAMS },
-  { id: "proc-vehicle-tatra-kt4", game: { weight: 12, power: 100, maxspeed: 60, accel: null }, title: "Tatra KT4", folder: "tatra-kt4", build: tatraKt4 },
-  { id: "proc-vehicle-kvag-gt4", game: { weight: 20, power: 100, maxspeed: 60, accel: null }, title: "GT4", folder: "gt4", build: gt4Tram },
+  { id: "proc-vehicle-tatra-t3", game: { weight: 16.5, power: 176, maxspeed: 50, accel: null }, title: "Tatra T3", folder: "tatra-t3", build: tatraT3, buildLod: tatraT3Lod, params: T3_PARAMS },
+  { id: "proc-vehicle-tatra-t6", game: { weight: 17, power: 180, maxspeed: 50, accel: null }, title: "Tatra T6A5", folder: "tatra-t6", build: tatraT6, buildLod: tatraT6Lod },
+  { id: "proc-vehicle-tatra-kt8", game: { weight: 30, power: 200, maxspeed: 50, accel: null }, title: "Tatra KT8D5", folder: "tatra-kt8", build: tatraKt8, buildLod: tatraKt8Lod, params: KT8_PARAMS },
+  { id: "proc-vehicle-tatra-kt4", game: { weight: 12, power: 100, maxspeed: 60, accel: null }, title: "Tatra KT4", folder: "tatra-kt4", build: tatraKt4, buildLod: tatraKt4Lod },
+  { id: "proc-vehicle-kvag-gt4", game: { weight: 20, power: 100, maxspeed: 60, accel: null }, title: "GT4", folder: "gt4", build: gt4Tram, buildLod: gt4TramLod },
 ];
 
 export const TRAM_DESIGNS: ProceduralDesign[] = TRAM_DESIGN_LIST.map((d) => ({
-  id: d.id, title: d.title, build: d.build, game: d.game, catalog: TRAM_CATALOG, references: d.folder, ...(d.params ? { params: d.params } : {}),
+  id: d.id, title: d.title, build: d.build, buildLod: d.buildLod, game: d.game, catalog: TRAM_CATALOG, references: d.folder, ...(d.params ? { params: d.params } : {}),
 }));
 
