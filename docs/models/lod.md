@@ -1,7 +1,7 @@
 # Low level of detail
 
 **Covers** - distant geometry for every standalone JS export, triangle budgets and the factory preview switch.
-**Code** - `generator/lod.ts`, `generator/lodHull.ts`, `generator/lodModel.ts`, `generator/lodPrimitives.ts`, `generator/meshCore.ts`, `generator/jsModel.ts`, `generator/towers.ts`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `test/lod.test.ts`.
+**Code** - `generator/lod.ts`, `generator/cd163.ts` (`cd163LodBody`), `generator/cd163Family.ts`, `generator/lodHull.ts`, `generator/lodModel.ts`, `generator/lodPrimitives.ts`, `generator/meshCore.ts`, `generator/jsModel.ts`, `generator/towers.ts`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `test/lod.test.ts`.
 **See also** - [js-format.md](js-format.md), [parameters.md](parameters.md), [vehicle-rig.md](vehicle-rig.md), [../site/catalog-site.md](../site/catalog-site.md).
 
 ## Consumer API
@@ -56,10 +56,23 @@ separate hoods of shunters, articulated vehicle bodies and architectural tiers.
 A design can instead supply `buildLod`, exported from the same source module.
 Dedicated silhouettes cover the ocean liner, cruise ferry, industrial models, castle,
 Colosseum, pagoda, palace, station hotel, Brandenburg Gate, St Basil's Cathedral,
-transmission tower and Eiffel Tower. Open courtyards, the Colosseum arena,
+transmission tower, Eiffel Tower and the CD 163 / 263 locomotives. Open courtyards, the Colosseum arena,
 individual rotor blades, wings, chimneys and domes remain distinct. Power and
 chemical plants and Prague main station use the large-complex-building budget
 of 500 triangles. Dedicated builders resolve the same parameters as full detail.
+
+The CD 163 / 363 and CD 263 / 371 / 372 (every livery of both designs) share
+`cd163LodBody`, at most 100 triangles: the body's raked ends and flat sides are
+painted in the livery's colour bands (a livery's own cab paint on the cab
+sections and ends), with the grey side apron under the eave, the roof hip, the
+raised cooler box, a dark block per bogie and one for the equipment between
+them (so the body stands on the rail instead of floating), the raised rear
+pantograph as thin rods with its collector bar, and a low ridge for the folded
+front one. The body is open below. When a livery's bands do not fit, the folded
+pantograph goes first, then the band that shows least: the thinnest, a cab band
+counting half (it then shows the machine room's colours at its height), the
+grey apron counting as a band. Windows and markings are left out as in every
+vehicle LOD, and all machine-room layouts look alike from afar.
 
 The process is deterministic. Generic recipes build the full geometry first,
 then reconstruct the silhouette; their saving is in rendering, not initial

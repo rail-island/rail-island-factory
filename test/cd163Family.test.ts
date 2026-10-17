@@ -6,7 +6,9 @@ import fs from "node:fs";
 import { describe, expect, it } from "vitest";
 import { CD150_LIVERIES, CD150_NUMBER, cd150 } from "../generator/cd150";
 import { CD163_GREEN, bandAt, runningNumber, type Band } from "../generator/cd163";
-import { CD163_LIVERIES, CD263_LIVERIES, cd163, cd263 } from "../generator/cd163Family";
+import { CD163_LIVERIES, CD263_LIVERIES, cd163, cd163Lod, cd263, cd263Lod } from "../generator/cd163Family";
+import { collectTriangles, parseGlb } from "../generator/glbTriangles";
+import { findCoplanarOverlaps } from "../generator/coplanar";
 import { glbStats } from "../generator/glbStats";
 import { isLeaf, type LeafNode, type TreeNode } from "../generator/sourceTree";
 import type { MaterialSpec, MeshBuilder } from "../generator/meshBuilder";
@@ -183,5 +185,71 @@ describe("CD 263 / 371 / 372", () => {
       ...Object.keys(CD150_LIVERIES).map((l) => cd150({ livery: l })),
     ];
     for (const m of builds) expect(glbStats(m.toGlb("t")).triangles).toBeLessThanOrEqual(16_000);
+  });
+});
+
+describe("CD 163 family low level of detail", () => {
+  const lods = [
+    ...Object.keys(CD163_LIVERIES).map((l) => [l, cd163Lod({ livery: l })] as const),
+    ...Object.keys(CD263_LIVERIES).map((l) => [l, cd263Lod({ livery: l })] as const),
+  ];
+  /** The material of the LOD face whose centre is nearest (x, y, z) among those facing n. */
+  function faceAt(m: MeshBuilder, x: number, y: number, z: number, n: [number, number, number]): string {
+    const { json, bin } = parseGlb(m.toGlb("t"));
+    let best = { d: Infinity, mat: "" };
+    for (const f of collectTriangles(json, bin)) {
+      const [a, b, c] = f.p;
+      const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+      const v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+      const fn = [u[1]! * v[2]! - u[2]! * v[1]!, u[2]! * v[0]! - u[0]! * v[2]!, u[0]! * v[1]! - u[1]! * v[0]!];
+      const l = Math.hypot(...fn);
+      if (fn[0]! * n[0] + fn[1]! * n[1] + fn[2]! * n[2] < 0.95 * l) continue;
+      // the face must contain the point's projection: test the barycentric coordinates in its plane
+      const w = [x - a[0], y - a[1], z - a[2]];
+      const dot = (p: number[], q: number[]) => p[0]! * q[0]! + p[1]! * q[1]! + p[2]! * q[2]!;
+      const [uu, uv, vv, wu, wv] = [dot(u, u), dot(u, v), dot(v, v), dot(w, u), dot(w, v)];
+      const den = uu * vv - uv * uv;
+      const s = (vv * wu - uv * wv) / den;
+      const t = (uu * wv - uv * wu) / den;
+      if (s < -1e-6 || t < -1e-6 || s + t > 1 + 1e-6) continue;
+      const d = Math.abs(dot(w, fn) / l);
+      if (d < best.d) best = { d, mat: f.material };
+    }
+    return best.mat;
+  }
+
+  it("fits every livery into 100 triangles, standing on its bogies with the rear collector raised", () => {
+    for (const [livery, m] of lods) {
+      const s = glbStats(m.toGlb("t"));
+      expect(s.triangles, livery).toBeLessThanOrEqual(100);
+      expect(s.triangles, livery).toBeGreaterThan(80);
+      // the running gear reaches down to the rail instead of the body floating 1 m above it
+      expect(s.min[1], livery).toBeLessThan(0.1);
+      expect(s.max[1], livery).toBeCloseTo(5.74, 1);
+      expect(s.max[2], livery).toBeCloseTo(1.51, 2);
+      expect(s.max[0], livery).toBeLessThanOrEqual(7.9 + 1e-6);
+      expect(findCoplanarOverlaps(m.toGlb("t")), livery).toEqual([]);
+    }
+  });
+
+  it("paints the livery's bands, not one body colour", () => {
+    const green = cd163Lod();
+    for (const s of [-1, 1]) {
+      expect(faceAt(green, 0, 1.4, s * 1.47, [0, 0, s])).toBe("green");
+      expect(faceAt(green, 0, 2.0, s * 1.47, [0, 0, s])).toBe("yellow");
+      expect(faceAt(green, 0, 3.0, s * 1.47, [0, 0, s])).toBe("green");
+      expect(faceAt(green, 0, 3.6, s * 1.47, [0, 0, s])).toBe("roof"); // the grey side apron
+    }
+    for (const e of [-1, 1]) expect(faceAt(green, e * 7.85, 2.0, 0, [e, 0, 0])).toBe("yellow");
+    // the 371 002 keeps its thin yellow line between the cream and the red
+    expect(faceAt(cd263Lod({ livery: "cd371No002" }), 0, 2.1, 1.47, [0, 0, 1])).toBe("yellow");
+  });
+
+  it("keeps the 363 009's red cabs against the charcoal machine-room band", () => {
+    const m = cd163Lod({ livery: "cd363No009" });
+    expect(faceAt(m, 0, 2.8, 1.47, [0, 0, 1])).toBe("charcoal");
+    expect(faceAt(m, 7.0, 2.8, 1.47, [0, 0, 1])).toBe("red");
+    expect(faceAt(m, 7.8, 2.8, 0, [1, 0, 0])).toBe("red");
+    expect(faceAt(m, 0, 1.1, -1.47, [0, 0, -1])).toBe("charcoal");
   });
 });
