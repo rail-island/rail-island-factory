@@ -3,7 +3,7 @@
 // image (AGENTS.md, "Show the user the model"). Headless, pure Node (pngjs).
 //
 //   pnpm exec tsx generator/contactSheet.ts <out.png> [--variants | --vary a,b]
-//       [--view auto|3q|side] [--cols N] [--cell PX] <source>...
+//       [--view auto|3q|side] [--cols N] [--cell PX] [--no-labels] <source>...
 //
 // A source is a design id (`proc-vehicle-cd-150`), a prefix of ids (`proc-vehicle-cd-1*`),
 // a design with parameters (`proc-building-x?variant=b&roof=red`), or a .glb or .png file.
@@ -59,7 +59,7 @@ export function composeSheet(tiles: readonly SheetTile[], opts: SheetOptions = {
     const k = t.side ? sideScale : Math.min(1, cell / t.png.width, cell / t.png.height);
     return resample(t.png, k);
   });
-  const lines = tiles.map((t) => wrap(t.label, Math.max(1, Math.floor(cell / ADVANCE))));
+  const lines = tiles.map((t) => (t.label ? wrap(t.label, Math.max(1, Math.floor(cell / ADVANCE))) : []));
   const cols = Math.max(1, Math.min(tiles.length, opts.cols ?? (anySide ? (tiles.length > 6 ? 2 : 1) : 4)));
   const rows: number[][] = [];
   for (let i = 0; i < tiles.length; i += cols) rows.push(tiles.slice(i, i + cols).map((_, j) => i + j));
@@ -318,19 +318,21 @@ export function expandSources(
 const MANY = 24;
 
 const USAGE =
-  "usage: tsx generator/contactSheet.ts <out.png> [--variants | --vary a,b] [--view auto|3q|side] [--cols N] [--cell PX] <id | id* | id?k=v | file.png | file.glb>...";
+  "usage: tsx generator/contactSheet.ts <out.png> [--variants | --vary a,b] [--view auto|3q|side] [--cols N] [--cell PX] [--no-labels] <id | id* | id?k=v | file.png | file.glb>...";
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const argv = process.argv.slice(2);
   const opts: SheetOptions = {};
   let view = "auto";
   let variants: boolean | string[] = false;
+  let labels = true;
   const rest: string[] = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]!;
     if (a === "--variants") variants = true;
     else if (a === "--vary") variants = (argv[++i] ?? "").split(",").filter(Boolean);
     else if (a === "--view") view = argv[++i] ?? "";
+    else if (a === "--no-labels") labels = false;
     else if (a === "--cols") opts.cols = Number(argv[++i]);
     else if (a === "--cell") opts.cell = Number(argv[++i]);
     else rest.push(a);
@@ -350,6 +352,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const cell = opts.cell ?? defaultCell(sources.some(isSide));
   const tiles: SheetTile[] = sources.map((s) => {
     const side = isSide(s);
+    if (!labels) s = { ...s, label: "" };
     if (s.file?.toLowerCase().endsWith(".png")) return { label: s.label, png: PNG.sync.read(fs.readFileSync(s.file)), side };
     const glb: GlbSource = s.file ?? designGlb(s.id!, s.params);
     return { label: s.label, png: side ? renderGlbSideThumb(glb).png : renderGlbThumb(glb, cell), side };

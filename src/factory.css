@@ -110,6 +110,23 @@ body {
   text-overflow: ellipsis;
 }
 
+.factory-bar__add {
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border: 1px solid var(--m-primary);
+  border-radius: 999px;
+  color: var(--m-primary);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.factory-bar__add:hover {
+  background: var(--m-state-hover);
+}
+
 .factory-main {
   padding: 0 16px 64px;
 }

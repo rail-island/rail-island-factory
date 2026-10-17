@@ -58,6 +58,12 @@ describe("the contact sheet", () => {
     expect(blueRun(12 + 200 + 12)).toBe(100); // the short one at the same half scale
   });
 
+  it("leaves the label row out when no tile has a label", () => {
+    const tile = (label: string) => ({ label, png: solid(100, 100, [200, 0, 0]) });
+    expect(composeSheet([tile("")], { cell: 100 }).height).toBe(12 + 100 + 12 + 12 + 12);
+    expect(composeSheet([tile("a")], { cell: 100 }).height).toBe(12 + 100 + 12 + 18 + 12 + 12);
+  });
+
   it("is deterministic", () => {
     const tiles = [{ label: "a", png: solid(64, 64, [10, 20, 30]) }];
     expect(PNG.sync.write(composeSheet(tiles))).toEqual(PNG.sync.write(composeSheet(tiles)));

@@ -238,7 +238,8 @@ rail vehicles); `--view 3q` or `side` forces one. Side views on a sheet share on
 scale, shrunk so the longest fits a cell, so lengths compare; three-quarter views
 are rendered at the cell size. `--cols` and `--cell` (px, default 384, or 800 with
 side views) set the grid. Each label is the id and the parameters that differ from
-the defaults, in a built-in 5x7 pixel font (upper case). Above 24 images it warns
+the defaults, in a built-in 5x7 pixel font (upper case); `--no-labels` leaves them
+out (the README's showcase images, `docs/images/`, are made so). Above 24 images it warns
 that the sheet is too dense to read; narrow it with `--vary` or split it.
 
 ## Industry migration manifest
