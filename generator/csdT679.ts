@@ -18,6 +18,9 @@ import {
   paint, planBody, rect, side, sideDecal, sideGrille, sideHandrail, sidePanel, sidePlate, sideWindow,
   type Band, type BogieSpec, type PlanBody, type Wall,
 } from "./dieselParts.ts";
+import type { ParamValues } from "./design.ts";
+import { LOD_GLASS } from "./lodKit.ts";
+import { locoLod, overlay, planBodyLod, screen, sideWindows } from "./lodLocos.ts";
 
 const C = (hex: string) => paint(hex);
 
@@ -195,4 +198,33 @@ function underframe(m: MeshBuilder): void {
     for (const s of [-1, 1]) block(m, "steel", X(9.2), X(9.6), 0.5, 0.7, ...side(s, 1.42, 1.47));
   });
   m.scope("frame", () => block(m, "underframe", X(1.4), X(17.5), 0.75, 0.88, -1.25, 1.25));
+}
+
+/**
+ * The T 679.0 for distant views (docs/models/lod.md, lodLocos.ts): the windscreen's
+ * blue frame as an end band, the long machine-room window, the silver intakes.
+ */
+export function csdT6790Lod(_params?: ParamValues, budget = 100): MeshBuilder {
+  const shell = planBodyLod(BODY, {
+    end: overlay(FACE, 2.95, 3.8, "blue"),
+    endWindows: screen(0.1, 1.42, 3.03, 3.72),
+    sideWindows: [
+      { u: [X(5.9), X(13.0)], y: [2.65, 3.7], mat: LOD_GLASS },
+      ...sideWindows([{ u: [X(0.75), X(1.05)], y: [2.95, 3.75] }, { u: [X(1.2), X(1.7)], y: [2.95, 3.75] }, { u: [X(1.98), X(2.52)], y: [2.95, 3.72] }], 0.3, true),
+      { u: [X(3.0), X(5.0)], y: [1.9, 3.6], mat: "silver", optional: 30 },
+    ],
+  });
+  return locoLod({
+    palette: PALETTE,
+    shells: [shell],
+    boxes: [
+      ...[-1, 1].map((e) => {
+        const beam = BODY.tip(0.9);
+        return { name: "skirt", mat: "skirt", x: e > 0 ? [beam - 0.5, beam] as const : [-beam, -beam + 0.5] as const, y: [0.12, 0.9] as const, w: 1.45, top: false as const, optional: 30 };
+      }),
+      { name: "fuel tank", mat: "skirt", x: [X(7.4), X(11.5)], y: [0.22, 0.9], w: 1.45, top: false, optional: 35 },
+      { name: "exhaust", mat: "exhaust", x: [X(9.0), X(9.4)], y: [4.2, 4.42], w: 0.15, zc: 0.8, optional: 15 },
+    ],
+    gear: [-1, 1].map((e) => ({ xc: e * 4.78, half: 2.0 + 0.5 + 0.2, top: 0.9 })),
+  }, budget);
 }

@@ -22,6 +22,7 @@ import {
   DIESEL_PALETTE, boxSpec, breaksOf, c, faceAt, grille, headlamp, numberText, pane, plate, railing, span, steps, tubeSeg, wallAt,
   type BoxSpec,
 } from "./smallDieselKit.ts";
+import { boxLod, locoLod, screen, sideWindows } from "./lodLocos.ts";
 
 export interface Db212Livery {
   title: string;
@@ -222,4 +223,26 @@ export function db212(params?: ParamValues): MeshBuilder {
   m.scope("body", () => body(m, l));
   m.scope("underframe", () => underframe(m, l));
   return m;
+}
+
+/** The V 100 / 212 for distant views (docs/models/lod.md, lodLocos.ts): the hoods, the cab under its overhanging roof. */
+export function db212Lod(params?: ParamValues, budget = 100): MeshBuilder {
+  const { livery } = resolveParams(DB212_PARAMS, params);
+  const l: Db212Livery = DB212_LIVERIES[livery as keyof typeof DB212_LIVERIES];
+  const sp = specs(l);
+  const cab = boxLod(sp.cab, {
+    endWindows: screen(0.2, 1.1, 3.2, 3.78),
+    sideWindows: sideWindows([[59, 63.4], [63.6, 69.4], [69.6, 76.5]].map(([a, b]) => ({ u: [px(a!), px(b!)] as const, y: [3.22, 3.78] as const }))),
+  });
+  return locoLod({
+    palette: { ...DIESEL_PALETTE, ...SHARED, ...l.palette },
+    shells: [boxLod(sp.longHood), boxLod(sp.shortHood), cab],
+    boxes: [
+      { name: "frame", mat: "frameBlack", x: [-FRAME, FRAME], y: [Y_FRAME, Y_DECK], w: 1.5 },
+      { name: "cab roof", mat: "roofGrey", x: [px(51), px(85)], y: [3.8, 4.3], w: [1.38, 1.2] },
+      { name: "fuel tank", mat: "frameBlack", x: [-1.3, 1.3], y: [0.45, Y_FRAME], w: 1.1, top: false, optional: 35 },
+      { name: "exhaust", mat: "exhaust", x: [-1.7, -1.5], y: [3.25, 3.42], w: 0.1, optional: 10 },
+    ],
+    gear: [-1, 1].map((e) => ({ xc: e * PIVOT, half: 1.1 + 0.475 + 0.2, top: Y_FRAME })),
+  }, budget);
 }

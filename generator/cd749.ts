@@ -9,7 +9,7 @@ import type { MeshBuilder } from "./meshBuilder.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import { runningNumber } from "./cd163.ts";
 import { paint } from "./dieselParts.ts";
-import { buildT478, type Cd750Livery } from "./cd750.ts";
+import { buildT478, t478Lod, type Cd750Livery } from "./cd750.ts";
 
 const C = (hex: string) => paint(hex);
 
@@ -84,4 +84,10 @@ export const CD749_NUMBER = CD749_LIVERIES.cd749.number;
 export function cd749(params?: ParamValues): MeshBuilder {
   const { livery: key } = resolveParams(CD749_PARAMS, params);
   return buildT478(CD749_LIVERIES[key as keyof typeof CD749_LIVERIES]);
+}
+
+/** The CD 749 for distant views (docs/models/lod.md). */
+export function cd749Lod(params?: ParamValues, budget = 100): MeshBuilder {
+  const { livery: key } = resolveParams(CD749_PARAMS, params);
+  return t478Lod(CD749_LIVERIES[key as keyof typeof CD749_LIVERIES], budget);
 }

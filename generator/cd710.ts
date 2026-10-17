@@ -11,6 +11,7 @@
 
 import { MeshBuilder, ngon, type MaterialSpec } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
+import type { ParamValues } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
 import { runningNumber, type Band } from "./cd163.ts";
 import { buffers, onEnd, onSide, rect, shell, surfaceDecal } from "./czElectricKit.ts";
@@ -18,6 +19,7 @@ import {
   DIESEL_PALETTE, axleGear, boxSpec, breaksOf, c, grille, hazardBeam, headlamp, numberText, pane, plate, railing, span, steps, tubeSeg,
   type BoxSpec,
 } from "./smallDieselKit.ts";
+import { boxLod, cutBox, locoLod, lowerBox, screen, sideWindows } from "./lodLocos.ts";
 
 /** 710 620-6: the vlakosimdb model's name; the check digit by the 1988 scheme. */
 export const CD710_NUMBER = runningNumber("710", "620");
@@ -154,4 +156,23 @@ export function cd710(): MeshBuilder {
   m.scope("body", () => body(m));
   m.scope("underframe", () => underframe(m));
   return m;
+}
+
+/** CD 710 620-6 for distant views (docs/models/lod.md, lodLocos.ts): the hood either side of the cab, the cab under its sun roof. */
+export function cd710Lod(_params?: ParamValues, budget = 100): MeshBuilder {
+  // the cab up to the sun roof's underside: what stands above is under the sun roof
+  const cab = boxLod(lowerBox(CAB, 3.42), {
+    endWindows: screen(0.3, 1.3, 2.72, 3.3),
+    sideWindows: sideWindows([[40, 44], [46, 55], [57, 61]].map(([a, b]) => ({ u: [px(a!), px(b!)] as const, y: [2.7, 3.3] as const }))),
+  });
+  return locoLod({
+    palette: PALETTE,
+    shells: [boxLod(cutBox(HOOD, HOOD.x0, CAB.x0)), boxLod(cutBox(HOOD, CAB.x1, HOOD.x1)), cab, boxLod(SUNROOF)],
+    boxes: [
+      { name: "frame", mat: "frameGrey", x: [-FRAME, FRAME], y: [Y_FRAME, Y_DECK], w: 1.5 },
+      ...[-1, 1].map((e) => ({ name: "buffer beam", mat: "hazardRed", x: span(e * (FRAME - 0.3), e * FRAME), y: [0.3, Y_FRAME] as const, w: 1.5, top: false as const, optional: 30 })),
+      { name: "exhaust", mat: "exhaust", x: [-3.3, -3.1], y: [2.6, 2.95], w: 0.1, optional: 10 },
+    ],
+    gear: [{ xc: (AXLES[0] + AXLES[2]) / 2, half: (AXLES[2] - AXLES[0]) / 2 + 0.5 + 0.2, top: Y_FRAME }],
+  }, budget);
 }

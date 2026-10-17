@@ -21,6 +21,8 @@ import {
   KIT_PALETTE, bogie, buffers, c, insulator, lerpTable, numberOn, onEnd, onSide, rect, roundRect, shell, singleArm,
   surfaceDecal, surfacePanel, type ShellSpec,
 } from "./czElectricKit.ts";
+import { czShellLod, locoLod, screen, sideWindows } from "./lodLocos.ts";
+import type { LodShell } from "./lodKit.ts";
 
 export interface Cd110Livery {
   title: string;
@@ -310,4 +312,36 @@ export function cd110(params?: ParamValues): MeshBuilder {
   });
   m.scope("roof equipment", () => roofEquipment(m, l));
   return m;
+}
+
+/**
+ * The same shunter for distant views (docs/models/lod.md, lodLocos.ts): the
+ * full-width blocks under the cab windows and the lower cab as one box, the
+ * upper cab on it, the hoods without their cambered tops; the low cabinets
+ * beside the cab give way first.
+ */
+export function cd110Lod(params?: ParamValues, budget = 100): MeshBuilder {
+  const { livery: key } = resolveParams(CD110_PARAMS, params);
+  const l: Cd110Livery = CD110_LIVERIES[key as keyof typeof CD110_LIVERIES];
+  const cab = cabSpec(l);
+  const upper = (t: ReadonlyArray<readonly [number, number]>) => t.filter(([y]) => y >= 3.2);
+  const lowerCab: LodShell = {
+    y0: Y_DECK, tip: [[Y_DECK, 2.55], [3.2, 2.2]], hw: [[Y_DECK, 1.5], [3.2, 1.5]],
+    side: cab.side.filter(([a]) => a < 3.2), end: cab.end.filter(([a]) => a < 3.2), roof: "roof",
+  };
+  const upperCab: LodShell = {
+    y0: 3.2, tip: upper(CAB_TIP), hw: upper(CAB_HW), side: [[3.2, 4.4, l.cabTop]], end: [[3.2, 4.4, l.cabTop]], roof: "roof",
+    endWindows: screen(0.04, 1.25, 3.3, 4.2),
+    sideWindows: sideWindows([{ u: [-1.12, 1.12], y: [3.3, 4.2] }]),
+  };
+  // the hoods from inside the lower cab (their inner ends hidden) to their leaning outer ends
+  const hood = (e: number) => czShellLod(hoodSpec(e, l), { xc: e * 3.9, tip: [[Y_DECK, 1.9], [3.15, 2.03]], hw: [[Y_DECK, HOOD_W], [3.15, HOOD_W]] });
+  return locoLod({
+    palette: { ...KIT_PALETTE, ...SHARED, ...l.palette },
+    shells: [lowerCab, upperCab, hood(-1), hood(1)],
+    optionalShells: [-1, 1].map((e) => ({ shell: czShellLod(cabinetSpec(e, l)), optional: 30 + e })),
+    boxes: [{ name: "frame", mat: l.frame, x: [-FRAME, FRAME], y: [Y_FRAME, Y_DECK], w: 1.5, top: "roof" }],
+    gear: [-1, 1].map((e) => ({ xc: e * 3.15, half: 1.4 + 0.525 + 0.2, top: Y_FRAME })),
+    pantographs: { x: 0, pair: false, roofY: CAB_TOP, baseY: CAB_TOP + 0.2, lower: 1.25, upper: 1.1 },
+  }, budget);
 }

@@ -15,6 +15,8 @@ import {
   paint, planBody, plough, rect, roofFan, side, sideDecal, sideGrille, sideHandrail, sidePlate, sideWindow, tankX,
   type Band, type BogieSpec, type PlanBody, type Wall,
 } from "./dieselParts.ts";
+import type { ParamValues } from "./design.ts";
+import { locoLod, planBodyLod, screen, sideWindows } from "./lodLocos.ts";
 
 const C = (hex: string) => paint(hex);
 
@@ -191,4 +193,28 @@ function underframe(m: MeshBuilder): void {
   m.scope("air reservoirs", () => {
     for (const s of [-1, 1]) tankX(m, "spring", X(11.4), X(12.0), s * 0.7, 0.75, 0.2);
   });
+}
+
+/** The T 499.0 for distant views (docs/models/lod.md, lodLocos.ts): the yellow bays behind the cabs as the cab sections. */
+export function csdT499Lod(_params?: ParamValues, budget = 100): MeshBuilder {
+  const shell = planBodyLod(BODY, {
+    // the cab's yellow reaches back over the louvred bay, its leaning edge at source x 5.2 .. 5.6
+    cab: { x: CENTRE - 5.4, side: CAB },
+    endWindows: screen(0.08, 1.42, 2.68, 3.32),
+    sideWindows: [
+      ...sideWindows([{ u: [X(0.9), X(1.4)], y: [2.8, 3.3] }, { u: [X(1.68), X(2.12)], y: [2.8, 3.3] }], 0.3, true),
+      ...sideWindows([5.8, 7.8, 8.5, 10.2].map((x) => ({ u: [X(x), X(x + 0.5)] as const, y: [2.8, 3.3] as const })), 0.3),
+    ],
+  });
+  const beam = CENTRE - 0.6;
+  return locoLod({
+    palette: PALETTE,
+    shells: [shell],
+    boxes: [
+      { name: "machine room roof", mat: "roofGrey", x: [X(2.6), X(14.9)], y: [3.6, 4.28], w: [1.18, 0.6] },
+      ...[-1, 1].map((e) => ({ name: "plough", mat: "frameBlack", x: e > 0 ? [beam - 0.6, beam] as const : [-beam, -beam + 0.6] as const, y: [0.2, 1.0] as const, w: 1.45, top: false as const, optional: 30 })),
+      { name: "fuel tank", mat: "tank", x: [X(6.3), X(11.2)], y: [0.32, 1.0], w: 1.3, top: false, optional: 35 },
+    ],
+    gear: [-1, 1].map((e) => ({ xc: e * 5.0, half: 1.3 + 0.5 + 0.2, top: 1.0 })),
+  }, budget);
 }

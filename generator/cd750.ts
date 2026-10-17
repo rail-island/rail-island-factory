@@ -22,6 +22,7 @@ import {
   rect, roofFan, roundRect, side, sideDecal, sideGrille, sideHandrail, sidePlate, sideWindow, tankX,
   type Band, type BogieSpec, type PlanBody, type Wall,
 } from "./dieselParts.ts";
+import { locoLod, overlay, planBodyLod, screen as lodScreen, sideWindows } from "./lodLocos.ts";
 
 export type Cd750Body = "brejlovec" | "bardotka";
 
@@ -236,6 +237,53 @@ function planBodyOf(g: Geometry, l: Cd750Livery): PlanBody {
 export function cd750(params?: ParamValues): MeshBuilder {
   const { livery: key } = resolveParams(CD750_PARAMS, params);
   return buildT478(CD750_LIVERIES[key as keyof typeof CD750_LIVERIES]);
+}
+
+/** The CD 750 / 753 / 754 for distant views (docs/models/lod.md). */
+export function cd750Lod(params?: ParamValues, budget = 100): MeshBuilder {
+  const { livery: key } = resolveParams(CD750_PARAMS, params);
+  return t478Lod(CD750_LIVERIES[key as keyof typeof CD750_LIVERIES], budget);
+}
+
+/**
+ * A T 478 for distant views (lodLocos.ts): the plan body with the windscreen's
+ * painted surround as an end band and the 750's yellow sweep as side bands
+ * (low along the cabs, high along the machine room), the headlight housings,
+ * the frame, ploughs, fuel tank and bogies.
+ */
+export function t478Lod(l: Cd750Livery, budget = 100): MeshBuilder {
+  const g = geometryOf(l);
+  const brej = g === BREJLOVEC;
+  const X = (sx: number) => sx - g.centre;
+  const pb = planBodyOf(g, l);
+  const [s0, s1] = brej ? [2.6, 3.5] : [2.82, 3.69];
+  const sweep = l.sweep;
+  const cabWindows = brej ? [[0.3, 0.5, 2.8, 3.3], [0.6, 1.1, 2.8, 3.3], [1.3, 1.7, 2.8, 3.3]] : [[1.05, 1.75, 2.9, 3.55], [1.88, 2.32, 3.0, 3.45]];
+  const shell = planBodyLod(pb, {
+    end: overlay(pb.face, s0, s1, l.screen),
+    ...(sweep ? { side: overlay(pb.side, 2.3, 2.6, sweep), cab: { x: g.centre - 4.6, side: overlay(pb.cab ?? pb.side, 1.6, 1.9, sweep) } } : {}),
+    endWindows: brej ? lodScreen(0.1, 1.4, 2.7, 3.4) : lodScreen(0.1, 1.4, 2.9, 3.6),
+    sideWindows: sideWindows(cabWindows.map(([a, b, y0, y1]) => ({ u: [X(a!), X(b!)] as const, y: [y0!, y1!] as const })), 0.2, true),
+  });
+  const beam = g.centre - g.frameEnd;
+  const [ta, tb] = brej ? [5.4, 9.9] : [6.9, 10.5];
+  // the headlight housing over the windscreen (Brejlovec) or on the brow (Bardotka)
+  const housing = (e: number) => {
+    const tip = brej ? 7.65 : 8.25 - 0.6;
+    const [x0, x1] = brej ? [tip - 1.2, tip + 0.08] : [tip - 0.9, tip + 0.06];
+    return { name: "headlight housing", mat: bandAt(l.face, 3.9)[2], x: e > 0 ? [x0, x1] as const : [-x1, -x0] as const, y: brej ? [3.5, 4.1] as const : [3.75, 4.3] as const, w: brej ? [0.5, 0.3] as const : [0.4, 0.25] as const, optional: 20 };
+  };
+  return locoLod({
+    palette: { ...DIESEL_PALETTE, ...l.palette, grey: C("#9da2a4"), cream: C("#efe7bf"), ...l.palette },
+    shells: [shell],
+    boxes: [
+      { name: "frame", mat: l.frame, x: [-beam, beam], y: [1.1, 1.6], w: 1.5 },
+      ...[-1, 1].map((e) => ({ name: "plough", mat: l.plough, x: e > 0 ? [beam - 0.6, beam] as const : [-beam, -beam + 0.6] as const, y: [0.15, 1.1] as const, w: 1.4, top: false as const, optional: 30 })),
+      { name: "fuel tank", mat: "tank", x: [X(ta), X(tb)], y: [0.2, 1.1], w: 1.25, top: false, optional: 35 },
+      housing(1), housing(-1),
+    ],
+    gear: [-1, 1].map((e) => ({ xc: e * 4.5, half: 1.2 + 0.5 + 0.2, top: 1.1 })),
+  }, budget);
 }
 
 /** A T 478 in livery `l`, on the body the livery names (the CD 749's design uses it too). */
