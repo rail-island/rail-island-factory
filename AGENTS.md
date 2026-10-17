@@ -2,13 +2,14 @@
 
 This is **Rail Island Factory**: Rail Island models generated from code, and the
 catalog site that shows them at `factory.railisland.com`. Today it builds ten
-procedural skyscrapers, five parametric village houses (docs/models/village.md),
+procedural skyscrapers, eight parametric village houses (among them an alpine hut, docs/models/village.md),
 road and rail vehicles (among them every non-archived vlakosimdb vehicle, as
 parametric families: buses with steerable front wheels and articulated joints,
 locomotives, units, coaches, wagons, trams and metro, and steam locomotives whose
 wheels and rods animate, docs/models/animation.md), and procedural reproductions of the
 game's hand-authored landmarks, stations, aircraft, ships, cable car cabins and trucks
-(docs/models/reproductions.md). The build writes an
+(docs/models/reproductions.md), plus a small airplane, a parametric chairlift chair and
+the JR KiHa 40 railcar. The build writes an
 export folder (GLBs, thumbnails, `skyscrapers.meta.json`, `village.meta.json`, `vehicles.meta.json`) that the game repository, `rail-island-webapp`, is meant
 to import - the factory is the source of these models, the game a consumer.
 
