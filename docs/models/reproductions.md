@@ -19,8 +19,8 @@ They retain their existing `tower-*` ids and convert authoring units to metres.
 
 ## Where they come from
 
-The webapp (`rail-island-webapp`) ships a set of models authored as GLB by hand from
-photos: landmarks and stations in `db/buildings/glb/`, and the aircraft, ships, cable car
+The webapp (`rail-island-webapp`) shipped a set of models authored as GLB by hand from
+photos (it has since deleted them; the game draws these reproductions): landmarks and stations in `db/buildings/glb/`, and the aircraft, ships, cable car
 cabins and trucks in `db/aircraft/`, `db/ships/`, `db/cablecar/` and `db/trucks/`. The
 photos they were made from live here, one folder per model under `assets/`, named after
 the webapp model; the site shows them on each model's Images tab. The factory rebuilds

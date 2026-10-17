@@ -96,3 +96,9 @@ used for it.
 
 They are ordinary design data now: change them in the design, and state them
 for every new vehicle. There is no other source.
+
+Vehicles added after the snapshot state their own published figures, noted
+beside the declaration: the JR KiHa 40 (JR Hokkaido's re-engined 1700 series),
+the small airplane (a light sport aircraft with a Rotax 912) and the chairlift
+chair (a detachable chair at 5 m/s, its rope and platform fractions from
+[cable-cabins.md](cable-cabins.md)).

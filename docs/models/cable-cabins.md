@@ -1,7 +1,7 @@
 # Cable car cabins
 
-**Covers** - the procedural cable car cabins (the aerial tramway car and the small gondola), the reference GLBs and photos they reproduce, their dimensions, the rope and door-sill datums the webapp hangs them by, the triangle budget and the deviations from the references.
-**Code** - `generator/cableCabins.ts`, `test/referenceModels.test.ts`, `test/models.test.ts`, `test/jsModel.test.ts`
+**Covers** - the procedural cable car cabins (the aerial tramway car, the small gondola and the parametric chairlift chair), the reference GLBs and photos they reproduce, their dimensions, the rope, door-sill and seat datums the webapp hangs them by, the chair's parameters, the triangle budget and the deviations from the references.
+**Code** - `generator/cableCabins.ts`, `test/chairlift.test.ts`, `test/referenceModels.test.ts`, `test/models.test.ts`, `test/jsModel.test.ts`
 **See also** - [vehicles.md](vehicles.md) (the `sweep` primitive, `vehicleParts.ts`), [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md)
 
 ## The designs
@@ -10,6 +10,7 @@
 |---|---|---|---|---|---|
 | `veh-cablecar-cabin` | Aerial Tramway Car | `db/cablecar/glb/cablecar-cabin.glb` | `assets/cablecar-cabin/` | 3.23 * 6.93 * 10.16 m | about 3,400 |
 | `veh-gondola-cabin` | Small Gondola | `db/cablecar/glb/gondola-cabin.glb` | `assets/gondola-cabin/` | 2.08 * 4.89 * 2.11 m | about 3,100 |
+| `veh-chairlift-chair` | Chairlift Chair | none (new design) | `assets/chairlift/` | 2.36-4.48 * 3.80 * 1.23 m (by seats) | 1,390-2,310 |
 
 Both stand in for the hand-authored GLBs of the same names in the webapp's model
 database (`rail-island-webapp/db/cablecar/`), so they keep those models' axes and
@@ -21,9 +22,10 @@ cable cabin is 8,000 triangles.
 ## Datums
 
 The webapp positions a cabin by two fractions of the model's height, measured
-off the reference and kept in `db/cablecar/cablecar.meta.json`: `ropeFrac` (the
-rope through the sheaves or grip) and `boardFrac` (the door sill the station's
-boarding platform is built to). The models are drawn so both stay true:
+off the reference (once kept in the webapp's `db/cablecar/cablecar.meta.json`) and
+now stated in each design's game properties ([game-properties.md](game-properties.md)):
+`ropeFrac` (the rope through the sheaves or grip) and `boardFrac` (the door sill
+the station's boarding platform is built to). The models are drawn so both stay true:
 
 | design | height | rope | ropeFrac | sill | boardFrac |
 |---|---|---|---|---|---|
@@ -32,6 +34,13 @@ boarding platform is built to). The models are drawn so both stay true:
 
 The constants are `CAR.axis` / `CAR.sill` and `GON.rope` / `GON.sill`; change a
 datum only together with the meta entry.
+
+The chairlift chair has no meta entry yet (no webapp model); its datums are fixed
+for every variant so one entry will fit them all: the rope at **y 3.60** (`CHAIR.rope`,
+through the grip jaws, along x) and the **seat top at y 0.62** (`CHAIR.seat`). The
+footrest's lowest point is y 0.0 and the grip rollers' top 3.80, so ropeFrac is
+0.947 and the seat 0.163 of the height; a boarding platform belongs about 0.45 m
+below the seat, at y 0.17 (0.045).
 
 ## Aerial tramway car
 
@@ -83,8 +92,45 @@ earlier, taller version). This model follows the meta, so the game's rope runs
 through the grip jaws and the platform meets the door sill. The reference's
 interior benches and skid bars are left out (the glass is opaque).
 
+## Chairlift chair
+
+A detachable chair of the kind in the user's photo (`assets/chairlift/`):
+orange tinted weather bubbles over six-seat chairs, a curved hanger, a grip
+running on small rollers. The rope runs along **x** (yaw 0, like the gondola);
+the riders face **+z**. Parameters (defaults first), 36 variants:
+
+| parameter | values | what changes |
+|---|---|---|
+| `seats` | `6`, `4`, `8` | the chair's width: 0.53 m a place, 2.12 / 3.18 / 4.24 m of seats; the photo's six-seater is the default |
+| `cover` | `bubble`, `none` | the closed weather bubble, or an open chair (the frame, safety bar and footrest stay) |
+| `color` | `orange`, `blue`, `red`, `yellow`, `green`, `grey` | finish only: the bubble and, a shade darker, the cushions |
+
+- **Seat** - a dark seat pan between a front and a rear cross tube, a cushion
+  per place, a backrest per place leaning back about 9 degrees on a dark back
+  shell, a short armrest after every second place.
+- **Side frames** - at each end a bent tube from the top beam down past the
+  bubble's pivot hub to the seat and forward into an armrest loop; the steel
+  top beam joins the two over the backrest.
+- **Safety bar and footrest** - the bar lies along the bubble's lower edge
+  (y 0.90, z 0.62) on arms from the pivot hubs; links drop from it to the
+  footrest bar (underside at y 0) with a footplate per place.
+- **Bubble** - a 2.5 cm shell on an arc of radius 0.95 m about the pivot axis
+  (y 1.25, z -0.30), from 100 degrees (just behind the top) to -20 degrees (the
+  riders' laps), straight across the seats and closing to the hubs in
+  superelliptic domes 0.42 m long. Opaque tinted colour, as the factory has no
+  transparent materials; it is drawn closed, as in the photo.
+- **Hanger and grip** - a steel tube straight down from the grip, curving back
+  over the riders' heads to the top beam (six straight lengths of a quadratic
+  curve), a number plate, the grip body under the rope, two jaws closing on a
+  short piece of haul rope and a head plate carrying four rollers above it.
+
+The parts: one mesh, no rig. The LOD keeps the `body` scope (the chair and its
+bubble). The budget is the cabins' 8,000 triangles; the eight-seater with the
+bubble is the largest at about 2,310.
+
 ## Checking
 
+`pnpm exec vitest run test/chairlift.test.ts`,
 `pnpm exec vitest run test/referenceModels.test.ts test/models.test.ts -t "cablecar|gondola"`
 and `pnpm exec vitest run test/jsModel.test.ts -t "cablecar|gondola"`; look at
 `export/thumbs/<id>.png` after `pnpm build:models`.

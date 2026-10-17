@@ -89,6 +89,8 @@ them with the model:
 6. Commit and push the images with the model change (they are source material,
    not generated output).
 
+Files the user uploads to `assets/_tmp/` (an inspiration GLB, a photo) are inputs for one model: `git mv` them into `assets/<name>/` in the same change and list them in `SOURCES.md` too.
+
 If the network or licences make a download impossible, say so to the user and
 list the references you would have used.
 

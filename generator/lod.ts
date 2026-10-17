@@ -209,7 +209,8 @@ const FAMILIES: Record<string, readonly string[]> = {
     "village-l-house",
     "village-family-house",
     "village-modern-house",
-    "village-narrow-house"
+    "village-narrow-house",
+    "village-alpine-hut"
   ],
   "wagonExtras": [
     "legacy-covered-wagon",
@@ -311,7 +312,8 @@ const FAMILIES: Record<string, readonly string[]> = {
     "mcdonnell-douglas-md11",
     "boeing-747",
     "airbus-beluga",
-    "light-jet"
+    "light-jet",
+    "small-airplane"
   ],
   "ships": [
     "cruise-ferry",
@@ -320,7 +322,8 @@ const FAMILIES: Record<string, readonly string[]> = {
   ],
   "cableCabins": [
     "cablecar-cabin",
-    "gondola-cabin"
+    "gondola-cabin",
+    "chairlift-chair"
   ],
   "emu471": [
     "cd-471"
@@ -365,6 +368,9 @@ const FAMILIES: Record<string, readonly string[]> = {
   ],
   "db628": [
     "db-628"
+  ],
+  "jrKiha40": [
+    "jr-kiha40"
   ],
   "mavMdmot": [
     "mav-mdmot"
@@ -424,7 +430,7 @@ export function lodRecipe(design: ProceduralDesign): LodRecipe {
   if (family === 'skyscrapers') return recipe('^(podium|shaft|crown|plinth|tier [0-9]+|base|segment [0-9]+|roof|west tower|east tower|sky bridge|floors|lobby|plant floor|glass bands|tip|step [0-9]+|spire|west wing|east wing)(/|$)',1,{exclude:'roof/(water tank|stair house)'});
   if (family === 'commercialStreets') return recipe('^(masonry and storey bands|roof and equipment|side shop wing|street gable)(/|$)',1);
   if (family === 'commercial') return recipe('^(bevelled plinth|storey [0-9]+|parapet roof|setback terrace)(/|$)',1,{merge:'^(bevelled plinth|storey [0-9]+)(/|$)'});
-  if (family === 'village') return recipe('^(house|main block|wing|garage|ground floor|upper storey|flat roof|carport|plaster and stone shell|sculpted barrel tiles)(/|$)',1);
+  if (family === 'village') return recipe('^(house|main block|wing|garage|ground floor|upper storey|flat roof|carport|plaster and stone shell|sculpted barrel tiles|alpine roof)(/|$)',1);
   if (family === 'industry') return recipe('^(Industrial assembly|tower|rotor)(/|$)',2);
   if (family === 'landmarks') return recipe('^(gate/(piers|columns|entablature|attic)|pyramid/glazing|white house/(residence|north portico|south portico|west wing|east wing))(/|$)',2,{allow:'^pyramid/glazing'});
   if (id === 'prague-main-station') return recipe('^(central hall|west tower|east tower|west wing|east wing|west link|east link)(/|$)',2,{layered:true,exclude:'pilaster|window|clock|lantern|finial|dormer|rib|pinnacle|crest|spandrel|archivolt|tracery|arcade'});

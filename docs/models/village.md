@@ -1,7 +1,7 @@
 # Village houses
 
-**Covers** - the seven parametric village houses: the Kenney and Quaternius styles they follow, the plan families and their parameters, the house builder (volumes, roofs, openings, details), the finish parameters, the mirror, dimensions and budget, the catalog fields and the tests.
-**Code** - `generator/village.ts`, `generator/timberCottages.ts`, `generator/design.ts` (`finishParams`, `coverageCombinations`), `generator/generate.ts`, `generator/catalog.ts` (`VILLAGE_META_FILE`), `test/village.test.ts`, `test/params.test.ts`
+**Covers** - the eight parametric village houses: the Kenney and Quaternius styles they follow, the alpine hut, the plan families and their parameters, the house builder (volumes, roofs, openings, details), the finish parameters, the mirror, dimensions and budget, the catalog fields and the tests.
+**Code** - `generator/village.ts`, `generator/timberCottages.ts`, `generator/alpineHut.ts`, `generator/design.ts` (`finishParams`, `coverageCombinations`), `generator/generate.ts`, `generator/catalog.ts` (`VILLAGE_META_FILE`), `test/village.test.ts`, `test/params.test.ts`
 **See also** - [parameters.md](parameters.md), [skyscrapers.md](skyscrapers.md), [export.md](export.md), [source-tree.md](source-tree.md)
 
 ## The style
@@ -43,7 +43,43 @@ porch/step/awning, and `chimney` stone/none: 24 shape combinations each.
 Finishes multiply these by 36: `roof` terracotta/ochre/slate/moss,
 `walls` ivory/cream/sage, and `timber` oak/walnut/weathered. Defaults are
 listed first. All 1,728 new variants stay below 10,000 triangles per building.
-The complete village collection now has 5,368 variants across seven ids.
+The timber cottages and the suburban houses have 5,368 variants across seven ids;
+with the alpine hut below the village collection has 8,824 variants across eight ids.
+
+## Alpine hut
+
+`village-alpine-hut` (`generator/alpineHut.ts`) is a chalet inspired by the
+community GLB `assets/alpine-hut/alpine-hut.glb` (a two-storey guesthouse of
+about 10,800 triangles): an original procedural model, not a mesh copy, with the
+reference folder set as its `references`. The house is 5.6 x 4.8 m on a 0.55 m
+stone plinth (a dark slate plinth with two courses of lighter blocks), white
+plaster in a dark half-timber frame - corner posts, sill, floor and wall-plate
+beams run past the corners, knee braces, door posts and middle posts - with a
+boarded gable (vertical battens, a collar beam) facing the street (+z) under a
+0.62 pitch gable roof. Light bargeboards, purlin ends under the eaves, windows
+with amber glass, a cross of mullion and transom and a trim sill, red board
+shutters on the ground floor, a plank door with a glazed top light and a wall
+lantern, and a stack of split logs against the left wall.
+
+| parameter | values (default first) | effect |
+|---|---|---|
+| `storeys` | two / one | two 2.55 m storeys, or one with a 0.55 m knee wall and a gable window |
+| `balcony` | front / wrap / none | only for two storeys (`when`): a cantilevered deck with sawn-board railing on brackets across the front, or wrapping round both sides (the roof widens to cover it), or a third upper window |
+| `entrance` | step / porch | stone steps, or a timber porch deck on stone with two posts - under a balcony they carry it, otherwise they carry a little gable roof |
+| `chimney` | stone / none | a stone chimney with a capped flue on the right slope |
+| `season` | winter / summer | winter: a snow layer on the roof (stopping short of the coloured roof edge), a snow ridge, snow pillows over the eaves, snow on sills, rails, plinth ledge, steps, chimney and woodpile; summer: standing seams on a bare sheet roof and geranium boxes on the balcony and the upper windows |
+| `roof` | green / red / slate / brown | finish |
+| `walls` | white / cream / ochre | finish |
+| `timber` | walnut / oak / weathered | finish (frame and gable boards) |
+| `accent` | red / green / blue | finish (shutters and door) |
+
+32 shape combinations times 108 finishes make 3,456 variants, 3,200 to 6,500
+triangles each (the reference model's 10,800 are well above that; the
+10,000-triangle village budget holds for every variant). Applied parts stop
+short of or sink into what carries them by a depth of their own material
+(`EMBED`), so the hidden backs of glass, frames, sills, shutters and snow never
+share a plane (`findCoplanarOverlaps`). Catalog fields: `VILLAGE_CATALOG`
+(group `village`). `accent` is in `VILLAGE_FINISH_PARAMS`.
 
 `timberCottages.ts` builds these separately from the suburban house builder,
 preserving the existing five designs. Most of the budget goes to individual
@@ -139,11 +175,12 @@ three-storey narrow house's chimney). `VILLAGE_CATALOG` gives the suburban house
 
 ## Tests
 
-`test/village.test.ts`: the seven ids and their catalog fields, at least 2,000
+`test/village.test.ts`: the eight ids and their catalog fields, at least 2,000
 variants in all, every shape combination standing on y = 0 at house size and
 under 10,000 triangles, the finish parameters recolouring without moving a
 vertex, the side parameter mirroring the L-house and the family house, and the
-shape options reaching the geometry. `test/params.test.ts` builds every
+shape options reaching the geometry (the alpine hut's storeys, balcony, season
+and chimney among them). `test/params.test.ts` builds every
 coverage combination for determinism and flicker and compares the JS model's
 triangles with the generator's; `test/export.test.ts` checks
 `village.meta.json`.

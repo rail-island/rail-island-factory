@@ -65,6 +65,7 @@ import { EMU470_DESIGNS } from "./emu470.ts";
 import { GERMAN_COACHES } from "./germanCoaches.ts";
 import { EMU680_DESIGNS } from "./emu680.ts";
 import { DB628_DESIGNS } from "./db628.ts";
+import { KIHA40_DESIGNS } from "./jrKiha40.ts";
 import { MDMOT_DESIGNS } from "./mavMdmot.ts";
 import { ICE1_DESIGNS } from "./ice1.ts";
 import { TGV_DESIGNS } from "./tgv.ts";
@@ -161,6 +162,7 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: EMU470_DESIGNS, source: "emu470.ts", meta: "vehicles" },
   { designs: CZ_DMUS, source: "czDmus.ts", meta: "vehicles" },
   { designs: DB628_DESIGNS, source: "db628.ts", meta: "vehicles" },
+  { designs: KIHA40_DESIGNS, source: "jrKiha40.ts", meta: "vehicles" },
   { designs: MDMOT_DESIGNS, source: "mavMdmot.ts", meta: "vehicles" },
   { designs: ICE1_DESIGNS, source: "ice1.ts", meta: "vehicles" },
   { designs: TGV_DESIGNS, source: "tgv.ts", meta: "vehicles" },
