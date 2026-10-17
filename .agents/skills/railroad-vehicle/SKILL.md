@@ -191,6 +191,7 @@ parked, maintenance or other operating state overrides this default.
 3. Run `pnpm build:models`. Check the triangle count and inspect
    `export/thumbs/<id>.png`. Render front, side, rear and three-quarter views
    headlessly as needed; use orthographic projection for measurements.
+   Send the user the rendered views in the chat (AGENTS.md, "Show the user the model").
 4. Add or update meaningful regression checks for the changed geometry and
    operating pose. Run `pnpm typecheck`, `pnpm test` and `pnpm build`.
 5. Update `docs/models/vehicles.md`, reference provenance and any relevant
