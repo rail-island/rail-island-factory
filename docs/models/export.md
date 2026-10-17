@@ -4,7 +4,7 @@
 `village.meta.json` and `vehicles.meta.json` contracts the game is meant to import, the site's `catalog.json`, and the offline
 thumbnail renderer.
 **Code** - `generator/generate.ts`, `generator/catalog.ts`, `generator/renderGlbThumb.ts`,
-`generator/jsModel.ts`, `generator/glbStats.ts`, `generator/coplanar.ts`, `generator/glbTriangles.ts`, `generator/glbParse.ts`, `test/export.test.ts`
+`generator/jsModel.ts`, `generator/glbStats.ts`, `test/thumbnails.test.ts`, `generator/coplanar.ts`, `generator/glbTriangles.ts`, `generator/glbParse.ts`, `test/export.test.ts`
 **See also** - [skyscrapers.md](skyscrapers.md), [village.md](village.md), [vehicles.md](vehicles.md), [../site/catalog-site.md](../site/catalog-site.md),
 [../guide/setup-and-build.md](../guide/setup-and-build.md)
 
@@ -16,7 +16,7 @@ and `pnpm dev`) writes the gitignored `export/`:
 | Path | What |
 |---|---|
 | `export/glb/<id>.glb` | the model (a vehicle's may have parts - [vehicles.md](vehicles.md) - and animation clips - [animation.md](animation.md)) |
-| `export/thumbs/<id>.png` | a 512 px square thumbnail, transparent background |
+| `export/thumbs/<id>.png` | the thumbnail, transparent background: a road or rail vehicle's side view, everything else's 512 px square three-quarter view (see "Thumbnails" below) |
 | `export/js/<id>.js` | the model as one standalone JS file ([js-format.md](js-format.md)) |
 | `export/tree/<id>.json` | the procedural source tree, for the site only ([source-tree.md](source-tree.md)) |
 | `export/refs/<id>/...` | the design's source images, copied from `assets/<references>/`, for the site only |
@@ -32,8 +32,10 @@ site-only `/tree/...` and `/refs/...`, which the game ignores).
 
 **Incremental.** An unchanged design produces byte-identical GLB bytes; the
 generator then leaves the file and its thumbnail alone. The thumbnail - a
-software rasterizer, the slow part - is re-rendered only when the GLB changed or
-the PNG is missing. A JS file is rewritten only when its text changed. A file of a design that no longer exists is deleted, so a
+software rasterizer, the slow part - is re-rendered only when the GLB changed,
+the PNG is missing or `THUMB_VERSION` (`generate.ts`) differs from the one
+`export/thumbs/.version` records, which is how a change of framing or lighting
+reaches every unchanged design. A JS file is rewritten only when its text changed. A file of a design that no longer exists is deleted, so a
 dropped id cannot linger. A tree file is rewritten only when its text changed.
 **Source images.** A design names its folder under `assets/` with
 `references` (`generator/design.ts`; the vehicles set it), or a list of folders
@@ -131,6 +133,14 @@ A **parametric** model's entry also carries `params`: its enum parameters as
 are the default build; the JS model builds the other combinations
 ([parameters.md](parameters.md)). A fixed model's entry has no `params` key.
 
+A **road or rail vehicle** (category `Road vehicles` or `Rail vehicles`,
+`SIDE_VIEW_CATEGORIES` in `catalog.ts`) also carries `thumbSide`: its thumbnail
+is a side view, and this is what it spans - `widthM` (the length and both
+margins), `heightM` and `bottomM` (the bottom edge's height, the rail at 0), in
+metres, to 0.1 mm. The game uses it to show the image in place of rendering the
+default variant itself, to scale beside the cars it renders (see "Thumbnails" below).
+Every other entry has no `thumbSide` key and a square thumbnail.
+
 A **rigged** vehicle - every road and rail vehicle - also carries
 `rig`: the GLB node names of its steered front wheels (road vehicles), a rail
 vehicle's supports (where it rides on the track, its turning bogies' nodes) and,
@@ -159,15 +169,41 @@ JSON chunk, triangles and the box from the decoded triangle soup
 ## Thumbnails
 
 `generator/renderGlbThumb.ts` is an offline software rasterizer (pngjs, no WebGL,
-no browser): a three-quarter view from `(0.8, 0.7, 0.9)`, auto-framed so the
-bounding box fills 90 % of the frame, lit by an ambient term plus a key and a
-fill light - the same setup as the game's in-app building thumbnails - with 3x
-supersampling and coverage kept as alpha. Only `baseColorFactor` is read; the
-mesh builder writes no textures. Standalone:
+no browser) with 3x supersampling and coverage kept as alpha. Only
+`baseColorFactor` is read; the mesh builder writes no textures. It has two views,
+chosen by the design's catalog category (`isSideViewCategory`, `catalog.ts`):
+
+- **The side view** - every road and rail vehicle. The game's own side
+  thumbnail, framed exactly as the webapp's `src/models/modelThumbRender.ts`
+  frames it, so the webapp can ship this image for the default variant instead of
+  rendering it: orthographic, seen from the flank the game shows (the factory's
+  -Z side, as the game turns the vehicle round to nose-at-min-X), **nose on the
+  left**, at a fixed **32 px per metre** (`SIDE_PX_PER_M`; twice the game's 16, which
+  the webapp's import scales down to), over a fixed height window from 0.3 m below
+  the rail to 5.7 m above it (`SIDE_BOTTOM_M`, `SIDE_TOP_M`) and the vehicle's length
+  plus 0.3 m each side (`SIDE_MARGIN_M`). Every side image is therefore 192 px tall
+  and its width is to scale; one longer than 128 m is drawn smaller so it stays
+  within 4096 px (`SIDE_MAX_PX`). The light is the game's: ambient 1.2 and a
+  directional 1.5 from the front, above (three.js units, diffuse colour / pi). The
+  window, the margins and the light are the webapp's numbers - change them only
+  together with it.
+- **The three-quarter view** - everything else (buildings, ships, aircraft,
+  cable car cabins): a 512 px square from `(0.8, 0.7, 0.9)`, auto-framed so the
+  bounding box fills 90 % of the frame, lit by an ambient term plus a key and a
+  fill light - the same setup as the game's in-app building thumbnails.
+
+What a side image spans is the meta entry's `thumbSide` (above); `glbSideFrame`
+works it out from the GLB without rendering, for a design whose thumbnail was not
+re-rendered. Standalone:
 
 ```bash
 pnpm exec tsx generator/renderGlbThumb.ts export/glb/sky-pagoda.glb /tmp/pagoda.png 256
+pnpm exec tsx generator/renderGlbThumb.ts export/glb/proc-vehicle-cd-150.glb /tmp/cd150.png side
 ```
+
+`test/thumbnails.test.ts` pins the side framing (scale, height window, nose on
+the left); `test/export.test.ts` checks every exported thumbnail against its
+entry's `thumbSide`.
 
 ## Industry migration manifest
 

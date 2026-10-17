@@ -41,6 +41,11 @@ missing file with `index.html`, so the response type is checked too).
 
 ## The listing
 
+- **Thumbnails** (`src/Thumb.tsx`) are the build's: a road or rail vehicle's is a
+  side view (the record's `thumbSide`, [../models/export.md](../models/export.md)), shown in a
+  144 x 60 box standing on its bottom edge; everything else's is square, in a
+  96 x 60 box. The model page shows a side view at 16 px per metre (half its
+  pixels, never wider than the panel), so vehicles compare by length.
 - **Wide (900 px and up): a table.** Thumbnail, title with the id beneath it, city
   pool, triangles, vertices, GLB size, JS size, primitives, materials, width, depth,
   height and license. Every header sorts; a second click flips the direction.
