@@ -8,9 +8,10 @@
 //
 //   sx = 2 * (y - x),   sy = x + y - z      (pixels)
 //
-// A vehicle's sprite is drawn with its offsets relative to the vehicle's
-// position: for a train or road vehicle the middle of its length, the front
-// ceil(length / 2) units ahead (OpenTTD's Train::CalcNextVehicleOffset). A full
+// A vehicle's position is, for a train or road vehicle, the middle of its
+// length, the front ceil(length / 2) units ahead (OpenTTD's
+// Train::CalcNextVehicleOffset); its sprite's offsets count from a corner of its
+// bounding box near that point (spriteAnchor). A full
 // length (8/8) vehicle is 8 units long -- half a tile -- along an axis, and 8
 // diagonal steps of (1, 1) on a diagonal.
 //
@@ -68,6 +69,40 @@ export function vehicleScale(feature: OpenttdFeature, box: ModelBox, eighths: nu
   return { along: k, across: k, up: 2 * k, sink: 0 };
 }
 
+/**
+ * Where OpenTTD anchors a vehicle's sprite: not at the vehicle's position but at a
+ * corner of its bounding box, (x_pos + x_offs, y_pos + y_offs), offset in tile units
+ * by direction and, for a train, by its length (OpenTTD's UpdateDeltaXY of each
+ * vehicle type; version 15 moved the numbers into bounds.origin + bounds.offset
+ * but kept the anchor). A sprite's offsets count from this point, so the frame is
+ * shifted by it. `direction` is OpenTTD's Direction; a train is unflipped.
+ */
+export function spriteAnchor(feature: OpenttdFeature, direction: number, length: number): [number, number] {
+  switch (feature) {
+    case "train": {
+      const front = Math.floor((length + 1) / 2);
+      switch (direction) {
+        case 1: return [1 - front, -1]; // NE
+        case 3: return [-1, 1 + front - 8]; // SE
+        case 5: return [1 + front - 8, -1]; // SW
+        case 7: return [-1, 1 - front]; // NW
+        default: {
+          // N, E, S, W: the box moves to the middle of a shortened vehicle
+          const half = Math.floor((8 - length) / 2);
+          const [sx, sy] = ([[-1, -1], [-1, 1], [1, 1], [1, -1]] as const)[direction / 2]!;
+          return [-1 - half * sx, -1 - half * sy];
+        }
+      }
+    }
+    case "road":
+      return direction === 1 || direction === 5 ? [-3, -1] : direction === 3 || direction === 7 ? [-1, -3] : [-1, -1];
+    case "ship":
+      return direction === 1 || direction === 5 ? [-16, -3] : direction === 3 || direction === 7 ? [-3, -16] : [-3, -3];
+    case "aircraft":
+      return [-1, -1];
+  }
+}
+
 /** One sprite to render: where the model goes and the image's frame. */
 export interface SpriteView {
   /** Model metres to tile units, a column-major 4x4 matrix (three's Matrix4.fromArray). */
@@ -76,7 +111,7 @@ export interface SpriteView {
   projection: number[];
   /** Planes in tile units, normal and constant; a point is kept where normal . p + constant >= 0. */
   clip: Array<{ normal: [number, number, number]; constant: number }>;
-  /** The image at RENDER_ZOOM: its size and the offset of its top-left pixel from the vehicle's position. */
+  /** The image at RENDER_ZOOM: its size and the offset of its top-left pixel from OpenTTD's anchor (spriteAnchor). */
   width: number;
   height: number;
   xOffs: number;
@@ -109,7 +144,7 @@ export function spriteViews(feature: OpenttdFeature, box: ModelBox, lengths: rea
     const sLo = single ? sOf(box.min[0]) : Math.max(sOf(box.min[0]), Math.ceil(len / 2) - len);
     const sHi = single ? sOf(box.max[0]) : Math.min(sOf(box.max[0]), Math.ceil(len / 2));
     const views: SpriteView[] = [];
-    for (const [dx, dy] of HEADINGS) {
+    for (const [dir, [dx, dy]] of HEADINGS.entries()) {
       const dn = Math.hypot(dx, dy);
       // A train or road vehicle follows OpenTTD's track metric: n units on a diagonal are
       // n steps of (1, 1), so its diagonal views are longer by sqrt 2, as OpenTTD's own are.
@@ -172,7 +207,10 @@ export function spriteViews(feature: OpenttdFeature, box: ModelBox, lengths: rea
             { normal: [hx, hy, 0] as [number, number, number], constant: -sLo * hh },
             { normal: [-hx, -hy, 0] as [number, number, number], constant: sHi * hh },
           ];
-      views.push({ model, projection, clip, width, height, xOffs: left, yOffs: top });
+      // the offsets count from OpenTTD's anchor, not the vehicle's position
+      const [ax, ay] = spriteAnchor(feature, dir, len);
+      const [anchorX, anchorY] = toScreen(ax, ay, 0);
+      views.push({ model, projection, clip, width, height, xOffs: left - anchorX, yOffs: top - anchorY });
     }
     out.push(views);
     front += len;

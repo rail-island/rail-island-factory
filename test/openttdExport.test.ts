@@ -8,7 +8,7 @@ import { catalogRecord, metaEntry } from "../generator/catalog";
 import { checkOpenttdProperties, type ProceduralDesign } from "../generator/design";
 import { ALL_VEHICLES, DESIGNS } from "../generator/generate";
 import { downsamplePremultiplied, flipRows, unpremultiply, zoomImages } from "../src/openttd/pixels";
-import { HEADINGS, RENDER_ZOOM, applyMatrix, spriteViews, vehicleScale, type ModelBox } from "../src/openttd/projection";
+import { HEADINGS, RENDER_ZOOM, applyMatrix, spriteAnchor, spriteViews, vehicleScale, type ModelBox } from "../src/openttd/projection";
 import {
   FIRST_LOCAL_ID, LAST_LOCAL_ID, assignIds, defaultOpenttdFields, fnv1a, grfIdOf, openttdFeature, partKey, partLengths, resolveVehicle, variantName,
 } from "../src/openttd/properties";
@@ -167,6 +167,41 @@ describe("spriteViews", () => {
     expect(len(train[0]!) / len(train[1]!)).toBeCloseTo(Math.SQRT2, 6);
     const plane = spriteViews("aircraft", { min: [-20, 0, -18], max: [20, 12, 18] }, [8])[0]!;
     expect(len(plane[0]!) / len(plane[1]!)).toBeCloseTo(1, 6);
+  });
+
+  // Regression: OpenTTD draws a vehicle's sprite from a corner of its bounding
+  // box, not from its position, so trains sat beside the rails and an articulated
+  // coach's 7/8 and 6/8 slices did not line up (OpenTTD 13.4 Train::UpdateDeltaXY).
+  it("counts the offsets from OpenTTD's sprite anchor", () => {
+    expect(spriteAnchor("train", 1, 8)).toEqual([-3, -1]); // NE: 1 - (8 + 1) / 2
+    expect(spriteAnchor("train", 1, 7)).toEqual([-3, -1]);
+    expect(spriteAnchor("train", 1, 6)).toEqual([-2, -1]);
+    expect(spriteAnchor("train", 5, 6)).toEqual([-4, -1]); // SW: 1 + (6 + 1) / 2 - 8
+    expect(spriteAnchor("train", 3, 8)).toEqual([-1, -3]); // SE
+    expect(spriteAnchor("train", 7, 5)).toEqual([-1, -2]); // NW
+    expect(spriteAnchor("train", 0, 8)).toEqual([-1, -1]); // N, full length
+    expect(spriteAnchor("train", 2, 4)).toEqual([1, -3]); // E, half_shorten 2 against (-1, +1)
+    expect(spriteAnchor("road", 1, 6)).toEqual([-3, -1]);
+    expect(spriteAnchor("road", 7, 6)).toEqual([-1, -3]);
+    expect(spriteAnchor("ship", 3, 8)).toEqual([-3, -16]);
+    expect(spriteAnchor("aircraft", 4, 8)).toEqual([-1, -1]);
+    // undoing the anchor, every part's frame holds the part's own position (its centre
+    // on the rail) and stays on whole normal-zoom pixels
+    const box: ModelBox = { min: [-13, 0, -1.4], max: [13, 4.6, 1.4] };
+    const views = spriteViews("train", box, [7, 7, 6, 6]);
+    for (const [k, len] of [7, 7, 6, 6].entries()) {
+      for (const [d, v] of views[k]!.entries()) {
+        const [ax, ay] = spriteAnchor("train", d, len);
+        const left = v.xOffs + RENDER_ZOOM * 2 * (ay - ax);
+        const top = v.yOffs + RENDER_ZOOM * (ax + ay);
+        expect(left).toBeLessThanOrEqual(0);
+        expect(left + v.width).toBeGreaterThanOrEqual(0);
+        expect(top).toBeLessThanOrEqual(0);
+        expect(top + v.height).toBeGreaterThanOrEqual(0);
+        expect(Math.abs(v.xOffs % RENDER_ZOOM)).toBe(0);
+        expect(Math.abs(v.yOffs % RENDER_ZOOM)).toBe(0);
+      }
+    }
   });
 
   it("does not slice a ship or aircraft", () => {

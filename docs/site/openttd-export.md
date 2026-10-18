@@ -144,7 +144,12 @@ OpenTTD's lengths too thin.
 `spriteViews` (`projection.ts`) gives, per part and direction, the model-to-tile
 matrix, the orthographic projection of the sprite's frame (the slice's box on
 screen, padded a pixel and widened to whole normal-zoom pixels) and the clipping
-planes. `SpriteRenderer` draws it with WebGL: the materials swapped for flat
+planes. The offsets count from where OpenTTD anchors a vehicle's sprite, which is not
+the vehicle's position but a corner of its bounding box, moved by direction and,
+for a train, by length (`spriteAnchor`, from each vehicle type's
+`UpdateDeltaXY` in OpenTTD 13 and 14; version 15 keeps the same point). Without
+it a train sat beside its rails and an articulated coach's slices of different
+lengths did not line up. `SpriteRenderer` draws it with WebGL: the materials swapped for flat
 diffuse ones of the same colour, an ambient (1.2) and a directional (1.5) light
 from the screen's upper left, an antialiased premultiplied canvas at twice the
 4x size. `zoomImages` (`pixels.ts`) box-filters it to OpenTTD's 4x, 2x and

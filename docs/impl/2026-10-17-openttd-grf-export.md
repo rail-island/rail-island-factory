@@ -48,6 +48,11 @@ Area: catalog site (`src/`: model page, app bar, export panel, export run, `src/
    The encoder now writes the tractive effort coefficient 0.3 for every train and
    road vehicle (as nmlc does), and a regression test in `test/openttdGrf.test.ts`
    pins it; in OpenTTD 13.4 the CD 163 now has 250 kN.
+3. Trains sat beside their rails, and a long coach's slices did not line up (shifted
+   doors, a jagged roof). OpenTTD draws a vehicle's sprite from a corner of its
+   bounding box, moved by direction and length, not from its position; the sprite
+   offsets now count from that anchor (`spriteAnchor`), pinned by a regression test
+   in `test/openttdExport.test.ts` and checked in OpenTTD 13.4.
 
 ## How to test
 
