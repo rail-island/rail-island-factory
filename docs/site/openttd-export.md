@@ -164,11 +164,15 @@ runs and back references of up to 16 bytes, so transparent pixels cost 2 bytes i
 | 14 | INFO: palette D, BLTR 32 (OpenTTD switches to a 32bpp blitter itself) |
 | 8 | GRF version 8, the GRF id, name and description |
 | 0 (feature 08) | the rail type table (RAIL first) and the cargo table (PASS first) |
-| 0 | per vehicle the head's properties (long intro date, lives, speed, power in hp, weight, running cost base and engine class by traction, capacity and cargo by table index, refit classes, length as "shorten by", custom sprites); each hidden articulated part (no climate, its length, the head's rail type) |
+| 0 | per vehicle the head's properties (long intro date, lives, speed, power in hp, weight, running cost base and engine class by traction, capacity and cargo by table index, refit classes, the tractive effort coefficient 0.3, length as "shorten by", custom sprites); each hidden articulated part (no climate, its length, the head's rail type) |
 | 4 | the name, plain ASCII or UTF-8 marked as such |
 | 1 | one sprite set of 8 directions per part |
 | 2 | a basic set per part; an articulated vehicle's callback switch (var 0C: callback 16 to the part switch) and part switch (var 10: part n's id, then "no more parts") |
 | 3 | the head's graphics (the callback switch, or its set), each part's own set |
+
+A train or road vehicle always gets OpenTTD's tractive effort coefficient, 0.3:
+a GRF's new engine otherwise has none, and with realistic acceleration an engine
+with no tractive effort barely moves whatever its power.
 
 An aircraft is always refittable to passengers: OpenTTD has no default-cargo
 property for aircraft and disables one with no refittable cargo.

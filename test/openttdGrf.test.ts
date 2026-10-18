@@ -116,14 +116,27 @@ describe("encodeGrf", () => {
     expect(pseudo[4]).toBe("00 08 01 01 00 09 50 41 53 53"); // PASS
     // nmlc 0.9 for the same item: climates 07, date 1960, lives, ELRL (1), 120 km/h, 3000 kW = 4023 hp, 87 t, electric.
     expect(pseudo[5]).toBe([
-      "00 00 17 01 ff 00 02", "06 07", "2a 63 ec 0a 00", "04 28", "03 1e", "02 14", "07 05", "05 01", "09 78 00", "0b b7 0f",
+      "00 00 18 01 ff 00 02", "06 07", "2a 63 ec 0a 00", "04 28", "03 1e", "02 14", "07 05", "05 01", "09 78 00", "0b b7 0f",
       "16 57", "24 00", "0e 3c 4c 00 00", "19 28", "0d 64", "17 78", "14 00", "15 00", "28 00 00", "1d 00 00 00 00",
-      "29 00 00", "1d 00 00 00 00", "21 02", "12 fd",
+      "29 00 00", "1d 00 00 00 00", "1f 4d", "21 02", "12 fd",
     ].join(" "));
     expect(pseudo[6]).toBe("04 00 7f 01 ff 00 02 4c 6f 63 6f 00"); // name
     expect(pseudo[7]).toBe("01 00 01 ff 08 00"); // one set of 8
     expect(pseudo[8]).toBe("02 00 00 01 01 00 00 00 00");
     expect(pseudo[9]).toBe("03 00 01 ff 00 02 00 00 00");
+  });
+
+  // Regression: a GRF's new engine has no tractive effort until the GRF sets it, so
+  // with realistic acceleration an exported locomotive barely moved (0 kN in OpenTTD).
+  it("gives every train and road vehicle OpenTTD's tractive effort coefficient, 0.3", () => {
+    const vehicles = [
+      { vehicle: vehicle(), parts: [part(0x200, 6)] },
+      { vehicle: vehicle({ feature: "road", speed: 80, power: 200, weight: 12 }), parts: [part(0x300, 5)] },
+    ];
+    const { entries } = parse(encodeGrf({ ...set, vehicles }));
+    const props = entries.filter((e) => e.type === 0xff && e.data[0] === 0x00 && e.data[1] !== 0x08).map((e) => hex(e.data));
+    expect(props[0]).toContain(" 1f 4d ");
+    expect(props[1]).toContain(" 18 4d ");
   });
 
   it("chains an articulated vehicle's parts through callback 16", () => {
@@ -151,7 +164,7 @@ describe("encodeGrf", () => {
     const props = entries.filter((e) => e.type === 0xff && e.data[0] === 0x00 && e.data[1] !== 0x08).map((e) => hex(e.data));
     // nmlc: speed 80 km/h = a0, 200 kW = 1b (10 hp), 12 t = 30 (1/4 t), length 5 = shorten 3; a tram's flag
     expect(props[0]).toMatch(/^00 01 .. 01 ff 00 03 06 07 1f 63 ec 0a 00 04 28 03 1e 02 14 07 05 08 a0 13 1b 14 30 0a 48 4c 00 00 /);
-    expect(props[0]).toContain(" 23 03 0e ff ");
+    expect(props[0]).toContain(" 18 4d 23 03 0e ff ");
     expect(props[0]).toMatch(/1c 01$/);
     // nmlc: 30 km/h = 3c, capacity 200 as a word
     expect(props[1]).toContain(" 0b 3c 0f 64 0a 78 0d c8 00 0c 00 08 ff ");

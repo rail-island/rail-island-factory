@@ -76,6 +76,13 @@ const SIGNATURE = [0x00, 0x00, 0x47, 0x52, 0x46, 0x82, 0x0d, 0x0a, 0x1a, 0x0a];
 const TYPE_RGBA = 0x03;
 /** The default loading speed OpenTTD's own vehicles use. */
 const LOADING_SPEED = 5;
+/**
+ * The coefficient of tractive effort, 0.3 in 1/256ths as nmlc writes it: the share
+ * of a powered vehicle's weight its wheels pull with. OpenTTD leaves a GRF's new
+ * engine at 0, and with realistic acceleration an engine with no tractive effort
+ * barely moves whatever its power.
+ */
+const TRACTIVE_EFFORT = 0x4d;
 
 /** A growable little-endian byte buffer. */
 class Bytes {
@@ -293,6 +300,7 @@ function headProps(v: ResolvedVehicle, length: number, articulated: boolean, car
         [0x1d, D(0)],
         [0x29, W(0)],
         [0x1d, D(0)],
+        [0x1f, B(TRACTIVE_EFFORT)],
         [0x21, B(8 - length)],
         [0x12, B(0xfd)],
       );
@@ -310,6 +318,7 @@ function headProps(v: ResolvedVehicle, length: number, articulated: boolean, car
         [0x11, B(clamp(v.costFactor, 0, 255))],
         [0x0f, B(clamp(v.capacity, 0, 255))],
         [0x10, B(cargoIndex)],
+        [0x18, B(TRACTIVE_EFFORT)],
         [0x23, B(8 - length)],
         [0x0e, B(0xff)],
         [0x1d, W(refits)],

@@ -44,6 +44,10 @@ Area: catalog site (`src/`: model page, app bar, export panel, export run, `src/
    per-design checks in one sharded pass (`test/catalogSweep.ts`), sampled variants
    (`TEST_ALL_VARIANTS=1` for all), whole-export tests on a few designs, and a
    sweep-and-prune prefilter in the z-fighting detector (docs/guide/setup-and-build.md).
+2. Exported locomotives crawled in OpenTTD: their "Max. Tractive Effort" read 0 kN.
+   The encoder now writes the tractive effort coefficient 0.3 for every train and
+   road vehicle (as nmlc does), and a regression test in `test/openttdGrf.test.ts`
+   pins it; in OpenTTD 13.4 the CD 163 now has 250 kN.
 
 ## How to test
 
