@@ -284,7 +284,8 @@ export function sweep(ids: readonly string[]): void {
           const rail = d.catalog?.category === "Rail vehicles";
           // a vehicle is centred on its track or lane; a building need not be
           const vehicle = VEHICLES.includes(d);
-          const glb = d.build(combo).toGlb(d.id);
+          const built = d.build(combo);
+          const glb = built.toGlb(d.id);
           // the first combination is the defaults: the same bytes as a build given no values
           if (i === 0) expect(Buffer.from(glb).equals(Buffer.from(d.build().toGlb(d.id)))).toBe(true);
           expect(findCoplanarOverlaps(glb)).toEqual([]);
@@ -293,7 +294,10 @@ export function sweep(ids: readonly string[]): void {
           if (vehicle) expect(s.min[2]).toBeCloseTo(-s.max[2], 5);
           if (rail) {
             expect(s.max[2] - s.min[2]).toBeLessThanOrEqual(3.1);
-            expect(s.triangles).toBeLessThanOrEqual(25_000);
+            // a whole train of rigid cars (an articulated set whose sections ride on
+            // their own bogies) may spend a car's budget on every car
+            const cars = built.rig?.sections?.length ?? 1;
+            expect(s.triangles).toBeLessThanOrEqual(Math.max(25_000, 16_000 * cars));
           }
           const mod = await jsModuleOf(id);
           expect(mod.params).toEqual(d.params);

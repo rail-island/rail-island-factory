@@ -2,8 +2,12 @@
 // Deutsche Reichsbahn's diesel-hydraulic express unit of 1963-68: one design
 // `veh-dr-vt1816` whose `unit` picks the car - the power car with its long
 // rounded nose, the raised cockpit and the engine room's portholes (the
-// default), or the intermediate trailer. A four-car train is power car,
-// trailer, trailer, power car turned (98.06 m over the couplers).
+// default), one of the three intermediate cars (the VMc dining car, the VMd
+// first and second class compartment car, the VMe second class car) - or the
+// whole train, articulated: `cars` (2 .. 8) cars, a power car at each end and
+// the intermediate cars between them, each car a section on its own bogies. A
+// four-car train is power car, VMd, VMc, power car turned (98.06 m over the
+// couplers).
 //
 // Modelled from the DEWAG sectional drawing of 175 015 / 016 (public domain,
 // assets/dr-vt1816/drawing-vt175-section.png) and photographs: body lengths
@@ -23,16 +27,34 @@ import { block, side } from "./vehicleParts.ts";
 import { centreCoupler, DMU_CATALOG, enumParam } from "./emuParts.ts";
 import { unitBogie } from "./unitParts.ts";
 import { strokeText, strokeWidth } from "./strokeFont.ts";
-import { LOD_GLASS, lodPolygon, type LodBand } from "./lodKit.ts";
-import { bogieParts, fitUnit, roofPart, sideGlass, type UnitBody } from "./lodUnits.ts";
+import { LOD_GLASS, lodPolygon, type LodBand, type LodPart, type LodSections } from "./lodKit.ts";
+import { bogieParts, fitUnit, roofPart, sideGlass, turnBody, type UnitBody } from "./lodUnits.ts";
+import { articulate } from "./tramKit.ts";
 
-export type Vt1816Unit = "powerCar" | "trailer";
+/** What the design builds: one car, or the whole train. */
+export type Vt1816Unit = "powerCar" | "dining" | "firstClass" | "trailer" | "train";
+/** One car of the train: the power car, or an intermediate car (VMc, VMd, VMe). */
+export type Vt1816Car = Exclude<Vt1816Unit, "train">;
+/** The two bodies: the power car's, and the intermediate cars' (all 22.82 m). */
+export type Vt1816Body = "powerCar" | "trailer";
+
+/** The train's car counts: two power cars and up to six intermediate cars. */
+export const VT1816_MIN_CARS = 2;
+export const VT1816_MAX_CARS = 8;
 
 export const VT1816_PARAMS: readonly ParamSpec[] = [
   enumParam("unit", "Car", {
     powerCar: "Power car",
-    trailer: "Trailer",
+    dining: "Dining car VMc",
+    firstClass: "1st class VMd",
+    trailer: "2nd class VMe",
+    train: "Full train",
   }),
+  {
+    ...enumParam("cars", "Cars", Object.fromEntries(Array.from({ length: VT1816_MAX_CARS - VT1816_MIN_CARS + 1 }, (_, i) => [String(i + VT1816_MIN_CARS), `${i + VT1816_MIN_CARS} cars`]))),
+    default: "4",
+    when: { name: "unit", values: ["train"] },
+  },
 ];
 
 /** Body lengths (m), nose tip or end wall to end wall, from the drawing. */
@@ -41,12 +63,12 @@ export const VT1816_TRAILER_BODY = 22.82;
 /** Half the 0.70 m between two bodies: each car's coupling plane; the nose coupler reaches as far. */
 export const VT1816_GAP = 0.35;
 /** Lengths over the couplers: 2 x 25.51 + 2 x 23.52 = 98.06 m, the published four-car length. */
-export const VT1816_LENGTH: Record<Vt1816Unit, number> = {
+export const VT1816_LENGTH: Record<Vt1816Body, number> = {
   powerCar: VT1816_POWER_BODY + 2 * VT1816_GAP,
   trailer: VT1816_TRAILER_BODY + 2 * VT1816_GAP,
 };
 /** Axles, metres back from the nose tip (power car) or the +X end wall (trailer). */
-export const VT1816_AXLES: Record<Vt1816Unit, number[]> = {
+export const VT1816_AXLES: Record<Vt1816Body, number[]> = {
   // the motor bogie: pivot 5.15 m, axles 1.94 m ahead and 2.06 m behind it
   powerCar: [3.21, 7.21, 20.4, 22.9],
   trailer: [1.91, 4.41, 18.41, 20.91],
@@ -72,6 +94,7 @@ const PALETTE: Record<string, MaterialSpec> = {
   roof: c("#d6d2c0", 0.7),
   glass: c("#26303a", 0.12, 0.2),
   rubber: c("#1c1c1e", 0.9),
+  bellows: c("#2a2b2d", 0.9),
   chrome: c("#c9ccd0", 0.25, 0.6),
   louvre: c("#d6d0b8", 0.6),
   slat: c("#5f5c54", 0.7),
@@ -265,8 +288,6 @@ const TRAILER: Profile = {
   stations: TRAILER_B.map(([d]) => d),
 };
 
-/** The model x of d: each car is centred between its coupling planes. */
-const xOf = (unit: Vt1816Unit) => (d: number): number => (unit === "powerCar" ? VT1816_POWER_BODY : VT1816_TRAILER_BODY) / 2 - d;
 
 // --- side fittings --------------------------------------------------------------------------
 
@@ -336,13 +357,6 @@ const POWER_DOORS: Array<{ d: [number, number]; glass: Array<[number, number]> }
 const POWER_WINDOWS: Array<[number, number]> = [[12.33, 12.89], [15.18, 16.29], [16.69, 17.79], [18.16, 19.24], [19.64, 20.82], [21.19, 22.34], [23.7, 24.26]];
 /** The roof's louvres over the engine room, d0, d1, y0, y1. */
 const LOUVRES: Array<[number, number, number, number]> = [[6.35, 7.57, 3.28, 3.69], [8.12, 9.94, 3.28, 3.69], [11.8, 13.6, 3.32, 3.69]];
-
-/** The trailer's ten windows at 1.95 m and the doors at both ends. */
-const TRAILER_WINDOWS: Array<[number, number]> = Array.from({ length: 10 }, (_, i) => {
-  const x = VT1816_TRAILER_BODY / 2 + (i - 4.5) * 1.95;
-  return [x - 0.575, x + 0.575];
-});
-const TRAILER_DOORS: Array<[number, number]> = [[0.25, 1.0], [VT1816_TRAILER_BODY - 1.0, VT1816_TRAILER_BODY - 0.25]];
 
 /** The point of a slice's roof arc at d, height y, on side s (x left 0). */
 function arcPoint(p: Profile, d: number, y: number, s: number): Vec3 {
@@ -527,21 +541,76 @@ function drawCockpit(m: MeshBuilder, X: (d: number) => number): void {
   });
 }
 
+
+// --- the intermediate cars --------------------------------------------------------------------
+
+/** A window (d0, d1) on the sides `sides` (+1 the +Z side); both when omitted. */
+interface CarWindow {
+  d: [number, number];
+  sides?: number[];
+}
+
+/** An intermediate car's sides: its windows, doors and roof fittings, d from its +X end. */
+interface MiddleLayout {
+  windows: CarWindow[];
+  doors: CarWindow[];
+  /** Roof boxes: d0, d1, half width (the dining car's kitchen ventilation). */
+  roofBoxes?: Array<[number, number, number]>;
+}
+
+const L = VT1816_TRAILER_BODY;
+const pitch = (n: number, first: number, step: number, width: number): CarWindow[] => Array.from({ length: n }, (_, i) => ({ d: [first + i * step, first + i * step + width] }));
+
+/**
+ * The intermediate cars, from the drawing (the VMc is the upper middle car, its
+ * +Z side; the VMd the lower one, its -Z side) and the type's description: an
+ * entrance with doors on both sides behind one gangway, a single entrance on
+ * one side at the other end; the VMe's two entrances diagonally opposite.
+ */
+const MIDDLE: Record<Exclude<Vt1816Car, "powerCar">, MiddleLayout> = {
+  // three second class compartments, the dining room's seven windows, the kitchen's small one
+  dining: {
+    windows: [...[2.66, 4.95, 7.24].map((d): CarWindow => ({ d: [d, d + 1.18] })), ...pitch(7, 9.65, 1.74, 1.13), { d: [21.86, 22.45], sides: [1] }],
+    doors: [{ d: [0.25, 1.0] }, { d: [L - 1.0, L - 0.25], sides: [-1] }],
+    roofBoxes: [[20.6, 22.0, 0.45]],
+  },
+  // compartments at about 2.02 m
+  firstClass: {
+    windows: [2.81, 4.8, 6.87, 8.89, 11.0, 12.8, 14.84, 16.86, 18.9].map((d): CarWindow => ({ d: [d, d + 1.12] })),
+    doors: [{ d: [0.25, 1.0], sides: [-1] }, { d: [L - 1.0, L - 0.25] }],
+  },
+  // ten compartment windows at 1.95 m
+  trailer: {
+    windows: Array.from({ length: 10 }, (_, i): CarWindow => {
+      const x = L / 2 + (i - 4.5) * 1.95;
+      return { d: [x - 0.575, x + 0.575] };
+    }),
+    doors: [{ d: [0.25, 1.0], sides: [1] }, { d: [L - 1.0, L - 0.25], sides: [-1] }],
+  },
+};
+
+const onSide = (w: CarWindow, s: number): boolean => !w.sides || w.sides.includes(s);
+
 // --- the cars -------------------------------------------------------------------------------
 
-/** Gangway bellows and the centre coupler at an inner end at d `wall` (e: +1 the +X end). */
-function innerEnd(m: MeshBuilder, X: (d: number) => number, e: number, wall: number): void {
+/**
+ * The fittings at an inner end at d `wall` (e: +1 the +X end): the end door, the
+ * gangway's frame (left out inside the train, whose joint draws the bellows) and
+ * the centre coupler.
+ */
+function innerEnd(m: MeshBuilder, X: (d: number) => number, e: number, wall: number, gangway: boolean): void {
   const face = e > 0 ? -VT1816_GAP : wall + VT1816_GAP;
   m.scope("end door", () => {
     const [a, b] = [X(wall), X(wall) + e * 0.012].sort((p, q) => p - q) as [number, number];
     block(m, "rubber", a, b, 1.3, 3.0, -0.36, 0.36);
   });
-  m.scope("gangway", () => {
-    const [a, b] = [X(wall) - e * 0.02, X(face) - e * 0.01].sort((p, q) => p - q) as [number, number];
-    for (const z of [-1, 1]) block(m, "rubber", a, b, 1.2, 3.3, ...side(z, 0.5, 0.72));
-    block(m, "rubber", a, b, 3.1, 3.3, -0.5, 0.5);
-    block(m, "rubber", a, b, 1.2, 1.32, -0.5, 0.5);
-  });
+  if (gangway)
+    m.scope("gangway", () => {
+      const [a, b] = [X(wall) - e * 0.02, X(face) - e * 0.01].sort((p, q) => p - q) as [number, number];
+      for (const z of [-1, 1]) block(m, "rubber", a, b, 1.2, 3.3, ...side(z, 0.5, 0.72));
+      block(m, "rubber", a, b, 3.1, 3.3, -0.5, 0.5);
+      block(m, "rubber", a, b, 1.2, 1.32, -0.5, 0.5);
+    });
   m.scope("coupler", () => centreCoupler(m, e, X(wall + e * 0.9), X(face), COUPLER_Y));
 }
 
@@ -549,9 +618,8 @@ function roofVents(m: MeshBuilder, X: (d: number) => number, ds: number[]): void
   m.scope("ventilators", () => ds.forEach((d, i) => m.scope(`ventilator ${i + 1}`, () => block(m, "vent", X(d) - 0.16, X(d) + 0.16, 4.14, 4.28, -0.13, 0.13))));
 }
 
-function powerCar(): MeshBuilder {
-  const X = xOf("powerCar");
-  const coach = new Coach(PALETTE, 0);
+/** The power car into `coach`'s builder, model x = X(d). */
+function drawPowerCar(coach: Coach, X: (d: number) => number, gangway: boolean): void {
   const m = coach.m;
   m.scope("body", () => {
     drawBody(m, POWER, X);
@@ -574,16 +642,17 @@ function powerCar(): MeshBuilder {
   });
   m.scope("nose", () => drawNose(m, X));
   m.scope("cockpit", () => drawCockpit(m, X));
-  m.scope("rear end", () => innerEnd(m, X, -1, VT1816_POWER_BODY));
+  m.scope("rear end", () => innerEnd(m, X, -1, VT1816_POWER_BODY, gangway));
   m.scope("roof equipment", () => roofVents(m, X, [14.6, 16.6, 18.6, 20.6, 22.6]));
   m.scope("running gear", () => {
     const [a1, a2, a3, a4] = VT1816_AXLES.powerCar as [number, number, number, number];
+    const xm = X((a1 + a2) / 2);
     m.scope("motor bogie", () =>
       m.bogie(() => {
-        unitBogie(coach, X((a1 + a2) / 2), { wb: a2 - a1, r: WHEEL_R, top: 0.72, overhang: 0.35 });
+        unitBogie(coach, xm, { wb: a2 - a1, r: WHEEL_R, top: 0.72, overhang: 0.35 });
         // the 12 KVD 18/21 engine and the Voith transmission hang in the bogie
-        m.scope("engine", () => block(m, "engine", X((a1 + a2) / 2) - 0.9, X((a1 + a2) / 2) + 0.75, 0.42, 0.72, -0.62, 0.62));
-        m.scope("transmission", () => block(m, "motor", X((a1 + a2) / 2) - 1.45, X((a1 + a2) / 2) - 0.95, 0.3, 0.68, -0.4, 0.4));
+        m.scope("engine", () => block(m, "engine", xm - 0.9, xm + 0.75, 0.42, 0.72, -0.62, 0.62));
+        m.scope("transmission", () => block(m, "motor", xm - 1.45, xm - 0.95, 0.3, 0.68, -0.4, 0.4));
       }),
     );
     m.scope("trailing bogie", () => unitBogie(coach, X((a3 + a4) / 2), { wb: a4 - a3, r: WHEEL_R, top: 0.96 }));
@@ -592,58 +661,121 @@ function powerCar(): MeshBuilder {
       block(m, "equipment", X(10.4), X(8.6), 0.48, 0.73, -0.9, 0.9);
     });
   });
-  return m;
 }
 
-function trailer(): MeshBuilder {
-  const X = xOf("trailer");
-  const coach = new Coach(PALETTE, 0);
+/** An intermediate car into `coach`'s builder, model x = X(d). */
+function drawMiddleCar(coach: Coach, kind: Exclude<Vt1816Car, "powerCar">, X: (d: number) => number, gangway: boolean): void {
   const m = coach.m;
+  const lay = MIDDLE[kind];
   m.scope("body", () => {
     drawBody(m, TRAILER, X);
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
         const f: Side = { m, p: TRAILER, X, s };
-        m.scope("doors", () => TRAILER_DOORS.forEach(([a, b], i) => m.scope(`door ${i + 1}`, () => sideDoor(f, a, b, 0.7, 3.15, [[a + 0.15, b - 0.15]]))));
-        m.scope("windows", () => TRAILER_WINDOWS.forEach(([a, b], i) => m.scope(`window ${i + 1}`, () => sideWindow(f, a, b, WIN[0], WIN[1]))));
-        m.scope("lettering", () => sideLettering(f, "DR", VT1816_TRAILER_BODY / 2, 1.5, 0.16));
+        m.scope("doors", () => lay.doors.filter((w) => onSide(w, s)).forEach(({ d: [a, b] }, i) => m.scope(`door ${i + 1}`, () => sideDoor(f, a, b, 0.7, 3.15, [[a + 0.15, b - 0.15]]))));
+        m.scope("windows", () => lay.windows.filter((w) => onSide(w, s)).forEach(({ d: [a, b] }, i) => m.scope(`window ${i + 1}`, () => sideWindow(f, a, b, WIN[0], WIN[1], b - a > 0.8))));
+        m.scope("lettering", () => sideLettering(f, "DR", L / 2, 1.5, 0.16));
       });
   });
-  m.scope("front end", () => innerEnd(m, X, 1, 0));
-  m.scope("rear end", () => innerEnd(m, X, -1, VT1816_TRAILER_BODY));
-  m.scope("roof equipment", () => roofVents(m, X, [2.4, 5.3, 8.2, 11.1, 14.0, 16.9, 19.8]));
+  m.scope("front end", () => innerEnd(m, X, 1, 0, gangway));
+  m.scope("rear end", () => innerEnd(m, X, -1, L, gangway));
+  m.scope("roof equipment", () => {
+    roofVents(m, X, [2.4, 5.3, 8.2, 11.1, 14.0, 16.9, 19.8]);
+    (lay.roofBoxes ?? []).forEach(([a, b, hw], i) => m.scope(`roof box ${i + 1}`, () => {
+      const [x0, x1] = [X(a), X(b)].sort((p, q) => p - q) as [number, number];
+      block(m, "vent", x0, x1, 4.1, 4.32, -hw, hw);
+    }));
+  });
   m.scope("running gear", () => {
     const ax = VT1816_AXLES.trailer;
     for (const [i, k] of [0, 2].entries()) m.scope(`bogie ${i + 1}`, () => unitBogie(coach, X((ax[k]! + ax[k + 1]!) / 2), { wb: ax[k + 1]! - ax[k]!, r: WHEEL_R, top: 0.96 }));
     m.scope("apron equipment", () => block(m, "equipment", X(15.5), X(7.3), 0.4, 0.47, -0.95, 0.95));
   });
+}
+
+const bodyOf = (car: Vt1816Car): Vt1816Body => (car === "powerCar" ? "powerCar" : "trailer");
+const bodyLength = (car: Vt1816Car): number => (car === "powerCar" ? VT1816_POWER_BODY : VT1816_TRAILER_BODY);
+
+function drawCar(coach: Coach, car: Vt1816Car, X: (d: number) => number, gangway: boolean): void {
+  if (car === "powerCar") drawPowerCar(coach, X, gangway);
+  else drawMiddleCar(coach, car, X, gangway);
+}
+
+/**
+ * The cars of a train of `n`, front first: a power car at each end, the VMd
+ * behind the leading one and the VMc ahead of the trailing one, VMe cars between
+ * them (a three-car train has the VMc alone). Each with its span lo..hi over the
+ * coupling planes, the whole train centred on x = 0, and whether it is turned.
+ */
+export function vt1816Train(n: number): Array<{ car: Vt1816Car; lo: number; hi: number; turned: boolean }> {
+  const k = n - 2;
+  const middle: Vt1816Car[] = k === 0 ? [] : k === 1 ? ["dining"] : ["firstClass", ...Array.from({ length: k - 2 }, (): Vt1816Car => "trailer"), "dining"];
+  const cars: Vt1816Car[] = ["powerCar", ...middle, "powerCar"];
+  const total = cars.reduce((t, c) => t + VT1816_LENGTH[bodyOf(c)], 0);
+  let hi = total / 2;
+  return cars.map((car, i) => {
+    const lo = hi - VT1816_LENGTH[bodyOf(car)];
+    const out = { car, lo, hi, turned: i === cars.length - 1 && n > 1 };
+    hi = lo;
+    return out;
+  });
+}
+
+/** The bellows' cross-section between two cars (z, y). */
+const BELLOWS: Array<[number, number]> = [[-0.72, 1.2], [0.72, 1.2], [0.72, 3.2], [0.6, 3.32], [-0.6, 3.32], [-0.72, 3.2]];
+/** The bend a joint allows between two cars. */
+const MAX_BEND_DEG = 12;
+
+/**
+ * The whole train as one articulated vehicle: each car a section (articulate,
+ * tramKit.ts) hinged at the coupling plane ahead of it, riding on its own two
+ * bogies, a bellows joint over the 0.70 m between two bodies.
+ */
+function train(n: number): MeshBuilder {
+  const cars = vt1816Train(n);
+  const coach = new Coach(PALETTE, 0);
+  const m = coach.m;
+  const sections = cars.map((c, k) => {
+    const cx = (c.lo + c.hi) / 2;
+    const len = bodyLength(c.car);
+    // a car facing +X: its +X end wall 0.35 m behind its front coupling plane; the
+    // trailing power car is laid out facing +X about its centre, then turned
+    const X = (d: number) => cx + len / 2 - d;
+    return {
+      x0: c.lo + VT1816_GAP,
+      x1: c.hi - VT1816_GAP,
+      draw: () => m.scope(`car ${k + 1}`, () => (c.turned ? m.turned(cx, () => drawCar(coach, c.car, X, false)) : drawCar(coach, c.car, X, false))),
+    };
+  });
+  articulate({ m }, sections, COUPLER_Y, { profile: BELLOWS, folds: 4, depth: 0.03 }, MAX_BEND_DEG, cars.slice(0, -1).map((c) => c.lo));
   return m;
 }
 
 export function vt1816(params?: ParamValues): MeshBuilder {
-  const unit = resolveParams(VT1816_PARAMS, params).unit as Vt1816Unit;
-  return unit === "powerCar" ? powerCar() : trailer();
+  const p = resolveParams(VT1816_PARAMS, params);
+  const unit = p.unit as Vt1816Unit;
+  if (unit === "train") return train(Number(p.cars));
+  const coach = new Coach(PALETTE, 0);
+  const len = bodyLength(unit);
+  drawCar(coach, unit, (d) => len / 2 - d, true);
+  return coach.m;
 }
 
 // --- distant view ---------------------------------------------------------------------------
 
-/**
- * The VT 18.16 for distant views (lodUnits.ts): the body's section with the
- * floor stripes as one dark band, the red and the cream; the power car's nose
- * rising into the hood, the red cockpit with its windscreen; the window band
- * and the bogies.
- */
-export function vt1816Lod(params?: ParamValues): MeshBuilder {
-  const unit = resolveParams(VT1816_PARAMS, params).unit as Vt1816Unit;
-  const X = xOf(unit);
-  const power = unit === "powerCar";
+/** One car of the distant model: its body and parts, laid out by X(d) (facing +X), turned about cx when `turned`. */
+function carLod(car: Vt1816Car, X: (d: number) => number, cx: number, turned: boolean, section: number | undefined, inside: { front: boolean; rear: boolean }): { body: UnitBody; parts: LodPart[] } {
+  const power = car === "powerCar";
+  const T = (x: number) => (turned ? 2 * cx - x : x);
+  const dir = turned ? -1 : 1;
   const side: LodBand[] = [[0.71, 1.05, "skirt"], [1.05, 1.33, "black"], [1.33, 1.95, "red"], [1.95, 3.2, "cream"], [3.2, 4.2, power ? "cream" : "roof"]];
   const hw: Array<readonly [number, number]> = [[0.71, 1.35], [0.79, W], [3.2, W], [3.55, 1.38], [3.85, 1.2], [4.05, 0.9], [4.2, 0.3]];
-  const flat = (d: number) => ({ tip: [[0.71, X(d)]] as Array<readonly [number, number]> });
-  const boxes = power
-    ? [...POWER_WINDOWS, ...POWER_DOORS.flatMap((dr) => dr.glass)].map(([a, b]) => ({ x0: X(b), x1: X(a), y0: WIN[0], y1: WIN[1] }))
-    : TRAILER_WINDOWS.map(([a, b]) => ({ x0: X(b), x1: X(a), y0: WIN[0], y1: WIN[1] }));
-  const body: UnitBody = {
+  const flat = (d: number, hidden: boolean) => ({ tip: [[0.71, X(d)]] as Array<readonly [number, number]>, ...(hidden ? { hidden: true } : {}) });
+  const glass = power
+    ? [...POWER_WINDOWS, ...POWER_DOORS.flatMap((dr) => dr.glass)]
+    : [...MIDDLE[car].windows.map((w) => w.d)];
+  const boxes = glass.map(([a, b]) => ({ x0: X(b), x1: X(a), y0: WIN[0], y1: WIN[1] }));
+  let body: UnitBody = {
     y0: 0.71,
     hw,
     side,
@@ -654,42 +786,92 @@ export function vt1816Lod(params?: ParamValues): MeshBuilder {
           setback: [[0.71, 1.2], [2.24, 1.2], [3.02, 1.6], [4.2, 1.6]],
           paint: [[0.71, 1.05, "skirt"], [1.05, 1.33, "black"], [1.33, 2.2, "red"], [2.2, 4.2, "cream"]],
         }
-      : flat(0),
-    rear: flat(power ? VT1816_POWER_BODY : VT1816_TRAILER_BODY),
+      : flat(0, inside.front),
+    rear: flat(bodyLength(car), inside.rear),
     windows: sideGlass(boxes, 0.6),
+    ...(section !== undefined ? { section } : {}),
   };
-  const ax = VT1816_AXLES[unit];
-  const bogies = [0, 2].map((k) => [X((ax[k]! + ax[k + 1]!) / 2), (ax[k + 1]! - ax[k]!) / 2 + WHEEL_R + 0.2] as const);
-  return fitUnit({
-    palette: PALETTE,
-    bodies: [body],
-    parts: [
-      ...bogieParts(bogies, 0.71),
-      ...(power
-        ? [
-            roofPart("red", X(7.5), X(3.62), 0.95, 0.75, 3.35, 4.25),
-            {
-              draw: (m: MeshBuilder) => m.scope("windscreen", () => lodPolygon(m, LOD_GLASS, [[X(3.62) + 0.01, 3.55, 0.65], [X(3.62) + 0.01, 3.55, -0.65], [X(3.62) + 0.01, 4.1, -0.62], [X(3.62) + 0.01, 4.1, 0.62]], [1, 0, 0])),
-            },
-          ]
-        : []),
-    ],
-  }, 100);
+  if (turned) body = turnBody(body, cx);
+  const ax = VT1816_AXLES[bodyOf(car)];
+  const bogies = [0, 2].map((k) => [T(X((ax[k]! + ax[k + 1]!) / 2)), (ax[k + 1]! - ax[k]!) / 2 + WHEEL_R + 0.2, ...(section !== undefined ? [section] : [])] as const);
+  const inSection = (part: LodPart): LodPart => (section !== undefined ? { ...part, section } : part);
+  const xs = T(X(3.62)) + dir * 0.01;
+  const parts: LodPart[] = [
+    // in a long train an intermediate car's bogies give way first: from afar the skirts hide them
+    ...bogieParts(bogies as unknown as ReadonlyArray<readonly [number, number, number?]>, 0.71).map((part) => (!power && section !== undefined ? { ...part, optional: 5 } : part)),
+    ...(power
+      ? [
+          inSection(roofPart("red", T(X(7.5)), T(X(3.62)), 0.95, 0.75, 3.35, 4.25)),
+          inSection({ draw: (m: MeshBuilder) => m.scope("windscreen", () => lodPolygon(m, LOD_GLASS, [[xs, 3.55, 0.65], [xs, 3.55, -0.65], [xs, 4.1, -0.62], [xs, 4.1, 0.62]], [dir, 0, 0])) }),
+        ]
+      : []),
+  ];
+  return { body, parts };
 }
 
 /**
- * What the game needs of it (design.ts GameProperties): the four-car set's
- * 214.4 t empty split as about 66 t a power car (engine, transmission and fuel)
- * and 41 t a trailer; 736 kW (1000 PS) a power car; 160 km/h.
+ * The VT 18.16 for distant views (lodUnits.ts): the body's section with the
+ * floor stripes as one dark band, the red and the cream; the power car's nose
+ * rising into the hood, the red cockpit with its windscreen; the window band
+ * and the bogies. The train keeps the full model's sections and a plain bellows
+ * over each joint, 100 triangles a car, 300 at most.
  */
+export function vt1816Lod(params?: ParamValues): MeshBuilder {
+  const p = resolveParams(VT1816_PARAMS, params);
+  const unit = p.unit as Vt1816Unit;
+  if (unit !== "train") {
+    const len = bodyLength(unit);
+    const { body, parts } = carLod(unit, (d) => len / 2 - d, 0, false, undefined, { front: false, rear: false });
+    return fitUnit({ palette: PALETTE, bodies: [body], parts }, 100);
+  }
+  const n = Number(p.cars);
+  const cars = vt1816Train(n);
+  const built = cars.map((c, k) => {
+    const cx = (c.lo + c.hi) / 2;
+    const len = bodyLength(c.car);
+    // the inner ends stay under the bellows; the turned car's own rear faces the car ahead
+    return carLod(c.car, (d) => cx + len / 2 - d, cx, c.turned, k, c.turned ? { front: false, rear: k > 0 } : { front: k > 0, rear: k < n - 1 });
+  });
+  const sections: LodSections = {
+    pivots: cars.map((_, i): [number, number, number] => (i === 0 ? [0, 0, 0] : [cars[i - 1]!.lo, COUPLER_Y, 0])),
+    joints: cars.slice(0, -1).map((c, i) => ({
+      sections: [i, i + 1] as [number, number],
+      front: c.lo + VT1816_GAP,
+      rear: cars[i + 1]!.hi - VT1816_GAP,
+      profile: [[-0.72, 1.2], [0.72, 1.2], [0.72, 3.32], [-0.72, 3.32]] as Array<[number, number]>,
+    })),
+    maxBendDeg: MAX_BEND_DEG,
+  };
+  return fitUnit({ palette: PALETTE, bodies: built.map((b) => b.body), parts: built.flatMap((b) => b.parts), sections }, Math.min(300, 100 * n));
+}
+
+// --- what the game needs ----------------------------------------------------------------------
+
+/**
+ * The four-car set's 214.4 t empty split by estimate: 66 t a power car (engine,
+ * transmission and fuel), 42.4 t the VMc dining car with its kitchen, 40 t the
+ * VMd and the VMe; 736 kW (1000 PS) a power car; 160 km/h, 140 km/h from six cars
+ * (the published limit of the six-car trains).
+ */
+const CAR_WEIGHT: Record<Vt1816Car, number> = { powerCar: 66, dining: 42.4, firstClass: 40, trailer: 40 };
+
 const VT1816_GAME: GameProperties = {
-  weight: 66,
+  weight: CAR_WEIGHT.powerCar,
   power: 736,
   maxspeed: 160,
   accel: null,
-  variants: [{ params: { unit: "trailer" }, weight: 41, power: 0 }],
+  variants: [
+    ...(["dining", "firstClass", "trailer"] as const).map((unit) => ({ params: { unit }, weight: CAR_WEIGHT[unit], power: 0 })),
+    ...Array.from({ length: VT1816_MAX_CARS - VT1816_MIN_CARS + 1 }, (_, i) => {
+      const n = i + VT1816_MIN_CARS;
+      const weight = Math.round(vt1816Train(n).reduce((t, c) => t + CAR_WEIGHT[c.car], 0) * 10) / 10;
+      // the default four cars are named by the unit alone
+      const params: ParamValues = n === 4 ? { unit: "train" } : { cars: String(n), unit: "train" };
+      return { params, weight, power: 2 * 736, maxspeed: n >= 6 ? 140 : 160 };
+    }),
+  ],
 };
 
 export const VT1816_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-dr-vt1816", game: VT1816_GAME, title: "DR VT 18.16 Delfin", build: vt1816, buildLod: vt1816Lod, params: VT1816_PARAMS, catalog: DMU_CATALOG, references: "dr-vt1816" },
+  { id: "proc-vehicle-dr-vt1816", game: VT1816_GAME, title: "DR VT 18.16 Delfin", build: vt1816, buildLod: vt1816Lod, lodTriangles: 300, params: VT1816_PARAMS, catalog: DMU_CATALOG, references: "dr-vt1816" },
 ];

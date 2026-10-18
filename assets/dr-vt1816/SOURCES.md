@@ -19,3 +19,13 @@ and trailers (about 41 t) is an estimate.
 The running number `VT 18.16.07` is the museum set's (the photos); the trailers
 carry only the "DR" lettering, as their own designation (VMc / VMd, later 175
 3xx / 4xx / 5xx) and check digits were not verified.
+
+The intermediate cars follow the same article's description: the VMc dining car
+(three second class compartments and the dining room with its kitchen), the VMd
+first and second class compartment car, both with an entrance on both sides
+behind one gangway and a single door at the other end, and the VMe "unit middle
+car" with two diagonally opposite entrances, added for five- and six-car trains.
+Their window layouts are measured from the drawing's two middle cars (the VMc the
+upper one, the VMd the lower one); the VMe's is an even 1.95 m pitch. The published
+top speed of the six-car trains, 140 km/h, applies to the model's trains of six
+cars and more.

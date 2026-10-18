@@ -26,7 +26,7 @@ describe('unit LODs', () => {
         const m = buildLodModel(d, v);
         const n = m.triangleCount();
         // an articulated set gets 100 a car, 300 at most; a single car 100
-        const cars = v.unit === 'set' ? Number(v.cars) : 1;
+        const cars = v.unit === 'set' || v.unit === 'train' ? Number(v.cars) : 1;
         expect(n).toBeLessThanOrEqual(Math.min(lodBudget(d), Math.min(300, 100 * cars)));
         // at least 70 % (a plain trailer, the MDmot's, shows all it has in 70)
         expect(n).toBeGreaterThanOrEqual(Math.min(300, 100 * cars) * 0.7);
