@@ -94,6 +94,18 @@ body {
   border-bottom: 1px solid var(--m-outline-variant);
 }
 
+.factory-bar__logo {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.factory-bar__logo img {
+  display: block;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+}
+
 .factory-bar__title {
   margin: 0;
   font-size: 20px;
@@ -129,6 +141,26 @@ body {
 
 .factory-main {
   padding: 0 16px 64px;
+}
+
+.factory-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  border-top: 1px solid var(--m-outline-variant);
+  color: var(--m-on-surface-variant);
+  font-size: 13px;
+}
+
+.factory-footer a {
+  color: var(--m-primary);
+  text-decoration: none;
+}
+
+.factory-footer a:hover {
+  text-decoration: underline;
 }
 
 /* -------------------------------------------------------------- the toolbar */

@@ -34,7 +34,9 @@ white page. So `index.html` carries, without waiting for anything else:
 
 ## The app bar
 
-The bar at the top shows "Rail Island Factory" (on a model page, the model's title,
+The bar at the top opens with the Rail Island logo (`src/rail-island-logo.webp`,
+the game's logo from www.railisland.com at 96 px), a link to the game at
+`play.railisland.com` (`PLAY_URL`), then shows "Rail Island Factory" (on a model page, the model's title,
 its id and a back arrow) and, on the right, an **Add your model** link to the
 repository's README on GitHub - the landing page for someone who wants to make a
 model (`ADD_MODEL_URL` in `App.tsx`) - and an **Export (n)** button, the number
@@ -45,6 +47,9 @@ The favicon (`src/favicon.svg`) is a sawtooth-roofed factory with a chimney on a
 rail, in the site's colours; `src/apple-touch-icon.png` is the same drawing at
 180 px for a phone's home screen. `index.html` links both, so Vite hashes them
 into `dist/assets/` (the public folder is the generated export).
+
+A footer under the catalog links to www.railisland.com (`HOME_URL`) and to the
+factory's GitHub repository (`REPO_URL`).
 
 ## Data
 

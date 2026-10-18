@@ -13,9 +13,15 @@ import { ModelCards } from "./ModelCards";
 import { ModelDetail } from "./ModelDetail";
 import { ExportPanel } from "./ExportPanel";
 import { EMPTY_EXPORT, addEntry, entryFor, hasEntry, loadExport, saveExport, type ExportState } from "./exportList";
+import logoUrl from "./rail-island-logo.webp";
 
 /** Where the "Add your model" link goes: the repository's README, written for a first-time contributor. */
 const ADD_MODEL_URL = "https://github.com/rail-island/rail-island-factory#readme";
+/** Where the Rail Island logo in the app bar goes: the game itself. */
+const PLAY_URL = "https://play.railisland.com";
+/** The footer's links: the game's home page and this repository. */
+const HOME_URL = "https://www.railisland.com";
+const REPO_URL = "https://github.com/rail-island/rail-island-factory";
 
 async function loadCatalog(): Promise<Row[]> {
   const res = await fetch("/catalog.json");
@@ -105,6 +111,9 @@ export function App() {
   return (
     <div class="factory">
       <header class="factory-bar">
+        <a class="factory-bar__logo" href={PLAY_URL} target="_blank" rel="noopener" title="Play Rail Island">
+          <img src={logoUrl} alt="Rail Island" width="40" height="40" />
+        </a>
         {open() ? (
           <button type="button" class="factory-btn factory-bar__back" onClick={onClose} aria-label="Back to the list">
             &larr;
@@ -218,6 +227,15 @@ export function App() {
           </Match>
         </Switch>
       </main>
+      <footer class="factory-footer">
+        <a href={HOME_URL} target="_blank" rel="noopener">
+          www.railisland.com
+        </a>
+        <span aria-hidden="true">&middot;</span>
+        <a href={REPO_URL} target="_blank" rel="noopener">
+          Rail Island Factory on GitHub
+        </a>
+      </footer>
       <Show when={exportOpen() && exportLoaded()}>
         <ExportPanel
           rows={rows() ?? []}
