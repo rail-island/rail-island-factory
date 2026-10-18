@@ -168,7 +168,10 @@ only the build knows: `thumbUrl` (site-relative), `thumbBytes`, `jsUrl`, `jsByte
 the bounding-box extents `sizeX`/`sizeY`/`sizeZ` in metres (before
 `defaultScale`), rounded to the millimetre, and `references`: the source images
 as `{ name, url, bytes }` in name order (`name` is the path within the assets
-folder, `url` is `refs/<id>/<name>`), empty for a design without any.
+folder, `url` is `refs/<id>/<name>`), empty for a design without any. A vehicle
+whose design declares OpenTTD figures also carries them as `openttd`, for the
+site's GRF export only; the game's meta files do not
+([../site/openttd-export.md](../site/openttd-export.md)).
 
 The counts come from `generator/glbStats.ts` over the in-memory GLB: vertices and
 primitives from the JSON chunk, triangles and the box from the decoded triangle

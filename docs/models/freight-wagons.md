@@ -140,7 +140,7 @@ buffers, axle positions and wheels on the rail for every combination, the loads
 under the XML hull, the bus stands on the deck where the inline puts it), that
 a livery changes only paint, the running numbers' check digits on both sides,
 MAERSK and TRANSWAGGON reading from outside, and that the clip solid refuses a
-concave view. `test/models.test.ts` and `test/params.test.ts` cover every
+concave view. The catalog sweep (`test/catalogSweep.ts`) covers every
 design's determinism, source tree, JS model and parameters.
 
 The former Nas tram load and Pao Karosa bus load are intentionally omitted. Legacy IDs map to their corresponding empty wagon with scale multiplier 1.

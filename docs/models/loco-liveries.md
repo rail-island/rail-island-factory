@@ -126,5 +126,5 @@ cab column where it has cab bands) is the band the model paints at that height,
 with at most one row off (a shaded rib or the 0.107 m rows of `cd_163.022`); the
 263's grilles, windows and the 371 005's four windows sit where the native BMP
 has them; every livery of the three designs stays within 16,000 triangles.
-`test/params.test.ts` builds every livery for determinism, z-fighting, the rail
+The catalog sweep (`test/catalogSweep.ts`) builds the defaults and a fixed sample of the other combinations (every one with `TEST_ALL_VARIANTS=1`, [../guide/setup-and-build.md](../guide/setup-and-build.md)) for determinism, z-fighting, the rail
 envelope and the JS model.

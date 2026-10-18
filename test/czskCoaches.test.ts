@@ -14,6 +14,7 @@ import { paramCombinations, resolveParams } from "../generator/design";
 import { isLeaf, type LeafNode, type TreeNode } from "../generator/sourceTree";
 import { VEHICLES } from "../generator/vehicles";
 import { DESIGNS } from "../generator/generate";
+import { sample } from "./catalogCache";
 
 const leaves = (n: TreeNode): LeafNode[] => (isLeaf(n) ? [n] : n.children.flatMap(leaves));
 const design = (id: string) => CZSK_COACHES.find((d) => d.id === id)!;
@@ -78,7 +79,7 @@ describe("Czech and Slovak coaches (CD Y, ZSR, UIC-Z)", () => {
     for (const d of CZSK_COACHES) expect(() => d.build({ variant: "nope" })).toThrow(/no value "nope"/);
   });
 
-  it.each(CZSK_COACHES.flatMap((d) => paramCombinations(d.params).map((p) => [d.id, JSON.stringify(p)] as const)))("%s %s builds inside the envelope and budget", (id, params) => {
+  it.each(CZSK_COACHES.flatMap((d) => sample(paramCombinations(d.params)).map((p) => [d.id, JSON.stringify(p)] as const)))("%s %s builds inside the envelope and budget", (id, params) => {
     const d = design(id);
     const s = glbStats(d.build(JSON.parse(params) as Record<string, string>).toGlb(d.title));
     expect(s.triangles).toBeLessThan(9000);

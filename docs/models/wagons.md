@@ -118,5 +118,5 @@ and wheels on the rail, that each variant carries exactly its own load up to its
 XML height, that the default build is the empty wagon, the running numbers'
 check digits, the lettering on both sides (the Rah's caron reads correctly from
 outside and its letters lie on the shell), and the Raj hoppers' rotation
-profile. `test/params.test.ts` and `test/models.test.ts` cover every cargo's
-determinism, flicker, envelope, budget and JS model.
+profile. The catalog sweep (`test/catalogSweep.ts`) covers the
+determinism, flicker, envelope, budget and JS model of the defaults and a fixed sample of the other combinations (every one with `TEST_ALL_VARIANTS=1`, [../guide/setup-and-build.md](../guide/setup-and-build.md)).

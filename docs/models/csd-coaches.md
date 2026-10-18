@@ -208,5 +208,5 @@ dropped floor; the Balm's rounded plan; that class numerals and the "CSD" and
 running-number inscriptions read correctly from outside on both sides; valid UIC
 check digits; the Balm and Bam two-tone door leaves; and the classic coach's two
 variants (11 and 12 side windows, an invalid variant rejected).
-`test/params.test.ts` covers every parameter combination. `test/models.test.ts` covers the shared contract
-(envelope, budget, determinism, source tree, GLB/JS agreement, no flicker).
+The catalog sweep (`test/catalogSweep.ts`) covers the shared contract
+(envelope, budget, determinism, source tree, GLB/JS agreement, no flicker) for the defaults and a fixed sample of the other combinations (every one with `TEST_ALL_VARIANTS=1`, [../guide/setup-and-build.md](../guide/setup-and-build.md)).

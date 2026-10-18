@@ -5,10 +5,10 @@ the table and card layouts, sorting and search, the model page with its 3D
 preview, and the URL state.
 **Code** - `src/main.tsx`, `src/App.tsx`, `src/catalogQuery.ts`, `src/ModelTable.tsx`,
 `src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`,
-`src/SourceTreePanel.tsx`, `src/sourceTreeView.ts`, `src/Thumb.tsx`,
+`src/SourceTreePanel.tsx`, `src/sourceTreeView.ts`, `src/Thumb.tsx`, `src/modelModule.ts`, `src/ExportPanel.tsx`,
 `src/factory.css`, `src/favicon.svg`, `src/apple-touch-icon.png`, `src/boot.ts`, `src/bootEntry.ts`, `index.html`, `vite.config.ts`,
 `test/catalogQuery.test.ts`, `test/boot.test.ts`, `test/rig.test.ts` (the Pose sliders)
-**See also** - [../models/export.md](../models/export.md), [../guide/deploy.md](../guide/deploy.md)
+**See also** - [../models/export.md](../models/export.md), [../guide/deploy.md](../guide/deploy.md), [openttd-export.md](openttd-export.md)
 
 The site is the factory's counterpart of the webapp Creator's model listing,
 copied and trimmed: no sign-in, uploads, woods or packages, and English only.
@@ -37,7 +37,9 @@ white page. So `index.html` carries, without waiting for anything else:
 The bar at the top shows "Rail Island Factory" (on a model page, the model's title,
 its id and a back arrow) and, on the right, an **Add your model** link to the
 repository's README on GitHub - the landing page for someone who wants to make a
-model (`ADD_MODEL_URL` in `App.tsx`).
+model (`ADD_MODEL_URL` in `App.tsx`) - and an **Export (n)** button, the number
+of model variants on the export list, which opens the export panel: a GRF for
+OpenTTD or a ZIP of GLBs, built in the browser ([openttd-export.md](openttd-export.md)).
 
 The favicon (`src/favicon.svg`) is a sawtooth-roofed factory with a chimney on a
 rail, in the site's colours; `src/apple-touch-icon.png` is the same drawing at
@@ -102,7 +104,9 @@ Bardotka, whose `livery` parameter draws it.
 
 Clicking a row or card opens the model page: the interactive preview (drag to
 orbit, wheel or pinch to zoom, no pan), the build's thumbnail and every column as
-a spec list. Arrows step through the **current** filtered and sorted list;
+a spec list. Its **Add to export** button puts the model, at the parameter values
+on screen, on the export list ("In the export" once that variant is listed;
+[openttd-export.md](openttd-export.md)). Arrows step through the **current** filtered and sorted list;
 Escape, the app bar's back arrow or the browser's Back return to it.
 
 The side panel has up to three tabs: **Specs** (the thumbnail and the spec list),
@@ -140,9 +144,11 @@ with a render loop that runs only while they play, Stop halts them in place, and
 another model or parameter choice stops them
 ([../models/animation.md](../models/animation.md)).
 
-`ModelViewer.tsx` (with its helper `viewerHighlight.ts`) is the only code
-importing three (plus `OrbitControls`), reached through a lazy import, so the list loads ~30 kB of
-script and the renderer arrives only when a model opens. It renders on demand
+`ModelViewer.tsx` (with its helpers `viewerHighlight.ts` and `modelModule.ts`, which
+fetches and builds a model's JS module) and the export (`exportRun.ts`) are the only
+code importing three (plus `OrbitControls`, or the `GLTFExporter`), each reached
+through a lazy import, so the list loads ~30 kB of script and the renderer arrives
+only when a model opens or an export runs. It renders on demand
 (no damping, no idle loop), follows its pane with a ResizeObserver, frames the
 model on each selection, and discards a load that resolves after the selection
 moved on. On each framing it also fits the camera's `near`/`far` to the model

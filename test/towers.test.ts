@@ -6,6 +6,7 @@ import { paramCombinations } from '../generator/design';
 import { findCoplanarOverlaps } from '../generator/coplanar';
 import { glbStats } from '../generator/glbStats';
 import { collectTriangles, parseGlb } from '../generator/glbTriangles';
+import { sample } from "./catalogCache";
 
 const HEIGHTS: Record<string,number> = {
   'proc-building-tower-bell':24.584785,'proc-building-tower-bigben':96,'proc-building-tower-eiffel':330,
@@ -23,7 +24,7 @@ describe('Towers imported into the factory',()=>{
       expect(stats.max[1]).toBeCloseTo(HEIGHTS[d.id]!,3);
       expect(d.catalog!.defaultScale).toBe(d.id.endsWith('tower-eiffel')?.55:1);
     });
-    for(const p of paramCombinations(d.params))it(`${d.id} ${JSON.stringify(p)} is deterministic, grounded, finite and within budget`,()=>{
+    for(const p of sample(paramCombinations(d.params)))it(`${d.id} ${JSON.stringify(p)} is deterministic, grounded, finite and within budget`,()=>{
       const m=d.build(p),bytes=m.toGlb('test'),stats=glbStats(bytes);
       expect(stats.triangles).toBeLessThanOrEqual(10000);
       expect(stats.triangles).toBeGreaterThan(100);

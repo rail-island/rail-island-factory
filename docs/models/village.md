@@ -180,8 +180,8 @@ variants in all, every shape combination standing on y = 0 at house size and
 under 10,000 triangles, the finish parameters recolouring without moving a
 vertex, the side parameter mirroring the L-house and the family house, and the
 shape options reaching the geometry (the alpine hut's storeys, balcony, season
-and chimney among them). `test/params.test.ts` builds every
-coverage combination for determinism and flicker and compares the JS model's
+and chimney among them). The catalog sweep (`test/catalogSweep.ts`) builds
+the defaults and a fixed sample of the other combinations (every one with `TEST_ALL_VARIANTS=1`, [../guide/setup-and-build.md](../guide/setup-and-build.md)) for flicker and compares the JS model's
 triangles with the generator's; `test/export.test.ts` checks
 `village.meta.json`.
 

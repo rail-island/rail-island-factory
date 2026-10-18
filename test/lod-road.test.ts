@@ -5,6 +5,7 @@ import { lodBudget } from '../generator/lod';
 import { coverageCombinations } from '../generator/design';
 import { collectTriangles, parseGlb } from '../generator/glbTriangles';
 import { LOD_GLASS } from '../generator/lodKit';
+import { sample } from './catalogCache';
 
 // The road vehicles' dedicated LODs (generator/lodRoad.ts): buses from the bus
 // kit's description and the draft's notes, trucks from the truck kits' cabs and masses.
@@ -22,7 +23,7 @@ describe('road vehicle LODs', () => {
     const d = DESIGNS.get(id)!;
     it(`${id}: a dedicated LOD that uses its budget well in every variant`, () => {
       expect(d.buildLod).toBeDefined();
-      for (const v of coverageCombinations(d.params, d.finishParams)) {
+      for (const v of sample(coverageCombinations(d.params, d.finishParams))) {
         const { m, faces: f } = faces(id, v);
         expect(m.triangleCount()).toBeLessThanOrEqual(lodBudget(d));
         expect(m.triangleCount()).toBeGreaterThan(0.7 * lodBudget(d));
@@ -40,7 +41,7 @@ describe('road vehicle LODs', () => {
   it('keeps the articulated buses and the semi-trucks bending at the full rig\'s hinges', () => {
     for (const id of ['proc-vehicle-karosa-renault-citybus-18m', 'proc-vehicle-mb-o345-g', 'proc-vehicle-karosa-long', 'proc-vehicle-cistern-semi-truck', 'proc-vehicle-reefer-semi-truck']) {
       const d = DESIGNS.get(id)!;
-      for (const v of coverageCombinations(d.params, d.finishParams)) {
+      for (const v of sample(coverageCombinations(d.params, d.finishParams))) {
         const full = d.build(v).rig!, low = buildLodModel(d, v).rig!;
         expect(lodBudget(d)).toBe(200);
         expect(low.sections!.map((s) => s.pivot)).toEqual(full.sections!.map((s) => s.pivot));

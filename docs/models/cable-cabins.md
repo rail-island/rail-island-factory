@@ -131,6 +131,6 @@ bubble is the largest at about 2,310.
 ## Checking
 
 `pnpm exec vitest run test/chairlift.test.ts`,
-`pnpm exec vitest run test/referenceModels.test.ts test/models.test.ts -t "cablecar|gondola"`
-and `pnpm exec vitest run test/jsModel.test.ts -t "cablecar|gondola"`; look at
+`pnpm exec vitest run test/referenceModels.test.ts -t "cablecar|gondola"`
+and `pnpm exec vitest run catalog -t "cablecar|gondola"` (the catalog sweep); look at
 `export/thumbs/<id>.png` after `pnpm build:models`.

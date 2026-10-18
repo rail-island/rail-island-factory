@@ -12,6 +12,7 @@ import { findCoplanarOverlaps } from "../generator/coplanar";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles";
 import { glbStats } from "../generator/glbStats";
 import { LOD_GLASS } from "../generator/lodKit";
+import { sample } from "./catalogCache";
 
 const GROUP = [...AIRCRAFT, ...SHIPS.filter((d) => d.id !== "proc-vehicle-cruise-ferry"), ...CABLE_CABINS, ...LEGACY_VEHICLES.filter((d) => d.id === "veh-cabin-classic")];
 const budget = (d: ProceduralDesign) => (d.catalog?.category === "Aircraft" ? 200 : 100);
@@ -24,7 +25,7 @@ describe("air, water and rope LODs", () => {
   for (const d of GROUP) {
     it(`${d.id}: every variant has its own LOD within the budget, without flicker or detail materials`, () => {
       expect(d.buildLod).toBeDefined();
-      for (const v of coverageCombinations(d.params, d.finishParams)) {
+      for (const v of sample(coverageCombinations(d.params, d.finishParams))) {
         const m = d.buildLod(v);
         expect(m.triangleCount()).toBeLessThanOrEqual(budget(d));
         // the budget is used, not wasted

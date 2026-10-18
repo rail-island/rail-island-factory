@@ -97,5 +97,5 @@ XML length and axles, section height and width, the CD emblem reading correctly
 from outside and the running number on both sides, valid check digits, and the
 variant list (window counts, the lookout bay only on BDs and Ds, an invalid value
 rejected), and the class marks drawn as white numerals (the "1" reading from
-outside on the A), not blank plates. `test/params.test.ts` builds every variant (determinism, no flicker,
+outside on the A), not blank plates. The catalog sweep (`test/catalogSweep.ts`) builds the defaults and a fixed sample of the other combinations (every one with `TEST_ALL_VARIANTS=1`, [../guide/setup-and-build.md](../guide/setup-and-build.md)) (determinism, no flicker,
 envelope, budget, GLB/JS agreement).

@@ -126,5 +126,5 @@ length over buffers, pivots, axle positions, wheel size and gauge; the
 Bardotka's nose and brow against its windscreen in every 749 livery and the
 Brejlovec body in every 750 one; the 749 liveries' nose and side colours; every native landmark within
 its stated pixel tolerance and each design's MAE under 1.1 pp; valid running
-numbers. `test/models.test.ts` and `test/params.test.ts` cover the designs with
+numbers. The catalog sweep (`test/catalogSweep.ts`) covers the designs with
 the other models (determinism, flicker, envelope, the JS model).

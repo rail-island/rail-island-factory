@@ -14,13 +14,14 @@ import { glbStats } from "../generator/glbStats.ts";
 import { parseGlb, readAccessor } from "../generator/glbParse.ts";
 import { poseGlb, sampleCount } from "../generator/glbPose.ts";
 import { isLeaf, type TreeNode } from "../generator/sourceTree.ts";
+import { sample } from "./catalogCache";
 
 type Gltf = {
   nodes: Array<{ name: string; translation?: number[] }>;
   animations?: Array<{ name: string; channels: Array<{ sampler: number; target: { node: number; path: string } }>; samplers: Array<{ input: number; output: number; interpolation: string }> }>;
 };
 
-const COMBOS = STEAM_DESIGNS.flatMap((d) => paramCombinations(d.params).map((p) => ({ d, p, label: `${d.id} ${JSON.stringify(p)}` })));
+const COMBOS = STEAM_DESIGNS.flatMap((d) => sample(paramCombinations(d.params)).map((p) => ({ d, p, label: `${d.id} ${JSON.stringify(p)}` })));
 
 const walk = (n: TreeNode): TreeNode[] => (isLeaf(n) ? [n] : [n, ...n.children.flatMap(walk)]);
 

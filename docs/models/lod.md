@@ -70,7 +70,7 @@ wheels, electric stock carries its raised rear pantograph.
   The crown is capped, the bottom is open. Faces of different colours never share
   a plane.
 - **Windows**: windscreens and window bands in one dark material, `lodGlass`
-  (`LOD_GLASS`) - the only glass a vehicle LOD may use (`test/lod.test.ts`).
+  (`LOD_GLASS`) - the only glass a vehicle LOD may use (`test/catalogSweep.ts`).
   `windowBands` joins a split windscreen into one band; a windscreen within
   0.2 m of the corners spans the whole end. Small windows (a cab's side
   windows) are optional parts.
@@ -182,10 +182,11 @@ restores them. No browser automation is required for headless verification.
 
 ## Verification
 
-`test/lod.test.ts` compares every standalone default LOD with its generator
+The catalog sweep (`test/catalogSweep.ts`) compares every standalone default LOD with its generator
 geometry (in model space) and checks deterministic output, unit normals and the
 rig contract (none, or sections and joints that `pose` bends).
-It builds every combination of shape parameters, plus each finish choice, and
+It builds the defaults and a fixed sample of the other combinations (every one with
+`TEST_ALL_VARIANTS=1`, [../guide/setup-and-build.md](../guide/setup-and-build.md)) and
 checks triangle budgets, finite coordinates, missing detail materials and the
 same coplanar-overlap detector used for full models. Regressions specifically
 cover long hoods and boilers and the open Colosseum arena. `test/lodKit.test.ts`

@@ -12,6 +12,10 @@
 // slider for the steering and one per hinge, which pose the preview through the
 // model's own JS module -- the code the game is to call.
 //
+// "Add to export" puts the model, at the parameter values on screen, on the export
+// list (exportList.ts, the app bar's Export panel); the same model may be listed
+// once per variant.
+//
 // A parametric model gets a Parameters block above the tabs: a <select> per enum
 // parameter. Choosing a value rebuilds the preview from the model's JS module
 // (ModelViewer); the source tree describes the default build, so its highlight
@@ -53,6 +57,10 @@ export function ModelDetail(props: {
   /** The chosen parameter values (from the URL), and the setter, which keeps only non-defaults. */
   params: Record<string, string>;
   onParams: (params: Record<string, string>) => void;
+  /** Whether the variant on screen is already in the export list. */
+  exported: boolean;
+  /** Add the variant on screen (the chosen parameter values) to the export list. */
+  onAddExport: () => void;
 }) {
   const [lod, setLod] = createSignal(false);
   const [triangles, setTriangles] = createSignal<number>();
@@ -115,6 +123,9 @@ export function ModelDetail(props: {
             &rarr;
           </button>
         </div>
+        <button type="button" class="factory-btn factory-detail__export" disabled={props.exported} onClick={() => props.onAddExport()}>
+          {props.exported ? "In the export" : "Add to export"}
+        </button>
         <label class="factory-param">
           <span>Low level of detail</span>
           <input type="checkbox" checked={lod()} onChange={(e) => setLod(e.currentTarget.checked)} />

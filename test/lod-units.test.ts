@@ -7,6 +7,7 @@ import { collectTriangles, parseGlb } from '../generator/glbTriangles';
 import { LOD_GLASS } from '../generator/lodKit';
 import { MeshBuilder } from '../generator/meshBuilder';
 import { fitUnit, sideGlass, type UnitBody } from '../generator/lodUnits';
+import { sample } from './catalogCache';
 
 // The dedicated LODs of the multiple units and railcars (lodUnits.ts, docs/models/lod.md).
 const UNITS = ['cd-810', 'cd-812', 'cd-843', 'csd-m131', 'csd-m240', 'csd-m296', 'db-628', 'cd-451', 'cd-460', 'cd-470', 'cd-471', 'cd-680', 'ice-1', 'tgv', 'jr-kiha40', 'mav-mdmot', 'metro-81-71'];
@@ -21,7 +22,7 @@ describe('unit LODs', () => {
     const d = DESIGNS.get(`proc-vehicle-${id}`)!;
     it(`${id}: every car and livery fits its budget, uses the budget, reaches the rail and keeps its livery`, () => {
       expect(d.buildLod).toBeDefined();
-      for (const v of coverageCombinations(d.params, d.finishParams)) {
+      for (const v of sample(coverageCombinations(d.params, d.finishParams))) {
         const m = buildLodModel(d, v);
         const n = m.triangleCount();
         // an articulated set gets 100 a car, 300 at most; a single car 100

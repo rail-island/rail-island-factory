@@ -85,7 +85,7 @@ import { SMALL_DIESELS } from "./smallDiesels.ts";
 import { CITY_BUS_DESIGNS, KAROSA_DESIGNS } from "./buses.ts";
 import { VILLAGE_HOUSES } from "./village.ts";
 import { COMMERCIAL_BUILDINGS } from "./commercial.ts";
-import type { CatalogFields, ParamValues, ProceduralDesign } from "./design.ts";
+import { checkOpenttdProperties, type CatalogFields, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { buildLodModel } from "./lodModel.ts";
 import { lodBudget } from "./lod.ts";
 import { glbStats, type GlbStats } from "./glbStats.ts";
@@ -204,7 +204,7 @@ export function designSource(id: string): string {
  * skyscraper's matches what the webapp's copy wrote, so a model built here is
  * byte-identical to one built there.
  */
-function toGlb(id: string, model: MeshBuilder): Uint8Array {
+export function toGlb(id: string, model: MeshBuilder): Uint8Array {
   return VEHICLE_IDS.has(id)
     ? model.toGlb(`Rail Island procedural vehicle (${id})`, "vehicle")
     : model.toGlb(`Rail Island procedural building (${id})`);
@@ -439,18 +439,27 @@ export function generateReferences(
   return out;
 }
 
-/** The whole export: the models, then the two meta.json files and the site's catalog.json. */
-export async function buildExport(dir = EXPORT_DIR): Promise<{ models: GeneratedModel[]; catalog: ModelCatalog; js: Map<string, string> }> {
-  const models = generateModels(dir);
-  const js = await generateJsModels(dir);
-  const refs = generateReferences(dir);
-  const designs = [...DESIGNS.values()];
-  fs.writeFileSync(path.join(dir, META_FILE), `${JSON.stringify(exportMeta(BUILDINGS), null, 2)}\n`);
-  fs.writeFileSync(path.join(dir, VILLAGE_META_FILE), `${JSON.stringify(exportMeta(VILLAGE_DESIGNS), null, 2)}\n`);
+/**
+ * The whole export: the models, then the meta.json files and the site's
+ * catalog.json. `designs` narrows it to some designs, every file listing only
+ * those and legacy-models.json (which maps onto the whole catalog) left out --
+ * the tests export a few; the build exports them all.
+ */
+export async function buildExport(
+  dir = EXPORT_DIR,
+  designs: readonly ProceduralDesign[] = [...DESIGNS.values()],
+): Promise<{ models: GeneratedModel[]; catalog: ModelCatalog; js: Map<string, string> }> {
+  const models = generateModels(dir, designs);
+  const js = await generateJsModels(dir, designs);
+  const refs = generateReferences(dir, designs);
+  const chosen = (list: readonly ProceduralDesign[]) => list.filter((d) => designs.includes(d));
+  fs.writeFileSync(path.join(dir, META_FILE), `${JSON.stringify(exportMeta(chosen(BUILDINGS)), null, 2)}\n`);
+  fs.writeFileSync(path.join(dir, VILLAGE_META_FILE), `${JSON.stringify(exportMeta(chosen(VILLAGE_DESIGNS)), null, 2)}\n`);
   const rigs = new Map(models.flatMap((m) => (m.rig ? [[m.id, m.rig] as const] : [])));
   const sides = new Map(models.flatMap((m) => (m.side ? [[m.id, m.side] as const] : [])));
-  fs.writeFileSync(path.join(dir, VEHICLE_META_FILE), `${JSON.stringify(exportVehicleMeta(ALL_VEHICLES, rigs, sides), null, 2)}\n`);
+  fs.writeFileSync(path.join(dir, VEHICLE_META_FILE), `${JSON.stringify(exportVehicleMeta(chosen(ALL_VEHICLES), rigs, sides), null, 2)}\n`);
   fs.writeFileSync(path.join(dir, "industry-migration.json"), `${JSON.stringify({ version: 1, entries: INDUSTRY_MIGRATION }, null, 2)}\n`);
+  for (const design of designs) checkOpenttdProperties(design, ALL_VEHICLES.includes(design));
   const catalog: ModelCatalog = {
     version: 1,
     records: designs.map((design) => {
@@ -461,11 +470,13 @@ export async function buildExport(dir = EXPORT_DIR): Promise<{ models: Generated
         jsBytes: Buffer.byteLength(jsText),
         jsGzipBytes: gzipSize(jsText),
         thumbBytes: fs.statSync(built.thumb).size,
-      }, refs.get(design.id));
+      }, refs.get(design.id), design.openttd);
     }),
   };
-  const mapping = buildLegacyMapping(DESIGNS);
-  fs.writeFileSync(path.join(dir, "legacy-models.json"), `${JSON.stringify(mapping, null, 2)}\n`);
+  // the legacy table maps old ids onto the whole catalog, so a narrowed export has none
+  if (designs.length === DESIGNS.size) {
+    fs.writeFileSync(path.join(dir, "legacy-models.json"), `${JSON.stringify(buildLegacyMapping(DESIGNS), null, 2)}\n`);
+  }
   await bundleRuntime({ entryPoints:[path.join(REPO_ROOT,"generator/modelReference.ts")], outfile:path.join(dir,"model-reference.js"), bundle:true, format:"esm", platform:"neutral", target:"es2022" });
   fs.writeFileSync(path.join(dir, CATALOG_FILE), `${JSON.stringify(catalog, null, 2)}\n`);
   return { models, catalog, js };

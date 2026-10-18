@@ -107,8 +107,8 @@ Publishing these exports into the game remains a separate requested step.
 `test/commercial.test.ts` checks registration and exported parameters,
 the 3,000 combinations, all shape variants' finite coordinates, ground level,
 size and triangle budget, distinct architectural combinations and finishes
-that only recolour. `test/params.test.ts` also builds the shape coverage
-deterministically, checks every variant for coplanar overlaps and verifies
+that only recolour. The catalog sweep (`test/catalogSweep.ts`) also builds
+the defaults and a fixed sample of the other combinations (every one with `TEST_ALL_VARIANTS=1`, [../guide/setup-and-build.md](../guide/setup-and-build.md)), checks them for coplanar overlaps and verifies
 that the standalone JS builds the same geometry using real three.js.
 The existing model and export tests cover scopes and the generated files.
 After `pnpm build:models`, inspect `export/thumbs/comm-*.png` headlessly;

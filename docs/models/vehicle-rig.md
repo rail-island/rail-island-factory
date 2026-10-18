@@ -221,8 +221,8 @@ vehicle, loaded through GLTFLoader, bends at both hinges; every semi-trailer swi
 clear of its tractor and every steered tyre clears the body at full lock, checked
 triangle against triangle (`test/collision.ts`); the site poses a non-default
 variant with its own rig, and its sliders, preview key and arrow keys.
-`test/jsModel.test.ts` checks the JS group's node nesting and `userData.rig` against
-the GLB's nodes and scene extras; `test/export.test.ts` the meta entries' `rig`.
+The catalog sweep (`test/catalogSweep.ts`) checks the JS group's `userData.rig` against
+the GLB's scene extras and poses every rigged vehicle; `test/export.test.ts` the meta entries' `rig`.
 
 ## Low level of detail
 

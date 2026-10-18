@@ -9,6 +9,7 @@ import { COMPARED, compare } from "../generator/smallDieselComparison.ts";
 import { paramCombinations, type ParamValues } from "../generator/design.ts";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles.ts";
 import { isLeaf, type LeafNode, type TreeNode } from "../generator/sourceTree.ts";
+import { sample } from "./catalogCache";
 
 function leaves(n: TreeNode): LeafNode[] {
   return isLeaf(n) ? [n] : n.children.flatMap(leaves);
@@ -47,7 +48,7 @@ describe("small and shunting diesels from vlakosimdb", () => {
   });
 
   for (const d of SMALL_DIESELS)
-    for (const params of paramCombinations(d.params))
+    for (const params of sample(paramCombinations(d.params)))
       it(`${d.id} ${JSON.stringify(params)}: length, running gear, envelope and budget`, () => {
         const spec = SPECS[d.id]!;
         const { mesh, tris, nodes } = build(d.id, params);

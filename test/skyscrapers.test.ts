@@ -7,6 +7,7 @@ import { coverageCombinations, paramCombinations } from "../generator/design";
 import { glbStats } from "../generator/glbStats";
 import { parseGlb } from "../generator/glbTriangles";
 import { type ScopeNode, type TreeNode } from "../generator/sourceTree";
+import { sample } from "./catalogCache";
 
 /** Actual rendered extents, including any transforms, rather than primitive arguments. */
 function scopes(node: TreeNode, names: readonly string[]): ScopeNode[] {
@@ -88,7 +89,7 @@ describe("parametric skyscrapers", () => {
 
   for (const d of SKYSCRAPERS) {
     it(`${d.id}: every shape combination respects the triangle budget`, () => {
-      for (const combo of coverageCombinations(d.params, d.finishParams)) {
+      for (const combo of sample(coverageCombinations(d.params, d.finishParams))) {
         const stats = glbStats(d.build(combo).toGlb(d.id));
         expect(stats.triangles, JSON.stringify(combo)).toBeLessThanOrEqual(10_000);
       }

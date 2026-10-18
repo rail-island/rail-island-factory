@@ -6,6 +6,7 @@ import { DESIGNS } from "../generator/generate";
 import { glbStats } from "../generator/glbStats";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import inventory from "../assets/commercial/inventory.json";
+import { sample } from "./catalogCache";
 
 describe("commercial architecture", () => {
   it("registers eleven families in Commercial with usable legacy suggestions", () => {
@@ -41,7 +42,7 @@ describe("commercial architecture", () => {
     expect(extra.max[0] - extra.min[0]).toBeGreaterThan(1.5 * (wide.max[0] - wide.min[0]));
   });
   for (const d of COMMERCIAL) it(`${d.id}: all shapes are grounded, deterministic and below 10k triangles without flicker`, () => {
-    for (const p of coverageCombinations(d.params, d.finishParams)) {
+    for (const p of sample(coverageCombinations(d.params, d.finishParams))) {
       const glb = d.build(p).toGlb(d.id), s = glbStats(glb);
       expect(s.min[1]).toBeCloseTo(0, 5);
       expect(s.triangles).toBeLessThanOrEqual(10_000);

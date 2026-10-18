@@ -14,6 +14,7 @@ import { lodBudget } from '../generator/lod';
 import { findCoplanarOverlaps } from '../generator/coplanar';
 import { glbStats } from '../generator/glbStats';
 import { collectTriangles, parseGlb } from '../generator/glbTriangles';
+import { sample } from './catalogCache';
 
 const GROUP: ProceduralDesign[] = [...COMMERCIAL_BUILDINGS, ...COMMERCIAL, ...VILLAGE_HOUSES, ...STATIONS, ...FOUNTAINS];
 
@@ -30,7 +31,7 @@ describe('ordinary building LODs', () => {
     expect(lodBudget(STATIONS.find(d => d.id.endsWith('prague-main-station'))!)).toBe(500);
   });
   for (const d of GROUP) {
-    for (const v of coverageCombinations(d.params, d.finishParams)) {
+    for (const v of sample(coverageCombinations(d.params, d.finishParams))) {
       it(`${d.id} ${JSON.stringify(v)}: fits its budget, no windows, within the full model's bounds and colours`, () => {
         const low = d.buildLod(v), glb = low.toGlb('test'), budget = lodBudget(d);
         expect(low.triangleCount()).toBeLessThanOrEqual(budget);

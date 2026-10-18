@@ -350,7 +350,7 @@ Follow the applicable road or railroad vehicle skill linked above:
    build fails without them ([game-properties.md](game-properties.md)).
 2. `pnpm build:models`, then look at `export/thumbs/<id>.png` and the triangle
    count.
-3. `pnpm test` - every design's z-fighting, scope and source-tree checks run
-   over the vehicles too, plus the vehicle shape and triangle budget checks above.
+3. `pnpm test` - every design's z-fighting, scope and source-tree checks (the
+   catalog sweep, `test/catalogSweep.ts`) run over the vehicles too, plus the vehicle shape and triangle budget checks above.
 
 The former Nas tram load and Pao Karosa bus load are intentionally omitted. Legacy IDs map to their corresponding empty wagon with scale multiplier 1.

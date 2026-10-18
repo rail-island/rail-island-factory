@@ -5,6 +5,7 @@ import { buildLodModel } from '../generator/lodModel';
 import { coverageCombinations } from '../generator/design';
 import { collectTriangles, parseGlb } from '../generator/glbTriangles';
 import { LOD_GLASS } from '../generator/lodKit';
+import { sample } from './catalogCache';
 
 // The dedicated LODs of the trams, the CZ/SK livery coaches and the German
 // double-deck coaches (generator/lodTrams.ts).
@@ -21,7 +22,7 @@ describe('tram and coach LODs', () => {
     it(`${name}: a dedicated LOD that uses its budget, with glass, bands and gear on the rail`, () => {
       const d = DESIGNS.get(id)!;
       expect(d.buildLod).toBeDefined();
-      for (const v of coverageCombinations(d.params, d.finishParams)) {
+      for (const v of sample(coverageCombinations(d.params, d.finishParams))) {
         const m = buildLodModel(d, v);
         // within the budget and not far below it
         expect(m.triangleCount()).toBeLessThanOrEqual(lodBudget(d));

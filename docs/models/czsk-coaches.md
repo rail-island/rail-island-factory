@@ -163,4 +163,4 @@ Austrian) with an emblem and a number on both sides, the window and door counts
 per variant and operator, the paint materials per livery, the CD UIC-Z GLBs
 pinned by SHA-256 under the `operator` parameter, and the blue Bee as the Bee's
 layout recoloured.
-`test/params.test.ts` and `test/models.test.ts` cover the generic contract.
+The catalog sweep (`test/catalogSweep.ts`) covers the generic contract.

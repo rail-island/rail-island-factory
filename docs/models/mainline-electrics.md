@@ -133,5 +133,5 @@ triangle budget, and the collectors (the rear raised to 5.87 m and the front
 folded, level strips, the diamond's eight arms or the single arm's A-frame);
 every native landmark within its tolerance; valid running numbers; each side's
 own equipment (the DNT's windows and grille bays, the 180's louvres) and the
-112's pivots. `test/models.test.ts` and `test/params.test.ts` cover the designs
+112's pivots. The catalog sweep (`test/catalogSweep.ts`) covers the designs
 with the others (determinism, flicker, the JS model).

@@ -8,6 +8,7 @@ import { lodBudget } from '../generator/lod';
 import { glbStats } from '../generator/glbStats';
 import { collectTriangles, parseGlb } from '../generator/glbTriangles';
 import { LOD_GLASS } from '../generator/lodKit';
+import { sample } from './catalogCache';
 
 const ELECTRICS = ['cd-110', 'cd-130', 'cd-140', 'cd-169'];
 const DIESELS = ['cd-750', 'cd-749', 'cd-781', 'csd-t679-0', 'csd-t499', 'cd-771', 'cd-704', 'cd-710', 'cd-714', 'cd-742', 'db-212', 'muv-69'];
@@ -24,7 +25,7 @@ describe('dedicated locomotive LODs', () => {
     it(`${id}: every variant fits and uses its budget, standing on the rail`, () => {
       const d = DESIGNS.get(id)!;
       expect(d.buildLod).toBeDefined();
-      for (const v of coverageCombinations(d.params, d.finishParams)) {
+      for (const v of sample(coverageCombinations(d.params, d.finishParams))) {
         const { m } = faces(id, v);
         expect(m.triangleCount()).toBeLessThanOrEqual(lodBudget(d));
         expect(m.triangleCount()).toBeGreaterThanOrEqual(lodBudget(d) * 0.75);

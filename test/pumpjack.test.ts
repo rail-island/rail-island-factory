@@ -3,6 +3,7 @@
 // several samples. See docs/models/animation.md.
 
 import { describe, expect, it } from "vitest";
+import { proceduralId } from "../generator/modelId.ts";
 import { INDUSTRY } from "../generator/industry.ts";
 import { paramCombinations } from "../generator/design.ts";
 import { parseGlb } from "../generator/glbTriangles.ts";
@@ -10,8 +11,9 @@ import { findCoplanarOverlaps } from "../generator/coplanar.ts";
 import { glbStats } from "../generator/glbStats.ts";
 import { poseGlb, sampleCount } from "../generator/glbPose.ts";
 import { PUMP_CLIP, PUMP_SAMPLES, PUMP_STROKE, pumpjackLayout, pumpjackPoses } from "../generator/pumpjack.ts";
+import { sample } from "./catalogCache";
 
-const design = INDUSTRY.find((d) => d.id === "industry-oil-pump")!;
+const design = INDUSTRY.find((d) => proceduralId(d.id) === proceduralId("industry-oil-pump"))!;
 const dist = (a: [number, number], b: [number, number]) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 
 describe("the oil pumpjack", () => {
@@ -37,7 +39,7 @@ describe("the oil pumpjack", () => {
   }
 
   it("has one time-driven pumping clip on the moving parts", () => {
-    for (const p of paramCombinations(design.params)) {
+    for (const p of sample(paramCombinations(design.params))) {
       const { json } = parseGlb(design.build(p).toGlb("t"));
       const g = json as unknown as {
         nodes: Array<{ name: string }>;
@@ -53,7 +55,7 @@ describe("the oil pumpjack", () => {
   });
 
   it("stays clear of z-fighting and the ground at every eighth sample", () => {
-    for (const p of paramCombinations(design.params)) {
+    for (const p of sample(paramCombinations(design.params))) {
       const glb = design.build(p).toGlb("t");
       expect(sampleCount(glb)).toBe(PUMP_SAMPLES + 1);
       for (let k = 0; k <= PUMP_SAMPLES; k += 6) {

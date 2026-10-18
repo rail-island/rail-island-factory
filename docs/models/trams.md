@@ -158,4 +158,4 @@ widths, heights and bogie spacings; the wheels on standard gauge; exactly one
 raised collector at the wire (the KT8D5's second folded) and none on the metro;
 the articulated trams' sections, joints, hinges in their gaps and bogies on their
 own sections; the windows and doors on their native boxes and the recorded MAEs.
-`test/rig.test.ts` poses them through their JS modules.
+The catalog sweep (`test/catalogSweep.ts`) and `test/rig.test.ts` pose them through their JS modules.

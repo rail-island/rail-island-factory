@@ -17,9 +17,10 @@ import { glbStats } from "../generator/glbStats.ts";
 import { parseGlb } from "../generator/glbParse.ts";
 import { isLeaf, type TreeNode } from "../generator/sourceTree.ts";
 import type { ParamValues } from "../generator/design.ts";
+import { sample } from "./catalogCache";
 
 const DESIGNS_HERE = [...TRAM_DESIGNS, ...METRO_DESIGNS];
-const COMBOS = DESIGNS_HERE.flatMap((d) => paramCombinations(d.params).map((p) => ({ d, p, label: `${d.id} ${JSON.stringify(p)}` })));
+const COMBOS = DESIGNS_HERE.flatMap((d) => sample(paramCombinations(d.params)).map((p) => ({ d, p, label: `${d.id} ${JSON.stringify(p)}` })));
 
 const walk = (n: TreeNode): TreeNode[] => (isLeaf(n) ? [n] : [n, ...n.children.flatMap(walk)]);
 type Box = { min: number[]; max: number[] };
@@ -170,7 +171,7 @@ describe("the pantographs", () => {
       .map((n) => ({ id: n.id, head: extent(id, (x) => x === n.id + "/collector", params).max[1]! }));
   };
 
-  it.each(TRAM_DESIGNS.flatMap((d) => paramCombinations(d.params).map((p) => [`${d.id} ${JSON.stringify(p)}`, d.id, p] as const)))(
+  it.each(TRAM_DESIGNS.flatMap((d) => sample(paramCombinations(d.params)).map((p) => [`${d.id} ${JSON.stringify(p)}`, d.id, p] as const)))(
     "%s raises exactly one collector to the wire", (_, id, p) => {
       const heads = collectors(id, p);
       const raised = heads.filter((h) => h.head > 5);

@@ -140,5 +140,5 @@ and cab (leaning windscreens, no gangway at the cab, the folding door's four win
 the liveries repainting one body; the double-deck coaches' dropped floor and deck
 window heights; the double-deck cab's bands kept behind the XML slope (the `noseTop`
 regression); the DBmq's flat cab; valid running numbers and the triangle budget.
-`test/params.test.ts` and `test/models.test.ts` cover every combination (determinism,
-no flicker, envelope, GLB/JS agreement).
+The catalog sweep (`test/catalogSweep.ts`) covers determinism,
+no flicker, envelope and GLB/JS agreement for the defaults and a fixed sample of the other combinations (every one with `TEST_ALL_VARIANTS=1`, [../guide/setup-and-build.md](../guide/setup-and-build.md)).

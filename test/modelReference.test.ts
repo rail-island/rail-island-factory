@@ -4,12 +4,23 @@ import { DESIGNS } from '../generator/generate.ts';
 import { VEHICLE_CATALOG } from '../generator/vehicles.ts';
 import { SKYSCRAPER_CATALOG } from '../generator/skyscrapers.ts';
 import { metaEntry } from '../generator/catalog.ts';
-import { buildLegacyMapping } from '../generator/legacyMapping.ts';
+import { buildLegacyMapping, legacyTargets, measureModel } from '../generator/legacyMapping.ts';
 import { proceduralId, isProceduralId } from '../generator/modelId.ts';
 import { resolveModelReference, type LegacyModelTable } from '../generator/modelReference.ts';
 let table:LegacyModelTable;
 const models=new Map([...DESIGNS.values()].map(d=>[d.id,metaEntry(d,d.catalog??(d.id.startsWith("proc-vehicle-")?VEHICLE_CATALOG:SKYSCRAPER_CATALOG))]));
-beforeAll(()=>{table=buildLegacyMapping(DESIGNS);},60_000);
+// The table measures a few hundred models: measure them ahead, yielding between
+// them so the worker keeps answering Vitest (test/setup.ts), then build it.
+beforeAll(async()=>{
+  const sizes=new Map<string,number[]>();
+  for(const {design,params,modelId} of legacyTargets(DESIGNS)){
+    const key=JSON.stringify([modelId,params]);
+    if(sizes.has(key))continue;
+    sizes.set(key,measureModel(design,params,modelId));
+    await new Promise<void>(resolve=>setImmediate(resolve));
+  }
+  table=buildLegacyMapping(DESIGNS,(_d,params,modelId)=>sizes.get(JSON.stringify([modelId,params]))!);
+},120_000);
 describe('legacy references and procedural IDs',()=>{
  it('covers the complete creator snapshot, including all archived IDs',()=>{
   expect(Object.keys(table.entries).sort()).toEqual(sources.map(s=>s.id).sort());

@@ -97,7 +97,7 @@ https://creativecommons.org/publicdomain/zero/1.0/ .
 `test/towers.test.ts` fixes coverage of the original eight ids, tests every parameter
 combination for finite grounded geometry, the 10k triangle ceiling, determinism and
 coplanar material conflicts, and checks default placed heights. The shared
-parameter tests compare standalone JS vertices with GLB vertices for every variant.
+catalog sweep (`test/catalogSweep.ts`) compares standalone JS vertices with GLB vertices for the defaults and a fixed sample of the other combinations (every one with `TEST_ALL_VARIANTS=1`, [../guide/setup-and-build.md](../guide/setup-and-build.md)).
 Run `pnpm typecheck`, `pnpm test`, `pnpm build`; inspect all eight generated thumbnails.
 
 ## Procedural export contract

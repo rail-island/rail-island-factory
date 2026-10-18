@@ -58,6 +58,7 @@
 | [models/js-format.md](models/js-format.md) | the standalone JS model (`export/js/<id>.js`, `build(THREE)`), how it is bundled, the sizes |
 | [models/source-tree.md](models/source-tree.md) | the procedural source tree: scopes, `export/tree/<id>.json`, highlight and picking |
 | [models/export.md](models/export.md) | the export folder: JS models, thumbnails, `skyscrapers.meta.json`, `village.meta.json`, `vehicles.meta.json`, `catalog.json`; the in-memory GLB the build analyses |
+| [site/openttd-export.md](site/openttd-export.md) | the site's export list ("Add to export", the Export panel, its localStorage key) and the two formats it writes in the browser: an OpenTTD NewGRF (true-proportion sprites, articulated parts, the `openttd` block and its defaults, the GRF encoder) and a ZIP of GLBs |
 | [models/game-properties.md](models/game-properties.md) | what the game needs beyond geometry: vehicle weight, power, speed, draft and rope heights, per-variant figures, building plaza and block rules; declared on each design, checked, exported |
 | [site/catalog-site.md](site/catalog-site.md) | the factory.railisland.com site: listing, sorting, search, 3D preview |
 

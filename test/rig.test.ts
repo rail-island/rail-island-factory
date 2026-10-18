@@ -7,14 +7,15 @@ import { describe, expect, it } from "vitest";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { ALL_VEHICLES, DESIGNS, designGlb, designSource } from "../generator/generate";
+import { ALL_VEHICLES, DESIGNS } from "../generator/generate";
 import { parseGlb } from "../generator/glbTriangles";
-import { bundleDesign } from "../generator/jsModel";
 import { MeshBuilder } from "../generator/meshBuilder";
 import { drawJoint, jointTriangles, pose, steerAngles, steerLock, type JointRig, type SectionRig, type SteerRig, type VehicleRig } from "../generator/rig";
 import { block } from "../generator/vehicleParts";
 import { pageKey, poseControls, poseOf, posePreview, previewKey, steerLockDeg, type CatalogRecord } from "../src/catalogQuery";
 import { intersectingPairs, worldTriangles, type Tri } from "./collision";
+import { built, forget, glbOf, jsModuleOf, warm, type JsModule } from "./catalogCache";
+import { expectSealed, jointMesh } from "./rigHelpers";
 
 const DEG = Math.PI / 180;
 const STEER: SteerRig = { axles: [{ nodes: ["l", "r"], wheelbase: 5.5 }], maxAngleDeg: 45, track: 2.1 };
@@ -108,58 +109,20 @@ describe("jointTriangles", () => {
   });
 });
 
-type Module = {
-  default: (three: typeof THREE, params?: Record<string, string>) => THREE.Group;
-  pose: typeof pose;
-};
-const MODULES = new Map<string, Module>();
-async function moduleOf(id: string): Promise<Module> {
-  if (!MODULES.has(id)) {
-    const text = await bundleDesign(DESIGNS.get(proceduralId(id))!, designSource(proceduralId(id)));
-    MODULES.set(id, (await import(/* @vite-ignore */ `data:text/javascript;base64,${Buffer.from(text).toString("base64")}`)) as Module);
-  }
-  return MODULES.get(id)!;
-}
+type Module = JsModule & { pose: typeof pose };
+const moduleOf = (id: string) => jsModuleOf(id) as Promise<Module>;
 
-const RIGGED = ALL_VEHICLES.filter((d) => d.build().rig !== null).map((d) => [d.id] as const);
+/** Every vehicle's rig, read from its build (null for an unrigged one); the builds are let go. */
+const RIGS = new Map<string, VehicleRig | null>();
+for (const d of ALL_VEHICLES) {
+  await warm([d.id]);
+  RIGS.set(d.id, built(d.id).rig);
+  forget(d.id);
+}
+const RIGGED = ALL_VEHICLES.filter((d) => RIGS.get(d.id) !== null).map((d) => [d.id] as const);
 /** The rigged vehicles with steered wheels: every road vehicle (an articulated tram has none). */
-const STEERED = RIGGED.filter(([id]) => DESIGNS.get(proceduralId(id))!.build().rig!.steer !== undefined);
-const ARTICULATED = RIGGED.filter(([id]) => (DESIGNS.get(proceduralId(id))!.build().rig!.joints ?? []).length > 0);
-
-/** A joint's mesh: the joint node, or the child holding its material. */
-function jointMesh(root: THREE.Object3D, j: JointRig): THREE.Mesh {
-  let found: THREE.Mesh | undefined;
-  root.getObjectByName(j.node)!.traverse((o) => {
-    const mesh = o as THREE.Mesh;
-    if (mesh.isMesh && (mesh.material as THREE.Material).name === j.material) found = mesh;
-  });
-  return found!;
-}
-
-/**
- * Every joint of `root` is where the joint renderer puts it between its two
- * sections' current world matrices (world space, so any parent, wrapper or
- * importer's node transform is accounted for), as a plain triangle list.
- */
-function expectSealed(root: THREE.Object3D, rig: VehicleRig, tolerance = 1e-4): void {
-  root.updateMatrixWorld(true);
-  for (const j of rig.joints ?? []) {
-    const a = root.getObjectByName(rig.sections![j.sections[0]]!.node)!;
-    const b = root.getObjectByName(rig.sections![j.sections[1]]!.node)!;
-    const want = jointTriangles(j, rig.sections!, a.matrixWorld.elements, b.matrixWorld.elements);
-    const mesh = jointMesh(root, j);
-    const pos = mesh.geometry.getAttribute("position");
-    expect(mesh.geometry.index).toBeNull();
-    expect(pos.count).toBe(want.length);
-    const v = new THREE.Vector3();
-    let worst = 0;
-    want.forEach((w, i) => {
-      v.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld);
-      worst = Math.max(worst, v.distanceTo(new THREE.Vector3(...w)));
-    });
-    expect(worst, j.node).toBeLessThan(tolerance);
-  }
-}
+const STEERED = RIGGED.filter(([id]) => RIGS.get(id)!.steer !== undefined);
+const ARTICULATED = RIGGED.filter(([id]) => (RIGS.get(id)!.joints ?? []).length > 0);
 
 /** The hinge of every section behind the first is where the section ahead carries it. */
 function expectHinged(root: THREE.Object3D, rig: VehicleRig): void {
@@ -189,7 +152,7 @@ describe("the rigged vehicles", () => {
     expect(rail).toEqual(expect.arrayContaining(["proc-vehicle-tatra-kt8", "proc-vehicle-tatra-kt4", "proc-vehicle-kvag-gt4"]));
     for (const id of rail) {
       const d = DESIGNS.get(proceduralId(id))!;
-      const rig = d.build().rig!;
+      const rig = RIGS.get(id)!;
       expect(d.catalog?.category).toBe("Rail vehicles");
       expect(rig.steer).toBeUndefined();
       expect(rig.supports!.length).toBeGreaterThanOrEqual(2);
@@ -197,12 +160,12 @@ describe("the rigged vehicles", () => {
       expect(rig.sections.length).toBeGreaterThanOrEqual(2);
       expect(rig.joints).toHaveLength(rig.sections.length - 1);
     }
-    expect(rail.filter((id) => DESIGNS.get(proceduralId(id))!.build().rig!.sections)).toEqual(expect.arrayContaining(["proc-vehicle-tatra-kt8", "proc-vehicle-tatra-kt4", "proc-vehicle-kvag-gt4"]));
+    expect(rail.filter((id) => RIGS.get(id)!.sections)).toEqual(expect.arrayContaining(["proc-vehicle-tatra-kt8", "proc-vehicle-tatra-kt4", "proc-vehicle-kvag-gt4"]));
   });
 
   it.each(STEERED)("%s: its steered wheels are child nodes of the front body, pivoting at their centres", (id) => {
-    const rig = DESIGNS.get(proceduralId(id))!.build().rig!;
-    const { json } = parseGlb(designGlb(proceduralId(id)));
+    const rig = RIGS.get(id)!;
+    const { json } = parseGlb(glbOf(id));
     const nodes = json.nodes as Array<{ name: string; children?: number[]; translation?: number[] }>;
     const front = rig.sections?.[0]?.node ?? nodes[0]!.name;
     const parent = nodes.find((n) => n.name === front)!;
@@ -227,46 +190,7 @@ describe("the rigged vehicles", () => {
     expect([...bases].sort((a, b) => b - a)).toEqual(bases);
   });
 
-  it.each(RIGGED)("%s: pose() turns the wheels and lays the sections out as a hinged chain", async (id) => {
-    const mod = await moduleOf(id);
-    const group = mod.default(THREE);
-    const rig = group.userData.rig as VehicleRig;
-    const hinges = Math.max(0, (rig.sections?.length ?? 0) - 1);
-    const bend = Array.from({ length: hinges }, (_, i) => (i % 2 ? -1 : 1) * 0.4);
-    mod.pose(group, { steer: 0.3, bend });
-    if (rig.steer) {
-      const angles = steerAngles(rig.steer, 0.3);
-      rig.steer.axles.forEach((a, k) => a.nodes.forEach((n, i) => expect(group.getObjectByName(n)!.rotation.y).toBeCloseTo(angles[k]![i]!, 9)));
-    }
-    group.updateMatrixWorld(true);
-    const sections = rig.sections ?? [];
-    for (let i = 1; i < sections.length; i++) {
-      // the hinge is where both the section ahead and this one put it
-      const ahead = group.getObjectByName(sections[i - 1]!.node)!;
-      const self = group.getObjectByName(sections[i]!.node)!;
-      const p = sections[i]!.pivot;
-      const q = sections[i - 1]!.pivot;
-      const fromAhead = new THREE.Vector3(p[0] - q[0], p[1] - q[1], p[2] - q[2]).applyMatrix4(ahead.matrixWorld);
-      const fromSelf = new THREE.Vector3(0, 0, 0).applyMatrix4(self.matrixWorld);
-      expect(fromAhead.distanceTo(fromSelf)).toBeLessThan(1e-9);
-      expect(self.rotation.y - ahead.rotation.y).toBeCloseTo(bend[i - 1]!, 9);
-    }
-    expectSealed(group, rig);
-    // back to rest: the build's geometry again
-    mod.pose(group, {});
-    for (const a of rig.steer?.axles ?? []) for (const n of a.nodes) expect(group.getObjectByName(n)!.rotation.y).toBe(0);
-    const fresh = mod.default(THREE);
-    for (const s of sections) {
-      const n = group.getObjectByName(s.node)!;
-      expect(n.position.toArray()).toEqual(fresh.getObjectByName(s.node)!.position.toArray());
-      expect(n.rotation.y).toBe(0);
-    }
-    for (const j of rig.joints ?? []) {
-      const got = jointMesh(group, j).geometry.getAttribute("position").array;
-      const want = jointMesh(fresh, j).geometry.getAttribute("position").array;
-      expect(Math.max(...Array.from(got, (x, i) => Math.abs(x - want[i]!)))).toBeLessThan(1e-5);
-    }
-  }, 30_000);
+  // pose() on every rigged vehicle: the catalog sweep (test/catalogSweep.ts).
 
   it.each(ARTICULATED)("%s: renderJoint draws the joint in world space, inside any parent", async (id) => {
     const mod = await moduleOf(id);
@@ -401,7 +325,7 @@ function newClashes(rest: Array<{ t: Tri; owner: string }>, posed: Array<{ t: Tr
 }
 
 describe("the semi-trucks", () => {
-  const SEMIS = RIGGED.filter(([id]) => DESIGNS.get(proceduralId(id))!.build().rig!.sections?.[1]?.node === "trailer");
+  const SEMIS = RIGGED.filter(([id]) => RIGS.get(id)!.sections?.[1]?.node === "trailer");
 
   it("are the American truck and the two reproduced from the game", () => {
     expect(SEMIS.map(([id]) => id).sort()).toEqual(["proc-vehicle-american-truck", "proc-vehicle-cistern-semi-truck", "proc-vehicle-reefer-semi-truck"]);
@@ -461,7 +385,7 @@ describe("the site's pose sliders", () => {
 
   it("pose a non-default build with its own rig, not the catalog record's default one", async () => {
     const mod = await moduleOf("proc-vehicle-karosa-long");
-    const record = { rig: DESIGNS.get(proceduralId("proc-vehicle-karosa-long"))!.build().rig } as CatalogRecord;
+    const record = { rig: RIGS.get("proc-vehicle-karosa-long") } as CatalogRecord;
     const group = mod.default(THREE, { variant: "b941" });
     const own = group.userData.rig as VehicleRig;
     // the variant's hinge is not the default's, which is what the record holds

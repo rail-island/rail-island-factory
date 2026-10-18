@@ -32,12 +32,12 @@ const leanMeshBuilder: Plugin = {
 
 /**
  * The standalone JS of one design. `source` is the generator module that exports
- * the design's build function under its own name (`design.build.name`).
+ * the design's build function under its own name (`design.build.name`). A rigged
+ * model (steered wheels, sections, joints) also exports the code that poses it;
+ * `rigged` says whether it is one, built to find out when not given.
  */
-export async function bundleDesign(design: ProceduralDesign, source: string): Promise<string> {
+export async function bundleDesign(design: ProceduralDesign, source: string, rigged = design.build().rig !== null): Promise<string> {
   const fn = design.build.name;
-  // a rigged model (steered wheels, sections, joints) also exports the code that poses it
-  const rigged = design.build().rig !== null;
   const result = await build({
     stdin: {
       contents: [

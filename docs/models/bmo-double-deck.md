@@ -47,4 +47,4 @@ and cdRedDoors 0.215 pp mean absolute error.
 `test/csdCoaches.test.ts`: every livery within its landmark tolerances, length,
 axles, section, the dropped floor, the CSD lettering or the CD emblem reading
 correctly from outside, check digits, and the four liveries on one body (same
-band bounds, the livery materials). `test/params.test.ts` builds every livery.
+band bounds, the livery materials). The catalog sweep (`test/catalogSweep.ts`) builds the defaults and a fixed sample of the other combinations (every one with `TEST_ALL_VARIANTS=1`, [../guide/setup-and-build.md](../guide/setup-and-build.md)).

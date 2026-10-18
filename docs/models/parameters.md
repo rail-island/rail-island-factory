@@ -181,9 +181,11 @@ shape - instead of the full product. A design without `finishParams` is tested
 on every combination.
 
 `test/params.test.ts` checks the resolution and enumeration rules, that every
-parametric design's enums are well formed, that the meta entries list exactly
-the declared parameters, and, for every covered combination of every parametric design:
-deterministic GLB bytes, no coplanar overlaps, the rail envelope and budget, and
+parametric design's enums are well formed and that the meta entries list exactly
+the declared parameters. The catalog sweep (`test/catalogSweep.ts`) checks, for the
+defaults and a fixed sample of the other combinations of every parametric design (every
+one with `TEST_ALL_VARIANTS=1`, [../guide/setup-and-build.md](../guide/setup-and-build.md)):
+the defaults' bytes, no coplanar overlaps, the rail envelope and budget, and
 that the JS model's `build(THREE, combination)` draws the generator's triangles.
 `test/catalogQuery.test.ts` covers the URL round trip and the site's fallback to
 defaults; `test/csdCoaches.test.ts` the classic coach's two window layouts and

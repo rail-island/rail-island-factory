@@ -12,6 +12,7 @@ import { coverageCombinations, type ProceduralDesign } from '../generator/design
 import { findCoplanarOverlaps } from '../generator/coplanar';
 import { glbStats } from '../generator/glbStats';
 import { collectTriangles, parseGlb } from '../generator/glbTriangles';
+import { sample } from './catalogCache';
 
 const GROUP: ProceduralDesign[] = [
   ...SKYSCRAPERS, ...CHURCHES, ...GOTHIC_CATHEDRALS,
@@ -32,7 +33,7 @@ describe('landmark, tower and skyscraper LODs', () => {
     for (const d of GROUP) expect(d.buildLod?.name).toBe(`${d.build.name}Lod`);
   });
   for (const d of GROUP) {
-    for (const v of coverageCombinations(d.params, d.finishParams)) {
+    for (const v of sample(coverageCombinations(d.params, d.finishParams))) {
       it(`${d.id} ${JSON.stringify(v)}: fits 500 triangles, no windows, the full model's height and plan`, () => {
         const low = d.buildLod(v), glb = low.toGlb('test');
         expect(low.triangleCount()).toBeLessThanOrEqual(500);
