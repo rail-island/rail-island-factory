@@ -1,6 +1,7 @@
 // The whole site: the catalog of every model the factory builds, as the webapp's
 // Creator lists the game's models -- a sortable table on a wide screen, cards on
-// a narrow one, a search box, and a model page with an interactive 3D preview.
+// a narrow one, or a row of variant thumbnails per model; a search box, and a
+// model page with an interactive 3D preview.
 //
 // All of its state is the URL's query string (catalogQuery.ts parseView), so the
 // browser's back button walks it and a model page can be linked to.
@@ -10,6 +11,7 @@ import { COLUMNS, GROUPS, chipLabel, chipRows, parseView, prepareRows, queryRows
 import type { ModelCatalog } from "../generator/catalog.ts";
 import { ModelTable } from "./ModelTable";
 import { ModelCards } from "./ModelCards";
+import { ModelVariants } from "./ModelVariants";
 import { ModelDetail } from "./ModelDetail";
 import { ExportPanel } from "./ExportPanel";
 import { EMPTY_EXPORT, addEntry, entryFor, hasEntry, loadExport, saveExport, type ExportState } from "./exportList";
@@ -96,7 +98,7 @@ export function App() {
     update({ sort: col.key, dir: v.sort === col.key ? (v.dir === "asc" ? "desc" : "asc") : col.dir });
   };
   // A node belongs to one model's tree: opening, closing or stepping drops it.
-  const onOpen = (r: Row) => update({ model: r.id, tab: "specs", node: null, params: {} }, true);
+  const onOpen = (r: Row, params: Record<string, string> = {}) => update({ model: r.id, tab: "specs", node: null, params: { ...params } }, true);
   const onClose = () => update({ model: null, tab: "specs", node: null, params: {} }, true);
   const onStep = (delta: number) => {
     const list = listed();
@@ -195,6 +197,26 @@ export function App() {
                   {view().dir === "asc" ? "\u25b2" : "\u25bc"}
                 </button>
               </div>
+              <div class="factory-layout" role="group" aria-label="Layout">
+                <button
+                  type="button"
+                  class="factory-filter"
+                  classList={{ "factory-filter--on": view().layout === "table" }}
+                  aria-pressed={view().layout === "table"}
+                  onClick={() => update({ layout: "table" })}
+                >
+                  Table
+                </button>
+                <button
+                  type="button"
+                  class="factory-filter"
+                  classList={{ "factory-filter--on": view().layout === "thumbs" }}
+                  aria-pressed={view().layout === "thumbs"}
+                  onClick={() => update({ layout: "thumbs" })}
+                >
+                  Thumbnails
+                </button>
+              </div>
               <div class="factory-chips">
                 <Chip label="All" on={view().group === null} onPick={() => pickGroup(null)} />
                 <For each={GROUPS.filter((g) => chips().groups.includes(g.id))}>
@@ -219,6 +241,8 @@ export function App() {
             </div>
             {listed().length === 0 ? (
               <p class="factory-muted">{view().q ? `No model matches "${view().q}".` : "No model matches the chosen filter."}</p>
+            ) : view().layout === "thumbs" ? (
+              <ModelVariants rows={listed()} onOpen={onOpen} />
             ) : wide() ? (
               <ModelTable rows={listed()} sort={view().sort} dir={view().dir} onSort={onSort} onOpen={onOpen} />
             ) : (

@@ -1,11 +1,12 @@
 # The catalog site (factory.railisland.com)
 
 **Covers** - the Solid site that lists every model the factory builds: its data,
-the table and card layouts, sorting and search, the model page with its 3D
+the table, card and thumbnail layouts, browser-rendered variant thumbnails, sorting and search, the model page with its 3D
 preview, and the URL state.
 **Code** - `src/main.tsx`, `src/App.tsx`, `src/catalogQuery.ts`, `src/ModelTable.tsx`,
 `src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`,
 `src/SourceTreePanel.tsx`, `src/sourceTreeView.ts`, `src/Thumb.tsx`, `src/modelModule.ts`, `src/ExportPanel.tsx`,
+`src/ModelVariants.tsx`, `src/VariantThumb.tsx`, `src/variantThumbs.ts`, `src/thumbRender.ts`,
 `src/factory.css`, `src/favicon.svg`, `src/apple-touch-icon.png`, `src/boot.ts`, `src/bootEntry.ts`, `index.html`, `vite.config.ts`,
 `test/catalogQuery.test.ts`, `test/boot.test.ts`, `test/rig.test.ts` (the Pose sliders)
 **See also** - [../models/export.md](../models/export.md), [../guide/deploy.md](../guide/deploy.md), [openttd-export.md](openttd-export.md)
@@ -75,7 +76,44 @@ missing file with `index.html`, so the response type is checked too).
   plus the sorted-by column when it is something else, so a reorder never hides
   the number behind it.
 - **The toolbar** (sticky) holds the search box, a sort `<select>` over every
-  column, a direction toggle, the filter chip rows and the totals (models and triangles listed).
+  column, a direction toggle, the **Table / Thumbnails** layout switch, the
+  filter chip rows and the totals (models and triangles listed).
+
+## The thumbnail view
+
+The layout switch's **Thumbnails** (`?view=thumbs`; **Table**, the default,
+is the table or cards above) lists one row per model, on any screen width
+(`src/ModelVariants.tsx`): title, pool chip, id and the number of variants
+(`variantCount` - every combination of the parameters' values, a conditional
+parameter counted only where it applies; 1 for a fixed model), then the
+thumbnails of up to ten of them (`MAX_SHOWN_VARIANTS`), each captioned with its
+non-default values. Which ten (`representativeVariants` in `catalogQuery.ts`):
+the defaults first, then every other value of each parameter with the rest at
+their defaults, taken in turns across the parameters (each one's second value,
+then each one's third...), a conditional parameter under the first value that
+enables it; slots still left are filled with combinations spread evenly over all
+variants. The title opens the model; a thumbnail opens it at that variant
+(its values in `?p.<name>=`).
+
+**Variant thumbnails are rendered in the browser**, on demand
+(`src/VariantThumb.tsx`, `src/variantThumbs.ts`, `src/thumbRender.ts`) - the
+build ships only the default's picture. A thumbnail is asked for when its box
+comes within 200 px of the viewport and released when it leaves; renders run
+one at a time in the order asked, and one released before its turn is skipped.
+`thumbRender.ts` builds the variant from its JS module and draws it with one
+shared offscreen `WebGLRenderer` into a WebP (PNG where WebP cannot be written):
+a road or rail vehicle in the build's side view (orthographic, nose on the left,
+24 px per metre over the fixed -0.3..5.7 m window, so every vehicle shares one
+scale and one rail line; shown 90 px tall), everything else in the three-quarter
+view at 256 px. Each image is cached in IndexedDB (database
+`factory-variant-thumbs`), keyed by `variantThumbKey`: the model id, its
+`jsHash` ([../models/export.md](../models/export.md)), the resolved values and
+`VARIANT_THUMB_VERSION` - so a rebuilt model draws afresh, and changing the
+framing or lighting means bumping the version. The cache is a pure cache: no
+IndexedDB, a full quota or a blocked open only means rendering again; past 4,000
+images the oldest written go first. The export panel shows its entries with the
+same thumbnails, each at its own variant ([openttd-export.md](openttd-export.md)).
+The table and cards keep the build's thumbnails.
 
 **Columns are data** (`COLUMNS` in `catalogQuery.ts`): the table, the cards, the
 sort control, the comparator and the model page's spec list all read the one
@@ -150,10 +188,10 @@ another model or parameter choice stops them
 ([../models/animation.md](../models/animation.md)).
 
 `ModelViewer.tsx` (with its helpers `viewerHighlight.ts` and `modelModule.ts`, which
-fetches and builds a model's JS module) and the export (`exportRun.ts`) are the only
+fetches and builds a model's JS module), the variant thumbnail renderer (`thumbRender.ts`) and the export (`exportRun.ts`) are the only
 code importing three (plus `OrbitControls`, or the `GLTFExporter`), each reached
 through a lazy import, so the list loads ~30 kB of script and the renderer arrives
-only when a model opens or an export runs. It renders on demand
+only when a model opens, a variant thumbnail is needed or an export runs. It renders on demand
 (no damping, no idle loop), follows its pane with a ResizeObserver, frames the
 model on each selection, and discards a load that resolves after the selection
 moved on. On each framing it also fits the camera's `near`/`far` to the model
@@ -185,7 +223,7 @@ file says to run `pnpm build:models`.
 ## URL state
 
 All state is in the query string (`parseView`/`serializeView` in
-`catalogQuery.ts`): `?q=` search, `?cat=`, `?sub=` and `?sub2=` the three chip
+`catalogQuery.ts`): `?q=` search, `?view=thumbs` the thumbnail layout, `?cat=`, `?sub=` and `?sub2=` the three chip
 rows (the Creator's names; a lower one only under the one above), `?sort=` and `?dir=` ordering, `?model=` the
 open model, `?tab=source` or `?tab=references` its Source or Images tab and `?node=` the selected tree node (kept
 only with the Source tab; a node id no longer in the tree selects nothing), and

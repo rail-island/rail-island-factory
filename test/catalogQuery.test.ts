@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   COLUMNS, DEFAULT_SORT, cellFile, cellText, column, compareRows, effectiveParams, formatBytes, isDefaultParams, nonDefaultParams, parseView,
   NO_CHIPS, chipLabel, chipRows, groupOf, prepareRows, queryRows, serializeView,
+  MAX_SHOWN_VARIANTS, representativeVariants, variantCaption, variantCount, variantThumbKey,
   type CatalogRecord,
 } from "../src/catalogQuery";
 
@@ -161,12 +162,12 @@ describe("the filter chips", () => {
 describe("the URL state", () => {
   it("round-trips, leaving defaults out", () => {
     expect(serializeView(parseView(""))).toBe("");
-    const v = { q: "tower", ...NO_CHIPS, sort: "triangles", dir: "asc" as const, model: "proc-building-sky-pagoda", tab: "specs" as const, node: null, params: {} };
+    const v = { q: "tower", layout: "table" as const, ...NO_CHIPS, sort: "triangles", dir: "asc" as const, model: "proc-building-sky-pagoda", tab: "specs" as const, node: null, params: {} };
     expect(parseView(serializeView(v))).toEqual(v);
   });
 
   it("carries the source tab and the selected node of an open model", () => {
-    const v = { q: "", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "proc-building-sky-art-deco", tab: "source" as const, node: "tier-3/piers", params: {} };
+    const v = { q: "", layout: "table" as const, ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "proc-building-sky-art-deco", tab: "source" as const, node: "tier-3/piers", params: {} };
     expect(serializeView(v)).toBe("?model=proc-building-sky-art-deco&tab=source&node=tier-3%2Fpiers");
     expect(parseView(serializeView(v))).toEqual(v);
     // the root scope's id is the empty string, and still a selection
@@ -175,7 +176,7 @@ describe("the URL state", () => {
   });
 
   it("carries the references tab of an open model, without a node", () => {
-    const v = { q: "", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "proc-vehicle-cd-150", tab: "references" as const, node: null, params: {} };
+    const v = { q: "", layout: "table" as const, ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "proc-vehicle-cd-150", tab: "references" as const, node: null, params: {} };
     expect(serializeView(v)).toBe("?model=proc-vehicle-cd-150&tab=references");
     expect(parseView(serializeView(v))).toEqual(v);
     expect(parseView("?model=proc-vehicle-cd-150&tab=references&node=crown")).toMatchObject({ tab: "references", node: null });
@@ -185,11 +186,11 @@ describe("the URL state", () => {
     expect(parseView("?tab=source&node=crown")).toMatchObject({ model: null, tab: "specs", node: null, params: {} });
     expect(parseView("?model=proc-building-sky-pagoda&node=crown")).toMatchObject({ tab: "specs", node: null });
     expect(parseView("?model=proc-building-sky-pagoda&tab=bogus")).toMatchObject({ tab: "specs", node: null });
-    expect(serializeView({ q: "", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc", model: "proc-building-sky-pagoda", tab: "specs", node: "crown", params: {} })).toBe("?model=proc-building-sky-pagoda");
+    expect(serializeView({ q: "", layout: "table", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc", model: "proc-building-sky-pagoda", tab: "specs", node: "crown", params: {} })).toBe("?model=proc-building-sky-pagoda");
   });
 
   it("carries a parametric model's chosen values, only with an open model", () => {
-    const v = { q: "", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "proc-vehicle-csd-classic-green-coach", tab: "specs" as const, node: null, params: { variant: "classB" } };
+    const v = { q: "", layout: "table" as const, ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "proc-vehicle-csd-classic-green-coach", tab: "specs" as const, node: null, params: { variant: "classB" } };
     expect(serializeView(v)).toBe("?model=proc-vehicle-csd-classic-green-coach&p.variant=classB");
     expect(parseView(serializeView(v))).toEqual(v);
     expect(parseView("?p.variant=classB").params).toEqual({});
@@ -198,7 +199,7 @@ describe("the URL state", () => {
 
   it("gives a column its own starting direction and ignores an unknown sort", () => {
     expect(parseView("?sort=triangles").dir).toBe("desc");
-    expect(parseView("?sort=bogus&dir=sideways")).toEqual({ q: "", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc", model: null, tab: "specs", node: null, params: {} });
+    expect(parseView("?sort=bogus&dir=sideways")).toEqual({ q: "", layout: "table", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc", model: null, tab: "specs", node: null, params: {} });
   });
 });
 
@@ -219,6 +220,73 @@ describe("parameters", () => {
     expect(isDefaultParams(coach, { variant: "bogus" })).toBe(true);
     expect(nonDefaultParams(coach, { variant: "classA" })).toEqual({});
     expect(nonDefaultParams(coach, { variant: "classB" })).toEqual({ variant: "classB" });
+  });
+});
+
+describe("the layout switch", () => {
+  it("keeps the thumbnail layout in the URL, the table being the default", () => {
+    expect(parseView("").layout).toBe("table");
+    expect(parseView("?view=thumbs").layout).toBe("thumbs");
+    expect(parseView("?view=bogus").layout).toBe("table");
+    const v = { ...parseView(""), layout: "thumbs" as const, q: "tower" };
+    expect(serializeView(v)).toBe("?q=tower&view=thumbs");
+    expect(parseView(serializeView(v))).toEqual(v);
+  });
+});
+
+describe("variants", () => {
+  const livery = { name: "livery", title: "Livery", default: "red", values: ["red", "blue", "green"].map((v) => ({ value: v, title: v.toUpperCase() })) };
+  const loco = rec("veh-loco", "Loco", 100, {
+    params: [livery, { name: "cab", title: "Cab", default: "one", values: [{ value: "one", title: "One cab" }, { value: "two", title: "Two cabs" }] }],
+  });
+  // a TGV-like set: `cars` applies only to the `set` unit
+  const tgv = rec("veh-tgv", "TGV", 100, {
+    params: [
+      { name: "unit", title: "Unit", default: "power", values: [{ value: "power", title: "Power car" }, { value: "set", title: "Set" }] },
+      { name: "cars", title: "Cars", default: "1", when: { name: "unit", values: ["set"] }, values: ["1", "2", "3"].map((v) => ({ value: v, title: `${v} cars` })) },
+    ],
+  });
+
+  it("counts every combination, a conditional parameter only where it applies", () => {
+    expect(variantCount(rec("sky-x", "X", 1))).toBe(1);
+    expect(variantCount(loco)).toBe(6);
+    expect(variantCount(tgv)).toBe(4);
+    const big = rec("big", "Big", 1, {
+      params: ["a", "b", "c", "d", "e", "f"].map((n) => ({ name: n, title: n, default: "0", values: Array.from({ length: 10 }, (_, i) => ({ value: String(i), title: String(i) })) })),
+    });
+    expect(variantCount(big)).toBe(1_000_000);
+  });
+
+  it("picks the defaults first, then each parameter's values in turns, then combinations, at most ten", () => {
+    expect(representativeVariants(rec("sky-x", "X", 1))).toEqual([{}]);
+    // one parameter at a time, then the combinations left, spread over all of them
+    expect(representativeVariants(loco)).toEqual([{}, { livery: "blue" }, { cab: "two" }, { livery: "green" }, { livery: "blue", cab: "two" }, { livery: "green", cab: "two" }]);
+    expect(representativeVariants(loco, 4)).toHaveLength(4);
+    expect(representativeVariants(tgv)).toEqual([{}, { unit: "set" }, { unit: "set", cars: "2" }, { unit: "set", cars: "3" }]);
+    const many = rec("many", "Many", 1, {
+      params: [{ name: "livery", title: "Livery", default: "v0", values: Array.from({ length: 30 }, (_, i) => ({ value: `v${i}`, title: `V${i}` })) }],
+    });
+    const shown = representativeVariants(many);
+    expect(shown).toHaveLength(MAX_SHOWN_VARIANTS);
+    expect(new Set(shown.map((p) => JSON.stringify(p))).size).toBe(MAX_SHOWN_VARIANTS);
+  });
+
+  it("captions a variant by its non-default values", () => {
+    expect(variantCaption(loco, {})).toBe("Default");
+    expect(variantCaption(loco, { livery: "blue", cab: "two" })).toBe("BLUE / Two cabs");
+  });
+
+  // Regression: the export panel showed the default's build thumbnail for every
+  // listed variant. Its thumbnail is now looked up by the variant's own key.
+  it("keys a variant thumbnail by the variant, the defaults and unknown values collapsing", () => {
+    expect(variantThumbKey(loco, { livery: "blue" })).not.toBe(variantThumbKey(loco, {}));
+    expect(variantThumbKey(loco, { livery: "red" })).toBe(variantThumbKey(loco, {}));
+    expect(variantThumbKey(loco, { livery: "bogus", colour: "x" })).toBe(variantThumbKey(loco, {}));
+    expect(variantThumbKey(loco, { livery: "blue", cab: "two" })).toBe(variantThumbKey(loco, { cab: "two", livery: "blue" }));
+  });
+
+  it("changes a thumbnail's key when the model's build changes", () => {
+    expect(variantThumbKey({ ...loco, jsHash: "aaaa" }, {})).not.toBe(variantThumbKey({ ...loco, jsHash: "bbbb" }, {}));
   });
 });
 

@@ -15,7 +15,8 @@ entries). The button is on every model; the GRF takes only vehicles (below).
 The app bar's **Export (n)** button opens the export panel over the listing or
 the model page:
 
-- the entries, each with its thumbnail, title and variant ("Livery: CD 162", or
+- the entries, each with the thumbnail of that variant (rendered in the browser
+  and cached, as the thumbnail view's are: [catalog-site.md](catalog-site.md)), title and variant ("Livery: CD 162", or
   "Default variant"), and a remove button; an entry the chosen format cannot take
   is greyed with the reason;
 - the **set name** (the GRF's name and the source of its GRF id; the file name);

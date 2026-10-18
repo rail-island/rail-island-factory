@@ -117,6 +117,11 @@ export interface CatalogRecord extends MetaEntry {
   jsBytes: number;
   /** The JS model as gzip -9 would send it. */
   jsGzipBytes: number;
+  /**
+   * The first 16 hex digits of the JS model's SHA-256: changes whenever the
+   * model does, so the site keys its browser-rendered variant thumbnails on it.
+   */
+  jsHash?: string;
   thumbBytes: number;
   triangles: number;
   vertices: number;
@@ -145,6 +150,8 @@ export interface ModelCatalog {
 export interface BuiltFacts {
   jsBytes: number;
   jsGzipBytes: number;
+  /** See CatalogRecord.jsHash. */
+  jsHash?: string;
   thumbBytes: number;
   triangles: number;
   vertices: number;
@@ -228,6 +235,7 @@ export function catalogRecord(entry: MetaEntry, facts: BuiltFacts, references: R
     jsUrl: `js/${entry.js}`,
     jsBytes: facts.jsBytes,
     jsGzipBytes: facts.jsGzipBytes,
+    ...(facts.jsHash ? { jsHash: facts.jsHash } : {}),
     thumbBytes: facts.thumbBytes,
     triangles: facts.triangles,
     vertices: facts.vertices,
