@@ -1,6 +1,7 @@
 {
   "name": "rail-island-factory",
   "private": true,
+  "license": "MIT",
   "version": "0.1.0",
   "type": "module",
   "description": "Procedurally generated Rail Island models, and the catalog site that shows them (factory.railisland.com)",

@@ -87,3 +87,9 @@ pnpm install
 pnpm dev     # build the models and run the site on http://localhost:5173
 pnpm test
 ```
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+Third-party reference assets retain their respective licenses, documented in
+each asset folder's `SOURCES.md`.
