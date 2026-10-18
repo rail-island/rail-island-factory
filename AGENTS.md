@@ -9,7 +9,7 @@ locomotives, units, coaches, wagons, trams and metro, and steam locomotives whos
 wheels and rods animate, docs/models/animation.md), and procedural reproductions of the
 game's hand-authored landmarks, stations, aircraft, ships, cable car cabins and trucks
 (docs/models/reproductions.md), plus a small airplane, a parametric chairlift chair and
-the JR KiHa 40 railcar. The build writes an
+the JR KiHa 40 railcar and the DR VT 18.16 "Delfin" express unit (docs/models/dr-vt1816.md). The build writes an
 export folder (standalone JS models, thumbnails, `skyscrapers.meta.json`, `village.meta.json`, `vehicles.meta.json`) that the game repository, `rail-island-webapp`,
 imports - the factory is the source of these models and of what the game needs of
 them (weight, power, speed, plaza rules: docs/models/game-properties.md), the game a

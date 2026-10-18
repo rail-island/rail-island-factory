@@ -1,0 +1,695 @@
+// The DR VT 18.16 "Delfin" (in Czech "Delfin", the SVT Gorlitz), the
+// Deutsche Reichsbahn's diesel-hydraulic express unit of 1963-68: one design
+// `veh-dr-vt1816` whose `unit` picks the car - the power car with its long
+// rounded nose, the raised cockpit and the engine room's portholes (the
+// default), or the intermediate trailer. A four-car train is power car,
+// trailer, trailer, power car turned (98.06 m over the couplers).
+//
+// Modelled from the DEWAG sectional drawing of 175 015 / 016 (public domain,
+// assets/dr-vt1816/drawing-vt175-section.png) and photographs: body lengths
+// 24.81 m (power car) and 22.82 m (trailer), 0.70 m between the bodies, roof
+// 4.20 m and cockpit 4.25 m, coupler at 1.03 m, the power car's motor bogie
+// (4.0 m wheelbase) 5.15 m behind the nose and its other bogie 16.5 m further,
+// the trailers' bogies 3.16 m from the ends and 16.5 m apart (2.5 m wheelbase,
+// 900 mm wheels). The bodies are lofted here through vertical slices whose
+// shoulder, crown, bottom and paint edges vary along the car, so the nose's hood
+// and the red sweep under it are exact. See docs/models/dr-vt1816.md.
+
+import { ngon, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
+import type { Vec3 } from "./meshCore.ts";
+import { Coach } from "./csdCoachParts.ts";
+import { resolveParams, type GameProperties, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
+import { block, side } from "./vehicleParts.ts";
+import { centreCoupler, DMU_CATALOG, enumParam } from "./emuParts.ts";
+import { unitBogie } from "./unitParts.ts";
+import { strokeText, strokeWidth } from "./strokeFont.ts";
+import { LOD_GLASS, lodPolygon, type LodBand } from "./lodKit.ts";
+import { bogieParts, fitUnit, roofPart, sideGlass, type UnitBody } from "./lodUnits.ts";
+
+export type Vt1816Unit = "powerCar" | "trailer";
+
+export const VT1816_PARAMS: readonly ParamSpec[] = [
+  enumParam("unit", "Car", {
+    powerCar: "Power car",
+    trailer: "Trailer",
+  }),
+];
+
+/** Body lengths (m), nose tip or end wall to end wall, from the drawing. */
+export const VT1816_POWER_BODY = 24.81;
+export const VT1816_TRAILER_BODY = 22.82;
+/** Half the 0.70 m between two bodies: each car's coupling plane; the nose coupler reaches as far. */
+export const VT1816_GAP = 0.35;
+/** Lengths over the couplers: 2 x 25.51 + 2 x 23.52 = 98.06 m, the published four-car length. */
+export const VT1816_LENGTH: Record<Vt1816Unit, number> = {
+  powerCar: VT1816_POWER_BODY + 2 * VT1816_GAP,
+  trailer: VT1816_TRAILER_BODY + 2 * VT1816_GAP,
+};
+/** Axles, metres back from the nose tip (power car) or the +X end wall (trailer). */
+export const VT1816_AXLES: Record<Vt1816Unit, number[]> = {
+  // the motor bogie: pivot 5.15 m, axles 1.94 m ahead and 2.06 m behind it
+  powerCar: [3.21, 7.21, 20.4, 22.9],
+  trailer: [1.91, 4.41, 18.41, 20.91],
+};
+/** The running number on the power car's nose and sides (the museum unit of the photos). */
+export const VT1816_NUMBER = "VT 18.16.07";
+
+/** Half the body width (2.94 m). */
+const W = 1.47;
+const WHEEL_R = 0.45;
+const COUPLER_Y = 1.03;
+/** The window band of every car: sills and heads. */
+const WIN: [number, number] = [2.08, 2.86];
+
+const c = (color: string, roughness = 0.5, metallic?: number): MaterialSpec => ({ color, roughness, ...(metallic !== undefined ? { metallic } : {}) });
+const PALETTE: Record<string, MaterialSpec> = {
+  cream: c("#ece5ca", 0.45),
+  red: c("#a51f2d", 0.45),
+  black: c("#1d1d1f", 0.6),
+  white: c("#f2f2ee", 0.45),
+  blue: c("#28479a", 0.45),
+  skirt: c("#bfc2c1", 0.55),
+  roof: c("#d6d2c0", 0.7),
+  glass: c("#26303a", 0.12, 0.2),
+  rubber: c("#1c1c1e", 0.9),
+  chrome: c("#c9ccd0", 0.25, 0.6),
+  louvre: c("#d6d0b8", 0.6),
+  slat: c("#5f5c54", 0.7),
+  lettering: c("#ece5ca", 0.5),
+  silver: c("#d8dadc", 0.3, 0.5),
+  lampWhite: c("#f3f5f6", 0.2),
+  lampRed: c("#c8202c", 0.3),
+  vent: c("#a9a79e", 0.7),
+  engine: c("#2e3033", 0.8),
+  motor: c("#2e3033", 0.8),
+  coupler: c("#2a2b2d", 0.6, 0.3),
+  equipment: c("#3b3d40", 0.8),
+};
+
+type Pt = [number, number];
+const lerp = (t: readonly Pt[], x: number): number => {
+  if (x <= t[0]![0]) return t[0]![1];
+  for (let i = 1; i < t.length; i++) {
+    const [xa, ya] = t[i - 1]!;
+    const [xb, yb] = t[i]!;
+    if (x <= xb + 1e-9) return xb - xa < 1e-9 ? yb : ya + ((x - xa) / (xb - xa)) * (yb - ya);
+  }
+  return t[t.length - 1]![1];
+};
+
+// --- the body: vertical slices along the car ---------------------------------------------------
+
+/** The fixed stripes at the floor: the black band, white lines either side of the blue one. */
+const STRIPES: Array<[number, string]> = [[1.05, "black"], [1.22, "white"], [1.25, "blue"], [1.31, "white"], [1.33, "red"]];
+/** Segments of the roof's quarter arc. */
+const ARC = 8;
+
+/** A car's body as functions of d, metres back from its +X end. */
+interface Profile {
+  length: number;
+  /** Half width. */
+  w: (d: number) => number;
+  /** Bottom of the sides (skirts). */
+  B: (d: number) => number;
+  /** Top of the vertical sides, where the roof's (or the hood's) arc starts. */
+  S: (d: number) => number;
+  /** The crown. */
+  C: (d: number) => number;
+  /** Top of the red: the cream above it. */
+  H: (d: number) => number;
+  /** The arc's paint between two stations, by their middle. */
+  top: (d: number) => string;
+  stations: number[];
+}
+
+/** One half slice (z >= 0) from the bottom's centre to the crown: points and the paint of each edge. */
+function halfSlice(p: Profile, d: number): { pts: Pt[]; mats: string[] } {
+  const w = p.w(d), B = p.B(d), S = p.S(d), C = p.C(d), H = p.H(d);
+  const pts: Pt[] = [[0, B], [0.92 * w, B], [w, B + 0.08], ...STRIPES.map(([y]): Pt => [w, y]), [w, H], [w, S]];
+  const mats = ["equipment", "skirt", "skirt", ...STRIPES.map(([, m]) => m), "cream"];
+  for (let i = 1; i <= ARC; i++) {
+    const t = (i / ARC) * (Math.PI / 2);
+    pts.push(i === ARC ? [0, C] : [w * Math.cos(t), S + (C - S) * Math.sin(t)]);
+    mats.push("arc");
+  }
+  return { pts, mats };
+}
+
+/** The bands of a slice from bottom to crown, for its end caps. */
+function sliceBands(p: Profile, d: number): Array<[number, number, string]> {
+  const ys = [p.B(d), ...STRIPES.map(([y]) => y), p.H(d), p.S(d), p.C(d)];
+  const mats = ["skirt", ...STRIPES.map(([, m]) => m), "cream", p.top(d)];
+  return mats.map((m, i): [number, number, string] => [ys[i]!, ys[i + 1]!, m]);
+}
+
+/** A convex polygon (z, y) cut to y0 <= y <= y1. */
+function clipY(poly: Pt[], y0: number, y1: number): Pt[] {
+  const cut = (ring: Pt[], h: number, above: boolean): Pt[] => {
+    const out: Pt[] = [];
+    for (let i = 0; i < ring.length; i++) {
+      const a = ring[i]!;
+      const b = ring[(i + 1) % ring.length]!;
+      const inA = above ? a[1] >= h - 1e-9 : a[1] <= h + 1e-9;
+      const inB = above ? b[1] >= h - 1e-9 : b[1] <= h + 1e-9;
+      if (inA) out.push(a);
+      if (inA !== inB) {
+        const t = (h - a[1]) / (b[1] - a[1]);
+        out.push([a[0] + t * (b[0] - a[0]), h]);
+      }
+    }
+    return out;
+  };
+  return cut(cut(poly, y0, true), y1, false);
+}
+
+const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const add = (a: Vec3, b: Vec3): Vec3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+const mul = (a: Vec3, k: number): Vec3 => [a[0] * k, a[1] * k, a[2] * k];
+const dot = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const cross = (a: Vec3, b: Vec3): Vec3 => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const unit = (a: Vec3): Vec3 => mul(a, 1 / Math.max(1e-12, Math.hypot(...a)));
+
+/**
+ * Lofts half slices (z >= 0, mirrored for the other side) between stations at
+ * model x `xs`: quads wound outward from the axis at height `axisY`.
+ */
+function loftHalves(m: MeshBuilder, xs: number[], halves: Pt[][], mat: (seg: number, edge: number) => string, axisY: (seg: number) => number): void {
+  for (const s of [1, -1])
+    for (let i = 0; i + 1 < xs.length; i++) {
+      const [ha, hb] = [halves[i]!, halves[i + 1]!];
+      const yc = axisY(i);
+      const xm = (xs[i]! + xs[i + 1]!) / 2;
+      for (let k = 0; k + 1 < ha.length; k++) {
+        const P = (h: Pt[], x: number, j: number): Vec3 => [x, h[j]![1], s * h[j]![0]];
+        const a = P(ha, xs[i]!, k), b = P(ha, xs[i]!, k + 1), cc = P(hb, xs[i + 1]!, k + 1), d = P(hb, xs[i + 1]!, k);
+        const centre = mul(add(add(a, b), add(cc, d)), 0.25);
+        let n = cross(sub(cc, a), sub(d, b));
+        if (Math.hypot(...n) < 1e-12) continue;
+        if (dot(n, sub(centre, [xm, yc, 0])) < 0) n = mul(n, -1);
+        m.facets(mat(i, k), [a, b, cc, a, cc, d], n);
+      }
+    }
+}
+
+/** A slice's end cap at model x, facing `dir` along x, painted in `bands`. */
+function capSlice(m: MeshBuilder, half: Pt[], x: number, dir: number, bands: Array<[number, number, string]>): void {
+  const ring: Pt[] = [...half, ...half.slice(1, -1).reverse().map(([z, y]): Pt => [-z, y])];
+  for (const [y0, y1, mat] of bands) {
+    const poly = clipY(ring, y0, y1);
+    if (poly.length < 3) continue;
+    const tris: Vec3[] = [];
+    for (let i = 1; i + 1 < poly.length; i++) tris.push(...[poly[0]!, poly[i]!, poly[i + 1]!].map(([z, y]): Vec3 => [x, y, z]));
+    m.facets(mat, tris, [dir, 0, 0]);
+  }
+}
+
+/** Draws a car's body: the lofted slices and both end caps. */
+function drawBody(m: MeshBuilder, p: Profile, X: (d: number) => number): void {
+  const ds = p.stations;
+  const halves = ds.map((d) => halfSlice(p, d));
+  m.scope("shell", () =>
+    loftHalves(m, ds.map(X), halves.map((h) => h.pts), (seg, edge) => {
+      const mat = halves[seg]!.mats[edge]!;
+      return mat === "arc" ? p.top((ds[seg]! + ds[seg + 1]!) / 2) : mat;
+    }, (seg) => {
+      const d = (ds[seg]! + ds[seg + 1]!) / 2;
+      return (p.B(d) + p.C(d)) / 2;
+    }),
+  );
+  m.scope("end caps", () => {
+    capSlice(m, halves[0]!.pts, X(ds[0]!), 1, sliceBands(p, ds[0]!));
+    capSlice(m, halves[ds.length - 1]!.pts, X(ds[ds.length - 1]!), -1, sliceBands(p, ds[ds.length - 1]!));
+  });
+}
+
+// --- the profiles -----------------------------------------------------------------------------
+
+/** The nose's plan: a flat front 0.5 m wide rounding into the sides over 1.4 m (an ellipse). */
+const NOSE_W0 = 0.25;
+const NOSE_D = 1.4;
+const noseW = (d: number): number => (d >= NOSE_D ? W : NOSE_W0 + (W - NOSE_W0) * Math.sqrt(Math.max(0, 1 - (1 - d / NOSE_D) ** 2)));
+
+/** The power car's side shoulder rising from the nose to the cant rail (the drawing's crease line). */
+const POWER_S: Pt[] = [[0, 2.24], [0.2, 2.28], [0.6, 2.35], [1.9, 2.55], [3.55, 2.85], [5.0, 3.08], [6.4, 3.2]];
+/** The hood's crown from the nose's top over the windscreen's foot to the roof behind the cockpit. */
+const POWER_C: Pt[] = [[0, 2.3], [0.2, 2.38], [0.6, 2.64], [1.2, 2.85], [1.9, 3.02], [3.55, 3.46], [6.0, 3.85], [9.0, 4.08], [11.1, 4.2]];
+/** The red rises toward the nose. */
+const POWER_H: Pt[] = [[0, 2.2], [1.0, 2.13], [3.0, 2.01], [6.0, 1.95]];
+/** The bottom: the nose's chin, the skirt over the motor bogie, open over the rear bogie. */
+const POWER_B: Pt[] = [[0, 0.62], [0.12, 0.5], [0.35, 0.43], [1.2, 0.45], [1.9, 0.55], [2.4, 0.71], [19.5, 0.71], [19.6, 0.95], [VT1816_POWER_BODY, 0.95]];
+/** Where the cockpit's roof meets the car's: the hood is cream ahead of it. */
+const HOOD_END = 11.1;
+
+const POWER: Profile = {
+  length: VT1816_POWER_BODY,
+  w: noseW,
+  B: (d) => lerp(POWER_B, d),
+  S: (d) => lerp(POWER_S, d),
+  C: (d) => lerp(POWER_C, d),
+  H: (d) => lerp(POWER_H, d),
+  top: () => "cream",
+  stations: [...new Set([0, 0.03, 0.08, 0.15, 0.25, 0.4, 0.6, 0.85, 1.1, 1.4, 1.9, 2.4, 3.0, 3.55, 4.3, 5.0, 6.0, 6.4, 7.5, 9.0, 10.0, 11.1, 12.0, ...POWER_B.map(([d]) => d)])].sort((a, b) => a - b),
+};
+
+/** The trailer's bottom: the door steps at the ends, open over the bogies, the apron between them. */
+const TRAILER_B: Pt[] = [[0, 0.64], [1.05, 0.64], [1.1, 0.95], [5.6, 0.95], [6.1, 0.45], [16.72, 0.45], [17.22, 0.95], [21.72, 0.95], [21.77, 0.64], [VT1816_TRAILER_BODY, 0.64]];
+
+const TRAILER: Profile = {
+  length: VT1816_TRAILER_BODY,
+  w: () => W,
+  B: (d) => lerp(TRAILER_B, d),
+  S: () => 3.2,
+  C: () => 4.2,
+  H: () => 1.95,
+  top: () => "roof",
+  stations: TRAILER_B.map(([d]) => d),
+};
+
+/** The model x of d: each car is centred between its coupling planes. */
+const xOf = (unit: Vt1816Unit) => (d: number): number => (unit === "powerCar" ? VT1816_POWER_BODY : VT1816_TRAILER_BODY) / 2 - d;
+
+// --- side fittings --------------------------------------------------------------------------
+
+interface Side {
+  m: MeshBuilder;
+  p: Profile;
+  X: (d: number) => number;
+  s: number;
+}
+
+/** A box on the flat side from d0 to d1, y0 to y1: its face `proud` off the skin, `depth` thick. */
+function sideBox(f: Side, mat: string, d0: number, d1: number, y0: number, y1: number, proud: number, depth: number): void {
+  const [a, b] = [f.X(d0), f.X(d1)].sort((p, q) => p - q) as [number, number];
+  block(f.m, mat, a, b, y0, y1, ...side(f.s, W + proud - depth, W + proud));
+}
+
+/** A window: the rubber frame, the glass, and the top light's bar when `bar`. */
+function sideWindow(f: Side, d0: number, d1: number, y0: number, y1: number, bar = true): void {
+  f.m.scope("frame", () => sideBox(f, "rubber", d0, d1, y0, y1, 0.012, 0.04));
+  f.m.scope("glass", () => sideBox(f, "glass", d0 + 0.05, d1 - 0.05, y0 + 0.05, y1 - 0.05, 0.02, 0.006));
+  if (bar) f.m.scope("bar", () => sideBox(f, "rubber", d0 + 0.04, d1 - 0.04, y1 - 0.34, y1 - 0.3, 0.026, 0.005));
+}
+
+/** A door: its seam, the leaf in the body's paint, its window, a grab handrail and the step under it. */
+function sideDoor(f: Side, d0: number, d1: number, y0: number, y1: number, glass: Array<[number, number]>): void {
+  const m = f.m;
+  const dm = (d0 + d1) / 2;
+  m.scope("outline", () => sideBox(f, "rubber", d0, d1, y0, y1, 0.006, 0.04));
+  m.scope("leaf", () => {
+    for (const [a, b, mat] of sliceBands(f.p, dm)) {
+      const [lo, hi] = [Math.max(a, y0 + 0.025), Math.min(b, y1 - 0.025)];
+      if (hi - lo > 1e-6) sideBox(f, mat === "roof" ? "cream" : mat, d0 + 0.025, d1 - 0.025, lo, hi, 0.011, 0.004);
+    }
+  });
+  m.scope("glass", () => glass.forEach(([a, b]) => {
+    sideBox(f, "rubber", a, b, WIN[0], WIN[1], 0.016, 0.004);
+    sideBox(f, "glass", a + 0.035, b - 0.035, WIN[0] + 0.035, WIN[1] - 0.035, 0.021, 0.004);
+  }));
+  m.scope("handrails", () => {
+    for (const d of [d0 - 0.07, d1 + 0.07]) {
+      m.prism("chrome", ngon(6, 0.015, 0, f.X(d), f.s * (W + 0.045)), 1.35, 2.65);
+      for (const y of [1.37, 2.6]) block(m, "chrome", f.X(d) - 0.014, f.X(d) + 0.014, y, y + 0.02, ...side(f.s, W - 0.01, W + 0.045));
+    }
+  });
+  m.scope("step", () => sideBox(f, "equipment", d0 + 0.05, d1 - 0.05, 0.48, 0.54, 0.02, 0.25));
+}
+
+/** Painted lettering on the side, centred at d, its foot at y, h tall, reading left to right from outside. */
+function sideLettering(f: Side, text: string, d: number, y: number, h: number, mat = "lettering"): void {
+  const w = h * 0.58;
+  const gap = h * 0.16;
+  const width = strokeWidth(text, w, gap);
+  const u0 = f.X(d) + (f.s > 0 ? -width / 2 : width / 2);
+  f.m.facets(mat, strokeText(text, u0, y, h, w, gap, f.s < 0).map(([u, v]): Vec3 => [u, v, f.s * (W + 0.005)]), [0, 0, f.s]);
+}
+
+/** Four porthole windows of the engine room. */
+const PORTHOLES = [6.42, 7.53, 8.59, 9.67];
+const PORTHOLE_Y = 2.73;
+
+/** The power car's side, nose to inner end: the cab door, the portholes, the baggage double door, the passenger door and windows. */
+const POWER_DOORS: Array<{ d: [number, number]; glass: Array<[number, number]> }> = [
+  { d: [5.24, 5.91], glass: [[5.37, 5.78]] },
+  { d: [10.85, 11.81], glass: [[10.96, 11.22], [11.44, 11.7]] },
+  { d: [13.69, 14.57], glass: [[13.86, 14.4]] },
+];
+const POWER_WINDOWS: Array<[number, number]> = [[12.33, 12.89], [15.18, 16.29], [16.69, 17.79], [18.16, 19.24], [19.64, 20.82], [21.19, 22.34], [23.7, 24.26]];
+/** The roof's louvres over the engine room, d0, d1, y0, y1. */
+const LOUVRES: Array<[number, number, number, number]> = [[6.35, 7.57, 3.28, 3.69], [8.12, 9.94, 3.28, 3.69], [11.8, 13.6, 3.32, 3.69]];
+
+/** The trailer's ten windows at 1.95 m and the doors at both ends. */
+const TRAILER_WINDOWS: Array<[number, number]> = Array.from({ length: 10 }, (_, i) => {
+  const x = VT1816_TRAILER_BODY / 2 + (i - 4.5) * 1.95;
+  return [x - 0.575, x + 0.575];
+});
+const TRAILER_DOORS: Array<[number, number]> = [[0.25, 1.0], [VT1816_TRAILER_BODY - 1.0, VT1816_TRAILER_BODY - 0.25]];
+
+/** The point of a slice's roof arc at d, height y, on side s (x left 0). */
+function arcPoint(p: Profile, d: number, y: number, s: number): Vec3 {
+  const w = p.w(d), S = p.S(d), C = p.C(d);
+  const t = Math.asin(Math.min(1, Math.max(0, (y - S) / (C - S))));
+  return [0, y, s * w * Math.cos(t)];
+}
+
+/** A louvre on the roof's shoulder: a plate through the arc's corners and its slats. */
+function louvre(f: Side, d0: number, d1: number, y0: number, y1: number): void {
+  const corner = (d: number, y: number): Vec3 => {
+    const a = arcPoint(f.p, d, y, f.s);
+    return [f.X(d), a[1], a[2]];
+  };
+  const q = [corner(d0, y0), corner(d1, y0), corner(d1, y1), corner(d0, y1)];
+  let n = unit(cross(sub(q[1]!, q[0]!), sub(q[3]!, q[0]!)));
+  if (n[2] * f.s < 0) n = mul(n, -1);
+  const at = (u: number, v: number, proud: number): Vec3 => {
+    const lo = add(mul(q[0]!, 1 - u), mul(q[1]!, u));
+    const hi = add(mul(q[3]!, 1 - u), mul(q[2]!, u));
+    return add(add(mul(lo, 1 - v), mul(hi, v)), mul(n, proud));
+  };
+  const rect = (u0: number, u1: number, v0: number, v1: number, proud: number) => [at(u0, v0, proud), at(u1, v0, proud), at(u1, v1, proud), at(u0, v1, proud)];
+  f.m.slab("louvre", rect(0, 1, 0, 1, 0.025), mul(n, -0.07));
+  const slats = Math.max(3, Math.round((y1 - y0) / 0.06));
+  for (let i = 0; i < slats; i++) {
+    const v0 = 0.08 + (0.84 * i) / slats;
+    f.m.slab("slat", rect(0.03, 0.97, v0, v0 + (0.84 / slats) * 0.45, 0.032), mul(n, -0.005));
+  }
+}
+
+// --- the nose -----------------------------------------------------------------------------
+
+/**
+ * The power car's nose surface at u across (the viewer's right as seen from
+ * ahead, so z = -u) and height y on its vertical part: the point on the lofted
+ * slices and their outward normal.
+ */
+function nosePoint(u: number, y: number, X: (d: number) => number): { p: Vec3; n: Vec3 } {
+  const lat = Math.abs(u);
+  const s = u < 0 ? 1 : -1;
+  if (lat <= NOSE_W0) return { p: [X(0), y, -u], n: [1, 0, 0] };
+  const ds = POWER.stations;
+  for (let i = 0; i + 1 < ds.length; i++) {
+    const [da, db] = [ds[i]!, ds[i + 1]!];
+    const [wa, wb] = [noseW(da), noseW(db)];
+    if (lat <= wb + 1e-9) {
+      const t = (lat - wa) / Math.max(1e-9, wb - wa);
+      const d = da + t * (db - da);
+      return { p: [X(d), y, s * lat], n: unit([wb - wa, 0, s * (db - da)]) };
+    }
+  }
+  return { p: [X(NOSE_D), y, s * W], n: [0, 0, s] };
+}
+
+/** Flat triangles (u, y) laid on the nose `proud` off it. */
+function noseDecal(m: MeshBuilder, mat: string, tris: Pt[], X: (d: number) => number, proud = 0.008): void {
+  const pts = tris.map(([u, y]): Vec3 => {
+    const q = nosePoint(u, y, X);
+    return add(q.p, mul(q.n, proud));
+  });
+  m.facets(mat, pts, [1, 0, 0]);
+}
+
+/** A flat disc tangent to the nose at (u, y): radius r, `proud` off it, `depth` into it. */
+function noseDisc(m: MeshBuilder, mat: string, u: number, y: number, r: number, proud: number, depth: number, X: (d: number) => number, sides = 16): void {
+  const q = nosePoint(u, y, X);
+  const t = unit([q.n[2], 0, -q.n[0]]);
+  const pts = Array.from({ length: sides }, (_, i): Vec3 => {
+    const a = (2 * Math.PI * i) / sides;
+    return add(add(q.p, mul(q.n, proud)), add(mul(t, r * Math.cos(a)), [0, r * Math.sin(a), 0]));
+  });
+  m.slab(mat, pts, mul(q.n, -depth));
+}
+
+/** A strip from u0 to u1 at y0..y1 (a wing of the emblem) split so it follows the nose's curve; `slant` cuts its outer end. */
+function wingStrip(u0: number, u1: number, y0: number, y1: number, slant: number): Pt[] {
+  const out: Pt[] = [];
+  const n = 5;
+  for (let i = 0; i < n; i++) {
+    const [a, b] = [u0 + ((u1 - u0) * i) / n, u0 + ((u1 - u0) * (i + 1)) / n];
+    const top = (u: number) => (i === n - 1 && u === b ? y1 - slant : y1);
+    out.push([a, y0], [b, y0], [b, top(b)], [a, y0], [b, top(b)], [a, y1]);
+  }
+  return out;
+}
+
+function drawNose(m: MeshBuilder, X: (d: number) => number): void {
+  m.scope("headlights", () => {
+    for (const u of [-0.64, 0.64])
+      m.scope(u < 0 ? "left lamps" : "right lamps", () => {
+        noseDisc(m, "chrome", u, 1.62, 0.155, 0.02, 0.07, X);
+        noseDisc(m, "lampWhite", u, 1.62, 0.115, 0.03, 0.008, X);
+        noseDisc(m, "chrome", u, 1.93, 0.085, 0.02, 0.07, X, 12);
+        noseDisc(m, "lampWhite", u, 1.93, 0.06, 0.03, 0.008, X, 12);
+      });
+  });
+  m.scope("emblem", () => {
+    const tris: Pt[] = [];
+    for (let k = 0; k < 3; k++) {
+      const y0 = 1.69 - k * 0.045;
+      const len = 0.44 - k * 0.06;
+      for (const sg of [-1, 1]) {
+        const strip = wingStrip(0.08, len, y0, y0 + 0.026, 0.015);
+        tris.push(...strip.map(([u, y]): Pt => [sg * u, y]));
+      }
+    }
+    // the winged wheel's hub between the wings
+    tris.push([-0.055, 1.6], [0.055, 1.6], [0.055, 1.73], [-0.055, 1.6], [0.055, 1.73], [-0.055, 1.73]);
+    for (const [ch, u] of [["D", -0.2], ["R", 0.2]] as const) tris.push(...strokeText(ch, u - 0.03, 1.47, 0.1, 0.06, 0.02, false, 0.018));
+    noseDecal(m, "silver", tris, X);
+  });
+  m.scope("running number", () => {
+    const h = 0.1, w = 0.055, gap = 0.018;
+    const width = strokeWidth(VT1816_NUMBER, w, gap);
+    noseDecal(m, "lettering", strokeText(VT1816_NUMBER, -width / 2, 1.86, h, w, gap, false, 0.016), X);
+  });
+  m.scope("coupler", () => centreCoupler(m, 1, X(0.7), X(-VT1816_GAP), COUPLER_Y));
+}
+
+// --- the cockpit ----------------------------------------------------------------------------
+
+/** The hood's height at d, z on the lofted slices' ellipse. */
+const hoodY = (d: number, z: number): number => {
+  const w = noseW(d), S = POWER.S(d), C = POWER.C(d);
+  return S + (C - S) * Math.sqrt(Math.max(0, 1 - (z / w) ** 2));
+};
+
+/** The raised cockpit: d, half width, roof; its foot is sunk into the hood. */
+const COCKPIT: Array<[number, number, number]> = [[3.38, 0.7, 3.5], [3.62, 0.8, 4.18], [3.95, 0.95, 4.25], [5.4, 0.92, 4.25], [7.5, 0.6, 4.23], [HOOD_END, 0.3, 4.22]];
+
+function cockpitHalf([d, cw, T]: [number, number, number]): Pt[] {
+  const yb = hoodY(d, cw) - 0.1;
+  return [[0, yb], [cw, yb], [cw, T - 0.15], [0.8 * cw, T], [0, T]];
+}
+
+function drawCockpit(m: MeshBuilder, X: (d: number) => number): void {
+  const halves = COCKPIT.map(cockpitHalf);
+  const xs = COCKPIT.map(([d]) => X(d));
+  m.scope("shell", () => {
+    loftHalves(m, xs, halves, () => "red", (i) => (halves[i]![0]![1] + halves[i]![4]![1]) / 2);
+    capSlice(m, halves[0]!, xs[0]!, 1, [[0, 5, "red"]]);
+    capSlice(m, halves[halves.length - 1]!, xs[xs.length - 1]!, -1, [[0, 5, "red"]]);
+  });
+  // a quad face of the loft between stations i and i + 1, corners (z, y) of edge k on side s
+  const face = (i: number, k: number, s: number) => {
+    const P = (j: number, kk: number): Vec3 => [xs[j]!, halves[j]![kk]![1], s * halves[j]![kk]![0]];
+    return [P(i, k), P(i + 1, k), P(i + 1, k + 1), P(i, k + 1)] as const;
+  };
+  const pane = (q: readonly [Vec3, Vec3, Vec3, Vec3], u0: number, u1: number, v0: number, v1: number, out: Vec3, mat: string, proud: number, depth: number) => {
+    let n = unit(cross(sub(q[1], q[0]), sub(q[3], q[0])));
+    if (dot(n, out) < 0) n = mul(n, -1);
+    const at = (u: number, v: number): Vec3 => {
+      const lo = add(mul(q[0], 1 - u), mul(q[1], u));
+      const hi = add(mul(q[3], 1 - u), mul(q[2], u));
+      return add(add(mul(lo, 1 - v), mul(hi, v)), mul(n, proud));
+    };
+    m.slab(mat, [at(u0, v0), at(u1, v0), at(u1, v1), at(u0, v1)], mul(n, -depth));
+  };
+  m.scope("windscreen", () => {
+    // the front face between the top edges of the first two slices, both sides' halves
+    for (const s of [1, -1]) {
+      const P = (j: number, kk: number): Vec3 => [xs[j]!, halves[j]![kk]![1], s * halves[j]![kk]![0]];
+      const q = [P(0, 4), P(0, 3), P(1, 3), P(1, 4)] as const;
+      pane(q, 0.04, 0.95, 0.1, 0.9, [1, 0.5, 0], "glass", 0.012, 0.008);
+    }
+    // the corner panes on the faces turning back to the sides
+    for (const s of [1, -1]) pane(face(1, 1, s), 0.08, 0.92, 0.42, 0.9, [0.3, 0, s], "glass", 0.012, 0.008);
+  });
+  m.scope("side windows", () => {
+    for (const s of [1, -1]) {
+      const [a, b] = [X(5.3), X(4.15)];
+      block(m, "rubber", a, b, 3.62, 4.04, ...side(s, 0.93, 0.962));
+      block(m, "glass", a + 0.04, b - 0.04, 3.66, 4.0, ...side(s, 0.95, 0.968));
+    }
+  });
+  m.scope("roof lamp", () => {
+    const x = X(4.05);
+    m.prism("red", ngon(10, 0.1, 0, x, 0), 4.2, 4.36);
+    const lens = ngon(10, 0.06, 0, 0, 4.29);
+    m.sweep("lampWhite", "x", lens, x + 0.08, lens, x + 0.11);
+  });
+}
+
+// --- the cars -------------------------------------------------------------------------------
+
+/** Gangway bellows and the centre coupler at an inner end at d `wall` (e: +1 the +X end). */
+function innerEnd(m: MeshBuilder, X: (d: number) => number, e: number, wall: number): void {
+  const face = e > 0 ? -VT1816_GAP : wall + VT1816_GAP;
+  m.scope("end door", () => {
+    const [a, b] = [X(wall), X(wall) + e * 0.012].sort((p, q) => p - q) as [number, number];
+    block(m, "rubber", a, b, 1.3, 3.0, -0.36, 0.36);
+  });
+  m.scope("gangway", () => {
+    const [a, b] = [X(wall) - e * 0.02, X(face) - e * 0.01].sort((p, q) => p - q) as [number, number];
+    for (const z of [-1, 1]) block(m, "rubber", a, b, 1.2, 3.3, ...side(z, 0.5, 0.72));
+    block(m, "rubber", a, b, 3.1, 3.3, -0.5, 0.5);
+    block(m, "rubber", a, b, 1.2, 1.32, -0.5, 0.5);
+  });
+  m.scope("coupler", () => centreCoupler(m, e, X(wall + e * 0.9), X(face), COUPLER_Y));
+}
+
+function roofVents(m: MeshBuilder, X: (d: number) => number, ds: number[]): void {
+  m.scope("ventilators", () => ds.forEach((d, i) => m.scope(`ventilator ${i + 1}`, () => block(m, "vent", X(d) - 0.16, X(d) + 0.16, 4.14, 4.28, -0.13, 0.13))));
+}
+
+function powerCar(): MeshBuilder {
+  const X = xOf("powerCar");
+  const coach = new Coach(PALETTE, 0);
+  const m = coach.m;
+  m.scope("body", () => {
+    drawBody(m, POWER, X);
+    for (const s of [1, -1])
+      m.scope(s > 0 ? "right side" : "left side", () => {
+        const f: Side = { m, p: POWER, X, s };
+        m.scope("doors", () => POWER_DOORS.forEach((dr, i) => m.scope(`door ${i + 1}`, () => sideDoor(f, dr.d[0], dr.d[1], 1.25, Math.min(3.12, POWER.S(dr.d[0]) - 0.04), dr.glass))));
+        m.scope("windows", () => POWER_WINDOWS.forEach(([a, b], i) => m.scope(`window ${i + 1}`, () => sideWindow(f, a, b, WIN[0], WIN[1], b - a > 0.8))));
+        m.scope("portholes", () =>
+          PORTHOLES.forEach((d, i) =>
+            m.scope(`porthole ${i + 1}`, () => {
+              m.sweep("chrome", "z", ngon(16, 0.27, 0, X(d), PORTHOLE_Y), s * (W - 0.03), ngon(16, 0.27, 0, X(d), PORTHOLE_Y), s * (W + 0.015));
+              m.sweep("glass", "z", ngon(16, 0.21, 0, X(d), PORTHOLE_Y), s * (W + 0.01), ngon(16, 0.21, 0, X(d), PORTHOLE_Y), s * (W + 0.022));
+            }),
+          ),
+        );
+        m.scope("louvres", () => LOUVRES.forEach(([a, b, y0, y1], i) => m.scope(`louvre ${i + 1}`, () => louvre(f, a, b, y0, y1))));
+        m.scope("running number", () => sideLettering(f, VT1816_NUMBER, 3.6, 1.5, 0.12));
+      });
+  });
+  m.scope("nose", () => drawNose(m, X));
+  m.scope("cockpit", () => drawCockpit(m, X));
+  m.scope("rear end", () => innerEnd(m, X, -1, VT1816_POWER_BODY));
+  m.scope("roof equipment", () => roofVents(m, X, [14.6, 16.6, 18.6, 20.6, 22.6]));
+  m.scope("running gear", () => {
+    const [a1, a2, a3, a4] = VT1816_AXLES.powerCar as [number, number, number, number];
+    m.scope("motor bogie", () =>
+      m.bogie(() => {
+        unitBogie(coach, X((a1 + a2) / 2), { wb: a2 - a1, r: WHEEL_R, top: 0.72, overhang: 0.35 });
+        // the 12 KVD 18/21 engine and the Voith transmission hang in the bogie
+        m.scope("engine", () => block(m, "engine", X((a1 + a2) / 2) - 0.9, X((a1 + a2) / 2) + 0.75, 0.42, 0.72, -0.62, 0.62));
+        m.scope("transmission", () => block(m, "motor", X((a1 + a2) / 2) - 1.45, X((a1 + a2) / 2) - 0.95, 0.3, 0.68, -0.4, 0.4));
+      }),
+    );
+    m.scope("trailing bogie", () => unitBogie(coach, X((a3 + a4) / 2), { wb: a4 - a3, r: WHEEL_R, top: 0.96 }));
+    m.scope("underframe", () => {
+      block(m, "equipment", X(17.6), X(13.0), 0.42, 0.73, -1.05, 1.05);
+      block(m, "equipment", X(10.4), X(8.6), 0.48, 0.73, -0.9, 0.9);
+    });
+  });
+  return m;
+}
+
+function trailer(): MeshBuilder {
+  const X = xOf("trailer");
+  const coach = new Coach(PALETTE, 0);
+  const m = coach.m;
+  m.scope("body", () => {
+    drawBody(m, TRAILER, X);
+    for (const s of [1, -1])
+      m.scope(s > 0 ? "right side" : "left side", () => {
+        const f: Side = { m, p: TRAILER, X, s };
+        m.scope("doors", () => TRAILER_DOORS.forEach(([a, b], i) => m.scope(`door ${i + 1}`, () => sideDoor(f, a, b, 0.7, 3.15, [[a + 0.15, b - 0.15]]))));
+        m.scope("windows", () => TRAILER_WINDOWS.forEach(([a, b], i) => m.scope(`window ${i + 1}`, () => sideWindow(f, a, b, WIN[0], WIN[1]))));
+        m.scope("lettering", () => sideLettering(f, "DR", VT1816_TRAILER_BODY / 2, 1.5, 0.16));
+      });
+  });
+  m.scope("front end", () => innerEnd(m, X, 1, 0));
+  m.scope("rear end", () => innerEnd(m, X, -1, VT1816_TRAILER_BODY));
+  m.scope("roof equipment", () => roofVents(m, X, [2.4, 5.3, 8.2, 11.1, 14.0, 16.9, 19.8]));
+  m.scope("running gear", () => {
+    const ax = VT1816_AXLES.trailer;
+    for (const [i, k] of [0, 2].entries()) m.scope(`bogie ${i + 1}`, () => unitBogie(coach, X((ax[k]! + ax[k + 1]!) / 2), { wb: ax[k + 1]! - ax[k]!, r: WHEEL_R, top: 0.96 }));
+    m.scope("apron equipment", () => block(m, "equipment", X(15.5), X(7.3), 0.4, 0.47, -0.95, 0.95));
+  });
+  return m;
+}
+
+export function vt1816(params?: ParamValues): MeshBuilder {
+  const unit = resolveParams(VT1816_PARAMS, params).unit as Vt1816Unit;
+  return unit === "powerCar" ? powerCar() : trailer();
+}
+
+// --- distant view ---------------------------------------------------------------------------
+
+/**
+ * The VT 18.16 for distant views (lodUnits.ts): the body's section with the
+ * floor stripes as one dark band, the red and the cream; the power car's nose
+ * rising into the hood, the red cockpit with its windscreen; the window band
+ * and the bogies.
+ */
+export function vt1816Lod(params?: ParamValues): MeshBuilder {
+  const unit = resolveParams(VT1816_PARAMS, params).unit as Vt1816Unit;
+  const X = xOf(unit);
+  const power = unit === "powerCar";
+  const side: LodBand[] = [[0.71, 1.05, "skirt"], [1.05, 1.33, "black"], [1.33, 1.95, "red"], [1.95, 3.2, "cream"], [3.2, 4.2, power ? "cream" : "roof"]];
+  const hw: Array<readonly [number, number]> = [[0.71, 1.35], [0.79, W], [3.2, W], [3.55, 1.38], [3.85, 1.2], [4.05, 0.9], [4.2, 0.3]];
+  const flat = (d: number) => ({ tip: [[0.71, X(d)]] as Array<readonly [number, number]> });
+  const boxes = power
+    ? [...POWER_WINDOWS, ...POWER_DOORS.flatMap((dr) => dr.glass)].map(([a, b]) => ({ x0: X(b), x1: X(a), y0: WIN[0], y1: WIN[1] }))
+    : TRAILER_WINDOWS.map(([a, b]) => ({ x0: X(b), x1: X(a), y0: WIN[0], y1: WIN[1] }));
+  const body: UnitBody = {
+    y0: 0.71,
+    hw,
+    side,
+    roof: power ? "cream" : "roof",
+    front: power
+      ? {
+          tip: [[0.71, X(0)], [2.24, X(0)], [2.38, X(0.2)], [2.64, X(0.6)], [3.02, X(1.9)], [3.46, X(3.55)], [3.85, X(6.0)], [4.2, X(HOOD_END)]],
+          setback: [[0.71, 1.2], [2.24, 1.2], [3.02, 1.6], [4.2, 1.6]],
+          paint: [[0.71, 1.05, "skirt"], [1.05, 1.33, "black"], [1.33, 2.2, "red"], [2.2, 4.2, "cream"]],
+        }
+      : flat(0),
+    rear: flat(power ? VT1816_POWER_BODY : VT1816_TRAILER_BODY),
+    windows: sideGlass(boxes, 0.6),
+  };
+  const ax = VT1816_AXLES[unit];
+  const bogies = [0, 2].map((k) => [X((ax[k]! + ax[k + 1]!) / 2), (ax[k + 1]! - ax[k]!) / 2 + WHEEL_R + 0.2] as const);
+  return fitUnit({
+    palette: PALETTE,
+    bodies: [body],
+    parts: [
+      ...bogieParts(bogies, 0.71),
+      ...(power
+        ? [
+            roofPart("red", X(7.5), X(3.62), 0.95, 0.75, 3.35, 4.25),
+            {
+              draw: (m: MeshBuilder) => m.scope("windscreen", () => lodPolygon(m, LOD_GLASS, [[X(3.62) + 0.01, 3.55, 0.65], [X(3.62) + 0.01, 3.55, -0.65], [X(3.62) + 0.01, 4.1, -0.62], [X(3.62) + 0.01, 4.1, 0.62]], [1, 0, 0])),
+            },
+          ]
+        : []),
+    ],
+  }, 100);
+}
+
+/**
+ * What the game needs of it (design.ts GameProperties): the four-car set's
+ * 214.4 t empty split as about 66 t a power car (engine, transmission and fuel)
+ * and 41 t a trailer; 736 kW (1000 PS) a power car; 160 km/h.
+ */
+const VT1816_GAME: GameProperties = {
+  weight: 66,
+  power: 736,
+  maxspeed: 160,
+  accel: null,
+  variants: [{ params: { unit: "trailer" }, weight: 41, power: 0 }],
+};
+
+export const VT1816_DESIGNS: ProceduralDesign[] = [
+  { id: "proc-vehicle-dr-vt1816", game: VT1816_GAME, title: "DR VT 18.16 Delfin", build: vt1816, buildLod: vt1816Lod, params: VT1816_PARAMS, catalog: DMU_CATALOG, references: "dr-vt1816" },
+];

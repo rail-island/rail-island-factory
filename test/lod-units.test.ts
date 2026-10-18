@@ -10,7 +10,7 @@ import { fitUnit, sideGlass, type UnitBody } from '../generator/lodUnits';
 import { sample } from './catalogCache';
 
 // The dedicated LODs of the multiple units and railcars (lodUnits.ts, docs/models/lod.md).
-const UNITS = ['cd-810', 'cd-812', 'cd-843', 'csd-m131', 'csd-m240', 'csd-m296', 'db-628', 'cd-451', 'cd-460', 'cd-470', 'cd-471', 'cd-680', 'ice-1', 'tgv', 'jr-kiha40', 'mav-mdmot', 'metro-81-71'];
+const UNITS = ['cd-810', 'cd-812', 'cd-843', 'csd-m131', 'csd-m240', 'csd-m296', 'db-628', 'cd-451', 'cd-460', 'cd-470', 'cd-471', 'cd-680', 'ice-1', 'tgv', 'jr-kiha40', 'dr-vt1816', 'mav-mdmot', 'metro-81-71'];
 
 const faces = (m: MeshBuilder) => {
   const { json, bin } = parseGlb(m.toGlb('lod'));
