@@ -469,6 +469,7 @@ export async function buildExport(
         ...built.stats,
         jsBytes: Buffer.byteLength(jsText),
         jsGzipBytes: gzipSize(jsText),
+        jsHash: crypto.createHash("sha256").update(jsText).digest("hex").slice(0, 16),
         thumbBytes: fs.statSync(built.thumb).size,
       }, refs.get(design.id), design.openttd);
     }),

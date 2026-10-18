@@ -283,6 +283,8 @@ export function cellFile(r: CatalogRecord, col: Column): { href: string; name: s
  */
 export interface ViewState extends ChipPath {
   q: string;
+  /** The listing's layout: the table (cards on a phone) or a row of variant thumbnails per model. */
+  layout: Layout;
   sort: string;
   dir: SortDir;
   /** The id of the model whose detail page is open, or null for the list. */
@@ -296,6 +298,8 @@ export interface ViewState extends ChipPath {
 }
 
 export type DetailTab = "specs" | "source" | "references";
+
+export type Layout = "table" | "thumbs";
 
 const DETAIL_TABS: readonly DetailTab[] = ["specs", "source", "references"];
 
@@ -317,6 +321,7 @@ export function parseView(search: string): ViewState {
   const l3 = l2 !== null ? readChip(p.get("sub2")) : null;
   return {
     q: p.get("q") ?? "",
+    layout: p.get("view") === "thumbs" ? "thumbs" : "table",
     group: group !== null && GROUP_IDS.has(group) ? group : null,
     l2,
     l3,
@@ -338,6 +343,7 @@ function readChip(raw: string | null): string | null {
 export function serializeView(v: ViewState): string {
   const p = new URLSearchParams();
   if (v.q) p.set("q", v.q);
+  if (v.layout === "thumbs") p.set("view", "thumbs");
   if (v.group) p.set("cat", v.group);
   if (v.group && v.l2) p.set("sub", v.l2);
   if (v.group && v.l2 && v.l3) p.set("sub2", v.l3);
@@ -381,6 +387,120 @@ export function nonDefaultParams(r: CatalogRecord, values: Record<string, string
 /** True when every parameter is at its default, i.e. the thumbnail and source tree show the model. */
 export function isDefaultParams(r: CatalogRecord, values: Record<string, string>): boolean {
   return Object.keys(nonDefaultParams(r, effectiveParams(r, values))).length === 0;
+}
+
+/**
+ * How many variants a model has: every combination of its parameters' values, a
+ * conditional parameter counted only where it applies; 1 for a fixed model.
+ * Counted without listing them (a commercial family has thousands): the
+ * combinations so far are grouped by the values a later condition reads.
+ */
+export function variantCount(r: CatalogRecord): number {
+  const specs = r.params ?? [];
+  const read = new Set(specs.flatMap((p) => (p.when ? [p.when.name] : [])));
+  let states = new Map<string, { values: Record<string, string>; count: number }>([["", { values: {}, count: 1 }]]);
+  for (const p of specs) {
+    const next = new Map<string, { values: Record<string, string>; count: number }>();
+    const add = (values: Record<string, string>, count: number) => {
+      const key = JSON.stringify([...read].map((n) => values[n] ?? ""));
+      const at = next.get(key);
+      if (at) at.count += count;
+      else next.set(key, { values, count });
+    };
+    for (const st of states.values()) {
+      if (p.when && !p.when.values.includes(st.values[p.when.name] ?? "")) add(st.values, st.count);
+      else for (const v of p.values) add(read.has(p.name) ? { ...st.values, [p.name]: v.value } : st.values, st.count);
+    }
+    states = next;
+  }
+  let total = 0;
+  for (const st of states.values()) total += st.count;
+  return total;
+}
+
+/** The most variants the thumbnail view shows of one model. */
+export const MAX_SHOWN_VARIANTS = 10;
+
+/**
+ * The variants that show a model best, at most `max`, as non-default values: the
+ * defaults first, then each other value of each parameter with the rest at their
+ * defaults, taken in turns across the parameters (each one's second value, then
+ * each one's third...), so a model with a livery and a length shows both. A
+ * conditional parameter is varied under the first value that enables it.
+ */
+export function representativeVariants(r: CatalogRecord, max = MAX_SHOWN_VARIANTS): Record<string, string>[] {
+  const specs = r.params ?? [];
+  const defaults = effectiveParams(r, {});
+  const lanes = specs.map((p) => {
+    const base = p.when && !p.when.values.includes(defaults[p.when.name] ?? "") ? { ...defaults, [p.when.name]: p.when.values[0]! } : defaults;
+    const others = p.values.map((v) => v.value).filter((v) => v !== p.default);
+    // under an enabling value the parameter's default is a variant of its own
+    return (base === defaults ? others : [p.default, ...others]).map((v) => ({ ...base, [p.name]: v }));
+  });
+  const out: Record<string, string>[] = [{}];
+  const seen = new Set([previewKey(r.id, {})]);
+  for (let i = 0; out.length < max && lanes.some((l) => i < l.length); i++) {
+    for (const lane of lanes) {
+      if (out.length >= max) break;
+      const chosen = lane[i];
+      if (!chosen) continue;
+      const values = nonDefaultParams(r, effectiveParams(r, chosen));
+      const key = previewKey(r.id, values);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(values);
+    }
+  }
+  // Slots left over (a few parameters of few values each): combinations, spread
+  // evenly over every variant, so they mix the parameters rather than vary one.
+  if (out.length < max && variantCount(r) <= MAX_SPREAD_COMBINATIONS) {
+    const all = [...combinations(r)].filter((c) => !seen.has(previewKey(r.id, c)));
+    const want = Math.min(max - out.length, all.length);
+    for (let i = 0; i < want; i++) out.push(all[Math.floor(((i + 0.5) * all.length) / want)]!);
+  }
+  return out;
+}
+
+/** The most variants representativeVariants lists to spread its leftover slots over. */
+const MAX_SPREAD_COMBINATIONS = 20_000;
+
+/** Every variant of a model as non-default values, the defaults first (design.ts paramCombinations). */
+function* combinations(r: CatalogRecord, from = 0, chosen: Record<string, string> = {}): Generator<Record<string, string>> {
+  const specs = r.params ?? [];
+  const p = specs[from];
+  if (!p) {
+    yield nonDefaultParams(r, chosen);
+    return;
+  }
+  if (p.when && !p.when.values.includes(chosen[p.when.name] ?? "")) {
+    yield* combinations(r, from + 1, chosen);
+    return;
+  }
+  for (const v of [p.default, ...p.values.map((x) => x.value).filter((x) => x !== p.default)]) yield* combinations(r, from + 1, { ...chosen, [p.name]: v });
+}
+
+/** A variant's short name for a thumbnail caption: its non-default values' titles, or "Default". */
+export function variantCaption(r: CatalogRecord, values: Record<string, string>): string {
+  const parts = (r.params ?? []).flatMap((p) => {
+    const v = values[p.name];
+    return v === undefined || v === p.default ? [] : [p.values.find((x) => x.value === v)?.title ?? v];
+  });
+  return parts.length ? parts.join(" / ") : "Default";
+}
+
+/** Bump when the browser thumbnail's framing, lighting or size changes: part of every cache key. */
+export const VARIANT_THUMB_VERSION = 1;
+
+/**
+ * The browser-rendered thumbnail cache key of a model variant: the model's id and
+ * build (its JS hash, or its size for a catalog without one), the variant's
+ * resolved values and the renderer's version. Values equal to the defaults, or
+ * names the model does not take, give the same key as leaving them out.
+ */
+export function variantThumbKey(r: CatalogRecord, values: Record<string, string>): string {
+  const resolved = effectiveParams(r, values);
+  const canon = Object.keys(resolved).sort().map((k) => `${k}=${resolved[k]}`).join("&");
+  return `${r.id}|${r.jsHash ?? `b${r.jsBytes}`}|${canon}|v${VARIANT_THUMB_VERSION}`;
 }
 
 // --- posing a rigged model (generator/rig.ts) ---------------------------------------

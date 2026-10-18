@@ -12,7 +12,7 @@ import type { Row } from "./catalogQuery";
 import { removeEntry, variantLabel, type ExportState } from "./exportList";
 import type { ExportFormat, ExportProgress } from "./exportRun";
 import { openttdFeature } from "./openttd/properties";
-import { Thumb } from "./Thumb";
+import { VariantThumb } from "./VariantThumb";
 
 /** Hand a finished file to the browser as a download. */
 function download(blob: Blob, fileName: string): void {
@@ -105,7 +105,7 @@ export function ExportPanel(props: {
               const r = () => byId().get(e.id);
               return (
                 <li class="factory-export__item" classList={{ "factory-export__item--off": !fits(e.id) }}>
-                  <Show when={r()}>{(rec) => <Thumb record={rec()} />}</Show>
+                  <Show when={r()}>{(rec) => <VariantThumb record={rec()} params={e.params} size="small" />}</Show>
                   <span class="factory-export__name">
                     {r()?.title ?? e.id}
                     <span class="factory-rowid">{variantLabel(r(), e) || "Default variant"}</span>

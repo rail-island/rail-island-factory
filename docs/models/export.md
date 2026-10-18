@@ -164,7 +164,7 @@ The buses take `BUS_CATALOG` (category `Road vehicles`, group `bus`), the trams
 
 `{ version: 1, records: CatalogRecord[] }`, one record per design - the
 skyscrapers, then the vehicles. A record is its meta entry plus what
-only the build knows: `thumbUrl` (site-relative), `thumbBytes`, `jsUrl`, `jsBytes`, `jsGzipBytes` (the standalone JS model, [js-format.md](js-format.md); gzip sizes are gzip -9), `triangles`, `vertices`, `primitives` (draw calls), `materials`, and
+only the build knows: `thumbUrl` (site-relative), `thumbBytes`, `jsUrl`, `jsBytes`, `jsGzipBytes` (the standalone JS model, [js-format.md](js-format.md); gzip sizes are gzip -9), `jsHash` (the first 16 hex digits of the JS model's SHA-256, which keys the site's cached variant thumbnails), `triangles`, `vertices`, `primitives` (draw calls), `materials`, and
 the bounding-box extents `sizeX`/`sizeY`/`sizeZ` in metres (before
 `defaultScale`), rounded to the millimetre, and `references`: the source images
 as `{ name, url, bytes }` in name order (`name` is the path within the assets
