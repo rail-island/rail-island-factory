@@ -7,8 +7,8 @@ preview, and the URL state.
 `src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`,
 `src/SourceTreePanel.tsx`, `src/sourceTreeView.ts`, `src/Thumb.tsx`, `src/modelModule.ts`, `src/ExportPanel.tsx`,
 `src/ModelVariants.tsx`, `src/VariantThumb.tsx`, `src/variantThumbs.ts`, `src/thumbRender.ts`,
-`src/factory.css`, `src/favicon.svg`, `src/apple-touch-icon.png`, `src/boot.ts`, `src/bootEntry.ts`, `index.html`, `vite.config.ts`,
-`test/catalogQuery.test.ts`, `test/boot.test.ts`, `test/rig.test.ts` (the Pose sliders)
+`src/factory.css`, `src/favicon.svg`, `src/apple-touch-icon.png`, `src/social-preview.png`, `src/boot.ts`, `src/bootEntry.ts`, `index.html`, `vite.config.ts`,
+`test/catalogQuery.test.ts`, `test/boot.test.ts`, `test/siteMeta.test.ts`, `test/rig.test.ts` (the Pose sliders)
 **See also** - [../models/export.md](../models/export.md), [../guide/deploy.md](../guide/deploy.md), [openttd-export.md](openttd-export.md)
 
 The site is the factory's counterpart of the webapp Creator's model listing,
@@ -48,6 +48,24 @@ The favicon (`src/favicon.svg`) is a sawtooth-roofed factory with a chimney on a
 rail, in the site's colours; `src/apple-touch-icon.png` is the same drawing at
 180 px for a phone's home screen. `index.html` links both, so Vite hashes them
 into `dist/assets/` (the public folder is the generated export).
+
+### Link previews
+
+`index.html` carries the page's description and canonical URL and the Open Graph
+and Twitter card tags that Facebook, Reddit, X, Slack and messengers read when a
+link to the site is shared (they do not run the app, so every page of the site
+shows the same preview). The image is `src/social-preview.png`, 1200 x 630 px:
+the site's colours and favicon, the title and a one-line description, the Eiffel
+Tower, Notre-Dame, the alpine hut, the twisted skyscraper and the Boeing 747
+above a rail line with the CSD 475.1 steam locomotive, the CD 230, the Tatra T3 and
+the articulated Karosa/Renault bus. It was composed from those models' transparent
+`export/thumbs/` renders on an HTML page screenshotted headlessly; redo it when the
+site's look changes, not for every new model (it names no model count).
+Crawlers need an absolute URL, which Vite does not rewrite, so the
+`social-preview` plugin in `vite.config.ts` emits the file at the site root as
+`social-preview.png`, unhashed; `test/siteMeta.test.ts` keeps the tags and the
+image's size in step. After a change, re-scrape the page with Facebook's Sharing
+Debugger, as its previews are cached.
 
 A footer under the catalog links to www.railisland.com (`HOME_URL`) and to the
 factory's GitHub repository (`REPO_URL`).

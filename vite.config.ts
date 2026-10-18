@@ -1,4 +1,5 @@
 /// <reference types="vitest/config" />
+import { readFileSync } from "node:fs";
 import { buildSync } from "esbuild";
 import { defineConfig, type Plugin } from "vite";
 import solid from "vite-plugin-solid";
@@ -26,12 +27,30 @@ function inlineBoot(): Plugin {
   };
 }
 
+/** The link-preview image index.html's og:image and twitter:image name. */
+const SOCIAL_PREVIEW = { source: "src/social-preview.png", fileName: "social-preview.png" };
+
+/**
+ * Emit src/social-preview.png at the site root under a fixed, unhashed name:
+ * index.html names it by an absolute URL, which Vite leaves alone, and the
+ * public folder is the generated export (docs/site/catalog-site.md).
+ */
+function socialPreview(): Plugin {
+  return {
+    name: "social-preview",
+    apply: "build",
+    generateBundle() {
+      this.emitFile({ type: "asset", fileName: SOCIAL_PREVIEW.fileName, source: readFileSync(SOCIAL_PREVIEW.source) });
+    },
+  };
+}
+
 // The site is a static Solid SPA. Its data is the generator's export folder,
 // served as Vite's publicDir: `pnpm build:models` writes export/ (glb/, thumbs/,
 // catalog.json, skyscrapers.meta.json) and `vite build` copies it into dist/ as
 // it stands, so the deployed site serves the very files the game would import.
 export default defineConfig({
-  plugins: [solid(), inlineBoot()],
+  plugins: [solid(), inlineBoot(), socialPreview()],
   publicDir: "export",
   build: {
     // three (~560 kB) is its own chunk, loaded only when a model page opens
