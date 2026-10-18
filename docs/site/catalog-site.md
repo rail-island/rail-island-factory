@@ -58,8 +58,10 @@ shows the same preview). The image is `src/social-preview.png`, 1200 x 630 px:
 the site's colours and favicon, the title and a one-line description, the Eiffel
 Tower, Notre-Dame, the alpine hut, the twisted skyscraper and the Boeing 747
 above a rail line with the CSD 475.1 steam locomotive, the CD 230, the Tatra T3 and
-the articulated Karosa/Renault bus. It was composed from those models' transparent
-`export/thumbs/` renders on an HTML page screenshotted headlessly; redo it when the
+the 12 m Karosa/Renault city bus. It was composed from those models' transparent
+`export/thumbs/` renders on an HTML page screenshotted headlessly; the vehicles'
+side views share one scale and a ground line (row 183 of 192), so they are all drawn
+at the same height and stand on the rail at their true relative lengths; redo it when the
 site's look changes, not for every new model (it names no model count).
 Crawlers need an absolute URL, which Vite does not rewrite, so the
 `social-preview` plugin in `vite.config.ts` emits the file at the site root as
