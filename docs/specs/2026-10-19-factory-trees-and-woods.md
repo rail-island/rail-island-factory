@@ -53,6 +53,15 @@ The trees also look worse than OpenTTD's. Analysis:
 Design moving tree and woods definition from game into factory. Also try to improve
 rendered trees - why trees in OpenTTD looks better than in Rail Island?
 
+Follow-up, which changes the direction: the factory should export a list of woods types,
+keyed by woods name. A woods type should not be a JSON record but a distribution
+function, which can also handle more complicated relations between trees. Custom woods
+should be mapped on load to the nearest woods type (keep it simple, as only a few users
+made custom woods). The map should save only the mapping woods_name -> id for the ids
+in `vegetation.bin`.
+
+(Later answer: custom woods map to one fixed fallback type, not to the nearest one.)
+
 ## Decisions
 
 ### What exactly moves from the game into the factory?
@@ -62,7 +71,8 @@ rendered trees - why trees in OpenTTD looks better than in Rail Island?
 | Species geometry only | The factory exports tree models only, and the woods presets stay in the game. Two places would define what a forest looks like. |
 | Everything incl. wind | The factory also owns the wind sway definition, so its site previews moving trees exactly as the game draws them. |
 
-**Answer: Species + woods types.**
+**Answer: Species + woods types.** Revised in the follow-up: woods types are exported
+as distribution functions keyed by name, not as JSON presets (see below).
 
 ### Should one spec cover both the move and the visual improvement of trees?
 | Option | What it means |
@@ -96,8 +106,8 @@ rendered trees - why trees in OpenTTD looks better than in Rail Island?
 | Factory owns, game validates | The woods meta carries built-in ids 1..127 and species keys, and factory tests pin them. |
 | Game owns ids | The factory exports presets by name only, and the game keeps a name-to-id table. Safer for saves, but adding a preset touches both repositories. |
 
-**Answer: Game owns ids.** The factory names presets and species. The game maps each
-preset name to its stored numeric id, and a saved map's id never depends on the factory.
+**Answer: Game owns ids.** Superseded by the follow-up: woods types are keyed by name,
+and each map stores its own name -> id table (see below).
 
 ### Which improvements should phase 2 include?
 | Option | What it means |
@@ -126,7 +136,8 @@ forest floor, ragged silhouettes.
 | New clustering field | A `clump` value gathers neighbours into groups. A second knob. |
 | Fixed 2x2 sub-grid | Every cell becomes four slots. Every existing type's count quadruples unless rescaled. |
 
-**Answer: Density above 100%.**
+**Answer: Density above 100%.** Superseded by the follow-up: a distribution function
+decides how many trees a cell grows, so no density field is needed.
 
 ### Existing islands will draw different forests after the change (nothing per-tree is stored). How to handle that?
 | Option | What it means |
@@ -169,132 +180,190 @@ forest floor, ragged silhouettes.
 
 **Answer: Same frame budget.**
 
+### Follow-up: how woods types are defined, keyed and stored
+The user decided this directly: the factory exports a list of woods types keyed by
+woods name. Each type is a **distribution function**, not a JSON record, so it can
+express relations between trees. Custom woods are mapped on load. The map saves only a
+woods_name -> id mapping for the ids in `vegetation.bin`.
+
+### What may a woods distribution function see when it decides the trees of a cell?
+| Option | What it means |
+|---|---|
+| Cell + neighbourhood | `fn(cell x/y, seeded rng, which neighbour cells within radius ~2 carry the same woods, terrain slope and height)` returns the cell's trees. Enables wood edges, clusters and understorey. Deterministic per cell. |
+| Single cell only | `fn(cell x/y, rng)`. Relations only among trees inside one cell. |
+| Whole tile at once | `fn(64x64 tile of woods ids, rng)`. Most freedom, but results depend on tile borders. |
+
+**Answer: Cell + neighbourhood.**
+
+### How is a custom woods mapped to the nearest factory woods type on load?
+| Option | What it means |
+|---|---|
+| By species mix | Compare the custom type's species share with a sampled share per factory type. |
+| By swatch colour | Nearest RGB swatch. |
+| Fixed fallback | Every custom woods becomes one chosen type (for example Mixed Woods). |
+
+**Answer: Fixed fallback.** This overrides "nearest" in the follow-up prompt. The
+fallback type is Mixed Woods, the example the option named; this can change while the
+spec is a draft.
+
+### Where does the name -> id mapping live?
+| Option | What it means |
+|---|---|
+| Versioned header in `vegetation.bin` | Name table in a new header of the grid file, and `woodsPalette` dropped. |
+| Keep woodsPalette key | The grid file is unchanged, and the name -> id table goes into `meta.json` under the existing `woodsPalette` key, replacing the per-type snapshots. |
+
+**Answer: Keep woodsPalette key.**
+
 ## High-level plan
 
 **Phase 1 - the move (no visible change).**
 
-- **Factory:** a new trees family gets one design per species (`tree-<species>`). The
-  game's builders are ported onto the factory's mesh core, with the high level as the
-  design, the low level as its `buildLod`, and a third coarse level that only this family
-  exports. The species colours come along as the design's materials, with trunk and
-  foliage as the two material names.
-- **The built-in woods presets** become factory data, identified by stable keys and
-  exported with their names, swatches, densities and species mix. The tree tests
-  (triangle caps, height and footprint pins, grounding, closed coarse solids,
-  surface-to-volume) move to the factory.
-- **Game:** the import mirrors the new modules and the woods meta. At load, the game runs
-  each species module per level and merges the meshes into the two-group geometry the
-  instanced renderer already expects. It then applies its own wind, shadows and
-  instancing. The game's table maps each preset key to its stored numeric id and its
-  i18n name key, and each species key to its model id. A game test compares triangle
-  counts and bounding boxes per species and level against the figures pinned before the
-  move, and then the old builders and the in-code preset library are deleted.
+- **Trees in the factory:** a new trees family gets one design per species
+  (`tree-<species>`). The game's builders are ported onto the factory's mesh core, with
+  the high level as the design, the low level as its `buildLod`, and a coarse level that
+  only this family exports. Species colours become the materials, named trunk and
+  foliage.
+- **Woods types in the factory:** each woods type becomes a named distribution function
+  in the factory. For each cell the function receives the cell, a seeded random source,
+  the same-woods mask of its neighbourhood (radius about 2) and the terrain slope and
+  height. It returns zero or more trees, each with species, in-cell offset, rotation,
+  height and tint, under a fixed per-cell cap that the budget sets. Each woods type also
+  has a display name, a swatch and a forest-floor colour. In phase 1 every built-in type
+  is a function that reproduces today's rule: one roll against density, a weighted
+  species pick and a height range. The export lists all woods types by name.
+- **Game:** the import mirrors the tree modules and the woods functions. At load the game
+  runs the species modules per level and merges them into its two-group instanced
+  geometry, then adds wind, shadows and instancing. `VegetationGen` calls the woods
+  function for each cell instead of its built-in roll. A woods type is shown with the
+  game's own translation of its name. A game test compares triangle counts and bounding
+  boxes per species and level against figures pinned before the move. The in-code tree
+  builders and woods library are then deleted.
+- **Maps:** every map gets its own woods_name -> id table, and old maps are converted on
+  load (see storage).
 
 **Phase 2 - the look (stylised, readable).** It depends on phase 1.
 
-- **Factory:** each species gets baked vertex colours: ambient occlusion from crown
-  interior and height, plus per-clump hue and value jitter. Crowns are reworked so their
-  silhouettes are ragged, with clumps of varied size, missing clumps and sky gaps, within
-  today's triangle caps. Proportions become stylised: slightly oversized, saturated and
-  high-contrast, with heights up to about 20% taller. Presets are retuned, and dense types
-  use densities above 100%. The site gains woods grove previews and thumbnails so the
-  forest look is reviewed in the factory.
-- **Game:** tree materials honour vertex colours. Each instance gets a tint and a slight
-  lean and width jitter from its cell hash. Placement rolls up to four sub-slots per cell
-  when density exceeds 100%. The ground tint from the woods map applies at every range,
-  using a darker forest-floor shade. The quality ladder's tree thresholds are retuned so
-  that the frame budgets hold.
+- **Factory:**
+  - **Vertex colours:** each species gets baked ambient occlusion and per-clump hue and
+    value jitter.
+  - **Silhouettes:** crowns get ragged outlines within today's triangle caps.
+  - **Proportions:** stylised, with heights up to about 20% taller.
+  - **Woods functions:** rewritten to use relations. Examples are several trees per cell
+    in dense types, smaller trees and bushes at a wood's edge, understorey under big
+    trees, and coherent clusters.
+  - **Site:** shows a grove preview and thumbnail per woods type, made by running the
+    same function on a patch.
+- **Game:**
+  - Tree materials honour vertex colours.
+  - Instances use the per-tree tint and lean the function returns.
+  - The ground tint from the woods map applies at every range, using each type's
+    forest-floor colour.
+  - The quality ladder's tree thresholds are retuned so the frame budgets hold.
 
-Workstreams within each phase are factory first, then game import, because the game
-consumes the export.
+Within each phase the factory work comes first, then the game import.
 
 ## Database and persistent storage
 
-Saved maps are unchanged: `vegetation.bin` (one woods id per cell), `woodsPalette` in
-`meta.json` and the built-in ids 1-13 keep their meaning, and the game still owns the
-ids. Existing islands draw re-rolled, restyled forests on the same painted ids, and no
-migration is needed. The woods validation range widens to allow densities up to 400.
-Older palette entries (<= 100) stay valid and keep their tree count.
+**Saved maps (game):**
 
-New stored files, all generated and deterministic:
+- **`vegetation.bin`** is unchanged: one `Uint8` per cell, `0` = none. Its ids become
+  **local to the map** (1..255) and mean nothing without the map's table.
+- **`meta.json` `woodsPalette`** changes meaning. Today it is an array of snapshots of
+  player-made woods types. It becomes the map's **name table**, an object mapping a woods
+  name (string, the factory key such as `pine-forest`) to its id (integer 1..255). It is
+  written on every save from the ids the grid actually paints, so an unused id is not
+  written. A new map assigns ids as woods are first painted or generated.
+- **Loading an old map**, where `woodsPalette` is absent or an array:
+  - ids 1..13 map through a fixed game-side legacy table to the built-in woods names they
+    always meant;
+  - ids 128..255 (custom slots from the old snapshots) map to the fixed fallback type,
+    Mixed Woods;
+  - the next save writes the new object form, and the snapshots are dropped.
 
-- **Factory export `woods.meta.json`** (mirrored into the game's `db/procedural` by
-  the import; never hand-edited there). Written by the factory build and read by the
-  game import and the factory site. Its structure:
-  - `species`: an array sorted by key. Each entry has `key` (string, stable, the same
-    names saved palettes already use, such as `pine`), `model` (the factory model id,
-    `tree-<key>`) and `baseHeight` per level (`coarse`, `low`, `high`; metres or studs as
-    the game expects).
-  - `presets`: an array sorted by key. Each entry has `key` (stable string such as
-    `pine-forest`), `name` (English), `swatch` `{r,g,b}`, `floor` `{r,g,b}` (the
-    forest-floor tint, phase 2), `density` (integer 1..400) and `models`, an array of
-    `{ species, minHeight, maxHeight, ratio }`, at most 12 entries.
-  - No numeric ids. The game owns the key-to-id table and fails its import test if a
-    preset it maps disappears.
-- **Factory export `js/tree-<species>.js`** and thumbnails, like every model. A tree
-  module additionally exports the coarse build next to `build` and `buildLod`.
-- **Woods grove thumbnails** (`thumbs/woods-<key>.png`) for the site.
-- **References** under `assets/tree-<species>/` with `SOURCES.md`, per the factory rule:
-  the RHS descriptions already cited, and any photos used for the stylised rework.
+  This is the only migration. It happens lazily on load, and no stored grid byte is
+  rewritten.
+- **Unknown names:** a name in a map's table that the current factory export lacks (a
+  removed woods type) also maps to the fallback.
+- **Custom woods:** their species mix, heights and densities are not kept. A custom woods
+  draws as the fallback from then on.
+
+**Factory export (generated, deterministic, mirrored into the game's `db/procedural`,
+never hand-edited there):**
+
+- `woods.meta.json`: an array sorted by name. Each entry is
+  `{ name, label (English), swatch {r,g,b}, floor {r,g,b}, module }`, and nothing about
+  species mix or density.
+- One JS module per woods type, exporting the distribution function. It has no imports
+  and is deterministic for a given seed and cell.
+- `js/tree-<species>.js` and the thumbnails, like every model. A tree module also
+  exports its coarse build. Species keys and woods names are stored in maps (directly, or
+  through the legacy table), so a factory test pins the shipped ones against renaming.
+- Grove thumbnails `thumbs/woods-<name>.png`, and reference folders
+  `assets/tree-<species>/` with `SOURCES.md`.
 
 ## Architecture decisions
 
-- **One design per species, not a parametric tree.** Species have different builders
-  and references. Separate ids give each its own catalog page, thumbnail and LOD checks,
-  and give woods presets a plain model id to point at.
-- **The game runs the JS modules rather than baked geometry.** Trees use the same single
-  export format as every other model, so phase 2 rework needs no new file type. The cost
-  is a build per species and level at load, about 42 small builds, which are cached.
-- **Wind, instancing, placement and the quality ladder stay in the game.** They are
-  rendering policy and depend on the map. The factory owns what a tree and a woods type
-  look like, and the game owns where and how many trees are drawn.
-- **The game owns numeric ids.** Saved maps store numbers, and the factory never sees a
-  save. Keys decouple the two, at the cost of a game-side table edit when a preset is
-  added.
-- **The visual gains come from colour, not textures.** Vertex colours plus instance tint
-  keep the closed-solid, no-alpha, no-texture design the game chose for tiled mobile GPUs.
-  This needs the factory's JS format and in-memory GLB to carry a colour attribute: a
-  format extension that every consumer must tolerate.
-- **Density above 100% instead of a new field.** One existing number keeps its meaning
-  up to 100 and simply extends past it.
+- **One design per species.** Each gets its own catalog page, thumbnail, LOD checks and
+  references, and the woods functions name species by key.
+- **The game runs the JS modules rather than baked geometry.** There is one export
+  format for everything. About 42 small builds per load (14 species x 3 levels) are
+  cached, and a level is built lazily.
+- **Woods types are code, not data.** Relations such as edges, clusters and understorey
+  cannot be written as a species/ratio table. A function keyed by a stable name also lets
+  a woods type change completely without touching saved maps. The cost is that a woods
+  type cannot be inspected or validated as data, so the factory tests and the grove
+  preview are the only review.
+- **The neighbourhood is limited to radius about 2 plus terrain.** Trees stay
+  deterministic per cell and independent of tile borders and of the order chunks are
+  built in, which the streamed forest needs. A whole-tile function would break that.
+- **Names in maps, ids local to each map.** The factory owns names. The map owns its
+  bytes and keeps the cheap one-byte grid. No global id registry exists, so adding a
+  woods type touches only the factory and the game's translation of its name.
+- **The table lives in `meta.json`, not in `vegetation.bin`.** The grid file and its
+  readers stay unchanged, and the change is one JSON key changing shape.
+- **Custom woods go to a fixed fallback.** Only a few users made custom woods. A nearest
+  match would need species-mix sampling for little gain.
+- **Wind, instancing, chunk streaming and the quality ladder stay in the game.** The
+  factory decides what grows in a cell, and the game decides how much of it is drawn.
+- **Colour comes from vertex colours and instance tint, not textures.** Trees keep the
+  closed-solid, no-alpha design that mobile GPUs need. The factory's JS format and its
+  in-memory GLB gain a colour attribute.
 
 ## Weaknesses and risks
 
-- **Metric-only proof in phase 1.** Small shape drift (vertex order, normals, a moved
-  clump) can pass a triangle count and bounding-box check unnoticed. Likelihood medium,
-  cost low, since phase 2 restyles everything anyway. Mitigation: before and after
-  thumbnails of each species and level are compared by eye.
-- **Load-time cost.** Building 14 species at 3 levels from JS at startup might add tens of
-  milliseconds on phones. Mitigation: build lazily per level when a band first needs it,
-  as the renderer already prunes unreachable levels.
-- **Instance count.** At 400% density a tile holds four times the trees, so the
-  per-instance buffers and coarse pool grow even with the same triangle budget. The
-  retuned ladder may make dense forests go coarse noticeably close to the camera.
-  Mitigation: the presets choose densities against the ladder tests, and the factory
-  grove preview shows the coarse look.
-- **Stylised heights versus existing scenes.** Trees up to 20% taller can hide track,
-  signals or station platforms that were visible before, and vegetation clearing around
-  blocks stays one cell. Mitigation: keep the oversize mostly in crown width and
-  contrast, and check city and station views in the game.
-- **Colour-attribute format change.** Other factory consumers (the OpenTTD sprite export,
-  the GLB ZIP, the site) must handle or ignore vertex colours consistently. Open question:
-  should the OpenTTD and GLB exports use them? That is recommended, because sprites
-  benefit most.
-- **Grove previews diverge from the game.** The site's grove uses its own simple
-  placement, not the game's per-cell hash and sub-slots, so it may not match an island
-  exactly. Open question: should the placement roll be shared, or is an approximation
-  enough?
-- **Species keys are now two-repository contracts.** A renamed factory species would
-  break saved palettes. A factory test pins the shipped keys, just as model ids are
-  pinned.
+- **Custom woods lose their look.** Players who built custom woods see them turn into
+  Mixed Woods after their next load. This is certain on those few maps. Mitigation: a
+  changelog note. The old snapshot stays in the map until the next save.
+- **Per-cell function cost.** Calling a JS function with a neighbourhood mask for about
+  26,000 cells per tile ring is slower than today's hoisted ratio walk. Mitigation: the
+  game builds the mask from the grid once per tile, and a function must stay
+  allocation-free per cell. A factory benchmark test bounds its time per cell.
+- **Determinism across repositories.** The seeded random source and the mask must be
+  identical in the factory preview and the game. If they differ, the grove preview lies.
+  Mitigation: the export defines the contract (seed mixing, mask layout), and both sides
+  test against fixed vectors.
+- **Metric-only proof in phase 1.** Shape drift can pass the count and bounding-box check.
+  Mitigation: before and after thumbnails per species and level are compared by eye.
+- **Instance count.** Dense functions place several trees per cell under the same
+  triangle budget, so forests go coarse closer to the camera. Mitigation: a per-cell cap
+  and ladder tests in the game.
+- **Stylised heights** may hide track, signals or platforms that were visible before.
+  Mitigation: keep the oversize mostly in crown width, and check city and station views.
+- **The colour-attribute format change** must be handled by the other factory consumers
+  (OpenTTD sprite export, GLB ZIP, site). Open question: should those exports use the
+  colours too?
+- **Open question: the per-cell tree cap** (4 is the working figure) and whether the
+  function may place a tree's offset outside its cell.
 
 ## Out of scope
 
-- Ground-cover meshes (undergrowth, ferns, reeds, stumps). The floor is a terrain tint
-  only.
-- Seasons or a calendar-driven colour change. Autumn larch stays a separate species.
-- Moving the wind shader, placement (`VegetationGen`, `WoodsGen`, `CityVegetation`) or
-  the woods board into the factory.
-- Player-made woods types and the Creator woods editor, which stay removed.
+- Keeping or migrating the exact look of custom woods. They become the fallback.
+- Editing or creating woods types in the game or the Creator. Woods types are authored in
+  the factory only.
+- Ground-cover meshes (undergrowth meshes, ferns, reeds, stumps) beyond the species the
+  functions can place. The floor is a terrain tint.
+- Seasons. Autumn larch stays a separate species.
+- Moving the wind shader, map-level generation (`WoodsGen`, `CityVegetation`, which pick
+  the woods type per cell) or the woods board into the factory.
 - Billboards, alpha-tested leaf cards and textures.
 - Publishing the factory export to the game outside the implementation of this spec.
