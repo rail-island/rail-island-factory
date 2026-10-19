@@ -3517,28 +3517,28 @@
     "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
   },
   "train-emu-shinkansen-bullet-car-1": {
-    "designId": "veh-cd-680",
+    "designId": "veh-shinkansen-0",
     "params": {
-      "unit": "car683"
+      "unit": "motorCar"
     },
     "quality": "substitute",
-    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+    "reason": "Archived model; the procedural Shinkansen 0 series car of the same role."
   },
   "train-emu-shinkansen-bullet-car-2": {
-    "designId": "veh-cd-680",
+    "designId": "veh-shinkansen-0",
     "params": {
-      "unit": "car683"
+      "unit": "pantographCar"
     },
     "quality": "substitute",
-    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+    "reason": "Archived model; the procedural Shinkansen 0 series car of the same role."
   },
   "train-emu-shinkansen-bullet-end-car": {
-    "designId": "veh-cd-680",
+    "designId": "veh-shinkansen-0",
     "params": {
       "unit": "endCar"
     },
     "quality": "substitute",
-    "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
+    "reason": "Archived model; the procedural Shinkansen 0 series car of the same role."
   },
   "train-loco-diesel-cd-704-red": {
     "designId": "veh-cd-704",

@@ -25,12 +25,14 @@ and materials, including a complete articulated bus. It is not a per-mesh allowa
 | Models | Maximum triangles |
 | --- | ---: |
 | Rail and road vehicles, ordinary buildings, village houses, ships, cabins and other ordinary models | 100 |
-| An articulated vehicle or trainset (its full rig has n sections) | min(300, 100 n) |
+| An articulated vehicle or trainset (its full rig has n sections) | min(300, 100 n); the Shinkansen 0 series and the TGV Duplex min(500, 100 n) |
 | Aircraft | 200 |
 | Historical buildings (including the castle), towers and skyscrapers | 500 |
 
 A design can set `lodTriangles` to override its family policy (the TGV does:
-its default build is the lone power car, its sets have up to six cars). Stable model ids,
+its default build is the lone power car, its sets have up to six cars; the
+Shinkansen 0 series and the TGV Duplex set 500 for their trains of up to 16 and
+12 cars). Stable model ids,
 scale, coordinates and parameter choices stay the same. The thumbnail,
 metadata and source tree remain the full-resolution defaults.
 

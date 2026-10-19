@@ -62,6 +62,8 @@ export interface BogieSpec {
   frame?: number;
   /** How far the side frames reach beyond the axles (m), default 0.42. */
   overhang?: number;
+  /** The sections it carries: two for a Jacobs bogie under a joint (MeshCore.bogie). */
+  sections?: number[];
 }
 
 /**
@@ -70,7 +72,7 @@ export interface BogieSpec {
  * when powered. Treads on y = 0.
  */
 export function unitBogie(c: Coach, x: number, b: BogieSpec): void {
-  c.m.bogie(() => unitBogieGeometry(c, x, b));
+  c.m.bogie(() => unitBogieGeometry(c, x, b), b.sections ? { sections: b.sections } : {});
 }
 
 function unitBogieGeometry(c: Coach, x: number, b: BogieSpec): void {
