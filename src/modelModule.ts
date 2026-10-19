@@ -5,12 +5,14 @@
 // three reaches the page only when one of them runs.
 
 import { AnimationClip, BufferAttribute, BufferGeometry, Group, Mesh, MeshStandardMaterial, QuaternionKeyframeTrack, VectorKeyframeTrack, type Object3D } from "three";
-import type { CatalogRecord } from "./catalogQuery";
+import type { CatalogRecord, PreviewLod } from "./catalogQuery";
 
 type JsBuild = (three: object, params?: Record<string, string>, lod?: boolean) => Object3D;
 /** A model's JS module: build(), and for a rigged model pose() (generator/rig.ts). */
 export interface JsModule {
   default: JsBuild;
+  /** A tree's third, coarsest level (docs/models/trees.md). */
+  buildCoarse?: (three: object, params?: Record<string, string>) => Object3D;
   pose?: (root: Object3D, pose: { steer: number; bend: number[] }) => void;
 }
 /** The classes a model's JS module uses: all it needs of three. */
@@ -41,7 +43,9 @@ export function jsModule(url: string): Promise<JsModule> {
  * The model as the page should show it: a JS build of the chosen values, with its
  * animation clips (none for most models).
  */
-export async function loadModel(record: CatalogRecord, params: Record<string, string>, lod = false): Promise<{ object: Object3D; clips: AnimationClip[] }> {
-  const object = (await jsModule(`/${record.jsUrl}`)).default(THREE_SUBSET, params, lod);
+export async function loadModel(record: CatalogRecord, params: Record<string, string>, lod: PreviewLod = false): Promise<{ object: Object3D; clips: AnimationClip[] }> {
+  const mod = await jsModule(`/${record.jsUrl}`);
+  // a tree's coarse level, where the model has one; any other model's low LOD
+  const object = lod === "coarse" && mod.buildCoarse ? mod.buildCoarse(THREE_SUBSET, params) : mod.default(THREE_SUBSET, params, lod !== false);
   return { object, clips: object.animations };
 }

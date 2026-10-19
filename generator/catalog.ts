@@ -133,6 +133,8 @@ export interface CatalogRecord extends MetaEntry {
   sizeZ: number;
   /** The source images the model was made from, by name; empty when it has none. */
   references: ReferenceImage[];
+  /** Set when the JS model also exports buildCoarse (a tree's third level, docs/models/trees.md). */
+  coarse?: boolean;
   /**
    * A vehicle's declared OpenTTD figures (design.ts OpenttdProperties), for the
    * site's GRF export only -- not part of the game's meta.json. Absent when the

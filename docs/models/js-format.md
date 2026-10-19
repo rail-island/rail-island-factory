@@ -48,7 +48,8 @@ scene.add(build(THREE)); // a THREE.Group named after the model id
   `vertexColors` (the GLB's `COLOR_0`: linear multipliers of the material colour); a material spec with
   `doubleSided` (a palm's fronds) is `THREE.DoubleSide` (the GLB's `doubleSided`). Other models are unchanged.
 - **The coarse level.** A tree's module also exports `buildCoarse(THREE)`, its third and coarsest level
-  ([lod.md](lod.md)).
+  ([lod.md](lod.md)). The game takes its trees from `trees.js` instead, every species in one module
+  ([trees.md](trees.md)); the per-species files are the catalog's and the site's.
 - **The same triangles.** The positions and normals equal the GLB's, not an approximation: it is the same
   algorithm running on the same geometry code.
 

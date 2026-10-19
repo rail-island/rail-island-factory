@@ -489,13 +489,14 @@ export async function buildExport(
     records: designs.map((design) => {
       const built = models.find((m) => m.id === design.id)!;
       const jsText = js.get(design.id)!;
-      return catalogRecord(metaEntry(design, catalogFields(design), built.rig, built.side), {
+      const record = catalogRecord(metaEntry(design, catalogFields(design), built.rig, built.side), {
         ...built.stats,
         jsBytes: Buffer.byteLength(jsText),
         jsGzipBytes: gzipSize(jsText),
         jsHash: crypto.createHash("sha256").update(jsText).digest("hex").slice(0, 16),
         thumbBytes: fs.statSync(built.thumb).size,
       }, refs.get(design.id), design.openttd);
+      return design.buildCoarse ? { ...record, coarse: true } : record;
     }),
   };
   // the legacy table maps old ids onto the whole catalog, so a narrowed export has none

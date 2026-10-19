@@ -25,6 +25,7 @@ and `pnpm dev`) writes the gitignored `export/`:
 | `export/vehicles.meta.json` | the same per vehicle, under `vehicles` |
 | `export/woods/<name>.js` | a woods type's distribution function, one standalone module each ([woods.md](woods.md)) |
 | `export/woods.meta.json` | every woods type and every tree species, for the game to import ([woods.md](woods.md)) |
+| `export/trees.js` | every tree species in one module, `buildTree(THREE, species, detail)`, what the game draws its forests with ([trees.md](trees.md)) |
 | `export/thumbs/woods-<name>.png` | a woods type's grove preview, for the site ([woods.md](woods.md)) |
 | `export/catalog.json` | what the site lists |
 

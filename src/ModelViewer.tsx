@@ -33,7 +33,7 @@ import {
   Raycaster, Scene, Vector2, Vector3, WebGLRenderer, type Object3D,
 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { posePreview, previewKey, type CatalogRecord } from "./catalogQuery";
+import { posePreview, previewKey, type CatalogRecord, type PreviewLod } from "./catalogQuery";
 import { jsModule, loadModel } from "./modelModule";
 import { leafAt, rangesOf, type TreeIndex } from "./sourceTreeView";
 import { applyHighlight, makeParts, type Part } from "./viewerHighlight";
@@ -53,7 +53,8 @@ const CLICK_SLOP = 5;
 
 export function ModelViewer(props: {
   record: CatalogRecord;
-  lod?: boolean;
+  /** Which level to build: the full model, its low LOD (true), or a tree's coarse level. */
+  lod?: PreviewLod;
   onTriangles?: (count: number) => void;
   /** A parametric model's chosen values (effectiveParams); {} for the defaults. */
   params?: Record<string, string>;

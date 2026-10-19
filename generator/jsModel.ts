@@ -23,7 +23,7 @@ export const JS_DIR = "js";
 const THREE_BUILDER = path.join(GENERATOR_DIR, "threeBuilder.ts");
 
 /** Swaps the recording MeshBuilder for the lean one inside a model's bundle. */
-const leanMeshBuilder: Plugin = {
+export const leanMeshBuilder: Plugin = {
   name: "lean-mesh-builder",
   setup(b) {
     b.onResolve({ filter: /(^|\/)meshBuilder(\.ts)?$/ }, () => ({ path: THREE_BUILDER }));

@@ -84,9 +84,21 @@ Area: rail-island-factory (trees, woods, export, site); rail-island-webapp (wood
   design count that had to include the trees); that test was fixed and re-run green.
   `pnpm build:models` built 208 models.
 - Game: `pnpm typecheck` (app and worker) clean. `pnpm test` gave 536 files,
-  7122 passed, 2 skipped. `pnpm build` passes (each tree a lazy chunk, 12.4 KB gzipped).
+  7122 passed, 2 skipped. `pnpm build` passes (the trees one lazy chunk, follow-up 1).
 - `TEST_ALL_VARIANTS=1` was not run, because no existing design's parameters
   changed.
+
+## Follow-up changes
+
+1. **All tree species in one module.** The export now writes `trees.js`
+   (`bundleTrees`): every species, `buildTree(THREE, species, detail)`, 32 KB
+   (12.3 KB gzipped) in place of fourteen 32 KB per-species modules. The game imports
+   it through `loadTrees` and no longer copies the per-species files, which stay as
+   the catalog's and the site's.
+2. **Coarse preview in the factory.** Tree catalog records carry `coarse: true`. On
+   the site, the model page's "Low level of detail" checkbox became a **Level of
+   detail** select (Full / Low / Coarse), and Coarse builds the module's
+   `buildCoarse`.
 
 ## How to test
 
@@ -124,6 +136,10 @@ create a new island with Woods set to "Woodlands".
 8. Draw a row of trees along a road (line decoration). The trees appear, using the
    new species and colours.
 
+9. On the factory site (`pnpm dev`), pick the Trees chip and open `proc-tree-oak`.
+   Set Level of detail to Coarse: a 20-triangle tree with the same outline appears,
+   and the triangle count reads "(coarse)". Step to a building: it shows its LOD.
+
 **Also worth trying.**
 
 - A phone or the lowest quality rung: dense forests should drop to coarse earlier,
@@ -137,13 +153,9 @@ create a new island with Woods set to "Woodlands".
   denser woods keep the same frame budget. The per-rung budget tests still pass
   unchanged, but no threshold was retuned and nothing was measured in a browser.
   This needs a browser profile, which the repo rules leave to the user.
-- **Coarse level toggle on the site.** The site's model page has no toggle for the
-  coarse level; only the factory's export carries it.
 
 ## Known problems
 
-- **Bundle size.** Each tree module bundles the whole `trees.ts`, about 32 KB each
-  and 11.5 KB gzipped, so about 160 KB gzipped for 14 species, fetched lazily.
 - **Full import churn.** Every factory module's code changed (vertex-colour support
   in `toGroup`), so the next full `pnpm import:factory` will touch all 194 game
   modules even though they render the same. This change used `--woods-only` to keep
@@ -163,12 +175,9 @@ create a new island with Woods set to "Woodlands".
 ## Recommended follow-ups
 
 1. Profile a dense forest on a phone and retune `treeCoverage` if it is needed.
-2. Ship the 14 tree species as one shared module, to remove the duplicated code
-   (about 130 KB gzipped).
-3. Add the site's coarse-level toggle.
-4. Decide whether the OpenTTD and GLB-ZIP exports should use the vertex colours
+2. Decide whether the OpenTTD and GLB-ZIP exports should use the vertex colours
    (this is an open question in the spec).
-5. Give the woods functions water distance, so riverside willows and reeds are
+3. Give the woods functions water distance, so riverside willows and reeds are
    possible.
 
 ## Changelog

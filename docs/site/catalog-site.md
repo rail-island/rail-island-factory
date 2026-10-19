@@ -102,7 +102,8 @@ missing file with `index.html`, so the response type is checked too).
   own. Picked, it shows the **woods types** above them (`src/WoodsGallery.tsx`, read
   from `/woods.meta.json`): one card per type with its grove preview
   (`thumbs/woods-<name>.png`), its stable name and its swatch and forest-floor
-  colours ([../models/woods.md](../models/woods.md)).
+  colours ([../models/woods.md](../models/woods.md)). A tree's page also offers a
+  *Coarse (distant forest)* level of detail ([../models/lod.md](../models/lod.md)).
 
 ## The thumbnail view
 

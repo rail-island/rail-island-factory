@@ -24,7 +24,7 @@
 import { For, Match, Show, Suspense, Switch, createEffect, createMemo, createResource, createSignal, lazy, on, onCleanup } from "solid-js";
 import {
   COLUMNS, effectiveParams, formatBytes, isDefaultParams, nonDefaultParams, pageKey, poseControls, poseOf,
-  type DetailTab, type PoseValues, type Row,
+  type DetailTab, type PoseValues, type PreviewLod, type Row,
 } from "./catalogQuery";
 import { indexTree, type SourceTree } from "./sourceTreeView";
 import { FileCell } from "./ModelTable";
@@ -62,7 +62,11 @@ export function ModelDetail(props: {
   /** Add the variant on screen (the chosen parameter values) to the export list. */
   onAddExport: () => void;
 }) {
-  const [lod, setLod] = createSignal(false);
+  // The level shown: the full model, its low LOD, or (a tree's) coarse level. Kept
+  // while stepping between models; a model without a coarse level shows its LOD.
+  const [detail, setDetail] = createSignal<"full" | "low" | "coarse">("full");
+  const lod = createMemo<PreviewLod>(() =>
+    detail() === "full" ? false : detail() === "coarse" && props.record.coarse ? "coarse" : true);
   const [triangles, setTriangles] = createSignal<number>();
   const values = createMemo(() => effectiveParams(props.record, props.params));
   const atDefaults = createMemo(() => isDefaultParams(props.record, values()));
@@ -127,10 +131,18 @@ export function ModelDetail(props: {
           {props.exported ? "In the export" : "Add to export"}
         </button>
         <label class="factory-param">
-          <span>Low level of detail</span>
-          <input type="checkbox" checked={lod()} onChange={(e) => setLod(e.currentTarget.checked)} />
+          <span>Level of detail</span>
+          <select aria-label="Level of detail" value={lod() === "coarse" ? "coarse" : lod() ? "low" : "full"} onChange={(e) => setDetail(e.currentTarget.value as "full" | "low" | "coarse")}>
+            <option value="full">Full detail</option>
+            <option value="low">Low (LOD)</option>
+            <Show when={props.record.coarse}>
+              <option value="coarse">Coarse (distant forest)</option>
+            </Show>
+          </select>
         </label>
-        <p class="factory-muted" aria-live="polite">Preview: {triangles() ?? "..."} triangles{lod() ? " (LOD)" : " (full detail)"}</p>
+        <p class="factory-muted" aria-live="polite">
+          Preview: {triangles() ?? "..."} triangles{lod() === "coarse" ? " (coarse)" : lod() ? " (LOD)" : " (full detail)"}
+        </p>
         <Show when={(props.record.params ?? []).length > 0}>
           <fieldset class="factory-params">
             <legend>Parameters</legend>

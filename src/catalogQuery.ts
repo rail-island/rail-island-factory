@@ -570,8 +570,11 @@ export function posePreview<T>(
 }
 
 /** Which model and parameter values a preview was built for, as one comparable string. */
-export function previewKey(id: string, params: Record<string, string>, lod = false): string {
-  return `${id}?${JSON.stringify(Object.keys(params).sort().map((k) => [k, params[k]]))}${lod ? "&lod=true" : ""}`;
+/** Which level a preview builds: the full model, its low LOD (true), or a tree's coarse level. */
+export type PreviewLod = boolean | "coarse";
+
+export function previewKey(id: string, params: Record<string, string>, lod: PreviewLod = false): string {
+  return `${id}?${JSON.stringify(Object.keys(params).sort().map((k) => [k, params[k]]))}${lod ? `&lod=${lod}` : ""}`;
 }
 
 /**

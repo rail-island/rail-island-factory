@@ -81,7 +81,9 @@ quarter tree a cell so the lawn shows, the mountain forest shrinks with height.
   `woods` (name, label, swatch, floor), `distribute`, `sample`, `MAX_TREES_PER_CELL`
   and `MASK_RADIUS` (esbuild; the types are marked pure so a module carries only its
   own);
-- `woods.meta.json`: `maxTreesPerCell`, every tree species (`species`, `id`) and every
+- `trees.js`: every tree species in one module, which the game imports
+  ([trees.md](trees.md));
+- `woods.meta.json`: `maxTreesPerCell`, `treesModule`, every tree species (`species`, `id`) and every
   woods type (`name`, `label`, `swatch`, `floor`, `module`), each list sorted by key, no
   numeric ids -- the game maps names to the ids its maps store;
 - `thumbs/woods-<name>.png`: the grove preview (below), re-rendered only when its

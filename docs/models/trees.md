@@ -97,6 +97,24 @@ larger than life and ragged outlines. The trees take the parts a mesh can carry:
 The game adds the rest per instance: the woods type's `width`, `lean`, `shade` and
 `hue` per tree ([woods.md](woods.md)).
 
+## One module for the game
+
+Each `js/proc-tree-<species>.js` carries the whole of `trees.ts` -- `buildTree` picks
+the species at run time, so nothing can be shaken out -- which is right for the
+catalog and the site, which build one tree at a time, and wasteful for the game,
+which needs all fourteen. The export therefore also writes **`trees.js`**
+(`woodsExport.ts` `bundleTrees`): every species in one standalone module,
+`buildTree(THREE, species, "high" | "low" | "coarse")` returning the same Group of
+`trunk` and `foliage` the per-species modules build, and `SPECIES`. It is about 32 KB
+(12 KB gzipped) against fourteen times that; `woods.meta.json` names it
+(`treesModule`), and the game imports it instead of the per-species files.
+
+## The coarse preview
+
+A tree's catalog record carries `coarse: true`, and the site's model page offers a
+third **Level of detail**, *Coarse (distant forest)*, beside full and low: it builds
+the JS model's `buildCoarse` ([../site/catalog-site.md](../site/catalog-site.md)).
+
 ## Budgets and tests
 
 `test/trees.test.ts`: the species list; the game's budgets (`low` at most 5% over the
@@ -104,7 +122,8 @@ fixture, `high` and `coarse` not at all); light and shade baked at every level, 
 crown's top lighter than its underside; coarse at most 20 and at least three times
 cheaper than low, high at least three times low; grounded, same size at every level,
 coarse box equal to low; closed coarse solids; only palm and willow foliage
-double-sided. The catalog sweep builds every tree in JS as in the generator.
+double-sided; `trees.js` building every species and level with the designs' own
+triangle counts. The catalog sweep builds every tree in JS as in the generator.
 
 References: `assets/trees/SOURCES.md` (written descriptions and OpenTTD's sprites,
 looked at, nothing downloaded).

@@ -140,3 +140,30 @@ describe("tree levels", () => {
     }
   });
 });
+
+describe("the shared trees module", () => {
+  it("builds every species at every level with the designs' own triangles, in one standalone file", async () => {
+    const { bundleTrees } = await import("../generator/woodsExport");
+    const THREE = await import("three");
+    const text = await bundleTrees();
+    expect(text.replace(/^\/\/.*\n/, "")).not.toMatch(/\bimport\s*[\w{*"'(]/);
+    expect(await bundleTrees()).toBe(text);
+    const mod = await import(`data:text/javascript;base64,${Buffer.from(text).toString("base64")}`);
+    expect([...mod.SPECIES].sort()).toEqual([...SPECIES].sort());
+    for (const species of SPECIES) {
+      for (const detail of LEVELS) {
+        const group = mod.buildTree(THREE, species, detail);
+        let n = 0;
+        const names: string[] = [];
+        group.traverse((o: { isMesh?: boolean; name: string; geometry?: { getAttribute(n: string): { count: number } } }) => {
+          if (!o.isMesh) return;
+          names.push(o.name);
+          n += o.geometry!.getAttribute("position").count / 3;
+        });
+        expect(names.sort(), `${species} ${detail}`).toEqual(["foliage", "trunk"]);
+        expect(n, `${species} ${detail}`).toBe(built(species, detail).triangleCount());
+      }
+    }
+    expect(() => mod.buildTree(THREE, "baobab", "high")).toThrow();
+  }, 60_000);
+});

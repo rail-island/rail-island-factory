@@ -304,3 +304,19 @@ describe("downloads", () => {
     expect(sorted).toEqual(["proc-building-sky-twin-towers", "proc-building-sky-art-deco", "proc-building-sky-pagoda"]);
   });
 });
+
+describe("previewKey", () => {
+  it("tells the full model, its LOD and a tree's coarse level apart", async () => {
+    const { previewKey } = await import("../src/catalogQuery");
+    const keys = [previewKey("proc-tree-oak", {}), previewKey("proc-tree-oak", {}, true), previewKey("proc-tree-oak", {}, "coarse")];
+    expect(new Set(keys).size).toBe(3);
+    expect(previewKey("proc-tree-oak", {}, false)).toBe(keys[0]);
+  });
+});
+
+describe("the Trees chip", () => {
+  it("files the tree species under a first-row chip of their own", async () => {
+    const { groupOf } = await import("../src/catalogQuery");
+    expect(groupOf({ category: "Trees", group: "tree" } as never)).toBe("tree");
+  });
+});
