@@ -46,7 +46,9 @@ scene.add(build(THREE)); // a THREE.Group named after the model id
 - **Vertex colours and double-sided materials.** A model drawn with `MeshCore.triShaded` (the trees' baked
   light and shade, [trees.md](trees.md)) carries a `color` attribute per mesh and its materials set
   `vertexColors` (the GLB's `COLOR_0`: linear multipliers of the material colour); a material spec with
-  `doubleSided` (a palm's fronds) is `THREE.DoubleSide` (the GLB's `doubleSided`). Other models are unchanged.
+  `doubleSided` (a palm's fronds) is `THREE.DoubleSide` (the GLB's `doubleSided`), so a namespace passed in
+  must carry `DoubleSide`: without it the fronds draw one-sided, visible only from below. Other models are
+  unchanged.
 - **The coarse level.** A tree's module also exports `buildCoarse(THREE)`, its third and coarsest level
   ([lod.md](lod.md)). The game takes its trees from `trees.js` instead, every species in one module
   ([trees.md](trees.md)); the per-species files are the catalog's and the site's.

@@ -215,7 +215,8 @@ another model or parameter choice stops them
 ([../models/animation.md](../models/animation.md)).
 
 `ModelViewer.tsx` (with its helpers `viewerHighlight.ts` and `modelModule.ts`, which
-fetches and builds a model's JS module), the variant thumbnail renderer (`thumbRender.ts`) and the export (`exportRun.ts`) are the only
+fetches and builds a model's JS module with the subset of three it reads, `THREE_SUBSET`, constants such as
+`DoubleSide` included; `test/modelModule.test.ts` checks it against the builder's code), the variant thumbnail renderer (`thumbRender.ts`) and the export (`exportRun.ts`) are the only
 code importing three (plus `OrbitControls`, or the `GLTFExporter`), each reached
 through a lazy import, so the list loads ~30 kB of script and the renderer arrives
 only when a model opens, a variant thumbnail is needed or an export runs. It renders on demand
