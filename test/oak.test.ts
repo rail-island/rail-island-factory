@@ -43,21 +43,23 @@ describe("reference oak", () => {
     expect(new Set(positions).size).toBe(5);
   });
 
-  it("spends Max detail on smaller lobed leaves and finer wood without changing the tree's envelope", () => {
+  it("spends Max detail on lumpier clumps of faceted leaves and finer wood without changing the tree's envelope", () => {
     const max = oakParts("max");
-    expect(max.foliage.filter((g) => g.count / 3 === 20)).toHaveLength(48);
-    expect(max.foliage.filter((g) => g.count / 3 === 10)).toHaveLength(816);
-    expect(treeOakMax().triangleCount()).toBe(9710);
-    expect(treeOakMax({ foliage: "airy" }).triangleCount()).toBe(8190);
+    expect(max.foliage.filter((g) => g.count / 3 === 20)).toHaveLength(39);
+    expect(max.foliage.filter((g) => g.count / 3 === 4)).toHaveLength(1950);
+    expect(max.trunk.reduce((n, g) => n + g.count / 3, 0)).toBe(794);
+    expect(treeOakMax().triangleCount()).toBe(9374);
+    expect(treeOakMax({ foliage: "airy" }).triangleCount()).toBe(7554);
     expect(TREES.filter((d) => d.buildMax).map((d) => d.id)).toEqual(["proc-tree-oak"]);
   });
 
-  it("uses 48 small cores and 240 leaf blades, with an airy option of 40 cores", () => {
+  it("builds thirteen clumps of 48 folded leaves each, with an airy option of 36", () => {
     const full = oakParts("high"), airy = oakParts("high", oakOptions({ foliage: "airy" }));
-    expect(full.foliage.filter((g) => g.count / 3 === 12)).toHaveLength(48);
-    expect(full.foliage.filter((g) => g.count / 3 === 4)).toHaveLength(240);
-    expect(airy.foliage.filter((g) => g.count / 3 === 12)).toHaveLength(40);
-    expect(treeOak().triangleCount()).toBe(1938);
+    expect(full.foliage.filter((g) => g.count / 3 === 20)).toHaveLength(13);
+    expect(full.foliage.filter((g) => g.count / 3 === 2)).toHaveLength(624);
+    expect(airy.foliage.filter((g) => g.count / 3 === 2)).toHaveLength(468);
+    expect(oakParts("low").foliage).toHaveLength(13);
+    expect(treeOak().triangleCount()).toBe(1886);
     expect(full.ribbons).toBe(true);
   });
 

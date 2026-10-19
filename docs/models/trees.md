@@ -102,30 +102,35 @@ larger than life and ragged outlines. The trees take the parts a mesh can carry:
 - **Brighter, more saturated colours** (`TREE_COLORS`), since the shading now darkens
   most of the crown below them.
 
-The **oak** is rebuilt from the user-provided visual brief in `assets/oak/`.
-`oak.ts` derives sixteen terminal foliage pads from seven staggered, bent boughs
-and the central leader. Each pad carries three small foliage cores and fifteen
-folded, six-sided leaf blades. The lower right bough reaches almost horizontally;
-upper limbs rise into staggered foliage tiers, leaving visible wood and daylight
-between the pads. A continuous faceted trunk loft and four root buttresses anchor
-it. Per-face vertex colours shade the underside dark green, exposed leaves medium
-green, and the uppermost leaves yellow-green, with warm brown wood.
+The **oak** is rebuilt from the user-provided references in `assets/oak/`; its
+second redesign follows `reference-max.png` (a stylised low-poly oak). Every level
+derives from one seeded layout (`layout` in `oak.ts`): a leaning, flared trunk that
+forks at about y = 3.2 into three rising limbs, two low side boughs leaving the
+trunk below the fork, and thirteen leaf clumps arranged as a broad dome - one top
+clump and rings of four, six and two (the two lowest hang from the side boughs, left
+and right, so the trunk and fork stay visible). Each limb serves the clumps nearest
+its bearing through a bowed twig ending inside the clump. Seeds vary the lean, the
+fork height, the crown's offset over the trunk, the ring phases, clump spacing,
+height and size, and the limb bearings.
+
+A high-detail clump is a dark closed core (an icosahedron) under twelve tufts of
+four pointed leaves, each leaf folded once along its midrib and raised 35-60
+degrees out of the clump surface, so the clump reads as a lumpy leaf mass rather
+than a ball. Tufts sit mostly on the upper half. Per-face vertex colours paint
+leaves by height, by the direction their tuft faces and by how far it stands out
+of the crown: dark green inside and underneath, medium green on the sides and
+yellow-green on top; the bark is warm brown, lit on one flank.
 
 | Oak geometry | Full foliage | Airy foliage |
 |---|---:|---:|
-| Wood (trunk, roots, boughs and forks) | 402 | 402 |
-| Closed foliage cores | 48 / 576 triangles | 40 / 480 triangles |
-| Leaf blades | 240 / 960 triangles | 200 / 800 triangles |
-| Total high detail | **1,938** | **1,682** |
-| Low / coarse detail | 212 / 20 | 212 / 20 |
+| Wood (trunk, five roots, five limbs, eleven twigs) | 378 | 378 |
+| Clump cores | 13 / 260 triangles | 13 / 260 triangles |
+| Leaf blades | 624 / 1,248 triangles | 468 / 936 triangles |
+| Total high detail | **1,886** | **1,574** |
+| Low / coarse detail | 190 / 20 | 190 / 20 |
 
-Both densities use two merged material groups, hence two draw calls per tree.
-The high oak's foliage material is double-sided for its leaf blades, without
-transparency or duplicated backfaces; the core volumes remain closed. Low and
-coarse foliage use closed single-sided geometry. The low model derives the same
-branches and pads; both simplified models fit the selected high model's exact
-bounds. The foot stays at y = 0 and centred on the trunk origin.
-
+The low model keeps the trunk, the five limbs and one closed ten-face volume per
+clump (130 triangles).
 The shipped ID remains `proc-tree-oak`. Its five enum controls produce 80 combinations:
 
 | Parameter | Values (default first) |
@@ -141,17 +146,19 @@ remain accepted aliases in both generator calls and saved catalog URLs. The five
 labels map to deterministic internal seeds 7, 19, 83, 173 and 431.
 
 Oak also supplies **Max detail** through `treeOakMax` / `buildMax`, with a hard
-10,000-triangle cap. It preserves the corresponding full-detail tree's bounding
-box and branch layout, while increasing stem and branch cross-sections, replacing
-its foliage cores with icosahedra and distributing smaller lobed leaf blades over
-each core's surface. The default full-detail geometry remains unchanged.
+10,000-triangle cap. It is the same layout as the selected full-detail tree, fitted
+to its exact bounding box, modelled after `assets/oak/reference-max.png`: rounder
+trunk, limbs and twigs (14, 10, 8 and 5 sides, every station kept), six ridged root
+buttresses, and clumps made lumpy by two seeded bulges, each bulge with its own
+core. Each clump carries thirty tufts of five faceted leaves (a raised midrib, four
+faces each), smaller and denser than at high detail.
 
 | Max detail geometry | Full foliage | Airy foliage |
 |---|---:|---:|
-| Wood | 590 | 590 |
-| Foliage cores | 48 / 960 triangles | 40 / 800 triangles |
-| Lobed leaf blades | 816 / 8,160 triangles | 680 / 6,800 triangles |
-| Total | **9,710** | **8,190** |
+| Wood | 794 | 794 |
+| Clump cores | 39 / 780 triangles | 39 / 780 triangles |
+| Faceted leaves | 1,950 / 7,800 triangles | 1,495 / 5,980 triangles |
+| Total | **9,374** | **7,554** |
 
 Max detail still uses two materials and two draw calls. It is optional and is
 currently available only for oak; the default forest quality remains `high`.
@@ -161,8 +168,9 @@ Max detail for unsupported species.
 `oakOptions(values)` resolves catalog parameters. `oakParts(detail, options)` also
 accepts numeric `seed`, `height`, `width`, `spread`, and `density` overrides for
 procedural callers. Height and width scale the whole tree about its origin;
-density below 0.9 selects airy foliage, otherwise full. Seeded randomness varies
-bough angles, reach, cluster placement, leaf orientation and colours; the same
+density below 0.9 selects airy foliage, otherwise full. The layout draws from
+the seed's structural random stream only; leaf placement uses a separate stream
+per clump, so leaf detail never moves branches between levels; the same
 seed and options always produce identical geometry. The shared forest module
 continues to draw the default oak when given only its species key and detail.
 
@@ -215,4 +223,4 @@ determinism, normals and no coplanar flicker. It also checks that each control
 affects geometry and that the standalone JS preserves the oak's leaf material.
 
 References: `assets/trees/SOURCES.md` (written descriptions and OpenTTD's sprites)
-and `assets/oak/SOURCES.md` (the user brief and inline visual reference).
+and `assets/oak/SOURCES.md` (the user brief and the stylised oak image).
