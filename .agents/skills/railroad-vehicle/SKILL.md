@@ -1,12 +1,12 @@
 ---
 name: railroad-vehicle
-description: Create or change procedural railway vehicles, including electric and diesel locomotives, railcars, coaches and wagons. Apply rail dimensions, triangle budgets, bogie and coupling conventions, pantograph operating poses and headless validation. Use for railway vehicle work in this repository; also use vlakosimdb-transfer when reconstructing a vehicle from that database.
+description: Create or change procedural railway vehicles, including electric and diesel locomotives, multiple units and high-speed trainsets, railcars, coaches and wagons. Apply rail dimensions, triangle budgets, bogie and coupling conventions, pantograph operating poses and headless validation. Use for railway vehicle work in this repository; also use vlakosimdb-transfer when reconstructing a vehicle from that database.
 ---
 
 # Railroad vehicle
 
 **Covers** - railway vehicle geometry, operating poses and verification.
-**Code** - `generator/vehicles.ts`, `generator/cd150.ts`, `generator/cd163.ts`, `generator/cd163Family.ts`, `generator/csdCoaches.ts`, `generator/csdCoachParts.ts`, `generator/bmoCoach.ts`, `generator/cdGreenWhiteCoach.ts`, `generator/wagons.ts`, `generator/wagonParts.ts`, `generator/steamLocos.ts`, `generator/steamLoco.ts`, `generator/steamParts.ts`, `generator/steamGear.ts`, `test/models.test.ts`, `test/steam.test.ts`, `test/cd150.test.ts`, `test/csdCoaches.test.ts`
+**Code** - `generator/vehicles.ts`, `generator/cd150.ts`, `generator/cd163.ts`, `generator/cd163Family.ts`, `generator/csdCoaches.ts`, `generator/csdCoachParts.ts`, `generator/bmoCoach.ts`, `generator/cdGreenWhiteCoach.ts`, `generator/wagons.ts`, `generator/wagonParts.ts`, `generator/steamLocos.ts`, `generator/steamLoco.ts`, `generator/steamParts.ts`, `generator/steamGear.ts`, `generator/drVt1816.ts`, `generator/shinkansen0.ts`, `generator/tgvDuplex.ts`, `generator/sliceBody.ts`, `test/models.test.ts`, `test/steam.test.ts`, `test/cd150.test.ts`, `test/csdCoaches.test.ts`
 **See also** - [vehicle reference](../../../docs/models/vehicles.md), [road-vehicle](../road-vehicle/SKILL.md), [vlakosimdb-transfer](../vlakosimdb-transfer/SKILL.md)
 
 This skill follows the repository's road-vehicle workflow, with railway-specific
@@ -140,6 +140,72 @@ locomotive body are a `livery` parameter whose values are data (`Cd163Livery`:
 colour bands, optional cab bands, emblems, number); a sister class whose body
 differs only in its machine-room sides reuses `cd163Body` with its own layout
 rather than copying the builder (docs/models/loco-liveries.md).
+
+## Multiple units and trainsets
+
+A multiple unit, a trainset or a power-car train (an EMU or DMU, a TGV, a
+Shinkansen, the VT 18.16) is **one design** whose `unit` parameter picks what is
+built; its paint schemes are a `livery` parameter. Model it like this
+(`drVt1816.ts`, `shinkansen0.ts`, `tgvDuplex.ts`; docs/models/dr-vt1816.md,
+shinkansen-0.md, tgv-duplex.md):
+
+1. **The default `unit` is the motor car that leads the train - its
+   "locomotive"**: the power car of a TGV, the end car with the cab of an EMU or
+   DMU (`powerCar`, `endCar`, `motorCar`). It is the catalog's thumbnail and the
+   car a player places first, so it carries the nose, the cab, the pantographs
+   and the running number.
+2. **Every other kind of car is a value of `unit`**: the intermediate motor
+   cars (a pantograph car where only some motor cars collect current), the
+   trailers, and the special trailers when the prototype has them - a driving
+   trailer, a first-class car, a dining, bar or buffet car, an end trailer that
+   couples to a power car. Name them after their role (`trailer`,
+   `pantographCar`, `bar`, `greenCar`), with the class or type in the title
+   ("Bar car R4", "Pantograph 26"; a value title is at most 16 characters, the
+   game shows it on a button). Add a special car when its body or
+   layout differs visibly (windows, doors, roof, equipment), not for interior
+   differences alone. A unit whose cars are all motored (the Shinkansen 0
+   series) has no trailer value: say so in its document.
+3. **The full train is the value `train`**, with a `cars` parameter for its
+   length (`when: { name: "unit", values: ["train"] }`), counting every vehicle
+   including the power or end cars. Default it to the prototype's usual
+   formation (ten for the TGV Duplex, four for the VT 18.16); allow shorter and
+   longer trains the game may want, and only formations that make sense (even
+   counts for motor-car pairs). A function `<name>Train(n)` lays out the cars
+   front to back - the formation rules (which car goes where, which pair carries
+   the pantograph, where the bar car stands) live there, tested - each car's span
+   over its coupling planes and whether it is turned; the train is centred on x
+   = 0.
+4. **The train is one articulated vehicle**: each car a section
+   (`articulate` from `tramKit.ts`) hinged at the coupling or joint plane ahead
+   of it, a bellows joint over each gap. The rear end car or power car is drawn
+   facing +X about its centre and turned (`MeshCore.turned`). Cars with their
+   own bogies keep them (two supports a section); an articulated set's shared
+   bogie under a joint is one Jacobs bogie carrying both sections
+   (`unitBogie(..., { sections: [k, k + 1] })`). Inside the train leave out
+   the cars' own gangway frames; keep their couplers.
+5. **Every single car stands on its own**: centred between its coupling planes,
+   on two bogies (a trailer that rides on Jacobs bogies in the train gets two
+   of its own as a lone car), with couplers and gangway frames at its ends, so
+   the game can couple single cars in any order and turn them.
+6. **One builder per body, drawn into any builder at any position**: a car is
+   a function of its builder and a mapping `X(d)` from the distance d behind
+   its +X end to model x, so the lone car, the train and the turned car share
+   it. Share the body kit between the cars (the slice body, `sliceBody.ts`, or
+   the coach builder, `csdCoachParts.ts`) and the paint between the liveries.
+7. **Budgets**: about 15,000 triangles a car, the cap 16,000 a car; the train
+   adds them up. The distant model is 100 triangles a car, 300 at most (500 with
+   `lodTriangles: 500` for trains longer than eight cars); give up the
+   intermediate cars' bogies first.
+8. **Game properties per value**: the default car's figures on the design, a
+   variant for every other car and every train length (and repeated for every
+   non-default livery, since variants match the selection exactly; generate
+   them in a loop). A train's weight is its cars added up, its power the motor
+   cars' sum.
+9. **Tests**: every car in every livery (budget, envelope, length over the
+   couplers, no coplanar faces), the formation of each train length, the
+   sections, hinges, joints and supports, deterministic bytes and the distant
+   model of every car and train. Show the user the default car, each other car,
+   a short train, and each livery (a contact sheet).
 
 ## Steam locomotives and moving parts
 

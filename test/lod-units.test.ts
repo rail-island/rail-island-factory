@@ -10,7 +10,7 @@ import { fitUnit, sideGlass, type UnitBody } from '../generator/lodUnits';
 import { sample } from './catalogCache';
 
 // The dedicated LODs of the multiple units and railcars (lodUnits.ts, docs/models/lod.md).
-const UNITS = ['cd-810', 'cd-812', 'cd-843', 'csd-m131', 'csd-m240', 'csd-m296', 'db-628', 'cd-451', 'cd-460', 'cd-470', 'cd-471', 'cd-680', 'ice-1', 'tgv', 'jr-kiha40', 'dr-vt1816', 'mav-mdmot', 'metro-81-71'];
+const UNITS = ['cd-810', 'cd-812', 'cd-843', 'csd-m131', 'csd-m240', 'csd-m296', 'db-628', 'cd-451', 'cd-460', 'cd-470', 'cd-471', 'cd-680', 'ice-1', 'tgv', 'jr-kiha40', 'dr-vt1816', 'shinkansen-0', 'tgv-duplex', 'mav-mdmot', 'metro-81-71'];
 
 const faces = (m: MeshBuilder) => {
   const { json, bin } = parseGlb(m.toGlb('lod'));
@@ -25,11 +25,12 @@ describe('unit LODs', () => {
       for (const v of sample(coverageCombinations(d.params, d.finishParams))) {
         const m = buildLodModel(d, v);
         const n = m.triangleCount();
-        // an articulated set gets 100 a car, 300 at most; a single car 100
+        // an articulated set gets 100 a car, its budget (300, the longest trains 500) at most; a single car 100
         const cars = v.unit === 'set' || v.unit === 'train' ? Number(v.cars) : 1;
-        expect(n).toBeLessThanOrEqual(Math.min(lodBudget(d), Math.min(300, 100 * cars)));
+        const budget = Math.min(lodBudget(d), 100 * cars);
+        expect(n).toBeLessThanOrEqual(budget);
         // at least 70 % (a plain trailer, the MDmot's, shows all it has in 70)
-        expect(n).toBeGreaterThanOrEqual(Math.min(300, 100 * cars) * 0.7);
+        expect(n).toBeGreaterThanOrEqual(budget * 0.7);
         const f = faces(m);
         // the running gear stands on the rail
         expect(Math.min(...f.filter((t) => /bogie/.test(t.material)).flatMap((t) => t.p.map((p) => p[1])))).toBeLessThan(0.1);
@@ -48,7 +49,7 @@ describe('unit LODs', () => {
   });
 
   it('raises the rear pantograph of an electric unit', () => {
-    for (const id of ['cd-451', 'cd-460', 'cd-470', 'cd-471', 'ice-1', 'tgv']) {
+    for (const id of ['cd-451', 'cd-460', 'cd-470', 'cd-471', 'ice-1', 'tgv', 'tgv-duplex']) {
       const f = faces(buildLodModel(DESIGNS.get(`proc-vehicle-${id}`)!)).filter((t) => t.material === 'pantograph');
       const top = Math.max(...f.flatMap((t) => t.p.map((p) => p[1])));
       expect(top).toBeGreaterThan(4.9);

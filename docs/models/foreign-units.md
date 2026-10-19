@@ -45,8 +45,11 @@ painting them iv and `red` vr. Their geometry, sources and comparison are in
 `assets/db-628/` and `assets/db-n-wagen/`. The MDmot class name is MAV's own (the cars
 were delivered as MDa); the trailers keep their MAV class letters as values.
 
-The archived Eurostar and Shinkansen (`train-emu-eurostar-*`,
-`train-emu-shinkansen-*` in the webapp's `db/archived.json`) are not built.
+The archived Eurostar (`train-emu-eurostar-*` in the webapp's
+`db/archived.json`) is not built; the archived Shinkansen cars
+(`train-emu-shinkansen-*`) map onto the procedural 0 series
+([shinkansen-0.md](shinkansen-0.md)). The double-deck TGV Duplex is its own design
+([tgv-duplex.md](tgv-duplex.md)).
 
 | design, car | length | triangles |
 |---|---|---|
