@@ -36,6 +36,10 @@ metadata and source tree remain the full-resolution defaults.
 
 ## Geometry
 
+The trees add a third, coarsest level below it, `buildCoarse` (at most 20 triangles,
+exported as `buildCoarse(THREE)`), because a forest needs a geometry an order of
+magnitude below `low` for the distance ([trees.md](trees.md)).
+
 Every design supplies its own distant model, `buildLod`, exported from the same
 source module as its `build` and resolving the same parameters; a design without
 one does not compile (`ProceduralDesign.buildLod` is required) and there is no

@@ -1,8 +1,8 @@
 # The export folder
 
 **Covers** - what `pnpm build:models` writes (no GLB files: a model ships as its JS
-file), the `skyscrapers.meta.json`, `village.meta.json` and `vehicles.meta.json`
-contracts the game imports, the site's `catalog.json`, the in-memory GLB the build
+file), the `skyscrapers.meta.json`, `village.meta.json`, `vehicles.meta.json` and
+`woods.meta.json` contracts the game imports, the site's `catalog.json`, the in-memory GLB the build
 analyses, the offline thumbnail renderer and the contact sheet.
 **Code** - `generator/generate.ts`, `generator/catalog.ts`, `generator/renderGlbThumb.ts`, `generator/contactSheet.ts`,
 `generator/jsModel.ts`, `generator/glbStats.ts`, `test/thumbnails.test.ts`, `test/contactSheet.test.ts`, `generator/coplanar.ts`, `generator/glbTriangles.ts`, `generator/glbParse.ts`, `test/export.test.ts`
@@ -23,6 +23,9 @@ and `pnpm dev`) writes the gitignored `export/`:
 | `export/skyscrapers.meta.json` | one game-catalog entry per building (skyscrapers, commercial families, landmarks, stations) - the import contract |
 | `export/village.meta.json` | the same per village house, under `buildings` |
 | `export/vehicles.meta.json` | the same per vehicle, under `vehicles` |
+| `export/woods/<name>.js` | a woods type's distribution function, one standalone module each ([woods.md](woods.md)) |
+| `export/woods.meta.json` | every woods type and every tree species, for the game to import ([woods.md](woods.md)) |
+| `export/thumbs/woods-<name>.png` | a woods type's grove preview, for the site ([woods.md](woods.md)) |
 | `export/catalog.json` | what the site lists |
 
 `export/` is also Vite's `publicDir`, so `vite build` copies it into `dist/` as
@@ -45,6 +48,8 @@ model changed, the PNG is missing or `THUMB_VERSION` (`generate.ts`) differs fro
 `export/thumbs/.version` records, which is how a change of framing or lighting
 reaches every unchanged design. A JS file is rewritten only when its text changed. A file of a design that no longer exists is deleted, so a
 dropped id cannot linger. A tree file is rewritten only when its text changed.
+The grove thumbnails keep their own hashes (`export/thumbs/.woods.json`) and are
+left out of the design cleanup.
 **Source images.** A design names its folder under `assets/` with
 `references` (`generator/design.ts`; the vehicles set it), or a list of folders
 when it merges models with their own material (the DB 628 and its n-Wagen

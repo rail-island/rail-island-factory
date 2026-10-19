@@ -98,6 +98,11 @@ missing file with `index.html`, so the response type is checked too).
 - **The toolbar** (sticky) holds the search box, a sort `<select>` over every
   column, a direction toggle, the **Table / Thumbnails** layout switch, the
   filter chip rows and the totals (models and triangles listed).
+- **Trees.** The tree species (category `Trees`) have a first-row chip of their
+  own. Picked, it shows the **woods types** above them (`src/WoodsGallery.tsx`, read
+  from `/woods.meta.json`): one card per type with its grove preview
+  (`thumbs/woods-<name>.png`), its stable name and its swatch and forest-floor
+  colours ([../models/woods.md](../models/woods.md)).
 
 ## The thumbnail view
 

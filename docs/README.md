@@ -58,6 +58,8 @@
 | [models/emitters.md](models/emitters.md) | where models smoke, steam and flare, and a fountain's water: `emit`, `pool`, `jet`, the export |
 | [models/js-format.md](models/js-format.md) | the standalone JS model (`export/js/<id>.js`, `build(THREE)`), how it is bundled, the sizes |
 | [models/source-tree.md](models/source-tree.md) | the procedural source tree: scopes, `export/tree/<id>.json`, highlight and picking |
+| [models/trees.md](models/trees.md) | the fourteen tree species the game plants: one design each, high, low and coarse levels, the geometry kit, the stylised look (baked light and shade, ragged and wide crowns), budgets |
+| [models/woods.md](models/woods.md) | the woods types: distribution functions keyed by name, the cell context and the four-tree limit, the forest rule (edges, groves, glades, understorey), the modules, `woods.meta.json`, grove previews |
 | [models/export.md](models/export.md) | the export folder: JS models, thumbnails, `skyscrapers.meta.json`, `village.meta.json`, `vehicles.meta.json`, `catalog.json`; the in-memory GLB the build analyses |
 | [site/openttd-export.md](site/openttd-export.md) | the site's export list ("Add to export", the Export panel, its localStorage key) and the two formats it writes in the browser: an OpenTTD NewGRF (true-proportion sprites, articulated parts, the `openttd` block and its defaults, the GRF encoder) and a ZIP of GLBs |
 | [models/game-properties.md](models/game-properties.md) | what the game needs beyond geometry: vehicle weight, power, speed, draft and rope heights, per-variant figures, building plaza and block rules; declared on each design, checked, exported |

@@ -43,6 +43,12 @@ scene.add(build(THREE)); // a THREE.Group named after the model id
 - **Parameters.** The module also exports `params`, the design's enum parameters (`[]` for a fixed design),
   and `build(THREE, params)` builds any combination of their values; `build(THREE)` builds the defaults, the
   GLB's model, and an unknown name or value throws ([parameters.md](parameters.md)).
+- **Vertex colours and double-sided materials.** A model drawn with `MeshCore.triShaded` (the trees' baked
+  light and shade, [trees.md](trees.md)) carries a `color` attribute per mesh and its materials set
+  `vertexColors` (the GLB's `COLOR_0`: linear multipliers of the material colour); a material spec with
+  `doubleSided` (a palm's fronds) is `THREE.DoubleSide` (the GLB's `doubleSided`). Other models are unchanged.
+- **The coarse level.** A tree's module also exports `buildCoarse(THREE)`, its third and coarsest level
+  ([lod.md](lod.md)).
 - **The same triangles.** The positions and normals equal the GLB's, not an approximation: it is the same
   algorithm running on the same geometry code.
 
