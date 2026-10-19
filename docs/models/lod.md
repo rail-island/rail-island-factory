@@ -179,7 +179,7 @@ trees and the existing API are unchanged.
 The model detail panel has a **Level of detail** select: *Full detail* (initially),
 *Low (LOD)*, and for a model whose record carries `coarse` (the trees) *Coarse
 (distant forest)*, which builds its `buildCoarse`. A model with `maxDetail`
-(currently only oak) also offers *Max detail*, calling its `buildMax` and capped
+(currently every tree) also offers *Max detail*, calling its `buildMax` and capped
 at 10,000 triangles. Switching to a model without Max detail shows full detail.
 The choice persists while stepping
 between models; a model without a coarse level shows its LOD while *Coarse* is chosen. Enabling it loads

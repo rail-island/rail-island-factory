@@ -1,13 +1,14 @@
 # Trees
 
 **Covers** - the fourteen tree species the game plants: one design per species (the
-two larches one design with a season), three levels of detail (high, low, coarse),
-the geometry kit they are built with, the stylised look (baked light and shade,
-ragged crowns), budgets and tests.
-**Code** - `generator/trees.ts`, `generator/broadleaf.ts`, `generator/oak.ts`,
-`generator/leafyTrees.ts`, `generator/treeGeo.ts`, `generator/meshCore.ts`
-(`triShaded`), `test/trees.test.ts`, `test/fixtures/tree-baseline.json`,
-`assets/trees/SOURCES.md`, `assets/oak/SOURCES.md`, `test/oak.test.ts`, `test/leafyTrees.test.ts`
+two larches one design with a season), four levels of detail (Max, high, low,
+coarse), the tree kit every species is drawn with, seeds, the stylised look,
+budgets and tests.
+**Code** - `generator/trees.ts`, `generator/treeKit.ts`, `generator/oak.ts`,
+`generator/leafyTrees.ts`, `generator/conifers.ts`, `generator/palm.ts`,
+`generator/deadTree.ts`, `generator/treeGeo.ts`, `generator/meshCore.ts`
+(`triShaded`), `test/trees.test.ts`, `test/treeSpecies.test.ts`, `test/oak.test.ts`,
+`test/fixtures/tree-baseline.json`, `assets/trees/SOURCES.md`, `assets/oak/SOURCES.md`
 **See also** - [woods.md](woods.md), [lod.md](lod.md), [js-format.md](js-format.md),
 [export.md](export.md), the game's `docs/rendering/woods.md`
 
@@ -19,269 +20,199 @@ The game draws every forest from fourteen species: `pine`, `spruce`, `oak`, `bir
 category of the catalog -- except the two larches, one design `proc-tree-larch` with a
 `season` parameter: `summer` (default) draws `larch`, `autumn` draws `autumnlarch`
 (`treeModelOf` names a species' design and values; `woods.meta.json` lists them). The
-species keys are what the woods types name
-([woods.md](woods.md)), so a shipped key is never renamed; `test/trees.test.ts` pins
-the list.
+species keys are what the woods types name ([woods.md](woods.md)), so a shipped key
+is never renamed; `test/trees.test.ts` pins the list.
 
-The trees were authored in the game (`render/TreeGeometry.ts`) and moved here
-unchanged: the port reproduced every species at every level to the triangle and to
-float32 precision against the game's own builder, measured before the move
-(`test/fixtures/tree-baseline.json`). They were then restyled here (below); the
-fixture stays as the budget the restyle had to fit.
-The oak's later full-detail redesign has an explicit 2,000-triangle allowance;
-its rebuilt low and coarse levels retain their original budgets. The leafy species
-redrawn after it (below) keep their fixture budgets at every level.
+The trees were first ported from the game (`render/TreeGeometry.ts`); their
+per-species triangle counts at that time are kept as budgets
+(`test/fixtures/tree-baseline.json`). Every species has since been redrawn on the
+tree kit (below) inside those budgets; the oak's full detail has an explicit
+2,000-triangle allowance.
 
 A tree is **base-anchored at y = 0** and has exactly **two materials**, `trunk` and
 `foliage`: the game merges a species into one geometry with two groups and draws a
 whole forest of it as one InstancedMesh per tile. Units are the game's studs,
 numerically (a pine is 9.2 tall); the game scales each tree to the height its woods
-type asks for, so only proportions matter.
+type asks for, so only proportions matter. The game adds the rest per instance: the
+woods type's `width`, `lean`, `shade` and `hue` per tree ([woods.md](woods.md)).
 
-## Three levels
+## Four levels
 
 | Level | Built by | Exported as | Triangles |
 |---|---|---|---|
-| `high` | the design's `build` | `build(THREE)` | 296-2,772 |
-| `low` | `buildLod` | `build(THREE, {}, true)` | 64-294 |
-| `coarse` | `buildCoarse` | `buildCoarse(THREE)` | 10-20 |
+| `max` | `buildMax` | `buildMax(THREE, params)` | 524-9,844 (at most 10,000) |
+| `high` | the design's `build` | `build(THREE, params)` | 232-2,872 |
+| `low` | `buildLod` | `build(THREE, params, true)` | 52-268 |
+| `coarse` | `buildCoarse` | `buildCoarse(THREE, params)` | 10-20 |
 
-`buildCoarse` is a field of `ProceduralDesign` only the trees set; the build checks
-it like a LOD (at most `COARSE_TRIANGLES`, 20, and no z-fighting) and `jsModel.ts`
-exports it. The game's quality ladder picks a level per distance band, so one island
-draws all three at once, and two rules keep a band flip invisible:
+`buildCoarse` and `buildMax` are `ProceduralDesign` fields only the trees set; the
+build checks coarse like a LOD (at most `COARSE_TRIANGLES`, 20, and no z-fighting)
+and `jsModel.ts` exports both. The game's quality ladder picks high, low or coarse
+per distance band, so one island draws all three at once; Max is a close-up level
+for the catalog and is never planted by forests. Two rules keep a level change
+invisible:
 
-- **A level may change how a tree is made, never how big it is.** The high tree is
-  measured and stretched onto the low tree's envelope (`fitToLow`), per axis about
-  the trunk's foot; tests hold every level within 10% of the low tree's height and
-  11% of its footprint, and grounded at y = 0. The broadleaf trees (oak and the
-  leafy species) instead fit their simplified and Max levels onto the high model,
-  preserving the origin and exact axis extents.
-- **The coarse tree fills the low tree's box exactly**: every coarse dimension is
-  measured off the low tree (`lowBoxOf`), so the two boxes agree to four decimals.
+- **A level may change how a tree is made, never how big it is.** Max and low are
+  built from the same layout as high and fitted onto the high tree's exact axis
+  extents, about the trunk's foot (`fit`); coarse is fitted onto low's. Tests hold
+  every level grounded at y = 0 and within the high (and low) tree's box.
+- **Nothing floats.** Leaves sit on their clump's core; at low detail every limb
+  runs into a mass and every mass is held by wood (or rests in a held mass).
 
 The coarse level is **closed convex solids**, not a billboard: alpha-tested foliage
 breaks early-Z on the tiled mobile GPUs the level exists for, and a flat quad goes
 edge-on to the game's low camera. Tests check every coarse part is closed and wound
 outward.
 
-## The geometry kit
+## The tree kit
 
-`treeGeo.ts` is a non-indexed triangle list (`Geo`) with the three.js primitives the
-game's builder used -- `CylinderGeometry`, `ConeGeometry`, `IcosahedronGeometry`, the
-transforms and `setFromUnitVectors` -- re-implemented on plain arrays with three's
-r160 vertex layouts, so per-vertex deformations land on the same points and a tree's
-JS model needs no three.js geometry classes. `buildTree` emits the lists into a
-MeshBuilder: degenerate triangles (a cone's tip) are dropped and every face gets its
-own normal.
+`treeGeo.ts` is a non-indexed triangle list (`Geo`) with the few three.js primitives
+the trees need (icosahedron, transforms, `setFromUnitVectors`) re-implemented on plain
+arrays, so a tree's JS model needs no three.js geometry classes. `treeMesh` (in
+`trees.ts`) emits the lists into a MeshBuilder.
 
-The legacy builders (`trees.ts`, for the conifers, palm, Scots pine and dead tree)
-are the game's: `coniferCrown` (whorls of closed `branchFan` plates bunching toward
-the apex, each whorl turned 2.4 rad), `leafShell` (lobes on a golden-angle spiral
-around a buried core; now only the Scots pine's `clusteredCrown`), ribbons for palm
-fronds (`ribbons: true`, the foliage material is `doubleSided`), and a lean field
-shared by wood and leaves so branch joints hold. The oak and the leafy species use
-the broadleaf kit instead ([below](#chunked-leafy-species)).
+`treeKit.ts` draws a species from two things:
 
-## The stylised look
+- **A layout** (`Layout`), drawn from the seed's structural random stream only: a
+  lofted stem, limbs and twigs (continuous lofts, no caps at elbows), leaf
+  **clumps** (centre, radius, outward direction, tone; optionally stretched and
+  turned, as a conifer's needle pad), the **groups** of clumps each low-detail mass
+  encloses, and optionally willow **strands**, palm **fronds** and bark-coloured
+  **knobs** (the palm's crown and coconuts).
+- **A style** (`BroadleafStyle`): material colours, a leaf and a bark palette,
+  optional bark marks, roots, tufts per clump and leaves per tuft at high and Max,
+  leaf length, width and rise (narrow needles for conifers), the low mass shape
+  (rounded or cone) and the coarse shape (dome, pyramid or bare wood).
 
-Why OpenTTD's trees read better than the game's did: painted light and shade on
-every clump, colour varying between trees, overlapping canopies, crowns drawn a size
-larger than life and ragged outlines. The trees take the parts a mesh can carry:
+From those every level is built the same way:
 
-- **Baked light and shade** (`paint`): a colour per corner, a multiplier of the
-  material colour written with `MeshCore.triShaded` -- the GLB's `COLOR_0`, the JS
-  model's `color` attribute with `vertexColors`. Occlusion from the corner's height
-  in the crown and its distance from the crown's axis (deep and low is dark, high and
-  outer is lit), a lift on the most exposed corners, and per **clump** -- each lobe,
-  branch fan or frond -- its own brightness and a slight warm or cool cast. Bark is
-  darker at the foot and under the crown. No runtime cost.
-- **Ragged crowns**: lobes of unequal size, the odd lobe left out (never one that
-  carries the crown's height), branch fans of unequal length with the odd one
-  missing, stronger undulation on the low crowns and cones -- a broken outline with
-  sky through it, inside the old budgets.
-- **Classic size**: the crowns are drawn as modelled, as wide as the game's own trees
-  were, and the woods types plant them at the game's classic heights
-  ([woods.md](woods.md)). An earlier restyle drew them 6-12% wider and 15% taller,
-  which read as too big next to the track.
-- **Brighter, more saturated colours** (`TREE_COLORS`), since the shading now darkens
-  most of the crown below them.
-
-The **oak** is rebuilt from the user-provided references in `assets/oak/`; its
-second redesign follows `reference-max.png` (a stylised low-poly oak). Every level
-derives from one seeded layout (`layout` in `oak.ts`): a leaning, flared trunk that
-forks at about y = 3.2 into three rising limbs, two low side boughs leaving the
-trunk below the fork, and thirteen leaf clumps arranged as a broad dome - one top
-clump and rings of four, six and two (the two lowest hang from the side boughs, left
-and right, so the trunk and fork stay visible). Each limb serves the clumps nearest
-its bearing through a bowed twig ending inside the clump. Seeds vary the lean, the
-fork height, the crown's offset over the trunk, the ring phases, clump spacing,
-height and size, and the limb bearings.
-
-A high-detail clump is a dark closed core (an icosahedron) under twelve tufts of
-four pointed leaves, each leaf folded once along its midrib and raised 35-60
-degrees out of the clump surface, so the clump reads as a lumpy leaf mass rather
-than a ball. Tufts sit mostly on the upper half. Per-face vertex colours paint
-leaves by height, by the direction their tuft faces and by how far it stands out
-of the crown: dark green inside and underneath, medium green on the sides and
-yellow-green on top; the bark is warm brown, lit on one flank.
-
-| Oak geometry | Full foliage | Airy foliage |
-|---|---:|---:|
-| Wood (trunk, five roots, five limbs, eleven twigs) | 378 | 378 |
-| Clump cores | 13 / 260 triangles | 13 / 260 triangles |
-| Leaf blades | 624 / 1,248 triangles | 468 / 936 triangles |
-| Total high detail | **1,886** | **1,574** |
-| Low / coarse detail | 204 / 20 | 204 / 20 |
-
-Leaves sit only on the clump core at high detail; the bulges that push leaves
-outwards exist only in Max, where each bulge has its own core, so no leaf hangs in
-the air at either level.
-
-The low model (also used near the camera on slow devices) keeps the trunk and the
-five limbs, and merges each limb's clumps into one closed 24-face mass - the top
-clump and each low bough's clump stay single, so at most six masses (144
-triangles). Each limb runs into its mass's centre, so no branch ends in the air
-and no mass floats without a branch.
-
-The shipped ID remains `proc-tree-oak`. Its five enum controls produce 80 combinations:
-
-| Parameter | Values (default first) |
-|---|---|
-| `seed` | `1`, `2`, `3`, `4`, `5` |
-| `height` | `standard`, `tall` (1.15 times as high) |
-| `canopy` | `broad`, `compact` (0.83 times as wide) |
-| `branches` | `spreading`, `upright` (0.8 times the reach, with extra rise) |
-| `foliage` | `full`, `airy` |
-
-Seeds 1 and 2 retain the earlier seeds 7 and 19, respectively. Those old tokens
-remain accepted aliases in both generator calls and saved catalog URLs. The five
-labels map to deterministic internal seeds 7, 19, 83, 173 and 431.
-
-Oak also supplies **Max detail** through `treeOakMax` / `buildMax`, with a hard
-10,000-triangle cap. It is the same layout as the selected full-detail tree, fitted
-to its exact bounding box, modelled after `assets/oak/reference-max.png`: rounder
-trunk, limbs and twigs (14, 10, 8 and 5 sides, every station kept), six ridged root
-buttresses, and clumps made lumpy by two seeded bulges, each bulge with its own
-core. Each clump carries thirty tufts of five faceted leaves (a raised midrib, four
-faces each), smaller and denser than at high detail.
-
-| Max detail geometry | Full foliage | Airy foliage |
-|---|---:|---:|
-| Wood | 794 | 794 |
-| Clump cores | 39 / 780 triangles | 39 / 780 triangles |
-| Faceted leaves | 1,950 / 7,800 triangles | 1,495 / 5,980 triangles |
-| Total | **9,374** | **7,554** |
-
-Max detail still uses two materials and two draw calls. It is optional and is
-currently available only for oak; the default forest quality remains `high`.
-The shared `trees.js` also accepts `buildTree(THREE, "oak", "max")` and rejects
-Max detail for unsupported species.
-
-`oakOptions(values)` resolves catalog parameters. `oakParts(detail, options)` also
-accepts numeric `seed`, `height`, `width`, `spread`, and `density` overrides for
-procedural callers. Height and width scale the whole tree about its origin;
-density below 0.9 selects airy foliage, otherwise full. The layout draws from
-the seed's structural random stream only; leaf placement uses a separate stream
-per clump, so leaf detail never moves branches between levels; the same
-seed and options always produce identical geometry. The shared forest module
-continues to draw the default oak when given only its species key and detail.
-
-The game adds the rest per instance: the woods type's `width`, `lean`, `shade` and
-`hue` per tree ([woods.md](woods.md)).
-
-## Chunked leafy species
-
-`birch`, `aspen`, `willow`, `bush`, `hazel` and `orchard` are drawn like the oak:
-their old `leafShell` crowns are replaced by chunked crowns from the shared
-**broadleaf kit** (`broadleaf.ts`, which the oak also runs on - its output is
-byte-identical to before the extraction). A species is a seeded layout
-(`leafyTrees.ts`) and a style; the kit draws every level from it:
-
-- **Layout**: a lofted stem, limbs and twigs (continuous lofts, no caps at
-  elbows), leaf clumps (centre, radius, outward direction, tone), the groups of
-  clumps each low-detail mass encloses, and for the willow hanging strands.
 - **High**: a dark closed core (icosahedron) per clump under tufts of folded
-  pointed leaves; leaves sit only on the core, never in the air.
-- **Max**: rounder wood, two seeded bulges per clump each with its own core,
-  dense tufts of faceted leaves; on birch and aspen a finer-divided stem carries
-  dark bark marks.
-- **Low**: the stem, the limbs that serve a mass (each run into its mass's
-  centre) and one closed 20- or 24-face mass per group; a leader that runs up
-  through the crown (birch, aspen) or a stool rising into the mound (bush) holds
-  the masses instead of limbs. Nothing ends in the air or floats.
-- **Coarse**: one closed 16-face crown spanning the low foliage's box and a
-  tetrahedral trunk into its middle, fitted to the low tree's box.
+  pointed leaves (two faces each); leaf placement uses a stream per clump, so it
+  never moves the branches.
+- **Max**: rounder wood (more sides, every station), two seeded bulges per clump
+  each with its own core, dense tufts of faceted leaves (a raised midrib, four
+  faces); birch and aspen get a finer-divided stem with dark bark marks.
+- **Low**: the stem (three stations), the limbs that serve a mass, each run into its
+  mass's centre, and one closed mass per group: a 20- or 24-face rounded solid, or
+  a 12-face cone for a conifer tier. A leader through the crown (birch, aspen,
+  conifers) or a stool rising into the mound (bush) holds the masses instead.
+- **Coarse**: a 16-face dome over the low foliage's box (a six-face pyramid for the
+  conifers, bare spikes for the dead tree) and a tetrahedral trunk whose base lies
+  flat on the ground.
+
+Per-corner colours (`MeshCore.triShaded`: the GLB's `COLOR_0`, the JS model's
+`color` attribute) multiply the material colour: foliage is lit by height, by the
+direction its tuft faces and by how far its clump stands out of the crown -- dark
+inside and underneath, lighter on the sides, the palette's light tone on top; bark
+is lit on one flank and towards the top. Single-layer leaves, needles, curtains and
+fronds use a double-sided foliage material (`ribbons: true`) without duplicated
+backfaces; cores and masses are closed.
+
+## The species
 
 | Species | Shape | Max | High | Low | Coarse |
 |---|---|---:|---:|---:|---:|
+| oak | flared trunk forking into three limbs and two side boughs, a dome of 13 clumps | 9,374 | 1,886 | 204 | 20 |
 | birch | leaning white trunk through an oval crown of 8 clumps on rising branches | 9,020 | 752 | 64 | 20 |
 | aspen | tall pale trunk, narrow column of 11 small clumps on short shoots | 9,536 | 936 | 140 | 20 |
-| willow | stout trunk forking into 4 arching limbs, dome of 9 clumps, 24 hanging curtains | 9,370 | 1,402 | 268 | 20 |
+| willow | stout trunk, 4 arching limbs, dome of 9 clumps, 24 hanging leaf curtains | 9,370 | 1,402 | 268 | 20 |
 | bush | mound of 7 clumps on short stems from a low stool | 9,684 | 1,022 | 64 | 20 |
 | hazel | 4 crooked stems from a stool, each ending in a clump and carrying one more | 9,586 | 776 | 144 | 20 |
 | orchard | short trunk forking into 4 spreading limbs under 9 round clumps | 9,338 | 848 | 124-148 | 20 |
+| pine | leader with 7 whorls of branches ending in needle pads, 33 pads and a top pad | 9,484 | 2,372 | 68 | 10 |
+| spruce | 8 dense, drooping whorls reaching low, dark blue-green, 36 pads | 9,572 | 2,872 | 68 | 10 |
+| larch | open conifer, 7 whorls of light pads (summer green, autumn gold) | 9,844 | 1,568 | 68 | 10 |
+| scotspine | tall bare crooked orange trunk, four boughs with flat pads: an umbrella crown | 9,140 | 992 | 168 | 20 |
+| palm | curving ringed trunk, crown knob and coconuts, 13 arching fronds of leaflet pairs | 5,108 | 774 | 137 | 20 |
+| deadtree | leaning broken-topped trunk, roots, four bare limbs forking into twigs | 524 | 232 | 52 | 16 |
 
-High, low and coarse stay inside the species' fixture budgets (low at most 5% over,
-within 300). The willow's curtains are chains of leaves at high and Max detail and
-three-segment ribbons at low, so its low level stays double-sided. Each species has
-one control, `seed` (`Tree seed`, `1`-`5`, default `1`, internal seeds 11, 29, 97,
-211 and 563): it varies the lean, clump bearings, spacing and size, limb bearings
-and, through each clump's own stream, leaf placement. `leafyOptions(values)`
-resolves it; `leafyParts(species, detail, options)` also takes the oak's numeric
-overrides.
+Notes per family:
+
+- **Leafy species** (`leafyTrees.ts`): each clump hangs on its own limb or twig;
+  low merges a limb's clumps into one mass. The willow's curtains are chains of
+  leaves at high and Max and three-segment ribbons at low (so its low level stays
+  double-sided).
+- **Conifers** (`conifers.ts`, `whorled`): whorls bunch toward the top; branch
+  count, reach and pad size shrink upward; each pad is stretched along its branch
+  and flattened, with narrow needles. Low stacks one cone per pair of whorls along
+  the leader. The two larch seasons share the shape and differ only in palette.
+- **Palm** (`palm.ts`): fronds are midribs of long leaflets swept toward the tip so
+  they overlap (11 pairs at high, 44 at Max); low draws each as a drooping ribbon.
+- **Dead tree** (`deadTree.ts`): no leaves -- its limbs and twigs are the foliage
+  group, in the bark colour, so the two-material layout holds.
+
+## Seeds and parameters
+
+Every design has `seed` (`Tree seed`, `1`-`5`, default `1`). It varies the lean,
+bearings, spacing and size of limbs and clumps (or whorls and pads), and through each
+clump's own stream the leaf placement; the same values always give identical
+geometry. Internal seeds: oak 7, 19, 83, 173, 431 (the old tokens `7` and `19` stay
+accepted aliases of seeds 1 and 2); leafy species 11, 29, 97, 211, 563; conifers
+13, 37, 101, 223, 577; palm 17, 41, 109, 239, 593; dead tree 19, 43, 113, 241, 599.
+`treeOptions(species, values)` resolves a design's values; `treeParts(species,
+detail, options)` also takes numeric `seed`, `height`, `width`, `spread` and
+`density` overrides. The larch also has `season`; the oak has four more controls:
+
+| Oak parameter | Values (default first) |
+|---|---|
+| `height` | `standard`, `tall` (1.15 times as high) |
+| `canopy` | `broad`, `compact` (0.83 times as wide) |
+| `branches` | `spreading`, `upright` (0.8 times the reach, with extra rise) |
+| `foliage` | `full`, `airy` (9 tufts a clump instead of 12; 23 instead of 30 at Max) |
+
+## The oak
+
+The oak follows the user's references in `assets/oak/` (`reference-max.png`, a
+stylised low-poly oak, for its second redesign). Its layout (`oak.ts`): a leaning,
+flared trunk forking at about y = 3.2 into three rising limbs, two low side boughs
+leaving the trunk below the fork, and thirteen clumps as a broad dome -- one top
+clump and rings of four, six and two (the two lowest hang from the side boughs, left
+and right, so the trunk and fork stay visible). Each limb serves the clumps nearest
+its bearing through a bowed twig ending inside the clump. High detail: 378 wood,
+13 cores (260), 624 leaf blades (1,248) -- 1,886 (airy 1,574). Max: 794 wood,
+39 cores, 1,950 faceted leaves -- 9,374 (airy 7,554). Low: the trunk, five limbs
+and at most six masses (204). It keeps its fixed coarse crown (`coarseCrown`).
 
 ## One module for the game
 
-Each `js/proc-tree-<species>.js` carries the whole of `trees.ts` -- `buildTree` picks
-the species at run time, so nothing can be shaken out -- which is right for the
-catalog and the site, which build one tree at a time, and wasteful for the game,
-which needs all fourteen. The export therefore also writes **`trees.js`**
-(`woodsExport.ts` `bundleTrees`): every species in one standalone module,
-`buildTree(THREE, species, "high" | "low" | "coarse" | "max")` (Max for the broadleaf species only) returning the same Group of
-`trunk` and `foliage` the per-species modules build, and `SPECIES`. It is about 32 KB
-(12 KB gzipped) against fourteen times that; `woods.meta.json` names it
-(`treesModule`), and the game imports it instead of the per-species files.
+Each `js/proc-tree-<species>.js` is built from that design's own builders, which
+call only its species module and the kit (never the species dispatch), so it
+carries one species. The game, which needs all fourteen, imports **`trees.js`**
+instead (`woodsExport.ts` `bundleTrees`): every species in one standalone module,
+`buildTree(THREE, species, "high" | "low" | "coarse" | "max")` returning the same
+Group of `trunk` and `foliage` the per-species modules build (each species' default
+seed), and `SPECIES`; `woods.meta.json` names it (`treesModule`).
 
-## The coarse preview
+## The coarse and Max previews
 
-A tree's catalog record carries `coarse: true`, and the site's model page offers a
-third **Level of detail**, *Coarse (distant forest)*, beside full and low: it builds
-the JS model's `buildCoarse` ([../site/catalog-site.md](../site/catalog-site.md)). The broadleaf trees (oak, birch,
-aspen, willow, bush, hazel, orchard) additionally advertise `maxDetail: true`,
-enabling *Max detail* through `buildMax`. The conifers, palm and dead tree do not
-show this option.
+A tree's catalog record carries `coarse: true` and `maxDetail: true`, and the
+site's model page offers *Coarse (distant forest)* and *Max detail* beside full and
+low ([../site/catalog-site.md](../site/catalog-site.md)): they build the JS model's
+`buildCoarse` and `buildMax`.
 
 ## Budgets and tests
 
 For new or reworked trees, follow the [tree authoring skill](../../.agents/skills/tree/SKILL.md):
-expose five deterministic seeds labelled `1` through `5`, defaulting to `1`, and
-resolve the same seed at every detail level. New trees target at most 2,000
-full-detail triangles, 300 low-detail triangles and 20 coarse triangles; optional
-Max detail is capped at 10,000. Existing species retain their tighter fixture
-budgets, and existing non-oak full-detail allowances remain unchanged. Oak's low
-cap is 218. This authoring policy does not add seeds or Max detail to legacy
-species automatically; the oak and the six chunked leafy species expose them.
+five deterministic seeds labelled `1` through `5`, the same seed at every level, and
+for new trees at most 2,000 full-detail, 300 low-detail and 20 coarse triangles, with
+Max at most 10,000. Existing species keep their fixture budgets: high and coarse not
+above the fixture (the oak's high 2,000), low at most 5% over it within 300 (the
+oak's 218).
 
-`test/trees.test.ts`: the species list; the game's budgets (`low` at most 5% over the
-fixture, `high` and `coarse` not at all, except oak `high` capped at 2,000); light and
-shade baked at every level, the crown's top lighter than its underside; coarse at
-most 20 and at least three times
-cheaper than low, high at least three times low; grounded, same size at every level,
-coarse box equal to low; closed coarse solids; palm and willow ribbon foliage
-and the high broadleaf leaf blades double-sided; `trees.js` building every species and level (and every
-broadleaf species at Max) with the designs' own triangle counts. The catalog sweep builds every tree in JS as in the generator.
+`test/trees.test.ts`: the species list; the fixture budgets; light and shade baked at
+every level, the crown's top lighter than its underside; coarse at most 20 and at
+least three times cheaper than low, high at least three times low; grounded, same
+size at every level, coarse box equal to low; closed coarse solids; double-sided
+foliage where leaves are single-layer; `trees.js` building every species at every
+level, Max included, with the designs' own triangle counts.
 
-`test/oak.test.ts` checks all 80 oak combinations at all four detail levels:
-triangle budgets, two materials and draw calls, grounding, matching bounds,
-determinism, normals and no coplanar flicker. It also checks that each control
-affects geometry and that the standalone JS preserves the oak's leaf material.
+`test/treeSpecies.test.ts` checks every seed of every kit species but the oak at all
+four levels (budgets, two materials, grounding, matching bounds, determinism,
+normals, no coplanar flicker), five distinct shapes, leaves rooted in their cores
+(willow curtains hanging under a clump), every low limb ending in a mass and every
+low mass held, and the standalone JS including `buildMax`. `test/oak.test.ts` checks
+the oak's 80 combinations the same way, each control taking effect and the old seed
+aliases. The catalog sweep builds every tree in JS as in the generator.
 
 References: `assets/trees/SOURCES.md` (written descriptions and OpenTTD's sprites)
 and `assets/oak/SOURCES.md` (the user brief and the stylised oak image).
-
-`test/leafyTrees.test.ts` checks every seed of each leafy species at all four levels
-(budgets, two materials, grounding, matching bounds, determinism, normals, no
-coplanar flicker), five distinct shapes, leaves rooted in their cores (willow
-curtains hanging under a clump), every low limb ending in a mass and every low mass
-held by wood or resting in a held mass, and the standalone JS including `buildMax`.

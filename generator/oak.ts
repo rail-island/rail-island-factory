@@ -1,13 +1,13 @@
 // Reference-led oak: connected tapered boughs, closed foliage cores and folded
-// double-sided leaf shapes, drawn by the shared broadleaf kit (broadleaf.ts).
+// double-sided leaf shapes, drawn by the shared tree kit (treeKit.ts).
 // No textures, transparency, random global state or Node APIs.
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import type { P3 } from "./treeGeo.ts";
-import { add, broadleafParts, mix, mul, random, sub, type BroadleafStyle, type Clump, type Layout, type Parts, type Station } from "./broadleaf.ts";
+import { add, broadleafParts, mix, mul, random, sub, type BroadleafStyle, type Clump, type Layout, type Parts, type Station } from "./treeKit.ts";
 export const OAK_COLORS = { trunk: "#ac804a", foliage: "#c4d953" };
 export const OAK_PARAMS: ParamSpec[] = [
   { name: "seed", title: "Tree seed", default: "1",
-    values: ["1", "2", "3", "4", "5"].map((value) => ({ value, title: value })),
+    values: /* @__PURE__ */ ["1", "2", "3", "4", "5"].map((value) => ({ value, title: value })),
     retired: { "7": { seed: "1" }, "19": { seed: "2" } } },
   { name: "height", title: "Height", default: "standard", values: [{ value: "standard", title: "Standard" }, { value: "tall", title: "Tall" }] },
   { name: "canopy", title: "Canopy width", default: "broad", values: [{ value: "broad", title: "Broad" }, { value: "compact", title: "Compact" }] },

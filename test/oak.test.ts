@@ -51,8 +51,7 @@ describe("reference oak", () => {
     expect(max.trunk.reduce((n, g) => n + g.count / 3, 0)).toBe(794);
     expect(treeOakMax().triangleCount()).toBe(9374);
     expect(treeOakMax({ foliage: "airy" }).triangleCount()).toBe(7554);
-    expect(TREES.filter((d) => d.buildMax).map((d) => d.id)).toEqual(
-      ["oak", "birch", "aspen", "willow", "bush", "hazel", "orchard"].map((s) => `proc-tree-${s}`));
+    expect(TREES.every((d) => d.buildMax)).toBe(true);
   });
 
   it("builds thirteen clumps of 48 folded leaves each, with an airy option of 36", () => {

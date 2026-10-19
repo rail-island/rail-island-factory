@@ -1,10 +1,10 @@
-// The leafy broadleaf species (generator/leafyTrees.ts on the broadleaf kit):
-// every seed at every level within its budgets, grounded, deterministic, free of
-// flicker and the same size; leaves rooted in their clumps; the standalone JS.
-// Docs: docs/models/trees.md.
+// Every tree species on the tree kit (generator/treeKit.ts): every seed at every
+// level within its budgets, grounded, deterministic, free of flicker and the same
+// size; leaves rooted in their clumps, low masses held by wood; the standalone JS.
+// The oak's 80 combinations are checked in oak.test.ts. Docs: docs/models/trees.md.
 import { describe, expect, it } from "vitest";
-import { LEAFY_PARAMS, LEAFY_SPECIES, leafyOptions, leafyParts } from "../generator/leafyTrees";
-import { TREES } from "../generator/trees";
+import { SPECIES, TREES, treeModelOf, treeOptions, treeParts, type Species } from "../generator/trees";
+import { TREE_SEED } from "../generator/treeKit";
 import type { Geo } from "../generator/treeGeo";
 import { glbStats } from "../generator/glbStats";
 import { findCoplanarOverlaps } from "../generator/coplanar";
@@ -12,28 +12,30 @@ import { bundleDesign } from "../generator/jsModel";
 import { parseGlb, collectTriangles } from "../generator/glbTriangles";
 import baseline from "./fixtures/tree-baseline.json";
 
-const SEEDS = LEAFY_PARAMS[0]!.values.map((v) => v.value);
-const design = (species: string) => TREES.find((d) => d.id === `proc-tree-${species}`)!;
+const SEEDS = TREE_SEED.values.map((v) => v.value);
+const design = (species: Species) => TREES.find((d) => d.id === treeModelOf(species).id)!;
 const ref = baseline as Record<string, { tris: number }>;
+const KIT = SPECIES.filter((s) => s !== "oak");
 
-describe.each([...LEAFY_SPECIES])("the chunked %s", (species) => {
+describe.each(KIT)("the kit's %s", (species) => {
   // The shipped full and coarse allowances stay; low may grow 5%, within the family's 300.
   const budgets = {
     high: ref[`${species}:high`]!.tris, low: Math.min(300, Math.floor(ref[`${species}:low`]!.tris * 1.05)),
-    coarse: 20, max: 10000,
+    coarse: ref[`${species}:coarse`]!.tris, max: 10000,
   };
+  const values = (seed: string) => ({ ...treeModelOf(species).params, seed });
 
   it.each(SEEDS)("keeps seed %s in budget, grounded, deterministic and free of flicker at all levels", (seed) => {
     const d = design(species);
     let highBox: ReturnType<typeof glbStats> | undefined;
     for (const [build, budget] of [[d.build, budgets.high], [d.buildLod, budgets.low], [d.buildCoarse!, budgets.coarse], [d.buildMax!, budgets.max]] as const) {
-      const glb = build({ seed }).toGlb(species), stats = glbStats(glb);
+      const glb = build(values(seed)).toGlb(species), stats = glbStats(glb);
       expect(stats.triangles).toBeLessThanOrEqual(budget);
       expect(stats.materials).toBe(2);
       expect(stats.primitives).toBe(2);
       expect(stats.min[1]).toBeCloseTo(0, 6);
       expect(findCoplanarOverlaps(glb)).toEqual([]);
-      expect(build({ seed }).toGlb(species)).toEqual(glb);
+      expect(build(values(seed)).toGlb(species)).toEqual(glb);
       if (!highBox) highBox = stats;
       for (let k = 0; k < 3; k++) {
         expect(stats.min[k]).toBeCloseTo(highBox.min[k]!, 4);
@@ -48,15 +50,17 @@ describe.each([...LEAFY_SPECIES])("the chunked %s", (species) => {
   });
 
   it("draws five different trees, one per seed", () => {
-    const shapes = SEEDS.map((seed) => JSON.stringify(design(species).build({ seed }).positions()));
+    const shapes = SEEDS.map((seed) => JSON.stringify(design(species).build(values(seed)).positions()));
     expect(new Set(shapes).size).toBe(5);
   });
 
-  it("roots every leaf in a clump core and holds every low mass on wood", () => {
+  // The palm's leaflets hang from fronds and the dead tree has none: no clumps, no masses.
+  const clumped = species !== "palm" && species !== "deadtree";
+  it.runIf(clumped)("roots every leaf in a clump core and holds every low mass on wood", () => {
     const corners = (g: Geo) => Array.from({ length: g.count }, (_, i) => [g.x(i), g.y(i), g.z(i)] as const);
     for (const seed of SEEDS) {
       for (const level of ["high", "max"] as const) {
-        const { foliage } = leafyParts(species, level, leafyOptions({ seed }));
+        const { foliage } = treeParts(species, level, treeOptions(species, { seed }));
         const cores = foliage.filter((g) => g.count === 60).map((g) => {
           const pts = corners(g), c = [0, 1, 2].map((k) => pts.reduce((n, p) => n + p[k]!, 0) / pts.length);
           return { c, r: Math.max(...pts.map((p) => Math.hypot(p[0] - c[0]!, p[1] - c[1]!, p[2] - c[2]!))) };
@@ -71,7 +75,7 @@ describe.each([...LEAFY_SPECIES])("the chunked %s", (species) => {
           expect(rooted || hanging, `${level} seed ${seed}`).toBe(true);
         }
       }
-      const low = leafyParts(species, "low", leafyOptions({ seed }));
+      const low = treeParts(species, "low", treeOptions(species, { seed }));
       const boxes = low.foliage.filter((g) => (g.count / 3) % 4 === 0).map((g) => g.box()!);
       const within = (b: { min: number[]; max: number[] }) => (p: readonly number[]) => [0, 1, 2].every((k) => p[k]! >= b.min[k]! && p[k]! <= b.max[k]!);
       // Points spread over every face: a long trunk face can cross a mass between its corners.

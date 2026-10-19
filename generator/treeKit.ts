@@ -1,5 +1,6 @@
-// The chunked broadleaf crown shared by the oak and the other leafy species: a
-// seeded layout of lofted wood and leaf clumps, drawn at four levels of detail.
+// The tree kit every species is drawn with: a seeded layout of lofted wood and
+// foliage (leaf clumps or needle pads, hanging curtains, palm fronds), drawn at
+// four levels of detail.
 //
 //   max     rounder wood, lumpy clumps (a core per bulge) under dense tufts of
 //           faceted leaves
@@ -11,7 +12,13 @@
 // A species supplies only its layout (where the wood runs and where the clumps
 // sit) and a style (colours, side counts, leaf counts); docs/models/trees.md.
 // No textures, transparency, random global state or Node APIs.
+import type { ParamSpec } from "./design.ts";
 import { Geo, boxOf, fromIndexed, icosahedronGeo, quatFromUnitVectors, type P3 } from "./treeGeo.ts";
+
+/** The control every kit tree has: five numbered tree shapes, `1` to `5`. */
+export const TREE_SEED: ParamSpec = {
+  name: "seed", title: "Tree seed", default: "1", values: /* @__PURE__ */ ["1", "2", "3", "4", "5"].map((value) => ({ value, title: value })),
+};
 
 export type Parts = {
   trunk: Geo[];
@@ -39,6 +46,19 @@ export type Clump = {
   // Horizontal direction away from the crown's axis (zero for a top clump), and a per-clump tone.
   out: P3;
   tone: number;
+  // A flattened or stretched clump (a conifer's needle pad): per-axis scale, then a turn about Y.
+  scale?: P3;
+  yaw?: number;
+};
+// A palm frond: from `at` out along the horizontal `dir`, rising `rise` at its middle
+// and dropping `droop` by its tip.
+export type Frond = {
+  at: P3;
+  dir: P3;
+  length: number;
+  rise: number;
+  droop: number;
+  tone: number;
 };
 // A hanging curtain of leaves (willow): from `at`, falling `length`, drifting `reach` along `out`.
 export type Strand = {
@@ -57,6 +77,9 @@ export type Layout = {
   // The clumps each low-detail mass encloses.
   groups: number[][];
   strands?: Strand[];
+  fronds?: Frond[];
+  // Knobs in the bark's material (a palm's crown and coconuts), at high and Max only.
+  knobs?: { at: P3; r: number }[];
 };
 export type Palette = [dark: P3, mid: P3, light: P3];
 export interface BroadleafStyle {
@@ -77,6 +100,18 @@ export interface BroadleafStyle {
   strandLeaves?: { high: number; max: number; lowSegments: number };
   // The oak's fixed coarse crown (scale and centre height before fitting); others derive it from low.
   coarseCrown?: { scale: P3; y: number };
+  // Leaf blade width (a fraction of its length; 0.6) and how far it rises out of
+  // the clump (radians: the base plus up to the range; 0.5 and 0.4). Needles are narrow.
+  leafWidth?: number;
+  leafRise?: [base: number, range: number];
+  // The low-detail mass: a rounded solid (default) or a cone (conifer tiers).
+  lowMass?: "round" | "cone";
+  // The coarse crown: a 16-face dome (default), a square pyramid, or bare branches (dead tree).
+  coarse?: "dome" | "cone" | "wood";
+  // Limbs and twigs are drawn in the foliage material (a leafless tree).
+  woodFoliage?: boolean;
+  // Leaflet pairs per frond at high and Max detail, and the low-detail ribbon's segments.
+  fronds?: { high: number; max: number; lowSegments: number };
 }
 export interface BroadleafOptions {
   seed: number;
@@ -100,6 +135,42 @@ export function random(seed: number): () => number {
     return (state >>> 0) / 4294967296;
   };
 }
+// A clump's local offset in tree space: scaled per axis, then turned about Y.
+function padOffset(c: Clump, v: P3): P3 {
+  if (!c.scale)
+    return v;
+  const x = v[0] * c.scale[0], y = v[1] * c.scale[1], z = v[2] * c.scale[2], a = c.yaw ?? 0;
+  return [Math.cos(a) * x + Math.sin(a) * z, y, -Math.sin(a) * x + Math.cos(a) * z];
+}
+// A clump's half extents along the axes.
+function padExtent(c: Clump, k: number): P3 {
+  if (!c.scale)
+    return [c.r * k, c.r * k, c.r * k];
+  const a = c.yaw ?? 0, [sx, sy, sz] = c.scale;
+  return [c.r * k * Math.hypot(sx * Math.cos(a), sz * Math.sin(a)), c.r * k * sy, c.r * k * Math.hypot(sx * Math.sin(a), sz * Math.cos(a))];
+}
+export const jitterOf = (rng: () => number) => (k: number) => (rng() - 0.5) * 2 * k;
+export const bearing = (a: number): P3 => [Math.cos(a), 0, Math.sin(a)];
+// A bowed branch from `start` to `end`, rising `bow` above the straight line at its middle.
+export const bough = (start: P3, end: P3, r0: number, r1: number, bow: number, count = 3): Station[] =>
+  Array.from({ length: count }, (_, i) => {
+    const t = i / (count - 1);
+    return { at: add(mix(start, end, t), [0, bow * Math.sin(Math.PI * t), 0]), r: r0 + (r1 - r0) * t };
+  });
+// The limb (of `bearings`) nearest a clump's direction from `from`.
+export const nearest = (at: P3, from: P3, bearings: number[]): number => {
+  const a = Math.atan2(at[2] - from[2], at[0] - from[0]);
+  let best = 0;
+  for (let k = 1; k < bearings.length; k++)
+    if (Math.cos(a - bearings[k]!) > Math.cos(a - bearings[best]!))
+      best = k;
+  return best;
+};
+export const leaning = (rng: () => number, amount: number) => {
+  const a = rng() * Math.PI * 2, lean = amount * (0.6 + rng() * 0.4);
+  return (t: number): P3 => mul(bearing(a), lean * t * t);
+};
+
 /** The point on a polyline of stations at height `y` (clamped to its ends). */
 export function stationAt(stations: Station[], y: number): P3 {
   const i = stations.findIndex((s) => s.at[1] >= y);
@@ -149,6 +220,35 @@ function leafVolume(rx: number, ry: number, rz: number, spin: number, sides = 6)
     indices.push(0, u1, u, u, u1, l, u1, l1, l, 1, l, l1);
   }
   return fromIndexed(points, indices);
+}
+// A closed cone for a conifer's low-detail tier: an apex over a ring of `sides`
+// corners and a shallow underside, 2 * sides faces.
+function coneVolume(rx: number, hy: number, rz: number, sides: number, spin: number): Geo {
+  const points: P3[] = [[0, hy, 0], [0, -hy, 0]], indices: number[] = [];
+  for (let k = 0; k < sides; k++) {
+    const a = k * Math.PI * 2 / sides + spin;
+    points.push([Math.cos(a) * rx, -hy * 0.72, Math.sin(a) * rz]);
+  }
+  for (let k = 0; k < sides; k++)
+    indices.push(0, 2 + (k + 1) % sides, 2 + k, 1, 2 + k, 2 + (k + 1) % sides);
+  return fromIndexed(points, indices);
+}
+// Four faces from `from` to `to`: the coarse level's trunk and bare branches. A
+// trunk's base triangle lies flat, so a leaning trunk still stands on the ground.
+function tetraBranch(from: P3, to: P3, radius: number, flat = false): Geo {
+  const axis = flat ? [0, 1, 0] as P3 : unit(sub(to, from)), u = unit(cross(Math.abs(axis[1]) > 0.9 ? [1, 0, 0] : [0, 1, 0], axis)), v = cross(axis, u);
+  const ring = [0, 1, 2].map((k) => add(from, add(mul(u, radius * Math.cos(k * Math.PI * 2 / 3)), mul(v, radius * Math.sin(k * Math.PI * 2 / 3)))));
+  return fromIndexed([...ring, to], [0, 2, 1, 0, 1, 3, 1, 2, 3, 2, 0, 3]);
+}
+// Two edge lines joined as a strip of triangles (low-detail curtains and fronds).
+function ribbonOf(left: P3[], right: P3[]): Geo {
+  const pos: number[] = [];
+  for (let k = 0; k < left.length - 1; k++) {
+    pos.push(...left[k]!, ...right[k]!, ...left[k + 1]!);
+    if (k < left.length - 2)
+      pos.push(...right[k]!, ...right[k + 1]!, ...left[k + 1]!);
+  }
+  return new Geo(pos);
 }
 const linear = (x: number) => x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
 const rgbOf = (hex: string): P3 => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255) as P3;
@@ -206,12 +306,13 @@ function rawTree(detail: "max" | "high" | "low", o: BroadleafOptions, plan: Layo
   // serves one into its centre, so no branch ends in the air and no clump floats.
   const masses = high ? [] : plan.groups.map((m) => {
     const lo: P3 = [Infinity, Infinity, Infinity], hi: P3 = [-Infinity, -Infinity, -Infinity];
-    for (const i of m)
+    for (const i of m) {
+      const c = plan.clumps[i]!, e = padExtent(c, 0.8);
       for (let a = 0; a < 3; a++) {
-        const c = plan.clumps[i]!;
-        lo[a] = Math.min(lo[a]!, c.at[a]! - c.r * 0.8);
-        hi[a] = Math.max(hi[a]!, c.at[a]! + c.r * 0.8);
+        lo[a] = Math.min(lo[a]!, c.at[a]! - e[a]!);
+        hi[a] = Math.max(hi[a]!, c.at[a]! + e[a]!);
       }
+    }
     return { members: m, at: mix(lo, hi, 0.5), half: mul(sub(hi, lo), 0.5) };
   });
   plan.limbs.forEach((l) => {
@@ -225,6 +326,12 @@ function rawTree(detail: "max" | "high" | "low", o: BroadleafOptions, plan: Layo
   if (high)
     plan.twigs.forEach((s) => {
       trunk.push(limb(max ? s : [s[0]!, s[s.length - 1]!], max ? 5 : 3));
+      marks.push(0);
+    });
+  const woodEnd = trunk.length;
+  if (high)
+    (plan.knobs ?? []).forEach((k, i) => {
+      trunk.push(icosahedronGeo(k.r, max ? 1 : 0).scale(1, 0.9, 1).rotateY(i * 1.3).translate(...k.at));
       marks.push(0);
     });
   // Root buttresses: a ridge from the trunk down to a tip on the ground, open
@@ -257,10 +364,13 @@ function rawTree(detail: "max" | "high" | "low", o: BroadleafOptions, plan: Layo
     // Only Max gives the bulges cores of their own, so only Max pushes leaves out onto them.
     const bump = (d: P3) => !max ? 1 : 1 + lobes.reduce((s, l) => s + 0.22 * Math.max(0, d[0] * l[0] + d[1] * l[1] + d[2] * l[2]) ** 3, 0);
     // Dark cores close the clump so no sky shows through the leaves.
-    const cores = max ? [{ at: c.at, r: c.r * 0.76 }, ...lobes.map((l) => ({ at: add(c.at, mul(l, c.r * 0.42)), r: c.r * 0.5 }))]
+    const cores = max ? [{ at: c.at, r: c.r * 0.76 }, ...lobes.map((l) => ({ at: add(c.at, padOffset(c, mul(l, c.r * 0.42))), r: c.r * 0.5 }))]
       : [{ at: c.at, r: c.r * 0.72 }];
     cores.forEach((k, j) => {
-      const core = icosahedronGeo(k.r, 0).scale(1, 0.86, 1).rotateY(rng() * Math.PI).rotateX((rng() - 0.5) * 0.4).translate(...k.at);
+      const core = icosahedronGeo(k.r, 0).scale(1, 0.86, 1).rotateY(rng() * Math.PI).rotateX((rng() - 0.5) * 0.4);
+      if (c.scale)
+        core.scale(...c.scale).rotateY(c.yaw ?? 0);
+      core.translate(...k.at);
       shade(style, core, true, c.tone - 0.2 - (j === 0 ? 0.04 : 0), top);
       foliage.push(core);
     });
@@ -268,21 +378,25 @@ function rawTree(detail: "max" | "high" | "low", o: BroadleafOptions, plan: Layo
     const rosettes = max ? (airy ? style.tufts.maxAiry : style.tufts.max) : (airy ? style.tufts.highAiry : style.tufts.high);
     const leaves = max ? style.leaves.max : style.leaves.high;
     const length = c.r * (max ? style.leafLength.max : style.leafLength.high), spin = rng() * Math.PI * 2;
+    const width = style.leafWidth ?? 0.6, rise = style.leafRise ?? [0.5, 0.4];
     for (let k = 0; k < rosettes; k++) {
       const y = 1 - 2 * (k + 0.5) / rosettes;
       const ring = Math.sqrt(1 - y * y), az = k * Math.PI * (3 - Math.sqrt(5)) + spin;
       // Lift the distribution: more tufts on the lit top than underneath.
       const d = unit([ring * Math.cos(az), y * 0.8 + 0.2, ring * Math.sin(az)]);
-      const centre = add(c.at, [d[0] * c.r * bump(d) * 0.66, d[1] * c.r * bump(d) * 0.6, d[2] * c.r * bump(d) * 0.66]);
-      const facing = unit(add(d, [0, 0.25, 0]));
+      // A stretched pad's tufts sit a little deeper, so its long ends stay rooted in the core.
+      const deep = c.scale ? 0.88 : 1;
+      const centre = add(c.at, padOffset(c, [d[0] * c.r * bump(d) * 0.66 * deep, d[1] * c.r * bump(d) * 0.6 * deep, d[2] * c.r * bump(d) * 0.66 * deep]));
+      // A flattened pad's surface faces along the inverse-scaled direction.
+      const facing = unit(add(c.scale ? unit(padOffset({ ...c, scale: [1 / c.scale[0], 1 / c.scale[1], 1 / c.scale[2]] }, d)) : d, [0, 0.25, 0]));
       const q = quatFromUnitVectors([0, 1, 0], facing);
       const twist = rng() * Math.PI * 2, size = 0.85 + rng() * 0.3;
       const outwards = clamp(0.5 + 0.5 * (d[0] * c.out[0] + d[2] * c.out[2]));
       const tone = c.tone + (rng() - 0.4) * 0.1;
       for (let j = 0; j < leaves; j++) {
         // Tufts, not flat stars: each leaf rises 30-50 degrees out of the surface.
-        const leaf = leafBlade(length * size * (j % 2 ? 0.85 : 1), length * size * 0.6, max)
-          .translate(0, 0, length * 0.06).rotateX(-0.5 - rng() * 0.4).rotateY(twist + j * Math.PI * 2 / leaves + (rng() - 0.5) * 0.3)
+        const leaf = leafBlade(length * size * (j % 2 ? 0.85 : 1), length * size * width, max)
+          .translate(0, 0, length * 0.06).rotateX(-rise[0] - rng() * rise[1]).rotateY(twist + j * Math.PI * 2 / leaves + (rng() - 0.5) * 0.3)
           .applyQuaternion(q).translate(...centre);
         shade(style, leaf, true, tone, top, facing, exposure * outwards);
         foliage.push(leaf);
@@ -301,13 +415,7 @@ function rawTree(detail: "max" | "high" | "low", o: BroadleafOptions, plan: Layo
         left.push(add(point(t), mul(side, -w)));
         right.push(add(point(t), mul(side, w)));
       }
-      const pos: number[] = [];
-      for (let k = 0; k < segments; k++) {
-        pos.push(...left[k]!, ...right[k]!, ...left[k + 1]!);
-        if (k < segments - 1)
-          pos.push(...right[k]!, ...right[k + 1]!, ...left[k + 1]!);
-      }
-      const ribbon = new Geo(pos);
+      const ribbon = ribbonOf(left, right);
       shade(style, ribbon, true, s.tone, top, facing, 0.5);
       foliage.push(ribbon);
       return;
@@ -326,18 +434,55 @@ function rawTree(detail: "max" | "high" | "low", o: BroadleafOptions, plan: Layo
       foliage.push(leaf);
     }
   });
+  // Palm fronds: pairs of leaflets down an arching midrib (a ribbon at low detail).
+  (plan.fronds ?? []).forEach((f) => {
+    const point = (t: number): P3 => add(f.at, add(mul(f.dir, f.length * t), [0, f.rise * Math.sin(Math.PI * t) - f.droop * t * t, 0]));
+    const side = unit(cross([0, 1, 0], f.dir));
+    if (!high) {
+      const segments = style.fronds!.lowSegments, left: P3[] = [], right: P3[] = [];
+      for (let k = 0; k <= segments; k++) {
+        const t = k / segments, w = f.length * 0.17 * Math.sin(Math.PI * Math.min(1, 0.12 + t * 0.88));
+        left.push(add(point(t), add(mul(side, -w), [0, -w * 0.35, 0])));
+        right.push(add(point(t), add(mul(side, w), [0, -w * 0.35, 0])));
+      }
+      const ribbon = ribbonOf(left, right);
+      shade(style, ribbon, true, f.tone, top, [0, 1, 0], 0.6);
+      foliage.push(ribbon);
+      return;
+    }
+    const pairs = max ? style.fronds!.max : style.fronds!.high;
+    for (let k = 0; k < pairs; k++) {
+      const t = 0.06 + 0.92 * (k + 0.5) / pairs, at = point(t), along = unit(sub(point(t + 0.02), at));
+      // Long leaflets swept toward the tip overlap along the midrib, so the frond reads as one leaf.
+      const length = f.length * (0.12 + 0.4 * Math.sin(Math.PI * (0.1 + 0.9 * t)));
+      for (const s of [-1, 1]) {
+        const dir = unit(add(add(mul(side, s), mul(along, 1.1)), [0, -0.35 - 0.35 * t, 0]));
+        const leaf = leafBlade(length, length * (max ? 0.16 : 0.24), max).rotateZ(s * 0.5)
+          .applyQuaternion(quatFromUnitVectors([0, 0, 1], dir)).translate(...at);
+        shade(style, leaf, true, f.tone + 0.06 * (1 - t), top, [0, 1, 0], 0.6);
+        foliage.push(leaf);
+      }
+    }
+  });
   masses.forEach((m, j) => {
     const lead = plan.clumps[m.members[0]!]!;
     const out = m.members.length > 1 ? 0.6 : Math.hypot(lead.out[0], lead.out[2]) > 0 ? 0.5 : 0.8;
     const n = typeof style.massSides === "number" ? style.massSides : style.massSides(j);
-    const mass = leafVolume(m.half[0] * 1.12, m.half[1] * 1.06, m.half[2] * 1.12, j * 0.7, n).translate(...m.at);
+    const mass = (style.lowMass === "cone" ? coneVolume(m.half[0] * 1.15, m.half[1], m.half[2] * 1.15, n, j * 0.7)
+      : leafVolume(m.half[0] * 1.12, m.half[1] * 1.06, m.half[2] * 1.12, j * 0.7, n)).translate(...m.at);
     shade(style, mass, true, lead.tone, top, [0, 0.3, 0], out);
     foliage.push(mass);
   });
   trunk.forEach((g, i) => shade(style, g, false, 0, top, undefined, 0, marks[i]));
+  // A leafless tree carries its limbs and twigs in the foliage material.
+  if (style.woodFoliage)
+    foliage.push(...trunk.splice(1, woodEnd - 1));
   for (const g of [...trunk, ...foliage])
     g.scale(o.width, o.height, o.width);
-  return { trunk, foliage, ...(high || plan.strands?.length ? { ribbons: true } : {}) };
+  // Single-layer leaves, curtains and fronds are drawn double-sided.
+  const ribbons = high ? plan.clumps.length > 0 || !!plan.strands?.length || !!plan.fronds?.length
+    : !!plan.strands?.length || !!plan.fronds?.length;
+  return { trunk, foliage, ...(ribbons ? { ribbons: true } : {}) };
 }
 // Fit simplified silhouettes to the high model's exact extents; all transforms
 // are around the foot, and colours have already been painted in tree space.
@@ -361,29 +506,50 @@ export function broadleafParts(detail: "max" | "high" | "low" | "coarse", o: Bro
   const low = fit(rawTree("low", o, layout(o), style), high);
   if (detail === "low")
     return low;
-  // Subdivide the four diamond edges into an eight-sided crown: 16 closed faces.
-  const points: P3[] = [[0, 1, 0], [0, -0.65, 0]], indices: number[] = [];
-  for (let i = 0; i < 8; i++) {
-    const a = i * Math.PI / 4;
-    points.push([Math.cos(a), 0, Math.sin(a)]);
+  const f = boxOf(low.foliage), stem = boxOf([low.trunk[0]!]);
+  const centre: P3 = [(f.max[0] + f.min[0]) / 2, 0, (f.max[2] + f.min[2]) / 2];
+  const r = Math.max(0.08, (stem.max[0] - stem.min[0]) / 2);
+  const foot = (y: number) => tetraBranch([0, 0, 0], [centre[0], y, centre[2]], r, true);
+  if (style.coarse === "wood") {
+    // A leafless tree: the trunk and its first three limbs as bare spikes.
+    const plan = layout(o), scale = (p: P3): P3 => [p[0] * o.width, p[1] * o.height, p[2] * o.width];
+    const wood = tetraBranch([0, 0, 0], scale(plan.stem[plan.stem.length - 1]!.at), r, true);
+    const branches = plan.limbs.slice(0, 3).map((l) => tetraBranch(scale(l.stations[0]!.at), scale(l.stations[l.stations.length - 1]!.at), 0.09));
+    const coarse = fit({ trunk: [wood], foliage: branches }, low);
+    const topY = boxOf([...coarse.trunk, ...coarse.foliage]).max[1];
+    for (const g of [wood, ...branches])
+      shade(style, g, false, 0, topY);
+    return coarse;
   }
-  for (let i = 0; i < 8; i++) {
-    const a = 2 + i, b = 2 + (i + 1) % 8;
-    indices.push(0, b, a, 1, a, b);
-  }
-  const crown = fromIndexed(points, indices);
-  let wood: Geo;
-  if (style.coarseCrown) {
-    crown.scale(...style.coarseCrown.scale).translate(0, style.coarseCrown.y, 0);
-    wood = fromIndexed([[0, 0, 0.6], [-0.52, 0, -0.3], [0.52, 0, -0.3], [0, 5, 0]], [0, 1, 2, 0, 3, 1, 1, 3, 2, 2, 3, 0]);
+  let crown: Geo, wood: Geo;
+  if (style.coarse === "cone") {
+    // A square pyramid over the low foliage's box: six closed faces.
+    crown = fromIndexed([[0, 1, 0], [1, 0, 0], [0, 0, 1], [-1, 0, 0], [0, 0, -1]], [0, 2, 1, 0, 3, 2, 0, 4, 3, 0, 1, 4, 1, 2, 3, 1, 3, 4]);
+    crown.scale((f.max[0] - f.min[0]) / 2, f.max[1] - f.min[1], (f.max[2] - f.min[2]) / 2).translate(centre[0], f.min[1], centre[2]);
+    wood = foot(f.min[1] + (f.max[1] - f.min[1]) * 0.3);
   } else {
-    // The crown spans the low foliage's own box; the trunk rises into its middle.
-    const f = boxOf(low.foliage), stem = boxOf([low.trunk[0]!]);
-    const half: P3 = [(f.max[0] - f.min[0]) / 2, (f.max[1] - f.min[1]) / 1.65, (f.max[2] - f.min[2]) / 2];
-    crown.scale(...half).translate((f.max[0] + f.min[0]) / 2, f.min[1] + half[1] * 0.65, (f.max[2] + f.min[2]) / 2);
-    const r = Math.max(0.08, (stem.max[0] - stem.min[0]) / 2), y = f.min[1] + half[1] * 0.65;
-    wood = fromIndexed([[0, 0, r], [-r * 0.87, 0, -r / 2], [r * 0.87, 0, -r / 2], [(f.max[0] + f.min[0]) / 2, y, (f.max[2] + f.min[2]) / 2]],
-      [0, 1, 2, 0, 3, 1, 1, 3, 2, 2, 3, 0]);
+    // Subdivide the four diamond edges into an eight-sided crown: 16 closed faces.
+    const points: P3[] = [[0, 1, 0], [0, -0.65, 0]], indices: number[] = [];
+    for (let i = 0; i < 8; i++) {
+      const a = i * Math.PI / 4;
+      points.push([Math.cos(a), 0, Math.sin(a)]);
+    }
+    for (let i = 0; i < 8; i++) {
+      const a = 2 + i, b = 2 + (i + 1) % 8;
+      indices.push(0, b, a, 1, a, b);
+    }
+    crown = fromIndexed(points, indices);
+    if (style.coarseCrown) {
+      crown.scale(...style.coarseCrown.scale).translate(0, style.coarseCrown.y, 0);
+      wood = fromIndexed([[0, 0, 0.6], [-0.52, 0, -0.3], [0.52, 0, -0.3], [0, 5, 0]], [0, 1, 2, 0, 3, 1, 1, 3, 2, 2, 3, 0]);
+    } else {
+      // The crown spans the low foliage's own box; the trunk rises into its middle.
+      const half: P3 = [(f.max[0] - f.min[0]) / 2, (f.max[1] - f.min[1]) / 1.65, (f.max[2] - f.min[2]) / 2];
+      crown.scale(...half).translate(centre[0], f.min[1] + half[1] * 0.65, centre[2]);
+      const y = f.min[1] + half[1] * 0.65;
+      wood = fromIndexed([[0, 0, r], [-r * 0.87, 0, -r / 2], [r * 0.87, 0, -r / 2], [centre[0], y, centre[2]]],
+        [0, 1, 2, 0, 3, 1, 1, 3, 2, 2, 3, 0]);
+    }
   }
   const coarse = fit({ trunk: [wood], foliage: [crown] }, low);
   shade(style, wood, false, 0, boxOf(coarse.foliage).max[1]);

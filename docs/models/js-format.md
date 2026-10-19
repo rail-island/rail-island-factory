@@ -53,7 +53,7 @@ scene.add(build(THREE)); // a THREE.Group named after the model id
   ([lod.md](lod.md)). The game takes its trees from `trees.js` instead, every species in one module
   ([trees.md](trees.md)); the per-species files are the catalog's and the site's.
 - **Max detail.** A design with `buildMax` exports `buildMax(THREE, params)` and
-  `maxTriangleBudget` (10,000). Currently only oak supplies it. It is optional,
+  `maxTriangleBudget` (10,000). Currently every tree supplies it. It is optional,
   does not change the default `build` or its boolean LOD argument, and sets
   `group.userData.lod` to `"max"`. The site advertises it with `maxDetail: true`.
 - **The same triangles.** The positions and normals equal the GLB's, not an approximation: it is the same

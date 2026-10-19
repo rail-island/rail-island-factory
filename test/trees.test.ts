@@ -37,7 +37,7 @@ describe("the tree species", () => {
 
   it("draws both larches from one design with a season", () => {
     const larch = TREES.find((t) => t.id === "proc-tree-larch")!;
-    expect(larch.params?.map((p) => p.name)).toEqual(["season"]);
+    expect(larch.params?.map((p) => p.name)).toEqual(["season", "seed"]);
     expect(larch.build().toGlb("a")).toEqual(larch.build({ season: "summer" }).toGlb("a"));
     expect(larch.build({ season: "autumn" }).toGlb("a")).not.toEqual(larch.build().toGlb("a"));
     expect(() => larch.build({ season: "winter" })).toThrow();
@@ -142,12 +142,11 @@ describe("tree levels", () => {
     }
   });
 
-  it("shades single-layer broadleaf leaves, palm fronds and willow curtains on both faces", () => {
-    const broadleaf = ["oak", "birch", "aspen", "willow", "bush", "hazel", "orchard"];
+  it("shades single-layer leaves and needles, palm fronds and willow curtains on both faces", () => {
     for (const species of SPECIES) {
       for (const detail of LEVELS) {
         const ribbons = (detail !== "coarse" && (species === "palm" || species === "willow"))
-          || (broadleaf.includes(species) && detail === "high");
+          || (species !== "deadtree" && detail === "high");
         expect(treeParts(species, detail).ribbons ?? false, `${species} ${detail}`).toBe(ribbons);
       }
     }
@@ -178,13 +177,13 @@ describe("the shared trees module", () => {
       }
     }
     expect(() => mod.buildTree(THREE, "baobab", "high")).toThrow();
-    expect(() => mod.buildTree(THREE, "pine", "max")).toThrow(/not available for pine/);
-    for (const species of ["oak", "birch", "aspen", "willow", "bush", "hazel", "orchard"]) {
+    for (const species of SPECIES) {
       let maxTriangles = 0;
       mod.buildTree(THREE, species, "max").traverse((o: { isMesh?: boolean; geometry?: { getAttribute(n: string): { count: number } } }) => {
         if (o.isMesh) maxTriangles += o.geometry!.getAttribute("position").count / 3;
       });
-      expect(maxTriangles, species).toBe(TREES.find((d) => d.id === `proc-tree-${species}`)!.buildMax!().triangleCount());
+      const { id, params } = treeModelOf(species);
+      expect(maxTriangles, species).toBe(TREES.find((d) => d.id === id)!.buildMax!(params).triangleCount());
     }
   }, 60_000);
 });

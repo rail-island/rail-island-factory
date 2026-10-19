@@ -63,7 +63,7 @@ carry no timestamp, so they are deterministic too.
 
 **Max detail.** A design may supply `buildMax`, exported as an optional function
 in its existing JS module. The catalog carries `maxDetail: true` only for such
-designs (currently oak). The build also checks this geometry against the hard
+designs (currently every tree). The build also checks this geometry against the hard
 10,000-triangle cap and the flicker guard. Default thumbnails, source trees,
 metadata triangle counts and exports continue to describe full detail.
 

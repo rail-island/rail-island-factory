@@ -1,13 +1,13 @@
 // The leafy species besides the oak -- birch, aspen, willow, bush, hazel and the
-// orchard tree -- drawn as chunked crowns by the broadleaf kit (broadleaf.ts):
+// orchard tree -- drawn as chunked crowns by the tree kit (treeKit.ts):
 // each species is a seeded layout of wood and leaf clumps plus a style. Five
 // numbered seeds per species; docs/models/trees.md. No Node APIs.
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import type { P3 } from "./treeGeo.ts";
 import {
-  add, broadleafParts, mix, mul, random, stationAt, unit,
+  TREE_SEED, add, bearing, bough, broadleafParts, jitterOf, leaning, mix, mul, nearest, random, stationAt, unit,
   type BroadleafOptions, type BroadleafStyle, type Clump, type Layout, type Limb, type Parts, type Station, type Strand,
-} from "./broadleaf.ts";
+} from "./treeKit.ts";
 
 export const LEAFY_SPECIES = ["birch", "aspen", "willow", "bush", "hazel", "orchard"] as const;
 export type LeafySpecies = (typeof LEAFY_SPECIES)[number];
@@ -26,36 +26,12 @@ export const LEAFY_COLORS: Record<LeafySpecies, { trunk: string; foliage: string
 };
 
 /** The one control every leafy species has: five numbered tree shapes. */
-export const LEAFY_PARAMS: ParamSpec[] = [
-  { name: "seed", title: "Tree seed", default: "1", values: ["1", "2", "3", "4", "5"].map((value) => ({ value, title: value })) },
-];
+export const LEAFY_PARAMS: ParamSpec[] = [TREE_SEED];
 const SEEDS = [11, 29, 97, 211, 563];
 export const DEFAULT_LEAFY: BroadleafOptions = { seed: SEEDS[0]!, height: 1, width: 1, spread: 1, density: 1 };
 export function leafyOptions(p?: ParamValues): BroadleafOptions {
   return { ...DEFAULT_LEAFY, seed: SEEDS[Number(resolveParams(LEAFY_PARAMS, p).seed) - 1]! };
 }
-
-const jitterOf = (rng: () => number) => (k: number) => (rng() - 0.5) * 2 * k;
-const bearing = (a: number): P3 => [Math.cos(a), 0, Math.sin(a)];
-// A bowed branch from `start` to `end`, rising `bow` above the straight line at its middle.
-const bough = (start: P3, end: P3, r0: number, r1: number, bow: number, count = 3): Station[] =>
-  Array.from({ length: count }, (_, i) => {
-    const t = i / (count - 1);
-    return { at: add(mix(start, end, t), [0, bow * Math.sin(Math.PI * t), 0]), r: r0 + (r1 - r0) * t };
-  });
-// The limb (of `bearings`) nearest a clump's direction from `from`.
-const nearest = (at: P3, from: P3, bearings: number[]): number => {
-  const a = Math.atan2(at[2] - from[2], at[0] - from[0]);
-  let best = 0;
-  for (let k = 1; k < bearings.length; k++)
-    if (Math.cos(a - bearings[k]!) > Math.cos(a - bearings[best]!))
-      best = k;
-  return best;
-};
-const leaning = (rng: () => number, amount: number) => {
-  const a = rng() * Math.PI * 2, lean = amount * (0.6 + rng() * 0.4);
-  return (t: number): P3 => mul(bearing(a), lean * t * t);
-};
 
 // Birch: a slender leaning white trunk runs up through an oval crown of small
 // clumps, each on its own short, rising branch.
@@ -217,16 +193,17 @@ const mark = (density: number) => (y: number, k: number) => {
   n ^= n >>> 13;
   return ((n >>> 0) % 1000) / 1000 < density;
 };
-const STYLES: Record<LeafySpecies, BroadleafStyle> = {
+// Marked pure, so another design's standalone JS can drop this table.
+const STYLES: Record<LeafySpecies, BroadleafStyle> = /* @__PURE__ */ (() => ({
   birch: {
     colors: LEAFY_COLORS.birch, top: 8.6,
-    leaf: [[0.12, 0.3, 0.06], [0.4, 0.63, 0.17], [0.78, 0.9, 0.34]], bark: [[0.6, 0.58, 0.53], [0.96, 0.95, 0.91]], barkMark: mark(0.28),
+    leaf: [[0.12, 0.3, 0.06], [0.4, 0.63, 0.17], [0.78, 0.9, 0.34]], bark: [[0.6, 0.58, 0.53], [0.96, 0.95, 0.91]], barkMark: /* @__PURE__ */ mark(0.28),
     tufts: { high: 6, highAiry: 6, max: 50, maxAiry: 50 }, leaves: { high: 4, max: 5 }, leafLength: { high: 0.62, max: 0.38 },
     massSides: (j) => j === 0 ? 6 : 5,
   },
   aspen: {
     colors: LEAFY_COLORS.aspen, top: 9.6,
-    leaf: [[0.16, 0.34, 0.06], [0.46, 0.68, 0.18], [0.84, 0.92, 0.36]], bark: [[0.52, 0.53, 0.45], [0.86, 0.86, 0.77]], barkMark: mark(0.12),
+    leaf: [[0.16, 0.34, 0.06], [0.46, 0.68, 0.18], [0.84, 0.92, 0.36]], bark: [[0.52, 0.53, 0.45], [0.86, 0.86, 0.77]], barkMark: /* @__PURE__ */ mark(0.12),
     tufts: { high: 6, highAiry: 6, max: 38, maxAiry: 38 }, leaves: { high: 4, max: 5 }, leafLength: { high: 0.62, max: 0.4 },
     massSides: 6,
   },
@@ -256,7 +233,7 @@ const STYLES: Record<LeafySpecies, BroadleafStyle> = {
     tufts: { high: 6, highAiry: 6, max: 46, maxAiry: 46 }, leaves: { high: 4, max: 5 }, leafLength: { high: 0.64, max: 0.4 },
     massSides: 6,
   },
-};
+}))();
 const LAYOUTS: Record<LeafySpecies, (o: BroadleafOptions) => Layout> = {
   birch: birchLayout, aspen: aspenLayout, willow: willowLayout, bush: bushLayout, hazel: hazelLayout, orchard: orchardLayout,
 };

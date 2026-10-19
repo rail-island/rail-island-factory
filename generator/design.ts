@@ -72,7 +72,7 @@ export interface ProceduralDesign {
    * forest draws in the distance. The JS model exports it as `buildCoarse(THREE)`.
    */
   buildCoarse?: (params?: ParamValues) => MeshBuilder;
-  /** Optional close-up geometry, capped at 10,000 triangles; currently the broadleaf trees. */
+  /** Optional close-up geometry, capped at 10,000 triangles; currently every tree. */
   buildMax?: (params?: ParamValues) => MeshBuilder;
   /** Total distant-mesh budget; defaults to the family policy in lod.ts. */
   lodTriangles?: 100 | 200 | 300 | 500 | 12000;
