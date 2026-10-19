@@ -64,6 +64,10 @@ document that owns it in the same change.** Conventions:
 
 ## Skills
 
+- **`tree`** (`.agents/skills/tree/`) - use whenever a procedural tree is added or
+  changed: five numbered seeds, full/low/coarse triangle budgets, optional Max
+  detail, matching LOD silhouettes and headless previews.
+
 - **`building`** (`.agents/skills/building/`) - use whenever a building is added or changed: row houses up to 10,000 triangles, large landmarks 20,000-30,000, references, structural detail and headless checks.
 
 - **`road-vehicle`** (`.agents/skills/road-vehicle/`) - use it whenever a road

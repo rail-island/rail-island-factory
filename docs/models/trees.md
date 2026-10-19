@@ -191,6 +191,15 @@ show this option.
 
 ## Budgets and tests
 
+For new or reworked trees, follow the [tree authoring skill](../../.agents/skills/tree/SKILL.md):
+expose five deterministic seeds labelled `1` through `5`, defaulting to `1`, and
+resolve the same seed at every detail level. New trees target at most 2,000
+full-detail triangles, 300 low-detail triangles and 20 coarse triangles; optional
+Max detail is capped at 10,000. Existing species retain their tighter fixture
+budgets, and existing non-oak full-detail allowances remain unchanged. Oak's low
+cap is 218. This authoring policy does not add seeds or Max detail to legacy
+species automatically; currently only oak exposes them.
+
 `test/trees.test.ts`: the species list; the game's budgets (`low` at most 5% over the
 fixture, `high` and `coarse` not at all, except oak `high` capped at 2,000); light and
 shade baked at every level, the crown's top lighter than its underside; coarse at
