@@ -64,15 +64,26 @@ from what is around it:
 
 Trees stand on the quarters of the cell, each jittered within its quarter, so crowns
 overlap into a canopy without stacking; each gets its own width, lean, shade and hue,
-and a grove shares a tone from the same field. Heights are about 15% taller than the
-game's old presets, part of the stylised look ([trees.md](trees.md)).
+and a grove shares a tone from the same field. Trees are planted at the game's
+classic heights: the specs are written about 15% taller and drawn at `HEIGHT`
+(1/1.15), so a tree is as big as the classic woods' ([trees.md](trees.md)).
 
-The thirteen types are the ones the game shipped -- `pine-forest`, `oak-woods`,
+The twelve types are the ones the game shipped -- `pine-forest`, `oak-woods`,
 `mixed-woods`, `scrub`, `palms`, `tropical-forest`, `high-mountain-forest`, `park`,
-`scots-pine-woodland`, `larch-woodland`, `autumn-larch-woodland`,
-`hazel-woodland-edge`, `village-orchard` -- rewritten with relations: a pine forest
-grows 1.7 trees a cell inside and young pines and bushes at its edge, a park stays a
-quarter tree a cell so the lawn shows, the mountain forest shrinks with height.
+`scots-pine-woodland`, `larch-woodland`, `hazel-woodland-edge`, `village-orchard`
+-- rewritten with relations: young pines and bushes at a pine forest's edge, a park
+thin so the lawn shows, the mountain forest shrinking with height. The game's
+thirteenth, `autumn-larch-woodland`, is merged into `larch-woodland` as its
+`season`: the game reads the old name as `larch-woodland` at peak autumn without
+spruce, which plants the same trees (its `docs/rendering/woods.md`).
+
+**Density.** A spec's tree counts give the shape of the wood (denser inside than at
+the edge, glades); each type's **scale** (`woodsType`'s third argument) brings its
+normal grade to the classic woods' density -- the game's density percent before the
+factory, as trees per cell averaged over a large wood's interior, glades included:
+pine 40%, oak 30%, mixed 50%, scrub 22%, palms 40%, tropical 100%, mountain 34%,
+park 18%, Scots pine 28%, larch 30%, hazel 24%, orchard 24%. The scales are
+calibrated by measurement; the tests hold every type within 10% of its figure.
 
 ## Parameters
 
@@ -81,21 +92,22 @@ A woods type has enum **parameters**, in the same shape as a model's (`name`,
 
 ```ts
 params: WoodsParam[]                       // density first
-variant(values?): { distribute, sample }   // one choice of them, compiled once
+variant(values?): { distribute, sample, swatch?, floor? }   // one choice of them, compiled once
 ```
 
 `variant` resolves the values leniently (`resolveWoodsParams`): a missing parameter,
 an unknown one or an unknown value reads as the default, so a game map written
 against a later or earlier factory still grows a forest. Each choice is compiled
 into its own planter once and kept, so the game's per-cell calls cost nothing more.
-The type's own `distribute` and `sample` are its defaults' -- and **the defaults
-reproduce the type exactly as it was before it had parameters** (checked tree for
-tree when they were added), so existing islands keep their forests.
+The type's own `distribute` and `sample` are its defaults'. A variant whose values
+change the wood's colour carries its own `swatch` and `floor` (a larch wood in autumn
+is gold); the game uses them for the picker and the ground tint.
 
 Every type has **`density`**: `sparse`, `normal` (default) or `dense`, the expected
-trees per cell (inside and at the edge) times 0.55, 1 or 1.55, kept within the
-four-tree limit; an orchard's row probability likewise, at most one tree a cell.
-Each type adds one parameter of its own:
+trees per cell (inside and at the edge) times 0.5, 1 or 2.5 of the classic density
+above, kept within the four-tree limit; an orchard's row probability likewise, at
+most one tree a cell. Dense is the full stylised forest, two or three trees a cell.
+Each type adds one parameter of its own (the larch woodland two):
 
 | Woods type | Parameter | Values (default in bold) |
 |---|---|---|
@@ -108,8 +120,7 @@ Each type adds one parameter of its own:
 | `high-mountain-forest` | `conifer` | `pine`, **`mixed`**, `spruce` |
 | `park` | `planting` | **`mixed`**, `birch` (birch and aspen), `oak`, `conifer` (spruce and Scots pine) |
 | `scots-pine-woodland` | `birch` | `none`, **`some`**, `many` |
-| `larch-woodland` | `spruce` | `none`, **`some`**, `many` |
-| `autumn-larch-woodland` | `season` | `early` (mostly green), **`peak`**, `late` (all golden) |
+| `larch-woodland` | `season`, `spruce` | **`summer`**, `early` (autumn, mostly green), `peak`, `late` (all golden); `none`, **`some`**, `many` |
 | `hazel-woodland-edge` | `oaks` | `none`, **`few`**, `many` |
 | `village-orchard` | `layout` | **`rows`**, `scattered` (an old meadow orchard) |
 
@@ -166,8 +177,9 @@ modules above, not from a grove model.
 unique and kebab-case; for every type, over a sweep of interiors, edges, lone cells,
 slopes and heights, at most four trees a cell, each a known species inside its cell
 with a sane height, width, lean, shade and hue; determinism; `sample`; the relations
-(denser inside than at the edge, more shrubs at the edge, a pine forest above one tree
-a cell, a thin park, a treeline, orchard rows, larch groves); the parameters (density
+(denser inside than at the edge, more shrubs at the edge, every type's normal
+density within 10% of the classic one and its dense and sparse grades around it, a
+thin park, a treeline, orchard rows, larch groves in autumn); the parameters (density
 first with three grades, more trees the denser the grade for every type, the
 four-tree limit for every combination of every type, lenient resolution, each type's
 own parameter changing what grows); the meta; a bundled module growing the same

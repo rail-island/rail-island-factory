@@ -13,8 +13,16 @@ import { glbStats } from "../generator/glbStats";
 // Stored in the game's saved maps (by name): a shipped name is never renamed or removed.
 const SHIPPED = [
   "pine-forest", "oak-woods", "mixed-woods", "scrub", "palms", "tropical-forest", "high-mountain-forest",
-  "park", "scots-pine-woodland", "larch-woodland", "autumn-larch-woodland", "hazel-woodland-edge", "village-orchard",
+  "park", "scots-pine-woodland", "larch-woodland", "hazel-woodland-edge", "village-orchard",
 ];
+/** Shipped names merged into another type: the game reads them as that type's variant. */
+const MERGED: Record<string, string> = { "autumn-larch-woodland": "larch-woodland" };
+/** The classic woods' density percent (the game before the factory): a type's normal grade. */
+const CLASSIC: Record<string, number> = {
+  "pine-forest": 40, "oak-woods": 30, "mixed-woods": 50, "scrub": 22, "palms": 40, "tropical-forest": 100,
+  "high-mountain-forest": 34, "park": 18, "scots-pine-woodland": 28, "larch-woodland": 30,
+  "hazel-woodland-edge": 24, "village-orchard": 24,
+};
 
 const slots = (): TreeSlot[] => Array.from({ length: MAX_TREES_PER_CELL }, newSlot);
 
@@ -55,6 +63,10 @@ describe("the woods types", () => {
     const names = WOODS.map((w) => w.design.name);
     expect(new Set(names).size).toBe(names.length);
     for (const n of SHIPPED) expect(names).toContain(n);
+    for (const [from, to] of Object.entries(MERGED)) {
+      expect(names).not.toContain(from);
+      expect(names).toContain(to);
+    }
     for (const n of names) expect(n).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
   });
 
@@ -124,13 +136,24 @@ describe("relations between trees", () => {
   it("plants a forest denser inside than at its edge, with shorter trees and more shrubs at the edge", () => {
     const inside = stats("mixed-woods", FULL);
     const edge = stats("mixed-woods", 1 << 12 | 1 << 13 | 1 << 7);
-    expect(inside.perCell).toBeGreaterThan(1.2);
     expect(inside.perCell).toBeGreaterThan(edge.perCell * 1.3);
     expect(edge.underShare).toBeGreaterThan(inside.underShare);
   });
 
-  it("grows a pine forest denser than the classic one tree in every other cell", () => {
-    expect(stats("pine-forest", FULL).perCell).toBeGreaterThan(1.1);
+  it.each(Object.entries(CLASSIC))("grows %s at normal density as the classic woods did (%i%%)", (name, percent) => {
+    // a large wood's interior, glades included, over several seeds
+    const out = slots();
+    const perCell = (values: Record<string, string>) => {
+      const p = wood(name).variant(values);
+      let n = 0;
+      for (const seed of [1, 777, 20261019]) for (let i = 0; i < 4096; i++) n += p.distribute({ gx: i % 64, gz: Math.floor(i / 64), seed, mask: FULL, slope: 0, height: 20 }, out);
+      return n / (3 * 4096);
+    };
+    const normal = perCell({});
+    expect(normal).toBeGreaterThan(percent / 100 * 0.9);
+    expect(normal).toBeLessThan(percent / 100 * 1.1);
+    expect(perCell({ density: "dense" })).toBeGreaterThan(normal * 1.8);
+    expect(perCell({ density: "sparse" })).toBeLessThan(normal * 0.65);
   });
 
   it("keeps a park thin, so the lawn shows", () => {
@@ -150,11 +173,11 @@ describe("relations between trees", () => {
     }
   });
 
-  it("gathers the autumn larch woodland into golden and green groves", () => {
+  it("gathers a larch woodland in autumn into golden and green groves", () => {
     // neighbouring cells mostly agree on their dominant larch; far apart they differ
     const out = slots();
     const golden = (gx: number, gz: number) => {
-      const n = wood("autumn-larch-woodland").distribute({ gx, gz, seed: 7, mask: FULL, slope: 0, height: 20 }, out);
+      const n = wood("larch-woodland").variant({ season: "peak", spruce: "none", density: "dense" }).distribute({ gx, gz, seed: 7, mask: FULL, slope: 0, height: 20 }, out);
       let g = 0;
       for (let k = 0; k < n; k++) if (out[k]!.species === "autumnlarch") g++;
       return n ? g / n : 0.5;
@@ -237,7 +260,12 @@ describe("woods parameters", () => {
       }
       return seen;
     };
-    expect(species("autumn-larch-woodland", { season: "late" }).get("larch") ?? 0).toBe(0);
+    expect(species("larch-woodland", { season: "late", spruce: "none" }).get("larch") ?? 0).toBe(0);
+    expect(species("larch-woodland", { season: "summer" }).get("autumnlarch") ?? 0).toBe(0);
+    expect(species("larch-woodland", { season: "peak", spruce: "none" }).get("spruce") ?? 0).toBe(0);
+    // an autumn larch wood keeps its golden swatch and floor, a summer one the type's
+    expect(wood("larch-woodland").variant({ season: "peak" }).swatch).toEqual({ r: 181, g: 146, b: 57 });
+    expect(wood("larch-woodland").variant({ season: "summer" }).swatch).toBeUndefined();
     expect(species("scrub", { trees: "none" }).get("oak") ?? 0).toBe(0);
     expect(species("park", { planting: "conifer" }).has("aspen")).toBe(false);
     const broad = species("mixed-woods", { mix: "broadleaf" }), conifer = species("mixed-woods", { mix: "conifer" });

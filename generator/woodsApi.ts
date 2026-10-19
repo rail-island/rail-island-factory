@@ -68,6 +68,12 @@ export interface TreeSlot {
 export interface WoodsPlanter {
   distribute(ctx: CellContext, out: TreeSlot[]): number;
   sample(u: number, v: number, out: TreeSlot): void;
+  /**
+   * A variant's own swatch and floor, where its parameters change the wood's colour
+   * (a larch wood in autumn is gold); the type's own when absent.
+   */
+  swatch?: { r: number; g: number; b: number };
+  floor?: { r: number; g: number; b: number };
 }
 
 /** One value of a woods parameter (the same shape as a model parameter's, design.ts ParamValue). */

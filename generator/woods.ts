@@ -84,6 +84,12 @@ function weighted(mix: readonly MixEntry[], u: number): MixEntry {
   return mix[mix.length - 1]!;
 }
 
+/**
+ * The spec heights were drawn about 15% taller than the classic presets; the
+ * trees are drawn at the classic sizes again (what the game's master grew).
+ */
+const HEIGHT = 1 / 1.15;
+
 function forest(spec: ForestSpec): WoodsPlanter {
   const edgeTrees = spec.edgeTrees ?? spec.trees * 0.6;
   const under = spec.under ?? [];
@@ -104,7 +110,7 @@ function forest(spec: ForestSpec): WoodsPlanter {
   };
   const plant = (out: TreeSlot, m: MixEntry, x: number, z: number, seed: number, k: number, size: number, tone: number) => {
     const span = Math.max(m.maxHeight, m.minHeight) - m.minHeight;
-    const height = (m.minHeight + draw(seed, 20 + k) * span) * size;
+    const height = (m.minHeight + draw(seed, 20 + k) * span) * size * HEIGHT;
     put(out, m.species, x, z, draw(seed, 30 + k) * 360, height,
       0.88 + 0.28 * draw(seed, 40 + k),
       (draw(seed, 50 + k) - 0.5) * 0.14,
@@ -150,7 +156,7 @@ function forest(spec: ForestSpec): WoodsPlanter {
     },
     sample(u: number, v: number, out: TreeSlot): void {
       const m = weighted(canopy, u);
-      put(out, m.species, 0, 0, 0, m.minHeight + v * (Math.max(m.maxHeight, m.minHeight) - m.minHeight),
+      put(out, m.species, 0, 0, 0, (m.minHeight + v * (Math.max(m.maxHeight, m.minHeight) - m.minHeight)) * HEIGHT,
         0.92 + 0.16 * v, 0, 0.92 + 0.16 * u, (u - 0.5) * 0.6);
     },
   };
@@ -161,8 +167,12 @@ function smoothstep(a: number, b: number, x: number): number {
   return t * t * (3 - 2 * t);
 }
 
-/** How many trees a cell grows at each density grade, against the type's own figure. */
-const DENSITY_FACTOR: Record<string, number> = { sparse: 0.55, normal: 1, dense: 1.55 };
+/**
+ * How many trees a cell grows at each density grade, against the type's normal.
+ * Normal is the density the game's classic woods had (`classic` below); dense is
+ * the full stylised forest, sparse a thin one.
+ */
+const DENSITY_FACTOR: Record<string, number> = { sparse: 0.5, normal: 1, dense: 2.5 };
 
 /** A three-value parameter: its name, title, values as [token, title], and default. */
 function param(name: string, title: string, values: Array<[string, string]>, def: string): WoodsParam {
@@ -179,13 +189,18 @@ const kept = (mix: MixEntry[]): MixEntry[] => mix.filter((m) => m.ratio > 0);
 /**
  * A woods type: its look, its parameters (`density` first, then its own) and the
  * forest each choice of them plants. `specFor` gets every value resolved and
- * returns the forest at NORMAL density; the density grade is applied on top. Each
- * choice is compiled once and kept, so the game's per-cell calls cost nothing more.
- * The defaults reproduce the type as it was before it had parameters.
+ * returns the forest's shape, its tree counts in relative terms; `scale` brings
+ * them to the type's NORMAL density -- the trees a cell grew in the game's classic
+ * woods, its density percent over 100, averaged over a large wood's interior,
+ * glades included (calibrated, test/woods.test.ts) -- and the density grade is
+ * applied on top. Each choice is compiled once and kept, so the game's per-cell
+ * calls cost nothing more. A spec may give its own `swatch` and `floor` (an autumn
+ * wood); they are the variant's.
  */
 function woodsType(
   look: { name: string; label: string; swatch: Rgb; floor?: Rgb },
   own: WoodsParam[],
+  scale: number,
   specFor: (v: WoodsParamValues) => ForestSpec,
 ): WoodsDesign {
   const params = [DENSITY_PARAM, ...own];
@@ -196,10 +211,11 @@ function woodsType(
     let planter = planters.get(key);
     if (!planter) {
       const spec = specFor(v);
-      const k = DENSITY_FACTOR[v.density!] ?? 1;
+      const k = (DENSITY_FACTOR[v.density!] ?? 1) * scale;
       planter = forest(spec.rows
         ? { ...spec, trees: Math.min(1, spec.trees * k) }
         : { ...spec, trees: Math.min(MAX_TREES_PER_CELL, spec.trees * k), edgeTrees: Math.min(MAX_TREES_PER_CELL, (spec.edgeTrees ?? spec.trees * 0.6) * k) });
+      if (spec.swatch !== look.swatch) planter = { ...planter, swatch: spec.swatch, floor: spec.floor ?? floorOf(spec.swatch) };
       planters.set(key, planter);
     }
     return planter;
@@ -217,14 +233,16 @@ function woodsType(
   };
 }
 
-// The woods types. Heights are studs, drawn about 15% taller than the classic
-// presets (the stylised look); the species' own models carry the wider crowns.
-// Every parameter's default is the type as it was before it had parameters.
+// The woods types. Heights are studs, written about 15% taller than the classic
+// presets and drawn at the classic sizes (HEIGHT).
+// The number after the parameters is the type's density scale: its normal grade
+// plants about as many trees as the classic woods type (its density percent in a
+// comment), the counts in the spec giving only the shape of the wood.
 
 const PINE = { name: "pine-forest", label: "Pine Forest", swatch: { r: 40, g: 92, b: 60 } };
 export const pineForest = /* @__PURE__ */ woodsType(PINE, [
   param("age", "Age", [["young", "Young"], ["mature", "Mature"], ["old", "Old growth"]], "mature"),
-], (v) => {
+], 0.268 /* classic 40% */, (v) => {
   const k = v.age === "young" ? 0.6 : v.age === "old" ? 1.2 : 1;
   return {
     ...PINE,
@@ -238,7 +256,7 @@ export const pineForest = /* @__PURE__ */ woodsType(PINE, [
 const OAK = { name: "oak-woods", label: "Oak Woods", swatch: { r: 74, g: 120, b: 54 } };
 export const oakWoods = /* @__PURE__ */ woodsType(OAK, [
   param("undergrowth", "Undergrowth", [["none", "None"], ["some", "Some"], ["thick", "Thick"]], "some"),
-], (v) => ({
+], 0.27 /* classic 30% */, (v) => ({
   ...OAK,
   trees: 1.25, edgeTrees: 0.8, glades: 0.45, edgeShrink: 0.78,
   canopy: [{ species: "oak", minHeight: 8, maxHeight: 12, ratio: 1 }],
@@ -249,7 +267,7 @@ export const oakWoods = /* @__PURE__ */ woodsType(OAK, [
 const MIXED = { name: "mixed-woods", label: "Mixed Woods", swatch: { r: 58, g: 106, b: 58 } };
 export const mixedWoods = /* @__PURE__ */ woodsType(MIXED, [
   param("mix", "Mix", [["broadleaf", "Mostly broadleaf"], ["balanced", "Balanced"], ["conifer", "Mostly conifer"]], "balanced"),
-], (v) => {
+], 0.326 /* classic 50% */, (v) => {
   const broad = v.mix === "broadleaf" ? 2.2 : v.mix === "conifer" ? 0.35 : 1;
   const conifer = v.mix === "conifer" ? 2.2 : v.mix === "broadleaf" ? 0.3 : 1;
   return {
@@ -268,7 +286,7 @@ export const mixedWoods = /* @__PURE__ */ woodsType(MIXED, [
 const SCRUB = { name: "scrub", label: "Scrub", swatch: { r: 108, g: 132, b: 66 } };
 export const scrub = /* @__PURE__ */ woodsType(SCRUB, [
   param("trees", "Trees", [["none", "Bushes only"], ["few", "A few"], ["many", "Many"]], "few"),
-], (v) => ({
+], 0.287 /* classic 22% */, (v) => ({
   ...SCRUB,
   trees: 0.9, edgeTrees: 0.5, glades: 0.6, groves: 0.3, edgeShrink: 0.9, slopeThin: 0.1,
   canopy: kept([
@@ -282,7 +300,7 @@ export const scrub = /* @__PURE__ */ woodsType(SCRUB, [
 const PALMS = { name: "palms", label: "Palms", swatch: { r: 96, g: 150, b: 72 } };
 export const palms = /* @__PURE__ */ woodsType(PALMS, [
   param("undergrowth", "Undergrowth", [["none", "None"], ["some", "Some"], ["thick", "Thick"]], "some"),
-], (v) => ({
+], 0.364 /* classic 40% */, (v) => ({
   ...PALMS,
   trees: 1.2, edgeTrees: 0.7, glades: 0.35, edgeShrink: 0.85,
   canopy: [{ species: "palm", minHeight: 9, maxHeight: 14, ratio: 1 }],
@@ -293,7 +311,7 @@ export const palms = /* @__PURE__ */ woodsType(PALMS, [
 const TROPICAL = { name: "tropical-forest", label: "Tropical Forest", swatch: { r: 96, g: 150, b: 72 } };
 export const tropicalForest = /* @__PURE__ */ woodsType(TROPICAL, [
   param("palms", "Palms", [["few", "Few"], ["some", "Some"], ["many", "Many"]], "some"),
-], (v) => ({
+], 0.357 /* classic 100% */, (v) => ({
   ...TROPICAL,
   trees: 2.8, edgeTrees: 1.6, groves: 0.4, edgeShrink: 0.8,
   canopy: [
@@ -308,7 +326,7 @@ export const tropicalForest = /* @__PURE__ */ woodsType(TROPICAL, [
 const MOUNTAIN = { name: "high-mountain-forest", label: "High Mountain Forest", swatch: { r: 56, g: 96, b: 74 } };
 export const highMountainForest = /* @__PURE__ */ woodsType(MOUNTAIN, [
   param("conifer", "Conifer", [["pine", "Mostly pine"], ["mixed", "Pine and spruce"], ["spruce", "Mostly spruce"]], "mixed"),
-], (v) => ({
+], 0.394 /* classic 34% */, (v) => ({
   ...MOUNTAIN,
   trees: 1.0, edgeTrees: 0.55, glades: 0.55, groves: 0.5, edgeShrink: 0.75, altitude: 0.12, slopeThin: 0.45,
   canopy: [
@@ -324,7 +342,7 @@ export const highMountainForest = /* @__PURE__ */ woodsType(MOUNTAIN, [
 const PARK = { name: "park", label: "Park", swatch: { r: 86, g: 138, b: 66 }, floor: { r: 98, g: 140, b: 62 } };
 export const park = /* @__PURE__ */ woodsType(PARK, [
   param("planting", "Planting", [["mixed", "Mixed"], ["birch", "Birch and aspen"], ["oak", "Oaks"], ["conifer", "Conifers"]], "mixed"),
-], (v) => ({
+], 0.741 /* classic 18% */, (v) => ({
   ...PARK,
   trees: 0.24, edgeTrees: 0.2, edgeShrink: 1, slopeThin: 0,
   canopy: kept([
@@ -340,7 +358,7 @@ export const park = /* @__PURE__ */ woodsType(PARK, [
 const SCOTS = { name: "scots-pine-woodland", label: "Scots Pine Woodland", swatch: { r: 74, g: 108, b: 72 } };
 export const scotsPineWoodland = /* @__PURE__ */ woodsType(SCOTS, [
   param("birch", "Birch", [["none", "None"], ["some", "Some"], ["many", "Many"]], "some"),
-], (v) => ({
+], 0.319 /* classic 28% */, (v) => ({
   ...SCOTS,
   trees: 1.0, edgeTrees: 0.6, glades: 0.5, edgeShrink: 0.85,
   canopy: kept([
@@ -354,39 +372,43 @@ export const scotsPineWoodland = /* @__PURE__ */ woodsType(SCOTS, [
   underShare: 0.3, edgeUnder: 0.55,
 }));
 
+// A larch wood through the year: summer green, or autumn with golden groves among
+// green ones (the grove field mixes the two larches), and spruce among the larches.
+// The autumn seasons were a woods type of their own, autumn-larch-woodland, which
+// the game now reads as this one's peak autumn without spruce.
 const LARCH = { name: "larch-woodland", label: "Larch Woodland", swatch: { r: 111, g: 150, b: 70 } };
+const AUTUMN_SWATCH = { r: 181, g: 146, b: 57 };
 export const larchWoodland = /* @__PURE__ */ woodsType(LARCH, [
-  param("spruce", "Spruce", [["none", "None"], ["some", "Some"], ["many", "Many"]], "some"),
-], (v) => ({
-  ...LARCH,
-  trees: 1.4, edgeTrees: 0.8, glades: 0.4, groves: 0.6, edgeShrink: 0.78,
-  canopy: kept([
-    { species: "larch", minHeight: 10, maxHeight: 16, ratio: 5 },
-    { species: "spruce", minHeight: 8, maxHeight: 11.5, ratio: v.spruce === "none" ? 0 : v.spruce === "many" ? 4 : 1 },
-  ]),
-  under: [{ species: "bush", minHeight: 1.5, maxHeight: 2.6, ratio: 1 }],
-  underShare: 0.15, edgeUnder: 0.45,
-}));
-
-// Golden groves among green ones: the grove field mixes the two larches.
-const AUTUMN = { name: "autumn-larch-woodland", label: "Autumn Larch Woodland", swatch: { r: 181, g: 146, b: 57 } };
-export const autumnLarchWoodland = /* @__PURE__ */ woodsType(AUTUMN, [
-  param("season", "Season", [["early", "Early autumn"], ["peak", "Peak colour"], ["late", "Late autumn"]], "peak"),
-], (v) => ({
-  ...AUTUMN,
-  trees: 1.4, edgeTrees: 0.8, glades: 0.4, groves: 0.85, edgeShrink: 0.78,
-  canopy: kept([
-    { species: "autumnlarch", minHeight: 10, maxHeight: 16, ratio: v.season === "early" ? 1 : 3 },
-    { species: "larch", minHeight: 9, maxHeight: 14, ratio: v.season === "early" ? 3 : v.season === "late" ? 0 : 2 },
-  ]),
-  under: [{ species: "bush", minHeight: 1.5, maxHeight: 2.6, ratio: 1 }],
-  underShare: 0.15, edgeUnder: 0.45,
-}));
+  param("season", "Season", [["summer", "Summer"], ["early", "Early autumn"], ["peak", "Peak autumn"], ["late", "Late autumn"]], "summer"),
+  param("spruce", "Spruce", [["none", "No spruce"], ["some", "Some spruce"], ["many", "Much spruce"]], "some"),
+], 0.238 /* classic 30% */, (v) => {
+  const spruce = { species: "spruce" as const, minHeight: 8, maxHeight: 11.5, ratio: v.spruce === "none" ? 0 : v.spruce === "many" ? 4 : 1 };
+  const under = [{ species: "bush" as const, minHeight: 1.5, maxHeight: 2.6, ratio: 1 }];
+  if (v.season === "summer") {
+    return {
+      ...LARCH,
+      trees: 1.4, edgeTrees: 0.8, glades: 0.4, groves: 0.6, edgeShrink: 0.78,
+      canopy: kept([{ species: "larch", minHeight: 10, maxHeight: 16, ratio: 5 }, spruce]),
+      under, underShare: 0.15, edgeUnder: 0.45,
+    };
+  }
+  return {
+    ...LARCH,
+    swatch: AUTUMN_SWATCH,
+    trees: 1.4, edgeTrees: 0.8, glades: 0.4, groves: 0.85, edgeShrink: 0.78,
+    canopy: kept([
+      { species: "autumnlarch", minHeight: 10, maxHeight: 16, ratio: v.season === "early" ? 1 : 3 },
+      { species: "larch", minHeight: 9, maxHeight: 14, ratio: v.season === "early" ? 3 : v.season === "late" ? 0 : 2 },
+      spruce,
+    ]),
+    under, underShare: 0.15, edgeUnder: 0.45,
+  };
+});
 
 const HAZEL = { name: "hazel-woodland-edge", label: "Hazel Woodland Edge", swatch: { r: 105, g: 139, b: 61 } };
 export const hazelWoodlandEdge = /* @__PURE__ */ woodsType(HAZEL, [
   param("oaks", "Oaks", [["none", "None"], ["few", "A few"], ["many", "Many"]], "few"),
-], (v) => ({
+], 0.173 /* classic 24% */, (v) => ({
   ...HAZEL,
   trees: 1.5, edgeTrees: 1.1, glades: 0.3, edgeShrink: 0.9,
   canopy: kept([
@@ -402,7 +424,7 @@ export const hazelWoodlandEdge = /* @__PURE__ */ woodsType(HAZEL, [
 const ORCHARD = { name: "village-orchard", label: "Village Orchard", swatch: { r: 106, g: 142, b: 65 }, floor: { r: 104, g: 138, b: 60 } };
 export const villageOrchard = /* @__PURE__ */ woodsType(ORCHARD, [
   param("layout", "Layout", [["rows", "Rows"], ["scattered", "Scattered meadow"]], "rows"),
-], (v) => v.layout === "scattered"
+], 0.278 /* classic 24% */, (v) => v.layout === "scattered"
   ? {
       ...ORCHARD,
       trees: 0.7, edgeTrees: 0.6, edgeShrink: 0.95, slopeThin: 0,
@@ -432,7 +454,6 @@ export const WOODS: ReadonlyArray<{ design: WoodsDesign; source: string }> = [
   { design: park, source: "park" },
   { design: scotsPineWoodland, source: "scotsPineWoodland" },
   { design: larchWoodland, source: "larchWoodland" },
-  { design: autumnLarchWoodland, source: "autumnLarchWoodland" },
   { design: hazelWoodlandEdge, source: "hazelWoodlandEdge" },
   { design: villageOrchard, source: "villageOrchard" },
 ];

@@ -106,7 +106,8 @@ export function buildGrove(woods: WoodsDesign, opts: GroveOptions = {}): MeshBui
   const detail = opts.detail ?? "high";
   const palette: Record<string, { color: string; roughness?: number; doubleSided?: boolean }> = {
     grass: { color: GRASS, roughness: 1 },
-    floor: { color: hex(woods.floor), roughness: 1 },
+    // a variant's own floor (an autumn wood's), else the type's
+    floor: { color: hex((opts.params ? woods.variant(opts.params).floor : undefined) ?? woods.floor), roughness: 1 },
   };
   const parts = new Map<Species, ReturnType<typeof treeParts>>();
   const trees = groveTrees(woods, opts);

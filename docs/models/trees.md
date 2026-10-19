@@ -1,8 +1,9 @@
 # Trees
 
-**Covers** - the fourteen tree species the game plants: one design per species, three
-levels of detail (high, low, coarse), the geometry kit they are built with, the
-stylised look (baked light and shade, ragged crowns, wide crowns), budgets and tests.
+**Covers** - the fourteen tree species the game plants: one design per species (the
+two larches one design with a season), three levels of detail (high, low, coarse),
+the geometry kit they are built with, the stylised look (baked light and shade,
+ragged crowns), budgets and tests.
 **Code** - `generator/trees.ts`, `generator/treeGeo.ts`, `generator/meshCore.ts`
 (`triShaded`), `test/trees.test.ts`, `test/fixtures/tree-baseline.json`,
 `assets/trees/SOURCES.md`
@@ -14,7 +15,10 @@ stylised look (baked light and shade, ragged crowns, wide crowns), budgets and t
 The game draws every forest from fourteen species: `pine`, `spruce`, `oak`, `birch`,
 `aspen`, `willow`, `palm`, `bush`, `deadtree`, `scotspine`, `larch`, `autumnlarch`,
 `hazel` and `orchard`. Each is a design, `proc-tree-<species>`, in the **Trees**
-category of the catalog. The species keys are what the woods types name
+category of the catalog -- except the two larches, one design `proc-tree-larch` with a
+`season` parameter: `summer` (default) draws `larch`, `autumn` draws `autumnlarch`
+(`treeModelOf` names a species' design and values; `woods.meta.json` lists them). The
+species keys are what the woods types name
 ([woods.md](woods.md)), so a shipped key is never renamed; `test/trees.test.ts` pins
 the list.
 
@@ -88,9 +92,10 @@ larger than life and ragged outlines. The trees take the parts a mesh can carry:
   carries the crown's height), branch fans of unequal length with the odd one
   missing, stronger undulation on the low crowns and cones -- a broken outline with
   sky through it, inside the old budgets.
-- **Wide crowns**: each species is drawn wider than modelled (`SPREAD`, 1.06-1.12),
-  trunks stouter with it. The oversize is in width, not height, so a tree does not
-  grow over the track beside it; the woods types plant somewhat taller trees.
+- **Classic size**: the crowns are drawn as modelled, as wide as the game's own trees
+  were, and the woods types plant them at the game's classic heights
+  ([woods.md](woods.md)). An earlier restyle drew them 6-12% wider and 15% taller,
+  which read as too big next to the track.
 - **Brighter, more saturated colours** (`TREE_COLORS`), since the shading now darkens
   most of the crown below them.
 

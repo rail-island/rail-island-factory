@@ -1,4 +1,5 @@
-// The tree species: one design per species (proc-tree-<species>), each with three
+// The tree species: one design per species (proc-tree-<species>; the two larches
+// are one design, proc-tree-larch, with a `season` parameter), each with three
 // levels of detail -- `high` (the design), `low` (its buildLod) and `coarse`
 // (buildCoarse, the trees' own third level). The game draws them instanced across
 // whole forests, so every species is two materials, `trunk` and `foliage`, and is
@@ -9,7 +10,7 @@
 // reasons behind them are documented in docs/models/trees.md. No `node:` imports.
 
 import { MeshBuilder } from "./meshBuilder.ts";
-import type { CatalogFields, ProceduralDesign } from "./design.ts";
+import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { Geo, boxOf, coneGeo, cylinderGeo, fromIndexed, icosahedronGeo, quatFromUnitVectors, type P3 } from "./treeGeo.ts";
 
 /** Every species the game knows, by its stable key (saved in the game's maps). */
@@ -303,20 +304,9 @@ export interface TreeParts {
   ribbons?: boolean;
 }
 
-/**
- * How much wider than modelled each species is drawn: the stylised look carries
- * its oversize in crown width (and a stouter trunk), not in height, so a tree does
- * not grow over the track it stands beside (docs/models/trees.md).
- */
-const SPREAD: Record<Species, number> = {
-  pine: 1.08, spruce: 1.06, oak: 1.12, birch: 1.1, aspen: 1.08, willow: 1.06, palm: 1, bush: 1.12,
-  deadtree: 1, scotspine: 1.1, larch: 1.06, autumnlarch: 1.06, hazel: 1.1, orchard: 1.12,
-};
-
 function partsFor(species: Species, lod: Lod): TreeParts {
+  // drawn as modelled: the crowns are the classic width, no stylised oversize
   const parts = rawPartsFor(species, lod);
-  const spread = SPREAD[species];
-  if (spread !== 1) for (const g of [...parts.trunk, ...parts.foliage]) g.scale(spread, 1, spread);
   // Bend wood and leaves by the same field so branch attachments stay together.
   const lean = species === "palm" ? 1.15 : species === "deadtree" ? -0.38
     : species === "birch" ? 0.28 : species === "oak" || species === "willow" ? 0.18 : 0;
@@ -873,12 +863,17 @@ export const treeDeadtreeCoarse = () => buildTree("deadtree", "coarse");
 export const treeScotspine = () => buildTree("scotspine", "high");
 export const treeScotspineLow = () => buildTree("scotspine", "low");
 export const treeScotspineCoarse = () => buildTree("scotspine", "coarse");
-export const treeLarch = () => buildTree("larch", "high");
-export const treeLarchLow = () => buildTree("larch", "low");
-export const treeLarchCoarse = () => buildTree("larch", "coarse");
-export const treeAutumnlarch = () => buildTree("autumnlarch", "high");
-export const treeAutumnlarchLow = () => buildTree("autumnlarch", "low");
-export const treeAutumnlarchCoarse = () => buildTree("autumnlarch", "coarse");
+// The European larch in summer green or autumn gold: one design, two species keys
+// (the woods plant `larch` and `autumnlarch`, and the game draws each).
+export const LARCH_PARAMS: ParamSpec[] = [{
+  name: "season", title: "Season",
+  values: [{ value: "summer", title: "Summer" }, { value: "autumn", title: "Autumn" }],
+  default: "summer",
+}];
+const larchOf = (p?: ParamValues): Species => resolveParams(LARCH_PARAMS, p).season === "autumn" ? "autumnlarch" : "larch";
+export const treeLarch = (p?: ParamValues) => buildTree(larchOf(p), "high");
+export const treeLarchLow = (p?: ParamValues) => buildTree(larchOf(p), "low");
+export const treeLarchCoarse = (p?: ParamValues) => buildTree(larchOf(p), "coarse");
 export const treeHazel = () => buildTree("hazel", "high");
 export const treeHazelLow = () => buildTree("hazel", "low");
 export const treeHazelCoarse = () => buildTree("hazel", "coarse");
@@ -886,22 +881,24 @@ export const treeOrchard = () => buildTree("orchard", "high");
 export const treeOrchardLow = () => buildTree("orchard", "low");
 export const treeOrchardCoarse = () => buildTree("orchard", "coarse");
 
-const BUILDERS: Record<Species, [() => MeshBuilder, () => MeshBuilder, () => MeshBuilder]> = {
-  pine: [treePine, treePineLow, treePineCoarse],
-  spruce: [treeSpruce, treeSpruceLow, treeSpruceCoarse],
-  oak: [treeOak, treeOakLow, treeOakCoarse],
-  birch: [treeBirch, treeBirchLow, treeBirchCoarse],
-  aspen: [treeAspen, treeAspenLow, treeAspenCoarse],
-  willow: [treeWillow, treeWillowLow, treeWillowCoarse],
-  palm: [treePalm, treePalmLow, treePalmCoarse],
-  bush: [treeBush, treeBushLow, treeBushCoarse],
-  deadtree: [treeDeadtree, treeDeadtreeLow, treeDeadtreeCoarse],
-  scotspine: [treeScotspine, treeScotspineLow, treeScotspineCoarse],
-  larch: [treeLarch, treeLarchLow, treeLarchCoarse],
-  autumnlarch: [treeAutumnlarch, treeAutumnlarchLow, treeAutumnlarchCoarse],
-  hazel: [treeHazel, treeHazelLow, treeHazelCoarse],
-  orchard: [treeOrchard, treeOrchardLow, treeOrchardCoarse],
-};
+type Builders = [(p?: ParamValues) => MeshBuilder, (p?: ParamValues) => MeshBuilder, (p?: ParamValues) => MeshBuilder];
+
+/** The tree designs: one per species, but the autumn larch is the larch's `season: autumn`. */
+const MODELS: ReadonlyArray<{ species: Species; builders: Builders; params?: ParamSpec[] }> = [
+  { species: "pine", builders: [treePine, treePineLow, treePineCoarse] },
+  { species: "spruce", builders: [treeSpruce, treeSpruceLow, treeSpruceCoarse] },
+  { species: "oak", builders: [treeOak, treeOakLow, treeOakCoarse] },
+  { species: "birch", builders: [treeBirch, treeBirchLow, treeBirchCoarse] },
+  { species: "aspen", builders: [treeAspen, treeAspenLow, treeAspenCoarse] },
+  { species: "willow", builders: [treeWillow, treeWillowLow, treeWillowCoarse] },
+  { species: "palm", builders: [treePalm, treePalmLow, treePalmCoarse] },
+  { species: "bush", builders: [treeBush, treeBushLow, treeBushCoarse] },
+  { species: "deadtree", builders: [treeDeadtree, treeDeadtreeLow, treeDeadtreeCoarse] },
+  { species: "scotspine", builders: [treeScotspine, treeScotspineLow, treeScotspineCoarse] },
+  { species: "larch", builders: [treeLarch, treeLarchLow, treeLarchCoarse], params: LARCH_PARAMS },
+  { species: "hazel", builders: [treeHazel, treeHazelLow, treeHazelCoarse] },
+  { species: "orchard", builders: [treeOrchard, treeOrchardLow, treeOrchardCoarse] },
+];
 
 /** The catalog fields every tree shares. */
 export const TREE_CATALOG: CatalogFields = {
@@ -913,20 +910,23 @@ export const TREE_CATALOG: CatalogFields = {
   source: "procedural (rail-island-factory)",
 };
 
-/** The model id of a species. */
+/** The model id of a design's species. */
 export const treeId = (species: Species): string => `proc-tree-${species}`;
 
-/** One design per species. */
-export const TREES: ProceduralDesign[] = SPECIES.map((species) => {
-  const [build, buildLod, buildCoarse] = BUILDERS[species];
-  return {
-    id: treeId(species),
-    title: TITLES[species],
-    build,
-    buildLod,
-    buildCoarse,
-    lodTriangles: 300,
-    references: "trees",
-    catalog: TREE_CATALOG,
-  };
-});
+/** The design that draws a species, and the parameter values that pick it. */
+export function treeModelOf(species: Species): { id: string; params: ParamValues } {
+  return species === "autumnlarch" ? { id: treeId("larch"), params: { season: "autumn" } } : { id: treeId(species), params: {} };
+}
+
+/** One design per species, the two larches one design with a season. */
+export const TREES: ProceduralDesign[] = MODELS.map(({ species, builders: [build, buildLod, buildCoarse], params }) => ({
+  id: treeId(species),
+  title: TITLES[species],
+  build,
+  buildLod,
+  buildCoarse,
+  ...(params ? { params } : {}),
+  lodTriangles: 300,
+  references: "trees",
+  catalog: TREE_CATALOG,
+}));

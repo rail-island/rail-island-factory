@@ -127,6 +127,24 @@ Area: rail-island-factory (trees, woods, export, site); rail-island-webapp (wood
    picked (`src/WoodsGallery.tsx`) is removed, and with it the separate grove
    thumbnails `thumbs/woods-<name>.png`. No game meta lists the woods designs.
 
+5. **Classic density and size; one larch.**
+   - A woods type's **normal** density is now the game's classic one (its old
+     density percent as trees per cell over a large wood's interior, glades
+     included: pine 40%, mixed 50%, park 18%, ...). Each type has a calibrated scale,
+     and the tests hold every type within 10%. **Dense** is 2.5 times that, the full
+     stylised forest; **sparse** is half.
+   - Trees are back to classic size: woods heights at the classic presets (`HEIGHT`
+     = 1/1.15), and crowns no longer drawn wider (`SPREAD` removed).
+   - The two larch trees are one design, `proc-tree-larch`, with `season` summer /
+     autumn (species keys `larch` and `autumnlarch` unchanged).
+   - The two larch woods types are one, `larch-woodland`, with `season` (summer,
+     early, peak, late autumn) and `spruce`. A variant may carry its own swatch and
+     floor, so an autumn wood stays gold. `autumn-larch-woodland` is no longer
+     exported. In the game, id 11 is `larch-woodland?season=peak&spruce=none` (the
+     same trees as the old type), a table key naming the old type is read as that
+     variant (`MERGED_NAMES`), and the toolbar still calls id 11 "Autumn Larch
+     Woodland".
+
 ## How to test
 
 **Automated coverage.**
@@ -145,19 +163,21 @@ create a new island with Woods set to "Woodlands".
 
 **Steps.**
 
-1. Open an existing island with forests. The forests should draw denser, with
-   smaller trees and shrubs at their edges, shaded crowns, and colour varying between
-   trees.
+1. Open an existing island with forests. The forests should be about as dense and
+   their trees as tall as on master, with smaller trees and shrubs at their edges,
+   shaded crowns, and colour varying between trees. Density Dense gives the full
+   forest.
 2. Zoom in to a forest edge. The ground under the trees is darker (forest floor), and
    a park's ground stays grass-coloured.
 3. Pull the camera far back. The trees fade into the canopy tint with no hard ring.
 4. In Terrain, open Vegetation and the woods selector. The board lists Clear and the
    13 woods types, each card naming its species. The highlighted grove matches the
    island.
-5. Paint "Autumn Larch Woodland" over a large area. Golden and green larch groves
-   form.
+5. Paint "Larch Woodland" with Season = Peak autumn over a large area. Golden and
+   green larch groves form. Open an island painted with the old Autumn Larch
+   Woodland: it looks the same and the toolbar still names it.
 6. Save, reload, and inspect `meta.json`: `woodsPalette` is
-   `{ "autumn-larch-woodland": 11, ... }`.
+   `{ "larch-woodland?season=peak&spruce=none": 11, ... }`.
 7. Load an island that used a player-made woods type. Those cells draw Mixed Woods,
    and after a save the palette array is gone.
 8. Draw a row of trees along a road (line decoration). The trees appear, using the
@@ -225,12 +245,14 @@ create a new island with Woods set to "Woodlands".
 
 ## Changelog
 
-- Forests are denser and look painted: shaded crowns, varied colours, smaller trees
+- Forests look painted: shaded crowns, varied colours, smaller trees
   and shrubs at the edges, groves of one kind, and a dark forest floor under the
   trees.
 - Parks keep their lawn, orchards stand in rows, and the mountain forest thins toward
   the treeline.
 - Islands that used a custom woods type now show Mixed Woods in its place.
+- Autumn Larch Woodland is now a season of Larch Woodland: summer, early, peak or late
+  autumn, with or without spruce.
 - Every woods type has a density (sparse, normal, dense) and a choice of its own -- a
   pine forest's age, a park's planting, an autumn wood's season -- picked on the woods
   board like a model's options.

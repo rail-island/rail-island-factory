@@ -3,15 +3,16 @@
 // Docs: docs/models/trees.md.
 
 import { describe, expect, it } from "vitest";
-import { SPECIES, TREES, treeParts, type Species, type TreeDetail } from "../generator/trees";
+import { SPECIES, TREES, treeModelOf, treeParts, type Species, type TreeDetail } from "../generator/trees";
 import type { MeshBuilder } from "../generator/meshBuilder";
 import baseline from "./fixtures/tree-baseline.json";
 
 const LEVELS: TreeDetail[] = ["coarse", "low", "high"];
 
 function built(species: Species, detail: TreeDetail): MeshBuilder {
-  const d = TREES.find((t) => t.id === `proc-tree-${species}`)!;
-  return detail === "high" ? d.build() : detail === "low" ? d.buildLod() : d.buildCoarse!();
+  const { id, params } = treeModelOf(species);
+  const d = TREES.find((t) => t.id === id)!;
+  return detail === "high" ? d.build(params) : detail === "low" ? d.buildLod(params) : d.buildCoarse!(params);
 }
 
 function bounds(m: MeshBuilder): { min: number[]; max: number[] } {
@@ -29,7 +30,17 @@ describe("the tree species", () => {
     expect([...SPECIES].sort()).toEqual(
       ["aspen", "autumnlarch", "birch", "bush", "deadtree", "hazel", "larch", "oak", "orchard", "palm", "pine", "scotspine", "spruce", "willow"],
     );
-    expect(TREES.map((t) => t.id)).toEqual(SPECIES.map((s) => `proc-tree-${s}`));
+    // one design a species, but the autumn larch is the larch's autumn season
+    expect(TREES.map((t) => t.id)).toEqual(SPECIES.filter((s) => s !== "autumnlarch").map((s) => `proc-tree-${s}`));
+    expect(treeModelOf("autumnlarch")).toEqual({ id: "proc-tree-larch", params: { season: "autumn" } });
+  });
+
+  it("draws both larches from one design with a season", () => {
+    const larch = TREES.find((t) => t.id === "proc-tree-larch")!;
+    expect(larch.params?.map((p) => p.name)).toEqual(["season"]);
+    expect(larch.build().toGlb("a")).toEqual(larch.build({ season: "summer" }).toGlb("a"));
+    expect(larch.build({ season: "autumn" }).toGlb("a")).not.toEqual(larch.build().toGlb("a"));
+    expect(() => larch.build({ season: "winter" })).toThrow();
   });
 
   // The game's budgets before the move (test/fixtures/tree-baseline.json, measured off

@@ -15,7 +15,7 @@ import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, ty
 import type { TreeDetail } from "./trees.ts";
 import type { WoodsDesign } from "./woodsApi.ts";
 import {
-  pineForest, oakWoods, mixedWoods, scrub, palms, tropicalForest, highMountainForest, park, scotsPineWoodland, larchWoodland, autumnLarchWoodland, hazelWoodlandEdge, villageOrchard,
+  pineForest, oakWoods, mixedWoods, scrub, palms, tropicalForest, highMountainForest, park, scotsPineWoodland, larchWoodland, hazelWoodlandEdge, villageOrchard,
 } from "./woods.ts";
 
 // strict, like every design's build (an unknown name or value throws); the woods
@@ -46,8 +46,6 @@ export const groveScotsPineWoodland = (p?: ParamValues) => grove(scotsPineWoodla
 export const groveScotsPineWoodlandLod = (p?: ParamValues) => grove(scotsPineWoodland, p, "coarse");
 export const groveLarchWoodland = (p?: ParamValues) => grove(larchWoodland, p, "low");
 export const groveLarchWoodlandLod = (p?: ParamValues) => grove(larchWoodland, p, "coarse");
-export const groveAutumnLarchWoodland = (p?: ParamValues) => grove(autumnLarchWoodland, p, "low");
-export const groveAutumnLarchWoodlandLod = (p?: ParamValues) => grove(autumnLarchWoodland, p, "coarse");
 export const groveHazelWoodlandEdge = (p?: ParamValues) => grove(hazelWoodlandEdge, p, "low");
 export const groveHazelWoodlandEdgeLod = (p?: ParamValues) => grove(hazelWoodlandEdge, p, "coarse");
 export const groveVillageOrchard = (p?: ParamValues) => grove(villageOrchard, p, "low");
@@ -83,7 +81,6 @@ const TABLE: ReadonlyArray<[WoodsDesign, (p?: ParamValues) => ReturnType<typeof 
   [park, grovePark, groveParkLod],
   [scotsPineWoodland, groveScotsPineWoodland, groveScotsPineWoodlandLod],
   [larchWoodland, groveLarchWoodland, groveLarchWoodlandLod],
-  [autumnLarchWoodland, groveAutumnLarchWoodland, groveAutumnLarchWoodlandLod],
   [hazelWoodlandEdge, groveHazelWoodlandEdge, groveHazelWoodlandEdgeLod],
   [villageOrchard, groveVillageOrchard, groveVillageOrchardLod],
 ];
