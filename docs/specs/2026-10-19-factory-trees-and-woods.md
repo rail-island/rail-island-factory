@@ -214,6 +214,15 @@ spec is a draft.
 
 **Answer: Keep woodsPalette key.**
 
+### Is the number of trees per cell capped?
+| Option | What it means |
+|---|---|
+| Hard limit, enforced on both sides | A function returns at most 4 trees per cell. A factory test fails any woods function that returns more, and the game clamps to 4 only as a safety net. |
+| Soft working figure | The cap is a budget number the game may trim to, and functions are not tested against it. |
+
+**Answer: hard limit 4.** The user decided this after asking whether a function could
+return anything.
+
 ## High-level plan
 
 **Phase 1 - the move (no visible change).**
@@ -227,7 +236,7 @@ spec is a draft.
   in the factory. For each cell the function receives the cell, a seeded random source,
   the same-woods mask of its neighbourhood (radius about 2) and the terrain slope and
   height. It returns zero or more trees, each with species, in-cell offset, rotation,
-  height and tint, under a fixed per-cell cap that the budget sets. Each woods type also
+  height and tint, **at most 4 per cell** (a hard limit, tested in the factory). Each woods type also
   has a display name, a swatch and a forest-floor colour. In phase 1 every built-in type
   is a function that reproduces today's rule: one roll against density, a weighted
   species pick and a height range. The export lists all woods types by name.
@@ -345,15 +354,14 @@ never hand-edited there):**
 - **Metric-only proof in phase 1.** Shape drift can pass the count and bounding-box check.
   Mitigation: before and after thumbnails per species and level are compared by eye.
 - **Instance count.** Dense functions place several trees per cell under the same
-  triangle budget, so forests go coarse closer to the camera. Mitigation: a per-cell cap
-  and ladder tests in the game.
+  triangle budget, so forests go coarse closer to the camera. Mitigation: the hard limit of
+  4 trees per cell and ladder tests in the game.
 - **Stylised heights** may hide track, signals or platforms that were visible before.
   Mitigation: keep the oversize mostly in crown width, and check city and station views.
 - **The colour-attribute format change** must be handled by the other factory consumers
   (OpenTTD sprite export, GLB ZIP, site). Open question: should those exports use the
   colours too?
-- **Open question: the per-cell tree cap** (4 is the working figure) and whether the
-  function may place a tree's offset outside its cell.
+- **Open question:** whether a function may place a tree's offset outside its cell.
 
 ## Out of scope
 
