@@ -148,9 +148,14 @@ function rasterize(
         ];
         if (dot(n, toEye(world)) < 0) n = [-n[0], -n[1], -n[2]];
         const lit = shade(n);
-        rgb[at * 3] = tri.color[0] * lit;
-        rgb[at * 3 + 1] = tri.color[1] * lit;
-        rgb[at * 3 + 2] = tri.color[2] * lit;
+        // a baked corner colour (COLOR_0) multiplies the material's, interpolated
+        const c = tri.corners;
+        const k0 = c ? c[0][0] * b0 + c[1][0] * b1 + c[2][0] * b2 : 1;
+        const k1 = c ? c[0][1] * b0 + c[1][1] * b1 + c[2][1] * b2 : 1;
+        const k2 = c ? c[0][2] * b0 + c[1][2] * b1 + c[2][2] * b2 : 1;
+        rgb[at * 3] = tri.color[0] * k0 * lit;
+        rgb[at * 3 + 1] = tri.color[1] * k1 * lit;
+        rgb[at * 3 + 2] = tri.color[2] * k2 * lit;
         cov[at] = 1;
       }
     }

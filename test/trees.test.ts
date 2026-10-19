@@ -1,0 +1,142 @@
+// The tree species (generator/trees.ts): three levels each, the budgets a forest
+// can afford, and the envelope rules that make a level change invisible in outline.
+// Docs: docs/models/trees.md.
+
+import { describe, expect, it } from "vitest";
+import { SPECIES, TREES, treeParts, type Species, type TreeDetail } from "../generator/trees";
+import type { MeshBuilder } from "../generator/meshBuilder";
+import baseline from "./fixtures/tree-baseline.json";
+
+const LEVELS: TreeDetail[] = ["coarse", "low", "high"];
+
+function built(species: Species, detail: TreeDetail): MeshBuilder {
+  const d = TREES.find((t) => t.id === `proc-tree-${species}`)!;
+  return detail === "high" ? d.build() : detail === "low" ? d.buildLod() : d.buildCoarse!();
+}
+
+function bounds(m: MeshBuilder): { min: number[]; max: number[] } {
+  const p = m.positions();
+  const min = [Infinity, Infinity, Infinity], max = [-Infinity, -Infinity, -Infinity];
+  for (let i = 0; i < p.length; i++) {
+    min[i % 3] = Math.min(min[i % 3]!, p[i]!);
+    max[i % 3] = Math.max(max[i % 3]!, p[i]!);
+  }
+  return { min, max };
+}
+
+describe("the tree species", () => {
+  it("are the fourteen species the game's maps name", () => {
+    expect([...SPECIES].sort()).toEqual(
+      ["aspen", "autumnlarch", "birch", "bush", "deadtree", "hazel", "larch", "oak", "orchard", "palm", "pine", "scotspine", "spruce", "willow"],
+    );
+    expect(TREES.map((t) => t.id)).toEqual(SPECIES.map((s) => `proc-tree-${s}`));
+  });
+
+  // The game's budgets before the move (test/fixtures/tree-baseline.json, measured off
+  // its own builder): low may grow 5%, high and coarse not at all -- a forest is
+  // instanced by the thousand, so the stylised rework is paid for with shape, not triangles.
+  it.each([...SPECIES])("keeps %s within the game's tree budgets", (species) => {
+    const ref = baseline as Record<string, { tris: number }>;
+    expect(built(species, "coarse").triangleCount()).toBeLessThanOrEqual(ref[`${species}:coarse`]!.tris);
+    expect(built(species, "low").triangleCount()).toBeLessThanOrEqual(Math.floor(ref[`${species}:low`]!.tris * 1.05));
+    expect(built(species, "high").triangleCount()).toBeLessThanOrEqual(ref[`${species}:high`]!.tris);
+  });
+
+  it.each([...SPECIES])("bakes light and shade into %s at every level", (species) => {
+    for (const detail of LEVELS) {
+      const m = built(species, detail);
+      expect(m.hasVertexColors(), `${species} ${detail}`).toBe(true);
+    }
+    if (species === "deadtree") return;
+    // the crown's underside is darker than its top: the painted light the stylised look rests on
+    const { foliage } = treeParts(species, "high");
+    let top = 0, topN = 0, low = 0, lowN = 0;
+    const ys = foliage.flatMap((g) => Array.from({ length: g.count }, (_, i) => g.y(i)));
+    const yMin = Math.min(...ys), yMax = Math.max(...ys);
+    for (const g of foliage) {
+      for (let i = 0; i < g.count; i++) {
+        const h = (g.y(i) - yMin) / (yMax - yMin);
+        const k = g.col![i * 3 + 1]!;
+        if (h > 0.75) { top += k; topN++; }
+        if (h < 0.25) { low += k; lowN++; }
+      }
+    }
+    expect(top / topN, species).toBeGreaterThan((low / lowN) * 1.2);
+  });
+});
+
+describe("tree levels", () => {
+  it.each([...SPECIES])("keeps %s cheap enough for a forest", (species) => {
+    const coarse = built(species, "coarse").triangleCount();
+    const low = built(species, "low").triangleCount();
+    const high = built(species, "high").triangleCount();
+    expect(coarse).toBeLessThanOrEqual(20);
+    expect(low).toBeLessThanOrEqual(300);
+    expect(high).toBeLessThanOrEqual(3000);
+    expect(low / coarse).toBeGreaterThan(3);
+    expect(high).toBeGreaterThan(low * 3);
+  });
+
+  it.each([...SPECIES])("grounds %s at y = 0 at every level", (species) => {
+    for (const detail of LEVELS) {
+      const b = bounds(built(species, detail));
+      expect(b.min[1]!, `${species} ${detail}`).toBeGreaterThan(-0.001);
+      expect(b.min[1]!, `${species} ${detail}`).toBeLessThan(0.001);
+    }
+  });
+
+  it.each([...SPECIES])("keeps %s the same size at every level", (species) => {
+    const low = bounds(built(species, "low"));
+    const h = (b: { min: number[]; max: number[] }) => b.max[1]! - b.min[1]!;
+    const w = (b: { min: number[]; max: number[] }) => Math.max(b.max[0]! - b.min[0]!, b.max[2]! - b.min[2]!);
+    for (const detail of LEVELS) {
+      const b = bounds(built(species, detail));
+      expect(h(b) / h(low), `${species} ${detail} height`).toBeGreaterThan(0.9);
+      expect(h(b) / h(low), `${species} ${detail} height`).toBeLessThan(1.1);
+      expect(w(b) / w(low), `${species} ${detail} width`).toBeGreaterThan(0.89);
+      expect(w(b) / w(low), `${species} ${detail} width`).toBeLessThan(1.11);
+    }
+  });
+
+  it.each([...SPECIES])("reproduces %s's low envelope exactly at the coarse level", (species) => {
+    const coarse = bounds(built(species, "coarse"));
+    const low = bounds(built(species, "low"));
+    for (let k = 0; k < 3; k++) {
+      expect(coarse.min[k]!).toBeCloseTo(low.min[k]!, 4);
+      expect(coarse.max[k]!).toBeCloseTo(low.max[k]!, 4);
+    }
+  });
+
+  it.each([...SPECIES])("builds %s's coarse level from closed, outward-facing solids", (species) => {
+    const { trunk, foliage } = treeParts(species, "coarse");
+    for (const part of [...trunk, ...foliage]) {
+      const p = part.pos;
+      const key = (i: number) => [p[i]!, p[i + 1]!, p[i + 2]!].map((n) => Math.round(n * 1e5)).join(",");
+      const edges = new Map<string, { count: number; balance: number }>();
+      let volume = 0;
+      for (let i = 0; i < p.length; i += 9) {
+        const [ax, ay, az, bx, by, bz, cx, cy, cz] = p.slice(i, i + 9) as number[];
+        volume += (ax! * (by! * cz! - bz! * cy!) - ay! * (bx! * cz! - bz! * cx!) + az! * (bx! * cy! - by! * cx!)) / 6;
+        for (const [f, t] of [[i, i + 3], [i + 3, i + 6], [i + 6, i]] as const) {
+          const ka = key(f), kb = key(t);
+          const id = ka < kb ? `${ka}/${kb}` : `${kb}/${ka}`;
+          const e = edges.get(id) ?? { count: 0, balance: 0 };
+          e.count++;
+          e.balance += ka < kb ? 1 : -1;
+          edges.set(id, e);
+        }
+      }
+      for (const e of edges.values()) expect(e).toEqual({ count: 2, balance: 0 });
+      expect(volume).toBeGreaterThan(0);
+    }
+  });
+
+  it("shades only the ribbon foliage (palm fronds, willow sprays) on both faces", () => {
+    for (const species of SPECIES) {
+      for (const detail of LEVELS) {
+        const ribbons = detail !== "coarse" && (species === "palm" || species === "willow");
+        expect(treeParts(species, detail).ribbons ?? false, `${species} ${detail}`).toBe(ribbons);
+      }
+    }
+  });
+});

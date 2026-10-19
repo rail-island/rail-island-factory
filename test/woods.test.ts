@@ -1,0 +1,195 @@
+// The woods types (generator/woods.ts): distribution functions keyed by name, the
+// contract the game calls (generator/woodsApi.ts), and their standalone modules
+// (generator/woodsExport.ts). Docs: docs/models/woods.md.
+
+import { describe, expect, it } from "vitest";
+import { WOODS } from "../generator/woods";
+import { MAX_TREES_PER_CELL, cellSeed, draw, newSlot, same, type CellContext, type TreeSlot } from "../generator/woodsApi";
+import { SPECIES } from "../generator/trees";
+import { bundleWoods, woodsMeta } from "../generator/woodsExport";
+
+// Stored in the game's saved maps (by name): a shipped name is never renamed or removed.
+const SHIPPED = [
+  "pine-forest", "oak-woods", "mixed-woods", "scrub", "palms", "tropical-forest", "high-mountain-forest",
+  "park", "scots-pine-woodland", "larch-woodland", "autumn-larch-woodland", "hazel-woodland-edge", "village-orchard",
+];
+
+const slots = (): TreeSlot[] => Array.from({ length: MAX_TREES_PER_CELL }, newSlot);
+
+/** A deterministic sweep of contexts: plain interiors, edges, lone cells, slopes and heights. */
+function* contexts(n = 3000): Generator<CellContext> {
+  for (let i = 0; i < n; i++) {
+    const r = (k: number) => draw(i * 7919 + 17, k);
+    const full = (1 << 25) - 1;
+    const mask = i % 5 === 0 ? full : i % 5 === 1 ? 1 << 12 : (Math.floor(r(1) * (1 << 25)) | (1 << 12));
+    yield { gx: (i * 37) % 700 - 50, gz: Math.floor(i / 7), seed: 12345 + (i % 3), mask, slope: r(2) * 45, height: r(3) * 300 };
+  }
+}
+
+describe("the woods contract", () => {
+  it("keeps the hash the game has always placed trees with", () => {
+    // the same vectors pin the game's copy (rail-island-webapp test/woodsFunctions.test.ts)
+    expect(draw(0, 0)).toBe(0.08725423295982182);
+    expect(draw(1, 0)).toBe(0.7090102224610746);
+    expect(draw(12345, 7)).toBe(0.7266957920510322);
+    expect(draw(-5, 3)).toBe(0.00643453374505043);
+    expect(draw(0x7fffffff, 99)).toBe(0.25879242876544595);
+    expect(cellSeed(10, 20, 42)).toBe(-66949952);
+    expect(cellSeed(-3, 7, -99)).toBe(-741394733);
+    expect(cellSeed(700, 700, 123456789)).toBe(97675669);
+  });
+
+  it("reads the neighbourhood mask by offset", () => {
+    expect(same(1 << 12, 0, 0)).toBe(true);
+    expect(same(1 << 12, 1, 0)).toBe(false);
+    expect(same(1 << 13, 1, 0)).toBe(true);
+    expect(same(1 << 0, -2, -2)).toBe(true);
+    expect(same(1 << 24, 2, 2)).toBe(true);
+  });
+});
+
+describe("the woods types", () => {
+  it("ships every name it ever shipped, each once", () => {
+    const names = WOODS.map((w) => w.design.name);
+    expect(new Set(names).size).toBe(names.length);
+    for (const n of SHIPPED) expect(names).toContain(n);
+    for (const n of names) expect(n).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
+  });
+
+  it.each(WOODS.map((w) => [w.design.name, w.design] as const))("%s grows at most four valid trees a cell", (_, w) => {
+    const out = slots();
+    let trees = 0;
+    for (const ctx of contexts()) {
+      const n = w.distribute(ctx, out);
+      expect(Number.isInteger(n)).toBe(true);
+      expect(n).toBeGreaterThanOrEqual(0);
+      expect(n).toBeLessThanOrEqual(MAX_TREES_PER_CELL);
+      for (let i = 0; i < n; i++) {
+        const t = out[i]!;
+        expect(SPECIES as readonly string[]).toContain(t.species);
+        expect(Math.abs(t.x)).toBeLessThanOrEqual(0.5);
+        expect(Math.abs(t.z)).toBeLessThanOrEqual(0.5);
+        expect(t.height).toBeGreaterThan(0);
+        expect(t.height).toBeLessThanOrEqual(60);
+        expect(t.width).toBeGreaterThan(0.5);
+        expect(t.width).toBeLessThan(1.6);
+        expect(Math.abs(t.lean)).toBeLessThan(0.3);
+        expect(t.shade).toBeGreaterThan(0.5);
+        expect(t.shade).toBeLessThan(1.5);
+        expect(Math.abs(t.hue)).toBeLessThanOrEqual(1);
+      }
+      trees += n;
+    }
+    expect(trees).toBeGreaterThan(0);
+  });
+
+  it.each(WOODS.map((w) => [w.design.name, w.design] as const))("%s is deterministic", (_, w) => {
+    const a = slots(), b = slots();
+    for (const ctx of contexts(400)) {
+      const n = w.distribute(ctx, a);
+      expect(w.distribute({ ...ctx }, b)).toBe(n);
+      expect(b.slice(0, n)).toEqual(a.slice(0, n));
+    }
+  });
+
+  it.each(WOODS.map((w) => [w.design.name, w.design] as const))("%s samples a tree for a row", (_, w) => {
+    const out = newSlot();
+    for (let i = 0; i < 50; i++) {
+      w.sample(draw(i, 1), draw(i, 2), out);
+      expect(SPECIES as readonly string[]).toContain(out.species);
+      expect(out.height).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe("relations between trees", () => {
+  const wood = (name: string) => WOODS.find((w) => w.design.name === name)!.design;
+  const FULL = (1 << 25) - 1;
+  const stats = (name: string, mask: number, height = 20) => {
+    const out = slots();
+    let trees = 0, tall = 0, under = 0;
+    for (let i = 0; i < 4000; i++) {
+      const n = wood(name).distribute({ gx: i % 97, gz: Math.floor(i / 97), seed: 99, mask, slope: 0, height }, out);
+      trees += n;
+      for (let k = 0; k < n; k++) {
+        tall += out[k]!.height;
+        if (out[k]!.species === "bush" || out[k]!.species === "hazel") under++;
+      }
+    }
+    return { perCell: trees / 4000, meanHeight: tall / trees, underShare: under / trees };
+  };
+
+  it("plants a forest denser inside than at its edge, with shorter trees and more shrubs at the edge", () => {
+    const inside = stats("mixed-woods", FULL);
+    const edge = stats("mixed-woods", 1 << 12 | 1 << 13 | 1 << 7);
+    expect(inside.perCell).toBeGreaterThan(1.2);
+    expect(inside.perCell).toBeGreaterThan(edge.perCell * 1.3);
+    expect(edge.underShare).toBeGreaterThan(inside.underShare);
+  });
+
+  it("grows a pine forest denser than the classic one tree in every other cell", () => {
+    expect(stats("pine-forest", FULL).perCell).toBeGreaterThan(1.1);
+  });
+
+  it("keeps a park thin, so the lawn shows", () => {
+    expect(stats("park", FULL).perCell).toBeLessThan(0.35);
+  });
+
+  it("shrinks the mountain forest with height: a treeline", () => {
+    expect(stats("high-mountain-forest", FULL, 200).meanHeight).toBeLessThan(stats("high-mountain-forest", FULL, 0).meanHeight * 0.85);
+  });
+
+  it("plants an orchard in rows: one tree at each cell's centre", () => {
+    const out = slots();
+    for (const ctx of contexts(500)) {
+      const n = wood("village-orchard").distribute(ctx, out);
+      expect(n).toBeLessThanOrEqual(1);
+      if (n) expect(Math.hypot(out[0]!.x, out[0]!.z)).toBeLessThan(0.06);
+    }
+  });
+
+  it("gathers the autumn larch woodland into golden and green groves", () => {
+    // neighbouring cells mostly agree on their dominant larch; far apart they differ
+    const out = slots();
+    const golden = (gx: number, gz: number) => {
+      const n = wood("autumn-larch-woodland").distribute({ gx, gz, seed: 7, mask: FULL, slope: 0, height: 20 }, out);
+      let g = 0;
+      for (let k = 0; k < n; k++) if (out[k]!.species === "autumnlarch") g++;
+      return n ? g / n : 0.5;
+    };
+    let agree = 0, pairs = 0;
+    for (let i = 0; i < 400; i++) {
+      const gx = (i * 13) % 200, gz = Math.floor(i / 2) * 3;
+      agree += Math.abs(golden(gx, gz) - golden(gx + 1, gz)) < 0.5 ? 1 : 0;
+      pairs++;
+    }
+    expect(agree / pairs).toBeGreaterThan(0.6);
+  });
+});
+
+describe("the woods export", () => {
+  it("lists every woods type and species, sorted, with no numeric ids", () => {
+    const meta = woodsMeta();
+    expect(meta.maxTreesPerCell).toBe(4);
+    expect(meta.woods.map((w) => w.name)).toEqual([...meta.woods.map((w) => w.name)].sort());
+    expect(meta.woods.map((w) => w.module)).toEqual(meta.woods.map((w) => `woods/${w.name}.js`));
+    expect(meta.trees.map((t) => t.species).sort()).toEqual([...SPECIES].sort());
+    expect(JSON.stringify(meta)).not.toMatch(/"id":\s*\d/);
+  });
+
+  it("bundles a standalone module that grows the same trees", async () => {
+    const entry = WOODS.find((w) => w.design.name === "mixed-woods")!;
+    const text = await bundleWoods(entry.source, entry.design.name);
+    expect(text).not.toMatch(/\bimport\b/);
+    expect(await bundleWoods(entry.source, entry.design.name)).toBe(text);
+    const mod = await import(`data:text/javascript;base64,${Buffer.from(text).toString("base64")}`);
+    expect(mod.woods.name).toBe("mixed-woods");
+    expect(mod.MAX_TREES_PER_CELL).toBe(4);
+    const a = slots(), b = slots();
+    for (const ctx of contexts(300)) {
+      const n = entry.design.distribute(ctx, a);
+      expect(mod.distribute(ctx, b)).toBe(n);
+      expect(b.slice(0, n)).toEqual(a.slice(0, n));
+    }
+  }, 30_000);
+});

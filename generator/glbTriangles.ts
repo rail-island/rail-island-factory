@@ -17,6 +17,8 @@ export interface Tri {
   p: [Vec3, Vec3, Vec3]; // world position
   n: [Vec3, Vec3, Vec3]; // world normal
   color: Vec3; // linear base colour
+  /** Corner colours (COLOR_0, linear multipliers of `color`), when the primitive has them. */
+  corners?: [Vec3, Vec3, Vec3];
   /** The primitive's material name, or `#<index>` when it has none. */
   material: string;
 }
@@ -34,6 +36,7 @@ export function collectTriangles(json: Gltf, bin: Uint8Array): Tri[] {
         if (posIdx == null) continue;
         const pos = readAccessor(json, bin, posIdx);
         const nrm = prim.attributes.NORMAL != null ? readAccessor(json, bin, prim.attributes.NORMAL) : null;
+        const col = prim.attributes.COLOR_0 != null ? readAccessor(json, bin, prim.attributes.COLOR_0) : null;
         const idx = prim.indices != null
           ? readAccessor(json, bin, prim.indices)
           : Array.from({ length: pos.length / 3 }, (_, i) => i);
@@ -54,7 +57,10 @@ export function collectTriangles(json: Gltf, bin: Uint8Array): Tri[] {
             const face = norm(cross(sub(p[1], p[0]), sub(p[2], p[0])));
             n[0] = n[1] = n[2] = face;
           }
-          tris.push({ p: p as [Vec3, Vec3, Vec3], n: n as [Vec3, Vec3, Vec3], color, material });
+          const corners = col
+            ? (idx.slice(i, i + 3).map((v) => [col[v * 3], col[v * 3 + 1], col[v * 3 + 2]]) as [Vec3, Vec3, Vec3])
+            : undefined;
+          tris.push({ p: p as [Vec3, Vec3, Vec3], n: n as [Vec3, Vec3, Vec3], color, material, ...(corners ? { corners } : {}) });
         }
       }
     }

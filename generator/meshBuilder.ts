@@ -306,6 +306,7 @@ export class MeshBuilder extends MeshCore {
           metallicFactor: spec.metallic ?? 0,
           roughnessFactor: spec.roughness ?? 0.85,
         },
+        ...(spec.doubleSided ? { doubleSided: true } : {}),
       });
     }
     units.forEach((unit, u) => {
@@ -313,21 +314,26 @@ export class MeshBuilder extends MeshCore {
         const g = this.groups.get(mat)!;
         let pos: number[] = g.pos;
         let nrm: number[] = g.nrm;
+        let col: number[] | undefined = g.col;
         if (unit.index >= 0 || units.length > 1) {
           pos = [];
           nrm = [];
+          col = g.col ? [] : undefined;
           for (let t = 0; t < g.part.length; t++) {
             if (g.part[t] !== unit.index) continue;
             for (let k = 0; k < 9; k++) {
               pos.push(g.pos[t * 9 + k]! - unit.pivot[k % 3]!);
               nrm.push(g.nrm[t * 9 + k]!);
+              col?.push(g.col![t * 9 + k]!);
             }
           }
           if (pos.length === 0) return;
         }
         const position = vec3Accessor(pos, true);
         const normal = vec3Accessor(nrm, false);
-        json.meshes[u]!.primitives.push({ attributes: { POSITION: position, NORMAL: normal }, material: m });
+        // a baked corner colour (MeshCore.triShaded), linear like the material factor
+        const color = col ? { COLOR_0: vec3Accessor(col, false) } : {};
+        json.meshes[u]!.primitives.push({ attributes: { POSITION: position, NORMAL: normal, ...color }, material: m });
       });
     });
     // the animations: one shared time accessor per clip, a linear sampler per track

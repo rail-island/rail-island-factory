@@ -28,7 +28,11 @@ export class MeshBuilder extends MeshCore {
     const materials = [...this.groups.keys()].sort();
     const standard = materials.map((mat) => {
       const spec = this.palette[mat]!;
-      const m = new THREE.MeshStandardMaterial({ color: spec.color, metalness: spec.metallic ?? 0, roughness: spec.roughness ?? 0.85 });
+      const m = new THREE.MeshStandardMaterial({
+        color: spec.color, metalness: spec.metallic ?? 0, roughness: spec.roughness ?? 0.85,
+        ...(spec.doubleSided ? { side: THREE.DoubleSide } : {}),
+        ...(this.groups.get(mat)!.col ? { vertexColors: true } : {}),
+      });
       m.name = mat;
       return m;
     });
@@ -49,17 +53,21 @@ export class MeshBuilder extends MeshCore {
         const g = this.groups.get(mat)!;
         const pos: number[] = [];
         const nrm: number[] = [];
+        const col: number[] = [];
         for (let t = 0; t < g.part.length; t++) {
           if (g.part[t] !== unit.index && (unit.index >= 0 || units.length > 1)) continue;
           for (let k = 0; k < 9; k++) {
             pos.push(g.pos[t * 9 + k]! - unit.pivot[k % 3]!);
             nrm.push(g.nrm[t * 9 + k]!);
+            if (g.col) col.push(g.col[t * 9 + k]!);
           }
         }
         if (pos.length === 0) return;
         const geometry = new THREE.BufferGeometry();
         geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(pos), 3));
         geometry.setAttribute("normal", new THREE.BufferAttribute(new Float32Array(nrm), 3));
+        // baked corner colours (MeshCore.triShaded): linear multipliers of the material colour
+        if (g.col) geometry.setAttribute("color", new THREE.BufferAttribute(new Float32Array(col), 3));
         const mesh = new THREE.Mesh(geometry, standard[m]);
         mesh.name = mat;
         holder.add(mesh);

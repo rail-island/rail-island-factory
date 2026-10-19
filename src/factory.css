@@ -1084,3 +1084,39 @@ body {
   margin: 0;
   font-size: 13px;
 }
+
+/* The woods types above the tree species (WoodsGallery.tsx). */
+.factory-woods {
+  margin-bottom: 16px;
+}
+.factory-woods__title {
+  font-size: 1.05rem;
+  margin: 12px 0 4px;
+}
+.factory-woods__card {
+  margin: 0;
+  cursor: default;
+}
+.factory-woods__card img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.factory-woods__card figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 8px;
+}
+.factory-woods__swatches {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: auto;
+}
+.factory-woods__swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}

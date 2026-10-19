@@ -14,6 +14,8 @@
 //                                   stations), for the game to import
 //   export/village.meta.json        the village houses' catalog entries, likewise
 //   export/vehicles.meta.json       the vehicles' catalog entries, likewise
+//   export/woods/<name>.js          a woods type's distribution function (woodsExport.ts)
+//   export/woods.meta.json          the woods types and the tree species, for the game
 //   export/catalog.json             what the site lists (catalog.ts)
 //
 // The same folder is Vite's publicDir, so the site serves it as it stands.
@@ -86,6 +88,8 @@ import { SMALL_DIESELS } from "./smallDiesels.ts";
 import { CITY_BUS_DESIGNS, KAROSA_DESIGNS } from "./buses.ts";
 import { VILLAGE_HOUSES } from "./village.ts";
 import { COMMERCIAL_BUILDINGS } from "./commercial.ts";
+import { TREES } from "./trees.ts";
+import { GROVE_THUMB_PREFIX, generateWoods } from "./woodsExport.ts";
 import { checkOpenttdProperties, type CatalogFields, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { buildLodModel } from "./lodModel.ts";
 import { lodBudget } from "./lod.ts";
@@ -108,6 +112,9 @@ export const ASSETS_DIR = path.join(REPO_ROOT, "assets");
 /** The export folder, and the site's publicDir. */
 export const EXPORT_DIR = path.join(REPO_ROOT, "export");
 
+/** The most triangles a coarse level (design.ts buildCoarse) may have: a distant tree. */
+export const COARSE_TRIANGLES = 20;
+
 /** Thumbnail size: the 512 px square the game's building thumbnails use. */
 const THUMB_SIZE = 512;
 
@@ -124,7 +131,7 @@ const THUMB_VERSION_FILE = ".version";
  * functions (the JS bundle's entry) and the meta file it is listed in: the
  * buildings', the village houses' own, or the vehicles'.
  */
-const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: string; meta: "buildings" | "village" | "vehicles" }> = [
+const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: string; meta: "buildings" | "village" | "vehicles" | "trees" }> = [
   { designs: SKYSCRAPERS, source: "skyscrapers.ts", meta: "buildings" },
   { designs: COMMERCIAL, source: "commercialStreets.ts", meta: "buildings" },
   { designs: COMMERCIAL_BUILDINGS, source: "commercial.ts", meta: "buildings" },
@@ -170,6 +177,8 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: TGV_DESIGNS, source: "tgv.ts", meta: "vehicles" },
   { designs: CZSK_COACHES, source: "czskCoaches.ts", meta: "vehicles" },
   { designs: GERMAN_COACHES, source: "germanCoaches.ts", meta: "vehicles" },
+  // the tree species: listed in woods.meta.json, not in a building or vehicle meta
+  { designs: TREES, source: "trees.ts", meta: "trees" },
 ];
 
 const FAMILIES = RAW_FAMILIES.map(f => ({ ...f, designs: f.designs.map(d => { d.id = proceduralId(d.id); return d; }) }));
@@ -181,8 +190,11 @@ export const BUILDINGS: readonly ProceduralDesign[] = FAMILIES.filter((f) => f.m
 /** Every vehicle design: road, rail, air, water and rope (vehicles.meta.json). */
 export const ALL_VEHICLES: readonly ProceduralDesign[] = FAMILIES.filter((f) => f.meta === "vehicles").flatMap((f) => f.designs);
 
-/** Every design, by id: the buildings, the village houses (village.meta.json), then the vehicles. */
-export const DESIGNS: ReadonlyMap<string, ProceduralDesign> = new Map([...BUILDINGS, ...VILLAGE_DESIGNS, ...ALL_VEHICLES].map((d) => [d.id, d]));
+/** Every tree species (trees.ts, listed in woods.meta.json). */
+export const TREE_DESIGNS: readonly ProceduralDesign[] = FAMILIES.filter((f) => f.meta === "trees").flatMap((f) => f.designs);
+
+/** Every design, by id: the buildings, the village houses (village.meta.json), the vehicles, then the trees. */
+export const DESIGNS: ReadonlyMap<string, ProceduralDesign> = new Map([...BUILDINGS, ...VILLAGE_DESIGNS, ...ALL_VEHICLES, ...TREE_DESIGNS].map((d) => [d.id, d]));
 
 const VEHICLE_IDS = new Set(ALL_VEHICLES.map((d) => d.id));
 
@@ -274,6 +286,12 @@ function buildAll(designs: readonly ProceduralDesign[]): Array<{ design: Procedu
     if (!low.triangleCount() || low.triangleCount() > lodBudget(design)) throw new Error(`${design.id}: invalid LOD triangle count ${low.triangleCount()}`);
     const overlaps = findCoplanarOverlaps(low.toGlb(design.id));
     if (overlaps.length) found.set(`${design.id} (LOD)`, overlaps);
+    if (design.buildCoarse) {
+      const coarse = design.buildCoarse();
+      if (!coarse.triangleCount() || coarse.triangleCount() > COARSE_TRIANGLES) throw new Error(`${design.id}: invalid coarse triangle count ${coarse.triangleCount()}`);
+      const flat = findCoplanarOverlaps(coarse.toGlb(design.id));
+      if (flat.length) found.set(`${design.id} (coarse)`, flat);
+    }
   }
   if (found.size) throw new ZFightingError(found);
   return built;
@@ -356,6 +374,8 @@ export function generateModels(
   writeIfChanged(sourcesFile, `${JSON.stringify(sorted, null, 2)}\n`);
   for (const [sub, ext] of [[thumbDir, ".png"], [treeDir, ".json"]] as const) {
     for (const name of fs.readdirSync(sub)) {
+      // a grove thumbnail (woods-<name>.png) belongs to generateWoods, not to a design
+      if (name.startsWith(GROVE_THUMB_PREFIX)) continue;
       if (name !== THUMB_SOURCES_FILE && name.endsWith(ext) && !known.has(name.slice(0, -ext.length))) fs.rmSync(path.join(sub, name));
     }
   }
@@ -460,6 +480,8 @@ export async function buildExport(
   const rigs = new Map(models.flatMap((m) => (m.rig ? [[m.id, m.rig] as const] : [])));
   const sides = new Map(models.flatMap((m) => (m.side ? [[m.id, m.side] as const] : [])));
   fs.writeFileSync(path.join(dir, VEHICLE_META_FILE), `${JSON.stringify(exportVehicleMeta(chosen(ALL_VEHICLES), rigs, sides), null, 2)}\n`);
+  // the woods types and the tree species they draw from (woodsExport.ts); only a whole export has them
+  if (designs.length === DESIGNS.size) await generateWoods(dir);
   fs.writeFileSync(path.join(dir, "industry-migration.json"), `${JSON.stringify({ version: 1, entries: INDUSTRY_MIGRATION }, null, 2)}\n`);
   for (const design of designs) checkOpenttdProperties(design, ALL_VEHICLES.includes(design));
   const catalog: ModelCatalog = {

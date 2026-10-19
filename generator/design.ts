@@ -67,6 +67,11 @@ export interface ProceduralDesign {
   params?: readonly ParamSpec[];
   /** The dedicated distant model (docs/models/lod.md), exported from the same source module. */
   buildLod: (params?: ParamValues) => MeshBuilder;
+  /**
+   * A third, coarsest level below `buildLod`: the trees' (trees.ts), which a whole
+   * forest draws in the distance. The JS model exports it as `buildCoarse(THREE)`.
+   */
+  buildCoarse?: (params?: ParamValues) => MeshBuilder;
   /** Total distant-mesh budget; defaults to the family policy in lod.ts. */
   lodTriangles?: 100 | 200 | 300 | 500;
   /**

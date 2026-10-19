@@ -23,6 +23,8 @@ export interface MaterialSpec {
   color: string;
   metallic?: number;
   roughness?: number;
+  /** Shade both faces: single-layer geometry such as a palm frond (GLB `doubleSided`). */
+  doubleSided?: boolean;
 }
 
 export type Vec3 = [number, number, number];
@@ -161,8 +163,14 @@ function round3(v: number): number {
 }
 
 export class MeshCore {
-  /** Per material: positions and normals, 9 numbers a triangle, and each triangle's part (-1 for none). */
-  protected readonly groups = new Map<string, { pos: number[]; nrm: number[]; part: number[]; scope: number[] }>();
+  /**
+   * Per material: positions and normals, 9 numbers a triangle, and each triangle's part (-1 for none).
+   * `col` holds a linear RGB multiplier per corner (9 numbers a triangle) once any triangle of the
+   * material was drawn with one (see `triShaded`); the material's other triangles read white.
+   */
+  protected readonly groups = new Map<string, { pos: number[]; nrm: number[]; part: number[]; scope: number[]; col?: number[] }>();
+  /** The corner colours of the triangle `triShaded` is drawing, or null. */
+  private pendingColors: [Vec3, Vec3, Vec3] | null = null;
   /**
    * The named parts in drawing order; `parent` indexes this list, -1 for a
    * top-level part. A `bogie` part is a rail bogie (see `bogie`): always top level.
@@ -508,6 +516,9 @@ export class MeshCore {
     if (l < 1e-9) return; // degenerate
     let g = this.groups.get(mat);
     if (!g) this.groups.set(mat, (g = { pos: [], nrm: [], part: [], scope: [] }));
+    const colors = this.pendingColors;
+    if (colors && !g.col) g.col = new Array<number>(g.pos.length).fill(1);
+    if (g.col) for (let k = 0; k < 3; k++) g.col.push(...(colors ? colors[k]! : [1, 1, 1] as Vec3));
     g.part.push(this.currentPart);
     g.scope.push(this.lodScope);
     for (const p of [a, b, c]) {
@@ -520,6 +531,26 @@ export class MeshCore {
         }
       }
     }
+  }
+
+  /**
+   * A triangle whose corners carry a colour: a linear RGB multiplier of the material's
+   * colour (white leaves it as it is) -- baked shading such as a tree crown's dark
+   * interior. Written as the GLB's COLOR_0 and the JS model's `color` attribute.
+   */
+  triShaded(mat: string, a: Vec3, b: Vec3, c: Vec3, colors: [Vec3, Vec3, Vec3]): void {
+    this.pendingColors = colors;
+    try {
+      this.tri(mat, a, b, c);
+    } finally {
+      this.pendingColors = null;
+    }
+  }
+
+  /** Whether any triangle carries a corner colour (see `triShaded`). */
+  hasVertexColors(): boolean {
+    for (const g of this.groups.values()) if (g.col) return true;
+    return false;
   }
 
   quad(mat: string, a: Vec3, b: Vec3, c: Vec3, d: Vec3): void {
