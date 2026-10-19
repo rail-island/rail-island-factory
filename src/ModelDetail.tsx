@@ -28,6 +28,7 @@ import {
 } from "./catalogQuery";
 import { indexTree, type SourceTree } from "./sourceTreeView";
 import { FileCell } from "./ModelTable";
+import { VariantThumb } from "./VariantThumb";
 import { SourceTreePanel } from "./SourceTreePanel";
 
 // three and OrbitControls arrive only once somebody opens a model.
@@ -208,13 +209,18 @@ export function ModelDetail(props: {
         <Switch>
           <Match when={props.tab === "specs"}>
             {/* A side view at 16 px per metre (half its pixels), so vehicles compare by length. */}
-            <img
-              class="factory-detail__thumb"
-              src={`/${props.record.thumbUrl}`}
-              alt={`${props.record.title} thumbnail`}
-              width={props.record.thumbSide ? Math.round(props.record.thumbSide.widthM * 16) : 160}
-              height={props.record.thumbSide ? Math.round(props.record.thumbSide.heightM * 16) : 160}
-            />
+            {import.meta.env.DEV ? (
+              // `pnpm dev` writes no thumbnails: the browser renders the default (VariantThumb)
+              <VariantThumb record={props.record} params={{}} size="large" title={`${props.record.title} thumbnail`} />
+            ) : (
+              <img
+                class="factory-detail__thumb"
+                src={`/${props.record.thumbUrl}`}
+                alt={`${props.record.title} thumbnail`}
+                width={props.record.thumbSide ? Math.round(props.record.thumbSide.widthM * 16) : 160}
+                height={props.record.thumbSide ? Math.round(props.record.thumbSide.heightM * 16) : 160}
+              />
+            )}
             <dl class="factory-specs">
               <For each={specs()}>
                 {(c) => (

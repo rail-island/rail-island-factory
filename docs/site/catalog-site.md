@@ -7,6 +7,7 @@ preview, and the URL state.
 `src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`,
 `src/SourceTreePanel.tsx`, `src/sourceTreeView.ts`, `src/Thumb.tsx`, `src/modelModule.ts`, `src/ExportPanel.tsx`,
 `src/ModelVariants.tsx`, `src/VariantThumb.tsx`, `src/variantThumbs.ts`, `src/thumbRender.ts`,
+`src/devCatalog.ts`, `src/devMeasure.ts`, `generator/devServer.ts`, `generator/devExport.ts`, `test/devExport.test.ts`,
 `src/factory.css`, `src/favicon.svg`, `src/apple-touch-icon.png`, `src/social-preview.png`, `src/boot.ts`, `src/bootEntry.ts`, `index.html`, `vite.config.ts`,
 `test/catalogQuery.test.ts`, `test/boot.test.ts`, `test/siteMeta.test.ts`, `test/rig.test.ts` (the Pose sliders)
 **See also** - [../models/export.md](../models/export.md), [../guide/deploy.md](../guide/deploy.md), [openttd-export.md](openttd-export.md)
@@ -79,9 +80,52 @@ once. A missing catalog - a checkout where `pnpm build:models` never ran - shows
 "The catalog is missing" rather than an empty list (the dev server answers a
 missing file with `index.html`, so the response type is checked too).
 
+## Local dev (`pnpm dev`)
+
+`pnpm dev` is plain `vite`: nothing is built before the server is up (about a
+second), and there is no export folder in play (`publicDir` is off while
+serving). The `dev-export` plugin (`generator/devServer.ts`) answers the site's
+data URLs from the generator, loaded through Vite's SSR loader
+(`generator/devExport.ts`) and warmed in the background once the server listens:
+
+| URL | Served |
+|---|---|
+| `/catalog.json` | every design's meta entry, with `dev: true` and each record `pending`: zero counts and sizes, no JS hash, no rig, a placeholder side frame for a road or rail vehicle |
+| `/js/<id>.js` | the design's JS model, bundled on first request and kept in memory - byte-identical to the build's |
+| `/tree/<id>.json` | the source tree, built on request |
+| `/refs/<id>/<name>` | the source image, straight from `assets/` |
+| `/thumbs/...` | 404: there are no thumbnail files |
+
+An edited file under `generator/` makes Vite reload the generator's changed
+modules, drops the bundled JS models and reloads the page, so the next request
+builds the new design. No z-fighting, LOD or game-property check runs in dev:
+`pnpm build` and the tests run them.
+
+The page then does the build's measuring itself (development bundle only;
+`import.meta.env.DEV` keeps it out of the deployed site):
+
+- **Measuring.** `App.tsx` hands the pending records to `src/devCatalog.ts`,
+  which measures them one at a time - the open model first, then the rows in
+  their listed order - and swaps them in every 300 ms. `src/devMeasure.ts`
+  loads the record's JS model, hashes its text (the `jsHash` the thumbnail cache
+  keys on), gzips it with the browser's `CompressionStream`, builds the default
+  and counts triangles, vertices, meshes and materials, the bounding box, the
+  rig (`userData.rig`) and a vehicle's side frame - the build's figures
+  (`test/devExport.test.ts`), except the gzip level and no thumbnail size. A
+  measurement is kept in `localStorage` under the model's id and JS hash, so a
+  reload rebuilds only the models whose code changed (their JS is still fetched,
+  to hash it).
+- **Thumbnails.** Every thumbnail - the listing's, the model page's - is the
+  browser render of the default variant (`VariantThumb`, the IndexedDB cache
+  below), drawn once the record is measured; a pending record shows the empty
+  placeholder.
+
+To see what deploys - the build's thumbnails and figures - run `pnpm build` and
+`pnpm preview`.
+
 ## The listing
 
-- **Thumbnails** (`src/Thumb.tsx`) are the build's: a road or rail vehicle's is a
+- **Thumbnails** (`src/Thumb.tsx`) are the build's (under `pnpm dev`, the browser's - "Local dev" above): a road or rail vehicle's is a
   side view (the record's `thumbSide`, [../models/export.md](../models/export.md)), shown in a
   144 x 60 box standing on its bottom edge; everything else's is square, in a
   96 x 60 box. The model page shows a side view at 16 px per metre (half its
@@ -232,8 +276,8 @@ parameters, the same file the game draws; no `defaultScale` applied.
 
 The model's procedural source tree ([../models/source-tree.md](../models/source-tree.md)):
 named scopes - podium, tier 3, piers - down to the `MeshBuilder` calls that drew
-the triangles. `tree/<id>.json` is fetched only when the tab opens; a missing
-file says to run `pnpm build:models`.
+the triangles. `tree/<id>.json` is fetched only when the tab opens (under
+`pnpm dev`, built then); a missing file says to run `pnpm build:models`.
 
 - **The tree** starts with the root open. Each row shows the scope name (or a
   leaf's call kind and material, with a colour swatch) and its triangle count;

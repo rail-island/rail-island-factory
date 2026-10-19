@@ -35,7 +35,7 @@ async function loadCatalog(): Promise<Row[]> {
 }
 
 export function App() {
-  const [rows] = createResource(loadCatalog);
+  const [rows, { mutate }] = createResource(loadCatalog);
   const [view, setView] = createSignal<ViewState>(parseView(location.search));
   const [wide, setWide] = createSignal(true);
   // The export list (exportList.ts): read from storage once the catalog lands, written back on every change.
@@ -107,6 +107,26 @@ export function App() {
     const next = list[(((at < 0 ? 0 : at + delta) % list.length) + list.length) % list.length]!;
     update({ model: next.id, node: null, params: {} });
   };
+
+  // `pnpm dev` lists every model unmeasured (generator/devExport.ts): measure them
+  // from their JS models in the browser, the open model first, then as listed.
+  if (import.meta.env.DEV) {
+    let started = false;
+    createEffect(() => {
+      if (started || !rows()?.some((r) => r.pending)) return;
+      started = true;
+      void import("./devCatalog").then(({ measurePending }) =>
+        measurePending(
+          (skip) => {
+            const wanted = (r: Row | undefined) => r?.pending && !skip.has(r.id);
+            const opened = open();
+            return wanted(opened) ? opened : (listed().find(wanted) ?? (rows() ?? []).find(wanted));
+          },
+          (measured) => mutate((list) => list?.map((r) => measured.get(r.id) ?? r)),
+        ),
+      );
+    });
+  }
 
   const totalTris = () => listed().reduce((s, r) => s + r.triangles, 0);
 

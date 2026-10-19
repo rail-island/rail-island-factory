@@ -84,7 +84,7 @@ assistants working on the project.
 
 ```bash
 pnpm install
-pnpm dev     # build the models and run the site on http://localhost:5173
+pnpm dev     # run the site on http://localhost:5173 (models are built on demand)
 pnpm test
 ```
 

@@ -7,7 +7,7 @@
   "description": "Procedurally generated Rail Island models, and the catalog site that shows them (factory.railisland.com)",
   "scripts": {
     "build:models": "tsx generator/generate.ts",
-    "dev": "pnpm build:models && vite",
+    "dev": "vite",
     "build": "pnpm build:models && tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",

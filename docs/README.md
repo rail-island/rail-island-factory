@@ -65,7 +65,7 @@
 | [models/export.md](models/export.md) | the export folder: JS models, thumbnails, `skyscrapers.meta.json`, `village.meta.json`, `vehicles.meta.json`, `catalog.json`; the in-memory GLB the build analyses |
 | [site/openttd-export.md](site/openttd-export.md) | the site's export list ("Add to export", the Export panel, its localStorage key) and the two formats it writes in the browser: an OpenTTD NewGRF (true-proportion sprites, articulated parts, the `openttd` block and its defaults, the GRF encoder) and a ZIP of GLBs |
 | [models/game-properties.md](models/game-properties.md) | what the game needs beyond geometry: vehicle weight, power, speed, draft and rope heights, per-variant figures, building plaza and block rules; declared on each design, checked, exported |
-| [site/catalog-site.md](site/catalog-site.md) | the factory.railisland.com site: listing (table, cards, variant thumbnails rendered in the browser), sorting, search, 3D preview |
+| [site/catalog-site.md](site/catalog-site.md) | the factory.railisland.com site: listing (table, cards, variant thumbnails rendered in the browser), sorting, search, 3D preview, local dev without a build |
 
 `docs/specs/` and `docs/impl/` are planning records (a spec and the notes on how
 it was built), not reference.

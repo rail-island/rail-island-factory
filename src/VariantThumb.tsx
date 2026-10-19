@@ -33,7 +33,8 @@ export function VariantThumb(props: {
   createEffect(() => {
     const record = props.record;
     const params = props.params;
-    if (!visible()) return;
+    // an unmeasured `pnpm dev` record has no JS hash to key the render on yet (devMeasure.ts)
+    if (!visible() || record.pending) return;
     setUrl(null);
     setFailed(false);
     const req = variantThumb(record, params);

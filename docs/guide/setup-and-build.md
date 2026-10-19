@@ -2,7 +2,7 @@
 
 **Covers** - installing the project, the package scripts, what a build produces
 and where, and the test suite.
-**Code** - `package.json`, `vite.config.ts`, `tsconfig.json`, `generator/generate.ts`, `test/`
+**Code** - `package.json`, `vite.config.ts`, `generator/devServer.ts`, `tsconfig.json`, `generator/generate.ts`, `test/`
 **See also** - [deploy.md](deploy.md), [../models/export.md](../models/export.md),
 [../site/catalog-site.md](../site/catalog-site.md)
 
@@ -17,7 +17,7 @@ packages `pnpm.onlyBuiltDependencies` allows.
 | Script | What it does |
 |---|---|
 | `pnpm build:models` | runs the generator: writes `export/` (see [../models/export.md](../models/export.md)) |
-| `pnpm dev` | `build:models`, then the Vite dev server with `export/` as its publicDir |
+| `pnpm dev` | the Vite dev server, with no export folder: models are built on demand and measured and thumbnailed in the browser ([../site/catalog-site.md](../site/catalog-site.md), "Local dev") |
 | `pnpm build` | `build:models`, `tsc --noEmit`, then `vite build` into `dist/` |
 | `pnpm preview` | serves `dist/` locally |
 | `pnpm test` | Vitest, once |
@@ -27,7 +27,9 @@ packages `pnpm.onlyBuiltDependencies` allows.
 `export/`, `dist/` and `.wrangler/` are gitignored: everything in them is
 regenerated from the code. A cold full model build can take a few minutes to
 check and render every design; an unchanged design is not re-rendered at all
-(see [../models/export.md](../models/export.md)).
+(see [../models/export.md](../models/export.md)). `pnpm dev` does not run it: the
+dev server is ready in about a second and builds a model only when the page asks
+for it.
 
 ## Layout
 

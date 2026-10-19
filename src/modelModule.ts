@@ -22,6 +22,8 @@ export interface JsModule {
  */
 export const THREE_SUBSET = { Group, Mesh, BufferGeometry, BufferAttribute, MeshStandardMaterial, DoubleSide, AnimationClip, QuaternionKeyframeTrack, VectorKeyframeTrack };
 const modules = new Map<string, Promise<JsModule>>();
+/** Each loaded module's text, by URL: what `pnpm dev` measures (devMeasure.ts). */
+const sources = new Map<string, string>();
 
 /** A model's standalone JS module, loaded once: fetched as text and imported from a blob URL. */
 export function jsModule(url: string): Promise<JsModule> {
@@ -30,7 +32,9 @@ export function jsModule(url: string): Promise<JsModule> {
     p = (async () => {
       const res = await fetch(url);
       if (!res.ok) throw new Error(`${url}: ${res.status}`);
-      const blob = URL.createObjectURL(new Blob([await res.text()], { type: "text/javascript" }));
+      const text = await res.text();
+      sources.set(url, text);
+      const blob = URL.createObjectURL(new Blob([text], { type: "text/javascript" }));
       try {
         return (await import(/* @vite-ignore */ blob)) as JsModule;
       } finally {
@@ -41,6 +45,12 @@ export function jsModule(url: string): Promise<JsModule> {
     modules.set(url, p);
   }
   return p;
+}
+
+/** A model's JS module and its text, loaded once (jsModule). */
+export async function jsModuleWithSource(url: string): Promise<{ mod: JsModule; text: string }> {
+  const mod = await jsModule(url);
+  return { mod, text: sources.get(url)! };
 }
 
 /**

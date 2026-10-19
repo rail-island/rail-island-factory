@@ -11,8 +11,9 @@ analyses, the offline thumbnail renderer and the contact sheet.
 
 ## What is written
 
-`pnpm build:models` (`generator/generate.ts`, also the first step of `pnpm build`
-and `pnpm dev`) writes the gitignored `export/`:
+`pnpm build:models` (`generator/generate.ts`, also the first step of `pnpm build`)
+writes the gitignored `export/`. `pnpm dev` neither writes nor reads it: it serves
+the same JS models and trees on demand ([../site/catalog-site.md](../site/catalog-site.md), "Local dev").
 
 | Path | What |
 |---|---|

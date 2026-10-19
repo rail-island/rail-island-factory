@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { buildSync } from "esbuild";
 import { defineConfig, type Plugin } from "vite";
 import solid from "vite-plugin-solid";
+import { devExport } from "./generator/devServer.ts";
 
 /**
  * Inline src/boot.ts (the loading line and the error box) into index.html as a
@@ -46,12 +47,14 @@ function socialPreview(): Plugin {
 }
 
 // The site is a static Solid SPA. Its data is the generator's export folder,
-// served as Vite's publicDir: `pnpm build:models` writes export/ (glb/, thumbs/,
+// served as Vite's publicDir: `pnpm build:models` writes export/ (js/, thumbs/,
 // catalog.json, skyscrapers.meta.json) and `vite build` copies it into dist/ as
 // it stands, so the deployed site serves the very files the game would import.
-export default defineConfig({
-  plugins: [solid(), inlineBoot(), socialPreview()],
-  publicDir: "export",
+// `pnpm dev` uses no export folder: generator/devServer.ts serves the data on
+// demand and the browser measures and renders the rest (docs/site/catalog-site.md).
+export default defineConfig(({ command }) => ({
+  plugins: [solid(), inlineBoot(), socialPreview(), devExport()],
+  publicDir: command === "serve" ? false : "export",
   build: {
     // three (~560 kB) is its own chunk, loaded only when a model page opens
     // (src/ModelDetail.tsx imports the viewer lazily) -- it is expected to be big.
@@ -70,4 +73,4 @@ export default defineConfig({
     // Some tests build whole families; 5 s is too tight on a small machine.
     testTimeout: 120_000,
   },
-});
+}));

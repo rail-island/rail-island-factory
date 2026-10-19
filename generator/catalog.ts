@@ -141,11 +141,23 @@ export interface CatalogRecord extends MetaEntry {
    * design declares none; the site then uses its category defaults.
    */
   openttd?: OpenttdProperties;
+  /**
+   * Set by `pnpm dev` (devExport.ts) on a record whose figures - the counts, the
+   * box, the JS sizes and hash, the rig and the side frame - are not measured
+   * yet: the site measures them from the JS model (src/devMeasure.ts) and drops
+   * the flag. Never in a built catalog.
+   */
+  pending?: true;
 }
 
 export interface ModelCatalog {
   version: 1;
   records: CatalogRecord[];
+  /**
+   * Set by `pnpm dev`: no thumbnail files and unmeasured records -- the site
+   * renders every thumbnail and measures every record in the browser.
+   */
+  dev?: true;
 }
 
 /** What the build measured for one model (see generate.ts). */

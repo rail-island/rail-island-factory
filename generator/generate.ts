@@ -209,7 +209,7 @@ export const DESIGNS: ReadonlyMap<string, ProceduralDesign> = new Map([...BUILDI
 const VEHICLE_IDS = new Set(ALL_VEHICLES.map((d) => d.id));
 
 /** A design's catalog fields: its own, else its family's (the vehicles' or the skyscrapers'). */
-function catalogFields(design: ProceduralDesign): CatalogFields {
+export function catalogFields(design: ProceduralDesign): CatalogFields {
   return design.catalog ?? (VEHICLE_IDS.has(design.id) ? VEHICLE_CATALOG : SKYSCRAPER_CATALOG);
 }
 
@@ -426,6 +426,25 @@ function listFiles(dir: string): string[] {
 }
 
 /**
+ * A design's source images in name order: its name under refs/<id>/ (a second or
+ * later folder's files under <folder>/) and the absolute path of the file in
+ * assets/. The export copies them (generateReferences); `pnpm dev` serves them
+ * from assets/ as they are (devExport.ts).
+ */
+export function designReferenceFiles(design: ProceduralDesign, assetsDir = ASSETS_DIR): Array<{ name: string; file: string }> {
+  const out: Array<{ name: string; file: string }> = [];
+  const folders = typeof design.references === "string" ? [design.references] : (design.references ?? []);
+  for (const [k, folder] of folders.entries()) {
+    const src = path.join(assetsDir, folder);
+    for (const file of listFiles(src)) {
+      const name = k === 0 ? file : `${folder}/${file}`;
+      if (REFERENCE_EXTENSIONS.some((ext) => name.toLowerCase().endsWith(ext))) out.push({ name, file: path.join(src, file) });
+    }
+  }
+  return out;
+}
+
+/**
  * Copies each design's source images (assets/<references>/, any depth, the
  * REFERENCE_EXTENSIONS; a second or later folder's files under <folder>/) to
  * `dir`/refs/<id>/, rewriting a file only when its
@@ -442,20 +461,14 @@ export function generateReferences(
   const keep = new Set<string>();
   for (const design of designs) {
     const images: ReferenceImage[] = [];
-    const folders = typeof design.references === "string" ? [design.references] : (design.references ?? []);
-    for (const [k, folder] of folders.entries()) {
-      const src = path.join(assetsDir, folder);
-      for (const file of listFiles(src)) {
-        const name = k === 0 ? file : `${folder}/${file}`;
-        if (!REFERENCE_EXTENSIONS.some((ext) => name.toLowerCase().endsWith(ext))) continue;
-        const bytes = fs.readFileSync(path.join(src, file));
-        const rel = `${design.id}/${name}`;
-        const target = path.join(refsDir, rel);
-        fs.mkdirSync(path.dirname(target), { recursive: true });
-        if (!fs.existsSync(target) || !bytes.equals(fs.readFileSync(target))) fs.writeFileSync(target, bytes);
-        keep.add(rel);
-        images.push({ name, url: `${REFS_DIR}/${rel}`, bytes: bytes.length });
-      }
+    for (const { name, file } of designReferenceFiles(design, assetsDir)) {
+      const bytes = fs.readFileSync(file);
+      const rel = `${design.id}/${name}`;
+      const target = path.join(refsDir, rel);
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      if (!fs.existsSync(target) || !bytes.equals(fs.readFileSync(target))) fs.writeFileSync(target, bytes);
+      keep.add(rel);
+      images.push({ name, url: `${REFS_DIR}/${rel}`, bytes: bytes.length });
     }
     out.set(design.id, images);
   }
