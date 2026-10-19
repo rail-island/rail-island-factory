@@ -44,13 +44,13 @@ describe("the tree species", () => {
   });
 
   // The game's budgets before the move (test/fixtures/tree-baseline.json, measured off
-  // its own builder): low may grow 5%, high and coarse not at all -- a forest is
-  // instanced by the thousand, so the stylised rework is paid for with shape, not triangles.
+  // its own builder): low may grow 5%, high and coarse not at all, except the
+  // redesigned oak's explicit 2,000-triangle allowance.
   it.each([...SPECIES])("keeps %s within the game's tree budgets", (species) => {
     const ref = baseline as Record<string, { tris: number }>;
     expect(built(species, "coarse").triangleCount()).toBeLessThanOrEqual(ref[`${species}:coarse`]!.tris);
     expect(built(species, "low").triangleCount()).toBeLessThanOrEqual(Math.floor(ref[`${species}:low`]!.tris * 1.05));
-    expect(built(species, "high").triangleCount()).toBeLessThanOrEqual(ref[`${species}:high`]!.tris);
+    expect(built(species, "high").triangleCount()).toBeLessThanOrEqual(species === "oak" ? 2000 : ref[`${species}:high`]!.tris);
   });
 
   it.each([...SPECIES])("bakes light and shade into %s at every level", (species) => {

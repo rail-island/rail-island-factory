@@ -27,6 +27,8 @@ unchanged: the port reproduced every species at every level to the triangle and 
 float32 precision against the game's own builder, measured before the move
 (`test/fixtures/tree-baseline.json`). They were then restyled here (below); the
 fixture stays as the budget the restyle had to fit.
+The oak's later full-detail redesign has an explicit 2,000-triangle allowance;
+its low and coarse levels retain their original budgets and geometry.
 
 A tree is **base-anchored at y = 0** and has exactly **two materials**, `trunk` and
 `foliage`: the game merges a species into one geometry with two groups and draws a
@@ -99,6 +101,13 @@ larger than life and ragged outlines. The trees take the parts a mesh can carry:
 - **Brighter, more saturated colours** (`TREE_COLORS`), since the shading now darkens
   most of the crown below them.
 
+The full-detail **oak** uses 1,980 triangles: a crooked, fluted trunk with a root
+flare and five spreading roots, five bent main limbs with secondary forks, and
+sixteen rounded foliage masses interlocked into an uneven dome. Fourteen smaller
+leaf bunches break up the perimeter. Each cluster also has its own baked
+underside-to-top shading. The high model still fits the original low model's
+envelope, keeping the tree's established game scale and distant levels.
+
 The game adds the rest per instance: the woods type's `width`, `lean`, `shade` and
 `hue` per tree ([woods.md](woods.md)).
 
@@ -123,8 +132,9 @@ the JS model's `buildCoarse` ([../site/catalog-site.md](../site/catalog-site.md)
 ## Budgets and tests
 
 `test/trees.test.ts`: the species list; the game's budgets (`low` at most 5% over the
-fixture, `high` and `coarse` not at all); light and shade baked at every level, the
-crown's top lighter than its underside; coarse at most 20 and at least three times
+fixture, `high` and `coarse` not at all, except oak `high` capped at 2,000); light and
+shade baked at every level, the crown's top lighter than its underside; coarse at
+most 20 and at least three times
 cheaper than low, high at least three times low; grounded, same size at every level,
 coarse box equal to low; closed coarse solids; only palm and willow foliage
 double-sided; `trees.js` building every species and level with the designs' own
