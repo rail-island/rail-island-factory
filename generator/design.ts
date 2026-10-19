@@ -73,7 +73,7 @@ export interface ProceduralDesign {
    */
   buildCoarse?: (params?: ParamValues) => MeshBuilder;
   /** Total distant-mesh budget; defaults to the family policy in lod.ts. */
-  lodTriangles?: 100 | 200 | 300 | 500;
+  lodTriangles?: 100 | 200 | 300 | 500 | 12000;
   /**
    * The names of the parameters that only recolour the model (a roof or wall
    * colour): they change no geometry, so the tests vary them one value at a

@@ -7,6 +7,8 @@ import { WOODS } from "../generator/woods";
 import { MAX_TREES_PER_CELL, cellSeed, draw, newSlot, same, type CellContext, type TreeSlot } from "../generator/woodsApi";
 import { SPECIES } from "../generator/trees";
 import { bundleWoods, woodsMeta } from "../generator/woodsExport";
+import { WOODS_MODELS, woodsModelId } from "../generator/woodsModels";
+import { glbStats } from "../generator/glbStats";
 
 // Stored in the game's saved maps (by name): a shipped name is never renamed or removed.
 const SHIPPED = [
@@ -278,4 +280,40 @@ describe("the woods export", () => {
       expect(b.slice(0, n)).toEqual(a.slice(0, n));
     }
   }, 30_000);
+});
+
+describe("the woods models (site catalog)", () => {
+  it("is one proc-woods-<name> design per woods type, with the type's parameters", () => {
+    expect(WOODS_MODELS.map((d) => d.id)).toEqual(WOODS.map(({ design }) => woodsModelId(design.name)));
+    for (const d of WOODS_MODELS) {
+      const w = WOODS.find(({ design }) => woodsModelId(design.name) === d.id)!.design;
+      expect(d.catalog?.category).toBe("Woods");
+      expect(d.params?.map((p) => p.name)).toEqual(w.params.map((p) => p.name));
+      expect(d.params?.[0]?.name).toBe("density");
+      for (const p of d.params ?? []) expect(p.values.map((v) => v.value)).toContain(p.default);
+    }
+  });
+
+  it("builds every parameter choice, denser with density and within the LOD budget", () => {
+    for (const d of WOODS_MODELS) {
+      const [density, own] = d.params!;
+      for (const { value: v } of own!.values) {
+        const sparse = d.build({ density: "sparse", [own!.name]: v }).triangleCount();
+        const dense = d.build({ density: "dense", [own!.name]: v }).triangleCount();
+        expect(dense, `${d.id} ${v}`).toBeGreaterThan(sparse);
+        expect(d.buildLod({ density: "dense", [own!.name]: v }).triangleCount(), `${d.id} ${v}`).toBeLessThanOrEqual(d.lodTriangles!);
+      }
+      expect(density!.values.map((v) => v.value)).toEqual(["sparse", "normal", "dense"]);
+    }
+  });
+
+  it("stands on the ground and rejects unknown values, like every design", () => {
+    for (const d of WOODS_MODELS) {
+      const glb = d.build({ density: "dense" }).toGlb(d.id);
+      // a leaning tree is lifted so its trunk's foot does not sink below the ground
+      expect(glbStats(glb).min[1], d.id).toBeCloseTo(0, 5);
+      expect(() => d.build({ variant: "nope" }), d.id).toThrow();
+      expect(() => d.build({ density: "nope" }), d.id).toThrow();
+    }
+  });
 });

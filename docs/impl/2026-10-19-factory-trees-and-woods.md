@@ -43,7 +43,7 @@ Area: rail-island-factory (trees, woods, export, site); rail-island-webapp (wood
   - grove thumbnails `thumbs/woods-<name>.png` (built with `woodsGrove.ts`, cached by
     hash).
 - **Site.** A "Trees" chip, and a woods gallery above the tree species
-  (`src/WoodsGallery.tsx`).
+  (`src/WoodsGallery.tsx`; replaced by the Woods category, follow-up 4).
 - **Docs.** `docs/models/trees.md` and `docs/models/woods.md` are new, with rows in
   the index. `export.md`, `js-format.md`, `lod.md`, `catalog-site.md` and `AGENTS.md`
   are updated.
@@ -118,6 +118,15 @@ Area: rail-island-factory (trees, woods, export, site); rail-island-webapp (wood
    variant; the toolbar names it "Pine Forest (Dense, Young)". This extends the spec's
    storage decision (a name table) to name-and-parameter keys, as asked.
 
+4. **Woods category on the site.** Every woods type is a catalog design,
+   `proc-woods-<name>` (`generator/woodsModels.ts`): its model is the type's grove
+   (trees at `low`, LOD at `coarse`, at most 12,000 triangles), its parameters are the
+   type's. A **Woods** chip lists them; a model page shows the grove in 3D with the
+   usual parameter selector, and the thumbnail view shows every combination. The
+   woods gallery that used to appear above the tree species when the Trees chip was
+   picked (`src/WoodsGallery.tsx`) is removed, and with it the separate grove
+   thumbnails `thumbs/woods-<name>.png`. No game meta lists the woods designs.
+
 ## How to test
 
 **Automated coverage.**
@@ -154,7 +163,11 @@ create a new island with Woods set to "Woodlands".
 8. Draw a row of trees along a road (line decoration). The trees appear, using the
    new species and colours.
 
-9. On the factory site (`pnpm dev`), pick the Trees chip and open `proc-tree-oak`.
+9. On the factory site (`pnpm dev`), pick the Woods chip and open
+   `proc-woods-park`. Set Density to Dense and Planting to Conifers: the grove
+   redraws denser and coniferous. Switch to Thumbnails: every combination is listed.
+   Then pick the Trees chip: only the tree species are listed, no woods cards.
+   Open `proc-tree-oak`.
    Set Level of detail to Coarse: a 20-triangle tree with the same outline appears,
    and the triangle count reads "(coarse)". Step to a building: it shows its LOD.
 
@@ -200,8 +213,6 @@ create a new island with Woods set to "Woodlands".
 - **The 255-variant cap cannot be reached yet.** All the current factory types and
   values together make 117 combinations, so the "too many variants" message is only
   reachable once the factory grows; it is not covered by a test.
-- **Grove thumbnails show defaults.** The site's grove thumbnail of each type is at
-  its default parameters; the card lists the parameters but shows no variant.
 - **Orchard rows.** The orchard's row layout is hard to see at 0.86 trees per cell.
 
 ## Recommended follow-ups

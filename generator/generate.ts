@@ -89,7 +89,8 @@ import { CITY_BUS_DESIGNS, KAROSA_DESIGNS } from "./buses.ts";
 import { VILLAGE_HOUSES } from "./village.ts";
 import { COMMERCIAL_BUILDINGS } from "./commercial.ts";
 import { TREES } from "./trees.ts";
-import { GROVE_THUMB_PREFIX, generateWoods } from "./woodsExport.ts";
+import { WOODS_MODELS } from "./woodsModels.ts";
+import { generateWoods } from "./woodsExport.ts";
 import { checkOpenttdProperties, type CatalogFields, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { buildLodModel } from "./lodModel.ts";
 import { lodBudget } from "./lod.ts";
@@ -131,7 +132,7 @@ const THUMB_VERSION_FILE = ".version";
  * functions (the JS bundle's entry) and the meta file it is listed in: the
  * buildings', the village houses' own, or the vehicles'.
  */
-const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: string; meta: "buildings" | "village" | "vehicles" | "trees" }> = [
+const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: string; meta: "buildings" | "village" | "vehicles" | "trees" | "woods" }> = [
   { designs: SKYSCRAPERS, source: "skyscrapers.ts", meta: "buildings" },
   { designs: COMMERCIAL, source: "commercialStreets.ts", meta: "buildings" },
   { designs: COMMERCIAL_BUILDINGS, source: "commercial.ts", meta: "buildings" },
@@ -179,6 +180,8 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: GERMAN_COACHES, source: "germanCoaches.ts", meta: "vehicles" },
   // the tree species: listed in woods.meta.json, not in a building or vehicle meta
   { designs: TREES, source: "trees.ts", meta: "trees" },
+  // the woods types as groves, for the site to browse: in no game meta
+  { designs: WOODS_MODELS, source: "woodsModels.ts", meta: "woods" },
 ];
 
 const FAMILIES = RAW_FAMILIES.map(f => ({ ...f, designs: f.designs.map(d => { d.id = proceduralId(d.id); return d; }) }));
@@ -193,8 +196,11 @@ export const ALL_VEHICLES: readonly ProceduralDesign[] = FAMILIES.filter((f) => 
 /** Every tree species (trees.ts, listed in woods.meta.json). */
 export const TREE_DESIGNS: readonly ProceduralDesign[] = FAMILIES.filter((f) => f.meta === "trees").flatMap((f) => f.designs);
 
-/** Every design, by id: the buildings, the village houses (village.meta.json), the vehicles, then the trees. */
-export const DESIGNS: ReadonlyMap<string, ProceduralDesign> = new Map([...BUILDINGS, ...VILLAGE_DESIGNS, ...ALL_VEHICLES, ...TREE_DESIGNS].map((d) => [d.id, d]));
+/** Every woods type as a grove model (woodsModels.ts), for the site. */
+export const WOODS_DESIGNS: readonly ProceduralDesign[] = FAMILIES.filter((f) => f.meta === "woods").flatMap((f) => f.designs);
+
+/** Every design, by id: the buildings, the village houses (village.meta.json), the vehicles, the trees, then the woods groves. */
+export const DESIGNS: ReadonlyMap<string, ProceduralDesign> = new Map([...BUILDINGS, ...VILLAGE_DESIGNS, ...ALL_VEHICLES, ...TREE_DESIGNS, ...WOODS_DESIGNS].map((d) => [d.id, d]));
 
 const VEHICLE_IDS = new Set(ALL_VEHICLES.map((d) => d.id));
 
@@ -374,8 +380,6 @@ export function generateModels(
   writeIfChanged(sourcesFile, `${JSON.stringify(sorted, null, 2)}\n`);
   for (const [sub, ext] of [[thumbDir, ".png"], [treeDir, ".json"]] as const) {
     for (const name of fs.readdirSync(sub)) {
-      // a grove thumbnail (woods-<name>.png) belongs to generateWoods, not to a design
-      if (name.startsWith(GROVE_THUMB_PREFIX)) continue;
       if (name !== THUMB_SOURCES_FILE && name.endsWith(ext) && !known.has(name.slice(0, -ext.length))) fs.rmSync(path.join(sub, name));
     }
   }

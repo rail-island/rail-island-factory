@@ -1,6 +1,6 @@
 // A woods type's grove: its distribution function run over a small patch of cells
-// and every tree it grows baked into one model -- the woods' preview on the site
-// (export/thumbs/woods-<name>.png) and in the headless review renders. The patch is
+// and every tree it grows baked into one model -- the woods models' geometry on
+// the site (woodsModels.ts, proc-woods-<name>) and the headless review renders. The patch is
 // a rounded wood on flat ground with open grass around it, so the function shows
 // its interior, its edge and what it does with a lone cell.
 //
@@ -121,13 +121,21 @@ export function buildGrove(woods: WoodsDesign, opts: GroveOptions = {}): MeshBui
   const m = new MeshBuilder(palette);
   if (opts.ground !== false) {
     const S = CELL_STUDS;
-    for (let gz = 0; gz < cells; gz++) {
-      for (let gx = 0; gx < cells; gx++) {
-        const mat = wooded(gx, gz, cells, radius) ? "floor" : "grass";
-        m.quad(mat, [gx * S, 0, gz * S], [gx * S, 0, (gz + 1) * S], [(gx + 1) * S, 0, (gz + 1) * S], [(gx + 1) * S, 0, gz * S]);
+    m.scope("ground", () => {
+      for (let gz = 0; gz < cells; gz++) {
+        for (let gx = 0; gx < cells; gx++) {
+          const mat = wooded(gx, gz, cells, radius) ? "floor" : "grass";
+          m.quad(mat, [gx * S, 0, gz * S], [gx * S, 0, (gz + 1) * S], [(gx + 1) * S, 0, (gz + 1) * S], [(gx + 1) * S, 0, gz * S]);
+        }
       }
-    }
+    });
   }
+  m.scope("trees", () => plant(m, trees, parts, detail));
+  return m;
+}
+
+/** Bakes every tree of the grove into `m`, placed and coloured the way the game does. */
+function plant(m: MeshBuilder, trees: Array<TreeSlot & { cx: number; cz: number }>, parts: Map<Species, ReturnType<typeof treeParts>>, detail: TreeDetail): void {
   for (const t of trees) {
     const s = t.species as Species;
     const p = parts.get(s)!;
@@ -136,11 +144,17 @@ export function buildGrove(woods: WoodsDesign, opts: GroveOptions = {}): MeshBui
     const cr = Math.cos(rot), sr = Math.sin(rot);
     const cl = Math.cos(t.lean), sl = Math.sin(t.lean);
     const tint = instanceTint(t.shade, t.hue);
+    // a lean tips one side of the trunk's foot below the ground: lift the tree by that much
+    let dip = 0;
+    for (const g of [...p.trunk, ...p.foliage]) {
+      for (let i = 0; i < g.count; i++) dip = Math.min(dip, g.y(i) * k * cl - g.z(i) * k * t.width * sl);
+    }
+    const lift = 0.02 - dip;
     // scale, lean about the tree's local X, turn about Y, move to the cell
     const place = (x: number, y: number, z: number): P3 => {
       const sx = x * k * t.width, sy = y * k, sz = z * k * t.width;
       const ly = sy * cl - sz * sl, lz = sy * sl + sz * cl;
-      return [cr * sx + sr * lz + t.cx, ly + 0.02, -sr * sx + cr * lz + t.cz];
+      return [cr * sx + sr * lz + t.cx, ly + lift, -sr * sx + cr * lz + t.cz];
     };
     const emit = (mat: string, list: Geo[]) => {
       for (const g of list) {
@@ -157,5 +171,4 @@ export function buildGrove(woods: WoodsDesign, opts: GroveOptions = {}): MeshBui
     emit(`${s}-trunk`, p.trunk);
     emit(`${s}-foliage`, p.foliage);
   }
-  return m;
 }

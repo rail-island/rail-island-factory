@@ -28,6 +28,7 @@ and materials, including a complete articulated bus. It is not a per-mesh allowa
 | An articulated vehicle or trainset (its full rig has n sections) | min(300, 100 n) |
 | Aircraft | 200 |
 | Historical buildings (including the castle), towers and skyscrapers | 500 |
+| Woods models (a grove of a few hundred coarse trees, the site's only; [woods.md](woods.md)) | 12,000 |
 
 A design can set `lodTriangles` to override its family policy (the TGV does:
 its default build is the lone power car, its sets have up to six cars). Stable model ids,

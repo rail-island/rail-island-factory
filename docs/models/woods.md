@@ -6,7 +6,7 @@ the contract the game calls them with (the cell context, the output
 slots, the four-tree limit, the hash), the forest rule they are written in, their
 standalone modules, `woods.meta.json`, the grove previews and the tests.
 **Code** - `generator/woods.ts`, `generator/woodsApi.ts`, `generator/woodsExport.ts`,
-`generator/woodsGrove.ts`, `src/WoodsGallery.tsx`, `test/woods.test.ts`
+`generator/woodsGrove.ts`, `generator/woodsModels.ts`, `test/woods.test.ts`
 **See also** - [trees.md](trees.md), [export.md](export.md),
 [../site/catalog-site.md](../site/catalog-site.md), the game's
 `docs/rendering/woods.md` and `docs/tooling/factory-import.md`, [parameters.md](parameters.md)
@@ -130,8 +130,6 @@ a woods name**: never rename or remove a shipped one. Titles are display text.
 - `woods.meta.json`: `maxTreesPerCell`, `treesModule`, every tree species (`species`, `id`) and every
   woods type (`name`, `label`, `swatch`, `floor`, `params`, `module`), each list sorted by key, no
   numeric ids -- the game maps names to the ids its maps store;
-- `thumbs/woods-<name>.png`: the grove preview (below), re-rendered only when its
-  model's hash changes (`thumbs/.woods.json`).
 
 The game imports all of it with `pnpm import:factory` (its
 `docs/tooling/factory-import.md`).
@@ -144,11 +142,23 @@ the way the game places it: the cell's centre plus the slot's offset, scaled to 
 height against the species' height at that level, stretched by `width`, tilted by
 `lean` about the tree's own X axis after its turn, and coloured by `shade` and `hue`
 with the game's instance-colour formula (`instanceTint`). The ground is the woods
-type's floor under the wood and grass outside it. The site shows the groves above the
-tree species when the **Trees** chip is picked (`src/WoodsGallery.tsx`), each with its
-name, swatch and floor colour.
-The grove thumbnails are at each type's default parameters; `buildGrove` takes
-`params` for any other choice. The site's card lists the type's parameters and values.
+type's floor under the wood and grass outside it.
+
+## The woods models
+
+`woodsModels.ts` makes every woods type a catalog design, `proc-woods-<name>`
+(category and group `Woods`), whose model is its grove: so the site browses the
+woods like any other model -- the **Woods** chip, a model page with the 3D preview
+and the parameter selector, the variant thumbnails
+([../site/catalog-site.md](../site/catalog-site.md)). The design's parameters are
+the woods type's (density first), and `build(params)` runs `buildGrove` with them.
+A grove plants a few hundred trees, so the full model draws them at the species'
+`low` level and its LOD at `coarse` (at most 12,000 triangles, the dense
+combinations included); the species' own pages show the `high` tree.
+
+These designs are the site's. They get a JS model and a thumbnail like every
+design, but no game meta lists them: the game plants its woods from the woods
+modules above, not from a grove model.
 
 ## Tests
 
@@ -160,5 +170,7 @@ with a sane height, width, lean, shade and hue; determinism; `sample`; the relat
 a cell, a thin park, a treeline, orchard rows, larch groves); the parameters (density
 first with three grades, more trees the denser the grade for every type, the
 four-tree limit for every combination of every type, lenient resolution, each type's
-own parameter changing what grows); the meta; and a bundled module growing the same
-trees as the source, at its defaults and through `variant`.
+own parameter changing what grows); the meta; a bundled module growing the same
+trees as the source, at its defaults and through `variant`; and the woods models
+(one per type, the type's parameters, every combination built, denser with
+density and within the LOD budget).

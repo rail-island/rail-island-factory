@@ -98,12 +98,13 @@ missing file with `index.html`, so the response type is checked too).
 - **The toolbar** (sticky) holds the search box, a sort `<select>` over every
   column, a direction toggle, the **Table / Thumbnails** layout switch, the
   filter chip rows and the totals (models and triangles listed).
-- **Trees.** The tree species (category `Trees`) have a first-row chip of their
-  own. Picked, it shows the **woods types** above them (`src/WoodsGallery.tsx`, read
-  from `/woods.meta.json`): one card per type with its grove preview
-  (`thumbs/woods-<name>.png`), its stable name and its swatch and forest-floor
-  colours ([../models/woods.md](../models/woods.md)). A tree's page also offers a
-  *Coarse (distant forest)* level of detail ([../models/lod.md](../models/lod.md)).
+- **Trees and Woods.** The tree species (category `Trees`) have a first-row chip
+  of their own; a tree's page also offers a *Coarse (distant forest)* level of
+  detail ([../models/lod.md](../models/lod.md)). The **Woods** chip (category
+  `Woods`) lists the woods types as grove models, `proc-woods-<name>`: a model page
+  shows a type's grove in 3D with the usual parameter selector (density and the
+  type's own parameter), and the thumbnail view shows every parameter combination
+  ([../models/woods.md](../models/woods.md)).
 
 ## The thumbnail view
 

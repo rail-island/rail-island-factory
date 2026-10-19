@@ -5,11 +5,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import crypto from "node:crypto";
 import { build } from "esbuild";
-import { PNG } from "pngjs";
-import { buildGrove } from "./woodsGrove.ts";
-import { renderGlbThumb } from "./renderGlbThumb.ts";
 import { WOODS } from "./woods.ts";
 import { SPECIES, treeId } from "./trees.ts";
 import { MAX_TREES_PER_CELL, type WoodsParam } from "./woodsApi.ts";
@@ -103,60 +99,6 @@ export async function bundleWoods(source: string, name: string): Promise<string>
   return result.outputFiles[0]!.text;
 }
 
-/** The grove thumbnails' prefix in thumbs/: woods-<name>.png (never a design id, which starts proc-). */
-export const GROVE_THUMB_PREFIX = "woods-";
-const GROVE_SIZE = 512;
-/** Beside the thumbnails: each grove's model hash, so an unchanged grove is not re-rendered. */
-const GROVE_SOURCES_FILE = ".woods.json";
-
-/** `png` cut to its drawn pixels (a margin kept) and fitted, centred, into a `size` square. */
-export function cropToContent(png: PNG, size: number, margin = 0.04): PNG {
-  let x0 = png.width, y0 = png.height, x1 = -1, y1 = -1;
-  for (let y = 0; y < png.height; y++) {
-    for (let x = 0; x < png.width; x++) {
-      if (png.data[(y * png.width + x) * 4 + 3]! === 0) continue;
-      if (x < x0) x0 = x;
-      if (x > x1) x1 = x;
-      if (y < y0) y0 = y;
-      if (y > y1) y1 = y;
-    }
-  }
-  const out = new PNG({ width: size, height: size });
-  if (x1 < 0) return out;
-  const side = Math.max(x1 - x0 + 1, y1 - y0 + 1) * (1 + 2 * margin);
-  const cx = (x0 + x1 + 1) / 2, cy = (y0 + y1 + 1) / 2;
-  const k = side / size;
-  // box-filter each target pixel over the source pixels it covers
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      const sx0 = cx - side / 2 + x * k, sy0 = cy - side / 2 + y * k;
-      let r = 0, g = 0, b = 0, a = 0, n = 0;
-      for (let sy = Math.floor(sy0); sy < Math.ceil(sy0 + k); sy++) {
-        for (let sx = Math.floor(sx0); sx < Math.ceil(sx0 + k); sx++) {
-          n++;
-          if (sx < 0 || sy < 0 || sx >= png.width || sy >= png.height) continue;
-          const o = (sy * png.width + sx) * 4;
-          const al = png.data[o + 3]!;
-          r += png.data[o]! * al; g += png.data[o + 1]! * al; b += png.data[o + 2]! * al; a += al;
-        }
-      }
-      const o = (y * size + x) * 4;
-      if (a > 0) {
-        out.data[o] = Math.round(r / a);
-        out.data[o + 1] = Math.round(g / a);
-        out.data[o + 2] = Math.round(b / a);
-      }
-      out.data[o + 3] = n ? Math.round(a / n) : 0;
-    }
-  }
-  return out;
-}
-
-/** A woods type's grove thumbnail: the grove at high detail, three-quarter view, cropped to it. */
-export function renderGroveThumb(glb: Uint8Array, size = GROVE_SIZE): PNG {
-  return cropToContent(renderGlbThumb(glb, size * 2), size);
-}
-
 /**
  * Every tree species in ONE standalone module, `trees.js`: the tree code once
  * instead of fourteen times. The per-species js/proc-tree-<species>.js files stay
@@ -214,23 +156,6 @@ export async function generateWoods(dir: string): Promise<WoodsMeta> {
     keep.add(`${design.name}.js`);
   }
   for (const f of fs.readdirSync(woodsDir)) if (!keep.has(f)) fs.rmSync(path.join(woodsDir, f));
-  // the grove thumbnails, re-rendered only when a grove's model changed
-  const thumbDir = path.join(dir, "thumbs");
-  fs.mkdirSync(thumbDir, { recursive: true });
-  const sourcesFile = path.join(thumbDir, GROVE_SOURCES_FILE);
-  const previous: Record<string, string> = fs.existsSync(sourcesFile) ? JSON.parse(fs.readFileSync(sourcesFile, "utf8")) : {};
-  const sources: Record<string, string> = {};
-  for (const { design } of WOODS) {
-    const glb = buildGrove(design).toGlb(`Rail Island woods grove (${design.name})`);
-    const hash = crypto.createHash("sha256").update(glb).digest("hex");
-    sources[design.name] = hash;
-    const file = path.join(thumbDir, `${GROVE_THUMB_PREFIX}${design.name}.png`);
-    if (previous[design.name] !== hash || !fs.existsSync(file)) fs.writeFileSync(file, PNG.sync.write(renderGroveThumb(glb)));
-  }
-  for (const f of fs.readdirSync(thumbDir)) {
-    if (f.startsWith(GROVE_THUMB_PREFIX) && f.endsWith(".png") && !(f.slice(GROVE_THUMB_PREFIX.length, -4) in sources)) fs.rmSync(path.join(thumbDir, f));
-  }
-  writeIfChanged(sourcesFile, `${JSON.stringify(Object.fromEntries(Object.entries(sources).sort(([a], [b]) => a.localeCompare(b))), null, 2)}\n`);
   writeIfChanged(path.join(dir, TREES_FILE), await bundleTrees());
   const meta = woodsMeta();
   writeIfChanged(path.join(dir, WOODS_META_FILE), `${JSON.stringify(meta, null, 2)}\n`);

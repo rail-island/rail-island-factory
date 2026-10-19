@@ -14,7 +14,6 @@ import { ModelCards } from "./ModelCards";
 import { ModelVariants } from "./ModelVariants";
 import { ModelDetail } from "./ModelDetail";
 import { ExportPanel } from "./ExportPanel";
-import { WoodsGallery } from "./WoodsGallery";
 import { EMPTY_EXPORT, addEntry, entryFor, hasEntry, loadExport, saveExport, type ExportState } from "./exportList";
 import logoUrl from "./rail-island-logo.webp";
 
@@ -240,9 +239,6 @@ export function App() {
                 <b>{listed().length}</b> models &middot; <b>{totalTris().toLocaleString("en-US")}</b> triangles
               </span>
             </div>
-            <Show when={view().group === "tree"}>
-              <WoodsGallery />
-            </Show>
             {listed().length === 0 ? (
               <p class="factory-muted">{view().q ? `No model matches "${view().q}".` : "No model matches the chosen filter."}</p>
             ) : view().layout === "thumbs" ? (

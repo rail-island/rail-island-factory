@@ -137,6 +137,7 @@ export const GROUPS: readonly Group[] = [
   { id: "cablecar", label: "Cable cars" },
   { id: "building", label: "Buildings" },
   { id: "tree", label: "Trees" },
+  { id: "woods", label: "Woods" },
 ];
 
 const GROUP_IDS = new Set(GROUPS.map((g) => g.id));
@@ -152,6 +153,8 @@ const VEHICLE_CATEGORIES: ReadonlyMap<string, string> = new Map([
   ["Cable car", "cablecar"],
   // not a vehicle, but a fleet of its own: the tree species (generator/trees.ts)
   ["Trees", "tree"],
+  // the woods types as grove models, browsed with their parameters (generator/woodsModels.ts)
+  ["Woods", "woods"],
 ]);
 
 /** The first-row chip: a tram is filed with the rail vehicles but listed with the trams. */
@@ -161,7 +164,7 @@ export function groupOf(r: CatalogRecord): string {
 }
 
 /** The fleets whose models are all one kind, so a second row would only split near-synonyms (ship / ships). */
-const NO_LEVEL2: ReadonlySet<string> = new Set(["ship", "aircraft", "cablecar", "tram", "tree"]);
+const NO_LEVEL2: ReadonlySet<string> = new Set(["ship", "aircraft", "cablecar", "tram", "tree", "woods"]);
 
 /** The chip a model lands on when it has no value for a level, so every model is reachable through the chips. */
 export const OTHER_CHIP = "other";
