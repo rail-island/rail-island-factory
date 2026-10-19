@@ -14,7 +14,7 @@
 //                                   stations), for the game to import
 //   export/village.meta.json        the village houses' catalog entries, likewise
 //   export/vehicles.meta.json       the vehicles' catalog entries, likewise
-//   export/woods/<name>.js          a woods type's distribution function (woodsExport.ts)
+//   export/woods.js                 every woods type and tree species in one module (woodsExport.ts)
 //   export/woods.meta.json          the woods types and the tree species, for the game
 //   export/catalog.json             what the site lists (catalog.ts)
 //

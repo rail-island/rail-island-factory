@@ -24,9 +24,8 @@ the same JS models and trees on demand ([../site/catalog-site.md](../site/catalo
 | `export/skyscrapers.meta.json` | one game-catalog entry per building (skyscrapers, commercial families, landmarks, stations) - the import contract |
 | `export/village.meta.json` | the same per village house, under `buildings` |
 | `export/vehicles.meta.json` | the same per vehicle, under `vehicles` |
-| `export/woods/<name>.js` | a woods type's distribution function, one standalone module each ([woods.md](woods.md)) |
+| `export/woods.js` | every woods type and every tree species in one standalone module, what the game plants its forests with ([woods.md](woods.md)) |
 | `export/woods.meta.json` | every woods type and every tree species, for the game to import ([woods.md](woods.md)) |
-| `export/trees.js` | every tree species in one module, `buildTree(THREE, species, detail)`, what the game draws its forests with ([trees.md](trees.md)) |
 | `export/catalog.json` | what the site lists |
 
 `export/` is also Vite's `publicDir`, so `vite build` copies it into `dist/` as

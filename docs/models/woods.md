@@ -4,7 +4,7 @@
 stable name, their parameters (density on every type, and one of each type's own),
 the contract the game calls them with (the cell context, the output
 slots, the four-tree limit, the hash), the forest rule they are written in, their
-standalone modules, `woods.meta.json`, the grove previews and the tests.
+single game module `woods.js` (with the trees), `woods.meta.json`, the grove previews and the tests.
 **Code** - `generator/woods.ts`, `generator/woodsApi.ts`, `generator/woodsExport.ts`,
 `generator/woodsGrove.ts`, `generator/woodsModels.ts`, `test/woods.test.ts`
 **See also** - [trees.md](trees.md), [export.md](export.md),
@@ -132,15 +132,19 @@ a woods name**: never rename or remove a shipped one. Titles are display text.
 
 `woodsExport.ts` writes, for a whole export only:
 
-- `woods/<name>.js`: one standalone ES module per type, no imports, exporting
-  `woods` (name, label, swatch, floor), `params`, `variant(values)`, the defaults'
-  `distribute` and `sample`, `MAX_TREES_PER_CELL` and `MASK_RADIUS` (esbuild; the types are marked pure so a module carries only its
-  own);
-- `trees.js`: every tree species in one module, which the game imports
-  ([trees.md](trees.md));
-- `woods.meta.json`: `maxTreesPerCell`, `treesModule`, every tree species (`species`, `id`) and every
-  woods type (`name`, `label`, `swatch`, `floor`, `params`, `module`), each list sorted by key, no
-  numeric ids -- the game maps names to the ids its maps store;
+- `woods.js`: **one** standalone ES module (esbuild, no imports) with every woods
+  type and every tree species -- the game plants its forests from it alone:
+  `WOODS` (each type's name, label, swatch, floor and params), `woodsType(name)`
+  returning `variant(values)` and the defaults' `distribute` and `sample`,
+  `MAX_TREES_PER_CELL`, `MASK_RADIUS`, `SPECIES`, and `buildTree(THREE, species,
+  detail, values?)` (detail `high`, `low`, `coarse` or `max`; `values` picks the
+  species design's parameters, such as its seed; [trees.md](trees.md)). There are
+  no separate tree or per-type modules; a build removes the `woods/` folder and
+  `trees.js` earlier exports wrote;
+- `woods.meta.json`: `maxTreesPerCell`, `module` (`woods.js`), every tree species
+  (`species`, `id`, `params`) and every woods type (`name`, `label`, `swatch`,
+  `floor`, `params`), each list sorted by key, no numeric ids -- the game maps names
+  to the ids its maps store;
 
 The game imports all of it with `pnpm import:factory` (its
 `docs/tooling/factory-import.md`).

@@ -40,8 +40,8 @@ woods type's `width`, `lean`, `shade` and `hue` per tree ([woods.md](woods.md)).
 
 | Level | Built by | Exported as | Triangles |
 |---|---|---|---|
-| `max` | `buildMax` | `buildMax(THREE, params)` | 524-9,844 (at most 10,000) |
-| `high` | the design's `build` | `build(THREE, params)` | 232-2,872 |
+| `max` | `buildMax` | `buildMax(THREE, params)` | 524-9,684 (at most 10,000) |
+| `high` | the design's `build` | `build(THREE, params)` | 232-2,702 |
 | `low` | `buildLod` | `build(THREE, params, true)` | 52-268 |
 | `coarse` | `buildCoarse` | `buildCoarse(THREE, params)` | 10-20 |
 
@@ -76,9 +76,9 @@ arrays, so a tree's JS model needs no three.js geometry classes. `treeMesh` (in
 - **A layout** (`Layout`), drawn from the seed's structural random stream only: a
   lofted stem, limbs and twigs (continuous lofts, no caps at elbows), leaf
   **clumps** (centre, radius, outward direction, tone; optionally stretched and
-  turned, as a conifer's needle pad), the **groups** of clumps each low-detail mass
-  encloses, and optionally willow **strands**, palm **fronds** and bark-coloured
-  **knobs** (the palm's crown and coconuts).
+  turned, as the Scots pine's flat pads), the **groups** of clumps each low-detail
+  mass encloses, and optionally willow **strands**, palm **fronds**, conifer needle
+  **sprays** and bark-coloured **knobs** (the palm's crown and coconuts).
 - **A style** (`BroadleafStyle`): material colours, a leaf and a bark palette,
   optional bark marks, roots, tufts per clump and leaves per tuft at high and Max,
   leaf length, width and rise (narrow needles for conifers), the low mass shape
@@ -94,7 +94,8 @@ From those every level is built the same way:
   faces); birch and aspen get a finer-divided stem with dark bark marks.
 - **Low**: the stem (three stations), the limbs that serve a mass, each run into its
   mass's centre, and one closed mass per group: a 20- or 24-face rounded solid, or
-  a 12-face cone for a conifer tier. A leader through the crown (birch, aspen,
+  for a conifer one 12-face cone per tier of sprays, from the tier's lowest needles
+  up into the tier above. A leader through the crown (birch, aspen,
   conifers) or a stool rising into the mound (bush) holds the masses instead.
 - **Coarse**: a 16-face dome over the low foliage's box (a six-face pyramid for the
   conifers, bare spikes for the dead tree) and a tetrahedral trunk whose base lies
@@ -119,9 +120,9 @@ backfaces; cores and masses are closed.
 | bush | mound of 7 clumps on short stems from a low stool | 9,684 | 1,022 | 64 | 20 |
 | hazel | 4 crooked stems from a stool, each ending in a clump and carrying one more | 9,586 | 776 | 144 | 20 |
 | orchard | short trunk forking into 4 spreading limbs under 9 round clumps | 9,338 | 848 | 124-148 | 20 |
-| pine | leader with 7 whorls of branches ending in needle pads, 33 pads and a top pad | 9,484 | 2,372 | 68 | 10 |
-| spruce | 8 dense, drooping whorls reaching low, dark blue-green, 36 pads | 9,572 | 2,872 | 68 | 10 |
-| larch | open conifer, 7 whorls of light pads (summer green, autumn gold) | 9,844 | 1,568 | 68 | 10 |
+| pine | irregular open crown on a bare trunk: 6 whorls of rising branches with needle tufts at the tips | 6,234 | 2,324 | 68 | 10 |
+| spruce | dense narrow cone: 10 whorls of long drooping boughs with side shoots, almost to the ground | 7,736 | 2,702 | 80 | 10 |
+| larch | airy: 8 whorls of thin arching branches hung with soft needle puffs (summer green, autumn gold) | 5,296 | 1,634 | 68 | 10 |
 | scotspine | tall bare crooked orange trunk, four boughs with flat pads: an umbrella crown | 9,140 | 992 | 168 | 20 |
 | palm | curving ringed trunk, crown knob and coconuts, 13 arching fronds of leaflet pairs | 5,108 | 774 | 137 | 20 |
 | deadtree | leaning broken-topped trunk, roots, four bare limbs forking into twigs | 524 | 232 | 52 | 16 |
@@ -132,10 +133,19 @@ Notes per family:
   low merges a limb's clumps into one mass. The willow's curtains are chains of
   leaves at high and Max and three-segment ribbons at low (so its low level stays
   double-sided).
-- **Conifers** (`conifers.ts`, `whorled`): whorls bunch toward the top; branch
-  count, reach and pad size shrink upward; each pad is stretched along its branch
-  and flattened, with narrow needles. Low stacks one cone per pair of whorls along
-  the leader. The two larch seasons share the shape and differ only in palette.
+- **Conifers** (`conifers.ts`): pine, spruce and larch carry **needle sprays**
+  instead of leaf clumps -- closed volumes lofted along a bough (`Spray`): a ragged
+  cross-section, flatter underneath than on top, tapering to the tip, lit on the
+  upper side and toward the tip (new growth) and dark underneath and inward, with a
+  warm or cool cast per spray. They follow the branch structure: the spruce's long
+  boughs droop and turn up at the tip, with two side shoots (four at Max) that
+  overlap into layers; the pine's thick visible branches rise and end in chunky
+  tufts, with two side twigs (three at Max) tufted the same way; the larch's thin
+  arching branches carry three soft hanging puffs (six at Max). Primary branches
+  come from the structural stream and Max's extra shoots from their own, so Max
+  never moves a branch. Each spray is drawn with 4-5 sides at high detail and 5-7
+  at Max. The two larch seasons share the shape and differ only in palette; the
+  Scots pine keeps flat needle pads (clumps) on four boughs.
 - **Palm** (`palm.ts`): fronds are midribs of long leaflets swept toward the tip so
   they overlap (11 pairs at high, 44 at Max); low draws each as a drooping ribbon.
 - **Dead tree** (`deadTree.ts`): no leaves -- its limbs and twigs are the foliage
@@ -173,15 +183,15 @@ its bearing through a bowed twig ending inside the clump. High detail: 378 wood,
 39 cores, 1,950 faceted leaves -- 9,374 (airy 7,554). Low: the trunk, five limbs
 and at most six masses (204). It keeps its fixed coarse crown (`coarseCrown`).
 
-## One module for the game
+## The game's module
 
-Each `js/proc-tree-<species>.js` is built from that design's own builders, which
-call only its species module and the kit (never the species dispatch), so it
-carries one species. The game, which needs all fourteen, imports **`trees.js`**
-instead (`woodsExport.ts` `bundleTrees`): every species in one standalone module,
-`buildTree(THREE, species, "high" | "low" | "coarse" | "max")` returning the same
-Group of `trunk` and `foliage` the per-species modules build (each species' default
-seed), and `SPECIES`; `woods.meta.json` names it (`treesModule`).
+The game takes its trees from **`woods.js`**, one standalone module with every
+woods type and every species (`woodsExport.ts` `bundleGame`, [woods.md](woods.md)):
+`buildTree(THREE, species, "high" | "low" | "coarse" | "max", values?)` returns the
+same Group of `trunk` and `foliage` the catalog design builds for those values (the
+default seed when absent), and `SPECIES` lists the keys. Each catalog
+`js/proc-tree-<species>.js` is built from that design's own builders, which call
+only its species module and the kit, so it carries one species.
 
 ## The coarse and Max previews
 
@@ -203,8 +213,8 @@ oak's 218).
 every level, the crown's top lighter than its underside; coarse at most 20 and at
 least three times cheaper than low, high at least three times low; grounded, same
 size at every level, coarse box equal to low; closed coarse solids; double-sided
-foliage where leaves are single-layer; `trees.js` building every species at every
-level, Max included, with the designs' own triangle counts.
+foliage where leaves are single-layer; `woods.js` building every species at every
+level, Max included, with the designs' own triangle counts and a seed's own shape.
 
 `test/treeSpecies.test.ts` checks every seed of every kit species but the oak at all
 four levels (budgets, two materials, grounding, matching bounds, determinism,

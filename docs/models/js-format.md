@@ -50,7 +50,7 @@ scene.add(build(THREE)); // a THREE.Group named after the model id
   must carry `DoubleSide`: without it the fronds draw one-sided, visible only from below. Other models are
   unchanged.
 - **The coarse level.** A tree's module also exports `buildCoarse(THREE)`, its third and coarsest level
-  ([lod.md](lod.md)). The game takes its trees from `trees.js` instead, every species in one module
+  ([lod.md](lod.md)). The game takes its trees from `woods.js` instead, every species and woods type in one module
   ([trees.md](trees.md)); the per-species files are the catalog's and the site's.
 - **Max detail.** A design with `buildMax` exports `buildMax(THREE, params)` and
   `maxTriangleBudget` (10,000). Currently every tree supplies it. It is optional,

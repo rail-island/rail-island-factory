@@ -39,6 +39,20 @@ export type Limb = {
   mass?: number;
   // Leave the limb out at low detail (a leader through the crown carries the masses).
   skipLow?: boolean;
+  // Draw the limb only at Max detail (finer side shoots).
+  maxOnly?: boolean;
+};
+// A conifer's needle spray: a closed volume lofted along a bough, `w` wide and
+// `h` deep at each point, tapering to the last point. Sprays of one `tier` merge
+// into one cone at low detail; `maxOnly` sprays are the extra shoots of Max.
+export type Spray = {
+  path: { at: P3; w: number; h: number }[];
+  tone: number;
+  tier: number;
+  seed: number;
+  // 0 for a bough, 1 for a side shoot or tuft: the style's detail per rank.
+  rank: number;
+  maxOnly?: boolean;
 };
 export type Clump = {
   at: P3;
@@ -78,6 +92,7 @@ export type Layout = {
   groups: number[][];
   strands?: Strand[];
   fronds?: Frond[];
+  sprays?: Spray[];
   // Knobs in the bark's material (a palm's crown and coconuts), at high and Max only.
   knobs?: { at: P3; r: number }[];
 };
@@ -112,6 +127,9 @@ export interface BroadleafStyle {
   woodFoliage?: boolean;
   // Leaflet pairs per frond at high and Max detail, and the low-detail ribbon's segments.
   fronds?: { high: number; max: number; lowSegments: number };
+  // Needle sprays: cross-section sides and stations along the bough at high and Max
+  // detail, and how ragged the cross-section is (a fraction of its radius).
+  sprays?: { high: [sides: number, stations: number][]; max: [sides: number, stations: number][]; ragged: number };
 }
 export interface BroadleafOptions {
   seed: number;
@@ -250,6 +268,57 @@ function ribbonOf(left: P3[], right: P3[]): Geo {
   }
   return new Geo(pos);
 }
+// A needle spray as a closed volume: rings of `sides` corners at `stations` points
+// along the bough (the last one a tip), flatter underneath than on top and ragged
+// by a per-corner wobble, so a bough reads as a soft needle mass rather than a
+// disc or a star. Each corner also returns how lit it is: the upper side and the
+// outer end (new growth) light, the underside and the inner end dark.
+function sprayVolume(s: Spray, sides: number, stations: number, ragged: number): { geo: Geo; light: number[] } {
+  const along = (u: number) => {
+    const x = u * (s.path.length - 1), i = Math.min(s.path.length - 2, Math.floor(x)), t = x - i;
+    const a = s.path[i]!, b = s.path[i + 1]!;
+    return { at: mix(a.at, b.at, t), w: a.w + (b.w - a.w) * t, h: a.h + (b.h - a.h) * t };
+  };
+  const rings: P3[][] = [], ringLight: number[][] = [], centres: P3[] = [];
+  for (let i = 0; i < stations - 1; i++) {
+    const u = i / (stations - 1), p = along(u);
+    const tangent = unit(sub(along(Math.min(1, u + 0.05)).at, along(Math.max(0, u - 0.05)).at));
+    const side = Math.abs(tangent[1]) > 0.95 ? [1, 0, 0] as P3 : unit(cross(tangent, [0, 1, 0]));
+    const up = cross(side, tangent);
+    const ring: P3[] = [], light: number[] = [];
+    for (let k = 0; k < sides; k++) {
+      const a = k * Math.PI * 2 / sides + 0.35 + i * 0.4, c = Math.cos(a), n = Math.sin(a);
+      const f = 1 + ragged * Math.sin(k * 2.39 + i * 1.7 + s.seed * 0.37) * Math.min(1, u * 3);
+      ring.push(add(p.at, add(mul(side, p.w * c * f), mul(up, p.h * n * (n > 0 ? 1 : 0.6) * f))));
+      light.push(0.5 * n + 0.35 * u);
+    }
+    rings.push(ring);
+    ringLight.push(light);
+    centres.push(p.at);
+  }
+  const tip = along(1).at, mass = mul(centres.reduce((m, c) => add(m, c), tip), 1 / (centres.length + 1));
+  const pos: number[] = [], light: number[] = [];
+  // Every face is wound outward from the bough's axis (caps: from the spray's middle).
+  const face = (a: P3, b: P3, c: P3, la: number, lb: number, lc: number, from: P3) => {
+    const n = cross(sub(b, a), sub(c, a)), m = mul(add(add(a, b), c), 1 / 3);
+    const flip = n[0] * (m[0] - from[0]) + n[1] * (m[1] - from[1]) + n[2] * (m[2] - from[2]) < 0;
+    pos.push(...a, ...(flip ? c : b), ...(flip ? b : c));
+    light.push(la, flip ? lc : lb, flip ? lb : lc);
+  };
+  const r0 = rings[0]!, base = centres[0]!;
+  for (let k = 0; k < sides; k++) {
+    const k1 = (k + 1) % sides;
+    face(base, r0[k]!, r0[k1]!, -0.2, ringLight[0]![k]!, ringLight[0]![k1]!, mass);
+    for (let i = 0; i < rings.length - 1; i++) {
+      const a = rings[i]!, b = rings[i + 1]!, la = ringLight[i]!, lb = ringLight[i + 1]!, axis = mix(centres[i]!, centres[i + 1]!, 0.5);
+      face(a[k]!, a[k1]!, b[k]!, la[k]!, la[k1]!, lb[k]!, axis);
+      face(a[k1]!, b[k1]!, b[k]!, la[k1]!, lb[k1]!, lb[k]!, axis);
+    }
+    const last = rings[rings.length - 1]!, ll = ringLight[rings.length - 1]!;
+    face(last[k]!, last[k1]!, tip, ll[k]!, ll[k1]!, 0.5, mass);
+  }
+  return { geo: new Geo(pos), light };
+}
 const linear = (x: number) => x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
 const rgbOf = (hex: string): P3 => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255) as P3;
 // Per-corner colours. Foliage light comes from height, from the direction the
@@ -276,6 +345,19 @@ function shade(style: BroadleafStyle, g: Geo, foliage: boolean, tone: number, to
         rgb = mix(rgb, [0.12, 0.11, 0.1], 0.85);
       g.col.push(...rgb.map((v, j) => linear(v) / linear(base[j]!)));
     }
+  }
+}
+// Colours for a needle spray from its per-corner light: height, the corner's own
+// light (upper side, outer end) and the spray's tone, through the leaf palette.
+function shadeSpray(style: BroadleafStyle, g: Geo, light: number[], tone: number, top: number): void {
+  const base = rgbOf(style.colors.foliage), [dark, mid, bright] = style.leaf;
+  g.col = [];
+  for (let i = 0; i < g.count; i++) {
+    const lit = clamp(0.12 + 0.45 * clamp(g.y(i) / top) + 0.32 * light[i]! + tone);
+    const rgb = lit < 0.6 ? mix(dark, mid, lit / 0.6) : mix(mid, bright, (lit - 0.6) / 0.4);
+    // A slight warm or cool cast per spray, so a crown is not one green.
+    const cast: P3 = [1 + tone * 0.8, 1 + tone * 0.3, 1 - tone * 0.9];
+    g.col.push(...rgb.map((v, j) => linear(Math.min(1, v * cast[j]!)) / linear(base[j]!)));
   }
 }
 // A pointed leaf along +Z with its base at the origin. High detail folds it once
@@ -316,7 +398,7 @@ function rawTree(detail: "max" | "high" | "low", o: BroadleafOptions, plan: Layo
     return { members: m, at: mix(lo, hi, 0.5), half: mul(sub(hi, lo), 0.5) };
   });
   plan.limbs.forEach((l) => {
-    if (!high && l.skipLow)
+    if ((!high && l.skipLow) || (!max && l.maxOnly))
       return;
     const mass = l.mass === undefined ? undefined : masses[l.mass];
     const path = mass ? [l.stations[0]!, { at: mass.at, r: 0.06 }] : stations(l.stations);
@@ -434,6 +516,49 @@ function rawTree(detail: "max" | "high" | "low", o: BroadleafOptions, plan: Layo
       foliage.push(leaf);
     }
   });
+  // Needle sprays (a cone per tier at low detail, below).
+  if (high)
+    for (const s of plan.sprays ?? []) {
+      if (s.maxOnly && !max)
+        continue;
+      const [n, m] = (max ? style.sprays!.max : style.sprays!.high)[s.rank]!;
+      const { geo, light } = sprayVolume(s, n, m, style.sprays!.ragged);
+      shadeSpray(style, geo, light, s.tone, top);
+      foliage.push(geo);
+    }
+  else if (plan.sprays?.length) {
+    // One cone per tier, from the tier's lowest needles up into the tier above (the
+    // top tier up to the leader), so the stacked cones close into one crown.
+    const tiers = [...new Set(plan.sprays.filter((s) => !s.maxOnly).map((s) => s.tier))].sort((a, b) => a - b);
+    const boxes = tiers.map((tier) => {
+      const lo: P3 = [Infinity, Infinity, Infinity], hi: P3 = [-Infinity, -Infinity, -Infinity];
+      for (const s of plan.sprays!)
+        if (!s.maxOnly && s.tier === tier)
+          for (const p of s.path)
+            for (let a = 0; a < 3; a++) {
+              const e = a === 1 ? p.h : p.w;
+              lo[a] = Math.min(lo[a]!, p.at[a]! - e);
+              hi[a] = Math.max(hi[a]!, p.at[a]! + e);
+            }
+      return { lo, hi };
+    });
+    boxes.forEach(({ lo, hi }, j) => {
+      const next = boxes[j + 1];
+      const apex = next ? Math.max(hi[1]!, next.lo[1]! + (next.hi[1]! - next.lo[1]!) * 0.6) : Math.max(hi[1]!, plan.stem[plan.stem.length - 1]!.at[1]);
+      const n = typeof style.massSides === "number" ? style.massSides : style.massSides(j);
+      const centre = mix(lo, hi, 0.5), points: P3[] = [[centre[0], apex, centre[2]], [centre[0], lo[1], centre[2]]], indices: number[] = [];
+      const ring = lo[1] + (hi[1] - lo[1]) * 0.3;
+      for (let k = 0; k < n; k++) {
+        const a = k * Math.PI * 2 / n + j * 0.7;
+        points.push([centre[0] + Math.cos(a) * (hi[0] - lo[0]) / 2, ring, centre[2] + Math.sin(a) * (hi[2] - lo[2]) / 2]);
+      }
+      for (let k = 0; k < n; k++)
+        indices.push(0, 2 + (k + 1) % n, 2 + k, 1, 2 + k, 2 + (k + 1) % n);
+      const cone = fromIndexed(points, indices);
+      shade(style, cone, true, 0, top, [0, 0.3, 0], 0.5);
+      foliage.push(cone);
+    });
+  }
   // Palm fronds: pairs of leaflets down an arching midrib (a ribbon at low detail).
   (plan.fronds ?? []).forEach((f) => {
     const point = (t: number): P3 => add(f.at, add(mul(f.dir, f.length * t), [0, f.rise * Math.sin(Math.PI * t) - f.droop * t * t, 0]));

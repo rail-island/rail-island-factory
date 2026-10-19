@@ -1,7 +1,7 @@
 // The woods types: what grows on a cell the game paints with one. Each is a
 // distribution function keyed by a stable name (woodsApi.ts, docs/models/woods.md);
-// the build bundles each into export/woods/<name>.js and lists them in
-// woods.meta.json. No `node:` imports.
+// the build bundles them all, with the trees, into export/woods.js and lists them
+// in woods.meta.json. No `node:` imports.
 
 import {
   DENSITY_PARAM, MAX_TREES_PER_CELL, cellSeed, draw, edgeness, field, put, resolveWoodsParams,

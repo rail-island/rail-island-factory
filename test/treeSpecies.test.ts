@@ -54,12 +54,32 @@ describe.each(KIT)("the kit's %s", (species) => {
     expect(new Set(shapes).size).toBe(5);
   });
 
-  // The palm's leaflets hang from fronds and the dead tree has none: no clumps, no masses.
-  const clumped = species !== "palm" && species !== "deadtree";
-  it.runIf(clumped)("roots every leaf in a clump core and holds every low mass on wood", () => {
+  // The palm's leaflets hang from fronds and the dead tree has none: no clumps, no
+  // masses. The whorled conifers carry needle sprays instead of clumps.
+  const sprayed = ["pine", "spruce", "larch", "autumnlarch"].includes(species);
+  const massed = species !== "palm" && species !== "deadtree";
+  it.runIf(sprayed)("draws its needles as closed spray volumes", () => {
+    for (const seed of SEEDS)
+      for (const level of ["high", "max"] as const) {
+        const { foliage } = treeParts(species, level, treeOptions(species, { seed }));
+        expect(foliage.length).toBeGreaterThan(20);
+        for (const g of foliage) {
+          const key = (i: number) => [g.x(i), g.y(i), g.z(i)].map((n) => Math.round(n * 1e5)).join(",");
+          const edges = new Map<string, number>();
+          for (let i = 0; i < g.count; i += 3)
+            for (const [a, b] of [[i, i + 1], [i + 1, i + 2], [i + 2, i]] as const) {
+              const ka = key(a), kb = key(b), id = ka < kb ? `${ka}/${kb}` : `${kb}/${ka}`;
+              edges.set(id, (edges.get(id) ?? 0) + 1);
+            }
+          expect([...edges.values()].every((n) => n === 2), `${level} seed ${seed}`).toBe(true);
+        }
+      }
+  });
+
+  it.runIf(massed)("roots every leaf in a clump core and holds every low mass on wood", () => {
     const corners = (g: Geo) => Array.from({ length: g.count }, (_, i) => [g.x(i), g.y(i), g.z(i)] as const);
     for (const seed of SEEDS) {
-      for (const level of ["high", "max"] as const) {
+      for (const level of sprayed ? [] : ["high", "max"] as const) {
         const { foliage } = treeParts(species, level, treeOptions(species, { seed }));
         const cores = foliage.filter((g) => g.count === 60).map((g) => {
           const pts = corners(g), c = [0, 1, 2].map((k) => pts.reduce((n, p) => n + p[k]!, 0) / pts.length);

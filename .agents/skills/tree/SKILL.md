@@ -80,8 +80,8 @@ Keep Max separate from the default tree used by forests.
 - Max detail refines visible species features within the selected tree's
   envelope. Extra hidden triangles alone do not improve the model.
 - Register species builders and parameters in `generator/trees.ts`. Named
-  builders must be exported for standalone bundling. Keep the shared `trees.js`
-  default call compatible; inspect `generator/woodsExport.ts` when changing its
+  builders must be exported for standalone bundling. Keep the game module's `buildTree`
+  (`woods.js`, `generator/woodsExport.ts`) default call compatible when changing its
   API. Do not add Node imports to bundled tree geometry.
 - Store source references in `assets/<name>/` with `SOURCES.md` and the design's
   `references` field, following `AGENTS.md`. Update `docs/models/trees.md` for

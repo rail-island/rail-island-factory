@@ -6,7 +6,7 @@ import fs from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { DoubleSide, Mesh, Group, type MeshStandardMaterial } from "three";
 import { THREE_SUBSET, buildPreview } from "../src/modelModule";
-import { bundleTrees } from "../generator/woodsExport";
+import { bundleGame } from "../generator/woodsExport";
 
 describe("the site's three subset", () => {
   it("holds every three name the JS model code reads", () => {
@@ -20,7 +20,7 @@ describe("the site's three subset", () => {
 
   it("builds a palm's fronds double-sided", async () => {
     // the bundled tree code, the same toGroup a model module runs
-    const code = await bundleTrees();
+    const code = await bundleGame();
     const mod = await import(`data:text/javascript;base64,${Buffer.from(code).toString("base64")}`);
     const group = mod.buildTree(THREE_SUBSET, "palm", "high") as Group;
     const foliage = group.children.find((o): o is Mesh => o instanceof Mesh && (o.material as MeshStandardMaterial).name === "foliage")!;
