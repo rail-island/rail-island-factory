@@ -3,9 +3,9 @@
 // fronds once lost THREE.DoubleSide that way and showed only from below.
 
 import fs from "node:fs";
-import { describe, expect, it } from "vitest";
-import { DoubleSide, Mesh, type Group, type MeshStandardMaterial } from "three";
-import { THREE_SUBSET } from "../src/modelModule";
+import { describe, expect, it, vi } from "vitest";
+import { DoubleSide, Mesh, Group, type MeshStandardMaterial } from "three";
+import { THREE_SUBSET, buildPreview } from "../src/modelModule";
 import { bundleTrees } from "../generator/woodsExport";
 
 describe("the site's three subset", () => {
@@ -25,5 +25,22 @@ describe("the site's three subset", () => {
     const group = mod.buildTree(THREE_SUBSET, "palm", "high") as Group;
     const foliage = group.children.find((o): o is Mesh => o instanceof Mesh && (o.material as MeshStandardMaterial).name === "foliage")!;
     expect((foliage.material as MeshStandardMaterial).side).toBe(DoubleSide);
+  });
+});
+
+
+describe("preview detail dispatch", () => {
+  it("builds Max detail with the chosen seed and falls back to full detail for other models", () => {
+    const full = new Group(), max = new Group(), coarse = new Group();
+    const mod = { default: vi.fn(() => full), buildMax: vi.fn(() => max), buildCoarse: vi.fn(() => coarse) };
+    const params = { seed: "5" };
+    expect(buildPreview(mod, params, "max")).toBe(max);
+    expect(mod.buildMax).toHaveBeenCalledWith(THREE_SUBSET, params);
+    expect(mod.default).not.toHaveBeenCalled();
+    expect(buildPreview({ default: mod.default }, params, "max")).toBe(full);
+    expect(mod.default).toHaveBeenLastCalledWith(THREE_SUBSET, params, false);
+    expect(buildPreview(mod, params, "coarse")).toBe(coarse);
+    expect(buildPreview(mod, params, true)).toBe(full);
+    expect(mod.default).toHaveBeenLastCalledWith(THREE_SUBSET, params, true);
   });
 });

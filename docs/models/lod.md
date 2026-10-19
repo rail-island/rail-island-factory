@@ -178,14 +178,17 @@ trees and the existing API are unchanged.
 
 The model detail panel has a **Level of detail** select: *Full detail* (initially),
 *Low (LOD)*, and for a model whose record carries `coarse` (the trees) *Coarse
-(distant forest)*, which builds its `buildCoarse`. The choice persists while stepping
+(distant forest)*, which builds its `buildCoarse`. A model with `maxDetail`
+(currently only oak) also offers *Max detail*, calling its `buildMax` and capped
+at 10,000 triangles. Switching to a model without Max detail shows full detail.
+The choice persists while stepping
 between models; a model without a coarse level shows its LOD while *Coarse* is chosen. Enabling it loads
 the model's JS export even at default parameters. Switching resolution keeps the
 camera position and current enum choices; asynchronous stale loads are discarded.
 The preview shows its actual triangle count. The Specs tab still describes the
 full-resolution downloadable files.
 
-Source-tree highlighting/picking and rig pose controls are disabled in LOD and coarse because
+Source-tree highlighting/picking and rig pose controls are disabled in low, coarse and Max detail because
 the source tree addresses full-detail triangle ranges. Returning to full detail
 restores them. No browser automation is required for headless verification.
 

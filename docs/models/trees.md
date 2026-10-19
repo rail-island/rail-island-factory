@@ -126,15 +126,37 @@ coarse foliage use closed single-sided geometry. The low model derives the same
 branches and pads; both simplified models fit the selected high model's exact
 bounds. The foot stays at y = 0 and centred on the trunk origin.
 
-The shipped ID remains `proc-tree-oak`. Its five enum controls produce 32 combinations:
+The shipped ID remains `proc-tree-oak`. Its five enum controls produce 80 combinations:
 
 | Parameter | Values (default first) |
 |---|---|
-| `seed` | `7`, `19` |
+| `seed` | `1`, `2`, `3`, `4`, `5` |
 | `height` | `standard`, `tall` (1.15 times as high) |
 | `canopy` | `broad`, `compact` (0.83 times as wide) |
 | `branches` | `spreading`, `upright` (0.8 times the reach, with extra rise) |
 | `foliage` | `full`, `airy` |
+
+Seeds 1 and 2 retain the earlier seeds 7 and 19, respectively. Those old tokens
+remain accepted aliases in both generator calls and saved catalog URLs. The five
+labels map to deterministic internal seeds 7, 19, 83, 173 and 431.
+
+Oak also supplies **Max detail** through `treeOakMax` / `buildMax`, with a hard
+10,000-triangle cap. It preserves the corresponding full-detail tree's bounding
+box and branch layout, while increasing stem and branch cross-sections, replacing
+its foliage cores with icosahedra and distributing smaller lobed leaf blades over
+each core's surface. The default full-detail geometry remains unchanged.
+
+| Max detail geometry | Full foliage | Airy foliage |
+|---|---:|---:|
+| Wood | 590 | 590 |
+| Foliage cores | 48 / 960 triangles | 40 / 800 triangles |
+| Lobed leaf blades | 816 / 8,160 triangles | 680 / 6,800 triangles |
+| Total | **9,710** | **8,190** |
+
+Max detail still uses two materials and two draw calls. It is optional and is
+currently available only for oak; the default forest quality remains `high`.
+The shared `trees.js` also accepts `buildTree(THREE, "oak", "max")` and rejects
+Max detail for unsupported species.
 
 `oakOptions(values)` resolves catalog parameters. `oakParts(detail, options)` also
 accepts numeric `seed`, `height`, `width`, `spread`, and `density` overrides for
@@ -163,7 +185,9 @@ which needs all fourteen. The export therefore also writes **`trees.js`**
 
 A tree's catalog record carries `coarse: true`, and the site's model page offers a
 third **Level of detail**, *Coarse (distant forest)*, beside full and low: it builds
-the JS model's `buildCoarse` ([../site/catalog-site.md](../site/catalog-site.md)).
+the JS model's `buildCoarse` ([../site/catalog-site.md](../site/catalog-site.md)). Oak additionally advertises
+`maxDetail: true`, enabling *Max detail* through `buildMax`. Other trees do not
+show this option.
 
 ## Budgets and tests
 
@@ -176,7 +200,7 @@ coarse box equal to low; closed coarse solids; palm and willow ribbon foliage
 and the high oak's leaf blades double-sided; `trees.js` building every species and level with the designs' own
 triangle counts. The catalog sweep builds every tree in JS as in the generator.
 
-`test/oak.test.ts` checks all 32 oak combinations at all three detail levels:
+`test/oak.test.ts` checks all 80 oak combinations at all four detail levels:
 triangle budgets, two materials and draw calls, grounding, matching bounds,
 determinism, normals and no coplanar flicker. It also checks that each control
 affects geometry and that the standalone JS preserves the oak's leaf material.

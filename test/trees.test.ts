@@ -177,5 +177,11 @@ describe("the shared trees module", () => {
       }
     }
     expect(() => mod.buildTree(THREE, "baobab", "high")).toThrow();
+    expect(() => mod.buildTree(THREE, "pine", "max")).toThrow(/only available for oak/);
+    let maxTriangles = 0;
+    mod.buildTree(THREE, "oak", "max").traverse((o: { isMesh?: boolean; geometry?: { getAttribute(n: string): { count: number } } }) => {
+      if (o.isMesh) maxTriangles += o.geometry!.getAttribute("position").count / 3;
+    });
+    expect(maxTriangles).toBe(TREES.find((d) => d.id === "proc-tree-oak")!.buildMax!().triangleCount());
   }, 60_000);
 });

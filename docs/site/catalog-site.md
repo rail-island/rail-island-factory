@@ -312,3 +312,18 @@ argument to `true` for its budgeted distant mesh. The factory detail view expose
 this through **Low level of detail** and reports the preview triangle count.
 LOD rig posing is static; full-detail models and source trees are unchanged.
 See [../models/lod.md](../models/lod.md) for budgets, geometry and verification.
+
+
+## Optional Max detail
+
+The model's level selector offers **Max detail** only when its catalog record
+carries `maxDetail` (currently oak). The preview calls the JS module's `buildMax`
+with the current parameter values and displays its actual triangle count.
+Stepping to a model without that capability falls back to full detail. Source-tree
+highlighting stays disabled outside full detail, since its triangle ranges belong
+to the default build. Export-list selections retain the normal full-detail
+behaviour; the downloaded JS module includes its optional Max detail builder.
+
+Retired parameter values are resolved before enum validation, keeping earlier
+URLs usable. Oak's old seed values `7` and `19` resolve to the numbered variants
+`1` and `2`, respectively; its visible seed choices are `1` through `5`.

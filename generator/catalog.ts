@@ -135,6 +135,8 @@ export interface CatalogRecord extends MetaEntry {
   references: ReferenceImage[];
   /** Set when the JS model also exports buildCoarse (a tree's third level, docs/models/trees.md). */
   coarse?: boolean;
+  /** Set when the JS module exports buildMax, an optional close-up detail level. */
+  maxDetail?: boolean;
   /**
    * A vehicle's declared OpenTTD figures (design.ts OpenttdProperties), for the
    * site's GRF export only -- not part of the game's meta.json. Absent when the

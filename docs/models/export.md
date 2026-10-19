@@ -61,6 +61,12 @@ changed, and anything else under `export/refs/` is deleted.
 The JSON documents are rewritten every run and
 carry no timestamp, so they are deterministic too.
 
+**Max detail.** A design may supply `buildMax`, exported as an optional function
+in its existing JS module. The catalog carries `maxDetail: true` only for such
+designs (currently oak). The build also checks this geometry against the hard
+10,000-triangle cap and the flicker guard. Default thumbnails, source trees,
+metadata triangle counts and exports continue to describe full detail.
+
 **Guarded.** Before anything is written, every design is checked for z-fighting
 faces; one that would flicker fails the build with a `ZFightingError` naming the
 design, the two materials and the plane, and the export is left as it was. See

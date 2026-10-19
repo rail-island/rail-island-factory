@@ -745,8 +745,9 @@ function paint(species: Species, parts: TreeParts): void {
 }
 
 /** The parts of one species at one level, shaded (tests, the woods previews). */
-export function treeParts(species: Species, detail: TreeDetail, options?: Partial<OakOptions>): TreeParts {
+export function treeParts(species: Species, detail: TreeDetail | "max", options?: Partial<OakOptions>): TreeParts {
   if (species === "oak") return oakParts(detail, options);
+  if (detail === "max") throw new Error("Max detail is only available for oak");
   const parts = detail === "coarse" ? coarseParts(species) : partsFor(species, LODS[detail]);
   if (detail === "high") fitToLow(species, parts);
   paint(species, parts);
@@ -773,7 +774,7 @@ function fitToLow(species: Species, parts: TreeParts): void {
 }
 
 /** One species at one level as a model: the `trunk` and `foliage` materials. */
-export function buildTree(species: Species, detail: TreeDetail, options?: Partial<OakOptions>): MeshBuilder {
+export function buildTree(species: Species, detail: TreeDetail | "max", options?: Partial<OakOptions>): MeshBuilder {
   const { trunk, foliage, ribbons } = treeParts(species, detail, options);
   const c = TREE_COLORS[species];
   const m = new MeshBuilder({
@@ -804,6 +805,7 @@ export const treeSpruce = () => buildTree("spruce", "high");
 export const treeSpruceLow = () => buildTree("spruce", "low");
 export const treeSpruceCoarse = () => buildTree("spruce", "coarse");
 export const treeOak = (p?: ParamValues) => buildTree("oak", "high", oakOptions(p));
+export const treeOakMax = (p?: ParamValues) => buildTree("oak", "max", oakOptions(p));
 export const treeOakLow = (p?: ParamValues) => buildTree("oak", "low", oakOptions(p));
 export const treeOakCoarse = (p?: ParamValues) => buildTree("oak", "coarse", oakOptions(p));
 export const treeBirch = () => buildTree("birch", "high");
@@ -889,6 +891,7 @@ export const TREES: ProceduralDesign[] = MODELS.map(({ species, builders: [build
   build,
   buildLod,
   buildCoarse,
+  ...(species === "oak" ? { buildMax: treeOakMax } : {}),
   ...(params ? { params } : {}),
   lodTriangles: 300,
   references: species === "oak" ? "oak" : "trees",

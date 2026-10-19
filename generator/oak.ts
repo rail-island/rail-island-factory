@@ -1,10 +1,12 @@
 // Reference-led oak: connected tapered boughs, closed foliage cores and folded
 // double-sided leaf shapes. No textures, transparency, random global state or Node APIs.
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
-import { Geo, boxOf, fromIndexed, type P3 } from "./treeGeo.ts";
+import { Geo, boxOf, fromIndexed, icosahedronGeo, quatFromUnitVectors, type P3 } from "./treeGeo.ts";
 export const OAK_COLORS = { trunk: "#ac804a", foliage: "#c4d953" };
 export const OAK_PARAMS: ParamSpec[] = [
-  { name: "seed", title: "Tree seed", default: "7", values: [{ value: "7", title: "7" }, { value: "19", title: "19" }] },
+  { name: "seed", title: "Tree seed", default: "1",
+    values: ["1", "2", "3", "4", "5"].map((value) => ({ value, title: value })),
+    retired: { "7": { seed: "1" }, "19": { seed: "2" } } },
   { name: "height", title: "Height", default: "standard", values: [{ value: "standard", title: "Standard" }, { value: "tall", title: "Tall" }] },
   { name: "canopy", title: "Canopy width", default: "broad", values: [{ value: "broad", title: "Broad" }, { value: "compact", title: "Compact" }] },
   { name: "branches", title: "Branch spread", default: "spreading", values: [{ value: "spreading", title: "Spreading" }, { value: "upright", title: "Upright" }] },
@@ -20,7 +22,7 @@ export interface OakOptions {
 export const DEFAULT_OAK: OakOptions = { seed: 7, height: 1, width: 1, spread: 1, density: 1 };
 export function oakOptions(p?: ParamValues): OakOptions {
   const v = resolveParams(OAK_PARAMS, p);
-  return { seed: Number(v.seed), height: v.height === "tall" ? 1.15 : 1,
+  return { seed: [7, 19, 83, 173, 431][Number(v.seed) - 1]!, height: v.height === "tall" ? 1.15 : 1,
     width: v.canopy === "compact" ? 0.83 : 1, spread: v.branches === "upright" ? 0.8 : 1,
     density: v.foliage === "airy" ? 0.8 : 1 };
 }
@@ -112,8 +114,8 @@ const BOUGHS: {
   { y: 5.2, angle: 2.4, reach: 1.85, rise: 1.45 },
   { y: 5.85, angle: 0.8, reach: 1.45, rise: 1.25 },
 ];
-function rawOak(detail: "high" | "low", o: OakOptions): Parts {
-  const rng = random(o.seed), high = detail === "high";
+function rawOak(detail: "max" | "high" | "low", o: OakOptions): Parts {
+  const rng = random(o.seed), high = detail !== "low", max = detail === "max";
   const stem: Station[] = [
     { at: [0, 0, 0], r: 0.7 }, { at: [0.12, 0.65, 0.02], r: 0.43 }, { at: [-0.08, 2.3, 0.03], r: 0.36 },
     { at: [0.2, 3.9, -0.03], r: 0.28 }, { at: [0.35, 5.55, -0.12], r: 0.19 }, { at: [0.03, 8.0, -0.18], r: 0.045 },
@@ -125,7 +127,7 @@ function rawOak(detail: "high" | "low", o: OakOptions): Parts {
     const a = stem[i - 1]!.at, b = stem[i]!.at;
     return mix(a, b, (y - a[1]) / (b[1] - a[1]));
   };
-  const trunk = [limb(high ? stem : [stem[0]!, stem[2]!, stem[4]!, stem[5]!], high ? 8 : 4)];
+  const trunk = [limb(high ? stem : [stem[0]!, stem[2]!, stem[4]!, stem[5]!], max ? 12 : high ? 8 : 4)];
   // Grounded buttresses taper into the existing stem, with no flat overlays.
   if (high)
     for (let i = 0; i < 4; i++) {
@@ -144,13 +146,13 @@ function rawOak(detail: "high" | "low", o: OakOptions): Parts {
     const elbow = add(base, add(mul(dir, reach * 0.48), [0, b.rise * 0.35, 0]));
     const tip = add(base, add(mul(dir, reach), [0, b.rise + (1 - o.spread) * 0.7, 0]));
     const stations = [{ at: base, r: 0.24 - i * 0.018 }, { at: elbow, r: 0.13 - i * 0.008 }, { at: tip, r: 0.035 }];
-    trunk.push(limb(high ? stations : [stations[0]!, stations[2]!], high ? 5 : 3, i * 0.3));
+    trunk.push(limb(high ? stations : [stations[0]!, stations[2]!], max ? 7 : high ? 5 : 3, i * 0.3));
     for (let j = 0; j < 2; j++) {
       const start = mix(elbow, tip, j === 0 ? 0.4 : 0.85);
       const turn = angle + (j === 0 ? 0.85 : -0.55);
       const end = add(start, [Math.cos(turn) * 0.64, 0.35 + (i % 2) * 0.08, Math.sin(turn) * 0.64]);
       if (high)
-        trunk.push(limb([{ at: start, r: 0.065 }, { at: end, r: 0.018 }], 3));
+        trunk.push(limb([{ at: start, r: 0.065 }, { at: end, r: 0.018 }], max ? 4 : 3));
       pads.push({ at: end, r: 0.72 + 0.1 * rng() });
     }
   });
@@ -177,9 +179,33 @@ function rawOak(detail: "high" | "low", o: OakOptions): Parts {
         const a = 2 + k, b = 2 + (k + 1) % 6;
         coreIndices.push(0, b, a, 1, a, b);
       }
-      const core = fromIndexed(corePoints, coreIndices).rotateY(spin).translate(...center);
+      const core = (max ? icosahedronGeo(radius * 0.83, 0).scale(1, 0.9, 1)
+        : fromIndexed(corePoints, coreIndices)).rotateY(spin).translate(...center);
       shade(core, true, tone - 0.15, 8.8);
       foliage.push(core);
+      if (max) {
+        const leafRng = random(o.seed * 7919 + p * 131 + j * 977);
+        for (let k = 0; k < 17; k++) {
+          const y = 1 - 2 * (k + 0.5) / 17;
+          const azimuth = k * Math.PI * (3 - Math.sqrt(5)) + spin;
+          const ring = Math.sqrt(1 - y * y);
+          const dir: P3 = [ring * Math.cos(azimuth), y, ring * Math.sin(azimuth)];
+          const size = radius * (0.45 + 0.12 * leafRng());
+          const outline: P3[] = [[0, 0, 1], [0.36, 0, 0.7], [0.23, 0, 0.43],
+            [0.52, 0, 0.1], [0.34, 0, -0.4], [0, 0, -0.85],
+            [-0.34, 0, -0.4], [-0.52, 0, 0.1], [-0.23, 0, 0.43], [-0.36, 0, 0.7]];
+          const indices: number[] = [];
+          for (let i = 0; i < 10; i++) indices.push(0, i + 1, (i + 1) % 10 + 1);
+          const leaf = fromIndexed([[0, 0.1, 0], ...outline], indices)
+            .scale(size, size, size).rotateY(leafRng() * Math.PI * 2)
+            .applyQuaternion(quatFromUnitVectors([0, 1, 0], unit(add(dir, [0, 0.35, 0]))))
+            .translate(center[0] + dir[0] * radius * 0.9,
+              center[1] + dir[1] * radius * 0.75, center[2] + dir[2] * radius * 0.9);
+          shade(leaf, true, tone + (leafRng() - 0.3) * 0.14, 8.8);
+          foliage.push(leaf);
+        }
+        continue;
+      }
       const leafCount = 5;
       for (let k = 0; k < leafCount; k++) {
         const spinLeaf = a + k * Math.PI * 2 / leafCount + 0.3;
@@ -218,13 +244,15 @@ function fit(parts: Parts, target: Parts): Parts {
     });
   return parts;
 }
-export function oakParts(detail: "high" | "low" | "coarse", options: Partial<OakOptions> = {}): Parts {
+export function oakParts(detail: "max" | "high" | "low" | "coarse", options: Partial<OakOptions> = {}): Parts {
   const o = { ...DEFAULT_OAK, ...options };
   if (!Number.isFinite(o.seed) || ![o.width, o.height, o.spread, o.density].every((v) => Number.isFinite(v) && v > 0))
     throw new Error("Invalid oak options");
   const high = rawOak("high", o);
   if (detail === "high")
     return high;
+  if (detail === "max")
+    return fit(rawOak("max", o), high);
   const low = fit(rawOak("low", o), high);
   if (detail === "low")
     return low;

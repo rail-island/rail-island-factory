@@ -40,6 +40,10 @@ describe("the dev catalog", () => {
     }
   });
 
+  it("advertises Max detail only for oak", () => {
+    expect(catalog.records.filter((r) => r.maxDetail).map((r) => r.id)).toEqual(["proc-tree-oak"]);
+  });
+
   it("serves the JS model and the source tree the build writes, and the source images from assets/", async () => {
     const id = proceduralId("proc-building-sky-art-deco");
     expect(await devJs(id)).toBe(await bundleDesign(DESIGNS.get(id)!, designSource(id)));
