@@ -6,10 +6,15 @@
 // base-anchored at y = 0. Units are the game's studs, numerically: the game scales
 // each tree to the height its woods type asks for (docs/models/trees.md).
 //
-// Ported from the game's render/TreeGeometry.ts; the shapes, budgets and the
-// reasons behind them are documented in docs/models/trees.md. No `node:` imports.
+// The conifers, palm and dead tree are ported from the game's
+// render/TreeGeometry.ts; the oak (oak.ts) and the leafy species (leafyTrees.ts)
+// are chunked crowns drawn by the broadleaf kit (broadleaf.ts), with five seeds
+// and Max detail. The shapes, budgets and the reasons behind them are documented
+// in docs/models/trees.md. No `node:` imports.
 
-import { oakParts, oakOptions, OAK_COLORS, OAK_PARAMS, type OakOptions } from "./oak.ts";
+import { oakParts, oakOptions, OAK_COLORS, OAK_PARAMS } from "./oak.ts";
+import { isLeafy, leafyOptions, leafyParts, LEAFY_COLORS, LEAFY_PARAMS } from "./leafyTrees.ts";
+import type { BroadleafOptions } from "./broadleaf.ts";
 import { MeshBuilder } from "./meshBuilder.ts";
 import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { Geo, boxOf, coneGeo, cylinderGeo, fromIndexed, icosahedronGeo, quatFromUnitVectors, type P3 } from "./treeGeo.ts";
@@ -32,23 +37,20 @@ export type TreeDetail = "coarse" | "low" | "high";
 export const TREE_COLORS: Record<Species, { trunk: string; foliage: string }> = {
   pine: { trunk: "#7a4f2a", foliage: "#33774a" },
   oak: OAK_COLORS,
-  bush: { trunk: "#634626", foliage: "#5f8a34" },
+  bush: LEAFY_COLORS.bush,
   palm: { trunk: "#94703a", foliage: "#4fa443" },
-  // slender white trunk, light-green rounded crown
-  birch: { trunk: "#e2ddd0", foliage: "#86b84a" },
+  birch: LEAFY_COLORS.birch,
   // tall narrow conifer, blue-tinged deep green
   spruce: { trunk: "#664526", foliage: "#2a6648" },
-  // drooping soft-green canopy
-  willow: { trunk: "#6f5533", foliage: "#93b850" },
-  // pale grey-green bark, tall narrow column of small bright leaves
-  aspen: { trunk: "#cbc9b2", foliage: "#a2c94f" },
+  willow: LEAFY_COLORS.willow,
+  aspen: LEAFY_COLORS.aspen,
   // bare, leafless dead trunk with a couple of stubs (no foliage)
   deadtree: { trunk: "#7a6650", foliage: "#7a6650" },
   scotspine: { trunk: "#a86a3e", foliage: "#548a52" },
   larch: { trunk: "#7e6146", foliage: "#8fbd4f" },
   autumnlarch: { trunk: "#7e6146", foliage: "#e0a83a" },
-  hazel: { trunk: "#7e6246", foliage: "#73a443" },
-  orchard: { trunk: "#7f5532", foliage: "#6aa242" },
+  hazel: LEAFY_COLORS.hazel,
+  orchard: LEAFY_COLORS.orchard,
 };
 
 /** A deterministic float in [0, 1) for two integers: the crowns' irregularity. */
@@ -151,23 +153,6 @@ function ribbon(left: P3[], right: P3[], segments: number): Geo {
     if (i < segments - 1) { push(right[i]!); push(right[i + 1]!); push(left[i + 1]!); }
   }
   return new Geo(pos);
-}
-
-// One ribbon-like curtain of willow leaves, moving outward from its branch while
-// falling, with a slight sideways bend.
-function willowSpray(length: number, reach: number, width: number, bend: number, segments = 5): Geo {
-  const left: P3[] = [];
-  const right: P3[] = [];
-  for (let i = 0; i <= segments; i++) {
-    const t = i / segments;
-    const x = reach * (1 - Math.pow(1 - t, 1.7));
-    const y = -length * (0.35 * t + 0.65 * t * t);
-    const z = bend * Math.sin(Math.PI * t);
-    const halfWidth = width * Math.sin(Math.PI * Math.min(1, 0.12 + t * 0.88)) * (i % 2 === 0 ? 1 : 0.68);
-    left.push([x, y, z - halfWidth]);
-    right.push([x, y, z + halfWidth]);
-  }
-  return ribbon(left, right, segments);
 }
 
 // A flat, tapered leaf-blade lying along +X whose spine arches up from the base
@@ -309,8 +294,7 @@ function partsFor(species: Species, lod: Lod): TreeParts {
   // drawn as modelled: the crowns are the classic width, no stylised oversize
   const parts = rawPartsFor(species, lod);
   // Bend wood and leaves by the same field so branch attachments stay together.
-  const lean = species === "palm" ? 1.15 : species === "deadtree" ? -0.38
-    : species === "birch" ? 0.28 : species === "oak" || species === "willow" ? 0.18 : 0;
+  const lean = species === "palm" ? 1.15 : species === "deadtree" ? -0.38 : 0;
   if (lean !== 0) {
     for (const g of [...parts.trunk, ...parts.foliage]) {
       g.map((x, y, z) => {
@@ -356,38 +340,6 @@ function rawPartsFor(species: Species, lod: Lod): TreeParts {
         whorls: 11, fansBase: 8, fansTop: 5, droop: 0.32, lift: 0.32, fanWidth: 0.28,
       }) };
     }
-    case "hazel":
-      // Several stems rise from one low stool under a broad crown.
-      return {
-        trunk: [
-          cyl(lod, 0.12, 0.24, 0.28, 0, 3),
-          branch(lod, [-0.08, 0.15, 0], [-0.85, 2.45, 0.3], 0.1, 0.035, 4),
-          branch(lod, [0.08, 0.15, 0], [0.85, 2.6, 0.2], 0.1, 0.035, 4),
-          branch(lod, [0, 0.15, -0.08], [0, 2.9, -0.65], 0.1, 0.035, 4),
-        ],
-        foliage: clusteredCrown(lod, [
-          [1.05, 1.1, 0.9, 1, -0.82, 2.3, 0.3],
-          [1.1, 1.1, 0.92, 1, 0.8, 2.45, 0.2],
-          [1.1, 1.05, 0.95, 1, 0, 2.85, -0.6],
-          [0.95, 1, 0.95, 1, -0.1, 2.7, 0.6],
-        ], 13),
-      };
-    case "orchard":
-      // A short grafted-looking trunk forks into a low, rounded fruit-tree crown.
-      return {
-        trunk: [
-          cyl(lod, 0.2, 0.34, 1.65, 0, 5),
-          branch(lod, [0, 1.3, 0], [-0.9, 2.7, 0.25], 0.18, 0.06, 4),
-          branch(lod, [0, 1.4, 0], [0.95, 2.9, 0.2], 0.17, 0.055, 4),
-          branch(lod, [0, 1.5, 0], [0, 3.2, -0.75], 0.16, 0.05, 4),
-        ],
-        foliage: clusteredCrown(lod, [
-          [1.25, 1.05, 0.95, 1, -0.85, 2.85, 0.25],
-          [1.3, 1, 0.95, 1, 0.85, 3, 0.2],
-          [1.2, 1, 1, 1, 0, 3.25, -0.75],
-          [1, 1.1, 0.9, 1, 0, 3.6, 0.2],
-        ], 14),
-      };
     case "pine": {
       if (!lod.extras) {
         return {
@@ -400,35 +352,6 @@ function rawPartsFor(species: Species, lod: Lod): TreeParts {
         foliage: coniferCrown(lod, {
           apex: 9.2, base: 2.9, top: 8.85, reach: 2.02, whorls: 12, fansBase: 11, fansTop: 6, droop: 0.62, lift: 0.45,
         }),
-      };
-    }
-    case "oak": return oakParts(lod.extras ? "high" : "low");
-    case "bush": {
-      if (!lod.extras) {
-        return {
-          trunk: [cyl(lod, 0.2, 0.25, 0.5, 0)],
-          foliage: [
-            crownBlob(lod, 1.7, 1.04, 0.78, 1.02, -0.12, 1.35, 0.04),
-            crownBlob(lod, 1.2, 1.0, 0.88, 0.94, 0.23, 2.3, -0.1),
-          ],
-        };
-      }
-      // A shrub, not a small tree: a stub and four thin stems buried in lobes at
-      // different heights and offsets.
-      return {
-        trunk: [
-          cyl(lod, 0.09, 0.15, 0.3, 0),
-          branch(lod, [0, 0.1, 0], [0.42, 1.15, 0.28], 0.08, 0.04),
-          branch(lod, [0, 0.1, 0], [-0.46, 1.05, -0.22], 0.08, 0.04),
-          branch(lod, [0, 0.14, 0], [0.1, 1.3, -0.42], 0.07, 0.035),
-          branch(lod, [0, 0.14, 0], [-0.26, 1.2, 0.42], 0.07, 0.035),
-        ],
-        foliage: [
-          ...leafShell(1.3, 1.15, 0.72, 1.1, -0.05, 1.35, 0.05, 22, 1),
-          ...leafShell(0.92, 1.05, 0.8, 1.0, 0.66, 1.7, -0.34, 14, 2),
-          ...leafShell(0.86, 1.0, 0.8, 1.05, -0.58, 1.78, 0.4, 13, 3),
-          ...leafShell(0.88, 1.0, 0.9, 1.0, 0.06, 2.3, 0.08, 12, 4),
-        ],
       };
     }
     case "palm": {
@@ -456,27 +379,6 @@ function rawPartsFor(species: Species, lod: Lod): TreeParts {
       }
       return { trunk, foliage, ribbons: true };
     }
-    case "birch": {
-      const trunk = [cyl(lod, 0.18, 0.3, 6, 0)];
-      if (!lod.extras) {
-        return { trunk, foliage: [
-          crownBlob(lod, 1.9, 1, 0.85, 0.92, 0.1, 5.5, -0.08),
-          crownBlob(lod, 1.35, 0.94, 0.92, 1, -0.18, 6.9, 0.12),
-        ] };
-      }
-      trunk.push(
-        branch(lod, [0, 4.3, 0], [1.15, 5.7, 0.35], 0.12, 0.06),
-        branch(lod, [0, 4.7, 0], [-1.0, 6.1, -0.4], 0.11, 0.055),
-        branch(lod, [0, 5.2, 0], [0.35, 6.6, -0.95], 0.1, 0.05),
-      );
-      return {
-        trunk,
-        foliage: [
-          ...leafShell(1.64, 1, 0.92, 0.92, 0.1, 5.5, -0.08, 26, 1),
-          ...leafShell(1.16, 0.94, 1, 1, -0.18, 6.9, 0.12, 18, 2),
-        ],
-      };
-    }
     case "spruce": {
       if (!lod.extras) {
         return {
@@ -491,85 +393,6 @@ function rawPartsFor(species: Species, lod: Lod): TreeParts {
         }),
       };
     }
-    case "aspen": {
-      // Tall, very slender pale trunk carrying a NARROW, columnar crown.
-      const trunk = [
-        cyl(lod, 0.14, 0.26, 7.4, 0),
-        branch(lod, [0, 4.2, 0], [0.55, 6.2, 0.2], 0.11, 0.06),
-        branch(lod, [0, 4.9, 0], [-0.5, 7.0, -0.25], 0.1, 0.055),
-        branch(lod, [0, 5.6, 0], [0.2, 7.8, -0.5], 0.1, 0.05),
-      ];
-      if (!lod.extras) {
-        return {
-          trunk,
-          foliage: [
-            crownBlob(lod, 1.15, 0.9, 1.15, 0.9, 0.15, 5.5, 0.1),
-            crownBlob(lod, 1.1, 0.85, 1.2, 0.85, -0.2, 6.9, -0.15),
-            crownBlob(lod, 0.95, 0.8, 1.15, 0.8, 0.2, 8.1, 0.15),
-            crownBlob(lod, 0.7, 0.75, 1.05, 0.75, -0.05, 9.1, -0.05),
-          ],
-        };
-      }
-      trunk.push(
-        branch(lod, [0, 3.6, 0], [-0.45, 5.4, 0.3], 0.1, 0.05),
-        branch(lod, [0, 6.3, 0], [0.4, 8.3, 0.3], 0.09, 0.045),
-      );
-      return {
-        trunk,
-        foliage: [
-          ...leafShell(0.92, 0.9, 1.15, 0.9, 0.15, 5.5, 0.1, 16, 1),
-          ...leafShell(0.88, 0.85, 1.2, 0.85, -0.2, 6.9, -0.15, 15, 2),
-          ...leafShell(0.76, 0.8, 1.15, 0.8, 0.2, 8.1, 0.15, 13, 3),
-          ...leafShell(0.56, 0.75, 1.05, 0.75, -0.05, 9.1, -0.05, 10, 4),
-        ],
-      };
-    }
-    case "willow": {
-      // The trunk forks below a light crown; leaf sprays hang from its rim.
-      const crownY = 6.15;
-      const trunk = [
-        cyl(lod, 0.36, 0.62, 3.7, 0, 7),
-        branch(lod, [0, 3.0, 0], [-1.65, 5.55, 0.2], 0.34, 0.13),
-        branch(lod, [0.05, 3.15, 0], [1.45, 5.8, 0.65], 0.32, 0.12),
-        branch(lod, [0, 3.25, 0], [0.2, 6.0, -1.25], 0.3, 0.11),
-      ];
-      const foliage: Geo[] = lod.extras
-        ? [
-            ...leafShell(1.34, 1.45, 0.65, 1.2, -1.25, 5.85, 0.15, 12, 1),
-            ...leafShell(1.38, 1.4, 0.7, 1.15, 1.15, 6.0, 0.45, 12, 2),
-            ...leafShell(1.43, 1.35, 0.7, 1.35, 0.05, 6.2, -0.9, 13, 3),
-            ...leafShell(1.29, 1.5, 0.7, 1.2, 0, 6.45, 0.35, 12, 4),
-          ]
-        : [
-            crownBlob(lod, 1.45, 1.45, 0.65, 1.2, -1.25, 5.85, 0.15),
-            crownBlob(lod, 1.5, 1.4, 0.7, 1.15, 1.15, 6.0, 0.45),
-            crownBlob(lod, 1.55, 1.35, 0.7, 1.35, 0.05, 6.2, -0.9),
-            crownBlob(lod, 1.4, 1.5, 0.7, 1.2, 0, 6.45, 0.35),
-          ];
-      if (lod.extras) {
-        trunk.push(
-          branch(lod, [-0.9, 4.4, 0.1], [-1.8, 5.7, -0.6], 0.13, 0.06),
-          branch(lod, [0.8, 4.6, 0.4], [1.6, 5.9, -0.5], 0.12, 0.06),
-        );
-      }
-      const sprayCount = lod.extras ? 26 : 14;
-      for (let i = 0; i < sprayCount; i++) {
-        const angle = (i / sprayCount) * Math.PI * 2 + 0.07 * Math.sin(i * 2.4);
-        const alternate = i % 2 === 0;
-        const g = willowSpray(
-          (alternate ? 4.45 : 3.65) * (0.94 + 0.06 * Math.sin(i * 1.7)),
-          alternate ? 1.25 : 0.95,
-          alternate ? 0.38 : 0.32,
-          i % 3 === 0 ? 0.25 : -0.18,
-          Math.round(5 * lod.ribbon),
-        );
-        g.rotateY(-angle);
-        const ring = alternate ? 1.35 : 0.8;
-        g.translate(Math.cos(angle) * ring, crownY + (alternate ? 0 : 0.35), Math.sin(angle) * ring);
-        foliage.push(g);
-      }
-      return { trunk, foliage, ribbons: true };
-    }
     case "deadtree": {
       // A bare trunk plus angled stubs; the stubs are the "foliage" group (in the
       // trunk's colour) so the two-group layout holds.
@@ -582,6 +405,9 @@ function rawPartsFor(species: Species, lod: Lod): TreeParts {
       }
       return { trunk, foliage };
     }
+    default:
+      // The oak and the leafy species are drawn by the broadleaf kit (treeParts).
+      throw new Error(`${species} is not drawn by the legacy tree builder`);
   }
 }
 
@@ -670,9 +496,7 @@ function coarseParts(species: Species): TreeParts {
     foliage = [fromIndexed([[1, 0, 0], [0, 0, 1], [-1, 0, 0], [0, 0, -1], [0, 1, 0]],
       [0, 4, 1, 1, 4, 2, 2, 4, 3, 3, 4, 0, 0, 1, 2, 0, 2, 3])];
   } else {
-    foliage = [species === "willow" ? coarseCrown(0.16, 0.72, 0.88, 1)
-      : species === "aspen" ? coarseCrown(0.28, 0.7, 1, 0.7)
-      : coarseCrown(0.32, 0.68, 1, 0.9)];
+    foliage = [coarseCrown(0.32, 0.68, 1, 0.9)];
   }
   // Every coarse crown fills the low tree's envelope exactly, asymmetry included.
   const src = boxOf(foliage);
@@ -706,7 +530,7 @@ const smooth = (a: number, b: number, x: number): number => {
 };
 
 /** How strongly a species' clumps vary in hue (a golden larch more, a dark spruce less). */
-const HUE_JITTER: Partial<Record<Species, number>> = { autumnlarch: 0.9, larch: 0.7, birch: 0.6, aspen: 0.7, spruce: 0.35, pine: 0.4 };
+const HUE_JITTER: Partial<Record<Species, number>> = { autumnlarch: 0.9, larch: 0.7, spruce: 0.35, pine: 0.4 };
 
 function paint(species: Species, parts: TreeParts): void {
   const seed = SPECIES.indexOf(species) + 1;
@@ -745,9 +569,17 @@ function paint(species: Species, parts: TreeParts): void {
 }
 
 /** The parts of one species at one level, shaded (tests, the woods previews). */
-export function treeParts(species: Species, detail: TreeDetail | "max", options?: Partial<OakOptions>): TreeParts {
+export function treeParts(species: Species, detail: TreeDetail | "max", options?: Partial<BroadleafOptions>): TreeParts {
   if (species === "oak") return oakParts(detail, options);
-  if (detail === "max") throw new Error("Max detail is only available for oak");
+  if (isLeafy(species)) return leafyParts(species, detail, options);
+  if (detail === "max") throw new Error(`Max detail is not available for ${species}`);
+  return legacyParts(species, detail);
+}
+
+// The game's original builders (conifers, palm, Scots pine, dead tree). Their
+// designs call this directly, never treeParts, so their standalone JS models
+// leave the broadleaf kit out of the bundle.
+function legacyParts(species: Species, detail: TreeDetail): TreeParts {
   const parts = detail === "coarse" ? coarseParts(species) : partsFor(species, LODS[detail]);
   if (detail === "high") fitToLow(species, parts);
   paint(species, parts);
@@ -774,8 +606,14 @@ function fitToLow(species: Species, parts: TreeParts): void {
 }
 
 /** One species at one level as a model: the `trunk` and `foliage` materials. */
-export function buildTree(species: Species, detail: TreeDetail | "max", options?: Partial<OakOptions>): MeshBuilder {
-  const { trunk, foliage, ribbons } = treeParts(species, detail, options);
+export function buildTree(species: Species, detail: TreeDetail | "max", options?: Partial<BroadleafOptions>): MeshBuilder {
+  return treeMesh(species, treeParts(species, detail, options));
+}
+
+// A legacy species' level as a model, without the broadleaf dispatch.
+const legacyTree = (species: Species, detail: TreeDetail): MeshBuilder => treeMesh(species, legacyParts(species, detail));
+
+function treeMesh(species: Species, { trunk, foliage, ribbons }: TreeParts): MeshBuilder {
   const c = TREE_COLORS[species];
   const m = new MeshBuilder({
     trunk: { color: c.trunk, roughness: 1 },
@@ -798,37 +636,41 @@ export function buildTree(species: Species, detail: TreeDetail | "max", options?
 
 // One exported build function per species and level: a design's JS model bundles
 // the functions it names (jsModel.ts), so each needs its own name.
-export const treePine = () => buildTree("pine", "high");
-export const treePineLow = () => buildTree("pine", "low");
-export const treePineCoarse = () => buildTree("pine", "coarse");
-export const treeSpruce = () => buildTree("spruce", "high");
-export const treeSpruceLow = () => buildTree("spruce", "low");
-export const treeSpruceCoarse = () => buildTree("spruce", "coarse");
+export const treePine = () => legacyTree("pine", "high");
+export const treePineLow = () => legacyTree("pine", "low");
+export const treePineCoarse = () => legacyTree("pine", "coarse");
+export const treeSpruce = () => legacyTree("spruce", "high");
+export const treeSpruceLow = () => legacyTree("spruce", "low");
+export const treeSpruceCoarse = () => legacyTree("spruce", "coarse");
 export const treeOak = (p?: ParamValues) => buildTree("oak", "high", oakOptions(p));
 export const treeOakMax = (p?: ParamValues) => buildTree("oak", "max", oakOptions(p));
 export const treeOakLow = (p?: ParamValues) => buildTree("oak", "low", oakOptions(p));
 export const treeOakCoarse = (p?: ParamValues) => buildTree("oak", "coarse", oakOptions(p));
-export const treeBirch = () => buildTree("birch", "high");
-export const treeBirchLow = () => buildTree("birch", "low");
-export const treeBirchCoarse = () => buildTree("birch", "coarse");
-export const treeAspen = () => buildTree("aspen", "high");
-export const treeAspenLow = () => buildTree("aspen", "low");
-export const treeAspenCoarse = () => buildTree("aspen", "coarse");
-export const treeWillow = () => buildTree("willow", "high");
-export const treeWillowLow = () => buildTree("willow", "low");
-export const treeWillowCoarse = () => buildTree("willow", "coarse");
-export const treePalm = () => buildTree("palm", "high");
-export const treePalmLow = () => buildTree("palm", "low");
-export const treePalmCoarse = () => buildTree("palm", "coarse");
-export const treeBush = () => buildTree("bush", "high");
-export const treeBushLow = () => buildTree("bush", "low");
-export const treeBushCoarse = () => buildTree("bush", "coarse");
-export const treeDeadtree = () => buildTree("deadtree", "high");
-export const treeDeadtreeLow = () => buildTree("deadtree", "low");
-export const treeDeadtreeCoarse = () => buildTree("deadtree", "coarse");
-export const treeScotspine = () => buildTree("scotspine", "high");
-export const treeScotspineLow = () => buildTree("scotspine", "low");
-export const treeScotspineCoarse = () => buildTree("scotspine", "coarse");
+export const treeBirch = (p?: ParamValues) => buildTree("birch", "high", leafyOptions(p));
+export const treeBirchMax = (p?: ParamValues) => buildTree("birch", "max", leafyOptions(p));
+export const treeBirchLow = (p?: ParamValues) => buildTree("birch", "low", leafyOptions(p));
+export const treeBirchCoarse = (p?: ParamValues) => buildTree("birch", "coarse", leafyOptions(p));
+export const treeAspen = (p?: ParamValues) => buildTree("aspen", "high", leafyOptions(p));
+export const treeAspenMax = (p?: ParamValues) => buildTree("aspen", "max", leafyOptions(p));
+export const treeAspenLow = (p?: ParamValues) => buildTree("aspen", "low", leafyOptions(p));
+export const treeAspenCoarse = (p?: ParamValues) => buildTree("aspen", "coarse", leafyOptions(p));
+export const treeWillow = (p?: ParamValues) => buildTree("willow", "high", leafyOptions(p));
+export const treeWillowMax = (p?: ParamValues) => buildTree("willow", "max", leafyOptions(p));
+export const treeWillowLow = (p?: ParamValues) => buildTree("willow", "low", leafyOptions(p));
+export const treeWillowCoarse = (p?: ParamValues) => buildTree("willow", "coarse", leafyOptions(p));
+export const treePalm = () => legacyTree("palm", "high");
+export const treePalmLow = () => legacyTree("palm", "low");
+export const treePalmCoarse = () => legacyTree("palm", "coarse");
+export const treeBush = (p?: ParamValues) => buildTree("bush", "high", leafyOptions(p));
+export const treeBushMax = (p?: ParamValues) => buildTree("bush", "max", leafyOptions(p));
+export const treeBushLow = (p?: ParamValues) => buildTree("bush", "low", leafyOptions(p));
+export const treeBushCoarse = (p?: ParamValues) => buildTree("bush", "coarse", leafyOptions(p));
+export const treeDeadtree = () => legacyTree("deadtree", "high");
+export const treeDeadtreeLow = () => legacyTree("deadtree", "low");
+export const treeDeadtreeCoarse = () => legacyTree("deadtree", "coarse");
+export const treeScotspine = () => legacyTree("scotspine", "high");
+export const treeScotspineLow = () => legacyTree("scotspine", "low");
+export const treeScotspineCoarse = () => legacyTree("scotspine", "coarse");
 // The European larch in summer green or autumn gold: one design, two species keys
 // (the woods plant `larch` and `autumnlarch`, and the game draws each).
 export const LARCH_PARAMS: ParamSpec[] = [{
@@ -837,33 +679,35 @@ export const LARCH_PARAMS: ParamSpec[] = [{
   default: "summer",
 }];
 const larchOf = (p?: ParamValues): Species => resolveParams(LARCH_PARAMS, p).season === "autumn" ? "autumnlarch" : "larch";
-export const treeLarch = (p?: ParamValues) => buildTree(larchOf(p), "high");
-export const treeLarchLow = (p?: ParamValues) => buildTree(larchOf(p), "low");
-export const treeLarchCoarse = (p?: ParamValues) => buildTree(larchOf(p), "coarse");
-export const treeHazel = () => buildTree("hazel", "high");
-export const treeHazelLow = () => buildTree("hazel", "low");
-export const treeHazelCoarse = () => buildTree("hazel", "coarse");
-export const treeOrchard = () => buildTree("orchard", "high");
-export const treeOrchardLow = () => buildTree("orchard", "low");
-export const treeOrchardCoarse = () => buildTree("orchard", "coarse");
+export const treeLarch = (p?: ParamValues) => legacyTree(larchOf(p), "high");
+export const treeLarchLow = (p?: ParamValues) => legacyTree(larchOf(p), "low");
+export const treeLarchCoarse = (p?: ParamValues) => legacyTree(larchOf(p), "coarse");
+export const treeHazel = (p?: ParamValues) => buildTree("hazel", "high", leafyOptions(p));
+export const treeHazelMax = (p?: ParamValues) => buildTree("hazel", "max", leafyOptions(p));
+export const treeHazelLow = (p?: ParamValues) => buildTree("hazel", "low", leafyOptions(p));
+export const treeHazelCoarse = (p?: ParamValues) => buildTree("hazel", "coarse", leafyOptions(p));
+export const treeOrchard = (p?: ParamValues) => buildTree("orchard", "high", leafyOptions(p));
+export const treeOrchardMax = (p?: ParamValues) => buildTree("orchard", "max", leafyOptions(p));
+export const treeOrchardLow = (p?: ParamValues) => buildTree("orchard", "low", leafyOptions(p));
+export const treeOrchardCoarse = (p?: ParamValues) => buildTree("orchard", "coarse", leafyOptions(p));
 
 type Builders = [(p?: ParamValues) => MeshBuilder, (p?: ParamValues) => MeshBuilder, (p?: ParamValues) => MeshBuilder];
 
 /** The tree designs: one per species, but the autumn larch is the larch's `season: autumn`. */
-const MODELS: ReadonlyArray<{ species: Species; builders: Builders; params?: ParamSpec[] }> = [
+const MODELS: ReadonlyArray<{ species: Species; builders: Builders; params?: ParamSpec[]; buildMax?: (p?: ParamValues) => MeshBuilder }> = [
   { species: "pine", builders: [treePine, treePineLow, treePineCoarse] },
   { species: "spruce", builders: [treeSpruce, treeSpruceLow, treeSpruceCoarse] },
-  { species: "oak", builders: [treeOak, treeOakLow, treeOakCoarse], params: OAK_PARAMS },
-  { species: "birch", builders: [treeBirch, treeBirchLow, treeBirchCoarse] },
-  { species: "aspen", builders: [treeAspen, treeAspenLow, treeAspenCoarse] },
-  { species: "willow", builders: [treeWillow, treeWillowLow, treeWillowCoarse] },
+  { species: "oak", builders: [treeOak, treeOakLow, treeOakCoarse], params: OAK_PARAMS, buildMax: treeOakMax },
+  { species: "birch", builders: [treeBirch, treeBirchLow, treeBirchCoarse], params: LEAFY_PARAMS, buildMax: treeBirchMax },
+  { species: "aspen", builders: [treeAspen, treeAspenLow, treeAspenCoarse], params: LEAFY_PARAMS, buildMax: treeAspenMax },
+  { species: "willow", builders: [treeWillow, treeWillowLow, treeWillowCoarse], params: LEAFY_PARAMS, buildMax: treeWillowMax },
   { species: "palm", builders: [treePalm, treePalmLow, treePalmCoarse] },
-  { species: "bush", builders: [treeBush, treeBushLow, treeBushCoarse] },
+  { species: "bush", builders: [treeBush, treeBushLow, treeBushCoarse], params: LEAFY_PARAMS, buildMax: treeBushMax },
   { species: "deadtree", builders: [treeDeadtree, treeDeadtreeLow, treeDeadtreeCoarse] },
   { species: "scotspine", builders: [treeScotspine, treeScotspineLow, treeScotspineCoarse] },
   { species: "larch", builders: [treeLarch, treeLarchLow, treeLarchCoarse], params: LARCH_PARAMS },
-  { species: "hazel", builders: [treeHazel, treeHazelLow, treeHazelCoarse] },
-  { species: "orchard", builders: [treeOrchard, treeOrchardLow, treeOrchardCoarse] },
+  { species: "hazel", builders: [treeHazel, treeHazelLow, treeHazelCoarse], params: LEAFY_PARAMS, buildMax: treeHazelMax },
+  { species: "orchard", builders: [treeOrchard, treeOrchardLow, treeOrchardCoarse], params: LEAFY_PARAMS, buildMax: treeOrchardMax },
 ];
 
 /** The catalog fields every tree shares. */
@@ -885,13 +729,13 @@ export function treeModelOf(species: Species): { id: string; params: ParamValues
 }
 
 /** One design per species, the two larches one design with a season. */
-export const TREES: ProceduralDesign[] = MODELS.map(({ species, builders: [build, buildLod, buildCoarse], params }) => ({
+export const TREES: ProceduralDesign[] = /* @__PURE__ */ MODELS.map(({ species, builders: [build, buildLod, buildCoarse], params, buildMax }) => ({
   id: treeId(species),
   title: TITLES[species],
   build,
   buildLod,
   buildCoarse,
-  ...(species === "oak" ? { buildMax: treeOakMax } : {}),
+  ...(buildMax ? { buildMax } : {}),
   ...(params ? { params } : {}),
   lodTriangles: 300,
   references: species === "oak" ? "oak" : "trees",

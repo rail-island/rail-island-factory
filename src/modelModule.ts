@@ -13,7 +13,7 @@ export interface JsModule {
   default: JsBuild;
   /** A tree's third, coarsest level (docs/models/trees.md). */
   buildCoarse?: (three: object, params?: Record<string, string>) => Object3D;
-  /** Optional close-up detail level, currently oak only. */
+  /** Optional close-up detail level, currently the broadleaf trees. */
   buildMax?: (three: object, params?: Record<string, string>) => Object3D;
   pose?: (root: Object3D, pose: { steer: number; bend: number[] }) => void;
 }

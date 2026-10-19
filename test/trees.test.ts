@@ -142,11 +142,12 @@ describe("tree levels", () => {
     }
   });
 
-  it("shades single-layer oak leaves, palm fronds and willow sprays on both faces", () => {
+  it("shades single-layer broadleaf leaves, palm fronds and willow curtains on both faces", () => {
+    const broadleaf = ["oak", "birch", "aspen", "willow", "bush", "hazel", "orchard"];
     for (const species of SPECIES) {
       for (const detail of LEVELS) {
         const ribbons = (detail !== "coarse" && (species === "palm" || species === "willow"))
-          || (species === "oak" && detail === "high");
+          || (broadleaf.includes(species) && detail === "high");
         expect(treeParts(species, detail).ribbons ?? false, `${species} ${detail}`).toBe(ribbons);
       }
     }
@@ -177,11 +178,13 @@ describe("the shared trees module", () => {
       }
     }
     expect(() => mod.buildTree(THREE, "baobab", "high")).toThrow();
-    expect(() => mod.buildTree(THREE, "pine", "max")).toThrow(/only available for oak/);
-    let maxTriangles = 0;
-    mod.buildTree(THREE, "oak", "max").traverse((o: { isMesh?: boolean; geometry?: { getAttribute(n: string): { count: number } } }) => {
-      if (o.isMesh) maxTriangles += o.geometry!.getAttribute("position").count / 3;
-    });
-    expect(maxTriangles).toBe(TREES.find((d) => d.id === "proc-tree-oak")!.buildMax!().triangleCount());
+    expect(() => mod.buildTree(THREE, "pine", "max")).toThrow(/not available for pine/);
+    for (const species of ["oak", "birch", "aspen", "willow", "bush", "hazel", "orchard"]) {
+      let maxTriangles = 0;
+      mod.buildTree(THREE, species, "max").traverse((o: { isMesh?: boolean; geometry?: { getAttribute(n: string): { count: number } } }) => {
+        if (o.isMesh) maxTriangles += o.geometry!.getAttribute("position").count / 3;
+      });
+      expect(maxTriangles, species).toBe(TREES.find((d) => d.id === `proc-tree-${species}`)!.buildMax!().triangleCount());
+    }
   }, 60_000);
 });
