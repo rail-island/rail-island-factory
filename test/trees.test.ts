@@ -142,10 +142,11 @@ describe("tree levels", () => {
     }
   });
 
-  it("shades only the ribbon foliage (palm fronds, willow sprays) on both faces", () => {
+  it("shades single-layer oak leaves, palm fronds and willow sprays on both faces", () => {
     for (const species of SPECIES) {
       for (const detail of LEVELS) {
-        const ribbons = detail !== "coarse" && (species === "palm" || species === "willow");
+        const ribbons = (detail !== "coarse" && (species === "palm" || species === "willow"))
+          || (species === "oak" && detail === "high");
         expect(treeParts(species, detail).ribbons ?? false, `${species} ${detail}`).toBe(ribbons);
       }
     }

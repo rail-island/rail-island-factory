@@ -9,6 +9,7 @@
 // Ported from the game's render/TreeGeometry.ts; the shapes, budgets and the
 // reasons behind them are documented in docs/models/trees.md. No `node:` imports.
 
+import { oakParts, oakOptions, OAK_COLORS, OAK_PARAMS, type OakOptions } from "./oak.ts";
 import { MeshBuilder } from "./meshBuilder.ts";
 import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { Geo, boxOf, coneGeo, cylinderGeo, fromIndexed, icosahedronGeo, quatFromUnitVectors, type P3 } from "./treeGeo.ts";
@@ -30,7 +31,7 @@ export type TreeDetail = "coarse" | "low" | "high";
  */
 export const TREE_COLORS: Record<Species, { trunk: string; foliage: string }> = {
   pine: { trunk: "#7a4f2a", foliage: "#33774a" },
-  oak: { trunk: "#76502c", foliage: "#4f8a2f" },
+  oak: OAK_COLORS,
   bush: { trunk: "#634626", foliage: "#5f8a34" },
   palm: { trunk: "#94703a", foliage: "#4fa443" },
   // slender white trunk, light-green rounded crown
@@ -300,75 +301,8 @@ function leafShell(radius: number, scaleX: number, scaleY: number, scaleZ: numbe
 export interface TreeParts {
   trunk: Geo[];
   foliage: Geo[];
-  /** The foliage is single-layer ribbons (palm fronds, willow sprays): shade both faces. */
+  /** The foliage includes single-layer leaves or ribbons: shade both faces. */
   ribbons?: boolean;
-}
-
-// Spend the oak's 2,000-triangle allowance on a rounded, lobed crown and the
-// crooked supporting wood beneath it. The distant levels keep their old envelope.
-function oakHigh(): TreeParts {
-  const woodLod: Lod = { seg: 1, sphere: 0, ribbon: 1, extras: false };
-  const stem = cylinderGeo(0.32, 0.64, 3.8, 10, 5).translate(0, 1.9, 0);
-  stem.map((x, y, z) => {
-    const t = y / 3.8;
-    const a = Math.atan2(z, x);
-    const flute = 1 + 0.13 * Math.cos(a * 5 + t * 0.6);
-    const flare = 1 + 0.42 * Math.exp(-y * 3);
-    return [x * flute * flare + 0.19 * Math.sin(t * 4), y, z * flute * flare - 0.13 * t * t];
-  });
-  const trunk = [stem];
-  for (let i = 0; i < 5; i++) {
-    const a = i * Math.PI * 2 / 5 + 0.2;
-    const root = branch(woodLod, [Math.cos(a) * 0.35, 0.28, Math.sin(a) * 0.35],
-      [Math.cos(a) * (1.05 + 0.12 * Math.sin(i)), 0.045, Math.sin(a) * 0.98], 0.23, 0.035, 3);
-    root.map((x, y, z) => [x, Math.max(0, y), z]);
-    trunk.push(root);
-  }
-  const limbs: [P3, P3, P3][] = [
-    [[0.12, 2.45, -0.03], [-0.95, 3.55, 0.18], [-2.15, 4.9, 0.45]],
-    [[0.13, 2.8, -0.04], [1.05, 3.75, 0.65], [1.95, 5.35, 0.9]],
-    [[0.1, 3.0, -0.08], [0.15, 4.25, -0.95], [0.5, 5.7, -1.75]],
-    [[0.08, 3.15, -0.1], [-0.65, 4.55, -0.35], [-0.65, 6.35, -0.45]],
-    [[0.13, 2.65, 0.02], [-0.05, 3.9, 0.95], [-0.4, 4.95, 1.8]],
-  ];
-  limbs.forEach(([base, elbow, tip], i) => {
-    trunk.push(branch(woodLod, base, elbow, 0.29 - i * 0.02, 0.19, 5));
-    trunk.push(branch(woodLod, elbow, tip, 0.19, 0.065, 4));
-    const fork: P3 = [tip[0] + 0.65 * Math.cos(i * 2.4), tip[1] + 0.25, tip[2] + 0.65 * Math.sin(i * 2.4)];
-    trunk.push(branch(woodLod, elbow, fork, 0.12, 0.035, 3));
-  });
-
-  const foliage: Geo[] = [];
-  const lobe = (x: number, y: number, z: number, r: number, seed: number, detail = 1) => {
-    const g = icosahedronGeo(r, detail);
-    softenCrown(g, r, seed * 1.37);
-    g.scale(1.08, 0.86 + 0.09 * Math.sin(seed), 1).rotateY(seed * 2.4).translate(x, y, z);
-    foliage.push(g);
-  };
-  // Offset tiers interlock into a broad dome; unequal heights and radii leave
-  // small notches at the perimeter without exposing a central polygonal core.
-  for (let i = 0; i < 7; i++) {
-    const a = i * Math.PI * 2 / 7 + 0.15;
-    const reach = 1.95 + 0.23 * Math.sin(i * 2.1);
-    lobe(Math.cos(a) * reach, 4.95 + 0.3 * Math.sin(i * 1.7), Math.sin(a) * reach,
-      1.05 + 0.16 * hash01(i, 21), i + 1);
-  }
-  for (let i = 0; i < 6; i++) {
-    const a = i * Math.PI / 3 + 0.6;
-    lobe(Math.cos(a) * 1.22, 6.05 + 0.24 * Math.cos(i * 2), Math.sin(a) * 1.18,
-      1.12 + 0.1 * hash01(i, 22), i + 11);
-  }
-  lobe(-0.45, 6.7, -0.15, 1.05, 23);
-  lobe(0.5, 6.55, 0.45, 0.95, 24);
-  lobe(0.1, 5.3, 0.1, 1.3, 25);
-  // Small leaf bunches break up the large lobe edges, using only 20 faces each.
-  for (let i = 0; i < 14; i++) {
-    const a = i * Math.PI * 2 / 14 + 0.45;
-    const reach = i % 3 === 0 ? 1.8 : 2.55;
-    lobe(Math.cos(a) * reach, (i % 3 === 0 ? 6.5 : 5.1) + 0.44 * Math.sin(i * 2.3), Math.sin(a) * reach,
-      0.5 + 0.12 * hash01(i, 23), i + 31, 0);
-  }
-  return { trunk, foliage };
 }
 
 function partsFor(species: Species, lod: Lod): TreeParts {
@@ -468,28 +402,7 @@ function rawPartsFor(species: Species, lod: Lod): TreeParts {
         }),
       };
     }
-    case "oak": {
-      if (lod.extras) return oakHigh();
-      // A short heavy trunk divides into several load-bearing limbs, foliage
-      // clustered around their tips.
-      const trunk = [
-        cyl(lod, 0.38, 0.68, 3.8, 0, 7),
-        branch(lod, [0, 3.1, 0], [-1.75, 5.0, 0.35], 0.34, 0.16),
-        branch(lod, [0.05, 3.35, 0], [1.55, 5.45, 0.75], 0.32, 0.15),
-        branch(lod, [0, 3.25, 0.05], [0.25, 5.7, -1.45], 0.3, 0.14),
-        branch(lod, [0, 3.4, 0], [-0.35, 6.0, -0.15], 0.3, 0.13),
-      ];
-      return {
-        trunk,
-        foliage: [
-          crownBlob(lod, 1.55, 1.25, 0.85, 1.05, -1.8, 5.25, 0.35),
-          crownBlob(lod, 1.65, 1.2, 0.9, 1.05, 1.45, 5.65, 0.75),
-          crownBlob(lod, 1.55, 1.15, 0.85, 1.2, 0.2, 5.9, -1.35),
-          crownBlob(lod, 1.75, 1.2, 0.9, 1.15, -0.3, 6.35, -0.05),
-          crownBlob(lod, 1.45, 1.2, 0.8, 1.0, 0.15, 5.1, 0.35),
-        ],
-      };
-    }
+    case "oak": return oakParts(lod.extras ? "high" : "low");
     case "bush": {
       if (!lod.extras) {
         return {
@@ -818,7 +731,6 @@ function paint(species: Species, parts: TreeParts): void {
     return;
   }
   parts.foliage.forEach((g, gi) => {
-    const lobeBox = species === "oak" && parts.foliage.length > 10 ? g.box() : null;
     const value = 0.8 + 0.38 * hash01(seed * 977 + gi, 7);
     const warm = (hash01(seed * 977 + gi, 8) - 0.5) * 2 * hueJitter;
     g.col = [];
@@ -826,17 +738,15 @@ function paint(species: Species, parts: TreeParts): void {
       const h = (g.y(i) - cb) / (ct - cb);
       const rad = Math.min(1, Math.hypot(g.x(i) - cx, g.z(i) - cz) / rmax);
       const open = Math.min(1, Math.max(0, 0.12 + 0.62 * h + 0.5 * rad));
-      let k = (0.34 + 0.66 * open) * value + 0.2 * smooth(0.7, 1, open);
-      // Model each oak cluster in colour as well as silhouette: shaded underneath,
-      // warm light on the exposed upper leaves, with no extra geometry.
-      if (lobeBox) k *= 0.72 + 0.4 * smooth(lobeBox.min[1], lobeBox.max[1], g.y(i));
+      const k = (0.34 + 0.66 * open) * value + 0.2 * smooth(0.7, 1, open);
       g.col.push(k * (1 + 0.12 * warm), k * (1 + 0.05 * warm), k * (1 - 0.18 * warm));
     }
   });
 }
 
 /** The parts of one species at one level, shaded (tests, the woods previews). */
-export function treeParts(species: Species, detail: TreeDetail): TreeParts {
+export function treeParts(species: Species, detail: TreeDetail, options?: Partial<OakOptions>): TreeParts {
+  if (species === "oak") return oakParts(detail, options);
   const parts = detail === "coarse" ? coarseParts(species) : partsFor(species, LODS[detail]);
   if (detail === "high") fitToLow(species, parts);
   paint(species, parts);
@@ -863,8 +773,8 @@ function fitToLow(species: Species, parts: TreeParts): void {
 }
 
 /** One species at one level as a model: the `trunk` and `foliage` materials. */
-export function buildTree(species: Species, detail: TreeDetail): MeshBuilder {
-  const { trunk, foliage, ribbons } = treeParts(species, detail);
+export function buildTree(species: Species, detail: TreeDetail, options?: Partial<OakOptions>): MeshBuilder {
+  const { trunk, foliage, ribbons } = treeParts(species, detail, options);
   const c = TREE_COLORS[species];
   const m = new MeshBuilder({
     trunk: { color: c.trunk, roughness: 1 },
@@ -893,9 +803,9 @@ export const treePineCoarse = () => buildTree("pine", "coarse");
 export const treeSpruce = () => buildTree("spruce", "high");
 export const treeSpruceLow = () => buildTree("spruce", "low");
 export const treeSpruceCoarse = () => buildTree("spruce", "coarse");
-export const treeOak = () => buildTree("oak", "high");
-export const treeOakLow = () => buildTree("oak", "low");
-export const treeOakCoarse = () => buildTree("oak", "coarse");
+export const treeOak = (p?: ParamValues) => buildTree("oak", "high", oakOptions(p));
+export const treeOakLow = (p?: ParamValues) => buildTree("oak", "low", oakOptions(p));
+export const treeOakCoarse = (p?: ParamValues) => buildTree("oak", "coarse", oakOptions(p));
 export const treeBirch = () => buildTree("birch", "high");
 export const treeBirchLow = () => buildTree("birch", "low");
 export const treeBirchCoarse = () => buildTree("birch", "coarse");
@@ -941,7 +851,7 @@ type Builders = [(p?: ParamValues) => MeshBuilder, (p?: ParamValues) => MeshBuil
 const MODELS: ReadonlyArray<{ species: Species; builders: Builders; params?: ParamSpec[] }> = [
   { species: "pine", builders: [treePine, treePineLow, treePineCoarse] },
   { species: "spruce", builders: [treeSpruce, treeSpruceLow, treeSpruceCoarse] },
-  { species: "oak", builders: [treeOak, treeOakLow, treeOakCoarse] },
+  { species: "oak", builders: [treeOak, treeOakLow, treeOakCoarse], params: OAK_PARAMS },
   { species: "birch", builders: [treeBirch, treeBirchLow, treeBirchCoarse] },
   { species: "aspen", builders: [treeAspen, treeAspenLow, treeAspenCoarse] },
   { species: "willow", builders: [treeWillow, treeWillowLow, treeWillowCoarse] },
@@ -981,6 +891,6 @@ export const TREES: ProceduralDesign[] = MODELS.map(({ species, builders: [build
   buildCoarse,
   ...(params ? { params } : {}),
   lodTriangles: 300,
-  references: "trees",
+  references: species === "oak" ? "oak" : "trees",
   catalog: TREE_CATALOG,
 }));
