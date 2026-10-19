@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { paramCombinations, type ParamValues } from "../generator/design";
 import { OAK_PARAMS, oakOptions, oakParts } from "../generator/oak";
+import type { Geo } from "../generator/treeGeo";
 import { treeOak, treeOakLow, treeOakCoarse, treeOakMax, TREES } from "../generator/trees";
 import { glbStats } from "../generator/glbStats";
 import { findCoplanarOverlaps } from "../generator/coplanar";
@@ -58,9 +59,34 @@ describe("reference oak", () => {
     expect(full.foliage.filter((g) => g.count / 3 === 20)).toHaveLength(13);
     expect(full.foliage.filter((g) => g.count / 3 === 2)).toHaveLength(624);
     expect(airy.foliage.filter((g) => g.count / 3 === 2)).toHaveLength(468);
-    expect(oakParts("low").foliage).toHaveLength(13);
+    expect(oakParts("low").foliage.length).toBeLessThanOrEqual(6);
     expect(treeOak().triangleCount()).toBe(1886);
     expect(full.ribbons).toBe(true);
+  });
+
+  // Regression: high-detail leaves sat on clump bulges that only Max fills with a
+  // core, so they hung in the air; low-detail limbs stopped short of floating clumps.
+  it("roots every leaf in a clump core and runs every low limb into a foliage mass", () => {
+    const corners = (g: Geo) => Array.from({ length: g.count }, (_, i) => [g.x(i), g.y(i), g.z(i)] as const);
+    for (const { value: seed } of OAK_PARAMS[0]!.values) {
+      for (const level of ["high", "max"] as const) {
+        const { foliage } = oakParts(level, oakOptions({ seed }));
+        const cores = foliage.filter((g) => g.count === 60).map((g) => {
+          const pts = corners(g), c = [0, 1, 2].map((k) => pts.reduce((n, p) => n + p[k]!, 0) / pts.length);
+          return { c, r: Math.max(...pts.map((p) => Math.hypot(p[0] - c[0]!, p[1] - c[1]!, p[2] - c[2]!))) };
+        });
+        // Max's small leaves may sit on a bulge's flank, just past its core's corners.
+        const reach = level === "max" ? 1.15 : 1;
+        for (const leaf of foliage.filter((g) => g.count !== 60)) {
+          const base = [leaf.x(0), leaf.y(0), leaf.z(0)];
+          expect(cores.some(({ c, r }) => Math.hypot(base[0]! - c[0]!, base[1]! - c[1]!, base[2]! - c[2]!) <= r * reach), `${level} seed ${seed}`).toBe(true);
+        }
+      }
+      const low = oakParts("low", oakOptions({ seed }));
+      const boxes = low.foliage.map((g) => g.box()!);
+      const inside = (p: readonly number[]) => boxes.some((b) => [0, 1, 2].every((k) => p[k]! >= b.min[k]! && p[k]! <= b.max[k]!));
+      for (const branch of low.trunk.slice(1)) expect(corners(branch).some(inside), `low seed ${seed}`).toBe(true);
+    }
   });
 
   it("makes every control effective and keeps the trunk foot at the origin", () => {

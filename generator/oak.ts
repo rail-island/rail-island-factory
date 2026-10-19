@@ -74,16 +74,18 @@ function limb(stations: Station[], sides: number, phase = 0): Geo {
     indices.push(0, k + 1, k, top, top + k, top + k + 1);
   return fromIndexed(points, indices);
 }
-// Closed crown volume for the low-detail model: a pentagonal bipyramid, ten faces.
-function leafVolume(rx: number, ry: number, rz: number): Geo {
-  const points: P3[] = [[0, ry, 0], [0, -ry * 0.7, 0]], indices: number[] = [];
-  for (let k = 0; k < 5; k++) {
-    const a = k * Math.PI * 2 / 5;
-    points.push([Math.cos(a) * rx, 0, Math.sin(a) * rz]);
-  }
-  for (let k = 0; k < 5; k++) {
-    const a = 2 + k, b = 2 + (k + 1) % 5;
-    indices.push(0, b, a, 1, a, b);
+// Closed crown mass for the low-detail model: a hexagonal solid with two rings,
+// 24 faces, rounded enough to read as foliage rather than a gem.
+function leafVolume(rx: number, ry: number, rz: number, spin: number): Geo {
+  const points: P3[] = [[0, ry, 0], [0, -ry * 0.8, 0]], indices: number[] = [];
+  for (const [y, r, off] of [[0.5, 0.88, 0], [-0.3, 1, 0.5]] as const)
+    for (let k = 0; k < 6; k++) {
+      const a = (k + off) * Math.PI / 3 + spin;
+      points.push([Math.cos(a) * rx * r, y * ry, Math.sin(a) * rz * r]);
+    }
+  for (let k = 0; k < 6; k++) {
+    const u = 2 + k, u1 = 2 + (k + 1) % 6, l = 8 + k, l1 = 8 + (k + 1) % 6;
+    indices.push(0, u1, u, u, u1, l, u1, l1, l, 1, l, l1);
   }
   return fromIndexed(points, indices);
 }
@@ -125,6 +127,8 @@ type Layout = {
   limbs: Station[][];
   twigs: Station[][];
   clumps: Clump[];
+  // The limb serving each clump: 0-2 for the fork's limbs, -1 for a low bough's.
+  owner: number[];
 };
 // The structure every level shares: a leaning, flared trunk that forks into three
 // limbs, low side boughs, and thirteen leaf clumps arranged as a broad dome. Only
@@ -209,7 +213,7 @@ function layout(o: OakOptions): Layout {
     limbs.push([{ at: add(start, mul(c.out, -0.12)), r: 0.21 }, { at: mix(start, elbow, 0.5), r: 0.16 }, { at: elbow, r: 0.12 },
       { at: tip, r: 0.04 }]);
   });
-  return { stem, limbs, twigs, clumps };
+  return { stem, limbs, twigs, clumps, owner };
 }
 // A pointed leaf along +Z with its base at the origin. High detail folds it once
 // along the midrib (two faces); Max raises the midrib into four facets.
@@ -226,7 +230,25 @@ function rawOak(detail: "max" | "high" | "low", o: OakOptions): Parts {
   const sides = (hi: number, mx: number, lo: number) => max ? mx : high ? hi : lo;
   const stations = (s: Station[]) => high ? s : [s[0]!, s[s.length - 1]!];
   const trunk = [limb(high ? plan.stem : [plan.stem[0]!, plan.stem[2]!, plan.stem[4]!], sides(8, 14, 4))];
-  plan.limbs.forEach((s, i) => trunk.push(limb(stations(s), i < 3 ? sides(6, 10, 3) : sides(5, 8, 3), i * 0.4)));
+  // Low detail merges each limb's clumps into one mass (the top clump and each low
+  // bough's clump stay single) and runs the limb into the mass's centre, so no
+  // branch ends in the air and no clump floats without one.
+  const masses = high ? [] : [[0], ...[0, 1, 2].map((k) => plan.clumps.map((_, i) => i).filter((i) => i > 0 && plan.owner[i] === k)),
+    ...plan.owner.flatMap((k, i) => k < 0 ? [[i]] : [])].filter((m) => m.length).map((m) => {
+    const lo: P3 = [Infinity, Infinity, Infinity], hi: P3 = [-Infinity, -Infinity, -Infinity];
+    for (const i of m)
+      for (let a = 0; a < 3; a++) {
+        const c = plan.clumps[i]!;
+        lo[a] = Math.min(lo[a]!, c.at[a]! - c.r * 0.8);
+        hi[a] = Math.max(hi[a]!, c.at[a]! + c.r * 0.8);
+      }
+    return { members: m, at: mix(lo, hi, 0.5), half: mul(sub(hi, lo), 0.5) };
+  });
+  plan.limbs.forEach((s, i) => {
+    const mass = masses.find((m) => i < 3 && m.members.some((c) => c > 0 && plan.owner[c] === i));
+    const path = mass ? [s[0]!, { at: mass.at, r: 0.06 }] : stations(s);
+    trunk.push(limb(path, i < 3 ? sides(6, 10, 3) : sides(5, 8, 3), i * 0.4));
+  });
   if (high)
     plan.twigs.forEach((s) => trunk.push(limb(max ? s : [s[0]!, s[2]!], max ? 5 : 3)));
   // Root buttresses: a ridge from the trunk down to a tip on the ground, open
@@ -248,18 +270,15 @@ function rawOak(detail: "max" | "high" | "low", o: OakOptions): Parts {
   plan.clumps.forEach((c, p) => {
     const rng = random(o.seed * 7919 + p * 131 + 17);
     const exposure = Math.hypot(c.out[0], c.out[2]) > 0 ? 0.5 : 0.8;
-    if (!high) {
-      const core = leafVolume(c.r * 1.2, c.r * 0.85, c.r * 1.15).rotateY(p * 2.4).translate(...c.at);
-      shade(core, true, c.tone, top, [0, 0.3, 0], exposure);
-      foliage.push(core);
+    if (!high)
       return;
-    }
     // Two bulges make each clump lumpy, like the reference's leaf masses.
     const lobes: P3[] = [0, 1].map((k) => {
       const a = rng() * Math.PI * 2 + k * 2.5;
       return unit(add(mul(c.out, 0.6), [Math.cos(a), 0.5 + rng() * 0.6, Math.sin(a)]));
     });
-    const bump = (d: P3) => 1 + lobes.reduce((s, l) => s + 0.22 * Math.max(0, d[0] * l[0] + d[1] * l[1] + d[2] * l[2]) ** 3, 0);
+    // Only Max gives the bulges cores of their own, so only Max pushes leaves out onto them.
+    const bump = (d: P3) => !max ? 1 : 1 + lobes.reduce((s, l) => s + 0.22 * Math.max(0, d[0] * l[0] + d[1] * l[1] + d[2] * l[2]) ** 3, 0);
     // Dark cores close the clump so no sky shows through the leaves.
     const cores = max ? [{ at: c.at, r: c.r * 0.76 }, ...lobes.map((l) => ({ at: add(c.at, mul(l, c.r * 0.42)), r: c.r * 0.5 }))]
       : [{ at: c.at, r: c.r * 0.72 }];
@@ -276,7 +295,7 @@ function rawOak(detail: "max" | "high" | "low", o: OakOptions): Parts {
       const y = 1 - 2 * (k + 0.5) / rosettes;
       const ring = Math.sqrt(1 - y * y), az = k * Math.PI * (3 - Math.sqrt(5)) + spin;
       // Lift the distribution: more rosettes on the lit top than underneath.
-      const d = unit([ring * Math.cos(az), y * 0.85 + 0.15, ring * Math.sin(az)]);
+      const d = unit([ring * Math.cos(az), y * 0.8 + 0.2, ring * Math.sin(az)]);
       const centre = add(c.at, [d[0] * c.r * bump(d) * 0.66, d[1] * c.r * bump(d) * 0.6, d[2] * c.r * bump(d) * 0.66]);
       const facing = unit(add(d, [0, 0.25, 0]));
       const q = quatFromUnitVectors([0, 1, 0], facing);
@@ -286,12 +305,19 @@ function rawOak(detail: "max" | "high" | "low", o: OakOptions): Parts {
       for (let j = 0; j < leaves; j++) {
         // Tufts, not flat stars: each leaf rises 35-60 degrees out of the surface.
         const leaf = leafBlade(length * size * (j % 2 ? 0.85 : 1), length * size * 0.6, max)
-          .translate(0, 0, length * 0.06).rotateX(-0.6 - rng() * 0.45).rotateY(twist + j * Math.PI * 2 / leaves + (rng() - 0.5) * 0.3)
+          .translate(0, 0, length * 0.06).rotateX(-0.5 - rng() * 0.4).rotateY(twist + j * Math.PI * 2 / leaves + (rng() - 0.5) * 0.3)
           .applyQuaternion(q).translate(...centre);
         shade(leaf, true, tone, top, facing, exposure * outwards);
         foliage.push(leaf);
       }
     }
+  });
+  masses.forEach((m, j) => {
+    const lead = plan.clumps[m.members[0]!]!;
+    const out = m.members.length > 1 ? 0.6 : Math.hypot(lead.out[0], lead.out[2]) > 0 ? 0.5 : 0.8;
+    const mass = leafVolume(m.half[0] * 1.12, m.half[1] * 1.06, m.half[2] * 1.12, j * 0.7).translate(...m.at);
+    shade(mass, true, lead.tone, top, [0, 0.3, 0], out);
+    foliage.push(mass);
   });
   for (const g of trunk)
     shade(g, false, 0, top);

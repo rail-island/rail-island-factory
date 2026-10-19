@@ -127,10 +127,18 @@ yellow-green on top; the bark is warm brown, lit on one flank.
 | Clump cores | 13 / 260 triangles | 13 / 260 triangles |
 | Leaf blades | 624 / 1,248 triangles | 468 / 936 triangles |
 | Total high detail | **1,886** | **1,574** |
-| Low / coarse detail | 190 / 20 | 190 / 20 |
+| Low / coarse detail | 204 / 20 | 204 / 20 |
 
-The low model keeps the trunk, the five limbs and one closed ten-face volume per
-clump (130 triangles).
+Leaves sit only on the clump core at high detail; the bulges that push leaves
+outwards exist only in Max, where each bulge has its own core, so no leaf hangs in
+the air at either level.
+
+The low model (also used near the camera on slow devices) keeps the trunk and the
+five limbs, and merges each limb's clumps into one closed 24-face mass - the top
+clump and each low bough's clump stay single, so at most six masses (144
+triangles). Each limb runs into its mass's centre, so no branch ends in the air
+and no mass floats without a branch.
+
 The shipped ID remains `proc-tree-oak`. Its five enum controls produce 80 combinations:
 
 | Parameter | Values (default first) |
