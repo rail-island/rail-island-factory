@@ -1,23 +1,11 @@
 # Agent Instructions
 
-This is **Rail Island Factory**: Rail Island models generated from code, and the
-catalog site that shows them at `factory.railisland.com`. Today it builds ten
-procedural skyscrapers, eight parametric village houses (among them an alpine hut, docs/models/village.md),
-road and rail vehicles (among them every non-archived vlakosimdb vehicle, as
-parametric families: buses with steerable front wheels and articulated joints,
-locomotives, units, coaches, wagons, trams and metro, and steam locomotives whose
-wheels and rods animate, docs/models/animation.md), and procedural reproductions of the
-game's hand-authored landmarks, stations, aircraft, ships, cable car cabins and trucks
-(docs/models/reproductions.md), plus a small airplane, a parametric chairlift chair and
-the JR KiHa 40 railcar, the DR VT 18.16 "Delfin" express unit (docs/models/dr-vt1816.md), the
-Shinkansen 0 series (docs/models/shinkansen-0.md) and the TGV Duplex (docs/models/tgv-duplex.md), and the game's
-fourteen tree species and the woods types that plant them (docs/models/trees.md, docs/models/woods.md). The build writes an
-export folder (standalone JS models, thumbnails, `skyscrapers.meta.json`, `village.meta.json`, `vehicles.meta.json`,
-`woods.meta.json` and the woods modules) that the game repository, `rail-island-webapp`,
-imports - the factory is the source of these models and of what the game needs of
-them (weight, power, speed, plaza rules: docs/models/game-properties.md), the game a
-consumer. **No GLB file is written**: the build serialises a design to GLB bytes
-only in memory, for its own thumbnails, stats, checks and tests (docs/models/export.md).
+**Rail Island Factory** generates procedural models for Rail Island and hosts their
+catalog at `factory.railisland.com`. The game repository, `rail-island-webapp`,
+imports the generated JS models, thumbnails and metadata from the export folder.
+The factory owns the models and their game properties (docs/models/game-properties.md);
+the game consumes them. **No GLB file is written**: GLB bytes are generated only
+in memory for thumbnails, stats, checks and tests (docs/models/export.md).
 
 ## Documentation (`docs/`)
 
