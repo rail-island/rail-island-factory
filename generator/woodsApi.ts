@@ -6,6 +6,8 @@
 //                         factory tests; the game clamps only as a safety net)
 //   sample(u, v, out)     one representative tree from two uniform numbers in
 //                         [0, 1): what a row of trees along a line draws
+//   variant(values)       the two above for one choice of the woods type's
+//                         parameters (density, and what each type adds)
 //
 // Both are pure and deterministic: the same context gives the same trees, so a
 // forest needs no per-tree state saved. They must not allocate per cell -- the
@@ -62,8 +64,60 @@ export interface TreeSlot {
   hue: number;
 }
 
+/** What plants a cell: one woods type at one choice of its parameters. */
+export interface WoodsPlanter {
+  distribute(ctx: CellContext, out: TreeSlot[]): number;
+  sample(u: number, v: number, out: TreeSlot): void;
+}
+
+/** One value of a woods parameter (the same shape as a model parameter's, design.ts ParamValue). */
+export interface WoodsParamValue {
+  /** The stable token, e.g. "dense": the game's maps store it; never rename a shipped one. */
+  value: string;
+  title: string;
+}
+
+/** An enum parameter of a woods type (the same shape as a model parameter, design.ts ParamSpec). */
+export interface WoodsParam {
+  /** The stable key, e.g. "density". */
+  name: string;
+  title: string;
+  values: WoodsParamValue[];
+  default: string;
+}
+
+/** Chosen parameter values by name. */
+export type WoodsParamValues = Record<string, string>;
+
+/**
+ * Every parameter resolved: the given value, else the default. Lenient on purpose --
+ * a saved map may name a parameter or a value a later factory dropped, and a forest
+ * must still grow -- so an unknown name is ignored and an unknown value reads as
+ * the default.
+ */
+export function resolveWoodsParams(params: readonly WoodsParam[], given: WoodsParamValues = {}): WoodsParamValues {
+  const out: WoodsParamValues = {};
+  for (const p of params) {
+    const v = given[p.name];
+    out[p.name] = v !== undefined && p.values.some((x) => x.value === v) ? v : p.default;
+  }
+  return out;
+}
+
+/** Every woods type has this one: how many trees a cell grows, in three grades. */
+export const DENSITY_PARAM: WoodsParam = {
+  name: "density",
+  title: "Density",
+  values: [
+    { value: "sparse", title: "Sparse" },
+    { value: "normal", title: "Normal" },
+    { value: "dense", title: "Dense" },
+  ],
+  default: "normal",
+};
+
 /** A woods type: its stable name (stored in the game's maps), how it looks in a picker, and its functions. */
-export interface WoodsDesign {
+export interface WoodsDesign extends WoodsPlanter {
   /** Stable key, e.g. "pine-forest": the game's maps store it; never rename a shipped one. */
   name: string;
   /** English display name. */
@@ -72,8 +126,14 @@ export interface WoodsDesign {
   swatch: { r: number; g: number; b: number };
   /** The forest floor under the trees, sRGB 0..255. */
   floor: { r: number; g: number; b: number };
-  distribute(ctx: CellContext, out: TreeSlot[]): number;
-  sample(u: number, v: number, out: TreeSlot): void;
+  /**
+   * The woods type's parameters, `density` first (every type has it). A game map
+   * stores a woods type together with its non-default values, so a shipped
+   * parameter name and value are never renamed.
+   */
+  params: WoodsParam[];
+  /** The planter for one choice of the parameters (memoized); `distribute`/`sample` are the defaults'. */
+  variant(values?: WoodsParamValues): WoodsPlanter;
 }
 
 // Distinct large primes that fold cell coordinates into the per-cell seed.

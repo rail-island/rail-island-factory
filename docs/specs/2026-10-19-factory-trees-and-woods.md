@@ -223,6 +223,20 @@ spec is a draft.
 **Answer: hard limit 4.** The user decided this after asking whether a function could
 return anything.
 
+### Follow-up: woods types with parameters
+The user decided this after the implementation: woods types get parameters like
+other factory models. Every woods type has a `density` parameter with three grades,
+and each type has other appropriate parameters of its own. A map's `meta.json`
+saves a mapping from each unique combination of woods type and parameter values to
+a woods id, so one map can hold at most 256 parametrized combinations (255 usable,
+0 being no woods). The game lets the player choose the parameters, as it does for
+model parameters.
+
+**Answer: as requested.** This extends the name table above: its keys are the woods
+name plus the non-default values (a bare name being the defaults), and ids above the
+shipped thirteen are the map's own (docs/impl/2026-10-19-factory-trees-and-woods.md,
+follow-up 3).
+
 ## High-level plan
 
 **Phase 1 - the move (no visible change).**

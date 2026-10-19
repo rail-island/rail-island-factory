@@ -1,6 +1,7 @@
 // The woods types (generator/woods.ts) on the site: one card per type with its
 // grove -- the type's distribution function run over a small patch and rendered at
-// build time (export/thumbs/woods-<name>.png) -- its stable name, and the swatch and
+// build time (export/thumbs/woods-<name>.png), at its default parameters -- its
+// stable name, its parameters (density first, with their values), and the swatch and
 // forest-floor colours the game tints the ground with. Shown above the tree species
 // when the Trees chip is picked.
 
@@ -34,6 +35,15 @@ export function WoodsGallery() {
                   <figcaption>
                     <b>{w.label}</b>
                     <span class="factory-muted">{w.name}</span>
+                    <span class="factory-woods__params">
+                      <For each={w.params}>
+                        {(p) => (
+                          <span>
+                            {p.title}: {p.values.map((v) => (v.value === p.default ? `${v.title} (default)` : v.title)).join(", ")}
+                          </span>
+                        )}
+                      </For>
+                    </span>
                     <span class="factory-woods__swatches">
                       <span class="factory-woods__swatch" style={{ background: rgb(w.swatch) }} title="Swatch" />
                       <span class="factory-woods__swatch" style={{ background: rgb(w.floor) }} title="Forest floor" />

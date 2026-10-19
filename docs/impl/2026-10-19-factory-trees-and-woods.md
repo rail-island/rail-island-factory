@@ -100,6 +100,24 @@ Area: rail-island-factory (trees, woods, export, site); rail-island-webapp (wood
    detail** select (Full / Low / Coarse), and Coarse builds the module's
    `buildCoarse`.
 
+3. **Woods parameters.** Every woods type has enum parameters, like a model's:
+   `density` (sparse / normal / dense) and one of its own (pine forest `age`, oak
+   woods `undergrowth`, mixed woods `mix`, scrub `trees`, palms `undergrowth`, tropical
+   forest `palms`, mountain forest `conifer`, park `planting`, Scots pine `birch`, larch
+   `spruce`, autumn larch `season`, hazel edge `oaks`, orchard `layout`). The factory
+   exports `params` and `variant(values)` per woods module and lists the parameters in
+   `woods.meta.json`; the defaults plant exactly what the types planted before (checked
+   tree for tree), so existing islands are unchanged. In the game a cell stores a
+   **variant** id: the thirteen shipped defaults keep 1-13, any other variant takes the
+   lowest free id from 14 as it is first painted or loaded (at most 255 per map). The
+   map's `meta.woodsPalette` maps **variant keys** -- the woods name plus its non-default
+   values, `park?density=dense&planting=conifer` -- to ids; a bare name is the defaults,
+   so tables written before parameters still read. The woods board shows the
+   highlighted type's parameters as chip rows (the model parameter style), opens on the
+   painted variant's values, previews without using up an id, and paints the chosen
+   variant; the toolbar names it "Pine Forest (Dense, Young)". This extends the spec's
+   storage decision (a name table) to name-and-parameter keys, as asked.
+
 ## How to test
 
 **Automated coverage.**
@@ -140,6 +158,12 @@ create a new island with Woods set to "Woodlands".
    Set Level of detail to Coarse: a 20-triangle tree with the same outline appears,
    and the triangle count reads "(coarse)". Step to a building: it shows its LOD.
 
+10. Open the woods board, pick Park, choose Dense and Conifers, Select and paint.
+    The grove and the painted park are denser and coniferous; the toolbar reads
+    "Park (Dense, Conifers)". Save and reload: `meta.woodsPalette` holds
+    `"park?density=dense&planting=conifer": 14`, and the park draws the same. Reopen
+    the board: Dense and Conifers are selected.
+
 **Also worth trying.**
 
 - A phone or the lowest quality rung: dense forests should drop to coarse earlier,
@@ -170,6 +194,14 @@ create a new island with Woods set to "Woodlands".
 - **Partial cell context.** `ctx.height` is the terrain height above `WATER_LEVEL`,
   and `ctx.slope` is a central difference across the cell. The functions get no
   material or water-distance information.
+- **Variant ids are per loaded map.** Loading a map resets every id above 13
+  (`resetVariants`), so only one map's woods can be open at a time; a remembered
+  tool preference keeps only the shipped defaults' ids.
+- **The 255-variant cap cannot be reached yet.** All the current factory types and
+  values together make 117 combinations, so the "too many variants" message is only
+  reachable once the factory grows; it is not covered by a test.
+- **Grove thumbnails show defaults.** The site's grove thumbnail of each type is at
+  its default parameters; the card lists the parameters but shows no variant.
 - **Orchard rows.** The orchard's row layout is hard to see at 0.86 trees per cell.
 
 ## Recommended follow-ups
@@ -188,3 +220,6 @@ create a new island with Woods set to "Woodlands".
 - Parks keep their lawn, orchards stand in rows, and the mountain forest thins toward
   the treeline.
 - Islands that used a custom woods type now show Mixed Woods in its place.
+- Every woods type has a density (sparse, normal, dense) and a choice of its own -- a
+  pine forest's age, a park's planting, an autumn wood's season -- picked on the woods
+  board like a model's options.

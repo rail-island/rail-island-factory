@@ -167,6 +167,82 @@ describe("relations between trees", () => {
   });
 });
 
+describe("woods parameters", () => {
+  const wood = (name: string) => WOODS.find((w) => w.design.name === name)!.design;
+  const FULL = (1 << 25) - 1;
+  const perCell = (name: string, values: Record<string, string>) => {
+    const p = wood(name).variant(values);
+    const out = slots();
+    let trees = 0;
+    for (let i = 0; i < 3000; i++) trees += p.distribute({ gx: i % 97, gz: Math.floor(i / 97), seed: 41, mask: FULL, slope: 0, height: 20 }, out);
+    return trees / 3000;
+  };
+
+  it("gives every woods type a three-grade density first, then parameters of its own", () => {
+    for (const { design } of WOODS) {
+      expect(design.params[0]!.name, design.name).toBe("density");
+      expect(design.params[0]!.values.map((v) => v.value)).toEqual(["sparse", "normal", "dense"]);
+      expect(design.params[0]!.default).toBe("normal");
+      expect(design.params.length, design.name).toBeGreaterThan(1);
+      for (const p of design.params) {
+        expect(p.values.map((v) => v.value), `${design.name} ${p.name}`).toContain(p.default);
+        expect(new Set(p.values.map((v) => v.value)).size).toBe(p.values.length);
+        for (const v of p.values) expect(v.value).toMatch(/^[a-z0-9]+$/);
+      }
+    }
+  });
+
+  it("plants more trees the denser the grade, for every woods type", () => {
+    for (const { design } of WOODS) {
+      const sparse = perCell(design.name, { density: "sparse" });
+      const normal = perCell(design.name, {});
+      const dense = perCell(design.name, { density: "dense" });
+      expect(sparse, design.name).toBeLessThan(normal);
+      expect(dense, design.name).toBeGreaterThan(normal);
+    }
+  });
+
+  it("keeps the four-tree limit and valid trees for every combination of every type", () => {
+    const out = slots();
+    for (const { design } of WOODS) {
+      let combos: Record<string, string>[] = [{}];
+      for (const p of design.params) combos = combos.flatMap((c) => p.values.map((v) => ({ ...c, [p.name]: v.value })));
+      for (const values of combos) {
+        const planter = design.variant(values);
+        for (const ctx of contexts(300)) {
+          const n = planter.distribute(ctx, out);
+          expect(n).toBeLessThanOrEqual(MAX_TREES_PER_CELL);
+          for (let i = 0; i < n; i++) expect(SPECIES as readonly string[]).toContain(out[i]!.species);
+        }
+      }
+    }
+  });
+
+  it("reads the defaults for missing, unknown or misspelt values, so a map from a later factory still grows", () => {
+    const d = wood("pine-forest");
+    expect(d.variant({})).toBe(d.variant({ density: "normal", age: "mature" }));
+    expect(d.variant({ density: "huge", bogus: "x" })).toBe(d.variant());
+  });
+
+  it("changes what grows with a type's own parameter", () => {
+    const species = (name: string, values: Record<string, string>) => {
+      const p = wood(name).variant(values);
+      const out = slots();
+      const seen = new Map<string, number>();
+      for (let i = 0; i < 2000; i++) {
+        const n = p.distribute({ gx: i % 50, gz: Math.floor(i / 50), seed: 3, mask: FULL, slope: 0, height: 20 }, out);
+        for (let k = 0; k < n; k++) seen.set(out[k]!.species, (seen.get(out[k]!.species) ?? 0) + 1);
+      }
+      return seen;
+    };
+    expect(species("autumn-larch-woodland", { season: "late" }).get("larch") ?? 0).toBe(0);
+    expect(species("scrub", { trees: "none" }).get("oak") ?? 0).toBe(0);
+    expect(species("park", { planting: "conifer" }).has("aspen")).toBe(false);
+    const broad = species("mixed-woods", { mix: "broadleaf" }), conifer = species("mixed-woods", { mix: "conifer" });
+    expect((broad.get("oak") ?? 0) / (broad.get("pine") ?? 1)).toBeGreaterThan((conifer.get("oak") ?? 0) / (conifer.get("pine") ?? 1) * 4);
+  });
+});
+
 describe("the woods export", () => {
   it("lists every woods type and species, sorted, with no numeric ids", () => {
     const meta = woodsMeta();
@@ -175,6 +251,7 @@ describe("the woods export", () => {
     expect(meta.woods.map((w) => w.module)).toEqual(meta.woods.map((w) => `woods/${w.name}.js`));
     expect(meta.trees.map((t) => t.species).sort()).toEqual([...SPECIES].sort());
     expect(JSON.stringify(meta)).not.toMatch(/"id":\s*\d/);
+    for (const w of meta.woods) expect(w.params[0]!.name, w.name).toBe("density");
   });
 
   it("bundles a standalone module that grows the same trees", async () => {
@@ -185,6 +262,15 @@ describe("the woods export", () => {
     const mod = await import(`data:text/javascript;base64,${Buffer.from(text).toString("base64")}`);
     expect(mod.woods.name).toBe("mixed-woods");
     expect(mod.MAX_TREES_PER_CELL).toBe(4);
+    expect(mod.params.map((p: { name: string }) => p.name)).toEqual(["density", "mix"]);
+    const dense = mod.variant({ density: "dense", mix: "conifer" });
+    const own = entry.design.variant({ density: "dense", mix: "conifer" });
+    const c = slots(), d = slots();
+    for (const ctx of contexts(200)) {
+      const n = own.distribute(ctx, c);
+      expect(dense.distribute(ctx, d)).toBe(n);
+      expect(d.slice(0, n)).toEqual(c.slice(0, n));
+    }
     const a = slots(), b = slots();
     for (const ctx of contexts(300)) {
       const n = entry.design.distribute(ctx, a);

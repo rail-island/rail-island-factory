@@ -1,14 +1,15 @@
 # Woods types
 
 **Covers** - the woods types the game paints: distribution functions keyed by a
-stable name, the contract the game calls them with (the cell context, the output
+stable name, their parameters (density on every type, and one of each type's own),
+the contract the game calls them with (the cell context, the output
 slots, the four-tree limit, the hash), the forest rule they are written in, their
 standalone modules, `woods.meta.json`, the grove previews and the tests.
 **Code** - `generator/woods.ts`, `generator/woodsApi.ts`, `generator/woodsExport.ts`,
 `generator/woodsGrove.ts`, `src/WoodsGallery.tsx`, `test/woods.test.ts`
 **See also** - [trees.md](trees.md), [export.md](export.md),
 [../site/catalog-site.md](../site/catalog-site.md), the game's
-`docs/rendering/woods.md` and `docs/tooling/factory-import.md`
+`docs/rendering/woods.md` and `docs/tooling/factory-import.md`, [parameters.md](parameters.md)
 
 ## A woods type is a function
 
@@ -73,18 +74,61 @@ The thirteen types are the ones the game shipped -- `pine-forest`, `oak-woods`,
 grows 1.7 trees a cell inside and young pines and bushes at its edge, a park stays a
 quarter tree a cell so the lawn shows, the mountain forest shrinks with height.
 
+## Parameters
+
+A woods type has enum **parameters**, in the same shape as a model's (`name`,
+`title`, `values` of `{ value, title }`, `default`; [parameters.md](parameters.md)):
+
+```ts
+params: WoodsParam[]                       // density first
+variant(values?): { distribute, sample }   // one choice of them, compiled once
+```
+
+`variant` resolves the values leniently (`resolveWoodsParams`): a missing parameter,
+an unknown one or an unknown value reads as the default, so a game map written
+against a later or earlier factory still grows a forest. Each choice is compiled
+into its own planter once and kept, so the game's per-cell calls cost nothing more.
+The type's own `distribute` and `sample` are its defaults' -- and **the defaults
+reproduce the type exactly as it was before it had parameters** (checked tree for
+tree when they were added), so existing islands keep their forests.
+
+Every type has **`density`**: `sparse`, `normal` (default) or `dense`, the expected
+trees per cell (inside and at the edge) times 0.55, 1 or 1.55, kept within the
+four-tree limit; an orchard's row probability likewise, at most one tree a cell.
+Each type adds one parameter of its own:
+
+| Woods type | Parameter | Values (default in bold) |
+|---|---|---|
+| `pine-forest` | `age` | `young` (more, shorter pines), **`mature`**, `old` (fewer, taller, more glades and undergrowth) |
+| `oak-woods` | `undergrowth` | `none`, **`some`**, `thick` |
+| `mixed-woods` | `mix` | `broadleaf`, **`balanced`**, `conifer` |
+| `scrub` | `trees` | `none` (bushes only), **`few`**, `many` |
+| `palms` | `undergrowth` | `none`, **`some`**, `thick` |
+| `tropical-forest` | `palms` | `few`, **`some`**, `many` |
+| `high-mountain-forest` | `conifer` | `pine`, **`mixed`**, `spruce` |
+| `park` | `planting` | **`mixed`**, `birch` (birch and aspen), `oak`, `conifer` (spruce and Scots pine) |
+| `scots-pine-woodland` | `birch` | `none`, **`some`**, `many` |
+| `larch-woodland` | `spruce` | `none`, **`some`**, `many` |
+| `autumn-larch-woodland` | `season` | `early` (mostly green), **`peak`**, `late` (all golden) |
+| `hazel-woodland-edge` | `oaks` | `none`, **`few`**, `many` |
+| `village-orchard` | `layout` | **`rows`**, `scattered` (an old meadow orchard) |
+
+The game stores a woods type with its non-default values in a map's table (its
+`docs/rendering/woods.md`), so **a parameter name and a value token are as stable as
+a woods name**: never rename or remove a shipped one. Titles are display text.
+
 ## The export
 
 `woodsExport.ts` writes, for a whole export only:
 
 - `woods/<name>.js`: one standalone ES module per type, no imports, exporting
-  `woods` (name, label, swatch, floor), `distribute`, `sample`, `MAX_TREES_PER_CELL`
-  and `MASK_RADIUS` (esbuild; the types are marked pure so a module carries only its
+  `woods` (name, label, swatch, floor), `params`, `variant(values)`, the defaults'
+  `distribute` and `sample`, `MAX_TREES_PER_CELL` and `MASK_RADIUS` (esbuild; the types are marked pure so a module carries only its
   own);
 - `trees.js`: every tree species in one module, which the game imports
   ([trees.md](trees.md));
 - `woods.meta.json`: `maxTreesPerCell`, `treesModule`, every tree species (`species`, `id`) and every
-  woods type (`name`, `label`, `swatch`, `floor`, `module`), each list sorted by key, no
+  woods type (`name`, `label`, `swatch`, `floor`, `params`, `module`), each list sorted by key, no
   numeric ids -- the game maps names to the ids its maps store;
 - `thumbs/woods-<name>.png`: the grove preview (below), re-rendered only when its
   model's hash changes (`thumbs/.woods.json`).
@@ -103,6 +147,8 @@ with the game's instance-colour formula (`instanceTint`). The ground is the wood
 type's floor under the wood and grass outside it. The site shows the groves above the
 tree species when the **Trees** chip is picked (`src/WoodsGallery.tsx`), each with its
 name, swatch and floor colour.
+The grove thumbnails are at each type's default parameters; `buildGrove` takes
+`params` for any other choice. The site's card lists the type's parameters and values.
 
 ## Tests
 
@@ -111,5 +157,8 @@ unique and kebab-case; for every type, over a sweep of interiors, edges, lone ce
 slopes and heights, at most four trees a cell, each a known species inside its cell
 with a sane height, width, lean, shade and hue; determinism; `sample`; the relations
 (denser inside than at the edge, more shrubs at the edge, a pine forest above one tree
-a cell, a thin park, a treeline, orchard rows, larch groves); the meta; and a bundled
-module growing the same trees as the source.
+a cell, a thin park, a treeline, orchard rows, larch groves); the parameters (density
+first with three grades, more trees the denser the grade for every type, the
+four-tree limit for every combination of every type, lenient resolution, each type's
+own parameter changing what grows); the meta; and a bundled module growing the same
+trees as the source, at its defaults and through `variant`.

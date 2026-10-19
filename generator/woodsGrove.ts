@@ -39,6 +39,8 @@ export function speciesHeight(species: Species, detail: TreeDetail): number {
 }
 
 export interface GroveOptions {
+  /** The woods type's parameter values; the defaults when absent. */
+  params?: Record<string, string>;
   /** Cells across the patch (square). */
   cells?: number;
   /** The wood's radius in cells; cells beyond it are open grass. */
@@ -67,6 +69,7 @@ function wooded(gx: number, gz: number, cells: number, radius: number): boolean 
 
 /** The trees the woods grows on the patch, in patch studs (x, z from the patch's corner). */
 export function groveTrees(woods: WoodsDesign, opts: GroveOptions = {}): Array<TreeSlot & { cx: number; cz: number }> {
+  const planter = opts.params ? woods.variant(opts.params) : woods;
   const cells = opts.cells ?? 14;
   const radius = opts.radius ?? cells * 0.36;
   const seed = opts.seed ?? 20261019;
@@ -82,7 +85,7 @@ export function groveTrees(woods: WoodsDesign, opts: GroveOptions = {}): Array<T
         }
       }
       const ctx: CellContext = { gx, gz, seed, mask, slope: 0, height: 20 };
-      const n = Math.min(woods.distribute(ctx, out), MAX_TREES_PER_CELL);
+      const n = Math.min(planter.distribute(ctx, out), MAX_TREES_PER_CELL);
       for (let i = 0; i < n; i++) {
         const t = out[i]!;
         trees.push({ ...t, cx: (gx + 0.5 + t.x) * CELL_STUDS, cz: (gz + 0.5 + t.z) * CELL_STUDS });

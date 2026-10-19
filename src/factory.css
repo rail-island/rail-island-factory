@@ -1120,3 +1120,11 @@ body {
   border-radius: 3px;
   border: 1px solid rgba(0, 0, 0, 0.2);
 }
+
+.factory-woods__params {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  font-size: 0.8rem;
+  color: var(--m-on-surface-variant);
+}
