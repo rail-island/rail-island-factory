@@ -11,3 +11,7 @@ table lists what the shapes draw on.
 | (none) | https://www.rhs.org.uk/plants/13141/pinus-sylvestris/details | Royal Horticultural Society | web page, cited only | `proc-tree-scotspine`: long exposed trunk, crooked leader, broad flattened crown clusters |
 | (none) | https://www.rhs.org.uk/plants/9835/larix-decidua/details | Royal Horticultural Society | web page, cited only | `proc-tree-larch`, `proc-tree-autumnlarch`: open whorls of fine branches, light green and golden autumn foliage |
 | (none) | OpenTTD's temperate and sub-tropical tree sprites (https://www.openttd.org) | OpenTTD contributors | GPL-2.0, looked at only | the stylised look: per-clump light and shade, colour variation between trees, overlapping canopies |
+
+`spruce-comparison.png` is a headless render of this repository, not an external
+reference. Left to right: the `trees2` high model, the rebuilt high model, and
+the rebuilt Max model, all in the same three-quarter view.

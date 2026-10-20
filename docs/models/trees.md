@@ -7,7 +7,7 @@ budgets and tests.
 **Code** - `generator/trees.ts`, `generator/treeKit.ts`, `generator/oak.ts`,
 `generator/leafyTrees.ts`, `generator/conifers.ts`, `generator/palm.ts`,
 `generator/deadTree.ts`, `generator/treeGeo.ts`, `generator/meshCore.ts`
-(`triShaded`), `test/trees.test.ts`, `test/treeSpecies.test.ts`, `test/oak.test.ts`,
+(`triShaded`), `test/trees.test.ts`, `test/treeSpecies.test.ts`, `test/spruce.test.ts`, `test/oak.test.ts`,
 `test/fixtures/tree-baseline.json`, `assets/trees/SOURCES.md`, `assets/oak/SOURCES.md`
 **See also** - [woods.md](woods.md), [lod.md](lod.md), [js-format.md](js-format.md),
 [export.md](export.md), the game's `docs/rendering/woods.md`
@@ -121,7 +121,7 @@ backfaces; cores and masses are closed.
 | hazel | 4 crooked stems from a stool, each ending in a clump and carrying one more | 9,586 | 776 | 144 | 20 |
 | orchard | short trunk forking into 4 spreading limbs under 9 round clumps | 9,338 | 848 | 124-148 | 20 |
 | pine | irregular open crown on a bare trunk: 6 whorls of rising branches with bluish needle tufts at the tips | 8,838 | 2,324 | 68 | 10 |
-| spruce | layered cone: 9 whorls of broad fan plates drooping at the tip, with side branchlets, gaps and the trunk showing between tiers | 8,786 | 2,454 | 80 | 10 |
+| spruce | 10 staggered tiers of rising wooden boughs carrying overlapping pointed, drooping foliage fingers; exposed trunk and a narrow leader | 8,004 | 2,528 | 80 | 10 |
 | larch | airy: 8 whorls of thin arching branches hung with soft needle plates (summer green, autumn gold) | 8,296 | 1,634 | 68 | 10 |
 | scotspine | tall bare crooked orange trunk, four boughs with flat pads: an umbrella crown | 9,140 | 992 | 168 | 20 |
 | palm | curving ringed trunk, crown knob and coconuts, 13 arching fronds of leaflet pairs | 5,108 | 774 | 137 | 20 |
@@ -141,10 +141,19 @@ Notes per family:
   and its underside shallower than its top (`under`). Shading lights the upper face
   and darkens what hangs below the point where the bough leaves its branch, so each
   tier has a light top and a dark underside, with a warm or cool cast per spray.
-  They follow the branch structure: the spruce's boughs start narrow at the trunk,
-  run out level and droop toward the tip, broader low down, with two side
-  branchlets just beneath (four, two smaller, at Max) and, at Max, the lower whorls'
-  wood showing; the pine's thick visible branches rise and end in flattened tufts,
+  They follow the branch structure: the spruce is built branch-first from the
+  [reference](../../assets/trees/spruce-reference.png), with three boughs per lower
+  tier and two per upper tier, staggered in height and rotated between tiers.
+  Its warm, tapered trunk and rising branches are visible at both high and Max.
+  Each bough carries a thick central pad and four swept, pointed side fingers on
+  its outer portion; Max adds four overlapping fingers. These droop away
+  from the branch into dark undersides, with brighter yellow-green tops, leaving
+  gaps between the tiers. The top finishes in a tapered leader rather than an
+  isolated needle tuft. Low retains five merged crown tiers; all levels preserve
+  the high model's extents. Spruce regression tests check supporting wood up the
+  crown, grounded foliage clearance, crown taper and substantial foliage depth
+  across all five seeds, in addition to the family's topology and budget checks.
+  The pine's thick visible branches rise and end in flattened tufts,
   with two tufted side twigs (five at Max); the larch's thin arching branches carry
   three hanging needle plates (ten, overlapping, at Max). Primary branches come from
   the structural stream and Max's extra shoots from their own, so Max never moves a
