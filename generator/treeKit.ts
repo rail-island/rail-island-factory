@@ -209,7 +209,7 @@ export function stationAt(stations: Station[], y: number): P3 {
   return mix(a, b, (y - a[1]) / (b[1] - a[1]));
 }
 // One continuous loft per limb: no visible end caps at bent branch elbows.
-function limb(stations: Station[], sides: number, phase = 0): Geo {
+export function limb(stations: Station[], sides: number, phase = 0): Geo {
   const points: P3[] = [], indices: number[] = [];
   stations.forEach(({ at, r }, i) => {
     const axis = unit(sub(stations[Math.min(i + 1, stations.length - 1)]!.at, stations[Math.max(0, i - 1)]!.at));
@@ -262,7 +262,7 @@ function coneVolume(rx: number, hy: number, rz: number, sides: number, spin: num
 }
 // Four faces from `from` to `to`: the coarse level's trunk and bare branches. A
 // trunk's base triangle lies flat, so a leaning trunk still stands on the ground.
-function tetraBranch(from: P3, to: P3, radius: number, flat = false): Geo {
+export function tetraBranch(from: P3, to: P3, radius: number, flat = false): Geo {
   const axis = flat ? [0, 1, 0] as P3 : unit(sub(to, from)), u = unit(cross(Math.abs(axis[1]) > 0.9 ? [1, 0, 0] : [0, 1, 0], axis)), v = cross(axis, u);
   const ring = [0, 1, 2].map((k) => add(from, add(mul(u, radius * Math.cos(k * Math.PI * 2 / 3)), mul(v, radius * Math.sin(k * Math.PI * 2 / 3)))));
   return fromIndexed([...ring, to], [0, 2, 1, 0, 1, 3, 1, 2, 3, 2, 0, 3]);
@@ -631,7 +631,7 @@ function rawTree(detail: "max" | "high" | "low", o: BroadleafOptions, plan: Layo
 }
 // Fit simplified silhouettes to the high model's exact extents; all transforms
 // are around the foot, and colours have already been painted in tree space.
-function fit(parts: Parts, target: Parts): Parts {
+export function fit(parts: Parts, target: Parts): Parts {
   const have = boxOf([...parts.trunk, ...parts.foliage]), want = boxOf([...target.trunk, ...target.foliage]);
   for (const g of [...parts.trunk, ...parts.foliage])
     g.map((x, y, z) => {

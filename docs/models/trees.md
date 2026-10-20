@@ -5,9 +5,9 @@ two larches one design with a season), four levels of detail (Max, high, low,
 coarse), the tree kit every species is drawn with, seeds, the stylised look,
 budgets and tests.
 **Code** - `generator/trees.ts`, `generator/treeKit.ts`, `generator/oak.ts`,
-`generator/leafyTrees.ts`, `generator/conifers.ts`, `generator/palm.ts`,
+`generator/leafyTrees.ts`, `generator/conifers.ts`, `generator/spruce.ts`, `generator/palm.ts`,
 `generator/deadTree.ts`, `generator/treeGeo.ts`, `generator/meshCore.ts`
-(`triShaded`), `test/trees.test.ts`, `test/treeSpecies.test.ts`, `test/oak.test.ts`,
+(`triShaded`), `test/trees.test.ts`, `test/treeSpecies.test.ts`, `test/spruce.test.ts`, `test/oak.test.ts`,
 `test/fixtures/tree-baseline.json`, `assets/trees/SOURCES.md`, `assets/oak/SOURCES.md`
 **See also** - [woods.md](woods.md), [lod.md](lod.md), [js-format.md](js-format.md),
 [export.md](export.md), the game's `docs/rendering/woods.md`
@@ -121,7 +121,7 @@ backfaces; cores and masses are closed.
 | hazel | 4 crooked stems from a stool, each ending in a clump and carrying one more | 9,586 | 776 | 144 | 20 |
 | orchard | short trunk forking into 4 spreading limbs under 9 round clumps | 9,338 | 848 | 124-148 | 20 |
 | pine | irregular open crown on a bare trunk: 6 whorls of rising branches with bluish needle tufts at the tips | 8,838 | 2,324 | 68 | 10 |
-| spruce | layered cone: 9 whorls of broad fan plates drooping at the tip, with side branchlets, gaps and the trunk showing between tiers | 8,786 | 2,454 | 80 | 10 |
+| spruce | tapered cone over a visible trunk: 9 whorls of boughs carrying broad drooping fan pads with serrated fronts, on the tip and side branchlets | 9,428-9,986 | 2,948-2,968 | 76 | 10 |
 | larch | airy: 8 whorls of thin arching branches hung with soft needle plates (summer green, autumn gold) | 8,296 | 1,634 | 68 | 10 |
 | scotspine | tall bare crooked orange trunk, four boughs with flat pads: an umbrella crown | 9,140 | 992 | 168 | 20 |
 | palm | curving ringed trunk, crown knob and coconuts, 13 arching fronds of leaflet pairs | 5,108 | 774 | 137 | 20 |
@@ -133,7 +133,7 @@ Notes per family:
   low merges a limb's clumps into one mass. The willow's curtains are chains of
   leaves at high and Max and three-segment ribbons at low (so its low level stays
   double-sided).
-- **Conifers** (`conifers.ts`): pine, spruce and larch carry **needle sprays**
+- **Conifers** (`conifers.ts`): pine and larch carry **needle sprays**
   instead of leaf clumps -- closed volumes lofted along a bough (`Spray`), shaped by
   the style's spray settings: a thin plate whose sides droop (`droop`, a fan rather
   than a tube), notched at alternate outline corners (`scallop`, the sides only, so
@@ -141,16 +141,36 @@ Notes per family:
   and its underside shallower than its top (`under`). Shading lights the upper face
   and darkens what hangs below the point where the bough leaves its branch, so each
   tier has a light top and a dark underside, with a warm or cool cast per spray.
-  They follow the branch structure: the spruce's boughs start narrow at the trunk,
-  run out level and droop toward the tip, broader low down, with two side
-  branchlets just beneath (four, two smaller, at Max) and, at Max, the lower whorls'
-  wood showing; the pine's thick visible branches rise and end in flattened tufts,
+  They follow the branch structure: the pine's thick visible branches rise and end in flattened tufts,
   with two tufted side twigs (five at Max); the larch's thin arching branches carry
   three hanging needle plates (ten, overlapping, at Max). Primary branches come from
   the structural stream and Max's extra shoots from their own, so Max never moves a
   branch; Max also draws each spray with more sides and stations. The two larch
   seasons share the shape and differ only in palette; the Scots pine keeps flat
   needle pads (clumps) on four boughs.
+- **Spruce** (`spruce.ts`, its own builder on the kit's lofts, after the user's
+  stylised reference `assets/trees/spruce-reference.png`): a straight, flared trunk
+  to a pointed five-sided leader, and nine whorls (2.5 to 9.45 studs, closer
+  together toward the top, each jittered) of 3 to 6 boughs at golden-angle phases.
+  A bough runs out, dips and turns up at its tip; its reach follows a straight cone
+  (2.75 studs low, 0.45 at the top) with +-18% per bough. Its foliage is **pads**:
+  closed drooping fans -- a crest over an inner ring of `k` corners and a serrated
+  rim of `2k` (lobes hanging lower than the notches, crowded toward the fan's
+  front), with a shallow underside, `6k` faces (`8k` with Max's extra ring). Each
+  bough has an end pad (k = 5; 8 at Max) from mid-bough past its tip and two smaller
+  side-branchlet pads (k = 4; 6 at Max), one or none in the top whorls; Max adds two
+  outer branchlets and an inner pad near the trunk from their own stream. Should a
+  seed's layout run over the allowance (2,970 high, 10,000 Max), a fixed scramble of
+  the optional pads is left out, never the boughs' end pads. Wood: every bough at Max
+  (five sides), the lower five whorls at high (three sides). Colours per corner: crest
+  and inner ring light, rim mid, underside dark, the fan's back (toward the trunk)
+  shaded by the tier above, facets lit by their slope with a little per-facet
+  variation, lighter with height and toward the crown's outside, a warm or cool
+  cast per pad. Low: the trunk and four tier cones whose eight-corner rims follow
+  the tier's bough reach on each bearing and alternate high and low (a serrated
+  skirt); coarse: a square pyramid over low's box and a tetrahedral trunk.
+  `test/spruce.test.ts` checks budgets, closed outward pads, the trunk showing
+  under the crown, the taper, the seeds and the LODs' shared box.
 - **Palm** (`palm.ts`): fronds are midribs of long leaflets swept toward the tip so
   they overlap (11 pairs at high, 44 at Max); low draws each as a drooping ribbon.
 - **Dead tree** (`deadTree.ts`): no leaves -- its limbs and twigs are the foliage
@@ -163,7 +183,7 @@ bearings, spacing and size of limbs and clumps (or whorls and pads), and through
 clump's own stream the leaf placement; the same values always give identical
 geometry. Internal seeds: oak 7, 19, 83, 173, 431 (the old tokens `7` and `19` stay
 accepted aliases of seeds 1 and 2); leafy species 11, 29, 97, 211, 563; conifers
-13, 37, 101, 223, 577; palm 17, 41, 109, 239, 593; dead tree 19, 43, 113, 241, 599.
+(and the spruce) 13, 37, 101, 223, 577; palm 17, 41, 109, 239, 593; dead tree 19, 43, 113, 241, 599.
 `treeOptions(species, values)` resolves a design's values; `treeParts(species,
 detail, options)` also takes numeric `seed`, `height`, `width`, `spread` and
 `density` overrides. The larch also has `season`; the oak has four more controls:

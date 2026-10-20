@@ -8,13 +8,15 @@
 // asks for (docs/models/trees.md).
 //
 // Every species is a seeded layout drawn by the tree kit (treeKit.ts): the oak
-// (oak.ts), the leafy species (leafyTrees.ts), the conifers (conifers.ts), the palm
+// (oak.ts), the leafy species (leafyTrees.ts), the conifers (conifers.ts), the
+// spruce (spruce.ts, its own builder on the kit's primitives), the palm
 // (palm.ts) and the dead tree (deadTree.ts). This file is their registry. No
 // `node:` imports.
 
 import { oakParts, oakOptions, OAK_COLORS, OAK_PARAMS } from "./oak.ts";
 import { isLeafy, leafyOptions, leafyParts, LEAFY_COLORS, LEAFY_PARAMS } from "./leafyTrees.ts";
 import { coniferOptions, coniferParts, CONIFER_COLORS, isConifer } from "./conifers.ts";
+import { spruceOptions, spruceParts, SPRUCE_COLORS } from "./spruce.ts";
 import { palmOptions, palmParts, PALM_COLORS, PALM_PARAMS } from "./palm.ts";
 import { deadtreeOptions, deadtreeParts, DEADTREE_COLORS, DEADTREE_PARAMS } from "./deadTree.ts";
 import { MeshBuilder } from "./meshBuilder.ts";
@@ -40,7 +42,7 @@ type Colors = { trunk: string; foliage: string };
  */
 // Marked pure, so another design's standalone JS can drop this table.
 export const TREE_COLORS: Record<Species, Colors> = /* @__PURE__ */ (() => ({
-  ...CONIFER_COLORS, ...LEAFY_COLORS, oak: OAK_COLORS, palm: PALM_COLORS, deadtree: DEADTREE_COLORS,
+  ...CONIFER_COLORS, spruce: SPRUCE_COLORS, ...LEAFY_COLORS, oak: OAK_COLORS, palm: PALM_COLORS, deadtree: DEADTREE_COLORS,
 }))();
 
 /** Display titles for the catalog. */
@@ -56,6 +58,7 @@ export type TreeParts = Parts;
 /** The parts of one species at one level, shaded (tests, the woods previews). */
 export function treeParts(species: Species, detail: Level, options?: Partial<BroadleafOptions>): TreeParts {
   if (species === "oak") return oakParts(detail, options);
+  if (species === "spruce") return spruceParts(detail, options);
   if (species === "palm") return palmParts(detail, options);
   if (species === "deadtree") return deadtreeParts(detail, options);
   if (isLeafy(species)) return leafyParts(species, detail, options);
@@ -66,6 +69,7 @@ export function treeParts(species: Species, detail: Level, options?: Partial<Bro
 /** A species' kit options for its design's parameter values (the seed; the oak's controls). */
 export function treeOptions(species: Species, p?: ParamValues): BroadleafOptions {
   if (species === "oak") return oakOptions(p);
+  if (species === "spruce") return spruceOptions(p);
   if (species === "palm") return palmOptions(p);
   if (species === "deadtree") return deadtreeOptions(p);
   if (isLeafy(species)) return leafyOptions(p);
@@ -105,10 +109,10 @@ export const treePine = (p?: ParamValues) => treeMesh(CONIFER_COLORS.pine, conif
 export const treePineMax = (p?: ParamValues) => treeMesh(CONIFER_COLORS.pine, coniferParts("pine", "max", coniferOptions(p)));
 export const treePineLow = (p?: ParamValues) => treeMesh(CONIFER_COLORS.pine, coniferParts("pine", "low", coniferOptions(p)));
 export const treePineCoarse = (p?: ParamValues) => treeMesh(CONIFER_COLORS.pine, coniferParts("pine", "coarse", coniferOptions(p)));
-export const treeSpruce = (p?: ParamValues) => treeMesh(CONIFER_COLORS.spruce, coniferParts("spruce", "high", coniferOptions(p)));
-export const treeSpruceMax = (p?: ParamValues) => treeMesh(CONIFER_COLORS.spruce, coniferParts("spruce", "max", coniferOptions(p)));
-export const treeSpruceLow = (p?: ParamValues) => treeMesh(CONIFER_COLORS.spruce, coniferParts("spruce", "low", coniferOptions(p)));
-export const treeSpruceCoarse = (p?: ParamValues) => treeMesh(CONIFER_COLORS.spruce, coniferParts("spruce", "coarse", coniferOptions(p)));
+export const treeSpruce = (p?: ParamValues) => treeMesh(SPRUCE_COLORS, spruceParts("high", spruceOptions(p)));
+export const treeSpruceMax = (p?: ParamValues) => treeMesh(SPRUCE_COLORS, spruceParts("max", spruceOptions(p)));
+export const treeSpruceLow = (p?: ParamValues) => treeMesh(SPRUCE_COLORS, spruceParts("low", spruceOptions(p)));
+export const treeSpruceCoarse = (p?: ParamValues) => treeMesh(SPRUCE_COLORS, spruceParts("coarse", spruceOptions(p)));
 export const treeScotspine = (p?: ParamValues) => treeMesh(CONIFER_COLORS.scotspine, coniferParts("scotspine", "high", coniferOptions(p)));
 export const treeScotspineMax = (p?: ParamValues) => treeMesh(CONIFER_COLORS.scotspine, coniferParts("scotspine", "max", coniferOptions(p)));
 export const treeScotspineLow = (p?: ParamValues) => treeMesh(CONIFER_COLORS.scotspine, coniferParts("scotspine", "low", coniferOptions(p)));

@@ -1,8 +1,9 @@
-// The conifers -- pine, spruce, the European larch (summer and autumn) and the
-// mature Scots pine -- drawn by the tree kit (treeKit.ts): seeded whorls of
+// The conifers -- pine, the European larch (summer and autumn) and the mature
+// Scots pine -- drawn by the tree kit (treeKit.ts): seeded whorls of
 // branches, each ending in a flattened needle pad (a dark core under tufts of
 // narrow needles), a leader with a top pad, and stacked cones at low detail.
-// Five numbered seeds per species; docs/models/trees.md. No Node APIs.
+// The spruce has its own builder (spruce.ts). Five numbered seeds per species;
+// docs/models/trees.md. No Node APIs.
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import type { P3 } from "./treeGeo.ts";
 import {
@@ -10,14 +11,12 @@ import {
   type BroadleafOptions, type BroadleafStyle, type Clump, type Layout, type Limb, type Parts, type Spray, type Station,
 } from "./treeKit.ts";
 
-export const CONIFER_SPECIES = ["pine", "spruce", "larch", "autumnlarch", "scotspine"] as const;
+export const CONIFER_SPECIES = ["pine", "larch", "autumnlarch", "scotspine"] as const;
 export type ConiferSpecies = (typeof CONIFER_SPECIES)[number];
 
 export const CONIFER_COLORS: Record<ConiferSpecies, { trunk: string; foliage: string }> = {
-  // bluish, lighter green than the spruce
+  // bluish green
   pine: { trunk: "#7a4f2a", foliage: "#3c7d60" },
-  // tall narrow conifer, blue-tinged deep green
-  spruce: { trunk: "#664526", foliage: "#2a6648" },
   larch: { trunk: "#7e6146", foliage: "#8fbd4f" },
   autumnlarch: { trunk: "#7e6146", foliage: "#e0a83a" },
   scotspine: { trunk: "#a86a3e", foliage: "#548a52" },
@@ -31,8 +30,7 @@ export function coniferOptions(p?: ParamValues, params: readonly ParamSpec[] = [
   return { ...DEFAULT_CONIFER, seed: SEEDS[Number(resolveParams(params, p).seed) - 1]! };
 }
 
-// Needle sprays (treeKit.ts `Spray`) follow the branch structure: a spruce's long
-// drooping boughs carry side shoots and layer into a dense cone; a pine's thick
+// Needle sprays (treeKit.ts `Spray`) follow the branch structure: a pine's thick
 // rising branches end in chunky tufts; a larch's thin arching branches carry small
 // soft puffs. Primary branches (and their tufts) come from the structural stream;
 // Max's extra shoots from a stream of their own, so they never move a branch.
@@ -47,42 +45,6 @@ const spray = (points: P3[], w: number, flat: number, tone: number, tier: number
   const profile = points.length === 3 ? [0.45, 1, 0.3] : points.length === 4 ? [0.35, 1, 0.85, 0.3] : [0.12, 0.6, 1, 0.85, 0.3];
   return { path: points.map((at, i) => ({ at, w: w * profile[i]!, h: w * profile[i]! * flat })), tone, tier, seed, rank, ...(maxOnly ? { maxOnly } : {}) };
 };
-
-// Spruce: nine whorls of long boughs, each a broad, thin fan plate that droops
-// to its sides and along its length and turns up at the tip, with two side
-// branchlets (four, two smaller, at Max). The lower boughs are broader, overlap and half hide
-// the trunk; Max shows the wood of the lower whorls' branches beneath them.
-function spruceLayout(o: BroadleafOptions): Layout {
-  const rng = random(o.seed), jit = jitterOf(rng), H = 10.6;
-  const stem = stemOf(rng, H, 0.42, 0.12);
-  const sprays: Spray[] = [], limbs: Limb[] = [];
-  const W = 9;
-  for (let w = 0; w < W; w++) {
-    const t = w / (W - 1), y = 1.6 + (9.5 - 1.6) * (1 - Math.pow(1 - t, 1.1)) + jit(0.1), base = stationAt(stem, y);
-    const n = Math.round(5.4 - 2.4 * t), phase = w * 2.4 + rng() * 0.8;
-    for (let b = 0; b < n; b++) {
-      const dir = bearing(phase + (b + jit(0.3)) * Math.PI * 2 / n), reach = (2.7 * Math.pow(1 - t, 0.95) + 0.6) * (0.85 + rng() * 0.3);
-      const at = (s: number): P3 => add(base, add(mul(dir, reach * s), up(-0.12 * reach * Math.pow(s, 2.2) + 0.05 * reach * Math.sin(Math.PI * s))));
-      const tone = jit(0.05), seed = w * 31 + b;
-      sprays.push(spray([at(0), at(0.25), at(0.5), at(0.75), at(1)], reach * (0.3 + 0.1 * (1 - t)) + 0.1, 0.16, tone, Math.floor(w / 2), seed, 0));
-      if (w < 5)
-        limbs.push({ stations: [{ at: base, r: 0.09 * (1 - 0.5 * t) }, { at: at(0.5), r: 0.035 }], sides: [3, 4, 3], maxOnly: true, skipLow: true });
-      const shoots = random(o.seed * 977 + seed);
-      // Side branchlets: smaller plates just under the bough, fanning out to either
-      // side of it, so each tier reads as layered foliage rather than one slab.
-      for (let k = 0; k < 4; k++) {
-        const s = [0.4, 0.62, 0.28, 0.8][k]!, from = add(at(s), up(-0.06)), len = reach * (0.55 - 0.25 * s) * (k < 2 ? 1 : 0.75) * (0.85 + shoots() * 0.3);
-        const d = turn(dir, (k % 2 ? 1 : -1) * (0.45 + shoots() * 0.2));
-        sprays.push(spray([from, add(from, add(mul(d, len * 0.5), up(-0.05 * len))), add(from, add(mul(d, len), up(-0.16 * len)))],
-          len * 0.55 + 0.06, 0.22, tone - 0.05 + (shoots() - 0.5) * 0.06, Math.floor(w / 2), seed * 7 + k, 1, k >= 2));
-      }
-    }
-  }
-  // The leader: an upright spray finishing the crown.
-  const top = stem[5]!.at;
-  sprays.push(spray([add(top, up(-1.6)), add(top, up(-1.0)), add(top, up(-0.4)), add(top, up(0.15))], 0.3, 1, 0.05, Math.floor((W - 1) / 2), 1, 0));
-  return { stem, stemSides: [6, 10, 4], limbs, twigs: [], clumps: [], groups: [], sprays };
-}
 
 // Pine: an irregular, open crown above a bare trunk; few whorls of strong branches
 // that rise as they reach out, the needles gathered in chunky tufts at the branch
@@ -190,12 +152,6 @@ const STYLES: Record<ConiferSpecies, BroadleafStyle> = /* @__PURE__ */ (() => ({
     tufts: { high: 0, highAiry: 0, max: 0, maxAiry: 0 }, leaves: { high: 0, max: 0 }, leafLength: { high: 0, max: 0 },
     massSides: 6, coarse: "cone", sprays: { high: [[5, 4], [5, 3]], max: [[7, 6], [6, 4]], ragged: 0.14, droop: 0.15, scallop: 0.18, under: 0.5, facet: 0.7 },
   },
-  spruce: {
-    colors: CONIFER_COLORS.spruce, top: 10.8,
-    leaf: [[0.05, 0.2, 0.1], [0.15, 0.44, 0.19], [0.45, 0.72, 0.26]], bark: [[0.3, 0.17, 0.08], [0.62, 0.4, 0.22]],
-    tufts: { high: 0, highAiry: 0, max: 0, maxAiry: 0 }, leaves: { high: 0, max: 0 }, leafLength: { high: 0, max: 0 },
-    massSides: 6, coarse: "cone", sprays: { high: [[5, 4], [4, 3]], max: [[7, 8], [5, 4]], ragged: 0.08, droop: 0.12, scallop: 0.22, under: 0.4, facet: 0.9 },
-  },
   larch: {
     colors: CONIFER_COLORS.larch, top: 10.8,
     leaf: [[0.16, 0.32, 0.1], [0.45, 0.66, 0.24], [0.78, 0.9, 0.46]], bark: [[0.28, 0.2, 0.13], [0.6, 0.46, 0.32]],
@@ -216,7 +172,7 @@ const STYLES: Record<ConiferSpecies, BroadleafStyle> = /* @__PURE__ */ (() => ({
   },
 }))();
 const LAYOUTS: Record<ConiferSpecies, (o: BroadleafOptions) => Layout> = {
-  pine: pineLayout, spruce: spruceLayout, larch: larchLayout, autumnlarch: larchLayout, scotspine: scotspineLayout,
+  pine: pineLayout, larch: larchLayout, autumnlarch: larchLayout, scotspine: scotspineLayout,
 };
 
 export const isConifer = (species: string): species is ConiferSpecies => (CONIFER_SPECIES as readonly string[]).includes(species);

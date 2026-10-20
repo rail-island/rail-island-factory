@@ -55,8 +55,10 @@ describe.each(KIT)("the kit's %s", (species) => {
   });
 
   // The palm's leaflets hang from fronds and the dead tree has none: no clumps, no
-  // masses. The whorled conifers carry needle sprays instead of clumps.
-  const sprayed = ["pine", "spruce", "larch", "autumnlarch"].includes(species);
+  // masses. The whorled conifers carry needle sprays (the spruce foliage pads,
+  // checked in spruce.test.ts) instead of clumps.
+  const sprayed = ["pine", "larch", "autumnlarch"].includes(species);
+  const padded = species === "spruce";
   const massed = species !== "palm" && species !== "deadtree";
   it.runIf(sprayed)("draws its needles as closed spray volumes", () => {
     for (const seed of SEEDS)
@@ -79,7 +81,7 @@ describe.each(KIT)("the kit's %s", (species) => {
   it.runIf(massed)("roots every leaf in a clump core and holds every low mass on wood", () => {
     const corners = (g: Geo) => Array.from({ length: g.count }, (_, i) => [g.x(i), g.y(i), g.z(i)] as const);
     for (const seed of SEEDS) {
-      for (const level of sprayed ? [] : ["high", "max"] as const) {
+      for (const level of sprayed || padded ? [] : ["high", "max"] as const) {
         const { foliage } = treeParts(species, level, treeOptions(species, { seed }));
         const cores = foliage.filter((g) => g.count === 60).map((g) => {
           const pts = corners(g), c = [0, 1, 2].map((k) => pts.reduce((n, p) => n + p[k]!, 0) / pts.length);
