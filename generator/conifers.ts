@@ -14,7 +14,8 @@ export const CONIFER_SPECIES = ["pine", "spruce", "larch", "autumnlarch", "scots
 export type ConiferSpecies = (typeof CONIFER_SPECIES)[number];
 
 export const CONIFER_COLORS: Record<ConiferSpecies, { trunk: string; foliage: string }> = {
-  pine: { trunk: "#7a4f2a", foliage: "#33774a" },
+  // bluish, lighter green than the spruce
+  pine: { trunk: "#7a4f2a", foliage: "#3c7d60" },
   // tall narrow conifer, blue-tinged deep green
   spruce: { trunk: "#664526", foliage: "#2a6648" },
   larch: { trunk: "#7e6146", foliage: "#8fbd4f" },
@@ -47,7 +48,7 @@ const spray = (points: P3[], w: number, flat: number, tone: number, tier: number
   return { path: points.map((at, i) => ({ at, w: w * profile[i]!, h: w * profile[i]! * flat })), tone, tier, seed, rank, ...(maxOnly ? { maxOnly } : {}) };
 };
 
-// Spruce: ten tight whorls of long boughs, each a broad, thin fan plate that droops
+// Spruce: nine whorls of long boughs, each a broad, thin fan plate that droops
 // to its sides and along its length and turns up at the tip, with two side
 // branchlets (four, two smaller, at Max). The lower boughs are broader, overlap and half hide
 // the trunk; Max shows the wood of the lower whorls' branches beneath them.
@@ -55,13 +56,13 @@ function spruceLayout(o: BroadleafOptions): Layout {
   const rng = random(o.seed), jit = jitterOf(rng), H = 10.6;
   const stem = stemOf(rng, H, 0.42, 0.12);
   const sprays: Spray[] = [], limbs: Limb[] = [];
-  const W = 10;
+  const W = 9;
   for (let w = 0; w < W; w++) {
-    const t = w / (W - 1), y = 1.45 + (9.4 - 1.45) * (1 - Math.pow(1 - t, 1.25)) + jit(0.1), base = stationAt(stem, y);
+    const t = w / (W - 1), y = 1.6 + (9.5 - 1.6) * (1 - Math.pow(1 - t, 1.1)) + jit(0.1), base = stationAt(stem, y);
     const n = Math.round(5.4 - 2.4 * t), phase = w * 2.4 + rng() * 0.8;
     for (let b = 0; b < n; b++) {
       const dir = bearing(phase + (b + jit(0.3)) * Math.PI * 2 / n), reach = (2.7 * Math.pow(1 - t, 0.95) + 0.6) * (0.85 + rng() * 0.3);
-      const at = (s: number): P3 => add(base, add(mul(dir, reach * s), up(-0.26 * reach * Math.pow(s, 2.2) + 0.06 * reach * Math.sin(Math.PI * s))));
+      const at = (s: number): P3 => add(base, add(mul(dir, reach * s), up(-0.12 * reach * Math.pow(s, 2.2) + 0.05 * reach * Math.sin(Math.PI * s))));
       const tone = jit(0.05), seed = w * 31 + b;
       sprays.push(spray([at(0), at(0.25), at(0.5), at(0.75), at(1)], reach * (0.3 + 0.1 * (1 - t)) + 0.1, 0.16, tone, Math.floor(w / 2), seed, 0));
       if (w < 5)
@@ -70,9 +71,9 @@ function spruceLayout(o: BroadleafOptions): Layout {
       // Side branchlets: smaller plates just under the bough, fanning out to either
       // side of it, so each tier reads as layered foliage rather than one slab.
       for (let k = 0; k < 4; k++) {
-        const s = [0.4, 0.62, 0.28, 0.8][k]!, from = add(at(s), up(-0.12)), len = reach * (0.55 - 0.25 * s) * (k < 2 ? 1 : 0.75) * (0.85 + shoots() * 0.3);
+        const s = [0.4, 0.62, 0.28, 0.8][k]!, from = add(at(s), up(-0.06)), len = reach * (0.55 - 0.25 * s) * (k < 2 ? 1 : 0.75) * (0.85 + shoots() * 0.3);
         const d = turn(dir, (k % 2 ? 1 : -1) * (0.45 + shoots() * 0.2));
-        sprays.push(spray([from, add(from, add(mul(d, len * 0.5), up(-0.05 * len))), add(from, add(mul(d, len), up(-0.24 * len)))],
+        sprays.push(spray([from, add(from, add(mul(d, len * 0.5), up(-0.05 * len))), add(from, add(mul(d, len), up(-0.16 * len)))],
           len * 0.55 + 0.06, 0.22, tone - 0.05 + (shoots() - 0.5) * 0.06, Math.floor(w / 2), seed * 7 + k, 1, k >= 2));
       }
     }
@@ -185,7 +186,7 @@ const pineBark: [P3, P3] = [[0.25, 0.15, 0.08], [0.56, 0.37, 0.21]];
 const STYLES: Record<ConiferSpecies, BroadleafStyle> = /* @__PURE__ */ (() => ({
   pine: {
     colors: CONIFER_COLORS.pine, top: 9.6,
-    leaf: [[0.05, 0.17, 0.09], [0.17, 0.4, 0.21], [0.5, 0.66, 0.33]], bark: pineBark,
+    leaf: [[0.06, 0.2, 0.14], [0.2, 0.47, 0.34], [0.56, 0.75, 0.53]], bark: pineBark,
     tufts: { high: 0, highAiry: 0, max: 0, maxAiry: 0 }, leaves: { high: 0, max: 0 }, leafLength: { high: 0, max: 0 },
     massSides: 6, coarse: "cone", sprays: { high: [[5, 4], [5, 3]], max: [[7, 6], [6, 4]], ragged: 0.14, droop: 0.15, scallop: 0.18, under: 0.5, facet: 0.7 },
   },
@@ -193,7 +194,7 @@ const STYLES: Record<ConiferSpecies, BroadleafStyle> = /* @__PURE__ */ (() => ({
     colors: CONIFER_COLORS.spruce, top: 10.8,
     leaf: [[0.05, 0.2, 0.1], [0.15, 0.44, 0.19], [0.45, 0.72, 0.26]], bark: [[0.3, 0.17, 0.08], [0.62, 0.4, 0.22]],
     tufts: { high: 0, highAiry: 0, max: 0, maxAiry: 0 }, leaves: { high: 0, max: 0 }, leafLength: { high: 0, max: 0 },
-    massSides: 6, coarse: "cone", sprays: { high: [[5, 4], [4, 3]], max: [[7, 8], [5, 4]], ragged: 0.08, droop: 0.2, scallop: 0.22, under: 0.4, facet: 0.9 },
+    massSides: 6, coarse: "cone", sprays: { high: [[5, 4], [4, 3]], max: [[7, 8], [5, 4]], ragged: 0.08, droop: 0.12, scallop: 0.22, under: 0.4, facet: 0.9 },
   },
   larch: {
     colors: CONIFER_COLORS.larch, top: 10.8,

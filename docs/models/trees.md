@@ -41,7 +41,7 @@ woods type's `width`, `lean`, `shade` and `hue` per tree ([woods.md](woods.md)).
 | Level | Built by | Exported as | Triangles |
 |---|---|---|---|
 | `max` | `buildMax` | `buildMax(THREE, params)` | 524-9,684 (at most 10,000) |
-| `high` | the design's `build` | `build(THREE, params)` | 232-2,702 |
+| `high` | the design's `build` | `build(THREE, params)` | 232-2,454 |
 | `low` | `buildLod` | `build(THREE, params, true)` | 52-268 |
 | `coarse` | `buildCoarse` | `buildCoarse(THREE, params)` | 10-20 |
 
@@ -120,8 +120,8 @@ backfaces; cores and masses are closed.
 | bush | mound of 7 clumps on short stems from a low stool | 9,684 | 1,022 | 64 | 20 |
 | hazel | 4 crooked stems from a stool, each ending in a clump and carrying one more | 9,586 | 776 | 144 | 20 |
 | orchard | short trunk forking into 4 spreading limbs under 9 round clumps | 9,338 | 848 | 124-148 | 20 |
-| pine | irregular open crown on a bare trunk: 6 whorls of rising branches with needle tufts at the tips | 8,838 | 2,324 | 68 | 10 |
-| spruce | layered cone: 10 whorls of broad drooping fan plates with side branchlets, the trunk showing between tiers | 9,658 | 2,702 | 80 | 10 |
+| pine | irregular open crown on a bare trunk: 6 whorls of rising branches with bluish needle tufts at the tips | 8,838 | 2,324 | 68 | 10 |
+| spruce | layered cone: 9 whorls of broad fan plates drooping at the tip, with side branchlets, gaps and the trunk showing between tiers | 8,786 | 2,454 | 80 | 10 |
 | larch | airy: 8 whorls of thin arching branches hung with soft needle plates (summer green, autumn gold) | 8,296 | 1,634 | 68 | 10 |
 | scotspine | tall bare crooked orange trunk, four boughs with flat pads: an umbrella crown | 9,140 | 992 | 168 | 20 |
 | palm | curving ringed trunk, crown knob and coconuts, 13 arching fronds of leaflet pairs | 5,108 | 774 | 137 | 20 |

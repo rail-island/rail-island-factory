@@ -316,7 +316,7 @@ function sprayVolume(s: Spray, sides: number, stations: number, ragged: number, 
   // What hangs below where the bough leaves its branch is in the tier's own shade:
   // light tops, dark drooping undersides, so stacked tiers read apart.
   const y0 = s.path[0]!.at[1], drop = Math.max(0.4, Math.hypot(...sub(tip, s.path[0]!.at)) * 0.35);
-  const hang = (p: P3) => 0.55 * Math.max(-1, Math.min(0.25, (p[1] - y0) / drop));
+  const hang = (p: P3) => 0.8 * Math.max(-1, Math.min(0.25, (p[1] - y0) / drop));
   // Every face is wound outward from the bough's axis (caps: from the spray's middle).
   const face = (a: P3, b: P3, c: P3, la: number, lb: number, lc: number, from: P3) => {
     const n = cross(sub(b, a), sub(c, a)), m = mul(add(add(a, b), c), 1 / 3);
