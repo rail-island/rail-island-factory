@@ -8,11 +8,12 @@
 // cell's centre plus the slot's offset in cell widths, scaled to the slot's height
 // against the species' own height at that level, stretched by `width`, tilted by
 // `lean` toward the tree's rotation, and coloured by `shade` and `hue` the way the
-// game's instance colour does. No `node:` imports.
+// game's instance colour does. Each tree is the shape its slot's `seed` picks.
+// No `node:` imports.
 
 import { MeshBuilder } from "./meshBuilder.ts";
 import { boxOf, type Geo, type P3 } from "./treeGeo.ts";
-import { TREE_COLORS, treeParts, type Species, type TreeDetail } from "./trees.ts";
+import { TREE_COLORS, treeOptions, treeParts, type Species, type TreeDetail } from "./trees.ts";
 import { MAX_TREES_PER_CELL, newSlot, type CellContext, type TreeSlot, type WoodsDesign } from "./woodsApi.ts";
 
 /** One cell's width in studs (the game's MapSizes.RESOLUTION). */
@@ -24,13 +25,18 @@ export function instanceTint(shade: number, hue: number): P3 {
   return [shade * (1 + 0.1 * hue), shade * (1 + 0.04 * hue), shade * (1 - 0.14 * hue)];
 }
 
+/** One shape of a species at one level: the tree its design builds for that seed. */
+export function seededParts(species: Species, detail: TreeDetail, seed = 1): ReturnType<typeof treeParts> {
+  return treeParts(species, detail, treeOptions(species, { seed: String(seed) }));
+}
+
 const heightCache = new Map<string, number>();
-/** A species' height at one level, at scale 1 (the game's speciesBaseHeight). */
-export function speciesHeight(species: Species, detail: TreeDetail): number {
-  const key = `${species}:${detail}`;
+/** A species' height at one level and seed, at scale 1 (the game's speciesBaseHeight). */
+export function speciesHeight(species: Species, detail: TreeDetail, seed = 1): number {
+  const key = `${species}:${detail}:${seed}`;
   let h = heightCache.get(key);
   if (h === undefined) {
-    const { trunk, foliage } = treeParts(species, detail);
+    const { trunk, foliage } = seededParts(species, detail, seed);
     const b = boxOf([...trunk, ...foliage]);
     h = b.max[1] - b.min[1];
     heightCache.set(key, h);
@@ -109,14 +115,16 @@ export function buildGrove(woods: WoodsDesign, opts: GroveOptions = {}): MeshBui
     // a variant's own floor (an autumn wood's), else the type's
     floor: { color: hex((opts.params ? woods.variant(opts.params).floor : undefined) ?? woods.floor), roughness: 1 },
   };
-  const parts = new Map<Species, ReturnType<typeof treeParts>>();
+  // one set of parts per species and seed; the materials are per species
+  const parts = new Map<string, ReturnType<typeof treeParts>>();
   const trees = groveTrees(woods, opts);
   for (const t of trees) {
     const s = t.species as Species;
-    if (!parts.has(s)) {
-      parts.set(s, treeParts(s, detail));
+    const key = `${s}:${t.seed}`;
+    if (!parts.has(key)) {
+      parts.set(key, seededParts(s, detail, t.seed));
       palette[`${s}-trunk`] = { color: TREE_COLORS[s].trunk, roughness: 1 };
-      palette[`${s}-foliage`] = { color: TREE_COLORS[s].foliage, roughness: 0.9, ...(parts.get(s)!.ribbons ? { doubleSided: true } : {}) };
+      palette[`${s}-foliage`] = { color: TREE_COLORS[s].foliage, roughness: 0.9, ...(parts.get(key)!.ribbons ? { doubleSided: true } : {}) };
     }
   }
   const m = new MeshBuilder(palette);
@@ -136,11 +144,11 @@ export function buildGrove(woods: WoodsDesign, opts: GroveOptions = {}): MeshBui
 }
 
 /** Bakes every tree of the grove into `m`, placed and coloured the way the game does. */
-function plant(m: MeshBuilder, trees: Array<TreeSlot & { cx: number; cz: number }>, parts: Map<Species, ReturnType<typeof treeParts>>, detail: TreeDetail): void {
+function plant(m: MeshBuilder, trees: Array<TreeSlot & { cx: number; cz: number }>, parts: Map<string, ReturnType<typeof treeParts>>, detail: TreeDetail): void {
   for (const t of trees) {
     const s = t.species as Species;
-    const p = parts.get(s)!;
-    const k = t.height / speciesHeight(s, detail);
+    const p = parts.get(`${s}:${t.seed}`)!;
+    const k = t.height / speciesHeight(s, detail, t.seed);
     const rot = (t.rot * Math.PI) / 180;
     const cr = Math.cos(rot), sr = Math.sin(rot);
     const cl = Math.cos(t.lean), sl = Math.sin(t.lean);

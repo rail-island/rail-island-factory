@@ -4,10 +4,11 @@
 
 import { describe, expect, it } from "vitest";
 import { WOODS } from "../generator/woods";
-import { MAX_TREES_PER_CELL, cellSeed, draw, newSlot, same, type CellContext, type TreeSlot } from "../generator/woodsApi";
+import { MAX_TREES_PER_CELL, TREE_SEEDS, cellSeed, draw, newSlot, same, type CellContext, type TreeSlot } from "../generator/woodsApi";
 import { SPECIES } from "../generator/trees";
 import { bundleGame, woodsMeta } from "../generator/woodsExport";
 import { WOODS_MODELS, woodsModelId } from "../generator/woodsModels";
+import { groveTrees } from "../generator/woodsGrove";
 import { glbStats } from "../generator/glbStats";
 
 // Stored in the game's saved maps (by name): a shipped name is never renamed or removed.
@@ -91,6 +92,9 @@ describe("the woods types", () => {
         expect(t.shade).toBeGreaterThan(0.5);
         expect(t.shade).toBeLessThan(1.5);
         expect(Math.abs(t.hue)).toBeLessThanOrEqual(1);
+        expect(Number.isInteger(t.seed)).toBe(true);
+        expect(t.seed).toBeGreaterThanOrEqual(1);
+        expect(t.seed).toBeLessThanOrEqual(TREE_SEEDS);
       }
       trees += n;
     }
@@ -108,11 +112,40 @@ describe("the woods types", () => {
 
   it.each(WOODS.map((w) => [w.design.name, w.design] as const))("%s samples a tree for a row", (_, w) => {
     const out = newSlot();
+    const seeds = new Set<number>();
     for (let i = 0; i < 50; i++) {
       w.sample(draw(i, 1), draw(i, 2), out);
       expect(SPECIES as readonly string[]).toContain(out.species);
       expect(out.height).toBeGreaterThan(0);
+      expect(Number.isInteger(out.seed) && out.seed >= 1 && out.seed <= TREE_SEEDS).toBe(true);
+      seeds.add(out.seed);
     }
+    expect(seeds.size, "a row draws every shape").toBe(TREE_SEEDS);
+  });
+
+  // Regression: every tree used to be its species' seed-1 shape, so a forest was
+  // rows of five-of-a-kind clones; each slot now picks one of the five seeds.
+  it.each(WOODS.map((w) => [w.design.name, w.design] as const))("%s grows every one of a species' five shapes", (_, w) => {
+    const out = slots();
+    const seen = new Map<string, Set<number>>();
+    const counts = new Map<string, number>();
+    for (const ctx of contexts()) {
+      const n = w.distribute(ctx, out);
+      for (let i = 0; i < n; i++) {
+        const t = out[i]!;
+        if (!seen.has(t.species)) seen.set(t.species, new Set());
+        seen.get(t.species)!.add(t.seed);
+        counts.set(t.species, (counts.get(t.species) ?? 0) + 1);
+      }
+    }
+    // every species the type plants at least 50 times shows all five shapes
+    let checked = 0;
+    for (const [species, n] of counts) {
+      if (n < 50) continue;
+      expect([...seen.get(species)!].sort(), species).toEqual([1, 2, 3, 4, 5]);
+      checked++;
+    }
+    expect(checked).toBeGreaterThan(0);
   });
 });
 
@@ -277,6 +310,7 @@ describe("the woods export", () => {
   it("lists every woods type and species, sorted, with no numeric ids", () => {
     const meta = woodsMeta();
     expect(meta.maxTreesPerCell).toBe(4);
+    expect(meta.treeSeeds).toBe(5);
     expect(meta.woods.map((w) => w.name)).toEqual([...meta.woods.map((w) => w.name)].sort());
     expect(meta.module).toBe("woods.js");
     expect(meta.trees.map((t) => t.species).sort()).toEqual([...SPECIES].sort());
@@ -292,6 +326,7 @@ describe("the woods export", () => {
     const all = await import(`data:text/javascript;base64,${Buffer.from(text).toString("base64")}`);
     expect(all.WOODS.map((w: { name: string }) => w.name)).toEqual(WOODS.map((w) => w.design.name));
     expect(all.MAX_TREES_PER_CELL).toBe(4);
+    expect(all.TREE_SEEDS).toBe(5);
     expect([...all.SPECIES].sort()).toEqual([...SPECIES].sort());
     expect(all.WOODS.find((w: { name: string }) => w.name === "mixed-woods").params.map((p: { name: string }) => p.name)).toEqual(["density", "mix"]);
     expect(() => all.woodsType("no-such-woods")).toThrow();
@@ -336,6 +371,12 @@ describe("the woods models (site catalog)", () => {
       }
       expect(density!.values.map((v) => v.value)).toEqual(["sparse", "normal", "dense"]);
     }
+  });
+
+  it("draws each grove tree in the shape its seed picks", () => {
+    const oak = WOODS.find((w) => w.design.name === "oak-woods")!.design;
+    const seeds = new Set(groveTrees(oak).map((t) => t.seed));
+    expect(seeds.size).toBe(5);
   });
 
   it("stands on the ground and rejects unknown values, like every design", () => {

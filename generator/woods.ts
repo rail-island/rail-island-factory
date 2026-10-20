@@ -4,7 +4,7 @@
 // in woods.meta.json. No `node:` imports.
 
 import {
-  DENSITY_PARAM, MAX_TREES_PER_CELL, cellSeed, draw, edgeness, field, put, resolveWoodsParams,
+  DENSITY_PARAM, MAX_TREES_PER_CELL, cellSeed, draw, edgeness, field, put, resolveWoodsParams, treeSeedOf,
   type CellContext, type TreeSlot, type WoodsDesign, type WoodsParam, type WoodsParamValues, type WoodsPlanter,
 } from "./woodsApi.ts";
 import type { Species } from "./trees.ts";
@@ -42,8 +42,9 @@ function floorOf(swatch: Rgb): Rgb {
  *               canopy tree, never instead of the whole cell
  *   height      drawn from the species' range, taller deep inside, shorter at the
  *               edge (`edgeShrink`) and on high ground (`altitude`)
- *   look        each tree its own width, lean, brightness and warm/cool cast, and a
- *               grove a shared tone from the same field
+ *   look        each tree one of its species' five shapes (its seed), its own width,
+ *               lean, brightness and warm/cool cast, and a grove a shared tone
+ *               from the same field
  */
 interface ForestSpec {
   name: string;
@@ -115,7 +116,9 @@ function forest(spec: ForestSpec): WoodsPlanter {
       0.88 + 0.28 * draw(seed, 40 + k),
       (draw(seed, 50 + k) - 0.5) * 0.14,
       Math.min(1.25, Math.max(0.75, 0.88 + 0.22 * draw(seed, 60 + k) + tone * 0.12)),
-      Math.min(1, Math.max(-1, (draw(seed, 70 + k) - 0.5) * 0.9 + tone * 0.7)));
+      Math.min(1, Math.max(-1, (draw(seed, 70 + k) - 0.5) * 0.9 + tone * 0.7)),
+      // which of the species' five shapes: every one of them grows in every wood
+      treeSeedOf(draw(seed, 120 + k)));
   };
   return {
     distribute(ctx: CellContext, out: TreeSlot[]): number {
@@ -157,7 +160,9 @@ function forest(spec: ForestSpec): WoodsPlanter {
     sample(u: number, v: number, out: TreeSlot): void {
       const m = weighted(canopy, u);
       put(out, m.species, 0, 0, 0, (m.minHeight + v * (Math.max(m.maxHeight, m.minHeight) - m.minHeight)) * HEIGHT,
-        0.92 + 0.16 * v, 0, 0.92 + 0.16 * u, (u - 0.5) * 0.6);
+        0.92 + 0.16 * v, 0, 0.92 + 0.16 * u, (u - 0.5) * 0.6,
+        // a shape decorrelated from the species pick and the height, which u and v already drive
+        treeSeedOf(draw(Math.floor(u * 4294967296) | 0, Math.floor(v * 4294967296) | 0)));
     },
   };
 }

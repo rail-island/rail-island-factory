@@ -27,8 +27,9 @@ cells of its 5x5 neighbourhood carry the same woods type (bit `(dz + 2) * 5 + dx
 read with `same`), the terrain's `slope` in degrees and its `height` in studs above
 the water. A `TreeSlot` is a species key, an offset from the cell's centre in cell
 widths (-0.5..0.5), a rotation in degrees, a height in studs, and the tree's look:
-`width` (crown stretch), `lean` (radians), `shade` (brightness) and `hue` (-1 cool ..
-1 warm). The slots are the caller's and reused, so a function allocates nothing per
+`width` (crown stretch), `lean` (radians), `shade` (brightness), `hue` (-1 cool ..
+1 warm) and `seed`, which of the species' **five shapes** it is (an integer
+1..`TREE_SEEDS`, the species design's `Tree seed` parameter; [trees.md](trees.md)). The slots are the caller's and reused, so a function allocates nothing per
 cell; the game calls it tens of thousands of times a tile.
 
 **Four trees a cell is a hard limit** (`MAX_TREES_PER_CELL`): the tests fail any woods
@@ -64,7 +65,10 @@ from what is around it:
 
 Trees stand on the quarters of the cell, each jittered within its quarter, so crowns
 overlap into a canopy without stacking; each gets its own width, lean, shade and hue,
-and a grove shares a tone from the same field. Trees are planted at the game's
+and a grove shares a tone from the same field. Each tree also rolls one of its
+species' five seeds, evenly (`treeSeedOf(draw(cellSeed, 120 + k))`), so every wood
+grows all five shapes of every species it plants and a stand is never a row of
+clones; `sample` picks a row tree's seed from a hash of its two numbers. Trees are planted at the game's
 classic heights: the specs are written about 15% taller and drawn at `HEIGHT`
 (1/1.15), so a tree is as big as the classic woods' ([trees.md](trees.md)).
 
@@ -136,12 +140,13 @@ a woods name**: never rename or remove a shipped one. Titles are display text.
   type and every tree species -- the game plants its forests from it alone:
   `WOODS` (each type's name, label, swatch, floor and params), `woodsType(name)`
   returning `variant(values)` and the defaults' `distribute` and `sample`,
-  `MAX_TREES_PER_CELL`, `MASK_RADIUS`, `SPECIES`, and `buildTree(THREE, species,
-  detail, values?)` (detail `high`, `low`, `coarse` or `max`; `values` picks the
-  species design's parameters, such as its seed; [trees.md](trees.md)). There are
+  `MAX_TREES_PER_CELL`, `MASK_RADIUS`, `TREE_SEEDS`, `SPECIES`, and
+  `buildTree(THREE, species, detail, values?)` (detail `high`, `low`, `coarse` or
+  `max`; `values` picks the species design's parameters -- a slot's tree is
+  `{ seed: String(slot.seed) }`; [trees.md](trees.md)). There are
   no separate tree or per-type modules; a build removes the `woods/` folder and
   `trees.js` earlier exports wrote;
-- `woods.meta.json`: `maxTreesPerCell`, `module` (`woods.js`), every tree species
+- `woods.meta.json`: `maxTreesPerCell`, `treeSeeds` (5), `module` (`woods.js`), every tree species
   (`species`, `id`, `params`) and every woods type (`name`, `label`, `swatch`,
   `floor`, `params`), each list sorted by key, no numeric ids -- the game maps names
   to the ids its maps store;
@@ -156,7 +161,8 @@ ragged edge on flat ground, grass around it -- and bakes every tree into one mod
 the way the game places it: the cell's centre plus the slot's offset, scaled to its
 height against the species' height at that level, stretched by `width`, tilted by
 `lean` about the tree's own X axis after its turn, and coloured by `shade` and `hue`
-with the game's instance-colour formula (`instanceTint`). The ground is the woods
+with the game's instance-colour formula (`instanceTint`), each tree in the shape
+its slot's `seed` picks (`seededParts`, heights measured per seed). The ground is the woods
 type's floor under the wood and grass outside it.
 
 ## The woods models
@@ -180,7 +186,8 @@ modules above, not from a grove model.
 `test/woods.test.ts`: the hash vectors and the mask; every shipped name present,
 unique and kebab-case; for every type, over a sweep of interiors, edges, lone cells,
 slopes and heights, at most four trees a cell, each a known species inside its cell
-with a sane height, width, lean, shade and hue; determinism; `sample`; the relations
+with a sane height, width, lean, shade, hue and seed; all five seeds of every species
+a type plants (and of a row's samples); determinism; `sample`; the relations
 (denser inside than at the edge, more shrubs at the edge, every type's normal
 density within 10% of the classic one and its dense and sparse grades around it, a
 thin park, a treeline, orchard rows, larch groves in autumn); the parameters (density
