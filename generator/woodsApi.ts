@@ -24,6 +24,12 @@ export const MAX_TREES_PER_CELL = 4;
 /** How far the neighbourhood mask reaches, in cells, on each side. */
 export const MASK_RADIUS = 2;
 
+/**
+ * How many shapes every tree species has: its design's `seed` parameter, values
+ * "1".."5" (treeKit.ts TREE_SEED). A woods type spreads its trees over all of them.
+ */
+export const TREE_SEEDS = 5;
+
 /** What a woods type sees of the cell it plants. */
 export interface CellContext {
   /** The cell's column and row on the map's cell grid. */
@@ -62,6 +68,11 @@ export interface TreeSlot {
   shade: number;
   /** Hue shift of the foliage: -1 cooler / bluer .. 1 warmer / yellower, 0 = as modelled. */
   hue: number;
+  /**
+   * Which of the species' shapes the tree is: its design's `seed` parameter, an
+   * integer 1..TREE_SEEDS (the game builds `buildTree(THREE, species, detail, { seed: String(seed) })`).
+   */
+  seed: number;
 }
 
 /** What plants a cell: one woods type at one choice of its parameters. */
@@ -167,13 +178,13 @@ export function same(mask: number, dx: number, dz: number): boolean {
 
 /** A fresh output slot (the caller keeps MAX_TREES_PER_CELL of them). */
 export function newSlot(): TreeSlot {
-  return { species: "", x: 0, z: 0, rot: 0, height: 0, width: 1, lean: 0, shade: 1, hue: 0 };
+  return { species: "", x: 0, z: 0, rot: 0, height: 0, width: 1, lean: 0, shade: 1, hue: 0, seed: 1 };
 }
 
 /** Writes one tree into a slot. */
 export function put(
   out: TreeSlot, species: string, x: number, z: number, rot: number, height: number,
-  width = 1, lean = 0, shade = 1, hue = 0,
+  width = 1, lean = 0, shade = 1, hue = 0, seed = 1,
 ): void {
   out.species = species;
   out.x = x;
@@ -184,6 +195,12 @@ export function put(
   out.lean = lean;
   out.shade = shade;
   out.hue = hue;
+  out.seed = seed;
+}
+
+/** A tree seed (1..TREE_SEEDS) from a uniform number in [0, 1). */
+export function treeSeedOf(u: number): number {
+  return 1 + Math.min(TREE_SEEDS - 1, Math.floor(u * TREE_SEEDS));
 }
 
 /**

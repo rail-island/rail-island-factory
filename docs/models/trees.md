@@ -34,7 +34,8 @@ A tree is **base-anchored at y = 0** and has exactly **two materials**, `trunk` 
 whole forest of it as one InstancedMesh per tile. Units are the game's studs,
 numerically (a pine is 9.2 tall); the game scales each tree to the height its woods
 type asks for, so only proportions matter. The game adds the rest per instance: the
-woods type's `width`, `lean`, `shade` and `hue` per tree ([woods.md](woods.md)).
+woods type's `width`, `lean`, `shade` and `hue` per tree, and the woods type's `seed`
+picks which of the species' five shapes each tree is ([woods.md](woods.md)).
 
 ## Four levels
 
@@ -203,7 +204,8 @@ The game takes its trees from **`woods.js`**, one standalone module with every
 woods type and every species (`woodsExport.ts` `bundleGame`, [woods.md](woods.md)):
 `buildTree(THREE, species, "high" | "low" | "coarse" | "max", values?)` returns the
 same Group of `trunk` and `foliage` the catalog design builds for those values (the
-default seed when absent), and `SPECIES` lists the keys. Each catalog
+default seed when absent; a planted tree passes `{ seed: String(slot.seed) }`), and
+`SPECIES` lists the keys. Each catalog
 `js/proc-tree-<species>.js` is built from that design's own builders, which call
 only its species module and the kit, so it carries one species.
 
