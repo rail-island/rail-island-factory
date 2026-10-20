@@ -120,9 +120,9 @@ backfaces; cores and masses are closed.
 | bush | mound of 7 clumps on short stems from a low stool | 9,684 | 1,022 | 64 | 20 |
 | hazel | 4 crooked stems from a stool, each ending in a clump and carrying one more | 9,586 | 776 | 144 | 20 |
 | orchard | short trunk forking into 4 spreading limbs under 9 round clumps | 9,338 | 848 | 124-148 | 20 |
-| pine | irregular open crown on a bare trunk: 6 whorls of rising branches with needle tufts at the tips | 6,234 | 2,324 | 68 | 10 |
-| spruce | dense narrow cone: 10 whorls of long drooping boughs with side shoots, almost to the ground | 7,736 | 2,702 | 80 | 10 |
-| larch | airy: 8 whorls of thin arching branches hung with soft needle puffs (summer green, autumn gold) | 5,296 | 1,634 | 68 | 10 |
+| pine | irregular open crown on a bare trunk: 6 whorls of rising branches with needle tufts at the tips | 8,838 | 2,324 | 68 | 10 |
+| spruce | layered cone: 10 whorls of broad drooping fan plates with side branchlets, the trunk showing between tiers | 9,658 | 2,702 | 80 | 10 |
+| larch | airy: 8 whorls of thin arching branches hung with soft needle plates (summer green, autumn gold) | 8,296 | 1,634 | 68 | 10 |
 | scotspine | tall bare crooked orange trunk, four boughs with flat pads: an umbrella crown | 9,140 | 992 | 168 | 20 |
 | palm | curving ringed trunk, crown knob and coconuts, 13 arching fronds of leaflet pairs | 5,108 | 774 | 137 | 20 |
 | deadtree | leaning broken-topped trunk, roots, four bare limbs forking into twigs | 524 | 232 | 52 | 16 |
@@ -134,18 +134,23 @@ Notes per family:
   leaves at high and Max and three-segment ribbons at low (so its low level stays
   double-sided).
 - **Conifers** (`conifers.ts`): pine, spruce and larch carry **needle sprays**
-  instead of leaf clumps -- closed volumes lofted along a bough (`Spray`): a ragged
-  cross-section, flatter underneath than on top, tapering to the tip, lit on the
-  upper side and toward the tip (new growth) and dark underneath and inward, with a
-  warm or cool cast per spray. They follow the branch structure: the spruce's long
-  boughs droop and turn up at the tip, with two side shoots (four at Max) that
-  overlap into layers; the pine's thick visible branches rise and end in chunky
-  tufts, with two side twigs (three at Max) tufted the same way; the larch's thin
-  arching branches carry three soft hanging puffs (six at Max). Primary branches
-  come from the structural stream and Max's extra shoots from their own, so Max
-  never moves a branch. Each spray is drawn with 4-5 sides at high detail and 5-7
-  at Max. The two larch seasons share the shape and differ only in palette; the
-  Scots pine keeps flat needle pads (clumps) on four boughs.
+  instead of leaf clumps -- closed volumes lofted along a bough (`Spray`), shaped by
+  the style's spray settings: a thin plate whose sides droop (`droop`, a fan rather
+  than a tube), notched at alternate outline corners (`scallop`, the sides only, so
+  the faces stay smooth planes), its top broken into small tilted facets (`facet`)
+  and its underside shallower than its top (`under`). Shading lights the upper face
+  and darkens what hangs below the point where the bough leaves its branch, so each
+  tier has a light top and a dark underside, with a warm or cool cast per spray.
+  They follow the branch structure: the spruce's boughs start narrow at the trunk,
+  run out level and droop toward the tip, broader low down, with two side
+  branchlets just beneath (four, two smaller, at Max) and, at Max, the lower whorls'
+  wood showing; the pine's thick visible branches rise and end in flattened tufts,
+  with two tufted side twigs (five at Max); the larch's thin arching branches carry
+  three hanging needle plates (ten, overlapping, at Max). Primary branches come from
+  the structural stream and Max's extra shoots from their own, so Max never moves a
+  branch; Max also draws each spray with more sides and stations. The two larch
+  seasons share the shape and differ only in palette; the Scots pine keeps flat
+  needle pads (clumps) on four boughs.
 - **Palm** (`palm.ts`): fronds are midribs of long leaflets swept toward the tip so
   they overlap (11 pairs at high, 44 at Max); low draws each as a drooping ribbon.
 - **Dead tree** (`deadTree.ts`): no leaves -- its limbs and twigs are the foliage

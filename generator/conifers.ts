@@ -43,39 +43,44 @@ const stemOf = (rng: () => number, H: number, foot: number, lean: number): Stati
 };
 // A spray along `points`, `w` wide at its widest (profile: narrow base, full body, tip).
 const spray = (points: P3[], w: number, flat: number, tone: number, tier: number, seed: number, rank: number, maxOnly = false): Spray => {
-  const profile = points.length === 3 ? [0.45, 1, 0.3] : [0.35, 1, 0.85, 0.3];
+  const profile = points.length === 3 ? [0.45, 1, 0.3] : points.length === 4 ? [0.35, 1, 0.85, 0.3] : [0.12, 0.6, 1, 0.85, 0.3];
   return { path: points.map((at, i) => ({ at, w: w * profile[i]!, h: w * profile[i]! * flat })), tone, tier, seed, rank, ...(maxOnly ? { maxOnly } : {}) };
 };
 
-// Spruce: ten tight whorls of long boughs that droop and turn up at the tip, each
-// with two side shoots (four at Max); they overlap into a dense, narrow cone that
-// reaches almost to the ground.
+// Spruce: ten tight whorls of long boughs, each a broad, thin fan plate that droops
+// to its sides and along its length and turns up at the tip, with two side
+// branchlets (four, two smaller, at Max). The lower boughs are broader, overlap and half hide
+// the trunk; Max shows the wood of the lower whorls' branches beneath them.
 function spruceLayout(o: BroadleafOptions): Layout {
   const rng = random(o.seed), jit = jitterOf(rng), H = 10.6;
   const stem = stemOf(rng, H, 0.42, 0.12);
-  const sprays: Spray[] = [];
+  const sprays: Spray[] = [], limbs: Limb[] = [];
   const W = 10;
   for (let w = 0; w < W; w++) {
     const t = w / (W - 1), y = 1.45 + (9.4 - 1.45) * (1 - Math.pow(1 - t, 1.25)) + jit(0.1), base = stationAt(stem, y);
     const n = Math.round(5.4 - 2.4 * t), phase = w * 2.4 + rng() * 0.8;
     for (let b = 0; b < n; b++) {
-      const dir = bearing(phase + (b + jit(0.3)) * Math.PI * 2 / n), reach = (2.15 * Math.pow(1 - t, 0.95) + 0.62) * (0.85 + rng() * 0.3);
-      const at = (s: number): P3 => add(base, add(mul(dir, reach * s), up(-0.3 * reach * Math.pow(s, 1.4) + 0.14 * reach * Math.max(0, s - 0.7))));
+      const dir = bearing(phase + (b + jit(0.3)) * Math.PI * 2 / n), reach = (2.7 * Math.pow(1 - t, 0.95) + 0.6) * (0.85 + rng() * 0.3);
+      const at = (s: number): P3 => add(base, add(mul(dir, reach * s), up(-0.26 * reach * Math.pow(s, 2.2) + 0.06 * reach * Math.sin(Math.PI * s))));
       const tone = jit(0.05), seed = w * 31 + b;
-      sprays.push(spray([at(0), at(0.35), at(0.7), at(1)], reach * 0.36 + 0.12, 0.5, tone, Math.floor(w / 2), seed, 0));
+      sprays.push(spray([at(0), at(0.25), at(0.5), at(0.75), at(1)], reach * (0.3 + 0.1 * (1 - t)) + 0.1, 0.16, tone, Math.floor(w / 2), seed, 0));
+      if (w < 5)
+        limbs.push({ stations: [{ at: base, r: 0.09 * (1 - 0.5 * t) }, { at: at(0.5), r: 0.035 }], sides: [3, 4, 3], maxOnly: true, skipLow: true });
       const shoots = random(o.seed * 977 + seed);
+      // Side branchlets: smaller plates just under the bough, fanning out to either
+      // side of it, so each tier reads as layered foliage rather than one slab.
       for (let k = 0; k < 4; k++) {
-        const s = [0.35, 0.6, 0.48, 0.78][k]!, from = at(s), len = reach * (0.62 - 0.3 * s) * (0.85 + shoots() * 0.3);
-        const d = turn(dir, (k % 2 ? 1 : -1) * (0.75 + shoots() * 0.3));
-        sprays.push(spray([from, add(from, add(mul(d, len * 0.55), up(-0.12 * len))), add(from, add(mul(d, len), up(-0.32 * len)))],
-          len * 0.5 + 0.06, 0.5, tone + (shoots() - 0.5) * 0.06, Math.floor(w / 2), seed * 7 + k, 1, k >= 2));
+        const s = [0.4, 0.62, 0.28, 0.8][k]!, from = add(at(s), up(-0.12)), len = reach * (0.55 - 0.25 * s) * (k < 2 ? 1 : 0.75) * (0.85 + shoots() * 0.3);
+        const d = turn(dir, (k % 2 ? 1 : -1) * (0.45 + shoots() * 0.2));
+        sprays.push(spray([from, add(from, add(mul(d, len * 0.5), up(-0.05 * len))), add(from, add(mul(d, len), up(-0.24 * len)))],
+          len * 0.55 + 0.06, 0.22, tone - 0.05 + (shoots() - 0.5) * 0.06, Math.floor(w / 2), seed * 7 + k, 1, k >= 2));
       }
     }
   }
   // The leader: an upright spray finishing the crown.
   const top = stem[5]!.at;
   sprays.push(spray([add(top, up(-1.6)), add(top, up(-1.0)), add(top, up(-0.4)), add(top, up(0.15))], 0.3, 1, 0.05, Math.floor((W - 1) / 2), 1, 0));
-  return { stem, stemSides: [6, 10, 4], limbs: [], twigs: [], clumps: [], groups: [], sprays };
+  return { stem, stemSides: [6, 10, 4], limbs, twigs: [], clumps: [], groups: [], sprays };
 }
 
 // Pine: an irregular, open crown above a bare trunk; few whorls of strong branches
@@ -97,24 +102,23 @@ function pineLayout(o: BroadleafOptions): Layout {
       const tone = jit(0.06), seed = w * 31 + b, size = 0.62 * (0.85 + rng() * 0.3) * (1 - 0.25 * t);
       // The branch's own tuft: from the outer part of the branch past its tip, turning up.
       const from = mix(branch[1]!.at, tip, 0.35), dirUp = unit(add(dir, up(0.6)));
-      sprays.push(spray([from, mix(from, tip, 0.5), tip, add(tip, mul(dirUp, size * 0.9))], size, 0.72, tone, tiers[w]!, seed, 0));
+      sprays.push(spray([from, mix(from, tip, 0.5), tip, add(tip, mul(dirUp, size * 0.9))], size, 0.5, tone, tiers[w]!, seed, 0));
       const twigRng = random(o.seed * 977 + seed);
-      for (let k = 0; k < 3; k++) {
-        const start = mix(branch[1]!.at, tip, 0.15 + 0.3 * k), d = turn(dir, (k % 2 ? 1 : -1) * (0.7 + twigRng() * 0.5));
-        const len = reach * (0.42 - 0.08 * k) * (0.85 + twigRng() * 0.3), end = add(start, add(mul(d, len), up(len * 0.45)));
-        const max = k === 2;
-        twigs.push(bough(start, end, 0.045, 0.02, 0.05 * len));
-        if (max) limbs.push({ stations: bough(start, end, 0.045, 0.02, 0.05 * len), sides: [3, 5, 3], maxOnly: true, skipLow: true });
+      for (let k = 0; k < 5; k++) {
+        const start = mix(branch[1]!.at, tip, [0.15, 0.45, 0.75, 0.3, 0.6][k]!), d = turn(dir, (k % 2 ? 1 : -1) * (0.7 + twigRng() * 0.5));
+        const len = reach * (0.42 - 0.08 * (k % 3)) * (0.85 + twigRng() * 0.3), end = add(start, add(mul(d, len), up(len * 0.45)));
+        const max = k >= 2;
+        if (!max) twigs.push(bough(start, end, 0.045, 0.02, 0.05 * len));
+        else limbs.push({ stations: bough(start, end, 0.045, 0.02, 0.05 * len), sides: [3, 5, 3], maxOnly: true, skipLow: true });
         const tuft = size * 0.72, out = unit(add(d, up(0.7)));
-        sprays.push(spray([mix(start, end, 0.45), end, add(end, mul(out, tuft * 0.9))], tuft, 0.75, tone + (twigRng() - 0.5) * 0.06, tiers[w]!, seed * 7 + k, 1, max));
+        sprays.push(spray([mix(start, end, 0.45), end, add(end, mul(out, tuft * 0.9))], tuft, 0.5, tone + (twigRng() - 0.5) * 0.06, tiers[w]!, seed * 7 + k, 1, max));
       }
     }
   });
-  // A twig only Max draws is a limb (above); the shared twig list keeps two per branch.
-  const kept = twigs.filter((_, i) => i % 3 !== 2);
+  // A twig only Max draws is a limb (above): the twig list is what high detail draws too.
   const top = stem[5]!.at;
-  sprays.push(spray([add(top, up(-1.1)), add(top, up(-0.6)), add(top, up(-0.1)), add(top, up(0.3))], 0.42, 0.9, 0.05, 3, 2, 0));
-  return { stem, stemSides: [6, 10, 4], limbs, twigs: kept, clumps: [], groups: [], sprays };
+  sprays.push(spray([add(top, up(-1.1)), add(top, up(-0.6)), add(top, up(-0.1)), add(top, up(0.3))], 0.3, 0.9, 0.05, 3, 2, 0));
+  return { stem, stemSides: [6, 10, 4], limbs, twigs, clumps: [], groups: [], sprays };
 }
 
 // Larch: a light, airy crown; thin branches arch out and down, carrying small
@@ -137,10 +141,11 @@ function larchLayout(o: BroadleafOptions): Layout {
         const i = s < 0.5 ? 0 : 1, u = s < 0.5 ? s * 2 : (s - 0.5) * 2;
         return mix(branch[i]!.at, branch[i + 1]!.at, u);
       };
-      for (let k = 0; k < 6; k++) {
-        const s = [0.45, 0.72, 0.97, 0.58, 0.85, 0.32][k]!, from = along(s), size = (0.36 + 0.1 * (1 - t)) * (0.85 + puffs() * 0.3);
-        const d = unit(add(turn(dir, (puffs() - 0.5) * 1.2), up(-0.9)));
-        sprays.push(spray([from, add(from, mul(d, size * 0.9)), add(from, mul(d, size * 1.9))], size, 0.85, tone + (puffs() - 0.5) * 0.08,
+      // Three hanging plates at high detail, ten overlapping ones at Max.
+      for (let k = 0; k < 10; k++) {
+        const s = k < 3 ? [0.45, 0.72, 0.97][k]! : 0.25 + 0.72 * ((k * 0.618) % 1), from = along(s), size = (0.36 + 0.1 * (1 - t)) * (0.85 + puffs() * 0.3);
+        const d = unit(add(turn(dir, (puffs() - 0.5) * 1.4), up(-0.6)));
+        sprays.push(spray([from, add(from, mul(d, size * 0.9)), add(from, mul(d, size * 1.9))], size, 0.5, tone + (puffs() - 0.5) * 0.08,
           Math.floor(w / 2), seed * 7 + k, 1, k >= 3));
       }
     }
@@ -182,25 +187,25 @@ const STYLES: Record<ConiferSpecies, BroadleafStyle> = /* @__PURE__ */ (() => ({
     colors: CONIFER_COLORS.pine, top: 9.6,
     leaf: [[0.05, 0.17, 0.09], [0.17, 0.4, 0.21], [0.5, 0.66, 0.33]], bark: pineBark,
     tufts: { high: 0, highAiry: 0, max: 0, maxAiry: 0 }, leaves: { high: 0, max: 0 }, leafLength: { high: 0, max: 0 },
-    massSides: 6, coarse: "cone", sprays: { high: [[5, 4], [5, 3]], max: [[7, 6], [6, 4]], ragged: 0.22 },
+    massSides: 6, coarse: "cone", sprays: { high: [[5, 4], [5, 3]], max: [[7, 6], [6, 4]], ragged: 0.14, droop: 0.15, scallop: 0.18, under: 0.5, facet: 0.7 },
   },
   spruce: {
     colors: CONIFER_COLORS.spruce, top: 10.8,
-    leaf: [[0.02, 0.1, 0.07], [0.09, 0.28, 0.2], [0.3, 0.5, 0.37]], bark: [[0.22, 0.14, 0.08], [0.5, 0.34, 0.2]],
+    leaf: [[0.05, 0.2, 0.1], [0.15, 0.44, 0.19], [0.45, 0.72, 0.26]], bark: [[0.3, 0.17, 0.08], [0.62, 0.4, 0.22]],
     tufts: { high: 0, highAiry: 0, max: 0, maxAiry: 0 }, leaves: { high: 0, max: 0 }, leafLength: { high: 0, max: 0 },
-    massSides: 6, coarse: "cone", sprays: { high: [[5, 4], [4, 3]], max: [[6, 6], [5, 4]], ragged: 0.18 },
+    massSides: 6, coarse: "cone", sprays: { high: [[5, 4], [4, 3]], max: [[7, 8], [5, 4]], ragged: 0.08, droop: 0.2, scallop: 0.22, under: 0.4, facet: 0.9 },
   },
   larch: {
     colors: CONIFER_COLORS.larch, top: 10.8,
     leaf: [[0.16, 0.32, 0.1], [0.45, 0.66, 0.24], [0.78, 0.9, 0.46]], bark: [[0.28, 0.2, 0.13], [0.6, 0.46, 0.32]],
     tufts: { high: 0, highAiry: 0, max: 0, maxAiry: 0 }, leaves: { high: 0, max: 0 }, leafLength: { high: 0, max: 0 },
-    massSides: 6, coarse: "cone", sprays: { high: [[4, 3], [4, 3]], max: [[6, 4], [5, 4]], ragged: 0.15 },
+    massSides: 6, coarse: "cone", sprays: { high: [[4, 3], [4, 3]], max: [[6, 4], [5, 4]], ragged: 0.12, scallop: 0.15, facet: 0.5 },
   },
   autumnlarch: {
     colors: CONIFER_COLORS.autumnlarch, top: 10.8,
     leaf: [[0.4, 0.22, 0.06], [0.84, 0.6, 0.18], [0.98, 0.86, 0.45]], bark: [[0.28, 0.2, 0.13], [0.6, 0.46, 0.32]],
     tufts: { high: 0, highAiry: 0, max: 0, maxAiry: 0 }, leaves: { high: 0, max: 0 }, leafLength: { high: 0, max: 0 },
-    massSides: 6, coarse: "cone", sprays: { high: [[4, 3], [4, 3]], max: [[6, 4], [5, 4]], ragged: 0.15 },
+    massSides: 6, coarse: "cone", sprays: { high: [[4, 3], [4, 3]], max: [[6, 4], [5, 4]], ragged: 0.12, scallop: 0.15, facet: 0.5 },
   },
   scotspine: {
     colors: CONIFER_COLORS.scotspine, top: 9.0, leafWidth: 0.2, leafRise: [0.2, 0.35],

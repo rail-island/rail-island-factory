@@ -129,7 +129,16 @@ export interface BroadleafStyle {
   fronds?: { high: number; max: number; lowSegments: number };
   // Needle sprays: cross-section sides and stations along the bough at high and Max
   // detail, and how ragged the cross-section is (a fraction of its radius).
-  sprays?: { high: [sides: number, stations: number][]; max: [sides: number, stations: number][]; ragged: number };
+  // `droop` bends a spray's sides down (a fan plate rather than a tube, a fraction of
+  // its width), `scallop` notches its outline at alternate corners and `under` sets
+  // how deep its underside is against its top.
+  sprays?: {
+    high: [sides: number, stations: number][]; max: [sides: number, stations: number][]; ragged: number;
+    droop?: number; scallop?: number; under?: number;
+    // Lifts and drops alternate corners of the upper face (a fraction of its depth),
+    // breaking a plate's top into small tilted facets.
+    facet?: number;
+  };
 }
 export interface BroadleafOptions {
   seed: number;
@@ -273,7 +282,7 @@ function ribbonOf(left: P3[], right: P3[]): Geo {
 // by a per-corner wobble, so a bough reads as a soft needle mass rather than a
 // disc or a star. Each corner also returns how lit it is: the upper side and the
 // outer end (new growth) light, the underside and the inner end dark.
-function sprayVolume(s: Spray, sides: number, stations: number, ragged: number): { geo: Geo; light: number[] } {
+function sprayVolume(s: Spray, sides: number, stations: number, ragged: number, droop = 0, scallop = 0, under = 0.6, facet = 0): { geo: Geo; light: number[] } {
   const along = (u: number) => {
     const x = u * (s.path.length - 1), i = Math.min(s.path.length - 2, Math.floor(x)), t = x - i;
     const a = s.path[i]!, b = s.path[i + 1]!;
@@ -288,9 +297,15 @@ function sprayVolume(s: Spray, sides: number, stations: number, ragged: number):
     const ring: P3[] = [], light: number[] = [];
     for (let k = 0; k < sides; k++) {
       const a = k * Math.PI * 2 / sides + 0.35 + i * 0.4, c = Math.cos(a), n = Math.sin(a);
-      const f = 1 + ragged * Math.sin(k * 2.39 + i * 1.7 + s.seed * 0.37) * Math.min(1, u * 3);
-      ring.push(add(p.at, add(mul(side, p.w * c * f), mul(up, p.h * n * (n > 0 ? 1 : 0.6) * f))));
-      light.push(0.5 * n + 0.35 * u);
+      // Ragged and scalloped toward the sides only (c * c), so the top and the
+      // underside stay smooth planes and only the outline is notched.
+      const f = (1 + ragged * Math.sin(k * 2.39 + i * 1.7 + s.seed * 0.37) * Math.min(1, u * 3))
+        * (1 + scallop * ((k + i) % 2 ? -1 : 1) * Math.min(1, u * 2) * c * c);
+      // A drooping fan: both faces bend down toward the sides, keeping their depth.
+      // (an upright leader stays smooth: its "upper face" is a side)
+      const lift = n > 0 && Math.abs(tangent[1]) < 0.8 ? facet * p.h * Math.sin(k * 1.9 + i * 2.6 + s.seed) * Math.min(1, u * 3) : 0;
+      ring.push(add(p.at, add(mul(side, p.w * c * f), mul(up, p.h * n * (n > 0 ? 1 : under) * f - droop * p.w * c * c + lift))));
+      light.push(0.5 * n + 0.2 * u);
     }
     rings.push(ring);
     ringLight.push(light);
@@ -298,12 +313,16 @@ function sprayVolume(s: Spray, sides: number, stations: number, ragged: number):
   }
   const tip = along(1).at, mass = mul(centres.reduce((m, c) => add(m, c), tip), 1 / (centres.length + 1));
   const pos: number[] = [], light: number[] = [];
+  // What hangs below where the bough leaves its branch is in the tier's own shade:
+  // light tops, dark drooping undersides, so stacked tiers read apart.
+  const y0 = s.path[0]!.at[1], drop = Math.max(0.4, Math.hypot(...sub(tip, s.path[0]!.at)) * 0.35);
+  const hang = (p: P3) => 0.55 * Math.max(-1, Math.min(0.25, (p[1] - y0) / drop));
   // Every face is wound outward from the bough's axis (caps: from the spray's middle).
   const face = (a: P3, b: P3, c: P3, la: number, lb: number, lc: number, from: P3) => {
     const n = cross(sub(b, a), sub(c, a)), m = mul(add(add(a, b), c), 1 / 3);
     const flip = n[0] * (m[0] - from[0]) + n[1] * (m[1] - from[1]) + n[2] * (m[2] - from[2]) < 0;
     pos.push(...a, ...(flip ? c : b), ...(flip ? b : c));
-    light.push(la, flip ? lc : lb, flip ? lb : lc);
+    light.push(la + hang(a), (flip ? lc : lb) + hang(flip ? c : b), (flip ? lb : lc) + hang(flip ? b : c));
   };
   const r0 = rings[0]!, base = centres[0]!;
   for (let k = 0; k < sides; k++) {
@@ -353,7 +372,7 @@ function shadeSpray(style: BroadleafStyle, g: Geo, light: number[], tone: number
   const base = rgbOf(style.colors.foliage), [dark, mid, bright] = style.leaf;
   g.col = [];
   for (let i = 0; i < g.count; i++) {
-    const lit = clamp(0.12 + 0.45 * clamp(g.y(i) / top) + 0.32 * light[i]! + tone);
+    const lit = clamp(0.3 + 0.25 * clamp(g.y(i) / top) + 0.4 * light[i]! + tone);
     const rgb = lit < 0.6 ? mix(dark, mid, lit / 0.6) : mix(mid, bright, (lit - 0.6) / 0.4);
     // A slight warm or cool cast per spray, so a crown is not one green.
     const cast: P3 = [1 + tone * 0.8, 1 + tone * 0.3, 1 - tone * 0.9];
@@ -522,7 +541,8 @@ function rawTree(detail: "max" | "high" | "low", o: BroadleafOptions, plan: Layo
       if (s.maxOnly && !max)
         continue;
       const [n, m] = (max ? style.sprays!.max : style.sprays!.high)[s.rank]!;
-      const { geo, light } = sprayVolume(s, n, m, style.sprays!.ragged);
+      const { ragged, droop, scallop, under, facet } = style.sprays!;
+      const { geo, light } = sprayVolume(s, n, m, ragged, droop, scallop, under, facet);
       shadeSpray(style, geo, light, s.tone, top);
       foliage.push(geo);
     }
