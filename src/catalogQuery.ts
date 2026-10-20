@@ -368,12 +368,16 @@ export function serializeView(v: ViewState): string {
 // ------------------------------------------------------------- parameters
 
 /**
- * A parametric record's values: each declared parameter takes the chosen value
+ * A parametric record's values: retired tokens migrate first, then each parameter takes the chosen value
  * when its enum lists it, else its default; names it does not declare are
  * dropped, and so is a parameter whose condition (`when`) the values before it
  * do not meet. A fixed record has none.
  */
 export function effectiveParams(r: CatalogRecord, chosen: Record<string, string>): Record<string, string> {
+  for (const p of r.params ?? []) {
+    const replacement = p.retired?.[chosen[p.name] ?? ""];
+    if (replacement) chosen = { ...chosen, ...replacement };
+  }
   const out: Record<string, string> = {};
   for (const p of r.params ?? []) {
     // a conditional parameter (a TGV's car count) is absent where it does not apply
@@ -573,8 +577,15 @@ export function posePreview<T>(
 }
 
 /** Which model and parameter values a preview was built for, as one comparable string. */
-/** Which level a preview builds: the full model, its low LOD (true), or a tree's coarse level. */
-export type PreviewLod = boolean | "coarse";
+/** Which level a preview builds: the full model, its low LOD (true), a tree's coarse level, or optional Max detail. */
+export type PreviewLod = boolean | "coarse" | "max";
+
+/** Resolve a retained selector choice when moving to another model. */
+export function previewLod(record: Pick<CatalogRecord, "coarse" | "maxDetail">, detail: "full" | "low" | "coarse" | "max"): PreviewLod {
+  if (detail === "max") return record.maxDetail ? "max" : false;
+  if (detail === "coarse") return record.coarse ? "coarse" : true;
+  return detail === "low";
+}
 
 export function previewKey(id: string, params: Record<string, string>, lod: PreviewLod = false): string {
   return `${id}?${JSON.stringify(Object.keys(params).sort().map((k) => [k, params[k]]))}${lod ? `&lod=${lod}` : ""}`;

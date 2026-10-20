@@ -53,7 +53,7 @@ const CLICK_SLOP = 5;
 
 export function ModelViewer(props: {
   record: CatalogRecord;
-  /** Which level to build: the full model, its low LOD (true), or a tree's coarse level. */
+  /** Which level to build: the full model, its low LOD (true), coarse detail or optional Max detail. */
   lod?: PreviewLod;
   onTriangles?: (count: number) => void;
   /** A parametric model's chosen values (effectiveParams); {} for the defaults. */

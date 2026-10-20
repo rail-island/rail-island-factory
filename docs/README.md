@@ -72,6 +72,7 @@ it was built), not reference.
 
 ## Workflow skills
 
+- [Tree](../.agents/skills/tree/SKILL.md): five seeds, tree LOD budgets and headless previews.
 - [Road vehicle](../.agents/skills/road-vehicle/SKILL.md): road geometry and articulation.
 - [Railroad vehicle](../.agents/skills/railroad-vehicle/SKILL.md): rail geometry, operating pantographs and verification.
 - [Vlakosimdb transfer](../.agents/skills/vlakosimdb-transfer/SKILL.md): XML profiles, native-pixel comparison tables, optimization and user-facing evidence.

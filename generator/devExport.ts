@@ -29,7 +29,7 @@ export function devCatalog(): ModelCatalog {
       const side = isSideViewCategory(fields.category) ? { widthM: 0, heightM: 0, bottomM: 0 } : null;
       const references = designReferenceFiles(design).map(({ name, file }) => ({ name, url: `${REFS_DIR}/${design.id}/${name}`, bytes: fs.statSync(file).size }));
       const record = catalogRecord(metaEntry(design, fields, null, side), zero, references, design.openttd);
-      return { ...record, ...(design.buildCoarse ? { coarse: true as const } : {}), pending: true as const };
+      return { ...record, ...(design.buildCoarse ? { coarse: true as const } : {}), ...(design.buildMax ? { maxDetail: true as const } : {}), pending: true as const };
     }),
   };
 }

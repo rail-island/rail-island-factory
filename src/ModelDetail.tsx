@@ -23,6 +23,7 @@
 
 import { For, Match, Show, Suspense, Switch, createEffect, createMemo, createResource, createSignal, lazy, on, onCleanup } from "solid-js";
 import {
+  previewLod,
   COLUMNS, effectiveParams, formatBytes, isDefaultParams, nonDefaultParams, pageKey, poseControls, poseOf,
   type DetailTab, type PoseValues, type PreviewLod, type Row,
 } from "./catalogQuery";
@@ -63,11 +64,10 @@ export function ModelDetail(props: {
   /** Add the variant on screen (the chosen parameter values) to the export list. */
   onAddExport: () => void;
 }) {
-  // The level shown: the full model, its low LOD, or (a tree's) coarse level. Kept
-  // while stepping between models; a model without a coarse level shows its LOD.
-  const [detail, setDetail] = createSignal<"full" | "low" | "coarse">("full");
-  const lod = createMemo<PreviewLod>(() =>
-    detail() === "full" ? false : detail() === "coarse" && props.record.coarse ? "coarse" : true);
+  // Keep the chosen level while stepping between models. Unsupported Max detail
+  // falls back to full; unsupported coarse detail falls back to low.
+  const [detail, setDetail] = createSignal<"full" | "low" | "coarse" | "max">("full");
+  const lod = createMemo<PreviewLod>(() => previewLod(props.record, detail()));
   const [triangles, setTriangles] = createSignal<number>();
   const values = createMemo(() => effectiveParams(props.record, props.params));
   const atDefaults = createMemo(() => isDefaultParams(props.record, values()));
@@ -133,7 +133,10 @@ export function ModelDetail(props: {
         </button>
         <label class="factory-param">
           <span>Level of detail</span>
-          <select aria-label="Level of detail" value={lod() === "coarse" ? "coarse" : lod() ? "low" : "full"} onChange={(e) => setDetail(e.currentTarget.value as "full" | "low" | "coarse")}>
+          <select aria-label="Level of detail" value={lod() === "max" ? "max" : lod() === "coarse" ? "coarse" : lod() ? "low" : "full"} onChange={(e) => setDetail(e.currentTarget.value as "full" | "low" | "coarse" | "max")}>
+            <Show when={props.record.maxDetail}>
+              <option value="max">Max detail</option>
+            </Show>
             <option value="full">Full detail</option>
             <option value="low">Low (LOD)</option>
             <Show when={props.record.coarse}>
@@ -142,7 +145,7 @@ export function ModelDetail(props: {
           </select>
         </label>
         <p class="factory-muted" aria-live="polite">
-          Preview: {triangles() ?? "..."} triangles{lod() === "coarse" ? " (coarse)" : lod() ? " (LOD)" : " (full detail)"}
+          Preview: {triangles() ?? "..."} triangles{lod() === "max" ? " (max detail)" : lod() === "coarse" ? " (coarse)" : lod() ? " (LOD)" : " (full detail)"}
         </p>
         <Show when={(props.record.params ?? []).length > 0}>
           <fieldset class="factory-params">

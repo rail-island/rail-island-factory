@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { WOODS } from "../generator/woods";
 import { MAX_TREES_PER_CELL, cellSeed, draw, newSlot, same, type CellContext, type TreeSlot } from "../generator/woodsApi";
 import { SPECIES } from "../generator/trees";
-import { bundleWoods, woodsMeta } from "../generator/woodsExport";
+import { bundleGame, woodsMeta } from "../generator/woodsExport";
 import { WOODS_MODELS, woodsModelId } from "../generator/woodsModels";
 import { glbStats } from "../generator/glbStats";
 
@@ -278,21 +278,24 @@ describe("the woods export", () => {
     const meta = woodsMeta();
     expect(meta.maxTreesPerCell).toBe(4);
     expect(meta.woods.map((w) => w.name)).toEqual([...meta.woods.map((w) => w.name)].sort());
-    expect(meta.woods.map((w) => w.module)).toEqual(meta.woods.map((w) => `woods/${w.name}.js`));
+    expect(meta.module).toBe("woods.js");
     expect(meta.trees.map((t) => t.species).sort()).toEqual([...SPECIES].sort());
     expect(JSON.stringify(meta)).not.toMatch(/"id":\s*\d/);
     for (const w of meta.woods) expect(w.params[0]!.name, w.name).toBe("density");
   });
 
-  it("bundles a standalone module that grows the same trees", async () => {
+  it("packs every woods type and tree into one standalone module that grows the same trees", async () => {
     const entry = WOODS.find((w) => w.design.name === "mixed-woods")!;
-    const text = await bundleWoods(entry.source, entry.design.name);
-    expect(text).not.toMatch(/\bimport\b/);
-    expect(await bundleWoods(entry.source, entry.design.name)).toBe(text);
-    const mod = await import(`data:text/javascript;base64,${Buffer.from(text).toString("base64")}`);
-    expect(mod.woods.name).toBe("mixed-woods");
-    expect(mod.MAX_TREES_PER_CELL).toBe(4);
-    expect(mod.params.map((p: { name: string }) => p.name)).toEqual(["density", "mix"]);
+    const text = await bundleGame();
+    expect(text.replace(/^\/\/.*\n/, "")).not.toMatch(/\bimport\b/);
+    expect(await bundleGame()).toBe(text);
+    const all = await import(`data:text/javascript;base64,${Buffer.from(text).toString("base64")}`);
+    expect(all.WOODS.map((w: { name: string }) => w.name)).toEqual(WOODS.map((w) => w.design.name));
+    expect(all.MAX_TREES_PER_CELL).toBe(4);
+    expect([...all.SPECIES].sort()).toEqual([...SPECIES].sort());
+    expect(all.WOODS.find((w: { name: string }) => w.name === "mixed-woods").params.map((p: { name: string }) => p.name)).toEqual(["density", "mix"]);
+    expect(() => all.woodsType("no-such-woods")).toThrow();
+    const mod = all.woodsType("mixed-woods");
     const dense = mod.variant({ density: "dense", mix: "conifer" });
     const own = entry.design.variant({ density: "dense", mix: "conifer" });
     const c = slots(), d = slots();

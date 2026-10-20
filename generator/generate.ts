@@ -14,7 +14,7 @@
 //                                   stations), for the game to import
 //   export/village.meta.json        the village houses' catalog entries, likewise
 //   export/vehicles.meta.json       the vehicles' catalog entries, likewise
-//   export/woods/<name>.js          a woods type's distribution function (woodsExport.ts)
+//   export/woods.js                 every woods type and tree species in one module (woodsExport.ts)
 //   export/woods.meta.json          the woods types and the tree species, for the game
 //   export/catalog.json             what the site lists (catalog.ts)
 //
@@ -117,6 +117,8 @@ export const EXPORT_DIR = path.join(REPO_ROOT, "export");
 
 /** The most triangles a coarse level (design.ts buildCoarse) may have: a distant tree. */
 export const COARSE_TRIANGLES = 20;
+/** The optional close-up model's hard budget. */
+export const MAX_DETAIL_TRIANGLES = 10_000;
 
 /** Thumbnail size: the 512 px square the game's building thumbnails use. */
 const THUMB_SIZE = 512;
@@ -301,6 +303,12 @@ function buildAll(designs: readonly ProceduralDesign[]): Array<{ design: Procedu
       if (!coarse.triangleCount() || coarse.triangleCount() > COARSE_TRIANGLES) throw new Error(`${design.id}: invalid coarse triangle count ${coarse.triangleCount()}`);
       const flat = findCoplanarOverlaps(coarse.toGlb(design.id));
       if (flat.length) found.set(`${design.id} (coarse)`, flat);
+    }
+    if (design.buildMax) {
+      const max = design.buildMax();
+      if (!max.triangleCount() || max.triangleCount() > MAX_DETAIL_TRIANGLES) throw new Error(`${design.id}: invalid Max detail triangle count ${max.triangleCount()}`);
+      const flat = findCoplanarOverlaps(max.toGlb(design.id));
+      if (flat.length) found.set(`${design.id} (max)`, flat);
     }
   }
   if (found.size) throw new ZFightingError(found);
@@ -517,7 +525,7 @@ export async function buildExport(
         jsHash: crypto.createHash("sha256").update(jsText).digest("hex").slice(0, 16),
         thumbBytes: fs.statSync(built.thumb).size,
       }, refs.get(design.id), design.openttd);
-      return design.buildCoarse ? { ...record, coarse: true } : record;
+      return { ...record, ...(design.buildCoarse ? { coarse: true } : {}), ...(design.buildMax ? { maxDetail: true } : {}) };
     }),
   };
   // the legacy table maps old ids onto the whole catalog, so a narrowed export has none

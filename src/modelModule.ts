@@ -13,6 +13,8 @@ export interface JsModule {
   default: JsBuild;
   /** A tree's third, coarsest level (docs/models/trees.md). */
   buildCoarse?: (three: object, params?: Record<string, string>) => Object3D;
+  /** Optional close-up detail level, currently every tree. */
+  buildMax?: (three: object, params?: Record<string, string>) => Object3D;
   pose?: (root: Object3D, pose: { steer: number; bend: number[] }) => void;
 }
 /**
@@ -59,7 +61,13 @@ export async function jsModuleWithSource(url: string): Promise<{ mod: JsModule; 
  */
 export async function loadModel(record: CatalogRecord, params: Record<string, string>, lod: PreviewLod = false): Promise<{ object: Object3D; clips: AnimationClip[] }> {
   const mod = await jsModule(`/${record.jsUrl}`);
-  // a tree's coarse level, where the model has one; any other model's low LOD
-  const object = lod === "coarse" && mod.buildCoarse ? mod.buildCoarse(THREE_SUBSET, params) : mod.default(THREE_SUBSET, params, lod !== false);
+  const object = buildPreview(mod, params, lod);
   return { object, clips: object.animations };
+}
+
+/** Build a selected level; unsupported Max detail falls back to full detail. */
+export function buildPreview(mod: JsModule, params: Record<string, string>, lod: PreviewLod = false): Object3D {
+  if (lod === "max") return mod.buildMax ? mod.buildMax(THREE_SUBSET, params) : mod.default(THREE_SUBSET, params, false);
+  if (lod === "coarse" && mod.buildCoarse) return mod.buildCoarse(THREE_SUBSET, params);
+  return mod.default(THREE_SUBSET, params, lod !== false);
 }

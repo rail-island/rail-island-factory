@@ -1,0 +1,145 @@
+# Task: Create a detailed low-poly oak tree (max 2,000 triangles)
+
+Create a new 3D model of a stylized **oak tree (Quercus)** based on the attached reference image.
+
+The result should closely resemble the reference, especially its overall silhouette, branching structure, foliage layering, colors, and visual style.
+
+The model will be used in **Rail Island**, a Three.js-based railway sandbox game that can display hundreds or thousands of trees.
+
+## 1. Visual requirements
+
+The most important goal is to reproduce the visual appearance of the reference image while respecting a strict polygon budget.
+
+**Trunk and branches**
+
+- Create a thick, slightly irregular brown trunk that tapers upward.
+- The trunk should split into approximately 5–8 major branches.
+- Branches should grow upward and outward, with several extending almost horizontally.
+- Use angular, faceted geometry consistent with the low-poly style.
+- Include a subtly widened base with a few visible root flares.
+- Ensure that some branches remain visible between foliage clusters.
+- Avoid a straight cylindrical trunk with foliage simply placed on top.
+
+**Foliage structure**
+
+- Create a broad, irregular, asymmetrical oak canopy.
+- Build the canopy from approximately 40–70 smaller, overlapping foliage clusters instead of a few large spheres.
+- Clusters should vary in size, orientation, density, and shape.
+- Organize the clusters around the branches, with large primary masses and smaller secondary masses near the canopy edges.
+- Create a layered canopy with visible depth and natural gaps.
+- Avoid the appearance of broccoli, green rocks, or a collection of identical spheres.
+- The silhouette should contain small protruding leaf shapes and irregular outlines.
+
+**Leaf details**
+
+- Use stylized geometric leaf shapes or small groups of leaves on the outer surfaces of foliage clusters.
+- Prefer simplified oak-like lobed silhouettes where feasible.
+- Leaves can be flat double-sided polygons or small low-poly shapes.
+- Use individual leaves selectively to break up the smooth surfaces of the foliage clusters.
+- Do not create thousands of detailed individual leaves.
+
+**Colors and shading**
+
+- Use multiple harmonious green tones.
+- Bright yellow-green on the sunlit top surfaces.
+- Medium natural greens for most of the foliage.
+- Darker greens inside and underneath the canopy.
+- Use subtle variation across foliage clusters.
+- Use warm brown tones for the trunk and branches.
+- Preserve the stylized, faceted appearance.
+- Avoid excessive random colors, extreme saturation, or overly dark foliage.
+
+## 2. Geometry budget
+
+**Hard limit: 2,000 triangles for the entire tree.**
+
+Suggested triangle allocation:
+
+| Component | Triangle budget |
+|---|---:|
+| Trunk and main branches | 250 |
+| Secondary branches | 150 |
+| Foliage cluster volumes | 600 |
+| Stylized leaf details | 900 |
+| Reserve | 100 |
+| Total | 2,000 |
+
+These allocations are guidelines, not strict per-component limits. Optimize the distribution to achieve the best visual quality.
+
+Count actual rendered triangles, including leaf geometry and both sides if duplicate backfaces are used. Prefer double-sided materials over duplicated geometry when appropriate.
+
+Do not exceed 2,000 geometric triangles.
+
+## 3. Procedural modeling approach
+
+Implement the tree as procedural geometry rather than manually positioning a large number of independent meshes.
+
+- Generate the trunk and branches using connected or intersecting tapered polygonal segments.
+- Derive foliage cluster positions from the branching structure.
+- Use irregular, low-resolution polyhedral volumes for foliage masses.
+- Add small leaf-shaped polygons around the outer surfaces.
+- Use deterministic seeded randomness to generate reproducible trees.
+- Support variations in canopy width, tree height, branch angles, foliage density, and random seed.
+- Keep geometry and material counts low to minimize draw calls.
+- Prefer merged geometry and shared materials where possible.
+- Avoid expensive transparent foliage textures.
+
+Use actual 3D geometry, not camera-facing billboards, for the primary foliage.
+
+## 4. Performance and integration
+
+The tree must be practical for a real-time Three.js game.
+
+- Target a maximum of 2,000 triangles.
+- Use vertex colors or a small shared material palette.
+- Avoid unnecessary draw calls.
+- Support efficient rendering of many tree instances.
+- Use flat shading where appropriate.
+- Correctly generate normals.
+- Avoid z-fighting and obviously disconnected floating foliage.
+- Use a consistent local coordinate system, with the trunk base at the origin.
+- Ensure the result looks good from all viewing angles, not just the reference camera angle.
+- Make the geometry suitable for GLB export.
+
+## 5. Visual priorities
+
+In decreasing order of importance:
+
+1. **Similarity to the reference image.**
+2. Natural, recognizable oak tree silhouette.
+3. Rich, layered foliage with smaller irregular clusters.
+4. Visible and believable branch structure.
+5. Strong visual depth through foliage layering and color variation.
+6. Attractive faceted low-poly appearance.
+7. Polygon efficiency.
+
+Do not sacrifice the overall silhouette merely to add more detailed individual leaves.
+
+## 6. Validation
+
+After implementing the model:
+
+1. Generate the tree using a fixed random seed.
+2. Count and report the actual triangle count.
+3. Render the tree from at least three directions.
+4. Compare the resulting shape with the reference image.
+5. Adjust the procedural parameters if necessary.
+
+In particular, check that:
+
+- The canopy is wide and asymmetrical.
+- The trunk and branches remain partially visible.
+- The foliage contains many smaller clusters rather than a few large spheres.
+- The canopy has an irregular leaf-like outline.
+- The tree does not look like broccoli.
+- The model remains under 2,000 triangles.
+
+## 7. Deliverables
+
+- Implement the procedural oak generator within the existing project architecture.
+- Generate one representative oak tree matching the reference.
+- Provide configurable parameters and seeded variations.
+- Report the exact triangle count and material/draw-call count.
+- Provide a preview or screenshot of the final model.
+
+**Important:** The attached image is the primary visual reference. Treat it as the desired art direction, not just a loose inspiration. The final result should preserve the distinctive large branching trunk, broad canopy, layered foliage clusters, and bright low-poly appearance.

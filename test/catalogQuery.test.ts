@@ -306,10 +306,10 @@ describe("downloads", () => {
 });
 
 describe("previewKey", () => {
-  it("tells the full model, its LOD and a tree's coarse level apart", async () => {
+  it("tells full, low, coarse and Max detail apart", async () => {
     const { previewKey } = await import("../src/catalogQuery");
-    const keys = [previewKey("proc-tree-oak", {}), previewKey("proc-tree-oak", {}, true), previewKey("proc-tree-oak", {}, "coarse")];
-    expect(new Set(keys).size).toBe(3);
+    const keys = [previewKey("proc-tree-oak", {}), previewKey("proc-tree-oak", {}, true), previewKey("proc-tree-oak", {}, "coarse"), previewKey("proc-tree-oak", {}, "max")];
+    expect(new Set(keys).size).toBe(4);
     expect(previewKey("proc-tree-oak", {}, false)).toBe(keys[0]);
   });
 });
@@ -318,5 +318,27 @@ describe("the Trees chip", () => {
   it("files the tree species under a first-row chip of their own", async () => {
     const { groupOf } = await import("../src/catalogQuery");
     expect(groupOf({ category: "Trees", group: "tree" } as never)).toBe("tree");
+  });
+});
+
+
+describe("detail selection", () => {
+  it("offers Max detail only where supported and falls back to full when stepping away", async () => {
+    const { previewLod } = await import("../src/catalogQuery");
+    expect(previewLod({ maxDetail: true }, "max")).toBe("max");
+    expect(previewLod({}, "max")).toBe(false);
+    expect(previewLod({ coarse: true }, "coarse")).toBe("coarse");
+    expect(previewLod({}, "coarse")).toBe(true);
+  });
+});
+
+
+describe("retired oak seeds", () => {
+  it("keeps old seed URLs on their original numbered shapes", async () => {
+    const { OAK_PARAMS } = await import("../generator/oak");
+    const { effectiveParams } = await import("../src/catalogQuery");
+    const record = { params: OAK_PARAMS } as import("../generator/catalog").CatalogRecord;
+    expect(effectiveParams(record, { seed: "7" }).seed).toBe("1");
+    expect(effectiveParams(record, { seed: "19" }).seed).toBe("2");
   });
 });

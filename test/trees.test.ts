@@ -37,20 +37,20 @@ describe("the tree species", () => {
 
   it("draws both larches from one design with a season", () => {
     const larch = TREES.find((t) => t.id === "proc-tree-larch")!;
-    expect(larch.params?.map((p) => p.name)).toEqual(["season"]);
+    expect(larch.params?.map((p) => p.name)).toEqual(["season", "seed"]);
     expect(larch.build().toGlb("a")).toEqual(larch.build({ season: "summer" }).toGlb("a"));
     expect(larch.build({ season: "autumn" }).toGlb("a")).not.toEqual(larch.build().toGlb("a"));
     expect(() => larch.build({ season: "winter" })).toThrow();
   });
 
   // The game's budgets before the move (test/fixtures/tree-baseline.json, measured off
-  // its own builder): low may grow 5%, high and coarse not at all -- a forest is
-  // instanced by the thousand, so the stylised rework is paid for with shape, not triangles.
+  // its own builder): low may grow 5%, high and coarse not at all, except the
+  // redesigned oak's explicit 2,000-triangle allowance.
   it.each([...SPECIES])("keeps %s within the game's tree budgets", (species) => {
     const ref = baseline as Record<string, { tris: number }>;
     expect(built(species, "coarse").triangleCount()).toBeLessThanOrEqual(ref[`${species}:coarse`]!.tris);
     expect(built(species, "low").triangleCount()).toBeLessThanOrEqual(Math.floor(ref[`${species}:low`]!.tris * 1.05));
-    expect(built(species, "high").triangleCount()).toBeLessThanOrEqual(ref[`${species}:high`]!.tris);
+    expect(built(species, "high").triangleCount()).toBeLessThanOrEqual(species === "oak" ? 2000 : ref[`${species}:high`]!.tris);
   });
 
   it.each([...SPECIES])("bakes light and shade into %s at every level", (species) => {
@@ -142,23 +142,26 @@ describe("tree levels", () => {
     }
   });
 
-  it("shades only the ribbon foliage (palm fronds, willow sprays) on both faces", () => {
+  it("shades single-layer leaves and needles, palm fronds and willow curtains on both faces", () => {
     for (const species of SPECIES) {
       for (const detail of LEVELS) {
-        const ribbons = detail !== "coarse" && (species === "palm" || species === "willow");
+        // the conifers' needle sprays and the dead tree's wood are closed volumes
+        const closed = ["deadtree", "pine", "spruce", "larch", "autumnlarch"].includes(species);
+        const ribbons = (detail !== "coarse" && (species === "palm" || species === "willow"))
+          || (!closed && detail === "high");
         expect(treeParts(species, detail).ribbons ?? false, `${species} ${detail}`).toBe(ribbons);
       }
     }
   });
 });
 
-describe("the shared trees module", () => {
+describe("the game module's trees", () => {
   it("builds every species at every level with the designs' own triangles, in one standalone file", async () => {
-    const { bundleTrees } = await import("../generator/woodsExport");
+    const { bundleGame } = await import("../generator/woodsExport");
     const THREE = await import("three");
-    const text = await bundleTrees();
+    const text = await bundleGame();
     expect(text.replace(/^\/\/.*\n/, "")).not.toMatch(/\bimport\s*[\w{*"'(]/);
-    expect(await bundleTrees()).toBe(text);
+    expect(await bundleGame()).toBe(text);
     const mod = await import(`data:text/javascript;base64,${Buffer.from(text).toString("base64")}`);
     expect([...mod.SPECIES].sort()).toEqual([...SPECIES].sort());
     for (const species of SPECIES) {
@@ -176,5 +179,27 @@ describe("the shared trees module", () => {
       }
     }
     expect(() => mod.buildTree(THREE, "baobab", "high")).toThrow();
+    for (const species of SPECIES) {
+      let maxTriangles = 0;
+      mod.buildTree(THREE, species, "max").traverse((o: { isMesh?: boolean; geometry?: { getAttribute(n: string): { count: number } } }) => {
+        if (o.isMesh) maxTriangles += o.geometry!.getAttribute("position").count / 3;
+      });
+      const { id, params } = treeModelOf(species);
+      expect(maxTriangles, species).toBe(TREES.find((d) => d.id === id)!.buildMax!(params).triangleCount());
+    }
+    // the design's values pick a tree's seed, the same as the catalog design
+    const positions = (values?: Record<string, string>) => {
+      const out: number[] = [];
+      mod.buildTree(THREE, "pine", "high", values).traverse((o: { isMesh?: boolean; geometry?: { getAttribute(n: string): { array: ArrayLike<number> } } }) => {
+        if (o.isMesh) out.push(...Array.from(o.geometry!.getAttribute("position").array));
+      });
+      return out.sort((x, y) => x - y);
+    };
+    // the same coordinates (to float32), whatever order the group lays them out in
+    const design = (seed: string) => [...TREES.find((d) => d.id === "proc-tree-pine")!.build({ seed }).positions()].sort((x, y) => x - y);
+    const close = (a: number[], b: number[]) => a.length === b.length && a.every((v, i) => Math.abs(v - b[i]!) < 1e-4);
+    expect(close(positions({ seed: "3" }), design("3"))).toBe(true);
+    expect(close(positions(), design("1"))).toBe(true);
+    expect(design("3")).not.toEqual(design("1"));
   }, 60_000);
 });

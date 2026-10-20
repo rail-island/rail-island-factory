@@ -24,9 +24,8 @@ the same JS models and trees on demand ([../site/catalog-site.md](../site/catalo
 | `export/skyscrapers.meta.json` | one game-catalog entry per building (skyscrapers, commercial families, landmarks, stations) - the import contract |
 | `export/village.meta.json` | the same per village house, under `buildings` |
 | `export/vehicles.meta.json` | the same per vehicle, under `vehicles` |
-| `export/woods/<name>.js` | a woods type's distribution function, one standalone module each ([woods.md](woods.md)) |
+| `export/woods.js` | every woods type and every tree species in one standalone module, what the game plants its forests with ([woods.md](woods.md)) |
 | `export/woods.meta.json` | every woods type and every tree species, for the game to import ([woods.md](woods.md)) |
-| `export/trees.js` | every tree species in one module, `buildTree(THREE, species, detail)`, what the game draws its forests with ([trees.md](trees.md)) |
 | `export/catalog.json` | what the site lists |
 
 `export/` is also Vite's `publicDir`, so `vite build` copies it into `dist/` as
@@ -60,6 +59,12 @@ reference GLBs, XML, JSON) stay behind. A file is rewritten only when its bytes
 changed, and anything else under `export/refs/` is deleted.
 The JSON documents are rewritten every run and
 carry no timestamp, so they are deterministic too.
+
+**Max detail.** A design may supply `buildMax`, exported as an optional function
+in its existing JS module. The catalog carries `maxDetail: true` only for such
+designs (currently every tree). The build also checks this geometry against the hard
+10,000-triangle cap and the flicker guard. Default thumbnails, source trees,
+metadata triangle counts and exports continue to describe full detail.
 
 **Guarded.** Before anything is written, every design is checked for z-fighting
 faces; one that would flicker fails the build with a `ZFightingError` naming the

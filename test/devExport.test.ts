@@ -10,6 +10,7 @@ import { proceduralId } from "../generator/modelId.ts";
 import { DESIGNS, catalogFields, designGlb, designReferenceFiles, designSource, designTree } from "../generator/generate";
 import { devCatalog, devJs, devReference, devTree } from "../generator/devExport";
 import { bundleDesign } from "../generator/jsModel";
+import { TREES } from "../generator/trees";
 import { glbStats } from "../generator/glbStats";
 import { glbSideFrame } from "../generator/renderGlbThumb";
 import { isSideViewCategory, metaEntry } from "../generator/catalog";
@@ -38,6 +39,11 @@ describe("the dev catalog", () => {
       expect(r).toMatchObject(entry);
       expect(r.references.map((i) => i.name)).toEqual(designReferenceFiles(design).map((f) => f.name));
     }
+  });
+
+  it("advertises Max detail only for the trees, all of them", () => {
+    expect(catalog.records.filter((r) => r.maxDetail).map((r) => r.id).sort()).toEqual(
+      TREES.map((d) => d.id).sort());
   });
 
   it("serves the JS model and the source tree the build writes, and the source images from assets/", async () => {
