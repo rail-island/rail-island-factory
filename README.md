@@ -88,12 +88,6 @@ pnpm dev     # run the site on http://localhost:5173 (models are built on demand
 pnpm test
 ```
 
-## License
-
-This project is licensed under the [MIT License](LICENSE).
-Third-party reference assets retain their respective licenses, documented in
-each asset folder's `SOURCES.md`.
-
 ## Triangle limits
 
 The most triangles a model may have at each level of detail, enforced by the
@@ -112,3 +106,9 @@ Details in [docs/models/lod.md](docs/models/lod.md) and the skills in
 | Historical landmarks | 20,000-30,000 | 500 | - | - |
 | Trees | 2,000 (new species) | 300 | 20 | 10,000 (optional) |
 | Woods (a grove of trees) | - | 12,000 | - | - |
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+Third-party reference assets retain their respective licenses, documented in
+each asset folder's `SOURCES.md`.
