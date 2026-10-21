@@ -33,9 +33,9 @@ export type DuplexUnit = "powerCar" | "endTrailer" | "trailer" | "bar" | "train"
 export type DuplexCar = Exclude<DuplexUnit, "train">;
 export type DuplexLivery = "carmillon" | "original" | "inoui" | "ouigo";
 
-/** The train's vehicle counts: two power cars and 2 .. 10 trailers. */
+/** The train's vehicle counts: two power cars and 2 .. 6 trailers. */
 export const DUPLEX_MIN_CARS = 4;
-export const DUPLEX_MAX_CARS = 12;
+export const DUPLEX_MAX_CARS = 8;
 
 export const DUPLEX_PARAMS: readonly ParamSpec[] = [
   enumParam("unit", "Car", {
@@ -47,8 +47,10 @@ export const DUPLEX_PARAMS: readonly ParamSpec[] = [
   }),
   {
     ...enumParam("cars", "Cars", Object.fromEntries(Array.from({ length: DUPLEX_MAX_CARS - DUPLEX_MIN_CARS + 1 }, (_, i) => [String(i + DUPLEX_MIN_CARS), `${i + DUPLEX_MIN_CARS} cars`]))),
-    default: "10",
+    default: "4",
     when: { name: "unit", values: ["train"] },
+    // the longer trains offered before the eight-car limit
+    retired: { "9": { cars: "8" }, "10": { cars: "8" }, "11": { cars: "8" }, "12": { cars: "8" } },
   },
   enumParam("livery", "Livery", {
     carmillon: "Carmillon",
@@ -703,8 +705,8 @@ function duplexGame(): GameProperties {
     for (const unit of ["endTrailer", "trailer", "bar"] as const) variants.push({ params: { ...base, unit }, weight: CAR_WEIGHT[unit], power: 0 });
     for (let n = DUPLEX_MIN_CARS; n <= DUPLEX_MAX_CARS; n++) {
       const weight = Math.round(duplexTrain(n).reduce((t, slot) => t + CAR_WEIGHT[slot.car], 0) * 10) / 10;
-      // the default ten cars are named by the unit alone
-      variants.push({ params: { ...(n === 10 ? {} : { cars: String(n) }), ...base, unit: "train" }, weight, power: 2 * POWER_KW });
+      // the default four cars are named by the unit alone
+      variants.push({ params: { ...(n === 4 ? {} : { cars: String(n) }), ...base, unit: "train" }, weight, power: 2 * POWER_KW });
     }
   }
   return { weight: CAR_WEIGHT.powerCar, power: POWER_KW, maxspeed: 320, accel: null, variants };

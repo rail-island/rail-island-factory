@@ -167,10 +167,16 @@ shinkansen-0.md, tgv-duplex.md):
    series) has no trailer value: say so in its document.
 3. **The full train is the value `train`**, with a `cars` parameter for its
    length (`when: { name: "unit", values: ["train"] }`), counting every vehicle
-   including the power or end cars. Default it to the prototype's usual
-   formation (ten for the TGV Duplex, four for the VT 18.16); allow shorter and
-   longer trains the game may want, and only formations that make sense (even
-   counts for motor-car pairs). A function `<name>Train(n)` lays out the cars
+   including the power or end cars. **Offer at most eight cars, and default to
+   at most four** (four for the TGV Duplex, the Shinkansen 0 series and the VT
+   18.16), even when the prototype's usual formation is longer; the full
+   prototype formation may still be the reference the formation function is
+   tested against. Offer every count from the shortest sensible train up to
+   eight, **odd counts included**: when the prototype pairs its motor cars,
+   give the formation rule a group of three (one pantograph car feeding two
+   neighbours) rather than leaving the odd lengths out. When you shorten an
+   existing train, list the removed counts as `retired` values resolving to
+   the longest one left, so saved maps still load. A function `<name>Train(n)` lays out the cars
    front to back - the formation rules (which car goes where, which pair carries
    the pantograph, where the bar car stands) live there, tested - each car's span
    over its coupling planes and whether it is turned; the train is centred on x
@@ -194,7 +200,7 @@ shinkansen-0.md, tgv-duplex.md):
    the coach builder, `csdCoachParts.ts`) and the paint between the liveries.
 7. **Budgets**: about 15,000 triangles a car, the cap 16,000 a car; the train
    adds them up. The distant model is 100 triangles a car, 300 at most (500 with
-   `lodTriangles: 500` for trains longer than eight cars); give up the
+   `lodTriangles: 500` for the longest trains); give up the
    intermediate cars' bogies first.
 8. **Game properties per value**: the default car's figures on the design, a
    variant for every other car and every train length (and repeated for every
