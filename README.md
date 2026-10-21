@@ -93,3 +93,22 @@ pnpm test
 This project is licensed under the [MIT License](LICENSE).
 Third-party reference assets retain their respective licenses, documented in
 each asset folder's `SOURCES.md`.
+
+## Triangle limits
+
+The most triangles a model may have at each level of detail, enforced by the
+tests and the build. Full detail is what the catalog shows and the game uses up
+close; low is the distant model; coarse and Max detail exist only for trees.
+Details in [docs/models/lod.md](docs/models/lod.md) and the skills in
+`.agents/skills/`.
+
+| Object type | Full | Low (distant) | Coarse | Max detail |
+| --- | ---: | ---: | ---: | ---: |
+| Road vehicles (cars, vans, trucks, buses) | 10,000 | 100; articulated 100 per section, at most 300 | - | - |
+| Rail vehicles | about 15,000 a car, cap 16,000 a car | 100 a car, at most 300 (500 for the Shinkansen 0 and TGV Duplex) | - | - |
+| Aircraft | 10,000 | 200 | - | - |
+| Row houses and ordinary buildings | 10,000 | 100 | - | - |
+| Skyscrapers and towers | 10,000 | 500 | - | - |
+| Historical landmarks | 20,000-30,000 | 500 | - | - |
+| Trees | 2,000 (new species) | 300 | 20 | 10,000 (optional) |
+| Woods (a grove of trees) | - | 12,000 | - | - |
