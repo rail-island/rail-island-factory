@@ -100,6 +100,8 @@ Details in [docs/models/lod.md](docs/models/lod.md) and the skills in
 | --- | ---: | ---: | ---: | ---: |
 | Road vehicles (cars, vans, trucks, buses) | 10,000 | 100; articulated 100 per section, at most 300 | - | - |
 | Rail vehicles | about 15,000 a car, cap 16,000 a car | 100 a car, at most 300 (500 for the Shinkansen 0 and TGV Duplex) | - | - |
+| Freight wagons | 8,000 | 100 | - | - |
+| Chairlift chairs | 8,000 | 100 | - | - |
 | Aircraft | 10,000 | 200 | - | - |
 | Row houses and ordinary buildings | 10,000 | 100 | - | - |
 | Skyscrapers and towers | 10,000 | 500 | - | - |
