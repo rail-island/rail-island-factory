@@ -35,8 +35,8 @@ export type Shinkansen0Unit = "endCar" | "motorCar" | "pantographCar" | "greenCa
 export type Shinkansen0Car = Exclude<Shinkansen0Unit, "train">;
 export type Shinkansen0Livery = "jnr" | "freshGreen" | "doctorYellow";
 
-/** The train's car counts: even, an end car at each end and pairs of motor cars between them. */
-export const SHINKANSEN0_CARS = [2, 4, 6, 8, 10, 12, 14, 16];
+/** The train's car counts, at most eight: an end car at each end and pairs of motor cars between them (one group of three in an odd train). */
+export const SHINKANSEN0_CARS = [2, 3, 4, 5, 6, 7, 8];
 
 export const SHINKANSEN0_PARAMS: readonly ParamSpec[] = [
   enumParam("unit", "Car", {
@@ -49,8 +49,10 @@ export const SHINKANSEN0_PARAMS: readonly ParamSpec[] = [
   }),
   {
     ...enumParam("cars", "Cars", Object.fromEntries(SHINKANSEN0_CARS.map((n) => [String(n), `${n} cars`]))),
-    default: "8",
+    default: "4",
     when: { name: "unit", values: ["train"] },
+    // the longer Hikari formations offered before the eight-car limit
+    retired: { "10": { cars: "8" }, "12": { cars: "8" }, "14": { cars: "8" }, "16": { cars: "8" } },
   },
   enumParam("livery", "Livery", {
     jnr: "JNR ivory, blue",
@@ -520,21 +522,18 @@ export interface Shinkansen0Slot {
 }
 
 /**
- * The cars of a train of `n` (even), front first: an end car at each end, the
+ * The cars of a train of `n` (2 .. 8), front first: an end car at each end, the
  * pairs of motor cars between them, every pair's pantograph car behind its
- * partner; from eight cars the buffet car takes the middle, from twelve two
- * Green cars follow it (the 16-car Hikari's cars 8, 11 and 12). Each with its
- * span lo..hi over the coupling planes, the train centred on x = 0.
+ * partner; an odd train's last pantograph car feeds both its partner and the
+ * trailing end car, a group of three. The eight-car train's buffet car takes
+ * the middle. Each with its span lo..hi over the coupling planes, the train
+ * centred on x = 0.
  */
 export function shinkansen0Train(n: number): Shinkansen0Slot[] {
   // the pairs: the leading end car and a pantograph car, motor and pantograph cars, a pantograph car and the trailing end car
   const pantograph = Array.from({ length: n }, (_, k) => k > 0 && k < n - 1 && (k % 2 === 1 || k === n - 2));
   const cars = pantograph.map((pan, k): Shinkansen0Car => (k === 0 || k === n - 1 ? "endCar" : pan ? "pantographCar" : "motorCar"));
   if (n >= 8) cars[n / 2] = "buffetCar";
-  if (n >= 12) {
-    cars[n / 2 + 2] = "greenCar";
-    cars[n / 2 + 3] = "greenCar";
-  }
   const total = cars.reduce((t, car) => t + shinkansen0Length(car), 0);
   let hi = total / 2;
   return cars.map((car, i) => {
@@ -583,7 +582,7 @@ export function shinkansen0(params?: ParamValues): MeshBuilder {
 
 // --- distant view ---------------------------------------------------------------------------
 
-/** The distant model's budget: 100 triangles a car, 500 for the longest trains. */
+/** The distant model's budget: 100 triangles a car, 500 for the eight-car train. */
 export const SHINKANSEN0_LOD = 500;
 
 function carLod(L: Livery, car: Shinkansen0Car, X: (d: number) => number, cx: number, turned: boolean, section: number | undefined, inside: { front: boolean; rear: boolean }, pantograph = car === "pantographCar"): { body: UnitBody; parts: LodPart[] } {
@@ -683,8 +682,8 @@ function shinkansen0Game(): GameProperties {
     for (const unit of ["motorCar", "pantographCar", "greenCar", "buffetCar"] as const) variants.push({ params: { ...base, unit }, weight: CAR_WEIGHT[unit] });
     for (const n of SHINKANSEN0_CARS) {
       const weight = shinkansen0Train(n).reduce((t, slot) => t + CAR_WEIGHT[slot.car], 0);
-      // the default eight cars are named by the unit alone
-      variants.push({ params: { ...(n === 8 ? {} : { cars: String(n) }), ...base, unit: "train" }, weight, power: CAR_POWER * n });
+      // the default four cars are named by the unit alone
+      variants.push({ params: { ...(n === 4 ? {} : { cars: String(n) }), ...base, unit: "train" }, weight, power: CAR_POWER * n });
     }
   }
   return { weight: CAR_WEIGHT.endCar, power: CAR_POWER, maxspeed: 220, accel: null, variants };

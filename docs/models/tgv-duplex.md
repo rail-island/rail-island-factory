@@ -9,7 +9,7 @@
 | id | title | parameter | values (default first) | triangles |
 |---|---|---|---|---|
 | `veh-tgv-duplex` | TGV Duplex | `unit` | `powerCar`, `endTrailer`, `trailer`, `bar`, `train` | about 8,100 a power car, 3,900 to 4,900 a trailer |
-| | | `cars` (with `train` only) | `10` (default), `4` .. `12` | about 24,500 (4) to 60,000 (12) |
+| | | `cars` (with `train` only) | `4` (default), `5` .. `8` | about 24,500 (4) to 35,500 (8) |
 | | | `livery` | `carmillon`, `original`, `inoui`, `ouigo` | |
 
 - `powerCar` - the power car (the default, the train's locomotive): the beak with
@@ -60,7 +60,10 @@ notes).
 | width, height | 2.814 m, 4.05 m | 2.896 m, 4.32 m | 2.896 m, 4.32 m |
 
 A ten-car train is 2 x 22.15 + 2 x 21.845 + 6 x 18.70 = 200.19 m, the published
-length.
+length. The design offers four to eight vehicles (the skill's limit for full
+trains), four by default; the prototype's ten-car formation stays the reference
+of `duplexTrain` and its tests, and the retired 9- to 12-car values resolve to
+the eight-car train.
 
 ## Construction
 
@@ -89,8 +92,8 @@ facing +X about their centres, then turned. Each vehicle is a section
 (`articulate`) hinged at the coupling or joint plane ahead of it. The power cars
 ride on their own two bogies, the end trailers on their own bogie by the power
 car; under every joint between two trailers is one Jacobs bogie (`unitBogie`
-with `sections: [k, k + 1]`), carrying the two cars on either side, so a ten-car
-train has 4 + 2 + 7 supports. Bellows skin every gap.
+with `sections: [k, k + 1]`), carrying the two cars on either side, so an eight-car
+train has 4 + 2 + 5 supports. Bellows skin every gap.
 
 ## Distant model
 
@@ -104,7 +107,8 @@ most (`lodTriangles: 500`).
 ## Game properties
 
 Power car 68 t, 4,400 kW; 320 km/h. Trailers 33 t (end), 30.5 t (bar) and 29.5 t
-by estimate, no power; the ten-car train 380 t, 8,800 kW. The liveries do not
+by estimate, no power; the ten-car prototype 380 t; the default four-car train 202 t, the
+eight-car train 321 t, each 8,800 kW. The liveries do not
 change the figures.
 
 ## Deviations
@@ -119,8 +123,8 @@ change the figures.
 
 ## Checking
 
-`pnpm exec vitest run test/tgvDuplex.test.ts` (ids and parameters and the ten-car
-figures, the 200.19 m train, every car in every livery: the triangle cap, the
+`pnpm exec vitest run test/tgvDuplex.test.ts` (ids and parameters, the four- and
+eight-car figures, the retired lengths, the 200.19 m ten-car formation, every car in every livery: the triangle cap, the
 envelope, its length, no coplanar faces; one raised and one folded pantograph;
 the bogies; both decks' windows; the trains' sections, hinges and Jacobs
 bogies; deterministic bytes, the distant models). Views: `pnpm exec tsx generator/orthoViews.ts proc-vehicle-tgv-duplex <dir> unit=<value> [cars=<n>] [livery=<value>]`.

@@ -9,7 +9,7 @@
 | id | title | parameter | values (default first) | triangles |
 |---|---|---|---|---|
 | `veh-shinkansen-0` | Shinkansen 0 series | `unit` | `endCar`, `motorCar`, `pantographCar`, `greenCar`, `buffetCar`, `train` | about 7,200 to 7,700 an end car, 5,000 to 6,000 an intermediate car |
-| | | `cars` (with `train` only) | `8` (default), `2`, `4` .. `16` (even) | the cars added up: about 14,600 (2) to 92,500 (16) |
+| | | `cars` (with `train` only) | `4` (default), `2`, `3`, `5` .. `8` | the cars added up: about 14,600 (2) to 48,200 (8) |
 | | | `livery` | `jnr`, `freshGreen`, `doctorYellow` | |
 
 Every 0 series car is a motor car: there is no unpowered trailer, so the
@@ -88,10 +88,14 @@ cap, the plough's line and the stripes stay exact on the curved nose.
 `shinkansen0Train(n)` lays the cars out front to back, the train centred on x =
 0: an end car at each end (the rear one drawn facing +X about its centre, then
 turned), between them pairs of motor cars - every pair has one pantograph car
-(the end cars pair with the pantograph car next to them). From eight cars the
-buffet car takes the middle; from twelve two Green cars follow it, as in the
-16-car Hikari (cars 8, 11 and 12). A Green car in a pantograph car's place
-carries the pair's pantograph (the type 16).
+(the end cars pair with the pantograph car next to them). A train has two to
+eight cars (the skill's limit for full trains; the default is four), odd counts
+included: an odd train's last pantograph car feeds both its partner and the
+trailing end car, a group of three (the prototype ran only even formations).
+The two-car train is the two end cars alone, without a pantograph. The
+eight-car train's buffet car takes the middle. The longer Hikari formations (10
+to 16 cars) are retired values that a saved map resolves to the eight-car train.
+The Green car is offered as a single car only.
 
 Each car is a section (`articulate` from the tram kit) hinged at the coupling
 plane ahead of it, one bellows joint over the 0.50 m between two bodies, a 10
@@ -107,7 +111,7 @@ rising from the plough over the dome and the bonnet into the windscreen, its
 cab painted without the band; the windows and the bogies; a pantograph car's
 collector as a block. A single car has 100 triangles; the train keeps the full
 model's sections and joints within 100 triangles a car and 500 at most
-(`lodTriangles: 500`, so the 16-car train still fits), the intermediate cars'
+(`lodTriangles: 500`, so the eight-car train keeps 500), the intermediate cars'
 bogies given up first.
 
 ## Game properties

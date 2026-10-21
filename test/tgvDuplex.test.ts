@@ -4,6 +4,7 @@ import {
   DUPLEX_DESIGNS, DUPLEX_LENGTH, DUPLEX_LOD, DUPLEX_MAX_CARS, DUPLEX_MIN_CARS, DUPLEX_PANTOGRAPHS, DUPLEX_PARAMS, DUPLEX_POWER_BOGIES,
   duplexTrain, tgvDuplex, type DuplexCar,
 } from "../generator/tgvDuplex";
+import { resolveParams } from "../generator/design";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { glbStats } from "../generator/glbStats";
 import { buildLodModel } from "../generator/lodModel";
@@ -25,16 +26,24 @@ describe("the TGV Duplex", () => {
     expect(d!.id).toBe("proc-vehicle-tgv-duplex");
     expect(d!.references).toBe("tgv-duplex");
     expect(d!.catalog).toMatchObject({ category: "Rail vehicles", group: "unit", traction: "electric" });
-    expect(DUPLEX_PARAMS.map((p) => [p.name, p.default])).toEqual([["unit", "powerCar"], ["cars", "10"], ["livery", "carmillon"]]);
+    expect(DUPLEX_PARAMS.map((p) => [p.name, p.default])).toEqual([["unit", "powerCar"], ["cars", "4"], ["livery", "carmillon"]]);
     expect(DUPLEX_PARAMS[0]!.values.map((v) => v.value)).toEqual([...CARS, "train"]);
     expect(DUPLEX_PARAMS[1]!.values.map((v) => v.value)).toEqual(SIZES.map(String));
     expect(DUPLEX_PARAMS[2]!.values.map((v) => v.value)).toEqual(LIVERIES);
     expect(d!.game).toMatchObject({ weight: 68, power: 4400, maxspeed: 320 });
-    // the ten-car train: 380 t, 8,800 kW
-    expect(d!.game!.variants!.find((v) => JSON.stringify(v.params) === JSON.stringify({ unit: "train" }))).toMatchObject({ weight: 380, power: 8800 });
+    // the default four-car train: two power cars and two end trailers, 202 t, 8,800 kW; at most eight cars
+    expect(SIZES).toEqual([4, 5, 6, 7, 8]);
+    expect(d!.game!.variants!.find((v) => JSON.stringify(v.params) === JSON.stringify({ unit: "train" }))).toMatchObject({ weight: 202, power: 8800 });
+    expect(d!.game!.variants!.find((v) => JSON.stringify(v.params) === JSON.stringify({ cars: "8", unit: "train" }))).toMatchObject({ weight: 321, power: 8800 });
   });
 
-  it("makes the published 200.19 m ten-car train", () => {
+  it("reads the retired 9- to 12-car trains of a saved map as the eight-car train", () => {
+    for (const n of ["9", "10", "11", "12"]) expect(resolveParams(DUPLEX_PARAMS, { unit: "train", cars: n })).toMatchObject({ unit: "train", cars: "8" });
+    expect(duplexTrain(5).map((s) => s.car)).toEqual(["powerCar", "endTrailer", "trailer", "endTrailer", "powerCar"]);
+    expect(duplexTrain(8).map((s) => s.car)).toEqual(["powerCar", "endTrailer", "trailer", "trailer", "bar", "trailer", "endTrailer", "powerCar"]);
+  });
+
+  it("lays out the published 200.19 m ten-car formation (no longer offered, the formation rule's reference)", () => {
     const slots = duplexTrain(10);
     expect(slots.map((s) => s.car)).toEqual(["powerCar", "endTrailer", "trailer", "trailer", "bar", "trailer", "trailer", "trailer", "endTrailer", "powerCar"]);
     expect(slots[0]!.hi - slots[9]!.lo).toBeCloseTo(200.19, 2);
@@ -80,7 +89,7 @@ describe("the TGV Duplex", () => {
     expect([count("bar", "lower"), count("bar", "upper")]).toEqual([2, 4]);
   });
 
-  for (const n of [4, 6, 10])
+  for (const n of [4, 5, 8])
     it(`a ${n}-car train: the power cars on their own bogies, the trailers articulated on Jacobs bogies`, () => {
       const slots = duplexTrain(n);
       const m = tgvDuplex({ unit: "train", cars: String(n) });

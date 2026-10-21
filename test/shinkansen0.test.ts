@@ -4,6 +4,7 @@ import {
   SHINKANSEN0_BOGIE_CENTRES, SHINKANSEN0_CARS, SHINKANSEN0_DESIGNS, SHINKANSEN0_LENGTH, SHINKANSEN0_LOD, SHINKANSEN0_PARAMS, SHINKANSEN0_WIRE,
   shinkansen0, shinkansen0Length, shinkansen0Train, type Shinkansen0Car,
 } from "../generator/shinkansen0";
+import { resolveParams } from "../generator/design";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { glbStats } from "../generator/glbStats";
 import { buildLodModel } from "../generator/lodModel";
@@ -29,7 +30,7 @@ describe("the Shinkansen 0 series", () => {
     expect(d!.id).toBe("proc-vehicle-shinkansen-0");
     expect(d!.references).toBe("shinkansen-0");
     expect(d!.catalog).toMatchObject({ category: "Rail vehicles", group: "unit", traction: "electric" });
-    expect(SHINKANSEN0_PARAMS.map((p) => [p.name, p.default])).toEqual([["unit", "endCar"], ["cars", "8"], ["livery", "jnr"]]);
+    expect(SHINKANSEN0_PARAMS.map((p) => [p.name, p.default])).toEqual([["unit", "endCar"], ["cars", "4"], ["livery", "jnr"]]);
     expect(SHINKANSEN0_PARAMS[0]!.values.map((v) => v.value)).toEqual([...CARS, "train"]);
     expect(SHINKANSEN0_PARAMS[1]!.values.map((v) => v.value)).toEqual(SHINKANSEN0_CARS.map(String));
     expect(SHINKANSEN0_PARAMS[1]!.when).toEqual({ name: "unit", values: ["train"] });
@@ -74,19 +75,32 @@ describe("the Shinkansen 0 series", () => {
     expect(head).toBeCloseTo(SHINKANSEN0_WIRE, 2);
   });
 
-  it("forms its trains of motor pairs: an end car at each end, a pantograph in every pair, the buffet car and the Green cars", () => {
+  it("forms its trains of motor pairs: an end car at each end, a pantograph in every pair, the buffet car in eight", () => {
+    expect(SHINKANSEN0_CARS).toEqual([2, 3, 4, 5, 6, 7, 8]);
     expect(shinkansen0Train(2).map((s) => s.car)).toEqual(["endCar", "endCar"]);
+    expect(shinkansen0Train(3).map((s) => s.car)).toEqual(["endCar", "pantographCar", "endCar"]);
     expect(shinkansen0Train(4).map((s) => s.car)).toEqual(["endCar", "pantographCar", "pantographCar", "endCar"]);
-    const sixteen = shinkansen0Train(16);
-    expect(sixteen.map((s) => s.car)).toEqual(["endCar", "pantographCar", "motorCar", "pantographCar", "motorCar", "pantographCar", "motorCar", "pantographCar", "buffetCar", "pantographCar", "greenCar", "greenCar", "motorCar", "pantographCar", "pantographCar", "endCar"]);
-    // one pantograph a pair: eight in sixteen cars, one in each pair of cars 2k, 2k + 1
-    expect(sixteen.filter((s) => s.pantograph)).toHaveLength(8);
-    for (let k = 0; k < 16; k += 2) expect(Number(sixteen[k]!.pantograph) + Number(sixteen[k + 1]!.pantograph)).toBe(1);
-    // 400.3 m: two end cars and fourteen intermediate cars
-    expect(sixteen[0]!.hi - sixteen[15]!.lo).toBeCloseTo(2 * 25.15 + 14 * 25.0, 6);
+    expect(shinkansen0Train(5).map((s) => s.car)).toEqual(["endCar", "pantographCar", "motorCar", "pantographCar", "endCar"]);
+    expect(shinkansen0Train(7).map((s) => s.car)).toEqual(["endCar", "pantographCar", "motorCar", "pantographCar", "motorCar", "pantographCar", "endCar"]);
+    const eight = shinkansen0Train(8);
+    expect(eight.map((s) => s.car)).toEqual(["endCar", "pantographCar", "motorCar", "pantographCar", "buffetCar", "pantographCar", "pantographCar", "endCar"]);
+    // one pantograph a pair of cars 2k, 2k + 1 (the two end cars of the shortest train have none); an odd train's last car shares the pantograph ahead of it
+    for (const n of SHINKANSEN0_CARS.filter((k) => k >= 3)) {
+      const slots = shinkansen0Train(n);
+      expect(slots.filter((s) => s.pantograph)).toHaveLength(Math.floor(n / 2));
+      for (let k = 0; k + 1 < n; k += 2) expect(Number(slots[k]!.pantograph) + Number(slots[k + 1]!.pantograph)).toBe(1);
+      if (n % 2 === 1) expect(slots[n - 2]!.pantograph).toBe(true);
+    }
+    // 200.3 m: two end cars and six intermediate cars
+    expect(eight[0]!.hi - eight[7]!.lo).toBeCloseTo(2 * 25.15 + 6 * 25.0, 6);
   });
 
-  for (const n of SHINKANSEN0_CARS.filter((k) => k <= 8))
+  it("reads the retired 10- to 16-car trains of a saved map as the eight-car train", () => {
+    for (const n of ["10", "12", "14", "16"]) expect(resolveParams(SHINKANSEN0_PARAMS, { unit: "train", cars: n })).toMatchObject({ unit: "train", cars: "8" });
+    expect(resolveParams(SHINKANSEN0_PARAMS, { unit: "train" })).toMatchObject({ cars: "4" });
+  });
+
+  for (const n of SHINKANSEN0_CARS)
     it(`a ${n}-car train is articulated: an end car at each end, the rear one turned, a section per car on its own bogies`, () => {
       const slots = shinkansen0Train(n);
       expect(slots[n - 1]).toMatchObject({ car: "endCar", turned: true });

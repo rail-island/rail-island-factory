@@ -32,8 +32,8 @@ and materials, including a complete articulated bus. It is not a per-mesh allowa
 
 A design can set `lodTriangles` to override its family policy (the TGV does:
 its default build is the lone power car, its sets have up to six cars; the
-Shinkansen 0 series and the TGV Duplex set 500 for their trains of up to 16 and
-12 cars). Stable model ids,
+Shinkansen 0 series and the TGV Duplex set 500 for their trains of up to eight
+cars). Stable model ids,
 scale, coordinates and parameter choices stay the same. The thumbnail,
 metadata and source tree remain the full-resolution defaults.
 
