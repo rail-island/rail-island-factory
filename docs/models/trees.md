@@ -60,9 +60,12 @@ invisible:
 - **Nothing floats.** Leaves sit on their clump's core; at low detail every limb
   runs into a mass and every mass is held by wood (or rests in a held mass).
 
-The coarse level is **closed convex solids**, not a billboard: alpha-tested foliage
-breaks early-Z on the tiled mobile GPUs the level exists for, and a flat quad goes
-edge-on to the game's low camera. Tests check every coarse part is closed and wound
+The coarse level is **closed convex solids**, not a billboard. The game draws its
+far forest as octahedral impostors where it can (baked in the browser from each
+species' first seed at `low`; the game's `docs/rendering/tree-impostors.md`), and
+the coarse solids are what it falls back to and what casts the impostors' shadows:
+a closed solid needs no texture and no `discard`, which alpha-tested foliage costs
+in early-Z on tiled mobile GPUs. Tests check every coarse part is closed and wound
 outward.
 
 ## The tree kit
