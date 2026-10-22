@@ -21,7 +21,8 @@
 import { ngon, type MaterialSpec, type MeshBuilder, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { block, plate, side } from "./vehicleParts.ts";
-import { CD163_PALETTE, bandAt, coil, lettering, letteringWidth, tubeX, type Band } from "./cd163.ts";
+import { CD163_PALETTE, bandAt, coil, lettering, letteringWidth, pushRod, type Band } from "./cd163.ts";
+import { liftable } from "./liftable.ts";
 
 export const c = (color: string, roughness = 0.5): MaterialSpec => ({ color, metallic: 0.1, roughness });
 
@@ -416,13 +417,38 @@ export interface SingleArmSpec {
 }
 /**
  * The single-arm "half pantograph" (cd163.ts's, sized to fit): an A-frame lower
- * arm from the hinge to the knee and a two-tube upper arm from the knee to the
- * head, with one length for each in both poses -- raised, the knee is found by
- * intersecting circles about the hinge and the head.
+ * arm from the hinge to the knee and a two-arm upper arm from the knee to the
+ * head, with one length for each in every pose -- the knee is found by
+ * intersecting circles about the hinge and the head. A raised one is drawn as a
+ * `liftable` mechanism, so the game can lower and raise it.
  */
 export function singleArm(m: MeshBuilder, p: SingleArmSpec): void {
+  if (p.raised) liftable(m, "pantograph", (mm, lift) => singleArmAt(mm, p, lift));
+  else singleArmAt(m, p, 0);
+}
+
+/** The hinge, knee and head of a single-arm pantograph at `lift` (0 folded, 1 raised). */
+function singleArmPose(p: SingleArmSpec, lift: number): { xh: number; hingeY: number; kx: number; ky: number; hx: number; headY: number } {
   const { xc, baseY: y, h } = p;
   const L1 = p.lower ?? 1.55, L2 = p.upper ?? 1.3;
+  const xh = xc + h * 0.5; // the hinge, toward the h end of the base
+  const hingeY = y + 0.11;
+  // the collector stands where both arms lie flat when folded, in every pose
+  const f1 = Math.sqrt(L1 * L1 - 0.11 * 0.11), f2 = Math.sqrt(L2 * L2 - 0.09 * 0.09);
+  const hx = xh - h * f1 + h * f2;
+  const headY = y + 0.33 + (p.raisedTop - 0.07 - (y + 0.33)) * lift;
+  // intersect circles about the hinge and the head; the knee points away from the hinge's end
+  const dx = hx - xh, dy = headY - 0.02 - hingeY;
+  const dist = Math.hypot(dx, dy);
+  const along = (L1 * L1 - L2 * L2 + dist * dist) / (2 * dist);
+  const across = Math.sqrt(Math.max(0, L1 * L1 - along * along));
+  const cands = [1, -1].map((k) => [xh + (along * dx - k * across * dy) / dist, hingeY + (along * dy + k * across * dx) / dist] as const);
+  const [kx, ky] = cands.reduce((p0, p1) => (h * (p1[0] - xh) < h * (p0[0] - xh) ? p1 : p0));
+  return { xh, hingeY, kx, ky, hx, headY };
+}
+
+function singleArmAt(m: MeshBuilder, p: SingleArmSpec, lift: number): void {
+  const { xc, baseY: y, h } = p;
   m.scope("insulators", () => {
     for (const dx of [-0.5, 0.5]) for (const z of [-0.45, 0.45]) insulator(m, xc + dx, z, p.roofY - 0.01, y);
   });
@@ -432,35 +458,23 @@ export function singleArm(m: MeshBuilder, p: SingleArmSpec): void {
     const [d0, d1] = h > 0 ? [0.1, 0.42] : [-0.42, -0.1];
     block(m, "pantograph", xc + d0, xc + d1, y + 0.05, y + 0.15, -0.14, 0.14); // the drive
   });
-  const xh = xc + h * 0.5; // the hinge, toward the h end of the base
-  const hingeY = y + 0.11;
-  // the collector stands where both arms lie flat when folded, in either pose
-  const f1 = Math.sqrt(L1 * L1 - 0.11 * 0.11), f2 = Math.sqrt(L2 * L2 - 0.09 * 0.09);
-  const hx = xh - h * f1 + h * f2;
-  let kx = xh - h * f1, ky = y + 0.22;
-  const headY = p.raised ? p.raisedTop - 0.07 : y + 0.33;
-  if (p.raised) {
-    // intersect circles about the hinge and the head; the knee points away from the hinge's end
-    const dx = hx - xh, dy = headY - 0.02 - hingeY;
-    const dist = Math.hypot(dx, dy);
-    const along = (L1 * L1 - L2 * L2 + dist * dist) / (2 * dist);
-    const across = Math.sqrt(Math.max(0, L1 * L1 - along * along));
-    const cands = [1, -1].map((k) => [xh + (along * dx - k * across * dy) / dist, hingeY + (along * dy + k * across * dx) / dist] as const);
-    const best = cands.reduce((p0, p1) => (h * (p1[0] - xh) < h * (p0[0] - xh) ? p1 : p0));
-    [kx, ky] = [best[0], best[1]];
-  }
+  const { xh, hingeY, kx, ky, hx, headY } = singleArmPose(p, lift);
   m.scope("arms", () => {
     for (const s of [-1, 1]) block(m, "pantograph", xh - 0.04, xh + 0.04, y + 0.04, y + 0.14, ...side(s, 0.34, 0.42));
     const shaft = ngon(8, 0.035, 0, xh, hingeY);
     m.sweep("pantograph", "z", shaft, -0.4, shaft, 0.4);
     m.scope("lower arms", () => {
-      for (const s of [-1, 1]) tubeX(m, "pantograph", 0.04, xh, hingeY, s * 0.3, kx, ky, s * 0.04);
+      for (const s of [-1, 1]) m.rod("pantograph", [xh, hingeY, s * 0.3], [kx, ky, s * 0.04], 0.04);
     });
-    tubeX(m, "pantograph", 0.016, xc + h * 0.62, y + 0.08, 0, kx + Math.sign(xh - kx) * 0.1, ky - 0.03, 0, 6); // the push rod
+    // the push rod, from the drive to the lower arm by the knee
+    pushRod(m, "pantograph", 0.016, [xc + h * 0.62, y + 0.08], (l) => {
+      const q = singleArmPose(p, l);
+      return [q.kx + (q.xh - q.kx) * 0.07, q.ky + (q.hingeY - q.ky) * 0.07 - 0.03];
+    }, lift);
     const knee = ngon(8, 0.05, 0, kx, ky + 0.005);
     m.sweep("pantograph", "z", knee, -0.08, knee, 0.08);
     m.scope("upper arms", () => {
-      for (const s of [-1, 1]) tubeX(m, "pantograph", 0.026, kx, ky + 0.02, s * 0.04, hx, headY, s * 0.32);
+      for (const s of [-1, 1]) m.rod("pantograph", [kx, ky + 0.02, s * 0.04], [hx, headY, s * 0.32], 0.026);
     });
   });
   collectorHead(m, hx, headY);
@@ -491,12 +505,20 @@ export interface DiamondSpec {
   raisedTop: number;
   arm?: number;
 }
-/** The diamond (rhombic) pantograph (cd230.ts's): four lower and four upper arms of one length about two knees. */
+/**
+ * The diamond (rhombic) pantograph (cd230.ts's): four lower and four upper arms of
+ * one length about two knees. A raised one is drawn as a `liftable` mechanism.
+ */
 export function diamond(m: MeshBuilder, p: DiamondSpec): void {
+  if (p.raised) liftable(m, "pantograph", (mm, lift) => diamondAt(mm, p, lift));
+  else diamondAt(m, p, 0);
+}
+
+function diamondAt(m: MeshBuilder, p: DiamondSpec, lift: number): void {
   const { xc, baseY } = p;
   const ARM = p.arm ?? 1.3, A = 0.3;
   // raised: the strips' top (head + 0.05) at raisedTop; folded: 0.2 m over the base
-  const hgt = p.raised ? p.raisedTop - 0.05 - baseY : 0.2;
+  const hgt = 0.2 + (p.raisedTop - 0.05 - baseY - 0.2) * lift;
   const w = A + Math.sqrt(ARM * ARM - (hgt / 2) * (hgt / 2) - 0.01);
   const top = baseY + hgt;
   m.scope("insulators", () => {
@@ -509,8 +531,8 @@ export function diamond(m: MeshBuilder, p: DiamondSpec): void {
   m.scope("arms", () => {
     for (const k of [-1, 1])
       for (const s of [-1, 1]) {
-        tubeX(m, "pantograph", 0.03, xc + k * A, baseY, s * 0.42, xc + k * w, baseY + hgt / 2, s * 0.32);
-        tubeX(m, "pantograph", 0.025, xc + k * w, baseY + hgt / 2, s * 0.32, xc + k * A, top, s * 0.22);
+        m.rod("pantograph", [xc + k * A, baseY, s * 0.42], [xc + k * w, baseY + hgt / 2, s * 0.32], 0.03);
+        m.rod("pantograph", [xc + k * w, baseY + hgt / 2, s * 0.32], [xc + k * A, top, s * 0.22], 0.025);
       }
   });
   m.scope("head", () => {

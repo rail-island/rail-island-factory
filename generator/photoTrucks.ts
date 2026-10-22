@@ -9,7 +9,9 @@ const palette: Record<string, MaterialSpec> = {
   paint: { color: '#a84548', roughness: .72 }, bed: { color: '#86423d', roughness: .9 },
   trim: { color: '#292d30' }, rubber: { color: '#262729', roughness: 1 },
   rim: { color: '#777b79', metallic: .25 }, glass: { color: '#334d59', roughness: .2, metallic: .15 },
-  light: { color: '#f5efd8' }, amber: { color: '#e69935' }, red: { color: '#a52826' },
+  light: { color: '#f5efd8', lamp: { role: 'head' } }, amber: { color: '#e69935', lamp: { role: 'indicator' } }, red: { color: '#a52826', lamp: { role: 'tail' } },
+  // the lettering and the side markers, in the lamps' colours but never lit
+  letter: { color: '#f5efd8' }, marker: { color: '#e69935' },
   canvas: { color: '#aaa38c', roughness: 1 }, silver: { color: '#bdc3c3', metallic: .3 },
   grille: { color: '#171d20' },
 };
@@ -36,7 +38,7 @@ function wheel(m: MeshBuilder, s: Spec, x: number, z0: number, z1: number, face:
   }
 }
 function frontText(m: MeshBuilder, text: string, x: number, y: number, h: number, width: number) {
-  m.facets('light', strokeText(text, width / 2, y, h, width / text.length * .7, width / text.length * .3, true).map(([z, yy]) => [x, yy, z]), [1, 0, 0]);
+  m.facets('letter', strokeText(text, width / 2, y, h, width / text.length * .7, width / text.length * .3, true).map(([z, yy]) => [x, yy, z]), [1, 0, 0]);
 }
 function chassis(m: MeshBuilder, s: Spec) {
   m.scope('chassis and running gear', () => {
@@ -173,7 +175,7 @@ function atego(m: MeshBuilder,s: Spec) {
       block(m,'paint',s.end-.035,s.end+.055,1.24,3.84,...side(sign,1.2,1.265));
       for(let x=s.end+.18;x<1.8;x+=.37) block(m,'trim',x,x+.035,1.26,1.35,...side(sign,1.23,1.25));
       block(m,'trim',-1.98,1.95,.61,.76,...side(sign,.99,1.09));
-      for(const x of [-1.5,.1,1.6]) block(m,'amber',x,x+.095,1.19,1.25,...side(sign,1.23,1.27));
+      for(const x of [-1.5,.1,1.6]) block(m,'marker',x,x+.095,1.19,1.25,...side(sign,1.23,1.27));
       arch(m,s,s.rear[0]!,sign,'trim');
       block(m,'silver',2.14,4.05,1.57,1.615,...side(sign,s.hw-.01,s.hw+.02));
     }

@@ -79,6 +79,12 @@ keeps it folded, as the railroad-vehicle rule for two collectors asks. Collector
 live under `roof-equipment/pantographs/`, which the fixed 4.7 m envelope check
 leaves out. The metro car has none: third-rail shoes hang from both bogies.
 
+The raised collector is a `liftable` mechanism ([animation.md](animation.md)), its
+arms `rod`s: the game folds it at stops. A diamond folds to `diamondFolded`, the
+lowest collector height at which its knees still stand below the collector - its
+fixed arm lengths cannot lie flat, and lower the frames would cross into a V; about
+1 m over the roof. The KT8D5's folded rear collector stands at that height too.
+
 ## Articulated trams
 
 The KT8D5, KT4 and GT4 use the vehicle rig ([vehicle-rig.md](vehicle-rig.md)) without

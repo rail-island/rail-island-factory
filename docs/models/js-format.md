@@ -32,13 +32,15 @@ scene.add(build(THREE)); // a THREE.Group named after the model id
 - **The rig.** A rigged vehicle's group carries `userData.rig`, and its module also exports `pose`,
   `renderJoint`, `steerAngles`, `steerLock` and `jointTriangles`: the code that turns its wheels, bends its
   sections and re-draws its joints ([vehicle-rig.md](vehicle-rig.md)).
+- **Lamps.** A vehicle that draws a lamp material carries `userData.lamps`: each lamp material's role, lit
+  colour and intensity, and `midX`, which splits its front lamps from its rear ([lamps.md](lamps.md)).
 - **Emitters.** A model that smokes, steams or flares carries `userData.emitters`, the mouths of its
   stacks for the parameters it was built with; a fountain carries `userData.fountain`, its pools and
   jets ([emitters.md](emitters.md)).
 - **Animations.** The group's `animations` holds the GLB's clips as `THREE.AnimationClip`s (a steam
   locomotive's `running`, the wind turbine's `wind`, the pumpjack's `pumping`, [animation.md](animation.md)),
-  and `userData.clipDrives` says what plays each, by clip name: a `time` loop or the `distance` travelled
-  at a reference speed. An animated model's namespace also needs `AnimationClip`,
+  and `userData.clipDrives` says what plays each, by clip name: a `time` loop, the `distance` travelled
+  at a reference speed, or a `state` the consumer scrubs to (a pantograph's `pantograph<n>`). An animated model's namespace also needs `AnimationClip`,
   `QuaternionKeyframeTrack` and `VectorKeyframeTrack`.
 - **Parameters.** The module also exports `params`, the design's enum parameters (`[]` for a fixed design),
   and `build(THREE, params)` builds any combination of their values; `build(THREE)` builds the defaults, the

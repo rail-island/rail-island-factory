@@ -9,6 +9,7 @@ import { paramCombinations, type ParamValues } from "../generator/design.ts";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles.ts";
 import { isLeaf, type LeafNode, type TreeNode } from "../generator/sourceTree.ts";
 import { sample } from "./catalogCache";
+import { rodEnds } from "./rodEnds.ts";
 
 function leaves(n: TreeNode): LeafNode[] {
   return isLeaf(n) ? [n] : n.children.flatMap(leaves);
@@ -92,19 +93,15 @@ describe("Czech electric locomotives from vlakosimdb", () => {
     // the CD 130's arms: the lower A-frame and the upper tubes are the same length raised and folded
     const { tris, nodes } = build("proc-vehicle-cd-130");
     const length = (id: string) => {
-      const n = nodes.find((x) => x.id === id)!;
+      const n = nodes.find((x) => x.id === id)! as LeafNode;
       const ps = tris.filter((t) => t.material === n.material).slice(n.tri[0], n.tri[0] + n.tri[1]).flatMap((t) => t.p);
-      const end = (x: number) => {
-        const at = ps.filter((p) => Math.abs(p[0] - x) < 1e-5);
-        return [x, at.reduce((s, p) => s + p[1], 0) / at.length, at.reduce((s, p) => s + p[2], 0) / at.length];
-      };
-      const [a, b] = [end(Math.min(...ps.map((p) => p[0]))), end(Math.max(...ps.map((p) => p[0])))];
-      return Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!);
+      const [a, b] = rodEnds(ps, n.args.a as number[], n.args.b as number[]);
+      return Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!);
     };
-    for (const part of ["lower-arms/sweep-1", "upper-arms/sweep-1"]) {
+    for (const part of ["lower-arms/rod-1", "upper-arms/rod-1"]) {
       const raised = length(`roof-equipment/pantographs/rear-pantograph/arms/${part}`);
       const folded = length(`roof-equipment/pantographs/front-pantograph/arms/${part}`);
-      expect(raised).toBeCloseTo(folded, 2);
+      expect(raised).toBeCloseTo(folded, 6);
     }
   });
 

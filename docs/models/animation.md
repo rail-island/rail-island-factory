@@ -1,8 +1,8 @@
 # Animation
 
-**Covers** - animated models: the mesh builder's animation clips and how they reach the GLB and the JS model, what plays each clip (`clipDrives`: a time loop or the distance travelled), the wind turbine's `wind` clip, the oil pumpjack's `pumping` mechanism, the steam locomotives' `running` clip (wheelsets, rods, Walschaerts valve gear), the timing contract for consumers, the site's Start and Stop buttons, and the tests.
-**Code** - `generator/meshCore.ts` (`animate`, `AnimationClipSpec`, `ClipDrive`, `clipDrives`, `tube`), `generator/industry.ts` (`industrialWind`, `industrialOilPump`), `generator/pumpjack.ts`, `generator/meshBuilder.ts` (`toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/steamGear.ts` (`RunningGear`, `N_SAMPLES`, `RUNNING_SPEED`, `RUNNING_CLIP`), `generator/glbPose.ts`, `src/ModelViewer.tsx`, `test/animation.test.ts`, `test/steam.test.ts`, `test/pumpjack.test.ts`, `test/jsModel.test.ts`
-**See also** - [steam-locomotives.md](steam-locomotives.md), [vehicles.md](vehicles.md) (parts), [export.md](export.md), [js-format.md](js-format.md), [industry.md](industry.md), [../site/catalog-site.md](../site/catalog-site.md)
+**Covers** - animated models: the mesh builder's animation clips and how they reach the GLB and the JS model, what plays each clip (`clipDrives`: a time loop, the distance travelled or a state), the wind turbine's `wind` clip, the oil pumpjack's `pumping` mechanism, the steam locomotives' `running` clip (wheelsets, rods, Walschaerts valve gear), the pantographs as `liftable` mechanisms (`state` clips) and the `rod` primitive they are drawn with, the timing contract for consumers, the site's Start and Stop buttons, and the tests.
+**Code** - `generator/meshCore.ts` (`animate`, `AnimationClipSpec`, `ClipDrive`, `clipDrives`, `tube`, `rod`, `sampleDraw`, `movingPart`, `drawRouted`), `generator/liftable.ts`, `generator/cd163.ts` (`pushRod`), the pantograph builders (`czElectricKit.ts` `singleArm`/`diamond`, `cd150.ts`, `cd163.ts`, `cd230.ts`, `emuParts.ts`, `shinkansen0.ts`, `tramKit.ts`), `test/liftable.test.ts`, `test/pantographs.test.ts`, `generator/industry.ts` (`industrialWind`, `industrialOilPump`), `generator/pumpjack.ts`, `generator/meshBuilder.ts` (`toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/steamGear.ts` (`RunningGear`, `N_SAMPLES`, `RUNNING_SPEED`, `RUNNING_CLIP`), `generator/glbPose.ts`, `src/ModelViewer.tsx`, `test/animation.test.ts`, `test/steam.test.ts`, `test/pumpjack.test.ts`, `test/jsModel.test.ts`
+**See also** - [steam-locomotives.md](steam-locomotives.md), [lamps.md](lamps.md), [vehicles.md](vehicles.md) (parts), [export.md](export.md), [js-format.md](js-format.md), [industry.md](industry.md), [../site/catalog-site.md](../site/catalog-site.md)
 
 ## Clips in the mesh builder
 
@@ -21,7 +21,7 @@ Every clip states what advances it in a consumer, so the game plays any clip wit
 knowing any model or clip by name:
 
 ```ts
-type ClipDrive = { drive: "time" } | { drive: "distance"; speed: number };
+type ClipDrive = { drive: "time" } | { drive: "distance"; speed: number } | { drive: "state" };
 ```
 
 - **`time`** - loop at the clip's own duration, whatever the model does: the wind
@@ -31,6 +31,9 @@ type ClipDrive = { drive: "time" } | { drive: "distance"; speed: number };
   `timeScale = v / speed` for the model's signed speed `v` in m/s, so it runs
   backwards in reverse and stands still with the vehicle. The steam `running`
   clip is `distance` at `RUNNING_SPEED`.
+- **`state`** - a pose between two states, not a loop: time 0 is one state, the
+  clip's end the other (a pantograph folded at 0, raised at 1). The consumer
+  scrubs the clip to a value it eases itself; the clip says nothing about how fast.
 
 three.js keeps no extras on an `AnimationClip`, so the drives travel beside the
 clips by clip name, as **`clipDrives`**: the GLB's scene `extras.clipDrives`
@@ -107,6 +110,42 @@ revolution of the reference wheel (the main driver; a tender's first axle) in
   rod and crosshead, return crank, eccentric rod, link, radius rod, lever, union
   link - so no two moving faces share a plane in any frame.
 
+## Pantographs: liftable mechanisms
+
+Every pantograph a design draws raised - the working one; a two-pantograph
+locomotive's other stays folded and static - is a **liftable mechanism**
+(`liftable.ts`): the builder draws it at any lift from 0 (folded) to 1 (raised)
+through the builder it is handed, and `liftable(m, "pantograph", draw)`
+
+1. draws it at `LIFT_SAMPLES` + 1 = 9 lifts into scratch builders of the model's
+   class and frame (`sampleDraw`; a `turned` car's frame too);
+2. finds each triangle's rigid motion from its raised position to every sample
+   (from an orthonormal frame on the triangle) and refuses a piece that stretches;
+3. gathers the triangles that move alike into pieces; a piece that never moves
+   stays where it is drawn (insulators, base frame, hinge shaft), every other
+   becomes a part `pantograph<n>-<k>` (`movingPart`), a child of the part being
+   drawn (a car of an articulated train) or a top-level node beside the body as a
+   bogie is, pivoted where it moves least - on its hinge for an arm;
+4. draws the raised pose for real with each triangle routed to its piece's part
+   (`drawRouted`), so the rest pose, the thumbnail and the source tree are the
+   raised pantograph;
+5. adds the clip `pantograph<n>`: per part its rotation and translation at the 9
+   lifts, times 0 .. 1, drive `state`.
+
+A piece moves rigidly only if it keeps its shape, which a `sweep` along x does not:
+its end rings stand vertical whatever the arm's slope. The arms are therefore drawn
+with **`rod`**, a round rod whose rings stand square to its axis and are oriented
+by the axis and +Z alone, so turning it about a Z axis moves it rigidly. A push
+rod changes length as the arm lifts, so `pushRod` draws it as the drive's
+cylinder and its piston rod, two rods that slide over each other. Each linkage
+finds its knee by intersecting circles about the hinge and the head at every lift,
+so its arms keep their lengths; the folded pose is the same equations at lift 0.
+
+Each pantograph is 3 to 7 parts. The low-detail build draws its own static
+pantographs and carries no clip. `test/pantographs.test.ts` checks every electric
+design: the clips, the rest pose as the last sample, the train at least 0.5 m
+lower with every collector folded, no z-fighting folded, nothing at low detail.
+
 ## Timing contract
 
 The clip's duration is the time the reference wheel takes to roll its
@@ -118,6 +157,9 @@ runs at the same reference speed, so a locomotive and its tender stay in step.
 The clip's `clipDrives` entry states exactly this: `distance` at 5 m/s.
 
 ## The site
+
+A `state` clip plays from folded to raised in a loop like any other clip under
+Start, which shows the mechanism moving.
 
 `ModelViewer` reads the clips of the loaded model (`gltf.animations`, or the JS
 model's `group.animations` for a non-default parameter choice) and, when there

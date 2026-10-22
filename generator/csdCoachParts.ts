@@ -58,8 +58,8 @@ export const COACH_PALETTE: Record<string, MaterialSpec> = {
   spring: { color: "#55585c", metallic: 0.2, roughness: 0.6 },
   steel: { color: "#8c9198", metallic: 0.3, roughness: 0.45 },
   wheel: { color: "#46484b", metallic: 0.2, roughness: 0.6 },
-  lampHead: { color: "#f3f5f6", roughness: 0.2 },
-  lampRed: { color: "#c8202c", roughness: 0.3 },
+  lampHead: { color: "#f3f5f6", roughness: 0.2, lamp: { role: "head" } },
+  lampRed: { color: "#c8202c", roughness: 0.3, lamp: { role: "tail" } },
   yellow: { color: "#c8b42a", roughness: 0.5 },
   marking: { color: "#d8c24a", roughness: 0.5 },
 };

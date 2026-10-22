@@ -402,7 +402,7 @@ export function tatraKt8(params?: ParamValues): MeshBuilder {
       }
       if (i === 2) {
         // the second collector, folded down (one raised per tram)
-        m.scope("pantographs", () => m.scope("pantograph (folded)", () => t.diamond(t.fx(24.55), t.fy(3.4), t.fy(3.4) + 0.62)));
+        m.scope("pantographs", () => m.scope("pantograph (folded)", () => t.diamond(t.fx(24.55), t.fy(3.4), t.fy(3.4) + 0.62, { folded: true })));
         m.scope("equipment box", () => t.roofBox("roofBox", 18, livery === "modern" ? 25.2 : 22.5, 3.38, 3.7, 0.7, 0.1));
         m.scope("route box", () => t.roofBox("roofBox", 26.7, 27.2, 3.38, 3.8, 0.3, 0.03));
       }

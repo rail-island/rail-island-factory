@@ -93,6 +93,12 @@ model page's Joint slider headlessly with a posed render (Steps, 4).
   material. The build refuses a flickering model.
 - Ids start with `veh-` and are never renamed once shipped (saved maps store
   them). Reference photos and an inspiration GLB go under `assets/<name>/`.
+- Lamps are materials with a `lamp` role on the palette entry (docs/models/lamps.md):
+  head lamps `head`, red rear lamps `tail` (a separate brake lamp `brake`), the
+  front and rear direction indicators `indicator`. Draw them at the ends: the game
+  tells the front from the rear by the model's middle and left from right by z.
+  A beacon, roof clearance lamps and side markers use `marker` (amber, no role),
+  so they never blink.
 
 ## Reference images from the internet
 

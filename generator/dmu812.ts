@@ -58,7 +58,7 @@ const PALETTE: Record<string, MaterialSpec> = {
   apronYellow: c("#f0c419"),
   signBlack: c("#202020", 0.6),
   display: c("#141516", 0.4),
-  lampClear: c("#d9dcdd", 0.15, 0.3),
+  lampClear: { ...c("#d9dcdd", 0.15, 0.3), lamp: { role: "head" } },
   hoseRed: c("#a5241e", 0.6),
 };
 

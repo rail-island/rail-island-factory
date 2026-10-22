@@ -23,12 +23,12 @@ import { resolveParams, type GameProperties, type ParamSpec, type ParamValues, t
 import { block, side } from "./vehicleParts.ts";
 import { centreCoupler, EMU_CATALOG, enumParam } from "./emuParts.ts";
 import { unitBogie } from "./unitParts.ts";
-import { tubeX } from "./cd163.ts";
 import { LOD_GLASS, type LodBand, type LodPart, type LodSections } from "./lodKit.ts";
 import { bogieParts, fitUnit, roofPart, sideGlass, turnBody, type UnitBody } from "./lodUnits.ts";
-import { articulate } from "./tramKit.ts";
+import { articulate, knee as linkKnee } from "./tramKit.ts";
 import { lerp, type Pt } from "./sliceLoft.ts";
 import { crownPane, drawShell, sideDecal, sideLettering, sidePanel, surfaceDisc, type SliceBody } from "./sliceBody.ts";
+import { liftable } from "./liftable.ts";
 
 /** What the design builds: one car, or the whole train. */
 export type Shinkansen0Unit = "endCar" | "motorCar" | "pantographCar" | "greenCar" | "buffetCar" | "train";
@@ -133,8 +133,8 @@ const PALETTE: Record<string, MaterialSpec> = {
   rubber: c("#1c1c1e", 0.9),
   bellows: c("#2a2b2d", 0.9),
   chrome: c("#7f858b", 0.3, 0.6),
-  lampGlass: c("#d9cf9e", 0.15),
-  lampRed: c("#c8202c", 0.3),
+  lampGlass: { ...c("#d9cf9e", 0.15), lamp: { role: "head" } },
+  lampRed: { ...c("#c8202c", 0.3), lamp: { role: "tail" } },
   under: c("#2a2c2f", 0.85),
   equipment: c("#3b3d40", 0.8),
   motor: c("#2e3033", 0.8),
@@ -406,6 +406,15 @@ function innerEnd(m: MeshBuilder, X: (d: number) => number, e: number, wall: num
 
 /** A diamond pantograph (the PS200): base, the lower and upper frames' rhombus either side, the collector. Raised to `top`. */
 function diamondPantograph(m: MeshBuilder, x: number, roof: number, top: number): void {
+  liftable(m, "pantograph", (mm, lift) => diamondPantographAt(mm, x, roof, top, lift));
+}
+
+/**
+ * The diamond pantograph at `lift`, 0 folded to 1 raised to `top`: each half's
+ * lower and upper frame keep the lengths they have raised, the knee where their
+ * circles meet, outside the line from the base pivot to the head.
+ */
+function diamondPantographAt(m: MeshBuilder, x: number, roof: number, top: number, lift: number): void {
   const y = roof + 0.32;
   m.scope("insulators", () => {
     for (const dx of [-0.55, 0.55])
@@ -418,18 +427,23 @@ function diamondPantograph(m: MeshBuilder, x: number, roof: number, top: number)
     for (const z of [-0.5, 0.5]) block(m, "pantograph", x - 0.72, x + 0.72, y - 0.04, y + 0.02, z - 0.04, z + 0.04);
     for (const dx of [-0.65, 0.65]) block(m, "pantograph", x + dx - 0.035, x + dx + 0.035, y - 0.04, y + 0.03, -0.52, 0.52);
   });
-  const head = top - 0.06;
-  const knee = (y + head) / 2;
+  const raisedHead = top - 0.06;
+  const head = y + 0.25 + (raisedHead - y - 0.25) * lift;
+  // the frames' lengths in the half's own plane (x outward), fixed by the raised pose
+  const raisedKnee = (y + raisedHead) / 2;
+  const lower = Math.hypot(0.95 - 0.5, raisedKnee - y);
+  const upper = Math.hypot(0.95 - 0.12, raisedHead - raisedKnee);
+  const [kx, knee] = linkKnee([0.5, y], lower, [0.12, head], upper, -1);
   m.scope("frames", () => {
     for (const z of [-0.42, 0.42]) {
       for (const dx of [-1, 1]) {
-        tubeX(m, "pantograph", 0.025, x + dx * 0.5, y, z, x + dx * 0.95, knee, z * 0.9);
-        tubeX(m, "pantograph", 0.02, x + dx * 0.95, knee, z * 0.9, x + dx * 0.12, head, z * 0.55);
+        m.rod("pantograph", [x + dx * 0.5, y, z], [x + dx * kx, knee, z * 0.9], 0.025);
+        m.rod("pantograph", [x + dx * kx, knee, z * 0.9], [x + dx * 0.12, head, z * 0.55], 0.02);
       }
     }
     // the cross ties at the knees and the hinge shafts
-    for (const dx of [-0.95, 0.95]) tubeX(m, "pantograph", 0.018, x + dx, knee, -0.38, x + dx, knee + 0.001, 0.38);
-    for (const dx of [-0.5, 0.5]) tubeX(m, "pantograph", 0.03, x + dx, y, -0.46, x + dx, y + 0.001, 0.46);
+    for (const dx of [-1, 1]) m.rod("pantograph", [x + dx * kx, knee, -0.38], [x + dx * kx, knee, 0.38], 0.018);
+    for (const dx of [-0.5, 0.5]) m.rod("pantograph", [x + dx, y, -0.46], [x + dx, y, 0.46], 0.03);
   });
   m.scope("head", () => {
     for (const dx of [-0.13, 0.13]) block(m, "carbon", x + dx - 0.03, x + dx + 0.03, head, head + 0.06, -0.62, 0.62);

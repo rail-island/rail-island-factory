@@ -30,7 +30,7 @@ export const STEAM_PALETTE: Record<string, MaterialSpec> = {
   roof: { color: "#2b2b2d", roughness: 0.8 },
   coal: { color: "#121212", roughness: 1 },
   glass: { color: "#26323f", metallic: 0.2, roughness: 0.15 },
-  lampHead: { color: "#f3f5f6", roughness: 0.2 },
+  lampHead: { color: "#f3f5f6", roughness: 0.2, lamp: { role: "head", lit: "#ffe6a8" } },
   plate: { color: "#7a1517", roughness: 0.5 },
   plateText: { color: "#e3dcc0", metallic: 0.3, roughness: 0.4 },
   white: { color: "#e8e6df", roughness: 0.6 },

@@ -19,8 +19,8 @@ import { ngon, type MaterialSpec, type MeshBuilder, type Ring } from "./meshBuil
 import type { Vec3 } from "./meshCore.ts";
 import { Coach, sectionHalf, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { block } from "./vehicleParts.ts";
-import { tubeX } from "./cd163.ts";
 import { drawJoint, type JointRig, type SectionRig, type VehicleRig } from "./rig.ts";
+import { liftable } from "./liftable.ts";
 
 export type { Pt } from "./csdCoachParts.ts";
 
@@ -59,9 +59,9 @@ export const TRAM_PALETTE: Record<string, MaterialSpec> = {
   spring: { color: "#55585c", metallic: 0.2, roughness: 0.6 },
   steel: { color: "#8c9198", metallic: 0.3, roughness: 0.45 },
   wheel: { color: "#46484b", metallic: 0.2, roughness: 0.6 },
-  lampHead: { color: "#f3f5f6", roughness: 0.2 },
-  lampRed: { color: "#c8202c", roughness: 0.3 },
-  lampAmber: { color: "#e08a1e", roughness: 0.3 },
+  lampHead: { color: "#f3f5f6", roughness: 0.2, lamp: { role: "head" } },
+  lampRed: { color: "#c8202c", roughness: 0.3, lamp: { role: "tail" } },
+  lampAmber: { color: "#e08a1e", roughness: 0.3, lamp: { role: "indicator" } },
   pantograph: { color: "#5b5f64", metallic: 0.3, roughness: 0.55 },
   insulator: { color: "#8a4a26", roughness: 0.4 },
   carbon: { color: "#2f3033", roughness: 0.7 },
@@ -311,93 +311,128 @@ export class Tram extends Coach {
 
   /**
    * A diamond (double-arm) pantograph centred at Factory x `xc` on a roof at
-   * Factory `roof`, its collector at Factory height `head` (raised) or folded
-   * down: two rhombic frames, the knees `reach` either side of the centre.
+   * Factory `roof`, its collector at Factory height `head`: two rhombic frames, the
+   * knees `reach` either side of the centre. Raised to the contact wire unless
+   * `folded`; a raised one is a `liftable` mechanism the game lowers and raises,
+   * folding down as far as its frames allow (diamondFolded).
    */
-  diamond(xc: number, roof: number, head: number, opts: { base?: number; reach?: number; frameZ?: number; bow?: number } = {}): void {
-    const m = this.m;
-    const base = roof + 0.22; // the base frame, on insulators
-    const bx = opts.base ?? 0.5; // lower pivots, either side of the centre
-    const hx = 0.14; // upper pivots under the head
-    const reach = opts.reach ?? 1.2; // the knees when raised to 5.5 m above a 3.3 m base
-    const fz = opts.frameZ ?? 0.36;
-    const bow = opts.bow ?? 0.85;
-    // the arm lengths are fixed by the design pose (knees at mid height of a 2.2 m lift)
-    const lift0 = 2.2;
-    const lower = Math.hypot(reach - bx, lift0 * 0.5);
-    const upper = Math.hypot(reach - hx, lift0 * 0.5);
-    const lift = head - base - 0.1;
-    m.scope("base", () => {
-      for (const s of [-1, 1]) block(m, "pantograph", xc - 0.62, xc + 0.62, base - 0.04, base, s * fz - 0.03, s * fz + 0.03);
-      for (const dx of [-0.55, 0.55]) block(m, "pantograph", xc + dx - 0.03, xc + dx + 0.03, base - 0.04, base, -fz - 0.03, fz + 0.03);
-      for (const dx of [-0.5, 0.5])
-        for (const s of [-1, 1]) m.prism("insulator", ngon(8, 0.05, 0, xc + dx, s * fz), roof - 0.01, base - 0.04);
-    });
-    m.scope("frames", () => {
-      for (const d of [-1, 1]) {
-        // in the half's own frame (x outward from the centre) the knee is outside the line
-        const k = knee([bx, 0], lower, [hx, lift], upper, -1);
-        for (const s of [-1, 1]) {
-          tubeX(m, "pantograph", 0.022, xc + d * bx, base + 0.02, s * fz, xc + d * k[0], base + k[1], s * fz, 6);
-          tubeX(m, "pantograph", 0.018, xc + d * k[0], base + k[1], s * fz, xc + d * hx, base + lift, s * 0.12, 6);
-        }
-        // the knee's cross tube
-        const kt = ngon(6, 0.02, 0, xc + d * k[0], base + k[1]);
-        m.sweep("pantograph", "z", kt, -fz - 0.02, kt, fz + 0.02);
-      }
-    });
-    m.scope("collector", () => {
-      const y = base + lift;
-      block(m, "pantograph", xc - hx - 0.03, xc + hx + 0.03, y - 0.03, y + 0.02, -0.16, 0.16);
-      // the bow: a carbon strip on a pan, its ends bent down into horns
-      block(m, "pantograph", xc - 0.07, xc + 0.07, y + 0.02, y + 0.07, -bow, bow);
-      block(m, "carbon", xc - 0.05, xc + 0.05, y + 0.07, y + 0.1, -bow + 0.05, bow - 0.05);
-      for (const s of [-1, 1]) {
-        const horn: Ring = [[-0.035, y + 0.07], [0.035, y + 0.07], [0.035, y - 0.13], [-0.035, y - 0.13]];
-        const tip = horn.map(([u, v]): [number, number] => [u, v - 0.06]);
-        const [a0, a1] = s > 0 ? [bow, bow + 0.16] : [-bow - 0.16, -bow];
-        m.sweep("pantograph", "z", s > 0 ? horn.map(([u, v]) => [u + xc, v]) : tip.map(([u, v]) => [u + xc, v]), a0, s > 0 ? tip.map(([u, v]) => [u + xc, v]) : horn.map(([u, v]) => [u + xc, v]), a1);
-      }
-    });
+  diamond(xc: number, roof: number, head: number, opts: { base?: number; reach?: number; frameZ?: number; bow?: number; folded?: boolean } = {}): void {
+    const folded = diamondFolded(roof, opts);
+    if (opts.folded) diamondAt(this.m, xc, roof, folded, opts);
+    else liftable(this.m, "pantograph", (mm, lift) => diamondAt(mm, xc, roof, folded + (head - folded) * lift, opts));
   }
 
   /**
    * A single-arm pantograph: its hinge at Factory x `xh`, the knee pointing
-   * toward `dir` (+1 / -1 along x), the collector above `xc` at Factory `head`.
+   * toward `dir` (+1 / -1 along x), the collector above `xc` at Factory `head`,
+   * raised -- a `liftable` mechanism folding down to 0.5 m over the roof.
    */
   singleArm(xh: number, xc: number, dir: number, roof: number, head: number, bow = 0.8): void {
-    const m = this.m;
-    const base = roof + 0.2;
-    const lower = 1.45;
-    const upper = 1.6;
-    const lift = head - base - 0.12;
-    // the left normal of hinge -> head points to -x, so a knee toward +x is on the right
-    const k = knee([xh, base + 0.08], lower, [xc, base + lift], upper, -dir);
-    m.scope("base", () => {
-      for (const s of [-1, 1]) block(m, "pantograph", Math.min(xh, xc) - 0.35, Math.max(xh, xc) + 0.35, base - 0.04, base, s * 0.32 - 0.03, s * 0.32 + 0.03);
-      for (const dx of [Math.min(xh, xc) - 0.25, Math.max(xh, xc) + 0.25])
-        for (const s of [-1, 1]) m.prism("insulator", ngon(8, 0.045, 0, dx, s * 0.32), roof - 0.01, base - 0.04);
-      const shaft = ngon(8, 0.035, 0, xh, base + 0.08);
-      m.sweep("pantograph", "z", shaft, -0.34, shaft, 0.34);
-    });
-    m.scope("arms", () => {
-      for (const s of [-1, 1]) tubeX(m, "pantograph", 0.03, xh, base + 0.08, s * 0.22, k[0], k[1], s * 0.05, 6);
-      const kt = ngon(6, 0.03, 0, k[0], k[1]);
-      m.sweep("pantograph", "z", kt, -0.08, kt, 0.08);
-      for (const s of [-1, 1]) tubeX(m, "pantograph", 0.018, k[0], k[1], s * 0.04, xc, base + lift, s * 0.25, 6);
-    });
-    m.scope("collector", () => {
-      const y = base + lift;
-      block(m, "pantograph", xc - 0.06, xc + 0.06, y - 0.03, y + 0.03, -0.3, 0.3);
-      block(m, "pantograph", xc - 0.06, xc + 0.06, y + 0.03, y + 0.08, -bow, bow);
-      block(m, "carbon", xc - 0.045, xc + 0.045, y + 0.08, y + 0.11, -bow + 0.05, bow - 0.05);
-      for (const s of [-1, 1]) {
-        const [a0, a1] = s > 0 ? [bow, bow + 0.14] : [-bow - 0.14, -bow];
-        const horn: Ring = [[xc - 0.03, y + 0.08], [xc + 0.03, y + 0.08], [xc + 0.03, y - 0.08], [xc - 0.03, y - 0.08]];
-        m.sweep("pantograph", "z", horn, a0, horn, a1);
-      }
-    });
+    const folded = roof + 0.5;
+    liftable(this.m, "pantograph", (mm, lift) => singleArmAt(mm, xh, xc, dir, roof, folded + (head - folded) * lift, bow));
   }
+}
+
+type DiamondOpts = { base?: number; reach?: number; frameZ?: number; bow?: number };
+
+/**
+ * A diamond pantograph's frames at a collector height `head`: the base frame's
+ * height, the collector's lift above it and each half's knee (x outward from the
+ * centre, y above the base) -- the arm lengths fixed by the design pose (knees
+ * at mid height of a 2.2 m lift, `reach` out).
+ */
+function diamondFrame(roof: number, head: number, opts: DiamondOpts): { base: number; lift: number; knee: [number, number]; bx: number; hx: number } {
+  const base = roof + 0.22; // the base frame, on insulators
+  const bx = opts.base ?? 0.5; // lower pivots, either side of the centre
+  const hx = 0.14; // upper pivots under the head
+  const reach = opts.reach ?? 1.2; // the knees when raised to 5.5 m above a 3.3 m base
+  const lift0 = 2.2;
+  const lower = Math.hypot(reach - bx, lift0 * 0.5);
+  const upper = Math.hypot(reach - hx, lift0 * 0.5);
+  const lift = head - base - 0.1;
+  // in the half's own frame (x outward from the centre) the knee is outside the line
+  return { base, lift, knee: knee([bx, 0.02], lower, [hx, lift], upper, -1), bx, hx };
+}
+
+/**
+ * The lowest collector height a diamond pantograph folds to: the lowest at which
+ * its knees still stand below the collector, a centimetre at a time -- lower than
+ * that the fixed-length frames would cross over into a V.
+ */
+export function diamondFolded(roof: number, opts: DiamondOpts): number {
+  for (let head = roof + 0.4; ; head += 0.01) {
+    const f = diamondFrame(roof, head, opts);
+    if (f.knee[1] <= f.lift - 0.08) return Math.round(head * 100) / 100;
+  }
+}
+
+function diamondAt(m: MeshBuilder, xc: number, roof: number, head: number, opts: DiamondOpts): void {
+  const fz = opts.frameZ ?? 0.36;
+  const bow = opts.bow ?? 0.85;
+  const { base, lift, knee: k, bx, hx } = diamondFrame(roof, head, opts);
+  m.scope("base", () => {
+    for (const s of [-1, 1]) block(m, "pantograph", xc - 0.62, xc + 0.62, base - 0.04, base, s * fz - 0.03, s * fz + 0.03);
+    for (const dx of [-0.55, 0.55]) block(m, "pantograph", xc + dx - 0.03, xc + dx + 0.03, base - 0.04, base, -fz - 0.03, fz + 0.03);
+    for (const dx of [-0.5, 0.5])
+      for (const s of [-1, 1]) m.prism("insulator", ngon(8, 0.05, 0, xc + dx, s * fz), roof - 0.01, base - 0.04);
+  });
+  m.scope("frames", () => {
+    for (const d of [-1, 1]) {
+      for (const s of [-1, 1]) {
+        m.rod("pantograph", [xc + d * bx, base + 0.02, s * fz], [xc + d * k[0], base + k[1], s * fz], 0.022, 6);
+        m.rod("pantograph", [xc + d * k[0], base + k[1], s * fz], [xc + d * hx, base + lift, s * 0.12], 0.018, 6);
+      }
+      // the knee's cross tube
+      const kt = ngon(6, 0.02, 0, xc + d * k[0], base + k[1]);
+      m.sweep("pantograph", "z", kt, -fz - 0.02, kt, fz + 0.02);
+    }
+  });
+  m.scope("collector", () => {
+    const y = base + lift;
+    block(m, "pantograph", xc - hx - 0.03, xc + hx + 0.03, y - 0.03, y + 0.02, -0.16, 0.16);
+    // the bow: a carbon strip on a pan, its ends bent down into horns
+    block(m, "pantograph", xc - 0.07, xc + 0.07, y + 0.02, y + 0.07, -bow, bow);
+    block(m, "carbon", xc - 0.05, xc + 0.05, y + 0.07, y + 0.1, -bow + 0.05, bow - 0.05);
+    for (const s of [-1, 1]) {
+      const horn: Ring = [[-0.035, y + 0.07], [0.035, y + 0.07], [0.035, y - 0.13], [-0.035, y - 0.13]];
+      const tip = horn.map(([u, v]): [number, number] => [u, v - 0.06]);
+      const [a0, a1] = s > 0 ? [bow, bow + 0.16] : [-bow - 0.16, -bow];
+      m.sweep("pantograph", "z", s > 0 ? horn.map(([u, v]) => [u + xc, v]) : tip.map(([u, v]) => [u + xc, v]), a0, s > 0 ? tip.map(([u, v]) => [u + xc, v]) : horn.map(([u, v]) => [u + xc, v]), a1);
+    }
+  });
+}
+
+function singleArmAt(m: MeshBuilder, xh: number, xc: number, dir: number, roof: number, head: number, bow: number): void {
+  const base = roof + 0.2;
+  const lower = 1.45;
+  const upper = 1.6;
+  const lift = head - base - 0.12;
+  // the left normal of hinge -> head points to -x, so a knee toward +x is on the right
+  const k = knee([xh, base + 0.08], lower, [xc, base + lift], upper, -dir);
+  m.scope("base", () => {
+    for (const s of [-1, 1]) block(m, "pantograph", Math.min(xh, xc) - 0.35, Math.max(xh, xc) + 0.35, base - 0.04, base, s * 0.32 - 0.03, s * 0.32 + 0.03);
+    for (const dx of [Math.min(xh, xc) - 0.25, Math.max(xh, xc) + 0.25])
+      for (const s of [-1, 1]) m.prism("insulator", ngon(8, 0.045, 0, dx, s * 0.32), roof - 0.01, base - 0.04);
+    const shaft = ngon(8, 0.035, 0, xh, base + 0.08);
+    m.sweep("pantograph", "z", shaft, -0.34, shaft, 0.34);
+  });
+  m.scope("arms", () => {
+    for (const s of [-1, 1]) m.rod("pantograph", [xh, base + 0.08, s * 0.22], [k[0], k[1], s * 0.05], 0.03, 6);
+    const kt = ngon(6, 0.03, 0, k[0], k[1]);
+    m.sweep("pantograph", "z", kt, -0.08, kt, 0.08);
+    for (const s of [-1, 1]) m.rod("pantograph", [k[0], k[1], s * 0.04], [xc, base + lift, s * 0.25], 0.018, 6);
+  });
+  m.scope("collector", () => {
+    const y = base + lift;
+    block(m, "pantograph", xc - 0.06, xc + 0.06, y - 0.03, y + 0.03, -0.3, 0.3);
+    block(m, "pantograph", xc - 0.06, xc + 0.06, y + 0.03, y + 0.08, -bow, bow);
+    block(m, "carbon", xc - 0.045, xc + 0.045, y + 0.08, y + 0.11, -bow + 0.05, bow - 0.05);
+    for (const s of [-1, 1]) {
+      const [a0, a1] = s > 0 ? [bow, bow + 0.14] : [-bow - 0.14, -bow];
+      const horn: Ring = [[xc - 0.03, y + 0.08], [xc + 0.03, y + 0.08], [xc + 0.03, y - 0.08], [xc - 0.03, y - 0.08]];
+      m.sweep("pantograph", "z", horn, a0, horn, a1);
+    }
+  });
 }
 
 /** One rigid section of an articulated tram, in Factory x (front end x1 > rear end x0). */

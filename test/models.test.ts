@@ -14,6 +14,7 @@ import { STEAM_LOCOS } from "../generator/steamLocos";
 import { ALL_VEHICLES, BUILDINGS, DESIGNS, TREE_DESIGNS, WOODS_DESIGNS, ZFightingError, designGlb, designTree, generateModels } from "../generator/generate";
 import { VILLAGE_HOUSES } from "../generator/village";
 import { isLeaf, type LeafNode, type ScopeNode, type TreeNode } from "../generator/sourceTree";
+import { rodEnds } from "./rodEnds.ts";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { glbStats } from "../generator/glbStats";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles";
@@ -314,7 +315,10 @@ describe("the vehicles", () => {
     const d = VEHICLES.find((v) => v.id === "proc-vehicle-cd-163")!;
     expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "loco", traction: "electric" });
     const { json } = parseGlb(designGlb(proceduralId(d.id)));
-    expect((json as { nodes: Array<{ name: string }> }).nodes.map((n) => n.name)).toEqual(["vehicle", "bogie0", "bogie1"]);
+    // the body, the two bogies, and the raised pantograph's moving pieces (liftable.ts)
+    const names = (json as { nodes: Array<{ name: string }> }).nodes.map((n) => n.name);
+    expect(names.filter((n) => !n.startsWith("pantograph1-"))).toEqual(["vehicle", "bogie0", "bogie1"]);
+    expect(names.filter((n) => n.startsWith("pantograph1-")).length).toBeGreaterThan(0);
     const s = glbStats(designGlb(proceduralId(d.id)));
     expect(s.max[0] - s.min[0]).toBeCloseTo(16.8, 2); // over the buffers
     expect(s.max[0] + s.min[0]).toBeCloseTo(0, 5); // centred along x
@@ -351,11 +355,8 @@ describe("the vehicles", () => {
         expect(tubes).toHaveLength(2);
         for (const tube of tubes) {
           const points = metal.slice(tube.tri[0], tube.tri[0] + tube.tri[1]).flatMap((t) => t.p);
-          const xs = [Math.min(...points.map((p) => p[0])), Math.max(...points.map((p) => p[0]))];
-          const centres = xs.map((x) => {
-            const ring = points.filter((p) => Math.abs(p[0] - x) < 1e-6);
-            return [x, ...[1, 2].map((axis) => (Math.min(...ring.map((p) => p[axis]!)) + Math.max(...ring.map((p) => p[axis]!))) / 2)];
-          }).sort((a, b) => a[1]! - b[1]!);
+          expect(tube.kind).toBe("rod");
+          const centres = rodEnds(points, tube.args.a as number[], tube.args.b as number[]).sort((a, b) => a[1]! - b[1]!);
           expect(Math.hypot(...centres[1]!.map((v, i) => v - centres[0]![i]!))).toBeCloseTo(length, 5);
           if (arm === "lower") {
             joints.push(centres[1]![1]!);

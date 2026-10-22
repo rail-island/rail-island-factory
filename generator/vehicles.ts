@@ -43,9 +43,11 @@ export const VEHICLE_PALETTE: Record<string, MaterialSpec> = {
   rubber: { color: "#1c1c1e", roughness: 0.95 },
   grease: { color: "#3a3a3a", roughness: 0.6 },
   glass: { color: "#26323f", metallic: 0.2, roughness: 0.15 },
-  lampHead: { color: "#f3f5f6", roughness: 0.2 },
-  lampAmber: { color: "#ff9a2e", roughness: 0.3 },
-  lampRed: { color: "#c8202c", roughness: 0.3 },
+  lampHead: { color: "#f3f5f6", roughness: 0.2, lamp: { role: "head" } },
+  lampAmber: { color: "#ff9a2e", roughness: 0.3, lamp: { role: "indicator" } },
+  lampRed: { color: "#c8202c", roughness: 0.3, lamp: { role: "tail" } },
+  // roof and side marker lamps: amber, but never blinking
+  marker: { color: "#ff9a2e", roughness: 0.3 },
   aluminum: { color: "#d9dde2", metallic: 0.25, roughness: 0.45 },
   aluminumDark: { color: "#b3bac2", metallic: 0.25, roughness: 0.45 },
 };
@@ -229,7 +231,7 @@ function tractor(m: MeshBuilder): void {
     m.scope("roof lights", () => {
       for (let i = 0; i < 5; i++) {
         const z = -0.6 + i * 0.3;
-        block(m, "lampAmber", 5.17, 5.23, 2.88, 2.96, z - 0.04, z + 0.04);
+        block(m, "marker", 5.17, 5.23, 2.88, 2.96, z - 0.04, z + 0.04);
       }
     });
     m.scope("air horns", () => {
@@ -256,8 +258,8 @@ function tractor(m: MeshBuilder): void {
     for (const s of [-1, 1]) {
       m.scope(s > 0 ? "right side" : "left side", () => {
         block(m, "glass", 3.2, 3.6, 2.7, 3.0, ...side(s, 1.11, 1.14));
-        block(m, "lampAmber", 2.7, 2.76, 3.45, 3.5, ...side(s, 1.11, 1.14));
-        block(m, "lampAmber", 3.8, 3.86, 3.45, 3.5, ...side(s, 1.11, 1.14));
+        block(m, "marker", 2.7, 2.76, 3.45, 3.5, ...side(s, 1.11, 1.14));
+        block(m, "marker", 3.8, 3.86, 3.45, 3.5, ...side(s, 1.11, 1.14));
       });
     }
   });
@@ -326,7 +328,7 @@ function trailer(m: MeshBuilder): void {
   });
   m.scope("side markers", () => {
     for (const x of [TRAILER_FRONT - 0.4, (TRAILER_FRONT + TRAILER_REAR) / 2, TRAILER_REAR + 0.4]) {
-      for (const s of [-1, 1]) block(m, "lampAmber", x - 0.05, x + 0.05, 1.21, 1.27, ...side(s, 1.295, 1.32));
+      for (const s of [-1, 1]) block(m, "marker", x - 0.05, x + 0.05, 1.21, 1.27, ...side(s, 1.295, 1.32));
     }
   });
   m.scope("rear", () => {

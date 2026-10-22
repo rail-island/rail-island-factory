@@ -42,9 +42,11 @@ const PALETTE: Record<string, MaterialSpec> = {
   rubber: { color: "#1e1e1f", roughness: 0.95 },
   glass: { color: "#1f262f", metallic: 0.2, roughness: 0.15 },
   visorTint: { color: "#4b4e71", metallic: 0.2, roughness: 0.2 },
-  lampClear: { color: "#f2f0e9", roughness: 0.2 },
-  lampAmber: { color: "#ffa01f", roughness: 0.3 },
-  lampRed: { color: "#b22521", roughness: 0.3 },
+  lampClear: { color: "#f2f0e9", roughness: 0.2, lamp: { role: "head" } },
+  lampAmber: { color: "#ffa01f", roughness: 0.3, lamp: { role: "indicator" } },
+  lampRed: { color: "#b22521", roughness: 0.3, lamp: { role: "tail" } },
+  // beacons, roof clearance lamps and side markers: amber, but never blinking
+  marker: { color: "#ffa01f", roughness: 0.3 },
   plateOrange: { color: "#df791f", roughness: 0.5 },
   plateWhite: { color: "#e9ebee", roughness: 0.4 },
   stripeYellow: { color: "#f1c020", roughness: 0.4 },
@@ -644,7 +646,7 @@ function mixerCab(m: MeshBuilder): void {
     });
     m.scope("beacon", () => {
       m.prism("chassis", ngon(10, 0.08, 0, 3.02, 0), 3.7, 3.75);
-      m.prism("lampAmber", ngon(10, 0.07, 0, 3.02, 0), 3.75, 3.94);
+      m.prism("marker", ngon(10, 0.07, 0, 3.02, 0), 3.75, 3.94);
     });
     m.scope("mirrors", () => {
       for (const s of [-1, 1]) {
@@ -921,7 +923,7 @@ function reeferTractor(m: MeshBuilder): void {
       for (const s of [-1, 1]) {
         const horn = ngon(8, 0.04, 0, s * 0.35, 4.03);
         m.sweep("alloy", "x", horn, 6.68, horn, 7.18);
-        block(m, "lampAmber", 7.68, 7.79, 3.96, 4.02, ...side(s, 0.6, 0.8));
+        block(m, "marker", 7.68, 7.79, 3.96, 4.02, ...side(s, 0.6, 0.8));
       }
     });
     m.scope("mirrors", () => {
@@ -992,7 +994,7 @@ function reeferTrailer(m: MeshBuilder): void {
     for (const z of [-0.9, -0.35, 0.35, 0.9]) block(m, "alloy", BOX_X0 - 0.04, BOX_X0 + 0.01, 1.42, 3.92, z - 0.02, z + 0.02);
     for (const s of [-1, 1]) {
       for (const y of [1.74, 2.64, 3.54]) block(m, "trim", BOX_X0 - 0.03, BOX_X0 + 0.01, y - 0.04, y + 0.04, ...side(s, 1.12, 1.235));
-      block(m, "lampAmber", BOX_X0 - 0.06, BOX_X0 - 0.01, 3.9, 3.98, ...side(s, 1.1, 1.22));
+      block(m, "marker", BOX_X0 - 0.06, BOX_X0 - 0.01, 3.9, 3.98, ...side(s, 1.1, 1.22));
     }
   });
   m.scope("underframe", () => {
@@ -1032,7 +1034,7 @@ function reeferTrailer(m: MeshBuilder): void {
     }
   });
   m.scope("side markers", () => {
-    for (const s of [-1, 1]) for (const x of [4.58, 1.98, -0.62, -3.22, -5.82, -8.2]) block(m, "lampAmber", x - 0.05, x + 0.05, 1.14, 1.2, ...side(s, 1.2, 1.26));
+    for (const s of [-1, 1]) for (const x of [4.58, 1.98, -0.62, -3.22, -5.82, -8.2]) block(m, "marker", x - 0.05, x + 0.05, 1.14, 1.2, ...side(s, 1.2, 1.26));
   });
   m.scope("rear", () => {
     block(m, "trim", -8.37, -8.21, 0.55, 0.68, -1.15, 1.15);

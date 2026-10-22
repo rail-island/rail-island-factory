@@ -35,7 +35,7 @@ const louvres: SideItem[] = ([[32, 39], [50, 57], [58, 65], [66, 73], [74, 81], 
 }));
 
 const SPEC: LocoSpec = {
-  palette: { red: c("#e81c10"), darkRed: c("#8a0a08"), louvre: c("#b01410"), yellow: c("#f0d020"), frame: c("#505154", 0.7), roof: { color: "#7e7f80", roughness: 0.75 }, plate: c("#8a0a08"), lampHead: { color: "#f6e7a8", roughness: 0.2 } },
+  palette: { red: c("#e81c10"), darkRed: c("#8a0a08"), louvre: c("#b01410"), yellow: c("#f0d020"), frame: c("#505154", 0.7), roof: { color: "#7e7f80", roughness: 0.75 }, plate: c("#8a0a08"), lampHead: { color: "#f6e7a8", roughness: 0.2, lamp: { role: "head", lit: "#ffe9a0" } } },
   y0: 1.6,
   tip: TIP,
   hw: HW,

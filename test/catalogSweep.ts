@@ -177,8 +177,9 @@ export function sweep(ids: readonly string[]): void {
             expect(kids).toEqual((n.children ?? []).map((i) => nodeNames[i]));
           });
         }
-        // a rigged model's rig rides along, as the GLB's scene extras
+        // a rigged model's rig rides along, as the GLB's scene extras; so do a vehicle's lamps
         expect(group.userData.rig).toEqual((json.scenes![0] as { extras?: { rig?: unknown } }).extras?.rig);
+        expect(group.userData.lamps).toEqual((json.scenes![0] as { extras?: { lamps?: unknown } }).extras?.lamps);
         expect(group.name).toBe(id);
         const anims = ((json as unknown as { animations?: Array<{ name: string; channels: Array<{ sampler: number; target: { node: number; path: string } }>; samplers: Array<{ input: number; output: number }> }> }).animations) ?? [];
         expect(group.animations.map((c) => c.name)).toEqual(anims.map((a) => a.name));

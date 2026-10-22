@@ -256,9 +256,11 @@ A model with animation clips (the steam locomotives' running gear) gets
 **Start** and **Stop** buttons over the preview: Start plays the clips in a loop
 with a render loop that runs only while they play, Stop halts them in place, and
 another model or parameter choice stops them
-([../models/animation.md](../models/animation.md)).
+([../models/animation.md](../models/animation.md)). A model with lamps gets a
+**Lights on / Lights off** button beside them that shows every tagged lamp lit,
+indicators blinking ([../models/lamps.md](../models/lamps.md)).
 
-`ModelViewer.tsx` (with its helpers `viewerHighlight.ts` and `modelModule.ts`, which
+`ModelViewer.tsx` (with its helpers `viewerHighlight.ts`, `viewerLamps.ts` and `modelModule.ts`, which
 fetches and builds a model's JS module with the subset of three it reads, `THREE_SUBSET`, constants such as
 `DoubleSide` included; `test/modelModule.test.ts` checks it against the builder's code), the variant thumbnail renderer (`thumbRender.ts`) and the export (`exportRun.ts`) are the only
 code importing three (plus `OrbitControls`, or the `GLTFExporter`), each reached

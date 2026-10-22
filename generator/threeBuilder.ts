@@ -6,7 +6,7 @@
 import { MeshCore } from "./meshCore.ts";
 
 export { chamferedRect, grow, ngon, rect, scaleRing } from "./meshCore.ts";
-export type { AnimationClipSpec, ClipDrive, AnimationTrack, Emitter, FountainWater, MaterialSpec, Ring, SweepAxis, WaterJet, WaterPool } from "./meshCore.ts";
+export type { AnimationClipSpec, ClipDrive, AnimationTrack, Emitter, FountainWater, LampRole, LampSpec, Lamps, MaterialSpec, Ring, SweepAxis, WaterJet, WaterPool } from "./meshCore.ts";
 
 /** The three.js namespace, or any object with the classes toGroup() uses. */
 export type ThreeNamespace = typeof import("three");
@@ -18,7 +18,8 @@ export class MeshBuilder extends MeshCore {
    * parts (see `part`) each part is a Group named after it, positioned at its
    * pivot (a child part inside its parent's Group), its meshes' positions
    * relative to that pivot. A rigged model's group carries `userData.rig`, a model
-   * that smokes `userData.emitters`, a fountain `userData.fountain`. Non-indexed
+   * that smokes `userData.emitters`, a fountain `userData.fountain`, a vehicle with
+   * lamps `userData.lamps`. Non-indexed
    * triangle soups with flat per-face normals, MeshStandardMaterial colours from
    * the palette's sRGB hex: the same data toGlb writes.
    */
@@ -86,9 +87,12 @@ export class MeshBuilder extends MeshCore {
     if (this.emitterList.length) root.userData.emitters = JSON.parse(JSON.stringify(this.emitterList));
     // a fountain's water: its pools and jets (MeshCore.pool / jet), model coordinates
     if (this.water) root.userData.fountain = JSON.parse(JSON.stringify(this.water));
-    // what plays each clip (MeshCore.clipDrives): a time loop or the distance travelled
+    // what plays each clip (MeshCore.clipDrives): a time loop, the distance travelled or a state
     const drives = this.clipDrives();
     if (drives) root.userData.clipDrives = drives;
+    // the lamp materials and where the model's ends meet (MeshCore.lamps)
+    const lamps = this.lamps();
+    if (lamps) root.userData.lamps = lamps;
     return root;
   }
 }

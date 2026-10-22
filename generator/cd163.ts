@@ -22,6 +22,7 @@ import type { CatalogFields } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
 import { CD_EMBLEM, triangulate } from "./cdLogo.ts";
 import { fitLod, LOD_GLASS, lodBands, lodBogie, lodPantograph, lodRoofBox, lodSideBox, type LodBand, type LodPart, type LodShell } from "./lodKit.ts";
+import { liftable } from "./liftable.ts";
 
 /** The catalog fields of a rail vehicle, in place of the road vehicles'. */
 export const RAIL_CATALOG: CatalogFields = {
@@ -50,8 +51,8 @@ export const CD163_PALETTE: Record<string, MaterialSpec> = {
   wheel: { color: "#46484b", metallic: 0.2, roughness: 0.6 },
   rubber: { color: "#1c1c1e", roughness: 0.95 },
   glass: { color: "#24303c", metallic: 0.2, roughness: 0.15 },
-  lampHead: { color: "#f3f5f6", roughness: 0.2 },
-  lampRed: { color: "#c8202c", roughness: 0.3 },
+  lampHead: { color: "#f3f5f6", roughness: 0.2, lamp: { role: "head" } },
+  lampRed: { color: "#c8202c", roughness: 0.3, lamp: { role: "tail" } },
   plate: { color: "#b3222c", roughness: 0.5 },
   white: { color: "#eeeeee", roughness: 0.5 },
   logo: { color: "#18181a", roughness: 0.6 },
@@ -355,6 +356,31 @@ export const letteringWidth = (text: string, w: number, gap: number): number => 
 /** A tube from (x0, y0, z0) to (x1, y1, z1), running mainly along x, its section upright. */
 export function tubeX(m: MeshBuilder, mat: string, r: number, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, n = 8): void {
   m.sweep(mat, "x", ngon(n, r, 0, z0, y0), x0, ngon(n, r, 0, z1, y1), x1);
+}
+
+/**
+ * A pantograph's push rod from the drive at `base` to the lower arm at `target(lift)`
+ * (x, y at z = 0), as the drive's cylinder and its piston rod: two rods of fixed
+ * length that overlap more or less as the arm lifts, so each moves rigidly
+ * (MeshCore.liftable). Their lengths come from the longest and shortest reach over
+ * every lift, so the pair spans the gap whatever the pose.
+ */
+export function pushRod(m: MeshBuilder, mat: string, r: number, base: [number, number], target: (lift: number) => [number, number], lift: number): void {
+  const reach = (l: number): number => {
+    const [x, y] = target(l);
+    return Math.hypot(x - base[0], y - base[1]);
+  };
+  const reaches = Array.from({ length: 17 }, (_, i) => reach(i / 16));
+  const longest = Math.max(...reaches);
+  const shortest = Math.min(...reaches);
+  const piece = Math.min(longest / 2 + 0.06, shortest * 0.95);
+  const [tx, ty] = target(lift);
+  const d = Math.hypot(tx - base[0], ty - base[1]);
+  const ux = (tx - base[0]) / d;
+  const uy = (ty - base[1]) / d;
+  // square sections, the piston's end open inside the cylinder: as few triangles as the one tube it replaced
+  m.rod(mat, [base[0], base[1], 0], [base[0] + ux * piece, base[1] + uy * piece, 0], r * 1.4, 4);
+  m.rod(mat, [tx - ux * piece, ty - uy * piece, 0], [tx, ty, 0], r, 4, false);
 }
 
 /**
@@ -885,6 +911,33 @@ function underframe(m: MeshBuilder): void {
  * nearer cab end, as on the photographs.
  */
 function pantograph(m: MeshBuilder, xc: number, h: number, raised: boolean): void {
+  if (raised) liftable(m, "pantograph", (mm, lift) => pantographAt(mm, xc, h, lift));
+  else pantographAt(m, xc, h, 0);
+}
+
+/** The knee of cd163's single-arm pantograph at `lift` (0 folded, 1 raised): circles about the hinge and the head. */
+function pantographKnee(xc: number, h: number, lift: number): { kx: number; ky: number; headY: number; hx: number } {
+  const y = PANTO_Y;
+  const xh = xc + h * 0.55; // the hinge
+  const hx = xc + h * 0.15; // keep the collector centred above its base
+  const headY = y + 0.33 + 1.10 * lift;
+  // Intersect circles about the hinge and head to unfold the linkage without
+  // stretching either arm. The upper attachment sits 20 mm above the knee.
+  const dx = hx - xh;
+  const dy = headY - 0.02 - (y + 0.11);
+  const distance = Math.hypot(dx, dy);
+  const lower2 = 1.60 ** 2 + 0.11 ** 2;
+  const upper2 = 1.20 ** 2 + 0.09 ** 2;
+  const along = (lower2 - upper2 + distance ** 2) / (2 * distance);
+  const across = Math.sqrt(Math.max(0, lower2 - along ** 2));
+  // the knee bends away from the hinge, beyond the head
+  const cands = [1, -1].map((k) => [xh + (along * dx - k * across * dy) / distance, y + 0.11 + (along * dy + k * across * dx) / distance] as const);
+  const [kx, ky] = cands.reduce((a, b) => (h * (b[0] - xh) < h * (a[0] - xh) ? b : a));
+  return { kx, ky, headY, hx };
+}
+
+/** A single-arm pantograph; h points to its hinge end; `lift` from 0 (folded) to 1 (raised). */
+function pantographAt(m: MeshBuilder, xc: number, h: number, lift: number): void {
   const y = PANTO_Y;
   m.scope("insulators", () => {
     for (const dx of [-0.55, 0.55]) for (const z of [-0.48, 0.48]) insulator(m, xc + dx, z, Y_ROOF - 0.01, y, 2);
@@ -895,37 +948,25 @@ function pantograph(m: MeshBuilder, xc: number, h: number, raised: boolean): voi
     block(m, "pantograph", ...ex(h, 0.1, 0.45).map((v) => v + xc) as [number, number], y + 0.05, y + 0.16, -0.15, 0.15); // the drive
   });
   const xh = xc + h * 0.55; // the hinge
-  const hx = xc + h * 0.15; // keep the collector centred above its base
-  const headY = y + 0.33 + (raised ? 1.10 : 0);
-  let kx = xc - h * 1.05;
-  let ky = y + 0.22;
-  if (raised) {
-    // Intersect circles about the hinge and head to unfold the linkage without
-    // stretching either arm. The upper attachment sits 20 mm above the knee.
-    const dx = -0.40;
-    const dy = headY - 0.02 - (y + 0.11);
-    const distance = Math.hypot(dx, dy);
-    const lower2 = 1.60 ** 2 + 0.11 ** 2;
-    const upper2 = 1.20 ** 2 + 0.09 ** 2;
-    const along = (lower2 - upper2 + distance ** 2) / (2 * distance);
-    const across = Math.sqrt(lower2 - along ** 2);
-    kx = xh + h * (along * dx - across * dy) / distance;
-    ky = y + 0.11 + (along * dy + across * dx) / distance;
-  }
+  const { kx, ky, headY, hx } = pantographKnee(xc, h, lift);
   m.scope("arms", () => {
     for (const s of [-1, 1]) block(m, "pantograph", xh - 0.04, xh + 0.04, y + 0.04, y + 0.14, ...side(s, 0.36, 0.44));
     const shaft = ngon(8, 0.035, 0, xh, y + 0.11);
     m.sweep("pantograph", "z", shaft, -0.42, shaft, 0.42);
     // the lower arm: an A-frame from the hinge shaft to the knee
     m.scope("lower arms", () => {
-      for (const s of [-1, 1]) tubeX(m, "pantograph", 0.04, xh, y + 0.11, s * 0.3, kx, ky, s * 0.04);
+      for (const s of [-1, 1]) m.rod("pantograph", [xh, y + 0.11, s * 0.3], [kx, ky, s * 0.04], 0.04);
     });
-    tubeX(m, "pantograph", 0.016, xc + h * 0.68, y + 0.08, 0, kx + h * 0.1, ky - 0.03, 0, 6); // the push rod
+    // the push rod, from the drive to the lower arm by the knee
+    pushRod(m, "pantograph", 0.016, [xc + h * 0.68, y + 0.08], (l) => {
+      const k = pantographKnee(xc, h, l);
+      return [k.kx + (xh - k.kx) * 0.07, k.ky - 0.03 + (y + 0.11 - k.ky) * 0.07];
+    }, lift);
     const knee = ngon(8, 0.05, 0, kx, ky + 0.005);
     m.sweep("pantograph", "z", knee, -0.08, knee, 0.08);
     // the upper arm: two tubes spreading from the knee to the head
     m.scope("upper arms", () => {
-      for (const s of [-1, 1]) tubeX(m, "pantograph", 0.026, kx, ky + 0.02, s * 0.04, hx, headY, s * 0.32);
+      for (const s of [-1, 1]) m.rod("pantograph", [kx, ky + 0.02, s * 0.04], [hx, headY, s * 0.32], 0.026);
     });
   });
   m.scope("head", () => {

@@ -60,9 +60,9 @@ export const CLASSIC_PALETTE: Record<string, MaterialSpec> = {
   insulator: { color: "#8a4a26", roughness: 0.4 },
   coupler: { color: "#3a3c3f", metallic: 0.3, roughness: 0.5 },
   motor: { color: "#2e3033", roughness: 0.8 },
-  lampWhite: { color: "#f3f5f6", roughness: 0.2 },
-  lampRed: { color: "#c8202c", roughness: 0.3 },
-  lampYellow: { color: "#f2c230", roughness: 0.3 },
+  lampWhite: { color: "#f3f5f6", roughness: 0.2, lamp: { role: "head" } },
+  lampRed: { color: "#c8202c", roughness: 0.3, lamp: { role: "tail" } },
+  lampYellow: { color: "#f2c230", roughness: 0.3, lamp: { role: "head", lit: "#ffd75a" } },
   lettering: { color: "#f2f2f2", roughness: 0.5 },
   letteringDark: { color: "#202020", roughness: 0.5 },
 };

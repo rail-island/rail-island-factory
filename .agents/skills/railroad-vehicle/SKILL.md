@@ -245,7 +245,15 @@ parked, maintenance or other operating state overrides this default.
    document a plausible display height. CD 163 currently reaches 5.74 m with
    its active collector, while the folded head is at 4.64 m. Those are model
    choices, not a universal contact-wire specification.
-5. Test that there are two pantographs, exactly one raised, one folded, a level
+5. Draw the raised pantograph as a `liftable` mechanism (`generator/liftable.ts`,
+   docs/models/animation.md): a function of the lift from 0 (folded) to 1
+   (raised) wrapped in `liftable(m, "pantograph", ...)`, so the game can lower and
+   raise it. Draw every arm with `m.rod` (never a `sweep` or `tubeX`, whose end
+   rings stay vertical and stretch the arm as it tilts), find the knee by
+   intersecting circles at every lift, and draw a push rod with `pushRod`. Reuse
+   `singleArm`/`diamond` (`czElectricKit.ts`) or `emuParts.pantograph` when they fit.
+   `test/pantographs.test.ts` checks every design folded and raised.
+6. Test that there are two pantographs, exactly one raised, one folded, a level
    contact head and connected arms. Check fixed equipment against the 4.7 m
    envelope and the whole model against the separate operating limit (currently
    6.5 m in repository tests). Never weaken the fixed-body check just to let a

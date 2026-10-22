@@ -25,6 +25,44 @@ export interface MaterialSpec {
   roughness?: number;
   /** Shade both faces: single-layer geometry such as a palm frond (GLB `doubleSided`). */
   doubleSided?: boolean;
+  /** The material is a vehicle lamp's lens: what it does and how it shines when lit (see LampSpec). */
+  lamp?: LampSpec;
+}
+
+/**
+ * What a lamp does on a vehicle (docs/models/lamps.md): `head` - a head or marker
+ * lamp, white or yellow; `tail` - a red tail lamp; `brake` - a red brake lamp;
+ * `indicator` - an amber direction indicator. A consumer splits a lamp material's
+ * triangles by the model's end (`Lamps.midX`) and, for an indicator, by side.
+ */
+export type LampRole = "head" | "tail" | "brake" | "indicator";
+
+export interface LampSpec {
+  role: LampRole;
+  /** sRGB hex the lit lamp glows in; the role's default when absent (LAMP_LIT). */
+  lit?: string;
+  /** How bright it glows, an emissive intensity; the role's default when absent. */
+  intensity?: number;
+}
+
+/** A role's lit colour and intensity when the palette entry states none. */
+export const LAMP_LIT: Readonly<Record<LampRole, { lit: string; intensity: number }>> = {
+  head: { lit: "#fff6e0", intensity: 1.6 },
+  tail: { lit: "#ff2a1c", intensity: 1.2 },
+  brake: { lit: "#ff1a10", intensity: 2.2 },
+  indicator: { lit: "#ffa21c", intensity: 2 },
+};
+
+/**
+ * The lamps of a model, as the GLB's scene extras and the JS group's `userData`
+ * carry them: per lamp material its role, lit colour and intensity, and `midX`, the
+ * middle of the model's length -- a lamp triangle whose centroid lies at x >= midX
+ * is at the front end (+X, the factory's forward), else at the rear; an indicator
+ * at z < 0 is on the left, else on the right.
+ */
+export interface Lamps {
+  midX: number;
+  materials: Record<string, { role: LampRole; lit: string; intensity: number }>;
 }
 
 export type Vec3 = [number, number, number];
@@ -98,9 +136,11 @@ export interface FountainWater {
  * at its own duration, whatever the model is doing (a wind turbine's rotor);
  * `distance` ties it to how far the model travels - one loop per `speed` m/s times
  * the clip's duration in metres, so it is played at `timeScale = speed / this.speed`
- * (signed: backwards in reverse, still when the vehicle stands).
+ * (signed: backwards in reverse, still when the vehicle stands); `state` is a pose
+ * between two states the consumer scrubs to (a pantograph from folded, the clip's
+ * start, to raised, its end), easing the value itself.
  */
-export type ClipDrive = { drive: "time" } | { drive: "distance"; speed: number };
+export type ClipDrive = { drive: "time" } | { drive: "distance"; speed: number } | { drive: "state" };
 
 /** A looping animation of a model's parts: shared sample times from 0, linear in between. */
 export interface AnimationClipSpec {
@@ -175,7 +215,14 @@ export class MeshCore {
    * The named parts in drawing order; `parent` indexes this list, -1 for a
    * top-level part. A `bogie` part is a rail bogie (see `bogie`): always top level.
    */
-  protected readonly parts: Array<{ name: string; pivot: Vec3; parent: number; bogie?: boolean }> = [];
+  protected readonly parts: Array<{ name: string; pivot: Vec3; parent: number; bogie?: boolean; moving?: boolean }> = [];
+  /**
+   * While `liftable` draws its rest pose: the part each triangle goes to, per
+   * material in drawing order (a triangle routed to -1 stays in the current part).
+   */
+  private triRoute: { parts: Map<string, number[]>; next: Map<string, number> } | null = null;
+  /** How many liftable mechanisms were drawn, for their part and clip names. */
+  private liftables = 0;
   /** The rig the design set (see `rig`). */
   private ownRig: VehicleRig | null = null;
   /**
@@ -403,7 +450,7 @@ export class MeshCore {
     if (this.clips.some((c) => c.name === clip.name)) throw new Error(`animation "${clip.name}" added twice`);
     const t = clip.times;
     if (t.length < 2 || t[0] !== 0 || t.some((v, i) => i > 0 && v <= t[i - 1]!)) throw new Error(`animation "${clip.name}": times must start at 0 and rise`);
-    if (clip.drive?.drive !== "time" && !(clip.drive?.drive === "distance" && clip.drive.speed > 0)) throw new Error(`animation "${clip.name}": drive must be time, or distance with a positive speed`);
+    if (clip.drive?.drive !== "time" && clip.drive?.drive !== "state" && !(clip.drive?.drive === "distance" && clip.drive.speed > 0)) throw new Error(`animation "${clip.name}": drive must be time, state, or distance with a positive speed`);
     for (const track of clip.tracks) {
       if (!this.parts.some((p) => p.name === track.node)) throw new Error(`animation "${clip.name}": no part "${track.node}"`);
       if (/[\s.:/\[\]]/.test(track.node)) throw new Error(`animated part "${track.node}" has a name three.js cannot bind`);
@@ -479,8 +526,86 @@ export class MeshCore {
   clipDrives(): Record<string, ClipDrive> | null {
     if (!this.clips.length) return null;
     const out: Record<string, ClipDrive> = {};
-    for (const c of this.clips) out[c.name] = c.drive.drive === "time" ? { drive: "time" } : { drive: "distance", speed: c.drive.speed };
+    for (const c of this.clips) out[c.name] = c.drive.drive === "distance" ? { drive: "distance", speed: c.drive.speed } : { drive: c.drive.drive };
     return out;
+  }
+
+  /**
+   * The model's lamps (see Lamps), or null for a model that drew no lamp material.
+   * `midX` is the middle of everything drawn along x, rounded to the millimetre.
+   */
+  lamps(): Lamps | null {
+    const materials: Lamps["materials"] = {};
+    for (const mat of [...this.groups.keys()].sort()) {
+      const spec = this.palette[mat]?.lamp;
+      if (!spec) continue;
+      const d = LAMP_LIT[spec.role];
+      materials[mat] = { role: spec.role, lit: spec.lit ?? d.lit, intensity: spec.intensity ?? d.intensity };
+    }
+    if (!Object.keys(materials).length) return null;
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (const g of this.groups.values()) {
+      for (let i = 0; i < g.pos.length; i += 3) {
+        if (g.pos[i]! < lo) lo = g.pos[i]!;
+        if (g.pos[i]! > hi) hi = g.pos[i]!;
+      }
+    }
+    return { midX: round3((lo + hi) / 2) + 0, materials }; // + 0: never -0, which JSON would not keep
+  }
+
+  /**
+   * For `liftable` (liftable.ts): every triangle corner `draw` would draw, per
+   * material, drawn into a scratch builder of this class with this palette and
+   * the current frame (a `turned` car's), leaving this model untouched.
+   */
+  sampleDraw(draw: (m: this) => void): Map<string, number[]> {
+    const scratch = new (this.constructor as new (p: Record<string, MaterialSpec>) => this)(this.palette);
+    scratch.frame = this.frame;
+    draw(scratch);
+    return new Map([...scratch.groups].map(([mat, g]) => [mat, g.pos]));
+  }
+
+  /**
+   * For `liftable`: adds a moving part (a child of the part being drawn, if any)
+   * pivoted at `pivot`, which may stand beside a body drawn outside any part, as
+   * a bogie does; returns its index and its parent's pivot.
+   */
+  movingPart(name: string, pivot: Vec3): { index: number; parentPivot: Vec3 } {
+    if (this.parts.some((p) => p.name === name)) throw new Error(`part "${name}" drawn twice`);
+    const parent = this.currentPart;
+    this.parts.push({ name, pivot, parent, moving: true });
+    return { index: this.parts.length - 1, parentPivot: parent >= 0 ? this.parts[parent]!.pivot : [0, 0, 0] };
+  }
+
+  /**
+   * For `liftable`: runs `draw` with every triangle it draws sent to the part
+   * `route` names for it -- per material, in drawing order; -1 keeps the current part.
+   */
+  drawRouted(route: Map<string, number[]>, draw: () => void): void {
+    if (this.drawing || this.triRoute) throw new Error("drawRouted() inside a primitive call or another routed draw");
+    this.triRoute = { parts: route, next: new Map() };
+    try {
+      draw();
+    } finally {
+      this.triRoute = null;
+    }
+  }
+
+  /** For `liftable`: numbers the mechanisms of one model, 1, 2, ... */
+  nextLiftable(): number {
+    return ++this.liftables;
+  }
+
+  /** The part the next triangle of `mat` goes to: the current one, or `liftable`'s routing. */
+  private routedPart(mat: string): number {
+    const route = this.triRoute;
+    if (!route) return this.currentPart;
+    const i = route.next.get(mat) ?? 0;
+    route.next.set(mat, i + 1);
+    const part = route.parts.get(mat)?.[i];
+    if (part === undefined) throw new Error("a routed draw drew differently from its sample");
+    return part >= 0 ? part : this.currentPart;
   }
 
   /**
@@ -493,7 +618,7 @@ export class MeshCore {
   protected outputUnits(name: string): Array<{ name: string; pivot: Vec3; index: number }> {
     if (!this.parts.length) return [{ name, pivot: [0, 0, 0], index: -1 }];
     const loose = [...this.groups.values()].some((g) => g.part.includes(-1));
-    if (loose && this.parts.some((p) => !p.bogie)) throw new Error("a model with parts drew a triangle outside any part");
+    if (loose && this.parts.some((p) => !p.bogie && !p.moving)) throw new Error("a model with parts drew a triangle outside any part");
     const parts = this.parts.map((p, index) => ({ name: p.name, pivot: p.pivot, index }));
     return loose ? [{ name, pivot: [0, 0, 0], index: -1 }, ...parts] : parts;
   }
@@ -519,7 +644,7 @@ export class MeshCore {
     const colors = this.pendingColors;
     if (colors && !g.col) g.col = new Array<number>(g.pos.length).fill(1);
     if (g.col) for (let k = 0; k < 3; k++) g.col.push(...(colors ? colors[k]! : [1, 1, 1] as Vec3));
-    g.part.push(this.currentPart);
+    g.part.push(this.routedPart(mat));
     g.scope.push(this.lodScope);
     for (const p of [a, b, c]) {
       g.pos.push(p[0], p[1], p[2]);
@@ -708,6 +833,44 @@ export class MeshCore {
         this.orientedQuad(mat, P(ro, a, a1), P(ro, b, a1), P(ri, b, a1), P(ri, a, a1), along);
         this.orientedQuad(mat, P(ro, a, a0), P(ro, b, a0), P(ri, b, a0), P(ri, a, a0), [-along[0], -along[1], -along[2]]);
       }
+    }
+  }
+
+  /**
+   * A round rod of radius `r` from `a` to `b` with `n` sides and flat ends: its rings
+   * stand square to its axis, oriented by the axis and +Z alone, so turning the rod
+   * about a Z axis moves it rigidly -- a pantograph arm (`liftable`) keeps its shape
+   * at every lift. Unlike a `sweep` along x, the ends are not cut vertically.
+   * `ends: false` leaves both ends open (a rod end hidden inside another).
+   */
+  rod(mat: string, a: Vec3, b: Vec3, r: number, n = 8, ends = true): void {
+    const d: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+    const len = Math.hypot(d[0], d[1], d[2]);
+    if (len < 1e-9) return;
+    for (let k = 0; k < 3; k++) d[k] /= len;
+    // +Z with its part along the axis removed; +X for a rod along Z
+    const ref: Vec3 = Math.abs(d[2]) > 0.999 ? [1, 0, 0] : [0, 0, 1];
+    const along = ref[0] * d[0] + ref[1] * d[1] + ref[2] * d[2];
+    const side: Vec3 = [ref[0] - along * d[0], ref[1] - along * d[1], ref[2] - along * d[2]];
+    const sl = Math.hypot(side[0], side[1], side[2]);
+    for (let k = 0; k < 3; k++) side[k] /= sl;
+    const third: Vec3 = [d[1] * side[2] - d[2] * side[1], d[2] * side[0] - d[0] * side[2], d[0] * side[1] - d[1] * side[0]];
+    const ring = (o: Vec3): Vec3[] => Array.from({ length: n }, (_, i) => {
+      const f = (i / n) * Math.PI * 2;
+      const c = Math.cos(f) * r;
+      const s = Math.sin(f) * r;
+      return [o[0] + c * side[0] + s * third[0], o[1] + c * side[1] + s * third[1], o[2] + c * side[2] + s * third[2]];
+    });
+    const ra = ring(a);
+    const rb = ring(b);
+    for (let i = 0; i < n; i++) {
+      const j = (i + 1) % n;
+      this.quad(mat, ra[i]!, ra[j]!, rb[j]!, rb[i]!);
+    }
+    if (!ends) return;
+    for (let i = 1; i < n - 1; i++) {
+      this.tri(mat, rb[0]!, rb[i]!, rb[i + 1]!);
+      this.tri(mat, ra[0]!, ra[i + 1]!, ra[i]!);
     }
   }
 

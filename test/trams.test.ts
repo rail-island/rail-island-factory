@@ -177,8 +177,12 @@ describe("the pantographs", () => {
       const raised = heads.filter((h) => h.head > 5);
       expect(raised).toHaveLength(1);
       expect(Math.abs(raised[0]!.head - TRAM_WIRE)).toBeLessThan(0.02);
-      // a second collector (the KT8D5's rear one) is folded down on its roof
-      for (const h of heads.filter((x) => x.head <= 5)) expect(h.head).toBeLessThan(4.0);
+      // a second collector (the KT8D5's rear one) is folded down on its roof, as low
+      // as its fixed frames allow (tramKit diamondFolded), and well below the raised one
+      for (const h of heads.filter((x) => x.head <= 5)) {
+        expect(h.head).toBeLessThan(4.2);
+        expect(raised[0]!.head - h.head).toBeGreaterThan(1.2);
+      }
       expect(heads.length).toBe(id === "proc-vehicle-tatra-kt8" ? 2 : 1);
     },
   );

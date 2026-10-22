@@ -119,8 +119,8 @@ const PALETTE: Record<string, MaterialSpec> = {
   coupler: { color: "#3a3c3f", metallic: 0.3, roughness: 0.5 },
   motor: { color: "#2e3033", roughness: 0.8 },
   rubber: { color: "#1c1c1e", roughness: 0.95 },
-  lampWhite: { color: "#f3f5f6", roughness: 0.2 },
-  lampRed: { color: "#c8202c", roughness: 0.3 },
+  lampWhite: { color: "#f3f5f6", roughness: 0.2, lamp: { role: "head" } },
+  lampRed: { color: "#c8202c", roughness: 0.3, lamp: { role: "tail" } },
 };
 
 export type PxBox = [number, number, number, number];

@@ -16,7 +16,7 @@ import { slug, type ArgValue, type NodeExtent, type PrimitiveKind, type ScopeNod
 import { MeshCore, type Ring, type SweepAxis, type Vec3 } from "./meshCore.ts";
 
 export { chamferedRect, grow, ngon, rect, scaleRing } from "./meshCore.ts";
-export type { AnimationClipSpec, AnimationTrack, MaterialSpec, Ring, SweepAxis } from "./meshCore.ts";
+export type { AnimationClipSpec, AnimationTrack, LampSpec, Lamps, MaterialSpec, Ring, SweepAxis } from "./meshCore.ts";
 
 interface RawLeaf {
   kind: PrimitiveKind;
@@ -138,6 +138,10 @@ export class MeshBuilder extends MeshCore {
     );
   }
 
+  override rod(mat: string, a: Vec3, b: Vec3, r: number, n = 8, ends = true): void {
+    this.leaf("rod", mat, () => ({ a, b, r, n, ends }), () => super.rod(mat, a, b, r, n, ends));
+  }
+
   override box(mat: string, cx: number, cz: number, w: number, d: number, y0: number, y1: number, ry = 0, top = true): void {
     this.leaf("box", mat, () => ({ cx, cz, w, d, y0, y1, ry, top }), () => super.box(mat, cx, cz, w, d, y0, y1, ry, top));
   }
@@ -226,7 +230,7 @@ export class MeshBuilder extends MeshCore {
    * non-indexed triangle soups with flat per-face normals. A model with a rig
    * carries it as the scene's `extras.rig` (three's GLTFLoader: `scene.userData.rig`),
    * a model that smokes its emitters as `extras.emitters`, a fountain its water as
-   * `extras.fountain`.
+   * `extras.fountain`, a vehicle's lamps as `extras.lamps`.
    * Animation clips (see `animate`) become glTF animations of the part nodes,
    * linearly interpolated, and what plays each is the scene's `extras.clipDrives`.
    */
@@ -234,7 +238,7 @@ export class MeshBuilder extends MeshCore {
     type Json = {
       asset: { version: string; generator: string };
       scene: number;
-      scenes: Array<{ nodes: number[]; extras?: { rig?: unknown; emitters?: unknown; fountain?: unknown; clipDrives?: unknown } }>;
+      scenes: Array<{ nodes: number[]; extras?: { rig?: unknown; emitters?: unknown; fountain?: unknown; clipDrives?: unknown; lamps?: unknown } }>;
       nodes: Array<{ mesh: number; name: string; translation?: Vec3; children?: number[] }>;
       meshes: Array<{ name: string; primitives: unknown[] }>;
       materials: unknown[];
@@ -248,12 +252,13 @@ export class MeshBuilder extends MeshCore {
     const units = this.outputUnits(name);
     const nodeOf = (part: number): number => units.findIndex((u) => u.index === part);
     const drives = this.clipDrives();
+    const lamps = this.lamps();
     const json: Json = {
       asset: { version: "2.0", generator },
       scene: 0,
       scenes: [{
         nodes: units.map((_, i) => i).filter((i) => units[i]!.index < 0 || this.parts[units[i]!.index]!.parent < 0),
-        ...(this.rig || this.emitterList.length || this.water || drives ? { extras: { ...(this.rig ? { rig: this.rig } : {}), ...(this.emitterList.length ? { emitters: this.emitterList } : {}), ...(this.water ? { fountain: this.water } : {}), ...(drives ? { clipDrives: drives } : {}) } } : {}),
+        ...(this.rig || this.emitterList.length || this.water || drives || lamps ? { extras: { ...(this.rig ? { rig: this.rig } : {}), ...(this.emitterList.length ? { emitters: this.emitterList } : {}), ...(this.water ? { fountain: this.water } : {}), ...(drives ? { clipDrives: drives } : {}), ...(lamps ? { lamps } : {}) } } : {}),
       }],
       nodes: units.map((u, i) => {
         if (u.index < 0) return { mesh: i, name: u.name };

@@ -18,6 +18,10 @@
 // loop only while it plays; Stop halts it where it is. A new model or parameter
 // choice stops the animation.
 //
+// A vehicle with lamps (userData.lamps, docs/models/lamps.md) gets a Lights
+// button that shows every tagged lamp lit, indicators blinking, so a design's
+// tagging can be checked by eye (viewerLamps.ts).
+//
 // A rigged vehicle (steered wheels, an articulated body) is posed from the page's
 // sliders through its JS module's pose() -- the same code the game is to call.
 //
@@ -37,6 +41,7 @@ import { posePreview, previewKey, type CatalogRecord, type PreviewLod } from "./
 import { jsModule, loadModel } from "./modelModule";
 import { leafAt, rangesOf, type TreeIndex } from "./sourceTreeView";
 import { applyHighlight, makeParts, type Part } from "./viewerHighlight";
+import { applyLamps, disposeLamps, lampsOf, type Lamp } from "./viewerLamps";
 
 function disposeModel(obj: Object3D): void {
   obj.traverse((o) => {
@@ -94,6 +99,35 @@ export function ModelViewer(props: {
   let mixer: AnimationMixer | null = null;
   let animRaf = 0;
   let lastFrame = 0;
+  // The current model's lamps, and whether the Lights button has them lit.
+  let lamps: Lamp[] = [];
+  const [lampCount, setLampCount] = createSignal(0);
+  const [lightsOn, setLightsOn] = createSignal(false);
+  let blinkRaf = 0;
+  let blinkStart = 0;
+  // Only indicators change while lit, so the loop runs only for a model that has one.
+  const blink = (now: number) => {
+    blinkRaf = requestAnimationFrame(blink);
+    if (!props.selected) applyLamps(lamps, true, (now - blinkStart) / 1000);
+    render();
+  };
+  const stopBlink = () => {
+    if (blinkRaf) cancelAnimationFrame(blinkRaf);
+    blinkRaf = 0;
+  };
+  const showLamps = () => {
+    stopBlink();
+    if (!props.selected) applyLamps(lamps, lightsOn());
+    if (lightsOn() && lamps.some((l) => l.role === "indicator")) {
+      blinkStart = performance.now();
+      blinkRaf = requestAnimationFrame(blink);
+    }
+    render();
+  };
+  const toggleLights = () => {
+    setLightsOn(!lightsOn());
+    showLamps();
+  };
 
   const tick = (now: number) => {
     animRaf = requestAnimationFrame(tick);
@@ -214,6 +248,10 @@ export function ModelViewer(props: {
       controls?.removeEventListener("change", render);
       controls?.dispose();
       if (current) applyHighlight(parts, null);
+      stopBlink();
+      applyLamps(lamps, false);
+      disposeLamps(lamps);
+      lamps = [];
       disposeParts();
       if (current) disposeModel(current);
       renderer?.dispose();
@@ -241,6 +279,9 @@ export function ModelViewer(props: {
         if (current) {
           scene.remove(current);
           applyHighlight(parts, null); // hand the built materials back, so dispose finds them
+          stopBlink();
+          applyLamps(lamps, false);
+          disposeLamps(lamps);
           disposeParts();
           disposeModel(current);
         }
@@ -253,7 +294,10 @@ export function ModelViewer(props: {
         currentKey = key;
         setClips(loadedClips);
         parts = makeParts(group);
+        lamps = lampsOf(group);
+        setLampCount(lamps.length);
         scene.add(group);
+        showLamps();
         if (framed === record.id) {
           setLoaded((n) => n + 1);
           render();
@@ -323,20 +367,29 @@ export function ModelViewer(props: {
     // a tree for another model (one still loading after a step) highlights nothing
     const live = index && index.tree.id === props.record.id && id != null && index.byId.has(id);
     applyHighlight(parts, live ? rangesOf(index, id) : null);
+    // a highlight shows the built materials; without one the lamps are as the button says
+    if (!live && lightsOn()) applyLamps(lamps, true, blinkRaf ? (performance.now() - blinkStart) / 1000 : 0);
     render();
   });
 
   return (
     <div class="factory-viewer" ref={pane}>
       <canvas ref={canvas} class="factory-viewer__canvas" />
-      <Show when={clips().length > 0}>
-        <div class="factory-viewer__controls" role="group" aria-label="Animation">
-          <button type="button" class="factory-btn" onClick={start} disabled={running()}>
-            Start
-          </button>
-          <button type="button" class="factory-btn" onClick={stop} disabled={!running()}>
-            Stop
-          </button>
+      <Show when={clips().length > 0 || lampCount() > 0}>
+        <div class="factory-viewer__controls" role="group" aria-label="Animation and lights">
+          <Show when={clips().length > 0}>
+            <button type="button" class="factory-btn" onClick={start} disabled={running()}>
+              Start
+            </button>
+            <button type="button" class="factory-btn" onClick={stop} disabled={!running()}>
+              Stop
+            </button>
+          </Show>
+          <Show when={lampCount() > 0}>
+            <button type="button" class="factory-btn" onClick={toggleLights} aria-pressed={lightsOn()}>
+              {lightsOn() ? "Lights off" : "Lights on"}
+            </button>
+          </Show>
         </div>
       </Show>
       <Show when={busy()}>

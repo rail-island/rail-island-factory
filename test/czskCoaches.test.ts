@@ -164,9 +164,9 @@ describe("Czech and Slovak coaches (CD Y, ZSR, UIC-Z)", () => {
   it("keeps the CD UIC-Z coaches byte for byte under the operator parameter", () => {
     const d = design("proc-vehicle-uic-z-coach");
     const sha = (p?: Record<string, string>) => createHash("sha256").update(d.build(p).toGlb(d.title)).digest("hex");
-    expect(sha()).toBe("6b75e8d1a867b5c31707861f807412e388cc5373e4192e8c4828f99b8fdfb03f");
-    expect(sha({ variant: "firstClass", operator: "cd" })).toBe("ef6864473dd363db5a728011dcd8a31c32d9a48490d33d09a9d1eba5bc6d682a");
-    expect(sha({ variant: "restaurant" })).toBe("60914904481a24010c842eaa628faec4ddbdb74d99f47eb01f4804595701c2b4");
+    expect(sha()).toBe("b67346cecccdbb6724f1a16946ba31561bb4ed4ee1bbbf64a9155ef989c91a88");
+    expect(sha({ variant: "firstClass", operator: "cd" })).toBe("36f777362c4aaf119930a56dc24b74c6f6afe3464e906055a2c4f07202a6f20b");
+    expect(sha({ variant: "restaurant" })).toBe("f2fd0c259c2f1cb2408ce0d3c457d5aba5bbb773ab1ea9a227f872a9597f7de4");
     expect(sha({ operator: "db" })).not.toBe(sha());
     expect(() => d.build({ operator: "sncf" })).toThrow(/no value "sncf"/);
   });

@@ -25,6 +25,7 @@ import {
   type LodPart, type LodShell,
 } from "./lodKit.ts";
 import { CD163_PALETTE, bandAt, coil, lettering, letteringWidth, runningNumber, tubeX, type Band } from "./cd163.ts";
+import { liftable } from "./liftable.ts";
 
 const c = (color: string, roughness = 0.5): MaterialSpec => ({ color, metallic: 0.1, roughness });
 
@@ -701,7 +702,13 @@ const PANTO_ARM = 1.3;
 const PANTO_A = 0.3; // the pivots' distance from the pantograph's centre
 /** The diamond (rhombic) pantograph of the native pant2 component: four arm pairs about two knees. */
 function pantograph(m: MeshBuilder, xc: number, raised: boolean): void {
-  const h = raised ? 1.52 : 0.2; // raised: the collector at 5.87 m
+  if (raised) liftable(m, "pantograph", (mm, lift) => pantographAt(mm, xc, lift));
+  else pantographAt(m, xc, 0);
+}
+
+/** The diamond pantograph at `lift`, 0 folded to 1 raised: every arm keeps its length. */
+function pantographAt(m: MeshBuilder, xc: number, lift: number): void {
+  const h = 0.2 + 1.32 * lift; // raised: the collector at 5.87 m
   const w = PANTO_A + Math.sqrt(PANTO_ARM * PANTO_ARM - (h / 2) * (h / 2) - 0.01);
   const top = PANTO_BASE + h;
   m.scope("base", () => {
@@ -713,8 +720,8 @@ function pantograph(m: MeshBuilder, xc: number, raised: boolean): void {
     for (const k of [-1, 1])
       for (const s of [-1, 1]) {
         // the lower arm from the base pivot out to the knee, the upper arm back in to the head
-        tubeX(m, "pantograph", 0.03, xc + k * PANTO_A, PANTO_BASE, s * 0.42, xc + k * w, PANTO_BASE + h / 2, s * 0.32);
-        tubeX(m, "pantograph", 0.025, xc + k * w, PANTO_BASE + h / 2, s * 0.32, xc + k * PANTO_A, top, s * 0.22);
+        m.rod("pantograph", [xc + k * PANTO_A, PANTO_BASE, s * 0.42], [xc + k * w, PANTO_BASE + h / 2, s * 0.32], 0.03);
+        m.rod("pantograph", [xc + k * w, PANTO_BASE + h / 2, s * 0.32], [xc + k * PANTO_A, top, s * 0.22], 0.025);
       }
   });
   m.scope("head", () => {

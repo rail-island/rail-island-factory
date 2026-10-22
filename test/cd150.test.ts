@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { cd150, CD150_NUMBER } from "../generator/cd150.ts";
 import { cd150Comparison } from "../generator/cd150Comparison.ts";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles.ts";
+import { rodEnds } from "./rodEnds.ts";
 import {
   isLeaf,
   type TreeNode,
@@ -91,23 +92,8 @@ describe("CD 150 transfer", () => {
         const ps = tris
           .slice(n.tri[0], n.tri[0] + n.tri[1])
           .flatMap((t) => t.p);
-        return [
-          Math.min(...ps.map((p) => p[0])),
-          Math.max(...ps.map((p) => p[0])),
-        ].map((x) => {
-          const unique = new Map(
-            ps
-              .filter((p) => Math.abs(p[0] - x) < 1e-5)
-              .map((p) => [p.join(","), p]),
-          );
-          const pts = [...unique.values()];
-          return [
-            x,
-            ...[1, 2].map(
-              (k) => pts.reduce((sum, p) => sum + p[k]!, 0) / pts.length,
-            ),
-          ];
-        });
+        expect(n.kind).toBe("rod");
+        return rodEnds(ps, n.args.a as number[], n.args.b as number[]);
       });
       for (const [a, b] of ends)
         lengths.push(Math.hypot(...a!.map((v, i) => v - b![i]!)));

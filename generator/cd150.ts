@@ -22,6 +22,7 @@ import {
   tubeX,
   type Band,
 } from "./cd163.ts";
+import { liftable } from "./liftable.ts";
 
 const PALETTE = {
   ...CD163_PALETTE,
@@ -728,9 +729,20 @@ function pantograph(
   h: number,
   raised: boolean,
 ): void {
+  if (raised) liftable(m, "pantograph", (mm, lift) => pantographAt(mm, xc, h, lift));
+  else pantographAt(m, xc, h, 0);
+}
+
+/** The pantograph at `lift`, 0 folded to 1 raised: the arms keep their length in every pose. */
+function pantographAt(
+  m: MeshBuilder,
+  xc: number,
+  h: number,
+  lift: number,
+): void {
   const base = 4.35,
     arm = 1.66,
-    rise = raised ? 0.92 : 0.12;
+    rise = 0.12 + 0.8 * lift;
   const dx = Math.sqrt(arm * arm - rise * rise),
     hinge = xc + h * 0.65,
     knee = hinge - h * dx;
@@ -753,28 +765,8 @@ function pantograph(
   });
   m.scope("arms", () => {
     for (const s of [-1, 1]) {
-      tubeX(
-        m,
-        "pantograph",
-        0.035,
-        hinge,
-        base,
-        s * 0.46,
-        knee,
-        base + rise,
-        s * 0.2,
-      );
-      tubeX(
-        m,
-        "pantograph",
-        0.028,
-        knee,
-        base + rise,
-        s * 0.2,
-        hinge,
-        base + 2 * rise,
-        s * 0.46,
-      );
+      m.rod("pantograph", [hinge, base, s * 0.46], [knee, base + rise, s * 0.2], 0.035);
+      m.rod("pantograph", [knee, base + rise, s * 0.2], [hinge, base + 2 * rise, s * 0.46], 0.028);
     }
   });
   m.scope("head", () => {

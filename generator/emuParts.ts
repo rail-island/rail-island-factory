@@ -8,8 +8,9 @@
 import { ngon, type MeshBuilder, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { block, side } from "./vehicleParts.ts";
-import { tubeX } from "./cd163.ts";
+import { pushRod } from "./cd163.ts";
 import type { CatalogFields, ParamSpec } from "./design.ts";
+import { liftable } from "./liftable.ts";
 
 /** The catalog fields of an electric multiple unit's cars: a powered unit that carries passengers. */
 export const EMU_CATALOG: CatalogFields = {
@@ -76,11 +77,38 @@ export interface PantographSpec {
  * head, so neither arm stretches (as cd163.ts does). Returns the head's height.
  */
 export function pantograph(m: MeshBuilder, p: PantographSpec): number {
+  if (p.raised) liftable(m, "pantograph", (mm, lift) => pantographAt(mm, p, lift));
+  else pantographAt(m, p, 0);
+  return pantographPose(p, p.raised ? 1 : 0).headY + 0.07;
+}
+
+/** The hinge, knee and head of the pantograph at `lift` (0 folded, 1 raised). */
+function pantographPose(p: PantographSpec, lift: number): { xh: number; hingeY: number; kx: number; ky: number; hx: number; headY: number } {
   const h = p.hinge;
   const xc = p.x;
   const y = p.roof + 0.2;
   const L1 = p.lower ?? 1.6;
   const L2 = p.upper ?? 1.2;
+  const xh = xc + h * 0.55;
+  const hx = xc + h * 0.1;
+  const headY = y + 0.3 + (p.rise ?? 1.1) * lift;
+  const hingeY = y + 0.11;
+  // local u runs from the hinge toward the head, v up from the hinge shaft
+  const du = h * (xh - hx);
+  const dv = headY - 0.02 - hingeY;
+  const distance = Math.hypot(du, dv);
+  const along = (L1 ** 2 - L2 ** 2 + distance ** 2) / (2 * distance);
+  const across = Math.sqrt(Math.max(0, L1 ** 2 - along ** 2));
+  // the knee bends away from the hinge, beyond the head
+  const ku = (along * du + across * dv) / distance;
+  const kv = (along * dv - across * du) / distance;
+  return { xh, hingeY, kx: xh - h * ku, ky: hingeY + kv, hx, headY };
+}
+
+function pantographAt(m: MeshBuilder, p: PantographSpec, lift: number): void {
+  const h = p.hinge;
+  const xc = p.x;
+  const y = p.roof + 0.2;
   m.scope("insulators", () => {
     for (const dx of [-0.5, 0.5]) for (const z of [-0.45, 0.45]) insulator(m, xc + dx, z, p.roof - 0.01, y, 2);
   });
@@ -90,36 +118,23 @@ export function pantograph(m: MeshBuilder, p: PantographSpec): number {
     const [a, b] = [xc + h * 0.1, xc + h * 0.45].sort((q, r) => q - r) as [number, number];
     block(m, "pantograph", a, b, y + 0.05, y + 0.16, -0.15, 0.15); // the drive
   });
-  const xh = xc + h * 0.55;
-  const hx = xc + h * 0.1;
-  const headY = y + 0.3 + (p.raised ? (p.rise ?? 1.1) : 0);
-  // local u runs from the hinge toward the head, v up from the hinge shaft
-  let ku = L1;
-  let kv = 0.09;
-  if (p.raised) {
-    const du = h * (xh - hx);
-    const dv = headY - 0.02 - (y + 0.11);
-    const distance = Math.hypot(du, dv);
-    const along = (L1 ** 2 - L2 ** 2 + distance ** 2) / (2 * distance);
-    const across = Math.sqrt(Math.max(0, L1 ** 2 - along ** 2));
-    // the knee bends away from the hinge, beyond the head
-    ku = (along * du + across * dv) / distance;
-    kv = (along * dv - across * du) / distance;
-  }
-  const kx = xh - h * ku;
-  const ky = y + 0.11 + kv;
+  const { xh, hingeY, kx, ky, hx, headY } = pantographPose(p, lift);
   m.scope("arms", () => {
     for (const s of [-1, 1]) block(m, "pantograph", xh - 0.04, xh + 0.04, y + 0.04, y + 0.14, ...side(s, 0.34, 0.42));
-    const shaft = ngon(8, 0.035, 0, xh, y + 0.11);
+    const shaft = ngon(8, 0.035, 0, xh, hingeY);
     m.sweep("pantograph", "z", shaft, -0.4, shaft, 0.4);
     m.scope("lower arms", () => {
-      for (const s of [-1, 1]) tubeX(m, "pantograph", 0.04, xh, y + 0.11, s * 0.28, kx, ky, s * 0.04);
+      for (const s of [-1, 1]) m.rod("pantograph", [xh, hingeY, s * 0.28], [kx, ky, s * 0.04], 0.04);
     });
-    tubeX(m, "pantograph", 0.016, xc + h * 0.68, y + 0.08, 0, kx + (xh - kx) * 0.08, ky - 0.03, 0, 6); // the push rod
+    // the push rod, from the drive to the lower arm by the knee
+    pushRod(m, "pantograph", 0.016, [xc + h * 0.68, y + 0.08], (l) => {
+      const q = pantographPose(p, l);
+      return [q.kx + (q.xh - q.kx) * 0.08, q.ky + (q.hingeY - q.ky) * 0.08 - 0.03];
+    }, lift);
     const knee = ngon(8, 0.05, 0, kx, ky + 0.005);
     m.sweep("pantograph", "z", knee, -0.08, knee, 0.08);
     m.scope("upper arms", () => {
-      for (const s of [-1, 1]) tubeX(m, "pantograph", 0.026, kx, ky + 0.02, s * 0.04, hx, headY, s * 0.3);
+      for (const s of [-1, 1]) m.rod("pantograph", [kx, ky + 0.02, s * 0.04], [hx, headY, s * 0.3], 0.026);
     });
   });
   m.scope("head", () => {
@@ -134,7 +149,6 @@ export function pantograph(m: MeshBuilder, p: PantographSpec): number {
       }
     }
   });
-  return headY + 0.07;
 }
 
 /**
