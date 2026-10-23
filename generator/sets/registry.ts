@@ -151,7 +151,7 @@ export const SETS: readonly SetDef[] = [
   {
     set: "decoration",
     phase: 4,
-    landed: false,
+    landed: true,
     defaultId: "fence",
     retired: {},
     types: [
@@ -165,7 +165,7 @@ export const SETS: readonly SetDef[] = [
   {
     set: "tunnelPortal",
     phase: 4,
-    landed: false,
+    landed: true,
     defaultId: "stone",
     retired: {},
     types: [
@@ -176,7 +176,7 @@ export const SETS: readonly SetDef[] = [
   {
     set: "railType",
     phase: 4,
-    landed: false,
+    landed: true,
     defaultId: "wooden_sleepers",
     retired: {},
     types: [
@@ -191,7 +191,7 @@ export const SETS: readonly SetDef[] = [
   {
     set: "roadType",
     phase: 4,
-    landed: false,
+    landed: true,
     defaultId: "narrow_asphalt",
     retired: {},
     types: [
@@ -228,7 +228,7 @@ export const SETS: readonly SetDef[] = [
     set: "dam",
     collectible: "dam",
     phase: 4,
-    landed: false,
+    landed: true,
     defaultId: "concrete",
     retired: {"arch":"concrete"},
     types: [

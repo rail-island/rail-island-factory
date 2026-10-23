@@ -60,6 +60,11 @@ A set's module holds what its types ARE, and the game keeps what fits them to a 
 | `cableCarStation` | `TYPE_META`: footprint, rope-head height and the shed prop; `buildPylon(height)` | the head, the boarding platform, the rope solver, placing the shed |
 | `port` | `TYPE_META`: family and grade; `PROPS`: the prop per role | layout, berths, approaches, decks, piles, placing the props |
 | `airport` | `TYPE_META`: tower and windsock props; `terminal(pad, type)` and `furniture(pad, type)` | runways, taxiways, stands, paint, the radar, placing the props |
+| `decoration` | `TYPE_META`: each kind's placement envelope (spacing, anchor, margins, top, steps, domain, sides, section); `buildPiece(kind, piece, ctx, out)`: one module's sweeps, boxes and plants | the intervals along a line, terrain probing, LOD layers, the plant meshes |
+| `tunnelPortal` | `TYPE_META`: portal depth; `buildPortal(style, halfWidth, bore)`: the masonry face round the bore | the bore, its lining and ribs, the cover over it, placing the portal at each mouth |
+| `railType` | `TYPE_META`: sleepers, the ballast bed and track spacing every type shares, the catenary style it is wired with (or none) | track generation, junctions, the rail meshes, the catenary planner |
+| `roadType` | `TYPE_META`: width, shoulder, surface, centre line, tram tracks, terrain bands, tightest curve; the registry's groups are the surface families (narrow and wide member) | routing, junctions, tile batching, terrain flattening, lanes |
+| `dam` | `TYPE_META`: body (gravity or weir), masonry surface, lock chamber, arcade; `COLORS`; `gravityParts`, `lockParts` (walls plus four named, hinged gate leaves), `arcadeLayout` / `arcadeParts` (with tower roofs) | where the dam stands, the wall and wings, the water, spillways, swinging the gates |
 
 Fixed props (a shed, a crane, a tower) are ordinary models, not module code ([props.md](props.md));
 a set names them by id.

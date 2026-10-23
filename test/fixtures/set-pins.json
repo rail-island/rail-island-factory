@@ -22,6 +22,44 @@
   "port": {
     "types": "c58f72afa9f01475"
   },
+  "decoration": {
+    "types": "62c91769a747032a",
+    "trees.both.high": "78891f4bdd91562e",
+    "trees.both.low": "78891f4bdd91562e",
+    "wall.both.high": "493b1a3fd843293d",
+    "wall.both.low": "493b1a3fd843293d",
+    "fence.both.high": "36cc5ff4026395ff",
+    "fence.both.low": "45b12387fdf53b74",
+    "guardrail.both.high": "26260135a1bf8e38",
+    "guardrail.both.low": "c18efe99991df833",
+    "gallery.both.high": "69bb3c1356426be5",
+    "gallery.both.low": "b2be4d405077e177",
+    "gallery.left.high": "44366b025fdc0140",
+    "gallery.left.low": "bf8fa30d830f62b4",
+    "gallery.none.high": "8fa659081d1e4655",
+    "gallery.none.low": "115d96eb3ba7fe95"
+  },
+  "tunnelPortal": {
+    "types": "018f27f71753c79d",
+    "stone.3.5": "662123036f3f9532",
+    "stone.9": "727083bd4e59ef42",
+    "stone.12": "8d41c14af949d6ea"
+  },
+  "railType": {
+    "types": "b29fbae59a6f2085"
+  },
+  "roadType": {
+    "types": "d5b10f0666ccbb3d"
+  },
+  "dam": {
+    "types": "12a56332acdbe440",
+    "gravity.near": "c365443bab880ea8",
+    "gravity.far": "2e17006e875b0fe1",
+    "lock.near": "abc51b8ec116eae6",
+    "lock.far": "368d9ff23fefe8ca",
+    "arcade.near": "420f89808e45f342",
+    "arcade.far": "c6b50e7ef97688ed"
+  },
   "airport": {
     "types": "2cbb729a185ba0c4",
     "grass_field.small": "86ce81ba6f924f17",
