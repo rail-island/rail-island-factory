@@ -117,3 +117,10 @@ three-quarter view, a before/after pair for a redesign, and a comparison of the
 changed LODs. Add a close-up when Max detail changes. Report actual triangle
 counts and one useful next visual refinement. Keep scratch renders outside the
 repository; do not publish to the game unless requested.
+
+## Translations
+
+A new or renamed model, parameter title or value is exported text: finish with the
+`translate-text` skill (`.agents/skills/translate-text/`), so all 14 languages are complete
+and `pnpm test` (test/text.test.ts) passes. A proper-noun title (a class designation, a
+brand) goes to `text/verbatim.json` instead of being translated.

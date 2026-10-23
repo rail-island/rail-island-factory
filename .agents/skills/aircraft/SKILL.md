@@ -97,3 +97,10 @@ does not compile. Extend the family's LOD adapter (`generator/lod*.ts`) or build
 the shared kit (`generator/lodKit.ts`): silhouette first, colours as bands, then
 the cockpit windscreen in `LOD_GLASS` (200 triangles, `airLod` in `generator/lodAir.ts`); keep every parameter combination within its budget, and review a full/LOD
 contact sheet.
+
+## Translations
+
+A new or renamed model, parameter title or value is exported text: finish with the
+`translate-text` skill (`.agents/skills/translate-text/`), so all 14 languages are complete
+and `pnpm test` (test/text.test.ts) passes. A proper-noun title (a class designation, a
+brand) goes to `text/verbatim.json` instead of being translated.

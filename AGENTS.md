@@ -44,7 +44,15 @@ document that owns it in the same change.** Conventions:
 - **Every vehicle states its game properties** (`game` on the design: weight,
   power, maxspeed, accel); the build fails without them.
 - **`export/` and `dist/` are generated and gitignored.** Never commit them.
-- The site is **English only**; there is no i18n layer.
+- The site UI is **English only**, but every text the game shows from the factory -
+  model titles, parameter titles and values, set type names and descriptions,
+  woods and species names, categories - is **exported in the game's 14 languages**
+  (docs/models/text.md). A change that adds or rewords such text carries all 13
+  translations in `text/<code>.json` (the `translate-text` skill); `pnpm test`
+  fails on any gap. Proper-noun titles go to `text/verbatim.json`.
+- **Set ids are stored in the game's saved maps** like model ids (structure types,
+  rail and road types, block types; docs/models/sets.md): never rename a shipped
+  one - retire it with an alias in the registry.
 - Every bug fix ships with a regression test in the suite that owns the behaviour.
 - Use ASCII in code and comments; no emoji.
 - **Source inspiration is stored in git.** Every reference a model is built
@@ -63,6 +71,10 @@ document that owns it in the same change.** Conventions:
   asked to.
 
 ## Skills
+
+- **`translate-text`** (`.agents/skills/translate-text/`) - use in every change that adds
+  or rewords exported text, and whenever `test/text.test.ts` reports gaps: fills the 13
+  phrasebooks in `text/`.
 
 - **`tree`** (`.agents/skills/tree/`) - use whenever a procedural tree is added or
   changed: five numbered seeds, full/low/coarse triangle budgets, optional Max

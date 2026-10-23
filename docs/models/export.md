@@ -26,6 +26,8 @@ the same JS models and trees on demand ([../site/catalog-site.md](../site/catalo
 | `export/vehicles.meta.json` | the same per vehicle, under `vehicles` |
 | `export/woods.js` | every woods type and every tree species in one standalone module, what the game plants its forests with ([woods.md](woods.md)) |
 | `export/woods.meta.json` | every woods type and every tree species, for the game to import ([woods.md](woods.md)) |
+| `export/sets/<set>.meta.json`, `export/sets/<set>.js` | every set's ids, order, default and aliases, and a landed set's definitions in one standalone module ([sets.md](sets.md)) |
+| `export/text/<code>.json` | every exported text in each of the game's 14 languages ([text.md](text.md)) |
 | `export/catalog.json` | what the site lists |
 
 `export/` is also Vite's `publicDir`, so `vite build` copies it into `dist/` as

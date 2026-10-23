@@ -16,6 +16,9 @@
 //   export/vehicles.meta.json       the vehicles' catalog entries, likewise
 //   export/woods.js                 every woods type and tree species in one module (woodsExport.ts)
 //   export/woods.meta.json          the woods types and the tree species, for the game
+//   export/sets/<set>.meta.json     every set's ids, order, default, aliases (sets/setsExport.ts)
+//   export/sets/<set>.js            a landed set's definitions in one module, for the game
+//   export/text/<code>.json         every exported text in each of the 14 languages (text.ts)
 //   export/catalog.json             what the site lists (catalog.ts)
 //
 // The same folder is Vite's publicDir, so the site serves it as it stands.
@@ -93,6 +96,8 @@ import { COMMERCIAL_BUILDINGS } from "./commercial.ts";
 import { TREES } from "./trees.ts";
 import { WOODS_MODELS } from "./woodsModels.ts";
 import { generateWoods } from "./woodsExport.ts";
+import { generateSets } from "./sets/setsExport.ts";
+import { generateText } from "./text.ts";
 import { checkOpenttdProperties, type CatalogFields, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { buildLodModel } from "./lodModel.ts";
 import { lodBudget } from "./lod.ts";
@@ -191,7 +196,8 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
 ];
 
 const FAMILIES = RAW_FAMILIES.map(f => ({ ...f, designs: f.designs.map(d => { d.id = proceduralId(d.id); return d; }) }));
-const VILLAGE_DESIGNS = FAMILIES.filter(f => f.meta === "village").flatMap(f => f.designs);
+/** Every village house (village.meta.json). */
+export const VILLAGE_DESIGNS: readonly ProceduralDesign[] = FAMILIES.filter(f => f.meta === "village").flatMap(f => f.designs);
 
 /** Every building design: the skyscrapers, then the landmarks and stations (skyscrapers.meta.json). */
 export const BUILDINGS: readonly ProceduralDesign[] = FAMILIES.filter((f) => f.meta === "buildings").flatMap((f) => f.designs);
@@ -511,6 +517,12 @@ export async function buildExport(
   fs.writeFileSync(path.join(dir, VEHICLE_META_FILE), `${JSON.stringify(exportVehicleMeta(chosen(ALL_VEHICLES), rigs, sides), null, 2)}\n`);
   // the woods types and the tree species they draw from (woodsExport.ts); only a whole export has them
   if (designs.length === DESIGNS.size) await generateWoods(dir);
+  // the set registry and its landed modules (sets/setsExport.ts), and the exported
+  // text in every language (text.ts); likewise only a whole export has them
+  if (designs.length === DESIGNS.size) {
+    await generateSets(dir);
+    generateText(dir);
+  }
   fs.writeFileSync(path.join(dir, "industry-migration.json"), `${JSON.stringify({ version: 1, entries: INDUSTRY_MIGRATION }, null, 2)}\n`);
   for (const design of designs) checkOpenttdProperties(design, ALL_VEHICLES.includes(design));
   const catalog: ModelCatalog = {

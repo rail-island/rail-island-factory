@@ -143,3 +143,10 @@ texture canvases, not overall photographic accuracy. Its fixtures in
   Include the model revision so the measurements can be traced to the result.
 - Update vehicle documentation and source notes. Follow the repository's commit
   and publication instructions; a Factory change does not authorize game import.
+
+## Translations
+
+A new or renamed model, parameter title or value is exported text: finish with the
+`translate-text` skill (`.agents/skills/translate-text/`), so all 14 languages are complete
+and `pnpm test` (test/text.test.ts) passes. A proper-noun title (a class designation, a
+brand) goes to `text/verbatim.json` instead of being translated.
