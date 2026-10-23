@@ -9,6 +9,7 @@
 // `build(THREE, params)` builds any combination (docs/models/parameters.md).
 
 import type { MeshBuilder } from "./meshBuilder.ts";
+import type { CityUse } from "./cityPresets.ts";
 
 /** What drives a powered rail vehicle. */
 export type Traction = "electric" | "diesel" | "steam";
@@ -270,6 +271,11 @@ export interface GameProperties extends Partial<VehicleGameFields> {
   plaza?: PlazaUse;
   /** A building's blocking footprint. Buildings only. */
   block?: BlockShape;
+  /**
+   * The variants the game's city generator builds of it, replacing its pool's
+   * family default (cityPresets.ts). Buildings only; usually left to the default.
+   */
+  city?: CityUse;
 }
 
 const PHYSICS_KEYS = ["weight", "power", "maxspeed", "accel"] as const;
@@ -288,11 +294,11 @@ export function checkGameProperties(design: ProceduralDesign, vehicle: boolean):
     throw new Error(`${design.id}: game properties ${why} (docs/models/game-properties.md)`);
   };
   if (!vehicle) {
-    if (game && Object.keys(game).some((k) => k !== "plaza" && k !== "block")) fail("of a building may hold only plaza and block");
+    if (game && Object.keys(game).some((k) => k !== "plaza" && k !== "block" && k !== "city")) fail("of a building may hold only plaza, block and city");
     return;
   }
   if (!game) return fail("missing: a vehicle states its weight, power, maxspeed and accel");
-  if (game.plaza || game.block) fail("of a vehicle hold no plaza or block");
+  if (game.plaza || game.block || game.city) fail("of a vehicle hold no plaza, block or city");
   for (const k of PHYSICS_KEYS) {
     const v = game[k];
     if (v === undefined) fail(`lack "${k}" (use null for none)`);

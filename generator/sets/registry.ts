@@ -59,7 +59,7 @@ export const SETS: readonly SetDef[] = [
   {
     set: "blockType",
     phase: 2,
-    landed: false,
+    landed: true,
     defaultId: "comm_small",
     retired: {},
     types: [

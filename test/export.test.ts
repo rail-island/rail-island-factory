@@ -23,7 +23,9 @@ describe("exportMeta", () => {
     const meta = exportMeta(SKYSCRAPERS);
     expect(meta.count).toBe(SKYSCRAPERS.length);
     expect(meta.buildings.map((b) => b.id)).toEqual(SKYSCRAPERS.map((d) => d.id));
-    for (const b of meta.buildings) {
+    for (const { game, ...b } of meta.buildings) {
+      // the city presets (cityPresets.ts, test/cityPresets.test.ts) are the only game property a skyscraper has
+      if (game) expect(Object.keys(game), b.id).toEqual(["city"]);
       expect(b).toEqual({
         id: b.id,
         title: SKYSCRAPERS.find((d) => d.id === b.id)!.title,
@@ -47,8 +49,11 @@ describe("exportMeta for the village houses", () => {
   it("has one entry per house, with the Village fields and the params", () => {
     const meta = exportMeta(VILLAGE_HOUSES);
     expect(meta.count).toBe(VILLAGE_HOUSES.length);
-    for (const b of meta.buildings) {
+    for (const { game, ...b } of meta.buildings) {
       const d = VILLAGE_HOUSES.find((x) => x.id === b.id)!;
+      // every house a city builds carries its presets; the alpine hut is placed by hand only
+      if (d.id === "proc-building-village-alpine-hut") expect(game).toBeUndefined();
+      else expect(game, d.id).toEqual({ city: { presets: expect.any(Array) } });
       expect(b).toEqual({
         id: d.id,
         title: d.title,
@@ -121,16 +126,17 @@ describe("exportVehicleMeta", () => {
 describe("game properties", () => {
   // What the game needs beyond geometry is the factory's: every vehicle states its
   // running figures, and the build refuses one that does not.
-  it("are in every vehicle's meta entry, and only plaza/block in a building's", () => {
+  it("are in every vehicle's meta entry, and only plaza/block/city in a building's", () => {
     for (const v of exportVehicleMeta(ALL_VEHICLES).vehicles) {
       expect(v.game, v.id).toBeDefined();
       for (const k of ["weight", "power", "maxspeed", "accel"] as const) expect(v.game, `${v.id} ${k}`).toHaveProperty(k);
     }
     for (const b of exportMeta(BUILDINGS).buildings) {
-      if (b.game) expect(Object.keys(b.game).every((k) => k === "plaza" || k === "block"), b.id).toBe(true);
+      if (b.game) expect(Object.keys(b.game).every((k) => k === "plaza" || k === "block" || k === "city"), b.id).toBe(true);
     }
     expect(exportMeta(BUILDINGS).buildings.find((b) => b.id === "proc-building-brandenburg-gate")!.game).toEqual({
       plaza: { cities: ["city"], layouts: ["rect"], fit: "footprint" },
+      city: { presets: [{}] },
     });
     // the per-variant figures: the CD 162 runs at 140 km/h, the 163 at 120
     const cd163 = exportVehicleMeta(ALL_VEHICLES).vehicles.find((v) => v.id === "proc-vehicle-cd-163")!.game!;
@@ -149,7 +155,7 @@ describe("game properties", () => {
     expect(() => exportVehicleMeta([{ ...base, params, game: { ...physics, variants: [{ params: { livery: "red" }, maxspeed: 140 }] } }])).toThrow(/at the default/);
     expect(() => exportVehicleMeta([{ ...base, params, game: { ...physics, variants: [{ params: { livery: "blue" } }, { params: { livery: "blue" } }] } }])).toThrow(/twice/);
     expect(exportVehicleMeta([{ ...base, params, game: { ...physics, variants: [{ params: { livery: "blue" }, maxspeed: 140 }] } }]).vehicles[0]!.game!.variants).toHaveLength(1);
-    expect(() => exportMeta([{ ...base, id: "proc-building-test", game: { ...physics } }])).toThrow(/of a building may hold only plaza and block/);
+    expect(() => exportMeta([{ ...base, id: "proc-building-test", game: { ...physics } }])).toThrow(/of a building may hold only plaza, block and city/);
   });
 });
 

@@ -12,8 +12,8 @@
 // No z-fighting, LOD or game-property checks run here: `pnpm build` and the
 // tests run them.
 
-import { catalogRecord, isSideViewCategory, metaEntry, REFS_DIR, type BuiltFacts, type ModelCatalog } from "./catalog.ts";
-import { DESIGNS, catalogFields, designReferenceFiles, designSource, designTree } from "./generate.ts";
+import { catalogRecord, isSideViewCategory, listedEntry, metaEntry, REFS_DIR, type BuiltFacts, type ModelCatalog } from "./catalog.ts";
+import { BUILDINGS, DESIGNS, VILLAGE_DESIGNS, catalogFields, designReferenceFiles, designSource, designTree } from "./generate.ts";
 import { bundleDesign } from "./jsModel.ts";
 import fs from "node:fs";
 
@@ -28,7 +28,8 @@ export function devCatalog(): ModelCatalog {
       // a placeholder frame, so the record asks for the side view; the site measures the real one
       const side = isSideViewCategory(fields.category) ? { widthM: 0, heightM: 0, bottomM: 0 } : null;
       const references = designReferenceFiles(design).map(({ name, file }) => ({ name, url: `${REFS_DIR}/${design.id}/${name}`, bytes: fs.statSync(file).size }));
-      const record = catalogRecord(metaEntry(design, fields, null, side), zero, references, design.openttd);
+      const building = BUILDINGS.includes(design) || VILLAGE_DESIGNS.includes(design);
+      const record = catalogRecord(listedEntry(metaEntry(design, fields, null, side), design, building), zero, references, design.openttd);
       return { ...record, ...(design.buildCoarse ? { coarse: true as const } : {}), ...(design.buildMax ? { maxDetail: true as const } : {}), pending: true as const };
     }),
   };

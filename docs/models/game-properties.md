@@ -3,10 +3,11 @@
 **Covers** - what the game needs of a model beyond its geometry: a vehicle's
 running figures (weight, power, top speed, acceleration), its size factor,
 draft, rope and sill heights and airport class, their per-variant overrides,
-and a building's plaza and block rules; where they are declared, how they are
-checked and exported, and where today's values came from.
+and a building's plaza and block rules and city presets; where they are declared,
+how they are checked and exported, and where today's values came from.
 **Code** - `generator/design.ts` (`GameProperties`, `checkGameProperties`),
-`generator/catalog.ts` (`metaEntry`, `exportMeta`, `exportVehicleMeta`), every
+`generator/catalog.ts` (`metaEntry`, `exportMeta`, `withCityPresets`, `exportVehicleMeta`),
+`generator/cityPresets.ts`, `test/cityPresets.test.ts`, every
 design module's `game` field, `test/export.test.ts`
 **See also** - [export.md](export.md), [../site/openttd-export.md](../site/openttd-export.md) (the optional `openttd` block for the GRF export), [parameters.md](parameters.md),
 [legacy-mapping.md](legacy-mapping.md), [vehicles.md](vehicles.md),
@@ -70,6 +71,24 @@ A building sets `game` only for its placement rules, in the webapp's shapes:
 - **`block`** (`BlockShape`): the rectangles of its plan that block rails and roads, as fractions of the plan. Examples are the Eiffel Tower's four legs and the wind turbine's mast.
 
 Fifteen landmarks, churches and industrial buildings carry one.
+
+### City presets
+
+Which variants of a building the game's city generator builds is the factory's
+(`generator/cityPresets.ts`), exported on every building a city builds as
+`game.city.presets`: a list of `{ params?, weight? }`, one fixed parameter selection
+each (`params` the non-default values, `weight` default 1). A building in a city pool
+(its catalog `group`) gets its pool's **family default** (`FAMILY_PRESETS`: the
+commercial pool builds each design at its defaults and three storey-and-finish
+combinations, a skyscraper at its defaults and two size-and-glazing ones), so a new
+design in a pool family appears in cities with no further line. A design whose
+variants differ declares its own list - `game.city` on the design, or its entry in
+`DESIGN_PRESETS` - and one too wide for any city lot at its placed scale opts out in
+`NOT_IN_CITIES` (it stays placeable by hand). Every preset is checked strictly
+(`checkCityPresets`): it must resolve against the design's parameters, name only
+non-default values, weigh more than zero and differ from every other preset; the build
+fails otherwise. `test/cityPresets.test.ts` pins the lists against the game's table as
+it was when they moved here (`test/fixtures/city-presets-baseline.json`).
 
 ## OpenTTD
 

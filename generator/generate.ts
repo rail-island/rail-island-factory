@@ -109,7 +109,7 @@ import { JS_DIR, bundleDesign, gzipSize, writeIfChanged } from "./jsModel.ts";
 import { findCoplanarOverlaps, type CoplanarOverlap } from "./coplanar.ts";
 import {
   CATALOG_FILE, META_FILE, REFERENCE_EXTENSIONS, REFS_DIR, VEHICLE_META_FILE, VILLAGE_META_FILE, catalogRecord, exportMeta,
-  exportVehicleMeta, isSideViewCategory, metaEntry, type ModelCatalog, type ReferenceImage,
+  exportVehicleMeta, isSideViewCategory, listedEntry, metaEntry, type ModelCatalog, type ReferenceImage,
 } from "./catalog.ts";
 import { TREE_DIR, type SourceTree } from "./sourceTree.ts";
 import type { MeshBuilder } from "./meshBuilder.ts";
@@ -534,7 +534,7 @@ export async function buildExport(
     records: designs.map((design) => {
       const built = models.find((m) => m.id === design.id)!;
       const jsText = js.get(design.id)!;
-      const record = catalogRecord(metaEntry(design, catalogFields(design), built.rig, built.side), {
+      const record = catalogRecord(listedEntry(metaEntry(design, catalogFields(design), built.rig, built.side), design, BUILDINGS.includes(design) || VILLAGE_DESIGNS.includes(design)), {
         ...built.stats,
         jsBytes: Buffer.byteLength(jsText),
         jsGzipBytes: gzipSize(jsText),

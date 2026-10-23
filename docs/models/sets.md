@@ -48,6 +48,23 @@ exactly the game's list: a new id would reach the picker with nothing to draw it
 has a source module `generator/sets/<set>.ts` - pure, deterministic, no `node:` imports - which
 the export bundles standalone; the set may then grow, and still never loses a shipped id.
 
+## Block types
+
+`blockType` is a landed set of pure data (`generator/sets/blockType.ts`, `TYPE_META`):
+what a block of a settlement is filled with. Each type names its pools (building
+`group`s) and their mix, its placement (`perimeter` frontages or one `single`
+building), a facade style by name (`FACADE_STYLES`; the game owns the numbers), an
+optional centrepiece pool, an exclusion key two neighbouring blocks may not share,
+ring pools for a single building, whether it is the settlement's landmark, and which
+settlements grow it: a weight per city type and ring (`cities`) and a per-settlement
+cap (`limits`). Flags replace ids the game used to hard-code: `district` (the family a
+city profile reweights and neighbouring blocks attract), `overlay` (the city overlay's
+colour family), `profileFactors` and `decoration` (a village or industrial fence, a
+tenement's noise wall beside it). The data rides in `blockType.meta.json`; the game
+refuses an import naming a city type, ring or facade it does not know.
+`test/blockTypes.test.ts` checks the names and that every city type and ring can grow
+a type no exclusion can starve.
+
 ## The export
 
 `generateSets` (a whole export only) writes `export/sets/`:

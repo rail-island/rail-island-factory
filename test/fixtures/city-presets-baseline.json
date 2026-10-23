@@ -1,0 +1,520 @@
+{
+ "note": "The game's city presets (its src/core/city/cityPresets.ts) when they moved into the factory: design -> the parameter selections, in order.",
+ "presets": {
+  "proc-building-baroque-church": [
+   {}
+  ],
+  "proc-building-brandenburg-gate": [
+   {}
+  ],
+  "proc-building-castle": [
+   {},
+   {
+    "layout": "keep"
+   },
+   {
+    "layout": "fortress"
+   }
+  ],
+  "proc-building-church-vrchlabi": [
+   {}
+  ],
+  "proc-building-comm-balcony-house": [
+   {},
+   {
+    "storeys": "three",
+    "roof": "garden"
+   },
+   {
+    "storeys": "five",
+    "roof": "garden"
+   }
+  ],
+  "proc-building-comm-corner-shop": [
+   {},
+   {
+    "storeys": "two",
+    "roof": "garden"
+   },
+   {
+    "storeys": "four",
+    "roof": "garden"
+   }
+  ],
+  "proc-building-comm-market-block": [
+   {},
+   {
+    "storeys": "four",
+    "roof": "garden"
+   }
+  ],
+  "proc-building-comm-office-house": [
+   {},
+   {
+    "storeys": "five",
+    "roof": "garden"
+   },
+   {
+    "storeys": "nine",
+    "roof": "garden"
+   }
+  ],
+  "proc-building-comm-terrace-house": [
+   {},
+   {
+    "storeys": "three",
+    "roof": "solar"
+   },
+   {
+    "storeys": "five",
+    "roof": "solar"
+   }
+  ],
+  "proc-building-commercial-annex": [
+   {},
+   {
+    "storeys": "2",
+    "finish": "sand"
+   },
+   {
+    "storeys": "4",
+    "finish": "sage"
+   },
+   {
+    "storeys": "5",
+    "finish": "brick"
+   }
+  ],
+  "proc-building-commercial-balcony": [
+   {},
+   {
+    "storeys": "2",
+    "finish": "sand"
+   },
+   {
+    "storeys": "4",
+    "finish": "sage"
+   },
+   {
+    "storeys": "5",
+    "finish": "brick"
+   }
+  ],
+  "proc-building-commercial-baroque": [
+   {},
+   {
+    "storeys": "2",
+    "finish": "sand"
+   },
+   {
+    "storeys": "4",
+    "finish": "sage"
+   },
+   {
+    "storeys": "5",
+    "finish": "brick"
+   }
+  ],
+  "proc-building-commercial-barrel": [
+   {},
+   {
+    "storeys": "2",
+    "finish": "sand"
+   },
+   {
+    "storeys": "4",
+    "finish": "sage"
+   },
+   {
+    "storeys": "5",
+    "finish": "brick"
+   }
+  ],
+  "proc-building-commercial-brick": [
+   {},
+   {
+    "storeys": "2",
+    "finish": "sand"
+   },
+   {
+    "storeys": "4",
+    "finish": "sage"
+   },
+   {
+    "storeys": "5",
+    "finish": "brick"
+   }
+  ],
+  "proc-building-commercial-classical": [
+   {},
+   {
+    "storeys": "2",
+    "finish": "sand"
+   },
+   {
+    "storeys": "4",
+    "finish": "sage"
+   },
+   {
+    "storeys": "5",
+    "finish": "brick"
+   }
+  ],
+  "proc-building-commercial-gable": [
+   {},
+   {
+    "storeys": "2",
+    "finish": "sand"
+   },
+   {
+    "storeys": "4",
+    "finish": "sage"
+   },
+   {
+    "storeys": "5",
+    "finish": "brick"
+   }
+  ],
+  "proc-building-commercial-modern": [
+   {},
+   {
+    "storeys": "2",
+    "finish": "sand"
+   },
+   {
+    "storeys": "4",
+    "finish": "sage"
+   },
+   {
+    "storeys": "5",
+    "finish": "brick"
+   }
+  ],
+  "proc-building-commercial-shop": [
+   {},
+   {
+    "storeys": "2",
+    "finish": "sand"
+   }
+  ],
+  "proc-building-commercial-tenement": [
+   {},
+   {
+    "storeys": "2",
+    "finish": "sand"
+   },
+   {
+    "storeys": "3",
+    "finish": "sage"
+   },
+   {
+    "storeys": "4",
+    "finish": "brick"
+   }
+  ],
+  "proc-building-commercial-terrace": [
+   {},
+   {
+    "storeys": "2",
+    "finish": "sand"
+   },
+   {
+    "storeys": "4",
+    "finish": "sage"
+   },
+   {
+    "storeys": "5",
+    "finish": "brick"
+   }
+  ],
+  "proc-building-fountain-classical": [
+   {}
+  ],
+  "proc-building-fountain-modern": [
+   {}
+  ],
+  "proc-building-fountain-obelisk": [
+   {}
+  ],
+  "proc-building-hist-colosseum": [
+   {}
+  ],
+  "proc-building-hist-pagoda": [
+   {}
+  ],
+  "proc-building-hist-palace": [
+   {}
+  ],
+  "proc-building-ind-building-a": [
+   {},
+   {
+    "size": "extended",
+    "finish": "blue"
+   }
+  ],
+  "proc-building-ind-building-h": [
+   {},
+   {
+    "size": "extended",
+    "finish": "blue"
+   }
+  ],
+  "proc-building-ind-building-k": [
+   {}
+  ],
+  "proc-building-ind-building-s": [
+   {}
+  ],
+  "proc-building-ind-chimney-basic": [
+   {},
+   {
+    "height": "medium",
+    "style": "striped"
+   },
+   {
+    "height": "tall",
+    "style": "steel"
+   }
+  ],
+  "proc-building-ind-detail-tank": [
+   {},
+   {
+    "layout": "vertical"
+   },
+   {
+    "layout": "cluster"
+   }
+  ],
+  "proc-building-industry-factory-a": [
+   {},
+   {
+    "size": "extended",
+    "finish": "blue"
+   }
+  ],
+  "proc-building-industry-wind-turbine": [
+   {}
+  ],
+  "proc-building-louvre-pyramid": [
+   {}
+  ],
+  "proc-building-notre-dame": [
+   {}
+  ],
+  "proc-building-prague-castle-st-vitus": [
+   {}
+  ],
+  "proc-building-sky-art-deco": [
+   {},
+   {
+    "size": "compact",
+    "glazing": "blue"
+   },
+   {
+    "size": "medium",
+    "glazing": "jade"
+   }
+  ],
+  "proc-building-sky-brick-residential": [
+   {},
+   {
+    "size": "compact",
+    "glazing": "blue"
+   },
+   {
+    "size": "medium",
+    "glazing": "jade"
+   }
+  ],
+  "proc-building-sky-bullet": [
+   {},
+   {
+    "size": "compact",
+    "glazing": "blue"
+   },
+   {
+    "size": "medium",
+    "glazing": "jade"
+   }
+  ],
+  "proc-building-sky-glass-office": [
+   {},
+   {
+    "size": "compact",
+    "glazing": "blue"
+   },
+   {
+    "size": "medium",
+    "glazing": "jade"
+   }
+  ],
+  "proc-building-sky-pagoda": [
+   {},
+   {
+    "size": "compact",
+    "glazing": "blue"
+   },
+   {
+    "size": "medium",
+    "glazing": "jade"
+   }
+  ],
+  "proc-building-sky-pyramid": [
+   {},
+   {
+    "size": "compact",
+    "glazing": "blue"
+   },
+   {
+    "size": "medium",
+    "glazing": "jade"
+   }
+  ],
+  "proc-building-sky-terraced": [
+   {},
+   {
+    "size": "compact",
+    "glazing": "blue"
+   },
+   {
+    "size": "medium",
+    "glazing": "jade"
+   }
+  ],
+  "proc-building-sky-twisted": [
+   {},
+   {
+    "size": "compact",
+    "glazing": "blue"
+   },
+   {
+    "size": "medium",
+    "glazing": "jade"
+   }
+  ],
+  "proc-building-st-basils-cathedral": [
+   {}
+  ],
+  "proc-building-st-nicholas-church": [
+   {}
+  ],
+  "proc-building-tower-bell": [
+   {},
+   {
+    "storeys": "4",
+    "roof": "red"
+   },
+   {
+    "storeys": "5",
+    "roof": "red"
+   }
+  ],
+  "proc-building-tower-bigben": [
+   {}
+  ],
+  "proc-building-tower-eiffel": [
+   {}
+  ],
+  "proc-building-tower-kenney": [
+   {},
+   {
+    "storeys": "3"
+   },
+   {
+    "storeys": "4"
+   }
+  ],
+  "proc-building-tower-radio": [
+   {},
+   {
+    "bays": "6"
+   },
+   {
+    "bays": "10"
+   }
+  ],
+  "proc-building-tower-stone": [
+   {},
+   {
+    "storeys": "2",
+    "banners": "blue"
+   },
+   {
+    "storeys": "4",
+    "banners": "none"
+   }
+  ],
+  "proc-building-tower-transmission": [
+   {},
+   {
+    "arms": "2"
+   }
+  ],
+  "proc-building-tower-watch": [
+   {},
+   {
+    "storeys": "2",
+    "banners": "blue"
+   },
+   {
+    "storeys": "4",
+    "banners": "none"
+   }
+  ],
+  "proc-building-twin-tower-baroque-church": [
+   {}
+  ],
+  "proc-building-village-cottage": [
+   {},
+   {
+    "storeys": "one",
+    "roof": "red"
+   }
+  ],
+  "proc-building-village-family-house": [
+   {},
+   {
+    "roofShape": "hip",
+    "roof": "red"
+   }
+  ],
+  "proc-building-village-l-house": [
+   {},
+   {
+    "storeys": "one",
+    "roof": "red"
+   }
+  ],
+  "proc-building-village-modern-house": [
+   {},
+   {
+    "storeys": "one",
+    "cladding": "timber"
+   }
+  ],
+  "proc-building-village-narrow-house": [
+   {},
+   {
+    "storeys": "three",
+    "roof": "red"
+   }
+  ],
+  "proc-building-village-timber-cottage": [
+   {},
+   {
+    "pitch": "gentle",
+    "roof": "ochre"
+   }
+  ],
+  "proc-building-village-timber-house": [
+   {},
+   {
+    "pitch": "gentle",
+    "roof": "ochre"
+   }
+  ],
+  "proc-building-white-house": [
+   {}
+  ]
+ }
+}
