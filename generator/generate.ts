@@ -101,11 +101,7 @@ import { generateWoods } from "./woodsExport.ts";
 import { PORT_PROPS } from "./props/portProps.ts";
 import { CABLE_CAR_PROPS } from "./props/cableCarSheds.ts";
 import { AIRPORT_PROPS } from "./props/airportProps.ts";
-import { SET_PREVIEWS } from "./props/setPreviews.ts";
-import { STATION_PREVIEWS } from "./props/stationPreview.ts";
-import { ROAD_STATION_PREVIEWS } from "./props/roadStationPreview.ts";
-import { BRIDGE_PREVIEWS } from "./props/bridgePreview.ts";
-import { CATENARY_PREVIEWS } from "./props/catenaryPreview.ts";
+import { PREVIEW_FAMILIES } from "./previews/index.ts";
 import { FAR_PROPS } from "./props/propKit.ts";
 import { generateSets } from "./sets/setsExport.ts";
 import { generateText } from "./text.ts";
@@ -210,11 +206,8 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: CABLE_CAR_PROPS, source: "props/cableCarSheds.ts", meta: "props" },
   { designs: AIRPORT_PROPS, source: "props/airportProps.ts", meta: "props" },
   // the set types drawn at a representative size, for the site to browse: in no game meta
-  { designs: SET_PREVIEWS, source: "props/setPreviews.ts", meta: "previews" },
-  { designs: STATION_PREVIEWS, source: "props/stationPreview.ts", meta: "previews" },
-  { designs: ROAD_STATION_PREVIEWS, source: "props/roadStationPreview.ts", meta: "previews" },
-  { designs: BRIDGE_PREVIEWS, source: "props/bridgePreview.ts", meta: "previews" },
-  { designs: CATENARY_PREVIEWS, source: "props/catenaryPreview.ts", meta: "previews" },
+  // the site's preview designs, one per set type, block type and texture (previews/index.ts)
+  ...PREVIEW_FAMILIES.map((f) => ({ designs: f.designs, source: f.source, meta: "previews" as const })),
 ];
 
 const FAMILIES = RAW_FAMILIES.map(f => ({ ...f, designs: f.designs.map(d => { d.id = proceduralId(d.id); return d; }) }));
@@ -236,7 +229,7 @@ export const WOODS_DESIGNS: readonly ProceduralDesign[] = FAMILIES.filter((f) =>
 /** Every prop the game places on its structures (props.meta.json; props/propKit.ts). */
 export const PROP_DESIGNS: readonly ProceduralDesign[] = FAMILIES.filter((f) => f.meta === "props").flatMap((f) => f.designs);
 
-/** The set types drawn at a representative size for the site (props/setPreviews.ts); in no game meta. */
+/** The site's preview designs, one per set type, block type and texture (previews/index.ts); in no game meta. */
 export const PREVIEW_DESIGNS: readonly ProceduralDesign[] = FAMILIES.filter((f) => f.meta === "previews").flatMap((f) => f.designs);
 
 /** Every design, by id: the buildings, the village houses (village.meta.json), the vehicles, the trees, the woods groves, the props, then the set previews. */

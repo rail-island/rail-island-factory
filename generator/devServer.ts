@@ -49,6 +49,10 @@ export function devExport(): Plugin {
       else if ((m = url.match(/^\/refs\/([^/]+)\/(.+)$/))) {
         const file = (await load()).devReference(m[1]!, m[2]!);
         send(`image/${path.extname(m[2]!).slice(1).toLowerCase().replace("jpg", "jpeg").replace("svg", "svg+xml")}`, file ? fs.readFileSync(file) : null);
+      } else if (url === "/surfaces.meta.json") send("application/json", (await load()).devSurfacesMeta());
+      else if ((m = url.match(/^\/textures\/([^/]+)$/))) {
+        const file = (await load()).devTexture(m[1]!);
+        send("image/jpeg", file ? fs.readFileSync(file) : null);
       } else if (url.startsWith("/thumbs/")) send("", null); // the browser renders every thumbnail
       else return false;
       return true;

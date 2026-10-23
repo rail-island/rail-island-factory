@@ -138,8 +138,11 @@ export const GROUPS: readonly Group[] = [
   { id: "building", label: "Buildings" },
   { id: "tree", label: "Trees" },
   { id: "woods", label: "Woods" },
+  { id: "structure", label: "Structures" },
+  { id: "way", label: "Rails and roads" },
+  { id: "block", label: "City blocks" },
   { id: "prop", label: "Props" },
-  { id: "structure", label: "Structure types" },
+  { id: "texture", label: "Textures" },
 ];
 
 const GROUP_IDS = new Set(GROUPS.map((g) => g.id));
@@ -157,10 +160,13 @@ const VEHICLE_CATEGORIES: ReadonlyMap<string, string> = new Map([
   ["Trees", "tree"],
   // the woods types as grove models, browsed with their parameters (generator/woodsModels.ts)
   ["Woods", "woods"],
-  // the fixed props the game places on its structures (generator/props/)
+  // the props the game places on its structures, and the parts a set module draws (generator/props/, previews/props.ts)
   ["Props", "prop"],
-  // the set types drawn at a representative size (generator/props/setPreviews.ts)
-  ["Structure types", "structure"],
+  // one page per set type, block type and texture (generator/previews/)
+  ["Structures", "structure"],
+  ["Rails and roads", "way"],
+  ["City blocks", "block"],
+  ["Textures", "texture"],
 ]);
 
 /** The first-row chip: a tram is filed with the rail vehicles but listed with the trams. */
@@ -170,7 +176,7 @@ export function groupOf(r: CatalogRecord): string {
 }
 
 /** The fleets whose models are all one kind, so a second row would only split near-synonyms (ship / ships). */
-const NO_LEVEL2: ReadonlySet<string> = new Set(["ship", "aircraft", "cablecar", "tram", "tree", "woods", "prop", "structure"]);
+const NO_LEVEL2: ReadonlySet<string> = new Set(["ship", "aircraft", "cablecar", "tram", "tree", "woods", "prop", "texture"]);
 
 /** The chip a model lands on when it has no value for a level, so every model is reachable through the chips. */
 export const OTHER_CHIP = "other";
@@ -257,6 +263,24 @@ const CHIP_LABELS: Readonly<Record<string, string>> = {
   truck: "Truck",
   tram: "Tram",
   other: "Other",
+  // the Structures, Rails and roads and City blocks rows: a set, a district
+  bridge: "Bridges",
+  busStop: "Bus stops",
+  station: "Railway stations",
+  roadStation: "Bus and truck stations",
+  cableCarStation: "Cable car stations",
+  port: "Ports",
+  airport: "Airports",
+  dam: "Dams",
+  tunnelPortal: "Tunnel portals",
+  railType: "Rail types",
+  roadType: "Road types",
+  decoration: "Line decorations",
+  residential: "Residential",
+  commercial: "Commercial",
+  industrial: "Industrial",
+  historic: "Historic",
+  highrise: "High-rise",
 };
 
 export function chipLabel(value: string): string {

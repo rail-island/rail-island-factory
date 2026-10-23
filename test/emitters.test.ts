@@ -32,9 +32,11 @@ const SMOKERS = [
 ];
 
 describe("emitters", () => {
-  it("sit on the mouth they rise from, never inside or above the model", () => {
-    for (const d of DESIGNS.values()) {
-      if (combos(d).length > 64) continue;
+  // one test per design: a single loop over every design ran for minutes without
+  // yielding, long enough to time out the worker's reports to Vitest
+  describe("sit on the mouth they rise from, never inside or above the model", () => {
+    for (const d of DESIGNS.values()) it(d.id, () => {
+      if (combos(d).length > 64) return;
       for (const params of combos(d)) {
         const { emitters, pos } = built(d, params);
         for (const e of emitters) {
@@ -52,8 +54,8 @@ describe("emitters", () => {
           expect(over, `${what}: covered by geometry`).toBe(false);
         }
       }
-    }
-  }, 300_000);
+    }, 300_000);
+  });
 
   it("are given by every chimney, cooling tower, flare, funnel and locomotive exhaust", () => {
     for (const id of SMOKERS) {

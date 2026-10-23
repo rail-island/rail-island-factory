@@ -94,6 +94,8 @@ data URLs from the generator, loaded through Vite's SSR loader
 | `/js/<id>.js` | the design's JS model, bundled on first request and kept in memory - byte-identical to the build's |
 | `/tree/<id>.json` | the source tree, built on request |
 | `/refs/<id>/<name>` | the source image, straight from `assets/` |
+| `/surfaces.meta.json` | the named surfaces, as the build writes them ([../models/surfaces.md](../models/surfaces.md)) |
+| `/textures/<file>` | a photo of the texture library, straight from `assets/textures/` |
 | `/thumbs/...` | 404: there are no thumbnail files |
 
 An edited file under `generator/` makes Vite reload the generator's changed
@@ -194,13 +196,15 @@ last in both directions; ties fall back to title, then id.
 **Filter chips** (`GROUPS`, `chipRows` in `catalogQuery.ts`) are the webapp
 Creator's, without its origin row (Common / Mine / Community / Archive): the
 factory has one origin. The first row is All plus one chip per fleet - Trains,
-Road vehicles, Trams, Ships, Aircraft, Cable cars, Buildings - offered only when
-it has models. A record's category picks its fleet (`Rail vehicles` is Trains,
+Road vehicles, Trams, Ships, Aircraft, Cable cars, Buildings, Trees, Woods, then
+Structures, Rails and roads, City blocks, Props and Textures (the site's preview pages and the
+props, [../models/previews.md](../models/previews.md)) - offered only when it has models. A record's category picks its fleet (`Rail vehicles` is Trains,
 except a `tram` group, which is Trams; `Road vehicles` is Road vehicles; `Cable
 car` is Cable cars; any category that is not a vehicle one is a building's).
 Under a pick, a second row splits it by the vehicle's `group` (Locomotive, Unit,
-Coach, Wagon, Metro, Bus, Truck) or the building's category; Ships, Aircraft,
-Cable cars and Trams have no second row. A third row splits a Locomotive or a
+Coach, Wagon, Metro, Bus, Truck), the building's category, a structure's or a way's set
+(Bridges, Railway stations, Dams, Rail types, ...) or a city block's district; Ships, Aircraft,
+Cable cars, Trams, Trees, Woods, Props and Textures have no second row. A third row splits a Locomotive or a
 Unit by its `traction` (Electric, Diesel, Steam); buildings have no city-pool
 row. A lower row appears only when it offers a choice,
 leads with its own All, and is cleared when the row above changes; picking the
@@ -235,7 +239,11 @@ A **parametric** model (one whose record has `params`) shows a Parameters block
 above the tabs: a `<select>` per enum parameter, its default marked. Each choice
 is built in the browser from the model's JS module, keeping the camera; the thumbnail, specs and source tree stay
 the default build's, so tree highlight and picking pause until the defaults
-return ([../models/parameters.md](../models/parameters.md)).
+return ([../models/parameters.md](../models/parameters.md)). A parameter marked `preview` - a
+fixture of a site preview that the game takes from the world, such as a bridge's span or a block's
+size - is listed apart, under **Preview parameters**
+([../models/previews.md](../models/previews.md)). A site preview (`proc-preview-*`) has no
+**Add to export** button.
 
 A **rigged** vehicle (its record has `rig`: every road vehicle) shows a **Pose**
 block: a Steering slider and one per hinge of an articulated body ("Trailer",

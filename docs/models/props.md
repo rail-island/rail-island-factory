@@ -7,7 +7,8 @@ units, the low detail, the loading gauge, and `props.meta.json`.
 **Code** - `generator/props/propKit.ts`, `generator/props/portProps.ts`,
 `generator/props/cableCarSheds.ts`, `generator/props/airportProps.ts`, `generator/catalog.ts`
 (`exportPropMeta`), `test/props.test.ts`
-**See also** - [sets.md](sets.md), [export.md](export.md), [lod.md](lod.md), the game's
+**See also** - [previews.md](previews.md) (the cable-car pylon and the catenary supports, drawn
+by their set modules and filed with the props on the site), [sets.md](sets.md), [export.md](export.md), [lod.md](lod.md), the game's
 `docs/rendering/props.md`
 
 ## What a prop is

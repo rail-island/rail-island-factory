@@ -132,6 +132,23 @@ export const SURFACES = {
   "model-stone": { texture: "cobblestone", tile: 2.5, tintLift: 0.85, fill: 0.2 },
   "model-concrete": { texture: "concrete", tile: 3, tintLift: 0.92, gain: 1.4, fill: 0.15 },
   "model-timber": { texture: "wood", tile: 2, tintLift: 0.85, fill: 0.15 },
+  // the site's texture pages (proc-preview-texture-*): each photo as it is, untinted;
+  // nothing in the game binds these
+  "swatch-asphalt": { texture: "asphalt", tile: 4, tintLift: 1 },
+  "swatch-bigstone": { texture: "bigstone", tile: 4, tintLift: 1 },
+  "swatch-cobblestone": { texture: "cobblestone", tile: 4, tintLift: 1 },
+  "swatch-concrete": { texture: "concrete", tile: 4, tintLift: 1 },
+  "swatch-grass": { texture: "grass", tile: 4, tintLift: 1 },
+  "swatch-gravel": { texture: "gravel", tile: 4, tintLift: 1 },
+  "swatch-ground": { texture: "ground", tile: 4, tintLift: 1 },
+  "swatch-mud": { texture: "mud", tile: 4, tintLift: 1 },
+  "swatch-pavement": { texture: "pavement", tile: 4, tintLift: 1 },
+  "swatch-rock": { texture: "rock", tile: 4, tintLift: 1 },
+  "swatch-sand": { texture: "sand", tile: 4, tintLift: 1 },
+  "swatch-slate": { texture: "slate", tile: 4, tintLift: 1 },
+  "swatch-snow": { texture: "snow", tile: 4, tintLift: 1 },
+  "swatch-wall": { texture: "wall", tile: 4, tintLift: 1 },
+  "swatch-wood": { texture: "wood", tile: 4, tintLift: 1 },
 } as const satisfies Record<string, SurfacePreset>;
 
 export type SurfaceId = keyof typeof SURFACES;

@@ -10,7 +10,7 @@ import * as THREE from "three";
 import type { Object3D } from "three";
 import { proceduralId } from "../generator/modelId.ts";
 import { DESIGNS, catalogFields, designGlb, designReferenceFiles, designSource, designTree } from "../generator/generate";
-import { devCatalog, devJs, devReference, devTree } from "../generator/devExport";
+import { devCatalog, devJs, devReference, devSurfacesMeta, devTexture, devTree } from "../generator/devExport";
 import { bundleDesign } from "../generator/jsModel";
 import { TREES } from "../generator/trees";
 import { glbStats } from "../generator/glbStats";
@@ -121,5 +121,18 @@ describe("the generator under `pnpm dev`", () => {
       }
     }
     expect(unmarked).toEqual([]);
+  });
+});
+
+describe("the texture library under `pnpm dev`", () => {
+  // Regression: the dev server served no textures/ and no surfaces.meta.json, so the
+  // site's 3D preview showed no photo on any surface while developing.
+  it("serves the named surfaces and every photo, and nothing else from the folder", () => {
+    const meta = JSON.parse(devSurfacesMeta()) as { surfaces: Record<string, unknown> };
+    expect(meta.surfaces["bridge-brick"]).toBeDefined();
+    expect(devTexture("wall_albedo.jpg")).toMatch(/assets[/\\]textures[/\\]wall_albedo\.jpg$/);
+    expect(fs.existsSync(devTexture("wall_albedo.jpg")!)).toBe(true);
+    expect(devTexture("SOURCES.md")).toBeNull();
+    expect(devTexture("../package.json")).toBeNull();
   });
 });

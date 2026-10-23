@@ -1,0 +1,58 @@
+// The site's preview designs (generator/previews/, docs/models/previews.md): one page
+// per structure type, rail and road type, line decoration, catenary style, city block
+// type and texture, each filed in its category and bound to its type.
+
+import { describe, expect, it } from "vitest";
+import { PREVIEW_DESIGNS } from "../generator/generate";
+import { SETS, type SetName } from "../generator/sets/registry";
+import { TEXTURE_NAMES } from "../generator/surfaces";
+
+const CATEGORY: Partial<Record<SetName, string>> = {
+  bridge: "Structures", busStop: "Structures", station: "Structures", roadStation: "Structures", cableCarStation: "Structures",
+  port: "Structures", airport: "Structures", dam: "Structures", tunnelPortal: "Structures",
+  railType: "Rails and roads", roadType: "Rails and roads", decoration: "Rails and roads",
+  blockType: "City blocks", catenaryStyle: "Props",
+};
+
+describe("the preview designs", () => {
+  it("give every type of every set one page in its category, bound to the type", () => {
+    for (const def of SETS) {
+      const category = CATEGORY[def.set];
+      expect(category, def.set).toBeDefined();
+      for (const t of def.types) {
+        const pages = PREVIEW_DESIGNS.filter((d) => d.bound === t.id && d.catalog?.category === category && (category === "City blocks" || d.catalog?.group === def.set || category === "Props"));
+        expect(pages.map((d) => d.id), `${def.set}:${t.id}`).toHaveLength(1);
+        expect(pages[0]!.title).toBe(t.label);
+      }
+    }
+  });
+
+  it("give every photo set of the texture library a page", () => {
+    const textures = PREVIEW_DESIGNS.filter((d) => d.catalog?.category === "Textures");
+    expect(textures.map((d) => d.bound).sort()).toEqual([...TEXTURE_NAMES].sort());
+  });
+
+  it("are all site-only proc-preview-* designs with unique ids, and no type is a parameter", () => {
+    const ids = PREVIEW_DESIGNS.map((d) => d.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const d of PREVIEW_DESIGNS) {
+      expect(d.id).toMatch(/^proc-preview-[a-z0-9-]+$/);
+      expect((d.params ?? []).map((p) => p.name)).not.toContain("type");
+    }
+  });
+
+  it("list a fixture the game sets itself under Preview parameters", () => {
+    const flagged = (id: string): string[] => (PREVIEW_DESIGNS.find((d) => d.id === id)!.params ?? []).filter((p) => p.preview).map((p) => p.name);
+    expect(flagged("proc-preview-bridge-beam")).toEqual(["length"]);
+    expect(flagged("proc-preview-block-village")).toEqual(["size", "sample"]);
+    // what a player picks for a station is an ordinary parameter
+    expect(flagged("proc-preview-station-arch-shed")).toEqual([]);
+  });
+
+  it("build a different model for each type of one shared function", () => {
+    const beam = PREVIEW_DESIGNS.find((d) => d.id === "proc-preview-bridge-beam")!;
+    const arch = PREVIEW_DESIGNS.find((d) => d.id === "proc-preview-bridge-stone-arch")!;
+    expect(beam.build.name).toBe(arch.build.name);
+    expect(beam.build().triangleCount()).not.toBe(arch.build().triangleCount());
+  });
+});

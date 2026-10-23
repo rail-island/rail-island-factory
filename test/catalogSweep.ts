@@ -215,7 +215,7 @@ export function sweep(ids: readonly string[]): void {
         // -- a set preview, which carries its whole set module and is never exported
         // to the game, to twice that -- or to its GLBs when those are larger;
         // every other design must beat its GLBs.
-        const boxes = ["Props", "Structure types"].includes(design(id).catalog?.category ?? "");
+        const boxes = design(id).catalog?.category === "Props" || id.startsWith("proc-preview-");
         const limit = id.startsWith("proc-preview-") ? PREVIEW_JS_LIMIT : PROP_JS_LIMIT;
         if (boxes) expect(Buffer.byteLength(text)).toBeLessThan(Math.max(limit, glbOf(id).length + lodGlbOf(id).length));
         else expect(Buffer.byteLength(text)).toBeLessThan(glbOf(id).length + lodGlbOf(id).length);

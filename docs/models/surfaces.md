@@ -38,7 +38,8 @@ its average.
 
 The `bridge-*`, `road-*`, `stop-*`, `rail-*`, `tram-tie`, `airport-*`, `dam-*`, `tunnel-portal`,
 `gallery-concrete` and `house-plinth` presets are what the game binds its own structures with;
-the `model-*` presets are for factory designs.
+the `model-*` presets are for factory designs, and the `swatch-*` presets (each photo untinted, four
+units a repeat) for the site's texture pages ([previews.md](previews.md)).
 
 ## A design that names a surface
 
@@ -56,4 +57,6 @@ A whole export copies the library to `export/textures/` and writes `surfaces.met
 (every texture with its files, slug, licence, average and sha256; every surface). The game's
 import mirrors both; the game binds a model's photos after it builds it, and its own structures
 through the same table. The site preview (`src/viewerSurfaces.ts`) binds them from the export
-folder with the game's tint rule, so a design can be checked by eye.
+folder with the game's tint rule, so a design can be checked by eye; under `pnpm dev` the dev
+server serves `/surfaces.meta.json` and `/textures/<file>` straight from the generator and
+`assets/textures/` ([../site/catalog-site.md](../site/catalog-site.md)).

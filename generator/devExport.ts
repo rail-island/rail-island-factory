@@ -8,6 +8,8 @@
 //   /js/<id>.js          the design's JS model, bundled when first asked for
 //   /tree/<id>.json      the design's source tree, built when asked for
 //   /refs/<id>/<name>    the design's source images, straight from assets/
+//   /surfaces.meta.json  the named surfaces, as the build writes them
+//   /textures/<file>     the texture library's photos, straight from assets/textures/
 //
 // No z-fighting, LOD or game-property checks run here: `pnpm build` and the
 // tests run them.
@@ -16,6 +18,9 @@ import { catalogRecord, isSideViewCategory, listedEntry, metaEntry, REFS_DIR, ty
 import { BUILDINGS, DESIGNS, VILLAGE_DESIGNS, catalogFields, designReferenceFiles, designSource, designTree } from "./generate.ts";
 import { bundleDesign } from "./jsModel.ts";
 import fs from "node:fs";
+import path from "node:path";
+import { surfacesMeta, TEXTURES_DIR } from "./surfacesExport.ts";
+import { TEXTURE_CHANNELS, TEXTURE_NAMES } from "./surfaces.ts";
 
 /** The catalog as `pnpm dev` lists it: every record unmeasured, its figures zero. */
 export function devCatalog(): ModelCatalog {
@@ -50,4 +55,15 @@ export function devTree(id: string): string | null {
 export function devReference(id: string, name: string): string | null {
   const design = DESIGNS.get(id);
   return (design && designReferenceFiles(design).find((r) => r.name === name)?.file) || null;
+}
+
+/** export/surfaces.meta.json as the build writes it: the site's 3D preview tints its photos by it. */
+export function devSurfacesMeta(): string {
+  return `${JSON.stringify(surfacesMeta(), null, 2)}\n`;
+}
+
+/** A photo of the texture library (export/textures/<name>_<channel>.jpg), or null for any other name. */
+export function devTexture(file: string): string | null {
+  const ok = TEXTURE_NAMES.some((name) => TEXTURE_CHANNELS.some((c) => file === `${name}_${c}.jpg`));
+  return ok ? path.join(TEXTURES_DIR, file) : null;
 }

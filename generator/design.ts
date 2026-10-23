@@ -31,6 +31,14 @@ export interface ParamSpec {
   /** One of `values`: what the exported GLB is built with. */
   default: string;
   /**
+   * A fixture of the site's preview, not of the model: the span a bridge preview
+   * crosses, the size of a sample city block. The game sets its own (from the path
+   * it builds over, the block it fills), so the site lists these apart, under
+   * "Preview parameters" (docs/models/sets.md). A parameter the game passes as it
+   * stands (a station's track count) is an ordinary one.
+   */
+  preview?: true;
+  /**
    * Set when the parameter applies only to some values of an earlier one (a
    * TGV's car count to its trailer set, not its power car): elsewhere it is
    * absent -- not resolved, not combined, not shown, not part of a key.
@@ -64,6 +72,14 @@ export interface ProceduralDesign {
   title: string;
   /** Builds the model; a parametric design reads `params`, missing names take their defaults. */
   build: (params?: ParamValues) => MeshBuilder;
+  /**
+   * The one value a shared build function is drawn for: a site preview of one set
+   * type (`proc-preview-bridge-stone-arch` draws the bridge set's `stone_arch`).
+   * `build` and `buildLod` are then the shared functions bound to it -- named as the
+   * module exports them -- and the JS model passes it as their second argument
+   * (`boundDesign`, jsModel.ts).
+   */
+  bound?: string;
   /** The design's enum parameters; absent for a fixed design. */
   params?: readonly ParamSpec[];
   /** The dedicated distant model (docs/models/lod.md), exported from the same source module. */
@@ -395,4 +411,19 @@ export interface CatalogFields {
   license: string;
   author: string;
   source: string;
+}
+
+/**
+ * Binds the shared build functions `build(values, value)` and `buildLod(values, value)`
+ * to one value (`bound`): the bound functions keep the shared names, which is what a
+ * design's JS model imports from its source module.
+ */
+export function boundDesign(
+  build: (params: ParamValues | undefined, value: string) => MeshBuilder,
+  buildLod: (params: ParamValues | undefined, value: string) => MeshBuilder,
+  value: string,
+): { build: (params?: ParamValues) => MeshBuilder; buildLod: (params?: ParamValues) => MeshBuilder; bound: string } {
+  const bind = (fn: (params: ParamValues | undefined, value: string) => MeshBuilder) =>
+    Object.defineProperty((params?: ParamValues) => fn(params, value), "name", { value: fn.name });
+  return { build: bind(build), buildLod: bind(buildLod), bound: value };
 }

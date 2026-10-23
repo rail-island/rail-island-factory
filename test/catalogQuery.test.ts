@@ -314,12 +314,25 @@ describe("previewKey", () => {
   });
 });
 
-describe("the Props and Structure types chips", () => {
-  it("file the structure props and the set previews under first-row chips of their own", async () => {
+describe("the Structures, Rails and roads, City blocks, Props and Textures chips", () => {
+  it("file the props and the site previews under first-row chips of their own", async () => {
     const { groupOf, GROUPS } = await import("../src/catalogQuery");
     expect(groupOf({ category: "Props", group: "props" } as never)).toBe("prop");
-    expect(groupOf({ category: "Structure types", group: "previews" } as never)).toBe("structure");
-    expect(GROUPS.map((g) => g.id)).toEqual(expect.arrayContaining(["prop", "structure"]));
+    expect(groupOf({ category: "Structures", group: "bridge" } as never)).toBe("structure");
+    expect(groupOf({ category: "Rails and roads", group: "roadType" } as never)).toBe("way");
+    expect(groupOf({ category: "City blocks", group: "commercial" } as never)).toBe("block");
+    expect(groupOf({ category: "Textures", group: "texture" } as never)).toBe("texture");
+    expect(GROUPS.map((g) => g.id)).toEqual(expect.arrayContaining(["structure", "way", "block", "prop", "texture"]));
+  });
+
+  it("splits Structures by set and Rails and roads by kind on the second row, with names", async () => {
+    const { chipLabel, level2Of } = await import("../src/catalogQuery");
+    expect(level2Of({ category: "Structures", group: "dam" } as never)).toBe("dam");
+    expect(level2Of({ category: "Rails and roads", group: "railType" } as never)).toBe("railType");
+    expect(level2Of({ category: "Textures", group: "texture" } as never)).toBe("other");
+    expect(chipLabel("dam")).toBe("Dams");
+    expect(chipLabel("roadStation")).toBe("Bus and truck stations");
+    expect(chipLabel("railType")).toBe("Rail types");
   });
 });
 

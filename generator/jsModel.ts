@@ -48,6 +48,8 @@ const noSurfaces: Plugin = {
  */
 export async function bundleDesign(design: ProceduralDesign, source: string, rigged = design.build().rig !== null): Promise<string> {
   const fn = design.build.name;
+  // a design bound to one value of a shared build function passes it along (design.ts `bound`)
+  const bound = design.bound === undefined ? "" : `, ${JSON.stringify(design.bound)}`;
   // the UV code ships only in the bundle of a design that names a surface (threeBuilder.ts)
   const levels = [design.build(), design.buildLod(), ...(design.buildCoarse ? [design.buildCoarse()] : []), ...(design.buildMax ? [design.buildMax()] : [])];
   const surfaces = levels.some((m) => Object.values((m as unknown as { palette: Record<string, MaterialSpec> }).palette).some((spec) => spec.surface));
@@ -58,7 +60,7 @@ export async function bundleDesign(design: ProceduralDesign, source: string, rig
         // a parametric design's enum parameters, [] for a fixed one; build() takes the chosen values
         `export const params = ${JSON.stringify(design.params ?? [])};`,
         `export const lodTriangleBudget = ${lodBudget(design)};`,
-        `export default function build(THREE, values, lod = false) { if (typeof lod !== "boolean") throw new Error("lod must be a boolean"); const mesh = lod ? designLod(values) : design(values); const group = mesh.toGroup(THREE, ${JSON.stringify(design.id)}); group.userData.lod = lod; return group; }`,
+        `export default function build(THREE, values, lod = false) { if (typeof lod !== "boolean") throw new Error("lod must be a boolean"); const mesh = lod ? designLod(values${bound}) : design(values${bound}); const group = mesh.toGroup(THREE, ${JSON.stringify(design.id)}); group.userData.lod = lod; return group; }`,
         ...(design.buildMax ? [`export const maxTriangleBudget = 10000;`, `export function buildMax(THREE, values) { const group = designMax(values).toGroup(THREE, ${JSON.stringify(design.id)}); group.userData.lod = "max"; return group; }`] : []),
         ...(rigged ? [`export { pose, renderJoint, steerAngles, steerLock, jointTriangles } from "./rig.ts";`] : []),
         // a tree's third, coarsest level (design.ts buildCoarse)

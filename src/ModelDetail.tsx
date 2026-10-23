@@ -128,8 +128,8 @@ export function ModelDetail(props: {
             &rarr;
           </button>
         </div>
-        {/* a set preview is a drawing of a game structure, not a model to take away */}
-        <Show when={props.record.category !== "Structure types"}>
+        {/* a site preview (proc-preview-*) is a drawing of what the game builds, not a model to take away */}
+        <Show when={!props.record.id.startsWith("proc-preview-")}>
           <button type="button" class="factory-btn factory-detail__export" disabled={props.exported} onClick={() => props.onAddExport()}>
             {props.exported ? "In the export" : "Add to export"}
           </button>
@@ -150,24 +150,32 @@ export function ModelDetail(props: {
         <p class="factory-muted" aria-live="polite">
           Preview: {triangles() ?? "..."} triangles{lod() === "max" ? " (max detail)" : lod() === "coarse" ? " (coarse)" : lod() ? " (LOD)" : " (full detail)"}
         </p>
-        <Show when={(props.record.params ?? []).length > 0}>
-          <fieldset class="factory-params">
-            <legend>Parameters</legend>
-            <For each={(props.record.params ?? []).filter((p) => values()[p.name] !== undefined)}>
-              {(p) => (
-                <label class="factory-param">
-                  <span>{p.title}</span>
-                  <select id={`param-${p.name}`} value={values()[p.name]} onChange={(e) => choose(p.name, e.currentTarget.value)}>
-                    <For each={p.values}>{(v) => <option value={v.value}>{v.value === p.default ? `${v.title} (default)` : v.title}</option>}</For>
-                  </select>
-                </label>
-              )}
-            </For>
-            <Show when={!atDefaults()}>
-              <p class="factory-muted factory-params__note">The thumbnail and source tree show the defaults.</p>
+        {/* the model's own parameters, then the fixtures its site preview is drawn at */}
+        <For each={[{ legend: "Parameters", preview: false }, { legend: "Preview parameters", preview: true }]}>
+          {(section) => (
+            <Show when={(props.record.params ?? []).some((p) => !!p.preview === section.preview)}>
+              <fieldset class="factory-params">
+                <legend>{section.legend}</legend>
+                <For each={(props.record.params ?? []).filter((p) => !!p.preview === section.preview && values()[p.name] !== undefined)}>
+                  {(p) => (
+                    <label class="factory-param">
+                      <span>{p.title}</span>
+                      <select id={`param-${p.name}`} value={values()[p.name]} onChange={(e) => choose(p.name, e.currentTarget.value)}>
+                        <For each={p.values}>{(v) => <option value={v.value}>{v.value === p.default ? `${v.title} (default)` : v.title}</option>}</For>
+                      </select>
+                    </label>
+                  )}
+                </For>
+                <Show when={section.preview}>
+                  <p class="factory-muted factory-params__note">The game sets these from the world it builds in.</p>
+                </Show>
+                <Show when={!section.preview && !atDefaults()}>
+                  <p class="factory-muted factory-params__note">The thumbnail and source tree show the defaults.</p>
+                </Show>
+              </fieldset>
             </Show>
-          </fieldset>
-        </Show>
+          )}
+        </For>
         <Show when={controls().length > 0 && !lod()}>
           <fieldset class="factory-params factory-pose">
             <legend>Pose</legend>
