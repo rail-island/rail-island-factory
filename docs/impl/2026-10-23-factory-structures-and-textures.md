@@ -86,11 +86,33 @@ Checks, run sequentially:
 | Repo | `pnpm typecheck` | `pnpm test` | `pnpm build` |
 |---|---|---|---|
 | Game | clean | 561 files, 7414 tests | succeeds |
-| Factory | clean | 96 files, 5422 tests, 11 skipped | succeeds |
+| Factory | clean | 98 files, 6792 tests, 11 skipped (after follow-up 1) | succeeds |
 
 - `TEST_ALL_VARIANTS=1` passes for every preview design.
 - A full `pnpm import:factory` after the final factory build leaves the game's `db/procedural`
   unchanged.
+
+## Follow-up changes
+
+1. **The site's structure pages, rails and roads, city blocks and textures** (asked: one
+   "Structures" list of every type, dams, airports and ports included; pylon and catenary to
+   Props; preview fixtures as their own parameters; textures on bridges; rail and road types and
+   city blocks on the site; the texture library on the site). The per-set preview pages with a
+   Type parameter became one page per type, as the spec's preview decision has it, in
+   `generator/previews/` (docs/models/previews.md):
+   - categories Structures (bridges, bus stops, railway stations, bus and truck stations,
+     cable-car stations, ports, airports, dams, tunnel portals), Rails and roads (rail types, road
+     types, line decorations), City blocks (a sample block per block type, grown from its pools
+     and city presets), Props (the cable-car pylon and the catenary supports beside the fixed
+     props) and Textures (one per photo set) - 101 pages;
+   - a design may be `bound` to a type of a shared build function, which its JS model passes;
+   - `ParamSpec.preview` lists a fixture (a bridge's span, a block's size) under **Preview
+     parameters**; what a player sets in the game stays under Parameters;
+   - previews name the game's surfaces, and `pnpm dev` now serves `/surfaces.meta.json` and
+     `/textures/*`, so the 3D preview shows the photos while developing too (regression test in
+     `test/devExport.test.ts`); the `swatch-*` surfaces face the texture pages;
+   - the emitters check runs one test per design, so a heavy design no longer times out the
+     worker's reports.
 
 ## How to test
 
@@ -129,8 +151,20 @@ Run `pnpm test` in each repo; `test/setPins.test.ts` in both holds every shipped
    decoration type names are translated, and so are model titles in the pickers.
 9. Load an island saved before the change. Nothing moves or disappears. A stored type the build
    does not know draws as its set's default.
-10. Open the factory site (`pnpm dev` in the factory). The "Structure types" chip lists the six
-    previews; each shows its types through the Type parameter.
+10. Open the factory site (`pnpm dev` in the factory). The first chip row ends with
+    **Structures**, **Rails and roads**, **City blocks**, **Props** and **Textures**.
+    - Structures: the second row lists Bridges, Bus stops, Railway stations, Bus and truck
+      stations, Cable car stations, Ports, Airports, Dams and Tunnel portals; each type is a model
+      of its own (e.g. "Stone Arch Bridge").
+    - Open a bridge: the 3D preview shows brick, stone, concrete or timber photos; **Carries** is
+      under Parameters, **Span** under Preview parameters; there is no Add to export button.
+    - Open a railway station: **Tracks** and **Length** are Parameters (a player sets them).
+    - City blocks: open "Tenements" (or any block); change **Block size** and **Sample** under
+      Preview parameters - the block regrows from its pools.
+    - Rails and roads: rail types with sleepers and, for Electric, masts and wires; road types
+      with their surfaces, centre line and tram rails; the five line decorations along a road.
+    - Props: the cable-car pylon (**Height** a preview parameter) and the rail mast and tram pole.
+    - Textures: each photo set on a slab and a block in the 3D preview.
 
 **Also worth trying.**
 - A deck-truss bridge over a sloping bank. Ships still route between its real piers; no phantom
@@ -154,11 +188,18 @@ Nothing - the spec is implemented in full.
   constants derived at module load from the default rail type's meta. A per-type ballast would
   need those reads moved per type.
 - Site previews approximate:
-  - glass is opaque and name boards stay blank;
-  - the bridge preview's tapered tram pole is a straight prism;
-  - bridge sweeps are drawn by a factory re-implementation of the game's mitred sweep.
-- Set previews are held to 48 KB of JS (props to 24 KB), or to their GLBs when those are larger.
-  They are never exported to the game.
+  - glass is opaque and name boards stay blank; a tram pole's taper is a straight prism;
+  - sweeps are drawn by a factory re-implementation of the game's mitred sweep, and every
+    material is grown by a hair to keep flush faces apart;
+  - ports and airports show the type's props and terminal on a fixed quay or pad, not the game's
+    solved layout; a dam's wall and a weir's wings are drawn in the preview, only their parts by
+    the dam module;
+  - a city block lines its frontages and picks presets by its data, but not with CityGen's lot
+    fitting or facade numbers; the landmark block, which names no pool, stands a building of the
+    historic pool; thumbnails are flat (the photos show in the 3D preview only).
+- Set previews are held to 48 KB of JS (props to 24 KB), or to their GLBs when those are larger;
+  a block's bundle carries its pools' building code (about 110 KB). None is exported to the game.
+- The `swatch-*` surfaces ride in `surfaces.meta.json`, which the game imports; it binds none.
 - `catenaryStyle.mast` and `pole` ignore their style argument: each style draws one support kind.
   A second mast style needs real dispatch.
 - The decoration, bridge and station modules keep the game's dimensions as module constants;
@@ -170,7 +211,7 @@ Nothing - the spec is implemented in full.
   guard test.
 - Add a second catenary style (a concrete mast or a headspan) to exercise style dispatch.
 - Let a rail type carry its own ballast bed per type, now that the cross-section is factory data.
-- Show the photos on the bridge and station previews by naming surfaces on their materials.
+- Render the site thumbnails with the photos, so a texture page's card is not a flat colour.
 - Run `update-translations` on the game's master: this change adds two keys in English and Czech
   (`toast.busstop_locked`, `city.block.named`) and drops the game keys the factory text replaced.
 
@@ -183,5 +224,6 @@ Nothing - the spec is implemented in full.
   instead of dropping or renaming it.
 - Structure, rail, road and decoration type names, model titles and woods names are now
   translated into every supported language.
-- The model catalog site previews every station, road station, bridge, bus stop, cable-car pylon
-  and overhead-line support type.
+- The model catalog site has a page for every structure type (bridges, stations, stops, cable-car
+  stations, ports, airports, dams, tunnel portals), every rail and road type and line decoration,
+  a sample of every city block type and every texture, with the photos shown in the 3D preview.
