@@ -16,6 +16,7 @@ import * as roadType from "./roadType.ts";
 import * as dam from "./dam.ts";
 import * as station from "./station.ts";
 import * as roadStation from "./roadStation.ts";
+import * as bridge from "./bridge.ts";
 import { pinHash } from "./pinHash.ts";
 
 /** A fixed solved road station: three islands either side of two stands, two mount points. */
@@ -28,6 +29,10 @@ const ROAD_STATION_SITE: roadStation.DressSite = {
   islandTop: 1.27,
   clearance: 9.5,
 };
+
+/** A fixed crossing of a valley: 240 studs of straight path 10 studs over the lowest ground. */
+const BRIDGE_PATH = bridge.pathFromPoints([{ x: -60, y: 10, z: 0 }, { x: 60, y: 11, z: 10 }, { x: 180, y: 12, z: 0 }], 9, 0, 0.67, 9.9)!;
+const BRIDGE_VALLEY = (x: number, z: number): number => 4 - 14 * Math.exp(-(((x - 60) / 34) ** 2)) + 0.02 * z;
 
 /** Everything one decoration module draws, recorded call by call. */
 function recordPiece(kind: string, side: decoration.DecorationSide, detail: string): unknown[] {
@@ -75,6 +80,13 @@ export function setPinCases(): Record<string, PinCase[]> {
     roadStation: [
       { name: "types", build: () => roadStation.TYPE_META },
       ...Object.keys(roadStation.TYPE_META).map((type) => ({ name: `${type}.site`, build: () => roadStation.dress(type, ROAD_STATION_SITE) })),
+    ],
+    bridge: [
+      { name: "types", build: () => bridge.TYPE_META },
+      ...Object.keys(bridge.TYPE_META).flatMap((type) => [
+        { name: `${type}.overhead`, build: () => [40, 150, 300].map((l) => bridge.overheadMembers(type, l, 9, 9.9)) },
+        { name: `${type}.valley`, build: () => bridge.buildBridge(type, BRIDGE_PATH, BRIDGE_VALLEY) },
+      ]),
     ],
     railType: [{ name: "types", build: () => railType.TYPE_META }],
     roadType: [{ name: "types", build: () => roadType.TYPE_META }],

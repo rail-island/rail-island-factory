@@ -296,7 +296,7 @@ export const SETS: readonly SetDef[] = [
     set: "bridge",
     collectible: "bridge",
     phase: 6,
-    landed: false,
+    landed: true,
     defaultId: "beam",
     retired: {},
     types: [

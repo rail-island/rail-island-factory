@@ -25,6 +25,7 @@ import { expectSealed, jointMesh } from "./rigHelpers";
 
 /** The most a prop's or a set preview's JS model may weigh: the builder runtime and its boxes. */
 const PROP_JS_LIMIT = 24_000;
+const PREVIEW_JS_LIMIT = 48_000;
 
 function walk(n: TreeNode, out: TreeNode[] = []): TreeNode[] {
   out.push(n);
@@ -211,10 +212,12 @@ export function sweep(ids: readonly string[]): void {
         // A structure prop or a set preview of a few boxes (a bollard, a container, a
         // pylon: docs/models/props.md) is smaller as a GLB than the builder runtime
         // every JS model carries, so it is held to the runtime and a little more
-        // -- or, a preview carrying a whole set module (a station), to its GLBs;
+        // -- a set preview, which carries its whole set module and is never exported
+        // to the game, to twice that -- or to its GLBs when those are larger;
         // every other design must beat its GLBs.
         const boxes = ["Props", "Structure types"].includes(design(id).catalog?.category ?? "");
-        if (boxes) expect(Buffer.byteLength(text)).toBeLessThan(Math.max(PROP_JS_LIMIT, glbOf(id).length + lodGlbOf(id).length));
+        const limit = id.startsWith("proc-preview-") ? PREVIEW_JS_LIMIT : PROP_JS_LIMIT;
+        if (boxes) expect(Buffer.byteLength(text)).toBeLessThan(Math.max(limit, glbOf(id).length + lodGlbOf(id).length));
         else expect(Buffer.byteLength(text)).toBeLessThan(glbOf(id).length + lodGlbOf(id).length);
       });
 

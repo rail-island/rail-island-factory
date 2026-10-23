@@ -104,6 +104,7 @@ import { AIRPORT_PROPS } from "./props/airportProps.ts";
 import { SET_PREVIEWS } from "./props/setPreviews.ts";
 import { STATION_PREVIEWS } from "./props/stationPreview.ts";
 import { ROAD_STATION_PREVIEWS } from "./props/roadStationPreview.ts";
+import { BRIDGE_PREVIEWS } from "./props/bridgePreview.ts";
 import { FAR_PROPS } from "./props/propKit.ts";
 import { generateSets } from "./sets/setsExport.ts";
 import { generateText } from "./text.ts";
@@ -211,6 +212,7 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: SET_PREVIEWS, source: "props/setPreviews.ts", meta: "previews" },
   { designs: STATION_PREVIEWS, source: "props/stationPreview.ts", meta: "previews" },
   { designs: ROAD_STATION_PREVIEWS, source: "props/roadStationPreview.ts", meta: "previews" },
+  { designs: BRIDGE_PREVIEWS, source: "props/bridgePreview.ts", meta: "previews" },
 ];
 
 const FAMILIES = RAW_FAMILIES.map(f => ({ ...f, designs: f.designs.map(d => { d.id = proceduralId(d.id); return d; }) }));
