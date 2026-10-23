@@ -7,6 +7,7 @@ the per-set meta files and modules the export writes, and the tests that pin the
 **Code** - `generator/sets/registry.ts`, `generator/sets/setsExport.ts`, `generator/sets/<set>.ts`,
 `generator/sets/pinCases.ts`, `generator/sets/writePins.ts`, `generator/props/setPreviews.ts`,
 `generator/props/stationPreview.ts`, `generator/props/roadStationPreview.ts`, `generator/props/bridgePreview.ts`,
+`generator/props/catenaryPreview.ts`,
 `test/sets.test.ts`, `test/setPins.test.ts`, `test/bridgeSet.test.ts`
 **See also** - [props.md](props.md), [text.md](text.md), [export.md](export.md), [woods.md](woods.md), the game's
 `docs/tooling/factory-import.md` and `docs/architecture/sets.md`, the spec
@@ -69,6 +70,7 @@ A set's module holds what its types ARE, and the game keeps what fits them to a 
 | `station` | `TYPE_META`: each type's layout recipe (platform and island widths, paired or side by side, the far side's platform or house strip); `buildLayout(type, tracks)`; `furnish(type, length, layout)`: the platforms, roofs, sheds, signs and furniture over any layout | track generation, the persisted layouts, painting the name boards (`label` boxes), material meaning, the structure LOD |
 | `roadStation` | `TYPE_META`: group (bus or truck) and island width; `dress(type, site)`: the bay posts and the type's dressing over a solved layout | the solver (stands, islands, roads, mount points), the islands' paving, the footprint banister |
 | `bridge` | `TYPE_META`: the span policy (`maxSpan`, or none); the kit (path sampling and its deck frame, box, span, strut, wall and ribbon shapes, piers, abutments) and one function per type, run per structural span over the path the game hands in (`pathFromPoints`, carrying the game's deck support height and overhead clearance); `buildBridge(type, path, heightAt)`, the boundary pier style, `overheadMembers` and `overheadMemberEndpoints`. Every box built from the terrain up is tagged `ground` | path planning, grade profiles, lanes, the deck geometry, the ground pier footprints, catenary fixings, the far LOD |
+| `catenaryStyle` | `TYPE_META`: the support a style draws (mast or pole); `mast(style, input)`: the railway ladder mast with its footing or deck pedestal and its trackside arms or portal beam; `pole(style, input)`: the tram pole with its bracket arm and drops. Both take the heights the game plans with and return parts in one cross-section (box, bar, pole) | the planners (spacing, sides, wire runs, bridge and station fixings), the wires, the hangers |
 
 Fixed props (a shed, a crane, a tower) are ordinary models, not module code ([props.md](props.md));
 a set names them by id.
@@ -78,8 +80,9 @@ short piece of two-lane road, a pylon of middling height (`generator/props/setPr
 60-stud station of one, two or four tracks over its ballast and rails
 (`generator/props/stationPreview.ts`), a road station on a fixed two-stand layout
 (`generator/props/roadStationPreview.ts`), every bridge type on a 60- or 160-stud straight
-crossing, its shapes drawn by `generator/props/bridgePreview.ts` (sweeps mitred like the game's)
-- `proc-preview-*`, category "Structure types". Each
+crossing, its shapes drawn by `generator/props/bridgePreview.ts` (sweeps mitred like the game's),
+and a trackside mast, a portal or a tram pole with a short run of wire
+(`generator/props/catenaryPreview.ts`) - `proc-preview-*`, category "Structure types". Each
 source file is one bundle, so a preview carries only its own set module; one carrying a whole
 module is held to 48 KB (or its GLBs) rather than the props' 24 KB - previews are never exported
 to the game. Glass draws opaque and name boards

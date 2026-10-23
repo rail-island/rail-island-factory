@@ -152,6 +152,15 @@
     "network_arch.overhead": "51f0037564ca9d1e",
     "network_arch.valley": "f817f9ca1e0f7f30"
   },
+  "catenaryStyle": {
+    "types": "e201afafc34da35d",
+    "rail_mast.trackside": "edac06b511d96a9c",
+    "rail_mast.portal": "17c444b6a0485fd4",
+    "rail_mast.deck": "a037d94bf403ed23",
+    "tram_pole.single": "6e9df696ee80d71c",
+    "tram_pole.double": "312c57824c96d456",
+    "tram_pole.deck": "c3bb6c83b46961a8"
+  },
   "railType": {
     "types": "b29fbae59a6f2085"
   },

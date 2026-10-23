@@ -17,6 +17,7 @@ import * as dam from "./dam.ts";
 import * as station from "./station.ts";
 import * as roadStation from "./roadStation.ts";
 import * as bridge from "./bridge.ts";
+import * as catenaryStyle from "./catenaryStyle.ts";
 import { pinHash } from "./pinHash.ts";
 
 /** A fixed solved road station: three islands either side of two stands, two mount points. */
@@ -87,6 +88,17 @@ export function setPinCases(): Record<string, PinCase[]> {
         { name: `${type}.overhead`, build: () => [40, 150, 300].map((l) => bridge.overheadMembers(type, l, 9, 9.9)) },
         { name: `${type}.valley`, build: () => bridge.buildBridge(type, BRIDGE_PATH, BRIDGE_VALLEY) },
       ]),
+    ],
+    catenaryStyle: [
+      { name: "types", build: () => catenaryStyle.TYPE_META },
+      ...([["trackside", [4], [0, -8], false], ["portal", [-4, 12], [0, 8], false], ["deck", [3.4], [0], true]] as const).map(([name, uprights, drops, deck]) => ({
+        name: `rail_mast.${name}`,
+        build: () => catenaryStyle.mast("rail_mast", { uprights: [...uprights], drops: [...drops], deck, groundY: 10, railTop: 1.56, contact: 6.2, messenger: 7.5, deckRise: 0.67, deckFootingWidth: 1.1, wire: 0.08 }),
+      })),
+      ...([["single", 5, [0], false], ["double", -7.6, [-4, 4], false], ["deck", 6.2, [-4, 4], true]] as const).map(([name, offset, offsets, deck]) => ({
+        name: `tram_pole.${name}`,
+        build: () => catenaryStyle.pole("tram_pole", { offset, offsets: [...offsets], groundY: 10, trackYs: offsets.map((o) => 10.2 + o * 0.01), wireLift: 7.7, deck, deckRise: 0.67, wire: 0.08 }),
+      })),
     ],
     railType: [{ name: "types", build: () => railType.TYPE_META }],
     roadType: [{ name: "types", build: () => roadType.TYPE_META }],

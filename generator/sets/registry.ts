@@ -333,7 +333,7 @@ export const SETS: readonly SetDef[] = [
   {
     set: "catenaryStyle",
     phase: 7,
-    landed: false,
+    landed: true,
     defaultId: "rail_mast",
     retired: {},
     types: [
