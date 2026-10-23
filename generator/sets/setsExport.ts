@@ -95,7 +95,10 @@ export function declareSet(def: SetDef): string {
 /** Per-type meta data a set module exports as `TYPE_META` (sizes, anchors the game reads without running it). */
 async function typeMeta(def: SetDef): Promise<Record<string, Record<string, unknown>>> {
   if (!def.landed) return {};
-  const mod = (await import(setSource(def))) as { TYPE_META?: Record<string, Record<string, unknown>> };
+  // A computed path Vite cannot analyse: `pnpm dev` loads this file through the
+  // dev-export plugin (generator/devServer.ts) but never runs the export, so the
+  // import is left to Node (test/devExport.test.ts holds every one to this).
+  const mod = (await import(/* @vite-ignore */ setSource(def))) as { TYPE_META?: Record<string, Record<string, unknown>> };
   return mod.TYPE_META ?? {};
 }
 

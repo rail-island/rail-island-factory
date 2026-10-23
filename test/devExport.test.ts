@@ -3,6 +3,8 @@
 // how the site measures a record from its JS model (src/devMeasure.ts),
 // against what the build writes.
 
+import fs from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import * as THREE from "three";
 import type { Object3D } from "three";
@@ -92,4 +94,32 @@ describe("measuring a dev record from its JS model", () => {
       }
     });
   }
+});
+
+describe("the generator under `pnpm dev`", () => {
+  // Regression: generator/sets/setsExport.ts imported each set module by a computed
+  // path, which Vite's import analysis cannot follow, so every `pnpm dev` start
+  // printed a "dynamic import cannot be analyzed" warning. The dev server loads the
+  // generator through Vite (generator/devServer.ts), so a computed import() there must
+  // carry Vite's ignore marker.
+  it("marks every computed dynamic import for Vite", () => {
+    const files: string[] = [];
+    const walk = (dir: string): void => {
+      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+        const p = path.join(dir, e.name);
+        if (e.isDirectory()) walk(p);
+        else if (p.endsWith(".ts")) files.push(p);
+      }
+    };
+    walk(path.join(__dirname, "..", "generator"));
+    const unmarked: string[] = [];
+    for (const f of files) {
+      for (const m of fs.readFileSync(f, "utf8").matchAll(/\bimport\(\s*([^)]*)/g)) {
+        const arg = m[1]!.trim();
+        if (/^["'`][^"'`$]*["'`]$/.test(arg) || arg.startsWith("/* @vite-ignore */")) continue;
+        unmarked.push(`${path.relative(path.join(__dirname, ".."), f)}: import(${arg})`);
+      }
+    }
+    expect(unmarked).toEqual([]);
+  });
 });
