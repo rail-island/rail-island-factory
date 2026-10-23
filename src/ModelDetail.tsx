@@ -128,9 +128,12 @@ export function ModelDetail(props: {
             &rarr;
           </button>
         </div>
-        <button type="button" class="factory-btn factory-detail__export" disabled={props.exported} onClick={() => props.onAddExport()}>
-          {props.exported ? "In the export" : "Add to export"}
-        </button>
+        {/* a set preview is a drawing of a game structure, not a model to take away */}
+        <Show when={props.record.category !== "Structure types"}>
+          <button type="button" class="factory-btn factory-detail__export" disabled={props.exported} onClick={() => props.onAddExport()}>
+            {props.exported ? "In the export" : "Add to export"}
+          </button>
+        </Show>
         <label class="factory-param">
           <span>Level of detail</span>
           <select aria-label="Level of detail" value={lod() === "max" ? "max" : lod() === "coarse" ? "coarse" : lod() ? "low" : "full"} onChange={(e) => setDetail(e.currentTarget.value as "full" | "low" | "coarse" | "max")}>

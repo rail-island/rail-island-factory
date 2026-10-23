@@ -11,7 +11,7 @@ import { MeshBuilder, ngon, rect } from "../generator/meshBuilder";
 import { SKYSCRAPERS } from "../generator/skyscrapers";
 import { VEHICLES } from "../generator/vehicles";
 import { STEAM_LOCOS } from "../generator/steamLocos";
-import { ALL_VEHICLES, BUILDINGS, DESIGNS, TREE_DESIGNS, WOODS_DESIGNS, ZFightingError, designGlb, designTree, generateModels } from "../generator/generate";
+import { ALL_VEHICLES, BUILDINGS, DESIGNS, PREVIEW_DESIGNS, PROP_DESIGNS, TREE_DESIGNS, WOODS_DESIGNS, ZFightingError, designGlb, designTree, generateModels } from "../generator/generate";
 import { VILLAGE_HOUSES } from "../generator/village";
 import { isLeaf, type LeafNode, type ScopeNode, type TreeNode } from "../generator/sourceTree";
 import { rodEnds } from "./rodEnds.ts";
@@ -275,7 +275,10 @@ describe("the vehicles", () => {
     }
     for (const d of TREE_DESIGNS) expect(d.id).toMatch(/^proc-tree-[a-z0-9]+$/);
     for (const d of WOODS_DESIGNS) expect(d.id).toMatch(/^proc-woods-[a-z0-9]+(-[a-z0-9]+)*$/);
-    expect(DESIGNS.size).toBe(BUILDINGS.length + VILLAGE_HOUSES.length + ALL_VEHICLES.length + TREE_DESIGNS.length + WOODS_DESIGNS.length);
+    for (const d of PROP_DESIGNS) expect(d.id).toMatch(/^proc-prop-[a-z0-9]+(-[a-z0-9]+)*$/);
+    for (const d of PREVIEW_DESIGNS) expect(d.id).toMatch(/^proc-preview-[a-z0-9]+(-[a-z0-9]+)*$/);
+    expect(DESIGNS.size).toBe(BUILDINGS.length + VILLAGE_HOUSES.length + ALL_VEHICLES.length + TREE_DESIGNS.length + WOODS_DESIGNS.length
+      + PROP_DESIGNS.length + PREVIEW_DESIGNS.length);
   });
 
   it.each([...VEHICLES, ...STEAM_LOCOS].map((d) => [d.id] as const))("%s stands on its wheels, faces +x, fits its road or track and stays in budget", (id) => {

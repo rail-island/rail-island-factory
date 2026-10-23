@@ -314,6 +314,15 @@ describe("previewKey", () => {
   });
 });
 
+describe("the Props and Structure types chips", () => {
+  it("file the structure props and the set previews under first-row chips of their own", async () => {
+    const { groupOf, GROUPS } = await import("../src/catalogQuery");
+    expect(groupOf({ category: "Props", group: "props" } as never)).toBe("prop");
+    expect(groupOf({ category: "Structure types", group: "previews" } as never)).toBe("structure");
+    expect(GROUPS.map((g) => g.id)).toEqual(expect.arrayContaining(["prop", "structure"]));
+  });
+});
+
 describe("the Trees chip", () => {
   it("files the tree species under a first-row chip of their own", async () => {
     const { groupOf } = await import("../src/catalogQuery");

@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "deploy": "pnpm build && wrangler deploy"
+    "deploy": "pnpm build && wrangler deploy",
+    "sets:pins": "tsx generator/sets/writePins.ts"
   },
   "dependencies": {
     "solid-js": "^1.9.3",

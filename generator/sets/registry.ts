@@ -84,7 +84,7 @@ export const SETS: readonly SetDef[] = [
     set: "busStop",
     collectible: "busStop",
     phase: 3,
-    landed: false,
+    landed: true,
     defaultId: "shelter",
     retired: {},
     types: [
@@ -100,7 +100,7 @@ export const SETS: readonly SetDef[] = [
     set: "cableCarStation",
     collectible: "cableCarStation",
     phase: 3,
-    landed: false,
+    landed: true,
     defaultId: "open_gantry",
     retired: {},
     types: [
@@ -114,7 +114,7 @@ export const SETS: readonly SetDef[] = [
     set: "port",
     collectible: "port",
     phase: 3,
-    landed: false,
+    landed: true,
     defaultId: "wooden_jetty",
     retired: {},
     types: [
@@ -136,7 +136,7 @@ export const SETS: readonly SetDef[] = [
     set: "airport",
     collectible: "airport",
     phase: 3,
-    landed: false,
+    landed: true,
     defaultId: "regional",
     retired: {},
     types: [

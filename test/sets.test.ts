@@ -79,3 +79,19 @@ describe("set registry", () => {
     expect(setDef("bridge").defaultId).toBe("beam");
   });
 });
+
+describe("landed set modules", () => {
+  // the game imports each module synchronously and type-checks its calls against
+  // the declarations beside it, so a module may import nothing and type every export
+  for (const def of SETS.filter((d) => d.landed)) {
+    it(`${def.set}: bundles without imports and declares every export`, async () => {
+      const { bundleSet, declareSet } = await import("../generator/sets/setsExport.ts");
+      const js = await bundleSet(def);
+      expect(js).not.toMatch(/^\s*import\b/m);
+      const dts = declareSet(def);
+      expect(dts).not.toMatch(/^\s*import\b/m);
+      const mod = await import(`../generator/sets/${def.set}.ts`) as Record<string, unknown>;
+      for (const name of Object.keys(mod)) expect(dts, name).toMatch(new RegExp(`\\b${name}\\b`));
+    });
+  }
+});

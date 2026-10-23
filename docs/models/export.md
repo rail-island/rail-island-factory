@@ -24,9 +24,10 @@ the same JS models and trees on demand ([../site/catalog-site.md](../site/catalo
 | `export/skyscrapers.meta.json` | one game-catalog entry per building (skyscrapers, commercial families, landmarks, stations) - the import contract |
 | `export/village.meta.json` | the same per village house, under `buildings` |
 | `export/vehicles.meta.json` | the same per vehicle, under `vehicles` |
+| `export/props.meta.json` | the same per prop the game's structures place, under `props`, each with `prop: { far, bounds }` ([props.md](props.md)) |
 | `export/woods.js` | every woods type and every tree species in one standalone module, what the game plants its forests with ([woods.md](woods.md)) |
 | `export/woods.meta.json` | every woods type and every tree species, for the game to import ([woods.md](woods.md)) |
-| `export/sets/<set>.meta.json`, `export/sets/<set>.js` | every set's ids, order, default and aliases, and a landed set's definitions in one standalone module ([sets.md](sets.md)) |
+| `export/sets/<set>.meta.json`, `export/sets/<set>.js`, `<set>.d.ts`, `pins.json` | every set's ids, order, default and aliases, a landed set's definitions in one standalone module with its declarations, and the landed sets' pins ([sets.md](sets.md)) |
 | `export/text/<code>.json` | every exported text in each of the game's 14 languages ([text.md](text.md)) |
 | `export/textures/*.jpg`, `export/surfaces.meta.json` | the texture library and every named surface, for the game to import ([surfaces.md](surfaces.md)) |
 | `export/catalog.json` | what the site lists |

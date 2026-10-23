@@ -63,7 +63,8 @@
 | [models/source-tree.md](models/source-tree.md) | the procedural source tree: scopes, `export/tree/<id>.json`, highlight and picking |
 | [models/trees.md](models/trees.md) | the fourteen tree species the game plants: one design each, high, low and coarse levels, the geometry kit, the stylised look (baked light and shade, ragged and wide crowns), budgets |
 | [models/woods.md](models/woods.md) | the woods types: distribution functions keyed by name, the cell context and the four-tree limit, the forest rule (edges, groves, glades, understorey), the modules, `woods.meta.json`, grove previews |
-| [models/sets.md](models/sets.md) | the set registry: structure, rail and road, block and catenary sets, frozen ids, defaults and aliases, landed sets, `export/sets/` metas and modules |
+| [models/sets.md](models/sets.md) | the set registry: structure, rail and road, block and catenary sets, frozen ids, defaults and aliases, landed sets and what each module holds, previews, pins, `export/sets/` metas, modules and declarations |
+| [models/props.md](models/props.md) | the fixed props the game's structures place: the box vocabulary and prop kit, `<kind>#<rrggbb>` materials, the port, cable car and airport props, the loading gauge, `props.meta.json` |
 | [models/text.md](models/text.md) | the exported text in the game's 14 languages: keys, phrasebooks keyed by English, verbatim titles, overrides, `export/text/`, the gap check |
 | [models/surfaces.md](models/surfaces.md) | the texture library (photo sets, sources, the cap, the fetch script), named surfaces and their tint rule, opting a material in, the UVs and `userData.surfaces`, `export/textures/` and `surfaces.meta.json` |
 | [models/export.md](models/export.md) | the export folder: JS models, thumbnails, `skyscrapers.meta.json`, `village.meta.json`, `vehicles.meta.json`, `catalog.json`; the in-memory GLB the build analyses |

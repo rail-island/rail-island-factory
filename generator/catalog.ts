@@ -94,6 +94,22 @@ export interface ExportMeta {
   buildings: MetaEntry[];
 }
 
+/** A prop's entry: what the game reads before it builds the model (docs/models/props.md). */
+export interface PropMetaEntry extends MetaEntry {
+  prop: {
+    /** Whether the structure's far level keeps it (its low detail is its silhouette). */
+    far: boolean;
+    /** The default variant's bounding box, studs, about its origin. */
+    bounds: { min: [number, number, number]; max: [number, number, number] };
+  };
+}
+
+export interface PropExportMeta {
+  note: string;
+  count: number;
+  props: PropMetaEntry[];
+}
+
 export interface VehicleExportMeta {
   note: string;
   count: number;
@@ -181,6 +197,7 @@ export interface BuiltFacts {
 export const META_FILE = "skyscrapers.meta.json";
 export const VEHICLE_META_FILE = "vehicles.meta.json";
 export const VILLAGE_META_FILE = "village.meta.json";
+export const PROPS_META_FILE = "props.meta.json";
 export const CATALOG_FILE = "catalog.json";
 /** The export's folder of source images, one subfolder per design id. */
 export const REFS_DIR = "refs";
@@ -244,6 +261,29 @@ export function withCityPresets(entry: MetaEntry, design: ProceduralDesign): Met
  * The vehicles' meta; `rigs` holds each rigged design's built rig by id, `sides`
  * each side-view thumbnail's frame.
  */
+/**
+ * props.meta.json: every prop the game places on its structures, apart from the
+ * buildings and vehicles so the game keeps them out of its pickers, rewards and
+ * counts. `bounds` is each prop's built extent (generate.ts measures it); `far`
+ * names the props the structure's far level keeps.
+ */
+export function exportPropMeta(
+  designs: readonly ProceduralDesign[],
+  bounds: ReadonlyMap<string, { min: readonly number[]; max: readonly number[] }>,
+  far: ReadonlySet<string>,
+): PropExportMeta {
+  const r = (v: number): number => Math.round(v * 1e4) / 1e4 + 0;
+  return {
+    note: NOTE,
+    count: designs.length,
+    props: designs.map((d) => {
+      const b = bounds.get(d.id);
+      const v3 = (p: readonly number[] | undefined): [number, number, number] => [r(p?.[0] ?? 0), r(p?.[1] ?? 0), r(p?.[2] ?? 0)];
+      return { ...metaEntry(d, d.catalog ?? SKYSCRAPER_CATALOG), prop: { far: far.has(d.id), bounds: { min: v3(b?.min), max: v3(b?.max) } } };
+    }),
+  };
+}
+
 export function exportVehicleMeta(
   designs: readonly ProceduralDesign[],
   rigs: ReadonlyMap<string, VehicleRig> = new Map(),

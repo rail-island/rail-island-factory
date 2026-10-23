@@ -52,7 +52,12 @@ document that owns it in the same change.** Conventions:
   fails on any gap. Proper-noun titles go to `text/verbatim.json`.
 - **Set ids are stored in the game's saved maps** like model ids (structure types,
   rail and road types, block types; docs/models/sets.md): never rename a shipped
-  one - retire it with an alias in the registry.
+  one - retire it with an alias in the registry. A landed set module imports
+  nothing and types every export; a change that redraws a shipped type moves its
+  pins (`pnpm sets:pins`, test/setPins.test.ts) - make that change on purpose.
+- **Props** (docs/models/props.md) are the fixed models the game's structures place
+  (`proc-prop-*`: a shed, a crane, a tower): drawn in studs from the game's box
+  vocabulary, materials named `<kind>#<rrggbb>`, listed in props.meta.json only.
 - Every bug fix ships with a regression test in the suite that owns the behaviour.
 - Use ASCII in code and comments; no emoji.
 - **Source inspiration is stored in git.** Every reference a model is built

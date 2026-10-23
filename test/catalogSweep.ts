@@ -23,6 +23,9 @@ import { VEHICLES } from "../generator/vehicles";
 import { built, design, forget, glbOf, jsModuleOf, jsTextOf, lodGlbOf, variantsUnderTest } from "./catalogCache";
 import { expectSealed, jointMesh } from "./rigHelpers";
 
+/** The most a prop's or a set preview's JS model may weigh: the builder runtime and its boxes. */
+const PROP_JS_LIMIT = 24_000;
+
 function walk(n: TreeNode, out: TreeNode[] = []): TreeNode[] {
   out.push(n);
   if (!isLeaf(n)) for (const c of n.children) walk(c, out);
@@ -205,7 +208,13 @@ export function sweep(ids: readonly string[]): void {
         expect(code).not.toMatch(/\bimport\s*[\w{*"'(]/);
         expect(code).not.toMatch(/["'`]node:|require\(/); // a rig's { node: "..." } keys are data
         expect(text).toMatch(/export\s*\{[^}]*\bas default\b/);
-        expect(Buffer.byteLength(text)).toBeLessThan(glbOf(id).length + lodGlbOf(id).length);
+        // A structure prop or a set preview of a few boxes (a bollard, a container, a
+        // pylon: docs/models/props.md) is smaller as a GLB than the builder runtime
+        // every JS model carries, so it is held to the runtime and a little more
+        // instead; every other design must beat its GLBs.
+        const boxes = ["Props", "Structure types"].includes(design(id).catalog?.category ?? "");
+        if (boxes) expect(Buffer.byteLength(text)).toBeLessThan(PROP_JS_LIMIT);
+        else expect(Buffer.byteLength(text)).toBeLessThan(glbOf(id).length + lodGlbOf(id).length);
       });
 
       it("builds its standalone LOD as the generator does, inside its budget", async () => {

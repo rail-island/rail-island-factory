@@ -98,6 +98,11 @@ import { COMMERCIAL_BUILDINGS } from "./commercial.ts";
 import { TREES } from "./trees.ts";
 import { WOODS_MODELS } from "./woodsModels.ts";
 import { generateWoods } from "./woodsExport.ts";
+import { PORT_PROPS } from "./props/portProps.ts";
+import { CABLE_CAR_PROPS } from "./props/cableCarSheds.ts";
+import { AIRPORT_PROPS } from "./props/airportProps.ts";
+import { SET_PREVIEWS } from "./props/setPreviews.ts";
+import { FAR_PROPS } from "./props/propKit.ts";
 import { generateSets } from "./sets/setsExport.ts";
 import { generateText } from "./text.ts";
 import { generateSurfaces } from "./surfacesExport.ts";
@@ -109,7 +114,7 @@ import { JS_DIR, bundleDesign, gzipSize, writeIfChanged } from "./jsModel.ts";
 import { findCoplanarOverlaps, type CoplanarOverlap } from "./coplanar.ts";
 import {
   CATALOG_FILE, META_FILE, REFERENCE_EXTENSIONS, REFS_DIR, VEHICLE_META_FILE, VILLAGE_META_FILE, catalogRecord, exportMeta,
-  exportVehicleMeta, isSideViewCategory, listedEntry, metaEntry, type ModelCatalog, type ReferenceImage,
+  exportPropMeta, exportVehicleMeta, isSideViewCategory, listedEntry, metaEntry, PROPS_META_FILE, type ModelCatalog, type ReferenceImage,
 } from "./catalog.ts";
 import { TREE_DIR, type SourceTree } from "./sourceTree.ts";
 import type { MeshBuilder } from "./meshBuilder.ts";
@@ -144,7 +149,7 @@ const THUMB_VERSION_FILE = ".version";
  * functions (the JS bundle's entry) and the meta file it is listed in: the
  * buildings', the village houses' own, or the vehicles'.
  */
-const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: string; meta: "buildings" | "village" | "vehicles" | "trees" | "woods" }> = [
+const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: string; meta: "buildings" | "village" | "vehicles" | "trees" | "woods" | "props" | "previews" }> = [
   { designs: SKYSCRAPERS, source: "skyscrapers.ts", meta: "buildings" },
   { designs: COMMERCIAL, source: "commercialStreets.ts", meta: "buildings" },
   { designs: COMMERCIAL_BUILDINGS, source: "commercial.ts", meta: "buildings" },
@@ -196,6 +201,12 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: TREES, source: "trees.ts", meta: "trees" },
   // the woods types as groves, for the site to browse: in no game meta
   { designs: WOODS_MODELS, source: "woodsModels.ts", meta: "woods" },
+  // the fixed props the game places on its structures: listed in props.meta.json
+  { designs: PORT_PROPS, source: "props/portProps.ts", meta: "props" },
+  { designs: CABLE_CAR_PROPS, source: "props/cableCarSheds.ts", meta: "props" },
+  { designs: AIRPORT_PROPS, source: "props/airportProps.ts", meta: "props" },
+  // the set types drawn at a representative size, for the site to browse: in no game meta
+  { designs: SET_PREVIEWS, source: "props/setPreviews.ts", meta: "previews" },
 ];
 
 const FAMILIES = RAW_FAMILIES.map(f => ({ ...f, designs: f.designs.map(d => { d.id = proceduralId(d.id); return d; }) }));
@@ -214,8 +225,14 @@ export const TREE_DESIGNS: readonly ProceduralDesign[] = FAMILIES.filter((f) => 
 /** Every woods type as a grove model (woodsModels.ts), for the site. */
 export const WOODS_DESIGNS: readonly ProceduralDesign[] = FAMILIES.filter((f) => f.meta === "woods").flatMap((f) => f.designs);
 
-/** Every design, by id: the buildings, the village houses (village.meta.json), the vehicles, the trees, then the woods groves. */
-export const DESIGNS: ReadonlyMap<string, ProceduralDesign> = new Map([...BUILDINGS, ...VILLAGE_DESIGNS, ...ALL_VEHICLES, ...TREE_DESIGNS, ...WOODS_DESIGNS].map((d) => [d.id, d]));
+/** Every prop the game places on its structures (props.meta.json; props/propKit.ts). */
+export const PROP_DESIGNS: readonly ProceduralDesign[] = FAMILIES.filter((f) => f.meta === "props").flatMap((f) => f.designs);
+
+/** The set types drawn at a representative size for the site (props/setPreviews.ts); in no game meta. */
+export const PREVIEW_DESIGNS: readonly ProceduralDesign[] = FAMILIES.filter((f) => f.meta === "previews").flatMap((f) => f.designs);
+
+/** Every design, by id: the buildings, the village houses (village.meta.json), the vehicles, the trees, the woods groves, the props, then the set previews. */
+export const DESIGNS: ReadonlyMap<string, ProceduralDesign> = new Map([...BUILDINGS, ...VILLAGE_DESIGNS, ...ALL_VEHICLES, ...TREE_DESIGNS, ...WOODS_DESIGNS, ...PROP_DESIGNS, ...PREVIEW_DESIGNS].map((d) => [d.id, d]));
 
 const VEHICLE_IDS = new Set(ALL_VEHICLES.map((d) => d.id));
 
@@ -518,6 +535,8 @@ export async function buildExport(
   const rigs = new Map(models.flatMap((m) => (m.rig ? [[m.id, m.rig] as const] : [])));
   const sides = new Map(models.flatMap((m) => (m.side ? [[m.id, m.side] as const] : [])));
   fs.writeFileSync(path.join(dir, VEHICLE_META_FILE), `${JSON.stringify(exportVehicleMeta(chosen(ALL_VEHICLES), rigs, sides), null, 2)}\n`);
+  const bounds = new Map(models.map((m) => [m.id, { min: m.stats.min, max: m.stats.max }] as const));
+  fs.writeFileSync(path.join(dir, PROPS_META_FILE), `${JSON.stringify(exportPropMeta(chosen(PROP_DESIGNS), bounds, FAR_PROPS), null, 2)}\n`);
   // the woods types and the tree species they draw from (woodsExport.ts); only a whole export has them
   if (designs.length === DESIGNS.size) await generateWoods(dir);
   // the set registry and its landed modules (sets/setsExport.ts), and the exported
