@@ -19,6 +19,8 @@
 //   export/sets/<set>.meta.json     every set's ids, order, default, aliases (sets/setsExport.ts)
 //   export/sets/<set>.js            a landed set's definitions in one module, for the game
 //   export/text/<code>.json         every exported text in each of the 14 languages (text.ts)
+//   export/textures/*.jpg           the texture library (surfacesExport.ts)
+//   export/surfaces.meta.json       the textures and every named surface, for the game
 //   export/catalog.json             what the site lists (catalog.ts)
 //
 // The same folder is Vite's publicDir, so the site serves it as it stands.
@@ -98,6 +100,7 @@ import { WOODS_MODELS } from "./woodsModels.ts";
 import { generateWoods } from "./woodsExport.ts";
 import { generateSets } from "./sets/setsExport.ts";
 import { generateText } from "./text.ts";
+import { generateSurfaces } from "./surfacesExport.ts";
 import { checkOpenttdProperties, type CatalogFields, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { buildLodModel } from "./lodModel.ts";
 import { lodBudget } from "./lod.ts";
@@ -522,6 +525,7 @@ export async function buildExport(
   if (designs.length === DESIGNS.size) {
     await generateSets(dir);
     generateText(dir);
+    generateSurfaces(dir);
   }
   fs.writeFileSync(path.join(dir, "industry-migration.json"), `${JSON.stringify({ version: 1, entries: INDUSTRY_MIGRATION }, null, 2)}\n`);
   for (const design of designs) checkOpenttdProperties(design, ALL_VEHICLES.includes(design));

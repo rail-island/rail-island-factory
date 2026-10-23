@@ -42,6 +42,7 @@ import { jsModule, loadModel } from "./modelModule";
 import { leafAt, rangesOf, type TreeIndex } from "./sourceTreeView";
 import { applyHighlight, makeParts, type Part } from "./viewerHighlight";
 import { applyLamps, disposeLamps, lampsOf, type Lamp } from "./viewerLamps";
+import { applySurfaces } from "./viewerSurfaces";
 
 function disposeModel(obj: Object3D): void {
   obj.traverse((o) => {
@@ -296,6 +297,8 @@ export function ModelViewer(props: {
         parts = makeParts(group);
         lamps = lampsOf(group);
         setLampCount(lamps.length);
+        // the photos of its named surfaces, tinted as the game tints them (viewerSurfaces.ts)
+        void applySurfaces(group).then(render);
         scene.add(group);
         showLamps();
         if (framed === record.id) {

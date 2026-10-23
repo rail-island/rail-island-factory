@@ -4,12 +4,14 @@
 // never reach the file. No imports of three.js: the caller hands the namespace in.
 
 import { MeshCore } from "./meshCore.ts";
+import { surfaceTable, surfaceUvs } from "./surfaceUvs.ts";
 
 export { chamferedRect, grow, ngon, rect, scaleRing } from "./meshCore.ts";
 export type { AnimationClipSpec, ClipDrive, AnimationTrack, Emitter, FountainWater, LampRole, LampSpec, Lamps, MaterialSpec, Ring, SweepAxis, WaterJet, WaterPool } from "./meshCore.ts";
 
 /** The three.js namespace, or any object with the classes toGroup() uses. */
 export type ThreeNamespace = typeof import("three");
+
 
 export class MeshBuilder extends MeshCore {
   /**
@@ -69,6 +71,8 @@ export class MeshBuilder extends MeshCore {
         geometry.setAttribute("normal", new THREE.BufferAttribute(new Float32Array(nrm), 3));
         // baked corner colours (MeshCore.triShaded): linear multipliers of the material colour
         if (g.col) geometry.setAttribute("color", new THREE.BufferAttribute(new Float32Array(col), 3));
+        // a named surface: box-projected UVs in model units, per triangle (docs/models/surfaces.md)
+        surfaceUvs(THREE, geometry, this.palette[mat]!, pos, unit.pivot);
         const mesh = new THREE.Mesh(geometry, standard[m]);
         mesh.name = mat;
         holder.add(mesh);
@@ -93,6 +97,9 @@ export class MeshBuilder extends MeshCore {
     // the lamp materials and where the model's ends meet (MeshCore.lamps)
     const lamps = this.lamps();
     if (lamps) root.userData.lamps = lamps;
+    // the materials that draw with a named surface, which the game binds a photo to
+    surfaceTable(root, this.palette, materials);
     return root;
   }
 }
+

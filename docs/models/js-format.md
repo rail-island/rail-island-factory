@@ -32,6 +32,10 @@ scene.add(build(THREE)); // a THREE.Group named after the model id
 - **The rig.** A rigged vehicle's group carries `userData.rig`, and its module also exports `pose`,
   `renderJoint`, `steerAngles`, `steerLock` and `jointTriangles`: the code that turns its wheels, bends its
   sections and re-draws its joints ([vehicle-rig.md](vehicle-rig.md)).
+- **Surfaces.** A material built with `surfaceMaterial` names a surface the game binds a photo to: its
+  meshes carry a `uv` attribute (box projection in model units, `surfaceTile` per repeat) and the group
+  carries `userData.surfaces`, material name -> surface id ([surfaces.md](surfaces.md)). Other meshes have
+  no UVs.
 - **Lamps.** A vehicle that draws a lamp material carries `userData.lamps`: each lamp material's role, lit
   colour and intensity, and `midX`, which splits its front lamps from its rear ([lamps.md](lamps.md)).
 - **Emitters.** A model that smokes, steams or flares carries `userData.emitters`, the mouths of its

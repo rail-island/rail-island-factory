@@ -27,6 +27,15 @@ export interface MaterialSpec {
   doubleSided?: boolean;
   /** The material is a vehicle lamp's lens: what it does and how it shines when lit (see LampSpec). */
   lamp?: LampSpec;
+  /**
+   * A named surface (surfaces.ts SURFACES) the game binds a photo to; `color` stays
+   * the honest flat colour. Set both with `surfaceMaterial(id)`: the JS model then
+   * carries box-projected UVs at `surfaceTile` units per repeat and lists the
+   * material in `userData.surfaces` (docs/models/surfaces.md).
+   */
+  surface?: string;
+  /** Model units one repeat of the surface's photo spans (from its preset). */
+  surfaceTile?: number;
 }
 
 /**
