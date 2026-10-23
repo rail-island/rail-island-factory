@@ -14,7 +14,20 @@ import * as tunnelPortal from "./tunnelPortal.ts";
 import * as railType from "./railType.ts";
 import * as roadType from "./roadType.ts";
 import * as dam from "./dam.ts";
+import * as station from "./station.ts";
+import * as roadStation from "./roadStation.ts";
 import { pinHash } from "./pinHash.ts";
+
+/** A fixed solved road station: three islands either side of two stands, two mount points. */
+const ROAD_STATION_SITE: roadStation.DressSite = {
+  islands: [-12, 0, 12].map((cx) => ({ cx, cz: 0, dirX: 0, dirZ: 1, width: 5, length: 34 })),
+  stands: 2,
+  mps: [{ x: -20, z: -24, outX: -1, outZ: 0 }, { x: 20, z: 24, outX: 1, outZ: 0 }],
+  layout: "drive_through",
+  standLength: 30,
+  islandTop: 1.27,
+  clearance: 9.5,
+};
 
 /** Everything one decoration module draws, recorded call by call. */
 function recordPiece(kind: string, side: decoration.DecorationSide, detail: string): unknown[] {
@@ -51,6 +64,17 @@ export function setPinCases(): Record<string, PinCase[]> {
       ...[3.5, 9, 12].map((half) => ({ name: `stone.${half}`, build: () => tunnelPortal.buildPortal("stone", half, {
         centerY: 4.85, verticalRadius: 6.85, floorDrop: 2, clearHeight: 11.7, bedY: 0.46, bedThickness: 0.42, segments: 18, wingReach: 5,
       }) })),
+    ],
+    station: [
+      { name: "types", build: () => station.TYPE_META },
+      // the default layout and every type's row signatures: a placed default station
+      // stores no layout, and a stored one renders only while its signature matches
+      ...Object.keys(station.TYPE_META).flatMap((type) => [1, 2, 3, 4, 5, 6].map((tracks) => ({ name: `${type}.layout.${tracks}`, build: () => station.buildLayout(type, tracks) }))),
+      ...Object.keys(station.TYPE_META).flatMap((type) => [1, 4].map((tracks) => ({ name: `${type}.${tracks}x120`, build: () => station.furnish(type, 120, station.buildLayout(type, tracks)) }))),
+    ],
+    roadStation: [
+      { name: "types", build: () => roadStation.TYPE_META },
+      ...Object.keys(roadStation.TYPE_META).map((type) => ({ name: `${type}.site`, build: () => roadStation.dress(type, ROAD_STATION_SITE) })),
     ],
     railType: [{ name: "types", build: () => railType.TYPE_META }],
     roadType: [{ name: "types", build: () => roadType.TYPE_META }],

@@ -102,6 +102,8 @@ import { PORT_PROPS } from "./props/portProps.ts";
 import { CABLE_CAR_PROPS } from "./props/cableCarSheds.ts";
 import { AIRPORT_PROPS } from "./props/airportProps.ts";
 import { SET_PREVIEWS } from "./props/setPreviews.ts";
+import { STATION_PREVIEWS } from "./props/stationPreview.ts";
+import { ROAD_STATION_PREVIEWS } from "./props/roadStationPreview.ts";
 import { FAR_PROPS } from "./props/propKit.ts";
 import { generateSets } from "./sets/setsExport.ts";
 import { generateText } from "./text.ts";
@@ -207,6 +209,8 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: AIRPORT_PROPS, source: "props/airportProps.ts", meta: "props" },
   // the set types drawn at a representative size, for the site to browse: in no game meta
   { designs: SET_PREVIEWS, source: "props/setPreviews.ts", meta: "previews" },
+  { designs: STATION_PREVIEWS, source: "props/stationPreview.ts", meta: "previews" },
+  { designs: ROAD_STATION_PREVIEWS, source: "props/roadStationPreview.ts", meta: "previews" },
 ];
 
 const FAMILIES = RAW_FAMILIES.map(f => ({ ...f, designs: f.designs.map(d => { d.id = proceduralId(d.id); return d; }) }));

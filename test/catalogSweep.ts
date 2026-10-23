@@ -211,9 +211,10 @@ export function sweep(ids: readonly string[]): void {
         // A structure prop or a set preview of a few boxes (a bollard, a container, a
         // pylon: docs/models/props.md) is smaller as a GLB than the builder runtime
         // every JS model carries, so it is held to the runtime and a little more
-        // instead; every other design must beat its GLBs.
+        // -- or, a preview carrying a whole set module (a station), to its GLBs;
+        // every other design must beat its GLBs.
         const boxes = ["Props", "Structure types"].includes(design(id).catalog?.category ?? "");
-        if (boxes) expect(Buffer.byteLength(text)).toBeLessThan(PROP_JS_LIMIT);
+        if (boxes) expect(Buffer.byteLength(text)).toBeLessThan(Math.max(PROP_JS_LIMIT, glbOf(id).length + lodGlbOf(id).length));
         else expect(Buffer.byteLength(text)).toBeLessThan(glbOf(id).length + lodGlbOf(id).length);
       });
 

@@ -6,6 +6,7 @@ picker order, default and retired aliases, which sets are collectible, what "lan
 the per-set meta files and modules the export writes, and the tests that pin them.
 **Code** - `generator/sets/registry.ts`, `generator/sets/setsExport.ts`, `generator/sets/<set>.ts`,
 `generator/sets/pinCases.ts`, `generator/sets/writePins.ts`, `generator/props/setPreviews.ts`,
+`generator/props/stationPreview.ts`, `generator/props/roadStationPreview.ts`,
 `test/sets.test.ts`, `test/setPins.test.ts`
 **See also** - [props.md](props.md), [text.md](text.md), [export.md](export.md), [woods.md](woods.md), the game's
 `docs/tooling/factory-import.md` and `docs/architecture/sets.md`, the spec
@@ -65,13 +66,20 @@ A set's module holds what its types ARE, and the game keeps what fits them to a 
 | `railType` | `TYPE_META`: sleepers, the ballast bed and track spacing every type shares, the catenary style it is wired with (or none) | track generation, junctions, the rail meshes, the catenary planner |
 | `roadType` | `TYPE_META`: width, shoulder, surface, centre line, tram tracks, terrain bands, tightest curve; the registry's groups are the surface families (narrow and wide member) | routing, junctions, tile batching, terrain flattening, lanes |
 | `dam` | `TYPE_META`: body (gravity or weir), masonry surface, lock chamber, arcade; `COLORS`; `gravityParts`, `lockParts` (walls plus four named, hinged gate leaves), `arcadeLayout` / `arcadeParts` (with tower roofs) | where the dam stands, the wall and wings, the water, spillways, swinging the gates |
+| `station` | `TYPE_META`: each type's layout recipe (platform and island widths, paired or side by side, the far side's platform or house strip); `buildLayout(type, tracks)`; `furnish(type, length, layout)`: the platforms, roofs, sheds, signs and furniture over any layout | track generation, the persisted layouts, painting the name boards (`label` boxes), material meaning, the structure LOD |
+| `roadStation` | `TYPE_META`: group (bus or truck) and island width; `dress(type, site)`: the bay posts and the type's dressing over a solved layout | the solver (stands, islands, roads, mount points), the islands' paving, the footprint banister |
 
 Fixed props (a shed, a crane, a tower) are ordinary models, not module code ([props.md](props.md));
 a set names them by id.
 
 **Preview designs** draw the function types at a representative size for the site: a stop on a
-short piece of two-lane road, a pylon of middling height (`generator/props/setPreviews.ts`,
-`proc-preview-*`, category "Structure types"). No game meta lists them and the site offers no
+short piece of two-lane road, a pylon of middling height (`generator/props/setPreviews.ts`), a
+60-stud station of one, two or four tracks over its ballast and rails
+(`generator/props/stationPreview.ts`), a road station on a fixed two-stand layout
+(`generator/props/roadStationPreview.ts`) - `proc-preview-*`, category "Structure types". Each
+source file is one bundle, so a preview carries only its own set module; one carrying a whole
+module is held to its GLBs rather than the props' 24 KB. Glass draws opaque and name boards
+stay blank. No game meta lists them and the site offers no
 export of them.
 
 ## Pins

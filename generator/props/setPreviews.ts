@@ -1,7 +1,9 @@
 // Preview designs of the set types whose shape is a function (docs/models/sets.md):
 // the site has no world to fit them to, so each is drawn here at a representative
-// size -- a stop on a short piece of two-lane road, a pylon of middling height. They
-// are the site's only: no game meta lists them, and the export list leaves them out.
+// size -- a stop on a short piece of two-lane road, a pylon of middling height (the
+// stations' are in stationPreview.ts and roadStationPreview.ts, files of their own so their modules ride in
+// their bundles only). They are the site's only: no game meta lists them, and the
+// export list leaves them out.
 
 import { resolveParams, type ParamSpec, type ProceduralDesign } from "../design.ts";
 import type { MeshBuilder } from "../meshBuilder.ts";

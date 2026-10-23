@@ -248,7 +248,7 @@ export const SETS: readonly SetDef[] = [
     set: "station",
     collectible: "station",
     phase: 5,
-    landed: false,
+    landed: true,
     defaultId: "platforms_only",
     retired: {"platforms_with_roof":"platforms_only"},
     types: [
@@ -274,7 +274,7 @@ export const SETS: readonly SetDef[] = [
     set: "roadStation",
     collectible: "roadStation",
     phase: 5,
-    landed: false,
+    landed: true,
     defaultId: "open_bays",
     retired: {},
     types: [
