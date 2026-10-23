@@ -42,3 +42,15 @@ Three sections, `section0` 0.5..10.5 m, `section1` 11.2..17.1 m, `section2` 17.8
 ## Measurement record
 
 `native/tram_ckd_kt8/landmarks.json` holds 23 native boxes (z_inc, x_both); `baseline.json` the first authored geometry's (mapped with the 0.4..27.8 m length before the 0.5 m XML end was adopted). See [COMPARISON.md](COMPARISON.md).
+
+## Direction indicators
+
+The vlakosimdb drawing shows no indicators; their places come from the photographs already listed in [PHOTOS.md](PHOTOS.md) (nothing new was downloaded):
+
+| file | URL | author | licence | use |
+|---|---|---|---|---|
+| `photo-kt8d5-9090-front-three-quarter.jpg` | https://commons.wikimedia.org/wiki/File:Praha%2C_Nov%C3%A9_M%C4%9Bsto%2C_Tatra_KT8D5_na_Karlov%C4%9B_n%C3%A1m..jpg | PatrikPaprika | CC BY-SA 3.0 | an amber-clear-red lamp column on each chamfered cab corner, the amber lamp on top at the white stripe; a side repeater in a window pier of the front section |
+| `photo-kt8d5-9009-door-side.jpg` | https://commons.wikimedia.org/wiki/File:Praha%2C_Libe%C5%88%2C_k%C5%99i%C5%BEovatka_Sokolovsk%C3%A1-Zenklova%2C_Tatra_KT8D5_%C4%8D._9009.jpg | Harold | CC BY-SA 3.0 | the side repeater at the foot of the pier between the front section's two windows |
+| `photo-kt8d5rn2p-9074-modern.jpg` | https://commons.wikimedia.org/wiki/File:Malostransk%C3%A1%2C_Tatra_KT8D5R.N2P_na_lince_22.jpg | Honza Groh ( Jagro ) | CC BY-SA 3.0 | the same corner columns and repeater on the rebuilt car |
+
+The KT8D5 is double-ended: the rear cab and the rear section mirror the front. The model draws the amber lenses only (`indicators` and `indicator` scopes); see [trams.md](../../docs/models/trams.md).

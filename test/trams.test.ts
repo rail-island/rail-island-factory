@@ -15,6 +15,7 @@ import { meanAbsoluteError } from "../generator/csdCoachComparison.ts";
 import { findCoplanarOverlaps } from "../generator/coplanar.ts";
 import { glbStats } from "../generator/glbStats.ts";
 import { parseGlb } from "../generator/glbParse.ts";
+import { collectTriangles } from "../generator/glbTriangles.ts";
 import { isLeaf, type TreeNode } from "../generator/sourceTree.ts";
 import type { ParamValues } from "../generator/design.ts";
 import { sample } from "./catalogCache";
@@ -191,6 +192,59 @@ describe("the pantographs", () => {
     const tree = DESIGNS.get(proceduralId("proc-vehicle-metro-81-71"))!.build().sourceTree("m", "m");
     expect(walk(tree.root).some((n) => n.id.includes("pantograph"))).toBe(false);
     expect(walk(tree.root).filter((n) => n.id.endsWith("current-collectors"))).toHaveLength(2);
+  });
+});
+
+describe("the direction indicators", () => {
+  // Amber indicators where the real trams carry them (docs/models/trams.md): the game
+  // splits the indicator lenses per triangle, front from rear at the lamps' midX and
+  // left (z < 0) from right (z > 0), so each lens sits clearly on its own side and end.
+  it.each(TRAM_DESIGNS.flatMap((d) => sample(paramCombinations(d.params)).map((p) => [`${d.id} ${JSON.stringify(p)}`, d, p] as const)))(
+    "%s blinks on both sides at both ends", (_, d, p) => {
+      const m = d.build(p);
+      const lamps = m.lamps()!;
+      expect(lamps.materials.lampAmber?.role).toBe("indicator");
+      const { json, bin } = parseGlb(m.toGlb(d.id));
+      expect((json.scenes![0] as { extras?: { lamps?: unknown } }).extras?.lamps).toEqual(lamps);
+      const lens = collectTriangles(json, bin).filter((f) => f.material === "lampAmber");
+      const quadrants = new Map<string, number>();
+      for (const f of lens) {
+        const cx = (f.p[0][0] + f.p[1][0] + f.p[2][0]) / 3;
+        const cz = (f.p[0][2] + f.p[1][2] + f.p[2][2]) / 3;
+        // no lens near or across the centre line, none near the middle of the length
+        for (const v of f.p) {
+          expect(Math.sign(v[2])).toBe(Math.sign(cz));
+          expect(Math.abs(v[2])).toBeGreaterThan(0.5);
+        }
+        expect(Math.abs(cx - lamps.midX)).toBeGreaterThan(2);
+        const key = `${cx >= lamps.midX ? "front" : "rear"} ${cz < 0 ? "left" : "right"}`;
+        quadrants.set(key, (quadrants.get(key) ?? 0) + 1);
+      }
+      expect([...quadrants.keys()].sort()).toEqual(["front left", "front right", "rear left", "rear right"]);
+      // mirror images: as many lens triangles on each side of each end
+      expect(quadrants.get("front left")).toBe(quadrants.get("front right"));
+      expect(quadrants.get("rear left")).toBe(quadrants.get("rear right"));
+    },
+  );
+
+  it("puts them where the photographs show them", () => {
+    const scopes = (id: string) => walk(DESIGNS.get(proceduralId(id))!.build().sourceTree(id, id).root).filter((n) => isLeaf(n) && /indicator/.test(n.id)).map((n) => n.id);
+    // cab-corner clusters only on the rigid T3 and T6A5 and on the KT4
+    for (const id of ["proc-vehicle-tatra-t3", "proc-vehicle-tatra-t6", "proc-vehicle-tatra-kt4"]) {
+      const ids = scopes(id);
+      expect(ids.length).toBeGreaterThan(0);
+      expect(ids.every((n) => /(front|rear)-end\/indicators/.test(n))).toBe(true);
+    }
+    // the KT8D5: the corner clusters at both cabs and a side repeater on each outer section
+    const kt8 = scopes("proc-vehicle-tatra-kt8");
+    expect(kt8.some((n) => /^section0\/front-end\/indicators/.test(n))).toBe(true);
+    expect(kt8.some((n) => /^section2\/rear-end\/indicators/.test(n))).toBe(true);
+    for (const s of ["section0", "section2"]) for (const side of ["left", "right"]) expect(kt8.some((n) => n.startsWith(`${s}/${side}-side/indicator`))).toBe(true);
+    expect(kt8.some((n) => n.startsWith("section1/"))).toBe(false);
+    // the GT4: side repeaters only, one a side on each section, none on its ends
+    const gt4 = scopes("proc-vehicle-kvag-gt4");
+    expect(gt4.length).toBeGreaterThan(0);
+    expect(gt4.every((n) => /^section[01]\/(left|right)-side\/indicator/.test(n))).toBe(true);
   });
 });
 

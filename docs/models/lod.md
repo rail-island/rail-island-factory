@@ -167,7 +167,10 @@ wheels, electric stock carries its raised rear pantograph.
 The process is deterministic. A LOD builder constructs only the low-detail
 geometry. Consumers should cache built variants.
 
-LOD has no animation clips, steering or rail supports. A rigid model's LOD has no
+LOD has no lamps, animation clips, steering or rail supports: no head, tail or
+indicator lens is drawn and no palette entry with a `lamp` role is used, so the
+model carries no `userData.lamps` (no GLB `extras.lamps`) and nothing in the far
+band can light, blink or move a pantograph ([lamps.md](lamps.md)). A rigid model's LOD has no
 rig, and `pose` and `renderJoint` leave it unchanged. An articulated vehicle's LOD
 carries `userData.rig` with its `sections`, `joints` and `maxBendDeg` only, and
 `pose` / `renderJoint` bend it as the full model. Rebuild at full resolution to
@@ -201,7 +204,9 @@ It builds the defaults and a fixed sample of the other combinations (every one w
 `TEST_ALL_VARIANTS=1`, [../guide/setup-and-build.md](../guide/setup-and-build.md)) and
 checks triangle budgets, finite coordinates, missing detail materials and the
 same coplanar-overlap detector used for full models. Regressions specifically
-cover long hoods and boilers and the open Colosseum arena. `test/lodKit.test.ts`
+cover long hoods and boilers and the open Colosseum arena. `test/lod.test.ts`
+also builds every vehicle's LOD - its defaults and each value of each parameter -
+and asserts no lamp material, no lamps table and no animation clip. `test/lodKit.test.ts`
 covers the kit, and each family has `test/lod-<group>.test.ts`: budget use per
 variant, running gear reaching the ground, livery colours, sections.
 

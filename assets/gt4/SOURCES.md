@@ -38,3 +38,16 @@ None: the drawing names KVAG but carries no number, and the photographed Stuttga
 ## Measurement record
 
 `native/tram_kvag_gt4/landmarks.json` holds 15 native boxes (z_inc, x_inc), the moved door and the bogies included with their reasons; `baseline.json` the first authored geometry's. See [COMPARISON.md](COMPARISON.md).
+
+## Direction indicators
+
+The vlakosimdb drawing shows no indicators; their places come from the photographs already listed in [PHOTOS.md](PHOTOS.md) (nothing new was downloaded):
+
+| file | URL | author | licence | use |
+|---|---|---|---|---|
+| `photo-gt4-632-side.jpg` | https://commons.wikimedia.org/wiki/File:Stra%C3%9Fenbahn_Stuttgart_Mercedesstra%C3%9Fe_GT4_632.jpg | Joma2411 | CC BY-SA 4.0 | a small upright amber side repeater at the window sill of the front section, about half way along |
+| `photo-gt4-629-three-quarter.jpg` | https://commons.wikimedia.org/wiki/File:Stra%C3%9Fenbahn_Stuttgart_Mercedesstra%C3%9Fe_GT4_629.jpg | Joma2411 | CC BY-SA 4.0 | the same repeater on 629 |
+| `photo-gt4-632-rear-side.jpg` | https://commons.wikimedia.org/wiki/File:Stra%C3%9Fenbahn_Stuttgart_Mercedesstra%C3%9Fe_GT4_632_hinten.JPG | Joma2411 | CC BY-SA 4.0 | the repeater on the rear section, ahead of its rear windows |
+| `photo-gt4-631-front.jpg` | https://commons.wikimedia.org/wiki/File:Stra%C3%9Fenbahn_Stuttgart_Stra%C3%9Fenbahnmuseum_GT4_631.jpg | Joma2411 | CC BY-SA 4.0 | the front carries head lamps and a red lamp only, no indicator |
+
+The photographs show the left (window) side; the model gives the right side the mirror image. The repeaters are the GT4's only indicators, one a side on each section, so the front section's pair is the front's and the rear section's the rear's. The model draws the amber lenses only (`indicator` scopes); see [trams.md](../../docs/models/trams.md).

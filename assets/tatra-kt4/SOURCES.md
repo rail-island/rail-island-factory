@@ -34,3 +34,15 @@ None: the KT4 never ran in Czech passenger service and the drawing's livery belo
 ## Measurement record
 
 `native/tram_ckd_kt4/landmarks.json` holds 17 native boxes (z_inc, x_inc); `baseline.json` the first authored geometry's. See [COMPARISON.md](COMPARISON.md).
+
+## Direction indicators
+
+The vlakosimdb drawing shows no indicators; their places come from the photographs already listed in [PHOTOS.md](PHOTOS.md) (nothing new was downloaded):
+
+| file | URL | author | licence | use |
+|---|---|---|---|---|
+| `photo-kt4d-169-door-side.jpg` | https://commons.wikimedia.org/wiki/File:TLT_Tatra_KT4D_169_02-12-2022.jpg | Robbie Klinkenberg | CC BY 4.0 | front: an upright lamp outboard of each headlight, on the rounded corner |
+| `photo-kt4d-174-side.jpg` | https://commons.wikimedia.org/wiki/File:TLT_Tatra_KT4D_174_02-12-2022.jpg | Robbie Klinkenberg | CC BY 4.0 | the same from the other quarter |
+| `photo-kt4d-170-front-three-quarter.jpg` | https://commons.wikimedia.org/wiki/File:TLT_Tatra_KT4D_170_02-12-2022.jpg | Robbie Klinkenberg | CC BY 4.0 | despite its name the rear end: a three-chamber lamp cluster at each corner at the top of the red band, the middle chamber red; the model takes the outer chamber as the amber indicator (the photograph does not show which is amber) |
+
+No side repeaters show on the KT4D. The model draws the amber lenses only (`indicators` scopes); see [trams.md](../../docs/models/trams.md).

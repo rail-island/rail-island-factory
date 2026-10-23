@@ -32,3 +32,15 @@ The drawing's body is 15.2 m long (0.4..15.6 m) and 3.5 m high; the published T6
 ## Measurement record
 
 `native/tram_ckd_t6/landmarks.json` holds 18 native boxes (z_inc, z_dec, x_inc); `baseline.json` the first authored geometry's. See [COMPARISON.md](COMPARISON.md).
+
+## Direction indicators
+
+The vlakosimdb drawing shows no indicators; their places come from photographs ([PHOTOS.md](PHOTOS.md)):
+
+| file | URL | author | licence | use |
+|---|---|---|---|---|
+| `photo-t6a5-8601-front.jpg` | https://commons.wikimedia.org/wiki/File:Praha%2C_Tatra_T6A5_%C4%8D._8601.jpg | Oleksandr Dede | CC BY-SA 4.0 | front: an upright cluster at each corner of the end, the amber lamp on top, just above the headlights |
+| `photo-t6a5-pair-three-quarter.jpg` | https://commons.wikimedia.org/wiki/File:Praha%2C_souprava_tramvaj%C3%AD_Tatra_T6A5.jpg | Petr Dadak from Ostrava-Poruba 8, Czech Republic | CC BY-SA 2.0 | the same cluster from the side, on the cab corner |
+| `photo-t6a5-8626-rear.jpg` | https://commons.wikimedia.org/wiki/File:Tatra_T6A5%2C_-8625%2B8626%2C_DP_Praha_%2842284199544%29.jpg | Janusz Jakubowski from Warsaw, Poland | CC BY 2.0 | rear: the same clusters on the rear corners (downloaded for this) |
+
+The model draws the amber lenses only, round, at the corners of both end caps (`indicators` scopes); see [trams.md](../../docs/models/trams.md).

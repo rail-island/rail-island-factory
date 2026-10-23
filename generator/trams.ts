@@ -115,6 +115,11 @@ function t3Bands(L: T3Livery): { main: Band[]; cab: Band[] } {
   };
 }
 
+/** A T3 front indicator (Factory box): just behind the curved front, its foot above the headlights. */
+function t3Indicator(t: Tram) {
+  return { x0: t.fx(1.0), x1: t.fx(0.86), y0: 1.22, y1: 1.38 };
+}
+
 const colors = (c: Record<string, string>) => Object.fromEntries(Object.entries(c).map(([k, v]) => [k, { color: v, roughness: 0.5 }]));
 
 export function tatraT3(params?: ParamValues): MeshBuilder {
@@ -150,6 +155,13 @@ export function tatraT3(params?: ParamValues): MeshBuilder {
         for (const u of [9, 21]) t.lamp(v, e, u, 28.5, 0.055, "lampRed");
         t.lamp(v, e, 15, 28.5, 0.045, "lampRed");
       }
+    });
+    // the direction indicators: on the front the amber top of the lamp cluster on each
+    // cab corner, in the belt; at the rear the amber outer half of each oval tail-lamp
+    // cluster, on the rounded corner outboard of the red lamp (assets/tatra-t3/PHOTOS.md)
+    m.scope("indicators", () => {
+      for (const s of sides)
+        m.scope(sideName(s), () => (e > 0 ? t.sideLamp(v, s, t3Indicator(t)) : t.cornerLamp(v, e, s * 0.8, t.fy(4 - 2.85), 0.045, "lampAmber")));
     });
     if (e > 0) m.scope("destination", () => {
       // T3: the route-number box over the windscreen; T3M and the prototype: a destination display
@@ -250,6 +262,10 @@ export function tatraT6(): MeshBuilder {
     const v = e > 0 ? front : rear;
     m.scope("lamps", () => {
       for (const u of [9.5, 21.5]) t.lamp(v, e, u, 48.5, e > 0 ? 0.08 : 0.06, e > 0 ? "lampHead" : "lampRed");
+    });
+    // the direction indicators: the amber top of the lamp cluster at each corner of both ends
+    m.scope("indicators", () => {
+      for (const u of [7.7, 22.3]) m.scope(sideName(Math.sign(t.fz(u / 10 - 1.5))), () => t.lamp(v, e, u, 47, 0.045, "lampAmber"));
     });
   });
   m.scope("roof equipment", () => {
@@ -382,6 +398,11 @@ export function tatraKt8(params?: ParamValues): MeshBuilder {
       const own = (bx: PxBox) => inside(bx[0] / 10, [a, b]) && inside(bx[2] / 10, [a, b]);
       m.scope("windows", () => t.windows(saloon, s, KT8_WINDOWS.filter(own), { frame: P.frame, sash: 2.5 }));
       m.scope("doors", () => t.doors(saloon, s, KT8_DOORS.filter((d) => own(d.box)), P.door, { frame: P.frame, sash: 1.82 }));
+      // a side repeater in the pier between the outer sections' two windows, at their foot
+      if (i !== 1) m.scope("indicator", () => {
+        const x = t.fx(i === 0 ? 4.85 : 23.35);
+        t.sideLamp(saloon, s, { x0: x - 0.03, x1: x + 0.03, y0: t.fy(1.95), y1: t.fy(2.13) });
+      });
       if (i === 1) m.scope("fleet number", () => t.inscription(saloon, s, t.fx(12.4), [{ text: KT8_NUMBER, y: t.fy(1.05), h: 0.16 }], 0.006, livery === "red" ? "white" : "marking"));
     });
     for (const e of [1, -1]) {
@@ -390,6 +411,11 @@ export function tatraKt8(params?: ParamValues): MeshBuilder {
       m.scope(endName(e), () => {
         m.scope("lamps", () => {
           for (const u of [9.5, 20.5]) t.lamp(v, e, u, 27.5, e > 0 ? 0.08 : 0.06, e > 0 ? "lampHead" : "lampRed");
+        });
+        // the amber top of the lamp column on each chamfered cab corner
+        m.scope("indicators", () => {
+          const [xa, xb] = e > 0 ? [0.62, 0.76] : [27.54, 27.68];
+          for (const s of sides) m.scope(sideName(s), () => t.sideLamp(v, s, { x0: t.fx(xb), x1: t.fx(xa), y0: t.fy(1.42), y1: t.fy(1.62) }));
         });
         m.scope("coupler", () => t.coupler(e, t.fx(e > 0 ? 0.9 : 27.4), t.fx(e > 0 ? 0 : 28.3), t.fy(0.6)));
       });
@@ -512,6 +538,13 @@ export function tatraKt4(): MeshBuilder {
       m.scope("lamps", () => {
         for (const u of [6.5, 23.5]) t.lamp(v, e, u, 29, e > 0 ? 0.08 : 0.06, e > 0 ? "lampHead" : "lampRed");
       });
+      // the direction indicators on the rounded corners, outboard of the head and tail
+      // lamps: upright at the front, the outer chamber of the rear's lamp cluster
+      m.scope("indicators", () => {
+        const [xa, xb] = e > 0 ? [1.17, 1.32] : [20.62, 20.84];
+        const [ya, yb] = e > 0 ? [0.98, 1.2] : [1.03, 1.17];
+        for (const s of sides) m.scope(sideName(s), () => t.sideLamp(saloon, s, { x0: t.fx(xb), x1: t.fx(xa), y0: t.fy(ya), y1: t.fy(yb) }));
+      });
       m.scope("coupler", () => t.coupler(e, t.fx(e > 0 ? 0.9 : 21.3), t.fx(e > 0 ? 0 : 22), t.fy(0.65)));
     });
     m.scope("roof equipment", () => {
@@ -614,6 +647,11 @@ export function gt4Tram(): MeshBuilder {
       const own = (bx: PxBox) => inside(bx[0] / 10, [a, b]) && inside(bx[2] / 10, [a, b]);
       m.scope("windows", () => t.windows(saloon, s, (s > 0 ? GT4_RIGHT_WINDOWS : GT4_LEFT_WINDOWS).filter(own), { frame: "doorFrame", sash: 2.25 }));
       if (s > 0) m.scope("doors", () => t.doors(saloon, s, GT4_DOORS.filter((d) => own(d.box)), "cream", { frame: "doorFrame", sash: 1.7 }));
+      // the GT4's only direction indicators: a side repeater on each section, at the window sill
+      m.scope("indicator", () => {
+        const x = t.fx(i === 0 ? 3.9 : 11.1);
+        t.sideLamp(saloon, s, { x0: x - 0.035, x1: x + 0.035, y0: 1.42, y1: 1.545 });
+      });
     });
     const e = i === 0 ? 1 : -1;
     const v = vols[i === 0 ? 0 : 1]!;

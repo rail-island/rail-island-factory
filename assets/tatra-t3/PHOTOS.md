@@ -39,3 +39,12 @@ All files were downloaded from Wikimedia Commons, downscaled to at most 1600 px 
 - Licence: CC BY-SA 3.0
 - Date: 4 February 2011, 15:16:10
 - Shows: T3SUCS front three-quarter at the Podbaba loop: the raked windscreen under the roof visor, headlights in the red belt, bumper strip.
+
+## photo-t3-6102-rear.jpg
+
+- Commons title: File:Tram Tatra T3 Praha 6102-zezadu.jpg
+- Page: https://commons.wikimedia.org/wiki/File:Tram_Tatra_T3_Praha_6102-zezadu.jpg
+- Author: SJu
+- Licence: CC BY-SA 3.0
+- Date: 22 September 2007
+- Shows: the rear of Prague's historic T3 6102: an oval lamp cluster on each rounded corner of the rear, red inboard and the amber direction indicator outboard, over the bumper.

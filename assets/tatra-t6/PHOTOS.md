@@ -21,3 +21,12 @@ All files were downloaded from Wikimedia Commons, downscaled to at most 1600 px 
 - Licence: CC BY-SA 2.0
 - Date: 12 May 2008, 11:06
 - Shows: A Prague T6A5 pair, three-quarter: the single-arm pantograph, red lower body with the white line, the raked cab.
+
+## photo-t6a5-8626-rear.jpg
+
+- Commons title: File:Tatra T6A5, -8625+8626, DP Praha (42284199544).jpg
+- Page: https://commons.wikimedia.org/wiki/File:Tatra_T6A5%2C_-8625%2B8626%2C_DP_Praha_%2842284199544%29.jpg
+- Author: Janusz Jakubowski from Warsaw, Poland
+- Licence: CC BY 2.0
+- Date: 25 June 2018, 15:33
+- Shows: the rear of 8626, the second car of a Prague pair, from above: the rectangular tail lamps and, on each chamfered rear corner, an upright cluster with the amber direction indicator on top.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DESIGNS } from '../generator/generate';
+import { ALL_VEHICLES, DESIGNS } from '../generator/generate';
 import { previewKey } from '../src/catalogQuery';
 import { glbStats } from '../generator/glbStats';
 import { buildLodModel } from '../generator/lodModel';
@@ -34,4 +34,26 @@ describe('dedicated silhouette regressions', () => {
     const {json,bin}=parseGlb(buildLodModel(d).toGlb('low'));
     for(const f of collectTriangles(json,bin))for(const p of f.p)expect(Math.hypot(p[0]/94,p[2]/78)).toBeGreaterThan(.51);
   });
+});
+
+describe('vehicle LODs carry no lamps and no motion', () => {
+  // docs/models/lod.md: a distant vehicle is never lit, blinks no indicator and moves
+  // no pantograph -- the game applies lamps and clips to the full detail only. Every
+  // vehicle design, its defaults and each value of each of its parameters.
+  const selections = (d: (typeof ALL_VEHICLES)[number]) => [
+    undefined,
+    // a parameter that applies under an earlier one's values (a train's car count) gets the first of them
+    ...(d.params ?? []).flatMap((p) => p.values.map((v) => ({ ...(p.when ? { [p.when.name]: p.when.values[0]! } : {}), [p.name]: v.value }))),
+  ];
+  for (const d of ALL_VEHICLES)
+    it(`${d.id} draws its low detail without a lamp material, lamps table or clip`, () => {
+      for (const values of selections(d)) {
+        const low = buildLodModel(d, values);
+        expect(low.lamps(), JSON.stringify(values)).toBeNull();
+        expect(low.animations(), JSON.stringify(values)).toEqual([]);
+        const { json } = parseGlb(low.toGlb(d.id));
+        expect((json.scenes![0] as { extras?: { lamps?: unknown } }).extras?.lamps).toBeUndefined();
+        expect((json as { animations?: unknown[] }).animations ?? []).toEqual([]);
+      }
+    });
 });

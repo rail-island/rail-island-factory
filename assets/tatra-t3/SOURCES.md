@@ -41,3 +41,15 @@ Prague numbers, painted on the sides: `7290` (t3, legible on `photo-t3sucs-7290-
 ## Measurement record
 
 `native/tram_ckd_t3/landmarks.json` holds 20 native pixel-edge boxes (z_inc, z_dec, x_inc) with their model scopes, tolerances and uncertainty; `baseline.json` is the first authored geometry's measurement. See [COMPARISON.md](COMPARISON.md).
+
+## Direction indicators
+
+The vlakosimdb drawings show no indicators; their places come from photographs ([PHOTOS.md](PHOTOS.md)):
+
+| file | URL | author | licence | use |
+|---|---|---|---|---|
+| `photo-t3sucs-front-three-quarter.jpg` | https://commons.wikimedia.org/wiki/File:Smy%C4%8Dka_Podbaba%2C_Tatra_T3SUCS_na_vn%C4%9Bj%C5%A1%C3%AD_koleji.jpg | Honza Groh ( Jagro ) | CC BY-SA 3.0 | front: an amber-over-clear cluster on each cab corner, in the belt just above the headlights |
+| `photo-t3sucs-7290-door-side.jpg` | https://commons.wikimedia.org/wiki/File:Praha%2C_Tatra_T3SUCS_%C4%8D._7290.jpg | Oleksandr Dede | CC BY-SA 4.0 | the same cluster from the side: behind the curved front, the amber lamp on top |
+| `photo-t3-6102-rear.jpg` | https://commons.wikimedia.org/wiki/File:Tram_Tatra_T3_Praha_6102-zezadu.jpg | SJu | CC BY-SA 3.0 | rear: the amber outer half of each oval tail-lamp cluster, outboard of the red lamp (downloaded for this) |
+
+The model draws the amber lenses only (`indicators` scopes); see [trams.md](../../docs/models/trams.md).

@@ -258,6 +258,50 @@ export class Tram extends Coach {
   }
 
   /**
+   * A round lamp on end e of v at Factory (z, y), facing out of the surface where
+   * it sits -- the end cap, or a tapered corner of the plan, where `lamp()`'s lamp
+   * along x would sink into the slope: housing and lens are rods along the
+   * surface's normal, the lens's back inside the housing.
+   */
+  cornerLamp(v: Volume, e: number, z: number, y: number, r: number, lens: string): void {
+    const plan = e > 0 ? [...v.plan].reverse() : v.plan;
+    const a = Math.abs(z);
+    const s = Math.sign(z);
+    // the plan's segment at |z|: the end cap's normal is +-x
+    let n: [number, number] = [e, 0];
+    for (let i = 1; i < plan.length; i++) {
+      const [xa, ha] = plan[i - 1]!;
+      const [xb, hb] = plan[i]!;
+      if (a > ha + 1e-9 && a <= hb + 1e-9) {
+        // the outward normal of the segment (x, s * h) in the x-z plane
+        const [dx, dz] = [xb - xa, s * (hb - ha)];
+        const len = Math.hypot(dx, dz);
+        n = [dz / len, -dx / len];
+        // the one pointing out of the end and the side
+        if (n[0] * e + n[1] * s < 0) n = [-n[0], -n[1]];
+        break;
+      }
+    }
+    const x = this.endX(v, e, z);
+    const at = (d: number): Vec3 => [x + n[0] * d, y, z + n[1] * d];
+    this.m.rod("underframe", at(-0.01), at(0.03), r * 1.3, 12);
+    this.m.rod(lens, at(0.025), at(0.045), r, 12);
+  }
+
+  /**
+   * A small rectangular lamp laid on side s of v -- a direction indicator on a cab
+   * corner or a side repeater: a dark housing over the Factory box `b` (x along, y
+   * up) and the lens inset in front of it. It follows the plan, so it sits on a
+   * tapered cab corner as on the straight side. Keep the box clear of windows: the
+   * housing stands 10 mm off the skin, the lens 20 mm (its back inside the housing).
+   */
+  sideLamp(v: Volume, s: number, b: Box, lens = "lampAmber"): void {
+    this.sidePanel(v, "rubber", s, b, 0.01, 0.03);
+    const k = 0.008;
+    this.sidePanel(v, lens, s, { x0: b.x0 + k, x1: b.x1 - k, y0: b.y0 + k, y1: b.y1 - k }, 0.02, 0.012);
+  }
+
+  /**
    * A box on the end e of v at end-view pixels `b`, standing `out` proud of the
    * end at source x `at` (a destination sign, a bumper): drawn as a block.
    */

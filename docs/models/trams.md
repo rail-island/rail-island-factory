@@ -1,6 +1,6 @@
 # Trams and metro
 
-**Covers** - the trams and the metro car transferred from vlakosimdb: the Tatra T3 (three variants), T6A5, KT8D5 (three liveries) and KT4, the GT4, and the 81-71 metro car (head and middle car); the shared tram builder and its source-to-Factory map, the articulated trams' sections and joints, pantographs, sources, deviations, the native comparison and tests.
+**Covers** - the trams and the metro car transferred from vlakosimdb: the Tatra T3 (three variants), T6A5, KT8D5 (three liveries) and KT4, the GT4, and the 81-71 metro car (head and middle car); the shared tram builder and its source-to-Factory map, the articulated trams' sections and joints, pantographs, lamps and direction indicators, sources, deviations, the native comparison and tests.
 **Code** - `generator/trams.ts`, `generator/metro.ts`, `generator/tramKit.ts`, `generator/tramComparison.ts`, `generator/tramReport.ts`, `generator/orthoViews.ts`, `generator/treeIds.ts`, `test/trams.test.ts`, `test/rig.test.ts`
 **See also** - [vehicles.md](vehicles.md), [vehicle-rig.md](vehicle-rig.md), [parameters.md](parameters.md), [csd-coaches.md](csd-coaches.md) (the coach builder underneath), [../../.agents/skills/vlakosimdb-transfer/SKILL.md](../../.agents/skills/vlakosimdb-transfer/SKILL.md)
 
@@ -8,11 +8,11 @@
 
 | id | title | params (vlakosimdb) | build | triangles |
 |---|---|---|---|---|
-| `veh-tatra-t3` | Tatra T3 | `variant`: `t3` (tram_ckd_t3, default), `t3m` (tram_ckd_t3m), `t3prototype` (tram_ckd_t3x) | rigid, one node | 6,700 to 6,800 |
-| `veh-tatra-t6` | Tatra T6A5 | - (tram_ckd_t6) | rigid | 6,000 |
-| `veh-tatra-kt8` | Tatra KT8D5 | `livery`: `redWhite` (tram_ckd_kt8, default), `red` (tram_ckd_kt8#2), `modern` (tram_ckd_kt8m) | three sections, two joints | 11,800 |
-| `veh-tatra-kt4` | Tatra KT4 | - (tram_ckd_kt4) | two sections, one joint | 7,800 |
-| `veh-kvag-gt4` | GT4 | - (tram_kvag_gt4) | two sections, one joint | 7,500 |
+| `veh-tatra-t3` | Tatra T3 | `variant`: `t3` (tram_ckd_t3, default), `t3m` (tram_ckd_t3m), `t3prototype` (tram_ckd_t3x) | rigid, one node | 6,800 to 6,900 |
+| `veh-tatra-t6` | Tatra T6A5 | - (tram_ckd_t6) | rigid | 6,600 |
+| `veh-tatra-kt8` | Tatra KT8D5 | `livery`: `redWhite` (tram_ckd_kt8, default), `red` (tram_ckd_kt8#2), `modern` (tram_ckd_kt8m) | three sections, two joints | 12,000 |
+| `veh-tatra-kt4` | Tatra KT4 | - (tram_ckd_kt4) | two sections, one joint | 7,900 |
+| `veh-kvag-gt4` | GT4 | - (tram_kvag_gt4) | two sections, one joint | 7,600 |
 | `veh-metro-81-71` | Metro 81-71 | `unit`: `headCar` (m_mmz_81-71l, default), `middleCar` (m_mmz_81-71v) | rigid | 6,200 / 5,500 |
 
 The trams take `TRAM_CATALOG` (category `Rail vehicles`, group `tram`), the metro
@@ -64,7 +64,8 @@ windscreen wraps onto the cab sides as the BMPs draw it. On the bodies:
   by half the panel's standoff, so a door's seam, leaf and lights (closed slabs of
   three materials) never share a hidden end face.
 - `lamp()` seats a lamp on the end surface where it really is (`endX()` follows the
-  tapered plan); `endBlock()`, `roofBox()`, `coupler()`.
+  tapered plan); `cornerLamp()` and `sideLamp()` place the direction indicators
+  (below); `endBlock()`, `roofBox()`, `coupler()`.
 - `tramBogie()`: the coach bogie with traction motors.
 - `diamond()`: the period double-arm pantograph (T3, KT8D5, KT4, GT4), two rhombic
   frames whose knees come from fixed arm lengths (`knee()`, two circles'
@@ -84,6 +85,36 @@ arms `rod`s: the game folds it at stops. A diamond folds to `diamondFolded`, the
 lowest collector height at which its knees still stand below the collector - its
 fixed arm lengths cannot lie flat, and lower the frames would cross into a V; about
 1 m over the roof. The KT8D5's folded rear collector stands at that height too.
+
+## Lamps and direction indicators
+
+Head lamps (`lampHead`) and red tail lamps (`lampRed`) come from the end BMPs.
+The drawings show no indicators, so their places come from photographs (two were
+downloaded for this, the T3's and the T6A5's rear, each folder's `SOURCES.md`
+lists the evidence). Every tram also draws amber direction indicators in `lampAmber` (role `indicator`,
+[lamps.md](lamps.md)) where the photographs in its `assets/<folder>/PHOTOS.md` show
+them, at both ends and on both sides, so the game's split - front from rear at the
+lamps' `midX`, left (z < 0) from right (z > 0) - finds all four. No lens comes near
+the centre line or the middle of the length. Each sits in an `indicators` (end) or
+`indicator` (side repeater) scope.
+
+| tram | front | rear | side repeaters | photographs |
+|---|---|---|---|---|
+| T3 (all variants) | the amber top of the lamp cluster on each cab corner, in the belt just above the headlights | the amber outer half of each oval tail-lamp cluster, on the rounded corner outboard of the red lamp | - | `photo-t3sucs-front-three-quarter.jpg`, `photo-t3sucs-7290-door-side.jpg`, `photo-t3-6102-rear.jpg` |
+| T6A5 | the amber top of the lamp cluster at each corner of the end, above the headlights | the same at the rear corners | - | `photo-t6a5-8601-front.jpg`, `photo-t6a5-pair-three-quarter.jpg`, `photo-t6a5-8626-rear.jpg` |
+| KT8D5 (all liveries) | the amber top of the lamp column on each chamfered cab corner | the same (it is double-ended) | one a side on each outer section, in the pier between its two windows, at their foot | `photo-kt8d5-9090-front-three-quarter.jpg`, `photo-kt8d5-9009-door-side.jpg`, `photo-kt8d5rn2p-9074-modern.jpg` |
+| KT4 | an upright lamp outboard of each headlight, on the rounded corner | the outer chamber of each three-chamber tail-lamp cluster | - | `photo-kt4d-169-door-side.jpg`, `photo-kt4d-174-side.jpg`, `photo-kt4d-170-front-three-quarter.jpg` (the rear) |
+| GT4 | - | - | one a side on each section, at the window sill: its only indicators | `photo-gt4-632-side.jpg`, `photo-gt4-629-three-quarter.jpg`, `photo-gt4-632-rear-side.jpg` |
+
+The builder draws them three ways: `sideLamp()` lays a dark housing and an inset
+rectangular lens on the side panel (it follows the plan, so it also sits on a
+tapered cab corner); `cornerLamp()` stands a round lamp on the end along the
+surface's normal, where `lamp()`'s lamp along x would sink into a steep corner; the
+T6A5's lie on its flat end cap and use `lamp()`. The photographs show only the
+left (window) side of the GT4; its right side carries the mirror image. The KT4's
+rear clusters do not show which chamber is amber; the model takes the outer one.
+Only the full detail draws them: the distant model has no lamps at all
+([lod.md](lod.md)).
 
 ## Articulated trams
 
@@ -162,6 +193,9 @@ its wheels, in the rail envelope (3.1 m wide, 4.7 m fixed, 6.5 m with the
 collector), under 16,000 triangles and free of z-fighting; the published lengths,
 widths, heights and bogie spacings; the wheels on standard gauge; exactly one
 raised collector at the wire (the KT8D5's second folded) and none on the metro;
+amber indicators on both sides at both ends of every tram, clear of the centre
+line and the middle, and each design's indicators in the scopes its photographs
+put them in;
 the articulated trams' sections, joints, hinges in their gaps and bogies on their
 own sections; the windows and doors on their native boxes and the recorded MAEs.
 The catalog sweep (`test/catalogSweep.ts`) and `test/rig.test.ts` pose them through their JS modules.
