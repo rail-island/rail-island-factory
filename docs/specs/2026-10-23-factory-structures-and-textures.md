@@ -2,65 +2,83 @@
 
 Status: draft
 Date: 2026-10-23
-Area: rail-island-factory (new structure and surface exports, site previews), rail-island-webapp
-(structure builders, textures, city presets, collection and gating, import pipeline)
+Area: rail-island-factory (structure, cross-section and surface exports, localization of exported
+text, site previews), rail-island-webapp (structure builders, rail and road types, catenary,
+textures, city presets and block types, collection and gating, i18n, import pipeline)
 
 ## Context of the change
 
-The factory (this repository) builds every vehicle, building and tree the game draws, and since
-the trees and woods move (docs/specs/2026-10-19-factory-trees-and-woods.md) it also exports
-**code, not only models**: woods types are distribution functions keyed by stable names, bundled
-into one import-free `woods.js` that the game imports synchronously. Everything else the game
-draws as "structures" is still authored in the game, `rail-island-webapp`:
+The factory (this repository) builds every vehicle, building and tree the game draws. Since the
+trees and woods move (docs/specs/2026-10-19-factory-trees-and-woods.md) it also exports **code,
+not only models**: woods types are distribution functions keyed by stable names, bundled into
+one import-free `woods.js` that the game imports synchronously. Everything else the game draws
+is still authored in the game, `rail-island-webapp`:
 
-- **Structures are box lists.** A pure module per kind in the game's `src/core/rail/` (no Three.js)
-  writes world-space box descriptors, and a thin `src/render/*Mesh.ts` merges them by material
-  with `shell`/`support` LOD tags:
-  - bridges: `Bridge.ts` (1,278 lines, 14 types). About 880 lines are type-independent path
-    planning, framing and pier helpers; each type is a 5-45 line builder over shared helpers.
-    The span policy, boundary pier style and overhead members (where catenary attaches) are
-    per-type switches outside the builders.
-  - rail stations: `Station.ts` (1,444 lines, 8 types), `StationLayout.ts`. A type is a layout
-    recipe (rows of platform/rail/building) plus a furnish function over length and layout.
-  - bus and tram stops: `BusStop.ts` (3 types, nearly fixed-size, one assembly per road side);
+- **Structures are mostly box lists.** For bridges, stations, stops, road stations, ports and
+  cable-car stations, a pure module in `src/core/rail/` (airports in `src/core/air/`; no
+  Three.js) writes world-space box descriptors. A thin `src/render/*Mesh.ts` merges them by
+  material, using LOD tags (`part` on bridges, `lod: shell/support` on stations and ports,
+  `detail` on stops). Dams, line decorations and the lake-spring cottage build their geometry
+  in `src/render/`.
+  - bridges: `Bridge.ts` (1,278 lines, 14 types). About 880 lines are type-independent path,
+    frame and pier code; each type is a 5-50 line builder. The span policy, boundary pier style
+    and overhead members (where catenary attaches) are per-type switches outside the builders.
+  - rail stations: `Station.ts` (1,444 lines, 8 types): a layout recipe per track count plus a
+    furnish function over length and layout.
+  - bus and tram stops: `BusStop.ts` (3 types, nearly fixed size, one assembly per road side);
     road stations: `RoadStation.ts` (6 types x 3 layouts, a solver plus per-type dressing).
-  - ports (6), airports (3), cable-car stations (4, fixed size per type), dams (5), tunnels (1),
-    line decorations (wall, fence, guardrail, gallery), catenary parts, semaphores, road signs,
-    crossing signals, the watchtower balloon and the lake-spring cottage.
-- **Gameplay reads that geometry**, not only the renderer: bridge pier footprints feed ship
-  navigation, bridge overhead members feed catenary, station layouts give track offsets. These
-  builders run synchronously on every hover move of their tools, in Vitest and in the headless
-  simulation runner.
-- **Textures** are photo PBR sets in the game's `public/textures/` (15 sets x albedo/normal/rough
-  at 512 px, about 4 MB, Poly Haven CC0, fetched by a macOS-only script). `pbrTextures.ts` binds
-  them by file name, with per-consumer tint, fill and tile tables in `BridgeMesh`, `TunnelMesh`,
-  `DamMesh`, `RoadMesh`, `BusStopMesh`, `AirportMesh` and `LineDecorationLayer`. Terrain uses
-  11 of them as splat array layers bound to the material ids stored in each map's terrain grid.
-  The factory has **no textures or UVs**: `MaterialSpec` is colour, metallic, roughness and
-  optional vertex colours, and earlier factory specs excluded textures explicitly.
+  - ports (6), airports (3), cable-car stations (4, fixed size per type), dams (5), tunnels
+    (1), line decorations (wall, fence, guardrail, gallery).
+- **Rail types (3) and road types (10)** are entry tables in `Rail.ts` and `Road.ts`: a
+  cross-section swept along the line. Widths, corridor half-widths, tram offsets and wire
+  heights are derived from the type id at runtime, not saved. **Catenary** (`Catenary.ts`,
+  `TramCatenary.ts`) is a planner that places masts, cantilevers, portals and tram poles; it
+  saves nothing.
+- **Gameplay reads that geometry**: bridge piers steer ship navigation, overhead members carry
+  catenary, station layouts give track offsets, road widths drive junctions and flattening. The
+  builders run synchronously on every hover move, in Vitest and in the headless simulations.
+- **Textures** are photo PBR sets in the game's `public/textures/` (15 sets x albedo, normal and
+  rough at 512 px, about 4 MB, Poly Haven CC0, plus a three.js water normal map; fetched by a
+  macOS-only script). `pbrTextures.ts` binds them by file name. Tint, fill and tile tables are
+  scattered over the bridge, tunnel, dam, road, rail, tram, bus-stop, airport, house-plinth and
+  line-decoration code. Terrain uses 11 of them as splat layers bound to the material ids
+  stored in each map's terrain grid. The factory has **no textures or UVs**: `MaterialSpec`
+  is a colour plus optional metallic, roughness, `doubleSided` and a `lamp` role; vertex
+  colours are a mesh attribute, not part of the material. Earlier factory specs excluded
+  textures explicitly.
 - **City block definitions** live in the game's `src/core/city/`: `BlockTypes.ts` (15 block
   types: placement, facade style, weighted factory pools), `cityTypes.json` (village, town,
   city), `CityProfiles.ts`, and `cityPresets.ts`, a per-pool list of `{design, params, weight}`
   naming factory designs. The factory already owns each building's pool (`group`) and its plaza
   and block-shape rules (`game.plaza`, `game.block`).
-- **Type ids are stored in many places**: saved maps (`bridgeType`, `stationType`,
-  `busStopType`, `portType`, ...), D1 collection keys `structure:<kind>:<type>`
-  (`Rewards.ts` `STRUCTURE_TYPES`, also compiled into the Worker through `PassLimits`), FREE/PLUS
-  gating (`DEFAULT_STRUCTURES`), localStorage tool prefs, simulation and tutorial definitions,
-  and i18n keys `<kind>.type.<id>` in 14 catalogs. Unknown ids are handled inconsistently: a
-  bridge becomes a beam, a road station renders bare, an unknown decoration kind is dropped on
-  load.
+- **Type ids are stored in many places**: saved maps, D1 collection keys
+  `structure:<kind>:<type>` (`Rewards.ts` `STRUCTURE_TYPES`, imported by the Worker; the Worker
+  also compiles the bridge and station geometry modules in through `PassLimits`), FREE/PLUS
+  gating (`DEFAULT_STRUCTURES`), localStorage tool prefs, simulation, tutorial and test
+  fixtures, and i18n keys in 14 catalogs (mostly `<kind>.type.<id>`, plus
+  `cablecar.station_type.*`, `decoration.kind.*`, `rail.type.*`, `road.type.*`; the tunnel
+  type has none). Unknown ids are handled inconsistently: a bridge draws as a beam, a bus stop
+  is rewritten to `shelter` on load, a road station renders bare, an unknown decoration kind is
+  dropped on load.
+- **Factory text is English.** The game renders factory model titles and parameter titles
+  verbatim; game-side keys exist only for woods names, tree species, building categories and
+  the structure, rail and road type names.
 
-Adding one bridge type today touches about ten places in the game (type union, entry table,
-builder, overhead and pier switches, rewards, i18n, tests, docs). The goal is that adding or
-changing a structure, a texture or a city building preset is factory work, previewed on the
-factory site, followed only by an import.
+Adding one bridge type today touches about ten places in the game. The goal is that adding or
+changing a structure, a cross-section, a texture or a city building preset is factory work,
+previewed on the factory site, followed only by an import.
 
 ## User request
 
 "I want to move textures, structures (bridges, stations, stops, city block definitions, suggest
 other extensible sets) from webapp into factory, to improve extendebility and simpler development
 of objects/structures. Similar effort like for woods."
+
+Later, answering how type names get translated: "Add localization to factory. Factory should
+support the same languages as the game".
+
+Later, extending the scope: "Add to plan: Rail and road types and their cross-sections,
+catenary, dams and locks. - this should be also defined in factory".
 
 ## Decisions
 
@@ -172,11 +190,8 @@ airport props/terminal.
 | Keys required at import | The import fails while a factory type lacks English and Czech keys in the game. |
 
 **Answer (free text): "Add localization to factory. Factory should support the same languages as
-the game".** This reverses the factory's current rule that the site is English-only with no i18n
-layer. Today the game renders factory model titles and parameter titles verbatim in English
-(`src/ui/woodsNames.ts`: "Parameter titles are the factory's data and render verbatim, as a
-model's do"); only woods names and structure types have game-side keys. Its scope is settled in
-the follow-up below.
+the game".** Context, not the user's words: this ends the factory's "no i18n layer" rule for
+exported text; the next decision keeps the site UI English.
 
 ### Factory localization: what does it cover?
 | Option | What it means |
@@ -194,8 +209,7 @@ the follow-up below.
 | All 14 at export | A skill translates every language in the same change that adds the text. Always complete, but every model change carries 13 translations. |
 | English only, later | Build the catalog structure now with English only; translations come later. |
 
-**Answer: All 14 at export.** In the factory, a change that adds or rewords exported text
-carries all 14 languages; the export fails on any missing language.
+**Answer: All 14 at export.**
 
 ### The game already has translations for structure type names (bridge.type.*, station.type.*, ...), woods names and species in 14 catalogs. What happens to them?
 | Option | What it means |
@@ -262,104 +276,272 @@ carries all 14 languages; the export fails on any missing language.
 | Separate fix first | One bugfix change in the game before any phase starts. |
 | Leave them | Out of scope; current behaviour kept. |
 
-**Answer: Fix in the phase that touches them.**
+**Answer: Fix in the phase that touches them.** Correction found later: the paired list exists
+twice under two names, `PAIRED_STATION_TYPES` in `Catenary.ts` and `PAIRED_TYPES` in
+`StationLayout.ts`.
+
+### Factory localization covers model titles. Many are proper nouns ("CD 043", "Karosa", "Eiffel Tower") and some are descriptive ("Classic Cottage", "Container Wagon"). How are titles handled?
+| Option | What it means |
+|---|---|
+| Proper nouns verbatim | A title may be marked as a proper noun and is then copied unchanged into every language, which the completeness check accepts. Descriptive titles, parameter titles and values are translated. |
+| Translate every title | All titles get 14 translations, including type designations and brand names, where the translator decides what to keep. |
+
+**Answer: Proper nouns verbatim.**
+
+### Ports (6 types), airports (3) and cable-car stations (4) are collectible types whose layouts stay in the game. Who owns their type ids and names?
+| Option | What it means |
+|---|---|
+| Factory owns all three | Each type becomes a factory definition: the props, terminal, shed and surfaces it uses, plus its name, in the set registry. The game's layout and berth/taxi solvers read it. A new port or airport style is factory-only. |
+| Cable-car only | Cable-car station types move with their sheds. Port and airport type ids stay game-owned; the factory only supplies props and the terminal. |
+| All stay game-owned | The factory supplies parts only; all three type lists, names and gating stay in the game. |
+
+**Answer: Factory owns all three.**
+
+### Where does the factory's 14-language completeness check run?
+| Option | What it means |
+|---|---|
+| Tests and game import | `pnpm test` fails on missing or outdated translations, and the game import refuses an export with gaps. The site still builds and deploys, so a model can be previewed before its translations are done. |
+| Model build | The export itself refuses to build with gaps, so the site deploy also stops until all 14 languages exist. |
+
+**Answer: Tests and game import.**
+
+### Follow-up: rail and road types, catenary, dams and locks
+The user decided this directly: "Add to plan: Rail and road types and their cross-sections,
+catenary, dams and locks. - this should be also defined in factory". These were out of scope in
+the first draft.
+
+### Rail types (3) and road types (10) move to the factory. What does a type definition hold?
+| Option | What it means |
+|---|---|
+| Full type incl. widths | The cross-section (widths, lanes, shoulders, corridor half-width, tram track offsets), surfaces, sleeper and marking style, and names. The game keeps routing, junctions, terrain flattening and tunnel bores. Widths are not saved, so a change redraws every existing road; the import pins catch it. |
+| Appearance only | Surfaces, sleepers, markings and names move. Widths, corridors and tram offsets stay game constants keyed by type. |
+
+**Answer: Full type incl. widths.**
+
+### Catenary has no saved ids today. What does the factory define?
+| Option | What it means |
+|---|---|
+| Styles with parts | Catenary styles become a set: mast, cantilever, portal and tram pole as functions of height and offsets, with each rail or road type naming its style. The game keeps the planner (mast spacing, wire runs) and passes wire heights and clearances in as its constants. |
+| Parts only | Today's single look as factory part functions, with no style set. |
+| Parts + planner rules | The factory also owns mast spacing and wire heights, which must match pantographs and bridge clearance. |
+
+**Answer: Styles with parts.**
+
+### Where do the added sets go in the phase order?
+| Option | What it means |
+|---|---|
+| Kits + catenary last | Rail and road types and dams join phase 4 (kits and cross-sections; the dam body solver stays in the game, while its lock, arcade bays and type definitions move). Catenary becomes phase 7, after bridges and stations, because it reads both. |
+| Appended at the end | The agreed order is untouched: 7 rail and road types, 8 catenary, 9 dams. |
+| Rail/road right after textures | Cross-sections move first (phase 2) because bridges, stations and stops read their widths; the rest shift by one. |
+
+**Answer: Kits + catenary last.**
 
 ## High-level plan
 
-Every phase ships on its own. Within a phase the factory work comes first, then the game's import,
-then the deletion of the game's in-code definitions. Every set moves 1:1: before a set moves, the
-game pins its output (box-list hashes, triangle counts) for fixed inputs, and the factory version
-must reproduce the pins.
+Every phase ships on its own. Within a phase the factory work comes first, then the game's
+import, then the deletion of the game's in-code definitions. Every set moves 1:1. Points marked
+*(derived)* were not asked as questions; they follow from the decisions and stay open for review
+while this spec is a draft.
+
+**The sets at a glance.** Ids and text are factory-owned for every set below. "Collectible"
+follows today's structure kinds; a new type in such a set is a reward unless the game's FREE
+list names it.
+
+| Set | Phase | The factory delivers | Collectible |
+|---|---|---|---|
+| Textures and surfaces | 1 | photo library, surface presets, named surfaces on materials | no |
+| City presets | 2 | presets on building designs | no |
+| Block types | 2 | block type data | no |
+| Bus and tram stops | 3 | stop side function | yes |
+| Cable-car stations | 3 | type definitions, shed models, pylon function | yes |
+| Ports | 3 | type definitions, prop models | yes |
+| Airports | 3 | type definitions, terminal function, tower and windsock models | yes |
+| Line decorations | 4 | per-kind functions with envelope metadata | no *(derived)* |
+| Tunnel portal styles | 4 | portal functions of the bore half-width | no *(derived)* |
+| Rail and road types | 4 | full cross-section type definitions | no |
+| Dams and locks | 4 | type definitions, lock, arcade bay and turret parts | yes |
+| Rail stations | 5 | layout recipes and furnish functions | yes |
+| Road stations | 5 | dressing functions | yes |
+| Bridges | 6 | per-span functions over the kit | yes |
+| Catenary styles | 7 | mast, cantilever, portal and tram-pole functions | no *(derived)* |
 
 **Phase 0 - foundations.**
-- *Factory localization.* The factory gains catalogs in the game's 14 languages for every text
-  it exports that the game shows: structure type names and descriptions, model titles,
-  parameter titles and values, woods and species names, building categories, block type names.
-  The catalogs are seeded from the game's existing translations, and those game keys are then
-  deleted. A change that adds or rewords exported text carries all 14 languages (a factory
-  translation skill does it), and the export fails on any gap. The export writes one text file
-  per language. The game loads English in its main chunk and the other 13 on demand together
-  with its own catalog. The factory site UI stays English.
-- *Set registry.* Each set has a meta file with frozen ids, picker order, retired aliases and
-  per-type metadata. Factory tests pin the shipped ids. The game derives its collection list,
-  gating lists, prefs validation and generated TS unions from the metas. The Worker reads the
-  meta files only, never a bundle or a geometry module. The FREE default list stays in the game;
-  every other type is a collectible reward.
+- *Factory localization.*
+  - The factory gains catalogs in the game's 14 languages for every text it exports that the
+    game shows: type names and descriptions, model titles, parameter titles and values, woods
+    and species names, block type names, and the grouping labels taken from factory data
+    (building categories, vehicle traction and subcategories). Game-only labels (the archive
+    tab, `city.block.auto` and `.empty`) stay in the game.
+  - Titles marked as proper nouns are copied verbatim into every language.
+  - English stays on the designs as the source. The other 13 languages are keyed by content and
+    carry a fingerprint of the English, so a reworded English text shows as outdated
+    *(derived)*.
+  - A change that adds or rewords exported text carries all 14 languages, written by a new
+    factory translation skill. `pnpm test` and the game import fail on missing or outdated
+    entries; the site still builds and deploys.
+  - The factory keeps a copy of the 14 language codes, which the game import checks against
+    its own list *(derived)*.
+  - The site UI, OpenTTD names and the GLB ZIP stay English, and designs that are not exported
+    are exempt *(derived)*.
+  - The catalogs are seeded from the game's existing translations, and those game keys are
+    deleted.
+  - The export writes one text file per language. The game registers it into its synchronous
+    translator under its own key space, with English in the main chunk and the other 13 loaded
+    on demand next to the game catalog. The offline build packs them like its own catalogs. One
+    English source serves core, MCP and debug output, and the Worker needs no factory text
+    *(derived)*.
+  - The woods UI moves to factory text: woods names, species and the variant names that used to
+    be types (Autumn Larch Woodland) get factory entries *(derived)*.
+- *Set registry.*
+  - Every set in the table has a meta file with frozen ids, picker order, retired aliases and
+    per-type metadata, pinned by factory tests. Phase 0 publishes metas and text for every set,
+    with ids frozen to today's lists, and a factory test refuses new ids in a set until that
+    set's phase has landed *(derived)*.
+  - The game derives its collection list, gating lists, prefs validation and generated TS
+    unions from the metas. The Worker reads the meta files only, never a bundle or a geometry
+    module.
+  - The FREE default list stays in the game; every other type in a collectible set is a
+    reward. Block types additionally get a default type for unknown ids *(derived)*.
 - *One unknown-id policy.* Stored ids are kept verbatim through load and save. Readers resolve
-  them through retired aliases, then to the set's default type. Decorations stop being dropped,
-  and road stations get a default.
-- *Import and checks.* The import mirrors bundles, metas, textures and text files. The game gains
-  a pin harness that fails when an import changes a shipped type's output, until it is re-pinned
-  on purpose. Preview designs (a type function on fixture paths and layouts, with enum sizes)
-  appear on the factory site but stay out of the game's metas and the GLB and OpenTTD exports.
-- *Defects:* the bus-stop commit path gets the collection check; road-station types resolve on load.
+  them through retired aliases, then to the set's default type. Decorations are no longer
+  dropped, bus stops no longer rewritten, and road stations get a default.
+- *Import and baselines.* The import mirrors bundles, metas, textures and text files.
+  - Before a set's phase, the game writes a baseline (fixture inputs, output hashes, triangle
+    counts, invariant expectations), committed into the factory's test fixtures like the tree
+    baseline. The hash is defined once for both repos, including the fields, tags and float
+    rounding it covers *(derived)*.
+  - The game keeps pins that fail when an import changes a shipped type's output, until the
+    pin is updated on purpose.
+  - The factory pins the default station layout and the layout row signatures.
+  - Preview designs and per-set pins start in each set's own phase. Preview designs stay out
+    of the game's metas and the GLB and OpenTTD exports.
+- *Rules and skills.* The factory's agent rules state that the site UI stays English, that
+  exported text carries 14 languages, and that a shared texture library sits beside the
+  per-model reference folders. They name the translation skill, and every model skill gains a
+  translation step. The game's agent rules and i18n reference state that factory content text
+  is authored only in the factory, and they scope `update-translations`, `i18n:check` and
+  `create-release` to the game's own catalogs *(derived)*.
+- *Defects:* the bus-stop commit path gets the collection check; road-station types resolve on
+  load.
 
-**Phase 1 - texture library and named surfaces.** The photo sets move to the factory with their
-sources and licences, plus a surface preset table (texture, tile, tint, fill, honest average
-colour). It replaces the per-consumer knob tables in the game's structure meshes, which read it
-from the import. Factory materials on structures and buildings may name a surface, opt-in. The
-export generates UVs and keeps the flat colour, so thumbnails, the far LOD band and tests still
-work untextured. The game binds the photos after a model is deserialized. Terrain keeps its
-material enum and layer order and picks its photos by name. The water normal map stays in the game.
+**Phase 1 - texture library and named surfaces.**
+- The photo sets move to the factory with their sources and licences, and the fetch script moves
+  with them, ported off macOS *(derived)*.
+- A surface preset table (texture, tile, tint, fill, honest average colour) replaces the game's
+  scattered tint and tile tables. Every game consumer that binds photos by name switches to
+  the surface lookup, including rail, tram and house plinths.
+- Factory materials on structures and buildings may name a surface, opt-in. The export generates
+  UVs and keeps the flat colour, so thumbnails, the far LOD band and tests still work
+  untextured.
+- The factory site viewer shows the photos. The game binds them after a model is deserialized.
+- Terrain keeps its material enum and layer order and picks its photos by name.
+- The water normal map stays tracked in the game, outside the generated folder *(derived)*.
+- The offline build ships every imported photo.
+- The number of photo sets is capped by a test *(derived)*.
 
-**Phase 2 - city presets and block types (data only).** Each building design declares its city
-presets: a family default plus per-design overrides, strictly validated against its parameters.
-Block types become factory data: pool mix, centrepiece, placement, a named facade style, which
-city types and rings use them, and family and decoration flags that replace the hard-coded ids.
-The game keeps CityGen, the facade numbers per named style, city types and profiles. It first
-consolidates its four copies of the type-choice logic so they read block types as data.
-*Defect:* the tenement anti-noise wall rule is fixed.
+**Phase 2 - city presets and block types (data only).**
+- Each building design declares its city presets: a family default plus per-design overrides,
+  strictly validated against its parameters.
+- Block types become a registry set of factory data: pool mix, centrepiece, placement, a named
+  facade style, which city types and rings use them, and family and decoration flags that
+  replace the hard-coded ids.
+- The import fails when block data names a city type, ring or facade style the game does not
+  know *(derived)*.
+- The game keeps CityGen, the facade numbers per named style, city types and profiles. It first
+  consolidates its four copies of the type-choice logic so they read block types as data.
+- *Defect:* the tenement anti-noise wall rule is fixed.
 
-**Phase 3 - fixed props and stops.** Cable-car station sheds, port props (crane, container stack,
-hut, floodlight, bollard, mooring post) and the airport tower and windsock become ordinary factory
-models. They load through the async model pipeline, with dimensions and anchors (rope head,
-wheel node, footprint) in meta so layout never waits. Sized parts are functions in their set's
-sync bundle: the cable-car pylon (height), the airport terminal (pad width and depth), and the
-bus-stop side assembly. The side assembly tags its parts as following the road grade, standing
-level, or fitted supports.
+**Phase 3 - fixed props, stops, cable-car, port and airport types.**
+- Cable-car, port and airport types become factory definitions: the props, terminal, shed and
+  surfaces each uses, plus its name. The game's layout, berth, taxiway and rope solvers read
+  them.
+- Truly fixed props are ordinary factory models through the async model pipeline: cable-car
+  station sheds, port crane, container stack, hut, floodlight, bollard and mooring post, and
+  the airport tower and windsock.
+  - Their dimensions and anchors (rope head, wheel node, footprint) are in meta, so layout
+    never waits.
+  - They are listed apart from buildings and vehicles, so the game keeps them out of pickers,
+    rewards, plan limits and used-model counts, and the offline build ships all of them
+    *(derived)*.
+- Sized parts are functions in their set's sync bundle: the cable-car pylon (height), the
+  airport terminal (pad width and depth), and the bus-stop side assembly. The side assembly
+  tags its parts as following the road grade, standing level, or fitted supports.
 
-**Phase 4 - kits.** Line decorations become per-kind functions with envelope metadata (top,
-margin, spacing, domain, sides, anchor, spans-corridor). Tunnel portals become a set of portal
-styles, each a function of the bore half-width. The game keeps routing, placement, clearance,
-tile batching and the tunnel bore and cover.
+**Phase 4 - kits and cross-sections.**
+- Line decorations become per-kind functions with envelope metadata: top, margin, spacing,
+  domain, sides, anchor, spans-corridor.
+- Tunnel portals become a set of portal styles, each a function of the bore half-width.
+- Rail and road types become full factory definitions: cross-section widths, lanes, shoulders,
+  corridor half-width, tram track offsets, surfaces, sleeper and marking style, and the
+  catenary style each one names. Bridges, stations and stops then read these widths through
+  the game.
+- Dam types become factory definitions: body style and masonry, arcade bay and turret parts,
+  and the lock with its gate leaves as named nodes.
+- The game keeps routing, placement, clearance, tile batching, junctions, terrain flattening,
+  the tunnel bore and cover, and the dam body solver, crest, spillways and water.
 
-**Phase 5 - rail and road stations.** A rail station type is a layout recipe per track count plus
-a furnish function over length and layout. A road station type is a dressing function over the
-game's solved layout. The game keeps track generation, the road-station solver, name-board
-painting and material semantics (glass, light). *Defect:* the duplicated paired-type list goes.
+**Phase 5 - rail and road stations.**
+- A rail station type is a layout recipe per track count plus a furnish function over length
+  and layout.
+- A road station type is a dressing function over the game's solved layout.
+- The game keeps track generation, the road-station solver, name-board painting and material
+  semantics (glass, light).
+- *Defect:* the duplicated paired-type list goes.
 
-**Phase 6 - bridges.** A bridge type is a per-span function over the bundle's kit, with its span
-policy, boundary pier style and overhead members alongside it. Ground supports are tagged
-explicitly instead of detected by height. The game keeps path planning, profiles, pier
-footprints, catenary fixing and the far LOD.
+**Phase 6 - bridges.**
+- A bridge type is a per-span function over the bundle's kit, with its span policy, boundary
+  pier style and overhead members alongside it.
+- Ground supports are tagged explicitly instead of detected by height.
+- The game keeps path planning, profiles, pier footprints, catenary fixing and the far LOD.
+
+**Phase 7 - catenary styles.**
+- Catenary styles become a set: mast, cantilever, portal and tram pole as functions of height
+  and offsets.
+- The game keeps the planner (mast spacing, wire runs) and passes in wire heights and
+  clearances. It reads bridge overhead members and paired station types from phases 5 and 6.
 
 ## Database and persistent storage
 
-- **Saved maps (R2 `objects.json` and the grids):** no format change and no migration. Type ids
-  stay strings where they are today: `bridgeType`, `stationType` and `layout`, `busStopType`,
-  road-station `stationType`, `portType`, `airportType`, cable-car `stationType`, `tunnelType`,
-  `damType`, `segment.decorations[].kind`, `CityData.blocks[].type`, `CityData.typeId`,
-  `HouseData.key`. **Behaviour change:** an id unknown to the current export is now kept
-  verbatim on save (decorations were dropped before), and drawn via retired aliases or the set's
-  default. Persisted layouts and road-station geometry stay authoritative. A changed factory
-  type redraws existing islands (accepted).
+- **Saved maps (R2 `objects.json`, `rail.json`, `road.json` and the grids):** no format change
+  and no migration. Type ids stay strings where they are today:
+  - in `objects.json`: `bridgeType`, `stationType` (its `layout` is a persisted rows object,
+    not an id), `busStopType`, road-station `stationType` and `layout`, `portType`,
+    `airportType`, cable-car `stationType`, `tunnelType`, `damType`, `CityData.blocks[].type`,
+    `CityData.typeId`, `HouseData.key`;
+  - in `rail.json` and `road.json`: `railType`, `roadType` and `segment.decorations[].kind`.
+
+  **Behaviour change:** an id unknown to the current export is now kept verbatim on save. Before,
+  decorations were dropped and bus-stop types rewritten to `shelter`. The unknown id draws via
+  retired aliases or the set's default. Persisted layouts and road-station geometry stay
+  authoritative. Widths and per-box geometry are not saved, so a changed factory type redraws
+  existing islands, roads included (accepted).
 - **D1 `user_collection.item` and `pending_gifts` offers:** key format
-  `structure:<kind>:<type>` unchanged. The set of valid types comes from the factory metas, so a
-  new factory type adds new keys. Ids are never renamed, only retired with an alias. No schema
-  change.
-- **localStorage tool prefs:** unchanged keys; validated against the derived lists (unknown
-  values dropped, as today).
-- **Factory repository (git):** the photo library moves in, with `SOURCES.md` (origin, author,
-  licence, use per file). New: 14-language catalogs of exported text; the surface preset table;
-  block type data; city presets on building designs; one source module per set with its kit.
-- **Factory export (generated, gitignored):** per set a bundle plus meta (ids, order, retired
-  aliases, per-type metadata); a surfaces meta and the textures; one text file per language;
-  block types; `game.city` presets on building entries.
-- **Game repository (git):** the import writes the per-set bundles, metas and generated type
-  declarations under `db/procedural`, the per-language text files, and the photos under
-  `db/textures`, replacing `public/textures` as the tracked source (`public/textures` becomes
-  generated, like the models). The game's catalogs lose the keys for exported content, and their
-  translation fingerprints are regenerated. Committed pin fixtures hold each type's output hashes.
+  `structure:<kind>:<type>` unchanged. The valid types per collectible set come from the
+  factory metas, so a new factory type adds new keys. Ids are never renamed, only retired with
+  an alias. No schema change.
+- **localStorage tool prefs:** keys unchanged (`railType`, `roadType`, `bridgeType`,
+  `tunnelType`, `stationType`, ...), validated against the derived lists; unknown values are
+  dropped, as today.
+- **Factory repository (git):**
+  - the photo library and its fetch script, with `SOURCES.md` (origin, author, licence, use);
+  - 14-language catalogs of exported text with English fingerprints;
+  - the surface preset table, block type data, and city presets on building designs;
+  - one source module per set with its kit;
+  - per-set baselines written by the game, and pins of the default station layout and row
+    signatures.
+- **Factory export (generated, gitignored):**
+  - per set, a bundle plus a meta (ids, order, retired aliases, per-type metadata);
+  - a props meta, a surfaces meta and the textures;
+  - one text file per language;
+  - `game.city` presets on building entries.
+- **Game repository (git):**
+  - The import writes the per-set bundles, metas and generated type declarations under
+    `db/procedural`, the per-language text files, and the photos under `db/textures`.
+  - `db/textures` replaces `public/textures` as the tracked source, and `public/textures`
+    becomes generated like the models. The water normal map keeps a tracked game location.
+  - The game's catalogs lose the keys for exported content, and their translation fingerprints
+    are regenerated.
+  - Committed pin fixtures hold each type's output hashes.
 
 ## Architecture decisions
 
@@ -367,71 +549,90 @@ footprints, catenary fixing and the far LOD.
   Node tests and in headless simulations, so they cannot wait for the model worker. Shipping the
   kit with the functions gives one implementation of the path frame and pier rules, used by both
   the site preview and the game. A game-implemented kit would need a second copy in the factory.
-- **Plain inputs in, tagged descriptors out.** The game passes paths, layouts, terrain height and
-  its own constants (clearances, wire heights, platform height), so gameplay numbers stay
-  game-owned. The bundle returns descriptors with explicit roles (ground support, overhead
+- **Plain inputs in, tagged descriptors out.** The game passes paths, layouts, terrain height
+  and its engine-wide constants (clearances, wire heights, platform height). Per-type
+  dimensions (road widths, rail cross-sections, station rows) belong to the type definitions in
+  the factory. The bundle returns descriptors with explicit roles (ground support, overhead
   member, name board, LOD), so pier footprints, catenary and the far LOD never rely on geometric
   coincidence.
+- **Factory parameters stay enum-only.** Anything sized by the world (portal half-width, pylon
+  height, terminal pad, stop side, catenary mast height) is a function in its set's bundle, not
+  a model built per numeric value. The model cache and the variant tests stay bounded.
 - **The factory owns ids; the game derives.** A type added in the factory reaches the picker,
   collection and gating with no game edit. The Worker reads meta JSON only, which also stops it
-  compiling the geometry modules in as it does today.
-- **Text belongs to whoever owns the content.** Moving the translations into the factory makes
-  model, parameter and type names translatable for the first time, and removes the double source
-  for structure and woods names. The cost: every factory text change carries 14 languages.
+  compiling geometry modules in as it does today.
+- **Text belongs to whoever owns the content.** Model, parameter and value titles become
+  translatable for the first time, and structure, rail, road and woods names lose their double
+  source. The cost is that every factory text change carries 14 languages. The gate sits in
+  tests and the import, not the build, so previews never wait for translations.
 - **Named surfaces with an honest flat colour.** The flat colour keeps every untextured path
-  correct (thumbnails, far band, tests, OpenTTD sprites). Photos are a binding in the game, and
-  one preset table replaces scattered per-consumer tuning.
-- **Block types as data, CityGen as code.** Pools, mixes and usage are content and move; grading,
-  facade numbers and city types are engine rules and stay.
+  correct: thumbnails, the far band, tests and OpenTTD sprites. Photos are a binding in the
+  game, and one preset table replaces scattered per-consumer tuning.
+- **Content as data, engines as code.** Block types, cross-sections and type definitions move;
+  CityGen, grading, the road junction and flattening code, and the catenary planner stay.
 - **Accept redraws, but make them visible.** Freezing types would clutter the pickers, and
   per-record versions would keep dead code forever. Hash pins turn every geometry change into a
   deliberate, reviewable act.
 
 ## Weaknesses and risks
 
-- **Hover hot path and bundle size.** Bridges and stops rebuild on every pointer move, so the
-  functions must stay allocation-light. Several bundles in the main chunk grow the download and
-  the offline build. Mitigation: per-type timing tests in the factory, plus the embedded
-  bundle-size guard.
-- **Silent gameplay drift.** A factory edit moves piers (ship routes), catenary fixings, station
-  widths and the default station layout (which stores no layout) on every island and in the
-  simulations, whose islands regenerate cities from the live catalog. Mitigation: the game's
-  pins, factory pins of layout signatures, and explicit roles. The cost lands on whoever re-pins.
+- **Hover hot path and bundle size.** Bridges, stops and roads rebuild on every pointer move, so
+  the functions must stay allocation-light. Several bundles plus the English text file grow
+  the main chunk and the offline build, and the game has no size guard today. Mitigation:
+  per-type timing tests in the factory and a new main-chunk size test in the game *(derived)*.
+- **Silent gameplay drift.** A factory edit can move every island and every simulation, whose
+  islands regenerate cities from the live catalog:
+  - piers, and so ship routes;
+  - catenary fixings;
+  - station widths, and the default station layout, which stores no layout;
+  - road widths, and with them junctions, terrain flattening and tunnel bores.
+
+  Simulation and test fixtures also name road types. Mitigation: the game's pins, the
+  factory's layout pins and explicit roles. The cost lands on whoever re-pins.
 - **Subtle frame conventions** (lateral sign flip, builder-owned piers, the "under" drop, masonry
-  pier widening) can regress multi-lane decks during the port. Mitigation: the 1:1 hash proof.
-- **Invariants change owner.** Gauge clearance, mast columns, overhead clearance, road clearance
-  and LOD ratios are tested in the game today. They must move into factory tests against fixture
-  inputs the game exports, or regressions surface only after import.
-- **Translation load.** Every model, parameter value and type change carries 13 translations, and
-  the first seeding covers hundreds of titles and values that were never translated. Machine
-  wording quality and review effort are open. The game's English factory text file also enters
-  the main chunk.
+  pier widening) can regress multi-lane decks during the port. Mitigation: the 1:1 baselines.
+- **Invariants change owner.** Gauge clearance, mast columns, overhead and road clearance, wire
+  height against pantographs and LOD ratios are tested in the game today. They move into
+  factory tests against the game's baselines *(derived)*. Otherwise regressions surface only
+  after import.
+- **Translation load.** The first seeding covers hundreds of titles and parameter values that
+  were never translated. After that, every model, parameter value and type change carries 13
+  translations, and every model skill gains a step. Machine wording quality and review effort
+  are open.
 - **Textures:**
   - GPU memory: there are no compressed textures, and buildings may now bind photos.
   - Photos render dark when tint and photo multiply.
   - A white far band appears if a material's colour is not honest.
   - Model-space UVs rotate with buildings and do not continue into roads or plazas.
-  - Mitigation: a cap on the number of sets, tested; one preset table; a colour-to-average check.
-- **City drift.** Old cities infer block types from presets, and block type ids are stored, so
-  preset or block-type edits change old maps and simulations. This reverses the 2026-10-16
-  decision that city tuning needs no factory release.
+  - Mitigation: the set cap, one preset table, and a check that each colour stays near its
+    photo's average.
+- **City drift.** Cities saved without block records infer their block types from their
+  buildings' groups, weighted by the block types' pools, and block type ids are stored. So
+  block-type and pool-mix edits change how old maps are read. Preset edits change new
+  generation and the simulations, not placed buildings. This reverses the 2026-10-16 decision
+  that city tuning needs no factory release.
 - **Cross-repo friction remains.** A new type still needs an import, a game build and a Worker
-  redeploy. It is factory-only in authoring, not in shipping.
+  redeploy. Authoring becomes factory-only; shipping does not.
 - **Previews approximate.** The site shows glass opaque, cannot paint station names, and runs
   types on fixtures, not real terrain.
 - **Open questions:**
-  - Whether the facade style names form a frozen game-owned list the factory validates against.
+  - Whether facade style names form a frozen, game-owned list the factory validates against.
   - What an owned collection item for a retired type shows.
-  - Whether the public API or the marketing site will ever want factory text in other languages.
+  - Whether line decorations, portal styles and catenary styles should become collectible.
+  - Which block type an unknown block id draws as.
+  - Whether the small props without a type set (below) join a later spec.
+  - Whether the public API or the marketing site will want factory text in other languages.
 
 ## Out of scope
 
-- Rail and road types and their cross-sections, catenary, dams and locks.
 - Small fixed props with no type set: semaphores, road signs, crossing signals, the watchtower
-  balloon and the lake-spring cottage.
+  balloon and the lake-spring cottage. They were not offered as sets *(derived)*.
 - The terrain material enum, palette, classifier and splat pipeline; the water normal map.
-- City types, city profiles, CityGen and grading; all world solvers (station tracks, road-station
-  solver, port and airport layouts, berths, taxiways, rope plan, tunnel bore and cover).
-- Localizing the factory site UI.
+- City types, city profiles, CityGen and grading.
+- All world solvers: station tracks, the road-station solver, port and airport layouts, berths,
+  taxiways, the rope plan, the tunnel bore and cover, the dam body, the catenary planner, road
+  junctions and terrain flattening.
+- Numeric factory parameters.
+- Localizing the factory site UI, OpenTTD names and the GLB ZIP.
 - Visual improvements of moved sets beyond the 1:1 port.
 - Publishing the factory export to the game outside the implementation of each phase.
