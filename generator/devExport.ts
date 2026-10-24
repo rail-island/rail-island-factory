@@ -35,7 +35,7 @@ export function devCatalog(): ModelCatalog {
       const references = designReferenceFiles(design).map(({ name, file }) => ({ name, url: `${REFS_DIR}/${design.id}/${name}`, bytes: fs.statSync(file).size }));
       const building = BUILDINGS.includes(design) || VILLAGE_DESIGNS.includes(design);
       const record = catalogRecord(listedEntry(metaEntry(design, fields, null, side), design, building), zero, references, design.openttd);
-      return { ...record, ...(design.buildCoarse ? { coarse: true as const } : {}), ...(design.buildMax ? { maxDetail: true as const } : {}), pending: true as const };
+      return { ...record, ...(design.buildCoarse ? { coarse: true as const } : {}), ...(design.buildMax ? { maxDetail: true as const } : {}), ...(design.sourceTree === false ? { noSourceTree: true as const } : {}), pending: true as const };
     }),
   };
 }
@@ -46,9 +46,9 @@ export async function devJs(id: string): Promise<string | null> {
   return design ? bundleDesign(design, designSource(id)) : null;
 }
 
-/** The design's source tree file (export/tree/<id>.json), or null for an unknown id. */
+/** The design's source tree file (export/tree/<id>.json), or null for an unknown id or one without a tree. */
 export function devTree(id: string): string | null {
-  return DESIGNS.has(id) ? `${JSON.stringify(designTree(id))}\n` : null;
+  return DESIGNS.has(id) && DESIGNS.get(id)!.sourceTree !== false ? `${JSON.stringify(designTree(id))}\n` : null;
 }
 
 /** The absolute path of one of the design's source images, or null. */

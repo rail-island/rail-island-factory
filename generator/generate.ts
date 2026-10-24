@@ -116,7 +116,7 @@ import {
   CATALOG_FILE, META_FILE, REFERENCE_EXTENSIONS, REFS_DIR, VEHICLE_META_FILE, VILLAGE_META_FILE, catalogRecord, exportMeta,
   exportPropMeta, exportVehicleMeta, isSideViewCategory, listedEntry, metaEntry, PROPS_META_FILE, type ModelCatalog, type ReferenceImage,
 } from "./catalog.ts";
-import { TREE_DIR, type SourceTree } from "./sourceTree.ts";
+import { TREE_DIR, TREE_MAX_BYTES, type SourceTree } from "./sourceTree.ts";
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { VehicleRig } from "./rig.ts";
 
@@ -284,6 +284,19 @@ export function designTree(id: string): SourceTree {
   return design.build().sourceTree(design.id, design.title);
 }
 
+/**
+ * Throws when a tree file's text would exceed TREE_MAX_BYTES (Cloudflare's
+ * per-asset limit), naming every such design, so the build fails rather than
+ * the deploy. The cure is `sourceTree: false` on the design.
+ */
+export function checkTreeSizes(texts: ReadonlyMap<string, string>): void {
+  const mib = (n: number): string => `${(n / 1048576).toFixed(1)} MiB`;
+  const big = [...texts].map(([id, t]) => [id, Buffer.byteLength(t)] as const).filter(([, n]) => n > TREE_MAX_BYTES);
+  if (big.length) {
+    throw new Error(`source tree over the ${mib(TREE_MAX_BYTES)} asset limit (set sourceTree: false on the design): ${big.map(([id, n]) => `${id} ${mib(n)}`).join(", ")}`);
+  }
+}
+
 /** Thrown when one or more designs would flicker; the message lists every overlap. */
 export class ZFightingError extends Error {
   constructor(readonly found: ReadonlyMap<string, CoplanarOverlap[]>) {
@@ -345,7 +358,7 @@ function buildAll(designs: readonly ProceduralDesign[]): Array<{ design: Procedu
 export interface GeneratedModel {
   id: string;
   thumb: string; // absolute path
-  tree: string; // absolute path
+  tree: string | null; // absolute path; null for a design without one (`sourceTree: false`)
   triangles: number;
   /** What the catalog lists of the built model: counts and bounding box (glbStats.ts). */
   stats: GlbStats;
@@ -379,7 +392,10 @@ export function generateModels(
   designs: readonly ProceduralDesign[] = [...DESIGNS.values()],
 ): GeneratedModel[] {
   const built = buildAll(designs); // throws before anything touches the disk
+  const treeTexts = new Map(built.filter((b) => b.design.sourceTree !== false).map((b) => [b.design.id, `${JSON.stringify(b.tree)}\n`]));
+  checkTreeSizes(treeTexts); // so does this
   const known = new Set(designs.map((d) => d.id));
+  const withTree = new Set(treeTexts.keys());
   const thumbDir = path.join(dir, "thumbs");
   const treeDir = path.join(dir, TREE_DIR);
   fs.mkdirSync(thumbDir, { recursive: true });
@@ -391,11 +407,11 @@ export function generateModels(
   const previous: Record<string, string> = fs.existsSync(sourcesFile) ? JSON.parse(fs.readFileSync(sourcesFile, "utf8")) : {};
   const sources: Record<string, string> = {};
   const out: GeneratedModel[] = [];
-  for (const { design, bytes, triangles, tree: sourceTree, rig } of built) {
+  for (const { design, bytes, triangles, rig } of built) {
     const thumb = path.join(thumbDir, `${design.id}.png`);
-    const tree = path.join(treeDir, `${design.id}.json`);
-    const treeText = `${JSON.stringify(sourceTree)}\n`;
-    if (!fs.existsSync(tree) || fs.readFileSync(tree, "utf8") !== treeText) fs.writeFileSync(tree, treeText);
+    const treeText = treeTexts.get(design.id);
+    const tree = treeText === undefined ? null : path.join(treeDir, `${design.id}.json`);
+    if (tree && (!fs.existsSync(tree) || fs.readFileSync(tree, "utf8") !== treeText)) fs.writeFileSync(tree, treeText!);
     const hash = sha256(bytes);
     sources[design.id] = hash;
     const changed = previous[design.id] !== hash;
@@ -417,9 +433,9 @@ export function generateModels(
   if (stale) fs.writeFileSync(versionFile, `${THUMB_VERSION}\n`);
   const sorted = Object.fromEntries(Object.entries(sources).sort(([a], [b]) => a.localeCompare(b)));
   writeIfChanged(sourcesFile, `${JSON.stringify(sorted, null, 2)}\n`);
-  for (const [sub, ext] of [[thumbDir, ".png"], [treeDir, ".json"]] as const) {
+  for (const [sub, ext, keep] of [[thumbDir, ".png", known], [treeDir, ".json", withTree]] as const) {
     for (const name of fs.readdirSync(sub)) {
-      if (name !== THUMB_SOURCES_FILE && name.endsWith(ext) && !known.has(name.slice(0, -ext.length))) fs.rmSync(path.join(sub, name));
+      if (name !== THUMB_SOURCES_FILE && name.endsWith(ext) && !keep.has(name.slice(0, -ext.length))) fs.rmSync(path.join(sub, name));
     }
   }
   return out;
@@ -561,7 +577,7 @@ export async function buildExport(
         jsHash: crypto.createHash("sha256").update(jsText).digest("hex").slice(0, 16),
         thumbBytes: fs.statSync(built.thumb).size,
       }, refs.get(design.id), design.openttd);
-      return { ...record, ...(design.buildCoarse ? { coarse: true } : {}), ...(design.buildMax ? { maxDetail: true } : {}) };
+      return { ...record, ...(design.buildCoarse ? { coarse: true } : {}), ...(design.buildMax ? { maxDetail: true } : {}), ...(design.sourceTree === false ? { noSourceTree: true } : {}) };
     }),
   };
   // the legacy table maps old ids onto the whole catalog, so a narrowed export has none

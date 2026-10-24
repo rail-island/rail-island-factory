@@ -287,7 +287,8 @@ parameters, the same file the game draws; no `defaultScale` applied.
 The model's procedural source tree ([../models/source-tree.md](../models/source-tree.md)):
 named scopes - podium, tier 3, piers - down to the `MeshBuilder` calls that drew
 the triangles. `tree/<id>.json` is fetched only when the tab opens (under
-`pnpm dev`, built then); a missing file says to run `pnpm build:models`.
+`pnpm dev`, built then); a missing file says to run `pnpm build:models`. A city
+block ships no tree (its record carries `noSourceTree`), so its page has no Source tab.
 
 - **The tree** starts with the root open. Each row shows the scope name (or a
   leaf's call kind and material, with a colour swatch) and its triangle count;

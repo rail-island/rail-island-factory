@@ -4,10 +4,10 @@
 that built it, the `export/tree/<id>.json` file, and how the site's Source tab
 maps tree nodes to triangles for highlighting and picking.
 **Code** - `generator/sourceTree.ts`, `generator/meshBuilder.ts` (`scope`, `sourceTree`; the geometry itself is `meshCore.ts`),
-`generator/skyscrapers.ts`, `generator/vehicles.ts`, `generator/generate.ts` (`designTree`), `src/sourceTreeView.ts`,
+`generator/skyscrapers.ts`, `generator/vehicles.ts`, `generator/generate.ts` (`designTree`, `checkTreeSizes`), `generator/previews/index.ts`, `src/sourceTreeView.ts`,
 `src/viewerHighlight.ts`, `src/SourceTreePanel.tsx`, `test/models.test.ts`,
 `test/sourceTreeView.test.ts`, `test/viewerHighlight.test.ts`
-**See also** - [skyscrapers.md](skyscrapers.md), [export.md](export.md),
+**See also** - [skyscrapers.md](skyscrapers.md), [export.md](export.md), [previews.md](previews.md),
 [../site/catalog-site.md](../site/catalog-site.md)
 
 ## What it is
@@ -49,6 +49,16 @@ Written by `pnpm build:models` beside the GLB and thumbnail, compact JSON,
 deterministic, rewritten only when its text changed, pruned with its design.
 It is **site-only**: not listed in either meta.json, not part of the
 game's import contract, and free to change.
+
+**City blocks have none.** A block preview (`proc-preview-block-*`,
+[previews.md](previews.md)) draws dozens of buildings, and its tree ran to
+15-40 MiB of JSON - over Cloudflare's 25 MiB per-asset limit, so the deploy
+failed. Those designs set `sourceTree: false`: the build writes no file (and
+removes an old one), the catalog record carries `noSourceTree: true`, the dev
+server answers 404 and the site shows no Source tab. The tree is still recorded
+in memory, so the catalog sweep checks it like any other. The build itself
+refuses any tree file over 25 MiB (`checkTreeSizes`, `TREE_MAX_BYTES`), naming
+the design, so the next oversized tree fails `pnpm build`, not the deploy.
 
 ```ts
 { version: 1, id, triangles, materials: string[], colors: string[], root: ScopeNode }
