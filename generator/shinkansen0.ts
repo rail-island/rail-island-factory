@@ -29,6 +29,7 @@ import { articulate, knee as linkKnee } from "./tramKit.ts";
 import { lerp, type Pt } from "./sliceLoft.ts";
 import { crownPane, drawShell, sideDecal, sideLettering, sidePanel, surfaceDisc, type SliceBody } from "./sliceBody.ts";
 import { liftable } from "./liftable.ts";
+import { openable, plugMove } from "./doors.ts";
 import { RAIL_COLLECTOR_TOP } from "./collector.ts";
 
 /** What the design builds: one car, or the whole train. */
@@ -333,17 +334,26 @@ function sideWindow(m: MeshBuilder, p: Profile, X: (d: number) => number, s: num
   m.scope("glass", () => sidePanel(m, p, X, s, "glass", d0 + 0.05, d1 - 0.05, WIN[0] + 0.05, WIN[1] - 0.05, 0.014, 0.004));
 }
 
-/** A plug door: its seam, the leaf in the body's paint, its narrow window. */
+/**
+ * A plug door: its seam, the leaf in the body's paint, its narrow window. The leaf
+ * and its window open as one plug leaf (doors.ts), sliding toward the car's middle.
+ */
 function sideDoor(m: MeshBuilder, L: Livery, p: Profile, X: (d: number) => number, s: number, d0: number, d1: number): void {
+  const slide = (d0 + d1) / 2 < p.length / 2 ? 1 : -1;
   const [y0, y1] = [1.36, 3.0];
   m.scope("outline", () => sidePanel(m, p, X, s, "rubber", d0, d1, y0, y1, 0.004, 0.03));
-  m.scope("leaf", () => {
-    for (const [a, b, mat] of sliceBands(L, p, (d0 + d1) / 2)) {
-      const [lo, hi] = [Math.max(a, y0 + 0.02), Math.min(b, y1 - 0.02)];
-      if (hi - lo > 1e-6 && mat !== "roof" && mat !== "skirt") sidePanel(m, p, X, s, mat, d0 + 0.02, d1 - 0.02, lo, hi, 0.008, 0.003);
-    }
-  });
-  m.scope("glass", () => sidePanel(m, p, X, s, "glass", d0 + 0.17, d1 - 0.17, 2.05, 2.62, 0.012, 0.004));
+  const dx = X(d0 + slide * (d1 - d0)) - X(d0);
+  openable(m, (mm, o) =>
+    mm.moved(plugMove(o, s, dx), () => {
+      mm.scope("leaf", () => {
+        for (const [a, b, mat] of sliceBands(L, p, (d0 + d1) / 2)) {
+          const [lo, hi] = [Math.max(a, y0 + 0.02), Math.min(b, y1 - 0.02)];
+          if (hi - lo > 1e-6 && mat !== "roof" && mat !== "skirt") sidePanel(mm, p, X, s, mat, d0 + 0.02, d1 - 0.02, lo, hi, 0.008, 0.003);
+        }
+      });
+      mm.scope("glass", () => sidePanel(mm, p, X, s, "glass", d0 + 0.17, d1 - 0.17, 2.05, 2.62, 0.012, 0.004));
+    }),
+  );
   m.scope("step", () => sidePanel(m, p, X, s, "under", d0, d1, 1.26, 1.34, 0.006, 0.2));
 }
 

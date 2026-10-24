@@ -9,6 +9,7 @@
 // native pixel boxes, 0.1 m a pixel, the length scaled to the published 12.1 m
 // over the buffers. See docs/models/czech-dmus.md.
 
+import type { DoorMotion } from "./doors.ts";
 import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
 import type { GameProperties } from "./design.ts";
 import type { Pt } from "./csdCoachParts.ts";
@@ -79,7 +80,8 @@ export function m131(params?: ParamValues): MeshBuilder {
   const motor = unit === "motorCar";
   const car = new Car(PALETTE, FRAME_131);
   const m = car.m;
-  const body = car.volume(BODY_131);
+  // both doors swing inward through doorways, one leaf each (doors.ts)
+  const body = car.volume(BODY_131, car.doorways(DOORS.map((d) => d.door), 0.025));
   m.scope("body", () => {
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
@@ -87,8 +89,8 @@ export function m131(params?: ParamValues): MeshBuilder {
         m.scope("doors", () =>
           DOORS.forEach((d, i) =>
             m.scope(`door ${i + 1}`, () => {
-              car.c.door(body, s, car.side(d.door), "doorRed", { seam: 0.025 });
-              m.scope("glass", () => car.c.window(body, s, car.side(d.glass), { fw: 0.04, frame: "frameGrey" }));
+              const motion: DoorMotion = { kind: "swing", leaves: 1, from: i === 0 ? "low" : "high" };
+              car.openingDoor(body, s, d.door, [d.glass], "doorRed", 0.025, motion, () => "glass", { fw: 0.04, frame: "frameGrey" });
             }),
           ),
         );

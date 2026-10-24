@@ -166,11 +166,19 @@ export function metro8171(params?: ParamValues): MeshBuilder {
     m.scope("doors", () =>
       car.doors.forEach((d, i) =>
         m.scope(`door ${i + 1}`, () => {
-          t.door(saloon, s, t.box(d), "doorRed");
+          // two sliding plug leaves, the yellow stripe and a light riding on each (doors.ts)
           const mid = (d[0] + d[2]) / 2;
-          t.paint(saloon, s, "doorYellow", [d[0] + 1, 39, d[2] - 1, 41], 0.014);
-          for (const [u0, u1] of [[d[0] + 1, mid - 0.5], [mid + 0.5, d[2] - 1]] as const)
-            m.scope("light", () => t.window(saloon, s, t.box([u0, 30, u1, 39]), { frame: "seam", fw: 0.04 }));
+          t.door(saloon, s, t.box(d), "doorRed", {
+            opens: { kind: "plug", leaves: 2 },
+            leafWork: (clip) => {
+              const stripe = clip(t.box([d[0] + 1, 39, d[2] - 1, 41]));
+              if (stripe) t.sidePanel(saloon, "doorYellow", s, stripe, 0.014, 0.003);
+              for (const [u0, u1] of [[d[0] + 1, mid - 0.5], [mid + 0.5, d[2] - 1]] as const) {
+                const w = clip(t.box([u0, 30, u1, 39]));
+                if (w) t.m.scope("light", () => t.window(saloon, s, w, { frame: "seam", fw: 0.04 }));
+              }
+            },
+          });
         }),
       ),
     );

@@ -18,6 +18,7 @@ import type { GameProperties } from "./design.ts";
 import { ngon } from "./meshBuilder.ts";
 import type { Pt, Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
+import type { DoorMotion } from "./doors.ts";
 import { block } from "./vehicleParts.ts";
 import { emblem } from "./cd163.ts";
 import { strokeText } from "./strokeFont.ts";
@@ -234,7 +235,8 @@ function esmeralda(unit: Cd812Unit): MeshBuilder {
   const car = new Car(PALETTE, FRAME_812);
   const m = car.m;
   const L = trailer ? LAYOUT_912 : LAYOUT_812;
-  const body: Volume = car.volume(BODY_812);
+  // the passenger doors swing inward through doorways, a leaf per window (doors.ts)
+  const body: Volume = car.volume(BODY_812, car.doorways(L.doors.map((d) => d.door), 0.03));
   const number = cd812Number(unit);
   m.scope("body", () => {
     for (const s of [1, -1])
@@ -243,8 +245,8 @@ function esmeralda(unit: Cd812Unit): MeshBuilder {
         m.scope("doors", () =>
           L.doors.forEach((dd, i) =>
             m.scope(`door ${i + 1}`, () => {
-              car.c.door(body, s, car.side(dd.door), "green", { seam: 0.03 });
-              dd.glass.forEach((g, j) => m.scope(`glass ${j + 1}`, () => car.c.window(body, s, car.side(g), { fw: 0.04 })));
+              const motion: DoorMotion = dd.glass.length > 1 ? { kind: "swing", leaves: 2 } : { kind: "swing", leaves: 1, from: i === 0 ? "low" : "high" };
+              car.openingDoor(body, s, dd.door, dd.glass, "green", 0.03, motion, (j) => `glass ${j}`);
             }),
           ),
         );

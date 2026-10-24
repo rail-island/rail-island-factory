@@ -241,7 +241,8 @@ function cd810Car(livery: Cd810Livery): MeshBuilder {
   const paint = PAINTS[livery];
   const car = new Car({ ...paint.palette, ploughEdge: c("#f2c40f"), hoseRed: c("#a5241e", 0.6) }, FRAME_810);
   const m = car.m;
-  const body = car.volume(body810(paint));
+  // the doorways on both sides, so the swinging leaves show as they open (doors.ts)
+  const body = car.volume(body810(paint), [1, -1].flatMap((s) => DOORS_810.map((dd) => car.c.doorOpening(s, car.side(dd.door), 0.03))));
   const number = cd810Number(livery);
   m.scope("body", () => {
     for (const s of [1, -1])
@@ -250,8 +251,16 @@ function cd810Car(livery: Cd810Livery): MeshBuilder {
         m.scope("doors", () =>
           DOORS_810.forEach((dd, i) =>
             m.scope(`door ${i + 1}`, () => {
-              car.c.door(body, s, car.side(dd.door), "bands", { seam: 0.03 });
-              m.scope("glass", () => car.c.window(body, s, car.side(dd.glass), { fw: 0.04 }));
+              // one leaf with its window, as the native drawing paints it, swinging
+              // inward on the jamb toward the car's nearer end (doors.ts)
+              car.c.door(body, s, car.side(dd.door), "bands", {
+                seam: 0.03,
+                opens: { kind: "swing", leaves: 1, from: i === 0 ? "low" : "high" },
+                leafWork: (clip) => {
+                  const w = clip(car.side(dd.glass));
+                  if (w) car.c.m.scope("glass", () => car.c.window(body, s, w, { fw: 0.04 }));
+                },
+              });
             }),
           ),
         );

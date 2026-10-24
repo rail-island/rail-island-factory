@@ -9,6 +9,7 @@
 import { ngon, type MeshBuilder } from "./meshBuilder.ts";
 import { block, side } from "./vehicleParts.ts";
 import { Coach, px, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
+import type { DoorMotion } from "./doors.ts";
 import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues } from "./design.ts";
 
 /** The game-catalog fields of the coaches: rail vehicles in their own pool. */
@@ -82,15 +83,46 @@ export function windows(c: Coach, v: Volume, h: number, list: Array<PxBox | [PxB
     });
 }
 
-/** Doors on a side of `v`: the leaf box and its windows. */
-export function doors(c: Coach, v: Volume, h: number, list: Array<{ box: PxBox; glass: PxBox[] }>, paint: string, opts: { frame?: string; fw?: number } = {}): SideWork {
+/** Doors on a side of `v`: the leaf box and its windows; with `opens` they open, the windows riding on the leaves (doors.ts). */
+export function doors(
+  c: Coach,
+  v: Volume,
+  h: number,
+  list: Array<{ box: PxBox; glass: PxBox[] }>,
+  paint: string,
+  opts: { frame?: string; fw?: number; opens?: DoorMotion | ((i: number) => DoorMotion); extra?: (s: number, i: number) => void } = {},
+): SideWork {
+  const { opens, extra, ...win } = opts;
   return (s) =>
     list.forEach((d, i) =>
       c.m.scope(`door ${i + 1}`, () => {
+        const pane = (b: Box) => c.window(v, s, b, { ...win, fw: win.fw ?? 0.05 });
+        if (opens) {
+          c.door(v, s, px(d.box, h), paint, {
+            opens: typeof opens === "function" ? opens(i) : opens,
+            leafWork: (clip) => {
+              d.glass.forEach((g, k) => {
+                const b = clip(px(g, h));
+                if (b) c.m.scope(`window ${k + 1}`, () => pane(b));
+              });
+              // what else the (single) leaf carries: a class numeral
+              extra?.(s, i);
+            },
+          });
+          return;
+        }
         c.door(v, s, px(d.box, h), paint);
-        d.glass.forEach((g, k) => c.m.scope(`window ${k + 1}`, () => c.window(v, s, px(g, h), { ...opts, fw: opts.fw ?? 0.05 })));
+        d.glass.forEach((g, k) => c.m.scope(`window ${k + 1}`, () => pane(px(g, h))));
       }),
     );
+}
+
+/**
+ * Marks the doorways of `list` on both sides of `v` (`Volume.openings`), before it
+ * is drawn: the doors that open inward, so their leaves stay in sight (doors.ts).
+ */
+export function doorways(c: Coach, v: Volume, h: number, list: Array<{ box: PxBox }>, seam?: number): void {
+  v.openings = [...(v.openings ?? []), ...sides.flatMap((s) => list.map((d) => c.doorOpening(s, px(d.box, h), seam)))];
 }
 
 /** A round lamp on end e at front-view centre (z, y): a housing and a lens. */
@@ -163,6 +195,11 @@ function yCoach(kind: "A" | "B"): MeshBuilder {
     bands: [[0.9, 3.1, "green"], [3.1, 3.2, "yellow"], [3.2, 4.3, "roof"]],
     endPaint: "green",
   };
+  const entrances = [
+    { box: [3, 19, 14, 38] as PxBox, glass: [[9, 20, 13, 29]] as PxBox[] },
+    { box: [231, 19, 242, 38] as PxBox, glass: [[232, 20, 236, 29]] as PxBox[] },
+  ];
+  doorways(c, body, H, entrances);
   m.scope("body", () => {
     c.volume(body);
     const compartments: PxBox[] =
@@ -172,10 +209,8 @@ function yCoach(kind: "A" | "B"): MeshBuilder {
     onSides(
       c,
       windows(c, body, H, [[[18, 19, 26, 30], "frosted"], ...compartments, [[219, 19, 227, 30], "frosted"]], { fw: 0.08, sash: () => 2.5 }),
-      doors(c, body, H, [
-        { box: [3, 19, 14, 38], glass: [[9, 20, 13, 29]] },
-        { box: [231, 19, 242, 38], glass: [[232, 20, 236, 29]] },
-      ], "green", { fw: 0.04 }),
+      // one leaf each, swinging inward on the jamb toward the nearer end
+      doors(c, body, H, entrances, "green", { fw: 0.04, opens: (i) => ({ kind: "swing", leaves: 1, from: i === 0 ? "low" : "high" }) }),
       (s) =>
         m.scope("class marks", () => {
           c.numeral(body, s, kind === "A" ? "1" : "2", kind === "A" ? 2.85 : 2.75, 2.35, 0.55);
@@ -271,6 +306,12 @@ export function csdBdmtee(): MeshBuilder {
     bands: [[0.9, 3.2, "green"], [3.2, 4.1, "roof"]],
     endPaint: "green",
   };
+  const entrances = [
+    { box: [63, 18, 83, 44] as PxBox, glass: [[65, 20, 70, 30], [76, 20, 81, 30]] as PxBox[] },
+    { box: [181, 18, 201, 44] as PxBox, glass: [[183, 20, 188, 30], [194, 20, 199, 30]] as PxBox[] },
+  ];
+  // the doorways on both sides, so the swinging leaves show as they open (doors.ts)
+  body.openings = sides.flatMap((s) => entrances.map((d) => c.doorOpening(s, px(d.box, H))));
   m.scope("body", () => {
     c.volume(body);
     onSides(
@@ -280,14 +321,7 @@ export function csdBdmtee(): MeshBuilder {
         [86, 20, 98, 30], [102, 20, 114, 30], [118, 20, 130, 30], [134, 20, 146, 30], [150, 20, 162, 30], [166, 20, 178, 30],
         [[203, 20, 210, 30], "frosted"], [216, 20, 228, 30], [231, 20, 243, 30], [246, 20, 258, 30],
       ], { fw: 0.07, sash: () => 2.5 }),
-      doors(c, body, H, [
-        { box: [63, 18, 83, 44], glass: [[65, 20, 70, 30], [76, 20, 81, 30]] },
-        { box: [181, 18, 201, 44], glass: [[183, 20, 188, 30], [194, 20, 199, 30]] },
-      ], "green", { fw: 0.04 }),
-      (s) =>
-        m.scope("door seams", () => {
-          for (const x of [7.25, 19.05]) c.sidePanel(body, "seam", s, { x0: x - 0.02, y0: 0.6, x1: x + 0.02, y1: 3.2 }, 0.016);
-        }),
+      doors(c, body, H, entrances, "green", { fw: 0.04, opens: { kind: "swing", leaves: 2 } }),
       (s) =>
         m.scope("handrails", () => {
           for (const x of [0.4, 26.0]) c.handrail(body, s, x, 1.5, 2.4);
@@ -364,6 +398,11 @@ export function csdBalm(): MeshBuilder {
     bottom: [[0.4, 0.8], [18.7, 0.8]],
     bands: [[0.8, 0.9, "cream"], [0.9, 1.7, "red"], [1.7, 1.8, "moulding"], [1.8, 3.8, "cream"]],
   };
+  const entrances = [
+    { box: [55, 10, 63, 31] as PxBox, glass: [[57, 11, 61, 21]] as PxBox[] },
+    { box: [128, 10, 136, 31] as PxBox, glass: [[130, 11, 134, 21]] as PxBox[] },
+  ];
+  doorways(c, body, H, entrances);
   m.scope("body", () => {
     c.volume(body);
     onSides(
@@ -372,10 +411,8 @@ export function csdBalm(): MeshBuilder {
         [14, 10, 21, 21], [24, 10, 37, 21], [40, 10, 53, 21], [[69, 10, 74, 21], "frosted"], [81, 10, 94, 21],
         [97, 10, 110, 21], [113, 10, 126, 21], [138, 10, 151, 21], [154, 10, 167, 21], [170, 10, 177, 21],
       ], { fw: 0.07, sash: (b) => (b.x1 - b.x0 > 0.6 ? 2.42 : undefined) }),
-      doors(c, body, H, [
-        { box: [55, 10, 63, 31], glass: [[57, 11, 61, 21]] },
-        { box: [128, 10, 136, 31], glass: [[130, 11, 134, 21]] },
-      ], "bands", { fw: 0.04 }),
+      // one leaf each, swinging inward on the jamb toward the nearer end
+      doors(c, body, H, entrances, "bands", { fw: 0.04, opens: (i) => ({ kind: "swing", leaves: 1, from: i === 0 ? "low" : "high" }) }),
       (s) => m.scope("gutter", () => c.sidePanel(body, "frame", s, px([12, 8, 179, 9], H), 0.02, 0.05)),
       (s) =>
         m.scope("class marks", () => {
@@ -442,15 +479,18 @@ export function csdBam(): MeshBuilder {
     bottom: [[0.7, 0.9], [21.6, 0.9]],
     bands: [[0.9, 2.0, "red"], [2.0, 3.2, "cream"], [3.2, 3.9, "roof"]],
   };
+  const entrances = [
+    { box: [12, 8, 20, 31] as PxBox, glass: [[13, 9, 19, 19]] as PxBox[] },
+    { box: [203, 8, 211, 31] as PxBox, glass: [[204, 9, 210, 19]] as PxBox[] },
+  ];
+  doorways(c, body, H, entrances);
   m.scope("body", () => {
     c.volume(body);
     onSides(
       c,
       windows(c, body, H, Array.from({ length: 12 }, (_, k): PxBox => [24 + 15 * k, 10, 34 + 15 * k, 19]), { fw: 0.07 }),
-      doors(c, body, H, [
-        { box: [12, 8, 20, 31], glass: [[13, 9, 19, 19]] },
-        { box: [203, 8, 211, 31], glass: [[204, 9, 210, 19]] },
-      ], "bands", { fw: 0.04 }),
+      // one leaf each, swinging inward on the jamb toward the nearer end
+      doors(c, body, H, entrances, "bands", { fw: 0.04, opens: (i) => ({ kind: "swing", leaves: 1, from: i === 0 ? "low" : "high" }) }),
       (s) =>
         m.scope("class marks", () => {
           for (const x of [4.35, 17.85]) c.numeral(body, s, "2", x, 1.45, 0.4);
@@ -519,7 +559,13 @@ export function csdBe31(): MeshBuilder {
   const rect = (hw: number, y0: number, y1: number): Pt[] => [[hw, y0], [-hw, y0], [-hw, y1], [hw, y1]];
   const main: Volume = { name: "main", section: rect(1.5, 1.1, 3.3), plan: [[1.4, 1.5], [14.2, 1.5]], bands: [[1.1, 3.3, "green"]] };
   const vest = (a: number, b: number): Volume => ({ name: "vestibule", section: rect(1.2, 1.1, 3.3), plan: [[a, 1.2], [b, 1.2]], bands: [[1.1, 3.3, "green"]] });
+  const entrances = [
+    { box: [5, 7, 14, 29] as PxBox, glass: [7, 8, 12, 18] as PxBox },
+    { box: [142, 7, 151, 29] as PxBox, glass: [144, 8, 149, 18] as PxBox },
+  ];
   const vestibules = [vest(0.4, 1.4), vest(14.2, 15.2)];
+  // each end vestibule's door swings inward on its outer jamb, through a doorway
+  vestibules.forEach((v, i) => doorways(c, v, H, [entrances[i]!]));
   const roof: Volume = {
     name: "roof",
     section: [[-1.5, 3.3], [-1.4, 3.5], [-1.3, 3.6], [-1, 3.7], [0, 3.8], [1, 3.7], [1.3, 3.6], [1.4, 3.5], [1.5, 3.3]],
@@ -535,13 +581,16 @@ export function csdBe31(): MeshBuilder {
       c,
       windows(c, main, H, [[[15, 9, 21, 18], "frosted"], ...Array.from({ length: 7 }, (_, k): PxBox => [26 + 17 * k, 9, 37 + 17 * k, 18])], { fw: 0.07 }),
       (s) =>
-        [
-          { v: vestibules[0]!, box: [5, 7, 14, 29] as PxBox, glass: [7, 8, 12, 18] as PxBox },
-          { v: vestibules[1]!, box: [142, 7, 151, 29] as PxBox, glass: [144, 8, 149, 18] as PxBox },
-        ].forEach((d, i) =>
+        entrances.forEach((d, i) =>
           m.scope(`vestibule door ${i + 1}`, () => {
-            c.door(d.v, s, px(d.box, H), "green");
-            m.scope("window", () => c.window(d.v, s, px(d.glass, H), { fw: 0.04 }));
+            const v = vestibules[i]!;
+            c.door(v, s, px(d.box, H), "green", {
+              opens: { kind: "swing", leaves: 1, from: i === 0 ? "low" : "high" },
+              leafWork: (clip) => {
+                const w = clip(px(d.glass, H));
+                if (w) c.m.scope("window", () => c.window(v, s, w, { fw: 0.04 }));
+              },
+            });
           }),
         ),
       (s) =>
@@ -639,12 +688,16 @@ export function csdBi20(): MeshBuilder {
     });
     onSides(
       c,
-      doors(c, body, H, Array.from({ length: 6 }, (_, k) => ({ box: [16 + 17 * k, 7, 25 + 17 * k, 28] as PxBox, glass: [[17 + 17 * k, 9, 24 + 17 * k, 19] as PxBox] })), "green", { frame: "brass", fw: 0.06 }),
-      // the brass class numerals on the end compartments' doors (native rows 21-24)
-      (s) =>
-        m.scope("class marks", () => {
-          for (const x of [2.05, 10.55]) c.numeral(body, s, "2", x, 1.55, 0.4, 0.015);
-        }),
+      // the compartment doors swing outward; the brass class numerals on the end
+      // compartments' doors (native rows 21-24) swing with them
+      doors(c, body, H, Array.from({ length: 6 }, (_, k) => ({ box: [16 + 17 * k, 7, 25 + 17 * k, 28] as PxBox, glass: [[17 + 17 * k, 9, 24 + 17 * k, 19] as PxBox] })), "green", {
+        frame: "brass",
+        fw: 0.06,
+        opens: { kind: "swing", leaves: 1, outward: true },
+        extra: (s, i) => {
+          if (i === 0 || i === 5) c.m.scope("class mark", () => c.numeral(body, s, "2", i === 0 ? 2.05 : 10.55, 1.55, 0.4, 0.015));
+        },
+      }),
       // on the panel between the third and fourth compartment doors
       numberPlate(c, body, 6.25, 1.5, RUNNING_NUMBERS.bi20.number, 0.09),
     );

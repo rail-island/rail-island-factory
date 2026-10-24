@@ -171,6 +171,7 @@ function car(unit: Unit460, livery: Livery460): MeshBuilder {
   const X = (x: number) => c.X(bOf(F, x));
   const motor = unit === "motorCar";
   const { body, cabUpper, cabLower } = volumes460(motor, paint);
+  body.openings = [1, -1].flatMap((s) => PASSENGER_DOORS[motor ? "motor" : "trailer"].map(([d]) => c.doorOpening(s, sb(F, d), 0.03)));
   const number = number460(livery, unit);
   m.scope("body", () => {
     c.volume(body);
@@ -224,10 +225,34 @@ function windows(c: Coach, v: Volume, s: number, list: PxBox[]): void {
   list.forEach((b, i) => c.m.scope(`window ${i + 1}`, () => c.window(v, s, sb(F, b), { fw: 0.07, sash: 2.62 })));
 }
 
-/** A passenger door with its windows. */
+/** A door with its windows: the cab and luggage doors, which stay shut. */
 function door(c: Coach, v: Volume, s: number, d: PxBox, glass: PxBox[], paint: string): void {
   c.door(v, s, sb(F, d), paint, { seam: 0.03 });
   for (const g of glass) c.window(v, s, sb(F, g), { fw: 0.04 });
+}
+
+/** The passenger doors of the motor car and the trailer, source boxes and windows. */
+const PASSENGER_DOORS: Record<"motor" | "trailer", Array<[PxBox, PxBox[]]>> = {
+  motor: [[[92, 18, 103, 39], [[94, 20, 98, 29]]], [[230, 18, 240, 39], [[232, 20, 236, 29]]]],
+  trailer: [[[5, 18, 15, 39], [[9, 20, 13, 29]]], [[114, 18, 131, 39], [[117, 20, 121, 29], [124, 20, 128, 29]]], [[230, 18, 240, 39], [[232, 20, 236, 29]]]],
+};
+
+/**
+ * A passenger door opening inward through its doorway (`Volume.openings`), the
+ * windows riding on the leaves (doors.ts): a double door from both jambs, a single
+ * leaf on the jamb toward the car's nearer end.
+ */
+function passengerDoor(c: Coach, v: Volume, s: number, d: PxBox, glass: PxBox[], paint: string): void {
+  c.door(v, s, sb(F, d), paint, {
+    seam: 0.03,
+    opens: glass.length === 2 ? { kind: "swing", leaves: 2 } : { kind: "swing", leaves: 1, from: d[0] < 120 ? "low" : "high" },
+    leafWork: (clip) => {
+      for (const g of glass) {
+        const w = clip(sb(F, g));
+        if (w) c.window(v, s, w, { fw: 0.04 });
+      }
+    },
+  });
 }
 
 function markings(c: Coach, v: Volume, paint: Paint, s: number, number: string, at: number): void {
@@ -246,8 +271,7 @@ function motorSide(c: Coach, cabV: Volume, v: Volume, paint: Paint, s: number, n
   m.scope("cab door", () => door(c, v, s, [18, 18, 26, 39], [[20, 20, 25, 27]], "bands"));
   m.scope("luggage door", () => door(c, v, s, [64, 18, 79, 41], [[66, 19, 70, 30], [73, 19, 77, 30]], "bands"));
   m.scope("doors", () => {
-    m.scope("door 1", () => door(c, v, s, [92, 18, 103, 39], [[94, 20, 98, 29]], paint.door));
-    m.scope("door 2", () => door(c, v, s, [230, 18, 240, 39], [[232, 20, 236, 29]], paint.door));
+    PASSENGER_DOORS.motor.forEach(([d, glass], i) => m.scope(`door ${i + 1}`, () => passengerDoor(c, v, s, d, glass, paint.door)));
   });
   m.scope("grille", () => louvre(c, v, s, sb(F, [105, 18, 114, 38]), "grille", 8));
   m.scope("windows", () => windows(c, v, s, WINDOWS_460));
@@ -258,9 +282,7 @@ function motorSide(c: Coach, cabV: Volume, v: Volume, paint: Paint, s: number, n
 function trailerSide(c: Coach, _cab: Volume, v: Volume, paint: Paint, s: number, number: string): void {
   const m = c.m;
   m.scope("doors", () => {
-    m.scope("door 1", () => door(c, v, s, [5, 18, 15, 39], [[9, 20, 13, 29]], paint.door));
-    m.scope("door 2", () => door(c, v, s, [114, 18, 131, 39], [[117, 20, 121, 29], [124, 20, 128, 29]], paint.door));
-    m.scope("door 3", () => door(c, v, s, [230, 18, 240, 39], [[232, 20, 236, 29]], paint.door));
+    PASSENGER_DOORS.trailer.forEach(([d, glass], i) => m.scope(`door ${i + 1}`, () => passengerDoor(c, v, s, d, glass, paint.door)));
   });
   m.scope("windows", () => windows(c, v, s, WINDOWS_060));
   markings(c, v, paint, s, number, 160);

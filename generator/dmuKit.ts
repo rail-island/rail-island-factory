@@ -13,8 +13,9 @@
 
 import { ngon, type MaterialSpec, type MeshBuilder, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
-import { Coach, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
+import { Coach, type Box, type Opening, type Pt, type Volume } from "./csdCoachParts.ts";
 import { emblem } from "./cd163.ts";
+import type { DoorMotion } from "./doors.ts";
 import { block, side } from "./vehicleParts.ts";
 
 export { enumParam, slopePanel, tractionNumber, tractionCheckDigit } from "./emuParts.ts";
@@ -99,6 +100,38 @@ export class Car {
   X(x: number): number {
     return this.c.X(x * this.f.kx);
   }
+
+  /** The doorways of side-view door boxes on both sides, for `volume` (`Volume.openings`): the doors that open inward. */
+  doorways(doors: PxBox[], seam: number): Opening[] {
+    return [1, -1].flatMap((s) => doors.map((d) => this.c.doorOpening(s, this.side(d), seam)));
+  }
+
+  /**
+   * A passenger door that opens (doors.ts): `door` in `paint` with its `glass`
+   * riding on the leaves, each in a scope named by `glassName` (its index from 1).
+   * A door opening inward needs its doorway in the volume (`doorways`).
+   */
+  openingDoor(
+    body: Volume,
+    s: number,
+    door: PxBox,
+    glass: PxBox[],
+    paint: string,
+    seam: number,
+    opens: DoorMotion,
+    glassName: (j: number) => string,
+    win: { fw?: number; frame?: string } = { fw: 0.04 },
+  ): void {
+    this.c.door(body, s, this.side(door), paint, {
+      seam,
+      opens,
+      leafWork: (clip) =>
+        glass.forEach((g, j) => {
+          const w = clip(this.side(g));
+          if (w) this.c.m.scope(glassName(j + 1), () => this.c.window(body, s, w, win));
+        }),
+    });
+  }
   /** Source x to the coach builder's (scaled, uncentred) x. */
   sx(x: number): number {
     return x * this.f.kx;
@@ -111,8 +144,9 @@ export class Car {
   }
 
   /** A volume in source metres, scaled to the model. */
-  volume(v: Volume): Volume {
-    const out = scaleVolume(this.f, v);
+  /** Draws `v`, scaled, with `openings` (in model metres, `side` boxes) cut as doorways (doors.ts). */
+  volume(v: Volume, openings?: Opening[]): Volume {
+    const out: Volume = { ...scaleVolume(this.f, v), ...(openings?.length ? { openings } : {}) };
     this.m.scope("shell", () => loft(this.c, out));
     return out;
   }
@@ -314,7 +348,8 @@ export function loft(c: Coach, v: Volume): void {
   const hw0 = Math.max(...v.section.map((p) => Math.abs(p[0])));
   const hiAt = (x: number): number => (v.top ? lerp(v.top, x) : Infinity);
   const loAt = (x: number): number => (v.bottom ? lerp(v.bottom, x) : -Infinity);
-  const xs = [...new Set([...v.plan, ...(v.top ?? []), ...(v.bottom ?? [])].map((p) => p[0]))]
+  // a doorway's edges are stations too, so its span is whole segments
+  const xs = [...new Set([...v.plan, ...(v.top ?? []), ...(v.bottom ?? [])].map((p) => p[0]).concat((v.openings ?? []).flatMap((o) => [o.x0, o.x1])))]
     .filter((x) => x >= v.plan[0]![0] - 1e-9 && x <= v.plan[v.plan.length - 1]![0] + 1e-9)
     .sort((a, b) => a - b);
   const gone = (x: number, y0: number, y1: number) => hiAt(x) <= y0 + 1e-6 || loAt(x) >= y1 - 1e-6;
@@ -337,6 +372,7 @@ export function loft(c: Coach, v: Volume): void {
         const b = xs[i + 1]!;
         if (b - a < 1e-6) continue;
         if (gone(a, y0, y1) && gone(b, y0, y1)) continue;
+        if (c.doorwaySegment(v, mat, y0, y1, a, b, at)) continue;
         m.sweep(mat, "x", at(a, y0, y1), c.X(a), at(b, y0, y1), c.X(b), false);
       }
       for (const x of [xs[0]!, xs[xs.length - 1]!]) {
@@ -346,4 +382,5 @@ export function loft(c: Coach, v: Volume): void {
       }
     });
   }
+  c.vestibules(v);
 }

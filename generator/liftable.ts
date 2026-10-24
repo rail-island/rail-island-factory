@@ -141,19 +141,39 @@ function quaternion(r: readonly number[]): [number, number, number, number] {
 export function liftable<T extends MeshCore>(m: T, name: string, draw: (m: T, lift: number) => void): void {
   if (/[\s.:/\[\]]/.test(name)) throw new Error(`liftable "${name}": a name three.js cannot bind`);
   const n = m.nextLiftable();
-  const lifts = Array.from({ length: LIFT_SAMPLES + 1 }, (_, k) => k / LIFT_SAMPLES);
+  const { times, tracks } = mechanism(m, `${name}${n}-`, LIFT_SAMPLES, LIFT_SAMPLES, draw, name);
+  if (tracks.length) m.animate({ name: `${name}${n}`, times, tracks, drive: { drive: "state" } });
+}
+
+/**
+ * The core of `liftable` and `openable` (doors.ts): samples `draw` at `samples` + 1
+ * values from 0 to 1, makes every rigid piece that moves a part named
+ * `<prefix><k>` pivoted where it moves least, draws the pose at sample `rest` into
+ * `m` with each triangle routed to its piece's part, and returns the sample times,
+ * the tracks that move the parts from value 0 to 1, and the mean z of the moving
+ * triangles' corners at rest (NaN when nothing moves).
+ */
+export function mechanism<T extends MeshCore>(
+  m: T,
+  prefix: string,
+  samples: number,
+  rest: number,
+  draw: (m: T, value: number) => void,
+  what: string,
+): { times: number[]; tracks: AnimationTrack[]; meanZ: number } {
+  const lifts = Array.from({ length: samples + 1 }, (_, k) => k / samples);
   const poses = lifts.map((lift) => m.sampleDraw((s) => draw(s, lift)));
-  const rest = poses[poses.length - 1]!;
+  const restPose = poses[rest]!;
   // per triangle, its rigid motion at every lift; clustered into pieces
   const pieces: Array<{ motions: Rigid[]; pts: number[] }> = [];
   const route = new Map<string, number[]>();
-  for (const [mat, pos] of rest) {
+  for (const [mat, pos] of restPose) {
     const ids: number[] = [];
     for (let t = 0; t < pos.length; t += 9) {
       const motions = poses.map((pose) => {
         const q = pose.get(mat);
-        if (!q || q.length !== pos.length) throw new Error(`liftable "${name}": ${mat} draws a different number of triangles as it lifts`);
-        return rigidMotion(pos, q, t, `${name} (${mat})`);
+        if (!q || q.length !== pos.length) throw new Error(`liftable "${what}": ${mat} draws a different number of triangles as it lifts`);
+        return rigidMotion(pos, q, t, `${what} (${mat})`);
       });
       let piece = pieces.findIndex((p) => sameMotions(p.motions, motions));
       if (piece < 0) {
@@ -169,10 +189,14 @@ export function liftable<T extends MeshCore>(m: T, name: string, draw: (m: T, li
   const partOf = new Map<number, number>();
   const tracks: AnimationTrack[] = [];
   let k = 0;
+  let zSum = 0;
+  let zCount = 0;
   pieces.forEach((p, i) => {
     if (p.motions.every(isIdentity)) return;
+    for (let j = 2; j < p.pts.length; j += 3) zSum += p.pts[j]!;
+    zCount += p.pts.length / 3;
     const pivot = leastMoved(p.motions, p.pts);
-    const partName = `${name}${n}-${++k}`;
+    const partName = `${prefix}${++k}`;
     const { index, parentPivot } = m.movingPart(partName, pivot);
     partOf.set(i, index);
     const rotation: number[] = [];
@@ -190,8 +214,8 @@ export function liftable<T extends MeshCore>(m: T, name: string, draw: (m: T, li
     tracks.push({ node: partName, path: "rotation", values: rotation }, { node: partName, path: "translation", values: translation });
   });
   // the rest pose, for real: every triangle routed to its piece's part
-  m.drawRouted(new Map([...route].map(([mat, ids]) => [mat, ids.map((i) => partOf.get(i) ?? -1)])), () => draw(m, 1));
-  if (tracks.length) m.animate({ name: `${name}${n}`, times: lifts, tracks, drive: { drive: "state" } });
+  m.drawRouted(new Map([...route].map(([mat, ids]) => [mat, ids.map((i) => partOf.get(i) ?? -1)])), () => draw(m, lifts[rest]!));
+  return { times: lifts, tracks, meanZ: zCount ? zSum / zCount : NaN };
 }
 
 /** Rounds to a millimetre (a pivot). */

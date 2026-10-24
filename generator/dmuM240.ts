@@ -9,6 +9,7 @@
 // 18.5 m over the buffers. The XML's 0.1 m rake of the ends above 1.9 m is left
 // out, so the end windows lie on the end's own plan. See docs/models/czech-dmus.md.
 
+import type { DoorMotion } from "./doors.ts";
 import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
 import type { Pt } from "./csdCoachParts.ts";
 import type { ProceduralDesign } from "./design.ts";
@@ -72,7 +73,10 @@ const BODY_240: Volume = { name: "body", section: SECTION, plan: PLAN, top: TOP,
 export function m240(): MeshBuilder {
   const car = new Car(PALETTE, FRAME_240);
   const m = car.m;
-  const body = car.volume(BODY_240);
+  // the passenger doors (one window, 0.8 m or wider) swing inward through doorways;
+  // the cab door and the luggage compartment's double door stay shut (doors.ts)
+  const passenger = (d: (typeof DOORS)[number]) => d.glass.length === 1 && d.door[2] - d.door[0] >= 8;
+  const body = car.volume(BODY_240, car.doorways(DOORS.filter(passenger).map((d) => d.door), 0.025));
   m.scope("body", () => {
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
@@ -80,6 +84,11 @@ export function m240(): MeshBuilder {
         m.scope("doors", () =>
           DOORS.forEach((d, i) =>
             m.scope(`door ${i + 1}`, () => {
+              if (passenger(d)) {
+                const motion: DoorMotion = { kind: "swing", leaves: 1, from: d.door[0] < 75 ? "low" : "high" };
+                car.openingDoor(body, s, d.door, d.glass, "bands", 0.025, motion, (j) => `glass ${j}`, { fw: 0.035, frame: "frameGrey" });
+                return;
+              }
               car.c.door(body, s, car.side(d.door), "bands", { seam: 0.025 });
               d.glass.forEach((g, j) => m.scope(`glass ${j + 1}`, () => car.c.window(body, s, car.side(g), { fw: 0.035, frame: "frameGrey" })));
             }),

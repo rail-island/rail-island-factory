@@ -108,9 +108,16 @@ export function drDoubleDeck(params?: ParamValues): MeshBuilder {
         DOORS.forEach((d, i) =>
           m.scope(`door ${i + 1}`, () => {
             const b = px(d.box, H);
-            c.door(body, s, b, "door");
-            d.glass.forEach((g, k) => m.scope(`window ${k + 1}`, () => c.window(body, s, px(g, H), { fw: 0.05, frame: "ochre" })));
-            m.scope("centre seam", () => c.sidePanel(body, "seam", s, { x0: d.seam / 10 - 0.015, y0: b.y0 + 0.03, x1: d.seam / 10 + 0.015, y1: b.y1 - 0.03 }, 0.016));
+            // two sliding plug leaves, the windows riding on them; they meet where
+            // the centre seam was (doors.ts)
+            c.door(body, s, b, "door", {
+              opens: { kind: "plug", leaves: 2 },
+              leafWork: (clip) =>
+                d.glass.forEach((g, k) => {
+                  const w = clip(px(g, H));
+                  if (w) c.m.scope(`window ${k + 1}`, () => c.window(body, s, w, { fw: 0.05, frame: "ochre" }));
+                }),
+            });
             m.scope("step edge", () => c.sidePanel(body, "ochre", s, { x0: b.x0 + 0.01, y0: b.y0 + 0.005, x1: b.x1 - 0.01, y1: b.y0 + 0.08 }, 0.02, 0.006));
             m.scope("canopy", () => c.sidePanel(body, "ochre", s, px(d.canopy, H), 0.05, 0.06));
           }),

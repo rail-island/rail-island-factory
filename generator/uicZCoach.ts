@@ -84,7 +84,9 @@ const Z_END: EndSpec = { gangway: [7, 7, 23, 29], door: [9, 9, 21, 24], doorWind
 
 const F = (b: PxBox): Win => [b, "frosted"];
 const frame = (x: number, w: number): PxBox => [x, 10, x + w, 20];
-const door = (box: PxBox, glass: PxBox): DoorSpec => ({ box, glass: [glass], paint: "red" });
+/** An entrance door's plug leaf, stepping out and sliding toward the coach's nearer end (doors.ts). */
+const plugDoor = (box: PxBox): DoorSpec["opens"] => ({ kind: "plug", leaves: 1, toward: box[0] < 130 ? "low" : "high" });
+const door = (box: PxBox, glass: PxBox): DoorSpec => ({ box, glass: [glass], paint: "red", opens: plugDoor(box) });
 
 const CD_PALETTE: Record<string, MaterialSpec> = {
   red: { color: "#f01010", roughness: 0.5 },
@@ -177,8 +179,8 @@ function cdSpec(variant: UicZVariant): LiveryCoachSpec {
 // The DB IC and OBB coaches share the end BMP of the CD ones (the gangway, the
 // red end door with two windows, tail lamps at 2.2 m); their side doors reach
 // from the window band's top down to 0.6 m, over the steps in the skirt recess.
-const dbDoor = (box: PxBox, glass: PxBox): DoorSpec => ({ box, glass: [glass], paint: [[0.5, 0.9, "doorGrey"], [0.9, 1.3, "white"], [1.3, 1.6, "red"], [1.6, 3.4, "white"]] });
-const obbDoor = (box: PxBox, glass: PxBox): DoorSpec => ({ box, glass: [glass], paint: [[0.5, 1.9, "red"], [1.9, 3.1, "grey"], [3.1, 3.4, "red"]] });
+const dbDoor = (box: PxBox, glass: PxBox): DoorSpec => ({ box, glass: [glass], paint: [[0.5, 0.9, "doorGrey"], [0.9, 1.3, "white"], [1.3, 1.6, "red"], [1.6, 3.4, "white"]], opens: plugDoor(box) });
+const obbDoor = (box: PxBox, glass: PxBox): DoorSpec => ({ box, glass: [glass], paint: [[0.5, 1.9, "red"], [1.9, 3.1, "grey"], [3.1, 3.4, "red"]], opens: plugDoor(box) });
 
 const DB_PALETTE: Record<string, MaterialSpec> = {
   white: { color: "#f2f2f2", roughness: 0.5 },
