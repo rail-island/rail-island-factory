@@ -86,7 +86,8 @@ planes. The masonry types build them of their masonry; the trestle of timber.
 
 - concrete (`pier`, `tower`): a shaft that widens with its height (up to 1.6 times) and tapers to
   its given size at the cap. A pier taller than 4 studs stands on a footing, which is the box
-  tagged `ground`. A deck 14 or more studs wide (two tracks, a road) stands on twin columns. The
+  tagged `ground` - and so what the game charts for ships, which is why it overhangs the shaft by
+  only 0.3 studs: a river must still take a hull beside a slim pier. A deck 14 or more studs wide (two tracks, a road) stands on twin columns. The
   cap is as wide as what stands on it (`capWidth`): the girders, the truss, both tower legs. The
   bearings sit under the members (`bearings`). `under` stops the pier below a superstructure
   hanging under the slab (girders, box, deck truss, cantilever towers).

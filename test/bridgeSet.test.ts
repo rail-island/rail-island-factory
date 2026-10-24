@@ -137,4 +137,19 @@ describe("the bridge kit", () => {
       expect(members.every((m) => m.kind === "span")).toBe(true);
     }
   });
+
+  it("builds only finite numbers for every type on odd-length, curved, sloping, two-lane paths", () => {
+    // regression: a station rounded a hair past the span's end took the plate
+    // girder's rounded-end formula below zero under a square root (NaN tops)
+    const finite = (v: unknown): boolean => (typeof v === "number" ? Number.isFinite(v) : Array.isArray(v) ? v.every(finite) : v && typeof v === "object" ? Object.values(v).every(finite) : true);
+    for (const length of [57.31791, 123.456789]) {
+      const points = Array.from({ length: 23 }, (_, i) => { const a = (length / 90) * (i / 22); return { x: 90 * Math.sin(a), y: 20 + 3 * (i / 22), z: 90 * (1 - Math.cos(a)) }; });
+      const path = bridge.pathFromPoints(points, 17, 4, 0.67, 13.16)!;
+      for (const type of Object.keys(bridge.TYPE_META)) {
+        const boxes = bridge.buildBridge(type, path, () => 0);
+        expect(boxes.every(finite), `${type} ${length}`).toBe(true);
+        expect(bridge.lowDetailBoxes(boxes).every(finite), `${type} ${length} distant`).toBe(true);
+      }
+    }
+  });
 });

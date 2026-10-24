@@ -577,7 +577,7 @@ export interface PierSpec {
   /** Columns at these lateral offsets (each `w` wide), whatever the deck's width. */
   columns?: number[];
 }
-const FOOTING_HEIGHT = 0.8, FOOTING_MARGIN = 0.6;
+const FOOTING_HEIGHT = 0.8, FOOTING_MARGIN = 0.3; // slim: the footing is what the game charts for ships
 const TWIN_DECK_WIDTH = 14; // a deck this wide stands on two columns
 function pushPier(out: BridgeBox[], g: BridgePathGeom, distance: number, spec: PierSpec, heightAt: TerrainHeightFn): void {
   const under = spec.under ?? 0;
@@ -692,7 +692,7 @@ const buildBeam: Builder = (out, g, _opts, heightAt) => {
   buildPathDeck(out, g);
   buildPathParapets(out, g);
   for (const side of [-1, 1]) pushRibbon(out, g, g.shiftAmount + side * g.deckWidth * BEAM_GIRDER_X, -DECK_THICKNESS / 2 - BEAM_GIRDER_DEPTH / 2, BEAM_GIRDER_WIDTH, BEAM_GIRDER_DEPTH, "pier", "frame");
-  buildPathPiers(out, g, heightAt, undefined, { w: 2.0, d: 1.8, material: "pier", under: BEAM_GIRDER_DEPTH });
+  buildPathPiers(out, g, heightAt, undefined, { w: PIER_WIDTH, d: PIER_WIDTH, material: "pier", under: BEAM_GIRDER_DEPTH });
 };
 
 // A truss carries its own span: it stands on the boundary piers only.
@@ -1089,7 +1089,8 @@ const buildPlateGirder: Builder = (out, g) => {
   const bottom = -DECK_THICKNESS / 2 - under, fullTop = bottom + D;
   const R = Math.min(3, D, g.length / 4);
   const rounded = (d: number): number => {
-    const x = Math.min(d, g.length - d) / R;
+    // a station rounded a hair past either end must not go below zero under the root
+    const x = Math.max(0, Math.min(d, g.length - d)) / R;
     return x >= 1 ? fullTop : bottom + (fullTop - bottom) * (0.35 + 0.65 * Math.sqrt(1 - (1 - x) * (1 - x)));
   };
   // stations: the rounded ends finely, and every path vertex so the web follows a bend
