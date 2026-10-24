@@ -47,13 +47,24 @@ the edge coping, the yellow safety lines and the cobbled outer trim. Two options
 | type | layout | what it builds |
 |---|---|---|
 | `platforms_only` | plain deck, 3-stud platforms | ramps, posted name boards, benches, a lamp |
-| `platforms_shared` | pairs, 10-stud islands | a V-roof on two rows of columns over every band, underpasses |
+| `platforms_shared` | pairs, 10-stud islands | a V-roof over every band (below), underpasses |
 | `arch_shed` | pairs | a glass vault per track group (below), underpasses |
 | `cantilever_wings` | pairs | masts on every band, tilted wings with a glazed tip over the pairs, wind shelters, underpasses |
 | `concourse` | pairs | low canopies and a glazed footbridge with a stair tower on every band |
 | `village_depot` | tracks side by side, a 10-stud house strip | the country station (below), a post-and-rail fence and lamps on the far platform |
 | `heritage_canopy` | pairs | a gabled timber umbrella canopy on cast-iron posts over every band, underpasses |
 | `grand_terminus` | pairs, 14-stud islands | stone arcades and glazed vaults, nave and aisles on a wide station (below), underpasses |
+
+### The shared platforms
+
+`platforms_shared` puts a V-roof draining to a valley gutter over every band, on two rows of
+columns 15 studs apart, each with a base, a cap and a knee brace in to the roof. Each slope is
+solid at the valley and the eave with a glazed skylight band between; fascias close the eaves
+and both roof ends. The name board hangs at each roof end under the valley, framed top and
+bottom, on two rods down from the roof's underside. A departure board (lit on both faces) and a
+two-faced clock hang from cross beams. Each island gets a glass waiting shelter with a bench,
+open to its track, across from its underpass (one, or two at the quarter points on a long
+station); the other benches, each with a bin, stand on the level deck clear of the ramps.
 
 ### The train sheds' vault
 
@@ -67,10 +78,13 @@ glazing bar at every other joint, and ribs.
 - **`arch_shed`** - one vault per track group, springing 4.8 studs above the deck from brick
   piers. Main ribs every 15 studs are lattices (an outer and an inner chord tied by a zigzag);
   a light rib runs halfway between them. A louvred ventilation lantern with a gabled cap runs
-  along every crown. A pier line two vaults share carries a valley gutter and downpipes. With
-  several vaults, a lattice girder above the gauge spans the station's whole width at both
-  ends, on posts from every pier line, and carries the name board; each vault mouth shows a
-  clock above it. A single vault keeps its clock and board stacked in the glazed end screen.
+  along every crown. A pier line two vaults share carries a valley gutter and downpipes. Each
+  vault's mouth is framed by a deep end arch and closed above the gauge only: a solid transom
+  beam carrying the name board spans it just above the clearance line (with several vaults, a
+  lattice girder across the whole station, on posts from every pier line, carries the name
+  instead), and over it a fanlight of edge-to-edge glass fills the arch behind a sunburst of
+  glazing bars radiating from a clock on the transom, crossed by a concentric ring. Below the
+  transom the mouth is open.
 - **`grand_terminus`** - up to two track groups share one great vault (springing at 9 studs).
   A wider station is a basilica: a nave over the middle group (or the middle two) and a lower
   aisle vault (springing at 7) over every other group, with a stone clerestory wall where an
@@ -114,8 +128,8 @@ coach is held to 16,000 triangles, so a 240-stud platform of coaches is about 14
 | type | 2 x 60 | 4 x 120 | 8 x 240 |
 |---|---|---|---|
 | `platforms_only` | 708 / 4,800 | 972 / 9,000 | 1,500 / 24,600 |
-| `platforms_shared` | 936 / 11,200 | 2,808 / 28,000 | 8,040 / 90,400 |
-| `arch_shed` | 5,752 / 20,800 | 20,360 / 46,000 | 70,696 / 139,600 |
+| `platforms_shared` | 2,352 / 11,200 | 6,012 / 28,000 | 16,584 / 90,400 |
+| `arch_shed` | 6,640 / 20,800 | 22,088 / 46,000 | 74,152 / 139,600 |
 | `cantilever_wings` | 1,224 / 11,200 | 3,024 / 28,000 | 7,896 / 90,400 |
 | `concourse` | 1,848 / 11,200 | 3,024 / 28,000 | 5,640 / 90,400 |
 | `village_depot` | 2,916 / 4,800 | 4,164 / 9,000 | 5,172 / 24,600 |

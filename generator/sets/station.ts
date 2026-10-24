@@ -547,7 +547,12 @@ function buildDefaultDeck(length: number, layout: StationLayout): StationBox[] {
 
 // --- island platforms (free, redesigned) ----------------------------------
 // Tracks in pairs; every deck band carries a V-roof draining to its middle, on a
-// double row of columns. Wide islands between the pairs are the point of the type.
+// double row of columns with knee braces. Each slope has a glazed skylight band;
+// fascias close the eaves and the roof ends. The name board hangs at each roof end
+// on two rods from the roof's underside; departure boards and a clock hang from the
+// cross beams. The islands get glass waiting shelters across from their underpasses.
+const SHARED_FASCIA: [number, number, number] = [214, 206, 190];
+
 function buildIslandPlatforms(length: number, layout: StationLayout): StationBox[] {
   const boxes: StationBox[] = [];
   const wells = islandWells(layout, underpassZs(length));
@@ -556,54 +561,116 @@ function buildIslandPlatforms(length: number, layout: StationLayout): StationBox
   const slopeRad = (SHARED_ROOF_SLOPE_DEG * Math.PI) / 180;
   const roofZ = length - 4;
   const bays = bayPositions(length, ROOF_COLUMN_SPACING);
+  const bayMids = bays.slice(1).map((z, i) => (z + bays[i]!) / 2);
+  const nearest = (zs: readonly number[], target: number) => zs.reduce((best, z) => (Math.abs(z - target) < Math.abs(best - target) ? z : best));
+  // the furniture stays on the level deck, clear of the ramps
+  const benchZs = bayPositions(length - 2 * RAMP_LENGTH - 6, 24);
 
   for (const band of deckBands(layout, false)) {
     const halfW = (band.maxX - band.minX) / 2;
     if (halfW < 1.6) continue;
+    const cx = band.centerX;
     const edgeY = PLATFORM_HEIGHT + SHARED_ROOF_HEIGHT;
     const drop = halfW * Math.tan(slopeRad);
     const vertexY = edgeY - drop;
     const slabLen = halfW / Math.cos(slopeRad);
+    // the underside of the roof at x
+    const under = (x: number) => vertexY + Math.abs(x - cx) * Math.tan(slopeRad) - 0.25 / Math.cos(slopeRad);
+    // one piece of a slope from u0 to u1 (0 at the valley, 1 at the eave)
+    const slopePiece = (sgn: number, u0: number, u1: number, thick: number, drop0: number, cz: number, sz: number, color: [number, number, number], material: StationBoxMaterial, lod?: "shell") => {
+      const u = (u0 + u1) / 2;
+      boxes.push({ cx: cx + sgn * u * halfW, cy: vertexY + u * drop - drop0, cz, sx: (u1 - u0) * slabLen, sy: thick, sz, rotZ: sgn * slopeRad, color, material, lod });
+    };
     for (const sgn of [-1, 1]) {
-      boxes.push({
-        cx: band.centerX + (sgn * halfW) / 2,
-        cy: (edgeY + vertexY) / 2,
-        cz: 0,
-        sx: slabLen,
-        sy: 0.5,
-        sz: roofZ,
-        rotZ: sgn * slopeRad,
-        color: ROOF_COLOR,
-        material: "roof",
-        lod: "shell",
-      });
+      // the slope: solid, a glazed band (overlapping the solid at both edges), solid
+      slopePiece(sgn, 0, 0.36, 0.5, 0, 0, roofZ, ROOF_COLOR, "roof", "shell");
+      slopePiece(sgn, 0.34, 0.62, 0.3, 0, 0, roofZ, GLASS_COLOR, "glass", "shell");
+      slopePiece(sgn, 0.6, 1, 0.5, 0, 0, roofZ, ROOF_COLOR, "roof", "shell");
+      // the eave fascia, and the fascia across both roof ends under the slope
+      boxes.push({ cx: cx + sgn * (halfW - 0.12), cy: edgeY - 0.45, cz: 0, sx: 0.14, sy: 0.7, sz: roofZ, color: SHARED_FASCIA, material: "column" });
+      for (const end of [-1, 1]) slopePiece(sgn, 0, 0.98, 0.7, 0.4, end * (roofZ / 2 - 0.08), 0.14, SHARED_FASCIA, "column");
+      // a light strip under each slope
+      const lightX = cx + sgn * (halfW - 1.7);
+      if (halfW > 2.6) boxes.push({ cx: lightX, cy: under(lightX) - 0.1, cz: 0, sx: 0.35, sy: 0.1, sz: Math.max(4, roofZ - 6), color: LIGHT_COLOR, material: "light" });
+      const colX = cx + sgn * (halfW - 0.5);
       for (const z of bays) {
-        boxes.push({
-          cx: band.centerX + sgn * (halfW - 0.5),
-          cy: PLATFORM_HEIGHT + SHARED_ROOF_HEIGHT / 2,
-          cz: z,
-          sx: 0.6,
-          sy: SHARED_ROOF_HEIGHT,
-          lod: "support",
-          sz: 0.6,
-          color: COLUMN_COLOR,
-          material: "column",
-        });
+        boxes.push({ lod: "support", cx: colX, cy: PLATFORM_HEIGHT + SHARED_ROOF_HEIGHT / 2, cz: z, sx: 0.5, sy: SHARED_ROOF_HEIGHT, sz: 0.5, color: COLUMN_COLOR, material: "column" });
+        boxes.push({ cx: colX, cy: PLATFORM_HEIGHT + 0.3, cz: z, sx: 0.8, sy: 0.6, sz: 0.8, color: STEEL_DARK, material: "steel" });
+        boxes.push({ cx: colX, cy: edgeY - 1.05, cz: z, sx: 0.7, sy: 0.3, sz: 0.7, color: STEEL_DARK, material: "steel" });
+        // the knee brace from the column in to the roof
+        if (halfW > 2.6) {
+          const a = { x: colX - sgn * 0.25, y: edgeY - 1.9 };
+          const bx = colX - sgn * 1.7;
+          const b = { x: bx, y: under(bx) - 0.08 };
+          boxes.push({ cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2, cz: z, sx: Math.hypot(b.x - a.x, b.y - a.y), sy: 0.2, sz: 0.2, rotZ: Math.atan2(b.y - a.y, b.x - a.x), color: COLUMN_COLOR, material: "column" });
+        }
       }
     }
-    boxes.push({ cx: band.centerX, cy: vertexY + 0.16, cz: 0, sx: 0.45, sy: 0.25, sz: roofZ, color: COLUMN_COLOR, material: "column" });
+    // the valley gutter and the cross beams
+    boxes.push({ cx, cy: vertexY + 0.16, cz: 0, sx: 0.45, sy: 0.25, sz: roofZ, color: COLUMN_COLOR, material: "column" });
+    const beamY = vertexY - 0.3;
     for (const z of bays) {
-      boxes.push({ cx: band.centerX, cy: vertexY - 0.3, cz: z, sx: halfW * 2 - 0.7, sy: 0.25, sz: 0.3, color: COLUMN_COLOR, material: "column" });
+      boxes.push({ cx, cy: beamY, cz: z, sx: halfW * 2 - 0.7, sy: 0.25, sz: 0.3, color: COLUMN_COLOR, material: "column" });
     }
-    // name board hung off the roof end at both ends -- just BEYOND the eave (the
-    // V-roof dips lowest at the band centre, so a board tucked under it is hidden),
-    // benches down the middle
-    for (const sgn of [-1, 1]) {
-      boxes.push({ cx: band.centerX, cy: edgeY - 1.3, cz: sgn * (roofZ / 2 + 0.45), sx: Math.min(band.maxX - band.minX - 1, 12), sy: 1.8, sz: 0.3, color: SIGN_COLOR, material: "sign", label: true });
+
+    // the name board at both roof ends, under the valley, on two rods from the roof
+    const boardW = Math.min(halfW * 2 - 2.6, 9);
+    const boardTop = vertexY - 0.45;
+    const boardH = 1.3;
+    if (boardW > 2) {
+      for (const end of [-1, 1]) {
+        const z = end * (roofZ / 2 - 0.45);
+        boxes.push({ cx, cy: boardTop - boardH / 2, cz: z, sx: boardW, sy: boardH, sz: 0.3, color: SIGN_COLOR, material: "sign", label: true });
+        boxes.push({ cx, cy: boardTop - boardH - 0.06, cz: z, sx: boardW + 0.2, sy: 0.12, sz: 0.38, color: STEEL_DARK, material: "steel" });
+        boxes.push({ cx, cy: boardTop + 0.06, cz: z, sx: boardW + 0.2, sy: 0.12, sz: 0.38, color: STEEL_DARK, material: "steel" });
+        for (const side of [-1, 1]) {
+          const rx = cx + side * (boardW / 2 - 0.5);
+          const topY = under(rx);
+          boxes.push({ cx: rx, cy: (boardTop + 0.12 + topY) / 2, cz: z, sx: 0.1, sy: topY - boardTop - 0.12, sz: 0.1, color: STEEL_DARK, material: "steel" });
+        }
+      }
+    }
+    // a departure board and a clock hung from the cross beams
+    if (halfW >= 3.5 && bays.length >= 3) {
+      const hang = (z: number, h: number) => {
+        for (const side of [-1, 1]) boxes.push({ cx: cx + side * 0.9, cy: beamY - 0.125 - 0.2, cz: z, sx: 0.08, sy: 0.4, sz: 0.08, color: STEEL_DARK, material: "steel" });
+        return beamY - 0.125 - 0.4 - h / 2;
+      };
+      const boardZ = nearest(bays, length / 6);
+      const dy = hang(boardZ, 0.9);
+      boxes.push({ cx, cy: dy, cz: boardZ, sx: 2.6, sy: 0.9, sz: 0.24, color: STEEL_DARK, material: "steel" });
+      for (const f of [-1, 1]) boxes.push({ cx, cy: dy, cz: boardZ + f * 0.13, sx: 2.3, sy: 0.65, sz: 0.04, color: LIGHT_COLOR, material: "light" });
+      const clockZ = nearest(bays, -length / 6);
+      if (clockZ !== boardZ) {
+        const clockY = hang(clockZ, 1.1);
+        pushClock(boxes, cx, clockY, clockZ, 1.1, 1);
+        // the second dial, on the back
+        boxes.push({ cx, cy: clockY, cz: clockZ - 0.23, sx: 1.1 * 0.84, sy: 1.1 * 0.84, sz: 0.08, color: WOOD_CREAM, material: "steel" });
+      }
+    }
+
+    // a glass waiting shelter across from the underpass on an island, open to the
+    // track on its side; benches down the middle elsewhere, each with a bin
+    const island = band.row.type === "island" && halfW >= 5.5;
+    const shelterZs = island ? [...new Set((length < 100 ? [0] : [-length / 4, length / 4]).map((t) => nearest(bayMids, t)))] : [];
+    for (const z of shelterZs) {
+      const back = cx - 1.5;
+      const front = cx - 4.3;
+      const len = Math.min(5.5, ROOF_COLUMN_SPACING - 2);
+      const roofY = PLATFORM_HEIGHT + 2.7;
+      boxes.push({ cx: back, cy: (PLATFORM_HEIGHT + roofY) / 2, cz: z, sx: 0.12, sy: roofY - PLATFORM_HEIGHT - 0.1, sz: len, color: GLASS_COLOR, material: "glass" });
+      for (const e of [-1, 1]) {
+        boxes.push({ cx: (back + front) / 2, cy: (PLATFORM_HEIGHT + roofY) / 2, cz: z + e * (len / 2), sx: back - front, sy: roofY - PLATFORM_HEIGHT - 0.1, sz: 0.12, color: GLASS_COLOR, material: "glass" });
+        for (const x of [back, front]) boxes.push({ cx: x, cy: (PLATFORM_HEIGHT + roofY) / 2, cz: z + e * (len / 2), sx: 0.16, sy: roofY - PLATFORM_HEIGHT, sz: 0.16, color: STEEL_DARK, material: "steel" });
+      }
+      boxes.push({ cx: (back + front) / 2 - 0.15, cy: roofY + 0.08, cz: z, sx: back - front + 0.6, sy: 0.16, sz: len + 0.4, color: STEEL_DARK, material: "steel" });
+      pushBench(boxes, layout, cx - 2.6, z, 1.1, len - 1.4, STEEL_DARK, "steel");
     }
     if (halfW > 3) {
-      for (const z of bayPositions(length, 24)) {
-        pushBench(boxes, layout, band.centerX, z, 1.6);
+      for (const z of benchZs) {
+        if (shelterZs.some((sz) => Math.abs(sz - z) < 5)) continue;
+        pushBench(boxes, layout, cx, z, 1.6);
+        boxes.push({ cx, cy: PLATFORM_HEIGHT + 0.45, cz: z + 2.9, sx: 0.5, sy: 0.9, sz: 0.5, color: STEEL_DARK, material: "steel" });
       }
     }
   }
@@ -785,38 +852,64 @@ function buildArchShed(length: number, layout: StationLayout): StationBox[] {
     pushVaultPurlins(boxes, v, zLen, 0.2);
     pushCrownLantern(boxes, v, zLen);
 
-    // glazed gable screen at both ends: it only closes above the clearance line
-    // where it crosses a track, so the train openings stay open
+    // The end screens: a deep transom beam across the mouth just above the gauge
+    // (with several vaults, the station-wide girder), and over it a glazed fanlight
+    // filling the arch -- one sheet of glass behind a sunburst of glazing bars that
+    // radiate from the clock, crossed by one concentric ring. Below the transom the
+    // mouth stays open.
+    const transomTop = girderTop;
+    const halfAt = (y: number) => {
+      const r = (y - v.springY) / rise;
+      return r >= 1 ? 0 : span * Math.sqrt(Math.max(0, 1 - r * r));
+    };
+    const crown = vaultHeightAt(v, 0);
+    const halfTop = halfAt(transomTop);
     const panelW = (span * 2) / v.segments;
     for (const sgn of [-1, 1]) {
       const zEnd = sgn * (zLen / 2 - 0.1);
-      for (let i = 0; i < v.segments; i++) {
-        const dx = -span + (i + 0.5) * panelW;
-        const px = midX + dx;
-        const top = Math.min(vaultHeightAt(v, dx - panelW / 2), vaultHeightAt(v, dx + panelW / 2)) - 0.3;
-        const bottom = overTrack(px, panelW / 2) ? clearY : springY;
-        if (top - bottom < 0.6) continue;
-        boxes.push({ cx: px, cy: (bottom + top) / 2, cz: zEnd, sx: panelW - 0.08, sy: top - bottom, sz: 0.12, color: GLASS_COLOR, material: "glass" });
-        if (i > 0) boxes.push({ cx: px - panelW / 2, cy: (bottom + top) / 2, cz: zEnd + sgn * 0.08, sx: 0.14, sy: top - bottom, sz: 0.16, color: STEEL_DARK, material: "steel" });
+      // the end arch, framing the screen
+      pushVaultArc(boxes, v, zEnd + sgn * 0.12, 0.5, 0.6, 0.05, STEEL_DARK, "steel");
+      if (halfTop < 1.2 || crown - transomTop < 0.8) continue;
+      if (!multi) {
+        boxes.push({ lod: "shell", cx: midX, cy: (girderBottom + transomTop) / 2, cz: zEnd + sgn * 0.15, sx: halfTop * 2, sy: transomTop - girderBottom, sz: 0.4, color: STEEL_DARK, material: "steel" });
+        boxes.push({ cx: midX, cy: transomTop - 0.12, cz: zEnd + sgn * 0.15, sx: halfTop * 2 + 0.2, sy: 0.24, sz: 0.6, color: STEEL_DARK, material: "steel" });
+        boxes.push({ cx: midX, cy: (girderBottom + transomTop) / 2, cz: zEnd + sgn * 0.48, sx: Math.min(halfTop * 2 - 1, 13), sy: transomTop - girderBottom - 0.45, sz: 0.25, color: SIGN_COLOR, material: "sign", label: true });
       }
-      const clockH = 2.4;
-      if (multi) {
-        // the name rides on the girder; a clock above it in every mouth
-        const clockY = girderTop + 0.4 + clockH / 2;
-        if (clockY + clockH / 2 <= vaultHeightAt(v, clockH / 2) - 0.6) pushClock(boxes, midX, clockY, zEnd + sgn * 0.35, clockH, sgn);
-        continue;
+      // the glass: edge-to-edge panes from the transom up to the arch, three to a
+      // segment so their stepped tops stay hidden behind the end arch
+      const paneW = panelW / 3;
+      for (let i = 0; i < v.segments * 3; i++) {
+        const dx = -span + (i + 0.5) * paneW;
+        const top = Math.min(vaultHeightAt(v, dx - paneW / 2), vaultHeightAt(v, dx + paneW / 2)) - 0.05;
+        if (top - transomTop < 0.3) continue;
+        boxes.push({ cx: midX + dx, cy: (transomTop + top) / 2, cz: zEnd, sx: paneW, sy: top - transomTop, sz: 0.1, color: GLASS_COLOR, material: "glass" });
       }
-      // clock + name board, stacked down from the crown. The board is the wider of
-      // the two, so it decides whether the stack has to sit above the clearance.
-      const boardH = 1.8;
-      const boardW = Math.min(length * 0.2, 13);
-      const stackTop = vaultHeightAt(v, Math.max(1.2, boardW / 2)) - 0.6;
-      const crossesTrack = overTrack(midX, boardW / 2) || overTrack(midX, clockH / 2);
-      const stackBottom = Math.max(crossesTrack ? clearY : springY + rise * 0.5 - clockH / 2, stackTop - clockH - boardH - 0.6);
-      if (stackBottom + clockH + boardH + 0.6 <= stackTop) {
-        pushClock(boxes, midX, stackBottom + boardH + 0.6 + clockH / 2, zEnd + sgn * 0.35, clockH, sgn);
-        boxes.push({ cx: midX, cy: stackBottom + boardH / 2, cz: zEnd + sgn * 0.35, sx: boardW, sy: boardH, sz: 0.35, color: SIGN_COLOR, material: "sign", label: true });
+      // the sunburst: glazing bars radiating from the middle of the transom to every
+      // other joint of the arch, round a clock sitting on the transom when the
+      // fanlight is tall enough, crossed by one concentric ring
+      const fan = crown - transomTop;
+      const clockH = Math.min(2.2, fan * 0.36);
+      const hasClock = clockH >= 0.9;
+      if (hasClock) pushClock(boxes, midX, transomTop + 0.15 + clockH / 2, zEnd + sgn * 0.35, clockH, sgn);
+      const hubR = hasClock ? clockH + 0.35 : 0.4;
+      const barZ = zEnd + sgn * 0.11;
+      const ends: Array<{ x: number; y: number }> = [];
+      for (let i = 2; i < v.segments - 1; i += 2) {
+        const p = vaultPoint(v, vaultT(v, i));
+        if (p.y > transomTop + 0.5 && Math.hypot(p.x - midX, p.y - transomTop) > hubR + 0.8) ends.push(p);
       }
+      const along = (p: { x: number; y: number }, f: number) => {
+        const len = Math.hypot(p.x - midX, p.y - transomTop);
+        const r = hubR + (len - 0.25 - hubR) * f;
+        return { x: midX + ((p.x - midX) / len) * r, y: transomTop + ((p.y - transomTop) / len) * r };
+      };
+      const bar = (a: { x: number; y: number }, b: { x: number; y: number }, w: number) => {
+        boxes.push({ cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2, cz: barZ, sx: Math.hypot(b.x - a.x, b.y - a.y), sy: w, sz: 0.14, rotZ: Math.atan2(b.y - a.y, b.x - a.x), color: STEEL_DARK, material: "steel" });
+      };
+      for (const p of ends) bar(along(p, 0), along(p, 1), 0.16);
+      for (let i = 0; i + 1 < ends.length; i++) bar(along(ends[i]!, 0.5), along(ends[i + 1]!, 0.5), 0.18);
+      // the hub's half ring round the clock
+      if (ends.length > 1) for (let i = 0; i + 1 < ends.length; i++) bar(along(ends[i]!, 0), along(ends[i + 1]!, 0), 0.18);
     }
 
     // pendant lamps down the crown
