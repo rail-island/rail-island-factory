@@ -1,6 +1,7 @@
 import { proceduralId } from "../generator/modelId.ts";
 import { expect, it } from 'vitest';
-import { INDUSTRY } from '../generator/industry.ts';
+import { buildingSpec, INDUSTRY } from '../generator/industry.ts';
+import { bayLayout, FACES, faceLength, hallOpenings, PLINTH } from '../generator/industryHall.ts';
 import { INDUSTRY_MIGRATION } from '../generator/industryMigration.ts';
 import { paramCombinations, resolveParams } from '../generator/design.ts';
 import { findCoplanarOverlaps } from '../generator/coplanar.ts';
@@ -40,4 +41,25 @@ it('exports a separate animated turbine rotor', () => {
   const animated = json as unknown as { nodes: { name?: string }[]; animations: unknown[] };
   expect(animated.nodes.some(n => n.name === 'rotor')).toBe(true);
   expect(animated.animations).toHaveLength(1);
+});
+// Regression: dock doors were drawn in front of the ground-floor windows (the roller
+// shutters read as ventilators over the glass). The hall kit now plans every opening
+// and builds the wall around them, so no two may overlap or cut a pilaster.
+it('plans hall openings that never overlap each other or a pilaster', () => {
+  const specs = ['mill', 'hall', 'saw', 'warehouse'].flatMap(kind => ['compact', 'extended'].map(size => buildingSpec(kind, size)));
+  specs.push({ w: 16, d: 12, h: 8, roof: 'gable', floors: [PLINTH] }, { w: 24, d: 14, h: 10, roof: 'saw', floors: [PLINTH] });
+  for (const s of specs) {
+    const openings = hallOpenings(s);
+    expect(openings.filter(o => o.kind === 'dock').length).toBeGreaterThan(1);
+    for (const face of FACES) {
+      const mine = openings.filter(o => o.face === face), { centres, bay } = bayLayout(s, face);
+      for (const [i, a] of mine.entries()) {
+        expect(a.u0).toBeGreaterThan(-faceLength(s, face) / 2 + .5);
+        expect(a.u1).toBeLessThan(faceLength(s, face) / 2 - .5);
+        expect(a.y1).toBeLessThan(s.h);
+        for (const c of centres.slice(1)) expect(a.u1 < c - bay / 2 - .3 || a.u0 > c - bay / 2 + .3).toBe(true);
+        for (const b of mine.slice(i + 1)) expect(a.u1 <= b.u0 || b.u1 <= a.u0 || a.y1 <= b.y0 || b.y1 <= a.y0, `${face} ${JSON.stringify([a, b])}`).toBe(true);
+      }
+    }
+  }
 });
