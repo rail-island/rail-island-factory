@@ -65,9 +65,31 @@ export const TYPE_META: Record<string, BridgeTypeData> = {
   network_arch: { maxSpan: 100 },
 };
 
-/** Divide a bridge of `length` into equal structural spans of at most the type's maxSpan. */
+// The two cable types are one structure over the whole bridge: their towers stand
+// at the ends of one or more MAIN spans (each at most the type's maxSpan), shared
+// between neighbours, with a back span half a main span long at each end down to
+// the abutments. Repeating a whole cable bridge per structural span put a pair of
+// towers in every span, each with its own cables down to the deck in between.
+const CABLE_TYPES = new Set(["suspension", "cable_stayed"]);
+/** Where a cable bridge's towers stand along a bridge of `length` (distances). */
+export function cableTowerDistances(type: string, length: number): number[] {
+  const maxMain = TYPE_META[type]?.maxSpan ?? length;
+  const mains = Math.max(1, Math.ceil(length / maxMain - 1));
+  const main = length / (mains + 1);
+  return Array.from({ length: mains + 1 }, (_, i) => main / 2 + i * main);
+}
+
+/**
+ * Divide a bridge of `length` into its structural spans: equal spans of at most the
+ * type's maxSpan, or -- for a cable type -- its back spans and main spans between
+ * the towers.
+ */
 export function getStructuralSpanRanges(type: string, length: number): SpanRange[] {
   if (typeof length !== "number" || length <= 0) return [];
+  if (CABLE_TYPES.has(type)) {
+    const stops = [0, ...cableTowerDistances(type, length), length];
+    return stops.slice(1).map((to, i) => ({ fromDistance: stops[i]!, toDistance: to }));
+  }
   const maxSpan = TYPE_META[type]?.maxSpan;
   if (!maxSpan) return [{ fromDistance: 0, toDistance: length }];
   const spanCount = Math.max(1, Math.ceil(length / maxSpan));
@@ -163,18 +185,20 @@ const tiedArchTopY = (length: number, t: number, clearanceY: number): number =>
 const tiedArchStruts = (length: number, clearanceY: number): number[] => TIED_ARCH_STRUT_T.filter((t) => tiedArchTopY(length, t, clearanceY) - TIED_ARCH_THICKNESS / 2 >= clearanceY);
 
 // cable-stayed: the stays are diagonal and stay at the deck edges; the members
-// crossing over the track are the two towers (legs plus a crossbeam on top)
-const CABLE_STAYED_TOWER_T = [1 / 3, 2 / 3];
+// crossing over the track are the towers (legs plus a crossbeam on top)
 const CABLE_STAYED_TOWER_WIDTH = 2.0;
-const cableStayedTowerHeight = (length: number, clearanceY: number): number => Math.max(clearanceY + 2, Math.min(length * 0.3, 22));
+const cableStayedTowerHeight = (main: number, clearanceY: number): number => Math.max(clearanceY + 2, Math.min(main * 0.6, 28));
 const cableStayedTowerHalfWidth = (deckWidth: number): number => deckWidth / 2 + 0.3;
 
-// suspension: vertical hangers from deck to main cable, between the towers
-const SUSPENSION_TOWER_T = [0.25, 0.75];
+// suspension: vertical hangers from the stiffening girders to the main cables
 const SUSPENSION_TOWER_WIDTH = 1.8;
 const suspensionCableHalfWidth = (deckWidth: number): number => deckWidth / 2 + 0.3;
-const suspensionHangerT = (): number[] =>
-  [1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => SUSPENSION_TOWER_T[0] + ((SUSPENSION_TOWER_T[1] - SUSPENSION_TOWER_T[0]) * i) / 10);
+// towers tall enough (and the cable's sag shallow enough) that the main cable's
+// lowest point at mid-span still clears both overhead wires of an electric track
+// plus their cross-span fixing
+const suspensionTowerHeight = (main: number): number => Math.max(16, Math.min(main * 0.5, 26));
+// the distance between a cable type's towers (its main span)
+const cableMainSpan = (type: string, length: number): number => length / cableTowerDistances(type, length).length;
 
 // One place a bridge's superstructure passes over the track, as a fraction
 // along the bridge path. A "point" member crosses the centreline at `localY`
@@ -186,7 +210,7 @@ export type BridgeOverheadMember =
   | { t: number; kind: "span"; halfWidth: number };
 
 // The members within ONE structural span, as fractions of that span.
-function spanOverheadMembers(bridgeType: string, spanLength: number, deckWidth: number, clearanceY: number): BridgeOverheadMember[] {
+function spanOverheadMembers(bridgeType: string, spanLength: number, clearanceY: number): BridgeOverheadMember[] {
   switch (bridgeType) {
     case "truss": {
       // the top lateral bracing, every other panel node
@@ -200,14 +224,6 @@ function spanOverheadMembers(bridgeType: string, spanLength: number, deckWidth: 
     case "tied_arch":
     case "network_arch":
       return tiedArchStruts(spanLength, clearanceY).map((t) => ({ t, kind: "point", localY: tiedArchTopY(spanLength, t, clearanceY) }));
-    // The two cable types are strung BETWEEN their towers rather than taken up
-    // to them: the tower crossbeam stands as much as 22 studs over the deck, and
-    // a wire reaching that far reads as a mast, not a fixing. The tower legs run
-    // from the deck up past it, so a perpendicular wire meets them on the way.
-    case "cable_stayed":
-      return CABLE_STAYED_TOWER_T.map((t) => ({ t, kind: "span", halfWidth: cableStayedTowerHalfWidth(deckWidth) }));
-    case "suspension":
-      return SUSPENSION_TOWER_T.map((t) => ({ t, kind: "span", halfWidth: suspensionCableHalfWidth(deckWidth) }));
     default:
       return [];
   }
@@ -228,12 +244,20 @@ function spanOverheadMembers(bridgeType: string, spanLength: number, deckWidth: 
 // deck-mounted masts instead.
 export function overheadMembers(type: string, length: number, deckWidth: number, clearanceY: number): BridgeOverheadMember[] {
   if (length <= 0) return [];
+  if (CABLE_TYPES.has(type)) {
+    // The two cable types are strung BETWEEN their towers rather than taken up
+    // to them: the tower crossbeam stands as much as 28 studs over the deck, and
+    // a wire reaching that far reads as a mast, not a fixing. The tower legs run
+    // from below the deck up past it, so a perpendicular wire meets them.
+    const halfWidth = type === "suspension" ? suspensionCableHalfWidth(deckWidth) : cableStayedTowerHalfWidth(deckWidth);
+    return cableTowerDistances(type, length).map((d) => ({ t: d / length, kind: "span", halfWidth }));
+  }
   const out: BridgeOverheadMember[] = [];
   for (const range of getStructuralSpanRanges(type, length)) {
     const spanLength = range.toDistance - range.fromDistance;
     if (spanLength <= 0) continue;
     const whole = (t: number) => (range.fromDistance + t * spanLength) / length;
-    for (const m of spanOverheadMembers(type, spanLength, deckWidth, clearanceY)) {
+    for (const m of spanOverheadMembers(type, spanLength, clearanceY)) {
       out.push(m.kind === "point"
         ? { t: whole(m.t), kind: "point", localY: m.localY }
         : { t: whole(m.t), kind: "span", halfWidth: m.halfWidth });
@@ -404,8 +428,9 @@ function pushRibbon(out: BridgeBox[], g: BridgePathGeom, lx: number, v: number, 
   });
 }
 
-function pushCurve(out: BridgeBox[], g: BridgePathGeom, lx: number, y: (t: number) => number, w: number, h: number, material: BridgeMaterial, anchors: number[] = [], part: BridgePart = "frame"): void {
-  const points = adaptiveCurvePoints((t) => pathWorldPoint(g, t * g.length, lx, y(t)), [0, ...g.distances.map((d) => d / g.length), ...anchors, 1]);
+function pushCurve(out: BridgeBox[], g: BridgePathGeom, lx: number, y: (t: number) => number, w: number, h: number, material: BridgeMaterial, anchors: number[] = [], part: BridgePart = "frame", from = 0, to = 1): void {
+  const inside = (t: number): boolean => t > from && t < to;
+  const points = adaptiveCurvePoints((t) => pathWorldPoint(g, t * g.length, lx, y(t)), [from, ...g.distances.map((d) => d / g.length).filter(inside), ...anchors.filter(inside), to]);
   out.push({ shape: "ribbon", points, sampled: true, profile: [{ u: w / 2, v: -h / 2 }, { u: w / 2, v: h / 2 }, { u: -w / 2, v: h / 2 }, { u: -w / 2, v: -h / 2 }], material, part });
 }
 
@@ -778,59 +803,105 @@ const makeTiedArch = (network: boolean): Builder => (out, g, opts, heightAt) => 
 const buildTiedArch = makeTiedArch(false);
 const buildNetworkArch = makeTiedArch(true);
 
-const buildSuspension: Builder = (out, g, opts, heightAt) => {
-  buildPathDeck(out, g);
-  buildPathPiers(out, g, heightAt, opts.suppressGroundPiers ? SUSPENSION_TOWER_T : [0, ...SUSPENSION_TOWER_T, 1], { ...boundaryPierStyle("suspension", g.deckWidth, g.length), w: 3.2, d: 3.2 });
-  const TOWER_T = SUSPENSION_TOWER_T;
-  // towers tall enough (and the cable's sag shallow enough) that the main
-  // cable's lowest point at mid-span still clears both overhead wires of an
-  // electric track plus their cross-span fixing
-  const TOWER_HEIGHT = Math.max(16, Math.min(g.length * 0.25, 20)), TOWER_WIDTH = SUSPENSION_TOWER_WIDTH;
-  const sideX = suspensionCableHalfWidth(g.deckWidth);
-  const towerTopY = DECK_THICKNESS / 2 + TOWER_HEIGHT, deckTopY = DECK_THICKNESS / 2;
-  for (const t of TOWER_T) {
-    const distance = g.length * t;
-    for (const sx of [sideX, -sideX]) pushBox(out, g, distance, sx, DECK_THICKNESS / 2 + TOWER_HEIGHT / 2, { x: TOWER_WIDTH, y: TOWER_HEIGHT, z: TOWER_WIDTH }, "tower", "frame");
-    pushStrut(out, pathWorldPoint(g, distance, -sideX, DECK_THICKNESS / 2 + TOWER_HEIGHT - TOWER_WIDTH / 2), pathWorldPoint(g, distance, sideX, DECK_THICKNESS / 2 + TOWER_HEIGHT - TOWER_WIDTH / 2), TOWER_WIDTH, "tower", "frame");
+// A tower of a cable type: two tapering legs from the pier cap below the deck up
+// past it, beside the deck edges, and a crossbeam on top.
+function pushCableTower(out: BridgeBox[], g: BridgePathGeom, distance: number, legX: number, legW: number, height: number): void {
+  const bottomY = -DECK_THICKNESS / 2 - 0.3, topY = DECK_THICKNESS / 2 + height;
+  for (const sx of [legX, -legX]) {
+    out.push({ shape: "box", center: pathWorldPoint(g, distance, sx, (bottomY + topY) / 2), size: { x: legW * 1.25, y: topY - bottomY, z: legW * 1.25 }, yaw: pathYaw(g, distance), material: "tower", part: "frame", topScale: 0.8 });
   }
+  pushStrut(out, pathWorldPoint(g, distance, -legX, topY - legW / 2), pathWorldPoint(g, distance, legX, topY - legW / 2), legW, "tower", "frame");
+}
+// The girder along each deck edge a cable type hangs its deck from, standing a
+// little above the slab (it is the edge barrier too).
+const CABLE_GIRDER_TOP = DECK_THICKNESS / 2 + 1.0;
+function pushCableGirders(out: BridgeBox[], g: BridgePathGeom, legX: number, material: BridgeMaterial): void {
+  const bottom = -DECK_THICKNESS / 2 - CORNICE_DEPTH - 0.15;
+  for (const side of [1, -1]) pushRibbon(out, g, g.shiftAmount + side * legX, (CABLE_GIRDER_TOP + bottom) / 2, 0.5, CABLE_GIRDER_TOP - bottom, material, "frame");
+}
+// The anchor block at each end the main cables are tied down to: from the ground
+// (or, over a deep crossing, a few studs below the deck) to above the girders.
+const ANCHOR_TOP = DECK_THICKNESS / 2 + 2.2, ANCHOR_IN = 1.6;
+function pushAnchorages(out: BridgeBox[], g: BridgePathGeom, legX: number, heightAt: TerrainHeightFn): void {
+  for (const d of [ANCHOR_IN, g.length - ANCHOR_IN]) {
+    for (const sx of [legX, -legX]) {
+      const at = pathWorldPoint(g, d, sx, 0);
+      const terrain = heightAt(at.x, at.z);
+      const top = at.y + ANCHOR_TOP;
+      const bottom = Math.max(terrain, at.y - 4.5);
+      if (top - bottom < 0.5) continue;
+      const ground = bottom === terrain ? { ground: true as const } : {};
+      out.push({ shape: "box", center: { x: at.x, y: (bottom + top) / 2, z: at.z }, size: { x: 2.2, y: top - bottom, z: 2 * ANCHOR_IN }, yaw: pathYaw(g, d), material: "tower", part: "support", ...ground });
+    }
+  }
+}
+
+const HANGER_SPACING = 4;
+const buildSuspension: Builder = (out, g, _opts, heightAt) => {
+  buildPathDeck(out, g);
+  const towers = cableTowerDistances("suspension", g.length);
+  const main = cableMainSpan("suspension", g.length);
+  const sideX = suspensionCableHalfWidth(g.deckWidth);
+  buildPathPiers(out, g, heightAt, towers.map((d) => d / g.length), { ...boundaryPierStyle("suspension", g.deckWidth, main), w: 3.2, d: 3.2 });
+  pushCableGirders(out, g, sideX, "steel");
+  pushAnchorages(out, g, sideX, heightAt);
+  const TOWER_HEIGHT = suspensionTowerHeight(main);
+  for (const d of towers) pushCableTower(out, g, d, sideX, SUSPENSION_TOWER_WIDTH, TOWER_HEIGHT);
+  const towerTopY = DECK_THICKNESS / 2 + TOWER_HEIGHT;
   const SAG = Math.min(TOWER_HEIGHT * 0.45, TOWER_HEIGHT - 13);
-  const cableY = (t: number): number => {
-    const t1 = TOWER_T[0], t2 = TOWER_T[1];
-    if (t <= t1) return deckTopY + (towerTopY - deckTopY) * (t / t1);
-    if (t >= t2) return deckTopY + (towerTopY - deckTopY) * ((1 - t) / (1 - t2));
-    const s = 2 * ((t - t1) / (t2 - t1)) - 1;
+  const first = towers[0]!, last = towers[towers.length - 1]!;
+  // a parabola in every span: the main spans sag SAG between towers, each back
+  // span from its tower top down to its anchorage, sagging a quarter as much
+  const cableAt = (d: number): number => {
+    if (d <= first || d >= last) {
+      const [a, b] = d <= first ? [ANCHOR_IN, first] : [g.length - ANCHOR_IN, last];
+      const s = Math.min(Math.max((d - a) / (b - a), 0), 1);
+      return ANCHOR_TOP + (towerTopY - ANCHOR_TOP) * s - (SAG / 4) * 4 * s * (1 - s);
+    }
+    const i = Math.min(towers.length - 2, Math.floor((d - first) / main));
+    const s = 2 * ((d - towers[i]!) / main) - 1;
     return towerTopY - SAG * (1 - s * s);
   };
-  for (const sx of [sideX, -sideX]) pushCurve(out, g, sx, cableY, 0.3, 0.3, "cable", [...TOWER_T, ...suspensionHangerT()]);
-  for (const t of suspensionHangerT()) {
-    const distance = g.length * t, topY = cableY(t);
-    for (const sx of [sideX, -sideX]) pushStrut(out, pathWorldPoint(g, distance, sx, deckTopY), pathWorldPoint(g, distance, sx, topY), 0.18, "cable");
+  // hangers every HANGER_SPACING studs wherever the cable stands clear above the girder
+  const hangers: number[] = [];
+  for (let d = HANGER_SPACING / 2; d < g.length; d += HANGER_SPACING) {
+    if (towers.some((t) => Math.abs(t - d) < 1.5)) continue;
+    if (cableAt(d) - CABLE_GIRDER_TOP > 0.8 && d > ANCHOR_IN + 1 && d < g.length - ANCHOR_IN - 1) hangers.push(d);
+  }
+  const from = ANCHOR_IN / g.length, to = 1 - from;
+  for (const sx of [sideX, -sideX]) pushCurve(out, g, sx, (t) => cableAt(t * g.length), 0.35, 0.35, "cable", [...towers, ...hangers].map((d) => d / g.length), "frame", from, to);
+  for (const d of hangers) {
+    for (const sx of [sideX, -sideX]) pushStrut(out, pathWorldPoint(g, d, sx, CABLE_GIRDER_TOP), pathWorldPoint(g, d, sx, cableAt(d)), 0.16, "cable");
   }
 };
 
-const buildCableStayed: Builder = (out, g, opts, heightAt) => {
+// Each tower fans its stays out over half of each neighbouring main span (to meet
+// the next tower's) and over its back span to the abutment; the outermost stay
+// leaves the top, the inner ones a little lower down the leg each.
+const STAY_SPACING = 4;
+const buildCableStayed: Builder = (out, g, _opts, heightAt) => {
   buildPathDeck(out, g);
-  buildPathPiers(out, g, heightAt, opts.suppressGroundPiers ? CABLE_STAYED_TOWER_T : [0, ...CABLE_STAYED_TOWER_T, 1], { ...boundaryPierStyle("cable_stayed", g.deckWidth, g.length), w: 3, d: 3 });
-  const TOWER_T = CABLE_STAYED_TOWER_T;
-  const TOWER_HEIGHT = cableStayedTowerHeight(g.length, g.clearanceY), TOWER_WIDTH = CABLE_STAYED_TOWER_WIDTH;
+  const towers = cableTowerDistances("cable_stayed", g.length);
+  const main = cableMainSpan("cable_stayed", g.length);
   const sideX = cableStayedTowerHalfWidth(g.deckWidth);
-  const towerTopY = DECK_THICKNESS / 2 + TOWER_HEIGHT, deckTopY = DECK_THICKNESS / 2;
-  for (const t of TOWER_T) {
-    const distance = g.length * t;
-    for (const sx of [sideX, -sideX]) pushBox(out, g, distance, sx, DECK_THICKNESS / 2 + TOWER_HEIGHT / 2, { x: TOWER_WIDTH, y: TOWER_HEIGHT, z: TOWER_WIDTH }, "tower", "frame");
-    pushStrut(out, pathWorldPoint(g, distance, -sideX, DECK_THICKNESS / 2 + TOWER_HEIGHT - TOWER_WIDTH / 2), pathWorldPoint(g, distance, sideX, DECK_THICKNESS / 2 + TOWER_HEIGHT - TOWER_WIDTH / 2), TOWER_WIDTH, "tower", "frame");
-  }
-  for (let towerIdx = 0; towerIdx < TOWER_T.length; towerIdx++) {
-    const towerDistance = g.length * TOWER_T[towerIdx];
-    const backEndDistance = towerIdx === 0 ? 0 : g.length;
-    const otherTowerDistance = g.length * TOWER_T[1 - towerIdx];
-    for (const anchorDistance of [backEndDistance, otherTowerDistance]) {
-      for (let i = 1; i <= 4; i++) {
-        const distance = towerDistance + ((anchorDistance - towerDistance) * i) / 5;
-        for (const sx of [sideX, -sideX]) pushStrut(out, pathWorldPoint(g, towerDistance, sx, towerTopY - TOWER_WIDTH / 2), pathWorldPoint(g, distance, sx, deckTopY), 0.18, "cable", i === 1 || i === 4 ? "frame" : "detail");
+  buildPathPiers(out, g, heightAt, towers.map((d) => d / g.length), { ...boundaryPierStyle("cable_stayed", g.deckWidth, main), w: 3, d: 3 });
+  pushCableGirders(out, g, sideX, "deck");
+  const TOWER_HEIGHT = cableStayedTowerHeight(main, g.clearanceY), TOWER_WIDTH = CABLE_STAYED_TOWER_WIDTH;
+  const towerTopY = DECK_THICKNESS / 2 + TOWER_HEIGHT;
+  for (const d of towers) pushCableTower(out, g, d, sideX, TOWER_WIDTH, TOWER_HEIGHT);
+  towers.forEach((td, i) => {
+    for (const dir of [-1, 1]) {
+      const end = dir < 0 ? (i === 0 ? 1 : td - main / 2) : (i === towers.length - 1 ? g.length - 1 : td + main / 2);
+      const reach = Math.abs(end - td);
+      const n = Math.max(4, Math.round(reach / STAY_SPACING));
+      for (let k = 0; k < n; k++) {
+        const f = 0.2 + (0.78 * k) / Math.max(1, n - 1);
+        const deckD = td + dir * reach * f;
+        const legY = towerTopY - TOWER_WIDTH * 1.2 - (n - 1 - k) * Math.min(0.7, (TOWER_HEIGHT * 0.3) / n);
+        for (const sx of [sideX, -sideX]) pushStrut(out, pathWorldPoint(g, td, sx, legY), pathWorldPoint(g, deckD, sx, CABLE_GIRDER_TOP), 0.16, "cable", k === 0 || k === n - 1 ? "frame" : "detail");
       }
     }
-  }
+  });
 };
 
 const buildPlateGirder: Builder = (out, g) => {
@@ -923,7 +994,7 @@ export function buildBridge(type: string, g: BridgePathGeom, heightAt: TerrainHe
   const out: BridgeBox[] = [];
   const builder = BUILDERS[type] ?? BUILDERS.beam!;
   const maxSpan = TYPE_META[type]?.maxSpan;
-  if (!maxSpan) {
+  if (!maxSpan || CABLE_TYPES.has(type)) {
     builder(out, g, {}, heightAt);
     buildAbutments(out, g, heightAt, type === "timber_trestle" ? "timber" : "pier");
     return out;

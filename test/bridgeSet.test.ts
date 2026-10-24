@@ -65,4 +65,26 @@ describe("the bridge kit", () => {
     const stations = [...new Set(turned.map((b) => (b.shape === "box" ? Math.round(b.center.x) : 0)))].sort((a, b) => a - b);
     expect(stations).toEqual([20, 40]);
   });
+
+  it("shares a cable bridge's towers between its main spans", () => {
+    for (const type of ["suspension", "cable_stayed"]) {
+      const maxMain = bridge.TYPE_META[type]!.maxSpan!;
+      for (const length of [60, 160, 300, 500]) {
+        const towers = bridge.cableTowerDistances(type, length);
+        const main = towers.length > 1 ? towers[1]! - towers[0]! : 0;
+        // back spans half a main span, main spans within the limit, towers evenly spaced
+        expect(towers[0]!, `${type} ${length}`).toBeCloseTo(main / 2, 6);
+        expect(length - towers[towers.length - 1]!).toBeCloseTo(main / 2, 6);
+        expect(main).toBeLessThanOrEqual(maxMain + 1e-9);
+        // one overhead member per tower, and nothing else
+        expect(bridge.overheadMembers(type, length, 9, 9.9).map((m) => m.t * length)).toEqual(towers.map((d) => expect.closeTo(d, 6)));
+        // the piers stand under the towers only (plus the anchor blocks and wing walls at the ends)
+        const path = bridge.pathFromPoints([{ x: 0, y: 30, z: 0 }, { x: length, y: 30, z: 0 }], 9, 0, 0.67, 9.9)!;
+        const piers = bridge.buildBridge(type, path, () => 0).filter((b) => b.shape === "box" && b.ground && b.center.x > 5 && b.center.x < length - 5);
+        const stations = [...new Set(piers.map((b) => (b.shape === "box" ? Math.round(b.center.x * 100) / 100 : 0)))];
+        expect(stations).toEqual(towers.map((d) => Math.round(d * 100) / 100));
+      }
+    }
+    expect(bridge.cableTowerDistances("suspension", 300)).toHaveLength(3);
+  });
 });
