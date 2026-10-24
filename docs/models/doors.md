@@ -134,7 +134,7 @@ its passenger doors, in the motion its prototype has where the drawing allows:
 | CD 451 / 452 | `swing` 2 inward through doorways |
 | CSD Bi20 compartment coach | `swing` 1 **outward**, the brass class numeral riding on its leaf |
 | DB n-Wagen coaches (the DB 628 design's other `unit` values) | `fold` 4 inward through doorways (a single door `swing` 1); the cab car's driver door stays shut |
-| every bus | `plug`: one leaf slides back toward the tail, two slide apart; right side only, as drawn |
+| every bus | `plug`: one leaf slides back toward the tail, two slide apart; right side only, as drawn; a dark doorway (the door style's `surround`, else `frame`) always stands behind the leaves |
 
 Where the native drawing paints one window across a door, the door opens as one
 leaf, so the window stays whole and its native-landmark comparison holds; a two-leaf
@@ -169,4 +169,5 @@ every bus), nine samples, sample 0 the rest pose, no z-fighting half
 open and open, and no door clip at low detail. A coach-kit body with a doorway has
 no skin over it and a vestibule's back wall behind it, one without doorways is
 byte-for-byte unchanged, and every inward-opening door of the seven designs opens
-into a vestibule.
+into a vestibule. Behind every leaf of every bus, the first still face a ray from
+outside meets is dark (luminance under 0.25): the doorway, never the body's paint.

@@ -265,3 +265,59 @@ describe("vehicle doors", () => {
     }
   }
 });
+
+/** Relative luminance of a palette colour "#rrggbb", 0..1. */
+const luminance = (hex: string) => {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
+};
+
+describe("bus doorways", () => {
+  // Looking in through a bus's open door: the first thing behind each leaf, along a
+  // ray from outside at the leaf's middle, must be a dark doorway, not the body's
+  // paint (the shell is not cut there; the doorway is a dark slab on it).
+  for (const d of ALL_VEHICLES.filter((v) => groupOf(v) === "bus")) {
+    it(`${d.id} shows a dark doorway behind every door leaf`, () => {
+      const m = d.build() as unknown as {
+        groups: Map<string, { pos: number[]; part: number[] }>;
+        parts: Array<{ name: string }>;
+        palette: Record<string, { color?: string }>;
+      };
+      const isLeaf = (part: number) => part >= 0 && /(^|\/)door\d+-\d+$/.test(m.parts[part]!.name);
+      const leaves = new Map<number, { min: number[]; max: number[] }>();
+      for (const g of m.groups.values())
+        for (let t = 0; t < g.part.length; t++) {
+          if (!isLeaf(g.part[t]!)) continue;
+          const box = leaves.get(g.part[t]!) ?? { min: [Infinity, Infinity, Infinity], max: [-Infinity, -Infinity, -Infinity] };
+          for (let c = 0; c < 3; c++)
+            for (let k = 0; k < 3; k++) {
+              box.min[k] = Math.min(box.min[k]!, g.pos[t * 9 + c * 3 + k]!);
+              box.max[k] = Math.max(box.max[k]!, g.pos[t * 9 + c * 3 + k]!);
+            }
+          leaves.set(g.part[t]!, box);
+        }
+      expect(leaves.size).toBeGreaterThan(0);
+      for (const box of leaves.values()) {
+        const [x, y] = [(box.min[0]! + box.max[0]!) / 2, (box.min[1]! + box.max[1]!) * 0.4];
+        const s = Math.sign(box.min[2]! + box.max[2]!);
+        // the nearest still triangle a ray along -s z through (x, y) meets
+        let hit: { z: number; mat: string } | null = null;
+        for (const [mat, g] of m.groups)
+          for (let t = 0; t < g.part.length; t++) {
+            if (isLeaf(g.part[t]!)) continue;
+            const p = g.pos.slice(t * 9, t * 9 + 9);
+            const [ax, ay, az, bx, by, bz, cx, cy, cz] = p as [number, number, number, number, number, number, number, number, number];
+            const den = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy);
+            if (Math.abs(den) < 1e-12) continue;
+            const u = ((by - cy) * (x - cx) + (cx - bx) * (y - cy)) / den;
+            const v = ((cy - ay) * (x - cx) + (ax - cx) * (y - cy)) / den;
+            if (u < 0 || v < 0 || u + v > 1) continue;
+            const z = u * az + v * bz + (1 - u - v) * cz;
+            if (z * s > 0 && (!hit || z * s > hit.z * s)) hit = { z, mat };
+          }
+        expect(hit, `nothing behind the leaf at x ${x.toFixed(2)}`).not.toBeNull();
+        expect(luminance(m.palette[hit!.mat]!.color ?? "#ffffff"), `${hit!.mat} behind the leaf at x ${x.toFixed(2)}`).toBeLessThan(0.25);
+      }
+    });
+  }
+});
