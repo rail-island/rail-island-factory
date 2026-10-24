@@ -244,7 +244,7 @@ export class BusDraft {
     this.fit(s > 0 ? "right doors" : "left doors", (x0 + x1) / 2, () => {
       const m = this.m;
       // kept off the body's underside, where a low door's sill would lie in its plane
-      const sill = Math.max(st.bottom - 0.04, Math.min(...this.frame.section.map(([, y]) => y)) + 0.03);
+      const sill = Math.max(st.bottom - 0.04, Math.min(...this.frame.section.map(([, y]) => y)) + 0.015);
       sideSlab(m, st.surround ?? "frame", this.frame, s, x0, x1, sill, st.top + 0.04, 0.01);
       const hw = halfWidth(this.frame.section, st.bottom + 0.2);
       const lw = (x1 - x0 - 0.06) / leaves;

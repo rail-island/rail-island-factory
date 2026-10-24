@@ -344,7 +344,7 @@ describe("the bus bodies", () => {
     const x0 = Math.min(...door.map((p) => p[0]));
     // the surround's strip beside the leaves, at every height across the belt corner
     for (const y of [0.6, 1.2, 1.45, 1.55, 2.0, 2.5]) expect(firstHit(karosa, [x0 + 0.015, y, 5], [0, 0, -1])?.material, `y ${y}`).toBe("frame");
-    for (const [id, end, y] of [["proc-vehicle-mb-o345-g", 1, 0.51], ["proc-vehicle-bus-1", 1, 0.48], ["proc-vehicle-bus-1", -1, 0.63]] as const) {
+    for (const [id, end, y] of [["proc-vehicle-mb-o345-g", 1, 0.51], ["proc-vehicle-bus-1", 1, 0.48], ["proc-vehicle-bus-1", -1, 0.46]] as const) {
       const tris = trianglesOf(BUS_DESIGNS.find((d) => d.id === id)!.build());
       expect(firstHit(tris, [end * 30, y, 0.1], [-end, 0, 0])?.material, `${id} ${end}`).toBe("plate");
     }
@@ -364,6 +364,6 @@ describe("the bus bodies", () => {
     expect(firstHit(citaro, [-30, 0.85, 0.3], [1, 0, 0])?.material).toBe("body");
     expect(firstHit(citaro, [-30, 2.55, 0.9], [1, 0, 0])?.material).toBe("body");
     const bus1 = trianglesOf(BUS_DESIGNS.find((d) => d.id === "proc-vehicle-bus-1")!.build());
-    expect(firstHit(bus1, [-30, 2.2, 0.3], [1, 0, 0])?.material).toBe("mint");
+    expect(firstHit(bus1, [-30, 1.0, 0.3], [1, 0, 0])?.material).toBe("mint");
   });
 });
