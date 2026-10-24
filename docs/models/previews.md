@@ -21,7 +21,11 @@ and the site shows each type on a page of its own by running the type's module o
 a two-stand road station, a quay facing water, a terminal pad by its apron, a dam across a flat
 valley, a short piece of track or road, a sample block. They are site-only designs
 (`proc-preview-*`): no game meta lists them, the site offers no export of them, and they are
-not translated.
+not translated. The `proc-preview-*` id only names a page's files and its URL and the site never
+shows it: a page carries its type's id as `gameId` (`catalog.gameId`, copied into the record),
+exactly as a saved game stores it - `platforms_shared`, not `platforms-shared` - and the site
+shows that instead ([../site/catalog-site.md](../site/catalog-site.md)). Texture pages and the
+cable-car pylon draw no set type and show no id.
 
 | Category (first chip) | Second chip | Pages |
 |---|---|---|

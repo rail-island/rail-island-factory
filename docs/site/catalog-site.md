@@ -243,7 +243,10 @@ return ([../models/parameters.md](../models/parameters.md)). A parameter marked 
 fixture of a site preview that the game takes from the world, such as a bridge's span or a block's
 size - is listed apart, under **Preview parameters**
 ([../models/previews.md](../models/previews.md)). A site preview (`proc-preview-*`) has no
-**Add to export** button.
+**Add to export** button, and its `proc-preview-*` id is never shown: wherever the site shows a
+model's id (beneath the title, in the bar, in the specs' Id) a preview shows its set type id
+exactly as a saved game stores it (`gameId`, e.g. `platforms_shared`), or nothing when it draws
+no set type (a texture, the cable-car pylon); `shownId` in `src/catalogQuery.ts`.
 
 A **rigged** vehicle (its record has `rig`: every road vehicle) shows a **Pose**
 block: a Steering slider and one per hinge of an articulated body ("Trailer",

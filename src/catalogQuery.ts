@@ -40,7 +40,7 @@ export interface Column {
 // the detail panel's spec list.
 export const COLUMNS: readonly Column[] = [
   { key: "title", label: "Title", unit: null, type: "text", dir: "asc", table: true, value: (r) => r.title },
-  { key: "id", label: "Id", unit: null, type: "text", dir: "asc", table: false, value: (r) => r.id },
+  { key: "id", label: "Id", unit: null, type: "text", dir: "asc", table: false, value: (r) => shownId(r) },
   { key: "category", label: "Category", unit: null, type: "text", dir: "asc", table: false, value: (r) => r.category },
   { key: "group", label: "City pool", unit: null, type: "text", dir: "asc", table: true, value: (r) => r.group },
   { key: "triangles", label: "Triangles", unit: null, type: "num", dir: "desc", table: true, value: (r) => r.triangles },
@@ -76,7 +76,7 @@ export function prepareRows(records: readonly CatalogRecord[]): Row[] {
   return records.map((r) => ({
     ...r,
     hay: [
-      r.title, r.id, r.category, r.group, r.traction ?? "", r.author, r.license, r.source,
+      r.title, r.id, r.gameId ?? "", r.category, r.group, r.traction ?? "", r.author, r.license, r.source,
       ...(r.params ?? []).flatMap((p) => p.values.flatMap((v) => [v.title, v.value])),
     ].join(" ").toLowerCase(),
   }));
@@ -282,6 +282,15 @@ const CHIP_LABELS: Readonly<Record<string, string>> = {
   historic: "Historic",
   highrise: "High-rise",
 };
+
+/**
+ * The id a row shows: a site preview's set type id as a saved game stores it, else the model
+ * id. A preview's own `proc-preview-*` id only names its files and its page and is never shown,
+ * so a preview of no set type (a texture, the pylon) shows none.
+ */
+export function shownId(r: CatalogRecord): string | null {
+  return r.gameId ?? (r.id.startsWith("proc-preview-") ? null : r.id);
+}
 
 export function chipLabel(value: string): string {
   return CHIP_LABELS[value] ?? value;

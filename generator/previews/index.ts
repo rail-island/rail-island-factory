@@ -43,6 +43,8 @@ interface Spec {
   buildLod: Builder;
   params?: ParamSpec[];
   lodTriangles?: ProceduralDesign["lodTriangles"];
+  /** False when the types are not set types (the texture library's photo sets): no game id. */
+  setTypes?: boolean;
 }
 
 /** One design per (type id, title), bound to the family's build functions. */
@@ -53,7 +55,7 @@ function designs(spec: Spec, types: ReadonlyArray<{ id: string; label: string }>
     ...boundDesign(spec.build, spec.buildLod, t.id),
     ...(spec.params ? { params: spec.params } : {}),
     lodTriangles: spec.lodTriangles ?? 500,
-    catalog: previewCatalog(spec.category, spec.group),
+    catalog: previewCatalog(spec.category, spec.group, spec.setTypes === false ? undefined : t.id),
   }));
 }
 
@@ -104,7 +106,7 @@ export const PREVIEW_FAMILIES: readonly PreviewFamily[] = [
   },
   {
     source: "previews/textures.ts",
-    designs: designs({ category: "Textures", group: "texture", prefix: "texture", build: texturePreview, buildLod: texturePreviewLod },
+    designs: designs({ category: "Textures", group: "texture", prefix: "texture", build: texturePreview, buildLod: texturePreviewLod, setTypes: false },
       TEXTURE_NAMES.map((name) => ({ id: name, label: name[0]!.toUpperCase() + name.slice(1) }))),
   },
   ...blockFamilies(),

@@ -52,6 +52,8 @@ export interface MetaEntry {
   group: string;
   /** A locomotive's or a unit's traction: electric, diesel or steam. */
   traction?: string;
+  /** A site preview's set type id, exactly as a saved game stores it; the site shows it in place of `id`. */
+  gameId?: string;
   /** File name within the export's js/ folder: the model (jsModel.ts). */
   js: string;
   /** File name within the export's thumbs/ folder. */
@@ -218,6 +220,7 @@ export function metaEntry(
     category: fields.category,
     group: fields.group,
     ...(fields.traction ? { traction: fields.traction } : {}),
+    ...(fields.gameId ? { gameId: fields.gameId } : {}),
     js: `${proceduralId(design.id)}.js`,
     thumb: `${proceduralId(design.id)}.png`,
     ...(side ? { thumbSide: { widthM: r4(side.widthM), heightM: r4(side.heightM), bottomM: r4(side.bottomM) } } : {}),

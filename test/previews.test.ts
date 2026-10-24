@@ -23,6 +23,8 @@ describe("the preview designs", () => {
         const pages = PREVIEW_DESIGNS.filter((d) => d.bound === t.id && d.catalog?.category === category && (category === "City blocks" || d.catalog?.group === def.set || category === "Props"));
         expect(pages.map((d) => d.id), `${def.set}:${t.id}`).toHaveLength(1);
         expect(pages[0]!.title).toBe(t.label);
+        // the site shows the id a saved game stores, verbatim (underscores kept)
+        expect(pages[0]!.catalog?.gameId).toBe(t.id);
       }
     }
   });
@@ -30,6 +32,7 @@ describe("the preview designs", () => {
   it("give every photo set of the texture library a page", () => {
     const textures = PREVIEW_DESIGNS.filter((d) => d.catalog?.category === "Textures");
     expect(textures.map((d) => d.bound).sort()).toEqual([...TEXTURE_NAMES].sort());
+    expect(textures.filter((d) => d.catalog?.gameId)).toEqual([]);
   });
 
   it("are all site-only proc-preview-* designs with unique ids, and no type is a parameter", () => {
