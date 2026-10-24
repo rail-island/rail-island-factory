@@ -204,7 +204,7 @@ export function railSignal(): MeshBuilder {
 export function railSignalLod(): MeshBuilder {
   const m = new MeshBuilder(palette(RAIL_SIGNAL_LAMPS));
   const { mastR, mastTop, headW, headH, headY } = SIG;
-  m.prism(mat.mast, ngon(6, mastR), 0, mastTop);
+  m.prism(mat.mast, ngon(6, mastR), 0, mastTop - 0.1);
   m.box(mat.black, 0, 0.35, headW, 0.42, headY - headH / 2, headY + headH / 2);
   RAIL_SIGNAL_LAMPS.forEach((l, i) => {
     const y = headY + (1 - i) * SIG.lampSpacing;
@@ -317,7 +317,7 @@ export function bufferStop(): MeshBuilder {
   });
   m.scope("frame", () => {
     for (const x of [-railX, railX]) {
-      m.box(mat.dark, x, 0.25, 0.32, 0.36, railY1, beamY1);
+      m.box(mat.dark, x, 0.25, 0.32, 0.36, railY1, beamY1 - 0.08);
       m.rod(mat.dark, [x, beamY0 + 0.2, 0.1], [x, railY1, -1.7], 0.2, 4);
       m.box(mat.dark, x, -1.7, 0.4, 0.5, railY1 - 0.02, railY1 + 0.12);
     }
@@ -325,7 +325,7 @@ export function bufferStop(): MeshBuilder {
   });
   m.scope("beam", () => {
     m.box(mat.dark, 0, (beamZ[0] + beamZ[1]) / 2, beamW, beamZ[1] - beamZ[0], beamY0, beamY1);
-    hazardStripes(m, -beamW / 2, beamW / 2, beamY0 + 0.04, beamY1 - 0.04, beamZ[1], beamZ[1] + 0.03);
+    hazardStripes(m, -beamW / 2, beamW / 2, beamY0 + 0.04, beamY1 - 0.04, beamZ[1] + 0.01, beamZ[1] + 0.04);
     const y = (beamY0 + beamY1) / 2;
     for (const x of [-STOP.bufferX, STOP.bufferX]) {
       const ring = (r: number, n: number): Ring => ngon(n, r).map(([u, v]): [number, number] => [x + u, y + v]);
@@ -349,7 +349,7 @@ export function bufferStop(): MeshBuilder {
 export function bufferStopLod(): MeshBuilder {
   const m = new MeshBuilder(palette([]));
   const { railX, railY1, beamW, beamY0, beamY1, beamZ } = STOP;
-  for (const x of [-railX, railX]) m.box(mat.dark, x, 0, 0.32, 0.36, railY1, beamY1);
+  for (const x of [-railX, railX]) m.box(mat.dark, x, 0, 0.32, 0.36, railY1, beamY0 + 0.1);
   m.box(mat.red, 0, (beamZ[0] + beamZ[1]) / 2, beamW, beamZ[1] - beamZ[0], beamY0, beamY1);
   m.box(mat.mast, 0, 0.05, 0.16, 0.16, beamY1, STOP.signY);
   plate(m, mat.red, ngon(8, STOP.signR), 0, STOP.signY, 0.2, 0.26);
