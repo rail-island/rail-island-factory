@@ -2,10 +2,12 @@
 
 **Covers** - the fixed props the game places on its structures: a cable car station's shed, a
 port's crane, container slots, hut, floodlight, bollard and mooring post, an airport's control
-tower and windsock; the box vocabulary they are drawn in, the material names the game reads,
+tower and windsock, and the trackside signals the game places itself (a rail signal, a level
+crossing's road signal) with the lamps it switches; the box vocabulary they are drawn in, the material names the game reads,
 units, the low detail, the loading gauge, and `props.meta.json`.
 **Code** - `generator/props/propKit.ts`, `generator/props/portProps.ts`,
-`generator/props/cableCarSheds.ts`, `generator/props/airportProps.ts`, `generator/catalog.ts`
+`generator/props/cableCarSheds.ts`, `generator/props/airportProps.ts`, `generator/props/signalProps.ts`,
+`generator/catalog.ts`
 (`exportPropMeta`), `test/props.test.ts`
 **See also** - [previews.md](previews.md) (the cable-car pylon and the catenary supports, drawn
 by their set modules and filed with the props on the site), [sets.md](sets.md), [export.md](export.md), [lod.md](lod.md), the game's
@@ -16,7 +18,9 @@ by their set modules and filed with the props on the site), [sets.md](sets.md), 
 A prop is an ordinary design (thumbnail, GLB, JS model, LOD, catalog page) that the game never
 offers a player: a structure places it. Which props a structure places is the structure's set
 module's data (`cableCarStation` `TYPE_META.shed`, `port` `PROPS`, `airport` `TYPE_META`;
-[sets.md](sets.md)); where they stand is the game's layout. A prop's size never follows the
+[sets.md](sets.md)); where they stand is the game's layout. The two trackside signals are the
+exception: no set names them, the game places one beside the track or road for every signal
+it derives (`SIGNAL_PROP_IDS`, see [The trackside signals](#the-trackside-signals)). A prop's size never follows the
 world - a part that does (a pylon's height, an airport terminal on its pad, a bus stop on its
 road) is a function in its set module instead.
 
@@ -60,6 +64,8 @@ kinds: the station vocabulary (`steel`, `glass`, `light`, `wood`, `roof`, `colum
 | `proc-prop-cablecar-shed` | `type`: the four station types | station frame: +Z toward the head, y = 0 the station's terrain level, at the type's footprint and head height |
 | `proc-prop-airport-tower` | `kind`: regional (28-stud shaft) / international (48) | full size, standing at its origin |
 | `proc-prop-airport-windsock` | - | five open cones tapering along +X from the mast head |
+| `proc-prop-rail-signal` | - | mast foot at the origin, the head facing +Z, the track toward +X |
+| `proc-prop-crossing-signal` | - | mast foot at the origin, the cross and head facing +Z, the road toward +X |
 
 A prop of a few boxes (a bollard, a container, a floodlight) is smaller as a GLB than the builder
 runtime every JS model carries, so `test/catalogSweep.ts` holds props and set previews to a fixed
@@ -70,6 +76,30 @@ larger; every other design keeps that check.
 `FAR_PROPS` names the props a structure's far level keeps (crane, container, hut, tower, shed);
 their low detail is the boxes tagged `lod: "shell"` - the silhouette the game's structure LOD
 kept when they were its boxes.
+
+## The trackside signals
+
+`generator/props/signalProps.ts` draws the two signals the game stands beside its track and
+roads: `proc-prop-rail-signal` (one per governed direction of a rail signal, implicit
+station signals included) and `proc-prop-crossing-signal` (one per road approach of a level
+crossing). They are not drawn in the box vocabulary but with the builder's round and slab
+primitives: a sunk concrete footing, a round mast with a flared foot and finial, a relay
+cabinet at the foot away from the track (-X), and
+
+- the rail signal: a white-bordered black shield with rounded corners on its lamp housing,
+  three domed lenses (red over blue over green) each with a bezel and a visor, two clamp
+  brackets, a name plate below the head, and a ladder up the back to a railed platform;
+- the crossing signal: the red-bordered white St Andrew's cross, a horizontal two-lamp head
+  (left and right red lenses with visors), the bell on the mast head and red and white bands
+  at the foot of the mast.
+
+Every lamp lens is a material of its own whose kind names the lamp the game switches:
+`lampred`, `lampblue`, `lampgreen` (`RAIL_SIGNAL_LAMPS`) and `lampleft`, `lampright`
+(`CROSSING_SIGNAL_LAMPS`, -X and +X). The game lights a lamp by swapping that one mesh's
+material; the body (`steel`, `paint`, `concrete`) it draws as one mesh. The low detail keeps
+the mast, the head (and the cross) and flat lamp faces in the same lamp materials, under the
+100-triangle budget. `test/props.test.ts` checks each lamp is its own material at both levels
+and that the lamps sit red over blue over green, left of right.
 
 ## The loading gauge
 

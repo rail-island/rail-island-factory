@@ -11,6 +11,7 @@ import { TYPE_META as CABLE_CAR_TYPES } from "../generator/sets/cableCarStation"
 import { PROPS as PORT_PROPS, CONTAINER_LIVERIES } from "../generator/sets/port";
 import { TYPE_META as AIRPORT_TYPES } from "../generator/sets/airport";
 import { CONTAINER_COLORS } from "../generator/props/portProps";
+import { CROSSING_SIGNAL_LAMPS, RAIL_SIGNAL_LAMPS, SIGNAL_PROP_IDS, crossingSignal, crossingSignalLod, railSignal, railSignalLod } from "../generator/props/signalProps";
 import { exportedText } from "../generator/text";
 
 describe("cable car sheds", () => {
@@ -36,8 +37,9 @@ describe("cable car sheds", () => {
 });
 
 describe("the props", () => {
-  it("are every model a set names, listed apart from the buildings and vehicles", () => {
+  it("are every model a set names and the signals the game places, listed apart from the buildings and vehicles", () => {
     const named = [
+      ...Object.values(SIGNAL_PROP_IDS),
       ...Object.values(CABLE_CAR_TYPES).map((t) => t.shed.prop),
       ...Object.values(PORT_PROPS),
       ...Object.values(AIRPORT_TYPES).flatMap((t) => [t.windsock.prop, ...(t.tower ? [t.tower.prop] : [])]),
@@ -75,5 +77,40 @@ describe("the props", () => {
       const palette = (d.build() as unknown as { palette: Record<string, unknown> }).palette;
       for (const name of Object.keys(palette)) expect(name, d.id).toMatch(/^[a-z]+#[0-9a-f]{6}$/);
     }
+  });
+});
+
+/** A builder's triangle corners per material, as the tests elsewhere read them. */
+const drawnByMaterial = (m: { triangleCount(): number }): Map<string, { pos: number[] }> => (m as unknown as { groups: Map<string, { pos: number[] }> }).groups;
+
+describe("the trackside signals", () => {
+  // the game swaps each lamp's material on its own, so every lamp must be a material of its own
+  it.each([
+    ["rail signal", railSignal, railSignalLod, RAIL_SIGNAL_LAMPS],
+    ["crossing signal", crossingSignal, crossingSignalLod, CROSSING_SIGNAL_LAMPS],
+  ] as const)("the %s draws each lamp in its own material, at both levels of detail", (_name, build, lod, lamps) => {
+    for (const m of [build(), lod()]) {
+      const names = new Set(drawnByMaterial(m).keys());
+      for (const l of lamps) expect(names).toContain(propMaterial(l.kind, l.color));
+      expect(m.triangleCount()).toBeGreaterThan(0);
+    }
+    expect(build().triangleCount()).toBeLessThanOrEqual(1500);
+  });
+
+  it("lights the rail signal's lamps red over blue over green, the crossing's left of right", () => {
+    const centreOf = (m: ReturnType<typeof railSignal>, name: string): [number, number] => {
+      const p = drawnByMaterial(m).get(name)!.pos;
+      let x = 0, y = 0;
+      for (let i = 0; i < p.length; i += 3) { x += p[i]!; y += p[i + 1]!; }
+      return [x / (p.length / 3), y / (p.length / 3)];
+    };
+    const rail = railSignal();
+    const ys = RAIL_SIGNAL_LAMPS.map((l) => centreOf(rail, propMaterial(l.kind, l.color))[1]);
+    expect(ys[0]).toBeGreaterThan(ys[1]!);
+    expect(ys[1]).toBeGreaterThan(ys[2]!);
+    const xing = crossingSignal();
+    const xs = CROSSING_SIGNAL_LAMPS.map((l) => centreOf(xing, propMaterial(l.kind, l.color))[0]);
+    expect(xs[0]).toBeLessThan(0);
+    expect(xs[1]).toBeGreaterThan(0);
   });
 });
