@@ -1,7 +1,7 @@
 # Village houses
 
 **Covers** - the eight parametric village houses: the Kenney and Quaternius styles they follow, the alpine hut, the plan families and their parameters, the house builder (volumes, roofs, openings, details), the finish parameters, the mirror, dimensions and budget, the catalog fields and the tests.
-**Code** - `generator/village.ts`, `generator/timberCottages.ts`, `generator/alpineHut.ts`, `generator/design.ts` (`finishParams`, `coverageCombinations`), `generator/generate.ts`, `generator/catalog.ts` (`VILLAGE_META_FILE`), `test/village.test.ts`, `test/params.test.ts`
+**Code** - `generator/village.ts`, `generator/partyWalls.ts`, `generator/timberCottages.ts`, `generator/alpineHut.ts`, `generator/design.ts` (`finishParams`, `coverageCombinations`), `generator/generate.ts`, `generator/catalog.ts` (`VILLAGE_META_FILE`), `test/village.test.ts`, `test/params.test.ts`
 **See also** - [parameters.md](parameters.md), [skyscrapers.md](skyscrapers.md), [export.md](export.md), [source-tree.md](source-tree.md)
 
 ## The style
@@ -107,6 +107,13 @@ has `cladding` instead of `roof`), listed in the table as *finish*.
 | `village-family-house` | square two-storey block and a one-storey annex | `roofShape` gable/hip, `annex` garage/terrace/wing, `side` right/left, `chimney` brick/none | 24 x 25 = 600 |
 | `village-modern-house` | flat roof, clad upper storey cantilevered over the front on two columns | `storeys` two/one, `annex` carport/none/wing, `solar` none/panels | 12 x 20 = 240 |
 | `village-narrow-house` | 6.2 x 8.5 m, steep gable to the street | `storeys` two/three, `entrance` porch/step/canopy, `balcony` none/balcony, `shutters` shutters/none | 24 x 25 = 600 |
+
+The narrow house is the village's **row house**: `partyLeft` and `partyRight` draw its eave sides
+as blank party walls - no windows, shutters or drainpipe - closed by a slab that slopes down under
+the roof's overhang and gutter, out to where the windowed house ends, so its extent never moves
+and two neighbours meet slab to slab under touching eaves (`House.party`, `House.partyWalls`;
+[game-properties.md](game-properties.md), "Party walls"). They are not variants of their own: the
+count above leaves them out.
 
 The finish values: `roof` green (Kenney's), red, brown, slate, blue; `walls`
 white, cream, ochre, rose, sage; `cladding` anthracite, timber, sand, teal.

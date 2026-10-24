@@ -21,7 +21,7 @@ and the articulated ones with sections and a joint ([vehicle-rig.md](vehicle-rig
 | `veh-mb-citaro-blue` | Mercedes-Benz Citaro (blue) | `bus_mb_citarob` | the same bus in dark blue | 2,650 |
 | `veh-mb-o345-g` | Mercedes-Benz O 345 G | `bus_mb_o345` | articulated, 17.94 m, 2-2-2-2 doors | 4,250 |
 | `veh-solaris-urbino-15` | Solaris Urbino 15 | `solaris_urbino_15` | three axles, 14.59 m | 3,600 |
-| `veh-bus-1` | Bus 1 | `bus_1` | vlakosimdb's generic coach, 11.3 m | 2,200 |
+| `veh-bus-1` | Bus 1 | `bus_1` | vlakosimdb's generic coach, 11.3 m | 2,840 |
 
 The Karosa variants differ in series (front mask, rear, length), doors and livery:
 
@@ -141,7 +141,12 @@ runs, axles, and a `details` callback for the nose, the tail and the roof.
   (no window there), round rear lamps.
 - **Bus 1**: the source's generic coach: blue under a long window band, a mint sweep
   falling from under the windows to the foot of a mint tail (the native sides' outline,
-  held above the rear arch's crown).
+  held above the rear arch's crown). Dressed beyond the native files as an intercity
+  coach: a two-leaf front door 1.15 m wide ahead of the front axle, headlamp clusters
+  with indicators in the corners, a louvred grille and a badge, fog lamps in the
+  bumper; three luggage-bay hatches a side between the axles with chrome handles;
+  amber side markers; a light air-conditioning unit and two hatches on the roof; a
+  rear window over seven engine louvres, and a dark rear bumper with the plate.
 
 ## Tests
 

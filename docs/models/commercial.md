@@ -1,7 +1,7 @@
 # Commercial buildings
 
 **Covers** - five original parametric commercial families, their Kenney-style references, architectural and finish variants, scale, budget, export and validation.
-**Code** - `generator/commercial.ts`, `generator/generate.ts`, `test/commercial.test.ts`, `test/params.test.ts`
+**Code** - `generator/partyWalls.ts`, `generator/commercial.ts`, `generator/generate.ts`, `test/commercial.test.ts`, `test/params.test.ts`
 **See also** - [village.md](village.md), [parameters.md](parameters.md), [export.md](export.md), [source-tree.md](source-tree.md)
 
 ## Reference study
@@ -27,6 +27,14 @@ Every family has 24 architectural combinations and 25 finish combinations,
 so five catalog entries offer **3,000 variants**, 600 per entry.
 The exported GLB and thumbnail show the defaults; the standalone JS model
 and the site's parameter pickers build the other variants on demand.
+
+The corner shop, the balcony house, the market block and the office house also draw **party
+walls** (`partyLeft`, `partyBack`, and `partyRight` but on the corner shop, whose right side is
+a second shop front): a side a city's neighbour stands against goes blank, without windows or
+overhang ([game-properties.md](game-properties.md), "Party walls"). The terrace house draws
+`partyLeft` and `partyBack`, the sides its upper floors stay flush with; above its street terrace
+the left party wall stands on as a firewall. They are not variants of their own: the counts above
+leave them out.
 
 | id | architecture | shape parameters (default first) |
 |---|---|---|

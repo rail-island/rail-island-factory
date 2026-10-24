@@ -51,7 +51,9 @@ describe("parametric skyscrapers", () => {
       "proc-building-sky-glass-office", "proc-building-sky-art-deco", "proc-building-sky-pagoda", "proc-building-sky-brick-residential",
       "proc-building-sky-twin-towers", "proc-building-sky-twisted", "proc-building-sky-dark-slab", "proc-building-sky-bullet", "proc-building-sky-terraced", "proc-building-sky-pyramid",
     ]);
-    for (const d of SKYSCRAPERS) expect(paramCombinations(d.params)).toHaveLength(proceduralId(d.id) === "proc-building-sky-terraced" ? 576 : proceduralId(d.id) === "proc-building-sky-twisted" ? 144 : 48);
+    // the brick slab and the glass office also take two or three party walls (partyWalls.ts)
+    const party: Record<string, number> = { "proc-building-sky-brick-residential": 4, "proc-building-sky-glass-office": 8 };
+    for (const d of SKYSCRAPERS) expect(paramCombinations(d.params)).toHaveLength((proceduralId(d.id) === "proc-building-sky-terraced" ? 576 : proceduralId(d.id) === "proc-building-sky-twisted" ? 144 : 48) * (party[proceduralId(d.id)] ?? 1));
   });
 
   it("joins the bullet tower's tip to its last glass band", () => {

@@ -23,6 +23,7 @@ import { block, side } from "./vehicleParts.ts";
 import { centreCoupler, EMU_CATALOG, enumParam, pantograph } from "./emuParts.ts";
 import { unitBogie } from "./unitParts.ts";
 import { articulate } from "./tramKit.ts";
+import { openable, plugMove } from "./doors.ts";
 import { lerp, type Pt } from "./sliceLoft.ts";
 import { crownPane, drawShell, edgeRole, sideDecal, sideLettering, sidePane, sidePanel, type SliceBody } from "./sliceBody.ts";
 import { LOD_GLASS, type LodBand, type LodPart, type LodSections } from "./lodKit.ts";
@@ -452,13 +453,19 @@ function drawTrailer(coach: Coach, L: Livery, f: TrailerFrame, X: (d: number) =>
         m.scope("door", () => {
           const [a, q] = lay.door;
           sidePanel(m, b, X, s, "rubber", a, q, 1.1, 3.22, 0.004, 0.03);
-          if (L.door) sidePanel(m, b, X, s, L.door, a + 0.03, q - 0.03, 1.13, 3.19, 0.008, 0.003);
-          else
-            for (const [y0, y1, mat] of trailerBands(L, b, (a + q) / 2)) {
-              const [lo, hi] = [Math.max(y0, 1.13), Math.min(y1, 3.19)];
-              if (hi - lo > 1e-6 && mat !== "roof" && mat !== "skirt") sidePanel(m, b, X, s, mat, a + 0.03, q - 0.03, lo, hi, 0.008, 0.003);
-            }
-          sidePanel(m, b, X, s, "glass", a + 0.18, q - 0.18, 2.2, 2.95, 0.012, 0.003);
+          // the leaf and its window: one plug leaf sliding toward the car's middle (doors.ts)
+          const dx = X(a + ((a + q) / 2 < b.length / 2 ? 1 : -1) * (q - a)) - X(a);
+          openable(m, (mm, o) =>
+            mm.moved(plugMove(o, s, dx), () => {
+              if (L.door) sidePanel(mm, b, X, s, L.door, a + 0.03, q - 0.03, 1.13, 3.19, 0.008, 0.003);
+              else
+                for (const [y0, y1, mat] of trailerBands(L, b, (a + q) / 2)) {
+                  const [lo, hi] = [Math.max(y0, 1.13), Math.min(y1, 3.19)];
+                  if (hi - lo > 1e-6 && mat !== "roof" && mat !== "skirt") sidePanel(mm, b, X, s, mat, a + 0.03, q - 0.03, lo, hi, 0.008, 0.003);
+                }
+              sidePanel(mm, b, X, s, "glass", a + 0.18, q - 0.18, 2.2, 2.95, 0.012, 0.003);
+            }),
+          );
         });
         m.scope("lower deck windows", () => lay.lower.forEach(([a, q], i) => m.scope(`window ${i + 1}`, () => deckWindow(m, b, X, s, a, q, LOWER_WIN))));
         m.scope("upper deck windows", () => lay.upper.forEach(([a, q], i) => m.scope(`window ${i + 1}`, () => deckWindow(m, b, X, s, a, q, UPPER_WIN))));

@@ -329,16 +329,21 @@ function sideWork(c: Coach, v: Volume, L: CarLayout, s: number): void {
   m.scope("doors", () =>
     L.doors.forEach((d, i) =>
       m.scope(`door ${i + 1}`, () => {
-        const o = box(d.box);
-        m.scope("outline", () => c.sidePanel(v, "seam", s, o, 0.006, 0.04));
-        // the leaf: teal top and foot, dark between, as the BMP paints it
-        const inner = { x0: o.x0 + 0.06, x1: o.x1 - 0.06, y0: o.y0 + 0.06, y1: o.y1 - 0.06 };
-        m.scope("leaf", () => {
-          c.sidePanel(v, "teal", s, { ...inner, y1: 1.0 }, 0.01, 0.003);
-          c.sidePanel(v, "frame", s, { ...inner, y0: 1.0, y1: 3.0 }, 0.01, 0.003);
-          c.sidePanel(v, "teal", s, { ...inner, y0: 3.0 }, 0.01, 0.003);
+        // the leaf: teal top and foot, dark between, as the BMP paints it; one
+        // plug leaf sliding toward the car's middle, its window riding on it (doors.ts)
+        c.door(v, s, box(d.box), "teal", {
+          seam: 0.06,
+          opens: { kind: "plug", leaves: 1, toward: d.box[0] > 125 ? "low" : "high" },
+          leafPaint: (inner) => {
+            c.sidePanel(v, "teal", s, { ...inner, y1: 1.0 }, 0.01, 0.003);
+            c.sidePanel(v, "frame", s, { ...inner, y0: 1.0, y1: 3.0 }, 0.01, 0.003);
+            c.sidePanel(v, "teal", s, { ...inner, y0: 3.0 }, 0.01, 0.003);
+          },
+          leafWork: (clip) => {
+            const w = clip(box(d.glass));
+            if (w) c.m.scope("window", () => c.sidePanel(v, "glass", s, w, 0.016, 0.004));
+          },
         });
-        m.scope("window", () => c.sidePanel(v, "glass", s, box(d.glass), 0.016, 0.004));
       }),
     ),
   );

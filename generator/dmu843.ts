@@ -17,6 +17,7 @@ import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
 import type { GameProperties } from "./design.ts";
 import type { Pt, Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
+import type { DoorMotion } from "./doors.ts";
 import { block } from "./vehicleParts.ts";
 import {
   Car, DMU_CATALOG, buffersBoth, endItems, enumParam, exhaust, sideEmblem, sideItems, sideNumber, tankX, tractionNumber, underBoxes,
@@ -185,8 +186,16 @@ export function cd843(params?: ParamValues): MeshBuilder {
         m.scope("doors", () =>
           L.doors.forEach((d, i) =>
             m.scope(`door ${i + 1}`, () => {
-              car.c.door(body, s, car.side(d.door), "doorRed", { seam: 0.03 });
-              d.glass.forEach((g, j) => m.scope(`glass ${j + 1}`, () => car.c.window(body, s, car.side(g), { fw: 0.04 })));
+              // the passenger doors reach down to the low entrance (native row 47 or
+              // more): sliding plug doors, a leaf per window, a single leaf sliding
+              // toward the car's middle (doors.ts); the cab and luggage doors stay shut
+              if (d.door[3] < 47 || d.door[2] - d.door[0] < 9) {
+                car.c.door(body, s, car.side(d.door), "doorRed", { seam: 0.03 });
+                d.glass.forEach((g, j) => m.scope(`glass ${j + 1}`, () => car.c.window(body, s, car.side(g), { fw: 0.04 })));
+                return;
+              }
+              const motion: DoorMotion = d.glass.length > 1 ? { kind: "plug", leaves: 2 } : { kind: "plug", leaves: 1, toward: d.door[0] < 120 ? "high" : "low" };
+              car.openingDoor(body, s, d.door, d.glass, "doorRed", 0.03, motion, (j) => `glass ${j}`);
             }),
           ),
         );

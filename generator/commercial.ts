@@ -6,6 +6,7 @@ import type { Vec3 } from "./meshCore.ts";
 import { balconyHouseLod, cornerShopLod, marketBlockLod, officeHouseLod, terraceHouseLod } from "./lodCommercial.ts";
 export { balconyHouseLod, cornerShopLod, marketBlockLod, officeHouseLod, terraceHouseLod } from "./lodCommercial.ts";
 import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
+import { anyBlank, blankSides, faceBlank, grownPlan, partyParams, partySlabs, windowed, type Blank, type PartySide } from "./partyWalls.ts";
 
 const option = (value: string, title: string) => ({ value, title });
 const param = (name: string, title: string, values: Array<[string, string]>): ParamSpec => ({
@@ -33,16 +34,21 @@ export const COMMERCIAL_CATALOG: CatalogFields = {
   license: "CC0", author: "Rail Island", source: "Rail Island",
 };
 
-export const SHOP_PARAMS = [param("storeys", "Storeys", [["three", "Three"], ["two", "Two"], ["four", "Four"]]), WIDTH, FRONTAGE, ROOF, ...FINISH];
+/** The sides each upright kind can draw as a party wall: the corner shop's right side is a second shop front. */
+export const SHOP_PARTY: PartySide[] = ["left", "back"];
+export const UPRIGHT_PARTY: PartySide[] = ["left", "right", "back"];
+/** The terraced house's upper storeys stay flush with its left and back walls; the corner terrace opens its right. */
+export const TERRACE_PARTY: PartySide[] = ["left", "back"];
+export const SHOP_PARAMS = [param("storeys", "Storeys", [["three", "Three"], ["two", "Two"], ["four", "Four"]]), WIDTH, FRONTAGE, ROOF, ...FINISH, ...partyParams(SHOP_PARTY)];
 export const BALCONY_PARAMS = [param("storeys", "Storeys", [["four", "Four"], ["three", "Three"], ["five", "Five"]]), WIDTH,
-  param("balconies", "Balconies", [["paired", "Balconies"], ["gallery", "Galleries"]]), ROOF, ...finishes("chalk", "gold")];
+  param("balconies", "Balconies", [["paired", "Balconies"], ["gallery", "Galleries"]]), ROOF, ...finishes("chalk", "gold"), ...partyParams(UPRIGHT_PARTY)];
 export const BLOCK_PARAMS = [param("storeys", "Storeys", [["three", "Three"], ["four", "Four"]]),
-  param("bays", "Shop bays", [["four", "Four"], ["five", "Five"], ["six", "Six"]]), FRONTAGE, ROOF, ...finishes("cream", "gold")];
+  param("bays", "Shop bays", [["four", "Four"], ["five", "Five"], ["six", "Six"]]), FRONTAGE, ROOF, ...finishes("cream", "gold"), ...partyParams(UPRIGHT_PARTY)];
 export const TERRACE_PARAMS = [param("storeys", "Storeys", [["four", "Four"], ["three", "Three"], ["five", "Five"]]),
   param("setback", "Terrace plan", [["front", "Street terrace"], ["corner", "Corner terrace"]]), FRONTAGE,
-  param("roof", "Terrace use", [["garden", "Pergola"], ["solar", "Solar panels"]]), ...FINISH];
+  param("roof", "Terrace use", [["garden", "Pergola"], ["solar", "Solar panels"]]), ...FINISH, ...partyParams(TERRACE_PARTY)];
 export const OFFICE_PARAMS = [param("storeys", "Storeys", [["seven", "Seven"], ["five", "Five"], ["nine", "Nine"]]), WIDTH,
-  param("facade", "Facade", [["grid", "Framed windows"], ["ribbon", "Ribbon glazing"]]), ROOF, ...finishes("charcoal", "blue")];
+  param("facade", "Facade", [["grid", "Framed windows"], ["ribbon", "Ribbon glazing"]]), ROOF, ...finishes("charcoal", "blue"), ...partyParams(UPRIGHT_PARTY)];
 export const NUM: Record<string, number> = { two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, nine: 9 };
 export const PL = 0.45;
 export const ST = 3.25;
@@ -66,7 +72,16 @@ export function palette(p: ParamValues): Record<string, MaterialSpec> {
  * layer a few centimetres farther out, so differently coloured faces never fight. */
 class Commercial {
   readonly m: MeshBuilder;
-  constructor(readonly p: ParamValues) { this.m = new MeshBuilder(palette(p)); }
+  /** The sides drawn as blank party walls (partyWalls.ts). */
+  readonly blank: Blank;
+  constructor(readonly p: ParamValues) { this.m = new MeshBuilder(palette(p)); this.blank = blankSides(p); }
+  /** Whether a face carries windows: every face but a blank party wall. */
+  open(f: Face): boolean { return !faceBlank(this.blank, f.axis, f.sign); }
+  /** A chamfered ring round `b` grown by `grow`, but not past a blank side. */
+  ring(b: Footprint, grow: number, chamfer: number): ReturnType<typeof chamferedRect> {
+    const [gx, gz, gw, gd] = grownPlan(b.w, b.d, grow, this.blank);
+    return chamferedRect(gw, gd, chamfer, b.x + gx, b.z + gz);
+  }
   box(mat: string, x: number, z: number, w: number, d: number, lo: number, hi: number, bottom = false): void {
     this.m.box(mat, x, z, w, d, lo, hi);
     if (bottom) this.m.cap(mat, rect(w, d, x, z), lo, false);
@@ -90,8 +105,8 @@ class Commercial {
   }
   base(b: Footprint): void {
     this.m.scope("bevelled plinth", () => {
-      const lower = chamferedRect(b.w + 0.5, b.d + 0.5, 0.25, b.x, b.z);
-      const upper = chamferedRect(b.w + 0.18, b.d + 0.18, 0.18, b.x, b.z);
+      const lower = this.ring(b, 0.25, 0.25);
+      const upper = this.ring(b, 0.09, 0.18);
       this.m.prism("trim", lower, 0, PL - 0.15, false);
       this.m.loft("trim", lower, PL - 0.15, upper, PL);
     });
@@ -101,7 +116,7 @@ class Commercial {
     this.m.scope(`storey ${level + 1}`, () => {
       this.m.prism(dark ? "trim" : "wall", chamferedRect(b.w, b.d, 0.18, b.x, b.z), level === 0 ? y - 0.03 : y + 0.02, y + ST - 0.1, false);
       this.m.scope("floor belt", () => {
-        const ring = chamferedRect(b.w + 0.22, b.d + 0.22, 0.24, b.x, b.z);
+        const ring = this.ring(b, 0.11, 0.24);
         this.m.prism("trim", ring, y + ST - 0.2, y + ST + 0.02);
         this.m.cap("trim", ring, y + ST - 0.2, false);
       });
@@ -121,6 +136,7 @@ class Commercial {
   windows(b: Footprint, level: number, frontBays: number, ribbon = false): void {
     this.m.scope(`storey ${level + 1} glazing`, () => {
       for (const f of this.faces(b)) {
+        if (!this.open(f)) continue;
         const len = f.axis === "z" ? b.w : b.d;
         const centre = f.axis === "z" ? b.x : b.z;
         const bays = f.axis === "z" ? frontBays : Math.max(2, Math.round(b.d / 3.2));
@@ -197,9 +213,11 @@ class Commercial {
   }
   roof(b: Footprint, y: number, use = this.p.roof): void {
     this.m.scope("parapet roof", () => {
-      this.box("roof", b.x, b.z, b.w + 0.14, b.d + 0.14, y, y + 0.22, true);
+      const [rx, rz, rw, rd] = grownPlan(b.w, b.d, 0.07, this.blank);
+      this.box("roof", b.x + rx, b.z + rz, rw, rd, y, y + 0.22, true);
+      const [px, , pw] = grownPlan(b.w, b.d, 0.175, this.blank);
       for (const side of [-1, 1]) {
-        this.box("trim", b.x, b.z + side * (b.d / 2 - 0.06), b.w + 0.35, 0.28, y + 0.18, y + 0.7);
+        this.box("trim", b.x + px, b.z + side * (b.d / 2 - 0.06), pw, 0.28, y + 0.18, y + 0.7);
         this.box("trim", b.x + side * (b.w / 2 - 0.06), b.z, 0.28, b.d - 0.35, y + 0.18, y + 0.7);
       }
       if (use === "plant") {
@@ -246,6 +264,7 @@ function upright(specs: ParamSpec[], given: ParamValues | undefined, kind: "shop
       c.shops(b, bays, kind === "shop");
       c.m.scope("rear service windows", () => {
         for (const f of c.faces(b).slice(kind === "shop" ? 2 : 1)) {
+          if (!c.open(f)) continue;
           const centre = f.axis === "z" ? b.x : b.z;
           c.window(f, centre - 1.7, PL + 1.6, 1.6);
           c.window(f, centre + 1.7, PL + 1.6, 1.6);
@@ -258,6 +277,7 @@ function upright(specs: ParamSpec[], given: ParamValues | undefined, kind: "shop
   }
   c.roof(b, PL + floors * ST);
   c.details(b);
+  if (anyBlank(c.blank)) c.m.scope("party walls", () => partySlabs(c.m, upright(specs, windowed(p), kind).positions(), c.blank, b.w, b.d, PL + floors * ST, "wall"));
   return c.m;
 }
 
@@ -300,6 +320,8 @@ export function terraceHouse(given?: ParamValues): MeshBuilder {
   });
   c.roof(upper, PL + floors * ST, p.roof === "garden" ? "garden" : "plant");
   c.details(lower);
+  // a firewall up to the roof: beside the street terrace it stands proud of the setback
+  if (anyBlank(c.blank)) c.m.scope("party walls", () => partySlabs(c.m, terraceHouse(windowed(p)).positions(), c.blank, lower.w, lower.d, PL + floors * ST, "wall"));
   return c.m;
 }
 

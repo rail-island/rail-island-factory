@@ -537,8 +537,17 @@ function drawTrailer(c: Coach, unit: "endCoach" | "coach", L: Livery, rearEnd: "
         m.scope("doors", () =>
           T.doors.forEach((d, i) =>
             m.scope(`door ${i + 1}`, () => {
-              c.door(body, s, box(d.box), "bands", { seam: 0.025 });
-              c.window(body, s, box(d.glass), { frame: "frame", fw: 0.04 });
+              // one plug leaf sliding toward the car's middle, its window riding on it (doors.ts)
+              const b = box(d.box);
+              const mid = (body.plan[0]![0] + body.plan[body.plan.length - 1]![0]) / 2;
+              c.door(body, s, b, "bands", {
+                seam: 0.025,
+                opens: { kind: "plug", leaves: 1, toward: (b.x0 + b.x1) / 2 < mid ? "high" : "low" },
+                leafWork: (clip) => {
+                  const w = clip(box(d.glass));
+                  if (w) c.window(body, s, w, { frame: "frame", fw: 0.04 });
+                },
+              });
             }),
           ),
         );

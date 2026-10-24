@@ -15,7 +15,7 @@
 
 import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
 import type { GameProperties } from "./design.ts";
-import { Coach, type Pt, type Volume } from "./csdCoachParts.ts";
+import { Coach, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { LOD_GLASS } from "./lodKit.ts";
 import { bogieParts, coachBody, fitUnit, pantographParts, roofPart, shifted, sideGlass } from "./lodUnits.ts";
@@ -128,6 +128,20 @@ const UPPER_070: PxBox[] = Array.from({ length: 9 }, (_, i): PxBox => [56 + 15 *
 const LOWER_070: PxBox[] = Array.from({ length: 7 }, (_, i): PxBox => [71 + 15 * i, 26, 84 + 15 * i, 37]);
 const END_070: PxBox[] = [[8, 19, 21, 30], [24, 19, 37, 30], [40, 19, 47, 30], [198, 19, 205, 30], [208, 19, 221, 30], [224, 19, 237, 30]];
 
+/** A passenger door: two sliding plug leaves, a window riding on each (doors.ts). */
+function passengerDoor(c: Coach, body: Volume, s: number, b: Box, glass: Box[]): void {
+  c.door(body, s, b, "doorRed", {
+    seam: 0.03,
+    opens: { kind: "plug", leaves: 2 },
+    leafWork: (clip) => {
+      for (const g of glass) {
+        const w = clip(g);
+        if (w) c.window(body, s, w, { fw: 0.04 });
+      }
+    },
+  });
+}
+
 function motorCar(): MeshBuilder {
   const car = CARS.motorCar;
   const F = car.F;
@@ -159,10 +173,7 @@ function motorCar(): MeshBuilder {
         );
         m.scope("doors", () =>
           ([[[64, 34, 79, 56], [[65, 37, 70, 49], [73, 37, 78, 49]]], [[165, 34, 180, 56], [[166, 37, 171, 49], [174, 37, 179, 49]]]] as Array<[PxBox, PxBox[]]>).forEach(([d, glass], i) =>
-            m.scope(`door ${i + 1}`, () => {
-              c.door(body, s, box(d), "doorRed", { seam: 0.03 });
-              for (const g of glass) c.window(body, s, box(g), { fw: 0.04 });
-            }),
+            m.scope(`door ${i + 1}`, () => passengerDoor(c, body, s, box(d), glass.map(box))),
           ),
         );
         m.scope("running number", () => {
@@ -243,10 +254,7 @@ function trailer(): MeshBuilder {
         );
         m.scope("doors", () =>
           ([[[54, 23, 69, 45], [[55, 27, 60, 38], [63, 27, 68, 38]]], [[176, 23, 191, 45], [[177, 27, 182, 38], [185, 27, 190, 38]]]] as Array<[PxBox, PxBox[]]>).forEach(([d, glass], i) =>
-            m.scope(`door ${i + 1}`, () => {
-              c.door(body, s, box(d), "doorRed", { seam: 0.03 });
-              for (const g of glass) c.window(body, s, box(g), { fw: 0.04 });
-            }),
+            m.scope(`door ${i + 1}`, () => passengerDoor(c, body, s, box(d), glass.map(box))),
           ),
         );
         m.scope("emblem", () => c.sidePanel(body, "logoRed", s, box([75, 20, 81, 22]), 0.006, 0.003));

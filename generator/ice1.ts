@@ -307,6 +307,7 @@ function coach(unit: "coach" | "restaurant"): MeshBuilder {
 function coachSide(c: Coach, v: Volume, unit: "coach" | "restaurant", s: number, box: (b: PxBox) => Box): void {
   const m = c.m;
   const glass = (b: PxBox) => c.sidePanel(v, "glass", s, box(b), 0.014, 0.004);
+  const glassBox = (b: Box) => c.sidePanel(v, "glass", s, b, 0.014, 0.004);
   if (unit === "coach") {
     m.scope("window band", () => c.sidePanel(v, "band", s, box([15, 13, 250, 22]), 0.006, 0.02));
     m.scope("windows", () =>
@@ -332,8 +333,17 @@ function coachSide(c: Coach, v: Volume, unit: "coach" | "restaurant", s: number,
   m.scope("doors", () =>
     ([[4, 13], [252, 261]] as const).forEach(([a, b], i) =>
       m.scope(`door ${i + 1}`, () => {
-        c.door(v, s, box([a, 9, b, 36]), "bands", { seam: 0.02 });
-        glass([a + 2, 12, b - 2, 23]);
+        // one plug leaf sliding toward the car's middle, its window riding on it (doors.ts)
+        const d = box([a, 9, b, 36]);
+        const mid = (v.plan[0]![0] + v.plan[v.plan.length - 1]![0]) / 2;
+        c.door(v, s, d, "bands", {
+          seam: 0.02,
+          opens: { kind: "plug", leaves: 1, toward: (d.x0 + d.x1) / 2 < mid ? "high" : "low" },
+          leafWork: (clip) => {
+            const w = clip(box([a + 2, 12, b - 2, 23]));
+            if (w) glassBox(w);
+          },
+        });
       }),
     ),
   );

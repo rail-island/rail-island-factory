@@ -118,9 +118,10 @@ export const PREVIEW_FAMILIES: readonly PreviewFamily[] = [
 
 /** The block types by the family module whose pools they draw from. */
 function blockFamilies(): PreviewFamily[] {
-  const family = (id: string): string =>
-    id.startsWith("village") ? "Village" : id.startsWith("comm_") ? "Commercial" : id.startsWith("skyscraper") ? "Highrise"
-    : id === "industry" ? "Industry" : id === "tower" ? "Tower" : "Historic";
+  const FAMILY: Record<string, string> = {
+    houses: "Village", street: "Commercial", highrise: "Highrise", industrial: "Industry", towerblock: "Tower", landmark: "Historic",
+  };
+  const family = (id: string): string => FAMILY[id] ?? "Historic";
   const builders: Record<string, [Builder, Builder]> = {
     Village: [blockPreviewVillage, blockPreviewVillageLod], Commercial: [blockPreviewCommercial, blockPreviewCommercialLod],
     Industry: [blockPreviewIndustry, blockPreviewIndustryLod], Tower: [blockPreviewTower, blockPreviewTowerLod],

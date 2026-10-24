@@ -73,18 +73,25 @@ ground keeps its foot there. A sketch is lifted so its lowest point is the groun
 
 ## City blocks
 
-`blockKit.ts` grows a sample block from the block type's data: a perimeter block lines its four
-frontages with buildings picked from its pools by their mix and, per building, a preset its city
-presets weigh (`cityPresetsOf`), each facing the street (+Z at yaw 0, as the game's CityGen
-turns them) with a gap between neighbours; a single-building block stands one from its ring pool
-on its own origin. Every building is drawn by its own design and baked in, its materials under
-its design's id; streets and a kerb strip run round the block. The distant level is each
-building's massing, a box over its footprint in its commonest material. The pools' designs come
-from the modules that hold them, so each family of block types (`blocksVillage.ts`,
+`blockKit.ts` fills a sample block with the game's own fill (`sets/blockType.ts`:
+`rollBlockParams`, `fillRun`, `touchingSides`; [sets.md](sets.md)), so a preview is a block the
+game could grow. The block is cut by the game's narrow streets (8 studs) at a city type's block
+pitch (`size`: 64, 72 or 80 studs) in one of three outlines (`shape`): a lattice square, an
+annular sector of a radial city (its ring frontages walked along the circle, its spokes straight)
+or an irregular five-sided block. Its parameters are preview parameters - `spacing`, `colour`,
+`height`, each `auto` (rolled from the sample) or pinned - and the setback, gaps, density and
+paving (`ground`) are the spacing's and the type's. The candidates are the city variants the
+game may stand ([game-properties.md](game-properties.md), "City variants"), each measured; a
+building takes the block's colours and, where it stands against a neighbour, its party walls. A
+single-building block stands its ring pool's largest fitting model in the middle; a towerblock its
+tower first. Every building is drawn by its own design and baked in, its materials under its
+design's id, over the block's ground and the streets. The distant level is each building's
+massing, a box over its footprint in its commonest material. The pools' designs come from the
+modules that hold them, so each family of block types (`blocksVillage.ts`,
 `blocksCommercial.ts`, ...) is its own source module and bundles only its pools' code; ids are
-taken as the export settles them (`proceduralId`), so presets are found inside a bundle too. A
-block's page has no Source tab: its designs set `sourceTree: false`, as their trees are too big to
-deploy ([source-tree.md](source-tree.md)).
+taken as the export settles them (`proceduralId`), so a design's city variants are found inside a
+bundle too. A block's page has no Source tab: its designs set `sourceTree: false`, as their trees
+are too big to deploy ([source-tree.md](source-tree.md)).
 
 ## Textures
 

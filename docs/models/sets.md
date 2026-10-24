@@ -55,7 +55,7 @@ A set's module holds what its types ARE, and the game keeps what fits them to a 
 
 | Set | The module | The game keeps |
 |---|---|---|
-| `blockType` | `TYPE_META`: block data (below) | CityGen, facade numbers, city types, profiles |
+| `blockType` | `TYPE_META`: block data (below); `RETIRED_PARAMS`; the fill: `rollBlockParams`, `pickCandidate`, `chooseColours`, `fillRun`, `touchingSides`, `partyValues` | the planners (the frontages they walk, what fits on the ground), city types, profiles |
 | `busStop` | `buildSide(type, lateral)`: one kerb's platform, shelter, fittings and flag in the side's frame (x along travel, z outward, y up), with `level` furniture groups | the pose on the road, both kerbs, the grade, levelling the furniture |
 | `cableCarStation` | `TYPE_META`: footprint, rope-head height and the shed prop; `buildPylon(height)` | the head, the boarding platform, the rope solver, placing the shed |
 | `port` | `TYPE_META`: family and grade; `PROPS`: the prop per role | layout, berths, approaches, decks, piles, placing the props |
@@ -88,20 +88,54 @@ that moved.
 
 ## Block types
 
-`blockType` is a landed set of pure data (`generator/sets/blockType.ts`, `TYPE_META`):
-what a block of a settlement is filled with. Each type names its pools (building
-`group`s) and their mix, its placement (`perimeter` frontages or one `single`
-building), a facade style by name (`FACADE_STYLES`; the game owns the numbers), an
-optional centrepiece pool, an exclusion key two neighbouring blocks may not share,
-ring pools for a single building, whether it is the settlement's landmark, and which
-settlements grow it: a weight per city type and ring (`cities`) and a per-settlement
-cap (`limits`). Flags replace ids the game used to hard-code: `district` (the family a
-city profile reweights and neighbouring blocks attract), `overlay` (the city overlay's
-colour family), `profileFactors` and `decoration` (a village or industrial fence, a
-tenement's noise wall beside it). The data rides in `blockType.meta.json`; the game
-refuses an import naming a city type, ring or facade it does not know.
-`test/blockTypes.test.ts` checks the names and that every city type and ring can grow
-a type no exclusion can starve.
+`blockType` is a landed set (`generator/sets/blockType.ts`): what a block of a settlement is
+filled with, and the fill that fills it. There are six archetypes - `houses`, `street`,
+`highrise`, `industrial`, `towerblock`, `landmark` - each in `TYPE_META` with its pools
+(building `group`s) and their fixed mix, its placement (`perimeter` frontages or one `single`
+building), its `ground` (`pavement`, `concrete` or null for the biome), an optional centrepiece
+pool, an exclusion key two neighbouring blocks may not share, ring pools for a single building,
+`landmarkIn` (the city types whose single blocks stand the settlement's plaza-landmark instead,
+a village's church), and which settlements grow it: a weight per city type and ring (`cities`)
+and a per-settlement cap (`limits`). Flags replace ids the game used to hard-code: `district`
+(the family a city profile reweights and neighbouring blocks attract), `overlay` (the city
+overlay's colour family), `profileFactors` and `decoration` (a village or industrial fence;
+`heights` limits it to blocks of those height bands). Cities never wall their streets: there is no
+noise-wall decoration.
+
+**Block parameters.** A block takes one value of each of three parameters, rolled when a city
+grows it and stored on the game's block record: `spacing` (`SPACINGS`: `touching` - wall to wall,
+`tight` - rows broken now and then by a passage, `open`, `wide`; each a gap, a jitter, a setback
+from the street, a density boost, a corner clearance and whether it builds rows), `colour` (one of the named `PALETTES`: warm, earth, brick, pastel, cool,
+stone) and `height` (`mixed`, `low`, `mid`, `tall`). `params` in a type's data lists the
+spacings and heights it may take, with weights; every type may take every palette.
+`rollBlockParams` rolls them (the city's dominant palettes and the neighbours' schemes weigh
+the colour), `storedBlockParams` reads a stored record's.
+
+**Retired types.** The fifteen types before the archetypes are retired aliases in the registry
+(`comm_low` draws as `street`) and `RETIRED_PARAMS` gives each the parameters it is read with (a
+`comm_low` record is a `low` street, `village_red` a `brick` block of houses), so a saved city
+keeps its character.
+
+**The fill.** Both the game's planners and the site's block previews run the module's fill:
+`pickCandidate` (a group by the mix, a candidate weighted by its width and filtered by the
+block's height band), `chooseColours` (a building's colour values by the block's palette, the
+map's standing variants favoured and, past a settlement's budget of new ones, reused),
+`fillRun` (one frontage walked slot by slot with the spacing; the caller answers whether a
+footprint fits, or where the building in its way ends; a gap narrower than `MIN_GAP`, 2.5 studs,
+is never left - two buildings that would stand closer touch when both draw party walls on their
+flanks and move `MIN_GAP` apart otherwise, and a refused wall-to-wall slot is not retried; on a
+spacing that builds rows, `touching` and `tight`, the buildings with flank party walls are
+`ROW_BIAS` times commoner, so a tight block of houses is a row of the village's row houses) and `touchingSides` / `partyValues` (the
+faces two footprints share, which a design with party walls draws blank;
+[game-properties.md](game-properties.md)). The game supplies the frontages and the fit;
+everything chosen is the module's.
+
+The data rides in `blockType.meta.json`; the game refuses an import naming a ground, city type,
+ring or decoration it does not know. `test/blockTypes.test.ts` checks the names, that every city
+type and ring can grow a type no exclusion can starve, the retired aliases and the fill
+(height filter, palette colouring, reuse, wall-to-wall walks, the minimum gap, the row bias,
+party walls); the pins hold the
+data, the parameter rolls, a frontage per spacing and a party-wall case.
 
 ## The export
 
