@@ -128,3 +128,25 @@ describe("station set: end ramps", () => {
     });
   }
 });
+
+describe("station set: name boards", () => {
+  // the game paints the station's name across a board's faces: no post, mast, tie
+  // or column may share its volume (a cantilever wing's tie once crossed one)
+  const OCCLUDERS = new Set(["column", "steel"]);
+  for (const type of Object.keys(station.TYPE_META)) {
+    it(`${type}: keeps every name board clear of posts, masts and ties`, () => {
+      for (const tracks of TRACKS) for (const length of LENGTHS) {
+        const boxes = station.furnish(type, length, station.buildLayout(type, tracks));
+        for (const board of boxes.filter((b) => b.label)) {
+          const bb = bounds(board);
+          for (const o of boxes) {
+            if (o === board || !OCCLUDERS.has(o.material)) continue;
+            const ob = bounds(o);
+            const overlap = Math.min(...[0, 1, 2].map((i) => Math.min(bb.max[i]!, ob.max[i]!) - Math.max(bb.min[i]!, ob.min[i]!)));
+            if (overlap >= 0.05) throw new Error(`${type} ${tracks}x${length}: a ${o.material} box overlaps a name board by ${overlap.toFixed(2)}`);
+          }
+        }
+      }
+    });
+  }
+});
