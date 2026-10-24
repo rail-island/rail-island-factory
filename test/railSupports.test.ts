@@ -10,6 +10,7 @@ import { bundleDesign } from "../generator/jsModel";
 import { MeshBuilder, ngon } from "../generator/meshBuilder";
 import { paramCombinations, resolveParams, type ParamSpec } from "../generator/design";
 import { isLeaf, type LeafNode, type TreeNode } from "../generator/sourceTree";
+import { TYPE_META as RAIL_TYPES } from "../generator/sets/railType";
 
 const RAIL = ALL_VEHICLES.filter((d) => d.catalog?.category === "Rail vehicles");
 
@@ -158,6 +159,32 @@ describe("MeshCore.bogie", () => {
     expect(centre(pb, 0)).toBeCloseTo(2 * 1 - centre(pa, 0), 6);
     expect(centre(pb, 2)).toBeCloseTo(-centre(pa, 2), 6);
     expect(b.triangleCount()).toBe(a.triangleCount());
+  });
+});
+
+// The game draws every vehicle at 1.5 studs a metre on the rail type set's track.
+// A wheel's tread is everything a vehicle draws at its lowest (y = 0, the running
+// surface); each rail head must lie wholly under it, on both sides, or the wheels
+// read as standing beside the rails -- which they did while the game's rails were
+// 1.8 m apart against these models' 1,435 mm gauge.
+describe("wheels on the rail type set's rails", () => {
+  const STUDS_PER_M = 1.5;
+  it("every rail type shares one rail section", () => {
+    const sections = Object.values(RAIL_TYPES).map((t) => JSON.stringify(t.rail));
+    expect(new Set(sections).size).toBe(1);
+  });
+  const rail = Object.values(RAIL_TYPES)[0]!.rail;
+  const headIn = (rail.gauge - rail.headWidth) / 2 / STUDS_PER_M;
+  const headOut = (rail.gauge + rail.headWidth) / 2 / STUDS_PER_M;
+  it.each(RAIL.map((d) => [d.id] as const))("%s runs with both rail heads under its wheel treads", (id) => {
+    const { json, bin } = parseGlb(designGlb(id));
+    const low = collectTriangles(json, bin).flatMap((t) => t.p).filter((p) => Math.abs(p[1]) < 0.005);
+    for (const side of [-1, 1]) {
+      const zs = low.filter((p) => p[2] * side > 0).map((p) => Math.abs(p[2]));
+      expect(zs.length).toBeGreaterThan(0);
+      expect(Math.min(...zs)).toBeLessThanOrEqual(headIn);
+      expect(Math.max(...zs)).toBeGreaterThanOrEqual(headOut);
+    }
   });
 });
 

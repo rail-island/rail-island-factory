@@ -19,33 +19,45 @@ export const WAY_PARAMS: ParamSpec[] = [
 ];
 const lengthOf = (values: ParamValues | undefined): number => (resolveParams(WAY_PARAMS, values).length === "long" ? 80 : 40);
 
-// the game's track measures (studs): the ballast bed's foot and slope, the sleepers,
-// the rails and their gauge, the railhead, and the overhead wires above it
-const BED_Y = 0.67, BED_SLOPE = 0.9;
-const TIE = { spacing: 2.2, width: 3.6, height: 0.35, depth: 0.8 };
-const GAUGE = 2.7, RAIL_W = 0.45, RAIL_H = 0.45;
+// the game's track measures (studs): the ballast bed's foot and slope, how far the
+// sleeper tops stand above the ballast filled up between them, and the overhead
+// wires above the railhead. The rails and sleepers are the rail type set's.
+const BED_Y = 0.67, BED_SLOPE = 0.9, TIE_PROUD = 0.065;
+const RAIL = railType.TYPE_META.wooden_sleepers!.rail;
 const BALLAST: Rgb = [168, 160, 150], STEEL: Rgb = [120, 120, 130];
 const CONTACT = 8.86, MESSENGER = 10.6, WIRE = 0.08, MAST_SPACING = 30;
 
+/** The two rails of a track centred at lateral `z`, their foot at `y`: foot, web and head each a box. */
+function rails(s: Sketch, length: number, z: number, y: number): void {
+  const steel = s.mat("steel", STEEL);
+  const webHeight = RAIL.height - RAIL.footHeight - RAIL.headHeight;
+  for (const side of [-1, 1]) {
+    const cz = z + side * RAIL.gauge / 2;
+    s.box(steel, { cx: 0, cy: y + RAIL.footHeight / 2, cz, sx: length, sy: RAIL.footHeight, sz: RAIL.footWidth });
+    s.box(steel, { cx: 0, cy: y + RAIL.footHeight + webHeight / 2, cz, sx: length, sy: webHeight, sz: RAIL.webWidth });
+    s.box(steel, { cx: 0, cy: y + RAIL.height - RAIL.headHeight / 2, cz, sx: length, sy: RAIL.headHeight, sz: RAIL.headWidth });
+  }
+}
+
 /** One track along +X centred at lateral `z`: bed, sleepers (unless `bare`), rails; returns the railhead height. */
-function track(s: Sketch, length: number, z: number, sleeper: { color: Rgb; surface: SurfaceId } | null, lod: boolean, bedTop = BED_Y + (0.8 * 2) / 3, bedWidth = 5): number {
+function track(s: Sketch, length: number, z: number, sleeper: { color: Rgb; surface: SurfaceId } | null, lod: boolean, bedTop = BED_Y + (0.8 * 2) / 3, bedWidth = 5, tie = railType.TYPE_META.wooden_sleepers!.sleeper): number {
   const half = bedWidth / 2;
   s.sweep(s.mat("ballast", BALLAST, "rail-ballast"), [[-length / 2, 0, z], [length / 2, 0, z]],
     [[half + BED_SLOPE, 0], [half, bedTop], [-half, bedTop], [-half - BED_SLOPE, 0]], true);
+  const tieTop = bedTop + TIE_PROUD;
   if (sleeper && !lod) {
-    const tie = s.mat("wood", sleeper.color, sleeper.surface);
-    for (let x = -length / 2 + TIE.spacing / 2; x < length / 2; x += TIE.spacing) s.box(tie, { cx: x, cy: bedTop + TIE.height / 2, cz: z, sx: TIE.depth, sy: TIE.height, sz: TIE.width });
+    const mat = s.mat("wood", sleeper.color, sleeper.surface);
+    for (let x = -length / 2 + tie.spacing / 2; x < length / 2; x += tie.spacing) s.box(mat, { cx: x, cy: tieTop - tie.height / 2, cz: z, sx: tie.width, sy: tie.height, sz: tie.length });
   }
-  const railY = bedTop + TIE.height + RAIL_H / 2;
-  if (!lod) for (const side of [-1, 1]) s.box(s.mat("steel", STEEL), { cx: 0, cy: railY, cz: z + side * GAUGE / 2, sx: length, sy: RAIL_H, sz: RAIL_W });
-  return railY + RAIL_H / 2;
+  if (!lod) rails(s, length, z, tieTop);
+  return tieTop + RAIL.height;
 }
 
 function railSketch(values: ParamValues | undefined, type: string, lod: boolean): Sketch {
   const length = lengthOf(values);
   const meta = railType.TYPE_META[type] ?? railType.TYPE_META.wooden_sleepers!;
   const s = new Sketch();
-  const top = track(s, length, 0, { color: meta.sleeper.color, surface: meta.sleeper.material === "concrete" ? "rail-tie-concrete" : "rail-tie-wood" }, lod, BED_Y + meta.ballast.height, meta.ballast.width);
+  const top = track(s, length, 0, { color: meta.sleeper.color, surface: meta.sleeper.material === "concrete" ? "rail-tie-concrete" : "rail-tie-wood" }, lod, BED_Y + meta.ballast.height, meta.ballast.width, meta.sleeper);
   if (meta.catenary && catenaryStyle.TYPE_META[meta.catenary]?.support === "mast") {
     for (let x = -length / 2 + 4; x <= length / 2; x += MAST_SPACING) {
       for (const p of catenaryStyle.mast(meta.catenary, { uprights: [-4], drops: [0], deck: false, groundY: 0, railTop: top, contact: CONTACT, messenger: MESSENGER, deckRise: 0, deckFootingWidth: 0, wire: WIRE })) {
@@ -82,7 +94,7 @@ function road(s: Sketch, length: number, type: string, lod: boolean): number {
   }
   for (const z of t.tramTracks) {
     if (t.trackOnly) track(s, length, z, { color: [101, 67, 33], surface: "tram-tie" }, lod, DECK_TOP - 0.3, 4);
-    else if (!lod) for (const side of [-1, 1]) s.box(s.mat("steel", STEEL), { cx: 0, cy: DECK_TOP + 0.03, cz: z + side * GAUGE / 2, sx: length, sy: 0.06, sz: RAIL_W });
+    else if (!lod) for (const side of [-1, 1]) s.box(s.mat("steel", STEEL), { cx: 0, cy: DECK_TOP + 0.03, cz: z + side * RAIL.gauge / 2, sx: length, sy: 0.06, sz: RAIL.headWidth });
   }
   return DECK_TOP - SHOULDER_DROP;
 }
