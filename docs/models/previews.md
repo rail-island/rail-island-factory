@@ -4,7 +4,7 @@
 decoration, catenary style, city block type and texture, drawn from the set modules and the
 props on a representative fixture; their categories, bound build functions, preview parameters,
 surfaces, the drawing kit, the block composer, and the checks they pass.
-**Code** - `generator/previews/` (`index.ts`, `sketch.ts`, `bridges.ts`, `stations.ts`,
+**Code** - `generator/previews/` (`index.ts`, `sketch.ts`, `wayKit.ts`, `bridges.ts`, `stations.ts`,
 `structures.ts`, `ways.ts`, `props.ts`, `textures.ts`, `blockKit.ts`, `blocks*.ts`),
 `generator/design.ts` (`bound`, `boundDesign`, `ParamSpec.preview`), `generator/jsModel.ts`,
 `src/catalogQuery.ts`, `src/ModelDetail.tsx`, `test/previews.test.ts`, `test/catalogSweep.ts`
@@ -49,11 +49,12 @@ lists every type as a model of its own. The titles are the registry's English na
 A preview's parameters split in two, shown in two blocks on the model page:
 
 - **Parameters** - what the game passes as a player set it: a station's track count and
-  length, a road station's stand count, what a bridge or a tunnel carries (one track, two, a
-  wide road), a rail mast over one track or a portal over two.
+  length, a road station's stand count, what a tunnel carries (one track, two, a wide road), a
+  rail mast over one track or a portal over two.
 - **Preview parameters** (`ParamSpec.preview`) - the fixture only, which the game takes from
-  the world: a bridge's span, a port's berth, an airport's terminal pad, a dam's valley, a way's
-  length, a city block's size and sample.
+  the world: a bridge's span, what its deck carries (one to three tracks, a narrow or wide
+  road) and its wires (none, a tram's, a railway's), a port's berth, an airport's terminal pad,
+  a dam's valley, a way's length, a city block's size and sample.
 
 ## Drawing
 

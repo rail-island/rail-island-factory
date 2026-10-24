@@ -158,6 +158,21 @@ Current counts (single track; the 400-stud road deck costs at most a fifth more)
 
 The distant level is held to the previews' 500 triangles ([previews.md](previews.md)).
 
+## The site preview
+
+`previews/bridges.ts` builds each type over a straight crossing of flat ground, raised until
+nothing dips below it, with three preview parameters: the span (60 or 160 studs), what the deck
+carries and its wires. The decks follow the game: n tracks 8 apart on a deck 8n + 1 wide, the
+path along the first track and the deck recentred over them (`shiftAmount` 4(n - 1)); a narrow
+or wide road (8 or 16 studs, the road types' widths) plus 2, centred. Tracks are drawn by the
+ways' kit (`wayKit.ts`) with the ballast on the deck top; a road gets its carriageway, raised
+shoulders and centre line, and with wires the tram type's embedded tracks. The wires - a contact
+and messenger wire per track for a railway, a trolley wire for a tram - are fixed as the game's
+planner fixes them: a drop from each `point` member, a cross-span wire between each `span`
+member's verticals, and where a type has no members, railway masts (a portal over more than one
+track) or tram poles on the deck inside the parapets, every 30 studs. The distant level draws
+the bridge only.
+
 ## Checks
 
 - `test/bridgeBudget.test.ts` - every type within its tier on every fixture, and every type has
