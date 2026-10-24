@@ -40,6 +40,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { posePreview, previewKey, type CatalogRecord, type PreviewLod } from "./catalogQuery";
 import { jsModule, loadModel } from "./modelModule";
 import { leafAt, rangesOf, type TreeIndex } from "./sourceTreeView";
+import { applyGlass } from "./viewerGlass";
 import { applyHighlight, makeParts, type Part } from "./viewerHighlight";
 import { applyLamps, disposeLamps, lampsOf, type Lamp } from "./viewerLamps";
 import { applySurfaces } from "./viewerSurfaces";
@@ -294,6 +295,8 @@ export function ModelViewer(props: {
         current = group;
         currentKey = key;
         setClips(loadedClips);
+        // glazing see-through as the game draws it, before the highlight clones the materials
+        applyGlass(group);
         parts = makeParts(group);
         lamps = lampsOf(group);
         setLampCount(lamps.length);

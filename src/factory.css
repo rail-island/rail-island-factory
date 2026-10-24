@@ -178,6 +178,14 @@ body {
   background: var(--m-surface);
 }
 
+/* On a phone the toolbar scrolls away with the list: held at the top, its chip rows
+   would leave too little room to scroll the models in. */
+@media (max-width: 899px) {
+  .factory-toolbar {
+    position: static;
+  }
+}
+
 .factory-search {
   flex: 1 1 260px;
   min-width: 0;
@@ -908,21 +916,48 @@ body {
   word-break: break-all;
 }
 
-/* On a wide screen the model page splits: the viewer left, the specs right. */
+/* On a wide screen the model page splits: the viewer left, the specs right. The
+   page itself fills the window and does not scroll; only the specs do, in their
+   own column. (A narrow screen scrolls the whole page, viewer first.) */
 @media (min-width: 900px) {
+  .factory--detail {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .factory--detail .factory-bar,
+  .factory--detail .factory-footer {
+    flex: none;
+  }
+
+  .factory--detail .factory-main {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    padding-bottom: 16px;
+  }
+
   .factory-detail {
+    flex: 1;
+    min-height: 0;
     flex-direction: row;
-    align-items: flex-start;
+    align-items: stretch;
   }
 
   .factory-detail__stage {
     flex: 1;
-    height: calc(100dvh - var(--m-bar-h) - 48px);
+    height: auto;
   }
 
   .factory-detail__specs {
     flex: none;
     width: 340px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 4px;
   }
 }
 
