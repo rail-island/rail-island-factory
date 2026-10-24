@@ -153,11 +153,37 @@ export function pathFromPoints(points: Vec3[], deckWidth: number, shiftAmount: n
 // All overhead types share the highest railway/tram wire envelope, `clearanceY`
 // (the game's, carried on the path). Dimensions are deck-local; the underside of a
 // crossbeam must clear this plane.
+//
+// A Pratt through truss: inclined end posts from the bearings up to the first
+// top node, verticals at the inner nodes, diagonals sloping down toward mid-span,
+// and -- on a span long enough to want it -- a polygonal (Parker) top chord that
+// rises toward the middle. The top chord, its crossbeams and the top bracing only
+// exist between the first and last inner node.
 const trussHeight = (clearanceY: number): number => Math.max(13, clearanceY + 0.4);
-const TRUSS_CHORD = 0.4;
+const TRUSS_CHORD = 0.4, TRUSS_TOP_CHORD = 0.55;
 const TRUSS_PANEL = 8;
-const trussTopY = (clearanceY: number): number => DECK_THICKNESS / 2 + trussHeight(clearanceY) - TRUSS_CHORD / 2;
-const trussPanelCount = (length: number): number => Math.max(2, Math.floor(length / TRUSS_PANEL));
+const trussPanelCount = (length: number): number => Math.max(4, Math.round(length / TRUSS_PANEL));
+// how far the Parker top chord rises at mid-span over its height at the ends
+const trussRise = (length: number): number => Math.min(4, Math.max(0, (length - 40) * 0.15));
+/**
+ * The top chord's centre over inner node `node` of `panels` (deck-local): the
+ * truss height at the end nodes, rising on a parabola through the nodes by
+ * trussRise at mid-span. Never below the wire envelope.
+ */
+const trussTopY = (clearanceY: number, length: number, node: number, panels: number): number => {
+  const q = (x: number): number => 1 - (2 * x - 1) * (2 * x - 1);
+  const qEnd = q(1 / panels);
+  const lift = qEnd < 1 ? (q(node / panels) - qEnd) / (1 - qEnd) : 0;
+  return DECK_THICKNESS / 2 + trussHeight(clearanceY) - TRUSS_TOP_CHORD / 2 + trussRise(length) * Math.max(0, lift);
+};
+// the top crossbeams an overhead line hangs from: every other inner node,
+// always including both ends of the top chord (the portals)
+const trussMemberNodes = (panels: number): number[] => {
+  const nodes: number[] = [];
+  for (let i = 1; i < panels; i += 2) nodes.push(i);
+  if (nodes[nodes.length - 1] !== panels - 1) nodes.push(panels - 1);
+  return nodes;
+};
 
 // the depths the plain superstructures hang below the slab's underside (their
 // piers stop there)
@@ -213,11 +239,9 @@ export type BridgeOverheadMember =
 function spanOverheadMembers(bridgeType: string, spanLength: number, clearanceY: number): BridgeOverheadMember[] {
   switch (bridgeType) {
     case "truss": {
-      // the top lateral bracing, every other panel node
+      // the top crossbeams, every other inner node and both portals
       const panels = trussPanelCount(spanLength);
-      const out: BridgeOverheadMember[] = [];
-      for (let i = 0; i <= panels; i += 2) out.push({ t: i / panels, kind: "point", localY: trussTopY(clearanceY) });
-      return out;
+      return trussMemberNodes(panels).map((i) => ({ t: i / panels, kind: "point", localY: trussTopY(clearanceY, spanLength, i, panels) }));
     }
     case "cantilever":
       return CANTILEVER_TOWER_T.map((t) => ({ t, kind: "point", localY: cantileverTowerTopY() }));
@@ -667,30 +691,53 @@ const buildBeam: Builder = (out, g, _opts, heightAt) => {
 // A truss carries its own span: it stands on the boundary piers only.
 const buildTruss: Builder = (out, g) => {
   buildPathDeck(out, g);
-  const CHORD = TRUSS_CHORD;
-  const sideX = g.deckWidth / 2 - CHORD / 2;
-  const botY = DECK_THICKNESS / 2 + CHORD / 2;
-  const topY = trussTopY(g.clearanceY);
-  const numPanels = trussPanelCount(g.length);
-  const panelLen = g.length / numPanels;
+  const n = trussPanelCount(g.length), panel = g.length / n;
+  const sideX = g.deckWidth / 2 - TRUSS_CHORD / 2;
+  const botY = DECK_THICKNESS / 2 + TRUSS_CHORD / 2;
+  const topY = (i: number): number => trussTopY(g.clearanceY, g.length, i, n);
+  const bot = (i: number, sx: number): Vec3 => pathWorldPoint(g, i * panel, sx, botY);
+  const top = (i: number, sx: number): Vec3 => pathWorldPoint(g, i * panel, sx, topY(i));
+  const mid = n / 2;
   for (const sx of [sideX, -sideX]) {
-    pushCurve(out, g, sx, () => botY, CHORD * 1.35, CHORD, "steel");
-    pushCurve(out, g, sx, () => topY, CHORD * 1.35, CHORD, "steel");
-    for (let i = 0; i < numPanels; i++) {
-      const a = i * panelLen, b = (i + 1) * panelLen;
-      pushStrut(out, pathWorldPoint(g, a, sx, botY), pathWorldPoint(g, a, sx, topY), CHORD, "steel", i % 4 === 0 ? "frame" : "detail");
-      pushBox(out, g, a, sx, botY + 0.35, { x: 0.12, y: 0.75, z: 0.85 }, "steel");
-      pushBox(out, g, a, sx, topY - 0.35, { x: 0.12, y: 0.75, z: 0.85 }, "steel");
-      if (i % 2 === 0) pushStrut(out, pathWorldPoint(g, a, sx, botY), pathWorldPoint(g, b, sx, topY), CHORD, "steel");
-      else pushStrut(out, pathWorldPoint(g, a, sx, topY), pathWorldPoint(g, b, sx, botY), CHORD, "steel");
+    // bottom chord along the deck, top chord node to node (polygonal when it rises)
+    pushCurve(out, g, sx, () => botY, TRUSS_CHORD * 1.35, TRUSS_CHORD, "steel");
+    for (let i = 1; i < n - 1; i++) pushStrut(out, top(i, sx), top(i + 1, sx), TRUSS_TOP_CHORD, "steel", "frame");
+    // inclined end posts, as heavy as the top chord
+    pushStrut(out, bot(0, sx), top(1, sx), TRUSS_TOP_CHORD, "steel", "frame");
+    pushStrut(out, bot(n, sx), top(n - 1, sx), TRUSS_TOP_CHORD, "steel", "frame");
+    for (let i = 1; i < n; i++) {
+      // verticals, and gusset plates at both chords
+      pushStrut(out, bot(i, sx), top(i, sx), 0.32, "steel", i === 1 || i === n - 1 ? "frame" : "detail");
+      pushBox(out, g, i * panel, sx, botY + 0.35, { x: 0.12, y: 0.75, z: 0.95 }, "steel");
+      pushBox(out, g, i * panel, sx, topY(i) - 0.45, { x: 0.12, y: 0.75, z: 0.95 }, "steel");
     }
-    pushStrut(out, pathWorldPoint(g, g.length, sx, botY), pathWorldPoint(g, g.length, sx, topY), CHORD, "steel", "frame");
+    // Pratt diagonals in the inner panels, sloping down toward mid-span (both
+    // ways in a middle panel of an odd count)
+    for (let i = 1; i < n - 1; i++) {
+      if (i + 1 <= mid) pushStrut(out, top(i, sx), bot(i + 1, sx), 0.3, "steel");
+      else if (i >= mid) pushStrut(out, top(i + 1, sx), bot(i, sx), 0.3, "steel");
+      else { pushStrut(out, top(i, sx), bot(i + 1, sx), 0.3, "steel"); pushStrut(out, top(i + 1, sx), bot(i, sx), 0.3, "steel"); }
+    }
   }
-  for (let i = 0; i <= numPanels; i++) {
-    if (i % 2 === 0) {
-      const d = i * panelLen;
-      pushStrut(out, pathWorldPoint(g, d, -sideX, topY), pathWorldPoint(g, d, sideX, topY), CHORD, "steel", "frame");
+  // crossbeams at every top node, X bracing in the top plane between them
+  for (let i = 1; i < n; i++) {
+    const member = i === 1 || i === n - 1 || trussMemberNodes(n).includes(i);
+    pushStrut(out, top(i, -sideX), top(i, sideX), TRUSS_CHORD, "steel", member ? "frame" : "detail");
+    if (i < n - 1) {
+      pushStrut(out, top(i, -sideX), top(i + 1, sideX), 0.18, "steel");
+      pushStrut(out, top(i, sideX), top(i + 1, -sideX), 0.18, "steel");
     }
+  }
+  // the portals: a strut between the end posts just over the wire envelope, and
+  // an X between it and the top crossbeam
+  const portalY = g.clearanceY + 0.6;
+  for (const [end, first] of [[0, 1], [n, n - 1]] as const) {
+    const f = (portalY - botY) / (topY(first) - botY);
+    if (f <= 0 || f >= 0.85) continue;
+    const at = (sx: number): Vec3 => { const a = bot(end, sx), b = top(first, sx); return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f, z: a.z + (b.z - a.z) * f }; };
+    pushStrut(out, at(-sideX), at(sideX), TRUSS_CHORD, "steel");
+    pushStrut(out, at(-sideX), top(first, sideX), 0.22, "steel");
+    pushStrut(out, at(sideX), top(first, -sideX), 0.22, "steel");
   }
 };
 

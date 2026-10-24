@@ -98,4 +98,24 @@ describe("the bridge kit", () => {
     // each span (three of about 53 studs) holds 14 or 15 of the path's vertices
     for (const c of chords) if (c.shape === "ribbon") expect(c.points.length).toBeLessThanOrEqual(16);
   });
+
+  it("hangs the truss's overhead members on its top crossbeams, above the wires", () => {
+    for (const length of [30, 60, 64]) {
+      const path = bridge.pathFromPoints([{ x: 0, y: 20, z: 0 }, { x: length, y: 20, z: 0 }], 9, 0, 0.67, 9.9)!;
+      const boxes = bridge.buildBridge("truss", path, () => 0);
+      const crossbeams = boxes.filter((b) => b.shape === "strut" && Math.abs(b.a.x - b.b.x) < 1e-6 && Math.abs(b.a.z - b.b.z) > 8);
+      const deckCentreY = 20 + 0.67 - bridge.DECK_THICKNESS / 2;
+      const members = bridge.overheadMembers("truss", length, 9, 9.9);
+      expect(members.length).toBeGreaterThanOrEqual(2);
+      for (const m of members) {
+        if (m.kind !== "point") throw new Error("a truss member is a point");
+        // a crossbeam crosses at that station, at that height, its underside over the wires
+        const beam = crossbeams.find((b) => b.shape === "strut" && Math.abs(b.a.x - m.t * length) < 1e-6 && Math.abs(b.a.y - deckCentreY - m.localY) < 1e-6);
+        expect(beam, `${length} at ${m.t}`).toBeDefined();
+        expect(m.localY - 0.2).toBeGreaterThanOrEqual(9.9);
+      }
+      // the end posts lean: nothing stands vertical at the span's ends
+      expect(boxes.some((b) => b.shape === "strut" && Math.abs(b.a.x) < 1e-6 && Math.abs(b.b.x) < 1e-6 && b.b.y - b.a.y > 5)).toBe(false);
+    }
+  });
 });

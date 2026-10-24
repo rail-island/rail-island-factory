@@ -42,7 +42,7 @@ meets its neighbours exactly - where the renderer's mitred sweep puts the deck. 
 | `beam` | plain | - | slab with two concrete girders underneath | concrete every ~25 studs |
 | `box_girder` | plain | 65 | trapezoidal concrete box under the slab | concrete at span boundaries |
 | `plate_girder` | framed | 60 | steel through-girders at the deck edges with stiffeners | concrete, cap under the girders |
-| `truss` | framed | 64 | through truss: chords, verticals, diagonals, top bracing | concrete at span boundaries only |
+| `truss` | framed | 64 | Pratt through truss: inclined end posts with portal frames, verticals, diagonals sloping down toward mid-span, a polygonal (Parker) top chord rising up to 4 studs on spans over 40, a crossbeam at every top node with X bracing between | concrete at span boundaries only |
 | `deck_truss` | framed | 65 | truss under the deck | concrete under the truss |
 | `timber_trestle` | framed | - | timber deck on bents every ~12 studs | the bents |
 | `arch` | framed | 80 | concrete deck arch with spandrel columns | full-width concrete abutments |
@@ -103,7 +103,7 @@ ships. `test/bridgeSet.test.ts` holds the tag to exactly the boxes whose foot is
 
 `overheadMembers(type, length, deckWidth, clearanceY)` lists where the superstructure crosses
 over the track, as fractions of the whole path, for the game's catenary planner:
-`point` members (the truss top bracing, the cantilever tower portals, the tied arch struts above
+`point` members (the truss top crossbeams at every other inner node and both portals, at the top chord's height there, the cantilever tower portals, the tied arch struts above
 the wire envelope) a wire is taken up to, and `span` members (the cable types' tower legs) a
 perpendicular wire is strung between. Types with nothing over the deck return none, which tells
 the planner to use deck masts. `overheadMemberEndpoints` gives a member's world endpoints in the
@@ -145,7 +145,7 @@ Current counts (single track; the 400-stud road deck costs at most a fifth more)
 | beam | 330 | 562 | 1,142 | 3,370 |
 | box_girder | 260 | 568 | 1,184 | 3,064 |
 | plate_girder | 632 | 1,612 | 3,788 | 5,668 |
-| truss | 992 | 2,476 | 6,308 | 4,660 |
+| truss | 1,364 | 3,484 | 7,988 | 5,044 |
 | deck_truss | 968 | 2,476 | 6,140 | 5,908 |
 | timber_trestle | 708 | 1,536 | 3,376 | 4,344 |
 | arch | 796 | 1,510 | 3,652 | 3,446 |
