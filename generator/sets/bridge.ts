@@ -58,6 +58,7 @@ export const TYPE_META: Record<string, BridgeTypeData> = {
   tied_arch: { maxSpan: 100 },
   suspension: { maxSpan: 140 },
   cable_stayed: { maxSpan: 120 },
+  cable_stayed_y: { maxSpan: 120 },
   plate_girder: { maxSpan: 60 },
   timber_trestle: { maxSpan: null },
   box_girder: { maxSpan: 65 },
@@ -70,7 +71,7 @@ export const TYPE_META: Record<string, BridgeTypeData> = {
 // between neighbours, with a back span half a main span long at each end down to
 // the abutments. Repeating a whole cable bridge per structural span put a pair of
 // towers in every span, each with its own cables down to the deck in between.
-const CABLE_TYPES = new Set(["suspension", "cable_stayed"]);
+const CABLE_TYPES = new Set(["suspension", "cable_stayed", "cable_stayed_y"]);
 /** Where a cable bridge's towers stand along a bridge of `length` (distances). */
 export function cableTowerDistances(type: string, length: number): number[] {
   const maxMain = TYPE_META[type]?.maxSpan ?? length;
@@ -432,7 +433,7 @@ function pushBox(out: BridgeBox[], g: BridgePathGeom, distance: number, lx: numb
 // in deck-local Y (relative to the slab centre, like every other localY here).
 // The stations are the descriptor's points; the renderer mitres between them,
 // so consecutive stations butt exactly instead of overlapping like box slices.
-function pushWall(out: BridgeBox[], g: BridgePathGeom, distances: number[], lx: number, w: number, bottoms: number[], tops: number[], material: BridgeMaterial): void {
+function pushWall(out: BridgeBox[], g: BridgePathGeom, distances: number[], lx: number, w: number, bottoms: number[], tops: number[], material: BridgeMaterial, part: BridgePart = "frame"): void {
   if (distances.length < 2) return;
   const points: Vec3[] = [];
   const bottomYs: number[] = [];
@@ -444,7 +445,7 @@ function pushWall(out: BridgeBox[], g: BridgePathGeom, distances: number[], lx: 
     topYs.push(p.y + tops[i]);
   }
   const u = -lx; // renderer's perpendicular is the opposite of pathRight
-  out.push({ shape: "wall", points, u0: u - w / 2, u1: u + w / 2, bottoms: bottomYs, tops: topYs, material, part: "frame" });
+  out.push({ shape: "wall", points, u0: u - w / 2, u1: u + w / 2, bottoms: bottomYs, tops: topYs, material, part });
 }
 
 // The deck centerline: every path point lifted to the middle of the slab. The
@@ -573,6 +574,8 @@ export interface PierSpec {
   /** The masonry pier's cutwater top, deck-local; none draws no cutwater. */
   cutwaterTop?: number;
   under?: number;
+  /** Columns at these lateral offsets (each `w` wide), whatever the deck's width. */
+  columns?: number[];
 }
 const FOOTING_HEIGHT = 0.8, FOOTING_MARGIN = 0.6;
 const TWIN_DECK_WIDTH = 14; // a deck this wide stands on two columns
@@ -599,11 +602,11 @@ function pushPier(out: BridgeBox[], g: BridgePathGeom, distance: number, spec: P
   if (shaftH <= 0.05) return;
   // the shaft widens downward with its height, its top kept near the given size
   const grow = 1 + Math.min(0.6, shaftH * 0.025);
-  const twin = g.deckWidth >= TWIN_DECK_WIDTH && spec.w < g.deckWidth * 0.6;
-  const colW = twin ? Math.max(1.6, spec.w * 0.85) : spec.w;
+  const twin = spec.columns !== undefined || (g.deckWidth >= TWIN_DECK_WIDTH && spec.w < g.deckWidth * 0.6);
+  const colW = spec.columns ? spec.w : twin ? Math.max(1.6, spec.w * 0.85) : spec.w;
   // twin columns stand under the cap's ends, not merely under the deck
   const colX = Math.max(g.deckWidth * 0.28, capWidth / 2 - (colW * grow) / 2 - 0.3);
-  const columns = twin ? [-colX, colX] : [0];
+  const columns = spec.columns ?? (twin ? [-colX, colX] : [0]);
   const centreAt = (lx: number, y: number): Vec3 => { const p = pathWorldPoint(g, distance, lx, 0); return { x: p.x, y, z: p.z }; };
   if (footing) {
     const span = twin ? columns[1]! - columns[0]! + colW * grow : spec.w * grow;
@@ -644,8 +647,6 @@ function buildPathPiers(out: BridgeBox[], g: BridgePathGeom, heightAt: TerrainHe
 // The masonry blocks are 0.4 wider than the deck so their faces sit proud of the
 // arch/masonry outer faces (which land on the deckWidth/2 plane): at a boundary the
 // two spans' masonry overlaps on that plane and would z-fight with a flush pier.
-// All three arch types share this abutment: an arch has to land its thrust on
-// something as wide as it is.
 function boundaryPierStyle(bridgeType: string, deckWidth: number, spanLength: number): PierSpec {
   const legs = (legX: number, legW: number): PierSpec => ({ w: 0, d: 0, material: "tower", capWidth: 2 * legX + legW + 0.4, bearings: [] });
   switch (bridgeType) {
@@ -655,7 +656,9 @@ function boundaryPierStyle(bridgeType: string, deckWidth: number, spanLength: nu
     case "plate_girder": return { w: Math.max(2.2, deckWidth * 0.24), d: 2.6, material: "pier", under: plateGirderUnder(spanLength), capWidth: deckWidth + 0.4, bearings: [-(deckWidth / 2 - PLATE_GIRDER_X), deckWidth / 2 - PLATE_GIRDER_X] };
     case "deck_truss": return { w: Math.max(2.2, deckWidth * 0.24), d: 2.6, material: "pier", under: deckTrussDepth(spanLength) - DECK_THICKNESS / 2, capWidth: deckWidth, bearings: [-(deckWidth / 2 - 0.55), deckWidth / 2 - 0.55] };
     case "truss": return { w: Math.max(2.4, deckWidth * 0.26), d: 2.8, material: "pier", capWidth: deckWidth + 0.2, bearings: [-(deckWidth / 2 - 0.3), deckWidth / 2 - 0.3] };
-    case "arch": return { w: deckWidth + 0.4, d: 4.5, material: "pier", bearings: [] };
+    // the concrete arch springs from a block under each rib, the two tied by a cap
+    // beam under the deck (a deck-wide wall read as the arch balancing on a dam)
+    case "arch": return { w: ARCH_RIB_W + 1.0, d: 3.4, material: "pier", columns: [-(deckWidth / 2 - ARCH_RIB_INSET), deckWidth / 2 - ARCH_RIB_INSET], capWidth: deckWidth - 0.2, bearings: [] };
     case "stone_arch": return { w: deckWidth + 0.4, d: 4.5, material: "stone", cutwaterTop: masonryArchSpringY(spanLength) };
     case "brick_arch": return { w: deckWidth + 0.4, d: 4.5, material: "brick", cutwaterTop: masonryArchSpringY(spanLength) };
     case "network_arch":
@@ -828,11 +831,12 @@ const buildCantilever: Builder = (out, g, opts, heightAt) => {
 // with a cap beam under the slab; struts between the ribs at every other pair.
 // The ribs' TOP meets the deck's underside at the crown (measured from their
 // bottom, the old single rib stood a thickness proud and broke through the deck).
+const ARCH_RIB_W = 1.4, ARCH_RIB_INSET = 1.2;
 const buildArch: Builder = (out, g) => {
   buildPathDeck(out, g);
   buildPathParapets(out, g);
-  const ARCH_DEPTH = Math.min(g.length * 0.3, 16), RIB_W = 1.4, COLUMN = 0.8;
-  const ribX = g.deckWidth / 2 - 1.2;
+  const ARCH_DEPTH = Math.min(g.length * 0.3, 16), RIB_W = ARCH_RIB_W, COLUMN = 0.8;
+  const ribX = g.deckWidth / 2 - ARCH_RIB_INSET;
   const deckBottom = -DECK_THICKNESS / 2;
   const archTopY = (t: number): number => deckBottom - ARCH_DEPTH * (2 * t - 1) * (2 * t - 1);
   const ribDepth = (t: number): number => 1.0 + 0.8 * (2 * t - 1) * (2 * t - 1);
@@ -895,7 +899,7 @@ const makeArchMasonry = (masonry: BridgeMaterial): Builder => (out, g) => {
   // the barrel vault between the two faces, its underside flush with the band's:
   // without it the arch was two face walls, open to the deck from below
   const innerHalf = sideX - (FACE + 0.18) / 2;
-  pushWall(out, g, distances, 0, 2 * innerHalf, bandBottoms, openTops, masonry);
+  pushWall(out, g, distances, 0, 2 * innerHalf, bandBottoms, openTops, masonry, "detail"); // unseen from afar
   // a keystone at the crown, standing proud of the band on both faces
   const crown = openingTopY(0.5);
   for (const sx of [sideX, -sideX]) pushBox(out, g, g.length / 2, sx, crown - ARCH_BAND / 2 + 0.25, { x: FACE + 0.4, y: ARCH_BAND + 0.5, z: 1.1 }, masonry);
@@ -1017,32 +1021,60 @@ const buildSuspension: Builder = (out, g, _opts, heightAt) => {
 
 // Each tower fans its stays out over half of each neighbouring main span (to meet
 // the next tower's) and over its back span to the abutment; the outermost stay
-// leaves the top, the inner ones a little lower down the leg each.
+// leaves the top, the inner ones a little lower down each time.
+//
+// The pylon is an H (`cable_stayed`: two legs beside the deck, a crossbeam on top,
+// the stays in two vertical planes from the legs) or an inverted Y
+// (`cable_stayed_y`): the legs stand upright beside the deck to a knee above the
+// wire envelope -- so a cross-span wire between them still finds two verticals --
+// then lean in to one mast over the deck's centre, whose stays fan down to both
+// deck edges in two inclined planes.
 const STAY_SPACING = 4;
-const buildCableStayed: Builder = (out, g, _opts, heightAt) => {
+const makeCableStayed = (type: "cable_stayed" | "cable_stayed_y"): Builder => (out, g, _opts, heightAt) => {
   buildPathDeck(out, g);
-  const towers = cableTowerDistances("cable_stayed", g.length);
-  const main = cableMainSpan("cable_stayed", g.length);
+  const towers = cableTowerDistances(type, g.length);
+  const main = cableMainSpan(type, g.length);
   const sideX = cableStayedTowerHalfWidth(g.deckWidth);
   buildPathPiers(out, g, heightAt, towers.map((d) => d / g.length), { ...boundaryPierStyle("cable_stayed", g.deckWidth, main), w: 3, d: 3 });
   pushCableGirders(out, g, sideX, "deck");
-  const TOWER_HEIGHT = cableStayedTowerHeight(main, g.clearanceY), TOWER_WIDTH = CABLE_STAYED_TOWER_WIDTH;
+  const TOWER_WIDTH = CABLE_STAYED_TOWER_WIDTH;
+  const y = type === "cable_stayed_y";
+  const kneeY = g.clearanceY + 2, mergeY = kneeY + sideX * 1.2;
+  const TOWER_HEIGHT = y ? Math.max(cableStayedTowerHeight(main, g.clearanceY), mergeY + 7 - DECK_THICKNESS / 2) : cableStayedTowerHeight(main, g.clearanceY);
   const towerTopY = DECK_THICKNESS / 2 + TOWER_HEIGHT;
-  for (const d of towers) pushCableTower(out, g, d, sideX, TOWER_WIDTH, TOWER_HEIGHT);
+  for (const d of towers) {
+    if (!y) { pushCableTower(out, g, d, sideX, TOWER_WIDTH, TOWER_HEIGHT); continue; }
+    const bottomY = -DECK_THICKNESS / 2 - 0.3;
+    for (const sx of [sideX, -sideX]) {
+      out.push({ shape: "box", center: pathWorldPoint(g, d, sx, (bottomY + kneeY) / 2), size: { x: TOWER_WIDTH * 1.25, y: kneeY - bottomY, z: TOWER_WIDTH * 1.25 }, yaw: pathYaw(g, d), material: "tower", part: "frame", topScale: 0.85 });
+      pushStrut(out, pathWorldPoint(g, d, sx, kneeY - 0.4), pathWorldPoint(g, d, Math.sign(sx) * 0.5, mergeY + 0.4), TOWER_WIDTH * 0.95, "tower", "frame");
+    }
+    // the strut at the knee, its underside clear above the wires
+    pushStrut(out, pathWorldPoint(g, d, -sideX, kneeY), pathWorldPoint(g, d, sideX, kneeY), 1.2, "tower", "frame");
+    out.push({ shape: "box", center: pathWorldPoint(g, d, 0, (mergeY + towerTopY) / 2), size: { x: TOWER_WIDTH * 1.2, y: towerTopY - mergeY, z: TOWER_WIDTH * 1.2 }, yaw: pathYaw(g, d), material: "tower", part: "frame", topScale: 0.75 });
+  }
   towers.forEach((td, i) => {
     for (const dir of [-1, 1]) {
       const end = dir < 0 ? (i === 0 ? 1 : td - main / 2) : (i === towers.length - 1 ? g.length - 1 : td + main / 2);
       const reach = Math.abs(end - td);
       const n = Math.max(4, Math.round(reach / STAY_SPACING));
+      const lowest = mergeY + 1.5;
       for (let k = 0; k < n; k++) {
         const f = 0.2 + (0.78 * k) / Math.max(1, n - 1);
         const deckD = td + dir * reach * f;
-        const legY = towerTopY - TOWER_WIDTH * 1.2 - (n - 1 - k) * Math.min(0.7, (TOWER_HEIGHT * 0.3) / n);
-        for (const sx of [sideX, -sideX]) pushStrut(out, pathWorldPoint(g, td, sx, legY), pathWorldPoint(g, deckD, sx, CABLE_GIRDER_TOP), 0.16, "cable", k === 0 || k === n - 1 ? "frame" : "detail");
+        const top = towerTopY - TOWER_WIDTH * 1.2;
+        // H: each inner stay 0.7 lower down the leg (at most 30% of the tower in
+        // all); Y: spread down the mast to just above where the legs join
+        const anchorY = y
+          ? top - ((n - 1 - k) / Math.max(1, n - 1)) * Math.min(top - lowest, n * 0.7)
+          : top - (n - 1 - k) * Math.min(0.7, (TOWER_HEIGHT * 0.3) / n);
+        for (const sx of [sideX, -sideX]) pushStrut(out, pathWorldPoint(g, td, y ? 0 : sx, anchorY), pathWorldPoint(g, deckD, sx, CABLE_GIRDER_TOP), 0.16, "cable", k === 0 || k === n - 1 ? "frame" : "detail");
       }
     }
   });
 };
+const buildCableStayed = makeCableStayed("cable_stayed");
+const buildCableStayedY = makeCableStayed("cable_stayed_y");
 
 // A through plate girder: a deep steel girder along each deck edge -- it is the
 // railing too, so there is no concrete parapet -- a quarter of its depth below the
@@ -1200,8 +1232,49 @@ const buildTimberTrestle: Builder = (out, g, _opts, heightAt) => {
 const BUILDERS: Record<string, Builder> = {
   plate_girder: buildPlateGirder, timber_trestle: buildTimberTrestle, box_girder: buildBoxGirder, deck_truss: buildDeckTruss, network_arch: buildNetworkArch,
   beam: buildBeam, truss: buildTruss, cantilever: buildCantilever, arch: buildArch,
-  stone_arch: buildStoneArch, brick_arch: buildBrickArch, tied_arch: buildTiedArch, suspension: buildSuspension, cable_stayed: buildCableStayed,
+  stone_arch: buildStoneArch, brick_arch: buildBrickArch, tied_arch: buildTiedArch, suspension: buildSuspension, cable_stayed: buildCableStayed, cable_stayed_y: buildCableStayedY,
 };
+
+// --- the distant level -------------------------------------------------------
+//
+// What a bridge keeps far away: its deck, its supports and the frame that makes its
+// silhouette (the part tags), every swept section thinned to the points that still
+// bend it -- Ramer-Douglas-Peucker over the centreline, and for a wall its opening
+// heights too, so a straight centreline cannot flatten a masonry arch. Details
+// (cornices, copings, web members, hangers, inner stays) and untagged parapets go.
+
+/** The indices of `points` (any dimension) that keep every other within `tolerance` of the chords. */
+export function simplifyIndices(points: number[][], tolerance: number): number[] {
+  if (points.length <= 2) return points.map((_, i) => i);
+  const keep = new Set([0, points.length - 1]);
+  const stack: Array<[number, number]> = [[0, points.length - 1]];
+  while (stack.length) {
+    const [a, b] = stack.pop()!;
+    const pa = points[a]!, pb = points[b]!;
+    const delta = pb.map((v, k) => v - pa[k]!);
+    const lenSq = delta.reduce((sum, v) => sum + v * v, 0);
+    let best = tolerance * tolerance, index = -1;
+    for (let i = a + 1; i < b; i++) {
+      const pi = points[i]!;
+      const t = lenSq ? Math.max(0, Math.min(1, delta.reduce((sum, v, k) => sum + v * (pi[k]! - pa[k]!), 0) / lenSq)) : 0;
+      const d = pi.reduce((sum, v, k) => sum + (v - pa[k]! - t * delta[k]!) ** 2, 0);
+      if (d > best) { best = d; index = i; }
+    }
+    if (index >= 0) { keep.add(index); stack.push([a, index], [index, b]); }
+  }
+  return [...keep].sort((x, y) => x - y);
+}
+
+/** A bridge's distant level: its deck, supports and frame, every sweep thinned (the game draws this far away). */
+export function lowDetailBoxes(boxes: BridgeBox[]): BridgeBox[] {
+  return boxes.filter((b) => b.part === "deck" || b.part === "support" || b.part === "frame").map((b): BridgeBox => {
+    if (b.shape !== "ribbon" && b.shape !== "wall") return b;
+    const samples = b.points.map((p, i) => (b.shape === "wall" ? [p.x, p.y, p.z, b.bottoms[i]!, b.tops[i]!] : [p.x, p.y, p.z]));
+    const indices = simplifyIndices(samples, b.part === "deck" ? 0.12 : 0.45);
+    const points = indices.map((i) => b.points[i]!);
+    return b.shape === "wall" ? { ...b, points, bottoms: indices.map((i) => b.bottoms[i]!), tops: indices.map((i) => b.tops[i]!) } : { ...b, points };
+  });
+}
 
 /**
  * Every box of a `type` bridge along `g` over the terrain `heightAt`. A type with a

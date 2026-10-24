@@ -115,4 +115,26 @@ describe("the bridge kit", () => {
       if (type === "truss") expect(boxes.some((b) => b.shape === "strut" && Math.abs(b.a.x) < 1e-6 && Math.abs(b.b.x) < 1e-6 && b.b.y - b.a.y > 5)).toBe(false);
     }
   });
+
+  it("keeps the Y pylon's converging stays clear of a lone track up to the wires", () => {
+    // the game's clearance (railhead + messenger + margin, deck-local); a stay may
+    // come no nearer than 1.5 studs to the centreline track anywhere below it
+    const clearanceY = 13.16, deckCentre = 30 + 0.67 - bridge.DECK_THICKNESS / 2;
+    for (const length of [60, 160, 300]) {
+      const path = bridge.pathFromPoints([{ x: 0, y: 30, z: 0 }, { x: length, y: 30, z: 0 }], 9, 0, 0.67, clearanceY)!;
+      const stays = bridge.buildBridge("cable_stayed_y", path, () => 0).filter((b) => b.shape === "strut" && b.material === "cable");
+      expect(stays.length).toBeGreaterThan(0);
+      for (const st of stays) {
+        if (st.shape !== "strut") continue;
+        const [hi, lo] = st.a.y > st.b.y ? [st.a, st.b] : [st.b, st.a];
+        for (let k = 0; k <= 20; k++) {
+          const p = { y: lo.y + ((hi.y - lo.y) * k) / 20, z: lo.z + ((hi.z - lo.z) * k) / 20 };
+          if (p.y - deckCentre <= clearanceY) expect(Math.abs(p.z), `${length} at y ${p.y}`).toBeGreaterThanOrEqual(1.5);
+        }
+      }
+      // the legs stand upright to above the wires: a span member's verticals
+      const members = bridge.overheadMembers("cable_stayed_y", length, 9, clearanceY);
+      expect(members.every((m) => m.kind === "span")).toBe(true);
+    }
+  });
 });

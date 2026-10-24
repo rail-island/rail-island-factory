@@ -95,8 +95,8 @@ A texture page is a slab and a block faced with the photo at four studs a repeat
 
 The previews pass every design's checks (`test/catalogSweep.ts`): JS as in the generator, no
 coplanar faces of two materials, the lowest point on the ground, a LOD within its budget (500
-triangles; 12,000 for dams, decorations and blocks, whose distant level is still a drawing of
-several parts). A preview's JS, which carries its set module and is never exported to the game,
+triangles; 3,000 for bridges, whose distant level is the set module's silhouette; 12,000 for
+dams, decorations and blocks, whose distant level is still a drawing of several parts). A preview's JS, which carries its set module and is never exported to the game,
 is held to 48 KB or its GLBs. `test/previews.test.ts` holds every set type, block type and photo
 set to exactly one page, in its category and bound to it, and the preview parameters to the
 fixtures.

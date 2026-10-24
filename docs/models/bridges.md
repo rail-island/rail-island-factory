@@ -45,13 +45,14 @@ meets its neighbours exactly - where the renderer's mitred sweep puts the deck. 
 | `truss` | framed | 64 | Pratt through truss: inclined end posts with portal frames, verticals, diagonals sloping down toward mid-span, a polygonal (Parker) top chord rising up to 4 studs on spans over 40, a crossbeam at every top node with X bracing between | concrete at span boundaries only |
 | `deck_truss` | framed | 65 | Warren truss with verticals under the deck, a cross frame between the trusses at every other panel point and X bracing in the bottom plane | concrete under the truss |
 | `timber_trestle` | framed | - | plank deck on two stringers and a post-and-rail guard; a bent every ~8 studs of two plumb and two battered posts on footings under a cap, X braced in stories of 10 studs with girts at the story lines and along the bridge at the first one | the bents |
-| `arch` | framed | 80 | concrete deck arch: two ribs thickening toward the springings, pairs of spandrel columns every ~5 studs with a cap beam under the slab, struts between the ribs | full-width concrete abutments |
+| `arch` | framed | 80 | concrete deck arch: two ribs thickening toward the springings, pairs of spandrel columns every ~5 studs with a cap beam under the slab, struts between the ribs | a concrete block under each rib, the two tied by a cap beam (`PierSpec.columns`) |
 | `stone_arch`, `brick_arch` | framed | 28 | masonry arches: spandrel walls, arch bands with a keystone, barrel vault | masonry, with cutwaters and pilasters between arches |
 | `cantilever` | signature | 90 | Forth-fashion: towers at the quarters (two splayed legs a side, X braced, a crossbeam with knee braces on top), anchor arms back to the span's ends and cantilever arms out to 0.4 of the span, deepest at the towers (a straight top chord, a bottom chord curving up from the tower foot), N webs, a Warren suspended span under the slab between the arm tips | under the towers, and anchor piers at span boundaries |
 | `tied_arch` | signature | 100 | box-section steel arches springing from knuckles on tie girders along the deck edges, a hanger about every 4 studs, transverse struts above the wires with X bracing between them | concrete at span boundaries |
 | `network_arch` | signature | 100 | as `tied_arch` with crossing hangers | concrete at span boundaries |
 | `suspension` | signature | 140 (main span) | towers, main cables, hangers, stiffening girders, anchor blocks | under the towers |
-| `cable_stayed` | signature | 120 (main span) | towers, fans of stays, edge girders | under the towers |
+| `cable_stayed` | signature | 120 (main span) | H towers (two tapering legs beside the deck, a crossbeam on top), a fan of stays from each leg every 4 studs, edge girders | under the towers |
+| `cable_stayed_y` | signature | 120 (main span) | inverted-Y towers: the legs upright beside the deck to a knee 2 studs over the wire envelope (a strut there), leaning in above it to one mast over the deck's centre, whose stays fan down to both deck edges in two inclined planes; edge girders | under the towers |
 
 A type the module does not know builds as `beam`.
 
@@ -114,8 +115,15 @@ same lateral frame as the mesh.
 `part` decides what each level keeps: `deck` (the slab), `support` (piers, footings, caps,
 bents, anchor blocks), `frame` (the silhouette: girders, chords, arches, towers, cables, walls,
 outer stays) and `detail` (cornices, copings, stiffeners, web members, hangers, inner stays).
-A middle level keeps everything but `detail`. The distant level is the deck and at most sixteen
-of the ground boxes (`bridgePreviewLod` on the site; the game builds its own).
+A middle level keeps everything but `detail`.
+
+**The distant level** is the module's too: `lowDetailBoxes(boxes)` keeps the `deck`, `support`
+and `frame` boxes and thins every sweep to the points that still bend it (`simplifyIndices`,
+Ramer-Douglas-Peucker over the centreline - for a wall with its opening heights, so a straight
+centreline cannot flatten a masonry arch - at 0.12 studs for the deck, 0.45 for the rest).
+The game draws it far away and the site's distant preview is the same function, so the two
+cannot drift apart. Untagged parapets and every `detail` box (the masonry vault, keystones,
+web members, hangers) go.
 
 ## Triangle budgets
 
@@ -128,9 +136,12 @@ plus an allowance for its two ends. Triangles are counted as the site draws them
 | plain | 2,000 | 1,000 | 2,200 | 4,200 | 9,000 |
 | framed | 4,000 | 1,000 | 3,400 | 7,400 | 17,000 |
 | signature | 6,000 | 1,500 | 5,100 | 11,100 | 25,500 |
+| distant level (every tier) | 1,500 | 500 | 1,400 | 2,900 | 6,500 |
 
 For scale: a 160-stud (107 m) bridge stays within one row house (10,000) for the plain and
-framed tiers and about one rail vehicle (15,000) for a signature bridge.
+framed tiers and about one rail vehicle (15,000) for a signature bridge. The distant level is
+also held to 65% of the full level; it keeps far more than a vehicle's 100 triangles a car
+because it is the bridge's silhouette - its arches, towers and truss outline - not a box.
 
 The cap holds on every fixture of `test/bridgeBudget.test.ts`: straight crossings of 60, 160 and
 400 studs 30 studs over flat ground (single track, and a road deck on the longest), and a
@@ -148,13 +159,14 @@ Current counts (single track; the 400-stud road deck costs at most a fifth more)
 | truss | 1,364 | 3,484 | 7,988 | 5,044 |
 | deck_truss | 1,400 | 3,592 | 9,164 | 7,024 |
 | timber_trestle | 2,400 | 5,592 | 13,464 | 7,152 |
-| arch | 928 | 2,366 | 5,792 | 4,494 |
+| arch | 952 | 2,402 | 5,864 | 4,530 |
 | stone_arch, brick_arch | 2,000 | 4,706 | 11,744 | 6,834 |
 | cantilever | 1,972 | 4,318 | 10,636 | 6,446 |
 | tied_arch | 1,156 | 2,446 | 5,266 | 3,966 |
 | network_arch | 1,492 | 3,358 | 7,570 | 4,878 |
 | suspension | 888 | 1,872 | 4,278 | 4,024 |
 | cable_stayed | 632 | 1,208 | 2,836 | 2,768 |
+| cable_stayed_y | 704 | 1,280 | 2,980 | 2,840 |
 
 The distant level is held to the previews' 500 triangles ([previews.md](previews.md)).
 
@@ -171,7 +183,8 @@ and messenger wire per track for a railway, a trolley wire for a tram - are fixe
 planner fixes them: a drop from each `point` member, a cross-span wire between each `span`
 member's verticals, and where a type has no members, railway masts (a portal over more than one
 track) or tram poles on the deck inside the parapets, every 30 studs. The distant level draws
-the bridge only.
+the bridge only (`lowDetailBoxes`). The fixture's clearance is the game's: the railhead 1.528
+over the path, the messenger wire 10.6 over it and 1.3 of margin, deck-local about 13.16.
 
 ## Checks
 

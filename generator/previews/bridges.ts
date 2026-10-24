@@ -44,8 +44,11 @@ const DECKS: Record<string, DeckSpec> = {
   narrowroad: { width: 10, shift: 0, road: { plain: "narrow_asphalt", tram: "narrow_asphalt_tram" } },
   road: { width: 18, shift: 0, road: { plain: "wide_asphalt", tram: "wide_asphalt_tram" } },
 };
-// the game's deck support height (the ballast bed's underside) and the overhead-wire clearance
-const SUPPORT_Y = 0.67, CLEARANCE_Y = 9.9;
+// the game's deck support height (the ballast bed's underside) and its overhead-wire
+// clearance, deck-local: the railhead (1.528 over the path, 0.67 of it below the deck
+// top, the slab 0.4 above its centre) + the messenger wire (10.6) + 1.3 of margin
+// (webapp core/rail/Bridge.ts OVERHEAD_CLEARANCE_Y)
+const SUPPORT_Y = 0.67, CLEARANCE_Y = 1.528 - 0.67 + 0.4 + 10.6 + 1.3;
 
 // the game's bridge colours and the surface each material draws with
 const COLORS: Record<bridge.BridgeMaterial, Rgb> = {
@@ -170,14 +173,6 @@ function draw(s: Sketch, list: readonly bridge.BridgeBox[]): void {
   }
 }
 
-/** The distant bridge: its deck, and at most sixteen of the piers it stands on. */
-function lod(list: readonly bridge.BridgeBox[]): bridge.BridgeBox[] {
-  const deck = list.filter((b) => b.part === "deck").map((b) => (b.shape === "ribbon" ? { ...b, points: [b.points[0]!, b.points[b.points.length - 1]!] } : b));
-  const piers = list.filter((b) => b.ground);
-  const step = Math.max(1, Math.ceil(piers.length / 16));
-  return [...deck, ...piers.filter((_, i) => i % step === 0)];
-}
-
 /** Any list of bridge boxes drawn as the previews draw them (the budget test counts these). */
 export function bridgeMesh(list: readonly bridge.BridgeBox[]): MeshBuilder {
   const s = new Sketch();
@@ -193,6 +188,6 @@ export function bridgePreview(values: ParamValues | undefined, type: string): Me
 }
 export function bridgePreviewLod(values: ParamValues | undefined, type: string): MeshBuilder {
   const s = new Sketch();
-  draw(s, lod(fixture(values, type).list));
+  draw(s, bridge.lowDetailBoxes(fixture(values, type).list));
   return s.build("bridge");
 }
