@@ -590,11 +590,13 @@ const buildArch: Builder = (out, g) => {
   buildPathParapets(out, g);
   const ARCH_DEPTH = Math.min(g.length * 0.3, 16), ARCH_THICKNESS = 1.2, ARCH_WIDTH = g.deckWidth * 0.9, PILLAR_WIDTH = 0.8;
   const deckBottom = -DECK_THICKNESS / 2;
-  const archBottomY = (t: number) => deckBottom - ARCH_DEPTH * (2 * t - 1) * (2 * t - 1);
-  pushCurve(out, g, 0, (t) => archBottomY(t) + ARCH_THICKNESS / 2, ARCH_WIDTH, ARCH_THICKNESS, "pier");
+  // the rib's TOP meets the deck's underside at the crown: measured from its
+  // bottom, the rib stood a thickness proud there and broke through the deck
+  const archTopY = (t: number) => deckBottom - ARCH_DEPTH * (2 * t - 1) * (2 * t - 1);
+  pushCurve(out, g, 0, (t) => archTopY(t) - ARCH_THICKNESS / 2, ARCH_WIDTH, ARCH_THICKNESS, "pier");
   for (let i = 1; i <= 17; i++) {
     const t = i / 18, distance = g.length * t;
-    const archTop = archBottomY(t) + ARCH_THICKNESS;
+    const archTop = archTopY(t);
     const fillH = deckBottom - archTop;
     if (fillH > 0.2) {
       const fillY = (archTop + deckBottom) / 2;
@@ -641,6 +643,10 @@ const makeArchMasonry = (masonry: BridgeMaterial): Builder => (out, g) => {
     // arch band tracing the opening, slightly proud of the wall face
     pushWall(out, g, distances, sx, FACE + 0.18, bandBottoms, openTops, masonry);
   }
+  // the barrel vault between the two faces, its underside flush with the band's:
+  // without it the arch was two face walls, open to the deck from below
+  const innerHalf = sideX - (FACE + 0.18) / 2;
+  pushWall(out, g, distances, 0, 2 * innerHalf, bandBottoms, openTops, masonry);
 };
 const buildStoneArch = makeArchMasonry("stone");
 const buildBrickArch = makeArchMasonry("brick");

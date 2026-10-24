@@ -53,8 +53,12 @@ function draw(s: Sketch, list: readonly bridge.BridgeBox[]): void {
     if (b.shape === "box") s.box(mat, { cx: b.center.x, cy: b.center.y, cz: b.center.z, sx: b.size.x, sy: b.size.y, sz: b.size.z, yaw: b.yaw, topScale: b.topScale });
     else if (b.shape === "span") s.span(mat, v3(b.a), v3(b.b), b.w, b.h);
     else if (b.shape === "strut") s.bar(mat, v3(b.a), v3(b.b), b.thick);
-    else if (b.shape === "wall") s.wall(mat, b.points.map(v3), b.u0, b.u1, b.bottoms, b.tops);
-    else s.sweep(mat, b.points.map(v3), b.profile.map((q) => [q.u, q.v] as const));
+    // The module's sections run along the game's sweep perpendicular, (tz, -tx);
+    // the sketch sweeps along (-tz, tx), so every lateral offset flips on the way
+    // in (and a profile's order with it, to stay counter-clockwise). Unflipped, a
+    // recentred deck -- two tracks -- was drawn on the wrong side of its piers.
+    else if (b.shape === "wall") s.wall(mat, b.points.map(v3), -b.u1, -b.u0, b.bottoms, b.tops);
+    else s.sweep(mat, b.points.map(v3), b.profile.map((q) => [-q.u, q.v] as const).reverse());
   }
 }
 

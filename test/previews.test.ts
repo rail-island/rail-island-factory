@@ -58,4 +58,12 @@ describe("the preview designs", () => {
     expect(beam.build.name).toBe(arch.build.name);
     expect(beam.build().triangleCount()).not.toBe(arch.build().triangleCount());
   });
+
+  it("draw a recentred bridge deck over its own piers and girders", () => {
+    // two tracks: a 17-stud deck recentred 4 studs to +z over a path along x
+    const girder = PREVIEW_DESIGNS.find((d) => d.id === "proc-preview-bridge-plate-girder")!;
+    const z = girder.build({ deck: "double" }).positions().filter((_, i) => i % 3 === 2);
+    expect(Math.min(...z)).toBeGreaterThan(4 - 17 / 2 - 0.5);
+    expect(Math.max(...z)).toBeLessThan(4 + 17 / 2 + 0.5);
+  });
 });

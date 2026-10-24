@@ -25,4 +25,24 @@ describe("the bridge kit", () => {
       }
     }
   });
+
+  it("keeps the concrete arch's rib under the deck at its crown", () => {
+    const path = bridge.pathFromPoints([{ x: 0, y: 12, z: 0 }, { x: 60, y: 12, z: 0 }], 9, 0, 0.67, 9.9)!;
+    const deckBottom = 12 + 0.67 - bridge.DECK_THICKNESS;
+    const rib = bridge.buildBridge("arch", path, () => 0).filter((b) => b.shape === "ribbon" && b.part !== "deck" && b.material === "pier");
+    expect(rib.length).toBeGreaterThan(0);
+    for (const b of rib) {
+      if (b.shape !== "ribbon") continue;
+      const top = Math.max(...b.points.map((p) => p.y)) + Math.max(...b.profile.map((q) => q.v));
+      expect(top).toBeLessThanOrEqual(deckBottom + 1e-6);
+    }
+  });
+
+  it("closes a masonry arch's underside between its two faces", () => {
+    const path = bridge.pathFromPoints([{ x: 0, y: 20, z: 0 }, { x: 24, y: 20, z: 0 }], 9, 0, 0.67, 9.9)!;
+    for (const type of ["stone_arch", "brick_arch"]) {
+      const vault = bridge.buildBridge(type, path, () => 0).filter((b) => b.shape === "wall" && b.u0 < -2 && b.u1 > 2);
+      expect(vault.length, type).toBe(1);
+    }
+  });
 });
