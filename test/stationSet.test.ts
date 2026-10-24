@@ -107,3 +107,24 @@ describe("station set: geometry", () => {
     });
   }
 });
+
+describe("station set: end ramps", () => {
+  // the open-ended types run their platforms down to the terrain over their last
+  // 3.5 studs: nothing standing on the deck may stand over a ramp (a bench and the
+  // end masts once did)
+  const RAMPED = ["platforms_only", "platforms_shared", "cantilever_wings", "concourse", "village_depot", "heritage_canopy"];
+  const RAMP = 3.5;
+  for (const type of RAMPED) {
+    it(`${type}: keeps what stands on the deck off the ramps`, () => {
+      for (const tracks of TRACKS) for (const length of LENGTHS) {
+        for (const b of station.furnish(type, length, station.buildLayout(type, tracks))) {
+          if (["platform", "edge", "safety"].includes(b.material)) continue;
+          const { min, max } = bounds(b);
+          const standing = Math.abs(min[1]! - station.PLATFORM_HEIGHT) < 0.6;
+          const onRamp = Math.max(Math.abs(min[2]!), Math.abs(max[2]!)) > length / 2 - RAMP + 0.01;
+          if (standing && onRamp) throw new Error(`${type} ${tracks}x${length}: ${b.material} box at z=${b.cz.toFixed(2)} stands on a ramp`);
+        }
+      }
+    });
+  }
+});

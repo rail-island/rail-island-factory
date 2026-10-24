@@ -545,6 +545,57 @@ function buildDefaultDeck(length: number, layout: StationLayout): StationBox[] {
   return boxes;
 }
 
+// --- platform furniture ----------------------------------------------------
+// The fittings the roofed types share: hung boards and clocks, the island waiting
+// shelter, a bench with its bin.
+
+/** Two rods hanging `drop` down from `topY` at cx +- spread: what a board or clock hangs on. */
+function pushHangers(boxes: StationBox[], cx: number, z: number, topY: number, drop: number, spread: number): void {
+  for (const side of [-1, 1]) boxes.push({ cx: cx + side * spread, cy: topY - drop / 2, cz: z, sx: 0.08, sy: drop, sz: 0.08, color: STEEL_DARK, material: "steel" });
+}
+
+/** A departure board reading along the platform, lit on both faces. */
+function pushDepartureBoard(boxes: StationBox[], cx: number, cy: number, z: number, width = 2.6): void {
+  boxes.push({ cx, cy, cz: z, sx: width, sy: 0.9, sz: 0.24, color: STEEL_DARK, material: "steel" });
+  for (const f of [-1, 1]) boxes.push({ cx, cy, cz: z + f * 0.13, sx: width - 0.3, sy: 0.65, sz: 0.04, color: LIGHT_COLOR, material: "light" });
+}
+
+/** A clock with a dial on both faces, reading along the platform. */
+function pushTwoFacedClock(boxes: StationBox[], cx: number, cy: number, z: number, size: number): void {
+  pushClock(boxes, cx, cy, z, size, 1);
+  boxes.push({ cx, cy, cz: z - 0.23, sx: size * 0.84, sy: size * 0.84, sz: 0.08, color: WOOD_CREAM, material: "steel" });
+}
+
+/**
+ * A glass waiting shelter on an island, 5.5 studs long, standing on the -X side of
+ * the centreline (the underpass takes the +X side) and open to that side's track.
+ */
+function pushShelter(boxes: StationBox[], layout: StationLayout, cx: number, z: number): void {
+  const back = cx - 1.5;
+  const front = cx - 4.3;
+  const len = 5.5;
+  const roofY = PLATFORM_HEIGHT + 2.7;
+  boxes.push({ cx: back, cy: (PLATFORM_HEIGHT + roofY) / 2, cz: z, sx: 0.12, sy: roofY - PLATFORM_HEIGHT - 0.1, sz: len, color: GLASS_COLOR, material: "glass" });
+  for (const e of [-1, 1]) {
+    boxes.push({ cx: (back + front) / 2, cy: (PLATFORM_HEIGHT + roofY) / 2, cz: z + e * (len / 2), sx: back - front, sy: roofY - PLATFORM_HEIGHT - 0.1, sz: 0.12, color: GLASS_COLOR, material: "glass" });
+    for (const x of [back, front]) boxes.push({ cx: x, cy: (PLATFORM_HEIGHT + roofY) / 2, cz: z + e * (len / 2), sx: 0.16, sy: roofY - PLATFORM_HEIGHT, sz: 0.16, color: STEEL_DARK, material: "steel" });
+  }
+  boxes.push({ cx: (back + front) / 2 - 0.15, cy: roofY + 0.08, cz: z, sx: back - front + 0.6, sy: 0.16, sz: len + 0.4, color: STEEL_DARK, material: "steel" });
+  pushBench(boxes, layout, cx - 2.6, z, 1.1, len - 1.4, STEEL_DARK, "steel");
+}
+
+/** A bench at the band's centre with a litter bin beyond its +Z end. */
+function pushBenchWithBin(boxes: StationBox[], layout: StationLayout, cx: number, z: number, width = 1.6): void {
+  pushBench(boxes, layout, cx, z, width);
+  boxes.push({ cx, cy: PLATFORM_HEIGHT + 0.45, cz: z + 2.9, sx: 0.5, sy: 0.9, sz: 0.5, color: STEEL_DARK, material: "steel" });
+}
+
+/** `zs` snapped to the nearest of `slots`, without repeats. */
+function snapZs(zs: readonly number[], slots: readonly number[]): number[] {
+  if (slots.length === 0) return [];
+  return [...new Set(zs.map((t) => slots.reduce((best, z) => (Math.abs(z - t) < Math.abs(best - t) ? z : best))))];
+}
+
 // --- island platforms (free, redesigned) ----------------------------------
 // Tracks in pairs; every deck band carries a V-roof draining to its middle, on a
 // double row of columns with knee braces. Each slope has a glazed skylight band;
@@ -632,45 +683,26 @@ function buildIslandPlatforms(length: number, layout: StationLayout): StationBox
     }
     // a departure board and a clock hung from the cross beams
     if (halfW >= 3.5 && bays.length >= 3) {
-      const hang = (z: number, h: number) => {
-        for (const side of [-1, 1]) boxes.push({ cx: cx + side * 0.9, cy: beamY - 0.125 - 0.2, cz: z, sx: 0.08, sy: 0.4, sz: 0.08, color: STEEL_DARK, material: "steel" });
-        return beamY - 0.125 - 0.4 - h / 2;
-      };
+      const beamBottom = beamY - 0.125;
       const boardZ = nearest(bays, length / 6);
-      const dy = hang(boardZ, 0.9);
-      boxes.push({ cx, cy: dy, cz: boardZ, sx: 2.6, sy: 0.9, sz: 0.24, color: STEEL_DARK, material: "steel" });
-      for (const f of [-1, 1]) boxes.push({ cx, cy: dy, cz: boardZ + f * 0.13, sx: 2.3, sy: 0.65, sz: 0.04, color: LIGHT_COLOR, material: "light" });
+      pushHangers(boxes, cx, boardZ, beamBottom, 0.4, 0.9);
+      pushDepartureBoard(boxes, cx, beamBottom - 0.4 - 0.45, boardZ);
       const clockZ = nearest(bays, -length / 6);
       if (clockZ !== boardZ) {
-        const clockY = hang(clockZ, 1.1);
-        pushClock(boxes, cx, clockY, clockZ, 1.1, 1);
-        // the second dial, on the back
-        boxes.push({ cx, cy: clockY, cz: clockZ - 0.23, sx: 1.1 * 0.84, sy: 1.1 * 0.84, sz: 0.08, color: WOOD_CREAM, material: "steel" });
+        pushHangers(boxes, cx, clockZ, beamBottom, 0.4, 0.9);
+        pushTwoFacedClock(boxes, cx, beamBottom - 0.4 - 0.55, clockZ, 1.1);
       }
     }
 
     // a glass waiting shelter across from the underpass on an island, open to the
     // track on its side; benches down the middle elsewhere, each with a bin
     const island = band.row.type === "island" && halfW >= 5.5;
-    const shelterZs = island ? [...new Set((length < 100 ? [0] : [-length / 4, length / 4]).map((t) => nearest(bayMids, t)))] : [];
-    for (const z of shelterZs) {
-      const back = cx - 1.5;
-      const front = cx - 4.3;
-      const len = Math.min(5.5, ROOF_COLUMN_SPACING - 2);
-      const roofY = PLATFORM_HEIGHT + 2.7;
-      boxes.push({ cx: back, cy: (PLATFORM_HEIGHT + roofY) / 2, cz: z, sx: 0.12, sy: roofY - PLATFORM_HEIGHT - 0.1, sz: len, color: GLASS_COLOR, material: "glass" });
-      for (const e of [-1, 1]) {
-        boxes.push({ cx: (back + front) / 2, cy: (PLATFORM_HEIGHT + roofY) / 2, cz: z + e * (len / 2), sx: back - front, sy: roofY - PLATFORM_HEIGHT - 0.1, sz: 0.12, color: GLASS_COLOR, material: "glass" });
-        for (const x of [back, front]) boxes.push({ cx: x, cy: (PLATFORM_HEIGHT + roofY) / 2, cz: z + e * (len / 2), sx: 0.16, sy: roofY - PLATFORM_HEIGHT, sz: 0.16, color: STEEL_DARK, material: "steel" });
-      }
-      boxes.push({ cx: (back + front) / 2 - 0.15, cy: roofY + 0.08, cz: z, sx: back - front + 0.6, sy: 0.16, sz: len + 0.4, color: STEEL_DARK, material: "steel" });
-      pushBench(boxes, layout, cx - 2.6, z, 1.1, len - 1.4, STEEL_DARK, "steel");
-    }
+    const shelterZs = island ? snapZs(length < 100 ? [0] : [-length / 4, length / 4], bayMids) : [];
+    for (const z of shelterZs) pushShelter(boxes, layout, cx, z);
     if (halfW > 3) {
       for (const z of benchZs) {
         if (shelterZs.some((sz) => Math.abs(sz - z) < 5)) continue;
-        pushBench(boxes, layout, cx, z, 1.6);
-        boxes.push({ cx, cy: PLATFORM_HEIGHT + 0.45, cz: z + 2.9, sx: 0.5, sy: 0.9, sz: 0.5, color: STEEL_DARK, material: "steel" });
+        pushBenchWithBin(boxes, layout, cx, z);
       }
     }
   }
@@ -993,20 +1025,50 @@ function buildCantileverWings(length: number, layout: StationLayout): StationBox
   const zLen = length - 4;
   const headY = PLATFORM_HEIGHT + WING_MAST_HEIGHT;
   const clearY = PLATFORM_HEIGHT + ROOF_HEIGHT;
-  const bays = bayPositions(length, 12);
+  // the masts stand on the level deck, their footings clear of the end ramps
+  const bays = bayPositions(length - 2, 12);
   const bands = deckBands(layout, false);
+
+  const nearest = (zs: readonly number[], target: number) => zs.reduce((best, z) => (Math.abs(z - target) < Math.abs(best - target) ? z : best));
+  const bayMids = bays.slice(1).map((z, i) => (z + bays[i]!) / 2);
+  const benchZs = bayMids.filter((z) => Math.abs(z) <= length / 2 - RAMP_LENGTH - 3);
+  const mastSplit = PLATFORM_HEIGHT + (headY - PLATFORM_HEIGHT) * 0.55;
 
   for (const band of bands) {
     const mastX = band.centerX;
+    const halfW = (band.maxX - band.minX) / 2;
+    // tapering masts: a footing, a stout lower shaft, a collar, a slimmer upper one
     for (const z of bays) {
-      boxes.push({ lod: "support", cx: mastX, cy: (PLATFORM_HEIGHT + headY) / 2, cz: z, sx: 0.85, sy: headY - PLATFORM_HEIGHT, sz: 0.85, color: STEEL_DARK, material: "steel" });
+      boxes.push({ cx: mastX, cy: PLATFORM_HEIGHT + 0.25, cz: z, sx: 1.4, sy: 0.5, sz: 1.4, color: CONCRETE_LIGHT, material: "platform" });
+      boxes.push({ lod: "support", cx: mastX, cy: (PLATFORM_HEIGHT + mastSplit) / 2, cz: z, sx: 0.95, sy: mastSplit - PLATFORM_HEIGHT, sz: 0.95, color: STEEL_DARK, material: "steel" });
+      boxes.push({ lod: "support", cx: mastX, cy: (mastSplit + headY) / 2, cz: z, sx: 0.72, sy: headY - mastSplit, sz: 0.72, color: STEEL_DARK, material: "steel" });
+      boxes.push({ cx: mastX, cy: mastSplit, cz: z, sx: 1.1, sy: 0.3, sz: 1.1, color: STEEL_WHITE, material: "steel" });
     }
     boxes.push({ lod: "shell", cx: mastX, cy: headY - 0.5, cz: 0, sx: 1.2, sy: 0.9, sz: zLen, color: STEEL_DARK, material: "steel" });
-    // LED strip along each platform edge
-    for (const sgn of [-1, 1]) {
-      const edgeX = sgn < 0 ? band.minX : band.maxX;
-      if (!(sgn < 0 ? band.edgeLeft : band.edgeRight)) continue;
-      boxes.push({ cx: edgeX - sgn * 0.6, cy: headY - 1.4, cz: 0, sx: 0.5, sy: 0.18, sz: Math.max(4, zLen - 6), color: LIGHT_COLOR, material: "light" });
+    // a departure board and a clock on brackets on two masts, at eye level, read
+    // along the platform
+    if (halfW >= 3 && bays.length >= 3) {
+      const boardZ = nearest(bays, length / 6);
+      const clockZ = nearest(bays, -length / 6);
+      for (const f of [-1, 1]) {
+        boxes.push({ cx: mastX, cy: PLATFORM_HEIGHT + 4.35, cz: boardZ + f * 0.55, sx: 0.4, sy: 0.3, sz: 0.2, color: STEEL_WHITE, material: "steel" });
+        boxes.push({ cx: mastX, cy: PLATFORM_HEIGHT + 3.75, cz: boardZ + f * 0.75, sx: 2.0, sy: 0.9, sz: 0.2, color: STEEL_DARK, material: "steel" });
+        boxes.push({ cx: mastX, cy: PLATFORM_HEIGHT + 3.75, cz: boardZ + f * 0.87, sx: 1.75, sy: 0.65, sz: 0.04, color: LIGHT_COLOR, material: "light" });
+      }
+      if (clockZ !== boardZ) {
+        for (const f of [-1, 1]) {
+          boxes.push({ cx: mastX, cy: PLATFORM_HEIGHT + 4.35, cz: clockZ + f * 0.55, sx: 0.4, sy: 0.3, sz: 0.2, color: STEEL_WHITE, material: "steel" });
+          pushClock(boxes, mastX, PLATFORM_HEIGHT + 3.75, clockZ + f * 0.85, 1.0, f);
+        }
+      }
+    }
+    // islands: a glass waiting shelter across from the underpass, benches with bins
+    // between the masts
+    const island = band.row.type === "island" && halfW >= 5.5;
+    const shelterZs = island ? snapZs(length < 100 ? [0] : [-length / 4, length / 4], bayMids) : [];
+    for (const z of shelterZs) pushShelter(boxes, layout, mastX, z);
+    if (island) {
+      for (const z of benchZs) if (!shelterZs.some((sz) => Math.abs(sz - z) < 5)) pushBenchWithBin(boxes, layout, mastX, z, 1.3);
     }
   }
 
@@ -1055,20 +1117,21 @@ function buildCantileverWings(length: number, layout: StationLayout): StationBox
       // fascia at the wing tip, never below the clearance line
       const fasciaY = Math.max(wingY(wingInner) - 0.4, clearY + 0.45);
       boxes.push({ lod: "shell", cx: wingInner, cy: fasciaY, cz: 0, sx: 0.35, sy: 0.8, sz: zLen, color: STEEL_DARK, material: "steel" });
-      // name board hung under the wing over the platform edge, at both ends
+      // the underside of the solid wing at x
+      const under = (x: number) => wingY(x) - 0.175 / Math.cos(tilt);
+      // name board hung under the wing over the platform, at both ends: framed top
+      // and bottom, on two rods from the wing
       const boardX = mastX + dir * 1.4;
+      const boardLen = Math.min(10, length * 0.15);
       for (const zs of [-1, 1]) {
-        boxes.push({
-          cx: boardX,
-          cy: wingY(boardX) - 2.4,
-          cz: zs * Math.max(2, zLen / 2 - 8),
-          sx: 0.35,
-          sy: 1.8,
-          sz: Math.min(10, length * 0.15),
-          color: SIGN_COLOR,
-          material: "sign",
-          label: true,
-        });
+        const bz = zs * Math.max(2, zLen / 2 - 8);
+        const top = under(boardX) - 1.5;
+        boxes.push({ cx: boardX, cy: top - 0.9, cz: bz, sx: 0.35, sy: 1.8, sz: boardLen, color: SIGN_COLOR, material: "sign", label: true });
+        for (const y of [top + 0.06, top - 1.86]) boxes.push({ cx: boardX, cy: y, cz: bz, sx: 0.42, sy: 0.12, sz: boardLen + 0.2, color: STEEL_DARK, material: "steel" });
+        for (const e of [-1, 1]) {
+          const rz = bz + e * (boardLen / 2 - 0.8);
+          boxes.push({ cx: boardX, cy: (top + 0.12 + under(boardX)) / 2, cz: rz, sx: 0.1, sy: under(boardX) - top - 0.12, sz: 0.1, color: STEEL_DARK, material: "steel" });
+        }
       }
       // Diagonal tie from the mast out under the wing. It hangs well below the wing
       // plane, so it stops short of the first ballast bed rather than reaching over
@@ -1078,6 +1141,9 @@ function buildCantileverWings(length: number, layout: StationLayout): StationBox
         .filter((x) => (dir > 0 ? x > mastX : x < mastX));
       const toBallast = ballastEdges.length > 0 ? Math.min(...ballastEdges.map((x) => Math.abs(x - mastX))) - 0.4 : run;
       const tieRun = Math.max(1.0, Math.min(6.4, run * 0.6, toBallast));
+      // the light strip along the platform edge, fixed to the wing's underside
+      const lightX = mastX + dir * Math.max(1.0, Math.min(run - 0.5, toBallast - 0.2));
+      boxes.push({ cx: lightX, cy: under(lightX) - 0.08, cz: 0, sx: 0.5, sy: 0.14, sz: Math.max(4, zLen - 6), color: LIGHT_COLOR, material: "light" });
       for (const z of bays) {
         boxes.push({
           cx: mastX + dir * (tieRun / 2),
@@ -1103,6 +1169,7 @@ function buildCantileverWings(length: number, layout: StationLayout): StationBox
     for (const z of bayPositions(length - 2 * RAMP_LENGTH - 1, 24)) {
       boxes.push({ cx: outerX, cy: PLATFORM_HEIGHT + 1.7, cz: z, sx: 0.2, sy: 3.4, sz: 7, color: GLASS_COLOR, material: "glass" });
       pushBench(boxes, layout, band.centerX, z, 1.1, 4.5, STEEL_DARK, "steel");
+      boxes.push({ cx: band.centerX, cy: PLATFORM_HEIGHT + 0.45, cz: z + 3.0, sx: 0.5, sy: 0.9, sz: 0.5, color: STEEL_DARK, material: "steel" });
       boxes.push({ cx: outerX, cy: PLATFORM_HEIGHT + 3.4, cz: z, sx: 0.25, sy: 0.16, sz: 7.2, color: STEEL_DARK, material: "steel" });
       for (const end of [-1, 1]) {
         boxes.push({ cx: outerX, cy: PLATFORM_HEIGHT + 1.7, cz: z + end * 3.4, sx: 0.25, sy: 3.4, sz: 0.2, color: STEEL_DARK, material: "steel" });
@@ -1131,22 +1198,81 @@ function buildConcourse(length: number, layout: StationLayout): StationBox[] {
   const canopyY = PLATFORM_HEIGHT + CONCOURSE_CANOPY_HEIGHT;
   const bands = deckBands(layout, false);
 
+  const columnZs = bayPositions(length, 12).filter((z) => Math.abs(z) >= 4.5);
+  const nearest = (zs: readonly number[], target: number) => zs.reduce((best, z) => (Math.abs(z - target) < Math.abs(best - target) ? z : best));
+  // the canopy's underside, the spine beam under it and the cross beams under that
+  const soffit = canopyY - 0.2;
+  const spineBottom = soffit - 0.45;
   for (const band of bands) {
     const w = band.maxX - band.minX;
     if (w < 1.6) continue;
+    const cx = band.centerX;
     for (const end of [-1, 1]) {
       const canopyZ = end * (zLen + 8.4) / 4;
       const canopyLength = (zLen - 8.4) / 2;
-      boxes.push({ lod: "shell", cx: band.centerX, cy: canopyY, cz: canopyZ, sx: w, sy: 0.4, sz: canopyLength, color: STEEL_WHITE, material: "steel" });
+      // the canopy: two solid strips either side of a glazed rooflight
+      const glassW = w > 5 ? Math.min(2.4, w * 0.3) : 0;
+      if (glassW > 0) {
+        for (const sgn of [-1, 1]) {
+          const x0 = cx + sgn * (glassW / 2 - 0.05);
+          const x1 = cx + sgn * (w / 2);
+          boxes.push({ lod: "shell", cx: (x0 + x1) / 2, cy: canopyY, cz: canopyZ, sx: Math.abs(x1 - x0), sy: 0.4, sz: canopyLength, color: STEEL_WHITE, material: "steel" });
+        }
+        boxes.push({ lod: "shell", cx, cy: canopyY + 0.05, cz: canopyZ, sx: glassW, sy: 0.24, sz: canopyLength - 0.1, color: GLASS_COLOR, material: "glass" });
+      } else {
+        boxes.push({ lod: "shell", cx, cy: canopyY, cz: canopyZ, sx: w, sy: 0.4, sz: canopyLength, color: STEEL_WHITE, material: "steel" });
+      }
+      // the spine beam down the middle
+      boxes.push({ cx, cy: (soffit + spineBottom) / 2, cz: canopyZ, sx: 0.5, sy: soffit - spineBottom + 0.02, sz: canopyLength - 0.4, color: STEEL_DARK, material: "steel" });
       for (const sgn of [-1, 1]) {
         const edgeX = sgn < 0 ? band.minX : band.maxX;
         boxes.push({ lod: "shell", cx: edgeX - sgn * 0.2, cy: canopyY - 0.55, cz: canopyZ, sx: 0.3, sy: 0.8, sz: canopyLength, color: STEEL_DARK, material: "steel" });
-        boxes.push({ cx: edgeX - sgn * 1.2, cy: canopyY - 0.75, cz: canopyZ, sx: 0.45, sy: 0.16, sz: Math.max(2, canopyLength - 2), color: LIGHT_COLOR, material: "light" });
+        // the light strip, fixed to the underside
+        boxes.push({ cx: edgeX - sgn * 1.2, cy: soffit - 0.07, cz: canopyZ, sx: 0.45, sy: 0.14, sz: Math.max(2, canopyLength - 2), color: LIGHT_COLOR, material: "light" });
+      }
+      // the name board at the canopy's far end, framed, on two rods from the spine
+      const boardW = Math.min(w - 2.4, 8);
+      if (boardW > 2) {
+        const bz = end * (zLen / 2 - 0.6);
+        const top = spineBottom - 0.35;
+        boxes.push({ cx, cy: top - 0.65, cz: bz, sx: boardW, sy: 1.3, sz: 0.3, color: SIGN_COLOR, material: "sign", label: true });
+        for (const y of [top + 0.06, top - 1.36]) boxes.push({ cx, cy: y, cz: bz, sx: boardW + 0.2, sy: 0.12, sz: 0.38, color: STEEL_DARK, material: "steel" });
+        pushHangers(boxes, cx, bz, soffit + 0.02, soffit + 0.02 - (top + 0.1), boardW / 2 - 0.5);
       }
     }
-    for (const z of bayPositions(length, 12)) {
-      if (Math.abs(z) < 4.5) continue;
-      boxes.push({ lod: "support", cx: band.centerX, cy: (PLATFORM_HEIGHT + canopyY) / 2, cz: z, sx: 0.6, sy: canopyY - PLATFORM_HEIGHT, sz: 0.6, color: STEEL_DARK, material: "steel" });
+    for (const z of columnZs) {
+      boxes.push({ cx, cy: PLATFORM_HEIGHT + 0.25, cz: z, sx: 1.0, sy: 0.5, sz: 1.0, color: CONCRETE_LIGHT, material: "platform" });
+      boxes.push({ lod: "support", cx, cy: (PLATFORM_HEIGHT + spineBottom) / 2, cz: z, sx: 0.6, sy: spineBottom - PLATFORM_HEIGHT, sz: 0.6, color: STEEL_DARK, material: "steel" });
+      // the cross beam on the column's head, and a brace either side
+      boxes.push({ cx, cy: spineBottom - 0.14, cz: z, sx: w - 0.7, sy: 0.3, sz: 0.3, color: STEEL_DARK, material: "steel" });
+      if (w > 4) {
+        for (const sgn of [-1, 1]) {
+          const a = { x: cx + sgn * 0.3, y: spineBottom - 1.7 };
+          const b = { x: cx + sgn * 1.6, y: spineBottom - 0.3 };
+          boxes.push({ cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2, cz: z, sx: Math.hypot(b.x - a.x, b.y - a.y), sy: 0.18, sz: 0.18, rotZ: Math.atan2(b.y - a.y, b.x - a.x), color: STEEL_DARK, material: "steel" });
+        }
+      }
+    }
+    // a departure board and a clock hung from cross beams, toward the stairs
+    if (w >= 6 && columnZs.length >= 2) {
+      const beamBottom = spineBottom - 0.27;
+      const boardZ = nearest(columnZs, length / 5);
+      const clockZ = nearest(columnZs, -length / 5);
+      pushHangers(boxes, cx, boardZ, beamBottom, 0.4, 0.9);
+      pushDepartureBoard(boxes, cx, beamBottom - 0.4 - 0.45, boardZ);
+      if (clockZ !== boardZ) {
+        pushHangers(boxes, cx, clockZ, beamBottom, 0.4, 0.9);
+        pushTwoFacedClock(boxes, cx, beamBottom - 0.4 - 0.55, clockZ, 1.1);
+      }
+    }
+    // islands: a waiting shelter under each canopy; benches with bins between the
+    // columns, on the level deck and clear of the stair tower
+    const mids = columnZs.slice(1).map((z, i) => (z + columnZs[i]!) / 2).filter((z) => Math.abs(z) > 7 && Math.abs(z) <= length / 2 - RAMP_LENGTH - 3.5);
+    const island = band.row.type === "island" && w >= 11;
+    const shelterZs = island ? snapZs([-length / 4, length / 4], mids) : [];
+    for (const z of shelterZs) pushShelter(boxes, layout, cx, z);
+    if (w > 6) {
+      for (const z of mids) if (!shelterZs.some((sz) => Math.abs(sz - z) < 5)) pushBenchWithBin(boxes, layout, cx, z, 1.3);
     }
   }
 
@@ -1170,7 +1296,13 @@ function buildConcourse(length: number, layout: StationLayout): StationBox[] {
   boxes.push({ lod: "shell", cx: 0, cy: deckY + 4.3, cz: 0, sx: bridgeHalf * 2 + 1.2, sy: 0.35, sz: bridgeZ + 1.6, color: STEEL_WHITE, material: "steel" });
   // a name board on BOTH bridge flanks, so it reads whichever way you walk the platform
   for (const sgn of [-1, 1]) {
-    boxes.push({ cx: 0, cy: deckY + 2.4, cz: sgn * (bridgeZ / 2 + 0.35), sx: Math.min(15, half), sy: 2, sz: 0.3, color: SIGN_COLOR, material: "sign", label: true });
+    const boardW = Math.min(15, half);
+    boxes.push({ cx: 0, cy: deckY + 2.4, cz: sgn * (bridgeZ / 2 + 0.35), sx: boardW, sy: 2, sz: 0.3, color: SIGN_COLOR, material: "sign", label: true });
+    // a clock either side of the board, on the mullions' line
+    for (const side of [-1, 1]) {
+      const x = side * (boardW / 2 + 1.8);
+      if (Math.abs(x) + 1.2 < bridgeHalf) pushClock(boxes, x, deckY + 2.4, sgn * (bridgeZ / 2 + 0.3), 2.0, sgn);
+    }
   }
 
   // A stair tower on EVERY deck band, not just the outer two: an island between two

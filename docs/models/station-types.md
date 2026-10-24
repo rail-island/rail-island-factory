@@ -49,8 +49,8 @@ the edge coping, the yellow safety lines and the cobbled outer trim. Two options
 | `platforms_only` | plain deck, 3-stud platforms | ramps, posted name boards, benches, a lamp |
 | `platforms_shared` | pairs, 10-stud islands | a V-roof over every band (below), underpasses |
 | `arch_shed` | pairs | a glass vault per track group (below), underpasses |
-| `cantilever_wings` | pairs | masts on every band, tilted wings with a glazed tip over the pairs, wind shelters, underpasses |
-| `concourse` | pairs | low canopies and a glazed footbridge with a stair tower on every band |
+| `cantilever_wings` | pairs | masts on every band, tilted wings with a glazed tip over the pairs (below), underpasses |
+| `concourse` | pairs | low canopies and a glazed footbridge with a stair tower on every band (below) |
 | `village_depot` | tracks side by side, a 10-stud house strip | the country station (below), a post-and-rail fence and lamps on the far platform |
 | `heritage_canopy` | pairs | a gabled timber umbrella canopy on cast-iron posts over every band, underpasses |
 | `grand_terminus` | pairs, 14-stud islands | stone arcades and glazed vaults, nave and aisles on a wide station (below), underpasses |
@@ -65,6 +65,36 @@ bottom, on two rods down from the roof's underside. A departure board (lit on bo
 two-faced clock hang from cross beams. Each island gets a glass waiting shelter with a bench,
 open to its track, across from its underpass (one, or two at the quarter points on a long
 station); the other benches, each with a bin, stand on the level deck clear of the ramps.
+
+### Platform furniture
+
+The roofed types share their fittings: a departure board lit on both faces, a two-faced clock,
+an island's glass waiting shelter with a bench (on the -X side of the centreline, open to its
+track, across from the underpass), and a bench with a litter bin (`pushDepartureBoard`,
+`pushTwoFacedClock`, `pushShelter`, `pushBenchWithBin`, `pushHangers`). Whatever hangs - a
+name board, a departure board, a clock - hangs on two rods from the structure above it, and
+whatever stands on the deck stays clear of the end ramps (`test/stationSet.test.ts`).
+
+### The cantilever wings
+
+Tapering masts 12 studs apart, each on a concrete footing with a stout lower shaft, a collar
+and a slimmer upper shaft, stand on every band's centreline (on the level deck, clear of the
+ramps) and carry a head beam; from it the wings reach out over the pairs, solid then glazed,
+stopping short of the group's centre, on diagonal ties. A light strip runs along every platform
+edge, fixed to the wing's underside. The name boards hang under the wings at both ends, framed
+top and bottom, on two rods each. Two masts carry a departure board and a two-faced clock on
+brackets at eye level. The outer platforms keep their glass windbreaks with a bench and a bin;
+the islands get a waiting shelter and benches with bins between the masts.
+
+### The concourse
+
+Two canopies over every band, either side of the footbridge: a solid white roof with a glazed
+rooflight strip down the middle, a spine beam under it, edge fascias and light strips fixed to
+the underside, on columns with footings, cross beams and braces. A framed name board hangs at
+each canopy's far end on two rods; a departure board and a clock hang from cross beams toward
+the stairs. Islands get a waiting shelter under each canopy, every wide band benches with bins
+between the columns. The glazed footbridge crosses the whole station at 11.6 studs, landing in
+a stair tower on every band, with the name board and a clock either side of it on both flanks.
 
 ### The train sheds' vault
 
@@ -130,8 +160,8 @@ coach is held to 16,000 triangles, so a 240-stud platform of coaches is about 14
 | `platforms_only` | 708 / 4,800 | 972 / 9,000 | 1,500 / 24,600 |
 | `platforms_shared` | 2,352 / 11,200 | 6,012 / 28,000 | 16,584 / 90,400 |
 | `arch_shed` | 6,640 / 20,800 | 22,088 / 46,000 | 74,152 / 139,600 |
-| `cantilever_wings` | 1,224 / 11,200 | 3,024 / 28,000 | 7,896 / 90,400 |
-| `concourse` | 1,848 / 11,200 | 3,024 / 28,000 | 5,640 / 90,400 |
+| `cantilever_wings` | 2,232 / 11,200 | 5,892 / 28,000 | 17,388 / 90,400 |
+| `concourse` | 3,336 / 11,200 | 7,272 / 28,000 | 18,216 / 90,400 |
 | `village_depot` | 2,916 / 4,800 | 4,164 / 9,000 | 5,172 / 24,600 |
 | `heritage_canopy` | 2,456 / 11,200 | 7,248 / 28,000 | 22,880 / 90,400 |
 | `grand_terminus` | 4,216 / 20,800 | 10,108 / 46,000 | 41,092 / 139,600 |
