@@ -565,11 +565,14 @@ export function solarisUrbino15Lod(): MeshBuilder {
 // --- Bus 1 -------------------------------------------------------------------------
 //
 // vlakosimdb's own generic coach: a plain box, a blue body under a long window
-// band, a mint sweep rising toward the rear, and a mint tail.
+// band, a mint sweep rising toward the rear, and a mint tail. Dressed as an
+// intercity coach: a wide two-leaf front door, headlamp clusters and a grille,
+// luggage bays between the axles, amber side markers, an air-conditioning unit
+// and hatches on the roof, a rear window over the engine's louvres.
 
 function bus1Spec(): CitySpec {
   return {
-    livery: { body: "#3152a5", mint: "#42e8b0", band: "#1b1d20", bumper: "#26282c", pod: "#3152a5" },
+    livery: { body: "#3152a5", mint: "#42e8b0", band: "#1b1d20", bumper: "#26282c", pod: "#3152a5", roofUnit: "#c9ccd1", marker: "#ff9a2e" },
     nose: 0.1, tail: 11.4, length: 11.3,
     bodies: [[0.1, 11.4]],
     axles: [{ u: 2.55, dual: false }, { u: 8.1, dual: true, drive: true }],
@@ -584,8 +587,9 @@ function bus1Spec(): CitySpec {
     ],
     pane: { glass: [1.7, 2.7], surround: [1.64, 2.76], inset: 0.04, glassMat: "glassLight" },
     pitch: 2.0,
-    door: { bottom: 0.36, top: 2.7, leafMat: "frame", panes: [[0.45, 2.62]], leafWidth: 0.4 },
-    doors: [[0.25, 0.9]],
+    door: { bottom: 0.36, top: 2.7, leafMat: "frame", panes: [[0.45, 2.62]], leafWidth: 0.6 },
+    // the front door, 1.15 m wide: two leaves ahead of the front axle
+    doors: [[0.25, 1.4]],
     windows: [[0.25, 11.0]],
     arch: { half: 0.6, side: 0.66, top: 1.12 },
     tyres: { single: [0.92, 1.18], inner: [0.62, 0.88], outer: [0.91, 1.17] },
@@ -608,16 +612,49 @@ function bus1Spec(): CitySpec {
           bentSlab(c.m(), "mint", lower.map(([u, y]): [Vec3, Vec3] => [[x(u), 1.58, z], [x(u), y, z]]), [0, 0, -s * 0.03]);
         }
       });
+      // the luggage bays between the axles: three hatches a side, each a body panel
+      // over a dark recess (the seams), a chrome handle at its foot
+      c.d.fit("luggage hatches", x(5.35), () => {
+        const edges = [3.35, 4.68, 6.02, 7.35];
+        for (const s of [-1, 1]) {
+          sideSlab(c.m(), "frame", c.frame, s, x(edges[3]!), x(edges[0]!), 0.42, 1.12, 0.006);
+          for (let i = 0; i < 3; i++) {
+            const [x0, x1] = [x(edges[i + 1]!) + 0.015, x(edges[i]!) - 0.015];
+            sideSlab(c.m(), "body", c.frame, s, x0, x1, 0.435, 1.105, 0.012);
+            sideSlab(c.m(), "chrome", c.frame, s, (x0 + x1) / 2 - 0.12, (x0 + x1) / 2 + 0.12, 0.5, 0.54, 0.02);
+          }
+        }
+      });
+      // amber markers low on the sides, behind the door and behind the rear wheels
+      c.d.fit("side markers", x(5.4), () => {
+        for (const s of [-1, 1]) for (const u of [1.75, 9.2]) sideSlab(c.m(), "marker", c.frame, s, x(u) - 0.05, x(u) + 0.05, 0.5, 0.56, 0.016);
+      });
       const ws = windscreen(c, 1.45, 2.68, 1.08, [2.42, 2.64]);
       c.d.fit("front", c.nose, () => {
         ws();
-        for (const s of [-1, 1]) endSlab(c.m(), "lampHead", c.frame, 1, s * 0.9 - 0.14, s * 0.9 + 0.14, 0.6, 0.72, 0.014);
-        endSlab(c.m(), "plate", c.frame, 1, -0.26, 0.26, 0.42, 0.54, 0.016);
+        // headlamp clusters in the corners, a grille between them, a badge over it
+        cornerLamps(c, 0.62, 0.8, 0.46, 0.08);
+        endSlab(c.m(), "grille", c.frame, 1, -0.5, 0.5, 0.66, 0.98, 0.008);
+        for (let i = 0; i < 4; i++) endSlab(c.m(), "chrome", c.frame, 1, -0.46, 0.46, 0.7 + i * 0.075, 0.72 + i * 0.075, 0.016);
+        endSlab(c.m(), "chrome", c.frame, 1, -0.16, 0.16, 1.08, 1.16, 0.014);
+        // fog lamps in the bumper, the plate between them
+        for (const s of [-1, 1]) endSlab(c.m(), "lampHead", c.frame, 1, s * 0.85 - 0.09, s * 0.85 + 0.09, 0.42, 0.5, 0.016);
+        endSlab(c.m(), "plate", c.frame, 1, -0.26, 0.26, 0.4, 0.52, 0.016);
       });
+      c.d.glaze(-1, -0.95, 0.95, 2.05, 2.6);
+      c.d.endPaint(-1, 0.32, 0.6, "bumper");
       c.d.fit("rear", c.tail, () => {
+        // the rear window, the engine's louvres under it, the lamps, the bumper and plate
+        endSlab(c.m(), "frame", c.frame, -1, -1.0, 1.0, 2.0, 2.65, 0.01);
+        endSlab(c.m(), "glassDark", c.frame, -1, -0.95, 0.95, 2.05, 2.6, 0.02);
+        for (let i = 0; i < 7; i++) endSlab(c.m(), "grille", c.frame, -1, -0.8, 0.8, 1.2 + i * 0.1, 1.25 + i * 0.1, 0.012);
         tailLamps(c, 0.7, 0.04);
-        endSlab(c.m(), "plate", c.frame, -1, -0.26, 0.26, 0.57, 0.69, 0.016);
+        endSlab(c.m(), "bumper", c.frame, -1, -1.18, 1.18, 0.34, 0.6, 0.008);
+        endSlab(c.m(), "plate", c.frame, -1, -0.26, 0.26, 0.4, 0.52, 0.016);
       });
+      // the air-conditioning unit over the front half, two roof hatches behind it
+      roofBox(c, "roof", x(6.0), x(3.0), -0.8, 0.8, 3.16, "roofUnit", 2.95);
+      for (const [u0, u1] of [[7.2, 7.9], [9.2, 9.9]] as const) roofBox(c, "roof hatches", x(u1), x(u0), -0.38, 0.38, 3.04, "frame", 2.95);
       armMirrors(c, 2.4);
     },
   };

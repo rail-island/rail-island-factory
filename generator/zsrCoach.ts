@@ -47,7 +47,16 @@ export const ZSR_NUMBERS: Record<ZsrVariant, { number: string; source: string }>
 };
 
 const F = (b: PxBox): Win => [b, "frosted"];
-const door = (box: PxBox, glass: PxBox[], paint: DoorSpec["paint"] = "orange"): DoorSpec => ({ box, glass, paint });
+/**
+ * A door; a passenger door opens, one leaf swinging inward on the jamb toward the
+ * coach's nearer end (doors.ts) -- a luggage door stays shut.
+ */
+const door = (box: PxBox, glass: PxBox[], paint: DoorSpec["paint"] = "orange", passenger = true): DoorSpec => ({
+  box,
+  glass,
+  paint,
+  ...(passenger ? { opens: { kind: "swing" as const, leaves: 1 as const, from: box[0] < 130 ? ("low" as const) : ("high" as const) } } : {}),
+});
 const Y_DOORS = [door([5, 18, 15, 38], [[8, 20, 13, 29]]), door([230, 18, 240, 38], [[232, 20, 237, 29]])];
 /** Toilet window, nine first class compartments at 2.1 m, toilet window (zsr_a, zsr_ab). */
 const A_WINDOWS = (frosted: boolean): Win[] => [frosted ? F([18, 19, 26, 30]) : [18, 19, 26, 30], ...[32, 53, 74, 95, 116, 137, 158, 179, 200].map((x): PxBox => [x, 19, x + 13, 30]), frosted ? F([219, 19, 227, 30]) : [219, 19, 227, 30]];
@@ -145,7 +154,7 @@ function variantSpec(variant: ZsrVariant): LiveryCoachSpec {
       const paint = stripes([[18, 50], [61, 69], [70, 77], [78, 119], [126, 228]], [[14, 70], [85, 231]]);
       const side: LiverySide = {
         windows: [[18, 19, 26, 30], [108, 19, 116, 30], ...[125, 144, 163, 182, 201].map((x): PxBox => [x, 19, x + 13, 30]), [219, 19, 227, 30]],
-        doors: [...Y_DOORS, door([69, 18, 86, 38], [[72, 20, 76, 29], [79, 20, 83, 29]], "bands")],
+        doors: [...Y_DOORS, door([69, 18, 86, 38], [[72, 20, 76, 29], [79, 20, 83, 29]], "bands", false)],
         paint,
         signs: plates([[[215, 21, 218, 27], "2"]]),
         emblem: [51, 31, 60, 38],
@@ -157,7 +166,7 @@ function variantSpec(variant: ZsrVariant): LiveryCoachSpec {
       });
     }
     case "bdmeer": {
-      const doors = (first: PxBox): DoorSpec[] => [door(first, [[8, 20, 13, 30]]), door([69, 18, 86, 38], [[72, 20, 76, 29], [79, 20, 83, 30]], "bands"), door([249, 19, 259, 44], [[251, 20, 256, 30]])];
+      const doors = (first: PxBox): DoorSpec[] => [door(first, [[8, 20, 13, 30]]), door([69, 18, 86, 38], [[72, 20, 76, 29], [79, 20, 83, 30]], "bands", false), door([249, 19, 259, 44], [[251, 20, 256, 30]])];
       const windows: Win[] = [[25, 19, 38, 30], [44, 19, 57, 30], ...[112, 131, 150, 169, 188, 207].map((x): PxBox => [x, 19, x + 13, 30]), [226, 19, 239, 30]];
       const signs = plates([[[221, 21, 224, 26], "2"]]);
       const right: LiverySide = { windows, doors: doors([4, 19, 14, 44]), paint: stripes([[16, 46], [54, 69], [70, 77], [78, 85], [86, 248]], [[15, 47], [53, 69], [86, 249]]), signs, emblem: [46, 31, 54, 38], numberAt: 160 };

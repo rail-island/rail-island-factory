@@ -9,7 +9,7 @@
 // `build(THREE, params)` builds any combination (docs/models/parameters.md).
 
 import type { MeshBuilder } from "./meshBuilder.ts";
-import type { CityUse } from "./cityPresets.ts";
+import type { CityUse } from "./cityVariants.ts";
 
 /** What drives a powered rail vehicle. */
 export type Traction = "electric" | "diesel" | "steam";
@@ -99,11 +99,12 @@ export interface ProceduralDesign {
    */
   sourceTree?: false;
   /** Total distant-mesh budget; defaults to the family policy in lod.ts. */
-  lodTriangles?: 100 | 200 | 300 | 500 | 12000;
+  lodTriangles?: 100 | 200 | 300 | 500 | 3000 | 12000;
   /**
    * The names of the parameters that only recolour the model (a roof or wall
    * colour): they change no geometry, so the tests vary them one value at a
-   * time instead of multiplying every combination by them (coverageCombinations).
+   * time instead of multiplying every combination by them (coverageCombinations),
+   * and a city colours a building by them (cityVariants.ts).
    */
   finishParams?: readonly string[];
   /**
@@ -295,8 +296,8 @@ export interface GameProperties extends Partial<VehicleGameFields> {
   /** A building's blocking footprint. Buildings only. */
   block?: BlockShape;
   /**
-   * The variants the game's city generator builds of it, replacing its pool's
-   * family default (cityPresets.ts). Buildings only; usually left to the default.
+   * Which of its parameters the game's cities vary, replacing its pool's family
+   * default (cityVariants.ts). Buildings only; usually left to the default.
    */
   city?: CityUse;
 }
@@ -384,13 +385,18 @@ export function paramCombinations(specs: readonly ParamSpec[] = []): ParamValues
   return out;
 }
 
+/** A party-wall parameter's name (partyWalls.ts: `partyLeft`, `partyBack`, ...). */
+const PARTY_PARAM = /^party[A-Z]/;
+
 /**
  * The combinations the tests build: every combination of the shape parameters
  * with the finish parameters at their defaults (the defaults first), then each
  * other value of each finish parameter with everything else at its default.
  * Without finish parameters this is paramCombinations(specs).
  */
-export function coverageCombinations(specs: readonly ParamSpec[] = [], finish: readonly string[] = []): ParamValues[] {
+export function coverageCombinations(specs: readonly ParamSpec[] = [], finishParams: readonly string[] = []): ParamValues[] {
+  // a party wall (partyWalls.ts) changes no extent either: one at a time too
+  const finish = [...finishParams, ...specs.filter((s) => PARTY_PARAM.test(s.name)).map((s) => s.name)];
   const shapes = paramCombinations(specs.filter((s) => !finish.includes(s.name)));
   const defaults = resolveParams(specs);
   const out = shapes.map((c) => ({ ...defaults, ...c }));

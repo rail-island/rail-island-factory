@@ -111,6 +111,26 @@ function motorVolumes(): { nose: Volume; body: Volume } {
   return { nose, body };
 }
 
+/**
+ * A passenger door: two leaves swinging inward from both jambs through its doorway
+ * (`Volume.openings`), a window riding on each (doors.ts).
+ */
+function passengerDoor(c: Coach, body: Volume, s: number, b: Box, glass: Box[]): void {
+  c.door(body, s, b, "doorRed", {
+    seam: 0.03,
+    opens: { kind: "swing", leaves: 2 },
+    // the side drawing runs against x: draw the leaves from that end, so the
+    // windows keep their order
+    fromHigh: true,
+    leafWork: (clip) => {
+      for (const g of glass) {
+        const w = clip(g);
+        if (w) c.window(body, s, w, { fw: 0.05 });
+      }
+    },
+  });
+}
+
 function motorCar(): MeshBuilder {
   const car = CARS.motorCar;
   const F = car.F;
@@ -119,6 +139,8 @@ function motorCar(): MeshBuilder {
   const box = (b: PxBox) => sb(F, b);
   const X = (x: number) => c.X(bOf(F, x));
   const { nose, body } = motorVolumes();
+  const doors = [[[70, 31, 87, 55], [[72, 37, 77, 46], [80, 37, 85, 46]]], [[183, 31, 200, 55], [[185, 37, 190, 46], [193, 37, 198, 46]]]] as Array<[PxBox, PxBox[]]>;
+  body.openings = [1, -1].flatMap((s) => doors.map(([d]) => c.doorOpening(s, box(d), 0.03)));
   m.scope("body", () => {
     m.scope("nose", () => c.volume(nose));
     c.volume(body);
@@ -134,12 +156,7 @@ function motorCar(): MeshBuilder {
           for (const [b, name] of ws) m.scope(name, () => c.window(body, s, box(b), { fw: 0.08 }));
         });
         m.scope("doors", () => {
-          ([[[70, 31, 87, 55], [[72, 37, 77, 46], [80, 37, 85, 46]]], [[183, 31, 200, 55], [[185, 37, 190, 46], [193, 37, 198, 46]]]] as Array<[PxBox, PxBox[]]>).forEach(([d, glass], i) =>
-            m.scope(`door ${i + 1}`, () => {
-              c.door(body, s, box(d), "doorRed", { seam: 0.03 });
-              for (const g of glass) c.window(body, s, box(g), { fw: 0.05 });
-            }),
-          );
+          doors.forEach(([d, glass], i) => m.scope(`door ${i + 1}`, () => passengerDoor(c, body, s, box(d), glass.map(box))));
           m.scope("luggage door", () => c.door(body, s, box([232, 28, 245, 49]), "light", { seam: 0.03 }));
         });
         m.scope("running number", () => {
@@ -216,6 +233,8 @@ function trailer(): MeshBuilder {
   const m = c.m;
   const box = (b: PxBox) => sb(F, b);
   const body = trailerVolume();
+  const doors = [[[50, 23, 67, 47], [[52, 29, 57, 38], [60, 29, 65, 38]]], [[178, 23, 195, 47], [[181, 29, 185, 38], [188, 29, 193, 38]]]] as Array<[PxBox, PxBox[]]>;
+  body.openings = [1, -1].flatMap((s) => doors.map(([d]) => c.doorOpening(s, box(d), 0.03)));
   m.scope("body", () => {
     c.volume(body);
     for (const s of [1, -1])
@@ -223,12 +242,7 @@ function trailer(): MeshBuilder {
         m.scope("end windows", () => END_WINDOWS_051.forEach((b, i) => m.scope(`window ${i + 1}`, () => c.window(body, s, box(b), { fw: 0.08, ...(b[2] - b[0] > 8 ? { sash: 2.47 } : {}) }))));
         m.scope("windows", () => WINDOWS_051.forEach((b, i) => m.scope(`window ${i + 1}`, () => c.window(body, s, box(b), { fw: 0.08, sash: 1.77 }))));
         m.scope("doors", () =>
-          ([[[50, 23, 67, 47], [[52, 29, 57, 38], [60, 29, 65, 38]]], [[178, 23, 195, 47], [[181, 29, 185, 38], [188, 29, 193, 38]]]] as Array<[PxBox, PxBox[]]>).forEach(([d, glass], i) =>
-            m.scope(`door ${i + 1}`, () => {
-              c.door(body, s, box(d), "doorRed", { seam: 0.03 });
-              for (const g of glass) c.window(body, s, box(g), { fw: 0.05 });
-            }),
-          ),
+          doors.forEach(([d, glass], i) => m.scope(`door ${i + 1}`, () => passengerDoor(c, body, s, box(d), glass.map(box)))),
         );
         m.scope("running number", () => {
           const b: Box = box([110, 45, 140, 47]);

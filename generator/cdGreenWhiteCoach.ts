@@ -10,7 +10,8 @@
 import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { block, side } from "./vehicleParts.ts";
-import { Coach, px, type Pt, type Volume } from "./csdCoachParts.ts";
+import { Coach, px, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
+import type { DoorMotion } from "./doors.ts";
 import { emblem } from "./cd163.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import { endName, fpx, gangway, headstock, lamp, mirror, roofVents, sides, sideName, Y_SECTION, type PxBox } from "./csdCoaches.ts";
@@ -382,6 +383,13 @@ export function cdGreenWhiteCoach(params?: ParamValues): MeshBuilder {
     bands: [[2.1, 3.1, "green"]],
   };
   const wall = [geo.plan[0]![0], geo.plan[geo.plan.length - 1]![0]] as const;
+  // every passenger door (a green leaf; the Ds luggage van has none) opens inward
+  // through a doorway (doors.ts): a double door (two windows) swings from both
+  // jambs, a single leaf on the jamb toward the nearer end; luggage doors stay shut
+  const passenger = (d: DoorSpec) => d.paint === "green" && variant !== "ds";
+  body.openings = sides.flatMap((s) => (s > 0 ? v.right : v.left).doors.filter(passenger).map((d) => c.doorOpening(s, px(d.box, H))));
+  const opens = (b: Box, glass: number): DoorMotion =>
+    glass === 2 ? { kind: "swing", leaves: 2 } : { kind: "swing", leaves: 1, from: (b.x0 + b.x1) / 2 < geo.length / 2 ? "low" : "high" };
   m.scope("body", () => {
     c.volume(body);
     if (v.bay) m.scope("lookout bay", () => c.volume(bay));
@@ -396,11 +404,22 @@ export function cdGreenWhiteCoach(params?: ParamValues): MeshBuilder {
         spec.doors.forEach((d, i) =>
           m.scope(`door ${i + 1}`, () => {
             const b = px(d.box, H);
-            c.door(body, s, b, d.paint);
-            d.glass.forEach((g, k) => m.scope(`window ${k + 1}`, () => c.window(body, s, px(g, H), { fw: 0.04 })));
-            // a double door's two leaves meet in the middle
-            const mid = (b.x0 + b.x1) / 2;
-            if (d.glass.length === 2) m.scope("centre seam", () => c.sidePanel(body, "seam", s, { x0: mid - 0.02, y0: Math.max(b.y0, 0.9) + 0.03, x1: mid + 0.02, y1: b.y1 - 0.03 }, 0.016));
+            if (!passenger(d)) {
+              c.door(body, s, b, d.paint);
+              d.glass.forEach((g, k) => m.scope(`window ${k + 1}`, () => c.window(body, s, px(g, H), { fw: 0.04 })));
+              const mid = (b.x0 + b.x1) / 2;
+              if (d.glass.length === 2) m.scope("centre seam", () => c.sidePanel(body, "seam", s, { x0: mid - 0.02, y0: Math.max(b.y0, 0.9) + 0.03, x1: mid + 0.02, y1: b.y1 - 0.03 }, 0.016));
+              return;
+            }
+            // the windows ride on the leaves; a double door's leaves meet in the middle
+            c.door(body, s, b, d.paint, {
+              opens: opens(b, d.glass.length),
+              leafWork: (clip) =>
+                d.glass.forEach((g, k) => {
+                  const w = clip(px(g, H));
+                  if (w) c.m.scope(`window ${k + 1}`, () => c.window(body, s, w, { fw: 0.04 }));
+                }),
+            });
           }),
         );
         // the white class numeral over each 3 by 5 pixel mark, centred in its box

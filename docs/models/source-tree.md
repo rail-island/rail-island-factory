@@ -85,8 +85,10 @@ LeafNode  = { id, kind, material, args, tri: [first, count], triangles, min?, ma
   is drawn right after its parent, so drawing order and depth-first node order
   agree. Each part is also a top-level scope. A rail bogie's node
   ([vehicle-rig.md](vehicle-rig.md#rail-supports-and-turning-bogies)) is drawn amid
-  its body's triangles; a leaf never straddles two nodes, so `sourceTree()` moves
-  each leaf's range as a block to where its node's triangles start.
+  its body's triangles, and so are a pantograph's and an opening door's moving
+  parts; a leaf never straddles two nodes, so `sourceTree()` moves each leaf's
+  range as a block to where its node's triangles start - an empty leaf (count 0)
+  to where the next triangle drawn went, so it still sits on a range boundary.
 - `args` are the call's arguments rounded to the millimetre; a ring is recorded
   as its point count (`ring`, `lower`, `upper`).
 - `triangles`, `min`, `max` are the node's extent in metres (absent when it drew
@@ -94,7 +96,8 @@ LeafNode  = { id, kind, material, args, tri: [first, count], triangles, min?, ma
 
 The catalog sweep (`test/catalogSweep.ts`) checks, for every design, that the leaves' ranges tile
 each material's primitive exactly and that each leaf's box matches the GLB's
-triangles in its range.
+triangles in its range; `test/sourceTree.test.ts` checks an empty leaf drawn after
+a moving part.
 
 ## On the site
 

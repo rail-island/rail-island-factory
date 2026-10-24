@@ -17,10 +17,11 @@
 
 import { ngon, type MaterialSpec, type MeshBuilder, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
-import { Coach, sectionHalf, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
+import { Coach, sectionHalf, type Box, type Opening, type Pt, type Volume } from "./csdCoachParts.ts";
 import { block } from "./vehicleParts.ts";
 import { drawJoint, type JointRig, type SectionRig, type VehicleRig } from "./rig.ts";
 import { liftable } from "./liftable.ts";
+import type { DoorMotion } from "./doors.ts";
 
 export type { Pt } from "./csdCoachParts.ts";
 
@@ -204,19 +205,34 @@ export class Tram extends Coach {
 
   /**
    * Folding doors on side s: the seam over the native box, the leaves in
-   * `paint`, and one glazed light per leaf (`leaves` light boxes).
+   * `paint`, and one glazed light per leaf (`leaves` light boxes). With `opens`
+   * (a motion, or one per door) they open, the lights riding on the leaves.
    */
-  doors(v: Volume, s: number, list: Array<{ box: PxBox; lights: PxBox[] }>, paint: string, opts: { frame?: string; glass?: string; sash?: number } = {}): void {
+  doors(v: Volume, s: number, list: Array<{ box: PxBox; lights: PxBox[] }>, paint: string, opts: { frame?: string; glass?: string; sash?: number; opens?: DoorMotion | ((d: { box: PxBox; lights: PxBox[] }) => DoorMotion) } = {}): void {
+    const light = (b: Box) => this.window(v, s, b, { frame: opts.frame, glass: opts.glass, fw: 0.035, sash: opts.sash === undefined ? undefined : this.fy(opts.sash) });
     list.forEach((d, i) =>
       this.m.scope(`door ${i + 1}`, () => {
+        if (opts.opens) {
+          // the lights ride on the leaves (doors.ts)
+          this.door(v, s, this.box(d.box), paint, {
+            opens: typeof opts.opens === "function" ? opts.opens(d) : opts.opens,
+            leafWork: (clip) =>
+              d.lights.forEach((g, k) => {
+                const b = clip(this.box(g));
+                if (b) this.m.scope(`light ${k + 1}`, () => light(b));
+              }),
+          });
+          return;
+        }
         this.door(v, s, this.box(d.box), paint);
-        d.lights.forEach((g, k) =>
-          this.m.scope(`light ${k + 1}`, () =>
-            this.window(v, s, this.box(g), { frame: opts.frame, glass: opts.glass, fw: 0.035, sash: opts.sash === undefined ? undefined : this.fy(opts.sash) }),
-          ),
-        );
+        d.lights.forEach((g, k) => this.m.scope(`light ${k + 1}`, () => light(this.box(g))));
       }),
     );
+  }
+
+  /** The doorways of `doors`' list on side s, for the volume they open into (`Volume.openings`). */
+  doorOpenings(s: number, list: Array<{ box: PxBox }>): Opening[] {
+    return list.map((d) => this.doorOpening(s, this.box(d.box)));
   }
 
   /** A painted side panel (a livery patch) over a native box, on side s. */

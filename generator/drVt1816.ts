@@ -30,6 +30,7 @@ import { strokeText, strokeWidth } from "./strokeFont.ts";
 import { LOD_GLASS, lodPolygon, type LodBand, type LodPart, type LodSections } from "./lodKit.ts";
 import { bogieParts, fitUnit, roofPart, sideGlass, turnBody, type UnitBody } from "./lodUnits.ts";
 import { articulate } from "./tramKit.ts";
+import { openable, plugMove } from "./doors.ts";
 import { add, capSlice, cross, dot, lerp, loftHalves, mul, sub, unit, type Pt } from "./sliceLoft.ts";
 
 /** What the design builds: one car, or the whole train. */
@@ -242,21 +243,32 @@ function sideWindow(f: Side, d0: number, d1: number, y0: number, y1: number, bar
   if (bar) f.m.scope("bar", () => sideBox(f, "rubber", d0 + 0.04, d1 - 0.04, y1 - 0.34, y1 - 0.3, 0.026, 0.005));
 }
 
-/** A door: its seam, the leaf in the body's paint, its window, a grab handrail and the step under it. */
-function sideDoor(f: Side, d0: number, d1: number, y0: number, y1: number, glass: Array<[number, number]>): void {
+/**
+ * A door: its seam, the leaf in the body's paint, its window, a grab handrail and
+ * the step under it. A passenger door (`opens`) opens as one plug leaf with its
+ * windows, sliding toward the car's middle (doors.ts).
+ */
+function sideDoor(f: Side, d0: number, d1: number, y0: number, y1: number, glass: Array<[number, number]>, opens = true): void {
   const m = f.m;
   const dm = (d0 + d1) / 2;
   m.scope("outline", () => sideBox(f, "rubber", d0, d1, y0, y1, 0.006, 0.04));
-  m.scope("leaf", () => {
-    for (const [a, b, mat] of sliceBands(f.p, dm)) {
-      const [lo, hi] = [Math.max(a, y0 + 0.025), Math.min(b, y1 - 0.025)];
-      if (hi - lo > 1e-6) sideBox(f, mat === "roof" ? "cream" : mat, d0 + 0.025, d1 - 0.025, lo, hi, 0.011, 0.004);
-    }
-  });
-  m.scope("glass", () => glass.forEach(([a, b]) => {
-    sideBox(f, "rubber", a, b, WIN[0], WIN[1], 0.016, 0.004);
-    sideBox(f, "glass", a + 0.035, b - 0.035, WIN[0] + 0.035, WIN[1] - 0.035, 0.021, 0.004);
-  }));
+  const leaf = (g: Side) => {
+    g.m.scope("leaf", () => {
+      for (const [a, b, mat] of sliceBands(g.p, dm)) {
+        const [lo, hi] = [Math.max(a, y0 + 0.025), Math.min(b, y1 - 0.025)];
+        if (hi - lo > 1e-6) sideBox(g, mat === "roof" ? "cream" : mat, d0 + 0.025, d1 - 0.025, lo, hi, 0.011, 0.004);
+      }
+    });
+    g.m.scope("glass", () => glass.forEach(([a, b]) => {
+      sideBox(g, "rubber", a, b, WIN[0], WIN[1], 0.016, 0.004);
+      sideBox(g, "glass", a + 0.035, b - 0.035, WIN[0] + 0.035, WIN[1] - 0.035, 0.021, 0.004);
+    }));
+  };
+  if (!opens) leaf(f);
+  else {
+    const dx = f.X(d0 + (dm < f.p.length / 2 ? 1 : -1) * (d1 - d0)) - f.X(d0);
+    openable(m, (mm, o) => mm.moved(plugMove(o, f.s, dx), () => leaf({ ...f, m: mm })));
+  }
   m.scope("handrails", () => {
     for (const d of [d0 - 0.07, d1 + 0.07]) {
       m.prism("chrome", ngon(6, 0.015, 0, f.X(d), f.s * (W + 0.045)), 1.35, 2.65);
@@ -557,7 +569,8 @@ function drawPowerCar(coach: Coach, X: (d: number) => number, gangway: boolean):
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
         const f: Side = { m, p: POWER, X, s };
-        m.scope("doors", () => POWER_DOORS.forEach((dr, i) => m.scope(`door ${i + 1}`, () => sideDoor(f, dr.d[0], dr.d[1], 1.25, Math.min(3.12, POWER.S(dr.d[0]) - 0.04), dr.glass))));
+        // the cab door and the baggage double door stay shut; the passenger door (the third) opens
+        m.scope("doors", () => POWER_DOORS.forEach((dr, i) => m.scope(`door ${i + 1}`, () => sideDoor(f, dr.d[0], dr.d[1], 1.25, Math.min(3.12, POWER.S(dr.d[0]) - 0.04), dr.glass, i === 2))));
         m.scope("windows", () => POWER_WINDOWS.forEach(([a, b], i) => m.scope(`window ${i + 1}`, () => sideWindow(f, a, b, WIN[0], WIN[1], b - a > 0.8))));
         m.scope("portholes", () =>
           PORTHOLES.forEach((d, i) =>

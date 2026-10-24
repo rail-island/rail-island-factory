@@ -166,7 +166,8 @@ export class MeshBuilder extends MeshCore {
       const start = counts.map((_, i) => counts.slice(0, i).reduce((a, b) => a + b, 0));
       moved.set(mat, parts.map((p) => start[rank.get(p) ?? 0]!++));
     }
-    const at = (mat: string, first: number): number => (first < this.groups.get(mat)!.part.length ? moved.get(mat)![first]! : first);
+    // a material that drew only degenerate triangles has no group, nothing to move
+    const at = (mat: string, first: number): number => (first < (this.groups.get(mat)?.part.length ?? 0) ? moved.get(mat)![first]! : first);
     const extentOf = (mat: string, first: number, count: number): NodeExtent => {
       if (count === 0) return { triangles: 0 };
       const pos = this.groups.get(mat)!.pos;
@@ -202,7 +203,8 @@ export class MeshBuilder extends MeshCore {
           let seg = `${c.kind}-${n}`;
           for (let k = 2; taken.has(seg); k++) seg = `${c.kind}-${n}-${k}`;
           taken.add(seg);
-          children.push({ id: join(seg), kind: c.kind, material: c.material, args: c.args, tri: [c.count ? at(c.material, c.first) : c.first, c.count], ...extentOf(c.material, c.first, c.count) });
+          // an empty leaf (every triangle degenerate) moves too: to where the next triangle drawn went
+          children.push({ id: join(seg), kind: c.kind, material: c.material, args: c.args, tri: [at(c.material, c.first), c.count], ...extentOf(c.material, c.first, c.count) });
         } else {
           const base = slug(c.name);
           let seg = base;

@@ -101,6 +101,7 @@ import { generateWoods } from "./woodsExport.ts";
 import { PORT_PROPS } from "./props/portProps.ts";
 import { CABLE_CAR_PROPS } from "./props/cableCarSheds.ts";
 import { AIRPORT_PROPS } from "./props/airportProps.ts";
+import { SIGNAL_PROPS } from "./props/signalProps.ts";
 import { PREVIEW_FAMILIES } from "./previews/index.ts";
 import { FAR_PROPS } from "./props/propKit.ts";
 import { generateSets } from "./sets/setsExport.ts";
@@ -205,6 +206,7 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: PORT_PROPS, source: "props/portProps.ts", meta: "props" },
   { designs: CABLE_CAR_PROPS, source: "props/cableCarSheds.ts", meta: "props" },
   { designs: AIRPORT_PROPS, source: "props/airportProps.ts", meta: "props" },
+  { designs: SIGNAL_PROPS, source: "props/signalProps.ts", meta: "props" },
   // the set types drawn at a representative size, for the site to browse: in no game meta
   // the site's preview designs, one per set type, block type and texture (previews/index.ts)
   ...PREVIEW_FAMILIES.map((f) => ({ designs: f.designs, source: f.source, meta: "previews" as const })),

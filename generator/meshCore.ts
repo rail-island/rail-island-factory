@@ -147,9 +147,15 @@ export interface FountainWater {
  * the clip's duration in metres, so it is played at `timeScale = speed / this.speed`
  * (signed: backwards in reverse, still when the vehicle stands); `state` is a pose
  * between two states the consumer scrubs to (a pantograph from folded, the clip's
- * start, to raised, its end), easing the value itself.
+ * start, to raised, its end), easing the value itself. `door` is a state clip of
+ * a vehicle's passenger doors on one `side` (seen facing the model's +X end: right
+ * is +Z), from shut at the clip's start to open at its end; the shut pose is the
+ * rest pose (doors.ts). A consumer that does not know a drive leaves its clip alone.
  */
-export type ClipDrive = { drive: "time" } | { drive: "distance"; speed: number } | { drive: "state" };
+export type ClipDrive = { drive: "time" } | { drive: "distance"; speed: number } | { drive: "state" } | { drive: "door"; side: DoorSide };
+
+/** A side of a vehicle, seen facing its +X end: right is +Z. */
+export type DoorSide = "left" | "right";
 
 /** A looping animation of a model's parts: shared sample times from 0, linear in between. */
 export interface AnimationClipSpec {
@@ -340,6 +346,21 @@ export class MeshCore {
   }
 
   /**
+   * Draws `fn` moved by the rigid motion `move` (a point of the model, before any
+   * enclosing `turned`, to where it goes): an opening door's leaf. `move` must be
+   * a rotation about a vertical axis and a translation, so faces stay wound outward.
+   */
+  moved<T>(move: (p: Vec3) => Vec3, fn: () => T): T {
+    const outer = this.frame;
+    this.frame = (p) => outer(move(p));
+    try {
+      return fn();
+    } finally {
+      this.frame = outer;
+    }
+  }
+
+  /**
    * Records a rail wheelset whose geometry is not drawn in a "wheelset" scope (a
    * steam locomotive's wheelset part): its axle's centre, model coordinates.
    */
@@ -459,7 +480,9 @@ export class MeshCore {
     if (this.clips.some((c) => c.name === clip.name)) throw new Error(`animation "${clip.name}" added twice`);
     const t = clip.times;
     if (t.length < 2 || t[0] !== 0 || t.some((v, i) => i > 0 && v <= t[i - 1]!)) throw new Error(`animation "${clip.name}": times must start at 0 and rise`);
-    if (clip.drive?.drive !== "time" && clip.drive?.drive !== "state" && !(clip.drive?.drive === "distance" && clip.drive.speed > 0)) throw new Error(`animation "${clip.name}": drive must be time, state, or distance with a positive speed`);
+    const d = clip.drive;
+    const k = d?.drive;
+    if (!(k === "time" || k === "state" || (k === "distance" && d.speed > 0) || (k === "door" && /^(left|right)$/.test(d.side)))) throw new Error(`animation "${clip.name}": bad drive`);
     for (const track of clip.tracks) {
       if (!this.parts.some((p) => p.name === track.node)) throw new Error(`animation "${clip.name}": no part "${track.node}"`);
       if (/[\s.:/\[\]]/.test(track.node)) throw new Error(`animated part "${track.node}" has a name three.js cannot bind`);
@@ -535,7 +558,8 @@ export class MeshCore {
   clipDrives(): Record<string, ClipDrive> | null {
     if (!this.clips.length) return null;
     const out: Record<string, ClipDrive> = {};
-    for (const c of this.clips) out[c.name] = c.drive.drive === "distance" ? { drive: "distance", speed: c.drive.speed } : { drive: c.drive.drive };
+    // a copy of each drive as the design wrote it: { drive } and its speed or side
+    for (const c of this.clips) out[c.name] = { ...c.drive };
     return out;
   }
 
@@ -604,6 +628,11 @@ export class MeshCore {
   /** For `liftable`: numbers the mechanisms of one model, 1, 2, ... */
   nextLiftable(): number {
     return ++this.liftables;
+  }
+
+  /** The name of the part being drawn (a car of a set), or null outside any part. */
+  currentPartName(): string | null {
+    return this.currentPart >= 0 ? this.parts[this.currentPart]!.name : null;
   }
 
   /** The part the next triangle of `mat` goes to: the current one, or `liftable`'s routing. */

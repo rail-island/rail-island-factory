@@ -14,6 +14,7 @@ import { drawShell, halfWidth, type Arch, type Paint } from "./busBody.ts";
 import { AXLE_FACTOR, axleBeam, busWheel, onSide, sideSlab, type BusFrame } from "./busKit.ts";
 import { block, steeredWheels } from "./vehicleParts.ts";
 import { busLod, emptyBusLodNotes, type BusLodNotes } from "./lodRoad.ts";
+import { openable, plugMove } from "./doors.ts";
 
 /** One axle: where it is, and what it carries. */
 export interface Axle {
@@ -182,7 +183,7 @@ export interface DoorStyle {
   leafMat: string;
   /** The glass in each leaf, height ranges. */
   panes: Array<[number, number]>;
-  /** The opening's dark surround, if drawn. */
+  /** The material of the opening's dark surround, the doorway behind the leaves ("frame" if none is named). */
   surround?: string;
   /** A leaf's width at most: the door gets as many leaves as that needs. */
   leafWidth?: number;
@@ -231,21 +232,33 @@ export class BusDraft {
     for (let i = 0; i < n; i++) this.pane(s, x0 + i * w + gap / 2, x0 + (i + 1) * w - gap / 2, st);
   }
 
-  /** A passenger door over x0..x1 on side `s` (the right, +1, by default). */
-  /** A door x0..x1 on side `s`: its leaves `leaves`, else the style's count, else as many as its leaf width needs. */
+  /**
+   * A passenger door x0..x1 on side `s` (the right, +1, by default): its leaves
+   * `leaves`, else the style's count, else as many as its leaf width needs. The
+   * leaves open as sliding plug leaves (doors.ts): one slides back toward the
+   * tail, two slide apart, each with its panes; the dark surround, always drawn, is
+   * the doorway they open (the shell is not cut).
+   */
   door(x0: number, x1: number, st: DoorStyle, s = 1, leaves = st.leaves ?? Math.max(1, Math.ceil((x1 - x0 - 0.06) / (st.leafWidth ?? 0.62) - 1e-9))): void {
     this.lod.doors.push({ s, x: [x0, x1], y: [st.bottom, st.top] });
     this.fit(s > 0 ? "right doors" : "left doors", (x0 + x1) / 2, () => {
       const m = this.m;
-      if (st.surround) sideSlab(m, st.surround, this.frame, s, x0, x1, st.bottom - 0.04, st.top + 0.04, 0.01);
+      // kept off the body's underside, where a low door's sill would lie in its plane
+      const sill = Math.max(st.bottom - 0.04, Math.min(...this.frame.section.map(([, y]) => y)) + 0.015);
+      sideSlab(m, st.surround ?? "frame", this.frame, s, x0, x1, sill, st.top + 0.04, 0.01);
       const hw = halfWidth(this.frame.section, st.bottom + 0.2);
       const lw = (x1 - x0 - 0.06) / leaves;
-      for (let l = 0; l < leaves; l++) {
-        const a = x0 + 0.03 + l * lw;
-        const b = a + lw - 0.02;
-        block(m, st.leafMat, a, b, st.bottom, st.top, ...onSide(s, hw + 0.006, hw + 0.02));
-        for (const [y0, y1] of st.panes) block(m, "glass", a + 0.06, b - 0.06, y0, y1, ...onSide(s, hw + 0.014, hw + 0.026));
-      }
+      openable(m, (mm, o) => {
+        for (let l = 0; l < leaves; l++) {
+          const a = x0 + 0.03 + l * lw;
+          const b = a + lw - 0.02;
+          const slide = leaves === 1 ? -lw : (l < leaves / 2 ? -1 : 1) * lw;
+          mm.moved(plugMove(o, s, slide), () => {
+            block(mm, st.leafMat, a, b, st.bottom, st.top, ...onSide(s, hw + 0.006, hw + 0.02));
+            for (const [y0, y1] of st.panes) block(mm, "glass", a + 0.06, b - 0.06, y0, y1, ...onSide(s, hw + 0.014, hw + 0.026));
+          });
+        }
+      });
     });
   }
 

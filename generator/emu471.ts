@@ -391,8 +391,17 @@ function sideWork(c: Coach, v: Volume, L: CarLayout, paint: Paint, s: number, nu
   m.scope("doors", () => {
     L.doors.forEach((b, i) =>
       m.scope(`door ${i + 1}`, () => {
-        c.door(v, s, box(b), paint.door, { seam: 0.03 });
-        for (const g of L.doorGlass.slice(2 * i, 2 * i + 2)) c.window(v, s, box(g), { fw: 0.05 });
+        // two-leaf sliding plug doors, the lights riding on the leaves (doors.ts)
+        c.door(v, s, box(b), paint.door, {
+          seam: 0.03,
+          opens: { kind: "plug", leaves: 2 },
+          leafWork: (clip) => {
+            for (const g of L.doorGlass.slice(2 * i, 2 * i + 2)) {
+              const w = clip(box(g));
+              if (w) c.window(v, s, w, { fw: 0.05 });
+            }
+          },
+        });
       }),
     );
     L.canopies.forEach((b, i) => m.scope(`canopy ${i + 1}`, () => c.sidePanel(v, "canopy", s, box(b), 0.03, 0.04)));

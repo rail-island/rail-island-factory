@@ -145,13 +145,13 @@ export function bmoCoach(params?: ParamValues): MeshBuilder {
       doors(c, body, H, [
         { box: [64, 25, 81, 46], glass: [[66, 26, 71, 36], [74, 26, 79, 36]] },
         { box: [187, 25, 204, 46], glass: [[189, 26, 194, 36], [197, 26, 202, 36]] },
-      ], paint.door, { fw: 0.04 }),
+      ], paint.door, { fw: 0.04, opens: { kind: "plug", leaves: 2 } }),
       // the hatch under the end window (native rows 32..39), in the end section's blue
       (s) => m.scope("hatch", () => c.door(body, s, px([24, 32, 35, 39], H), "blue")),
       (s) =>
         m.scope("door canopies", () => {
           for (const [a, b] of [[5.7, 8.8], [18.0, 21.1]]) c.sidePanel(body, paint.canopy, s, { x0: a, y0: 2.6, x1: b, y1: 2.66 }, 0.04, 0.06);
-          for (const x of [7.25, 19.55]) c.sidePanel(body, "seam", s, { x0: x - 0.02, y0: 0.4, x1: x + 0.02, y1: 2.5 }, 0.016);
+          // (the doors' centre seams are the gaps between their opening leaves)
         }),
       (s) =>
         m.scope("handrails", () => {

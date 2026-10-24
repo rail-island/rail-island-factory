@@ -4,7 +4,7 @@
 decoration, catenary style, city block type and texture, drawn from the set modules and the
 props on a representative fixture; their categories, bound build functions, preview parameters,
 surfaces, the drawing kit, the block composer, and the checks they pass.
-**Code** - `generator/previews/` (`index.ts`, `sketch.ts`, `bridges.ts`, `stations.ts`,
+**Code** - `generator/previews/` (`index.ts`, `sketch.ts`, `wayKit.ts`, `bridges.ts`, `stations.ts`,
 `structures.ts`, `ways.ts`, `props.ts`, `textures.ts`, `blockKit.ts`, `blocks*.ts`),
 `generator/design.ts` (`bound`, `boundDesign`, `ParamSpec.preview`), `generator/jsModel.ts`,
 `src/catalogQuery.ts`, `src/ModelDetail.tsx`, `test/previews.test.ts`, `test/catalogSweep.ts`
@@ -49,11 +49,12 @@ lists every type as a model of its own. The titles are the registry's English na
 A preview's parameters split in two, shown in two blocks on the model page:
 
 - **Parameters** - what the game passes as a player set it: a station's track count and
-  length, a road station's stand count, what a bridge or a tunnel carries (one track, two, a
-  wide road), a rail mast over one track or a portal over two.
+  length, a road station's stand count, what a tunnel carries (one track, two, a wide road), a
+  rail mast over one track or a portal over two.
 - **Preview parameters** (`ParamSpec.preview`) - the fixture only, which the game takes from
-  the world: a bridge's span, a port's berth, an airport's terminal pad, a dam's valley, a way's
-  length, a city block's size and sample.
+  the world: a bridge's span, what its deck carries (one to three tracks, a narrow or wide
+  road) and its wires (none, a tram's, a railway's), a port's berth, an airport's terminal pad,
+  a dam's valley, a way's length, a city block's size and sample.
 
 ## Drawing
 
@@ -72,18 +73,25 @@ ground keeps its foot there. A sketch is lifted so its lowest point is the groun
 
 ## City blocks
 
-`blockKit.ts` grows a sample block from the block type's data: a perimeter block lines its four
-frontages with buildings picked from its pools by their mix and, per building, a preset its city
-presets weigh (`cityPresetsOf`), each facing the street (+Z at yaw 0, as the game's CityGen
-turns them) with a gap between neighbours; a single-building block stands one from its ring pool
-on its own origin. Every building is drawn by its own design and baked in, its materials under
-its design's id; streets and a kerb strip run round the block. The distant level is each
-building's massing, a box over its footprint in its commonest material. The pools' designs come
-from the modules that hold them, so each family of block types (`blocksVillage.ts`,
+`blockKit.ts` fills a sample block with the game's own fill (`sets/blockType.ts`:
+`rollBlockParams`, `fillRun`, `touchingSides`; [sets.md](sets.md)), so a preview is a block the
+game could grow. The block is cut by the game's narrow streets (8 studs) at a city type's block
+pitch (`size`: 64, 72 or 80 studs) in one of three outlines (`shape`): a lattice square, an
+annular sector of a radial city (its ring frontages walked along the circle, its spokes straight)
+or an irregular five-sided block. Its parameters are preview parameters - `spacing`, `colour`,
+`height`, each `auto` (rolled from the sample) or pinned - and the setback, gaps, density and
+paving (`ground`) are the spacing's and the type's. The candidates are the city variants the
+game may stand ([game-properties.md](game-properties.md), "City variants"), each measured; a
+building takes the block's colours and, where it stands against a neighbour, its party walls. A
+single-building block stands its ring pool's largest fitting model in the middle; a towerblock its
+tower first. Every building is drawn by its own design and baked in, its materials under its
+design's id, over the block's ground and the streets. The distant level is each building's
+massing, a box over its footprint in its commonest material. The pools' designs come from the
+modules that hold them, so each family of block types (`blocksVillage.ts`,
 `blocksCommercial.ts`, ...) is its own source module and bundles only its pools' code; ids are
-taken as the export settles them (`proceduralId`), so presets are found inside a bundle too. A
-block's page has no Source tab: its designs set `sourceTree: false`, as their trees are too big to
-deploy ([source-tree.md](source-tree.md)).
+taken as the export settles them (`proceduralId`), so a design's city variants are found inside a
+bundle too. A block's page has no Source tab: its designs set `sourceTree: false`, as their trees
+are too big to deploy ([source-tree.md](source-tree.md)).
 
 ## Textures
 
@@ -94,8 +102,8 @@ A texture page is a slab and a block faced with the photo at four studs a repeat
 
 The previews pass every design's checks (`test/catalogSweep.ts`): JS as in the generator, no
 coplanar faces of two materials, the lowest point on the ground, a LOD within its budget (500
-triangles; 12,000 for dams, decorations and blocks, whose distant level is still a drawing of
-several parts). A preview's JS, which carries its set module and is never exported to the game,
+triangles; 3,000 for bridges, whose distant level is the set module's silhouette; 12,000 for
+dams, decorations and blocks, whose distant level is still a drawing of several parts). A preview's JS, which carries its set module and is never exported to the game,
 is held to 80 KB or its GLBs. `test/previews.test.ts` holds every set type, block type and photo
 set to exactly one page, in its category and bound to it, and the preview parameters to the
 fixtures.

@@ -46,8 +46,8 @@ describe("the preview designs", () => {
 
   it("list a fixture the game sets itself under Preview parameters", () => {
     const flagged = (id: string): string[] => (PREVIEW_DESIGNS.find((d) => d.id === id)!.params ?? []).filter((p) => p.preview).map((p) => p.name);
-    expect(flagged("proc-preview-bridge-beam")).toEqual(["length"]);
-    expect(flagged("proc-preview-block-village")).toEqual(["size", "sample"]);
+    expect(flagged("proc-preview-bridge-beam")).toEqual(["deck", "wires", "length"]);
+    expect(flagged("proc-preview-block-houses")).toEqual(["shape", "size", "spacing", "colour", "height", "sample"]);
     // what a player picks for a station is an ordinary parameter
     expect(flagged("proc-preview-station-arch-shed")).toEqual([]);
   });
@@ -57,5 +57,15 @@ describe("the preview designs", () => {
     const arch = PREVIEW_DESIGNS.find((d) => d.id === "proc-preview-bridge-stone-arch")!;
     expect(beam.build.name).toBe(arch.build.name);
     expect(beam.build().triangleCount()).not.toBe(arch.build().triangleCount());
+  });
+
+  it("draw a recentred bridge deck over its own piers and girders", () => {
+    // two tracks: a 17-stud deck recentred 4 studs to +z over a path along x
+    const girder = PREVIEW_DESIGNS.find((d) => d.id === "proc-preview-bridge-plate-girder")!;
+    const z = girder.build({ deck: "double" }).positions().filter((_, i) => i % 3 === 2);
+    // within a stud of the deck's edges (the girders' flanges overhang them); the
+    // mirrored deck lay 8 studs off
+    expect(Math.min(...z)).toBeGreaterThan(4 - 17 / 2 - 1);
+    expect(Math.max(...z)).toBeLessThan(4 + 17 / 2 + 1);
   });
 });
