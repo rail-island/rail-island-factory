@@ -13,33 +13,12 @@ import * as roadType from "../sets/roadType.ts";
 import * as decoration from "../sets/decoration.ts";
 import * as catenaryStyle from "../sets/catenaryStyle.ts";
 import { Sketch, type Rgb, type V } from "./sketch.ts";
+import { BED_Y, CONTACT, GAUGE, MAST_SPACING, MESSENGER, RAIL_W, STEEL, WIRE, track } from "./wayKit.ts";
 
 export const WAY_PARAMS: ParamSpec[] = [
   { name: "length", title: "Length", default: "short", preview: true, values: [{ value: "short", title: "40 studs" }, { value: "long", title: "80 studs" }] },
 ];
 const lengthOf = (values: ParamValues | undefined): number => (resolveParams(WAY_PARAMS, values).length === "long" ? 80 : 40);
-
-// the game's track measures (studs): the ballast bed's foot and slope, the sleepers,
-// the rails and their gauge, the railhead, and the overhead wires above it
-const BED_Y = 0.67, BED_SLOPE = 0.9;
-const TIE = { spacing: 2.2, width: 3.6, height: 0.35, depth: 0.8 };
-const GAUGE = 2.7, RAIL_W = 0.45, RAIL_H = 0.45;
-const BALLAST: Rgb = [168, 160, 150], STEEL: Rgb = [120, 120, 130];
-const CONTACT = 8.86, MESSENGER = 10.6, WIRE = 0.08, MAST_SPACING = 30;
-
-/** One track along +X centred at lateral `z`: bed, sleepers (unless `bare`), rails; returns the railhead height. */
-function track(s: Sketch, length: number, z: number, sleeper: { color: Rgb; surface: SurfaceId } | null, lod: boolean, bedTop = BED_Y + (0.8 * 2) / 3, bedWidth = 5): number {
-  const half = bedWidth / 2;
-  s.sweep(s.mat("ballast", BALLAST, "rail-ballast"), [[-length / 2, 0, z], [length / 2, 0, z]],
-    [[half + BED_SLOPE, 0], [half, bedTop], [-half, bedTop], [-half - BED_SLOPE, 0]], true);
-  if (sleeper && !lod) {
-    const tie = s.mat("wood", sleeper.color, sleeper.surface);
-    for (let x = -length / 2 + TIE.spacing / 2; x < length / 2; x += TIE.spacing) s.box(tie, { cx: x, cy: bedTop + TIE.height / 2, cz: z, sx: TIE.depth, sy: TIE.height, sz: TIE.width });
-  }
-  const railY = bedTop + TIE.height + RAIL_H / 2;
-  if (!lod) for (const side of [-1, 1]) s.box(s.mat("steel", STEEL), { cx: 0, cy: railY, cz: z + side * GAUGE / 2, sx: length, sy: RAIL_H, sz: RAIL_W });
-  return railY + RAIL_H / 2;
-}
 
 function railSketch(values: ParamValues | undefined, type: string, lod: boolean): Sketch {
   const length = lengthOf(values);

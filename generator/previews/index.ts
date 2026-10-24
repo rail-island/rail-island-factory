@@ -69,7 +69,9 @@ function structures(set: SetName, prefix: string, build: Builder, buildLod: Buil
 }
 
 export const PREVIEW_FAMILIES: readonly PreviewFamily[] = [
-  { source: "previews/bridges.ts", designs: structures("bridge", "bridge", bridgePreview, bridgePreviewLod, BRIDGE_PARAMS) },
+  // a bridge's distant level is the set module's (bridge.lowDetailBoxes, what the game
+  // draws far away): 500 + 1,500 per 100 studs, 3,000 on the 160-stud fixture
+  { source: "previews/bridges.ts", designs: designs({ category: "Structures", group: "bridge", prefix: "bridge", build: bridgePreview, buildLod: bridgePreviewLod, params: BRIDGE_PARAMS, lodTriangles: 3000 }, typesOf("bridge")) },
   {
     source: "previews/stations.ts",
     designs: [
@@ -116,9 +118,10 @@ export const PREVIEW_FAMILIES: readonly PreviewFamily[] = [
 
 /** The block types by the family module whose pools they draw from. */
 function blockFamilies(): PreviewFamily[] {
-  const family = (id: string): string =>
-    id.startsWith("village") ? "Village" : id.startsWith("comm_") ? "Commercial" : id.startsWith("skyscraper") ? "Highrise"
-    : id === "industry" ? "Industry" : id === "tower" ? "Tower" : "Historic";
+  const FAMILY: Record<string, string> = {
+    houses: "Village", street: "Commercial", highrise: "Highrise", industrial: "Industry", towerblock: "Tower", landmark: "Historic",
+  };
+  const family = (id: string): string => FAMILY[id] ?? "Historic";
   const builders: Record<string, [Builder, Builder]> = {
     Village: [blockPreviewVillage, blockPreviewVillageLod], Commercial: [blockPreviewCommercial, blockPreviewCommercialLod],
     Industry: [blockPreviewIndustry, blockPreviewIndustryLod], Tower: [blockPreviewTower, blockPreviewTowerLod],

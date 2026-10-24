@@ -148,6 +148,16 @@ The house is drawn in station boxes, not placed as a prop: the game places props
 whose data names one (`cableCarStation`, `port`, `airport`; [props.md](props.md)), and a
 station type has no such field yet.
 
+## Glass in the game
+
+The game draws `glass` see-through; the factory's previews draw it opaque. A pane is
+therefore glass only where something should show through it - a shed's glazing, a
+shelter's walls, a canopy's rooflight. A window in a solid wall (the village depot's house,
+wing and gables, the heritage canopy's waiting room) is an opaque dark `steel` pane, since a
+glass one would show its own frame and wall through it; and a glass roof sits on a steel rim,
+not a plate. `test/stationSet.test.ts` holds every type to it: no thin flat glass pane may lie
+on a solid face.
+
 ## Triangle budgets
 
 The game draws 12 triangles per box (8 for a gable prism). A station type is held to a fixed

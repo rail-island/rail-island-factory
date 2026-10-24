@@ -16,6 +16,7 @@ import {
 } from "./meshBuilder.ts";
 import { lodMasses, lodStripes, type LodMass } from "./lodLandmarks.ts";
 import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
+import { anyBlank, blankSides, partyParams, partySlabs, windowed, type Blank } from "./partyWalls.ts";
 
 export type { ProceduralDesign } from "./design.ts";
 
@@ -57,6 +58,14 @@ export const SKYSCRAPER_PARAMS: readonly ParamSpec[] = [
     { value: "graphite", title: "Graphite" },
   ] },
 ];
+
+/**
+ * The towers whose plan can stand against a neighbour (partyWalls.ts): the brick
+ * apartment slab on its plain flanks (its balconies face front and back), the glass
+ * office on its podium's flanks and back.
+ */
+const BRICK_PARAMS: readonly ParamSpec[] = [...SKYSCRAPER_PARAMS, ...partyParams(["left", "right"])];
+const OFFICE_PARAMS: readonly ParamSpec[] = [...SKYSCRAPER_PARAMS, ...partyParams(["left", "right", "back"])];
 
 const TWISTED_PARAMS: readonly ParamSpec[] = [...SKYSCRAPER_PARAMS,
   { name: "twist", title: "Twist", default: "quarter", values: [
@@ -167,7 +176,7 @@ function floorBands(m: MeshBuilder, mat: string, ring: Ring, y0: number, y1: num
  */
 function piers(
   m: MeshBuilder, mat: string, cx: number, cz: number, w: number, d: number,
-  y0: number, y1: number, n: number, width: number, depth: number,
+  y0: number, y1: number, n: number, width: number, depth: number, blank?: Blank,
 ): void {
   m.scope("piers", () => {
     for (let i = 0; i <= n; i++) {
@@ -175,7 +184,8 @@ function piers(
       const tz = -d / 2 + (i / n) * d;
       for (const s of [-1, 1]) {
         m.box(mat, cx + tx, cz + s * (d / 2 + depth / 2 - 0.05), width, depth, y0, y1);
-        if (i > 0 && i < n) m.box(mat, cx + s * (w / 2 + depth / 2 - 0.05), cz + tz, depth, width, y0, y1);
+        // a blank party wall's piers would stand inside its slab
+        if (i > 0 && i < n && !(blank && (s < 0 ? blank.left : blank.right))) m.box(mat, cx + s * (w / 2 + depth / 2 - 0.05), cz + tz, depth, width, y0, y1);
       }
     }
   });
@@ -212,7 +222,7 @@ function curtainWall(
  * draws each as one outward quad instead of a thin box, for a tower whose
  * every-floor panels would otherwise outgrow the budget.
  */
-function facadePanels(m: MeshBuilder, ring: Ring, y0: number, y1: number, step: number, bays: number, material = "glassDark", flat = false): void {
+function facadePanels(m: MeshBuilder, ring: Ring, y0: number, y1: number, step: number, bays: number, material = "glassDark", flat = false, blank?: Blank): void {
   m.scope("facade panels", () => {
     for (let y = y0 + 0.8, floor = 0; y + step < y1; y += step, floor++) {
       for (let edge = 0; edge < ring.length; edge++) {
@@ -220,6 +230,8 @@ function facadePanels(m: MeshBuilder, ring: Ring, y0: number, y1: number, step: 
         const b = ring[(edge + 1) % ring.length]!;
         const dx = b[0] - a[0], dz = b[1] - a[1];
         const length = Math.hypot(dx, dz);
+        // no panels on a blank party wall: the edge's outward normal is (-dz, dx)
+        if (blank && ((blank.left && -dz / length < -0.5) || (blank.right && -dz / length > 0.5) || (blank.back && dx / length < -0.5))) continue;
         const angle = Math.atan2(-dz, dx);
         // Leave a generous margin around each panel: the surface belongs only to it.
         for (let bay = 0; bay < bays; bay++) {
@@ -287,13 +299,16 @@ function glassOfficeLayout(m: TowerMesh) {
 
 /** A square blue-glass office tower: stone podium, curtain wall, crown, mast. */
 export function glassOffice(params?: ParamValues): MeshBuilder {
-  const m = new TowerMesh(params);
+  const m = new TowerMesh(params, OFFICE_PARAMS);
   const k = m.plan;
   const { mastHeight, top, belt, podium, shaft, crown } = glassOfficeLayout(m);
+  const blank = blankSides(m.choices);
   m.scope("podium", () => {
     m.box("dark", 0, 0, podium, podium, 0, 4);
     m.box("glassDark", 0, 0, podium - 1, podium - 1, 4, 11);
     m.box("slab", 0, 0, podium + 0.5, podium + 0.5, 11, 12);
+    // the podium's party walls: from its glass band out to the cornice's edge, under the cornice
+    if (anyBlank(blank)) m.scope("party walls", () => partySlabs(m, glassOffice(windowed(m.choices)).positions(), blank, podium - 1, podium - 1, 11, "dark"));
   });
   m.scope("shaft", () => {
     curtainWall(m, "glass", "steel", 0, 0, shaft, shaft, 12, top, { bays: m.bays(6) });
@@ -439,14 +454,15 @@ function brickLayout(m: TowerMesh) {
 
 /** A brick apartment high-rise with balconies and a timber water tank on the roof. */
 export function brickResidential(params?: ParamValues): MeshBuilder {
-  const m = new TowerMesh(params);
+  const m = new TowerMesh(params, BRICK_PARAMS);
   const k = m.plan;
   const { w, d, top, balconyX } = brickLayout(m);
   const bays = m.bays(8);
+  const blank = blankSides(m.choices);
   m.scope("plinth", () => m.box("stone", 0, 0, w + 1, d + 1, 0, 7));
   m.scope("shaft", () => {
     m.scope("core", () => m.box("window", 0, 0, w, d, 7, top, 0, false));
-    piers(m, "brick", 0, 0, w, d, 7, top, bays, 1.6, 0.5);
+    piers(m, "brick", 0, 0, w, d, 7, top, bays, 1.6, 0.5, blank);
     floorBands(m, "brick", rect(w, d), 7, top, 3.2, 1.1, 0.5);
   });
   // balconies: a slab and a rail, every floor on the front, every other at the back
@@ -477,7 +493,9 @@ export function brickResidential(params?: ParamValues): MeshBuilder {
   });
   entrance(m, d / 2 + 0.5, 0, "dark");
   // one window panel a floor, between the 3.2 m floor bands
-  facadePanels(m, rect(w, d), 7, top, 3.2, bays, "glass", true);
+  facadePanels(m, rect(w, d), 7, top, 3.2, bays, "glass", true, blank);
+  // a blank flank: brick from the plinth to the roof slab, out to the roof's edge
+  if (anyBlank(blank)) m.scope("party walls", () => partySlabs(m, brickResidential(windowed(m.choices)).positions(), blank, w, d, top, "brick"));
   m.scope("balcony returns", () => {
     for (let y = 10.2, floor = 0; y < top - 3; y += 3.2, floor++) {
       for (const sign of floor % 2 ? [1] : [-1, 1]) {
@@ -858,7 +876,7 @@ const mastMasses = (cx: number, cz: number, y0: number, h: number, r = 0.5): Lod
 const canopyMass = (front: number, y: number, mat = "steel"): LodMass => boxMass(mat, 0, front + 1.7, 7.5, 3.7, y + 3.6, y + 4.1);
 
 export function glassOfficeLod(params?: ParamValues): MeshBuilder {
-  return skyscraperLod(params, SKYSCRAPER_PARAMS, (m) => {
+  return skyscraperLod(params, OFFICE_PARAMS, (m) => {
     const k = m.plan;
     const { mastHeight, top, belt, podium, shaft, crown } = glassOfficeLayout(m);
     return [
@@ -921,7 +939,7 @@ export function pagodaLod(params?: ParamValues): MeshBuilder {
 }
 
 export function brickResidentialLod(params?: ParamValues): MeshBuilder {
-  return skyscraperLod(params, SKYSCRAPER_PARAMS, (m) => {
+  return skyscraperLod(params, BRICK_PARAMS, (m) => {
     const k = m.plan;
     const { w, d, top, balconyX } = brickLayout(m);
     const span = balconyX[2]! - balconyX[0]! + 4.4;
@@ -1094,10 +1112,10 @@ export const SKYSCRAPER_CATALOG: CatalogFields = {
 
 /** Every procedural skyscraper, by catalog id. The ids are stored in saved maps. */
 export const SKYSCRAPERS: ProceduralDesign[] = [
-  { params: SKYSCRAPER_PARAMS, finishParams: SKYSCRAPER_FINISH_PARAMS, id: "sky-glass-office", title: "Glass Office Tower", build: glassOffice, buildLod: glassOfficeLod },
+  { params: OFFICE_PARAMS, finishParams: SKYSCRAPER_FINISH_PARAMS, id: "sky-glass-office", title: "Glass Office Tower", build: glassOffice, buildLod: glassOfficeLod },
   { params: SKYSCRAPER_PARAMS, finishParams: SKYSCRAPER_FINISH_PARAMS, id: "sky-art-deco", title: "Art Deco Tower", build: artDeco, buildLod: artDecoLod },
   { params: SKYSCRAPER_PARAMS, finishParams: SKYSCRAPER_FINISH_PARAMS, id: "sky-pagoda", title: "Pagoda Tower", build: pagoda, buildLod: pagodaLod },
-  { params: SKYSCRAPER_PARAMS, finishParams: SKYSCRAPER_FINISH_PARAMS, id: "sky-brick-residential", title: "Brick Apartment Tower", build: brickResidential, buildLod: brickResidentialLod },
+  { params: BRICK_PARAMS, finishParams: SKYSCRAPER_FINISH_PARAMS, id: "sky-brick-residential", title: "Brick Apartment Tower", build: brickResidential, buildLod: brickResidentialLod },
   { params: SKYSCRAPER_PARAMS, finishParams: SKYSCRAPER_FINISH_PARAMS, id: "sky-twin-towers", title: "Twin Towers", build: twinTowers, buildLod: twinTowersLod },
   { params: TWISTED_PARAMS, finishParams: SKYSCRAPER_FINISH_PARAMS, id: "sky-twisted", title: "Twisting Tower", build: twisted, buildLod: twistedLod },
   { params: SKYSCRAPER_PARAMS, finishParams: SKYSCRAPER_FINISH_PARAMS, id: "sky-dark-slab", title: "Black Glass Slab", build: darkSlab, buildLod: darkSlabLod },

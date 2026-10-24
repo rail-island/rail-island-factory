@@ -28,7 +28,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { BUILDINGS, VILLAGE_DESIGNS, ALL_VEHICLES } from "./generate.ts";
-import { SETS } from "./sets/registry.ts";
+import { BLOCK_PARAM_TEXT, SETS } from "./sets/registry.ts";
 import { WOODS } from "./woods.ts";
 import { SPECIES } from "./trees.ts";
 import { writeIfChanged } from "./jsModel.ts";
@@ -123,6 +123,10 @@ export function exportedText(): Map<string, string> {
       out.set(`set.${s.set}.group.${g.id}`, g.label);
       if (g.description) out.set(`set.${s.set}.group.${g.id}.desc`, g.description);
     }
+  }
+  for (const [name, p] of Object.entries(BLOCK_PARAM_TEXT)) {
+    out.set(`set.blockType.param.${name}`, p.label);
+    for (const [value, label] of Object.entries(p.values)) out.set(`set.blockType.param.${name}.${value}`, label);
   }
   for (const { design: w } of WOODS) {
     out.set(`woods.${w.name}`, w.label);

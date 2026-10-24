@@ -23,7 +23,8 @@ describe("the commercial buildings", () => {
     expect(COMMERCIAL_BUILDINGS.map((d) => d.id)).toEqual([
       "proc-building-comm-corner-shop", "proc-building-comm-balcony-house", "proc-building-comm-market-block", "proc-building-comm-terrace-house", "proc-building-comm-office-house",
     ]);
-    expect(COMMERCIAL_BUILDINGS.reduce((n, d) => n + paramCombinations(d.params).length, 0)).toBe(3000);
+    // the party walls (partyWalls.ts) only blank a side a neighbour covers: not a variant of their own
+    expect(COMMERCIAL_BUILDINGS.reduce((n, d) => n + paramCombinations(d.params?.filter((p) => !p.name.startsWith("party"))).length, 0)).toBe(3000);
     expect(COMMERCIAL_CATALOG).toMatchObject({ category: "Commercial", group: "comm_classic", defaultScale: 1 });
     const exported = exportMeta(BUILDINGS).buildings;
     for (const d of COMMERCIAL_BUILDINGS) {
@@ -57,7 +58,9 @@ describe("the commercial buildings", () => {
         const positions = shape(d, values);
         signatures.add(JSON.stringify([...positions]));
       }
-      const shapeCount = paramCombinations(d.params!.filter((p) => !d.finishParams!.includes(p.name))).length;
+      // a party wall (partyWalls.ts) is covered one side at a time, and each blank side is a shape of its own
+      const party = d.params!.filter((p) => p.name.startsWith("party")).length;
+      const shapeCount = paramCombinations(d.params!.filter((p) => !d.finishParams!.includes(p.name) && !p.name.startsWith("party"))).length + party;
       expect(signatures.size).toBe(shapeCount);
     });
 

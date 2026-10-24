@@ -23,7 +23,8 @@ describe("commercial architecture", () => {
       const d = DESIGNS.get(proceduralId(row.targetId!))!;
       expect(d, row.legacyId).toBeDefined();
       expect(() => resolveParams(d.params!, row.params as Record<string, string>)).not.toThrow();
-      expect(Object.keys(row.params).sort(), row.legacyId).toEqual(d.params!.map(p => p.name).sort());
+      // every parameter but the party walls, which only a city sets (partyWalls.ts)
+      expect(Object.keys(row.params).sort(), row.legacyId).toEqual(d.params!.map(p => p.name).filter(n => !n.startsWith("party")).sort());
     }
   });
   it("preserves distinguishing row-house entrances, signs and long facades", () => {
