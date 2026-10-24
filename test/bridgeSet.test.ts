@@ -45,4 +45,24 @@ describe("the bridge kit", () => {
       expect(vault.length, type).toBe(1);
     }
   });
+
+  it("stands a wide deck on twin columns and a tall pier on a footing", () => {
+    const columnsAt = (deckWidth: number): number => {
+      const path = bridge.pathFromPoints([{ x: 0, y: 30, z: 0 }, { x: 50, y: 30, z: 0 }], deckWidth, 0, 0.67, 9.9)!;
+      const boxes = bridge.buildBridge("beam", path, () => 0).filter((b) => b.shape === "box" && b.part === "support" && b.material === "pier");
+      // the middle pier: its shafts are the tapering boxes there
+      const mid = boxes.filter((b) => b.shape === "box" && Math.abs(b.center.x - 25) < 0.01);
+      expect(mid.some((b) => b.shape === "box" && b.ground && b.size.y < 1), "footing").toBe(true);
+      return mid.filter((b) => b.shape === "box" && b.topScale !== undefined).length;
+    };
+    expect(columnsAt(9)).toBe(1);
+    expect(columnsAt(17)).toBe(2);
+  });
+
+  it("gives a masonry viaduct's intermediate piers cutwaters, and its abutments none", () => {
+    const path = bridge.pathFromPoints([{ x: 0, y: 24, z: 0 }, { x: 60, y: 24, z: 0 }], 9, 0, 0.67, 9.9)!;
+    const turned = bridge.buildBridge("stone_arch", path, () => 0).filter((b) => b.shape === "box" && Math.abs(b.yaw - Math.PI / 2 - Math.PI / 4) < 1e-6);
+    const stations = [...new Set(turned.map((b) => (b.shape === "box" ? Math.round(b.center.x) : 0)))].sort((a, b) => a - b);
+    expect(stations).toEqual([20, 40]);
+  });
 });
