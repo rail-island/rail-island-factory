@@ -49,8 +49,12 @@ describe("the bridge kit", () => {
       const boxes = bridge.buildBridge("beam", path, () => 0).filter((b) => b.shape === "box" && b.part === "support" && b.material === "pier");
       // the middle pier: its shafts are the tapering boxes there
       const mid = boxes.filter((b) => b.shape === "box" && Math.abs(b.center.x - 25) < 0.01);
-      expect(mid.some((b) => b.shape === "box" && b.ground && b.size.y < 1), "footing").toBe(true);
-      return mid.filter((b) => b.shape === "box" && b.topScale !== undefined).length;
+      // the footing: a plinth sunk into the ground, showing above it, and not charted --
+      // the columns standing on the terrain are what the game charts for ships
+      expect(mid.some((b) => b.shape === "box" && !b.ground && b.size.y < 1 && b.center.y - b.size.y / 2 < 0 && b.center.y + b.size.y / 2 > 0), "footing").toBe(true);
+      const columns = mid.filter((b) => b.shape === "box" && b.topScale !== undefined);
+      expect(columns.every((b) => b.ground), "columns charted").toBe(true);
+      return columns.length;
     };
     expect(columnsAt(9)).toBe(1);
     expect(columnsAt(17)).toBe(2);

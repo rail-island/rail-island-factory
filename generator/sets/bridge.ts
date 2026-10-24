@@ -577,7 +577,10 @@ export interface PierSpec {
   /** Columns at these lateral offsets (each `w` wide), whatever the deck's width. */
   columns?: number[];
 }
-const FOOTING_HEIGHT = 0.8, FOOTING_MARGIN = 0.3; // slim: the footing is what the game charts for ships
+// A tall pier's footing is a plinth sunk into the ground, showing FOOTING_RISE: the
+// column standing on the terrain is the box tagged `ground`, so what the game charts
+// for ships stays the slim column and not the wider footing round it.
+const FOOTING_HEIGHT = 0.8, FOOTING_RISE = 0.3, FOOTING_MARGIN = 0.6;
 const TWIN_DECK_WIDTH = 14; // a deck this wide stands on two columns
 function pushPier(out: BridgeBox[], g: BridgePathGeom, distance: number, spec: PierSpec, heightAt: TerrainHeightFn): void {
   const under = spec.under ?? 0;
@@ -597,7 +600,7 @@ function pushPier(out: BridgeBox[], g: BridgePathGeom, distance: number, spec: P
   const capHeight = drop > 2 ? 0.65 : 0;
   const footing = drop > 4 ? FOOTING_HEIGHT : 0;
   const BEARING = capHeight ? 0.3 : 0;
-  const shaftBottom = terrainY + footing, shaftTop = railPoint.y - BEARING - capHeight;
+  const shaftBottom = terrainY, shaftTop = railPoint.y - BEARING - capHeight;
   const shaftH = shaftTop - shaftBottom;
   if (shaftH <= 0.05) return;
   // the shaft widens downward with its height, its top kept near the given size
@@ -610,10 +613,10 @@ function pushPier(out: BridgeBox[], g: BridgePathGeom, distance: number, spec: P
   const centreAt = (lx: number, y: number): Vec3 => { const p = pathWorldPoint(g, distance, lx, 0); return { x: p.x, y, z: p.z }; };
   if (footing) {
     const span = twin ? columns[1]! - columns[0]! + colW * grow : spec.w * grow;
-    out.push({ shape: "box", center: centreAt(0, terrainY + footing / 2), size: { x: span + 2 * FOOTING_MARGIN, y: footing, z: spec.d * grow + 2 * FOOTING_MARGIN }, yaw, material, part: "support", ground: true });
+    out.push({ shape: "box", center: centreAt(0, terrainY + FOOTING_RISE - footing / 2), size: { x: span + 2 * FOOTING_MARGIN, y: footing, z: spec.d * grow + 2 * FOOTING_MARGIN }, yaw, material, part: "support" });
   }
   for (const lx of columns) {
-    out.push({ shape: "box", center: centreAt(lx, (shaftBottom + shaftTop) / 2), size: { x: colW * grow, y: shaftH, z: spec.d * grow }, yaw, material, part: "support", topScale: 1 / grow, ...(footing ? {} : { ground: true as const }) });
+    out.push({ shape: "box", center: centreAt(lx, (shaftBottom + shaftTop) / 2), size: { x: colW * grow, y: shaftH, z: spec.d * grow }, yaw, material, part: "support", topScale: 1 / grow, ground: true });
   }
   if (capHeight) {
     pushBox(out, g, distance, 0, -DECK_THICKNESS / 2 - under - BEARING - capHeight / 2, { x: capWidth, y: capHeight, z: spec.d + 0.45 }, material, "support");
