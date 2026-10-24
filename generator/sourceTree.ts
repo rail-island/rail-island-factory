@@ -13,6 +13,8 @@
 // imports; the site imports the types from here.
 
 export const TREE_DIR = "tree";
+/** Cloudflare Workers refuses an asset over 25 MiB; the build refuses a larger tree file. */
+export const TREE_MAX_BYTES = 25 * 1024 * 1024;
 
 /** What a scope or leaf covers: its triangle count and bounding box (metres). */
 export interface NodeExtent {

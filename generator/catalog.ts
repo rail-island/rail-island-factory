@@ -176,6 +176,8 @@ export interface CatalogRecord extends MetaEntry {
   coarse?: boolean;
   /** Set when the JS module exports buildMax, an optional close-up detail level. */
   maxDetail?: boolean;
+  /** Set when the design ships no source tree (`sourceTree: false`, a city block): the site shows no Source tab. */
+  noSourceTree?: boolean;
   /**
    * A vehicle's declared OpenTTD figures (design.ts OpenttdProperties), for the
    * site's GRF export only -- not part of the game's meta.json. Absent when the

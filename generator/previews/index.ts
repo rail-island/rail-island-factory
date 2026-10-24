@@ -43,6 +43,7 @@ interface Spec {
   buildLod: Builder;
   params?: ParamSpec[];
   lodTriangles?: ProceduralDesign["lodTriangles"];
+  sourceTree?: false;
 }
 
 /** One design per (type id, title), bound to the family's build functions. */
@@ -54,6 +55,7 @@ function designs(spec: Spec, types: ReadonlyArray<{ id: string; label: string }>
     ...(spec.params ? { params: spec.params } : {}),
     lodTriangles: spec.lodTriangles ?? 500,
     catalog: previewCatalog(spec.category, spec.group),
+    ...(spec.sourceTree === false ? { sourceTree: false as const } : {}),
   }));
 }
 
@@ -124,7 +126,7 @@ function blockFamilies(): PreviewFamily[] {
     source: `previews/blocks${name}.ts`,
     designs: typesOf("blockType").filter((t) => family(t.id) === name).flatMap((t) => {
       const meta = blockType.TYPE_META[t.id];
-      return designs({ category: "City blocks", group: meta?.district ?? meta?.overlay ?? "other", prefix: "block", build, buildLod, params: BLOCK_PARAMS, lodTriangles: 12000 }, [t]);
+      return designs({ category: "City blocks", group: meta?.district ?? meta?.overlay ?? "other", prefix: "block", build, buildLod, params: BLOCK_PARAMS, lodTriangles: 12000, sourceTree: false }, [t]);
     }),
   }));
 }

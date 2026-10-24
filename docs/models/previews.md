@@ -77,7 +77,9 @@ its design's id; streets and a kerb strip run round the block. The distant level
 building's massing, a box over its footprint in its commonest material. The pools' designs come
 from the modules that hold them, so each family of block types (`blocksVillage.ts`,
 `blocksCommercial.ts`, ...) is its own source module and bundles only its pools' code; ids are
-taken as the export settles them (`proceduralId`), so presets are found inside a bundle too.
+taken as the export settles them (`proceduralId`), so presets are found inside a bundle too. A
+block's page has no Source tab: its designs set `sourceTree: false`, as their trees are too big to
+deploy ([source-tree.md](source-tree.md)).
 
 ## Textures
 
