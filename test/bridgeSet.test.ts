@@ -156,4 +156,29 @@ describe("the bridge kit", () => {
       }
     }
   });
+
+  it("lays a pier's footing plinth only on flat ground, and never leaves a pier hanging off a slope", () => {
+    // regression: the plinth was sunk at the height under the pier's centre whatever
+    // the ground did, so on a hillside a flat slab jutted out of the slope downhill
+    const plinths = (boxes: bridge.BridgeBox[]) => boxes.filter((b) => b.shape === "box" && b.part === "support" && !b.ground && (b.material === "pier" || b.material === "tower") && Math.abs(b.size.y - 0.8) < 1e-9);
+    const slopes: Array<[string, bridge.TerrainHeightFn]> = [["across", (_x, z) => 0.7 * z], ["along", (x) => 0.35 * x]];
+    for (const [name, heightAt] of slopes) {
+      for (const [type, width] of [["beam", 9], ["beam", 17], ["arch", 9]] as const) {
+        const path = bridge.pathFromPoints([{ x: 0, y: 40, z: 0 }, { x: 60, y: 40, z: 0 }], width, 0, 0.67, 13.16)!;
+        const boxes = bridge.buildBridge(type, path, heightAt);
+        expect(plinths(boxes), `${type} ${width} ${name}: a plinth on a slope`).toHaveLength(0);
+        // every charted box reaches the lowest ground under its four corners
+        for (const b of boxes) {
+          if (b.shape !== "box" || !b.ground) continue;
+          const foot = b.center.y - b.size.y / 2;
+          // the path runs along +x: a box's width lies along z, its depth along x
+          const corners = [-1, 1].flatMap((sx) => [-1, 1].map((sz) => heightAt(b.center.x + (sz * b.size.z) / 2, b.center.z + (sx * b.size.x) / 2)));
+          expect(foot, `${type} ${width} ${name} at ${b.center.x.toFixed(1)}`).toBeLessThanOrEqual(Math.min(...corners) + 1e-6);
+        }
+      }
+    }
+    // ...and a flat crossing keeps its plinths
+    const flat = bridge.buildBridge("beam", bridge.pathFromPoints([{ x: 0, y: 40, z: 0 }, { x: 60, y: 40, z: 0 }], 9, 0, 0.67, 13.16)!, () => 0);
+    expect(plinths(flat).length).toBeGreaterThan(0);
+  });
 });

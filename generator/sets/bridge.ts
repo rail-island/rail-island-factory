@@ -582,6 +582,22 @@ export interface PierSpec {
 // for ships stays the slim column and not the wider footing round it.
 const FOOTING_HEIGHT = 0.8, FOOTING_RISE = 0.3, FOOTING_MARGIN = 0.6;
 const TWIN_DECK_WIDTH = 14; // a deck this wide stands on two columns
+// The terrain under a footprint `w` across and `d` along the path, centred `lx`
+// across it at `distance`: its lowest and highest point over the four corners and
+// the centre. A pier stands on the lowest (on a slope it reaches down the hill
+// instead of hanging off it), and a footing is laid only where the two agree.
+const FLAT_TOLERANCE = 0.4;
+function footprintTerrain(g: BridgePathGeom, distance: number, lx: number, w: number, d: number, heightAt: TerrainHeightFn): { low: number; high: number } {
+  const { tangent } = pathSample(g, distance);
+  const along = unit(tangent.x, 0, tangent.z), right = pathRight(tangent);
+  const c = pathWorldPoint(g, distance, lx, 0);
+  let low = heightAt(c.x, c.z), high = low;
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    const y = heightAt(c.x + (right.x * sx * w + along.x * sz * d) / 2, c.z + (right.z * sx * w + along.z * sz * d) / 2);
+    low = Math.min(low, y); high = Math.max(high, y);
+  }
+  return { low, high };
+}
 function pushPier(out: BridgeBox[], g: BridgePathGeom, distance: number, spec: PierSpec, heightAt: TerrainHeightFn): void {
   const under = spec.under ?? 0;
   const railPoint = pathWorldPoint(g, distance, 0, -DECK_THICKNESS / 2 - under);
@@ -592,7 +608,9 @@ function pushPier(out: BridgeBox[], g: BridgePathGeom, distance: number, spec: P
   const { material } = spec;
   const concrete = material === "pier" || material === "tower";
   if (!concrete) {
-    out.push({ shape: "box", center: { x: railPoint.x, y: terrainY + drop / 2, z: railPoint.z }, size: { x: spec.w, y: drop, z: spec.d }, yaw, material, part: "support", ground: true });
+    // a masonry block reaches down to the lowest ground under it
+    const foot = footprintTerrain(g, distance, 0, spec.w, spec.d, heightAt).low;
+    out.push({ shape: "box", center: { x: railPoint.x, y: (foot + railPoint.y) / 2, z: railPoint.z }, size: { x: spec.w, y: railPoint.y - foot, z: spec.d }, yaw, material, part: "support", ground: true });
     if (spec.cutwaterTop !== undefined) pushCutwaters(out, g, distance, spec, heightAt);
     return;
   }
@@ -611,12 +629,20 @@ function pushPier(out: BridgeBox[], g: BridgePathGeom, distance: number, spec: P
   const colX = Math.max(g.deckWidth * 0.28, capWidth / 2 - (colW * grow) / 2 - 0.3);
   const columns = spec.columns ?? (twin ? [-colX, colX] : [0]);
   const centreAt = (lx: number, y: number): Vec3 => { const p = pathWorldPoint(g, distance, lx, 0); return { x: p.x, y, z: p.z }; };
+  // The footing plinth only on flat ground (or a flat river bed): on a slope a flat
+  // slab sunk at the centre's height would jut out of the hillside downhill.
   if (footing) {
     const span = twin ? columns[1]! - columns[0]! + colW * grow : spec.w * grow;
-    out.push({ shape: "box", center: centreAt(0, terrainY + FOOTING_RISE - footing / 2), size: { x: span + 2 * FOOTING_MARGIN, y: footing, z: spec.d * grow + 2 * FOOTING_MARGIN }, yaw, material, part: "support" });
+    const size = { x: span + 2 * FOOTING_MARGIN, y: footing, z: spec.d * grow + 2 * FOOTING_MARGIN };
+    const under = footprintTerrain(g, distance, 0, size.x, size.z, heightAt);
+    if (under.high - under.low <= FLAT_TOLERANCE) {
+      out.push({ shape: "box", center: centreAt(0, under.low + FOOTING_RISE - footing / 2), size, yaw, material, part: "support" });
+    }
   }
+  // each column from the lowest ground under its own footprint
   for (const lx of columns) {
-    out.push({ shape: "box", center: centreAt(lx, (shaftBottom + shaftTop) / 2), size: { x: colW * grow, y: shaftH, z: spec.d * grow }, yaw, material, part: "support", topScale: 1 / grow, ground: true });
+    const foot = Math.min(shaftBottom, footprintTerrain(g, distance, lx, colW * grow, spec.d * grow, heightAt).low);
+    out.push({ shape: "box", center: centreAt(lx, (foot + shaftTop) / 2), size: { x: colW * grow, y: shaftTop - foot, z: spec.d * grow }, yaw, material, part: "support", topScale: 1 / grow, ground: true });
   }
   if (capHeight) {
     pushBox(out, g, distance, 0, -DECK_THICKNESS / 2 - under - BEARING - capHeight / 2, { x: capWidth, y: capHeight, z: spec.d + 0.45 }, material, "support");
