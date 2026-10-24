@@ -103,8 +103,8 @@ noise wall beside a street of tenements or taller: `heights`).
 
 **Block parameters.** A block takes one value of each of three parameters, rolled when a city
 grows it and stored on the game's block record: `spacing` (`SPACINGS`: `touching` - wall to wall,
-`tight`, `open`, `wide`; each a gap, a jitter, a setback from the street, a density boost and a
-corner clearance), `colour` (one of the named `PALETTES`: warm, earth, brick, pastel, cool,
+`tight` - rows broken now and then by a passage, `open`, `wide`; each a gap, a jitter, a setback
+from the street, a density boost, a corner clearance and whether it builds rows), `colour` (one of the named `PALETTES`: warm, earth, brick, pastel, cool,
 stone) and `height` (`mixed`, `low`, `mid`, `tall`). `params` in a type's data lists the
 spacings and heights it may take, with weights; every type may take every palette.
 `rollBlockParams` rolls them (the city's dominant palettes and the neighbours' schemes weigh
@@ -120,7 +120,11 @@ keeps its character.
 block's height band), `chooseColours` (a building's colour values by the block's palette, the
 map's standing variants favoured and, past a settlement's budget of new ones, reused),
 `fillRun` (one frontage walked slot by slot with the spacing; the caller answers whether a
-footprint fits, or where the building in its way ends) and `touchingSides` / `partyValues` (the
+footprint fits, or where the building in its way ends; a gap narrower than `MIN_GAP`, 2.5 studs,
+is never left - two buildings that would stand closer touch when both draw party walls on their
+flanks and move `MIN_GAP` apart otherwise, and a refused wall-to-wall slot is not retried; on a
+spacing that builds rows, `touching` and `tight`, the buildings with flank party walls are
+`ROW_BIAS` times commoner, so a tight block of houses is a row of the village's row houses) and `touchingSides` / `partyValues` (the
 faces two footprints share, which a design with party walls draws blank;
 [game-properties.md](game-properties.md)). The game supplies the frontages and the fit;
 everything chosen is the module's.
@@ -128,7 +132,8 @@ everything chosen is the module's.
 The data rides in `blockType.meta.json`; the game refuses an import naming a ground, city type,
 ring or decoration it does not know. `test/blockTypes.test.ts` checks the names, that every city
 type and ring can grow a type no exclusion can starve, the retired aliases and the fill
-(height filter, palette colouring, reuse, wall-to-wall walks, party walls); the pins hold the
+(height filter, palette colouring, reuse, wall-to-wall walks, the minimum gap, the row bias,
+party walls); the pins hold the
 data, the parameter rolls, a frontage per spacing and a party-wall case.
 
 ## The export

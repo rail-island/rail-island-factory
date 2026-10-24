@@ -104,11 +104,23 @@ parameter per side - `partyLeft`, `partyRight`, `partyBack` (left is -X, right +
 street), values `no` and `yes` - and the city sets them where its fill finds two footprints
 sharing a face. A blank side is a solid slab out to where the windowed variant's extent ends, so
 the extent never changes: the game centres a building on it and stands the next one against it.
-The commercial street kit (`commercialStreets.ts`; the annex house has no right party wall, its
-wing stands there) and the classic upright shop houses (`commercial.ts`; the corner shop's right
-side is a second shop front) draw them; the tests vary them one side at a time
-(`coverageCombinations`). `test/partyWalls.test.ts` checks the names, that a blank side drops its
-windows and that the extent holds.
+Every building whose plan can stand against a neighbour draws them:
+
+- the commercial street kit (`commercialStreets.ts`; the annex house has no right party wall, its
+  wing stands there);
+- the classic upright shop houses (`commercial.ts`; the corner shop's right side is a second shop
+  front) and the terraced house (left and back, where its upper floors stay flush; above the
+  street terrace its party wall stands as a firewall);
+- the village's row house, `village-narrow-house` (left and right, its eave sides: the slab
+  slopes down under the roof's overhang and gutter, and two neighbours' eaves meet);
+- the brick apartment tower (left and right; its balconies face front and back) and the glass
+  office tower (its podium's left, right and back, up to the podium's cornice).
+
+Detached houses with gardens or yards round them (the other village houses, the industry halls on
+their concrete aprons) and the round, stepped or twisting towers keep their windows on every side.
+The tests vary the parameters one side at a time (`coverageCombinations`). `test/partyWalls.test.ts`
+checks the names, that a blank side drops its windows (the glass office's podium band is covered
+instead) and that the extent holds.
 
 ## OpenTTD
 

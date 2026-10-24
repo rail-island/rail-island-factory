@@ -31,9 +31,10 @@ and the site's parameter pickers build the other variants on demand.
 The corner shop, the balcony house, the market block and the office house also draw **party
 walls** (`partyLeft`, `partyBack`, and `partyRight` but on the corner shop, whose right side is
 a second shop front): a side a city's neighbour stands against goes blank, without windows or
-overhang ([game-properties.md](game-properties.md), "Party walls"). The terrace house, whose
-upper floors step back, has none. They are not variants of their own: the counts above leave
-them out.
+overhang ([game-properties.md](game-properties.md), "Party walls"). The terrace house draws
+`partyLeft` and `partyBack`, the sides its upper floors stay flush with; above its street terrace
+the left party wall stands on as a firewall. They are not variants of their own: the counts above
+leave them out.
 
 | id | architecture | shape parameters (default first) |
 |---|---|---|

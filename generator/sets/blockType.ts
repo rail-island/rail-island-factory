@@ -54,24 +54,38 @@ export interface Spacing {
   /** Corner clearance at the start of a frontage, plus 0..cornerJitter studs. */
   corner: number;
   cornerJitter: number;
+  /** Whether it builds rows: the buildings that draw party walls are ROW_BIAS times commoner. */
+  rows: boolean;
 }
 
 /**
  * The spacing values. `touching` stands buildings wall to wall (party walls where
- * both designs draw them, else `TOUCH_FALLBACK_GAP`); `tight` is a terraced street
- * with a half-stud joint; `open` keeps detached houses apart; `wide` is a garden
- * suburb. The setback is half a terrain cell for the street spacings: the city
+ * both designs draw them, else `MIN_GAP` apart); `tight` is a terraced street whose
+ * rows break now and then for a passage; `open` keeps detached houses apart; `wide`
+ * is a garden suburb. Whatever the spacing, a gap narrower than `MIN_GAP` is never
+ * left: two buildings that would stand closer touch (when both draw party walls)
+ * or move apart to it. The setback is half a terrain cell for the street spacings: the city
  * re-asserts its street decks after every pad and resolves a building it touched
  * on a foundation, so a terraced front can meet the kerb.
  */
 export const SPACINGS: Readonly<Record<string, Spacing>> = {
-  touching: { gap: 0, jitter: 0, setback: 2, densityBoost: 0.16, corner: 0, cornerJitter: 0 },
-  tight: { gap: 0.5, jitter: 1.5, setback: 2, densityBoost: 0.12, corner: 0, cornerJitter: 2 },
-  open: { gap: 2, jitter: 6, setback: 4, densityBoost: 0, corner: 2, cornerJitter: 4 },
-  wide: { gap: 5, jitter: 8, setback: 6, densityBoost: -0.06, corner: 3, cornerJitter: 5 },
+  touching: { gap: 0, jitter: 0, setback: 2, densityBoost: 0.16, corner: 0, cornerJitter: 0, rows: true },
+  tight: { gap: 1, jitter: 3, setback: 2, densityBoost: 0.12, corner: 0, cornerJitter: 2, rows: true },
+  open: { gap: 2, jitter: 6, setback: 4, densityBoost: 0, corner: 2, cornerJitter: 4, rows: false },
+  wide: { gap: 5, jitter: 8, setback: 6, densityBoost: -0.06, corner: 3, cornerJitter: 5, rows: false },
 };
-/** The gap a `touching` frontage keeps beside a building that draws no party wall there. */
-export const TOUCH_FALLBACK_GAP = 1;
+/**
+ * The narrowest gap two buildings of a frontage keep when they do not touch: a
+ * narrower one reads as a mistake, not a passage, so the walk closes it (wall to
+ * wall, when both draw party walls) or widens it to this.
+ */
+export const MIN_GAP = 2.5;
+/**
+ * How much commoner a building that draws party walls on its flanks is on a block
+ * whose spacing builds rows (`touching`, `tight`): a village's row houses, a
+ * street's terraces.
+ */
+export const ROW_BIAS = 8;
 
 /** A block's parameters: one value of each, sampled when the city grows it. */
 export interface BlockParams {
@@ -120,7 +134,7 @@ export const TYPE_META: Readonly<Record<string, BlockTypeData>> = {
   "houses": {
     "placement": "perimeter", "ground": null,
     "pools": [{ "group": "village", "weight": 7 }, { "group": "village_red", "weight": 3 }],
-    "params": { "spacing": { "open": 3, "wide": 1 }, "height": { "mixed": 3, "low": 1, "mid": 1 } },
+    "params": { "spacing": { "open": 3, "wide": 1, "tight": 1 }, "height": { "mixed": 3, "low": 1, "mid": 1 } },
     "cities": { "village": { "center": 10, "outer": 10 }, "town": { "outer": 6 }, "city": { "outer": 2 } },
     "district": "residential", "overlay": "residential",
     "decoration": { "kind": "fence_village" },
@@ -453,12 +467,20 @@ function flankParty(c: FillCandidate): boolean {
   return !!c.party && (c.party.includes("left") || c.party.includes("right"));
 }
 
+/** The candidates with the row builders (flank party walls) made `ROW_BIAS` times commoner. */
+function rowPools(pools: ReadonlyMap<string, readonly FillCandidate[]>): Map<string, readonly FillCandidate[]> {
+  const out = new Map<string, readonly FillCandidate[]>();
+  for (const [group, list] of pools) out.set(group, list.map((c) => flankParty(c) ? { ...c, weight: (c.weight ?? 1) * ROW_BIAS } : c));
+  return out;
+}
+
 /**
  * Walks one frontage: from the corner clearance to the end, a slot at a time --
  * skipped by the density roll, else a candidate picked, coloured and offered to
- * `tryPlace` -- leaving the block's spacing after every building. On a `touching`
- * block a building that cannot draw a party wall keeps TOUCH_FALLBACK_GAP from its
- * neighbours instead. Every random draw comes from `ctx.random`, in walk order.
+ * `tryPlace` -- leaving the block's spacing after every building. A gap narrower
+ * than MIN_GAP is closed when both neighbours draw party walls and widened to
+ * MIN_GAP otherwise; a block whose spacing builds rows favours the buildings
+ * that draw party walls (ROW_BIAS). Every random draw comes from `ctx.random`, in walk order.
  */
 export function fillRun(run: FillRun, ctx: FillContext, tryPlace: (at: number, c: FillCandidate, key: string) => FillVerdict): FillPlacement[] {
   const t = TYPE_META[ctx.typeId];
@@ -467,26 +489,30 @@ export function fillRun(run: FillRun, ctx: FillContext, tryPlace: (at: number, c
   const sp = spacingOf(ctx.params);
   const density = Math.min(0.98, Math.max(0, ctx.density + sp.densityBoost));
   const random = ctx.random;
+  const pools = sp.rows ? rowPools(ctx.pools) : ctx.pools;
   let cursor = sp.corner + random() * sp.cornerJitter;
   // the end of the last building stood, and whether it draws a party wall
   let lastEnd = -Infinity;
   let lastParty = false;
+  // whether nothing was refused since that end: a refused wall-to-wall slot is not retried
+  let fresh = true;
   const limitOf = (at: number): number => Math.min(run.length - at, ctx.maxWidth ?? Infinity);
   while (cursor < run.length) {
     if (random() > density) {
       cursor += 8 + random() * 8;
       continue;
     }
-    let c = pickCandidate(ctx.pools, t.pools, ctx.params.height, random, limitOf(cursor), run.depthLimit);
+    let c = pickCandidate(pools, t.pools, ctx.params.height, random, limitOf(cursor), run.depthLimit);
     if (!c) break;
-    // wall to wall only between two party walls
-    if (sp.gap === 0 && cursor - lastEnd < 1e-6 && !(lastParty && flankParty(c))) {
-      cursor = lastEnd + TOUCH_FALLBACK_GAP;
+    // no gap under MIN_GAP: wall to wall between two party walls (unless that was
+    // refused already), else MIN_GAP apart
+    if (cursor - lastEnd < MIN_GAP) {
+      cursor = fresh && lastParty && flankParty(c) ? lastEnd : Math.max(cursor, lastEnd + MIN_GAP);
       if (c.w > limitOf(cursor)) continue;
     }
     const tries: FillCandidate[] = [c];
     if (ctx.fallback) {
-      const rest = t.pools.flatMap((p) => ctx.pools.get(p.group) ?? [])
+      const rest = t.pools.flatMap((p) => pools.get(p.group) ?? [])
         .filter((o) => o !== c && o.w <= limitOf(cursor) && o.d <= run.depthLimit)
         .sort((a, b) => a.w * a.d - b.w * b.d || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
       tries.push(...rest);
@@ -502,6 +528,7 @@ export function fillRun(run: FillRun, ctx: FillContext, tryPlace: (at: number, c
         ctx.reuse?.note(key);
         lastEnd = cursor + cand.w;
         lastParty = flankParty(cand);
+        fresh = true;
         cursor = lastEnd + sp.gap + random() * sp.jitter;
         stood = true;
         c = cand;
@@ -514,12 +541,14 @@ export function fillRun(run: FillRun, ctx: FillContext, tryPlace: (at: number, c
     }
     if (stood) continue;
     if (skip && skip.skipTo > cursor) {
-      const touch = sp.gap === 0 && !!skip.party && flankParty(c);
+      // on past the building in the way; the next pick closes or widens the gap as above
       lastEnd = skip.skipTo;
       lastParty = !!skip.party;
-      cursor = skip.skipTo + (touch ? 0 : Math.max(sp.gap, sp.gap === 0 ? TOUCH_FALLBACK_GAP : 0));
+      fresh = true;
+      cursor = skip.skipTo + sp.gap;
       continue;
     }
+    fresh = false;
     cursor += ctx.retryStep;
   }
   return out;

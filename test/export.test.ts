@@ -53,6 +53,8 @@ describe("exportMeta for the village houses", () => {
       const d = VILLAGE_HOUSES.find((x) => x.id === b.id)!;
       // every house a city builds carries its city variants; the alpine hut is placed by hand only
       if (d.id === "proc-building-village-alpine-hut") expect(game).toBeUndefined();
+      // the row house also names the sides it can stand against its neighbours
+      else if (d.id === "proc-building-village-narrow-house") expect(game, d.id).toEqual({ city: { variants: expect.any(Array), colours: expect.any(Array), party: ["left", "right"] } });
       else expect(game, d.id).toEqual({ city: { variants: expect.any(Array), colours: expect.any(Array) } });
       expect(b).toEqual({
         id: d.id,

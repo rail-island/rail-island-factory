@@ -9,7 +9,7 @@ import { BUILDINGS, VILLAGE_DESIGNS, catalogFields } from "../generator/generate
 import { setDef, resolveSetId } from "../generator/sets/registry.ts";
 import { setMeta } from "../generator/sets/setsExport.ts";
 import {
-  BLOCK_HEIGHTS, CITY_TYPES, DECORATIONS, DISTRICTS, GROUNDS, PALETTES, RETIRED_PARAMS, RINGS, SPACINGS, TOUCH_FALLBACK_GAP, TYPE_META,
+  BLOCK_HEIGHTS, CITY_TYPES, DECORATIONS, DISTRICTS, GROUNDS, PALETTES, RETIRED_PARAMS, RINGS, SPACINGS, MIN_GAP, ROW_BIAS, TYPE_META,
   blockParamValues, chooseColours, decorates, fillRun, partyParam, partyValues, pickCandidate, rollBlockParams, storedBlockParams,
   touchingSides, type FillCandidate, type FillContext, type VariantReuse,
 } from "../generator/sets/blockType.ts";
@@ -182,7 +182,62 @@ describe("the fill", () => {
 
   it("keeps a gap beside a building that draws no party wall, even on a touching block", () => {
     const placed = fillRun({ length: 60, depthLimit: 20 }, ctx("touching", [shop("n", 10)]), () => true);
-    for (let i = 1; i < placed.length; i++) expect(placed[i]!.at - placed[i - 1]!.at - 10).toBeGreaterThanOrEqual(TOUCH_FALLBACK_GAP - 1e-9);
+    for (let i = 1; i < placed.length; i++) expect(placed[i]!.at - placed[i - 1]!.at - 10).toBeGreaterThanOrEqual(MIN_GAP - 1e-9);
+  });
+
+  // regression: a tight street left half-stud slivers between buildings that could touch
+  it("never leaves a gap narrower than MIN_GAP: it touches between party walls, else widens", () => {
+    for (const spacing of Object.keys(SPACINGS)) {
+      for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
+        const list = [shop("p", 10, { party: ["left", "right"] }), shop("n", 9)];
+        const placed = fillRun({ length: 200, depthLimit: 20 }, { ...ctx(spacing, list), random: seeded(seed) }, () => true);
+        for (let i = 1; i < placed.length; i++) {
+          const gap = placed[i]!.at - placed[i - 1]!.at - placed[i - 1]!.candidate.w;
+          const both = placed[i]!.candidate.key === "p" && placed[i - 1]!.candidate.key === "p";
+          if (Math.abs(gap) < 1e-9) expect(both, `${spacing} ${seed} #${i}`).toBe(true);
+          else expect(gap, `${spacing} ${seed} #${i}`).toBeGreaterThanOrEqual(MIN_GAP - 1e-9);
+        }
+      }
+    }
+  });
+
+  it("stands most party-walled neighbours wall to wall on a tight block", () => {
+    let touching = 0, pairs = 0;
+    for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
+      const placed = fillRun({ length: 200, depthLimit: 20 }, { ...ctx("tight", [shop("p", 10, { party: ["left", "right"] })]), random: seeded(seed) }, () => true);
+      for (let i = 1; i < placed.length; i++, pairs++) if (Math.abs(placed[i]!.at - placed[i - 1]!.at - 10) < 1e-9) touching++;
+    }
+    expect(touching / pairs).toBeGreaterThan(0.3);
+    expect(touching).toBeLessThan(pairs); // the passages
+  });
+
+  it("does not retry a refused wall-to-wall slot forever", () => {
+    const list = [shop("p", 10, { party: ["left", "right"] })];
+    let calls = 0;
+    const placed = fillRun({ length: 100, depthLimit: 20 }, ctx("touching", list), (at) => {
+      calls++;
+      return at < 1e-9 || at >= 30;
+    });
+    expect(calls).toBeLessThan(50);
+    expect(placed[1]!.at).toBeGreaterThanOrEqual(10 + MIN_GAP - 1e-9);
+  });
+
+  it("favours the row builders on a block whose spacing builds rows", () => {
+    // the share of row builders among what stands
+    const share = (spacing: string): number => {
+      let rows = 0, all = 0;
+      for (const seed of [1, 2, 3, 4, 5, 6]) {
+        const list = [shop("p", 10, { party: ["left", "right"] }), shop("n", 10)];
+        const placed = fillRun({ length: 200, depthLimit: 20 }, { ...ctx(spacing, list), random: seeded(seed) }, () => true);
+        rows += placed.filter((p) => p.candidate.key === "p").length;
+        all += placed.length;
+      }
+      return rows / all;
+    };
+    expect(ROW_BIAS).toBeGreaterThan(1);
+    expect(share("open")).toBeLessThan(0.65);
+    expect(share("touching")).toBeGreaterThan(0.7);
+    expect(share("tight")).toBeGreaterThan(0.7);
   });
 
   it("leaves the spacing's gap on other blocks", () => {

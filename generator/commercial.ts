@@ -37,6 +37,8 @@ export const COMMERCIAL_CATALOG: CatalogFields = {
 /** The sides each upright kind can draw as a party wall: the corner shop's right side is a second shop front. */
 export const SHOP_PARTY: PartySide[] = ["left", "back"];
 export const UPRIGHT_PARTY: PartySide[] = ["left", "right", "back"];
+/** The terraced house's upper storeys stay flush with its left and back walls; the corner terrace opens its right. */
+export const TERRACE_PARTY: PartySide[] = ["left", "back"];
 export const SHOP_PARAMS = [param("storeys", "Storeys", [["three", "Three"], ["two", "Two"], ["four", "Four"]]), WIDTH, FRONTAGE, ROOF, ...FINISH, ...partyParams(SHOP_PARTY)];
 export const BALCONY_PARAMS = [param("storeys", "Storeys", [["four", "Four"], ["three", "Three"], ["five", "Five"]]), WIDTH,
   param("balconies", "Balconies", [["paired", "Balconies"], ["gallery", "Galleries"]]), ROOF, ...finishes("chalk", "gold"), ...partyParams(UPRIGHT_PARTY)];
@@ -44,7 +46,7 @@ export const BLOCK_PARAMS = [param("storeys", "Storeys", [["three", "Three"], ["
   param("bays", "Shop bays", [["four", "Four"], ["five", "Five"], ["six", "Six"]]), FRONTAGE, ROOF, ...finishes("cream", "gold"), ...partyParams(UPRIGHT_PARTY)];
 export const TERRACE_PARAMS = [param("storeys", "Storeys", [["four", "Four"], ["three", "Three"], ["five", "Five"]]),
   param("setback", "Terrace plan", [["front", "Street terrace"], ["corner", "Corner terrace"]]), FRONTAGE,
-  param("roof", "Terrace use", [["garden", "Pergola"], ["solar", "Solar panels"]]), ...FINISH];
+  param("roof", "Terrace use", [["garden", "Pergola"], ["solar", "Solar panels"]]), ...FINISH, ...partyParams(TERRACE_PARTY)];
 export const OFFICE_PARAMS = [param("storeys", "Storeys", [["seven", "Seven"], ["five", "Five"], ["nine", "Nine"]]), WIDTH,
   param("facade", "Facade", [["grid", "Framed windows"], ["ribbon", "Ribbon glazing"]]), ROOF, ...finishes("charcoal", "blue"), ...partyParams(UPRIGHT_PARTY)];
 export const NUM: Record<string, number> = { two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, nine: 9 };
@@ -318,6 +320,8 @@ export function terraceHouse(given?: ParamValues): MeshBuilder {
   });
   c.roof(upper, PL + floors * ST, p.roof === "garden" ? "garden" : "plant");
   c.details(lower);
+  // a firewall up to the roof: beside the street terrace it stands proud of the setback
+  if (anyBlank(c.blank)) c.m.scope("party walls", () => partySlabs(c.m, terraceHouse(windowed(p)).positions(), c.blank, lower.w, lower.d, PL + floors * ST, "wall"));
   return c.m;
 }
 
