@@ -16,7 +16,7 @@ import * as port from "../sets/port.ts";
 import * as airport from "../sets/airport.ts";
 import * as dam from "../sets/dam.ts";
 import * as tunnelPortal from "../sets/tunnelPortal.ts";
-import { shedBoxes, SHED_VALUES, type StationType } from "../props/cableCarSheds.ts";
+import { shedBoxes, shedLodBoxes, SHED_VALUES, type StationType } from "../props/cableCarSheds.ts";
 import { bollardBoxes, containerBoxes, craneBoxes, CRANE_DECKS, floodlightBoxes, hutBoxes, mooringPostBoxes } from "../props/portProps.ts";
 import { towerBoxes, TOWER_HEIGHTS } from "../props/airportProps.ts";
 import type { PropBox } from "../props/propKit.ts";
@@ -64,8 +64,8 @@ function cableCarSketch(type: string, lod: boolean): Sketch {
   const meta = cableCarStation.TYPE_META[type]!;
   // the boarding deck the game builds under the shed, at the footprint the type is placed with
   s.box(s.mat("deck", [150, 146, 138], "stop-concrete"), { cx: 0, cy: 0.5, cz: 0, sx: meta.w, sy: 1, sz: meta.d });
-  const shed = shedBoxes((Object.keys(SHED_VALUES) as StationType[]).find((t) => SHED_VALUES[t] === meta.shed.values.type) ?? "open_gantry");
-  props(s, lod ? shed.filter((b) => b.lod === "shell") : shed, 0, 0);
+  const shedType = (Object.keys(SHED_VALUES) as StationType[]).find((t) => SHED_VALUES[t] === meta.shed.values.type) ?? "open_gantry";
+  props(s, lod ? shedLodBoxes(shedType) : shedBoxes(shedType), 0, 0);
   return s;
 }
 export function cableCarStationPreview(_values: ParamValues | undefined, type: string): MeshBuilder { return cableCarSketch(type, false).build("station"); }

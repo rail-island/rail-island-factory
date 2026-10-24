@@ -86,7 +86,10 @@ planes. The masonry types build them of their masonry; the trestle of timber.
 
 - concrete (`pier`, `tower`): a shaft that widens with its height (up to 1.6 times) and tapers to
   its given size at the cap. A pier taller than 4 studs stands on a footing: a plinth sunk into
-  the ground, 0.3 studs of it showing. The column standing on the terrain is the box tagged
+  the ground, 0.3 studs of it showing - but only where the ground under it is flat (corners and
+  centre within 0.4 studs, `footprintTerrain`; a river bed counts): on a slope a flat slab would
+  jut out of the hillside. Every column, and a masonry block, reaches down to the lowest ground
+  under its own footprint, so a pier on a slope never hangs off it. The column standing on the terrain is the box tagged
   `ground` - what the game charts for ships - so a river still takes a hull beside a slim pier
   (the game samples a cell's corners against the charted rect; a wide footing blocked four). A deck 14 or more studs wide (two tracks, a road) stands on twin columns. The
   cap is as wide as what stands on it (`capWidth`): the girders, the truss, both tower legs. The

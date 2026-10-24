@@ -59,7 +59,7 @@ export function propPalette(boxes: readonly PropBox[]): Record<string, MaterialS
 }
 
 /** The corners of a box (or the six of a gable prism), placed as the game places them. */
-function corners(b: PropBox): Vec3[] {
+export function propBoxCorners(b: PropBox): Vec3[] {
   const x = b.sx / 2, y = b.sy / 2, z = b.sz / 2;
   const local: Vec3[] = b.profile === "gable"
     ? [[-x, -y, z], [x, -y, z], [0, y, z], [-x, -y, -z], [x, -y, -z], [0, y, -z]]
@@ -78,7 +78,7 @@ function corners(b: PropBox): Vec3[] {
 export function drawPropBoxes(m: MeshBuilder, boxes: readonly PropBox[], prefix = "box"): void {
   boxes.forEach((b, i) => {
     const mat = propMaterial(b.material, b.color);
-    const p = corners(b);
+    const p = propBoxCorners(b);
     m.scope(`${prefix}-${i}`, () => {
       if (b.profile === "gable") {
         m.tri(mat, p[0]!, p[1]!, p[2]!);
