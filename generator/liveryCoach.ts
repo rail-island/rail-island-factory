@@ -15,6 +15,7 @@ import { block, side } from "./vehicleParts.ts";
 import { Coach, px, sectionHalf, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { emblem } from "./cd163.ts";
 import { strokeText, strokeWidth } from "./strokeFont.ts";
+import type { DoorMotion } from "./doors.ts";
 import { endName, fpx, headstock, lamp, mirror, roofVents, sides, sideName, type PxBox } from "./csdCoaches.ts";
 
 /** A window box, optionally with frosted glass (the toilets). */
@@ -26,6 +27,8 @@ export interface DoorSpec {
   glass: PxBox[];
   /** The leaf's material, "bands" for the body's own paint bands, or bands of its own ([y0, y1, material]). */
   paint: string | Array<[number, number, string]>;
+  /** How the door opens (doors.ts); a door without it stays shut. */
+  opens?: DoorMotion;
 }
 
 /**
@@ -263,8 +266,20 @@ export function buildLiveryCoach(spec: LiveryCoachSpec): MeshBuilder {
         sp.doors.forEach((d, i) =>
           m.scope(`door ${i + 1}`, () => {
             const b = px(d.box, H);
-            if (typeof d.paint === "string") c.door(body, s, b, d.paint);
-            else c.door({ ...body, bands: d.paint }, s, b, "bands");
+            const [v, paint] = typeof d.paint === "string" ? [body, d.paint] : [{ ...body, bands: d.paint }, "bands"];
+            if (d.opens) {
+              // the windows ride on the leaves, which part where a centre seam would be
+              c.door(v, s, b, paint, {
+                opens: d.opens,
+                leafWork: (clip) =>
+                  d.glass.forEach((g, k) => {
+                    const w = clip(px(g, H));
+                    if (w) c.m.scope(`window ${k + 1}`, () => c.window(body, s, w, { fw: 0.04 }));
+                  }),
+              });
+              return;
+            }
+            c.door(v, s, b, paint);
             d.glass.forEach((g, k) => m.scope(`window ${k + 1}`, () => c.window(body, s, px(g, H), { fw: 0.04 })));
             const mid = (b.x0 + b.x1) / 2;
             if (d.glass.length === 2) m.scope("centre seam", () => c.sidePanel(body, "seam", s, { x0: mid - 0.02, y0: Math.max(b.y0, 0.9) + 0.03, x1: mid + 0.02, y1: b.y1 - 0.03 }, 0.016));

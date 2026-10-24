@@ -279,7 +279,11 @@ another model or parameter choice stops them
 ([../models/animation.md](../models/animation.md)). A model with pantographs
 (`state` clips) gets **Up** and **Down** instead: they raise or lower every
 working collector over 1.5 s from wherever it stands, as the game does at a stop;
-the model always arrives with them raised, its rest pose. A model with lamps gets a
+the model always arrives with them raised, its rest pose. A model with opening
+doors (`door` clips) gets **Open left** and **Open right** - each only where it has
+doors on that side - and **Close**, which move each side's doors between shut and
+open over 2 s, eased, from wherever they stand; the model always arrives shut
+([../models/doors.md](../models/doors.md)). A model with lamps gets a
 **Lights on / Lights off** button beside them that shows every tagged lamp lit,
 indicators blinking ([../models/lamps.md](../models/lamps.md)).
 

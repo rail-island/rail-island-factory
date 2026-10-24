@@ -250,8 +250,16 @@ function cd810Car(livery: Cd810Livery): MeshBuilder {
         m.scope("doors", () =>
           DOORS_810.forEach((dd, i) =>
             m.scope(`door ${i + 1}`, () => {
-              car.c.door(body, s, car.side(dd.door), "bands", { seam: 0.03 });
-              m.scope("glass", () => car.c.window(body, s, car.side(dd.glass), { fw: 0.04 }));
+              // one leaf with its window, as the native drawing paints it, swinging
+              // inward on the jamb toward the car's nearer end (doors.ts)
+              car.c.door(body, s, car.side(dd.door), "bands", {
+                seam: 0.03,
+                opens: { kind: "swing", leaves: 1, from: i === 0 ? "low" : "high" },
+                leafWork: (clip) => {
+                  const w = clip(car.side(dd.glass));
+                  if (w) car.c.m.scope("glass", () => car.c.window(body, s, w, { fw: 0.04 }));
+                },
+              });
             }),
           ),
         );

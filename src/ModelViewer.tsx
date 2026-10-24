@@ -17,9 +17,13 @@
 // locomotive's running gear: wheelsets, rods and valve gear) get Start and Stop:
 // Start plays them in a loop through an AnimationMixer, Stop halts them where they
 // are. The `state` clips (the pantographs) get Up and Down, which raise or lower
-// every collector the way the game does, from where it stands now. A render loop
-// runs only while something moves. A new model or parameter choice drops the
-// animation, and the model comes back at rest: its pantographs raised.
+// every collector the way the game does, from where it stands now. The `door`
+// clips (a tram's, coach's or unit's passenger doors, one per side and car) get
+// Open left, Open right (each only where the model has doors on that side) and
+// Close, which move each side's doors between shut and open, eased, from where
+// they stand. A render loop runs only while something moves. A new model or
+// parameter choice drops the animation, and the model comes back at rest: its
+// pantographs raised, its doors shut.
 //
 // A road or rail vehicle stands on its way, an electric one under the game's wire
 // (viewerScenery.ts); a Scenery checkbox hides them.
@@ -66,12 +70,25 @@ function disposeModel(obj: Object3D): void {
 const CLICK_SLOP = 5;
 /** Seconds a pantograph takes from folded to raised. */
 const LIFT_SECONDS = 1.5;
+/** Seconds a door takes from shut to open. */
+const DOOR_SECONDS = 2;
+
+type DoorSide = "left" | "right";
 
 /** Whether the clip is a `state` clip of the model (a pantograph): its drive in userData.clipDrives. */
 function isStateClip(model: Object3D, clip: AnimationClip): boolean {
   const drives = model.userData.clipDrives as Record<string, { drive?: string }> | undefined;
   return drives?.[clip.name]?.drive === "state";
 }
+
+/** The side a `door` clip of the model opens (its drive in userData.clipDrives), or null for another clip. */
+function doorSide(model: Object3D, clip: AnimationClip): DoorSide | null {
+  const drive = (model.userData.clipDrives as Record<string, { drive?: string; side?: string }> | undefined)?.[clip.name];
+  return drive?.drive === "door" && (drive.side === "left" || drive.side === "right") ? drive.side : null;
+}
+
+/** Slow at both ends: a door's position (0 shut, 1 open) for how far its move has run. */
+const ease = (t: number): number => t * t * (3 - 2 * t);
 // Whether the Scenery checkbox shows the way and the wire, kept across models.
 const [showScenery, setShowScenery] = createSignal(true);
 
@@ -119,6 +136,11 @@ export function ModelViewer(props: {
   const [stateClips, setStateClips] = createSignal<AnimationClip[]>([]);
   const [liftTarget, setLiftTarget] = createSignal(1);
   let lift = 1;
+  // Its door clips, by side: where each side stands (0 shut, 1 open, before easing) and where it goes.
+  const [doorClips, setDoorClips] = createSignal<Array<{ clip: AnimationClip; side: DoorSide }>>([]);
+  const [doorTarget, setDoorTarget] = createSignal<Record<DoorSide, number>>({ left: 0, right: 0 });
+  const doorAt: Record<DoorSide, number> = { left: 0, right: 0 };
+  let doorActions: Array<{ action: AnimationAction; side: DoorSide }> = [];
   let mixer: AnimationMixer | null = null;
   let loopActions: AnimationAction[] = [];
   let stateActions: AnimationAction[] = [];
@@ -173,16 +195,30 @@ export function ModelViewer(props: {
         a.time = lift * clip.duration;
         return a.play();
       });
+      // so does a door action: its time is set from its side's opening
+      doorActions = doorClips().map(({ clip, side }) => {
+        const a = mixer!.clipAction(clip);
+        a.paused = true;
+        a.time = ease(doorAt[side]) * clip.duration;
+        return { action: a.play(), side };
+      });
     }
     return mixer;
   };
-  const moving = () => running() || lift !== liftTarget();
+  const doorsMoving = () => doorAt.left !== doorTarget().left || doorAt.right !== doorTarget().right;
+  const moving = () => running() || lift !== liftTarget() || doorsMoving();
   const tick = (now: number) => {
     const dt = Math.min(0.1, (now - lastFrame) / 1000);
     lastFrame = now;
     const target = liftTarget();
     if (lift !== target) lift = target > lift ? Math.min(target, lift + dt / LIFT_SECONDS) : Math.max(target, lift - dt / LIFT_SECONDS);
     for (const a of stateActions) a.time = lift * a.getClip().duration;
+    const doors = doorTarget();
+    for (const side of ["left", "right"] as const) {
+      const [at, to] = [doorAt[side], doors[side]];
+      if (at !== to) doorAt[side] = to > at ? Math.min(to, at + dt / DOOR_SECONDS) : Math.max(to, at - dt / DOOR_SECONDS);
+    }
+    for (const { action, side } of doorActions) action.time = ease(doorAt[side]) * action.getClip().duration;
     mixer?.update(dt);
     render();
     animRaf = moving() ? requestAnimationFrame(tick) : 0;
@@ -209,6 +245,14 @@ export function ModelViewer(props: {
     setLiftTarget(target);
     animate();
   };
+  /** Opens the doors of one side (the other keeps where it is going), or with null shuts both. */
+  const doorsTo = (side: DoorSide | null) => {
+    if (doorClips().length === 0 || !ensureMixer()) return;
+    setDoorTarget(side ? { ...doorTarget(), [side]: 1 } : { left: 0, right: 0 });
+    animate();
+  };
+  const hasDoors = (side: DoorSide) => doorClips().some((d) => d.side === side);
+
   /** Stops and forgets the animation of the model being replaced. */
   const dropAnimation = () => {
     if (animRaf) cancelAnimationFrame(animRaf);
@@ -218,10 +262,14 @@ export function ModelViewer(props: {
     mixer = null;
     loopActions = [];
     stateActions = [];
+    doorActions = [];
     setClips([]);
     setStateClips([]);
+    setDoorClips([]);
     lift = 1;
     setLiftTarget(1);
+    doorAt.left = doorAt.right = 0;
+    setDoorTarget({ left: 0, right: 0 });
   };
   const dropScenery = () => {
     if (!scenery) return;
@@ -365,8 +413,12 @@ export function ModelViewer(props: {
         props.onTriangles?.(triangles);
         current = group;
         currentKey = key;
-        setClips(loadedClips.filter((c) => !isStateClip(group, c)));
+        setClips(loadedClips.filter((c) => !isStateClip(group, c) && !doorSide(group, c)));
         setStateClips(loadedClips.filter((c) => isStateClip(group, c)));
+        setDoorClips(loadedClips.flatMap((clip) => {
+          const side = doorSide(group, clip);
+          return side ? [{ clip, side }] : [];
+        }));
         dropScenery();
         if (record.scenery) {
           scenery = buildScenery(record.scenery, new Box3().setFromObject(group));
@@ -466,8 +518,8 @@ export function ModelViewer(props: {
   return (
     <div class="factory-viewer" ref={pane}>
       <canvas ref={canvas} class="factory-viewer__canvas" />
-      <Show when={clips().length > 0 || stateClips().length > 0 || lampCount() > 0 || props.record.scenery}>
-        <div class="factory-viewer__controls" role="group" aria-label="Animation, pantographs, lights and scenery">
+      <Show when={clips().length > 0 || stateClips().length > 0 || doorClips().length > 0 || lampCount() > 0 || props.record.scenery}>
+        <div class="factory-viewer__controls" role="group" aria-label="Animation, pantographs, doors, lights and scenery">
           <Show when={clips().length > 0}>
             <button type="button" class="factory-btn" onClick={start} disabled={running()}>
               Start
@@ -482,6 +534,27 @@ export function ModelViewer(props: {
             </button>
             <button type="button" class="factory-btn" onClick={() => liftTo(0)} disabled={liftTarget() === 0} title="Lower the pantographs">
               Down
+            </button>
+          </Show>
+          <Show when={doorClips().length > 0}>
+            <Show when={hasDoors("left")}>
+              <button type="button" class="factory-btn" onClick={() => doorsTo("left")} disabled={doorTarget().left === 1} title="Open the doors on the left side">
+                Open left
+              </button>
+            </Show>
+            <Show when={hasDoors("right")}>
+              <button type="button" class="factory-btn" onClick={() => doorsTo("right")} disabled={doorTarget().right === 1} title="Open the doors on the right side">
+                Open right
+              </button>
+            </Show>
+            <button
+              type="button"
+              class="factory-btn"
+              onClick={() => doorsTo(null)}
+              disabled={doorTarget().left === 0 && doorTarget().right === 0}
+              title="Close the doors on both sides"
+            >
+              Close
             </button>
           </Show>
           <Show when={lampCount() > 0}>

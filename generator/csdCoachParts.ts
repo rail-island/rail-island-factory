@@ -9,6 +9,7 @@ import type { Vec3 } from "./meshCore.ts";
 import { block, side } from "./vehicleParts.ts";
 import { lettering, letteringWidth } from "./cd163.ts";
 import { strokeText, strokeWidth } from "./strokeFont.ts";
+import { doorLeaves, openable, type DoorMotion } from "./doors.ts";
 
 export type Pt = [number, number];
 
@@ -124,6 +125,18 @@ export class Coach {
   /** A coach drawing into its own builder, or into `m` (another car of the same articulated set). */
   constructor(palette: Record<string, MaterialSpec>, readonly centre: number, m?: MeshBuilder) {
     this.m = m ?? new MeshBuilder({ ...COACH_PALETTE, ...palette });
+  }
+
+  /** Runs `fn` with this coach drawing into `mm` (a mechanism's scratch builder). */
+  private drawingInto<T>(mm: MeshBuilder, fn: () => T): T {
+    const self = this as { m: MeshBuilder };
+    const old = self.m;
+    self.m = mm;
+    try {
+      return fn();
+    } finally {
+      self.m = old;
+    }
   }
 
   /** Source x to Factory x. */
@@ -287,21 +300,60 @@ export class Coach {
   /**
    * A door: a dark seam over the box and the leaf just inside it, in `paint`, or
    * with `paint` "bands" in the body's own paint bands (a cream-over-red door).
+   *
+   * A side door with `opens` opens (doors.ts): the leaf splits into the motion's
+   * leaves over the outline's dark panel (the doorway), and they become moving
+   * parts of the side's `door` clip. `leafWork` draws what a leaf carries (its lights), once per leaf,
+   * with `clip` cutting a source box to that leaf (null where it misses it);
+   * `leafPaint` draws a leaf's own panels in place of `paint` (a two-tone leaf).
    */
-  door(v: Volume, s: number, b: Box, paint: string, opts: { end?: boolean; seam?: number } = {}): void {
+  door(
+    v: Volume,
+    s: number,
+    b: Box,
+    paint: string,
+    opts: { end?: boolean; seam?: number; opens?: DoorMotion; leafWork?: (clip: (bb: Box) => Box | null) => void; leafPaint?: (bb: Box) => void } = {},
+  ): void {
     const sw = opts.seam ?? 0.025;
     const draw = (mat: string, bb: Box, proud: number, depth = 0.04) =>
       opts.end ? this.endPanel(v, mat, s, bb, proud, depth) : this.sidePanel(v, mat, s, bb, proud, depth);
     this.m.scope("outline", () => draw("seam", b, 0.006));
     const leaf = { x0: b.x0 + sw, y0: b.y0 + sw, x1: b.x1 - sw, y1: b.y1 - sw };
-    this.m.scope("leaf", () => {
-      if (paint !== "bands") draw(paint, leaf, 0.01, 0.003);
+    const leafPanel = (bb: Box) => {
+      if (opts.leafPaint) opts.leafPaint(bb);
+      else if (paint !== "bands") draw(paint, bb, 0.01, 0.003);
       else
         for (const [y0, y1, mat] of v.bands) {
-          const [a, c] = [Math.max(y0, leaf.y0), Math.min(y1, leaf.y1)];
-          if (c - a > 1e-6) draw(mat, { ...leaf, y0: a, y1: c }, 0.01, 0.003);
+          const [a, c] = [Math.max(y0, bb.y0), Math.min(y1, bb.y1)];
+          if (c - a > 1e-6) draw(mat, { ...bb, y0: a, y1: c }, 0.01, 0.003);
         }
-    });
+    };
+    if (!opts.opens || opts.end) {
+      this.m.scope("leaf", () => leafPanel(leaf));
+      return;
+    }
+    // the outline's dark panel fills the whole door box behind the leaves: it is
+    // the doorway they uncover
+    const leaves = doorLeaves(this.X(leaf.x0), this.X(leaf.x1), s, opts.opens);
+    // the hinge line: the leaf's outer face at mid height, mid door
+    const hz = s * ((sectionHalf(v.section, (leaf.y0 + leaf.y1) / 2) * lerp(v.plan, (leaf.x0 + leaf.x1) / 2)) / halfWidth(v) + 0.01);
+    // each leaf's panels in a "leaf" scope, what it carries under the caller's own
+    // names, so a shut door's source tree reads as a painted one's
+    openable(this.m, (mm, o) =>
+      this.drawingInto(mm, () =>
+        leaves.forEach((l) =>
+          this.m.moved(l.move(o, hz), () => {
+            const lb = { x0: l.x0 + this.centre, x1: l.x1 + this.centre, y0: leaf.y0, y1: leaf.y1 };
+            this.m.scope("leaf", () => leafPanel(lb));
+            // a box cut at a leaf's edge keeps 1 cm inside it, its walls off the leaf's
+            opts.leafWork?.((bb) => {
+              const [a, c] = [Math.max(bb.x0, lb.x0 + 0.01), Math.min(bb.x1, lb.x1 - 0.01)];
+              return c - a > 0.03 ? { ...bb, x0: a, x1: c } : null;
+            });
+          }),
+        ),
+      ),
+    );
   }
 
   /**

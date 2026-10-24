@@ -145,7 +145,7 @@ export function tatraT3(params?: ParamValues): MeshBuilder {
   });
   for (const s of sides) m.scope(sideName(s), () => {
     m.scope("windows", () => t.windows(mid, s, s > 0 ? T3_RIGHT_WINDOWS : T3_LEFT_WINDOWS, { frame: L.frame, glass: L.glass, sash: 2.4 }));
-    if (s > 0) m.scope("doors", () => t.doors(mid, s, T3_DOORS, L.door, { frame: L.frame, glass: L.glass, sash: 1.88 }));
+    if (s > 0) m.scope("doors", () => t.doors(mid, s, T3_DOORS, L.door, { frame: L.frame, glass: L.glass, sash: 1.88, opens: { kind: "fold", leaves: 4 } }));
     m.scope("fleet number", () => t.inscription(mid, s, t.fx(s > 0 ? 7.0 : 2.6), [{ text: T3_NUMBERS[variant], y: t.fy(1.15), h: 0.16 }], 0.006, "marking"));
   });
   for (const e of [1, -1]) m.scope(endName(e), () => {
@@ -256,7 +256,7 @@ export function tatraT6(): MeshBuilder {
   });
   for (const s of sides) m.scope(sideName(s), () => {
     m.scope("windows", () => t.windows(mid, s, s > 0 ? T6_RIGHT_WINDOWS : T6_LEFT_WINDOWS, { frame: "band", sash: 2.68 }));
-    if (s > 0) m.scope("doors", () => t.doors(mid, s, T6_DOORS, "doorGrey", { frame: "band", sash: 1.8 }));
+    if (s > 0) m.scope("doors", () => t.doors(mid, s, T6_DOORS, "doorGrey", { frame: "band", sash: 1.8, opens: { kind: "plug", leaves: 2 } }));
     m.scope("fleet number", () => t.inscription(mid, s, t.fx(s > 0 ? 6.2 : 2.4), [{ text: T6_NUMBER, y: t.fy(1.0), h: 0.16 }], 0.006, "white"));
   });
   for (const e of [1, -1]) m.scope(endName(e), () => {
@@ -398,7 +398,7 @@ export function tatraKt8(params?: ParamValues): MeshBuilder {
     for (const s of sides) m.scope(sideName(s), () => {
       const own = (bx: PxBox) => inside(bx[0] / 10, [a, b]) && inside(bx[2] / 10, [a, b]);
       m.scope("windows", () => t.windows(saloon, s, KT8_WINDOWS.filter(own), { frame: P.frame, sash: 2.5 }));
-      m.scope("doors", () => t.doors(saloon, s, KT8_DOORS.filter((d) => own(d.box)), P.door, { frame: P.frame, sash: 1.82 }));
+      m.scope("doors", () => t.doors(saloon, s, KT8_DOORS.filter((d) => own(d.box)), P.door, { frame: P.frame, sash: 1.82, opens: (d) => ({ kind: "fold", leaves: d.lights.length === 3 ? 3 : 4 }) }));
       // a side repeater in the pier between the outer sections' two windows, at their foot
       if (i !== 1) m.scope("indicator", () => {
         const x = t.fx(i === 0 ? 4.85 : 23.35);
@@ -531,7 +531,7 @@ export function tatraKt4(): MeshBuilder {
     for (const s of sides) m.scope(sideName(s), () => {
       const own = (bx: PxBox) => inside(bx[0] / 10, [a, b]) && inside(bx[2] / 10, [a, b]);
       m.scope("windows", () => t.windows(saloon, s, (s > 0 ? KT4_RIGHT_WINDOWS : KT4_LEFT_WINDOWS).filter(own), { frame: "frame", sash: 2.35 }));
-      if (s > 0) m.scope("doors", () => t.doors(saloon, s, KT4_DOORS.filter((d) => own(d.box)), "white", { frame: "frame", sash: 1.6 }));
+      if (s > 0) m.scope("doors", () => t.doors(saloon, s, KT4_DOORS.filter((d) => own(d.box)), "white", { frame: "frame", sash: 1.6, opens: { kind: "fold", leaves: 4 } }));
     });
     const e = i === 0 ? 1 : -1;
     const v = vols[i === 0 ? 0 : 1]!;
@@ -647,7 +647,7 @@ export function gt4Tram(): MeshBuilder {
     for (const s of sides) m.scope(sideName(s), () => {
       const own = (bx: PxBox) => inside(bx[0] / 10, [a, b]) && inside(bx[2] / 10, [a, b]);
       m.scope("windows", () => t.windows(saloon, s, (s > 0 ? GT4_RIGHT_WINDOWS : GT4_LEFT_WINDOWS).filter(own), { frame: "doorFrame", sash: 2.25 }));
-      if (s > 0) m.scope("doors", () => t.doors(saloon, s, GT4_DOORS.filter((d) => own(d.box)), "cream", { frame: "doorFrame", sash: 1.7 }));
+      if (s > 0) m.scope("doors", () => t.doors(saloon, s, GT4_DOORS.filter((d) => own(d.box)), "cream", { frame: "doorFrame", sash: 1.7, opens: { kind: "fold", leaves: 2 } }));
       // the GT4's only direction indicators: a side repeater on each section, at the window sill
       m.scope("indicator", () => {
         const x = t.fx(i === 0 ? 3.9 : 11.1);

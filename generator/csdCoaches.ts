@@ -9,6 +9,7 @@
 import { ngon, type MeshBuilder } from "./meshBuilder.ts";
 import { block, side } from "./vehicleParts.ts";
 import { Coach, px, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
+import type { DoorMotion } from "./doors.ts";
 import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues } from "./design.ts";
 
 /** The game-catalog fields of the coaches: rail vehicles in their own pool. */
@@ -82,13 +83,33 @@ export function windows(c: Coach, v: Volume, h: number, list: Array<PxBox | [PxB
     });
 }
 
-/** Doors on a side of `v`: the leaf box and its windows. */
-export function doors(c: Coach, v: Volume, h: number, list: Array<{ box: PxBox; glass: PxBox[] }>, paint: string, opts: { frame?: string; fw?: number } = {}): SideWork {
+/** Doors on a side of `v`: the leaf box and its windows; with `opens` they open, the windows riding on the leaves (doors.ts). */
+export function doors(
+  c: Coach,
+  v: Volume,
+  h: number,
+  list: Array<{ box: PxBox; glass: PxBox[] }>,
+  paint: string,
+  opts: { frame?: string; fw?: number; opens?: DoorMotion } = {},
+): SideWork {
+  const { opens, ...win } = opts;
   return (s) =>
     list.forEach((d, i) =>
       c.m.scope(`door ${i + 1}`, () => {
+        const pane = (b: Box) => c.window(v, s, b, { ...win, fw: win.fw ?? 0.05 });
+        if (opens) {
+          c.door(v, s, px(d.box, h), paint, {
+            opens,
+            leafWork: (clip) =>
+              d.glass.forEach((g, k) => {
+                const b = clip(px(g, h));
+                if (b) c.m.scope(`window ${k + 1}`, () => pane(b));
+              }),
+          });
+          return;
+        }
         c.door(v, s, px(d.box, h), paint);
-        d.glass.forEach((g, k) => c.m.scope(`window ${k + 1}`, () => c.window(v, s, px(g, h), { ...opts, fw: opts.fw ?? 0.05 })));
+        d.glass.forEach((g, k) => c.m.scope(`window ${k + 1}`, () => pane(px(g, h))));
       }),
     );
 }
@@ -283,7 +304,7 @@ export function csdBdmtee(): MeshBuilder {
       doors(c, body, H, [
         { box: [63, 18, 83, 44], glass: [[65, 20, 70, 30], [76, 20, 81, 30]] },
         { box: [181, 18, 201, 44], glass: [[183, 20, 188, 30], [194, 20, 199, 30]] },
-      ], "green", { fw: 0.04 }),
+      ], "green", { fw: 0.04, opens: { kind: "swing", leaves: 2 } }),
       (s) =>
         m.scope("door seams", () => {
           for (const x of [7.25, 19.05]) c.sidePanel(body, "seam", s, { x0: x - 0.02, y0: 0.6, x1: x + 0.02, y1: 3.2 }, 0.016);

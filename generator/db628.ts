@@ -245,8 +245,17 @@ function sideWork(c: Coach, v: Volume, L: Livery, s: number): void {
   m.scope("doors", () =>
     DOORS.forEach((d, i) =>
       m.scope(`door ${i + 1}`, () => {
-        c.door(v, s, box(d.door), L.door, { seam: 0.03 });
-        d.glass.forEach((g, j) => m.scope(`window ${j + 1}`, () => c.window(v, s, box(g), { fw: 0.06 })));
+        // one plug leaf with its lights, as the native drawing paints it, sliding
+        // toward the car's middle (doors.ts)
+        c.door(v, s, box(d.door), L.door, {
+          seam: 0.03,
+          opens: { kind: "plug", leaves: 1, toward: i === 0 ? "high" : "low" },
+          leafWork: (clip) =>
+            d.glass.forEach((g, j) => {
+              const w = clip(box(g));
+              if (w) c.m.scope(`window ${j + 1}`, () => c.window(v, s, w, { fw: 0.06 }));
+            }),
+        });
       }),
     ),
   );

@@ -39,7 +39,8 @@ export const CD_Y_NUMBERS: Record<CdYVariant, { number: string; source: string }
 };
 
 const F = (b: PxBox): Win => [b, "frosted"];
-const door = (box: PxBox, glass: PxBox[], paint: DoorSpec["paint"]): DoorSpec => ({ box, glass, paint });
+/** An entrance door: one leaf, as the native drawing paints it, swinging inward on the jamb toward the coach's nearer end. */
+const door = (box: PxBox, glass: PxBox[], paint: DoorSpec["paint"]): DoorSpec => ({ box, glass, paint, opens: { kind: "swing", leaves: 1, from: box[0] < 120 ? "low" : "high" } });
 /** Two toilets and ten compartments: the window columns of cd_b, cd_bee and their relatives. */
 const Y_COMPARTMENTS: PxBox[] = [31, 50, 69, 88, 107, 125, 144, 163, 182, 201].map((x): PxBox => [x, 19, x + 13, 30]);
 const Y_VENTS: Array<[number, number]> = [[3.6, 4.2], [7.8, 8.4], [12.0, 12.6], [16.2, 16.8], [20.4, 21.0]];
