@@ -3,7 +3,7 @@
 // JS size, which is a link that downloads that file.
 
 import { For, Show } from "solid-js";
-import { COLUMNS, cellFile, cellText, type Column, type Row, type SortDir } from "./catalogQuery";
+import { COLUMNS, cellFile, cellText, shownId, type Column, type Row, type SortDir } from "./catalogQuery";
 import { Thumb } from "./Thumb";
 
 const TABLE_COLUMNS = COLUMNS.filter((c) => c.table);
@@ -75,7 +75,7 @@ export function ModelTable(props: {
                     c.key === "title" ? (
                       <th scope="row">
                         {r.title}
-                        <span class="factory-rowid">{r.id}</span>
+                        <Show when={shownId(r)}>{(id) => <span class="factory-rowid">{id()}</span>}</Show>
                       </th>
                     ) : (
                       <td class={c.type === "text" ? "" : "factory-num"}>

@@ -305,8 +305,8 @@ function trimEnds(pts: V[], inset: number): V[] {
 }
 
 /** The catalog fields every preview design carries, in its category and group. */
-export function previewCatalog(category: PreviewCategory, group: string): { category: PreviewCategory; group: string; defaultScale: 1; license: "CC0"; author: "Rail Island"; source: "Rail Island" } {
-  return { category, group, defaultScale: 1, license: "CC0", author: "Rail Island", source: "Rail Island" };
+export function previewCatalog(category: PreviewCategory, group: string, gameId?: string): { category: PreviewCategory; group: string; gameId?: string; defaultScale: 1; license: "CC0"; author: "Rail Island"; source: "Rail Island" } {
+  return { category, group, ...(gameId ? { gameId } : {}), defaultScale: 1, license: "CC0", author: "Rail Island", source: "Rail Island" };
 }
 
 /** The site's categories of preview designs (src/catalogQuery.ts). */

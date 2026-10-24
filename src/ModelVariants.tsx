@@ -5,7 +5,7 @@
 // it at that variant.
 
 import { For, Show } from "solid-js";
-import { formatNumber, representativeVariants, variantCaption, variantCount, type Row } from "./catalogQuery";
+import { formatNumber, representativeVariants, shownId, variantCaption, variantCount, type Row } from "./catalogQuery";
 import { variantLabel } from "./exportList";
 import { VariantThumb } from "./VariantThumb";
 
@@ -23,7 +23,7 @@ export function ModelVariants(props: { rows: readonly Row[]; onOpen: (r: Row, pa
                   {r.title}
                   <span class="factory-chip">{r.group}</span>
                 </span>
-                <span class="factory-rowid">{r.id}</span>
+                <Show when={shownId(r)}>{(id) => <span class="factory-rowid">{id()}</span>}</Show>
                 <span class="factory-variants__count">
                   <b>{formatNumber(count)}</b> {count === 1 ? "variant" : "variants"}
                   <Show when={count > shown.length}>

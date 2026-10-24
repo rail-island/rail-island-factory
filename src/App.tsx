@@ -7,7 +7,7 @@
 // browser's back button walks it and a model page can be linked to.
 
 import { For, Match, Show, Switch, createEffect, createMemo, createResource, createSignal, onCleanup, onMount } from "solid-js";
-import { COLUMNS, GROUPS, chipLabel, chipRows, parseView, prepareRows, queryRows, serializeView, type Column, type Row, type ViewState } from "./catalogQuery";
+import { COLUMNS, GROUPS, chipLabel, chipRows, parseView, prepareRows, queryRows, serializeView, shownId, type Column, type Row, type ViewState } from "./catalogQuery";
 import type { ModelCatalog } from "../generator/catalog.ts";
 import { ModelTable } from "./ModelTable";
 import { ModelCards } from "./ModelCards";
@@ -154,7 +154,7 @@ export function App() {
           </button>
         ) : null}
         <h1 class="factory-bar__title">{open()?.title ?? "Rail Island Factory"}</h1>
-        <Show when={open()}>{(record) => <span class="factory-muted factory-bar__sub">{record().id}</span>}</Show>
+        <Show when={open() && shownId(open()!)}>{(id) => <span class="factory-muted factory-bar__sub">{id()}</span>}</Show>
         <a class="factory-bar__add" href={ADD_MODEL_URL} target="_blank" rel="noopener">
           Add your model
         </a>

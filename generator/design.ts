@@ -414,6 +414,8 @@ export interface CatalogFields {
   group: string;
   /** A powered rail vehicle's traction (a locomotive's, a unit's); absent for anything else. */
   traction?: Traction;
+  /** A site preview's set type id (docs/models/previews.md): the id a saved game stores, shown in place of the model id. */
+  gameId?: string;
   defaultScale: number;
   license: string;
   author: string;

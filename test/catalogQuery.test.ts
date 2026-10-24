@@ -3,7 +3,7 @@
 import { describe, expect, it } from "vitest";
 import {
   COLUMNS, DEFAULT_SORT, cellFile, cellText, column, compareRows, effectiveParams, formatBytes, isDefaultParams, nonDefaultParams, parseView,
-  NO_CHIPS, chipLabel, chipRows, groupOf, prepareRows, queryRows, serializeView,
+  NO_CHIPS, chipLabel, chipRows, groupOf, prepareRows, queryRows, serializeView, shownId,
   MAX_SHOWN_VARIANTS, representativeVariants, variantCaption, variantCount, variantThumbKey,
   type CatalogRecord,
 } from "../src/catalogQuery";
@@ -64,6 +64,16 @@ describe("queryRows", () => {
 
   it("offers a sort for every column", () => {
     for (const c of COLUMNS) expect(() => queryRows(ROWS, "", c.key, c.dir)).not.toThrow();
+  });
+});
+
+describe("shownId", () => {
+  it("shows a preview's set type id verbatim, else the model id, and never a proc-preview-* id", () => {
+    const shed = rec("proc-preview-station-platforms-shared", "Island platforms", 100, { gameId: "platforms_shared" });
+    expect(shownId(shed)).toBe("platforms_shared");
+    expect(shownId(ROWS[0]!)).toBe(ROWS[0]!.id);
+    expect(shownId(rec("proc-preview-texture-brick", "Brick", 12))).toBeNull();
+    expect(queryRows(prepareRows([shed]), "platforms_shared", "title", "asc")).toHaveLength(1);
   });
 });
 
