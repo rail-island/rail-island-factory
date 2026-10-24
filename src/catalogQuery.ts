@@ -7,9 +7,9 @@
 // detail panel's spec list and the comparator all read the same list, so a column
 // cannot offer an ordering the comparator does not implement.
 
-import type { CatalogRecord } from "../generator/catalog.ts";
+import type { CatalogRecord, Scenery } from "../generator/catalog.ts";
 
-export type { CatalogRecord };
+export type { CatalogRecord, Scenery };
 
 export type SortDir = "asc" | "desc";
 

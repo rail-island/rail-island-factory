@@ -135,7 +135,7 @@ export function ice1Lod(params?: ParamValues): MeshBuilder {
       ...skirtParts((v.bottom ?? []).map(([b, y]): Pt => [b - centre, y]), 0.5, 1.5 * L.kZ - 0.02, "skirt"),
       ...(power ? [
         roofPart("roofGrey", X(14.5), X(3.6), 0.7, 0.65, 3.78, 3.84),
-        ...pantographParts([X(17.4)], 3.83, 4.05, 5.0),
+        ...pantographParts([X(17.4)], 3.83, 4.05),
       ] : []),
     ],
   }, 100);
@@ -262,7 +262,7 @@ function powerCar(): MeshBuilder {
       roofBox(m, "roofGrey", X(6.8), X(14.5), 3.79, 1.4, 0.05, 0.05);
     });
     m.scope("platform", () => roofBox(m, "platform", X(14.5), X(19.7), 3.79, 1.6, 0.04, 0.03));
-    m.scope("pantographs", () => m.scope("pantograph", () => pantograph(m, { x: X(17.4), roof: 3.83, hinge: -1, raised: true, rise: 1.2 })));
+    m.scope("pantographs", () => m.scope("pantograph", () => pantograph(m, { x: X(17.4), roof: 3.83, hinge: -1, raised: true })));
   });
   m.scope("running gear", () => {
     ICE1_POWER_BOGIES.forEach((x, i) => m.scope(`bogie ${i + 1}`, () => unitBogie(c, c.X(B(x)), { wb: 3.0, r: 0.52, motor: true, top: 0.6, frame: 1.0 })));

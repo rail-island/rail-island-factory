@@ -18,6 +18,7 @@ import { rodEnds } from "./rodEnds.ts";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { glbStats } from "../generator/glbStats";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles";
+import { RAIL_COLLECTOR_TOP } from "../generator/collector.ts";
 
 /** Every triangle of a GLB with its face normal (from the winding) and centroid. */
 function faces(glb: Uint8Array): Array<{ n: [number, number, number]; c: [number, number, number] }> {
@@ -345,7 +346,7 @@ describe("the vehicles", () => {
     for (const end of ["front", "rear"]) {
       const prefix = `roof-equipment/pantographs/${end}-pantograph`;
       const head = nodes.find((n) => n.id === `${prefix}/head`)!;
-      expect(head.max![1]).toBeCloseTo(end === "rear" ? 5.74 : 4.64, 3);
+      expect(head.max![1]).toBeCloseTo(end === "rear" ? RAIL_COLLECTOR_TOP : 4.64, 3);
       const strips = nodes.filter((n): n is LeafNode => isLeaf(n) && n.id.startsWith(`${prefix}/head/`) && n.material === "carbon");
       expect(strips).toHaveLength(2);
       for (const strip of strips) {

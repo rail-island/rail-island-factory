@@ -229,7 +229,7 @@ export function cd680Lod(params?: ParamValues): MeshBuilder {
       ...bogieParts(L.bogies.map((x) => [X(x), 2.0] as const), 0.8),
       ...skirtParts((body.bottom ?? []).map(([b, y]): Pt => [b - centre, y]), 0.8, HALF - 0.02, "teal"),
       ...L.boxes.map(([x0, x1]) => roofPart("roofBox", X(x1), X(x0), 1.0 * K_Z, 0.8 * K_Z, 3.5, 4.0)),
-      ...(L.pantograph ? pantographParts([X(21.8)], 3.6, 3.85, 4.95) : []),
+      ...(L.pantograph ? pantographParts([X(21.8)], 3.6, 3.85) : []),
     ],
   }, 100);
 }
@@ -257,7 +257,7 @@ export function cd680(params?: ParamValues): MeshBuilder {
         m.sweep("roofBox", "x", ring, a, ring, b);
       }),
     );
-    if (L.pantograph) m.scope("pantographs", () => m.scope("pantograph", () => pantograph(m, { x: c.X(bOf(L, 21.8)), roof: 3.6, hinge: -1, raised: true, rise: 1.25 })));
+    if (L.pantograph) m.scope("pantographs", () => m.scope("pantograph", () => pantograph(m, { x: c.X(bOf(L, 21.8)), roof: 3.6, hinge: -1, raised: true })));
   });
   m.scope("running gear", () => {
     L.bogies.forEach((x, i) =>

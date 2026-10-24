@@ -23,6 +23,7 @@ import {
   type Band,
 } from "./cd163.ts";
 import { liftable } from "./liftable.ts";
+import { RAIL_COLLECTOR_TOP } from "./collector.ts";
 
 const PALETTE = {
   ...CD163_PALETTE,
@@ -742,7 +743,7 @@ function pantographAt(
 ): void {
   const base = 4.35,
     arm = 1.66,
-    rise = 0.12 + 0.8 * lift;
+    rise = 0.12 + ((RAIL_COLLECTOR_TOP - 0.05 - base) / 2 - 0.12) * lift; // raised: the strips' top at the contact wire
   const dx = Math.sqrt(arm * arm - rise * rise),
     hinge = xc + h * 0.65,
     knee = hinge - h * dx;
@@ -899,7 +900,7 @@ export function cd150Lod(params?: ParamValues, budget = 100): MeshBuilder {
     ],
   };
   const pantograph = (m: MeshBuilder, x: number, h: number, raised: boolean) =>
-    lodPantograph(m, { x, roofY: 4.2, baseY: 4.35, h, raised, raisedTop: 6.24, lower: 1.66, upper: 1.66, halfHead: 0.9 });
+    lodPantograph(m, { x, roofY: 4.2, baseY: 4.35, h, raised, lower: 1.66, upper: 1.66, halfHead: 0.9 });
   const parts: LodPart[] = [
     { draw: (m) => m.scope("frame", () => lodSideBox(m, livery.skirt, [[-7.8, 0.9], [7.8, 0.9], [7.8, 1.2], [-7.8, 1.2]], -1.36, 1.36)) },
     { draw: (m) => m.scope("running gear", () => { for (const x of [-4.25, 4.15]) lodBogie(m, x, 2.3, 0.9, 1.1); }) },

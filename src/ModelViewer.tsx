@@ -12,11 +12,17 @@
 // draws; there is no GLB. The camera keeps its place while only the parameters
 // change.
 //
-// A model with animation clips (a steam locomotive's running gear: wheelsets,
-// rods and valve gear, docs/models/animation.md) gets Start and Stop buttons.
-// Start plays every clip in a loop through an AnimationMixer and runs a render
-// loop only while it plays; Stop halts it where it is. A new model or parameter
-// choice stops the animation.
+// A model with animation clips (docs/models/animation.md) gets buttons for them,
+// by what plays each clip (userData.clipDrives). The looping clips (a steam
+// locomotive's running gear: wheelsets, rods and valve gear) get Start and Stop:
+// Start plays them in a loop through an AnimationMixer, Stop halts them where they
+// are. The `state` clips (the pantographs) get Up and Down, which raise or lower
+// every collector the way the game does, from where it stands now. A render loop
+// runs only while something moves. A new model or parameter choice drops the
+// animation, and the model comes back at rest: its pantographs raised.
+//
+// A road or rail vehicle stands on its way, an electric one under the game's wire
+// (viewerScenery.ts); a Scenery checkbox hides them.
 //
 // A vehicle with lamps (userData.lamps, docs/models/lamps.md) gets a Lights
 // button that shows every tagged lamp lit, indicators blinking, so a design's
@@ -33,7 +39,7 @@
 
 import { createEffect, createSignal, onCleanup, onMount, Show } from "solid-js";
 import {
-  AmbientLight, AnimationClip, AnimationMixer, Box3, Color, DirectionalLight, Mesh, PerspectiveCamera,
+  AmbientLight, AnimationClip, AnimationMixer, type AnimationAction, Box3, Color, DirectionalLight, Mesh, PerspectiveCamera,
   Raycaster, Scene, Vector2, Vector3, WebGLRenderer, type Object3D,
 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
@@ -43,6 +49,7 @@ import { leafAt, rangesOf, type TreeIndex } from "./sourceTreeView";
 import { applyHighlight, makeParts, type Part } from "./viewerHighlight";
 import { applyLamps, disposeLamps, lampsOf, type Lamp } from "./viewerLamps";
 import { applySurfaces } from "./viewerSurfaces";
+import { buildScenery } from "./viewerScenery";
 
 function disposeModel(obj: Object3D): void {
   obj.traverse((o) => {
@@ -56,6 +63,16 @@ function disposeModel(obj: Object3D): void {
 
 /** A pointer that moved less than this (px) between down and up clicked rather than dragged. */
 const CLICK_SLOP = 5;
+/** Seconds a pantograph takes from folded to raised. */
+const LIFT_SECONDS = 1.5;
+
+/** Whether the clip is a `state` clip of the model (a pantograph): its drive in userData.clipDrives. */
+function isStateClip(model: Object3D, clip: AnimationClip): boolean {
+  const drives = model.userData.clipDrives as Record<string, { drive?: string }> | undefined;
+  return drives?.[clip.name]?.drive === "state";
+}
+// Whether the Scenery checkbox shows the way and the wire, kept across models.
+const [showScenery, setShowScenery] = createSignal(true);
 
 export function ModelViewer(props: {
   record: CatalogRecord;
@@ -94,12 +111,20 @@ export function ModelViewer(props: {
   const [failed, setFailed] = createSignal(false);
   // Bumped when a model lands, so the highlight effect re-runs on the new parts.
   const [loaded, setLoaded] = createSignal(0);
-  // The current model's animation clips, and whether they are playing.
+  // The current model's looping clips, and whether they are playing.
   const [clips, setClips] = createSignal<AnimationClip[]>([]);
   const [running, setRunning] = createSignal(false);
+  // Its state clips (the pantographs): where they stand (0 folded, 1 raised) and where they go.
+  const [stateClips, setStateClips] = createSignal<AnimationClip[]>([]);
+  const [liftTarget, setLiftTarget] = createSignal(1);
+  let lift = 1;
   let mixer: AnimationMixer | null = null;
+  let loopActions: AnimationAction[] = [];
+  let stateActions: AnimationAction[] = [];
   let animRaf = 0;
   let lastFrame = 0;
+  // The way and wire around the current model, when it has them.
+  let scenery: { group: Object3D; dispose: () => void } | null = null;
   // The current model's lamps, and whether the Lights button has them lit.
   let lamps: Lamp[] = [];
   const [lampCount, setLampCount] = createSignal(0);
@@ -130,33 +155,78 @@ export function ModelViewer(props: {
     showLamps();
   };
 
-  const tick = (now: number) => {
-    animRaf = requestAnimationFrame(tick);
-    mixer?.update(Math.min(0.1, (now - lastFrame) / 1000));
-    lastFrame = now;
-    render();
-  };
-  const start = () => {
-    if (!current || running() || clips().length === 0) return;
+  /** The mixer of the current model: its looping actions (paused until Start) and its state actions (posed by `lift`). */
+  const ensureMixer = (): AnimationMixer | null => {
+    if (!current) return null;
     if (!mixer) {
       mixer = new AnimationMixer(current);
-      for (const clip of clips()) mixer.clipAction(clip).play();
+      loopActions = clips().map((clip) => {
+        const a = mixer!.clipAction(clip);
+        a.paused = true;
+        return a.play();
+      });
+      // a state action never runs on its own: its time is set from `lift` every frame
+      stateActions = stateClips().map((clip) => {
+        const a = mixer!.clipAction(clip);
+        a.paused = true;
+        a.time = lift * clip.duration;
+        return a.play();
+      });
     }
-    setRunning(true);
+    return mixer;
+  };
+  const moving = () => running() || lift !== liftTarget();
+  const tick = (now: number) => {
+    const dt = Math.min(0.1, (now - lastFrame) / 1000);
+    lastFrame = now;
+    const target = liftTarget();
+    if (lift !== target) lift = target > lift ? Math.min(target, lift + dt / LIFT_SECONDS) : Math.max(target, lift - dt / LIFT_SECONDS);
+    for (const a of stateActions) a.time = lift * a.getClip().duration;
+    mixer?.update(dt);
+    render();
+    animRaf = moving() ? requestAnimationFrame(tick) : 0;
+  };
+  /** Runs the render loop while anything moves. */
+  const animate = () => {
+    if (animRaf || !moving()) return;
     lastFrame = performance.now();
     animRaf = requestAnimationFrame(tick);
   };
+  const start = () => {
+    if (running() || clips().length === 0 || !ensureMixer()) return;
+    for (const a of loopActions) a.paused = false;
+    setRunning(true);
+    animate();
+  };
   const stop = () => {
-    if (animRaf) cancelAnimationFrame(animRaf);
-    animRaf = 0;
+    for (const a of loopActions) a.paused = true;
     setRunning(false);
+  };
+  /** Raises (1) or lowers (0) every pantograph from where it stands. */
+  const liftTo = (target: number) => {
+    if (stateClips().length === 0 || !ensureMixer()) return;
+    setLiftTarget(target);
+    animate();
   };
   /** Stops and forgets the animation of the model being replaced. */
   const dropAnimation = () => {
-    stop();
+    if (animRaf) cancelAnimationFrame(animRaf);
+    animRaf = 0;
+    setRunning(false);
     mixer?.stopAllAction();
     mixer = null;
+    loopActions = [];
+    stateActions = [];
     setClips([]);
+    setStateClips([]);
+    lift = 1;
+    setLiftTarget(1);
+  };
+  const dropScenery = () => {
+    if (!scenery) return;
+    scene?.remove(scenery.group);
+    scenery.dispose();
+    scenery = null;
   };
 
   const disposeParts = () => {
@@ -242,6 +312,7 @@ export function ModelViewer(props: {
 
     onCleanup(() => {
       dropAnimation();
+      dropScenery();
       if (resizeRaf) cancelAnimationFrame(resizeRaf);
       ro.disconnect();
       canvas.removeEventListener("pointerdown", onDown);
@@ -293,7 +364,14 @@ export function ModelViewer(props: {
         props.onTriangles?.(triangles);
         current = group;
         currentKey = key;
-        setClips(loadedClips);
+        setClips(loadedClips.filter((c) => !isStateClip(group, c)));
+        setStateClips(loadedClips.filter((c) => isStateClip(group, c)));
+        dropScenery();
+        if (record.scenery) {
+          scenery = buildScenery(record.scenery, new Box3().setFromObject(group));
+          scenery.group.visible = showScenery();
+          scene.add(scenery.group);
+        }
         parts = makeParts(group);
         lamps = lampsOf(group);
         setLampCount(lamps.length);
@@ -365,6 +443,13 @@ export function ModelViewer(props: {
 
   createEffect(() => {
     loaded();
+    const visible = showScenery();
+    if (scenery) scenery.group.visible = visible;
+    render();
+  });
+
+  createEffect(() => {
+    loaded();
     const index = props.tree;
     const id = props.selected;
     // a tree for another model (one still loading after a step) highlights nothing
@@ -378,8 +463,8 @@ export function ModelViewer(props: {
   return (
     <div class="factory-viewer" ref={pane}>
       <canvas ref={canvas} class="factory-viewer__canvas" />
-      <Show when={clips().length > 0 || lampCount() > 0}>
-        <div class="factory-viewer__controls" role="group" aria-label="Animation and lights">
+      <Show when={clips().length > 0 || stateClips().length > 0 || lampCount() > 0 || props.record.scenery}>
+        <div class="factory-viewer__controls" role="group" aria-label="Animation, pantographs, lights and scenery">
           <Show when={clips().length > 0}>
             <button type="button" class="factory-btn" onClick={start} disabled={running()}>
               Start
@@ -388,10 +473,24 @@ export function ModelViewer(props: {
               Stop
             </button>
           </Show>
+          <Show when={stateClips().length > 0}>
+            <button type="button" class="factory-btn" onClick={() => liftTo(1)} disabled={liftTarget() === 1} title="Raise the pantographs">
+              Up
+            </button>
+            <button type="button" class="factory-btn" onClick={() => liftTo(0)} disabled={liftTarget() === 0} title="Lower the pantographs">
+              Down
+            </button>
+          </Show>
           <Show when={lampCount() > 0}>
             <button type="button" class="factory-btn" onClick={toggleLights} aria-pressed={lightsOn()}>
               {lightsOn() ? "Lights off" : "Lights on"}
             </button>
+          </Show>
+          <Show when={props.record.scenery}>
+            <label class="factory-viewer__check">
+              <input type="checkbox" checked={showScenery()} onChange={(e) => setShowScenery(e.currentTarget.checked)} />
+              Scenery
+            </label>
           </Show>
         </div>
       </Show>

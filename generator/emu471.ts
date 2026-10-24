@@ -366,7 +366,7 @@ export function cd471Lod(params?: ParamValues): MeshBuilder {
     bodies: [body],
     parts: [
       ...bogieParts(BOGIES.map((b) => [b - centre, half] as const), 0.9 * K_Y),
-      ...(unit === "motorCar" ? pantographParts([3.25 - centre], 4.2 * K_Y, 4.2 * K_Y + 0.25, 5.9) : []),
+      ...(unit === "motorCar" ? pantographParts([3.25 - centre], 4.2 * K_Y, 4.2 * K_Y + 0.25) : []),
     ],
   }, 100);
 }

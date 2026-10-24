@@ -181,7 +181,10 @@ only the build knows: `thumbUrl` (site-relative), `thumbBytes`, `jsUrl`, `jsByte
 the bounding-box extents `sizeX`/`sizeY`/`sizeZ` in metres (before
 `defaultScale`), rounded to the millimetre, and `references`: the source images
 as `{ name, url, bytes }` in name order (`name` is the path within the assets
-folder, `url` is `refs/<id>/<name>`), empty for a design without any. A vehicle
+folder, `url` is `refs/<id>/<name>`), empty for a design without any. A road or
+rail vehicle also carries `scenery` (`sceneryOf`): the way the site's viewer draws
+under it (`rail`, `road` or `tram`) and, over an electric one or a tram, `wireTop`,
+the wire's underside ([../site/catalog-site.md](../site/catalog-site.md)). A vehicle
 whose design declares OpenTTD figures also carries them as `openttd`, for the
 site's GRF export only; the game's meta files do not
 ([../site/openttd-export.md](../site/openttd-export.md)).

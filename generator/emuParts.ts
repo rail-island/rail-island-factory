@@ -11,6 +11,7 @@ import { block, side } from "./vehicleParts.ts";
 import { pushRod } from "./cd163.ts";
 import type { CatalogFields, ParamSpec } from "./design.ts";
 import { liftable } from "./liftable.ts";
+import { RAIL_COLLECTOR_TOP } from "./collector.ts";
 
 /** The catalog fields of an electric multiple unit's cars: a powered unit that carries passengers. */
 export const EMU_CATALOG: CatalogFields = {
@@ -66,8 +67,6 @@ export interface PantographSpec {
   /** Lower and upper arm lengths (m). */
   lower?: number;
   upper?: number;
-  /** How far the raised head stands above the base frame. */
-  rise?: number;
 }
 
 /**
@@ -91,7 +90,7 @@ function pantographPose(p: PantographSpec, lift: number): { xh: number; hingeY: 
   const L2 = p.upper ?? 1.2;
   const xh = xc + h * 0.55;
   const hx = xc + h * 0.1;
-  const headY = y + 0.3 + (p.rise ?? 1.1) * lift;
+  const headY = y + 0.3 + (RAIL_COLLECTOR_TOP - 0.07 - (y + 0.3)) * lift; // raised: the strips' top at the contact wire
   const hingeY = y + 0.11;
   // local u runs from the hinge toward the head, v up from the hinge shaft
   const du = h * (xh - hx);

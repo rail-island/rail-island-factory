@@ -14,6 +14,7 @@
 import { MeshBuilder, type MaterialSpec } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { drawJoint, type JointRig, type SectionRig } from "./rig.ts";
+import { RAIL_COLLECTOR_TOP } from "./collector.ts";
 
 // --- bands ----------------------------------------------------------------------------
 
@@ -175,8 +176,8 @@ export interface LodPantograph {
   /** +1: the hinge stands toward +x of the centre and the knee points to -x. */
   h: number;
   raised: boolean;
-  /** The collector's top when raised. */
-  raisedTop: number;
+  /** The collector's top when raised (the game's contact wire unless given). */
+  raisedTop?: number;
   lower?: number;
   upper?: number;
   /** Half the collector's width. */
@@ -208,7 +209,7 @@ export function lodPantograph(m: MeshBuilder, p: LodPantograph): void {
   const hingeY = y + 0.11;
   const f1 = Math.sqrt(L1 * L1 - 0.11 * 0.11), f2 = Math.sqrt(L2 * L2 - 0.09 * 0.09);
   const hx = xh - h * f1 + h * f2;
-  const headY = p.raisedTop - 0.07;
+  const headY = (p.raisedTop ?? RAIL_COLLECTOR_TOP) - 0.07;
   const dx = hx - xh, dy = headY - 0.02 - hingeY;
   const dist = Math.hypot(dx, dy);
   const along = (L1 * L1 - L2 * L2 + dist * dist) / (2 * dist);

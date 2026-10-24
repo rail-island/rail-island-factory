@@ -187,7 +187,7 @@ function motorCar(): MeshBuilder {
         for (const u of [104, 117, 129, 141, 153, 165]) for (const s of [-1, 1]) block(m, "louvreSlat", X((u + 3) / 10), X(u / 10), 3.95, 4.03, ...side(s, 0.79, 0.815));
       });
     });
-    m.scope("pantographs", () => m.scope("pantograph", () => diamond(m, { xc: X(22.64), roofY: 3.8, baseY: 4.1, raised: true, raisedTop: 5.75 })));
+    m.scope("pantographs", () => m.scope("pantograph", () => diamond(m, { xc: X(22.64), roofY: 3.8, baseY: 4.1, raised: true })));
   });
   m.scope("running gear", () => {
     [4.4, 22.6].forEach((x, i) => m.scope(`bogie ${i + 1}`, () => emuBogie(c, bOf(F, x), 2.5, 0.5, 0.78, true)));
@@ -271,7 +271,7 @@ export function cd451Lod(params?: ParamValues): MeshBuilder {
       ...bogieParts([[X(4.4), 1.95], [X(22.6), 1.95]], 0.8),
       underPart(X(2.6), X(0.6), 0.5, 0.8, 1.25, 30, undefined, "apron"),
       roofPart("roofTop", X(18.1), X(9.3), 0.8, 0.6, 3.78, 4.2),
-      ...pantographParts([X(22.64)], 3.8, 4.1, 5.75),
+      ...pantographParts([X(22.64)], 3.8, 4.1),
     ],
   }, 100);
 }
