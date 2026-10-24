@@ -173,6 +173,27 @@ describe("wheels on the rail type set's rails", () => {
     const sections = Object.values(RAIL_TYPES).map((t) => JSON.stringify(t.rail));
     expect(new Set(sections).size).toBe(1);
   });
+  it("every rail type's simplified rail stays under the wheel treads, at full rail height", () => {
+    // every rail vehicle's tread runs 0.665-0.80 m off its centre line
+    for (const [id, t] of Object.entries(RAIL_TYPES)) {
+      const inner = (t.rail.gauge - t.far.rail.width) / 2 / STUDS_PER_M;
+      const outer = (t.rail.gauge + t.far.rail.width) / 2 / STUDS_PER_M;
+      expect(inner, id).toBeGreaterThanOrEqual(0.665);
+      expect(outer, id).toBeLessThanOrEqual(0.8);
+      expect(t.far.rail.width, id).toBeGreaterThanOrEqual(t.rail.headWidth);
+      expect(t.far.rail.height, id).toBe(t.rail.height);
+    }
+  });
+  it("every rail type's sleeper band spans its sleepers and fits the bed", () => {
+    for (const [id, t] of Object.entries(RAIL_TYPES)) {
+      const band = t.far.sleeperBand;
+      expect(band.width, id).toBe(t.sleeper.length);
+      expect(band.width, id).toBeLessThan(t.ballast.width);
+      expect(band.cover, id).toBeCloseTo(t.sleeper.width / t.sleeper.spacing, 2);
+      expect(band.color.every((c) => Number.isInteger(c) && c >= 0 && c <= 255), id).toBe(true);
+      expect(t.far.streetRailWidth, id).toBeGreaterThanOrEqual(t.rail.headWidth);
+    }
+  });
   const rail = Object.values(RAIL_TYPES)[0]!.rail;
   const headIn = (rail.gauge - rail.headWidth) / 2 / STUDS_PER_M;
   const headOut = (rail.gauge + rail.headWidth) / 2 / STUDS_PER_M;
