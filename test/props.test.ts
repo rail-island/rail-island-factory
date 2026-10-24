@@ -123,14 +123,15 @@ describe("the trackside signals", () => {
     expect(build().triangleCount()).toBeLessThanOrEqual(1500);
   });
 
-  it("draws the buffer stop without a lamp, its rails reaching back to the end of the track", () => {
+  it("draws the buffer stop without a lamp, standing on the rail tops the game lays under it", () => {
     for (const m of [bufferStop(), bufferStopLod()]) {
       expect([...drawnByMaterial(m).keys()].filter((k) => k.startsWith("lamp"))).toEqual([]);
+      // no rails, sleepers or bed of its own: the game draws the track in the dead end's rail type
+      const pos = m.positions();
+      let minY = Infinity;
+      for (let i = 1; i < pos.length; i += 3) minY = Math.min(minY, pos[i]!);
+      expect(minY).toBeGreaterThan(1.528 - 0.258); // the rail foot
     }
-    let maxZ = -Infinity;
-    const pos = bufferStop().positions();
-    for (let i = 2; i < pos.length; i += 3) maxZ = Math.max(maxZ, pos[i]!);
-    expect(maxZ).toBeGreaterThanOrEqual(3.2);
   });
 
   it("lights the rail signal's lamps red over blue over green, the crossing's left of right", () => {

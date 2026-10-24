@@ -12,7 +12,7 @@
 // the track or road lies toward +X. Studs, placed at scale 1.
 
 import type { ProceduralDesign } from "../design.ts";
-import { MeshBuilder, ngon, rect, type MaterialSpec, type Ring } from "../meshBuilder.ts";
+import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "../meshBuilder.ts";
 import type { Vec3 } from "../meshCore.ts";
 import { propMaterial, type Rgb } from "./propKit.ts";
 import * as railType from "../sets/railType.ts";
@@ -24,9 +24,6 @@ const WHITE: Rgb = [234, 234, 228];
 const CROSS_RED: Rgb = [196, 34, 38];
 const CONCRETE: Rgb = [152, 150, 142];
 const CABINET: Rgb = [132, 142, 136];
-const RAIL_STEEL: Rgb = [96, 88, 80];
-const SLEEPER: Rgb = [112, 86, 62];
-const GRAVEL: Rgb = [138, 134, 126];
 const BACK_GREY: Rgb = [150, 154, 158];
 
 /** The rail signal's lamps, top to bottom: the material kind the game switches and the lens colour. */
@@ -49,9 +46,6 @@ const mat = {
   red: propMaterial("paint", CROSS_RED),
   concrete: propMaterial("concrete", CONCRETE),
   cabinet: propMaterial("steel", CABINET),
-  rail: propMaterial("steel", RAIL_STEEL),
-  sleeper: propMaterial("wood", SLEEPER),
-  gravel: propMaterial("concrete", GRAVEL),
   back: propMaterial("paint", BACK_GREY),
 };
 
@@ -66,9 +60,6 @@ function palette(lamps: ReadonlyArray<{ kind: string; color: Rgb }>): Record<str
     [mat.red]: { color: hex(CROSS_RED), roughness: 0.5 },
     [mat.concrete]: { color: hex(CONCRETE), roughness: 0.9 },
     [mat.cabinet]: { color: hex(CABINET), roughness: 0.5, metallic: 0.4 },
-    [mat.rail]: { color: hex(RAIL_STEEL), roughness: 0.4, metallic: 0.6 },
-    [mat.sleeper]: { color: hex(SLEEPER), roughness: 0.9 },
-    [mat.gravel]: { color: hex(GRAVEL), roughness: 1 },
     [mat.back]: { color: hex(BACK_GREY), roughness: 0.6 },
   };
   for (const l of lamps) out[propMaterial(l.kind, l.color)] = { color: hex(l.color), roughness: 0.2 };
@@ -280,15 +271,16 @@ export function crossingSignalLod(): MeshBuilder {
 
 /**
  * The game's track, from the rail type set (every type shares its cross-section):
- * the rails' gauge and flat-bottom profile, their running surface 1.528 studs
- * above the track's points (the game's RAIL_TOP_Y_OFFSET) and their foot on the
- * sleeper tops; the ballast crest 1.203 studs up. The stop stands 3.2 studs past
- * the end of the track, so its own rail stubs reach back to meet it.
+ * the rails' gauge and their running surface 1.528 studs above the track's points
+ * (the game's RAIL_TOP_Y_OFFSET). The stop stands 3.2 studs past the end of the
+ * track, on rails the game lays itself: it carries the dead end's track on under
+ * the stop in the track's own rail type (rails, sleepers, ballast and its sloped
+ * end), so the prop is only what stands on those rails.
  */
 const TRACK = railType.TYPE_META.wooden_sleepers!;
 const RAIL_TOP = 1.528;
 const STOP = {
-  railX: TRACK.rail.gauge / 2, railY0: RAIL_TOP - TRACK.rail.height, railY1: RAIL_TOP, trackEndZ: 3.2, crestY: 1.203,
+  railX: TRACK.rail.gauge / 2, railY1: RAIL_TOP,
   beamW: 4.0, beamY0: 2.45, beamY1: 3.05, beamZ: [0, 0.55] as const,
   bufferX: 1.55, signY: 4.9, signR: 0.9,
 };
@@ -306,31 +298,15 @@ function hazardStripes(m: MeshBuilder, x0: number, x1: number, y0: number, y1: n
 }
 
 /**
- * A buffer stop at a dead end of track: a gravel bed with rail stubs on three
- * sleepers reaching back (+Z) to the end of the track, a frame of rail on each rail
- * (a post and a raking strut), the buffer beam with hazard stripes and two buffers
- * facing the track, and the end-of-track sign - a red disk with a white bar - on a
- * post above it.
+ * A buffer stop at a dead end of track, standing on the rail tops: a frame of rail
+ * on each rail (a post and a raking strut back to a clamp at -Z), the buffer beam
+ * with hazard stripes and two buffers facing the track (+Z), and the end-of-track
+ * sign - a red disk with a white bar - on a post above it. The rails, sleepers and
+ * ballast under it are the game's track, drawn in the dead end's rail type.
  */
 export function bufferStop(): MeshBuilder {
   const m = new MeshBuilder(palette([]));
-  const { railX, railY0, railY1, trackEndZ, crestY, beamW, beamY0, beamY1, beamZ } = STOP;
-  const { rail, sleeper } = TRACK;
-  m.scope("bed", () => {
-    m.loft(mat.gravel, rect(5.4, 6.0, 0, 0.7), -0.1, rect(4.4, 5.2, 0, 0.75), crestY);
-    // the track's own sleepers, at its spacing, back to its end
-    for (let z = trackEndZ - sleeper.spacing / 2; z > -1.4; z -= sleeper.spacing) {
-      m.box(mat.sleeper, 0, z, sleeper.length, sleeper.width, railY0 - sleeper.height, railY0 - 0.004);
-    }
-    // each rail stub as the track's rail: foot, web and head
-    const z0 = -1.9, z1 = trackEndZ, zc = (z0 + z1) / 2, zl = z1 - z0;
-    const webY0 = railY0 + rail.footHeight, webY1 = railY1 - rail.headHeight;
-    for (const x of [-railX, railX]) {
-      m.box(mat.rail, x, zc, rail.footWidth, zl, railY0, webY0);
-      m.box(mat.rail, x, zc, rail.webWidth, zl, webY0, webY1);
-      m.box(mat.rail, x, zc, rail.headWidth, zl, webY1, railY1);
-    }
-  });
+  const { railX, railY1, beamW, beamY0, beamY1, beamZ } = STOP;
   m.scope("frame", () => {
     for (const x of [-railX, railX]) {
       m.box(mat.dark, x, 0.25, 0.32, 0.36, railY1, beamY1 - 0.08);
