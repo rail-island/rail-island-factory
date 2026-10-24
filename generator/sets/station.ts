@@ -1122,9 +1122,13 @@ function buildCantileverWings(length: number, layout: StationLayout): StationBox
       // name board hung under the wing over the platform, at both ends: framed top
       // and bottom, on two rods from the wing
       const boardX = mastX + dir * 1.4;
-      const boardLen = Math.min(10, length * 0.15);
+      // midway between two masts, so no tie from the masts crosses the board
+      const bayStep = bays.length > 1 ? bays[1]! - bays[0]! : length;
+      const boardLen = Math.min(10, length * 0.15, bayStep - 1.5);
       for (const zs of [-1, 1]) {
-        const bz = zs * Math.max(2, zLen / 2 - 8);
+        const target = zs * Math.max(2, zLen / 2 - 8);
+        const side = bayMids.filter((z) => z * zs > 0);
+        const bz = side.length ? nearest(side, target) : target;
         const top = under(boardX) - 1.5;
         boxes.push({ cx: boardX, cy: top - 0.9, cz: bz, sx: 0.35, sy: 1.8, sz: boardLen, color: SIGN_COLOR, material: "sign", label: true });
         for (const y of [top + 0.06, top - 1.86]) boxes.push({ cx: boardX, cy: y, cz: bz, sx: 0.42, sy: 0.12, sz: boardLen + 0.2, color: STEEL_DARK, material: "steel" });
