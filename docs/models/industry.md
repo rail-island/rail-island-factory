@@ -1,7 +1,7 @@
 # Procedural industry
 
 **Covers** - the Industry audit, eleven parametric families, geometry budgets and future game migration.
-**Code** - `generator/industry.ts`, `generator/industryMigration.ts`, `generator/generate.ts`, `test/industry.test.ts`
+**Code** - `generator/industry.ts`, `generator/industryHall.ts`, `generator/industryMigration.ts`, `generator/generate.ts`, `test/industry.test.ts`
 **See also** - [parameters.md](parameters.md), [export.md](export.md), [animation.md](animation.md)
 
 ## Scope and design
@@ -13,30 +13,58 @@ industrial building types, not geometry conversions of the licensed source GLBs.
 No source mesh or texture is embedded. New geometry is CC0, authored for Rail Island.
 
 Twenty small factories become four architectural families, with compact/extended
-footprints and brick/blue/cream finishes. Each includes loading doors, raised
-ramps, bollards, framed glazing and structural piers. Roofs distinguish the
-families, rather than twenty minor variations of the same box.
+footprints and brick/blue/cream finishes. Roofs distinguish the families, rather
+than twenty minor variations of the same box. They share one hall kit
+(`generator/industryHall.ts`), also used by the heavy works and the power plant's
+turbine hall:
+
+- **Walls built around planned openings.** `hallOpenings` lays out every window,
+  clerestory, loading dock, personnel door and taking-in door per bay (about 4 m on
+  front and rear, 4.5 m on the ends), and the wall is filled only where no opening
+  is, so glass, shutters and doors sit in 0.2-0.3 m reveals and can never overlap.
+  The front (+z) has a dock in every bay but the last, which holds the entrance;
+  a single-storey hall has a clerestory window above each dock. test/industry.test.ts
+  checks that no two openings overlap and none cuts a pilaster.
+- **Facade structure.** Concrete plinth, brick pilasters at the bay lines and
+  corners (a darker `trim` shade of the finish), stone sills and lintels on a hall,
+  string courses at the window heads of a multi-storey mill; multi-pane steel
+  windows with mullions and transoms.
+- **Docks.** Roller shutter with slats, black dock seal and buffers, leveller lip,
+  a hood with tie rods over each dock (or one cantilevered canopy on the
+  warehouse), guard posts and painted truck lines on the apron.
+- **Roofs.** Flat with parapet and coping; gable with standing seams, rooflight
+  strips, a louvred ridge ventilator, eaves gutters, downpipes and round louvred
+  vents in the gables; sawtooth with mullioned north-light glazing, capped ridges
+  and valley gutters.
+- **Per design.** The mill (14 m, four floors) has a stack, a stair tower, a water
+  tank on its stand, rooflights, roof ventilators and taking-in doors with a hoist
+  on its right end; the assembly hall a compressor house with its air receiver;
+  the sawtooth works a dust-extraction cyclone; the warehouse its dock canopy,
+  air-handling units, rooflights and a name board. Every site has yard lamps,
+  pallets and drums.
 
 | Factory design | Replaces source models | Parameters / character |
 |---|---|---|
-| ind-building-a | ind-building-a,b,d,f,g,l,o | Multi-storey mill, roof lights, stack and service gallery |
-| ind-building-h | ind-building-h,i,j | Gabled assembly hall with ridge ventilation |
-| ind-building-k | ind-building-k,m,n | Repeated sawtooth roof with northlight glazing |
-| ind-building-s | ind-building-c,e,p,q,r,s,t | Warehouse, canopy and loading bays |
+| ind-building-a | ind-building-a,b,d,f,g,l,o | Four-storey mill, stack, stair tower, water tank, taking-in doors and hoist |
+| ind-building-h | ind-building-h,i,j | Gabled assembly hall: ridge ventilator, rooflights, compressor house |
+| ind-building-k | ind-building-k,m,n | Sawtooth roof with mullioned north-light glazing, dust cyclone |
+| ind-building-s | ind-building-c,e,p,q,r,s,t | Warehouse, cantilevered dock canopy, roof plant |
 | ind-chimney-basic | ind-chimney-basic,large,medium,small | Three heights and brick/striped/steel finishes; recessed mouth, service ladder |
 | ind-detail-tank | ind-detail-tank | Horizontal vessel, vertical tank, twin tank cluster |
 | industry-factory-a | industry-factory-a,b,c | Heavy works with three stacks; two sizes and three finishes |
 | industry-power-plant | industry-power-plant, coal-plant, nuclear-plant | Thermal/coal/nuclear installations, cooling towers, turbine hall and switchyard |
 | chemical-factory | chemical-factory, oil-refinery | Chemical/refinery process train, columns, platforms, pipe rack and storage |
 | industry-oil-pump | industry-oil-pump | Two sizes, open trestle, crank wheels on the gear reducer, pitman arms and horsehead; the `pumping` clip moves the mechanism ([animation.md](animation.md)) |
-| industry-wind-turbine | industry-wind-turbine | Two heights, tapered mast, nacelle and three-blade rotor turned by the `wind` clip ([animation.md](animation.md)) |
+| industry-wind-turbine | industry-wind-turbine | Two heights; three-section tapered tower with flanges, entrance platform and transformer kiosk; nacelle with cooler, wind sensors and obstruction light; spinner and three twisted aerofoil blades with red tips, turned by the `wind` clip ([animation.md](animation.md)) |
 
 ## Geometry and export
 
 All geometry is generated from deterministic primitives in metres, +Y up, at
 ground y=0. Catalog defaultScale is 1. The budget is a ceiling of 10,000 triangles
 for **every** parameter combination, not a target to fill with invisible detail.
-The 51 combinations currently range from 290 to 6,790 triangles.
+The 51 combinations currently range from 598 to 9,202 triangles; the four factory
+buildings use 4,000-9,200, the wind turbine about 2,000 (its slender tower and
+blades need no more to read at game distance).
 Small standalone equipment deliberately uses fewer triangles. Named scopes expose
 structure in the factory's source tree. Geometry is shared by GLB and standalone
 JS exports; only default variants have static thumbnails and GLBs.
