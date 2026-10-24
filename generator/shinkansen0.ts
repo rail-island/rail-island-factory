@@ -29,6 +29,7 @@ import { articulate, knee as linkKnee } from "./tramKit.ts";
 import { lerp, type Pt } from "./sliceLoft.ts";
 import { crownPane, drawShell, sideDecal, sideLettering, sidePanel, surfaceDisc, type SliceBody } from "./sliceBody.ts";
 import { liftable } from "./liftable.ts";
+import { RAIL_COLLECTOR_TOP } from "./collector.ts";
 
 /** What the design builds: one car, or the whole train. */
 export type Shinkansen0Unit = "endCar" | "motorCar" | "pantographCar" | "greenCar" | "buffetCar" | "train";
@@ -457,8 +458,8 @@ function diamondPantographAt(m: MeshBuilder, x: number, roof: number, top: numbe
 
 /** The pantograph car's collector stands 1.15 m behind its +X body end... a pantograph car pairs with the car ahead. */
 const PANTOGRAPH_D = 5.2;
-/** The raised collector's height: the Shinkansen's 5.0 m contact wire. */
-export const SHINKANSEN0_WIRE = 5.0;
+/** The raised collector's height: the game's contact wire, not the Shinkansen's own 5.0 m one. */
+export const SHINKANSEN0_WIRE = RAIL_COLLECTOR_TOP;
 
 function drawCar(coach: Coach, L: Livery, car: Shinkansen0Car, X: (d: number) => number, gangway: boolean, pantograph = car === "pantographCar"): void {
   const m = coach.m;

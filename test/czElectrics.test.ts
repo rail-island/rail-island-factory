@@ -10,6 +10,7 @@ import { collectTriangles, parseGlb } from "../generator/glbTriangles.ts";
 import { isLeaf, type LeafNode, type TreeNode } from "../generator/sourceTree.ts";
 import { sample } from "./catalogCache";
 import { rodEnds } from "./rodEnds.ts";
+import { RAIL_COLLECTOR_TOP } from "../generator/collector.ts";
 
 function leaves(n: TreeNode): LeafNode[] {
   return isLeaf(n) ? [n] : n.children.flatMap(leaves);
@@ -71,21 +72,21 @@ describe("Czech electric locomotives from vlakosimdb", () => {
           expect(n.min![1]).toBeCloseTo(0, 5);
           expect(Math.min(Math.abs(n.min![2]), Math.abs(n.max![2]))).toBeCloseTo(0.665, 4);
         }
-        // collectors: level strips; with two, the rear (-X) raised to 5.87 m and the front folded
+        // collectors: level strips; with two, the rear (-X) raised to the contact wire and the front folded
         const heads = (name: string) => nodes.filter((n) => n.id.startsWith(`roof-equipment/pantographs/${name}/head/`) && n.material === "carbon");
         if (spec.pantographs === 2) {
           const rear = heads("rear-pantograph"), front = heads("front-pantograph");
           expect(rear).toHaveLength(2);
           expect(front).toHaveLength(2);
           for (const h of [...rear, ...front]) expect(h.max![1] - h.min![1]).toBeCloseTo(0.05, 5);
-          expect(Math.max(...rear.map((n) => n.max![1]))).toBeCloseTo(5.87, 3);
+          expect(Math.max(...rear.map((n) => n.max![1]))).toBeCloseTo(RAIL_COLLECTOR_TOP, 3);
           expect(Math.max(...front.map((n) => n.max![1]))).toBeLessThan(4.9);
           for (const n of rear) expect(n.max![0]).toBeLessThan(0);
           for (const n of front) expect(n.min![0]).toBeGreaterThan(0);
         } else {
           const h = heads("pantograph");
           expect(h).toHaveLength(2);
-          expect(Math.max(...h.map((n) => n.max![1]))).toBeCloseTo(5.87, 3);
+          expect(Math.max(...h.map((n) => n.max![1]))).toBeCloseTo(RAIL_COLLECTOR_TOP, 3);
         }
       });
 

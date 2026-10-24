@@ -73,8 +73,9 @@ windscreen wraps onto the cab sides as the BMPs draw it. On the bodies:
 
 ## Pantographs
 
-Every tram has exactly one raised collector, its carbon strip at the 5.5 m display
-wire (`TRAM_WIRE`, a model choice: no contact-wire height comes with the game). The
+Every tram has exactly one raised collector, its carbon strip's top at the game's
+trolley wire, 5.50 m (`TRAM_WIRE`, `TRAM_COLLECTOR_TOP` in `collector.ts`;
+[animation.md](animation.md)) - the T6A5's single arm included. The
 KT8D5's source draws a second collector on the rear section, folded: the model
 keeps it folded, as the railroad-vehicle rule for two collectors asks. Collectors
 live under `roof-equipment/pantographs/`, which the fixed 4.7 m envelope check

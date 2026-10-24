@@ -12,6 +12,7 @@ import {
   SIDE_BOTTOM_M, SIDE_MARGIN_M, SIDE_PX_PER_M, SIDE_TOP_M, glbSideFrame, renderGlbSideThumb, renderGlbThumb, sideFrame,
 } from "../generator/renderGlbThumb";
 import { isSideViewCategory } from "../generator/catalog";
+import { RAIL_COLLECTOR_TOP, TRAM_COLLECTOR_TOP } from "../generator/collector";
 
 /** A 10 m long grey body standing 0.5 m above the rail, its nose (+X) painted red. */
 function testVehicle(): string {
@@ -27,6 +28,10 @@ function testVehicle(): string {
 const alpha = (png: { width: number; data: Uint8Array }, x: number, y: number) => png.data[(y * png.width + x) * 4 + 3]!;
 
 describe("the side view", () => {
+  it("reaches above every raised collector, so no pantograph is cut off", () => {
+    expect(SIDE_TOP_M).toBeGreaterThan(Math.max(RAIL_COLLECTOR_TOP, TRAM_COLLECTOR_TOP));
+  });
+
   it("is framed as the game frames its own: a fixed scale and height window", () => {
     const glb = testVehicle();
     const { png, frame } = renderGlbSideThumb(glb);

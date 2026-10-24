@@ -210,7 +210,7 @@ function car(unit: Unit460, livery: Livery460): MeshBuilder {
       m.scope("pantographs", () => {
         // XML inlines at 3.6 .. 3.8 m (over the cab bogie) and 21.1 m (over the inner one)
         for (const [name, x, up] of [["pantograph 1", 3.7, paint.raised === "front"], ["pantograph 2", 21.1, paint.raised === "rear"]] as const)
-          m.scope(name, () => diamond(m, { xc: X(x), roofY: 4.0, baseY: 4.25, raised: up, raisedTop: 5.8 }));
+          m.scope(name, () => diamond(m, { xc: X(x), roofY: 4.0, baseY: 4.25, raised: up }));
       });
     });
   m.scope("running gear", () => {
@@ -334,7 +334,7 @@ export function cd460Lod(params?: ParamValues): MeshBuilder {
       ...(motor ? [
         underPart(X(18.9), X(5.9), 0.2, 0.9, 1.45, 50, undefined, "skirt"),
         roofPart("roofBox", X(12.8), X(8.7), 0.5, 0.4, 3.9, 4.5),
-        ...pantographParts([X(21.1), X(3.7)], 4.0, 4.25, 5.8),
+        ...pantographParts([X(21.1), X(3.7)], 4.0, 4.25),
       ] : []),
     ],
   }, 100);

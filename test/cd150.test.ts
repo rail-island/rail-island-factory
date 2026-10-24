@@ -8,6 +8,7 @@ import {
   type TreeNode,
   type LeafNode,
 } from "../generator/sourceTree.ts";
+import { RAIL_COLLECTOR_TOP } from "../generator/collector.ts";
 
 function leaves(n: TreeNode): LeafNode[] {
   return isLeaf(n) ? [n] : n.children.flatMap(leaves);
@@ -83,7 +84,7 @@ describe("CD 150 transfer", () => {
       );
       expect(heads).toHaveLength(2);
       const top = Math.max(...heads.map((n) => n.max![1]));
-      expect(top).toBeCloseTo(name === "rear-pantograph" ? 6.24 : 4.64, 3);
+      expect(top).toBeCloseTo(name === "rear-pantograph" ? RAIL_COLLECTOR_TOP : 4.64, 3);
       for (const head of heads)
         expect(head.max![1] - head.min![1]).toBeCloseTo(0.05, 4);
       const arms = nodes.filter((n) => n.id.startsWith(prefix + "/arms/"));

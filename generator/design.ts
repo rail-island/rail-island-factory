@@ -91,6 +91,13 @@ export interface ProceduralDesign {
   buildCoarse?: (params?: ParamValues) => MeshBuilder;
   /** Optional close-up geometry, capped at 10,000 triangles; currently every tree. */
   buildMax?: (params?: ParamValues) => MeshBuilder;
+  /**
+   * False for a design whose source tree is too big to be useful: a city block's
+   * dozens of buildings run to 15-40 MiB of tree, over Cloudflare's 25 MiB
+   * per-asset limit. The build then writes no tree file and the site shows no
+   * Source tab (docs/models/source-tree.md).
+   */
+  sourceTree?: false;
   /** Total distant-mesh budget; defaults to the family policy in lod.ts. */
   lodTriangles?: 100 | 200 | 300 | 500 | 12000;
   /**

@@ -23,7 +23,8 @@ intermediate cars are the unit's other motor cars and its special cars.
 - `motorCar` - the intermediate motor car (type 25): a door at each end, thirteen
   large windows.
 - `pantographCar` - its partner (type 26), with the diamond pantograph (the
-  PS200) raised to the 5.0 m contact wire.
+  PS200) raised to the game's contact wire (5.88 m, `RAIL_COLLECTOR_TOP`), not
+  the prototype's 5.0 m line, so it touches the wire the game hangs.
 - `greenCar` - the first-class Green car (type 15): seventeen smaller windows, the
   four-leaf clover emblems by the doors.
 - `buffetCar` - the buffet car (type 35): the saloon's large windows, the
@@ -79,7 +80,7 @@ cap, the plough's line and the stripes stay exact on the curved nose.
   frame and glass (`sidePanel`, on the leaning side), the running numbers
   (`21-1` and so on), the Green car's clovers and the stripes' ends (`sideDecal`).
 - **Roof** - a row of ventilators; the pantograph car's diamond pantograph on
-  four insulators, its frames a rhombus either side, the collector at 5.0 m.
+  four insulators, its frames a rhombus either side, the collector at the game's contact wire.
 - **Running gear** - `unitBogie` with traction motors for every bogie; the
   underframe's equipment boxes between the bogies.
 

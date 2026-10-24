@@ -288,7 +288,7 @@ function drawPowerCar(coach: Coach, L: Livery, X: (d: number) => number): void {
     });
     m.scope("pantographs", () => {
       const roof = DUPLEX_POWER_HEIGHT - 0.03;
-      DUPLEX_PANTOGRAPHS.forEach((d, i) => m.scope(i === 1 ? "pantograph raised" : "pantograph folded", () => pantograph(m, { x: X(d), roof, hinge: Math.sign(X(0) - X(1)), raised: i === 1, rise: 0.75 })));
+      DUPLEX_PANTOGRAPHS.forEach((d, i) => m.scope(i === 1 ? "pantograph raised" : "pantograph folded", () => pantograph(m, { x: X(d), roof, hinge: Math.sign(X(0) - X(1)), raised: i === 1 })));
     });
   });
   m.scope("rear end", () => {
@@ -604,7 +604,7 @@ function powerLod(L: Livery, X: (d: number) => number, cx: number, turned: boole
   const T = (x: number) => (turned ? 2 * cx - x : x);
   const parts: LodPart[] = [
     ...bogieParts(DUPLEX_POWER_BOGIES.map((d) => [T(X(d)), DUPLEX_WHEELBASE / 2 + WHEEL_R + 0.25, ...(section !== undefined ? [section] : [])] as const) as unknown as ReadonlyArray<readonly [number, number, number?]>, 1.0),
-    ...pantographParts([T(X(DUPLEX_PANTOGRAPHS[1]))], DUPLEX_POWER_HEIGHT - 0.03, DUPLEX_POWER_HEIGHT + 0.17, DUPLEX_POWER_HEIGHT + 1.3, section !== undefined ? { section } : {}),
+    ...pantographParts([T(X(DUPLEX_PANTOGRAPHS[1]))], DUPLEX_POWER_HEIGHT - 0.03, DUPLEX_POWER_HEIGHT + 0.17, section !== undefined ? { section } : {}),
   ];
   return { body, parts };
 }

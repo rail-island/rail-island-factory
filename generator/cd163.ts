@@ -23,6 +23,7 @@ import { block, side } from "./vehicleParts.ts";
 import { CD_EMBLEM, triangulate } from "./cdLogo.ts";
 import { fitLod, LOD_GLASS, lodBands, lodBogie, lodPantograph, lodRoofBox, lodSideBox, type LodBand, type LodPart, type LodShell } from "./lodKit.ts";
 import { liftable } from "./liftable.ts";
+import { RAIL_COLLECTOR_TOP } from "./collector.ts";
 
 /** The catalog fields of a rail vehicle, in place of the road vehicles'. */
 export const RAIL_CATALOG: CatalogFields = {
@@ -920,7 +921,7 @@ function pantographKnee(xc: number, h: number, lift: number): { kx: number; ky: 
   const y = PANTO_Y;
   const xh = xc + h * 0.55; // the hinge
   const hx = xc + h * 0.15; // keep the collector centred above its base
-  const headY = y + 0.33 + 1.10 * lift;
+  const headY = y + 0.33 + (RAIL_COLLECTOR_TOP - 0.07 - (y + 0.33)) * lift; // raised: the strips' top at the contact wire
   // Intersect circles about the hinge and head to unfold the linkage without
   // stretching either arm. The upper attachment sits 20 mm above the knee.
   const dx = hx - xh;
@@ -1053,8 +1054,8 @@ export function cd163LodBody(livery: Cd163Livery, budget = CD163_LOD_TRIANGLES):
       for (const xb of [-BOGIE_X, BOGIE_X]) lodBogie(m, xb, 2.1, Y_BOTTOM);
       lodSideBox(m, "underframe", [[-1.45, 0.5], [1.45, 0.5], [1.45, Y_BOTTOM], [-1.45, Y_BOTTOM]], -1.38, 1.38);
     }) },
-    { draw: (m) => m.scope("raised pantograph", () => lodPantograph(m, { x: -PANTO_X, roofY: Y_ROOF, baseY: PANTO_Y, h: 1, raised: true, raisedTop: 5.74, lower: Math.hypot(1.6, 0.11), upper: Math.hypot(1.2, 0.09) })) },
-    { optional: 0, draw: (m) => m.scope("folded pantograph", () => lodPantograph(m, { x: PANTO_X, roofY: Y_ROOF, baseY: PANTO_Y, h: -1, raised: false, raisedTop: 5.74 })) },
+    { draw: (m) => m.scope("raised pantograph", () => lodPantograph(m, { x: -PANTO_X, roofY: Y_ROOF, baseY: PANTO_Y, h: 1, raised: true, lower: Math.hypot(1.6, 0.11), upper: Math.hypot(1.2, 0.09) })) },
+    { optional: 0, draw: (m) => m.scope("folded pantograph", () => lodPantograph(m, { x: PANTO_X, roofY: Y_ROOF, baseY: PANTO_Y, h: -1, raised: false })) },
   ];
   return fitLod({ palette: { ...CD163_PALETTE, ...livery.palette }, shells: [shell], parts }, budget);
 }

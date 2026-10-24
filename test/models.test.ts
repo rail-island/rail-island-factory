@@ -11,13 +11,14 @@ import { MeshBuilder, ngon, rect } from "../generator/meshBuilder";
 import { SKYSCRAPERS } from "../generator/skyscrapers";
 import { VEHICLES } from "../generator/vehicles";
 import { STEAM_LOCOS } from "../generator/steamLocos";
-import { ALL_VEHICLES, BUILDINGS, DESIGNS, PREVIEW_DESIGNS, PROP_DESIGNS, TREE_DESIGNS, WOODS_DESIGNS, ZFightingError, designGlb, designTree, generateModels } from "../generator/generate";
+import { ALL_VEHICLES, BUILDINGS, DESIGNS, PREVIEW_DESIGNS, PROP_DESIGNS, TREE_DESIGNS, WOODS_DESIGNS, ZFightingError, checkTreeSizes, designGlb, designTree, generateModels } from "../generator/generate";
 import { VILLAGE_HOUSES } from "../generator/village";
-import { isLeaf, type LeafNode, type ScopeNode, type TreeNode } from "../generator/sourceTree";
+import { TREE_MAX_BYTES, isLeaf, type LeafNode, type ScopeNode, type TreeNode } from "../generator/sourceTree";
 import { rodEnds } from "./rodEnds.ts";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { glbStats } from "../generator/glbStats";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles";
+import { RAIL_COLLECTOR_TOP } from "../generator/collector.ts";
 
 /** Every triangle of a GLB with its face normal (from the winding) and centroid. */
 function faces(glb: Uint8Array): Array<{ n: [number, number, number]; c: [number, number, number] }> {
@@ -345,7 +346,7 @@ describe("the vehicles", () => {
     for (const end of ["front", "rear"]) {
       const prefix = `roof-equipment/pantographs/${end}-pantograph`;
       const head = nodes.find((n) => n.id === `${prefix}/head`)!;
-      expect(head.max![1]).toBeCloseTo(end === "rear" ? 5.74 : 4.64, 3);
+      expect(head.max![1]).toBeCloseTo(end === "rear" ? RAIL_COLLECTOR_TOP : 4.64, 3);
       const strips = nodes.filter((n): n is LeafNode => isLeaf(n) && n.id.startsWith(`${prefix}/head/`) && n.material === "carbon");
       expect(strips).toHaveLength(2);
       for (const strip of strips) {
@@ -686,7 +687,7 @@ describe("generateModels", () => {
       for (const b of first) {
         expect(b.changed).toBe(true);
         expect(fs.readFileSync(b.thumb).subarray(1, 4).toString()).toBe("PNG");
-        expect(JSON.parse(fs.readFileSync(b.tree, "utf8"))).toEqual(built(b.id).tree);
+        expect(JSON.parse(fs.readFileSync(b.tree!, "utf8"))).toEqual(built(b.id).tree);
       }
       expect(fs.existsSync(path.join(dir, "tree", "sky-retired.json"))).toBe(false);
       // an old export's glb/ folder is removed: there is no GLB output
@@ -699,5 +700,32 @@ describe("generateModels", () => {
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
+  });
+
+  // Regression: proc-preview-block-village-red's tree was 37.7 MiB of JSON and
+  // Cloudflare refuses an asset over 25 MiB, so the deploy failed after the build
+  // had passed. City blocks ship no tree now, and the build refuses one too large.
+  it("writes no source tree for a city block, and removes an old one", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "factory-block-"));
+    try {
+      const block = PREVIEW_DESIGNS.find((d) => d.id === "proc-preview-block-landmark")!;
+      expect(block.sourceTree).toBe(false);
+      fs.mkdirSync(path.join(dir, "tree"));
+      fs.writeFileSync(path.join(dir, "tree", `${block.id}.json`), "stale");
+      const [model] = generateModels(dir, [block]);
+      expect(model!.tree).toBeNull();
+      expect(fs.readdirSync(path.join(dir, "tree"))).toEqual([]);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("gives every city block and only them sourceTree: false", () => {
+    for (const d of DESIGNS.values()) expect(d.sourceTree === false, d.id).toBe(d.id.startsWith("proc-preview-block-"));
+  });
+
+  it("refuses a tree file over the asset limit, naming the design", () => {
+    expect(() => checkTreeSizes(new Map([["ok", "{}"]]))).not.toThrow();
+    expect(() => checkTreeSizes(new Map([["ok", "{}"], ["huge", "x".repeat(TREE_MAX_BYTES + 1)]]))).toThrow(/huge 25\.0 MiB/);
   });
 });

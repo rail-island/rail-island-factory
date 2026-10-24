@@ -43,7 +43,7 @@ const SS = 3; // supersampling factor (rendered at size*SS, box-filtered down)
  * them only together with it.
  */
 export const SIDE_BOTTOM_M = -0.3;
-export const SIDE_TOP_M = 5.7;
+export const SIDE_TOP_M = 6.0;
 export const SIDE_MARGIN_M = 0.3;
 /** Pixels per metre of a side view: twice the game's 16, so the site gets a sharp picture. */
 export const SIDE_PX_PER_M = 32;

@@ -450,7 +450,7 @@ function singleArmAt(m: MeshBuilder, xh: number, xc: number, dir: number, roof: 
   const base = roof + 0.2;
   const lower = 1.45;
   const upper = 1.6;
-  const lift = head - base - 0.12;
+  const lift = head - base - 0.11; // the carbon strip's top at head
   // the left normal of hinge -> head points to -x, so a knee toward +x is on the right
   const k = knee([xh, base + 0.08], lower, [xc, base + lift], upper, -dir);
   m.scope("base", () => {

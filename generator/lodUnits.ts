@@ -380,12 +380,12 @@ export function roofPart(mat: string, xa: number, xb: number, w0: number, w1: nu
 }
 
 /** A unit's pantographs: the one at the lowest x raised (the rear), any other folded and optional. */
-export function pantographParts(xs: readonly number[], roofY: number, baseY: number, raisedTop: number, opts: { lower?: number; upper?: number; halfHead?: number; section?: number } = {}): LodPart[] {
+export function pantographParts(xs: readonly number[], roofY: number, baseY: number, opts: { lower?: number; upper?: number; halfHead?: number; section?: number } = {}): LodPart[] {
   const sorted = [...xs].sort((a, b) => a - b);
   return sorted.map((x, i) => ({
     ...(i > 0 ? { optional: 0 } : {}), ...(opts.section !== undefined ? { section: opts.section } : {}),
     draw: (m: MeshBuilder) => m.scope(i === 0 ? "raised pantograph" : "folded pantograph", () => lodPantograph(m, {
-      x, roofY, baseY, h: i === 0 ? 1 : -1, raised: i === 0, raisedTop,
+      x, roofY, baseY, h: i === 0 ? 1 : -1, raised: i === 0,
       ...(opts.lower ? { lower: opts.lower } : {}), ...(opts.upper ? { upper: opts.upper } : {}), ...(opts.halfHead ? { halfHead: opts.halfHead } : {}),
     })),
   }));

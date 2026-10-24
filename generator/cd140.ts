@@ -201,7 +201,7 @@ function roofEquipment(m: MeshBuilder): void {
   });
   m.scope("pantographs", () => {
     for (const e of [-1, 1])
-      m.scope(e > 0 ? "front pantograph" : "rear pantograph", () => diamond(m, { xc: e * PANTO_X, roofY: 4.1, baseY: 4.34, raised: e < 0, raisedTop: 5.87 }));
+      m.scope(e > 0 ? "front pantograph" : "rear pantograph", () => diamond(m, { xc: e * PANTO_X, roofY: 4.1, baseY: 4.34, raised: e < 0 }));
   });
   m.scope("high voltage line", () => {
     for (const e of [-1, 1]) {

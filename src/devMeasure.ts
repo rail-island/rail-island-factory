@@ -19,7 +19,7 @@ const MEASURE_VERSION = 1;
 const CACHE_PREFIX = "factory-dev-measure";
 /** The side frame's fixed height window and margin, metres (generator/renderGlbThumb.ts). */
 const SIDE_BOTTOM_M = -0.3;
-const SIDE_TOP_M = 5.7;
+const SIDE_TOP_M = 6.0;
 const SIDE_MARGIN_M = 0.3;
 
 type Measured = Pick<

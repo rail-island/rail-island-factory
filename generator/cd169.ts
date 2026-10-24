@@ -174,7 +174,7 @@ function roofEquipment(m: MeshBuilder): void {
   });
   m.scope("pantographs", () => {
     for (const e of [-1, 1])
-      m.scope(e > 0 ? "front pantograph" : "rear pantograph", () => singleArm(m, { xc: e * PANTO_X, roofY: 3.9, baseY: 4.05, h: -e, raised: e < 0, raisedTop: 5.87 }));
+      m.scope(e > 0 ? "front pantograph" : "rear pantograph", () => singleArm(m, { xc: e * PANTO_X, roofY: 3.9, baseY: 4.05, h: -e, raised: e < 0 }));
   });
   m.scope("high voltage line", () => {
     for (const e of [-1, 1]) {

@@ -99,7 +99,10 @@ export function ModelDetail(props: {
   const references = () => props.record.references ?? [];
   const tabs = () =>
     ([["specs", "Specs"], ["source", "Source"], ["references", "Images"]] as const).filter(
-      ([tab]) => tab !== "references" || references().length > 0 || props.tab === "references",
+      ([tab]) =>
+        (tab !== "references" || references().length > 0 || props.tab === "references") &&
+        // a city block ships no source tree (docs/models/source-tree.md)
+        (tab !== "source" || !props.record.noSourceTree || props.tab === "source"),
     );
 
   return (

@@ -181,7 +181,10 @@ only the build knows: `thumbUrl` (site-relative), `thumbBytes`, `jsUrl`, `jsByte
 the bounding-box extents `sizeX`/`sizeY`/`sizeZ` in metres (before
 `defaultScale`), rounded to the millimetre, and `references`: the source images
 as `{ name, url, bytes }` in name order (`name` is the path within the assets
-folder, `url` is `refs/<id>/<name>`), empty for a design without any. A vehicle
+folder, `url` is `refs/<id>/<name>`), empty for a design without any. A road or
+rail vehicle also carries `scenery` (`sceneryOf`): the way the site's viewer draws
+under it (`rail`, `road` or `tram`) and, over an electric one or a tram, `wireTop`,
+the wire's underside ([../site/catalog-site.md](../site/catalog-site.md)). A vehicle
 whose design declares OpenTTD figures also carries them as `openttd`, for the
 site's GRF export only; the game's meta files do not
 ([../site/openttd-export.md](../site/openttd-export.md)).
@@ -205,8 +208,8 @@ chosen by the design's catalog category (`isSideViewCategory`, `catalog.ts`):
   -Z side, as the game turns the vehicle round to nose-at-min-X), **nose on the
   left**, at a fixed **32 px per metre** (`SIDE_PX_PER_M`; twice the game's 16, which
   the webapp's import scales down to), over a fixed height window from 0.3 m below
-  the rail to 5.7 m above it (`SIDE_BOTTOM_M`, `SIDE_TOP_M`) and the vehicle's length
-  plus 0.3 m each side (`SIDE_MARGIN_M`). Every side image is therefore 192 px tall
+  the rail to 6.0 m above it - clear of a raised collector at 5.88 m (`SIDE_BOTTOM_M`, `SIDE_TOP_M`) and the vehicle's length
+  plus 0.3 m each side (`SIDE_MARGIN_M`). Every side image is therefore 202 px tall
   and its width is to scale; one longer than 128 m is drawn smaller so it stays
   within 4096 px (`SIDE_MAX_PX`). The light is the game's: ambient 1.2 and a
   directional 1.5 from the front, above (three.js units, diffuse colour / pi). The

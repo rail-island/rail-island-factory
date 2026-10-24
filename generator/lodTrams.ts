@@ -124,7 +124,7 @@ export function lodDiamond(m: MeshBuilder, p: { x: number; roof: number; head: n
     lodRod(m, mat, [p.x + d * bx, p.roof - 0.02, 0], [p.x + d * k[0], base + k[1], 0], 0.07);
     lodRod(m, mat, [p.x + d * k[0], base + k[1], 0], [p.x + d * hx, base + lift, 0], 0.05);
   }
-  collector(m, mat, p.x, base + lift + 0.05, p.bow ?? 0.85);
+  collector(m, mat, p.x, base + lift + 0.03, p.bow ?? 0.85); // its ridge at head, as the full collector's carbon
 }
 
 // --- the trams ------------------------------------------------------------------------------

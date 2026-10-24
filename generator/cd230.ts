@@ -26,6 +26,7 @@ import {
 } from "./lodKit.ts";
 import { CD163_PALETTE, bandAt, coil, lettering, letteringWidth, runningNumber, tubeX, type Band } from "./cd163.ts";
 import { liftable } from "./liftable.ts";
+import { RAIL_COLLECTOR_TOP } from "./collector.ts";
 
 const c = (color: string, roughness = 0.5): MaterialSpec => ({ color, metallic: 0.1, roughness });
 
@@ -708,7 +709,7 @@ function pantograph(m: MeshBuilder, xc: number, raised: boolean): void {
 
 /** The diamond pantograph at `lift`, 0 folded to 1 raised: every arm keeps its length. */
 function pantographAt(m: MeshBuilder, xc: number, lift: number): void {
-  const h = 0.2 + 1.32 * lift; // raised: the collector at 5.87 m
+  const h = 0.2 + (RAIL_COLLECTOR_TOP - 0.05 - PANTO_BASE - 0.2) * lift; // raised: the strips' top at the contact wire
   const w = PANTO_A + Math.sqrt(PANTO_ARM * PANTO_ARM - (h / 2) * (h / 2) - 0.01);
   const top = PANTO_BASE + h;
   m.scope("base", () => {
@@ -896,7 +897,7 @@ export function cd230Lod(params?: ParamValues, budget = 100): MeshBuilder {
   };
   const [b0, b1] = l.roofBox ? fromSource(8.5, 9.8) : fromSource(7.3, 8.6);
   const pantograph = (m: MeshBuilder, x: number, h: number, raised: boolean) =>
-    lodPantograph(m, { x, roofY: Y_ROOF, baseY: PANTO_BASE, h, raised, raisedTop: PANTO_BASE + 1.57, lower: PANTO_ARM, upper: PANTO_ARM, halfHead: 0.9 });
+    lodPantograph(m, { x, roofY: Y_ROOF, baseY: PANTO_BASE, h, raised, lower: PANTO_ARM, upper: PANTO_ARM, halfHead: 0.9 });
   const parts: LodPart[] = [
     { draw: (m) => m.scope("frame", () => lodSideBox(m, l.frame, [[-7.6, Y_FRAME], [7.6, Y_FRAME], [7.6, Y_SHELL], [-7.6, Y_SHELL]], -1.5, 1.5)) },
     { draw: (m) => m.scope("running gear", () => { for (const x of [-BOGIE_X, BOGIE_X]) lodBogie(m, x, HALF_BASE + WHEEL_R + 0.2, Y_FRAME, 1.1); }) },

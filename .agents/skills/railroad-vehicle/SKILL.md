@@ -241,10 +241,11 @@ parked, maintenance or other operating state overrides this default.
 3. Keep the collector strips horizontal and the end horns correctly oriented.
    Check arms, push rods and electrical connections against the roof and each
    other in front, side and three-quarter views.
-4. Use the consumer's contact-wire height when known. Otherwise choose and
-   document a plausible display height. CD 163 currently reaches 5.74 m with
-   its active collector, while the folded head is at 4.64 m. Those are model
-   choices, not a universal contact-wire specification.
+4. Raise the collector to the game's contact wire, never a height of your own:
+   the strips' top at `RAIL_COLLECTOR_TOP` (5.88 m, `generator/collector.ts`;
+   a tram's at `TRAM_COLLECTOR_TOP`, 5.50 m), whatever the prototype's line.
+   The shared builders default to it; a new builder takes it from there.
+   `test/pantographs.test.ts` checks every rail vehicle against it.
 5. Draw the raised pantograph as a `liftable` mechanism (`generator/liftable.ts`,
    docs/models/animation.md): a function of the lift from 0 (folded) to 1
    (raised) wrapped in `liftable(m, "pantograph", ...)`, so the game can lower and

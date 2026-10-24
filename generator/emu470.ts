@@ -296,7 +296,7 @@ export function cd470Lod(params?: ParamValues): MeshBuilder {
       // the raised roof over the inner end: given up before a colour band
       { ...roofPart("roofGrey", X(24.27), X(21.7), 1.17, 0.6, 4.1, 4.7), optional: 45 },
       roofPart("roofGrey", X(7.6), X(5.8), 0.4, 0.4, 4.1, 4.4),
-      ...pantographParts([X(20.4), X(2.8)], 4.1, 4.3, 5.9),
+      ...pantographParts([X(20.4), X(2.8)], 4.1, 4.3),
     ],
   }, 100);
 }

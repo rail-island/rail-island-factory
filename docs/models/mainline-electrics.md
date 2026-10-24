@@ -43,7 +43,8 @@ whose bogie pivots stand 8.4 m apart instead of 8.5 m.
 | `veh-obb-1012` | 19.30 m | 18.3 m | 9.9 m | 2.8 m | 1.15 m | single-arm | 11,900 |
 | `veh-obb-1040` | 12.92 m | 11.8 m | 7.6 m | 2.4 m | 1.30 m | diamond | 10,200 |
 
-Every design has two collectors: the rear (-X) raised to 5.87 m and the front
+Every design has two collectors: the rear (-X) raised to the game's contact wire
+(5.88 m, [animation.md](animation.md)) and the front
 folded. Dimensions are the published ones where they exist (each folder's
 `SOURCES.md`); where vlakosimdb's body is shorter (the OBB 1012 by 6 %, the
 1040 by 5 %) its x is scaled to the published length and the scale is part of
@@ -129,7 +130,7 @@ and was not converted.
 `test/mainlineElectrics.test.ts`: the ids, parameters and defaults; for every
 parameter combination the length over the buffers, the axle positions, wheel
 contact and gauge, the 3.1 m x 4.7 m envelope and 6.5 m operating height, the
-triangle budget, and the collectors (the rear raised to 5.87 m and the front
+triangle budget, and the collectors (the rear raised to 5.88 m and the front
 folded, level strips, the diamond's eight arms or the single arm's A-frame);
 every native landmark within its tolerance; valid running numbers; each side's
 own equipment (the DNT's windows and grille bays, the 180's louvres) and the

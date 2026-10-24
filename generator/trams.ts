@@ -11,6 +11,7 @@ import { resolveParams, type CatalogFields, type GameProperties, type ParamSpec,
 import type { Volume } from "./csdCoachParts.ts";
 import { Tram, articulate, type Pt, type PxBox, type SourceVolume, type TramMap } from "./tramKit.ts";
 import { tramLod } from "./lodTrams.ts";
+import { TRAM_COLLECTOR_TOP } from "./collector.ts";
 
 /** The game-catalog fields of the trams: rail vehicles in their own pool. */
 export const TRAM_CATALOG: CatalogFields = {
@@ -22,8 +23,8 @@ export const TRAM_CATALOG: CatalogFields = {
   source: "Rail Island",
 };
 
-/** Contact-wire display height of a raised tram pantograph (a model choice, docs/models/trams.md). */
-export const TRAM_WIRE = 5.5;
+/** A raised tram pantograph's collector top: the game's trolley wire (collector.ts, docs/models/trams.md). */
+export const TRAM_WIRE = TRAM_COLLECTOR_TOP;
 /** Tram wheels: 700 mm (T3, T6A5, KT8D5, KT4) on standard gauge. */
 export const TRAM_WHEEL_R = 0.35;
 export const TRAM_GAUGE = 1.435;
