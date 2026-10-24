@@ -292,6 +292,12 @@ export function csdBdmtee(): MeshBuilder {
     bands: [[0.9, 3.2, "green"], [3.2, 4.1, "roof"]],
     endPaint: "green",
   };
+  const entrances = [
+    { box: [63, 18, 83, 44] as PxBox, glass: [[65, 20, 70, 30], [76, 20, 81, 30]] as PxBox[] },
+    { box: [181, 18, 201, 44] as PxBox, glass: [[183, 20, 188, 30], [194, 20, 199, 30]] as PxBox[] },
+  ];
+  // the doorways on both sides, so the swinging leaves show as they open (doors.ts)
+  body.openings = sides.flatMap((s) => entrances.map((d) => c.doorOpening(s, px(d.box, H))));
   m.scope("body", () => {
     c.volume(body);
     onSides(
@@ -301,14 +307,7 @@ export function csdBdmtee(): MeshBuilder {
         [86, 20, 98, 30], [102, 20, 114, 30], [118, 20, 130, 30], [134, 20, 146, 30], [150, 20, 162, 30], [166, 20, 178, 30],
         [[203, 20, 210, 30], "frosted"], [216, 20, 228, 30], [231, 20, 243, 30], [246, 20, 258, 30],
       ], { fw: 0.07, sash: () => 2.5 }),
-      doors(c, body, H, [
-        { box: [63, 18, 83, 44], glass: [[65, 20, 70, 30], [76, 20, 81, 30]] },
-        { box: [181, 18, 201, 44], glass: [[183, 20, 188, 30], [194, 20, 199, 30]] },
-      ], "green", { fw: 0.04, opens: { kind: "swing", leaves: 2 } }),
-      (s) =>
-        m.scope("door seams", () => {
-          for (const x of [7.25, 19.05]) c.sidePanel(body, "seam", s, { x0: x - 0.02, y0: 0.6, x1: x + 0.02, y1: 3.2 }, 0.016);
-        }),
+      doors(c, body, H, entrances, "green", { fw: 0.04, opens: { kind: "swing", leaves: 2 } }),
       (s) =>
         m.scope("handrails", () => {
           for (const x of [0.4, 26.0]) c.handrail(body, s, x, 1.5, 2.4);

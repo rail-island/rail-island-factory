@@ -1,16 +1,19 @@
 # Doors: passenger doors that open
 
-**Covers** - the passenger doors that open on a few trams, coaches and units: the `door` clip drive and its side, the three motion families (fold, swing, plug) and their leaves, `openable` and the mechanism core it shares with the pantographs, the shut rest pose, how the coach kit draws an opening door (the doorway, the lights riding on the leaves), which designs open which doors, the site's Open left / Open right / Close buttons, what the game does with the clips today, and the tests.
-**Code** - `generator/doors.ts` (`DoorMotion`, `doorLeaves`, `openable`, `DOOR_SAMPLES`, `DOOR_FOLD_ANGLE`, `DOOR_PLUG_OUT`, `LEAF_GAP`), `generator/liftable.ts` (`mechanism`), `generator/meshCore.ts` (`ClipDrive`, `DoorSide`, `moved`, `currentPartName`), `generator/csdCoachParts.ts` (`Coach.door`), `generator/tramKit.ts` (`doors`), `generator/csdCoaches.ts` (`doors`), `generator/liveryCoach.ts` (`DoorSpec.opens`), `generator/trams.ts`, `generator/cdYCoach.ts`, `generator/uicZCoach.ts`, `generator/bmoCoach.ts`, `generator/emu471.ts`, `generator/emu680.ts`, `generator/db628.ts`, `generator/dmu810.ts`, `src/ModelViewer.tsx`, `test/doors.test.ts`
+**Covers** - the passenger doors that open on a few trams, coaches and units: the `door` clip drive and its side, the three motion families (fold, swing, plug) and their leaves, `openable` and the mechanism core it shares with the pantographs, the shut rest pose, how the coach kit draws an opening door (the lights riding on the leaves), the doorways cut through the shell and the dark vestibules behind them, which designs open which doors, the site's Open left / Open right / Close buttons, what the game does with the clips today, and the tests.
+**Code** - `generator/csdCoachParts.ts` (`Opening`, `Volume.openings`, `doorOpening`, `doorwaySegment`, `vestibules`), `generator/dmuKit.ts` (`Car.volume`, `loft`), `generator/doors.ts` (`DoorMotion`, `doorLeaves`, `openable`, `DOOR_SAMPLES`, `DOOR_FOLD_ANGLE`, `DOOR_PLUG_OUT`, `LEAF_GAP`), `generator/liftable.ts` (`mechanism`), `generator/meshCore.ts` (`ClipDrive`, `DoorSide`, `moved`, `currentPartName`), `generator/csdCoachParts.ts` (`Coach.door`), `generator/tramKit.ts` (`doors`), `generator/csdCoaches.ts` (`doors`), `generator/liveryCoach.ts` (`DoorSpec.opens`), `generator/trams.ts`, `generator/cdYCoach.ts`, `generator/uicZCoach.ts`, `generator/bmoCoach.ts`, `generator/emu471.ts`, `generator/emu680.ts`, `generator/db628.ts`, `generator/dmu810.ts`, `src/ModelViewer.tsx`, `test/doors.test.ts`
 **See also** - [animation.md](animation.md), [trams.md](trams.md), [csd-coaches.md](csd-coaches.md), [czsk-coaches.md](czsk-coaches.md), [czech-emus.md](czech-emus.md), [czech-dmus.md](czech-dmus.md), [foreign-units.md](foreign-units.md), [../site/catalog-site.md](../site/catalog-site.md)
 
 ## The idea
 
 A door used to be paint: a dark seam over the door box and a leaf 1 cm proud of the
 body skin, all of it fixed to the body. An opening door keeps that look shut and
-turns its leaves into moving parts, animated by a clip from shut to open. The body
-shell is not cut: behind the leaves stands the door's own dark seam panel, which
-already fills the whole door box, and an open leaf uncovers it as the doorway.
+turns its leaves into moving parts, animated by a clip from shut to open. Behind a
+door whose leaves fold or swing inward the body shell is cut open and a dark
+vestibule stands in the body, so the leaves stay in sight as they turn in (see
+Doorways and vestibules below); behind a plug door the shell
+stays whole and the door's own dark seam panel, which fills the whole door box, is
+the doorway an open leaf uncovers.
 
 This is a proof of concept on a few designs of each kind (below); every other
 vehicle's doors stay paint.
@@ -54,9 +57,9 @@ line's z (the leaf's outer face). Inward is toward the car's centre line.
 | `swing` | 1, 2 | hinged at a jamb, turning inward 80 degrees: one at `from`, two from both jambs (a double door) |
 | `plug` | 1, 2 | step out `DOOR_PLUG_OUT` = 8 cm over the first quarter of the opening, then slide along the side by a leaf's width (and the gap): one toward `toward`, two apart |
 
-A folding or swinging leaf ends inside the body shell, so open it is hidden and the
-doorway shows; a plug leaf stands outside, over the panels beside the door, 8 cm out
-- clear of window frames, sashes and handrails.
+A folding or swinging leaf turns into the vestibule behind its doorway; a plug leaf
+stands outside, over the panels beside the door, 8 cm out - clear of window frames,
+sashes and handrails.
 
 ## `openable` and the mechanism core
 
@@ -76,7 +79,8 @@ their own, so a pantograph keeps its `pantograph<n>` names.
 coach and unit of the coach kit draws. With `opts.opens` (a `DoorMotion`) on a side
 door:
 
-- the outline (seam) is drawn as before: the doorway;
+- the outline (seam) is drawn as before, the doorway behind the leaves - or, where
+  the volume has a doorway at the leaf box (below), as a frame round the hole;
 - the leaf splits into the motion's leaves, each painted as the whole leaf was
   (`paint`, the body's bands, or `opts.leafPaint` for a two-tone leaf);
 - `opts.leafWork(clip)` draws what a leaf carries - its lights - once per leaf;
@@ -87,6 +91,34 @@ door:
 The tram kit's `doors` and the CSD coaches' `doors` take an `opens` option and pass
 their lights through `leafWork`; the livery coaches take `opens` per `DoorSpec`. A
 door drawn without it is byte-for-byte what it was. End doors never open.
+
+## Doorways and vestibules
+
+A leaf that folds or swings inward would vanish into a closed body as soon as it
+moved, and show only in the last degrees of closing - a snap, not a motion. So a
+`Volume` takes `openings` (`csdCoachParts.ts`): one per inward-opening door, the
+door's leaf box on its side, made with `Coach.doorOpening(s, box, seam)`. The
+volume must know them when it is drawn, so a design lists them before its body:
+the tram kit's `doorOpenings(s, list)`, the livery coaches from their `DoorSpec`s,
+the railcar kit's `Car.volume(v, openings)`.
+
+- **The shell** (`Coach.volume`, the railcar kit's `loft`, both through
+  `doorwaySegment`): a doorway's edges become stations; over its span each band is
+  drawn in pieces at the doorway's heights, a piece within it without that side's
+  wall and without the chords across the body. The cut runs 2 mm beyond sill and
+  head, under the door's frame, so no cut edge shares a plane with the frame.
+- **The vestibule** (`vestibules`): a floor, a ceiling, a back wall
+  `VESTIBULE_DEPTH` = 0.6 m inside the skin and two side walls following the skin's
+  profile, all in the dark `seam` and facing the doorway. Floor and ceiling stand
+  3 mm (or 6, 9) inside the doorway, clear of the shell's chords and band
+  boundaries.
+- **The frame**: the door's outline becomes four strips round the hole.
+
+The shut leaves cover the hole but for the 12 mm gaps between them, through which
+the vestibule shows dark as the seam did. A volume without `openings` draws exactly
+as before. The doors with a doorway: the T3, KT4, KT8D5 and GT4, the Bdmtee, the
+CD Y coach and the CD 810. The Bdmtee and the Bmo lost the painted centre seam over
+their doors: the gap between the two leaves is that seam now.
 
 ## The designs
 
@@ -129,4 +161,7 @@ door clip per side matching a plain build at 0, 0.5 and 1, every door of a side
 joining one clip, numbered apart from a pantograph; a door drive without a side is
 refused. Per design and sampled parameter combination: door clips exactly on the
 listed designs and sides, nine samples, sample 0 the rest pose, no z-fighting half
-open and open, and no door clip at low detail.
+open and open, and no door clip at low detail. A coach-kit body with a doorway has
+no skin over it and a vestibule's back wall behind it, one without doorways is
+byte-for-byte unchanged, and every inward-opening door of the seven designs opens
+into a vestibule.

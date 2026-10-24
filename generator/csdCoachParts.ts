@@ -45,7 +45,21 @@ export interface Volume {
    * sloped nose's upper bands), instead of a 2 mm sliver at the clamp height.
    */
   trimCaps?: boolean;
+  /**
+   * Doorways through the sides (an inward-opening door's leaf box, `doorOpening`):
+   * the shell is left open over each, with a dark vestibule behind it, so leaves
+   * that fold or swing inward stay in sight (doors.ts).
+   */
+  openings?: Opening[];
 }
+
+/** A doorway through side `s` of a volume, over the side-view box x0..x1, y0..y1 (source metres). */
+export interface Opening extends Box {
+  s: number;
+}
+
+/** How deep a doorway's vestibule reaches into the body (metres). */
+const VESTIBULE_DEPTH = 0.6;
 
 export const COACH_PALETTE: Record<string, MaterialSpec> = {
   roof: { color: "#7c7f80", roughness: 0.75 },
@@ -139,6 +153,11 @@ export class Coach {
     }
   }
 
+  /** The doorway a door over `b` on side s opens (its leaf box, inside a `seam` wide outline): see `Volume.openings`. */
+  doorOpening(s: number, b: Box, seam = 0.025): Opening {
+    return { s, x0: b.x0 + seam, y0: b.y0 + seam, x1: b.x1 - seam, y1: b.y1 - seam };
+  }
+
   /** Source x to Factory x. */
   X(x: number): number {
     return x - this.centre;
@@ -152,7 +171,9 @@ export class Coach {
   volume(v: Volume): void {
     const m = this.m;
     const hw0 = halfWidth(v);
-    const xs = stations(v);
+    const opens = v.openings ?? [];
+    // a doorway's edges are stations too, so its span is whole segments
+    const xs = opens.length ? [...new Set([...stations(v), ...opens.flatMap((o) => [o.x0, o.x1])])].sort((a, b) => a - b) : stations(v);
     const at = (poly: Pt[], x: number, y0 = -Infinity, y1 = Infinity): Ring => {
       // a band the elevation clips away entirely keeps a sliver 2 mm thick, so no
       // ring of a sweep collapses to a line (that would turn its walls inside out)
@@ -174,6 +195,7 @@ export class Coach {
           if (b - a < 1e-6) continue;
           const gone = (x: number) => hiAt(v, x) <= y0 + 1e-6 || loAt(v, x) >= y1 - 1e-6;
           if (gone(a) && gone(b)) continue;
+          if (this.doorwaySegment(v, mat, y0, y1, a, b, (x, p0, p1) => at(clipY(v.section, p0, p1), x, p0, p1))) continue;
           m.sweep(mat, "x", at(poly, a, y0, y1), this.X(a), at(poly, b, y0, y1), this.X(b), false);
         }
         for (const x of [xs[0]!, xs[xs.length - 1]!]) {
@@ -183,6 +205,7 @@ export class Coach {
         }
       });
     }
+    this.vestibules(v);
     if (v.endPaint) {
       const paint = v.endPaint;
       m.scope("end walls", () => {
@@ -197,6 +220,84 @@ export class Coach {
         }
       });
     }
+  }
+
+  /**
+   * Draws band `mat` (y0..y1, as the shell's band boundaries lie) of volume `v`
+   * from source x `a` to `b` when the segment lies over one of its doorways
+   * (`Volume.openings`), and returns true; returns false, drawing nothing, for a
+   * segment clear of them. The band goes in pieces at the doorways' heights, a
+   * piece within one without that side's wall; the cut runs 2 mm beyond sill and
+   * head, under the door's frame and off the frame's own walls. `ring(x, y0, y1)`
+   * is the band piece's ring at x, as the shell's sweep draws it.
+   */
+  doorwaySegment(v: Volume, mat: string, y0: number, y1: number, a: number, b: number, ring: (x: number, y0: number, y1: number) => Ring): boolean {
+    const cut = (v.openings ?? []).filter((o) => o.x0 <= a + 1e-9 && b <= o.x1 + 1e-9);
+    if (!cut.length) return false;
+    const hole = (o: Opening): [number, number] => [o.y0 - 0.002, o.y1 + 0.002];
+    const ys = [...new Set([y0, y1, ...cut.flatMap(hole).filter((y) => y > y0 + 1e-6 && y < y1 - 1e-6)])].sort((p, q) => p - q);
+    for (let k = 0; k + 1 < ys.length; k++) {
+      const [p0, p1] = [ys[k]!, ys[k + 1]!];
+      if (clipY(v.section, p0, p1).length < 3) continue;
+      const open = cut.filter((o) => hole(o)[0] <= p0 + 1e-6 && p1 <= hole(o)[1] + 1e-6).map((o) => o.s);
+      const [ra, rb] = [ring(a, p0, p1), ring(b, p0, p1)];
+      if (!open.length) this.m.sweep(mat, "x", ra, this.X(a), rb, this.X(b), false);
+      else this.openWalls(mat, ra, this.X(a), rb, this.X(b), open);
+    }
+    return true;
+  }
+
+  /** The dark vestibules behind volume `v`'s doorways (`Volume.openings`). */
+  vestibules(v: Volume): void {
+    (v.openings ?? []).forEach((o, i) => this.m.scope(`vestibule ${i + 1}`, () => this.vestibule(v, o)));
+  }
+
+  /**
+   * The walls of a band piece swept from ring `ra` at Factory x `xa` to `rb` at
+   * `xb` (rings of (z, y), as `volume` sweeps them), leaving out the chords across
+   * the body and the wall on every side in `open`: the shell over a doorway.
+   */
+  private openWalls(mat: string, ra: Ring, xa: number, rb: Ring, xb: number, open: number[]): void {
+    const n = ra.length;
+    const [cz, cy] = [ra.reduce((t, p) => t + p[0], 0) / n, ra.reduce((t, p) => t + p[1], 0) / n];
+    for (let i = 0; i < n; i++) {
+      const j = (i + 1) % n;
+      const [za, ya] = ra[i]!;
+      const [zb, yb] = ra[j]!;
+      if (Math.abs(ya - yb) < 1e-9 && za * zb < 0) continue; // a chord, inside the body
+      if (open.some((s) => s * za > 1e-6 && s * zb > 1e-6)) continue; // the doorway's side
+      const out: Vec3 = [0, (ya + yb) / 2 - cy, (za + zb) / 2 - cz];
+      const A: Vec3 = [xa, ya, za];
+      const B: Vec3 = [xa, yb, zb];
+      const C: Vec3 = [xb, rb[j]![1], rb[j]![0]];
+      const D: Vec3 = [xb, rb[i]![1], rb[i]![0]];
+      this.m.facets(mat, [A, B, C, A, C, D], out);
+    }
+  }
+
+  /**
+   * The dark vestibule behind doorway `o`: a floor, a ceiling, a back wall
+   * VESTIBULE_DEPTH inside the skin and the two side walls, all facing the
+   * doorway. Floor and ceiling stand 3 mm (or 6, 9) inside the doorway, clear
+   * of the shell's chords at its sill and head and at the bands' boundaries.
+   */
+  private vestibule(v: Volume, o: Opening): void {
+    const k = lerp(v.plan, (o.x0 + o.x1) / 2) / halfWidth(v);
+    const skin = (y: number) => o.s * sectionHalf(v.section, y) * k;
+    // the shell's internal band boundaries lie 2.5 mm above their nominal heights (volume)
+    const chords = v.bands.slice(1).map(([y]) => y + 0.0025);
+    const clear = (y: number, dir: number) => [0.003, 0.006, 0.009].map((d) => y + dir * d).find((c) => chords.every((h) => Math.abs(h - c) > 0.0015))!;
+    const [y0, y1] = [clear(o.y0, 1), clear(o.y1, -1)];
+    const zi = o.s * (Math.min(Math.abs(skin(y0)), Math.abs(skin(y1))) - VESTIBULE_DEPTH);
+    const [x0, x1] = [this.X(o.x0), this.X(o.x1)];
+    const mat = "seam";
+    const face = (pts: Vec3[], nrm: Vec3) => this.m.facets(mat, pts.slice(1, -1).flatMap((p, i) => [pts[0]!, p, pts[i + 2]!]), nrm);
+    face([[x0, y0, skin(y0)], [x1, y0, skin(y0)], [x1, y0, zi], [x0, y0, zi]], [0, 1, 0]);
+    face([[x0, y1, skin(y1)], [x1, y1, skin(y1)], [x1, y1, zi], [x0, y1, zi]], [0, -1, 0]);
+    face([[x0, y0, zi], [x1, y0, zi], [x1, y1, zi], [x0, y1, zi]], [0, 0, o.s]);
+    // the side walls follow the skin's profile between sill and head
+    const prof = [y0, ...v.section.map((p) => p[1]).filter((y) => y > y0 + 1e-6 && y < y1 - 1e-6).sort((p, q) => p - q), y1];
+    for (const [x, dir] of [[x0, 1], [x1, -1]] as const) face([...prof.map((y): Vec3 => [x, y, skin(y)]), [x, y1, zi], [x, y0, zi]], [dir, 0, 0]);
   }
 
   /**
@@ -317,8 +418,14 @@ export class Coach {
     const sw = opts.seam ?? 0.025;
     const draw = (mat: string, bb: Box, proud: number, depth = 0.04) =>
       opts.end ? this.endPanel(v, mat, s, bb, proud, depth) : this.sidePanel(v, mat, s, bb, proud, depth);
-    this.m.scope("outline", () => draw("seam", b, 0.006));
     const leaf = { x0: b.x0 + sw, y0: b.y0 + sw, x1: b.x1 - sw, y1: b.y1 - sw };
+    const near = (p: number, q: number) => Math.abs(p - q) < 1e-6;
+    const doorway = !opts.end && opts.opens && v.openings?.some((o) => o.s === s && near(o.x0, leaf.x0) && near(o.x1, leaf.x1) && near(o.y0, leaf.y0) && near(o.y1, leaf.y1));
+    this.m.scope("outline", () => {
+      if (!doorway) return draw("seam", b, 0.006);
+      // a frame round the doorway cut through the shell
+      for (const f of [{ ...b, x1: leaf.x0 }, { ...b, x0: leaf.x1 }, { ...leaf, y0: b.y0, y1: leaf.y0 }, { ...leaf, y0: leaf.y1, y1: b.y1 }]) draw("seam", f, 0.006);
+    });
     const leafPanel = (bb: Box) => {
       if (opts.leafPaint) opts.leafPaint(bb);
       else if (paint !== "bands") draw(paint, bb, 0.01, 0.003);
@@ -332,8 +439,8 @@ export class Coach {
       this.m.scope("leaf", () => leafPanel(leaf));
       return;
     }
-    // the outline's dark panel fills the whole door box behind the leaves: it is
-    // the doorway they uncover
+    // behind the leaves: the doorway cut through the shell (Volume.openings), or
+    // else the outline's dark panel, which fills the whole door box
     const leaves = doorLeaves(this.X(leaf.x0), this.X(leaf.x1), s, opts.opens);
     // the hinge line: the leaf's outer face at mid height, mid door
     const hz = s * ((sectionHalf(v.section, (leaf.y0 + leaf.y1) / 2) * lerp(v.plan, (leaf.x0 + leaf.x1) / 2)) / halfWidth(v) + 0.01);

@@ -17,7 +17,7 @@
 
 import { ngon, type MaterialSpec, type MeshBuilder, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
-import { Coach, sectionHalf, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
+import { Coach, sectionHalf, type Box, type Opening, type Pt, type Volume } from "./csdCoachParts.ts";
 import { block } from "./vehicleParts.ts";
 import { drawJoint, type JointRig, type SectionRig, type VehicleRig } from "./rig.ts";
 import { liftable } from "./liftable.ts";
@@ -228,6 +228,11 @@ export class Tram extends Coach {
         d.lights.forEach((g, k) => this.m.scope(`light ${k + 1}`, () => light(this.box(g))));
       }),
     );
+  }
+
+  /** The doorways of `doors`' list on side s, for the volume they open into (`Volume.openings`). */
+  doorOpenings(s: number, list: Array<{ box: PxBox }>): Opening[] {
+    return list.map((d) => this.doorOpening(s, this.box(d.box)));
   }
 
   /** A painted side panel (a livery patch) over a native box, on side s. */

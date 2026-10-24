@@ -135,7 +135,8 @@ export function tatraT3(params?: ParamValues): MeshBuilder {
   // (the cabs carry the bumper strip, 0.85..1.0, round the end and back to the first door)
   const { main, cab } = t3Bands(L);
   const front = t.vol("front cab", section, body, 0.5, 1.2, cab);
-  const mid = t.vol("saloon", section, body, 1.2, 14.45, main);
+  // the saloon's doorways, so the folding leaves show as they open (doors.ts)
+  const mid = { ...t.vol("saloon", section, body, 1.2, 14.45, main), openings: t.doorOpenings(1, T3_DOORS) };
   const rear = t.vol("rear cab", section, body, 14.45, 15.3, cab);
 
   m.scope("body", () => {
@@ -393,10 +394,12 @@ export function tatraKt8(params?: ParamValues): MeshBuilder {
     if (i === 0) vols.push(t.vol("front cab", KT8_SECTION, KT8_BODY, a, 1.4, cab), t.vol("saloon", KT8_SECTION, KT8_BODY, 1.4, b, main));
     else if (i === 2) vols.push(t.vol("saloon", KT8_SECTION, KT8_BODY, a, 26.9, main), t.vol("rear cab", KT8_SECTION, KT8_BODY, 26.9, b, cab));
     else vols.push(t.vol("saloon", KT8_SECTION, KT8_BODY, a, b, main));
-    const saloon = vols.find((v) => v.name === "saloon")!;
-    m.scope("body", () => vols.forEach((v) => m.scope(v.name, () => t.volume(v))));
+    const own = (bx: PxBox) => inside(bx[0] / 10, [a, b]) && inside(bx[2] / 10, [a, b]);
+    // the saloon's doorways on both sides, so the folding leaves show as they open (doors.ts)
+    const mine = KT8_DOORS.filter((d) => own(d.box));
+    const saloon = { ...vols.find((v) => v.name === "saloon")!, openings: [...t.doorOpenings(1, mine), ...t.doorOpenings(-1, mine)] };
+    m.scope("body", () => vols.forEach((v) => m.scope(v.name, () => t.volume(v.name === "saloon" ? saloon : v))));
     for (const s of sides) m.scope(sideName(s), () => {
-      const own = (bx: PxBox) => inside(bx[0] / 10, [a, b]) && inside(bx[2] / 10, [a, b]);
       m.scope("windows", () => t.windows(saloon, s, KT8_WINDOWS.filter(own), { frame: P.frame, sash: 2.5 }));
       m.scope("doors", () => t.doors(saloon, s, KT8_DOORS.filter((d) => own(d.box)), P.door, { frame: P.frame, sash: 1.82, opens: (d) => ({ kind: "fold", leaves: d.lights.length === 3 ? 3 : 4 }) }));
       // a side repeater in the pier between the outer sections' two windows, at their foot
@@ -526,10 +529,11 @@ export function tatraKt4(): MeshBuilder {
     const vols: Volume[] = i === 0
       ? [t.vol("front cab", KT4_SECTION, KT4_BODY, a, 1.15, cab), t.vol("saloon", KT4_SECTION, KT4_BODY, 1.15, b, main)]
       : [t.vol("saloon", KT4_SECTION, KT4_BODY, a, 21.05, main), t.vol("rear cab", KT4_SECTION, KT4_BODY, 21.05, b, cab)];
-    const saloon = vols.find((v) => v.name === "saloon")!;
-    m.scope("body", () => vols.forEach((v) => m.scope(v.name, () => t.volume(v))));
+    const own = (bx: PxBox) => inside(bx[0] / 10, [a, b]) && inside(bx[2] / 10, [a, b]);
+    // the saloon's doorways, so the folding leaves show as they open (doors.ts)
+    const saloon = { ...vols.find((v) => v.name === "saloon")!, openings: t.doorOpenings(1, KT4_DOORS.filter((d) => own(d.box))) };
+    m.scope("body", () => vols.forEach((v) => m.scope(v.name, () => t.volume(v.name === "saloon" ? saloon : v))));
     for (const s of sides) m.scope(sideName(s), () => {
-      const own = (bx: PxBox) => inside(bx[0] / 10, [a, b]) && inside(bx[2] / 10, [a, b]);
       m.scope("windows", () => t.windows(saloon, s, (s > 0 ? KT4_RIGHT_WINDOWS : KT4_LEFT_WINDOWS).filter(own), { frame: "frame", sash: 2.35 }));
       if (s > 0) m.scope("doors", () => t.doors(saloon, s, KT4_DOORS.filter((d) => own(d.box)), "white", { frame: "frame", sash: 1.6, opens: { kind: "fold", leaves: 4 } }));
     });
@@ -642,10 +646,11 @@ export function gt4Tram(): MeshBuilder {
     const vols: Volume[] = i === 0
       ? [t.vol("front cab", GT4_SECTION, GT4_BODY, a, 0.8, cab), t.vol("saloon", GT4_SECTION, GT4_BODY, 0.8, b, main)]
       : [t.vol("saloon", GT4_SECTION, GT4_BODY, a, 14.0, main), t.vol("rear end", GT4_SECTION, GT4_BODY, 14.0, b, cab)];
-    const saloon = vols.find((v) => v.name === "saloon")!;
-    m.scope("body", () => vols.forEach((v) => m.scope(v.name, () => t.volume(v))));
+    const own = (bx: PxBox) => inside(bx[0] / 10, [a, b]) && inside(bx[2] / 10, [a, b]);
+    // the saloon's doorways, so the folding leaves show as they open (doors.ts)
+    const saloon = { ...vols.find((v) => v.name === "saloon")!, openings: t.doorOpenings(1, GT4_DOORS.filter((d) => own(d.box))) };
+    m.scope("body", () => vols.forEach((v) => m.scope(v.name, () => t.volume(v.name === "saloon" ? saloon : v))));
     for (const s of sides) m.scope(sideName(s), () => {
-      const own = (bx: PxBox) => inside(bx[0] / 10, [a, b]) && inside(bx[2] / 10, [a, b]);
       m.scope("windows", () => t.windows(saloon, s, (s > 0 ? GT4_RIGHT_WINDOWS : GT4_LEFT_WINDOWS).filter(own), { frame: "doorFrame", sash: 2.25 }));
       if (s > 0) m.scope("doors", () => t.doors(saloon, s, GT4_DOORS.filter((d) => own(d.box)), "cream", { frame: "doorFrame", sash: 1.7, opens: { kind: "fold", leaves: 2 } }));
       // the GT4's only direction indicators: a side repeater on each section, at the window sill

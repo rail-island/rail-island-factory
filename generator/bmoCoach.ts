@@ -151,7 +151,7 @@ export function bmoCoach(params?: ParamValues): MeshBuilder {
       (s) =>
         m.scope("door canopies", () => {
           for (const [a, b] of [[5.7, 8.8], [18.0, 21.1]]) c.sidePanel(body, paint.canopy, s, { x0: a, y0: 2.6, x1: b, y1: 2.66 }, 0.04, 0.06);
-          for (const x of [7.25, 19.55]) c.sidePanel(body, "seam", s, { x0: x - 0.02, y0: 0.4, x1: x + 0.02, y1: 2.5 }, 0.016);
+          // (the doors' centre seams are the gaps between their opening leaves)
         }),
       (s) =>
         m.scope("handrails", () => {

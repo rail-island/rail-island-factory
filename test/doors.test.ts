@@ -17,6 +17,7 @@ import { poseGlb, sampleCount } from "../generator/glbPose.ts";
 import { findCoplanarOverlaps } from "../generator/coplanar.ts";
 import { buildLodModel } from "../generator/lodModel.ts";
 import { variantsUnderTest } from "./catalogCache";
+import { Coach, type Volume } from "../generator/csdCoachParts.ts";
 
 const PALETTE = { body: { color: "#808080" }, leaf: { color: "#c03030" }, arm: { color: "#303030" } };
 
@@ -146,6 +147,73 @@ describe("openable doors", () => {
     const track = { node: "p", path: "translation" as const, values: [0, 0, 0, 0, 0, 0] };
     expect(() => m.animate({ name: "d", times: [0, 1], tracks: [track], drive: { drive: "door" } as never })).toThrow(/bad drive/);
   });
+});
+
+describe("doorways", () => {
+  // a box body 10 m long, 2.8 m wide, from 0.5 to 3.5 m, in two bands
+  const volume = (openings?: Volume["openings"]): Volume => ({
+    name: "body",
+    section: [[1.4, 0.5], [1.4, 3.5], [-1.4, 3.5], [-1.4, 0.5]],
+    plan: [[0, 1.4], [10, 1.4]],
+    bands: [[0.5, 2, "red"], [2, 3.5, "roof"]],
+    ...(openings ? { openings } : {}),
+  });
+  /** How many triangles of `mat` lie in the plane z = `z` over the point (x, y). */
+  const over = (c: Coach, mat: string, z: number, x: number, y: number): number => {
+    const pos = (c.m as unknown as { groups: Map<string, { pos: number[] }> }).groups.get(mat)?.pos ?? [];
+    let n = 0;
+    for (let t = 0; t < pos.length; t += 9) {
+      const [xs, ys, zs] = [0, 1, 2].map((k) => [pos[t + k]!, pos[t + 3 + k]!, pos[t + 6 + k]!]);
+      if (zs!.every((v) => Math.abs(v - z) < 1e-6) && Math.min(...xs!) <= x && x <= Math.max(...xs!) && Math.min(...ys!) <= y && y <= Math.max(...ys!)) n++;
+    }
+    return n;
+  };
+
+  it("leave the shell open over an inward-opening door, a dark vestibule behind it", () => {
+    const c = new Coach({ red: { color: "#c03030" }, roof: { color: "#808080" } }, 5);
+    const door = { x0: 4, y0: 0.6, x1: 5.2, y1: 2.8 };
+    const v = volume([c.doorOpening(1, door)]);
+    c.volume(v);
+    c.door(v, 1, door, "red", { opens: { kind: "fold", leaves: 2 } });
+    // the skin (z = 1.4) is gone over the doorway, still there beside it
+    expect(over(c, "red", 1.4, -0.4, 1.6)).toBe(0);
+    expect(over(c, "red", 1.4, -3, 1.6)).toBeGreaterThan(0);
+    // the vestibule's back wall stands 0.6 m inside the skin, behind the doorway
+    expect(over(c, "seam", 0.8, -0.4, 1.6)).toBeGreaterThan(0);
+  });
+
+  it("change nothing on a body without doorways", () => {
+    const [a, b] = [new Coach({ red: { color: "#c03030" }, roof: { color: "#808080" } }, 5), new Coach({ red: { color: "#c03030" }, roof: { color: "#808080" } }, 5)];
+    a.volume(volume());
+    b.volume(volume([]));
+    expect(Buffer.from(a.m.toGlb("t")).equals(Buffer.from(b.m.toGlb("t")))).toBe(true);
+  });
+});
+
+/** The designs whose leaves fold or swing inward, and how many such doors: each opens through a doorway into a vestibule. */
+const INWARD: Record<string, number> = {
+  "proc-vehicle-tatra-t3": 3,
+  "proc-vehicle-tatra-kt4": 4,
+  "proc-vehicle-tatra-kt8": 10,
+  "proc-vehicle-kvag-gt4": 3,
+  "proc-vehicle-csd-bdmtee": 4,
+  "proc-vehicle-cd-y-coach": 4,
+  "proc-vehicle-cd-810": 4,
+};
+
+describe("inward-opening doors", () => {
+  for (const [id, count] of Object.entries(INWARD)) {
+    it(`${id} opens each of its ${count} inward doors into a vestibule`, () => {
+      const d = ALL_VEHICLES.find((v) => v.id === id)!;
+      const ids: string[] = [];
+      const walk = (n: { id: string; children?: unknown[] }) => {
+        if (/(^|\/)vestibule-\d+$/.test(n.id)) ids.push(n.id);
+        for (const k of (n.children ?? []) as Array<{ id: string; children?: unknown[] }>) walk(k);
+      };
+      walk(d.build().sourceTree(d.id, d.title).root);
+      expect(ids).toHaveLength(count);
+    });
+  }
 });
 
 /**

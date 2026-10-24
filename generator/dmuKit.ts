@@ -13,7 +13,7 @@
 
 import { ngon, type MaterialSpec, type MeshBuilder, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
-import { Coach, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
+import { Coach, type Box, type Opening, type Pt, type Volume } from "./csdCoachParts.ts";
 import { emblem } from "./cd163.ts";
 import { block, side } from "./vehicleParts.ts";
 
@@ -111,8 +111,9 @@ export class Car {
   }
 
   /** A volume in source metres, scaled to the model. */
-  volume(v: Volume): Volume {
-    const out = scaleVolume(this.f, v);
+  /** Draws `v`, scaled, with `openings` (in model metres, `side` boxes) cut as doorways (doors.ts). */
+  volume(v: Volume, openings?: Opening[]): Volume {
+    const out: Volume = { ...scaleVolume(this.f, v), ...(openings?.length ? { openings } : {}) };
     this.m.scope("shell", () => loft(this.c, out));
     return out;
   }
@@ -314,7 +315,8 @@ export function loft(c: Coach, v: Volume): void {
   const hw0 = Math.max(...v.section.map((p) => Math.abs(p[0])));
   const hiAt = (x: number): number => (v.top ? lerp(v.top, x) : Infinity);
   const loAt = (x: number): number => (v.bottom ? lerp(v.bottom, x) : -Infinity);
-  const xs = [...new Set([...v.plan, ...(v.top ?? []), ...(v.bottom ?? [])].map((p) => p[0]))]
+  // a doorway's edges are stations too, so its span is whole segments
+  const xs = [...new Set([...v.plan, ...(v.top ?? []), ...(v.bottom ?? [])].map((p) => p[0]).concat((v.openings ?? []).flatMap((o) => [o.x0, o.x1])))]
     .filter((x) => x >= v.plan[0]![0] - 1e-9 && x <= v.plan[v.plan.length - 1]![0] + 1e-9)
     .sort((a, b) => a - b);
   const gone = (x: number, y0: number, y1: number) => hiAt(x) <= y0 + 1e-6 || loAt(x) >= y1 - 1e-6;
@@ -337,6 +339,7 @@ export function loft(c: Coach, v: Volume): void {
         const b = xs[i + 1]!;
         if (b - a < 1e-6) continue;
         if (gone(a, y0, y1) && gone(b, y0, y1)) continue;
+        if (c.doorwaySegment(v, mat, y0, y1, a, b, at)) continue;
         m.sweep(mat, "x", at(a, y0, y1), c.X(a), at(b, y0, y1), c.X(b), false);
       }
       for (const x of [xs[0]!, xs[xs.length - 1]!]) {
@@ -346,4 +349,5 @@ export function loft(c: Coach, v: Volume): void {
       }
     });
   }
+  c.vestibules(v);
 }
