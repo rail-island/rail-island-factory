@@ -667,8 +667,21 @@ body {
   left: 12px;
   bottom: 12px;
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
   z-index: 1;
+}
+
+.factory-viewer__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  color: var(--m-on-surface-variant);
+  font-size: 0.875rem;
+  cursor: pointer;
+  user-select: none;
 }
 
 .factory-detail__nav {

@@ -3,6 +3,7 @@ import { cd230, CD230_LIVERIES, CD230_PARAMS } from "../generator/cd230.ts";
 import { cd230Comparison } from "../generator/cd230Comparison.ts";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles.ts";
 import { isLeaf, type LeafNode, type TreeNode } from "../generator/sourceTree.ts";
+import { RAIL_COLLECTOR_TOP } from "../generator/collector.ts";
 
 function leaves(n: TreeNode): LeafNode[] {
   return isLeaf(n) ? [n] : n.children.flatMap(leaves);
@@ -93,7 +94,7 @@ describe("CD 230 laminatka transfer", () => {
         lengths.push(Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!));
       }
     }
-    expect(tops[0]).toBeCloseTo(5.87, 3);
+    expect(tops[0]).toBeCloseTo(RAIL_COLLECTOR_TOP, 3);
     expect(tops[1]).toBeCloseTo(4.55, 3);
     // the lower arms share one length in both poses, and so do the upper arms
     const lower = lengths.filter((_, i) => i % 2 === 0), upper = lengths.filter((_, i) => i % 2 === 1);

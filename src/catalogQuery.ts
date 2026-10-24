@@ -7,9 +7,9 @@
 // detail panel's spec list and the comparator all read the same list, so a column
 // cannot offer an ordering the comparator does not implement.
 
-import type { CatalogRecord } from "../generator/catalog.ts";
+import type { CatalogRecord, Scenery } from "../generator/catalog.ts";
 
-export type { CatalogRecord };
+export type { CatalogRecord, Scenery };
 
 export type SortDir = "asc" | "desc";
 
@@ -529,7 +529,7 @@ export function variantCaption(r: CatalogRecord, values: Record<string, string>)
 }
 
 /** Bump when the browser thumbnail's framing, lighting or size changes: part of every cache key. */
-export const VARIANT_THUMB_VERSION = 1;
+export const VARIANT_THUMB_VERSION = 2;
 
 /**
  * The browser-rendered thumbnail cache key of a model variant: the model's id and

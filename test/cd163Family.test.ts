@@ -12,6 +12,7 @@ import { findCoplanarOverlaps } from "../generator/coplanar";
 import { glbStats } from "../generator/glbStats";
 import { isLeaf, type LeafNode, type TreeNode } from "../generator/sourceTree";
 import type { MaterialSpec, MeshBuilder } from "../generator/meshBuilder";
+import { RAIL_COLLECTOR_TOP } from "../generator/collector.ts";
 
 /** The pixels of an uncompressed bottom-up 8 or 24 bit BMP, as [r, g, b]. */
 function readBmp(file: URL): { w: number; h: number; px: (x: number, y: number) => number[] } {
@@ -225,7 +226,7 @@ describe("CD 163 family low level of detail", () => {
       expect(s.triangles, livery).toBeGreaterThan(80);
       // the running gear reaches down to the rail instead of the body floating 1 m above it
       expect(s.min[1], livery).toBeLessThan(0.1);
-      expect(s.max[1], livery).toBeCloseTo(5.74, 1);
+      expect(s.max[1], livery).toBeCloseTo(RAIL_COLLECTOR_TOP, 1);
       expect(s.max[2], livery).toBeCloseTo(1.51, 2);
       expect(s.max[0], livery).toBeLessThanOrEqual(7.9 + 1e-6);
       expect(findCoplanarOverlaps(m.toGlb("t")), livery).toEqual([]);

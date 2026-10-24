@@ -23,8 +23,8 @@ their build functions for the JS models).
 
 | id | over buffers | body | pivots | wheelbase | wheels | collectors | triangles |
 |---|---|---|---|---|---|---|---|
-| `veh-cd-110` | 14.40 m | 13.16 m frame | 6.30 m | 2.80 m | 1.05 m | one half pantograph, raised to 5.87 m | 9,700 to 10,000 |
-| `veh-cd-130` | 17.21 m | 15.97 m | 8.17 m | 3.20 / 3.33 m | 1.25 m | rear raised to 5.87 m, front folded | 11,100 to 11,300 |
+| `veh-cd-110` | 14.40 m | 13.16 m frame | 6.30 m | 2.80 m | 1.05 m | one half pantograph, raised to 5.88 m | 9,700 to 10,000 |
+| `veh-cd-130` | 17.21 m | 15.97 m | 8.17 m | 3.20 / 3.33 m | 1.25 m | rear raised to 5.88 m, front folded | 11,100 to 11,300 |
 | `veh-cd-140` | 15.74 m | 14.50 m | 8.17 m | 3.33 m | 1.25 m | diamond, rear raised, front folded | 11,200 |
 | `veh-cd-169` | 18.00 m | 16.70 m | 8.70 m | 2.50 m | 1.25 m | single-arm, rear raised, front folded | 9,700 |
 
@@ -61,7 +61,8 @@ part of the native mapping.
   their arm lengths in either pose; the single arm's knee is found by
   intersecting circles about the hinge and the head and points away from the
   hinge (the hinge toward the middle of the roof on two-pantograph locomotives).
-  Two collectors: the rear (-X) raised to 5.87 m, the front folded, as on the
+  Two collectors: the rear (-X) raised to the game's contact wire (5.88 m,
+  [animation.md](animation.md)), the front folded, as on the
   CD 230 and 163. The 110 has one, raised.
 
 ## The bodies
@@ -117,7 +118,7 @@ converted on request: `cd_110`, `cd_140`, `cd_141`, `cd_141_017` and `csd_131`.
 `test/czElectrics.test.ts`: the ids, parameters and defaults; for every
 parameter combination the length over the buffers, the axle positions, wheel
 contact and gauge, the 3.1 m x 4.7 m envelope and 6.5 m operating height, the
-triangle budget, and the collectors (two: the rear raised to 5.87 m and the
+triangle budget, and the collectors (two: the rear raised to 5.88 m and the
 front folded, level strips; one: raised); constant single-arm arm lengths in
 both poses; every native landmark within its tolerance; valid running numbers;
 diamond pantographs on the 123 liveries and the breaker on the 210.

@@ -1,7 +1,7 @@
 # Animation
 
-**Covers** - animated models: the mesh builder's animation clips and how they reach the GLB and the JS model, what plays each clip (`clipDrives`: a time loop, the distance travelled or a state), the wind turbine's `wind` clip, the oil pumpjack's `pumping` mechanism, the steam locomotives' `running` clip (wheelsets, rods, Walschaerts valve gear), the pantographs as `liftable` mechanisms (`state` clips) and the `rod` primitive they are drawn with, the timing contract for consumers, the site's Start and Stop buttons, and the tests.
-**Code** - `generator/meshCore.ts` (`animate`, `AnimationClipSpec`, `ClipDrive`, `clipDrives`, `tube`, `rod`, `sampleDraw`, `movingPart`, `drawRouted`), `generator/liftable.ts`, `generator/cd163.ts` (`pushRod`), the pantograph builders (`czElectricKit.ts` `singleArm`/`diamond`, `cd150.ts`, `cd163.ts`, `cd230.ts`, `emuParts.ts`, `shinkansen0.ts`, `tramKit.ts`), `test/liftable.test.ts`, `test/pantographs.test.ts`, `generator/industry.ts` (`industrialWind`, `industrialOilPump`), `generator/pumpjack.ts`, `generator/meshBuilder.ts` (`toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/steamGear.ts` (`RunningGear`, `N_SAMPLES`, `RUNNING_SPEED`, `RUNNING_CLIP`), `generator/glbPose.ts`, `src/ModelViewer.tsx`, `test/animation.test.ts`, `test/steam.test.ts`, `test/pumpjack.test.ts`, `test/jsModel.test.ts`
+**Covers** - animated models: the mesh builder's animation clips and how they reach the GLB and the JS model, what plays each clip (`clipDrives`: a time loop, the distance travelled or a state), the wind turbine's `wind` clip, the oil pumpjack's `pumping` mechanism, the steam locomotives' `running` clip (wheelsets, rods, Walschaerts valve gear), the pantographs as `liftable` mechanisms (`state` clips) and the `rod` primitive they are drawn with, the collector heights they reach (`collector.ts`), the timing contract for consumers, the site's Start/Stop and Up/Down buttons, and the tests.
+**Code** - `generator/meshCore.ts` (`animate`, `AnimationClipSpec`, `ClipDrive`, `clipDrives`, `tube`, `rod`, `sampleDraw`, `movingPart`, `drawRouted`), `generator/liftable.ts`, `generator/collector.ts`, `generator/cd163.ts` (`pushRod`), the pantograph builders (`czElectricKit.ts` `singleArm`/`diamond`, `cd150.ts`, `cd163.ts`, `cd230.ts`, `emuParts.ts`, `shinkansen0.ts`, `tramKit.ts`), `test/liftable.test.ts`, `test/pantographs.test.ts`, `generator/industry.ts` (`industrialWind`, `industrialOilPump`), `generator/pumpjack.ts`, `generator/meshBuilder.ts` (`toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/steamGear.ts` (`RunningGear`, `N_SAMPLES`, `RUNNING_SPEED`, `RUNNING_CLIP`), `generator/glbPose.ts`, `src/ModelViewer.tsx`, `test/animation.test.ts`, `test/steam.test.ts`, `test/pumpjack.test.ts`, `test/jsModel.test.ts`
 **See also** - [steam-locomotives.md](steam-locomotives.md), [lamps.md](lamps.md), [vehicles.md](vehicles.md) (parts), [export.md](export.md), [js-format.md](js-format.md), [industry.md](industry.md), [../site/catalog-site.md](../site/catalog-site.md)
 
 ## Clips in the mesh builder
@@ -146,6 +146,25 @@ pantographs and carries no clip. `test/pantographs.test.ts` checks every electri
 design: the clips, the rest pose as the last sample, the train at least 0.5 m
 lower with every collector folded, no z-fighting folded, nothing at low detail.
 
+### Collector heights
+
+A raised collector touches the game's wire, so every design raises it to one of
+two heights over the railhead (`collector.ts`), whatever the prototype's own line:
+
+| Constant | Height | What it is |
+| --- | --- | --- |
+| `RAIL_COLLECTOR_TOP` | 5.88 m | the underside of the game's contact wire: its centre 8.86 studs over the railhead, 0.08 studs thick, at 1.5 studs a metre - (8.86 - 0.04) / 1.5 |
+| `TRAM_COLLECTOR_TOP` | 5.50 m | a tram's collector; the game hangs its trolley wire with its underside here |
+
+The carbon strips' top stands exactly there - every railway locomotive and unit, the
+Shinkansen 0 (no longer at its own 5.0 m line) and the TGVs included, every tram at
+the tram height - and the builders take no height of their own: `singleArm`,
+`diamond` and `lodPantograph` default to the railway one, `emuParts.pantograph`,
+`cd150.ts`, `cd163.ts` and `cd230.ts` raise to it, and the trams pass
+`TRAM_WIRE`. Each builder keeps its arm lengths and its folded pose, so only how far
+it lifts changes. `test/pantographs.test.ts` checks every rail vehicle: the carbon's
+top, and the model's, at its wire, and the low detail no higher.
+
 ## Timing contract
 
 The clip's duration is the time the reference wheel takes to roll its
@@ -158,16 +177,21 @@ The clip's `clipDrives` entry states exactly this: `distance` at 5 m/s.
 
 ## The site
 
-A `state` clip plays from folded to raised in a loop like any other clip under
-Start, which shows the mechanism moving.
+`ModelViewer` reads the clips of the loaded model (the JS model's
+`group.animations`) and sorts them by their drive (`userData.clipDrives`):
 
-`ModelViewer` reads the clips of the loaded model (`gltf.animations`, or the JS
-model's `group.animations` for a non-default parameter choice) and, when there
-are any, shows **Start** and **Stop** over the preview. Start plays every clip in
-a loop through an `AnimationMixer` and runs a render loop only while it plays;
-Stop halts the animation where it is (the render loop ends, the pose stays).
-Another model or parameter choice stops it. Highlight and picking keep working,
-on the moved parts.
+- the **looping** clips (time, distance: a steam locomotive's running gear, kept for
+  any wheel motion to come) get **Start** and **Stop**. Start plays them in a loop
+  through an `AnimationMixer`; Stop halts them where they are, the pose stays;
+- the **`state`** clips (the pantographs) get **Up** and **Down**, which move every
+  working collector toward raised or folded over 1.5 s from wherever it stands -
+  the viewer sets each state action's time from one lift value, as the game drives
+  the clip from a state. A model arrives raised, its rest pose.
+
+A render loop runs only while something moves. Another model or parameter choice
+drops the animation. Highlight and picking keep working, on the moved parts. An
+electric vehicle stands under the game's wire there, so a raised collector can be
+seen touching it ([../site/catalog-site.md](../site/catalog-site.md)).
 
 ## Tests
 

@@ -257,8 +257,8 @@ function roofEquipment(m: MeshBuilder, l: Cd130Livery): void {
   m.scope("pantographs", () => {
     for (const e of [-1, 1])
       m.scope(e > 0 ? "front pantograph" : "rear pantograph", () => {
-        if (l.pantograph === "diamond") diamond(m, { xc: e * PANTO_X, roofY: CROWN, baseY: 4.36, raised: e < 0, raisedTop: 5.87 });
-        else singleArm(m, { xc: e * PANTO_X, roofY: CROWN, baseY: 4.22, h: -e, raised: e < 0, raisedTop: 5.87 });
+        if (l.pantograph === "diamond") diamond(m, { xc: e * PANTO_X, roofY: CROWN, baseY: 4.36, raised: e < 0 });
+        else singleArm(m, { xc: e * PANTO_X, roofY: CROWN, baseY: 4.22, h: -e, raised: e < 0 });
       });
   });
   m.scope("high voltage line", () => {

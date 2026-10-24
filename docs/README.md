@@ -43,7 +43,7 @@
 | [models/bmo-double-deck.md](models/bmo-double-deck.md) | the parametric Bmo double-deck coach: the CSD and three CD liveries as one `livery` parameter |
 | [models/steam-locomotives.md](models/steam-locomotives.md) | the nine steam locomotives from vlakosimdb, locomotive and tender as `unit` variants, the shared builder, deviations, the native comparison and tests |
 | [models/trams.md](models/trams.md) | the trams and the metro car from vlakosimdb: Tatra T3, T6A5, KT8D5 and KT4, the GT4, the 81-71; the tram builder, the drawing-to-published map, articulated sections, pantographs, the native comparison and tests |
-| [models/animation.md](models/animation.md) | animation clips of parts and what plays each (`clipDrives`: time, distance, state), the wind turbine, the oil pumpjack's mechanism, the steam locomotives' running-gear clip and its timing contract, the pantographs as `liftable` mechanisms and the `rod` primitive, the site's Start and Stop buttons |
+| [models/animation.md](models/animation.md) | animation clips of parts and what plays each (`clipDrives`: time, distance, state), the wind turbine, the oil pumpjack's mechanism, the steam locomotives' running-gear clip and its timing contract, the pantographs as `liftable` mechanisms, the `rod` primitive and the collector heights, the site's Start/Stop and Up/Down buttons |
 | [models/lamps.md](models/lamps.md) | the vehicles' lamps: lamp roles on palette entries (head, tail, brake, indicator), lit colours, the exported `lamps` table and how a consumer splits front from rear and left from right, marker materials, the site's Lights button |
 | [models/wagons.md](models/wagons.md) | the five freight wagons from vlakosimdb (Nas, Ua, Eas, Raj, Rah), three of them parametric by `cargo`: sources, the shared wagon parts, the native-raster comparison and tests |
 | [models/freight-wagons.md](models/freight-wagons.md) | the Sqns container, Pao flat, Habis sliding-wall, Hadgs covered hopper and Faccs, Falls and Wap hopper wagons from vlakosimdb, by `cargo` and `livery`: the JT7 clip solid, loads, deviations, the native comparison and tests |
@@ -71,7 +71,7 @@
 | [models/export.md](models/export.md) | the export folder: JS models, thumbnails, `skyscrapers.meta.json`, `village.meta.json`, `vehicles.meta.json`, `catalog.json`; the in-memory GLB the build analyses |
 | [site/openttd-export.md](site/openttd-export.md) | the site's export list ("Add to export", the Export panel, its localStorage key) and the two formats it writes in the browser: an OpenTTD NewGRF (true-proportion sprites, articulated parts, the `openttd` block and its defaults, the GRF encoder) and a ZIP of GLBs |
 | [models/game-properties.md](models/game-properties.md) | what the game needs beyond geometry: vehicle weight, power, speed, draft and rope heights, per-variant figures, building plaza and block rules; declared on each design, checked, exported |
-| [site/catalog-site.md](site/catalog-site.md) | the factory.railisland.com site: listing (table, cards, variant thumbnails rendered in the browser), sorting, search, 3D preview, local dev without a build |
+| [site/catalog-site.md](site/catalog-site.md) | the factory.railisland.com site: listing (table, cards, variant thumbnails rendered in the browser), sorting, search, 3D preview (pantograph Up/Down, the scenery under a vehicle), local dev without a build |
 
 `docs/specs/` and `docs/impl/` are planning records (a spec and the notes on how
 it was built), not reference.

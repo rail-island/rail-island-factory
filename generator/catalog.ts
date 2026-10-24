@@ -24,6 +24,7 @@ import { VEHICLE_CATALOG } from "./vehicles.ts";
 import { checkGameProperties, type CatalogFields, type GameProperties, type OpenttdProperties, type ParamSpec, type ProceduralDesign } from "./design.ts";
 import type { VehicleRig } from "./rig.ts";
 import { checkCityPresets, cityPresetsOf } from "./cityPresets.ts";
+import { RAIL_COLLECTOR_TOP, TRAM_COLLECTOR_TOP } from "./collector.ts";
 
 /** What a side-view thumbnail spans, in metres (renderGlbThumb.ts SideFrame). */
 export interface ThumbSide {
@@ -125,6 +126,25 @@ export interface ReferenceImage {
   bytes: number;
 }
 
+/**
+ * What the site's viewer draws around a vehicle (src/viewerScenery.ts): the way it
+ * stands on -- a railway track, a road, or a road with an embedded tram track --
+ * and, over an electric one, the game's wire, its underside at `wireTop` metres
+ * over the railhead (generator/collector.ts).
+ */
+export interface Scenery {
+  way: "rail" | "road" | "tram";
+  wireTop?: number;
+}
+
+/** The scenery of a catalog entry; null for anything that is not a road or rail vehicle. */
+export function sceneryOf(entry: Pick<MetaEntry, "category" | "group" | "traction">): Scenery | null {
+  if (entry.category === "Road vehicles") return { way: "road" };
+  if (entry.category !== "Rail vehicles") return null;
+  if (entry.group === "tram") return { way: "tram", wireTop: TRAM_COLLECTOR_TOP };
+  return entry.traction === "electric" ? { way: "rail", wireTop: RAIL_COLLECTOR_TOP } : { way: "rail" };
+}
+
 /** One row of the site's listing. */
 export interface CatalogRecord extends MetaEntry {
   /** Site-relative URLs, e.g. "thumbs/sky-pagoda.png". */
@@ -150,6 +170,8 @@ export interface CatalogRecord extends MetaEntry {
   sizeZ: number;
   /** The source images the model was made from, by name; empty when it has none. */
   references: ReferenceImage[];
+  /** What the viewer draws under (and over) a road or rail vehicle; absent for anything else. */
+  scenery?: Scenery;
   /** Set when the JS model also exports buildCoarse (a tree's third level, docs/models/trees.md). */
   coarse?: boolean;
   /** Set when the JS module exports buildMax, an optional close-up detail level. */
@@ -306,6 +328,7 @@ const r4 = (v: number): number => Math.round(v * 1e4) / 1e4;
 const mm = (v: number): number => Math.round(v * 1000) / 1000;
 
 export function catalogRecord(entry: MetaEntry, facts: BuiltFacts, references: ReferenceImage[] = [], openttd?: OpenttdProperties): CatalogRecord {
+  const scenery = sceneryOf(entry);
   return {
     ...entry,
     thumbUrl: `thumbs/${entry.thumb}`,
@@ -322,6 +345,7 @@ export function catalogRecord(entry: MetaEntry, facts: BuiltFacts, references: R
     sizeY: mm(facts.max[1] - facts.min[1]),
     sizeZ: mm(facts.max[2] - facts.min[2]),
     references,
+    ...(scenery ? { scenery } : {}),
     ...(openttd ? { openttd: JSON.parse(JSON.stringify(openttd)) as OpenttdProperties } : {}),
   };
 }

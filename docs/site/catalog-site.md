@@ -4,12 +4,12 @@
 the table, card and thumbnail layouts, browser-rendered variant thumbnails, sorting and search, the model page with its 3D
 preview, and the URL state.
 **Code** - `src/main.tsx`, `src/App.tsx`, `src/catalogQuery.ts`, `src/ModelTable.tsx`,
-`src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`, `src/viewerGlass.ts`,
+`src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`, `src/viewerScenery.ts`, `src/viewerGlass.ts`,
 `src/SourceTreePanel.tsx`, `src/sourceTreeView.ts`, `src/Thumb.tsx`, `src/modelModule.ts`, `src/ExportPanel.tsx`,
 `src/ModelVariants.tsx`, `src/VariantThumb.tsx`, `src/variantThumbs.ts`, `src/thumbRender.ts`,
 `src/devCatalog.ts`, `src/devMeasure.ts`, `generator/devServer.ts`, `generator/devExport.ts`, `test/devExport.test.ts`,
 `src/factory.css`, `src/favicon.svg`, `src/apple-touch-icon.png`, `src/social-preview.png`, `src/boot.ts`, `src/bootEntry.ts`, `index.html`, `vite.config.ts`,
-`test/catalogQuery.test.ts`, `test/boot.test.ts`, `test/siteMeta.test.ts`, `test/rig.test.ts` (the Pose sliders)
+`test/catalogQuery.test.ts`, `test/boot.test.ts`, `test/siteMeta.test.ts`, `test/rig.test.ts` (the Pose sliders), `test/scenery.test.ts`
 **See also** - [../models/export.md](../models/export.md), [../guide/deploy.md](../guide/deploy.md), [openttd-export.md](openttd-export.md)
 
 The site is the factory's counterpart of the webapp Creator's model listing,
@@ -178,7 +178,7 @@ one at a time in the order asked, and one released before its turn is skipped.
 `thumbRender.ts` builds the variant from its JS module and draws it with one
 shared offscreen `WebGLRenderer` into a WebP (PNG where WebP cannot be written):
 a road or rail vehicle in the build's side view (orthographic, nose on the left,
-24 px per metre over the fixed -0.3..5.7 m window, so every vehicle shares one
+24 px per metre over the fixed -0.3..6.0 m window, so every vehicle shares one
 scale and one rail line; shown 90 px tall), everything else in the three-quarter
 view at 256 px. Each image is cached in IndexedDB (database
 `factory-variant-thumbs`), keyed by `variantThumbKey`: the model id, its
@@ -269,13 +269,31 @@ pose is page state only, back to rest for every model, and never in the URL. Whi
 a slider (or a parameter's select) has the focus the arrow keys are its own; they
 step through the list only otherwise (`pageKey`).
 
-A model with animation clips (the steam locomotives' running gear) gets
+A model with looping animation clips (the steam locomotives' running gear) gets
 **Start** and **Stop** buttons over the preview: Start plays the clips in a loop
 with a render loop that runs only while they play, Stop halts them in place, and
 another model or parameter choice stops them
-([../models/animation.md](../models/animation.md)). A model with lamps gets a
+([../models/animation.md](../models/animation.md)). A model with pantographs
+(`state` clips) gets **Up** and **Down** instead: they raise or lower every
+working collector over 1.5 s from wherever it stands, as the game does at a stop;
+the model always arrives with them raised, its rest pose. A model with lamps gets a
 **Lights on / Lights off** button beside them that shows every tagged lamp lit,
 indicators blinking ([../models/lamps.md](../models/lamps.md)).
+
+A road or rail vehicle stands in its **scenery** (`viewerScenery.ts`), drawn from its
+record's `scenery` (`generator/catalog.ts` `sceneryOf`): a rail vehicle on a
+ballasted standard-gauge track, a tram on the game's narrow asphalt road with its
+track embedded, a road vehicle on that road (8 studs, 5.33 m, across, kerbs
+included). Over an electric vehicle (`traction` electric) and every tram hangs the
+game's wire - a railway's contact and messenger wires on masts, a tram's single
+trolley wire on poles - its underside at `scenery.wireTop`, the one height every
+raised collector reaches (`generator/collector.ts`,
+[../models/animation.md](../models/animation.md)). So a design's wheels can be
+checked against the rails and its collector against the wire by eye. Everything
+runs along x from 8 m before the model to 8 m past it, at y = 0 the running
+surface; it is neither picked nor highlighted and adds nothing to the triangle
+count. A **Scenery** checkbox beside the buttons hides it, for every model until
+it is ticked again.
 
 `ModelViewer.tsx` (with its helpers `viewerHighlight.ts`, `viewerLamps.ts` and `modelModule.ts`, which
 fetches and builds a model's JS module with the subset of three it reads, `THREE_SUBSET`, constants such as

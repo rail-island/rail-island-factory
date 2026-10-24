@@ -23,6 +23,7 @@ import type { Vec3 } from "./meshCore.ts";
 import { block, plate, side } from "./vehicleParts.ts";
 import { CD163_PALETTE, bandAt, coil, lettering, letteringWidth, pushRod, type Band } from "./cd163.ts";
 import { liftable } from "./liftable.ts";
+import { RAIL_COLLECTOR_TOP } from "./collector.ts";
 
 export const c = (color: string, roughness = 0.5): MaterialSpec => ({ color, metallic: 0.1, roughness });
 
@@ -410,8 +411,8 @@ export interface SingleArmSpec {
   /** +1: the hinge stands toward +x of the centre and the knee points to -x. */
   h: number;
   raised: boolean;
-  /** The collector strips' top when raised. */
-  raisedTop: number;
+  /** The collector strips' top when raised (the game's contact wire unless given). */
+  raisedTop?: number;
   lower?: number;
   upper?: number;
 }
@@ -436,7 +437,7 @@ function singleArmPose(p: SingleArmSpec, lift: number): { xh: number; hingeY: nu
   // the collector stands where both arms lie flat when folded, in every pose
   const f1 = Math.sqrt(L1 * L1 - 0.11 * 0.11), f2 = Math.sqrt(L2 * L2 - 0.09 * 0.09);
   const hx = xh - h * f1 + h * f2;
-  const headY = y + 0.33 + (p.raisedTop - 0.07 - (y + 0.33)) * lift;
+  const headY = y + 0.33 + ((p.raisedTop ?? RAIL_COLLECTOR_TOP) - 0.07 - (y + 0.33)) * lift;
   // intersect circles about the hinge and the head; the knee points away from the hinge's end
   const dx = hx - xh, dy = headY - 0.02 - hingeY;
   const dist = Math.hypot(dx, dy);
@@ -501,8 +502,8 @@ export interface DiamondSpec {
   roofY: number;
   baseY: number;
   raised: boolean;
-  /** The collector strips' top when raised. */
-  raisedTop: number;
+  /** The collector strips' top when raised (the game's contact wire unless given). */
+  raisedTop?: number;
   arm?: number;
 }
 /**
@@ -518,7 +519,7 @@ function diamondAt(m: MeshBuilder, p: DiamondSpec, lift: number): void {
   const { xc, baseY } = p;
   const ARM = p.arm ?? 1.3, A = 0.3;
   // raised: the strips' top (head + 0.05) at raisedTop; folded: 0.2 m over the base
-  const hgt = 0.2 + (p.raisedTop - 0.05 - baseY - 0.2) * lift;
+  const hgt = 0.2 + ((p.raisedTop ?? RAIL_COLLECTOR_TOP) - 0.05 - baseY - 0.2) * lift;
   const w = A + Math.sqrt(ARM * ARM - (hgt / 2) * (hgt / 2) - 0.01);
   const top = baseY + hgt;
   m.scope("insulators", () => {

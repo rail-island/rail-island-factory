@@ -22,7 +22,7 @@ const THREEQUARTER_SIZE = 256;
 const SIDE_PX_PER_M = 24;
 /** The side view's height window and margins, metres: the build's and the game's. */
 const SIDE_BOTTOM_M = -0.3;
-const SIDE_TOP_M = 5.7;
+const SIDE_TOP_M = 6.0;
 const SIDE_MARGIN_M = 0.3;
 /** The widest side image, in pixels; a longer vehicle is drawn at a smaller scale. */
 const SIDE_MAX_PX = 2048;

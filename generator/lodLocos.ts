@@ -130,7 +130,6 @@ export interface LocoPantographs {
   pair: boolean;
   roofY: number;
   baseY: number;
-  raisedTop?: number;
   lower?: number;
   upper?: number;
 }
@@ -162,7 +161,7 @@ export function locoLod(s: LocoLodSpec, budget = 100): MeshBuilder {
   ];
   const p = s.pantographs;
   if (p) {
-    const common = { roofY: p.roofY, baseY: p.baseY, raisedTop: p.raisedTop ?? 5.87, ...(p.lower ? { lower: p.lower } : {}), ...(p.upper ? { upper: p.upper } : {}) };
+    const common = { roofY: p.roofY, baseY: p.baseY, ...(p.lower ? { lower: p.lower } : {}), ...(p.upper ? { upper: p.upper } : {}) };
     parts.push({ draw: (m) => m.scope("raised pantograph", () => lodPantograph(m, { ...common, x: p.pair ? -p.x : p.x, h: 1, raised: true })) });
     if (p.pair) parts.push({ optional: 0, draw: (m) => m.scope("folded pantograph", () => lodPantograph(m, { ...common, x: p.x, h: -1, raised: false })) });
   }

@@ -294,7 +294,7 @@ function powerCar(L: Livery): MeshBuilder {
   });
   m.scope("roof equipment", () => {
     const [px, roof] = L.pantograph;
-    m.scope("pantographs", () => m.scope("pantograph", () => pantograph(m, { x: X(px), roof, hinge: -1, raised: true, rise: 1.0 })));
+    m.scope("pantographs", () => m.scope("pantograph", () => pantograph(m, { x: X(px), roof, hinge: -1, raised: true })));
   });
   m.scope("running gear", () => {
     // the XML's gear clips reach 0.65 m beyond the axles: the long side frames of the Y 230 motor bogie
@@ -358,7 +358,7 @@ export function tgvLod(params?: ParamValues): MeshBuilder {
       parts: [
         ...bogieParts(TGV_POWER_BOGIES.map((x) => [X(x), 1.5 + 0.46 + 0.3] as const), 0.95),
         ...skirtParts((body.bottom ?? []).map(([b, y]): Pt => [b - centre, y]), 0.95, 1.5 * K_Z_POWER - 0.02, L.body[0]![2]),
-        ...pantographParts([X(px)], roof, roof + 0.2, roof + 1.25),
+        ...pantographParts([X(px)], roof, roof + 0.2),
       ],
     }, 100);
   }

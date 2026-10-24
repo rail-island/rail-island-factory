@@ -288,7 +288,7 @@ function frame(m: MeshBuilder, l: Cd110Livery): void {
 
 function roofEquipment(m: MeshBuilder, l: Cd110Livery): void {
   m.scope("pantographs", () => {
-    m.scope("pantograph", () => singleArm(m, { xc: 0, roofY: CAB_TOP + 0.05, baseY: CAB_TOP + 0.2, h: 1, raised: true, raisedTop: 5.87, lower: 1.25, upper: 1.1 }));
+    m.scope("pantograph", () => singleArm(m, { xc: 0, roofY: CAB_TOP + 0.05, baseY: CAB_TOP + 0.2, h: 1, raised: true, lower: 1.25, upper: 1.1 }));
   });
   if (l.acRoof)
     m.scope("main breaker", () => {
