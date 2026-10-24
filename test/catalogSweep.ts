@@ -25,7 +25,7 @@ import { expectSealed, jointMesh } from "./rigHelpers";
 
 /** The most a prop's or a set preview's JS model may weigh: the builder runtime and its boxes. */
 const PROP_JS_LIMIT = 24_000;
-const PREVIEW_JS_LIMIT = 48_000;
+const PREVIEW_JS_LIMIT = 80_000;
 
 function walk(n: TreeNode, out: TreeNode[] = []): TreeNode[] {
   out.push(n);

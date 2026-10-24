@@ -15,6 +15,7 @@
 
 import { MeshBuilder, chamferedRect, ngon, rect, type MaterialSpec, type Ring } from "./meshBuilder.ts";
 import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
+import { anyBlank, blankSides, faceBlank, grownPlan, partyParams, windowed, type Blank } from "./partyWalls.ts";
 
 import { villageTimberCottageLod, villageTimberHouseLod, villageCottageLod, villageLHouseLod, villageFamilyHouseLod, villageModernHouseLod, villageNarrowHouseLod, villageAlpineHutLod } from "./lodVillage.ts";
 export { villageTimberCottageLod, villageTimberHouseLod, villageCottageLod, villageLHouseLod, villageFamilyHouseLod, villageModernHouseLod, villageNarrowHouseLod, villageAlpineHutLod } from "./lodVillage.ts";
@@ -175,6 +176,8 @@ export class House {
   shutters = false;
   /** Flower boxes under the upper storeys' ordinary windows. */
   flowerBoxes = false;
+  /** The sides drawn as blank party walls (partyWalls.ts), in the design's unmirrored plan. */
+  blank: Blank = { back: false, left: false, right: false };
 
   constructor(pal: Record<string, MaterialSpec>, private readonly mx: 1 | -1 = 1) {
     this.m = new MeshBuilder(pal);
@@ -186,6 +189,17 @@ export class House {
 
   p(x: number, y: number, z: number): Vec3 {
     return [this.mx * x, y, z];
+  }
+
+  /** Takes the party-wall parameters: a model's left is the mirrored plan's right. */
+  party(p: ParamValues): void {
+    const b = blankSides(p);
+    this.blank = this.mx === 1 ? b : { back: b.back, left: b.right, right: b.left };
+  }
+
+  /** Whether a face of the plan is a blank party wall: no window, door or drainpipe on it. */
+  isBlank(f: Face): boolean {
+    return faceBlank(this.blank, f.axis, f.s);
   }
 
   /** A ring mirrored and, when mirrored, re-wound counter-clockwise. */
@@ -247,15 +261,22 @@ export class House {
   /** Plinth, walls and floor bands of a volume; the roof draws the rest. */
   walls(vol: Volume, wallMat = vol.wallMat ?? "wall"): void {
     const { cx, cz, w, d } = vol;
+    // grown round the plan, but on a blank side stopping inside the wall
+    const blank = anyBlank(this.blank);
+    const around = (grow: number, ch: number): Ring => {
+      if (!blank) return chamferedRect(w + 2 * grow, d + 2 * grow, ch, cx, cz);
+      const [gx, gz, gw, gd] = grownPlan(w, d, grow, this.blank);
+      return chamferedRect(gw, gd, ch, cx + gx, cz + gz);
+    };
     this.scope("plinth", () => {
-      this.prism("trim", chamferedRect(w + 0.5, d + 0.5, CH + 0.2, cx, cz), 0, PL - 0.15, false);
-      this.loft("trim", chamferedRect(w + 0.5, d + 0.5, CH + 0.2, cx, cz), PL - 0.15, chamferedRect(w + 0.24, d + 0.24, CH + 0.1, cx, cz), PL);
+      this.prism("trim", around(0.25, CH + 0.2), 0, PL - 0.15, false);
+      this.loft("trim", around(0.25, CH + 0.2), PL - 0.15, around(0.12, CH + 0.1), PL);
     });
     this.scope("walls", () => this.prism(wallMat, chamferedRect(w, d, CH, cx, cz), PL - 0.05, vol.eave, false));
     if (vol.bands.length) {
       this.scope("floor bands", () => {
         for (const y of vol.bands) {
-          const r = chamferedRect(w + 0.16, d + 0.16, CH + 0.05, cx, cz);
+          const r = around(0.08, CH + 0.05);
           this.prism("trim", r, y, y + 0.22);
           this.cap("trim", r, y, false);
         }
@@ -384,6 +405,7 @@ export class House {
 
   /** A window: a rounded dark frame, light blue glass, `bars` vertical mullions and a sill. */
   window(f: Face, u: number, y0: number, w = 1.3, h = WIN_H, bars = 1): void {
+    if (this.isBlank(f)) return;
     this.scope("window", () => {
       this.panel("trim", f, roundRect(u, y0 + h / 2, w + 0.26, h + 0.26, 0.2), -0.03, 0.07);
       this.panel("glass", f, roundRect(u, y0 + h / 2, w, h, 0.1), 0.02, 0.1);
@@ -417,6 +439,7 @@ export class House {
 
   /** A round attic window, centred at (u, y). */
   roundWindow(f: Face, u: number, y: number, r = 0.42): void {
+    if (this.isBlank(f)) return;
     this.scope("round window", () => {
       this.panel("trim", f, circle(u, y, r + 0.13, 12), -0.03, 0.07);
       this.panel("glass", f, circle(u, y, r, 12), 0.02, 0.1);
@@ -539,8 +562,40 @@ export class House {
 
   /** A drainpipe down a wall, beside the corner at `u`. */
   drainpipe(f: Face, u: number, top: number): void {
+    if (this.isBlank(f)) return;
     this.scope("drainpipe", () => {
       this.panel("stone", f, rectOutline(u, (PL + top) / 2 + 0.05, 0.14, top - PL - 0.1), -0.02, 0.16);
+    });
+  }
+
+  /**
+   * The party walls of a volume whose ridge runs along z, so its blank left and
+   * right sides are eave sides: a slab from just inside the wall (closing the
+   * chamfer) out to where the windowed variant's extent ends (`ref`, its
+   * positions), its top sloping down under the roof's overhang and gutter. The
+   * extent never changes, and two neighbours meet slab to slab under touching
+   * eaves.
+   */
+  partyWalls(vol: Volume, ref: ArrayLike<number>): void {
+    if (vol.axis !== "z" || vol.roof !== "gable") throw new Error("village party walls stand on the eave sides of a gable along z");
+    if (!this.blank.left && !this.blank.right) return;
+    let lo = Infinity, hi = -Infinity;
+    for (let i = 0; i < ref.length; i += 3) {
+      lo = Math.min(lo, this.mx * ref[i]!);
+      hi = Math.max(hi, this.mx * ref[i]!);
+    }
+    this.scope("party walls", () => {
+      for (const s of [-1, 1] as const) {
+        if (!(s < 0 ? this.blank.left : this.blank.right)) continue;
+        const wall = vol.cx + s * vol.w / 2;
+        const ext = s < 0 ? lo : hi;
+        const reach = Math.abs(ext - wall);
+        // under the roof's underside (eave at the wall, falling at the pitch) and the gutter's bottom
+        const drop = reach * vol.pitch + 0.13;
+        const z = vol.cz + vol.d / 2;
+        const inner = wall - s * CH;
+        this.slab("wall", [[inner, 0, z], [ext, 0, z], [ext, vol.eave - drop, z], [inner, vol.eave, z]], [0, 0, -vol.d]);
+      }
     });
   }
 
@@ -1033,14 +1088,19 @@ export const NARROW_HOUSE_PARAMS: readonly ParamSpec[] = [
   { name: "shutters", title: "Shutters", default: "shutters", values: [v("shutters", "Shutters"), v("none", "None")] },
   ROOF_PARAM,
   WALLS_PARAM,
+  ...partyParams(["left", "right"]),
 ];
 
-/** A narrow, steep-roofed house with its gable to the street. */
+/**
+ * A narrow, steep-roofed house with its gable to the street: the village's row
+ * house, whose eave sides can stand against its neighbours as party walls.
+ */
 export function villageNarrowHouse(params?: ParamValues): MeshBuilder {
   const p = resolveParams(NARROW_HOUSE_PARAMS, params);
   const h = new House(palette(ROOF_COLOURS[p.roof]!, WALL_COLOURS[p.walls]!));
   const storeys = p.storeys === "three" ? 3 : 2;
   h.shutters = p.shutters === "shutters";
+  h.party(p);
   const main = volume(0, 0, 6.2, 8.5, storeys, "gable", "z", 1.05);
   const f = h.faces(main);
   h.scope("house", () => {
@@ -1084,6 +1144,7 @@ export function villageNarrowHouse(params?: ParamValues): MeshBuilder {
     atticWindow(h, main, f.back);
   });
   h.chimney(main, 1.2, -2.2);
+  if (anyBlank(h.blank)) h.partyWalls(main, villageNarrowHouse(windowed(p)).positions());
   return h.m;
 }
 

@@ -24,7 +24,7 @@ describe("exportMeta", () => {
     expect(meta.count).toBe(SKYSCRAPERS.length);
     expect(meta.buildings.map((b) => b.id)).toEqual(SKYSCRAPERS.map((d) => d.id));
     for (const { game, ...b } of meta.buildings) {
-      // the city presets (cityPresets.ts, test/cityPresets.test.ts) are the only game property a skyscraper has
+      // the city variants (cityVariants.ts, test/cityVariants.test.ts) are the only game property a skyscraper has
       if (game) expect(Object.keys(game), b.id).toEqual(["city"]);
       expect(b).toEqual({
         id: b.id,
@@ -51,9 +51,11 @@ describe("exportMeta for the village houses", () => {
     expect(meta.count).toBe(VILLAGE_HOUSES.length);
     for (const { game, ...b } of meta.buildings) {
       const d = VILLAGE_HOUSES.find((x) => x.id === b.id)!;
-      // every house a city builds carries its presets; the alpine hut is placed by hand only
+      // every house a city builds carries its city variants; the alpine hut is placed by hand only
       if (d.id === "proc-building-village-alpine-hut") expect(game).toBeUndefined();
-      else expect(game, d.id).toEqual({ city: { presets: expect.any(Array) } });
+      // the row house also names the sides it can stand against its neighbours
+      else if (d.id === "proc-building-village-narrow-house") expect(game, d.id).toEqual({ city: { variants: expect.any(Array), colours: expect.any(Array), party: ["left", "right"] } });
+      else expect(game, d.id).toEqual({ city: { variants: expect.any(Array), colours: expect.any(Array) } });
       expect(b).toEqual({
         id: d.id,
         title: d.title,
@@ -136,7 +138,7 @@ describe("game properties", () => {
     }
     expect(exportMeta(BUILDINGS).buildings.find((b) => b.id === "proc-building-brandenburg-gate")!.game).toEqual({
       plaza: { cities: ["city"], layouts: ["rect"], fit: "footprint" },
-      city: { presets: [{}] },
+      city: { variants: [{ size: expect.any(Array) }] },
     });
     // the per-variant figures: the CD 162 runs at 140 km/h, the 163 at 120
     const cd163 = exportVehicleMeta(ALL_VEHICLES).vehicles.find((v) => v.id === "proc-vehicle-cd-163")!.game!;

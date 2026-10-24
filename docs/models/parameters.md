@@ -178,7 +178,10 @@ are ordinary parameters everywhere else; the tests build
 `coverageCombinations(params, finishParams)` - every combination of the other
 parameters at the default finish, then each other finish value on the default
 shape - instead of the full product. A design without `finishParams` is tested
-on every combination.
+on every combination. A city colours a building by its finish parameters too
+([game-properties.md](game-properties.md), "City variants"). Party-wall parameters
+(`partyLeft`, `partyRight`, `partyBack`; "Party walls" there) change no extent either
+and are covered the same way, one side at a time, without being listed.
 
 `test/params.test.ts` checks the resolution and enumeration rules, that every
 parametric design's enums are well formed and that the meta entries list exactly

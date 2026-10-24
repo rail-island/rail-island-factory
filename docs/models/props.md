@@ -64,7 +64,7 @@ kinds: the station vocabulary (`steel`, `glass`, `light`, `wood`, `roof`, `colum
 A prop of a few boxes (a bollard, a container, a floodlight) is smaller as a GLB than the builder
 runtime every JS model carries, so `test/catalogSweep.ts` holds props and set previews to a fixed
 24 KB JS limit instead of its "JS smaller than the GLBs" check (a set preview, which carries its
-whole set module and is never exported to the game, to 48 KB), or to their GLBs when those are
+whole set module and is never exported to the game, to 80 KB), or to their GLBs when those are
 larger; every other design keeps that check.
 
 `FAR_PROPS` names the props a structure's far level keeps (crane, container, hut, tower, shed);

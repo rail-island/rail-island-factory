@@ -2,7 +2,7 @@
 
 **Covers** - the ten procedurally generated skyscrapers, the mesh builder they
 are made with, and how to add or change a design.
-**Code** - `generator/skyscrapers.ts`, `generator/meshCore.ts`, `generator/meshBuilder.ts`, `generator/coplanar.ts`, `test/models.test.ts`, `test/skyscrapers.test.ts`, `test/buildingScale.test.ts`
+**Code** - `generator/skyscrapers.ts`, `generator/partyWalls.ts`, `generator/meshCore.ts`, `generator/meshBuilder.ts`, `generator/coplanar.ts`, `test/models.test.ts`, `test/skyscrapers.test.ts`, `test/buildingScale.test.ts`
 **See also** - [export.md](export.md), [source-tree.md](source-tree.md), [vehicles.md](vehicles.md), [../site/catalog-site.md](../site/catalog-site.md)
 
 ## The designs
@@ -49,6 +49,12 @@ unchanged. Exports contain the default GLB and thumbnail plus the parameter spec
 
 The former `lowrise` size is retired to `compact`, so a saved map that stored it
 still resolves ([parameters.md](parameters.md)).
+
+Two towers can stand against a neighbour ([game-properties.md](game-properties.md), "Party
+walls"): the brick apartment tower takes `partyLeft` and `partyRight` (a blank flank drops its
+piers and window panels; a brick slab rises to the roof slab), the glass office `partyLeft`,
+`partyRight` and `partyBack` on its podium (a dark slab under the cornice). These multiply their
+combination counts by four and eight; they never move the extent.
 
 Original finishes preserve each tower's own palette. Glass colour changes both
 light glazing and its darker panels; cladding changes the structural and masonry

@@ -28,6 +28,7 @@ and materials, including a complete articulated bus. It is not a per-mesh allowa
 | An articulated vehicle or trainset (its full rig has n sections) | min(300, 100 n); the Shinkansen 0 series and the TGV Duplex min(500, 100 n) |
 | Aircraft | 200 |
 | Historical buildings (including the castle), towers and skyscrapers | 500 |
+| Bridge previews (the bridge set's own distant level on a 160-stud fixture; [bridges.md](bridges.md)) | 3,000 |
 | Woods models (a grove of a few hundred coarse trees, the site's only; [woods.md](woods.md)) | 12,000 |
 
 A design can set `lodTriangles` to override its family policy (the TGV does:

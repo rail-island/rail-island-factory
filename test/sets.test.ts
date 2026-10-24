@@ -32,8 +32,8 @@ describe("set registry", () => {
   for (const def of SETS) {
     describe(def.set, () => {
       const ids = def.types.map((t) => t.id);
-      it("keeps every shipped id; an unlanded set exactly the game's list", () => {
-        if (def.landed) for (const id of SHIPPED[def.set]) expect(ids).toContain(id);
+      it("keeps every shipped id or retires it with an alias; an unlanded set exactly the game's list", () => {
+        if (def.landed) for (const id of SHIPPED[def.set]) expect(ids.includes(id) || ids.includes(def.retired[id] ?? ""), id).toBe(true);
         else expect(ids).toEqual(SHIPPED[def.set]);
       });
       it("has unique ids the D1 item key accepts, an English name each, and a default among them", () => {
