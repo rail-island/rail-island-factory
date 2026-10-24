@@ -176,7 +176,7 @@ one at a time in the order asked, and one released before its turn is skipped.
 `thumbRender.ts` builds the variant from its JS module and draws it with one
 shared offscreen `WebGLRenderer` into a WebP (PNG where WebP cannot be written):
 a road or rail vehicle in the build's side view (orthographic, nose on the left,
-24 px per metre over the fixed -0.3..5.7 m window, so every vehicle shares one
+24 px per metre over the fixed -0.3..6.0 m window, so every vehicle shares one
 scale and one rail line; shown 90 px tall), everything else in the three-quarter
 view at 256 px. Each image is cached in IndexedDB (database
 `factory-variant-thumbs`), keyed by `variantThumbKey`: the model id, its

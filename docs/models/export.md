@@ -208,8 +208,8 @@ chosen by the design's catalog category (`isSideViewCategory`, `catalog.ts`):
   -Z side, as the game turns the vehicle round to nose-at-min-X), **nose on the
   left**, at a fixed **32 px per metre** (`SIDE_PX_PER_M`; twice the game's 16, which
   the webapp's import scales down to), over a fixed height window from 0.3 m below
-  the rail to 5.7 m above it (`SIDE_BOTTOM_M`, `SIDE_TOP_M`) and the vehicle's length
-  plus 0.3 m each side (`SIDE_MARGIN_M`). Every side image is therefore 192 px tall
+  the rail to 6.0 m above it - clear of a raised collector at 5.88 m (`SIDE_BOTTOM_M`, `SIDE_TOP_M`) and the vehicle's length
+  plus 0.3 m each side (`SIDE_MARGIN_M`). Every side image is therefore 202 px tall
   and its width is to scale; one longer than 128 m is drawn smaller so it stays
   within 4096 px (`SIDE_MAX_PX`). The light is the game's: ambient 1.2 and a
   directional 1.5 from the front, above (three.js units, diffuse colour / pi). The
