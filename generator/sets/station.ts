@@ -1583,11 +1583,39 @@ function buildVillageDepot(length: number, layout: StationLayout): StationBox[] 
 }
 
 // --- heritage umbrella canopy ---------------------------------------------
-// A gabled timber canopy on every deck band, on a single row of cast-iron posts.
-// The eaves stop at the platform edge, so the tracks stay open to the sky.
+// A gabled timber canopy on every deck band, on a single row of cast-iron posts
+// with bases, capitals and spandrel brackets; a fretted valance of dagger boards
+// along both eaves, a glazed ridge lantern, lanterns hung from the brackets. The
+// eaves stop at the platform edge, so the tracks stay open to the sky. The name
+// board hangs at each gable end from a tie beam across it; a clock and a train
+// indicator are fixed to two posts. Islands get a timber waiting room across
+// from their underpass, every platform benches with bins.
 const HERITAGE_EAVE_HEIGHT = 6.4;
 const HERITAGE_PITCH_DEG = 24;
-const HERITAGE_VALANCE_STEP = 2.5;
+const HERITAGE_DAGGER_STEP = 1.25;
+const HERITAGE_BRACKET = 0.5; // the spandrel brackets' slope
+
+/** A small timber waiting room on an island: on the -X side of the centreline, windows to its track. */
+function pushWaitingRoom(boxes: StationBox[], cx: number, z: number): void {
+  const x0 = cx - 4.4;
+  const x1 = cx - 1.5;
+  const len = 6;
+  const h = 3.1;
+  const mx = (x0 + x1) / 2;
+  boxes.push({ cx: mx, cy: PLATFORM_HEIGHT + 0.2, cz: z, sx: x1 - x0 + 0.2, sy: 0.4, sz: len + 0.2, color: WOOD_COLOR, material: "wood" });
+  boxes.push({ lod: "shell", cx: mx, cy: PLATFORM_HEIGHT + 0.4 + (h - 0.4) / 2, cz: z, sx: x1 - x0, sy: h - 0.4, sz: len, color: WOOD_CREAM, material: "wood" });
+  boxes.push({ cx: mx, cy: PLATFORM_HEIGHT + h + 0.12, cz: z, sx: x1 - x0 + 0.5, sy: 0.24, sz: len + 0.5, color: CANOPY_GREEN, material: "tile" });
+  for (const ex of [x0, x1]) for (const ez of [-1, 1]) {
+    boxes.push({ cx: ex, cy: PLATFORM_HEIGHT + h / 2 + 0.1, cz: z + ez * (len / 2), sx: 0.24, sy: h - 0.2, sz: 0.24, color: IRON_GREEN, material: "wood" });
+  }
+  // two windows to the track, a glazed door at the +Z end
+  for (const wz of [-1.4, 1.4]) {
+    boxes.push({ cx: x0 - 0.05, cy: PLATFORM_HEIGHT + 1.95, cz: z + wz, sx: 0.12, sy: 1.5, sz: 1.5, color: IRON_GREEN, material: "wood" });
+    boxes.push({ cx: x0 - 0.09, cy: PLATFORM_HEIGHT + 1.95, cz: z + wz, sx: 0.08, sy: 1.25, sz: 1.25, color: STEEL_DARK, material: "glass" });
+  }
+  boxes.push({ cx: mx, cy: PLATFORM_HEIGHT + 1.45, cz: z + len / 2 + 0.05, sx: 1.1, sy: 2.1, sz: 0.12, color: IRON_GREEN, material: "wood" });
+  boxes.push({ cx: mx, cy: PLATFORM_HEIGHT + 1.85, cz: z + len / 2 + 0.09, sx: 0.8, sy: 1.0, sz: 0.08, color: STEEL_DARK, material: "glass" });
+}
 
 function buildHeritageCanopy(length: number, layout: StationLayout): StationBox[] {
   const boxes: StationBox[] = [];
@@ -1596,6 +1624,9 @@ function buildHeritageCanopy(length: number, layout: StationLayout): StationBox[
   pushUnderpasses(boxes, wells);
   const zLen = length - 3;
   const pitch = (HERITAGE_PITCH_DEG * Math.PI) / 180;
+  const canopyBays = bayPositions(length, 10);
+  const bayMids = canopyBays.slice(1).map((z, i) => (z + canopyBays[i]!) / 2);
+  const nearest = (zs: readonly number[], target: number) => zs.reduce((best, z) => (Math.abs(z - target) < Math.abs(best - target) ? z : best));
 
   for (const band of deckBands(layout, false)) {
     const inner = band.minX + (band.edgeLeft ? 0.2 : -1.5);
@@ -1619,10 +1650,11 @@ function buildHeritageCanopy(length: number, layout: StationLayout): StationBox[
         material: "tile",
         lod: "shell",
       });
+      // the eaves board and its fretted valance: a dagger board every step
       const eaveX = centerX + side * (halfW - 0.15);
       boxes.push({ cx: eaveX, cy: eaveY - 0.35, cz: 0, sx: 0.32, sy: 1.2, sz: zLen, color: WOOD_CREAM, material: "wood" });
-      for (let z = -zLen / 2 + 1; z <= zLen / 2 - 1; z += HERITAGE_VALANCE_STEP) {
-        boxes.push({ cx: eaveX, cy: eaveY - 0.95, cz: z, sx: 0.3, sy: 0.4, sz: 1.1, color: WOOD_CREAM, material: "wood" });
+      for (let z = -zLen / 2 + 0.8; z <= zLen / 2 - 0.7; z += HERITAGE_DAGGER_STEP) {
+        boxes.push({ rotX: Math.PI / 4, cx: eaveX, cy: eaveY - 1.0, cz: z, sx: 0.28, sy: 0.45, sz: 0.45, color: WOOD_CREAM, material: "wood" });
       }
     }
     boxes.push({ lod: "shell", cx: centerX, cy: ridgeY + 0.55, cz: 0, sx: 1.3, sy: 0.6, sz: zLen, color: WOOD_COLOR, material: "wood" });
@@ -1630,22 +1662,59 @@ function buildHeritageCanopy(length: number, layout: StationLayout): StationBox[
       boxes.push({ cx: centerX, cy: ridgeY + 1.0, cz: 0, sx: 1.1, sy: 0.7, sz: zLen - 14, color: GLASS_COLOR, material: "glass" });
       boxes.push({ cx: centerX, cy: ridgeY + 1.48, cz: 0, sx: 1.8, sy: 0.22, sz: zLen - 13, color: CANOPY_GREEN, material: "tile" });
     }
-    const canopyBays = bayPositions(length, 10);
+    // the bracket arm's height at x on the +X side, where the lanterns hang
+    const armY = (x: number) => eaveY - 0.6 + (x - (centerX + 1.1)) * Math.tan(HERITAGE_BRACKET);
+    const lampX = centerX + Math.min(halfW * 0.25, 1.5);
     for (const z of canopyBays) {
-      boxes.push({ lod: "support", cx: centerX, cy: (PLATFORM_HEIGHT + eaveY + 0.6) / 2, cz: z, sx: 0.75, sy: eaveY + 0.6 - PLATFORM_HEIGHT, sz: 0.75, color: IRON_GREEN, material: "column" });
+      boxes.push({ lod: "support", cx: centerX, cy: (PLATFORM_HEIGHT + eaveY + 0.6) / 2, cz: z, sx: 0.6, sy: eaveY + 0.6 - PLATFORM_HEIGHT, sz: 0.6, color: IRON_GREEN, material: "column" });
+      // the post's base and its capital under the brackets
+      boxes.push({ cx: centerX, cy: PLATFORM_HEIGHT + 0.45, cz: z, sx: 0.95, sy: 0.9, sz: 0.95, color: IRON_GREEN, material: "column" });
+      boxes.push({ cx: centerX, cy: PLATFORM_HEIGHT + 1.0, cz: z, sx: 0.8, sy: 0.2, sz: 0.8, color: IRON_GREEN, material: "column" });
+      boxes.push({ cx: centerX, cy: eaveY - 1.25, cz: z, sx: 0.9, sy: 0.3, sz: 0.9, color: IRON_GREEN, material: "column" });
       for (const side of [-1, 1]) {
-        boxes.push({ cx: centerX + side * 1.1, cy: eaveY - 0.6, cz: z, sx: 2.6, sy: 0.35, sz: 0.4, rotZ: side * 0.5, color: IRON_GREEN, material: "column" });
+        boxes.push({ cx: centerX + side * 1.1, cy: eaveY - 0.6, cz: z, sx: 2.6, sy: 0.35, sz: 0.4, rotZ: side * HERITAGE_BRACKET, color: IRON_GREEN, material: "column" });
       }
-      boxes.push({ cx: centerX + Math.min(halfW * 0.25, 1.5), cy: eaveY - 1.5, cz: z, sx: 1.2, sy: 1.5, sz: 1.2, color: LIGHT_COLOR, material: "light" });
+      // a lantern hung from the bracket on a rod
+      const rodTop = armY(lampX);
+      const lampTop = rodTop - 0.75;
+      boxes.push({ cx: lampX, cy: (lampTop + rodTop) / 2, cz: z, sx: 0.08, sy: rodTop - lampTop, sz: 0.08, color: STEEL_DARK, material: "steel" });
+      boxes.push({ cx: lampX, cy: lampTop - 0.06, cz: z, sx: 0.7, sy: 0.12, sz: 0.7, color: IRON_GREEN, material: "column" });
+      boxes.push({ cx: lampX, cy: lampTop - 0.5, cz: z, sx: 0.5, sy: 0.76, sz: 0.5, color: LIGHT_COLOR, material: "light" });
     }
     for (const zs of [-1, 1]) {
       boxes.push({ lod: "shell", profile: "gable", cx: centerX, cy: (eaveY + ridgeY) / 2 + 0.2, cz: zs * (zLen / 2 + 0.08), sx: halfW * 2, sy: ridgeY - eaveY, sz: 0.22, color: WOOD_CREAM, material: "wood" });
-      // name board on the gable face, reading along the track -- outboard of the
-      // gable boards and beyond every post, so nothing crosses it
-      boxes.push({ cx: centerX, cy: eaveY + 0.9, cz: zs * (zLen / 2 + 0.28), sx: Math.min(halfW * 1.6, 9), sy: 1.6, sz: 0.3, color: SIGN_COLOR, material: "sign", label: true });
+      // the tie beam across the gable end, and the name board hung from it on two
+      // rods, framed top and bottom, reading along the track
+      const tz = zs * (zLen / 2 - 0.1);
+      boxes.push({ cx: centerX, cy: eaveY + 0.05, cz: tz, sx: halfW * 2 - 0.4, sy: 0.4, sz: 0.3, color: WOOD_COLOR, material: "wood" });
+      const boardW = Math.min(halfW * 2 - 2.2, 8);
+      if (boardW > 1.8) {
+        const top = eaveY - 0.75;
+        boxes.push({ cx: centerX, cy: top - 0.65, cz: tz, sx: boardW, sy: 1.3, sz: 0.3, color: SIGN_COLOR, material: "sign", label: true });
+        for (const y of [top + 0.06, top - 1.36]) boxes.push({ cx: centerX, cy: y, cz: tz, sx: boardW + 0.2, sy: 0.12, sz: 0.38, color: WOOD_COLOR, material: "wood" });
+        pushHangers(boxes, centerX, tz, eaveY - 0.13, 0.52, boardW / 2 - 0.5);
+      }
     }
+    // a clock and a train indicator fixed to two posts, reading along the platform
+    if (canopyBays.length >= 3 && halfW >= 2.5) {
+      const clockZ = nearest(canopyBays, -length / 6);
+      const boardZ = nearest(canopyBays, length / 6);
+      for (const f of [-1, 1]) {
+        pushClock(boxes, centerX, PLATFORM_HEIGHT + 3.9, clockZ + f * 0.52, 1.1, f);
+        if (boardZ !== clockZ) {
+          boxes.push({ cx: centerX, cy: PLATFORM_HEIGHT + 3.8, cz: boardZ + f * 0.42, sx: 1.9, sy: 1.1, sz: 0.16, color: WOOD_COLOR, material: "wood" });
+          boxes.push({ cx: centerX, cy: PLATFORM_HEIGHT + 3.8, cz: boardZ + f * 0.52, sx: 1.6, sy: 0.85, sz: 0.04, color: WOOD_CREAM, material: "light" });
+        }
+      }
+    }
+    // the island's waiting room across from the underpass; benches with bins
+    const island = band.row.type === "island" && halfW >= 5.5;
+    const roomZs = island ? snapZs(length < 100 ? [0] : [-length / 4, length / 4], bayMids) : [];
+    for (const z of roomZs) pushWaitingRoom(boxes, centerX, z);
     for (let i = 0; i + 1 < canopyBays.length; i += 2) {
-      pushBench(boxes, layout, centerX, (canopyBays[i] + canopyBays[i + 1]) / 2);
+      const z = (canopyBays[i]! + canopyBays[i + 1]!) / 2;
+      if (roomZs.some((rz) => Math.abs(rz - z) < 5) || Math.abs(z) > length / 2 - RAMP_LENGTH - 3.5) continue;
+      pushBenchWithBin(boxes, layout, centerX, z, 1.3);
     }
   }
   return boxes;

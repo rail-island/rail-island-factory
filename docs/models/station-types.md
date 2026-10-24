@@ -52,7 +52,7 @@ the edge coping, the yellow safety lines and the cobbled outer trim. Two options
 | `cantilever_wings` | pairs | masts on every band, tilted wings with a glazed tip over the pairs (below), underpasses |
 | `concourse` | pairs | low canopies and a glazed footbridge with a stair tower on every band (below) |
 | `village_depot` | tracks side by side, a 10-stud house strip | the country station (below), a post-and-rail fence and lamps on the far platform |
-| `heritage_canopy` | pairs | a gabled timber umbrella canopy on cast-iron posts over every band, underpasses |
+| `heritage_canopy` | pairs | a gabled timber umbrella canopy on cast-iron posts over every band (below), underpasses |
 | `grand_terminus` | pairs, 14-stud islands | stone arcades and glazed vaults, nave and aisles on a wide station (below), underpasses |
 
 ### The shared platforms
@@ -95,6 +95,17 @@ each canopy's far end on two rods; a departure board and a clock hang from cross
 the stairs. Islands get a waiting shelter under each canopy, every wide band benches with bins
 between the columns. The glazed footbridge crosses the whole station at 11.6 studs, landing in
 a stair tower on every band, with the name board and a clock either side of it on both flanks.
+
+### The heritage canopy
+
+A gabled timber umbrella canopy over every band, its eaves stopping at the platform edges, on
+one row of cast-iron posts 10 studs apart: each post has a moulded base, a capital and two
+spandrel brackets, and a lantern hangs from a bracket on a rod. Both eaves carry a fretted
+valance of dagger boards every 1.25 studs (tilted square boxes); a glazed lantern runs along
+the ridge. At each gable end a tie beam crosses the canopy and the framed name board hangs from
+it on two rods. A clock and a train indicator are fixed to two posts at eye level. Islands get
+a small timber waiting room across from their underpass; benches with bins stand between the
+posts, on the level deck.
 
 ### The train sheds' vault
 
@@ -163,7 +174,7 @@ coach is held to 16,000 triangles, so a 240-stud platform of coaches is about 14
 | `cantilever_wings` | 2,232 / 11,200 | 5,892 / 28,000 | 17,388 / 90,400 |
 | `concourse` | 3,336 / 11,200 | 7,272 / 28,000 | 18,216 / 90,400 |
 | `village_depot` | 2,916 / 4,800 | 4,164 / 9,000 | 5,172 / 24,600 |
-| `heritage_canopy` | 2,456 / 11,200 | 7,248 / 28,000 | 22,880 / 90,400 |
+| `heritage_canopy` | 4,832 / 11,200 | 13,920 / 28,000 | 44,336 / 90,400 |
 | `grand_terminus` | 4,216 / 20,800 | 10,108 / 46,000 | 41,092 / 139,600 |
 
 A change that redraws a type moves its pins (`pnpm sets:pins`, [sets.md](sets.md)).
