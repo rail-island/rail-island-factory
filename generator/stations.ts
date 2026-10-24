@@ -18,8 +18,8 @@
 import { MeshBuilder, ngon, rect, type MaterialSpec, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { arc, block } from "./vehicleParts.ts";
-import { pragueMainStationLod, stationBuildingLod, stationHaltLod, suburbanStationLod } from "./lodStations.ts";
-export { pragueMainStationLod, stationBuildingLod, stationHaltLod, suburbanStationLod } from "./lodStations.ts";
+import { pragueMainStationLod, stationBuildingLod, stationHaltLod, stationHotelLod, suburbanStationLod } from "./lodStations.ts";
+export { pragueMainStationLod, stationBuildingLod, stationHaltLod, stationHotelLod, suburbanStationLod } from "./lodStations.ts";
 import type { CatalogFields, ProceduralDesign } from "./design.ts";
 
 // --- walls -----------------------------------------------------------------------
@@ -250,6 +250,7 @@ const FONT: Record<string, string[]> = {
   C: ["011", "100", "100", "100", "011"],
   E: ["111", "100", "110", "100", "111"],
   F: ["111", "100", "110", "100", "100"],
+  H: ["101", "101", "111", "101", "101"],
   I: ["111", "010", "010", "010", "111"],
   K: ["101", "101", "110", "101", "101"],
   L: ["100", "100", "100", "100", "111"],
@@ -1191,6 +1192,164 @@ export function pragueMainStation(): MeshBuilder {
   return m;
 }
 
+// --- the station hotel -----------------------------------------------------------------
+
+export const HOTEL: Record<string, MaterialSpec> = {
+  plinth: { color: "#8f877a" },
+  plaster: { color: "#dfcba4" },
+  stone: { color: "#efe4cc" },
+  slate: { color: "#3f5d63" },
+  ridge: { color: "#2f474c" },
+  brick: { color: "#9a4d3a" },
+  frame: { color: "#f3ede0" },
+  glass: { color: "#2b4652", roughness: 0.3 },
+  door: { color: "#5a3a26" },
+  iron: { color: "#2f3a3c", metallic: 0.3, roughness: 0.5 },
+  canopyGlass: { color: "#9fc3cf", roughness: 0.2 },
+  sign: { color: "#1f3d55" },
+  gilt: { color: "#d9b44a", metallic: 0.6, roughness: 0.35 },
+};
+
+/**
+ * The railway hotel facing the station square (+Z): a three-storey stucco block
+ * of eleven bays under a slate hip roof with dormers, and a four-storey corner
+ * pavilion over the entrance, with its balcony, the glass entrance canopy on iron
+ * brackets, the HOTEL board and a steep hip roof with an iron cresting.
+ */
+export function stationHotel(): MeshBuilder {
+  const m = new MeshBuilder(HOTEL);
+  const front = wall("+z", 6);
+  const rear = wall("-z", -6);
+  const west = wall("-x", -18);
+  const east = wall("+x", 18);
+  const tFront = wall("+z", 6.6);
+  const tRear = wall("-z", -6.3);
+  const fine: WindowStyle = { glass: "glass", frame: "frame", cols: 2, transoms: [0.72], surround: { mat: "stone", by: 0.16 }, sill: "stone", head: "stone" };
+  const plain: WindowStyle = { glass: "glass", frame: "frame", cols: 2, transoms: [0.72], sill: "stone" };
+  // the rear and the ends: single-pane sashes
+  const back: WindowStyle = { glass: "glass", frame: "frame", cols: 1, sill: "stone" };
+  // the bays of the main block either side of the pavilion (x -14..-6)
+  const bays = [-15.8, -4.5, -1.5, 1.5, 4.5, 7.5, 10.5, 13.5, 16.5];
+  const floors = [
+    { sill: 1.6, w: 1.8, h: 2.5 },
+    { sill: 5.5, w: 1.4, h: 2.2 },
+    { sill: 9.0, w: 1.3, h: 1.9 },
+  ];
+
+  m.scope("building", () => {
+    m.scope("main block", () => {
+      m.box("plinth", 0, 0, 36.2, 12.2, 0, 0.8);
+      m.box("plaster", 0, 0, 36, 12, 0.8, 11.3, 0, false);
+      m.scope("bands", () => {
+        m.box("stone", 0, 0, 36.16, 12.16, 4.5, 4.8);
+        m.box("stone", 0, 0, 36.12, 12.12, 8.1, 8.3);
+        m.box("stone", 0, 0, 36.5, 12.5, 11.2, 11.8);
+      });
+      m.scope("corner pilasters", () => {
+        for (const x of [-18, 18]) for (const z of [-6, 6]) {
+          block(m, "stone", x > 0 ? x - 0.9 : x - 0.08, x > 0 ? x + 0.08 : x + 0.9, 0.8, 11.2, z > 0 ? z - 0.9 : z - 0.08, z > 0 ? z + 0.08 : z + 0.9);
+        }
+      });
+    });
+    m.scope("pavilion", () => {
+      m.box("plinth", -10, 0.15, 8.2, 13.1, 0, 0.8);
+      m.box("plaster", -10, 0.15, 8, 12.9, 0.8, 15.0, 0, false);
+      m.box("stone", -10, 0.15, 8.2, 13.2, 11.2, 11.8);
+      m.box("stone", -10, 0.15, 8.5, 13.4, 15.0, 15.6);
+      for (const x of [-14, -6]) for (const z of [-6.3, 6.6]) {
+        block(m, "stone", x - 0.35, x + 0.35, 0.8, 15.0, z - 0.35, z + 0.35);
+      }
+    });
+  });
+
+  m.scope("roof", () => {
+    m.scope("main roof", () => hipRoof(m, "slate", -18.4, 18.4, -6.4, 6.4, 11.8, 15.6, 0.22));
+    m.scope("ridge", () => m.box("ridge", 0, 0, 24.4, 0.3, 15.5, 15.8));
+    m.scope("pavilion roof", () => {
+      hipRoof(m, "slate", -14.45, -5.55, -6.85, 7.15, 15.6, 21.0, 0.22, 3.6);
+      m.box("ridge", -10, 0.15, 0.3, 6.8, 20.9, 21.2);
+      // the iron cresting along its ridge and the finials
+      for (let z = -3.2; z <= 3.5; z += 0.7) m.box("iron", -10, z, 0.06, 0.06, 21.2, 21.8);
+      m.box("iron", -10, 0.15, 0.08, 7.0, 21.75, 21.85);
+      for (const z of [-3.35, 3.65]) {
+        m.prism("iron", ngon(6, 0.08, 0, -10, z), 21.2, 22.6);
+        revolve(m, "gilt", [[0.0001, 22.6], [0.18, 22.75], [0.0, 22.95]], 6, -10, z);
+      }
+    });
+    m.scope("dormers", () => {
+      for (const x of bays) {
+        // only where the long front and rear planes run, clear of the hips
+        if (x < -14 || x > 12) continue;
+        // on the front only; each dormer's ridge runs back until it dies into the roof
+        block(m, "plaster", x - 0.8, x + 0.8, 11.7, 13.7, 2.0, 5.2);
+        windowOn(m, wall("+z", 5.2), x, 12.65, 0.9, 0.9, { ...back, sill: undefined });
+        gableRoofZ(m, "slate", x - 1.0, x + 1.0, 1.9, 5.5, 13.6, 14.4, 0.15);
+        gableWallZ(m, "plaster", x - 0.8, x + 0.8, 13.7, 14.3, 5.1, 5.2);
+      }
+    });
+    m.scope("chimneys", () => {
+      for (const x of [-16, 2, 12]) {
+        m.box("brick", x, -1.2, 0.9, 1.6, 12.5, 17.2);
+        m.box("stone", x, -1.2, 1.1, 1.8, 17.2, 17.45);
+      }
+    });
+  });
+
+  m.scope("windows", () => {
+    m.scope("front", () => {
+      for (const x of bays) {
+        floors.forEach((f, i) => {
+          if (i === 0) windowOn(m, front, x, f.sill, f.w, f.h, { ...fine, cols: 3, transoms: [0.74] });
+          else windowOn(m, front, x, f.sill, f.w, f.h, fine);
+        });
+      }
+    });
+    m.scope("rear", () => {
+      for (const x of bays) for (const f of floors) windowOn(m, rear, x, f.sill, f.w * 0.9, f.h, back);
+    });
+    m.scope("ends", () => {
+      for (const w of [west, east]) for (const u of [-3.2, 0, 3.2]) for (const f of floors) windowOn(m, w, u, f.sill, 1.2, f.h, back);
+    });
+    m.scope("pavilion", () => {
+      for (const x of [-12, -8]) {
+        windowOn(m, tFront, x, 5.5, 1.4, 2.4, { ...fine, head: undefined });
+        windowOn(m, tFront, x, 9.0, 1.3, 1.9, fine);
+        windowOn(m, tRear, x, 12.4, 1.2, 1.8, back);
+      }
+      windowOn(m, tFront, -10, 12.3, 2.2, 1.9, { ...fine, cols: 3 });
+      for (const x of [-12, -8]) windowOn(m, tRear, x, 9.0, 1.2, 1.9, back);
+    });
+  });
+
+  m.scope("entrance", () => {
+    doorOn(m, tFront, -10, 0.8, 2.4, 3.0, "door", "stone", "glass");
+    windowOn(m, tFront, -10, 4.05, 2.4, 0.5, { glass: "glass", frame: "frame", cols: 3 });
+    for (const x of [-12.6, -7.4]) windowOn(m, tFront, x, 1.6, 1.2, 2.2, plain);
+    m.scope("canopy", () => {
+      roofPlane(m, "canopyGlass", [[-13.2, 4.0, 6.6], [-6.8, 4.0, 6.6], [-6.8, 3.7, 9.4], [-13.2, 3.7, 9.4]], 0.08);
+      m.box("iron", -10, 9.42, 6.5, 0.12, 3.45, 3.75);
+      for (const x of [-13.28, -6.72]) block(m, "iron", x - 0.06, x + 0.06, 3.45, 4.05, 6.6, 9.45);
+      for (const x of [-12.6, -10, -7.4]) {
+        // tie rods from the wall to the canopy's front edge
+        m.slab("iron", [[x - 0.04, 5.1, 6.6], [x + 0.04, 5.1, 6.6], [x + 0.04, 3.8, 9.35], [x - 0.04, 3.8, 9.35]], [0, -0.05, 0]);
+      }
+    });
+    m.scope("name board", () => {
+      onWall(m, "sign", tFront, -11.3, -8.7, 14.35, 14.9, 0.04, 0.14);
+      lettering(m, "gilt", tFront, "HOTEL", -10, 14.62, 0.35, 0.14, 0.2);
+    });
+  });
+
+  m.scope("balcony", () => {
+    m.box("stone", -10, 7.15, 4.2, 1.1, 5.25, 5.45);
+    for (const s of [-1, 1]) block(m, "stone", -10 + s * 1.7 - 0.12, -10 + s * 1.7 + 0.12, 4.85, 5.25, 6.6, 7.6);
+    for (let x = -11.95; x <= -8.0; x += 0.3) m.box("iron", x, 7.62, 0.05, 0.05, 5.45, 6.4);
+    m.box("iron", -10, 7.62, 4.2, 0.08, 6.38, 6.46);
+    for (const s of [-1, 1]) m.box("iron", -10 + s * 2.06, 7.1, 0.06, 1.0, 6.38, 6.46);
+  });
+  return m;
+}
+
 // --- the catalog -------------------------------------------------------------------
 
 /** The catalog fields of the family (meta.json, catalog.ts); a design may override the scale. */
@@ -1209,4 +1368,5 @@ export const STATIONS: ProceduralDesign[] = [
   { id: "bld-station-building", title: "Station Building", build: stationBuilding, buildLod: stationBuildingLod, references: "station-building", catalog: { ...STATION_CATALOG, defaultScale: 1 } },
   { id: "bld-station-halt", title: "Station Halt", build: stationHalt, buildLod: stationHaltLod, references: "station-halt", catalog: { ...STATION_CATALOG, defaultScale: 1 } },
   { id: "bld-suburban-station", title: "Suburban Station", build: suburbanStation, buildLod: suburbanStationLod, references: "suburban-station", catalog: { ...STATION_CATALOG, defaultScale: 1 } },
+  { id: "bld-station-hotel", title: "Station Hotel", build: stationHotel, buildLod: stationHotelLod, catalog: { ...STATION_CATALOG, defaultScale: 1 } },
 ];

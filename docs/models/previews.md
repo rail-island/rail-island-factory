@@ -4,7 +4,7 @@
 decoration, catenary style, city block type and texture, drawn from the set modules and the
 props on a representative fixture; their categories, bound build functions, preview parameters,
 surfaces, the drawing kit, the block composer, and the checks they pass.
-**Code** - `generator/previews/` (`index.ts`, `sketch.ts`, `bridges.ts`, `stations.ts`,
+**Code** - `generator/previews/` (`index.ts`, `sketch.ts`, `wayKit.ts`, `bridges.ts`, `stations.ts`,
 `structures.ts`, `ways.ts`, `props.ts`, `textures.ts`, `blockKit.ts`, `blocks*.ts`),
 `generator/design.ts` (`bound`, `boundDesign`, `ParamSpec.preview`), `generator/jsModel.ts`,
 `src/catalogQuery.ts`, `src/ModelDetail.tsx`, `test/previews.test.ts`, `test/catalogSweep.ts`
@@ -49,11 +49,12 @@ lists every type as a model of its own. The titles are the registry's English na
 A preview's parameters split in two, shown in two blocks on the model page:
 
 - **Parameters** - what the game passes as a player set it: a station's track count and
-  length, a road station's stand count, what a bridge or a tunnel carries (one track, two, a
-  wide road), a rail mast over one track or a portal over two.
+  length, a road station's stand count, what a tunnel carries (one track, two, a wide road), a
+  rail mast over one track or a portal over two.
 - **Preview parameters** (`ParamSpec.preview`) - the fixture only, which the game takes from
-  the world: a bridge's span, a port's berth, an airport's terminal pad, a dam's valley, a way's
-  length, a city block's size and sample.
+  the world: a bridge's span, what its deck carries (one to three tracks, a narrow or wide
+  road) and its wires (none, a tram's, a railway's), a port's berth, an airport's terminal pad,
+  a dam's valley, a way's length, a city block's size and sample.
 
 ## Drawing
 
@@ -101,8 +102,8 @@ A texture page is a slab and a block faced with the photo at four studs a repeat
 
 The previews pass every design's checks (`test/catalogSweep.ts`): JS as in the generator, no
 coplanar faces of two materials, the lowest point on the ground, a LOD within its budget (500
-triangles; 12,000 for dams, decorations and blocks, whose distant level is still a drawing of
-several parts). A preview's JS, which carries its set module and is never exported to the game,
-is held to 48 KB or its GLBs. `test/previews.test.ts` holds every set type, block type and photo
+triangles; 3,000 for bridges, whose distant level is the set module's silhouette; 12,000 for
+dams, decorations and blocks, whose distant level is still a drawing of several parts). A preview's JS, which carries its set module and is never exported to the game,
+is held to 80 KB or its GLBs. `test/previews.test.ts` holds every set type, block type and photo
 set to exactly one page, in its category and bound to it, and the preview parameters to the
 fixtures.

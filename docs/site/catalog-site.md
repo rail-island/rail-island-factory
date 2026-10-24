@@ -4,7 +4,7 @@
 the table, card and thumbnail layouts, browser-rendered variant thumbnails, sorting and search, the model page with its 3D
 preview, and the URL state.
 **Code** - `src/main.tsx`, `src/App.tsx`, `src/catalogQuery.ts`, `src/ModelTable.tsx`,
-`src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`, `src/viewerScenery.ts`,
+`src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`, `src/viewerScenery.ts`, `src/viewerGlass.ts`,
 `src/SourceTreePanel.tsx`, `src/sourceTreeView.ts`, `src/Thumb.tsx`, `src/modelModule.ts`, `src/ExportPanel.tsx`,
 `src/ModelVariants.tsx`, `src/VariantThumb.tsx`, `src/variantThumbs.ts`, `src/thumbRender.ts`,
 `src/devCatalog.ts`, `src/devMeasure.ts`, `generator/devServer.ts`, `generator/devExport.ts`, `test/devExport.test.ts`,
@@ -141,9 +141,11 @@ To see what deploys - the build's thumbnails and figures - run `pnpm build` and
 - **Narrow: cards.** Title and pool chip, then triangles, vertices and JS size -
   plus the sorted-by column when it is something else, so a reorder never hides
   the number behind it.
-- **The toolbar** (sticky) holds the search box, a sort `<select>` over every
+- **The toolbar** holds the search box, a sort `<select>` over every
   column, a direction toggle, the **Table / Thumbnails** layout switch, the
-  filter chip rows and the totals (models and triangles listed).
+  filter chip rows and the totals (models and triangles listed). On a wide screen
+  it is sticky; on a narrow one it scrolls away with the list, since its chip rows
+  would leave too little room for the models.
 - **Trees and Woods.** The tree species (category `Trees`) have a first-row chip
   of their own; a tree's page also offers a *Coarse (distant forest)* level of
   detail ([../models/lod.md](../models/lod.md)). The **Woods** chip (category
@@ -227,6 +229,13 @@ on screen, on the export list ("In the export" once that variant is listed;
 [openttd-export.md](openttd-export.md)). Arrows step through the **current** filtered and sorted list;
 Escape, the app bar's back arrow or the browser's Back return to it.
 
+A model page always opens at its top, however far the list was scrolled, and
+closing it returns the list to where it was (`show` in `App.tsx`; the browser's
+own scroll restoration is off). On a wide screen the page fills the window and
+does not scroll: the preview takes the rest of the width and only the side panel
+scrolls, in its own column (`.factory--detail`). A narrow screen scrolls the whole
+page, preview first.
+
 The side panel has up to three tabs: **Specs** (the thumbnail and the spec list),
 **Source** (below) and **Images** - the source images the model was made from
 (photos, drawings, native textures; the record's `references`,
@@ -301,7 +310,12 @@ moved on. On each framing it also fits the camera's `near`/`far` to the model
 (near a twentieth of the closest zoom, far past the farthest): depth precision
 goes with far/near, and a fixed 0.1..5000 range wasted it and let surfaces a few
 centimetres apart flicker. It shows the model exactly as its JS module builds it - every model, at any
-parameters, the same file the game draws; no `defaultScale` applied.
+parameters, the same file the game draws; no `defaultScale` applied. One exception
+is the glazing of the structure previews and props: the drawing kit's glass
+(`glass#rrggbb`, [../models/previews.md](../models/previews.md)) turns see-through
+in the preview as the game draws a station's glass - opacity 0.28, double-sided, no
+depth write (`viewerGlass.ts`, `test/viewerGlass.test.ts`). The JS model and the
+thumbnails keep it opaque; a vehicle's windows (plain `glass`) stay opaque.
 
 ## The Source tab
 

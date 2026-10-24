@@ -4,7 +4,7 @@
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { lodHipRoof, lodNgon, lodPolygon, type LodPart } from "./lodKit.ts";
-import { HALT, PRAGUE, STUCCO, SUBURBAN } from "./stations.ts";
+import { HALT, HOTEL, PRAGUE, STUCCO, SUBURBAN } from "./stations.ts";
 import { type XY, bounds, distinct, faceQuad, lodPost, lodBox, part, fit, lodRect, lodWalls, lodCap, lodFrustum, lodSpire, lodRevolve, lodPlate, lodGable } from "./lodBuildings.ts";
 
 // --- the stations (stations.ts) ---------------------------------------------------------------
@@ -223,4 +223,19 @@ export function pragueMainStationLod(): MeshBuilder {
     }, 1));
   }
   return fit(PRAGUE, parts, BIG);
+}
+
+/** The station hotel: the slate-roofed block, the taller corner pavilion under its steep hip, the entrance canopy. */
+export function stationHotelLod(): MeshBuilder {
+  const parts: LodPart[] = [
+    part((m) => {
+      lodWalls(m, lodRect(0, 0, 36, 12), [[0, 0.8, "plinth"], [0.8, 11.2, "plaster"], [11.2, 11.8, "stone"]]);
+      lodHipRoof(m, "slate", -18.4, 18.4, -6.4, 6.4, 11.8, 15.6, 6.4);
+      lodWalls(m, lodRect(-10, 0.15, 8, 12.9), [[0, 0.8, "plinth"], [0.8, 15.0, "plaster"], [15.0, 15.6, "stone"]]);
+      lodHipRoof(m, "slate", -14.45, -5.55, -6.85, 7.15, 15.6, 21.0, 3.6);
+      lodPolygon(m, "iron", [[-13.2, 4.0, 6.6], [-6.8, 4.0, 6.6], [-6.8, 3.7, 9.4], [-13.2, 3.7, 9.4]], [0, 1, 0.1]);
+    }),
+    part((m) => { for (const x of [-16, 2, 12]) lodBox(m, "brick", x, -1.2, 0.9, 1.6, 13.5, 17.45, "stone"); }, 3),
+  ];
+  return fit(HOTEL, parts);
 }

@@ -60,13 +60,25 @@ export function App() {
     const sync = () => setWide(mq.matches);
     sync();
     mq.addEventListener("change", sync);
-    const onPop = () => setView(parseView(location.search));
+    const onPop = () => show(parseView(location.search));
     window.addEventListener("popstate", onPop);
     onCleanup(() => {
       mq.removeEventListener("change", sync);
       window.removeEventListener("popstate", onPop);
     });
   });
+
+  // The page's scroll: a model page opens at its top, whatever the list was scrolled
+  // to, and closing it returns to where the list was (manual, so the browser's own
+  // restoration on Back does not fight it).
+  let listScroll = 0;
+  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+  const show = (next: ViewState) => {
+    const was = !!view().model, now = !!next.model;
+    if (!was && now) listScroll = window.scrollY;
+    setView(next);
+    if (was !== now) window.scrollTo(0, now ? 0 : listScroll);
+  };
 
   /**
    * Change the view. Opening or closing a model is a new history entry (Back
@@ -75,7 +87,7 @@ export function App() {
    */
   const update = (patch: Partial<ViewState>, push = false) => {
     const next = { ...view(), ...patch };
-    setView(next);
+    show(next);
     const url = `${location.pathname}${serializeView(next)}`;
     if (push) history.pushState(null, "", url);
     else history.replaceState(null, "", url);
@@ -131,7 +143,7 @@ export function App() {
   const totalTris = () => listed().reduce((s, r) => s + r.triangles, 0);
 
   return (
-    <div class="factory">
+    <div class="factory" classList={{ "factory--detail": !!open() }}>
       <header class="factory-bar">
         <a class="factory-bar__logo" href={PLAY_URL} target="_blank" rel="noopener" title="Play Rail Island">
           <img src={logoUrl} alt="Rail Island" width="40" height="40" />

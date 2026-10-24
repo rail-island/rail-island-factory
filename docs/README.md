@@ -53,7 +53,8 @@
 | [models/gothic-cathedrals.md](models/gothic-cathedrals.md) | Notre-Dame and Prague Castle's St Vitus: Gothic geometry, references, axes and the 30,000-triangle budget |
 | [models/landmarks.md](models/landmarks.md) | the Brandenburg Gate, the Louvre Pyramid and the White House |
 | [models/towers.md](models/towers.md) | all eight Towers: procedural designs, parameters, budgets, reference attribution and scale conversion |
-| [models/stations.md](models/stations.md) | the four station buildings: Prague main station, the station building, the Mikulasovice halt, the suburban station |
+| [models/stations.md](models/stations.md) | the five station buildings: Prague main station, the station building, the Mikulasovice halt, the suburban station, the station hotel; their triangle tiers |
+| [models/station-types.md](models/station-types.md) | the eight railway station types of the `station` set: layouts, the deck (end ramps, island underpasses), the train sheds' vault, the village depot, the gauge rule and the triangle budgets |
 | [models/aircraft.md](models/aircraft.md) | the Aero A.10, the Airbus A380, the Boeing 737-800, the MD-11, 747-400 and Beluga, the light jet and the small two-seat airplane, airline liveries, their gear parts |
 | [models/ships.md](models/ships.md) | the cruise ferry, the hydrofoil and the passenger ferry, their waterlines |
 | [models/cable-cabins.md](models/cable-cabins.md) | the aerial tramway car, the small gondola and the parametric chairlift chair (seats, bubble, colour), their rope, sill and seat datums |
@@ -64,6 +65,7 @@
 | [models/trees.md](models/trees.md) | the fourteen tree species the game plants: one design each, high, low and coarse levels, the geometry kit, the stylised look (baked light and shade, ragged and wide crowns), budgets |
 | [models/woods.md](models/woods.md) | the woods types: distribution functions keyed by name, the cell context and the four-tree limit, the forest rule (edges, groves, glades, understorey), the modules, `woods.meta.json`, grove previews |
 | [models/sets.md](models/sets.md) | the set registry: structure, rail and road, block and catenary sets, frozen ids, defaults and aliases, landed sets and what each module holds (the six block archetypes, their parameters and the shared city fill), previews, pins, `export/sets/` metas, modules and declarations |
+| [models/bridges.md](models/bridges.md) | the bridge types: what each builds over the game's path, the deck section, piers and abutments, structural spans and the cable types' shared towers, overhead members, part tags, triangle budgets per length |
 | [models/previews.md](models/previews.md) | the site's preview designs: one page per structure, rail and road type, decoration, catenary style, city block and texture; categories, bound types, preview parameters, the drawing kit, the block composer |
 | [models/props.md](models/props.md) | the fixed props the game's structures place: the box vocabulary and prop kit, `<kind>#<rrggbb>` materials, the port, cable car and airport props, the loading gauge, `props.meta.json` |
 | [models/text.md](models/text.md) | the exported text in the game's 14 languages: keys, phrasebooks keyed by English, verbatim titles, overrides, `export/text/`, the gap check |

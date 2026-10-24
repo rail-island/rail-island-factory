@@ -69,7 +69,9 @@ function structures(set: SetName, prefix: string, build: Builder, buildLod: Buil
 }
 
 export const PREVIEW_FAMILIES: readonly PreviewFamily[] = [
-  { source: "previews/bridges.ts", designs: structures("bridge", "bridge", bridgePreview, bridgePreviewLod, BRIDGE_PARAMS) },
+  // a bridge's distant level is the set module's (bridge.lowDetailBoxes, what the game
+  // draws far away): 500 + 1,500 per 100 studs, 3,000 on the 160-stud fixture
+  { source: "previews/bridges.ts", designs: designs({ category: "Structures", group: "bridge", prefix: "bridge", build: bridgePreview, buildLod: bridgePreviewLod, params: BRIDGE_PARAMS, lodTriangles: 3000 }, typesOf("bridge")) },
   {
     source: "previews/stations.ts",
     designs: [

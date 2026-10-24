@@ -1,20 +1,21 @@
 # Stations
 
-**Covers** - the four procedural station buildings (Prague main station, the yellow
-stucco station building, the Mikulasovice halt and the red-brick suburban station):
-their reference GLBs and photos, dimensions and datums, triangle counts, the facade
-and roof helpers they share, and where they deviate from the references.
-**Code** - `generator/stations.ts`, `test/referenceModels.test.ts`, `test/buildingScale.test.ts`, `test/models.test.ts`, `test/jsModel.test.ts`
-**See also** - [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [source-tree.md](source-tree.md), [export.md](export.md), [js-format.md](js-format.md)
+**Covers** - the five procedural station buildings (Prague main station, the yellow
+stucco station building, the Mikulasovice halt, the red-brick suburban station and the
+station hotel): their reference GLBs and photos, dimensions and datums, triangle counts
+and tiers, the facade and roof helpers they share, and where they deviate from the
+references.
+**Code** - `generator/stations.ts`, `generator/lodStations.ts`, `test/stations.test.ts`, `test/referenceModels.test.ts`, `test/buildingScale.test.ts`, `test/models.test.ts`, `test/jsModel.test.ts`
+**See also** - [station-types.md](station-types.md) (the station set's types the game builds over its tracks), [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [source-tree.md](source-tree.md), [export.md](export.md), [js-format.md](js-format.md)
 
 ## The designs
 
 Each design replaces a hand-authored GLB in the webapp's model database
 (`rail-island-webapp/db/buildings/glb/<name>.glb`) and keeps its axes and bounding box:
 the platform or street front faces **+Z**, the long side runs along **X**, the model
-stands on y = 0 and is roughly centred on the origin. All four match their reference
-bounding box to the centimetre (`test/referenceModels.test.ts` allows 10% per axis).
-Photos are in `assets/<folder>/`.
+stands on y = 0 and is roughly centred on the origin. The first four match their
+reference bounding box to the centimetre (`test/referenceModels.test.ts` allows 10% per
+axis); the hotel keeps the axes only. Photos are in `assets/<folder>/`.
 
 | id | reference GLB | photos | size x / y / z (m) | triangles (reference) |
 |---|---|---|---|---|
@@ -22,8 +23,18 @@ Photos are in `assets/<folder>/`.
 | `bld-station-building` | `station-building.glb` | `assets/station-building/` | 27.78 / 8.53 / 11.84 | 9,444 (10,612) |
 | `bld-station-halt` | `station-halt.glb` | `assets/station-halt/` | 19.50 / 10.46 / 13.12 | 4,662 (3,008) |
 | `bld-suburban-station` | `suburban-station.glb` | `assets/suburban-station/` | 25.20 / 13.88 / 13.60 | 7,970 (7,424) |
+| `bld-station-hotel` | - | - | 36.80 / 22.95 / 16.33 | 9,602 |
 
-The budget for a building is 40,000 triangles (`test/referenceModels.test.ts`).
+### Triangle tiers
+
+The station buildings use the tiers of the other buildings (`test/stations.test.ts`):
+
+- **Ordinary station building** (the halt, the station building, the suburban station, the
+  hotel) - the row-house tier: 4,000 to 10,000 triangles, low detail at most 100.
+- **Landmark station** (Prague main station) - the landmark tier: 20,000 to 30,000
+  triangles, low detail at most 500.
+
+Every building also stays within the generic 40,000 (`test/referenceModels.test.ts`).
 
 ### Prague main station
 
@@ -76,6 +87,20 @@ and a clock housing with a brick-backed clock on top (13.88 m); lower wings eith
 side (x +-5..12, 7 m) with cream corner pilasters. Over the cream canopy (z 5..8, on
 nine posts with iron brackets) hangs the yellow SUBURBAN STATION board; under it the
 glazed entrance doors, shop windows, two lamps and the TICKETS and CAFE plaques.
+
+### Station hotel
+
+The railway hotel facing the station square, rebuilt from the earlier 160-triangle block
+(no reference GLB: the legacy table scales it to the old model's height and footprint,
+[legacy-mapping.md](legacy-mapping.md)). A three-storey cream stucco block (x +-18,
+z +-6) of eleven bays: a plinth, stone string courses at 4.5 and 8.1 m, a cornice at
+11.2-11.8 m, stone corner pilasters, three-light restaurant windows on the ground floor
+and framed windows with hoods above, single sashes at the rear and the ends; a slate hip
+roof (ridge 15.6 m) with six gabled dormers on the front and three chimneys. The corner
+pavilion (x -14..-6) rises a storey higher, to a stone cornice at 15-15.6 m and a steep
+slate hip roof with an iron cresting and gilt finials (22.95 m); it holds the entrance - a
+glazed double door under a glass canopy on iron tie rods - a stone balcony with an iron
+railing on the first floor and the HOTEL board under its cornice.
 
 ## Shared helpers
 

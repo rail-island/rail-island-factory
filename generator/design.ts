@@ -99,7 +99,7 @@ export interface ProceduralDesign {
    */
   sourceTree?: false;
   /** Total distant-mesh budget; defaults to the family policy in lod.ts. */
-  lodTriangles?: 100 | 200 | 300 | 500 | 12000;
+  lodTriangles?: 100 | 200 | 300 | 500 | 3000 | 12000;
   /**
    * The names of the parameters that only recolour the model (a roof or wall
    * colour): they change no geometry, so the tests vary them one value at a
