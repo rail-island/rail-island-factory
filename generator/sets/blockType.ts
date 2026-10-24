@@ -22,8 +22,11 @@ export const CITY_TYPES = ["village", "town", "city"] as const;
 export const RINGS = ["center", "outer"] as const;
 /** The district families a city profile reweights. */
 export const DISTRICTS = ["historic", "industrial", "residential", "commercial", "highrise"] as const;
-/** The road decorations a block type asks for beside it. */
-export const DECORATIONS = ["fence_village", "fence_industrial", "noise_wall"] as const;
+/**
+ * The road decorations a block type asks for beside it. A city never walls its
+ * streets: a noise wall in town read as a fence round nothing, so none is offered.
+ */
+export const DECORATIONS = ["fence_village", "fence_industrial"] as const;
 /** What a block's open ground is paved with (null keeps the island's biome). */
 export const GROUNDS = ["pavement", "concrete"] as const;
 
@@ -145,7 +148,6 @@ export const TYPE_META: Readonly<Record<string, BlockTypeData>> = {
     "params": { "spacing": { "touching": 3, "tight": 4 }, "height": { "mixed": 2, "low": 2, "mid": 3, "tall": 1 } },
     "cities": { "town": { "center": 17, "outer": 6 }, "city": { "center": 11, "outer": 12 } },
     "district": "commercial", "overlay": "commercial",
-    "decoration": { "kind": "noise_wall", "heights": ["mid", "tall"] },
   },
   "highrise": {
     "placement": "perimeter", "ground": "pavement",

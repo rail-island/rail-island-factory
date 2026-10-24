@@ -93,7 +93,7 @@ describe("block types", () => {
     const meta = setMeta(def, TYPE_META as unknown as Record<string, Record<string, unknown>>);
     expect(meta.module).toBe("blockType.js");
     expect(meta.defaultId).toBe("street");
-    expect(meta.types.find((t) => t.id === "street")).toMatchObject({ ground: "pavement", decoration: { kind: "noise_wall", heights: ["mid", "tall"] } });
+    expect(meta.types.find((t) => t.id === "street")).toMatchObject({ ground: "pavement" });
   });
 });
 
@@ -134,13 +134,18 @@ describe("block parameters", () => {
     expect(count({ neighbours: ["brick", "brick"] })).toBeGreaterThan(plain * 1.8);
   });
 
-  it("raise a decoration only for the heights that name it", () => {
-    expect(decorates("street", "tall")).toBe(true);
-    expect(decorates("street", "mid")).toBe(true);
-    expect(decorates("street", "low")).toBe(false);
-    expect(decorates("street", "mixed")).toBe(false);
+  it("raise a decoration only where a type names one", () => {
     expect(decorates("houses", "mixed")).toBe(true);
+    expect(decorates("industrial", "mixed")).toBe(true);
     expect(decorates("highrise", "tall")).toBe(false);
+  });
+
+  // regression: a city walled its tall streets with noise walls, which read as
+  // fences round nothing; no block type raises one now
+  it("never walls a city street", () => {
+    expect(DECORATIONS as readonly string[]).not.toContain("noise_wall");
+    for (const h of BLOCK_HEIGHTS) expect(decorates("street", h), h).toBe(false);
+    for (const t of Object.values(TYPE_META)) expect(t.decoration?.kind).not.toBe("noise_wall");
   });
 });
 

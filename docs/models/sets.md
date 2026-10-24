@@ -98,8 +98,9 @@ pool, an exclusion key two neighbouring blocks may not share, ring pools for a s
 a village's church), and which settlements grow it: a weight per city type and ring (`cities`)
 and a per-settlement cap (`limits`). Flags replace ids the game used to hard-code: `district`
 (the family a city profile reweights and neighbouring blocks attract), `overlay` (the city
-overlay's colour family), `profileFactors` and `decoration` (a village or industrial fence, a
-noise wall beside a street of tenements or taller: `heights`).
+overlay's colour family), `profileFactors` and `decoration` (a village or industrial fence;
+`heights` limits it to blocks of those height bands). Cities never wall their streets: there is no
+noise-wall decoration.
 
 **Block parameters.** A block takes one value of each of three parameters, rolled when a city
 grows it and stored on the game's block record: `spacing` (`SPACINGS`: `touching` - wall to wall,
