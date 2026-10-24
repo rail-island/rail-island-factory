@@ -150,3 +150,36 @@ describe("station set: name boards", () => {
     });
   }
 });
+
+describe("station set: see-through glass", () => {
+  // The game draws "glass" see-through (the factory's preview draws it opaque): a
+  // dark pane laid on a solid wall or frame shows the wall through it, so a window
+  // in a solid wall is drawn with an opaque material. (The village depot's windows
+  // once read as pale cream panels in the game.)
+  for (const type of Object.keys(station.TYPE_META)) {
+    it(`${type}: lays no thin glass pane on a solid face`, () => {
+      for (const tracks of TRACKS) for (const length of LENGTHS) {
+        const boxes = station.furnish(type, length, station.buildLayout(type, tracks));
+        for (const g of boxes) {
+          // flat panes and walls: a tilted slab's bounds say little about its faces
+          if (g.material !== "glass" || g.rotZ || g.rotX) continue;
+          const gb = bounds(g);
+          const size = [0, 1, 2].map((i) => gb.max[i]! - gb.min[i]!);
+          const thin = size.indexOf(Math.min(...size));
+          if (size[thin]! > 0.5) continue;
+          for (const o of boxes) {
+            if (o === g || o.material === "glass" || o.material === "light" || o.rotZ || o.rotX) continue;
+            const ob = bounds(o);
+            const covers = [0, 1, 2].every((i) => i === thin
+              || (Math.min(gb.max[i]!, ob.max[i]!) - Math.max(gb.min[i]!, ob.min[i]!)) >= 0.9 * size[i]!);
+            const gap = Math.max(ob.min[thin]! - gb.max[thin]!, gb.min[thin]! - ob.max[thin]!);
+            if (covers && gap <= 0.35) {
+              throw new Error(`${type} ${tracks}x${length}: a glass pane at (${g.cx.toFixed(2)}, ${g.cy.toFixed(2)}, ${g.cz.toFixed(2)}) lies on a solid ${o.material} face`);
+            }
+          }
+        }
+      }
+    });
+  }
+});
+

@@ -414,7 +414,11 @@ function pushUnderpasses(boxes: StationBox[], wells: ReadonlyMap<number, readonl
         }
       }
       boxes.push({ cx, cy: roofY + 0.12, cz: headZ - 0.95, sx: w + 1.0, sy: 0.24, sz: 3.9, color: GLASS_COLOR, material: "glass" });
-      boxes.push({ cx, cy: roofY - 0.06, cz: headZ - 0.95, sx: w + 1.1, sy: 0.14, sz: 4.0, color: STEEL_DARK, material: "steel" });
+      // the glass roof's steel rim (a frame, not a plate: the game draws glass see-through)
+      for (const e of [-1, 1]) {
+        boxes.push({ cx, cy: roofY - 0.02, cz: headZ - 0.95 + e * 1.98, sx: w + 1.1, sy: 0.14, sz: 0.14, color: STEEL_DARK, material: "steel" });
+        boxes.push({ cx: cx + e * (w / 2 + 0.53), cy: roofY - 0.02, cz: headZ - 0.95, sx: 0.14, sy: 0.14, sz: 4.0, color: STEEL_DARK, material: "steel" });
+      }
       boxes.push({ cx, cy: roofY - 0.5, cz: wl.z1 + 0.3, sx: w * 0.7, sy: 0.6, sz: 0.12, color: SIGN_COLOR, material: "sign" });
     }
   }
@@ -1394,10 +1398,14 @@ function depotPieces(usable: number): DepotPiece[] {
   });
 }
 
-/** A framed window or door on a long wall at x = `face`, `dir` pointing out of it. */
+/**
+ * A framed window or door on a long wall at x = `face`, `dir` pointing out of it.
+ * The pane is dark steel, not glass: the game draws glass see-through, and a glass
+ * pane on the solid frame and wall would show them through it.
+ */
 function pushWallOpening(boxes: StationBox[], face: number, dir: number, y0: number, h: number, z: number, w: number, door: boolean): void {
   boxes.push({ cx: face + dir * 0.06, cy: y0 + h / 2, cz: z, sx: 0.16, sy: h + 0.24, sz: w + 0.24, color: WOOD_CREAM, material: "wood" });
-  boxes.push({ cx: face + dir * 0.12, cy: y0 + h / 2, cz: z, sx: 0.08, sy: h - 0.12, sz: w - 0.16, color: door ? WOOD_COLOR : STEEL_DARK, material: door ? "wood" : "glass" });
+  boxes.push({ cx: face + dir * 0.12, cy: y0 + h / 2, cz: z, sx: 0.08, sy: h - 0.12, sz: w - 0.16, color: door ? WOOD_COLOR : STEEL_DARK, material: door ? "wood" : "steel" });
   if (!door) {
     boxes.push({ cx: face + dir * 0.17, cy: y0 + h / 2, cz: z, sx: 0.05, sy: h - 0.12, sz: 0.1, color: WOOD_CREAM, material: "wood" });
     boxes.push({ cx: face + dir * 0.2, cy: y0 - 0.1, cz: z, sx: 0.34, sy: 0.14, sz: w + 0.4, color: WOOD_CREAM, material: "wood" });
@@ -1485,7 +1493,7 @@ function buildVillageDepot(length: number, layout: StationLayout): StationBox[] 
       boxes.push({ cx: houseInner - 0.32, cy: base + 3.45, cz: p.z + doorZ, sx: 0.22, sy: 0.75, sz: Math.min(6, p.length * 0.45), color: SIGN_COLOR, material: "sign", label: true });
       // an attic window in each gable
       for (const end of [-1, 1]) {
-        boxes.push({ cx: bcx, cy: eaveY + rise * 0.35, cz: p.z + end * (p.length / 2 + 0.05), sx: 1.0, sy: 1.1, sz: 0.12, color: STEEL_DARK, material: "glass" });
+        boxes.push({ cx: bcx, cy: eaveY + rise * 0.35, cz: p.z + end * (p.length / 2 + 0.05), sx: 1.0, sy: 1.1, sz: 0.12, color: STEEL_DARK, material: "steel" });
       }
     } else if (p.kind === "wing") {
       // its eaves clear the awning that runs along its wall
@@ -1615,10 +1623,10 @@ function pushWaitingRoom(boxes: StationBox[], cx: number, z: number): void {
   // two windows to the track, a glazed door at the +Z end
   for (const wz of [-1.4, 1.4]) {
     boxes.push({ cx: x0 - 0.05, cy: PLATFORM_HEIGHT + 1.95, cz: z + wz, sx: 0.12, sy: 1.5, sz: 1.5, color: IRON_GREEN, material: "wood" });
-    boxes.push({ cx: x0 - 0.09, cy: PLATFORM_HEIGHT + 1.95, cz: z + wz, sx: 0.08, sy: 1.25, sz: 1.25, color: STEEL_DARK, material: "glass" });
+    boxes.push({ cx: x0 - 0.09, cy: PLATFORM_HEIGHT + 1.95, cz: z + wz, sx: 0.08, sy: 1.25, sz: 1.25, color: STEEL_DARK, material: "steel" });
   }
   boxes.push({ cx: mx, cy: PLATFORM_HEIGHT + 1.45, cz: z + len / 2 + 0.05, sx: 1.1, sy: 2.1, sz: 0.12, color: IRON_GREEN, material: "wood" });
-  boxes.push({ cx: mx, cy: PLATFORM_HEIGHT + 1.85, cz: z + len / 2 + 0.09, sx: 0.8, sy: 1.0, sz: 0.08, color: STEEL_DARK, material: "glass" });
+  boxes.push({ cx: mx, cy: PLATFORM_HEIGHT + 1.85, cz: z + len / 2 + 0.09, sx: 0.8, sy: 1.0, sz: 0.08, color: STEEL_DARK, material: "steel" });
 }
 
 function buildHeritageCanopy(length: number, layout: StationLayout): StationBox[] {
