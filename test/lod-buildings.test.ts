@@ -25,8 +25,8 @@ function colours(glb: Uint8Array): Map<string, string> {
 }
 
 describe('ordinary building LODs', () => {
-  it('covers the 31 designs of the group, each with its own builder', () => {
-    expect(GROUP).toHaveLength(31);
+  it('covers the 32 designs of the group, each with its own builder', () => {
+    expect(GROUP).toHaveLength(32);
     for (const d of GROUP) expect(d.buildLod?.name).toBe(`${d.build.name}Lod`);
     expect(lodBudget(STATIONS.find(d => d.id.endsWith('prague-main-station'))!)).toBe(500);
   });
