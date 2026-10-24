@@ -87,4 +87,15 @@ describe("the bridge kit", () => {
     }
     expect(bridge.cableTowerDistances("suspension", 300)).toHaveLength(3);
   });
+
+  it("samples a level member along a bend at the path's own vertices only", () => {
+    // a 160-stud arc of radius 120, a vertex every 4 studs: a chord at a constant
+    // height is straight between vertices, so it needs no point between them
+    const points = Array.from({ length: 41 }, (_, i) => { const a = (160 / 120) * (i / 40); return { x: 120 * Math.sin(a), y: 30, z: 120 * (1 - Math.cos(a)) }; });
+    const path = bridge.pathFromPoints(points, 9, 0, 0.67, 9.9)!;
+    const chords = bridge.buildBridge("plate_girder", path, () => 0).filter((b) => b.shape === "ribbon" && b.sampled);
+    expect(chords.length).toBeGreaterThan(0);
+    // each span (three of about 53 studs) holds 14 or 15 of the path's vertices
+    for (const c of chords) if (c.shape === "ribbon") expect(c.points.length).toBeLessThanOrEqual(16);
+  });
 });

@@ -294,9 +294,38 @@ function pathRight(tangent: Vec3): Vec3 {
   if (len < 0.001) return { x: 1, y: 0, z: 0 };
   return { x: -tangent.z / len, y: 0, z: tangent.x / len };
 }
+// The lateral direction at a vertex: the mitre between its two segments, scaled
+// so an offset along it lies on both segments' offset lines (as the renderer's
+// mitred sweep places it).
+function vertexRight(g: BridgePathGeom, i: number): Vec3 {
+  const n = g.points.length;
+  const seg = (k: number): Vec3 => { const a = g.points[k]!, b = g.points[k + 1]!; return pathRight(unit(b.x - a.x, b.y - a.y, b.z - a.z)); };
+  if (i <= 0) return seg(0);
+  if (i >= n - 1) return seg(n - 2);
+  const r0 = seg(i - 1), r1 = seg(i);
+  const m = unit(r0.x + r1.x, 0, r0.z + r1.z);
+  if (m.x === 0 && m.z === 0) return r1;
+  const s = 1 / Math.max(m.x * r1.x + m.z * r1.z, 0.3);
+  return { x: m.x * s, y: 0, z: m.z * s };
+}
+// The lateral direction at a distance: blended between the mitres at the ends of
+// its segment, so a constant offset traces a straight line along every segment
+// that meets its neighbours exactly. Each segment's own perpendicular instead
+// jumped at every vertex, which the curve sampler read as a kink and subdivided
+// to its depth limit on every bend.
+function pathRightAt(g: BridgePathGeom, distance: number): Vec3 {
+  const d = Math.min(Math.max(distance, 0), g.length);
+  const last = g.points.length - 2;
+  let i = 0;
+  while (i < last && d > g.distances[i + 1]!) i++;
+  const span = Math.max(g.distances[i + 1]! - g.distances[i]!, 0.001);
+  const t = Math.min(Math.max((d - g.distances[i]!) / span, 0), 1);
+  const a = vertexRight(g, i), b = vertexRight(g, i + 1);
+  return { x: a.x + (b.x - a.x) * t, y: 0, z: a.z + (b.z - a.z) * t };
+}
 function pathWorldPoint(g: BridgePathGeom, distance: number, localX: number, localY: number): Vec3 {
-  const { point, tangent } = pathSample(g, distance);
-  const right = pathRight(tangent);
+  const { point } = pathSample(g, distance);
+  const right = pathRightAt(g, distance);
   const lateral = g.shiftAmount + localX;
   return {
     x: point.x + right.x * lateral,
@@ -461,7 +490,7 @@ function buildAbutments(out: BridgeBox[], g: BridgePathGeom, heightAt: TerrainHe
 // structure with a shadow line rather than a plank. Every section here is a
 // separate convex ribbon (a renderer caps a convex section safely), and none of
 // their faces shares a plane with the slab's.
-export const CORNICE_DEPTH = 0.65; // below the slab's underside
+export const CORNICE_DEPTH: number = 0.65; // below the slab's underside
 const CORNICE_RISE = 0.12; // above the slab's top
 const CORNICE_OUT = 0.15; // beyond the slab's edge
 const CORNICE_IN = 0.55; // inside it
@@ -477,7 +506,7 @@ function buildPathDeck(out: BridgeBox[], g: BridgePathGeom, material: BridgeMate
 // brick parapet reads as a repair, not as the bridge. A coping, wider than the
 // wall on both sides, caps it.
 const COPING_HEIGHT = 0.22, COPING_OVERHANG = 0.1;
-export const PARAPET_TOP = DECK_THICKNESS / 2 + PARAPET_HEIGHT + COPING_HEIGHT / 2;
+export const PARAPET_TOP: number = DECK_THICKNESS / 2 + PARAPET_HEIGHT + COPING_HEIGHT / 2;
 function buildPathParapets(out: BridgeBox[], g: BridgePathGeom, material: BridgeMaterial = "parapet"): void {
   const parapetY = DECK_THICKNESS / 2 + PARAPET_HEIGHT / 2;
   const parapetX = g.deckWidth / 2 - PARAPET_THICKNESS / 2;
@@ -749,7 +778,7 @@ const buildArch: Builder = (out, g) => {
 const makeArchMasonry = (masonry: BridgeMaterial): Builder => (out, g) => {
   buildPathDeck(out, g, masonry);
   buildPathParapets(out, g, masonry);
-  const ARCH_DEPTH = masonryArchDepth(g.length), ARCH_BAND = 1.3, FACE = 1.0, STATION_SPACING = 1.2;
+  const ARCH_DEPTH = masonryArchDepth(g.length), ARCH_BAND = 1.3, FACE = 1.0, STATION_SPACING = 1.8;
   const sideX = g.deckWidth / 2 - FACE / 2;
   const deckBottom = -DECK_THICKNESS / 2;
   const archSpringY = deckBottom - ARCH_DEPTH, archRise = ARCH_DEPTH * 0.72;
@@ -760,8 +789,10 @@ const makeArchMasonry = (masonry: BridgeMaterial): Builder => (out, g) => {
   const stationCount = Math.max(8, Math.ceil(g.length / STATION_SPACING));
   const distances: number[] = [];
   const openTops: number[] = [];
+  // stations evenly spaced in angle round the opening: dense where it springs
+  // steeply, sparse along its flat crown
   for (let i = 0; i <= stationCount; i++) {
-    const d = (g.length * i) / stationCount;
+    const d = (g.length * (1 - Math.cos((Math.PI * i) / stationCount))) / 2;
     distances.push(d);
     openTops.push(openingTopY(d / g.length));
   }

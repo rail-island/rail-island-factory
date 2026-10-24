@@ -70,6 +70,12 @@ function lod(list: readonly bridge.BridgeBox[]): bridge.BridgeBox[] {
   return [...deck, ...piers.filter((_, i) => i % step === 0)];
 }
 
+/** Any list of bridge boxes drawn as the previews draw them (the budget test counts these). */
+export function bridgeMesh(list: readonly bridge.BridgeBox[]): MeshBuilder {
+  const s = new Sketch();
+  draw(s, list);
+  return s.build("bridge");
+}
 export function bridgePreview(values: ParamValues | undefined, type: string): MeshBuilder {
   const s = new Sketch();
   draw(s, boxes(values, type));

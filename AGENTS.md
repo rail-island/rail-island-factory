@@ -87,6 +87,9 @@ document that owns it in the same change.** Conventions:
 
 - **`building`** (`.agents/skills/building/`) - use whenever a building is added or changed: row houses up to 10,000 triangles, large landmarks 20,000-30,000, references, structural detail and headless checks.
 
+- **`bridge`** (`.agents/skills/bridge/`) - use it whenever a bridge type, the bridge kit or
+  its site preview is added or changed: per-length triangle budget tiers, the deck and pier
+  kit, structural spans and shared cable towers, overhead members, pins and checks.
 - **`road-vehicle`** (`.agents/skills/road-vehicle/`) - use it whenever a road
   vehicle model is added or changed: triangle budget, steered front wheels, the
   truck/trailer split, an articulated bus's sections and joints, checks.
