@@ -76,7 +76,30 @@ larger; every other design keeps that check.
 
 `FAR_PROPS` names the props a structure's far level keeps (crane, container, hut, tower, shed);
 their low detail is the boxes tagged `lod: "shell"` - the silhouette the game's structure LOD
-kept when they were its boxes.
+kept when they were its boxes - except the cable car shed's, which draws its own few boxes
+(`shedLodBoxes`, below).
+
+## The cable car sheds
+
+`generator/props/cableCarSheds.ts` draws one station hall per station type, and every type's
+roof carries on forward over the game's boarding platform and the back half of the bull wheel,
+its underside 2.5 studs above the rope and its front edge half a stud past the wheel axis.
+Only the footprint is levelled, so everything that stands on the ground stands inside it;
+what reaches over the platform is cantilevered from columns at the footprint's front corners
+(a column may pass through the platform's deck). Each hall leaves the game's stairs a door in
+its front (and the gantry one in its back), so they climb out of the hall to the platform.
+
+| Type | The shed |
+|---|---|
+| `open_gantry` | a red steel frame of H columns on plinths, lattice girders cantilevered to the wheel, roof trusses, X bracing; a corrugated roof with a ridge lantern and the machine room over the wheel (the gearbox and motor hung under it); clad back wall, an operator's and a ticket booth on a grating deck, the station board on the front truss |
+| `alpine_chalet` | a stone ground floor and two timber storeys with shuttered windows, flower boxes, side balconies and a clock on the inner gable; one 25-degree shingle roof on deep bracketed eaves, carried forward by timber posts, braces, tie beams and king posts to the front truss with its collar and board; barge boards, ridge turret, chimney |
+| `glass_modern` | a two-storey curtain-wall box (mullions, sun fins, terraces with glass balustrades, a panorama box cantilevered off the right side, a counter and benches inside) under a flat white wing with a skylight, solar panels and a timber slat soffit, carried by tree columns forked above the platform; a lift core rising through the wing to a glass lantern, glass wind screens |
+| `concrete_drive` | a concrete hall with deep fins, ribbon windows, a relief over the control room's bay window and slit windows by the door; portal frames with capitals and haunches, a coffered ceiling, a parapeted roof with roof lights, and the drive room over the wheel (glass ribbon, louvres, plant, railing, the gearbox and motor under the front beam) |
+
+The full detail stays within 5,000 triangles a type and the low detail within 200
+(`test/props.test.ts`); the low detail is the hall (open over the stairs), the roof, the
+columns and beams that carry it and the machine room or tower - the same silhouette. The
+station's preview ([previews.md](previews.md)) draws the same two levels on its deck.
 
 ## The trackside signals
 
@@ -111,8 +134,15 @@ and that the lamps sit red over blue over green, left of right.
 
 A cabin rounds the outside of the bull wheel, so what it sweeps is a ring about the wheel axis;
 no shed box may stand in it (`intrudesOnCabin`, the game's predicate, with the wheel `headZ =
-depth / 2 + 7` in front of the station). `test/props.test.ts` asserts it for every station type,
-the separated geometry included, and that the check would catch a box across the cabin's path.
+depth / 2 + 7` in front of the station, on each box's exact extent with its tilts).
+`shedFouls` adds what else the game builds round the shed: nothing on the wheel or the grips
+riding it (within the ring's outer radius, up to 1.3 studs above the rope), nothing more than
+0.6 studs ahead of the wheel axis (where the rope leaves, at any slope), nothing in the
+platform's band (7.8 to 12.4 studs from the axis, from 9.4 to 6.9 studs below the rope) but
+slender upright columns clear of its railing, and nothing over the stairs' treads
+(`stairTreads`, the default cabin's) lower than 2.4 studs of head room. `test/props.test.ts`
+asserts both for every station type at both levels, the separated geometry included, and that
+the checks would catch a box in each place.
 
 ## props.meta.json
 
