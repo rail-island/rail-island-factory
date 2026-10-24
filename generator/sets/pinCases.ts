@@ -48,12 +48,43 @@ function recordPiece(kind: string, side: decoration.DecorationSide, detail: stri
   return calls;
 }
 
+/** A fixed sequence of draws for the fill's pins. */
+function pinRandom(seed: number): () => number {
+  let s = seed >>> 0;
+  return () => {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+}
+
+/** One street frontage filled with a fixed pool of candidates at `spacing`: what the fill stands, where. */
+function recordFill(spacing: string): unknown {
+  const colours = [{ name: "walls", values: [{ value: "rose", palettes: ["pastel", "warm"] }, { value: "charcoal", palettes: ["stone"] }, { value: "plain", palettes: [] }] }];
+  const list: blockType.FillCandidate[] = [
+    { key: "narrow", group: "commercial", w: 8.1, d: 8, band: "low", party: ["left", "right", "back"], colours },
+    { key: "wide", group: "commercial", w: 13.5, d: 9, band: "mid", party: ["left", "right"], colours },
+    { key: "tall", group: "comm_classic", w: 10.55, d: 9.6, band: "tall", colours },
+  ];
+  const pools = new Map([["commercial", list.slice(0, 2)], ["comm_classic", list.slice(2)]]);
+  return blockType.fillRun({ length: 96, depthLimit: 24 }, {
+    typeId: "street", params: { spacing, colour: "pastel", height: "mixed" }, pools, density: 0.8, random: pinRandom(11), retryStep: 4,
+    keyOf: (c, v) => `${c.key}|${v.walls ?? ""}`,
+  }, (at) => (at > 40 && at < 44 ? { skipTo: 46, party: true } : at < 70 || at > 80)).map((p) => ({ at: p.at, key: p.key }));
+}
+
 export type PinCase = { name: string; build: () => unknown };
 
 export function setPinCases(): Record<string, PinCase[]> {
   const pads: Array<[string, airport.TerminalPad]> = [["small", { cx: 0, cz: 0, w: 26, d: 90 }], ["big", { cx: 30, cz: -12, w: 48, d: 180 }]];
   return {
-    blockType: [{ name: "types", build: () => blockType.TYPE_META }],
+    blockType: [
+      { name: "types", build: () => blockType.TYPE_META },
+      { name: "params", build: () => Object.keys(blockType.TYPE_META).map((id) => blockType.rollBlockParams(id, pinRandom(7), { palettes: ["brick"] })) },
+      ...Object.keys(blockType.SPACINGS).map((spacing) => ({ name: `fill.${spacing}`, build: () => recordFill(spacing) })),
+      { name: "party", build: () => blockType.touchingSides([
+        { x: 0, z: 0, rot: 0, w: 10, d: 8 }, { x: 10, z: 0, rot: 0, w: 10, d: 8 }, { x: -1, z: -9, rot: 270, w: 10, d: 8 }, { x: 30, z: 0, rot: 90, w: 6, d: 6 },
+      ]) },
+    ],
     busStop: busStop.TYPES.flatMap((t) => [4.5, 7, 10].map((lateral) => ({ name: `${t}.${lateral}`, build: () => busStop.buildSide(t, lateral) }))),
     cableCarStation: [
       { name: "types", build: () => cableCarStation.TYPE_META },

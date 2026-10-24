@@ -1,6 +1,12 @@
 {
   "blockType": {
-    "types": "cad9d3a9611f6c55"
+    "types": "c7740bb6607e8995",
+    "params": "b9eaf225b3fa31e1",
+    "fill.touching": "f695c26fd7e675a9",
+    "fill.tight": "607eb086fe89597b",
+    "fill.open": "6f047483817d77a7",
+    "fill.wide": "95dd924688707c00",
+    "party": "2896660bccbfd3cf"
   },
   "busStop": {
     "shelter.4.5": "687369ce3751d076",

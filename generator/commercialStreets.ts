@@ -4,6 +4,7 @@ import { MeshBuilder, rect, type MaterialSpec, type Ring } from "./meshBuilder.t
 import { commercialModernLod, commercialBalconyLod, commercialAnnexLod, commercialBrickLod, commercialTenementLod, commercialShopLod, commercialBarrelLod, commercialTerraceLod, commercialGableLod, commercialBaroqueLod, commercialClassicalLod } from "./lodStreets.ts";
 export { commercialModernLod, commercialBalconyLod, commercialAnnexLod, commercialBrickLod, commercialTenementLod, commercialShopLod, commercialBarrelLod, commercialTerraceLod, commercialGableLod, commercialBaroqueLod, commercialClassicalLod } from "./lodStreets.ts";
 import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
+import { anyBlank, blankSides, faceBlank, grownPlan, partyParams, partySlabs, windowed, type Blank, type PartySide } from "./partyWalls.ts";
 
 export const COMMERCIAL_CATALOG: CatalogFields = {
   category: "Commercial", group: "commercial", defaultScale: 1,
@@ -14,6 +15,8 @@ const option = (name: string, title: string, values: string[], initial: string):
   name, title, default: initial, values: values.map(value => ({ value, title: value[0].toUpperCase() + value.slice(1) })),
 });
 export const historic = (s: Style) => ["terrace", "gable", "baroque", "classical"].includes(s);
+/** The sides a style can draw as a party wall: the shop wing stands at the right of the annex house. */
+export const partySides = (s: Style): PartySide[] => s === "annex" ? ["left", "back"] : ["left", "right", "back"];
 export function specs(s: Style): ParamSpec[] {
   return [
     option("storeys", "Storeys", s === "shop" ? ["1", "2"] : ["2", "3", "4", "5"], s === "tenement" ? "5" : s === "shop" ? "1" : "3"),
@@ -23,6 +26,7 @@ export function specs(s: Style): ParamSpec[] {
     ...(["brick", "shop"].includes(s) ? [option("sign", "Shop sign", ["none", "board"], "none")] : []),
     ...(["shop", "brick", "tenement"].includes(s) ? [option("roof", "Roof form", ["flat", "pitched"], "flat")] : []),
     ...(s === "shop" || s === "modern" ? [option("awning", "Shop canopy", ["green", "ochre", "none"], "green")] : []),
+    ...partyParams(partySides(s)),
   ];
 }
 // All face layers have distinct depths; the solid wall is behind the window glass.
@@ -45,31 +49,38 @@ function balcony(m: MeshBuilder, x: number, z: number, y: number, w: number) {
   for (const s of [-1, 1]) m.box("metal", x + s * (w / 2 + 0.12), z + 0.68, 0.09, 1.4, y + 0.82, y + 0.92);
   for (let i = 0; i <= 8; i++) m.box("metal", x - w / 2 + i * w / 8, z + 1.35, 0.055, 0.055, y - 0.06, y + 0.84);
 }
-function roof(m: MeshBuilder, s: Style, w: number, d: number, y: number) {
-  m.box("trim", 0, 0, w + 0.5, d + 0.5, y, y + 0.25);
+function roof(m: MeshBuilder, s: Style, w: number, d: number, y: number, blank: Blank) {
+  const [tx, tz, tw, td] = grownPlan(w, d, 0.25, blank);
+  m.box("trim", tx, tz, tw, td, y, y + 0.25);
   if (["terrace", "gable", "classical"].includes(s)) {
     const rise = s === "classical" ? 2.1 : 3.2;
+    const [rx, rz, rw, rd] = grownPlan(w, d, 0.325, blank);
     // A very narrow ridge avoids a collapsed loft ring and degenerate triangles.
-    m.loft("roof", rect(w + 0.65, d + 0.65), y + 0.26,
-      rect(s === "classical" ? w * 0.65 : w + 0.65, 0.08), y + rise);
+    m.loft("roof", rect(rw, rd, rx, rz), y + 0.26,
+      rect(s === "classical" ? w * 0.65 : rw, 0.08, s === "classical" ? 0 : rx, rz), y + rise);
     if (s !== "classical") for (const x of [-w * 0.26, w * 0.26]) {
       m.box("wall", x, d * 0.24, 1.5, 1.4, y + 0.6, y + 2.25);
       window(m, "z", 1, d * 0.24 + 0.7, x, y + 1.02, 0.85, 0.95, false);
       m.loft("roof", rect(1.8, 1.65, x, d * 0.24), y + 2.26, rect(0.08, 1.65, x, d * 0.24), y + 2.9);
     }
   } else if (s === "barrel") {
-    const section: Ring = [[-w / 2 - 0.2, y + 0.26]];
+    const x0 = -w / 2 - (blank.left ? 0 : 0.2), x1 = w / 2 + (blank.right ? 0 : 0.2);
+    const cx = (x0 + x1) / 2, hw = (x1 - x0) / 2;
+    const section: Ring = [[x0, y + 0.26]];
     for (let i = 0; i <= 16; i++) {
       const a = Math.PI - i * Math.PI / 16;
-      section.push([Math.cos(a) * (w / 2 + 0.2), y + 0.3 + Math.sin(a) * 3]);
+      section.push([cx + Math.cos(a) * hw, y + 0.3 + Math.sin(a) * 3]);
     }
-    section.push([w / 2 + 0.2, y + 0.26]);
-    m.sweep("roof", "z", section, -d / 2 - 0.25, section, d / 2 + 0.25);
+    section.push([x1, y + 0.26]);
+    m.sweep("roof", "z", section, -d / 2 - (blank.back ? 0 : 0.25), section, d / 2 + 0.25);
   } else {
     m.box("roof", 0, 0, w - 0.1, d - 0.1, y + 0.26, y + 0.33);
+    // the parapet: on a party wall it stands on the wall line, not beyond it
     for (const sign of [-1, 1]) {
-      m.box("trim", 0, sign * (d / 2 + 0.12), w + 0.5, 0.18, y + 0.27, y + 0.7);
-      m.box("trim", sign * (w / 2 + 0.12), 0, 0.18, d + 0.12, y + 0.27, y + 0.7);
+      const zEdge = sign < 0 && blank.back ? -d / 2 + 0.09 : sign * (d / 2 + 0.12);
+      const xEdge = (sign < 0 ? blank.left : blank.right) ? sign * (w / 2 - 0.09) : sign * (w / 2 + 0.12);
+      m.box("trim", tx, zEdge, tw, 0.18, y + 0.27, y + 0.7);
+      m.box("trim", xEdge, 0, 0.18, d + 0.12, y + 0.27, y + 0.7);
     }
     for (const x of [-w * 0.24, w * 0.24]) {
       m.box("metal", x, -d * 0.2, 1.5, 1.25, y + 0.34, y + 0.9);
@@ -94,16 +105,20 @@ export function streetPalette(s: Style, p: ParamValues): Record<string, Material
 }
 function buildCommercial(s: Style, given?: ParamValues): MeshBuilder {
   const p = resolveParams(specs(s), given);
+  const blank = blankSides(p);
   const n = Number(p.storeys), bays = p.width === "narrow" ? 2 : p.width === "wide" ? 5 : p.width === "extraWide" ? 8 : 3;
   const w = bays * 2.7, d = historic(s) ? 9 : 8, floor = 3.2, h = n * floor + 0.45;
   const m = new MeshBuilder(streetPalette(s, p));
   m.scope("masonry and storey bands", () => {
-    m.box("stone", 0, 0, w + 0.12, d + 0.12, 0, 0.45);
+    const [px, pz, pw, pd] = grownPlan(w, d, 0.06, blank);
+    m.box("stone", px, pz, pw, pd, 0, 0.45);
     m.box("wall", 0, 0, w, d, 0.45, h);
-    for (let f = 1; f < n; f++) m.box("trim", 0, 0, w + 0.22, d + 0.22, 0.45 + f * floor - 0.19, 0.45 + f * floor);
+    const [bx, bz, bw, bd] = grownPlan(w, d, 0.11, blank);
+    for (let f = 1; f < n; f++) m.box("trim", bx, bz, bw, bd, 0.45 + f * floor - 0.19, 0.45 + f * floor);
     if (!["modern", "balcony", "annex"].includes(s)) for (let f = 0; f < n * 4; f++) {
       const yy = 0.65 + f * 0.8;
       for (const sign of [-1, 1]) for (const axis of ["x", "z"] as const) {
+        if (faceBlank(blank, axis, sign)) continue;
         const at = axis === "z" ? d / 2 : w / 2;
         const extent = axis === "z" ? w : d;
         for (const edge of [-1, 1]) panel(m, "trim", axis, sign, at, edge * (extent / 2 - 0.23), yy, f % 2 ? 0.38 : 0.65, 0.22, 0.07);
@@ -112,6 +127,7 @@ function buildCommercial(s: Style, given?: ParamValues): MeshBuilder {
   });
   m.scope("windows and storefront", () => {
     for (const axis of ["z", "x"] as const) for (const sign of [-1, 1]) {
+      if (faceBlank(blank, axis, sign)) continue;
       const at = (axis === "z" ? d : w) / 2, count = axis === "z" ? bays : 3;
       const span = axis === "z" ? w : d;
       for (let f = 0; f < n; f++) for (let i = 0; i < count; i++) {
@@ -142,7 +158,8 @@ function buildCommercial(s: Style, given?: ParamValues): MeshBuilder {
     m.box("door", 0, d / 2 + 0.35, Math.min(w - 1, 4.8), 0.16, 3.06, 3.48);
     m.box("trim", 0, d / 2 + 0.45, Math.min(w - 1.2, 4.6), 0.05, 3.14, 3.4);
   });
-  m.scope("roof and equipment", () => roof(m, p.roof === "pitched" ? "terrace" : s, w, d, h));
+  m.scope("roof and equipment", () => roof(m, p.roof === "pitched" ? "terrace" : s, w, d, h, blank));
+  if (anyBlank(blank)) m.scope("party walls", () => partySlabs(m, buildCommercial(s, windowed(p)).positions(), blank, w, d, h, "wall"));
   if (s === "gable") m.scope("arcaded ground floor", () => {
     for (let i = 0; i < bays; i++) {
       const x = -w / 2 + (i + 0.5) * 2.7, z = d / 2 + 0.3;

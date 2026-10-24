@@ -47,7 +47,7 @@ describe("the preview designs", () => {
   it("list a fixture the game sets itself under Preview parameters", () => {
     const flagged = (id: string): string[] => (PREVIEW_DESIGNS.find((d) => d.id === id)!.params ?? []).filter((p) => p.preview).map((p) => p.name);
     expect(flagged("proc-preview-bridge-beam")).toEqual(["length"]);
-    expect(flagged("proc-preview-block-village")).toEqual(["size", "sample"]);
+    expect(flagged("proc-preview-block-houses")).toEqual(["shape", "size", "spacing", "colour", "height", "sample"]);
     // what a player picks for a station is an ordinary parameter
     expect(flagged("proc-preview-station-arch-shed")).toEqual([]);
   });

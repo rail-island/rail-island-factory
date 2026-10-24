@@ -1,7 +1,7 @@
 # Commercial street and historic buildings
 
 **Covers** - eleven procedural families, their parameters, the complete legacy Commercial inventory and the legacy runtime correspondence.
-**Code** - `generator/commercialStreets.ts`, `generator/generate.ts`, `assets/commercial/inventory.json`, `test/commercialStreets.test.ts`
+**Code** - `generator/commercialStreets.ts`, `generator/partyWalls.ts`, `generator/generate.ts`, `assets/commercial/inventory.json`, `test/commercialStreets.test.ts`
 **See also** - [parameters.md](parameters.md), [export.md](export.md), [skyscrapers.md](skyscrapers.md)
 
 These eleven street-house families complement the five existing
@@ -50,6 +50,10 @@ scale. Geometry uses metres with 3.2 m storeys; legacy instance scaling is handl
 - `storeys`: 2, 3, 4 or 5; the low shop has 1 or 2. Floor height is 3.2 m.
 - `width`: narrow (2 bays), standard (3), wide (5), at 2.7 m per bay. Brick houses and tenements also offer extraWide (8 bays) for long street rows.
 - `finish`: original, sand, sage or brick. This changes material colour only.
+- `partyLeft`, `partyRight`, `partyBack`: a side a city's neighbour stands against, drawn as a
+  blank party wall without windows, trims or overhang, its extent unchanged
+  ([game-properties.md](game-properties.md), "Party walls"). The annex house has no right
+  party wall: its shop wing stands there.
 - `awning`: green, ochre or none, on modern shop houses and low shops.
 - `roof`: flat or pitched, on brick houses, tenements and shops.
 

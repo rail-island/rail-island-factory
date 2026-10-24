@@ -60,24 +60,28 @@ export const SETS: readonly SetDef[] = [
     set: "blockType",
     phase: 2,
     landed: true,
-    defaultId: "comm_small",
-    retired: {},
+    defaultId: "street",
+    // the fifteen types before the archetypes (2026-10-24); each is read with the
+    // block parameters blockType.ts's RETIRED_PARAMS gives it
+    retired: {
+      village: "houses", village_red: "houses", comm_classic: "street", comm_large: "street",
+      comm_small: "street", comm_low: "street", comm_oldtown: "street", comm_street: "street",
+      comm_tenement: "street", skyscraper_a: "highrise", skyscraper_b: "highrise", industry: "industrial",
+      tower: "towerblock", historical: "landmark",
+    },
     types: [
-      { id: "village", label: "Village houses" },
-      { id: "village_red", label: "Red village houses" },
-      { id: "comm_classic", label: "Classic shops" },
-      { id: "comm_large", label: "Large commercial" },
-      { id: "comm_small", label: "Small shops" },
-      { id: "comm_low", label: "Low commercial" },
-      { id: "comm_oldtown", label: "Old town" },
-      { id: "comm_street", label: "Main street" },
-      { id: "comm_tenement", label: "Tenements" },
-      { id: "skyscraper_a", label: "Skyscrapers" },
-      { id: "skyscraper_b", label: "Glass towers" },
-      { id: "industry", label: "Industry" },
-      { id: "tower", label: "Tower block" },
-      { id: "historical", label: "Historical building" },
-      { id: "landmark", label: "Landmark" },
+      { id: "houses", label: "Houses",
+        description: "Detached village and suburban houses standing apart in their gardens." },
+      { id: "street", label: "Street block",
+        description: "Shops and town houses lining the street, from a joint between them to wall to wall." },
+      { id: "highrise", label: "High-rise",
+        description: "Office and apartment towers on a paved block." },
+      { id: "industrial", label: "Industry",
+        description: "Factories, sheds and tanks on concrete yards, with a few shop fronts." },
+      { id: "towerblock", label: "Tower block",
+        description: "A tower in the middle of the block, ringed by shop fronts." },
+      { id: "landmark", label: "Landmark",
+        description: "One historical building filling the whole block: a church, a castle, a palace." },
     ],
   },
   {
@@ -344,6 +348,27 @@ export const SETS: readonly SetDef[] = [
     ],
   },
 ];
+
+/**
+ * The English names of the block types' parameters and their values (blockType.ts:
+ * BLOCK_PARAM_NAMES, SPACINGS, PALETTES, BLOCK_HEIGHTS), exported as
+ * `set.blockType.param.<name>` and `set.blockType.param.<name>.<value>`: the game's
+ * block tools show and edit them.
+ */
+export const BLOCK_PARAM_TEXT: Readonly<Record<string, { label: string; values: Readonly<Record<string, string>> }>> = {
+  spacing: {
+    label: "Spacing",
+    values: { touching: "Wall to wall", tight: "Tight row", open: "Detached", wide: "Wide gardens" },
+  },
+  colour: {
+    label: "Colour scheme",
+    values: { warm: "Warm colours", earth: "Earth tones", brick: "Brick red", pastel: "Pastel colours", cool: "Cool colours", stone: "Stone grey" },
+  },
+  height: {
+    label: "Building height",
+    values: { mixed: "Mixed heights", low: "Low buildings", mid: "Medium height", tall: "Tall buildings" },
+  },
+};
 
 /** The set named `name`. */
 export function setDef(name: SetName): SetDef {

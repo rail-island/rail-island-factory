@@ -3,11 +3,11 @@
 **Covers** - what the game needs of a model beyond its geometry: a vehicle's
 running figures (weight, power, top speed, acceleration), its size factor,
 draft, rope and sill heights and airport class, their per-variant overrides,
-and a building's plaza and block rules and city presets; where they are declared,
+and a building's plaza and block rules, city variants and party walls; where they are declared,
 how they are checked and exported, and where today's values came from.
 **Code** - `generator/design.ts` (`GameProperties`, `checkGameProperties`),
-`generator/catalog.ts` (`metaEntry`, `exportMeta`, `withCityPresets`, `exportVehicleMeta`),
-`generator/cityPresets.ts`, `test/cityPresets.test.ts`, every
+`generator/catalog.ts` (`metaEntry`, `exportMeta`, `withCityUse`, `exportVehicleMeta`),
+`generator/cityVariants.ts`, `generator/partyWalls.ts`, `test/cityVariants.test.ts`, `test/partyWalls.test.ts`, every
 design module's `game` field, `test/export.test.ts`
 **See also** - [export.md](export.md), [../site/openttd-export.md](../site/openttd-export.md) (the optional `openttd` block for the GRF export), [parameters.md](parameters.md),
 [legacy-mapping.md](legacy-mapping.md), [vehicles.md](vehicles.md),
@@ -72,23 +72,43 @@ A building sets `game` only for its placement rules, in the webapp's shapes:
 
 Fifteen landmarks, churches and industrial buildings carry one.
 
-### City presets
+### City variants
 
-Which variants of a building the game's city generator builds is the factory's
-(`generator/cityPresets.ts`), exported on every building a city builds as
-`game.city.presets`: a list of `{ params?, weight? }`, one fixed parameter selection
-each (`params` the non-default values, `weight` default 1). A building in a city pool
-(its catalog `group`) gets its pool's **family default** (`FAMILY_PRESETS`: the
-commercial pool builds each design at its defaults and three storey-and-finish
-combinations, a skyscraper at its defaults and two size-and-glazing ones), so a new
-design in a pool family appears in cities with no further line. A design whose
-variants differ declares its own list - `game.city` on the design, or its entry in
-`DESIGN_PRESETS` - and one too wide for any city lot at its placed scale opts out in
-`NOT_IN_CITIES` (it stays placeable by hand). Every preset is checked strictly
-(`checkCityPresets`): it must resolve against the design's parameters, name only
-non-default values, weigh more than zero and differ from every other preset; the build
-fails otherwise. `test/cityPresets.test.ts` pins the lists against the game's table as
-it was when they moved here (`test/fixtures/city-presets-baseline.json`).
+What the game's cities may stand of a building is the factory's
+(`generator/cityVariants.ts`), exported on every building a city builds as `game.city`:
+
+- `variants`: its **shape** variants, every combination of the parameters a city may vary
+  (its pool family's `FAMILY_VARY` - storeys and width for the commercial streets, size for
+  a skyscraper - or the design's own `DESIGN_VARY`, limited by `FAMILY_VALUES`), each with its
+  non-default `params`, its measured `size` (x, y, z at scale 1: the game sizes a lot from it
+  without building anything) and its height `band` (`HEIGHT_TAGS`: storeys 1-2 low, 3-4 mid,
+  5 and up tall; a skyscraper's size);
+- `colours`: its **colour** parameters (the design's `finishParams`, which change no extent),
+  every value with the named palettes it belongs to (`COLOUR_TAGS`: a red roof is warm and
+  brick); a value tagged with none (an `original` finish) is neutral in every palette;
+- `party`: the sides it can draw as a blank **party wall** (below).
+
+A city samples the colours freely under its block's colour scheme and picks shapes under its
+height band (sets.md, "Block types"). A building in a city pool (its catalog `group`) gets its
+family's defaults, so a new design in a pool family appears in cities with no further line; one
+too wide for any city lot at its placed scale opts out in `NOT_IN_CITIES` (it stays placeable by
+hand). `test/cityVariants.test.ts` holds every variant the old fixed presets built
+(`test/fixtures/city-presets-baseline.json`) reachable as a shape and a colour, the sizes to the
+build, and every colour value tagged.
+
+### Party walls
+
+A street house a neighbour stands against draws that side blank: no windows, no trim or roof
+overhang reaching into the neighbour (`generator/partyWalls.ts`). A design that supports it has a
+parameter per side - `partyLeft`, `partyRight`, `partyBack` (left is -X, right +X, front +Z the
+street), values `no` and `yes` - and the city sets them where its fill finds two footprints
+sharing a face. A blank side is a solid slab out to where the windowed variant's extent ends, so
+the extent never changes: the game centres a building on it and stands the next one against it.
+The commercial street kit (`commercialStreets.ts`; the annex house has no right party wall, its
+wing stands there) and the classic upright shop houses (`commercial.ts`; the corner shop's right
+side is a second shop front) draw them; the tests vary them one side at a time
+(`coverageCombinations`). `test/partyWalls.test.ts` checks the names, that a blank side drops its
+windows and that the extent holds.
 
 ## OpenTTD
 
@@ -106,7 +126,7 @@ fails before anything is written:
 - A vehicle without `game` fails.
 - So does a vehicle lacking any of the four figures, or with a figure that is not a finite, non-negative number or `null`.
 - A variant fails if its `params` does not resolve against the design's parameters, sits at a default, or repeats another variant.
-- A building fails if its `game` holds anything but `plaza` and `block`.
+- A building fails if its `game` holds anything but `plaza`, `block` and `city`.
 
 `test/export.test.ts` ("game properties") covers each refusal and pins two
 examples.
