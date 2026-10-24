@@ -3,7 +3,7 @@
 **Covers** - the fixed props the game places on its structures: a cable car station's shed, a
 port's crane, container slots, hut, floodlight, bollard and mooring post, an airport's control
 tower and windsock, and the trackside signals the game places itself (a rail signal, a level
-crossing's road signal) with the lamps it switches; the box vocabulary they are drawn in, the material names the game reads,
+crossing's road signal, a buffer stop) with the lamps it switches; the box vocabulary they are drawn in, the material names the game reads,
 units, the low detail, the loading gauge, and `props.meta.json`.
 **Code** - `generator/props/propKit.ts`, `generator/props/portProps.ts`,
 `generator/props/cableCarSheds.ts`, `generator/props/airportProps.ts`, `generator/props/signalProps.ts`,
@@ -66,6 +66,7 @@ kinds: the station vocabulary (`steel`, `glass`, `light`, `wood`, `roof`, `colum
 | `proc-prop-airport-windsock` | - | five open cones tapering along +X from the mast head |
 | `proc-prop-rail-signal` | - | mast foot at the origin, the head facing +Z, the track toward +X |
 | `proc-prop-crossing-signal` | - | mast foot at the origin, the cross and head facing +Z, the road toward +X |
+| `proc-prop-buffer-stop` | - | on the track's centre line 3.2 studs past its end, the beam facing the track at +Z |
 
 A prop of a few boxes (a bollard, a container, a floodlight) is smaller as a GLB than the builder
 runtime every JS model carries, so `test/catalogSweep.ts` holds props and set previews to a fixed
@@ -79,10 +80,10 @@ kept when they were its boxes.
 
 ## The trackside signals
 
-`generator/props/signalProps.ts` draws the two signals the game stands beside its track and
+`generator/props/signalProps.ts` draws the props the game stands beside its track and
 roads: `proc-prop-rail-signal` (one per governed direction of a rail signal, implicit
-station signals included) and `proc-prop-crossing-signal` (one per road approach of a level
-crossing). They are not drawn in the box vocabulary but with the builder's round and slab
+station signals included), `proc-prop-crossing-signal` (one per road approach of a level
+crossing) and `proc-prop-buffer-stop` (one per dead end of track). They are not drawn in the box vocabulary but with the builder's round and slab
 primitives: a sunk concrete footing, a round mast with a flared foot and finial, a relay
 cabinet at the foot away from the track (-X), and
 
@@ -91,7 +92,12 @@ cabinet at the foot away from the track (-X), and
   brackets, a name plate below the head, and a ladder up the back to a railed platform;
 - the crossing signal: the red-bordered white St Andrew's cross, a horizontal two-lamp head
   (left and right red lenses with visors), the bell on the mast head and red and white bands
-  at the foot of the mast.
+  at the foot of the mast;
+- the buffer stop (no cabinet and no lamp): a gravel bed with rail stubs on three sleepers
+  reaching back to the end of the track 3.2 studs away (rails 2.7 studs apart, 0.45 square,
+  their middle 1.3 studs up - the game's track), a frame of rail on each rail (post and raking
+  strut), the buffer beam with hazard stripes and two buffers, and the end-of-track sign, a red
+  disk with a white bar, on a post above it.
 
 Every lamp lens is a material of its own whose kind names the lamp the game switches:
 `lampred`, `lampblue`, `lampgreen` (`RAIL_SIGNAL_LAMPS`) and `lampleft`, `lampright`

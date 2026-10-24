@@ -11,7 +11,7 @@ import { TYPE_META as CABLE_CAR_TYPES } from "../generator/sets/cableCarStation"
 import { PROPS as PORT_PROPS, CONTAINER_LIVERIES } from "../generator/sets/port";
 import { TYPE_META as AIRPORT_TYPES } from "../generator/sets/airport";
 import { CONTAINER_COLORS } from "../generator/props/portProps";
-import { CROSSING_SIGNAL_LAMPS, RAIL_SIGNAL_LAMPS, SIGNAL_PROP_IDS, crossingSignal, crossingSignalLod, railSignal, railSignalLod } from "../generator/props/signalProps";
+import { CROSSING_SIGNAL_LAMPS, RAIL_SIGNAL_LAMPS, SIGNAL_PROP_IDS, bufferStop, bufferStopLod, crossingSignal, crossingSignalLod, railSignal, railSignalLod } from "../generator/props/signalProps";
 import { exportedText } from "../generator/text";
 
 describe("cable car sheds", () => {
@@ -95,6 +95,16 @@ describe("the trackside signals", () => {
       expect(m.triangleCount()).toBeGreaterThan(0);
     }
     expect(build().triangleCount()).toBeLessThanOrEqual(1500);
+  });
+
+  it("draws the buffer stop without a lamp, its rails reaching back to the end of the track", () => {
+    for (const m of [bufferStop(), bufferStopLod()]) {
+      expect([...drawnByMaterial(m).keys()].filter((k) => k.startsWith("lamp"))).toEqual([]);
+    }
+    let maxZ = -Infinity;
+    const pos = bufferStop().positions();
+    for (let i = 2; i < pos.length; i += 3) maxZ = Math.max(maxZ, pos[i]!);
+    expect(maxZ).toBeGreaterThanOrEqual(3.2);
   });
 
   it("lights the rail signal's lamps red over blue over green, the crossing's left of right", () => {
