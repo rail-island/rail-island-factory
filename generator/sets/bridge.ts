@@ -188,7 +188,9 @@ const trussMemberNodes = (panels: number): number[] => {
 // the depths the plain superstructures hang below the slab's underside (their
 // piers stop there)
 const BEAM_GIRDER_DEPTH = 1.3, BEAM_GIRDER_WIDTH = 1.0, BEAM_GIRDER_X = 0.26;
-const BOX_GIRDER_DEPTH = 2.2;
+// a box girder is haunched: its sloping-webbed box BOX_GIRDER_DEPTH deep, and under
+// it a parabolic haunch down to BOX_GIRDER_END_DEPTH over the piers
+const BOX_GIRDER_DEPTH = 1.8, BOX_GIRDER_END_DEPTH = 3.4, BOX_GIRDER_LIP = 0.08;
 const deckTrussDepth = (spanLength: number): number => Math.max(2.5, Math.min(6, spanLength * 0.12));
 // the masonry arches' springing, deck-local: where the opening's curve starts
 const masonryArchDepth = (spanLength: number): number => Math.min(spanLength * 0.55, 14);
@@ -518,8 +520,9 @@ export const CORNICE_DEPTH: number = 0.65; // below the slab's underside
 const CORNICE_RISE = 0.12; // above the slab's top
 const CORNICE_OUT = 0.15; // beyond the slab's edge
 const CORNICE_IN = 0.55; // inside it
-function buildPathDeck(out: BridgeBox[], g: BridgePathGeom, material: BridgeMaterial = "deck"): void {
+function buildPathDeck(out: BridgeBox[], g: BridgePathGeom, material: BridgeMaterial = "deck", cornice = true): void {
   pushRibbon(out, g, g.shiftAmount, 0, g.deckWidth, DECK_THICKNESS, material, "deck");
+  if (!cornice) return;
   const top = DECK_THICKNESS / 2 + CORNICE_RISE, bottom = -DECK_THICKNESS / 2 - CORNICE_DEPTH;
   const w = CORNICE_IN + CORNICE_OUT, x = g.deckWidth / 2 - CORNICE_IN + w / 2;
   for (const side of [1, -1]) pushRibbon(out, g, g.shiftAmount + side * x, (top + bottom) / 2, w, top - bottom, material, "detail");
@@ -646,9 +649,10 @@ function buildPathPiers(out: BridgeBox[], g: BridgePathGeom, heightAt: TerrainHe
 function boundaryPierStyle(bridgeType: string, deckWidth: number, spanLength: number): PierSpec {
   const legs = (legX: number, legW: number): PierSpec => ({ w: 0, d: 0, material: "tower", capWidth: 2 * legX + legW + 0.4, bearings: [] });
   switch (bridgeType) {
-    case "cantilever": return { ...legs(deckWidth / 2 + 0.3, 1.8), w: 3.0, d: 3.0 };
-    case "box_girder": return { w: Math.max(2.8, deckWidth * 0.28), d: 3, material: "pier", under: BOX_GIRDER_DEPTH };
-    case "plate_girder": return { w: Math.max(2.2, deckWidth * 0.24), d: 2.6, material: "pier", capWidth: deckWidth - 0.2, bearings: [-(deckWidth / 2 - 0.45), deckWidth / 2 - 0.45] };
+    // the anchor piers at a cantilever span's ends, under both side trusses
+    case "cantilever": return { w: 2.6, d: 3, material: "pier", under: CANTILEVER_END_UNDER + 0.25, capWidth: deckWidth + 1.4, bearings: [-(deckWidth / 2 + 0.3), deckWidth / 2 + 0.3] };
+    case "box_girder": return { w: Math.max(2.8, deckWidth * 0.28), d: 3, material: "pier", under: BOX_GIRDER_END_DEPTH + BOX_GIRDER_LIP };
+    case "plate_girder": return { w: Math.max(2.2, deckWidth * 0.24), d: 2.6, material: "pier", under: plateGirderUnder(spanLength), capWidth: deckWidth + 0.4, bearings: [-(deckWidth / 2 - PLATE_GIRDER_X), deckWidth / 2 - PLATE_GIRDER_X] };
     case "deck_truss": return { w: Math.max(2.2, deckWidth * 0.24), d: 2.6, material: "pier", under: deckTrussDepth(spanLength) - DECK_THICKNESS / 2, capWidth: deckWidth, bearings: [-(deckWidth / 2 - 0.55), deckWidth / 2 - 0.55] };
     case "truss": return { w: Math.max(2.4, deckWidth * 0.26), d: 2.8, material: "pier", capWidth: deckWidth + 0.2, bearings: [-(deckWidth / 2 - 0.3), deckWidth / 2 - 0.3] };
     case "arch": return { w: deckWidth + 0.4, d: 4.5, material: "pier", bearings: [] };
@@ -741,75 +745,112 @@ const buildTruss: Builder = (out, g) => {
   }
 };
 
+// A cantilever span, Forth-fashion: a tower over a pier at each quarter, an anchor
+// arm from each tower back to an anchor pier at the span's end, a cantilever arm
+// from each tower out toward mid-span, and between the two arm tips a short
+// suspended span (a deck truss under the slab). The arms are deepest at the towers:
+// the top chord runs straight from the tower top down to each arm's end, the bottom
+// chord curves from the tower's foot, steep at first and flattening toward the end.
+const CANTILEVER_UNDER = 5.5, CANTILEVER_END_UNDER = 1.0, CANTILEVER_TIP_T = 0.4;
 const buildCantilever: Builder = (out, g, opts, heightAt) => {
   buildPathDeck(out, g);
   buildPathParapets(out, g);
-  const towerFractions = CANTILEVER_TOWER_T;
-  const TOWER_HEIGHT = CANTILEVER_TOWER_HEIGHT, TOWER_WIDTH = 1.8, CHORD = 0.5, WEB = 0.32, UNDER_DECK = 5.5;
-  // the tower piers stop under the towers' bottom crossbeam, their cap under both legs
-  if (!opts.suppressGroundPiers) buildPathPiers(out, g, heightAt, towerFractions, { ...boundaryPierStyle("cantilever", g.deckWidth, g.length), under: UNDER_DECK + TOWER_WIDTH / 2 });
+  const L = g.length, CHORD = 0.5, WEB = 0.3, LEG = 1.0;
   const sideX = g.deckWidth / 2 + 0.3;
   const deckTopY = DECK_THICKNESS / 2, deckBottomY = -DECK_THICKNESS / 2;
-  const towerTopY = deckTopY + TOWER_HEIGHT, towerBottomY = deckBottomY - UNDER_DECK;
-  const endTopY = deckTopY + 1.2, centerTopY = deckTopY + 4.2;
-  const endBottomY = deckBottomY - 0.8, centerBottomY = deckBottomY - 0.8;
-  const leftTower = g.length * towerFractions[0], center = g.length * 0.5, rightTower = g.length * towerFractions[1];
-  const lerp = (a: number, b: number, al: number) => a + (b - a) * Math.min(Math.max(al, 0), 1);
-  const topChordY = (d: number): number => {
-    if (d <= leftTower) return lerp(endTopY, towerTopY, d / Math.max(leftTower, 0.001));
-    if (d <= center) return lerp(towerTopY, centerTopY, (d - leftTower) / Math.max(center - leftTower, 0.001));
-    if (d <= rightTower) return lerp(centerTopY, towerTopY, (d - center) / Math.max(rightTower - center, 0.001));
-    return lerp(towerTopY, endTopY, (d - rightTower) / Math.max(g.length - rightTower, 0.001));
-  };
-  const bottomChordY = (d: number): number => {
-    if (d <= leftTower) return lerp(endBottomY, towerBottomY, d / Math.max(leftTower, 0.001));
-    if (d <= center) return lerp(towerBottomY, centerBottomY, (d - leftTower) / Math.max(center - leftTower, 0.001));
-    if (d <= rightTower) return lerp(centerBottomY, towerBottomY, (d - center) / Math.max(rightTower - center, 0.001));
-    return lerp(towerBottomY, endBottomY, (d - rightTower) / Math.max(g.length - rightTower, 0.001));
-  };
-  for (const fraction of towerFractions) {
-    const d = g.length * fraction;
-    for (const sx of [sideX, -sideX]) pushStrut(out, pathWorldPoint(g, d, sx, towerBottomY), pathWorldPoint(g, d, sx, towerTopY), TOWER_WIDTH, "steel", "frame");
-    pushStrut(out, pathWorldPoint(g, d, -sideX, towerTopY), pathWorldPoint(g, d, sideX, towerTopY), TOWER_WIDTH, "steel", "frame");
-    pushStrut(out, pathWorldPoint(g, d, -sideX, towerBottomY), pathWorldPoint(g, d, sideX, towerBottomY), TOWER_WIDTH, "steel", "frame");
+  const towerTopY = cantileverTowerTopY(), towerBottomY = deckBottomY - CANTILEVER_UNDER;
+  const armTopY = deckTopY + 1.0, endBottomY = deckBottomY - CANTILEVER_END_UNDER;
+  const towers = CANTILEVER_TOWER_T.map((t) => t * L);
+  const tips = [CANTILEVER_TIP_T * L, (1 - CANTILEVER_TIP_T) * L];
+  const susDepth = Math.max(2.2, Math.min(4, 0.12 * (tips[1]! - tips[0]!)));
+  const tipBottomY = deckBottomY - susDepth;
+  if (!opts.suppressGroundPiers) {
+    buildPathPiers(out, g, heightAt, CANTILEVER_TOWER_T, { w: 3.0, d: 5.4, material: "tower", capWidth: 2 * sideX + 1.4, bearings: [], under: CANTILEVER_UNDER + 0.5 });
   }
-  const panelCount = Math.max(8, Math.ceil(g.length / 7));
-  const panelLength = g.length / panelCount;
+  // the four arms: [from (a tower), to (an arm end), the end's bottom height]
+  const arms: Array<[number, number, number]> = [[towers[0]!, 0, endBottomY], [towers[0]!, tips[0]!, tipBottomY], [towers[1]!, tips[1]!, tipBottomY], [towers[1]!, L, endBottomY]];
   for (const sx of [sideX, -sideX]) {
-    pushCurve(out, g, sx, (t) => topChordY(t * g.length), CHORD * 1.3, CHORD, "steel", [0.25, 0.5, 0.75]);
-    pushCurve(out, g, sx, (t) => bottomChordY(t * g.length), CHORD * 1.3, CHORD, "steel", [0.25, 0.5, 0.75]);
-    for (let i = 0; i < panelCount; i++) {
-      const a = i * panelLength, b = (i + 1) * panelLength;
-      pushStrut(out, pathWorldPoint(g, a, sx, bottomChordY(a)), pathWorldPoint(g, a, sx, topChordY(a)), WEB, "steel");
-      if (i % 2 === 0) pushStrut(out, pathWorldPoint(g, a, sx, bottomChordY(a)), pathWorldPoint(g, b, sx, topChordY(b)), WEB, "steel");
-      else pushStrut(out, pathWorldPoint(g, a, sx, topChordY(a)), pathWorldPoint(g, b, sx, bottomChordY(b)), WEB, "steel");
+    for (const [from, to, endBottom] of arms) {
+      const n = Math.max(3, Math.round(Math.abs(to - from) / 5));
+      const node = (k: number): { d: number; top: number; bot: number } => {
+        const s = k / n;
+        return { d: from + (to - from) * s, top: towerTopY + (armTopY - towerTopY) * s, bot: endBottom + (towerBottomY - endBottom) * (1 - s) * (1 - s) };
+      };
+      for (let k = 0; k < n; k++) {
+        const a = node(k), b = node(k + 1);
+        pushStrut(out, pathWorldPoint(g, a.d, sx, a.top), pathWorldPoint(g, b.d, sx, b.top), CHORD, "steel", "frame");
+        pushStrut(out, pathWorldPoint(g, a.d, sx, a.bot), pathWorldPoint(g, b.d, sx, b.bot), CHORD, "steel", "frame");
+        // an N web: a vertical at each node, a diagonal falling away from the tower
+        if (k > 0) pushStrut(out, pathWorldPoint(g, a.d, sx, a.bot), pathWorldPoint(g, a.d, sx, a.top), WEB, "steel");
+        pushStrut(out, pathWorldPoint(g, a.d, sx, a.top), pathWorldPoint(g, b.d, sx, b.bot), WEB, "steel");
+      }
+      const e = node(n);
+      pushStrut(out, pathWorldPoint(g, e.d, sx, e.bot), pathWorldPoint(g, e.d, sx, e.top), CHORD, "steel", "frame");
+      // lateral struts between the two bottom chords, under the deck
+      if (sx > 0) for (let k = 1; k < n; k++) {
+        const a = node(k);
+        if (a.bot < deckBottomY - 1) pushStrut(out, pathWorldPoint(g, a.d, -sideX, a.bot), pathWorldPoint(g, a.d, sideX, a.bot), 0.25, "steel");
+      }
     }
-    pushStrut(out, pathWorldPoint(g, g.length, sx, bottomChordY(g.length)), pathWorldPoint(g, g.length, sx, topChordY(g.length)), WEB, "steel");
+    // the suspended span: a Warren deck truss under the slab between the tips
+    const n = Math.max(2, Math.round((tips[1]! - tips[0]!) / 4.5));
+    const at = (k: number): number => tips[0]! + ((tips[1]! - tips[0]!) * k) / n;
+    const topY = deckBottomY - CHORD / 2;
+    pushStrut(out, pathWorldPoint(g, tips[0]!, sx, topY), pathWorldPoint(g, tips[1]!, sx, topY), CHORD * 0.8, "steel", "frame");
+    pushStrut(out, pathWorldPoint(g, tips[0]!, sx, tipBottomY), pathWorldPoint(g, tips[1]!, sx, tipBottomY), CHORD * 0.8, "steel", "frame");
+    for (let k = 0; k < n; k++) {
+      const [ya, yb] = k % 2 === 0 ? [tipBottomY, topY] : [topY, tipBottomY];
+      pushStrut(out, pathWorldPoint(g, at(k), sx, ya), pathWorldPoint(g, at(k + 1), sx, yb), WEB, "steel");
+    }
+  }
+  // the towers: per side two legs splayed along the path and braced with an X, a
+  // crossbeam on top (the overhead member) with knee braces, and one at the foot
+  for (const d of towers) {
+    for (const sx of [sideX, -sideX]) {
+      const foot = [pathWorldPoint(g, d - 2.4, sx, towerBottomY), pathWorldPoint(g, d + 2.4, sx, towerBottomY)];
+      const head = [pathWorldPoint(g, d - 0.8, sx, towerTopY), pathWorldPoint(g, d + 0.8, sx, towerTopY)];
+      for (const i of [0, 1]) pushStrut(out, foot[i]!, head[i]!, LEG, "steel", "frame");
+      pushStrut(out, foot[0]!, head[1]!, 0.35, "steel");
+      pushStrut(out, foot[1]!, head[0]!, 0.35, "steel");
+    }
+    pushStrut(out, pathWorldPoint(g, d, -sideX, towerTopY), pathWorldPoint(g, d, sideX, towerTopY), 1.4, "steel", "frame");
+    pushStrut(out, pathWorldPoint(g, d, -sideX, towerBottomY), pathWorldPoint(g, d, sideX, towerBottomY), 1.4, "steel", "frame");
+    for (const s of [-1, 1]) pushStrut(out, pathWorldPoint(g, d, s * sideX, towerTopY - 3), pathWorldPoint(g, d, s * (sideX - 2.5), towerTopY), 0.4, "steel");
   }
 };
 
 // The plain arch: a CONCRETE deck-arch. Its rib and spandrel columns carry the
 // deck the way the piers do, so they share the structural-concrete material --
 // only the two masonry arch types (makeArchMasonry) are built of stone or brick.
+//
+// Two ribs under the deck's outer thirds, each a wall thickening from the crown
+// toward its springings; pairs of spandrel columns standing on them every ~5 studs
+// with a cap beam under the slab; struts between the ribs at every other pair.
+// The ribs' TOP meets the deck's underside at the crown (measured from their
+// bottom, the old single rib stood a thickness proud and broke through the deck).
 const buildArch: Builder = (out, g) => {
   buildPathDeck(out, g);
   buildPathParapets(out, g);
-  const ARCH_DEPTH = Math.min(g.length * 0.3, 16), ARCH_THICKNESS = 1.2, ARCH_WIDTH = g.deckWidth * 0.9, PILLAR_WIDTH = 0.8;
+  const ARCH_DEPTH = Math.min(g.length * 0.3, 16), RIB_W = 1.4, COLUMN = 0.8;
+  const ribX = g.deckWidth / 2 - 1.2;
   const deckBottom = -DECK_THICKNESS / 2;
-  // the rib's TOP meets the deck's underside at the crown: measured from its
-  // bottom, the rib stood a thickness proud there and broke through the deck
-  const archTopY = (t: number) => deckBottom - ARCH_DEPTH * (2 * t - 1) * (2 * t - 1);
-  pushCurve(out, g, 0, (t) => archTopY(t) - ARCH_THICKNESS / 2, ARCH_WIDTH, ARCH_THICKNESS, "pier");
-  for (let i = 1; i <= 17; i++) {
-    const t = i / 18, distance = g.length * t;
-    const archTop = archTopY(t);
-    const fillH = deckBottom - archTop;
-    if (fillH > 0.2) {
-      const fillY = (archTop + deckBottom) / 2;
-      for (const sx of [g.deckWidth / 2 - PILLAR_WIDTH, -(g.deckWidth / 2 - PILLAR_WIDTH)]) {
-        pushBox(out, g, distance, sx, fillY, { x: PILLAR_WIDTH, y: fillH, z: PILLAR_WIDTH }, "pier");
-      }
-    }
+  const archTopY = (t: number): number => deckBottom - ARCH_DEPTH * (2 * t - 1) * (2 * t - 1);
+  const ribDepth = (t: number): number => 1.0 + 0.8 * (2 * t - 1) * (2 * t - 1);
+  const stations = Math.max(10, Math.ceil(g.length / 2.5));
+  const distances: number[] = [], tops: number[] = [], bottoms: number[] = [];
+  for (let i = 0; i <= stations; i++) {
+    const t = (1 - Math.cos((Math.PI * i) / stations)) / 2;
+    distances.push(t * g.length); tops.push(archTopY(t)); bottoms.push(archTopY(t) - ribDepth(t));
+  }
+  for (const sx of [ribX, -ribX]) pushWall(out, g, distances, sx, RIB_W, bottoms, tops, "pier");
+  const pairs = Math.max(4, Math.round(g.length / 5));
+  for (let i = 1; i < pairs; i++) {
+    const t = i / pairs, d = g.length * t, top = archTopY(t), height = deckBottom - top;
+    if (height < 0.6) continue;
+    const capH = Math.min(0.5, height * 0.4);
+    for (const sx of [ribX, -ribX]) pushBox(out, g, d, sx, (top + deckBottom - capH) / 2, { x: COLUMN, y: height - capH, z: COLUMN }, "pier", "frame");
+    pushBox(out, g, d, 0, deckBottom - capH / 2, { x: 2 * ribX + COLUMN, y: capH, z: COLUMN + 0.2 }, "pier");
+    if (i % 2 === 0) pushStrut(out, pathWorldPoint(g, d, -ribX, top - ribDepth(t) / 2), pathWorldPoint(g, d, ribX, top - ribDepth(t) / 2), 0.5, "pier");
   }
 };
 
@@ -855,28 +896,49 @@ const makeArchMasonry = (masonry: BridgeMaterial): Builder => (out, g) => {
   // without it the arch was two face walls, open to the deck from below
   const innerHalf = sideX - (FACE + 0.18) / 2;
   pushWall(out, g, distances, 0, 2 * innerHalf, bandBottoms, openTops, masonry);
+  // a keystone at the crown, standing proud of the band on both faces
+  const crown = openingTopY(0.5);
+  for (const sx of [sideX, -sideX]) pushBox(out, g, g.length / 2, sx, crown - ARCH_BAND / 2 + 0.25, { x: FACE + 0.4, y: ARCH_BAND + 0.5, z: 1.1 }, masonry);
 };
 const buildStoneArch = makeArchMasonry("stone");
 const buildBrickArch = makeArchMasonry("brick");
 
+// A tied arch: two box-section steel arches springing from knuckles on the tie
+// girders along both deck edges (the deck is the tie), hangers about every 4 studs
+// (crossing each other on a network arch), and between the arches, wherever they
+// stand clear above the wires, transverse struts with X bracing between them.
+const TIE_GIRDER_TOP = DECK_THICKNESS / 2 + 1.4;
 const makeTiedArch = (network: boolean): Builder => (out, g, opts, heightAt) => {
   buildPathDeck(out, g);
   if (!opts.suppressGroundPiers) buildPathPiers(out, g, heightAt);
   const ARCH_THICKNESS = TIED_ARCH_THICKNESS;
   const sideX = g.deckWidth / 2 - ARCH_THICKNESS / 2;
   const archTopY = (t: number): number => tiedArchTopY(g.length, t, g.clearanceY);
-  for (const sx of [sideX, -sideX]) pushCurve(out, g, sx, archTopY, ARCH_THICKNESS, ARCH_THICKNESS, "steel", tiedArchStruts(g.length, g.clearanceY));
-  for (let i = 1; i <= 9; i++) {
-    const t = i / 10, distance = g.length * t;
+  const struts = tiedArchStruts(g.length, g.clearanceY);
+  const tieBottom = -DECK_THICKNESS / 2 - CORNICE_DEPTH - 0.2;
+  for (const sx of [sideX, -sideX]) {
+    pushRibbon(out, g, g.shiftAmount + sx, (TIE_GIRDER_TOP + tieBottom) / 2, 0.9, TIE_GIRDER_TOP - tieBottom, "steel", "frame");
+    pushCurve(out, g, sx, archTopY, ARCH_THICKNESS * 1.5, ARCH_THICKNESS * 1.1, "steel", struts);
+    // the knuckles where each arch lands on its tie
+    for (const d of [0.9, g.length - 0.9]) pushBox(out, g, d, sx, TIE_GIRDER_TOP + 0.3, { x: 1.3, y: 1.6, z: 2.2 }, "steel", "frame");
+  }
+  const hangers = Math.max(10, Math.round(g.length / 4));
+  for (let i = 1; i < hangers; i++) {
+    const t = i / hangers, distance = g.length * t;
     for (const sx of [sideX, -sideX]) {
       const targets = network ? [Math.max(0.08, t - 0.22), Math.min(0.92, t + 0.22)] : [t];
-      for (const anchor of targets) pushStrut(out, pathWorldPoint(g, distance, sx, DECK_THICKNESS / 2), pathWorldPoint(g, g.length * anchor, sx, archTopY(anchor)), 0.2, "cable", network && i % 3 === 0 ? "frame" : "detail");
+      for (const anchor of targets) pushStrut(out, pathWorldPoint(g, distance, sx, TIE_GIRDER_TOP), pathWorldPoint(g, g.length * anchor, sx, archTopY(anchor)), 0.18, "cable", network && i % 3 === 0 ? "frame" : "detail");
     }
   }
-  for (const t of tiedArchStruts(g.length, g.clearanceY)) {
+  struts.forEach((t, i) => {
     const distance = g.length * t;
     pushStrut(out, pathWorldPoint(g, distance, -sideX, archTopY(t)), pathWorldPoint(g, distance, sideX, archTopY(t)), ARCH_THICKNESS, "steel", "frame");
-  }
+    const next = struts[i + 1];
+    if (next === undefined) return;
+    // both ends stand above the wires, so the whole diagonal does
+    pushStrut(out, pathWorldPoint(g, distance, -sideX, archTopY(t)), pathWorldPoint(g, g.length * next, sideX, archTopY(next)), 0.25, "steel");
+    pushStrut(out, pathWorldPoint(g, distance, sideX, archTopY(t)), pathWorldPoint(g, g.length * next, -sideX, archTopY(next)), 0.25, "steel");
+  });
 };
 const buildTiedArch = makeTiedArch(false);
 const buildNetworkArch = makeTiedArch(true);
@@ -982,17 +1044,41 @@ const buildCableStayed: Builder = (out, g, _opts, heightAt) => {
   });
 };
 
+// A through plate girder: a deep steel girder along each deck edge -- it is the
+// railing too, so there is no concrete parapet -- a quarter of its depth below the
+// slab, its top flange rounding down at both ends, stiffeners on both faces of the
+// web, and cross girders under the slab between the two.
+const plateGirderDepth = (spanLength: number): number => Math.min(5, Math.max(2.6, spanLength / 11));
+const plateGirderUnder = (spanLength: number): number => plateGirderDepth(spanLength) * 0.25;
+const PLATE_GIRDER_X = 0.05; // the web's centre inside the deck edge: its outer face covers the slab's
 const buildPlateGirder: Builder = (out, g) => {
-  buildPathDeck(out, g);
-  buildPathParapets(out, g);
+  buildPathDeck(out, g, "deck", false); // the girders are the deck's edges
+  const D = plateGirderDepth(g.length), under = plateGirderUnder(g.length);
+  const bottom = -DECK_THICKNESS / 2 - under, fullTop = bottom + D;
+  const R = Math.min(3, D, g.length / 4);
+  const rounded = (d: number): number => {
+    const x = Math.min(d, g.length - d) / R;
+    return x >= 1 ? fullTop : bottom + (fullTop - bottom) * (0.35 + 0.65 * Math.sqrt(1 - (1 - x) * (1 - x)));
+  };
+  // stations: the rounded ends finely, and every path vertex so the web follows a bend
+  const ends = [0, 1, 2, 3, 4, 5, 6].map((k) => (R * k) / 6);
+  const stations = [...new Set([...ends, ...ends.map((d) => g.length - d), ...g.distances].map((d) => Math.round(Math.min(Math.max(d, 0), g.length) * 1e4) / 1e4))].sort((a, b) => a - b);
+  const FLANGE = 0.25;
   for (const side of [-1, 1]) {
-    const x = side * (g.deckWidth / 2 - 0.45);
-    pushCurve(out, g, x, () => 0.15, 0.2, 2.3, "steel");
-    for (const y of [-1, 1.3]) pushCurve(out, g, x, () => y, 0.85, 0.22, "steel");
-    const panels = Math.max(2, Math.ceil(g.length / 5));
-    for (let i = 0; i <= panels; i++) {
-      pushBox(out, g, g.length * i / panels, x, 0.15, { x: 0.45, y: 2.1, z: 0.15 }, "steel");
+    const x = side * (g.deckWidth / 2 - PLATE_GIRDER_X);
+    const tops = stations.map(rounded);
+    pushWall(out, g, stations, x, 0.22, stations.map(() => bottom + FLANGE), tops.map((t) => t - FLANGE), "steel");
+    pushWall(out, g, stations, x, 0.95, tops.map((t) => t - FLANGE), tops, "steel");
+    pushRibbon(out, g, g.shiftAmount + x, bottom + FLANGE / 2, 0.95, FLANGE, "steel", "frame");
+    const panels = Math.max(4, Math.round(g.length / 4));
+    for (let i = 1; i < panels; i++) {
+      const d = (g.length * i) / panels, top = rounded(d) - FLANGE;
+      for (const face of [-1, 1]) pushBox(out, g, d, x + face * 0.26, (bottom + FLANGE + top) / 2, { x: 0.3, y: top - bottom - FLANGE, z: 0.28 }, "steel");
     }
+  }
+  const cross = Math.max(3, Math.round(g.length / 4));
+  for (let i = 1; i < cross; i++) {
+    pushBox(out, g, (g.length * i) / cross, 0, -DECK_THICKNESS / 2 - (under - 0.1) / 2, { x: g.deckWidth - 2 * PLATE_GIRDER_X - 0.3, y: under - 0.1, z: 0.4 }, "steel");
   }
 };
 
@@ -1003,10 +1089,17 @@ const buildBoxGirder: Builder = (out, g) => {
   // the fascia a shadow line without another material or a coplanar surface.
   const top = g.deckWidth * 0.42, bottom = g.deckWidth * 0.29;
   const u = -g.shiftAmount;
+  const boxBottom = -DECK_THICKNESS / 2 - BOX_GIRDER_DEPTH;
   out.push({ shape: "ribbon", points: deckCenterline(g), profile: [
-    { u: u + bottom, v: -DECK_THICKNESS / 2 - BOX_GIRDER_DEPTH }, { u: u + top, v: -DECK_THICKNESS / 2 },
-    { u: u - top, v: -DECK_THICKNESS / 2 }, { u: u - bottom, v: -DECK_THICKNESS / 2 - BOX_GIRDER_DEPTH },
+    { u: u + bottom, v: boxBottom }, { u: u + top, v: -DECK_THICKNESS / 2 },
+    { u: u - top, v: -DECK_THICKNESS / 2 }, { u: u - bottom, v: boxBottom },
   ], material: "pier", part: "frame" });
+  // the haunch: as wide as the box's bottom, its top hidden inside the box, its
+  // soffit a parabola from the piers up to a lip under the box at mid-span
+  const step = Math.max(8, Math.ceil(g.length / 2.5));
+  const stations = [...new Set([...Array.from({ length: step + 1 }, (_, i) => (g.length * i) / step), ...g.distances].map((d) => Math.round(d * 1e4) / 1e4))].sort((a, b) => a - b);
+  const soffit = (d: number): number => { const s = 2 * (d / g.length) - 1; return boxBottom - BOX_GIRDER_LIP - (BOX_GIRDER_END_DEPTH - BOX_GIRDER_DEPTH) * s * s; };
+  pushWall(out, g, stations, 0, 2 * bottom, stations.map(soffit), stations.map(() => boxBottom + 0.3), "pier");
 };
 
 const buildDeckTruss: Builder = (out, g) => {
@@ -1027,32 +1120,80 @@ const buildDeckTruss: Builder = (out, g) => {
       }
     }
   }
+  // between the two trusses: a cross frame (a bottom strut and an X) at every
+  // other panel point, and X bracing in the bottom plane in every panel
+  const x = g.deckWidth / 2 - 0.55, top = -0.9, bottom = -depth;
+  for (let i = 0; i <= panels; i++) {
+    const d = (g.length * i) / panels;
+    if (i % 2 === 0 || i === panels) {
+      pushStrut(out, pathWorldPoint(g, d, -x, bottom), pathWorldPoint(g, d, x, bottom), 0.3, "steel");
+      pushStrut(out, pathWorldPoint(g, d, -x, top), pathWorldPoint(g, d, x, bottom), 0.22, "steel");
+      pushStrut(out, pathWorldPoint(g, d, x, top), pathWorldPoint(g, d, -x, bottom), 0.22, "steel");
+    }
+    if (i < panels) {
+      const next = (g.length * (i + 1)) / panels;
+      pushStrut(out, pathWorldPoint(g, d, -x, bottom), pathWorldPoint(g, next, x, bottom), 0.18, "steel");
+      pushStrut(out, pathWorldPoint(g, d, x, bottom), pathWorldPoint(g, next, -x, bottom), 0.18, "steel");
+    }
+  }
 };
 
+// A timber trestle: a bent about every 8 studs -- two plumb posts and two battered
+// ones, each on its own footing, under a cap -- braced in stories: an X between the
+// outer posts in each story and a girt at each story line every 10 studs of height,
+// and girts along the bridge from bent to bent at the first story line. Two
+// stringers carry the plank deck; a post-and-rail guard runs along both edges.
+const TRESTLE_BENT = 8, TRESTLE_STORY = 10, TRESTLE_CAP_Y = -1.1;
 const buildTimberTrestle: Builder = (out, g, _opts, heightAt) => {
-  buildPathDeck(out, g, "timber");
-  buildPathParapets(out, g, "timber");
-  const count = Math.max(1, Math.ceil(g.length / 12));
-  for (const x of [-g.deckWidth * 0.3, g.deckWidth * 0.3]) pushCurve(out, g, x, () => -0.85, 0.6, 0.7, "timber");
+  // every ribbon pays a joint at each path vertex on a bend: a plank deck without a
+  // cornice, two stringers, one rail a side
+  buildPathDeck(out, g, "timber", false);
+  const W = g.deckWidth;
+  for (const x of [-0.22 * W, 0.22 * W]) pushCurve(out, g, x, () => -0.85, 0.8, 0.7, "timber");
+  // the guard: posts every 4.5 studs under a top rail
+  const railX = W / 2 - 0.25;
+  for (const side of [1, -1]) {
+    pushRibbon(out, g, g.shiftAmount + side * railX, DECK_THICKNESS / 2 + 1.25, 0.2, 0.22, "timber", "detail");
+    const posts = Math.max(2, Math.round(g.length / 4.5));
+    for (let i = 0; i <= posts; i++) pushBox(out, g, (g.length * i) / posts, side * (railX + 0.08), DECK_THICKNESS / 2 + 0.7, { x: 0.28, y: 1.4, z: 0.28 }, "timber");
+  }
+  const count = Math.max(2, Math.ceil(g.length / TRESTLE_BENT));
+  let previous: { d: number; level: Vec3[] } | null = null;
   for (let i = 0; i <= count; i++) {
-    const d = g.length * i / count;
-    const tops: Vec3[] = [], feet: Vec3[] = [];
-    for (const side of [-1, 1]) {
-      const top = pathWorldPoint(g, d, side * g.deckWidth * 0.29, -1.1);
-      const foot = pathWorldPoint(g, d, side * g.deckWidth * 0.4, -1.1);
+    const d = (g.length * i) / count;
+    // posts: [top lateral, foot lateral]; the outer two are battered
+    const posts: Array<[number, number]> = [[-0.27 * W, -0.42 * W], [-0.12 * W, -0.12 * W], [0.12 * W, 0.12 * W], [0.27 * W, 0.42 * W]];
+    const lines: Array<{ top: Vec3; foot: Vec3 }> = [];
+    for (const [topX, footX] of posts) {
+      const top = pathWorldPoint(g, d, topX, TRESTLE_CAP_Y);
+      const foot = pathWorldPoint(g, d, footX, TRESTLE_CAP_Y);
       foot.y = heightAt(foot.x, foot.z);
       if (top.y - foot.y < MIN_PIER_DROP) continue;
-      tops.push(top); feet.push(foot);
-      out.push({ shape: "box", center: { ...foot, y: foot.y + 0.2 }, size: { x: 1, y: 0.4, z: 1 }, yaw: pathYaw(g, d), material: "timber", part: "support", ground: true });
-      pushStrut(out, { ...foot, y: foot.y + 0.2 }, top, 0.6, "timber", "support");
+      lines.push({ top, foot });
+      out.push({ shape: "box", center: { ...foot, y: foot.y + 0.2 }, size: { x: 0.9, y: 0.4, z: 0.9 }, yaw: pathYaw(g, d), material: "timber", part: "support", ground: true });
+      pushStrut(out, { ...foot, y: foot.y + 0.4 }, top, 0.5, "timber", "support");
     }
-    pushBox(out, g, d, 0, -1, { x: g.deckWidth * 0.83, y: 0.55, z: 0.75 }, "timber", "support");
-    if (tops.length === 2) {
-      for (const side of [0, 1]) pushStrut(out, { ...feet[side], y: feet[side].y + 0.5 }, tops[1 - side], 0.26, "timber");
-      // Horizontal tie halfway down each bent, omitted by the far mesh.
-      const middle = tops.map((p, j) => ({ x: (p.x + feet[j].x) / 2, y: (p.y + feet[j].y) / 2, z: (p.z + feet[j].z) / 2 }));
-      pushStrut(out, middle[0], middle[1], 0.35, "timber");
+    pushBox(out, g, d, 0, TRESTLE_CAP_Y + 0.1, { x: W * 0.9, y: 0.55, z: 0.75 }, "timber", "support");
+    if (lines.length < 4) { previous = null; continue; }
+    const left = lines[0]!, right = lines[3]!;
+    const at = (line: { top: Vec3; foot: Vec3 }, y: number): Vec3 => {
+      const f = (line.top.y - y) / (line.top.y - line.foot.y);
+      return { x: line.top.x + (line.foot.x - line.top.x) * f, y, z: line.top.z + (line.foot.z - line.top.z) * f };
+    };
+    // the story lines, from the cap down to just above the higher outer foot
+    const bottom = Math.max(left.foot.y, right.foot.y) + 0.6;
+    const levels = [left.top.y - 0.3];
+    while (levels[levels.length - 1]! - TRESTLE_STORY > bottom + 1.5) levels.push(levels[levels.length - 1]! - TRESTLE_STORY);
+    levels.push(bottom);
+    for (let k = 0; k + 1 < levels.length; k++) {
+      const [hi, lo] = [levels[k]!, levels[k + 1]!];
+      pushStrut(out, at(left, hi), at(right, lo), 0.26, "timber");
+      pushStrut(out, at(right, hi), at(left, lo), 0.26, "timber");
+      if (k + 1 < levels.length - 1) pushStrut(out, at(left, lo), at(right, lo), 0.3, "timber");
     }
+    const level = levels.length > 2 ? [at(left, levels[1]!), at(right, levels[1]!)] : [];
+    if (previous && level.length && previous.level.length) for (const j of [0, 1]) pushStrut(out, previous.level[j]!, level[j]!, 0.26, "timber");
+    previous = { d, level };
   }
 };
 
@@ -1082,7 +1223,7 @@ export function buildBridge(type: string, g: BridgePathGeom, heightAt: TerrainHe
     const spanGeom = clipPathGeom(g, range.fromDistance, range.toDistance);
     if (spanGeom) builder(out, spanGeom, { suppressGroundPiers: type !== "cantilever" }, heightAt);
   }
-  if (type !== "cantilever") buildSpanBoundaryPiers(out, g, ranges, type, heightAt);
+  buildSpanBoundaryPiers(out, g, ranges, type, heightAt);
   buildAbutments(out, g, heightAt, type === "stone_arch" ? "stone" : type === "brick_arch" ? "brick" : "pier");
   return out;
 }

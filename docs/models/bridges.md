@@ -40,15 +40,15 @@ meets its neighbours exactly - where the renderer's mitred sweep puts the deck. 
 | Type | Tier | Span limit | Superstructure | Piers |
 |---|---|---|---|---|
 | `beam` | plain | - | slab with two concrete girders underneath | concrete every ~25 studs |
-| `box_girder` | plain | 65 | trapezoidal concrete box under the slab | concrete at span boundaries |
-| `plate_girder` | framed | 60 | steel through-girders at the deck edges with stiffeners | concrete, cap under the girders |
+| `box_girder` | plain | 65 | trapezoidal concrete box under the slab, haunched: a parabolic soffit from 3.4 studs deep over the piers to 1.8 at mid-span | concrete at span boundaries, under the haunch |
+| `plate_girder` | framed | 60 | steel through-girders span / 11 deep (2.6 to 5 studs) along the deck edges - the railing too, no parapet or cornice - a quarter of their depth below the slab, top flanges rounding down at the ends, stiffeners on both faces of the web, cross girders under the slab | concrete, cap under the girders |
 | `truss` | framed | 64 | Pratt through truss: inclined end posts with portal frames, verticals, diagonals sloping down toward mid-span, a polygonal (Parker) top chord rising up to 4 studs on spans over 40, a crossbeam at every top node with X bracing between | concrete at span boundaries only |
-| `deck_truss` | framed | 65 | truss under the deck | concrete under the truss |
-| `timber_trestle` | framed | - | timber deck on bents every ~12 studs | the bents |
-| `arch` | framed | 80 | concrete deck arch with spandrel columns | full-width concrete abutments |
-| `stone_arch`, `brick_arch` | framed | 28 | masonry arches: spandrel walls, arch bands, barrel vault | masonry, with cutwaters and pilasters between arches |
-| `cantilever` | signature | 90 | steel cantilever truss over two tower portals | under the towers |
-| `tied_arch` | signature | 100 | steel arches tied by the deck, vertical hangers, struts | concrete at span boundaries |
+| `deck_truss` | framed | 65 | Warren truss with verticals under the deck, a cross frame between the trusses at every other panel point and X bracing in the bottom plane | concrete under the truss |
+| `timber_trestle` | framed | - | plank deck on two stringers and a post-and-rail guard; a bent every ~8 studs of two plumb and two battered posts on footings under a cap, X braced in stories of 10 studs with girts at the story lines and along the bridge at the first one | the bents |
+| `arch` | framed | 80 | concrete deck arch: two ribs thickening toward the springings, pairs of spandrel columns every ~5 studs with a cap beam under the slab, struts between the ribs | full-width concrete abutments |
+| `stone_arch`, `brick_arch` | framed | 28 | masonry arches: spandrel walls, arch bands with a keystone, barrel vault | masonry, with cutwaters and pilasters between arches |
+| `cantilever` | signature | 90 | Forth-fashion: towers at the quarters (two splayed legs a side, X braced, a crossbeam with knee braces on top), anchor arms back to the span's ends and cantilever arms out to 0.4 of the span, deepest at the towers (a straight top chord, a bottom chord curving up from the tower foot), N webs, a Warren suspended span under the slab between the arm tips | under the towers, and anchor piers at span boundaries |
+| `tied_arch` | signature | 100 | box-section steel arches springing from knuckles on tie girders along the deck edges, a hanger about every 4 studs, transverse struts above the wires with X bracing between them | concrete at span boundaries |
 | `network_arch` | signature | 100 | as `tied_arch` with crossing hangers | concrete at span boundaries |
 | `suspension` | signature | 140 (main span) | towers, main cables, hangers, stiffening girders, anchor blocks | under the towers |
 | `cable_stayed` | signature | 120 (main span) | towers, fans of stays, edge girders | under the towers |
@@ -75,7 +75,7 @@ and over its back span.
 
 ## The kit
 
-**Deck section.** Every deck is a slab ribbon (`DECK_THICKNESS` 0.8) with a cornice at each edge.
+**Deck section.** Every deck is a slab ribbon (`DECK_THICKNESS` 0.8) with a cornice at each edge (except where the edge is something else: the plate girder's girders, the trestle's planks).
 The cornice is an edge beam standing 0.12 proud of the slab top, 0.15 beyond its edge and 0.65
 below its underside, so the deck has a shadow line. Parapets (`PARAPET_HEIGHT` 1.6) carry a
 coping 0.1 wider each side. All of these are separate convex ribbons with no face in the slab's
@@ -103,7 +103,7 @@ ships. `test/bridgeSet.test.ts` holds the tag to exactly the boxes whose foot is
 
 `overheadMembers(type, length, deckWidth, clearanceY)` lists where the superstructure crosses
 over the track, as fractions of the whole path, for the game's catenary planner:
-`point` members (the truss top crossbeams at every other inner node and both portals, at the top chord's height there, the cantilever tower portals, the tied arch struts above
+`point` members (each on a real crossbeam over the wires, `test/bridgeSet.test.ts`: the truss top crossbeams at every other inner node and both portals, at the top chord's height there, the cantilever tower portals, the tied arch struts above
 the wire envelope) a wire is taken up to, and `span` members (the cable types' tower legs) a
 perpendicular wire is strung between. Types with nothing over the deck return none, which tells
 the planner to use deck masts. `overheadMemberEndpoints` gives a member's world endpoints in the
@@ -143,16 +143,16 @@ Current counts (single track; the 400-stud road deck costs at most a fifth more)
 | Type | 60 | 160 | 400 | 160 curved |
 |---|---:|---:|---:|---:|
 | beam | 330 | 562 | 1,142 | 3,370 |
-| box_girder | 260 | 568 | 1,184 | 3,064 |
-| plate_girder | 632 | 1,612 | 3,788 | 5,668 |
+| box_girder | 456 | 1,108 | 2,500 | 3,908 |
+| plate_girder | 1,472 | 3,844 | 9,248 | 6,028 |
 | truss | 1,364 | 3,484 | 7,988 | 5,044 |
-| deck_truss | 968 | 2,476 | 6,140 | 5,908 |
-| timber_trestle | 708 | 1,536 | 3,376 | 4,344 |
-| arch | 796 | 1,510 | 3,652 | 3,446 |
-| stone_arch, brick_arch | 1,928 | 4,562 | 11,384 | 6,690 |
-| cantilever | 896 | 2,032 | 5,008 | 5,184 |
-| tied_arch | 868 | 1,630 | 3,154 | 2,542 |
-| network_arch | 1,084 | 2,062 | 4,018 | 2,974 |
+| deck_truss | 1,400 | 3,592 | 9,164 | 7,024 |
+| timber_trestle | 2,400 | 5,592 | 13,464 | 7,152 |
+| arch | 928 | 2,366 | 5,792 | 4,494 |
+| stone_arch, brick_arch | 2,000 | 4,706 | 11,744 | 6,834 |
+| cantilever | 1,972 | 4,318 | 10,636 | 6,446 |
+| tied_arch | 1,156 | 2,446 | 5,266 | 3,966 |
+| network_arch | 1,492 | 3,358 | 7,570 | 4,878 |
 | suspension | 888 | 1,872 | 4,278 | 4,024 |
 | cable_stayed | 632 | 1,208 | 2,836 | 2,768 |
 

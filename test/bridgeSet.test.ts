@@ -29,13 +29,10 @@ describe("the bridge kit", () => {
   it("keeps the concrete arch's rib under the deck at its crown", () => {
     const path = bridge.pathFromPoints([{ x: 0, y: 12, z: 0 }, { x: 60, y: 12, z: 0 }], 9, 0, 0.67, 9.9)!;
     const deckBottom = 12 + 0.67 - bridge.DECK_THICKNESS;
-    const rib = bridge.buildBridge("arch", path, () => 0).filter((b) => b.shape === "ribbon" && b.part !== "deck" && b.material === "pier");
-    expect(rib.length).toBeGreaterThan(0);
-    for (const b of rib) {
-      if (b.shape !== "ribbon") continue;
-      const top = Math.max(...b.points.map((p) => p.y)) + Math.max(...b.profile.map((q) => q.v));
-      expect(top).toBeLessThanOrEqual(deckBottom + 1e-6);
-    }
+    // the ribs (walls of the pier concrete): their tops never above the deck's underside
+    const ribs = bridge.buildBridge("arch", path, () => 0).filter((b) => b.shape === "wall" && b.material === "pier");
+    expect(ribs.length).toBe(2);
+    for (const b of ribs) if (b.shape === "wall") expect(Math.max(...b.tops)).toBeLessThanOrEqual(deckBottom + 1e-6);
   });
 
   it("closes a masonry arch's underside between its two faces", () => {
@@ -93,29 +90,29 @@ describe("the bridge kit", () => {
     // height is straight between vertices, so it needs no point between them
     const points = Array.from({ length: 41 }, (_, i) => { const a = (160 / 120) * (i / 40); return { x: 120 * Math.sin(a), y: 30, z: 120 * (1 - Math.cos(a)) }; });
     const path = bridge.pathFromPoints(points, 9, 0, 0.67, 9.9)!;
-    const chords = bridge.buildBridge("plate_girder", path, () => 0).filter((b) => b.shape === "ribbon" && b.sampled);
+    const chords = bridge.buildBridge("deck_truss", path, () => 0).filter((b) => b.shape === "ribbon" && b.sampled);
     expect(chords.length).toBeGreaterThan(0);
     // each span (three of about 53 studs) holds 14 or 15 of the path's vertices
     for (const c of chords) if (c.shape === "ribbon") expect(c.points.length).toBeLessThanOrEqual(16);
   });
 
-  it("hangs the truss's overhead members on its top crossbeams, above the wires", () => {
-    for (const length of [30, 60, 64]) {
+  it("hangs every point member on a real crossbeam, above the wires", () => {
+    for (const [type, length] of [["truss", 30], ["truss", 60], ["truss", 64], ["cantilever", 90], ["cantilever", 160], ["tied_arch", 60], ["network_arch", 100]] as const) {
       const path = bridge.pathFromPoints([{ x: 0, y: 20, z: 0 }, { x: length, y: 20, z: 0 }], 9, 0, 0.67, 9.9)!;
-      const boxes = bridge.buildBridge("truss", path, () => 0);
+      const boxes = bridge.buildBridge(type, path, () => 0);
       const crossbeams = boxes.filter((b) => b.shape === "strut" && Math.abs(b.a.x - b.b.x) < 1e-6 && Math.abs(b.a.z - b.b.z) > 8);
       const deckCentreY = 20 + 0.67 - bridge.DECK_THICKNESS / 2;
-      const members = bridge.overheadMembers("truss", length, 9, 9.9);
+      const members = bridge.overheadMembers(type, length, 9, 9.9);
       expect(members.length).toBeGreaterThanOrEqual(2);
       for (const m of members) {
         if (m.kind !== "point") throw new Error("a truss member is a point");
         // a crossbeam crosses at that station, at that height, its underside over the wires
         const beam = crossbeams.find((b) => b.shape === "strut" && Math.abs(b.a.x - m.t * length) < 1e-6 && Math.abs(b.a.y - deckCentreY - m.localY) < 1e-6);
-        expect(beam, `${length} at ${m.t}`).toBeDefined();
-        expect(m.localY - 0.2).toBeGreaterThanOrEqual(9.9);
+        expect(beam, `${type} ${length} at ${m.t}`).toBeDefined();
+        if (beam?.shape === "strut") expect(m.localY - beam.thick / 2, `${type} ${length}`).toBeGreaterThanOrEqual(9.9);
       }
-      // the end posts lean: nothing stands vertical at the span's ends
-      expect(boxes.some((b) => b.shape === "strut" && Math.abs(b.a.x) < 1e-6 && Math.abs(b.b.x) < 1e-6 && b.b.y - b.a.y > 5)).toBe(false);
+      // the truss's end posts lean: nothing stands vertical at the span's ends
+      if (type === "truss") expect(boxes.some((b) => b.shape === "strut" && Math.abs(b.a.x) < 1e-6 && Math.abs(b.b.x) < 1e-6 && b.b.y - b.a.y > 5)).toBe(false);
     }
   });
 });

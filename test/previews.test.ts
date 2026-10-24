@@ -63,7 +63,9 @@ describe("the preview designs", () => {
     // two tracks: a 17-stud deck recentred 4 studs to +z over a path along x
     const girder = PREVIEW_DESIGNS.find((d) => d.id === "proc-preview-bridge-plate-girder")!;
     const z = girder.build({ deck: "double" }).positions().filter((_, i) => i % 3 === 2);
-    expect(Math.min(...z)).toBeGreaterThan(4 - 17 / 2 - 0.5);
-    expect(Math.max(...z)).toBeLessThan(4 + 17 / 2 + 0.5);
+    // within a stud of the deck's edges (the girders' flanges overhang them); the
+    // mirrored deck lay 8 studs off
+    expect(Math.min(...z)).toBeGreaterThan(4 - 17 / 2 - 1);
+    expect(Math.max(...z)).toBeLessThan(4 + 17 / 2 + 1);
   });
 });
