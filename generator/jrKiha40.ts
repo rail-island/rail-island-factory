@@ -113,7 +113,8 @@ function kiha40Car(livery: Kiha40Livery): MeshBuilder {
   const paint = LIVERIES[livery];
   const car = new Car({ ...PALETTE, ...paint.palette }, FRAME);
   const m = car.m;
-  const body = car.volume(volume(livery));
+  // the doors swing inward through doorways, one leaf each, the window riding on it (doors.ts)
+  const body = car.volume(volume(livery), car.doorways(DOORS.map(([x0, x1]) => sb(x0, x1, 1.02, 2.92)), 0.025));
   m.scope("body", () => {
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
@@ -121,8 +122,10 @@ function kiha40Car(livery: Kiha40Livery): MeshBuilder {
         m.scope("doors", () =>
           DOORS.forEach(([x0, x1], i) =>
             m.scope(`door ${i + 1}`, () => {
-              car.c.door(body, s, car.side(sb(x0, x1, 1.02, 2.92)), "bands", { seam: 0.025 });
-              m.scope("glass", () => car.c.window(body, s, car.side(sb(x0 + 0.2, x1 - 0.2, 2.1, 2.78)), { fw: 0.035, frame: "rubber" }));
+              car.openingDoor(body, s, sb(x0, x1, 1.02, 2.92), [sb(x0 + 0.2, x1 - 0.2, 2.1, 2.78)], "bands", 0.025, { kind: "swing", leaves: 1, from: i === 0 ? "low" : "high" }, () => "glass", {
+                fw: 0.035,
+                frame: "rubber",
+              });
               m.scope("handrails", () => handrails(car, body, s, [(x0 - 0.08) * 10, (x1 + 0.08) * 10], (4 - 2.5) * 10, (4 - 1.3) * 10));
               m.scope("step", () => step(car, s, sb(x0 + 0.05, x1 - 0.05, 0.72, 0.76), 1.45));
             }),

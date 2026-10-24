@@ -13,6 +13,7 @@ import { ngon } from "./meshBuilder.ts";
 import { block, side } from "./vehicleParts.ts";
 import { Coach, px, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
+import type { DoorMotion } from "./doors.ts";
 import { endName, fpx, gangway, headstock, lamp, mirror, roofVents, sideName, sides } from "./csdCoaches.ts";
 import { dbLogo, nosePanel, noseTop, sideWindows, type PxBox, type Win } from "./germanCoachParts.ts";
 
@@ -194,6 +195,13 @@ export function nWagen(params?: ParamValues): MeshBuilder {
     endPaint: paint.bands.find((b) => b[0] <= 2.0 && b[1] > 2.0)![2],
   };
   const wall: [number, number] = [body.plan[0]![0], 26.2];
+  // the passenger doors open inward through doorways (doors.ts): the folding doors
+  // fold as many leaves as their seams cut, a plain door swings; the cab car's door
+  // beside the cab is the driver's and stays shut
+  const opening = v.doors.filter((d) => !(cab && d.box[0] < 20));
+  body.openings = sides.flatMap((s) => opening.map((d) => c.doorOpening(s, px(d.box, H))));
+  const opens = (d: (typeof v.doors)[number]): DoorMotion | undefined =>
+    !opening.includes(d) ? undefined : d.seams.length ? { kind: "fold", leaves: 4 } : { kind: "swing", leaves: 1, from: d.box[0] < 132 ? "low" : "high" };
   m.scope("body", () => {
     c.volume(body);
     for (const s of sides)
@@ -202,6 +210,19 @@ export function nWagen(params?: ParamValues): MeshBuilder {
         v.doors.forEach((d, i) =>
           m.scope(`door ${i + 1}`, () => {
             const b = px(d.box, H);
+            const motion = opens(d);
+            if (motion) {
+              // the windows ride on the leaves, whose gaps are the painted seams
+              c.door(body, s, b, paint.door, {
+                opens: motion,
+                leafWork: (clip) =>
+                  d.glass.forEach((g, k) => {
+                    const w = clip(px(g, H));
+                    if (w) c.m.scope(`window ${k + 1}`, () => c.window(body, s, w, { fw: 0.035 }));
+                  }),
+              });
+              return;
+            }
             c.door(body, s, b, paint.door);
             d.glass.forEach((g, k) => m.scope(`window ${k + 1}`, () => c.window(body, s, px(g, H), { fw: 0.035 })));
             if (d.seams.length) m.scope("seams", () => d.seams.forEach((x) => c.sidePanel(body, "seam", s, { x0: x / 10 - 0.015, y0: b.y0 + 0.03, x1: x / 10 + 0.015, y1: b.y1 - 0.03 }, 0.016)));

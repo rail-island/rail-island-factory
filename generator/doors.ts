@@ -25,13 +25,13 @@ export type Jamb = "low" | "high";
  *   leaves fold against `from`, four make a pair at each jamb (a Tatra tram's door),
  *   three a pair at `from` and a single swinging leaf at the other jamb;
  * - `swing`: leaves hinged at their jamb swing inward -- one at `from`, two from
- *   both jambs (an older coach's double door);
+ *   both jambs (an older coach's double door) -- or `outward` (a compartment door);
  * - `plug`: leaves step `out` from the skin, then slide along it by their own
  *   width -- one toward `toward`, two apart (a modern unit's sliding plug door).
  */
 export type DoorMotion =
   | { kind: "fold"; leaves: 2 | 3 | 4; from?: Jamb }
-  | { kind: "swing"; leaves: 1 | 2; from?: Jamb }
+  | { kind: "swing"; leaves: 1 | 2; from?: Jamb; outward?: boolean }
   | { kind: "plug"; leaves: 1 | 2; toward?: Jamb; out?: number };
 
 /** How far a folding or swinging leaf turns, open (radians). */
@@ -49,6 +49,16 @@ export interface Leaf {
   x1: number;
   /** Where a point of the shut leaf goes at opening `o` (0..1); `hz` is the hinge line's z. */
   move: (o: number, hz: number) => (p: Vec3) => Vec3;
+}
+
+/**
+ * A plug leaf's motion at opening `o` on side `s`: out `out` metres over the first
+ * quarter of the opening, then along x by `slide` (signed) over the rest.
+ */
+export function plugMove(o: number, s: number, slide: number, out = DOOR_PLUG_OUT): (p: Vec3) => Vec3 {
+  const dz = s * out * Math.min(1, o / PLUG_STEP);
+  const dx = slide * Math.max(0, (o - PLUG_STEP) / (1 - PLUG_STEP));
+  return ([x, y, z]) => [x + dx, y, z + dz];
 }
 
 /** The rotation about the vertical line through (hx, hz) taking direction (dx, dz) to (ex, ez), then a shift. */
@@ -76,15 +86,7 @@ export function doorLeaves(x0: number, x1: number, s: number, motion: DoorMotion
       // two leaves part; one slides toward its jamb
       const dir = n === 2 ? (k === 0 ? -1 : 1) : (motion.toward ?? "low") === "low" ? -1 : 1;
       const [a, b] = span(k);
-      out.push({
-        x0: a,
-        x1: b,
-        move: (o) => {
-          const dz = s * step * Math.min(1, o / PLUG_STEP);
-          const dx = dir * (w + LEAF_GAP) * Math.max(0, (o - PLUG_STEP) / (1 - PLUG_STEP));
-          return ([x, y, z]) => [x + dx, y, z + dz];
-        },
-      });
+      out.push({ x0: a, x1: b, move: (o) => plugMove(o, s, dir * (w + LEAF_GAP), step) });
     }
     return out;
   }
@@ -108,7 +110,8 @@ export function doorLeaves(x0: number, x1: number, s: number, motion: DoorMotion
           const along: [number, number] = [g.dir, 0];
           // the first leaf turns inward about the jamb; the second turns back out
           // from the first one's free edge, its own free edge kept on the door line
-          const first: [number, number] = [g.dir * Math.cos(th), -s * Math.sin(th)];
+          const inward = motion.kind === "swing" && motion.outward ? -1 : 1;
+          const first: [number, number] = [g.dir * Math.cos(th), -inward * s * Math.sin(th)];
           const near = g.dir > 0 ? a : b;
           if (j === 0) return turn(near, hz, along, first, [near, hz]);
           const knee: [number, number] = [g.jamb + (near - g.jamb) * Math.cos(th), hz - s * Math.abs(near - g.jamb) * Math.sin(th)];

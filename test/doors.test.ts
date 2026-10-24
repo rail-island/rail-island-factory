@@ -216,47 +216,34 @@ describe("inward-opening doors", () => {
   }
 });
 
-/**
- * The designs whose passenger doors open, and the sides they have doors on. The
- * DB 628 design's n-Wagen coaches (its `unit` values other than the motor car)
- * keep shut doors: only the railcar itself opens.
- */
-const DOOR_DESIGNS: Record<string, Array<"left" | "right">> = {
-  "proc-vehicle-tatra-t3": ["right"],
-  "proc-vehicle-tatra-t6": ["right"],
-  "proc-vehicle-tatra-kt8": ["left", "right"],
-  "proc-vehicle-tatra-kt4": ["right"],
-  "proc-vehicle-kvag-gt4": ["right"],
-  "proc-vehicle-cd-y-coach": ["left", "right"],
-  "proc-vehicle-uic-z-coach": ["left", "right"],
-  "proc-vehicle-bmo-double-deck-coach": ["left", "right"],
-  "proc-vehicle-csd-bdmtee": ["left", "right"],
-  "proc-vehicle-cd-471": ["left", "right"],
-  "proc-vehicle-db-628": ["left", "right"],
-  "proc-vehicle-cd-680": ["left", "right"],
-  "proc-vehicle-cd-810": ["left", "right"],
-};
+/** The groups of passenger vehicles: every one opens its passenger doors. */
+const PASSENGER_GROUPS = new Set(["coach", "unit", "tram", "metro", "bus"]);
+/** Passenger-group designs with no door to open: a luggage van, a steam railcar whose van body draws none. */
+const NO_DOORS = new Set(["proc-vehicle-csd-dsk", "proc-vehicle-csd-m112"]);
+/** Doors on the right only: the single-ended trams and every bus (the kerb side). */
+const RIGHT_ONLY = (id: string, group: string) => group === "bus" || ["proc-vehicle-tatra-t3", "proc-vehicle-tatra-t6", "proc-vehicle-tatra-kt4", "proc-vehicle-kvag-gt4"].includes(id);
+
+const groupOf = (d: (typeof ALL_VEHICLES)[number]) => d.catalog?.group ?? "";
+const PASSENGER = ALL_VEHICLES.filter((d) => PASSENGER_GROUPS.has(groupOf(d)) && !NO_DOORS.has(d.id));
 
 describe("vehicle doors", () => {
-  it("open on the chosen trams, coaches and units only", () => {
-    const withDoors = ALL_VEHICLES.filter((d) => d.build().animations().some((c) => c.drive.drive === "door")).map((d) => d.id);
-    expect(withDoors.sort()).toEqual(Object.keys(DOOR_DESIGNS).sort());
+  it("open on every passenger vehicle, and on nothing else", () => {
+    // a design opens doors when one of its variants does (a set's power car opens none)
+    const opens = (d: (typeof ALL_VEHICLES)[number]) => variantsUnderTest(d).some((p) => d.build(p).animations().some((c) => c.drive.drive === "door"));
+    const withDoors = ALL_VEHICLES.filter(opens).map((d) => d.id);
+    expect(withDoors.sort()).toEqual(PASSENGER.map((d) => d.id).sort());
+    expect(PASSENGER.length).toBeGreaterThan(40);
   });
 
-  for (const [id, sides] of Object.entries(DOOR_DESIGNS)) {
-    const d = ALL_VEHICLES.find((v) => v.id === id)!;
+  for (const d of PASSENGER) {
+    const sides = RIGHT_ONLY(d.id, groupOf(d)) ? ["right"] : ["left", "right"];
     for (const params of variantsUnderTest(d)) {
-      if (id === "proc-vehicle-db-628" && (params.unit ?? "motorCar") !== "motorCar") {
-        it(`${id} ${JSON.stringify(params)} keeps the n-Wagen's doors shut`, () => {
-          expect(d.build(params).animations().filter((c) => c.drive.drive === "door")).toHaveLength(0);
-        });
-        continue;
-      }
-      it(`${id} ${JSON.stringify(params)} opens its passenger doors on each side, shut at rest`, () => {
+      it(`${d.id} ${JSON.stringify(params)} opens its passenger doors on each side, shut at rest`, () => {
         const m = d.build(params);
         const glb = m.toGlb(d.title, d.id);
         const doors = m.animations().map((c, i) => ({ c, i })).filter(({ c }) => c.drive.drive === "door");
-        expect(new Set(doors.map(({ c }) => (c.drive as { side: string }).side))).toEqual(new Set(sides));
+        // a variant may have none to open (a luggage van, a power car with crew doors only)
+        if (doors.length) expect(new Set(doors.map(({ c }) => (c.drive as { side: string }).side))).toEqual(new Set(sides));
         for (const { c, i } of doors) {
           expect(c.name).toMatch(/^doors-(left|right)(-.+)?$/);
           expect(sampleCount(glb, i)).toBe(DOOR_SAMPLES + 1);

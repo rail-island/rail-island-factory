@@ -12,6 +12,7 @@
 // buffers and the bogies set to the published 17.2 m pivots and 2.4 m wheelbase.
 // See docs/models/czech-dmus.md.
 
+import type { DoorMotion } from "./doors.ts";
 import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
 import type { Pt } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
@@ -140,7 +141,10 @@ export function m296(params?: ParamValues): MeshBuilder {
   const L = variant === "cd854" ? LAYOUT_854 : LAYOUT_296;
   const car = new Car(paint.palette, FRAME_296);
   const m = car.m;
-  const body = car.volume(body296(paint));
+  // the passenger doors (one window, reaching down to native row 40) swing inward
+  // through doorways; the cab doors and the luggage compartment's stay shut (doors.ts)
+  const passenger = (d: Layout["doors"][number]) => d.glass.length === 1 && d.door[3] >= 40;
+  const body = car.volume(body296(paint), car.doorways(L.doors.filter(passenger).map((d) => d.door), 0.025));
   m.scope("body", () => {
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
@@ -150,6 +154,11 @@ export function m296(params?: ParamValues): MeshBuilder {
         m.scope("doors", () =>
           L.doors.forEach((d, i) =>
             m.scope(`door ${i + 1}`, () => {
+              if (passenger(d)) {
+                const motion: DoorMotion = { kind: "swing", leaves: 1, from: d.door[0] < 120 ? "low" : "high" };
+                car.openingDoor(body, s, d.door, d.glass, "doorRed", 0.025, motion, (j) => `glass ${j}`, { fw: 0.035, frame: "frameGrey" });
+                return;
+              }
               car.c.door(body, s, car.side(d.door), "doorRed", { seam: 0.025 });
               d.glass.forEach((g, j) => m.scope(`glass ${j + 1}`, () => car.c.window(body, s, car.side(g), { fw: 0.035, frame: "frameGrey" })));
             }),

@@ -89,7 +89,8 @@ interface CarLayout {
   /** Cab ends: the nose volume's span (source x) and its front-view canvas. */
   cabs: Array<{ x0: number; x1: number; top: Pt[]; bottom: Pt[]; plan: Pt[]; e: number; face: { lean: [number, number, number, number]; screen: [number, number, number, number] } }>;
   windows: Window[];
-  doors: Array<{ box: PxBox; glass: PxBox; rails: number[] }>;
+  /** The doors; a baggage room's or a crew door (narrower than 0.8 m of native width) stays shut. */
+  doors: Array<{ box: PxBox; glass: PxBox; rails: number[]; baggage?: boolean }>;
   grilles: PxBox[];
   louvres: PxBox[];
   lines: Array<{ box: PxBox; mat: string }>;
@@ -247,7 +248,7 @@ const LAYOUTS: Record<MdmotUnit, CarLayout> = {
       { box: [11, 8, 19, 28], glass: [12, 9, 18, 20], rails: [10.5, 19.5] },
       { box: [147, 8, 155, 28], glass: [148, 9, 154, 20], rails: [146.5, 155.5] },
       // the baggage room's double door
-      { box: [184, 9, 195, 28], glass: [185, 12, 188, 19], rails: [189.5] },
+      { box: [184, 9, 195, 28], glass: [185, 12, 188, 19], rails: [189.5], baggage: true },
     ],
     grilles: [[164, 10, 171, 20]],
     louvres: [],
@@ -339,8 +340,22 @@ function sideWork(c: Coach, v: Volume, L: CarLayout, s: number): void {
   m.scope("doors", () =>
     L.doors.forEach((d, i) =>
       m.scope(`door ${i + 1}`, () => {
-        c.door(v, s, box(d.box), "doorGrey", { seam: 0.025 });
-        m.scope("window", () => c.window(v, s, box(d.glass), { fw: 0.05 }));
+        // a passenger door: one sliding plug leaf toward the car's middle, its window
+        // riding on it (doors.ts); the baggage room's and the crew doors stay shut
+        const b = box(d.box);
+        if (d.baggage || d.box[2] - d.box[0] < 8) {
+          c.door(v, s, b, "doorGrey", { seam: 0.025 });
+          m.scope("window", () => c.window(v, s, box(d.glass), { fw: 0.05 }));
+          return;
+        }
+        c.door(v, s, b, "doorGrey", {
+          seam: 0.025,
+          opens: { kind: "plug", leaves: 1, toward: c.X((b.x0 + b.x1) / 2) < 0 ? "high" : "low" },
+          leafWork: (clip) => {
+            const w = clip(box(d.glass));
+            if (w) c.m.scope("window", () => c.window(v, s, w, { fw: 0.05 }));
+          },
+        });
         m.scope("handrails", () => {
           for (const u of d.rails) {
             const b = box([u - 0.5, 13, u + 0.5, 28]);

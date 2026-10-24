@@ -407,13 +407,16 @@ export class Coach {
    * parts of the side's `door` clip. `leafWork` draws what a leaf carries (its lights), once per leaf,
    * with `clip` cutting a source box to that leaf (null where it misses it);
    * `leafPaint` draws a leaf's own panels in place of `paint` (a two-tone leaf).
+   * The leaves are drawn from the low-x end, or from the high one with
+   * `fromHigh` -- for a side drawing that runs against x, so what the leaves carry
+   * keeps its order (and its names in the source tree).
    */
   door(
     v: Volume,
     s: number,
     b: Box,
     paint: string,
-    opts: { end?: boolean; seam?: number; opens?: DoorMotion; leafWork?: (clip: (bb: Box) => Box | null) => void; leafPaint?: (bb: Box) => void } = {},
+    opts: { end?: boolean; seam?: number; opens?: DoorMotion; leafWork?: (clip: (bb: Box) => Box | null) => void; leafPaint?: (bb: Box) => void; fromHigh?: boolean } = {},
   ): void {
     const sw = opts.seam ?? 0.025;
     const draw = (mat: string, bb: Box, proud: number, depth = 0.04) =>
@@ -442,6 +445,7 @@ export class Coach {
     // behind the leaves: the doorway cut through the shell (Volume.openings), or
     // else the outline's dark panel, which fills the whole door box
     const leaves = doorLeaves(this.X(leaf.x0), this.X(leaf.x1), s, opts.opens);
+    if (opts.fromHigh) leaves.reverse();
     // the hinge line: the leaf's outer face at mid height, mid door
     const hz = s * ((sectionHalf(v.section, (leaf.y0 + leaf.y1) / 2) * lerp(v.plan, (leaf.x0 + leaf.x1) / 2)) / halfWidth(v) + 0.01);
     // each leaf's panels in a "leaf" scope, what it carries under the caller's own

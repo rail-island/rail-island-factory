@@ -15,6 +15,7 @@ import { ngon, type MaterialSpec, type MeshBuilder, type Ring } from "./meshBuil
 import type { Vec3 } from "./meshCore.ts";
 import { Coach, type Box, type Opening, type Pt, type Volume } from "./csdCoachParts.ts";
 import { emblem } from "./cd163.ts";
+import type { DoorMotion } from "./doors.ts";
 import { block, side } from "./vehicleParts.ts";
 
 export { enumParam, slopePanel, tractionNumber, tractionCheckDigit } from "./emuParts.ts";
@@ -98,6 +99,38 @@ export class Car {
   /** Source x to model x. */
   X(x: number): number {
     return this.c.X(x * this.f.kx);
+  }
+
+  /** The doorways of side-view door boxes on both sides, for `volume` (`Volume.openings`): the doors that open inward. */
+  doorways(doors: PxBox[], seam: number): Opening[] {
+    return [1, -1].flatMap((s) => doors.map((d) => this.c.doorOpening(s, this.side(d), seam)));
+  }
+
+  /**
+   * A passenger door that opens (doors.ts): `door` in `paint` with its `glass`
+   * riding on the leaves, each in a scope named by `glassName` (its index from 1).
+   * A door opening inward needs its doorway in the volume (`doorways`).
+   */
+  openingDoor(
+    body: Volume,
+    s: number,
+    door: PxBox,
+    glass: PxBox[],
+    paint: string,
+    seam: number,
+    opens: DoorMotion,
+    glassName: (j: number) => string,
+    win: { fw?: number; frame?: string } = { fw: 0.04 },
+  ): void {
+    this.c.door(body, s, this.side(door), paint, {
+      seam,
+      opens,
+      leafWork: (clip) =>
+        glass.forEach((g, j) => {
+          const w = clip(this.side(g));
+          if (w) this.c.m.scope(glassName(j + 1), () => this.c.window(body, s, w, win));
+        }),
+    });
   }
   /** Source x to the coach builder's (scaled, uncentred) x. */
   sx(x: number): number {
