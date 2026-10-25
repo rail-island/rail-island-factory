@@ -1,4 +1,4 @@
-// Block types (generator/sets/blockType.ts): the six archetypes the game's city
+// Block types (generator/sets/blockType.ts): the seven archetypes the game's city
 // generator fills its blocks by, their parameters and the fill both the game and the
 // site's previews run. Every registry type has its data and nothing else does; the
 // names it uses are the game's (city types, rings) or the factory's own pools; every
@@ -29,9 +29,9 @@ function seeded(seed: number): () => number {
 const keyOf = (c: FillCandidate, colours: Readonly<Record<string, string>>): string => `${c.key}|${JSON.stringify(colours)}`;
 
 describe("block types", () => {
-  it("has data for exactly the registry's six archetypes", () => {
+  it("has data for exactly the registry's seven archetypes", () => {
     expect(Object.keys(TYPE_META).sort()).toEqual(def.types.map((t) => t.id).sort());
-    expect(def.types.map((t) => t.id)).toEqual(["houses", "street", "highrise", "industrial", "towerblock", "landmark"]);
+    expect(def.types.map((t) => t.id)).toEqual(["houses", "street", "highrise", "industrial", "towerblock", "panel_estate", "landmark"]);
   });
 
   it("names only known grounds, city types, rings, districts, decorations, parameters and the factory's pools", () => {

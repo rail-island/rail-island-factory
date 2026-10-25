@@ -1,5 +1,5 @@
 // The block types of the game's city generator (docs/models/sets.md, "Block types"):
-// what a block of a settlement is filled with, and HOW. There are six archetypes,
+// what a block of a settlement is filled with, and HOW. There are seven archetypes,
 // each with a fixed pool mix (the factory's building groups) and a parameter space
 // a city samples per block: the spacing (how far apart its buildings stand, down to
 // wall to wall), a colour scheme (one of the named PALETTES the buildings' colour
@@ -170,6 +170,13 @@ export const TYPE_META: Readonly<Record<string, BlockTypeData>> = {
     "params": { "spacing": { "tight": 1, "touching": 1 }, "height": { "mixed": 2, "mid": 1 } },
     "cities": { "town": { "center": 1 }, "city": { "center": 1 } },
     "overlay": "highrise",
+  },
+  "panel_estate": {
+    "placement": "perimeter", "ground": null,
+    "pools": [{ "group": "panel", "weight": 1 }],
+    "params": { "spacing": { "open": 3, "wide": 2, "touching": 1 }, "height": { "mixed": 3, "low": 1, "mid": 2, "tall": 2 } },
+    "cities": { "town": { "outer": 2 }, "city": { "center": 1, "outer": 5 } },
+    "district": "residential", "overlay": "residential",
   },
   "landmark": {
     "placement": "single", "ground": null,

@@ -80,6 +80,8 @@ export const SETS: readonly SetDef[] = [
         description: "Factories, sheds and tanks on concrete yards, with a few shop fronts." },
       { id: "towerblock", label: "Tower block",
         description: "A tower in the middle of the block, ringed by shop fronts." },
+      { id: "panel_estate", label: "Housing estate",
+        description: "Prefabricated panel houses and tower blocks standing apart in open greenery." },
       { id: "landmark", label: "Landmark",
         description: "One historical building filling the whole block: a church, a castle, a palace." },
     ],
