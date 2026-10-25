@@ -46,8 +46,9 @@ ribbon a joint, so keep the ribbon count modest and leave a margin for bends.
 ## Checks
 
 1. `pnpm typecheck`; `pnpm exec vitest run test/bridgeSet.test.ts test/bridgeBudget.test.ts test/previews.test.ts`.
-2. The catalog sweep on the bridge pages (`TEST_ALL_VARIANTS=1 pnpm test`, or a
-   scratch test calling `sweep()` on the `proc-preview-bridge-*` ids).
+2. The catalog sweep on the bridge pages: a scratch test calling `sweep()` on the
+   `proc-preview-bridge-*` ids (not `TEST_ALL_VARIANTS=1 pnpm test`, which runs
+   only when the user asks for it).
 3. `pnpm sets:pins` - read which cases redraw; only the types you meant to change
    may move.
 4. Every bug fix gets a regression test in `test/bridgeSet.test.ts` (the kit) or

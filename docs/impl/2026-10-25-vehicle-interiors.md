@@ -67,8 +67,10 @@ buses.md and catalog-site.md were updated to match.
   - the UIC-Z hash pins re-pinned, and the CD 471 landmark R17 re-mapped to the
     skirt's new leaves.
 
-Checks: `pnpm typecheck` passes; the results of `pnpm test`,
-`TEST_ALL_VARIANTS=1 pnpm test` and `pnpm build` are in the hand-back.
+Checks: `pnpm typecheck` and `pnpm test` pass (323 s on a four-core
+container). `pnpm build` has not been run on this branch.
+`TEST_ALL_VARIANTS=1 pnpm test` was not run: it runs only when the user asks
+for it (AGENTS.md).
 
 ## Follow-up changes
 
@@ -85,6 +87,13 @@ Checks: `pnpm typecheck` passes; the results of `pnpm test`,
    doors). A cabin's side and end walls now start at the body's bottom edge where
    it stands above the floor (`Cabin.bottom`, passed by the coach kit and the
    VT 18.16), with a regression test in `test/interiors.test.ts`.
+3. **Tests under five minutes** ("tests should run under 5 minutes, don't run all
+   combinations"). AGENTS.md now limits `pnpm test` to five minutes and runs
+   `TEST_ALL_VARIANTS=1` only on request. The per-vehicle interior test checks
+   each design's defaults, and the ray scan across shut doors pre-filters
+   triangles per door. The oak test checks every seed and the fixed sample, not
+   all 80 combinations. Together they took `pnpm test` from 428 s to 323 s on a
+   four-core container, still over the limit.
 
 ## How to test
 

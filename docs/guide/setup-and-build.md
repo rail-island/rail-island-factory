@@ -45,8 +45,9 @@ for it.
 
 ## Tests
 
-`pnpm test` runs every suite under `test/` and takes **about three minutes** on a
-four-core machine (`vite.config.ts`). Three things keep it there:
+`pnpm test` runs every suite under `test/` and **must finish in under five
+minutes** (AGENTS.md); it takes about three on a four-core machine
+(`vite.config.ts`). Three things keep it there:
 
 - **Shared workers.** `isolate: false` runs the files of a worker in one module
   registry: the generator is loaded once per worker, not once per file, and
@@ -66,8 +67,8 @@ four-core machine (`vite.config.ts`). Three things keep it there:
   ones every run (`variantsUnderTest` and `sample` in `test/catalogCache.ts`):
   the sweep's flicker, envelope and JS-against-generator checks, the LOD
   checks, and the family suites' per-variant loops. **`TEST_ALL_VARIANTS=1 pnpm
-  test` checks every combination** - run it after changing a design's
-  parameters or a shared builder; it takes far longer.
+  test` checks every combination**; it takes far longer, so it runs only when
+  the user asks for it (AGENTS.md).
 
 The whole-export tests export a few designs, not the catalog: `buildExport` and
 `generateModels` take a design list, and `pnpm build` (which runs the same code

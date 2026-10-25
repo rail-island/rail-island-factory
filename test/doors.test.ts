@@ -269,6 +269,24 @@ function firstHit(m: { groups: Map<string, { pos: number[]; nrm: number[]; part:
   return hit;
 }
 
+/** The triangles of `m` that reach into x0..x1 and span height y: what a ray across that span can meet. */
+function slab(m: Internals, x0: number, x1: number, y: number): Pick<Internals, "groups"> {
+  const groups = new Map<string, { pos: number[]; nrm: number[]; part: number[] }>();
+  for (const [mat, g] of m.groups) {
+    const out = { pos: [] as number[], nrm: [] as number[], part: [] as number[] };
+    for (let t = 0; t < g.part.length; t++) {
+      const xs = [0, 3, 6].map((c) => g.pos[t * 9 + c]!);
+      const ys = [1, 4, 7].map((c) => g.pos[t * 9 + c]!);
+      if (Math.max(...xs) < x0 || Math.min(...xs) > x1 || Math.max(...ys) < y || Math.min(...ys) > y) continue;
+      out.pos.push(...g.pos.slice(t * 9, t * 9 + 9));
+      out.nrm.push(...g.nrm.slice(t * 9, t * 9 + 9));
+      out.part.push(g.part[t]!);
+    }
+    if (out.part.length) groups.set(mat, out);
+  }
+  return { groups };
+}
+
 /** A built model's internals, for the ray tests. */
 type Internals = { groups: Map<string, { pos: number[]; nrm: number[]; part: number[] }>; parts: Array<{ name: string }>; palette: Record<string, { color?: string }> };
 
@@ -331,8 +349,10 @@ describe("shut doors over a doorway", () => {
       for (const [name, u] of doors) {
         const s = Math.sign(u.min[2]! + u.max[2]!);
         const y = (u.min[1]! + u.max[1]!) / 2;
+        // only the triangles across this door's span and height can meet its rays
+        const near = slab(m, u.min[0]!, u.max[0]!, y);
         for (let x = u.min[0]! + 0.003; x < u.max[0]! - 0.003; x += 0.005) {
-          const hit = firstHit(m, x, y, s, (p) => !(p >= 0 && isInteriorName(m.parts[p]!.name)), true);
+          const hit = firstHit(near, x, y, s, (p) => !(p >= 0 && isInteriorName(m.parts[p]!.name)), true);
           expect(hit, `${name}: nothing at x ${x.toFixed(3)}`).not.toBeNull();
         }
       }

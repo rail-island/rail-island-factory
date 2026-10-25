@@ -6,12 +6,17 @@ import { treeOak, treeOakLow, treeOakCoarse, treeOakMax, TREES } from "../genera
 import { glbStats } from "../generator/glbStats";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { bundleDesign } from "../generator/jsModel";
+import { ALL_VARIANTS, sample } from "./catalogCache";
 import { parseGlb, collectTriangles } from "../generator/glbTriangles";
 
 const variants = paramCombinations(OAK_PARAMS);
+// every seed at its defaults and the fixed sample of the rest (every one with
+// TEST_ALL_VARIANTS=1): the whole list alone took five minutes of `pnpm test`
+const atDefaults = (p: ParamValues) => OAK_PARAMS.every((s) => s.name === "seed" || p[s.name] === s.default);
+const checked = ALL_VARIANTS ? variants : [...new Set([...variants.filter(atDefaults), ...sample(variants)])];
 
 describe("reference oak", () => {
-  it.each(variants)("keeps %j in budget, grounded, deterministic and free of flicker at all levels", (p) => {
+  it.each(checked)("keeps %j in budget, grounded, deterministic and free of flicker at all levels", (p) => {
     let highBox: ReturnType<typeof glbStats> | undefined;
     for (const [build, budget] of [[treeOak, 2000], [treeOakLow, 218], [treeOakCoarse, 20], [treeOakMax, 10000]] as const) {
       const glb = build(p).toGlb("oak"), stats = glbStats(glb);

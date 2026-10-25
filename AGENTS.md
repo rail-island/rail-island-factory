@@ -105,12 +105,21 @@ document that owns it in the same change.** Conventions:
 
 ## Verify changes
 
-`pnpm typecheck`, `pnpm test` and `pnpm build`. `pnpm test` takes about three
-minutes: it checks each design's defaults and a fixed sample of its other
-parameter combinations; after changing a design's parameters or a shared
-builder, also run `TEST_ALL_VARIANTS=1 pnpm test`, which checks every one
-(docs/guide/setup-and-build.md). For a model change, also look at
-`export/thumbs/<id>.png` after `pnpm build:models`.
+`pnpm typecheck`, `pnpm test` and `pnpm build`. `pnpm test` checks each
+design's defaults and a fixed sample of its other parameter combinations
+(docs/guide/setup-and-build.md).
+
+- **The whole `pnpm test` must finish in under 5 minutes.** A change that
+  pushes it past that makes the tests faster (share builds, sample variants,
+  test fewer designs) in the same change; never by skipping a check that
+  guards behaviour.
+- **Do not run `TEST_ALL_VARIANTS=1 pnpm test`** (every parameter
+  combination; it takes far longer) unless the user asks for it. To check
+  more of a changed design's combinations, run a scratch test on that design
+  alone.
+
+For a model change, also look at `export/thumbs/<id>.png` after
+`pnpm build:models`.
 
 **Headless verification only**: do not drive a real browser (no dev server +
 browser automation) unless the task is about browser tooling and the user agreed
