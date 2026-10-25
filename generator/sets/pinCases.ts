@@ -90,6 +90,9 @@ export function setPinCases(): Record<string, PinCase[]> {
     busStop: busStop.TYPES.flatMap((t) => [4.5, 7, 10].map((lateral) => ({ name: `${t}.${lateral}`, build: () => busStop.buildSide(t, lateral) }))),
     cableCarStation: [
       { name: "types", build: () => cableCarStation.TYPE_META },
+      ...Object.keys(cableCarStation.TYPE_META).flatMap((t) => [false, true].map((circulating) => ({
+        name: `${t}.${circulating ? "ring" : "shuttle"}`, build: () => cableCarStation.buildStation(t, { ...cableCarStation.DEFAULT_VIEW, circulating }),
+      }))),
       ...[12, 31.5, 60].map((h) => ({ name: `pylon.${h}`, build: () => cableCarStation.buildPylon(h) })),
     ],
     port: [{ name: "types", build: () => ({ types: port.TYPE_META, props: port.PROPS }) }],

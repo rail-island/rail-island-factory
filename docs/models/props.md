@@ -1,28 +1,28 @@
 # Props
 
-**Covers** - the fixed props the game places on its structures: a cable car station's shed, a
-port's crane, container slots, hut, floodlight, bollard and mooring post, an airport's control
+**Covers** - the fixed props the game places on its structures: a port's crane, container slots, hut, floodlight, bollard and mooring post, an airport's control
 tower and windsock, and the trackside signals the game places itself (a rail signal, a level
 crossing's road signal, a buffer stop) with the lamps it switches; the box vocabulary they are drawn in, the material names the game reads,
-units, the low detail, the loading gauge, and `props.meta.json`.
+units, the low detail and `props.meta.json`.
 **Code** - `generator/props/propKit.ts`, `generator/props/portProps.ts`,
-`generator/props/cableCarSheds.ts`, `generator/props/airportProps.ts`, `generator/props/signalProps.ts`,
+`generator/props/airportProps.ts`, `generator/props/signalProps.ts`,
 `generator/catalog.ts`
 (`exportPropMeta`), `test/props.test.ts`
 **See also** - [previews.md](previews.md) (the cable-car pylon and the catenary supports, drawn
-by their set modules and filed with the props on the site), [sets.md](sets.md), [export.md](export.md), [lod.md](lod.md), the game's
+by their set modules and filed with the props on the site), [sets.md](sets.md), [cable-car-stations.md](cable-car-stations.md) (the cable car station, drawn whole by its set module), [export.md](export.md), [lod.md](lod.md), the game's
 `docs/rendering/props.md`
 
 ## What a prop is
 
 A prop is an ordinary design (thumbnail, GLB, JS model, LOD, catalog page) that the game never
 offers a player: a structure places it. Which props a structure places is the structure's set
-module's data (`cableCarStation` `TYPE_META.shed`, `port` `PROPS`, `airport` `TYPE_META`;
+module's data (`port` `PROPS`, `airport` `TYPE_META`;
 [sets.md](sets.md)); where they stand is the game's layout. The two trackside signals are the
 exception: no set names them, the game places one beside the track or road for every signal
 it derives (`SIGNAL_PROP_IDS`, see [The trackside signals](#the-trackside-signals)). A prop's size never follows the
 world - a part that does (a pylon's height, an airport terminal on its pad, a bus stop on its
-road) is a function in its set module instead.
+road, a whole cable car station drawn to its line's cabin) is a function in its set module
+instead.
 
 Ids are `proc-prop-<name>`; they are stored nowhere in a map, but the set modules name them, so
 renaming one is a change to both. Props carry no game text: the game never names one.
@@ -35,8 +35,7 @@ gable prism with its ridge along Z. The props were moved out of the game's own b
 they land looking as the game drew them. A bottom resting on the ground or deck the prop stands
 on is not drawn. `separateCoplanar` pulls apart flush faces of different materials (each
 material inset 0.0137 studs more than the one before, a thin box proportionally less) for the
-props whose source geometry let two materials share a face: the cable car sheds and the bus
-stop preview.
+props whose source geometry let two materials share a face, like the bus stop preview.
 
 Units are **studs**, the game's own, and props are placed at scale 1 - an airport's tower and
 windsock are drawn full size and placed at the airport's furniture scale (0.45..1).
@@ -48,8 +47,7 @@ and the colour. The game parses the name and gives the mesh the material its own
 kind get - `light` glows, `glass` is see-through, `steel` is metallic - so the factory material
 (roughness and metalness by kind) is only what the site, the thumbnail and the GLB show. The
 kinds: the station vocabulary (`steel`, `glass`, `light`, `wood`, `roof`, `column`, `sign`,
-...) for port and airport props, the cable car's (`steel`, `timber`, `glass`, `concrete`,
-`stone`, `deck`) for the sheds, and `fabric` for the windsock.
+...) for port and airport props and `fabric` for the windsock.
 
 ## The props
 
@@ -61,7 +59,6 @@ kinds: the station vocabulary (`steel`, `glass`, `light`, `wood`, `roof`, `colum
 | `proc-prop-port-floodlight` | - | crossbar along X |
 | `proc-prop-port-bollard` | - | plate, stem and cap |
 | `proc-prop-port-mooring-post` | - | sunk half a stud into the deck |
-| `proc-prop-cablecar-shed` | `type`: the four station types | station frame: +Z toward the head, y = 0 the station's terrain level, at the type's footprint and head height |
 | `proc-prop-airport-tower` | `kind`: regional (28-stud shaft) / international (48) | full size, standing at its origin |
 | `proc-prop-airport-windsock` | - | five open cones tapering along +X from the mast head |
 | `proc-prop-rail-signal` | - | mast foot at the origin, the head facing +Z, the track toward +X |
@@ -74,32 +71,9 @@ runtime every JS model carries, so `test/catalogSweep.ts` holds props and set pr
 whole set module and is never exported to the game, to 80 KB), or to their GLBs when those are
 larger; every other design keeps that check.
 
-`FAR_PROPS` names the props a structure's far level keeps (crane, container, hut, tower, shed);
+`FAR_PROPS` names the props a structure's far level keeps (crane, container, hut, tower);
 their low detail is the boxes tagged `lod: "shell"` - the silhouette the game's structure LOD
-kept when they were its boxes - except the cable car shed's, which draws its own few boxes
-(`shedLodBoxes`, below).
-
-## The cable car sheds
-
-`generator/props/cableCarSheds.ts` draws one station hall per station type, and every type's
-roof carries on forward over the game's boarding platform and the back half of the bull wheel,
-its underside 2.5 studs above the rope and its front edge half a stud past the wheel axis.
-Only the footprint is levelled, so everything that stands on the ground stands inside it;
-what reaches over the platform is cantilevered from columns at the footprint's front corners
-(a column may pass through the platform's deck). Each hall leaves the game's stairs a door in
-its front (and the gantry one in its back), so they climb out of the hall to the platform.
-
-| Type | The shed |
-|---|---|
-| `open_gantry` | a red steel frame of H columns on plinths, lattice girders cantilevered to the wheel, roof trusses, X bracing; a corrugated roof with a ridge lantern and the machine room over the wheel (the gearbox and motor hung under it); clad back wall, an operator's and a ticket booth on a grating deck, the station board on the front truss |
-| `alpine_chalet` | a stone ground floor and two timber storeys with shuttered windows, flower boxes, side balconies and a clock on the inner gable; one 25-degree shingle roof on deep bracketed eaves, carried forward by timber posts, braces, tie beams and king posts to the front truss with its collar and board; barge boards, ridge turret, chimney |
-| `glass_modern` | a two-storey curtain-wall box (mullions, sun fins, terraces with glass balustrades, a panorama box cantilevered off the right side, a counter and benches inside) under a flat white wing with a skylight, solar panels and a timber slat soffit, carried by tree columns forked above the platform; a lift core rising through the wing to a glass lantern, glass wind screens |
-| `concrete_drive` | a concrete hall with deep fins, ribbon windows, a relief over the control room's bay window and slit windows by the door; portal frames with capitals and haunches, a coffered ceiling, a parapeted roof with roof lights, and the drive room over the wheel (glass ribbon, louvres, plant, railing, the gearbox and motor under the front beam) |
-
-The full detail stays within 5,000 triangles a type and the low detail within 200
-(`test/props.test.ts`); the low detail is the hall (open over the stairs), the roof, the
-columns and beams that carry it and the machine room or tower - the same silhouette. The
-station's preview ([previews.md](previews.md)) draws the same two levels on its deck.
+kept when they were its boxes.
 
 ## The trackside signals
 
@@ -131,20 +105,6 @@ material; the body (`steel`, `paint`, `concrete`) it draws as one mesh. The low 
 the mast, the head (and the cross) and flat lamp faces in the same lamp materials, under the
 100-triangle budget. `test/props.test.ts` checks each lamp is its own material at both levels
 and that the lamps sit red over blue over green, left of right.
-
-## The loading gauge
-
-A cabin rounds the outside of the bull wheel, so what it sweeps is a ring about the wheel axis;
-no shed box may stand in it (`intrudesOnCabin`, the game's predicate, with the wheel `headZ =
-depth / 2 + 7` in front of the station, on each box's exact extent with its tilts).
-`shedFouls` adds what else the game builds round the shed: nothing on the wheel or the grips
-riding it (within the ring's outer radius, up to 1.3 studs above the rope), nothing more than
-0.6 studs ahead of the wheel axis (where the rope leaves, at any slope), nothing in the
-platform's band (7.8 to 12.4 studs from the axis, from 9.4 to 6.9 studs below the rope) but
-slender upright columns clear of its railing, and nothing over the stairs' treads
-(`stairTreads`, the default cabin's) lower than 2.4 studs of head room. `test/props.test.ts`
-asserts both for every station type at both levels, the separated geometry included, and that
-the checks would catch a box in each place.
 
 ## props.meta.json
 

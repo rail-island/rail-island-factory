@@ -1,72 +1,20 @@
 // The fixed props the game places on its structures (generator/props/,
-// docs/models/props.md): the loading gauge no shed may cross, the meta the game
-// reads before building one, and the material names the game reads its box
-// material back from.
+// docs/models/props.md): the meta the game reads before building one and the
+// material names the game reads its box material back from.
 import { describe, expect, it } from "vitest";
 import { PROP_DESIGNS, PREVIEW_DESIGNS, DESIGNS, BUILDINGS, ALL_VEHICLES } from "../generator/generate";
 import { exportPropMeta } from "../generator/catalog";
-import { FAR_PROPS, propMaterial, separateCoplanar, type PropBox } from "../generator/props/propKit";
-import { SHED_VALUES, STATION_DIMS, STATION_TYPES, cableCarShed, cableCarShedLod, headOverhangFor, intrudesOnCabin, shedBoxes, shedFouls, shedLodBoxes, stairTreads } from "../generator/props/cableCarSheds";
-import { TYPE_META as CABLE_CAR_TYPES } from "../generator/sets/cableCarStation";
+import { FAR_PROPS, propMaterial } from "../generator/props/propKit";
 import { PROPS as PORT_PROPS, CONTAINER_LIVERIES } from "../generator/sets/port";
 import { TYPE_META as AIRPORT_TYPES } from "../generator/sets/airport";
 import { CONTAINER_COLORS } from "../generator/props/portProps";
 import { CROSSING_SIGNAL_LAMPS, RAIL_SIGNAL_LAMPS, SIGNAL_PROP_IDS, bufferStop, bufferStopLod, crossingSignal, crossingSignalLod, railSignal, railSignalLod } from "../generator/props/signalProps";
 import { exportedText } from "../generator/text";
 
-describe("cable car sheds", () => {
-  it.each(STATION_TYPES)("%s stays out of the ring the cabins sweep round the wheel", (type) => {
-    const dims = STATION_DIMS[type];
-    const fouling = shedBoxes(type).filter((b) => intrudesOnCabin(dims.ropeHeadY, headOverhangFor(dims.d), b));
-    expect(fouling).toEqual([]);
-    // and the separation that keeps faces from flickering moves nothing into it
-    expect(separateCoplanar(shedBoxes(type)).filter((b) => intrudesOnCabin(dims.ropeHeadY, headOverhangFor(dims.d), b))).toEqual([]);
-  });
-
-  it.each(STATION_TYPES)("%s keeps off the head, the rope, the platform and the stairs the game builds, at both levels", (type) => {
-    for (const boxes of [shedBoxes(type), shedLodBoxes(type)]) {
-      const fouls = [...boxes, ...separateCoplanar(boxes)].map((b) => shedFouls(type, b)).filter((f) => f !== null);
-      expect(fouls).toEqual([]);
-    }
-  });
-
-  it("would catch a box over the stairs, through the platform or ahead of the wheel", () => {
-    const type = "alpine_chalet";
-    const dims = STATION_DIMS[type];
-    const headZ = headOverhangFor(dims.d);
-    const tread = stairTreads(type)[4]!;
-    const box = (cx: number, cy: number, cz: number, sx: number, sy: number, sz: number): PropBox => ({ cx, cy, cz, sx, sy, sz, color: [0, 0, 0], material: "steel" });
-    expect(shedFouls(type, box(0, tread.top + 1, (tread.z0 + tread.z1) / 2, 2, 1, 0.5))).toBe("stairs");
-    expect(shedFouls(type, box(10, dims.ropeHeadY - 8.5, headZ - 2, 3, 0.4, 3))).toBe("platform");
-    expect(shedFouls(type, box(10, dims.ropeHeadY - 8.5, headZ - 4, 0.8, 12, 0.8))).toBeNull();
-    expect(shedFouls(type, box(0, dims.ropeHeadY + 3, headZ + 2, 10, 0.5, 2))).toBe("rope");
-    expect(shedFouls(type, box(0, dims.ropeHeadY + 0.8, headZ, 1, 1, 1))).toBe("head");
-  });
-
-  it.each(STATION_TYPES)("%s draws in 5,000 triangles, its low detail in 200", (type) => {
-    const values = { type: SHED_VALUES[type] };
-    expect(cableCarShed(values).triangleCount()).toBeLessThanOrEqual(5000);
-    expect(cableCarShedLod(values).triangleCount()).toBeLessThanOrEqual(200);
-  });
-
-  it("would catch a box across the cabin's path", () => {
-    const dims = STATION_DIMS.open_gantry;
-    const across: PropBox = { cx: 0, cy: dims.ropeHeadY - 3, cz: headOverhangFor(dims.d) - 5, sx: 4, sy: 2, sz: 1, color: [0, 0, 0], material: "steel" };
-    expect(intrudesOnCabin(dims.ropeHeadY, headOverhangFor(dims.d), across)).toBe(true);
-  });
-
-  it("is the shed every station type names, at the type's own size", () => {
-    for (const type of STATION_TYPES) {
-      expect(CABLE_CAR_TYPES[type]).toMatchObject({ ...STATION_DIMS[type], shed: { prop: "proc-prop-cablecar-shed", values: { type: SHED_VALUES[type] } } });
-    }
-  });
-});
-
 describe("the props", () => {
   it("are every model a set names and the signals the game places, listed apart from the buildings and vehicles", () => {
     const named = [
       ...Object.values(SIGNAL_PROP_IDS),
-      ...Object.values(CABLE_CAR_TYPES).map((t) => t.shed.prop),
       ...Object.values(PORT_PROPS),
       ...Object.values(AIRPORT_TYPES).flatMap((t) => [t.windsock.prop, ...(t.tower ? [t.tower.prop] : [])]),
     ];

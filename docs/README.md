@@ -59,6 +59,7 @@
 | [models/station-types.md](models/station-types.md) | the eight railway station types of the `station` set: layouts, the deck (end ramps, island underpasses), the train sheds' vault, the village depot, the gauge rule and the triangle budgets |
 | [models/aircraft.md](models/aircraft.md) | the Aero A.10, the Airbus A380, the Boeing 737-800, the MD-11, 747-400 and Beluga, the light jet and the small two-seat airplane, airline liveries, their gear parts |
 | [models/ships.md](models/ships.md) | the cruise ferry, the hydrofoil and the passenger ferry, their waterlines |
+| [models/cable-car-stations.md](models/cable-car-stations.md) | the four cable car station types: the whole station the set module draws for the game's view (hall, head, bull wheel, curved or rectangular platform, stairs), per-type platforms, levels, clearances, budget, the pylon |
 | [models/cable-cabins.md](models/cable-cabins.md) | the aerial tramway car, the small gondola and the parametric chairlift chair (seats, bubble, colour), their rope, sill and seat datums |
 | [models/trucks.md](models/trucks.md) | the cistern semi-truck, the concrete mixer and the reefer semi-truck |
 | [models/emitters.md](models/emitters.md) | where models smoke, steam and flare, and a fountain's water: `emit`, `pool`, `jet`, the export |
@@ -69,7 +70,7 @@
 | [models/sets.md](models/sets.md) | the set registry: structure, rail and road, block and catenary sets, frozen ids, defaults and aliases, landed sets and what each module holds (the seven block archetypes, their parameters and the shared city fill), previews, pins, `export/sets/` metas, modules and declarations |
 | [models/bridges.md](models/bridges.md) | the bridge types: what each builds over the game's path, the deck section, piers and abutments, structural spans and the cable types' shared towers, overhead members, part tags, triangle budgets per length |
 | [models/previews.md](models/previews.md) | the site's preview designs: one page per structure, rail and road type, decoration, catenary style, city block and texture; categories, bound types, preview parameters, the drawing kit, the block composer |
-| [models/props.md](models/props.md) | the fixed props the game's structures place: the box vocabulary and prop kit, `<kind>#<rrggbb>` materials, the port, cable car and airport props, the loading gauge, `props.meta.json` |
+| [models/props.md](models/props.md) | the fixed props the game's structures place: the box vocabulary and prop kit, `<kind>#<rrggbb>` materials, the port and airport props and the signals, `props.meta.json` |
 | [models/text.md](models/text.md) | the exported text in the game's 14 languages: keys, phrasebooks keyed by English, verbatim titles, overrides, `export/text/`, the gap check |
 | [models/surfaces.md](models/surfaces.md) | the texture library (photo sets, sources, the cap, the fetch script), named surfaces and their tint rule, opting a material in, the UVs and `userData.surfaces`, `export/textures/` and `surfaces.meta.json` |
 | [models/export.md](models/export.md) | the export folder: JS models, thumbnails, `skyscrapers.meta.json`, `village.meta.json`, `vehicles.meta.json`, `catalog.json`; the in-memory GLB the build analyses |
