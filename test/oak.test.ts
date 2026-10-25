@@ -31,18 +31,18 @@ describe("reference oak", () => {
         expect(stats.min[k]).toBeCloseTo(highBox.min[k]!, 5);
         expect(stats.max[k]).toBeCloseTo(highBox.max[k]!, 5);
       }
+      // one expect per level: an expect per triangle cost most of the test's time
       const { json, bin } = parseGlb(glb);
-      for (const tri of collectTriangles(json, bin)) {
-        expect(tri.p.flat().every(Number.isFinite)).toBe(true);
-        for (const n of tri.n) expect(Math.hypot(...n)).toBeCloseTo(1, 5);
-      }
+      const bad = collectTriangles(json, bin).filter((tri) => !tri.p.flat().every(Number.isFinite) || tri.n.some((n) => Math.abs(Math.hypot(...n) - 1) > 1e-5));
+      expect(bad).toHaveLength(0);
     }
   });
 
   it("offers five numbered seeds while preserving the two previously saved variants", () => {
     expect(OAK_PARAMS[0]!.values.map((v) => [v.value, v.title])).toEqual(["1", "2", "3", "4", "5"].map((s) => [s, s]));
     for (const [old, seed] of [["7", "1"], ["19", "2"]]) {
-      for (const build of [treeOak, treeOakLow, treeOakCoarse, treeOakMax])
+      // every level reads the seed through oakOptions, so the cheap levels prove the alias
+      for (const build of [treeOak, treeOakLow, treeOakCoarse])
         expect(build({ seed: old! }).toGlb("oak")).toEqual(build({ seed: seed! }).toGlb("oak"));
     }
     const positions = OAK_PARAMS[0]!.values.map(({value}) => JSON.stringify(treeOak({ seed: value }).positions()));
@@ -113,7 +113,7 @@ describe("reference oak", () => {
     const source = await bundleDesign(design, "trees.ts");
     const mod = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
     expect(mod.maxTriangleBudget).toBe(10000);
-    for (const p of variants) for (const max of [false, true]) {
+    for (const p of checked) for (const max of [false, true]) {
       const group = max ? mod.buildMax(THREE, p) : mod.default(THREE, p);
       const meshes: import("three").Mesh[] = [];
       group.traverse((o: import("three").Object3D) => { if ((o as import("three").Mesh).isMesh) meshes.push(o as import("three").Mesh); });

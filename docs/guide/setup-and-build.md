@@ -46,8 +46,8 @@ for it.
 ## Tests
 
 `pnpm test` runs every suite under `test/` and **must finish in under five
-minutes** (AGENTS.md); it takes about three on a four-core machine
-(`vite.config.ts`). Three things keep it there:
+minutes** (AGENTS.md); it takes about four and a half on a four-core machine
+(`vite.config.ts`). Four things keep it there:
 
 - **Shared workers.** `isolate: false` runs the files of a worker in one module
   registry: the generator is loaded once per worker, not once per file, and
@@ -69,6 +69,10 @@ minutes** (AGENTS.md); it takes about three on a four-core machine
   checks, and the family suites' per-variant loops. **`TEST_ALL_VARIANTS=1 pnpm
   test` checks every combination**; it takes far longer, so it runs only when
   the user asks for it (AGENTS.md).
+- **Cheap comparisons.** `test/setup.ts` decides equal typed arrays (GLB bytes)
+  in one native comparison: `toEqual` walks them element by element, seconds per
+  model. A check over every triangle collects the failures and makes one
+  `expect`, not one per triangle.
 
 The whole-export tests export a few designs, not the catalog: `buildExport` and
 `generateModels` take a design list, and `pnpm build` (which runs the same code

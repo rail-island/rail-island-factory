@@ -227,7 +227,13 @@ describe("vehicle doors", () => {
         for (const { c, i } of doors) {
           expect(c.name).toMatch(/^doors-(left|right)(-.+)?$/);
           expect(sampleCount(glb, i)).toBe(DOOR_SAMPLES + 1);
-          const [shut, rest] = [glbStats(poseGlb(glb, 0, i)), glbStats(glb)];
+        }
+        // every clip's first sample is the model at rest: posed shut all at once (one
+        // measurement, not one per clip: a set has sixteen), it keeps the rest bounds
+        if (doors.length) {
+          let shutGlb = glb;
+          for (const { i } of doors) shutGlb = poseGlb(shutGlb, 0, i);
+          const [shut, rest] = [glbStats(shutGlb), glbStats(glb)];
           for (const k of [0, 1, 2]) {
             expect(shut.min[k]).toBeCloseTo(rest.min[k]!, 5);
             expect(shut.max[k]).toBeCloseTo(rest.max[k]!, 5);

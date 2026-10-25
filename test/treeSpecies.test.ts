@@ -41,11 +41,10 @@ describe.each(KIT)("the kit's %s", (species) => {
         expect(stats.min[k]).toBeCloseTo(highBox.min[k]!, 4);
         expect(stats.max[k]).toBeCloseTo(highBox.max[k]!, 4);
       }
+      // one expect per level: an expect per triangle cost most of the test's time
       const { json, bin } = parseGlb(glb);
-      for (const tri of collectTriangles(json, bin)) {
-        expect(tri.p.flat().every(Number.isFinite)).toBe(true);
-        for (const n of tri.n) expect(Math.hypot(...n)).toBeCloseTo(1, 5);
-      }
+      const bad = collectTriangles(json, bin).filter((tri) => !tri.p.flat().every(Number.isFinite) || tri.n.some((n) => Math.abs(Math.hypot(...n) - 1) > 1e-5));
+      expect(bad).toHaveLength(0);
     }
   });
 

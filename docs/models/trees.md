@@ -242,7 +242,7 @@ four levels (budgets, two materials, grounding, matching bounds, determinism,
 normals, no coplanar flicker), five distinct shapes, leaves rooted in their cores
 (willow curtains hanging under a clump), every low limb ending in a mass and every
 low mass held, and the standalone JS including `buildMax`. `test/oak.test.ts` checks
-the oak's 80 combinations the same way, each control taking effect and the old seed
+every oak seed at its defaults and the fixed sample of its 80 combinations the same way, each control taking effect and the old seed
 aliases. The catalog sweep builds every tree in JS as in the generator.
 
 References: `assets/trees/SOURCES.md` (written descriptions and OpenTTD's sprites)

@@ -67,7 +67,7 @@ buses.md and catalog-site.md were updated to match.
   - the UIC-Z hash pins re-pinned, and the CD 471 landmark R17 re-mapped to the
     skirt's new leaves.
 
-Checks: `pnpm typecheck` and `pnpm test` pass (323 s on a four-core
+Checks: `pnpm typecheck` and `pnpm test` pass (269 s on a four-core
 container). `pnpm build` has not been run on this branch.
 `TEST_ALL_VARIANTS=1 pnpm test` was not run: it runs only when the user asks
 for it (AGENTS.md).
@@ -92,8 +92,13 @@ for it (AGENTS.md).
    `TEST_ALL_VARIANTS=1` only on request. The per-vehicle interior test checks
    each design's defaults, and the ray scan across shut doors pre-filters
    triangles per door. The oak test checks every seed and the fixed sample, not
-   all 80 combinations. Together they took `pnpm test` from 428 s to 323 s on a
-   four-core container, still over the limit.
+   all 80 combinations.
+4. **Faster slow test files** ("trim the slower test files to get under 5
+   minutes; one tree test at most 5 seconds"). `test/setup.ts` compares equal
+   typed arrays (GLB bytes) natively, which `toEqual` walked element by element.
+   The tree tests make one `expect` per level, not one per triangle. The door
+   test poses every clip shut at once. `pnpm test` went from 428 s to 269 s on a
+   four-core container; the oak file takes 5 s, each species of the kit about 3.5 s.
 
 ## How to test
 
