@@ -42,7 +42,8 @@ scene.add(build(THREE)); // a THREE.Group named after the model id
   window, a tinted visor, frosted toilet glass) - carries `userData.glass = true`, and the game draws it
   with a reflection of the sky. The GLB does not carry the flag. Every vehicle family marks its glass in its
   palette, and `test/glass.test.ts` fails on a vehicle that draws an unmarked material named like glass.
-  An LOD's glass (`LOD_GLASS`, [lod.md](lod.md)) stays unmarked: the low level is drawn plain.
+  An LOD's glass (`LOD_GLASS`, [lod.md](lod.md)) stays unmarked, and the game draws the low level
+  plain whatever it carries (an LOD that reuses a full palette's entry, like a truck's `visorTint`).
 - **Emitters.** A model that smokes, steams or flares carries `userData.emitters`, the mouths of its
   stacks for the parameters it was built with; a fountain carries `userData.fountain`, its pools and
   jets ([emitters.md](emitters.md)).
