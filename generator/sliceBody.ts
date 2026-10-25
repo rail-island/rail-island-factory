@@ -273,9 +273,10 @@ export function sliceHalf(b: SliceBody, d: number, y: number): number {
  * The cabin of a slice body's car from d0 to d1 behind its `doors` (their leaf
  * boxes, interior.ts): a floor at the lowest sill, a ceiling above the highest
  * head, the side walls CABIN_INSET inside the narrowest side between them where the
- * car keeps 90 % of its full width, a seat row only where the side holds it.
+ * car keeps 90 % of its full width, its `windows` (glass boxes, d and y) on them,
+ * a seat row only where the side holds it.
  */
-export function sliceCabin(m: MeshBuilder, b: SliceBody, X: (d: number) => number, d0: number, d1: number, doors: readonly SliceDoorway[]): void {
+export function sliceCabin(m: MeshBuilder, b: SliceBody, X: (d: number) => number, d0: number, d1: number, doors: readonly SliceDoorway[], windows: readonly SliceDoorway[] = []): void {
   const floor = Math.min(...doors.map((o) => o.y0)) + 0.003;
   const [a, c] = [d0 + CABIN_INSET, d1 - CABIN_INSET];
   const ds = [a, c, ...b.stations.filter((d) => d > a && d < c)];
@@ -298,6 +299,10 @@ export function sliceCabin(m: MeshBuilder, b: SliceBody, X: (d: number) => numbe
       const [x0d, x1d] = span(X(o.d0), X(o.d1));
       const dm = (o.d0 + o.d1) / 2;
       return { s: o.s, x0: x0d, x1: x1d, y0: o.y0 + 0.003, y1: o.y1 - 0.003, skin: (y: number) => sliceHalf(b, dm, y) };
+    }),
+    windows: windows.map((w) => {
+      const [x0w, x1w] = span(X(w.d0), X(w.d1));
+      return { s: w.s, x0: x0w, x1: x1w, y0: w.y0, y1: w.y1 };
     }),
     room: (xa, xb) => {
       const at = [xa, (xa + xb) / 2, xb].map(dOf);

@@ -16,6 +16,7 @@ export const INTERIOR_PALETTE: Record<string, MaterialSpec> = {
   interiorFloor: { color: "#5b5f62", roughness: 0.9 },
   interiorWall: { color: "#d8d4c8", roughness: 0.8 },
   interiorSeat: { color: "#3e5a80", roughness: 0.85 },
+  interiorGlass: { color: "#26323c", metallic: 0.2, roughness: 0.15 },
 };
 
 /** The most triangles one car's interior may have (test/interiors.test.ts). */
@@ -62,6 +63,15 @@ export interface CabinDoor {
   skin?: (y: number) => number;
 }
 
+/** A window seen from inside (model coordinates): side `s`, x0..x1 along the car, y0..y1 its glass. */
+export interface CabinWindow {
+  s: number;
+  x0: number;
+  x1: number;
+  y0: number;
+  y1: number;
+}
+
 /** A car's cabin (model coordinates): x0..x1 along the car, floor and ceiling heights, the side walls at |z| = half. */
 export interface Cabin {
   x0: number;
@@ -79,6 +89,8 @@ export interface Cabin {
    * would show outside. Omit where every row fits on the floor.
    */
   room?: (x0: number, x1: number) => { base: number; top: number } | null;
+  /** The car's windows, laid on the side walls as dark panes facing in (`windowPanes`). */
+  windows?: CabinWindow[];
   /**
    * Wheel housings (a bus's arches): x0..x1 along the car, up to `top`, a box on
    * each side from the side wall in to |z| = z, or with z 0 one box across the car.
@@ -156,15 +168,55 @@ function face(m: MeshCore, mat: string, pts: Vec3[], n: Vec3): void {
 }
 
 /**
+ * The windows on the cabin's side walls, seen from inside: a dark pane facing in,
+ * 4 mm off the wall, over each window's glass cut to the wall (between floor and
+ * ceiling, x0..x1); a window wholly off the wall (an upper deck's) has none.
+ */
+export function windowPanes(m: MeshCore, c: Pick<Cabin, "x0" | "x1" | "floor" | "ceiling" | "half">, windows: readonly CabinWindow[]): void {
+  for (const w of windows) {
+    const [a, b] = [Math.max(c.x0, Math.min(w.x0, w.x1)), Math.min(c.x1, Math.max(w.x0, w.x1))];
+    const [p, q] = [Math.max(c.floor + 0.01, w.y0), Math.min(c.ceiling - 0.01, w.y1)];
+    if (b - a < 0.05 || q - p < 0.05) continue;
+    const z = w.s * (c.half - 0.004);
+    face(m, "interiorGlass", [[a, p, z], [b, p, z], [b, q, z], [a, q, z]], [0, 0, -w.s]);
+  }
+}
+
+/** The cabins drawn into each model, by the interior part they went into, with their car, for `laterWindows`. */
+const cabins = new WeakMap<MeshCore, Map<string, Pick<Cabin, "x0" | "x1" | "floor" | "ceiling" | "half"> & { car: string | null }>>();
+
+/**
+ * Lays windows drawn after the cabin (the coach kit's) on its walls: each into
+ * the interior part of the cabin of the car being drawn that spans it, its
+ * triangles routed there (MeshCore.drawRouted) so the panes hide and show with the
+ * rest of the cabin. A window no cabin spans (a cab's, a car without doors) has none.
+ */
+export function laterWindows(m: MeshCore, windows: readonly CabinWindow[]): void {
+  const car = m.currentPartName();
+  for (const [name, c] of cabins.get(m) ?? []) {
+    const mine = windows.filter((w) => c.car === car && (w.x0 + w.x1) / 2 > c.x0 && (w.x0 + w.x1) / 2 < c.x1);
+    if (!mine.length) continue;
+    const index = (m as unknown as { parts: Array<{ name: string }> }).parts.findIndex((p) => p.name === name);
+    const draw = (mm: MeshCore) => mm.scope("cabin windows", () => windowPanes(mm, c, mine));
+    const sample = m.sampleDraw(draw);
+    if (sample.size) m.drawRouted(new Map([...sample].map(([mat, pos]) => [mat, new Array<number>(pos.length / 9).fill(index)])), () => draw(m));
+    return;
+  }
+}
+
+/**
  * Draws cabin `c` into the interior of the car being drawn: the floor, the
  * ceiling, the end walls, the side walls open over each doorway with its reveal,
- * and the seat rows, every row facing the middle of the car, its back toward the
- * nearer end.
+ * the windows on them, and the seat rows, every row facing the middle of the car,
+ * its back toward the nearer end. Returns the interior part's name.
  */
-export function drawCabin(m: MeshCore, c: Cabin): void {
+export function drawCabin(m: MeshCore, c: Cabin): string {
   if (!(c.x1 - c.x0 > 0.5 && c.ceiling - c.floor > 1 && c.half > 0.4)) throw new Error(`drawCabin: a cabin too small to stand in (${JSON.stringify({ x0: c.x0, x1: c.x1, floor: c.floor, ceiling: c.ceiling, half: c.half })})`);
   const { x0, x1, floor: y0, ceiling: y1, half: h } = c;
-  m.spin(interiorName(m), [0, 0, 0], () => {
+  const name = interiorName(m);
+  const drawnHere = cabins.get(m) ?? new Map();
+  cabins.set(m, drawnHere.set(name, { x0, x1, floor: y0, ceiling: y1, half: h, car: m.currentPartName() }));
+  m.spin(name, [0, 0, 0], () => {
     // a housing across the car stands on the arch, not on the floor
     const across = (c.housings ?? []).filter((hs) => hs.z <= 1e-6);
     m.scope("floor", () => {
@@ -207,6 +259,7 @@ export function drawCabin(m: MeshCore, c: Cabin): void {
         }
       }
     });
+    if (c.windows?.length) m.scope("windows", () => windowPanes(m, c, c.windows!));
     if (c.housings?.length)
       m.scope("wheel housings", () => {
         for (const hs of c.housings!) {
@@ -251,6 +304,7 @@ export function drawCabin(m: MeshCore, c: Cabin): void {
       }
     });
   });
+  return name;
 }
 
 /**

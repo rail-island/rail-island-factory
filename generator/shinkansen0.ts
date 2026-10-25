@@ -502,7 +502,9 @@ function drawCar(coach: Coach, L: Livery, car: Shinkansen0Car, X: (d: number) =>
         m.scope("running number", () => sideLettering(m, p, X, s, SHINKANSEN0_NUMBERS[car], end ? 8.9 : p.length - 1.75, 1.42, 0.1, "lettering"));
         if (lay.clover) m.scope("green emblems", () => lay.clover!.forEach((d) => clover(m, p, X, s, d, 2.85)));
       });
-    sliceCabin(m, p, X, end ? NOSE_LEN : 0, p.length, leaves);
+    // its windows seen from inside, their glass
+    const panes = [1, -1].flatMap((s) => lay.windows.filter((o) => onSide(o, s)).map(({ d: [a, b] }) => ({ s, d0: a + 0.05, d1: b - 0.05, y0: WIN[0] + 0.05, y1: WIN[1] - 0.05 })));
+    sliceCabin(m, p, X, end ? NOSE_LEN : 0, p.length, leaves, panes);
   });
   if (end) m.scope("nose", () => drawNose(m, p, X));
   else m.scope("front end", () => innerEnd(m, X, 1, 0, gangway));

@@ -4,7 +4,17 @@
 // no interior (jsModel.ts), so only the coaches with doors that open carry it.
 
 import { hiAt, loAt, lerp, halfWidth, sectionHalf, type Coach, type Volume } from "./csdCoachParts.ts";
-import { CABIN_INSET, drawCabin } from "./interior.ts";
+import { CABIN_INSET, drawCabin, laterWindows } from "./interior.ts";
+import type { Box } from "./csdCoachParts.ts";
+
+/**
+ * The window glass `b` (source metres) coach `c` lays on side `s`, seen from
+ * inside: a pane on the wall of the car's cabin, if one spans it (interior.ts
+ * `laterWindows`).
+ */
+export function coachWindow(c: Coach, s: number, b: Box): void {
+  laterWindows(c.m, [{ s, x0: c.X(b.x0), x1: c.X(b.x1), y0: b.y0, y1: b.y1 }]);
+}
 
 /** The shell's internal band boundaries of `v`, 2.5 mm above their nominal heights (`Coach.volume`). */
 const chordsOf = (v: Volume): number[] => v.bands.slice(1).map(([y]) => y + 0.0025);

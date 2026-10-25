@@ -14,6 +14,7 @@ buses.md and catalog-site.md were updated to match.
 
 - **The cabin** (`generator/interior.ts`, `drawCabin`):
   - floor, ceiling, side and end walls, and a reveal at each doorway;
+  - the side windows seen from inside, as dark panes on the walls;
   - box seats in 2+2, 2+1 or 1+1 rows, left out of every door's clear zone on
     either side and facing the middle of the car;
   - a bus's wheel-arch podiums;
@@ -69,6 +70,17 @@ buses.md and catalog-site.md were updated to match.
 Checks: `pnpm typecheck` passes; the results of `pnpm test`,
 `TEST_ALL_VARIANTS=1 pnpm test` and `pnpm build` are in the hand-back.
 
+## Follow-up changes
+
+1. **Windows seen from inside** ("missing windows are strange"). The cabin's
+   side walls now carry a dark pane over every side window's glass, so an open
+   door looks onto windows rather than a blank wall; the windows stay opaque.
+   Buses, the slice-lofted sets and the VT 18.16 pass their window lists to the
+   cabin. The coach kit lays its windows after the cabin, so `Coach.window` and
+   glass laid with `Coach.sidePanel` route a pane into the car's interior part
+   (`laterWindows`). Tests cover the routing, a door leaf's light getting none,
+   and panes on every kit; the UIC-Z pins moved again.
+
 ## How to test
 
 **Automated coverage.** No E2E framework exists in this repository, and
@@ -83,7 +95,8 @@ catalog site.
    preview. The model arrives with its doors shut: no interior shows, and the
    gaps between the leaves are dark.
 2. Press **Open right**. The doors open over 2 s and the cabin appears behind
-   them: grey floor, light walls, blue seats, none in front of a door.
+   them: grey floor, light walls with dark window panes where the side windows
+   are, blue seats, none in front of a door.
 3. Press **Close**. Once the doors have shut, the cabin disappears again.
 4. Press **Interior on**. Every cabin shows with the doors shut and the model is
    cut away above the ceilings: from above you see the seat rows, gaps at each
@@ -140,6 +153,7 @@ Nothing - the spec is implemented in full. The game is untouched, as the spec sa
 ## Changelog
 
 - Trams, coaches, units, metro cars and buses show a simple interior through their
-  open doors: floor, walls and seat rows, which keep the doorways free.
+  open doors: floor, walls with their windows, and seat rows, which keep the
+  doorways free.
 - The model page's 3D preview shows each car's interior while its doors open, and
   an Interior button shows every interior with the model cut away above it.

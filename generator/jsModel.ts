@@ -51,7 +51,7 @@ const noInteriors: Plugin = {
     const stubs: Record<string, string> = {
       interiorTable: "export const interiorTable = () => {};",
       interior: "export const drawCabin = () => {}, INTERIOR_PALETTE = {}, CABIN_INSET = 0.047;",
-      coachCabin: "export const coachCabin = () => {}, cabinHeights = () => [0, 0];",
+      coachCabin: "export const coachCabin = () => {}, cabinHeights = () => [0, 0], coachWindow = () => {};",
     };
     b.onResolve({ filter: /(^|\/)(interior|interiorTable|coachCabin)(\.ts)?$/ }, (a) => ({ path: a.path.replace(/^.*\//, "").replace(/\.ts$/, ""), namespace: "no-interiors" }));
     b.onLoad({ filter: /.*/, namespace: "no-interiors" }, (a) => ({ contents: stubs[a.path]!, loader: "js" }));

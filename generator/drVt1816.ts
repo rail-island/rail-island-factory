@@ -168,6 +168,10 @@ interface Leaf {
   y1: number;
 }
 
+/** The glass of side windows over spans `d` (on the sides they stand on), as `sideWindow` lays it: its windows seen from inside. */
+const glassOf = (list: ReadonlyArray<{ d: readonly [number, number]; sides?: number[] }>): Leaf[] =>
+  [1, -1].flatMap((s) => list.filter((w) => !w.sides || w.sides.includes(s)).map(({ d: [a, b] }) => ({ s, d0: a + 0.05, d1: b - 0.05, y0: WIN[0] + 0.05, y1: WIN[1] - 0.05 })));
+
 /** How far a door's leaf stands inside its outline. */
 const LEAF_INSET = 0.025;
 
@@ -309,10 +313,11 @@ function sideDoor(f: Side, d0: number, d1: number, y0: number, y1: number, glass
 /**
  * The cabin of a car from d0 to d1 behind its doors' `leaves` (interior.ts): a
  * floor at the lowest sill, a ceiling above the highest head under the roof's
- * arc, the side walls CABIN_INSET inside the flat sides, a seat row only where the
- * sides are full width, standing over the body's bottom.
+ * arc, the side walls CABIN_INSET inside the flat sides, its `windows` (glass boxes)
+ * on them, a seat row only where the sides are full width, standing over the
+ * body's bottom.
  */
-function drawCarCabin(m: MeshBuilder, p: Profile, X: (d: number) => number, d0: number, d1: number, leaves: readonly Leaf[]): void {
+function drawCarCabin(m: MeshBuilder, p: Profile, X: (d: number) => number, d0: number, d1: number, leaves: readonly Leaf[], windows: readonly Leaf[]): void {
   const floor = Math.min(...leaves.map((o) => o.y0)) + 0.003;
   const ds = [d0, d1, ...p.stations.filter((d) => d > d0 && d < d1)];
   const ceiling = Math.min(Math.max(...leaves.map((o) => o.y1)) + 0.12, ...ds.map((d) => p.C(d) - 0.08));
@@ -330,6 +335,10 @@ function drawCarCabin(m: MeshBuilder, p: Profile, X: (d: number) => number, d0: 
     doors: leaves.map((o) => {
       const [a, b] = span(X(o.d0), X(o.d1));
       return { s: o.s, x0: a, x1: b, y0: o.y0 + 0.003, y1: o.y1 - 0.003, skin: () => W };
+    }),
+    windows: windows.map((w) => {
+      const [a, b] = span(X(w.d0), X(w.d1));
+      return { s: w.s, x0: a, x1: b, y0: w.y0, y1: w.y1 };
     }),
     room: (xa, xb) => {
       const at = [xa, (xa + xb) / 2, xb].map(dOf);
@@ -647,7 +656,7 @@ function drawPowerCar(coach: Coach, X: (d: number) => number, gangway: boolean):
         m.scope("louvres", () => LOUVRES.forEach(([a, b, y0, y1], i) => m.scope(`louvre ${i + 1}`, () => louvre(f, a, b, y0, y1))));
         m.scope("running number", () => sideLettering(f, VT1816_NUMBER, 3.6, 1.5, 0.12));
       });
-    drawCarCabin(m, POWER, X, NOSE_D, VT1816_POWER_BODY - CABIN_INSET, leaves);
+    drawCarCabin(m, POWER, X, NOSE_D, VT1816_POWER_BODY - CABIN_INSET, leaves, glassOf(POWER_WINDOWS.map((d) => ({ d }))));
   });
   m.scope("nose", () => drawNose(m, X));
   m.scope("cockpit", () => drawCockpit(m, X));
@@ -686,7 +695,7 @@ function drawMiddleCar(coach: Coach, kind: Exclude<Vt1816Car, "powerCar">, X: (d
         m.scope("windows", () => lay.windows.filter((w) => onSide(w, s)).forEach(({ d: [a, b] }, i) => m.scope(`window ${i + 1}`, () => sideWindow(f, a, b, WIN[0], WIN[1], b - a > 0.8))));
         m.scope("lettering", () => sideLettering(f, "DR", L / 2, 1.5, 0.16));
       });
-    drawCarCabin(m, TRAILER, X, CABIN_INSET, L - CABIN_INSET, leaves);
+    drawCarCabin(m, TRAILER, X, CABIN_INSET, L - CABIN_INSET, leaves, glassOf(lay.windows));
   });
   m.scope("front end", () => innerEnd(m, X, 1, 0, gangway));
   m.scope("rear end", () => innerEnd(m, X, -1, L, gangway));

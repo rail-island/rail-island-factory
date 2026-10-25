@@ -11,7 +11,7 @@ import { lettering, letteringWidth } from "./cd163.ts";
 import { strokeText, strokeWidth } from "./strokeFont.ts";
 import { doorLeaves, LEAF_GAP, openable, type DoorMotion } from "./doors.ts";
 import { INTERIOR_PALETTE } from "./interior.ts";
-import { cabinHeights, coachCabin } from "./coachCabin.ts";
+import { cabinHeights, coachCabin, coachWindow } from "./coachCabin.ts";
 
 export type Pt = [number, number];
 
@@ -137,6 +137,11 @@ const stations = (v: Volume): number[] =>
 export class Coach {
   readonly m: MeshBuilder;
   /** A coach drawing into its own builder, or into `m` (another car of the same articulated set). */
+  /** True while a door's leaves are drawn: their lights are no cabin windows. */
+  private onLeaf = false;
+  /** True while `window` lays its glass, which it shows on the cabin's wall itself. */
+  private inWindow = false;
+
   constructor(palette: Record<string, MaterialSpec>, readonly centre: number, m?: MeshBuilder) {
     this.m = m ?? new MeshBuilder({ ...INTERIOR_PALETTE, ...COACH_PALETTE, ...palette });
   }
@@ -299,6 +304,8 @@ export class Coach {
    * edges that would meet the body's own edges are pulled 5 mm inside them.
    */
   sidePanel(v: Volume, mat: string, s: number, b: Box, proud: number, depth = 0.04): void {
+    // glass laid straight on the side shows on the cabin's wall too (`window`'s does there)
+    if (!this.onLeaf && !this.inWindow && /glass|frosted/i.test(mat)) coachWindow(this, s, b);
     const hw0 = halfWidth(v);
     const ys0 = v.section.map((p) => p[1]);
     const [minY, maxY] = [Math.min(...ys0), Math.max(...ys0)];
@@ -376,7 +383,15 @@ export class Coach {
       opts.end ? this.endPanel(v, mat, s, bb, proud, depth) : this.sidePanel(v, mat, s, bb, proud, depth);
     this.m.scope("frame", () => draw(opts.frame ?? "frame", b, 0.012));
     // the glass is a thin layer in front of the frame: its walls never meet the frame's
-    this.m.scope("glass", () => draw(opts.glass ?? "glass", { x0: b.x0 + fw, y0: b.y0 + fw, x1: b.x1 - fw, y1: b.y1 - fw }, 0.022, 0.008));
+    const glass = { x0: b.x0 + fw, y0: b.y0 + fw, x1: b.x1 - fw, y1: b.y1 - fw };
+    this.inWindow = true;
+    try {
+      this.m.scope("glass", () => draw(opts.glass ?? "glass", glass, 0.022, 0.008));
+    } finally {
+      this.inWindow = false;
+    }
+    // seen from inside, on the wall of the car's cabin -- but not a door leaf's light
+    if (!opts.end && !this.onLeaf) coachWindow(this, s, glass);
     // a drop light's horizontal sash bar, `sash` its lower edge, over the glass
     const y = opts.sash;
     if (y !== undefined) this.m.scope("sash", () => draw(opts.frame ?? "frame", { x0: b.x0 + fw - 0.01, y0: y, x1: b.x1 - fw + 0.01, y1: y + 0.07 }, 0.033, 0.009));
@@ -441,28 +456,34 @@ export class Coach {
     // the hinge line: the leaf's outer face at mid height, mid door
     const hz = s * ((sectionHalf(v.section, (leaf.y0 + leaf.y1) / 2) * lerp(v.plan, (leaf.x0 + leaf.x1) / 2)) / halfWidth(v) + 0.01);
     // each leaf's panels in a "leaf" scope, what it carries under the caller's own
-    // names, so a shut door's source tree reads as a painted one's
-    openable(this.m, (mm, o) =>
-      this.drawingInto(mm, () =>
-        leaves.forEach((l) =>
-          this.m.moved(l.move(o, hz), () => {
-            const lb = { x0: l.x0 + this.centre, x1: l.x1 + this.centre, y0: leaf.y0, y1: leaf.y1 };
-            this.m.scope("leaf", () => leafPanel(lb));
-            // over a doorway, a dark strip behind the gap to the next leaf, riding on
-            // this one and reaching 1 cm into the frame above and below: the gap shows
-            // dark while the doors are shut, as the doorway did (3.5 mm proud, an odd
-            // figure, off the faces of the leaves' lights)
-            if (doorway && leaves.some((n) => Math.abs(n.x0 - l.x1 - LEAF_GAP) < 1e-6))
-              this.m.scope("gap", () => draw("seam", { x0: lb.x1 - 0.02, x1: lb.x1 + LEAF_GAP + 0.008, y0: lb.y0 - 0.01, y1: lb.y1 + 0.01 }, 0.0035, 0.0055));
-            // a box cut at a leaf's edge keeps 1 cm inside it, its walls off the leaf's
-            opts.leafWork?.((bb) => {
-              const [a, c] = [Math.max(bb.x0, lb.x0 + 0.01), Math.min(bb.x1, lb.x1 - 0.01)];
-              return c - a > 0.03 ? { ...bb, x0: a, x1: c } : null;
-            });
-          }),
+    // names, so a shut door's source tree reads as a painted one's; a leaf's lights
+    // are no cabin windows (`sidePanel`)
+    this.onLeaf = true;
+    try {
+      openable(this.m, (mm, o) =>
+        this.drawingInto(mm, () =>
+          leaves.forEach((l) =>
+            this.m.moved(l.move(o, hz), () => {
+              const lb = { x0: l.x0 + this.centre, x1: l.x1 + this.centre, y0: leaf.y0, y1: leaf.y1 };
+              this.m.scope("leaf", () => leafPanel(lb));
+              // over a doorway, a dark strip behind the gap to the next leaf, riding on
+              // this one and reaching 1 cm into the frame above and below: the gap shows
+              // dark while the doors are shut, as the doorway did (3.5 mm proud, an odd
+              // figure, off the faces of the leaves' lights)
+              if (doorway && leaves.some((n) => Math.abs(n.x0 - l.x1 - LEAF_GAP) < 1e-6))
+                this.m.scope("gap", () => draw("seam", { x0: lb.x1 - 0.02, x1: lb.x1 + LEAF_GAP + 0.008, y0: lb.y0 - 0.01, y1: lb.y1 + 0.01 }, 0.0035, 0.0055));
+              // a box cut at a leaf's edge keeps 1 cm inside it, its walls off the leaf's
+              opts.leafWork?.((bb) => {
+                const [a, c] = [Math.max(bb.x0, lb.x0 + 0.01), Math.min(bb.x1, lb.x1 - 0.01)];
+                return c - a > 0.03 ? { ...bb, x0: a, x1: c } : null;
+              });
+            }),
+          ),
         ),
-      ),
-    );
+      );
+    } finally {
+      this.onLeaf = false;
+    }
   }
 
   /**

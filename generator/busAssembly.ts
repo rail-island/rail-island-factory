@@ -58,6 +58,8 @@ export interface BusSpec {
   fittings: Fitting[];
   /** The passenger doors' doorways (`s` +1 right), cut through the shell with the cabin behind (BusDraft.door). */
   doorways?: Doorway[];
+  /** The side windows' glass (`s` +1 right), seen from inside on the cabin's walls (BusDraft.pane). */
+  windows?: Doorway[];
 }
 
 /** A doorway through side `s` of the shell: x0..x1 along it, sill y0 to head y1. */
@@ -85,8 +87,9 @@ function spanAt(outline: ReadonlyArray<[number, number]>, at: number): [number, 
 /**
  * The cabin of the section lo..hi behind its `doors` (interior.ts): a floor at
  * the lowest sill, a ceiling above the highest head, the side walls CABIN_INSET inside
- * the shell, a podium across the car over each wheel arch, a seat row only where
- * the plan and the roof hold it, over a wheel arch standing on its podium.
+ * the shell, the windows on them, a podium across the car over each wheel arch, a
+ * seat row only where the plan and the roof hold it, over a wheel arch standing on
+ * its podium.
  */
 function busCabin(m: MeshBuilder, spec: BusSpec, lo: number, hi: number, doors: Doorway[]): void {
   const sideXs = spec.side.map(([x]) => x);
@@ -99,6 +102,7 @@ function busCabin(m: MeshBuilder, spec: BusSpec, lo: number, hi: number, doors: 
   drawCabin(m, {
     x0, x1, floor, ceiling, half,
     doors: doors.map((d): CabinDoor => ({ ...d, y0: d.y0 + 0.003, y1: d.y1 - 0.003, skin: (y) => halfWidth(spec.section, y) })),
+    windows: (spec.windows ?? []).filter((w) => (w.x0 + w.x1) / 2 >= lo && (w.x0 + w.x1) / 2 <= hi),
     // a podium across the car over each wheel arch, its ends 11 mm outside the
     // arch's notch and its top over the notch's crown, so neither shows inside
     housings: spec.arches.filter((a) => a.x + a.half > x0 && a.x - a.half < x1).map((a) => ({ x0: a.x - a.half - 0.011, x1: a.x + a.half + 0.011, top: a.top + 0.004, z: 0 })),
@@ -374,7 +378,8 @@ export class BusDraft {
 
   /** Builds the bus with these fittings. */
   build(spec: Omit<BusSpec, "fittings">): MeshBuilder {
-    return assembleBus({ ...spec, fittings: this.fittings, doorways: this.doorways }, (b) => (this.builder = b));
+    const windows = this.lod.glass.map((g) => ({ s: g.s, x0: g.x[0], x1: g.x[1], y0: g.y[0], y1: g.y[1] }));
+    return assembleBus({ ...spec, fittings: this.fittings, doorways: this.doorways, windows }, (b) => (this.builder = b));
   }
 
   /** Builds the bus's distant model (lodRoad.ts busLod) from the same description and the notes. */

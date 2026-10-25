@@ -148,6 +148,36 @@ describe("a coach body with doorways", () => {
   });
 });
 
+describe("windows seen from inside", () => {
+  it("lay a coach's windows, drawn after its cabin, on the cabin's wall in the cabin's part, but not a door leaf's light", () => {
+    const c = new Coach({ red: { color: "#c03030" }, roof: { color: "#808080" } }, 5);
+    const v: Volume = { name: "body", section: [[1.4, 0.5], [1.4, 3.5], [-1.4, 3.5], [-1.4, 0.5]], plan: [[0, 1.4], [10, 1.4]], bands: [[0.5, 2, "red"], [2, 3.5, "roof"]] };
+    const door = { x0: 4, y0: 0.6, x1: 5.2, y1: 2.8 };
+    v.openings = [c.doorOpening(1, door)];
+    c.volume(v);
+    c.door(v, 1, door, "red", { opens: { kind: "plug", leaves: 1 }, leafWork: (clip) => c.window(v, 1, clip({ x0: 4.2, y0: 1.8, x1: 5, y1: 2.5 })!) });
+    c.window(v, -1, { x0: 1, y0: 1.8, x1: 2.4, y1: 2.6 });
+    const m = c.m as unknown as { groups: Map<string, { pos: number[]; part: number[] }>; parts: Array<{ name: string }> };
+    const panes = m.groups.get("interiorGlass")!;
+    // one pane (two triangles), on the far wall, facing in, in the interior part
+    expect(panes.part).toHaveLength(2);
+    expect(panes.part.every((p) => m.parts[p]!.name === "interior")).toBe(true);
+    const zs = panes.pos.filter((_, i) => i % 3 === 2);
+    expect(zs.every((z) => z < -1.3 && z > -1.4)).toBe(true);
+    expect(c.m.interiorTriangleCount()).toBeGreaterThan(2);
+  });
+
+  // a pane per window on every kit's cabins: the coach kit's tram and coach, a bus,
+  // the slice-lofted Shinkansen and the VT 18.16
+  for (const [id, params] of [["proc-vehicle-tatra-t3", {}], ["proc-vehicle-bmo-double-deck-coach", {}], ["proc-vehicle-karosa-renault-citybus-12m", {}], ["proc-vehicle-shinkansen-0", {}], ["proc-vehicle-dr-vt1816", {}], ["proc-vehicle-tgv-duplex", { unit: "bar" }]] as const)
+    it(`${id} shows its windows inside`, () => {
+      const m = ALL_VEHICLES.find((d) => d.id === id)!.build(params) as unknown as { groups: Map<string, { part: number[] }>; parts: Array<{ name: string }> };
+      const panes = m.groups.get("interiorGlass")?.part ?? [];
+      expect(panes.length).toBeGreaterThan(4);
+      expect(panes.every((p) => /^interior/.test(m.parts[p]!.name))).toBe(true);
+    });
+});
+
 /** The groups of passenger vehicles, and the designs among them with no door to open. */
 const PASSENGER_GROUPS = new Set(["coach", "unit", "tram", "metro", "bus"]);
 const NO_DOORS = new Set(["proc-vehicle-csd-dsk", "proc-vehicle-csd-m112"]);

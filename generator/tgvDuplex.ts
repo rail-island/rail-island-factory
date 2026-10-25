@@ -481,7 +481,9 @@ function drawTrailer(coach: Coach, L: Livery, f: TrailerFrame, X: (d: number) =>
         m.scope("upper deck windows", () => lay.upper.forEach(([a, q], i) => m.scope(`window ${i + 1}`, () => deckWindow(m, b, X, s, a, q, UPPER_WIN))));
         if (lay.numeral) m.scope("class numeral", () => sideLettering(m, b, X, s, lay.numeral!, lay.door[1] + 0.45, 2.05, 0.3, "lettering", 0.006));
       });
-    sliceCabin(m, b, X, f.d0, f.d1, leaves);
+    // its windows seen from inside: the lower deck's (the upper deck's stand above the one cabin)
+    const panes = [1, -1].flatMap((s) => [...lay.lower.map(([a, q]) => ({ s, d0: a, d1: q, y0: LOWER_WIN[0], y1: LOWER_WIN[1] })), ...lay.upper.map(([a, q]) => ({ s, d0: a, d1: q, y0: UPPER_WIN[0], y1: UPPER_WIN[1] }))]);
+    sliceCabin(m, b, X, f.d0, f.d1, leaves, panes);
   });
   const end = (which: "front" | "rear") => {
     const wall = which === "front" ? f.d0 : f.d1;

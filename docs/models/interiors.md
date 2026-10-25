@@ -1,7 +1,7 @@
 # Vehicle interiors
 
-**Covers** - the generic cabin behind every passenger door: the interior part and how consumers hide it while the doors are shut (`userData.interiors`, the GLB's `extras`), what a cabin holds (floor, ceiling, walls, the doorways' reveals, seat rows clear of the doors, a bus's wheel-arch podiums), how each kit fits one into its body and cuts the doorways, the interior budget, the gap strips on shut leaves, keeping the code out of other bundles, the site's preview and the tests.
-**Code** - `generator/interior.ts` (`drawCabin`, `Cabin`, `CabinDoor`, `clearZones`, `seatRows`, `seatLayout`, `INTERIOR_PALETTE`, `INTERIOR_TRIANGLE_BUDGET`, `CABIN_INSET`), `generator/interiorTable.ts` (`interiorsOf`, `interiorTable`, `isInteriorName`), `generator/meshBuilder.ts` (`interiors`, `interiorTriangleCount`, `exteriorTriangleCount`, `toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/jsModel.ts` (`noInteriors`), `generator/glbTriangles.ts` (`collectTriangles`), `generator/coplanar.ts`, `generator/coachCabin.ts`, `generator/csdCoachParts.ts` (`Coach.bandPiece`, `Coach.door`), `generator/dmuKit.ts` (`loft`, `Car.doorways`), `generator/busAssembly.ts` (`busCabin`, `BusDraft.door`), `generator/busBody.ts` (`Shell.doorways`), `generator/sliceLoft.ts` (`loftQuad`), `generator/sliceBody.ts` (`drawShell`, `sliceCabin`), `generator/drVt1816.ts` (`drawCarCabin`), `generator/renderGlbThumb.ts` (`ThumbOptions`), `src/viewerInteriors.ts`, `src/ModelViewer.tsx`, `test/interiors.test.ts`, `test/viewerInteriors.test.ts`, `test/doors.test.ts`
+**Covers** - the generic cabin behind every passenger door: the interior part and how consumers hide it while the doors are shut (`userData.interiors`, the GLB's `extras`), what a cabin holds (floor, ceiling, walls with the windows seen from inside, the doorways' reveals, seat rows clear of the doors, a bus's wheel-arch podiums), how each kit fits one into its body and cuts the doorways, the interior budget, the gap strips on shut leaves, keeping the code out of other bundles, the site's preview and the tests.
+**Code** - `generator/interior.ts` (`drawCabin`, `Cabin`, `CabinDoor`, `CabinWindow`, `windowPanes`, `laterWindows`, `clearZones`, `seatRows`, `seatLayout`, `INTERIOR_PALETTE`, `INTERIOR_TRIANGLE_BUDGET`, `CABIN_INSET`), `generator/interiorTable.ts` (`interiorsOf`, `interiorTable`, `isInteriorName`), `generator/meshBuilder.ts` (`interiors`, `interiorTriangleCount`, `exteriorTriangleCount`, `toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/jsModel.ts` (`noInteriors`), `generator/glbTriangles.ts` (`collectTriangles`), `generator/coplanar.ts`, `generator/coachCabin.ts`, `generator/csdCoachParts.ts` (`Coach.bandPiece`, `Coach.door`, `Coach.window`, `Coach.sidePanel`), `generator/dmuKit.ts` (`loft`, `Car.doorways`), `generator/busAssembly.ts` (`busCabin`, `BusDraft.door`), `generator/busBody.ts` (`Shell.doorways`), `generator/sliceLoft.ts` (`loftQuad`), `generator/sliceBody.ts` (`drawShell`, `sliceCabin`), `generator/drVt1816.ts` (`drawCarCabin`), `generator/renderGlbThumb.ts` (`ThumbOptions`), `src/viewerInteriors.ts`, `src/ModelViewer.tsx`, `test/interiors.test.ts`, `test/viewerInteriors.test.ts`, `test/doors.test.ts`
 **See also** - [doors.md](doors.md), [animation.md](animation.md), [js-format.md](js-format.md), [export.md](export.md), [buses.md](buses.md), [../site/catalog-site.md](../site/catalog-site.md), [../specs/2026-10-25-vehicle-interiors.md](../specs/2026-10-25-vehicle-interiors.md)
 
 ## The idea
@@ -66,8 +66,17 @@ by height for the reveal).
 | ceiling, end walls | `interiorWall` | facing in |
 | side walls | `interiorWall` | facing in, open over each doorway; the wall above a door's head and below a raised sill stays |
 | doorway reveal | `interiorFloor`, `interiorWall` | the threshold, the head and the two jambs from the skin in to the side wall; jambs 3 mm inside the doorway, off the frame's inner walls; a riser up to the floor where a sill lies lower (a step well) |
+| windows | `interiorGlass` | each side window's glass seen from inside: a dark pane on the side wall, 4 mm off it and facing in, cut to the wall between floor and ceiling (a double-decker's upper windows stand above the one cabin and get none). The windows stay opaque |
 | seats | `interiorSeat` | a box cushion and a box back per seat group |
 | wheel-arch podiums | `interiorWall` | a bus's: a box across the car over each arch, its ends 11 mm outside the arch's notch and its top over the notch's crown, so neither shows inside (`Cabin.housings`; a per-side box is possible too). The floor and the side walls leave out what a podium covers, so a front tyre turning to full lock cuts through nothing |
+
+The windows come from each kit: a bus's from its panes (`BusDraft.pane`), the
+slice-lofted sets' and the VT 18.16's from their window lists, all known when the
+cabin is drawn (`Cabin.windows`). The coach kit lays its windows after the cabin:
+`Coach.window` (and glass laid straight with `Coach.sidePanel`) hands each glass box
+to `laterWindows`, which draws its pane into the interior part of the car's cabin
+that spans it, the triangles routed there (`MeshCore.drawRouted`). A door leaf's
+lights get none.
 
 The materials are shared by every vehicle (`INTERIOR_PALETTE`). The kits that draw
 cabins put them in their builder's palette: the coach kit's `Coach` and
@@ -98,7 +107,7 @@ there, which is why `room` keeps seats where the shell holds them.
 
 **Budget.** At most `INTERIOR_TRIANGLE_BUDGET` = 1,500 triangles per car's
 interior, apart from the design's exterior budget. The catalog's cabins hold 56
-(the Be31's end vestibules, which have no seats) to about 1,360.
+(the Be31's end vestibules, which have no seats) to about 1,410.
 
 ## The kits
 
@@ -157,6 +166,8 @@ none.
 `test/interiors.test.ts` covers:
 
 - the clear zones and the seat rows: no row in a door's zone, on either side;
+- a coach's windows, drawn after its cabin, as panes in the cabin's part on its
+  far wall (a door leaf's light none), and panes on the cabins of every kit;
 - the seat layouts;
 - the hidden interior part, its GLB node mark and scene extras, and its triangles
   left out of the rest model;
