@@ -64,8 +64,8 @@ const VESTIBULE_DEPTH = 0.6;
 export const COACH_PALETTE: Record<string, MaterialSpec> = {
   roof: { color: "#7c7f80", roughness: 0.75 },
   frame: { color: "#a9adac", metallic: 0.2, roughness: 0.5 },
-  glass: { color: "#26323c", metallic: 0.2, roughness: 0.15 },
-  frosted: { color: "#b9c0c2", roughness: 0.4 },
+  glass: { color: "#26323c", metallic: 0.2, roughness: 0.15, glass: true },
+  frosted: { color: "#b9c0c2", roughness: 0.4, glass: true },
   seam: { color: "#151716", roughness: 0.9 },
   rubber: { color: "#1c1c1e", roughness: 0.95 },
   underframe: { color: "#26282a", roughness: 0.85 },

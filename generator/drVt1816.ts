@@ -94,7 +94,7 @@ const PALETTE: Record<string, MaterialSpec> = {
   blue: c("#28479a", 0.45),
   skirt: c("#bfc2c1", 0.55),
   roof: c("#d6d2c0", 0.7),
-  glass: c("#26303a", 0.12, 0.2),
+  glass: { ...c("#26303a", 0.12, 0.2), glass: true },
   rubber: c("#1c1c1e", 0.9),
   bellows: c("#2a2b2d", 0.9),
   chrome: c("#c9ccd0", 0.25, 0.6),

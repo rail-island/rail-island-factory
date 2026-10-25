@@ -51,7 +51,7 @@ export const CD163_PALETTE: Record<string, MaterialSpec> = {
   steel: { color: "#8c9198", metallic: 0.3, roughness: 0.45 },
   wheel: { color: "#46484b", metallic: 0.2, roughness: 0.6 },
   rubber: { color: "#1c1c1e", roughness: 0.95 },
-  glass: { color: "#24303c", metallic: 0.2, roughness: 0.15 },
+  glass: { color: "#24303c", metallic: 0.2, roughness: 0.15, glass: true },
   lampHead: { color: "#f3f5f6", roughness: 0.2, lamp: { role: "head" } },
   lampRed: { color: "#c8202c", roughness: 0.3, lamp: { role: "tail" } },
   plate: { color: "#b3222c", roughness: 0.5 },

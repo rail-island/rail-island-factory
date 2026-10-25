@@ -144,8 +144,8 @@ const LIVERIES: Record<TgvLivery, Livery> = {
 };
 
 const PALETTE: Record<string, MaterialSpec> = {
-  glass: { color: "#5f6670", metallic: 0.2, roughness: 0.15 },
-  cabGlass: { color: "#202830", metallic: 0.2, roughness: 0.12 },
+  glass: { color: "#5f6670", metallic: 0.2, roughness: 0.15, glass: true },
+  cabGlass: { color: "#202830", metallic: 0.2, roughness: 0.12, glass: true },
   frame: { color: "#292929", roughness: 0.5 },
   seam: { color: "#404040", roughness: 0.8 },
   louvre: { color: "#161616", roughness: 0.8 },

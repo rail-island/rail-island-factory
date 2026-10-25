@@ -50,7 +50,7 @@ export const fyOf = (H: number) => (v: number): number => H - v / 10;
 
 /** Materials every car of the three shares. */
 export const CLASSIC_PALETTE: Record<string, MaterialSpec> = {
-  glass: { color: "#2f363d", metallic: 0.2, roughness: 0.15 },
+  glass: { color: "#2f363d", metallic: 0.2, roughness: 0.15, glass: true },
   frame: { color: "#b8bcbf", metallic: 0.2, roughness: 0.45 },
   rubber: { color: "#1c1c1e", roughness: 0.95 },
   cabBlack: { color: "#222324", roughness: 0.6 },

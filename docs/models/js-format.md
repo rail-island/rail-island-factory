@@ -38,6 +38,11 @@ scene.add(build(THREE)); // a THREE.Group named after the model id
   no UVs.
 - **Lamps.** A vehicle that draws a lamp material carries `userData.lamps`: each lamp material's role, lit
   colour and intensity, and `midX`, which splits its front lamps from its rear ([lamps.md](lamps.md)).
+- **Glass.** A vehicle's window glass material - a palette entry with `glass: true` (a windscreen, a side
+  window, a tinted visor, frosted toilet glass) - carries `userData.glass = true`, and the game draws it
+  with a reflection of the sky. The GLB does not carry the flag. Every vehicle family marks its glass in its
+  palette, and `test/glass.test.ts` fails on a vehicle that draws an unmarked material named like glass.
+  An LOD's glass (`LOD_GLASS`, [lod.md](lod.md)) stays unmarked: the low level is drawn plain.
 - **Emitters.** A model that smokes, steams or flares carries `userData.emitters`, the mouths of its
   stacks for the parameters it was built with; a fountain carries `userData.fountain`, its pools and
   jets ([emitters.md](emitters.md)).

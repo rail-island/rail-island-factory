@@ -21,7 +21,7 @@ export class MeshBuilder extends MeshCore {
    * pivot (a child part inside its parent's Group), its meshes' positions
    * relative to that pivot. A rigged model's group carries `userData.rig`, a model
    * that smokes `userData.emitters`, a fountain `userData.fountain`, a vehicle with
-   * lamps `userData.lamps`. Non-indexed
+   * lamps `userData.lamps`, a window glass material `userData.glass`. Non-indexed
    * triangle soups with flat per-face normals, MeshStandardMaterial colours from
    * the palette's sRGB hex: the same data toGlb writes.
    */
@@ -37,6 +37,8 @@ export class MeshBuilder extends MeshCore {
         ...(this.groups.get(mat)!.col ? { vertexColors: true } : {}),
       });
       m.name = mat;
+      // window glass, which the game draws with a sky reflection (MaterialSpec.glass)
+      if (spec.glass) m.userData.glass = true;
       return m;
     });
     // a rigid rail vehicle with bogies: its body's meshes on the root, a Group per bogie

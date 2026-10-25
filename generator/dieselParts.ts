@@ -28,7 +28,7 @@ export const DIESEL_PALETTE: Record<string, MaterialSpec> = {
   spring: c("#55585c", 0.6, 0.2),
   steel: c("#8c9198", 0.45, 0.3),
   wheel: c("#46484b", 0.6, 0.2),
-  glass: c("#26323f", 0.15, 0.2),
+  glass: { ...c("#26323f", 0.15, 0.2), glass: true },
   rubber: c("#1c1c1e", 0.95, 0),
   lampHead: { ...c("#f3f5f6", 0.2, 0), lamp: { role: "head" } },
   lampRed: { ...c("#c8202c", 0.3, 0), lamp: { role: "tail" } },

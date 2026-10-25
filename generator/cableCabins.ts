@@ -33,14 +33,14 @@ import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, ty
 const PALETTE: Record<string, MaterialSpec> = {
   // the tramway car (the reference's colours)
   shell: { color: "#2b2e33", metallic: 0.3, roughness: 0.45 },
-  glass: { color: "#0d1116", metallic: 0.35, roughness: 0.12 },
+  glass: { color: "#0d1116", metallic: 0.35, roughness: 0.12, glass: true },
   stripe: { color: "#c8202b", metallic: 0.1, roughness: 0.35 },
   gear: { color: "#3c4046", metallic: 0.35, roughness: 0.5 },
   white: { color: "#d9dbdd", metallic: 0.3, roughness: 0.4 },
   lamp: { color: "#f2eccd", roughness: 0.3 },
   // the gondola
   red: { color: "#b81c17", metallic: 0.22, roughness: 0.32 },
-  tint: { color: "#1b2429", metallic: 0.3, roughness: 0.06 },
+  tint: { color: "#1b2429", metallic: 0.3, roughness: 0.06, glass: true },
   rubber: { color: "#2a2b2d", metallic: 0.02, roughness: 0.9 },
   steel: { color: "#b4b9bd", metallic: 0.38, roughness: 0.42 },
   trim: { color: "#191b1d", metallic: 0.15, roughness: 0.55 },

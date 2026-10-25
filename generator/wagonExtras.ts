@@ -8,7 +8,7 @@ import { WAGON_CATALOG } from './wagons.ts';
 import { numberLines } from './freightWagonParts.ts';
 import { resolveParams, type ParamValues, type ParamSpec, type ProceduralDesign } from './design.ts';
 const BODY:ParamSpec[]=[{name:'body',title:'Body',default:'box',values:[{value:'box',title:'Z'},{value:'beer',title:'Lp'},{value:'sliding',title:'Zaz'}]}];
-const palette={body:{color:'#934b34'},rib:{color:'#ad6044'},roof:{color:'#665b53'},cream:{color:'#dddcc7'},frame:{color:'#292a29'},ink:{color:'#e4dec8'},glass:{color:'#647a81'}};
+const palette={body:{color:'#934b34'},rib:{color:'#ad6044'},roof:{color:'#665b53'},cream:{color:'#dddcc7'},frame:{color:'#292a29'},ink:{color:'#e4dec8'},glass:{color:'#647a81',glass:true}};
 function chassis(c:Wagon,length:number,axles:number[],bogies=false):void {
  const m=c.m;
  m.scope('underframe',()=>{c.box('frame',.5,length-.5,.78,1.1,-1.3,1.3);for(const x of axles){if(bogies)c.freightBogie(x,1.9);else{c.wheelset(c.X(x),.46);m.axleAt(c.X(x),.46*Math.cos(Math.PI/24));}}});
