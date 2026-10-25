@@ -105,7 +105,7 @@ const PAINTS: Record<ElefantVariant, Paint> = {
 
 const PALETTE: Record<string, MaterialSpec> = {
   frame: { color: "#bdbdbd", metallic: 0.2, roughness: 0.45 },
-  glass: { color: "#3c4248", metallic: 0.2, roughness: 0.15 },
+  glass: { color: "#3c4248", metallic: 0.2, roughness: 0.15, glass: true },
   skirt: { color: "#737373", roughness: 0.7 },
   skirtDark: { color: "#424242", roughness: 0.8 },
   cabBlack: { color: "#202020", roughness: 0.6 },

@@ -129,8 +129,8 @@ const LIVERIES: Record<Shinkansen0Livery, Livery> = {
 };
 
 const PALETTE: Record<string, MaterialSpec> = {
-  glass: c("#27323d", 0.12, 0.2),
-  cabGlass: c("#1d252e", 0.1, 0.25),
+  glass: { ...c("#27323d", 0.12, 0.2), glass: true },
+  cabGlass: { ...c("#1d252e", 0.1, 0.25), glass: true },
   frame: c("#9ea3a8", 0.35, 0.4),
   rubber: c("#1c1c1e", 0.9),
   bellows: c("#2a2b2d", 0.9),

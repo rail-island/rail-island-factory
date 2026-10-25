@@ -141,8 +141,8 @@ const LIVERIES: Record<DuplexLivery, Livery> = {
 };
 
 const PALETTE: Record<string, MaterialSpec> = {
-  glass: c("#26303a", 0.12, 0.2),
-  cabGlass: c("#1b232c", 0.1, 0.25),
+  glass: { ...c("#26303a", 0.12, 0.2), glass: true },
+  cabGlass: { ...c("#1b232c", 0.1, 0.25), glass: true },
   rubber: c("#1c1c1e", 0.9),
   frame: c("#55595f", 0.5, 0.3),
   lampBand: c("#2a2f36", 0.2, 0.3),

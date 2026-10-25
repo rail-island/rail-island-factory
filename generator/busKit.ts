@@ -9,9 +9,9 @@ import { endAt, halfWidth, rectAB } from "./busBody.ts";
 
 /** Materials every bus has; a design adds its livery's colours. */
 export const BUS_BASE_PALETTE: Record<string, MaterialSpec> = {
-  glass: { color: "#26323f", metallic: 0.2, roughness: 0.15 },
-  glassDark: { color: "#161c24", metallic: 0.2, roughness: 0.15 },
-  glassLight: { color: "#456d7a", metallic: 0.2, roughness: 0.15 },
+  glass: { color: "#26323f", metallic: 0.2, roughness: 0.15, glass: true },
+  glassDark: { color: "#161c24", metallic: 0.2, roughness: 0.15, glass: true },
+  glassLight: { color: "#456d7a", metallic: 0.2, roughness: 0.15, glass: true },
   rubber: { color: "#1c1c1e", roughness: 0.95 },
   frame: { color: "#2b2d31", roughness: 0.6 },
   under: { color: "#26272a", roughness: 0.9 },

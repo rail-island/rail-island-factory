@@ -28,6 +28,12 @@ export interface MaterialSpec {
   /** The material is a vehicle lamp's lens: what it does and how it shines when lit (see LampSpec). */
   lamp?: LampSpec;
   /**
+   * The material is a vehicle's window glass (a windscreen, a side window, a tinted
+   * visor). The JS model's material carries `userData.glass`, and the game draws it
+   * with a sky reflection (docs/models/js-format.md). Never on an LOD's glass.
+   */
+  glass?: boolean;
+  /**
    * A named surface (surfaces.ts SURFACES) the game binds a photo to; `color` stays
    * the honest flat colour. Set both with `surfaceMaterial(id)`: the JS model then
    * carries box-projected UVs at `surfaceTile` units per repeat and lists the

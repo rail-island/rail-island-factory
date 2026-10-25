@@ -33,7 +33,7 @@ const PALETTE: Record<string, MaterialSpec> = {
   hullRed: { color: "#c42a1e", roughness: 0.5 },
   whitePaint: { color: "#f2efe8", roughness: 0.6 },
   deckGrey: { color: "#9aa0a2" },
-  glassDark: { color: "#232b31", metallic: 0.2, roughness: 0.15 },
+  glassDark: { color: "#232b31", metallic: 0.2, roughness: 0.15, glass: true },
   funnelGreen: { color: "#1f7a4d", roughness: 0.5 },
   blackTrim: { color: "#1b1e21" },
   lifeboatOrange: { color: "#e2691f", roughness: 0.5 },
@@ -42,14 +42,14 @@ const PALETTE: Record<string, MaterialSpec> = {
   signalRed: { color: "#c0202c", roughness: 0.5 },
   hullWhite: { color: "#e9ebe8", roughness: 0.6 },
   foilDeck: { color: "#8d918c" },
-  foilGlass: { color: "#22303b", metallic: 0.2, roughness: 0.15 },
+  foilGlass: { color: "#22303b", metallic: 0.2, roughness: 0.15, glass: true },
   foilBlue: { color: "#2d5ca8", metallic: 0.2, roughness: 0.45 },
   // the passenger ferry
   lakeWhite: { color: "#f3f4f1", roughness: 0.6 },
   bootStripe: { color: "#33413f", roughness: 0.6 },
   lakeSteel: { color: "#b8bcbb", metallic: 0.2, roughness: 0.5 },
   lakeDeck: { color: "#9d9e98" },
-  glassTinted: { color: "#30474a", metallic: 0.2, roughness: 0.15 },
+  glassTinted: { color: "#30474a", metallic: 0.2, roughness: 0.15, glass: true },
   signalGreen: { color: "#3f7d4a", roughness: 0.4 },
 };
 

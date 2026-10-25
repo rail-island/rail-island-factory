@@ -99,7 +99,7 @@ const LIVERIES: Record<Db628Livery, Livery> = {
 const PALETTE: Record<string, MaterialSpec> = {
   roof: { color: "#7d7d7d", roughness: 0.75 },
   frame: { color: "#383838", roughness: 0.5 },
-  glass: { color: "#4a4c58", metallic: 0.2, roughness: 0.15 },
+  glass: { color: "#4a4c58", metallic: 0.2, roughness: 0.15, glass: true },
   cabBlack: { color: "#1c1c1c", roughness: 0.5 },
   gangway: { color: "#5a595a", roughness: 0.7 },
   skirtDark: { color: "#2e2c2f", roughness: 0.8 },

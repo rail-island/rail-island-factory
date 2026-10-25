@@ -27,7 +27,7 @@ export type PxBox = [number, number, number, number];
 
 /** Materials every car of the package shares; a livery adds its own colours. */
 export const DMU_PALETTE: Record<string, MaterialSpec> = {
-  glass: { color: "#323a42", metallic: 0.2, roughness: 0.15 },
+  glass: { color: "#323a42", metallic: 0.2, roughness: 0.15, glass: true },
   frame: { color: "#b4b8b9", metallic: 0.2, roughness: 0.45 },
   rubber: { color: "#1e1f21", roughness: 0.9 },
   roof: { color: "#8a8d8e", roughness: 0.75 },
