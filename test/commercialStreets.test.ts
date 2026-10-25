@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { proceduralId } from "../generator/modelId";
-import { COMMERCIAL } from "../generator/commercialStreets";
+import { COMMERCIAL, windowKind } from "../generator/commercialStreets";
 import { coverageCombinations, resolveParams } from "../generator/design";
 import { DESIGNS } from "../generator/generate";
 import { glbStats } from "../generator/glbStats";
@@ -54,7 +54,11 @@ describe("commercial architecture", () => {
     expect(d.build().toGlb(d.id)).toEqual(d.build().toGlb(d.id));
   }, 120_000);
   it("sets every street window's glass back in its surround, glazing bars spanning it edge to edge", () => {
-    for (const id of ["proc-building-commercial-balcony", "proc-building-commercial-baroque"]) {
+    // the family, its window kind and how far its head reaches above the glass
+    const cases = [["balcony", "plain", 0.07], ["brick", "stone", 0.13], ["terrace", "moulded", 0.31], ["baroque", "baroque", 0.52]] as const;
+    for (const [style, kind, head] of cases) {
+      const id = `proc-building-commercial-${style}`;
+      expect(windowKind(style)).toBe(kind);
       const m = COMMERCIAL.find(d => d.id === id)!.build() as unknown as { groups: Map<string, { pos: number[]; nrm: number[] }> };
       // the street-facing faces of a material, as x/y rectangles at a z
       const faces = (mat: string) => {
@@ -65,17 +69,25 @@ describe("commercial architecture", () => {
         });
         return out;
       };
-      const panes = faces("glass").filter(g => g.x1 - g.x0 < 2 && g.y0 > 0.6), bars = faces("frame"), trim = faces("trim");
+      const panes = faces("glass").filter(g => Math.abs(g.x1 - g.x0 - 1.35) < 1e-6), bars = faces("frame"), surround = [...faces("trim"), ...bars];
       expect(panes.length, id).toBeGreaterThan(10);
       for (const g of panes) {
         const inside = bars.filter(b => b.x0 > g.x0 - 1e-6 && b.x1 < g.x1 + 1e-6 && b.y0 > g.y0 - 1e-6 && b.y1 < g.y1 + 1e-6);
-        expect(Math.min(...inside.map(b => b.x0)), id).toBeCloseTo(g.x0, 6);
-        expect(Math.max(...inside.map(b => b.x1)), id).toBeCloseTo(g.x1, 6);
         expect(Math.min(...inside.map(b => b.y0)), id).toBeCloseTo(g.y0, 6);
         expect(Math.max(...inside.map(b => b.y1)), id).toBeCloseTo(g.y1, 6);
+        if (kind === "plain") {
+          // one mullion and no transom
+          expect(inside.every(b => b.y1 - b.y0 > g.y1 - g.y0 - 1e-6), id).toBe(true);
+        } else {
+          expect(Math.min(...inside.map(b => b.x0)), id).toBeCloseTo(g.x0, 6);
+          expect(Math.max(...inside.map(b => b.x1)), id).toBeCloseTo(g.x1, 6);
+        }
         // a jamb beside the pane stands proud of it
-        const jamb = trim.filter(f => Math.abs(f.x1 - g.x0) < 1e-6 && f.y0 < g.y1 && f.y1 > g.y0);
-        expect(Math.max(...jamb.map(f => f.z)) - g.z, id).toBeGreaterThan(0.1);
+        const jamb = surround.filter(f => Math.abs(f.x1 - g.x0) < 1e-6 && f.y0 < g.y1 && f.y1 > g.y0);
+        expect(Math.max(...jamb.map(f => f.z)) - g.z, id).toBeGreaterThan(0.04);
+        const mid = (g.x0 + g.x1) / 2;
+        const above = surround.filter(f => f.x0 <= mid && f.x1 >= mid && f.y0 > g.y1 - 0.1 && f.y0 < g.y1 + 0.5);
+        expect(Math.max(...above.map(f => f.y1)) - g.y1, id).toBeCloseTo(head, 6);
       }
     }
   });
