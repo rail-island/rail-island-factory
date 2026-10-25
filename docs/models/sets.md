@@ -7,7 +7,7 @@ the per-set meta files and modules the export writes, and the tests that pin the
 **Code** - `generator/sets/registry.ts`, `generator/sets/setsExport.ts`, `generator/sets/<set>.ts`,
 `generator/sets/pinCases.ts`, `generator/sets/writePins.ts`,
 `test/sets.test.ts`, `test/setPins.test.ts`, `test/bridgeSet.test.ts`
-**See also** - [bridges.md](bridges.md), [station-types.md](station-types.md), [previews.md](previews.md), [props.md](props.md), [text.md](text.md), [export.md](export.md), [woods.md](woods.md), the game's
+**See also** - [bridges.md](bridges.md), [cable-car-stations.md](cable-car-stations.md), [station-types.md](station-types.md), [previews.md](previews.md), [props.md](props.md), [text.md](text.md), [export.md](export.md), [woods.md](woods.md), the game's
 `docs/tooling/factory-import.md` and `docs/architecture/sets.md`, the spec
 `../specs/2026-10-23-factory-structures-and-textures.md`
 
@@ -57,7 +57,7 @@ A set's module holds what its types ARE, and the game keeps what fits them to a 
 |---|---|---|
 | `blockType` | `TYPE_META`: block data (below); `RETIRED_PARAMS`; the fill: `rollBlockParams`, `pickCandidate`, `chooseColours`, `fillRun`, `touchingSides`, `partyValues` | the planners (the frontages they walk, what fits on the ground), city types, profiles |
 | `busStop` | `buildSide(type, lateral)`: one kerb's platform, shelter, fittings and flag in the side's frame (x along travel, z outward, y up), with `level` furniture groups | the pose on the road, both kerbs, the grade, levelling the furniture |
-| `cableCarStation` | `TYPE_META`: footprint, rope-head height and the shed prop; `buildPylon(height)` | the head, the boarding platform, the rope solver, placing the shed |
+| `cableCarStation` | `TYPE_META`: footprint and rope-head height; `buildStation(type, view)`: the whole station - hall, head, bull wheel, boarding platform and stairs - for the view the game passes (circulating or not, the cabin's sill drop and half width), with part and level tags; `stationFouls`, its clearances; `buildPylon(height)`. The types, view and budgets: [cable-car-stations.md](cable-car-stations.md) | the rope solver, placing the station, deriving the view from the line's cabin, turning the wheel |
 | `port` | `TYPE_META`: family and grade; `PROPS`: the prop per role | layout, berths, approaches, decks, piles, placing the props |
 | `airport` | `TYPE_META`: tower and windsock props; `terminal(pad, type)` and `furniture(pad, type)` | runways, taxiways, stands, paint, the radar, placing the props |
 | `decoration` | `TYPE_META`: each kind's placement envelope (spacing, anchor, margins, top, steps, domain, sides, section); `buildPiece(kind, piece, ctx, out)`: one module's sweeps, boxes and plants | the intervals along a line, terrain probing, LOD layers, the plant meshes |

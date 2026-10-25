@@ -1,5 +1,5 @@
-// The fixed props the game places on its structures (docs/models/props.md): a cable
-// car's station shed, a port's crane and containers, an airport's control tower.
+// The fixed props the game places on its structures (docs/models/props.md): a port's
+// crane and containers, an airport's control tower, the trackside signals.
 // Each is drawn from the box vocabulary the game's structures speak -- a box at a
 // centre with a size, optionally tilted about X or Z, or a gable prism -- so a prop
 // lands in the game looking exactly as it did when the game drew it.
@@ -19,7 +19,7 @@ export type Rgb = readonly [number, number, number];
 
 /** The props a structure's far level keeps: the ones whose low detail is a silhouette worth drawing. */
 export const FAR_PROPS: ReadonlySet<string> = new Set([
-  "proc-prop-port-crane", "proc-prop-port-container", "proc-prop-port-hut", "proc-prop-airport-tower", "proc-prop-cablecar-shed",
+  "proc-prop-port-crane", "proc-prop-port-container", "proc-prop-port-hut", "proc-prop-airport-tower",
 ]);
 
 /** One box of a prop, in the prop's own frame: +Y up, the origin where it stands. */

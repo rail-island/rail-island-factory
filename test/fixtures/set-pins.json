@@ -20,10 +20,18 @@
     "cargo.10": "9b46ca7f6f6b0de1"
   },
   "cableCarStation": {
-    "types": "ad73833e18124e36",
-    "pylon.12": "ef4c7b5acbeda371",
-    "pylon.31.5": "3203fb69647e836d",
-    "pylon.60": "fbea842bac209ebc"
+    "types": "bafbb90df6256fa8",
+    "open_gantry.shuttle": "dd7771ea36ddf6af",
+    "open_gantry.ring": "49eb3c79c42f1e36",
+    "alpine_chalet.shuttle": "287f57bed398a173",
+    "alpine_chalet.ring": "00b10af31ecb7590",
+    "glass_modern.shuttle": "9176f5b78f3776de",
+    "glass_modern.ring": "b4aba886fa5ffac2",
+    "concrete_drive.shuttle": "60e7f9c03d891a21",
+    "concrete_drive.ring": "b7638240a1e67e50",
+    "pylon.12": "b99db5ffef78aceb",
+    "pylon.31.5": "d25ce57a422ff20d",
+    "pylon.60": "c24989ec0188ab5d"
   },
   "port": {
     "types": "c58f72afa9f01475"

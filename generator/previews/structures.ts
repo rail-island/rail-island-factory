@@ -2,7 +2,7 @@
 // (docs/models/previews.md): bus stops, cable-car stations, ports, airports, dams and
 // tunnel portals, one page per type. Each draws what its set module and props give a
 // type on a representative fixture: a stop on both kerbs of a short two-lane road, a
-// cable-car station's deck under its shed, a port's quay with the props its grade is
+// cable-car station on its levelled footprint, a port's quay with the props its grade is
 // furnished with, an airport's terminal and tower on a pad by its apron, a dam's wall
 // across a flat valley, a portal's masonry round a bore. The game's own layout of a
 // port or an airport is richer: these show the type, not a placed instance.
@@ -16,7 +16,6 @@ import * as port from "../sets/port.ts";
 import * as airport from "../sets/airport.ts";
 import * as dam from "../sets/dam.ts";
 import * as tunnelPortal from "../sets/tunnelPortal.ts";
-import { shedBoxes, shedLodBoxes, SHED_VALUES, type StationType } from "../props/cableCarSheds.ts";
 import { bollardBoxes, containerBoxes, craneBoxes, CRANE_DECKS, floodlightBoxes, hutBoxes, mooringPostBoxes } from "../props/portProps.ts";
 import { towerBoxes, TOWER_HEIGHTS } from "../props/airportProps.ts";
 import type { PropBox } from "../props/propKit.ts";
@@ -59,17 +58,43 @@ export function busStopPreviewLod(_values: ParamValues | undefined, type: string
 
 // --- cable-car stations ---
 
-function cableCarSketch(type: string, lod: boolean): Sketch {
+export const CABLE_CAR_PARAMS: ParamSpec[] = [
+  { name: "platform", title: "Platform", default: "shuttle", preview: true, values: [{ value: "shuttle", title: "Rectangular" }, { value: "ring", title: "Curved" }] },
+];
+/** How far below the station's level the preview cuts what the station sinks into the ground. */
+const CUT = -1;
+
+/** The station the set module draws for the default cabin, on its levelled footprint. */
+function cableCarSketch(values: ParamValues | undefined, type: string, lod: boolean): Sketch {
   const s = new Sketch();
   const meta = cableCarStation.TYPE_META[type]!;
-  // the boarding deck the game builds under the shed, at the footprint the type is placed with
-  s.box(s.mat("deck", [150, 146, 138], "stop-concrete"), { cx: 0, cy: 0.5, cz: 0, sx: meta.w, sy: 1, sz: meta.d });
-  const shedType = (Object.keys(SHED_VALUES) as StationType[]).find((t) => SHED_VALUES[t] === meta.shed.values.type) ?? "open_gantry";
-  props(s, lod ? shedLodBoxes(shedType) : shedBoxes(shedType), 0, 0);
+  const view = { ...cableCarStation.DEFAULT_VIEW, circulating: resolveParams(CABLE_CAR_PARAMS, values).platform === "ring" };
+  const model = cableCarStation.buildStation(type, view);
+  const shown = (level: cableCarStation.StationLevel): boolean => (lod ? level !== "full" : level !== "low");
+  s.box(s.mat("deck", [150, 146, 138], "stop-concrete"), { cx: 0, cy: CUT / 2, cz: 0, sx: meta.w, sy: -CUT, sz: meta.d });
+  for (const b of model.boxes) {
+    if (!shown(b.level)) continue;
+    const sunk = !b.rotX && !b.rotZ && b.cy - b.sy / 2 < CUT;
+    if (sunk && b.cy + b.sy / 2 <= CUT) continue;
+    const y0 = sunk ? CUT : b.cy - b.sy / 2, y1 = b.cy + b.sy / 2;
+    s.box(s.mat(b.material, b.color), { ...b, cy: (y0 + y1) / 2, sy: y1 - y0 });
+  }
+  for (const sec of model.sectors) {
+    if (!shown(sec.level)) continue;
+    // a sector as its section swept round the arc
+    const mid = Math.atan2(sec.apexX, -sec.apexZ), r = (sec.rIn + sec.rOut) / 2, w = sec.rOut - sec.rIn;
+    const steps = Math.max(4, Math.ceil((2 * sec.halfAngle) / 0.15));
+    const path = Array.from({ length: steps + 1 }, (_, i) => {
+      const a = mid - sec.halfAngle + (2 * sec.halfAngle * i) / steps;
+      return [sec.cx + Math.sin(a) * r, sec.cy, sec.cz - Math.cos(a) * r] as [number, number, number];
+    });
+    const y0 = sec.cy - sec.thick / 2, y1 = sec.cy + sec.thick / 2;
+    s.sweep(s.mat(sec.material, sec.color), path, [[-w / 2, y0], [w / 2, y0], [w / 2, y1], [-w / 2, y1]], true);
+  }
   return s;
 }
-export function cableCarStationPreview(_values: ParamValues | undefined, type: string): MeshBuilder { return cableCarSketch(type, false).build("station"); }
-export function cableCarStationPreviewLod(_values: ParamValues | undefined, type: string): MeshBuilder { return cableCarSketch(type, true).build("station"); }
+export function cableCarStationPreview(values: ParamValues | undefined, type: string): MeshBuilder { return cableCarSketch(values, type, false).build("station"); }
+export function cableCarStationPreviewLod(values: ParamValues | undefined, type: string): MeshBuilder { return cableCarSketch(values, type, true).build("station"); }
 
 // --- ports ---
 
