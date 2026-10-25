@@ -82,6 +82,7 @@ export const CATEGORY_LABELS: Readonly<Record<string, string>> = {
   decor: "Decorations",
   historical: "Historical",
   industry: "Industry",
+  "panel houses": "Panel houses",
   skyscrapers: "Skyscrapers",
   station: "Station",
   towers: "Towers",

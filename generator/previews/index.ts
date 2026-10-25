@@ -26,6 +26,7 @@ import { blockPreviewCommercial, blockPreviewCommercialLod } from "./blocksComme
 import { blockPreviewIndustry, blockPreviewIndustryLod } from "./blocksIndustry.ts";
 import { blockPreviewTower, blockPreviewTowerLod } from "./blocksTower.ts";
 import { blockPreviewHighrise, blockPreviewHighriseLod } from "./blocksHighrise.ts";
+import { blockPreviewPanel, blockPreviewPanelLod } from "./blocksPanel.ts";
 import { blockPreviewHistoric, blockPreviewHistoricLod } from "./blocksHistoric.ts";
 
 type Builder = (values: ParamValues | undefined, type: string) => MeshBuilder;
@@ -119,13 +120,14 @@ export const PREVIEW_FAMILIES: readonly PreviewFamily[] = [
 /** The block types by the family module whose pools they draw from. */
 function blockFamilies(): PreviewFamily[] {
   const FAMILY: Record<string, string> = {
-    houses: "Village", street: "Commercial", highrise: "Highrise", industrial: "Industry", towerblock: "Tower", landmark: "Historic",
+    houses: "Village", street: "Commercial", highrise: "Highrise", industrial: "Industry", towerblock: "Tower", panel_estate: "Panel", landmark: "Historic",
   };
   const family = (id: string): string => FAMILY[id] ?? "Historic";
   const builders: Record<string, [Builder, Builder]> = {
     Village: [blockPreviewVillage, blockPreviewVillageLod], Commercial: [blockPreviewCommercial, blockPreviewCommercialLod],
     Industry: [blockPreviewIndustry, blockPreviewIndustryLod], Tower: [blockPreviewTower, blockPreviewTowerLod],
     Highrise: [blockPreviewHighrise, blockPreviewHighriseLod], Historic: [blockPreviewHistoric, blockPreviewHistoricLod],
+    Panel: [blockPreviewPanel, blockPreviewPanelLod],
   };
   return Object.entries(builders).map(([name, [build, buildLod]]) => ({
     source: `previews/blocks${name}.ts`,

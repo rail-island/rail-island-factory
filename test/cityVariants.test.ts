@@ -14,10 +14,12 @@ import { PALETTES } from "../generator/sets/blockType.ts";
 const baseline = JSON.parse(fs.readFileSync(new URL("./fixtures/city-presets-baseline.json", import.meta.url), "utf8")) as { presets: Record<string, Array<Record<string, string>>> };
 const all = [...BUILDINGS, ...VILLAGE_DESIGNS];
 const cityDesigns = all.filter((d) => inCities(d.id, catalogFields(d).group));
+/** City designs added after the old presets' last table: nothing of theirs to keep reachable. */
+const ADDED_SINCE_BASELINE = ["proc-building-panel-slab", "proc-building-panel-tower"];
 
 describe("city variants", () => {
   it("are offered by exactly the designs the old presets built", () => {
-    expect(cityDesigns.map((d) => d.id).sort()).toEqual(Object.keys(baseline.presets).sort());
+    expect(cityDesigns.map((d) => d.id).sort()).toEqual([...Object.keys(baseline.presets), ...ADDED_SINCE_BASELINE].sort());
     for (const id of NOT_IN_CITIES) expect(all.some((d) => d.id === id), id).toBe(true);
   });
 
@@ -26,7 +28,7 @@ describe("city variants", () => {
       const group = catalogFields(d).group;
       const shapes = cityShapes(d, group, d.game?.city).map((s) => resolveParams(d.params ?? [], s));
       const colours = new Map(cityColours(d).map((c) => [c.name, c.values.map((v) => v.value)]));
-      for (const preset of baseline.presets[d.id]!) {
+      for (const preset of baseline.presets[d.id] ?? []) {
         const shapeOnly = Object.fromEntries(Object.entries(preset).filter(([k]) => !colours.has(k)));
         const want = resolveParams(d.params ?? [], shapeOnly);
         expect(shapes.some((s) => JSON.stringify(s) === JSON.stringify(want)), `${d.id} ${JSON.stringify(preset)}`).toBe(true);

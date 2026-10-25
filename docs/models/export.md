@@ -120,6 +120,9 @@ One default thumbnail represents each family; the JS model builds the 600 varian
 per family on demand. These are original models rather than replacements of
 the webapp's `comm-building-a` through `-n` ids.
 
+The two panel houses ([panel-houses.md](panel-houses.md)) are in `BUILDINGS` too, with
+`PANEL_CATALOG`: category `Panel houses`, group `panel`, scale 1.
+
 ## `village.meta.json`
 
 The village houses ([village.md](village.md)) are buildings of their own
