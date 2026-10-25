@@ -66,7 +66,7 @@ kinds: the station vocabulary (`steel`, `glass`, `light`, `wood`, `roof`, `colum
 | `proc-prop-airport-windsock` | - | five open cones tapering along +X from the mast head |
 | `proc-prop-rail-signal` | - | mast foot at the origin, the head facing +Z, the track toward +X |
 | `proc-prop-crossing-signal` | - | mast foot at the origin, the cross and head facing +Z, the road toward +X |
-| `proc-prop-buffer-stop` | - | on the track's centre line 3.2 studs past its end (y = 0 the track's points, standing on the rail tops), the beam facing the track at +Z |
+| `proc-prop-buffer-stop` | - | on the track's centre line 1.5 studs past its end, the buffers' heads just past the end of the rails (y = 0 the track's points, standing on the rail tops), the beam facing the track at +Z |
 
 A prop of a few boxes (a bollard, a container, a floodlight) is smaller as a GLB than the builder
 runtime every JS model carries, so `test/catalogSweep.ts` holds props and set previews to a fixed

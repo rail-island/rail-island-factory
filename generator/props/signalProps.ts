@@ -272,10 +272,11 @@ export function crossingSignalLod(): MeshBuilder {
 /**
  * The game's track, from the rail type set (every type shares its cross-section):
  * the rails' gauge and their running surface 1.528 studs above the track's points
- * (the game's RAIL_TOP_Y_OFFSET). The stop stands 3.2 studs past the end of the
- * track, on rails the game lays itself: it carries the dead end's track on under
- * the stop in the track's own rail type (rails, sleepers, ballast and its sloped
- * end), so the prop is only what stands on those rails.
+ * (the game's RAIL_TOP_Y_OFFSET). The stop stands 1.5 studs past the end of the
+ * track, its buffers' heads just past the rail end, on rails the game lays itself: it
+ * carries the dead end's track on under the stop in the track's own rail type
+ * (rails, sleepers, ballast and its sloped end), so the prop is only what stands
+ * on those rails.
  */
 const TRACK = railType.TYPE_META.wooden_sleepers!;
 const RAIL_TOP = 1.528;
