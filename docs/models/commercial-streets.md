@@ -67,6 +67,24 @@ stay below 10,000 triangles. More triangles are not added just to fill a budget.
 Opaque blue window panes, layered surrounds, mullions, sills, floor bands and
 roof details remain readable at the game's viewing distances.
 
+Every window is one shared drawing (`window` in the source): a surround standing
+proud of the wall, whose inner faces are the reveals; the glass set back in it,
+2 cm off the wall; glazing bars spanning the glass exactly from edge to edge; a
+sill under it. Each family frames it its own way (`windowKind`):
+
+| Kind | Families | Window |
+| --- | --- | --- |
+| plain | modern, balcony, annex (and the annex's shop wing) | slim white frame 7 cm proud, one mullion, thin sill; about 40 triangles |
+| stone | brick, tenement, shop, barrel (and every roof dormer) | flat stone surround 14 cm proud, mullion and transom, stone sill; about 46 |
+| moulded | terrace, gable, classical | stepped surround - an architrave round the reveals and a fascia behind it - under a cornice head; about 70 |
+| baroque | baroque | the stepped surround with a keystone under a solid segmental pediment; about 85 |
+
+Only the faces the street sees are drawn. The baroque attic window is moulded,
+on the gable face. Seen up close from an angle, the earlier layered panels -
+glazing bars floating in front of the glass, stopping short of it at one end and
+overhanging it at the other - read as skewed windows; the test "sets every street
+window's glass back in its surround" pins the layout and each family's kind.
+
 The shared facade toolkit offsets material layers to avoid coplanar faces.
 Named scopes expose masonry, windows, roofs, arcades, gables and wings in the
 factory's source-tree viewer. Exported JS uses the same code as the GLB builder;

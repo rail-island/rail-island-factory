@@ -34,15 +34,85 @@ function panel(m: MeshBuilder, mat: string, axis: "x" | "z", sign: number, at: n
   if (axis === "z") m.box(mat, u, sign * (at + depth), w, thickness, y, y + h);
   else m.box(mat, sign * (at + depth), u, thickness, w, y, y + h);
 }
-function window(m: MeshBuilder, axis: "x" | "z", sign: number, at: number, u: number, y: number, w: number, h: number, ornate: boolean) {
-  const p = (mat: string, x: number, yy: number, ww: number, hh: number, d: number) => panel(m, mat, axis, sign, at, x, yy, ww, hh, d);
-  p("trim", u, y - 0.1, w + 0.28, h + 0.2, 0.09);
-  p("glass", u, y, w, h, 0.135);
-  p("frame", u, y + 0.035, 0.065, h - 0.07, 0.185);
-  p("frame", u, y + h * 0.58, w - 0.035, 0.075, 0.20);
-  p("trim", u, y - 0.18, w + 0.42, 0.12, 0.24);
-  if (ornate) p("trim", u, y + h + 0.19, w + 0.46, 0.16, 0.22);
+/**
+ * How a family frames its windows: `plain` a slim white frame and a thin sill (the
+ * modern houses), `stone` a flat stone surround, `moulded` a stepped surround - an
+ * architrave and the fascia behind it - under a cornice head (the burgher houses),
+ * `baroque` the stepped surround with a keystone under a curved hood.
+ */
+export type WindowKind = "plain" | "stone" | "moulded" | "baroque";
+export const windowKind = (s: Style): WindowKind =>
+  ["modern", "balcony", "annex"].includes(s) ? "plain" : s === "baroque" ? "baroque" : historic(s) ? "moulded" : "stone";
+/**
+ * A window set into the wall at `at`: a surround standing proud of the wall, whose
+ * inner faces are the reveals, the glass set back in it near the wall plane,
+ * glazing bars spanning the glass exactly, a sill under it and the head its
+ * `kind` gives it. `u` and `y` are the glass's centre along the facade and its
+ * bottom. Only the faces the street can see are drawn (no backs, no hidden ends).
+ */
+function window(m: MeshBuilder, axis: "x" | "z", sign: number, at: number, u: number, y: number, w: number, h: number, kind: WindowKind) {
+  type V = [number, number, number];
+  // facade-local (s along the facade from u, height, t out of the wall) to the model
+  const P = (s: number, yy: number, t: number): V => axis === "z" ? [u + s, yy, sign * (at + t)] : [sign * (at + t), yy, u + s];
+  const N = (ns: number, ny: number, nt: number): V => axis === "z" ? [ns, ny, sign * nt] : [sign * nt, ny, ns];
+  const q = (mat: string, a: V, b: V, c: V, d: V, n: V) => m.facets(mat, [a, b, c, a, c, d], n);
+  // the faces of the block s0..s1, y0..y1, t0..t1 named in `faces` (front, left, right, top, bottom)
+  const block = (mat: string, s0: number, s1: number, y0: number, y1: number, t0: number, t1: number, faces: string) => {
+    if (faces.includes("f")) q(mat, P(s0, y0, t1), P(s1, y0, t1), P(s1, y1, t1), P(s0, y1, t1), N(0, 0, 1));
+    if (faces.includes("l")) q(mat, P(s0, y0, t0), P(s0, y0, t1), P(s0, y1, t1), P(s0, y1, t0), N(-1, 0, 0));
+    if (faces.includes("r")) q(mat, P(s1, y0, t0), P(s1, y0, t1), P(s1, y1, t1), P(s1, y1, t0), N(1, 0, 0));
+    if (faces.includes("t")) q(mat, P(s0, y1, t0), P(s1, y1, t0), P(s1, y1, t1), P(s0, y1, t1), N(0, 1, 0));
+    if (faces.includes("b")) q(mat, P(s0, y0, t0), P(s1, y0, t0), P(s1, y0, t1), P(s0, y0, t1), N(0, -1, 0));
+  };
+  const half = w / 2;
+  // a band `band` wide round the opening, `proud` of the wall: two jambs under a lintel
+  // that runs over them, so the band's top is closed from above
+  const surround = (mat: string, inner: number, band: number, proud: number, jamb: [string, string], lintel: string) => {
+    const o = inner + band, top = y + h + (inner - half) + band;
+    block(mat, -o, -inner, y, top - band, 0, proud, jamb[0]);
+    block(mat, inner, o, y, top - band, 0, proud, jamb[1]);
+    block(mat, -o, o, top - band, top, 0, proud, lintel);
+    return { outer: o, top };
+  };
+  block("glass", -half, half, y, y + h, 0, 0.02, "f");
+  if (kind === "plain") {
+    // a slim frame flush with the glazing bar: one mullion, no transom
+    const { outer } = surround("frame", half, 0.07, 0.07, ["flr", "flr"], "flrtb");
+    block("frame", -0.025, 0.025, y, y + h, 0.02, 0.06, "flr");
+    block("trim", -outer - 0.03, outer + 0.03, y - 0.06, y, 0, 0.12, "flrtb");
+    return;
+  }
+  block("frame", -0.03, 0.03, y, y + h, 0.02, 0.07, "flr");
+  block("frame", -half, half, y + h * 0.6 - 0.03, y + h * 0.6 + 0.03, 0.02, 0.07, "ftb");
+  if (kind === "stone") {
+    const { outer } = surround("trim", half, 0.13, 0.14, ["flr", "flr"], "flrtb");
+    block("trim", -outer - 0.06, outer + 0.06, y - 0.12, y, 0, 0.2, "flrtb");
+    return;
+  }
+  // the moulded surround: an architrave round the reveals, stepped back to a fascia
+  const arch = surround("trim", half, 0.08, 0.14, ["fr", "fl"], "fb");
+  block("trim", -arch.outer, -half, y, arch.top - 0.08, 0.08, 0.14, "l");
+  block("trim", half, arch.outer, y, arch.top - 0.08, 0.08, 0.14, "r");
+  block("trim", -arch.outer, arch.outer, arch.top - 0.08, arch.top, 0.08, 0.14, "lrt");
+  const fascia = surround("trim", arch.outer, 0.07, 0.08, ["fl", "fr"], "flrt");
+  const R = fascia.outer + 0.06;
+  block("trim", -R, R, y - 0.12, y, 0, 0.2, "flrtb");
+  if (kind === "moulded") {
+    block("trim", -R, R, fascia.top, fascia.top + 0.16, 0, 0.2, "flrtb");
+    return;
+  }
+  // baroque: a solid segmental pediment on the fascia, a keystone standing proud under it
+  const rise = 0.24, thick = 0.13, steps = 4;
+  const arc = (k: number) => { const sk = -R + (2 * R * k) / steps; return [sk, fascia.top + thick + rise * (1 - (sk / R) ** 2)] as const; };
+  for (let k = 0; k < steps; k++) {
+    const [s0, y0] = arc(k), [s1, y1] = arc(k + 1);
+    q("trim", P(s0, fascia.top, 0.2), P(s1, fascia.top, 0.2), P(s1, y1, 0.2), P(s0, y0, 0.2), N(0, 0, 1));
+    q("trim", P(s0, y0, 0), P(s1, y1, 0), P(s1, y1, 0.2), P(s0, y0, 0.2), N(0, 1, 0));
+  }
+  block("trim", -R, R, fascia.top, fascia.top + thick, 0, 0.2, "lrb");
+  block("trim", -0.09, 0.09, y + h - 0.05, fascia.top, 0, 0.22, "flrtb");
 }
+
 function balcony(m: MeshBuilder, x: number, z: number, y: number, w: number) {
   m.box("trim", x, z + 0.65, w + 0.4, 1.5, y - 0.24, y - 0.08);
   m.box("metal", x, z + 1.35, w + 0.32, 0.09, y + 0.82, y + 0.92);
@@ -60,7 +130,7 @@ function roof(m: MeshBuilder, s: Style, w: number, d: number, y: number, blank: 
       rect(s === "classical" ? w * 0.65 : rw, 0.08, s === "classical" ? 0 : rx, rz), y + rise);
     if (s !== "classical") for (const x of [-w * 0.26, w * 0.26]) {
       m.box("wall", x, d * 0.24, 1.5, 1.4, y + 0.6, y + 2.25);
-      window(m, "z", 1, d * 0.24 + 0.7, x, y + 1.02, 0.85, 0.95, false);
+      window(m, "z", 1, d * 0.24 + 0.7, x, y + 1.02, 0.85, 0.95, "stone");
       m.loft("roof", rect(1.8, 1.65, x, d * 0.24), y + 2.26, rect(0.08, 1.65, x, d * 0.24), y + 2.9);
     }
   } else if (s === "barrel") {
@@ -148,7 +218,7 @@ function buildCommercial(s: Style, given?: ParamValues): MeshBuilder {
             panel(m, "awning", axis, sign, at, u, yy + 2.5, 2.45, 0.25, 1.26);
           }
         } else {
-          window(m, axis, sign, at, u, yy + 0.7, 1.35, 1.75, historic(s));
+          window(m, axis, sign, at, u, yy + 0.7, 1.35, 1.75, windowKind(s));
           if (front && f > 0 && (s === "balcony" || (s === "tenement" && i % 2 === 0))) balcony(m, u, at, yy + 0.4, 1.7);
         }
       }
@@ -179,7 +249,7 @@ function buildCommercial(s: Style, given?: ParamValues): MeshBuilder {
     const x = w / 2 + 2.2, z = -1;
     m.box("wall", x, z, 4.4, 6, 0.05, 3.55);
     m.box("roof", x, z, 4.65, 6.25, 3.56, 3.85);
-    window(m, "z", 1, 2, x, 0.7, 3.1, 1.9, false);
+    window(m, "z", 1, 2, x, 0.7, 3.1, 1.9, "plain");
   });
   if (s === "baroque" || s === "gable") m.scope("street gable", () => {
     // Layered curved silhouette, a small central pediment and an attic window.
@@ -199,7 +269,8 @@ function buildCommercial(s: Style, given?: ParamValues): MeshBuilder {
       m.box("wall", 0, d / 2 - 0.1, w * widths[i], 0.45, h + 0.3 + i * 0.48, h + 0.78 + i * 0.48);
       m.box("trim", 0, d / 2 - 0.1, w * widths[i] + 0.12, 0.58, h + 0.79 + i * 0.48, h + 0.89 + i * 0.48);
     }
-    window(m, "z", 1, d / 2 + 0.125, 0, h + 0.7, 0.85, 1.05, false);
+    // on the face of the gable: the baroque sections stand 0.25 m proud, the gabled steps 0.125 m
+    window(m, "z", 1, d / 2 + (s === "baroque" ? 0.25 : 0.125), 0, h + 0.7, 0.85, 1.05, s === "baroque" ? "moulded" : "stone");
   });
   if (s === "classical") m.scope("pilasters", () => {
     for (let i = 0; i <= bays; i++) {
