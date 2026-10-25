@@ -244,8 +244,8 @@ function inCabinRing(headY: number, e: Extent): boolean {
  * - `lanes`: anything in the two lanes the cabins leave the head along (beside each
  *   strand, ahead of the wheel axis, from the cabin's floor to above the grips) or, above
  *   the rope, ahead of the axis at all (the rope may leave climbing steeply);
- * - `platform`: anything but the platform and slender upright columns (which may pass
- *   through its deck) in its band;
+ * - `platform`: anything but the platform in its band, from just under the deck to above
+ *   its railing -- no column of the hall stands in the deck;
  * - `stairs`: anything but the stairs over a tread, lower than the head room.
  */
 export function stationFouls(type: string, view: StationView, item: StationBox | StationSector): string | null {
@@ -270,9 +270,8 @@ export function stationFouls(type: string, view: StationView, item: StationBox |
   if (item.part !== "platform" && item.part !== "stairs") {
     const { rIn, rOut } = platformBand(view);
     const deckY = deckLevel(headY, view);
-    const column = !sector && !item.rotX && !item.rotZ && item.sx <= 1.6 && item.sz <= 1.6;
     const band = e.near < rOut && e.far > rIn && e.y1 > deckY - 1 && e.y0 < deckY + RAIL_HEIGHT + 0.3;
-    if (!column && band) return "platform";
+    if (band) return "platform";
   }
   if (item.part !== "stairs" && e.x0 < STAIR_HALF_WIDTH && e.x1 > -STAIR_HALF_WIDTH) {
     // a sector by the points of its plan (its bounding square would cover the gap left for the stairs)
@@ -295,8 +294,10 @@ type Ctx = {
   eaveY: number;
   /** The roof's front edge, over the wheel axis. */
   zF: number;
-  /** Where a column standing through the platform may branch: over its railing. */
+  /** Where a column beside the platform may branch: over its railing. */
   forkY: number;
+  /** The platform's plan, which no column of the hall may stand in (null: no platform). */
+  deck: { circulating: boolean; rIn: number; rOut: number; zFront: number } | null;
   /** The part the boxes being drawn belong to. */
   part: StationPart;
   boxes: StationBox[];
@@ -305,6 +306,32 @@ type Ctx = {
 
 /** Which levels a box is drawn at: the full one (default), the low one or both. */
 type Lv = StationLevel;
+
+/**
+ * Where a hall column wanted at (x, z), `half` wide each way, may stand: slid back
+ * along -Z until it is clear of the platform with a little air -- behind the curved
+ * deck's outer rim, or behind the rectangular deck's back edge -- so no column stands in
+ * the deck. Each hall asks for its front columns through this, so they follow the plan.
+ */
+function clearZ(c: Ctx, x: number, z: number, half: number): number {
+  const d = c.deck;
+  if (!d) return z;
+  const h = half + 0.3;
+  const fouls = (cz: number): boolean => {
+    const x0 = x - h, x1 = x + h, z0 = cz - h, z1 = cz + h;
+    if (d.circulating) {
+      const near = Math.hypot(Math.max(x0, 0, -x1), Math.max(z0 - c.headZ, 0, c.headZ - z1));
+      const far = Math.hypot(Math.max(Math.abs(x0), Math.abs(x1)), Math.max(Math.abs(z0 - c.headZ), Math.abs(z1 - c.headZ)));
+      return near < d.rOut && far > d.rIn;
+    }
+    const hit = (ax0: number, ax1: number, az0: number, az1: number): boolean => x0 < ax1 && x1 > ax0 && z0 < az1 && z1 > az0;
+    return hit(-d.rOut, d.rOut, c.headZ - d.rOut, c.headZ - d.rIn)
+      || hit(d.rIn, d.rOut, c.headZ - d.rIn, d.zFront) || hit(-d.rOut, -d.rIn, c.headZ - d.rIn, d.zFront);
+  };
+  let cz = z;
+  while (fouls(cz)) cz -= 0.1;
+  return Math.round(cz * 100) / 100;
+}
 
 function put(c: Ctx, b: Omit<StationBox, "part" | "level">, lv: Lv): void {
   c.boxes.push({ ...b, part: c.part, level: lv });
@@ -438,7 +465,8 @@ function booth(c: Ctx, x0: number, x1: number, y: number, z0: number, z1: number
 function buildOpenGantry(c: Ctx): void {
   const hw = c.w / 2, hd = c.d / 2;
   const colX = hw - 0.6;
-  const colZ = [-hd + 0.6, 0, hd - 0.6];
+  // the front pair stands behind the platform, whichever plan it has
+  const colZ = [-hd + 0.6, 0, Math.max(1.6, clearZ(c, colX, hd - 0.6, 0.8))];
   const y0 = c.eaveY;
   const span = 13.8;
   const ridgeY = y0 + 3.2;
@@ -455,8 +483,8 @@ function buildOpenGantry(c: Ctx): void {
       blk(c, x - 0.45, x + 0.45, 0.7, y0, z + 0.29, z + 0.45, FRAME, "steel");
       blk(c, x - 0.09, x + 0.09, 0.7, y0, z - 0.29, z + 0.29, FRAME, "steel");
       if (z !== colZ[1]) blk(c, x - 0.45, x + 0.45, 0.7, y0, z - 0.45, z + 0.45, FRAME, "steel", "low");
-      // knee braces out to the roof's side overhang
-      bar(c, [x + s * 0.4, y0 - 4.5, z], [s * (colX + 4.4), y0 + 0.1, z], 0.3, FRAME, "steel");
+      // knee braces out under the truss's bottom chord, which carries the roof's side overhang
+      bar(c, [x + s * 0.4, y0 - 4.5, z], [s * (colX + 4.4), y0 + 2.2, z], 0.3, FRAME, "steel");
     }
   }
   // the longitudinal girders, cantilevered forward over the platform to the wheel
@@ -555,7 +583,10 @@ function buildAlpineChalet(c: Ctx): void {
   const wallTop = roofUnder(wallX);
   const zB = -hd, zH = 0; // the hall, back to front
   const postX = hw - 0.6;
-  const posts = [hd / 2 - 0.3, hd - 0.6];
+  // the front posts stand behind the platform; where that brings them onto the inner pair, one pair carries the frame
+  const front = clearZ(c, postX, hd - 0.6, 0.75);
+  const posts = front - (hd / 2 - 0.3) < 2.5 ? [hd / 2 - 0.3] : [hd / 2 - 0.3, front];
+  const lastPost = posts[posts.length - 1]!;
   const zFront = c.zF - 0.35;
   // the hall: a stone ground floor, two timber storeys over it
   pair(c, wallX - 0.8, wallX, 0, plinth, zB, zH, STONE, "stone");
@@ -613,16 +644,18 @@ function buildAlpineChalet(c: Ctx): void {
   for (const s of [-1, 1]) {
     for (const z of posts) {
       blk(c, s * postX - 0.75, s * postX + 0.75, 0, 1.0, z - 0.75, z + 0.75, STONE, "stone");
-      blk(c, s * postX - 0.45, s * postX + 0.45, 1.0, roofUnder(postX) - 0.45, z - 0.45, z + 0.45, TIMBER_DARK, "timber", z === posts[1] ? "both" : "full");
+      blk(c, s * postX - 0.45, s * postX + 0.45, 1.0, roofUnder(postX) - 0.45, z - 0.45, z + 0.45, TIMBER_DARK, "timber", z === lastPost ? "both" : "full");
       // knee braces out to the eave purlin
       bar(c, [s * postX, c.eaveY - 3.6, z], [s * (eaveX - 1.9), c.eaveY + 0.1, z], 0.32, TIMBER_DARK, "timber");
     }
     blk(c, s * postX - 0.4, s * postX + 0.4, roofUnder(postX) - 0.85, roofUnder(postX) - 0.1, zH, c.zF, TIMBER_DARK, "timber", "both");
     blk(c, s * (eaveX - 1.2) - 0.3, s * (eaveX - 1.2) + 0.3, c.eaveY + 0.1, roofUnder(eaveX - 0.9) - 0.05, zB - 0.6, c.zF, TIMBER_DARK, "timber");
     // the braces that carry the frame forward over the wheel
-    bar(c, [s * postX, c.eaveY - 6.5, posts[1]! + 0.4], [s * postX, roofUnder(postX) - 0.9, zFront - 0.3], 0.4, TIMBER_DARK, "timber");
-    bar(c, [s * postX, c.eaveY - 3, posts[0]! + 0.4], [s * postX, roofUnder(postX) - 0.9, posts[1]! - 0.5], 0.3, TIMBER_DARK, "timber");
-    bar(c, [s * postX, c.eaveY - 3, posts[1]! - 0.4], [s * postX, roofUnder(postX) - 0.9, posts[0]! + 0.5], 0.3, TIMBER_DARK, "timber");
+    bar(c, [s * postX, c.eaveY - 6.5, lastPost + 0.4], [s * postX, roofUnder(postX) - 0.9, zFront - 0.3], 0.4, TIMBER_DARK, "timber");
+    if (posts.length > 1) {
+      bar(c, [s * postX, c.eaveY - 3, posts[0]! + 0.4], [s * postX, roofUnder(postX) - 0.9, lastPost - 0.5], 0.3, TIMBER_DARK, "timber");
+      bar(c, [s * postX, c.eaveY - 3, lastPost - 0.4], [s * postX, roofUnder(postX) - 0.9, posts[0]! + 0.5], 0.3, TIMBER_DARK, "timber");
+    }
     // the boarded apron under the eaves between the posts
     blk(c, s * (eaveX - 1.2) - 0.1, s * (eaveX - 1.2) + 0.1, c.eaveY + 0.25, roofUnder(eaveX - 1.3) - 0.1, zH + 0.3, c.zF - 0.3, TIMBER, "timber");
   }
@@ -731,7 +764,7 @@ function buildGlassModern(c: Ctx): void {
   }
   // the tree columns that carry the wing over the platform
   // the fork stands over the platform's railing, so only the trunk passes its deck
-  const tx = hw - 0.6, tz = hd - 0.6, fork = c.forkY;
+  const tx = hw - 0.6, tz = clearZ(c, hw - 0.6, hd - 0.6, 0.9), fork = c.forkY;
   for (const s of [-1, 1]) {
     blk(c, s * tx - 0.9, s * tx + 0.9, 0, 0.5, tz - 0.9, tz + 0.9, WHITE, "concrete");
     blk(c, s * tx - 0.4, s * tx + 0.4, 0.5, fork, tz - 0.4, tz + 0.4, STEEL, "steel", "both");
@@ -810,16 +843,19 @@ function buildConcreteDrive(c: Ctx): void {
   blk(c, -bx1, -bx0, by0, by1, zH, zH + 0.08, GLASS, "glass");
   // the portal frames over the platform, beams cantilevered out to the roof's edge
   const px = hw - 0.8;
-  const portals = [hd / 2 - 1.5, hd - 2];
+  // the front portal stands behind the platform; where that brings it onto the inner one, one portal carries the roof
+  const frontPortal = clearZ(c, px, hd - 2, 1.0);
+  const portals = frontPortal - (hd / 2 - 1.5) < 2.5 ? [hd / 2 - 1.5] : [hd / 2 - 1.5, frontPortal];
+  const lastPortal = portals[portals.length - 1]!;
   const front = c.zF - 0.7;
   for (const z of portals) {
     pair(c, px - 0.7, px + 0.7, 0, roof0, z - 0.7, z + 0.7, CONCRETE, "concrete", "both");
-    blk(c, -roofX, roofX, c.eaveY, roof0, z - 0.6, z + 0.6, CONCRETE, "concrete", z === portals[1] ? "both" : "full");
+    blk(c, -roofX, roofX, c.eaveY, roof0, z - 0.6, z + 0.6, CONCRETE, "concrete", z === lastPortal ? "both" : "full");
     bars(c, [px + 0.5, c.eaveY - 4, z], [roofX - 1.2, c.eaveY + 0.2, z], 0.8, CONCRETE, "concrete");
   }
   blk(c, -roofX, roofX, c.eaveY, roof0, front - 0.6, front + 0.6, CONCRETE, "concrete", "both");
   pair(c, roofX - 1.2, roofX, c.eaveY, roof0, zH, front - 0.6, CONCRETE, "concrete", "both");
-  for (const s of [-1, 1]) bar(c, [s * px, c.eaveY - 5, portals[1]! + 0.6], [s * px, c.eaveY + 0.2, front - 0.6], 0.8, CONCRETE, "concrete");
+  for (const s of [-1, 1]) bar(c, [s * px, c.eaveY - 5, lastPortal + 0.6], [s * px, c.eaveY + 0.2, front - 0.6], 0.8, CONCRETE, "concrete");
   // the roof slab, its parapet and the hall's roof lights
   blk(c, -roofX, roofX, roof0, roof1, zB - 0.6, c.zF, CONC_LIGHT, "concrete", "both");
   blk(c, -roofX, roofX, roof1, roof1 + 0.8, zB - 0.6, zB - 0.1, CONC_LIGHT, "concrete");
@@ -1204,6 +1240,7 @@ export function buildStation(type: string, view: StationView = DEFAULT_VIEW): St
     w: dims.w, d: dims.d, headY: dims.ropeHeadY, headZ,
     eaveY: dims.ropeHeadY + ROOF_CLEAR, zF: headZ + 0.5,
     forkY: hasDeck ? deckY + RAIL_HEIGHT + 1.0 : dims.ropeHeadY - 6.5,
+    deck: hasDeck ? { circulating: view.circulating, ...platformBand(view), zFront: headZ + platformBand(view).rOut * Math.max(0, -Math.cos(BOARD_ARC_HALF)) } : null,
     part: "hall", boxes: [], sectors: [],
   };
   HALLS[key]!(c);

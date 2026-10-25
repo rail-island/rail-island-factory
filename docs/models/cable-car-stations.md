@@ -87,8 +87,15 @@ one building:
 | `glass_modern` | a two-storey curtain-wall box under a flat white wing with a skylight and solar panels, carried by tree columns forked above the platform's railing; a lift core with a glass lantern | a light deck with a white edge, slim steel legs, glass balustrades with a dark cap, a solid white flight | a white pedestal with a teal housing; white spokes |
 | `concrete_drive` | a concrete hall with deep fins, ribbon windows and a relief, portal frames, a coffered ceiling, the drive room over the wheel | a thick concrete deck on concrete piers, a concrete parapet with a light coping, a solid flight with cheek walls | the wheel hung from the gearbox under the front beam; orange spokes |
 
-The hall's frame follows the view where it meets the platform: the glass type's tree columns
-fork 1 stud above the railing, whatever the deck's height.
+The hall's frame follows the view where it meets the platform. **No column of a hall stands
+in the platform**: each hall asks for its front columns (the gantry's front H columns, the
+chalet's front posts, the glass type's tree columns, the concrete type's front portal) through
+`clearZ`, which slides a column back along -Z until it stands clear of the deck the view
+draws - behind the curved deck's outer rim, or behind the rectangular deck's back edge - and
+the roof is cantilevered forward from there to the wheel. Where that brings a front post or
+portal within 2.5 studs of the inner one, the inner pair carries the frame alone. The glass
+type's tree columns fork 1 stud above the railing, whatever the deck's height, and the gantry's
+knee braces end under the trusses' bottom chords, which carry the roof's side overhang.
 
 ## Levels of detail
 
@@ -114,13 +121,13 @@ or null:
 - `lanes` - nothing more than 0.6 studs ahead of the axis above the grips (the rope may leave
   climbing steeply), and nothing in the two lanes the cabins leave along (beside each strand,
   `5 -+ (halfWidth + 0.3)` from the centre line, above the deepest cabin's floor);
-- `platform` - nothing but the platform and slender upright columns (which may pass through the
-  deck) in the platform's band, from 1 stud below the deck to above its railing;
+- `platform` - nothing but the platform in the platform's band, from 1 stud below the deck to
+  above its railing (no column passes through the deck);
 - `stairs` - nothing over a tread lower than 2.4 studs of head room.
 
 The test asserts every type clear in both plans, at both levels, for the catalog's cabins and a
-narrower and a wider one, that no hall box but a column crosses the rectangular deck, and that
-each check would catch a box in its place.
+narrower and a wider one, that no hall box crosses either plan's deck, and that each check
+would catch a box in its place.
 
 ## The pylon
 

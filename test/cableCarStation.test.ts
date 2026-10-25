@@ -43,16 +43,23 @@ describe("cable car station types", () => {
     }
   });
 
-  it.each(TYPES)("%s stands nothing but slender columns through the rectangular platform's deck", (type) => {
-    for (const cabin of CABINS) {
-      const m = buildStation(type, { ...cabin, circulating: false });
-      const decks = m.boxes.filter((b) => b.part === "platform" && b.material === "deck").map(extent);
+  it.each(TYPES)("%s stands no column of its hall in the platform, rectangular or curved", (type) => {
+    for (const view of VIEWS) {
+      const m = buildStation(type, view);
       const crossing = m.boxes.filter((b) => b.part === "hall").filter((b) => {
-        const column = !b.rotX && !b.rotZ && b.sx <= 1.6 && b.sz <= 1.6;
         const e = extent(b);
-        return !column && decks.some((d) => e.x0 < d.x1 && e.x1 > d.x0 && e.y0 < d.y1 && e.y1 > d.y0 && e.z0 < d.z1 && e.z1 > d.z0);
+        if (e.y1 < m.deckY! - 1 || e.y0 > m.deckY!) return false;
+        if (view.circulating) {
+          // the deck sector about the wheel axis
+          const near = Math.hypot(Math.max(e.x0, 0, -e.x1), Math.max(e.z0 - m.headZ, 0, m.headZ - e.z1));
+          const far = Math.hypot(Math.max(Math.abs(e.x0), Math.abs(e.x1)), Math.max(Math.abs(e.z0 - m.headZ), Math.abs(e.z1 - m.headZ)));
+          const { rIn, rOut } = platformBand(view);
+          return near < rOut && far > rIn;
+        }
+        return m.boxes.filter((d) => d.part === "platform" && d.material === "deck").map(extent)
+          .some((d) => e.x0 < d.x1 && e.x1 > d.x0 && e.z0 < d.z1 && e.z1 > d.z0);
       });
-      expect(crossing).toEqual([]);
+      expect({ view: viewName(view), crossing }).toEqual({ view: viewName(view), crossing: [] });
     }
   });
 
@@ -67,7 +74,7 @@ describe("cable car station types", () => {
     expect(stationFouls(type, view, box("platform", 5, headY - 4, headZ + 9, 1, 1, 1))).toBe("lanes");
     expect(stationFouls(type, view, box("hall", 0, headY + 3, headZ + 2, 10, 0.5, 2))).toBe("lanes");
     expect(stationFouls(type, view, box("hall", 10, deckY, headZ - 2, 3, 0.4, 3))).toBe("platform");
-    expect(stationFouls(type, view, box("hall", 10, deckY, headZ - 4, 0.8, 12, 0.8))).toBeNull();
+    expect(stationFouls(type, view, box("hall", 10, deckY, headZ - 4, 0.8, 12, 0.8))).toBe("platform");
     expect(stationFouls(type, view, box("hall", 0, tread.top + 1, (tread.z0 + tread.z1) / 2, 2, 1, 0.5))).toBe("stairs");
     // the wheel is the one thing allowed in the ring, the head the one thing on the wheel
     expect(stationFouls(type, view, box("wheel", 0, headY, headZ - 5, 1, 0.5, 1))).toBeNull();
