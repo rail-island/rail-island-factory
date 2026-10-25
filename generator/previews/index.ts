@@ -15,7 +15,7 @@ import { BRIDGE_PARAMS, bridgePreview, bridgePreviewLod } from "./bridges.ts";
 import { ROAD_STATION_PARAMS, STATION_PARAMS, roadStationPreview, roadStationPreviewLod, stationPreview, stationPreviewLod } from "./stations.ts";
 import {
   AIRPORT_PARAMS, DAM_PARAMS, PORTAL_PARAMS, PORT_PARAMS, airportPreview, airportPreviewLod, busStopPreview, busStopPreviewLod,
-  cableCarStationPreview, cableCarStationPreviewLod, damPreview, damPreviewLod, portPreview, portPreviewLod, tunnelPortalPreview, tunnelPortalPreviewLod,
+  CABLE_CAR_PARAMS, cableCarStationPreview, cableCarStationPreviewLod, damPreview, damPreviewLod, portPreview, portPreviewLod, tunnelPortalPreview, tunnelPortalPreviewLod,
 } from "./structures.ts";
 import { WAY_PARAMS, decorationPreview, decorationPreviewLod, railTypePreview, railTypePreviewLod, roadTypePreview, roadTypePreviewLod } from "./ways.ts";
 import { MAST_PARAMS, PYLON_PARAMS, catenaryPreview, catenaryPreviewLod, pylonPreview, pylonPreviewLod } from "./props.ts";
@@ -84,7 +84,7 @@ export const PREVIEW_FAMILIES: readonly PreviewFamily[] = [
     source: "previews/structures.ts",
     designs: [
       ...structures("busStop", "bus-stop", busStopPreview, busStopPreviewLod),
-      ...structures("cableCarStation", "cable-car-station", cableCarStationPreview, cableCarStationPreviewLod),
+      ...structures("cableCarStation", "cable-car-station", cableCarStationPreview, cableCarStationPreviewLod, CABLE_CAR_PARAMS),
       ...structures("port", "port", portPreview, portPreviewLod, PORT_PARAMS),
       ...structures("airport", "airport", airportPreview, airportPreviewLod, AIRPORT_PARAMS),
       ...designs({ category: "Structures", group: "dam", prefix: "dam", build: damPreview, buildLod: damPreviewLod, params: DAM_PARAMS, lodTriangles: 12000 }, typesOf("dam")),

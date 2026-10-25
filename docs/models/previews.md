@@ -29,7 +29,7 @@ cable-car pylon draw no set type and show no id.
 
 | Category (first chip) | Second chip | Pages |
 |---|---|---|
-| Structures | the set: bridges, bus stops, railway stations, bus and truck stations, cable car stations, ports, airports, dams, tunnel portals | one per type of the set |
+| Structures | the set: bridges, bus stops, railway stations, bus and truck stations, cable car stations (a `platform` parameter: rectangular or curved), ports, airports, dams, tunnel portals | one per type of the set |
 | Rails and roads | rail types, road types, line decorations | one per type |
 | City blocks | the block's district (residential, commercial, industrial, historic, high-rise) | one per block type |
 | Props | - | the cable-car pylon and each catenary style's support, beside the fixed props |

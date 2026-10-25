@@ -25,7 +25,7 @@ export interface SetMeta {
   landed: boolean;
   defaultId: string;
   retired: Record<string, string>;
-  /** In picker order, each with the per-type data the game reads without running the module (a shed's size). */
+  /** In picker order, each with the per-type data the game reads without running the module (a station's size). */
   types: Array<{ id: string } & Record<string, unknown>>;
   groups?: Array<{ id: string; types: string[] }>;
   /** The set's module beside the meta, once its definitions are the factory's. */

@@ -100,7 +100,6 @@ import { TREES } from "./trees.ts";
 import { WOODS_MODELS } from "./woodsModels.ts";
 import { generateWoods } from "./woodsExport.ts";
 import { PORT_PROPS } from "./props/portProps.ts";
-import { CABLE_CAR_PROPS } from "./props/cableCarSheds.ts";
 import { AIRPORT_PROPS } from "./props/airportProps.ts";
 import { SIGNAL_PROPS } from "./props/signalProps.ts";
 import { PREVIEW_FAMILIES } from "./previews/index.ts";
@@ -206,7 +205,6 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: WOODS_MODELS, source: "woodsModels.ts", meta: "woods" },
   // the fixed props the game places on its structures: listed in props.meta.json
   { designs: PORT_PROPS, source: "props/portProps.ts", meta: "props" },
-  { designs: CABLE_CAR_PROPS, source: "props/cableCarSheds.ts", meta: "props" },
   { designs: AIRPORT_PROPS, source: "props/airportProps.ts", meta: "props" },
   { designs: SIGNAL_PROPS, source: "props/signalProps.ts", meta: "props" },
   // the set types drawn at a representative size, for the site to browse: in no game meta
