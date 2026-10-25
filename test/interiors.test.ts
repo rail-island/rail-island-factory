@@ -96,6 +96,23 @@ describe("the generic cabin", () => {
     });
   });
 
+  it("stops its walls at the body's bottom edge where that stands above the floor", () => {
+    // a skirt cut away from x = 1 to x = 3, 0.8 m above the floor, with sloped ends (a Bmo over its bogies)
+    const at = (x: number) => 0.5 + 1.5 * Math.max(0, Math.min(1, (x - 0.5) * 2, (3.5 - x) * 2));
+    // the lowest point of the side-wall triangles that cover x = 2, mid-cut
+    const lowest = (cabin: Cabin) => {
+      const { json, bin } = parseGlb(car(new MeshBuilder(PALETTE), cabin).toGlb("t", "t"));
+      const ys = collectTriangles(json, bin, { interiors: true })
+        .filter((t) => t.material === "interiorWall" && t.p.every((p) => Math.abs(Math.abs(p[2]) - CABIN.half) < 1e-4))
+        .filter((t) => Math.min(...t.p.map((p) => p[0])) <= 2 && Math.max(...t.p.map((p) => p[0])) >= 2)
+        .flatMap((t) => t.p.map((p) => p[1]));
+      expect(ys.length).toBeGreaterThan(0);
+      return Math.min(...ys);
+    };
+    expect(lowest(CABIN)).toBeCloseTo(CABIN.floor, 6);
+    expect(lowest({ ...CABIN, bottom: { at, xs: [0.5, 1, 3, 3.5] } })).toBeCloseTo(2.0, 6);
+  });
+
   it("refuses an interior no door clip reveals", () => {
     const m = new MeshBuilder(PALETTE);
     m.box("body", 0, 0, 12.4, 2.8, 1, 3.5);

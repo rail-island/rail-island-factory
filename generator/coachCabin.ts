@@ -60,6 +60,8 @@ export function coachCabin(c: Coach, v: Volume): void {
   const wide = [x0, x1, ...v.plan.map((p) => p[0])].filter((x) => x >= x0 && x <= x1 && k(x) >= 0.9);
   const half = Math.min(...(wide.length ? wide : [(x0 + x1) / 2]).map((x) => skin(x, floor, ceiling))) - CABIN_INSET;
   drawCabin(c.m, {
+    // the walls stop at the body's bottom edge where it rises above the floor (over the wheels)
+    bottom: { at: (x) => loAt(v, x + c.centre), xs: (v.bottom ?? []).map((p) => c.X(p[0])) },
     x0: c.X(x0),
     x1: c.X(x1),
     floor,

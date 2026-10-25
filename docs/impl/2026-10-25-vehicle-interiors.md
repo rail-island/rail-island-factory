@@ -80,6 +80,11 @@ Checks: `pnpm typecheck` passes; the results of `pnpm test`,
    glass laid with `Coach.sidePanel` route a pane into the car's interior part
    (`laterWindows`). Tests cover the routing, a door leaf's light getting none,
    and panes on every kit; the UIC-Z pins moved again.
+2. **Walls stop at the body's bottom edge** (found while checking the windows: on
+   the Bmo the far wall showed below the body over the bogies, through the open
+   doors). A cabin's side and end walls now start at the body's bottom edge where
+   it stands above the floor (`Cabin.bottom`, passed by the coach kit and the
+   VT 18.16), with a regression test in `test/interiors.test.ts`.
 
 ## How to test
 
@@ -128,7 +133,8 @@ Nothing - the spec is implemented in full. The game is untouched, as the spec sa
   seat row, so its cabin has no seats; the Be31's vestibule cabins have none either.
 - The cabin's floor is one level per car body. A high-floor car with step wells
   shows a riser at its doorways; a seat over a skirt cut away above the wheels
-  stands raised on that cut.
+  stands raised on that cut. Buses and the slice-lofted sets pass no
+  `Cabin.bottom` (a bus has its podiums over the arches instead).
 - Double-deckers show one level at door height, as decided.
 - Cabin walls are inset from the narrowest skin between floor and ceiling. Where
   a body tapers (noses, bus corners), the walls stand outside the shell, facing

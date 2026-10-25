@@ -89,6 +89,12 @@ export interface Cabin {
    * would show outside. Omit where every row fits on the floor.
    */
   room?: (x0: number, x1: number) => { base: number; top: number } | null;
+  /**
+   * The body's bottom edge at x where it stands above the floor (a skirt cut away
+   * over the wheels), with the x where it bends: the walls stop there, so they
+   * never show below the body. Omit where the body's bottom stays under the floor.
+   */
+  bottom?: { at: (x: number) => number; xs: number[] };
   /** The car's windows, laid on the side walls as dark panes facing in (`windowPanes`). */
   windows?: CabinWindow[];
   /**
@@ -228,22 +234,26 @@ export function drawCabin(m: MeshCore, c: Cabin): string {
       }
     });
     m.scope("ceiling", () => face(m, "interiorWall", [[x0, y1, -h], [x1, y1, -h], [x1, y1, h], [x0, y1, h]], [0, -1, 0]));
+    // where the walls start: the floor, or the body's bottom edge above it
+    const foot = (x: number) => Math.max(y0, c.bottom ? c.bottom.at(x) : y0);
     m.scope("end walls", () => {
-      face(m, "interiorWall", [[x0, y0, -h], [x0, y0, h], [x0, y1, h], [x0, y1, -h]], [1, 0, 0]);
-      face(m, "interiorWall", [[x1, y0, -h], [x1, y0, h], [x1, y1, h], [x1, y1, -h]], [-1, 0, 0]);
+      face(m, "interiorWall", [[x0, foot(x0), -h], [x0, foot(x0), h], [x0, y1, h], [x0, y1, -h]], [1, 0, 0]);
+      face(m, "interiorWall", [[x1, foot(x1), -h], [x1, foot(x1), h], [x1, y1, h], [x1, y1, -h]], [-1, 0, 0]);
     });
     m.scope("side walls", () => {
       for (const s of [-1, 1]) {
         const z = s * h;
+        // a piece from the floor up starts at the body's bottom edge where that stands higher
         const wall = (a: number, b: number, p: number, q: number) => {
-          if (b - a > 1e-4 && q - p > 1e-4) face(m, "interiorWall", [[a, p, z], [b, p, z], [b, q, z], [a, q, z]], [0, 0, -s]);
+          const [pa, pb] = p <= y0 + 1e-9 ? [foot(a), foot(b)] : [p, p];
+          if (b - a > 1e-4 && q - Math.min(pa, pb) > 1e-4) face(m, "interiorWall", [[a, Math.min(pa, q), z], [b, Math.min(pb, q), z], [b, q, z], [a, q, z]], [0, 0, -s]);
         };
         // what the wall leaves out on this side: its doorways, and what a housing covers
         const holes = [
           ...c.doors.filter((d) => d.s === s).map((d) => ({ x0: d.x0, x1: d.x1, y0: d.y0, y1: d.y1 })),
           ...(c.housings ?? []).map((hs) => ({ x0: hs.x0, x1: hs.x1, y0: -Infinity, y1: hs.top })),
         ];
-        const xs = [...new Set([x0, x1, ...holes.flatMap((o) => [o.x0, o.x1]).filter((x) => x > x0 && x < x1)])].sort((a, b) => a - b);
+        const xs = [...new Set([x0, x1, ...[...holes.flatMap((o) => [o.x0, o.x1]), ...(c.bottom?.xs ?? [])].filter((x) => x > x0 && x < x1)])].sort((a, b) => a - b);
         for (let i = 0; i + 1 < xs.length; i++) {
           const [a, b] = [xs[i]!, xs[i + 1]!];
           const cuts = holes

@@ -336,6 +336,8 @@ function drawCarCabin(m: MeshBuilder, p: Profile, X: (d: number) => number, d0: 
       const [a, b] = span(X(o.d0), X(o.d1));
       return { s: o.s, x0: a, x1: b, y0: o.y0 + 0.003, y1: o.y1 - 0.003, skin: () => W };
     }),
+    // the walls stop at the body's bottom edge where it rises above the floor (over the bogies)
+    bottom: { at: (x) => p.B(dOf(x)), xs: p.stations.map(X) },
     windows: windows.map((w) => {
       const [a, b] = span(X(w.d0), X(w.d1));
       return { s: w.s, x0: a, x1: b, y0: w.y0, y1: w.y1 };
