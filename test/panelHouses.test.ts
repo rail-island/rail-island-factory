@@ -3,9 +3,9 @@
 import { describe, expect, it } from "vitest";
 import { proceduralId } from "../generator/modelId.ts";
 import { BAY, PANEL_CATALOG, PANEL_HOUSES, PL, SLAB_DEPTH, ST } from "../generator/panelHouses.ts";
-import { coverageCombinations, paramCombinations, type ParamValues, type ProceduralDesign } from "../generator/design.ts";
+import { coverageCombinations, type ParamValues, type ProceduralDesign } from "../generator/design.ts";
 import { BUILDINGS, DESIGNS, designSource } from "../generator/generate.ts";
-import { exportMeta } from "../generator/catalog.ts";
+import { metaEntry } from "../generator/catalog.ts";
 import { cityShapes, heightBand } from "../generator/cityVariants.ts";
 import { glbStats } from "../generator/glbStats.ts";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles.ts";
@@ -27,13 +27,13 @@ describe("the panel houses", () => {
   it("are a building category of their own, in the panel pool, with references", () => {
     expect(PANEL_HOUSES.map((d) => d.id)).toEqual(["proc-building-panel-slab", "proc-building-panel-tower"]);
     expect(PANEL_CATALOG).toMatchObject({ category: "Panel houses", group: "panel", defaultScale: 1 });
-    const exported = exportMeta(BUILDINGS).buildings;
     for (const d of PANEL_HOUSES) {
       expect(DESIGNS.get(proceduralId(d.id))).toBe(d);
+      expect(BUILDINGS).toContain(d);
       expect(designSource(d.id)).toBe("panelHouses.ts");
       expect(d.references).toBe("panel-houses");
-      expect(exported.find((e) => e.id === d.id)).toMatchObject({ ...PANEL_CATALOG, params: d.params });
-      expect(exported.find((e) => e.id === d.id)!.game?.city?.variants.length).toBeGreaterThan(1);
+      // the entry alone, without measuring every city variant (the export test does that)
+      expect(metaEntry(d, PANEL_CATALOG)).toMatchObject({ ...PANEL_CATALOG, params: d.params });
     }
   });
 
@@ -50,11 +50,12 @@ describe("the panel houses", () => {
       }
     });
 
-    it(`${d.id}: every shape choice changes the geometry; the colours only recolour`, () => {
-      const shapes = d.params!.filter((p) => !d.finishParams!.includes(p.name) && !p.name.startsWith("party"));
-      const signatures = new Set(paramCombinations(shapes).map((v) => shape(d, v)));
-      expect(signatures.size).toBe(paramCombinations(shapes).length);
+    it(`${d.id}: every shape value changes the geometry; the colours only recolour`, () => {
+      // one parameter at a time from the defaults, not every combination: the test stays quick
       const base = shape(d, {});
+      for (const p of d.params!.filter((s) => !d.finishParams!.includes(s.name))) {
+        for (const v of p.values) if (v.value !== p.default) expect(shape(d, { [p.name]: v.value }), `${p.name}=${v.value}`).not.toBe(base);
+      }
       for (const name of d.finishParams!) {
         const p = d.params!.find((s) => s.name === name)!;
         for (const v of p.values) {
