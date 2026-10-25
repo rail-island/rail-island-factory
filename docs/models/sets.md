@@ -89,8 +89,9 @@ that moved.
 ## Block types
 
 `blockType` is a landed set (`generator/sets/blockType.ts`): what a block of a settlement is
-filled with, and the fill that fills it. There are six archetypes - `houses`, `street`,
-`highrise`, `industrial`, `towerblock`, `landmark` - each in `TYPE_META` with its pools
+filled with, and the fill that fills it. There are seven archetypes - `houses`, `street`,
+`highrise`, `industrial`, `towerblock`, `panel_estate` (a housing estate of panel houses,
+[panel-houses.md](panel-houses.md)), `landmark` - each in `TYPE_META` with its pools
 (building `group`s) and their fixed mix, its placement (`perimeter` frontages or one `single`
 building), its `ground` (`pavement`, `concrete` or null for the biome), an optional centrepiece
 pool, an exclusion key two neighbouring blocks may not share, ring pools for a single building,

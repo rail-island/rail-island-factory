@@ -59,6 +59,7 @@ export const FAMILY_VARY: Readonly<Record<string, readonly string[]>> = {
   skyscraper_c: ["size"],
   industry: ["size"],
   towers: ["storeys"],
+  panel: ["sections", "storeys", "roofShape", "facade", "balconies"],
   hist_center: [],
   decor: [],
 };
@@ -108,10 +109,14 @@ export const COLOUR_TAGS: Readonly<Record<string, Readonly<Record<string, readon
   walls: {
     white: ["stone", "pastel", "cool"], cream: ["warm", "pastel"], ochre: ["warm", "earth"], rose: ["pastel", "warm"],
     sage: ["pastel", "cool", "earth"], ivory: ["pastel", "stone"], chalk: ["stone", "pastel"], charcoal: ["stone", "cool"],
+    grey: ["stone", "cool"],
   },
   cladding: { anthracite: ["stone", "cool"], timber: ["earth", "warm"], sand: ["earth", "warm"], teal: ["cool"] },
   timber: { oak: ["warm", "earth"], walnut: ["earth", "brick"], weathered: ["stone", "earth"] },
-  accent: { blue: ["cool"], coral: ["warm", "pastel"], gold: ["warm"], green: ["earth", "cool"], plum: ["pastel"], red: ["brick", "warm"] },
+  accent: {
+    blue: ["cool"], coral: ["warm", "pastel"], gold: ["warm"], green: ["earth", "cool"], plum: ["pastel"], red: ["brick", "warm"],
+    orange: ["warm", "brick"],
+  },
   finish: { blue: ["cool"], brick: ["brick", "warm"], cream: ["pastel", "warm"], sage: ["pastel", "cool"], sand: ["earth", "warm"] },
   glazing: { blue: ["cool"], bronze: ["warm", "earth"], jade: ["cool", "pastel"] },
   structure: { graphite: ["stone", "cool"], limestone: ["stone", "warm"] },
@@ -128,6 +133,8 @@ export const HEIGHT_TAGS: Readonly<Record<string, Readonly<Record<string, (typeo
     one: "low", two: "low", three: "mid", four: "mid", five: "tall", seven: "tall", nine: "tall",
   },
   "skyscraper_c:size": { compact: "mid", medium: "mid", standard: "tall", landmark: "tall" },
+  // a housing estate's own scale: four storeys are its low blocks, twelve and more its towers
+  "panel:storeys": { "4": "low", "6": "mid", "8": "mid", "10": "tall", "12": "tall", "14": "tall" },
 };
 
 function heightTable(group: string, name: string): Readonly<Record<string, (typeof HEIGHT_BANDS)[number]>> | undefined {

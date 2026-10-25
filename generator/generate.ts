@@ -95,6 +95,7 @@ import { SMALL_DIESELS } from "./smallDiesels.ts";
 import { CITY_BUS_DESIGNS, KAROSA_DESIGNS } from "./buses.ts";
 import { VILLAGE_HOUSES } from "./village.ts";
 import { COMMERCIAL_BUILDINGS } from "./commercial.ts";
+import { PANEL_HOUSES } from "./panelHouses.ts";
 import { TREES } from "./trees.ts";
 import { WOODS_MODELS } from "./woodsModels.ts";
 import { generateWoods } from "./woodsExport.ts";
@@ -153,6 +154,7 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: SKYSCRAPERS, source: "skyscrapers.ts", meta: "buildings" },
   { designs: COMMERCIAL, source: "commercialStreets.ts", meta: "buildings" },
   { designs: COMMERCIAL_BUILDINGS, source: "commercial.ts", meta: "buildings" },
+  { designs: PANEL_HOUSES, source: "panelHouses.ts", meta: "buildings" },
   { designs: WAGON_EXTRAS, source: "wagonExtras.ts", meta: "vehicles" },
   { designs: LEGACY_VEHICLES, source: "legacyVehicles.ts", meta: "vehicles" },
   { designs: LEGACY_BUILDINGS, source: "legacyBuildings.ts", meta: "buildings" },

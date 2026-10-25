@@ -113,6 +113,8 @@ Every building whose plan can stand against a neighbour draws them:
   street terrace its party wall stands as a firewall);
 - the village's row house, `village-narrow-house` (left and right, its eave sides: the slab
   slopes down under the roof's overhang and gutter, and two neighbours' eaves meet);
+- the panel slab (left and right, its end walls; a pitched roof ends there in a gable;
+  [panel-houses.md](panel-houses.md));
 - the brick apartment tower (left and right; its balconies face front and back) and the glass
   office tower (its podium's left, right and back, up to the podium's cornice).
 

@@ -26,6 +26,34 @@ describe("the bridge kit", () => {
     }
   });
 
+  it("stands a cantilever on its two tower piers only, with no anchor piers at the span ends", () => {
+    // two 90-stud spans: towers at each span's quarters, nothing at 0, 90 or 180
+    const path = bridge.pathFromPoints([{ x: 0, y: 30, z: 0 }, { x: 180, y: 30, z: 0 }], 9, 0, 0.67, 9.9)!;
+    const piers = bridge.buildBridge("cantilever", path, () => 0).filter((b) => b.shape === "box" && b.part === "support");
+    const stations = [...new Set(piers.map((b) => (b.shape === "box" ? Math.round(b.center.x * 10) / 10 : 0)))].sort((a, b) => a - b);
+    expect(stations).toEqual([22.5, 67.5, 112.5, 157.5]);
+  });
+
+  it("lays footings and starlings at the waterline over a sloping river bed", () => {
+    // the bed falls across the path, so on dry ground no footing would be laid
+    const path = bridge.pathFromPoints([{ x: 0, y: 24, z: 0 }, { x: 100, y: 24, z: 0 }], 9, 0, 0.67, 9.9)!;
+    const bed = (_x: number, z: number): number => -6 + 0.6 * z;
+    const water = (): number => 2;
+    const boxes = (type: string, waterAt?: bridge.WaterLevelFn) => bridge.buildBridge(type, path, bed, waterAt).filter((b) => b.shape === "box" && b.part === "support" && !b.ground);
+    const topOf = (b: bridge.BridgeBox): number => (b.shape === "box" ? b.center.y + b.size.y / 2 : NaN);
+    // concrete: no footing on the dry slope, a caisson to 0.3 above the water in the river
+    const dryFootings = boxes("beam").filter((b) => b.material === "pier" && b.shape === "box" && b.size.y < 2 && b.center.y < 0);
+    expect(dryFootings).toHaveLength(0);
+    const caissons = boxes("beam", water).filter((b) => Math.abs(topOf(b) - 2.3) < 1e-9);
+    expect(caissons.length).toBeGreaterThan(0);
+    // masonry: a starling 0.8 above the water at every intermediate pier (block and two cutwaters), none dry
+    expect(boxes("brick_arch").filter((b) => Math.abs(topOf(b) - 2.8) < 1e-9)).toHaveLength(0);
+    const starlings = boxes("brick_arch", water).filter((b) => Math.abs(topOf(b) - 2.8) < 1e-9);
+    const piers = bridge.getStructuralSpanRanges("brick_arch", 100).length - 1;
+    expect(starlings).toHaveLength(3 * piers);
+    for (const b of starlings) expect(b.shape === "box" && b.center.y - b.size.y / 2).toBeLessThanOrEqual(-6 + 1e-9);
+  });
+
   it("keeps the concrete arch's rib under the deck at its crown", () => {
     const path = bridge.pathFromPoints([{ x: 0, y: 12, z: 0 }, { x: 60, y: 12, z: 0 }], 9, 0, 0.67, 9.9)!;
     const deckBottom = 12 + 0.67 - bridge.DECK_THICKNESS;

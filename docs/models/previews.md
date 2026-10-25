@@ -88,7 +88,7 @@ tower first. Every building is drawn by its own design and baked in, its materia
 design's id, over the block's ground and the streets. The distant level is each building's
 massing, a box over its footprint in its commonest material. The pools' designs come from the
 modules that hold them, so each family of block types (`blocksVillage.ts`,
-`blocksCommercial.ts`, ...) is its own source module and bundles only its pools' code; ids are
+`blocksCommercial.ts`, `blocksPanel.ts`, ...) is its own source module and bundles only its pools' code; ids are
 taken as the export settles them (`proceduralId`), so a design's city variants are found inside a
 bundle too. A block's page has no Source tab: its designs set `sourceTree: false`, as their trees
 are too big to deploy ([source-tree.md](source-tree.md)).

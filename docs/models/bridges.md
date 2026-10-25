@@ -12,9 +12,10 @@ checks.
 ## What the game hands in, what the module returns
 
 The game plans where a bridge stands - its path, grade profile and the lanes its deck carries -
-and calls `buildBridge(type, path, heightAt)` with the path as plain points (`pathFromPoints`:
+and calls `buildBridge(type, path, heightAt, waterAt?)` with the path as plain points (`pathFromPoints`:
 points, deck width, the lane recentring `shiftAmount`, the deck support height `supportY` and the
-overhead clearance `clearanceY`) and a terrain height function. The module returns a list of
+overhead clearance `clearanceY`), a terrain height function (the bed, under water) and, optionally,
+the water surface's height (`WaterLevelFn`: undefined where it is dry). The module returns a list of
 `BridgeBox` descriptors in world space, which the game (and the site's preview) draws:
 
 | Shape | What it is |
@@ -47,7 +48,7 @@ meets its neighbours exactly - where the renderer's mitred sweep puts the deck. 
 | `timber_trestle` | framed | - | plank deck on two stringers and a post-and-rail guard; a bent every ~8 studs of two plumb and two battered posts on footings under a cap, X braced in stories of 10 studs with girts at the story lines and along the bridge at the first one | the bents |
 | `arch` | framed | 80 | concrete deck arch: two ribs thickening toward the springings, pairs of spandrel columns every ~5 studs with a cap beam under the slab, struts between the ribs | a concrete block under each rib, the two tied by a cap beam (`PierSpec.columns`) |
 | `stone_arch`, `brick_arch` | framed | 28 | masonry arches: spandrel walls, arch bands with a keystone, barrel vault | masonry, with cutwaters and pilasters between arches |
-| `cantilever` | signature | 90 | Forth-fashion: towers at the quarters (two splayed legs a side, X braced, a crossbeam with knee braces on top), anchor arms back to the span's ends and cantilever arms out to 0.4 of the span, deepest at the towers (a straight top chord, a bottom chord curving up from the tower foot), N webs, a Warren suspended span under the slab between the arm tips | under the towers, and anchor piers at span boundaries |
+| `cantilever` | signature | 90 | Forth-fashion: towers at the quarters (two splayed legs a side, X braced, a crossbeam with knee braces on top), anchor arms back to the span's ends and cantilever arms out to 0.4 of the span, deepest at the towers (a straight top chord, a bottom chord curving up from the tower foot), N webs, a Warren suspended span under the slab between the arm tips | under the towers only: the anchor arms rest on the abutments or meet the next span's arms, with no pier at a span boundary |
 | `tied_arch` | signature | 100 | box-section steel arches springing from knuckles on tie girders along the deck edges, a hanger about every 4 studs, transverse struts above the wires with X bracing between them | concrete at span boundaries |
 | `network_arch` | signature | 100 | as `tied_arch` with crossing hangers | concrete at span boundaries |
 | `suspension` | signature | 140 (main span) | towers, main cables, hangers, stiffening girders, anchor blocks | under the towers |
@@ -89,7 +90,9 @@ planes. The masonry types build them of their masonry; the trestle of timber.
   the ground, 0.3 studs of it showing - but only where the ground under it is flat (corners and
   centre within 0.4 studs, `footprintTerrain`; a river bed counts): on a slope a flat slab would
   jut out of the hillside. Every column, and a masonry block, reaches down to the lowest ground
-  under its own footprint, so a pier on a slope never hangs off it. The column standing on the terrain is the box tagged
+  under its own footprint, so a pier on a slope never hangs off it. **In water** (`waterAt` above
+  the bed by more than 0.2 at the pier's centre) the surface is the flat ground, whatever the bed
+  does under it: the footing becomes a caisson from the bed up to 0.3 above the waterline. The column standing on the terrain is the box tagged
   `ground` - what the game charts for ships - so a river still takes a hull beside a slim pier
   (the game samples a cell's corners against the charted rect; a wide footing blocked four). A deck 14 or more studs wide (two tracks, a road) stands on twin columns. The
   cap is as wide as what stands on it (`capWidth`): the girders, the truss, both tower legs. The
@@ -97,7 +100,12 @@ planes. The masonry types build them of their masonry; the trestle of timber.
   hanging under the slab (girders, box, deck truss, cantilever towers).
 - masonry (`stone`, `brick`): one block 0.4 wider than the deck. An intermediate pier gets a
   cutwater at each face (a square column turned 45 degrees, up to the arch springing) and a
-  pilaster above it up to the coping; the two abutments get neither.
+  pilaster above it up to the coping; the two abutments get neither. In water an intermediate
+  pier stands on a starling: the block and its cutwaters again, 0.5 wider all round, from the
+  bed up to 0.8 above the waterline, stopping 0.3 short of the springing (none when the water
+  reaches within 0.5 of it).
+  Footings, caissons and starlings are not tagged `ground`: ships are charted against the slim
+  pier, not the ledge round it.
 
 **Abutments** (`buildAbutments`): a wing wall at each corner, reaching the local ground or cut
 short 3.5 studs down on a steep crossing.
@@ -202,6 +210,6 @@ over the path, the messenger wire 10.6 over it and 1.3 of margin, deck-local abo
 - `test/previews.test.ts` - a recentred deck drawn over its own piers and girders.
 - the catalog sweep on every bridge page (`proc-preview-bridge-*`): no coplanar faces of two
   materials, grounded, LOD within budget.
-- the pins ([sets.md](sets.md)): every type's boxes over a curved valley and its overhead members
-  at three lengths. A redrawn type moves its pins (`pnpm sets:pins`) and redraws every island
+- the pins ([sets.md](sets.md)): every type's boxes over a curved valley, dry and with a river in
+  its floor (`.river`), and its overhead members at three lengths. A redrawn type moves its pins (`pnpm sets:pins`) and redraws every island
   that has it, so make that change on purpose.
