@@ -66,7 +66,7 @@ kinds: the station vocabulary (`steel`, `glass`, `light`, `wood`, `roof`, `colum
 | `proc-prop-airport-windsock` | - | five open cones tapering along +X from the mast head |
 | `proc-prop-rail-signal` | - | mast foot at the origin, the head facing +Z, the track toward +X |
 | `proc-prop-crossing-signal` | - | mast foot at the origin, the cross and head facing +Z, the road toward +X |
-| `proc-prop-buffer-stop` | - | on the track's centre line 3.2 studs past its end (y = 0 the track's points, standing on the rail tops), the beam facing the track at +Z |
+| `proc-prop-buffer-stop` | - | on the track's centre line 1.95 studs back from its end, so the clamps at the back of the frame sit on the end of the rails (y = 0 the track's points, standing on the rail tops), the beam facing the track at +Z |
 
 A prop of a few boxes (a bollard, a container, a floodlight) is smaller as a GLB than the builder
 runtime every JS model carries, so `test/catalogSweep.ts` holds props and set previews to a fixed
@@ -120,9 +120,9 @@ cabinet at the foot away from the track (-X), and
   each rail (post and raking strut, the rail type set's gauge apart, the rail tops at the game's
   running surface 1.528 studs up), the buffer beam with hazard stripes and two buffers, and the
   end-of-track sign, a red disk with a white bar, on a post above it. It draws no rails,
-  sleepers or bed: the game carries the dead end's own track on under the stop - rails,
-  sleepers and ballast in the track's rail type, the bed ending in a slope at the ballast's
-  angle - so the stop always matches the track it ends (the game's `docs/rendering/props.md`).
+  sleepers or bed: the game stands it on the dead end's own last studs of track, adding no
+  track past the end, and closes the bed there in a slope at the ballast's angle - so the stop
+  always matches the track it ends (the game's `docs/rendering/props.md`).
 
 Every lamp lens is a material of its own whose kind names the lamp the game switches:
 `lampred`, `lampblue`, `lampgreen` (`RAIL_SIGNAL_LAMPS`) and `lampleft`, `lampright`
