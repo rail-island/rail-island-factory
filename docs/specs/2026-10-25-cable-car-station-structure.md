@@ -39,7 +39,9 @@ circular and the height of the platform (according to the cabins). Now the platf
 the station very well: each station should have platforms that match the station nicely.
 
 Later: do not save `w`, `d` and `ropeHeadY` to the map. Ignore them in old saves and do not
-write them in new saves.
+write them in new saves. Revised right after: save `w`, `d` and `ropeHeadY`, but only for the
+recalculation, not so the new design reuses them. When a new version brings new values, a
+recalculation is triggered.
 
 ## Decisions
 
@@ -142,6 +144,18 @@ previous answer: there is nothing to overwrite, the values are simply not read. 
 parts still hold: ropes follow the current dimensions, the terrain is never changed, sizes stay
 close to today's.
 
+### Revision: keep the three fields, but only as a recalculation trigger
+Raised by the user after the previous answer, no options offered.
+
+**Answer: "save w, d, ropeHeadY, but only because of recalculation, not because of reusing it by
+the new design version. Simply when new version brings new values, recalculate is triggered."**
+- the fields stay in the station record, but drawing never reads them: the station is always
+drawn at its type's current factory dimensions. They record what the line was last solved for.
+On load, a station whose stored values differ from its type's current ones gets its lines'
+ropes and pylons re-solved, and the stored values are updated to the current ones. When the
+values match, nothing is re-solved, so stored pylons keep their heights. This supersedes the
+previous answer.
+
 ## High-level plan
 
 1. **One station builder in the factory.** The `cableCarStation` set module gains
@@ -162,6 +176,18 @@ close to today's.
    ring for circulating lines and the rectangular U for shuttle and jig-back lines. Platform
    height follows `sillDrop`, its inner edge `halfWidth`; the roof covers the platform it
    actually draws. Footprints and rope-head heights may be retuned, but stay close to today's.
+
+### Revision: keep the three fields, but only as a recalculation trigger
+Raised by the user after the previous answer, no options offered.
+
+**Answer: "save w, d, ropeHeadY, but only because of recalculation, not because of reusing it by
+the new design version. Simply when new version brings new values, recalculate is triggered."**
+- the fields stay in the station record, but drawing never reads them: the station is always
+drawn at its type's current factory dimensions. They record what the line was last solved for.
+On load, a station whose stored values differ from its type's current ones gets its lines'
+ropes and pylons re-solved, and the stored values are updated to the current ones. When the
+values match, nothing is re-solved, so stored pylons keep their heights. This supersedes the
+previous answer.
 3. **A better pylon.** `buildPylon(height)` keeps its signature and stays one design for every
    line, with an improved shape (for example a tapered or lattice mast, a proper cross-head and
    sheave assemblies), still sunk into the ground, still within the rope geometry the solver
@@ -176,26 +202,29 @@ close to today's.
    `buildStation` with the view it computes today (`cableCarBoarding`), transforms the result to
    world space and draws it; the wheel-tagged boxes become the rotating `cablecar-wheel` node.
    The game's own head, wheel geometry, platform and stair code and the shed prop placement are
-   deleted. The station record drops `w`, `d` and `ropeHeadY`: the loader ignores them in old
-   saves, the saver no longer writes them, and every reader (terrain pad, surface blocks, rope
-   head, core passes) takes them from the station type. Lines whose stations changed size get
-   their ropes and pylons re-solved; terrain is not touched.
+   deleted. Every reader of a station's size (drawing, terrain pad, surface blocks, rope head,
+   core passes) takes it from the station type. The record's `w`, `d` and `ropeHeadY` become a
+   "solved for" stamp: on load, a mismatch with the type's current values re-solves the ropes and
+   pylons of that station's lines and refreshes the stamp; terrain is not touched.
 
 Phases 1-4 are one factory change; phase 5 depends on its export.
 
 ## Database and persistent storage
 
-No new store, table, field or file. One **field removal**, in the webapp's saved maps (R2 map
-JSON, `CableCarStationData`):
+No new store, table, field or file. One **change of meaning**, in the webapp's saved maps (R2
+map JSON, `CableCarStationData`):
 
-- **Removed fields:** `w`, `d`, `ropeHeadY` (numbers, studs). New saves do not write them. Old
-  saves may still contain them; the loader ignores them and they disappear from that map on its
-  next save. There is no versioned migration step.
-- **Kept fields:** `id`, `name`, `x`, `y`, `z`, `rot`, `stationType`. A station's footprint and
-  rope-head height are always the current values of its type in the factory set.
-- **Lines** (`CableCarData`) are unchanged. Where a station's dimensions now differ from what
-  its line was solved with, the line's rope and pylons are re-solved, and the stored `pylons`
-  list is rewritten with the next save.
+- **Fields unchanged in shape:** `id`, `name`, `x`, `y`, `z`, `rot`, `stationType`, `w`, `d`,
+  `ropeHeadY` (numbers in studs for the last three).
+- **New meaning of `w`, `d`, `ropeHeadY`:** the dimensions the station's lines were last solved
+  for, not the dimensions it is drawn at. Drawing and every other reader use the type's current
+  factory values.
+- **Re-solve on mismatch:** on load, when any of the three differs from the type's current value
+  (or is missing), the ropes and pylons of every line touching that station are re-solved, the
+  line's stored `pylons` list is replaced, and the three fields are set to the current values;
+  both reach storage with the next save. A matching station triggers nothing, so stored pylon
+  heights do not move when only the solver's constants change.
+- **Lines** (`CableCarData`) are unchanged in shape.
 - Terrain, the station's terrain pad and surface blocks are **not** changed; a station whose
   footprint is larger than its old levelled pad stands on the ground as it is (sunk columns
   hide small slopes).
@@ -217,10 +246,12 @@ JSON, `CableCarStationData`):
   low level is today, without a second entry point.
 - **One pylon design**: a line with two different station types never has to pick a style, and
   no line setting is stored.
-- **Dimensions are not stored**: every station of a type looks the same and a retuned type
-  reaches every map without a migration; the factory set is the one source of a station's size.
-  Terrain is left alone, so loading a map never edits the player's ground. The cost is that any
-  future resize of a type also moves existing stations; that is accepted.
+- **Stored dimensions as a trigger, not a source**: the factory set is the one source of a
+  station's size, so every station of a type looks the same and a retuned type reaches every
+  map; the stored values only tell the loader which lines need re-solving, which keeps stored
+  pylons stable otherwise. Terrain is left alone, so loading a map never edits the player's
+  ground. The cost is that any future resize of a type also moves existing lines; that is
+  accepted.
 
 ## Weaknesses and risks
 
@@ -234,13 +265,11 @@ JSON, `CableCarStationData`):
 - **Dimension changes reach old maps.** With no stored size, today's redesign and every later
   resize move existing stations: re-solving a rope can move pylons, and a larger footprint over
   an unlevelled pad can show a gap or bury the hall on steep ground. Keeping sizes close to
-  today's limits this; a test should cover loading an old record that still carries the three
-  fields, and a record without them.
-- **Detecting when to re-solve.** With no stored `ropeHeadY`, the game cannot tell from the
-  station record whether a line was solved for the old head height; it either re-solves every
-  line on load or compares the stored pylons with a fresh solve. Re-solving every load would
-  also move pylons whenever the solver's constants change, against the rule that stored pylon
-  heights never move.
+  today's limits this; tests should cover loading a record with matching values (nothing
+  re-solved), with different values (re-solved, stamp refreshed) and with the fields missing.
+- **Re-solve outcome.** A re-solve on load can fail or produce a different number of pylons
+  (for example when a taller head clears a ridge differently); the loader needs a defined
+  fallback, such as keeping the old pylons and drawing the rope to the new head.
 - **Collision with existing map objects.** A grown footprint or platform may overlap nearby
   buildings or track placed against the old size; nothing re-checks placement on load.
 - **View space coverage.** The design must look right and stay clear of the cabin ring across
