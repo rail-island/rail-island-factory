@@ -18,6 +18,8 @@ import { findCoplanarOverlaps } from "../generator/coplanar.ts";
 import { buildLodModel } from "../generator/lodModel.ts";
 import { variantsUnderTest } from "./catalogCache";
 import { Coach, type Volume } from "../generator/csdCoachParts.ts";
+import { CABIN_INSET } from "../generator/interior.ts";
+import { isInteriorName } from "../generator/interiorTable.ts";
 
 const PALETTE = { body: { color: "#808080" }, leaf: { color: "#c03030" }, arm: { color: "#303030" } };
 
@@ -169,17 +171,21 @@ describe("doorways", () => {
     return n;
   };
 
-  it("leave the shell open over an inward-opening door, a dark vestibule behind it", () => {
-    const c = new Coach({ red: { color: "#c03030" }, roof: { color: "#808080" } }, 5);
-    const door = { x0: 4, y0: 0.6, x1: 5.2, y1: 2.8 };
-    const v = volume([c.doorOpening(1, door)]);
-    c.volume(v);
-    c.door(v, 1, door, "red", { opens: { kind: "fold", leaves: 2 } });
-    // the skin (z = 1.4) is gone over the doorway, still there beside it
-    expect(over(c, "red", 1.4, -0.4, 1.6)).toBe(0);
-    expect(over(c, "red", 1.4, -3, 1.6)).toBeGreaterThan(0);
-    // the vestibule's back wall stands 0.6 m inside the skin, behind the doorway
-    expect(over(c, "seam", 0.8, -0.4, 1.6)).toBeGreaterThan(0);
+  it("leave the shell open over a door, the car's cabin behind it", () => {
+    for (const opens of [{ kind: "fold", leaves: 2 }, { kind: "plug", leaves: 2 }] as DoorMotion[]) {
+      const c = new Coach({ red: { color: "#c03030" }, roof: { color: "#808080" } }, 5);
+      const door = { x0: 4, y0: 0.6, x1: 5.2, y1: 2.8 };
+      const v = volume([c.doorOpening(1, door)]);
+      c.volume(v);
+      c.door(v, 1, door, "red", { opens });
+      // the skin (z = 1.4) is gone over the doorway, still there beside it
+      expect(over(c, "red", 1.4, -0.4, 1.6)).toBe(0);
+      expect(over(c, "red", 1.4, -3, 1.6)).toBeGreaterThan(0);
+      // behind it the cabin's far side wall, inside the far skin, and none on the doorway's side
+      expect(over(c, "interiorWall", -(1.4 - CABIN_INSET), -0.4, 1.6)).toBeGreaterThan(0);
+      expect(over(c, "interiorWall", 1.4 - CABIN_INSET, -0.4, 1.6)).toBe(0);
+      expect(c.m.interiors()).toEqual({ interior: ["doors-right"] });
+    }
   });
 
   it("change nothing on a body without doorways", () => {
@@ -188,32 +194,6 @@ describe("doorways", () => {
     b.volume(volume([]));
     expect(Buffer.from(a.m.toGlb("t")).equals(Buffer.from(b.m.toGlb("t")))).toBe(true);
   });
-});
-
-/** The designs whose leaves fold or swing inward, and how many such doors: each opens through a doorway into a vestibule. */
-const INWARD: Record<string, number> = {
-  "proc-vehicle-tatra-t3": 3,
-  "proc-vehicle-tatra-kt4": 4,
-  "proc-vehicle-tatra-kt8": 10,
-  "proc-vehicle-kvag-gt4": 3,
-  "proc-vehicle-csd-bdmtee": 4,
-  "proc-vehicle-cd-y-coach": 4,
-  "proc-vehicle-cd-810": 4,
-};
-
-describe("inward-opening doors", () => {
-  for (const [id, count] of Object.entries(INWARD)) {
-    it(`${id} opens each of its ${count} inward doors into a vestibule`, () => {
-      const d = ALL_VEHICLES.find((v) => v.id === id)!;
-      const ids: string[] = [];
-      const walk = (n: { id: string; children?: unknown[] }) => {
-        if (/(^|\/)vestibule-\d+$/.test(n.id)) ids.push(n.id);
-        for (const k of (n.children ?? []) as Array<{ id: string; children?: unknown[] }>) walk(k);
-      };
-      walk(d.build().sourceTree(d.id, d.title).root);
-      expect(ids).toHaveLength(count);
-    });
-  }
 });
 
 /** The groups of passenger vehicles: every one opens its passenger doors. */
@@ -253,11 +233,11 @@ describe("vehicle doors", () => {
             expect(shut.max[k]).toBeCloseTo(rest.max[k]!, 5);
           }
         }
-        // half open and open, with every door at once, nothing z-fights
+        // half open and open, with every door at once and the interior shown, nothing z-fights
         for (const k of [DOOR_SAMPLES / 2, DOOR_SAMPLES]) {
           let posed = glb;
           for (const { i } of doors) posed = poseGlb(posed, k, i);
-          expect(findCoplanarOverlaps(posed)).toEqual([]);
+          expect(findCoplanarOverlaps(posed, undefined, { interiors: true })).toEqual([]);
         }
         // the low level of detail stays shut and still
         expect(buildLodModel(d, params).animations().filter((c) => c.drive.drive === "door")).toHaveLength(0);
@@ -266,57 +246,95 @@ describe("vehicle doors", () => {
   }
 });
 
-/** Relative luminance of a palette colour "#rrggbb", 0..1. */
-const luminance = (hex: string) => {
-  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
-  return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
-};
+/**
+ * The nearest triangle of `m` a ray along -s z through (x, y) meets from outside,
+ * among those `keep` admits and facing the ray (as three.js culls back faces);
+ * with `near`, only on the ray's own half of the car.
+ */
+function firstHit(m: { groups: Map<string, { pos: number[]; nrm: number[]; part: number[] }> }, x: number, y: number, s: number, keep: (part: number) => boolean, near = false): { z: number; mat: string; part: number } | null {
+  let hit: { z: number; mat: string; part: number } | null = null;
+  for (const [mat, g] of m.groups)
+    for (let t = 0; t < g.part.length; t++) {
+      if (!keep(g.part[t]!) || g.nrm[t * 9 + 2]! * s <= 0) continue;
+      const p = g.pos.slice(t * 9, t * 9 + 9);
+      const [ax, ay, az, bx, by, bz, cx, cy, cz] = p as [number, number, number, number, number, number, number, number, number];
+      const den = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy);
+      if (Math.abs(den) < 1e-12) continue;
+      const u = ((by - cy) * (x - cx) + (cx - bx) * (y - cy)) / den;
+      const v = ((cy - ay) * (x - cx) + (ax - cx) * (y - cy)) / den;
+      if (u < 0 || v < 0 || u + v > 1) continue;
+      const z = u * az + v * bz + (1 - u - v) * cz;
+      if ((!near || z * s > 0) && (!hit || z * s > hit.z * s)) hit = { z, mat, part: g.part[t]! };
+    }
+  return hit;
+}
 
-describe("bus doorways", () => {
-  // Looking in through a bus's open door: the first thing behind each leaf, along a
-  // ray from outside at the leaf's middle, must be a dark doorway, not the body's
-  // paint (the shell is not cut there; the doorway is a dark slab on it).
-  for (const d of ALL_VEHICLES.filter((v) => groupOf(v) === "bus")) {
-    it(`${d.id} shows a dark doorway behind every door leaf`, () => {
-      const m = d.build() as unknown as {
-        groups: Map<string, { pos: number[]; part: number[] }>;
-        parts: Array<{ name: string }>;
-        palette: Record<string, { color?: string }>;
-      };
-      const isLeaf = (part: number) => part >= 0 && /(^|\/)door\d+-\d+$/.test(m.parts[part]!.name);
-      const leaves = new Map<number, { min: number[]; max: number[] }>();
-      for (const g of m.groups.values())
-        for (let t = 0; t < g.part.length; t++) {
-          if (!isLeaf(g.part[t]!)) continue;
-          const box = leaves.get(g.part[t]!) ?? { min: [Infinity, Infinity, Infinity], max: [-Infinity, -Infinity, -Infinity] };
-          for (let c = 0; c < 3; c++)
-            for (let k = 0; k < 3; k++) {
-              box.min[k] = Math.min(box.min[k]!, g.pos[t * 9 + c * 3 + k]!);
-              box.max[k] = Math.max(box.max[k]!, g.pos[t * 9 + c * 3 + k]!);
-            }
-          leaves.set(g.part[t]!, box);
+/** A built model's internals, for the ray tests. */
+type Internals = { groups: Map<string, { pos: number[]; nrm: number[]; part: number[] }>; parts: Array<{ name: string }>; palette: Record<string, { color?: string }> };
+
+/** Each door leaf part's bounds at rest, by part index. */
+function leafBoxes(m: Internals): Map<number, { min: number[]; max: number[] }> {
+  const isLeaf = (part: number) => part >= 0 && /(^|\/)door\d+-\d+$/.test(m.parts[part]!.name);
+  const leaves = new Map<number, { min: number[]; max: number[] }>();
+  for (const g of m.groups.values())
+    for (let t = 0; t < g.part.length; t++) {
+      if (!isLeaf(g.part[t]!)) continue;
+      const box = leaves.get(g.part[t]!) ?? { min: [Infinity, Infinity, Infinity], max: [-Infinity, -Infinity, -Infinity] };
+      for (let c = 0; c < 3; c++)
+        for (let k = 0; k < 3; k++) {
+          box.min[k] = Math.min(box.min[k]!, g.pos[t * 9 + c * 3 + k]!);
+          box.max[k] = Math.max(box.max[k]!, g.pos[t * 9 + c * 3 + k]!);
         }
-      expect(leaves.size).toBeGreaterThan(0);
-      for (const box of leaves.values()) {
+      leaves.set(g.part[t]!, box);
+    }
+  return leaves;
+}
+
+describe("every doorway", () => {
+  // Looking in through a door: the first face a ray from outside at the leaf's
+  // middle meets, past the door's own leaves and as three.js draws it (back faces
+  // culled), is the cabin's -- the shell is cut open behind the leaves
+  // (docs/models/interiors.md), never the body's paint or a dark box -- or, where
+  // a door faces it across the car, that door's shut leaf.
+  for (const d of PASSENGER) {
+    it(`${d.id} opens every door leaf onto its cabin`, () => {
+      const m = d.build() as unknown as Internals;
+      const leaves = leafBoxes(m);
+      const doorOf = (part: number) => m.parts[part]!.name.replace(/-\d+$/, "");
+      for (const [part, box] of leaves) {
         const [x, y] = [(box.min[0]! + box.max[0]!) / 2, (box.min[1]! + box.max[1]!) * 0.4];
         const s = Math.sign(box.min[2]! + box.max[2]!);
-        // the nearest still triangle a ray along -s z through (x, y) meets
-        let hit: { z: number; mat: string } | null = null;
-        for (const [mat, g] of m.groups)
-          for (let t = 0; t < g.part.length; t++) {
-            if (isLeaf(g.part[t]!)) continue;
-            const p = g.pos.slice(t * 9, t * 9 + 9);
-            const [ax, ay, az, bx, by, bz, cx, cy, cz] = p as [number, number, number, number, number, number, number, number, number];
-            const den = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy);
-            if (Math.abs(den) < 1e-12) continue;
-            const u = ((by - cy) * (x - cx) + (cx - bx) * (y - cy)) / den;
-            const v = ((cy - ay) * (x - cx) + (ax - cx) * (y - cy)) / den;
-            if (u < 0 || v < 0 || u + v > 1) continue;
-            const z = u * az + v * bz + (1 - u - v) * cz;
-            if (z * s > 0 && (!hit || z * s > hit.z * s)) hit = { z, mat };
-          }
-        expect(hit, `nothing behind the leaf at x ${x.toFixed(2)}`).not.toBeNull();
-        expect(luminance(m.palette[hit!.mat]!.color ?? "#ffffff"), `${hit!.mat} behind the leaf at x ${x.toFixed(2)}`).toBeLessThan(0.25);
+        const hit = firstHit(m, x, y, s, (p) => !(leaves.has(p) && doorOf(p) === doorOf(part)));
+        const name = hit && hit.part >= 0 ? m.parts[hit.part]!.name : "";
+        const ok = !!hit && (isInteriorName(name) || (leaves.has(hit.part) && hit.z * s < 0));
+        expect(ok, `${hit?.mat ?? "nothing"} (${name}) behind leaf ${m.parts[part]!.name}`).toBe(true);
+      }
+    });
+  }
+});
+
+describe("shut doors over a doorway", () => {
+  // Regression: with the shell cut open and the cabin hidden while the doors are
+  // shut, the gap between two leaves looked straight through the car. A dark strip
+  // riding on a leaf now covers it, as the dark vestibule or panel used to: rays
+  // across each shut door, 5 mm apart, all meet the door on its own half of the car.
+  for (const d of ALL_VEHICLES.filter((v) => PASSENGER_GROUPS.has(groupOf(v)) && !NO_DOORS.has(v.id))) {
+    it(`${d.id} shows no gap through its shut doors`, () => {
+      const m = d.build() as unknown as Internals;
+      const doors = new Map<string, { min: number[]; max: number[] }>();
+      for (const [part, box] of leafBoxes(m)) {
+        const key = m.parts[part]!.name.replace(/-\d+$/, "");
+        const u = doors.get(key) ?? { min: [...box.min], max: [...box.max] };
+        for (let k = 0; k < 3; k++) [u.min[k], u.max[k]] = [Math.min(u.min[k]!, box.min[k]!), Math.max(u.max[k]!, box.max[k]!)];
+        doors.set(key, u);
+      }
+      for (const [name, u] of doors) {
+        const s = Math.sign(u.min[2]! + u.max[2]!);
+        const y = (u.min[1]! + u.max[1]!) / 2;
+        for (let x = u.min[0]! + 0.003; x < u.max[0]! - 0.003; x += 0.005) {
+          const hit = firstHit(m, x, y, s, (p) => !(p >= 0 && isInteriorName(m.parts[p]!.name)), true);
+          expect(hit, `${name}: nothing at x ${x.toFixed(3)}`).not.toBeNull();
+        }
       }
     });
   }

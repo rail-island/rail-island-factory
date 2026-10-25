@@ -1,19 +1,19 @@
 # Doors: passenger doors that open
 
-**Covers** - the passenger doors that open on every train, tram and bus: the `door` clip drive and its side, the three motion families (fold, swing, plug) and their leaves, `openable` and the mechanism core it shares with the pantographs, the shut rest pose, how the coach kit draws an opening door (the lights riding on the leaves), the doorways cut through the shell and the dark vestibules behind them, which designs open which doors, the site's Open left / Open right / Close buttons, what the game does with the clips today, and the tests.
-**Code** - `generator/csdCoachParts.ts` (`Opening`, `Volume.openings`, `doorOpening`, `doorwaySegment`, `vestibules`), `generator/dmuKit.ts` (`Car.volume`, `loft`), `generator/doors.ts` (`DoorMotion`, `doorLeaves`, `openable`, `DOOR_SAMPLES`, `DOOR_FOLD_ANGLE`, `DOOR_PLUG_OUT`, `LEAF_GAP`), `generator/liftable.ts` (`mechanism`), `generator/meshCore.ts` (`ClipDrive`, `DoorSide`, `moved`, `currentPartName`), `generator/csdCoachParts.ts` (`Coach.door`), `generator/tramKit.ts` (`doors`), `generator/csdCoaches.ts` (`doors`), `generator/liveryCoach.ts` (`DoorSpec.opens`), `generator/trams.ts`, `generator/cdYCoach.ts`, `generator/uicZCoach.ts`, `generator/bmoCoach.ts`, `generator/emu471.ts`, `generator/emu680.ts`, `generator/db628.ts`, `generator/dmu810.ts`, `generator/cdGreenWhiteCoach.ts`, `generator/zsrCoach.ts`, `generator/dbDoubleDeck.ts`, `generator/drDoubleDeck.ts`, `generator/dbNWagen.ts`, `generator/emu451.ts`, `generator/emu460.ts`, `generator/emu470.ts`, `generator/dmu812.ts`, `generator/dmu843.ts`, `generator/dmuM131.ts`, `generator/dmuM240.ts`, `generator/dmuM296.ts`, `generator/jrKiha40.ts`, `generator/mavMdmot.ts`, `generator/metro.ts`, `generator/busAssembly.ts` (`BusDraft.door`), `generator/tgv.ts`, `generator/ice1.ts`, `generator/tgvDuplex.ts`, `generator/shinkansen0.ts`, `generator/drVt1816.ts`, `src/ModelViewer.tsx`, `test/doors.test.ts`
-**See also** - [animation.md](animation.md), [trams.md](trams.md), [csd-coaches.md](csd-coaches.md), [czsk-coaches.md](czsk-coaches.md), [czech-emus.md](czech-emus.md), [czech-dmus.md](czech-dmus.md), [foreign-units.md](foreign-units.md), [../site/catalog-site.md](../site/catalog-site.md)
+**Covers** - the passenger doors that open on every train, tram and bus: the `door` clip drive and its side, the three motion families (fold, swing, plug) and their leaves, `openable` and the mechanism core it shares with the pantographs, the shut rest pose, how the coach kit draws an opening door (the lights riding on the leaves), the doorways cut through the shell into the car's cabin, which designs open which doors, the site's Open left / Open right / Close buttons, what the game does with the clips today, and the tests.
+**Code** - `generator/csdCoachParts.ts` (`Opening`, `Volume.openings`, `doorOpening`, `doorwaySegment`), `generator/coachCabin.ts`, `generator/dmuKit.ts` (`Car.volume`, `loft`), `generator/doors.ts` (`DoorMotion`, `doorLeaves`, `openable`, `DOOR_SAMPLES`, `DOOR_FOLD_ANGLE`, `DOOR_PLUG_OUT`, `LEAF_GAP`), `generator/liftable.ts` (`mechanism`), `generator/meshCore.ts` (`ClipDrive`, `DoorSide`, `moved`, `currentPartName`), `generator/csdCoachParts.ts` (`Coach.door`), `generator/tramKit.ts` (`doors`), `generator/csdCoaches.ts` (`doors`), `generator/liveryCoach.ts` (`DoorSpec.opens`), `generator/trams.ts`, `generator/cdYCoach.ts`, `generator/uicZCoach.ts`, `generator/bmoCoach.ts`, `generator/emu471.ts`, `generator/emu680.ts`, `generator/db628.ts`, `generator/dmu810.ts`, `generator/cdGreenWhiteCoach.ts`, `generator/zsrCoach.ts`, `generator/dbDoubleDeck.ts`, `generator/drDoubleDeck.ts`, `generator/dbNWagen.ts`, `generator/emu451.ts`, `generator/emu460.ts`, `generator/emu470.ts`, `generator/dmu812.ts`, `generator/dmu843.ts`, `generator/dmuM131.ts`, `generator/dmuM240.ts`, `generator/dmuM296.ts`, `generator/jrKiha40.ts`, `generator/mavMdmot.ts`, `generator/metro.ts`, `generator/busAssembly.ts` (`BusDraft.door`), `generator/tgv.ts`, `generator/ice1.ts`, `generator/tgvDuplex.ts`, `generator/shinkansen0.ts`, `generator/drVt1816.ts`, `src/ModelViewer.tsx`, `test/doors.test.ts`
+**See also** - [interiors.md](interiors.md), [animation.md](animation.md), [trams.md](trams.md), [csd-coaches.md](csd-coaches.md), [czsk-coaches.md](czsk-coaches.md), [czech-emus.md](czech-emus.md), [czech-dmus.md](czech-dmus.md), [foreign-units.md](foreign-units.md), [../site/catalog-site.md](../site/catalog-site.md)
 
 ## The idea
 
 A door used to be paint: a dark seam over the door box and a leaf 1 cm proud of the
 body skin, all of it fixed to the body. An opening door keeps that look shut and
-turns its leaves into moving parts, animated by a clip from shut to open. Behind a
-door whose leaves fold or swing inward the body shell is cut open and a dark
-vestibule stands in the body, so the leaves stay in sight as they turn in (see
-Doorways and vestibules below); behind a plug door the shell
-stays whole and the door's own dark seam panel, which fills the whole door box, is
-the doorway an open leaf uncovers.
+turns its leaves into moving parts, animated by a clip from shut to open. Behind
+every opening door the body shell is cut open over the leaves, with the car's
+cabin behind: an open door shows the interior, and leaves that fold or swing
+inward stay in sight as they turn in (see Doorways below, and
+[interiors.md](interiors.md)). The cabin is hidden while every door of its car is
+shut.
 
 Every passenger vehicle opens its passenger doors (below); locomotives, wagons and
 the doors no passenger uses (cab, end, luggage, mail, crew) stay paint.
@@ -80,7 +80,8 @@ coach and unit of the coach kit draws. With `opts.opens` (a `DoorMotion`) on a s
 door:
 
 - the outline (seam) is drawn as before, the doorway behind the leaves - or, where
-  the volume has a doorway at the leaf box (below), as a frame round the hole;
+  the volume has a doorway at the leaf box (below), as a frame round the hole, a
+  leaf with a neighbour carrying a dark strip behind the 12 mm gap between them;
 - the leaf splits into the motion's leaves, each painted as the whole leaf was
   (`paint`, the body's bands, or `opts.leafPaint` for a two-tone leaf);
 - `opts.leafWork(clip)` draws what a leaf carries - its lights - once per leaf;
@@ -92,33 +93,32 @@ The tram kit's `doors` and the CSD coaches' `doors` take an `opens` option and p
 their lights through `leafWork`; the livery coaches take `opens` per `DoorSpec`. A
 door drawn without it is byte-for-byte what it was. End doors never open.
 
-## Doorways and vestibules
+## Doorways
 
 A leaf that folds or swings inward would vanish into a closed body as soon as it
-moved, and show only in the last degrees of closing - a snap, not a motion. So a
-`Volume` takes `openings` (`csdCoachParts.ts`): one per inward-opening door, the
-door's leaf box on its side, made with `Coach.doorOpening(s, box, seam)`. The
-volume must know them when it is drawn, so a design lists them before its body:
-the tram kit's `doorOpenings(s, list)`, the livery coaches from their `DoorSpec`s,
-the railcar kit's `Car.volume(v, openings)`.
+moved. A plug leaf would uncover nothing but paint. So a `Volume` takes
+`openings` (`csdCoachParts.ts`): one per opening door, the door's leaf box on its
+side, made with `Coach.doorOpening(s, box, seam)`. The volume must know them when
+it is drawn, so a design lists them before its body: the tram kit's
+`doorOpenings(s, list)`, `doorways` in `csdCoaches.ts`, the livery coaches from
+their `DoorSpec`s, the railcar kit's `Car.volume(v, openings)`.
 
 - **The shell** (`Coach.volume`, the railcar kit's `loft`, both through
-  `doorwaySegment`): a doorway's edges become stations; over its span each band is
+  `doorwaySegment`): a doorway's edges become stations. Over its span each band is
   drawn in pieces at the doorway's heights, a piece within it without that side's
-  wall and without the chords across the body. The cut runs 2 mm beyond sill and
-  head, under the door's frame, so no cut edge shares a plane with the frame.
-- **The vestibule** (`vestibules`): a floor, a ceiling, a back wall
-  `VESTIBULE_DEPTH` = 0.6 m inside the skin and two side walls following the skin's
-  profile, all in the dark `seam` and facing the doorway. Floor and ceiling stand
-  3 mm (or 6, 9) inside the doorway, clear of the shell's chords and band
-  boundaries.
+  wall. The cut runs 2 mm beyond sill and head, under the door's frame, so no cut
+  edge shares a plane with the frame. A volume with doorways also leaves out the
+  chords across the body at its internal cuts, which would stand in the cabin.
+- **The cabin** (`coachCabin.ts`): floor, ceiling, walls, the doorways' reveals and
+  the seats, hidden while the doors are shut ([interiors.md](interiors.md)).
 - **The frame**: the door's outline becomes four strips round the hole.
 
-The shut leaves cover the hole but for the 12 mm gaps between them, through which
-the vestibule shows dark as the seam did. A volume without `openings` draws exactly
-as before. The doors with a doorway: the T3, KT4, KT8D5 and GT4, the Bdmtee, the
-CD Y coach and the CD 810. The Bdmtee and the Bmo lost the painted centre seam over
-their doors: the gap between the two leaves is that seam now.
+The shut leaves cover the hole but for the 12 mm gaps between them, and a dark
+strip riding on a leaf covers each gap. A volume without `openings` draws exactly
+as before. The buses, the TGV Duplex, the Shinkansen 0 and the VT 18.16 cut their
+own shells the same way ([interiors.md](interiors.md)). The Bdmtee and the Bmo lost
+the painted centre seam over their doors: the gap between the two leaves is that
+seam now.
 
 ## The designs
 
@@ -132,9 +132,9 @@ its passenger doors, in the motion its prototype has where the drawing allows:
 | UIC-Z (every operator), CD 680, DB 628 motor car, CD 843 (one-window doors), MAV MDmot trailers, TGV and TGV Duplex trailers, ICE 1, Shinkansen 0, DR VT 18.16 | `plug` 1 toward the car's middle (two-window doors `plug` 2) |
 | CSD Y-type, Balm, Bam, Be31, CD Y coach, ZSR coach, green-and-white coaches, CD 460 and 810, 812, M 131, M 240, M 296 / 853 / 854, JR KiHa 40 | `swing` inward through doorways: one leaf on the jamb toward the nearer end, two (a double door with a window a leaf) from both jambs |
 | CD 451 / 452 | `swing` 2 inward through doorways |
-| CSD Bi20 compartment coach | `swing` 1 **outward**, the brass class numeral riding on its leaf |
+| CSD Bi20 compartment coach | `swing` 1 **outward** through doorways, the brass class numeral riding on its leaf |
 | DB n-Wagen coaches (the DB 628 design's other `unit` values) | `fold` 4 inward through doorways (a single door `swing` 1); the cab car's driver door stays shut |
-| every bus | `plug`: one leaf slides back toward the tail, two slide apart; right side only, as drawn; a dark doorway (the door style's `surround`, else `frame`) always stands behind the leaves |
+| every bus | `plug`: one leaf slides back toward the tail, two slide apart; right side only, as drawn; the shell cut open over the leaves into the cabin, a frame in the door style's `surround` (else `frame`) round the doorway |
 
 Where the native drawing paints one window across a door, the door opens as one
 leaf, so the window stays whole and its native-landmark comparison holds; a two-leaf
@@ -166,8 +166,12 @@ refused. Every design of the passenger groups (but the Dsk and the M 112) opens
 doors in some variant, and nothing else does; per design and sampled parameter
 combination: door clips on both sides (the right only on the single-ended trams and
 every bus), nine samples, sample 0 the rest pose, no z-fighting half
-open and open, and no door clip at low detail. A coach-kit body with a doorway has
-no skin over it and a vestibule's back wall behind it, one without doorways is
-byte-for-byte unchanged, and every inward-opening door of the seven designs opens
-into a vestibule. Behind every leaf of every bus, the first still face a ray from
-outside meets is dark (luminance under 0.25): the doorway, never the body's paint.
+open and open with the interiors shown, and no door clip at low detail. A
+coach-kit body with a doorway, folding or plug, has no skin over it and the cabin's
+far wall behind it, one without doorways is byte-for-byte unchanged, and every
+inward-opening door of the seven designs opens into the cabin (a doorway reveal).
+Behind every leaf of every bus the first still face a ray from outside meets is the
+cabin's, never the body's paint; and across every shut door of every passenger
+design, rays 5 mm apart all meet the door on its own half of the car -- no gap
+between leaves looks through (the gap strips). The interiors themselves:
+[interiors.md](interiors.md).

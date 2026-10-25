@@ -49,14 +49,17 @@ export const unit = (a: Vec3): Vec3 => mul(a, 1 / Math.max(1e-12, Math.hypot(...
 
 /**
  * Lofts half slices (z >= 0, mirrored for the other side) between stations at
- * model x `xs`: quads wound outward from the axis at height `axisY`.
+ * model x `xs`: quads wound outward from the axis at height `axisY`. Where
+ * `hole(s, seg)` names a doorway's sill and head for side s over segment seg,
+ * the side's quads leave out what lies between them (`loftQuad`).
  */
-export function loftHalves(m: MeshBuilder, xs: number[], halves: Pt[][], mat: (seg: number, edge: number) => string, axisY: (seg: number) => number): void {
+export function loftHalves(m: MeshBuilder, xs: number[], halves: Pt[][], mat: (seg: number, edge: number) => string, axisY: (seg: number) => number, hole: (s: number, seg: number) => [number, number] | null = () => null): void {
   for (const s of [1, -1])
     for (let i = 0; i + 1 < xs.length; i++) {
       const [ha, hb] = [halves[i]!, halves[i + 1]!];
       const yc = axisY(i);
       const xm = (xs[i]! + xs[i + 1]!) / 2;
+      const cut = hole(s, i);
       for (let k = 0; k + 1 < ha.length; k++) {
         const P = (h: Pt[], x: number, j: number): Vec3 => [x, h[j]![1], s * h[j]![0]];
         const a = P(ha, xs[i]!, k), b = P(ha, xs[i]!, k + 1), cc = P(hb, xs[i + 1]!, k + 1), d = P(hb, xs[i + 1]!, k);
@@ -64,9 +67,36 @@ export function loftHalves(m: MeshBuilder, xs: number[], halves: Pt[][], mat: (s
         let n = cross(sub(cc, a), sub(d, b));
         if (Math.hypot(...n) < 1e-12) continue;
         if (dot(n, sub(centre, [xm, yc, 0])) < 0) n = mul(n, -1);
-        m.facets(mat(i, k), [a, b, cc, a, cc, d], n);
+        loftQuad(m, mat(i, k), [a, b, cc, d], n, cut);
       }
     }
+}
+
+/**
+ * One quad of a loft, a..b at the near station and d..c at the far one (its
+ * upright edges), facing `n`; with `hole` (a doorway's sill and head) only its
+ * pieces below the sill and above the head, cut along the upright edges. A piece
+ * that comes to a point at one end draws as one triangle: tri() drops the other.
+ */
+export function loftQuad(m: MeshBuilder, mat: string, [a, b, c, d]: [Vec3, Vec3, Vec3, Vec3], n: Vec3, hole: [number, number] | null): void {
+  if (!hole) {
+    m.facets(mat, [a, b, c, a, c, d], n);
+    return;
+  }
+  for (const [lo, hi] of [[-Infinity, hole[0]], [hole[1], Infinity]] as const) {
+    // the part of edge p..r within lo..hi, a single point where none is (a level
+    // edge is all in or all out)
+    const part = (p: Vec3, r: Vec3): [Vec3, Vec3] => {
+      if (Math.abs(r[1] - p[1]) < 1e-12) return p[1] >= lo && p[1] <= hi ? [p, r] : [p, p];
+      const t = (y: number) => Math.min(1, Math.max(0, (Math.min(hi, Math.max(lo, y)) - p[1]) / (r[1] - p[1])));
+      return [add(p, mul(sub(r, p), t(p[1]))), add(p, mul(sub(r, p), t(r[1])))];
+    };
+    const [near, far] = [part(a, b), part(d, c)];
+    // nothing of the quad on this side of the doorway
+    const point = (e: [Vec3, Vec3]) => Math.hypot(...sub(e[1], e[0])) < 1e-9;
+    if (point(near) && point(far)) continue;
+    m.facets(mat, [near[0], near[1], far[1], near[0], far[1], far[0]], n);
+  }
 }
 
 /** A slice's end cap at model x, facing `dir` along x, painted in `bands`. */

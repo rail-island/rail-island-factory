@@ -174,6 +174,11 @@ export interface Shell {
   /** Extra cuts across the shell (a section's ends): only x0..x1 of it is drawn. */
   x0?: number;
   x1?: number;
+  /**
+   * Doorways through the sides (`s` +1 right), x0..x1 and y0..y1: the shell
+   * leaves out its side wall over each, with the bus's cabin behind (interior.ts).
+   */
+  doorways?: Array<{ s: number; x0: number; x1: number; y0: number; y1: number }>;
 }
 
 /** How many straight pieces an arch's rounded crown is made of. */
@@ -206,8 +211,9 @@ function archBottom(arches: readonly Arch[], x: number): number {
 /**
  * Draws the shell: one convex solid per paint cell, every face in its cell's
  * colour, the underside and the arches' insides in `under`. The cells are the
- * panels' x and y edges and the arches' pieces; neighbouring cells of one colour
- * at one height are merged.
+ * panels' x and y edges, the doorways' and the arches' pieces; neighbouring
+ * cells of one colour at one height are merged. A cell over a doorway has no
+ * side wall there.
  */
 export function drawShell(m: MeshBuilder, s: Shell, name = "shell"): void {
   let lo = Infinity;
@@ -230,6 +236,11 @@ export function drawShell(m: MeshBuilder, s: Shell, name = "shell"): void {
   for (const p of s.paint) {
     for (const x of [p.x0, p.x1]) if (x > lo && x < hi) xs.add(x);
     for (const y of [p.y0, p.y1]) if (y > bottom && y < top) ys.add(y);
+  }
+  const doorways = s.doorways ?? [];
+  for (const d of doorways) {
+    for (const x of [d.x0, d.x1]) if (x > lo && x < hi) xs.add(x);
+    for (const y of [d.y0, d.y1]) if (y > bottom && y < top) ys.add(y);
   }
   for (const a of s.arches) {
     for (const [x] of archOutline(a)) if (x > lo && x < hi) xs.add(x);
@@ -256,8 +267,8 @@ export function drawShell(m: MeshBuilder, s: Shell, name = "shell"): void {
     for (let yi = 0; yi + 1 < ycuts.length; yi++) {
       const ya = ycuts[yi]!;
       const yb = ycuts[yi + 1]!;
-      // the x cells of this band, merged where colour and arch agree
-      const cells: Array<{ x0: number; x1: number; mat: string; arch?: Arch }> = [];
+      // the x cells of this band, merged where colour, arch and doorway agree
+      const cells: Array<{ x0: number; x1: number; mat: string; arch?: Arch; door?: number }> = [];
       for (let xi = 0; xi + 1 < xcuts.length; xi++) {
         const x0 = xcuts[xi]!;
         const x1 = xcuts[xi + 1]!;
@@ -270,9 +281,12 @@ export function drawShell(m: MeshBuilder, s: Shell, name = "shell"): void {
           continue;
         }
         const mat = colour(xm, (ya + yb) / 2);
+        const ym = (ya + yb) / 2;
+        const di = doorways.findIndex((d) => xm > d.x0 && xm < d.x1 && ym > d.y0 && ym < d.y1);
+        const door = di >= 0 ? di : undefined;
         const last = cells[cells.length - 1];
-        if (last && !arch && !last.arch && last.mat === mat) last.x1 = x1;
-        else cells.push({ x0, x1, mat, arch });
+        if (last && !arch && !last.arch && last.mat === mat && last.door === door) last.x1 = x1;
+        else cells.push({ x0, x1, mat, arch, ...(door !== undefined ? { door } : {}) });
       }
       cells.forEach((c, ci) => {
         if (!c.mat) return;
@@ -286,7 +300,8 @@ export function drawShell(m: MeshBuilder, s: Shell, name = "shell"): void {
         const showLo = ci === 0 || ya < bottomAt(prev, c.x0 - 1e-6) - 1e-6;
         const showHi = ci + 1 === cells.length || ya < bottomAt(next, c.x1 + 1e-6) - 1e-6;
         const planes: Plane[] = [
-          ...hull.map((p) => ({ ...p, mat: p.n[1] < -0.9 ? s.under : c.mat })),
+          // over a doorway the side facing out of it is left open
+          ...hull.map((p) => ({ ...p, mat: p.n[1] < -0.9 ? s.under : c.door !== undefined && p.n[2] * doorways[c.door]!.s > 0.3 ? null : c.mat })),
           { n: [-1, 0, 0], d: -c.x0, mat: showLo ? c.mat : null },
           { n: [1, 0, 0], d: c.x1, mat: showHi ? c.mat : null },
           { n: [0, -1, 0], d: -ya, mat: ya <= bottom + 1e-9 ? s.under : null },

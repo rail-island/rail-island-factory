@@ -15,6 +15,7 @@ import { AXLE_FACTOR, axleBeam, busWheel, onSide, sideSlab, type BusFrame } from
 import { block, steeredWheels } from "./vehicleParts.ts";
 import { busLod, emptyBusLodNotes, type BusLodNotes } from "./lodRoad.ts";
 import { openable, plugMove } from "./doors.ts";
+import { CABIN_INSET, drawCabin, INTERIOR_PALETTE, type CabinDoor } from "./interior.ts";
 
 /** One axle: where it is, and what it carries. */
 export interface Axle {
@@ -55,6 +56,65 @@ export interface BusSpec {
   maxSteerDeg: number;
   maxBendDeg?: number;
   fittings: Fitting[];
+  /** The passenger doors' doorways (`s` +1 right), cut through the shell with the cabin behind (BusDraft.door). */
+  doorways?: Doorway[];
+}
+
+/** A doorway through side `s` of the shell: x0..x1 along it, sill y0 to head y1. */
+export interface Doorway {
+  s: number;
+  x0: number;
+  x1: number;
+  y0: number;
+  y1: number;
+}
+
+/** The lowest and highest b where the line a = `at` crosses a convex outline of (a, b) points, or null. */
+function spanAt(outline: ReadonlyArray<[number, number]>, at: number): [number, number] | null {
+  const bs: number[] = [];
+  for (let i = 0; i < outline.length; i++) {
+    const [a0, b0] = outline[i]!;
+    const [a1, b1] = outline[(i + 1) % outline.length]!;
+    if (at < Math.min(a0, a1) - 1e-9 || at > Math.max(a0, a1) + 1e-9) continue;
+    if (Math.abs(a1 - a0) < 1e-9) bs.push(b0, b1);
+    else bs.push(b0 + ((b1 - b0) * (at - a0)) / (a1 - a0));
+  }
+  return bs.length ? [Math.min(...bs), Math.max(...bs)] : null;
+}
+
+/**
+ * The cabin of the section lo..hi behind its `doors` (interior.ts): a floor at
+ * the lowest sill, a ceiling above the highest head, the side walls CABIN_INSET inside
+ * the shell, a podium across the car over each wheel arch, a seat row only where
+ * the plan and the roof hold it, over a wheel arch standing on its podium.
+ */
+function busCabin(m: MeshBuilder, spec: BusSpec, lo: number, hi: number, doors: Doorway[]): void {
+  const sideXs = spec.side.map(([x]) => x);
+  const ys = spec.section.map(([, y]) => y);
+  const [x0, x1] = [Math.max(lo, Math.min(...sideXs)) + CABIN_INSET, Math.min(hi, Math.max(...sideXs)) - CABIN_INSET];
+  const floor = Math.max(Math.min(...doors.map((d) => d.y0)), Math.min(...ys) + 0.02) + 0.003;
+  const ceiling = Math.min(Math.max(...doors.map((d) => d.y1)) + 0.12, Math.max(...ys) - 0.08);
+  const heights = [floor, ceiling, ...ys.filter((y) => y > floor && y < ceiling)];
+  const half = Math.min(...heights.map((y) => halfWidth(spec.section, y))) - CABIN_INSET;
+  drawCabin(m, {
+    x0, x1, floor, ceiling, half,
+    doors: doors.map((d): CabinDoor => ({ ...d, y0: d.y0 + 0.003, y1: d.y1 - 0.003, skin: (y) => halfWidth(spec.section, y) })),
+    // a podium across the car over each wheel arch, its ends 11 mm outside the
+    // arch's notch and its top over the notch's crown, so neither shows inside
+    housings: spec.arches.filter((a) => a.x + a.half > x0 && a.x - a.half < x1).map((a) => ({ x0: a.x - a.half - 0.011, x1: a.x + a.half + 0.011, top: a.top + 0.004, z: 0 })),
+    room: (xa, xb) => {
+      let top = Infinity;
+      for (const x of [xa, (xa + xb) / 2, xb]) {
+        const plan = spanAt(spec.plan, x);
+        const side = spanAt(spec.side, x);
+        if (!plan || !side || plan[1] < half - 0.01) return null;
+        top = Math.min(top, side[1]);
+      }
+      // a row over a wheel arch stands on its podium
+      const arches = spec.arches.filter((a) => a.x + a.half + 0.011 > xa && a.x - a.half - 0.011 < xb);
+      return { base: Math.max(floor, ...arches.map((a) => a.top + 0.014)), top };
+    },
+  });
 }
 
 /** Draws every fitting of `groups` whose x falls in lo..hi, a scope per group. */
@@ -84,7 +144,7 @@ export function busSections(spec: Pick<BusSpec, "bodies" | "hingeY">): SectionRi
  * the fittings' closures, written before it existed, can draw into it.
  */
 export function assembleBus(spec: BusSpec, bind?: (m: MeshBuilder) => void): MeshBuilder {
-  const m = new MeshBuilder(spec.palette);
+  const m = new MeshBuilder({ ...INTERIOR_PALETTE, ...spec.palette });
   bind?.(m);
   const articulated = spec.bodies.length > 1;
   const steer = spec.axles.find((a) => a.steer);
@@ -97,11 +157,15 @@ export function assembleBus(spec: BusSpec, bind?: (m: MeshBuilder) => void): Mes
   spec.bodies.forEach(([lo, hi], i) => {
     const node = sections[i]!.node;
     m.part(node, sections[i]!.pivot, () => {
+      // the doorways of this section, cut 2 mm beyond their edges, under the leaves' margins
+      const doors = (spec.doorways ?? []).filter((d) => (d.x0 + d.x1) / 2 >= lo && (d.x0 + d.x1) / 2 <= hi);
       // the gaps are the cut: a section's shell stops at its own ends
       drawShell(m, {
         section: spec.section, side: spec.side, plan: spec.plan, base: spec.base, paint: spec.paint,
         arches: spec.arches, under: "under", x0: lo, x1: hi,
+        ...(doors.length ? { doorways: doors.map((d) => ({ ...d, x0: d.x0 - 0.002, x1: d.x1 + 0.002, y0: d.y0 - 0.002, y1: d.y1 + 0.002 })) } : {}),
       });
+      if (doors.length) busCabin(m, spec, lo, hi, doors);
       spec.axles.forEach((a, ai) => {
         if (a.x < lo || a.x > hi) return;
         m.scope(a.steer ? "front axle" : `axle ${ai + 1}`, () => {
@@ -183,7 +247,7 @@ export interface DoorStyle {
   leafMat: string;
   /** The glass in each leaf, height ranges. */
   panes: Array<[number, number]>;
-  /** The material of the opening's dark surround, the doorway behind the leaves ("frame" if none is named). */
+  /** The material of the frame round the doorway ("frame" if none is named), and of the strips behind the gaps between its leaves. */
   surround?: string;
   /** A leaf's width at most: the door gets as many leaves as that needs. */
   leafWidth?: number;
@@ -200,6 +264,8 @@ export class BusDraft {
   readonly fittings: Fitting[] = [];
   /** What the distant model keeps of the fittings (lodRoad.ts busLod), recorded beside them. */
   readonly lod: BusLodNotes = emptyBusLodNotes();
+  /** The passenger doors' doorways, cut through the shell (BusSpec.doorways). */
+  readonly doorways: Doorway[] = [];
   private builder: MeshBuilder | null = null;
 
   constructor(readonly frame: BusFrame) {}
@@ -236,18 +302,31 @@ export class BusDraft {
    * A passenger door x0..x1 on side `s` (the right, +1, by default): its leaves
    * `leaves`, else the style's count, else as many as its leaf width needs. The
    * leaves open as sliding plug leaves (doors.ts): one slides back toward the
-   * tail, two slide apart, each with its panes; the dark surround, always drawn, is
-   * the doorway they open (the shell is not cut).
+   * tail, two slide apart, each with its panes. Behind them the shell is cut open
+   * into the bus's cabin (interior.ts), 3 cm inside the leaves' span all round, a
+   * frame round the leaves; a dark strip riding on a leaf covers the gap to the
+   * next one while they are shut.
    */
   door(x0: number, x1: number, st: DoorStyle, s = 1, leaves = st.leaves ?? Math.max(1, Math.ceil((x1 - x0 - 0.06) / (st.leafWidth ?? 0.62) - 1e-9))): void {
     this.lod.doors.push({ s, x: [x0, x1], y: [st.bottom, st.top] });
+    const lw = (x1 - x0 - 0.06) / leaves;
+    // the leaves' span; the doorway 3 cm inside it all round, so the flat leaves
+    // overlap the shell at their edges, where its sides lean in under them
+    const [ls, le] = [x0 + 0.03, x0 + 0.03 + leaves * lw - 0.02];
+    const hole: Doorway = { s, x0: ls + 0.03, x1: le - 0.03, y0: st.bottom + 0.03, y1: st.top - 0.03 };
+    this.doorways.push(hole);
     this.fit(s > 0 ? "right doors" : "left doors", (x0 + x1) / 2, () => {
       const m = this.m;
+      const mat = st.surround ?? "frame";
       // kept off the body's underside, where a low door's sill would lie in its plane
       const sill = Math.max(st.bottom - 0.04, Math.min(...this.frame.section.map(([, y]) => y)) + 0.015);
-      sideSlab(m, st.surround ?? "frame", this.frame, s, x0, x1, sill, st.top + 0.04, 0.01);
+      m.scope("frame", () => {
+        sideSlab(m, mat, this.frame, s, x0, ls, sill, st.top + 0.04, 0.01);
+        sideSlab(m, mat, this.frame, s, le, x1, sill, st.top + 0.04, 0.01);
+        if (st.bottom - sill > 1e-3) sideSlab(m, mat, this.frame, s, ls, le, sill, st.bottom, 0.01);
+        sideSlab(m, mat, this.frame, s, ls, le, st.top, st.top + 0.04, 0.01);
+      });
       const hw = halfWidth(this.frame.section, st.bottom + 0.2);
-      const lw = (x1 - x0 - 0.06) / leaves;
       openable(m, (mm, o) => {
         for (let l = 0; l < leaves; l++) {
           const a = x0 + 0.03 + l * lw;
@@ -256,6 +335,8 @@ export class BusDraft {
           mm.moved(plugMove(o, s, slide), () => {
             block(mm, st.leafMat, a, b, st.bottom, st.top, ...onSide(s, hw + 0.006, hw + 0.02));
             for (const [y0, y1] of st.panes) block(mm, "glass", a + 0.06, b - 0.06, y0, y1, ...onSide(s, hw + 0.014, hw + 0.026));
+            // reaching 1 cm into the frame above and below, so no slit is left at either end
+            if (l + 1 < leaves) block(mm, mat, b - 0.02, b + 0.04, st.bottom - 0.01, st.top + 0.01, ...onSide(s, hw - 0.022, hw + 0.002));
           });
         }
       });
@@ -293,7 +374,7 @@ export class BusDraft {
 
   /** Builds the bus with these fittings. */
   build(spec: Omit<BusSpec, "fittings">): MeshBuilder {
-    return assembleBus({ ...spec, fittings: this.fittings }, (b) => (this.builder = b));
+    return assembleBus({ ...spec, fittings: this.fittings, doorways: this.doorways }, (b) => (this.builder = b));
   }
 
   /** Builds the bus's distant model (lodRoad.ts busLod) from the same description and the notes. */

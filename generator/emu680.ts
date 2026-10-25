@@ -243,6 +243,8 @@ export function cd680(params?: ParamValues): MeshBuilder {
   const m = c.m;
   const gum = 0.1 * L.k;
   const body = body680(L);
+  // the plug doors open through doorways, so an open one shows the interior (doors.ts)
+  body.openings = [1, -1].flatMap((s) => L.doors.map((d) => c.doorOpening(s, sb(L, d.box), 0.06)));
   m.scope("body", () => {
     c.volume(body);
     for (const s of [1, -1]) m.scope(s > 0 ? "right side" : "left side", () => sideWork(c, body, L, s));

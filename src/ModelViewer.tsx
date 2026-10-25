@@ -29,6 +29,12 @@
 // A road or rail vehicle stands on its way, an electric one under the game's wire
 // (viewerScenery.ts); a Scenery checkbox hides them.
 //
+// A vehicle with an interior (userData.interiors, docs/models/interiors.md) shows
+// each car's cabin only while a door of that car opens or stands open, as the
+// game is to; an Interior toggle shows every cabin with the doors shut and cuts
+// the model away above the ceilings, so the seat layout shows from above
+// (viewerInteriors.ts).
+//
 // A vehicle with lamps (userData.lamps, docs/models/lamps.md) gets a Lights
 // button that shows every tagged lamp lit, indicators blinking, so a design's
 // tagging can be checked by eye (viewerLamps.ts).
@@ -44,7 +50,7 @@
 
 import { createEffect, createSignal, onCleanup, onMount, Show } from "solid-js";
 import {
-  AmbientLight, AnimationClip, AnimationMixer, type AnimationAction, Box3, Color, DirectionalLight, Mesh, PerspectiveCamera,
+  AmbientLight, AnimationClip, AnimationMixer, type AnimationAction, Box3, Color, DirectionalLight, Mesh, PerspectiveCamera, Plane,
   Raycaster, Scene, Vector2, Vector3, WebGLRenderer, type Object3D,
 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
@@ -55,6 +61,7 @@ import { applyGlass } from "./viewerGlass";
 import { applyHighlight, makeParts, type Part } from "./viewerHighlight";
 import { applyLamps, disposeLamps, lampsOf, type Lamp } from "./viewerLamps";
 import { applySurfaces } from "./viewerSurfaces";
+import { applyInteriors, cutHeight, interiorsOf, type DoorSide, type Interior } from "./viewerInteriors";
 import { buildScenery } from "./viewerScenery";
 
 function disposeModel(obj: Object3D): void {
@@ -74,8 +81,6 @@ const LIFT_SECONDS = 1.5;
 /** Seconds a door takes from shut to open. */
 const DOOR_SECONDS = 2;
 
-type DoorSide = "left" | "right";
-
 /** Whether the clip is a `state` clip of the model (a pantograph): its drive in userData.clipDrives. */
 function isStateClip(model: Object3D, clip: AnimationClip): boolean {
   const drives = model.userData.clipDrives as Record<string, { drive?: string }> | undefined;
@@ -92,6 +97,8 @@ function doorSide(model: Object3D, clip: AnimationClip): DoorSide | null {
 const ease = (t: number): number => t * t * (3 - 2 * t);
 // Whether the Scenery checkbox shows the way and the wire, kept across models.
 const [showScenery, setShowScenery] = createSignal(true);
+// Whether the Interior toggle shows every cabin, the model cut away above them, kept across models.
+const [showInterior, setShowInterior] = createSignal(false);
 
 export function ModelViewer(props: {
   record: CatalogRecord;
@@ -142,6 +149,10 @@ export function ModelViewer(props: {
   const [doorTarget, setDoorTarget] = createSignal<Record<DoorSide, number>>({ left: 0, right: 0 });
   const doorAt: Record<DoorSide, number> = { left: 0, right: 0 };
   let doorActions: Array<{ action: AnimationAction; side: DoorSide }> = [];
+  // Its interiors, hidden but while their doors open (or with the Interior toggle), and the toggle's cut.
+  let interiors: Interior[] = [];
+  const [interiorCount, setInteriorCount] = createSignal(0);
+  let cut = new Plane(new Vector3(0, -1, 0), Infinity);
   let mixer: AnimationMixer | null = null;
   let loopActions: AnimationAction[] = [];
   let stateActions: AnimationAction[] = [];
@@ -220,6 +231,7 @@ export function ModelViewer(props: {
       if (at !== to) doorAt[side] = to > at ? Math.min(to, at + dt / DOOR_SECONDS) : Math.max(to, at - dt / DOOR_SECONDS);
     }
     for (const { action, side } of doorActions) action.time = ease(doorAt[side]) * action.getClip().duration;
+    applyInteriors(interiors, doorAt, showInterior());
     mixer?.update(dt);
     render();
     animRaf = moving() ? requestAnimationFrame(tick) : 0;
@@ -253,6 +265,12 @@ export function ModelViewer(props: {
     animate();
   };
   const hasDoors = (side: DoorSide) => doorClips().some((d) => d.side === side);
+  /** Shows the interiors as the doors and the Interior toggle say, the model cut away above them with the toggle on. */
+  const showInteriors = () => {
+    applyInteriors(interiors, doorAt, showInterior());
+    if (renderer) renderer.clippingPlanes = showInterior() && interiors.length ? [cut] : [];
+    render();
+  };
 
   /** Stops and forgets the animation of the model being replaced. */
   const dropAnimation = () => {
@@ -271,6 +289,8 @@ export function ModelViewer(props: {
     setLiftTarget(1);
     doorAt.left = doorAt.right = 0;
     setDoorTarget({ left: 0, right: 0 });
+    interiors = [];
+    setInteriorCount(0);
   };
   const dropScenery = () => {
     if (!scenery) return;
@@ -347,6 +367,10 @@ export function ModelViewer(props: {
       const ndc = new Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
       raycaster.setFromCamera(ndc, camera);
       for (const hit of raycaster.intersectObject(current, true)) {
+        // a hidden interior is not there to click (the raycaster ignores visibility)
+        let shown = true;
+        for (let o: Object3D | null = hit.object; o; o = o.parent) shown &&= o.visible;
+        if (!shown) continue;
         const part = parts.find((p) => p.mesh === hit.object);
         if (!part || hit.faceIndex == null) continue;
         const leaf = leafAt(index, part.name, part.offset + hit.faceIndex);
@@ -407,9 +431,13 @@ export function ModelViewer(props: {
           disposeParts();
           disposeModel(current);
         }
+        // the exterior's triangles, the catalog's count: an interior has a budget of its own
         let triangles = 0;
+        const inner = new Set(interiorsOf(group).map((it) => it.group));
         group.traverse((o) => {
-          if (o instanceof Mesh) triangles += (o.geometry.index?.count ?? o.geometry.getAttribute("position").count) / 3;
+          let up: Object3D | null = o;
+          while (up && !inner.has(up)) up = up.parent;
+          if (o instanceof Mesh && !up) triangles += (o.geometry.index?.count ?? o.geometry.getAttribute("position").count) / 3;
         });
         props.onTriangles?.(triangles);
         current = group;
@@ -420,6 +448,10 @@ export function ModelViewer(props: {
           const side = doorSide(group, clip);
           return side ? [{ clip, side }] : [];
         }));
+        interiors = interiorsOf(group);
+        setInteriorCount(interiors.length);
+        if (interiors.length) cut = new Plane(new Vector3(0, -1, 0), cutHeight(interiors));
+        showInteriors();
         dropScenery();
         if (record.scenery) {
           scenery = buildScenery(record.scenery, new Box3().setFromObject(group));
@@ -520,7 +552,7 @@ export function ModelViewer(props: {
     <div class="factory-viewer" ref={pane}>
       <canvas ref={canvas} class="factory-viewer__canvas" />
       <Show when={clips().length > 0 || stateClips().length > 0 || doorClips().length > 0 || lampCount() > 0 || props.record.scenery}>
-        <div class="factory-viewer__controls" role="group" aria-label="Animation, pantographs, doors, lights and scenery">
+        <div class="factory-viewer__controls" role="group" aria-label="Animation, pantographs, doors, interior, lights and scenery">
           <Show when={clips().length > 0}>
             <button type="button" class="factory-btn" onClick={start} disabled={running()}>
               Start
@@ -556,6 +588,20 @@ export function ModelViewer(props: {
               title="Close the doors on both sides"
             >
               Close
+            </button>
+          </Show>
+          <Show when={interiorCount() > 0}>
+            <button
+              type="button"
+              class="factory-btn"
+              onClick={() => {
+                setShowInterior(!showInterior());
+                showInteriors();
+              }}
+              aria-pressed={showInterior()}
+              title="Show the interior with the doors shut, the model cut away above it"
+            >
+              {showInterior() ? "Interior off" : "Interior on"}
             </button>
           </Show>
           <Show when={lampCount() > 0}>

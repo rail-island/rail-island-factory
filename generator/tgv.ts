@@ -529,6 +529,8 @@ function drawTrailer(c: Coach, unit: "endCoach" | "coach", L: Livery, rearEnd: "
   const box = (b: PxBox) => sideBox(map, b);
   const [front, rear] = TRAILER_WALLS[unit];
   const { body, bFront, bRear } = trailerVolume(unit, L, rearEnd);
+  // the plug doors open through doorways, so an open one shows the interior (doors.ts)
+  body.openings = [1, -1].flatMap((s) => T.doors.map((d) => c.doorOpening(s, box(d.box), 0.025)));
   m.scope("body", () => {
     c.volume(body);
     for (const s of [1, -1])

@@ -26,8 +26,11 @@ export interface Part {
 export function makeParts(root: Object3D): Part[] {
   const parts: Part[] = [];
   const seen = new Map<string, number>();
+  // a vehicle's interiors are not in the source tree (docs/models/interiors.md)
+  const inner = new Set(Object.keys((root.userData.interiors ?? {}) as object).map((name) => root.getObjectByName(name)));
+  const inside = (o: Object3D | null): boolean => !!o && (inner.has(o) || inside(o.parent));
   root.traverse((o) => {
-    if (!(o instanceof Mesh) || Array.isArray(o.material)) return;
+    if (!(o instanceof Mesh) || Array.isArray(o.material) || inside(o)) return;
     const base = o.material as MeshStandardMaterial;
     const glow = base.clone();
     glow.emissive = new Color(0xffa040);

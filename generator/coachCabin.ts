@@ -1,0 +1,69 @@
+// The coach kit's cabin (csdCoachParts.ts, docs/models/interiors.md): the generic
+// interior (interior.ts) fitted into a volume behind its doorways. Apart from
+// csdCoachParts.ts, and swapped for a no-op in the bundle of a design that draws
+// no interior (jsModel.ts), so only the coaches with doors that open carry it.
+
+import { hiAt, loAt, lerp, halfWidth, sectionHalf, type Coach, type Volume } from "./csdCoachParts.ts";
+import { CABIN_INSET, drawCabin } from "./interior.ts";
+
+/** The shell's internal band boundaries of `v`, 2.5 mm above their nominal heights (`Coach.volume`). */
+const chordsOf = (v: Volume): number[] => v.bands.slice(1).map(([y]) => y + 0.0025);
+
+/** A height 3 mm (or 6, 9) from `y` toward `dir`, clear of volume `v`'s chords. */
+const clearOf = (v: Volume, y: number, dir: number): number => [0.003, 0.006, 0.009].map((d) => y + dir * d).find((c) => chordsOf(v).every((h) => Math.abs(h - c) > 0.0015))!;
+
+/**
+ * The floor and ceiling of the cabin behind volume `v`'s doorways: the floor at
+ * the lowest sill (or just above the body's bottom at the doors), the ceiling
+ * 0.12 m above the highest head, under the roof.
+ */
+export function cabinHeights(v: Volume): [number, number] {
+  const opens = v.openings ?? [];
+  const ys = v.section.map((p) => p[1]);
+  // a doorway that reaches below the body (a step well) opens onto the floor
+  const floor = clearOf(v, Math.max(Math.min(...opens.map((o) => o.y0)), Math.min(...ys) + 0.02, ...opens.map((o) => loAt(v, (o.x0 + o.x1) / 2) + 0.02)), 1);
+  const ceiling = clearOf(v, Math.min(Math.max(...opens.map((o) => o.y1)) + 0.12, Math.max(...ys) - 0.08), -1);
+  return [floor, ceiling];
+}
+
+/**
+ * The cabin behind volume `v`'s doorways (`Volume.openings`, interior.ts), drawn
+ * by coach `c`: one floor and ceiling (`cabinHeights`), along the whole volume,
+ * its side walls CABIN_INSET inside the narrowest skin between floor and ceiling where the plan keeps 90 %
+ * of the full width, and a reveal at every doorway out to the skin. Where the
+ * cabin reaches outside the shell (a tapered nose, a skirt cut away over the
+ * wheels) only its inward faces stand there, which nobody outside sees; a seat
+ * row stands only where the shell holds it. Floor, ceiling and the reveals'
+ * thresholds and heads stand 3 mm (or 6, 9) clear of the shell's chords at the
+ * doorways' sills and heads and at the bands' boundaries.
+ */
+export function coachCabin(c: Coach, v: Volume): void {
+  const opens = v.openings ?? [];
+  if (!opens.length) return;
+  const hw0 = halfWidth(v);
+  const k = (x: number) => lerp(v.plan, x) / hw0;
+  const clear = (y: number, dir: number) => clearOf(v, y, dir);
+  const ys = v.section.map((p) => p[1]);
+  const [floor, ceiling] = cabinHeights(v);
+  const [x0, x1] = [v.plan[0]![0] + CABIN_INSET, v.plan[v.plan.length - 1]![0] - CABIN_INSET];
+  const skin = (x: number, y0: number, y1: number) => k(x) * Math.min(...[y0, y1, ...ys.filter((y) => y > y0 && y < y1)].map((y) => sectionHalf(v.section, y)));
+  const wide = [x0, x1, ...v.plan.map((p) => p[0])].filter((x) => x >= x0 && x <= x1 && k(x) >= 0.9);
+  const half = Math.min(...(wide.length ? wide : [(x0 + x1) / 2]).map((x) => skin(x, floor, ceiling))) - CABIN_INSET;
+  drawCabin(c.m, {
+    x0: c.X(x0),
+    x1: c.X(x1),
+    floor,
+    ceiling,
+    half,
+    doors: opens.map((o) => {
+      const kd = k((o.x0 + o.x1) / 2);
+      return { s: o.s, x0: c.X(o.x0), x1: c.X(o.x1), y0: clear(o.y0, 1), y1: clear(o.y1, -1), skin: (y: number) => sectionHalf(v.section, Math.min(Math.max(...ys) - 1e-6, Math.max(Math.min(...ys) + 1e-6, y))) * kd };
+    }),
+    // a row's seats inside the skin and under the roof, standing over the body's bottom
+    room: (xa, xb) => {
+      const xs = [xa, (xa + xb) / 2, xb].map((xf) => xf + c.centre);
+      if (!xs.every((x) => skin(x, floor, ceiling) >= half - 0.01)) return null;
+      return { base: Math.max(floor, ...xs.map((x) => loAt(v, x) + 0.01)), top: Math.min(...xs.map((x) => hiAt(v, x))) };
+    },
+  });
+}

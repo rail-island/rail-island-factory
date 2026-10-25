@@ -15,7 +15,7 @@
 
 import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
 import type { GameProperties } from "./design.ts";
-import { Coach, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
+import { Coach, type Box, type Opening, type Pt, type Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { LOD_GLASS } from "./lodKit.ts";
 import { bogieParts, coachBody, fitUnit, pantographParts, roofPart, shifted, sideGlass } from "./lodUnits.ts";
@@ -128,6 +128,15 @@ const UPPER_070: PxBox[] = Array.from({ length: 9 }, (_, i): PxBox => [56 + 15 *
 const LOWER_070: PxBox[] = Array.from({ length: 7 }, (_, i): PxBox => [71 + 15 * i, 26, 84 + 15 * i, 37]);
 const END_070: PxBox[] = [[8, 19, 21, 30], [24, 19, 37, 30], [40, 19, 47, 30], [198, 19, 205, 30], [208, 19, 221, 30], [224, 19, 237, 30]];
 
+/** The passenger doors of the motor car and of the trailer: the door box and its leaves' windows (native boxes). */
+const DOORS_470: Array<[PxBox, PxBox[]]> = [[[64, 34, 79, 56], [[65, 37, 70, 49], [73, 37, 78, 49]]], [[165, 34, 180, 56], [[166, 37, 171, 49], [174, 37, 179, 49]]]];
+const DOORS_070: Array<[PxBox, PxBox[]]> = [[[54, 23, 69, 45], [[55, 27, 60, 38], [63, 27, 68, 38]]], [[176, 23, 191, 45], [[177, 27, 182, 38], [185, 27, 190, 38]]]];
+
+/** The doorways of `doors` on both sides (`Volume.openings`), so an open door shows the interior (doors.ts). */
+function doorways(c: Coach, doors: Array<[PxBox, PxBox[]]>, box: (b: PxBox) => Box): Opening[] {
+  return [1, -1].flatMap((s) => doors.map(([d]) => c.doorOpening(s, box(d), 0.03)));
+}
+
 /** A passenger door: two sliding plug leaves, a window riding on each (doors.ts). */
 function passengerDoor(c: Coach, body: Volume, s: number, b: Box, glass: Box[]): void {
   c.door(body, s, b, "doorRed", {
@@ -150,6 +159,7 @@ function motorCar(): MeshBuilder {
   const box = (b: PxBox) => sb(F, b);
   const X = (x: number) => c.X(bOf(F, x));
   const { body, upper, lower } = motorVolumes();
+  body.openings = doorways(c, DOORS_470, box);
   // the cab section (source x 0.2 .. 1.7, back to the cab door as z_both paints it) in the front's bands (x_inc): the yellow band at 1.4 .. 2.1 m
   m.scope("body", () => {
     c.volume(body);
@@ -172,7 +182,7 @@ function motorCar(): MeshBuilder {
           ),
         );
         m.scope("doors", () =>
-          ([[[64, 34, 79, 56], [[65, 37, 70, 49], [73, 37, 78, 49]]], [[165, 34, 180, 56], [[166, 37, 171, 49], [174, 37, 179, 49]]]] as Array<[PxBox, PxBox[]]>).forEach(([d, glass], i) =>
+          DOORS_470.forEach(([d, glass], i) =>
             m.scope(`door ${i + 1}`, () => passengerDoor(c, body, s, box(d), glass.map(box))),
           ),
         );
@@ -239,6 +249,7 @@ function trailer(): MeshBuilder {
   const m = c.m;
   const box = (b: PxBox) => sb(F, b);
   const body = trailerVolume();
+  body.openings = doorways(c, DOORS_070, box);
   m.scope("body", () => {
     c.volume(body);
     for (const s of [1, -1])
@@ -253,7 +264,7 @@ function trailer(): MeshBuilder {
           END_070.forEach((b, i) => m.scope(`window ${i + 1}`, () => c.window(body, s, box(b), { fw: 0.07 }))),
         );
         m.scope("doors", () =>
-          ([[[54, 23, 69, 45], [[55, 27, 60, 38], [63, 27, 68, 38]]], [[176, 23, 191, 45], [[177, 27, 182, 38], [185, 27, 190, 38]]]] as Array<[PxBox, PxBox[]]>).forEach(([d, glass], i) =>
+          DOORS_070.forEach(([d, glass], i) =>
             m.scope(`door ${i + 1}`, () => passengerDoor(c, body, s, box(d), glass.map(box))),
           ),
         );

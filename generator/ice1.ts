@@ -278,6 +278,8 @@ function coach(unit: "coach" | "restaurant"): MeshBuilder {
   const B = (x: number) => bOf(L.map, x);
   const box = (b: PxBox) => sideBox(L.map, b);
   const body = coachVolume(unit);
+  // the plug doors open through doorways, so an open one shows the interior (doors.ts)
+  body.openings = [1, -1].flatMap((s) => ICE1_DOORS.map(([a, b]) => c.doorOpening(s, box([a, 9, b, 36]), 0.02)));
   m.scope("body", () => {
     c.volume(body);
     for (const s of [1, -1]) m.scope(s > 0 ? "right side" : "left side", () => coachSide(c, body, unit, s, box));
@@ -302,6 +304,9 @@ function coach(unit: "coach" | "restaurant"): MeshBuilder {
   });
   return m;
 }
+
+/** A coach's passenger doors, one at each end: their native x columns (rows 9..36). */
+const ICE1_DOORS: ReadonlyArray<readonly [number, number]> = [[4, 13], [252, 261]];
 
 /** A coach's side: the dark window band and its glass, the doors, the logo; the restaurant's dining windows, clerestory and kitchen door. */
 function coachSide(c: Coach, v: Volume, unit: "coach" | "restaurant", s: number, box: (b: PxBox) => Box): void {
@@ -331,7 +336,7 @@ function coachSide(c: Coach, v: Volume, unit: "coach" | "restaurant", s: number,
     m.scope("restaurant stripe", () => c.sidePanel(v, "red", s, box([95, 15, 138, 17]), 0.006, 0.003));
   }
   m.scope("doors", () =>
-    ([[4, 13], [252, 261]] as const).forEach(([a, b], i) =>
+    ICE1_DOORS.forEach(([a, b], i) =>
       m.scope(`door ${i + 1}`, () => {
         // one plug leaf sliding toward the car's middle, its window riding on it (doors.ts)
         const d = box([a, 9, b, 36]);

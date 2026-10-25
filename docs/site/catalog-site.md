@@ -4,12 +4,12 @@
 the table, card and thumbnail layouts, browser-rendered variant thumbnails, sorting and search, the model page with its 3D
 preview, and the URL state.
 **Code** - `src/main.tsx`, `src/App.tsx`, `src/catalogQuery.ts`, `src/ModelTable.tsx`,
-`src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`, `src/viewerScenery.ts`, `src/viewerGlass.ts`,
+`src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`, `src/viewerScenery.ts`, `src/viewerGlass.ts`, `src/viewerInteriors.ts`,
 `src/SourceTreePanel.tsx`, `src/sourceTreeView.ts`, `src/Thumb.tsx`, `src/modelModule.ts`, `src/ExportPanel.tsx`,
 `src/ModelVariants.tsx`, `src/VariantThumb.tsx`, `src/variantThumbs.ts`, `src/thumbRender.ts`,
 `src/devCatalog.ts`, `src/devMeasure.ts`, `generator/devServer.ts`, `generator/devExport.ts`, `test/devExport.test.ts`,
 `src/factory.css`, `src/favicon.svg`, `src/apple-touch-icon.png`, `src/social-preview.png`, `src/boot.ts`, `src/bootEntry.ts`, `index.html`, `vite.config.ts`,
-`test/catalogQuery.test.ts`, `test/boot.test.ts`, `test/siteMeta.test.ts`, `test/rig.test.ts` (the Pose sliders), `test/scenery.test.ts`
+`test/catalogQuery.test.ts`, `test/boot.test.ts`, `test/siteMeta.test.ts`, `test/rig.test.ts` (the Pose sliders), `test/scenery.test.ts`, `test/viewerInteriors.test.ts`
 **See also** - [../models/export.md](../models/export.md), [../guide/deploy.md](../guide/deploy.md), [openttd-export.md](openttd-export.md)
 
 The site is the factory's counterpart of the webapp Creator's model listing,
@@ -284,7 +284,11 @@ the model always arrives with them raised, its rest pose. A model with opening
 doors (`door` clips) gets **Open left** and **Open right** - each only where it has
 doors on that side - and **Close**, which move each side's doors between shut and
 open over 2 s, eased, from wherever they stand; the model always arrives shut
-([../models/doors.md](../models/doors.md)). A model with lamps gets a
+([../models/doors.md](../models/doors.md)). Behind the doors each car's cabin
+shows only while one of its doors opens or stands open; **Interior on / Interior
+off** shows every cabin with the doors shut and cuts the model away just under the
+ceilings, so the seat layout shows from above, and the triangle count is the
+exterior's ([../models/interiors.md](../models/interiors.md)). A model with lamps gets a
 **Lights on / Lights off** button beside them that shows every tagged lamp lit,
 indicators blinking ([../models/lamps.md](../models/lamps.md)).
 

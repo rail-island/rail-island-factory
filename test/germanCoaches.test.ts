@@ -182,7 +182,7 @@ describe("German coaches transferred from vlakosimdb", () => {
     }
     for (const d of GERMAN_COACHES)
       for (const p of sample(paramCombinations(d.params))) {
-        const t = d.build(p).triangleCount();
+        const t = d.build(p).exteriorTriangleCount();
         expect(t, `${d.id} ${JSON.stringify(p)}`).toBeLessThan(12000);
       }
   });

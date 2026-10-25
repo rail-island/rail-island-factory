@@ -170,6 +170,11 @@ function body843(L: Layout): Volume {
 /** A cab front's items on a canvas `frontH` tall (the 843 front sits 10 rows higher on a 6 m canvas). */
 const cabFront = (frontH: number): EndItem[] => CAB_FRONT.map((it): EndItem => ({ ...it, box: [it.box[0], it.box[1] + 10 * (frontH - 5), it.box[2], it.box[3] + 10 * (frontH - 5)] }));
 
+/** A door that stays shut: a cab or luggage door, not reaching the low entrance (native row 47) or narrower than 0.9 m. */
+function shut843(d: { door: PxBox }): boolean {
+  return d.door[3] < 47 || d.door[2] - d.door[0] < 9;
+}
+
 export function cd843(params?: ParamValues): MeshBuilder {
   const p = resolveParams(CD843_PARAMS, params);
   const unit = p.unit as Cd843Unit;
@@ -178,7 +183,8 @@ export function cd843(params?: ParamValues): MeshBuilder {
   const car = new Car(PALETTE, frame843(L));
   const m = car.m;
   const xs = (b: number) => L.x0 + (b / BODY_843) * (L.x1 - L.x0); // body metres -> source x
-  const body: Volume = car.volume(body843(L));
+  // the passenger doors open through doorways, so an open one shows the interior (doors.ts)
+  const body: Volume = car.volume(body843(L), car.doorways(L.doors.filter((d) => !shut843(d)).map((d) => d.door), 0.03));
   m.scope("body", () => {
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
@@ -189,7 +195,7 @@ export function cd843(params?: ParamValues): MeshBuilder {
               // the passenger doors reach down to the low entrance (native row 47 or
               // more): sliding plug doors, a leaf per window, a single leaf sliding
               // toward the car's middle (doors.ts); the cab and luggage doors stay shut
-              if (d.door[3] < 47 || d.door[2] - d.door[0] < 9) {
+              if (shut843(d)) {
                 car.c.door(body, s, car.side(d.door), "doorRed", { seam: 0.03 });
                 d.glass.forEach((g, j) => m.scope(`glass ${j + 1}`, () => car.c.window(body, s, car.side(g), { fw: 0.04 })));
                 return;

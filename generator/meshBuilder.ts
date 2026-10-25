@@ -14,6 +14,7 @@
 
 import { slug, type ArgValue, type NodeExtent, type PrimitiveKind, type ScopeNode, type SourceTree, type TreeNode } from "./sourceTree.ts";
 import { MeshCore, type Ring, type SweepAxis, type Vec3 } from "./meshCore.ts";
+import { interiorsOf, isInteriorName } from "./interiorTable.ts";
 
 export { chamferedRect, grow, ngon, rect, scaleRing } from "./meshCore.ts";
 export type { AnimationClipSpec, AnimationTrack, LampSpec, Lamps, MaterialSpec, Ring, SweepAxis } from "./meshCore.ts";
@@ -149,23 +150,30 @@ export class MeshBuilder extends MeshCore {
   /**
    * The recorded source tree, its root named `title`. Ids are slash paths of
    * slugged scope names, unique among siblings (a repeated name gets "-2",
-   * "-3"...); a leaf is "<kind>-<n>" within its scope. Empty scopes are dropped.
+   * "-3"...); a leaf is "<kind>-<n>" within its scope. Empty scopes are dropped,
+   * and so are a vehicle's interiors, hidden at rest.
    */
   sourceTree(id: string, title: string): SourceTree {
-    const materials = [...this.groups.keys()].sort();
+    // A vehicle's interiors are hidden at rest and left out, as collectTriangles
+    // leaves them out of the GLB (docs/models/interiors.md): the tree is the model
+    // at rest, its materials those drawn outside them.
+    const units = this.outputUnits(title);
+    const hidden = new Set(units.filter((u) => u.index >= 0 && isInteriorName(u.name)).map((u) => u.index));
+    const materials = [...this.groups.keys()].filter((mat) => this.groups.get(mat)!.part.some((p) => !hidden.has(p))).sort();
     // The GLB writes a material's triangles node by node (outputUnits); a leaf's
     // range is drawn inside one node, so it moves as a block to where its node's
     // triangles start -- a bogie drawn amid its body's triangles, say.
-    const units = this.outputUnits(title);
     const rank = new Map(units.map((u, i) => [u.index, i]));
     const moved = new Map<string, number[]>();
-    for (const mat of materials) {
+    for (const mat of this.groups.keys()) {
       const parts = this.groups.get(mat)!.part;
       const counts = units.map(() => 0);
-      for (const p of parts) counts[rank.get(p) ?? 0]!++;
+      for (const p of parts) if (!hidden.has(p)) counts[rank.get(p) ?? 0]!++;
       const start = counts.map((_, i) => counts.slice(0, i).reduce((a, b) => a + b, 0));
-      moved.set(mat, parts.map((p) => start[rank.get(p) ?? 0]!++));
+      moved.set(mat, parts.map((p) => (hidden.has(p) ? -1 : start[rank.get(p) ?? 0]!++)));
     }
+    /** Whether a leaf's triangles are an interior's (a leaf is drawn inside one node). */
+    const inside = (mat: string, first: number, count: number): boolean => count > 0 && hidden.has(this.groups.get(mat)!.part[first]!);
     // a material that drew only degenerate triangles has no group, nothing to move
     const at = (mat: string, first: number): number => (first < (this.groups.get(mat)?.part.length ?? 0) ? moved.get(mat)![first]! : first);
     const extentOf = (mat: string, first: number, count: number): NodeExtent => {
@@ -198,13 +206,16 @@ export class MeshBuilder extends MeshCore {
       const join = (seg: string): string => (path ? `${path}/${seg}` : seg);
       for (const c of raw.children) {
         if ("kind" in c) {
+          // an empty leaf (every triangle degenerate) moves too: to where the next
+          // triangle drawn went -- and, where that went into an interior, goes with it
+          const first = at(c.material, c.first);
+          if (first < 0 || inside(c.material, c.first, c.count)) continue;
           const n = (perKind.get(c.kind) ?? 0) + 1;
           perKind.set(c.kind, n);
           let seg = `${c.kind}-${n}`;
           for (let k = 2; taken.has(seg); k++) seg = `${c.kind}-${n}-${k}`;
           taken.add(seg);
-          // an empty leaf (every triangle degenerate) moves too: to where the next triangle drawn went
-          children.push({ id: join(seg), kind: c.kind, material: c.material, args: c.args, tri: [at(c.material, c.first), c.count], ...extentOf(c.material, c.first, c.count) });
+          children.push({ id: join(seg), kind: c.kind, material: c.material, args: c.args, tri: [first, c.count], ...extentOf(c.material, c.first, c.count) });
         } else {
           const base = slug(c.name);
           let seg = base;
@@ -220,7 +231,28 @@ export class MeshBuilder extends MeshCore {
     };
     const root = build(this.root, "", title)!;
     const colors = materials.map((name) => this.palette[name]!.color);
-    return { version: 1, id, triangles: this.triangleCount(), materials, colors, root };
+    return { version: 1, id, triangles: this.exteriorTriangleCount(), materials, colors, root };
+  }
+
+  /**
+   * Which door clips reveal each interior part (interiorTable.ts,
+   * docs/models/interiors.md), by part name; null for a model without an interior.
+   */
+  interiors(): Record<string, string[]> | null {
+    return interiorsOf(this.parts, this.clips);
+  }
+
+  /** How many triangles the interiors hold; the rest is the exterior. */
+  interiorTriangleCount(): number {
+    const inner = this.parts.map((p) => isInteriorName(p.name));
+    let n = 0;
+    for (const g of this.groups.values()) for (const part of g.part) if (part >= 0 && inner[part]) n++;
+    return n;
+  }
+
+  /** How many triangles the model holds outside its interiors: what a design's budget counts. */
+  exteriorTriangleCount(): number {
+    return this.triangleCount() - this.interiorTriangleCount();
   }
 
   /**
@@ -232,7 +264,9 @@ export class MeshBuilder extends MeshCore {
    * non-indexed triangle soups with flat per-face normals. A model with a rig
    * carries it as the scene's `extras.rig` (three's GLTFLoader: `scene.userData.rig`),
    * a model that smokes its emitters as `extras.emitters`, a fountain its water as
-   * `extras.fountain`, a vehicle's lamps as `extras.lamps`.
+   * `extras.fountain`, a vehicle's lamps as `extras.lamps`, and the interiors and
+   * the door clips revealing each as `extras.interiors`, each interior node marked
+   * `extras.interior` (collectTriangles leaves them out unless asked).
    * Animation clips (see `animate`) become glTF animations of the part nodes,
    * linearly interpolated, and what plays each is the scene's `extras.clipDrives`.
    */
@@ -240,8 +274,8 @@ export class MeshBuilder extends MeshCore {
     type Json = {
       asset: { version: string; generator: string };
       scene: number;
-      scenes: Array<{ nodes: number[]; extras?: { rig?: unknown; emitters?: unknown; fountain?: unknown; clipDrives?: unknown; lamps?: unknown } }>;
-      nodes: Array<{ mesh: number; name: string; translation?: Vec3; children?: number[] }>;
+      scenes: Array<{ nodes: number[]; extras?: { rig?: unknown; emitters?: unknown; fountain?: unknown; clipDrives?: unknown; lamps?: unknown; interiors?: unknown } }>;
+      nodes: Array<{ mesh: number; name: string; translation?: Vec3; children?: number[]; extras?: { interior: true } }>;
       meshes: Array<{ name: string; primitives: unknown[] }>;
       materials: unknown[];
       accessors: unknown[];
@@ -255,17 +289,18 @@ export class MeshBuilder extends MeshCore {
     const nodeOf = (part: number): number => units.findIndex((u) => u.index === part);
     const drives = this.clipDrives();
     const lamps = this.lamps();
+    const interiors = this.interiors();
     const json: Json = {
       asset: { version: "2.0", generator },
       scene: 0,
       scenes: [{
         nodes: units.map((_, i) => i).filter((i) => units[i]!.index < 0 || this.parts[units[i]!.index]!.parent < 0),
-        ...(this.rig || this.emitterList.length || this.water || drives || lamps ? { extras: { ...(this.rig ? { rig: this.rig } : {}), ...(this.emitterList.length ? { emitters: this.emitterList } : {}), ...(this.water ? { fountain: this.water } : {}), ...(drives ? { clipDrives: drives } : {}), ...(lamps ? { lamps } : {}) } } : {}),
+        ...(this.rig || this.emitterList.length || this.water || drives || lamps || interiors ? { extras: { ...(this.rig ? { rig: this.rig } : {}), ...(this.emitterList.length ? { emitters: this.emitterList } : {}), ...(this.water ? { fountain: this.water } : {}), ...(drives ? { clipDrives: drives } : {}), ...(lamps ? { lamps } : {}), ...(interiors ? { interiors } : {}) } } : {}),
       }],
       nodes: units.map((u, i) => {
         if (u.index < 0) return { mesh: i, name: u.name };
         const children = this.parts.map((p, k) => (p.parent === u.index ? nodeOf(k) : -1)).filter((k) => k >= 0);
-        return { mesh: i, name: u.name, translation: this.partOffset(u.index), ...(children.length ? { children } : {}) };
+        return { mesh: i, name: u.name, translation: this.partOffset(u.index), ...(children.length ? { children } : {}), ...(isInteriorName(u.name) ? { extras: { interior: true as const } } : {}) };
       }),
       meshes: units.map((u) => ({ name: u.name, primitives: [] })),
       materials: [],

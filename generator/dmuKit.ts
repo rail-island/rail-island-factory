@@ -14,6 +14,7 @@
 import { ngon, type MaterialSpec, type MeshBuilder, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { Coach, type Box, type Opening, type Pt, type Volume } from "./csdCoachParts.ts";
+import { coachCabin } from "./coachCabin.ts";
 import { emblem } from "./cd163.ts";
 import type { DoorMotion } from "./doors.ts";
 import { block, side } from "./vehicleParts.ts";
@@ -101,7 +102,7 @@ export class Car {
     return this.c.X(x * this.f.kx);
   }
 
-  /** The doorways of side-view door boxes on both sides, for `volume` (`Volume.openings`): the doors that open inward. */
+  /** The doorways of side-view door boxes on both sides, for `volume` (`Volume.openings`): the doors that open. */
   doorways(doors: PxBox[], seam: number): Opening[] {
     return [1, -1].flatMap((s) => doors.map((d) => this.c.doorOpening(s, this.side(d), seam)));
   }
@@ -109,7 +110,7 @@ export class Car {
   /**
    * A passenger door that opens (doors.ts): `door` in `paint` with its `glass`
    * riding on the leaves, each in a scope named by `glassName` (its index from 1).
-   * A door opening inward needs its doorway in the volume (`doorways`).
+   * Its doorway must be in the volume (`doorways`).
    */
   openingDoor(
     body: Volume,
@@ -373,7 +374,7 @@ export function loft(c: Coach, v: Volume): void {
         if (b - a < 1e-6) continue;
         if (gone(a, y0, y1) && gone(b, y0, y1)) continue;
         if (c.doorwaySegment(v, mat, y0, y1, a, b, at)) continue;
-        m.sweep(mat, "x", at(a, y0, y1), c.X(a), at(b, y0, y1), c.X(b), false);
+        c.bandPiece(v, mat, at(a, y0, y1), a, at(b, y0, y1), b, y0, y1);
       }
       for (const x of [xs[0]!, xs[xs.length - 1]!]) {
         const s = x === xs[0] ? -1 : 1;
@@ -382,5 +383,5 @@ export function loft(c: Coach, v: Volume): void {
       }
     });
   }
-  c.vestibules(v);
+  coachCabin(c, v);
 }

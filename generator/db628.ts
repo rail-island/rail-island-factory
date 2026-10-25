@@ -176,6 +176,8 @@ export function db628(params?: ParamValues): MeshBuilder {
   const c = new Coach({ ...PALETTE, ...L.palette }, DB628_LENGTH / 2);
   const m = c.m;
   const { nose, body } = volumes628(L);
+  // the plug doors open through doorways, so an open one shows the interior (doors.ts)
+  body.openings = [1, -1].flatMap((s) => DOORS.map((d) => c.doorOpening(s, box(d.door), 0.03)));
   m.scope("body", () => {
     m.scope("nose", () => c.volume(nose));
     c.volume(body);

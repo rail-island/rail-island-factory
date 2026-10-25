@@ -86,7 +86,8 @@ the same shell cut at its own ends, which become the end walls the joint meets.
 shell: side panes and surrounds follow the section's lean (`sideSlab`), front and rear
 panels the end's rake (`endSlab`, `endLamp`), bending with the outline where they
 cross one of its corners (one closed solid, `bentSlab`); doors are double-leaf (two
-leaves with panes; the LC 735's rear door one). A slab
+leaves with panes; the LC 735's rear door one), the shell cut open behind them into
+the bus's cabin, a frame round the doorway ([interiors.md](interiors.md)). A slab
 stands a centimetre or two proud and sinks into the shell by more the prouder it is,
 so stacked slabs never share a face (no flicker, see vehicles.md). Mirrors hang ahead
 of the nose's corners on an arm that starts inside the body at its height (a raked

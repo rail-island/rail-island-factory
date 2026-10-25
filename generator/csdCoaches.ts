@@ -119,7 +119,8 @@ export function doors(
 
 /**
  * Marks the doorways of `list` on both sides of `v` (`Volume.openings`), before it
- * is drawn: the doors that open inward, so their leaves stay in sight (doors.ts).
+ * is drawn: the doors that open, so an open one shows the car's interior and a
+ * leaf that turns inward stays in sight (doors.ts).
  */
 export function doorways(c: Coach, v: Volume, h: number, list: Array<{ box: PxBox }>, seam?: number): void {
   v.openings = [...(v.openings ?? []), ...sides.flatMap((s) => list.map((d) => c.doorOpening(s, px(d.box, h), seam)))];
@@ -679,6 +680,9 @@ export function csdBi20(): MeshBuilder {
     plan: [[a, ha], [b, hb]],
     bands: [[0.9, 1.05, "underframe"], [1.05, 1.1, "floor"]],
   });
+  const compartments = Array.from({ length: 6 }, (_, k) => ({ box: [16 + 17 * k, 7, 25 + 17 * k, 28] as PxBox, glass: [[17 + 17 * k, 9, 24 + 17 * k, 19] as PxBox] }));
+  // the doors open through doorways, so an open one shows the interior (doors.ts)
+  doorways(c, body, H, compartments);
   m.scope("body", () => {
     m.scope("compartments", () => c.volume(body));
     m.scope("roof", () => c.volume(roof));
@@ -690,7 +694,7 @@ export function csdBi20(): MeshBuilder {
       c,
       // the compartment doors swing outward; the brass class numerals on the end
       // compartments' doors (native rows 21-24) swing with them
-      doors(c, body, H, Array.from({ length: 6 }, (_, k) => ({ box: [16 + 17 * k, 7, 25 + 17 * k, 28] as PxBox, glass: [[17 + 17 * k, 9, 24 + 17 * k, 19] as PxBox] })), "green", {
+      doors(c, body, H, compartments, "green", {
         frame: "brass",
         fw: 0.06,
         opens: { kind: "swing", leaves: 1, outward: true },

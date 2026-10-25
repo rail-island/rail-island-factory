@@ -14,7 +14,7 @@ import { ngon } from "./meshBuilder.ts";
 import { block } from "./vehicleParts.ts";
 import { Coach, px, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
-import { endName, fpx, gangway, headstock, lamp, mirror, sideName, sides } from "./csdCoaches.ts";
+import { doorways, endName, fpx, gangway, headstock, lamp, mirror, sideName, sides } from "./csdCoaches.ts";
 import { doubleDeckLod } from "./lodTrams.ts";
 import { dbLogo, nosePanel, noseTop, sideWindows, skinNumeral, type PxBox, type Win } from "./germanCoachParts.ts";
 
@@ -127,6 +127,8 @@ export function dbDosto(params?: ParamValues): MeshBuilder {
   const c = new Coach(palette, v.cab ? 13.6 : 13.4);
   const m = c.m;
   const { end, body } = dostoBody(v);
+  // the plug doors open through doorways, so an open one shows the interior (doors.ts)
+  doorways(c, body, H, DOORS);
   m.scope("body", () => {
     c.volume(body);
     for (const s of sides)

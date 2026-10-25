@@ -324,7 +324,8 @@ function buildAll(designs: readonly ProceduralDesign[]): Array<{ design: Procedu
     return {
       design,
       bytes: toGlb(design.id, model),
-      triangles: model.triangleCount(),
+      // a vehicle's interior, hidden at rest, has a budget of its own (docs/models/interiors.md)
+      triangles: model.exteriorTriangleCount(),
       tree: model.sourceTree(design.id, design.title),
       rig: model.rig,
     };

@@ -291,6 +291,8 @@ export function mavMdmot(params?: ParamValues): MeshBuilder {
   const m = c.m;
   const B = (x: number) => bOf(L.map, x);
   const [body, ...noses] = volumesMdmot(L);
+  // the passenger doors open through doorways, so an open one shows the interior (doors.ts)
+  body.openings = [1, -1].flatMap((s) => L.doors.filter((d) => !passengerDoorShut(d)).map((d) => c.doorOpening(s, sideBox(L.map, d.box), 0.025)));
   m.scope("body", () => {
     c.volume(body);
     noses.forEach((nose, i) => m.scope(L.cabs.length > 1 ? `cab ${i + 1}` : "cab", () => c.volume(nose)));
@@ -329,6 +331,11 @@ export function mavMdmot(params?: ParamValues): MeshBuilder {
 }
 
 /** Windows, doors, grilles, lines and markings on side s. */
+/** A door that stays shut: the baggage room's, or one narrower than 0.8 m (a crew door). */
+function passengerDoorShut(d: CarLayout["doors"][number]): boolean {
+  return !!d.baggage || d.box[2] - d.box[0] < 8;
+}
+
 function sideWork(c: Coach, v: Volume, L: CarLayout, s: number): void {
   const m = c.m;
   const box = (b: PxBox) => sideBox(L.map, b);
@@ -343,7 +350,7 @@ function sideWork(c: Coach, v: Volume, L: CarLayout, s: number): void {
         // a passenger door: one sliding plug leaf toward the car's middle, its window
         // riding on it (doors.ts); the baggage room's and the crew doors stay shut
         const b = box(d.box);
-        if (d.baggage || d.box[2] - d.box[0] < 8) {
+        if (passengerDoorShut(d)) {
           c.door(v, s, b, "doorGrey", { seam: 0.025 });
           m.scope("window", () => c.window(v, s, box(d.glass), { fw: 0.05 }));
           return;

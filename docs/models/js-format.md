@@ -46,6 +46,9 @@ scene.add(build(THREE)); // a THREE.Group named after the model id
   and `userData.clipDrives` says what plays each, by clip name: a `time` loop, the `distance` travelled
   at a reference speed, or a `state` the consumer scrubs to (a pantograph's `pantograph<n>`). An animated model's namespace also needs `AnimationClip`,
   `QuaternionKeyframeTrack` and `VectorKeyframeTrack`.
+- **Interiors.** A passenger vehicle's group carries `userData.interiors`, each interior part's name
+  and the `door` clips that reveal it; its interior Groups are built hidden (`visible = false`), for the
+  consumer to show while one of those doors stands open ([interiors.md](interiors.md)).
 - **Parameters.** The module also exports `params`, the design's enum parameters (`[]` for a fixed design),
   and `build(THREE, params)` builds any combination of their values; `build(THREE)` builds the defaults, the
   GLB's model, and an unknown name or value throws ([parameters.md](parameters.md)).
@@ -78,7 +81,9 @@ scene.add(build(THREE)); // a THREE.Group named after the model id
 `jsModel.ts` bundles one design with esbuild: an entry imports the design's build function (each design is an
 exported function of `skyscrapers.ts` or `vehicles.ts`) and exports `params` and `build(THREE, params)`; a plugin resolves the
 design's `./meshBuilder.ts` import to `threeBuilder.ts`, so the recorder and the GLB writer never reach the
-file. Output is minified ES2022 with a one-line banner, deterministic, and rewritten only when its text changed.
+file. Two more plugins leave optional code out: the surface UVs of a design that names no surface, and the
+interior code of a design that draws no interior (`noInteriors`, [interiors.md](interiors.md)), each swapped for
+no-ops. Output is minified ES2022 with a one-line banner, deterministic, and rewritten only when its text changed.
 `pnpm build:models` writes it after the thumbnails (`generateJsModels`) and deletes the file of a dropped design.
 
 A design must therefore stay free of Node-only imports and of anything that differs between runs.

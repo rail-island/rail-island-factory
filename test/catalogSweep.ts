@@ -51,12 +51,12 @@ function groupVertices(group: THREE.Object3D): Map<string, number[]> {
   return out;
 }
 
-/** A GLB's vertices per material, in draw order, with each material's colour. */
+/** A GLB's vertices per material, in draw order, with each material's colour (a vehicle's hidden interior too). */
 function glbVertices(glb: Uint8Array): { positions: Map<string, number[]>; colors: Map<string, number[]> } {
   const { json, bin } = parseGlb(glb);
   const positions = new Map<string, number[]>();
   const colors = new Map<string, number[]>();
-  for (const t of collectTriangles(json, bin)) {
+  for (const t of collectTriangles(json, bin, { interiors: true })) {
     const list = positions.get(t.material) ?? [];
     for (const p of t.p) list.push(...p);
     positions.set(t.material, list);
@@ -124,6 +124,7 @@ export function sweep(ids: readonly string[]): void {
         const nodes = walk(tree.root);
         expect(new Set(nodes.map((n) => n.id)).size).toBe(nodes.length);
         const { json, bin } = parseGlb(glb);
+        // the model at rest: a vehicle's hidden interiors are out of both
         const byMat = new Map<string, ReturnType<typeof collectTriangles>>();
         for (const t of collectTriangles(json, bin)) {
           if (!byMat.has(t.material)) byMat.set(t.material, []);
@@ -184,6 +185,10 @@ export function sweep(ids: readonly string[]): void {
         // a rigged model's rig rides along, as the GLB's scene extras; so do a vehicle's lamps
         expect(group.userData.rig).toEqual((json.scenes![0] as { extras?: { rig?: unknown } }).extras?.rig);
         expect(group.userData.lamps).toEqual((json.scenes![0] as { extras?: { lamps?: unknown } }).extras?.lamps);
+        // so do its interiors, each built hidden (docs/models/interiors.md)
+        const interiors = (json.scenes![0] as { extras?: { interiors?: Record<string, string[]> } }).extras?.interiors;
+        expect(group.userData.interiors).toEqual(interiors);
+        for (const name of Object.keys(interiors ?? {})) expect(group.getObjectByName(name)!.visible).toBe(false);
         expect(group.name).toBe(id);
         const anims = ((json as unknown as { animations?: Array<{ name: string; channels: Array<{ sampler: number; target: { node: number; path: string } }>; samplers: Array<{ input: number; output: number }> }> }).animations) ?? [];
         expect(group.animations.map((c) => c.name)).toEqual(anims.map((a) => a.name));

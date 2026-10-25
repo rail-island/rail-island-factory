@@ -216,8 +216,9 @@ export function buildLiveryCoach(spec: LiveryCoachSpec): MeshBuilder {
     bands: spec.bands,
     ...(spec.endPaint ? { endPaint: spec.endPaint } : {}),
   };
-  // the doorways of the doors that open inward, so their leaves show as they open (doors.ts)
-  const doorways = sides.flatMap((s) => (s > 0 ? spec.right : spec.left).doors.filter((d) => d.opens && d.opens.kind !== "plug").map((d) => c.doorOpening(s, px(d.box, H))));
+  // the doorways of the doors that open, so an open one shows the interior and an
+  // inward leaf stays in sight as it turns (doors.ts)
+  const doorways = sides.flatMap((s) => (s > 0 ? spec.right : spec.left).doors.filter((d) => d.opens).map((d) => c.doorOpening(s, px(d.box, H))));
   if (doorways.length) body.openings = doorways;
   const bay: Volume | undefined = spec.bay && {
     name: "bay",

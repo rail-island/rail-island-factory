@@ -16,6 +16,8 @@ export interface Gltf {
     translation?: number[];
     rotation?: number[];
     scale?: number[];
+    /** `interior: true` on a vehicle's interior node (meshCore.ts `interior`), hidden while its doors are shut. */
+    extras?: { interior?: boolean };
   }[];
   meshes?: { primitives: GltfPrimitive[] }[];
   materials?: {

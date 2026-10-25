@@ -69,11 +69,13 @@ function clipPolygon(subject: V2[], clip: V2[]): V2[] {
 
 /**
  * Every z-fighting pair of materials in `glb`, merged per (material pair, plane),
- * largest first. `minArea` drops slivers that only touch along an edge.
+ * largest first. `minArea` drops slivers that only touch along an edge;
+ * `interiors` checks a vehicle's interior too, which is hidden at rest (a pose
+ * with its doors open).
  */
-export function findCoplanarOverlaps(glb: Uint8Array, minArea = 1e-3): CoplanarOverlap[] {
+export function findCoplanarOverlaps(glb: Uint8Array, minArea = 1e-3, opts: { interiors?: boolean } = {}): CoplanarOverlap[] {
   const { json, bin } = parseGlb(glb);
-  const tris = collectTriangles(json, bin);
+  const tris = collectTriangles(json, bin, opts);
   const faces: Face[] = tris.map((t) => {
     const n = cross(sub(t.p[1], t.p[0]), sub(t.p[2], t.p[0]));
     const l = Math.hypot(n[0], n[1], n[2]) || 1;

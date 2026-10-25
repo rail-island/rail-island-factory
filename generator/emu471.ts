@@ -306,6 +306,8 @@ function elefantCar(unit: ElefantUnit, variant: ElefantVariant): MeshBuilder {
   const body = volume471(unit, paint);
   const box = (b: PxBox) => sb(L, b);
   const number = elefantNumber(variant, unit);
+  // the plug doors open through doorways, so an open one shows the interior (doors.ts)
+  body.openings = [1, -1].flatMap((s) => L.doors.map((b) => c.doorOpening(s, box(b), 0.03)));
   m.scope("body", () => {
     c.volume(body);
     for (const s of [1, -1]) m.scope(s > 0 ? "right side" : "left side", () => sideWork(c, body, L, paint, s, number));

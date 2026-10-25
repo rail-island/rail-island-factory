@@ -9,7 +9,7 @@ import type { Vec3 } from "./meshCore.ts";
 import { Coach, px, type Pt, type Volume } from "./csdCoachParts.ts";
 import { emblem } from "./cd163.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
-import { CSD, doors, endName, fpx, gangway, headstock, lamp, mirror, onSides, windows, type PxBox } from "./csdCoaches.ts";
+import { CSD, doors, doorways, endName, fpx, gangway, headstock, lamp, mirror, onSides, windows, type PxBox } from "./csdCoaches.ts";
 
 /** The running number of each livery; UIC numbers with their check digit. */
 export const BMO_NUMBERS = {
@@ -131,6 +131,12 @@ export function bmoCoach(params?: ParamValues): MeshBuilder {
     bands: paint.bands,
     endPaint: paint.end,
   };
+  const entrances = [
+    { box: [64, 25, 81, 46] as PxBox, glass: [[66, 26, 71, 36], [74, 26, 79, 36]] as PxBox[] },
+    { box: [187, 25, 204, 46] as PxBox, glass: [[189, 26, 194, 36], [197, 26, 202, 36]] as PxBox[] },
+  ];
+  // the plug doors open through doorways, so an open one shows the interior (doors.ts)
+  doorways(c, body, H, entrances);
   const xs = [85, 102, 119, 136, 153, 170];
   const number = BMO_NUMBERS[livery].number;
   m.scope("body", () => {
@@ -142,10 +148,7 @@ export function bmoCoach(params?: ParamValues): MeshBuilder {
         ...xs.map((x): PxBox => [x, 31, x + 13, 40]),
         [23, 21, 36, 30], [233, 21, 246, 30], [[251, 21, 259, 30], "frosted"],
       ], { fw: 0.08, sash: (b) => (b.y1 < 2 ? 1.5 : b.y0 > 3 || b.x1 - b.x0 < 1 ? undefined : 2.5) }),
-      doors(c, body, H, [
-        { box: [64, 25, 81, 46], glass: [[66, 26, 71, 36], [74, 26, 79, 36]] },
-        { box: [187, 25, 204, 46], glass: [[189, 26, 194, 36], [197, 26, 202, 36]] },
-      ], paint.door, { fw: 0.04, opens: { kind: "plug", leaves: 2 } }),
+      doors(c, body, H, entrances, paint.door, { fw: 0.04, opens: { kind: "plug", leaves: 2 } }),
       // the hatch under the end window (native rows 32..39), in the end section's blue
       (s) => m.scope("hatch", () => c.door(body, s, px([24, 32, 35, 39], H), "blue")),
       (s) =>

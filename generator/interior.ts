@@ -1,0 +1,273 @@
+// A vehicle's generic interior (docs/models/interiors.md): one cabin per car, a
+// floor, a ceiling, side and end walls and rows of seats across the car, drawn
+// into the car's interior part (a child part `interior-<car>`, interiorTable.ts),
+// which consumers hide while every door of the car is shut. Nothing in it is particular to a design but the
+// doors: a row of seats is left out wherever it would reach into a door's clear
+// zone, on either side, and the side walls are open over each doorway, with its
+// reveal (threshold, jambs and head) reaching out to the skin. Apart from
+// meshCore.ts, and swapped for a no-op in the bundle of a design that draws no
+// interior (jsModel.ts), so only the designs with one carry this code in their
+// standalone JS model.
+
+import type { MaterialSpec, MeshCore, Vec3 } from "./meshCore.ts";
+
+/** The shared interior materials, the same in every vehicle: a kit drawing cabins puts them in its palette. */
+export const INTERIOR_PALETTE: Record<string, MaterialSpec> = {
+  interiorFloor: { color: "#5b5f62", roughness: 0.9 },
+  interiorWall: { color: "#d8d4c8", roughness: 0.8 },
+  interiorSeat: { color: "#3e5a80", roughness: 0.85 },
+};
+
+/** The most triangles one car's interior may have (test/interiors.test.ts). */
+export const INTERIOR_TRIANGLE_BUDGET = 1500;
+
+/** A seat row's length along the car, cushion and back (metres). */
+const ROW_DEPTH = 0.55;
+/** The distance from one row to the next. */
+const ROW_PITCH = 0.9;
+/** How far a door's clear zone reaches beyond each jamb along the car. */
+const DOOR_CLEARANCE = 0.35;
+/** One seat's width across the car, and the narrowest aisle. */
+const SEAT_WIDTH = 0.46;
+const MIN_AISLE = 0.45;
+/** A seat's height above the floor, its back's above the seat, and the thinnest cushion on a raised base. */
+const SEAT_HEIGHT = 0.45;
+const BACK_HEIGHT = 0.65;
+const CUSHION = 0.15;
+/** How far the seats keep from the side and end walls (an odd figure, so their faces meet no design's round one). */
+const WALL_GAP = 0.037;
+/**
+ * How far a cabin's walls stand inside the shell: the side walls inside the
+ * narrowest skin, the end walls inside the body's ends -- clear of the panels
+ * laid on the skin, and an odd figure, so they meet no design's round one.
+ */
+export const CABIN_INSET = 0.047;
+
+/**
+ * A doorway into the cabin (model coordinates): side `s` (+1 the +z side), x0..x1
+ * along the car, and the heights of its threshold `y0` and head `y1` -- just
+ * inside the doorway's sill and head, clear of the shell's own faces there.
+ */
+export interface CabinDoor {
+  s: number;
+  x0: number;
+  x1: number;
+  y0: number;
+  y1: number;
+  /**
+   * The skin's |z| at height y over the doorway, for its reveal: the threshold,
+   * jambs and head from the skin in to the cabin's side wall. Omit where something
+   * else lines the doorway.
+   */
+  skin?: (y: number) => number;
+}
+
+/** A car's cabin (model coordinates): x0..x1 along the car, floor and ceiling heights, the side walls at |z| = half. */
+export interface Cabin {
+  x0: number;
+  x1: number;
+  floor: number;
+  ceiling: number;
+  half: number;
+  doors: CabinDoor[];
+  /**
+   * What the shell leaves a seat row over x0..x1 (model x): the lowest height it
+   * may stand on -- the floor, or a wheel arch's top or a skirt cut away over the
+   * wheels, which the seats then stand on -- and the highest it may reach (the
+   * roof), or null where no row fits across the cabin (a tapered nose). The cabin
+   * may reach past the shell there, where only its inward faces stand, but a seat
+   * would show outside. Omit where every row fits on the floor.
+   */
+  room?: (x0: number, x1: number) => { base: number; top: number } | null;
+  /**
+   * Wheel housings (a bus's arches): x0..x1 along the car, up to `top`, a box on
+   * each side from the side wall in to |z| = z, or with z 0 one box across the car.
+   */
+  housings?: Array<{ x0: number; x1: number; top: number; z: number }>;
+}
+
+/** The interior parts each model has drawn, for their names. */
+const drawn = new WeakMap<MeshCore, Set<string>>();
+
+/**
+ * The name of the next interior part of the car being drawn: `interior-<car>`
+ * (`interior` outside any part), then `-2`, `-3` for a car with cabins in several
+ * bodies (interiorTable.ts reads the car back from the part's parent).
+ */
+function interiorName(m: MeshCore): string {
+  const car = m.currentPartName();
+  const base = car ? `interior-${car}` : "interior";
+  const used = drawn.get(m) ?? new Set<string>();
+  drawn.set(m, used);
+  let name = base;
+  for (let k = 2; used.has(name); k++) name = `${base}-${k}`;
+  used.add(name);
+  return name;
+}
+
+/** The x spans along the car no seat row may reach into: each door's, widened by its clearance. */
+export function clearZones(c: Cabin): Array<[number, number]> {
+  const zones = c.doors.map((d): [number, number] => [Math.min(d.x0, d.x1) - DOOR_CLEARANCE, Math.max(d.x0, d.x1) + DOOR_CLEARANCE]).sort((a, b) => a[0] - b[0]);
+  const out: Array<[number, number]> = [];
+  for (const z of zones) {
+    const last = out[out.length - 1];
+    if (last && z[0] <= last[1]) last[1] = Math.max(last[1], z[1]);
+    else out.push([...z]);
+  }
+  return out;
+}
+
+/** Where the seat rows stand: the x of each row's low end, rows spread evenly over the spans between the clear zones. */
+export function seatRows(c: Cabin): number[] {
+  const free: Array<[number, number]> = [];
+  let at = c.x0 + WALL_GAP;
+  for (const [a, b] of clearZones(c)) {
+    if (a > at) free.push([at, Math.min(a, c.x1 - WALL_GAP)]);
+    at = Math.max(at, b);
+  }
+  if (c.x1 - WALL_GAP > at) free.push([at, c.x1 - WALL_GAP]);
+  const rows: number[] = [];
+  for (const [a, b] of free) {
+    const n = Math.floor((b - a - ROW_DEPTH) / ROW_PITCH + 1e-9) + 1;
+    if (b - a < ROW_DEPTH) continue;
+    const start = a + (b - a - ROW_DEPTH - (n - 1) * ROW_PITCH) / 2;
+    for (let k = 0; k < n; k++) rows.push(start + k * ROW_PITCH);
+  }
+  return rows;
+}
+
+/** How many seats stand on each side of the aisle, for an inner width `w`: 2+2, 2+1 or 1+1. */
+export function seatLayout(w: number): [number, number] {
+  const room = w - 2 * WALL_GAP - MIN_AISLE;
+  if (room >= 4 * SEAT_WIDTH) return [2, 2];
+  if (room >= 3 * SEAT_WIDTH) return [2, 1];
+  return [1, 1];
+}
+
+/** An axis-aligned box, every face outward. */
+function box(m: MeshCore, mat: string, x0: number, x1: number, y0: number, y1: number, z0: number, z1: number): void {
+  const s = [[z0, y0], [z1, y0], [z1, y1], [z0, y1]] as Array<[number, number]>;
+  m.sweep(mat, "x", s, x0, s, x1);
+}
+
+/** A flat quad facing `n` (its corners in either winding). */
+function face(m: MeshCore, mat: string, pts: Vec3[], n: Vec3): void {
+  m.facets(mat, pts.slice(1, -1).flatMap((p, i) => [pts[0]!, p, pts[i + 2]!]), n);
+}
+
+/**
+ * Draws cabin `c` into the interior of the car being drawn: the floor, the
+ * ceiling, the end walls, the side walls open over each doorway with its reveal,
+ * and the seat rows, every row facing the middle of the car, its back toward the
+ * nearer end.
+ */
+export function drawCabin(m: MeshCore, c: Cabin): void {
+  if (!(c.x1 - c.x0 > 0.5 && c.ceiling - c.floor > 1 && c.half > 0.4)) throw new Error(`drawCabin: a cabin too small to stand in (${JSON.stringify({ x0: c.x0, x1: c.x1, floor: c.floor, ceiling: c.ceiling, half: c.half })})`);
+  const { x0, x1, floor: y0, ceiling: y1, half: h } = c;
+  m.spin(interiorName(m), [0, 0, 0], () => {
+    // a housing across the car stands on the arch, not on the floor
+    const across = (c.housings ?? []).filter((hs) => hs.z <= 1e-6);
+    m.scope("floor", () => {
+      const xs = [...new Set([x0, x1, ...across.flatMap((hs) => [hs.x0, hs.x1]).filter((x) => x > x0 && x < x1)])].sort((a, b) => a - b);
+      for (let i = 0; i + 1 < xs.length; i++) {
+        const [a, b] = [xs[i]!, xs[i + 1]!];
+        if (across.some((hs) => hs.x0 < (a + b) / 2 && (a + b) / 2 < hs.x1)) continue;
+        face(m, "interiorFloor", [[a, y0, -h], [b, y0, -h], [b, y0, h], [a, y0, h]], [0, 1, 0]);
+      }
+    });
+    m.scope("ceiling", () => face(m, "interiorWall", [[x0, y1, -h], [x1, y1, -h], [x1, y1, h], [x0, y1, h]], [0, -1, 0]));
+    m.scope("end walls", () => {
+      face(m, "interiorWall", [[x0, y0, -h], [x0, y0, h], [x0, y1, h], [x0, y1, -h]], [1, 0, 0]);
+      face(m, "interiorWall", [[x1, y0, -h], [x1, y0, h], [x1, y1, h], [x1, y1, -h]], [-1, 0, 0]);
+    });
+    m.scope("side walls", () => {
+      for (const s of [-1, 1]) {
+        const z = s * h;
+        const wall = (a: number, b: number, p: number, q: number) => {
+          if (b - a > 1e-4 && q - p > 1e-4) face(m, "interiorWall", [[a, p, z], [b, p, z], [b, q, z], [a, q, z]], [0, 0, -s]);
+        };
+        // what the wall leaves out on this side: its doorways, and what a housing covers
+        const holes = [
+          ...c.doors.filter((d) => d.s === s).map((d) => ({ x0: d.x0, x1: d.x1, y0: d.y0, y1: d.y1 })),
+          ...(c.housings ?? []).map((hs) => ({ x0: hs.x0, x1: hs.x1, y0: -Infinity, y1: hs.top })),
+        ];
+        const xs = [...new Set([x0, x1, ...holes.flatMap((o) => [o.x0, o.x1]).filter((x) => x > x0 && x < x1)])].sort((a, b) => a - b);
+        for (let i = 0; i + 1 < xs.length; i++) {
+          const [a, b] = [xs[i]!, xs[i + 1]!];
+          const cuts = holes
+            .filter((o) => o.x0 < (a + b) / 2 && (a + b) / 2 < o.x1)
+            .map((o): [number, number] => [Math.max(y0, o.y0), Math.min(y1, o.y1)])
+            .sort((p, q) => p[0] - q[0]);
+          let at = y0;
+          for (const [p, q] of cuts) {
+            wall(a, b, at, p);
+            at = Math.max(at, q);
+          }
+          wall(a, b, at, y1);
+        }
+      }
+    });
+    if (c.housings?.length)
+      m.scope("wheel housings", () => {
+        for (const hs of c.housings!) {
+          const [a, b] = [Math.max(x0, hs.x0), Math.min(x1, hs.x1)];
+          if (b - a < 1e-3) continue;
+          // the box's top and its ends, from the inner face (or across the car) out to the side walls
+          const across = hs.z <= 1e-6;
+          for (const s of across ? [1] : [-1, 1]) {
+            const [zi, zo] = across ? [-h, h] : [s * hs.z, s * h];
+            face(m, "interiorWall", [[a, hs.top, zi], [b, hs.top, zi], [b, hs.top, zo], [a, hs.top, zo]], [0, 1, 0]);
+            if (!across) face(m, "interiorWall", [[a, y0, zi], [b, y0, zi], [b, hs.top, zi], [a, hs.top, zi]], [0, 0, -s]);
+            face(m, "interiorWall", [[a, y0, zi], [a, y0, zo], [a, hs.top, zo], [a, hs.top, zi]], [-1, 0, 0]);
+            face(m, "interiorWall", [[b, y0, zi], [b, y0, zo], [b, hs.top, zo], [b, hs.top, zi]], [1, 0, 0]);
+          }
+        }
+      });
+    c.doors.forEach((d, i) => {
+      if (d.skin) m.scope(`doorway ${i + 1}`, () => reveal(m, d, h, y0, d.skin!));
+    });
+    m.scope("seats", () => {
+      const [lo, hi] = seatLayout(2 * h);
+      const mid = (x0 + x1) / 2;
+      for (const x of seatRows(c)) {
+        const room = c.room ? c.room(x - 0.1, x + ROW_DEPTH + 0.1) : { base: y0, top: y1 };
+        if (!room) continue;
+        // a seat on a raised base keeps a cushion at least CUSHION thick
+        const base = Math.max(y0 + 0.005, room.base);
+        const seat = Math.max(y0 + SEAT_HEIGHT, base + CUSHION);
+        const top = seat + BACK_HEIGHT;
+        if (top > Math.min(room.top, y1) - 0.03) continue;
+        // the back on the row's end toward the nearer car end
+        const back = x + ROW_DEPTH / 2 < mid ? x : x + ROW_DEPTH;
+        const dir = back === x ? 1 : -1;
+        for (const [s, n] of [[-1, lo], [1, hi]] as const) {
+          const [za, zb] = [h - WALL_GAP - n * SEAT_WIDTH, h - WALL_GAP];
+          const [z0, z1] = s > 0 ? [za, zb] : [-zb, -za];
+          box(m, "interiorSeat", x, x + ROW_DEPTH, base, seat, z0, z1);
+          // the back stands 5 mm behind the cushion's end and 1 cm inside its sides, so no faces meet
+          const [b0, b1] = dir > 0 ? [back - 0.005, back + 0.1] : [back - 0.1, back + 0.005];
+          box(m, "interiorSeat", b0, b1, seat - 0.15, top, z0 + 0.01, z1 - 0.01);
+        }
+      }
+    });
+  });
+}
+
+/**
+ * A doorway's reveal, from the skin in to the cabin's side wall at |z| = `h`: the
+ * threshold at the sill, the head and the two jambs, which follow the skin's
+ * profile; a sill below the cabin's `floor` (a step well) gets a riser up to it.
+ */
+function reveal(m: MeshCore, d: CabinDoor, h: number, floor: number, skin: (y: number) => number): void {
+  const s = d.s;
+  const zi = s * h;
+  const [a, b] = [d.y0, d.y1];
+  const zs = (y: number) => s * skin(y);
+  if (floor > a + 1e-4) face(m, "interiorWall", [[d.x0, a, zi], [d.x1, a, zi], [d.x1, floor, zi], [d.x0, floor, zi]], [0, 0, s]);
+  face(m, "interiorFloor", [[d.x0, a, zs(a)], [d.x1, a, zs(a)], [d.x1, a, zi], [d.x0, a, zi]], [0, 1, 0]);
+  face(m, "interiorWall", [[d.x0, b, zs(b)], [d.x1, b, zs(b)], [d.x1, b, zi], [d.x0, b, zi]], [0, -1, 0]);
+  const steps = 8;
+  const prof = Array.from({ length: steps + 1 }, (_, k) => a + ((b - a) * k) / steps);
+  // the jambs 3 mm inside the doorway, off the inner walls of the door's frame at its edges
+  for (const [x, dir] of [[d.x0 + 0.003, 1], [d.x1 - 0.003, -1]] as const) face(m, "interiorWall", [...prof.map((y): Vec3 => [x, y, zs(y)]), [x, b, zi], [x, a, zi]], [dir, 0, 0]);
+}

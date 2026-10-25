@@ -233,6 +233,14 @@ pnpm exec tsx generator/renderGlbThumb.ts proc-building-sky-pagoda /tmp/pagoda.p
 pnpm exec tsx generator/renderGlbThumb.ts proc-vehicle-cd-150 /tmp/cd150.png side
 ```
 
+A vehicle's interior is hidden at rest, so the thumbnails, `glbStats` and the
+catalog's `triangles` leave it out (`collectTriangles` skips the nodes marked
+`extras.interior` unless asked; [interiors.md](interiors.md)). For a headless look
+inside, `renderGlbThumb(glb, size, opts)` takes `ThumbOptions`: `interiors` to draw
+them (pose the door clips open with `poseGlb` first), `cutAbove` to cut the model
+away above a height, `xRange` to frame one car of a set, `view` for another viewing
+direction.
+
 `test/thumbnails.test.ts` pins the side framing (scale, height window, nose on
 the left); `test/export.test.ts` checks every exported thumbnail against its
 entry's `thumbSide`.

@@ -5,6 +5,7 @@
 
 import { MeshCore } from "./meshCore.ts";
 import { surfaceTable, surfaceUvs } from "./surfaceUvs.ts";
+import { interiorTable } from "./interiorTable.ts";
 
 export { chamferedRect, grow, ngon, rect, scaleRing } from "./meshCore.ts";
 export type { AnimationClipSpec, ClipDrive, AnimationTrack, Emitter, FountainWater, LampRole, LampSpec, Lamps, MaterialSpec, Ring, SweepAxis, WaterJet, WaterPool } from "./meshCore.ts";
@@ -21,7 +22,8 @@ export class MeshBuilder extends MeshCore {
    * pivot (a child part inside its parent's Group), its meshes' positions
    * relative to that pivot. A rigged model's group carries `userData.rig`, a model
    * that smokes `userData.emitters`, a fountain `userData.fountain`, a vehicle with
-   * lamps `userData.lamps`. Non-indexed
+   * lamps `userData.lamps`, one with an interior `userData.interiors` (its interior
+   * Groups built hidden). Non-indexed
    * triangle soups with flat per-face normals, MeshStandardMaterial colours from
    * the palette's sRGB hex: the same data toGlb writes.
    */
@@ -85,20 +87,24 @@ export class MeshBuilder extends MeshCore {
         ? new THREE.QuaternionKeyframeTrack(`${t.node}.quaternion`, clip.times, t.values)
         : new THREE.VectorKeyframeTrack(`${t.node}.position`, clip.times, t.values)),
     ));
+    const data = root.userData;
     // a deep copy, as GLTFLoader hands the GLB's scene extras over
-    if (this.rig) root.userData.rig = JSON.parse(JSON.stringify(this.rig));
+    const copy = (v: unknown): unknown => JSON.parse(JSON.stringify(v));
+    if (this.rig) data.rig = copy(this.rig);
     // where the model smokes, steams or flares (MeshCore.emit), model coordinates
-    if (this.emitterList.length) root.userData.emitters = JSON.parse(JSON.stringify(this.emitterList));
+    if (this.emitterList.length) data.emitters = copy(this.emitterList);
     // a fountain's water: its pools and jets (MeshCore.pool / jet), model coordinates
-    if (this.water) root.userData.fountain = JSON.parse(JSON.stringify(this.water));
+    if (this.water) data.fountain = copy(this.water);
     // what plays each clip (MeshCore.clipDrives): a time loop, the distance travelled or a state
     const drives = this.clipDrives();
-    if (drives) root.userData.clipDrives = drives;
+    if (drives) data.clipDrives = drives;
     // the lamp materials and where the model's ends meet (MeshCore.lamps)
     const lamps = this.lamps();
-    if (lamps) root.userData.lamps = lamps;
+    if (lamps) data.lamps = lamps;
     // the materials that draw with a named surface, which the game binds a photo to
     surfaceTable(root, this.palette, materials);
+    // a vehicle's interiors, hidden, and the door clips that reveal each (interiorTable.ts)
+    interiorTable(root, this.parts, this.clips);
     return root;
   }
 }

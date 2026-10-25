@@ -25,7 +25,7 @@ import { unitBogie } from "./unitParts.ts";
 import { articulate } from "./tramKit.ts";
 import { openable, plugMove } from "./doors.ts";
 import { lerp, type Pt } from "./sliceLoft.ts";
-import { crownPane, drawShell, edgeRole, sideDecal, sideLettering, sidePane, sidePanel, type SliceBody } from "./sliceBody.ts";
+import { crownPane, drawShell, edgeRole, sideDecal, sideLettering, sidePane, sidePanel, sliceCabin, type SliceBody, type SliceDoorway } from "./sliceBody.ts";
 import { LOD_GLASS, type LodBand, type LodPart, type LodSections } from "./lodKit.ts";
 import { bogieParts, fitUnit, pantographParts, sideGlass, turnBody, type UnitBody } from "./lodUnits.ts";
 
@@ -446,13 +446,23 @@ function drawTrailer(coach: Coach, L: Livery, f: TrailerFrame, X: (d: number) =>
   const b = trailerProfile(f);
   const lay = trailerLayout(f.car as TrailerCar);
   const e = Math.sign(X(0) - X(1));
+  // the doors' leaf boxes: the shell is cut open over them (2 mm beyond, under the
+  // frame), the car's cabin behind, so an open door shows the interior (doors.ts)
+  const [da, dq] = lay.door;
+  const leaves: SliceDoorway[] = [1, -1].map((s) => ({ s, d0: da + 0.03, d1: dq - 0.03, y0: 1.13, y1: 3.19 }));
   m.scope("body", () => {
-    m.scope("shell", () => drawShell(m, b, X, (_d, k) => trailerMat(L, b, k), (d) => trailerBands(L, b, d), { front: true, rear: true }));
+    m.scope("shell", () => drawShell(m, b, X, (_d, k) => trailerMat(L, b, k), (d) => trailerBands(L, b, d), { front: true, rear: true }, leaves.map((o) => ({ ...o, d0: o.d0 - 0.002, d1: o.d1 + 0.002, y0: o.y0 - 0.002, y1: o.y1 + 0.002 }))));
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
         m.scope("door", () => {
           const [a, q] = lay.door;
-          sidePanel(m, b, X, s, "rubber", a, q, 1.1, 3.22, 0.004, 0.03);
+          // the frame round the doorway
+          m.scope("frame", () => {
+            sidePanel(m, b, X, s, "rubber", a, a + 0.03, 1.1, 3.22, 0.004, 0.03);
+            sidePanel(m, b, X, s, "rubber", q - 0.03, q, 1.1, 3.22, 0.004, 0.03);
+            sidePanel(m, b, X, s, "rubber", a + 0.03, q - 0.03, 1.1, 1.13, 0.004, 0.03);
+            sidePanel(m, b, X, s, "rubber", a + 0.03, q - 0.03, 3.19, 3.22, 0.004, 0.03);
+          });
           // the leaf and its window: one plug leaf sliding toward the car's middle (doors.ts)
           const dx = X(a + ((a + q) / 2 < b.length / 2 ? 1 : -1) * (q - a)) - X(a);
           openable(m, (mm, o) =>
@@ -471,6 +481,7 @@ function drawTrailer(coach: Coach, L: Livery, f: TrailerFrame, X: (d: number) =>
         m.scope("upper deck windows", () => lay.upper.forEach(([a, q], i) => m.scope(`window ${i + 1}`, () => deckWindow(m, b, X, s, a, q, UPPER_WIN))));
         if (lay.numeral) m.scope("class numeral", () => sideLettering(m, b, X, s, lay.numeral!, lay.door[1] + 0.45, 2.05, 0.3, "lettering", 0.006));
       });
+    sliceCabin(m, b, X, f.d0, f.d1, leaves);
   });
   const end = (which: "front" | "rear") => {
     const wall = which === "front" ? f.d0 : f.d1;

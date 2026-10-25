@@ -66,6 +66,11 @@ documentation in English.
   follow its transfer skill and report measured residuals.
 - Follow the livery's paint boundaries, not just the body edges: a colour band
   can step or drop (the CD 150's green skirt is lowered between the bogies).
+- A passenger car's opening doors (docs/models/doors.md) open onto the car's
+  generic cabin: list every opening door's doorway before the body is drawn
+  (`Volume.openings`, `doorways`, `Car.doorways`) so the kit cuts the shell and
+  draws the cabin behind it (docs/models/interiors.md); `test/interiors.test.ts`
+  fails for a door clip no cabin stands behind.
 
 ## Reference images from the internet
 

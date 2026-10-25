@@ -82,7 +82,8 @@ describe("the Czech electric units", () => {
 
   it("CD 471: the low floor between the bogies drops to 0.2 m (scaled), the ends stay at 0.9 m", () => {
     const { nodes } = built(cd471(), "proc-vehicle-cd-471");
-    const skirt = bounds(nodes, /^body\/skirtdark-band\/sweep-/);
+    // the low floor's skirt: swept whole, or wall by wall where the cabin behind the doorways stands (docs/models/interiors.md)
+    const skirt = bounds(nodes, /^body\/skirtdark-band\/(sweep|facets)-/);
     expect(skirt.min[1]).toBeCloseTo(0.2 * K_Y, 3);
     // the drop spans the XML's 14.9 m between the slopes (body 5.0 .. 19.9 m)
     expect(skirt.max[0] - skirt.min[0]).toBeCloseTo(14.9, 2);

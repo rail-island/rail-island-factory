@@ -27,7 +27,7 @@ import { LOD_GLASS, type LodBand, type LodPart, type LodSections } from "./lodKi
 import { bogieParts, fitUnit, roofPart, sideGlass, turnBody, type UnitBody } from "./lodUnits.ts";
 import { articulate, knee as linkKnee } from "./tramKit.ts";
 import { lerp, type Pt } from "./sliceLoft.ts";
-import { crownPane, drawShell, sideDecal, sideLettering, sidePanel, surfaceDisc, type SliceBody } from "./sliceBody.ts";
+import { crownPane, drawShell, sideDecal, sideLettering, sidePanel, sliceCabin, surfaceDisc, type SliceBody, type SliceDoorway } from "./sliceBody.ts";
 import { liftable } from "./liftable.ts";
 import { openable, plugMove } from "./doors.ts";
 import { RAIL_COLLECTOR_TOP } from "./collector.ts";
@@ -197,10 +197,15 @@ function sliceBands(L: Livery, p: Profile, d: number): Array<[number, number, st
   return out.filter(([a, b]) => b - a > 1e-6);
 }
 
-/** The car's lofted shell; an end car's nose tip needs no cap. */
-function shell(m: MeshBuilder, L: Livery, p: Profile, X: (d: number) => number, nose: boolean): void {
-  drawShell(m, p, X, (d, k) => edgeMat(L, p, d, k, nose), (d) => sliceBands(L, p, d), { front: !nose, rear: true });
+/** The car's lofted shell, open over its doors' leaf boxes (2 mm beyond, under the frame); an end car's nose tip needs no cap. */
+function shell(m: MeshBuilder, L: Livery, p: Profile, X: (d: number) => number, nose: boolean, leaves: readonly SliceDoorway[]): void {
+  const cut = leaves.map((o) => ({ ...o, d0: o.d0 - 0.002, d1: o.d1 + 0.002, y0: o.y0 - 0.002, y1: o.y1 + 0.002 }));
+  drawShell(m, p, X, (d, k) => edgeMat(L, p, d, k, nose), (d) => sliceBands(L, p, d), { front: !nose, rear: true }, cut);
 }
+
+/** A door's outline box (y) and its leaf's, 2 cm inside it. */
+const DOOR_Y: [number, number] = [1.36, 3.0];
+const LEAF_INSET = 0.02;
 
 // --- the profiles -----------------------------------------------------------------------------
 
@@ -340,8 +345,15 @@ function sideWindow(m: MeshBuilder, p: Profile, X: (d: number) => number, s: num
  */
 function sideDoor(m: MeshBuilder, L: Livery, p: Profile, X: (d: number) => number, s: number, d0: number, d1: number): void {
   const slide = (d0 + d1) / 2 < p.length / 2 ? 1 : -1;
-  const [y0, y1] = [1.36, 3.0];
-  m.scope("outline", () => sidePanel(m, p, X, s, "rubber", d0, d1, y0, y1, 0.004, 0.03));
+  const [y0, y1] = DOOR_Y;
+  const k = LEAF_INSET;
+  // the frame round the doorway cut through the shell
+  m.scope("outline", () => {
+    sidePanel(m, p, X, s, "rubber", d0, d0 + k, y0, y1, 0.004, 0.03);
+    sidePanel(m, p, X, s, "rubber", d1 - k, d1, y0, y1, 0.004, 0.03);
+    sidePanel(m, p, X, s, "rubber", d0 + k, d1 - k, y0, y0 + k, 0.004, 0.03);
+    sidePanel(m, p, X, s, "rubber", d0 + k, d1 - k, y1 - k, y1, 0.004, 0.03);
+  });
   const dx = X(d0 + slide * (d1 - d0)) - X(d0);
   openable(m, (mm, o) =>
     mm.moved(plugMove(o, s, dx), () => {
@@ -476,8 +488,12 @@ function drawCar(coach: Coach, L: Livery, car: Shinkansen0Car, X: (d: number) =>
   const end = isEnd(car);
   const p = end ? endProfile(L) : middleProfile(L, car);
   const lay = layout(car);
+  // the doors' leaf boxes, the doorways into the car's cabin (doors.ts)
+  const leaves: SliceDoorway[] = [1, -1].flatMap((s) =>
+    lay.doors.filter((o) => onSide(o, s)).map(({ d: [a, b] }) => ({ s, d0: a + LEAF_INSET, d1: b - LEAF_INSET, y0: DOOR_Y[0] + LEAF_INSET, y1: DOOR_Y[1] - LEAF_INSET })),
+  );
   m.scope("body", () => {
-    m.scope("shell", () => shell(m, L, p, X, end));
+    m.scope("shell", () => shell(m, L, p, X, end, leaves));
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
         m.scope("doors", () => lay.doors.filter((o) => onSide(o, s)).forEach(({ d: [a, b] }, i) => m.scope(`door ${i + 1}`, () => sideDoor(m, L, p, X, s, a, b))));
@@ -486,6 +502,7 @@ function drawCar(coach: Coach, L: Livery, car: Shinkansen0Car, X: (d: number) =>
         m.scope("running number", () => sideLettering(m, p, X, s, SHINKANSEN0_NUMBERS[car], end ? 8.9 : p.length - 1.75, 1.42, 0.1, "lettering"));
         if (lay.clover) m.scope("green emblems", () => lay.clover!.forEach((d) => clover(m, p, X, s, d, 2.85)));
       });
+    sliceCabin(m, p, X, end ? NOSE_LEN : 0, p.length, leaves);
   });
   if (end) m.scope("nose", () => drawNose(m, p, X));
   else m.scope("front end", () => innerEnd(m, X, 1, 0, gangway));

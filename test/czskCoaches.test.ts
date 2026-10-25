@@ -161,13 +161,14 @@ describe("Czech and Slovak coaches (CD Y, ZSR, UIC-Z)", () => {
 
   // the DB IC and OBB coaches came in as the `operator` parameter: every CD
   // combination (and so the default build) keeps its GLB bytes (pinned again when
-  // its entrance doors became opening leaves, docs/models/doors.md)
+  // its entrance doors became opening leaves, docs/models/doors.md, and when they
+  // opened onto a cabin, docs/models/interiors.md)
   it("keeps the CD UIC-Z coaches byte for byte under the operator parameter", () => {
     const d = design("proc-vehicle-uic-z-coach");
     const sha = (p?: Record<string, string>) => createHash("sha256").update(d.build(p).toGlb(d.title)).digest("hex");
-    expect(sha()).toBe("db161cef68c29690bf63e38eb3d88d8b4436c3ff997e79b635902d2b4d9c1251");
-    expect(sha({ variant: "firstClass", operator: "cd" })).toBe("263132086254c836e2f7d9854be9f2df1fed67eb1be415c802b43a420a86c255");
-    expect(sha({ variant: "restaurant" })).toBe("1ab43207771e120fa5cb86eb77efaaea4214d59ad18777476ed6adc326a94e57");
+    expect(sha()).toBe("fb60332a25b91899c892023437c408fc5f3c73bdc7d24f903321f975d1cdb9c6");
+    expect(sha({ variant: "firstClass", operator: "cd" })).toBe("a9041e6245442ef0c474d452525c69e151456416d5d8999596804963a902e9d7");
+    expect(sha({ variant: "restaurant" })).toBe("3b44cd9e1a35d932c338789dfcb1b4b3623c84cb4cb308dada1fd0d914c44fce");
     expect(sha({ operator: "db" })).not.toBe(sha());
     expect(() => d.build({ operator: "sncf" })).toThrow(/no value "sncf"/);
   });

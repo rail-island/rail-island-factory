@@ -248,7 +248,8 @@ export function tatraT6(): MeshBuilder {
   const m = t.m;
   const [main, cab] = [T6_MAIN, T6_CAB];
   const front = t.vol("front cab", T6_SECTION, T6_BODY, 0.4, 1.3, cab);
-  const mid = t.vol("saloon", T6_SECTION, T6_BODY, 1.3, 14.7, main);
+  // the saloon's doorways, so the open plug doors show the interior (doors.ts)
+  const mid = { ...t.vol("saloon", T6_SECTION, T6_BODY, 1.3, 14.7, main), openings: t.doorOpenings(1, T6_DOORS) };
   const rear = t.vol("rear cab", T6_SECTION, T6_BODY, 14.7, 15.6, cab);
   m.scope("body", () => {
     m.scope("front cab", () => t.volume(front));

@@ -11,7 +11,8 @@
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { strokeText, strokeWidth } from "./strokeFont.ts";
-import { add, capSlice, cross, dot, mul, sub, unit as norm, type Pt } from "./sliceLoft.ts";
+import { add, capSlice, cross, dot, loftQuad, mul, sub, unit as norm, type Pt } from "./sliceLoft.ts";
+import { CABIN_INSET, drawCabin } from "./interior.ts";
 
 /** A car's body as functions of d, metres back from its +X end. */
 export interface SliceBody {
@@ -69,13 +70,24 @@ export function edgeRole(b: SliceBody, k: number): { kind: "bottom" | "skirt" | 
   return { kind: "arc" };
 }
 
+/** A doorway through side `s` (+1 the +z side) over d0..d1 and y0..y1: the shell is left open there. */
+export interface SliceDoorway {
+  s: number;
+  d0: number;
+  d1: number;
+  y0: number;
+  y1: number;
+}
+
 /**
  * Lofts the slices: quads wound outward, each painted by `mat` from the middle
  * of its station span and its edge (k as in halfSlice); and the end caps,
- * painted in `bands` (bottom to crown) of their slice, unless left out.
+ * painted in `bands` (bottom to crown) of their slice, unless left out. Over a
+ * doorway (its ends are stations too) a side's quads leave out what lies
+ * between its sill and head.
  */
-export function drawShell(m: MeshBuilder, b: SliceBody, X: (d: number) => number, mat: (d: number, k: number) => string, bands: (d: number) => Array<[number, number, string]>, caps: { front: boolean; rear: boolean }): void {
-  const ds = b.stations;
+export function drawShell(m: MeshBuilder, b: SliceBody, X: (d: number) => number, mat: (d: number, k: number) => string, bands: (d: number) => Array<[number, number, string]>, caps: { front: boolean; rear: boolean }, doorways: readonly SliceDoorway[] = []): void {
+  const ds = doorways.length ? [...new Set([...b.stations, ...doorways.flatMap((o) => [o.d0, o.d1])])].sort((p, q) => p - q) : b.stations;
   const halves = ds.map((d) => halfSlice(b, d));
   for (const s of [1, -1])
     for (let i = 0; i + 1 < ds.length; i++) {
@@ -83,6 +95,7 @@ export function drawShell(m: MeshBuilder, b: SliceBody, X: (d: number) => number
       const dm = (ds[i]! + ds[i + 1]!) / 2;
       const [xa, xb] = [X(ds[i]!), X(ds[i + 1]!)];
       const axis: Vec3 = [(xa + xb) / 2, (b.B(dm) + b.C(dm)) / 2, 0];
+      const door = doorways.find((o) => o.s === s && o.d0 <= ds[i]! + 1e-9 && ds[i + 1]! <= o.d1 + 1e-9);
       for (let k = 0; k + 1 < ha.length; k++) {
         const P = (h: Pt[], x: number, j: number): Vec3 => [x, h[j]![1], s * h[j]![0]];
         const a = P(ha, xa, k), q = P(ha, xa, k + 1), cc = P(hb, xb, k + 1), dd = P(hb, xb, k);
@@ -90,7 +103,7 @@ export function drawShell(m: MeshBuilder, b: SliceBody, X: (d: number) => number
         let n = cross(sub(cc, a), sub(dd, q));
         if (Math.hypot(...n) < 1e-12) continue;
         if (dot(n, sub(centre, axis)) < 0) n = mul(n, -1);
-        m.facets(mat(dm, k), [a, q, cc, a, cc, dd], n);
+        loftQuad(m, mat(dm, k), [a, q, cc, dd], n, door ? [door.y0, door.y1] : null);
       }
     }
   m.scope("end caps", () => {
@@ -242,4 +255,54 @@ export function sidePane(m: MeshBuilder, b: SliceBody, X: (d: number) => number,
       const [a, q, c, f] = [out[i]![j]!, out[i + 1]![j]!, out[i + 1]![j + 1]!, out[i]![j + 1]!];
       m.facets(mat, [a, q, c, a, c, f], normals[i]![j]!);
     }
+}
+
+/** The half width (z >= 0) of the slice at d at height y: where the line at y crosses its outline, or 0 off it. */
+export function sliceHalf(b: SliceBody, d: number, y: number): number {
+  const h = halfSlice(b, d);
+  let best = 0;
+  for (let i = 0; i + 1 < h.length; i++) {
+    const [[za, ya], [zb, yb]] = [h[i]!, h[i + 1]!];
+    if (y < Math.min(ya, yb) - 1e-9 || y > Math.max(ya, yb) + 1e-9) continue;
+    best = Math.max(best, Math.abs(yb - ya) < 1e-12 ? Math.max(za, zb) : za + ((zb - za) * (y - ya)) / (yb - ya));
+  }
+  return best;
+}
+
+/**
+ * The cabin of a slice body's car from d0 to d1 behind its `doors` (their leaf
+ * boxes, interior.ts): a floor at the lowest sill, a ceiling above the highest
+ * head, the side walls CABIN_INSET inside the narrowest side between them where the
+ * car keeps 90 % of its full width, a seat row only where the side holds it.
+ */
+export function sliceCabin(m: MeshBuilder, b: SliceBody, X: (d: number) => number, d0: number, d1: number, doors: readonly SliceDoorway[]): void {
+  const floor = Math.min(...doors.map((o) => o.y0)) + 0.003;
+  const [a, c] = [d0 + CABIN_INSET, d1 - CABIN_INSET];
+  const ds = [a, c, ...b.stations.filter((d) => d > a && d < c)];
+  const ceiling = Math.min(Math.max(...doors.map((o) => o.y1)) + 0.12, ...ds.map((d) => b.C(d) - 0.08));
+  const wide = Math.max(...ds.map((d) => b.w(d)));
+  const narrowest = (d: number) => Math.min(...[floor, ceiling, ...halfSlice(b, d).map((p) => p[1]).filter((y) => y > floor && y < ceiling)].map((y) => sliceHalf(b, d, y)));
+  const half = Math.min(...ds.filter((d) => b.w(d) >= 0.9 * wide).map(narrowest)) - CABIN_INSET;
+  // model x back to d (X is a shift, perhaps turned)
+  const [x0, k] = [X(0), X(1) - X(0)];
+  const dOf = (x: number) => (x - x0) / k;
+  const span = (p: number, q: number): [number, number] => (p < q ? [p, q] : [q, p]);
+  const [cx0, cx1] = span(X(a), X(c));
+  drawCabin(m, {
+    x0: cx0,
+    x1: cx1,
+    floor,
+    ceiling,
+    half,
+    doors: doors.map((o) => {
+      const [x0d, x1d] = span(X(o.d0), X(o.d1));
+      const dm = (o.d0 + o.d1) / 2;
+      return { s: o.s, x0: x0d, x1: x1d, y0: o.y0 + 0.003, y1: o.y1 - 0.003, skin: (y: number) => sliceHalf(b, dm, y) };
+    }),
+    room: (xa, xb) => {
+      const at = [xa, (xa + xb) / 2, xb].map(dOf);
+      if (!at.every((d) => narrowest(d) >= half - 0.01)) return null;
+      return { base: Math.max(floor, ...at.map((d) => b.B(d) + 0.01)), top: Math.min(...at.map((d) => b.C(d))) };
+    },
+  });
 }

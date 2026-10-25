@@ -147,6 +147,8 @@ export function metro8171(params?: ParamValues): MeshBuilder {
     ? [t.vol("cab", SECTION, car.body, a, 0.75, cabBands), t.vol("saloon", SECTION, car.body, 0.75, b, bands)]
     : [t.vol("saloon", SECTION, car.body, a, b, bands)];
   const saloon = vols[vols.length - 1]!;
+  // the saloon's doorways on both sides, so the open plug doors show the interior (doors.ts)
+  saloon.openings = [1, -1].flatMap((s) => car.doors.map((d) => t.doorOpening(s, t.box(d))));
   m.scope("body", () => vols.forEach((v) => m.scope(v.name, () => t.volume(v))));
   for (const s of [1, -1]) m.scope(s > 0 ? "right side" : "left side", () => {
     // the ribs of the stainless lower side: light strips over the darker band

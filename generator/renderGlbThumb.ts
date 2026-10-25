@@ -193,17 +193,37 @@ function rasterize(
 /** A GLB: its bytes, or the path of a file holding them. */
 export type GlbSource = Uint8Array | string;
 
-function readTriangles(glb: GlbSource): Tri[] {
+/**
+ * What a three-quarter view shows: a vehicle's `interiors` (hidden at rest), the
+ * model cut away above the height `cutAbove` (a triangle with a corner above it
+ * goes), framed on what lies within `xRange` along the model (a car of a set, a
+ * door), and the direction `view` the camera looks from (VIEW_DIR by default).
+ */
+export interface ThumbOptions {
+  interiors?: boolean;
+  cutAbove?: number;
+  xRange?: [number, number];
+  view?: Vec3;
+}
+
+function readTriangles(glb: GlbSource, opts: ThumbOptions = {}): Tri[] {
   const { json, bin } = parseGlb(typeof glb === "string" ? fs.readFileSync(glb) : glb);
-  const tris = collectTriangles(json, bin);
+  let tris = collectTriangles(json, bin, opts);
+  const cut = opts.cutAbove;
+  if (cut !== undefined) tris = tris.filter((t) => t.p.every((p) => p[1] <= cut));
   if (tris.length === 0) throw new Error(`${typeof glb === "string" ? path.basename(glb) : "the GLB"} has no triangles`);
   return tris;
 }
 
-/** Render the GLB as a `size` x `size` RGBA PNG, in the three-quarter view. */
-export function renderGlbThumb(glb: GlbSource, size: number): PNG {
-  const tris = readTriangles(glb);
-  const { min: mn, max: mx } = triBounds(tris);
+/** Render the GLB as a `size` x `size` RGBA PNG, in the three-quarter view (or as `opts` say). */
+export function renderGlbThumb(glb: GlbSource, size: number, opts: ThumbOptions = {}): PNG {
+  const tris = readTriangles(glb, opts);
+  const viewDir = opts.view ? norm(opts.view) : VIEW_DIR;
+  // framed on xRange: the triangles reaching into it, their bounds cut to it
+  const range = opts.xRange;
+  const framing = range ? tris.filter((t) => t.p.some((p) => p[0] >= range[0]) && t.p.some((p) => p[0] <= range[1])) : tris;
+  const { min: mn, max: mx } = triBounds(framing.length ? framing : tris);
+  if (range) [mn[0], mx[0]] = [Math.max(mn[0], range[0]), Math.min(mx[0], range[1])];
   const center: Vec3 = [(mn[0] + mx[0]) / 2, (mn[1] + mx[1]) / 2, (mn[2] + mx[2]) / 2];
   const maxDim = Math.max(mx[0] - mn[0], mx[1] - mn[1], mx[2] - mn[2]) || 1;
 
@@ -214,7 +234,7 @@ export function renderGlbThumb(glb: GlbSource, size: number): PNG {
 
   // View matrix for a camera at `center + VIEW_DIR * dist` looking at the centre.
   const viewFor = (dist: number): { m: Mat4; eye: Vec3 } => {
-    const eye: Vec3 = [center[0] + VIEW_DIR[0] * dist, center[1] + VIEW_DIR[1] * dist, center[2] + VIEW_DIR[2] * dist];
+    const eye: Vec3 = [center[0] + viewDir[0] * dist, center[1] + viewDir[1] * dist, center[2] + viewDir[2] * dist];
     const zAxis = norm(sub(eye, center)); // camera looks down -z
     const xAxis = norm(cross([0, 1, 0], zAxis));
     const yAxis = cross(zAxis, xAxis);

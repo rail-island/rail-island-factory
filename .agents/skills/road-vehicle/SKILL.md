@@ -99,6 +99,10 @@ model page's Joint slider headlessly with a posed render (Steps, 4).
   tells the front from the rear by the model's middle and left from right by z.
   A beacon, roof clearance lamps and side markers use `marker` (amber, no role),
   so they never blink.
+- A bus's passenger doors (`BusDraft.door`) open onto its generic cabin: the
+  shell is cut behind the leaves and the cabin drawn per section, podiums over
+  the wheel arches (docs/models/interiors.md); keep the interior within its
+  1,500-triangle cap, apart from the exterior budget.
 
 ## Reference images from the internet
 

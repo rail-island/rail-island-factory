@@ -21,13 +21,19 @@ export interface Tri {
   corners?: [Vec3, Vec3, Vec3];
   /** The primitive's material name, or `#<index>` when it has none. */
   material: string;
+  /** True for a triangle of a vehicle's interior (collected only when asked for). */
+  interior?: boolean;
 }
 
-export function collectTriangles(json: Gltf, bin: Uint8Array): Tri[] {
+export function collectTriangles(json: Gltf, bin: Uint8Array, opts: { interiors?: boolean } = {}): Tri[] {
   const tris: Tri[] = [];
-  const visit = (nodeIndex: number, parent: Mat4): void => {
+  const visit = (nodeIndex: number, parent: Mat4, inside = false): void => {
     const node = json.nodes?.[nodeIndex];
     if (!node) return;
+    // a vehicle's interior is hidden while its doors are shut, so the model at
+    // rest (thumbnails, stats, budgets) leaves it out (docs/models/interiors.md)
+    if (node.extras?.interior && !opts.interiors) return;
+    const interior = inside || !!node.extras?.interior;
     const world = mul(parent, node.matrix ? (node.matrix as Mat4) : trs(node.translation, node.rotation, node.scale));
     if (node.mesh != null) {
       for (const prim of json.meshes?.[node.mesh]?.primitives ?? []) {
@@ -60,11 +66,11 @@ export function collectTriangles(json: Gltf, bin: Uint8Array): Tri[] {
           const corners = col
             ? (idx.slice(i, i + 3).map((v) => [col[v * 3], col[v * 3 + 1], col[v * 3 + 2]]) as [Vec3, Vec3, Vec3])
             : undefined;
-          tris.push({ p: p as [Vec3, Vec3, Vec3], n: n as [Vec3, Vec3, Vec3], color, material, ...(corners ? { corners } : {}) });
+          tris.push({ p: p as [Vec3, Vec3, Vec3], n: n as [Vec3, Vec3, Vec3], color, material, ...(corners ? { corners } : {}), ...(interior ? { interior } : {}) });
         }
       }
     }
-    for (const c of node.children ?? []) visit(c, world);
+    for (const c of node.children ?? []) visit(c, world, interior);
   };
   const scene = json.scenes?.[json.scene ?? 0];
   for (const n of scene?.nodes ?? []) visit(n, ident());

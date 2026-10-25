@@ -13,7 +13,7 @@ import { ngon } from "./meshBuilder.ts";
 import { block } from "./vehicleParts.ts";
 import { Coach, px, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
-import { endName, fpx, gangway, headstock, lamp, mirror, sideName, sides } from "./csdCoaches.ts";
+import { doorways, endName, fpx, gangway, headstock, lamp, mirror, sideName, sides } from "./csdCoaches.ts";
 import { doubleDeckLod } from "./lodTrams.ts";
 import { sideWindows, type PxBox, type Win } from "./germanCoachParts.ts";
 
@@ -97,6 +97,8 @@ export function drDoubleDeck(params?: ParamValues): MeshBuilder {
   const start = cab ? 0.3 : 0.2;
   const body = drBody(cab);
   const endWindows = drEndWindows(cab);
+  // the plug doors open through doorways, so an open one shows the interior (doors.ts)
+  doorways(c, body, H, DOORS);
   m.scope("body", () => {
     c.volume(body);
     for (const s of sides)
