@@ -34,6 +34,8 @@ const ROAD_STATION_SITE: roadStation.DressSite = {
 /** A fixed crossing of a valley: 240 studs of straight path 10 studs over the lowest ground. */
 const BRIDGE_PATH = bridge.pathFromPoints([{ x: -60, y: 10, z: 0 }, { x: 60, y: 11, z: 10 }, { x: 180, y: 12, z: 0 }], 9, 0, 0.67, 9.9)!;
 const BRIDGE_VALLEY = (x: number, z: number): number => 4 - 14 * Math.exp(-(((x - 60) / 34) ** 2)) + 0.02 * z;
+// a river in the valley's floor, its surface at 1 stud (the piers' waterline footings)
+const BRIDGE_RIVER = (x: number, z: number): number | undefined => (BRIDGE_VALLEY(x, z) < 1 ? 1 : undefined);
 
 /** Everything one decoration module draws, recorded call by call. */
 function recordPiece(kind: string, side: decoration.DecorationSide, detail: string): unknown[] {
@@ -118,6 +120,7 @@ export function setPinCases(): Record<string, PinCase[]> {
       ...Object.keys(bridge.TYPE_META).flatMap((type) => [
         { name: `${type}.overhead`, build: () => [40, 150, 300].map((l) => bridge.overheadMembers(type, l, 9, 9.9)) },
         { name: `${type}.valley`, build: () => bridge.buildBridge(type, BRIDGE_PATH, BRIDGE_VALLEY) },
+        { name: `${type}.river`, build: () => bridge.buildBridge(type, BRIDGE_PATH, BRIDGE_VALLEY, BRIDGE_RIVER) },
       ]),
     ],
     catenaryStyle: [
