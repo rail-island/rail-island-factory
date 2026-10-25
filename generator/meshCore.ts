@@ -331,6 +331,28 @@ export class MeshCore {
   }
 
   /**
+   * Draws `fn` as a part that rolls (rolling.ts): a wheel, or a wheelset, as its
+   * own node named `name`, pivoted at `pivot` on its axle. Its node is a child of
+   * the part being drawn -- a bogie, a steered wheel, a truck's body -- or a
+   * top-level node outside any part. Like `bogie` it may be called inside scopes,
+   * and every triangle drawn in `fn` goes to it; it is also a scope of the source
+   * tree. Only the wheel goes in: what does not turn with it (an axle box, a
+   * spring) is drawn outside.
+   */
+  spin<T>(name: string, pivot: Vec3, fn: () => T): T {
+    if (this.drawing) throw new Error("spin() inside a primitive call");
+    if (this.parts.some((p) => p.name === name)) throw new Error(`part "${name}" drawn twice`);
+    const outer = this.currentPart;
+    this.parts.push({ name, pivot, parent: outer, moving: true });
+    this.currentPart = this.parts.length - 1;
+    try {
+      return this.scope(name, fn);
+    } finally {
+      this.currentPart = outer;
+    }
+  }
+
+  /**
    * Draws `fn` turned 180 degrees about the vertical line through x = `cx`, z = 0
    * (x mirrored about cx, z negated: a rotation, so faces stay wound outward) --
    * the last car of a set, facing the other way.
@@ -365,14 +387,23 @@ export class MeshCore {
    * steam locomotive's wheelset part): its axle's centre, model coordinates.
    */
   axleAt(x: number, y: number): void {
-    const owner = this.currentPart >= 0 && !this.parts[this.currentPart]!.bogie ? this.parts[this.currentPart]!.name : this.ownerOfBogie();
+    const at = this.carrierPart();
+    const owner = at >= 0 && !this.parts[at]!.bogie ? this.parts[at]!.name : this.ownerOfBogie();
     this.railAxles.push({ x, y, bogie: this.currentBogie, owner });
+  }
+
+  /** The part being drawn, looking through a rolling wheel (`spin`) to the part that carries it. */
+  private carrierPart(): number {
+    let p = this.currentPart;
+    while (p >= 0 && this.parts[p]!.moving) p = this.parts[p]!.parent;
+    return p;
   }
 
   /** The part a wheelset drawn now belongs to: the bogie's owner inside a bogie. */
   private ownerOfBogie(): string | null {
     if (this.currentBogie >= 0) return this.railBogies[this.currentBogie]!.owner;
-    return this.currentPart >= 0 ? this.parts[this.currentPart]!.name : null;
+    const at = this.carrierPart();
+    return at >= 0 ? this.parts[at]!.name : null;
   }
 
   /**

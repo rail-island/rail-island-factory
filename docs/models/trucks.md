@@ -115,6 +115,10 @@ y = 0. Each has a rigid `body` and two child front wheel nodes, a 40-degree
 inner steering lock, and a wheelbase measured to the centre of the rear axle(s).
 The Praga frame is narrowed to clear the steered tyres. The existing truck LOD
 recipe is registered for all three. The tipper bed is fixed, not animated.
+The wheel nuts roll: every wheel's rim, hub and eight nuts are a `spin` part
+(`wheel-rear-<n>-<left|right>` in the body, `wheel-front-<left|right>-spin`
+inside each steered wheel), turned by the `rolling` clip by distance travelled;
+the plain tyre stays put ([animation.md](animation.md#rolling-wheels)).
 
 The user supplied one three-quarter photograph per model. Reference provenance,
 missing photo files and limitations are recorded in each `assets/<name>/SOURCES.md`.

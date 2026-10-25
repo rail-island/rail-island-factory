@@ -14,7 +14,8 @@
 //
 // A model with animation clips (docs/models/animation.md) gets buttons for them,
 // by what plays each clip (userData.clipDrives). The looping clips (a steam
-// locomotive's running gear: wheelsets, rods and valve gear) get Start and Stop:
+// locomotive's running gear: wheelsets, rods and valve gear; the rolling wheels
+// of a vehicle whose wheels carry spokes or nuts) get Start and Stop:
 // Start plays them in a loop through an AnimationMixer, Stop halts them where they
 // are. The `state` clips (the pantographs) get Up and Down, which raise or lower
 // every collector the way the game does, from where it stands now. The `door`

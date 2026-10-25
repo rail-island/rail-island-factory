@@ -2,6 +2,7 @@
 import { MeshBuilder, ngon, type Ring, type MaterialSpec } from './meshBuilder.ts';
 import { block, side, arc, plate, steeredWheels } from './vehicleParts.ts';
 import { strokeText } from './strokeFont.ts';
+import { rollWheels } from './rolling.ts';
 import type { ProceduralDesign } from './design.ts';
 import { blockPart, profileBody, sectionBody, truckLod } from './lodRoad.ts';
 
@@ -26,16 +27,27 @@ const ay = (s: Spec) => s.r * Math.cos(Math.PI / 16);
 function disk(m: MeshBuilder, mat: string, axis: 'x' | 'z', u: number, v: number, radius: number, a: number, b: number, n = 16) {
   const ring = ngon(n, radius, Math.PI / n, u, v); m.sweep(mat, axis, ring, a, ring, b);
 }
-function wheel(m: MeshBuilder, s: Spec, x: number, z0: number, z1: number, face: number) {
+/**
+ * One wheel: the tyre, and on its outer face (`face`) the rim, hub and wheel nuts
+ * as the rolling part `spin` (rolling.ts) -- the plain tyre looks the same at any
+ * angle and stays with the node that carries the wheel.
+ */
+function wheel(m: MeshBuilder, s: Spec, x: number, z0: number, z1: number, face: number, spin: string) {
   disk(m, 'rubber', 'z', x, ay(s), s.r, z0 + .025, z1 - .025);
   disk(m, 'rubber', 'z', x, ay(s), s.r * .94, z0, z1);
   const f = face > 0 ? z1 : z0;
-  disk(m, 'rim', 'z', x, ay(s), s.r * .61, f - face * .02, f + face * .018);
-  disk(m, 'trim', 'z', x, ay(s), s.r * .24, f, f + face * .07, 10);
-  for (let i = 0; i < 8; i++) {
-    const a = i * Math.PI / 4;
-    disk(m, 'grille', 'z', x + Math.cos(a) * s.r * .43, ay(s) + Math.sin(a) * s.r * .43, .032, f + face * .012, f + face * .027, 6);
-  }
+  m.spin(spin, [x, ay(s), (z0 + z1) / 2], () => {
+    disk(m, 'rim', 'z', x, ay(s), s.r * .61, f - face * .02, f + face * .018);
+    disk(m, 'trim', 'z', x, ay(s), s.r * .24, f, f + face * .07, 10);
+    for (let i = 0; i < 8; i++) {
+      const a = i * Math.PI / 4;
+      disk(m, 'grille', 'z', x + Math.cos(a) * s.r * .43, ay(s) + Math.sin(a) * s.r * .43, .032, f + face * .012, f + face * .027, 6);
+    }
+  });
+}
+/** The rolling part of a rear wheel (rolling.ts): wheel-rear-<axle, from the front>-<left|right>. */
+function rearWheel(s: Spec, x: number, sign: number): string {
+  return `wheel-rear-${s.rear.indexOf(x) + 1}-${sign < 0 ? 'left' : 'right'}`;
 }
 function frontText(m: MeshBuilder, text: string, x: number, y: number, h: number, width: number) {
   m.facets('letter', strokeText(text, width / 2, y, h, width / text.length * .7, width / text.length * .3, true).map(([z, yy]) => [x, yy, z]), [1, 0, 0]);
@@ -46,7 +58,10 @@ function chassis(m: MeshBuilder, s: Spec) {
     for (const x of [s.front, ...s.rear]) {
       m.scope(`axle ${x}`, () => {
         disk(m, 'trim', 'z', x, ay(s), .065, -.81, .81, 8);
-        if (x !== s.front) for (const sign of [-1, 1]) wheel(m, s, x, ...side(sign, s.hw - .33, s.hw), sign);
+        if (x !== s.front) for (const sign of [-1, 1]) {
+          const [z0, z1] = side(sign, s.hw - .33, s.hw);
+          wheel(m, s, x, z0, z1, sign, rearWheel(s, x, sign));
+        }
       });
     }
     for (const sign of [-1, 1]) {
@@ -195,8 +210,12 @@ function build(kind: Kind, draw: (m: MeshBuilder, s: Spec) => void): MeshBuilder
   const m=new MeshBuilder(colors);
   m.part('body',[0,0,0],()=>{ chassis(m,s); draw(m,s); });
   const tyre: [number,number]=[s.hw-.32,s.hw];
-  const nodes=steeredWheels(m,'body',s.front,ay(s),(sign,z0,z1)=>m.scope('tyre rim and hub',()=>wheel(m,s,s.front,z0,z1,sign)),tyre);
+  // a steered wheel steers its node and rolls a child of it, so the two turns never meet
+  const spin=(sign:number)=>`wheel-front-${sign<0?'left':'right'}-spin`;
+  const nodes=steeredWheels(m,'body',s.front,ay(s),(sign,z0,z1)=>m.scope('tyre rim and hub',()=>wheel(m,s,s.front,z0,z1,sign,spin(sign))),tyre);
   m.rig={steer:{axles:[{nodes,wheelbase:s.front-s.rear.reduce((a,b)=>a+b,0)/s.rear.length}],track:tyre[0]+tyre[1],maxAngleDeg:40}};
+  // the wheel nuts roll with the distance travelled
+  rollWheels(m,[spin(-1),spin(1),...s.rear.flatMap((x)=>[-1,1].map((sign)=>rearWheel(s,x,sign)))],2*s.r);
   return m;
 }
 export function tatra815Tipper(){return build('tatra', tatra);}

@@ -15,7 +15,7 @@ and a `rig` says which.
 
 | What | Nodes | How it moves |
 |---|---|---|
-| steered wheels | `wheel-front-left` at -Z, `wheel-front-right` at +Z on every road vehicle (a second steered axle's `wheel-front-2-left`, ...), children of the front body's node | each turns about its own +Y; its origin is the wheel's centre (on the steering axis) |
+| steered wheels | `wheel-front-left` at -Z, `wheel-front-right` at +Z on every road vehicle (a second steered axle's `wheel-front-2-left`, ...), children of the front body's node | each turns about its own +Y; its origin is the wheel's centre (on the steering axis); a wheel that rolls carries its rolling part as a child (`wheel-front-left-spin`, [animation.md](animation.md#rolling-wheels)), so steering and rolling compose |
 | sections | `section0`, `section1`, ... (the American truck: `truck`, `trailer`) | section i turns about its origin, the hinge with section i - 1, which section i - 1 carries |
 | joints | `joint0`, ... between sections i and i + 1 | not rigid: re-drawn between the two sections wherever they are (`renderJoint`) |
 | bogies | `bogie0`, `bogie1`, ... on a rail vehicle, top-level nodes | each is placed on the track at its own distance and turned to it; its origin is its centre on the track centre line at axle height |

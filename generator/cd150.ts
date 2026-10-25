@@ -24,6 +24,7 @@ import {
 } from "./cd163.ts";
 import { liftable } from "./liftable.ts";
 import { RAIL_COLLECTOR_TOP } from "./collector.ts";
+import { rollWheels } from "./rolling.ts";
 
 const PALETTE = {
   ...CD163_PALETTE,
@@ -620,46 +621,61 @@ function cab(m: MeshBuilder, e: number, livery: Cd150Livery): void {
 // axle boxes between paired primary coils on an equaliser, a side frame that
 // drops between the axles to carry the large secondary coils on a spring
 // plank, nose-hung traction motors, brake cylinders and sandboxes.
-function bogie(m: MeshBuilder, xc: number): void {
-  m.bogie(() => bogieGeometry(m, xc));
+function bogie(m: MeshBuilder, xc: number, first: number): string[] {
+  return m.bogie(() => bogieGeometry(m, xc, first));
 }
 
-function bogieGeometry(m: MeshBuilder, xc: number): void {
-  const r = 0.625,
+/** The wheel radius, for the rolling clip. */
+const WHEEL_R = 0.625;
+
+/**
+ * One bogie; its wheelsets are the rolling parts `wheelset-<first>` and
+ * `wheelset-<first + 1>` (rolling.ts), returned for the clip.
+ */
+function bogieGeometry(m: MeshBuilder, xc: number, first: number): string[] {
+  const r = WHEEL_R,
     ay = r * Math.cos(Math.PI / 24);
+  const names: string[] = [];
   for (const dx of [-1.65, 1.65])
     m.scope("wheelset", () => {
-      const x = xc + dx,
-        axle = ngon(10, 0.08, 0, x, ay);
-      m.sweep("steel", "z", axle, -1.02, axle, 1.02);
+      const x = xc + dx;
+      const name = `wheelset-${first + names.length}`;
+      names.push(name);
+      // the axle and both wheels turn as one part, the rest of the wheelset stays with the bogie
+      m.spin(name, [x, ay, 0], () => {
+        const axle = ngon(10, 0.08, 0, x, ay);
+        m.sweep("steel", "z", axle, -1.02, axle, 1.02);
+        for (const s of [-1, 1]) {
+          const wheel = ngon(24, r, Math.PI / 24, x, ay),
+            disc = ngon(20, 0.48, 0, x, ay);
+          const [w0, w1] = side(s, 0.665, 0.8);
+          m.sweep("steel", "z", wheel, w0, wheel, w1);
+          const [a, b] = side(s, 0.79, 0.825);
+          m.sweep("wheel", "z", disc, a, disc, b);
+          // Photographs: cast spoked wheel centres, ten spokes and a hub.
+          m.scope("spokes", () => {
+            const [c, d] = side(s, 0.825, 0.845);
+            const hub = ngon(12, 0.13, 0, x, ay);
+            m.sweep("steel", "z", hub, c, hub, d);
+            for (let k = 0; k < 10; k++) {
+              const t = (k * Math.PI) / 5,
+                u = [Math.cos(t), Math.sin(t)],
+                n = [-u[1]! * 0.025, u[0]! * 0.025];
+              const q: Ring = [0.12, 0.47].flatMap((r, j) =>
+                (j === 0 ? [1, -1] : [-1, 1]).map(
+                  (sg) =>
+                    [x + u[0]! * r + sg * n[0]!, ay + u[1]! * r + sg * n[1]!] as [
+                      number,
+                      number,
+                    ],
+                ),
+              );
+              m.sweep("steel", "z", q, c, q, d);
+            }
+          });
+        }
+      });
       for (const s of [-1, 1]) {
-        const wheel = ngon(24, r, Math.PI / 24, x, ay),
-          disc = ngon(20, 0.48, 0, x, ay);
-        const [w0, w1] = side(s, 0.665, 0.8);
-        m.sweep("steel", "z", wheel, w0, wheel, w1);
-        const [a, b] = side(s, 0.79, 0.825);
-        m.sweep("wheel", "z", disc, a, disc, b);
-        // Photographs: cast spoked wheel centres, ten spokes and a hub.
-        m.scope("spokes", () => {
-          const [c, d] = side(s, 0.825, 0.845);
-          const hub = ngon(12, 0.13, 0, x, ay);
-          m.sweep("steel", "z", hub, c, hub, d);
-          for (let k = 0; k < 10; k++) {
-            const t = (k * Math.PI) / 5,
-              u = [Math.cos(t), Math.sin(t)],
-              n = [-u[1]! * 0.025, u[0]! * 0.025];
-            const q: Ring = [0.12, 0.47].flatMap((r, j) =>
-              (j === 0 ? [1, -1] : [-1, 1]).map(
-                (sg) =>
-                  [x + u[0]! * r + sg * n[0]!, ay + u[1]! * r + sg * n[1]!] as [
-                    number,
-                    number,
-                  ],
-              ),
-            );
-            m.sweep("steel", "z", q, c, q, d);
-          }
-        });
         m.scope("axle box", () => {
           const box = ngon(8, 0.15, Math.PI / 8, x, ay);
           const [c, d] = side(s, 0.835, 1.06);
@@ -723,6 +739,7 @@ function bogieGeometry(m: MeshBuilder, xc: number): void {
       }
     }
   });
+  return names;
 }
 function pantograph(
   m: MeshBuilder,
@@ -837,12 +854,13 @@ export function cd150(params?: ParamValues): MeshBuilder {
   if (livery.cabBands) m.scope("cab paint", () => { for (const e of [-1, 1]) cabPaint(m, e, livery.cabBands!); });
   for (const e of [-1, 1])
     m.scope(e > 0 ? "front cab" : "rear cab", () => cab(m, e, livery));
+  const wheelsets: string[] = [];
   m.scope("bogies", () => {
     for (const [name, x] of [
       ["rear bogie", -4.25],
       ["front bogie", 4.15],
     ] as const)
-      m.scope(name, () => bogie(m, x));
+      m.scope(name, () => wheelsets.push(...bogie(m, x, wheelsets.length + 1)));
   });
   m.scope("underframe", () => {
     block(m, "underframe", -7.8, 7.8, 0.94, 1.25, -1.35, 1.35);
@@ -863,6 +881,8 @@ export function cd150(params?: ParamValues): MeshBuilder {
       tubeX(m, "copper", 0.018, -4.1, 4.45, -0.6, 4.1, 4.45, -0.6);
     });
   });
+  // the spoked wheelsets roll with the distance travelled
+  rollWheels(m, wheelsets, 2 * WHEEL_R);
   return m;
 }
 

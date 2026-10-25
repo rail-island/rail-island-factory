@@ -272,7 +272,8 @@ pose is page state only, back to rest for every model, and never in the URL. Whi
 a slider (or a parameter's select) has the focus the arrow keys are its own; they
 step through the list only otherwise (`pageKey`).
 
-A model with looping animation clips (the steam locomotives' running gear) gets
+A model with looping animation clips (the steam locomotives' running gear, the
+rolling wheels of the CD 150 and the photo trucks) gets
 **Start** and **Stop** buttons over the preview: Start plays the clips in a loop
 with a render loop that runs only while they play, Stop halts them in place, and
 another model or parameter choice stops them
