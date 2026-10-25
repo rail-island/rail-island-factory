@@ -34,14 +34,38 @@ function panel(m: MeshBuilder, mat: string, axis: "x" | "z", sign: number, at: n
   if (axis === "z") m.box(mat, u, sign * (at + depth), w, thickness, y, y + h);
   else m.box(mat, sign * (at + depth), u, thickness, w, y, y + h);
 }
+/**
+ * A window set into the wall at `at`: a stone surround standing proud of the wall,
+ * whose reveals frame glass set back near the wall plane, a mullion and a transom
+ * spanning the glass exactly, a sill under it and, when ornate, a head on the
+ * surround. `u` and `y` are the glass's centre along the facade and its bottom.
+ * Only the faces the street can see are drawn (no backs, no hidden ends).
+ */
 function window(m: MeshBuilder, axis: "x" | "z", sign: number, at: number, u: number, y: number, w: number, h: number, ornate: boolean) {
-  const p = (mat: string, x: number, yy: number, ww: number, hh: number, d: number) => panel(m, mat, axis, sign, at, x, yy, ww, hh, d);
-  p("trim", u, y - 0.1, w + 0.28, h + 0.2, 0.09);
-  p("glass", u, y, w, h, 0.135);
-  p("frame", u, y + 0.035, 0.065, h - 0.07, 0.185);
-  p("frame", u, y + h * 0.58, w - 0.035, 0.075, 0.20);
-  p("trim", u, y - 0.18, w + 0.42, 0.12, 0.24);
-  if (ornate) p("trim", u, y + h + 0.19, w + 0.46, 0.16, 0.22);
+  // facade-local (s along the facade from u, height, t out of the wall) to the model
+  const P = (s: number, yy: number, t: number): [number, number, number] =>
+    axis === "z" ? [u + s, yy, sign * (at + t)] : [sign * (at + t), yy, u + s];
+  const N = (ns: number, ny: number, nt: number): [number, number, number] => axis === "z" ? [ns, ny, sign * nt] : [sign * nt, ny, ns];
+  // the faces of the block s0..s1, y0..y1, t0..t1 named in `faces` (front, left, right, top, bottom)
+  const block = (mat: string, s0: number, s1: number, y0: number, y1: number, t0: number, t1: number, faces: string) => {
+    const q = (a: [number, number, number], b: [number, number, number], c: [number, number, number], d: [number, number, number], n: [number, number, number]) => m.facets(mat, [a, b, c, a, c, d], n);
+    if (faces.includes("f")) q(P(s0, y0, t1), P(s1, y0, t1), P(s1, y1, t1), P(s0, y1, t1), N(0, 0, 1));
+    if (faces.includes("l")) q(P(s0, y0, t0), P(s0, y0, t1), P(s0, y1, t1), P(s0, y1, t0), N(-1, 0, 0));
+    if (faces.includes("r")) q(P(s1, y0, t0), P(s1, y0, t1), P(s1, y1, t1), P(s1, y1, t0), N(1, 0, 0));
+    if (faces.includes("t")) q(P(s0, y1, t0), P(s1, y1, t0), P(s1, y1, t1), P(s0, y1, t1), N(0, 1, 0));
+    if (faces.includes("b")) q(P(s0, y0, t0), P(s1, y0, t0), P(s1, y0, t1), P(s0, y0, t1), N(0, -1, 0));
+  };
+  const half = w / 2, band = 0.13, proud = 0.14, top = y + h + band;
+  // the surround: two jambs and a lintel, their inner faces the reveals
+  block("trim", -half - band, -half, y, top, 0, proud, "flr");
+  block("trim", half, half + band, y, top, 0, proud, "flr");
+  block("trim", -half, half, y + h, top, 0, proud, "ftb");
+  block("trim", -half - band - 0.06, half + band + 0.06, y - 0.12, y, 0, 0.2, "flrtb");
+  if (ornate) block("trim", -half - band - 0.06, half + band + 0.06, top, top + 0.16, 0, proud + 0.06, "flrtb");
+  block("glass", -half, half, y, y + h, 0, 0.02, "f");
+  // glazing bars from glass edge to glass edge, flush with each other where they cross
+  block("frame", -0.03, 0.03, y, y + h, 0.02, 0.07, "flr");
+  block("frame", -half, half, y + h * 0.6 - 0.03, y + h * 0.6 + 0.03, 0.02, 0.07, "ftb");
 }
 function balcony(m: MeshBuilder, x: number, z: number, y: number, w: number) {
   m.box("trim", x, z + 0.65, w + 0.4, 1.5, y - 0.24, y - 0.08);
@@ -199,7 +223,8 @@ function buildCommercial(s: Style, given?: ParamValues): MeshBuilder {
       m.box("wall", 0, d / 2 - 0.1, w * widths[i], 0.45, h + 0.3 + i * 0.48, h + 0.78 + i * 0.48);
       m.box("trim", 0, d / 2 - 0.1, w * widths[i] + 0.12, 0.58, h + 0.79 + i * 0.48, h + 0.89 + i * 0.48);
     }
-    window(m, "z", 1, d / 2 + 0.125, 0, h + 0.7, 0.85, 1.05, false);
+    // on the face of the gable: the baroque sections stand 0.25 m proud, the gabled steps 0.125 m
+    window(m, "z", 1, d / 2 + (s === "baroque" ? 0.25 : 0.125), 0, h + 0.7, 0.85, 1.05, false);
   });
   if (s === "classical") m.scope("pilasters", () => {
     for (let i = 0; i <= bays; i++) {
