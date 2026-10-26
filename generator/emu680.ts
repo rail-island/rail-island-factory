@@ -50,7 +50,7 @@ const PALETTE: Record<string, MaterialSpec> = {
   yellow: { color: "#e6e600", roughness: 0.5 },
   endWall: { color: "#c0c0c0", roughness: 0.5 },
   skirtPanel: { color: "#005151", roughness: 0.6 },
-  glass: { color: "#174a4a", metallic: 0.2, roughness: 0.15 },
+  glass: { color: "#174a4a", metallic: 0.2, roughness: 0.15, glass: true },
   frame: { color: "#1a1a1a", roughness: 0.5 },
   seam: { color: "#0e0e0e", roughness: 0.9 },
   rubber: { color: "#b8bcbc", roughness: 0.9 },

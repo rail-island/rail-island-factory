@@ -55,7 +55,7 @@ const PALETTE: Record<string, MaterialSpec> = {
   red: { color: "#8e1f2b", roughness: 0.35 },
   darkGrey: { color: "#2b2e32", roughness: 0.5 },
   metalGrey: { color: "#b6bcc2", metallic: 0.3, roughness: 0.4 },
-  glass: { color: "#161b22", metallic: 0.2, roughness: 0.15 },
+  glass: { color: "#161b22", metallic: 0.2, roughness: 0.15, glass: true },
   tyre: { color: "#1b1c1e", roughness: 0.95 },
 };
 
@@ -2333,7 +2333,7 @@ const SMALL_PARAMS: readonly ParamSpec[] = [{
 const SMALL_PALETTE: Record<string, MaterialSpec> = {
   ...PALETTE,
   planeWhite: { color: "#f3f4f5", roughness: 0.35 },
-  canopy: { color: "#2e4456", metallic: 0.2, roughness: 0.1 },
+  canopy: { color: "#2e4456", metallic: 0.2, roughness: 0.1, glass: true },
   navRed: { color: "#e8392a", roughness: 0.3 },
   navGreen: { color: "#36d35c", roughness: 0.3 },
   navWhite: { color: "#fffbe8", roughness: 0.3 },

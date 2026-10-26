@@ -42,7 +42,7 @@ export const VEHICLE_PALETTE: Record<string, MaterialSpec> = {
   darkMetal: { color: "#2e3136" },
   rubber: { color: "#1c1c1e", roughness: 0.95 },
   grease: { color: "#3a3a3a", roughness: 0.6 },
-  glass: { color: "#26323f", metallic: 0.2, roughness: 0.15 },
+  glass: { color: "#26323f", metallic: 0.2, roughness: 0.15, glass: true },
   lampHead: { color: "#f3f5f6", roughness: 0.2, lamp: { role: "head" } },
   lampAmber: { color: "#ff9a2e", roughness: 0.3, lamp: { role: "indicator" } },
   lampRed: { color: "#c8202c", roughness: 0.3, lamp: { role: "tail" } },

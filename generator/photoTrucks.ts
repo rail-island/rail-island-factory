@@ -9,7 +9,7 @@ import { blockPart, profileBody, sectionBody, truckLod } from './lodRoad.ts';
 const palette: Record<string, MaterialSpec> = {
   paint: { color: '#a84548', roughness: .72 }, bed: { color: '#86423d', roughness: .9 },
   trim: { color: '#292d30' }, rubber: { color: '#262729', roughness: 1 },
-  rim: { color: '#777b79', metallic: .25 }, glass: { color: '#334d59', roughness: .2, metallic: .15 },
+  rim: { color: '#777b79', metallic: .25 }, glass: { color: '#334d59', roughness: .2, metallic: .15, glass: true },
   light: { color: '#f5efd8', lamp: { role: 'head' } }, amber: { color: '#e69935', lamp: { role: 'indicator' } }, red: { color: '#a52826', lamp: { role: 'tail' } },
   // the lettering and the side markers, in the lamps' colours but never lit
   letter: { color: '#f5efd8' }, marker: { color: '#e69935' },

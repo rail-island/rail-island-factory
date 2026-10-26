@@ -16,7 +16,7 @@ export const INTERIOR_PALETTE: Record<string, MaterialSpec> = {
   interiorFloor: { color: "#5b5f62", roughness: 0.9 },
   interiorWall: { color: "#d8d4c8", roughness: 0.8 },
   interiorSeat: { color: "#3e5a80", roughness: 0.85 },
-  interiorGlass: { color: "#26323c", metallic: 0.2, roughness: 0.15 },
+  interiorGlass: { color: "#26323c", metallic: 0.2, roughness: 0.15, glass: true },
 };
 
 /** The most triangles one car's interior may have (test/interiors.test.ts). */

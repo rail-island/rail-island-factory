@@ -51,7 +51,7 @@ export interface SourceVolume {
 export const TRAM_PALETTE: Record<string, MaterialSpec> = {
   roof: { color: "#8a8d8f", roughness: 0.75 },
   frame: { color: "#b9bdbf", metallic: 0.2, roughness: 0.5 },
-  glass: { color: "#26323c", metallic: 0.2, roughness: 0.15 },
+  glass: { color: "#26323c", metallic: 0.2, roughness: 0.15, glass: true },
   seam: { color: "#2a2c2e", roughness: 0.9 },
   rubber: { color: "#1c1c1e", roughness: 0.95 },
   bellows: { color: "#26272a", roughness: 0.95 },

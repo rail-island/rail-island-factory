@@ -66,7 +66,7 @@ by height for the reveal).
 | ceiling, end walls | `interiorWall` | facing in |
 | side walls | `interiorWall` | facing in, open over each doorway; the wall above a door's head and below a raised sill stays. Where the body's bottom edge stands above the floor (a skirt cut away over the wheels), the side and end walls start at that edge (`Cabin.bottom`; the coach kit and the VT 18.16 pass theirs) |
 | doorway reveal | `interiorFloor`, `interiorWall` | the threshold, the head and the two jambs from the skin in to the side wall; jambs 3 mm inside the doorway, off the frame's inner walls; a riser up to the floor where a sill lies lower (a step well) |
-| windows | `interiorGlass` | each side window's glass seen from inside: a dark pane on the side wall, 4 mm off it and facing in, cut to the wall between floor and ceiling (a double-decker's upper windows stand above the one cabin and get none). The windows stay opaque |
+| windows | `interiorGlass` | each side window's glass seen from inside: a dark pane on the side wall, 4 mm off it and facing in, cut to the wall between floor and ceiling (a double-decker's upper windows stand above the one cabin and get none). The windows stay opaque; the pane is marked glass (`glass: true`), so the game reflects the sky in it like the outside glass |
 | seats | `interiorSeat` | a box cushion and a box back per seat group |
 | wheel-arch podiums | `interiorWall` | a bus's: a box across the car over each arch, its ends 11 mm outside the arch's notch and its top over the notch's crown, so neither shows inside (`Cabin.housings`; a per-side box is possible too). The floor and the side walls leave out what a podium covers, so a front tyre turning to full lock cuts through nothing |
 

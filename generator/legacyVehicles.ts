@@ -5,7 +5,7 @@ import { lodBlock, LOD_GLASS } from './lodKit.ts';
 import { MeshBuilder, ngon, chamferedRect, type Ring } from './meshBuilder.ts';
 import { beam, panel } from './towerParts.ts';
 import type { ProceduralDesign } from './design.ts';
-const palette={ivory:{color:'#e5dfcc'},red:{color:'#ad4536'},glass:{color:'#283f4b',roughness:.15},steel:{color:'#737e80',metallic:.6},dark:{color:'#22292d'},white:{color:'#eeeeea'},blue:{color:'#163858'},deck:{color:'#bd9a55'},hull:{color:'#183d36'},brass:{color:'#bca45c',metallic:.4}};
+const palette={ivory:{color:'#e5dfcc'},red:{color:'#ad4536'},glass:{color:'#283f4b',roughness:.15,glass:true},steel:{color:'#737e80',metallic:.6},dark:{color:'#22292d'},white:{color:'#eeeeea'},blue:{color:'#163858'},deck:{color:'#bd9a55'},hull:{color:'#183d36'},brass:{color:'#bca45c',metallic:.4}};
 export function classicCabin():MeshBuilder {
   const m=new MeshBuilder(palette),plan=chamferedRect(3.78,2.58,.4);
   m.scope('body',()=>{
