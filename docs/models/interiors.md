@@ -62,7 +62,7 @@ by height for the reveal).
 
 | Piece | Material | What it is |
 | --- | --- | --- |
-| floor | `interiorFloor` | one level, facing up |
+| floor | `interiorFloor` | one level, facing up; where the body's bottom edge stands above it (`Cabin.bottom`) the floor rises onto that edge, 3 mm above it, so it never shows below the body over the gear |
 | ceiling, end walls | `interiorWall` | facing in |
 | side walls | `interiorWall` | facing in, open over each doorway; the wall above a door's head and below a raised sill stays. Where the body's bottom edge stands above the floor (a skirt cut away over the wheels), the side and end walls start at that edge (`Cabin.bottom`; the coach kit and the VT 18.16 pass theirs) |
 | doorway reveal | `interiorFloor`, `interiorWall` | the threshold, the head and the two jambs from the skin in to the side wall; jambs 3 mm inside the doorway, off the frame's inner walls; a riser up to the floor where a sill lies lower (a step well) |
@@ -104,8 +104,9 @@ lands on a design's round one. The seats keep 37 mm from the walls.
 reaches past the shell, nobody outside sees them: a tapered nose, a roof that
 falls toward a power car. Only a seat would show there, which is why `room` keeps
 seats where the shell holds them. A skirt cut away over the wheels is the
-exception: through an open door the far wall would show below the body, so the
-walls stop at its bottom edge (`Cabin.bottom`).
+exception: the floor would show below the body over the gear, and through an
+open door the far wall too, so the walls stop at its bottom edge and the floor
+rises onto it (`Cabin.bottom`).
 
 **Budget.** At most `INTERIOR_TRIANGLE_BUDGET` = 1,500 triangles per car's
 interior, apart from the design's exterior budget. The catalog's cabins hold 56
@@ -171,7 +172,7 @@ none.
 - a coach's windows, drawn after its cabin, as panes in the cabin's part on its
   far wall (a door leaf's light none), and panes on the cabins of every kit;
 - the seat layouts;
-- the walls stopping at a body's bottom edge that stands above the floor;
+- the walls stopping at, and the floor rising onto, a body's bottom edge that stands above the floor;
 - the hidden interior part, its GLB node mark and scene extras, and its triangles
   left out of the rest model;
 - `interior-<car>` revealed by that car's clips only;

@@ -225,17 +225,20 @@ export function drawCabin(m: MeshCore, c: Cabin): string {
   m.spin(name, [0, 0, 0], () => {
     // a housing across the car stands on the arch, not on the floor
     const across = (c.housings ?? []).filter((hs) => hs.z <= 1e-6);
+    // where the walls start: the floor, or the body's bottom edge above it
+    const foot = (x: number) => Math.max(y0, c.bottom ? c.bottom.at(x) : y0);
     m.scope("floor", () => {
-      const xs = [...new Set([x0, x1, ...across.flatMap((hs) => [hs.x0, hs.x1]).filter((x) => x > x0 && x < x1)])].sort((a, b) => a - b);
+      // the floor rises onto the body's bottom edge where that stands higher, 3 mm above it, so it never shows below the body
+      const level = (x: number) => (c.bottom ? Math.max(y0, c.bottom.at(x) + 0.003) : y0);
+      const xs = [...new Set([x0, x1, ...[...across.flatMap((hs) => [hs.x0, hs.x1]), ...(c.bottom?.xs ?? [])].filter((x) => x > x0 && x < x1)])].sort((a, b) => a - b);
       for (let i = 0; i + 1 < xs.length; i++) {
         const [a, b] = [xs[i]!, xs[i + 1]!];
         if (across.some((hs) => hs.x0 < (a + b) / 2 && (a + b) / 2 < hs.x1)) continue;
-        face(m, "interiorFloor", [[a, y0, -h], [b, y0, -h], [b, y0, h], [a, y0, h]], [0, 1, 0]);
+        const [ya, yb] = [level(a), level(b)];
+        face(m, "interiorFloor", [[a, ya, -h], [b, yb, -h], [b, yb, h], [a, ya, h]], [0, 1, 0]);
       }
     });
     m.scope("ceiling", () => face(m, "interiorWall", [[x0, y1, -h], [x1, y1, -h], [x1, y1, h], [x0, y1, h]], [0, -1, 0]));
-    // where the walls start: the floor, or the body's bottom edge above it
-    const foot = (x: number) => Math.max(y0, c.bottom ? c.bottom.at(x) : y0);
     m.scope("end walls", () => {
       face(m, "interiorWall", [[x0, foot(x0), -h], [x0, foot(x0), h], [x0, y1, h], [x0, y1, -h]], [1, 0, 0]);
       face(m, "interiorWall", [[x1, foot(x1), -h], [x1, foot(x1), h], [x1, y1, h], [x1, y1, -h]], [-1, 0, 0]);

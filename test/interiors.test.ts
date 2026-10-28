@@ -113,6 +113,32 @@ describe("the generic cabin", () => {
     expect(lowest({ ...CABIN, bottom: { at, xs: [0.5, 1, 3, 3.5] } })).toBeCloseTo(2.0, 6);
   });
 
+  it("raises its floor onto the body's bottom edge where that stands above the floor", () => {
+    // the same skirt cut away over the wheels: a floor left at 1.2 m there would show below the body, over the gear
+    const at = (x: number) => 0.5 + 1.5 * Math.max(0, Math.min(1, (x - 0.5) * 2, (3.5 - x) * 2));
+    const floorTris = (cabin: Cabin) => {
+      const { json, bin } = parseGlb(car(new MeshBuilder(PALETTE), cabin).toGlb("t", "t"));
+      return collectTriangles(json, bin, { interiors: true }).filter((t) => t.material === "interiorFloor" && t.p.every((p) => Math.abs(p[2]) <= CABIN.half + 1e-6));
+    };
+    // the floor's height at x, interpolated along each triangle's edge that crosses it
+    const heightsAt = (cabin: Cabin, x: number) =>
+      floorTris(cabin).flatMap((t) =>
+        t.p.flatMap((p, i) => {
+          const q = t.p[(i + 1) % 3]!;
+          if ((p[0] - x) * (q[0] - x) > 0 || Math.abs(q[0] - p[0]) < 1e-9) return [];
+          return [p[1] + ((q[1] - p[1]) * (x - p[0])) / (q[0] - p[0])];
+        }),
+      );
+    expect(Math.min(...heightsAt(CABIN, 2))).toBeCloseTo(CABIN.floor, 6);
+    const cut = { ...CABIN, bottom: { at, xs: [0.5, 1, 3, 3.5] } };
+    for (const x of [-3, 0.7, 1, 2, 3.2, 5]) {
+      const ys = heightsAt(cut, x);
+      expect(ys.length).toBeGreaterThan(0);
+      for (const y of ys) expect(y).toBeGreaterThanOrEqual(Math.max(CABIN.floor, at(x)) - 1e-9);
+    }
+    expect(Math.min(...heightsAt(cut, 2))).toBeCloseTo(2.003, 6);
+  });
+
   it("refuses an interior no door clip reveals", () => {
     const m = new MeshBuilder(PALETTE);
     m.box("body", 0, 0, 12.4, 2.8, 1, 3.5);
