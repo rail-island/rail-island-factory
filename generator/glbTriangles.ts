@@ -23,6 +23,8 @@ export interface Tri {
   material: string;
   /** True for a triangle of a vehicle's interior (collected only when asked for). */
   interior?: boolean;
+  /** True when its material is drawn from both sides (the game culls every other triangle's back). */
+  doubleSided?: boolean;
 }
 
 export function collectTriangles(json: Gltf, bin: Uint8Array, opts: { interiors?: boolean } = {}): Tri[] {
@@ -51,6 +53,7 @@ export function collectTriangles(json: Gltf, bin: Uint8Array, opts: { interiors?
           : undefined) ?? [1, 1, 1, 1];
         const color: Vec3 = [factor[0], factor[1], factor[2]];
         const material = prim.material != null ? (json.materials?.[prim.material]?.name ?? `#${prim.material}`) : "default";
+        const doubleSided = prim.material != null && json.materials?.[prim.material]?.doubleSided === true;
         for (let i = 0; i + 2 < idx.length; i += 3) {
           const p: Vec3[] = [];
           const n: Vec3[] = [];
@@ -66,7 +69,7 @@ export function collectTriangles(json: Gltf, bin: Uint8Array, opts: { interiors?
           const corners = col
             ? (idx.slice(i, i + 3).map((v) => [col[v * 3], col[v * 3 + 1], col[v * 3 + 2]]) as [Vec3, Vec3, Vec3])
             : undefined;
-          tris.push({ p: p as [Vec3, Vec3, Vec3], n: n as [Vec3, Vec3, Vec3], color, material, ...(corners ? { corners } : {}), ...(interior ? { interior } : {}) });
+          tris.push({ p: p as [Vec3, Vec3, Vec3], n: n as [Vec3, Vec3, Vec3], color, material, ...(corners ? { corners } : {}), ...(interior ? { interior } : {}), ...(doubleSided ? { doubleSided } : {}) });
         }
       }
     }

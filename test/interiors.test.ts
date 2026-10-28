@@ -9,8 +9,9 @@ import { MeshBuilder } from "../generator/meshBuilder.ts";
 import { MeshBuilder as ThreeMeshBuilder } from "../generator/threeBuilder.ts";
 import type { MeshCore } from "../generator/meshCore.ts";
 import { openable, doorLeaves } from "../generator/doors.ts";
-import { clearZones, drawCabin, INTERIOR_PALETTE, INTERIOR_TRIANGLE_BUDGET, seatLayout, seatRows, type Cabin } from "../generator/interior.ts";
-import { ALL_VEHICLES } from "../generator/generate.ts";
+import { CABIN_INSET, clearZones, drawCabin, fitCabin, INTERIOR_PALETTE, INTERIOR_TRIANGLE_BUDGET, seatLayout, seatRows, type Cabin } from "../generator/interior.ts";
+import { ALL_VEHICLES, designGlb } from "../generator/generate.ts";
+import { renderGlbThumb } from "../generator/renderGlbThumb.ts";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles.ts";
 import { glbStats } from "../generator/glbStats.ts";
 import { buildLodModel } from "../generator/lodModel.ts";
@@ -139,6 +140,55 @@ describe("the generic cabin", () => {
     expect(Math.min(...heightsAt(cut, 2))).toBeCloseTo(2.003, 6);
   });
 
+  it("shortens itself to where a tapered shell holds it, narrowing where a door stands in the taper", () => {
+    // a body full width (1.4) over |x| <= 4, tapering to 0.9 at its ends, x = +-6.2
+    const skin = (x: number) => (Math.abs(x) > 6.2 ? 0 : 1.4 - (0.5 * Math.max(0, Math.abs(x) - 4)) / 2.2);
+    const shell = (x: number) => skin(x);
+    /** The cabin's triangles, and whether every corner stands inside the shell. */
+    const drawn = (cabin: Cabin) => {
+      const { json, bin } = parseGlb(car(new MeshBuilder(PALETTE), cabin).toGlb("t", "t"));
+      const tris = collectTriangles(json, bin, { interiors: true }).filter((t) => t.interior);
+      expect(tris.length).toBeGreaterThan(0);
+      for (const t of tris) for (const p of t.p) expect(Math.abs(p[2]), `(${p[0].toFixed(3)}, ${p[1].toFixed(3)})`).toBeLessThanOrEqual(skin(p[0]) + 1e-6);
+      const xs = tris.flatMap((t) => t.p.map((p) => p[0]));
+      return [Math.min(...xs), Math.max(...xs)];
+    };
+    // doors clear of the taper: the ends move in to where the skin holds the walls, 2 mm outside them
+    const inner = { ...CABIN, x0: -6.2, x1: 6.2, doors: [{ s: 1, x0: -3.5, x1: -2.5, y0: 1.2, y1: 3.1 }, { s: -1, x0: 2.5, x1: 3.5, y0: 1.2, y1: 3.1 }], shell };
+    const fitted = fitCabin(inner);
+    expect(fitted.half).toBe(CABIN.half);
+    expect(fitted.x0).toBeCloseTo(-(4 + (2.2 * (1.4 - CABIN.half - 0.002)) / 0.5), 3);
+    expect(fitted.x1).toBeCloseTo(-fitted.x0, 6);
+    drawn(inner);
+    // a door in the taper keeps the cabin behind it, narrowed to CABIN_INSET inside the skin at its jamb
+    const outer = { ...CABIN, x0: -6.2, x1: 6.2, shell };
+    const narrowed = fitCabin(outer);
+    expect(narrowed.half).toBeCloseTo(skin(-5) - CABIN_INSET, 6);
+    expect(narrowed.x0).toBeLessThanOrEqual(-5);
+    expect(narrowed.x1).toBeGreaterThanOrEqual(5);
+    const [lo, hi] = drawn(outer);
+    expect(lo).toBeLessThanOrEqual(-5);
+    expect(hi).toBeGreaterThanOrEqual(5);
+    // without a shell the cabin stands as given
+    expect(fitCabin(CABIN)).toBe(CABIN);
+  });
+
+  it("lays a doorway's reveal along a skin that narrows across the door, and onto a rising bottom", () => {
+    // a door at x = 4..5 where the skin narrows from 1.5 to 1.4 and the body's bottom rises above the floor
+    const skin = (_y: number, x: number) => 1.5 - 0.1 * (x - 4);
+    const bottom = (x: number) => (x <= 4.5 ? 1.0 : 1.0 + (x - 4.5) * 1.2);
+    const cabin: Cabin = { ...CABIN, doors: [{ s: 1, x0: 4, x1: 5, y0: 1.2, y1: 3.1, skin }], bottom: { at: bottom, xs: [4.5, 6] } };
+    const { json, bin } = parseGlb(car(new MeshBuilder(PALETTE), cabin).toGlb("t", "t"));
+    // the reveal: what reaches out past the side wall
+    const reveal = collectTriangles(json, bin, { interiors: true }).filter((t) => t.interior && t.p.some((p) => p[2] > CABIN.half + 1e-6));
+    expect(reveal.length).toBeGreaterThan(0);
+    for (const t of reveal)
+      for (const p of t.p) {
+        expect(p[2], `(${p[0].toFixed(3)}, ${p[1].toFixed(3)})`).toBeLessThanOrEqual(skin(p[1], p[0]) + 1e-6);
+        if (p[1] < 3) expect(p[1], `(${p[0].toFixed(3)}, ${p[2].toFixed(3)})`).toBeGreaterThanOrEqual(Math.max(1.2, bottom(p[0])) - 1e-6);
+      }
+  });
+
   it("refuses an interior no door clip reveals", () => {
     const m = new MeshBuilder(PALETTE);
     m.box("body", 0, 0, 12.4, 2.8, 1, 3.5);
@@ -188,6 +238,26 @@ describe("a coach body with doorways", () => {
     const [floor, ceiling] = cabinHeights(v);
     expect(chords(c, floor, ceiling)).toBe(0);
     expect(chords(c, 0.6, floor)).toBeGreaterThan(0);
+  });
+
+  it("closes its underside where the bottom rises over a bogie, though a band's chord lies there", () => {
+    // Regression: a ramp's underside is, at the ramp's foot, a band's internal chord, left
+    // out round a cabin -- so the Bmo and the 471 had a hole there, the cabin showing through
+    const c = new Coach({ red: { color: "#c03030" }, cream: { color: "#e0d8c0" }, roof: { color: "#808080" } }, 5);
+    const door = { x0: 2, y0: 0.6, x1: 3.2, y1: 2.8 };
+    const v: Volume = { ...volume([c.doorOpening(1, door)]), bottom: [[0, 0.5], [6, 0.5], [6.5, 1.5], [10, 1.5]] };
+    c.volume(v);
+    // the cream band's faces over the ramp lying across the body and facing down
+    const pos = (c.m as unknown as { groups: Map<string, { pos: number[] }> }).groups.get("cream")!.pos;
+    let under = 0;
+    for (let t = 0; t < pos.length; t += 9) {
+      const q = [0, 3, 6].map((k): [number, number, number] => [pos[t + k]!, pos[t + k + 1]!, pos[t + k + 2]!]);
+      if (!q.every((p) => p[0] >= c.X(6) - 1e-6 && p[0] <= c.X(6.5) + 1e-6)) continue;
+      if (!(Math.min(...q.map((p) => p[2])) < 0 && Math.max(...q.map((p) => p[2])) > 0)) continue;
+      const [u, w] = [q[1]!.map((x, i) => x - q[0]![i]!), q[2]!.map((x, i) => x - q[0]![i]!)];
+      if (u[2]! * w[0]! - u[0]! * w[2]! < 0) under++;
+    }
+    expect(under).toBeGreaterThan(0);
   });
 });
 
@@ -272,4 +342,25 @@ describe("every passenger vehicle", () => {
         expect(buildLodModel(d, params).interiorTriangleCount()).toBe(0);
       });
     }
+});
+
+describe("no interior shows outside its body", () => {
+  // Regression: a cabin's floor hung below a body cut away over its bogies (Bmo), its
+  // end walls and floor stood outside tapered ends (M 131.1, the buses), a reveal outside
+  // a door in a narrowing nose (GT4). With every door shut and back faces culled as the
+  // game culls them, a view with the interior shown must match one without it.
+  const views: Array<[string, [number, number, number]]> = [["three-quarter", [0.8, 0.7, 0.9]], ["low", [0.4, -0.08, 1]], ["front", [1, 0.15, 0.25]], ["rear", [-1, 0.15, -0.25]]];
+  for (const id of ["proc-vehicle-bmo-double-deck-coach", "proc-vehicle-csd-m131", "proc-vehicle-karosa-renault-citybus-12m", "proc-vehicle-kvag-gt4"])
+    it(id, () => {
+      const glb = designGlb(id);
+      for (const [name, view] of views) {
+        const [a, b] = [false, true].map((interiors) => renderGlbThumb(glb, 200, { view, interiors, cull: true }).data);
+        const W = 200;
+        const differs = (i: number) => Math.abs(a[i]! - b[i]!) + Math.abs(a[i + 1]! - b[i + 1]!) + Math.abs(a[i + 2]! - b[i + 2]!) > 30;
+        // a leak, not an edge's antialiasing: a pixel that differs with its four neighbours
+        let leak = 0;
+        for (let i = 4 * (W + 1); i < a.length - 4 * (W + 1); i += 4) if (differs(i) && differs(i - 4) && differs(i + 4) && differs(i - 4 * W) && differs(i + 4 * W)) leak++;
+        expect(leak, `${name} view`).toBe(0);
+      }
+    });
 });

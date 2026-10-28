@@ -304,6 +304,11 @@ export function sliceCabin(m: MeshBuilder, b: SliceBody, X: (d: number) => numbe
       const [x0w, x1w] = span(X(w.d0), X(w.d1));
       return { s: w.s, x0: x0w, x1: x1w, y0: w.y0, y1: w.y1 };
     }),
+    // the body: the slice at x, 0 past its ends
+    shell: (x, y) => {
+      const d = dOf(x);
+      return d < 0 || d > b.length ? 0 : sliceHalf(b, d, y);
+    },
     room: (xa, xb) => {
       const at = [xa, (xa + xb) / 2, xb].map(dOf);
       if (!at.every((d) => narrowest(d) >= half - 0.01)) return null;

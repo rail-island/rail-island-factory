@@ -239,7 +239,8 @@ catalog's `triangles` leave it out (`collectTriangles` skips the nodes marked
 inside, `renderGlbThumb(glb, size, opts)` takes `ThumbOptions`: `interiors` to draw
 them (pose the door clips open with `poseGlb` first), `cutAbove` to cut the model
 away above a height, `xRange` to frame one car of a set, `view` for another viewing
-direction.
+direction, `cull` to leave out back faces but a double-sided material's, as the game
+draws them (`Tri.doubleSided`).
 
 `test/thumbnails.test.ts` pins the side framing (scale, height window, nose on
 the left); `test/export.test.ts` checks every exported thumbnail against its

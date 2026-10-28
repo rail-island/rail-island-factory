@@ -284,7 +284,10 @@ export class Coach {
       const j = (i + 1) % n;
       const [za, ya] = ra[i]!;
       const [zb, yb] = ra[j]!;
-      if (Math.abs(ya - yb) < 1e-9 && za * zb < 0 && chords.some((c) => Math.abs(ya - c) < 1e-9)) continue; // a chord, inside the body
+      // a chord, inside the body -- unless the ring at the other end lies lower or higher there (the
+      // elevation clamps it: a ramp over the bogies), where the edge is the body's own underside or top
+      const atChord = (r: Ring, c: number) => Math.abs(r[i]![1] - c) < 1e-9 && Math.abs(r[j]![1] - c) < 1e-9;
+      if (Math.abs(ya - yb) < 1e-9 && za * zb < 0 && chords.some((c) => atChord(ra, c) && atChord(rb, c))) continue;
       if (open.some((s) => s * za > 1e-6 && s * zb > 1e-6)) continue; // the doorway's side
       // an edge of no length at either end (a band's sliver, a clamped ring) has no wall
       if (Math.hypot(za - zb, ya - yb) < 1e-9 && Math.hypot(rb[i]![0] - rb[j]![0], rb[i]![1] - rb[j]![1]) < 1e-9) continue;

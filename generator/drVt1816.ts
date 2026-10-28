@@ -338,6 +338,19 @@ function drawCarCabin(m: MeshBuilder, p: Profile, X: (d: number) => number, d0: 
     }),
     // the walls stop at the body's bottom edge where it rises above the floor (over the bogies)
     bottom: { at: (x) => p.B(dOf(x)), xs: p.stations.map(X) },
+    // the body: the half slice at x, its widest crossing at height y
+    shell: (x, y) => {
+      const d = dOf(x);
+      if (d < 0 || d > p.length) return 0;
+      const pts = halfSlice(p, d).pts;
+      let best = 0;
+      for (let i = 0; i + 1 < pts.length; i++) {
+        const [[za, ya], [zb, yb]] = [pts[i]!, pts[i + 1]!];
+        if (y < Math.min(ya, yb) || y > Math.max(ya, yb)) continue;
+        best = Math.max(best, Math.abs(yb - ya) < 1e-12 ? Math.max(za, zb) : za + ((zb - za) * (y - ya)) / (yb - ya));
+      }
+      return best;
+    },
     windows: windows.map((w) => {
       const [a, b] = span(X(w.d0), X(w.d1));
       return { s: w.s, x0: a, x1: b, y0: w.y0, y1: w.y1 };

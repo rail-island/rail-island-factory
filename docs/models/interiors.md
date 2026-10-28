@@ -1,7 +1,7 @@
 # Vehicle interiors
 
 **Covers** - the generic cabin behind every passenger door: the interior part and how consumers hide it while the doors are shut (`userData.interiors`, the GLB's `extras`), what a cabin holds (floor, ceiling, walls with the windows seen from inside, the doorways' reveals, seat rows clear of the doors, a bus's wheel-arch podiums), how each kit fits one into its body and cuts the doorways, the interior budget, the gap strips on shut leaves, keeping the code out of other bundles, the site's preview and the tests.
-**Code** - `generator/interior.ts` (`drawCabin`, `Cabin`, `CabinDoor`, `CabinWindow`, `windowPanes`, `laterWindows`, `clearZones`, `seatRows`, `seatLayout`, `INTERIOR_PALETTE`, `INTERIOR_TRIANGLE_BUDGET`, `CABIN_INSET`), `generator/interiorTable.ts` (`interiorsOf`, `interiorTable`, `isInteriorName`), `generator/meshBuilder.ts` (`interiors`, `interiorTriangleCount`, `exteriorTriangleCount`, `toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/jsModel.ts` (`noInteriors`), `generator/glbTriangles.ts` (`collectTriangles`), `generator/coplanar.ts`, `generator/coachCabin.ts`, `generator/csdCoachParts.ts` (`Coach.bandPiece`, `Coach.door`, `Coach.window`, `Coach.sidePanel`), `generator/dmuKit.ts` (`loft`, `Car.doorways`), `generator/busAssembly.ts` (`busCabin`, `BusDraft.door`), `generator/busBody.ts` (`Shell.doorways`), `generator/sliceLoft.ts` (`loftQuad`), `generator/sliceBody.ts` (`drawShell`, `sliceCabin`), `generator/drVt1816.ts` (`drawCarCabin`), `generator/renderGlbThumb.ts` (`ThumbOptions`), `src/viewerInteriors.ts`, `src/ModelViewer.tsx`, `test/interiors.test.ts`, `test/viewerInteriors.test.ts`, `test/doors.test.ts`
+**Code** - `generator/interior.ts` (`drawCabin`, `fitCabin`, `Cabin`, `CabinDoor`, `CabinWindow`, `windowPanes`, `laterWindows`, `clearZones`, `seatRows`, `seatLayout`, `INTERIOR_PALETTE`, `INTERIOR_TRIANGLE_BUDGET`, `CABIN_INSET`), `generator/interiorTable.ts` (`interiorsOf`, `interiorTable`, `isInteriorName`), `generator/meshBuilder.ts` (`interiors`, `interiorTriangleCount`, `exteriorTriangleCount`, `toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/jsModel.ts` (`noInteriors`), `generator/glbTriangles.ts` (`collectTriangles`, `Tri.doubleSided`), `generator/coplanar.ts`, `generator/coachCabin.ts`, `generator/csdCoachParts.ts` (`Coach.bandPiece`, `Coach.door`, `Coach.window`, `Coach.sidePanel`), `generator/dmuKit.ts` (`loft`, `Car.doorways`), `generator/busAssembly.ts` (`busCabin`, `BusDraft.door`), `generator/busBody.ts` (`Shell.doorways`), `generator/sliceLoft.ts` (`loftQuad`), `generator/sliceBody.ts` (`drawShell`, `sliceCabin`), `generator/drVt1816.ts` (`drawCarCabin`), `generator/renderGlbThumb.ts` (`ThumbOptions`, `cull`), `src/viewerInteriors.ts`, `src/ModelViewer.tsx`, `test/interiors.test.ts`, `test/viewerInteriors.test.ts`, `test/doors.test.ts`
 **See also** - [doors.md](doors.md), [animation.md](animation.md), [js-format.md](js-format.md), [export.md](export.md), [buses.md](buses.md), [../site/catalog-site.md](../site/catalog-site.md), [../specs/2026-10-25-vehicle-interiors.md](../specs/2026-10-25-vehicle-interiors.md)
 
 ## The idea
@@ -58,14 +58,15 @@ Consumers below.
 `drawCabin(m, cabin)` (`interior.ts`) draws a `Cabin` in model coordinates: x0..x1
 along the car, `floor` and `ceiling` heights, side walls at |z| = `half`, and its
 `doors` (`CabinDoor`: side, x span, threshold and head heights, and the skin's |z|
-by height for the reveal).
+by height and x for the reveal). `fitCabin` first fits it into its kit's
+`Cabin.shell` (below).
 
 | Piece | Material | What it is |
 | --- | --- | --- |
 | floor | `interiorFloor` | one level, facing up; where the body's bottom edge stands above it (`Cabin.bottom`) the floor rises onto that edge, 3 mm above it, so it never shows below the body over the gear |
 | ceiling, end walls | `interiorWall` | facing in |
 | side walls | `interiorWall` | facing in, open over each doorway; the wall above a door's head and below a raised sill stays. Where the body's bottom edge stands above the floor (a skirt cut away over the wheels), the side and end walls start at that edge (`Cabin.bottom`; the coach kit and the VT 18.16 pass theirs) |
-| doorway reveal | `interiorFloor`, `interiorWall` | the threshold, the head and the two jambs from the skin in to the side wall; jambs 3 mm inside the doorway, off the frame's inner walls; a riser up to the floor where a sill lies lower (a step well) |
+| doorway reveal | `interiorFloor`, `interiorWall` | the threshold, the head and the two jambs from the skin in to the side wall, following the skin along the door where the body narrows across it (a door in a tapered nose); jambs 3 mm inside the doorway, off the frame's inner walls; a riser up to the floor where a sill lies lower (a step well). The threshold rises onto the body's bottom edge (`Cabin.bottom`) where that stands above the sill |
 | windows | `interiorGlass` | each side window's glass seen from inside: a dark pane on the side wall, 4 mm off it and facing in, cut to the wall between floor and ceiling (a double-decker's upper windows stand above the one cabin and get none). The windows stay opaque; the pane is marked glass (`glass: true`), so the game reflects the sky in it like the outside glass |
 | seats | `interiorSeat` | a box cushion and a box back per seat group |
 | wheel-arch podiums | `interiorWall` | a bus's: a box across the car over each arch, its ends 11 mm outside the arch's notch and its top over the notch's crown, so neither shows inside (`Cabin.housings`; a per-side box is possible too). The floor and the side walls leave out what a podium covers, so a front tyre turning to full lock cuts through nothing |
@@ -100,13 +101,24 @@ between floor and ceiling. The end walls stand the same inside the body's ends.
 That is clear of the panels laid on the skin, and an odd figure, so no cabin face
 lands on a design's round one. The seats keep 37 mm from the walls.
 
-**Outside the shell.** Floor, ceiling and walls face only inward. Where the cabin
-reaches past the shell, nobody outside sees them: a tapered nose, a roof that
-falls toward a power car. Only a seat would show there, which is why `room` keeps
-seats where the shell holds them. A skirt cut away over the wheels is the
-exception: the floor would show below the body over the gear, and through an
-open door the far wall too, so the walls stop at its bottom edge and the floor
-rises onto it (`Cabin.bottom`).
+**Inside the shell.** Floor, ceiling and walls face only inward, but a face that
+reaches past the shell still shows from outside, seen from the far side: an end
+wall standing out of a rounded end, a floor under a bus's rising rear, the floor
+hanging below a body cut away over the gear. So the cabin stays inside its shell:
+
+- every kit passes `Cabin.shell(x, y)`, the skin's half width at x and height y
+  (0 outside the body), and `fitCabin` moves each end in to the first x where the
+  skin stands outside the side walls (by 2 mm) at every height from the walls'
+  foot to the ceiling (FIT_STEP 2 cm steps, then bisection). An end never moves
+  past a door's jamb: where a door stands in a taper (the M 131.1's cab doors, the
+  GT4's front door), the whole cabin narrows to `CABIN_INSET` inside the narrowest
+  skin between that jamb and where the cabin would have fitted;
+- where the body's bottom edge stands above the floor (a skirt cut away over the
+  wheels, `Cabin.bottom`), the walls stop at that edge and the floor and the
+  doorways' thresholds rise onto it.
+
+Only a seat would show where a tapered shell still meets the cabin, which is why
+`room` keeps seats where the shell holds them.
 
 **Budget.** At most `INTERIOR_TRIANGLE_BUDGET` = 1,500 triangles per car's
 interior, apart from the design's exterior budget. The catalog's cabins hold 56
@@ -121,7 +133,7 @@ round the hole and the cabin behind it.
 
 | Kit | Shell cut | Cabin |
 | --- | --- | --- |
-| coach kit (`Coach.volume`; trams, CSD and livery coaches, most units) and the railcar kit (`dmuKit.ts` `loft`) | `Volume.openings`, every opening door's leaf box (`doorOpening`, `Car.doorways`, the tram kit's `doorOpenings`, `doorways` in `csdCoaches.ts`). Over them `doorwaySegment` leaves out the side's wall. Over a doorway the piece also leaves out its chords across the body. Elsewhere a volume with openings leaves out the chord at a band boundary between the cabin's floor and ceiling (`bandPiece`, `cabinHeights`): a hidden face that would cut through the cabin. A piece with nothing to leave out is still one `sweep`, so the source tree's ids below the floor and above the ceiling are unchanged | `coachCabin(c, v)` (`coachCabin.ts`): along the whole volume. The floor is at the lowest sill, above the body's bottom at the doors. The ceiling is 0.12 m above the highest head, under the roof. The walls are inside the narrowest skin where the plan keeps 90 % of the full width. Seats go where the skin and the elevation hold them. Floor, ceiling and the reveals stand 3, 6 or 9 mm clear of the shell's chords |
+| coach kit (`Coach.volume`; trams, CSD and livery coaches, most units) and the railcar kit (`dmuKit.ts` `loft`) | `Volume.openings`, every opening door's leaf box (`doorOpening`, `Car.doorways`, the tram kit's `doorOpenings`, `doorways` in `csdCoaches.ts`). Over them `doorwaySegment` leaves out the side's wall. Over a doorway the piece also leaves out its chords across the body. Elsewhere a volume with openings leaves out the chord at a band boundary between the cabin's floor and ceiling (`bandPiece`, `cabinHeights`): a hidden face that would cut through the cabin. Only a chord at both ends of the piece is left out: where the bottom elevation rises over a bogie, a band's chord at the ramp's foot is the body's underside at its top, and stays. A piece with nothing to leave out is still one `sweep`, so the source tree's ids below the floor and above the ceiling are unchanged | `coachCabin(c, v)` (`coachCabin.ts`): along the volume, fitted into it (its shell: the section scaled by the plan, between the bottom and top elevations). The floor is at the lowest sill, above the body's bottom at the doors. The ceiling is 0.12 m above the highest head, under the roof. The walls are inside the narrowest skin where the plan keeps 90 % of the full width. Seats go where the skin and the elevation hold them. Floor, ceiling and the reveals stand 3, 6 or 9 mm clear of the shell's chords |
 | bus (`busAssembly.ts`) | `BusDraft.door` records the doorway (3 cm inside the leaves' span, sill to head) and draws a frame round the leaves in the door style's `surround`. `drawShell` adds the doorway's cuts and leaves out the side face of the cells over it | `busCabin` per section. A podium stands across the car over each wheel arch, seats on it |
 | TGV Duplex, Shinkansen 0 (`sliceBody.ts`) | `drawShell(..., doorways)`: a doorway's ends become stations, and the side's quads keep only their pieces below the sill and above the head (`loftQuad`) | `sliceCabin`, from the end of the nose (Shinkansen) or the whole car |
 | DR VT 18.16 (`drVt1816.ts`) | `drawBody(m, p, X, leaves)` through `loftHalves`' `hole` | `drawCarCabin`; the power car's behind its one passenger door |
@@ -160,9 +172,10 @@ none.
 - **The game** (rail-island-webapp) does not read `userData.interiors` yet: its
   doors open onto an empty, see-through shell until it does. Do not import an
   export with interiors into the game before it hides and shows them.
-- **Headless views**: `renderGlbThumb(glb, size, { interiors, cutAbove, xRange, view })`
-  renders a posed GLB with its interiors, cut away, a car of a set and another
-  viewing direction ([export.md](export.md)).
+- **Headless views**: `renderGlbThumb(glb, size, { interiors, cutAbove, xRange, view, cull })`
+  renders a posed GLB with its interiors, cut away, a car of a set, another
+  viewing direction and with back faces culled as the game culls them
+  ([export.md](export.md)).
 
 ## Tests
 
@@ -173,6 +186,14 @@ none.
   far wall (a door leaf's light none), and panes on the cabins of every kit;
 - the seat layouts;
 - the walls stopping at, and the floor rising onto, a body's bottom edge that stands above the floor;
+- `fitCabin`: ends moved in to where a tapered shell holds the cabin, and the
+  cabin narrowed where a door stands in the taper, every corner inside the skin;
+- a reveal following a skin that narrows across its door, its threshold on a
+  rising bottom;
+- a coach-kit body closing its underside over a ramp, where a band's chord lies;
+- no interior outside its body: four designs that leaked (Bmo, M 131.1, Karosa
+  Renault Citybus 12M, GT4), rendered with every door shut and back faces culled
+  from four directions, the same with the interior shown as without it;
 - the hidden interior part, its GLB node mark and scene extras, and its triangles
   left out of the rest model;
 - `interior-<car>` revealed by that car's clips only;

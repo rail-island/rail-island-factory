@@ -38,12 +38,12 @@ export function cabinHeights(v: Volume): [number, number] {
 
 /**
  * The cabin behind volume `v`'s doorways (`Volume.openings`, interior.ts), drawn
- * by coach `c`: one floor and ceiling (`cabinHeights`), along the whole volume,
- * its side walls CABIN_INSET inside the narrowest skin between floor and ceiling where the plan keeps 90 %
- * of the full width, and a reveal at every doorway out to the skin. Where the
- * cabin reaches outside the shell (a tapered nose, a skirt cut away over the
- * wheels) only its inward faces stand there, which nobody outside sees; a seat
- * row stands only where the shell holds it. Floor, ceiling and the reveals'
+ * by coach `c`: one floor and ceiling (`cabinHeights`), along the volume and
+ * fitted into it (`Cabin.shell`, `Cabin.bottom`: its ends drawn in from a tapered
+ * nose, its floor raised over a skirt cut away over the wheels), its side walls
+ * CABIN_INSET inside the narrowest skin between floor and ceiling where the plan
+ * keeps 90 % of the full width, and a reveal at every doorway out to the skin; a
+ * seat row stands only where the shell holds it. Floor, ceiling and the reveals'
  * thresholds and heads stand 3 mm (or 6, 9) clear of the shell's chords at the
  * doorways' sills and heads and at the bands' boundaries.
  */
@@ -62,15 +62,19 @@ export function coachCabin(c: Coach, v: Volume): void {
   drawCabin(c.m, {
     // the walls stop at the body's bottom edge where it rises above the floor (over the wheels)
     bottom: { at: (x) => loAt(v, x + c.centre), xs: (v.bottom ?? []).map((p) => c.X(p[0])) },
+    // the volume: the section scaled by the plan, between the bottom and the top elevations
+    shell: (x, y) => {
+      const xs = x + c.centre;
+      if (xs < v.plan[0]![0] || xs > v.plan[v.plan.length - 1]![0] || y < loAt(v, xs) || y > hiAt(v, xs)) return 0;
+      return k(xs) * sectionHalf(v.section, y);
+    },
     x0: c.X(x0),
     x1: c.X(x1),
     floor,
     ceiling,
     half,
-    doors: opens.map((o) => {
-      const kd = k((o.x0 + o.x1) / 2);
-      return { s: o.s, x0: c.X(o.x0), x1: c.X(o.x1), y0: clear(o.y0, 1), y1: clear(o.y1, -1), skin: (y: number) => sectionHalf(v.section, Math.min(Math.max(...ys) - 1e-6, Math.max(Math.min(...ys) + 1e-6, y))) * kd };
-    }),
+    // the skin over a doorway follows the plan along it (a door in a tapered nose)
+    doors: opens.map((o) => ({ s: o.s, x0: c.X(o.x0), x1: c.X(o.x1), y0: clear(o.y0, 1), y1: clear(o.y1, -1), skin: (y: number, x: number) => sectionHalf(v.section, Math.min(Math.max(...ys) - 1e-6, Math.max(Math.min(...ys) + 1e-6, y))) * k(x + c.centre) })),
     // a row's seats inside the skin and under the roof, standing over the body's bottom
     room: (xa, xb) => {
       const xs = [xa, (xa + xb) / 2, xb].map((xf) => xf + c.centre);

@@ -103,6 +103,13 @@ function busCabin(m: MeshBuilder, spec: BusSpec, lo: number, hi: number, doors: 
     x0, x1, floor, ceiling, half,
     doors: doors.map((d): CabinDoor => ({ ...d, y0: d.y0 + 0.003, y1: d.y1 - 0.003, skin: (y) => halfWidth(spec.section, y) })),
     windows: (spec.windows ?? []).filter((w) => (w.x0 + w.x1) / 2 >= lo && (w.x0 + w.x1) / 2 <= hi),
+    // the shell: inside the section, the side elevation and the plan
+    shell: (x, y) => {
+      const side = spanAt(spec.side, x);
+      const plan = spanAt(spec.plan, x);
+      if (!side || !plan || y < side[0] || y > side[1]) return 0;
+      return Math.min(halfWidth(spec.section, y), plan[1]);
+    },
     // a podium across the car over each wheel arch, its ends 11 mm outside the
     // arch's notch and its top over the notch's crown, so neither shows inside
     housings: spec.arches.filter((a) => a.x + a.half > x0 && a.x - a.half < x1).map((a) => ({ x0: a.x - a.half - 0.011, x1: a.x + a.half + 0.011, top: a.top + 0.004, z: 0 })),

@@ -81,9 +81,10 @@ type Projected = { x: number; y: number; w: number };
  * size and box-filtered down, coverage kept as alpha). `project` takes a world
  * point to the supersampled buffer; `perspective` interpolates depth-correctly;
  * `toEye` is the direction from a world point to the camera, which flips a normal
- * that faces away (the rasterizer does not cull, so a face wound inward still
- * looks right here -- the game would not draw it, the mesh builder's winding test
- * is what catches that).
+ * that faces away (the rasterizer does not cull unless asked to, so a face wound
+ * inward still looks right here -- the game would not draw it, the mesh builder's
+ * winding test is what catches that). With `cull`, a triangle wound away from the
+ * camera is left out unless it is double-sided.
  */
 function rasterize(
   tris: readonly Tri[],
@@ -93,6 +94,7 @@ function rasterize(
   perspective: boolean,
   toEye: (world: Vec3) => Vec3,
   shade: (n: Vec3) => number,
+  cull = false,
 ): PNG {
   const W = width * SS;
   const H = height * SS;
@@ -110,6 +112,7 @@ function rasterize(
     const dw = [a.w, b.w, c.w];
     const area = (sx[1] - sx[0]) * (sy[2] - sy[0]) - (sx[2] - sx[0]) * (sy[1] - sy[0]);
     if (area === 0) continue;
+    if (cull && !tri.doubleSided && dot(cross(sub(tri.p[1], tri.p[0]), sub(tri.p[2], tri.p[0])), toEye(tri.p[0])) < 0) continue;
     const x0 = Math.max(0, Math.floor(Math.min(sx[0], sx[1], sx[2])));
     const x1 = Math.min(W - 1, Math.ceil(Math.max(sx[0], sx[1], sx[2])));
     const y0 = Math.max(0, Math.floor(Math.min(sy[0], sy[1], sy[2])));
@@ -198,9 +201,13 @@ export type GlbSource = Uint8Array | string;
  * model cut away above the height `cutAbove` (a triangle with a corner above it
  * goes), framed on what lies within `xRange` along the model (a car of a set, a
  * door), and the direction `view` the camera looks from (VIEW_DIR by default).
+ * `cull` leaves out every triangle facing away from the camera but a double-sided
+ * material's, as the game draws them (test/interiors.test.ts checks with it that
+ * no interior shows outside its body).
  */
 export interface ThumbOptions {
   interiors?: boolean;
+  cull?: boolean;
   cutAbove?: number;
   xRange?: [number, number];
   view?: Vec3;
@@ -284,6 +291,7 @@ export function renderGlbThumb(glb: GlbSource, size: number, opts: ThumbOptions 
     true,
     (world) => norm(sub(eye, world)),
     (n) => AMBIENT + KEY * Math.max(0, dot(n, KEY_DIR)) + FILL * Math.max(0, dot(n, FILL_DIR)),
+    opts.cull,
   );
 }
 

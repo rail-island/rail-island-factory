@@ -56,11 +56,11 @@ export interface CabinDoor {
   y0: number;
   y1: number;
   /**
-   * The skin's |z| at height y over the doorway, for its reveal: the threshold,
-   * jambs and head from the skin in to the cabin's side wall. Omit where something
-   * else lines the doorway.
+   * The skin's |z| at height y over the doorway (at x along it, where the body
+   * narrows across the door), for its reveal: the threshold, jambs and head from
+   * the skin in to the cabin's side wall. Omit where something else lines the doorway.
    */
-  skin?: (y: number) => number;
+  skin?: (y: number, x: number) => number;
 }
 
 /** A window seen from inside (model coordinates): side `s`, x0..x1 along the car, y0..y1 its glass. */
@@ -95,6 +95,14 @@ export interface Cabin {
    * never show below the body. Omit where the body's bottom stays under the floor.
    */
   bottom?: { at: (x: number) => number; xs: number[] };
+  /**
+   * The shell's half width |z| at x and height y, 0 where (x, y) lies outside the
+   * body (past its ends, under its bottom, over its roof). The cabin is shortened
+   * to where the shell holds it from the floor (or `bottom`) to the ceiling, so its
+   * end walls, floor and ceiling never stand outside a tapered nose or a rounded
+   * end (`fitCabin`); it still reaches every door. Omit where x0..x1 already fits.
+   */
+  shell?: (x: number, y: number) => number;
   /** The car's windows, laid on the side walls as dark panes facing in (`windowPanes`). */
   windows?: CabinWindow[];
   /**
@@ -210,13 +218,76 @@ export function laterWindows(m: MeshCore, windows: readonly CabinWindow[]): void
   }
 }
 
+/** How far apart `fitCabin` tries the cabin's ends, and the heights it checks at each. */
+const FIT_STEP = 0.02;
+const FIT_RISE = 0.05;
+
+/**
+ * Cabin `c` fitted into its shell (`Cabin.shell`): each end moved in to the first
+ * x where the skin stands outside the side walls (by 2 mm) at every height from
+ * the walls' foot to the ceiling, found in FIT_STEP steps and refined by
+ * bisection. An end never moves past a door's jamb, so every doorway keeps the
+ * cabin behind it: where the skin is still too narrow there (a door in a tapered
+ * cab), the whole cabin narrows to CABIN_INSET inside the narrowest skin between
+ * that jamb and where the cabin would have fitted.
+ */
+export function fitCabin(c: Cabin): Cabin {
+  const shell = c.shell;
+  if (!shell) return c;
+  const foot = (x: number) => Math.max(c.floor, c.bottom ? c.bottom.at(x) : c.floor);
+  // the skin's narrowest half width at x, from the walls' foot to the ceiling
+  const narrowest = (x: number) => {
+    const lo = foot(x) + 0.004;
+    const n = Math.max(1, Math.ceil((c.ceiling - lo) / FIT_RISE));
+    let w = Infinity;
+    for (let i = 0; i <= n; i++) w = Math.min(w, shell(x, lo + ((c.ceiling - lo) * i) / n));
+    return w;
+  };
+  const xs = c.doors.flatMap((d) => [d.x0, d.x1]);
+  const mid = (c.x0 + c.x1) / 2;
+  const limits: Array<[number, number]> = [[c.x0, Math.min(mid, ...xs)], [c.x1, Math.max(mid, ...xs)]];
+  // from end `from` in toward `limit`: the first x where a cabin `half` wide fits, or `limit`
+  const end = (from: number, limit: number, half: number) => {
+    const fits = (x: number) => narrowest(x) >= half + 0.002;
+    const dir = Math.sign(limit - from);
+    if (fits(from)) return from;
+    let out = from;
+    for (let x = from + dir * FIT_STEP; dir * (limit - x) > 0; x += dir * FIT_STEP) {
+      if (!fits(x)) {
+        out = x;
+        continue;
+      }
+      let inn = x;
+      for (let k = 0; k < 10; k++) {
+        const m = (out + inn) / 2;
+        if (fits(m)) inn = m;
+        else out = m;
+      }
+      return inn;
+    }
+    return limit;
+  };
+  let half = c.half;
+  for (const [from, limit] of limits) {
+    const at = end(from, limit, half);
+    if (narrowest(at) >= half + 0.002) continue;
+    // a door holds this end where the cabin does not fit: narrow it over the span up to where it would
+    const fitted = end(limit, mid, c.half);
+    const dir = Math.sign(fitted - at);
+    if (dir) for (let x = at; dir * (fitted - x) > 0; x += dir * FIT_STEP) half = Math.min(half, narrowest(x) - CABIN_INSET);
+    half = Math.min(half, narrowest(fitted) - CABIN_INSET);
+  }
+  return { ...c, half, x0: end(c.x0, limits[0]![1], half), x1: end(c.x1, limits[1]![1], half) };
+}
+
 /**
  * Draws cabin `c` into the interior of the car being drawn: the floor, the
  * ceiling, the end walls, the side walls open over each doorway with its reveal,
  * the windows on them, and the seat rows, every row facing the middle of the car,
  * its back toward the nearer end. Returns the interior part's name.
  */
-export function drawCabin(m: MeshCore, c: Cabin): string {
+export function drawCabin(m: MeshCore, cabin: Cabin): string {
+  const c = fitCabin(cabin);
   if (!(c.x1 - c.x0 > 0.5 && c.ceiling - c.floor > 1 && c.half > 0.4)) throw new Error(`drawCabin: a cabin too small to stand in (${JSON.stringify({ x0: c.x0, x1: c.x1, floor: c.floor, ceiling: c.ceiling, half: c.half })})`);
   const { x0, x1, floor: y0, ceiling: y1, half: h } = c;
   const name = interiorName(m);
@@ -227,9 +298,9 @@ export function drawCabin(m: MeshCore, c: Cabin): string {
     const across = (c.housings ?? []).filter((hs) => hs.z <= 1e-6);
     // where the walls start: the floor, or the body's bottom edge above it
     const foot = (x: number) => Math.max(y0, c.bottom ? c.bottom.at(x) : y0);
+    // the floor rises onto the body's bottom edge where that stands higher, 3 mm above it, so it never shows below the body
+    const level = (x: number) => (c.bottom ? Math.max(y0, c.bottom.at(x) + 0.003) : y0);
     m.scope("floor", () => {
-      // the floor rises onto the body's bottom edge where that stands higher, 3 mm above it, so it never shows below the body
-      const level = (x: number) => (c.bottom ? Math.max(y0, c.bottom.at(x) + 0.003) : y0);
       const xs = [...new Set([x0, x1, ...[...across.flatMap((hs) => [hs.x0, hs.x1]), ...(c.bottom?.xs ?? [])].filter((x) => x > x0 && x < x1)])].sort((a, b) => a - b);
       for (let i = 0; i + 1 < xs.length; i++) {
         const [a, b] = [xs[i]!, xs[i + 1]!];
@@ -290,7 +361,7 @@ export function drawCabin(m: MeshCore, c: Cabin): string {
         }
       });
     c.doors.forEach((d, i) => {
-      if (d.skin) m.scope(`doorway ${i + 1}`, () => reveal(m, d, h, y0, d.skin!));
+      if (d.skin) m.scope(`doorway ${i + 1}`, () => reveal(m, d, h, level, c.bottom, d.skin!));
     });
     m.scope("seats", () => {
       const [lo, hi] = seatLayout(2 * h);
@@ -325,16 +396,27 @@ export function drawCabin(m: MeshCore, c: Cabin): string {
  * threshold at the sill, the head and the two jambs, which follow the skin's
  * profile; a sill below the cabin's `floor` (a step well) gets a riser up to it.
  */
-function reveal(m: MeshCore, d: CabinDoor, h: number, floor: number, skin: (y: number) => number): void {
+function reveal(m: MeshCore, d: CabinDoor, h: number, level: (x: number) => number, bottom: Cabin["bottom"], skin: (y: number, x: number) => number): void {
   const s = d.s;
   const zi = s * h;
-  const [a, b] = [d.y0, d.y1];
-  const zs = (y: number) => s * skin(y);
-  if (floor > a + 1e-4) face(m, "interiorWall", [[d.x0, a, zi], [d.x1, a, zi], [d.x1, floor, zi], [d.x0, floor, zi]], [0, 0, s]);
-  face(m, "interiorFloor", [[d.x0, a, zs(a)], [d.x1, a, zs(a)], [d.x1, a, zi], [d.x0, a, zi]], [0, 1, 0]);
-  face(m, "interiorWall", [[d.x0, b, zs(b)], [d.x1, b, zs(b)], [d.x1, b, zi], [d.x0, b, zi]], [0, -1, 0]);
+  const b = d.y1;
+  const zs = (y: number, x: number) => s * skin(y, x);
+  // the sill, raised onto the body's bottom edge where that stands higher (a nose's rising underside)
+  const sill = (x: number) => Math.min(b - 0.01, Math.max(d.y0, bottom ? bottom.at(x) + 0.003 : d.y0));
+  const xs = [...new Set([d.x0, d.x1, ...(bottom?.xs ?? []).filter((x) => x > d.x0 && x < d.x1)])].sort((p, q) => p - q);
+  for (let i = 0; i + 1 < xs.length; i++) {
+    const [p, q] = [xs[i]!, xs[i + 1]!];
+    const [sp, sq] = [sill(p), sill(q)];
+    const [fp, fq] = [Math.max(sp, level(p)), Math.max(sq, level(q))];
+    if (fp > sp + 1e-4 || fq > sq + 1e-4) face(m, "interiorWall", [[p, sp, zi], [q, sq, zi], [q, fq, zi], [p, fp, zi]], [0, 0, s]);
+    face(m, "interiorFloor", [[p, sp, zs(sp, p)], [q, sq, zs(sq, q)], [q, sq, zi], [p, sp, zi]], [0, 1, 0]);
+  }
+  face(m, "interiorWall", [[d.x0, b, zs(b, d.x0)], [d.x1, b, zs(b, d.x1)], [d.x1, b, zi], [d.x0, b, zi]], [0, -1, 0]);
   const steps = 8;
-  const prof = Array.from({ length: steps + 1 }, (_, k) => a + ((b - a) * k) / steps);
   // the jambs 3 mm inside the doorway, off the inner walls of the door's frame at its edges
-  for (const [x, dir] of [[d.x0 + 0.003, 1], [d.x1 - 0.003, -1]] as const) face(m, "interiorWall", [...prof.map((y): Vec3 => [x, y, zs(y)]), [x, b, zi], [x, a, zi]], [dir, 0, 0]);
+  for (const [x, dir] of [[d.x0 + 0.003, 1], [d.x1 - 0.003, -1]] as const) {
+    const a = sill(x);
+    const prof = Array.from({ length: steps + 1 }, (_, k) => a + ((b - a) * k) / steps);
+    face(m, "interiorWall", [...prof.map((y): Vec3 => [x, y, zs(y, x)]), [x, b, zi], [x, a, zi]], [dir, 0, 0]);
+  }
 }
