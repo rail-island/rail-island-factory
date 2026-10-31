@@ -92,8 +92,10 @@ interface PassengerHints {
 `tracks` - a railway station page's tracks, in the model's own (lifted, `Sketch.build`)
 coordinates: each centreline's x, its extent along z and its rail top - keeps the viewpoints off
 the tracks and turns on the page's **Parked train** and **Catenary** overlays, which the viewer
-lays along them (`src/viewerOverlays.ts`). The overlays are the viewer's, not the station's: the
-station's JS, thumbnails and pins stay as they are.
+lays along them (`src/viewerOverlays.ts`). The railway station pages state both, on the full and
+the distant build (`stations.ts`: every rail row's centre, the rails' length and their top at 1.0).
+The overlays are the viewer's, not the station's: the station's JS, thumbnails and pins stay as
+they are.
 
 ## City blocks
 
