@@ -2282,8 +2282,8 @@ function buildGrandTerminus(length: number, layout: StationLayout): StationBox[]
 // --- passenger detail ---------------------------------------------------------
 // What a passenger standing on the platform sees, added to every type over what its
 // builder made (docs/models/station-types.md, "Passenger detail"): the platform's
-// surface and edges (a tactile strip behind the safety line, a coping lip and a
-// darker platform face, paving joints, drainage gratings), sector letters and track
+// surface and edges (a tactile strip behind the safety line, a raised coping,
+// paving joints, drainage gratings), sector letters and track
 // numbers on posts, furniture and information (ticket machines, validators, info
 // pillars, timetable cases, vending machines, bins, speaker and camera poles, lamps
 // on an open platform) and a glass lift beside every underpass stair. Every standing
@@ -2291,7 +2291,6 @@ function buildGrandTerminus(length: number, layout: StationLayout): StationBox[]
 // clear of whatever the type built there (`Floor`), and is left out if none is free.
 
 const TACTILE_COLOR: [number, number, number] = [232, 230, 222];
-const PLATFORM_FACE: [number, number, number] = [150, 142, 130];
 const JOINT_COLOR: [number, number, number] = [150, 143, 132];
 const MACHINE_BLUE: [number, number, number] = [40, 98, 160];
 const VENDING_RED: [number, number, number] = [168, 44, 44];
@@ -2571,8 +2570,8 @@ function pushPassengerKit(boxes: StationBox[], type: string, length: number, lay
       const edge = side < 0 ? band.minX : band.maxX;
       if (track) {
         kit.push({ cx: edge - side * 0.95, cy: PLATFORM_HEIGHT + MARK_TACTILE - 0.035, cz: 0, sx: 0.5, sy: 0.07, sz: 2 * deckHalf - 2, color: TACTILE_COLOR, material: "safety" });
-        kit.push({ cx: edge + side * 0.045, cy: (0.3 + PLATFORM_HEIGHT - 0.3) / 2, cz: 0, sx: 0.07, sy: PLATFORM_HEIGHT - 0.6, sz: 2 * deckHalf, color: PLATFORM_FACE, material: "edge" });
-        kit.push({ cx: edge - side * 0.09, cy: PLATFORM_HEIGHT + MARK_LIP - 0.05, cz: 0, sx: 0.42, sy: 0.1, sz: 2 * deckHalf, color: EDGE_COLOR, material: "edge" });
+        // the raised coping along the edge (nothing may stand out over the ballast)
+        kit.push({ cx: edge - side * 0.21, cy: PLATFORM_HEIGHT + MARK_LIP - 0.05, cz: 0, sx: 0.42, sy: 0.1, sz: 2 * deckHalf, color: EDGE_COLOR, material: "edge" });
       } else if (w > 3) {
         // drainage gratings along the back of an outer platform
         for (let z = -deckHalf + 6; z <= deckHalf - 6; z += 12) {

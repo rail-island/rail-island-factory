@@ -95,8 +95,11 @@ describe("station set: geometry", () => {
           }
           const { min, max } = bounds(b);
           // 0.2: the lower corner of a tilted slab ending at the platform edge (the
-          // shared V-roof's eave) reaches a fifth of a stud past it, outside the gauge
-          const over = beds.some(([a, c]) => Math.min(max[0]!, c) - Math.max(min[0]!, a) > 0.2);
+          // shared V-roof's eave) reaches a fifth of a stud past it, outside the
+          // gauge; an upright box may not reach over the ballast at all (the
+          // passenger kit's coping once overhung it, which the game refuses)
+          const slack = b.rotZ || b.rotX ? 0.2 : 0.01;
+          const over = beds.some(([a, c]) => Math.min(max[0]!, c) - Math.max(min[0]!, a) > slack);
           if (over && min[1]! < clearY - 0.05) {
             throw new Error(`${type} ${tracks}x${length}: ${b.material} box at x=${b.cx.toFixed(2)} y=${min[1]!.toFixed(2)}..${max[1]!.toFixed(2)} hangs into a track's gauge`);
           }
