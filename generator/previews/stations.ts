@@ -25,7 +25,14 @@ function stationSketch(values: ParamValues | undefined, type: string, lod: boole
   const length = Number(p.length), layout = station.buildLayout(type, Number(p.tracks));
   const s = new Sketch();
   const furnished = station.furnish(type, length, layout);
-  if (!lod) for (const b of furnished) s.box(s.mat(b.material, b.color), b);
+  if (!lod) {
+    // the materials drawn on thin parts only first (a sign's letters, a machine's
+    // screen), so they take the smallest coplanar steps: the rest keep their order,
+    // and so the steps between them
+    const thick = new Set(furnished.filter((b) => partSize(b) > 0.06).map((b) => `${b.material}|${b.color.join(",")}`));
+    for (const b of furnished) if (!thick.has(`${b.material}|${b.color.join(",")}`)) s.mat(b.material, b.color);
+    for (const b of furnished) drawStationBox(s, b);
+  }
   else {
     // the distant station: the deck, and one box round the roofs, vaults and walls over it
     const width = layout.rows.reduce((w, r) => w + r.width, 0);
@@ -51,6 +58,33 @@ function stationSketch(values: ParamValues | undefined, type: string, lod: boole
     x += row.width;
   }
   return s;
+}
+
+/** How small a part is: its thinnest side (an arc's thickness). */
+function partSize(b: station.StationBox): number {
+  return b.shape === "arc" ? b.arc?.thick ?? 0.2 : Math.min(b.sx, b.sy, b.sz);
+}
+
+/**
+ * One box of the station vocabulary: a box through the sketch, a shape from the set's
+ * own mesh (the game draws the same), grown by its material's coplanar step.
+ */
+function drawStationBox(s: Sketch, b: station.StationBox): void {
+  const mat = s.mat(b.material, b.color);
+  if (!b.shape) {
+    s.box(mat, b);
+    return;
+  }
+  const e = s.grow(mat);
+  let grown: station.StationBox = { ...b, sx: b.sx + 2 * e, sy: b.sy + 2 * e, sz: b.sz + 2 * e };
+  if (b.shape === "bar" && b.from && b.to) {
+    const d = [b.to[0] - b.from[0], b.to[1] - b.from[1], b.to[2] - b.from[2]];
+    const l = Math.hypot(d[0]!, d[1]!, d[2]!) || 1;
+    const k = e / l;
+    grown = { ...grown, from: [b.from[0] - d[0]! * k, b.from[1] - d[1]! * k, b.from[2] - d[2]! * k], to: [b.to[0] + d[0]! * k, b.to[1] + d[1]! * k, b.to[2] + d[2]! * k] };
+  }
+  if (b.shape === "arc" && b.arc) grown = { ...grown, arc: { ...b.arc, thick: b.arc.thick + 2 * e } };
+  s.triangles(mat, station.stationBoxMesh(grown).positions, b.shape === "arc" && station.arcIsSheet(b));
 }
 
 export function stationPreview(values: ParamValues | undefined, type: string): MeshBuilder { return stationSketch(values, type, false).build("station"); }

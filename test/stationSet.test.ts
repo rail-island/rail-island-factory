@@ -9,53 +9,43 @@ const TRACKS = [1, 2, 3, 4, 8];
 const LENGTHS = [40, 60, 120, 240];
 
 /**
- * The triangle budget of a station type, by tier (docs/models/sets.md, "Triangle
+ * The triangle budget of every station type (docs/models/station-types.md, "Triangle
  * budgets"): a fixed part for what a station has once (end facades, boards, the
  * depot's buildings) plus a part per stud of length per track, counting one more
- * track for the outer platforms -- so a station grows with its size the way the
- * trains standing in it do, and stays far below them (a coach is 16,000).
+ * track for the outer platforms -- 30,000 for 4 tracks of 120 studs. A station grows
+ * with its size the way the trains standing in it do, and stays far below them (a
+ * coach is 16,000).
  */
-const TIERS = {
-  open: { ends: 3000, perStud: 10 },
-  canopy: { ends: 4000, perStud: 40 },
-  shed: { ends: 10000, perStud: 60 },
-} as const;
-const TIER: Record<string, keyof typeof TIERS> = {
-  platforms_only: "open",
-  village_depot: "open",
-  platforms_shared: "canopy",
-  heritage_canopy: "canopy",
-  cantilever_wings: "canopy",
-  concourse: "canopy",
-  arch_shed: "shed",
-  grand_terminus: "shed",
-};
+const BUDGET = { ends: 6000, perStud: 40 } as const;
 
-function budget(type: string, tracks: number, length: number): number {
-  const t = TIERS[TIER[type]!];
-  return t.ends + t.perStud * length * (tracks + 1);
+function budget(tracks: number, length: number): number {
+  return BUDGET.ends + BUDGET.perStud * length * (tracks + 1);
 }
 
-/** Triangles the game draws for a box list: 12 per box, 8 per gable prism. */
-function stationTriangles(boxes: readonly station.StationBox[]): number {
-  let n = 0;
-  for (const b of boxes) n += b.profile === "gable" ? 8 : 12;
-  return n;
-}
-
-/** A box's axis-aligned bounds after its Z then X tilt. */
+/** A box's extent in the station frame, from the mesh the game draws. */
 function bounds(b: station.StationBox): { min: number[]; max: number[] } {
-  const cz = Math.cos(b.rotZ ?? 0), sz = Math.sin(b.rotZ ?? 0);
-  const cx = Math.cos(b.rotX ?? 0), sx = Math.sin(b.rotX ?? 0);
-  const min = [Infinity, Infinity, Infinity], max = [-Infinity, -Infinity, -Infinity];
-  for (const dx of [-1, 1]) for (const dy of [-1, 1]) for (const dz of [-1, 1]) {
-    let x = (dx * b.sx) / 2, y = (dy * b.sy) / 2, z = (dz * b.sz) / 2;
-    [x, y] = [x * cz - y * sz, x * sz + y * cz];
-    [y, z] = [y * cx - z * sx, y * sx + z * cx];
-    const p = [b.cx + x, b.cy + y, b.cz + z];
-    for (let i = 0; i < 3; i++) { min[i] = Math.min(min[i]!, p[i]!); max[i] = Math.max(max[i]!, p[i]!); }
-  }
+  const [min, max] = station.stationBoxBounds(b);
   return { min, max };
+}
+
+/** The lowest point of a box's mesh over the x span [x0, x1] (Infinity if none of it lies there). */
+function lowestOver(b: station.StationBox, x0: number, x1: number): number {
+  const p = station.stationBoxMesh(b).positions;
+  let low = Infinity;
+  const inside = (x: number): boolean => x >= x0 && x <= x1;
+  for (let t = 0; t < p.length; t += 9) {
+    for (let i = 0; i < 3; i++) {
+      const ax = p[t + i * 3]!, ay = p[t + i * 3 + 1]!;
+      const j = (i + 1) % 3;
+      const bx = p[t + j * 3]!, by = p[t + j * 3 + 1]!;
+      if (inside(ax)) low = Math.min(low, ay);
+      // where the edge crosses either end of the span
+      for (const x of [x0, x1]) {
+        if ((ax - x) * (bx - x) < 0) low = Math.min(low, ay + ((by - ay) * (x - ax)) / (bx - ax));
+      }
+    }
+  }
+  return low;
 }
 
 /** The ballast beds' X spans of a layout. */
@@ -72,14 +62,14 @@ function ballastSpans(layout: station.StationLayout): Array<[number, number]> {
 }
 
 describe("station set: triangle budgets", () => {
-  it("puts every type in a tier", () => {
-    expect(Object.keys(TIER).sort()).toEqual(Object.keys(station.TYPE_META).sort());
+  it("holds 4 tracks of 120 studs to 30,000 triangles", () => {
+    expect(budget(4, 120)).toBe(30000);
   });
   for (const type of Object.keys(station.TYPE_META)) {
-    it(`${type}: within its ${TIER[type]} budget at every size`, () => {
+    it(`${type}: within the budget at every size`, () => {
       for (const tracks of TRACKS) for (const length of LENGTHS) {
-        const tris = stationTriangles(station.furnish(type, length, station.buildLayout(type, tracks)));
-        expect(tris, `${type} ${tracks}x${length}`).toBeLessThanOrEqual(budget(type, tracks, length));
+        const tris = station.stationTriangles(station.furnish(type, length, station.buildLayout(type, tracks)));
+        expect(tris, `${type} ${tracks}x${length}`).toBeLessThanOrEqual(budget(tracks, length));
       }
     });
   }
@@ -95,6 +85,14 @@ describe("station set: geometry", () => {
         for (const b of station.furnish(type, length, layout)) {
           for (const v of [b.cx, b.cy, b.cz, b.sx, b.sy, b.sz]) expect(Number.isFinite(v)).toBe(true);
           expect(Math.min(b.sx, b.sy, b.sz)).toBeGreaterThan(0.01);
+          if (b.shape) {
+            // a shape (a curved vault, a round post): its true surface over the beds
+            for (const [a, c] of beds) {
+              const low = lowestOver(b, a + 0.2, c - 0.2);
+              if (low < clearY - 0.05) throw new Error(`${type} ${tracks}x${length}: ${b.material} ${b.shape} at x=${b.cx.toFixed(2)} reaches down to y=${low.toFixed(2)} over a track`);
+            }
+            continue;
+          }
           const { min, max } = bounds(b);
           // 0.2: the lower corner of a tilted slab ending at the platform edge (the
           // shared V-roof's eave) reaches a fifth of a stud past it, outside the gauge
@@ -162,13 +160,13 @@ describe("station set: see-through glass", () => {
         const boxes = station.furnish(type, length, station.buildLayout(type, tracks));
         for (const g of boxes) {
           // flat panes and walls: a tilted slab's bounds say little about its faces
-          if (g.material !== "glass" || g.rotZ || g.rotX) continue;
+          if (g.material !== "glass" || g.rotZ || g.rotX || g.shape) continue;
           const gb = bounds(g);
           const size = [0, 1, 2].map((i) => gb.max[i]! - gb.min[i]!);
           const thin = size.indexOf(Math.min(...size));
           if (size[thin]! > 0.5) continue;
           for (const o of boxes) {
-            if (o === g || o.material === "glass" || o.material === "light" || o.rotZ || o.rotX) continue;
+            if (o === g || o.material === "glass" || o.material === "light" || o.rotZ || o.rotX || o.shape) continue;
             const ob = bounds(o);
             const covers = [0, 1, 2].every((i) => i === thin
               || (Math.min(gb.max[i]!, ob.max[i]!) - Math.max(gb.min[i]!, ob.min[i]!)) >= 0.9 * size[i]!);
@@ -183,3 +181,53 @@ describe("station set: see-through glass", () => {
   }
 });
 
+
+describe("station set: primitives", () => {
+  // The game builds a shape's geometry from stationBoxMesh and the budget counts it
+  // with stationBoxTriangles: the two must agree, and a closed shape must face out.
+  const base = { cx: 1, cy: 2, cz: 3, sx: 1, sy: 2, sz: 1.5, color: [1, 2, 3] as [number, number, number], material: "steel" as const };
+  const SHAPES: station.StationBox[] = [
+    { ...base },
+    { ...base, profile: "gable" },
+    { ...base, rotZ: 0.3, rotX: -0.2 },
+    { ...base, shape: "cylinder", sides: 3 },
+    { ...base, shape: "cylinder", sides: 12, rotZ: 0.4, rotX: 0.2 },
+    { ...base, shape: "sphere", sides: 4 },
+    { ...base, shape: "sphere", sides: 10 },
+    { ...base, shape: "dome", sides: 4 },
+    { ...base, shape: "dome", sides: 16 },
+    { ...base, shape: "bar", from: [0, 0, 0], to: [2, 3, 1], sx: 0.2, sy: 0.3 },
+    { ...base, shape: "bar", sides: 6, from: [0, 0, 0], to: [0, 3, 0], sx: 0.2, sy: 0.2 },
+    { ...base, shape: "arc", sides: 12, arc: { rx: 5, ry: 4, a0: Math.PI, a1: 0, thick: 0.3 } },
+    { ...base, shape: "arc", sides: 5, arc: { rx: 3, ry: 3, a0: 0.2, a1: 1.4, thick: 0.6 } },
+  ];
+  /** The signed volume of a triangle soup: positive when every face looks out. */
+  function volume(pos: number[]): number {
+    let v = 0;
+    for (let i = 0; i < pos.length; i += 9) {
+      const [ax, ay, az, bx, by, bz, cx, cy, cz] = pos.slice(i, i + 9) as number[];
+      v += (ax! * (by! * cz! - bz! * cy!) - ay! * (bx! * cz! - bz! * cx!) + az! * (bx! * cy! - by! * cx!)) / 6;
+    }
+    return v;
+  }
+  it("counts what it draws, and every closed shape faces out", () => {
+    for (const b of SHAPES) {
+      const mesh = station.stationBoxMesh(b);
+      expect(mesh.positions.length / 9, b.shape ?? "box").toBe(station.stationBoxTriangles(b));
+      expect(mesh.normals.length).toBe(mesh.positions.length);
+      expect(volume(mesh.positions), b.shape ?? "box").toBeGreaterThan(0);
+    }
+  });
+  it("draws a thin glass arc as one sheet", () => {
+    const sheet: station.StationBox = { ...base, material: "glass", shape: "arc", sides: 10, arc: { rx: 5, ry: 4, a0: Math.PI, a1: 0, thick: 0.1 } };
+    expect(station.stationBoxTriangles(sheet)).toBe(20);
+    expect(station.stationBoxMesh(sheet).positions.length / 9).toBe(20);
+  });
+  it("draws every type's boxes as counted", () => {
+    for (const type of Object.keys(station.TYPE_META)) {
+      for (const b of station.furnish(type, 120, station.buildLayout(type, 4))) {
+        expect(station.stationBoxMesh(b).positions.length / 9).toBe(station.stationBoxTriangles(b));
+      }
+    }
+  });
+});
