@@ -22,15 +22,38 @@ function budget(tracks: number, length: number): number {
   return BUDGET.ends + BUDGET.perStud * length * (tracks + 1);
 }
 
-/** A box's extent in the station frame, from the mesh the game draws. */
+/** A box's extent in the station frame, from the mesh the game draws (kept per box). */
+const extents = new WeakMap<station.StationBox, { min: number[]; max: number[] }>();
 function bounds(b: station.StationBox): { min: number[]; max: number[] } {
-  const [min, max] = station.stationBoxBounds(b);
-  return { min, max };
+  let e = extents.get(b);
+  if (!e) {
+    const [min, max] = station.stationBoxBounds(b);
+    e = { min, max };
+    extents.set(b, e);
+  }
+  return e;
+}
+
+/** A furnished station, built once for every check that reads it. */
+const built = new Map<string, station.StationBox[]>();
+function furnished(type: string, tracks: number, length: number): station.StationBox[] {
+  const key = `${type}|${tracks}|${length}`;
+  let boxes = built.get(key);
+  if (!boxes) {
+    boxes = station.furnish(type, length, station.buildLayout(type, tracks));
+    built.set(key, boxes);
+  }
+  return boxes;
 }
 
 /** The lowest point of a box's mesh over the x span [x0, x1] (Infinity if none of it lies there). */
+const meshes = new WeakMap<station.StationBox, number[]>();
 function lowestOver(b: station.StationBox, x0: number, x1: number): number {
-  const p = station.stationBoxMesh(b).positions;
+  let p = meshes.get(b);
+  if (!p) {
+    p = station.stationBoxMesh(b).positions;
+    meshes.set(b, p);
+  }
   let low = Infinity;
   const inside = (x: number): boolean => x >= x0 && x <= x1;
   for (let t = 0; t < p.length; t += 9) {
@@ -68,7 +91,7 @@ describe("station set: triangle budgets", () => {
   for (const type of Object.keys(station.TYPE_META)) {
     it(`${type}: within the budget at every size`, () => {
       for (const tracks of TRACKS) for (const length of LENGTHS) {
-        const tris = station.stationTriangles(station.furnish(type, length, station.buildLayout(type, tracks)));
+        const tris = station.stationTriangles(furnished(type, tracks, length));
         expect(tris, `${type} ${tracks}x${length}`).toBeLessThanOrEqual(budget(tracks, length));
       }
     });
@@ -82,12 +105,17 @@ describe("station set: geometry", () => {
       for (const tracks of TRACKS) for (const length of LENGTHS) {
         const layout = station.buildLayout(type, tracks);
         const beds = ballastSpans(layout);
-        for (const b of station.furnish(type, length, layout)) {
-          for (const v of [b.cx, b.cy, b.cz, b.sx, b.sy, b.sz]) expect(Number.isFinite(v)).toBe(true);
-          expect(Math.min(b.sx, b.sy, b.sz)).toBeGreaterThan(0.01);
+        for (const b of furnished(type, tracks, length)) {
+          // (plain checks: thousands of boxes a station)
+          if (![b.cx, b.cy, b.cz, b.sx, b.sy, b.sz].every(Number.isFinite)) throw new Error(`${type} ${tracks}x${length}: a ${b.material} box is not finite`);
+          if (!(Math.min(b.sx, b.sy, b.sz) > 0.01)) throw new Error(`${type} ${tracks}x${length}: a ${b.material} box is degenerate`);
           if (b.shape) {
-            // a shape (a curved vault, a round post): its true surface over the beds
+            // a shape (a curved vault, a round post): its true surface over the beds,
+            // where its extent says it could reach into the gauge at all
+            const { min, max } = bounds(b);
+            if (min[1]! >= clearY - 0.05) continue;
             for (const [a, c] of beds) {
+              if (max[0]! < a + 0.2 || min[0]! > c - 0.2) continue;
               const low = lowestOver(b, a + 0.2, c - 0.2);
               if (low < clearY - 0.05) throw new Error(`${type} ${tracks}x${length}: ${b.material} ${b.shape} at x=${b.cx.toFixed(2)} reaches down to y=${low.toFixed(2)} over a track`);
             }
@@ -118,7 +146,7 @@ describe("station set: end ramps", () => {
   for (const type of RAMPED) {
     it(`${type}: keeps what stands on the deck off the ramps`, () => {
       for (const tracks of TRACKS) for (const length of LENGTHS) {
-        for (const b of station.furnish(type, length, station.buildLayout(type, tracks))) {
+        for (const b of furnished(type, tracks, length)) {
           if (["platform", "edge", "safety"].includes(b.material)) continue;
           const { min, max } = bounds(b);
           const standing = Math.abs(min[1]! - station.PLATFORM_HEIGHT) < 0.6;
@@ -137,7 +165,7 @@ describe("station set: name boards", () => {
   for (const type of Object.keys(station.TYPE_META)) {
     it(`${type}: keeps every name board clear of posts, masts and ties`, () => {
       for (const tracks of TRACKS) for (const length of LENGTHS) {
-        const boxes = station.furnish(type, length, station.buildLayout(type, tracks));
+        const boxes = furnished(type, tracks, length);
         for (const board of boxes.filter((b) => b.label)) {
           const bb = bounds(board);
           for (const o of boxes) {
@@ -160,7 +188,7 @@ describe("station set: see-through glass", () => {
   for (const type of Object.keys(station.TYPE_META)) {
     it(`${type}: lays no thin glass pane on a solid face`, () => {
       for (const tracks of TRACKS) for (const length of LENGTHS) {
-        const boxes = station.furnish(type, length, station.buildLayout(type, tracks));
+        const boxes = furnished(type, tracks, length);
         for (const g of boxes) {
           // flat panes and walls: a tilted slab's bounds say little about its faces
           if (g.material !== "glass" || g.rotZ || g.rotX || g.shape) continue;

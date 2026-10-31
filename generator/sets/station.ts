@@ -414,10 +414,24 @@ export function stationBoxMesh(b: StationBox): StationMesh {
   return { positions, normals };
 }
 
+/** A plain box's eight corners in the station frame, flat (x, y, z, x, y, z, ...). */
+function boxCorners(b: StationBox): number[] {
+  const cz = Math.cos(b.rotZ ?? 0), sz = Math.sin(b.rotZ ?? 0);
+  const cx = Math.cos(b.rotX ?? 0), sx = Math.sin(b.rotX ?? 0);
+  const out: number[] = [];
+  for (const dx of [-1, 1]) for (const dy of [-1, 1]) for (const dz of [-1, 1]) {
+    const x0 = (dx * b.sx) / 2, y0 = (dy * b.sy) / 2, z0 = (dz * b.sz) / 2;
+    const x = x0 * cz - y0 * sz, y = x0 * sz + y0 * cz;
+    out.push(b.cx + x, b.cy + y * cx - z0 * sx, b.cz + y * sx + z0 * cx);
+  }
+  return out;
+}
+
 /** A box's extent in the station frame: [min, max], each [x, y, z]. */
 export function stationBoxBounds(b: StationBox): [V3, V3] {
   const min: V3 = [Infinity, Infinity, Infinity], max: V3 = [-Infinity, -Infinity, -Infinity];
-  const pos = stationBoxMesh(b).positions;
+  // a plain box from its eight corners (the mesh's own corners), without meshing it
+  const pos = b.shape || b.profile || isGlassPane(b) ? stationBoxMesh(b).positions : boxCorners(b);
   for (let i = 0; i < pos.length; i += 3) {
     for (let j = 0; j < 3; j++) {
       min[j] = Math.min(min[j]!, pos[i + j]!);
