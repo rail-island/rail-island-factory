@@ -1,14 +1,11 @@
-# Typecheck + Vitest on every push to `master` (and by hand on any branch).
+# Typecheck + Vitest, run by hand only (Run workflow, on any branch).
 #
-# Runs beside deploy.yml rather than in front of it: a red run shows as a failed
-# check without holding the deploy back.
+# Pushes to `master` no longer run it: run the tests locally before landing a
+# change (`pnpm typecheck`, `pnpm test`). It never gated deploy.yml.
 
 name: Tests
 
 on:
-  push:
-    branches:
-      - master
   workflow_dispatch:
 
 concurrency:
