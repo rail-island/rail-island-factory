@@ -7,7 +7,9 @@ import * as THREE from "three";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { AVATAR, AVATAR_SEAT_HEIGHT, CHARACTERS, avatar, avatarLod } from "../generator/characters";
+import { AVATAR, AVATAR_FINISH_PARAMS, AVATAR_PARAMS, AVATAR_PRESETS, AVATAR_SEAT_HEIGHT, CHARACTERS, avatar, avatarLod } from "../generator/characters";
+import { ANIMALS, ANIMAL_PARTS, ANIMAL_RUN_SPEED, ANIMAL_WALK_SPEED } from "../generator/animals";
+import { resolveParams, type ParamValues, type ProceduralDesign } from "../generator/design";
 import {
   ALL_VEHICLES, BUILDINGS, CHARACTER_DESIGNS, DESIGNS, PREVIEW_DESIGNS, PROP_DESIGNS, VILLAGE_DESIGNS, buildExport,
 } from "../generator/generate";
@@ -38,9 +40,12 @@ describe("the avatar", () => {
   it("is a character of its own, in no other family or meta", () => {
     const d = DESIGNS.get(ID)!;
     expect(d).toBe(CHARACTERS[0]);
-    expect(CHARACTER_DESIGNS).toEqual([d]);
-    for (const list of [BUILDINGS, VILLAGE_DESIGNS, ALL_VEHICLES, PROP_DESIGNS, PREVIEW_DESIGNS]) expect(list).not.toContain(d);
-    expect(d.catalog?.category).toBe("Characters");
+    expect(CHARACTERS).toEqual([d]);
+    expect(CHARACTER_DESIGNS).toEqual([d, ...ANIMALS]);
+    for (const c of CHARACTER_DESIGNS) {
+      for (const list of [BUILDINGS, VILLAGE_DESIGNS, ALL_VEHICLES, PROP_DESIGNS, PREVIEW_DESIGNS]) expect(list).not.toContain(c);
+      expect(c.catalog?.category).toBe("Characters");
+    }
     expect(exportedText().get(`model.${ID}`)).toBe("Avatar");
   });
 
@@ -125,19 +130,24 @@ describe("the avatar", () => {
 describe("characters.meta.json", () => {
   it("lists the avatar with its height, bounds, clips, facing and seat", () => {
     const s = glbStats(glb);
-    const meta = exportCharacterMeta(CHARACTER_DESIGNS, new Map([[ID, { min: s.min, max: s.max }]]));
+    const meta = exportCharacterMeta([CHARACTERS[0]!], new Map([[ID, { min: s.min, max: s.max }]]));
     expect(meta.count).toBe(1);
     const e = meta.characters[0]!;
     expect(e).toMatchObject({ id: ID, title: "Avatar", category: "Characters", group: "character", js: `${ID}.js`, thumb: `${ID}.png` });
     expect(e.defaultScale).toBeUndefined();
-    expect(e.params).toBeUndefined();
-    expect(e.character).toEqual({
+    expect(e.params!.map((p) => p.name)).toEqual(AVATAR_PARAMS.map((p) => p.name));
+    const { presets, ...rest } = e.character;
+    expect(rest).toEqual({
       height: 1.81,
       bounds: { min: [-0.21, 0, -0.475], max: [0.22, 1.81, 0.475] },
       clips: Object.keys(CLIPS),
       facing: "+x",
       seat: AVATAR_SEAT_HEIGHT,
     });
+    // every preset with every parameter resolved, so the game stores a full look
+    expect(presets!.map((p) => p.id)).toEqual(AVATAR_PRESETS.map((p) => p.id));
+    for (const p of presets!) expect(p.params).toEqual(resolveParams(AVATAR_PARAMS, p.params));
+    expect(presets![0]!.params).toEqual(resolveParams(AVATAR_PARAMS));
     expect(() => exportCharacterMeta(CHARACTER_DESIGNS, new Map())).toThrow(/bounds/);
   });
 
@@ -148,6 +158,7 @@ describe("characters.meta.json", () => {
       const read = (f: string) => fs.readFileSync(path.join(dir, f), "utf8");
       const chars = JSON.parse(read(CHARACTERS_META_FILE)) as CharacterExportMeta;
       expect(chars.characters.map((c) => c.id)).toEqual([ID]);
+      expect(chars.characters[0]!.character.presets).toHaveLength(AVATAR_PRESETS.length);
       expect(chars.characters[0]!.character.height).toBe(1.81);
       for (const f of [META_FILE, VILLAGE_META_FILE, VEHICLE_META_FILE, PROPS_META_FILE]) expect(read(f), f).not.toContain(ID);
       expect(JSON.parse(read(PROPS_META_FILE)).props.map((p: { id: string }) => p.id)).toEqual([PROP_DESIGNS[0]!.id]);
@@ -197,5 +208,128 @@ describe("the site", () => {
       ["Idle", "loop"], ["Walk", "loop"], ["Run", "loop"], ["Jump", "once"], ["Fall", "loop"], ["Sit", "hold"],
     ]);
     expect(buttons.find((b) => b.name === "walk")!.speed).toBe(AVATAR.walkSpeed);
+  });
+});
+
+/** The lowest point of a posed build at every sample of a clip. */
+function lowestOf(build: ReturnType<typeof avatar>, glbBytes: Uint8Array, name: string): number[] {
+  const i = build.animations().findIndex((c) => c.name === name);
+  return Array.from({ length: sampleCount(glbBytes, i) }, (_, k) => glbStats(poseGlb(glbBytes, k, i)).min[1]);
+}
+
+describe("the avatar's looks", () => {
+  /** The presets, and every shape value on the default look: what the game offers by name and one by one. */
+  const looks: [string, ParamValues][] = [
+    ...AVATAR_PRESETS.map((p) => [`preset ${p.id}`, p.params] as [string, ParamValues]),
+    ...AVATAR_PARAMS.filter((p) => !(AVATAR_FINISH_PARAMS as readonly string[]).includes(p.name))
+      .flatMap((p) => p.values.filter((v) => v.value !== p.default).map((v) => [`${p.name}=${v.value}`, { [p.name]: v.value }] as [string, ParamValues])),
+  ];
+
+  it("offers ten presets with stable ids, a name gender each, all resolving", () => {
+    expect(AVATAR_PRESETS.length).toBe(10);
+    expect(new Set(AVATAR_PRESETS.map((p) => p.id)).size).toBe(10);
+    expect(AVATAR_PRESETS[0]!).toMatchObject({ id: "classic", params: {} });
+    for (const p of AVATAR_PRESETS) {
+      expect(["female", "male"]).toContain(p.nameGender);
+      expect(() => resolveParams(AVATAR_PARAMS, p.params)).not.toThrow();
+      expect(exportedText().get(`model.${ID}.preset.${p.id}`)).toBe(p.title);
+    }
+  });
+
+  it("draws the original figure at its defaults", () => {
+    expect(avatar({}).triangleCount()).toBe(avatar().triangleCount());
+    expect(glbStats(avatar(resolveParams(AVATAR_PARAMS)).toGlb(ID)).max[1]).toBeCloseTo(1.81, 5);
+  });
+
+  it.each(looks)("keeps the skeleton, the budgets, no z-fighting and its feet on the ground: %s", (_name, params) => {
+    const b = avatar(params);
+    const bytes = b.toGlb(ID);
+    expect(b.triangleCount()).toBeLessThan(1500);
+    expect(avatarLod(params).triangleCount()).toBeLessThanOrEqual(100);
+    expect(findCoplanarOverlaps(bytes)).toEqual([]);
+    expect(b.animations().map((c) => c.name)).toEqual(Object.keys(CLIPS));
+    expect(new Set(b.animations()[0]!.tracks.map((t) => t.node))).toEqual(new Set(PARTS));
+    const s = glbStats(bytes);
+    expect(s.max[1]).toBeGreaterThan(1.75);
+    expect(s.max[1]).toBeLessThan(2.0);
+    for (const clip of Object.keys(CLIPS)) expect(Math.min(...lowestOf(b, bytes, clip)), clip).toBeGreaterThanOrEqual(-0.02);
+  });
+});
+
+describe("the animals", () => {
+  const byId = (id: string): ProceduralDesign => ANIMALS.find((a) => a.id === id)!;
+
+  it("are a dog, a cat, a pig and an elephant, each with a coat colour and an exported title", () => {
+    expect(ANIMALS.map((a) => [a.id, a.title])).toEqual([
+      ["proc-char-dog", "Dog"], ["proc-char-cat", "Cat"], ["proc-char-pig", "Pig"], ["proc-char-elephant", "Elephant"],
+    ]);
+    for (const a of ANIMALS) {
+      expect(a.params!.map((p) => p.name)).toEqual(["coat"]);
+      expect(a.character).toMatchObject({ facing: "+x" });
+      expect(exportedText().get(`model.${a.id}`)).toBe(a.title);
+    }
+    expect(byId("proc-char-dog").params![0]!.default).toBe("brown");
+  });
+
+  it.each(ANIMALS.map((a) => [a.id, a] as const))("%s stands in the avatar's height class, inside its budgets, with the avatar's clips", (_id, a) => {
+    for (const coat of a.params![0]!.values.map((v) => v.value)) {
+      const b = a.build({ coat });
+      const bytes = b.toGlb(a.id);
+      const s = glbStats(bytes);
+      expect(s.min[1]).toBeCloseTo(0, 5);
+      expect(s.max[1]).toBeGreaterThan(1.7);
+      expect(s.max[1]).toBeLessThan(1.95);
+      expect(s.max[0]).toBeGreaterThan(-s.min[0]); // the head leads
+      expect(b.triangleCount()).toBeLessThan(1500);
+      expect(a.buildLod({ coat }).triangleCount()).toBeLessThanOrEqual(100);
+      expect(a.buildLod({ coat }).animations()).toEqual([]);
+      expect(findCoplanarOverlaps(bytes)).toEqual([]);
+    }
+    const b = a.build();
+    const bytes = b.toGlb(a.id);
+    const drives = b.clipDrives()!;
+    expect(Object.keys(drives)).toEqual(Object.keys(CLIPS));
+    for (const [name, drive] of Object.entries(CLIPS)) expect(drives[name]!.drive, name).toBe(drive);
+    expect(drives.walk).toEqual({ drive: "distance", speed: ANIMAL_WALK_SPEED });
+    expect(drives.run).toEqual({ drive: "distance", speed: ANIMAL_RUN_SPEED });
+    const tracks = (c: { tracks: { node: string; path: string }[] }) => c.tracks.map((t) => `${t.node}.${t.path}`).sort();
+    for (const c of b.animations()) expect(tracks(c), c.name).toEqual(tracks(b.animations()[0]!));
+    expect(new Set(b.animations()[0]!.tracks.map((t) => t.node))).toEqual(new Set(ANIMAL_PARTS));
+    for (const clip of Object.keys(CLIPS)) expect(Math.min(...lowestOf(b, bytes, clip)), clip).toBeGreaterThanOrEqual(-0.02);
+    // the walk keeps a foot down; the run and the jump leave the ground
+    expect(Math.max(...lowestOf(b, bytes, "walk"))).toBeLessThan(0.005);
+    expect(Math.max(...lowestOf(b, bytes, "run"))).toBeGreaterThan(0.03);
+    expect(Math.max(...lowestOf(b, bytes, "jump"))).toBeGreaterThan(0.1);
+    // seated: the body pivot at the stated seat height, lower than standing
+    const sit = b.animations().find((c) => c.name === "sit")!;
+    const hips = sit.tracks.find((t) => t.node === "body" && t.path === "translation")!.values;
+    expect(hips.at(-2)).toBeCloseTo(a.character!.seat, 4);
+    expect(a.character!.seat).toBeLessThan(hips[1]!);
+  });
+
+  it("builds each JS model with its parts as named nodes", async () => {
+    for (const a of ANIMALS) {
+      const mod = await jsModuleOf(a.id);
+      const group = mod.default(THREE, { coat: a.params![0]!.values.at(-1)!.value }) as THREE.Group;
+      for (const p of ANIMAL_PARTS) expect(group.getObjectByName(p), `${a.id} ${p}`).toBeDefined();
+      expect(group.getObjectByName("frontLeftShin")!.parent!.name).toBe("frontLeftLeg");
+      expect(group.getObjectByName("head")!.parent!.name).toBe("body");
+      expect(group.animations.map((c: THREE.AnimationClip) => c.name)).toEqual(Object.keys(CLIPS));
+    }
+  });
+
+  it("are listed in characters.meta.json after the avatar, with their coat parameter and seat", () => {
+    const bounds = new Map(CHARACTER_DESIGNS.map((d) => {
+      const s = glbStats(d.build().toGlb(d.id));
+      return [d.id, { min: s.min, max: s.max }] as const;
+    }));
+    const meta = exportCharacterMeta(CHARACTER_DESIGNS, bounds);
+    expect(meta.characters.map((c) => c.id)).toEqual(CHARACTER_DESIGNS.map((d) => d.id));
+    for (const e of meta.characters.slice(1)) {
+      expect(e.params!.map((p) => p.name)).toEqual(["coat"]);
+      expect(e.character.presets).toBeUndefined();
+      expect(e.character.clips).toEqual(Object.keys(CLIPS));
+      expect(e.character.seat).toBeGreaterThan(0.3);
+    }
   });
 });

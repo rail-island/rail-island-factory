@@ -140,6 +140,19 @@ export interface CharacterProperties {
   seat: number;
   /** Where its face looks: "+x", as a vehicle's nose. */
   facing: "+x";
+  /** The named looks the game offers as types, for a parametric character (docs/models/characters.md). */
+  presets?: readonly CharacterPreset[];
+}
+
+/** One named look of a parametric character: its parameter values (the rest at their defaults). */
+export interface CharacterPreset {
+  /** Stable, stored in the game's saved maps. */
+  id: string;
+  /** English title, exported game text (`model.<id>.preset.<preset>`). */
+  title: string;
+  /** The grammatical gender of the first name the game gives a new avatar of this look. */
+  nameGender: "female" | "male";
+  params: ParamValues;
 }
 
 /** An OpenTTD climate a vehicle is offered in. */

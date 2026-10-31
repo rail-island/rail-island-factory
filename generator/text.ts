@@ -114,6 +114,7 @@ export function exportedText(): Map<string, string> {
   for (const d of exportedDesigns()) {
     out.set(`model.${d.id}`, d.title);
     paramText(out, `model.${d.id}`, d.params);
+    for (const p of d.character?.presets ?? []) out.set(`model.${d.id}.preset.${p.id}`, p.title);
   }
   for (const s of SETS) {
     for (const t of s.types) {

@@ -20,9 +20,10 @@
 // The low detail is eight plain boxes under 100 triangles in the rest pose: one
 // static mesh like every low detail (no parts, no clips).
 
-import type { ProceduralDesign } from "./design.ts";
+import { resolveParams, type CharacterPreset, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { MeshBuilder, type MaterialSpec } from "./meshBuilder.ts";
-import { chamferedRect, rect, type AnimationTrack, type Ring, type Vec3 } from "./meshCore.ts";
+import { chamferedRect, rect, type AnimationTrack, type Vec3 } from "./meshCore.ts";
+import { block, cube, qAxis, qMul, qRotate, r9, TAU, type Quat } from "./characterKit.ts";
 
 // ------------------------------------------------------------------ the figure
 
@@ -50,25 +51,124 @@ export const AVATAR = {
 /** The facing the game reads off characters.meta.json: the face looks along +X, as a vehicle's nose does. */
 export const AVATAR_FACING = "+x";
 
-const PALETTE: Record<string, MaterialSpec> = {
-  skin: { color: "#eac086", roughness: 0.7 },
-  shirt: { color: "#2f6fd0", roughness: 0.85 },
-  trousers: { color: "#3b4a63", roughness: 0.9 },
-  shoes: { color: "#2a2a2e", roughness: 0.6 },
-  hair: { color: "#3d2817", roughness: 0.9 },
-  face: { color: "#1c1c22", roughness: 0.5 },
-  mouth: { color: "#8a3a34", roughness: 0.6 },
+// ------------------------------------------------------------------ the look
+
+/** One enum value with its English title (exported game text, docs/models/text.md). */
+const v = (value: string, title: string) => ({ value, title });
+
+/** The colour palettes: each value's sRGB hex. */
+export const SKIN_TONES: Record<string, string> = { light: "#eac086", fair: "#f3d3b5", tan: "#c99764", brown: "#8d5a3b", dark: "#5a3a26" };
+export const SHIRT_COLOURS: Record<string, string> = {
+  blue: "#2f6fd0", red: "#c8352e", green: "#3f8f45", yellow: "#e8c33a", white: "#e9e9e4",
+  black: "#26262b", orange: "#e07a26", purple: "#7a4bb0", navy: "#1f2b4d",
+};
+export const TROUSER_COLOURS: Record<string, string> = { navy: "#3b4a63", black: "#232328", grey: "#6f737a", beige: "#b9a47c", denim: "#3f6390", brown: "#5e4430" };
+export const HAIR_COLOURS: Record<string, string> = { brown: "#3d2817", black: "#17151a", blonde: "#d6b25e", red: "#a2462a", grey: "#9c9c9e" };
+
+/**
+ * The avatar's parameters (docs/models/characters.md): five that change its shape and
+ * four colour palettes (finish parameters). Names and values are stored in the game's
+ * saved maps - never rename a shipped one. The defaults draw the original figure.
+ */
+export const AVATAR_PARAMS: readonly ParamSpec[] = [
+  { name: "hair", title: "Hair", default: "short", values: [v("short", "Short"), v("curls", "Curls"), v("long", "Long"), v("ponytail", "Ponytail"), v("bald", "Bald")] },
+  {
+    name: "headwear", title: "Headwear", default: "none",
+    values: [v("none", "None"), v("cap", "Cap"), v("hat", "Hat"), v("beanie", "Beanie"), v("helmet", "Hard hat"), v("conductor", "Conductor's cap")],
+  },
+  { name: "bag", title: "Bag", default: "none", values: [v("none", "None"), v("backpack", "Backpack"), v("shoulderBag", "Shoulder bag"), v("suitcase", "Suitcase")] },
+  { name: "body", title: "Body", default: "standard", values: [v("standard", "Standard"), v("slim", "Slim"), v("broad", "Broad")] },
+  { name: "clothing", title: "Clothing", default: "tshirt", values: [v("tshirt", "T-shirt"), v("jacket", "Jacket"), v("dress", "Dress"), v("vest", "High-vis vest")] },
+  {
+    name: "skin", title: "Skin", default: "light",
+    values: [v("light", "Light"), v("fair", "Fair"), v("tan", "Tan"), v("brown", "Brown"), v("dark", "Dark")],
+  },
+  {
+    name: "shirtColour", title: "Top colour", default: "blue",
+    values: [v("blue", "Blue"), v("red", "Red"), v("green", "Green"), v("yellow", "Yellow"), v("white", "White"), v("black", "Black"), v("orange", "Orange"), v("purple", "Purple"), v("navy", "Navy")],
+  },
+  {
+    name: "trousersColour", title: "Trousers colour", default: "navy",
+    values: [v("navy", "Navy"), v("black", "Black"), v("grey", "Grey"), v("beige", "Beige"), v("denim", "Denim"), v("brown", "Brown")],
+  },
+  { name: "hairColour", title: "Hair colour", default: "brown", values: [v("brown", "Brown"), v("black", "Black"), v("blonde", "Blonde"), v("red", "Red"), v("grey", "Grey")] },
+];
+
+/** The parameters that only recolour the avatar (ProceduralDesign.finishParams). */
+export const AVATAR_FINISH_PARAMS = ["skin", "shirtColour", "trousersColour", "hairColour"] as const;
+
+/**
+ * The named looks the game offers as avatar types (characters.meta.json `presets`),
+ * each a full set of parameter values and the grammatical gender of the first name
+ * the game gives a new avatar of that look. Ids are stored in saved maps.
+ */
+export const AVATAR_PRESETS: readonly CharacterPreset[] = [
+  { id: "classic", title: "Classic", nameGender: "male", params: {} },
+  { id: "conductor", title: "Conductor", nameGender: "male", params: { headwear: "conductor", clothing: "jacket", shirtColour: "navy", trousersColour: "navy" } },
+  { id: "worker", title: "Worker", nameGender: "male", params: { headwear: "helmet", clothing: "vest", body: "broad", shirtColour: "white", trousersColour: "denim", skin: "tan" } },
+  { id: "hiker", title: "Hiker", nameGender: "female", params: { hair: "ponytail", headwear: "cap", bag: "backpack", shirtColour: "green", trousersColour: "brown", hairColour: "blonde" } },
+  { id: "tourist", title: "Tourist", nameGender: "male", params: { headwear: "hat", bag: "shoulderBag", shirtColour: "red", trousersColour: "beige", skin: "fair" } },
+  { id: "traveller", title: "Traveller", nameGender: "female", params: { hair: "long", bag: "suitcase", clothing: "dress", shirtColour: "purple", hairColour: "black", skin: "brown" } },
+  { id: "student", title: "Student", nameGender: "female", params: { hair: "curls", bag: "backpack", body: "slim", shirtColour: "yellow", trousersColour: "denim", hairColour: "black", skin: "dark" } },
+  { id: "business", title: "Business", nameGender: "male", params: { bag: "suitcase", clothing: "jacket", shirtColour: "black", trousersColour: "black", hairColour: "grey" } },
+  { id: "commuter", title: "Commuter", nameGender: "female", params: { hair: "ponytail", bag: "shoulderBag", clothing: "jacket", body: "slim", shirtColour: "red", trousersColour: "black", hairColour: "red" } },
+  { id: "pensioner", title: "Pensioner", nameGender: "male", params: { hair: "bald", headwear: "hat", body: "broad", shirtColour: "green", trousersColour: "grey", hairColour: "grey" } },
+];
+
+/** The upper body's measures per body shape; the legs and the joints below the neck stay the same for every shape. */
+const BODIES: Record<string, { tw: number; td: number; shoulderZ: number; limb: number }> = {
+  standard: { tw: 0.26, td: 0.48, shoulderZ: 0.36, limb: 1 },
+  slim: { tw: 0.215, td: 0.42, shoulderZ: 0.33, limb: 0.88 },
+  broad: { tw: 0.32, td: 0.54, shoulderZ: 0.4, limb: 1.1 },
 };
 
-/** A closed prism over `ring` from y0 to y1: sides, top and bottom (a limb turns its ends into view). */
-function block(m: MeshBuilder, mat: string, ring: Ring, y0: number, y1: number, bottom = true): void {
-  m.prism(mat, ring, y0, y1);
-  if (bottom) m.cap(mat, ring, y0, false);
+/** A resolved look: the parameter values and the measures they pick. */
+interface Look {
+  hair: string;
+  headwear: string;
+  bag: string;
+  clothing: string;
+  tw: number;
+  td: number;
+  shoulderZ: number;
+  limb: number;
 }
 
-/** A closed axis-aligned box from its centre across (cx, cz) and size (w along x, d along z). */
-function cube(m: MeshBuilder, mat: string, cx: number, cz: number, w: number, d: number, y0: number, y1: number, bottom = true): void {
-  block(m, mat, rect(w, d, cx, cz), y0, y1, bottom);
+function lookOf(params?: ParamValues): { look: Look; palette: Record<string, MaterialSpec> } {
+  const p = resolveParams(AVATAR_PARAMS, params);
+  const body = BODIES[p.body!]!;
+  const look: Look = { hair: p.hair!, headwear: p.headwear!, bag: p.bag!, clothing: p.clothing!, ...body };
+  const palette: Record<string, MaterialSpec> = {
+    skin: { color: SKIN_TONES[p.skin!]!, roughness: 0.7 },
+    shirt: { color: SHIRT_COLOURS[p.shirtColour!]!, roughness: 0.85 },
+    trousers: { color: TROUSER_COLOURS[p.trousersColour!]!, roughness: 0.9 },
+    shoes: { color: "#2a2a2e", roughness: 0.6 },
+    hair: { color: HAIR_COLOURS[p.hairColour!]!, roughness: 0.9 },
+    face: { color: "#1c1c22", roughness: 0.5 },
+    mouth: { color: "#8a3a34", roughness: 0.6 },
+  };
+  const add = (name: string, color: string, roughness = 0.8, metallic = 0): void => {
+    palette[name] = { color, roughness, ...(metallic ? { metallic } : {}) };
+  };
+  if (look.clothing === "jacket") add("undershirt", "#ecebe6", 0.85);
+  if (look.clothing === "vest") {
+    add("vest", "#d6ea2a", 0.7);
+    add("reflector", "#c9cdd2", 0.35, 0.4);
+  }
+  const headwear: Record<string, [string, string?]> = {
+    cap: ["#c8352e"], hat: ["#b89a6a", "#5b4430"], beanie: ["#5f8a3a", "#e9e6dc"], helmet: ["#f2c230"], conductor: ["#1f2a4a", "#d4af37"],
+  };
+  const hw = headwear[look.headwear];
+  if (hw) {
+    add("headwear", hw[0], look.headwear === "helmet" ? 0.45 : 0.85);
+    if (hw[1]) add("headwearTrim", hw[1], 0.6, look.headwear === "conductor" ? 0.6 : 0);
+  }
+  const bags: Record<string, string> = { backpack: "#46583a", shoulderBag: "#6b4a2e", suitcase: "#8a2f2f" };
+  if (bags[look.bag]) {
+    add("bag", bags[look.bag]!, 0.75);
+    add("strap", "#2b2b2f", 0.8);
+  }
+  return { look, palette };
 }
 
 const PART_ORDER = ["torso", "head", "leftArm", "rightArm", "leftLeg", "leftShin", "rightLeg", "rightShin"] as const;
@@ -105,23 +205,142 @@ function drawLimb(m: MeshBuilder, mat: string, b: LimbBox, z: number): void {
   cube(m, mat, b.cx, z, b.w, b.d, b.y0, b.y1);
 }
 
-/** The full figure: two dozen closed boxes, a few hundred triangles. */
-function drawAvatar(m: MeshBuilder): void {
-  m.part("torso", PIVOTS.torso, () => {
-    m.scope("shirt", () => {
-      cube(m, "shirt", 0, 0, 0.26, 0.48, 0.84, 1.4);
-      // the collar, a band of skin at the open neck
-      cube(m, "skin", 0.1, 0, 0.07, 0.14, 1.33, 1.405);
+/** The legs' material: trousers, or bare legs under a dress. */
+const legMat = (look: Look): string => (look.clothing === "dress" ? "skin" : "trousers");
+
+/** The hair, on the head part. Under headwear the curls lose the bumps the headwear covers. */
+function drawHair(m: MeshBuilder, look: Look): void {
+  if (look.hair === "bald") return;
+  m.scope("hair", () => {
+    if (look.hair === "curls") {
+      block(m, "hair", chamferedRect(0.43, 0.43, 0.07), 1.72, 1.83);
+      cube(m, "hair", -0.17, 0, 0.112, 0.41, 1.46, 1.76);
+      for (const z of [-0.195, 0.195]) cube(m, "hair", -0.06, z, 0.2, 0.052, 1.6, 1.755);
+      if (look.headwear === "none") {
+        for (const [x, z] of [[0.09, -0.1], [0.09, 0.1], [-0.09, -0.1], [-0.09, 0.1]] as const) cube(m, "hair", x, z, 0.13, 0.13, 1.8, 1.875);
+      }
+      return;
+    }
+    block(m, "hair", chamferedRect(0.41, 0.41, 0.06, -0.005), 1.73, 1.81);
+    cube(m, "hair", -0.165, 0, 0.08, 0.395, 1.5, 1.74);
+    if (look.hair === "long") {
+      cube(m, "hair", -0.17, 0, 0.09, 0.41, 1.29, 1.745);
+      for (const z of [-0.2, 0.2]) cube(m, "hair", -0.07, z, 0.21, 0.042, 1.39, 1.75);
+    } else if (look.hair === "ponytail") {
+      cube(m, "hair", -0.215, 0, 0.07, 0.07, 1.61, 1.68);
+      cube(m, "hair", -0.265, 0, 0.08, 0.1, 1.37, 1.655);
+    }
+  });
+}
+
+/** The headwear over the hair, on the head part. */
+function drawHeadwear(m: MeshBuilder, look: Look): void {
+  const h = look.headwear;
+  if (h === "none") return;
+  m.scope(h === "helmet" ? "hardHat" : h, () => {
+    if (h === "cap") {
+      block(m, "headwear", chamferedRect(0.445, 0.445, 0.07), 1.745, 1.87);
+      cube(m, "headwear", 0.3, 0, 0.19, 0.36, 1.75, 1.772);
+    } else if (h === "hat") {
+      block(m, "headwear", chamferedRect(0.445, 0.445, 0.05), 1.765, 1.95);
+      block(m, "headwearTrim", chamferedRect(0.455, 0.455, 0.05), 1.79, 1.84);
+      block(m, "headwear", chamferedRect(0.64, 0.64, 0.1), 1.775, 1.797);
+    } else if (h === "beanie") {
+      block(m, "headwear", chamferedRect(0.435, 0.435, 0.07), 1.71, 1.87);
+      block(m, "headwear", chamferedRect(0.455, 0.455, 0.085), 1.695, 1.765);
+      cube(m, "headwearTrim", 0, 0, 0.09, 0.09, 1.86, 1.935);
+    } else if (h === "helmet") {
+      block(m, "headwear", chamferedRect(0.45, 0.45, 0.1), 1.735, 1.895);
+      block(m, "headwear", chamferedRect(0.51, 0.51, 0.11), 1.74, 1.763);
+      cube(m, "headwear", 0, 0, 0.37, 0.07, 1.885, 1.925);
+    } else if (h === "conductor") {
+      block(m, "headwear", chamferedRect(0.44, 0.44, 0.06), 1.745, 1.865);
+      block(m, "headwear", chamferedRect(0.48, 0.48, 0.07), 1.855, 1.895);
+      cube(m, "face", 0.29, 0, 0.15, 0.35, 1.75, 1.77);
+      cube(m, "headwearTrim", 0.222, 0, 0.014, 0.07, 1.8, 1.835);
+    }
+  });
+}
+
+/** The clothes over the torso, on the torso part. */
+function drawTorso(m: MeshBuilder, look: Look): void {
+  const { tw, td } = look;
+  m.scope("shirt", () => {
+    cube(m, "shirt", 0, 0, tw, td, 0.84, 1.4);
+    // the collar, a band of skin at the open neck
+    cube(m, "skin", tw / 2 - 0.03, 0, 0.07, 0.14, 1.33, 1.405);
+  });
+  m.scope("waist", () => cube(m, "trousers", 0, 0, tw + 0.01, td + 0.01, 0.76, 0.86));
+  if (look.clothing === "jacket") {
+    m.scope("jacket", () => {
+      cube(m, "shirt", 0, 0, tw + 0.024, td + 0.022, 0.8, 1.385);
+      cube(m, "undershirt", (tw + 0.024) / 2, 0, 0.014, 0.11, 1.06, 1.395);
     });
-    m.scope("waist", () => cube(m, "trousers", 0, 0, 0.27, 0.49, 0.76, 0.86));
+  } else if (look.clothing === "vest") {
+    m.scope("vest", () => {
+      cube(m, "vest", 0, 0, tw + 0.026, td + 0.014, 0.9, 1.36);
+      for (const y of [1.0, 1.13]) cube(m, "reflector", 0, 0, tw + 0.036, td + 0.024, y, y + 0.04);
+    });
+  } else if (look.clothing === "dress") {
+    m.scope("skirt", () => {
+      const top = rect(tw + 0.022, td + 0.022);
+      const hem = rect(tw + 0.13, td + 0.1);
+      m.loft("shirt", hem, 0.55, top, 0.87);
+      m.cap("shirt", hem, 0.55, false);
+    });
+  }
+}
+
+/** The bag, on the torso (a backpack, a shoulder bag) or in the right hand (a suitcase: see drawArm). */
+function drawBag(m: MeshBuilder, look: Look): void {
+  const { tw, td } = look;
+  if (look.bag === "backpack") {
+    m.scope("backpack", () => {
+      cube(m, "bag", -tw / 2 - 0.085, 0, 0.18, 0.36, 0.915, 1.32);
+      cube(m, "bag", -tw / 2 - 0.19, 0, 0.05, 0.28, 0.94, 1.12);
+      for (const z of [-0.1, 0.1]) {
+        cube(m, "strap", tw / 2 + 0.004, z, 0.022, 0.05, 1.0, 1.395);
+        cube(m, "strap", 0, z, tw + 0.03, 0.05, 1.37, 1.41);
+      }
+    });
+  } else if (look.bag === "shoulderBag") {
+    m.scope("shoulderBag", () => {
+      cube(m, "bag", tw / 2 + 0.045, -td / 4, 0.09, 0.22, 0.815, 1.01);
+      // the strap across the chest, from the right shoulder down to the bag
+      m.rod("strap", [tw / 2 + 0.012, 1.4, td / 2 - 0.08], [tw / 2 + 0.012, 0.98, -td / 4 + 0.06], 0.018, 4);
+      m.rod("strap", [-tw / 2 - 0.012, 1.4, td / 2 - 0.08], [-tw / 2 - 0.012, 0.98, -td / 4 + 0.06], 0.018, 4);
+    });
+  }
+}
+
+function drawArm(m: MeshBuilder, look: Look, s: Side): void {
+  const z = sideZ(s) * look.shoulderZ;
+  const k = look.limb;
+  const long = look.clothing === "jacket";
+  m.part(`${s}Arm`, [0, AVATAR.shoulderY, z], () => {
+    m.scope("sleeve", () => cube(m, "shirt", 0, z, 0.23 * k, 0.23 * k, long ? 0.865 : 1.06, 1.41));
+    if (!long) m.scope("arm", () => cube(m, "skin", 0, z, 0.2 * k, 0.2 * k, 0.84, 1.08));
+    m.scope("hand", () => cube(m, "skin", 0.01, z, 0.18 * k, 0.21 * k, 0.78, 0.86));
+    if (s === "right" && look.bag === "suitcase") {
+      m.scope("suitcase", () => {
+        cube(m, "strap", 0.01, z, 0.12, 0.04, 0.74, 0.79);
+        cube(m, "bag", 0.01, z + 0.035, 0.44, 0.13, 0.45, 0.745);
+      });
+    }
+  }, "torso");
+}
+
+/** The full figure: closed boxes, a few hundred triangles. */
+function drawAvatar(m: MeshBuilder, look: Look): void {
+  m.part("torso", PIVOTS.torso, () => {
+    drawTorso(m, look);
+    drawBag(m, look);
   });
   m.part("head", PIVOTS.head, () => {
     m.scope("neck", () => cube(m, "skin", 0, 0, 0.12, 0.12, 1.37, 1.44, false));
     m.scope("head", () => block(m, "skin", chamferedRect(0.38, 0.38, 0.05), 1.42, 1.78));
-    m.scope("hair", () => {
-      block(m, "hair", chamferedRect(0.41, 0.41, 0.06, -0.005), 1.73, 1.81);
-      cube(m, "hair", -0.165, 0, 0.08, 0.395, 1.5, 1.74);
-    });
+    drawHair(m, look);
+    drawHeadwear(m, look);
     m.scope("face", () => {
       for (const z of [-0.075, 0.075]) {
         cube(m, "face", 0.188, z, 0.016, 0.055, 1.62, 1.685);
@@ -132,57 +351,30 @@ function drawAvatar(m: MeshBuilder): void {
       cube(m, "skin", 0.2, 0, 0.04, 0.05, 1.56, 1.6);
     });
   }, "torso");
-  for (const s of SIDES) {
-    const z = sideZ(s) * AVATAR.shoulderZ;
-    m.part(`${s}Arm`, PIVOTS[`${s}Arm`], () => {
-      m.scope("sleeve", () => cube(m, "shirt", 0, z, 0.23, 0.23, 1.06, 1.41));
-      m.scope("arm", () => cube(m, "skin", 0, z, 0.2, 0.2, 0.84, 1.08));
-      m.scope("hand", () => cube(m, "skin", 0.01, z, 0.18, 0.21, 0.78, 0.86));
-    }, "torso");
-  }
+  for (const s of SIDES) drawArm(m, look, s);
   for (const s of SIDES) {
     const z = sideZ(s) * AVATAR.hipZ;
-    m.part(`${s}Leg`, PIVOTS[`${s}Leg`], () => m.scope("thigh", () => drawLimb(m, "trousers", THIGH_BOX, z)));
+    m.part(`${s}Leg`, PIVOTS[`${s}Leg`], () => m.scope("thigh", () => drawLimb(m, legMat(look), THIGH_BOX, z)));
     m.part(`${s}Shin`, PIVOTS[`${s}Shin`], () => {
-      m.scope("shin", () => drawLimb(m, "trousers", SHIN_BOXES[0]!, z));
+      m.scope("shin", () => drawLimb(m, legMat(look), SHIN_BOXES[0]!, z));
       m.scope("shoe", () => drawLimb(m, "shoes", SHIN_BOXES[1]!, z));
     }, `${s}Leg`);
   }
 }
 
-/** The low detail: eight plain boxes in the rest pose, one static mesh. */
-function drawAvatarLod(m: MeshBuilder): void {
-  m.scope("torso", () => cube(m, "shirt", 0, 0, 0.26, 0.48, 0.76, 1.4, false));
+/** The low detail: eight plain boxes in the rest pose, one static mesh, in the look's colours. */
+function drawAvatarLod(m: MeshBuilder, look: Look): void {
+  m.scope("torso", () => cube(m, "shirt", 0, 0, look.tw, look.td, 0.76, 1.4, false));
   m.scope("head", () => cube(m, "skin", 0, 0, 0.38, 0.38, 1.4, 1.79, false));
-  for (const s of SIDES) m.scope(`${s}Arm`, () => cube(m, "shirt", 0, sideZ(s) * AVATAR.shoulderZ, 0.22, 0.22, 0.79, 1.41));
+  for (const s of SIDES) m.scope(`${s}Arm`, () => cube(m, "shirt", 0, sideZ(s) * look.shoulderZ, 0.22 * look.limb, 0.22 * look.limb, 0.79, 1.41));
   for (const s of SIDES) {
     const z = sideZ(s) * AVATAR.hipZ;
-    m.scope(`${s}Leg`, () => drawLimb(m, "trousers", THIGH_BOX, z));
-    m.scope(`${s}Shin`, () => drawLimb(m, "trousers", LOD_SHIN, z));
+    m.scope(`${s}Leg`, () => drawLimb(m, legMat(look), THIGH_BOX, z));
+    m.scope(`${s}Shin`, () => drawLimb(m, legMat(look), LOD_SHIN, z));
   }
 }
 
 // ------------------------------------------------------------------ the pose
-
-type Quat = [number, number, number, number];
-const qAxis = (axis: 0 | 1 | 2, a: number): Quat => {
-  const q: Quat = [0, 0, 0, Math.cos(a / 2)];
-  q[axis] = Math.sin(a / 2);
-  return q;
-};
-const qMul = (a: Quat, b: Quat): Quat => [
-  a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1],
-  a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0],
-  a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3],
-  a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2],
-];
-const qRotate = (q: Quat, v: Vec3): Vec3 => {
-  const [x, y, z, w] = q;
-  const tx = 2 * (y * v[2] - z * v[1]);
-  const ty = 2 * (z * v[0] - x * v[2]);
-  const tz = 2 * (x * v[1] - y * v[0]);
-  return [v[0] + w * tx + (y * tz - z * ty), v[1] + w * ty + (z * tx - x * tz), v[2] + w * tz + (x * ty - y * tx)];
-};
 
 /**
  * A pose in joint angles, radians. A swing turns a limb about Z: positive brings
@@ -268,9 +460,7 @@ function loop(duration: number, n: number, at: (phase: number) => JointPose): { 
   poses.push(poses[0]!);
   return { times: Array.from({ length: n + 1 }, (_, k) => r9((k * duration) / n)), tracks: tracksOf(poses) };
 }
-const r9 = (v: number): number => Math.round(v * 1e9) / 1e9;
 
-const TAU = Math.PI * 2;
 const pose = (p: Partial<Omit<JointPose, "arm" | "leg">> & { arm?: Partial<JointPose["arm"]>; leg?: Partial<JointPose["leg"]> }): JointPose => ({
   ...REST, ...p, arm: { ...REST.arm, ...p.arm }, leg: { ...REST.leg, ...p.leg },
 });
@@ -386,18 +576,20 @@ function addClips(m: MeshBuilder): void {
   });
 }
 
-/** The avatar at full detail, with its clips. */
-export function avatar(): MeshBuilder {
-  const m = new MeshBuilder(PALETTE);
-  drawAvatar(m);
+/** The avatar at full detail, with its clips, in the look its parameters pick. */
+export function avatar(params?: ParamValues): MeshBuilder {
+  const { look, palette } = lookOf(params);
+  const m = new MeshBuilder(palette);
+  drawAvatar(m, look);
   addClips(m);
   return m;
 }
 
-/** The avatar's low detail: eight boxes in the rest pose, static. */
-export function avatarLod(): MeshBuilder {
-  const m = new MeshBuilder(PALETTE);
-  drawAvatarLod(m);
+/** The avatar's low detail: eight boxes in the rest pose, static, in the look's colours. */
+export function avatarLod(params?: ParamValues): MeshBuilder {
+  const { look, palette } = lookOf(params);
+  const m = new MeshBuilder(palette);
+  drawAvatarLod(m, look);
   return m;
 }
 
@@ -407,7 +599,8 @@ export const CHARACTER_CATALOG = { category: "Characters", group: "character", d
 export const CHARACTERS: ProceduralDesign[] = [
   {
     id: "proc-char-avatar", title: "Avatar", build: avatar, buildLod: avatarLod,
+    params: AVATAR_PARAMS, finishParams: AVATAR_FINISH_PARAMS,
     catalog: { ...CHARACTER_CATALOG },
-    character: { seat: AVATAR_SEAT_HEIGHT, facing: AVATAR_FACING },
+    character: { seat: AVATAR_SEAT_HEIGHT, facing: AVATAR_FACING, presets: AVATAR_PRESETS },
   },
 ];

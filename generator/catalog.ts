@@ -23,7 +23,7 @@
 import { proceduralId } from "./modelId.ts";
 import { SKYSCRAPER_CATALOG } from "./skyscrapers.ts";
 import { VEHICLE_CATALOG } from "./vehicles.ts";
-import { checkGameProperties, type CatalogFields, type GameProperties, type OpenttdProperties, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
+import { checkGameProperties, resolveParams, type CatalogFields, type GameProperties, type OpenttdProperties, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import type { VehicleRig } from "./rig.ts";
 import { cityExport, extentOf, type CityExport } from "./cityVariants.ts";
 
@@ -131,6 +131,8 @@ export interface CharacterMetaEntry extends MetaEntry {
     facing: "+x";
     /** The hips' height in the seated pose (the end of `sit`), metres. */
     seat: number;
+    /** A parametric character's named looks, each with every parameter's value resolved. */
+    presets?: { id: string; title: string; nameGender: "female" | "male"; params: Record<string, string> }[];
   };
 }
 
@@ -385,7 +387,12 @@ export function exportCharacterMeta(
       const clips = d.build().animations().map((a) => a.name);
       return {
         ...metaEntry(d, d.catalog ?? SKYSCRAPER_CATALOG),
-        character: { height: r(b.max[1] ?? 0), bounds: { min: v3(b.min), max: v3(b.max) }, clips, facing: c.facing, seat: r(c.seat) },
+        character: {
+          height: r(b.max[1] ?? 0), bounds: { min: v3(b.min), max: v3(b.max) }, clips, facing: c.facing, seat: r(c.seat),
+          ...(c.presets?.length
+            ? { presets: c.presets.map((p) => ({ id: p.id, title: p.title, nameGender: p.nameGender, params: resolveParams(d.params ?? [], p.params) })) }
+            : {}),
+        },
       };
     }),
   };

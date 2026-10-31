@@ -1,12 +1,15 @@
 # Characters
 
 **Covers** - the characters the game's walk mode moves: the avatar `proc-char-avatar`, its
-frame and measures, the posable parts and their pivots, the six clips (`idle`, `walk`, `run`,
+looks (parameters and the ten presets), the four animals (`proc-char-dog`, `-cat`, `-pig`,
+`-elephant`), their frame and measures, the posable parts and their pivots, the six clips (`idle`, `walk`, `run`,
 `jump`, `fall`, `sit`) with their drives, durations and paces, the foot contact the clips are
 solved for, the seat height, the low detail, `characters.meta.json`, the site's motion buttons
 and the tests.
 **Code** - `generator/characters.ts` (`avatar`, `avatarLod`, `AVATAR`, `AVATAR_SEAT_HEIGHT`,
-`CHARACTERS`), `generator/design.ts` (`CharacterProperties`), `generator/catalog.ts`
+`AVATAR_PARAMS`, `AVATAR_PRESETS`, `CHARACTERS`), `generator/animals.ts` (`ANIMALS`,
+`ANIMAL_PARTS`, `dog` ... `elephantLod`), `generator/characterKit.ts`, `generator/design.ts`
+(`CharacterPreset`), `generator/design.ts` (`CharacterProperties`), `generator/catalog.ts`
 (`exportCharacterMeta`, `CHARACTERS_META_FILE`, `sceneryOf`), `generator/generate.ts`
 (`CHARACTER_DESIGNS`), `generator/meshCore.ts` (`ClipDrive` `motion`), `src/viewerMotions.ts`,
 `src/ModelViewer.tsx`, `src/viewerScenery.ts`, `test/characters.test.ts`
@@ -20,14 +23,15 @@ A character is an ordinary design (thumbnail, JS model, LOD, catalog page) that 
 places on a map or offers in a picker: its walk mode shows it and moves it. Ids are
 `proc-char-<name>` and permanent like every model id. A character's title is exported game
 text in all 14 languages (`model.<id>`, [text.md](text.md)). It is listed only in
-`characters.meta.json`, never in the building, village, vehicle or prop metas.
+`characters.meta.json`, never in the building, village, vehicle or prop metas. The avatar is
+listed first, then the four animals.
 
 ## The avatar
 
 `proc-char-avatar`, title "Avatar": a blocky, Roblox-like figure of closed boxes - a big,
 slightly bevelled head with hair, eyes, brows, a nose and a mouth on its face; a box torso in a
 blue shirt with a trouser waistband; sleeved arms with hands; thighs, shins and shoes in dark
-trousers and shoes. About 330 triangles; no parameters.
+trousers and shoes. About 330 triangles at its defaults, at most about 450 in any look.
 
 - **Units and frame**: metres, like the vehicles (the game scales it by its 1.5 studs a metre).
   **+X forward** - the face looks along +X, as a vehicle's nose does - +Y up, +Z to the
@@ -35,6 +39,34 @@ trousers and shoes. About 330 triangles; no parameters.
 - **Measures** (`AVATAR`): 1.81 m to the top of the hair; hips 0.78 m, knees 0.39 m, shoulders
   1.30 m, neck 1.41 m; 0.95 m across the arms, 0.43 m front to back.
 - **Default bounds at rest**: min (-0.21, 0, -0.475), max (0.22, 1.81, 0.475).
+
+### Looks
+
+The avatar is parametric ([parameters.md](parameters.md)); the defaults draw the original
+figure. Five parameters change its shape and four only recolour it (`finishParams`, varied one
+at a time by the tests). Names and values are stored in the game's saved maps.
+
+| name | values (default first) |
+|---|---|
+| `hair` | short, curls, long, ponytail, bald |
+| `headwear` | none, cap, hat, beanie, helmet (Hard hat), conductor (Conductor's cap) |
+| `bag` | none, backpack, shoulderBag, suitcase (in the right hand, on the arm part) |
+| `body` | standard, slim, broad - the torso's width and depth, the shoulders' spacing and the arms' thickness; the legs, the hips and every joint height stay, so the clips and the foot contact are the same for every body |
+| `clothing` | tshirt, jacket (long sleeves, a white front), dress (a flared skirt on the torso, bare legs), vest (high-vis with two reflective bands) |
+| `skin` | light, fair, tan, brown, dark |
+| `shirtColour` | blue, red, green, yellow, white, black, orange, purple, navy |
+| `trousersColour` | navy, black, grey, beige, denim, brown |
+| `hairColour` | brown, black, blonde, red, grey |
+
+Under any headwear the curls lose the bumps the headwear covers. Every accessory is a closed
+box (or a rod) on the part it moves with, so the clips need no change.
+
+**Presets** (`AVATAR_PRESETS`, `CharacterPreset`): ten named looks the game offers as avatar
+types - Classic (the defaults), Conductor, Worker, Hiker, Tourist, Traveller, Student,
+Business, Commuter, Pensioner. Each is a set of parameter values (the rest at their defaults),
+an English title exported as `model.proc-char-avatar.preset.<id>` in all 14 languages, and a
+`nameGender` (`female` / `male`): the grammatical gender of the first name the game gives a new
+avatar of that look. Preset ids are stored in saved maps like parameter values.
 
 ### Parts
 
@@ -92,6 +124,32 @@ shins - in the rest pose, 92 triangles, under the 100-triangle budget of an ordi
 ([lod.md](lod.md)). Like every low detail it is one static mesh: no parts and no clips, so a
 distant avatar stands still; a consumer animates the full model.
 
+## The animals
+
+`generator/animals.ts`: a dog, a cat, a pig and an elephant, each its own design
+(`proc-char-dog`, `proc-char-cat`, `proc-char-pig`, `proc-char-elephant`, titles Dog, Cat, Pig,
+Elephant) built from one quadruped kit. They share the avatar's frame (metres, +X forward, feet
+at y = 0) and its **height class**: each stands about 1.8 m to the top of its head or ears
+(1.76 - 1.87 m), so the game's motion rules, follow camera and step heights serve every
+character alike - a look, not realism.
+
+- **One parameter**, `coat` (a finish parameter): dog brown, golden, black, white, grey; cat
+  ginger, black, grey, white, cream; pig pink, black, brown; elephant grey, lightGrey, pink.
+- **Skeleton** (`ANIMAL_PARTS`): `body` (the root, pivot at the legs' top height), `head` and
+  `tail` (children of the body), and per leg - `frontLeft`, `frontRight`, `backLeft`,
+  `backRight` - `<leg>Leg` (child of the body, pivot at the shoulder or hip) and `<leg>Shin`
+  (child of its leg, pivot at the knee, holding the paw or hoof).
+- **Clips**: the avatar's six names and drives. `walk` is a trot (diagonal pairs) at 1.4 m/s,
+  `run` a gallop at 4 m/s with a short flight, the swinging knee folding so the foot clears the
+  ground; `idle` breathes and wags the tail; `jump` crouches, pushes off, tucks and lands;
+  `fall` splays the legs 6 cm over the ground; `sit` ends seated on the haunches with the head
+  up. Every clip moves each part's rotation and the body's translation; the body's height is
+  solved so the lowest corner of a leg or of the body touches y = 0 wherever it stands.
+- **Seat**: the body pivot's height at the end of `sit` (about 0.5 - 0.65 m), exported as
+  `seat`; the game puts that pivot that high above the floor of a vehicle it rides.
+- **Low detail**: the body, the head and four whole legs, 72 triangles, static.
+- About 300 - 350 triangles each.
+
 ## characters.meta.json
 
 `exportCharacterMeta` writes `export/characters.meta.json`: `{ note, count, characters }`, one
@@ -114,6 +172,11 @@ like a vehicle; `params` when the design has any) - plus `character`:
 }
 ```
 
+A character with presets (the avatar) also carries `character.presets`:
+`[{ id, title, nameGender, params }]`, each preset's `params` with every parameter resolved,
+so the game can store a full look. Its `params` (the enum parameters) are in the entry like any
+parametric model's.
+
 `height` is the top of the default build's bounds at rest (the feet are at 0), `bounds` that
 build's extent about its origin in metres, `clips` the clip names in the model's order (each
 clip's drive is in the JS model's `userData.clipDrives`), `facing` and `seat` the design's
@@ -130,7 +193,12 @@ and puts one button per clip over the preview - Idle, Walk, Run, Jump, Fall, Sit
 
 ## Tests
 
-`test/characters.test.ts`: the avatar in no other family or meta and its title exported; its
+`test/characters.test.ts`: every character in no other family or meta and its title exported;
+the presets resolving with their exported titles and name genders; every preset and every
+shape value on the default look keeping the skeleton, the budgets, no z-fighting and its feet
+on the ground through every clip; each animal in every coat in the height class and its
+budgets, its clips, drives and tracks, the walk's contact, the run's and jump's flight, its
+seat, its JS model's nodes and its meta entry; its
 height, feet, facing, centring, budgets and no z-fighting; every clip with its drive, walk and
 run at their pace, the same tracks in every clip, the low detail static; closed
 loops; feet at or above -0.02 m through every sample of `walk`, `run` and `idle` with a foot

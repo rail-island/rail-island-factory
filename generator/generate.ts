@@ -103,6 +103,7 @@ import { PORT_PROPS } from "./props/portProps.ts";
 import { AIRPORT_PROPS } from "./props/airportProps.ts";
 import { SIGNAL_PROPS } from "./props/signalProps.ts";
 import { CHARACTERS } from "./characters.ts";
+import { ANIMALS } from "./animals.ts";
 import { PREVIEW_FAMILIES } from "./previews/index.ts";
 import { FAR_PROPS } from "./props/propKit.ts";
 import { generateSets } from "./sets/setsExport.ts";
@@ -210,6 +211,7 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: SIGNAL_PROPS, source: "props/signalProps.ts", meta: "props" },
   // the characters the game's walk mode moves: listed in characters.meta.json
   { designs: CHARACTERS, source: "characters.ts", meta: "characters" },
+  { designs: ANIMALS, source: "animals.ts", meta: "characters" },
   // the set types drawn at a representative size, for the site to browse: in no game meta
   // the site's preview designs, one per set type, block type and texture (previews/index.ts)
   ...PREVIEW_FAMILIES.map((f) => ({ designs: f.designs, source: f.source, meta: "previews" as const })),
