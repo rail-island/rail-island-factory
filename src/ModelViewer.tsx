@@ -42,20 +42,29 @@
 // A rigged vehicle (steered wheels, an articulated body) is posed from the page's
 // sliders through its JS module's pose() -- the same code the game is to call.
 //
+// A Structures page (a station, a port, an airport, a dam...) gets a Passenger view
+// toggle: the camera stands at eye height on a walkable surface found from the
+// drawn triangles (viewerPassenger.ts), jumps between named viewpoints and walks --
+// W A S D or the arrows, Q and E turn, drag looks, two fingers walk -- with
+// OrbitControls off; Esc or the toggle brings the orbit camera back where it was.
+// A render loop runs only while a key is held. A railway station page (its group
+// carries userData.passenger.tracks) also gets Parked train and Catenary
+// checkboxes, overlays laid along its tracks (viewerOverlays.ts).
+//
 // With a source tree (the model page's Source tab) it also highlights the
 // selected node -- its triangles glow, everything else turns into a faint ghost --
 // and a click that is not a drag picks the leaf under the cursor. The model has one
 // mesh per material and the tree's triangle ranges index into them, so both work
 // through draw groups and the face index; nothing is split or re-uploaded.
 
-import { createEffect, createSignal, onCleanup, onMount, Show } from "solid-js";
+import { createEffect, createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import {
   AmbientLight, AnimationClip, AnimationMixer, type AnimationAction, Box3, Color, DirectionalLight, Mesh, PerspectiveCamera, Plane,
   Raycaster, Scene, Vector2, Vector3, WebGLRenderer, type Object3D,
 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { posePreview, previewKey, type CatalogRecord, type PreviewLod } from "./catalogQuery";
-import { jsModule, loadModel } from "./modelModule";
+import { buildPreview, jsModule, loadModel } from "./modelModule";
 import { leafAt, rangesOf, type TreeIndex } from "./sourceTreeView";
 import { applyGlass } from "./viewerGlass";
 import { applyHighlight, makeParts, type Part } from "./viewerHighlight";
@@ -63,6 +72,8 @@ import { applyLamps, disposeLamps, lampsOf, type Lamp } from "./viewerLamps";
 import { applySurfaces } from "./viewerSurfaces";
 import { applyInteriors, cutHeight, interiorsOf, type DoorSide, type Interior } from "./viewerInteriors";
 import { buildScenery } from "./viewerScenery";
+import { eyeOf, findPresets, forwardOf, Ground, hintsOf, MAX_STEP, PITCH_LIMIT, trianglesOf, walk, type Preset, type Stance } from "./viewerPassenger";
+import { buildCatenary, placeTrain, TRAIN_ID, trainTrack, type Overlay } from "./viewerOverlays";
 
 function disposeModel(obj: Object3D): void {
   obj.traverse((o) => {
@@ -99,6 +110,23 @@ const ease = (t: number): number => t * t * (3 - 2 * t);
 const [showScenery, setShowScenery] = createSignal(true);
 // Whether the Interior toggle shows every cabin, the model cut away above them, kept across models.
 const [showInterior, setShowInterior] = createSignal(false);
+// Whether a railway station page shows the parked train and the catenary, kept across pages.
+const [showTrain, setShowTrain] = createSignal(false);
+const [showCatenary, setShowCatenary] = createSignal(false);
+
+/** The keys the passenger view walks and turns with (KeyboardEvent.code). */
+const WALK_KEYS = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "KeyQ", "KeyE"]);
+/** Radians of look per pixel dragged. */
+const LOOK = 0.005;
+/** A passenger's walking speed in eye heights a second, and how much faster with Shift. */
+const WALK_SPEED = 1.6;
+const RUN = 2.5;
+/** Radians a second that Q and E turn. */
+const TURN = 1.6;
+
+/** A field the keys type into: the passenger view leaves its keys alone. */
+const typing = (t: EventTarget | null): boolean =>
+  t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement || (t instanceof HTMLInputElement && t.type !== "checkbox" && t.type !== "button");
 
 export function ModelViewer(props: {
   record: CatalogRecord;
@@ -299,6 +327,183 @@ export function ModelViewer(props: {
     scenery = null;
   };
 
+  // --- the passenger view (viewerPassenger.ts) and a station's overlays (viewerOverlays.ts) ---
+  const isStructure = () => props.record.category === "Structures";
+  const [walking, setWalking] = createSignal(false);
+  const [presets, setPresets] = createSignal<Preset[]>([]);
+  const [presetAt, setPresetAt] = createSignal(0);
+  const [noFloor, setNoFloor] = createSignal(false);
+  const [trackCount, setTrackCount] = createSignal(0);
+  // the current build's triangles indexed for the walk, made when first needed
+  let ground: Ground | null = null;
+  let stance: Stance | null = null;
+  // the orbit camera to come back to
+  let orbit: { position: Vector3; target: Vector3; near: number; far: number } | null = null;
+  const held = new Set<string>();
+  let walkRaf = 0;
+  let walkFrame = 0;
+  const eye = () => eyeOf(hintsOf(current));
+  const groundOf = (): Ground | null => {
+    if (!ground && current) ground = new Ground(trianglesOf(current));
+    return ground;
+  };
+  const placeCamera = () => {
+    if (!camera || !stance) return;
+    camera.position.set(stance.x, stance.y + eye(), stance.z);
+    camera.rotation.set(stance.pitch, stance.yaw, 0, "YXZ");
+    render();
+  };
+  const goPreset = (i: number) => {
+    const p = presets()[i];
+    if (!p) return;
+    setPresetAt(i);
+    stance = { x: p.x, y: p.y, z: p.z, yaw: p.yaw, pitch: p.pitch };
+    placeCamera();
+  };
+  const stopWalkLoop = () => {
+    if (walkRaf) cancelAnimationFrame(walkRaf);
+    walkRaf = 0;
+  };
+  /** Walks by (forward, right) in model units, from where the passenger looks. */
+  const stepBy = (forward: number, right: number) => {
+    const g = groundOf();
+    if (!g || !stance) return;
+    const [fx, fz] = forwardOf(stance.yaw);
+    // the camera's right is its forward turned a quarter clockwise seen from above
+    stance = walk(g, stance, fx * forward - fz * right, fz * forward + fx * right, eye());
+  };
+  const walkTick = (now: number) => {
+    const dt = Math.min(0.1, (now - walkFrame) / 1000);
+    walkFrame = now;
+    if (stance) {
+      const k = (code: string) => (held.has(code) ? 1 : 0);
+      stance.yaw += (k("KeyQ") - k("KeyE")) * TURN * dt;
+      const speed = eye() * WALK_SPEED * (held.has("Shift") ? RUN : 1) * dt;
+      stepBy((k("KeyW") + k("ArrowUp") - k("KeyS") - k("ArrowDown")) * speed, (k("KeyD") + k("ArrowRight") - k("KeyA") - k("ArrowLeft")) * speed);
+      placeCamera();
+    }
+    walkRaf = [...held].some((c) => WALK_KEYS.has(c)) ? requestAnimationFrame(walkTick) : 0;
+  };
+  const startWalkLoop = () => {
+    if (walkRaf) return;
+    walkFrame = performance.now();
+    walkRaf = requestAnimationFrame(walkTick);
+  };
+  const enterWalk = () => {
+    const g = groundOf();
+    if (!g || !camera || !controls) return;
+    const list = findPresets(g, eye(), hintsOf(current)?.tracks ?? []);
+    setPresets(list);
+    setNoFloor(list.length === 0);
+    if (!list.length) return;
+    orbit = { position: camera.position.clone(), target: controls.target.clone(), near: camera.near, far: camera.far };
+    controls.enabled = false;
+    // a passenger's eye is close to the things around it; the model stays in reach
+    camera.near = eye() * 0.02;
+    camera.far = Math.hypot(g.max[0] - g.min[0], g.max[1] - g.min[1], g.max[2] - g.min[2]) * 1.5 + eye() * 20;
+    camera.updateProjectionMatrix();
+    setWalking(true);
+    goPreset(0);
+  };
+  const exitWalk = () => {
+    stopWalkLoop();
+    held.clear();
+    setWalking(false);
+    stance = null;
+    if (camera && controls && orbit) {
+      camera.position.copy(orbit.position);
+      controls.target.copy(orbit.target);
+      camera.near = orbit.near;
+      camera.far = orbit.far;
+      camera.updateProjectionMatrix();
+      controls.enabled = true;
+      controls.update();
+    }
+    orbit = null;
+    render();
+  };
+  /** After a parameter change while walking: stay where the passenger stands if the floor is still there, else the same preset. */
+  const rewalk = () => {
+    const g = groundOf();
+    const list = g ? findPresets(g, eye(), hintsOf(current)?.tracks ?? []) : [];
+    setPresets(list);
+    if (!g || !list.length) {
+      exitWalk();
+      setNoFloor(true);
+      return;
+    }
+    const f = stance ? g.floorAt(stance.x, stance.z, stance.y + MAX_STEP, eye()) : null;
+    if (stance && f && f.y >= stance.y - MAX_STEP) {
+      stance = { ...stance, y: f.y };
+      placeCamera();
+    } else goPreset(Math.min(presetAt(), list.length - 1));
+  };
+  const onWalkKey = (e: KeyboardEvent) => {
+    if (!walking() || typing(e.target) || e.ctrlKey || e.metaKey || e.altKey) return;
+    // the page's own keys (Esc closes it, the arrows step) wait while the passenger walks
+    if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      exitWalk();
+      return;
+    }
+    if (e.key === "Shift") held.add("Shift");
+    if (!WALK_KEYS.has(e.code)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    held.add(e.code);
+    startWalkLoop();
+  };
+  const onWalkKeyUp = (e: KeyboardEvent) => {
+    held.delete(e.code);
+    if (e.key === "Shift") held.delete("Shift");
+  };
+  const onWalkBlur = () => held.clear();
+
+  let catenary: Overlay | null = null;
+  let train: Overlay | null = null;
+  // the station build the train was laid (or is loading) for
+  let trainFor: Object3D | null = null;
+  const dropOverlays = () => {
+    for (const o of [catenary, train]) {
+      if (!o) continue;
+      scene?.remove(o.group);
+      o.dispose();
+    }
+    catenary = train = null;
+    trainFor = null;
+  };
+  /** Builds the overlays the checkboxes ask for over the current station, and shows or hides them. */
+  const syncOverlays = () => {
+    const tracks = hintsOf(current)?.tracks ?? [];
+    const station = current;
+    if (!scene || !station || !tracks.length) return;
+    if (showCatenary() && !catenary) {
+      catenary = buildCatenary(tracks, new Box3().setFromObject(station).min.y);
+      scene.add(catenary.group);
+    }
+    if (catenary) catenary.group.visible = showCatenary();
+    if (showTrain() && trainFor !== station) {
+      trainFor = station;
+      void jsModule(`/js/${TRAIN_ID}.js`).then((mod) => {
+        if (current !== station || trainFor !== station || !scene) return;
+        const track = trainTrack(groundOf(), tracks, eye());
+        if (!track) return;
+        train = placeTrain(() => buildPreview(mod, {}, false), track, (o) => {
+          const b = new Box3().setFromObject(o);
+          return { minX: b.min.x, maxX: b.max.x };
+        });
+        train.group.visible = showTrain();
+        scene.add(train.group);
+        render();
+      }, () => {
+        if (trainFor === station) trainFor = null;
+        setFailed(true);
+      });
+    }
+    if (train) train.group.visible = showTrain();
+  };
+
   const disposeParts = () => {
     for (const p of parts) {
       p.glow.dispose();
@@ -384,6 +589,40 @@ export function ModelViewer(props: {
     canvas.addEventListener("pointerdown", onDown);
     canvas.addEventListener("pointerup", onUp);
 
+    // The passenger view's pointers: one drags the look, two walk (their midpoint's drag).
+    const pointers = new Map<number, { x: number; y: number }>();
+    const onWalkDown = (e: PointerEvent) => {
+      if (!walking()) return;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      canvas.setPointerCapture?.(e.pointerId);
+    };
+    const onWalkMove = (e: PointerEvent) => {
+      const last = pointers.get(e.pointerId);
+      if (!walking() || !stance || !last) return;
+      const dx = e.clientX - last.x, dy = e.clientY - last.y;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.size === 1) {
+        // the scene follows the pointer, as when it is grabbed
+        stance.yaw += dx * LOOK;
+        stance.pitch = Math.max(-PITCH_LIMIT, Math.min(PITCH_LIMIT, stance.pitch + dy * LOOK));
+      } else {
+        // one of two pointers moving moves their midpoint half as far: up walks forward
+        const k = (eye() * 0.03) / pointers.size;
+        stepBy(-dy * k, dx * k);
+      }
+      placeCamera();
+    };
+    const onWalkUp = (e: PointerEvent) => {
+      pointers.delete(e.pointerId);
+    };
+    canvas.addEventListener("pointerdown", onWalkDown);
+    canvas.addEventListener("pointermove", onWalkMove);
+    canvas.addEventListener("pointerup", onWalkUp);
+    canvas.addEventListener("pointercancel", onWalkUp);
+    window.addEventListener("keydown", onWalkKey, true);
+    window.addEventListener("keyup", onWalkKeyUp, true);
+    window.addEventListener("blur", onWalkBlur);
+
     onCleanup(() => {
       dropAnimation();
       dropScenery();
@@ -391,6 +630,15 @@ export function ModelViewer(props: {
       ro.disconnect();
       canvas.removeEventListener("pointerdown", onDown);
       canvas.removeEventListener("pointerup", onUp);
+      canvas.removeEventListener("pointerdown", onWalkDown);
+      canvas.removeEventListener("pointermove", onWalkMove);
+      canvas.removeEventListener("pointerup", onWalkUp);
+      canvas.removeEventListener("pointercancel", onWalkUp);
+      window.removeEventListener("keydown", onWalkKey, true);
+      window.removeEventListener("keyup", onWalkKeyUp, true);
+      window.removeEventListener("blur", onWalkBlur);
+      stopWalkLoop();
+      dropOverlays();
       controls?.removeEventListener("change", render);
       controls?.dispose();
       if (current) applyHighlight(parts, null);
@@ -467,6 +715,16 @@ export function ModelViewer(props: {
         void applySurfaces(group).then(render);
         scene.add(group);
         showLamps();
+        // a new build: its own walkable surfaces, and the overlays laid along its tracks
+        ground = null;
+        dropOverlays();
+        setTrackCount(hintsOf(group)?.tracks?.length ?? 0);
+        setNoFloor(false);
+        if (walking()) {
+          // another model brings the orbit back; a parameter change keeps the passenger in place
+          if (framed === record.id && isStructure()) rewalk();
+          else exitWalk();
+        }
         if (framed === record.id) {
           setLoaded((n) => n + 1);
           render();
@@ -531,6 +789,14 @@ export function ModelViewer(props: {
 
   createEffect(() => {
     loaded();
+    showTrain();
+    showCatenary();
+    syncOverlays();
+    render();
+  });
+
+  createEffect(() => {
+    loaded();
     const visible = showScenery();
     if (scenery) scenery.group.visible = visible;
     render();
@@ -551,8 +817,11 @@ export function ModelViewer(props: {
   return (
     <div class="factory-viewer" ref={pane}>
       <canvas ref={canvas} class="factory-viewer__canvas" />
-      <Show when={clips().length > 0 || stateClips().length > 0 || doorClips().length > 0 || lampCount() > 0 || props.record.scenery}>
-        <div class="factory-viewer__controls" role="group" aria-label="Animation, pantographs, doors, interior, lights and scenery">
+      <Show when={walking()}>
+        <p class="factory-viewer__hint">W A S D or arrows walk, Q E turn, Shift runs, drag looks, two fingers walk, Esc returns</p>
+      </Show>
+      <Show when={clips().length > 0 || stateClips().length > 0 || doorClips().length > 0 || lampCount() > 0 || props.record.scenery || isStructure()}>
+        <div class="factory-viewer__controls" role="group" aria-label="Animation, pantographs, doors, interior, lights, scenery and passenger view">
           <Show when={clips().length > 0}>
             <button type="button" class="factory-btn" onClick={start} disabled={running()}>
               Start
@@ -613,6 +882,44 @@ export function ModelViewer(props: {
             <label class="factory-viewer__check">
               <input type="checkbox" checked={showScenery()} onChange={(e) => setShowScenery(e.currentTarget.checked)} />
               Scenery
+            </label>
+          </Show>
+          <Show when={isStructure()}>
+            <button
+              type="button"
+              class="factory-btn"
+              onClick={() => (walking() ? exitWalk() : enterWalk())}
+              aria-pressed={walking()}
+              title="Stand at a passenger's eye height on the model and walk around"
+            >
+              {walking() ? "Orbit view" : "Passenger view"}
+            </button>
+            <Show when={walking() && presets().length > 1}>
+              <select
+                class="factory-viewer__select"
+                aria-label="Viewpoint"
+                value={String(presetAt())}
+                onChange={(e) => {
+                  goPreset(Number(e.currentTarget.value));
+                  // the keys walk again, rather than change the viewpoint
+                  e.currentTarget.blur();
+                }}
+              >
+                <For each={presets()}>{(p, i) => <option value={String(i())}>{p.name}</option>}</For>
+              </select>
+            </Show>
+            <Show when={noFloor()}>
+              <span class="factory-viewer__note">No place to stand</span>
+            </Show>
+          </Show>
+          <Show when={trackCount() > 0}>
+            <label class="factory-viewer__check">
+              <input type="checkbox" checked={showTrain()} onChange={(e) => setShowTrain(e.currentTarget.checked)} />
+              Parked train
+            </label>
+            <label class="factory-viewer__check">
+              <input type="checkbox" checked={showCatenary()} onChange={(e) => setShowCatenary(e.currentTarget.checked)} />
+              Catenary
             </label>
           </Show>
         </div>
