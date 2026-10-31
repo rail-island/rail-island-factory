@@ -25,7 +25,8 @@ closest analogue is the `bridge` skill (a set type with per-size budgets).
 ## User request
 
 Make railway station models much more detailed. Optimize them from the perspective of the
-passenger. Make the triangle limit for a 120-stud-long station with 4 rails 25k triangles,
+passenger. Make the triangle limit for a 120-stud-long station with 4 rails 25k triangles (later:
+"change limit from 25k to 30k triangles"),
 and write it to the skills (do we have a skill for stations? if not, create one). In the
 factory UI, add a passenger view, similar to the attached image (a passenger standing on a
 platform inside a station with an arched glass roof, catenary masts, benches, lamps, a
@@ -49,7 +50,9 @@ stair entrance with a glass railing, platform edge lines).
 | Fixed cap 25k at 4x120 only | Check only that size; other sizes keep the tier formulas |
 | Tiers rescaled, shed = 25k | Three tiers kept, the shed tier reaching 25k at 4x120 |
 
-**Answer: One formula, 25k at 4x120.**
+**Answer: One formula, 25k at 4x120.** Revised by the user at the start of
+implementation: "change limit from 25k to 30k triangles" - the formula is calibrated to
+30,000 at 4x120.
 
 ### Can the extra detail use new geometry primitives, or only the game's current box vocabulary?
 | Option | What it means |
@@ -158,8 +161,8 @@ switched on and off by a checkbox.
    floor filter still recognises the deck. Landed together with the factory change; the
    webapp imports the new `station.js` only with its renderer ready.
 3. **Budget and checks.** The three tiers become one formula,
-   `budget = 4,000 + 35 x length x (tracks + 1)` = 25,000 at 4 x 120 (6,800 at 1 x 40,
-   79,600 at 8 x 240, so today's heaviest type, `arch_shed` at 74,152 for 8 x 240, still
+   `budget = 6,000 + 40 x length x (tracks + 1)` = 30,000 at 4 x 120 (9,200 at 1 x 40,
+   92,400 at 8 x 240, so today's heaviest type, `arch_shed` at 74,152 for 8 x 240, still
    fits). The gauge rule, the no-glass-on-solid rule, the ramp-clearance rule and the
    coplanar check extend to the new primitives.
 4. **Passenger-level detail, all eight types.** Each type gains the four families, in the
@@ -180,7 +183,7 @@ switched on and off by a checkbox.
    (keys and drag to look on desktop, touch equivalents on mobile), held on walkable
    surfaces. On railway station pages two checkboxes add a parked train at a platform and
    a catenary over the tracks, loaded as their own exported models beside the station.
-6. **Skill and docs.** A new `station` skill in `.agents/skills/station/` (the 25k-at-4x120
+6. **Skill and docs.** A new `station` skill in `.agents/skills/station/` (the 30k-at-4x120
    budget formula, primitives, passenger-detail checklist, gauge and glass rules, pins,
    the webapp renderer, passenger-view headless checks, what to show the user), listed in
    `AGENTS.md`; docs/models/station-types.md, docs/models/previews.md and the site docs
@@ -215,8 +218,8 @@ The pins file changes as a deliberate redraw, not as a schema change.
   renderer is ready. Medium likelihood, high cost; mitigation: a format version on the set
   module that the game checks.
 - **Budget squeeze for sheds.** `arch_shed` already spends 22,088 at 4 x 120, leaving about
-  3,000 for all passenger detail; the swept arc must save on the vault to pay for it.
-- **Furniture density on long stations.** Per-stud detail at 8 x 240 approaches 80k
+  8,000 for all passenger detail; the swept arc must save on the vault to pay for it.
+- **Furniture density on long stations.** Per-stud detail at 8 x 240 approaches 92k
   triangles; repeated items need a spacing rule, not a fixed count.
 - **Gauge and coplanar checks** grow to round shapes; their tolerance must stay strict
   enough to catch a lamp or bar over the track.
