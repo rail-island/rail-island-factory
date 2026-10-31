@@ -87,6 +87,11 @@ document that owns it in the same change.** Conventions:
 
 - **`building`** (`.agents/skills/building/`) - use whenever a building is added or changed: row houses up to 10,000 triangles, large landmarks 20,000-30,000, references, structural detail and headless checks.
 
+- **`station`** (`.agents/skills/station/`) - use it whenever a railway station type, the
+  station kit or its site preview is added or changed: the 30,000-triangle budget for 4 tracks
+  of 120 studs, the shapes beyond the box, the passenger detail, the gauge and glass rules,
+  pins and headless passenger views.
+
 - **`bridge`** (`.agents/skills/bridge/`) - use it whenever a bridge type, the bridge kit or
   its site preview is added or changed: per-length triangle budget tiers, the deck and pier
   kit, structural spans and shared cable towers, overhead members, pins and checks.

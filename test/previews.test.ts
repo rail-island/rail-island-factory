@@ -69,3 +69,18 @@ describe("the preview designs", () => {
     expect(Math.max(...z)).toBeLessThan(4 + 17 / 2 + 1);
   });
 });
+
+describe("railway station previews: passenger hints", () => {
+  // the site's passenger view stands at the eye height and lays its parked train and
+  // catenary along the tracks the station page states
+  it("state the eye height and every track, on the full and the distant build", async () => {
+    const { stationPreview, stationPreviewLod } = await import("../generator/previews/stations.ts");
+    const { passengerOf } = await import("../generator/passengerHints.ts");
+    for (const build of [stationPreview, stationPreviewLod]) {
+      const hints = passengerOf(build({ tracks: "4", length: "120" }, "arch_shed"));
+      expect(hints?.eye).toBe(2.55);
+      expect(hints?.tracks).toHaveLength(4);
+      for (const t of hints!.tracks!) expect([t.z0, t.z1, t.top]).toEqual([-64, 64, 1]);
+    }
+  });
+});

@@ -3,11 +3,12 @@
 **Covers** - the site's preview designs: one page per structure type, rail and road type, line
 decoration, catenary style, city block type and texture, drawn from the set modules and the
 props on a representative fixture; their categories, bound build functions, preview parameters,
-surfaces, the drawing kit, the block composer, and the checks they pass.
+surfaces, the passenger-view hints, the drawing kit, the block composer, and the checks they pass.
 **Code** - `generator/previews/` (`index.ts`, `sketch.ts`, `wayKit.ts`, `bridges.ts`, `stations.ts`,
 `structures.ts`, `ways.ts`, `props.ts`, `textures.ts`, `blockKit.ts`, `blocks*.ts`),
 `generator/design.ts` (`bound`, `boundDesign`, `ParamSpec.preview`), `generator/jsModel.ts`,
-`src/catalogQuery.ts`, `src/ModelDetail.tsx`, `test/previews.test.ts`, `test/catalogSweep.ts`
+`generator/passengerHints.ts`, `src/catalogQuery.ts`, `src/ModelDetail.tsx`,
+`src/viewerPassenger.ts`, `src/viewerOverlays.ts`, `test/previews.test.ts`, `test/catalogSweep.ts`, `test/viewerPassenger.test.ts`
 **See also** - [sets.md](sets.md), [props.md](props.md), [surfaces.md](surfaces.md),
 [parameters.md](parameters.md), [../site/catalog-site.md](../site/catalog-site.md)
 
@@ -70,6 +71,31 @@ pane in its rib), which would flicker. Every material is drawn a hair bigger tha
 registered before it - a fixed odd step per material, a sweep's ends moved too - so two flush
 faces always end apart and no part, however thin, turns inside out; a box standing on the
 ground keeps its foot there. A sketch is lifted so its lowest point is the ground.
+
+## Passenger view hints
+
+Every Structures page offers the site's **passenger view** - eye-height viewpoints and walking,
+found from the drawn triangles ([../site/catalog-site.md](../site/catalog-site.md), "Passenger
+view") - so a preview needs nothing to get it. A preview may state two things the viewer cannot
+guess, with `setPassenger(builder, hints)` on the MeshBuilder it returns (`generator/passengerHints.ts`,
+which also exports the `PassengerHints` type); the JS group carries them as `userData.passenger`,
+the GLB and the thumbnails do not. The bundler adds that line only to the JS model of a design
+whose build sets hints (`jsModel.ts`), so no other model's file grows:
+
+```ts
+interface PassengerHints {
+  eye: number; // the eye above the walkable surface, model units (studs: 2.55 when absent)
+  tracks?: Array<{ x: number; z0: number; z1: number; top: number }>;
+}
+```
+
+`tracks` - a railway station page's tracks, in the model's own (lifted, `Sketch.build`)
+coordinates: each centreline's x, its extent along z and its rail top - keeps the viewpoints off
+the tracks and turns on the page's **Parked train** and **Catenary** overlays, which the viewer
+lays along them (`src/viewerOverlays.ts`). The railway station pages state both, on the full and
+the distant build (`stations.ts`: every rail row's centre, the rails' length and their top at 1.0).
+The overlays are the viewer's, not the station's: the station's JS, thumbnails and pins stay as
+they are.
 
 ## City blocks
 

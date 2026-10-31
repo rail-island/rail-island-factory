@@ -57,7 +57,7 @@
 | [models/landmarks.md](models/landmarks.md) | the Brandenburg Gate, the Louvre Pyramid and the White House |
 | [models/towers.md](models/towers.md) | all eight Towers: procedural designs, parameters, budgets, reference attribution and scale conversion |
 | [models/stations.md](models/stations.md) | the five station buildings: Prague main station, the station building, the Mikulasovice halt, the suburban station, the station hotel; their triangle tiers |
-| [models/station-types.md](models/station-types.md) | the eight railway station types of the `station` set: layouts, the deck (end ramps, island underpasses), the train sheds' vault, the village depot, the gauge rule and the triangle budgets |
+| [models/station-types.md](models/station-types.md) | the eight railway station types of the `station` set: layouts, the deck (end ramps, island underpasses), the train sheds' vault, the village depot, the shapes beyond the box, the passenger detail, the gauge rule, the triangle budget and the headless passenger view |
 | [models/aircraft.md](models/aircraft.md) | the Aero A.10, the Airbus A380, the Boeing 737-800, the MD-11, 747-400 and Beluga, the light jet and the small two-seat airplane, airline liveries, their gear parts |
 | [models/ships.md](models/ships.md) | the cruise ferry, the hydrofoil and the passenger ferry, their waterlines |
 | [models/cable-car-stations.md](models/cable-car-stations.md) | the four cable car station types: the whole station the set module draws for the game's view (hall, head, bull wheel, curved or rectangular platform, stairs), per-type platforms, levels, clearances, budget, the pylon |
