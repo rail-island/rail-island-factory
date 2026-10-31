@@ -4,12 +4,12 @@
 the table, card and thumbnail layouts, browser-rendered variant thumbnails, sorting and search, the model page with its 3D
 preview, and the URL state.
 **Code** - `src/main.tsx`, `src/App.tsx`, `src/catalogQuery.ts`, `src/ModelTable.tsx`,
-`src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`, `src/viewerScenery.ts`, `src/viewerGlass.ts`, `src/viewerInteriors.ts`,
+`src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`, `src/viewerScenery.ts`, `src/viewerMotions.ts`, `src/viewerGlass.ts`, `src/viewerInteriors.ts`,
 `src/SourceTreePanel.tsx`, `src/sourceTreeView.ts`, `src/Thumb.tsx`, `src/modelModule.ts`, `src/ExportPanel.tsx`,
 `src/ModelVariants.tsx`, `src/VariantThumb.tsx`, `src/variantThumbs.ts`, `src/thumbRender.ts`,
 `src/devCatalog.ts`, `src/devMeasure.ts`, `generator/devServer.ts`, `generator/devExport.ts`, `test/devExport.test.ts`,
 `src/factory.css`, `src/favicon.svg`, `src/apple-touch-icon.png`, `src/social-preview.png`, `src/boot.ts`, `src/bootEntry.ts`, `index.html`, `vite.config.ts`,
-`test/catalogQuery.test.ts`, `test/boot.test.ts`, `test/siteMeta.test.ts`, `test/rig.test.ts` (the Pose sliders), `test/scenery.test.ts`, `test/viewerInteriors.test.ts`
+`test/catalogQuery.test.ts`, `test/boot.test.ts`, `test/siteMeta.test.ts`, `test/rig.test.ts` (the Pose sliders), `test/scenery.test.ts`, `test/viewerInteriors.test.ts`, `test/characters.test.ts` (the Characters chip, ground and motion buttons)
 **See also** - [../models/export.md](../models/export.md), [../guide/deploy.md](../guide/deploy.md), [openttd-export.md](openttd-export.md)
 
 The site is the factory's counterpart of the webapp Creator's model listing,
@@ -146,6 +146,9 @@ To see what deploys - the build's thumbnails and figures - run `pnpm build` and
   filter chip rows and the totals (models and triangles listed). On a wide screen
   it is sticky; on a narrow one it scrolls away with the list, since its chip rows
   would leave too little room for the models.
+- **Characters.** The characters (category `Characters`, the avatar) have a
+  first-row chip of their own, with no second row
+  ([../models/characters.md](../models/characters.md)).
 - **Trees and Woods.** The tree species (category `Trees`) have a first-row chip
   of their own; a tree's page also offers a *Coarse (distant forest)* level of
   detail ([../models/lod.md](../models/lod.md)). The **Woods** chip (category
@@ -292,6 +295,21 @@ exterior's ([../models/interiors.md](../models/interiors.md)). A model with lamp
 **Lights on / Lights off** button beside them that shows every tagged lamp lit,
 indicators blinking ([../models/lamps.md](../models/lamps.md)).
 
+A **character** (a model with a `motion` clip: the avatar,
+[../models/characters.md](../models/characters.md)) gets no Start and Stop but one
+button per clip, named after the clip - **Idle**, **Walk**, **Run**, **Jump**,
+**Fall**, **Sit** - and **Stop**. The buttons come from the clips' drives and shapes
+(`viewerMotions.ts` `motionButtons`), not from the avatar's clip names: a `time` or
+`distance` clip and a `motion` clip whose last sample repeats its first loop until
+another button or Stop; a `motion` clip that ends near its start (jump) plays once
+and hands over to the first `time` clip (idle); one that ends in another pose (sit)
+eases into its end - the clip carries the easing - and holds it. Walk and run play
+in place at the pace their `distance` drive states (their tooltip names it). Each
+change cross-fades over 0.25 s from the motion before; Stop fades back to the rest
+pose. The button playing is pressed (`aria-pressed`). A character is framed close
+(its height is a person's), and the render loop runs only while a motion plays or
+fades - not while a held pose stands.
+
 A road or rail vehicle stands in its **scenery** (`viewerScenery.ts`), drawn from its
 record's `scenery` (`generator/catalog.ts` `sceneryOf`): a rail vehicle on a
 ballasted standard-gauge track, a tram on the game's narrow asphalt road with its
@@ -304,8 +322,13 @@ raised collector reaches (`generator/collector.ts`,
 checked against the rails and its collector against the wire by eye. Everything
 runs along x from 8 m before the model to 8 m past it, at y = 0 the running
 surface; it is neither picked nor highlighted and adds nothing to the triangle
-count. A **Scenery** checkbox beside the buttons hides it, for every model until
-it is ticked again.
+count. A character stands on a strip of grass with a paved path along x (its
+walking direction), 3 m past it either way, its surface at y = 0 the soles, beside a
+**height marker**: a pole as tall as the game's vehicle doors (`DOOR_HEIGHT`, 2 m;
+`scenery.marker`), banded red and white every quarter metre, ticked every half
+(longer each metre), with a crossbar at the top - so the figure's height reads
+against the scale the game expects. The marker is scenery too. A **Scenery**
+checkbox beside the buttons hides it, for every model until it is ticked again.
 
 `ModelViewer.tsx` (with its helpers `viewerHighlight.ts`, `viewerLamps.ts` and `modelModule.ts`, which
 fetches and builds a model's JS module with the subset of three it reads, `THREE_SUBSET`, constants such as

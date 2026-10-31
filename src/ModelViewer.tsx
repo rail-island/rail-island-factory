@@ -26,7 +26,16 @@
 // parameter choice drops the animation, and the model comes back at rest: its
 // pantographs raised, its doors shut.
 //
-// A road or rail vehicle stands on its way, an electric one under the game's wire
+// A character (a model with a `motion` clip: the avatar) gets one button per clip
+// instead of Start and Stop -- Idle, Walk, Run, Jump, Fall, Sit -- and Stop, derived
+// from the clips' drives and shapes (viewerMotions.ts): a loop plays until another
+// button or Stop, a one-shot (jump) plays once and hands over to the idle loop, a
+// clip that ends in another pose (sit) eases into its end and holds it. Each change
+// cross-fades from the motion before; Stop fades back to the rest pose. Walk and
+// run play in place at the pace their drive states.
+//
+// A road or rail vehicle stands on its way, an electric one under the game's wire,
+// a character on a strip of ground beside a door-high marker pole
 // (viewerScenery.ts); a Scenery checkbox hides them.
 //
 // A vehicle with an interior (userData.interiors, docs/models/interiors.md) shows
@@ -48,9 +57,9 @@
 // mesh per material and the tree's triangle ranges index into them, so both work
 // through draw groups and the face index; nothing is split or re-uploaded.
 
-import { createEffect, createSignal, onCleanup, onMount, Show } from "solid-js";
+import { createEffect, createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import {
-  AmbientLight, AnimationClip, AnimationMixer, type AnimationAction, Box3, Color, DirectionalLight, Mesh, PerspectiveCamera, Plane,
+  AmbientLight, AnimationClip, AnimationMixer, type AnimationAction, Box3, LoopOnce, LoopRepeat, Color, DirectionalLight, Mesh, PerspectiveCamera, Plane,
   Raycaster, Scene, Vector2, Vector3, WebGLRenderer, type Object3D,
 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
@@ -63,6 +72,7 @@ import { applyLamps, disposeLamps, lampsOf, type Lamp } from "./viewerLamps";
 import { applySurfaces } from "./viewerSurfaces";
 import { applyInteriors, cutHeight, interiorsOf, type DoorSide, type Interior } from "./viewerInteriors";
 import { buildScenery } from "./viewerScenery";
+import { motionButtons, motionTitle, restingMotion, type MotionButton } from "./viewerMotions";
 
 function disposeModel(obj: Object3D): void {
   obj.traverse((o) => {
@@ -80,6 +90,8 @@ const CLICK_SLOP = 5;
 const LIFT_SECONDS = 1.5;
 /** Seconds a door takes from shut to open. */
 const DOOR_SECONDS = 2;
+/** Seconds a character's cross-fade from one motion to the next (or to rest) takes. */
+const MOTION_FADE = 0.25;
 
 /** Whether the clip is a `state` clip of the model (a pantograph): its drive in userData.clipDrives. */
 function isStateClip(model: Object3D, clip: AnimationClip): boolean {
@@ -153,6 +165,14 @@ export function ModelViewer(props: {
   let interiors: Interior[] = [];
   const [interiorCount, setInteriorCount] = createSignal(0);
   let cut = new Plane(new Vector3(0, -1, 0), Infinity);
+  // A character's motions (viewerMotions.ts): its buttons, the one playing and its action.
+  const [motions, setMotions] = createSignal<MotionButton[]>([]);
+  const [motion, setMotion] = createSignal<string | null>(null);
+  let motionClips = new Map<string, AnimationClip>();
+  let motionAction: AnimationAction | null = null;
+  // true once a held motion (sit) reached its end; the deadline (performance.now()) of a fade to rest
+  let motionHeld = false;
+  let restAt = 0;
   let mixer: AnimationMixer | null = null;
   let loopActions: AnimationAction[] = [];
   let stateActions: AnimationAction[] = [];
@@ -214,11 +234,56 @@ export function ModelViewer(props: {
         a.time = ease(doorAt[side]) * clip.duration;
         return { action: a.play(), side };
       });
+      mixer.addEventListener("finished", (e) => onMotionFinished((e as unknown as { action: AnimationAction }).action));
     }
     return mixer;
   };
+  /** Plays one of a character's motions, cross-fading from the one before. */
+  const playMotion = (b: MotionButton) => {
+    const clip = motionClips.get(b.name);
+    const mx = ensureMixer();
+    if (!clip || !mx) return;
+    // a loop already playing, or a pose already held or being reached, stays; a one-shot plays again
+    if (motion() === b.name && b.play !== "once") return;
+    const next = mx.clipAction(clip);
+    const prev = motionAction;
+    next.reset();
+    next.setLoop(b.play === "loop" ? LoopRepeat : LoopOnce, Infinity);
+    next.clampWhenFinished = b.play !== "loop";
+    next.play();
+    if (prev && prev !== next) next.crossFadeFrom(prev, MOTION_FADE, false);
+    else if (!prev) next.fadeIn(MOTION_FADE);
+    motionAction = next;
+    motionHeld = false;
+    restAt = 0;
+    setMotion(b.name);
+    animate();
+  };
+  /** Fades a character back to its rest pose. */
+  const stopMotion = () => {
+    if (!motionAction) return;
+    motionAction.fadeOut(MOTION_FADE);
+    motionAction = null;
+    motionHeld = false;
+    restAt = performance.now() + MOTION_FADE * 1000;
+    setMotion(null);
+    animate();
+  };
+  /** A one-shot motion hands over to the idle loop (or the rest pose); a held one stays at its end. */
+  const onMotionFinished = (action: AnimationAction) => {
+    if (action !== motionAction) return;
+    const b = motions().find((m) => m.name === action.getClip().name);
+    if (b?.play === "hold") {
+      motionHeld = true;
+      return;
+    }
+    const idle = restingMotion(motions());
+    if (idle) playMotion(idle);
+    else stopMotion();
+  };
+  const motionMoving = () => (motionAction !== null && !motionHeld) || restAt > 0;
   const doorsMoving = () => doorAt.left !== doorTarget().left || doorAt.right !== doorTarget().right;
-  const moving = () => running() || lift !== liftTarget() || doorsMoving();
+  const moving = () => running() || lift !== liftTarget() || doorsMoving() || motionMoving();
   const tick = (now: number) => {
     const dt = Math.min(0.1, (now - lastFrame) / 1000);
     lastFrame = now;
@@ -233,6 +298,11 @@ export function ModelViewer(props: {
     for (const { action, side } of doorActions) action.time = ease(doorAt[side]) * action.getClip().duration;
     applyInteriors(interiors, doorAt, showInterior());
     mixer?.update(dt);
+    // a fade to rest is over: the stopped actions hand every part back its rest pose
+    if (restAt && now >= restAt && !motionAction) {
+      restAt = 0;
+      mixer?.stopAllAction();
+    }
     render();
     animRaf = moving() ? requestAnimationFrame(tick) : 0;
   };
@@ -285,6 +355,12 @@ export function ModelViewer(props: {
     setClips([]);
     setStateClips([]);
     setDoorClips([]);
+    setMotions([]);
+    setMotion(null);
+    motionClips = new Map();
+    motionAction = null;
+    motionHeld = false;
+    restAt = 0;
     lift = 1;
     setLiftTarget(1);
     doorAt.left = doorAt.right = 0;
@@ -442,7 +518,11 @@ export function ModelViewer(props: {
         props.onTriangles?.(triangles);
         current = group;
         currentKey = key;
-        setClips(loadedClips.filter((c) => !isStateClip(group, c) && !doorSide(group, c)));
+        // a character's clips are its motion buttons, not Start and Stop
+        const buttons = motionButtons(loadedClips, group.userData.clipDrives as Record<string, { drive?: string; speed?: number }> | undefined);
+        setMotions(buttons);
+        motionClips = new Map(loadedClips.filter((c) => buttons.some((b) => b.name === c.name)).map((c) => [c.name, c]));
+        setClips(loadedClips.filter((c) => !isStateClip(group, c) && !doorSide(group, c) && !motionClips.has(c.name)));
         setStateClips(loadedClips.filter((c) => isStateClip(group, c)));
         setDoorClips(loadedClips.flatMap((clip) => {
           const side = doorSide(group, clip);
@@ -477,10 +557,11 @@ export function ModelViewer(props: {
         const center = box.getCenter(new Vector3());
         const size = box.getSize(new Vector3());
         const maxDim = Math.max(size.x, size.y, size.z, 1);
-        const dist = maxDim * 1.3 + 10;
+        // a person-sized character is framed close; anything else from further out
+        const dist = maxDim * 1.3 + (buttons.length ? 1.5 : 10);
         camera.position.set(center.x + dist * 0.8, center.y + dist * 0.7, center.z + dist * 0.9);
         controls.target.copy(center);
-        controls.minDistance = maxDim * 0.4 + 2;
+        controls.minDistance = maxDim * 0.4 + (buttons.length ? 0.5 : 2);
         controls.maxDistance = maxDim * 4 + 40;
         // Fit the depth range to the model: depth precision goes with far/near,
         // and a fixed 0.1..5000 spends it on space the camera can never see,
@@ -551,8 +632,20 @@ export function ModelViewer(props: {
   return (
     <div class="factory-viewer" ref={pane}>
       <canvas ref={canvas} class="factory-viewer__canvas" />
-      <Show when={clips().length > 0 || stateClips().length > 0 || doorClips().length > 0 || lampCount() > 0 || props.record.scenery}>
-        <div class="factory-viewer__controls" role="group" aria-label="Animation, pantographs, doors, interior, lights and scenery">
+      <Show when={clips().length > 0 || motions().length > 0 || stateClips().length > 0 || doorClips().length > 0 || lampCount() > 0 || props.record.scenery}>
+        <div class="factory-viewer__controls" role="group" aria-label="Animation, motions, pantographs, doors, interior, lights and scenery">
+          <Show when={motions().length > 0}>
+            <For each={motions()}>
+              {(b) => (
+                <button type="button" class="factory-btn" onClick={() => playMotion(b)} aria-pressed={motion() === b.name} title={motionTitle(b)}>
+                  {b.label}
+                </button>
+              )}
+            </For>
+            <button type="button" class="factory-btn" onClick={stopMotion} disabled={motion() === null} title="Back to the rest pose">
+              Stop
+            </button>
+          </Show>
           <Show when={clips().length > 0}>
             <button type="button" class="factory-btn" onClick={start} disabled={running()}>
               Start

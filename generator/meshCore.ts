@@ -156,9 +156,12 @@ export interface FountainWater {
  * start, to raised, its end), easing the value itself. `door` is a state clip of
  * a vehicle's passenger doors on one `side` (seen facing the model's +X end: right
  * is +Z), from shut at the clip's start to open at its end; the shut pose is the
- * rest pose (doors.ts). A consumer that does not know a drive leaves its clip alone.
+ * rest pose (doors.ts). `motion` is a clip a character plays by name when it
+ * chooses that motion - a jump, a fall, sitting down (characters.ts): nothing in
+ * the model's own movement plays it. A consumer that does not know a drive leaves
+ * its clip alone.
  */
-export type ClipDrive = { drive: "time" } | { drive: "distance"; speed: number } | { drive: "state" } | { drive: "door"; side: DoorSide };
+export type ClipDrive = { drive: "time" } | { drive: "distance"; speed: number } | { drive: "state" } | { drive: "door"; side: DoorSide } | { drive: "motion" };
 
 /** A side of a vehicle, seen facing its +X end: right is +Z. */
 export type DoorSide = "left" | "right";
@@ -519,7 +522,7 @@ export class MeshCore {
     if (t.length < 2 || t[0] !== 0 || t.some((v, i) => i > 0 && v <= t[i - 1]!)) throw new Error(`animation "${clip.name}": times must start at 0 and rise`);
     const d = clip.drive;
     const k = d?.drive;
-    if (!(k === "time" || k === "state" || (k === "distance" && d.speed > 0) || (k === "door" && /^(left|right)$/.test(d.side)))) throw new Error(`animation "${clip.name}": bad drive`);
+    if (!(k === "time" || k === "state" || k === "motion" || (k === "distance" && d.speed > 0) || (k === "door" && /^(left|right)$/.test(d.side)))) throw new Error(`animation "${clip.name}": bad drive`);
     for (const track of clip.tracks) {
       if (!this.parts.some((p) => p.name === track.node)) throw new Error(`animation "${clip.name}": no part "${track.node}"`);
       if (/[\s.:/\[\]]/.test(track.node)) throw new Error(`animated part "${track.node}" has a name three.js cannot bind`);

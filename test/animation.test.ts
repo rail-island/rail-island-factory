@@ -63,6 +63,10 @@ describe("animation clips", () => {
     const tracks = [{ node: "ok", path: "rotation" as const, values: [0, 0, 0, 1, 0, 0, 0, 1] }];
     expect(() => m.animate({ name: "x", times: [0, 1], tracks, drive: { drive: "distance", speed: 0 } })).toThrow(/drive/);
     expect(() => m.animate({ name: "x", times: [0, 1], tracks } as never)).toThrow(/drive/);
+    expect(() => m.animate({ name: "x", times: [0, 1], tracks, drive: { drive: "chosen" } } as never)).toThrow(/drive/);
+    // a character's chosen motion (characters.ts) is a drive of its own
+    m.animate({ name: "hop", times: [0, 1], tracks, drive: { drive: "motion" } });
+    expect(m.clipDrives()).toEqual({ hop: { drive: "motion" } });
   });
 
   it("leave a model without clips byte-identical in layout (no animations key)", () => {

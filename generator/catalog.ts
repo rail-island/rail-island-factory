@@ -12,6 +12,8 @@
 //   vehicles.meta.json     the same entries for the vehicles, under "vehicles"
 //                          rather than "buildings", so a building import never
 //                          picks up a truck.
+//   props.meta.json        the props the game's structures place (docs/models/props.md).
+//   characters.meta.json   the characters the game's walk mode moves (docs/models/characters.md).
 //   catalog.json           what the factory site lists: the meta entry joined
 //                          with what only the build knows (geometry counts,
 //                          bounding box, file sizes) and the URLs to fetch.
@@ -116,6 +118,28 @@ export interface PropExportMeta {
   props: PropMetaEntry[];
 }
 
+/** A character's entry: what the game reads before it builds and animates the figure (docs/models/characters.md). */
+export interface CharacterMetaEntry extends MetaEntry {
+  character: {
+    /** The figure's height standing, metres: the top of its bounds (its feet are at y = 0). */
+    height: number;
+    /** The default variant's bounding box at rest, metres, about its origin between the feet. */
+    bounds: { min: [number, number, number]; max: [number, number, number] };
+    /** Its clips by name, in the order the model carries them (each clip's drive is in the model's userData.clipDrives). */
+    clips: string[];
+    /** Where its face looks: "+x", as a vehicle's nose. */
+    facing: "+x";
+    /** The hips' height in the seated pose (the end of `sit`), metres. */
+    seat: number;
+  };
+}
+
+export interface CharacterExportMeta {
+  note: string;
+  count: number;
+  characters: CharacterMetaEntry[];
+}
+
 export interface VehicleExportMeta {
   note: string;
   count: number;
@@ -138,13 +162,22 @@ export interface ReferenceImage {
  * over the railhead (generator/collector.ts).
  */
 export interface Scenery {
-  way: "rail" | "road" | "tram";
+  way: "rail" | "road" | "tram" | "ground";
   wireTop?: number;
+  /**
+   * The height of a marker pole beside the model, metres: a character stands on
+   * a strip of ground beside a pole the height of the game's vehicle doors.
+   */
+  marker?: number;
 }
+
+/** A vehicle door's height, metres: the scale a character is checked against on the site. */
+export const DOOR_HEIGHT = 2;
 
 /** The scenery of a catalog entry; null for anything that is not a road or rail vehicle. */
 export function sceneryOf(entry: Pick<MetaEntry, "category" | "group" | "traction">): Scenery | null {
   if (entry.category === "Road vehicles") return { way: "road" };
+  if (entry.category === "Characters") return { way: "ground", marker: DOOR_HEIGHT };
   if (entry.category !== "Rail vehicles") return null;
   if (entry.group === "tram") return { way: "tram", wireTop: TRAM_COLLECTOR_TOP };
   return entry.traction === "electric" ? { way: "rail", wireTop: RAIL_COLLECTOR_TOP } : { way: "rail" };
@@ -227,6 +260,7 @@ export const META_FILE = "skyscrapers.meta.json";
 export const VEHICLE_META_FILE = "vehicles.meta.json";
 export const VILLAGE_META_FILE = "village.meta.json";
 export const PROPS_META_FILE = "props.meta.json";
+export const CHARACTERS_META_FILE = "characters.meta.json";
 export const CATALOG_FILE = "catalog.json";
 /** The export's folder of source images, one subfolder per design id. */
 export const REFS_DIR = "refs";
@@ -251,7 +285,7 @@ export function metaEntry(
     js: `${proceduralId(design.id)}.js`,
     thumb: `${proceduralId(design.id)}.png`,
     ...(side ? { thumbSide: { widthM: r4(side.widthM), heightM: r4(side.heightM), bottomM: r4(side.bottomM) } } : {}),
-    ...(["Road vehicles", "Rail vehicles", "Cable car"].includes(fields.category) ? {} : { defaultScale: fields.defaultScale }),
+    ...(["Road vehicles", "Rail vehicles", "Cable car", "Characters"].includes(fields.category) ? {} : { defaultScale: fields.defaultScale }),
     license: fields.license,
     author: fields.author,
     source: fields.source,
@@ -324,6 +358,35 @@ export function exportPropMeta(
       const b = bounds.get(d.id);
       const v3 = (p: readonly number[] | undefined): [number, number, number] => [r(p?.[0] ?? 0), r(p?.[1] ?? 0), r(p?.[2] ?? 0)];
       return { ...metaEntry(d, d.catalog ?? SKYSCRAPER_CATALOG), prop: { far: far.has(d.id), bounds: { min: v3(b?.min), max: v3(b?.max) } } };
+    }),
+  };
+}
+
+/**
+ * characters.meta.json: every character (characters.ts), apart from the buildings,
+ * vehicles and props so the game keeps it out of its pickers and counts. `bounds`
+ * is each design's built extent at rest (generate.ts measures it); the clips, the
+ * seat and the facing come from the design.
+ */
+export function exportCharacterMeta(
+  designs: readonly ProceduralDesign[],
+  bounds: ReadonlyMap<string, { min: readonly number[]; max: readonly number[] }>,
+): CharacterExportMeta {
+  const r = (v: number): number => Math.round(v * 1e4) / 1e4 + 0;
+  return {
+    note: NOTE,
+    count: designs.length,
+    characters: designs.map((d) => {
+      const c = d.character;
+      if (!c) throw new Error(`${d.id}: a character states its seat and facing (docs/models/characters.md)`);
+      const b = bounds.get(d.id);
+      if (!b) throw new Error(`${d.id}: no measured bounds`);
+      const v3 = (p: readonly number[]): [number, number, number] => [r(p[0] ?? 0), r(p[1] ?? 0), r(p[2] ?? 0)];
+      const clips = d.build().animations().map((a) => a.name);
+      return {
+        ...metaEntry(d, d.catalog ?? SKYSCRAPER_CATALOG),
+        character: { height: r(b.max[1] ?? 0), bounds: { min: v3(b.min), max: v3(b.max) }, clips, facing: c.facing, seat: r(c.seat) },
+      };
     }),
   };
 }

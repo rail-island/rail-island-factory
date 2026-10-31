@@ -1,12 +1,12 @@
 # The export folder
 
 **Covers** - what `pnpm build:models` writes (no GLB files: a model ships as its JS
-file), the `skyscrapers.meta.json`, `village.meta.json`, `vehicles.meta.json` and
-`woods.meta.json` contracts the game imports, the site's `catalog.json`, the in-memory GLB the build
+file), the `skyscrapers.meta.json`, `village.meta.json`, `vehicles.meta.json`,
+`characters.meta.json` and `woods.meta.json` contracts the game imports, the site's `catalog.json`, the in-memory GLB the build
 analyses, the offline thumbnail renderer and the contact sheet.
 **Code** - `generator/generate.ts`, `generator/catalog.ts`, `generator/renderGlbThumb.ts`, `generator/contactSheet.ts`,
 `generator/jsModel.ts`, `generator/glbStats.ts`, `test/thumbnails.test.ts`, `test/contactSheet.test.ts`, `generator/coplanar.ts`, `generator/glbTriangles.ts`, `generator/glbParse.ts`, `test/export.test.ts`
-**See also** - [skyscrapers.md](skyscrapers.md), [village.md](village.md), [vehicles.md](vehicles.md), [game-properties.md](game-properties.md), [../site/catalog-site.md](../site/catalog-site.md),
+**See also** - [skyscrapers.md](skyscrapers.md), [village.md](village.md), [vehicles.md](vehicles.md), [game-properties.md](game-properties.md), [characters.md](characters.md), [../site/catalog-site.md](../site/catalog-site.md),
 [../guide/setup-and-build.md](../guide/setup-and-build.md)
 
 ## What is written
@@ -25,6 +25,7 @@ the same JS models and trees on demand ([../site/catalog-site.md](../site/catalo
 | `export/village.meta.json` | the same per village house, under `buildings` |
 | `export/vehicles.meta.json` | the same per vehicle, under `vehicles` |
 | `export/props.meta.json` | the same per prop the game's structures place, under `props`, each with `prop: { far, bounds }` ([props.md](props.md)) |
+| `export/characters.meta.json` | the same per character the game's walk mode moves (the avatar), under `characters`, each with `character: { height, bounds, clips, facing, seat }` ([characters.md](characters.md)) |
 | `export/woods.js` | every woods type and every tree species in one standalone module, what the game plants its forests with ([woods.md](woods.md)) |
 | `export/woods.meta.json` | every woods type and every tree species, for the game to import ([woods.md](woods.md)) |
 | `export/sets/<set>.meta.json`, `export/sets/<set>.js`, `<set>.d.ts`, `pins.json` | every set's ids, order, default and aliases, a landed set's definitions in one standalone module with its declarations, and the landed sets' pins ([sets.md](sets.md)) |
@@ -175,6 +176,15 @@ object is the built group's `userData.rig`.
 The buses take `BUS_CATALOG` (category `Road vehicles`, group `bus`), the trams
 `TRAM_CATALOG` (`Rail vehicles`, group `tram`) and the metro car `METRO_CATALOG`
 (`Rail vehicles`, group `metro`) ([trams.md](trams.md)).
+
+## `characters.meta.json`
+
+The characters (`CHARACTER_DESIGNS`, [characters.md](characters.md)) are neither buildings,
+vehicles nor props, so `exportCharacterMeta()` writes them a file of their own: the same `note`
+and `count`, the same entry shape under **`characters`** (category `Characters`, group
+`character`, no `defaultScale`: metres, as a vehicle), each with `character` - `height` and
+`bounds` of the default build at rest in metres, the `clips` by name in the model's order,
+`facing` (`"+x"`) and `seat` (the hips' height seated). No other meta lists a character.
 
 ## `catalog.json` (the site's data)
 

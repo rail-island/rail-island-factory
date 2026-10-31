@@ -127,6 +127,19 @@ export interface ProceduralDesign {
    * field from the vehicle's category (docs/site/openttd-export.md).
    */
   openttd?: OpenttdProperties;
+  /**
+   * What the game needs of a character (characters.ts, docs/models/characters.md)
+   * beyond its geometry and clips; set on every character and nothing else.
+   */
+  character?: CharacterProperties;
+}
+
+/** A character's game properties, exported in its characters.meta.json entry. */
+export interface CharacterProperties {
+  /** The hips' (the leg joints') height in the seated pose, the end of its `sit` clip, metres. */
+  seat: number;
+  /** Where its face looks: "+x", as a vehicle's nose. */
+  facing: "+x";
 }
 
 /** An OpenTTD climate a vehicle is offered in. */

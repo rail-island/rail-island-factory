@@ -9,7 +9,7 @@ units, the low detail and `props.meta.json`.
 `generator/catalog.ts`
 (`exportPropMeta`), `test/props.test.ts`
 **See also** - [previews.md](previews.md) (the cable-car pylon and the catenary supports, drawn
-by their set modules and filed with the props on the site), [sets.md](sets.md), [cable-car-stations.md](cable-car-stations.md) (the cable car station, drawn whole by its set module), [export.md](export.md), [lod.md](lod.md), the game's
+by their set modules and filed with the props on the site), [sets.md](sets.md), [cable-car-stations.md](cable-car-stations.md) (the cable car station, drawn whole by its set module), [export.md](export.md), [lod.md](lod.md), [characters.md](characters.md) (the avatar, listed apart in characters.meta.json), the game's
 `docs/rendering/props.md`
 
 ## What a prop is

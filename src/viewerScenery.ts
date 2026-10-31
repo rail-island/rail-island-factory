@@ -7,6 +7,12 @@
 // surface (the railhead, the road), so the scenery is laid out from there; it runs
 // along x, past both ends of the model.
 //
+// A character (a walking avatar) stands on a strip of grass with a paved path
+// along x, its walking direction, beside a marker pole as tall as the game's
+// vehicle doors (2 m), banded every quarter metre with a tick each half metre and
+// a crossbar at the top, so its height reads against the scale the game expects.
+// The pole is scenery, not model: never picked, highlighted or counted.
+//
 // The measures are the game's (its narrow road is 8 studs wide at 1.5 studs a
 // metre), the track's gauge the models' standard 1.435 m. The wire's height comes
 // with the record: generator/collector.ts, the one height every collector reaches.
@@ -26,7 +32,12 @@ const ROAD = { width: 8 / 1.5, kerb: 1.4 / 1.5, depth: 0.3 };
 /** The wire: its thickness, the messenger's height over the contact wire (railway), mast spacing and offset. */
 const WIRE = { thick: 0.05, messenger: 1.16, spacing: 25, offset: 4 / 1.5 };
 
+/** A character's ground: past each end, its width, the path's width; and the marker pole beside the figure. */
+const GROUND = { margin: 3, width: 4, path: 1.4, depth: 0.2 };
+const MARKER = { x: 0.6, z: -0.85, thick: 0.05, band: 0.25, tick: 0.5 };
+
 const COLORS = {
+  grass: 0x5d8a3a, paving: 0x9a958b, markerRed: 0xc8322d, markerWhite: 0xeeeeea,
   rail: 0x787882, sleeper: 0xb4b0a8, ballast: 0xa8a096, asphalt: 0x3c3c40, kerb: 0x9b9b96, wire: 0x3c3c41, mast: 0x5a692d,
 };
 
@@ -70,12 +81,18 @@ export function buildScenery(scenery: Scenery, bounds: Box3): { group: Group; di
     if (!m) mats.set(name, (m = new MeshStandardMaterial({ color: COLORS[name], roughness: name === "rail" || name === "wire" ? 0.5 : 0.95, metalness: name === "rail" ? 0.4 : 0 })));
     return m;
   };
-  const x0 = Math.min(bounds.min.x, 0) - MARGIN;
-  const x1 = Math.max(bounds.max.x, 0) + MARGIN;
+  const margin = scenery.way === "ground" ? GROUND.margin : MARGIN;
+  const x0 = Math.min(bounds.min.x, 0) - margin;
+  const x1 = Math.max(bounds.max.x, 0) + margin;
   const rails = (y0: number) => {
     for (const s of [-1, 1]) box(group, mat("rail"), x0, x1, y0, 0, s * (GAUGE / 2) - (s < 0 ? RAIL.width : 0), s * (GAUGE / 2) + (s > 0 ? RAIL.width : 0));
   };
-  if (scenery.way === "rail") {
+  if (scenery.way === "ground") {
+    // the path's surface at the feet, the grass a centimetre under it, so no two faces share a plane
+    const [hw, hp] = [GROUND.width / 2, GROUND.path / 2];
+    box(group, mat("paving"), x0, x1, -GROUND.depth, 0, -hp, hp);
+    for (const s of [-1, 1]) box(group, mat("grass"), x0, x1, -GROUND.depth, -0.01, s > 0 ? hp : -hw, s > 0 ? hw : -hp);
+  } else if (scenery.way === "rail") {
     rails(-RAIL.height);
     const top = -RAIL.height;
     for (let x = x0 + SLEEPER.spacing / 2; x < x1; x += SLEEPER.spacing)
@@ -89,6 +106,19 @@ export function buildScenery(scenery: Scenery, bounds: Box3): { group: Group; di
     for (const s of [-1, 1]) box(group, mat("kerb"), x0, x1, -ROAD.depth, -0.1, s > 0 ? half - ROAD.kerb : -half, s > 0 ? half : -half + ROAD.kerb);
     // a tram's track, embedded flush in the road
     if (scenery.way === "tram") rails(-0.02);
+  }
+  if (scenery.marker !== undefined) {
+    const h = scenery.marker;
+    const { x, z, thick: t, band, tick } = MARKER;
+    for (let k = 0, y = 0; y < h - 1e-6; k++, y += band) {
+      box(group, mat(k % 2 ? "markerWhite" : "markerRed"), x - t / 2, x + t / 2, y, Math.min(h, y + band), z - t / 2, z + t / 2);
+    }
+    // a tick every half metre (longer each metre), and the crossbar at the door's head
+    for (let y = tick; y < h - 1e-6; y += tick) {
+      const reach = Math.abs(y - Math.round(y)) < 1e-6 ? 0.16 : 0.1;
+      box(group, mat("markerWhite"), x - 0.01, x + 0.01, y - 0.01, y + 0.01, z + t / 2, z + t / 2 + reach);
+    }
+    box(group, mat("markerRed"), x - 0.03, x + 0.03, h, h + 0.04, z - 0.3, z + 0.3);
   }
   const top = scenery.wireTop;
   if (top !== undefined) {

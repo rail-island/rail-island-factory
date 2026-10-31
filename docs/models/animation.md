@@ -1,8 +1,8 @@
 # Animation
 
-**Covers** - animated models: the mesh builder's animation clips and how they reach the GLB and the JS model, what plays each clip (`clipDrives`: a time loop, the distance travelled or a state), the wind turbine's `wind` clip, the oil pumpjack's `pumping` mechanism, the steam locomotives' `running` clip (wheelsets, rods, Walschaerts valve gear), the `rolling` clip of the wheels with spokes or wheel nuts (`spin` parts), the pantographs as `liftable` mechanisms (`state` clips) and the `rod` primitive they are drawn with, the collector heights they reach (`collector.ts`), the timing contract for consumers, the site's Start/Stop and Up/Down buttons, and the tests.
-**Code** - `generator/meshCore.ts` (`animate`, `AnimationClipSpec`, `ClipDrive`, `clipDrives`, `tube`, `rod`, `sampleDraw`, `movingPart`, `drawRouted`), `generator/liftable.ts`, `generator/collector.ts`, `generator/cd163.ts` (`pushRod`), the pantograph builders (`czElectricKit.ts` `singleArm`/`diamond`, `cd150.ts`, `cd163.ts`, `cd230.ts`, `emuParts.ts`, `shinkansen0.ts`, `tramKit.ts`), `test/liftable.test.ts`, `test/pantographs.test.ts`, `generator/industry.ts` (`industrialWind`, `industrialOilPump`), `generator/pumpjack.ts`, `generator/meshBuilder.ts` (`toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/steamGear.ts` (`RunningGear`, `N_SAMPLES`, `RUNNING_SPEED`, `RUNNING_CLIP`), `generator/rolling.ts` (`rollWheels`, `ROLLING_CLIP`, `ROLLING_SPEED`, `ROLLING_SAMPLES`), `MeshCore.spin`, `generator/cd150.ts` and `generator/photoTrucks.ts` (their rolling wheels), `generator/glbPose.ts`, `src/ModelViewer.tsx`, `test/animation.test.ts`, `test/steam.test.ts`, `test/rolling.test.ts`, `test/pumpjack.test.ts`, `test/jsModel.test.ts`
-**See also** - [steam-locomotives.md](steam-locomotives.md), [doors.md](doors.md) (the `door` clips), [lamps.md](lamps.md), [vehicles.md](vehicles.md) (parts), [export.md](export.md), [js-format.md](js-format.md), [industry.md](industry.md), [../site/catalog-site.md](../site/catalog-site.md)
+**Covers** - animated models: the mesh builder's animation clips and how they reach the GLB and the JS model, what plays each clip (`clipDrives`: a time loop, the distance travelled, a state, a door or a chosen motion), the wind turbine's `wind` clip, the oil pumpjack's `pumping` mechanism, the steam locomotives' `running` clip (wheelsets, rods, Walschaerts valve gear), the `rolling` clip of the wheels with spokes or wheel nuts (`spin` parts), the pantographs as `liftable` mechanisms (`state` clips) and the `rod` primitive they are drawn with, the collector heights they reach (`collector.ts`), the timing contract for consumers, the site's Start/Stop and Up/Down buttons and a character's motion buttons, and the tests.
+**Code** - `generator/meshCore.ts` (`animate`, `AnimationClipSpec`, `ClipDrive`, `clipDrives`, `tube`, `rod`, `sampleDraw`, `movingPart`, `drawRouted`), `generator/liftable.ts`, `generator/collector.ts`, `generator/cd163.ts` (`pushRod`), the pantograph builders (`czElectricKit.ts` `singleArm`/`diamond`, `cd150.ts`, `cd163.ts`, `cd230.ts`, `emuParts.ts`, `shinkansen0.ts`, `tramKit.ts`), `test/liftable.test.ts`, `test/pantographs.test.ts`, `generator/industry.ts` (`industrialWind`, `industrialOilPump`), `generator/pumpjack.ts`, `generator/meshBuilder.ts` (`toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/steamGear.ts` (`RunningGear`, `N_SAMPLES`, `RUNNING_SPEED`, `RUNNING_CLIP`), `generator/rolling.ts` (`rollWheels`, `ROLLING_CLIP`, `ROLLING_SPEED`, `ROLLING_SAMPLES`), `MeshCore.spin`, `generator/cd150.ts` and `generator/photoTrucks.ts` (their rolling wheels), `generator/glbPose.ts`, `src/ModelViewer.tsx`, `src/viewerMotions.ts`, `test/animation.test.ts`, `test/steam.test.ts`, `test/rolling.test.ts`, `test/pumpjack.test.ts`, `test/jsModel.test.ts`
+**See also** - [steam-locomotives.md](steam-locomotives.md), [doors.md](doors.md) (the `door` clips), [characters.md](characters.md) (the `motion` clips), [lamps.md](lamps.md), [vehicles.md](vehicles.md) (parts), [export.md](export.md), [js-format.md](js-format.md), [industry.md](industry.md), [../site/catalog-site.md](../site/catalog-site.md)
 
 ## Clips in the mesh builder
 
@@ -21,7 +21,7 @@ Every clip states what advances it in a consumer, so the game plays any clip wit
 knowing any model or clip by name:
 
 ```ts
-type ClipDrive = { drive: "time" } | { drive: "distance"; speed: number } | { drive: "state" } | { drive: "door"; side: "left" | "right" };
+type ClipDrive = { drive: "time" } | { drive: "distance"; speed: number } | { drive: "state" } | { drive: "door"; side: "left" | "right" } | { drive: "motion" };
 ```
 
 - **`time`** - loop at the clip's own duration, whatever the model does: the wind
@@ -38,6 +38,19 @@ type ClipDrive = { drive: "time" } | { drive: "distance"; speed: number } | { dr
   0 (the rest pose) and open at 1; a drive of its own so that a consumer that moves
   every `state` clip as a pantograph leaves the doors alone
   ([doors.md](doors.md)).
+- **`motion`** - a clip a character plays by name when it chooses that motion: the
+  avatar's `jump`, `fall` and `sit` ([characters.md](characters.md)). Nothing in the
+  model's own movement advances it - not time, distance or a state of the model - so
+  a consumer that does not know the clip names, or the drive, must ignore the clip
+  (the game's clip controller leaves every unknown drive alone). What the clip's
+  samples are says how it plays: one whose last sample repeats its first loops (the
+  fall), one that ends near its start plays once (the jump, back to the idle loop),
+  one that ends in another pose eases into that end and holds it (sitting down). A
+  drive of its own, not `state`, so that a consumer moving every `state` clip as a
+  pantograph leaves a character's limbs alone.
+
+`animate` refuses any other drive kind. A consumer that does not know a drive must
+leave its clip alone, so a new kind never moves a model in an old consumer.
 
 three.js keeps no extras on an `AnimationClip`, so the drives travel beside the
 clips by clip name, as **`clipDrives`**: the GLB's scene `extras.clipDrives`
@@ -221,7 +234,13 @@ The clip's `clipDrives` entry states exactly this: `distance` at 5 m/s.
 - the **`state`** clips (the pantographs) get **Up** and **Down**, which move every
   working collector toward raised or folded over 1.5 s from wherever it stands -
   the viewer sets each state action's time from one lift value, as the game drives
-  the clip from a state. A model arrives raised, its rest pose.
+  the clip from a state. A model arrives raised, its rest pose;
+- a **character** (a model with a `motion` clip) gets one button per clip
+  instead, named after it, and **Stop** ([characters.md](characters.md),
+  `viewerMotions.ts`): the `time` and `distance` clips and a closed `motion` clip
+  loop, a `motion` clip that returns near its start plays once and hands over to the
+  first `time` clip, one that ends elsewhere eases into its end and holds; each
+  change cross-fades over 0.25 s, Stop fades back to rest.
 
 A render loop runs only while something moves. Another model or parameter choice
 drops the animation. Highlight and picking keep working, on the moved parts. An
@@ -249,5 +268,7 @@ once; plain-wheeled vehicles without the clip.
 `test/pumpjack.test.ts`: the pitman arm, beam tail and crank keep their lengths at
 every sample, the beam rocks both ways and returns, one `time` clip on the four
 moving parts, no z-fighting and nothing below ground at every sixth sample, and a
-static low-detail build. The catalog sweep (`test/catalogSweep.ts`) checks that every design's JS model builds
+static low-detail build. `test/characters.test.ts`: the avatar's six clips and their
+drives, closed loops, the feet on the ground through the walk and the run, and the
+site's motion buttons derived from the drives. The catalog sweep (`test/catalogSweep.ts`) checks that every design's JS model builds
 the GLB's clips track for track.

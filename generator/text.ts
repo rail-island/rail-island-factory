@@ -27,7 +27,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { BUILDINGS, VILLAGE_DESIGNS, ALL_VEHICLES } from "./generate.ts";
+import { BUILDINGS, VILLAGE_DESIGNS, ALL_VEHICLES, CHARACTER_DESIGNS } from "./generate.ts";
 import { BLOCK_PARAM_TEXT, SETS } from "./sets/registry.ts";
 import { WOODS } from "./woods.ts";
 import { SPECIES } from "./trees.ts";
@@ -96,9 +96,9 @@ export const TRACTION_LABELS: Readonly<Record<string, string>> = {
   steam: "Steam",
 };
 
-/** The designs the game shows: every one a game meta lists (not the trees or woods groves). */
+/** The designs the game shows: every one a game meta lists (not the trees, woods groves or props). */
 export function exportedDesigns(): readonly ProceduralDesign[] {
-  return [...BUILDINGS, ...VILLAGE_DESIGNS, ...ALL_VEHICLES];
+  return [...BUILDINGS, ...VILLAGE_DESIGNS, ...ALL_VEHICLES, ...CHARACTER_DESIGNS];
 }
 
 function paramText(out: Map<string, string>, prefix: string, params: readonly { name: string; title: string; values: readonly { value: string; title: string }[]; retired?: unknown }[] | undefined): void {

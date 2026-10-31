@@ -14,7 +14,7 @@ Every string the game shows from the factory, with its English where it is autho
 
 | Key | English from |
 |---|---|
-| `model.<id>` | the title of a design a game meta lists (not trees or woods groves) |
+| `model.<id>` | the title of a design a game meta lists: a building, village house, vehicle or character (not trees, woods groves, props or previews) |
 | `model.<id>.param.<name>`, `model.<id>.param.<name>.<value>` | its parameter and value titles |
 | `set.<set>.<id>`, `set.<set>.<id>.desc` | the set registry's type name and description |
 | `set.<set>.group.<id>`, `.desc` | a set group (a road family) |
