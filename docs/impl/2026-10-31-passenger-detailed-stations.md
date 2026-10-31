@@ -58,6 +58,16 @@ Checks:
   `test/setPins.test.ts` passes; `test/station.test.ts` (45) and `test/stationMesh.test.ts`
   (14) pass.
 
+## Follow-up changes
+
+1. **Flicker in the game, and the parked train's height.** The game draws station boxes
+   exactly, so flush faces of two colours flickered (the grand terminus' foot along its whole
+   side: the deck slabs' sides in the outer trim's plane). Slabs stand back 0.02 behind the trim
+   and coping, the builders' flush ends stand off, and a new check meshes every type as the game
+   does and holds it to no coplanar fights. The station pages now lay the game's own track
+   section (railhead 1.526), so the parked train no longer stands half a stud low with its
+   wheels hidden; the game then imported the full factory export (`pnpm import:factory`).
+
 ## How to test
 
 **Automated coverage.** No E2E framework exists in the factory (AGENTS.md: headless only). The
