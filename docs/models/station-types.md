@@ -3,9 +3,10 @@
 **Covers** - the eight railway station types of the `station` set: the layout recipes, the deck
 every type stands on (platform end ramps, island underpasses), what each type builds, the train
 sheds' shared vault, the shapes beyond the box, the passenger detail every type carries, the
-loading-gauge rule, the triangle budget the types are held to and the headless passenger view.
+loading-gauge rule, the no-flicker rule, the triangle budget the types are held to and the headless passenger view.
 **Code** - `generator/sets/station.ts`, `generator/previews/stations.ts`,
-`generator/renderPassengerView.ts`, `test/stationSet.test.ts`, `test/setPins.test.ts`
+`generator/previews/wayKit.ts`, `generator/renderPassengerView.ts`, `generator/coplanar.ts`,
+`test/stationSet.test.ts`, `test/setPins.test.ts`
 **See also** - [sets.md](sets.md) (the registry, landed modules, pins), [previews.md](previews.md),
 [stations.md](stations.md) (the station buildings, fixed models), [lod.md](lod.md),
 `.agents/skills/station/SKILL.md` (the checklist for changing a type)
@@ -210,6 +211,25 @@ hundredths above the deck could land in the deck's grown plane. The kit's deck m
 machine's panels therefore stand off by odd halves of that step (`MARK_*`, `PANEL_OUT`), and the
 preview registers the materials drawn only on thin parts (letters, screens, posters) first, so
 they take the smallest steps.
+
+## No flicker in the game
+
+The game draws a station's boxes exactly as given - unlike the site, it grows no material by a
+coplanar step - so two faces of two colours lying in one plane and facing one way flicker as
+the camera moves. `test/stationSet.test.ts` ("flicker") meshes every type as the game does (a
+glass pane and a glazed arc from both sides) at 1 x 40, 2 x 60, 4 x 120, 3 x 240 and 8 x 60 and
+holds it to none (`findCoplanarTriangles`, generator/coplanar.ts); a face looking down onto the
+deck or the terrain is never seen and is let be. Parts that would end flush stand off instead:
+
+- a deck slab's sides stop `DECK_INSET` (0.02) inside its band, behind the coping and the outer
+  trim, which in turn run 0.02 past the slab's ends (the grand terminus' long side once
+  flickered along its whole foot);
+- a beam, board, gutter or fascia as long as its roof stops `FLUSH` (0.02) short of the roof's
+  ends; a cornice or tie beam stands `FLUSH` proud of the wall or board it caps; a post stands
+  `FLUSH` off the top it would share;
+- a vault's arc springs `ARC_SPRING_LIFT` above its springing line, so its end faces do not lie
+  in the cornice's or the pier's plane;
+- a paving joint that would end in the plane of a part standing on it moves along.
 
 ## Glass in the game
 

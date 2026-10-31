@@ -51,3 +51,32 @@ export function track(s: Sketch, length: number, z: number, sleeper: { color: Rg
   if (!lod) rails(s, length, z, tieTop);
   return tieTop + RAIL.height;
 }
+
+/**
+ * One track along Z centred at lateral `x` (a station's tracks run along its Z): a flat
+ * ballast bed `bedWidth` wide from the ground to the game's bed top, sleepers (unless
+ * `sleeper` is null or `lod`), rails; returns the railhead height - the game's own
+ * section, so what stands on it (a parked train, the catenary) stands as in the game.
+ */
+export function trackAlongZ(s: Sketch, length: number, x: number, sleeper: Rgb | null, lod: boolean, bedWidth = 5): number {
+  const bedTop = BED_Y + BALLAST_HEIGHT;
+  s.box(s.mat("edge", BALLAST, "rail-ballast"), { cx: x, cy: bedTop / 2, cz: 0, sx: bedWidth, sy: bedTop, sz: length });
+  const tieTop = bedTop + TIE_PROUD;
+  if (lod) return tieTop + RAIL.height;
+  if (sleeper) {
+    const mat = s.mat("platform", sleeper);
+    for (let z = -length / 2 + TIE.spacing / 2; z < length / 2; z += TIE.spacing) s.box(mat, { cx: x, cy: tieTop - TIE.height / 2, cz: z, sx: TIE.length, sy: TIE.height, sz: TIE.width });
+  }
+  const steel = s.mat("steel", STEEL);
+  const webHeight = RAIL.height - RAIL.footHeight - RAIL.headHeight;
+  for (const side of [-1, 1]) {
+    const cx = x + side * RAIL.gauge / 2;
+    s.box(steel, { cx, cy: tieTop + RAIL.footHeight / 2, cz: 0, sx: RAIL.footWidth, sy: RAIL.footHeight, sz: length });
+    s.box(steel, { cx, cy: tieTop + RAIL.footHeight + webHeight / 2, cz: 0, sx: RAIL.webWidth, sy: webHeight, sz: length });
+    s.box(steel, { cx, cy: tieTop + RAIL.height - RAIL.headHeight / 2, cz: 0, sx: RAIL.headWidth, sy: RAIL.headHeight, sz: length });
+  }
+  return tieTop + RAIL.height;
+}
+
+/** The railhead's height over the ground of a track on the game's bed (trackAlongZ). */
+export const RAILHEAD_Y = BED_Y + BALLAST_HEIGHT + TIE_PROUD + RAIL.height;
