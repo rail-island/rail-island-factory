@@ -22,10 +22,11 @@ There is one environment. The site is public and has no sign-in.
 | Workflow | Runs on | Does |
 |---|---|---|
 | `deploy.yml` | push to `master`, or by hand on any branch | `pnpm build`, then `wrangler deploy` |
-| `test.yml` | push to `master`, or by hand on any branch | `pnpm typecheck`, then `pnpm test` (even if the typecheck failed) |
+| `test.yml` | by hand only, on any branch | `pnpm typecheck`, then `pnpm test` (even if the typecheck failed) |
 
-The two run in parallel; tests do **not** gate the deploy, so a red test run shows
-as a failed check while the site already carries the commit. Fix forward. A
+Pushes to `master` run only the deploy: the tests are not run there, so run
+`pnpm typecheck` and `pnpm test` locally before landing a change, or dispatch
+`test.yml` by hand. Tests never gate the deploy. A
 dispatch of `deploy.yml` against a `claude/*` branch puts that branch on the
 site - the way to look at a change before it reaches `master`.
 
