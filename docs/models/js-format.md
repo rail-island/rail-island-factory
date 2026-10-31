@@ -3,7 +3,7 @@
 **Covers** - the model as the export ships it: `export/js/<id>.js`, one ES module with no imports whose
 `build(THREE)` returns a `THREE.Group`; how it is bundled, what it contains, how it relates to the build's
 in-memory GLB, and the measured sizes.
-**Code** - `generator/jsModel.ts`, `generator/threeBuilder.ts`, `generator/meshCore.ts`,
+**Code** - `generator/jsModel.ts`, `generator/threeBuilder.ts`, `generator/meshCore.ts`, `generator/passengerHints.ts`,
 `generator/generate.ts` (`generateJsModels`), `test/jsModel.test.ts`
 **See also** - [vehicle-rig.md](vehicle-rig.md), [parameters.md](parameters.md), [export.md](export.md), [skyscrapers.md](skyscrapers.md), [vehicles.md](vehicles.md),
 [../site/catalog-site.md](../site/catalog-site.md)
@@ -47,6 +47,10 @@ scene.add(build(THREE)); // a THREE.Group named after the model id
 - **Emitters.** A model that smokes, steams or flares carries `userData.emitters`, the mouths of its
   stacks for the parameters it was built with; a fountain carries `userData.fountain`, its pools and
   jets ([emitters.md](emitters.md)).
+- **Passenger hints.** A structure preview that sets them (`setPassenger`, `generator/passengerHints.ts`)
+  carries `userData.passenger`: the passenger's eye height above the walkable surface and, on a railway
+  station page, its tracks - the site's passenger view reads them ([previews.md](previews.md)). Only
+  such a design's bundle holds the code that copies them in; the GLB does not carry them.
 - **Animations.** The group's `animations` holds the GLB's clips as `THREE.AnimationClip`s (a steam
   locomotive's `running`, the wind turbine's `wind`, the pumpjack's `pumping`, [animation.md](animation.md)),
   and `userData.clipDrives` says what plays each, by clip name: a `time` loop, the `distance` travelled

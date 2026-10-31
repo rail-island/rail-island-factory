@@ -684,6 +684,36 @@ body {
   user-select: none;
 }
 
+/* the passenger view's viewpoint picker, its "no place to stand" note and its key hint */
+.factory-viewer__select {
+  min-height: 36px;
+  padding: 4px 8px;
+  border-radius: var(--m-radius-sm);
+  border: 1px solid var(--m-outline);
+  background: rgb(30, 30, 35);
+  color: inherit;
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.factory-viewer__note {
+  padding: 0 8px;
+  color: var(--m-on-surface-variant);
+  font-size: 0.875rem;
+}
+
+.factory-viewer__hint {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  right: 12px;
+  margin: 0;
+  color: var(--m-on-surface-variant);
+  font-size: 0.75rem;
+  pointer-events: none;
+  z-index: 1;
+}
+
 .factory-detail__nav {
   display: flex;
   align-items: center;

@@ -2,14 +2,14 @@
 
 **Covers** - the Solid site that lists every model the factory builds: its data,
 the table, card and thumbnail layouts, browser-rendered variant thumbnails, sorting and search, the model page with its 3D
-preview, and the URL state.
+preview (its passenger view on structure pages included), and the URL state.
 **Code** - `src/main.tsx`, `src/App.tsx`, `src/catalogQuery.ts`, `src/ModelTable.tsx`,
-`src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`, `src/viewerScenery.ts`, `src/viewerGlass.ts`, `src/viewerInteriors.ts`,
+`src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`, `src/viewerScenery.ts`, `src/viewerGlass.ts`, `src/viewerInteriors.ts`, `src/viewerPassenger.ts`, `src/viewerOverlays.ts`,
 `src/SourceTreePanel.tsx`, `src/sourceTreeView.ts`, `src/Thumb.tsx`, `src/modelModule.ts`, `src/ExportPanel.tsx`,
 `src/ModelVariants.tsx`, `src/VariantThumb.tsx`, `src/variantThumbs.ts`, `src/thumbRender.ts`,
 `src/devCatalog.ts`, `src/devMeasure.ts`, `generator/devServer.ts`, `generator/devExport.ts`, `test/devExport.test.ts`,
 `src/factory.css`, `src/favicon.svg`, `src/apple-touch-icon.png`, `src/social-preview.png`, `src/boot.ts`, `src/bootEntry.ts`, `index.html`, `vite.config.ts`,
-`test/catalogQuery.test.ts`, `test/boot.test.ts`, `test/siteMeta.test.ts`, `test/rig.test.ts` (the Pose sliders), `test/scenery.test.ts`, `test/viewerInteriors.test.ts`
+`test/catalogQuery.test.ts`, `test/boot.test.ts`, `test/siteMeta.test.ts`, `test/rig.test.ts` (the Pose sliders), `test/scenery.test.ts`, `test/viewerInteriors.test.ts`, `test/viewerPassenger.test.ts`
 **See also** - [../models/export.md](../models/export.md), [../guide/deploy.md](../guide/deploy.md), [openttd-export.md](openttd-export.md)
 
 The site is the factory's counterpart of the webapp Creator's model listing,
@@ -306,6 +306,59 @@ runs along x from 8 m before the model to 8 m past it, at y = 0 the running
 surface; it is neither picked nor highlighted and adds nothing to the triangle
 count. A **Scenery** checkbox beside the buttons hides it, for every model until
 it is ticked again.
+
+### Passenger view
+
+Every **Structures** page (bridges, bus stops, railway stations, bus and truck
+stations, cable car stations, ports, airports, dams, tunnel portals) gets a
+**Passenger view** button over the preview (`viewerPassenger.ts`): the camera
+drops to a passenger's eye on the model and stays there until **Orbit view** or
+Esc puts the orbit camera back exactly where it was. OrbitControls is off
+meanwhile, and Esc and the arrow keys belong to the walk, not to the page.
+
+- **Where one can stand** is found from the drawn triangles, not from per-family
+  data: an upward face (normal y > 0.7) with the eye height plus 0.25 free above
+  it. The triangles are indexed once per build in an x/z grid (`Ground`), so a
+  floor or a wall test reads a cell or two. The eye height is the preview's
+  `userData.passenger.eye`, else 2.55 studs
+  ([../models/previews.md](../models/previews.md), "Passenger view hints").
+- **Viewpoints** (a select beside the button; the first is where the view
+  opens): a grid over the model, floors no higher than four eye heights over its
+  lowest point, joined into the areas one can walk between (a step or a stair
+  apart). Roof tops (over another floor) and flat tops more than an eye height
+  over the deck are left out; raised decks - track beds over the ground,
+  platforms over the beds, islands, quays - are preferred to the ground between
+  them; a stated track is never stood on. From those, in this order and at least
+  two eye heights apart: **End** (on a station: **Platform end**), **Middle**,
+  **Under the roof** (a spot with a cover above), **Side**, **Far end** (**Other
+  platform end**) and **Upper level** where one stands an eye height above the
+  rest. Deterministic: the same build gives the same list.
+- **Walking**: W A S D or the arrow keys walk, Q and E turn, Shift runs; a drag
+  looks around (pitch held within +-77 degrees); on a touch screen one finger
+  looks and two fingers walk. The passenger keeps to a floor: a step up or down
+  of at most 0.6 units is taken (stairs), a platform edge or a wall stops them
+  (rays at knee, waist and eye height; a blocked move slides along the wall), and
+  they never leave the model's bounds by more than an eye height. The render loop
+  runs only while a key is held; a drag renders per move. A parameter change
+  keeps the passenger where they stand when the floor is still there, else at the
+  same viewpoint; another model brings the orbit view back.
+- **Overlays** on a railway station page (its preview states its tracks): two
+  checkboxes, off by default and kept across pages (`viewerOverlays.ts`). **Parked
+  train** loads the UIC-Z coach's own JS model (`proc-vehicle-uic-z-coach`, as any
+  page loads its model, `modelModule.ts`), scales it from metres to studs (x1.5),
+  turns it along z and stands its wheels on the rail top of the first track with
+  a platform beside it, coupling as many cars as fit (one to four), centred on the
+  track. **Catenary** draws a mast beside every track every 15 studs or less,
+  3.1 studs off its centre (outside the 5-stud ballast, on the side that keeps
+  2.8 studs from every track - on a platform when that is where the room is, as
+  the game does), with an arm and a register arm out over the track, a dropper, and
+  the contact and messenger wires at the game's heights (8.86 and 10.6 studs over
+  the rail top, `generator/previews/wayKit.ts`). Both are rebuilt with every build,
+  so they follow the page's track count and length; neither counts triangles nor is
+  walked on, and the station's JS and thumbnails are untouched.
+
+`test/viewerPassenger.test.ts` covers the floors, the head room, the step limit,
+the walls, the viewpoints, the hints reaching `userData` and the overlays' layout.
 
 `ModelViewer.tsx` (with its helpers `viewerHighlight.ts`, `viewerLamps.ts` and `modelModule.ts`, which
 fetches and builds a model's JS module with the subset of three it reads, `THREE_SUBSET`, constants such as

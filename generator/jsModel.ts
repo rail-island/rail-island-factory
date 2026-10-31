@@ -16,6 +16,7 @@ import type { ProceduralDesign } from "./design.ts";
 
 import { lodBudget } from "./lod.ts";
 import { isInteriorName } from "./interiorTable.ts";
+import { passengerOf } from "./passengerHints.ts";
 
 const GENERATOR_DIR = path.dirname(fileURLToPath(import.meta.url));
 
@@ -86,14 +87,18 @@ export async function bundleDesign(design: ProceduralDesign, source: string, rig
   // the UV code ships only in the bundle of a design that names a surface (threeBuilder.ts)
   const levels = [design.build(), design.buildLod(), ...(design.buildCoarse ? [design.buildCoarse()] : []), ...(design.buildMax ? [design.buildMax()] : [])];
   const surfaces = levels.some((m) => Object.values((m as unknown as { palette: Record<string, MaterialSpec> }).palette).some((spec) => spec.surface));
+  // a structure preview's passenger-view hints (passengerHints.ts) reach userData only in the bundle of a design that sets them
+  const passenger = levels.some((m) => passengerOf(m) !== null);
+  const stamp = passenger ? " const hints = passengerOf(mesh); if (hints) group.userData.passenger = JSON.parse(JSON.stringify(hints));" : "";
   const result = await build({
     stdin: {
       contents: [
         `import { ${fn} as design, ${design.buildLod.name} as designLod${design.buildCoarse ? `, ${design.buildCoarse.name} as designCoarse` : ""}${design.buildMax ? `, ${design.buildMax.name} as designMax` : ""} } from ${JSON.stringify(`./${source}`)};`,
         // a parametric design's enum parameters, [] for a fixed one; build() takes the chosen values
+        ...(passenger ? [`import { passengerOf } from "./passengerHints.ts";`] : []),
         `export const params = ${JSON.stringify(design.params ?? [])};`,
         `export const lodTriangleBudget = ${lodBudget(design)};`,
-        `export default function build(THREE, values, lod = false) { if (typeof lod !== "boolean") throw new Error("lod must be a boolean"); const mesh = lod ? designLod(values${bound}) : design(values${bound}); const group = mesh.toGroup(THREE, ${JSON.stringify(design.id)}); group.userData.lod = lod; return group; }`,
+        `export default function build(THREE, values, lod = false) { if (typeof lod !== "boolean") throw new Error("lod must be a boolean"); const mesh = lod ? designLod(values${bound}) : design(values${bound}); const group = mesh.toGroup(THREE, ${JSON.stringify(design.id)}); group.userData.lod = lod;${stamp} return group; }`,
         ...(design.buildMax ? [`export const maxTriangleBudget = 10000;`, `export function buildMax(THREE, values) { const group = designMax(values).toGroup(THREE, ${JSON.stringify(design.id)}); group.userData.lod = "max"; return group; }`] : []),
         ...(rigged ? [`export { pose, renderJoint, steerAngles, steerLock, jointTriangles } from "./rig.ts";`] : []),
         // a tree's third, coarsest level (design.ts buildCoarse)
