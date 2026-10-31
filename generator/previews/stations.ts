@@ -10,6 +10,7 @@ import type { MeshBuilder } from "../meshBuilder.ts";
 import * as station from "../sets/station.ts";
 import * as roadStation from "../sets/roadStation.ts";
 import { Sketch } from "./sketch.ts";
+import { setPassenger } from "../passengerHints.ts";
 
 // both are what a player picks for a station in the game
 export const STATION_PARAMS: ParamSpec[] = [
@@ -18,6 +19,8 @@ export const STATION_PARAMS: ParamSpec[] = [
 ];
 
 const BALLAST = [168, 160, 150] as const, RAIL = [92, 88, 84] as const;
+/** The rails' top above the terrain (the rail boxes below: 0.6 to 1.0). */
+const RAIL_TOP = 1.0;
 const ROOFED = new Set(["roof", "glass", "tile", "steel", "brick"]);
 
 function stationSketch(values: ParamValues | undefined, type: string, lod: boolean): Sketch {
@@ -87,8 +90,27 @@ function drawStationBox(s: Sketch, b: station.StationBox): void {
   s.triangles(mat, station.stationBoxMesh(grown).positions, b.shape === "arc" && station.arcIsSheet(b));
 }
 
-export function stationPreview(values: ParamValues | undefined, type: string): MeshBuilder { return stationSketch(values, type, false).build("station"); }
-export function stationPreviewLod(values: ParamValues | undefined, type: string): MeshBuilder { return stationSketch(values, type, true).build("station"); }
+/**
+ * The passenger view's hints (docs/models/previews.md): the eye height, and every
+ * track's centreline, extent and rail top, along which the site lays its parked train
+ * and catenary. The sketch stands on y = 0 already (the ballast's foot), so these are
+ * its own coordinates.
+ */
+function withPassenger(m: MeshBuilder, values: ParamValues | undefined, type: string): MeshBuilder {
+  const p = resolveParams(STATION_PARAMS, values);
+  const length = Number(p.length), layout = station.buildLayout(type, Number(p.tracks));
+  let x = -layout.rows.reduce((w, r) => w + r.width, 0) / 2;
+  const tracks = [];
+  for (const row of layout.rows) {
+    if (row.type === "rail") tracks.push({ x: x + row.width / 2, z0: -length / 2 - 4, z1: length / 2 + 4, top: RAIL_TOP });
+    x += row.width;
+  }
+  setPassenger(m, { eye: 2.55, tracks });
+  return m;
+}
+
+export function stationPreview(values: ParamValues | undefined, type: string): MeshBuilder { return withPassenger(stationSketch(values, type, false).build("station"), values, type); }
+export function stationPreviewLod(values: ParamValues | undefined, type: string): MeshBuilder { return withPassenger(stationSketch(values, type, true).build("station"), values, type); }
 
 // a road station's layout and stand count are what a player picks for it in the game
 export const ROAD_STATION_PARAMS: ParamSpec[] = [
