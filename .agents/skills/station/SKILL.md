@@ -68,6 +68,11 @@ kit; check that a new structure does not crowd the platforms so much that the ki
 all drop out. A type's own structure should read at eye level: round columns and masts,
 bases and capitals, lamps with shades or globes, gutters and downpipes, bench armrests.
 
+**No flicker in the game.** The game draws the boxes exactly: two faces of two colours in
+one plane facing one way flicker. Never end a part flush with another of another colour -
+stop it `FLUSH` (0.02) short or proud, as `docs/models/station-types.md` ("No flicker in the
+game") lists; `test/stationSet.test.ts` ("flicker") checks the game's own geometry.
+
 Thin faces near another face (a marking above the deck, a screen on a machine) stand off
 by an odd half of the preview's coplanar step (`MARK_*`, `PANEL_OUT`: 0.0041337 x n.5);
 a round shape is turned so no flat faces along an axis.
@@ -82,7 +87,8 @@ user asks for the game side (publishing is a separate step).
 
 ## Checks
 
-1. `pnpm typecheck`; `pnpm exec vitest run test/stationSet.test.ts test/setPins.test.ts test/previews.test.ts`.
+1. `pnpm typecheck`; `pnpm exec vitest run test/stationSet.test.ts test/setPins.test.ts test/previews.test.ts`
+   (the station tests include the game-geometry flicker check).
 2. The catalog sweep on the station pages: a scratch test calling `sweep()` (with
    `warm()`) on the `proc-preview-station-*` ids - it catches z-fighting the box checks
    cannot (not `TEST_ALL_VARIANTS=1 pnpm test`, which runs only when the user asks).

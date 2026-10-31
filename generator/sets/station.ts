@@ -591,6 +591,17 @@ function endInset(type: string): number {
   return RAMPED.has(type) ? RAMP_LENGTH : 0;
 }
 
+/** How far a deck slab's sides stand back inside its band, behind the coping and the trim. */
+const DECK_INSET = 0.02;
+/**
+ * How far one part stands off another it would otherwise end flush with: the game
+ * draws a station's boxes exactly, so two faces of two colours in one plane flicker
+ * (test/stationSet.test.ts, "flicker").
+ */
+const FLUSH = 0.02;
+/** How far (radians) a vault's arc springs above its springing line. */
+const ARC_SPRING_LIFT = 0.01;
+
 /** A stairwell cut into a deck band: the underpass a passenger takes to an island. */
 interface DeckWell { x0: number; x1: number; z0: number; z1: number }
 
@@ -612,13 +623,17 @@ function pushDeck(boxes: StationBox[], length: number, layout: StationLayout, fi
     const w = band.maxX - band.minX;
     if (w <= 0.1) return;
     const wells = opts.wells?.get(bandIndex) ?? [];
-    if (wells.length === 0) slab(band.minX, band.maxX, -deckLen / 2, deckLen / 2);
+    // The slab stops a hair inside the band: its sides would otherwise lie in the plane
+    // of the edge coping and the outer trim, two colours the game draws flush, which
+    // flicker (seen from the side, along the whole platform).
+    const sx0 = band.minX + DECK_INSET, sx1 = band.maxX - DECK_INSET;
+    if (wells.length === 0) slab(sx0, sx1, -deckLen / 2, deckLen / 2);
     else {
       // the band round its wells: full-length strips beside them, pieces between
       const x0 = Math.min(...wells.map((wl) => wl.x0));
       const x1 = Math.max(...wells.map((wl) => wl.x1));
-      slab(band.minX, x0, -deckLen / 2, deckLen / 2);
-      slab(x1, band.maxX, -deckLen / 2, deckLen / 2);
+      slab(sx0, x0, -deckLen / 2, deckLen / 2);
+      slab(x1, sx1, -deckLen / 2, deckLen / 2);
       let z = -deckLen / 2;
       for (const wl of [...wells].sort((a, b) => a.z0 - b.z0)) {
         slab(x0, x1, z, wl.z0);
@@ -637,18 +652,18 @@ function pushDeck(boxes: StationBox[], length: number, layout: StationLayout, fi
         const zTop = sgn * (length / 2 - ramp);
         const midZ = sgn * (length / 2 - ramp / 2);
         const ny = Math.cos(angle), nz = sgn * Math.sin(angle);
-        boxes.push({ cx: band.centerX, cy: PLATFORM_HEIGHT / 2 - (ny * thick) / 2, cz: midZ - (nz * thick) / 2, sx: w, sy: thick, sz: Math.hypot(ramp, PLATFORM_HEIGHT), rotX: sgn * angle, color: PLATFORM_COLOR, material: "platform" });
+        boxes.push({ cx: band.centerX, cy: PLATFORM_HEIGHT / 2 - (ny * thick) / 2, cz: midZ - (nz * thick) / 2, sx: w - 2 * DECK_INSET, sy: thick, sz: Math.hypot(ramp, PLATFORM_HEIGHT), rotX: sgn * angle, color: PLATFORM_COLOR, material: "platform" });
         for (const k of [1, 2]) {
           const h = PLATFORM_HEIGHT * (1 - (k - 1) / 3) - vertical;
           if (h <= 0.1) continue;
           const zEnd = zTop + (sgn * ramp * k) / 3;
-          boxes.push({ cx: band.centerX, cy: h / 2, cz: (zTop + zEnd) / 2, sx: w - 0.02 * k, sy: h, sz: Math.abs(zEnd - zTop), color: PLATFORM_COLOR, material: "platform" });
+          boxes.push({ cx: band.centerX, cy: h / 2, cz: (zTop + zEnd) / 2, sx: w - 2 * DECK_INSET - 0.02 * k, sy: h, sz: Math.abs(zEnd - zTop), color: PLATFORM_COLOR, material: "platform" });
         }
       }
     }
     for (const side of [-1, 1]) {
       if (!(side < 0 ? band.edgeLeft : band.edgeRight)) continue;
-      boxes.push({ cx: side < 0 ? band.minX + 0.18 : band.maxX - 0.18, cy: PLATFORM_HEIGHT - 0.12, cz: 0, sx: 0.36, sy: 0.3, sz: deckLen, color: EDGE_COLOR, material: "edge" });
+      boxes.push({ cx: side < 0 ? band.minX + 0.18 : band.maxX - 0.18, cy: PLATFORM_HEIGHT - 0.12, cz: 0, sx: 0.36, sy: 0.3, sz: deckLen + 2 * DECK_INSET, color: EDGE_COLOR, material: "edge" });
     }
     // safety line 0.5 studs back from every edge that faces a track
     if (band.edgeLeft && w > 1.4) {
@@ -662,7 +677,7 @@ function pushDeck(boxes: StationBox[], length: number, layout: StationLayout, fi
   const edgeWidth = 0.5;
   const edgeHeight = PLATFORM_HEIGHT + 0.2;
   for (const sgn of [-1, 1]) {
-    boxes.push({ cx: sgn * (half - edgeWidth / 2), cy: edgeHeight / 2, cz: 0, sx: edgeWidth, sy: edgeHeight, sz: deckLen, color: EDGE_COLOR, material: "edge" });
+    boxes.push({ cx: sgn * (half - edgeWidth / 2), cy: edgeHeight / 2, cz: 0, sx: edgeWidth, sy: edgeHeight, sz: deckLen + 2 * DECK_INSET, color: EDGE_COLOR, material: "edge" });
   }
 }
 
@@ -724,7 +739,8 @@ function pushUnderpasses(boxes: StationBox[], wells: ReadonlyMap<number, readonl
       // glass balustrade on the two long sides and the closed (-Z) end
       const railY = PLATFORM_HEIGHT + 0.55;
       for (const x of [wl.x0 - 0.1, wl.x1 + 0.1]) {
-        boxes.push({ cx: x, cy: railY, cz: (wl.z0 + wl.z1) / 2, sx: 0.12, sy: 1.1, sz: wl.z1 - wl.z0, color: GLASS_COLOR, material: "glass" });
+        // (the pane a hair off the rail's centre: the stair canopy's posts end in its plane)
+        boxes.push({ cx: x + Math.sign(x - (wl.x0 + wl.x1) / 2) * FLUSH, cy: railY, cz: (wl.z0 + wl.z1) / 2, sx: 0.12, sy: 1.1, sz: wl.z1 - wl.z0, color: GLASS_COLOR, material: "glass" });
         boxes.push({ cx: x, cy: railY + 0.62, cz: (wl.z0 + wl.z1) / 2, sx: 0.2, sy: 0.14, sz: wl.z1 - wl.z0 + 0.2, color: STEEL_DARK, material: "steel" });
       }
       boxes.push({ cx, cy: railY, cz: wl.z0 - 0.1, sx: w, sy: 1.1, sz: 0.12, color: GLASS_COLOR, material: "glass" });
@@ -973,7 +989,7 @@ function buildIslandPlatforms(length: number, layout: StationLayout): StationBox
       slopePiece(sgn, 0.34, 0.62, 0.3, 0, 0, roofZ, GLASS_COLOR, "glass", "shell");
       slopePiece(sgn, 0.6, 1, 0.5, 0, 0, roofZ, ROOF_COLOR, "roof", "shell");
       // the eave fascia, and the fascia across both roof ends under the slope
-      boxes.push({ cx: cx + sgn * (halfW - 0.12), cy: edgeY - 0.45, cz: 0, sx: 0.14, sy: 0.7, sz: roofZ, color: SHARED_FASCIA, material: "column" });
+      boxes.push({ cx: cx + sgn * (halfW - 0.12), cy: edgeY - 0.45, cz: 0, sx: 0.14, sy: 0.7, sz: roofZ - 2 * FLUSH, color: SHARED_FASCIA, material: "column" });
       for (const end of [-1, 1]) slopePiece(sgn, 0, 0.98, 0.7, 0.4, end * (roofZ / 2 - 0.08), 0.14, SHARED_FASCIA, "column");
       // a light strip under each slope
       const lightX = cx + sgn * (halfW - 1.7);
@@ -994,7 +1010,7 @@ function buildIslandPlatforms(length: number, layout: StationLayout): StationBox
       }
     }
     // the valley gutter and the cross beams
-    boxes.push({ cx, cy: vertexY + 0.16, cz: 0, sx: 0.45, sy: 0.25, sz: roofZ, color: COLUMN_COLOR, material: "column" });
+    boxes.push({ cx, cy: vertexY + 0.16, cz: 0, sx: 0.45, sy: 0.25, sz: roofZ - 2 * FLUSH, color: COLUMN_COLOR, material: "column" });
     const beamY = vertexY - 0.3;
     for (const z of bays) {
       boxes.push({ cx, cy: beamY, cz: z, sx: halfW * 2 - 0.7, sy: 0.25, sz: 0.3, color: COLUMN_COLOR, material: "column" });
@@ -1108,7 +1124,9 @@ function pushVaultArc(boxes: StationBox[], v: Vault, cz: number, thickZ: number,
   boxes.push({
     shape: "arc",
     sides: v.segments,
-    arc: { rx, ry, a0: Math.PI, a1: 0, thick: thickY },
+    // (springing a hair above the line, so its end faces do not lie in the
+    // cornice's or the pier's plane beneath)
+    arc: { rx, ry, a0: Math.PI - ARC_SPRING_LIFT, a1: ARC_SPRING_LIFT, thick: thickY },
     cx: v.midX, cy: v.springY, cz,
     sx: 2 * rx, sy: ry, sz: thickZ,
     color,
@@ -1565,7 +1583,7 @@ function buildConcourse(length: number, layout: StationLayout): StationBox[] {
       boxes.push({ cx, cy: (soffit + spineBottom) / 2, cz: canopyZ, sx: 0.5, sy: soffit - spineBottom + 0.02, sz: canopyLength - 0.4, color: STEEL_DARK, material: "steel" });
       for (const sgn of [-1, 1]) {
         const edgeX = sgn < 0 ? band.minX : band.maxX;
-        boxes.push({ lod: "shell", cx: edgeX - sgn * 0.2, cy: canopyY - 0.55, cz: canopyZ, sx: 0.3, sy: 0.8, sz: canopyLength, color: STEEL_DARK, material: "steel" });
+        boxes.push({ lod: "shell", cx: edgeX - sgn * 0.2, cy: canopyY - 0.55, cz: canopyZ, sx: 0.3, sy: 0.8, sz: canopyLength - 2 * FLUSH, color: STEEL_DARK, material: "steel" });
         // the light strip, fixed to the underside
         boxes.push({ cx: edgeX - sgn * 1.2, cy: soffit - 0.07, cz: canopyZ, sx: 0.45, sy: 0.14, sz: Math.max(2, canopyLength - 2), color: LIGHT_COLOR, material: "light" });
       }
@@ -1626,8 +1644,8 @@ function buildConcourse(length: number, layout: StationLayout): StationBox[] {
   for (const sgn of [-1, 1]) {
     const railZ = sgn * (bridgeZ / 2 - 0.15);
     boxes.push({ lod: "shell", cx: 0, cy: deckY + 2.1, cz: railZ, sx: bridgeHalf * 2, sy: 3.4, sz: 0.25, color: GLASS_COLOR, material: "glass" });
-    boxes.push({ lod: "shell", cx: 0, cy: deckY + 0.5, cz: railZ, sx: bridgeHalf * 2, sy: 0.5, sz: 0.5, color: STEEL_DARK, material: "steel" });
-    boxes.push({ lod: "shell", cx: 0, cy: deckY + 3.85, cz: railZ, sx: bridgeHalf * 2, sy: 0.45, sz: 0.6, color: STEEL_DARK, material: "steel" });
+    boxes.push({ lod: "shell", cx: 0, cy: deckY + 0.5, cz: railZ, sx: bridgeHalf * 2 + 2 * FLUSH, sy: 0.5, sz: 0.5, color: STEEL_DARK, material: "steel" });
+    boxes.push({ lod: "shell", cx: 0, cy: deckY + 3.85, cz: railZ, sx: bridgeHalf * 2 + 2 * FLUSH, sy: 0.45, sz: 0.6, color: STEEL_DARK, material: "steel" });
     const mullions = Math.max(3, Math.round(bridgeHalf / 3.6));
     for (let i = -mullions; i <= mullions; i++) {
       boxes.push({ cx: (i * bridgeHalf) / (mullions + 0.5), cy: deckY + 2.1, cz: railZ, sx: 0.3, sy: 3.4, sz: 0.4, color: STEEL_DARK, material: "steel" });
@@ -1657,7 +1675,7 @@ function buildConcourse(length: number, layout: StationLayout): StationBox[] {
     boxes.push({ lod: "shell", cx: tx, cy: towerMid, cz: 0, sx: tw, sy: towerH, sz: 7.2, color: GLASS_COLOR, material: "glass" });
     for (const dx of [-1, 1]) {
       for (const dz of [-1, 1]) {
-        boxes.push({ cx: tx + (dx * tw) / 2, cy: towerMid, cz: dz * 3.5, sx: 0.55, sy: towerH, sz: 0.55, color: STEEL_DARK, material: "steel" });
+        boxes.push({ cx: tx + (dx * tw) / 2, cy: towerMid + FLUSH, cz: dz * 3.5, sx: 0.55, sy: towerH + 2 * FLUSH, sz: 0.55, color: STEEL_DARK, material: "steel" });
       }
     }
     for (const f of [0.34, 0.67]) {
@@ -1800,7 +1818,7 @@ function buildVillageDepot(length: number, layout: StationLayout): StationBox[] 
       boxes.push({ cx: bcx, cy: base + 0.4, cz: p.z, sx: buildingW + 0.3, sy: 0.8, sz: p.length + 0.3, color: BRICK_COLOR, material: "brick" });
       boxes.push({ lod: "shell", cx: bcx, cy: (base + eaveY) / 2, cz: p.z, sx: buildingW, sy: eaveY - base, sz: p.length, color: STUCCO, material: "brick" });
       boxes.push({ cx: bcx, cy: base + DEPOT_GROUND, cz: p.z, sx: buildingW + 0.24, sy: 0.3, sz: p.length + 0.24, color: WOOD_CREAM, material: "brick" });
-      boxes.push({ cx: bcx, cy: eaveY - 0.2, cz: p.z, sx: buildingW + 0.4, sy: 0.4, sz: p.length + 0.4, color: WOOD_CREAM, material: "brick" });
+      boxes.push({ cx: bcx, cy: eaveY - 0.2 + FLUSH, cz: p.z, sx: buildingW + 0.4, sy: 0.4, sz: p.length + 0.4, color: WOOD_CREAM, material: "brick" });
       for (const sx of [-1, 1]) {
         for (const sz of [-1, 1]) {
           boxes.push({ cx: bcx + sx * (buildingW / 2 - 0.2), cy: (base + 0.8 + eaveY - 0.4) / 2, cz: p.z + sz * (p.length / 2 - 0.2), sx: 0.52, sy: eaveY - base - 1.2, sz: 0.52, color: BRICK_COLOR, material: "brick" });
@@ -1832,7 +1850,7 @@ function buildVillageDepot(length: number, layout: StationLayout): StationBox[] 
       const eaveY = base + 4.9;
       boxes.push({ cx: bcx, cy: base + 0.4, cz: p.z, sx: buildingW + 0.3, sy: 0.8, sz: p.length + 0.3, color: BRICK_COLOR, material: "brick" });
       boxes.push({ lod: "shell", cx: bcx, cy: (base + eaveY) / 2, cz: p.z, sx: buildingW - 0.4, sy: eaveY - base, sz: p.length, color: STUCCO, material: "brick" });
-      boxes.push({ cx: bcx, cy: eaveY - 0.18, cz: p.z, sx: buildingW, sy: 0.36, sz: p.length + 0.2, color: WOOD_CREAM, material: "brick" });
+      boxes.push({ cx: bcx, cy: eaveY - 0.18 + FLUSH, cz: p.z, sx: buildingW - 2 * FLUSH, sy: 0.36, sz: p.length + 0.2, color: WOOD_CREAM, material: "brick" });
       pushGableRoof(boxes, bcx, p.z, buildingW - 0.4, p.length, eaveY, 26, TILE_COLOR, "tile", STUCCO);
       for (const [face, dir] of [[houseInner + 0.2, -1], [houseOuter - 0.2, 1]] as const) {
         for (const z of windows(p.length)) pushWallOpening(boxes, face, dir, base + 0.9, 2.4, p.z + z, 1.3, false);
@@ -1847,7 +1865,7 @@ function buildVillageDepot(length: number, layout: StationLayout): StationBox[] 
       }
       // the sliding door to the track, its rail, and the timber loading apron
       const doorW = Math.min(4, p.length * 0.4);
-      boxes.push({ cx: houseInner + 0.1 - 0.12, cy: base + 1.6, cz: p.z, sx: 0.12, sy: 3.2, sz: doorW, color: [96, 64, 40], material: "wood" });
+      boxes.push({ cx: houseInner + 0.1 - 0.12, cy: base + 1.6, cz: p.z, sx: 0.12, sy: 3.2, sz: doorW - 2 * FLUSH, color: [96, 64, 40], material: "wood" });
       boxes.push({ cx: houseInner + 0.1 - 0.2, cy: base + 3.35, cz: p.z, sx: 0.16, sy: 0.18, sz: doorW * 2 + 0.4, color: STEEL_DARK, material: "steel" });
       boxes.push({ cx: houseInner - 0.6, cy: base + 0.06, cz: p.z, sx: 1.4, sy: 0.12, sz: doorW * 2 + 1, color: WOOD_COLOR, material: "wood" });
       pushGableRoof(boxes, bcx, p.z, shedW, p.length, eaveY, 22, SHED_ROOF, "roof", WOOD_COLOR);
@@ -1952,14 +1970,14 @@ function pushWaitingRoom(boxes: StationBox[], cx: number, z: number): void {
   boxes.push({ lod: "shell", cx: mx, cy: PLATFORM_HEIGHT + 0.4 + (h - 0.4) / 2, cz: z, sx: x1 - x0, sy: h - 0.4, sz: len, color: WOOD_CREAM, material: "wood" });
   boxes.push({ cx: mx, cy: PLATFORM_HEIGHT + h + 0.12, cz: z, sx: x1 - x0 + 0.5, sy: 0.24, sz: len + 0.5, color: CANOPY_GREEN, material: "tile" });
   for (const ex of [x0, x1]) for (const ez of [-1, 1]) {
-    boxes.push({ cx: ex, cy: PLATFORM_HEIGHT + h / 2 + 0.1, cz: z + ez * (len / 2), sx: 0.24, sy: h - 0.2, sz: 0.24, color: IRON_GREEN, material: "wood" });
+    boxes.push({ cx: ex, cy: PLATFORM_HEIGHT + h / 2 + 0.1 - FLUSH, cz: z + ez * (len / 2), sx: 0.24, sy: h - 0.2 - 2 * FLUSH, sz: 0.24, color: IRON_GREEN, material: "wood" });
   }
   // two windows to the track, a glazed door at the +Z end
   for (const wz of [-1.4, 1.4]) {
     boxes.push({ cx: x0 - 0.05, cy: PLATFORM_HEIGHT + 1.95, cz: z + wz, sx: 0.12, sy: 1.5, sz: 1.5, color: IRON_GREEN, material: "wood" });
     boxes.push({ cx: x0 - 0.09, cy: PLATFORM_HEIGHT + 1.95, cz: z + wz, sx: 0.08, sy: 1.25, sz: 1.25, color: STEEL_DARK, material: "steel" });
   }
-  boxes.push({ cx: mx, cy: PLATFORM_HEIGHT + 1.45, cz: z + len / 2 + 0.05, sx: 1.1, sy: 2.1, sz: 0.12, color: IRON_GREEN, material: "wood" });
+  boxes.push({ cx: mx, cy: PLATFORM_HEIGHT + 1.45 + FLUSH, cz: z + len / 2 + 0.05, sx: 1.1, sy: 2.1 - 2 * FLUSH, sz: 0.12, color: IRON_GREEN, material: "wood" });
   boxes.push({ cx: mx, cy: PLATFORM_HEIGHT + 1.85, cz: z + len / 2 + 0.09, sx: 0.8, sy: 1.0, sz: 0.08, color: STEEL_DARK, material: "steel" });
 }
 
@@ -1998,13 +2016,13 @@ function buildHeritageCanopy(length: number, layout: StationLayout): StationBox[
       });
       // the eaves board and its fretted valance: a dagger board every step
       const eaveX = centerX + side * (halfW - 0.15);
-      boxes.push({ cx: eaveX, cy: eaveY - 0.35, cz: 0, sx: 0.32, sy: 1.2, sz: zLen, color: WOOD_CREAM, material: "wood" });
+      boxes.push({ cx: eaveX, cy: eaveY - 0.35, cz: 0, sx: 0.32, sy: 1.2, sz: zLen - 2 * FLUSH, color: WOOD_CREAM, material: "wood" });
       for (let z = -zLen / 2 + 0.8; z <= zLen / 2 - 0.7; z += HERITAGE_DAGGER_STEP) {
         // a three-sided prism across the eave: a flat top under the board, the point down
         boxes.push({ shape: "cylinder", sides: 3, rotZ: Math.PI / 2, cx: eaveX, cy: eaveY - 0.95, cz: z, sx: 0.62, sy: 0.28, sz: 0.5, color: WOOD_CREAM, material: "wood" });
       }
     }
-    boxes.push({ lod: "shell", cx: centerX, cy: ridgeY + 0.55, cz: 0, sx: 1.3, sy: 0.6, sz: zLen, color: WOOD_COLOR, material: "wood" });
+    boxes.push({ lod: "shell", cx: centerX, cy: ridgeY + 0.55, cz: 0, sx: 1.3, sy: 0.6, sz: zLen - 2 * FLUSH, color: WOOD_COLOR, material: "wood" });
     if (zLen > 16) {
       boxes.push({ cx: centerX, cy: ridgeY + 1.0, cz: 0, sx: 1.1, sy: 0.7, sz: zLen - 14, color: GLASS_COLOR, material: "glass" });
       boxes.push({ cx: centerX, cy: ridgeY + 1.48, cz: 0, sx: 1.8, sy: 0.22, sz: zLen - 13, color: CANOPY_GREEN, material: "tile" });
@@ -2033,7 +2051,7 @@ function buildHeritageCanopy(length: number, layout: StationLayout): StationBox[
       // the tie beam across the gable end, and the name board hung from it on two
       // rods, framed top and bottom, reading along the track
       const tz = zs * (zLen / 2 - 0.1);
-      boxes.push({ cx: centerX, cy: eaveY + 0.05, cz: tz, sx: halfW * 2 - 0.4, sy: 0.4, sz: 0.3, color: WOOD_COLOR, material: "wood" });
+      boxes.push({ cx: centerX, cy: eaveY + 0.05 + FLUSH, cz: tz, sx: halfW * 2 - 0.4, sy: 0.4, sz: 0.3, color: WOOD_COLOR, material: "wood" });
       const boardW = Math.min(halfW * 2 - 2.2, 8);
       if (boardW > 1.8) {
         const top = eaveY - 0.75;
@@ -2193,7 +2211,7 @@ function buildGrandTerminus(length: number, layout: StationLayout): StationBox[]
         }
       }
       // stone archivolt along the arch, and the entablature
-      pushVaultArc(boxes, v, zOut(0.85), 0.9, 0.9, 0.5, STONE_LIGHT, "brick", "shell");
+      pushVaultArc(boxes, v, zOut(0.85), 0.86, 0.9, 0.5, STONE_LIGHT, "brick", "shell");
       stone(midX, bandHalf * 2 + 1.6, bandBottom, bandTop, zOut(0.9), 1.1);
       const scale = Math.max(0.6, Math.min(2, span / 16));
       const crossBase = crownY + 0.35;
@@ -2225,7 +2243,7 @@ function buildGrandTerminus(length: number, layout: StationLayout): StationBox[]
     for (const s of new Set(springs)) {
       boxes.push({ lod: "shell", cx: x, cy: s + 0.5, cz: 0, sx: 2.8, sy: 1.0, sz: zLen, color: STONE_LIGHT, material: "brick" });
     }
-    if (hi - lo > 1.2) boxes.push({ lod: "shell", cx: x, cy: (lo + 1.0 + hi) / 2, cz: 0, sx: 1.4, sy: hi - lo - 1.0, sz: zLen, color: STONE_DARK, material: "brick" });
+    if (hi - lo > 1.2) boxes.push({ lod: "shell", cx: x, cy: (lo + 1.0 + hi) / 2 - FLUSH, cz: 0, sx: 1.4, sy: hi - lo - 1.0 - 2 * FLUSH, sz: zLen, color: STONE_DARK, material: "brick" });
     for (const z of ribs) {
       boxes.push({ lod: "support", cx: x, cy: (PLATFORM_HEIGHT + hi) / 2, cz: z, sx: 2.2, sy: hi - PLATFORM_HEIGHT, sz: 2.2, color: STONE_LIGHT, material: "brick" });
       // its moulded base and capital
@@ -2286,7 +2304,7 @@ function buildGrandTerminus(length: number, layout: StationLayout): StationBox[]
         const mx = band.centerX - sw / 2 + (i * sw) / mullions;
         const inPassage = Math.abs(mx - band.centerX) < passage / 2 + 0.5;
         const lo = inPassage ? transomY : PLATFORM_HEIGHT + 0.6;
-        boxes.push({ cx: mx, cy: (lo + clearY + 0.1) / 2, cz: zOut(0.53), sx: 0.14, sy: clearY + 0.1 - lo, sz: 0.14, color: STEEL_DARK, material: "steel" });
+        boxes.push({ cx: mx, cy: (lo + clearY + 0.1) / 2, cz: zOut(0.51), sx: 0.14, sy: clearY + 0.1 - lo, sz: 0.14, color: STEEL_DARK, material: "steel" });
       }
     }
   }
@@ -2345,6 +2363,10 @@ class Floor {
       && max[1]! >= PLATFORM_HEIGHT - 0.15 && min[1]! < PLATFORM_HEIGHT + 0.3 && !b.rotX && !b.rotZ;
     if (flat) return;
     this.taken.push({ x0: min[0]!, x1: max[0]!, z0: min[2]!, z1: max[2]!, y: min[1]! });
+  }
+  /** Whether a footprint across [x0, x1] has a side within `tol` of the plane z. */
+  sideNear(x0: number, x1: number, z: number, tol: number): boolean {
+    return this.taken.some((t) => Math.min(t.x1, x1) > Math.max(t.x0, x0) && (Math.abs(t.z0 - z) < tol || Math.abs(t.z1 - z) < tol));
   }
   /** Whether nothing reaches below `top` over the spot grown by `margin`. */
   free(s: Spot, top: number, margin = 0.25): boolean {
@@ -2552,6 +2574,7 @@ function pushPassengerKit(boxes: StationBox[], type: string, length: number, lay
     wells.some((w) => Math.min(w.x1 + 0.3, x1) > Math.max(w.x0 - 0.3, x0) && Math.min(w.z1 + 0.3, z1) > Math.max(w.z0 - 0.3, z0));
   const tracks = railRowOffsets(layout);
   const kit: StationBox[] = [];
+  const joints: Array<() => void> = [];
 
   /** Places `item` near (x, z) in [lo, hi] x [-zLim, zLim], facing toward the nearer track edge. */
   const place = (item: Item, x: number, z: number, lo: number, hi: number, faceTo: number): boolean => {
@@ -2585,7 +2608,7 @@ function pushPassengerKit(boxes: StationBox[], type: string, length: number, lay
       if (track) {
         kit.push({ cx: edge - side * 0.95, cy: PLATFORM_HEIGHT + MARK_TACTILE - 0.035, cz: 0, sx: 0.5, sy: 0.07, sz: 2 * deckHalf - 2, color: TACTILE_COLOR, material: "safety" });
         // the raised coping along the edge (nothing may stand out over the ballast)
-        kit.push({ cx: edge - side * 0.21, cy: PLATFORM_HEIGHT + MARK_LIP - 0.05, cz: 0, sx: 0.42, sy: 0.1, sz: 2 * deckHalf, color: EDGE_COLOR, material: "edge" });
+        kit.push({ cx: edge - side * 0.21, cy: PLATFORM_HEIGHT + MARK_LIP - 0.05, cz: 0, sx: 0.42, sy: 0.1, sz: 2 * deckHalf + 2 * DECK_INSET, color: EDGE_COLOR, material: "edge" });
       } else if (w > 3) {
         // drainage gratings along the back of an outer platform
         for (let z = -deckHalf + 6; z <= deckHalf - 6; z += 12) {
@@ -2594,15 +2617,22 @@ function pushPassengerKit(boxes: StationBox[], type: string, length: number, lay
         }
       }
     }
-    // paving joints across the band, every 6 studs, broken at the stairwells
-    // (clear of the gratings along a back edge)
-    const jx0 = band.minX + (band.edgeLeft ? 1.25 : 1.4), jx1 = band.maxX - (band.edgeRight ? 1.25 : 1.4);
-    if (jx1 - jx0 > 0.5) {
-      for (let z = -Math.floor(deckHalf / 6) * 6 + 6; z < deckHalf - 1; z += 6) {
-        if (inWell(jx0, jx1, z - 0.05, z + 0.05)) continue;
-        kit.push({ cx: (jx0 + jx1) / 2, cy: PLATFORM_HEIGHT + MARK_JOINT - 0.011, cz: z, sx: jx1 - jx0, sy: 0.022, sz: 0.06, color: JOINT_COLOR, material: "edge" });
+    // paving joints across the band, every 6 studs, broken at the stairwells: laid
+    // when every standing item is placed, so none ends in a joint's plane
+    joints.push(() => {
+      // (clear of the gratings along a back edge)
+      const jx0 = band.minX + (band.edgeLeft ? 1.25 : 1.4), jx1 = band.maxX - (band.edgeRight ? 1.25 : 1.4);
+      if (jx1 - jx0 > 0.5) {
+        for (let z0 = -Math.floor(deckHalf / 6) * 6 + 6; z0 < deckHalf - 1; z0 += 6) {
+          // a joint whose sides would lie in the plane of a part standing on it moves along
+          // (the game draws them flush: they would flicker)
+          let z = z0;
+          while (floor.sideNear(jx0, jx1, z - 0.03, 0.02) || floor.sideNear(jx0, jx1, z + 0.03, 0.02)) z += 0.05;
+          if (inWell(jx0, jx1, z - 0.05, z + 0.05)) continue;
+          kit.push({ cx: (jx0 + jx1) / 2, cy: PLATFORM_HEIGHT + MARK_JOINT - 0.011, cz: z, sx: jx1 - jx0, sy: 0.022, sz: 0.06, color: JOINT_COLOR, material: "edge" });
+        }
       }
-    }
+    });
     // --- standing items, between the tactile strips ---
     const lo = band.minX + (band.edgeLeft ? 1.5 : 0.4), hi = band.maxX - (band.edgeRight ? 1.5 : 0.4);
     if (hi - lo < 0.8) return;
@@ -2636,5 +2666,6 @@ function pushPassengerKit(boxes: StationBox[], type: string, length: number, lay
       for (let z = -zLim + 3; z <= zLim; z += 16) place(ITEMS.lamp!, mid, z, lo, hi, nearestTrack(mid));
     }
   });
+  for (const lay of joints) lay();
   boxes.push(...kit);
 }

@@ -80,7 +80,11 @@ describe("railway station previews: passenger hints", () => {
       const hints = passengerOf(build({ tracks: "4", length: "120" }, "arch_shed"));
       expect(hints?.eye).toBe(2.55);
       expect(hints?.tracks).toHaveLength(4);
-      for (const t of hints!.tracks!) expect([t.z0, t.z1, t.top]).toEqual([-64, 64, 1]);
+      // the rail top is the game's railhead (wayKit.ts), where a train's wheels stand:
+      // a parked train once stood half a stud low, its wheels hidden by the platform
+      const { RAILHEAD_Y } = await import("../generator/previews/wayKit.ts");
+      expect(RAILHEAD_Y).toBeCloseTo(1.528, 2);
+      for (const t of hints!.tracks!) expect([t.z0, t.z1, t.top]).toEqual([-64, 64, RAILHEAD_Y]);
     }
   });
 });

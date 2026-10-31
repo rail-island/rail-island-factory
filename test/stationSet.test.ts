@@ -4,6 +4,7 @@
 // finite, non-degenerate boxes.
 import { describe, expect, it } from "vitest";
 import * as station from "../generator/sets/station.ts";
+import { findCoplanarTriangles } from "../generator/coplanar.ts";
 
 const TRACKS = [1, 2, 3, 4, 8];
 const LENGTHS = [40, 60, 120, 240];
@@ -261,4 +262,39 @@ describe("station set: primitives", () => {
       }
     }
   });
+});
+
+describe("station set: flicker", () => {
+  // The game draws a station's boxes exactly as given (render/StationMesh.ts in the
+  // webapp), with no coplanar step: two faces of two colours lying in one plane and
+  // facing one way flicker. (The grand terminus' long side flickered at the bottom:
+  // the deck slab's side lay in the outer trim's plane, all along the platform.) A
+  // face looking down onto the deck or the terrain is never seen and is let be.
+  type V3 = [number, number, number];
+  function gameTriangles(boxes: readonly station.StationBox[]): Array<{ p: [V3, V3, V3]; mat: string; name: string }> {
+    const out: Array<{ p: [V3, V3, V3]; mat: string; name: string }> = [];
+    for (const b of boxes) {
+      if (b.depthLayer) continue;
+      const pos = station.stationBoxMesh(b).positions;
+      const mat = `${b.material}#${b.color.join(",")}${b.label ? " (name board)" : ""}`;
+      // the game draws a glass pane and a glazed arc from both sides
+      const twoSided = station.isGlassPane(b) || (b.shape === "arc" && station.arcIsSheet(b));
+      for (let i = 0; i < pos.length; i += 9) {
+        const a: V3 = [pos[i]!, pos[i + 1]!, pos[i + 2]!], c: V3 = [pos[i + 3]!, pos[i + 4]!, pos[i + 5]!], d: V3 = [pos[i + 6]!, pos[i + 7]!, pos[i + 8]!];
+        out.push({ p: [a, c, d], mat, name: mat });
+        if (twoSided) out.push({ p: [d, c, a], mat, name: mat });
+      }
+    }
+    return out;
+  }
+  const SIZES = [[1, 40], [2, 60], [4, 120], [3, 240], [8, 60]] as const;
+  for (const type of Object.keys(station.TYPE_META)) {
+    it(`${type}: lays no two colours' faces in one plane`, () => {
+      for (const [tracks, length] of SIZES) {
+        const fights = findCoplanarTriangles(gameTriangles(furnished(type, tracks, length)), 0.01)
+          .filter((f) => !(f.normal[1] < -0.99 && f.offset > -station.PLATFORM_HEIGHT - 0.01));
+        expect(fights.map((f) => `${f.materials.join(" / ")} at ${f.normal.map((v) => v.toFixed(2))} ${f.offset.toFixed(3)} (${f.area.toFixed(2)})`), `${type} ${tracks}x${length}`).toEqual([]);
+      }
+    });
+  }
 });

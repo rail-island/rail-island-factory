@@ -75,13 +75,21 @@ function clipPolygon(subject: V2[], clip: V2[]): V2[] {
  */
 export function findCoplanarOverlaps(glb: Uint8Array, minArea = 1e-3, opts: { interiors?: boolean } = {}): CoplanarOverlap[] {
   const { json, bin } = parseGlb(glb);
-  const tris = collectTriangles(json, bin, opts);
+  // the primitive's base colour stands in for the material: two materials of the
+  // same colour cannot flicker visibly either
+  return findCoplanarTriangles(collectTriangles(json, bin, opts).map((t) => ({ p: t.p, mat: t.color.map((c) => c.toFixed(4)).join(","), name: t.material })), minArea);
+}
+
+/**
+ * The same search over plain triangles: each with what decides a fight (`mat`: two
+ * triangles of one `mat` never fight) and what the report calls it (`name`). The
+ * station set's check runs it on the game's own geometry (test/stationSet.test.ts).
+ */
+export function findCoplanarTriangles(tris: ReadonlyArray<{ p: [V3, V3, V3]; mat: string; name: string }>, minArea = 1e-3): CoplanarOverlap[] {
   const faces: Face[] = tris.map((t) => {
     const n = cross(sub(t.p[1], t.p[0]), sub(t.p[2], t.p[0]));
     const l = Math.hypot(n[0], n[1], n[2]) || 1;
-    // the primitive's base colour stands in for the material: two materials of
-    // the same colour cannot flicker visibly either
-    return { p: t.p, n: [n[0] / l, n[1] / l, n[2] / l], mat: t.color.map((c) => c.toFixed(4)).join(","), name: t.material };
+    return { p: t.p, n: [n[0] / l, n[1] / l, n[2] / l], mat: t.mat, name: t.name };
   });
 
   // Bucket by plane: rounded normal and offset. Neighbouring buckets are not

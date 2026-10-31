@@ -10,6 +10,7 @@ import type { MeshBuilder } from "../meshBuilder.ts";
 import * as station from "../sets/station.ts";
 import * as roadStation from "../sets/roadStation.ts";
 import { Sketch } from "./sketch.ts";
+import { RAILHEAD_Y, trackAlongZ } from "./wayKit.ts";
 import { setPassenger } from "../passengerHints.ts";
 
 // both are what a player picks for a station in the game
@@ -18,9 +19,10 @@ export const STATION_PARAMS: ParamSpec[] = [
   { name: "length", title: "Length", default: "60", values: ["40", "60", "120"].map((v) => ({ value: v, title: `${v} studs` })) },
 ];
 
-const BALLAST = [168, 160, 150] as const, RAIL = [92, 88, 84] as const;
-/** The rails' top above the terrain (the rail boxes below: 0.6 to 1.0). */
-const RAIL_TOP = 1.0;
+/** The station tracks' sleepers (concrete). */
+const SLEEPER = [180, 180, 170] as const;
+/** The rails' top above the terrain: the game's railhead (wayKit.ts). */
+const RAIL_TOP = RAILHEAD_Y;
 const ROOFED = new Set(["roof", "glass", "tile", "steel", "brick"]);
 
 function stationSketch(values: ParamValues | undefined, type: string, lod: boolean): Sketch {
@@ -54,10 +56,9 @@ function stationSketch(values: ParamValues | undefined, type: string, lod: boole
   let x = -layout.rows.reduce((w, r) => w + r.width, 0) / 2;
   for (const row of layout.rows) {
     const cx = x + row.width / 2;
-    if (row.type === "rail") {
-      s.box(s.mat("edge", BALLAST, "rail-ballast"), { cx, cy: 0.3, cz: 0, sx: station.BALLAST_WIDTH, sy: 0.6, sz: length + 8 });
-      if (!lod) for (const side of [-1, 1]) s.box(s.mat("steel", RAIL), { cx: cx + side * 1.35, cy: 0.8, cz: 0, sx: 0.45, sy: 0.4, sz: length + 8 });
-    }
+    // the game's own track section (the rail type pages' kit): its railhead stands where
+    // a train's wheels stand in the game, just below the platform's edge
+    if (row.type === "rail") trackAlongZ(s, length + 8, cx, SLEEPER, lod, station.BALLAST_WIDTH);
     x += row.width;
   }
   return s;

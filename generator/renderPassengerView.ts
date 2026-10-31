@@ -57,10 +57,15 @@ function clipNear(tris: readonly Tri[], eye: Vec3, fwd: Vec3, near: number): Tri
 
 /** Render the GLB as seen from `camera`, a `width` x `height` PNG over a pale sky. */
 export function renderPassengerView(glb: GlbSource, width: number, height: number, camera: PassengerCamera): PNG {
+  return renderTrianglesView(readTriangles(glb), width, height, camera);
+}
+
+/** The same view of plain triangles (several models laid together: a station and its parked train). */
+export function renderTrianglesView(all: readonly Tri[], width: number, height: number, camera: PassengerCamera): PNG {
   const fwd = norm(sub(camera.look, camera.eye));
   const right = norm(cross(fwd, [0, 1, 0]));
   const up = cross(right, fwd);
-  const tris = clipNear(readTriangles(glb), camera.eye, fwd, SS_NEAR);
+  const tris = clipNear(all, camera.eye, fwd, SS_NEAR);
   const f = 1 / Math.tan(((camera.fovDeg ?? FOV_DEG) * Math.PI) / 360);
   const aspect = width / height;
   const SS = 3;
