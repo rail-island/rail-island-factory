@@ -10,6 +10,8 @@ import type { MeshBuilder } from "../meshBuilder.ts";
 import * as station from "../sets/station.ts";
 import * as roadStation from "../sets/roadStation.ts";
 import { Sketch } from "./sketch.ts";
+import { RAILHEAD_Y, trackAlongZ } from "./wayKit.ts";
+import { setPassenger } from "../passengerHints.ts";
 
 // both are what a player picks for a station in the game
 export const STATION_PARAMS: ParamSpec[] = [
@@ -17,7 +19,10 @@ export const STATION_PARAMS: ParamSpec[] = [
   { name: "length", title: "Length", default: "60", values: ["40", "60", "120"].map((v) => ({ value: v, title: `${v} studs` })) },
 ];
 
-const BALLAST = [168, 160, 150] as const, RAIL = [92, 88, 84] as const;
+/** The station tracks' sleepers (concrete). */
+const SLEEPER = [180, 180, 170] as const;
+/** The rails' top above the terrain: the game's railhead (wayKit.ts). */
+const RAIL_TOP = RAILHEAD_Y;
 const ROOFED = new Set(["roof", "glass", "tile", "steel", "brick"]);
 
 function stationSketch(values: ParamValues | undefined, type: string, lod: boolean): Sketch {
@@ -25,7 +30,14 @@ function stationSketch(values: ParamValues | undefined, type: string, lod: boole
   const length = Number(p.length), layout = station.buildLayout(type, Number(p.tracks));
   const s = new Sketch();
   const furnished = station.furnish(type, length, layout);
-  if (!lod) for (const b of furnished) s.box(s.mat(b.material, b.color), b);
+  if (!lod) {
+    // the materials drawn on thin parts only first (a sign's letters, a machine's
+    // screen), so they take the smallest coplanar steps: the rest keep their order,
+    // and so the steps between them
+    const thick = new Set(furnished.filter((b) => partSize(b) > 0.06).map((b) => `${b.material}|${b.color.join(",")}`));
+    for (const b of furnished) if (!thick.has(`${b.material}|${b.color.join(",")}`)) s.mat(b.material, b.color);
+    for (const b of furnished) drawStationBox(s, b);
+  }
   else {
     // the distant station: the deck, and one box round the roofs, vaults and walls over it
     const width = layout.rows.reduce((w, r) => w + r.width, 0);
@@ -44,17 +56,62 @@ function stationSketch(values: ParamValues | undefined, type: string, lod: boole
   let x = -layout.rows.reduce((w, r) => w + r.width, 0) / 2;
   for (const row of layout.rows) {
     const cx = x + row.width / 2;
-    if (row.type === "rail") {
-      s.box(s.mat("edge", BALLAST, "rail-ballast"), { cx, cy: 0.3, cz: 0, sx: station.BALLAST_WIDTH, sy: 0.6, sz: length + 8 });
-      if (!lod) for (const side of [-1, 1]) s.box(s.mat("steel", RAIL), { cx: cx + side * 1.35, cy: 0.8, cz: 0, sx: 0.45, sy: 0.4, sz: length + 8 });
-    }
+    // the game's own track section (the rail type pages' kit): its railhead stands where
+    // a train's wheels stand in the game, just below the platform's edge
+    if (row.type === "rail") trackAlongZ(s, length + 8, cx, SLEEPER, lod, station.BALLAST_WIDTH);
     x += row.width;
   }
   return s;
 }
 
-export function stationPreview(values: ParamValues | undefined, type: string): MeshBuilder { return stationSketch(values, type, false).build("station"); }
-export function stationPreviewLod(values: ParamValues | undefined, type: string): MeshBuilder { return stationSketch(values, type, true).build("station"); }
+/** How small a part is: its thinnest side (an arc's thickness). */
+function partSize(b: station.StationBox): number {
+  return b.shape === "arc" ? b.arc?.thick ?? 0.2 : Math.min(b.sx, b.sy, b.sz);
+}
+
+/**
+ * One box of the station vocabulary: a box through the sketch, a shape from the set's
+ * own mesh (the game draws the same), grown by its material's coplanar step.
+ */
+function drawStationBox(s: Sketch, b: station.StationBox): void {
+  const mat = s.mat(b.material, b.color);
+  if (!b.shape) {
+    s.box(mat, b);
+    return;
+  }
+  const e = s.grow(mat);
+  let grown: station.StationBox = { ...b, sx: b.sx + 2 * e, sy: b.sy + 2 * e, sz: b.sz + 2 * e };
+  if (b.shape === "bar" && b.from && b.to) {
+    const d = [b.to[0] - b.from[0], b.to[1] - b.from[1], b.to[2] - b.from[2]];
+    const l = Math.hypot(d[0]!, d[1]!, d[2]!) || 1;
+    const k = e / l;
+    grown = { ...grown, from: [b.from[0] - d[0]! * k, b.from[1] - d[1]! * k, b.from[2] - d[2]! * k], to: [b.to[0] + d[0]! * k, b.to[1] + d[1]! * k, b.to[2] + d[2]! * k] };
+  }
+  if (b.shape === "arc" && b.arc) grown = { ...grown, arc: { ...b.arc, thick: b.arc.thick + 2 * e } };
+  s.triangles(mat, station.stationBoxMesh(grown).positions, b.shape === "arc" && station.arcIsSheet(b));
+}
+
+/**
+ * The passenger view's hints (docs/models/previews.md): the eye height, and every
+ * track's centreline, extent and rail top, along which the site lays its parked train
+ * and catenary. The sketch stands on y = 0 already (the ballast's foot), so these are
+ * its own coordinates.
+ */
+function withPassenger(m: MeshBuilder, values: ParamValues | undefined, type: string): MeshBuilder {
+  const p = resolveParams(STATION_PARAMS, values);
+  const length = Number(p.length), layout = station.buildLayout(type, Number(p.tracks));
+  let x = -layout.rows.reduce((w, r) => w + r.width, 0) / 2;
+  const tracks = [];
+  for (const row of layout.rows) {
+    if (row.type === "rail") tracks.push({ x: x + row.width / 2, z0: -length / 2 - 4, z1: length / 2 + 4, top: RAIL_TOP });
+    x += row.width;
+  }
+  setPassenger(m, { eye: 2.55, tracks });
+  return m;
+}
+
+export function stationPreview(values: ParamValues | undefined, type: string): MeshBuilder { return withPassenger(stationSketch(values, type, false).build("station"), values, type); }
+export function stationPreviewLod(values: ParamValues | undefined, type: string): MeshBuilder { return withPassenger(stationSketch(values, type, true).build("station"), values, type); }
 
 // a road station's layout and stand count are what a player picks for it in the game
 export const ROAD_STATION_PARAMS: ParamSpec[] = [

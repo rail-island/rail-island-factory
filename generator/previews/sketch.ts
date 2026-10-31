@@ -75,10 +75,30 @@ export class Sketch {
    * grown by a step of its own (one more per material, an odd step no sum of the
    * game's measures lands on), so two flush faces of two materials always end apart
    * and no part, however thin, turns inside out. `size` is kept for a part that
-   * could only take a smaller step.
+   * could only take a smaller step. (A drawing of many materials registers those of
+   * its smallest parts first, so they take the smallest steps.)
    */
   private inset(mat: string, _size = Infinity): number {
     return -(this.ranks.get(mat) ?? 0) * 0.0041337;
+  }
+
+  /** How much bigger than its true size material `mat` is drawn (its coplanar step). */
+  grow(mat: string): number {
+    return -this.inset(mat);
+  }
+
+  /** Raw triangles (three points each, wound to face out), drawn as given; `twoSided` adds their backs. */
+  triangles(mat: string, positions: readonly number[], twoSided = false): void {
+    for (let i = 1; i < positions.length; i += 3) this.low = Math.min(this.low, positions[i]!);
+    this.ops.push((m) => {
+      for (let i = 0; i + 8 < positions.length; i += 9) {
+        const a: V = [positions[i]!, positions[i + 1]!, positions[i + 2]!];
+        const b: V = [positions[i + 3]!, positions[i + 4]!, positions[i + 5]!];
+        const c: V = [positions[i + 6]!, positions[i + 7]!, positions[i + 8]!];
+        m.tri(mat, a, b, c);
+        if (twoSided) m.tri(mat, c, b, a);
+      }
+    });
   }
 
   private track(...ps: V[]): void {

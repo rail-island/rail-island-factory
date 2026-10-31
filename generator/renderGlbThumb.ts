@@ -74,7 +74,7 @@ function toSrgb(v: number): number {
 }
 
 /** A point projected into the supersampled buffer: pixel x and y, and view depth (> 0). */
-type Projected = { x: number; y: number; w: number };
+export type Projected = { x: number; y: number; w: number };
 
 /**
  * Rasterize `tris` into a `width` x `height` RGBA PNG (rendered at SS times the
@@ -86,7 +86,7 @@ type Projected = { x: number; y: number; w: number };
  * winding test is what catches that). With `cull`, a triangle wound away from the
  * camera is left out unless it is double-sided.
  */
-function rasterize(
+export function rasterize(
   tris: readonly Tri[],
   width: number,
   height: number,
@@ -213,7 +213,7 @@ export interface ThumbOptions {
   view?: Vec3;
 }
 
-function readTriangles(glb: GlbSource, opts: ThumbOptions = {}): Tri[] {
+export function readTriangles(glb: GlbSource, opts: ThumbOptions = {}): Tri[] {
   const { json, bin } = parseGlb(typeof glb === "string" ? fs.readFileSync(glb) : glb);
   let tris = collectTriangles(json, bin, opts);
   const cut = opts.cutAbove;
