@@ -41,9 +41,14 @@ describe("a variant's slots", () => {
 
 describe("a slot's controls", () => {
   it("give a horn its calls, an engine its drive, a ship's horn and a bell a Play", () => {
-    const calls = slotControls("horn", soundById("loco-horn")!.params);
+    const calls = slotControls("horn", soundById("loco-horn")!.params, ["crossing", "tunnel"]);
     expect(calls.kind).toBe("calls");
-    expect(calls.kind === "calls" && calls.calls.map((c) => c.value)).toEqual(["departure", "crossing", "tunnel", "player"]);
+    expect(calls.kind === "calls" && calls.calls.map((c) => c.value)).toEqual(["crossing", "tunnel", "player"]);
+    // a call the model does not make is silent in the game: no button; the player's always has one
+    const whistle = slotControls("horn", soundById("steam-whistle")!.params, ["departure", "crossing", "tunnel"]);
+    expect(whistle.kind === "calls" && whistle.calls.map((c) => c.value)).toEqual(["departure", "crossing", "tunnel", "player"]);
+    const bare = slotControls("horn", soundById("loco-horn")!.params);
+    expect(bare.kind === "calls" && bare.calls.map((c) => c.value)).toEqual(["player"]);
     const diesel = slotControls("engine", soundById("diesel-engine")!.params);
     expect(diesel.kind === "drive" && diesel.sliders.map((s) => s.name)).toEqual(["rpm", "load"]);
     const steam = slotControls("engine", soundById("steam-chuff")!.params);

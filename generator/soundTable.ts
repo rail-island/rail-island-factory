@@ -26,6 +26,13 @@ export type SoundSlotName = "horn" | "engine" | "bell";
 export interface SoundSlot {
   id: string;
   params?: Record<string, number | string>;
+  /**
+   * A horn's calls the game makes by itself (values of its design's `call`):
+   * `departure`, `crossing`, `tunnel`. A call not listed is silent -- the game
+   * plays nothing. The player's own Horn (`player`) always sounds and is never
+   * listed.
+   */
+  calls?: string[];
 }
 
 /** Which sound plays in each slot: horn and engine for a vehicle, bell for a building. */

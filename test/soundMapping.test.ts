@@ -41,6 +41,16 @@ describe("a slot's check", () => {
     expect(slotProblems("bell", { id: "church-bell", params: { tone: 1 } })[0]).toMatch(/no parameter "tone"/);
   });
 
+  it("takes a horn's calls the game makes by itself, and nothing else", () => {
+    expect(slotProblems("horn", { id: "loco-horn", calls: ["crossing", "tunnel"] })).toEqual([]);
+    expect(slotProblems("horn", { id: "loco-horn", calls: [] })).toEqual([]);
+    expect(slotProblems("horn", { id: "loco-horn", calls: ["player"] })[0]).toMatch(/not one the game makes by itself/);
+    expect(slotProblems("horn", { id: "loco-horn", calls: ["honk"] })[0]).toMatch(/not one the game makes by itself/);
+    expect(slotProblems("horn", { id: "loco-horn", calls: ["tunnel", "tunnel"] })[0]).toMatch(/listed twice/);
+    expect(slotProblems("horn", { id: "ship-horn", calls: ["departure"] })[0]).toMatch(/has no call/);
+    expect(slotProblems("bell", { id: "church-bell", calls: ["crossing"] })[0]).toMatch(/has no call/);
+  });
+
   it("names the design, and keeps a building to its bell", () => {
     const d = { id: "x", title: "X", build: () => null } as unknown as ProceduralDesign;
     const table = { "proc-building-x": { sounds: { horn: { id: "loco-horn" } } } };
@@ -81,6 +91,9 @@ describe("the derived defaults", () => {
     expect(railHorn(false, 90).params!.pitch).toBe(295);
     expect(railHorn(true, 40).params!.pitch).toBe(880);
     expect(railHorn(true, 140).params!.pitch).toBe(520);
+    // only steam sounds as it leaves a platform; every other rail vehicle leaves quietly
+    expect(railHorn(true, 90).calls).toEqual(["departure", "crossing", "tunnel"]);
+    expect(railHorn(false, 90).calls).toEqual(["crossing", "tunnel"]);
     expect(dieselEngine(115).params!.size).toBe(0.75);
     expect(shipHorn(20).params).toEqual({ pitch: 196, seconds: 0.7 });
     expect(shipHorn(120).params).toEqual({ pitch: 70, seconds: 2.2 });
@@ -117,6 +130,15 @@ describe("a design's exported sounds", () => {
       for (const [slot, value] of Object.entries(v.game!.sounds!)) expect(slotProblems(slot as "horn", value!), v.id).toEqual([]);
       for (const variant of v.game!.variants ?? [])
         for (const [slot, value] of Object.entries(variant.sounds ?? {})) if (value) expect(slotProblems(slot as "horn", value), v.id).toEqual([]);
+    }
+  });
+
+  it("let only a steam locomotive sound as it leaves a platform", () => {
+    const rail = vehicles.filter((v) => v.category === "Rail vehicles");
+    expect(rail.some((v) => v.traction === "steam")).toBe(true);
+    for (const v of rail) {
+      const horns = [v.game!.sounds!.horn, ...(v.game!.variants ?? []).map((x) => x.sounds?.horn)].filter((h) => h);
+      for (const h of horns) expect(h!.calls?.includes("departure") ?? false, v.id).toBe(v.traction === "steam");
     }
   });
 

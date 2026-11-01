@@ -268,8 +268,9 @@ A model with **sounds** (a vehicle's horn and engine, a building's bell;
 (`src/SoundsPanel.tsx`) above the tabs, for the variant on screen (`slotsFor`):
 - each slot: its name, the design's title (a link to its page on
   sound.railisland.com), its id and the values pinned for this model;
-- a horn: a button per call (departure, crossing, tunnel, player), each played as
-  the game plays it; a ship's horn, which has no calls, and a bell: Play;
+- a horn: a button per call the model makes (its `calls`) and one for the
+  player's Horn, each played as the game plays it; a call the model does not
+  make is silent in the game, so it has no button; a ship's horn, which has no calls, and a bell: Play;
 - an engine: Start/Stop, and a slider for each value the game drives (a diesel's
   revs and effort, a steam beat's rate and effort), which a running engine takes
   at once (`slotControls`).

@@ -38,10 +38,18 @@ does not have, and plays nothing there.
 | `engine` | rail and road vehicles | a loop | `rpm`, `load` (a diesel's revs and effort) or `rate`, `intensity` (a steam beat), whichever the design has |
 | `bell` | buildings | a one-shot | nothing |
 
-A slot is `{ id, params? }`: a rail-island-music design id and the values of its
-**character** parameters pinned for this model (pitch, size, strikes, chime,
-level, ...). The runtime parameters above are the game's; pinning one fails the
-build.
+A slot is `{ id, params?, calls? }`: a rail-island-music design id and the
+values of its **character** parameters pinned for this model (pitch, size,
+strikes, chime, level, ...). The runtime parameters above are the game's; pinning
+one fails the build.
+
+`calls` is a horn's list of the calls the game makes on it **by itself**:
+`departure` (moving off from a platform), `crossing`, `tunnel`. A call the model
+does not list is silent: the game plays nothing for it, so a model with no
+`calls` sounds no horn of its own accord. The player's Horn (`player`) always
+sounds and is never listed. The check refuses a call the design's `call`
+parameter lacks, `player`, a duplicate, and `calls` on a design with no `call`
+(a ship's horn, a bell).
 
 ## Stated by hand: `generator/soundTable.ts`
 
@@ -73,11 +81,14 @@ the game keeps no rule of its own:
 
 | Vehicle | Horn | Engine |
 |---|---|---|
-| rail, `traction: "steam"` | `steam-whistle`, pitch 880 Hz (40 t) to 520 Hz (140 t) | `steam-chuff` |
-| rail, `traction: "diesel"` | `loco-horn`, pitch 370 Hz (40 t) to 220 Hz (140 t) | `diesel-engine`, size 0 (40 t) to 1 (140 t) |
-| every other rail vehicle (electric, units, trams, coaches, wagons) | `loco-horn` by weight | none |
+| rail, `traction: "steam"` | `steam-whistle`, pitch 880 Hz (40 t) to 520 Hz (140 t); calls `departure`, `crossing`, `tunnel` | `steam-chuff` |
+| rail, `traction: "diesel"` | `loco-horn`, pitch 370 Hz (40 t) to 220 Hz (140 t); calls `crossing`, `tunnel` | `diesel-engine`, size 0 (40 t) to 1 (140 t) |
+| every other rail vehicle (electric, units, trams, coaches, wagons) | `loco-horn` by weight; calls `crossing`, `tunnel` | none |
 | ship | `ship-horn`, pitch 196 Hz (20 studs) to 70 Hz (120 studs), 0.7 to 2.2 s | - |
 | road vehicles, aircraft, cable cars | none | none |
+
+Only a steam locomotive whistles as it leaves a platform (`STEAM_CALLS`); every
+other rail vehicle leaves quietly (`HORN_CALLS`).
 
 These are the rules the game used to apply itself (its `hornSpecFor`,
 `dieselDriveFor` and `shipHornFor`), moved here unchanged, so every model sounds

@@ -56,6 +56,9 @@ export const RUNTIME_PARAMS: Record<SoundSlotName, readonly string[]> = {
   bell: [],
 };
 
+/** The calls the game makes on a horn by itself; `player` is the player's and always sounds. */
+export const AUTO_CALLS: readonly string[] = ["departure", "crossing", "tunnel"];
+
 /** The slots a vehicle may have, and a building's. */
 export const VEHICLE_SLOTS: readonly SoundSlotName[] = ["horn", "engine"];
 export const BUILDING_SLOTS: readonly SoundSlotName[] = ["bell"];
@@ -75,6 +78,17 @@ export function slotProblems(slot: SoundSlotName, value: SoundSlot, sounds: Soun
     if (!p) out.push(`${slot}: "${value.id}" has no parameter "${name}"`);
     else if (p.kind === "number" && (typeof v !== "number" || v < p.min || v > p.max)) out.push(`${slot}: "${name}" ${String(v)} is outside ${p.min}..${p.max}`);
     else if (p.kind === "choice" && !p.values.some((x) => x.value === v)) out.push(`${slot}: "${name}" has no value "${String(v)}"`);
+  }
+  if (value.calls) {
+    const call = design.params.find((x) => x.name === "call");
+    if (slot !== "horn" || !call || call.kind !== "choice") out.push(`${slot}: "${value.id}" has no call, so it takes no calls`);
+    else {
+      for (const c of value.calls) {
+        if (!AUTO_CALLS.includes(c)) out.push(`${slot}: call "${c}" is not one the game makes by itself (${AUTO_CALLS.join(", ")})`);
+        else if (!call.values.some((x) => x.value === c)) out.push(`${slot}: "${value.id}" has no call "${c}"`);
+      }
+      if (new Set(value.calls).size !== value.calls.length) out.push(`${slot}: a call is listed twice`);
+    }
   }
   return out;
 }
@@ -156,12 +170,20 @@ const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const heaviness = (tonnes: number) => clamp((tonnes - LIGHT_TONNES) / (HEAVY_TONNES - LIGHT_TONNES), 0, 1);
 
-/** A rail vehicle's horn: a steam locomotive whistles, everything else blows the air horn. */
+/** A steam locomotive whistles as it leaves a platform, before a crossing and at a tunnel mouth. */
+export const STEAM_CALLS: readonly string[] = ["departure", "crossing", "tunnel"];
+/** Every other rail vehicle leaves quietly: its horn sounds before a crossing and at a tunnel mouth. */
+export const HORN_CALLS: readonly string[] = ["crossing", "tunnel"];
+
+/**
+ * A rail vehicle's horn: a steam locomotive whistles, everything else blows the
+ * air horn; with the calls the game makes on it by itself.
+ */
 export function railHorn(steam: boolean, tonnes: number): SoundSlot {
   const t = heaviness(tonnes);
   return steam
-    ? { id: "steam-whistle", params: { pitch: Math.round(lerp(WHISTLE_PITCH_LIGHT, WHISTLE_PITCH_HEAVY, t)) } }
-    : { id: "loco-horn", params: { pitch: Math.round(lerp(HORN_PITCH_LIGHT, HORN_PITCH_HEAVY, t)) } };
+    ? { id: "steam-whistle", params: { pitch: Math.round(lerp(WHISTLE_PITCH_LIGHT, WHISTLE_PITCH_HEAVY, t)) }, calls: [...STEAM_CALLS] }
+    : { id: "loco-horn", params: { pitch: Math.round(lerp(HORN_PITCH_LIGHT, HORN_PITCH_HEAVY, t)) }, calls: [...HORN_CALLS] };
 }
 
 /** A diesel's engine: the heavier, the bigger and lower it fires. */

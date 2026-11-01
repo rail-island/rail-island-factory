@@ -59,11 +59,20 @@ export type SlotControls =
   | { kind: "drive"; sliders: Array<{ name: string; title: string; min: number; max: number; step: number; value: number }> }
   | { kind: "play" };
 
-/** The controls of a slot playing a design with `params`. */
-export function slotControls(slot: SoundSlotName, params: readonly SoundParam[]): SlotControls {
+/** The call the player makes with the Horn button: it always sounds, so a slot never lists it. */
+export const PLAYER_CALL = "player";
+
+/**
+ * The controls of a slot playing a design with `params`. A horn offers the calls
+ * the game makes on it by itself (`calls`, the factory's mapping) and the
+ * player's: a call the model does not list is silent in the game, so it gets no button.
+ */
+export function slotControls(slot: SoundSlotName, params: readonly SoundParam[], calls: readonly string[] = []): SlotControls {
   const runtime = params.filter((p) => RUNTIME_PARAMS[slot].includes(p.name));
   const call = runtime.find((p) => p.name === "call");
-  if (call && call.kind === "choice") return { kind: "calls", calls: call.values.map((v) => ({ ...v })) };
+  if (call && call.kind === "choice") {
+    return { kind: "calls", calls: call.values.filter((v) => v.value === PLAYER_CALL || calls.includes(v.value)).map((v) => ({ ...v })) };
+  }
   if (slot === "engine") {
     return {
       kind: "drive",

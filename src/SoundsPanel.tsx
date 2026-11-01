@@ -81,7 +81,7 @@ function SlotRow(props: {
   onStop: () => void;
 }) {
   const pins = () => props.value.params ?? {};
-  const controls = createMemo(() => (props.design ? slotControls(props.slot, props.design.params) : null));
+  const controls = createMemo(() => (props.design ? slotControls(props.slot, props.design.params, props.value.calls) : null));
   const [drive, setDrive] = createSignal<Record<string, number>>({});
   const driveValues = (): SoundValues => {
     const c = controls();
