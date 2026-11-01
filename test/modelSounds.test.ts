@@ -12,7 +12,7 @@ import { soundById } from "../sounds/sounds.js";
 import type { LoopDesign, OneShotDesign } from "../sounds/sounds.js";
 
 const GAME: GameSounds = {
-  sounds: { horn: { id: "loco-horn", params: { pitch: 300 } }, engine: { id: "diesel-engine", params: { size: 0.5 } } },
+  sounds: { horn: { id: "loco-horn", params: { pitch: 300 } }, engine: { id: "diesel-engine-mainline", params: { size: 0.5 } } },
   variants: [
     { params: { livery: "red" }, sounds: { horn: { id: "loco-horn", params: { pitch: 250 } } } },
     { params: { livery: "mute", unit: "b" }, sounds: { horn: null } },
@@ -49,10 +49,13 @@ describe("a slot's controls", () => {
     expect(whistle.kind === "calls" && whistle.calls.map((c) => c.value)).toEqual(["departure", "crossing", "tunnel", "player"]);
     const bare = slotControls("horn", soundById("loco-horn")!.params);
     expect(bare.kind === "calls" && bare.calls.map((c) => c.value)).toEqual(["player"]);
-    const diesel = slotControls("engine", soundById("diesel-engine")!.params);
+    const diesel = slotControls("engine", soundById("diesel-engine-mainline")!.params);
     expect(diesel.kind === "drive" && diesel.sliders.map((s) => s.name)).toEqual(["rpm", "load"]);
+    // a diesel starts and shuts down by its state: Start and Stop play them
+    expect(diesel.kind === "drive" && diesel.states).toBe(true);
     const steam = slotControls("engine", soundById("steam-chuff")!.params);
     expect(steam.kind === "drive" && steam.sliders.map((s) => s.name)).toEqual(["rate", "intensity"]);
+    expect(steam.kind === "drive" && steam.states).toBe(false);
     expect(slotControls("horn", soundById("ship-horn")!.params)).toEqual({ kind: "play" });
     expect(slotControls("bell", soundById("big-ben")!.params)).toEqual({ kind: "play" });
   });
@@ -69,9 +72,9 @@ describe("the catalog's Sounds column", () => {
   const rows = prepareRows([rec("a", GAME), rec("b", { sounds: { horn: { id: "steam-whistle" } } }), rec("c")]);
 
   it("lists the design ids, and the search finds a model by them", () => {
-    expect(column("sounds")!.value(rows[0]!)).toBe("loco-horn, diesel-engine");
+    expect(column("sounds")!.value(rows[0]!)).toBe("loco-horn, diesel-engine-mainline");
     expect(column("sounds")!.value(rows[2]!)).toBeNull();
-    expect(queryRows(rows, "diesel-engine", "title", "asc").map((r) => r.id)).toEqual(["a"]);
+    expect(queryRows(rows, "diesel-engine-mainline", "title", "asc").map((r) => r.id)).toEqual(["a"]);
     expect(queryRows(rows, "steam-whistle", "title", "asc").map((r) => r.id)).toEqual(["b"]);
   });
 });
@@ -80,8 +83,8 @@ describe("the page's audition", () => {
   function stub() {
     const param = () => ({ value: 0, setValueAtTime: () => {}, linearRampToValueAtTime: () => {}, exponentialRampToValueAtTime: () => {}, cancelScheduledValues: () => {}, setTargetAtTime: () => {} });
     const stops: number[] = [];
-    const node = () => ({ connect: (t: unknown) => t, disconnect: () => {}, frequency: param(), detune: param(), gain: param(), Q: param(), type: "", buffer: null, loop: false, start: () => {}, stop: (at: number) => stops.push(at) });
-    const ctx = { sampleRate: 48000, currentTime: 1, createGain: node, createBiquadFilter: node, createOscillator: node, createBufferSource: node, createBuffer: (_c: number, n: number) => ({ getChannelData: () => new Float32Array(n) }) } as unknown as BaseAudioContext;
+    const node = () => ({ connect: (t: unknown) => t, disconnect: () => {}, frequency: param(), detune: param(), gain: param(), Q: param(), type: "", buffer: null, loop: false, start: () => {}, stop: (at: number) => stops.push(at), setPeriodicWave: () => {} });
+    const ctx = { sampleRate: 48000, currentTime: 1, createGain: node, createBiquadFilter: node, createOscillator: node, createBufferSource: node, createBuffer: (_c: number, n: number) => ({ getChannelData: () => new Float32Array(n) }), createPeriodicWave: () => ({}) } as unknown as BaseAudioContext;
     return { ctx, dest: node() as unknown as AudioNode, stops };
   }
 
@@ -91,7 +94,7 @@ describe("the page's audition", () => {
     let cleared = 0;
     const a = createAudition(ctx, dest, { setInterval: (fn) => (timers.push(fn), timers.length), clearInterval: () => void cleared++ });
     a.playOnce(soundById("loco-horn") as OneShotDesign, { call: "departure" });
-    a.startLoop(soundById("diesel-engine") as LoopDesign, { rpm: 0.5 });
+    a.startLoop(soundById("diesel-engine-mainline") as LoopDesign, { rpm: 0.5, state: "start" });
     expect(a.looping()).toBe(true);
     timers[0]!();
     a.stopAll();

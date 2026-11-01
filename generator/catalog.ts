@@ -343,7 +343,7 @@ function gameWithSounds(design: ProceduralDesign, fields: CatalogFields): { game
   const yawed = Math.abs(fields.yaw ?? 0) % 180 === 90;
   const hullStuds =
     fields.category === "Ships" ? shipHullStuds(design, () => measuredExtent(design, defaultValues(design))[yawed ? 2 : 0]) : undefined;
-  const out = withSounds(game, design, { category: fields.category, traction: fields.traction, hullStuds });
+  const out = withSounds(game, design, { category: fields.category, group: fields.group, traction: fields.traction, hullStuds });
   return out ? { game: out as ExportedGame } : {};
 }
 

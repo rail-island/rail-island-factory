@@ -136,8 +136,8 @@ To see what deploys - the build's thumbnails and figures - run `pnpm build` and
   pool, triangles, vertices, JS size, primitives, materials, width, depth,
   height, sounds (the sound design ids the model plays, its variants' included,
   [../models/sounds.md](../models/sounds.md)) and license. The search also
-  matches a model's sound ids, so `diesel-engine` lists every model with that
-  engine. Every header sorts; a second click flips the direction.
+  matches a model's sound ids, so `diesel-engine-railcar` lists every model with
+  that engine. Every header sorts; a second click flips the direction.
   **The JS size is a link**: a click downloads the model's file (`js/<id>.js`,
   [../models/js-format.md](../models/js-format.md)) without opening the model. The model page's
   spec list links it too and adds the gzip size. There is no GLB to download.
@@ -273,7 +273,10 @@ A model with **sounds** (a vehicle's horn and engine, a building's bell;
   make is silent in the game, so it has no button; a ship's horn, which has no calls, and a bell: Play;
 - an engine: Start/Stop, and a slider for each value the game drives (a diesel's
   revs and effort, a steam beat's rate and effort), which a running engine takes
-  at once (`slotControls`).
+  at once (`slotControls`). A diesel (its design has `state`) starts and shuts
+  down the way the game does it: Start sets `state` to `start` (its start: coughs,
+  catches, settles at idle), Stop to `stop` (its run-down), both on the same
+  voice; a steam beat simply begins and ends.
 
 The designs are the factory's committed copy (`sounds/sounds.js`), loaded the
 first time a page with sounds opens, and played through one `AudioContext` made

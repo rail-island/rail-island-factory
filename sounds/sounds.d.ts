@@ -32,7 +32,12 @@ export type SoundValues = Record<string, number | string>;
 
 /** One sounding thing. */
 export interface Voice {
-  /** When it falls silent by itself, in the context's seconds (Infinity for a loop). */
+  /**
+   * When it falls silent by itself, in the context's seconds. Infinity for a loop
+   * that runs on; a loop that winds down by itself (a diesel engine shutting
+   * down, or begun shut down) reports when it is silent, and Infinity again once
+   * it runs.
+   */
   readonly endsAt: number;
   /** Fade out and release its nodes from `at` on. */
   stop(at: number): void;

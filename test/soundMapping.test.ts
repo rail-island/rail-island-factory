@@ -12,6 +12,7 @@ import {
   declaredSounds,
   derivedSounds,
   dieselEngine,
+  MAINLINE_TONNES,
   railHorn,
   shipHorn,
   slotProblems,
@@ -35,7 +36,11 @@ describe("a slot's check", () => {
     expect(slotProblems("horn", { id: "foghorn" })[0]).toMatch(/no sound design "foghorn"/);
     expect(slotProblems("engine", { id: "loco-horn" })[0]).toMatch(/is a oneShot, the slot plays a loop/);
     expect(slotProblems("horn", { id: "loco-horn", params: { call: "tunnel" } })[0]).toMatch(/set by the game/);
-    expect(slotProblems("engine", { id: "diesel-engine", params: { rpm: 0.5 } })[0]).toMatch(/set by the game/);
+    expect(slotProblems("engine", { id: "diesel-engine-mainline", params: { rpm: 0.5 } })[0]).toMatch(/set by the game/);
+    // whether a diesel runs is the game's too
+    expect(slotProblems("engine", { id: "diesel-engine-bus", params: { state: "off" } })[0]).toMatch(/set by the game/);
+    // the old engine with its choice of profiles is gone
+    expect(slotProblems("engine", { id: "diesel-engine" })[0]).toMatch(/no sound design "diesel-engine"/);
     expect(slotProblems("horn", { id: "loco-horn", params: { pitch: 9000 } })[0]).toMatch(/outside 150..500/);
     expect(slotProblems("bell", { id: "big-ben", params: { chime: "noon" } })[0]).toMatch(/no value "noon"/);
     expect(slotProblems("bell", { id: "church-bell", params: { tone: 1 } })[0]).toMatch(/no parameter "tone"/);
@@ -78,8 +83,11 @@ describe("the derived defaults", () => {
   it("give a steam locomotive a whistle and its beat, a diesel a horn and its engine, the rest a horn", () => {
     expect(derivedSounds({ category: "Rail vehicles", traction: "steam" }, 90)).toEqual({ horn: railHorn(true, 90), engine: { id: "steam-chuff" } });
     expect(derivedSounds({ category: "Rail vehicles", traction: "diesel" }, 90)).toEqual({ horn: railHorn(false, 90), engine: dieselEngine(90) });
+    expect(derivedSounds({ category: "Rail vehicles", group: "unit", traction: "diesel" }, 45)).toEqual({ horn: railHorn(false, 45), engine: dieselEngine(45, "unit") });
     expect(derivedSounds({ category: "Rail vehicles", traction: "electric" }, 90)).toEqual({ horn: railHorn(false, 90) });
     expect(derivedSounds({ category: "Rail vehicles" }, 30)).toEqual({ horn: railHorn(false, 30) });
+    expect(derivedSounds({ category: "Road vehicles", group: "bus" }, 12)).toEqual({ engine: { id: "diesel-engine-bus" } });
+    expect(derivedSounds({ category: "Road vehicles", group: "truck" }, 36)).toEqual({ engine: { id: "diesel-engine-truck" } });
     expect(derivedSounds({ category: "Road vehicles" }, 12)).toEqual({});
     expect(derivedSounds({ category: "Ships", hullStuds: 70 }, 500)).toEqual({ horn: shipHorn(70) });
   });
@@ -95,6 +103,14 @@ describe("the derived defaults", () => {
     expect(railHorn(true, 90).calls).toEqual(["departure", "crossing", "tunnel"]);
     expect(railHorn(false, 90).calls).toEqual(["crossing", "tunnel"]);
     expect(dieselEngine(115).params!.size).toBe(0.75);
+  });
+
+  it("give a railcar its underfloor six, a light locomotive the shunter's six and a heavy one the mainline V12", () => {
+    expect(dieselEngine(45, "unit").id).toBe("diesel-engine-railcar");
+    expect(dieselEngine(120, "unit").id).toBe("diesel-engine-railcar");
+    expect(dieselEngine(MAINLINE_TONNES - 1, "loco").id).toBe("diesel-engine-shunter");
+    expect(dieselEngine(MAINLINE_TONNES, "loco").id).toBe("diesel-engine-mainline");
+    expect(dieselEngine(115).id).toBe("diesel-engine-mainline");
     expect(shipHorn(20).params).toEqual({ pitch: 196, seconds: 0.7 });
     expect(shipHorn(120).params).toEqual({ pitch: 70, seconds: 2.2 });
   });
@@ -108,19 +124,19 @@ describe("a design's exported sounds", () => {
     } as unknown as ProceduralDesign;
     const table = {
       "proc-vehicle-loco": {
-        sounds: { engine: { id: "diesel-engine", params: { size: 1 } } },
+        sounds: { engine: { id: "diesel-engine-two-stroke", params: { size: 1 } } },
         variants: [{ params: { livery: "mute" }, sounds: { horn: null } }],
       },
     };
     expect(declaredSounds(design, table)).toBe(table["proc-vehicle-loco"]);
     const out = withSounds(design.game as ExportedGame, design, { category: "Rail vehicles", traction: "diesel" }, table)!;
-    expect(out.sounds).toEqual({ horn: railHorn(false, 60), engine: { id: "diesel-engine", params: { size: 1 } } });
+    expect(out.sounds).toEqual({ horn: railHorn(false, 60), engine: { id: "diesel-engine-two-stroke", params: { size: 1 } } });
     // the heavier variant's horn is deeper; its engine stays the declared one
     expect(out.variants![0]!.sounds).toEqual({ horn: railHorn(false, 140) });
     // a variant only the table lists is appended with its parameters and sounds alone
     expect(out.variants![1]).toEqual({ params: { livery: "mute" }, sounds: { horn: null } });
     expect(soundsFor(out, { livery: "heavy" }).horn).toEqual(railHorn(false, 140));
-    expect(soundsFor(out, { livery: "mute" })).toEqual({ engine: { id: "diesel-engine", params: { size: 1 } } });
+    expect(soundsFor(out, { livery: "mute" })).toEqual({ engine: { id: "diesel-engine-two-stroke", params: { size: 1 } } });
     expect(soundsFor(out, {})).toEqual(out.sounds);
   });
 
@@ -147,11 +163,17 @@ describe("a design's exported sounds", () => {
     expect(steam.game!.sounds!.horn!.id).toBe("steam-whistle");
     expect(steam.game!.sounds!.engine!.id).toBe("steam-chuff");
     const diesel = vehicles.find((v) => v.traction === "diesel" && v.group === "loco")!;
-    expect(diesel.game!.sounds).toEqual({ horn: railHorn(false, diesel.game!.weight!), engine: dieselEngine(diesel.game!.weight!) });
+    expect(diesel.game!.sounds).toEqual({ horn: railHorn(false, diesel.game!.weight!), engine: dieselEngine(diesel.game!.weight!, "loco") });
+    const railcar = vehicles.find((v) => v.traction === "diesel" && v.group === "unit")!;
+    expect(railcar.game!.sounds!.engine!.id).toBe("diesel-engine-railcar");
+    expect(byId("proc-vehicle-cd-781").game!.sounds!.engine!.id).toBe("diesel-engine-mainline");
+    expect(byId("proc-vehicle-cd-749").game!.sounds!.engine!.id).toBe("diesel-engine-shunter");
     const electric = vehicles.find((v) => v.traction === "electric")!;
     expect(Object.keys(electric.game!.sounds!)).toEqual(["horn"]);
     const bus = vehicles.find((v) => v.group === "bus")!;
-    expect(bus.game!.sounds).toEqual({});
+    expect(bus.game!.sounds).toEqual({ engine: { id: "diesel-engine-bus" } });
+    const truck = vehicles.find((v) => v.group === "truck")!;
+    expect(truck.game!.sounds).toEqual({ engine: { id: "diesel-engine-truck" } });
     // a livery that weighs more blows a different horn (CD 163's cd362 variant: 87 t)
     const cd163 = byId("proc-vehicle-cd-163");
     const heavy = cd163.game!.variants!.find((x) => x.params.livery === "cd362")!;
@@ -201,9 +223,9 @@ describe("the bells", () => {
 
 describe("the catalog's Sounds column", () => {
   it("lists every design id a model names, its variants' included", () => {
-    expect(soundIdsOf({ sounds: { horn: { id: "loco-horn" }, engine: { id: "diesel-engine" } }, variants: [{ sounds: { horn: { id: "steam-whistle" } } }] })).toEqual([
+    expect(soundIdsOf({ sounds: { horn: { id: "loco-horn" }, engine: { id: "diesel-engine-mainline" } }, variants: [{ sounds: { horn: { id: "steam-whistle" } } }] })).toEqual([
       "loco-horn",
-      "diesel-engine",
+      "diesel-engine-mainline",
       "steam-whistle",
     ]);
     expect(soundIdsOf(undefined)).toEqual([]);

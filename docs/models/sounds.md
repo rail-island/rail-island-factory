@@ -35,7 +35,7 @@ does not have, and plays nothing there.
 | Slot | On | Plays | The game sets |
 |---|---|---|---|
 | `horn` | rail and road vehicles, ships | a one-shot | `call` (why it sounds), where the design has one |
-| `engine` | rail and road vehicles | a loop | `rpm`, `load` (a diesel's revs and effort) or `rate`, `intensity` (a steam beat), whichever the design has |
+| `engine` | rail and road vehicles | a loop | `rpm`, `load`, `state` (a diesel's revs, effort and whether it runs) or `rate`, `intensity` (a steam beat), whichever the design has |
 | `bell` | buildings | a one-shot | nothing |
 
 A slot is `{ id, params?, calls? }`: a rail-island-music design id and the
@@ -59,7 +59,7 @@ id, with per-variant overrides keyed by the variant's non-default parameters (th
 ```ts
 "proc-building-tower-bigben": { sounds: { bell: { id: "big-ben", params: { chime: "quarters" } } } },
 "proc-vehicle-cd-750": {
-  sounds: { engine: { id: "diesel-engine", params: { size: 0.9 } } },
+  sounds: { engine: { id: "diesel-engine-two-stroke", params: { size: 0.9 } } },
   variants: [{ params: { livery: "cd753" }, sounds: { horn: { id: "loco-horn", params: { pitch: 240 } } } }],
 },
 ```
@@ -82,17 +82,25 @@ the game keeps no rule of its own:
 | Vehicle | Horn | Engine |
 |---|---|---|
 | rail, `traction: "steam"` | `steam-whistle`, pitch 880 Hz (40 t) to 520 Hz (140 t); calls `departure`, `crossing`, `tunnel` | `steam-chuff` |
-| rail, `traction: "diesel"` | `loco-horn`, pitch 370 Hz (40 t) to 220 Hz (140 t); calls `crossing`, `tunnel` | `diesel-engine`, size 0 (40 t) to 1 (140 t) |
+| rail, `traction: "diesel"`, group `unit` (a railcar, a DMU) | `loco-horn` by weight, as below; calls `crossing`, `tunnel` | `diesel-engine-railcar`, size 0 (40 t) to 1 (140 t) |
+| rail, `traction: "diesel"`, any other group (a locomotive) | `loco-horn`, pitch 370 Hz (40 t) to 220 Hz (140 t); calls `crossing`, `tunnel` | `diesel-engine-shunter` under 80 t (`MAINLINE_TONNES`), `diesel-engine-mainline` from 80 t; size 0 (40 t) to 1 (140 t) |
 | every other rail vehicle (electric, units, trams, coaches, wagons) | `loco-horn` by weight; calls `crossing`, `tunnel` | none |
 | ship | `ship-horn`, pitch 196 Hz (20 studs) to 70 Hz (120 studs), 0.7 to 2.2 s | - |
-| road vehicles, aircraft, cable cars | none | none |
+| road vehicle, group `bus` | none | `diesel-engine-bus`, as measured (no size) |
+| road vehicle, group `truck` | none | `diesel-engine-truck`, as measured (no size) |
+| aircraft, cable cars | none | none |
 
 Only a steam locomotive whistles as it leaves a platform (`STEAM_CALLS`); every
 other rail vehicle leaves quietly (`HORN_CALLS`).
 
-These are the rules the game used to apply itself (its `hornSpecFor`,
-`dieselDriveFor` and `shipHornFor`), moved here unchanged, so every model sounds
-as it did. A coach has a horn because a consist without a locomotive sounds its
+The horns, whistles and steam beats are the rules the game used to apply itself
+(its `hornSpecFor`, `dieselDriveFor` and `shipHornFor`), moved here unchanged.
+A diesel's engine is one rail-island-music design per engine (`dieselEngine`,
+`roadEngine`): the catalog group and the weight pick which one; a model whose
+engine is another kind (a big two-stroke, `diesel-engine-two-stroke`) states it
+in the table. By that rule CD 749 (72 t), CD 750 (74 t) and T 499.0 (76 t) run
+the shunter's six. The engines' `state` (whether it runs) is the game's, like
+their revs, and never pinned. A coach has a horn because a consist without a locomotive sounds its
 first car's. A ship's hull is measured as the game draws it
 (`shipHullStuds`): a ship standing in for an old model takes the old model's
 length (the legacy table scales it to that, [legacy-mapping.md](legacy-mapping.md)),

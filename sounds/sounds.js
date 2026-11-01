@@ -636,99 +636,463 @@ var crossingBell = /* @__PURE__ */ loop({
     };
   }
 });
-function dieselFiring(size, rpm) {
-  const idle = 30 - 10 * size;
-  const full = 110 - 40 * size;
-  return idle + (full - idle) * rpm;
+
+// sounds/designs/diesel.ts
+var DIESEL_PROFILES = {
+  railcar: {
+    title: "Railcar (inline six)",
+    cylinders: 6,
+    strokes: 4,
+    idleRpm: 600,
+    maxRpm: 2e3,
+    uneven: 0.4,
+    pulse: 0.5,
+    bright: [2e3, 3e3],
+    body: [190, 1.4, 6],
+    knock: [2300, 0.5],
+    breath: 0.8,
+    turbo: [2400, 5200, 0.012],
+    fan: 0,
+    rundown: 1.6,
+    trim: 1.24
+  },
+  shunter: {
+    title: "Shunter (medium-speed six)",
+    cylinders: 6,
+    strokes: 4,
+    idleRpm: 420,
+    maxRpm: 1250,
+    uneven: 0.45,
+    pulse: 0.55,
+    bright: [1700, 2600],
+    body: [120, 1.3, 7],
+    knock: [1600, 0.45],
+    breath: 0.9,
+    turbo: [1800, 4200, 0.014],
+    fan: 0,
+    rundown: 2.6,
+    trim: 1.26
+  },
+  mainline: {
+    title: "Mainline (V12, turbocharged)",
+    cylinders: 12,
+    strokes: 4,
+    idleRpm: 400,
+    maxRpm: 1100,
+    uneven: 0.35,
+    pulse: 0.55,
+    bright: [1800, 2800],
+    body: [140, 1.2, 6],
+    knock: [1500, 0.35],
+    breath: 1,
+    turbo: [1500, 3800, 0.03],
+    fan: 0,
+    rundown: 3.4,
+    trim: 1
+  },
+  "two-stroke": {
+    title: "Two-stroke (V16, turbocharged)",
+    cylinders: 16,
+    strokes: 2,
+    idleRpm: 315,
+    maxRpm: 904,
+    uneven: 0.3,
+    pulse: 0.6,
+    bright: [2e3, 3e3],
+    body: [170, 1.1, 5],
+    knock: [1300, 0.25],
+    breath: 1.1,
+    turbo: [1200, 3400, 0.04],
+    fan: 0,
+    rundown: 4,
+    trim: 0.84
+  },
+  bus: {
+    title: "Bus (inline six, turbocharged)",
+    cylinders: 6,
+    strokes: 4,
+    idleRpm: 600,
+    maxRpm: 2200,
+    uneven: 0.3,
+    pulse: 0.55,
+    bright: [1400, 2400],
+    body: [180, 1.2, 5],
+    knock: [2e3, 0.4],
+    breath: 0.7,
+    turbo: [2800, 6200, 0.01],
+    fan: 0,
+    rundown: 1.2,
+    trim: 1.3
+  },
+  truck: {
+    title: "Truck (air-cooled V8)",
+    cylinders: 8,
+    strokes: 4,
+    idleRpm: 650,
+    maxRpm: 2300,
+    uneven: 0.5,
+    pulse: 0.45,
+    bright: [2400, 3400],
+    body: [210, 1.5, 6],
+    knock: [2500, 0.65],
+    breath: 0.7,
+    turbo: [0, 0, 0],
+    fan: 0.25,
+    rundown: 1.1,
+    trim: 1.33
+  }
+};
+function dieselProfile(engine) {
+  return DIESEL_PROFILES[engine] ?? DIESEL_PROFILES.mainline;
+}
+var SIZE = { name: "size", title: "Size", kind: "number", min: 0, max: 1, step: 0.05, default: 0.5 };
+function sizeScale(size) {
+  return 1.2 - 0.4 * size;
+}
+function dieselRpm(engine, size, rpm) {
+  const p = dieselProfile(engine);
+  return (p.idleRpm + (p.maxRpm - p.idleRpm) * rpm) * sizeScale(size);
+}
+function cycleRate(p, revs) {
+  return revs / 60 / (p.strokes === 4 ? 2 : 1);
 }
 function dieselLevel(rpm, load) {
   return 0.35 + 0.3 * rpm + 0.35 * load;
 }
-var dieselEngine = /* @__PURE__ */ loop({
-  id: "diesel-engine",
-  title: "Diesel engine",
-  category: "trains",
-  description: "A diesel locomotive's or railcar's engine: a low chugging drone that revs up with the speed and growls harder as it works, with a turbo's whine on top.",
-  params: [
-    { name: "rpm", title: "Revs", kind: "number", min: 0, max: 1, step: 0.05, default: 0.4 },
-    { name: "load", title: "Effort", kind: "number", min: 0, max: 1, step: 0.05, default: 0.5 },
-    { name: "size", title: "Size", kind: "number", min: 0, max: 1, step: 0.05, default: 0.5 },
-    LEVEL
-  ],
-  start(ctx, dest, t, initial) {
-    const out = gain(ctx, num(initial, "level") * 0.12);
-    out.connect(dest);
-    const body = gain(ctx, 0);
-    body.connect(out);
-    const fire = dieselFiring(num(initial, "size"), num(initial, "rpm"));
-    const tone = filter(ctx, "lowpass", 260, 1.2);
-    tone.connect(body);
-    const saw = ctx.createOscillator();
-    saw.type = "sawtooth";
-    saw.frequency.value = fire;
-    const sawGain = gain(ctx, 0.5);
-    saw.connect(sawGain).connect(tone);
-    const half = ctx.createOscillator();
-    half.type = "square";
-    half.frequency.value = fire / 2;
-    const halfGain = gain(ctx, 0.22);
-    half.connect(halfGain).connect(tone);
-    const exhaust = noiseSource(ctx, true);
-    const exBand = filter(ctx, "bandpass", 420, 0.8);
-    const exGain = gain(ctx, 0.35);
-    const chop = ctx.createOscillator();
-    chop.type = "sine";
-    chop.frequency.value = fire;
-    const chopDepth = gain(ctx, 0.25);
-    chop.connect(chopDepth).connect(exGain.gain);
-    exhaust.connect(exBand).connect(exGain).connect(body);
-    const turbo = ctx.createOscillator();
-    turbo.type = "sine";
-    turbo.frequency.value = 1800;
-    const turboGain = gain(ctx, 0);
-    turbo.connect(turboGain).connect(body);
-    const sources = [saw, half, exhaust, chop, turbo];
-    for (const s of sources) s.start(t);
-    const base = voiceOf(out, sources, Infinity);
-    const rnd = seeded(53733);
-    let v = initial;
-    let next = t;
-    let stopped = false;
-    const apply = (at, wobble) => {
-      const rpm = num(v, "rpm");
-      const load = num(v, "load");
-      const f = dieselFiring(num(v, "size"), rpm) * wobble;
-      saw.frequency.setTargetAtTime(f, at, 0.35);
-      half.frequency.setTargetAtTime(f / 2, at, 0.35);
-      chop.frequency.setTargetAtTime(f, at, 0.35);
-      tone.frequency.setTargetAtTime(200 + 500 * load + 300 * rpm, at, 0.3);
-      exBand.frequency.setTargetAtTime(300 + 400 * rpm, at, 0.3);
-      exGain.gain.setTargetAtTime(0.2 + 0.3 * load, at, 0.3);
-      turbo.frequency.setTargetAtTime(1500 + 1600 * rpm, at, 0.8);
-      turboGain.gain.setTargetAtTime(0.012 * rpm * (0.3 + load), at, 0.6);
-      body.gain.setTargetAtTime(dieselLevel(rpm, load), at, 0.3);
-    };
-    apply(t, 1);
-    return {
-      endsAt: Infinity,
-      stop(at) {
-        stopped = true;
-        base.stop(at);
-      },
-      set(values) {
-        v = values;
-      },
-      tick(now, horizon) {
-        if (stopped) return;
-        if (next < now) next = now;
-        while (next < now + horizon) {
-          apply(next, 0.985 + 0.03 * rnd());
-          next += 0.3;
-        }
-      }
-    };
+var HARMONICS = 192;
+var SAMPLES = 2048;
+function cycleShape(p, decay, power) {
+  const rnd = seeded(p.cylinders * 977 + p.idleRpm);
+  const n = p.cylinders;
+  const gap = 1 / n;
+  const out = new Float64Array(SAMPLES);
+  for (let c = 0; c < n; c++) {
+    const strength = 1 - p.uneven * rnd();
+    const at = c * gap + (rnd() - 0.5) * p.uneven * 0.15 * gap;
+    for (let i = 0; i < SAMPLES; i++) {
+      let dt = i / SAMPLES - at;
+      dt -= Math.floor(dt);
+      const rise = 1 - Math.exp(-dt / (0.04 * gap));
+      out[i] += strength * rise * Math.exp(-dt / (decay * gap)) ** power;
+    }
   }
-});
+  return out;
+}
+function cycleSeries(shape) {
+  const real = new Float32Array(HARMONICS + 1);
+  const imag = new Float32Array(HARMONICS + 1);
+  let mean = 0;
+  let peak = 0;
+  for (const v of shape) {
+    mean += v;
+    peak = Math.max(peak, v);
+  }
+  mean /= shape.length;
+  for (let k = 1; k <= HARMONICS; k++) {
+    let re = 0;
+    let im = 0;
+    for (let i = 0; i < SAMPLES; i++) {
+      const a = 2 * Math.PI * k * i / SAMPLES;
+      re += shape[i] * Math.cos(a);
+      im += shape[i] * Math.sin(a);
+    }
+    real[k] = 2 * re / SAMPLES;
+    imag[k] = 2 * im / SAMPLES;
+  }
+  return { real, imag, mean, peak };
+}
+var waveCache = /* @__PURE__ */ new WeakMap();
+function wavesOf(ctx, p) {
+  let byProfile = waveCache.get(ctx);
+  if (!byProfile) {
+    byProfile = /* @__PURE__ */ new Map();
+    waveCache.set(ctx, byProfile);
+  }
+  let w = byProfile.get(p);
+  if (!w) {
+    const make = (decay, power) => {
+      const s = cycleSeries(cycleShape(p, decay, power));
+      const scale = 1 / Math.max(1e-6, s.peak - s.mean);
+      const real = s.real.map((v) => v * scale);
+      const imag = s.imag.map((v) => v * scale);
+      return { wave: ctx.createPeriodicWave(real, imag, { disableNormalization: true }), mean: s.mean * scale };
+    };
+    const tone = make(p.pulse, 1);
+    const knock2 = make(0.1, 1);
+    const breath = make(0.8, 1);
+    w = { tone: tone.wave, knock: knock2.wave, breath: breath.wave, knockMean: knock2.mean, breathMean: breath.mean };
+    byProfile.set(p, w);
+  }
+  return w;
+}
+var KNOCK_FLOOR = 0.35;
+var BREATH_FLOOR = 0.8;
+function buildEngine(ctx, into, t, p) {
+  const w = wavesOf(ctx, p);
+  const master = gain(ctx);
+  master.connect(into);
+  const dest = master;
+  const tone = ctx.createOscillator();
+  tone.setPeriodicWave(w.tone);
+  const toneGain = gain(ctx);
+  const lp = filter(ctx, "lowpass", p.bright[0], 0.8);
+  const body = filter(ctx, "peaking", p.body[0], p.body[1]);
+  body.gain.value = p.body[2];
+  const shelf = filter(ctx, "lowshelf", 160);
+  shelf.gain.value = -12;
+  tone.connect(toneGain).connect(shelf).connect(body).connect(lp).connect(dest);
+  const knockSrc = noiseSource(ctx, true);
+  const knockBand = filter(ctx, "bandpass", p.knock[0], 0.9);
+  const knockGate = gain(ctx);
+  const knockLevel = gain(ctx);
+  const knockOsc = ctx.createOscillator();
+  knockOsc.setPeriodicWave(w.knock);
+  const knockDepth = gain(ctx, 1);
+  knockOsc.connect(knockDepth).connect(knockGate.gain);
+  knockSrc.connect(knockBand).connect(knockGate).connect(knockLevel).connect(dest);
+  const breathSrc = noiseSource(ctx, true);
+  const breathLp = filter(ctx, "lowpass", 1200, 0.5);
+  const breathGate = gain(ctx);
+  const breathLevel = gain(ctx);
+  const breathOsc = ctx.createOscillator();
+  breathOsc.setPeriodicWave(w.breath);
+  const breathDepth = gain(ctx, 1);
+  breathOsc.connect(breathDepth).connect(breathGate.gain);
+  breathSrc.connect(breathLp).connect(breathGate).connect(breathLevel).connect(dest);
+  const turbo = ctx.createOscillator();
+  turbo.type = "sine";
+  const turboGain = gain(ctx);
+  turbo.connect(turboGain).connect(dest);
+  const fanSrc = noiseSource(ctx, true);
+  const fanBand = filter(ctx, "bandpass", 900, 0.6);
+  const fanGain = gain(ctx);
+  fanSrc.connect(fanBand).connect(fanGain).connect(dest);
+  const cyclers = [tone, knockOsc, breathOsc];
+  for (const o of cyclers) o.frequency.value = 0;
+  tone.start(t);
+  knockOsc.start(t);
+  breathOsc.start(t);
+  turbo.start(t);
+  knockSrc.start(t, 0);
+  breathSrc.start(t, 0.61);
+  fanSrc.start(t, 1.27);
+  const driven = [
+    ...cyclers.map((o) => o.frequency),
+    toneGain.gain,
+    lp.frequency,
+    knockGate.gain,
+    knockLevel.gain,
+    knockBand.frequency,
+    breathGate.gain,
+    breathLevel.gain,
+    breathLp.frequency,
+    master.gain,
+    turbo.frequency,
+    turboGain.gain,
+    fanGain.gain
+  ];
+  return {
+    sources: [tone, knockOsc, breathOsc, turbo, knockSrc, breathSrc, fanSrc],
+    cancel(at) {
+      for (const param of driven) param.cancelScheduledValues(at);
+    },
+    drive(at, s, tau) {
+      const idle = p.idleRpm;
+      const turning = s.revs / idle;
+      const speed = Math.min(1, turning);
+      const rev01 = Math.max(0, Math.min(1, (s.revs - idle) / (p.maxRpm - idle)));
+      const rate = cycleRate(p, s.revs);
+      for (const o of cyclers) o.frequency.setTargetAtTime(rate, at, tau);
+      const work = s.fire * (0.55 + 0.45 * s.load);
+      toneGain.gain.setTargetAtTime(speed * (0.35 + 0.65 * s.fire) * (0.7 + 0.3 * rev01) * 0.4, at, tau);
+      lp.frequency.setTargetAtTime(
+        (0.45 + 0.55 * s.fire) * (p.bright[0] + (p.bright[1] - p.bright[0]) * Math.min(1, 0.5 * s.load + 0.5 * rev01)),
+        at,
+        tau
+      );
+      const k = p.knock[1] * s.fire * speed * (1 - 0.4 * s.load) * 0.5;
+      knockGate.gain.setTargetAtTime(w.knockMean + KNOCK_FLOOR, at, tau);
+      knockLevel.gain.setTargetAtTime(k, at, tau);
+      knockBand.frequency.setTargetAtTime(p.knock[0] * (0.9 + 0.3 * rev01), at, tau);
+      const b = p.breath * speed * (0.25 + 0.75 * work) * 0.6;
+      breathGate.gain.setTargetAtTime(w.breathMean + BREATH_FLOOR, at, tau);
+      breathLevel.gain.setTargetAtTime(b, at, tau);
+      breathLp.frequency.setTargetAtTime(450 + 700 * rev01 + 350 * s.load, at, tau);
+      master.gain.setTargetAtTime(dieselLevel(rev01, s.load) * p.trim, at, tau);
+      const [tLo, tHi, tLevel] = p.turbo;
+      turbo.frequency.setTargetAtTime(Math.max(1, tLo * 0.3 + (tHi - tLo * 0.3) * s.turbo), at, tau);
+      turboGain.gain.setTargetAtTime(tLevel * Math.min(1, s.turbo * 1.6), at, tau);
+      fanGain.gain.setTargetAtTime(p.fan * speed * (0.4 + 0.6 * rev01) * 0.3, at, tau);
+    }
+  };
+}
+function turboSpeed(rpm, load) {
+  return 0.25 + 0.45 * rpm + 0.3 * load * (0.4 + 0.6 * rpm);
+}
+var DIESEL_TRIM = 0.138;
+var STATE = {
+  name: "state",
+  title: "State",
+  kind: "choice",
+  values: [
+    { value: "run", title: "Running" },
+    { value: "start", title: "Starting" },
+    { value: "stop", title: "Stopping" },
+    { value: "off", title: "Off" }
+  ],
+  default: "run"
+};
+function dieselRuns(state) {
+  return state === "run" || state === "start";
+}
+var COUGHING = 0.5;
+function dieselStartTimes(_engine) {
+  const catches = COUGHING;
+  return { catches, idles: catches + 1.8 };
+}
+function dieselStopTimes(engine) {
+  const p = dieselProfile(engine);
+  const cut = 0.3;
+  const still = cut + p.rundown;
+  return { cut, still, ends: still + Math.max(0.6, p.turbo[2] > 0 ? p.rundown * 0.8 : 0.6) };
+}
+function playStart(engine, kind, p, idle, t) {
+  const coughRevs = Math.min(220, idle * 0.45);
+  const { catches } = dieselStartTimes(kind);
+  const rnd = seeded(p.cylinders * 31 + p.idleRpm);
+  const coughs = 6;
+  for (let i = 0; i < coughs; i++) {
+    const at = t + i * COUGHING / coughs;
+    const fire = i % 2 === 0 ? 0.3 + 0.5 * rnd() : 0.05;
+    engine.drive(at, { revs: coughRevs * (1 + i * 0.12), load: 0.3, fire, turbo: 0 }, 0.03);
+  }
+  engine.drive(t + catches, { revs: idle * 1.45, load: 0.6, fire: 1, turbo: 0.3 }, 0.22);
+  engine.drive(t + catches + 0.8, { revs: idle, load: 0.1, fire: 1, turbo: turboSpeed(0, 0.1) }, 0.4);
+}
+function playStop(ctx, out, engine, kind, p, idle, t) {
+  const { cut, still, ends } = dieselStopTimes(kind);
+  engine.drive(t, { revs: idle, load: 0.1, fire: 1, turbo: turboSpeed(0, 0.1) }, 0.1);
+  engine.drive(t + cut, { revs: idle * 0.55, load: 0, fire: 0, turbo: turboSpeed(0, 0.1) }, p.rundown * 0.25);
+  engine.drive(t + cut + p.rundown * 0.45, { revs: 0, load: 0, fire: 0, turbo: 0 }, p.rundown * 0.22);
+  engine.drive(t + still, { revs: 0, load: 0, fire: 0, turbo: 0 }, (ends - still) / 3);
+  const thud = noiseSource(ctx, false);
+  const lp = filter(ctx, "lowpass", 180, 1.5);
+  const tg = gain(ctx);
+  thud.connect(lp).connect(tg).connect(out);
+  tg.gain.setValueAtTime(0, t + still - 0.1);
+  tg.gain.linearRampToValueAtTime(0.9, t + still - 0.09);
+  tg.gain.setTargetAtTime(0, t + still - 0.08, 0.06);
+  thud.start(t + still - 0.1, 0.9);
+  thud.stop(t + still + 0.4);
+  return thud;
+}
+var ENGINE_WORDS = {
+  railcar: "A diesel railcar's or DMU's underfloor inline six",
+  shunter: "A shunting locomotive's medium-speed six",
+  mainline: "A mainline diesel locomotive's turbocharged V12",
+  "two-stroke": "A big two-stroke V16 locomotive engine, the EMD kind",
+  bus: "A city bus's turbocharged inline six, muffled",
+  truck: "A truck's air-cooled V8, open and clattering, with its fan"
+};
+function dieselEngineOf(kind) {
+  const p = DIESEL_PROFILES[kind];
+  return loop({
+    id: `diesel-engine-${kind}`,
+    title: `Diesel engine: ${p.title}`,
+    category: "trains",
+    description: `${ENGINE_WORDS[kind]}: idling and revving with the speed (\`rpm\`), growling and knocking harder as it works (\`load\`). \`state\` starts it (it coughs, catches and settles to idle) and shuts it down (it runs down and rocks to a stop).`,
+    params: [
+      { name: "rpm", title: "Revs", kind: "number", min: 0, max: 1, step: 0.05, default: 0.4 },
+      { name: "load", title: "Effort", kind: "number", min: 0, max: 1, step: 0.05, default: 0.5 },
+      SIZE,
+      STATE,
+      LEVEL
+    ],
+    start(ctx, dest, t, initial) {
+      const out = gain(ctx, num(initial, "level") * DIESEL_TRIM);
+      out.connect(dest);
+      const engine = buildEngine(ctx, out, t, p);
+      const sources = [...engine.sources];
+      const base = voiceOf(out, sources, Infinity);
+      const rnd = seeded(53733);
+      let v = initial;
+      let phase = "off";
+      let until = t;
+      let endsAt = Infinity;
+      let next = t;
+      let stopped = false;
+      const idle = () => dieselRpm(kind, num(v, "size"), 0);
+      const apply = (at, wobble, tau) => {
+        const rpm = num(v, "rpm");
+        const load = num(v, "load");
+        engine.drive(at, { revs: dieselRpm(kind, num(v, "size"), rpm) * wobble, load, fire: 1, turbo: turboSpeed(rpm, load) }, tau);
+      };
+      const begin = (at) => {
+        engine.cancel(at);
+        playStart(engine, kind, p, idle(), at);
+        phase = "starting";
+        until = at + dieselStartTimes(kind).idles;
+        endsAt = Infinity;
+      };
+      const end = (at) => {
+        engine.cancel(at);
+        sources.push(playStop(ctx, out, engine, kind, p, idle(), at));
+        phase = "stopping";
+        until = at + dieselStopTimes(kind).ends;
+        endsAt = until;
+      };
+      const first = choice(initial, "state");
+      if (first === "run") {
+        phase = "running";
+        apply(t, 1, 0.01);
+        next = t + 0.3;
+      } else if (first === "start") {
+        begin(t);
+      } else {
+        phase = "off";
+        engine.drive(t, { revs: 0, load: 0, fire: 0, turbo: 0 }, 0.01);
+        endsAt = t;
+      }
+      return {
+        get endsAt() {
+          return endsAt;
+        },
+        stop(at) {
+          stopped = true;
+          base.stop(at);
+        },
+        set(values) {
+          v = values;
+        },
+        tick(now, horizon) {
+          if (stopped) return;
+          const runs = phase === "starting" || phase === "running";
+          if (dieselRuns(choice(v, "state")) !== runs) {
+            if (runs) end(now);
+            else begin(now);
+          }
+          if (phase === "stopping" && now >= until) phase = "off";
+          if (phase === "starting" && until < now + horizon) {
+            phase = "running";
+            next = until;
+          }
+          if (phase !== "running") return;
+          if (next < now) next = now;
+          while (next < now + horizon) {
+            apply(next, 0.99 + 0.02 * rnd(), 0.35);
+            next += 0.3;
+          }
+        }
+      };
+    }
+  });
+}
+var dieselEngineRailcar = /* @__PURE__ */ dieselEngineOf("railcar");
+var dieselEngineShunter = /* @__PURE__ */ dieselEngineOf("shunter");
+var dieselEngineMainline = /* @__PURE__ */ dieselEngineOf("mainline");
+var dieselEngineTwoStroke = /* @__PURE__ */ dieselEngineOf("two-stroke");
+var dieselEngineBus = /* @__PURE__ */ dieselEngineOf("bus");
+var dieselEngineTruck = /* @__PURE__ */ dieselEngineOf("truck");
 
 // sounds/designs/nature.ts
 var BIRD_CALLS = ["chirps", "whistle", "trill"];
@@ -1059,7 +1423,12 @@ var SOUNDS = [
   locoHorn,
   steamWhistle,
   steamChuff,
-  dieselEngine,
+  dieselEngineRailcar,
+  dieselEngineShunter,
+  dieselEngineMainline,
+  dieselEngineTwoStroke,
+  dieselEngineBus,
+  dieselEngineTruck,
   crossingBell,
   shipHorn,
   riverRapids,
@@ -1074,7 +1443,7 @@ var SOUNDS = [
   editDemolish
 ];
 var CATEGORIES = [
-  { id: "trains", title: "Trains", description: "Locomotives and the railway: horns, whistles, the exhaust beat, the diesel engine, the level crossing's bell." },
+  { id: "trains", title: "Trains", description: "Locomotives and the railway: horns, whistles, the exhaust beat, diesel engines (railcars, shunters, mainline locomotives, buses and trucks) running, starting and stopping, the level crossing's bell." },
   { id: "ships", title: "Ships", description: "Vessels in port and at sea." },
   { id: "water", title: "Water", description: "Ambient water, played while it is in view: rivers, waterfalls, springs and the sea." },
   { id: "nature", title: "Nature", description: "Ambient life of the land: woods and their birds." },

@@ -47,12 +47,13 @@ export const SLOT_KINDS: Record<SoundSlotName, "oneShot" | "loop"> = { horn: "on
 
 /**
  * The parameters the game sets on each slot as it plays: never pinned by a model.
- * A horn's call is why it sounds; an engine's revs and effort (diesel) or beat
- * rate and effort (steam) follow the vehicle frame by frame.
+ * A horn's call is why it sounds; an engine's revs, effort and whether it runs
+ * (diesel: `state`) or its beat rate and effort (steam) follow the vehicle frame
+ * by frame.
  */
 export const RUNTIME_PARAMS: Record<SoundSlotName, readonly string[]> = {
   horn: ["call"],
-  engine: ["rpm", "load", "rate", "intensity"],
+  engine: ["rpm", "load", "state", "rate", "intensity"],
   bell: [],
 };
 
@@ -186,9 +187,25 @@ export function railHorn(steam: boolean, tonnes: number): SoundSlot {
     : { id: "loco-horn", params: { pitch: Math.round(lerp(HORN_PITCH_LIGHT, HORN_PITCH_HEAVY, t)) }, calls: [...HORN_CALLS] };
 }
 
-/** A diesel's engine: the heavier, the bigger and lower it fires. */
-export function dieselEngine(tonnes: number): SoundSlot {
-  return { id: "diesel-engine", params: { size: Number(heaviness(tonnes).toFixed(2)) } };
+/** A diesel locomotive this heavy or heavier runs the mainline V12; a lighter one the shunter's six. */
+export const MAINLINE_TONNES = 80;
+
+/**
+ * A rail diesel's engine: a railcar or a diesel unit (`group` "unit") runs the
+ * railcar's underfloor six, a locomotive the shunter's six under MAINLINE_TONNES
+ * and the mainline V12 from there; the heavier, the bigger and lower it fires
+ * within its engine (`size`). The game sets `state`, `rpm` and `load`.
+ */
+export function dieselEngine(tonnes: number, group?: string): SoundSlot {
+  const kind = group === "unit" ? "railcar" : tonnes < MAINLINE_TONNES ? "shunter" : "mainline";
+  return { id: `diesel-engine-${kind}`, params: { size: Number(heaviness(tonnes).toFixed(2)) } };
+}
+
+/** A road vehicle's engine: a bus's turbocharged six, a truck's air-cooled V8, each as measured. */
+export function roadEngine(group: string | undefined): SoundSlot | undefined {
+  if (group === "bus") return { id: "diesel-engine-bus" };
+  if (group === "truck") return { id: "diesel-engine-truck" };
+  return undefined;
 }
 
 /** A ship's horn from its hull length in studs: a small boat toots high and short. */
@@ -200,6 +217,8 @@ export function shipHorn(hullStuds: number): SoundSlot {
 /** What the derivation reads of a vehicle besides its game properties. */
 export interface SoundSource {
   category: string;
+  /** The catalog group: a rail `unit` or `loco`, a road `bus` or `truck`. */
+  group?: string;
   traction?: string;
   /** A ship's hull length on the game's map, in studs. */
   hullStuds?: number;
@@ -208,8 +227,9 @@ export interface SoundSource {
 /**
  * The sounds derived for a vehicle weighing `weight` tonnes: every rail vehicle
  * has a horn (a consist sounds its first locomotive's, or its first car's), a
- * steam locomotive its exhaust beat and a diesel its engine; a ship its horn.
- * Road vehicles, aircraft and cable cars get none: no designs fit them yet.
+ * steam locomotive its exhaust beat and a diesel its engine (a railcar's, a
+ * shunter's or a mainline one); a bus or a truck its diesel engine; a ship its
+ * horn. Aircraft and cable cars get none: no designs fit them yet.
  */
 export function derivedSounds(src: SoundSource, weight: number | null | undefined): SoundMapping {
   if (src.category === "Rail vehicles") {
@@ -217,8 +237,12 @@ export function derivedSounds(src: SoundSource, weight: number | null | undefine
     const steam = src.traction === "steam";
     const out: SoundMapping = { horn: railHorn(steam, weight) };
     if (steam) out.engine = { id: "steam-chuff" };
-    else if (src.traction === "diesel") out.engine = dieselEngine(weight);
+    else if (src.traction === "diesel") out.engine = dieselEngine(weight, src.group);
     return out;
+  }
+  if (src.category === "Road vehicles") {
+    const engine = roadEngine(src.group);
+    return engine ? { engine } : {};
   }
   if (src.category === "Ships" && src.hullStuds) return { horn: shipHorn(src.hullStuds) };
   return {};

@@ -22,7 +22,7 @@ export const SLOT_TITLES: Record<SoundSlotName, string> = { horn: "Horn", engine
 /** The parameters the game sets as it plays each slot (generator/soundMapping.ts RUNTIME_PARAMS). */
 export const RUNTIME_PARAMS: Record<SoundSlotName, readonly string[]> = {
   horn: ["call"],
-  engine: ["rpm", "load", "rate", "intensity"],
+  engine: ["rpm", "load", "state", "rate", "intensity"],
   bell: [],
 };
 
@@ -53,10 +53,15 @@ export function slotsFor(game: GameSounds | undefined, nonDefault: Record<string
   return SLOT_ORDER.filter((s) => out[s]).map((s) => [s, out[s]!]);
 }
 
-/** What a slot's panel offers: a button per call, sliders for an engine's drive, or one Play. */
+/** What a slot's panel offers: a button per call, sliders for an engine's drive (and its start and stop), or one Play. */
 export type SlotControls =
   | { kind: "calls"; calls: Array<{ value: string; title: string }> }
-  | { kind: "drive"; sliders: Array<{ name: string; title: string; min: number; max: number; step: number; value: number }> }
+  | {
+      kind: "drive";
+      sliders: Array<{ name: string; title: string; min: number; max: number; step: number; value: number }>;
+      /** The engine starts and shuts down by its `state` (a diesel): Start plays its start, Stop its run-down. */
+      states: boolean;
+    }
   | { kind: "play" };
 
 /** The call the player makes with the Horn button: it always sounds, so a slot never lists it. */
@@ -77,6 +82,7 @@ export function slotControls(slot: SoundSlotName, params: readonly SoundParam[],
     return {
       kind: "drive",
       sliders: runtime.flatMap((p) => (p.kind === "number" ? [{ name: p.name, title: p.title, min: p.min, max: p.max, step: p.step, value: p.default }] : [])),
+      states: runtime.some((p) => p.name === "state" && p.kind === "choice"),
     };
   }
   return { kind: "play" };
