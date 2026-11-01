@@ -22,6 +22,7 @@ packages `pnpm.onlyBuiltDependencies` allows.
 | `pnpm preview` | serves `dist/` locally |
 | `pnpm test` | Vitest, once |
 | `pnpm typecheck` | `tsc --noEmit` over `src/`, `generator/`, `test/` |
+| `pnpm import:sounds` | mirrors the sibling rail-island-music export into the committed `sounds/` ([../models/sounds.md](../models/sounds.md)) |
 | `pnpm deploy` | `pnpm build` and `wrangler deploy` from a workstation (CI normally does it) |
 
 `export/`, `dist/` and `.wrangler/` are gitignored: everything in them is
@@ -38,6 +39,7 @@ for it.
 | `generator/` | Node-only: the mesh builder, the designs, the in-memory GLB writer and reader, the thumbnail rasterizer, the export writer |
 | `src/` | the Solid site |
 | `test/` | Vitest suites, all in the node environment |
+| `sounds/` | the imported rail-island-music sound designs (`pnpm import:sounds`); never edited by hand |
 | `.github/workflows/` | `deploy.yml` and `test.yml` |
 
 `src/` imports **types only** from `generator/` (`generator/catalog.ts` and

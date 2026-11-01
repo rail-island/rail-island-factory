@@ -99,8 +99,14 @@ describe("exportVehicleMeta", () => {
     expect(meta.count).toBe(VEHICLES.length);
     expect(meta).not.toHaveProperty("buildings");
     expect(meta.vehicles.map((v) => v.id)).toEqual(VEHICLES.map((d) => d.id));
+    // the sounds are soundMapping.ts's (test/soundMapping.test.ts): set apart here
+    const noSounds = (game: (typeof meta.vehicles)[number]["game"]) => {
+      const { sounds, variants, ...rest } = game!;
+      expect(sounds).toBeDefined();
+      return variants ? { ...rest, variants: variants.map(({ sounds: _s, ...x }) => x) } : rest;
+    };
     for (const v of meta.vehicles) {
-      expect(v).toEqual({
+      expect({ ...v, game: noSounds(v.game) }).toEqual({
         id: v.id,
         title: VEHICLES.find((d) => d.id === v.id)!.title,
         category: VEHICLES.find((d) => d.id === v.id)!.catalog?.category ?? "Road vehicles",
@@ -129,13 +135,13 @@ describe("exportVehicleMeta", () => {
 describe("game properties", () => {
   // What the game needs beyond geometry is the factory's: every vehicle states its
   // running figures, and the build refuses one that does not.
-  it("are in every vehicle's meta entry, and only plaza/block/city in a building's", () => {
+  it("are in every vehicle's meta entry, and only plaza/block/city/sounds in a building's", () => {
     for (const v of exportVehicleMeta(ALL_VEHICLES).vehicles) {
       expect(v.game, v.id).toBeDefined();
       for (const k of ["weight", "power", "maxspeed", "accel"] as const) expect(v.game, `${v.id} ${k}`).toHaveProperty(k);
     }
     for (const b of exportMeta(BUILDINGS).buildings) {
-      if (b.game) expect(Object.keys(b.game).every((k) => k === "plaza" || k === "block" || k === "city"), b.id).toBe(true);
+      if (b.game) expect(Object.keys(b.game).every((k) => ["plaza", "block", "city", "sounds"].includes(k)), b.id).toBe(true);
     }
     expect(exportMeta(BUILDINGS).buildings.find((b) => b.id === "proc-building-brandenburg-gate")!.game).toEqual({
       plaza: { cities: ["city"], layouts: ["rect"], fit: "footprint" },

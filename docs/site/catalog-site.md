@@ -6,7 +6,7 @@ preview (its passenger view on structure pages included), and the URL state.
 **Code** - `src/main.tsx`, `src/App.tsx`, `src/catalogQuery.ts`, `src/ModelTable.tsx`,
 `src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`, `src/viewerScenery.ts`, `src/viewerMotions.ts`, `src/viewerGlass.ts`, `src/viewerInteriors.ts`, `src/viewerPassenger.ts`, `src/viewerOverlays.ts`,
 `src/SourceTreePanel.tsx`, `src/sourceTreeView.ts`, `src/Thumb.tsx`, `src/modelModule.ts`, `src/ExportPanel.tsx`,
-`src/ModelVariants.tsx`, `src/VariantThumb.tsx`, `src/variantThumbs.ts`, `src/thumbRender.ts`,
+`src/ModelVariants.tsx`, `src/VariantThumb.tsx`, `src/SoundsPanel.tsx`, `src/modelSounds.ts`, `src/soundAudition.ts`, `test/modelSounds.test.ts`, `src/variantThumbs.ts`, `src/thumbRender.ts`,
 `src/devCatalog.ts`, `src/devMeasure.ts`, `generator/devServer.ts`, `generator/devExport.ts`, `test/devExport.test.ts`,
 `src/factory.css`, `src/favicon.svg`, `src/apple-touch-icon.png`, `src/social-preview.png`, `src/boot.ts`, `src/bootEntry.ts`, `index.html`, `vite.config.ts`,
 `test/catalogQuery.test.ts`, `test/boot.test.ts`, `test/siteMeta.test.ts`, `test/rig.test.ts` (the Pose sliders), `test/scenery.test.ts`, `test/viewerInteriors.test.ts`, `test/viewerPassenger.test.ts`, `test/characters.test.ts` (the Characters chip, ground and motion buttons)
@@ -134,7 +134,10 @@ To see what deploys - the build's thumbnails and figures - run `pnpm build` and
   pixels, never wider than the panel), so vehicles compare by length.
 - **Wide (900 px and up): a table.** Thumbnail, title with the id beneath it, city
   pool, triangles, vertices, JS size, primitives, materials, width, depth,
-  height and license. Every header sorts; a second click flips the direction.
+  height, sounds (the sound design ids the model plays, its variants' included,
+  [../models/sounds.md](../models/sounds.md)) and license. The search also
+  matches a model's sound ids, so `diesel-engine` lists every model with that
+  engine. Every header sorts; a second click flips the direction.
   **The JS size is a link**: a click downloads the model's file (`js/<id>.js`,
   [../models/js-format.md](../models/js-format.md)) without opening the model. The model page's
   spec list links it too and adds the gzip size. There is no GLB to download.
@@ -259,6 +262,24 @@ size - is listed apart, under **Preview parameters**
 model's id (beneath the title, in the bar, in the specs' Id) a preview shows its set type id
 exactly as a saved game stores it (`gameId`, e.g. `platforms_shared`), or nothing when it draws
 no set type (a texture, the cable-car pylon); `shownId` in `src/catalogQuery.ts`.
+
+A model with **sounds** (a vehicle's horn and engine, a building's bell;
+[../models/sounds.md](../models/sounds.md)) shows a **Sounds** block
+(`src/SoundsPanel.tsx`) above the tabs, for the variant on screen (`slotsFor`):
+- each slot: its name, the design's title (a link to its page on
+  sound.railisland.com), its id and the values pinned for this model;
+- a horn: a button per call (departure, crossing, tunnel, player), each played as
+  the game plays it; a ship's horn, which has no calls, and a bell: Play;
+- an engine: Start/Stop, and a slider for each value the game drives (a diesel's
+  revs and effort, a steam beat's rate and effort), which a running engine takes
+  at once (`slotControls`).
+
+The designs are the factory's committed copy (`sounds/sounds.js`), loaded the
+first time a page with sounds opens, and played through one `AudioContext` made
+on the first press. What the block plays is held by an audition
+(`src/soundAudition.ts`): the engine loop, ticked every 50 ms 0.2 s ahead as the
+game ticks it, and every one-shot still ringing. Leaving the page, stepping to
+another model or choosing another variant stops all of it.
 
 A **rigged** vehicle (its record has `rig`: every road vehicle) shows a **Pose**
 block: a Steering slider and one per hinge of an articulated body ("Trailer",

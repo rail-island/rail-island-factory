@@ -14,7 +14,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "deploy": "pnpm build && wrangler deploy",
-    "sets:pins": "tsx generator/sets/writePins.ts"
+    "sets:pins": "tsx generator/sets/writePins.ts",
+    "import:sounds": "tsx generator/importSounds.ts"
   },
   "dependencies": {
     "solid-js": "^1.9.3",

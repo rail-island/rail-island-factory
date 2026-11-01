@@ -3,13 +3,13 @@
 **Covers** - what the game needs of a model beyond its geometry: a vehicle's
 running figures (weight, power, top speed, acceleration), its size factor,
 draft, rope and sill heights, airport class and passenger seat, their per-variant overrides,
-and a building's plaza and block rules, city variants and party walls; where they are declared,
+their exported sounds, and a building's plaza and block rules, city variants, party walls and bell; where they are declared,
 how they are checked and exported, and where today's values came from.
 **Code** - `generator/design.ts` (`GameProperties`, `checkGameProperties`),
 `generator/catalog.ts` (`metaEntry`, `exportMeta`, `withCityUse`, `exportVehicleMeta`),
 `generator/cityVariants.ts`, `generator/partyWalls.ts`, `test/cityVariants.test.ts`, `test/partyWalls.test.ts`, every
 design module's `game` field, `test/export.test.ts`
-**See also** - [export.md](export.md), [../site/openttd-export.md](../site/openttd-export.md) (the optional `openttd` block for the GRF export), [parameters.md](parameters.md),
+**See also** - [sounds.md](sounds.md) (the `sounds` field), [export.md](export.md), [../site/openttd-export.md](../site/openttd-export.md) (the optional `openttd` block for the GRF export), [parameters.md](parameters.md),
 [legacy-mapping.md](legacy-mapping.md), [vehicles.md](vehicles.md),
 [reproductions.md](reproductions.md)
 
@@ -49,6 +49,7 @@ The fields below are set only where they apply:
 | `boardFrac` | cable car cabins | fraction of the height at the door sill |
 | `sizeClass` | aircraft | the largest airport class it needs: `small`, `medium` or `big` |
 | `seatFrac` | aircraft, optional | where the game's Passenger camera sits, as a fraction of the body length from the nose (0..1): the window seat with the best outlook, ahead of or behind the wing as the design judges it. Absent, the game uses its own default. The build refuses it outside 0..1 or on anything but an aircraft. |
+| `sounds` | any vehicle (exported) | its horn and engine, derived from its traction and weight or stated in `generator/soundTable.ts`; written by the export, never set on the design ([sounds.md](sounds.md)) |
 
 `variants` lists the parameter variants whose figures differ from the design's:
 
@@ -70,6 +71,7 @@ A building sets `game` only for its placement rules, in the webapp's shapes:
 
 - **`plaza`** (`PlazaUse`): which city types' main square it may stand on, which layouts, and how the square fits it.
 - **`block`** (`BlockShape`): the rectangles of its plan that block rails and roads, as fractions of the plan. Examples are the Eiffel Tower's four legs and the wind turbine's mast.
+- **`sounds`** (exported): its `bell`, for the churches, cathedrals and bell towers, from `generator/soundTable.ts` ([sounds.md](sounds.md#bells)).
 
 Fifteen landmarks, churches and industrial buildings carry one.
 
@@ -142,6 +144,7 @@ fails before anything is written:
 - So does a vehicle lacking any of the four figures, or with a figure that is not a finite, non-negative number or `null`.
 - A variant fails if its `params` does not resolve against the design's parameters, sits at a default, or repeats another variant.
 - A building fails if its `game` holds anything but `plaza`, `block` and `city`.
+- Sounds are never set on a design: they are derived or stated in `generator/soundTable.ts`, and checked by `checkDesignSounds` ([sounds.md](sounds.md#checks)).
 
 `test/export.test.ts` ("game properties") covers each refusal and pins two
 examples.
