@@ -6,7 +6,7 @@
   {
    "id": "trains",
    "title": "Trains",
-   "description": "Locomotives and the railway: horns, whistles, the exhaust beat, the diesel engine, the level crossing's bell."
+   "description": "Locomotives and the railway: horns, whistles, the exhaust beat, diesel engines (railcars, shunters, mainline locomotives, buses and trucks) running, starting and stopping, the level crossing's bell."
   },
   {
    "id": "ships",
@@ -198,10 +198,10 @@
    }
   },
   {
-   "id": "diesel-engine",
-   "title": "Diesel engine",
+   "id": "diesel-engine-railcar",
+   "title": "Diesel engine: Railcar (inline six)",
    "category": "trains",
-   "description": "A diesel locomotive's or railcar's engine: a low chugging drone that revs up with the speed and growls harder as it works, with a turbo's whine on top.",
+   "description": "A diesel railcar's or DMU's underfloor inline six: idling and revving with the speed (`rpm`), growling and knocking harder as it works (`load`). `state` starts it (it coughs, catches and settles to idle) and shuts it down (it runs down and rocks to a stop).",
    "kind": "loop",
    "params": [
     {
@@ -232,6 +232,30 @@
      "default": 0.5
     },
     {
+     "name": "state",
+     "title": "State",
+     "kind": "choice",
+     "values": [
+      {
+       "value": "run",
+       "title": "Running"
+      },
+      {
+       "value": "start",
+       "title": "Starting"
+      },
+      {
+       "value": "stop",
+       "title": "Stopping"
+      },
+      {
+       "value": "off",
+       "title": "Off"
+      }
+     ],
+     "default": "run"
+    },
+    {
      "name": "level",
      "title": "Level",
      "kind": "number",
@@ -242,11 +266,391 @@
     }
    ],
    "metrics": {
-    "jsBytes": 3396,
-    "nodesAtStart": 14,
+    "jsBytes": 9570,
+    "nodesAtStart": 24,
     "nodesPerSecond": 0,
     "seconds": null,
-    "params": 4
+    "params": 5
+   }
+  },
+  {
+   "id": "diesel-engine-shunter",
+   "title": "Diesel engine: Shunter (medium-speed six)",
+   "category": "trains",
+   "description": "A shunting locomotive's medium-speed six: idling and revving with the speed (`rpm`), growling and knocking harder as it works (`load`). `state` starts it (it coughs, catches and settles to idle) and shuts it down (it runs down and rocks to a stop).",
+   "kind": "loop",
+   "params": [
+    {
+     "name": "rpm",
+     "title": "Revs",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.4
+    },
+    {
+     "name": "load",
+     "title": "Effort",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.5
+    },
+    {
+     "name": "size",
+     "title": "Size",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.5
+    },
+    {
+     "name": "state",
+     "title": "State",
+     "kind": "choice",
+     "values": [
+      {
+       "value": "run",
+       "title": "Running"
+      },
+      {
+       "value": "start",
+       "title": "Starting"
+      },
+      {
+       "value": "stop",
+       "title": "Stopping"
+      },
+      {
+       "value": "off",
+       "title": "Off"
+      }
+     ],
+     "default": "run"
+    },
+    {
+     "name": "level",
+     "title": "Level",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 1
+    }
+   ],
+   "metrics": {
+    "jsBytes": 9570,
+    "nodesAtStart": 24,
+    "nodesPerSecond": 0,
+    "seconds": null,
+    "params": 5
+   }
+  },
+  {
+   "id": "diesel-engine-mainline",
+   "title": "Diesel engine: Mainline (V12, turbocharged)",
+   "category": "trains",
+   "description": "A mainline diesel locomotive's turbocharged V12: idling and revving with the speed (`rpm`), growling and knocking harder as it works (`load`). `state` starts it (it coughs, catches and settles to idle) and shuts it down (it runs down and rocks to a stop).",
+   "kind": "loop",
+   "params": [
+    {
+     "name": "rpm",
+     "title": "Revs",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.4
+    },
+    {
+     "name": "load",
+     "title": "Effort",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.5
+    },
+    {
+     "name": "size",
+     "title": "Size",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.5
+    },
+    {
+     "name": "state",
+     "title": "State",
+     "kind": "choice",
+     "values": [
+      {
+       "value": "run",
+       "title": "Running"
+      },
+      {
+       "value": "start",
+       "title": "Starting"
+      },
+      {
+       "value": "stop",
+       "title": "Stopping"
+      },
+      {
+       "value": "off",
+       "title": "Off"
+      }
+     ],
+     "default": "run"
+    },
+    {
+     "name": "level",
+     "title": "Level",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 1
+    }
+   ],
+   "metrics": {
+    "jsBytes": 9572,
+    "nodesAtStart": 24,
+    "nodesPerSecond": 0,
+    "seconds": null,
+    "params": 5
+   }
+  },
+  {
+   "id": "diesel-engine-two-stroke",
+   "title": "Diesel engine: Two-stroke (V16, turbocharged)",
+   "category": "trains",
+   "description": "A big two-stroke V16 locomotive engine, the EMD kind: idling and revving with the speed (`rpm`), growling and knocking harder as it works (`load`). `state` starts it (it coughs, catches and settles to idle) and shuts it down (it runs down and rocks to a stop).",
+   "kind": "loop",
+   "params": [
+    {
+     "name": "rpm",
+     "title": "Revs",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.4
+    },
+    {
+     "name": "load",
+     "title": "Effort",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.5
+    },
+    {
+     "name": "size",
+     "title": "Size",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.5
+    },
+    {
+     "name": "state",
+     "title": "State",
+     "kind": "choice",
+     "values": [
+      {
+       "value": "run",
+       "title": "Running"
+      },
+      {
+       "value": "start",
+       "title": "Starting"
+      },
+      {
+       "value": "stop",
+       "title": "Stopping"
+      },
+      {
+       "value": "off",
+       "title": "Off"
+      }
+     ],
+     "default": "run"
+    },
+    {
+     "name": "level",
+     "title": "Level",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 1
+    }
+   ],
+   "metrics": {
+    "jsBytes": 9575,
+    "nodesAtStart": 24,
+    "nodesPerSecond": 0,
+    "seconds": null,
+    "params": 5
+   }
+  },
+  {
+   "id": "diesel-engine-bus",
+   "title": "Diesel engine: Bus (inline six, turbocharged)",
+   "category": "trains",
+   "description": "A city bus's turbocharged inline six, muffled: idling and revving with the speed (`rpm`), growling and knocking harder as it works (`load`). `state` starts it (it coughs, catches and settles to idle) and shuts it down (it runs down and rocks to a stop).",
+   "kind": "loop",
+   "params": [
+    {
+     "name": "rpm",
+     "title": "Revs",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.4
+    },
+    {
+     "name": "load",
+     "title": "Effort",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.5
+    },
+    {
+     "name": "size",
+     "title": "Size",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.5
+    },
+    {
+     "name": "state",
+     "title": "State",
+     "kind": "choice",
+     "values": [
+      {
+       "value": "run",
+       "title": "Running"
+      },
+      {
+       "value": "start",
+       "title": "Starting"
+      },
+      {
+       "value": "stop",
+       "title": "Stopping"
+      },
+      {
+       "value": "off",
+       "title": "Off"
+      }
+     ],
+     "default": "run"
+    },
+    {
+     "name": "level",
+     "title": "Level",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 1
+    }
+   ],
+   "metrics": {
+    "jsBytes": 9562,
+    "nodesAtStart": 24,
+    "nodesPerSecond": 0,
+    "seconds": null,
+    "params": 5
+   }
+  },
+  {
+   "id": "diesel-engine-truck",
+   "title": "Diesel engine: Truck (air-cooled V8)",
+   "category": "trains",
+   "description": "A truck's air-cooled V8, open and clattering, with its fan: idling and revving with the speed (`rpm`), growling and knocking harder as it works (`load`). `state` starts it (it coughs, catches and settles to idle) and shuts it down (it runs down and rocks to a stop).",
+   "kind": "loop",
+   "params": [
+    {
+     "name": "rpm",
+     "title": "Revs",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.4
+    },
+    {
+     "name": "load",
+     "title": "Effort",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.5
+    },
+    {
+     "name": "size",
+     "title": "Size",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.5
+    },
+    {
+     "name": "state",
+     "title": "State",
+     "kind": "choice",
+     "values": [
+      {
+       "value": "run",
+       "title": "Running"
+      },
+      {
+       "value": "start",
+       "title": "Starting"
+      },
+      {
+       "value": "stop",
+       "title": "Stopping"
+      },
+      {
+       "value": "off",
+       "title": "Off"
+      }
+     ],
+     "default": "run"
+    },
+    {
+     "name": "level",
+     "title": "Level",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 1
+    }
+   ],
+   "metrics": {
+    "jsBytes": 9566,
+    "nodesAtStart": 24,
+    "nodesPerSecond": 0,
+    "seconds": null,
+    "params": 5
    }
   },
   {

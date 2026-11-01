@@ -2,8 +2,8 @@
 // slot of the variant on screen -- a vehicle's horn and engine, a building's bell --
 // with its design, the values pinned for this model and the controls to hear it
 // the way the game plays it: a horn's calls, an engine's drive on sliders while it
-// runs, a bell's toll. The designs are the factory's copy of the game's sounds
-// (sounds/sounds.js, `pnpm import:sounds`), loaded the first time a page with
+// runs (a diesel's start and run-down on Start and Stop), a bell's toll. The
+// designs are the factory's copy of the game's sounds (sounds/sounds.js, `pnpm import:sounds`), loaded the first time a page with
 // sounds opens. Leaving the page, stepping to another model or choosing another
 // variant stops whatever still sounds.
 
@@ -83,10 +83,31 @@ function SlotRow(props: {
   const pins = () => props.value.params ?? {};
   const controls = createMemo(() => (props.design ? slotControls(props.slot, props.design.params, props.value.calls) : null));
   const [drive, setDrive] = createSignal<Record<string, number>>({});
+  // A diesel runs from its start until its stop; the voice plays both.
+  const [on, setOn] = createSignal(false);
+  const states = () => {
+    const c = controls();
+    return c?.kind === "drive" && c.states;
+  };
+  createEffect(() => {
+    if (!props.running) setOn(false);
+  });
   const driveValues = (): SoundValues => {
     const c = controls();
     const base = c?.kind === "drive" ? Object.fromEntries(c.sliders.map((s) => [s.name, s.value])) : {};
-    return { ...pins(), ...base, ...drive() };
+    return { ...pins(), ...base, ...drive(), ...(states() ? { state: on() ? "run" : "off" } : {}) };
+  };
+  // Start: the engine's start (a new voice, or the same one again after a stop); Stop: its run-down.
+  const toggleEngine = (d: SoundDesign) => {
+    if (on()) {
+      setOn(false);
+      props.onSet({ ...driveValues(), state: "stop" });
+      return;
+    }
+    setOn(true);
+    const values = { ...driveValues(), state: "start" };
+    if (props.running) props.onSet(values);
+    else props.onPlay(d, values);
   };
   return (
     <div class="factory-sound">
@@ -126,9 +147,18 @@ function SlotRow(props: {
             <Show when={controls()?.kind === "drive" && controls()}>
               {(c) => (
                 <>
-                  <button type="button" class="factory-btn" onClick={() => (props.running ? props.onStop() : props.onPlay(d(), driveValues()))}>
-                    {props.running ? "Stop" : "Start"}
-                  </button>
+                  <Show
+                    when={states()}
+                    fallback={
+                      <button type="button" class="factory-btn" onClick={() => (props.running ? props.onStop() : props.onPlay(d(), driveValues()))}>
+                        {props.running ? "Stop" : "Start"}
+                      </button>
+                    }
+                  >
+                    <button type="button" class="factory-btn" onClick={() => toggleEngine(d())}>
+                      {on() ? "Stop" : "Start"}
+                    </button>
+                  </Show>
                   <For each={(c() as { sliders: Array<{ name: string; title: string; min: number; max: number; step: number; value: number }> }).sliders}>
                     {(s) => (
                       <label class="factory-param factory-pose__row">
