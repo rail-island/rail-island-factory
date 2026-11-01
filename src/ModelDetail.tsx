@@ -16,6 +16,9 @@
 // list (exportList.ts, the app bar's Export panel); the same model may be listed
 // once per variant.
 //
+// A model with sounds (a vehicle's horn and engine, a building's bell) gets a
+// Sounds block (SoundsPanel) that plays the variant on screen's.
+//
 // A parametric model gets a Parameters block above the tabs: a <select> per enum
 // parameter. Choosing a value rebuilds the preview from the model's JS module
 // (ModelViewer); the source tree describes the default build, so its highlight
@@ -31,6 +34,7 @@ import { indexTree, type SourceTree } from "./sourceTreeView";
 import { FileCell } from "./ModelTable";
 import { VariantThumb } from "./VariantThumb";
 import { SourceTreePanel } from "./SourceTreePanel";
+import { SoundsPanel } from "./SoundsPanel";
 
 // three and OrbitControls arrive only once somebody opens a model.
 const ModelViewer = lazy(() => import("./ModelViewer").then((m) => ({ default: m.ModelViewer })));
@@ -207,6 +211,7 @@ export function ModelDetail(props: {
             </div>
           </fieldset>
         </Show>
+        <SoundsPanel id={props.record.id} game={props.record.game} nonDefault={nonDefaultParams(props.record, values())} />
         <div class="factory-tabs" role="tablist">
           <For each={tabs()}>
             {([tab, label]) => (

@@ -1162,3 +1162,42 @@ body {
   margin: 0;
   font-size: 13px;
 }
+
+/* A model's Sounds block (src/SoundsPanel.tsx): one row per slot. */
+.factory-sound + .factory-sound {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--m-outline);
+}
+
+.factory-sound__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.factory-sound__head a {
+  color: var(--m-primary, inherit);
+}
+
+.factory-sound__slot {
+  min-width: 4rem;
+  font-weight: 600;
+}
+
+.factory-sound__pins {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+}
+
+.factory-sound__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.factory-sound__controls .factory-pose__row {
+  flex-basis: 100%;
+}
