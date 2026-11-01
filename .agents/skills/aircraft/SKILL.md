@@ -55,6 +55,12 @@ The game hides the node named exactly `gear` in flight. Fixed gear: no parts.
 - State the game properties on the design: `game: { weight, power, maxspeed,
   accel }` and the airport class `sizeClass` (`small`, `medium`, `big`); the build
   fails without them (docs/models/game-properties.md).
+- Choose the passenger seat, `seatFrac`: the fraction of the length from the nose
+  where the game's Passenger camera sits. Pick the window with the best outlook -
+  usually just ahead of the wing root, so the default look (out of the side, a
+  little rearward and down) shows the wing and the ground; behind the wing, or the
+  cockpit of an open or light aircraft, where that sees more. Check it on a
+  top view. Optional: without it the game uses its own default.
 
 ## Liveries
 

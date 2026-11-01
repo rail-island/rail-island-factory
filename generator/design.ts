@@ -280,6 +280,12 @@ export interface VehicleGameFields extends VehiclePhysics {
   boardFrac?: number;
   /** The largest airport class the airframe needs: "small" | "medium" | "big". Aircraft only. */
   sizeClass?: string;
+  /**
+   * Where the game's Passenger camera sits, as a fraction of the body length from
+   * the nose (0..1): the window seat with the best outlook, ahead of or behind the
+   * wing. Aircraft only, and optional: without it the game uses its own default.
+   */
+  seatFrac?: number;
 }
 
 /** The game properties of one parameter variant: the fields that differ from the design's. */
@@ -329,7 +335,7 @@ export interface GameProperties extends Partial<VehicleGameFields> {
 }
 
 const PHYSICS_KEYS = ["weight", "power", "maxspeed", "accel"] as const;
-const VEHICLE_KEYS = [...PHYSICS_KEYS, "scale", "draftFrac", "ropeFrac", "boardFrac", "sizeClass", "variants"];
+const VEHICLE_KEYS = [...PHYSICS_KEYS, "scale", "draftFrac", "ropeFrac", "boardFrac", "sizeClass", "seatFrac", "variants"];
 
 /**
  * Checks a design's game properties (GameProperties): a vehicle must have them,
@@ -353,6 +359,11 @@ export function checkGameProperties(design: ProceduralDesign, vehicle: boolean):
     const v = game[k];
     if (v === undefined) fail(`lack "${k}" (use null for none)`);
     if (v !== null && (typeof v !== "number" || !Number.isFinite(v) || v < 0)) fail(`have an invalid "${k}": ${String(v)}`);
+  }
+  const seats = [game.seatFrac, ...(game.variants ?? []).map((v) => v.seatFrac)].filter((v) => v !== undefined);
+  if (seats.length && design.catalog?.category !== "Aircraft") fail('hold a "seatFrac", which is for aircraft only');
+  for (const v of seats) {
+    if (typeof v !== "number" || !Number.isFinite(v) || v < 0 || v > 1) fail(`have an invalid "seatFrac": ${String(v)} (a fraction of the length, 0..1)`);
   }
   const specs = design.params ?? [];
   const seen = new Set<string>();

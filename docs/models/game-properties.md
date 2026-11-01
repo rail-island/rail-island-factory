@@ -2,7 +2,7 @@
 
 **Covers** - what the game needs of a model beyond its geometry: a vehicle's
 running figures (weight, power, top speed, acceleration), its size factor,
-draft, rope and sill heights and airport class, their per-variant overrides,
+draft, rope and sill heights, airport class and passenger seat, their per-variant overrides,
 and a building's plaza and block rules, city variants and party walls; where they are declared,
 how they are checked and exported, and where today's values came from.
 **Code** - `generator/design.ts` (`GameProperties`, `checkGameProperties`),
@@ -48,6 +48,7 @@ The fields below are set only where they apply:
 | `ropeFrac` | cable car cabins | fraction of the height at the rope |
 | `boardFrac` | cable car cabins | fraction of the height at the door sill |
 | `sizeClass` | aircraft | the largest airport class it needs: `small`, `medium` or `big` |
+| `seatFrac` | aircraft, optional | where the game's Passenger camera sits, as a fraction of the body length from the nose (0..1): the window seat with the best outlook, ahead of or behind the wing as the design judges it. Absent, the game uses its own default. The build refuses it outside 0..1 or on anything but an aircraft. |
 
 `variants` lists the parameter variants whose figures differ from the design's:
 

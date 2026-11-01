@@ -9,6 +9,7 @@ import { built, glbOf, lodGlbOf } from "./catalogCache";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { AIRCRAFT_CATALOG } from "../generator/aircraft";
 import { SKYSCRAPERS } from "../generator/skyscrapers";
 import { VEHICLES } from "../generator/vehicles";
 import { ALL_VEHICLES, BUILDINGS, DESIGNS, buildExport, generateReferences } from "../generator/generate";
@@ -158,6 +159,23 @@ describe("game properties", () => {
     expect(() => exportVehicleMeta([{ ...base, params, game: { ...physics, variants: [{ params: { livery: "blue" } }, { params: { livery: "blue" } }] } }])).toThrow(/twice/);
     expect(exportVehicleMeta([{ ...base, params, game: { ...physics, variants: [{ params: { livery: "blue" }, maxspeed: 140 }] } }]).vehicles[0]!.game!.variants).toHaveLength(1);
     expect(() => exportMeta([{ ...base, id: "proc-building-test", game: { ...physics } }])).toThrow(/of a building may hold only plaza, block and city/);
+  });
+
+  it("carry an aircraft's passenger seat, a fraction of its length, and refuse one elsewhere", () => {
+    // The game's Passenger camera sits where the factory says the best window is.
+    for (const v of exportVehicleMeta(ALL_VEHICLES).vehicles.filter((x) => x.category === "Aircraft")) {
+      const seat = v.game!.seatFrac;
+      if (seat === undefined) continue;
+      expect(seat, v.id).toBeGreaterThanOrEqual(0);
+      expect(seat, v.id).toBeLessThanOrEqual(1);
+    }
+    expect(exportVehicleMeta(ALL_VEHICLES).vehicles.find((v) => v.id === "proc-vehicle-boeing-737")!.game!.seatFrac).toBe(0.3);
+    const base = { id: "proc-vehicle-test", title: "Test", build: SKYSCRAPERS[0]!.build, buildLod: SKYSCRAPERS[0]!.buildLod };
+    const physics = { weight: 80, power: 3000, maxspeed: 120, accel: null };
+    const plane = { ...base, catalog: AIRCRAFT_CATALOG };
+    expect(exportVehicleMeta([{ ...plane, game: { ...physics, seatFrac: 0.3 } }]).vehicles[0]!.game!.seatFrac).toBe(0.3);
+    expect(() => exportVehicleMeta([{ ...plane, game: { ...physics, seatFrac: 1.5 } }])).toThrow(/invalid "seatFrac"/);
+    expect(() => exportVehicleMeta([{ ...base, game: { ...physics, seatFrac: 0.3 } }])).toThrow(/for aircraft only/);
   });
 });
 
