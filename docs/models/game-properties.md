@@ -50,6 +50,10 @@ The fields below are set only where they apply:
 | `sizeClass` | aircraft | the largest airport class it needs: `small`, `medium` or `big` |
 | `seatFrac` | aircraft, optional | where the game's Passenger camera sits, as a fraction of the body length from the nose (0..1): the window seat with the best outlook, ahead of or behind the wing as the design judges it. Absent, the game uses its own default. The build refuses it outside 0..1 or on anything but an aircraft. |
 
+A vehicle's **rider seat** - where the game's avatar sits riding it - is not a
+declared property: the build measures it on the model and exports it as `rider`
+([rider-seat.md](rider-seat.md)).
+
 `variants` lists the parameter variants whose figures differ from the design's:
 
 - each entry's `params` is the variant's **non-default** selection, matched exactly;

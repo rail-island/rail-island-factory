@@ -173,6 +173,9 @@ vehicle's supports (where it rides on the track, its turning bogies' nodes) and,
 for an articulated vehicle, of its sections and joints, with the pivots, limits and
 joint shapes the game needs to move them ([vehicle-rig.md](vehicle-rig.md)). The same
 object is the built group's `userData.rig`.
+
+Every vehicle also carries `rider`: where the game's avatar sits riding it, a point
+on its roof in the model's frame, measured by the build ([rider-seat.md](rider-seat.md)).
 The buses take `BUS_CATALOG` (category `Road vehicles`, group `bus`), the trams
 `TRAM_CATALOG` (`Rail vehicles`, group `tram`) and the metro car `METRO_CATALOG`
 (`Rail vehicles`, group `metro`) ([trams.md](trams.md)).

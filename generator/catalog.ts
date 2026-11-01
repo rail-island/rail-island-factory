@@ -89,6 +89,13 @@ export interface MetaEntry {
    */
   rig?: VehicleRig;
   /**
+   * Where the game's avatar sits riding this vehicle (riderSeat.ts): a spot on its
+   * roof, in the head section, clear of pantographs and roof equipment -- the
+   * model's own frame, metres. Measured by the build on every vehicle
+   * (docs/models/rider-seat.md).
+   */
+  rider?: [number, number, number];
+  /**
    * What the game needs of the model beyond its geometry (design.ts
    * GameProperties): a vehicle's running figures, a ship's draft, a landmark's
    * plaza rules. Always present for a vehicle.
@@ -275,6 +282,7 @@ export function metaEntry(
   fields: CatalogFields = SKYSCRAPER_CATALOG,
   rig: VehicleRig | null = null,
   side: ThumbSide | null = null,
+  seat: readonly [number, number, number] | null = null,
 ): MetaEntry {
   return {
     id: proceduralId(design.id),
@@ -293,6 +301,7 @@ export function metaEntry(
     source: fields.source,
     ...(design.params?.length ? { params: design.params.map((p) => ({ ...p, values: p.values.map((v) => ({ ...v })) })) } : {}),
     ...(rig ? { rig: JSON.parse(JSON.stringify(rig)) as VehicleRig } : {}),
+    ...(seat ? { rider: [r4(seat[0]), r4(seat[1]), r4(seat[2])] as [number, number, number] } : {}),
     ...(design.game ? { game: JSON.parse(JSON.stringify(design.game)) as ExportedGame } : {}),
   };
 }
@@ -339,7 +348,7 @@ export function withCityUse(entry: MetaEntry, design: ProceduralDesign): MetaEnt
 
 /**
  * The vehicles' meta; `rigs` holds each rigged design's built rig by id, `sides`
- * each side-view thumbnail's frame.
+ * each side-view thumbnail's frame, `seats` each vehicle's measured rider seat.
  */
 /**
  * props.meta.json: every prop the game places on its structures, apart from the
@@ -402,12 +411,13 @@ export function exportVehicleMeta(
   designs: readonly ProceduralDesign[],
   rigs: ReadonlyMap<string, VehicleRig> = new Map(),
   sides: ReadonlyMap<string, ThumbSide> = new Map(),
+  seats: ReadonlyMap<string, readonly [number, number, number]> = new Map(),
 ): VehicleExportMeta {
   for (const d of designs) checkGameProperties(d, true);
   return {
     note: NOTE,
     count: designs.length,
-    vehicles: designs.map((d) => metaEntry(d, d.catalog ?? VEHICLE_CATALOG, rigs.get(d.id) ?? null, sides.get(d.id) ?? null)),
+    vehicles: designs.map((d) => metaEntry(d, d.catalog ?? VEHICLE_CATALOG, rigs.get(d.id) ?? null, sides.get(d.id) ?? null, seats.get(d.id) ?? null)),
   };
 }
 

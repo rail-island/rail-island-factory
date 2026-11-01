@@ -12,7 +12,7 @@ import path from "node:path";
 import { AIRCRAFT_CATALOG } from "../generator/aircraft";
 import { SKYSCRAPERS } from "../generator/skyscrapers";
 import { VEHICLES } from "../generator/vehicles";
-import { ALL_VEHICLES, BUILDINGS, DESIGNS, buildExport, generateReferences } from "../generator/generate";
+import { ALL_VEHICLES, BUILDINGS, DESIGNS, buildExport, generateReferences, vehicleSeat } from "../generator/generate";
 import { VILLAGE_HOUSES } from "../generator/village";
 import {
   CATALOG_FILE, META_FILE, VEHICLE_META_FILE, VILLAGE_META_FILE, catalogRecord, exportMeta, exportVehicleMeta, isSideViewCategory, metaEntry,
@@ -219,7 +219,10 @@ describe("buildExport", () => {
       // a road or rail vehicle's thumbnail is a side view, framed as its meta says
       const sides = new Map(inSample(ALL_VEHICLES).flatMap((d) =>
         isSideViewCategory(d.catalog?.category ?? "Road vehicles") ? [[d.id, glbSideFrame(glbOf(d.id))] as const] : []));
-      expect(vehicles).toEqual(exportVehicleMeta(inSample(ALL_VEHICLES), rigs, sides));
+      // every vehicle's entry carries its rider seat, measured on its built model (docs/models/rider-seat.md)
+      const seats = new Map(inSample(ALL_VEHICLES).map((d) => [d.id, vehicleSeat(d, glbOf(d.id))] as const));
+      expect(vehicles).toEqual(exportVehicleMeta(inSample(ALL_VEHICLES), rigs, sides, seats));
+      for (const v of vehicles.vehicles) expect(v.rider).toHaveLength(3);
       expect(vehicles.vehicles.map((v) => v.id).sort()).toEqual(["proc-vehicle-american-truck", "proc-vehicle-cd-150"]);
       for (const v of vehicles.vehicles) {
         const png = PNG.sync.read(fs.readFileSync(path.join(dir, "thumbs", v.thumb)));

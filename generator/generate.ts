@@ -47,7 +47,9 @@ import { proceduralId } from "./modelId.ts";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { PNG } from "pngjs";
-import { glbSideFrame, renderGlbSideThumb, renderGlbThumb, type SideFrame } from "./renderGlbThumb.ts";
+import { glbSideFrame, readTriangles, renderGlbSideThumb, renderGlbThumb, type SideFrame } from "./renderGlbThumb.ts";
+import { gameYaw, riderSeat } from "./riderSeat.ts";
+import type { Vec3 } from "./glbTriangles.ts";
 import { SKYSCRAPERS, SKYSCRAPER_CATALOG } from "./skyscrapers.ts";
 import { VEHICLES, VEHICLE_CATALOG } from "./vehicles.ts";
 import { COMMERCIAL } from "./commercialStreets.ts";
@@ -281,6 +283,12 @@ export function designGlb(id: string, params?: ParamValues): Uint8Array {
   return toGlb(id, design.build(params));
 }
 
+/** A vehicle's rider seat, measured on its built model (riderSeat.ts) in the yaw the game turns it by. */
+export function vehicleSeat(design: ProceduralDesign, bytes: Uint8Array): Vec3 {
+  const fields = catalogFields(design);
+  return riderSeat(readTriangles(bytes), gameYaw(fields.category, fields.yaw));
+}
+
 /** Whether the build draws a design's thumbnail in the side view (a road or rail vehicle). */
 export function designUsesSideView(id: string): boolean {
   const design = DESIGNS.get(id);
@@ -330,9 +338,10 @@ export class ZFightingError extends Error {
 function buildAll(designs: readonly ProceduralDesign[]): Array<{ design: ProceduralDesign; bytes: Uint8Array; triangles: number; tree: SourceTree; rig: VehicleRig | null }> {
   const built = designs.map((design) => {
     const model = design.build();
+    const bytes = toGlb(design.id, model);
     return {
       design,
-      bytes: toGlb(design.id, model),
+      bytes,
       // a vehicle's interior, hidden at rest, has a budget of its own (docs/models/interiors.md)
       triangles: model.exteriorTriangleCount(),
       tree: model.sourceTree(design.id, design.title),
@@ -378,6 +387,8 @@ export interface GeneratedModel {
   rig: VehicleRig | null;
   /** The frame of a side-view thumbnail (a road or rail vehicle's), or null for the three-quarter view. */
   side: SideFrame | null;
+  /** A vehicle's rider seat (riderSeat.ts) in the model's frame, metres; null for anything else. */
+  seat: Vec3 | null;
   /** False when the model came out identical to the one its thumbnail was rendered from. */
   changed: boolean;
 }
@@ -440,7 +451,8 @@ export function generateModels(
     } else if (sideView) {
       side = glbSideFrame(bytes);
     }
-    out.push({ id: design.id, thumb, tree, triangles, stats: glbStats(bytes), rig, side, changed });
+    const seat = VEHICLE_IDS.has(design.id) ? vehicleSeat(design, bytes) : null;
+    out.push({ id: design.id, thumb, tree, triangles, stats: glbStats(bytes), rig, side, seat, changed });
   }
   if (stale) fs.writeFileSync(versionFile, `${THUMB_VERSION}\n`);
   const sorted = Object.fromEntries(Object.entries(sources).sort(([a], [b]) => a.localeCompare(b)));
@@ -563,7 +575,8 @@ export async function buildExport(
   fs.writeFileSync(path.join(dir, VILLAGE_META_FILE), `${JSON.stringify(exportMeta(chosen(VILLAGE_DESIGNS)), null, 2)}\n`);
   const rigs = new Map(models.flatMap((m) => (m.rig ? [[m.id, m.rig] as const] : [])));
   const sides = new Map(models.flatMap((m) => (m.side ? [[m.id, m.side] as const] : [])));
-  fs.writeFileSync(path.join(dir, VEHICLE_META_FILE), `${JSON.stringify(exportVehicleMeta(chosen(ALL_VEHICLES), rigs, sides), null, 2)}\n`);
+  const seats = new Map(models.flatMap((m) => (m.seat ? [[m.id, m.seat] as const] : [])));
+  fs.writeFileSync(path.join(dir, VEHICLE_META_FILE), `${JSON.stringify(exportVehicleMeta(chosen(ALL_VEHICLES), rigs, sides, seats), null, 2)}\n`);
   const bounds = new Map(models.map((m) => [m.id, { min: m.stats.min, max: m.stats.max }] as const));
   fs.writeFileSync(path.join(dir, PROPS_META_FILE), `${JSON.stringify(exportPropMeta(chosen(PROP_DESIGNS), bounds, FAR_PROPS), null, 2)}\n`);
   fs.writeFileSync(path.join(dir, CHARACTERS_META_FILE), `${JSON.stringify(exportCharacterMeta(chosen(CHARACTER_DESIGNS), bounds), null, 2)}\n`);
@@ -583,7 +596,7 @@ export async function buildExport(
     records: designs.map((design) => {
       const built = models.find((m) => m.id === design.id)!;
       const jsText = js.get(design.id)!;
-      const record = catalogRecord(listedEntry(metaEntry(design, catalogFields(design), built.rig, built.side), design, BUILDINGS.includes(design) || VILLAGE_DESIGNS.includes(design)), {
+      const record = catalogRecord(listedEntry(metaEntry(design, catalogFields(design), built.rig, built.side, built.seat), design, BUILDINGS.includes(design) || VILLAGE_DESIGNS.includes(design)), {
         ...built.stats,
         jsBytes: Buffer.byteLength(jsText),
         jsGzipBytes: gzipSize(jsText),
