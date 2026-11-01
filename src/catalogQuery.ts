@@ -8,6 +8,7 @@
 // cannot offer an ordering the comparator does not implement.
 
 import type { CatalogRecord, Scenery } from "../generator/catalog.ts";
+import { soundIdsOf } from "./modelSounds";
 
 export type { CatalogRecord, Scenery };
 
@@ -55,6 +56,8 @@ export const COLUMNS: readonly Column[] = [
   { key: "sizeY", label: "Height", unit: "m", type: "num", dir: "desc", table: true, value: (r) => r.sizeY },
   { key: "defaultScale", label: "Scale", unit: null, type: "num", dir: "desc", table: false, value: (r) => r.defaultScale ?? null },
   { key: "author", label: "Author", unit: null, type: "text", dir: "asc", table: false, value: (r) => r.author },
+  // The sound designs it plays (docs/models/sounds.md), its variants' included.
+  { key: "sounds", label: "Sounds", unit: null, type: "text", dir: "asc", table: true, value: (r) => soundIdsOf(r.game).join(", ") || null },
   { key: "license", label: "License", unit: null, type: "text", dir: "asc", table: true, value: (r) => r.license },
   { key: "source", label: "Source", unit: null, type: "text", dir: "asc", table: false, value: (r) => r.source },
 ];
@@ -77,6 +80,7 @@ export function prepareRows(records: readonly CatalogRecord[]): Row[] {
     ...r,
     hay: [
       r.title, r.id, r.gameId ?? "", r.category, r.group, r.traction ?? "", r.author, r.license, r.source,
+      ...soundIdsOf(r.game),
       ...(r.params ?? []).flatMap((p) => p.values.flatMap((v) => [v.title, v.value])),
     ].join(" ").toLowerCase(),
   }));

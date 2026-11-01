@@ -94,6 +94,7 @@ import { CZ_DMUS } from "./czDmus.ts";
 import { SMALL_DIESELS } from "./smallDiesels.ts";
 import { CITY_BUS_DESIGNS, KAROSA_DESIGNS } from "./buses.ts";
 import { VILLAGE_HOUSES } from "./village.ts";
+import { unknownTableIds } from "./soundMapping.ts";
 import { COMMERCIAL_BUILDINGS } from "./commercial.ts";
 import { PANEL_HOUSES } from "./panelHouses.ts";
 import { TREES } from "./trees.ts";
@@ -578,6 +579,11 @@ export async function buildExport(
   }
   fs.writeFileSync(path.join(dir, "industry-migration.json"), `${JSON.stringify({ version: 1, entries: INDUSTRY_MIGRATION }, null, 2)}\n`);
   for (const design of designs) checkOpenttdProperties(design, ALL_VEHICLES.includes(design));
+  // every model soundTable.ts gives a sound must exist (docs/models/sounds.md)
+  if (designs.length === DESIGNS.size) {
+    const unknown = unknownTableIds(designs);
+    if (unknown.length) throw new Error(`generator/soundTable.ts names no such model: ${unknown.join(", ")}`);
+  }
   const catalog: ModelCatalog = {
     version: 1,
     records: designs.map((design) => {

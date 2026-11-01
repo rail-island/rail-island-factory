@@ -55,6 +55,11 @@ document that owns it in the same change.** Conventions:
   one - retire it with an alias in the registry. A landed set module imports
   nothing and types every export; a change that redraws a shipped type moves its
   pins (`pnpm sets:pins`, test/setPins.test.ts) - make that change on purpose.
+- **Sounds** (docs/models/sounds.md): a model's horn, engine or bell is exported as
+  `game.sounds`, a rail-island-music design id per slot with its character values pinned.
+  A vehicle's slots are derived from its traction and weight; anything else is stated in
+  `generator/soundTable.ts`, never on the design (that would rewrite its module's models).
+  `sounds/` is the imported copy of the designs (`pnpm import:sounds`): never edit it.
 - **Props** (docs/models/props.md) are the fixed models the game's structures place
   (`proc-prop-*`: a shed, a crane, a tower): drawn in studs from the game's box
   vocabulary, materials named `<kind>#<rrggbb>`, listed in props.meta.json only.
