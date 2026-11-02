@@ -5,10 +5,10 @@
 // the D trailer, or the whole train, articulated: `cars` (3 .. 8) cars, an A car
 // at each end (the rear one turned), each car a section on its own two bogies.
 // `livery` is the refurbished silver body with the black cab mask and red band,
-// or the 1979 look: the original white glass-fibre front with its two red
-// stripes, or the Disneyland Resort Line's - offered only on what that line ran:
+// or the 1979 look: the original front (the same silver as the sides) with its two red
+// stripes, or the Disneyland Resort Line's - offered only on the cars that line ran:
 // the A car drawn as its P cab car, the C car as its Q pantograph car and the
-// four-car train P-Q+Q-P, with three doors a side, Mickey-head windows and their
+// train as P-Q..Q-P (four cars, P-Q+Q-P, by default), with three doors a side, Mickey-head windows and their
 // own blue and yellow front.
 //
 // Modelled from photographs (assets/mtr-m-train/) and the published figures: the
@@ -48,16 +48,16 @@ export type MtrFront = "refurbished" | "original" | "disney";
 
 /** The urban train's car counts: an A car at each end and at least one C car (the pantograph) between them. */
 export const MTR_CARS = [3, 4, 5, 6, 7, 8];
-/** The units the Disneyland Resort Line ran: its P cab car (an A car), Q pantograph car (a C car) and four-car train. */
+/** The units the Disneyland Resort Line ran: its P cab car (an A car), Q pantograph car (a C car) and its train (P-Q..Q-P, 3 .. 8 cars). */
 const DRL_UNITS: MtrUnit[] = ["aCar", "cCar", "train"];
-/** The liveries the urban lines' trains of every length wear. */
+/** The urban lines' liveries. */
 const URBAN_LIVERIES: MtrLivery[] = ["refurbished", "retro"];
 
 /**
- * The car, then the livery, then the train's length. Only combinations that ran
- * are offered (a value's `when`, design.ts): the Disneyland livery on the A car,
- * the C car and the train, which is then four cars (P-Q+Q-P) - no B or D car,
- * no other length.
+ * The car, then the livery, then the train's length. The Disneyland livery is
+ * offered only on the cars that line ran (a value's `when`, design.ts): the A car,
+ * the C car and the train - no B or D car. Its train comes in every length, a P
+ * car at each end and Q cars between them.
  */
 export const MTR_PARAMS: readonly ParamSpec[] = [
   {
@@ -86,7 +86,7 @@ export const MTR_PARAMS: readonly ParamSpec[] = [
     title: "Cars",
     default: "4",
     when: { name: "unit", values: ["train"] },
-    values: MTR_CARS.map((n) => ({ value: String(n), title: `${n} cars`, ...(n === 4 ? {} : { when: { name: "livery", values: URBAN_LIVERIES } }) })),
+    values: MTR_CARS.map((n) => ({ value: String(n), title: `${n} cars` })),
   },
 ];
 
@@ -139,8 +139,8 @@ const urban = (livery: MtrLivery): "refurbished" | "retro" => (livery === "retro
 
 /** The running numbers of the A164 set (assets/mtr-m-train/SOURCES.md), front to rear. */
 export const MTR_SET_NUMBERS = ["A169", "C169", "D602", "B456", "C456", "D619", "C164", "A164"];
-/** The Disneyland line's set P503-Q503+Q504-P504. */
-export const MTR_DRL_NUMBERS = ["P503", "Q503", "Q504", "P504"];
+/** The Disneyland train's numbers for `n` cars: P503 ahead, P504 at the rear, the Q cars from Q503 on (four: the set P503-Q503+Q504-P504). */
+export const mtrDrlNumbers = (n: number): string[] => ["P503", ...Array.from({ length: n - 2 }, (_, i) => `Q${503 + i}`), "P504"];
 const LONE_NUMBER: Record<"refurbished" | "retro", Record<MtrCar, string>> = {
   refurbished: { aCar: "A164", bCar: "B456", cCar: "C169", dCar: "D602", pCar: "P503", qCar: "Q503" },
   retro: { aCar: "A161", bCar: "B442", cCar: "C161", dCar: "D601", pCar: "P503", qCar: "Q503" },
@@ -148,7 +148,7 @@ const LONE_NUMBER: Record<"refurbished" | "retro", Record<MtrCar, string>> = {
 
 // --- paint schemes ------------------------------------------------------------------------------
 
-interface Scheme {
+export interface Scheme {
   palette: Record<string, MaterialSpec>;
   /** The cab face's red bands (bottom, top). */
   bands: Array<[number, number]>;
@@ -156,15 +156,16 @@ interface Scheme {
 
 const c = (color: string, roughness = 0.4, metallic?: number): MaterialSpec => ({ color, roughness, ...(metallic !== undefined ? { metallic } : {}) });
 
-const SCHEMES: Record<"refurbished" | "retro" | "disney", Scheme> = {
+export const MTR_SCHEMES: Record<"refurbished" | "retro" | "disney", Scheme> = {
   // the refurbished trains: brushed aluminium, the black glass-fibre mask and emergency door, the red band
   refurbished: {
-    palette: { body: c("#b9bdc1", 0.35, 0.55), mask: c("#26282b", 0.35), door: c("#1d1f22", 0.35), roof: c("#6b5f57", 0.8) },
+    palette: { body: c("#e8eaec", 0.35, 0.2), mask: c("#26282b", 0.35), door: c("#1d1f22", 0.35), roof: c("#968a80", 0.8) },
     bands: [[1.72, 1.9]],
   },
-  // the 1979 trains: unpainted aluminium sides, the white glass-fibre front, a wide red stripe and a thin one under it
+  // the 1979 trains: unpainted aluminium sides, the front finished to match them (the same colour seen from the
+  // front as from the side), a wide red stripe and a thin one under it
   retro: {
-    palette: { body: c("#c6c9cb", 0.35, 0.5), mask: c("#ecebe6", 0.4), door: c("#e0dfda", 0.4), roof: c("#6b5f57", 0.8) },
+    palette: { body: c("#eceeef", 0.35, 0.2), mask: c("#eceeef", 0.35, 0.2), door: c("#e2e4e6", 0.35, 0.2), roof: c("#968a80", 0.8) },
     bands: [[1.36, 1.42], [1.5, 1.74]],
   },
   // the Disneyland Resort Line: white body, navy roof and front, its yellow edge, the red "smile" band
@@ -173,8 +174,8 @@ const SCHEMES: Record<"refurbished" | "retro" | "disney", Scheme> = {
     bands: [[1.72, 1.86]],
   },
 };
-const schemeOf = (car: MtrCar, livery: MtrLivery): Scheme => SCHEMES[isDisney(car) ? "disney" : urban(livery)];
-const paletteOf = (s: Scheme) => ({ ...PALETTE, ...SCHEMES.disney.palette, ...s.palette });
+const schemeOf = (car: MtrCar, livery: MtrLivery): Scheme => MTR_SCHEMES[isDisney(car) ? "disney" : urban(livery)];
+const paletteOf = (s: Scheme) => ({ ...PALETTE, ...MTR_SCHEMES.disney.palette, ...s.palette });
 
 const PALETTE: Record<string, MaterialSpec> = {
   glass: { ...c("#27323d", 0.12, 0.2), glass: true },
@@ -455,7 +456,7 @@ function windscreens(m: MeshBuilder, xf: number, zIn: number, zOut: number, fram
  * - refurbished: the black mask with the two windscreens and their displays, the
  *   black emergency door between them, the red band with the roundel, the
  *   silver header's two small lamps and round lamp;
- * - original (1979): the white glass-fibre face, the two narrow windscreens with
+ * - original (1979): the face in the sides' silver, the two narrow windscreens with
  *   their displays, the wide door between them, the wide and the thin red stripe
  *   across it, the round lamp over the door;
  * - disney: the navy front edged in yellow, the windscreens and the centre door's
@@ -689,8 +690,8 @@ export const MTR_FORMATIONS: Record<number, MtrCar[]> = {
   7: ["aCar", "cCar", "dCar", "bCar", "cCar", "cCar", "aCar"],
   8: ["aCar", "cCar", "dCar", "bCar", "cCar", "dCar", "cCar", "aCar"],
 };
-/** The Disneyland Resort Line's four-car train P-Q+Q-P. */
-export const MTR_DRL_FORMATION: MtrCar[] = ["pCar", "qCar", "qCar", "pCar"];
+/** The Disneyland Resort Line's train of `n` (3 .. 8) cars: a P cab car at each end, Q cars between (four: P-Q+Q-P, as it ran). */
+export const mtrDrlFormation = (n: number): MtrCar[] => ["pCar", ...Array<MtrCar>(n - 2).fill("qCar"), "pCar"];
 
 /** Cars front to back with their numbers and spans lo..hi over the coupling planes, the train centred on x = 0, the last one turned. */
 function lay(cars: MtrCar[], numbers: string[]): MtrSlot[] {
@@ -719,8 +720,8 @@ export function mtrTrain(n: number): MtrSlot[] {
   return lay(cars, numbers);
 }
 
-/** The Disneyland line's train P503-Q503+Q504-P504. */
-export const mtrDrlTrain = (): MtrSlot[] => lay(MTR_DRL_FORMATION, MTR_DRL_NUMBERS);
+/** The Disneyland line's train of `n` cars (default four: P503-Q503+Q504-P504). */
+export const mtrDrlTrain = (n = 4): MtrSlot[] => lay(mtrDrlFormation(n), mtrDrlNumbers(n));
 
 /** The bellows' cross-section between two cars (z, y). */
 const BELLOWS: Array<[number, number]> = [[-0.8, 1.02], [0.8, 1.02], [0.8, 3.2], [0.7, 3.3], [-0.7, 3.3], [-0.8, 3.2]];
@@ -746,8 +747,8 @@ function train(slots: MtrSlot[], livery: MtrLivery): MeshBuilder {
   return m;
 }
 
-/** A train's cars: the Disneyland line's P-Q+Q-P, or the urban formation of `cars`. */
-const slotsOf = (livery: MtrLivery, cars: number): MtrSlot[] => (livery === "disneyland" ? mtrDrlTrain() : mtrTrain(cars));
+/** A train's `cars` cars: the Disneyland line's P-Q..Q-P, or the urban formation. */
+const slotsOf = (livery: MtrLivery, cars: number): MtrSlot[] => (livery === "disneyland" ? mtrDrlTrain(cars) : mtrTrain(cars));
 
 export function mtrMTrain(params?: ParamValues): MeshBuilder {
   const p = resolveOfferedParams(MTR_PARAMS, params);
@@ -865,9 +866,12 @@ function mtrGame(): GameProperties {
       variants.push({ params: { ...(n === 4 ? {} : { cars: String(n) }), ...base, unit: "train" }, weight: sum(cars, CAR_WEIGHT), power: sum(cars, CAR_POWER) });
     }
   }
-  // the Disneyland livery's P car is as the A car (the default's figures); its Q car and four-car train
+  // the Disneyland livery's P car is as the A car (the default's figures); its Q car and its train of every length
   variants.push({ params: { unit: "cCar", livery: "disneyland" }, weight: CAR_WEIGHT.qCar, power: CAR_POWER.qCar });
-  variants.push({ params: { unit: "train", livery: "disneyland" }, weight: sum(MTR_DRL_FORMATION, CAR_WEIGHT), power: sum(MTR_DRL_FORMATION, CAR_POWER) });
+  for (const n of MTR_CARS) {
+    const cars = mtrDrlFormation(n);
+    variants.push({ params: { ...(n === 4 ? {} : { cars: String(n) }), unit: "train", livery: "disneyland" }, weight: sum(cars, CAR_WEIGHT), power: sum(cars, CAR_POWER) });
+  }
   return { weight: CAR_WEIGHT.aCar, power: CAR_POWER.aCar, maxspeed: 80, accel: 1.0, variants };
 }
 

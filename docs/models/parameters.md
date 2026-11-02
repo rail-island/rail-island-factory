@@ -121,8 +121,7 @@ picker and it is no part of a reference key - so the power car keeps its keys.
 
 A single **value** may be offered under some values of an earlier parameter only:
 `when: { name, values }` on the value (the MTR M-Train's Disneyland livery, `when: {
-name: "unit", values: ["aCar", "cCar", "train"] }`, and its train lengths other than
-four, offered with the urban liveries only). Where the condition fails the value is
+name: "unit", values: ["aCar", "cCar", "train"] }`). Where the condition fails the value is
 not offered: a design with conditional values resolves with `resolveOfferedParams`
 (`paramOffers.ts`), which throws on it (`does not offer`) - plain `resolveParams`,
 which every standalone JS model carries, is left without the check, so no other

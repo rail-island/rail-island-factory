@@ -10,13 +10,13 @@
 |---|---|---|---|---|
 | `veh-mtr-m-train` | MTR M-Train | `unit` | `aCar`, `bCar`, `cCar`, `dCar`, `train` | about 7,000 to 8,000 a cab car, 5,000 to 6,500 the others |
 | | | `livery` | `refurbished`, `retro`, `disneyland` (with `aCar`, `cCar` and `train` only) | |
-| | | `cars` (with `train` only) | `4` (default), `3`, `5` .. `8` (`3` and `5` .. `8` with `refurbished` and `retro` only) | the cars added up: about 20,000 (3) to 47,500 (8); the Disneyland train about 29,000 |
+| | | `cars` (with `train` only) | `4` (default), `3`, `5` .. `8`, in every livery | the cars added up: about 20,000 (3) to 47,500 (8); the Disneyland train about 29,000 at four cars |
 
-The parameters come in that order, and only combinations that ran are offered:
-the Disneyland livery's values carry a `when` (a conditional value,
-[parameters.md](parameters.md)) on the car, and the train lengths other than four
-one on the livery, so the Disneyland Resort Line's B or D car or a Disneyland train
-of eight is in no picker, combination or test, and resolving one throws.
+The parameters come in that order. The Disneyland livery carries a `when` (a
+conditional value, [parameters.md](parameters.md)) on the car, so a Disneyland
+Resort Line B or D car is in no picker, combination or test, and resolving one
+throws. Its train, like the urban ones, comes in every length (`cars`): a P car at
+each end and Q cars between them - four cars, P-Q+Q-P, is the set the line ran.
 
 - `aCar` - "Cab car A", the default and the train's "locomotive": a motor car with
   the driving cab. Its flat cab face at +X has corners rounded in plan (0.32 m) and
@@ -33,8 +33,8 @@ of eight is in no picker, combination or test, and resolving one throws.
 
 In the `disneyland` livery the A car is drawn as the Disneyland Resort Line's P cab
 car (22.85 m: the Disneyland front, three doors a side, Mickey-head windows), the C
-car as its Q pantograph car (22.0 m) and the train as the line's four cars P-Q+Q-P,
-the rear P car turned (`mtrCarOf`). They were `unit` values of their own for a day
+car as its Q pantograph car (22.0 m) and the train as the line's P-Q..Q-P of `cars`
+cars, the rear P car turned (`mtrCarOf`). They were `unit` values of their own for a day
 (`pCar`, `qCar`, `drlTrain`): those are `retired` and resolve to `aCar`, `cCar` and
 `train` in the `disneyland` livery, so a key that names one still builds the same car.
 
@@ -57,14 +57,19 @@ fields are `EMU_CATALOG` (rail vehicles, group `unit`).
 
 The `livery` picks the paint, and with it the cab car's front (`mtrFront`).
 
+Both urban liveries are a light silver (`#e8eaec` refurbished, `#eceeef` retro, only
+slightly metallic so they do not read dark in the game's light) under a light
+brown-grey roof.
+
 - `refurbished` - the trains as refurbished in 1998-2001: brushed aluminium sides,
   the brown-grey roof; the **refurbished front**: corners rounded 0.32 m in plan,
   the crown curving down to the face at 3.42 m; the black glass-fibre mask with the
   two windscreens and their displays, the black emergency door, one red band with
   the roundel, the silver header's two small lamps and round lamp.
 - `retro` - the 1979 trains as delivered: unpainted aluminium sides; the **original
-  front**: tight 0.12 m corners and a near-square top (3.56 m at the face); the white
-  glass-fibre face, the narrow windscreens with their displays, the wide emergency
+  front**: tight 0.12 m corners and a near-square top (3.56 m at the face); the face
+  in the very material of the sides (one light silver, so the train is the same colour
+  seen from the front as from the side), the narrow windscreens with their displays, the wide emergency
   door, the wide red stripe and the thin one under it running unbroken round the
   corners to the hinged cab door (the face's stripes reach the face's edge, and their
   wrap follows the corner's quarter circle in plan at the same 12 mm offset,
@@ -95,14 +100,16 @@ the lower body curving in under the 1.2 m belly, the nearly upright side to the
 
 ## The formations
 
-`mtrDrlTrain()` lays out the Disneyland train P-Q+Q-P (P503, Q503, Q504, P504);
+`mtrDrlTrain(n)` lays out the Disneyland train of `n` cars (`mtrDrlFormation`): a P car
+at each end, Q cars between, numbered P503, Q503, Q504 .. and P504 at the rear (four:
+P503-Q503+Q504-P504, the set the line ran);
 `mtrTrain(n)` lays out the cars front to back from `MTR_FORMATIONS`, the 8-car urban
 formation A-C+D+B-C+D+C-A shortened from its middle; the rear A car is drawn turned.
 
 | cars | formation |
 |---|---|
 | 3 | A C A |
-| 4 | A C C A (the Disneyland Resort line's sets, P-Q+Q-P) |
+| 4 | A C C A |
 | 5 | A C D C A |
 | 6 | A C D B C A |
 | 7 | A C D B C C A |
@@ -130,13 +137,13 @@ at most for a train.
 ## Tests
 
 `test/mtrMTrain.test.ts`: the parameters' order and conditional values - the
-Disneyland livery only on the A car, C car and four-car train, the retired Disneyland
+Disneyland livery only on the A car, C car and the train of every length, the retired Disneyland
 units resolving to them; every urban car in both urban liveries and both Disneyland cars
 within 16,000 triangles, the envelope and its length over the couplers without
 coplanar faces; the bogies and axles; five (three) opening doors a side of two leaves
 each; the cab faces, which front each car and livery draws, the 1979 stripes
 unbroken from the face round the corners, the Disneyland windscreens' size, the Mickey-head windows,
-and only the C and Q cars' pantographs at the wire; the Disneyland train; the formation of every length and its running numbers; the
+and only the C and Q cars' pantographs at the wire; the Disneyland train at four, three and eight cars; the formation of every length and its running numbers; the
 sections, joints and supports of every train; deterministic bytes and the distant model
 of every car and train. `test/lod-units.test.ts` (which counts a fixed-length train's
 cars by its sections) checks the distant models with the other units.
