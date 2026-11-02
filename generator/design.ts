@@ -20,6 +20,14 @@ export interface ParamValue {
   value: string;
   /** What a picker shows, e.g. "Class A (1st class)". */
   title: string;
+  /**
+   * Set when the value is offered only under some values of an earlier parameter
+   * (the MTR M-Train's Disneyland livery, only on the cars the line ran: `when: {
+   * name: "unit", values: ["aCar", "cCar", "train"] }`). Elsewhere it is not
+   * offered: resolving refuses it, no combination holds it, no picker shows it. A
+   * parameter's default is never conditional, so it is always offered.
+   */
+  when?: ParamCondition;
 }
 
 /** An enum parameter of a parametric design. */
@@ -412,12 +420,14 @@ export function resolveParams(specs: readonly ParamSpec[], given: ParamValues = 
   return out;
 }
 
-/** Every combination of the parameters' values, the defaults first; [{}] for none. */
+
+/** Every combination of the parameters' values, the defaults first; [{}] for none. A conditional value is only where it is offered. */
 export function paramCombinations(specs: readonly ParamSpec[] = []): ParamValues[] {
   let out: ParamValues[] = [{}];
   for (const s of specs) {
-    const ordered = [s.default, ...s.values.map((v) => v.value).filter((v) => v !== s.default)];
-    out = out.flatMap((combo) => (paramApplies(s, combo) ? ordered.map((v) => ({ ...combo, [s.name]: v })) : [combo]));
+    // a conditional value (ParamValue.when) only where the values before it offer it (paramOffers.ts offeredValues)
+    const ordered = (combo: ParamValues) => [s.default, ...s.values.filter((v) => !v.when || v.when.values.includes(combo[v.when.name] ?? "")).map((v) => v.value).filter((v) => v !== s.default)];
+    out = out.flatMap((combo) => (paramApplies(s, combo) ? ordered(combo).map((v) => ({ ...combo, [s.name]: v })) : [combo]));
   }
   return out;
 }
@@ -440,7 +450,7 @@ export function coverageCombinations(specs: readonly ParamSpec[] = [], finishPar
   for (const s of specs) {
     if (!finish.includes(s.name)) continue;
     if (!paramApplies(s, defaults)) continue;
-    for (const v of s.values) if (v.value !== s.default) out.push({ ...defaults, [s.name]: v.value });
+    for (const v of s.values) if (v.value !== s.default && (!v.when || v.when.values.includes(defaults[v.when.name] ?? ""))) out.push({ ...defaults, [s.name]: v.value });
   }
   return out;
 }

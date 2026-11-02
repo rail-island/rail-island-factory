@@ -1,7 +1,7 @@
 # Parametric models
 
 **Covers** - designs with enum parameters: how a design declares them, what the export holds (one thumbnail and source tree per design, built with the defaults; the JS model builds any combination), how the meta and catalog entries and the standalone JS model expose them, the site's parameter picker, and the tests.
-**Code** - `generator/steamLocos.ts` (`UNIT_PARAM`, `CSD433_PARAMS`), `generator/design.ts` (`ParamSpec`, `resolveParams`, `paramCombinations`, `coverageCombinations`), `generator/village.ts` (the village houses' params), `generator/skyscrapers.ts` (the towers' params), `generator/catalog.ts` (`MetaEntry.params`), `generator/jsModel.ts`, `generator/csdCoaches.ts` (`CLASSIC_GREEN_PARAMS`), `generator/bmoCoach.ts` (`BMO_PARAMS`), `generator/cdGreenWhiteCoach.ts` (`GREEN_WHITE_PARAMS`), `generator/wagons.ts` (`NAS_PARAMS`, `UA_PARAMS`, `EAS_PARAMS`), `generator/cd163Family.ts` (`CD163_PARAMS`, `CD263_PARAMS`), `generator/cd150.ts` (`CD150_PARAMS`), `generator/cd110.ts` (`CD110_PARAMS`), `generator/cd130.ts` (`CD130_PARAMS`), `generator/karosa.ts` (`KAROSA_SHORT_PARAMS`, `KAROSA_LONG_PARAMS`), `generator/emu471.ts` (`CD471_PARAMS`), `generator/emu680.ts` (`CD680_PARAMS`), `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/catalogQuery.ts` (`effectiveParams`, `isDefaultParams`), `test/params.test.ts`, `generator/freightWagons.ts` (`SQNS_PARAMS`, `PAO_PARAMS`, `HABIS_PARAMS`), `generator/hopperWagons.ts` (`FACCS_PARAMS`, `FALLS_PARAMS`), `generator/emu451.ts` (`CD451_PARAMS`), `generator/emu460.ts` (`CD460_PARAMS`), `generator/emu470.ts` (`CD470_PARAMS`), `generator/cd704.ts` (`CD704_PARAMS`), `generator/cd742.ts` (`CD742_PARAMS`), `generator/db212.ts` (`DB212_PARAMS`), `generator/cdYCoach.ts` (`CD_Y_PARAMS`), `generator/zsrCoach.ts` (`ZSR_PARAMS`), `generator/uicZCoach.ts` (`UIC_Z_PARAMS`), `generator/characters.ts` (`AVATAR_PARAMS`), `generator/animals.ts`
+**Code** - `generator/steamLocos.ts` (`UNIT_PARAM`, `CSD433_PARAMS`), `generator/design.ts` (`ParamSpec`, `ParamValue.when`, `resolveParams`, `paramCombinations`, `coverageCombinations`), `generator/paramOffers.ts` (`offeredValues`, `valueApplies`, `resolveOfferedParams`), `generator/mtrMTrain.ts` (`MTR_PARAMS`: conditional values), `generator/contactSheet.ts`, `generator/cityVariants.ts`, `generator/village.ts` (the village houses' params), `generator/skyscrapers.ts` (the towers' params), `generator/catalog.ts` (`MetaEntry.params`), `generator/jsModel.ts`, `generator/csdCoaches.ts` (`CLASSIC_GREEN_PARAMS`), `generator/bmoCoach.ts` (`BMO_PARAMS`), `generator/cdGreenWhiteCoach.ts` (`GREEN_WHITE_PARAMS`), `generator/wagons.ts` (`NAS_PARAMS`, `UA_PARAMS`, `EAS_PARAMS`), `generator/cd163Family.ts` (`CD163_PARAMS`, `CD263_PARAMS`), `generator/cd150.ts` (`CD150_PARAMS`), `generator/cd110.ts` (`CD110_PARAMS`), `generator/cd130.ts` (`CD130_PARAMS`), `generator/karosa.ts` (`KAROSA_SHORT_PARAMS`, `KAROSA_LONG_PARAMS`), `generator/emu471.ts` (`CD471_PARAMS`), `generator/emu680.ts` (`CD680_PARAMS`), `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/catalogQuery.ts` (`effectiveParams`, `offeredValues`, `isDefaultParams`, `variantCount`, `representativeVariants`), `test/params.test.ts`, `generator/freightWagons.ts` (`SQNS_PARAMS`, `PAO_PARAMS`, `HABIS_PARAMS`), `generator/hopperWagons.ts` (`FACCS_PARAMS`, `FALLS_PARAMS`), `generator/emu451.ts` (`CD451_PARAMS`), `generator/emu460.ts` (`CD460_PARAMS`), `generator/emu470.ts` (`CD470_PARAMS`), `generator/cd704.ts` (`CD704_PARAMS`), `generator/cd742.ts` (`CD742_PARAMS`), `generator/db212.ts` (`DB212_PARAMS`), `generator/cdYCoach.ts` (`CD_Y_PARAMS`), `generator/zsrCoach.ts` (`ZSR_PARAMS`), `generator/uicZCoach.ts` (`UIC_Z_PARAMS`), `generator/characters.ts` (`AVATAR_PARAMS`), `generator/animals.ts`
 **See also** - [export.md](export.md), [js-format.md](js-format.md), [csd-coaches.md](csd-coaches.md), [village.md](village.md), [buses.md](buses.md), [steam-locomotives.md](steam-locomotives.md), [../site/catalog-site.md](../site/catalog-site.md)
 
 ## The idea
@@ -119,6 +119,23 @@ condition fails the parameter is absent - `resolveParams` drops it (a value give
 for it is ignored), `paramCombinations` does not vary it, the site hides its
 picker and it is no part of a reference key - so the power car keeps its keys.
 
+A single **value** may be offered under some values of an earlier parameter only:
+`when: { name, values }` on the value (the MTR M-Train's Disneyland livery, `when: {
+name: "unit", values: ["aCar", "cCar", "train"] }`, and its train lengths other than
+four, offered with the urban liveries only). Where the condition fails the value is
+not offered: a design with conditional values resolves with `resolveOfferedParams`
+(`paramOffers.ts`), which throws on it (`does not offer`) - plain `resolveParams`,
+which every standalone JS model carries, is left without the check, so no other
+model's bundle grows - `paramCombinations`,
+`coverageCombinations` and the contact sheet leave it out (`offeredValues`), the
+site's picker does not list it and a link that names it falls back to the default
+(`effectiveParams`). A parameter's **default is never conditional**, so it is offered
+wherever the parameter applies and resolving a missing value always succeeds;
+`test/params.test.ts` checks that, and that a value's condition names an earlier
+parameter and values it has. The game reads the same field: its pickers list only
+the offered values and its resolution falls back to the default (rail-island-webapp,
+`src/core/ModelRef.ts`).
+
 A value a design no longer offers can be **retired** rather than dropped:
 `retired: { <value>: { <name>: <value>, ... } }` on its parameter maps it to the
 values that replace it (the TGV's `unit: coach` and `unit: endCoach` to `{ unit:
@@ -170,7 +187,9 @@ only the parameters change. The thumbnail, the spec list and the source tree
 describe the default build, so the Source tab's highlight and picking pause
 while another value is chosen. The choice is in the URL as `?p.<name>=<value>`
 (only values that differ from the default), so a variant can be linked; an
-unknown name or value falls back to the default (`effectiveParams`).
+unknown name or value, or one the values before it do not offer, falls back to the
+default (`effectiveParams`). A `<select>` lists only the values offered under the
+values chosen before it (`offeredValues`).
 
 ## Tests
 

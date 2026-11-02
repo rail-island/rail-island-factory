@@ -27,7 +27,7 @@
 import { For, Match, Show, Suspense, Switch, createEffect, createMemo, createResource, createSignal, lazy, on, onCleanup } from "solid-js";
 import {
   previewLod,
-  COLUMNS, effectiveParams, formatBytes, isDefaultParams, nonDefaultParams, pageKey, poseControls, poseOf,
+  COLUMNS, effectiveParams, formatBytes, isDefaultParams, nonDefaultParams, offeredValues, pageKey, poseControls, poseOf,
   type DetailTab, type PoseValues, type PreviewLod, type Row,
 } from "./catalogQuery";
 import { indexTree, type SourceTree } from "./sourceTreeView";
@@ -168,7 +168,7 @@ export function ModelDetail(props: {
                     <label class="factory-param">
                       <span>{p.title}</span>
                       <select id={`param-${p.name}`} value={values()[p.name]} onChange={(e) => choose(p.name, e.currentTarget.value)}>
-                        <For each={p.values}>{(v) => <option value={v.value}>{v.value === p.default ? `${v.title} (default)` : v.title}</option>}</For>
+                        <For each={offeredValues(p, values())}>{(v) => <option value={v.value}>{v.value === p.default ? `${v.title} (default)` : v.title}</option>}</For>
                       </select>
                     </label>
                   )}

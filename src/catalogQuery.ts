@@ -413,6 +413,14 @@ export function serializeView(v: ViewState): string {
 
 // ------------------------------------------------------------- parameters
 
+/** One parameter of a record (its spec as the catalog carries it). */
+type RecordParam = NonNullable<CatalogRecord["params"]>[number];
+
+/** The values of a parameter offered under the values chosen before it (a value's `when`, design.ts ParamValue). */
+export function offeredValues(p: RecordParam, chosen: Record<string, string>): RecordParam["values"] {
+  return p.values.filter((v) => !v.when || v.when.values.includes(chosen[v.when.name] ?? ""));
+}
+
 /**
  * A parametric record's values: retired tokens migrate first, then each parameter takes the chosen value
  * when its enum lists it, else its default; names it does not declare are
@@ -428,7 +436,8 @@ export function effectiveParams(r: CatalogRecord, chosen: Record<string, string>
   for (const p of r.params ?? []) {
     // a conditional parameter (a TGV's car count) is absent where it does not apply
     if (p.when && !p.when.values.includes(out[p.when.name] ?? "")) continue;
-    out[p.name] = p.values.some((v) => v.value === chosen[p.name]) ? chosen[p.name]! : p.default;
+    // a value the values before it do not offer (the MTR's Disneyland livery on a trailer) falls back too
+    out[p.name] = offeredValues(p, out).some((v) => v.value === chosen[p.name]) ? chosen[p.name]! : p.default;
   }
   return out;
 }
@@ -453,7 +462,7 @@ export function isDefaultParams(r: CatalogRecord, values: Record<string, string>
  */
 export function variantCount(r: CatalogRecord): number {
   const specs = r.params ?? [];
-  const read = new Set(specs.flatMap((p) => (p.when ? [p.when.name] : [])));
+  const read = new Set(specs.flatMap((p) => [...(p.when ? [p.when.name] : []), ...p.values.flatMap((v) => (v.when ? [v.when.name] : []))]));
   let states = new Map<string, { values: Record<string, string>; count: number }>([["", { values: {}, count: 1 }]]);
   for (const p of specs) {
     const next = new Map<string, { values: Record<string, string>; count: number }>();
@@ -465,7 +474,7 @@ export function variantCount(r: CatalogRecord): number {
     };
     for (const st of states.values()) {
       if (p.when && !p.when.values.includes(st.values[p.when.name] ?? "")) add(st.values, st.count);
-      else for (const v of p.values) add(read.has(p.name) ? { ...st.values, [p.name]: v.value } : st.values, st.count);
+      else for (const v of offeredValues(p, st.values)) add(read.has(p.name) ? { ...st.values, [p.name]: v.value } : st.values, st.count);
     }
     states = next;
   }
@@ -489,9 +498,11 @@ export function representativeVariants(r: CatalogRecord, max = MAX_SHOWN_VARIANT
   const defaults = effectiveParams(r, {});
   const lanes = specs.map((p) => {
     const base = p.when && !p.when.values.includes(defaults[p.when.name] ?? "") ? { ...defaults, [p.when.name]: p.when.values[0]! } : defaults;
-    const others = p.values.map((v) => v.value).filter((v) => v !== p.default);
-    // under an enabling value the parameter's default is a variant of its own
-    return (base === defaults ? others : [p.default, ...others]).map((v) => ({ ...base, [p.name]: v }));
+    const others = p.values.filter((v) => v.value !== p.default);
+    // under an enabling value the parameter's default is a variant of its own;
+    // a conditional value is shown under the first value that offers it
+    const under = (v: RecordParam["values"][number]) => (v.when && !v.when.values.includes(base[v.when.name] ?? "") ? { ...base, [v.when.name]: v.when.values[0]! } : base);
+    return [...(base === defaults ? [] : [{ ...base, [p.name]: p.default }]), ...others.map((v) => ({ ...under(v), [p.name]: v.value }))];
   });
   const out: Record<string, string>[] = [{}];
   const seen = new Set([previewKey(r.id, {})]);
@@ -532,7 +543,7 @@ function* combinations(r: CatalogRecord, from = 0, chosen: Record<string, string
     yield* combinations(r, from + 1, chosen);
     return;
   }
-  for (const v of [p.default, ...p.values.map((x) => x.value).filter((x) => x !== p.default)]) yield* combinations(r, from + 1, { ...chosen, [p.name]: v });
+  for (const v of [p.default, ...offeredValues(p, chosen).map((x) => x.value).filter((x) => x !== p.default)]) yield* combinations(r, from + 1, { ...chosen, [p.name]: v });
 }
 
 /** A variant's short name for a thumbnail caption: its non-default values' titles, or "Default". */

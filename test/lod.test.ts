@@ -43,7 +43,8 @@ describe('vehicle LODs carry no lamps and no motion', () => {
   const selections = (d: (typeof ALL_VEHICLES)[number]) => [
     undefined,
     // a parameter that applies under an earlier one's values (a train's car count) gets the first of them
-    ...(d.params ?? []).flatMap((p) => p.values.map((v) => ({ ...(p.when ? { [p.when.name]: p.when.values[0]! } : {}), [p.name]: v.value }))),
+    // and a value offered only under an earlier one's values (the MTR's Disneyland livery) the first of those
+    ...(d.params ?? []).flatMap((p) => p.values.map((v) => ({ ...(p.when ? { [p.when.name]: p.when.values[0]! } : {}), ...(v.when ? { [v.when.name]: v.when.values[0]! } : {}), [p.name]: v.value }))),
   ];
   for (const d of ALL_VEHICLES)
     it(`${d.id} draws its low detail without a lamp material, lamps table or clip`, () => {

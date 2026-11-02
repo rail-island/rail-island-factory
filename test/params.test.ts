@@ -5,6 +5,7 @@
 import { describe, expect, it } from "vitest";
 import { DESIGNS } from "../generator/generate";
 import { coverageCombinations, paramCombinations, resolveParams, type ParamSpec } from "../generator/design";
+import { offeredValues, resolveOfferedParams } from "../generator/paramOffers";
 import { exportVehicleMeta, metaEntry } from "../generator/catalog";
 import { VEHICLES } from "../generator/vehicles";
 
@@ -21,6 +22,20 @@ describe("parametric models", () => {
     expect(resolveParams(SPECS, { roof: "dome" })).toEqual({ variant: "b", roof: "dome" });
     expect(() => resolveParams(SPECS, { colour: "red" })).toThrow(/unknown parameter "colour"/);
     expect(() => resolveParams(SPECS, { roof: "spire" })).toThrow(/no value "spire"/);
+  });
+
+  it("offer a conditional value only under the earlier values it names, and never combine it elsewhere", () => {
+    const specs: ParamSpec[] = [
+      { name: "unit", title: "Unit", default: "car", values: [{ value: "car", title: "Car" }, { value: "van", title: "Van" }] },
+      { name: "paint", title: "Paint", default: "red", values: [{ value: "red", title: "Red" }, { value: "gold", title: "Gold", when: { name: "unit", values: ["car"] } }] },
+    ];
+    expect(resolveParams(specs, { paint: "gold" })).toEqual({ unit: "car", paint: "gold" });
+    // plain resolution (the runtime every JS model carries) does not check; the design's own resolution does
+    expect(resolveOfferedParams(specs, { paint: "gold" })).toEqual({ unit: "car", paint: "gold" });
+    expect(() => resolveOfferedParams(specs, { unit: "van", paint: "gold" })).toThrow(/does not offer "gold" with unit "van"/);
+    expect(offeredValues(specs[1]!, { unit: "van" }).map((v) => v.value)).toEqual(["red"]);
+    expect(paramCombinations(specs)).toEqual([{ unit: "car", paint: "red" }, { unit: "car", paint: "gold" }, { unit: "van", paint: "red" }]);
+    expect(coverageCombinations(specs, ["paint"])).toEqual([{ unit: "car", paint: "red" }, { unit: "van", paint: "red" }, { unit: "car", paint: "gold" }]);
   });
 
   it("enumerate every combination, the defaults first", () => {
@@ -56,6 +71,13 @@ describe("parametric models", () => {
         for (const v of p.values) expect(v.title.length, `${d.id} ${p.name}=${v.value}`).toBeLessThanOrEqual(16);
         expect(new Set(p.values.map((v) => v.title)).size, `${d.id} ${p.name} titles`).toBe(p.values.length);
         expect(p.values.map((v) => v.value)).toContain(p.default);
+        // a conditional value names an earlier parameter and values it has; the default is always offered
+        for (const v of p.values.filter((x) => x.when)) {
+          const earlier = d.params!.slice(0, d.params!.indexOf(p)).find((q) => q.name === v.when!.name);
+          expect(earlier, `${d.id} ${p.name}=${v.value} names an earlier parameter`).toBeDefined();
+          for (const w of v.when!.values) expect(earlier!.values.map((x) => x.value), `${d.id} ${p.name}=${v.value}`).toContain(w);
+          expect(v.value, `${d.id} ${p.name}: the default is never conditional`).not.toBe(p.default);
+        }
       }
       for (const name of d.finishParams ?? []) expect(names).toContain(name);
     }

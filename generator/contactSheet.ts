@@ -16,6 +16,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { PNG } from "pngjs";
+import { offeredValues } from "./paramOffers.ts";
 import { coverageCombinations, paramApplies, resolveParams, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { renderGlbSideThumb, renderGlbThumb, type GlbSource } from "./renderGlbThumb.ts";
 
@@ -258,9 +259,10 @@ export function varyCombinations(design: ProceduralDesign, vary: readonly string
   let out: ParamValues[] = [resolveParams(specs)];
   for (const s of specs) {
     if (!vary.includes(s.name)) continue;
-    const ordered = [s.default, ...s.values.map((v) => v.value).filter((v) => v !== s.default)];
+    // a conditional value only where the values before it offer it
+    const ordered = (combo: ParamValues) => [s.default, ...offeredValues(s, combo).map((v) => v.value).filter((v) => v !== s.default)];
     out = out.flatMap((combo) =>
-      paramApplies(s, combo) ? ordered.map((v) => resolveParams(specs, { ...combo, [s.name]: v })) : [combo]);
+      paramApplies(s, combo) ? ordered(combo).map((v) => resolveParams(specs, { ...combo, [s.name]: v })) : [combo]);
   }
   const seen = new Set<string>();
   return out.filter((c) => !seen.has(JSON.stringify(c)) && !!seen.add(JSON.stringify(c)));
