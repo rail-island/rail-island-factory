@@ -206,10 +206,24 @@ const RIGHT_ONLY = (id: string, group: string) => group === "bus" || ["proc-vehi
 const groupOf = (d: (typeof ALL_VEHICLES)[number]) => d.catalog?.group ?? "";
 const PASSENGER = ALL_VEHICLES.filter((d) => PASSENGER_GROUPS.has(groupOf(d)) && !NO_DOORS.has(d.id));
 
+/**
+ * A passenger vehicle's default build, shared by the four checks that read it
+ * (none changes it) and dropped after the last of them, "shows no gap through
+ * its shut doors"; other designs and combinations are built afresh.
+ */
+const DEFAULT_BUILDS = new Map<string, ReturnType<(typeof ALL_VEHICLES)[number]["build"]>>();
+function defaultBuild(d: (typeof ALL_VEHICLES)[number]): ReturnType<typeof d.build> {
+  if (!PASSENGER.includes(d)) return d.build();
+  let m = DEFAULT_BUILDS.get(d.id);
+  if (!m) DEFAULT_BUILDS.set(d.id, (m = d.build()));
+  return m;
+}
+const buildOf = (d: (typeof ALL_VEHICLES)[number], params: Record<string, string>, i: number) => (i === 0 ? defaultBuild(d) : d.build(params));
+
 describe("vehicle doors", () => {
   it("open on every passenger vehicle, and on nothing else", () => {
     // a design opens doors when one of its variants does (a set's power car opens none)
-    const opens = (d: (typeof ALL_VEHICLES)[number]) => variantsUnderTest(d).some((p) => d.build(p).animations().some((c) => c.drive.drive === "door"));
+    const opens = (d: (typeof ALL_VEHICLES)[number]) => variantsUnderTest(d).some((p, i) => buildOf(d, p, i).animations().some((c) => c.drive.drive === "door"));
     const withDoors = ALL_VEHICLES.filter(opens).map((d) => d.id);
     expect(withDoors.sort()).toEqual(PASSENGER.map((d) => d.id).sort());
     expect(PASSENGER.length).toBeGreaterThan(40);
@@ -217,9 +231,9 @@ describe("vehicle doors", () => {
 
   for (const d of PASSENGER) {
     const sides = RIGHT_ONLY(d.id, groupOf(d)) ? ["right"] : ["left", "right"];
-    for (const params of variantsUnderTest(d)) {
+    variantsUnderTest(d).forEach((params, i) => {
       it(`${d.id} ${JSON.stringify(params)} opens its passenger doors on each side, shut at rest`, () => {
-        const m = d.build(params);
+        const m = buildOf(d, params, i);
         const glb = m.toGlb(d.title, d.id);
         const doors = m.animations().map((c, i) => ({ c, i })).filter(({ c }) => c.drive.drive === "door");
         // a variant may have none to open (a luggage van, a power car with crew doors only)
@@ -248,7 +262,7 @@ describe("vehicle doors", () => {
         // the low level of detail stays shut and still
         expect(buildLodModel(d, params).animations().filter((c) => c.drive.drive === "door")).toHaveLength(0);
       });
-    }
+    });
   }
 });
 
@@ -322,7 +336,7 @@ describe("every doorway", () => {
   // a door faces it across the car, that door's shut leaf.
   for (const d of PASSENGER) {
     it(`${d.id} opens every door leaf onto its cabin`, () => {
-      const m = d.build() as unknown as Internals;
+      const m = defaultBuild(d) as unknown as Internals;
       const leaves = leafBoxes(m);
       const doorOf = (part: number) => m.parts[part]!.name.replace(/-\d+$/, "");
       for (const [part, box] of leaves) {
@@ -344,7 +358,8 @@ describe("shut doors over a doorway", () => {
   // across each shut door, 5 mm apart, all meet the door on its own half of the car.
   for (const d of ALL_VEHICLES.filter((v) => PASSENGER_GROUPS.has(groupOf(v)) && !NO_DOORS.has(v.id))) {
     it(`${d.id} shows no gap through its shut doors`, () => {
-      const m = d.build() as unknown as Internals;
+      const m = defaultBuild(d) as unknown as Internals;
+      DEFAULT_BUILDS.delete(d.id);
       const doors = new Map<string, { min: number[]; max: number[] }>();
       for (const [part, box] of leafBoxes(m)) {
         const key = m.parts[part]!.name.replace(/-\d+$/, "");

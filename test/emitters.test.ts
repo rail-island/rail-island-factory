@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import { DESIGNS } from "../generator/generate.ts";
 import { resolveParams, type ProceduralDesign } from "../generator/design.ts";
 import type { Emitter } from "../generator/meshCore.ts";
+import { ALL_VARIANTS, sample } from "./catalogCache";
 
 function built(d: ProceduralDesign, params: Record<string, string> = {}): { emitters: readonly Emitter[]; pos: number[] } {
   const m = d.build(resolveParams(d.params ?? [], params));
@@ -18,6 +19,11 @@ function combos(d: ProceduralDesign): Record<string, string>[] {
   let out: Record<string, string>[] = [{}];
   for (const p of d.params ?? []) out = out.flatMap((c) => p.values.map((v) => ({ ...c, [p.name]: v.value })));
   return out;
+}
+
+/** Whether `params` are the design's defaults (the build `built(d)` made). */
+function isDefault(d: ProceduralDesign, params: Record<string, string>): boolean {
+  return JSON.stringify(resolveParams(d.params ?? [], params)) === JSON.stringify(resolveParams(d.params ?? [], {}));
 }
 
 const SMOKERS = [
@@ -35,10 +41,16 @@ describe("emitters", () => {
   // one test per design: a single loop over every design ran for minutes without
   // yielding, long enough to time out the worker's reports to Vitest
   describe("sit on the mouth they rise from, never inside or above the model", () => {
+    // Every combination of a design that smokes (a SMOKERS design, or one whose
+    // defaults emit); the defaults and the sampled few of the others
+    // (catalogCache.sample), every one with TEST_ALL_VARIANTS=1.
     for (const d of DESIGNS.values()) it(d.id, () => {
-      if (combos(d).length > 64) return;
-      for (const params of combos(d)) {
-        const { emitters, pos } = built(d, params);
+      const all = combos(d);
+      if (all.length > 64) return;
+      const first = built(d);
+      const list = ALL_VARIANTS || SMOKERS.includes(d.id) || first.emitters.length > 0 ? all : sample(all);
+      for (const params of list) {
+        const { emitters, pos } = isDefault(d, params) ? first : built(d, params);
         for (const e of emitters) {
           const [x, y, z] = e.at;
           const reach = 2 * e.radius + 0.1;

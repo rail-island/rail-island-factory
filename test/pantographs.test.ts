@@ -17,11 +17,27 @@ import { variantsUnderTest } from "./catalogCache";
 import { RAIL_COLLECTOR_TOP, TRAM_COLLECTOR_TOP } from "../generator/collector.ts";
 import { TRAM_DESIGNS } from "../generator/trams.ts";
 
+/** The highest y of the material `mat` (every material when absent). */
+function topOf(m: unknown, mat?: string): number {
+  let y = -Infinity;
+  for (const [k, g] of (m as { groups: Map<string, { pos: number[] }> }).groups) if (!mat || k === mat) for (let i = 1; i < g.pos.length; i += 3) y = Math.max(y, g.pos[i]!);
+  return y;
+}
+
+/**
+ * What the tests read of every vehicle's default model, from one build of it
+ * (the file built each default three times over before).
+ */
+const DEFAULTS = new Map(
+  ALL_VEHICLES.map((d) => {
+    const m = d.build();
+    const groups = (m as unknown as { groups: Map<string, unknown> }).groups;
+    return [d.id, { pantograph: m.positions().length > 0 && groups.has("pantograph"), carbon: groups.has("carbon"), carbonTop: topOf(m, "carbon"), top: topOf(m), lamps: m.lamps() }] as const;
+  }),
+);
+
 /** The designs whose default model draws a pantograph (the material). */
-const ELECTRIC = ALL_VEHICLES.filter((d) => {
-  const m = d.build();
-  return m.positions().length > 0 && (m as unknown as { groups: Map<string, unknown> }).groups.has("pantograph");
-});
+const ELECTRIC = ALL_VEHICLES.filter((d) => DEFAULTS.get(d.id)!.pantograph);
 
 describe("pantographs", () => {
   it("are found on the electric locomotives, units and trams", () => {
@@ -58,28 +74,27 @@ describe("pantographs", () => {
   }
 });
 
-/** The highest y of the material `mat` (every material when absent). */
-function topOf(m: unknown, mat?: string): number {
-  let y = -Infinity;
-  for (const [k, g] of (m as { groups: Map<string, { pos: number[] }> }).groups) if (!mat || k === mat) for (let i = 1; i < g.pos.length; i += 3) y = Math.max(y, g.pos[i]!);
-  return y;
-}
-
 describe("collector heights", () => {
   const trams = new Set(TRAM_DESIGNS.map((d) => d.id));
   for (const d of ALL_VEHICLES.filter((v) => v.catalog?.category === "Rail vehicles")) {
     const wire = trams.has(d.id) ? TRAM_COLLECTOR_TOP : RAIL_COLLECTOR_TOP;
-    for (const params of variantsUnderTest(d)) {
+    variantsUnderTest(d).forEach((params, i) => {
       it(`${d.id} ${JSON.stringify(params)} raises its collector to the game's wire`, () => {
-        const m = d.build(params);
+        // the first combination is the defaults, already built
+        let at = DEFAULTS.get(d.id)!;
+        if (i > 0) {
+          const m = d.build(params);
+          const groups = (m as unknown as { groups: Map<string, unknown> }).groups;
+          at = { ...at, carbon: groups.has("carbon"), carbonTop: topOf(m, "carbon"), top: topOf(m) };
+        }
         // a car without a pantograph (a trailer) has no carbon strip to raise
-        if (!(m as unknown as { groups: Map<string, unknown> }).groups.has("carbon")) return;
-        expect(topOf(m, "carbon")).toBeCloseTo(wire, 3);
+        if (!at.carbon) return;
+        expect(at.carbonTop).toBeCloseTo(wire, 3);
         // nothing stands above the wire, and the low detail's collector is no higher
-        expect(topOf(m)).toBeCloseTo(wire, 3);
+        expect(at.top).toBeCloseTo(wire, 3);
         expect(topOf(buildLodModel(d, params))).toBeLessThan(wire + 1e-3);
       });
-    }
+    });
   }
 });
 
@@ -87,7 +102,7 @@ describe("lamps", () => {
   const ROLES = new Set(["head", "tail", "brake", "indicator"]);
   for (const d of ALL_VEHICLES) {
     it(`${d.id} names a known role for every lamp it draws`, () => {
-      const lamps = d.build().lamps();
+      const lamps = DEFAULTS.get(d.id)!.lamps;
       if (!lamps) return;
       for (const [mat, l] of Object.entries(lamps.materials)) {
         expect(ROLES.has(l.role), mat).toBe(true);
@@ -99,7 +114,7 @@ describe("lamps", () => {
 
   it("light every road vehicle's way ahead", () => {
     for (const d of ALL_VEHICLES.filter((v) => v.catalog?.category === "Road vehicles")) {
-      const roles = Object.values(d.build().lamps()?.materials ?? {}).map((l) => l.role);
+      const roles = Object.values(DEFAULTS.get(d.id)!.lamps?.materials ?? {}).map((l) => l.role);
       expect(roles, d.id).toContain("head");
     }
   });
