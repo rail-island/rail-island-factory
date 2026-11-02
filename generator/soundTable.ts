@@ -59,4 +59,14 @@ export const SOUND_TABLE: Readonly<Record<string, DeclaredSounds>> = {
   "proc-building-notre-dame": { sounds: { bell: { id: "notre-dame-bell" } } },
   "proc-building-tower-bell": { sounds: { bell: { id: "church-bell", params: { pitch: 587, strikes: 3 } } } },
   "proc-building-tower-bigben": { sounds: { bell: { id: "big-ben", params: { chime: "quarters" } } } },
+
+  // The electrics whose motors differ from the derived ones (a locomotive's
+  // resistors, a unit's converters, a high-speed train's wind).
+  // Three-phase asynchronous motors: the converters, not a resistor locomotive's notches.
+  "proc-vehicle-cd-169": { sounds: { engine: { id: "electric-engine-converter" } } },
+  "proc-vehicle-obb-1012": { sounds: { engine: { id: "electric-engine-converter" } } },
+  // The converter tones were measured in an ICE: it is the reference, not a high-speed train's wind.
+  "proc-vehicle-ice-1": { sounds: { engine: { id: "electric-engine-converter" } } },
+  // A 1960s unit with resistor control and a camshaft controller.
+  "proc-vehicle-cd-451": { sounds: { engine: { id: "electric-engine-resistor" } } },
 };

@@ -22,7 +22,7 @@ export const SLOT_TITLES: Record<SoundSlotName, string> = { horn: "Horn", engine
 /** The parameters the game sets as it plays each slot (generator/soundMapping.ts RUNTIME_PARAMS). */
 export const RUNTIME_PARAMS: Record<SoundSlotName, readonly string[]> = {
   horn: ["call"],
-  engine: ["rpm", "load", "state", "rate", "intensity"],
+  engine: ["rpm", "load", "state", "rate", "intensity", "speed"],
   bell: [],
 };
 

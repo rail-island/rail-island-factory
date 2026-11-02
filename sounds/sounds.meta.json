@@ -6,7 +6,7 @@
   {
    "id": "trains",
    "title": "Trains",
-   "description": "Locomotives and the railway: horns, whistles, the exhaust beat, diesel engines (railcars, shunters, mainline locomotives, buses and trucks) running, starting and stopping, the level crossing's bell."
+   "description": "Locomotives and the railway: horns, whistles, the exhaust beat, diesel engines (railcars, shunters, mainline locomotives, buses and trucks) running, starting and stopping, electric locomotives and trains old and new, the Shinkansen, the level crossing's bell and the tram bell."
   },
   {
    "id": "ships",
@@ -146,8 +146,8 @@
     }
    ],
    "metrics": {
-    "jsBytes": 2823,
-    "nodesAtStart": 21,
+    "jsBytes": 2845,
+    "nodesAtStart": 25,
     "nodesPerSecond": null,
     "seconds": 1.8,
     "params": 3
@@ -654,6 +654,135 @@
    }
   },
   {
+   "id": "electric-engine-resistor",
+   "title": "Electric locomotive, resistor control",
+   "category": "trains",
+   "description": "An old DC electric locomotive: blowers, a compressor while it stands, gears whining with its speed and the controller clacking notch by notch as it pulls away.",
+   "kind": "loop",
+   "params": [
+    {
+     "name": "speed",
+     "title": "Speed",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "default": 0.5
+    },
+    {
+     "name": "load",
+     "title": "Pull",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.5
+    },
+    {
+     "name": "level",
+     "title": "Level",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 1
+    }
+   ],
+   "metrics": {
+    "jsBytes": 3944,
+    "nodesAtStart": 27,
+    "nodesPerSecond": 0,
+    "seconds": null,
+    "params": 3
+   }
+  },
+  {
+   "id": "electric-engine-converter",
+   "title": "Electric train, three-phase",
+   "category": "trains",
+   "description": "A modern electric train or locomotive: the converters' cluster of high tones while it pulls, rising a little with its speed, over a steady hum.",
+   "kind": "loop",
+   "params": [
+    {
+     "name": "speed",
+     "title": "Speed",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "default": 0.5
+    },
+    {
+     "name": "load",
+     "title": "Pull",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.5
+    },
+    {
+     "name": "level",
+     "title": "Level",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 1
+    }
+   ],
+   "metrics": {
+    "jsBytes": 3423,
+    "nodesAtStart": 23,
+    "nodesPerSecond": 0,
+    "seconds": null,
+    "params": 3
+   }
+  },
+  {
+   "id": "electric-engine-shinkansen",
+   "title": "Shinkansen",
+   "category": "trains",
+   "description": "A Japanese high-speed train: a soft inverter whine pulling out, the roar of the wind and the pantograph's hiss at speed.",
+   "kind": "loop",
+   "params": [
+    {
+     "name": "speed",
+     "title": "Speed",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "default": 0.5
+    },
+    {
+     "name": "load",
+     "title": "Pull",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.5
+    },
+    {
+     "name": "level",
+     "title": "Level",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 1
+    }
+   ],
+   "metrics": {
+    "jsBytes": 2987,
+    "nodesAtStart": 16,
+    "nodesPerSecond": 0,
+    "seconds": null,
+    "params": 3
+   }
+  },
+  {
    "id": "crossing-bell",
    "title": "Level crossing bell",
    "category": "trains",
@@ -714,6 +843,47 @@
     "nodesPerSecond": 0,
     "seconds": null,
     "params": 5
+   }
+  },
+  {
+   "id": "tram-bell",
+   "title": "Tram bell",
+   "category": "trains",
+   "description": "The bell of a Czech Tatra tram: two short rings before it leaves a stop, or one long ring as a warning.",
+   "kind": "oneShot",
+   "params": [
+    {
+     "name": "call",
+     "title": "Call",
+     "kind": "choice",
+     "values": [
+      {
+       "value": "departure",
+       "title": "Departure (two short rings)"
+      },
+      {
+       "value": "warning",
+       "title": "Warning (one long ring)"
+      }
+     ],
+     "default": "departure"
+    },
+    {
+     "name": "level",
+     "title": "Level",
+     "kind": "number",
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 1
+    }
+   ],
+   "metrics": {
+    "jsBytes": 2711,
+    "nodesAtStart": 17,
+    "nodesPerSecond": null,
+    "seconds": 5.3,
+    "params": 2
    }
   },
   {

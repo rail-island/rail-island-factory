@@ -12,16 +12,20 @@ import {
   declaredSounds,
   derivedSounds,
   dieselEngine,
+  electricEngine,
+  HIGH_SPEED_KMH,
   MAINLINE_TONNES,
   railHorn,
   shipHorn,
   slotProblems,
+  tramBell,
   soundIdsOf,
   soundsFor,
   unknownTableIds,
   withSounds,
 } from "../generator/soundMapping.ts";
 import { DESIGNS } from "../generator/generate.ts";
+import { SOUND_TABLE } from "../generator/soundTable.ts";
 
 const vehicles = exportVehicleMeta(ALL_VEHICLES).vehicles;
 const byId = (id: string) => vehicles.find((v) => v.id === id)!;
@@ -80,11 +84,24 @@ describe("a slot's check", () => {
 });
 
 describe("the derived defaults", () => {
-  it("give a steam locomotive a whistle and its beat, a diesel a horn and its engine, the rest a horn", () => {
+  it("give a steam locomotive a whistle and its beat, a diesel and an electric a horn and its engine, a tram its bell, the rest a horn", () => {
     expect(derivedSounds({ category: "Rail vehicles", traction: "steam" }, 90)).toEqual({ horn: railHorn(true, 90), engine: { id: "steam-chuff" } });
     expect(derivedSounds({ category: "Rail vehicles", traction: "diesel" }, 90)).toEqual({ horn: railHorn(false, 90), engine: dieselEngine(90) });
     expect(derivedSounds({ category: "Rail vehicles", group: "unit", traction: "diesel" }, 45)).toEqual({ horn: railHorn(false, 45), engine: dieselEngine(45, "unit") });
-    expect(derivedSounds({ category: "Rail vehicles", traction: "electric" }, 90)).toEqual({ horn: railHorn(false, 90) });
+    expect(derivedSounds({ category: "Rail vehicles", group: "loco", traction: "electric" }, 90, 120)).toEqual({
+      horn: railHorn(false, 90),
+      engine: { id: "electric-engine-resistor" },
+    });
+    expect(derivedSounds({ category: "Rail vehicles", group: "unit", traction: "electric" }, 60, 160)).toEqual({
+      horn: railHorn(false, 60),
+      engine: { id: "electric-engine-converter" },
+    });
+    expect(derivedSounds({ category: "Rail vehicles", group: "unit", traction: "electric" }, 60, HIGH_SPEED_KMH)).toEqual({
+      horn: railHorn(false, 60),
+      engine: { id: "electric-engine-shinkansen" },
+    });
+    expect(derivedSounds({ category: "Rail vehicles", group: "tram" }, 17, 50)).toEqual({ horn: tramBell() });
+    expect(tramBell()).toEqual({ id: "tram-bell", calls: ["departure"] });
     expect(derivedSounds({ category: "Rail vehicles" }, 30)).toEqual({ horn: railHorn(false, 30) });
     expect(derivedSounds({ category: "Road vehicles", group: "bus" }, 12)).toEqual({ engine: { id: "diesel-engine-bus" } });
     expect(derivedSounds({ category: "Road vehicles", group: "truck" }, 36)).toEqual({ engine: { id: "diesel-engine-truck" } });
@@ -149,13 +166,19 @@ describe("a design's exported sounds", () => {
     }
   });
 
-  it("let only a steam locomotive sound as it leaves a platform", () => {
+  it("let only a steam locomotive whistle and a tram ring as it leaves a platform or a stop", () => {
     const rail = vehicles.filter((v) => v.category === "Rail vehicles");
     expect(rail.some((v) => v.traction === "steam")).toBe(true);
+    expect(rail.some((v) => v.group === "tram")).toBe(true);
     for (const v of rail) {
       const horns = [v.game!.sounds!.horn, ...(v.game!.variants ?? []).map((x) => x.sounds?.horn)].filter((h) => h);
-      for (const h of horns) expect(h!.calls?.includes("departure") ?? false, v.id).toBe(v.traction === "steam");
+      for (const h of horns) expect(h!.calls?.includes("departure") ?? false, v.id).toBe(v.traction === "steam" || v.group === "tram");
     }
+  });
+
+  it("ring every tram's bell on departure only", () => {
+    const trams = vehicles.filter((v) => v.group === "tram");
+    for (const t of trams) expect(t.game!.sounds, t.id).toEqual({ horn: tramBell() });
   });
 
   it("follow traction and weight on the real vehicles", () => {
@@ -168,8 +191,20 @@ describe("a design's exported sounds", () => {
     expect(railcar.game!.sounds!.engine!.id).toBe("diesel-engine-railcar");
     expect(byId("proc-vehicle-cd-781").game!.sounds!.engine!.id).toBe("diesel-engine-mainline");
     expect(byId("proc-vehicle-cd-749").game!.sounds!.engine!.id).toBe("diesel-engine-shunter");
-    const electric = vehicles.find((v) => v.traction === "electric")!;
-    expect(Object.keys(electric.game!.sounds!)).toEqual(["horn"]);
+    // an electric's motors: a locomotive's resistors, a unit's converters, a high-speed train's wind,
+    // and the table's exceptions (three-phase locomotives, the ICE, an old resistor unit)
+    const engineOf = (id: string) => byId(id).game!.sounds!.engine!.id;
+    expect(engineOf("proc-vehicle-cd-150")).toBe("electric-engine-resistor");
+    expect(engineOf("proc-vehicle-cd-471")).toBe("electric-engine-converter");
+    expect(engineOf("proc-vehicle-tgv")).toBe("electric-engine-shinkansen");
+    expect(engineOf("proc-vehicle-shinkansen-0")).toBe("electric-engine-shinkansen");
+    expect(engineOf("proc-vehicle-cd-169")).toBe("electric-engine-converter");
+    expect(engineOf("proc-vehicle-ice-1")).toBe("electric-engine-converter");
+    expect(engineOf("proc-vehicle-cd-451")).toBe("electric-engine-resistor");
+    for (const v of vehicles.filter((x) => x.traction === "electric")) {
+      expect(v.game!.sounds!.engine, v.id).toBeDefined();
+      if (!SOUND_TABLE[v.id]?.sounds?.engine) expect(v.game!.sounds!.engine, v.id).toEqual(electricEngine(v.group, v.game!.maxspeed));
+    }
     const bus = vehicles.find((v) => v.group === "bus")!;
     expect(bus.game!.sounds).toEqual({ engine: { id: "diesel-engine-bus" } });
     const truck = vehicles.find((v) => v.group === "truck")!;

@@ -48,12 +48,12 @@ export const SLOT_KINDS: Record<SoundSlotName, "oneShot" | "loop"> = { horn: "on
 /**
  * The parameters the game sets on each slot as it plays: never pinned by a model.
  * A horn's call is why it sounds; an engine's revs, effort and whether it runs
- * (diesel: `state`) or its beat rate and effort (steam) follow the vehicle frame
- * by frame.
+ * (diesel: `state`), its beat rate and effort (steam) or its speed and effort
+ * (electric) follow the vehicle frame by frame.
  */
 export const RUNTIME_PARAMS: Record<SoundSlotName, readonly string[]> = {
   horn: ["call"],
-  engine: ["rpm", "load", "state", "rate", "intensity"],
+  engine: ["rpm", "load", "state", "rate", "intensity", "speed"],
   bell: [],
 };
 
@@ -201,6 +201,29 @@ export function dieselEngine(tonnes: number, group?: string): SoundSlot {
   return { id: `diesel-engine-${kind}`, params: { size: Number(heaviness(tonnes).toFixed(2)) } };
 }
 
+/** An electric train this fast (km/h) or faster runs the high-speed design: the wind and the pantograph over the inverters. */
+export const HIGH_SPEED_KMH = 200;
+
+/**
+ * A rail electric's engine: a high-speed train (HIGH_SPEED_KMH and over) the
+ * Shinkansen's, a multiple unit the three-phase converters of a modern train, a
+ * locomotive the resistor locomotive's blowers, gears and notches. A model whose
+ * equipment differs (a three-phase locomotive, an old resistor unit) states it in
+ * the table. The game sets `speed` and `load`; nothing is pinned.
+ */
+export function electricEngine(group: string | undefined, maxspeed: number | null | undefined): SoundSlot {
+  if ((maxspeed ?? 0) >= HIGH_SPEED_KMH) return { id: "electric-engine-shinkansen" };
+  return { id: group === "unit" ? "electric-engine-converter" : "electric-engine-resistor" };
+}
+
+/** A tram rings its bell as it moves off from a stop: the two short rings of a Czech tram driver. */
+export const TRAM_CALLS: readonly string[] = ["departure"];
+
+/** A tram's horn slot: the bell of a Tatra tram, rung on departure. */
+export function tramBell(): SoundSlot {
+  return { id: "tram-bell", calls: [...TRAM_CALLS] };
+}
+
 /** A road vehicle's engine: a bus's turbocharged six, a truck's air-cooled V8, each as measured. */
 export function roadEngine(group: string | undefined): SoundSlot | undefined {
   if (group === "bus") return { id: "diesel-engine-bus" };
@@ -225,19 +248,22 @@ export interface SoundSource {
 }
 
 /**
- * The sounds derived for a vehicle weighing `weight` tonnes: every rail vehicle
- * has a horn (a consist sounds its first locomotive's, or its first car's), a
- * steam locomotive its exhaust beat and a diesel its engine (a railcar's, a
- * shunter's or a mainline one); a bus or a truck its diesel engine; a ship its
- * horn. Aircraft and cable cars get none: no designs fit them yet.
+ * The sounds derived for a vehicle weighing `weight` tonnes with a top speed of
+ * `maxspeed` km/h: every rail vehicle has a horn (a consist sounds its first
+ * locomotive's, or its first car's) and a tram its bell instead; a steam
+ * locomotive its exhaust beat, a diesel its engine (a railcar's, a shunter's or a
+ * mainline one) and an electric its motors (a resistor locomotive's, a unit's
+ * converters, a high-speed train's); a bus or a truck its diesel engine; a ship
+ * its horn. Aircraft and cable cars get none: no designs fit them yet.
  */
-export function derivedSounds(src: SoundSource, weight: number | null | undefined): SoundMapping {
+export function derivedSounds(src: SoundSource, weight: number | null | undefined, maxspeed?: number | null): SoundMapping {
   if (src.category === "Rail vehicles") {
     if (weight == null) return {};
     const steam = src.traction === "steam";
-    const out: SoundMapping = { horn: railHorn(steam, weight) };
+    const out: SoundMapping = { horn: src.group === "tram" ? tramBell() : railHorn(steam, weight) };
     if (steam) out.engine = { id: "steam-chuff" };
     else if (src.traction === "diesel") out.engine = dieselEngine(weight, src.group);
+    else if (src.traction === "electric") out.engine = electricEngine(src.group, maxspeed);
     return out;
   }
   if (src.category === "Road vehicles") {
@@ -252,7 +278,7 @@ const sameSlot = (a: SoundSlot | undefined, b: SoundSlot | undefined) => JSON.st
 
 /** The design's slots: the derived ones, each replaced by a stated one. */
 function designSlots(design: ProceduralDesign, src: SoundSource, declared: SoundMapping): SoundMapping {
-  const derived = derivedSounds(src, design.game?.weight);
+  const derived = derivedSounds(src, design.game?.weight, design.game?.maxspeed);
   const out: SoundMapping = {};
   for (const slot of SOUND_SLOTS) {
     const v = declared[slot] ?? derived[slot];
@@ -279,9 +305,13 @@ export function withSounds<G extends { weight?: number | null; sounds?: SoundMap
   const declared = stated?.sounds ?? {};
   const base = designSlots(design, src, declared);
   const key = (p: ParamValues) => JSON.stringify(Object.entries(p).sort());
-  const overrideOf = (v: { params: ParamValues; weight?: number | null }): SoundOverride => {
+  const overrideOf = (v: { params: ParamValues; weight?: number | null; maxspeed?: number | null }): SoundOverride => {
     const own = stated?.variants?.find((x) => key(x.params) === key(v.params))?.sounds ?? {};
-    const derived = derivedSounds(src, v.weight !== undefined ? v.weight : design.game?.weight);
+    const derived = derivedSounds(
+      src,
+      v.weight !== undefined ? v.weight : design.game?.weight,
+      v.maxspeed !== undefined ? v.maxspeed : design.game?.maxspeed,
+    );
     const sounds: SoundOverride = {};
     for (const slot of SOUND_SLOTS) {
       if (slot in own) sounds[slot] = own[slot] ?? null;
