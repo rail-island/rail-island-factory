@@ -77,6 +77,7 @@ import { DB628_DESIGNS } from "./db628.ts";
 import { KIHA40_DESIGNS } from "./jrKiha40.ts";
 import { VT1816_DESIGNS } from "./drVt1816.ts";
 import { SHINKANSEN0_DESIGNS } from "./shinkansen0.ts";
+import { MTR_M_TRAIN_DESIGNS } from "./mtrMTrain.ts";
 import { DUPLEX_DESIGNS } from "./tgvDuplex.ts";
 import { MDMOT_DESIGNS } from "./mavMdmot.ts";
 import { ICE1_DESIGNS } from "./ice1.ts";
@@ -201,6 +202,7 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: ICE1_DESIGNS, source: "ice1.ts", meta: "vehicles" },
   { designs: TGV_DESIGNS, source: "tgv.ts", meta: "vehicles" },
   { designs: SHINKANSEN0_DESIGNS, source: "shinkansen0.ts", meta: "vehicles" },
+  { designs: MTR_M_TRAIN_DESIGNS, source: "mtrMTrain.ts", meta: "vehicles" },
   { designs: DUPLEX_DESIGNS, source: "tgvDuplex.ts", meta: "vehicles" },
   { designs: CZSK_COACHES, source: "czskCoaches.ts", meta: "vehicles" },
   { designs: GERMAN_COACHES, source: "germanCoaches.ts", meta: "vehicles" },
