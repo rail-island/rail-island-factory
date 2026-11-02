@@ -35,7 +35,7 @@ does not have, and plays nothing there.
 | Slot | On | Plays | The game sets |
 |---|---|---|---|
 | `horn` | rail and road vehicles, ships | a one-shot | `call` (why it sounds), where the design has one |
-| `engine` | rail and road vehicles | a loop | `rpm`, `load`, `state` (a diesel's revs, effort and whether it runs) or `rate`, `intensity` (a steam beat), whichever the design has |
+| `engine` | rail and road vehicles | a loop | `rpm`, `load`, `state` (a diesel's revs, effort and whether it runs), `rate`, `intensity` (a steam beat) or `speed`, `load` (an electric's share of its top speed and effort), whichever the design has |
 | `bell` | buildings | a one-shot | nothing |
 
 A slot is `{ id, params?, calls? }`: a rail-island-music design id and the
@@ -44,7 +44,7 @@ strikes, chime, level, ...). The runtime parameters above are the game's; pinnin
 one fails the build.
 
 `calls` is a horn's list of the calls the game makes on it **by itself**:
-`departure` (moving off from a platform), `crossing`, `tunnel`. A call the model
+`departure` (moving off from a platform, or a tram from a stop), `crossing`, `tunnel`. A call the model
 does not list is silent: the game plays nothing for it, so a model with no
 `calls` sounds no horn of its own accord. The player's Horn (`player`) always
 sounds and is never listed. The check refuses a call the design's `call`
@@ -84,14 +84,29 @@ the game keeps no rule of its own:
 | rail, `traction: "steam"` | `steam-whistle`, pitch 880 Hz (40 t) to 520 Hz (140 t); calls `departure`, `crossing`, `tunnel` | `steam-chuff` |
 | rail, `traction: "diesel"`, group `unit` (a railcar, a DMU) | `loco-horn` by weight, as below; calls `crossing`, `tunnel` | `diesel-engine-railcar`, size 0 (40 t) to 1 (140 t) |
 | rail, `traction: "diesel"`, any other group (a locomotive) | `loco-horn`, pitch 370 Hz (40 t) to 220 Hz (140 t); calls `crossing`, `tunnel` | `diesel-engine-shunter` under 80 t (`MAINLINE_TONNES`), `diesel-engine-mainline` from 80 t; size 0 (40 t) to 1 (140 t) |
-| every other rail vehicle (electric, units, trams, coaches, wagons) | `loco-horn` by weight; calls `crossing`, `tunnel` | none |
+| rail, `traction: "electric"`, top speed 200 km/h or more (`HIGH_SPEED_KMH`) | `loco-horn` by weight; calls `crossing`, `tunnel` | `electric-engine-shinkansen` (the TGVs, the Shinkansen) |
+| rail, `traction: "electric"`, group `unit` | `loco-horn` by weight; calls `crossing`, `tunnel` | `electric-engine-converter` (three-phase converters) |
+| rail, `traction: "electric"`, any other group (a locomotive) | `loco-horn` by weight; calls `crossing`, `tunnel` | `electric-engine-resistor` (blowers, gears, the controller's notches) |
+| rail, group `tram` | `tram-bell`; calls `departure` | none |
+| every other rail vehicle (metro, coaches, wagons) | `loco-horn` by weight; calls `crossing`, `tunnel` | none |
 | ship | `ship-horn`, pitch 196 Hz (20 studs) to 70 Hz (120 studs), 0.7 to 2.2 s | - |
 | road vehicle, group `bus` | none | `diesel-engine-bus`, as measured (no size) |
 | road vehicle, group `truck` | none | `diesel-engine-truck`, as measured (no size) |
 | aircraft, cable cars | none | none |
 
-Only a steam locomotive whistles as it leaves a platform (`STEAM_CALLS`); every
-other rail vehicle leaves quietly (`HORN_CALLS`).
+Only a steam locomotive whistles as it leaves a platform (`STEAM_CALLS`) and a
+tram rings its bell as it moves off from a stop (`TRAM_CALLS`, the two short
+rings of a Czech tram driver); every other rail vehicle leaves quietly
+(`HORN_CALLS`). The tram bell has no `crossing` or `tunnel` call, so a tram
+rings for nothing else by itself.
+
+An electric's motors are derived from its group and its top speed
+(`electricEngine`; a variant's own `maxspeed` re-derives it). The table states
+the electrics whose equipment differs: the three-phase CD 169 and OBB 1012 and
+the ICE 1 (whose converters the design was measured from) run
+`electric-engine-converter`, the 1960s resistor unit CD 451
+`electric-engine-resistor`. The game sets `speed` (its share of the vehicle's
+top speed) and `load`; nothing is pinned.
 
 The horns, whistles and steam beats are the rules the game used to apply itself
 (its `hornSpecFor`, `dieselDriveFor` and `shipHornFor`), moved here unchanged.
