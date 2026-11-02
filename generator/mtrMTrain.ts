@@ -358,13 +358,18 @@ function facePanel(m: MeshBuilder, xf: number, mat: string, poly: Pt[], proud: n
   m.slab(mat, poly.map(([z, y]): Vec3 => [xf + proud, y, z]), [-depth, 0, 0]);
 }
 
-/** A rectangle (z0..z1, y0..y1) with its corners rounded by r (`round`: which corners, bottom-left, bottom-right, top-right, top-left seen from ahead). */
-function roundRect(z0: number, z1: number, y0: number, y1: number, r: number, round = [true, true, true, true]): Pt[] {
+/**
+ * A rectangle (z0..z1, y0..y1) with its corners rounded by r (`round`: which
+ * corners - low z bottom, high z bottom, high z top, low z top); r may give each
+ * corner its own radius in that order.
+ */
+function roundRect(z0: number, z1: number, y0: number, y1: number, r: number | [number, number, number, number], round = [true, true, true, true]): Pt[] {
   const out: Pt[] = [];
-  const corners: Array<[number, number, number]> = [[z0 + r, y0 + r, Math.PI], [z1 - r, y0 + r, 1.5 * Math.PI], [z1 - r, y1 - r, 0], [z0 + r, y1 - r, 0.5 * Math.PI]];
+  const rs = typeof r === "number" ? [r, r, r, r] : r;
+  const corners: Array<[number, number, number, number]> = [[z0 + rs[0], y0 + rs[0], Math.PI, rs[0]], [z1 - rs[1], y0 + rs[1], 1.5 * Math.PI, rs[1]], [z1 - rs[2], y1 - rs[2], 0, rs[2]], [z0 + rs[3], y1 - rs[3], 0.5 * Math.PI, rs[3]]];
   const sharp: Pt[] = [[z0, y0], [z1, y0], [z1, y1], [z0, y1]];
-  corners.forEach(([cz, cy, a0], i) => {
-    if (!round[i]) {
+  corners.forEach(([cz, cy, a0, r], i) => {
+    if (!round[i] || r <= 0) {
       out.push(sharp[i]!);
       return;
     }
@@ -390,13 +395,22 @@ function roundel(m: MeshBuilder, xf: number, yc: number, proud: number): void {
 /** The bumper's head and tail lamps in their recesses and the anticlimber strip, every front. */
 function bumper(m: MeshBuilder, xf: number, round: boolean): void {
   m.scope("bumper lamps", () => {
+    // the Disneyland front: round headlamps in chrome rings near the corners, a small round tail lamp inboard
+    if (round)
+      for (const s of [1, -1]) {
+        facePanel(m, xf, "frame", circle(s * 0.82, 1.14, 0.105, 16), 0.006, 0.02);
+        facePanel(m, xf, "lampGlass", circle(s * 0.82, 1.14, 0.08, 16), 0.011, 0.004);
+        facePanel(m, xf, "rubber", circle(s * 0.6, 1.14, 0.055, 12), 0.006, 0.02);
+        facePanel(m, xf, "lampRed", circle(s * 0.6, 1.14, 0.04, 12), 0.011, 0.004);
+      }
+    else
     for (const s of [1, -1]) {
       const [z0, z1] = s > 0 ? [0.58, 1.0] : [-1.0, -0.58];
-      facePanel(m, xf, "rubber", roundRect(z0, z1, 1.04, 1.22, round ? 0.08 : 0.03), 0.006, 0.02);
+      facePanel(m, xf, "rubber", roundRect(z0, z1, 1.04, 1.22, 0.03), 0.006, 0.02);
       const [h0, h1] = s > 0 ? [0.64, 0.77] : [-0.77, -0.64];
       const [t0, t1] = s > 0 ? [0.83, 0.95] : [-0.95, -0.83];
-      facePanel(m, xf, "lampGlass", roundRect(h0, h1, 1.07, 1.19, round ? 0.05 : 0.01), 0.011, 0.004);
-      facePanel(m, xf, "lampRed", roundRect(t0, t1, 1.08, 1.18, round ? 0.04 : 0.01), 0.011, 0.004);
+      facePanel(m, xf, "lampGlass", roundRect(h0, h1, 1.07, 1.19, 0.01), 0.011, 0.004);
+      facePanel(m, xf, "lampRed", roundRect(t0, t1, 1.08, 1.18, 0.01), 0.011, 0.004);
     }
   });
   m.scope("anticlimber", () => facePanel(m, xf, "rubber", roundRect(-1.0, 1.0, 1.26, 1.3, 0.01), 0.006, 0.03));
@@ -455,16 +469,26 @@ function drawCabFace(m: MeshBuilder, S: Scheme, xf: number, front: MtrFront): vo
     });
     m.scope("emergency door", () => {
       facePanel(m, xf, "door", roundRect(-0.5, 0.5, 1.62, 3.18, 0.04), 0.009, 0.02);
-      facePanel(m, xf, "rubber", roundRect(-0.38, 0.38, 2.0, 2.94, 0.04), 0.012, 0.004);
-      facePanel(m, xf, "cabGlass", roundRect(-0.35, 0.35, 2.03, 2.91, 0.03), 0.015, 0.004);
+      // the centre door's large window
+      facePanel(m, xf, "rubber", roundRect(-0.41, 0.41, 1.92, 3.06, 0.07), 0.012, 0.004);
+      facePanel(m, xf, "cabGlass", roundRect(-0.38, 0.38, 1.95, 3.03, 0.055), 0.015, 0.004);
     });
-    windscreens(m, xf, 0.58, 0.98, "rubber", 0.06, false);
+    // the large side windscreens, rounded where they follow the mask's outer edge
+    m.scope("windscreens", () => {
+      for (const s of [1, -1]) {
+        const [z0, z1] = s > 0 ? [0.56, 1.0] : [-1.0, -0.56];
+        const outer = (r: number, k: number): [number, number, number, number] => (s > 0 ? [k, r, r * 0.8, k] : [r, k, k, r * 0.8]);
+        facePanel(m, xf, "rubber", roundRect(z0, z1, 1.88, 3.1, outer(0.26, 0.05)), 0.009, 0.02);
+        facePanel(m, xf, "cabGlass", roundRect(z0 + 0.03, z1 - 0.03, 1.91, 3.07, outer(0.23, 0.035)), 0.014, 0.004);
+      }
+    });
   }
   m.scope("bands", () => {
     // the Disneyland band: a short "smile" on the mask; the others across the face
-    const z = front === "disney" ? 0.9 : front === "original" ? 1.39 : 1.08;
-    const proud = front === "original" ? 0.012 : 0.017;
-    for (const [y0, y1] of S.bands) facePanel(m, xf, "red", roundRect(-z, z, y0, y1, front === "original" ? 0.001 : Math.min(0.08, (y1 - y0) / 2 - 0.001)), proud, 0.004);
+    // the 1979 stripes run to the face's very edge, where their wrap round the corners takes over at the same offset (STRIPE_PROUD)
+    const z = front === "disney" ? 0.9 : front === "original" ? W - FRONTS.original.corner : 1.08;
+    const proud = front === "original" ? STRIPE_PROUD : 0.017;
+    for (const [y0, y1] of S.bands) facePanel(m, xf, "red", roundRect(-z, z, y0, y1, front === "original" ? 0 : Math.min(0.08, (y1 - y0) / 2 - 0.001)), proud, 0.004);
   });
   if (front !== "original") {
     const [y0, y1] = S.bands[S.bands.length - 1]!;
@@ -473,9 +497,34 @@ function drawCabFace(m: MeshBuilder, S: Scheme, xf: number, front: MtrFront): vo
   bumper(m, xf, front === "disney");
 }
 
-/** The 1979 front's red stripes wrapping round the corners onto the sides, to the cab door. */
-function stripeWrap(m: MeshBuilder, S: Scheme, p: SliceBody, X: (d: number) => number, s: number, to: number): void {
-  for (const [y0, y1] of S.bands) sidePane(m, p, X, s, "red", [0, to], [y0, y1], 0.006, 6, 1);
+/** How far the 1979 stripes stand off the face and the corner: one offset, so the face's stripe meets its wrap. */
+const STRIPE_PROUD = 0.012;
+
+/**
+ * The 1979 front's red stripes wrapping round the corners onto the sides, to the
+ * cab door: strips laid STRIPE_PROUD off the corner's quarter circle in plan
+ * (starting where the face's stripe ends, at the face's edge), then along the side.
+ */
+function stripeWrap(m: MeshBuilder, S: Scheme, X: (d: number) => number, s: number, to: number): void {
+  const r = FRONTS.original.corner;
+  const e = Math.sign(X(0) - X(1));
+  // the side's lean: the slice's half width at y is w(d) times this
+  const f = (y: number) => 1 - ((1 - LEAN) * (y - BELLY)) / (SHOULDER - BELLY);
+  // stations: the corner's arc in angle (0 facing ahead), then the flat side to `to`
+  const at = (k: number): { d: number; w: number; n: [number, number] } => {
+    if (k <= 6) {
+      const th = (k / 6) * (Math.PI / 2);
+      return { d: r * (1 - Math.cos(th)), w: W - r + r * Math.sin(th), n: [Math.cos(th), Math.sin(th)] };
+    }
+    return { d: to, w: W, n: [0, 1] };
+  };
+  for (const [y0, y1] of S.bands)
+    for (let k = 0; k < 7; k++) {
+      const [a, b] = [at(k), at(k + 1)];
+      const P = (q: typeof a, y: number): Vec3 => [X(q.d) + e * q.n[0] * STRIPE_PROUD, y, s * (q.w * f(y) + q.n[1] * STRIPE_PROUD)];
+      const nx = (a.n[0] + b.n[0]) / 2, nz = (a.n[1] + b.n[1]) / 2;
+      m.facets("red", [P(a, y0), P(b, y0), P(b, y1), P(a, y0), P(b, y1), P(a, y1)], [e * nx, 0, s * nz]);
+    }
 }
 
 /** The Disneyland cab car's navy and yellow sweep along the lower side behind the front. */
@@ -559,7 +608,7 @@ function drawCar(coach: Coach, S: Scheme, car: MtrCar, front: MtrFront, X: (d: n
             sidePanel(m, p, X, s, "frame", a + 0.12, b - 0.12, 2.0, 2.72, 0.01, 0.003);
             sidePanel(m, p, X, s, "glass", a + 0.15, b - 0.15, 2.03, 2.69, 0.013, 0.003);
           });
-        if (front === "original" && cab) m.scope("stripes", () => stripeWrap(m, S, p, X, s, 0.28));
+        if (front === "original" && cab) m.scope("stripes", () => stripeWrap(m, S, X, s, 0.28));
         if (disney && cab) m.scope("sweep", () => disneySweep(m, p, X, s));
         // the running number on the body under the windows, between the second and third doors
         m.scope("running number", () => runningNumber(m, p, X, s, number, (lay.doors[1]![1] + lay.doors[2]![0]) / 2, 1.55, 0.1));

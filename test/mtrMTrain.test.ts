@@ -125,6 +125,33 @@ describe("the MTR M-Train", () => {
     expect(faceTop({ unit: "aCar", livery: "retro" })).toBeGreaterThan(faceTop({ unit: "aCar" }));
   });
 
+  it("runs the 1979 stripes unbroken from the face round the corners: the face's stripe reaches the face's edge at the wrap's own offset", () => {
+    const all = nodes({ unit: "aCar", livery: "retro" });
+    const bands = all.filter((n) => n.id.startsWith("cab-end/bands"));
+    const wrap = all.filter((n) => n.id.startsWith("body/right-side/stripes"));
+    expect(bands.length).toBeGreaterThan(0);
+    expect(wrap.length).toBeGreaterThan(0);
+    // the face's half width at the stripes is 1.53 - 0.12 m (the 1979 front's corner), a hair less for the side's lean
+    expect(Math.max(...bands.map((n) => n.max![2]))).toBeGreaterThan(1.405);
+    // the wrap starts where the face's stripe stands, 12 mm ahead of the face
+    const front = (ns: typeof all) => Math.max(...ns.map((n) => n.max![0]));
+    expect(front(wrap)).toBeCloseTo(front(bands), 3);
+    expect(Math.min(...wrap.map((n) => n.min![2]))).toBeLessThan(1.42);
+  });
+
+  it("gives the Disneyland front its large windscreens and centre window and round headlamps", () => {
+    const all = nodes({ unit: "pCar" });
+    const span = (prefix: string, axis: number) => {
+      const ns = all.filter((n) => n.id.startsWith(prefix));
+      return Math.max(...ns.map((n) => n.max![axis])) - Math.min(...ns.map((n) => n.min![axis]));
+    };
+    // the side windscreens reach out to the mask's edge, 1.22 m tall; the centre door's window over 1.1 m tall
+    expect(Math.max(...all.filter((n) => n.id.startsWith("cab-end/windscreens")).map((n) => n.max![2]))).toBeGreaterThan(0.99);
+    expect(span("cab-end/windscreens", 1)).toBeGreaterThan(1.2);
+    expect(span("cab-end/emergency-door", 1)).toBeGreaterThan(1.5);
+    expect(all.some((n) => n.id.startsWith("cab-end/bumper-lamps"))).toBe(true);
+  });
+
   it("gives the Disneyland cars their Mickey-head windows and oval door lights, the urban cars none", () => {
     for (const car of DRL) {
       expect(mtrLayout(car).mickeys.length).toBeGreaterThanOrEqual(8);

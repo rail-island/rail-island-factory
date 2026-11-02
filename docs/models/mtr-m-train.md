@@ -58,13 +58,17 @@ The `livery` picks the urban cars' paint, and with it the A car's front
 - `retro` - the 1979 trains as delivered: unpainted aluminium sides; the **original
   front**: tight 0.12 m corners and a near-square top (3.56 m at the face); the white
   glass-fibre face, the narrow windscreens with their displays, the wide emergency
-  door, the wide red stripe and the thin one under it running round the corners to
-  the hinged cab door that takes the cab's side window's place, the round lamp over
+  door, the wide red stripe and the thin one under it running unbroken round the
+  corners to the hinged cab door (the face's stripes reach the face's edge, and their
+  wrap follows the corner's quarter circle in plan at the same 12 mm offset,
+  `stripeWrap`) that takes the cab's side window's place, the round lamp over
   the door.
 - the Disneyland cars: a white body and navy roof; the **Disneyland front**: rounder
   0.38 m corners, the top curving further back (3.38 m at the face); the navy mask
-  edged in yellow, the windscreens and the centre door's own window, the short red
-  "smile" band with the roundel, round bumper lamps; a navy and yellow sweep along
+  edged in yellow, the large side windscreens (1.22 m tall, reaching the mask's edge,
+  their outer corners rounded to follow it), the centre door's large window, the
+  short red "smile" band with the roundel, round headlamps in chrome rings near the
+  corners with small round tail lamps inboard; a navy and yellow sweep along
   the lower side behind the front.
 
 ## Dimensions
@@ -121,7 +125,8 @@ at most for a train.
 `test/mtrMTrain.test.ts`: every urban car in both liveries and both Disneyland cars
 within 16,000 triangles, the envelope and its length over the couplers without
 coplanar faces; the bogies and axles; five (three) opening doors a side of two leaves
-each; the cab faces, which front each car and livery draws, the Mickey-head windows,
+each; the cab faces, which front each car and livery draws, the 1979 stripes
+unbroken from the face round the corners, the Disneyland windscreens' size, the Mickey-head windows,
 and only the C and Q cars' pantographs at the wire; the Disneyland train; the formation of every length and its running numbers; the
 sections, joints and supports of every train; deterministic bytes and the distant model
 of every car and train. `test/lod-units.test.ts` (which counts a fixed-length train's
