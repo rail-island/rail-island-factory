@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   COLUMNS, DEFAULT_SORT, cellFile, cellText, column, compareRows, effectiveParams, formatBytes, isDefaultParams, nonDefaultParams, parseView,
   NO_CHIPS, chipLabel, chipRows, groupOf, prepareRows, queryRows, serializeView, shownId,
-  MAX_SHOWN_VARIANTS, representativeVariants, variantCaption, variantCount, variantThumbKey,
+  MAX_SHOWN_VARIANTS, offeredValues, representativeVariants, variantCaption, variantCount, variantThumbKey,
   type CatalogRecord,
 } from "../src/catalogQuery";
 
@@ -279,6 +279,24 @@ describe("variants", () => {
     const shown = representativeVariants(many);
     expect(shown).toHaveLength(MAX_SHOWN_VARIANTS);
     expect(new Set(shown.map((p) => JSON.stringify(p))).size).toBe(MAX_SHOWN_VARIANTS);
+  });
+
+  // the MTR-like case: the gold livery only on the car, not the van
+  const mtr = rec("veh-mtr", "MTR", 100, {
+    params: [
+      { name: "unit", title: "Unit", default: "car", values: [{ value: "car", title: "Car" }, { value: "van", title: "Van" }] },
+      { name: "livery", title: "Livery", default: "red", values: [{ value: "red", title: "Red" }, { value: "gold", title: "Gold", when: { name: "unit", values: ["car"] } }] },
+    ],
+  });
+
+  it("offers a conditional value only where the values before it allow it, in the picker, the count and the thumbnails", () => {
+    expect(offeredValues(mtr.params![1]!, { unit: "van" }).map((v) => v.value)).toEqual(["red"]);
+    expect(offeredValues(mtr.params![1]!, { unit: "car" }).map((v) => v.value)).toEqual(["red", "gold"]);
+    // a link to a combination that never ran falls back to the default
+    expect(effectiveParams(mtr, { unit: "van", livery: "gold" })).toEqual({ unit: "van", livery: "red" });
+    expect(effectiveParams(mtr, { livery: "gold" })).toEqual({ unit: "car", livery: "gold" });
+    expect(variantCount(mtr)).toBe(3);
+    expect(representativeVariants(mtr)).toEqual([{}, { unit: "van" }, { livery: "gold" }]);
   });
 
   it("captions a variant by its non-default values", () => {

@@ -1,6 +1,6 @@
 # MTR M-Train
 
-**Covers** - the Metro-Cammell electric units of Hong Kong's MTR urban lines and the Disneyland Resort Line (`veh-mtr-m-train`): their references, dimensions, the `unit` parameter (the A cab car, the B motor car, the C pantograph car, the D trailer, the articulated full train with its `cars`; the Disneyland P and Q cars and their train), the two liveries and the three cab fronts, the slice body, the formations, the game properties, the deviations and the tests.
+**Covers** - the Metro-Cammell electric units of Hong Kong's MTR urban lines and the Disneyland Resort Line (`veh-mtr-m-train`): their references, dimensions, the `unit` parameter (the A cab car, the B motor car, the C pantograph car, the D trailer, the articulated full train with its `cars`), the three liveries - the Disneyland one offered only on the cars that line ran - and the three cab fronts, the retired Disneyland units, the slice body, the formations, the game properties, the deviations and the tests.
 **Code** - `generator/mtrMTrain.ts`, `generator/sliceBody.ts`, `generator/unitParts.ts` (`unitBogie`), `generator/emuParts.ts` (`centreCoupler`), `generator/czElectricKit.ts` (`diamond`), `generator/tramKit.ts` (`articulate`), `generator/doors.ts`, `test/mtrMTrain.test.ts`, `assets/mtr-m-train/`
 **See also** - [shinkansen-0.md](shinkansen-0.md) (the same slice body and train), [vehicles.md](vehicles.md), [parameters.md](parameters.md), [vehicle-rig.md](vehicle-rig.md), [doors.md](doors.md), [lod.md](lod.md), [the source notes](../../assets/mtr-m-train/SOURCES.md)
 
@@ -8,9 +8,15 @@
 
 | id | title | parameter | values (default first) | triangles |
 |---|---|---|---|---|
-| `veh-mtr-m-train` | MTR M-Train | `unit` | `aCar`, `bCar`, `cCar`, `dCar`, `train`, `pCar`, `qCar`, `drlTrain` | about 7,000 to 8,000 a cab car, 5,000 to 6,500 the others |
-| | | `cars` (with `train` only) | `4` (default), `3`, `5` .. `8` | the cars added up: about 20,000 (3) to 47,500 (8); the Disneyland train about 29,000 |
-| | | `livery` (with the urban cars and `train` only) | `refurbished`, `retro` | |
+| `veh-mtr-m-train` | MTR M-Train | `unit` | `aCar`, `bCar`, `cCar`, `dCar`, `train` | about 7,000 to 8,000 a cab car, 5,000 to 6,500 the others |
+| | | `livery` | `refurbished`, `retro`, `disneyland` (with `aCar`, `cCar` and `train` only) | |
+| | | `cars` (with `train` only) | `4` (default), `3`, `5` .. `8` (`3` and `5` .. `8` with `refurbished` and `retro` only) | the cars added up: about 20,000 (3) to 47,500 (8); the Disneyland train about 29,000 |
+
+The parameters come in that order, and only combinations that ran are offered:
+the Disneyland livery's values carry a `when` (a conditional value,
+[parameters.md](parameters.md)) on the car, and the train lengths other than four
+one on the livery, so the Disneyland Resort Line's B or D car or a Disneyland train
+of eight is in no picker, combination or test, and resolving one throws.
 
 - `aCar` - "Cab car A", the default and the train's "locomotive": a motor car with
   the driving cab. Its flat cab face at +X has corners rounded in plan (0.32 m) and
@@ -24,11 +30,13 @@
   its +X end, raised to the game's contact wire (5.88 m, `RAIL_COLLECTOR_TOP`).
 - `dCar` - "Trailer D": the unpowered trailer (its bogies without motors).
 - `train` - the whole train as one articulated vehicle of `cars` cars (below).
-- `pCar` - "Disneyland P", the Disneyland Resort Line's cab car (a motor car,
-  22.85 m): the Disneyland front, three doors a side, Mickey-head windows.
-- `qCar` - "Disneyland Q", its pantograph car (22.0 m), three doors a side.
-- `drlTrain` - "Disneyland train", the line's four-car train P-Q+Q-P, articulated
-  as `train`, the rear P car turned.
+
+In the `disneyland` livery the A car is drawn as the Disneyland Resort Line's P cab
+car (22.85 m: the Disneyland front, three doors a side, Mickey-head windows), the C
+car as its Q pantograph car (22.0 m) and the train as the line's four cars P-Q+Q-P,
+the rear P car turned (`mtrCarOf`). They were `unit` values of their own for a day
+(`pCar`, `qCar`, `drlTrain`): those are `retired` and resolve to `aCar`, `cCar` and
+`train` in the `disneyland` livery, so a key that names one still builds the same car.
 
 Every urban car has five double-leaf sliding doors a side, 1.4 m wide and 4.5 m
 apart, the last 2.0 m from the inner end; a window with its upper hopper midway
@@ -47,8 +55,7 @@ fields are `EMU_CATALOG` (rail vehicles, group `unit`).
 
 ## Liveries and fronts
 
-The `livery` picks the urban cars' paint, and with it the A car's front
-(`mtrFront`); the Disneyland cars have their own paint and front, and no livery.
+The `livery` picks the paint, and with it the cab car's front (`mtrFront`).
 
 - `refurbished` - the trains as refurbished in 1998-2001: brushed aluminium sides,
   the brown-grey roof; the **refurbished front**: corners rounded 0.32 m in plan,
@@ -63,7 +70,7 @@ The `livery` picks the urban cars' paint, and with it the A car's front
   wrap follows the corner's quarter circle in plan at the same 12 mm offset,
   `stripeWrap`) that takes the cab's side window's place, the round lamp over
   the door.
-- the Disneyland cars: a white body and navy roof; the **Disneyland front**: rounder
+- `disneyland` - the Disneyland Resort Line's P and Q cars: a white body and navy roof; the **Disneyland front**: rounder
   0.38 m corners, the top curving further back (3.38 m at the face); the navy mask
   edged in yellow, the large side windscreens (1.22 m tall, reaching the mask's edge,
   their outer corners rounded to follow it), the centre door's large window, the
@@ -122,7 +129,9 @@ at most for a train.
 
 ## Tests
 
-`test/mtrMTrain.test.ts`: every urban car in both liveries and both Disneyland cars
+`test/mtrMTrain.test.ts`: the parameters' order and conditional values - the
+Disneyland livery only on the A car, C car and four-car train, the retired Disneyland
+units resolving to them; every urban car in both urban liveries and both Disneyland cars
 within 16,000 triangles, the envelope and its length over the couplers without
 coplanar faces; the bogies and axles; five (three) opening doors a side of two leaves
 each; the cab faces, which front each car and livery draws, the 1979 stripes

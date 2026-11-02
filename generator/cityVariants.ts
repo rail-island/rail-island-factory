@@ -18,6 +18,7 @@
 //
 // No node: imports.
 
+import { offeredValues } from "./paramOffers.ts";
 import { paramApplies, resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { HEIGHT_BANDS, PALETTES, PARTY_SIDES, partyParam } from "./sets/blockType.ts";
 
@@ -162,9 +163,9 @@ export function cityShapes(design: Pick<ProceduralDesign, "id" | "params" | "fin
   const finish = new Set(design.finishParams ?? []);
   const use = declared ?? DESIGN_VARY[design.id];
   const vary = (use?.vary ?? FAMILY_VARY[group!] ?? []).filter((n) => !finish.has(n) && specs.some((s) => s.name === n));
-  const allowed = (s: ParamSpec): string[] => {
+  const allowed = (s: ParamSpec, chosen: ParamValues): string[] => {
     const only = use?.values?.[s.name] ?? FAMILY_VALUES[group!]?.[s.name];
-    const values = s.values.map((v) => v.value).filter((v) => !only || only.includes(v));
+    const values = offeredValues(s, chosen).map((v) => v.value).filter((v) => !only || only.includes(v));
     return [s.default, ...values.filter((v) => v !== s.default)].filter((v, i, a) => values.includes(v) && a.indexOf(v) === i);
   };
   let combos: ParamValues[] = [{}];
@@ -172,7 +173,7 @@ export function cityShapes(design: Pick<ProceduralDesign, "id" | "params" | "fin
     if (!vary.includes(s.name)) continue;
     combos = combos.flatMap((c) => {
       const chosen = { ...resolveParams(specs, c) };
-      return paramApplies(s, chosen) ? allowed(s).map((v) => (v === s.default ? { ...c } : { ...c, [s.name]: v })) : [c];
+      return paramApplies(s, chosen) ? allowed(s, chosen).map((v) => (v === s.default ? { ...c } : { ...c, [s.name]: v })) : [c];
     });
   }
   return combos;
