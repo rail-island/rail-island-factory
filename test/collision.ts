@@ -112,7 +112,16 @@ export function insideSeen(tris: readonly Tri[], dir: V3, spacing: number): V3[]
   const uu: V3 = [u[0] / ul, u[1] / ul, u[2] / ul];
   const vv = cross(d, uu);
   const cell = 0.2;
-  const grid = new Map<string, number[]>();
+  // each triangle's corner and edges, and whether it faces away from the rays, once
+  // (the rays below are many; the arithmetic is cross() and dot() written out)
+  const n = tris.length;
+  const P = new Float64Array(n * 3);
+  const E1 = new Float64Array(n * 3);
+  const E2 = new Float64Array(n * 3);
+  const AWAY = new Uint8Array(n);
+  // numeric cell keys: a * 2^21 + b, the cells' indices well inside +-2^20
+  const keyOf = (a: number, b: number) => a * 2097152 + b;
+  const grid = new Map<number, number[]>();
   let lo = [Infinity, Infinity];
   let hi = [-Infinity, -Infinity];
   let far = 0;
@@ -123,43 +132,61 @@ export function insideSeen(tris: readonly Tri[], dir: V3, spacing: number): V3[]
     const [u0, u1, v0, v1] = [Math.min(...pu), Math.max(...pu), Math.min(...pv), Math.max(...pv)];
     lo = [Math.min(lo[0]!, u0), Math.min(lo[1]!, v0)];
     hi = [Math.max(hi[0]!, u1), Math.max(hi[1]!, v1)];
+    const [p0, p1, p2] = t;
+    const e1 = sub(p1, p0);
+    const e2 = sub(p2, p0);
+    P.set(p0, i * 3);
+    E1.set(e1, i * 3);
+    E2.set(e2, i * 3);
+    AWAY[i] = dot(cross(e1, e2), d) > 0 ? 1 : 0;
     for (let a = Math.floor(u0 / cell); a <= Math.floor(u1 / cell); a++) {
       for (let b = Math.floor(v0 / cell); b <= Math.floor(v1 / cell); b++) {
-        const key = `${a},${b}`;
+        const key = keyOf(a, b);
         const list = grid.get(key);
         if (list) list.push(i);
         else grid.set(key, [i]);
       }
     }
   });
+  const [dx, dy, dz] = d;
   const seen: V3[] = [];
   // half a step in from the outline, so no ray runs along a face at the edge of it
   for (let a = lo[0]! + spacing / 2; a <= hi[0]!; a += spacing) {
     for (let b = lo[1]! + spacing / 2; b <= hi[1]!; b += spacing) {
-      const origin: V3 = [0, 1, 2].map((k) => a * uu[k]! + b * vv[k]! - (far + 1) * d[k]!) as V3;
+      const ox = a * uu[0] + b * vv[0] - (far + 1) * dx;
+      const oy = a * uu[1] + b * vv[1] - (far + 1) * dy;
+      const oz = a * uu[2] + b * vv[2] - (far + 1) * dz;
       let best = Infinity;
       let back = false;
-      for (const i of grid.get(`${Math.floor(a / cell)},${Math.floor(b / cell)}`) ?? []) {
-        const [p0, p1, p2] = tris[i]!;
-        const e1 = sub(p1, p0);
-        const e2 = sub(p2, p0);
-        const h = cross(d, e2);
-        const det = dot(e1, h);
+      for (const i of grid.get(keyOf(Math.floor(a / cell), Math.floor(b / cell))) ?? []) {
+        const j = i * 3;
+        const [e1x, e1y, e1z] = [E1[j]!, E1[j + 1]!, E1[j + 2]!];
+        const [e2x, e2y, e2z] = [E2[j]!, E2[j + 1]!, E2[j + 2]!];
+        // h = d x e2
+        const hx = dy * e2z - dz * e2y;
+        const hy = dz * e2x - dx * e2z;
+        const hz = dx * e2y - dy * e2x;
+        const det = e1x * hx + e1y * hy + e1z * hz;
         if (Math.abs(det) < 1e-12) continue;
-        const s = sub(origin, p0);
-        const w = dot(s, h) / det;
+        const sx = ox - P[j]!;
+        const sy = oy - P[j + 1]!;
+        const sz = oz - P[j + 2]!;
+        const w = (sx * hx + sy * hy + sz * hz) / det;
         if (w < 0 || w > 1) continue;
-        const k = cross(s, e1);
-        const v = dot(d, k) / det;
+        // k = s x e1
+        const kx = sy * e1z - sz * e1y;
+        const ky = sz * e1x - sx * e1z;
+        const kz = sx * e1y - sy * e1x;
+        const v = (dx * kx + dy * ky + dz * kz) / det;
         if (v < 0 || w + v > 1) continue;
-        const t = dot(e2, k) / det;
+        const t = (e2x * kx + e2y * ky + e2z * kz) / det;
         if (t <= 0 || t > best + 1e-9) continue;
         // on a tie (an edge two faces share) the front one wins: that is what shows
-        const away = dot(cross(e1, e2), d) > 0;
+        const away = AWAY[i] === 1;
         back = t < best - 1e-9 ? away : back && away;
         best = Math.min(best, t);
       }
-      if (back) seen.push([0, 1, 2].map((k) => origin[k]! + best * d[k]!) as V3);
+      if (back) seen.push([ox + best * dx, oy + best * dy, oz + best * dz]);
     }
   }
   return seen;

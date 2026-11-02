@@ -49,7 +49,7 @@ for it.
 
 `pnpm test` runs every suite under `test/` and **must finish in under five
 minutes** (AGENTS.md); it takes about four and a half on a four-core machine
-(`vite.config.ts`). Four things keep it there:
+(`vite.config.ts`). Five things keep it there:
 
 - **Shared workers.** `isolate: false` runs the files of a worker in one module
   registry: the generator is loaded once per worker, not once per file, and
@@ -57,13 +57,18 @@ minutes** (AGENTS.md); it takes about four and a half on a four-core machine
 - **One build per design.** `test/catalogCache.ts` keeps each design's default
   build (GLB bytes, triangles, rig, source tree), its LOD and its bundled JS
   module, so the files a worker runs share them. The checks every design gets
-  run in **one pass per design** (`test/catalogSweep.ts`), split into eight
-  files, `test/catalog-1.test.ts` .. `test/catalog-8.test.ts`, by position in the
-  catalog: no z-fighting; deterministic GLB bytes and source tree; every
+  run in **one pass per design** (`test/catalogSweep.ts`), split into sixteen
+  files, `test/catalog-1.test.ts` .. `test/catalog-16.test.ts`, by position in the
+  catalog (small files, so the last to finish leaves no core idle for long): no z-fighting; deterministic GLB bytes and source tree; every
   primitive in a named scope and the tree's ranges tiling the GLB; the JS model
   building the GLB's triangles, colours, nodes, rig and clips, standalone and
   smaller than the full and LOD GLBs; the standalone LOD as the generator builds
-  it, in budget; a rigged vehicle's `pose()`.
+  it, in budget; a rigged vehicle's `pose()`. A parametric design's second
+  build is its defaults combination's, compared with the cached one, not a
+  separate rebuild. Suites that read several facts of one default build build it
+  once (`test/pantographs.test.ts` keeps what it reads of every vehicle's default,
+  `test/doors.test.ts` shares each passenger vehicle's default build between its
+  four checks).
 - **Sampled variants.** A test that builds a design's parameter combinations
   checks the defaults and three others spread evenly through the list, the same
   ones every run (`variantsUnderTest` and `sample` in `test/catalogCache.ts`):
@@ -73,8 +78,12 @@ minutes** (AGENTS.md); it takes about four and a half on a four-core machine
   the user asks for it (AGENTS.md).
 - **Cheap comparisons.** `test/setup.ts` decides equal typed arrays (GLB bytes)
   in one native comparison: `toEqual` walks them element by element, seconds per
-  model. A check over every triangle collects the failures and makes one
-  `expect`, not one per triangle.
+  model. A check over every triangle, vertex, normal or keyframe collects the
+  failures (or the worst deviation) and makes one `expect`, not one per item:
+  an `expect` costs more than the arithmetic it checks.
+- **Smoke where it is.** `test/emitters.test.ts` checks every combination of a
+  design that smokes (a listed smoker, or one whose defaults emit) and the
+  sampled ones of every other design.
 
 The whole-export tests export a few designs, not the catalog: `buildExport` and
 `generateModels` take a design list, and `pnpm build` (which runs the same code

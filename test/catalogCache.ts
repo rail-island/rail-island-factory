@@ -139,7 +139,7 @@ export function sample<T>(list: readonly T[]): T[] {
 
 /**
  * The designs of shard `index` of `count`, by position in the catalog, so the
- * per-design checks spread over the workers (test/catalog-*.test.ts).
+ * per-design checks spread over the workers (test/catalog-*.test.ts, sixteen).
  */
 export function shard(index: number, count: number): string[] {
   return [...DESIGNS.keys()].filter((_, i) => i % count === index);

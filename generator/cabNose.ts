@@ -106,6 +106,12 @@ export class CabNose {
   readonly yBot: number;
   readonly yTop: number;
   private readonly memo = new Map<string, [number, number] | null>();
+  /**
+   * The heights every interval() scan samples, the same for every layer and
+   * column, with the slice there (half width, corner radius, centreline face):
+   * looked up once, not once a scan (the lookups were most of a nose's build).
+   */
+  private scan?: { n: number; y: Float64Array; hw: Float64Array; r: Float64Array; dF: Float64Array };
   /** The pieces drawn so far, by scope name: material, triangles, normal. */
   private readonly out = new Map<string, Array<[string, Vec3[], Vec3]>>();
 
@@ -117,10 +123,14 @@ export class CabNose {
   /** The surface at (u, y): the query a layer sees and the model point. */
   at(u: number, y: number): NoseQuery & { p: Vec3 } {
     const s = this.s;
-    const hw = lerp(s.half, y);
-    const r = Math.min(lerp(s.corner, y), hw * 0.98);
+    return this.atSlice(u, y, lerp(s.half, y), lerp(s.corner, y), lerp(s.profile, y));
+  }
+
+  /** at(u, y) given the slice at y: its half width, its plan's corner radius and its centreline face. */
+  private atSlice(u: number, y: number, hw: number, corner: number, dF: number): NoseQuery & { p: Vec3 } {
+    const s = this.s;
+    const r = Math.min(corner, hw * 0.98);
     const a = hw - r;
-    const dF = lerp(s.profile, y);
     const b = s.bulge ?? 0;
     const au = Math.min(4, Math.abs(u));
     const sg = u < 0 ? -1 : 1;
@@ -179,12 +189,12 @@ export class CabNose {
     if (hit !== undefined) return hit;
     const L = this.s.layers[li]!;
     const test = (y: number) => L.inside(this.at(u, y));
-    const n = Math.max(80, Math.ceil((this.yTop - this.yBot) / 0.006));
+    const S = this.samples();
+    const n = S.n;
     let first = -1;
     let last = -1;
     for (let i = 0; i <= n; i++) {
-      const y = this.yBot + ((this.yTop - this.yBot) * i) / n;
-      if (test(y)) {
+      if (L.inside(this.atSlice(u, S.y[i]!, S.hw[i]!, S.r[i]!, S.dF[i]!))) {
         if (first < 0) first = i;
         last = i;
       }
@@ -206,6 +216,26 @@ export class CabNose {
     }
     this.memo.set(key, out);
     return out;
+  }
+
+  /** The scan's sample heights and the slice at each (see `scan`). */
+  private samples(): NonNullable<CabNose["scan"]> {
+    if (!this.scan) {
+      const s = this.s;
+      const n = Math.max(80, Math.ceil((this.yTop - this.yBot) / 0.006));
+      const y = new Float64Array(n + 1);
+      const hw = new Float64Array(n + 1);
+      const r = new Float64Array(n + 1);
+      const dF = new Float64Array(n + 1);
+      for (let i = 0; i <= n; i++) {
+        y[i] = this.yBot + ((this.yTop - this.yBot) * i) / n;
+        hw[i] = lerp(s.half, y[i]!);
+        r[i] = lerp(s.corner, y[i]!);
+        dF[i] = lerp(s.profile, y[i]!);
+      }
+      this.scan = { n, y, hw, r, dF };
+    }
+    return this.scan;
   }
 
   /** The base columns, refined where a layer boundary bends or a layer starts or ends. */

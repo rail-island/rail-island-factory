@@ -2,7 +2,7 @@
 // bundled once (test/catalogCache.ts) and every per-design invariant of the
 // mesh builder, the source tree, the standalone JS model, the LOD, the
 // parameters and the rig runs on that one build. test/catalog-<n>.test.ts each
-// run a quarter of the catalog, so the four workers share the work.
+// run a sixteenth of the catalog, so the workers share the work.
 //
 // A parametric design checks its defaults and a fixed sample of its other
 // combinations (variantsUnderTest); TEST_ALL_VARIANTS=1 checks every one.
@@ -20,7 +20,7 @@ import { collectTriangles, parseGlb } from "../generator/glbTriangles";
 import { steerAngles, type VehicleRig } from "../generator/rig";
 import { isLeaf, type TreeNode } from "../generator/sourceTree";
 import { VEHICLES } from "../generator/vehicles";
-import { built, design, forget, glbOf, jsModuleOf, jsTextOf, lodGlbOf, variantsUnderTest } from "./catalogCache";
+import { built, built as cached, design, forget, glbOf, jsModuleOf, jsTextOf, lodGlbOf, variantsUnderTest } from "./catalogCache";
 import { expectSealed, jointMesh } from "./rigHelpers";
 
 /** The most a prop's or a set preview's JS model may weigh: the builder runtime and its boxes. */
@@ -86,7 +86,10 @@ function lodTriangles(group: THREE.Object3D): number {
     const n = o.geometry.getAttribute("normal");
     count += p.count / 3;
     expect(Array.from(p.array as ArrayLike<number>).every(Number.isFinite)).toBe(true);
-    for (let i = 0; i < n.count; i++) expect(Math.hypot(n.getX(i), n.getY(i), n.getZ(i))).toBeCloseTo(1, 5);
+    // one assertion per mesh: an expect() per vertex costs more than the check itself
+    let worst = 0;
+    for (let i = 0; i < n.count; i++) worst = Math.max(worst, Math.abs(Math.hypot(n.getX(i), n.getY(i), n.getZ(i)) - 1));
+    expect(worst, o.name).toBeLessThan(5e-6);
   });
   return count;
 }
@@ -108,11 +111,13 @@ export function sweep(ids: readonly string[]): void {
         expect(findCoplanarOverlaps(glbOf(id))).toEqual([]);
       });
 
-      it("builds the same GLB bytes (the game's LOD cache) and source tree every time", () => {
-        const again = d.build();
-        expect(Buffer.from(toGlb(id, again)).equals(Buffer.from(glbOf(id)))).toBe(true);
-        expect(JSON.stringify(again.sourceTree(d.id, d.title))).toBe(JSON.stringify(built(id).tree));
-      });
+      // (a parametric design's second build is its defaults combination's, below)
+      if (!parametric)
+        it("builds the same GLB bytes (the game's LOD cache) and source tree every time", () => {
+          const again = d.build();
+          expect(Buffer.from(toGlb(id, again)).equals(Buffer.from(glbOf(id)))).toBe(true);
+          expect(JSON.stringify(again.sourceTree(d.id, d.title))).toBe(JSON.stringify(built(id).tree));
+        });
 
       // The site's source tree is only readable when every primitive sits in a
       // named scope; it highlights and picks through the leaves' triangle ranges,
@@ -143,22 +148,30 @@ export function sweep(ids: readonly string[]): void {
           }
           expect(next).toBe(byMat.get(mat)!.length);
         }
+        // each leaf's bounds are its triangles' (one pass a leaf, the misfits collected for one assertion)
+        const misfits: string[] = [];
         for (const leaf of leaves) {
           if (leaf.tri[1] === 0) continue;
-          const tris = byMat.get(leaf.material)!.slice(leaf.tri[0], leaf.tri[0] + leaf.tri[1]);
-          for (let k = 0; k < 3; k++) {
-            const lo = Math.min(...tris.flatMap((t) => t.p.map((p) => p[k]!)));
-            const hi = Math.max(...tris.flatMap((t) => t.p.map((p) => p[k]!)));
-            expect(Math.abs(lo - leaf.min![k]!)).toBeLessThan(0.002);
-            expect(Math.abs(hi - leaf.max![k]!)).toBeLessThan(0.002);
-          }
+          const tris = byMat.get(leaf.material)!;
+          const lo = [Infinity, Infinity, Infinity];
+          const hi = [-Infinity, -Infinity, -Infinity];
+          for (let t = leaf.tri[0]; t < leaf.tri[0] + leaf.tri[1]; t++)
+            for (const p of tris[t]!.p)
+              for (let k = 0; k < 3; k++) {
+                if (p[k]! < lo[k]!) lo[k] = p[k]!;
+                if (p[k]! > hi[k]!) hi[k] = p[k]!;
+              }
+          for (let k = 0; k < 3; k++)
+            if (!(Math.abs(lo[k]! - leaf.min![k]!) < 0.002 && Math.abs(hi[k]! - leaf.max![k]!) < 0.002)) misfits.push(`${leaf.id} axis ${k}`);
         }
+        expect(misfits).toEqual([]);
       });
 
       // The standalone JS model is the design's own code, so the group it builds
       // carries the very triangles, colours and nodes of the design's GLB.
       it("builds in JS the GLB's triangles, colours, nodes, rig and animation clips", async () => {
         const group = (await jsModuleOf(id)).default(THREE);
+        expect(group.userData.lod).toBe(false);
         const glb = glbOf(id);
         const { positions, colors } = glbVertices(glb);
         expectSameVertices(groupVertices(group), positions);
@@ -176,8 +189,11 @@ export function sweep(ids: readonly string[]): void {
         if (id.startsWith("veh-") && !(nodeNames.length === 1 && nodeNames[0] === "vehicle")) {
           const roots = (json.scenes![0] as { nodes: number[] }).nodes;
           expect(group.children.map((c) => c.name)).toEqual(roots.map((i) => nodeNames[i]));
+          // the group's objects by name, the first of each as getObjectByName finds it
+          const byName = new Map<string, THREE.Object3D>();
+          group.traverse((o) => { if (!byName.has(o.name)) byName.set(o.name, o); });
           nodes.forEach((n) => {
-            const holder = group.getObjectByName(n.name)!;
+            const holder = byName.get(n.name)!;
             const kids = holder.children.filter((c) => !(c instanceof THREE.Mesh)).map((c) => c.name);
             expect(kids).toEqual((n.children ?? []).map((i) => nodeNames[i]));
           });
@@ -202,7 +218,10 @@ export function sweep(ids: readonly string[]): void {
           clip.tracks.forEach((t, k) => {
             const v = readAccessor(json, bin, a.samplers[a.channels[k]!.sampler]!.output);
             expect(t.values.length).toBe(v.length);
-            t.values.forEach((x, n) => expect(x).toBeCloseTo(v[n]!, 4));
+            // one assertion a track (toBeCloseTo(x, 4): within 5e-5)
+            let worst = 0;
+            t.values.forEach((x, n) => (worst = Math.max(worst, Math.abs(x - v[n]!))));
+            expect(worst, t.name).toBeLessThan(5e-5);
           });
           for (const t of clip.tracks) expect(group.getObjectByName(t.name.split(".")[0]!)).toBeDefined();
         });
@@ -229,16 +248,16 @@ export function sweep(ids: readonly string[]): void {
       it("builds its standalone LOD as the generator does, inside its budget", async () => {
         const mod = await jsModuleOf(id);
         expect(mod.lodTriangleBudget).toBe(lodBudget(d));
-        const full = mod.default(THREE);
         const low = mod.default(THREE, undefined, true);
-        expect(full.userData.lod).toBe(false);
         expect(low.userData.lod).toBe(true);
         expect(low.name).toBe(id);
         const expected = buildLodModel(d);
-        expect(lodTriangles(low)).toBeGreaterThan(0);
-        expect(lodTriangles(low)).toBeLessThanOrEqual(lodBudget(d));
-        expect(lodTriangles(low)).toBe(expected.triangleCount());
-        expect(expected.toGlb("determinism")).toEqual(buildLodModel(d).toGlb("determinism"));
+        const lowTriangles = lodTriangles(low);
+        expect(lowTriangles).toBeGreaterThan(0);
+        expect(lowTriangles).toBeLessThanOrEqual(lodBudget(d));
+        expect(lowTriangles).toBe(expected.triangleCount());
+        // deterministic: this build's bytes are those of the cached one, built apart from it
+        expect(expected.toGlb(id)).toEqual(lodGlbOf(id));
         expect(low.animations).toHaveLength(0);
         // a LOD is static but for an articulated vehicle's sections and joints (no supports, no steering)
         const lowRig = low.userData.rig as VehicleRig | undefined;
@@ -305,9 +324,14 @@ export function sweep(ids: readonly string[]): void {
           const vehicle = VEHICLES.includes(d);
           const built = d.build(combo);
           const glb = built.toGlb(d.id);
-          // the first combination is the defaults: the same bytes as a build given no values
-          if (i === 0) expect(Buffer.from(glb).equals(Buffer.from(d.build().toGlb(d.id)))).toBe(true);
-          expect(findCoplanarOverlaps(glb)).toEqual([]);
+          // the first combination is the defaults, built a second time: the same bytes
+          // and source tree as the cached build given no values (the design builds the
+          // same every time, the game's LOD cache relies on it), whose faces "has no
+          // z-fighting faces" already checks
+          if (i === 0) {
+            expect(Buffer.from(toGlb(id, built)).equals(Buffer.from(glbOf(id)))).toBe(true);
+            expect(JSON.stringify(built.sourceTree(d.id, d.title))).toBe(JSON.stringify(cached(id).tree));
+          } else expect(findCoplanarOverlaps(glb)).toEqual([]);
           const s = glbStats(glb);
           expect(s.min[1]).toBeCloseTo(0, 5);
           if (vehicle) expect(s.min[2]).toBeCloseTo(-s.max[2], 5);
@@ -320,7 +344,8 @@ export function sweep(ids: readonly string[]): void {
           }
           const mod = await jsModuleOf(id);
           expect(mod.params).toEqual(d.params);
-          expectSameVertices(groupVertices(mod.default(THREE, combo)), glbVertices(glb).positions);
+          // the defaults' JS group is "builds in JS the GLB's triangles"'s
+          if (i > 0) expectSameVertices(groupVertices(mod.default(THREE, combo)), glbVertices(glb).positions);
           expect(() => mod.default(THREE, { variant: "nope" })).toThrow();
         });
       }
