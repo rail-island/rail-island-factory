@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import {
   MTR_BODY, MTR_BOGIE_CENTRES, MTR_CARS, MTR_FORMATIONS, MTR_FRONT_COUPLER, MTR_GAP, MTR_LOD, MTR_M_TRAIN_DESIGNS, MTR_PARAMS, MTR_WIRE,
-  mtrLayout, mtrLength, mtrMTrain, mtrTrain, type MtrCar,
+  MTR_DRL_FORMATION, mtrDrlTrain, mtrFront, mtrLayout, mtrLength, mtrMTrain, mtrTrain, type MtrCar,
 } from "../generator/mtrMTrain";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { glbStats } from "../generator/glbStats";
@@ -14,6 +14,8 @@ function leaves(n: TreeNode): LeafNode[] {
 }
 
 const CARS: MtrCar[] = ["aCar", "bCar", "cCar", "dCar"];
+const DRL: MtrCar[] = ["pCar", "qCar"];
+const ALL: MtrCar[] = [...CARS, ...DRL];
 const LIVERIES = ["refurbished", "retro"];
 const nodes = (params: Record<string, string>) => leaves(mtrMTrain(params).sourceTree("m", "M-Train").root);
 const axlesOf = (m: ReturnType<typeof mtrMTrain>) =>
@@ -23,22 +25,25 @@ const axlesOf = (m: ReturnType<typeof mtrMTrain>) =>
     .sort((a, b) => a - b);
 
 describe("the MTR M-Train", () => {
-  it("is one electric unit design: four cars and the full train, the A cab car by default, two liveries", () => {
+  it("is one electric unit design: four cars and the full train, the Disneyland cars and train, the A cab car by default, two liveries", () => {
     const [d] = MTR_M_TRAIN_DESIGNS;
     expect(MTR_M_TRAIN_DESIGNS).toHaveLength(1);
     expect(d!.id).toBe("proc-vehicle-mtr-m-train");
     expect(d!.references).toBe("mtr-m-train");
     expect(d!.catalog).toMatchObject({ category: "Rail vehicles", group: "unit", traction: "electric" });
     expect(MTR_PARAMS.map((p) => [p.name, p.default])).toEqual([["unit", "aCar"], ["cars", "4"], ["livery", "refurbished"]]);
-    expect(MTR_PARAMS[0]!.values.map((v) => v.value)).toEqual([...CARS, "train"]);
+    expect(MTR_PARAMS[0]!.values.map((v) => v.value)).toEqual([...CARS, "train", ...DRL, "drlTrain"]);
     expect(MTR_PARAMS[1]!.values.map((v) => v.value)).toEqual(MTR_CARS.map(String));
     expect(MTR_PARAMS[1]!.when).toEqual({ name: "unit", values: ["train"] });
     expect(MTR_PARAMS[2]!.values.map((v) => v.value)).toEqual(LIVERIES);
+    // the livery is the urban cars' only: the Disneyland cars have their own paint
+    expect(MTR_PARAMS[2]!.when).toEqual({ name: "unit", values: [...CARS, "train"] });
     for (const p of MTR_PARAMS) for (const v of p.values) expect(v.title.length, v.title).toBeLessThanOrEqual(16);
     expect(d!.game).toMatchObject({ weight: 37, power: 340, maxspeed: 80, accel: 1.0 });
     // the D trailer has no power; the 8-car train's six motor cars 2,040 kW
     expect(d!.game!.variants).toContainEqual({ params: { unit: "dCar" }, weight: 27, power: 0 });
     expect(d!.game!.variants).toContainEqual({ params: { cars: "8", unit: "train" }, weight: 2 * 37 + 3 * 37 + 36 + 2 * 27, power: 6 * 340 });
+    expect(d!.game!.variants).toContainEqual({ params: { unit: "drlTrain" }, weight: 4 * 37, power: 4 * 340 });
   });
 
   for (const livery of LIVERIES)
@@ -54,10 +59,22 @@ describe("the MTR M-Train", () => {
         expect(findCoplanarOverlaps(glb)).toEqual([]);
       });
 
+  for (const car of DRL)
+    it(`${car} (Disneyland): stays in budget and in the envelope, at its length over the couplers, without coplanar faces`, () => {
+      const glb = mtrMTrain({ unit: car }).toGlb("m");
+      const s = glbStats(glb);
+      expect(s.triangles).toBeLessThanOrEqual(16000);
+      expect(s.min[1]).toBeCloseTo(0, 2);
+      expect(s.max[1]).toBeLessThanOrEqual(car === "qCar" ? MTR_WIRE + 0.01 : 4.7);
+      expect(s.max[2] - s.min[2]).toBeLessThanOrEqual(3.1);
+      expect(s.max[0] - s.min[0]).toBeCloseTo(mtrLength(car), 2);
+      expect(findCoplanarOverlaps(glb)).toEqual([]);
+    });
+
   it("is 22.85 m (A) and 22.0 m (B, C, D) over the bodies, on two bogies 2.5 m wheelbase", () => {
-    expect(mtrLength("aCar")).toBeCloseTo(MTR_BODY.aCar + MTR_GAP + MTR_FRONT_COUPLER, 6);
+    expect(mtrLength("aCar")).toBeCloseTo(MTR_BODY.cab + MTR_GAP + MTR_FRONT_COUPLER, 6);
     expect(mtrLength("dCar")).toBeCloseTo(MTR_BODY.middle + 2 * MTR_GAP, 6);
-    for (const car of CARS) {
+    for (const car of ALL) {
       const m = mtrMTrain({ unit: car });
       expect(m.rig!.supports).toHaveLength(2);
       const a = axlesOf(m);
@@ -67,14 +84,15 @@ describe("the MTR M-Train", () => {
     }
   });
 
-  it("has five double-leaf doors a side on every car, each door's two leaves opening", () => {
-    for (const car of CARS) {
-      expect(mtrLayout(car).doors).toHaveLength(5);
+  it("has five double-leaf doors a side on an urban car, three on a Disneyland car, each door's two leaves opening", () => {
+    for (const car of ALL) {
+      const n = DRL.includes(car) ? 3 : 5;
+      expect(mtrLayout(car).doors).toHaveLength(n);
       const m = mtrMTrain({ unit: car });
       const clips = m.animations().filter((c) => c.drive.drive === "door");
       expect(clips.map((c) => c.drive)).toEqual(expect.arrayContaining([{ drive: "door", side: "right" }, { drive: "door", side: "left" }]));
-      // two leaves a door, five doors a side
-      expect(new Set(clips.flatMap((c) => c.tracks.map((t) => t.node))).size).toBe(20);
+      // two leaves a door, on both sides
+      expect(new Set(clips.flatMap((c) => c.tracks.map((t) => t.node))).size).toBe(4 * n);
     }
   });
 
@@ -83,8 +101,54 @@ describe("the MTR M-Train", () => {
     for (const scope of ["cab-end/mask", "cab-end/windscreens", "cab-end/bands", "cab-end/bumper-lamps", "front-coupler"]) expect(a.some((n) => n.id.startsWith(scope)), scope).toBe(true);
     expect(Math.max(...a.map((n) => n.max![0]))).toBeCloseTo(mtrLength("aCar") / 2, 2);
     const pans = (params: Record<string, string>) => nodes(params).filter((n) => n.id.startsWith("roof-equipment/pantographs/"));
-    for (const unit of ["aCar", "bCar", "dCar"]) expect(pans({ unit })).toHaveLength(0);
-    expect(Math.max(...pans({ unit: "cCar" }).map((n) => n.max![1]))).toBeCloseTo(MTR_WIRE, 2);
+    for (const unit of ["aCar", "bCar", "dCar", "pCar"]) expect(pans({ unit })).toHaveLength(0);
+    for (const unit of ["cCar", "qCar"]) expect(Math.max(...pans({ unit }).map((n) => n.max![1]))).toBeCloseTo(MTR_WIRE, 2);
+  });
+
+  it("draws the cab front by car and livery: the refurbished mask, the 1979 front with the retro livery, the Disneyland front", () => {
+    expect(mtrFront("aCar", "refurbished")).toBe("refurbished");
+    expect(mtrFront("aCar", "retro")).toBe("original");
+    expect(mtrFront("pCar", "refurbished")).toBe("disney");
+    expect(mtrFront("pCar", "retro")).toBe("disney");
+    const has = (params: Record<string, string>, scope: string) => nodes(params).some((n) => n.id.startsWith(scope));
+    // the refurbished mask and header lamps; the 1979 white face, its stripes round the corners and the cab door; the Disneyland navy mask and sweep
+    expect(has({ unit: "aCar" }, "cab-end/header-lamps")).toBe(true);
+    expect(has({ unit: "aCar", livery: "retro" }, "cab-end/face")).toBe(true);
+    expect(has({ unit: "aCar", livery: "retro" }, "cab-end/mask")).toBe(false);
+    expect(has({ unit: "aCar", livery: "retro" }, "body/right-side/stripes")).toBe(true);
+    expect(has({ unit: "aCar", livery: "retro" }, "body/right-side/cab-door")).toBe(true);
+    expect(has({ unit: "aCar" }, "body/right-side/cab-door")).toBe(false);
+    expect(has({ unit: "pCar" }, "cab-end/mask")).toBe(true);
+    expect(has({ unit: "pCar" }, "body/left-side/sweep")).toBe(true);
+    // the 1979 front's square top stands higher at the face than the refurbished one
+    const faceTop = (params: Record<string, string>) => Math.max(...nodes(params).filter((n) => n.id.startsWith("cab-end/")).map((n) => n.max![1]));
+    expect(faceTop({ unit: "aCar", livery: "retro" })).toBeGreaterThan(faceTop({ unit: "aCar" }));
+  });
+
+  it("gives the Disneyland cars their Mickey-head windows and oval door lights, the urban cars none", () => {
+    for (const car of DRL) {
+      expect(mtrLayout(car).mickeys.length).toBeGreaterThanOrEqual(8);
+      expect(nodes({ unit: car }).some((n) => n.id.startsWith("body/right-side/mickey-windows/"))).toBe(true);
+    }
+    for (const car of CARS) {
+      expect(mtrLayout(car).mickeys).toEqual([]);
+      expect(nodes({ unit: car }).some((n) => n.id.includes("mickey"))).toBe(false);
+    }
+  });
+
+  it("runs the Disneyland line's four-car train P-Q+Q-P, the rear P car turned", () => {
+    const slots = mtrDrlTrain();
+    expect(slots.map((s) => s.car)).toEqual(MTR_DRL_FORMATION);
+    expect(slots.map((s) => s.number)).toEqual(["P503", "Q503", "Q504", "P504"]);
+    expect(slots[3]!.turned).toBe(true);
+    const m = mtrMTrain({ unit: "drlTrain" });
+    const s = glbStats(m.toGlb("m"));
+    expect(s.max[0] - s.min[0]).toBeCloseTo(2 * mtrLength("pCar") + 2 * mtrLength("qCar"), 2);
+    expect(s.triangles).toBeLessThanOrEqual(4 * 16000);
+    expect(m.rig!.sections).toHaveLength(4);
+    expect(m.rig!.joints).toHaveLength(3);
+    expect(m.rig!.supports).toHaveLength(8);
+    expect(findCoplanarOverlaps(m.toGlb("m"))).toEqual([]);
   });
 
   it("forms its trains from the 8-car urban formation A-C+D+B-C+D+C-A, a C car in each half", () => {
@@ -131,11 +195,13 @@ describe("the MTR M-Train", () => {
   it("builds the same bytes twice and keeps a distant model for every car and train", () => {
     expect(Buffer.from(mtrMTrain({ unit: "train", cars: "4" }).toGlb("a")).equals(Buffer.from(mtrMTrain({ unit: "train", cars: "4" }).toGlb("a")))).toBe(true);
     const d = MTR_M_TRAIN_DESIGNS[0]!;
-    for (const params of [...CARS.map((unit) => ({ unit })), ...MTR_CARS.map((n) => ({ unit: "train", cars: String(n) }))]) {
+    const all: Array<Record<string, string>> = [...ALL.map((unit) => ({ unit })), { unit: "aCar", livery: "retro" }, { unit: "drlTrain" }, ...MTR_CARS.map((n) => ({ unit: "train", cars: String(n) }))];
+    for (const params of all) {
       const low = buildLodModel(d, params);
       expect(low.triangleCount()).toBeGreaterThan(0);
-      expect(low.triangleCount()).toBeLessThanOrEqual(params.unit === "train" ? Math.min(MTR_LOD, 100 * Number(params.cars)) : 100);
-      if (params.unit === "train") expect(low.rig!.sections).toHaveLength(Number(params.cars));
+      const n = params.unit === "drlTrain" ? 4 : params.unit === "train" ? Number(params.cars!) : 1;
+      expect(low.triangleCount()).toBeLessThanOrEqual(Math.min(MTR_LOD, 100 * n));
+      if (n > 1) expect(low.rig!.sections).toHaveLength(n);
     }
   });
 });

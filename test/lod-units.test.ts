@@ -26,7 +26,8 @@ describe('unit LODs', () => {
         const m = buildLodModel(d, v);
         const n = m.triangleCount();
         // an articulated set gets 100 a car, its budget (300, the longest trains 500) at most; a single car 100
-        const cars = v.unit === 'set' || v.unit === 'train' ? Number(v.cars) : 1;
+        // (a train of fixed length, the MTR's Disneyland train, counts its sections)
+        const cars = v.unit === 'set' || v.unit === 'train' ? Number(v.cars) : (m.rig?.sections?.length ?? 1);
         const budget = Math.min(lodBudget(d), 100 * cars);
         expect(n).toBeLessThanOrEqual(budget);
         // at least 70 % (a plain trailer, the MDmot's, shows all it has in 70)
