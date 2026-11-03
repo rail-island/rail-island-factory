@@ -24,7 +24,7 @@ declaration order, the first the default unless noted.
 | `veh-cd-263` | `livery`: cd263, cd263No015, cd371No002, cd371No005, cd372, db180, dbAg180, cd263Blue, cd371Blue | [loco-liveries.md](loco-liveries.md) |
 | `veh-csd-classic-green-coach` | `variant`: classA, classB | [csd-coaches.md](csd-coaches.md) |
 | `veh-bmo-double-deck-coach` | `livery`: csd, cdBlue, cdBlueGrey, cdRedDoors | [bmo-double-deck.md](bmo-double-deck.md) |
-| `veh-cd-green-white-coach` | `variant`: a, ab, b, bee, beel, bds, ds, bdmeer, bdmtee, beeBlue (default b) | [cd-green-white.md](cd-green-white.md) |
+| `veh-cd-green-white-coach` | `variant`: a, ab, b, bee, beel, bds, ds, bdmeer, bdmtee, beeBlue (default b); `livery`: greenWhite (default), cdBlue (only on a, ab, b, bee, bds, bdmtee) | [cd-green-white.md](cd-green-white.md) |
 | `veh-nas-flat-wagon` | `cargo`: empty, wood, tubes, reels | [wagons.md](wagons.md) |
 | `veh-ua-open-wagon` | `cargo`: empty, coal, wood, sand | [wagons.md](wagons.md) |
 | `veh-eas-open-wagon` | `cargo`: empty, wood, coal | [wagons.md](wagons.md) |

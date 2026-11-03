@@ -15,6 +15,7 @@ import { block, side } from "./vehicleParts.ts";
 import { Coach, px, sectionHalf, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { emblem } from "./cd163.ts";
 import { strokeText, strokeWidth } from "./strokeFont.ts";
+import { wordmarkAt } from "./letters.ts";
 import type { DoorMotion } from "./doors.ts";
 import { endName, fpx, headstock, lamp, mirror, roofVents, sides, sideName, type PxBox } from "./csdCoaches.ts";
 
@@ -199,6 +200,27 @@ export function zsrMark(u0: number, v0: number, h: number, w = h * 1.3): Array<[
 
 /** The CD emblem's width at height 1. */
 const EMBLEM_W = ((us: number[]) => Math.max(...us) - Math.min(...us))(emblem(0, 0, 1, false).map((q) => q[0]));
+
+/** CD's wordmark of the Najbrt scheme, "Ceske drahy" with its diacritics. */
+export const CD_WORDMARK = "\u010Cesk\u00E9 dr\u00E1hy";
+
+/**
+ * CD's current logo (the Najbrt scheme) on side s of a coach, z its plane: the emblem `h` high
+ * centred on source x `cx` with its foot at y0, and - with `wordmark` - "Ceske drahy" after it as
+ * the reader sees it (cap height 0.32 of the emblem's, the baseline at 0.42 of it, as dmuKit's
+ * cdSideLogo), all in `mat`.
+ */
+export function cdCoachLogo(c: Coach, s: number, cx: number, y0: number, h: number, z: number, mat: string, wordmark: boolean): void {
+  const w = EMBLEM_W * h;
+  // read left to right from outside: toward +x on the +z side, toward -x on the -z side
+  const u0 = s > 0 ? c.X(cx - w / 2) : c.X(cx + w / 2);
+  c.m.facets(mat, emblem(u0, y0, h, s < 0).map(([u, vv]): Vec3 => [u, vv, z]), [0, 0, s]);
+  if (!wordmark) return;
+  const dir = s > 0 ? 1 : -1;
+  c.m.scope("wordmark", () => {
+    for (const r of wordmarkAt([[CD_WORDMARK, mat]], u0 + dir * (w + 0.25 * h), y0 + 0.42 * h, 0.32 * h, s < 0)) c.m.facets(r.mat, r.tris.map(([u, vv]): Vec3 => [u, vv, z]), [0, 0, s]);
+  });
+}
 
 /** One coach from its spec. */
 export function buildLiveryCoach(spec: LiveryCoachSpec): MeshBuilder {

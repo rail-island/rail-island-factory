@@ -13,10 +13,15 @@ import { block, side } from "./vehicleParts.ts";
 import { Coach, px, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import type { DoorMotion } from "./doors.ts";
 import { emblem } from "./cd163.ts";
-import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
+import type { ParamSpec, ParamValues } from "./design.ts";
+import { cdCoachLogo } from "./liveryCoach.ts";
+import { resolveOfferedParams } from "./paramOffers.ts";
 import { endName, fpx, gangway, headstock, lamp, mirror, roofVents, sides, sideName, Y_SECTION, type PxBox } from "./csdCoaches.ts";
 
 export type GreenWhiteVariant = "a" | "ab" | "b" | "bee" | "beel" | "bds" | "ds" | "bdmeer" | "bdmtee" | "beeBlue";
+/** The paint: vlakosimdb's green and white (default) or CD's current blue (the Najbrt scheme, from photographs). */
+export type GreenWhiteLivery = "greenWhite" | "cdBlue";
+
 
 export const GREEN_WHITE_PARAMS: readonly ParamSpec[] = [
   {
@@ -34,6 +39,15 @@ export const GREEN_WHITE_PARAMS: readonly ParamSpec[] = [
       { value: "bdmeer", title: "BDmeer" },
       { value: "bdmtee", title: "Bdmtee" },
       { value: "beeBlue", title: "Bee blue" },
+    ],
+  },
+  {
+    name: "livery",
+    title: "Livery",
+    default: "greenWhite",
+    values: [
+      { value: "greenWhite", title: "Green and white" },
+      { value: "cdBlue", title: "CD blue", when: { name: "variant", values: ["a", "ab", "b", "bee", "bds", "bdmtee"] } },
     ],
   },
 ];
@@ -345,15 +359,100 @@ export const BODIES = {
 /** The CD emblem's width at height 1. */
 const EMBLEM_W = ((us: number[]) => Math.max(...us) - Math.min(...us))(emblem(0, 0, 1, false).map((q) => q[0]));
 
+/** How one type wears CD's current blue, as its photographs show it. */
+export interface CdBlueSpec {
+  /** The running number (UIC, with the check digit) and where it was read. */
+  number: string;
+  source: string;
+  /** The roof's paint: weathered navy, grey or light grey. */
+  roof: string;
+  /** Below the navy line: white on the passenger coaches, light blue on the BDs. */
+  lower: "white" | "lightBlue";
+  /** The line under the roof: white (the AB's yellow over its first class half), yellow along the A. */
+  eave: "white" | "yellow";
+  /** The emblem, the wordmark and the running number: navy (a black number) on white, white on light blue. */
+  ink: "navy" | "white";
+}
+
+const NAVY_ROOF = "#2f3c62";
+const GREY_ROOF = "#6e7276";
+const LIGHT_ROOF = "#c9cdd0";
+
+/**
+ * CD's current blue (the Najbrt scheme) on the types photographed in it (assets/cd-green-white/
+ * SOURCES.md, "CD blue livery"); `cdBlue` is offered on these only.
+ */
+export const CD_BLUE: Partial<Record<GreenWhiteVariant, CdBlueSpec>> = {
+  a: { number: "51 54 19-41 068-0", source: "legible on photo-a-51-54-19-41-068-0-cd-blue.jpg", roof: GREY_ROOF, lower: "white", eave: "yellow", ink: "navy" },
+  ab: {
+    number: "51 54 39-41 045-4",
+    source: "illustrative, CD AB349 series; the AB on photo-ab-cd-blue-praha-vysocany.jpg is not legible",
+    roof: NAVY_ROOF,
+    lower: "white",
+    eave: "white",
+    ink: "navy",
+  },
+  b: { number: "51 54 20-41 866-4", source: "read on photo-b-51-54-20-41-866-4-cd-blue.jpg (a soft print; the digits its check digit 4 fits)", roof: NAVY_ROOF, lower: "white", eave: "white", ink: "navy" },
+  bee: {
+    number: "51 54 20-41 789-8",
+    source: "illustrative, CD Bee243 series; the Bee 243 on photo-bee-243-cd-blue-praha-holesovice-2022.jpg shows no number",
+    roof: LIGHT_ROOF,
+    lower: "white",
+    eave: "white",
+    ink: "navy",
+  },
+  bds: { number: "50 54 82-40 340-7", source: "legible on photo-bds-50-54-82-40-340-7-cd-blue.jpg (a BDs 450)", roof: GREY_ROOF, lower: "lightBlue", eave: "white", ink: "white" },
+  bdmtee: {
+    number: "50 54 20-82 232-0",
+    source: "illustrative, in the 50 54 20-82 2..-0 series of photo-bdmtee-cd-blue-nove-mesto-2018.jpg (the rest of its number hidden by a railing)",
+    roof: NAVY_ROOF,
+    lower: "white",
+    eave: "white",
+    ink: "navy",
+  },
+};
+
+/** The types photographed in CD's current blue: the only ones `cdBlue` is offered on. */
+export const CD_BLUE_VARIANTS = Object.keys(CD_BLUE) as GreenWhiteVariant[];
+
+const CD_BLUE_PALETTE = (b: CdBlueSpec): Record<string, MaterialSpec> => ({
+  white: { color: "#eef0f2", roughness: 0.55 },
+  navy: { color: "#1f3a7a", roughness: 0.5 },
+  lightBlue: { color: "#3c97de", roughness: 0.5 },
+  roof: { color: b.roof, roughness: 0.7 },
+  yellow: { color: "#e8c51c", roughness: 0.5 },
+  frame: { color: "#b0b0b0", metallic: 0.2, roughness: 0.45 },
+  classMark: { color: "#f2f4f2", roughness: 0.5 },
+  marking: { color: "#1b1d1c", roughness: 0.6 },
+});
+
+/**
+ * The blue's bands, bottom up (the Y side is vertical from 0.9 to 3.2 m), measured on the B
+ * 51 54 20-41 866-4: the navy line under the windows, the light blue window band to the eave and
+ * a line over it under the roof.
+ */
+const CD_BLUE_BANDS = (roofTop: number, b: CdBlueSpec): Array<[number, number, string]> => [
+  [0.9, 1.72, b.lower],
+  [1.72, 1.86, "navy"],
+  [1.86, 3.2, "lightBlue"],
+  [3.2, 3.32, b.eave],
+  [3.32, roofTop + 0.1, "roof"],
+];
+
 /** One CD green and white coach (vlakosimdb cd_<variant>). */
 export function cdGreenWhiteCoach(params?: ParamValues): MeshBuilder {
-  const variant = resolveParams(GREEN_WHITE_PARAMS, params).variant as GreenWhiteVariant;
+  const resolved = resolveOfferedParams(GREEN_WHITE_PARAMS, params);
+  const variant = resolved.variant as GreenWhiteVariant;
+  const blue = (resolved.livery as GreenWhiteLivery) === "cdBlue" ? CD_BLUE[variant]! : undefined;
   // vlakosimdb's CD Bee 001 is the Bee's texture with blue for its green: the
   // same measured layout, the "green" material in blue
   const v = VARIANTS[variant === "beeBlue" ? "bee" : variant];
   const geo = BODIES[v.body];
   const H = 5;
-  const palette: Record<string, MaterialSpec> = {
+  // CD's current blue paints over the same layout: what the green and white paints green
+  // goes navy (doors, aprons) or light blue (the window band, the lookout bay)
+  const leafMat = blue ? "navy" : "green";
+  const palette: Record<string, MaterialSpec> = blue ? CD_BLUE_PALETTE(blue) : {
     green: { color: variant === "ab" ? "#1f701f" : variant === "beeBlue" ? "#3c44e6" : "#0d7a1a", roughness: 0.55 },
     white: { color: "#e9eee9", roughness: 0.55 },
     roof: { color: v.roof, roughness: 0.7 },
@@ -371,8 +470,8 @@ export function cdGreenWhiteCoach(params?: ParamValues): MeshBuilder {
     section: geo.section.map(([z, y]): Pt => [z, y]),
     plan: geo.plan.map(([x, y]): Pt => [x, y]),
     top,
-    bands: [[0.9, 1.9, "white"], [1.9, 3.2, "green"], [3.2, Math.max(...top.map((p) => p[1])) + 0.1, "roof"]],
-    ...(v.endWall === "green" ? { endPaint: "green" } : {}),
+    bands: blue ? CD_BLUE_BANDS(Math.max(...top.map((p) => p[1])), blue) : [[0.9, 1.9, "white"], [1.9, 3.2, "green"], [3.2, Math.max(...top.map((p) => p[1])) + 0.1, "roof"]],
+    ...(v.endWall === "green" ? { endPaint: blue ? "navy" : "green" } : {}),
   };
   // the XML bay reaches 1.6 m from the centreline; 1.525 m keeps it and its
   // glass inside the 3.1 m width envelope (as the CSD Dsk's duckets)
@@ -380,7 +479,7 @@ export function cdGreenWhiteCoach(params?: ParamValues): MeshBuilder {
     name: "bay",
     section: [[1.525, 2.1], [-1.525, 2.1], [-1.525, 3.1], [1.525, 3.1]],
     plan: [[3.2, 1.5], [3.5, 1.525], [4.1, 1.525], [4.4, 1.5]],
-    bands: [[2.1, 3.1, "green"]],
+    bands: [[2.1, 3.1, blue ? "lightBlue" : "green"]],
   };
   const wall = [geo.plan[0]![0], geo.plan[geo.plan.length - 1]![0]] as const;
   // every passenger door (a green leaf; the Ds luggage van has none) opens inward
@@ -412,7 +511,7 @@ export function cdGreenWhiteCoach(params?: ParamValues): MeshBuilder {
               return;
             }
             // the windows ride on the leaves; a double door's leaves meet in the middle
-            c.door(body, s, b, d.paint, {
+            c.door(body, s, b, leafMat, {
               opens: opens(b, d.glass.length),
               leafWork: (clip) =>
                 d.glass.forEach((g, k) => {
@@ -436,10 +535,12 @@ export function cdGreenWhiteCoach(params?: ParamValues): MeshBuilder {
               m.scope(`window ${i + 1}`, () => c.window(bay, s, px(b, H), { fw: 0.04 })),
             ),
           );
-        if (v.yellow) m.scope("first class line", () => c.sidePanel(body, "yellow", s, { x0: v.yellow![0] / 10 + 0.005, y0: 3.1, x1: v.yellow![1] / 10 - 0.005, y1: 3.2 }, 0.004, 0.004));
+        // the blue's first class line is its eave line: yellow along the A, over the AB's first class half
+        if (v.yellow && !blue) m.scope("first class line", () => c.sidePanel(body, "yellow", s, { x0: v.yellow![0] / 10 + 0.005, y0: 3.1, x1: v.yellow![1] / 10 - 0.005, y1: 3.2 }, 0.004, 0.004));
+        if (v.yellow && blue?.eave === "white") m.scope("first class line", () => c.sidePanel(body, "yellow", s, { x0: v.yellow![0] / 10 + 0.005, y0: 3.2, x1: v.yellow![1] / 10 - 0.005, y1: 3.32 }, 0.004, 0.004));
         if (v.classMarks)
           m.scope("class marks", () => {
-            for (const [text, x] of v.classMarks!) c.numeral(body, s, text, x, 2.25, 0.62, 0.004, "yellow");
+            for (const [text, x] of v.classMarks!) c.numeral(body, s, text, x, 2.25, 0.62, 0.004, blue ? "classMark" : "yellow");
           });
         // beside the end doors (native columns 15 and 230), at the very ends where
         // the doors are (Beel, BDmeer) or none are (Bdmtee): columns 3 and 261
@@ -451,13 +552,15 @@ export function cdGreenWhiteCoach(params?: ParamValues): MeshBuilder {
         m.scope("emblem", () => {
           const b = px(spec.emblem, H);
           const h = 0.36;
+          // the blue's navy emblem with the "Ceske drahy" wordmark after it
+          if (blue) return cdCoachLogo(c, s, (b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2 - h / 2, h, s * 1.506, blue.ink, true);
           const w = EMBLEM_W * h;
           const x0 = (b.x0 + b.x1) / 2 - w / 2;
           // read left to right from outside: toward +x on the +z side, toward -x on the -z side
           const u0 = s > 0 ? c.X(x0) : c.X(x0 + w);
           m.facets("marking", emblem(u0, (b.y0 + b.y1) / 2 - h / 2, h, s < 0).map(([u, vv]): Vec3 => [u, vv, s * 1.506]), [0, 0, s]);
         });
-        m.scope("running number", () => c.inscription(body, s, geo.length / 2, [{ text: GREEN_WHITE_NUMBERS[variant].number, y: 1.5, h: 0.1 }], 0.006));
+        m.scope("running number", () => c.inscription(body, s, geo.length / 2, [{ text: (blue ?? GREEN_WHITE_NUMBERS[variant]).number, y: 1.5, h: 0.1 }], 0.006, blue?.ink === "white" ? "white" : "marking"));
       });
   });
   for (const e of [-1, 1])
@@ -467,7 +570,7 @@ export function cdGreenWhiteCoach(params?: ParamValues): MeshBuilder {
       const fb = (b: PxBox) => (e > 0 ? mirror(fpx(b, H)) : fpx(b, H));
       m.scope("gangway", () => gangway(c, e, w, head + -e * 0.01, H));
       m.scope("end door", () => {
-        c.door(body, e, fb([9, 19, 21, 37]), v.endDoor, { end: true });
+        c.door(body, e, fb([9, 19, 21, 37]), blue ? "navy" : v.endDoor, { end: true });
         for (const [k, b] of ([[10, 20, 13, 29], [17, 20, 20, 29]] as PxBox[]).entries())
           m.scope(`window ${k + 1}`, () => c.window(body, e, fb(b), { end: true, fw: 0.04 }));
       });
@@ -493,7 +596,7 @@ export function cdGreenWhiteCoach(params?: ParamValues): MeshBuilder {
   if (v.body === "bdmtee")
     m.scope("door aprons", () => {
       for (const [a, b] of [[6.3, 8.3], [18.1, 20.1]]) {
-        block(m, "green", c.X(a + 0.02), c.X(b - 0.02), 0.58, 0.92, -1.49, 1.49);
+        block(m, leafMat, c.X(a + 0.02), c.X(b - 0.02), 0.58, 0.92, -1.49, 1.49);
         for (const s of sides) block(m, "steel", c.X(a + 0.05), c.X(b - 0.05), 0.42, 0.47, ...side(s, 1.2, 1.46));
       }
     });
