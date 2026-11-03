@@ -50,7 +50,7 @@ declaration order, the first the default unless noted.
 | `veh-db-212` | `livery`: oldRed, oceanBlue, trafficRed | [small-diesels.md](small-diesels.md) |
 | `veh-karosa-short` | `variant`: b731, b732, c734, lc735, b931, b931e, b951e | [buses.md](buses.md) |
 | `veh-karosa-long` | `variant`: b741, b941, b941e, b961 | [buses.md](buses.md) |
-| `veh-cd-471` | `unit`: motorCar, trailer, drivingTrailer; `variant`: cd471, cd675 | [czech-emus.md](czech-emus.md) |
+| `veh-cd-471` | `unit`: motorCar, trailer, drivingTrailer; `variant`: cd471, cd675, cdBlue | [czech-emus.md](czech-emus.md) |
 | `veh-cd-680` | `unit`: endCar, car683, car685, car686 | [czech-emus.md](czech-emus.md) |
 | `veh-cd-750` | `livery`: cd750, cd750No308, cd753, cd754, cd754No013 | [diesel-locos.md](diesel-locos.md) |
 | `veh-cd-749` | `livery`: cd749, cd749No264, cd749No121 | [diesel-locos.md](diesel-locos.md) |
@@ -59,8 +59,8 @@ declaration order, the first the default unless noted.
 | `veh-tatra-t3` | `variant`: t3, t3m, t3prototype | [trams.md](trams.md) |
 | `veh-tatra-kt8` | `livery`: redWhite, red, modern | [trams.md](trams.md) |
 | `veh-metro-81-71` | `unit`: headCar, middleCar | [trams.md](trams.md) |
-| `veh-cd-451` | `unit`: motorCar, trailer | [czech-emus-classic.md](czech-emus-classic.md) |
-| `veh-cd-460` | `unit`: motorCar, trailer; `livery`: cd, cd003, cd007, csd | [czech-emus-classic.md](czech-emus-classic.md) |
+| `veh-cd-451` | `unit`: motorCar, trailer; `livery`: cd, cdBlue | [czech-emus-classic.md](czech-emus-classic.md) |
+| `veh-cd-460` | `unit`: motorCar, trailer; `livery`: cd, cd003, cd007, csd, cdBlue | [czech-emus-classic.md](czech-emus-classic.md) |
 | `veh-cd-470` | `unit`: motorCar, trailer | [czech-emus-classic.md](czech-emus-classic.md) |
 | `veh-cd-810` | `livery`: red, yellowBand, blueWhite, ivoryBand | [czech-dmus.md](czech-dmus.md) |
 | `veh-cd-812` | `unit`: motorCar, drivingTrailer | [czech-dmus.md](czech-dmus.md) |

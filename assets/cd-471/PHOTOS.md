@@ -32,3 +32,12 @@ All files were downloaded from Wikimedia Commons (rendered by `w/thumb.php`), do
 - Licence: CC BY-SA 4.0
 - Date: 2016-06-04
 - Shows: driving trailer 971 037-7 in the later red and blue livery, three-quarter: the body section (vertical lower wall, upper wall leaning in under the rounded roof), the single-level end over the bogie with its intermediate-level windows, the low-floor centre with both decks' windows, the cab front.
+
+## photo-471-079-cd-blue-2024.jpg
+
+- Commons title: File:20240810 Ceske drahy 471079.jpg
+- Page: https://commons.wikimedia.org/wiki/File:20240810_%C4%8Cesk%C3%A9_dr%C3%A1hy_471079.jpg
+- Author: Alex Noble
+- Licence: CC0 1.0
+- Date: 2024-08-10
+- Shows: motor car 471 079-4 leading its set in CD's current blue (the Najbrt scheme), three-quarter: the navy roof and upper wall, the white line under the upper windows with the yellow line below it, light blue down to the navy line under the end windows, white below over a navy foot, navy doors, the white emblem behind the cab and "City Elefant" in white on the navy; the nose light blue round the windscreen with the number and the emblem in white, the yellow apron. The `cdBlue` variant.

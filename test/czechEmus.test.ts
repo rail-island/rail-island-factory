@@ -44,7 +44,7 @@ describe("the Czech electric units", () => {
     }
     expect(CD471_PARAMS.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([
       ["unit", "motorCar", ["motorCar", "trailer", "drivingTrailer"]],
-      ["variant", "cd471", ["cd471", "cd675"]],
+      ["variant", "cd471", ["cd471", "cd675", "cdBlue"]],
     ]);
     expect(CD680_PARAMS.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([["unit", "endCar", ["endCar", "car683", "car685", "car686"]]]);
   });
@@ -113,14 +113,37 @@ describe("the Czech electric units", () => {
   it("CD 471 and the vlakosimdb CD 675 share one body: same bounds, different paint and numbers", () => {
     for (const unit of ["motorCar", "trailer", "drivingTrailer"] as const) {
       const a = built(cd471({ unit, variant: "cd471" }), "a").stats;
-      const b = built(cd471({ unit, variant: "cd675" }), "b").stats;
-      expect(b.min).toEqual(a.min);
-      expect(b.max).toEqual(a.max);
+      for (const variant of ["cd675", "cdBlue"]) {
+        const b = built(cd471({ unit, variant }), "b").stats;
+        expect(b.min).toEqual(a.min);
+        expect(b.max).toEqual(a.max);
+      }
     }
     const mats = (v: string) => new Set(cd471({ variant: v }).sourceTree("x", "x").materials);
     expect(mats("cd471").has("blue")).toBe(true);
     expect(mats("cd675").has("blue")).toBe(false);
     expect(mats("cd675").has("red")).toBe(true);
+    for (const m of ["navy", "sky", "white"]) expect(mats("cdBlue").has(m)).toBe(true);
+  });
+
+  it("CD 471 blue (Najbrt): the emblem behind the cab, 'City Elefant' on the cab cars' upper wall, the front lettered", () => {
+    const tree = (unit: string, variant = "cdBlue") => built(cd471({ unit, variant }), "x").nodes;
+    for (const unit of ["motorCar", "drivingTrailer"]) {
+      const nodes = tree(unit);
+      for (const side of ["right", "left"]) {
+        const word = nodes.filter((n) => n.id.startsWith(`body/${side}-side/wordmark/`) && n.tri[1] > 0);
+        expect(word.length).toBeGreaterThan(0);
+        // on the vertical upper wall, over the end section behind the cab
+        expect(Math.min(...word.map((n) => n.min![1]))).toBeGreaterThan(3.42 * K_Y);
+        expect(Math.max(...word.map((n) => n.max![1]))).toBeLessThan(3.8 * K_Y);
+        expect(Math.min(...word.map((n) => n.min![0]))).toBeGreaterThan(4);
+      }
+      expect(nodes.some((n) => n.id.startsWith("cab/running-number/"))).toBe(true);
+      // no CityElefant stripes in the blue
+      expect(nodes.some((n) => /stripe/.test(n.id))).toBe(false);
+    }
+    expect(tree("trailer").some((n) => n.id.includes("/wordmark/"))).toBe(false);
+    expect(tree("motorCar", "cd471").some((n) => n.id.includes("/wordmark/") || n.id.startsWith("cab/running-number/"))).toBe(false);
   });
 
   it("carries valid running numbers", () => {
@@ -128,6 +151,8 @@ describe("the Czech electric units", () => {
     expect(elefantNumber("cd471", "trailer")).toBe("071 014-5");
     expect(elefantNumber("cd471", "drivingTrailer")).toBe("971 014-6");
     expect(elefantNumber("cd675", "motorCar")).toBe("675 001-2");
+    expect(elefantNumber("cdBlue", "motorCar")).toBe("471 079-4");
+    expect(elefantNumber("cdBlue", "drivingTrailer")).toBe(`971 079-${tractionCheckDigit("971079")}`);
     expect(tractionCheckDigit("163244")).toBe(7);
     expect(tractionCheckDigit("150222")).toBe(8);
   });
