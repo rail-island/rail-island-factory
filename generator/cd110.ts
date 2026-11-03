@@ -16,7 +16,8 @@ import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "./meshBuilder.t
 import type { Vec3 } from "./meshCore.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
-import { runningNumber, tubeX, type Band } from "./cd163.ts";
+import { emblem, runningNumber, tubeX, type Band } from "./cd163.ts";
+import { wordmarkAt, type Wordmark } from "./letters.ts";
 import {
   KIT_PALETTE, bogie, buffers, c, insulator, lerpTable, numberOn, onEnd, onSide, rect, roundRect, shell, singleArm,
   surfaceDecal, surfacePanel, type ShellSpec,
@@ -26,8 +27,10 @@ import type { LodShell } from "./lodKit.ts";
 
 export interface Cd110Livery {
   title: string;
-  /** The vlakosimdb directory under db/train/loco/electric. */
-  source: string;
+  /** The vlakosimdb directory under db/train/loco/electric; a livery read from photographs names its photo instead. */
+  source?: string;
+  /** The reference photograph a livery without a vlakosimdb model is read from (assets/cd-110/). */
+  photo?: string;
   number: string;
   numberSource: string;
   palette: Record<string, MaterialSpec>;
@@ -40,6 +43,14 @@ export interface Cd110Livery {
   frame: string;
   /** The 210's main breaker and AC roof line on the cab roof. */
   acRoof: boolean;
+  /** The hoods' cambered tops, where they differ from the hood colour (`body`). */
+  hoodRoof?: string;
+  /** The CD emblem on the frame's sides (at the reader's left) and on the hood ends. */
+  emblems?: boolean;
+  /** The operator's lettered wordmark after the frame's side emblem (letters.ts). */
+  wordmark?: Wordmark;
+  /** The running number on the frame's sides instead of a plate on the cab's. */
+  frameNumber?: boolean;
 }
 
 const BODY: Band = [1.4, 3.3, "body"];
@@ -80,6 +91,29 @@ export const CD110_LIVERIES = {
     frame: "frameGrey",
     acRoof: true,
   },
+  // CD's current blue (the Najbrt scheme, from 2008), read from photo-111-006-cd-blue.jpg: the
+  // hoods, the cabinets and the lower cab white to 1.88 m, light blue to 2.78 m, a white band to
+  // 3.03 m and navy above it to the hoods' tops; the upper cab, its roof and the frame navy; the
+  // white emblem with "Ceske drahy" and the number on the frame, the emblem on the hood ends
+  cd111Blue: {
+    title: "CD 111 blue",
+    photo: "photo-111-006-cd-blue.jpg",
+    number: runningNumber("111", "006"),
+    numberSource: "photo-111-006-cd-blue.jpg",
+    palette: {
+      body: c("#3c97de"), white: c("#eef0f2"), navy: c("#1f3a7a"), logo: c("#eef0f2"), beam: c("#d2c418"),
+      roof: { color: "#1f3a7a", roughness: 0.7 },
+    },
+    hood: [[1.4, 1.88, "white"], [1.88, 2.78, "body"], [2.78, 3.03, "white"], [3.03, 3.3, "navy"]],
+    hoodEnd: [[1.4, 1.88, "white"], [1.88, 2.78, "body"], [2.78, 3.03, "white"], [3.03, 3.3, "navy"]],
+    cabTop: "navy",
+    frame: "navy",
+    acRoof: false,
+    hoodRoof: "navy",
+    emblems: true,
+    wordmark: { runs: [["České dráhy", "logo"]], side: { h: 0.11, v: 1.16 } },
+    frameNumber: true,
+  },
 } as const satisfies Record<string, Cd110Livery>;
 
 export const CD110_PARAMS: readonly ParamSpec[] = [{
@@ -113,7 +147,7 @@ const hoodSpec = (e: number, l: Cd110Livery): ShellSpec => ({
     const w = lerpTable([[Y_DECK, HOOD_W], [3.1, HOOD_W], [3.22, 0.35]], y);
     return [[0, 0], [w - 0.04, 0], [w, 0.04]];
   },
-  side: l.hood, end: l.hoodEnd, corner: "end", roof: "body", ends: [e],
+  side: l.hood, end: l.hoodEnd, corner: "end", roof: l.hoodRoof ?? "body", ends: [e],
 });
 // beside the cab, full width: the low cabinets with the ramp falling to the hood (XML roof clip 2.1..5.8 m) ...
 const cabinetSpec = (e: number, l: Cd110Livery): ShellSpec => ({
@@ -186,7 +220,7 @@ function cab(m: MeshBuilder, l: Cd110Livery): void {
         surfaceDecal(m, "rubber", at, n, [rect(0.1, 1.45, 0.9, 1.47), rect(0.1, 1.47, 0.12, 3.12), rect(0.88, 1.47, 0.9, 3.12), rect(0.1, 3.12, 0.9, 3.14)], 0.004);
         for (const x of [0.02, 0.98]) m.prism("steel", ngon(6, 0.016, 0, x, s * 1.53), 1.5, 3.0);
       });
-      m.scope("number plate", () => {
+      if (!l.frameNumber) m.scope("number plate", () => {
         surfacePanel(m, "plate", at, n, rect(-1.2, 2.2, -0.3, 2.5), -0.01, 0.02, [], CAB_BREAKS);
         numberOn(m, at, n, l.number, -0.75, 2.35, 0.13, 0.024, s < 0);
       });
@@ -247,8 +281,25 @@ function hood(m: MeshBuilder, e: number, l: Cd110Livery): void {
       surfacePanel(m, "plate", at, n, rect(-0.4, 1.6, 0.4, 1.9), -0.01, 0.02);
       numberOn(m, at, n, l.number, 0, 1.75, 0.1, 0.024, e > 0);
     });
+    // the emblem left of the headlamp as read from outside (photo: just under the white band)
+    if (l.emblems) m.scope("emblem", () => {
+      const h = 0.25, w = emblemSpan(h);
+      surfaceDecal(m, "logo", at, n, tris(emblem(e > 0 ? 0.15 + w / 2 : 0.15 - w / 2, 2.5, h, e > 0)), 0.006);
+    });
   });
 }
+
+/** A triangle list in (u, v) as one-triangle rings for surfaceDecal. */
+const tris = (pts: ReadonlyArray<[number, number]>): Ring[] => {
+  const out: Ring[] = [];
+  for (let i = 0; i + 2 < pts.length; i += 3) out.push([pts[i]!, pts[i + 1]!, pts[i + 2]!]);
+  return out;
+};
+/** The emblem's width at height h. */
+const emblemSpan = (h: number): number => {
+  const us = emblem(0, 0, h, false).map(([u]) => u);
+  return Math.max(...us) - Math.min(...us);
+};
 
 function frame(m: MeshBuilder, l: Cd110Livery): void {
   m.scope("frame", () => {
@@ -257,6 +308,23 @@ function frame(m: MeshBuilder, l: Cd110Livery): void {
     m.cap("roof", r, Y_DECK);
     m.cap("underframe", r, Y_FRAME, false);
   });
+  if (l.emblems || l.wordmark || l.frameNumber)
+    for (const s of [-1, 1])
+      m.scope(s > 0 ? "right markings" : "left markings", () => {
+        // read from outside: the reader's right is +x on the right side, -x on the left
+        const flip = s < 0, r = s > 0 ? 1 : -1;
+        const at = (u: number, v: number, d: number): Vec3 => [u, v, s * (1.5 + d)];
+        const n: Vec3 = [0, 0, s];
+        // photo: the emblem 0.85 m from the frame's end at the reader's left, the name after it
+        const h = 0.3, w = emblemSpan(h), u0 = r * (-FRAME + 0.85);
+        if (l.emblems) m.scope("emblem", () => surfaceDecal(m, "logo", at, n, tris(emblem(u0, 1.0, h, flip)), 0.006));
+        const wm = l.wordmark;
+        if (wm?.side) m.scope("wordmark", () => {
+          for (const run of wordmarkAt(wm.runs, u0 + r * (w + 0.08), wm.side!.v, wm.side!.h, flip, wm.style))
+            surfaceDecal(m, run.mat, at, n, tris(run.tris), 0.006);
+        });
+        if (l.frameNumber) m.scope("number", () => numberOn(m, at, n, l.number, r * -2.2, 1.15, 0.12, 0.006, flip));
+      });
   for (const e of [-1, 1])
     m.scope(e > 0 ? "front end" : "rear end", () => {
       buffers(m, e, FRAME, BUFFERS, 1.06);

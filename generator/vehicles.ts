@@ -538,6 +538,7 @@ const CD_230_GAME: GameProperties = {
     { params: { livery: "cd240No047" }, maxspeed: 120 },
     { params: { livery: "cd240" }, maxspeed: 120 },
     { params: { livery: "cd242" }, weight: 84, power: 2472, maxspeed: 120 },
+    { params: { livery: "cd242Blue" }, weight: 84, power: 2472, maxspeed: 120 },
     { params: { livery: "cd340" }, maxspeed: 120 },
   ],
 };
