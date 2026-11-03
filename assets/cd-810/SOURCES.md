@@ -31,4 +31,15 @@ Each holds `vehicle.xml` (the unchanged Windows-1250 metadata), `index.xml` (the
 
 ## Running numbers
 
-- red: 810 604-9 (illustrative; M 152.0604 survives in red), yellowBand: 810 225-3 (photographed), blueWhite: 810 472-1 (illustrative), ivoryBand: 810 545-4 (photographed, PHOTOS.md).
+- red: 810 604-9 (illustrative; M 152.0604 survives in red), yellowBand: 810 225-3 (photographed), blueWhite: 810 472-1 (illustrative), ivoryBand: 810 545-4 (photographed, PHOTOS.md), cdBlue: 810 290-7 (photographed, below).
+
+## CD blue livery
+
+The `cdBlue` livery (810 290-7 in CD's current blue, the Najbrt scheme) is read from two photographs from Wikimedia Commons, downscaled to 1600 px and saved as JPEG (quality 85):
+
+| file | Commons page | author | licence | use |
+|---|---|---|---|---|
+| `photo-810-290-cd-blue.jpg` | https://commons.wikimedia.org/wiki/File:810.290_Hodonin.jpg (2019-07-23) | Radek Linner | CC BY-SA 3.0 | the running number; the side (navy foot, white to the navy line under the windows, light blue to the eave, the white eave line, navy roof, navy doors, the emblem with "Ceske drahy" and the small number near the -X end) and the face (navy cap, light blue round the windscreens, navy line at the sill, white lamp band with the navy emblem and number, navy below, the yellow plough edge) |
+| `photo-810-641-cd-blue.jpg` | https://commons.wikimedia.org/wiki/File:01.09.25_Chodov_810641.jpg (2025-09-01) | Phil Richards | CC BY-SA 4.0 | the face in three-quarter view: the black windscreen rubber, the large emblem between the lamp housings, the navy roof cap |
+
+Simplified: the lamp housings keep the model's white inner and red outer lamp; the class numeral "2", the "Narodni dopravce" line under the wordmark and the UIC number's prefix are left out.
