@@ -1,13 +1,14 @@
 # CD green and white coaches
 
-**Covers** - the parametric `veh-cd-green-white-coach`: the nine CD green and white coaches transferred from vlakosimdb (cd_a, cd_ab, cd_b, cd_bee, cd_beel, cd_bds, cd_ds, cd_bdmeer, cd_bdmtee) and the blue and white Bee (cd_bee001) as values of one `variant` parameter, their bodies, per-side layouts, paint, running numbers, deviations, the measured comparison and tests.
-**Code** - `generator/cdGreenWhiteCoach.ts`, `generator/csdCoachParts.ts`, `generator/coachTransfers.ts`, `test/csdCoaches.test.ts`, `assets/cd-green-white/`
+**Covers** - the parametric `veh-cd-green-white-coach`: the nine CD green and white coaches transferred from vlakosimdb (cd_a, cd_ab, cd_b, cd_bee, cd_beel, cd_bds, cd_ds, cd_bdmeer, cd_bdmtee) and the blue and white Bee (cd_bee001) as values of one `variant` parameter, CD's current blue (the Najbrt scheme) on the types photographed in it (`livery`), their bodies, per-side layouts, paint, running numbers, deviations, the measured comparison and tests.
+**Code** - `generator/cdGreenWhiteCoach.ts`, `generator/csdCoachParts.ts`, `generator/liveryCoach.ts` (`cdCoachLogo`), `generator/coachTransfers.ts`, `test/csdCoaches.test.ts`, `assets/cd-green-white/`
 **See also** - [csd-coaches.md](csd-coaches.md) (the shared builder, coordinates, comparison method), [bmo-double-deck.md](bmo-double-deck.md), [parameters.md](parameters.md), [the vlakosimdb-transfer skill](../../.agents/skills/vlakosimdb-transfer/SKILL.md)
 
 ## The design
 
 `veh-cd-green-white-coach` ("CD Green-White Coach"), rigid, one GLB node,
-`category: "Rail vehicles"`, `group: "coach"`. One parameter:
+`category: "Rail vehicles"`, `group: "coach"`. Two parameters, `variant` and
+`livery` ([CD's current blue](#cds-current-blue)):
 
 | `variant` | vlakosimdb | body | what it is | triangles |
 |---|---|---|---|---|
@@ -43,6 +44,40 @@ decals (the yellow line, the white class numerals, the CD emblem from `cd163.ts`
 running number). Everything else - panels, windows with sash bars, doors,
 gangways, lamps, buffers, couplings, bogies - comes from the shared `Coach`
 builder ([csd-coaches.md](csd-coaches.md)).
+
+## CD's current blue
+
+`livery` is `greenWhite` ("Green and white", the default: every variant as above,
+its GLB unchanged) or `cdBlue` ("CD blue"), CD's Najbrt scheme on the variant's own
+measured layout. It is a conditional value (`ParamValue.when`,
+[parameters.md](parameters.md)), offered only on the types photographed in it
+(`CD_BLUE`, [the photographs](../../assets/cd-green-white/SOURCES.md)):
+
+| variant | number | the paint | photograph |
+|---|---|---|---|
+| `a` | 51 54 19-41 068-0 | white to the navy line, light blue window band, a **yellow** line under the grey roof (its first class line), navy doors and ends | `photo-a-51-54-19-41-068-0-cd-blue.jpg` |
+| `ab` | 51 54 39-41 045-4 (illustrative) | as the B; the line under the navy roof yellow over the first class half, white over the second; white class numerals | `photo-ab-cd-blue-praha-vysocany.jpg` |
+| `b` | 51 54 20-41 866-4 | white to 1.72 m, the navy line to 1.86 m, light blue to the eave (3.2 m), a white line to 3.32 m, the weathered navy roof; navy doors and ends | `photo-b-51-54-20-41-866-4-cd-blue.jpg` |
+| `bee` | 51 54 20-41 789-8 (illustrative) | as the B under a light grey roof; navy side and end doors | `photo-bee-243-cd-blue-praha-holesovice-2022.jpg` |
+| `bds` | 50 54 82-40 340-7 | light blue below the navy line too, the white line, a grey roof; navy passenger doors, the luggage doors and lookout bay in the bands; the emblem, wordmark and number in white | `photo-bds-50-54-82-40-340-7-cd-blue.jpg` |
+| `bdmtee` | 50 54 20-82 232-0 (illustrative, the photographed series) | as the B on the 26.4 m body; navy double doors and aprons | `photo-bdmtee-cd-blue-nove-mesto-2018.jpg`, `photo-bdmtee-cd-blue-praha-liben.jpg` |
+
+Every blue coach carries the CD emblem with the "Ceske drahy" wordmark after it
+(`cdCoachLogo` in `liveryCoach.ts`, the proportions of the railcars' `cdSideLogo`)
+on the emblem box of each side, navy on the white (white on the BDs). The colours
+are the railcars' (navy #1f3a7a, light blue #3c97de, white #eef0f2,
+[czech-dmus.md](czech-dmus.md)). The roofs follow each photograph: weathered navy
+over the B, AB and Bdmtee, grey over the A and BDs, light grey over the Bee (as on
+the train of the 162 039 photograph, `assets/cd-163/`).
+
+Not offered: **Beel**, **Ds**, **BDmeer** and the blue Bee. No Commons photograph
+of a Beel, a BDmeer or a Ds in the blue was found (the Ds category's photographs
+show the green; the Bee categories hold the Bee 243 and the rebuilt Bee 272, not
+the Beel); the blue Bee is vlakosimdb's own blue.
+
+Simplified: the pictogram panels (bicycle, luggage), the class signs' plates and
+pictograms, "Narodni dopravce", the small inscriptions and the UIC prefixes are
+left out; the class numerals stay where the green and white coach has them.
 
 ## Choices and deviations
 
@@ -97,5 +132,7 @@ XML length and axles, section height and width, the CD emblem reading correctly
 from outside and the running number on both sides, valid check digits, and the
 variant list (window counts, the lookout bay only on BDs and Ds, an invalid value
 rejected), and the class marks drawn as white numerals (the "1" reading from
-outside on the A), not blank plates. The catalog sweep (`test/catalogSweep.ts`) builds the defaults and a fixed sample of the other combinations (every one with `TEST_ALL_VARIANTS=1`, [../guide/setup-and-build.md](../guide/setup-and-build.md)) (determinism, no flicker,
+outside on the A), not blank plates; the blue offered only on `CD_BLUE`'s types,
+with valid numbers, the green and white layout's windows and doors, navy doors and
+the wordmark read after the emblem from outside. The catalog sweep (`test/catalogSweep.ts`) builds the defaults and a fixed sample of the other combinations (every one with `TEST_ALL_VARIANTS=1`, [../guide/setup-and-build.md](../guide/setup-and-build.md)) (determinism, no flicker,
 envelope, budget, GLB/JS agreement).

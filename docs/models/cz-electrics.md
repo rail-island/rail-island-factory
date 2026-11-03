@@ -15,6 +15,7 @@ their build functions for the JS models).
 | `veh-cd-110` | `cd110` (default) | `cd_110 046-0` | 110 046-0 | red, cream cab and hood band |
 | | `cd111` | `cd_111` | 111 006-3 | green, cream cab, orange hood ends |
 | | `cd210` | `cd_210` | 210 021-2 | blue, cream cab and hood band; the AC breaker on the cab roof |
+| | `cd111Blue` | - (photograph) | 111 006-3 | CD's current blue (Najbrt): white, light blue, white and navy hood bands, navy upper cab and frame, emblems, "České dráhy" and the number on the frame |
 | `veh-cd-130` | `cd130` (default) | `cd_130` | 130 036-7 | cream over green, yellow nose band; single-arm pantographs, 3.20 m bogies |
 | | `cd123` | `cd_123` | 123 008-5 | pale and dark green, yellow lines; diamond pantographs, 3.33 m bogies |
 | | `cd123No019` | `cd_123-019-2` | 123 019-2 | two greens, salmon line; diamond pantographs, 3.33 m bogies |
@@ -23,7 +24,7 @@ their build functions for the JS models).
 
 | id | over buffers | body | pivots | wheelbase | wheels | collectors | triangles |
 |---|---|---|---|---|---|---|---|
-| `veh-cd-110` | 14.40 m | 13.16 m frame | 6.30 m | 2.80 m | 1.05 m | one half pantograph, raised to 5.88 m | 9,700 to 10,000 |
+| `veh-cd-110` | 14.40 m | 13.16 m frame | 6.30 m | 2.80 m | 1.05 m | one half pantograph, raised to 5.88 m | 9,700 to 10,600 |
 | `veh-cd-130` | 17.21 m | 15.97 m | 8.17 m | 3.20 / 3.33 m | 1.25 m | rear raised to 5.88 m, front folded | 11,100 to 11,300 |
 | `veh-cd-140` | 15.74 m | 14.50 m | 8.17 m | 3.33 m | 1.25 m | diamond, rear raised, front folded | 11,200 |
 | `veh-cd-169` | 18.00 m | 16.70 m | 8.70 m | 2.50 m | 1.25 m | single-arm, rear raised, front folded | 9,700 |
@@ -73,6 +74,23 @@ part of the native mapping.
   and the cab leaning in above 3.2 m (all from `cd_110 046-0`'s clips). Louvres,
   the cab door, plates and lamps from its native BMPs; railings and corner steps
   from photographs. The 210 adds the AC breaker on the cab roof.
+
+### CD 111 blue
+
+`cd111Blue` is read from a photograph, not vlakosimdb (`photo` names it,
+`source` is absent): 111 006-3 in CD's current blue, the Najbrt scheme from 2008
+(`assets/cd-110/photo-111-006-cd-blue.jpg`). The hoods, cabinets, cab block and
+lower cab are white to 1.88 m, light blue to 2.78 m, white to 3.03 m and navy to
+the hoods' tops (`hoodRoof`); the upper cab, its roof and the frame are navy.
+The frame's sides carry the white CD emblem 0.85 m from the end at the reader's
+left, "České dráhy" after it ([lettering.md](lettering.md)) and the running
+number in white (`frameNumber`, in place of the cab side's plate); each hood
+end carries the emblem beside its headlamp, over the red plate. Game
+properties as the `cd111` (500 kW). Simplified: the "Národní dopravce" line
+and the small UIC lettering are left out, the hood-end plate stays at the
+model's 1.6 m (the photo: on the frame), the headlamp housings keep the grey
+rim. Some units (111 019-6) wear a variant with a white frame, white cab and
+hood ends and a darker blue sweep; it is not modelled.
 - **CD 123 / 130**: the Skoda box body with a nearly flat raked end and rounded
   corners, the roof curving to a narrow crown and the raised louvred middle,
   four machine-room windows a side, cab doors with windows, the round roof
@@ -105,8 +123,8 @@ its stated tolerance.
   the dome around it).
 - The 169's front: plate between the lamps, twin headlight, rectangular buffer
   heads, from the 1987 photograph where the native front is ambiguous.
-- Not modelled: emblems and lettering other than the running number, cab
-  interiors, cables and hoses.
+- Not modelled: emblems and lettering other than the running number (except
+  on `cd111Blue`), cab interiors, cables and hoses.
 
 ## Left out
 

@@ -18,13 +18,14 @@ import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import type { PxBox } from "./csdCoaches.ts";
 import { liveryCoachLod } from "./lodTrams.ts";
 import type { Vec3 } from "./meshCore.ts";
-import { wordmarkAt } from "./letters.ts";
+import { runsWidth, wordmarkAt } from "./letters.ts";
+import { emblem } from "./cd163.ts";
 import { buildLiveryCoach, type BodyGeo, type DoorSpec, type EndSpec, type LiveryCoachSpec, type LiverySide, type Paint, type Win } from "./liveryCoach.ts";
 
 /** The kind of coach: the same three kinds every operator of the body runs. */
 export type UicZVariant = "firstClass" | "secondClass" | "restaurant";
-/** The operators whose liveries are modelled: CD (the default), DB IC, OBB, RegioJet. */
-export type UicZOperator = "cd" | "db" | "obb" | "regiojet";
+/** The operators whose liveries are modelled: CD (the default; `cdBlue` its current paint), DB IC, OBB, RegioJet. */
+export type UicZOperator = "cd" | "cdBlue" | "db" | "obb" | "regiojet";
 
 export const UIC_Z_PARAMS: readonly ParamSpec[] = [
   {
@@ -43,6 +44,7 @@ export const UIC_Z_PARAMS: readonly ParamSpec[] = [
     default: "cd",
     values: [
       { value: "cd", title: "CD" },
+      { value: "cdBlue", title: "CD blue" },
       { value: "db", title: "DB" },
       { value: "obb", title: "OBB" },
       { value: "regiojet", title: "RegioJet" },
@@ -56,6 +58,11 @@ export const UIC_Z_NUMBERS: Record<UicZOperator, Record<UicZVariant, { number: s
     firstClass: { number: "73 54 10-91 008-8", source: "the CD Ampz 73 54 10-91 008-8 of a Wikimedia Commons file title (EC 176, Praha hl.n., 2005)" },
     secondClass: { number: "73 54 21-91 026-7", source: "the CD Bmz245 21-91 026 of a Wikimedia Commons file title; check digit computed" },
     restaurant: { number: "73 54 88-91 003-6", source: "illustrative, CD WRmz 88-91 series; no legible photograph of the red livery" },
+  },
+  cdBlue: {
+    firstClass: { number: "73 54 19-91 004-8", source: "illustrative, CD Ampz 19-91 series; no photograph of a blue Ampz found on Wikimedia Commons" },
+    secondClass: { number: "73 54 21-91 007-7", source: "the CD Bmz 73 54 21-91 007-7 legible on photo-cd-blue-bmz-21-91-007.jpg (Praha-Bubenec)" },
+    restaurant: { number: "61 81 88-90 215-8", source: "the A-CD WRmz 61 81 88-90 215-8 (an ex-OBB car in CD's blue) legible on photo-cd-blue-wrmz-88-90-215.jpg" },
   },
   db: {
     firstClass: { number: "61 80 19-91 164-2", source: "illustrative, DB Avmz 19-91 series (the photographed Avmz's serial, its check digit not legible)" },
@@ -413,7 +420,105 @@ function rjSpec(variant: UicZVariant): LiveryCoachSpec {
   };
 }
 
-const SPECS: Record<UicZOperator, (variant: UicZVariant) => LiveryCoachSpec> = { cd: cdSpec, db: dbSpec, obb: obbSpec, regiojet: rjSpec };
+const CD_BLUE_PALETTE: Record<string, MaterialSpec> = {
+  ...CD_PALETTE,
+  navy: { color: "#1f3a7a", roughness: 0.5 },
+  skyBlue: { color: "#3c97de", roughness: 0.5 },
+  cdWhite: { color: "#eef0f2", roughness: 0.5 },
+  roofNavy: { color: "#2a3a66", roughness: 0.7 },
+};
+
+/** The emblem's width at height 1 (cd163.ts). */
+const EMBLEM_W = ((us: number[]) => Math.max(...us) - Math.min(...us))(emblem(0, 0, 1, false).map((q) => q[0]));
+
+/**
+ * CD's blue logo group on the white: the navy emblem `h` high, then the wordmark, its cap height
+ * 0.4 of the emblem's; the running number centred under them. `left` is the group's left
+ * edge as the reader sees it, metres from the reader's left end of the coach.
+ */
+const CD_BLUE_LOGO = { h: 0.36, y0: 1.24, left: 9.3, gap: 0.09, text: (v: UicZVariant) => (v === "restaurant" ? "\u010CD RESTAURANT" : "\u010Cesk\u00E9 dr\u00E1hy") } as const;
+const logoTh = CD_BLUE_LOGO.h * 0.4;
+const logoWidth = (v: UicZVariant) => EMBLEM_W * CD_BLUE_LOGO.h + CD_BLUE_LOGO.gap + runsWidth([[CD_BLUE_LOGO.text(v), "navy"]], logoTh);
+
+/** A white-framed square with a crossed knife and fork (the dining car's pictogram) in box b. */
+function cutlery(b: PxBox): Paint[] {
+  const [u0, v0, u1, v1] = b;
+  const t = 0.45;
+  const frame: Paint[] = ([[u0, v0, u1, v0 + t], [u0, v1 - t, u1, v1], [u0, v0 + t, u0 + t, v1 - t], [u1 - t, v0 + t, u1, v1 - t]] as PxBox[]).map((box) => ({ box, mat: "cdWhite" }));
+  // two bars corner to corner inside the frame, the second one a layer out where they cross
+  const [a0, a1, b0, b1, w] = [u0 + 1.4, u1 - 1.4, v0 + 1.4, v1 - 1.4, 0.38];
+  const knife: Pt[] = [[a0, b0 + w], [a0 + w, b0], [a1, b1 - w], [a1 - w, b1]];
+  const fork: Pt[] = [[a1 - w, b0], [a1, b0 + w], [a0 + w, b1], [a0, b1 - w]];
+  return [...frame, { poly: knife, mat: "cdWhite" }, { poly: fork, mat: "cdWhite", layer: 1 }];
+}
+
+/**
+ * CD's current blue (the Najbrt scheme) on its own Ampz, Bmz and WRmz, from photographs
+ * (assets/uic-z-coach/photo-cd-blue-*.jpg): white to the navy line under the windows, light
+ * blue (the dining car navy) to a white line at the eave, the navy roof; navy doors and skirt,
+ * the bands round the ends; white class numerals; the navy emblem and "Ceske drahy" a third
+ * along the white, the number under them. The layouts are the vlakosimdb CD ones. No blue
+ * Ampz was found on a photograph: it is the Bmz's paint with its white "1" (and no yellow
+ * line, which the photographs of the scheme never show).
+ */
+function cdBlueSpec(variant: UicZVariant): LiveryCoachSpec {
+  const o = cdSpec(variant);
+  const L = o.body.length;
+  const upper = variant === "restaurant" ? "navy" : "skyBlue";
+  const line = variant === "restaurant" ? "skyBlue" : "navy";
+  // the logo group and the grille, placed as the reader sees each side: from the low-x end on
+  // the right side, from the high-x end on the left (source x in metres -> native columns)
+  const ew = EMBLEM_W * CD_BLUE_LOGO.h;
+  const at = (s: number, d: number) => (s > 0 ? d : L - d) * 10;
+  const emblemBox = (s: number): PxBox => {
+    const c = at(s, CD_BLUE_LOGO.left + ew / 2);
+    return [c - 3.3, 40 - (CD_BLUE_LOGO.y0 + CD_BLUE_LOGO.h) * 10, c + 3.3, 40 - CD_BLUE_LOGO.y0 * 10];
+  };
+  const grille = (s: number): Paint => {
+    const [a, b] = [at(s, 17.2), at(s, 18.1)].sort((p, q) => p - q) as [number, number];
+    return { box: [a, 23, b, 26.2], mat: "grille" };
+  };
+  const side = (sd: LiverySide, s: number): LiverySide => ({
+    ...sd,
+    doors: sd.doors.map((d) => ({ ...d, paint: "navy" })),
+    // the dining car's white-framed knife and fork stand where the red one has its class sign
+    paint: variant === "restaurant" ? cutlery([16.5, 10.5, 24, 18]) : [grille(s)],
+    signs: variant === "restaurant" ? undefined : sd.signs?.map((g) => ({ box: g.box, text: g.text, mat: "cdWhite" })),
+    emblem: emblemBox(s),
+    numberAt: at(s, CD_BLUE_LOGO.left + logoWidth(variant) / 2),
+  });
+  return {
+    ...o,
+    palette: CD_BLUE_PALETTE,
+    bands: [[0.9, 1.8, "cdWhite"], [1.8, 1.92, line], [1.92, 3.46, upper], [3.46, 3.56, "cdWhite"], [3.56, 4.1, "roofNavy"]],
+    endPaint: undefined,
+    endDoor: "navy",
+    emblem: { kind: "cd", mat: "navy" },
+    number: UIC_Z_NUMBERS.cdBlue[variant].number,
+    numberMat: "navy",
+    numberY: 1.06,
+    skirt: o.skirt && { ...o.skirt, mat: "navy" },
+    right: side(o.right, 1),
+    left: side(o.left, -1),
+  };
+}
+
+const SPECS: Record<UicZOperator, (variant: UicZVariant) => LiveryCoachSpec> = { cd: cdSpec, cdBlue: cdBlueSpec, db: dbSpec, obb: obbSpec, regiojet: rjSpec };
+
+/** The wordmark after the emblem on both sides of CD's blue coaches, navy on the white. */
+function cdBlueWordmark(m: MeshBuilder, variant: UicZVariant, length: number): void {
+  const { h, y0, left, gap } = CD_BLUE_LOGO;
+  const runs = [[CD_BLUE_LOGO.text(variant), "navy"]] as const;
+  m.scope("wordmark", () => {
+    for (const s of [-1, 1])
+      m.scope(s > 0 ? "right" : "left", () => {
+        // the reader's left end is -x on the right side (+z), +x on the left
+        const start = s > 0 ? -length / 2 + left + EMBLEM_W * h + gap : length / 2 - left - EMBLEM_W * h - gap;
+        for (const r of wordmarkAt(runs, start, y0 + 0.3 * h, logoTh, s < 0))
+          m.facets(r.mat, r.tris.map(([x, y]): Vec3 => [x, y, s * 1.507]), [0, 0, s]);
+      });
+  });
+}
 
 /**
  * RegioJet's wordmark on both sides, "|| REGIO" red and "JET" navy on the lower
@@ -435,8 +540,10 @@ function rjWordmark(m: MeshBuilder): void {
 /** One UIC-Z coach. */
 export function uicZCoach(params?: ParamValues): MeshBuilder {
   const p = resolveParams(UIC_Z_PARAMS, params);
-  const m = buildLiveryCoach(SPECS[p.operator as UicZOperator](p.variant as UicZVariant));
+  const spec = SPECS[p.operator as UicZOperator](p.variant as UicZVariant);
+  const m = buildLiveryCoach(spec);
   if (p.operator === "regiojet") rjWordmark(m);
+  if (p.operator === "cdBlue") cdBlueWordmark(m, p.variant as UicZVariant, spec.body.length);
   return m;
 }
 

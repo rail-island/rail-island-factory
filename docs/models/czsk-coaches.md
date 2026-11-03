@@ -1,6 +1,6 @@
 # Czech and Slovak coaches
 
-**Covers** - the three parametric coach designs `veh-cd-y-coach`, `veh-zsr-coach` and `veh-uic-z-coach` (fifteen vlakosimdb coaches in later CD and ZSR liveries, the DB IC and OBB UIC-Z coaches, and RegioJet's ex-OBB coaches from photographs), the shared livery builder, its painted decals, the parameter contract (the UIC-Z `variant` x `operator`), running numbers, the measured comparison and the tests.
+**Covers** - the three parametric coach designs `veh-cd-y-coach`, `veh-zsr-coach` and `veh-uic-z-coach` (fifteen vlakosimdb coaches in later CD and ZSR liveries, the DB IC and OBB UIC-Z coaches, RegioJet's ex-OBB coaches and CD's current blue from photographs), the shared livery builder, its painted decals, the parameter contract (the UIC-Z `variant` x `operator`), running numbers, the measured comparison and the tests.
 **Code** - `generator/liveryCoach.ts`, `generator/letters.ts`, `generator/cdYCoach.ts`, `generator/zsrCoach.ts`, `generator/uicZCoach.ts`, `generator/czskCoaches.ts`, `generator/coachTransfers.ts`, `test/czskCoaches.test.ts`, `assets/cd-y-coach/`, `assets/zsr-coach/`, `assets/uic-z-coach/`
 **See also** - [cd-green-white.md](cd-green-white.md) (the green and white coaches, the blue Bee 001), [csd-coaches.md](csd-coaches.md) (the shared `Coach` builder, coordinates, comparison method), [parameters.md](parameters.md), [vehicles.md](vehicles.md), [the vlakosimdb-transfer skill](../../.agents/skills/vlakosimdb-transfer/SKILL.md)
 
@@ -32,6 +32,7 @@ change the body as well as the paint (as on the green and white coach).
 | | `secondClass` + `operator=obb` | obb_bmpz | UIC-Z 26.4 m | about 5,500 |
 | | `restaurant` + `operator=obb` | obb_wrmz | UIC-Z 26.4 m | about 5,300 |
 | | any `variant` + `operator=regiojet` | - (photographs) | the OBB layout, UIC-Z 26.4 m; the wordmark | about 6,900 to 7,200 |
+| | any `variant` + `operator=cdBlue` | - (photographs) | the CD layout, CD's current blue; the wordmark | about 5,900 to 6,300 |
 
 The blue and white **cd_bee001** is the Bee's texture with blue for its green,
 so it is the green and white design's value `beeBlue`
@@ -40,6 +41,12 @@ cd_bee; Bnb has a lower roof; the ZSR A, AB, B and Bh are one XML; ZSR BDs,
 BDmeer and WRRm are the CD BDs, BDmeer and WRRm bodies. **zsr_apee** is a coarse
 file on the same Y body (the brief's "26.4 m" does not hold for it), so it is a
 value of `veh-zsr-coach`; its copied lookout bay, painted nowhere, is left out.
+
+**CD's current blue** (the Najbrt scheme) is not offered on `veh-cd-y-coach`: no
+Commons photograph shows a Bc / Bcc couchette, a Beer, a Bnb or a Y-type WRRm in
+it (their categories hold the liveries modelled here, and the WRRm search found
+none). The Y coaches that do wear it - the A, AB, B, Bee, BDs and Bdmtee - are
+`livery=cdBlue` of the green and white design ([cd-green-white.md](cd-green-white.md)).
 
 Not converted (archived in the game, `rail-island-webapp/db/archived.json`):
 cd_a-old, cd_b-old, cd_aee, cd_aeel, cd_bmee, cd_bpb, cd_bt, cd_post, cd_wlab,
@@ -51,10 +58,10 @@ cd_wlabmee, zsr_wlab, cd_baafx#1/#3/#4, cd_bix, cd_bifx.
 `restaurant` - not a class code, because every operator of the body runs one
 of each under its own code (CD Ampz / Bmz / WRRmz, DB IC Ampz / Bmpz / WRmz,
 OBB Ampz / Bmpz / WRmz). The operators' liveries are the second parameter,
-**`operator`**: `cd` (the default), `db` and `obb`, all nine combinations
+**`operator`**: `cd` (the default), `cdBlue`, `db`, `obb` and `regiojet`, all fifteen combinations
 valid. It came in after `variant` shipped, so every CD combination - and with
 it the default build and every saved map's values - keeps its GLB bytes
-(pinned by SHA-256 in the tests). `uicZCoach.ts` keeps one spec function per
+(pinned by SHA-256 in the tests), and kept them when `regiojet` and `cdBlue` came in. `uicZCoach.ts` keeps one spec function per
 operator (`cdSpec`, `dbSpec`, `obbSpec`), `UIC_Z_NUMBERS` per operator, and
 one body (`body(length)`) for all of them.
 
@@ -90,6 +97,21 @@ at 3.6 m, silver doors, anthracite ends, white class numerals, and the lettered
 blue pictograms are left off. RegioJet runs no dining car of this type; the
 `restaurant` combination is the OBB WRmz in RegioJet paint, there only because
 every combination builds. The numbers are illustrative Czech (54) ones.
+
+**CD blue** (`operator=cdBlue`, "CD blue") is CD's current paint, the Najbrt
+scheme, on its own Ampz, Bmz and WRmz (`cdBlueSpec`, the CD spec repainted), read
+from photographs ([../../assets/uic-z-coach/SOURCES.md](../../assets/uic-z-coach/SOURCES.md),
+"CD blue coaches"): white to a navy line under the windows (1.8..1.92 m), light
+blue to a white eave line (3.46..3.56 m), the navy roof; the dining car swaps the
+line and the window band (light blue line, navy band) and carries a white-framed
+knife and fork instead of a class numeral. Navy doors and skirt, the bands round
+the ends, white class numerals; the navy CD emblem with the "Ceske drahy"
+wordmark ("CD RESTAURANT" on the dining car) 9.3 m from the reader's left end of
+each side, the number under them, a grille on the white two thirds along. The
+wordmark is drawn after the shared builder (`cdBlueWordmark`), as RegioJet's.
+Numbers: Bmz 73 54 21-91 007-7 and the dining car's A-CD 61 81 88-90 215-8 from
+photographs; no blue Ampz was found, so the 1st class coach is the Bmz paint on
+the Ampz layout with its "1" (illustrative 73 54 19-91 004-8).
 ## How it is built
 
 `buildLiveryCoach(spec)` (`liveryCoach.ts`) is the data-driven coach of the
@@ -105,6 +127,11 @@ coach keeps its own builder (its GLBs are unchanged). A `LiveryCoachSpec` names:
   material, the body's bands or bands of their own), class numerals optionally
   on a plate, the emblem box (the CD emblem of `cd163.ts`, a simplified ZSR
   mark, the DB letters on a plate or a simplified OBB mark), the running number and the **painted areas**.
+
+`cdCoachLogo` draws CD's current logo on a coach side: the emblem with the "Ceske
+drahy" wordmark after it as the reader sees it (cap height 0.32 of the emblem's,
+as the railcars' `cdSideLogo`); the green and white coach's `livery=cdBlue` uses it
+([cd-green-white.md](cd-green-white.md)).
 
 Painted areas (`Paint`) are boxes or convex outlines in native pixels laid as
 one-sided decals on the skin (`skinDecal`), split at the plan stations so each
@@ -174,6 +201,6 @@ every transfer within its landmark tolerances, the XML length, roof height and
 axle positions, valid UIC numbers (54 Czech, 56 Slovak, 80 German, 81
 Austrian) with an emblem and a number on both sides, the window and door counts
 per variant and operator, the paint materials per livery, the CD UIC-Z GLBs
-pinned by SHA-256 under the `operator` parameter, and the blue Bee as the Bee's
+pinned by SHA-256 under the `operator` parameter, CD's blue on the CD layouts (bands, navy doors, the emblem and wordmark on both sides), and the blue Bee as the Bee's
 layout recoloured.
 The catalog sweep (`test/catalogSweep.ts`) covers the generic contract.

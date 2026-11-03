@@ -50,7 +50,7 @@ describe("Czech mainline diesel locomotives", () => {
     expect(DIESEL_LOCOS.map((d) => d.id)).toEqual(["proc-vehicle-cd-750", "proc-vehicle-cd-749", "proc-vehicle-cd-781", "proc-vehicle-csd-t679-0", "proc-vehicle-csd-t499", "proc-vehicle-cd-771"]);
     expect(DIESEL_LOCOS.map((d) => d.title)).toEqual(["CD 750 / 753 / 754 Brejlovec", "CD 749 Bardotka", "CD 781 Sergej", "CSD T 679.0 Pomeranc", "CSD T 499.0 / CD 759 Kyklop", "CD 770 / 771 Cmelak"]);
     expect(design("proc-vehicle-cd-750").params![0]).toMatchObject({ name: "livery", default: "cd750" });
-    expect(design("proc-vehicle-cd-750").params![0]!.values.map((v) => v.value)).toEqual(["cd750", "cd750No308", "cd753", "cd754", "cd754No013"]);
+    expect(design("proc-vehicle-cd-750").params![0]!.values.map((v) => v.value)).toEqual(["cd750", "cd750No308", "cd753", "cd754", "cd754No013", "cd754Blue"]);
     expect(design("proc-vehicle-cd-749").params![0]).toMatchObject({ name: "livery", default: "cd749" });
     expect(design("proc-vehicle-cd-749").params![0]!.values.map((v) => v.value)).toEqual(["cd749", "cd749No264", "cd749No121"]);
     expect(design("proc-vehicle-cd-781").params![0]!.values.map((v) => v.value)).toEqual(["cd781", "cd781No462"]);
@@ -134,6 +134,25 @@ describe("Czech mainline diesel locomotives", () => {
     expect(nose("cd749No264").upperSide).toContain("green");
     expect(nose("cd749No121").face).toContain("cream");
     expect(nose("cd749No121").upperSide).toContain("navy");
+  }, 120_000);
+
+  it("paints the CD blue 754 as photographed: light blue over the white band, navy frame and roof", () => {
+    const { tris } = built("proc-vehicle-cd-750", { livery: "cd754Blue" });
+    const centroid = (t: (typeof tris)[number]) => [0, 1, 2].map((i) => (t.p[0]![i]! + t.p[1]![i]! + t.p[2]![i]!) / 3);
+    const mats = (keep: (p: number[]) => boolean) => new Set(tris.filter((t) => keep(centroid(t))).map((t) => t.material));
+    // the side wall's strips by height: triangles on the wall (|z| = 1.5) crossing x = -1, clear of windows and plates
+    const side = (y0: number, y1: number) => new Set(tris.filter((t) => {
+      const xs = t.p.map((p) => p[0]!), c = centroid(t);
+      return Math.min(...xs) < -1 && Math.max(...xs) > -1 && c[1]! > y0 && c[1]! < y1 && t.p.every((p) => Math.abs(Math.abs(p[2]!) - 1.5) < 0.001);
+    }).map((t) => t.material));
+    expect(side(1.62, 1.88)).toEqual(new Set(["cdWhite"]));
+    expect(side(2.3, 2.6)).toEqual(new Set(["skyBlue"]));
+    expect(side(3.51, 3.59)).toEqual(new Set(["cdWhite"]));
+    // the nose under the windscreen and the white band round it, the navy frame
+    const face = (y0: number, y1: number) => mats((p) => p[0]! > 7.2 && p[1]! > y0 && p[1]! < y1 && Math.abs(p[2]!) > 0.6 && Math.abs(p[2]!) < 1.2);
+    expect(face(2.2, 2.5)).toContain("skyBlue");
+    expect(face(1.65, 1.85)).toContain("cdWhite");
+    expect(mats((p) => p[0]! > 7.2 && p[1]! > 0.8 && p[1]! < 1.6)).toContain("navy");
   }, 120_000);
 
   it("matches the independently annotated native fronts and sides within the stated pixel tolerances", () => {

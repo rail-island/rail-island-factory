@@ -8,7 +8,7 @@
 
 | id | title | `livery` values (vlakosimdb model) | over buffers | triangles |
 |---|---|---|---|---|
-| `veh-cd-750` | CD 750 / 753 / 754 Brejlovec | `cd750` (default, `cd_750`), `cd750No308` (`cd_750_308`), `cd753` (`cd_753`), `cd754` (`cd_754`), `cd754No013` (`cd_754_013`) | 16.54 m | 10,500 .. 11,000 |
+| `veh-cd-750` | CD 750 / 753 / 754 Brejlovec | `cd750` (default, `cd_750`), `cd750No308` (`cd_750_308`), `cd753` (`cd_753`), `cd754` (`cd_754`), `cd754No013` (`cd_754_013`), `cd754Blue` (photograph) | 16.54 m | 10,500 .. 11,000 |
 | `veh-cd-749` | CD 749 Bardotka | `cd749` (default, `cd_749`), `cd749No264` and `cd749No121` (from photographs, on the `cd_749` body) | 16.50 m | 10,400 .. 10,600 |
 | `veh-cd-781` | CD 781 Sergej | `cd781` (default, `cd_781`), `cd781No462` (`cd_781_462`) | 17.55 m | 12,500 .. 12,700 |
 | `veh-csd-t679-0` | CSD T 679.0 Pomeranc | fixed (`csd_t_679`) | 18.00 m | 10,500 |
@@ -44,7 +44,15 @@ The CD 749 was once a `cd749` livery of `veh-cd-750`; the legacy models
 livery (`generator/legacyTargets.json`). Of its liveries, `cd749` (grey and red)
 is the vlakosimdb `cd_749`; `cd749No264` (green and cream with the maroon roof,
 749 264-8) and `cd749No121` (navy, red and cream, 749 121-0) were read from
-photographs (`assets/cd-750/SOURCES.md`, `PHOTOS.md`).
+photographs (`assets/cd-750/SOURCES.md`, `PHOTOS.md`). On `veh-cd-750`,
+`cd754Blue` (CD 754 blue, 754 045-3, the 754's power) is CD's current blue (the
+Najbrt scheme) read from `photo-754-045-cd-blue.jpg`: light blue over a white
+band from the frame to 1.9 m (round the noses too), a white line under the
+machine room's cant (3.5 - 3.6 m), the navy frame, ploughs, roof and headlight
+housings, the white windscreen surround, white emblems on the noses and, with
+the "České dráhy" lettering (`wordmark`, [lettering.md](lettering.md)) after it,
+on the sides behind the radiator (`emblemX`), white plates with navy figures
+(`numberInk`).
 
 ## The diesel toolkit (`dieselParts.ts`)
 
@@ -117,6 +125,11 @@ The remaining larger rows are the deliberate departures below.
   painted on the common body.
 - Not modelled: printed data panels, the side ribs of the 749 and 781, emblems
   the BMPs do not show.
+- `cd754Blue` is painted on the Brejlovec body as built: the photographed,
+  modernised 754 045 has oval machine-room windows, which the model does not
+  draw; its emblem and lettering stand at the same place on both sides (the
+  photo shows the left side), the front emblem centred (the photo: left of the
+  middle), the side plate on the body (the photo: the number on the frame).
 
 ## Tests
 

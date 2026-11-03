@@ -41,3 +41,12 @@ All files were downloaded from Wikimedia Commons (rendered by `w/thumb.php`), do
 - Licence: CC BY-SA 3.0
 - Date: 2007-04-02
 - Shows: a 451 motor bogie: side frame, axle boxes and springs, used for the running gear's proportions.
+
+## photo-451-056-cd-blue-masarykovo-2014.jpg
+
+- Commons title: File:Masarykovo nadrazi, pantak v najbrtu.jpg
+- Page: https://commons.wikimedia.org/wiki/File:Masarykovo_n%C3%A1dra%C5%BE%C3%AD,_pan%C5%A5%C3%A1k_v_najbrtu.jpg
+- Author: PatrikPaprika
+- Licence: CC BY-SA 4.0
+- Date: 2014-09-23
+- Shows: motor car 451 056-6 in CD's current blue (the Najbrt scheme) at Praha Masarykovo nadrazi, three-quarter: the white nose with the navy CD emblem and the number, navy under and over the windscreen, the machine room light blue over a navy line, the saloon's light blue window band between a navy line and white above, navy doors, the trailers behind in the same paint. The `cdBlue` livery.

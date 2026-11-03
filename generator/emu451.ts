@@ -11,6 +11,10 @@
 // the published 95.29 m of the four-car set; heights and widths are the XML's.
 // Every car faces +X: the motor car's cab is its +X end. See
 // docs/models/czech-emus-classic.md.
+//
+// The `livery` picks the paint: the CD blue and grey of the vlakosimdb BMPs
+// (`cd`, the default) or CD's current blue (`cdBlue`, the Najbrt scheme, 451 056
+// read from photographs).
 
 import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
 import type { GameProperties } from "./design.ts";
@@ -26,16 +30,103 @@ import { bOf, CLASSIC_PALETTE, emuBogie, frontEmblem, frontNumber, gangwayEnd, l
 export const K_X = 95.29 / 98.8;
 
 export type Unit451 = "motorCar" | "trailer";
+export type Livery451 = "cd" | "cdBlue";
 
 export const CD451_PARAMS: readonly ParamSpec[] = [
   enumParam("unit", "Car", {
     motorCar: "Motor car",
     trailer: "Trailer",
   }),
+  enumParam("livery", "Livery", {
+    cd: "CD 451",
+    cdBlue: "CD 451 blue",
+  }),
 ];
 
 /** The set the running numbers name: 451 032 (photographed at Ricany in 2007) and its trailer. */
 export const NUMBERS_451: Record<Unit451, string> = { motorCar: tractionNumber("451", "032"), trailer: tractionNumber("051", "032") };
+
+/**
+ * A livery: its colours over the base palette, the nose's and the bodies' bands
+ * (the nose's edges are the face's stations), the paint laid over the saloon of
+ * each car (the native panel under the windows, or the blue's window band), the
+ * doors' and ends' paint, the front emblem's and the numbers' paint and the serial.
+ */
+interface Paint451 {
+  palette?: Record<string, MaterialSpec>;
+  nose: Array<[number, number, string]>;
+  motorBody: Array<[number, number, string]>;
+  trailerBody: Array<[number, number, string]>;
+  /** Panels over the motor car's passenger part, [y0, y1, mat], from the first door to the inner end. */
+  motorSaloon: Array<[number, number, string]>;
+  /** Panels over the trailer's end compartments (the higher window band over the bogies), [y0, y1, mat]. */
+  trailerEnds: Array<[number, number, string]>;
+  door: string;
+  machineDoor: string;
+  luggageDoor: string;
+  endPaint: string;
+  endDoor: string;
+  emblem: string;
+  number: string;
+  frontNumber: string;
+  /** The lamp pods. */
+  pods: string;
+  serial: string;
+}
+
+const PAINTS_451: Record<Livery451, Paint451> = {
+  cd: {
+    nose: [[0.4, 1.2, "blue"], [1.2, 2.2, "light"], [2.2, 2.5, "blue"], [2.5, 3.25, "glass"], [3.25, 3.4, "blue"], [3.4, 3.8, "roof"]],
+    motorBody: [[0.4, 1.2, "blue"], [1.2, 2.2, "light"], [2.2, 3.3, "blue"], [3.3, 3.72, "roof"], [3.72, 3.8, "roofTop"]],
+    trailerBody: [[0.2, 1.0, "blue"], [1.0, 2.5, "light"], [2.5, 3.1, "blue"], [3.1, 3.7, "roof"], [3.7, 3.9, "roofTop"]],
+    // the band under the windows: grey from the first door to the inner end
+    motorSaloon: [[2.2, 2.7, "light"]],
+    trailerEnds: [],
+    door: "doorRed",
+    machineDoor: "light",
+    luggageDoor: "light",
+    endPaint: "blue",
+    endDoor: "blue",
+    emblem: "blue",
+    number: "lettering",
+    frontNumber: "letteringDark",
+    pods: "light",
+    serial: "032",
+  },
+  // CD's current blue (the Najbrt scheme), read from photo-451-056-cd-blue-masarykovo-2014.jpg: the
+  // nose white under a navy band, navy round the windscreen; behind it white under a navy line
+  // and light blue to the eave over the machine room; over the saloons a light blue window band
+  // between a navy line under the windows and white above; navy doors
+  cdBlue: {
+    palette: {
+      navy: { color: "#1f3a7a", roughness: 0.5 },
+      sky: { color: "#3c97de", roughness: 0.5 },
+      white: { color: "#eef0f2", roughness: 0.5 },
+    },
+    nose: [[0.4, 1.2, "white"], [1.2, 2.2, "white"], [2.2, 2.5, "navy"], [2.5, 3.25, "glass"], [3.25, 3.4, "navy"], [3.4, 3.8, "roof"]],
+    motorBody: [[0.4, 2.2, "white"], [2.2, 2.35, "navy"], [2.35, 3.3, "sky"], [3.3, 3.72, "roof"], [3.72, 3.8, "roofTop"]],
+    trailerBody: [[0.2, 0.97, "white"], [0.97, 1.12, "navy"], [1.12, 2.32, "sky"], [2.32, 3.1, "white"], [3.1, 3.7, "roof"], [3.7, 3.9, "roofTop"]],
+    motorSaloon: [[1.22, 1.37, "navy"], [1.37, 2.52, "sky"], [2.52, 3.3, "white"]],
+    trailerEnds: [[0.97, 1.78, "white"], [1.78, 1.93, "navy"], [1.93, 3.0, "sky"]],
+    door: "navy",
+    machineDoor: "bands",
+    luggageDoor: "navy",
+    endPaint: "white",
+    endDoor: "navy",
+    emblem: "navy",
+    number: "letteringDark",
+    frontNumber: "letteringDark",
+    pods: "white",
+    serial: "056",
+  },
+};
+
+/** The running number a car carries in a livery: `451 032-7`, its trailer `051 032-1`. */
+export function number451(livery: Livery451, unit: Unit451): string {
+  return tractionNumber(unit === "motorCar" ? "451" : "051", PAINTS_451[livery].serial);
+}
+
+const paletteOf = (paint: Paint451): Record<string, MaterialSpec> => (paint.palette ? { ...PALETTE, ...paint.palette } : PALETTE);
 
 const PALETTE: Record<string, MaterialSpec> = {
   ...CLASSIC_PALETTE,
@@ -77,8 +168,9 @@ const noseAt = (y: number): Pt => [0.5 + (0.6 * (y - 1.2)) / 2.1, y];
 
 /** A car of the CD 451 set. */
 export function cd451(params?: ParamValues): MeshBuilder {
-  const unit = resolveParams(CD451_PARAMS, params).unit as Unit451;
-  return unit === "motorCar" ? motorCar() : trailer();
+  const p = resolveParams(CD451_PARAMS, params);
+  const livery = p.livery as Livery451;
+  return p.unit === "motorCar" ? motorCar(livery) : trailer(livery);
 }
 
 /** The side windows (native boxes): the motor car's saloon, the trailer's saloon and end compartments. */
@@ -87,7 +179,7 @@ const WINDOWS_051: PxBox[] = [[74, 28, 83, 38], [89, 28, 101, 38], [107, 28, 119
 const END_WINDOWS_051: PxBox[] = [[6, 21, 18, 31], [22, 21, 34, 31], [37, 21, 44, 31], [202, 21, 208, 31], [211, 21, 223, 31], [227, 21, 239, 31]];
 
 /** The motor car's volumes: the nose and the body behind it. */
-function motorVolumes(): { nose: Volume; body: Volume } {
+function motorVolumes(paint: Paint451): { nose: Volume; body: Volume } {
   const F = CARS.motorCar.F;
   // the nose (source x 0.5 .. 2.4): rounded plan, the raked face; its bands from x_inc
   const nose: Volume = {
@@ -97,7 +189,7 @@ function motorVolumes(): { nose: Volume; body: Volume } {
     // the face carries a station at every band edge, so each band's clamped ring stays on it
     top: toB(F, [noseAt(1.2), noseAt(2.2), noseAt(2.5), noseAt(3.25), [1.1, 3.3], [1.1 + 0.2 / 3, 3.4], [1.3, 3.6], [1.6, 3.8], [2.4, 3.9]]),
     bottom: toB(F, [[0.5, 1.2], [0.6, 0.8], [2.4, 0.8]]),
-    bands: [[0.4, 1.2, "blue"], [1.2, 2.2, "light"], [2.2, 2.5, "blue"], [2.5, 3.25, "glass"], [3.25, 3.4, "blue"], [3.4, 3.8, "roof"]],
+    bands: paint.nose,
   };
   const body: Volume = {
     name: "body",
@@ -105,8 +197,8 @@ function motorVolumes(): { nose: Volume; body: Volume } {
     plan: toB(F, [[2.4, 1.5], [24.8, 1.5]]),
     // the low floor between the bogies (XML 6.6 .. 20.4 m at 0.4 m)
     bottom: toB(F, [[2.4, 0.8], [6.2, 0.8], [6.6, 0.4], [20.4, 0.4], [20.8, 0.8], [24.8, 0.8]]),
-    bands: [[0.4, 1.2, "blue"], [1.2, 2.2, "light"], [2.2, 3.3, "blue"], [3.3, 3.72, "roof"], [3.72, 3.8, "roofTop"]],
-    endPaint: "blue",
+    bands: paint.motorBody,
+    endPaint: paint.endPaint,
   };
   return { nose, body };
 }
@@ -115,8 +207,8 @@ function motorVolumes(): { nose: Volume; body: Volume } {
  * A passenger door: two leaves swinging inward from both jambs through its doorway
  * (`Volume.openings`), a window riding on each (doors.ts).
  */
-function passengerDoor(c: Coach, body: Volume, s: number, b: Box, glass: Box[]): void {
-  c.door(body, s, b, "doorRed", {
+function passengerDoor(c: Coach, body: Volume, s: number, b: Box, glass: Box[], paint: string): void {
+  c.door(body, s, b, paint, {
     seam: 0.03,
     opens: { kind: "swing", leaves: 2 },
     // the side drawing runs against x: draw the leaves from that end, so the
@@ -131,14 +223,16 @@ function passengerDoor(c: Coach, body: Volume, s: number, b: Box, glass: Box[]):
   });
 }
 
-function motorCar(): MeshBuilder {
+function motorCar(livery: Livery451): MeshBuilder {
+  const paint = PAINTS_451[livery];
+  const number = number451(livery, "motorCar");
   const car = CARS.motorCar;
   const F = car.F;
-  const c = new Coach(PALETTE, (car.front + car.rear) / 2);
+  const c = new Coach(paletteOf(paint), (car.front + car.rear) / 2);
   const m = c.m;
   const box = (b: PxBox) => sb(F, b);
   const X = (x: number) => c.X(bOf(F, x));
-  const { nose, body } = motorVolumes();
+  const { nose, body } = motorVolumes(paint);
   const doors = [[[70, 31, 87, 55], [[72, 37, 77, 46], [80, 37, 85, 46]]], [[183, 31, 200, 55], [[185, 37, 190, 46], [193, 37, 198, 46]]]] as Array<[PxBox, PxBox[]]>;
   body.openings = [1, -1].flatMap((s) => doors.map(([d]) => c.doorOpening(s, box(d), 0.03)));
   m.scope("body", () => {
@@ -147,21 +241,24 @@ function motorCar(): MeshBuilder {
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
         m.scope("cab windows", () => c.sidePanel(nose, "cabBlack", s, box([16, 28, 18, 35]), 0.01, 0.02));
-        // the band under the windows: grey from the first door to the inner end
-        m.scope("paint lines", () => c.sidePanel(body, "light", s, box([66, 33, 248, 38]), 0.004, 0.003));
+        // the saloon's paint from the first door to the inner end (the native grey band under the windows)
+        m.scope("paint lines", () => {
+          const b = box([66, 33, 248, 38]);
+          for (const [y0, y1, mat] of paint.motorSaloon) c.sidePanel(body, mat, s, { ...b, y0, y1 }, 0.004, 0.003);
+        });
         m.scope("louvres", () => ([[26, 28, 34, 36], [35, 28, 43, 36], [44, 28, 52, 36]] as PxBox[]).forEach((b, i) => m.scope(`louvre ${i + 1}`, () => louvre(c, body, s, box(b), "roof", 6))));
-        m.scope("machine room door", () => c.door(body, s, box([35, 36, 52, 47]), "light", { seam: 0.03 }));
+        m.scope("machine room door", () => c.door(body, s, box([35, 36, 52, 47]), paint.machineDoor, { seam: 0.03 }));
         m.scope("windows", () => {
           const ws: Array<[PxBox, string]> = [[[55, 28, 62, 36], "cab end window"], ...WINDOWS_451.map((b, i): [PxBox, string] => [b, `window ${i + 1}`])];
           for (const [b, name] of ws) m.scope(name, () => c.window(body, s, box(b), { fw: 0.08 }));
         });
         m.scope("doors", () => {
-          doors.forEach(([d, glass], i) => m.scope(`door ${i + 1}`, () => passengerDoor(c, body, s, box(d), glass.map(box))));
-          m.scope("luggage door", () => c.door(body, s, box([232, 28, 245, 49]), "light", { seam: 0.03 }));
+          doors.forEach(([d, glass], i) => m.scope(`door ${i + 1}`, () => passengerDoor(c, body, s, box(d), glass.map(box), paint.door)));
+          m.scope("luggage door", () => c.door(body, s, box([232, 28, 245, 49]), paint.luggageDoor, { seam: 0.03 }));
         });
         m.scope("running number", () => {
           const b = box([30, 49, 58, 51]);
-          sideNumber(c, body, s, NUMBERS_451.motorCar, (b.x0 + b.x1) / 2, b.y0, 0.18, "lettering");
+          sideNumber(c, body, s, number, (b.x0 + b.x1) / 2, b.y0, 0.18, paint.number);
         });
       });
   });
@@ -170,14 +267,14 @@ function motorCar(): MeshBuilder {
     const plane = { x0: X(0.5), y0: 1.2, x1: X(1.1), y1: 3.3 };
     const xAt = (y: number) => plane.x0 + ((y - plane.y0) / (plane.y1 - plane.y0)) * (plane.x1 - plane.x0);
     m.scope("windscreen pillar", () => slopePanel(m, "cabBlack", 1, plane, -0.05, 0.05, 2.5, 3.25, 0.012, 0.01));
-    m.scope("emblem", () => frontEmblem(m, "blue", 1.53, 0.33, xAt));
-    m.scope("running number", () => frontNumber(m, "letteringDark", NUMBERS_451.motorCar, 0, 1.36, 0.12, xAt));
+    m.scope("emblem", () => frontEmblem(m, paint.emblem, 1.53, 0.33, xAt));
+    m.scope("running number", () => frontNumber(m, paint.frontNumber, number, 0, 1.36, 0.12, xAt));
     // the lamp pods (XML `light`): z 0.95 .. 1.5, 1.0 .. 1.8 m, from source x 0.7 back into the nose
     m.scope("lamp pods", () => {
       for (const s of [1, -1])
         m.scope(s > 0 ? "right" : "left", () => {
           const ring: Array<[number, number]> = [[1.25, 1.0], [1.35, 1.05], [1.4, 1.1], [1.5, 1.7], [1.4, 1.8], [1.05, 1.8], [1.0, 1.7], [0.95, 1.2], [1.0, 1.1], [1.1, 1.0]].map(([z, y]) => [s * z, y] as [number, number]);
-          m.sweep("light", "x", ring, X(2.0), ring, X(0.7));
+          m.sweep(paint.pods, "x", ring, X(2.0), ring, X(0.7));
           lens(m, "lampWhite", X(0.7), s * 1.22, 1.5, 0.15);
           lens(m, "lampRed", X(0.7), s * 1.22, 1.15, 0.06, 0.03, 8);
         });
@@ -191,7 +288,7 @@ function motorCar(): MeshBuilder {
     m.scope("apron", () => c.sideSweep("apron", polyB(F, [[0.6, 0.8], [2.6, 0.8], [2.2, 0.5], [0.9, 0.5]]), -1.25, 1.25));
     m.scope("coupler", () => centreCoupler(m, 1, X(1.2), c.X(car.front), 0.9));
   });
-  m.scope("rear end", () => gangwayEnd(c, body, { wall: 0, e: -1, face: BELLOWS * K_X, door: { x0: -0.55, x1: 0.55, y0: 1.5, y1: 3.4 }, doorPaint: "blue", couplerY: 0.75, markerY: 1.65, markerZ: 0.8 }));
+  m.scope("rear end", () => gangwayEnd(c, body, { wall: 0, e: -1, face: BELLOWS * K_X, door: { x0: -0.55, x1: 0.55, y0: 1.5, y1: 3.4 }, doorPaint: paint.endDoor, couplerY: 0.75, markerY: 1.65, markerZ: 0.8 }));
   m.scope("roof equipment", () => {
     // the ventilator housing over the passenger saloon (XML roof, 9.3 .. 18.1 m, to 4.2 m)
     m.scope("ventilator", () => {
@@ -213,7 +310,7 @@ function motorCar(): MeshBuilder {
 }
 
 /** The trailer's body. */
-function trailerVolume(): Volume {
+function trailerVolume(paint: Paint451): Volume {
   const F = CARS.trailer.F;
   return {
     name: "body",
@@ -221,37 +318,45 @@ function trailerVolume(): Volume {
     plan: toB(F, [[0.2, 1.5], [24.3, 1.5]]),
     // the low floor between the bogies (XML 4.6 .. 19.9 m at 0.2 m)
     bottom: toB(F, [[0.2, 0.6], [4.2, 0.6], [4.6, 0.2], [19.9, 0.2], [20.3, 0.6], [24.3, 0.6]]),
-    bands: [[0.2, 1.0, "blue"], [1.0, 2.5, "light"], [2.5, 3.1, "blue"], [3.1, 3.7, "roof"], [3.7, 3.9, "roofTop"]],
-    endPaint: "blue",
+    bands: paint.trailerBody,
+    endPaint: paint.endPaint,
   };
 }
 
-function trailer(): MeshBuilder {
+function trailer(livery: Livery451): MeshBuilder {
+  const paint = PAINTS_451[livery];
   const car = CARS.trailer;
   const F = car.F;
-  const c = new Coach(PALETTE, (car.front + car.rear) / 2);
+  const c = new Coach(paletteOf(paint), (car.front + car.rear) / 2);
   const m = c.m;
   const box = (b: PxBox) => sb(F, b);
-  const body = trailerVolume();
+  const body = trailerVolume(paint);
   const doors = [[[50, 23, 67, 47], [[52, 29, 57, 38], [60, 29, 65, 38]]], [[178, 23, 195, 47], [[181, 29, 185, 38], [188, 29, 193, 38]]]] as Array<[PxBox, PxBox[]]>;
   body.openings = [1, -1].flatMap((s) => doors.map(([d]) => c.doorOpening(s, box(d), 0.03)));
   m.scope("body", () => {
     c.volume(body);
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
+        if (paint.trailerEnds.length) m.scope("paint lines", () => {
+          // the end compartments over the bogies: their higher window band
+          for (const [u0, u1] of [[2, 47], [197, 242]]) {
+            const b = box([u0, 30, u1, 31]);
+            for (const [y0, y1, mat] of paint.trailerEnds) c.sidePanel(body, mat, s, { ...b, y0, y1 }, 0.004, 0.003);
+          }
+        });
         m.scope("end windows", () => END_WINDOWS_051.forEach((b, i) => m.scope(`window ${i + 1}`, () => c.window(body, s, box(b), { fw: 0.08, ...(b[2] - b[0] > 8 ? { sash: 2.47 } : {}) }))));
         m.scope("windows", () => WINDOWS_051.forEach((b, i) => m.scope(`window ${i + 1}`, () => c.window(body, s, box(b), { fw: 0.08, sash: 1.77 }))));
         m.scope("doors", () =>
-          doors.forEach(([d, glass], i) => m.scope(`door ${i + 1}`, () => passengerDoor(c, body, s, box(d), glass.map(box)))),
+          doors.forEach(([d, glass], i) => m.scope(`door ${i + 1}`, () => passengerDoor(c, body, s, box(d), glass.map(box), paint.door))),
         );
         m.scope("running number", () => {
           const b: Box = box([110, 45, 140, 47]);
-          sideNumber(c, body, s, NUMBERS_451.trailer, (b.x0 + b.x1) / 2, b.y0, 0.18, "lettering");
+          sideNumber(c, body, s, number451(livery, "trailer"), (b.x0 + b.x1) / 2, b.y0, 0.18, paint.number);
         });
       });
   });
   for (const e of [1, -1])
-    m.scope(e > 0 ? "front end" : "rear end", () => gangwayEnd(c, body, { wall: e > 0 ? bOf(F, 0.2) : 0, e, face: BELLOWS * K_X, door: { x0: -0.45, x1: 0.45, y0: 1.2, y1: 2.8 }, doorPaint: "blue", couplerY: 0.7, markerY: 1.35 }));
+    m.scope(e > 0 ? "front end" : "rear end", () => gangwayEnd(c, body, { wall: e > 0 ? bOf(F, 0.2) : 0, e, face: BELLOWS * K_X, door: { x0: -0.45, x1: 0.45, y0: 1.2, y1: 2.8 }, doorPaint: paint.endDoor, couplerY: 0.7, markerY: 1.35 }));
   m.scope("running gear", () => {
     [2.4, 22.1].forEach((x, i) => m.scope(`bogie ${i + 1}`, () => emuBogie(c, bOf(F, x), 2.4, 0.46, 0.58, false)));
   });
@@ -265,7 +370,9 @@ function trailer(): MeshBuilder {
  * the apron, the ventilator housing and the raised pantograph.
  */
 export function cd451Lod(params?: ParamValues): MeshBuilder {
-  const unit = resolveParams(CD451_PARAMS, params).unit as Unit451;
+  const p = resolveParams(CD451_PARAMS, params);
+  const unit = p.unit as Unit451;
+  const paint = PAINTS_451[p.livery as Livery451];
   const car = CARS[unit];
   const F = car.F;
   const centre = (car.front + car.rear) / 2;
@@ -273,13 +380,13 @@ export function cd451Lod(params?: ParamValues): MeshBuilder {
   const place = (v: Volume) => ({ v, X: (b: number) => b - centre });
   const glass = (boxes: PxBox[]) => sideGlass(boxes.map((b) => sb(F, b)).map((b) => ({ ...b, x0: b.x0 - centre, x1: b.x1 - centre })), 0.6);
   if (unit === "trailer") {
-    const body = coachBody([place(trailerVolume())], { y0: 0.6, windows: glass([...WINDOWS_051, ...END_WINDOWS_051]) });
-    return fitUnit({ palette: PALETTE, bodies: [body], parts: bogieParts([[X(2.4), 1.85], [X(22.1), 1.85]], 0.6) }, 100);
+    const body = coachBody([place(trailerVolume(paint))], { y0: 0.6, windows: glass([...WINDOWS_051, ...END_WINDOWS_051]) });
+    return fitUnit({ palette: paletteOf(paint), bodies: [body], parts: bogieParts([[X(2.4), 1.85], [X(22.1), 1.85]], 0.6) }, 100);
   }
-  const { nose, body } = motorVolumes();
+  const { nose, body } = motorVolumes(paint);
   const shell = coachBody([place(nose), place(body)], { y0: 0.8, main: 1, windows: glass(WINDOWS_451) });
   return fitUnit({
-    palette: PALETTE,
+    palette: paletteOf(paint),
     bodies: [shell],
     parts: [
       ...bogieParts([[X(4.4), 1.95], [X(22.6), 1.95]], 0.8),
@@ -301,6 +408,7 @@ const CD_451_GAME: GameProperties = {
   accel: null,
   variants: [
     { params: { unit: "trailer" }, weight: 40, power: 0 },
+    { params: { unit: "trailer", livery: "cdBlue" }, weight: 40, power: 0 },
   ],
 };
 

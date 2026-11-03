@@ -1,8 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { CSD_COACHES, COACH_CATALOG, RUNNING_NUMBERS, uicCheckDigit } from "../generator/csdCoaches";
 import { CD_COACHES, COACH_TRANSFERS, transferBuild } from "../generator/coachTransfers";
+import { createHash } from "node:crypto";
 import { BMO_NUMBERS } from "../generator/bmoCoach";
-import { GREEN_WHITE_NUMBERS } from "../generator/cdGreenWhiteCoach";
+import { CD_BLUE, CD_BLUE_VARIANTS, GREEN_WHITE_NUMBERS } from "../generator/cdGreenWhiteCoach";
 import { canStroke } from "../generator/strokeFont";
 import { emblem } from "../generator/cd163";
 import { coachComparison, readLandmarks, transfer } from "../generator/csdCoachComparison";
@@ -261,9 +262,50 @@ describe("CSD coaches transferred from vlakosimdb", () => {
     expect(() => d.build({ variant: "bx" })).toThrow(/no value "bx"/);
   });
 
-  it("paints the Bmo in its four liveries on one body", () => {
+  it("offers CD's current blue on the photographed green and white types only, on their own layout", () => {
+    const d = VEHICLES.find((v) => v.id === "proc-vehicle-cd-green-white-coach")!;
+    const livery = d.params!.find((p) => p.name === "livery")!;
+    expect([livery.default, livery.values.map((v) => v.value)]).toEqual(["greenWhite", ["greenWhite", "cdBlue"]]);
+    expect(livery.values[1]!.when).toEqual({ name: "variant", values: [...CD_BLUE_VARIANTS] });
+    expect(() => d.build({ variant: "ds", livery: "cdBlue" })).toThrow();
+    const count = (p: Record<string, string>) =>
+      new Set(leaves(d.build(p).sourceTree(d.id, d.title).root).filter((n) => /^body\/right-side\/(window|door)-\d+\/frame\//.test(n.id)).map((n) => n.id.split("/")[2])).size;
+    for (const variant of CD_BLUE_VARIANTS) {
+      const { number } = CD_BLUE[variant]!;
+      expect(uicCheckDigit(number), `${variant} ${number}`).toBe(Number(number.slice(-1)));
+      const nodes = leaves(d.build({ variant, livery: "cdBlue" }).sourceTree(d.id, d.title).root);
+      const mats = new Set(nodes.map((n) => n.material));
+      expect(mats.has("green") || !mats.has("navy") || !mats.has("lightBlue"), variant).toBe(false);
+      // the same windows and doors as the green and white coach
+      expect(count({ variant, livery: "cdBlue" }), variant).toBe(count({ variant }));
+      // the passenger doors' leaves navy; the emblem and the "Ceske drahy" wordmark on both sides
+      expect(nodes.some((n) => n.id.startsWith("body/right-side/door-1/leaf/") && n.material === "navy"), variant).toBe(true);
+      for (const side of ["right", "left"]) expect(nodes.some((n) => n.id.startsWith(`body/${side}-side/emblem/wordmark/`)), `${variant} ${side}`).toBe(true);
+    }
+  });
+
+  it("reads the blue coaches' wordmark after the emblem, from outside", () => {
+    const d = VEHICLES.find((v) => v.id === "proc-vehicle-cd-green-white-coach")!;
+    const nodes = leaves(d.build({ variant: "b", livery: "cdBlue" }).sourceTree(d.id, d.title).root);
+    for (const side of ["right", "left"]) {
+      const mid = (prefix: string) => {
+        const ns = nodes.filter((n) => n.id.startsWith(prefix) && n.min);
+        return (Math.min(...ns.map((n) => n.min![0])) + Math.max(...ns.map((n) => n.max![0]))) / 2;
+      };
+      const word = mid(`body/${side}-side/emblem/wordmark/`);
+      const mark = (() => {
+        const ns = nodes.filter((n) => n.id.startsWith(`body/${side}-side/emblem/`) && !n.id.includes("/wordmark/") && n.min);
+        return (Math.min(...ns.map((n) => n.min![0])) + Math.max(...ns.map((n) => n.max![0]))) / 2;
+      })();
+      // the reader's right is +x on the right (+z) side, -x on the left
+      if (side === "right") expect(word).toBeGreaterThan(mark);
+      else expect(word).toBeLessThan(mark);
+    }
+  });
+
+  it("paints the Bmo in its five liveries on one body", () => {
     const d = VEHICLES.find((v) => v.id === "proc-vehicle-bmo-double-deck-coach")!;
-    expect(d.params![0]!.values.map((v) => v.value)).toEqual(["csd", "cdBlue", "cdBlueGrey", "cdRedDoors"]);
+    expect(d.params![0]!.values.map((v) => v.value)).toEqual(["csd", "cdBlue", "cdBlueGrey", "cdRedDoors", "cdNajbrt"]);
     const mats = (livery: string) => new Set(leaves(d.build({ livery }).sourceTree(d.id, d.title).root).map((n) => n.material));
     expect(mats("csd").has("yellow")).toBe(true);
     expect(mats("cdBlue").has("doorGrey")).toBe(true);
@@ -274,7 +316,33 @@ describe("CSD coaches transferred from vlakosimdb", () => {
       const ns = leaves(d.build({ livery }).sourceTree(d.id, d.title).root).filter((n) => /-band(-\d+)?\//.test(n.id) && n.min);
       return [Math.min(...ns.map((n) => n.min![0])), Math.max(...ns.map((n) => n.max![0])), Math.max(...ns.map((n) => n.max![1]))].map((x) => Math.round(x * 1000) / 1000);
     };
-    for (const l of ["cdBlue", "cdBlueGrey", "cdRedDoors"]) expect(bounds(l)).toEqual(bounds("csd"));
+    for (const l of ["cdBlue", "cdBlueGrey", "cdRedDoors", "cdNajbrt"]) expect(bounds(l)).toEqual(bounds("csd"));
+  });
+
+  // CD's current blue came in as a new livery: the four vlakosimdb ones keep their GLB bytes
+  it("paints the Bmo in CD's Najbrt blue from the photographs, the other liveries unchanged", () => {
+    const d = VEHICLES.find((v) => v.id === "proc-vehicle-bmo-double-deck-coach")!;
+    const sha = (livery: string) => createHash("sha256").update(d.build({ livery }).toGlb(d.title)).digest("hex").slice(0, 16);
+    expect(["csd", "cdBlue", "cdBlueGrey", "cdRedDoors"].map(sha)).toEqual(["931dadeb395c072a", "da2124e07926f410", "080a11f5504c76b9", "eb0bc72d2afe62db"]);
+    const nodes = leaves(d.build({ livery: "cdNajbrt" }).sourceTree(d.id, d.title).root);
+    // the navy foot, white, the navy line, light blue, the white eave line, the navy roof
+    const bands = nodes.filter((n) => /^body\/[a-zA-Z]+-band(-\d+)?\//.test(n.id)).map((n) => n.material);
+    expect(new Set(bands)).toEqual(new Set(["navy", "cdWhite", "skyBlue", "roofNavy"]));
+    expect(new Set(nodes.filter((n) => /^body\/right-side\/door-\d+\/leaf/.test(n.id) && !n.id.includes("window")).map((n) => n.material)).has("navy")).toBe(true);
+    for (const side of ["right", "left"]) {
+      const at = (scope: string) => nodes.filter((n) => n.id.startsWith(`body/${side}-side/${scope}/`));
+      // the navy emblem and wordmark on the white of the end section at the reader's left
+      for (const scope of ["emblem", "wordmark"]) {
+        const ns = at(scope);
+        expect(new Set(ns.map((n) => n.material)), `${side} ${scope}`).toEqual(new Set(["navy"]));
+        expect(Math.min(...ns.map((n) => n.min![1]))).toBeGreaterThan(0.9);
+        expect(Math.max(...ns.map((n) => n.max![1]))).toBeLessThan(2.2);
+        const x = (Math.min(...ns.map((n) => n.min![0])) + Math.max(...ns.map((n) => n.max![0]))) / 2;
+        expect(side === "right" ? x < -7.4 : x > 7.4, `${side} ${scope} at ${x}`).toBe(true);
+      }
+      expect(new Set(at("class-marks").map((n) => n.material))).toEqual(new Set(["cdWhite"]));
+      expect(at("running-number").length).toBeGreaterThan(0);
+    }
   });
 
   // regression: the white 3 by 5 pixel marks beside the toilets were first drawn

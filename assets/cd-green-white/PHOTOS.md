@@ -43,3 +43,7 @@ All files were downloaded from Wikimedia Commons, downscaled to at most 1600 px 
 - Licence: CC BY-SA 3.0
 - Date: 2009-11-26
 - Shows: Goerlitz Va bogie under a CD BDs Y-coach: running gear reference for the A and B Y-coaches.
+
+## CD blue livery
+
+The photographs of the blue (`livery=cdBlue`) are listed with their authors, licences and uses in [SOURCES.md](SOURCES.md), "CD blue livery": `photo-a-51-54-19-41-068-0-cd-blue.jpg`, `photo-ab-cd-blue-praha-vysocany.jpg`, `photo-b-51-54-20-41-866-4-cd-blue.jpg`, `photo-bee-243-cd-blue-praha-holesovice-2022.jpg`, `photo-bds-50-54-82-40-340-7-cd-blue.jpg`, `photo-bdmtee-cd-blue-nove-mesto-2018.jpg` and `photo-bdmtee-cd-blue-praha-liben.jpg`.

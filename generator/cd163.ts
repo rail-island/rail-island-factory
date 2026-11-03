@@ -133,6 +133,25 @@ export interface Cd163Livery {
   emblemY?: number;
   /** The operator's lettered wordmark (letters.ts), on the sides and the ends. */
   wordmark?: Wordmark;
+  /**
+   * Cab paint in zones (the CD 263 / 371 blue; needs `cabBands`): `rear` from the
+   * cab seam to |x| = `rearTo`, over the door, and `end` over the ends and their
+   * chamfers; `cabBands` paints the cab sides between.
+   */
+  cabZones?: CabZones;
+  /** The front emblem's material, where it differs from the side's ("logo"). */
+  frontLogo?: string;
+  /** The running numbers' material, on the plates front and side ("white"). */
+  numberInk?: string;
+  /** Where the sides carry the number: on a plate in the machine room (default), or lettered small on the lower band. */
+  sideNumber?: "plate" | "lowerBand";
+}
+
+/** A livery's cab paint in zones along the cab section (Cd163Livery.cabZones). */
+export interface CabZones {
+  rearTo: number;
+  rear: readonly Band[];
+  end: readonly Band[];
 }
 
 /** The machine room's side equipment: the 163's portholes and shutters, or the 263's grille banks and windows. */
@@ -535,21 +554,26 @@ const WINDOW_X1 = 7.5;
  * A livery's cab paint (`cabBands`): a one-sided skin 3 mm off the shell over
  * the cab section of both sides, the chamfers and the end at `e`, split where the
  * profile kinks and where the colours change. It stops 10 mm under the grey side
- * apron so the two never share a face.
+ * apron so the two never share a face. With `zones` the sides' rear panel (to
+ * `rearTo`) and the end with its chamfers take their own bands.
  */
-function cabPaint(m: MeshBuilder, e: number, bands: readonly Band[]): void {
+function cabPaint(m: MeshBuilder, e: number, bands: readonly Band[], zones?: CabZones): void {
   const top = Y_SIDE_EAVE - 0.01;
   const line = (y: number): Vec3[] => {
     const fx = frontX(y);
-    const pts: Array<[number, number]> = [[CAB_X, -HW], [fx - CH, -HW], [fx, -HW + CH], [fx, HW - CH], [fx - CH, HW], [CAB_X, HW]];
+    const pts: Array<[number, number]> = zones
+      ? [[CAB_X, -HW], [zones.rearTo, -HW], [fx - CH, -HW], [fx, -HW + CH], [fx, HW - CH], [fx - CH, HW], [zones.rearTo, HW], [CAB_X, HW]]
+      : [[CAB_X, -HW], [fx - CH, -HW], [fx, -HW + CH], [fx, HW - CH], [fx - CH, HW], [CAB_X, HW]];
     return pts.map(([x, z]): Vec3 => [e * x, y, z]);
   };
-  const hs = splitHeights(bands, Y_BOTTOM, top, [Y_APRON, Y_NOSE]);
+  // with zones, the strips along the line: rear, side, chamfer, end, chamfer, side, rear
+  const zoneBands = zones ? [zones.rear, bands, zones.end, zones.end, zones.end, bands, zones.rear] : [];
+  const hs = splitHeights(zones ? [...bands, ...zones.rear, ...zones.end] : bands, Y_BOTTOM, top, [Y_APRON, Y_NOSE]);
   for (let i = 1; i < hs.length; i++) {
     const [y0, y1] = [hs[i - 1]!, hs[i]!];
-    const mat = bandAt(bands, (y0 + y1) / 2)[2];
     const [lo, hi] = [line(y0), line(y1)];
     for (let k = 0; k + 1 < lo.length; k++) {
+      const mat = bandAt(zones ? zoneBands[k]! : bands, (y0 + y1) / 2)[2];
       const quad = [lo[k]!, lo[k + 1]!, hi[k + 1]!, hi[k]!];
       // the outward normal: perpendicular to the strip, away from the body's axis
       const [a, b, d] = [quad[0]!, quad[1]!, quad[3]!];
@@ -630,7 +654,11 @@ function body(m: MeshBuilder, st: Style): void {
 
   if (st.layout === "163") portholesAndShutters(m);
   else grillesAndWindows(m, st.layout);
-  if (st.livery.cabBands) m.scope("cab paint", () => { for (const e of [-1, 1]) cabPaint(m, e, withSolebar(st.livery.cabBands!)); });
+  if (st.livery.cabBands) m.scope("cab paint", () => {
+    const z = st.livery.cabZones;
+    const zones = z ? { rearTo: z.rearTo, rear: withSolebar(z.rear), end: withSolebar(z.end) } : undefined;
+    for (const e of [-1, 1]) cabPaint(m, e, withSolebar(st.livery.cabBands!), zones);
+  });
 
   m.scope("cant grilles", () => {
     // long grille strips in the roof's cant, between the cooler box and the cabs
@@ -686,10 +714,15 @@ function body(m: MeshBuilder, st: Style): void {
       const wall = sideWall(s);
       // read from outside: the reader's right is +x on the right side, -x on the left
       const flip = s < 0;
-      m.scope("number plate", () => {
+      if (st.livery.sideNumber === "lowerBand") m.scope("number", () => {
+        // lettered in white on the lower band under the middle of the machine room (the 371's)
+        const w = letteringWidth(number, 0.045, 0.014);
+        decal(m, "white", wall, lettering(number, flip ? w / 2 : -w / 2, 1.23, 0.10, 0.045, 0.014, flip), 0.024);
+      });
+      else m.scope("number plate", () => {
         panel(m, "plate", wall, [[-0.60, 1.90], [0.50, 1.90], [0.50, 2.20], [-0.60, 2.20]], 0.005, 0.026);
         const w = letteringWidth(number, 0.080, 0.025);
-        decal(m, "white", wall, lettering(number, -0.05 + (flip ? w / 2 : -w / 2), 1.95, 0.20, 0.080, 0.025, flip), 0.03);
+        decal(m, st.livery.numberInk ?? "white", wall, lettering(number, -0.05 + (flip ? w / 2 : -w / 2), 1.95, 0.20, 0.080, 0.025, flip), 0.03);
       });
       if (st.livery.sideEmblem) m.scope("emblem", () => {
         const h = 0.40;
@@ -768,12 +801,12 @@ function cab(m: MeshBuilder, e: number, st: Style): void {
       panel(m, "steel", front, rrect(-0.52, 0.52, 1.38, 1.72, 0.018), -0.016, 0.014);
       panel(m, "plate", front, rrect(-0.50, 0.50, 1.40, 1.70, 0.01), 0.006, 0.024);
       const w = letteringWidth(livery.number, 0.073, 0.022);
-      decal(m, "white", front, lettering(livery.number, flip ? w / 2 : -w / 2, 1.45, 0.20, 0.073, 0.022, flip), 0.028);
+      decal(m, livery.numberInk ?? "white", front, lettering(livery.number, flip ? w / 2 : -w / 2, 1.45, 0.20, 0.073, 0.022, flip), 0.028);
     });
     if (livery.frontEmblem) m.scope("emblem", () => {
       const h = 0.40;
       const u0 = flip ? emblemWidth(h) / 2 : -emblemWidth(h) / 2;
-      decal(m, "logo", front, emblem(u0, 1.80, h, flip), 0.006);
+      decal(m, livery.frontLogo ?? "logo", front, emblem(u0, 1.80, h, flip), 0.006);
     });
     const wm = livery.wordmark;
     if (wm?.end) m.scope("wordmark", () => {
@@ -795,7 +828,7 @@ function cab(m: MeshBuilder, e: number, st: Style): void {
       });
       m.scope("door", () => {
         block(m, "rubber", ...xs(DOOR_X0, DOOR_X1), 1.40, 3.40, ...z(-0.01, 0.012)); // the gap around it
-        for (const [y0, y1, mat] of bandPieces(livery.cabBands ?? livery.bands, 1.43, 3.37)) block(m, mat, ...xs(DOOR_X0 + 0.03, DOOR_X1 - 0.03), y0, y1, ...z(-0.005, 0.024));
+        for (const [y0, y1, mat] of bandPieces(livery.cabZones?.rear ?? livery.cabBands ?? livery.bands, 1.43, 3.37)) block(m, mat, ...xs(DOOR_X0 + 0.03, DOOR_X1 - 0.03), y0, y1, ...z(-0.005, 0.024));
         panel(m, "rubber", wall, rrect(...xs(DOOR_X0 + 0.07, DOOR_X1 - 0.07), Y_WINDOW0 - 0.01, Y_WINDOW1 + 0.01, 0.025), 0.01, 0.034);
         panel(m, "glass", wall, rrect(...xs(DOOR_X0 + 0.1, DOOR_X1 - 0.1), Y_WINDOW0 + 0.02, Y_WINDOW1 - 0.02, 0.015), 0.015, 0.046);
         block(m, "steel", ...xs(DOOR_X1 - 0.14, DOOR_X1 - 0.06), 1.97, 2.01, ...z(0.02, 0.05)); // the handle
@@ -1110,7 +1143,7 @@ export function cd163LodBody(livery: Cd163Livery, budget = CD163_LOD_TRIANGLES):
     tip: [[Y_BOTTOM, HALF - LOWER_RAKE], [Y_NOSE, HALF], [Y_EAVE, frontX(Y_EAVE)], [Y_ROOF, frontX(Y_EAVE) - RAMP_ROOF]],
     hw: [[Y_BOTTOM, HW], [Y_EAVE, HW], [Y_ROOF, ROOF_HW]],
     side: roofTop(withSolebar(livery.bands), Y_SIDE_EAVE),
-    end: roofTop(withSolebar(cab), Y_EAVE),
+    end: roofTop(withSolebar(livery.cabZones?.end ?? cab), Y_EAVE),
     ...(livery.cabBands ? { cab: { x: CAB_X, side: roofTop(withSolebar(livery.cabBands), Y_SIDE_EAVE) } } : {}),
     roof: "roof",
     endWindows: [{ u: [-1.3, 1.3], y: [2.7, 3.4], mat: LOD_GLASS }],

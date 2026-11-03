@@ -64,10 +64,10 @@ describe("Czech and Slovak coaches (CD Y, ZSR, UIC-Z)", () => {
     }
     for (const t of CZSK_TRANSFERS) expect(ALL_TRANSFERS).toContain(t);
     // every parameter combination of every design is one transferred vlakosimdb vehicle, but the
-    // RegioJet coaches, read from photographs (docs/models/czsk-coaches.md)
+    // RegioJet coaches and CD's blue ones, read from photographs (docs/models/czsk-coaches.md)
     const key = (p: Record<string, string>) => JSON.stringify(Object.entries(p).sort());
     for (const d of CZSK_COACHES)
-      expect(CZSK_TRANSFERS.filter((t) => t.id === d.id).map((t) => key(resolveParams(d.params!, t.params))).sort()).toEqual(paramCombinations(d.params).filter((p) => p.operator !== "regiojet").map(key).sort());
+      expect(CZSK_TRANSFERS.filter((t) => t.id === d.id).map((t) => key(resolveParams(d.params!, t.params))).sort()).toEqual(paramCombinations(d.params).filter((p) => p.operator !== "regiojet" && p.operator !== "cdBlue").map(key).sort());
   });
 
   it("keeps the parameter contract and defaults", () => {
@@ -75,7 +75,7 @@ describe("Czech and Slovak coaches (CD Y, ZSR, UIC-Z)", () => {
     expect(design("proc-vehicle-zsr-coach").params!.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([["variant", "b", ["a", "ab", "b", "bh", "bds", "bdmeer", "wrrm", "apee"]]]);
     expect(design("proc-vehicle-uic-z-coach").params!.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([
       ["variant", "secondClass", ["firstClass", "secondClass", "restaurant"]],
-      ["operator", "cd", ["cd", "db", "obb", "regiojet"]],
+      ["operator", "cd", ["cd", "cdBlue", "db", "obb", "regiojet"]],
     ]);
     for (const d of CZSK_COACHES) expect(() => d.build({ variant: "nope" })).toThrow(/no value "nope"/);
   });
@@ -128,6 +128,8 @@ describe("Czech and Slovak coaches (CD Y, ZSR, UIC-Z)", () => {
     for (const { number } of Object.values(UIC_Z_NUMBERS.obb)) expect(number.slice(3, 5)).toBe("81");
     // RegioJet's ex-OBB coaches run under Czech registration
     for (const { number } of Object.values(UIC_Z_NUMBERS.regiojet)) expect(number.slice(3, 5)).toBe("54");
+    // CD's blue Ampz and Bmz are Czech-registered; its blue WRmz the photographed ex-OBB A-CD car
+    expect([UIC_Z_NUMBERS.cdBlue.firstClass, UIC_Z_NUMBERS.cdBlue.secondClass, UIC_Z_NUMBERS.cdBlue.restaurant].map((n) => n.number.slice(3, 5))).toEqual(["54", "54", "81"]);
     for (const t of CZSK_TRANSFERS)
       for (const side of ["right", "left"]) {
         const n = leaves(transferBuild(t).sourceTree(t.id, t.title).root);
@@ -195,6 +197,39 @@ describe("Czech and Slovak coaches (CD Y, ZSR, UIC-Z)", () => {
       }
     }
     expect(nodesOf(id, { operator: "obb" }).some((n) => n.id.startsWith("wordmark/"))).toBe(false);
+  });
+
+  it("paints CD's blue (Najbrt) Ampz, Bmz and WRmz on the CD layouts, lettered both sides", () => {
+    const id = "proc-vehicle-uic-z-coach";
+    const bands = (p: Record<string, string>) => new Set(nodesOf(id, p).filter((n) => /^body\/[a-zA-Z]+-band\//.test(n.id)).map((n) => n.material));
+    for (const variant of ["firstClass", "secondClass", "restaurant"]) {
+      const p = { operator: "cdBlue", variant };
+      // the CD coach's windows and doors
+      for (const side of ["right", "left"]) expect(windowCount(id, p, side), `${variant} ${side}`).toBe(windowCount(id, { operator: "cd", variant }, side));
+      const ns = nodesOf(id, p);
+      // white, the line under the windows, light blue (the dining car navy), the white eave line, the navy roof
+      expect(bands(p)).toEqual(new Set(["cdWhite", "navy", "skyBlue", "roofNavy"]));
+      expect(ns.some((n) => n.material === "red" || n.material === "light")).toBe(false);
+      // navy doors
+      expect(new Set(ns.filter((n) => /^body\/right-side\/door-\d+\/leaf/.test(n.id) && !n.id.includes("window")).map((n) => n.material)).has("navy")).toBe(true);
+      for (const side of ["right", "left"]) {
+        // the navy emblem, the wordmark after it and the number under them, on the white
+        expect(new Set(ns.filter((n) => n.id.startsWith(`body/${side}-side/emblem/`)).map((n) => n.material)), `${variant} ${side}`).toEqual(new Set(["navy"]));
+        const w = ns.filter((n) => n.id.startsWith(`wordmark/${side}/`));
+        expect(new Set(w.map((n) => n.material)), `${variant} ${side}`).toEqual(new Set(["navy"]));
+        expect(Math.max(...w.map((n) => n.max![1]))).toBeLessThan(1.8);
+        expect(Math.min(...w.map((n) => n.min![1]))).toBeGreaterThan(0.9);
+        expect(ns.some((n) => n.id.startsWith(`body/${side}-side/running-number/`))).toBe(true);
+      }
+    }
+    expect(bands({ operator: "cdBlue", variant: "restaurant" })).toEqual(bands({ operator: "cdBlue", variant: "secondClass" }));
+    // the grille on the white, no red-livery yellow line; the dining car's knife and fork
+    const mats = (variant: string) => new Set(nodesOf(id, { operator: "cdBlue", variant }).filter((n) => n.id.includes("/paint/")).map((n) => n.material));
+    expect(mats("firstClass")).toEqual(new Set(["grille"]));
+    expect(mats("secondClass")).toEqual(new Set(["grille"]));
+    expect(mats("restaurant")).toEqual(new Set(["cdWhite"]));
+    expect(new Set(nodesOf(id, { operator: "cdBlue", variant: "secondClass" }).filter((n) => n.id.includes("/class-marks/")).map((n) => n.material))).toEqual(new Set(["cdWhite"]));
+    expect(nodesOf(id, { operator: "cd" }).some((n) => n.id.startsWith("wordmark/"))).toBe(false);
   });
 
   it("lays out the DB IC and OBB coaches as their native BMPs do", () => {

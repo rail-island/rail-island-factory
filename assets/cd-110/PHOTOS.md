@@ -39,3 +39,16 @@ All files were downloaded from Wikimedia Commons (960 px thumbnails, saved as JP
 - Licence: CC BY-SA 3.0 / CC BY-SA 3.0 DE / GFDL
 - Date: 2011-11-05
 - Shows: a 210 in the later blue livery: the AC roof equipment beside the pantograph, hood louvres, the ramp, railings.
+
+## photo-111-006-cd-blue.jpg
+
+- Commons title: File:20240804 Ceske drahy 111006.jpg
+- Page: https://commons.wikimedia.org/wiki/File:20240804_%C4%8Cesk%C3%A9_dr%C3%A1hy_111006.jpg
+- Author: Alex Noble
+- Licence: CC0 1.0
+- Date: 2024-08-04
+- Saved: 1600 px wide, JPEG quality 85.
+- Shows: 111 006-3 in CD's current blue (the Najbrt scheme) at Praha hlavni nadrazi: the white,
+  light blue, white and navy bands of the hoods and the lower cab, the navy upper cab and frame,
+  the emblem with "Ceske drahy" and the number on the frame, the emblem on the hood end. The
+  `cd111Blue` livery is read from it.

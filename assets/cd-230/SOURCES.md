@@ -46,6 +46,7 @@ All from Wikimedia Commons, downscaled to 1280 px by Commons' thumbnailer.
 | `photo-240-082-three-quarter.jpg` | [Laminátka.JPG](https://commons.wikimedia.org/wiki/File:Lamin%C3%A1tka.JPG) | Balogh Zsolt, 2006 | public domain | the 240 in red and yellow, the diamond pantograph |
 | `photo-242-214-side.jpg` | [242 214 Cheb.jpg](https://commons.wikimedia.org/wiki/File:242_214_Cheb.jpg) | Steffen Mokosch, 2001 | GFDL (relicensed CC BY-SA 3.0) | the 242's cream and red livery with the yellow nose band, the number 242 214-5 |
 | `photo-242-282-side.jpg` | [15.02.92 Ceske Budejovice 242.282 (11355707036).jpg](https://commons.wikimedia.org/wiki/File:15.02.92_%C4%8Cesk%C3%A9_Bud%C4%9Bjovice_242.282_%2811355707036%29.jpg) | Phil Richards, 1992 | CC BY-SA 2.0 | the 242's steel body in profile, roof equipment (in the earlier orange and yellow) |
+| `photo-242-236-cd-blue.jpg` | [Řikonín, lokomotiva 242 236-8.jpg](https://commons.wikimedia.org/wiki/File:%C5%98ikon%C3%ADn,_lokomotiva_242_236-8.jpg) | Michal Gregor, 2022 | CC BY-SA 4.0 | the `cd242Blue` livery (CD's current Najbrt blue): the bands of the machine room, the light grey cab sections and noses, the light blue windscreen surround, the emblems; the number 242 236-8 (1600 px, JPEG quality 85) |
 
 Dimensions: 16.44 m over the buffers (cs.wikipedia, Lokomotiva 230 and 240);
 15.20 m body, 3.02 m wide, 7.80 m between the pivots, 2.80 m bogie wheelbase
@@ -99,3 +100,4 @@ noses and `z_both` both sides.
 - `cd240`: 240 048-9, illustrative; the native plate does not resolve digits.
 - `cd240No047`: 240 047-1, the vlakosimdb model's name.
 - `cd340`: 340 062-9, photographed in this livery.
+- `cd242Blue`: 242 236-8, photographed in this livery (`photo-242-236-cd-blue.jpg`).

@@ -48,12 +48,12 @@ describe("Czech diesel railcars from vlakosimdb", () => {
   it("registers the six designs with their parameters and defaults", () => {
     expect(CZ_DMUS.map((d) => d.id)).toEqual(["proc-vehicle-cd-810", "proc-vehicle-cd-812", "proc-vehicle-cd-843", "proc-vehicle-csd-m131", "proc-vehicle-csd-m240", "proc-vehicle-csd-m296"]);
     const values = (id: string) => (CZ_DMUS.find((d) => d.id === id)!.params ?? []).map((p) => [p.name, p.default, p.values.map((v) => v.value)]);
-    expect(values("proc-vehicle-cd-810")).toEqual([["livery", "red", ["red", "yellowBand", "blueWhite", "ivoryBand"]]]);
+    expect(values("proc-vehicle-cd-810")).toEqual([["livery", "red", ["red", "yellowBand", "blueWhite", "ivoryBand", "cdBlue"]]]);
     expect(values("proc-vehicle-cd-812")).toEqual([["unit", "motorCar", ["motorCar", "drivingTrailer"]]]);
-    expect(values("proc-vehicle-cd-843")).toEqual([["unit", "motorCar", ["motorCar", "drivingTrailer", "trailer"]]]);
+    expect(values("proc-vehicle-cd-843")).toEqual([["unit", "motorCar", ["motorCar", "drivingTrailer", "trailer"]], ["livery", "red", ["red", "cdBlue"]]]);
     expect(values("proc-vehicle-csd-m131")).toEqual([["unit", "motorCar", ["motorCar", "trailer"]]]);
     expect(values("proc-vehicle-csd-m240")).toEqual([]);
-    expect(values("proc-vehicle-csd-m296")).toEqual([["variant", "m296", ["m296", "cd853", "cd854"]]]);
+    expect(values("proc-vehicle-csd-m296")).toEqual([["variant", "m296", ["m296", "cd853", "cd854", "cd854Blue"]]]);
     for (const d of CZ_DMUS) expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "unit", traction: "diesel" });
   });
 
@@ -112,7 +112,7 @@ describe("Czech diesel railcars from vlakosimdb", () => {
       const body = build(id, params).nodes.filter((n) => n.max && /^(front|rear)-end\/skin\//.test(n.id));
       return Math.max(...body.map((n) => n.max![0])) - Math.min(...body.map((n) => n.min![0]));
     };
-    for (const livery of ["red", "yellowBand", "blueWhite", "ivoryBand"]) expect(length("proc-vehicle-cd-810", { livery })).toBeCloseTo(13.103, 2);
+    for (const livery of ["red", "yellowBand", "blueWhite", "ivoryBand", "cdBlue"]) expect(length("proc-vehicle-cd-810", { livery })).toBeCloseTo(13.103, 2);
     for (const unit of ["motorCar", "drivingTrailer"]) expect(length("proc-vehicle-cd-812", { unit })).toBeCloseTo(14.0 * K812, 2);
   });
 
@@ -122,7 +122,7 @@ describe("Czech diesel railcars from vlakosimdb", () => {
       min: [0, 1, 2].map((k) => Math.min(...ns.map((n) => n.min![k]!))),
       max: [0, 1, 2].map((k) => Math.max(...ns.map((n) => n.max![k]!))),
     });
-    for (const livery of ["red", "yellowBand", "blueWhite", "ivoryBand"]) {
+    for (const livery of ["red", "yellowBand", "blueWhite", "ivoryBand", "cdBlue"]) {
       // the snow plough under the buffer beam: across most of the face, its foot 0.18 m over the rail, ahead of the face
       const plough = box(front("proc-vehicle-cd-810", { livery }, "front-end/plough/"));
       expect(plough.min[1]).toBeCloseTo(0.18, 3);
@@ -148,16 +148,114 @@ describe("Czech diesel railcars from vlakosimdb", () => {
     }
   });
 
+  it("draws the 854's own cab ends and the 843's roof headlamp box", () => {
+    const nodes = (id: string, params: ParamValues, re: RegExp) => build(id, params).nodes.filter((n) => n.max && re.test(n.id));
+    const box = (ns: ReturnType<typeof nodes>) => ({
+      min: [0, 1, 2].map((k) => Math.min(...ns.map((n) => n.min![k]!))),
+      max: [0, 1, 2].map((k) => Math.max(...ns.map((n) => n.max![k]!))),
+    });
+    const tip = (24.3 - 12.45) * K296;
+    for (const variant of ["cd854", "cd854Blue"])
+      for (const end of ["front-end", "rear-end"]) {
+        const at = `${variant} ${end}`;
+        // two windscreens either side of the pillar, each about 1 m wide; no gangway door
+        const mids = [1, 2].map((i) => {
+          const ws = box(nodes("proc-vehicle-csd-m296", { variant }, new RegExp(`^${end}/windscreen-${i}/glass`)));
+          expect(ws.max[2] - ws.min[2], at).toBeGreaterThan(0.85);
+          return (ws.min[2] + ws.max[2]) / 2;
+        });
+        expect(mids[0]! * mids[1]!, at).toBeLessThan(-0.16);
+        expect(nodes("proc-vehicle-csd-m296", { variant }, new RegExp(`^${end}/gangway-door`)).length, at).toBe(0);
+        // the headlamp box stands out over the face's top; the apron reaches 0.3 m
+        const lamp = box(nodes("proc-vehicle-csd-m296", { variant }, new RegExp(`^${end}/top-lamp/`)));
+        expect(end === "front-end" ? lamp.max[0] : -lamp.min[0], at).toBeGreaterThan(tip + 0.1);
+        expect(lamp.max[2] - lamp.min[2], at).toBeGreaterThan(0.9);
+        expect(box(nodes("proc-vehicle-csd-m296", { variant }, new RegExp(`^${end}/apron/`))).min[1], at).toBeCloseTo(0.3, 3);
+        expect(nodes("proc-vehicle-csd-m296", { variant }, new RegExp(`^${end}/(front-number|front-emblem|lamps)/`)).length, at).toBeGreaterThan(0);
+      }
+    // the M 296.1 and the 853 keep the gangway front
+    for (const variant of ["m296", "cd853"]) {
+      expect(nodes("proc-vehicle-csd-m296", { variant }, /^front-end\/gangway-door/).length, variant).toBeGreaterThan(0);
+      expect(nodes("proc-vehicle-csd-m296", { variant }, /^front-end\/windscreen/).length, variant).toBe(0);
+    }
+    // the 843's and 943's cab ends carry the headlamp box over the windows in every livery; gangway ends do not
+    for (const livery of ["red", "cdBlue"]) {
+      for (const unit of ["motorCar", "drivingTrailer"]) {
+        const lamp = box(nodes("proc-vehicle-cd-843", { unit, livery }, /^front-end\/top-lamp\//));
+        expect(lamp.max[2] - lamp.min[2], `${unit} ${livery}`).toBeCloseTo(0.82, 2);
+        expect(lamp.min[1], `${unit} ${livery}`).toBeGreaterThan(3.3);
+        expect(nodes("proc-vehicle-cd-843", { unit, livery }, /^front-end\/top-lamp\/lamps/).length).toBeGreaterThan(0);
+      }
+      expect(nodes("proc-vehicle-cd-843", { unit: "motorCar", livery }, /^rear-end\/top-lamp\//).length).toBeGreaterThan(0);
+      expect(nodes("proc-vehicle-cd-843", { unit: "drivingTrailer", livery }, /^rear-end\/top-lamp\//).length).toBe(0);
+      expect(nodes("proc-vehicle-cd-843", { unit: "trailer", livery }, /top-lamp/).length).toBe(0);
+    }
+  });
+
+  it("paints CD's blue over the cars' own bodies, with the logo where photographed", () => {
+    const ids = (id: string, params: ParamValues, re: RegExp) => build(id, params).nodes.filter((n) => re.test(n.id)).map((n) => n.id);
+    const windows = (id: string, params: ParamValues) => ids(id, params, /\/windows\//).sort();
+    // the blue 854 is the 854's body and layout; the blue 843 cars the red ones'
+    expect(windows("proc-vehicle-csd-m296", { variant: "cd854Blue" })).toEqual(windows("proc-vehicle-csd-m296", { variant: "cd854" }));
+    for (const unit of ["motorCar", "drivingTrailer", "trailer"]) {
+      expect(windows("proc-vehicle-cd-843", { unit, livery: "cdBlue" }), unit).toEqual(windows("proc-vehicle-cd-843", { unit }));
+      // the emblem on both sides; the wordmark after it on the motor car and the driving trailer, as photographed
+      expect(ids("proc-vehicle-cd-843", { unit, livery: "cdBlue" }, /^body\/(right|left)-side\/emblem\//).length, unit).toBeGreaterThan(0);
+      expect(ids("proc-vehicle-cd-843", { unit, livery: "cdBlue" }, /^body\/right-side\/wordmark\//).length > 0, unit).toBe(unit !== "trailer");
+    }
+    // a cab front carries the number and the emblem, and the light blue over the roof's end
+    for (const unit of ["motorCar", "drivingTrailer"])
+      for (const scope of ["front-number", "front-emblem", "hood"])
+        expect(ids("proc-vehicle-cd-843", { unit, livery: "cdBlue" }, new RegExp(`^front-end/${scope}/`)).length, `${unit} ${scope}`).toBeGreaterThan(0);
+    for (const [id, params] of [["proc-vehicle-cd-810", { livery: "cdBlue" }], ["proc-vehicle-csd-m296", { variant: "cd854Blue" }]] as const)
+      expect(ids(id, params, /^body\/left-side\/wordmark\//).length, id).toBeGreaterThan(0);
+  });
+
+  it("covers the roof's rounding at every blue 843 / 943 cab end with the light blue, across its width", () => {
+    // seen from above, the topmost surface over the last 0.5 m of a cab end: the light blue hood,
+    // never the grey roof showing through it (it did over half the +X end, where the shell's
+    // non-planar quads fold the other way than the hood's)
+    const top = (tris: ReturnType<typeof build>["tris"], x: number, z: number): string => {
+      let best = -Infinity;
+      let mat = "";
+      for (const t of tris) {
+        const [a, b, c] = t.p;
+        const d = (b[0] - a[0]) * (c[2] - a[2]) - (c[0] - a[0]) * (b[2] - a[2]);
+        if (Math.abs(d) < 1e-12) continue;
+        const u = ((x - a[0]) * (c[2] - a[2]) - (c[0] - a[0]) * (z - a[2])) / d;
+        const v = ((b[0] - a[0]) * (z - a[2]) - (x - a[0]) * (b[2] - a[2])) / d;
+        if (u < 0 || v < 0 || u + v > 1) continue;
+        const y = a[1] + u * (b[1] - a[1]) + v * (c[1] - a[1]);
+        if (y > best) [best, mat] = [y, t.material];
+      }
+      return mat;
+    };
+    for (const unit of ["motorCar", "drivingTrailer"]) {
+      const { tris } = build("proc-vehicle-cd-843", { unit, livery: "cdBlue" });
+      const xs = tris.flatMap((t) => t.p.filter((p) => p[1] > 3).map((p) => p[0]));
+      const ends: number[] = unit === "motorCar" ? [Math.max(...xs), Math.min(...xs)] : [Math.max(...xs)];
+      for (const tip of ends)
+        for (let i = 1; i <= 5; i++)
+          for (let j = -6; j <= 6; j++) {
+            const x = tip - Math.sign(tip) * 0.1 * i;
+            expect(top(tris, x, 0.2 * j), `${unit} x=${x.toFixed(2)} z=${(0.2 * j).toFixed(1)}`).toBe("skyBlue");
+          }
+    }
+  });
+
   it("carries valid running numbers", () => {
-    for (const l of ["red", "yellowBand", "blueWhite", "ivoryBand"] as const) expect(valid(cd810Number(l)), l).toBe(true);
+    for (const l of ["red", "yellowBand", "blueWhite", "ivoryBand", "cdBlue"] as const) expect(valid(cd810Number(l)), l).toBe(true);
+    expect(cd810Number("cdBlue")).toBe("810 290-7");
     expect(cd810Number("yellowBand")).toBe("810 225-3");
     expect(cd810Number("ivoryBand")).toBe("810 545-4");
     expect(cd812Number("motorCar")).toBe("812 613-8");
     expect(cd812Number("drivingTrailer")).toBe("912 001-5");
-    for (const u of ["motorCar", "drivingTrailer", "trailer"] as const) expect(valid(cd843Number(u)), u).toBe(true);
+    for (const u of ["motorCar", "drivingTrailer", "trailer"] as const) for (const l of ["red", "cdBlue"] as const) expect(valid(cd843Number(u, l)), `${u} ${l}`).toBe(true);
+    expect([cd843Number("motorCar", "cdBlue"), cd843Number("drivingTrailer", "cdBlue")]).toEqual(["843 007-6", "943 010-9"]);
     expect(cd843Number("drivingTrailer")).toBe("943 002-6");
     expect(m296Number("cd853")).toBe("853 029-7");
     expect(valid(m296Number("cd854"))).toBe(true);
+    expect(m296Number("cd854Blue")).toBe("854 023-9");
     // the pre-1988 CSD railcars carry their Kryspin designations
     expect(M131_NUMBERS.motorCar).toBe("M 131.1238");
     expect(M240_NUMBER).toBe("M 240.0113");

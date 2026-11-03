@@ -30,4 +30,18 @@ CD 843 (MSV Studenka, 1995-97, Bo'Bo', 2 x 300 kW diesel-electric): 25,200 mm ov
 
 ## Running numbers
 
-843 024-1 and 943 002-6 (both photographed, PHOTOS.md), 043 001-7 (the first of the class).
+843 024-1 and 943 002-6 (both photographed, PHOTOS.md), 043 001-7 (the first of the class); in the blue see below.
+
+## CD blue livery
+
+The `livery` value `cdBlue` (every car in CD's current blue, the Najbrt scheme) is read from three photographs from Wikimedia Commons, downscaled to 1600 px and saved as JPEG (quality 85):
+
+| file | Commons page | author | licence | use |
+|---|---|---|---|---|
+| `photo-843-007-cd-blue.jpg` | https://commons.wikimedia.org/wiki/File:CD_843_007_Liberec.jpg (2020-07-18) | Rainerhaufe | CC BY-SA 4.0 | the motor car 843 007-6: the light blue cab front up over the roof's rounding, the windows and door in one black surround, the navy line across the front with the white number, a red and a white lamp each side over it, the navy emblem on the white under the door, the navy apron; the side's emblem with "Ceske drahy" near the -X end, the navy doors |
+| `photo-943-010-cd-blue.jpg` | https://commons.wikimedia.org/wiki/File:Liberec,_n%C3%A1dra%C5%BE%C3%AD,_%C5%99%C3%ADd%C3%ADc%C3%AD_v%C5%AFz_943.jpg (2014-12-21) | PatrikPaprika | CC BY-SA 4.0 | the driving trailer, lettered 80-29 010-3 (the former 943 010-9, the model's number): the cab front without the black surround, the emblem with the wordmark near the gangway end |
+| `photo-043-liberec-cd-blue.jpg` | https://commons.wikimedia.org/wiki/File:Liberec,_v%C5%AFz_Btn.jpg (2013-11-02) | SJu (Commons user "ŠJů") | CC BY-SA 3.0 | the band heights on the side (white to 1.58 m, the navy line to 1.74 m, light blue to the eave, the grey roof) and the trailer's emblem without a wordmark, the number small under it; its number reads "...29 007", taken as 043 007-4 |
+
+Running numbers in the blue: 843 007-6 and 943 010-9 (photographed), 043 007-4 (read from the trailer's photograph, uncertain). Simplified: the cars keep the red livery's cab front layout (vlakosimdb's) with the lamps moved up to where the photographs show them; the class pictograms on the doors and the UIC number's prefix are left out; the roof is one grey on every car (the motor car's looks darker in its photograph).
+
+The roof headlamp box over the cab windows (every cab end, in both liveries: 0.82 m wide, 0.3 m tall, a black face with three lamps) is read from `photo-843-007-cd-blue.jpg`, `photo-943-010-cd-blue.jpg` and `photo-843-024-holasovice.jpg` (PHOTOS.md); its housing takes the end's paint around it (grey in the red and cream, where the model's end is grey above the eave, though the photographed red cars are red there).

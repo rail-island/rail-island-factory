@@ -3,7 +3,7 @@
 // See docs/models/czech-emus-classic.md.
 import { describe, expect, it } from "vitest";
 import { paramCombinations, type ParamValues } from "../generator/design";
-import { cd451, CD451_PARAMS, EMU451_DESIGNS, K_X as K_X_451, length451, NUMBERS_451 } from "../generator/emu451";
+import { cd451, CD451_PARAMS, EMU451_DESIGNS, K_X as K_X_451, length451, number451, NUMBERS_451 } from "../generator/emu451";
 import { cd460, CD460_PARAMS, CARS_460, EMU460_DESIGNS, length460, number460, raised460 } from "../generator/emu460";
 import { cd470, CD470_PARAMS, EMU470_DESIGNS, K_X as K_X_470, length470, NUMBERS_470 } from "../generator/emu470";
 import { tractionCheckDigit } from "../generator/emuParts";
@@ -50,10 +50,13 @@ describe("the older Czech electric units", () => {
     expect(DESIGNS.map((d) => d.id)).toEqual(["proc-vehicle-cd-451", "proc-vehicle-cd-460", "proc-vehicle-cd-470"]);
     for (const d of DESIGNS) expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "unit", traction: "electric" });
     expect(DESIGNS.map((d) => d.references)).toEqual(["cd-451", "cd-460", "cd-470"]);
-    expect(CD451_PARAMS.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([["unit", "motorCar", ["motorCar", "trailer"]]]);
+    expect(CD451_PARAMS.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([
+      ["unit", "motorCar", ["motorCar", "trailer"]],
+      ["livery", "cd", ["cd", "cdBlue"]],
+    ]);
     expect(CD460_PARAMS.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([
       ["unit", "motorCar", ["motorCar", "trailer"]],
-      ["livery", "cd", ["cd", "cd003", "cd007", "csd"]],
+      ["livery", "cd", ["cd", "cd003", "cd007", "csd", "cdBlue"]],
     ]);
     expect(CD470_PARAMS.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([["unit", "motorCar", ["motorCar", "trailer"]]]);
   });
@@ -127,7 +130,7 @@ describe("the older Czech electric units", () => {
   });
 
   it("CD 460: the motor car has two pantographs, exactly one raised: the inner one, or the cab one on 460 007", () => {
-    for (const livery of ["cd", "cd003", "cd007", "csd"] as const) {
+    for (const livery of ["cd", "cd003", "cd007", "csd", "cdBlue"] as const) {
       const h = heads(built(cd460({ livery }), "proc-vehicle-cd-460").nodes);
       expect(h.length).toBe(2);
       const up = h.filter((p) => p.top > 5.5);
@@ -141,7 +144,7 @@ describe("the older Czech electric units", () => {
   it("CD 460: the liveries share one body and repaint it", () => {
     for (const unit of ["motorCar", "trailer"] as const) {
       const body = (livery: string) => bounds(built(cd460({ unit, livery }), "x").nodes, /^body\//);
-      for (const livery of ["cd003", "cd007", "csd"]) {
+      for (const livery of ["cd003", "cd007", "csd", "cdBlue"]) {
         expect(body(livery).min).toEqual(body("cd").min);
         expect(body(livery).max).toEqual(body("cd").max);
       }
@@ -152,7 +155,31 @@ describe("the older Czech electric units", () => {
     };
     expect(colour("cd")).toBe("#7195ea");
     expect(colour("csd")).toBe("#2b5238");
-    expect(CARS_460.length).toBe(8);
+    expect(CARS_460.length).toBe(10);
+  });
+
+  it("CD blue (Najbrt): the 451 and the 460 repaint the same bodies, lettered after the photographs", () => {
+    for (const unit of ["motorCar", "trailer"] as const) {
+      const body = (livery: string) => bounds(built(cd451({ unit, livery }), "x").nodes, /^body\//);
+      expect(body("cdBlue").min).toEqual(body("cd").min);
+      expect(body("cdBlue").max).toEqual(body("cd").max);
+    }
+    const mats = (mesh: MeshBuilder) => new Set(mesh.sourceTree("x", "x").materials);
+    for (const mesh of [cd451({ livery: "cdBlue" }), cd451({ unit: "trailer", livery: "cdBlue" }), cd460({ livery: "cdBlue" }), cd460({ unit: "trailer", livery: "cdBlue" })])
+      for (const m of ["navy", "sky", "white"]) expect(mats(mesh).has(m)).toBe(true);
+    expect(mats(cd451()).has("navy")).toBe(false);
+    // the 460's emblem and "Ceske drahy" near the inner end, read after the emblem on both sides
+    const nodes = built(cd460({ livery: "cdBlue" }), "x").nodes;
+    for (const side of ["right", "left"]) {
+      const emblem = bounds(nodes, new RegExp(`^body/${side}-side/emblem/`));
+      const word = bounds(nodes, new RegExp(`^body/${side}-side/wordmark/`));
+      expect(word.count).toBeGreaterThan(0);
+      expect(emblem.max[0]).toBeLessThan(-6);
+      if (side === "right") expect(word.min[0]).toBeGreaterThan(emblem.max[0]);
+      else expect(word.max[0]).toBeLessThan(emblem.min[0]);
+      expect(word.min[0]).toBeGreaterThan(-12.25);
+    }
+    for (const livery of ["cd", "cd003", "cd007", "csd"]) expect(built(cd460({ livery }), "x").nodes.some((n) => n.id.includes("/wordmark/"))).toBe(false);
   });
 
   it("CD 470: 26.4 m cars make the published 132 m set; the double-deck trailer reaches 4.7 m with two rows of windows", () => {
@@ -188,6 +215,10 @@ describe("the older Czech electric units", () => {
 
   it("carry valid running numbers", () => {
     expect(NUMBERS_451).toEqual({ motorCar: "451 032-7", trailer: "051 032-1" });
+    expect(number451("cd", "motorCar")).toBe("451 032-7");
+    expect(number451("cdBlue", "motorCar")).toBe("451 056-6");
+    expect(number451("cdBlue", "trailer")).toBe(`051 056-${tractionCheckDigit("051056")}`);
+    expect(number460("cdBlue", "motorCar")).toBe("460 016-9");
     expect(number460("cd", "motorCar")).toBe("460 071-4");
     expect(number460("cd003", "motorCar")).toBe("460 003-7");
     expect(number460("cd007", "motorCar")).toBe("460 007-8");

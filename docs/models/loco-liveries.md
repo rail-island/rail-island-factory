@@ -22,8 +22,8 @@ DB scheme's check digit is the same as the CSD one).
 | design | title | `livery` values (default first) | triangles |
 |---|---|---|---|
 | `veh-cd-163` | CD 163 / 363 | `cd163`, `cd162`, `cd162No022`, `cd163No022`, `cd163No021`, `cd362`, `cd362No054`, `cd363`, `cd363No044`, `cd363No037`, `cd363No009`, `regiojet`, `cdBlue` | 15,300 to 16,000 |
-| `veh-cd-263` | CD 263 / 371 / 372 | `cd263`, `cd263No015`, `cd371No002`, `cd371No005`, `cd372`, `db180`, `dbAg180` | 14,800 to 15,500 |
-| `veh-cd-230` | CD 230 / 240 / 340 | `cd230`, `cd240`, `cd240No047`, `cd340`, `cd242` - its own body and livery model, see [cd-230.md](cd-230.md) | 15,600 to 15,900 |
+| `veh-cd-263` | CD 263 / 371 / 372 | `cd263`, `cd263No015`, `cd371No002`, `cd371No005`, `cd372`, `db180`, `dbAg180`, `cd263Blue`, `cd371Blue` | 14,800 to 15,500 |
+| `veh-cd-230` | CD 230 / 240 / 340 | `cd230`, `cd240`, `cd240No047`, `cd340`, `cd242`, `cd242Blue` - its own body and livery model, see [cd-230.md](cd-230.md) | 15,600 to 16,000 |
 | `veh-cd-150` | CD 150 / 151 / ZSR 350 | `cd150`, `cd151`, `cd151Cez`, `zsr350`, `zsr350No001` ... `zsr350No004`, `cdBlue` | 12,100 to 13,000 |
 
 A value names its vlakosimdb model: `cd363No044` is `cd_363.044`, `zsr350No001`
@@ -49,6 +49,12 @@ A livery (`Cd163Livery`, `Cd150Livery`) is data, not code:
   chamfers and the end, split at the same kinks; on the 163 it stops 10 mm under
   the grey side apron so the two never share a plane. The cab doors and the ribs
   under the cab windows follow the cab bands.
+- **`cabZones`** (163 family, optional, with `cabBands`) - the cab section in
+  three paints, as the CD blue 263 and 371 have it: `rear` from the cab seam to
+  |x| = `rearTo` (over the door, which takes these bands), `end` over the ends and
+  their corner chamfers, `cabBands` on the cab sides between. `cabPaint` splits
+  its skin at `rearTo` and at the chamfers; the distant model paints its ends in
+  `end` and its cab sides in `cabBands` (the rear panel is left out).
 - **`palette`** - materials added to the base palette (`blue`, `cream`, `red`,
   `silver`, ...) or replacing one (`roof` for the light grey roofs of the later
   repaints, `pantograph` for the 363 037's red collectors, `logo` for a white
@@ -66,6 +72,11 @@ A livery (`Cd163Livery`, `Cd150Livery`) is data, not code:
   livery moves it off its 1.80 m.
 - **`wordmark`** (optional) - the operator's lettered name on the sides and the
   ends, in coloured runs ([lettering.md](lettering.md)).
+- **`frontLogo`, `numberInk`, `sideNumber`** (163 family, optional) - the front
+  emblem's own material (default `logo`, the side's), the running numbers'
+  material on the plates (default `white`), and `sideNumber: "lowerBand"` for a
+  side number lettered small in white on the lower band instead of the side
+  plate (the 371's).
 
 The track clearers, steps, hoses and warning parts keep the base `yellow`; a
 livery's band uses its own material, so a cream or white band does not repaint
@@ -108,7 +119,7 @@ design keeps one arrangement for the whole family, the grilles on the right.
 
 ## The current operators' liveries
 
-Three liveries come from photographs, not vlakosimdb (`photo` names the
+Five liveries come from photographs, not vlakosimdb (`photo` names the
 reference, `source` is absent): the units are the photographed ones.
 
 | design | value | unit | look | references |
@@ -116,12 +127,26 @@ reference, `source` is absent): the units are the photographed ones.
 | `veh-cd-163` | `regiojet` (RegioJet 162) | 162 120-0, one of RegioJet's 162 112 - 120 | yellow all over, the dark grey roof, the dark machine-room shutters, no CD emblems; "\|\| REGIO" red and "JET" navy along the lower side and small on the noses | `assets/cd-163/photo-162-120-regiojet.jpg`, `photo-162-114-regiojet-side.jpg`, `photo-162-120-regiojet-front.jpg` |
 | `veh-cd-163` | `cdBlue` (CD 162 blue) | 162 039-2 | CD's current blue (the Najbrt scheme, from 2008): navy to 1.2 m, a white band to 1.92 m, light blue above, the light grey roof, the white emblem raised to 1.98 m and "České dráhy" after it, red plates | `assets/cd-163/photo-162-039-cd-blue.jpg` |
 | `veh-cd-150` | `cdBlue` (CD 150 blue) | 150 226-9 | the same scheme on the 150: navy to 1.87 m, the white line to 2.02 m, light blue to the eave, the blue-grey roof, the emblem and "České dráhy" in white | `assets/cd-150/photo-150-226-side.jpg`, `photo-150-203-side.jpg` |
+| `veh-cd-263` | `cd263Blue` (CD 263 blue) | 263 001-0, the prototype "Mája" | not the 162's drawing: the ribbed machine room mid blue (`#2a6cbf`) from 1.45 m over a silver lower band; behind each cab a navy panel with the door, ahead of it silver-grey cab sides and noses; the light blue windscreen band on the noses from 2.30 m; the light grey roof; red plates, the white emblem on the side, the navy one on the noses | `assets/cd-263/photo-263-001-cd-blue.jpg` |
+| `veh-cd-263` | `cd371Blue` (CD 371 blue) | 371 002-7 | the 263's zones over a dark grey lower band to 1.35 m along the whole locomotive and under the noses; no plates: the number black on the noses and small in white on the lower band; the black emblem on the noses, the white emblem and "České dráhy" on the machine room; the 371's game figures (160 km/h) | `assets/cd-263/photo-371-002-cd-blue.jpg` |
 
 Both new 163-family liveries are 162s, the units RegioJet runs and the one
 photographed in the blue; a 163 or 363 in the blue is the same paint with
 another number. `test/cd163Family.test.ts` compares the vlakosimdb liveries with
 their native BMPs; the photographed ones are checked by `test/letters.test.ts`
 (their wordmarks) and by the budget and catalog tests.
+
+CD's blue is drawn on every catalog class that wears it (Wikimedia Commons'
+"in Najbrt livery" categories), each read from its own photographs: besides the
+162, 150, 263 and 371 above, the CD 111 (`veh-cd-110` `cd111Blue`,
+[cz-electrics.md](cz-electrics.md)), the CD 242 (`veh-cd-230` `cd242Blue`,
+[cd-230.md](cd-230.md)), the CD 754 (`veh-cd-750` `cd754Blue`,
+[diesel-locos.md](diesel-locos.md)), the railcars 810, 843 / 943 / 043 and 854
+(`veh-cd-810` `cdBlue`, `veh-cd-843` `livery=cdBlue`, `veh-csd-m296` `cd854Blue`,
+[czech-dmus.md](czech-dmus.md)) and the units 451, 460 and 471 (`veh-cd-451` and
+`veh-cd-460` `livery=cdBlue`, [czech-emus-classic.md](czech-emus-classic.md);
+`veh-cd-471` `variant=cdBlue`, [czech-emus.md](czech-emus.md)). The 163, 362 and
+363 in the blue are the 162's paint with another number; the 151's is the 150's.
 
 ## Deviations
 
@@ -142,6 +167,12 @@ their native BMPs; the photographed ones are checked by `test/letters.test.ts`
   drawn on the model's machine room: portholes on the right and the dark
   shutters on the left. The CD blue 162's navy edge sits at the shell's 1.2 m kink
   (the photo: 1.3 m), one loft fewer, to stay within 16,000 triangles.
+- On the CD blue 263 and 371 the machine-room blue is one colour (the 371's is
+  faded paler on its photo); the thin navy line over the 263's silver lower band,
+  the 263's name "Mája" and the 371's "Národní dopravce" line are left out. Both
+  use the `"263"` machine-room layout (the photographed 371 002 shows the grille
+  side, the 263 001 the window side). The silver plate on the 371's nose keeps
+  the plate's steel rim. The distant model leaves out the navy door panels.
 - On the CD blue 150 the emblem and the lettering stay at the 150's emblem height
   (1.3 m, on the navy), clear of the grille banks; the photographs show them over
   the white line. The "Národní dopravce" line under the name is left out.

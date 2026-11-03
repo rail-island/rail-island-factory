@@ -32,3 +32,12 @@ All files were downloaded from Wikimedia Commons (rendered by `w/thumb.php`), do
 - Licence: CC BY-SA 3.0 (VRT ticket 2019010610003654)
 - Date: 1991
 - Shows: motor car 460 002-9 in CSD days, in the red and cream livery with the yellow stripe (not the green the vlakosimdb CSD unit wears): the cab front's shape, one pantograph folded and one raised, the single-leaf doors.
+
+## photo-460-016-cd-blue-ostrava-2022.jpg
+
+- Commons title: File:460 016-9 in Ostrava.jpg
+- Page: https://commons.wikimedia.org/wiki/File:460_016-9_in_Ostrava.jpg
+- Author: Oleksandr Dede
+- Licence: CC BY-SA 4.0
+- Date: 2022-06-07
+- Shows: unit 460 016-9 in CD's current blue (the Najbrt scheme), three-quarter from above: the navy foot, white to the navy line under the windows, light blue to the white eave line, the dark grey roof, navy passenger doors, the white grille box under the windscreen, the emblem and "Ceske drahy" in navy near the inner end, the trailers behind in the same paint. The `cdBlue` livery.

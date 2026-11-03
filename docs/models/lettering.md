@@ -1,7 +1,7 @@
 # Lettering
 
 **Covers** - the stroke font that paints words on a model (an operator's wordmark): its glyphs, its style, the wordmark of coloured runs, how a builder places one on a side or an end, its triangle cost, and the tests.
-**Code** - `generator/letters.ts` (`letters`, `wordWidth`, `wordmarkAt`, `runsWidth`, `Wordmark`, `LetterStyle`), `generator/cd163.ts`, `generator/cd150.ts`, `generator/vectron.ts`, `generator/uicZCoach.ts`, `test/letters.test.ts`, `test/czskCoaches.test.ts`
+**Code** - `generator/letters.ts` (`letters`, `wordWidth`, `wordmarkAt`, `runsWidth`, `Wordmark`, `LetterStyle`), `generator/cd163.ts`, `generator/cd150.ts`, `generator/cd750.ts`, `generator/vectron.ts`, `generator/uicZCoach.ts`, `generator/emu460.ts`, `generator/emu471.ts`, `test/letters.test.ts`, `test/czskCoaches.test.ts`, `test/czechEmusClassic.test.ts`, `test/czechEmus.test.ts`
 **See also** - [loco-liveries.md](loco-liveries.md) (the liveries that carry a wordmark), [vectron.md](vectron.md), [vehicles.md](vehicles.md) ("Running numbers": the numerals of the plates)
 
 ## The font
@@ -52,8 +52,12 @@ returns the triangles per material, from `at` or centred on it.
 | `veh-cd-163` | `regiojet` (RegioJet 162) | "\|\| REGIO" red, "JET" navy, 0.55 m, from the cab at the reader's left | the same, 0.10 m, right of the middle |
 | `veh-cd-163` | `cdBlue` (CD 162 blue) | "České dráhy" 0.14 m after the emblem | - |
 | `veh-cd-150` | `cdBlue` (CD 150 blue) | "České dráhy" 0.13 m after the emblem | - |
+| `veh-cd-263` | `cd371Blue` (CD 371 blue) | "České dráhy" 0.15 m after the emblem | - |
+| `veh-cd-750` | `cd754Blue` (CD 754 blue) | "České dráhy" 0.14 m after the emblem, behind the radiator | - |
 | `veh-vectron` | `regiojet` | "\|\| REGIO" red, "JET" navy, 0.50 m, behind the cab door at the reader's left | the same, 0.10 m, left of the middle |
 | `veh-uic-z-coach` | `operator=regiojet` | "\|\| REGIO" red, "JET" navy, 0.32 m, on the lower yellow 6 m left of the middle | - |
+| `veh-cd-460` | `cdBlue` (CD 460 blue) | "České dráhy" navy, 0.12 m, after the emblem near the inner end of both cars | - |
+| `veh-cd-471` | `cdBlue` (CD 471 blue) | "City Elefant" white, 0.21 m, on the navy upper wall over the cab end of the motor car and the driving trailer | - |
 
 A wordmark costs about 13 triangles a capital: "České dráhy" 144, "|| REGIOJET"
 about 120. A livery without one draws nothing new, so the shipped liveries' GLBs

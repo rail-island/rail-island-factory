@@ -65,3 +65,19 @@ The Bdmtee photographs confirm the green window band between the light upper bod
 ## The blue and white Bee (cd_bee001)
 
 `native/cd_bee001/` keeps vlakosimdb's `db/train/coach/cd_bee001` (CD Bee 001, author Vojtech Vohlidka), same revision. Its XML is identical to cd_bee's, and its BMPs are cd_bee's pixel for pixel with the green (0, 120, 0) and its shades replaced by blue (64, 64, 255); the red end doors stay. It is therefore the variant `beeBlue`: the Bee's measured layout with the `green` material in blue (#3c44e6), and the same landmarks as cd_bee. Running number 51 54 20-41 790-6, illustrative.
+
+## CD blue livery
+
+`livery=cdBlue` (CD's current blue, the Najbrt scheme) is read from these Wikimedia Commons photographs, downscaled to 1600 px wide and saved as JPEG (quality 85); author and licence from each file page:
+
+| file | Commons page | author | licence | use |
+|---|---|---|---|---|
+| `photo-a-51-54-19-41-068-0-cd-blue.jpg` | https://commons.wikimedia.org/wiki/File:V%C5%AFz_A%2C_Praha-hlavn%C3%AD_n%C3%A1dra%C5%BE%C3%AD.jpg (2009-12-04) | Honza Groh (Jagro) | CC BY-SA 3.0 | the A in the blue: the running number (also in the file description), white below the navy line, the light blue window band, the yellow line under the grey roof, navy doors |
+| `photo-ab-cd-blue-praha-vysocany.jpg` | https://commons.wikimedia.org/wiki/File:Praha-Vyso%C4%8Dany%2C_rychl%C3%ADk_do_Prahy_%2801%29.jpg (2014-06-17) | SJu (ŠJů) | CC BY 4.0 | an AB in the blue at the end of a train: the line under the navy roof yellow over the first class half and white over the second, the navy end wall, navy doors (the number is not legible) |
+| `photo-b-51-54-20-41-866-4-cd-blue.jpg` | https://commons.wikimedia.org/wiki/File:Praha_hl._n.%2C_v%C5%AFz_B.jpg (2014-08-27) | PatrikPaprika | CC BY-SA 4.0 | the B side on, measured for the bands (white to 1.72 m, the navy line to 1.86 m, light blue to the eave, the white line to 3.32 m), the weathered navy roof, the navy door, the small emblem near one end, the number (a soft print, read as 51 54 20-41 866-4, which its check digit fits) |
+| `photo-bee-243-cd-blue-praha-holesovice-2022.jpg` | https://commons.wikimedia.org/wiki/File:V%C5%AFz_Bee243_%C4%8CD.jpg (2022-02-03) | Martin Vrut | CC BY 3.0 | a Bee 243 in the blue (the description names the type): the bands as on the B, the white line under a light grey roof, the navy door (no number in view) |
+| `photo-bds-50-54-82-40-340-7-cd-blue.jpg` | https://commons.wikimedia.org/wiki/File:Praha_hl._n.%2C_v%C5%AFz_BDs_%2801%29.jpg (2014-08-27) | PatrikPaprika | CC BY-SA 4.0 | a BDs 450 in the blue: light blue below the navy line too, the white emblem and "Ceske drahy" wordmark and the white number, the luggage doors in the bands, the navy passenger door, the grey roof |
+| `photo-bdmtee-cd-blue-nove-mesto-2018.jpg` | https://commons.wikimedia.org/wiki/File:Nov%C3%A9_M%C4%9Bsto_na_Morav%C4%9B%2C_n%C3%A1dra%C5%BE%C3%AD%2C_2018_%284%29.jpg (2018-10-06) | Marie Ccheidzeova | CC BY-SA 4.0 | a Bdmtee in the blue: white below the navy line, light blue window band, white line, navy roof, the navy double doors; the number partly hidden (50 54 20-82 2..-0) |
+| `photo-bdmtee-cd-blue-praha-liben.jpg` | https://commons.wikimedia.org/wiki/File:Praha-Libe%C5%88%2C_sp%C4%9B%C5%A1n%C3%BD_vlak_%C4%8CD_%2801%29.jpg (2016-12-21) | SJu (ŠJů) | CC BY 4.0 | a Bdmtee in the blue beside a green and white coach: the same bands, the navy double doors and roof |
+
+Simplified: the pictogram panels, the class signs' plates and pictograms, "Narodni dopravce", the small inscriptions and the UIC prefixes are left out. The AB, Bee and Bdmtee numbers are illustrative (UIC check digits valid), the A, B and BDs numbers as photographed.

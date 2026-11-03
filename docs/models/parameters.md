@@ -20,11 +20,11 @@ declaration order, the first the default unless noted.
 |---|---|---|
 | `veh-cd-150` | `livery`: cd150, cd151, cd151Cez, zsr350, zsr350No001, zsr350No002, zsr350No003, zsr350No004 | [loco-liveries.md](loco-liveries.md) |
 | `veh-cd-163` | `livery`: cd163, cd162, cd162No022, cd163No022, cd163No021, cd362, cd362No054, cd363, cd363No044, cd363No037, cd363No009 | [loco-liveries.md](loco-liveries.md) |
-| `veh-cd-230` | `livery`: cd230, cd240, cd240No047, cd340, cd242 | [cd-230.md](cd-230.md) |
-| `veh-cd-263` | `livery`: cd263, cd263No015, cd371No002, cd371No005, cd372, db180, dbAg180 | [loco-liveries.md](loco-liveries.md) |
+| `veh-cd-230` | `livery`: cd230, cd240, cd240No047, cd340, cd242, cd242Blue | [cd-230.md](cd-230.md) |
+| `veh-cd-263` | `livery`: cd263, cd263No015, cd371No002, cd371No005, cd372, db180, dbAg180, cd263Blue, cd371Blue | [loco-liveries.md](loco-liveries.md) |
 | `veh-csd-classic-green-coach` | `variant`: classA, classB | [csd-coaches.md](csd-coaches.md) |
-| `veh-bmo-double-deck-coach` | `livery`: csd, cdBlue, cdBlueGrey, cdRedDoors | [bmo-double-deck.md](bmo-double-deck.md) |
-| `veh-cd-green-white-coach` | `variant`: a, ab, b, bee, beel, bds, ds, bdmeer, bdmtee, beeBlue (default b) | [cd-green-white.md](cd-green-white.md) |
+| `veh-bmo-double-deck-coach` | `livery`: csd, cdBlue, cdBlueGrey, cdRedDoors, cdNajbrt | [bmo-double-deck.md](bmo-double-deck.md) |
+| `veh-cd-green-white-coach` | `variant`: a, ab, b, bee, beel, bds, ds, bdmeer, bdmtee, beeBlue (default b); `livery`: greenWhite (default), cdBlue (only on a, ab, b, bee, bds, bdmtee) | [cd-green-white.md](cd-green-white.md) |
 | `veh-nas-flat-wagon` | `cargo`: empty, wood, tubes, reels | [wagons.md](wagons.md) |
 | `veh-ua-open-wagon` | `cargo`: empty, coal, wood, sand | [wagons.md](wagons.md) |
 | `veh-eas-open-wagon` | `cargo`: empty, wood, coal | [wagons.md](wagons.md) |
@@ -34,7 +34,7 @@ declaration order, the first the default unless noted.
 | `veh-csd-556-0` | `unit`: locomotive, tender | [steam-locomotives.md](steam-locomotives.md) |
 | `veh-csd-636` | `unit`: locomotive, tender | [steam-locomotives.md](steam-locomotives.md) |
 | `veh-csd-386` | `unit`: locomotive, tender | [steam-locomotives.md](steam-locomotives.md) |
-| `veh-cd-110` | `livery`: cd110, cd111, cd210 | [cz-electrics.md](cz-electrics.md) |
+| `veh-cd-110` | `livery`: cd110, cd111, cd210, cd111Blue | [cz-electrics.md](cz-electrics.md) |
 | `veh-cd-130` | `livery`: cd130, cd123, cd123No019 | [cz-electrics.md](cz-electrics.md) |
 | `veh-sqns-container-wagon` | `cargo`: empty, maersk | [freight-wagons.md](freight-wagons.md) |
 | `veh-pao-flat-wagon` | `cargo`: empty, tubes | [freight-wagons.md](freight-wagons.md) |
@@ -50,30 +50,30 @@ declaration order, the first the default unless noted.
 | `veh-db-212` | `livery`: oldRed, oceanBlue, trafficRed | [small-diesels.md](small-diesels.md) |
 | `veh-karosa-short` | `variant`: b731, b732, c734, lc735, b931, b931e, b951e | [buses.md](buses.md) |
 | `veh-karosa-long` | `variant`: b741, b941, b941e, b961 | [buses.md](buses.md) |
-| `veh-cd-471` | `unit`: motorCar, trailer, drivingTrailer; `variant`: cd471, cd675 | [czech-emus.md](czech-emus.md) |
+| `veh-cd-471` | `unit`: motorCar, trailer, drivingTrailer; `variant`: cd471, cd675, cdBlue | [czech-emus.md](czech-emus.md) |
 | `veh-cd-680` | `unit`: endCar, car683, car685, car686 | [czech-emus.md](czech-emus.md) |
-| `veh-cd-750` | `livery`: cd750, cd750No308, cd753, cd754, cd754No013 | [diesel-locos.md](diesel-locos.md) |
+| `veh-cd-750` | `livery`: cd750, cd750No308, cd753, cd754, cd754No013, cd754Blue | [diesel-locos.md](diesel-locos.md) |
 | `veh-cd-749` | `livery`: cd749, cd749No264, cd749No121 | [diesel-locos.md](diesel-locos.md) |
 | `veh-cd-781` | `livery`: cd781, cd781No462 | [diesel-locos.md](diesel-locos.md) |
 | `veh-cd-771` | `livery`: cd771, cd771No235, cd771No421 (default cd771No235) | [diesel-locos.md](diesel-locos.md) |
 | `veh-tatra-t3` | `variant`: t3, t3m, t3prototype | [trams.md](trams.md) |
 | `veh-tatra-kt8` | `livery`: redWhite, red, modern | [trams.md](trams.md) |
 | `veh-metro-81-71` | `unit`: headCar, middleCar | [trams.md](trams.md) |
-| `veh-cd-451` | `unit`: motorCar, trailer | [czech-emus-classic.md](czech-emus-classic.md) |
-| `veh-cd-460` | `unit`: motorCar, trailer; `livery`: cd, cd003, cd007, csd | [czech-emus-classic.md](czech-emus-classic.md) |
+| `veh-cd-451` | `unit`: motorCar, trailer; `livery`: cd, cdBlue | [czech-emus-classic.md](czech-emus-classic.md) |
+| `veh-cd-460` | `unit`: motorCar, trailer; `livery`: cd, cd003, cd007, csd, cdBlue | [czech-emus-classic.md](czech-emus-classic.md) |
 | `veh-cd-470` | `unit`: motorCar, trailer | [czech-emus-classic.md](czech-emus-classic.md) |
-| `veh-cd-810` | `livery`: red, yellowBand, blueWhite, ivoryBand | [czech-dmus.md](czech-dmus.md) |
+| `veh-cd-810` | `livery`: red, yellowBand, blueWhite, ivoryBand, cdBlue | [czech-dmus.md](czech-dmus.md) |
 | `veh-cd-812` | `unit`: motorCar, drivingTrailer | [czech-dmus.md](czech-dmus.md) |
-| `veh-cd-843` | `unit`: motorCar, drivingTrailer, trailer | [czech-dmus.md](czech-dmus.md) |
+| `veh-cd-843` | `unit`: motorCar, drivingTrailer, trailer; `livery`: red, cdBlue | [czech-dmus.md](czech-dmus.md) |
 | `veh-csd-m131` | `unit`: motorCar, trailer | [czech-dmus.md](czech-dmus.md) |
-| `veh-csd-m296` | `variant`: m296, cd853, cd854 | [czech-dmus.md](czech-dmus.md) |
+| `veh-csd-m296` | `variant`: m296, cd853, cd854, cd854Blue | [czech-dmus.md](czech-dmus.md) |
 | `veh-db-628` | `unit`: motorCar, bn, abn, bdnrf; `livery`: mint, red | [foreign-units.md](foreign-units.md) |
 | `veh-mav-mdmot` | `unit`: motorCar, trailerAx, trailerBx, drivingTrailer | [foreign-units.md](foreign-units.md) |
 | `veh-ice-1` | `unit`: powerCar, coach, restaurant | [foreign-units.md](foreign-units.md) |
 | `veh-tgv` | `unit`: powerCar, set; `cars`: 1 .. 6, with `unit` set only (default 1); `livery`: pse, atlantique | [foreign-units.md](foreign-units.md) |
 | `veh-cd-y-coach` | `variant`: bcc, beer, bnb, wrrm | [czsk-coaches.md](czsk-coaches.md) |
 | `veh-zsr-coach` | `variant`: a, ab, b, bh, bds, bdmeer, wrrm, apee (default b) | [czsk-coaches.md](czsk-coaches.md) |
-| `veh-uic-z-coach` | `variant`: firstClass, secondClass, restaurant (default secondClass); `operator`: cd, db, obb | [czsk-coaches.md](czsk-coaches.md) |
+| `veh-uic-z-coach` | `variant`: firstClass, secondClass, restaurant (default secondClass); `operator`: cd, cdBlue, db, obb, regiojet | [czsk-coaches.md](czsk-coaches.md) |
 | `veh-db-dosto` | `variant`: firstClass, secondClass, drivingTrailer (default secondClass) | [german-coaches.md](german-coaches.md) |
 | `veh-dr-sbahn-berlin` | `variant`: coach, drivingTrailer | [german-coaches.md](german-coaches.md) |
 | `proc-char-avatar` | `hair`, `headwear`, `bag`, `body`, `clothing`; finish `skin`, `shirtColour`, `trousersColour`, `hairColour` | [characters.md](characters.md) |

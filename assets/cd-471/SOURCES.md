@@ -44,6 +44,16 @@ Real CD never ran a class 675; the number belongs to the Ukrainian EJ675, a late
 
 `elefantNumber()`: the 471 set carries 471 014-1, 071 014-5 and 971 014-6 (the motor car's number is legible on `photo-471-014-front-three-quarter-srbsko-2010.jpg`, a unit in the modelled livery; the trailer's and driving trailer's share the set's serial). The cd675 variant carries the illustrative 675 001-2, 075 001-8 and 975 001-9. All check digits are valid (`tractionCheckDigit`).
 
+## CD blue livery
+
+The `cdBlue` variant (471 079-4 in CD's current blue, the Najbrt scheme) is read from a photograph, not from vlakosimdb:
+
+| file | page | author | licence | use |
+|---|---|---|---|---|
+| `photo-471-079-cd-blue-2024.jpg` | https://commons.wikimedia.org/wiki/File:20240810_%C4%8Cesk%C3%A9_dr%C3%A1hy_471079.jpg | Alex Noble | CC0 1.0 | the bands on the sides and the nose, the doors, the emblem, the "City Elefant" wordmark, the running number 471 079-4 |
+
+The set carries 471 079-4, 071 079 and 971 079 (`elefantNumber`; the motor car's number is legible on the photo). The trailer and the driving trailer are painted as the motor car; the driving trailer's emblem and wordmark mirror the motor car's behind its cab. See docs/models/czech-emus.md.
+
 ## Measurement record
 
 `native/cd_471/landmarks.json` holds 34 native pixel-edge boxes (23 side, 8 cab front, 3 inner end) with their model scopes, tolerances and uncertainty; `baseline.json` is the geometry's measurement when the annotations were fixed. [COMPARISON.md](COMPARISON.md) lists the normalized errors and the signed residual of every box at the model revision.

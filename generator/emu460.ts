@@ -3,7 +3,8 @@
 // with its cab (default) or the intermediate trailer (CD class 063, vlakosimdb's
 // "CD 060"), and whose `livery` picks the paint and running number: the CD grey
 // and blue (460 071), the vlakosimdb units 460 003 and 460 007 in the same
-// paint, and the CSD cream and green (460 045).
+// paint, the CSD cream and green (460 045) and CD's current blue (460 016, read
+// from a photograph).
 //
 // Reconstructed from the native vlakosimdb XML and BMPs in assets/cd-460/native
 // (db/train/emu/cd 460/cd_460, cd_460,003-4, cd_460,007-4, cd_060 and
@@ -23,10 +24,12 @@ import { diamond } from "./czElectricKit.ts";
 import { LOD_GLASS } from "./lodKit.ts";
 import { bogieParts, coachBody, fitUnit, pantographParts, roofPart, shifted, sideGlass, underPart } from "./lodUnits.ts";
 import { EMU_CATALOG, enumParam, slopePanel, tractionNumber, blockX } from "./emuParts.ts";
+import { wordmarkAt, type Wordmark } from "./letters.ts";
+import type { Vec3 } from "./meshCore.ts";
 import { bOf, CLASSIC_PALETTE, emuBogie, endBuffers, frontNumber, gangwayEnd, lens, louvre, polyB, sb, sideEmblem, toB, type CarFrame, type PxBox } from "./emuClassicKit.ts";
 
 export type Unit460 = "motorCar" | "trailer";
-export type Livery460 = "cd" | "cd003" | "cd007" | "csd";
+export type Livery460 = "cd" | "cd003" | "cd007" | "csd" | "cdBlue";
 
 export const CD460_PARAMS: readonly ParamSpec[] = [
   enumParam("unit", "Car", {
@@ -38,6 +41,7 @@ export const CD460_PARAMS: readonly ParamSpec[] = [
     cd003: "460 003",
     cd007: "460 007",
     csd: "CSD",
+    cdBlue: "CD 460 blue",
   }),
 ];
 
@@ -54,6 +58,17 @@ interface Paint {
   serial: string;
   /** Which of the two pantographs is raised: the inner one (rear, -X) or the cab one. */
   raised: "rear" | "front";
+  /** The gangway end door's paint ("doorRed" when absent). */
+  endDoor?: string;
+  /** The grille box's paint under the windscreen ("band" when absent). */
+  grilleBox?: string;
+  /** The side running number's paint ("lettering" when absent) and the front one's ("letteringDark"). */
+  numberMat?: string;
+  frontNumberMat?: string;
+  /** The side emblem's native box ([43, 32, 51, 37] behind the cab when absent). */
+  emblemBox?: PxBox;
+  /** The operator's lettered wordmark after the side emblem (letters.ts): cap height and baseline. */
+  wordmark?: { runs: Wordmark["runs"]; h: number; v: number };
 }
 
 const CD_PALETTE: Record<string, MaterialSpec> = {
@@ -66,6 +81,9 @@ const CD_PALETTE: Record<string, MaterialSpec> = {
 };
 const CD_BODY: Array<[number, number, string]> = [[0.3, 1.2, "body"], [1.2, 1.8, "band"], [1.8, 2.7, "body"], [2.7, 3.2, "band"], [3.2, 4.0, "roof"]];
 const CD_CAB: Array<[number, number, string]> = [[0.3, 1.7, "body"], [1.7, 2.3, "band"], [2.3, 3.2, "body"], [3.2, 4.0, "roof"]];
+// CD blue (photo-460-016-cd-blue-ostrava-2022.jpg): the navy foot, white, the navy line under the
+// windows, light blue, the white eave line, on the body and the cab alike
+const BLUE_BANDS: Array<[number, number, string]> = [[0.3, 1.15, "navy"], [1.15, 1.75, "white"], [1.75, 1.9, "navy"], [1.9, 3.12, "sky"], [3.12, 3.28, "white"], [3.28, 4.0, "roof"]];
 const cdPaint = (serial: string, raised: "rear" | "front"): Paint => ({ palette: CD_PALETTE, body: CD_BODY, cab: CD_CAB, door: "doorRed", emblem: true, serial, raised });
 
 const PAINTS: Record<Livery460, Paint> = {
@@ -81,6 +99,31 @@ const PAINTS: Record<Livery460, Paint> = {
     emblem: false,
     serial: "045",
     raised: "rear",
+  },
+  // CD's current blue (the Najbrt scheme), read from photo-460-016-cd-blue-ostrava-2022.jpg: a navy
+  // foot, white to the navy line under the windows, light blue to the white eave line, the dark
+  // grey roof, navy passenger doors; the emblem and "Ceske drahy" in navy near the inner end
+  cdBlue: {
+    palette: {
+      navy: { color: "#1f3a7a", roughness: 0.5 },
+      sky: { color: "#3c97de", roughness: 0.5 },
+      white: { color: "#eef0f2", roughness: 0.5 },
+      body: { color: "#eef0f2", roughness: 0.5 },
+      roof: { color: "#6b6f73", roughness: 0.7 },
+      emblemBlue: { color: "#1f3a7a", roughness: 0.5 },
+    },
+    body: BLUE_BANDS,
+    cab: BLUE_BANDS,
+    door: "navy",
+    emblem: true,
+    serial: "016",
+    raised: "rear",
+    endDoor: "navy",
+    grilleBox: "white",
+    numberMat: "navy",
+    frontNumberMat: "lettering",
+    emblemBox: [203, 33, 211, 36],
+    wordmark: { runs: [["\u010Cesk\u00E9 dr\u00E1hy", "navy"]], h: 0.12, v: 1.48 },
   },
 };
 
@@ -181,10 +224,10 @@ function car(unit: Unit460, livery: Livery460): MeshBuilder {
     }
     for (const s of [1, -1]) m.scope(s > 0 ? "right side" : "left side", () => (motor ? motorSide : trailerSide)(c, motor ? cabUpper : body, body, paint, s, number));
   });
-  if (motor) m.scope("cab", () => cab(c, cabUpper, cabLower, number));
+  if (motor) m.scope("cab", () => cab(c, cabUpper, cabLower, number, paint));
   for (const e of motor ? [-1] : [-1, 1])
     m.scope(e > 0 ? "front end" : "rear end", () =>
-      gangwayEnd(c, body, { wall: e > 0 ? bOf(F, 0.2) : 0, e, face: 0.2, door: { x0: -0.6, x1: 0.6, y0: 1.6, y1: 3.1 }, doorPaint: "doorRed", couplerY: 0.95, markerY: 1.4, markerZ: 1.0 }),
+      gangwayEnd(c, body, { wall: e > 0 ? bOf(F, 0.2) : 0, e, face: 0.2, door: { x0: -0.6, x1: 0.6, y0: 1.6, y1: 3.1 }, doorPaint: paint.endDoor ?? "doorRed", couplerY: 0.95, markerY: 1.4, markerZ: 1.0 }),
     );
   m.scope("underframe", () => {
     if (motor) {
@@ -257,10 +300,19 @@ function passengerDoor(c: Coach, v: Volume, s: number, d: PxBox, glass: PxBox[],
 
 function markings(c: Coach, v: Volume, paint: Paint, s: number, number: string, at: number): void {
   const m = c.m;
-  if (paint.emblem) m.scope("emblem", () => sideEmblem(c, s, sb(F, [43, 32, 51, 37]), 1.5, "emblemBlue"));
+  const e = sb(F, paint.emblemBox ?? [43, 32, 51, 37]);
+  if (paint.emblem) m.scope("emblem", () => sideEmblem(c, s, e, 1.5, "emblemBlue"));
+  const wm = paint.wordmark;
+  // after the emblem as the reader sees it: toward +X on the right side, toward -X on the left
+  if (wm) m.scope("wordmark", () => {
+    const w = (e.y1 - e.y0) * 0.8 * 1.5385;
+    const cx = c.X((e.x0 + e.x1) / 2);
+    for (const r of wordmarkAt(wm.runs, cx + s * (w / 2 + 0.12), wm.v, wm.h, s < 0))
+      m.facets(r.mat, r.tris.map(([x, y]): Vec3 => [x, y, s * 1.509]), [0, 0, s]);
+  });
   m.scope("running number", () => {
     const b = sb(F, [at - 15, 36, at + 15, 38]);
-    c.numeral(v, s, number, (b.x0 + b.x1) / 2, b.y0 + 0.02, 0.16, 0.006, "lettering");
+    c.numeral(v, s, number, (b.x0 + b.x1) / 2, b.y0 + 0.02, 0.16, 0.006, paint.numberMat ?? "lettering");
   });
 }
 
@@ -289,7 +341,7 @@ function trailerSide(c: Coach, _cab: Volume, v: Volume, paint: Paint, s: number,
 }
 
 /** The cab front (cd_460 x_dec): windscreen on the leaning face, lamps and grilles, buffers, plough, top lamp. */
-function cab(c: Coach, upper: Volume, lower: Volume, number: string): void {
+function cab(c: Coach, upper: Volume, lower: Volume, number: string, paint: Paint): void {
   const m = c.m;
   const X = (x: number) => c.X(bOf(F, x));
   const plane = { x0: X(0.6), y0: 1.8, x1: X(0.3), y1: 3.6 };
@@ -298,10 +350,11 @@ function cab(c: Coach, upper: Volume, lower: Volume, number: string): void {
     // x_dec columns 5..14 and 16..25, rows 19..27
     for (const [z0, z1] of [[-0.88, -0.1], [0.1, 0.88]]) slopePanel(m, "glass", 1, plane, z0, z1, 2.32, 3.08, 0.014, 0.006);
   });
-  m.scope("running number", () => frontNumber(m, "letteringDark", number, 0.6, 1.02, 0.1, () => X(0.4)));
+  m.scope("running number", () => frontNumber(m, paint.frontNumberMat ?? "letteringDark", number, 0.6, 1.02, 0.1, () => X(0.4)));
   // the grille box under the windscreen (XML `b`: 0.4 .. 0.6 m, 1.8 .. 2.2 m, z +-0.6)
   m.scope("grille box", () => {
-    blockX(m, "band", X(0.62), X(0.4), 1.8, 2.2, -0.6, 0.6);
+    // a box in its own paint stands 1 cm clear of the lower front, off the cab's face at 1.8 m
+    blockX(m, paint.grilleBox ?? "band", X(0.62), X(0.4), paint.grilleBox ? 1.81 : 1.8, 2.2, -0.6, 0.6);
     for (let i = 0; i < 4; i++) blockX(m, "louvreSlat", X(0.4) + 0.001, X(0.4) + 0.012, 1.86 + i * 0.09, 1.9 + i * 0.09, -0.56, 0.56);
   });
   m.scope("lower grille", () => c.endPanel(lower, "grille", 1, { x0: -0.6, x1: 0.6, y0: 1.4, y1: 1.76 }, 0.008, 0.02));
@@ -366,7 +419,7 @@ export function cd460Lod(params?: ParamValues): MeshBuilder {
 export const frame460 = (unit: Unit460): { F: CarFrame; centre: number } => ({ F, centre: (FACES[unit][0] + FACES[unit][1]) / 2 });
 
 /** Every car and livery, for the tests. */
-export const CARS_460: ReadonlyArray<[Unit460, Livery460]> = (["motorCar", "trailer"] as const).flatMap((u) => (["cd", "cd003", "cd007", "csd"] as const).map((l): [Unit460, Livery460] => [u, l]));
+export const CARS_460: ReadonlyArray<[Unit460, Livery460]> = (["motorCar", "trailer"] as const).flatMap((u) => (["cd", "cd003", "cd007", "csd", "cdBlue"] as const).map((l): [Unit460, Livery460] => [u, l]));
 
 /** What the game needs of it beyond its geometry (design.ts GameProperties). */
 const CD_460_GAME: GameProperties = {
@@ -380,6 +433,7 @@ const CD_460_GAME: GameProperties = {
     { params: { livery: "cd007", unit: "trailer" }, power: 0 },
     { params: { livery: "csd", unit: "trailer" }, power: 0, maxspeed: 110 },
     { params: { unit: "trailer" }, power: 0 },
+    { params: { livery: "cdBlue", unit: "trailer" }, power: 0 },
   ],
 };
 
