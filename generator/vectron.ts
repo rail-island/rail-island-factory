@@ -21,7 +21,7 @@ import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign 
 import { ELECTRIC_LOCO_CATALOG, emblem, runningNumber, type Band } from "./cd163.ts";
 import { c, lerpTable, onEnd, onSide } from "./czElectricKit.ts";
 import { boxLocoLod, buildBoxLoco, shellOf, type EndItem, type LocoSpec, type SideItem } from "./boxLocoKit.ts";
-import { wordmarkAt, type Wordmark } from "./letters.ts";
+import { runsWidth, wordmarkAt, type Wordmark } from "./letters.ts";
 
 // ---------------------------------------------------------------------------
 // The body
@@ -97,32 +97,47 @@ interface Livery {
   /** The lamp grille's stripes. */
   grille: string;
   /** The CD emblem: on the ends, on the sides, its material. */
-  emblem?: { end: boolean; side: boolean; mat: string };
+  /**
+   * The CD emblem: on the ends, on the sides, its material; `sideAt` places the side emblem at the
+   * reader's u (the right side's x; mirrored on the left) and height v, `h` high, in `sideMat`.
+   */
+  emblem?: { end: boolean; side: boolean; mat: string; sideMat?: string; sideAt?: { u: number; v: number; h: number } };
   /** The operator's lettered wordmark (letters.ts). */
   wordmark?: Wordmark;
 }
 
 const FRAME: Band = [Y0, 1.42, "frame"];
 
+/** The Eurocity's side emblem's width (0.34 m high) and the width of its "Ceske drahy" (0.17 m), for the lettering after it. */
+const EMBLEM_W_EC = 0.34 * ((us: number[]) => Math.max(...us) - Math.min(...us))(emblem(0, 0, 1, false).map((q) => q[0]));
+const EC_WORD_W = runsWidth([["\u010Cesk\u00E9 dr\u00E1hy", "navy"]], 0.17);
+
 export const VECTRON_LIVERIES = {
-  // 193 298 (photo-193-298-cd-eurocity.jpg): navy cabs and roof cant, the light blue wave along
-  // the machine room over a white band, white elsewhere; white stripes and emblem on the navy nose
+  // 193 298 (photo-193-298-cd-eurocity.jpg, photo-193-295-cd-eurocity-side.jpg): light blue along the
+  // lower half over the dark grey frame, white above to the roof; the navy cab sections, their rear
+  // edge sloping forward to the nose's foot below and reaching back over the cab door along the cant;
+  // the navy nose with white grille stripes and the white emblem over a light blue foot; the navy
+  // emblem and "Ceske drahy" behind the reader's left cab door (the cities, their skylines and the
+  // slogan are left out)
   cdEurocity: {
     title: "CD Eurocity",
     numberSource: "photo-193-298-cd-eurocity.jpg (91 80 6193 298-7 D-ELOC)",
     number: runningNumber("193", "298"),
-    palette: { navy: c("#1f3d8f"), skyBlue: c("#2f8fdc"), white: c("#eef0f2"), plate: c("#1f3d8f") },
-    side: [FRAME, [1.42, 1.55, "navy"], [1.55, 1.72, "white"], [1.72, 2.35, "skyBlue"], [2.35, 3.55, "white"], [3.55, ROOF, "navy"]],
-    end: [FRAME, [1.42, ROOF, "navy"]],
+    palette: { navy: c("#1f3d8f"), skyBlue: c("#2f9be3"), white: c("#eef0f2"), plate: c("#1f3d8f") },
+    side: [FRAME, [1.42, 2.6, "skyBlue"], [2.6, ROOF, "white"]],
+    end: [FRAME, [1.42, 1.52, "skyBlue"], [1.52, ROOF, "navy"]],
     sidePaint: [
-      // the navy cab section, its rear edge leaning forward to the roof
-      cabSidePaint("cab", "navy", 1.42, 3.55, (y) => 6.05 - 0.25 * (y - 1.42)),
-      // the light blue wave rising from the cab into the machine room's band
-      { kind: "paint", name: "wave", x: [3.2, 6.1], y: [1.72, 2.7], poly: [[3.2, 1.72], [5.7, 1.72], [6.1, 2.0], [5.5, 2.7], [4.2, 2.6]], mat: "skyBlue", mirror: true, layer: 1 },
+      // the navy cab section in three convex pieces: the foot narrowing to the nose's corner, the
+      // cab side ahead of the door (the white sweep between them and the door is the side's white),
+      // the cant reaching back over the door
+      cabSidePaint("cab foot", "navy", 1.75, 2.6, (y) => 8.2 - (0.9 * (y - 1.75)) / 0.85),
+      cabSidePaint("cab", "navy", 2.6, 3.5, (y) => 7.3 - (0.25 * (y - 2.6)) / 0.9),
+      cabSidePaint("cab cant", "navy", 3.5, ROOF, () => 5.3),
     ],
     endPaint: [],
     grille: "white",
-    emblem: { end: true, side: false, mat: "white" },
+    emblem: { end: true, side: true, mat: "white", sideMat: "navy", sideAt: { u: -5.85, v: 2.95, h: 0.34 } },
+    wordmark: { runs: [["\u010Cesk\u00E9 dr\u00E1hy", "navy"]], side: { h: 0.17, v: 3.02, u: -5.85 + EMBLEM_W_EC + 0.1 + EC_WORD_W / 2 } },
   },
   // 193 205 (photo-193-205-regiojet.jpg): golden yellow, the white cap over the windscreens and the
   // cab roofs, the black windscreen surround and stripes; "|| REGIO" in red and "JET" in navy
@@ -246,8 +261,14 @@ function emblems(m: MeshBuilder, s: LocoSpec, l: Livery): void {
       for (const sd of [-1, 1])
         m.scope(sd > 0 ? "right" : "left", () => {
           // the reader's right is +x on the right side (+z), -x on the left
-          const h = 0.45, w = EMBLEM_W * h;
           const at = onSide(sp, sd), n: Vec3 = [0, 0, sd];
+          if (e.sideAt) {
+            // at the reader's u: the right side's x, mirrored on the left
+            const { u, v, h } = e.sideAt;
+            m.facets(e.sideMat ?? e.mat, emblem(sd > 0 ? u : -u, v, h, sd < 0).map(([x, y]) => at(x, y, 0.006)), n);
+            return;
+          }
+          const h = 0.45, w = EMBLEM_W * h;
           // x 3.0 .. 3.0 + w on both sides, read from its own side
           m.facets(e.mat, emblem(sd > 0 ? 3.0 : 3.0 + w, 2.3, h, sd < 0).map(([u, v]) => at(u, v, 0.006)), n);
         });

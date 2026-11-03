@@ -74,7 +74,13 @@ describe("Siemens Vectron", () => {
     const ids = (livery: string) => leaves(vectron({ livery }).sourceTree("v", "v").root);
     const ec = ids("cdEurocity"), rj = ids("regiojet"), white = ids("cdWhite");
     expect(ec.filter((n) => n.id.startsWith("emblems/front/") || n.id.startsWith("emblems/rear/")).length).toBeGreaterThan(0);
-    expect(ec.some((n) => n.id.startsWith("emblems/right/"))).toBe(false);
+    // the Eurocity's side emblem in navy on the white behind the reader's left cab door, "Ceske drahy" after it
+    for (const sd of ["right", "left"]) {
+      const em = ec.filter((n) => n.id.startsWith(`emblems/${sd}/`));
+      expect(em.length, sd).toBeGreaterThan(0);
+      expect(new Set(em.map((n) => n.material)), sd).toEqual(new Set(["navy"]));
+      expect(ec.some((n) => n.id.startsWith(`wordmark/${sd}/`) && n.material === "navy"), sd).toBe(true);
+    }
     expect(white.some((n) => n.id.startsWith("emblems/right/"))).toBe(true);
     expect(white.some((n) => n.id.startsWith("emblems/front/"))).toBe(false);
     expect(rj.some((n) => n.id.startsWith("emblems/"))).toBe(false);
@@ -84,9 +90,19 @@ describe("Siemens Vectron", () => {
     expect(new Set(stripes(ec).map((n) => n.material))).toEqual(new Set(["white"]));
     expect(new Set(stripes(rj).map((n) => n.material))).toEqual(new Set(["black"]));
     // the Eurocity's navy cab sections and the RegioJet's white cab caps, both ends, both sides
-    for (const [ns, name] of [[ec, "cab"], [rj, "cab-cap"]] as const)
+    for (const [ns, name] of [[ec, "cab"], [ec, "cab-foot"], [ec, "cab-cant"], [rj, "cab-cap"]] as const)
       for (const sd of ["right-side", "left-side"])
         for (const end of ["front", "rear"]) expect(ns.some((n) => n.id.startsWith(`sides/${sd}/${name}-${end}/`)), `${name} ${sd} ${end}`).toBe(true);
+  });
+
+  it("paints the Eurocity light blue along the lower half and white above, without the old wave", () => {
+    const ec = leaves(vectron({ livery: "cdEurocity" }).sourceTree("v", "v").root);
+    expect(ec.some((n) => n.id.includes("/wave"))).toBe(false);
+    // each side: light blue from the frame to 2.6 m, white from there to the roof
+    for (const sd of ["side-left", "side-right"]) {
+      const bands = ec.filter((n) => n.id.startsWith(`body/shell/${sd}/band-`)).map((n) => [n.material, n.min![1], n.max![1]]);
+      expect(bands, sd).toEqual([["frame", 1.3, 1.42], ["skyBlue", 1.42, 2.6], ["white", 2.6, 4]]);
+    }
   });
 
   it("stays within the distant model's budget in every livery", () => {
