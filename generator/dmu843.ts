@@ -412,9 +412,14 @@ function blueHood(car: Car, e: number, L: Layout): void {
     for (let j = 0; j + 1 < rings.length; j++)
       for (let i = 0; i + 1 < line.length; i++) {
         const [a, b, c, d] = [rings[j]![i]!, rings[j + 1]![i]!, rings[j + 1]![i + 1]!, rings[j]![i + 1]!];
+        // the quad is not planar: fold it along the diagonal that bulges out, so the skin covers the
+        // shell whichever way the shell's own quad is split (a fixed diagonal let the shell show
+        // through over half of the +X end)
+        const out = (p: Vec3, q: Vec3) => Math.hypot((p[1] + q[1]) / 2 - 2.4, (p[2] + q[2]) / 2);
+        const tris = out(a, c) >= out(b, d) ? [a, b, c, a, c, d] : [a, b, d, b, c, d];
         const mid: Vec3 = [0, (a[1] + c[1]) / 2 - 2.4, (a[2] + c[2]) / 2];
-        // both windings; facets keeps the one facing out
-        car.m.facets("skyBlue", [a, b, c, a, c, d, a, c, b, a, d, c], mid);
+        // facets turns each triangle to face out
+        car.m.facets("skyBlue", tris, mid);
       }
   });
 }

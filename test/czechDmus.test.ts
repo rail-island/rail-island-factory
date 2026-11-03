@@ -211,6 +211,38 @@ describe("Czech diesel railcars from vlakosimdb", () => {
       expect(ids(id, params, /^body\/left-side\/wordmark\//).length, id).toBeGreaterThan(0);
   });
 
+  it("covers the roof's rounding at every blue 843 / 943 cab end with the light blue, across its width", () => {
+    // seen from above, the topmost surface over the last 0.5 m of a cab end: the light blue hood,
+    // never the grey roof showing through it (it did over half the +X end, where the shell's
+    // non-planar quads fold the other way than the hood's)
+    const top = (tris: ReturnType<typeof build>["tris"], x: number, z: number): string => {
+      let best = -Infinity;
+      let mat = "";
+      for (const t of tris) {
+        const [a, b, c] = t.p;
+        const d = (b[0] - a[0]) * (c[2] - a[2]) - (c[0] - a[0]) * (b[2] - a[2]);
+        if (Math.abs(d) < 1e-12) continue;
+        const u = ((x - a[0]) * (c[2] - a[2]) - (c[0] - a[0]) * (z - a[2])) / d;
+        const v = ((b[0] - a[0]) * (z - a[2]) - (x - a[0]) * (b[2] - a[2])) / d;
+        if (u < 0 || v < 0 || u + v > 1) continue;
+        const y = a[1] + u * (b[1] - a[1]) + v * (c[1] - a[1]);
+        if (y > best) [best, mat] = [y, t.material];
+      }
+      return mat;
+    };
+    for (const unit of ["motorCar", "drivingTrailer"]) {
+      const { tris } = build("proc-vehicle-cd-843", { unit, livery: "cdBlue" });
+      const xs = tris.flatMap((t) => t.p.filter((p) => p[1] > 3).map((p) => p[0]));
+      const ends: number[] = unit === "motorCar" ? [Math.max(...xs), Math.min(...xs)] : [Math.max(...xs)];
+      for (const tip of ends)
+        for (let i = 1; i <= 5; i++)
+          for (let j = -6; j <= 6; j++) {
+            const x = tip - Math.sign(tip) * 0.1 * i;
+            expect(top(tris, x, 0.2 * j), `${unit} x=${x.toFixed(2)} z=${(0.2 * j).toFixed(1)}`).toBe("skyBlue");
+          }
+    }
+  });
+
   it("carries valid running numbers", () => {
     for (const l of ["red", "yellowBand", "blueWhite", "ivoryBand", "cdBlue"] as const) expect(valid(cd810Number(l)), l).toBe(true);
     expect(cd810Number("cdBlue")).toBe("810 290-7");
