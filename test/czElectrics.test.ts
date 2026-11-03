@@ -38,7 +38,7 @@ const SPECS: Record<string, { lob: number; axles: (p: ParamValues) => number[]; 
 describe("Czech electric locomotives from vlakosimdb", () => {
   it("registers the four designs with their parameters and defaults", () => {
     expect(CZ_ELECTRICS.map((d) => d.id)).toEqual(["proc-vehicle-cd-110", "proc-vehicle-cd-130", "proc-vehicle-cd-140", "proc-vehicle-cd-169"]);
-    expect(CZ_ELECTRICS[0]!.params![0]!.values.map((v) => v.value)).toEqual(["cd110", "cd111", "cd210"]);
+    expect(CZ_ELECTRICS[0]!.params![0]!.values.map((v) => v.value)).toEqual(["cd110", "cd111", "cd210", "cd111Blue"]);
     expect(CZ_ELECTRICS[0]!.params![0]!.default).toBe("cd110");
     expect(CZ_ELECTRICS[1]!.params![0]!.values.map((v) => v.value)).toEqual(["cd130", "cd123", "cd123No019"]);
     expect(CZ_ELECTRICS[1]!.params![0]!.default).toBe("cd130");

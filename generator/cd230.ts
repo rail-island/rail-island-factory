@@ -24,7 +24,7 @@ import {
   fitLod, lodBogie, lodPantograph, lodRoofBox, lodSideBox, windowBands,
   type LodPart, type LodShell,
 } from "./lodKit.ts";
-import { CD163_PALETTE, bandAt, coil, lettering, letteringWidth, runningNumber, tubeX, type Band } from "./cd163.ts";
+import { CD163_PALETTE, bandAt, coil, emblem, lettering, letteringWidth, runningNumber, tubeX, type Band } from "./cd163.ts";
 import { liftable } from "./liftable.ts";
 import { RAIL_COLLECTOR_TOP } from "./collector.ts";
 
@@ -50,8 +50,10 @@ const PALETTE: Record<string, MaterialSpec> = {
  */
 export interface Cd230Livery {
   title: string;
-  /** The vlakosimdb directory under db/train/loco/electric. */
-  source: string;
+  /** The vlakosimdb directory under db/train/loco/electric; a livery read from photographs names its photo instead. */
+  source?: string;
+  /** The reference photograph a livery without a vlakosimdb model is read from (assets/cd-230/). */
+  photo?: string;
   number: string;
   numberSource: string;
   palette?: Record<string, MaterialSpec>;
@@ -71,6 +73,10 @@ export interface Cd230Livery {
   headlamp: "twin" | "single";
   /** The 240 family's roof box between the breaker and the front pantograph. */
   roofBox: boolean;
+  /** The CD emblem over the sides' lip at the reader's left, in `logo`. */
+  sideEmblem?: boolean;
+  /** The CD emblem on the noses' lip, in this material. */
+  frontEmblem?: string;
 }
 
 // Every livery paints the windscreen surround grey (`rim`, 2.5 to 3.62 m) and
@@ -165,6 +171,33 @@ export const CD230_LIVERIES = {
     ventRim: "cream",
     headlamp: "single",
     roofBox: true,
+  },
+  // CD's current blue (the Najbrt scheme) on the 242, read from photo-242-236-cd-blue.jpg: the
+  // machine room dark grey to 1.9 m, a light blue band over the lip with the white emblem, navy
+  // round the louvred band (2.5 to 3.4 m), light blue along the top windows; the cab sections and the noses light
+  // silver-grey with the light blue windscreen surround and the navy emblem on the lip
+  cd242Blue: {
+    title: "CD 242 blue",
+    photo: "photo-242-236-cd-blue.jpg",
+    number: runningNumber("242", "236"),
+    numberSource: "photo-242-236-cd-blue.jpg",
+    palette: {
+      navy: c("#1f3a7a"), skyBlue: c("#3c97de"), silverGrey: c("#d3d7d9", 0.45), darkGrey: c("#565b62", 0.6),
+      logo: c("#eef0f2"), slat: { color: "#5d6675", roughness: 0.6 },
+      roof: { color: "#5e6266", roughness: 0.75 }, pantograph: { color: "#5a5e63", metallic: 0.2, roughness: 0.6 },
+    },
+    side: [[1.2, 1.9, "darkGrey"], [1.9, 2.5, "skyBlue"], [2.5, 3.4, "navy"], [3.4, 3.8, "skyBlue"], [3.8, 4.1, "roof"]],
+    cab: [[1.2, 3.8, "silverGrey"], [3.8, 4.1, "roof"]],
+    face: [[1.2, 2.5, "silverGrey"], [2.5, 3.62, "skyBlue"], [3.62, 3.8, "silverGrey"], [3.8, 4.1, "roof"]],
+    frame: "darkGrey",
+    plough: "darkGrey",
+    ploughStripe: "hazard",
+    pillar: "skyBlue",
+    ventRim: "silverGrey",
+    headlamp: "single",
+    roofBox: true,
+    sideEmblem: true,
+    frontEmblem: "navy",
   },
 } as const satisfies Record<string, Cd230Livery>;
 
@@ -557,6 +590,16 @@ function face_(m: MeshBuilder, e: number, l: Cd230Livery): void {
     const tris = lettering(l.number, e > 0 ? -w / 2 : w / 2, 1.65, 0.12, 0.062, 0.016, e < 0);
     m.facets("white", tris.map(([u, v]) => onNose(e, -u, v, 0.034).p), [e, 0, 0]);
   });
+  // centred on the lip's face, between the lamps (photographs)
+  if (l.frontEmblem) m.scope("emblem", () => {
+    const h = 0.18, w = emblemSpan(h);
+    m.facets(l.frontEmblem!, emblem(e > 0 ? -w / 2 : w / 2, 1.97, h, e < 0).map(([u, v]) => onNose(e, -u, v, 0.006).p), [e, 0, 0]);
+  });
+}
+/** The CD emblem's width at height h. */
+function emblemSpan(h: number): number {
+  const us = emblem(0, 0, h, false).map(([u]) => u);
+  return Math.max(...us) - Math.min(...us);
 }
 /** The round headlight housing on the hood, its ridge tapering back into the roof. */
 function headlight(m: MeshBuilder, e: number, l: Cd230Livery): void {
@@ -666,6 +709,13 @@ function sides(m: MeshBuilder, l: Cd230Livery): void {
         const w = letteringWidth(l.number, 0.055, 0.014);
         const xc = (x0 + x1) / 2;
         m.facets("white", lettering(l.number, s < 0 ? xc + w / 2 : xc - w / 2, 1.73, 0.13, 0.055, 0.014, s < 0).map(([x, y]): Vec3 => [x, y, sideZ(s, y, 0.026)]), [0, 0, s]);
+      });
+      // over the lip, just inside the cab door at the reader's left (photo-242-236-cd-blue.jpg)
+      if (l.sideEmblem) m.scope("emblem", () => {
+        const pts = emblem(s > 0 ? -5.4 : 5.4, 1.95, 0.22, s < 0);
+        const qs: Ring[] = [];
+        for (let i = 0; i + 2 < pts.length; i += 3) qs.push([pts[i]!, pts[i + 1]!, pts[i + 2]!]);
+        sideDecal(m, "logo", s, qs, 0.006);
       });
       for (const e of [-1, 1])
         m.scope(e > 0 ? "front cab" : "rear cab", () => {

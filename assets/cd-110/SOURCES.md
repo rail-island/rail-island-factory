@@ -58,4 +58,16 @@ share the mechanical part, so one body serves all.
 - 110 046-0: the vlakosimdb model's name.
 - 111 006-3: illustrative, a unit of the class photographed in 2011
   (`photo-111-006-three-quarter.jpg`, in a later livery).
+- 111 006-3 (`cd111Blue`): the unit photographed in CD's current blue
+  (`photo-111-006-cd-blue.jpg`).
 - 210 021-2: illustrative, the unit of `photo-210-021-three-quarter.jpg`.
+
+## CD blue livery
+
+The `cd111Blue` livery (111 006-3 in CD's current blue, the Najbrt scheme, from
+2008) is read from `photo-111-006-cd-blue.jpg` (PHOTOS.md), not from vlakosimdb:
+on the hoods, the cabinets and the lower cab white to 1.88 m, light blue to
+2.78 m, a white band to 3.03 m and navy to the hoods' tops; the upper cab, its
+roof and the frame navy; the white emblem with "Ceske drahy" and the running
+number on the frame's sides, the emblem on the hood ends. See
+docs/models/cz-electrics.md.

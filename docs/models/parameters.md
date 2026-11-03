@@ -20,7 +20,7 @@ declaration order, the first the default unless noted.
 |---|---|---|
 | `veh-cd-150` | `livery`: cd150, cd151, cd151Cez, zsr350, zsr350No001, zsr350No002, zsr350No003, zsr350No004 | [loco-liveries.md](loco-liveries.md) |
 | `veh-cd-163` | `livery`: cd163, cd162, cd162No022, cd163No022, cd163No021, cd362, cd362No054, cd363, cd363No044, cd363No037, cd363No009 | [loco-liveries.md](loco-liveries.md) |
-| `veh-cd-230` | `livery`: cd230, cd240, cd240No047, cd340, cd242 | [cd-230.md](cd-230.md) |
+| `veh-cd-230` | `livery`: cd230, cd240, cd240No047, cd340, cd242, cd242Blue | [cd-230.md](cd-230.md) |
 | `veh-cd-263` | `livery`: cd263, cd263No015, cd371No002, cd371No005, cd372, db180, dbAg180 | [loco-liveries.md](loco-liveries.md) |
 | `veh-csd-classic-green-coach` | `variant`: classA, classB | [csd-coaches.md](csd-coaches.md) |
 | `veh-bmo-double-deck-coach` | `livery`: csd, cdBlue, cdBlueGrey, cdRedDoors | [bmo-double-deck.md](bmo-double-deck.md) |
@@ -34,7 +34,7 @@ declaration order, the first the default unless noted.
 | `veh-csd-556-0` | `unit`: locomotive, tender | [steam-locomotives.md](steam-locomotives.md) |
 | `veh-csd-636` | `unit`: locomotive, tender | [steam-locomotives.md](steam-locomotives.md) |
 | `veh-csd-386` | `unit`: locomotive, tender | [steam-locomotives.md](steam-locomotives.md) |
-| `veh-cd-110` | `livery`: cd110, cd111, cd210 | [cz-electrics.md](cz-electrics.md) |
+| `veh-cd-110` | `livery`: cd110, cd111, cd210, cd111Blue | [cz-electrics.md](cz-electrics.md) |
 | `veh-cd-130` | `livery`: cd130, cd123, cd123No019 | [cz-electrics.md](cz-electrics.md) |
 | `veh-sqns-container-wagon` | `cargo`: empty, maersk | [freight-wagons.md](freight-wagons.md) |
 | `veh-pao-flat-wagon` | `cargo`: empty, tubes | [freight-wagons.md](freight-wagons.md) |

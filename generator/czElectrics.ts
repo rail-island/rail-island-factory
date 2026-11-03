@@ -26,7 +26,7 @@ const CD_130_GAME: GameProperties = {
 };
 
 export const CZ_ELECTRICS: readonly ProceduralDesign[] = [
-  { id: "proc-vehicle-cd-110", game: { weight: 72, power: 800, maxspeed: 80, accel: null, variants: [{ params: { livery: "cd111" }, power: 500 }] }, title: "CD 110 / 111 / 210", build: cd110, buildLod: cd110Lod, params: CD110_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-110" },
+  { id: "proc-vehicle-cd-110", game: { weight: 72, power: 800, maxspeed: 80, accel: null, variants: [{ params: { livery: "cd111" }, power: 500 }, { params: { livery: "cd111Blue" }, power: 500 }] }, title: "CD 110 / 111 / 210", build: cd110, buildLod: cd110Lod, params: CD110_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-110" },
   { id: "proc-vehicle-cd-130", game: CD_130_GAME, title: "CD 123 / 130", build: cd130, buildLod: cd130Lod, params: CD130_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-130" },
   { id: "proc-vehicle-cd-140", game: { weight: 82, power: 2032, maxspeed: 120, accel: null }, title: "CD 140 bobina", build: cd140, buildLod: cd140Lod, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-140" },
   { id: "proc-vehicle-cd-169", game: { weight: 85, power: 4000, maxspeed: 160, accel: null }, title: "CD 169", build: cd169, buildLod: cd169Lod, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-169" },
