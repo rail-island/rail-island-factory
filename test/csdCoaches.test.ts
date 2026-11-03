@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { CSD_COACHES, COACH_CATALOG, RUNNING_NUMBERS, uicCheckDigit } from "../generator/csdCoaches";
 import { CD_COACHES, COACH_TRANSFERS, transferBuild } from "../generator/coachTransfers";
 import { BMO_NUMBERS } from "../generator/bmoCoach";
-import { GREEN_WHITE_NUMBERS } from "../generator/cdGreenWhiteCoach";
+import { CD_BLUE, CD_BLUE_VARIANTS, GREEN_WHITE_NUMBERS } from "../generator/cdGreenWhiteCoach";
 import { canStroke } from "../generator/strokeFont";
 import { emblem } from "../generator/cd163";
 import { coachComparison, readLandmarks, transfer } from "../generator/csdCoachComparison";
@@ -259,6 +259,47 @@ describe("CSD coaches transferred from vlakosimdb", () => {
     const bay = (variant: string) => leaves(d.build({ variant }).sourceTree(d.id, d.title).root).some((n) => n.id.startsWith("body/lookout-bay/"));
     expect(["a", "bds", "ds"].map(bay)).toEqual([false, true, true]);
     expect(() => d.build({ variant: "bx" })).toThrow(/no value "bx"/);
+  });
+
+  it("offers CD's current blue on the photographed green and white types only, on their own layout", () => {
+    const d = VEHICLES.find((v) => v.id === "proc-vehicle-cd-green-white-coach")!;
+    const livery = d.params!.find((p) => p.name === "livery")!;
+    expect([livery.default, livery.values.map((v) => v.value)]).toEqual(["greenWhite", ["greenWhite", "cdBlue"]]);
+    expect(livery.values[1]!.when).toEqual({ name: "variant", values: [...CD_BLUE_VARIANTS] });
+    expect(() => d.build({ variant: "ds", livery: "cdBlue" })).toThrow();
+    const count = (p: Record<string, string>) =>
+      new Set(leaves(d.build(p).sourceTree(d.id, d.title).root).filter((n) => /^body\/right-side\/(window|door)-\d+\/frame\//.test(n.id)).map((n) => n.id.split("/")[2])).size;
+    for (const variant of CD_BLUE_VARIANTS) {
+      const { number } = CD_BLUE[variant]!;
+      expect(uicCheckDigit(number), `${variant} ${number}`).toBe(Number(number.slice(-1)));
+      const nodes = leaves(d.build({ variant, livery: "cdBlue" }).sourceTree(d.id, d.title).root);
+      const mats = new Set(nodes.map((n) => n.material));
+      expect(mats.has("green") || !mats.has("navy") || !mats.has("lightBlue"), variant).toBe(false);
+      // the same windows and doors as the green and white coach
+      expect(count({ variant, livery: "cdBlue" }), variant).toBe(count({ variant }));
+      // the passenger doors' leaves navy; the emblem and the "Ceske drahy" wordmark on both sides
+      expect(nodes.some((n) => n.id.startsWith("body/right-side/door-1/leaf/") && n.material === "navy"), variant).toBe(true);
+      for (const side of ["right", "left"]) expect(nodes.some((n) => n.id.startsWith(`body/${side}-side/emblem/wordmark/`)), `${variant} ${side}`).toBe(true);
+    }
+  });
+
+  it("reads the blue coaches' wordmark after the emblem, from outside", () => {
+    const d = VEHICLES.find((v) => v.id === "proc-vehicle-cd-green-white-coach")!;
+    const nodes = leaves(d.build({ variant: "b", livery: "cdBlue" }).sourceTree(d.id, d.title).root);
+    for (const side of ["right", "left"]) {
+      const mid = (prefix: string) => {
+        const ns = nodes.filter((n) => n.id.startsWith(prefix) && n.min);
+        return (Math.min(...ns.map((n) => n.min![0])) + Math.max(...ns.map((n) => n.max![0]))) / 2;
+      };
+      const word = mid(`body/${side}-side/emblem/wordmark/`);
+      const mark = (() => {
+        const ns = nodes.filter((n) => n.id.startsWith(`body/${side}-side/emblem/`) && !n.id.includes("/wordmark/") && n.min);
+        return (Math.min(...ns.map((n) => n.min![0])) + Math.max(...ns.map((n) => n.max![0]))) / 2;
+      })();
+      // the reader's right is +x on the right (+z) side, -x on the left
+      if (side === "right") expect(word).toBeGreaterThan(mark);
+      else expect(word).toBeLessThan(mark);
+    }
   });
 
   it("paints the Bmo in its four liveries on one body", () => {

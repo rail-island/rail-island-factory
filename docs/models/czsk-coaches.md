@@ -41,6 +41,12 @@ BDmeer and WRRm are the CD BDs, BDmeer and WRRm bodies. **zsr_apee** is a coarse
 file on the same Y body (the brief's "26.4 m" does not hold for it), so it is a
 value of `veh-zsr-coach`; its copied lookout bay, painted nowhere, is left out.
 
+**CD's current blue** (the Najbrt scheme) is not offered on `veh-cd-y-coach`: no
+Commons photograph shows a Bc / Bcc couchette, a Beer, a Bnb or a Y-type WRRm in
+it (their categories hold the liveries modelled here, and the WRRm search found
+none). The Y coaches that do wear it - the A, AB, B, Bee, BDs and Bdmtee - are
+`livery=cdBlue` of the green and white design ([cd-green-white.md](cd-green-white.md)).
+
 Not converted (archived in the game, `rail-island-webapp/db/archived.json`):
 cd_a-old, cd_b-old, cd_aee, cd_aeel, cd_bmee, cd_bpb, cd_bt, cd_post, cd_wlab,
 cd_wlabmee, zsr_wlab, cd_baafx#1/#3/#4, cd_bix, cd_bifx.
@@ -105,6 +111,11 @@ coach keeps its own builder (its GLBs are unchanged). A `LiveryCoachSpec` names:
   material, the body's bands or bands of their own), class numerals optionally
   on a plate, the emblem box (the CD emblem of `cd163.ts`, a simplified ZSR
   mark, the DB letters on a plate or a simplified OBB mark), the running number and the **painted areas**.
+
+`cdCoachLogo` draws CD's current logo on a coach side: the emblem with the "Ceske
+drahy" wordmark after it as the reader sees it (cap height 0.32 of the emblem's,
+as the railcars' `cdSideLogo`); the green and white coach's `livery=cdBlue` uses it
+([cd-green-white.md](cd-green-white.md)).
 
 Painted areas (`Paint`) are boxes or convex outlines in native pixels laid as
 one-sided decals on the skin (`skinDecal`), split at the plan stations so each

@@ -37,8 +37,11 @@ const CD_GREEN_WHITE_COACH_GAME: GameProperties = {
   variants: [
     { params: { variant: "bdmeer" }, maxspeed: 160 },
     { params: { variant: "bdmtee" }, weight: 46, maxspeed: 160 },
+    // variants match the selection exactly: the Bdmtee and the Bee again in the blue
+    { params: { variant: "bdmtee", livery: "cdBlue" }, weight: 46, maxspeed: 160 },
     { params: { variant: "beeBlue" }, maxspeed: 160 },
     { params: { variant: "bee" }, maxspeed: 160 },
+    { params: { variant: "bee", livery: "cdBlue" }, maxspeed: 160 },
     { params: { variant: "beel" }, maxspeed: 160 },
   ],
 };
