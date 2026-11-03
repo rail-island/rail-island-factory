@@ -46,3 +46,20 @@ The photographs (later liveries) confirm the dropped centre section with six upp
 ## Measurement record
 
 Each `native/<key>/landmarks.json` holds 60 native pixel-edge boxes with their model scopes, tolerances and uncertainty (the CD liveries' windows re-detected on their own BMPs where the paint allows); `baseline.json` is the first authored geometry's measurement. `COMPARISON-<livery>.md` lists the normalized errors, the signed residual of every box and the model revision.
+
+## CD Najbrt blue
+
+`livery=cdNajbrt` ("CD Najbrt blue") is CD's current blue, read from photographs
+(the older `cdBlue` is vlakosimdb's all-blue Bmo#1 and keeps its name).
+
+| File | Commons page | Author | Licence | Used for |
+|---|---|---|---|---|
+| `photo-bmto-cd-blue-branik.jpg` | https://commons.wikimedia.org/wiki/File:Praha,_Bran%C3%ADk,_v%C5%AFz_Bmto_(03).jpg | PatrikPaprika | CC BY-SA 4.0 | Bmto 50 54 26-18 109-3 at Praha-Branik (19 April 2014), the side: a navy foot under the dropped centre, white to the navy line at the end windows' sills, light blue over the upper deck to a white line at its windows' tops, the navy roof; navy doors under light blue canopies; the white "2" after each door; the navy emblem and "Ceske drahy" on the end section's white after the grille; the number under the lower deck's windows after the door |
+| `photo-bmto-cd-blue-cernosice.jpg` | https://commons.wikimedia.org/wiki/File:Zast%C3%A1vka_%C4%8Cerno%C5%A1ice,_patrov%C3%BD_vlak.jpg | SJu | CC BY 4.0 | a train of Bmto in the blue behind a 162 at Cernosice (10 October 2023): the scheme is CD's current one on the whole class |
+
+Bands: navy 0.2..0.5 m, white 0.5..2.2 m, navy 2.2..2.34 m, light blue 2.34..4.0 m,
+white 4.0..4.1 m, the navy roof; the end walls light blue; the hatch white. The
+logo group starts 3.8 m from the end at the reader's left on both sides (the
+photograph shows one side; the other is taken as its mirror). The photograph's
+small hatch over a grille near the end is drawn as vlakosimdb's hatch alone (white).
+The number `50 54 26-18 109-3` is legible on the Branik photograph; its check digit is valid.

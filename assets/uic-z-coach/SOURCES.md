@@ -71,3 +71,30 @@ Running numbers (`UIC_Z_NUMBERS.regiojet`) are illustrative Czech-registered
 (54) numbers of the 19-91, 21-91 and 88-91 series with computed check digits; no
 number is legible on the photographs. RegioJet runs no WRmz: the dining car in
 RegioJet paint exists only because every parameter combination must build.
+
+## CD blue coaches
+
+`operator=cdBlue` ("CD blue") is CD's current blue, the Najbrt scheme, read from
+photographs rather than vlakosimdb; the layouts (windows, doors, signs) are the CD
+spec's. Page URLs are the exact percent-encoded titles; titles in ASCII.
+
+| File | Commons page | Author | Licence | Used for |
+|---|---|---|---|---|
+| `photo-cd-blue-bmz-21-91-007.jpg` | https://commons.wikimedia.org/wiki/File:Bubene%C4%8D,_v%C5%AFz_Bmz.jpg | PatrikPaprika | CC BY-SA 4.0 | CD Bmz 73 54 21-91 007-7 at Praha-Bubenec (28 August 2014), the whole side: white to the navy line under the windows, light blue to a white eave line, the navy roof; navy doors; white "2" beside the toilets; the navy emblem and "Ceske drahy" a third along the white with the number under them; the grille two thirds along; the running number of `secondClass` |
+| `photo-cd-blue-bmz-21-91-016.jpg` | https://commons.wikimedia.org/wiki/File:Osobn%C3%AD_v%C5%AFz_v_Doma%C5%BElic%C3%ADch.jpg | Dezidor | CC BY 3.0 | CD Bmz 73 54 21-91 016-8 at Domazlice (2011): the same bands and logo place, the bands running round the end |
+| `photo-cd-blue-wrmz-88-90-215.jpg` | https://commons.wikimedia.org/wiki/File:A_CD_WRmz_with_EC_274_Metropolitan,_Nov%C3%A9_Z%C3%A1mky_-_Bratislava.jpg | Dining Car | CC BY 2.0 | the dining car's scheme close up (19 February 2023): the navy window band, the light blue line under it, white below, the white eave line; the white-framed knife and fork; the number A-CD 61 81 88-90 215-8 WRmz 817 of `restaurant` |
+| `photo-cd-blue-wrmz-bernau.jpg` | https://commons.wikimedia.org/wiki/File:EC_378_in_Bernau_station_with_restaurant_car.jpg | Smiley.toerist | CC BY-SA 4.0 | a CD dining car in the blue at Bernau (1 March 2015): the whole side, navy doors, the bands round the end |
+
+- Bands (all three): white 0.9..1.8 m, the line 1.8..1.92 m (navy; the dining car
+  light blue), the window band to 3.46 m (light blue; the dining car navy), a white
+  eave line to 3.56 m, the navy roof; the skirt navy; the ends in the bands; navy
+  side and end doors; white class numerals without plates.
+- The logo group: the emblem 0.36 m high from 1.24 m and the wordmark ("Ceske
+  drahy"; the dining car "CD RESTAURANT", after its "CDRestaurant" lettering) in
+  navy, 9.3 m from the reader's left end on both sides; the number under them.
+  The "Narodni dopravce" line, the pictograms and the small inscriptions are left out.
+- No photograph of a blue Ampz was found on Commons: `firstClass` is the Bmz's
+  paint on the Ampz layout with its white "1", no yellow line (the photographs of
+  the scheme never show one); its number 73 54 19-91 004-8 is illustrative.
+- `restaurant` keeps the vlakosimdb WRRmz layout (one door, 26.9 m); the
+  photographed number is that of an ex-OBB WRmz 817 CD runs in this paint.
