@@ -67,3 +67,13 @@ All BY licences require attribution and BY-SA share-alike.
 - Licence: CC BY-SA 3.0 CZ
 - Date: 1994-07-12
 - Shows: 753 286-4 in red with the cream band (livery `cd753`), front three-quarter.
+
+## photo-754-045-cd-blue.jpg
+
+- Commons title: File:20240809 Ceske drahy 754045.jpg
+- Page: https://commons.wikimedia.org/wiki/File%3A20240809_%C4%8Cesk%C3%A9_dr%C3%A1hy_754045.jpg
+- Author: Alex Noble
+- Licence: CC0 1.0
+- Date: 2024-08-09
+- Saved: 1600 px wide from the 1920 px Commons thumbnail, JPEG quality 85
+- Shows: the modernised 754 045-3 in CD's current blue (livery `cd754Blue`) at Kostomlaty, left side and front three-quarter: light blue over the white band, the navy frame, ploughs and roof, the white line under the machine room's cant, the white windscreen surround, the white emblems and the "Ceske drahy" lettering behind the radiator, the white front plate with navy figures. Its oval machine-room windows are the rebuild's; the model keeps the Brejlovec's small windows.

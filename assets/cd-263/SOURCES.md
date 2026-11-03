@@ -36,9 +36,15 @@ Measured from `cd_263` (pixel-edge boxes, x = column / 10 - 8.5 m, y = 6.0 - row
 
 ## Photographs
 
-None are stored: Wikimedia Commons was not reachable from the session that built
-the model (the network policy refused the connection). The ones to add when it
-is, as the railroad-vehicle skill asks (side, front three-quarter, bogie):
-Wikimedia Commons category "CD Class 263" (a side view of a red/yellow 263 and a
-front three-quarter), category "CD Class 371" and "CD Class 372" (the red/cream
-371 and the 372). Record title, author, licence and URL here when they are added.
+The `cd263Blue` and `cd371Blue` liveries (CD's current blue, the Najbrt scheme)
+are read from these Wikimedia Commons photos (1600 px, saved as JPEG quality 85);
+see docs/models/loco-liveries.md, "The current operators' liveries".
+
+| File | Commons page | Author | Licence | Used for |
+|---|---|---|---|---|
+| `photo-263-001-cd-blue.jpg` | https://commons.wikimedia.org/wiki/File:CD_263001_Brno.jpg | Matijak | CC BY-SA 4.0 | `cd263Blue` and its number 263 001-0 (the prototype, named "Maja"; Brno hl. n., 1 August 2014): the mid blue ribbed machine room over the silver lower band, the navy panel and door behind each cab, the silver cab sides and noses with the light blue windscreen band, the red plates, the navy emblem on the nose, the white one on the side, the light grey roof; the window side |
+| `photo-371-002-cd-blue.jpg` | https://commons.wikimedia.org/wiki/File:20240207_%C4%8Cesk%C3%A9_dr%C3%A1hy_371002.jpg | Alex Noble | CC0 | `cd371Blue` and its number 371 002-7 (Praha hl. n., 7 February 2024): the same zones over a dark grey lower band, the black number and emblem on the nose (no plates), the small white number on the lower band, the white emblem and "Ceske drahy" lettering on the machine room; the grille side |
+
+Not yet stored, as the railroad-vehicle skill asks for the vlakosimdb liveries:
+a side view of a red/yellow 263 and of the red/cream 371 and the 372 (Commons
+categories "CD Class 263", "CD Class 371", "CD Class 372").

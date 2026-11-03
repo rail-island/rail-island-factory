@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { letters, runsWidth, wordWidth, wordmarkAt } from "../generator/letters.ts";
-import { cd163, CD163_LIVERIES } from "../generator/cd163Family.ts";
+import { cd163, cd263, CD163_LIVERIES, CD263_LIVERIES } from "../generator/cd163Family.ts";
+import { cd750, CD750_LIVERIES } from "../generator/cd750.ts";
 import { cd150, CD150_LIVERIES } from "../generator/cd150.ts";
 import { vectron } from "../generator/vectron.ts";
 import { isLeaf, type LeafNode, type TreeNode } from "../generator/sourceTree.ts";
@@ -101,6 +102,30 @@ describe("the lettered liveries", () => {
       expect(nodes(cd163({ livery: key })).some((n) => n.id.includes("wordmark")), key).toBe(false);
     for (const key of Object.keys(CD150_LIVERIES).filter((k) => k !== "cdBlue"))
       expect(nodes(cd150({ livery: key })).some((n) => n.id.includes("wordmark")), key).toBe(false);
+  });
+
+  it("letter CD's name on the blue 371 and 754 only, clear of the side equipment", () => {
+    const apart = (a: LeafNode, b: LeafNode) => a.max![0] < b.min![0] || a.min![0] > b.max![0] || a.max![1] < b.min![1] || a.min![1] > b.max![1];
+    for (const [m, mat, gear] of [
+      [cd263({ livery: "cd371Blue" }), "logo", /^body\/(grille-banks|machine-room-windows|side-markings\/(emblem|number))/],
+      [cd750({ livery: "cd754Blue" }), "cdWhite", /^sides\/(left|right)-side\/(radiator|windows|emblem|number-plate)/],
+    ] as const) {
+      const ns = nodes(m);
+      const words = ns.filter((n) => n.id.includes("wordmark"));
+      // one run on each side
+      expect(words.map((n) => n.material)).toEqual([mat, mat]);
+      const gears = ns.filter((n) => gear.test(n.id));
+      expect(gears.length).toBeGreaterThan(4);
+      for (const w of words)
+        for (const g of gears) {
+          if (Math.sign(w.min![2]) !== Math.sign(g.min![2])) continue;
+          expect(apart(w, g), `${w.id} vs ${g.id}`).toBe(true);
+        }
+    }
+    for (const key of Object.keys(CD263_LIVERIES).filter((k) => k !== "cd371Blue"))
+      expect(nodes(cd263({ livery: key })).some((n) => n.id.includes("wordmark")), key).toBe(false);
+    for (const key of Object.keys(CD750_LIVERIES).filter((k) => k !== "cd754Blue"))
+      expect(nodes(cd750({ livery: key })).some((n) => n.id.includes("wordmark")), key).toBe(false);
   });
 
   it("keeps the lettering clear of the side number plate on the 162", () => {

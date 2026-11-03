@@ -66,14 +66,14 @@ const palette = (m: MeshBuilder): Record<string, MaterialSpec> => {
 };
 
 const CASES: Case[] = [
-  // the liveries read from vlakosimdb; the photographed ones (RegioJet, CD blue) have no native BMP
+  // the liveries read from vlakosimdb; the photographed ones (RegioJet, CD blue on the 162, 263, 371) have no native BMP
   ...Object.entries(CD163_LIVERIES).flatMap(([key, l]) => ("source" in l ? [[key, l] as const] : [])).map(([key, l]): Case => ({
     key, ...l.livery, palette: palette(cd163({ livery: key })),
     bmp: new URL(key === "cd163" ? "cd-163/native/z_dec.bmp" : `cd-163/native/liveries/${l.source}/z_dec.bmp`, assets),
     // cd_163.022 maps a 169 x 57 BMP onto 16.9 x 6.1 m; the others 170 x 60 onto 17 x 6 m
     ...(key === "cd163No022" ? { column: 60, rows: [25, 44], canvas: [169, 57, 6.1] } : { column: 60, rows: [27, 46], canvas: [170, 60, 6] }),
   })),
-  ...Object.entries(CD263_LIVERIES).map(([key, l]): Case => ({
+  ...Object.entries(CD263_LIVERIES).flatMap(([key, l]) => ("source" in l ? [[key, l] as const] : [])).map(([key, l]): Case => ({
     key, ...l.livery, palette: palette(cd263({ livery: key })),
     bmp: new URL(`cd-263/native/${l.source}/z_inc.bmp`, assets),
     column: 60, rows: [27, 46], canvas: [170, 60, 6],
@@ -95,7 +95,11 @@ describe("CD 163 family and CD 150 liveries", () => {
       ...Object.values(CD263_LIVERIES).map((l) => l.livery.number),
       ...Object.values(CD150_LIVERIES).map((l) => l.number),
     ];
-    expect(new Set(numbers).size).toBe(numbers.length);
+    // one unit in two paints: 371 002 in vlakosimdb's red and cream, and photographed in the blue
+    const repainted = [CD263_LIVERIES.cd371Blue.livery.number];
+    expect(repainted).toEqual([CD263_LIVERIES.cd371No002.livery.number]);
+    const once = numbers.filter((n, i) => !repainted.includes(n) || numbers.indexOf(n) !== i);
+    expect(new Set(once).size).toBe(once.length);
     for (const n of numbers) {
       const m = /^(\d{3}) (\d{3})-(\d)$/.exec(n);
       expect(m, n).not.toBeNull();
@@ -178,6 +182,36 @@ describe("CD 263 / 371 / 372", () => {
     expect(glass).toHaveLength(4);
     const widths = glass.map((n) => n.max![0] - n.min![0]);
     for (const w of widths) expect(w).toBeCloseTo(0.8, 2);
+  });
+
+  it("paints the CD blue 263 and 371 cabs in zones: navy over the door, silver ahead of it, the light blue windscreen band", () => {
+    for (const livery of ["cd263Blue", "cd371Blue"]) {
+      const ns = leaves(cd263({ livery }).sourceTree("t", "t").root);
+      const eps = 0.01;
+      const paintAt = (x: number, y: number, z: number) => ns.filter((n) => n.id.startsWith("body/cab-paint/")
+        && [x, y, z].every((v, i) => n.min![i]! - eps <= v && v <= n.max![i]! + eps)).map((n) => n.material);
+      for (const e of [-1, 1]) {
+        for (const s of [-1, 1]) {
+          expect(paintAt(e * 6.0, 2.8, s * 1.47), `${livery} rear panel`).toEqual(["navy"]);
+          expect(paintAt(e * 7.3, 2.8, s * 1.47), `${livery} cab side`).toEqual(["silver"]);
+          expect(paintAt(e * 7.3, 1.25, s * 1.47), `${livery} lower band`).toEqual([livery === "cd371Blue" ? "darkGrey" : "silver"]);
+        }
+        expect(paintAt(e * 7.8, 3.0, 0.5), `${livery} windscreen band`).toEqual(["skyBlue"]);
+        expect(paintAt(e * 7.85, 2.0, 0.5), `${livery} nose`).toEqual(["silver"]);
+      }
+      // the doors take the rear panel's navy above its lower band, the machine room stays mid blue
+      const doors = ns.filter((n) => /-cab\/(left|right)-side\/door\//.test(n.id) && n.max![1] > 2 && !["rubber", "glass", "steel", "underframe"].includes(n.material));
+      expect(new Set(doors.map((n) => n.material))).toEqual(new Set(["navy"]));
+      expect(CD263_LIVERIES[livery as "cd263Blue"].livery.bands.some((b) => b[2] === "midBlue")).toBe(true);
+    }
+    // the 371: no side plates, the number lettered on the lower band; the 263 keeps its red plates
+    const n371 = leaves(cd263({ livery: "cd371Blue" }).sourceTree("t", "t").root);
+    expect(n371.some((n) => n.id.includes("side-markings/number-plate"))).toBe(false);
+    for (const n of n371.filter((n) => n.id.includes("side-markings/number/"))) expect(n.max![1]).toBeLessThan(1.35);
+    expect(n371.filter((n) => n.id.includes("front-markings/emblem")).map((n) => n.material)).toEqual(["ink", "ink"]);
+    const n263 = leaves(cd263({ livery: "cd263Blue" }).sourceTree("t", "t").root);
+    expect(n263.filter((n) => n.id.includes("side-markings/number-plate") && n.material === "plate")).toHaveLength(2);
+    expect(n263.filter((n) => n.id.includes("front-markings/emblem")).map((n) => n.material)).toEqual(["navy", "navy"]);
   });
 
   it("keeps every livery of the three designs within the rail budget", () => {

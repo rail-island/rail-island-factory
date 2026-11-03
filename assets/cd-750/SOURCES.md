@@ -18,6 +18,7 @@ All native files come from `janproch/vlakosimdb` revision
 | `cd754No013` | `cd_754_013` | Vojtech Vohlidka | `native/liveries/cd_754_013/` |
 | `veh-cd-749` `cd749` (default) | `cd_749` | Vojtech Vohlidka | `native/liveries/cd_749/` (BMPs, `vehicle.xml`, its own `index.xml`: the Bardotka body) |
 | `veh-cd-749` `cd749No264`, `cd749No121` | - | - | no native model: the bands are read from the photographs (`photo-749-264-*.jpg`, `photo-749-121-*.jpg`) on the `cd_749` body |
+| `cd754Blue` | - | - | no native model: CD's current blue read from the photograph `photo-754-045-cd-blue.jpg` (PHOTOS.md) on the `cd_750` body |
 
 The original Windows-1250 spellings are kept in the XML files. The `cd_750`,
 `cd_750_308`, `cd_754` and `cd_754_013` models share one geometry (the `m753`
@@ -85,6 +86,7 @@ diagonals between) follows `z_both` columns 0 .. 36 and 116 .. 159.
 | `cd753` | 753 286-4 | photographed in this livery (`photo-753-286-front.jpg`) |
 | `cd754` | 754 046-1 | photographed in this livery (`photo-754-046-three-quarter.jpg`) |
 | `cd754No013` | 754 013-1 | the vlakosimdb model's name |
+| `cd754Blue` | 754 045-3 | photographed in this livery (`photo-754-045-cd-blue.jpg`) |
 | `cd749` (`veh-cd-749`) | 749 107-9 | in the grey and red (CT24, 2018, "Pul stoleti na kolejich ... Bardotka cislo 121"); the native plate does not resolve digits |
 | `cd749No264` (`veh-cd-749`) | 749 264-8 | photographed in this livery (`photo-749-264-side.jpg`, `photo-749-264-three-quarter.jpg`) |
 | `cd749No121` (`veh-cd-749`) | 749 121-0 | photographed in this livery (`photo-749-121-front.jpg`, `photo-749-121-three-quarter.jpg`) |

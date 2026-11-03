@@ -17,6 +17,7 @@ import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "./meshBuilder.t
 import type { Vec3 } from "./meshCore.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import { bandAt, emblem, lettering, runningNumber } from "./cd163.ts";
+import { wordmarkAt, type Wordmark } from "./letters.ts";
 import {
   DIESEL_PALETTE, block, bogie, buffers, coupling, endPanel, endSurface, exhaust, extrude, horn, lerpTable, paint, planBody, plough,
   rect, roofFan, roundRect, side, sideDecal, sideGrille, sideHandrail, sidePlate, sideWindow, tankX,
@@ -29,8 +30,10 @@ export type Cd750Body = "brejlovec" | "bardotka";
 /** A livery of the T 478 family: its paint by height and the body it is painted on. */
 export interface Cd750Livery {
   title: string;
-  /** The vlakosimdb directory under db/train/loco/diesel. */
-  source: string;
+  /** The vlakosimdb directory under db/train/loco/diesel; a livery read from photographs names its photo instead. */
+  source?: string;
+  /** The reference photograph a livery without a vlakosimdb model is read from (assets/cd-750/). */
+  photo?: string;
   body: Cd750Body;
   number: string;
   numberSource: string;
@@ -52,6 +55,12 @@ export interface Cd750Livery {
   sweep?: string;
   /** The CD emblem on the face and the side, and its colour. */
   emblem?: string;
+  /** The side emblem's centre (source x), where a livery moves it (3.55 m on the Brejlovec, 4.15 m on the Bardotka). */
+  emblemX?: number;
+  /** The running numbers' colour on the plates (white). */
+  numberInk?: string;
+  /** The operator's lettered wordmark (letters.ts) on the sides, after the emblem in reading order (`side.u` is not used). */
+  wordmark?: Wordmark;
 }
 
 const C = (hex: string) => paint(hex);
@@ -142,6 +151,31 @@ export const CD750_LIVERIES = {
     screen: "white",
     housing: "white",
     emblem: "black",
+  },
+  // CD's current blue (the Najbrt scheme) on the modernised 754, read from photo-754-045-cd-blue.jpg
+  // (754 045-3): light blue over a white band (1.6 - 1.9 m, round the noses too), the navy frame,
+  // ploughs and roof, a white line under the machine room's cant; the white windscreen surround,
+  // the white emblem on the noses and, with the "Ceske drahy" lettering, on the sides behind the
+  // radiator; white number plates with navy figures
+  cd754Blue: {
+    title: "CD 754 blue",
+    photo: "photo-754-045-cd-blue.jpg",
+    body: "brejlovec",
+    number: runningNumber("754", "045"),
+    numberSource: "photo-754-045-cd-blue.jpg",
+    palette: { skyBlue: C("#3c97de"), navy: C("#1f3a7a"), cdWhite: C("#eef0f2"), roofNavy: paint("#26365e", 0.6), plate: C("#eef0f2") },
+    face: [[1.6, 1.9, "cdWhite"], [1.9, 3.6, "skyBlue"], [3.6, 5, "roofNavy"]],
+    side: [[1.6, 1.9, "cdWhite"], [1.9, 3.5, "skyBlue"], [3.5, 3.6, "cdWhite"], [3.6, 5, "roofNavy"]],
+    cab: [[1.6, 1.9, "cdWhite"], [1.9, 3.6, "skyBlue"], [3.6, 5, "roofNavy"]],
+    roof: "roofNavy",
+    frame: "navy",
+    plough: "navy",
+    screen: "cdWhite",
+    housing: "roofNavy",
+    emblem: "cdWhite",
+    emblemX: 10.45,
+    numberInk: "navy",
+    wordmark: { runs: [["\u010Cesk\u00E9 dr\u00E1hy", "cdWhite"]], side: { h: 0.14, v: 2.12 } },
   },
 } as const satisfies Record<string, Cd750Livery>;
 
@@ -429,7 +463,7 @@ function faceCommon(m: MeshBuilder, pb: PlanBody, e: number, l: Cd750Livery, emb
     const xb = beamOf(l) + 0.02;
     block(m, "plate", ...along(e, xb - 0.03, xb + 0.01), 1.3, 1.5, -0.4, 0.4);
     const pts = numberTris(l.number, 1.33, 0.13, 0.055, 0.016).map(([u, v]): Vec3 => [e * (xb + 0.012), v, -e * u]);
-    m.facets("white", pts, [e, 0, 0]);
+    m.facets(l.numberInk ?? "white", pts, [e, 0, 0]);
   });
 }
 
@@ -539,12 +573,22 @@ function sides(m: MeshBuilder, g: Geometry, w: Wall, l: Cd750Livery, X: (sx: num
       if (l.emblem)
         m.scope("emblem", () => {
           // z_both: Brejlovec columns 33..37, Bardotka 39..44, rows 26..29 (2.0 .. 2.4 m); read from outside on both sides
-          const xc = X(brej ? 3.55 : 4.15);
+          const xc = X(l.emblemX ?? (brej ? 3.55 : 4.15));
           const tris = centredEmblem(2.04, 0.36, s < 0);
           m.facets(l.emblem!, tris.map(([u, y]): Vec3 => [xc + u, y, s * (g.half(y) + 0.004)]), [0, 0, s]);
         });
+      const wm = l.wordmark;
+      if (wm?.side)
+        m.scope("wordmark", () => {
+          // after the side emblem to the reader's right (+x on the right side, -x on the left), a 0.1 m gap
+          const { h, v } = wm.side!;
+          const us = centredEmblem(2.04, 0.36, false).map(([u]) => u);
+          const start = X(l.emblemX ?? (brej ? 3.55 : 4.15)) + (s > 0 ? 1 : -1) * (Math.max(...us) + 0.1);
+          for (const r of wordmarkAt(wm.runs, start, v, h, s < 0, wm.style))
+            m.facets(r.mat, r.tris.map(([x, y]): Vec3 => [x, y, s * (g.half(y) + 0.004)]), [0, 0, s]);
+        });
       // z_both: the plate at columns 74..81 (Brejlovec) / 80..87 (Bardotka), rows 27..29 (2.0 .. 2.3 m)
-      m.scope("number plate", () => sidePlate(m, w, s, l.number, X(brej ? 7.8 : 8.4), 2.07));
+      m.scope("number plate", () => sidePlate(m, w, s, l.number, X(brej ? 7.8 : 8.4), 2.07, "plate", l.numberInk ?? "white"));
     });
 }
 
