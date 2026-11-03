@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 import { DESIGNS } from "../generator/generate.ts";
-import { resolveParams, type ProceduralDesign } from "../generator/design.ts";
+import { paramCombinations, resolveParams, type ProceduralDesign } from "../generator/design.ts";
 import type { Emitter } from "../generator/meshCore.ts";
 import { ALL_VARIANTS, sample } from "./catalogCache";
 
@@ -14,11 +14,9 @@ function built(d: ProceduralDesign, params: Record<string, string> = {}): { emit
   return { emitters: m.emitters(), pos: m.positions() };
 }
 
-/** Every combination of a design's parameters (small for the designs that smoke). */
+/** Every combination of a design's parameters it offers (small for the designs that smoke); a conditional value only where it applies. */
 function combos(d: ProceduralDesign): Record<string, string>[] {
-  let out: Record<string, string>[] = [{}];
-  for (const p of d.params ?? []) out = out.flatMap((c) => p.values.map((v) => ({ ...c, [p.name]: v.value })));
-  return out;
+  return paramCombinations(d.params ?? []) as Record<string, string>[];
 }
 
 /** Whether `params` are the design's defaults (the build `built(d)` made). */
