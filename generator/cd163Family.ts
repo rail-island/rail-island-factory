@@ -6,11 +6,12 @@
 //   green 163 244-7 the design was first built as.
 // - `veh-cd-263` (CD 263 / 371 / 372): the 25 kV AC 263 and the 371/372
 //   (Skoda 85E/76E/78E), the same body and cabs with a different machine room:
-//   two banks of grilles on the right and windows on the left. Five liveries.
+//   two banks of grilles on the right and windows on the left. Seven vlakosimdb
+//   liveries and the 263's and 371's CD blue.
 //
-// The liveries are read from the native vlakosimdb side BMPs (170 x 60 pixels,
+// The vlakosimdb liveries are read from the native side BMPs (170 x 60 pixels,
 // 0.1 m a pixel; height = 6.0 - 0.1 * row): the band rows, the colours, which
-// emblems are painted. See docs/models/loco-liveries.md.
+// emblems are painted; the RegioJet and CD blue ones from photographs. See docs/models/loco-liveries.md.
 
 import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
@@ -234,6 +235,17 @@ export const CD163_LIVERIES = {
 
 const red263 = (red: string): Record<string, MaterialSpec> => ({ red: c(red) });
 
+/** The Najbrt blue's colours on the 263 / 371 (the shared navy, light blue and white of cdBlue, the darker machine-room blue). */
+const NAJBRT_263: Record<string, MaterialSpec> = {
+  midBlue: c("#2a6cbf"),
+  midRib: c("#3279cc"),
+  navy: c("#1f3a7a"),
+  skyBlue: c("#3c97de"),
+  silver: c("#c9cdd0"),
+  logo: { color: "#eef0f2", roughness: 0.5 },
+  slat: { color: "#2e3033", roughness: 0.7 },
+};
+
 export const CD263_LIVERIES = {
   cd263: {
     title: "CD 263",
@@ -307,6 +319,55 @@ export const CD263_LIVERIES = {
       frame: "rubber",
       sideEmblem: false,
       frontEmblem: false,
+    },
+  },
+  // CD's current blue (the Najbrt scheme) on the 263 and the 371: not the 162's drawing. The ribbed
+  // machine room mid blue over a lower band; the cab sections in zones - navy from the seam over
+  // the door, light silver-grey ahead of it and on the noses, the light blue windscreen band from
+  // the nose's kink to the roof; the frame dark grey, the roof light grey.
+  // 263 001-0 ("Maja"), read from photo-263-001-cd-blue.jpg: a silver lower band, red number
+  // plates, the white emblem beside the side plate and the navy emblem on the noses.
+  cd263Blue: {
+    title: "CD 263 blue",
+    photo: "photo-263-001-cd-blue.jpg",
+    numberSource: "photo-263-001-cd-blue.jpg",
+    livery: {
+      number: runningNumber("263", "001"),
+      palette: { ...NAJBRT_263, roof: { color: "#b4b8bb", roughness: 0.7 } },
+      bands: [[1.03, 1.45, "silver"], [1.45, 3.5, "midBlue", "midRib"], [3.5, 3.7, "skyBlue"]],
+      cabBands: [[1.03, 3.7, "silver"]],
+      cabZones: { rearTo: 6.86, rear: [[1.03, 1.45, "silver"], [1.45, 3.7, "navy"]], end: [[1.03, 2.3, "silver"], [2.3, 3.7, "skyBlue"]] },
+      frame: "skyBlue",
+      sideEmblem: true,
+      frontEmblem: true,
+      frontLogo: "navy",
+    },
+  },
+  // 371 002-7, read from photo-371-002-cd-blue.jpg: the lower band dark grey along the whole
+  // locomotive, under the noses too; the number lettered black on the noses and small in white
+  // on the lower band, no plates; the white emblem and "Ceske drahy" on the machine room, the
+  // black emblem on the noses.
+  cd371Blue: {
+    title: "CD 371 blue",
+    photo: "photo-371-002-cd-blue.jpg",
+    numberSource: "photo-371-002-cd-blue.jpg",
+    livery: {
+      number: runningNumber("371", "002"),
+      palette: { ...NAJBRT_263, darkGrey: c("#5a5d60", 0.6), roof: { color: "#c3c6c8", roughness: 0.7 }, plate: c("#c9cdd0"), ink: c("#1c1d20", 0.6) },
+      bands: [[1.03, 1.35, "darkGrey"], [1.35, 3.5, "midBlue", "midRib"], [3.5, 3.7, "skyBlue"]],
+      cabBands: [[1.03, 1.35, "darkGrey"], [1.35, 3.7, "silver"]],
+      cabZones: {
+        rearTo: 6.86,
+        rear: [[1.03, 1.35, "darkGrey"], [1.35, 3.7, "navy"]],
+        end: [[1.03, 1.35, "darkGrey"], [1.35, 2.3, "silver"], [2.3, 3.7, "skyBlue"]],
+      },
+      frame: "skyBlue",
+      sideEmblem: true,
+      frontEmblem: true,
+      frontLogo: "ink",
+      numberInk: "ink",
+      sideNumber: "lowerBand",
+      wordmark: { runs: [["\u010Cesk\u00E9 dr\u00E1hy", "logo"]], side: { h: 0.15, v: 1.92 } },
     },
   },
 } as const satisfies Record<string, FamilyLivery>;

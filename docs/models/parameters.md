@@ -21,7 +21,7 @@ declaration order, the first the default unless noted.
 | `veh-cd-150` | `livery`: cd150, cd151, cd151Cez, zsr350, zsr350No001, zsr350No002, zsr350No003, zsr350No004 | [loco-liveries.md](loco-liveries.md) |
 | `veh-cd-163` | `livery`: cd163, cd162, cd162No022, cd163No022, cd163No021, cd362, cd362No054, cd363, cd363No044, cd363No037, cd363No009 | [loco-liveries.md](loco-liveries.md) |
 | `veh-cd-230` | `livery`: cd230, cd240, cd240No047, cd340, cd242, cd242Blue | [cd-230.md](cd-230.md) |
-| `veh-cd-263` | `livery`: cd263, cd263No015, cd371No002, cd371No005, cd372, db180, dbAg180 | [loco-liveries.md](loco-liveries.md) |
+| `veh-cd-263` | `livery`: cd263, cd263No015, cd371No002, cd371No005, cd372, db180, dbAg180, cd263Blue, cd371Blue | [loco-liveries.md](loco-liveries.md) |
 | `veh-csd-classic-green-coach` | `variant`: classA, classB | [csd-coaches.md](csd-coaches.md) |
 | `veh-bmo-double-deck-coach` | `livery`: csd, cdBlue, cdBlueGrey, cdRedDoors | [bmo-double-deck.md](bmo-double-deck.md) |
 | `veh-cd-green-white-coach` | `variant`: a, ab, b, bee, beel, bds, ds, bdmeer, bdmtee, beeBlue (default b) | [cd-green-white.md](cd-green-white.md) |
@@ -52,7 +52,7 @@ declaration order, the first the default unless noted.
 | `veh-karosa-long` | `variant`: b741, b941, b941e, b961 | [buses.md](buses.md) |
 | `veh-cd-471` | `unit`: motorCar, trailer, drivingTrailer; `variant`: cd471, cd675 | [czech-emus.md](czech-emus.md) |
 | `veh-cd-680` | `unit`: endCar, car683, car685, car686 | [czech-emus.md](czech-emus.md) |
-| `veh-cd-750` | `livery`: cd750, cd750No308, cd753, cd754, cd754No013 | [diesel-locos.md](diesel-locos.md) |
+| `veh-cd-750` | `livery`: cd750, cd750No308, cd753, cd754, cd754No013, cd754Blue | [diesel-locos.md](diesel-locos.md) |
 | `veh-cd-749` | `livery`: cd749, cd749No264, cd749No121 | [diesel-locos.md](diesel-locos.md) |
 | `veh-cd-781` | `livery`: cd781, cd781No462 | [diesel-locos.md](diesel-locos.md) |
 | `veh-cd-771` | `livery`: cd771, cd771No235, cd771No421 (default cd771No235) | [diesel-locos.md](diesel-locos.md) |

@@ -25,6 +25,7 @@ const CD_750_GAME: GameProperties = {
   variants: [
     { params: { livery: "cd754No013" }, power: 1470 },
     { params: { livery: "cd754" }, power: 1470 },
+    { params: { livery: "cd754Blue" }, power: 1470 },
   ],
 };
 

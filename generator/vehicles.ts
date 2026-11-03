@@ -552,6 +552,7 @@ const CD_263_GAME: GameProperties = {
   variants: [
     { params: { livery: "cd371No002" }, weight: 86, power: 3080, maxspeed: 160 },
     { params: { livery: "cd371No005" }, weight: 84, power: 3080, maxspeed: 160 },
+    { params: { livery: "cd371Blue" }, weight: 86, power: 3080, maxspeed: 160 },
     { params: { livery: "cd372" }, weight: 82 },
     { params: { livery: "db180" }, weight: 86 },
     { params: { livery: "dbAg180" }, weight: 86 },
