@@ -256,6 +256,7 @@ describe("CD 163 family low level of detail", () => {
     expect(faceAt(m, 0, 2.8, 1.47, [0, 0, 1])).toBe("charcoal");
     expect(faceAt(m, 7.0, 2.8, 1.47, [0, 0, 1])).toBe("red");
     expect(faceAt(m, 7.85, 2.5, 0, [1, 0, 0])).toBe("red");
-    expect(faceAt(m, 0, 1.1, -1.47, [0, 0, -1])).toBe("charcoal");
+    // the dark solebar under every livery's body (it takes the bottom of the old charcoal band)
+    expect(faceAt(m, 0, 1.1, -1.47, [0, 0, -1])).toBe("underframe");
   });
 });

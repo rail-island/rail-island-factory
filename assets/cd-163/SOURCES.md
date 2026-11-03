@@ -44,6 +44,27 @@ calibrated dimensions and treatment of ambiguous outlines. Round marker lenses,
 standard buffer spacing and the emblem's continuous outline are retained rather
 than reproducing low-resolution raster artifacts.
 
+### Photographed corrections
+
+Where the photographs and the native BMPs disagree by more than a pixel or two,
+the photographs win. `photo-162-114-regiojet-side.jpg` is a near-orthogonal side
+(the body's 15.8 m at the nose kink spans 1276 px of the 1600 px copy, 80.8 px a
+metre); measured at both ends:
+
+- the cab is 2.2 m long (its seam at 5.52 m; the BMP: 1.7 m);
+- the door stands 0.9 - 1.6 m behind the nose, 0.72 m wide (the BMP: 0.7 - 1.2 m);
+- the side window is 0.42 m wide, 0.22 m behind the nose (the BMP: 0.6 m, at the nose);
+- the shutter band ends 2.33 m behind the noses (+-5.38 m; the BMP: -5.8 .. 5.7 m);
+- the roof over the cab rises as a ramp, reaching the roof 1.8 m behind the nose
+  (the BMP's front elevation: a 0.42 m roll-over);
+- a dark solebar about 0.33 m deep runs under the painted body.
+
+The nose profile itself agrees with the BMP (lower rake 0.12 m, the kink at
+2.27 m, upper rake 0.17 m), and so do the heights: the yellow side reads 1.22 to
+3.50 m with the buffer centre at 1.03 m as the reference. The cooler's grille
+sides lean in from the eave (`photo-163-048-three-quarter.jpg`).
+`native/landmarks.json` marks the 13 contradicted boxes `superseded`.
+
 ## Liveries (`livery` parameter)
 
 The other liveries of this design are read from their vlakosimdb side BMPs,

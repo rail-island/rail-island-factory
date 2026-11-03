@@ -147,6 +147,12 @@ export const CD163_GREEN: Cd163Livery = {
   frontEmblem: true,
 };
 
+/** A livery's bands with the dark solebar under them: Y_BOTTOM .. Y_APRON is the frame's, not the paint's. */
+export function withSolebar(bands: readonly Band[]): Band[] {
+  const clip = (b: Band): Band => (b[3] === undefined ? [Y_APRON, b[1], b[2]] : [Y_APRON, b[1], b[2], b[3]]);
+  return [[Y_BOTTOM, Y_APRON, "underframe"], ...bands.filter((b) => b[1] > Y_APRON).map((b) => (b[0] < Y_APRON ? clip(b) : b))];
+}
+
 /** What one build draws: the livery and the side layout. */
 interface Style {
   livery: Cd163Livery;
@@ -170,6 +176,14 @@ const Y_CANT = 3.94;
 const Y_ROOF = 4.06;
 const CANT_HW = 1.22; // half the width at the top of the cant
 const ROOF_HW = 1.0;
+// The roof over each cab is a long ramp, not a brow: from the eave at the windscreen's top it
+// rises to the cant 0.90 m back and to the roof 1.75 m back (photo-162-114-regiojet-side.jpg,
+// both ends; the native BMP's 0.42 m roll-over is superseded).
+const RAMP_CANT = 0.90;
+const RAMP_ROOF = 1.75;
+// A dark solebar runs under the painted body the whole length: the shell's lowest band
+// (to the apron kink, so no extra loft) and a strip below the body down to 0.88 m.
+const Y_SOLEBAR = 0.88;
 const COOLER_X = 2.15; // the raised cooler box over the middle of the machine room
 const Y_COOLER = 4.25;
 const COOLER_FOOT = 3.30; // the cooler skirt overlaps the upper side wall
@@ -211,6 +225,18 @@ function frontX(y: number): number {
   if (y <= Y_APRON) return HALF - LOWER_RAKE;
   if (y <= Y_NOSE) return HALF - LOWER_RAKE * (Y_NOSE - y) / (Y_NOSE - Y_APRON);
   return HALF - RAKE * (y - Y_NOSE) / (Y_EAVE - Y_NOSE);
+}
+
+/** The cab roof's height on the centre line at |x| (the eave, the cant and the roof rings' ends). */
+function rampY(x: number): number {
+  const eave = frontX(Y_EAVE);
+  const pts: Array<[number, number]> = [[eave - RAMP_ROOF, Y_ROOF], [eave - RAMP_CANT, Y_CANT], [eave, Y_EAVE]];
+  if (x <= pts[0]![0]) return Y_ROOF;
+  for (let i = 1; i < pts.length; i++) {
+    const [[xa, ya], [xb, yb]] = [pts[i - 1]!, pts[i]!];
+    if (x <= xb) return ya + ((yb - ya) * (x - xa)) / (xb - xa);
+  }
+  return Y_EAVE;
 }
 
 /** The x range a..b (both >= 0) at the end `e` (+1 front, -1 rear), low end first. */
@@ -432,10 +458,11 @@ function portholesAndShutters(m: MeshBuilder): void {
   // The opposite machine-room side has continuous intake shutters, not portholes.
   m.scope("machine room intake", () => {
     const wall = sideWall(-1);
-    panel(m, "roof", wall, [[-5.80, 2.40], [5.70, 2.40], [5.70, 3.30], [-5.80, 3.30]], -0.018, 0.022);
-    panel(m, "louvre", wall, [[-5.74, 2.46], [5.64, 2.46], [5.64, 3.24], [-5.74, 3.24]], 0.008, 0.029);
-    for (let i = 0; i < 88; i++) {
-      const x = -5.69 + i * 0.129;
+    // the band ends 0.17 m short of the cab seams (the photographs; the native BMP's -5.8 .. 5.7 is superseded)
+    panel(m, "roof", wall, [[-5.38, 2.40], [5.38, 2.40], [5.38, 3.30], [-5.38, 3.30]], -0.018, 0.022);
+    panel(m, "louvre", wall, [[-5.32, 2.46], [5.32, 2.46], [5.32, 3.24], [-5.32, 3.24]], 0.008, 0.029);
+    for (let i = 0; i < 82; i++) {
+      const x = -5.24 + i * 0.129;
       panel(m, "slat", wall, [[x, 2.48], [x + 0.035, 2.48], [x + 0.035, 3.22], [x, 3.22]], 0.016, 0.043);
     }
     for (const x of [-3.95, -1.98, 0, 1.98, 3.95]) {
@@ -492,8 +519,17 @@ function grillesAndWindows(m: MeshBuilder, layout: Cd163Layout): void {
   });
 }
 
-/** Where the cab paint of a livery with `cabBands` begins, clear of the machine-room ribs' ends at 6.05. */
-const CAB_X = 6.07;
+/**
+ * The cab section's seam, 2.2 m behind the nose (photo-162-114-regiojet-side.jpg, both ends; the
+ * native BMP's 1.7 m cab is superseded): where the machine room's ribs end and the cab paint of a
+ * livery with `cabBands` begins.
+ */
+const CAB_X = 5.52;
+/** The cab door, 0.9 to 1.6 m behind the nose, and the narrower side window ahead of it. */
+const DOOR_X0 = 6.11;
+const DOOR_X1 = 6.83;
+const WINDOW_X0 = 7.08;
+const WINDOW_X1 = 7.5;
 
 /**
  * A livery's cab paint (`cabBands`): a one-sided skin 3 mm off the shell over
@@ -533,7 +569,7 @@ function cabPaint(m: MeshBuilder, e: number, bands: readonly Band[]): void {
 
 
 function body(m: MeshBuilder, st: Style): void {
-  const { bands } = st.livery;
+  const bands = withSolebar(st.livery.bands);
   m.scope("shell", () => {
     const at = (y: number) => plan(frontX(y), HW, CH);
     m.cap("underframe", at(Y_BOTTOM), Y_BOTTOM, false);
@@ -547,9 +583,9 @@ function body(m: MeshBuilder, st: Style): void {
   });
   m.scope("roof", () => {
     const eave = plan(frontX(Y_EAVE), HW, CH);
-    const cant = plan(frontX(Y_EAVE) - 0.22, CANT_HW, 0.1);
+    const cant = plan(frontX(Y_EAVE) - RAMP_CANT, CANT_HW, 0.1);
     m.loft("roof", eave, Y_EAVE, cant, Y_CANT, false);
-    m.loft("roof", cant, Y_CANT, plan(frontX(Y_EAVE) - 0.42, ROOF_HW, 0.1), Y_ROOF);
+    m.loft("roof", cant, Y_CANT, plan(frontX(Y_EAVE) - RAMP_ROOF, ROOF_HW, 0.1), Y_ROOF);
     // The native front retains green above the glazing to 3.70 m, while
     // both side elevations paint the lower roof apron grey from 3.50 m.
     m.scope("side aprons", () => {
@@ -562,6 +598,10 @@ function body(m: MeshBuilder, st: Style): void {
     m.scope("gutters", () => {
       for (const s of [-1, 1]) block(m, "roof", -7.45, 7.45, Y_SIDE_EAVE - 0.035, Y_SIDE_EAVE - 0.005, ...side(s, HW - 0.01, HW + 0.012));
     });
+    m.scope("solebar", () => {
+      // the frame's side member under the painted body, from the buffer beam to the buffer beam
+      for (const s of [-1, 1]) block(m, "underframe", -(HALF - 0.14), HALF - 0.14, Y_SOLEBAR, Y_BOTTOM, ...side(s, HW - 0.06, HW - 0.005));
+    });
     m.scope("hatch seams", () => {
       for (const x of [-5.4, -3.0, 3.0, 5.4]) block(m, "underframe", x - 0.015, x + 0.015, Y_ROOF - 0.01, Y_ROOF + 0.012, -ROOF_HW + 0.12, ROOF_HW - 0.12);
     });
@@ -573,15 +613,16 @@ function body(m: MeshBuilder, st: Style): void {
     for (let k = 0; k < 17; k++) {
       const y = Y_BOTTOM + 0.12 + k * 0.145;
       if (y + 0.026 >= Y_SIDE_EAVE - 0.04) continue; // leave the gutter clear
+      if (y < Y_APRON + 0.02) continue; // the solebar is smooth
       const rib = (b: Band) => b[3] ?? b[2];
       const mat = rib(bandAt(bands, y));
       const cabMat = rib(bandAt(st.livery.cabBands ?? bands, y));
       for (const s of [-1, 1]) {
         const z = side(s, HW - 0.01, HW + 0.018);
-        block(m, mat, -6.05, 6.05, y, y + 0.026, ...z);
+        block(m, mat, -(CAB_X - 0.02), CAB_X - 0.02, y, y + 0.026, ...z);
         if (y < Y_WINDOW0 - 0.1) {
           const end = Math.min(frontX(y), frontX(y + 0.026)) - CH - 0.015;
-          for (const e of [-1, 1]) block(m, cabMat, ...ex(e, 7.18, end), y, y + 0.026, ...z);
+          for (const e of [-1, 1]) block(m, cabMat, ...ex(e, DOOR_X1 + 0.03, end), y, y + 0.026, ...z);
         }
       }
     }
@@ -589,7 +630,7 @@ function body(m: MeshBuilder, st: Style): void {
 
   if (st.layout === "163") portholesAndShutters(m);
   else grillesAndWindows(m, st.layout);
-  if (st.livery.cabBands) m.scope("cab paint", () => { for (const e of [-1, 1]) cabPaint(m, e, st.livery.cabBands!); });
+  if (st.livery.cabBands) m.scope("cab paint", () => { for (const e of [-1, 1]) cabPaint(m, e, withSolebar(st.livery.cabBands!)); });
 
   m.scope("cant grilles", () => {
     // long grille strips in the roof's cant, between the cooler box and the cabs
@@ -612,13 +653,17 @@ function body(m: MeshBuilder, st: Style): void {
   });
 
   m.scope("cooler box", () => {
-    // raised over the middle of the roof, its near-upright sides all grille
+    // raised over the middle of the roof: an upright skirt to the eave, then sides of grille
+    // leaning in steeply to its top (photo-163-048-three-quarter.jpg)
     const foot = HW + 0.04;
-    const sec: Ring = [[-foot, COOLER_FOOT], [foot, COOLER_FOOT], [foot - 0.04, Y_COOLER - 0.14], [foot - 0.22, Y_COOLER], [-foot + 0.22, Y_COOLER], [-foot + 0.04, Y_COOLER - 0.14]];
+    // the grille's inset from its foot at the eave to its top edge: it stays just proud of the
+    // body's cant (0.25 m in over 0.24 m) all the way up
+    const lean = 0.55;
+    const sec: Ring = [[-foot, COOLER_FOOT], [foot, COOLER_FOOT], [foot, Y_EAVE], [foot - lean, Y_COOLER - 0.04], [foot - 0.07 - lean, Y_COOLER], [-foot + 0.07 + lean, Y_COOLER], [-foot + lean, Y_COOLER - 0.04], [-foot, Y_EAVE]];
     m.sweep("roof", "x", sec, -COOLER_X - 0.05, sec, COOLER_X - 0.05);
     for (const s of [-1, 1]) {
-      // the side face, u along x, v from its foot (0) to its top edge (1)
-      const [z0, y0, z1, y1] = [s * foot, COOLER_FOOT, s * (foot - 0.04), Y_COOLER - 0.14];
+      // the leaning grille face, u along x, v from its foot (0) to its top edge (1)
+      const [z0, y0, z1, y1] = [s * foot, Y_EAVE, s * (foot - lean), Y_COOLER - 0.04];
       const l = Math.hypot(z1 - z0, y1 - y0);
       const n: Vec3 = [0, Math.abs(z1 - z0) / l, s * (y1 - y0) / l];
       const wall: Surface = { at: (u, v, d) => [u, y0 + (y1 - y0) * v + n[1] * d, z0 + (z1 - z0) * v + n[2] * d], n };
@@ -743,61 +788,63 @@ function cab(m: MeshBuilder, e: number, st: Style): void {
       const z = (d0: number, d1: number) => side(s, HW + d0, HW + d1);
       const xs = (a: number, b: number): [number, number] => ex(e, a, b);
       m.scope("side window", () => {
-        // The leading edge follows the cab rake. A rectangular pane here
-        // would project beyond the chamfered shell at its upper front corner.
-        const profile = (points: Array<[number, number]>) => points.map(([x, y]): [number, number] => [e * x, y]);
-        panel(m, "rubber", wall, profile([[7.07, 2.57], [7.73, 2.57], [7.73, 2.64], [7.63, 3.33], [7.07, 3.33]]), -0.01, 0.012);
-        panel(m, "glass", wall, profile([[7.10, 2.60], [7.70, 2.60], [7.70, 2.65], [7.60, 3.30], [7.10, 3.30]]), -0.005, 0.024);
+        // 0.42 m wide, 0.22 m behind the nose's corner, a ribbed panel between it and the door
+        const quad = (a: number, b: number, y0: number, y1: number): Array<[number, number]> => { const [u0, u1] = xs(a, b); return [[u0, y0], [u1, y0], [u1, y1], [u0, y1]]; };
+        panel(m, "rubber", wall, quad(WINDOW_X0 - 0.03, WINDOW_X1 + 0.03, Y_WINDOW0 - 0.01, Y_WINDOW1 + 0.01), -0.01, 0.012);
+        panel(m, "glass", wall, quad(WINDOW_X0, WINDOW_X1, Y_WINDOW0 + 0.02, Y_WINDOW1 - 0.02), -0.005, 0.024);
       });
       m.scope("door", () => {
-        block(m, "rubber", ...xs(6.35, 7.05), 1.40, 3.40, ...z(-0.01, 0.012)); // the gap around it
-        for (const [y0, y1, mat] of bandPieces(livery.cabBands ?? livery.bands, 1.43, 3.37)) block(m, mat, ...xs(6.38, 7.02), y0, y1, ...z(-0.005, 0.024));
-        panel(m, "rubber", wall, rrect(...xs(6.42, 6.98), Y_WINDOW0 - 0.01, Y_WINDOW1 + 0.01, 0.025), 0.01, 0.034);
-        panel(m, "glass", wall, rrect(...xs(6.45, 6.95), Y_WINDOW0 + 0.02, Y_WINDOW1 - 0.02, 0.015), 0.015, 0.046);
-        block(m, "steel", ...xs(6.91, 6.99), 1.97, 2.01, ...z(0.02, 0.05)); // the handle
-        block(m, "underframe", ...xs(6.47, 6.93), 1.14, 1.3, ...z(-0.01, 0.012)); // the foothold below it
+        block(m, "rubber", ...xs(DOOR_X0, DOOR_X1), 1.40, 3.40, ...z(-0.01, 0.012)); // the gap around it
+        for (const [y0, y1, mat] of bandPieces(livery.cabBands ?? livery.bands, 1.43, 3.37)) block(m, mat, ...xs(DOOR_X0 + 0.03, DOOR_X1 - 0.03), y0, y1, ...z(-0.005, 0.024));
+        panel(m, "rubber", wall, rrect(...xs(DOOR_X0 + 0.07, DOOR_X1 - 0.07), Y_WINDOW0 - 0.01, Y_WINDOW1 + 0.01, 0.025), 0.01, 0.034);
+        panel(m, "glass", wall, rrect(...xs(DOOR_X0 + 0.1, DOOR_X1 - 0.1), Y_WINDOW0 + 0.02, Y_WINDOW1 - 0.02, 0.015), 0.015, 0.046);
+        block(m, "steel", ...xs(DOOR_X1 - 0.14, DOOR_X1 - 0.06), 1.97, 2.01, ...z(0.02, 0.05)); // the handle
+        block(m, "underframe", ...xs(DOOR_X0 + 0.12, DOOR_X1 - 0.12), 1.21, 1.3, ...z(-0.01, 0.012)); // the foothold below it
       });
       m.scope("cab number", () => {
-        // the cab's number, white, just inboard of the door's handrail
-        const xc = 6.07 * e;
-        decal(m, "white", wall, lettering(e > 0 ? "2" : "1", s < 0 ? xc + 0.04 : xc - 0.04, 3.12, 0.14, 0.08, 0, s < 0), 0.016);
+        // the cab's number, low on the smooth panel behind the door
+        const xc = (DOOR_X0 - 0.14) * e;
+        decal(m, "white", wall, lettering(e > 0 ? "2" : "1", s < 0 ? xc + 0.04 : xc - 0.04, 1.62, 0.14, 0.08, 0, s < 0), 0.016);
       });
       m.scope("handrails", () => {
-        for (const x of [6.28, 7.12]) {
+        for (const x of [DOOR_X0 - 0.07, DOOR_X1 + 0.07]) {
           m.prism("steel", ngon(6, 0.018, 0, e * x, s * (HW + 0.055)), 1.4, 3.38);
           for (const y of [1.43, 3.31]) block(m, "steel", ...xs(x - 0.015, x + 0.015), y, y + 0.026, ...z(-0.01, 0.06));
         }
       });
       m.scope("steps", () => {
-        for (const x of [6.43, 6.94]) block(m, "underframe", ...xs(x, x + 0.03), 0.42, Y_BOTTOM + 0.02, ...z(-0.17, -0.11));
+        for (const x of [DOOR_X0 + 0.08, DOOR_X1 - 0.11]) block(m, "underframe", ...xs(x, x + 0.03), 0.42, Y_SOLEBAR + 0.02, ...z(-0.17, -0.11));
         for (const y of [0.45, 0.76]) {
-          block(m, "steel", ...xs(6.46, 6.94), y, y + 0.035, ...z(-0.25, -0.07));
-          block(m, "yellow", ...xs(6.46, 6.94), y - 0.005, y + 0.04, ...z(-0.07, -0.055));
+          block(m, "steel", ...xs(DOOR_X0 + 0.11, DOOR_X1 - 0.11), y, y + 0.035, ...z(-0.25, -0.07));
+          block(m, "yellow", ...xs(DOOR_X0 + 0.11, DOOR_X1 - 0.11), y - 0.005, y + 0.04, ...z(-0.07, -0.055));
         }
       });
     });
   }
 
   m.scope("roof box", () => {
-    // over the cab, nearly the roof's width, two grilles in its end face
-    const [x0, x1] = ex(e, 6.0, 7.12);
-    block(m, "roof", x0, x1, Y_ROOF - 0.01, Y_ROOF + 0.26, -0.86, 0.86);
-    const endX = e * 7.12;
+    // the hood on the cab roof's ramp, two grilles in its end face, its foot sunk into the ramp
+    const [a, b] = [6.05, 6.75];
+    const [x0, x1] = ex(e, a, b);
+    const top = Y_ROOF + 0.12;
+    block(m, "roof", x0, x1, rampY(b) - 0.03, top, -0.62, 0.62);
+    const endX = e * b;
     for (const s of [-1, 1]) {
-      const [z0, z1] = side(s, 0.08, 0.72);
-      block(m, "louvre", ...(e > 0 ? [endX - 0.01, endX + 0.012] : [endX - 0.012, endX + 0.01]) as [number, number], Y_ROOF + 0.05, Y_ROOF + 0.22, z0, z1);
-      for (let i = 0; i < 4; i++) {
-        const y = Y_ROOF + 0.075 + i * 0.037;
+      const [z0, z1] = side(s, 0.08, 0.52);
+      block(m, "louvre", ...(e > 0 ? [endX - 0.01, endX + 0.012] : [endX - 0.012, endX + 0.01]) as [number, number], rampY(b) + 0.04, top - 0.04, z0, z1);
+      for (let i = 0; i < 3; i++) {
+        const y = rampY(b) + 0.06 + i * 0.05;
         block(m, "slat", ...(e > 0 ? [endX + 0.005, endX + 0.03] : [endX - 0.03, endX - 0.005]) as [number, number], y, y + 0.016, z0 + 0.02, z1 - 0.02);
       }
     }
   });
   m.scope("horns", () => {
+    const top = Y_ROOF + 0.12;
     for (const z of [-0.3, 0.3]) {
-      block(m, "underframe", ...ex(e, 6.5, 6.58), Y_ROOF + 0.25, Y_ROOF + 0.32, z - 0.04, z + 0.04);
-      const [a, b] = ex(e, 6.52, 6.7);
-      const narrow = ngon(8, 0.025, 0, z, Y_ROOF + 0.35);
-      const bell = ngon(8, 0.06, 0, z, Y_ROOF + 0.35);
+      block(m, "underframe", ...ex(e, 6.3, 6.38), top - 0.01, top + 0.06, z - 0.04, z + 0.04);
+      const [a, b] = ex(e, 6.32, 6.5);
+      const narrow = ngon(8, 0.025, 0, z, top + 0.09);
+      const bell = ngon(8, 0.06, 0, z, top + 0.09);
       m.sweep("steel", "x", e > 0 ? narrow : bell, a, e > 0 ? bell : narrow, b);
     }
   });
@@ -1060,16 +1107,16 @@ export function cd163LodBody(livery: Cd163Livery, budget = CD163_LOD_TRIANGLES):
   const cab = livery.cabBands ?? livery.bands;
   const shell: LodShell = {
     y0: Y_BOTTOM,
-    tip: [[Y_BOTTOM, HALF - LOWER_RAKE], [Y_NOSE, HALF], [Y_EAVE, frontX(Y_EAVE)], [Y_ROOF, frontX(Y_EAVE) - 0.42]],
+    tip: [[Y_BOTTOM, HALF - LOWER_RAKE], [Y_NOSE, HALF], [Y_EAVE, frontX(Y_EAVE)], [Y_ROOF, frontX(Y_EAVE) - RAMP_ROOF]],
     hw: [[Y_BOTTOM, HW], [Y_EAVE, HW], [Y_ROOF, ROOF_HW]],
-    side: roofTop(livery.bands, Y_SIDE_EAVE),
-    end: roofTop(cab, Y_EAVE),
-    ...(livery.cabBands ? { cab: { x: CAB_X, side: roofTop(livery.cabBands, Y_SIDE_EAVE) } } : {}),
+    side: roofTop(withSolebar(livery.bands), Y_SIDE_EAVE),
+    end: roofTop(withSolebar(cab), Y_EAVE),
+    ...(livery.cabBands ? { cab: { x: CAB_X, side: roofTop(withSolebar(livery.cabBands), Y_SIDE_EAVE) } } : {}),
     roof: "roof",
     endWindows: [{ u: [-1.3, 1.3], y: [2.7, 3.4], mat: LOD_GLASS }],
   };
   const parts: LodPart[] = [
-    { draw: (m) => m.scope("cooler box", () => lodRoofBox(m, "roof", -COOLER_X - 0.05, COOLER_X - 0.05, HW + 0.04, HW + 0.04 - 0.22, COOLER_FOOT, Y_COOLER)) },
+    { draw: (m) => m.scope("cooler box", () => lodRoofBox(m, "roof", -COOLER_X - 0.05, COOLER_X - 0.05, HW + 0.04, HW + 0.04 - 0.62, COOLER_FOOT, Y_COOLER)) },
     { draw: (m) => m.scope("running gear", () => {
       for (const xb of [-BOGIE_X, BOGIE_X]) lodBogie(m, xb, 2.1, Y_BOTTOM);
       lodSideBox(m, "underframe", [[-1.45, 0.5], [1.45, 0.5], [1.45, Y_BOTTOM], [-1.45, Y_BOTTOM]], -1.38, 1.38);

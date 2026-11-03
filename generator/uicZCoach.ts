@@ -1,9 +1,11 @@
 // The 26.4 m UIC-Z (Eurofima-type) coaches: vlakosimdb's CD Ampz, Bmz and
 // WRRmz, DB IC Ampz, Bmpz and WRmz and OBB Ampz, Bmpz and WRmz as one design
 // with two parameters - `variant`, the kind of coach (the 1st class coach, the
-// 2nd class coach, the dining car), and `operator` (cd, the default, db, obb),
-// whose livery and layout it carries: each operator lists its own spec for each
-// kind of coach. The body follows the CD XML (the DB and OBB files draw the same
+// 2nd class coach, the dining car), and `operator` (cd, the default, db, obb,
+// regiojet), whose livery and layout it carries: each operator lists its own spec
+// for each kind of coach. RegioJet runs the OBB coaches it bought, so its spec is
+// the OBB layout in RegioJet's paint, with its lettered wordmark. The body follows
+// the CD XML (the DB and OBB files draw the same
 // envelope more coarsely): a flatter roof than the UIC-Y coaches, ends rounded
 // at the roof and at the floor, a skirt between the bogies, doors at the ends.
 // Windows, doors and paint follow boxes measured on the native BMPs (side
@@ -15,12 +17,14 @@ import type { Pt } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import type { PxBox } from "./csdCoaches.ts";
 import { liveryCoachLod } from "./lodTrams.ts";
+import type { Vec3 } from "./meshCore.ts";
+import { wordmarkAt } from "./letters.ts";
 import { buildLiveryCoach, type BodyGeo, type DoorSpec, type EndSpec, type LiveryCoachSpec, type LiverySide, type Paint, type Win } from "./liveryCoach.ts";
 
 /** The kind of coach: the same three kinds every operator of the body runs. */
 export type UicZVariant = "firstClass" | "secondClass" | "restaurant";
-/** The operators whose liveries are modelled: CD (the default), DB IC, OBB. */
-export type UicZOperator = "cd" | "db" | "obb";
+/** The operators whose liveries are modelled: CD (the default), DB IC, OBB, RegioJet. */
+export type UicZOperator = "cd" | "db" | "obb" | "regiojet";
 
 export const UIC_Z_PARAMS: readonly ParamSpec[] = [
   {
@@ -41,6 +45,7 @@ export const UIC_Z_PARAMS: readonly ParamSpec[] = [
       { value: "cd", title: "CD" },
       { value: "db", title: "DB" },
       { value: "obb", title: "OBB" },
+      { value: "regiojet", title: "RegioJet" },
     ],
   },
 ];
@@ -61,6 +66,12 @@ export const UIC_Z_NUMBERS: Record<UicZOperator, Record<UicZVariant, { number: s
     firstClass: { number: "73 81 19-70 104-8", source: "illustrative, OBB Ampz 19-70 series" },
     secondClass: { number: "73 81 21-91 111-4", source: "the OBB Bmz 73 81 21-91 111-4 of a Wikimedia Commons file title (Brugg, 2018)" },
     restaurant: { number: "61 81 88-90 203-4", source: "the OBB WRmz 61 81 88-90 203-4 of a Wikimedia Commons file title (Bregenz, 2003)" },
+  },
+  // the ex-OBB coaches under Czech registration (54); no number is legible on the photographs
+  regiojet: {
+    firstClass: { number: "61 54 19-91 006-7", source: "illustrative, a Czech-registered 19-91 series number (RegioJet's ex-OBB Ampz, its Business class)" },
+    secondClass: { number: "61 54 21-91 024-6", source: "illustrative, a Czech-registered 21-91 series number (RegioJet's ex-OBB Bmz)" },
+    restaurant: { number: "61 54 88-91 001-4", source: "illustrative: RegioJet runs no WRmz; the combination exists because every parameter combination builds" },
   },
 };
 
@@ -362,12 +373,71 @@ function obbSpec(variant: UicZVariant): LiveryCoachSpec {
   };
 }
 
-const SPECS: Record<UicZOperator, (variant: UicZVariant) => LiveryCoachSpec> = { cd: cdSpec, db: dbSpec, obb: obbSpec };
+const RJ_PALETTE: Record<string, MaterialSpec> = {
+  ...OBB_PALETTE,
+  rjYellow: { color: "#f0b21c", roughness: 0.5 },
+  grey: { color: "#3b3d40", roughness: 0.55 },
+  doorSilver: { color: "#c4c7ca", metallic: 0.2, roughness: 0.45 },
+  frame: { color: "#2a2c2e", roughness: 0.6 },
+  roof: { color: "#7d8083", roughness: 0.7 },
+  skirt: { color: "#36383a", roughness: 0.8 },
+  marking: { color: "#2a2b2d", roughness: 0.6 },
+  rjRed: { color: "#d2202a", roughness: 0.5 },
+  rjNavy: { color: "#243a8c", roughness: 0.5 },
+};
+
+/**
+ * RegioJet's coaches (photographs, assets/uic-z-coach/photo-regiojet-*.jpg): the
+ * ex-OBB Ampz, Bmz (and, illustratively, WRmz) layout; yellow to 1.9 m, the
+ * anthracite window band to 3.1 m, yellow up to the roof's curve at 3.6 m, the
+ * silver doors, white class numerals, the number in dark grey on the yellow.
+ */
+function rjSpec(variant: UicZVariant): LiveryCoachSpec {
+  const o = obbSpec(variant);
+  const silver = (d: DoorSpec): DoorSpec => ({ ...d, paint: [[0.5, 3.4, "doorSilver"]] });
+  // OBB's first class line and blue pictograms are OBB's; RegioJet's coaches carry neither
+  const side = (sd: LiverySide): LiverySide => ({ ...sd, doors: sd.doors.map(silver), paint: sd.paint?.filter((p) => p.mat !== "yellow" && p.mat !== "blue") });
+  return {
+    ...o,
+    palette: RJ_PALETTE,
+    bands: [[0.9, 1.9, "rjYellow"], [1.9, 3.1, "grey"], [3.1, 3.6, "rjYellow"], [3.6, 4.1, "roof"]],
+    // the ends anthracite around the gangway, as the window band
+    endPaint: "grey",
+    endDoor: "grey",
+    emblem: undefined,
+    number: UIC_Z_NUMBERS.regiojet[variant].number,
+    numberMat: "marking",
+    numberY: 1.25,
+    right: side(o.right),
+    left: side(o.left),
+  };
+}
+
+const SPECS: Record<UicZOperator, (variant: UicZVariant) => LiveryCoachSpec> = { cd: cdSpec, db: dbSpec, obb: obbSpec, regiojet: rjSpec };
+
+/**
+ * RegioJet's wordmark on both sides, "|| REGIO" red and "JET" navy on the lower
+ * yellow, centred 6 m ahead of the middle as the reader sees it (letters.ts).
+ */
+function rjWordmark(m: MeshBuilder): void {
+  const runs = [["|| REGIO", "rjRed"], ["JET", "rjNavy"]] as const;
+  const style = { width: 0.75, weight: 0.2, slant: 0.2, gap: 0.14 };
+  m.scope("wordmark", () => {
+    for (const s of [-1, 1])
+      m.scope(s > 0 ? "right" : "left", () => {
+        // the reader's right is +x on the right side (+z), -x on the left
+        for (const r of wordmarkAt(runs, s > 0 ? -6 : 6, 1.35, 0.32, s < 0, style, "centre"))
+          m.facets(r.mat, r.tris.map(([x, y]): Vec3 => [x, y, s * 1.509]), [0, 0, s]);
+      });
+  });
+}
 
 /** One UIC-Z coach. */
 export function uicZCoach(params?: ParamValues): MeshBuilder {
   const p = resolveParams(UIC_Z_PARAMS, params);
-  return buildLiveryCoach(SPECS[p.operator as UicZOperator](p.variant as UicZVariant));
+  const m = buildLiveryCoach(SPECS[p.operator as UicZOperator](p.variant as UicZVariant));
+  if (p.operator === "regiojet") rjWordmark(m);
+  return m;
 }
 
 /** The same coach from afar (docs/models/lod.md): the livery coach adapter of lodTrams.ts. */

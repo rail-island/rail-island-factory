@@ -1,7 +1,7 @@
 # Czech and Slovak coaches
 
-**Covers** - the three parametric coach designs `veh-cd-y-coach`, `veh-zsr-coach` and `veh-uic-z-coach` (fifteen vlakosimdb coaches in later CD and ZSR liveries, and the DB IC and OBB UIC-Z coaches), the shared livery builder, its painted decals, the parameter contract (the UIC-Z `variant` x `operator`), running numbers, the measured comparison and the tests.
-**Code** - `generator/liveryCoach.ts`, `generator/cdYCoach.ts`, `generator/zsrCoach.ts`, `generator/uicZCoach.ts`, `generator/czskCoaches.ts`, `generator/coachTransfers.ts`, `test/czskCoaches.test.ts`, `assets/cd-y-coach/`, `assets/zsr-coach/`, `assets/uic-z-coach/`
+**Covers** - the three parametric coach designs `veh-cd-y-coach`, `veh-zsr-coach` and `veh-uic-z-coach` (fifteen vlakosimdb coaches in later CD and ZSR liveries, the DB IC and OBB UIC-Z coaches, and RegioJet's ex-OBB coaches from photographs), the shared livery builder, its painted decals, the parameter contract (the UIC-Z `variant` x `operator`), running numbers, the measured comparison and the tests.
+**Code** - `generator/liveryCoach.ts`, `generator/letters.ts`, `generator/cdYCoach.ts`, `generator/zsrCoach.ts`, `generator/uicZCoach.ts`, `generator/czskCoaches.ts`, `generator/coachTransfers.ts`, `test/czskCoaches.test.ts`, `assets/cd-y-coach/`, `assets/zsr-coach/`, `assets/uic-z-coach/`
 **See also** - [cd-green-white.md](cd-green-white.md) (the green and white coaches, the blue Bee 001), [csd-coaches.md](csd-coaches.md) (the shared `Coach` builder, coordinates, comparison method), [parameters.md](parameters.md), [vehicles.md](vehicles.md), [the vlakosimdb-transfer skill](../../.agents/skills/vlakosimdb-transfer/SKILL.md)
 
 ## The designs
@@ -31,6 +31,7 @@ change the body as well as the paint (as on the green and white coach).
 | | `firstClass` + `operator=obb` | obb_ampz | UIC-Z 26.4 m | about 5,500 |
 | | `secondClass` + `operator=obb` | obb_bmpz | UIC-Z 26.4 m | about 5,500 |
 | | `restaurant` + `operator=obb` | obb_wrmz | UIC-Z 26.4 m | about 5,300 |
+| | any `variant` + `operator=regiojet` | - (photographs) | the OBB layout, UIC-Z 26.4 m; the wordmark | about 6,900 to 7,200 |
 
 The blue and white **cd_bee001** is the Bee's texture with blue for its green,
 so it is the green and white design's value `beeBlue`
@@ -77,6 +78,18 @@ bogies and plug-door steps; only the paint and the openings differ:
   `obb`, three slanted bars); the WRmz (26.4 m) has its one door at the front
   end, the kitchen's lower windows at the rear.
 
+
+**RegioJet** (`operator=regiojet`) runs the OBB Ampz and Bmz it bought, so its
+spec (`rjSpec`) is the OBB one repainted, from photographs rather than a
+vlakosimdb file ([../../assets/uic-z-coach/SOURCES.md](../../assets/uic-z-coach/SOURCES.md)):
+yellow to 1.9 m, the anthracite window band to 3.1 m, yellow to the roof's curve
+at 3.6 m, silver doors, anthracite ends, white class numerals, and the lettered
+"|| REGIO" (red) "JET" (navy) wordmark on the lower yellow of both sides
+([lettering.md](lettering.md)), drawn after the shared builder so
+`liveryCoach.ts` and the other coaches are unchanged. OBB's first class line and
+blue pictograms are left off. RegioJet runs no dining car of this type; the
+`restaurant` combination is the OBB WRmz in RegioJet paint, there only because
+every combination builds. The numbers are illustrative Czech (54) ones.
 ## How it is built
 
 `buildLiveryCoach(spec)` (`liveryCoach.ts`) is the data-driven coach of the

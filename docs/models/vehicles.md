@@ -120,7 +120,10 @@ so each native pixel represents 0.10 m. The old 4x images are not measurement
 sources. Photographs still establish mechanical dimensions, including buffer
 spacing, wheel diameter and overall length.
 
-The body runs from 1.03 to 3.70 m, with a yellow band at 1.70 to 2.30 m.
+The body runs from 1.03 to 3.70 m, with a yellow band at 1.70 to 2.30 m; its
+lowest 0.17 m (to the apron at 1.20 m) is the dark solebar under every livery's
+paint (`withSolebar`), and a solebar strip continues below the body to 0.88 m,
+as every photograph shows.
 Grey roof aprons start at 3.50 m on the sides; the front stays green to 3.70 m,
 matching the different paint boundaries in the native front and side BMPs.
 The projecting nose is at the band's upper edge: the face recedes 0.20 m toward
@@ -129,9 +132,21 @@ skirt is upright. Each colour band follows this same double-raked profile.
 Each front glass is 1.20 m wide and approximately 0.70 m high (aspect 1.71),
 from 2.70 to 3.40 m above rail, inside a metal surround and rubber gasket.
 The 80 mm corner chamfers leave room for frames extending to 1.39 m either
-side of the centreline. The side cab panes are 0.60 by 0.70 m with a sloping
-leading edge; the door glazing is 0.50 by 0.70 m, aligned at 2.60 to 3.30 m.
-Doors, handles, steps and handrails move together with the wider glazing.
+side of the centreline.
+
+The cab sections follow the photographs rather than the native BMPs, which
+draw them 0.5 m short (`photo-162-114-regiojet-side.jpg`, measured at both ends
+on a near-orthogonal side at 80.8 px a metre): each cab is 2.2 m long, its seam
+at 5.52 m where the machine room's ribs end; the side window is 0.42 by 0.70 m,
+0.22 m behind the nose's corner; the door stands 0.9 to 1.6 m behind the nose
+(6.11 to 6.83 m), its glazing 0.52 by 0.70 m at 2.60 to 3.30 m, a ribbed panel
+between it and the window and a smooth one, with the cab's number, behind it.
+Handles, steps and handrails move with the door. The roof over each cab is a
+long ramp, not a brow: from the eave at the windscreen's top it reaches the cant
+0.90 m back and the roof 1.75 m back (`RAMP_CANT`, `RAMP_ROOF`), and the hood
+with the horns sits on it. The intake shutters end at 5.38 m, 0.17 m short of the
+cab seams. The cooler's grille sides lean in from the eave to its top, 0.55 m in,
+just proud of the body's cant, as on the three-quarter photograph.
 Bottom-mounted wipers and front handrails stand proud of the shell.
 
 Both red and white lower marker lenses are circular, 200 mm across, in equal
@@ -155,9 +170,13 @@ gutters. Four 700 mm porthole panes sit at 2.85 m on the +Z side. The opposite
 intake frame extends from 2.40 to 3.30 m, matching `z_inc`. The central cooler
 has a skirt overlapping the upper side wall at 3.30 m and reaches 4.25 m, the
 midpoint of the two side textures' half-pixel disagreement in its top edge.
+Its grille sides lean in from the eave (see above).
 
 `assets/cd-163/native/landmarks.json` records 50 independently annotated
-native-pixel boxes and their model scopes. Regression checks project the actual
+native-pixel boxes and their model scopes; 13 of them (the cab doors and side
+windows, D01-D06 and I01-I06, and the intake band I09) carry a `superseded` note
+naming the photograph that contradicts the BMP by 0.3 m or more, and the test
+checks the other 37. Regression checks project the actual
 GLB vertices onto the same canvases: front `u = 1.5 - Z`, side `u = X + 8.5`,
 vertical `v = 6 - Y`. Both side comparisons follow the bitmap's longitudinal
 axis; the intake side is mirrored relative to a normal outside view. Tests
@@ -191,7 +210,8 @@ radius swells and narrows once per turn, capped only on top; insulators are a
 core with a few sheds. Round parts use as few sides as their size allows
 (portholes 16, lamps 12, tanks and axle boxes 8-10): the model was trimmed
 from about 22,400 to about 15,600 triangles this way. The intake shutters keep
-their full 88 fine slats: thinning them made the side read worse.
+their fine slats at the same pitch (82 over the photographed, shorter band):
+thinning them made the side read worse.
 
 The rear (-X) pantograph is raised to the game's 5.88 m contact wire
 ([animation.md](animation.md)); the front one
