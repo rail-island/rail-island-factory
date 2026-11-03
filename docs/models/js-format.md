@@ -15,6 +15,12 @@ code, bundled with only the geometry it uses and minified. It is the **only** fo
 the game and the site both build from it, and there is no GLB file. (The build still writes each design to GLB
 bytes in memory, for its own analysis - [export.md](export.md).)
 
+"Only the geometry it uses" depends on tree-shaking: the bundle imports the build function through the family's
+source module, and esbuild keeps every module-level statement it cannot prove pure, with all it reaches. A
+family registry built with spreads or calls (`vehicles.ts`'s `VEHICLES`, which spreads the coaches and wagons)
+is therefore wrapped in a function marked `/* @__PURE__ */`, and a module-level table is written as literals
+(`letters.ts`'s glyphs), so a coach's bundle carries no locomotive.
+
 ```js
 import build from "./sky-pyramid.js";
 import * as THREE from "three";

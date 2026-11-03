@@ -65,6 +65,7 @@ export const SOUND_TABLE: Readonly<Record<string, DeclaredSounds>> = {
   // Three-phase asynchronous motors: the converters, not a resistor locomotive's notches.
   "proc-vehicle-cd-169": { sounds: { engine: { id: "electric-engine-converter" } } },
   "proc-vehicle-obb-1012": { sounds: { engine: { id: "electric-engine-converter" } } },
+  "proc-vehicle-vectron": { sounds: { engine: { id: "electric-engine-converter" } } },
   // The converter tones were measured in an ICE: it is the reference, not a high-speed train's wind.
   "proc-vehicle-ice-1": { sounds: { engine: { id: "electric-engine-converter" } } },
   // A 1960s unit with resistor control and a camshaft controller.

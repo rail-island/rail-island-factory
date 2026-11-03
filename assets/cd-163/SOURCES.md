@@ -44,6 +44,27 @@ calibrated dimensions and treatment of ambiguous outlines. Round marker lenses,
 standard buffer spacing and the emblem's continuous outline are retained rather
 than reproducing low-resolution raster artifacts.
 
+### Photographed corrections
+
+Where the photographs and the native BMPs disagree by more than a pixel or two,
+the photographs win. `photo-162-114-regiojet-side.jpg` is a near-orthogonal side
+(the body's 15.8 m at the nose kink spans 1276 px of the 1600 px copy, 80.8 px a
+metre); measured at both ends:
+
+- the cab is 2.2 m long (its seam at 5.52 m; the BMP: 1.7 m);
+- the door stands 0.9 - 1.6 m behind the nose, 0.72 m wide (the BMP: 0.7 - 1.2 m);
+- the side window is 0.42 m wide, 0.22 m behind the nose (the BMP: 0.6 m, at the nose);
+- the shutter band ends 2.33 m behind the noses (+-5.38 m; the BMP: -5.8 .. 5.7 m);
+- the roof over the cab rises as a ramp, reaching the roof 1.8 m behind the nose
+  (the BMP's front elevation: a 0.42 m roll-over);
+- a dark solebar about 0.33 m deep runs under the painted body.
+
+The nose profile itself agrees with the BMP (lower rake 0.12 m, the kink at
+2.27 m, upper rake 0.17 m), and so do the heights: the yellow side reads 1.22 to
+3.50 m with the buffer centre at 1.03 m as the reference. The cooler's grille
+sides lean in from the eave (`photo-163-048-three-quarter.jpg`).
+`native/landmarks.json` marks the 13 contradicted boxes `superseded`.
+
 ## Liveries (`livery` parameter)
 
 The other liveries of this design are read from their vlakosimdb side BMPs,
@@ -64,3 +85,19 @@ See docs/models/loco-liveries.md for the reading and the deviations.
 | `cd_363.044` | Borek Hudak | 363 044 - the model's name |
 | `cd_363_037` | Vojtech Vohlidka | 363 037 - the model's name |
 | `cd_363_009` | Vojtech Vohlidka | 363 009 - the model's name |
+
+## Current operators' liveries (photographs)
+
+The `regiojet` and `cdBlue` liveries of `veh-cd-163` are read from these
+Wikimedia Commons photos (1600 px thumbnails, saved as JPEG quality 85); see
+docs/models/loco-liveries.md, "The current operators' liveries".
+
+| File | Commons page | Author | Licence | Used for |
+|---|---|---|---|---|
+| `photo-162-120-regiojet.jpg` | https://commons.wikimedia.org/wiki/File:162_120_RegioJet_Smichov.jpg | Rainerhaufe | CC BY-SA 4.0 | the RegioJet livery on 162 120-0 (CZ-RJ 91 54 7 162 120-0, Praha-Smichov, 16 December 2017): the yellow, the dark grey roof, the wordmark's size, colours and place |
+| `photo-162-114-regiojet-side.jpg` | https://commons.wikimedia.org/wiki/File:RegioJet,_lokomotiva,_profil.jpg | Honza Groh (Jagro) | CC BY-SA 3.0 | the side of 162 114-3 (8 November 2011): the wordmark's length and height from the cab, the shutter side |
+| `photo-162-120-regiojet-front.jpg` | https://commons.wikimedia.org/wiki/File:193_214_and_163_120_RegioJet_Smichov.jpg | JanSuchy | CC0 | the RegioJet nose (16 November 2014): the small wordmark right of the middle; the file's title says 163 120, the unit is RegioJet's 162 120 |
+| `photo-162-039-cd-blue.jpg` | https://commons.wikimedia.org/wiki/File:20240207_%C4%8Cesk%C3%A9_dr%C3%A1hy_162039.jpg | Alex Noble | CC0 | CD's current blue on 162 039-2 (7 February 2024): the navy, white and light blue bands, the emblem and "Ceske drahy" lettering, the red plates, the light grey roof |
+
+RegioJet's units are 162 112 - 120 (Commons category and photos; 162 120-0 on the
+Pardubice photo of 9 May 2012).

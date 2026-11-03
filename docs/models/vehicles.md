@@ -6,7 +6,7 @@ locomotives, electric and diesel units, high-speed trains, coaches, freight wago
 parts, steered front wheels and animated running gear, the `sweep` primitive they are mostly built from, and
 how to add one.
 **Code** - `generator/vehicles.ts`, `generator/cd150.ts`, `generator/cd150Comparison.ts`, `generator/cd150Report.ts`, `test/cd150.test.ts`, `generator/cd163.ts`, `generator/cd163Family.ts`, `generator/cd230.ts`, `generator/cdLogo.ts`, `generator/vehicleParts.ts`, `generator/design.ts`, `generator/meshCore.ts` (`sweep`, `part`), `generator/meshBuilder.ts` (`toGlb`), `src/viewerHighlight.ts`, `test/models.test.ts`, `test/cdLogo.test.ts`, `test/viewerHighlight.test.ts`, `.agents/skills/road-vehicle/SKILL.md`, `.agents/skills/railroad-vehicle/SKILL.md`, `.agents/skills/vlakosimdb-transfer/SKILL.md`
-**See also** - [buses.md](buses.md) (the buses), [vehicle-rig.md](vehicle-rig.md) (steered wheels, sections, joints), [trucks.md](trucks.md), [loco-liveries.md](loco-liveries.md) (the locomotives' liveries and the CD 263), [cd-230.md](cd-230.md) (the laminatka), [cz-electrics.md](cz-electrics.md) (CD 110, 130, 140, 169), [csd-coaches.md](csd-coaches.md) (the CSD coaches), [wagons.md](wagons.md) (the freight wagons), [cd-green-white.md](cd-green-white.md), [bmo-double-deck.md](bmo-double-deck.md), [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md), [wagons.md](wagons.md) and [freight-wagons.md](freight-wagons.md) (the freight wagons), [trams.md](trams.md) (the trams and the metro), [mainline-electrics.md](mainline-electrics.md) (CD 180 / 181 / 182, DNT 184.5, DB 111, DR 243 / DB 143 / 112, OBB 1012, 1040), [small-diesels.md](small-diesels.md) (CD 704, 710, 714, 742, DB 212, MUV 69), [czsk-coaches.md](czsk-coaches.md) (the CD Y, ZSR and UIC-Z coaches), [german-coaches.md](german-coaches.md)
+**See also** - [buses.md](buses.md) (the buses), [vehicle-rig.md](vehicle-rig.md) (steered wheels, sections, joints), [trucks.md](trucks.md), [loco-liveries.md](loco-liveries.md) (the locomotives' liveries and the CD 263), [cd-230.md](cd-230.md) (the laminatka), [cz-electrics.md](cz-electrics.md) (CD 110, 130, 140, 169), [csd-coaches.md](csd-coaches.md) (the CSD coaches), [wagons.md](wagons.md) (the freight wagons), [cd-green-white.md](cd-green-white.md), [bmo-double-deck.md](bmo-double-deck.md), [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md), [wagons.md](wagons.md) and [freight-wagons.md](freight-wagons.md) (the freight wagons), [trams.md](trams.md) (the trams and the metro), [mainline-electrics.md](mainline-electrics.md) (CD 180 / 181 / 182, DNT 184.5, DB 111, DR 243 / DB 143 / 112, OBB 1012, 1040), [vectron.md](vectron.md) (the Siemens Vectron), [small-diesels.md](small-diesels.md) (CD 704, 710, 714, 742, DB 212, MUV 69), [czsk-coaches.md](czsk-coaches.md) (the CD Y, ZSR and UIC-Z coaches), [german-coaches.md](german-coaches.md)
 
 ## The designs
 
@@ -27,6 +27,7 @@ how to add one.
 | `veh-dr-243` | DR 243 / DB 143 / 112 | parametric (`livery`: dr243, the default, db143, db143vr, db112, [mainline-electrics.md](mainline-electrics.md)): the LEW body of the DR 243 864: the ribbed machine room, roof-edge grilles, cab doors and windows; the 112 on 8.4 m pivots; 16.64 m over buffers, about 12,900 to 13,100 triangles. [Source notes](../../assets/dr-243/SOURCES.md), [measured comparison](../../assets/dr-243/COMPARISON.md) |
 | `veh-obb-1012` | OBB 1012 | the 1996 prototype 1012.001: long raked nose, one wide windscreen, the upper sides leaning in, white with the red machine room and cab sweeps, single-arm pantographs; 19.30 m over buffers, about 11,900 triangles ([mainline-electrics.md](mainline-electrics.md)). [Source notes](../../assets/obb-1012/SOURCES.md), [measured comparison](../../assets/obb-1012/COMPARISON.md) |
 | `veh-obb-1040` | OBB 1040 | the Floridsdorf 1040 013 in red with the yellow line: the V-shaped ends, louvre panels and two windows, cab doors, the grey frame, two diamond pantographs; 12.92 m over buffers, about 10,200 triangles ([mainline-electrics.md](mainline-electrics.md)). [Source notes](../../assets/obb-1040/SOURCES.md), [measured comparison](../../assets/obb-1040/COMPARISON.md) |
+| `veh-vectron` | Siemens Vectron | parametric (`livery`: cdEurocity, the default, regiojet, cdWhite, [vectron.md](vectron.md)): the Vectron MS of the Czech operators' leases - the CD Eurocity 193 298, the RegioJet 193 205, the white 193 574 in CD service: the almost upright lower nose with the V lamp grille, the raked windscreen, the wide rounded cab corners, one cab door a side at each end, the cant grilles, single-arm pantographs; 18.98 m over buffers, about 13,300 to 14,000 triangles. [Source notes](../../assets/vectron/SOURCES.md) |
 | `veh-cd-230` | CD 230 / 240 / 340 | parametric (`livery`: cd230, the default, cd240, cd240No047, cd340, cd242, [cd-230.md](cd-230.md)): the Skoda 47E "laminatka" 230 025-9 reconstructed from native vlakosimdb XML/BMPs and photographs: rounded glass-fibre noses with the wrap-round windscreen, headlight housing, vents, lip grilles and lamps laid on the curved skin, louvred machine-room band under six windows, portholed cab doors, diamond pantographs (rear raised, front folded), bogies with coils, motors and brake cylinders; 16.44 m over buffers, 5.88 m operating height, about 15,600 to 15,900 triangles. [Source notes](../../assets/cd-230/SOURCES.md), [measured comparison](../../assets/cd-230/COMPARISON.md) |
 | `veh-cd-263` | CD 263 / 371 / 372 | parametric (`livery`: cd263, cd263No015, cd371No002, cd371No005, cd372, db180, dbAg180 - the DB 180 is the 372): the CD 163's body, cabs, roof and running gear (`cd163Body`) with the 263's machine room - two banks of grilles on the right, square and divided windows on the left (four equal ones on the 371 005) - in the red liveries with a yellow or cream band; about 15,200 to 15,500 triangles. See [loco-liveries.md](loco-liveries.md) and `assets/cd-263/SOURCES.md` |
 | `veh-cd-263` | CD 263 / 371 / 372 | parametric (`livery`: cd263, cd263No015, cd371No002, cd371No005, cd372): the CD 163's body, cabs, roof and running gear (`cd163Body`) with the 263's machine room - two banks of grilles on the right, square and divided windows on the left (four equal ones on the 371 005) - in the red liveries with a yellow or cream band; about 15,200 to 15,500 triangles. See [loco-liveries.md](loco-liveries.md) and `assets/cd-263/SOURCES.md` |
@@ -119,7 +120,10 @@ so each native pixel represents 0.10 m. The old 4x images are not measurement
 sources. Photographs still establish mechanical dimensions, including buffer
 spacing, wheel diameter and overall length.
 
-The body runs from 1.03 to 3.70 m, with a yellow band at 1.70 to 2.30 m.
+The body runs from 1.03 to 3.70 m, with a yellow band at 1.70 to 2.30 m; its
+lowest 0.17 m (to the apron at 1.20 m) is the dark solebar under every livery's
+paint (`withSolebar`), and a solebar strip continues below the body to 0.88 m,
+as every photograph shows.
 Grey roof aprons start at 3.50 m on the sides; the front stays green to 3.70 m,
 matching the different paint boundaries in the native front and side BMPs.
 The projecting nose is at the band's upper edge: the face recedes 0.20 m toward
@@ -128,9 +132,21 @@ skirt is upright. Each colour band follows this same double-raked profile.
 Each front glass is 1.20 m wide and approximately 0.70 m high (aspect 1.71),
 from 2.70 to 3.40 m above rail, inside a metal surround and rubber gasket.
 The 80 mm corner chamfers leave room for frames extending to 1.39 m either
-side of the centreline. The side cab panes are 0.60 by 0.70 m with a sloping
-leading edge; the door glazing is 0.50 by 0.70 m, aligned at 2.60 to 3.30 m.
-Doors, handles, steps and handrails move together with the wider glazing.
+side of the centreline.
+
+The cab sections follow the photographs rather than the native BMPs, which
+draw them 0.5 m short (`photo-162-114-regiojet-side.jpg`, measured at both ends
+on a near-orthogonal side at 80.8 px a metre): each cab is 2.2 m long, its seam
+at 5.52 m where the machine room's ribs end; the side window is 0.42 by 0.70 m,
+0.22 m behind the nose's corner; the door stands 0.9 to 1.6 m behind the nose
+(6.11 to 6.83 m), its glazing 0.52 by 0.70 m at 2.60 to 3.30 m, a ribbed panel
+between it and the window and a smooth one, with the cab's number, behind it.
+Handles, steps and handrails move with the door. The roof over each cab is a
+long ramp, not a brow: from the eave at the windscreen's top it reaches the cant
+0.90 m back and the roof 1.75 m back (`RAMP_CANT`, `RAMP_ROOF`), and the hood
+with the horns sits on it. The intake shutters end at 5.38 m, 0.17 m short of the
+cab seams. The cooler's grille sides lean in from the eave to its top, 0.55 m in,
+just proud of the body's cant, as on the three-quarter photograph.
 Bottom-mounted wipers and front handrails stand proud of the shell.
 
 Both red and white lower marker lenses are circular, 200 mm across, in equal
@@ -154,9 +170,13 @@ gutters. Four 700 mm porthole panes sit at 2.85 m on the +Z side. The opposite
 intake frame extends from 2.40 to 3.30 m, matching `z_inc`. The central cooler
 has a skirt overlapping the upper side wall at 3.30 m and reaches 4.25 m, the
 midpoint of the two side textures' half-pixel disagreement in its top edge.
+Its grille sides lean in from the eave (see above).
 
 `assets/cd-163/native/landmarks.json` records 50 independently annotated
-native-pixel boxes and their model scopes. Regression checks project the actual
+native-pixel boxes and their model scopes; 13 of them (the cab doors and side
+windows, D01-D06 and I01-I06, and the intake band I09) carry a `superseded` note
+naming the photograph that contradicts the BMP by 0.3 m or more, and the test
+checks the other 37. Regression checks project the actual
 GLB vertices onto the same canvases: front `u = 1.5 - Z`, side `u = X + 8.5`,
 vertical `v = 6 - Y`. Both side comparisons follow the bitmap's longitudinal
 axis; the intake side is mirrored relative to a normal outside view. Tests
@@ -190,7 +210,8 @@ radius swells and narrows once per turn, capped only on top; insulators are a
 core with a few sheds. Round parts use as few sides as their size allows
 (portholes 16, lamps 12, tanks and axle boxes 8-10): the model was trimmed
 from about 22,400 to about 15,600 triangles this way. The intake shutters keep
-their full 88 fine slats: thinning them made the side read worse.
+their fine slats at the same pitch (82 over the photographed, shorter band):
+thinning them made the side read worse.
 
 The rear (-X) pantograph is raised to the game's 5.88 m contact wire
 ([animation.md](animation.md)); the front one

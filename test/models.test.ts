@@ -402,10 +402,15 @@ describe("the vehicles", () => {
         const glass = (scope: string) => nodes.find((n): n is LeafNode => isLeaf(n) && n.id.startsWith(`${cab}/${side}/${scope}/`) && n.material === "glass")!;
         const window = glass("side-window");
         const door = glass("door");
+        // the photographed proportions (photo-162-114-regiojet-side.jpg): a 0.42 m side window
+        // 0.22 m behind the nose, the door's 0.52 m pane 0.9 - 1.6 m behind it
         expect(window.max![1] - window.min![1]).toBeCloseTo(0.70, 2);
-        expect(window.max![0] - window.min![0]).toBeCloseTo(0.60, 2);
+        expect(window.max![0] - window.min![0]).toBeCloseTo(0.42, 2);
         expect(door.max![1] - door.min![1]).toBeCloseTo(0.70, 2);
-        expect(door.max![0] - door.min![0]).toBeCloseTo(0.50, 2);
+        expect(door.max![0] - door.min![0]).toBeCloseTo(0.52, 2);
+        const nose = 7.7; // the shell's end at the windows' height
+        expect(nose - Math.max(Math.abs(window.min![0]), Math.abs(window.max![0]))).toBeCloseTo(0.22, 1);
+        expect(nose - Math.max(Math.abs(door.min![0]), Math.abs(door.max![0]))).toBeGreaterThan(0.9);
         expect(Math.abs(window.max![1] - door.max![1])).toBeLessThan(0.06);
       }
     }
@@ -536,7 +541,9 @@ describe("the vehicles", () => {
     }
     const intake = nodes.find((n) => n.id === "body/machine-room-intake")!;
     expect(intake.max![2]).toBeLessThan(-1.4);
-    expect(intake.max![0] - intake.min![0]).toBeGreaterThan(11);
+    // the shutter band ends 0.17 m short of the cab seams 2.2 m behind the noses (the photographs)
+    expect(intake.max![0] - intake.min![0]).toBeGreaterThan(10.7);
+    expect(intake.max![0]).toBeLessThan(5.4);
     expect(intake.min![1]).toBeGreaterThan(2.30); // clear of the livery band
   });
 
@@ -545,14 +552,18 @@ describe("the vehicles", () => {
     // One native pixel is 0.10 m. Wider tolerances cover ambiguous buffer and
     // door outlines, and the painted band's extent beyond the body silhouette.
     const reference = JSON.parse(fs.readFileSync(new URL("../assets/cd-163/native/landmarks.json", import.meta.url), "utf8")) as {
-      annotations: Array<{ id: string; view: string; box: number[]; nodes: string[]; tolerancePixels: number }>;
+      annotations: Array<{ id: string; view: string; box: number[]; nodes: string[]; tolerancePixels: number; superseded?: string }>;
     };
     const nodes = walk(designTree(proceduralId("proc-vehicle-cd-163")).root).filter(isLeaf);
     const { json, bin } = parseGlb(designGlb(proceduralId("proc-vehicle-cd-163")));
     const triangles = collectTriangles(json, bin);
     const materials = new Map([...new Set(triangles.map((t) => t.material))].map((mat) => [mat, triangles.filter((t) => t.material === mat)]));
     expect(reference.annotations).toHaveLength(50);
-    for (const row of reference.annotations) {
+    // the cab doors, side windows and shutter band follow the photographs, which the native BMP
+    // contradicts by 0.3 m (each row names its photo); every other row still holds
+    const superseded = reference.annotations.filter((r) => r.superseded).map((r) => r.id);
+    expect(superseded).toEqual(["D01", "D02", "D03", "D04", "D05", "D06", "I01", "I02", "I03", "I04", "I05", "I06", "I09"]);
+    for (const row of reference.annotations.filter((r) => !r.superseded)) {
       // Check both ends against x_both in the same texture-coordinate basis.
       for (const rear of row.view === "x_both" ? [false, true] : [false]) {
         const ids = row.nodes.map((id) => rear ? id.replace("front-cab/", "rear-cab/") : id);

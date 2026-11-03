@@ -49,3 +49,25 @@ Native files: `db/train/coach/db_ic_ampz`, `db_ic_bmpz`, `db_ic_wrmz`, `obb_ampz
 Running numbers (`UIC_Z_NUMBERS.db`, `.obb`): OBB Bmpz 73 81 21-91 111-4 and OBB WRmz 61 81 88-90 203-4 from Commons file titles; the DB numbers and the OBB Ampz are illustrative numbers of their series with computed check digits.
 
 Photos: [PHOTOS.md](PHOTOS.md); the DB ones show the BMPs' livery, the OBB ones later liveries of the same bodies.
+
+## RegioJet coaches
+
+`operator=regiojet` is read from photographs, not vlakosimdb: RegioJet's ex-OBB
+Ampz and Bmz in its yellow livery. The layout (windows, doors, signs) is the OBB
+spec's, the coaches being OBB's; only the paint and the lettering differ.
+
+| File | Commons page | Author | Licence | Used for |
+|---|---|---|---|---|
+| `photo-regiojet-train.jpg` | https://commons.wikimedia.org/wiki/File:RegioJet,_souprava_03.jpg | Honza Groh (Jagro) | CC BY-SA 3.0 | a RegioJet train of ex-OBB coaches behind a 162 (8 November 2011): yellow to 1.9 m, the anthracite window band, yellow up to the roof's curve, the grey roof, white class numerals |
+| `photo-regiojet-bmz-door.jpg` | https://commons.wikimedia.org/wiki/File:RegioJet,_souprava,_dve%C5%99e.jpg | Honza Groh (Jagro) | CC BY-SA 3.0 | the silver door with its dark window, the white "2" on the window band, the dark grey lettering on the lower yellow |
+
+The bands: yellow 0.9..1.9 m, anthracite 1.9..3.1 m, yellow 3.1..3.6 m, roof
+above; the ends anthracite. The "|| REGIO" (red) "JET" (navy) wordmark on the
+lower yellow is RegioJet's corporate mark as on its locomotives
+(docs/models/lettering.md); its place on the coach (6 m ahead of the middle as
+the reader sees it) is a choice, the photographs not showing the whole side.
+
+Running numbers (`UIC_Z_NUMBERS.regiojet`) are illustrative Czech-registered
+(54) numbers of the 19-91, 21-91 and 88-91 series with computed check digits; no
+number is legible on the photographs. RegioJet runs no WRmz: the dining car in
+RegioJet paint exists only because every parameter combination must build.

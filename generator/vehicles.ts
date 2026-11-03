@@ -517,6 +517,8 @@ const CD_163_GAME: GameProperties = {
   variants: [
     { params: { livery: "cd162No022" }, maxspeed: 140 },
     { params: { livery: "cd162" }, maxspeed: 140 },
+    { params: { livery: "regiojet" }, maxspeed: 140 },
+    { params: { livery: "cdBlue" }, maxspeed: 140 },
     { params: { livery: "cd362No054" }, power: 3060, maxspeed: 140 },
     { params: { livery: "cd362" }, weight: 87, power: 3060, maxspeed: 140 },
     { params: { livery: "cd363No009" }, weight: 87, power: 3060 },
@@ -556,7 +558,10 @@ const CD_263_GAME: GameProperties = {
 };
 
 /** Every procedural vehicle, by catalog id. The ids are stored in saved maps. */
-export const VEHICLES: ProceduralDesign[] = [
+// Built by a function marked pure: a model's JS bundle imports its build function
+// through this module, and esbuild keeps a module-level spread or call it cannot
+// prove pure with everything it reaches -- every locomotive here in a coach's bundle.
+export const VEHICLES: ProceduralDesign[] = /* @__PURE__ */ (() => [
   { id: "proc-vehicle-american-truck", game: { weight: 36, power: 375, maxspeed: 90, accel: null }, title: "American Truck", build: americanTruck, buildLod: americanTruckLod, references: "american-truck" },
   { id: "proc-vehicle-cd-150", game: CD_150_GAME, title: "CD 150 / 151 / ZSR 350", build: cd150, buildLod: cd150Lod, params: CD150_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-150" },
   { id: "proc-vehicle-cd-163", game: CD_163_GAME, openttd: CD_163_OPENTTD, title: "CD 163 / 363", build: cd163, buildLod: cd163Lod, params: CD163_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-163" },
@@ -564,4 +569,4 @@ export const VEHICLES: ProceduralDesign[] = [
   { id: "proc-vehicle-cd-263", game: CD_263_GAME, title: "CD 263 / 371 / 372", build: cd263, buildLod: cd263Lod, params: CD263_PARAMS, catalog: ELECTRIC_LOCO_CATALOG, references: "cd-263" },
   ...COACH_DESIGNS.map((c): ProceduralDesign => ({ id: c.id, title: c.title, build: c.build, buildLod: COACH_LODS[c.id], game: c.game, catalog: COACH_CATALOG, references: c.folder, ...(c.params ? { params: c.params } : {}) })),
   ...WAGON_DESIGNS.map((w): ProceduralDesign => ({ id: w.id, title: w.title, build: w.build, buildLod: w.buildLod, game: w.game, catalog: WAGON_CATALOG, references: w.folder, ...(w.params ? { params: w.params } : {}) })),
-];
+])();

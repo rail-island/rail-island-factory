@@ -25,6 +25,7 @@ import {
 import { liftable } from "./liftable.ts";
 import { RAIL_COLLECTOR_TOP } from "./collector.ts";
 import { rollWheels } from "./rolling.ts";
+import { wordmarkAt, type Wordmark } from "./letters.ts";
 
 const PALETTE = {
   ...CD163_PALETTE,
@@ -47,8 +48,10 @@ export const CD150_NUMBER = "150 222-8";
  */
 export interface Cd150Livery {
   title: string;
-  /** The vlakosimdb directory under db/train/loco/electric. */
-  source: string;
+  /** The vlakosimdb directory under db/train/loco/electric; a livery read from photographs names its photo instead. */
+  source?: string;
+  /** The reference photograph a livery without a vlakosimdb model is read from (assets/cd-150/). */
+  photo?: string;
   number: string;
   numberSource: string;
   palette?: Record<string, MaterialSpec>;
@@ -62,6 +65,8 @@ export interface Cd150Livery {
   skirt: string;
   sideEmblem: boolean;
   frontEmblem: boolean;
+  /** The operator's lettered wordmark (letters.ts), on the sides and the ends. */
+  wordmark?: Wordmark;
 }
 
 const c = (color: string, roughness = 0.6): MaterialSpec => ({ color, roughness });
@@ -163,6 +168,29 @@ export const CD150_LIVERIES = {
     skirt: "skyBlue",
     sideEmblem: false,
     frontEmblem: false,
+  },
+  // CD's current blue (the Najbrt scheme, from 2008), read from photo-150-226-side.jpg and
+  // photo-150-203-side.jpg: navy to 1.87 m, the white line, light blue to the eave; the white
+  // emblem and the "Ceske drahy" lettering after it
+  cdBlue: {
+    title: "CD 150 blue",
+    photo: "photo-150-226-side.jpg",
+    number: runningNumber("150", "226"),
+    numberSource: "photo-150-226-side.jpg",
+    palette: {
+      navy: c("#1f3a7a", 0.5),
+      skyBlue: c("#3a8fd8", 0.5),
+      skyRib: c("#3282c8", 0.6),
+      white: c("#eef0f2", 0.5),
+      logo: c("#eef0f2", 0.5),
+      plate: c("#1f3a7a", 0.5),
+      roof: { color: "#40557e", roughness: 0.7 },
+    },
+    bands: [[1.2, 1.87, "navy"], [1.87, 2.02, "white"], [2.02, 3.7, "skyBlue", "skyRib"]],
+    skirt: "navy",
+    sideEmblem: true,
+    frontEmblem: true,
+    wordmark: { runs: [["\u010Cesk\u00E9 dr\u00E1hy", "logo"]], side: { h: 0.13, v: 1.41 } },
   },
 } as const satisfies Record<string, Cd150Livery>;
 
@@ -413,6 +441,15 @@ function body(m: MeshBuilder, livery: Cd150Livery): void {
           [0, 0, s],
         );
       });
+      const wm = livery.wordmark;
+      if (wm?.side) m.scope("wordmark", () => {
+        const { h, v, u } = wm.side!;
+        // centred at the reader's u, or after the emblem (x = 3.3 .. 3.75 on the right, -4 .. -4.45 on the left)
+        const runs = u !== undefined
+          ? wordmarkAt(wm.runs, s > 0 ? u : -u, v, h, s < 0, wm.style, "centre")
+          : wordmarkAt(wm.runs, s > 0 ? 3.87 : -4.57, v, h, s < 0, wm.style);
+        for (const r of runs) m.facets(r.mat, r.tris.map(([x, y]): Vec3 => [x, y, s * 1.525]), [0, 0, s]);
+      });
     });
   m.scope("cooler", () => {
     m.scope("painted skirt", () =>
@@ -533,6 +570,11 @@ function cab(m: MeshBuilder, e: number, livery: Cd150Livery): void {
       ).map(([z, y]) => [e * (frontX(y, e) + 0.045), y, z]),
       [e, 0, 0],
     );
+  });
+  if (livery.wordmark?.end) m.scope("wordmark", () => {
+    const wm = livery.wordmark!, { h, v, u } = wm.end!;
+    for (const r of wordmarkAt(wm.runs, e > 0 ? -u : u, v, h, e > 0, wm.style, "centre"))
+      m.facets(r.mat, r.tris.map(([z, y]): Vec3 => [e * (frontX(y, e) + 0.045), y, z]), [e, 0, 0]);
   });
   if (livery.frontEmblem) m.scope("emblem", () => {
     m.facets(

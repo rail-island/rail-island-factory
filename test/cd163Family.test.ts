@@ -66,7 +66,8 @@ const palette = (m: MeshBuilder): Record<string, MaterialSpec> => {
 };
 
 const CASES: Case[] = [
-  ...Object.entries(CD163_LIVERIES).map(([key, l]): Case => ({
+  // the liveries read from vlakosimdb; the photographed ones (RegioJet, CD blue) have no native BMP
+  ...Object.entries(CD163_LIVERIES).flatMap(([key, l]) => ("source" in l ? [[key, l] as const] : [])).map(([key, l]): Case => ({
     key, ...l.livery, palette: palette(cd163({ livery: key })),
     bmp: new URL(key === "cd163" ? "cd-163/native/z_dec.bmp" : `cd-163/native/liveries/${l.source}/z_dec.bmp`, assets),
     // cd_163.022 maps a 169 x 57 BMP onto 16.9 x 6.1 m; the others 170 x 60 onto 17 x 6 m
@@ -77,7 +78,7 @@ const CASES: Case[] = [
     bmp: new URL(`cd-263/native/${l.source}/z_inc.bmp`, assets),
     column: 60, rows: [27, 46], canvas: [170, 60, 6],
   })),
-  ...Object.entries(CD150_LIVERIES).map(([key, l]): Case => ({
+  ...Object.entries(CD150_LIVERIES).flatMap(([key, l]) => ("source" in l ? [[key, l] as const] : [])).map(([key, l]): Case => ({
     key, bands: l.bands, ...("cabBands" in l ? { cabBands: l.cabBands } : {}), palette: palette(cd150({ livery: key })),
     bmp: new URL(key === "cd150" ? "cd-150/native/z_dec.bmp" : `cd-150/native/liveries/${l.source}/z_dec.bmp`, assets),
     column: 62, rows: [25, 46], canvas: [170, 60, 6],
@@ -255,6 +256,7 @@ describe("CD 163 family low level of detail", () => {
     expect(faceAt(m, 0, 2.8, 1.47, [0, 0, 1])).toBe("charcoal");
     expect(faceAt(m, 7.0, 2.8, 1.47, [0, 0, 1])).toBe("red");
     expect(faceAt(m, 7.85, 2.5, 0, [1, 0, 0])).toBe("red");
-    expect(faceAt(m, 0, 1.1, -1.47, [0, 0, -1])).toBe("charcoal");
+    // the dark solebar under every livery's body (it takes the bottom of the old charcoal band)
+    expect(faceAt(m, 0, 1.1, -1.47, [0, 0, -1])).toBe("underframe");
   });
 });

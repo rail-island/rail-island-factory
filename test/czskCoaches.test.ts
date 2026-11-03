@@ -63,10 +63,11 @@ describe("Czech and Slovak coaches (CD Y, ZSR, UIC-Z)", () => {
       expect(d.references).toBe({ "proc-vehicle-cd-y-coach": "cd-y-coach", "proc-vehicle-zsr-coach": "zsr-coach", "proc-vehicle-uic-z-coach": "uic-z-coach" }[d.id]);
     }
     for (const t of CZSK_TRANSFERS) expect(ALL_TRANSFERS).toContain(t);
-    // every parameter combination of every design is one transferred vlakosimdb vehicle
+    // every parameter combination of every design is one transferred vlakosimdb vehicle, but the
+    // RegioJet coaches, read from photographs (docs/models/czsk-coaches.md)
     const key = (p: Record<string, string>) => JSON.stringify(Object.entries(p).sort());
     for (const d of CZSK_COACHES)
-      expect(CZSK_TRANSFERS.filter((t) => t.id === d.id).map((t) => key(resolveParams(d.params!, t.params))).sort()).toEqual(paramCombinations(d.params).map(key).sort());
+      expect(CZSK_TRANSFERS.filter((t) => t.id === d.id).map((t) => key(resolveParams(d.params!, t.params))).sort()).toEqual(paramCombinations(d.params).filter((p) => p.operator !== "regiojet").map(key).sort());
   });
 
   it("keeps the parameter contract and defaults", () => {
@@ -74,7 +75,7 @@ describe("Czech and Slovak coaches (CD Y, ZSR, UIC-Z)", () => {
     expect(design("proc-vehicle-zsr-coach").params!.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([["variant", "b", ["a", "ab", "b", "bh", "bds", "bdmeer", "wrrm", "apee"]]]);
     expect(design("proc-vehicle-uic-z-coach").params!.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([
       ["variant", "secondClass", ["firstClass", "secondClass", "restaurant"]],
-      ["operator", "cd", ["cd", "db", "obb"]],
+      ["operator", "cd", ["cd", "db", "obb", "regiojet"]],
     ]);
     for (const d of CZSK_COACHES) expect(() => d.build({ variant: "nope" })).toThrow(/no value "nope"/);
   });
@@ -125,6 +126,8 @@ describe("Czech and Slovak coaches (CD Y, ZSR, UIC-Z)", () => {
     // German coaches 80, Austrian ones 81
     for (const { number } of Object.values(UIC_Z_NUMBERS.db)) expect(number.slice(3, 5)).toBe("80");
     for (const { number } of Object.values(UIC_Z_NUMBERS.obb)) expect(number.slice(3, 5)).toBe("81");
+    // RegioJet's ex-OBB coaches run under Czech registration
+    for (const { number } of Object.values(UIC_Z_NUMBERS.regiojet)) expect(number.slice(3, 5)).toBe("54");
     for (const t of CZSK_TRANSFERS)
       for (const side of ["right", "left"]) {
         const n = leaves(transferBuild(t).sourceTree(t.id, t.title).root);
@@ -171,6 +174,27 @@ describe("Czech and Slovak coaches (CD Y, ZSR, UIC-Z)", () => {
     expect(sha({ variant: "restaurant" })).toBe("27cc9fc829387908f1b5f23fe109ae53f952910cf760bf6371e7fe537552f5c7");
     expect(sha({ operator: "db" })).not.toBe(sha());
     expect(() => d.build({ operator: "sncf" })).toThrow(/no value "sncf"/);
+  });
+
+  it("paints RegioJet's ex-OBB coaches on the OBB layout, lettered both sides, the CD and OBB ones untouched", () => {
+    const id = "proc-vehicle-uic-z-coach";
+    for (const variant of ["firstClass", "secondClass", "restaurant"]) {
+      // the OBB coach's windows and doors
+      for (const side of ["right", "left"]) expect(windowCount(id, { operator: "regiojet", variant }, side), `${variant} ${side}`).toBe(windowCount(id, { operator: "obb", variant }, side));
+      const ns = nodesOf(id, { operator: "regiojet", variant });
+      // yellow, the anthracite window band; no OBB red, line or pictogram
+      expect(ns.some((n) => n.material === "rjYellow")).toBe(true);
+      expect(ns.some((n) => n.material === "red" || n.material === "blue" || n.material === "yellow")).toBe(false);
+      // "|| REGIO" red and "JET" navy on both sides
+      for (const side of ["right", "left"]) {
+        const w = ns.filter((n) => n.id.startsWith(`wordmark/${side}/`));
+        expect(new Set(w.map((n) => n.material)), `${variant} ${side}`).toEqual(new Set(["rjRed", "rjNavy"]));
+        // on the lower yellow, clear of the window band
+        expect(Math.max(...w.map((n) => n.max![1]))).toBeLessThan(1.9);
+        expect(Math.min(...w.map((n) => n.min![1]))).toBeGreaterThan(0.9);
+      }
+    }
+    expect(nodesOf(id, { operator: "obb" }).some((n) => n.id.startsWith("wordmark/"))).toBe(false);
   });
 
   it("lays out the DB IC and OBB coaches as their native BMPs do", () => {
