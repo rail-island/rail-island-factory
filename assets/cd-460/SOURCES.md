@@ -42,6 +42,16 @@ Each holds `vehicle.xml` (the unchanged Windows-1250 metadata), `index.xml` (the
 
 `number460()`: the default livery carries 460 071-4 (legible on `photo-460-071-three-quarter-ostrava-2009.jpg`), cd003 460 003-7 and cd007 460 007-8 (vlakosimdb writes "003-4" and "007-4"; those check digits are wrong, the CSD scheme gives 7 and 8), csd 460 045-8. The trailers carry the real class of the intermediate cars, 063, with the set's serial (illustrative: 063 071-5, 063 003-8, 063 007-9, 063 045-9). All check digits are valid (`tractionCheckDigit`).
 
+## CD blue livery
+
+The `cdBlue` livery (460 016-9 in CD's current blue, the Najbrt scheme) is read from a photograph, not from vlakosimdb:
+
+| file | page | author | licence | use |
+|---|---|---|---|---|
+| `photo-460-016-cd-blue-ostrava-2022.jpg` | https://commons.wikimedia.org/wiki/File:460_016-9_in_Ostrava.jpg | Oleksandr Dede | CC BY-SA 4.0 | the bands on the sides and the front, the doors, the emblem and wordmark, the running number 460 016-9 |
+
+The motor car carries 460 016-9 (legible on the photo's front), the trailer 063 016 of the same set (`number460`). See docs/models/czech-emus-classic.md.
+
 ## Measurement record
 
 `native/cd_460/landmarks.json` holds 23 native pixel-edge boxes (13 side, 8 cab front, 2 inner end) with their model scopes, tolerances and uncertainty; `baseline.json` is the geometry's measurement when the annotations were fixed. [COMPARISON.md](COMPARISON.md) lists the normalized errors and the signed residual of every box at the model revision.

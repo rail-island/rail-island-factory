@@ -2,8 +2,9 @@
 // suburban network: one design `veh-cd-471` whose `unit` picks the car of the
 // three-car set - the 471 motor car (default), the 071 trailer or the 971
 // driving trailer - and whose `variant` picks the CD 471 in its CityElefant
-// livery or vlakosimdb's red "CD 675", the same body and layout in another
-// paint and class (assets/cd-471/SOURCES.md says why it is no separate design).
+// livery, vlakosimdb's red "CD 675", the same body and layout in another
+// paint and class (assets/cd-471/SOURCES.md says why it is no separate design),
+// or CD's current blue (`cdBlue`, 471 079, read from a photograph).
 //
 // Reconstructed from the native vlakosimdb XML and BMPs in assets/cd-471/native
 // (db/train/emu/cd 471/cd_471, cd_071, cd_971) and assets/cd-675/native (cd 675):
@@ -22,6 +23,8 @@ import { bogieParts, coachBody, fitUnit, pantographParts, shifted, sideGlass } f
 import { emblem } from "./cd163.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
+import { wordmarkAt, type Wordmark } from "./letters.ts";
+import { frontDecal, frontNumber } from "./emuClassicKit.ts";
 import { blockX, centreCoupler, EMU_CATALOG, enumParam, pantograph, slopePanel, tractionNumber } from "./emuParts.ts";
 
 /** The published height (4.635 m) over the XML's 4.8 m roof: every source height is scaled by it. */
@@ -30,7 +33,7 @@ export const K_Y = 4.635 / 4.8;
 export const K_Z = 2.82 / 3.0;
 
 export type ElefantUnit = "motorCar" | "trailer" | "drivingTrailer";
-export type ElefantVariant = "cd471" | "cd675";
+export type ElefantVariant = "cd471" | "cd675" | "cdBlue";
 
 export const CD471_PARAMS: readonly ParamSpec[] = [
   enumParam("unit", "Car", {
@@ -41,6 +44,7 @@ export const CD471_PARAMS: readonly ParamSpec[] = [
   enumParam("variant", "Variant", {
     cd471: "CityElefant",
     cd675: "CD 675",
+    cdBlue: "CD 471 blue",
   }),
 ];
 
@@ -48,10 +52,11 @@ export const CD471_PARAMS: readonly ParamSpec[] = [
 const CLASSES: Record<ElefantVariant, Record<ElefantUnit, string>> = {
   cd471: { motorCar: "471", trailer: "071", drivingTrailer: "971" },
   cd675: { motorCar: "675", trailer: "075", drivingTrailer: "975" },
+  cdBlue: { motorCar: "471", trailer: "071", drivingTrailer: "971" },
 };
 
-/** The set the running numbers name: 471 014 (photographed at Srbsko), and an illustrative 675 001. */
-const SERIAL: Record<ElefantVariant, string> = { cd471: "014", cd675: "001" };
+/** The set the running numbers name: 471 014 (photographed at Srbsko), an illustrative 675 001, and 471 079 in CD blue. */
+const SERIAL: Record<ElefantVariant, string> = { cd471: "014", cd675: "001", cdBlue: "079" };
 
 /** The running number a car carries, e.g. `471 014-1`. */
 export function elefantNumber(variant: ElefantVariant, unit: ElefantUnit): string {
@@ -68,6 +73,26 @@ interface Paint {
   door: string;
   /** The apron's lower edge. */
   apron: string;
+  /** The body's bands in source heights (skirt, white, `band`, white when absent). */
+  bands?: Array<[number, number, string]>;
+  /** The cab doors' paint ("white" when absent; "bands" paints a door in the body's bands). */
+  cabDoor?: string;
+  /** Whether the side stripes, the cab doors' and the front stripe are drawn, and the trim lines (both by default). */
+  stripes?: boolean;
+  trim?: boolean;
+  /** How far the yellow line under the upper windows is lowered (source metres, 0 when absent). */
+  yellowDrop?: number;
+  /** The side emblem's paint (`band` when absent) and, per car, its native box where it moves. */
+  emblemMat?: string;
+  emblemBox?: Partial<Record<ElefantUnit, PxBox>>;
+  /** The operator's lettered wordmark on the upper side wall: cap height and baseline (source metres), centre per car (body metres). */
+  wordmark?: { runs: Wordmark["runs"]; h: number; v: number; at: Partial<Record<ElefantUnit, number>> };
+  /** The front: panels on the nose's slope (source heights, across the nose tip), the running number and the emblem (reader's u, foot and height in model metres). */
+  front?: {
+    panels: Array<[number, number, string]>;
+    number: { mat: string; u: number; y: number; h: number };
+    emblem: { mat: string; u: number; y: number; h: number };
+  };
 }
 
 // the native BMP colours (z_both, x_inc) of each variant
@@ -100,6 +125,38 @@ const PAINTS: Record<ElefantVariant, Paint> = {
     stripe: "stripeGreen",
     door: "red",
     apron: "apronYellow",
+  },
+  // CD's current blue (the Najbrt scheme), read from photo-471-079-cd-blue-2024.jpg: a navy foot,
+  // white to the navy line under the end windows, light blue to the white line under the upper
+  // windows, navy above and over the roof; navy doors; the white emblem behind the cab and
+  // "City Elefant" in white on the navy; the nose light blue round the windscreen
+  cdBlue: {
+    palette: {
+      white: { color: "#eef0f2", roughness: 0.5 },
+      navy: { color: "#1f3a7a", roughness: 0.5 },
+      sky: { color: "#3c97de", roughness: 0.5 },
+      canopy: { color: "#18275a", roughness: 0.5 },
+      yellow: { color: "#f2c418", roughness: 0.5 },
+      apronYellow: { color: "#e8bf16", roughness: 0.6 },
+      emblemBack: { color: "#3c97de", roughness: 0.5 },
+    },
+    band: "sky",
+    stripe: "sky",
+    door: "navy",
+    apron: "apronYellow",
+    bands: [[0.2, 1.0, "navy"], [1.0, 2.15, "white"], [2.15, 2.32, "navy"], [2.32, 3.3, "sky"], [3.3, 3.42, "white"], [3.42, 4.8, "navy"]],
+    cabDoor: "bands",
+    stripes: false,
+    trim: false,
+    yellowDrop: 0.12,
+    emblemMat: "white",
+    emblemBox: { motorCar: [33, 30, 42, 35], drivingTrailer: [205, 30, 214, 35] },
+    wordmark: { runs: [["City Elefant", "white"]], h: 0.22, v: 3.54, at: { motorCar: 20.6, drivingTrailer: 20.4 } },
+    front: {
+      panels: [[1.78, 2.15, "sky"], [3.42, 4.1, "sky"]],
+      number: { mat: "white", u: -0.62, y: 1.98, h: 0.085 },
+      emblem: { mat: "white", u: -0.02, y: 1.84, h: 0.24 },
+    },
   },
 };
 
@@ -167,7 +224,7 @@ const NOSE_TIP = 25.1;
 const NOSE_PLAN: Pt[] = [[24.4, 1.5], [24.9, 1.4], [25.1, 1.2]];
 // the slope's points at the paint bands' edges (3.3 and 2.2 m) keep each band's clamped ring on the one plane
 const noseAt = (y: number): Pt => [25.1 - (0.6 * (y - 1.6)) / 2.5, y];
-const NOSE_TOP: Pt[] = [[23.5, 4.8], [24.5, 4.1], noseAt(3.3), noseAt(2.2), [25.1, 1.6]];
+const noseTop = (edges: number[]): Pt[] => [[23.5, 4.8], [24.5, 4.1], ...edges.filter((y) => y > 1.6 && y < 4.1).sort((a, b) => b - a).map(noseAt), [25.1, 1.6]];
 const NOSE_BOTTOM: Pt[] = [[24.8, 0.9], [25.1, 1.6]];
 
 /** vlakosimdb's 971 body is 24.4 m against the 471's 25.1 m: its columns are stretched to the 471's length. */
@@ -280,6 +337,8 @@ export function cd471(params?: ParamValues): MeshBuilder {
 /** A car's body: the cab cars' nose, the motor car's pantograph well, the low floor between the bogies. */
 function volume471(unit: ElefantUnit, paint: Paint): Volume {
   const L = LAYOUTS[unit];
+  const bands = paint.bands ?? [[0.2, 0.4, "skirtDark"], [0.4, 0.9, "skirt"], [0.9, 2.2, "white"], [2.2, 3.3, paint.band], [3.3, 4.8, "white"]];
+  const NOSE_TOP = noseTop(bands.map((b) => b[0]));
   const [l0, l1, l2, l3] = L.low;
   const plan: Pt[] = L.cab ? [[0, HALF], ...NOSE_PLAN.map(([x, h]): Pt => [x, h * K_Z])] : [[0, HALF], [L.length, HALF]];
   const top: Pt[] | undefined = unit === "motorCar"
@@ -293,7 +352,7 @@ function volume471(unit: ElefantUnit, paint: Paint): Volume {
     plan,
     ...(top ? { top } : {}),
     bottom,
-    bands: [[0.2 * K_Y, 0.4 * K_Y, "skirtDark"], [0.4 * K_Y, 0.9 * K_Y, "skirt"], [0.9 * K_Y, 2.2 * K_Y, "white"], [2.2 * K_Y, 3.3 * K_Y, paint.band], [3.3 * K_Y, 4.8 * K_Y, "white"]],
+    bands: bands.map(([y0, y1, mat]): [number, number, string] => [y0 * K_Y, y1 * K_Y, mat]),
     endPaint: "white",
   };
 }
@@ -312,7 +371,7 @@ function elefantCar(unit: ElefantUnit, variant: ElefantVariant): MeshBuilder {
     c.volume(body);
     for (const s of [1, -1]) m.scope(s > 0 ? "right side" : "left side", () => sideWork(c, body, L, paint, s, number));
   });
-  if (L.cab) m.scope("cab", () => cab(c, body, L, paint));
+  if (L.cab) m.scope("cab", () => cab(c, body, L, paint, number));
   for (const e of L.cab ? [-1] : [-1, 1]) m.scope(e > 0 ? "front end" : "rear end", () => innerEnd(c, body, L, e));
   if (unit === "motorCar")
     m.scope("roof equipment", () => {
@@ -378,9 +437,13 @@ function sideWork(c: Coach, v: Volume, L: CarLayout, paint: Paint, s: number, nu
   const m = c.m;
   const box = (b: PxBox) => sb(L, b);
   m.scope("paint lines", () => {
-    L.stripes.forEach((b, i) => m.scope(`stripe ${i + 1}`, () => c.sidePanel(v, paint.stripe, s, box(b), 0.004, 0.003)));
-    L.yellow.forEach((b, i) => m.scope(`yellow line ${i + 1}`, () => c.sidePanel(v, "yellow", s, box(b), 0.004, 0.003)));
-    L.trim.forEach((b, i) => m.scope(`trim ${i + 1}`, () => c.sidePanel(v, "trim", s, box(b), 0.004, 0.003)));
+    if (paint.stripes ?? true) L.stripes.forEach((b, i) => m.scope(`stripe ${i + 1}`, () => c.sidePanel(v, paint.stripe, s, box(b), 0.004, 0.003)));
+    const drop = (paint.yellowDrop ?? 0) * K_Y;
+    L.yellow.forEach((b, i) => m.scope(`yellow line ${i + 1}`, () => {
+      const y = box(b);
+      c.sidePanel(v, "yellow", s, drop ? { ...y, y0: y.y0 - drop, y1: y.y1 - drop } : y, 0.004, 0.003);
+    }));
+    if (paint.trim ?? true) L.trim.forEach((b, i) => m.scope(`trim ${i + 1}`, () => c.sidePanel(v, "trim", s, box(b), 0.004, 0.003)));
   });
   m.scope("upper windows", () =>
     L.upper.forEach((b, i) => {
@@ -409,14 +472,21 @@ function sideWork(c: Coach, v: Volume, L: CarLayout, paint: Paint, s: number, nu
     L.canopies.forEach((b, i) => m.scope(`canopy ${i + 1}`, () => c.sidePanel(v, "canopy", s, box(b), 0.03, 0.04)));
   });
   m.scope("emblem", () => {
-    const e = box(L.emblem);
+    const e = box(paint.emblemBox?.[L.key === "cd_471" ? "motorCar" : L.key === "cd_971" ? "drivingTrailer" : "trailer"] ?? L.emblem);
     c.sidePanel(v, "emblemBack", s, e, 0.006, 0.004);
     const h = (e.y1 - e.y0) * 0.62;
     const w = h * 1.5385;
     const cx = c.X((e.x0 + e.x1) / 2);
     const u0 = s > 0 ? cx - w / 2 : cx + w / 2;
     const y0 = (e.y0 + e.y1) / 2 - h / 2;
-    m.facets(paint.band, emblem(u0, y0, h, s < 0).map(([u, vv]): Vec3 => [u, vv, s * (HALF + 0.011)]), [0, 0, s]);
+    m.facets(paint.emblemMat ?? paint.band, emblem(u0, y0, h, s < 0).map(([u, vv]): Vec3 => [u, vv, s * (HALF + 0.011)]), [0, 0, s]);
+  });
+  const wm = paint.wordmark;
+  const at = wm?.at[L.key === "cd_471" ? "motorCar" : L.key === "cd_971" ? "drivingTrailer" : "trailer"];
+  // centred on the car's upper wall, read from either side
+  if (wm && at !== undefined) m.scope("wordmark", () => {
+    for (const r of wordmarkAt(wm.runs, c.X(at), wm.v * K_Y, wm.h * K_Y, s < 0, {}, "centre"))
+      m.facets(r.mat, r.tris.map(([x, y]): Vec3 => [x, y, s * (HALF + 0.006)]), [0, 0, s]);
   });
   m.scope("running number", () => {
     const n = box(L.number);
@@ -425,7 +495,7 @@ function sideWork(c: Coach, v: Volume, L: CarLayout, paint: Paint, s: number, nu
 }
 
 /** The cab: windscreen, lamps, the apron and the coupler on the nose (x_inc of the 471). */
-function cab(c: Coach, v: Volume, L: CarLayout, paint: Paint): void {
+function cab(c: Coach, v: Volume, L: CarLayout, paint: Paint, number: string): void {
   const m = c.m;
   const X = (b: number) => c.X(b);
   // the nose's upper plane (XML 0.6 m back at 4.1 m) and its undercut (0.3 m back at 0.9 m)
@@ -444,7 +514,18 @@ function cab(c: Coach, v: Volume, L: CarLayout, paint: Paint): void {
   });
   m.scope("visor", () => slopePanel(m, "trim", 1, roof, fz(11), fz(19), fy(18.8), fy(17.2), 0.006, 0.01));
   // the stripe the BMP paints across its full 3 m canvas, held to the 2.26 m nose tip
-  m.scope("front stripe", () => slopePanel(m, paint.stripe, 1, upper, fz(3.1), fz(26.9), fy(44.9), fy(42.9), 0.004, 0.003));
+  if (paint.stripes ?? true) m.scope("front stripe", () => slopePanel(m, paint.stripe, 1, upper, fz(3.1), fz(26.9), fy(44.9), fy(42.9), 0.004, 0.003));
+  const fr = paint.front;
+  if (fr) {
+    // the front's own paint over the bands, as wide as the nose tip, under the lamps and the windscreen
+    m.scope("front paint", () => fr.panels.forEach(([y0, y1, mat]) => slopePanel(m, mat, 1, upper, fz(3.1), fz(26.9), y0 * K_Y, y1 * K_Y, 0.003, 0.002)));
+    const xAt = (y: number) => upper.x0 + ((y - upper.y0) / (upper.y1 - upper.y0)) * (upper.x1 - upper.x0);
+    m.scope("running number", () => frontNumber(m, fr.number.mat, number, fr.number.u, fr.number.y, fr.number.h, xAt));
+    m.scope("emblem", () => {
+      const e = fr.emblem;
+      frontDecal(m, e.mat, emblem(e.u - (e.h * 1.5385) / 2, e.y, e.h, false), xAt, 0.012);
+    });
+  }
   m.scope("lamps", () => {
     // x_inc columns 2..11 and 19..28, rows 42..45: a housing of three lenses each side
     for (const [k, z] of [-0.85 * K_Z, 0.85 * K_Z].entries())
@@ -472,9 +553,9 @@ function cab(c: Coach, v: Volume, L: CarLayout, paint: Paint): void {
       const cb = (b: PxBox) => sb(L, b);
       m.scope("cab window", () => c.window(v, s, cb(cs.window), { fw: 0.06 }));
       m.scope("cab door", () => {
-        c.door(v, s, cb(cs.door), "white", { seam: 0.03 });
+        c.door(v, s, cb(cs.door), paint.cabDoor ?? "white", { seam: 0.03 });
         c.window(v, s, cb(cs.doorGlass), { fw: 0.05 });
-        m.scope("stripe", () => c.sidePanel(v, paint.stripe, s, cb(cs.stripe), 0.013, 0.002));
+        if (paint.stripes ?? true) m.scope("stripe", () => c.sidePanel(v, paint.stripe, s, cb(cs.stripe), 0.013, 0.002));
       });
       m.scope("handrails", () => {
         for (const u of cs.rails) {
@@ -518,7 +599,7 @@ function innerEnd(c: Coach, v: Volume, L: CarLayout, e: number): void {
 }
 
 /** Every car and variant, for the tests: [unit, variant]. */
-export const ELEFANT_CARS: ReadonlyArray<[ElefantUnit, ElefantVariant]> = (["motorCar", "trailer", "drivingTrailer"] as const).flatMap((u) => (["cd471", "cd675"] as const).map((v): [ElefantUnit, ElefantVariant] => [u, v]));
+export const ELEFANT_CARS: ReadonlyArray<[ElefantUnit, ElefantVariant]> = (["motorCar", "trailer", "drivingTrailer"] as const).flatMap((u) => (["cd471", "cd675", "cdBlue"] as const).map((v): [ElefantUnit, ElefantVariant] => [u, v]));
 
 /** What the game needs of it beyond its geometry (design.ts GameProperties). */
 const CD_471_GAME: GameProperties = {
@@ -531,6 +612,7 @@ const CD_471_GAME: GameProperties = {
     { params: { unit: "drivingTrailer", variant: "cd675" }, maxspeed: 160 },
     { params: { unit: "trailer", variant: "cd675" }, weight: 50, power: 0, maxspeed: 160 },
     { params: { unit: "trailer" }, weight: 50, power: 0 },
+    { params: { unit: "trailer", variant: "cdBlue" }, weight: 50, power: 0 },
   ],
 };
 

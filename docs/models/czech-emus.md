@@ -1,7 +1,7 @@
 # Czech electric units
 
-**Covers** - the parametric `veh-cd-471` (CD 471 CityElefant: three cars, two variants) and `veh-cd-680` (CD 680 Pendolino: four cars) from vlakosimdb: what each parameter value builds, the shared EMU parts, the scales from the XML to the published dimensions, the measured comparison and the tests.
-**Code** - `generator/emu471.ts`, `generator/emu680.ts`, `generator/emuParts.ts`, `generator/emuComparison.ts`, `generator/emuReport.ts`, `generator/csdCoachParts.ts` (the body builder), `test/czechEmus.test.ts`, `assets/cd-471/`, `assets/cd-680/`
+**Covers** - the parametric `veh-cd-471` (CD 471 CityElefant: three cars, three variants, CD's current blue from a photograph) and `veh-cd-680` (CD 680 Pendolino: four cars) from vlakosimdb: what each parameter value builds, the shared EMU parts, the scales from the XML to the published dimensions, the measured comparison and the tests.
+**Code** - `generator/emu471.ts`, `generator/emu680.ts`, `generator/emuParts.ts`, `generator/letters.ts` (the blue's wordmark), `generator/emuComparison.ts`, `generator/emuReport.ts`, `generator/csdCoachParts.ts` (the body builder), `test/czechEmus.test.ts`, `assets/cd-471/`, `assets/cd-680/`
 **See also** - [czech-emus-classic.md](czech-emus-classic.md) (the CD 451, 460 and 470), [vehicles.md](vehicles.md), [parameters.md](parameters.md), [csd-coaches.md](csd-coaches.md) (the coach builder and the comparison method), [bmo-double-deck.md](bmo-double-deck.md), [CD 471 sources](../../assets/cd-471/SOURCES.md), [CD 680 sources](../../assets/cd-680/SOURCES.md)
 
 ## The designs
@@ -18,6 +18,7 @@ coupling faces, so the game can couple the cars of a set in any order.
 | | | `drivingTrailer` | cd 471/cd_971 | driving trailer 971: cab |
 | | `variant` | `cd471` (default) | cd 471 | the CityElefant livery: light grey, blue band, red stripe, red doors |
 | | | `cd675` | cd 675/cd_675, cd_075, cd_975 | vlakosimdb's "CD 675": the same body, red band, dark green stripe |
+| | | `cdBlue` | - (photograph) | CD's current blue (Najbrt), 471 079, see [CD 471 blue](#cd-471-blue-najbrt) |
 | `veh-cd-680` "CD 680 Pendolino" | `unit` | `endCar` (default) | cd 680/cd_681 | end car 681: cab, pantograph |
 | | | `car683` | cd 680/cd_683 | intermediate car with the blind kitchen section and a second roof cover |
 | | | `car685` | cd 680/cd_685 | intermediate car with a pantograph |
@@ -31,8 +32,8 @@ number ([sources](../../assets/cd-471/SOURCES.md)).
 
 | design, car | length over couplers | triangles |
 |---|---|---|
-| CD 471 motor car, driving trailer | 26.05 m | about 7,300 and 6,600 |
-| CD 471 trailer | 25.70 m | about 5,900 |
+| CD 471 motor car, driving trailer | 26.05 m | about 7,300 to 8,400 and 6,600 to 7,700 |
+| CD 471 trailer | 25.70 m | about 5,900 to 6,450 |
 | CD 680 end car | 27.70 m | about 8,100 |
 | CD 680 intermediate cars | 25.90 m | about 6,600 to 7,500 |
 
@@ -58,6 +59,27 @@ Heights are scaled to the published 4.635 m (the XML roof is 4.8 m) and widths
 to 2.82 m; bogie pivots 19.0 m apart, 2.6 m wheelbase under the motor car, 2.4 m
 under the trailers. Running numbers 471 014-1, 071 014-5, 971 014-6 (the 675
 variant 675 001-2, 075 001-8, 975 001-9).
+
+### CD 471 blue (Najbrt)
+
+`cdBlue` is CD's current blue (Studio Najbrt, from 2008) on the same body, read
+from `assets/cd-471/photo-471-079-cd-blue-2024.jpg` (471 079-4): a navy foot to
+1.0 m, white to the navy line under the end windows (2.15 - 2.32 m, source
+heights), light blue to the white line at 3.3 - 3.42 m, navy above and over the
+roof; the yellow line under the upper windows lowered 0.12 m, under the white
+line; navy doors and dark navy canopies; no red stripes or grey trim lines. The
+white CD emblem stands behind the cab of each cab car, "City Elefant" (the stroke
+font's capitals, [lettering.md](lettering.md)) in white on the navy upper wall
+over the cab end. The nose is light blue round the windscreen (panels on its
+slope, as wide as the nose tip, over 1.78 - 2.15 m and 3.42 - 4.1 m) with the
+number "471 079-4" and the emblem in white under the windscreen, white round the
+lamps and a bright yellow apron edge. Colours: navy #1f3a7a, light blue #3c97de,
+white #eef0f2. Numbers 471 079-4, 071 079 and 971 079 (the set's serial).
+
+Simplified: the trailer and the driving trailer are painted as the motor car (the
+photo shows the motor car); the wordmark is in capitals without the logo's
+elephant trunk; the motor car's window behind the cab (on the photo) is not in the
+vlakosimdb layout and is not drawn; the inner end walls and end doors stay white.
 
 ## CD 680 Pendolino
 
@@ -103,7 +125,7 @@ physical, 0.42 pp with the scales undone; the 681 1.80 and 0.59 pp.
 3.1 m, 16,000 triangles and the 4.7 m fixed envelope; the 471's lengths over the
 couplers, height, width, 19.0 m pivots and both wheelbases, its low floor and the
 two decks' windows, the motor car's single raised pantograph over the inner
-bogie, the cabs facing +X, the CD 675 sharing the 471's bounds; the running
+bogie, the cabs facing +X, the CD 675 and the CD blue sharing the 471's bounds, the blue's "City Elefant" on the cab cars' upper wall and its lettered nose; the running
 numbers' check digits; the 680's lengths, width, tumblehome, roof, 2.7 m
 wheelbase and which cars carry a pantograph; and both default cars within their
 landmarks' pixel tolerances. The catalog sweep (`test/catalogSweep.ts`)

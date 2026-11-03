@@ -30,6 +30,16 @@ Each holds `vehicle.xml` (the unchanged Windows-1250 metadata), `index.xml` (the
 
 `NUMBERS_451`: the motor car carries 451 032-7, legible on `photo-451-032-front-ricany-2007.jpg` (a car in the modelled livery), on its nose and sides; the trailer the illustrative 051 032-1 of the same technical unit. Both check digits are valid (`tractionCheckDigit`).
 
+## CD blue livery
+
+The `cdBlue` livery (451 056-6 in CD's current blue, the Najbrt scheme) is read from a photograph, not from vlakosimdb:
+
+| file | page | author | licence | use |
+|---|---|---|---|---|
+| `photo-451-056-cd-blue-masarykovo-2014.jpg` | https://commons.wikimedia.org/wiki/File:Masarykovo_n%C3%A1dra%C5%BE%C3%AD,_pan%C5%A5%C3%A1k_v_najbrtu.jpg | PatrikPaprika | CC BY-SA 4.0 | the paint boundaries, the doors, the front emblem and the running number 451 056-6 |
+
+The motor car carries 451 056-6 (legible on the photo), the trailer the illustrative 051 056 of the same unit (`number451`). The trailer's paint is read from the trailers behind the motor car in the photo; its end compartments repeat the motor car's step, which the photo does not show clearly. See docs/models/czech-emus-classic.md.
+
 ## Measurement record
 
 `native/cd_451/landmarks.json` holds 24 native pixel-edge boxes (15 side, 7 cab front, 2 inner end) with their model scopes, tolerances and uncertainty; `baseline.json` is the geometry's measurement when the annotations were fixed. [COMPARISON.md](COMPARISON.md) lists the normalized errors and the signed residual of every box at the model revision.
