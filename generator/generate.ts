@@ -68,6 +68,7 @@ import { STATIONS } from "./stations.ts";
 import { AIRCRAFT } from "./aircraft.ts";
 import { SHIPS } from "./ships.ts";
 import { EMU471_DESIGNS } from "./emu471.ts";
+import { VECTRON_DESIGNS } from "./vectron.ts";
 import { EMU451_DESIGNS } from "./emu451.ts";
 import { EMU460_DESIGNS } from "./emu460.ts";
 import { EMU470_DESIGNS } from "./emu470.ts";
@@ -178,6 +179,7 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: CZ_ELECTRICS, source: "czElectrics.ts", meta: "vehicles" },
   { designs: FREIGHT_WAGONS, source: "freightWagons.ts", meta: "vehicles" },
   { designs: MAINLINE_ELECTRICS, source: "mainlineElectrics.ts", meta: "vehicles" },
+  { designs: VECTRON_DESIGNS, source: "vectron.ts", meta: "vehicles" },
   { designs: SMALL_DIESELS, source: "smallDiesels.ts", meta: "vehicles" },
   { designs: TRUCKS, source: "trucks.ts", meta: "vehicles" },
   { designs: PHOTO_TRUCKS, source: "photoTrucks.ts", meta: "vehicles" },
