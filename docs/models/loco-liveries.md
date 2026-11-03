@@ -136,9 +136,17 @@ another number. `test/cd163Family.test.ts` compares the vlakosimdb liveries with
 their native BMPs; the photographed ones are checked by `test/letters.test.ts`
 (their wordmarks) and by the budget and catalog tests.
 
-The same scheme on other classes is described with their designs: the CD 111
-(`veh-cd-110` `cd111Blue`, [cz-electrics.md](cz-electrics.md)) and the CD 242
-(`veh-cd-230` `cd242Blue`, [cd-230.md](cd-230.md)).
+CD's blue is drawn on every catalog class that wears it (Wikimedia Commons'
+"in Najbrt livery" categories), each read from its own photographs: besides the
+162, 150, 263 and 371 above, the CD 111 (`veh-cd-110` `cd111Blue`,
+[cz-electrics.md](cz-electrics.md)), the CD 242 (`veh-cd-230` `cd242Blue`,
+[cd-230.md](cd-230.md)), the CD 754 (`veh-cd-750` `cd754Blue`,
+[diesel-locos.md](diesel-locos.md)), the railcars 810, 843 / 943 / 043 and 854
+(`veh-cd-810` `cdBlue`, `veh-cd-843` `livery=cdBlue`, `veh-csd-m296` `cd854Blue`,
+[czech-dmus.md](czech-dmus.md)) and the units 451, 460 and 471 (`veh-cd-451` and
+`veh-cd-460` `livery=cdBlue`, [czech-emus-classic.md](czech-emus-classic.md);
+`veh-cd-471` `variant=cdBlue`, [czech-emus.md](czech-emus.md)). The 163, 362 and
+363 in the blue are the 162's paint with another number; the 151's is the 150's.
 
 ## Deviations
 
