@@ -85,12 +85,14 @@ interface Paint843 {
   ink: string;
   /** The cab front's items on the 843 canvas, for the motor car or a driving trailer. */
   front: (motor: boolean) => readonly EndItem[];
+  /** The roof headlamp box's housing over the cab windows: the paint of the end around it. */
+  lampBox: string;
   /** CD's blue: the emblem with the wordmark (`Layout.logo`), the number under it and on the cab fronts. */
   logo?: true;
 }
 
 const PAINTS: Record<Cd843Livery, Paint843> = {
-  red: { palette: PALETTE, bands: BANDS, door: "doorRed", apron: "red", ink: "letteringDark", front: () => CAB_FRONT },
+  red: { palette: PALETTE, bands: BANDS, door: "doorRed", apron: "red", ink: "letteringDark", front: () => CAB_FRONT, lampBox: "roofGrey" },
   // CD's current blue, read from photo-843-007-cd-blue.jpg, photo-943-010-cd-blue.jpg and
   // photo-043-liberec-cd-blue.jpg: white to the navy line under the windows, light blue to the eave
   // and over the cab fronts, the grey roof, navy doors and aprons
@@ -103,7 +105,7 @@ const PAINTS: Record<Cd843Livery, Paint843> = {
       roofGrey: c("#9a9ea2", 0.7),
     },
     bands: [[0.8, 1.58, "white"], [1.58, 1.74, "navy"], [1.74, 3.2, "skyBlue"], [3.2, 4.0, "roofGrey"]],
-    door: "navy", apron: "navy", ink: "navy", front: (motor) => cabFrontBlue(motor), logo: true,
+    door: "navy", apron: "navy", ink: "navy", front: (motor) => cabFrontBlue(motor), lampBox: "skyBlue", logo: true,
   },
 };
 
@@ -296,6 +298,7 @@ export function cd843(params?: ParamValues): MeshBuilder {
           frontLogo(car, e, e > 0 ? L.x1 : L.x0, cd843Number(unit, livery), paint.ink);
           blueHood(car, e, L);
         }
+        m.scope("top lamp", () => topLamp(car, e, e > 0 ? L.x1 : L.x0, paint.lampBox));
         m.scope("apron", () => apron(car, e, e > 0 ? L.x1 : L.x0, paint.apron));
       } else {
         const rows = L.frontH - 6;
@@ -338,6 +341,26 @@ export function cd843(params?: ParamValues): MeshBuilder {
     m.scope("air conditioning", () => block(m, "roofGrey", car.X(xs(11.2)), car.X(xs(12.9)), 3.86, 4.08, -0.6, 0.6));
   });
   return m;
+}
+
+/**
+ * The roof headlamp box over a cab's windows (read from photo-843-007-cd-blue.jpg,
+ * photo-943-010-cd-blue.jpg and photo-843-024-holasovice.jpg): 0.82 m wide and 0.3 m tall at the
+ * top of the end, standing 6 cm out and reaching back into the roof's rounding; m along x, y, half width.
+ */
+export const LAMP_BOX_843 = { out: 0.06, back: 0.22, y0: 3.33, y1: 3.63, hw: 0.41 };
+
+/** The roof headlamp box on cab end e at source x `tip`: a housing in `mat`, a black face with three lamps. */
+function topLamp(car: Car, e: number, tip: number, mat: string): void {
+  const m = car.m;
+  const B = LAMP_BOX_843;
+  const xf = car.X(tip) + e * B.out;
+  const span = (a: number, b: number): [number, number] => [Math.min(a, b), Math.max(a, b)];
+  block(m, mat, ...span(xf, car.X(tip) - e * B.back), B.y0, B.y1, -B.hw, B.hw);
+  m.scope("face", () => block(m, "black", ...span(xf, xf + e * 0.01), B.y0 + 0.04, B.y1 - 0.04, -B.hw + 0.04, B.hw - 0.04));
+  m.scope("lamps", () => {
+    for (const z of [-0.22, 0, 0.22]) block(m, "lampWhite", ...span(xf + e * 0.01, xf + e * 0.02), B.y0 + 0.09, B.y1 - 0.09, z - 0.06, z + 0.06);
+  });
 }
 
 /** The deep apron under a cab: red (the livery's `mat`) down to 0.38 m over a yellow edge, set 5 cm behind the end wall. */
@@ -400,7 +423,8 @@ function blueHood(car: Car, e: number, L: Layout): void {
  * A car of the 843 family for distant views (lodUnits.ts): the body's section,
  * bands and the roof sloping to each cab, the cab fronts' windows and door as
  * one windscreen, the side window band, the deep red aprons under the cabs,
- * the bogies, the underframe equipment and the air conditioning.
+ * the bogies, the underframe equipment and the air conditioning; the cabs'
+ * roof headlamp boxes are below what the 100 triangles keep.
  */
 export function cd843Lod(params?: ParamValues): MeshBuilder {
   const p = resolveParams(CD843_PARAMS, params);

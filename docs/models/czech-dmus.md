@@ -29,8 +29,8 @@ centred between its buffer faces, so the cars of a set couple in any order.
 | `veh-csd-m240` "CSD M 240.0 Singrovka" | - | - | csd_m240 | the bogie railcar with a cab at each end |
 | `veh-csd-m296` "CSD M 296.1 / CD 853 / 854" | `variant` | `m296` (default) | csd_m296 | the express railcar in its CSD paint |
 | | | `cd853` | csd_853 | the same car renumbered 853 (vlakosimdb paints it in the same scheme) |
-| | | `cd854` | cd_854 | the rebuilt 854: its own window layout and the CD red and cream |
-| | | `cd854Blue` | - (photographs) | the 854 in CD's current blue (854 023-9), on the 854's layout |
+| | | `cd854` | cd_854 | the rebuilt 854: its own window layout, its cab ends with two windscreens (photographs) and the CD red and cream |
+| | | `cd854Blue` | - (photographs) | the 854 in CD's current blue (854 023-9), on the 854's layout and cab ends |
 
 Choices:
 
@@ -52,7 +52,7 @@ Choices:
 - **The M 296.1, 853 and 854 are one design.** The 853 is the renumbered M 296.1:
   vlakosimdb's side BMP repeats the M 296's layout six columns to the left, so
   `cd853` changes only the shades and the number. The 854 is the same body with
-  its own windows and paint. vlakosimdb's 853 and 854 XML is a plain box of the
+  its own windows, cab ends and paint. vlakosimdb's 853 and 854 XML is a plain box of the
   same size; all three take the M 296's XML shapes.
 - **The M 031 is a `unit` of the Hurvinek,** as the steam locomotives' tenders are.
 
@@ -60,10 +60,10 @@ Choices:
 |---|---|---|
 | CD 810 (each livery) | 13.97 m | about 9,200 to 9,900; 12,600 in CD's blue (the wordmarks) |
 | CD 812, 912 | 14.47 m | about 14,700 and 14,400 |
-| CD 843, 943, 043 | 25.20 m | about 6,300, 5,600 and 5,100; in CD's blue 8,800, 7,600 and 6,700 |
+| CD 843, 943, 043 | 25.20 m | about 6,800, 6,000 and 5,400; in CD's blue 7,700, 6,500 and 5,400 |
 | CSD M 131.1, M 031 | 12.10 m | about 4,000 and 3,900 |
 | CSD M 240.0 | 18.50 m | about 6,400 |
-| CSD M 296.1, 853, 854 | 24.79 m | about 6,100 to 6,300; 8,600 for the blue 854 |
+| CSD M 296.1, 853, 854 | 24.79 m | about 6,300; 7,100 for the 854, 7,600 for the blue 854 |
 
 ## The railcar kit (`dmuKit.ts`)
 
@@ -176,7 +176,14 @@ rounds 0.8 m from 3.5 m). Bands: red, the cream band 1.0 to 1.6 m, red, the grey
 roof from 3.2 m. The cab front (843_x_both; the 943's x_inc is the same 10 rows
 lower) carries the two windows, the door with its window, the dark red lines and
 the lamps; the gangway end (943 x_dec) its door with two windows. The cab ends
-get the deep apron with a yellow edge the photographs show. Bogies 17.2 m apart,
+get the deep apron with a yellow edge and, in every livery, the roof headlamp box
+the photographs show over the windows (`LAMP_BOX_843`, read from
+photo-843-007-cd-blue.jpg, photo-943-010-cd-blue.jpg and photo-843-024-holasovice.jpg):
+0.82 m wide and 0.3 m tall from 3.33 m, standing 6 cm out of the end and reaching
+back into the roof's rounding, a housing in the end's paint (grey in the red and
+cream, where the model's end is grey above the eave; light blue in CD's blue) with
+a black face and three lamps. The 043's gangway ends carry none; the
+distant model leaves the box out (below its 100 triangles). Bogies 17.2 m apart,
 2.4 m wheelbase, 920 mm wheels with traction motors under the motor car, 840 mm
 under the trailers; the motor car carries two power packs, the rectifier, the
 fuel tank and two exhausts.
@@ -208,8 +215,22 @@ to 3.2 m at the ends; the radiator grille on the roof's side slope over the -X
 bogie (XML `roof` clip) under a low roof hump, the exhaust, the underfloor
 engine, transmission, tank and boxes. Lengths scaled to the published 24.79 m;
 bogies at the published 17.2 m pivots and 2.4 m wheelbase, the powered one under
-the radiator end. The fronts (x_dec) carry the side panes, the gangway door pair,
-the lamps and the headlamp in the roof dome.
+the radiator end. The M 296.1's and 853's fronts (x_dec) carry the side panes,
+the gangway door pair, the lamps and the headlamp in the roof dome.
+
+The 854 (`cd854`, `cd854Blue`) has its own cab ends, the 1990s rebuild's, read from
+photo-854-032-turnov.jpg and photo-854-023-cd-blue.jpg (`FRONT_854`, `cab854`): two
+large windscreens about 1 m wide either side of a 0.12 m pillar, from 2.15 to 3.1 m,
+a narrow pane on each rounded corner, all in black rubber; two pairs of round lamps
+in proud housings on the light band (cream, or white in the blue); the number and
+the emblem (black on the cream, or the number white on the navy line and the navy
+emblem on the white); the headlamp box standing 0.12 m out over the face's top
+(1.0 m wide, 3.24 to 3.6 m, in the roof's grey or navy, a black face round the
+lamp); behind it on the -X end the air conditioning on the roof; the deep apron
+under the buffer beam (red or navy) over a yellow edge. No gangway door, no
+coupling plate. The body's plan and roof ends stay the M 296's. The distant model
+(`m296Lod`) joins the windscreens and corner panes into its windscreen; the lamp
+box, the air conditioning and the aprons are below what its 100 triangles keep.
 
 ## CD's current blue
 
@@ -222,15 +243,17 @@ light blue #3c97de and white #eef0f2, the logo is `cdSideLogo`.
 |---|---|---|---|
 | `veh-cd-810` `cdBlue` (CD 810 blue) | 810 290-7 | sides navy to 0.92 m, white to the navy line (1.86 m) under the windows, light blue to the eave, a white eave line, the navy roof, navy doors; the face's navy cap over the windscreens in black rubber, light blue round them, the navy line at the sill, the white lamp band (from 1.2 m) with the navy emblem (0.25 m) and number, navy below; the logo near the -X end | `assets/cd-810/photo-810-290-cd-blue.jpg`, `photo-810-641-cd-blue.jpg` |
 | `veh-cd-843` `livery=cdBlue` (CD 843 blue) | 843 007-6, 943 010-9, 043 007-4 | every car white to 1.58 m, the navy line to 1.74 m, light blue to the eave, the grey roof, navy doors and aprons; the cab fronts light blue up over the roof's rounding (a skin over the last 0.6 m), the door black down to the navy line, a red and a white lamp each side over it, the number in white on the line, the emblem on the white under the door; the motor car's windows and door in one black surround; the logo near the -X end, the trailer's emblem without the wordmark | `assets/cd-843/photo-843-007-cd-blue.jpg`, `photo-943-010-cd-blue.jpg`, `photo-043-liberec-cd-blue.jpg` |
-| `veh-csd-m296` `cd854Blue` (CD 854 blue) | 854 023-9 | the 854's layout; white to 1.72 m, the deep navy line to 1.94 m, light blue to the eave, a white line round the roof's edge and over the ends, the navy roof and domes; navy passenger doors, the cab and luggage doors in the bands; the ends' number in white on the line, the emblem in place of the coupling plate; the logo behind the -X cab door | `assets/csd-m296/photo-854-023-cd-blue.jpg` |
+| `veh-csd-m296` `cd854Blue` (CD 854 blue) | 854 023-9 | the 854's layout; white to 1.72 m, the deep navy line to 1.94 m, light blue to the eave, a white line round the roof's edge and over the ends, the navy roof and domes; navy passenger doors, the cab and luggage doors in the bands; the 854's cab ends (above) with the number in white on the navy line and the navy emblem on the white, the navy apron and lamp box; the logo behind the -X cab door | `assets/csd-m296/photo-854-023-cd-blue.jpg` |
 
-Deviations: the blue cars keep their vlakosimdb fronts (the 854's real face with
-its two large windscreens is not modelled; the 843 / 943 front's lamps move up to
+Deviations: the blue 843 / 943 keep their vlakosimdb fronts (the lamps move up to
 where the photographs show them); "Národní dopravce", the class numerals and the
 UIC numbers' prefixes are left out; the 843 family's roof is one grey on every
 car. The 843's game figures repeat its trailers' variants in the blue (variants
-match the selection exactly). Every existing parameter combination's GLB is
-unchanged.
+match the selection exactly). Adding the blue left every existing parameter combination's GLB
+unchanged; the later cab corrections (the 854's cab ends, the 843 / 943 headlamp
+box) changed exactly the `cd854` and `cd854Blue` builds and the motor car's and
+the driving trailer's in both liveries; the M 296.1, the 853 and the 043 are as
+they were.
 
 ## Measured comparison
 
@@ -260,6 +283,9 @@ trailers without engines and roof equipment; the 810 liveries sharing the body
 and the 812 / 912 their longer one; the cab faces' parts (the 810's plough, its
 foot 0.18 m over the rail and ahead of the face, and its two windscreen panes;
 the 812 / 912's apron to 0.24 m, the windscreen 2.4 m wide over the lamp mask);
+the 854's cab ends (two windscreens, no gangway door, the headlamp box standing
+out, the apron) while the M 296.1 and 853 keep the gangway front; the 843's and
+943's headlamp box on every cab end in both liveries and none on a gangway end;
 the running numbers' check digits; CD's blue on the cars' own layouts, the logo with or
 without the wordmark, the cab fronts' number, emblem and light blue hood; every
 default car within its landmarks' pixel tolerances and MAE limit. The catalog sweep (`test/catalogSweep.ts`)

@@ -148,6 +148,50 @@ describe("Czech diesel railcars from vlakosimdb", () => {
     }
   });
 
+  it("draws the 854's own cab ends and the 843's roof headlamp box", () => {
+    const nodes = (id: string, params: ParamValues, re: RegExp) => build(id, params).nodes.filter((n) => n.max && re.test(n.id));
+    const box = (ns: ReturnType<typeof nodes>) => ({
+      min: [0, 1, 2].map((k) => Math.min(...ns.map((n) => n.min![k]!))),
+      max: [0, 1, 2].map((k) => Math.max(...ns.map((n) => n.max![k]!))),
+    });
+    const tip = (24.3 - 12.45) * K296;
+    for (const variant of ["cd854", "cd854Blue"])
+      for (const end of ["front-end", "rear-end"]) {
+        const at = `${variant} ${end}`;
+        // two windscreens either side of the pillar, each about 1 m wide; no gangway door
+        const mids = [1, 2].map((i) => {
+          const ws = box(nodes("proc-vehicle-csd-m296", { variant }, new RegExp(`^${end}/windscreen-${i}/glass`)));
+          expect(ws.max[2] - ws.min[2], at).toBeGreaterThan(0.85);
+          return (ws.min[2] + ws.max[2]) / 2;
+        });
+        expect(mids[0]! * mids[1]!, at).toBeLessThan(-0.16);
+        expect(nodes("proc-vehicle-csd-m296", { variant }, new RegExp(`^${end}/gangway-door`)).length, at).toBe(0);
+        // the headlamp box stands out over the face's top; the apron reaches 0.3 m
+        const lamp = box(nodes("proc-vehicle-csd-m296", { variant }, new RegExp(`^${end}/top-lamp/`)));
+        expect(end === "front-end" ? lamp.max[0] : -lamp.min[0], at).toBeGreaterThan(tip + 0.1);
+        expect(lamp.max[2] - lamp.min[2], at).toBeGreaterThan(0.9);
+        expect(box(nodes("proc-vehicle-csd-m296", { variant }, new RegExp(`^${end}/apron/`))).min[1], at).toBeCloseTo(0.3, 3);
+        expect(nodes("proc-vehicle-csd-m296", { variant }, new RegExp(`^${end}/(front-number|front-emblem|lamps)/`)).length, at).toBeGreaterThan(0);
+      }
+    // the M 296.1 and the 853 keep the gangway front
+    for (const variant of ["m296", "cd853"]) {
+      expect(nodes("proc-vehicle-csd-m296", { variant }, /^front-end\/gangway-door/).length, variant).toBeGreaterThan(0);
+      expect(nodes("proc-vehicle-csd-m296", { variant }, /^front-end\/windscreen/).length, variant).toBe(0);
+    }
+    // the 843's and 943's cab ends carry the headlamp box over the windows in every livery; gangway ends do not
+    for (const livery of ["red", "cdBlue"]) {
+      for (const unit of ["motorCar", "drivingTrailer"]) {
+        const lamp = box(nodes("proc-vehicle-cd-843", { unit, livery }, /^front-end\/top-lamp\//));
+        expect(lamp.max[2] - lamp.min[2], `${unit} ${livery}`).toBeCloseTo(0.82, 2);
+        expect(lamp.min[1], `${unit} ${livery}`).toBeGreaterThan(3.3);
+        expect(nodes("proc-vehicle-cd-843", { unit, livery }, /^front-end\/top-lamp\/lamps/).length).toBeGreaterThan(0);
+      }
+      expect(nodes("proc-vehicle-cd-843", { unit: "motorCar", livery }, /^rear-end\/top-lamp\//).length).toBeGreaterThan(0);
+      expect(nodes("proc-vehicle-cd-843", { unit: "drivingTrailer", livery }, /^rear-end\/top-lamp\//).length).toBe(0);
+      expect(nodes("proc-vehicle-cd-843", { unit: "trailer", livery }, /top-lamp/).length).toBe(0);
+    }
+  });
+
   it("paints CD's blue over the cars' own bodies, with the logo where photographed", () => {
     const ids = (id: string, params: ParamValues, re: RegExp) => build(id, params).nodes.filter((n) => re.test(n.id)).map((n) => n.id);
     const windows = (id: string, params: ParamValues) => ids(id, params, /\/windows\//).sort();
