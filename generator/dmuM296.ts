@@ -2,7 +2,8 @@
 // railcar of 1969-70, renumbered CD 853 in 1988 and rebuilt as the CD 854 from
 // 1997: one design `veh-csd-m296` whose `variant` picks the M 296.1 in its CSD
 // paint (default), the CD 853 or the rebuilt CD 854. All three share the body;
-// the 854 has its own window layout and paint.
+// the 854 has its own window layout and paint, and `cd854Blue` is the 854 in CD's
+// current blue, read from a photograph.
 //
 // Reconstructed from the native vlakosimdb XML and BMPs in assets/csd-m296/native
 // (db/train/dmu/csd_m296, csd_853 and cd_854): the M 296's XML section, plan and
@@ -18,19 +19,20 @@ import type { Pt } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { block } from "./vehicleParts.ts";
 import {
-  Car, DMU_CATALOG, buffersBoth, endItems, enumParam, exhaust, sideEmblem, sideItems, sideNumber, tractionNumber, underBoxes,
+  Car, DMU_CATALOG, buffersBoth, cdSideLogo, endItems, endMarks, enumParam, exhaust, sideEmblem, sideItems, sideNumber, tractionNumber, underBoxes,
   DMU_PALETTE, type CarFrame, type EndItem, type PxBox, type SideItem,
 } from "./dmuKit.ts";
 import type { Volume } from "./csdCoachParts.ts";
 import { bogieParts, dmuBody, fitUnit, roofPart, underPart } from "./lodUnits.ts";
 
-export type M296Variant = "m296" | "cd853" | "cd854";
+export type M296Variant = "m296" | "cd853" | "cd854" | "cd854Blue";
 
 export const M296_PARAMS: readonly ParamSpec[] = [
   enumParam("variant", "Vehicle", {
     m296: "M 296.1",
     cd853: "CD 853",
     cd854: "CD 854",
+    cd854Blue: "CD 854 blue",
   }),
 ];
 
@@ -42,9 +44,9 @@ const CENTRE = 12.45;
 export const M296_PIVOTS = 17.2;
 export const M296_WHEELBASE = 2.4;
 
-/** M 296.1028 and 853 029 / 854 032 are photographed (assets/csd-m296/PHOTOS.md). */
+/** M 296.1028, 853 029 / 854 032 and the blue 854 023 are photographed (assets/csd-m296/PHOTOS.md, SOURCES.md). */
 export function m296Number(v: M296Variant): string {
-  return v === "m296" ? "M 296.1028" : v === "cd853" ? tractionNumber("853", "029") : tractionNumber("854", "032");
+  return v === "m296" ? "M 296.1028" : v === "cd853" ? tractionNumber("853", "029") : v === "cd854Blue" ? tractionNumber("854", "023") : tractionNumber("854", "032");
 }
 
 const c = (color: string, roughness = 0.5): MaterialSpec => ({ color, roughness });
@@ -52,6 +54,14 @@ const c = (color: string, roughness = 0.5): MaterialSpec => ({ color, roughness 
 interface Paint {
   palette: Record<string, MaterialSpec>;
   bands: Array<[number, number, string]>;
+  /** The passenger doors' and the other doors' paint (default `doorRed`). */
+  door?: string;
+  otherDoor?: string;
+  /**
+   * CD's blue: the logo's native box (cdSideLogo) instead of the emblem and the number in the
+   * layout, its ink, and the ends without the coupling plate, with the number and the emblem.
+   */
+  logo?: { box: PxBox; ink: string };
 }
 
 // native z_both colours
@@ -67,6 +77,19 @@ const PAINTS: Record<M296Variant, Paint> = {
   cd854: {
     palette: { red: c("#d60000"), cream: c("#ffffce"), roofGrey: c("#acacac", 0.7), frameGrey: c("#c5c5c5", 0.45), doorRed: c("#a51919") },
     bands: [[0.9, 1.25, "red"], [1.25, 1.85, "cream"], [1.85, 3.3, "red"], [3.3, 4.1, "roofGrey"]],
+  },
+  // CD's current blue on the 854 (the Najbrt scheme), read from photo-854-023-cd-blue.jpg: white
+  // to the deep navy line under the windows, light blue to the eave, a white line round the roof's
+  // edge and over the ends, the navy roof; navy passenger doors, the cab and luggage doors in the
+  // bands; the emblem with "Ceske drahy" behind the -X cab door
+  cd854Blue: {
+    palette: {
+      navy: c("#1f3a7a"), skyBlue: c("#3c97de"), white: c("#eef0f2"), roofNavy: c("#2a3a66", 0.7),
+      frameGrey: c("#c5c5c5", 0.45),
+    },
+    bands: [[0.9, 1.72, "white"], [1.72, 1.94, "navy"], [1.94, 3.2, "skyBlue"], [3.2, 3.3, "white"], [3.3, 4.1, "roofNavy"]],
+    door: "navy", otherDoor: "bands",
+    logo: { box: [27, 34.5, 31.5, 37.5], ink: "navy" },
   },
 };
 
@@ -138,7 +161,7 @@ export function m296(params?: ParamValues): MeshBuilder {
   const p = resolveParams(M296_PARAMS, params);
   const variant = p.variant as M296Variant;
   const paint = PAINTS[variant];
-  const L = variant === "cd854" ? LAYOUT_854 : LAYOUT_296;
+  const L = variant === "cd854" || variant === "cd854Blue" ? LAYOUT_854 : LAYOUT_296;
   const car = new Car(paint.palette, FRAME_296);
   const m = car.m;
   // the passenger doors (one window, reaching down to native row 40) swing inward
@@ -156,21 +179,30 @@ export function m296(params?: ParamValues): MeshBuilder {
             m.scope(`door ${i + 1}`, () => {
               if (passenger(d)) {
                 const motion: DoorMotion = { kind: "swing", leaves: 1, from: d.door[0] < 120 ? "low" : "high" };
-                car.openingDoor(body, s, d.door, d.glass, "doorRed", 0.025, motion, (j) => `glass ${j}`, { fw: 0.035, frame: "frameGrey" });
+                car.openingDoor(body, s, d.door, d.glass, paint.door ?? "doorRed", 0.025, motion, (j) => `glass ${j}`, { fw: 0.035, frame: "frameGrey" });
                 return;
               }
-              car.c.door(body, s, car.side(d.door), "doorRed", { seam: 0.025 });
+              car.c.door(body, s, car.side(d.door), paint.otherDoor ?? "doorRed", { seam: 0.025 });
               d.glass.forEach((g, j) => m.scope(`glass ${j + 1}`, () => car.c.window(body, s, car.side(g), { fw: 0.035, frame: "frameGrey" })));
             }),
           ),
         );
+        const logo = paint.logo;
+        if (logo) {
+          cdSideLogo(car, body, s, logo.box, logo.ink, { wordmark: true, number: m296Number(variant) });
+          return;
+        }
         if (L.emblem) m.scope("emblem", () => sideEmblem(car, body, s, L.emblem!, "letteringDark"));
         m.scope("running number", () => sideNumber(car, body, s, L.number, m296Number(variant), variant === "cd854" ? "letteringDark" : "cream"));
       });
   });
   for (const e of [1, -1])
     m.scope(e > 0 ? "front end" : "rear end", () => {
-      endItems(car, body, e, FRONT);
+      if (paint.logo) {
+        // the number in white on the navy line left of the gangway door, the emblem on the white under it
+        endItems(car, body, e, FRONT.filter((it) => it.name !== "coupling plate"));
+        endMarks(car, e, car.X(e > 0 ? 24.3 : 0.6), paint.logo.ink, { number: m296Number(variant), numberLeft: 0.74, numberY: 1.8, numberH: 0.09, emblemY: 1.25 });
+      } else endItems(car, body, e, FRONT);
       // the headlamp in the roof dome over the windows
       m.scope("top lamp", () => {
         const x = car.X(e > 0 ? 24.3 - 0.06 : 0.66);
@@ -215,7 +247,7 @@ export function m296(params?: ParamValues): MeshBuilder {
 export function m296Lod(params?: ParamValues): MeshBuilder {
   const variant = resolveParams(M296_PARAMS, params).variant as M296Variant;
   const paint = PAINTS[variant];
-  const L = variant === "cd854" ? LAYOUT_854 : LAYOUT_296;
+  const L = variant === "cd854" || variant === "cd854Blue" ? LAYOUT_854 : LAYOUT_296;
   const X = (x: number) => (x - CENTRE) * K296;
   const body = dmuBody(FRAME_296, body296(paint), { y0: 0.9, items: L.windows, cabs: [-1, 1], cabItems: FRONT });
   return fitUnit({
@@ -229,7 +261,7 @@ export function m296Lod(params?: ParamValues): MeshBuilder {
   }, 100);
 }
 
-export const M296_VARIANTS: readonly M296Variant[] = ["m296", "cd853", "cd854"];
+export const M296_VARIANTS: readonly M296Variant[] = ["m296", "cd853", "cd854", "cd854Blue"];
 
 export const M296_DESIGNS: ProceduralDesign[] = [
   { id: "proc-vehicle-csd-m296", game: { weight: 57, power: 592, maxspeed: 120, accel: null }, title: "CSD M 296.1 / CD 853 / 854", build: m296, buildLod: m296Lod, params: M296_PARAMS, catalog: DMU_CATALOG, references: "csd-m296" },

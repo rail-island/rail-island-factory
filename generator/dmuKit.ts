@@ -16,6 +16,8 @@ import type { Vec3 } from "./meshCore.ts";
 import { Coach, type Box, type Opening, type Pt, type Volume } from "./csdCoachParts.ts";
 import { coachCabin } from "./coachCabin.ts";
 import { emblem } from "./cd163.ts";
+import { runsWidth, wordmarkAt } from "./letters.ts";
+import { strokeText } from "./strokeFont.ts";
 import type { DoorMotion } from "./doors.ts";
 import { block, side } from "./vehicleParts.ts";
 
@@ -256,6 +258,56 @@ export function sideEmblem(car: Car, v: Volume, s: number, box: PxBox, mat: stri
   car.m.facets(mat, emblem(u0, y0, h, s < 0).map(([u, vv]): Vec3 => [u, vv, s * (half + (back ? 0.011 : 0.007))]), [0, 0, s]);
 }
 
+const CD_WORDMARK = "\u010Cesk\u00E9 dr\u00E1hy";
+
+/**
+ * CD's current logo (the Najbrt scheme) on side s: the emblem filling the native box's height, the
+ * "Ceske drahy" wordmark after it as the reader sees it (cap height 0.32 of the emblem's, the
+ * baseline at 0.42 of it), the group over the same stretch of the body on both sides from the box's
+ * -X edge; and the running number small (0.08 m) centred under it.
+ */
+export function cdSideLogo(car: Car, v: Volume, s: number, box: PxBox, ink: string, opts: { wordmark?: boolean; number?: string } = {}): void {
+  const m = car.m;
+  const b = car.side(box);
+  const h = b.y1 - b.y0;
+  const ew = h * 1.5385;
+  const th = h * 0.32;
+  const runs = [[CD_WORDMARK, ink]] as const;
+  const gap = 0.25 * h;
+  const w = ew + (opts.wordmark ? gap + runsWidth(runs, th) : 0);
+  const x0 = car.c.X(b.x0);
+  const half = Math.max(...v.section.map((p) => Math.abs(p[0])));
+  const z = s * (half + 0.007);
+  const left = s > 0 ? x0 : x0 + w; // the group's left edge as the reader sees it
+  m.scope("emblem", () => m.facets(ink, emblem(left, b.y0, h, s < 0).map(([x, y]): Vec3 => [x, y, z]), [0, 0, s]));
+  if (opts.wordmark)
+    m.scope("wordmark", () => {
+      for (const r of wordmarkAt(runs, left + s * (ew + gap), b.y0 + 0.42 * h, th, s < 0))
+        m.facets(r.mat, r.tris.map(([x, y]): Vec3 => [x, y, z]), [0, 0, s]);
+    });
+  const number = opts.number;
+  if (number) m.scope("running number", () => car.c.inscription(v, s, b.x0 + w / 2, [{ text: number, y: b.y0 - 0.14, h: 0.08 }], 0.006, ink));
+}
+
+/**
+ * Markings on a flat end at model x `x` (end e): the running number in `numberMat` (white on
+ * the navy line), its left edge `numberLeft` from the middle as the reader sees it, and the CD
+ * emblem `emblemH` high, centred. Both lie 4 mm proud.
+ */
+export function endMarks(
+  car: Car, e: number, x: number, ink: string,
+  o: { number: string; numberLeft: number; numberY: number; numberH?: number; numberMat?: string; emblemY: number; emblemH?: number },
+): void {
+  const m = car.m;
+  const xf = x + e * 0.004;
+  // across the end, u is the reader's: z for the -X end, -z for the +X end
+  const put = (mat: string, tris: Array<[number, number]>) => m.facets(mat, tris.map(([z, y]): Vec3 => [xf, y, z]), [e, 0, 0]);
+  const nh = o.numberH ?? 0.1;
+  m.scope("front number", () => put(o.numberMat ?? "lettering", strokeText(o.number, e * o.numberLeft, o.numberY, nh, nh * 0.58, nh * 0.16, e > 0)));
+  const eh = o.emblemH ?? 0.2;
+  m.scope("front emblem", () => put(ink, emblem((e * eh * 1.5385) / 2, o.emblemY, eh, e > 0)));
+}
+
 /** The running number painted on side s, centred on the native box. */
 export function sideNumber(car: Car, v: Volume, s: number, box: PxBox, text: string, mat = "lettering"): void {
   const n = car.side(box);
@@ -318,7 +370,8 @@ const lerp = (pts: Pt[], x: number): number => {
   return pts[pts.length - 1]![1];
 };
 
-function clipY(poly: Pt[], y0: number, y1: number): Pt[] {
+/** A section polygon clipped to the heights y0..y1. */
+export function clipY(poly: Pt[], y0: number, y1: number): Pt[] {
   const cut = (ring: Pt[], h: number, above: boolean): Pt[] => {
     const out: Pt[] = [];
     for (let i = 0; i < ring.length; i++) {

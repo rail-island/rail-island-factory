@@ -48,12 +48,12 @@ describe("Czech diesel railcars from vlakosimdb", () => {
   it("registers the six designs with their parameters and defaults", () => {
     expect(CZ_DMUS.map((d) => d.id)).toEqual(["proc-vehicle-cd-810", "proc-vehicle-cd-812", "proc-vehicle-cd-843", "proc-vehicle-csd-m131", "proc-vehicle-csd-m240", "proc-vehicle-csd-m296"]);
     const values = (id: string) => (CZ_DMUS.find((d) => d.id === id)!.params ?? []).map((p) => [p.name, p.default, p.values.map((v) => v.value)]);
-    expect(values("proc-vehicle-cd-810")).toEqual([["livery", "red", ["red", "yellowBand", "blueWhite", "ivoryBand"]]]);
+    expect(values("proc-vehicle-cd-810")).toEqual([["livery", "red", ["red", "yellowBand", "blueWhite", "ivoryBand", "cdBlue"]]]);
     expect(values("proc-vehicle-cd-812")).toEqual([["unit", "motorCar", ["motorCar", "drivingTrailer"]]]);
-    expect(values("proc-vehicle-cd-843")).toEqual([["unit", "motorCar", ["motorCar", "drivingTrailer", "trailer"]]]);
+    expect(values("proc-vehicle-cd-843")).toEqual([["unit", "motorCar", ["motorCar", "drivingTrailer", "trailer"]], ["livery", "red", ["red", "cdBlue"]]]);
     expect(values("proc-vehicle-csd-m131")).toEqual([["unit", "motorCar", ["motorCar", "trailer"]]]);
     expect(values("proc-vehicle-csd-m240")).toEqual([]);
-    expect(values("proc-vehicle-csd-m296")).toEqual([["variant", "m296", ["m296", "cd853", "cd854"]]]);
+    expect(values("proc-vehicle-csd-m296")).toEqual([["variant", "m296", ["m296", "cd853", "cd854", "cd854Blue"]]]);
     for (const d of CZ_DMUS) expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "unit", traction: "diesel" });
   });
 
@@ -112,7 +112,7 @@ describe("Czech diesel railcars from vlakosimdb", () => {
       const body = build(id, params).nodes.filter((n) => n.max && /^(front|rear)-end\/skin\//.test(n.id));
       return Math.max(...body.map((n) => n.max![0])) - Math.min(...body.map((n) => n.min![0]));
     };
-    for (const livery of ["red", "yellowBand", "blueWhite", "ivoryBand"]) expect(length("proc-vehicle-cd-810", { livery })).toBeCloseTo(13.103, 2);
+    for (const livery of ["red", "yellowBand", "blueWhite", "ivoryBand", "cdBlue"]) expect(length("proc-vehicle-cd-810", { livery })).toBeCloseTo(13.103, 2);
     for (const unit of ["motorCar", "drivingTrailer"]) expect(length("proc-vehicle-cd-812", { unit })).toBeCloseTo(14.0 * K812, 2);
   });
 
@@ -122,7 +122,7 @@ describe("Czech diesel railcars from vlakosimdb", () => {
       min: [0, 1, 2].map((k) => Math.min(...ns.map((n) => n.min![k]!))),
       max: [0, 1, 2].map((k) => Math.max(...ns.map((n) => n.max![k]!))),
     });
-    for (const livery of ["red", "yellowBand", "blueWhite", "ivoryBand"]) {
+    for (const livery of ["red", "yellowBand", "blueWhite", "ivoryBand", "cdBlue"]) {
       // the snow plough under the buffer beam: across most of the face, its foot 0.18 m over the rail, ahead of the face
       const plough = box(front("proc-vehicle-cd-810", { livery }, "front-end/plough/"));
       expect(plough.min[1]).toBeCloseTo(0.18, 3);
@@ -148,16 +148,38 @@ describe("Czech diesel railcars from vlakosimdb", () => {
     }
   });
 
+  it("paints CD's blue over the cars' own bodies, with the logo where photographed", () => {
+    const ids = (id: string, params: ParamValues, re: RegExp) => build(id, params).nodes.filter((n) => re.test(n.id)).map((n) => n.id);
+    const windows = (id: string, params: ParamValues) => ids(id, params, /\/windows\//).sort();
+    // the blue 854 is the 854's body and layout; the blue 843 cars the red ones'
+    expect(windows("proc-vehicle-csd-m296", { variant: "cd854Blue" })).toEqual(windows("proc-vehicle-csd-m296", { variant: "cd854" }));
+    for (const unit of ["motorCar", "drivingTrailer", "trailer"]) {
+      expect(windows("proc-vehicle-cd-843", { unit, livery: "cdBlue" }), unit).toEqual(windows("proc-vehicle-cd-843", { unit }));
+      // the emblem on both sides; the wordmark after it on the motor car and the driving trailer, as photographed
+      expect(ids("proc-vehicle-cd-843", { unit, livery: "cdBlue" }, /^body\/(right|left)-side\/emblem\//).length, unit).toBeGreaterThan(0);
+      expect(ids("proc-vehicle-cd-843", { unit, livery: "cdBlue" }, /^body\/right-side\/wordmark\//).length > 0, unit).toBe(unit !== "trailer");
+    }
+    // a cab front carries the number and the emblem, and the light blue over the roof's end
+    for (const unit of ["motorCar", "drivingTrailer"])
+      for (const scope of ["front-number", "front-emblem", "hood"])
+        expect(ids("proc-vehicle-cd-843", { unit, livery: "cdBlue" }, new RegExp(`^front-end/${scope}/`)).length, `${unit} ${scope}`).toBeGreaterThan(0);
+    for (const [id, params] of [["proc-vehicle-cd-810", { livery: "cdBlue" }], ["proc-vehicle-csd-m296", { variant: "cd854Blue" }]] as const)
+      expect(ids(id, params, /^body\/left-side\/wordmark\//).length, id).toBeGreaterThan(0);
+  });
+
   it("carries valid running numbers", () => {
-    for (const l of ["red", "yellowBand", "blueWhite", "ivoryBand"] as const) expect(valid(cd810Number(l)), l).toBe(true);
+    for (const l of ["red", "yellowBand", "blueWhite", "ivoryBand", "cdBlue"] as const) expect(valid(cd810Number(l)), l).toBe(true);
+    expect(cd810Number("cdBlue")).toBe("810 290-7");
     expect(cd810Number("yellowBand")).toBe("810 225-3");
     expect(cd810Number("ivoryBand")).toBe("810 545-4");
     expect(cd812Number("motorCar")).toBe("812 613-8");
     expect(cd812Number("drivingTrailer")).toBe("912 001-5");
-    for (const u of ["motorCar", "drivingTrailer", "trailer"] as const) expect(valid(cd843Number(u)), u).toBe(true);
+    for (const u of ["motorCar", "drivingTrailer", "trailer"] as const) for (const l of ["red", "cdBlue"] as const) expect(valid(cd843Number(u, l)), `${u} ${l}`).toBe(true);
+    expect([cd843Number("motorCar", "cdBlue"), cd843Number("drivingTrailer", "cdBlue")]).toEqual(["843 007-6", "943 010-9"]);
     expect(cd843Number("drivingTrailer")).toBe("943 002-6");
     expect(m296Number("cd853")).toBe("853 029-7");
     expect(valid(m296Number("cd854"))).toBe(true);
+    expect(m296Number("cd854Blue")).toBe("854 023-9");
     // the pre-1988 CSD railcars carry their Kryspin designations
     expect(M131_NUMBERS.motorCar).toBe("M 131.1238");
     expect(M240_NUMBER).toBe("M 240.0113");

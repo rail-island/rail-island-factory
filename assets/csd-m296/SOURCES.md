@@ -30,4 +30,14 @@ M 296.1 / 853 (Vagonka Studenka, 1969-70, B' 2'): 24,790 mm over the buffers, bo
 
 ## Running numbers
 
-M 296.1028 (photographed in 1985, PHOTOS.md) in the pre-1988 Kryspin designation; 853 029-7 and 854 032-0 (both photographed).
+M 296.1028 (photographed in 1985, PHOTOS.md) in the pre-1988 Kryspin designation; 853 029-7 and 854 032-0 (both photographed); the blue 854 023-9 (photographed, below).
+
+## CD blue livery
+
+The `variant` value `cd854Blue` (854 023-9 in CD's current blue, the Najbrt scheme, on the 854's body and layout) is read from a photograph from Wikimedia Commons, downscaled to 1600 px and saved as JPEG (quality 85):
+
+| file | Commons page | author | licence | use |
+|---|---|---|---|---|
+| `photo-854-023-cd-blue.jpg` | https://commons.wikimedia.org/wiki/File:%C4%8CD_Class_854_diesel_railcar_854_029-9_at_Brno_hlavn%C3%AD_n%C3%A1dra%C5%BE%C3%AD,_Czech_Republic.jpg (2026-08-23) | Novoklimov | CC BY 4.0 | the running number (the front reads "023-9", a valid 854 023-9; the file name's 029 is not); the side (white to the deep navy line under the windows, light blue to the eave, a white line round the roof's edge, the navy roof and dome), the navy passenger doors, the emblem with "Ceske drahy" behind the -X cab door, the number in white on the navy line of the front and the emblem on its white |
+
+Simplified: the 854 keeps vlakosimdb's flat front with the gangway door (the real one has two large windscreens); the navy apron under the buffer beam, the "Narodni dopravce" line and the class numerals are left out.

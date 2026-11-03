@@ -1,5 +1,6 @@
 // The CD 810 two-axle railcar (CSD M 152.0, the "orchestrion"): one design
-// `veh-cd-810` whose `livery` picks one of the four 810 paints vlakosimdb holds.
+// `veh-cd-810` whose `livery` picks one of the four 810 paints vlakosimdb holds
+// or CD's current blue (`cdBlue`), read from photographs.
 // Its rebuilt sister, the 812 "Esmeralda", and the 912 are their own design
 // (dmu812.ts).
 //
@@ -22,13 +23,13 @@ import { emblem } from "./cd163.ts";
 import { strokeText } from "./strokeFont.ts";
 import { CabNose, inRoundRect, type NoseLayer, type NoseQuery } from "./cabNose.ts";
 import {
-  Car, DMU_CATALOG, buffersBoth, enumParam, exhaust, sideEmblem, sideItems, sideNumber, tractionNumber, underBoxes,
+  Car, DMU_CATALOG, buffersBoth, cdSideLogo, enumParam, exhaust, sideEmblem, sideItems, sideNumber, tractionNumber, underBoxes,
   DMU_PALETTE, type CarFrame, type PxBox, type SideItem,
 } from "./dmuKit.ts";
 import { LOD_GLASS } from "./lodKit.ts";
 import { axleParts, dmuBody, fitUnit, noseEnd, paintOver, roofPart, underPart } from "./lodUnits.ts";
 
-export type Cd810Livery = "red" | "yellowBand" | "blueWhite" | "ivoryBand";
+export type Cd810Livery = "red" | "yellowBand" | "blueWhite" | "ivoryBand" | "cdBlue";
 
 export const CD810_PARAMS: readonly ParamSpec[] = [
   enumParam("livery", "Livery", {
@@ -36,14 +37,18 @@ export const CD810_PARAMS: readonly ParamSpec[] = [
     yellowBand: "Yellow band",
     blueWhite: "Blue and white",
     ivoryBand: "Ivory band",
+    cdBlue: "CD 810 blue",
   }),
 ];
 
 /** The published 810 body (13.103 m) over the XML's 12.5 m; 13.97 m over the buffers. */
 export const K810 = 13.103 / 12.5;
 
-/** The running numbers: 810 225 is photographed in the yellow-band paint, 810 545 in the ivory band; the rest are illustrative. */
-const NUMBERS: Record<Cd810Livery, string> = { red: "604", yellowBand: "225", blueWhite: "472", ivoryBand: "545" };
+/**
+ * The running numbers: 810 225 is photographed in the yellow-band paint, 810 545 in the ivory band,
+ * 810 290 in CD's current blue; the rest are illustrative.
+ */
+const NUMBERS: Record<Cd810Livery, string> = { red: "604", yellowBand: "225", blueWhite: "472", ivoryBand: "545", cdBlue: "290" };
 
 /** The running number a livery carries, e.g. `810 225-3`. */
 export function cd810Number(livery: Cd810Livery): string {
@@ -66,6 +71,16 @@ interface Paint {
   ink: string;
   /** The emblem's colour on the lamp band. */
   emblemInk: string;
+  /** The face's paint from this height to the crown (over the windscreens), when it differs from `upper`. */
+  cap?: [number, string];
+  /** The windscreens' rubber (default the light grey `frame`). */
+  paneFrame?: string;
+  /** The face emblem's height (default 0.13 m). */
+  emblemH?: number;
+  /** CD's current logo on the sides (dmuKit cdSideLogo) in this ink, in place of the emblem and the number. */
+  logo?: string;
+  /** The doors' paint (default the bands). */
+  door?: string;
 }
 
 const c = (color: string, roughness = 0.5): MaterialSpec => ({ color, roughness });
@@ -94,6 +109,17 @@ const PAINTS: Record<Cd810Livery, Paint> = {
     palette: { red: c("#b8141a"), ivory: c("#efe7c4"), roofGrey: c("#9a9a92", 0.75) },
     bands: [[0.4, 1.35, "red"], [1.35, SILL, "ivory"], [SILL, 3.0, "red"], [3.0, 3.4, "roofGrey"]],
     upper: "red", lower: "red", band: [1.35, SILL, "ivory"], roof: "roofGrey", lampY: 1.72, numberY: 1.39, ink: "letteringDark", emblemInk: "letteringDark",
+  },
+  // CD's current blue (the Najbrt scheme), read from photo-810-290-cd-blue.jpg and
+  // photo-810-641-cd-blue.jpg: the sides navy at the foot, white to the navy line under the windows,
+  // light blue to the eave, a white line at the eave and the navy roof, navy doors; on the face the
+  // navy cap over the black-rimmed windscreens, light blue round them, the navy line at the sill,
+  // the white lamp band with the navy emblem and number, navy below; CD's logo on the sides
+  cdBlue: {
+    palette: { navy: c("#1f3a7a"), skyBlue: c("#3c97de"), white: c("#eef0f2"), roofNavy: c("#2a3a66", 0.7) },
+    bands: [[0.4, 0.92, "navy"], [0.92, 1.86, "white"], [1.86, SILL, "navy"], [SILL, 3.0, "skyBlue"], [3.0, 3.06, "white"], [3.06, 3.4, "roofNavy"]],
+    upper: "skyBlue", lower: "navy", band: [1.2, 1.86, "white"], strip: [1.86, SILL, "navy"], roof: "roofNavy", cap: [2.95, "navy"],
+    lampY: 1.62, numberY: 1.27, ink: "navy", emblemInk: "navy", emblemH: 0.25, paneFrame: "rubber", logo: "navy", door: "navy",
   },
 };
 
@@ -146,13 +172,17 @@ function layers(p: Paint): NoseLayer[] {
     { mat: p.upper, name: "front upper", inside: (q) => front(q) && q.y >= SILL },
     { mat: p.band[2], name: "front band", inside: (q) => !q.side && q.y >= p.band[0] && q.y < p.band[1] },
   );
+  if (p.cap) {
+    const [y0, mat] = p.cap;
+    out.push({ mat, name: "front cap", inside: (q) => front(q) && q.y >= y0 });
+  }
   if (p.strip) {
     const [y0, y1, mat] = p.strip;
     out.push({ mat, name: "front strip", inside: (q) => front(q) && q.y >= y0 && q.y < y1 });
   }
   out.push({ mat: p.roof, name: "roof", inside: (q) => q.y >= 3.0 && q.d >= 0.16 });
   for (const [i, s] of [-1, 1].entries()) {
-    out.push({ mat: "frame", name: `pane ${i + 1} frame`, inside: (q) => inPane(q, s, 0) });
+    out.push({ mat: p.paneFrame ?? "frame", name: `pane ${i + 1} frame`, inside: (q) => inPane(q, s, 0) });
     out.push({ mat: "glass", name: `pane ${i + 1} glass`, inside: (q) => inPane(q, s, 0.045) });
   }
   return out;
@@ -192,7 +222,7 @@ function cabEnd(car: Car, e: number, p: Paint, number: string): void {
     });
   });
   m.scope("emblem", () => {
-    const h = 0.13;
+    const h = p.emblemH ?? 0.13;
     const w = h * 1.5385;
     n.decal(p.emblemInk, emblem(-w / 2, p.lampY - h / 2, h, false));
   });
@@ -253,7 +283,7 @@ function cd810Car(livery: Cd810Livery): MeshBuilder {
             m.scope(`door ${i + 1}`, () => {
               // one leaf with its window, as the native drawing paints it, swinging
               // inward on the jamb toward the car's nearer end (doors.ts)
-              car.c.door(body, s, car.side(dd.door), "bands", {
+              car.c.door(body, s, car.side(dd.door), paint.door ?? "bands", {
                 seam: 0.03,
                 opens: { kind: "swing", leaves: 1, from: i === 0 ? "low" : "high" },
                 leafWork: (clip) => {
@@ -264,6 +294,8 @@ function cd810Car(livery: Cd810Livery): MeshBuilder {
             }),
           ),
         );
+        // CD's blue: the emblem with "Ceske drahy" after it and the number small under it, from the emblem's place
+        if (paint.logo) return cdSideLogo(car, body, s, s > 0 ? [32, 23.5, 36, 26.5] : [95, 23.5, 99, 26.5], paint.logo, { wordmark: true, number });
         m.scope("emblem", () => sideEmblem(car, body, s, s > 0 ? [32, 23, 38, 27] : [95, 23, 101, 27], sideInk(paint)));
         m.scope("running number", () => sideNumber(car, body, s, [60, 24, 70, 26], number, sideInk(paint)));
       });
