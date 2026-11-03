@@ -2,8 +2,9 @@
 // railcar of 1969-70, renumbered CD 853 in 1988 and rebuilt as the CD 854 from
 // 1997: one design `veh-csd-m296` whose `variant` picks the M 296.1 in its CSD
 // paint (default), the CD 853 or the rebuilt CD 854. All three share the body;
-// the 854 has its own window layout and paint, and `cd854Blue` is the 854 in CD's
-// current blue, read from a photograph.
+// the 854 has its own window layout, cab ends (two windscreens, read from
+// photographs) and paint, and `cd854Blue` is the 854 in CD's current blue, read
+// from a photograph.
 //
 // Reconstructed from the native vlakosimdb XML and BMPs in assets/csd-m296/native
 // (db/train/dmu/csd_m296, csd_853 and cd_854): the M 296's XML section, plan and
@@ -59,7 +60,7 @@ interface Paint {
   otherDoor?: string;
   /**
    * CD's blue: the logo's native box (cdSideLogo) instead of the emblem and the number in the
-   * layout, its ink, and the ends without the coupling plate, with the number and the emblem.
+   * layout and its ink (the ends' marks are the 854 cab's, `END_854`).
    */
   logo?: { box: PxBox; ink: string };
 }
@@ -75,7 +76,7 @@ const PAINTS: Record<M296Variant, Paint> = {
     bands: [[0.9, 2.0, "red"], [2.0, 3.2, "cream"], [3.2, 3.3, "red"], [3.3, 4.1, "roofGrey"]],
   },
   cd854: {
-    palette: { red: c("#d60000"), cream: c("#ffffce"), roofGrey: c("#acacac", 0.7), frameGrey: c("#c5c5c5", 0.45), doorRed: c("#a51919") },
+    palette: { red: c("#d60000"), cream: c("#ffffce"), roofGrey: c("#acacac", 0.7), frameGrey: c("#c5c5c5", 0.45), doorRed: c("#a51919"), yellow: c("#f2c40f") },
     bands: [[0.9, 1.25, "red"], [1.25, 1.85, "cream"], [1.85, 3.3, "red"], [3.3, 4.1, "roofGrey"]],
   },
   // CD's current blue on the 854 (the Najbrt scheme), read from photo-854-023-cd-blue.jpg: white
@@ -85,7 +86,7 @@ const PAINTS: Record<M296Variant, Paint> = {
   cd854Blue: {
     palette: {
       navy: c("#1f3a7a"), skyBlue: c("#3c97de"), white: c("#eef0f2"), roofNavy: c("#2a3a66", 0.7),
-      frameGrey: c("#c5c5c5", 0.45),
+      frameGrey: c("#c5c5c5", 0.45), yellow: c("#f2c40f"),
     },
     bands: [[0.9, 1.72, "white"], [1.72, 1.94, "navy"], [1.94, 3.2, "skyBlue"], [3.2, 3.3, "white"], [3.3, 4.1, "roofNavy"]],
     door: "navy", otherDoor: "bands",
@@ -153,6 +154,87 @@ const FRONT: EndItem[] = [
   { kind: "lamp", box: [22, 33, 28, 36], name: "lamp" },
 ];
 
+/**
+ * The 854's own cab end (the 1990s rebuild, read from photo-854-032-turnov.jpg and
+ * photo-854-023-cd-blue.jpg; on the x_dec canvas): two large windscreens across the face either
+ * side of a 0.12 m pillar, a narrow pane on each rounded corner, black rubber frames. No gangway
+ * door and no coupling plate; the lamps, the roof's headlamp box, the -X end's air conditioning
+ * and the apron are `cab854`.
+ */
+const FRONT_854: EndItem[] = [
+  { kind: "window", box: [0.8, 19, 3.8, 28.5], mat: "rubber", name: "corner window", fw: 0.04 },
+  { kind: "window", box: [4.5, 19, 14.4, 28.5], mat: "rubber", name: "windscreen", fw: 0.06 },
+  { kind: "window", box: [15.6, 19, 25.5, 28.5], mat: "rubber", name: "windscreen", fw: 0.06 },
+  { kind: "window", box: [26.2, 19, 29.2, 28.5], mat: "rubber", name: "corner window", fw: 0.04 },
+];
+
+/** The 854's lamp housings (x_dec pixel boxes) on the light band, two round lamps in each. */
+const HOUSINGS_854: PxBox[] = [[3.5, 33, 9.8, 36.2], [20.2, 33, 26.5, 36.2]];
+const LAMPS_854: PxBox[] = [[4, 33.4, 6.4, 35.8], [6.9, 33.4, 9.3, 35.8], [20.7, 33.4, 23.1, 35.8], [23.6, 33.4, 26, 35.8]];
+
+/** The 854's cab end in a livery: the housings', apron's and lamp box's paint, the marks' inks and the number's height. */
+interface End854 {
+  housing: string;
+  apron: string;
+  roofBox: string;
+  ink: string;
+  numberMat: string;
+  numberY: number;
+  emblemY: number;
+}
+const END_854: Partial<Record<M296Variant, End854>> = {
+  // 854 032-0: cream housings, the red apron, the grey lamp box; the number and the emblem in black on the cream
+  cd854: { housing: "cream", apron: "red", roofBox: "roofGrey", ink: "letteringDark", numberMat: "letteringDark", numberY: 1.74, emblemY: 1.42 },
+  // 854 023-9: white housings, the navy apron and lamp box; the number in white on the navy line, the navy emblem
+  cd854Blue: { housing: "white", apron: "navy", roofBox: "roofNavy", ink: "navy", numberMat: "lettering", numberY: 1.8, emblemY: 1.18 },
+};
+
+/** The 854's headlamp box over the face: how far it stands out and reaches back (m), its heights and half width. */
+const LAMP_BOX_854 = { out: 0.12, back: 0.35, y0: 3.24, y1: 3.6, hw: 0.5 };
+/** The air conditioning on the roof behind the -X end's lamp box (source x), its heights and half width. */
+const AIRCON_854 = { x0: 0.95, x1: 1.9, y0: 3.9, y1: 4.2, hw: 0.5 };
+
+const span = (a: number, b: number): [number, number] => [Math.min(a, b), Math.max(a, b)];
+
+/**
+ * The rest of the 854's cab end e: the lamp housings with their lamps, the number and the emblem,
+ * the headlamp box standing out over the face's top (a black face round the lamp), the air
+ * conditioning behind it on the -X end, and the deep apron under the buffer beam over a yellow edge.
+ */
+function cab854(car: Car, body: Volume, e: number, end: End854, number: string): void {
+  const m = car.m;
+  const tip = car.X(e > 0 ? 24.3 : 0.6);
+  m.scope("lamps", () => {
+    HOUSINGS_854.forEach((b, i) => m.scope(`housing ${i + 1}`, () => car.c.endPanel(body, end.housing, e, car.front(b, e), 0.04, 0.036)));
+    LAMPS_854.forEach((b, i) =>
+      m.scope(`lamp ${i + 1}`, () => {
+        const f = car.front(b, e);
+        car.c.endPanel(body, "black", e, f, 0.046, 0.005);
+        const g = 0.022;
+        car.c.endPanel(body, "lampWhite", e, { x0: f.x0 + g, x1: f.x1 - g, y0: f.y0 + g, y1: f.y1 - g }, 0.05, 0.003);
+      }),
+    );
+  });
+  endMarks(car, e, tip, end.ink, { number, numberLeft: 0.74, numberY: end.numberY, numberH: 0.09, numberMat: end.numberMat, emblemY: end.emblemY });
+  m.scope("top lamp", () => {
+    const L = LAMP_BOX_854;
+    const xf = tip + e * L.out;
+    block(m, end.roofBox, ...span(xf, tip - e * L.back), L.y0, L.y1, -L.hw, L.hw);
+    m.scope("face", () => block(m, "black", ...span(xf, xf + e * 0.01), L.y0 + 0.04, L.y1 - 0.04, -L.hw + 0.05, L.hw - 0.05));
+    m.scope("lamp", () => block(m, "lampWhite", ...span(xf + e * 0.01, xf + e * 0.02), L.y0 + 0.09, L.y1 - 0.09, -0.09, 0.09));
+  });
+  if (e < 0)
+    m.scope("air conditioning", () => {
+      const A = AIRCON_854;
+      block(m, "roof", car.X(A.x0), car.X(A.x1), A.y0, A.y1, -A.hw, A.hw);
+    });
+  m.scope("apron", () => {
+    const [a, b] = span(tip - e * 0.05, tip - e * 0.75);
+    block(m, end.apron, a, b, 0.38, 0.89, -1.3, 1.3);
+    block(m, "yellow", a + 0.01, b - 0.01, 0.3, 0.38, -1.29, 1.29);
+  });
+}
+
 /** The frame of the native canvases and the body in a paint. */
 const FRAME_296: CarFrame = { kx: K296, ky: 1, kz: 1, centre: CENTRE, sideH: 5, frontH: 5 };
 const body296 = (paint: Paint): Volume => ({ name: "body", section: SECTION, plan: PLAN, top: TOP, bottom: BOTTOM, bands: paint.bands });
@@ -196,13 +278,16 @@ export function m296(params?: ParamValues): MeshBuilder {
         m.scope("running number", () => sideNumber(car, body, s, L.number, m296Number(variant), variant === "cd854" ? "letteringDark" : "cream"));
       });
   });
+  const end854 = END_854[variant];
   for (const e of [1, -1])
     m.scope(e > 0 ? "front end" : "rear end", () => {
-      if (paint.logo) {
-        // the number in white on the navy line left of the gangway door, the emblem on the white under it
-        endItems(car, body, e, FRONT.filter((it) => it.name !== "coupling plate"));
-        endMarks(car, e, car.X(e > 0 ? 24.3 : 0.6), paint.logo.ink, { number: m296Number(variant), numberLeft: 0.74, numberY: 1.8, numberH: 0.09, emblemY: 1.25 });
-      } else endItems(car, body, e, FRONT);
+      if (end854) {
+        // the 854's own cab end (the rebuild) in place of the gangway front and the dome's lamp
+        endItems(car, body, e, FRONT_854);
+        cab854(car, body, e, end854, m296Number(variant));
+        return;
+      }
+      endItems(car, body, e, FRONT);
       // the headlamp in the roof dome over the windows
       m.scope("top lamp", () => {
         const x = car.X(e > 0 ? 24.3 - 0.06 : 0.66);
@@ -241,15 +326,19 @@ export function m296(params?: ParamValues): MeshBuilder {
 /**
  * The M 296.1, CD 853 or 854 for distant views (lodUnits.ts): the body with
  * its rounded plan and roof ends in the variant's bands, the end windows and
- * gangway door as one windscreen, the side window band, the bogies, the
- * underframe equipment and the radiator.
+ * gangway door (the 854: its windscreens and corner panes) as one windscreen,
+ * the side window band, the bogies, the underframe equipment and the radiator.
+ * The 854's headlamp boxes, air conditioning and aprons are smaller than what
+ * the 100 triangles keep (as optional parts they were given up), so they are
+ * left out.
  */
 export function m296Lod(params?: ParamValues): MeshBuilder {
   const variant = resolveParams(M296_PARAMS, params).variant as M296Variant;
   const paint = PAINTS[variant];
-  const L = variant === "cd854" || variant === "cd854Blue" ? LAYOUT_854 : LAYOUT_296;
+  const end854 = END_854[variant];
+  const L = end854 ? LAYOUT_854 : LAYOUT_296;
   const X = (x: number) => (x - CENTRE) * K296;
-  const body = dmuBody(FRAME_296, body296(paint), { y0: 0.9, items: L.windows, cabs: [-1, 1], cabItems: FRONT });
+  const body = dmuBody(FRAME_296, body296(paint), { y0: 0.9, items: L.windows, cabs: [-1, 1], cabItems: end854 ? FRONT_854 : FRONT });
   return fitUnit({
     palette: { ...DMU_PALETTE, ...paint.palette },
     bodies: [body],
