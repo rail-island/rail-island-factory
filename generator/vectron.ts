@@ -21,6 +21,7 @@ import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign 
 import { ELECTRIC_LOCO_CATALOG, emblem, runningNumber, type Band } from "./cd163.ts";
 import { c, lerpTable, onEnd, onSide } from "./czElectricKit.ts";
 import { boxLocoLod, buildBoxLoco, shellOf, type EndItem, type LocoSpec, type SideItem } from "./boxLocoKit.ts";
+import { wordmarkAt, type Wordmark } from "./letters.ts";
 
 // ---------------------------------------------------------------------------
 // The body
@@ -97,6 +98,8 @@ interface Livery {
   grille: string;
   /** The CD emblem: on the ends, on the sides, its material. */
   emblem?: { end: boolean; side: boolean; mat: string };
+  /** The operator's lettered wordmark (letters.ts). */
+  wordmark?: Wordmark;
 }
 
 const FRAME: Band = [Y0, 1.42, "frame"];
@@ -122,24 +125,26 @@ export const VECTRON_LIVERIES = {
     emblem: { end: true, side: false, mat: "white" },
   },
   // 193 205 (photo-193-205-regiojet.jpg): golden yellow, the white cap over the windscreens and the
-  // cab roofs, the black windscreen surround and stripes, the red "||" of the wordmark
+  // cab roofs, the black windscreen surround and stripes; "|| REGIO" in red and "JET" in navy
+  // behind the cab door at the reader's left, and small under the windscreen
   regiojet: {
     title: "RegioJet",
     numberSource: "photo-193-205-regiojet.jpg; 193 205-2 is on the Commons file of 27.06.2016",
     number: runningNumber("193", "205"),
-    palette: { yellow: c("#f2b318"), white: c("#eceeee"), plate: c("#1e1f21", 0.7), red: c("#d4202a") },
+    palette: { yellow: c("#f2b318"), white: c("#eceeee"), plate: c("#1e1f21", 0.7), red: c("#d4202a"), rjNavy: c("#243a8c") },
     side: [FRAME, [1.42, ROOF, "yellow"]],
     end: [FRAME, [1.42, 2.45, "yellow"], [2.45, 3.6, "black"], [3.6, ROOF, "white"]],
     sidePaint: [
       cabSidePaint("cab cap", "white", 3.4, ROOF, (y) => 6.6 - 1.2 * (y - 3.4)),
-      // the wordmark's two red bars behind the door
-      ...[0, 1].map((i): SideItem => {
-        const x0 = 5.6 - i * 0.24;
-        return { kind: "paint", name: `wordmark bar ${i + 1}`, x: [x0 - 0.22, x0], y: [2.55, 3.25], poly: [[x0 - 0.22, 2.55], [x0 - 0.1, 2.55], [x0, 3.25], [x0 - 0.12, 3.25]], mat: "red", mirror: true };
-      }),
     ],
     endPaint: [],
     grille: "black",
+    wordmark: {
+      runs: [["|| REGIO", "red"], ["JET", "rjNavy"]],
+      style: { width: 0.75, weight: 0.2, slant: 0.2, gap: 0.14 },
+      side: { h: 0.5, v: 2.55, u: -4.1 },
+      end: { h: 0.1, v: 2.24, u: -0.6 },
+    },
   },
   // 193 574-1 (photo-193-574-cd-white.jpg): RSL's white with the grey frame, the black windscreen
   // surround and stripes, the CD emblem in blue on the sides
@@ -249,6 +254,31 @@ function emblems(m: MeshBuilder, s: LocoSpec, l: Livery): void {
   });
 }
 
+/** The operator's wordmark on both sides and both ends, read from outside (positions are the reader's). */
+function wordmarks(m: MeshBuilder, s: LocoSpec, l: Livery): void {
+  const wm = l.wordmark;
+  if (!wm) return;
+  const sp = shellOf(s);
+  m.scope("wordmark", () => {
+    if (wm.side?.u !== undefined) {
+      const { h, v, u } = wm.side;
+      for (const sd of [-1, 1])
+        m.scope(sd > 0 ? "right" : "left", () => {
+          const at = onSide(sp, sd), n: Vec3 = [0, 0, sd];
+          for (const r of wordmarkAt(wm.runs, sd > 0 ? u : -u, v, h, sd < 0, wm.style, "centre")) m.facets(r.mat, r.tris.map(([x, y]) => at(x, y, 0.006)), n);
+        });
+    }
+    if (wm.end) {
+      const { h, v, u } = wm.end;
+      for (const e of [-1, 1])
+        m.scope(e > 0 ? "front" : "rear", () => {
+          const at = onEnd(sp, e), n: Vec3 = [e, 0, 0];
+          for (const r of wordmarkAt(wm.runs, e > 0 ? -u : u, v, h, e > 0, wm.style, "centre")) m.facets(r.mat, r.tris.map(([z, y]) => at(z, y, 0.008)), n);
+        });
+    }
+  });
+}
+
 const liveryOf = (params?: ParamValues): Livery => VECTRON_LIVERIES[resolveParams(VECTRON_PARAMS, params).livery as VectronLivery];
 
 /** The Vectron in one of its Czech operators' liveries; the default is CD's Eurocity 193 298. */
@@ -257,6 +287,7 @@ export function vectron(params?: ParamValues): MeshBuilder {
   const s = spec(l);
   const m = buildBoxLoco(s);
   emblems(m, s, l);
+  wordmarks(m, s, l);
   return m;
 }
 

@@ -24,6 +24,7 @@ import { CD_EMBLEM, triangulate } from "./cdLogo.ts";
 import { fitLod, LOD_GLASS, lodBands, lodBogie, lodPantograph, lodRoofBox, lodSideBox, type LodBand, type LodPart, type LodShell } from "./lodKit.ts";
 import { liftable } from "./liftable.ts";
 import { RAIL_COLLECTOR_TOP } from "./collector.ts";
+import { wordmarkAt, type Wordmark } from "./letters.ts";
 
 /** The catalog fields of a rail vehicle, in place of the road vehicles'. */
 export const RAIL_CATALOG: CatalogFields = {
@@ -128,6 +129,10 @@ export interface Cd163Livery {
   /** Whether the sides and the ends carry the CD emblem. */
   sideEmblem: boolean;
   frontEmblem: boolean;
+  /** The side emblem's lower edge, where a livery moves it (1.80 m by default). */
+  emblemY?: number;
+  /** The operator's lettered wordmark (letters.ts), on the sides and the ends. */
+  wordmark?: Wordmark;
 }
 
 /** The machine room's side equipment: the 163's portholes and shutters, or the 263's grille banks and windows. */
@@ -646,7 +651,17 @@ function body(m: MeshBuilder, st: Style): void {
         // the 263's emblem stands beside the plate, between the grille banks
         const xc = st.layout !== "163" ? -1.85 : s > 0 ? -3.90 : -4.10;
         const u0 = flip ? xc + emblemWidth(h) / 2 : xc - emblemWidth(h) / 2;
-        decal(m, "logo", wall, emblem(u0, 1.80, h, flip), 0.02);
+        decal(m, "logo", wall, emblem(u0, st.livery.emblemY ?? 1.80, h, flip), 0.02);
+      });
+      const wm = st.livery.wordmark;
+      if (wm?.side) m.scope("wordmark", () => {
+        const { h, v, u } = wm.side!;
+        // centred at the reader's u, or after the emblem to the reader's right (a 0.12 m gap)
+        const xc = st.layout !== "163" ? -1.85 : s > 0 ? -3.90 : -4.10;
+        const runs = u !== undefined
+          ? wordmarkAt(wm.runs, s > 0 ? u : -u, v, h, flip, wm.style, "centre")
+          : wordmarkAt(wm.runs, xc + (s > 0 ? 1 : -1) * (emblemWidth(0.40) / 2 + 0.12), v, h, flip, wm.style);
+        for (const r of runs) decal(m, r.mat, wall, r.tris, 0.02);
       });
     }
   });
@@ -714,6 +729,11 @@ function cab(m: MeshBuilder, e: number, st: Style): void {
       const h = 0.40;
       const u0 = flip ? emblemWidth(h) / 2 : -emblemWidth(h) / 2;
       decal(m, "logo", front, emblem(u0, 1.80, h, flip), 0.006);
+    });
+    const wm = livery.wordmark;
+    if (wm?.end) m.scope("wordmark", () => {
+      const { h, v, u } = wm.end!;
+      for (const r of wordmarkAt(wm.runs, flip ? -u : u, v, h, flip, wm.style, "centre")) decal(m, r.mat, front, r.tris, 0.006);
     });
   });
 

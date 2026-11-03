@@ -19,8 +19,10 @@ import { CD163_GREEN, cd163Body, cd163LodBody, runningNumber, type Band, type Cd
 /** One livery: what the picker shows, the vlakosimdb model it comes from, and the paint. */
 interface FamilyLivery {
   title: string;
-  /** The vlakosimdb directory under db/train/loco/electric. */
-  source: string;
+  /** The vlakosimdb directory under db/train/loco/electric; a livery read from photographs names its photo instead. */
+  source?: string;
+  /** The reference photograph a livery without a vlakosimdb model is read from (assets/cd-163/). */
+  photo?: string;
   /** Where the running number comes from. */
   numberSource: string;
   livery: Cd163Livery;
@@ -170,6 +172,62 @@ export const CD163_LIVERIES = {
       frame: "white",
       sideEmblem: true,
       frontEmblem: true,
+    },
+  },
+  // RegioJet's 162 112 - 120, read from photo-162-120-regiojet.jpg, photo-162-114-regiojet-side.jpg
+  // and photo-162-120-regiojet-front.jpg: yellow all over, the dark grey roof and the dark
+  // machine-room shutters, no CD emblems; the "|| REGIO" in red and "JET" in navy along the lower
+  // side from the cab at the reader's left, and small on the noses right of the middle
+  regiojet: {
+    title: "RegioJet 162",
+    photo: "photo-162-120-regiojet.jpg",
+    numberSource: "photo-162-120-regiojet.jpg (CZ-RJ 91 54 7 162 120-0)",
+    livery: {
+      number: runningNumber("162", "120"),
+      palette: {
+        rjYellow: c("#e9a81e"),
+        rjRed: c("#d2202a"),
+        rjNavy: c("#243a8c"),
+        roof: { color: "#55585b", roughness: 0.7 },
+        slat: { color: "#2e3033", roughness: 0.7 },
+        plate: c("#2a2b2d", 0.6),
+      },
+      bands: [[1.03, 3.7, "rjYellow"]],
+      frame: "rjYellow",
+      sideEmblem: false,
+      frontEmblem: false,
+      wordmark: {
+        runs: [["|| REGIO", "rjRed"], ["JET", "rjNavy"]],
+        style: { width: 0.75, weight: 0.2, slant: 0.2, gap: 0.14 },
+        side: { h: 0.55, v: 1.2, u: -3.3 },
+        end: { h: 0.1, v: 2.08, u: 0.7 },
+      },
+    },
+  },
+  // CD's current blue (the Najbrt scheme on the 162 / 163), read from photo-162-039-cd-blue.jpg:
+  // navy to 1.2 m (the photo: 1.3 m; 1.2 m is the shell's apron kink, one loft fewer), the white band
+  // to 1.92 m, light blue to the eave; the white emblem over the
+  // white band with the "Ceske drahy" lettering after it, the red number plates
+  cdBlue: {
+    title: "CD 162 blue",
+    photo: "photo-162-039-cd-blue.jpg",
+    numberSource: "photo-162-039-cd-blue.jpg",
+    livery: {
+      number: runningNumber("162", "039"),
+      palette: {
+        navy: c("#1f3a7a"),
+        skyBlue: c("#3c97de"),
+        white: c("#eef0f2"),
+        logo: { color: "#eef0f2", roughness: 0.5 },
+        roof: { color: "#9a9c9e", roughness: 0.7 },
+        slat: { color: "#2e3033", roughness: 0.7 },
+      },
+      bands: [[1.03, 1.2, "navy"], [1.2, 1.92, "white"], [1.92, 3.7, "skyBlue"]],
+      frame: "white",
+      sideEmblem: true,
+      frontEmblem: true,
+      emblemY: 1.98,
+      wordmark: { runs: [["\u010Cesk\u00E9 dr\u00E1hy", "logo"]], side: { h: 0.14, v: 2.11 } },
     },
   },
 } as const satisfies Record<string, FamilyLivery>;

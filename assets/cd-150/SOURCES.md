@@ -135,3 +135,10 @@ See docs/models/loco-liveries.md for the reading and the deviations.
 | `zsr_350_002` | Vojtech Vohlidka | 350 002 - the model's name |
 | `zsr_350_003` | Vojtech Vohlidka | 350 003 - the model's name |
 | `zsr_350_004` | Vojtech Vohlidka | 350 004 - the model's name |
+
+## CD blue livery
+
+The `cdBlue` livery (150 226-9 in CD's current blue, the Najbrt scheme) is read
+from `photo-150-226-side.jpg` and `photo-150-203-side.jpg` above: navy to 1.87 m,
+the white line to 2.02 m, light blue to the eave, the blue-grey roof, the white
+emblem with the "Ceske drahy" lettering. See docs/models/loco-liveries.md.

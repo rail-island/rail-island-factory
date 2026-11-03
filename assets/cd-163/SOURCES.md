@@ -64,3 +64,19 @@ See docs/models/loco-liveries.md for the reading and the deviations.
 | `cd_363.044` | Borek Hudak | 363 044 - the model's name |
 | `cd_363_037` | Vojtech Vohlidka | 363 037 - the model's name |
 | `cd_363_009` | Vojtech Vohlidka | 363 009 - the model's name |
+
+## Current operators' liveries (photographs)
+
+The `regiojet` and `cdBlue` liveries of `veh-cd-163` are read from these
+Wikimedia Commons photos (1600 px thumbnails, saved as JPEG quality 85); see
+docs/models/loco-liveries.md, "The current operators' liveries".
+
+| File | Commons page | Author | Licence | Used for |
+|---|---|---|---|---|
+| `photo-162-120-regiojet.jpg` | https://commons.wikimedia.org/wiki/File:162_120_RegioJet_Smichov.jpg | Rainerhaufe | CC BY-SA 4.0 | the RegioJet livery on 162 120-0 (CZ-RJ 91 54 7 162 120-0, Praha-Smichov, 16 December 2017): the yellow, the dark grey roof, the wordmark's size, colours and place |
+| `photo-162-114-regiojet-side.jpg` | https://commons.wikimedia.org/wiki/File:RegioJet,_lokomotiva,_profil.jpg | Honza Groh (Jagro) | CC BY-SA 3.0 | the side of 162 114-3 (8 November 2011): the wordmark's length and height from the cab, the shutter side |
+| `photo-162-120-regiojet-front.jpg` | https://commons.wikimedia.org/wiki/File:193_214_and_163_120_RegioJet_Smichov.jpg | JanSuchy | CC0 | the RegioJet nose (16 November 2014): the small wordmark right of the middle; the file's title says 163 120, the unit is RegioJet's 162 120 |
+| `photo-162-039-cd-blue.jpg` | https://commons.wikimedia.org/wiki/File:20240207_%C4%8Cesk%C3%A9_dr%C3%A1hy_162039.jpg | Alex Noble | CC0 | CD's current blue on 162 039-2 (7 February 2024): the navy, white and light blue bands, the emblem and "Ceske drahy" lettering, the red plates, the light grey roof |
+
+RegioJet's units are 162 112 - 120 (Commons category and photos; 162 120-0 on the
+Pardubice photo of 9 May 2012).

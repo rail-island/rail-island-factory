@@ -1,8 +1,8 @@
 # Locomotive liveries
 
-**Covers** - the parametric electric locomotives: `veh-cd-150` (CD 150, CD 151, ZSR 350), `veh-cd-163` (CD 162, 163, 362, 363) and `veh-cd-263` (CD 263, 371, 372, DB 180) as `livery` values, the livery model (colour bands, cab paint, emblems, running numbers), the CD 263's own machine room, the native BMP evidence, deviations and tests.
+**Covers** - the parametric electric locomotives: `veh-cd-150` (CD 150, CD 151, ZSR 350), `veh-cd-163` (CD 162, 163, 362, 363) and `veh-cd-263` (CD 263, 371, 372, DB 180) as `livery` values, the livery model (colour bands, cab paint, emblems, wordmarks, running numbers), the current operators' liveries read from photographs (CD blue, RegioJet), the CD 263's own machine room, the native BMP evidence, deviations and tests.
 **Code** - `generator/cd163.ts` (`Cd163Livery`, `Band`, `bandAt`, `bandPieces`, `splitHeights`, `runningNumber`, `cd163Body`, `cabPaint`, `grillesAndWindows`), `generator/cd163Family.ts` (`CD163_LIVERIES`, `CD263_LIVERIES`, `cd163`, `cd263`), `generator/cd150.ts` (`CD150_LIVERIES`, `CD150_PARAMS`), `generator/vehicles.ts`, `test/cd163Family.test.ts`, `assets/cd-163/native/liveries/`, `assets/cd-263/`, `assets/cd-150/native/liveries/`
-**See also** - [vehicles.md](vehicles.md) (the CD 150 and CD 163 bodies), [cd-230.md](cd-230.md) (the laminatka), [parameters.md](parameters.md), [the railroad-vehicle skill](../../.agents/skills/railroad-vehicle/SKILL.md), [the vlakosimdb-transfer skill](../../.agents/skills/vlakosimdb-transfer/SKILL.md)
+**See also** - [vehicles.md](vehicles.md) (the CD 150 and CD 163 bodies), [lettering.md](lettering.md) (the wordmarks), [cd-230.md](cd-230.md) (the laminatka), [parameters.md](parameters.md), [the railroad-vehicle skill](../../.agents/skills/railroad-vehicle/SKILL.md), [the vlakosimdb-transfer skill](../../.agents/skills/vlakosimdb-transfer/SKILL.md)
 
 ## The idea
 
@@ -21,10 +21,10 @@ DB scheme's check digit is the same as the CSD one).
 
 | design | title | `livery` values (default first) | triangles |
 |---|---|---|---|
-| `veh-cd-163` | CD 163 / 363 | `cd163`, `cd162`, `cd162No022`, `cd163No022`, `cd163No021`, `cd362`, `cd362No054`, `cd363`, `cd363No044`, `cd363No037`, `cd363No009` | 15,300 to 16,000 |
+| `veh-cd-163` | CD 163 / 363 | `cd163`, `cd162`, `cd162No022`, `cd163No022`, `cd163No021`, `cd362`, `cd362No054`, `cd363`, `cd363No044`, `cd363No037`, `cd363No009`, `regiojet`, `cdBlue` | 15,300 to 16,000 |
 | `veh-cd-263` | CD 263 / 371 / 372 | `cd263`, `cd263No015`, `cd371No002`, `cd371No005`, `cd372`, `db180`, `dbAg180` | 14,800 to 15,500 |
 | `veh-cd-230` | CD 230 / 240 / 340 | `cd230`, `cd240`, `cd240No047`, `cd340`, `cd242` - its own body and livery model, see [cd-230.md](cd-230.md) | 15,600 to 15,900 |
-| `veh-cd-150` | CD 150 / 151 / ZSR 350 | `cd150`, `cd151`, `cd151Cez`, `zsr350`, `zsr350No001` ... `zsr350No004` | 12,100 to 12,600 |
+| `veh-cd-150` | CD 150 / 151 / ZSR 350 | `cd150`, `cd151`, `cd151Cez`, `zsr350`, `zsr350No001` ... `zsr350No004`, `cdBlue` | 12,100 to 13,000 |
 
 A value names its vlakosimdb model: `cd363No044` is `cd_363.044`, `zsr350No001`
 is `zsr_350_001`; a value without a serial (`cd362`, `zsr350`) is the class's
@@ -61,6 +61,11 @@ A livery (`Cd163Livery`, `Cd150Livery`) is data, not code:
   ([vehicles.md](vehicles.md), "Running numbers"). A vlakosimdb model named by a
   serial gets that serial; a generic one an illustrative unit of the class
   (`numberSource` says which).
+
+- **`emblemY`** (163 family, optional) - the side emblem's lower edge where a
+  livery moves it off its 1.80 m.
+- **`wordmark`** (optional) - the operator's lettered name on the sides and the
+  ends, in coloured runs ([lettering.md](lettering.md)).
 
 The track clearers, steps, hoses and warning parts keep the base `yellow`; a
 livery's band uses its own material, so a cream or white band does not repaint
@@ -101,6 +106,23 @@ intake shutters on the left. `"263"` and `"371"` (`grillesAndWindows`) follow
 `cd_371_002` draws its grilles on `z_inc` and its windows on `z_dec`; the
 design keeps one arrangement for the whole family, the grilles on the right.
 
+## The current operators' liveries
+
+Three liveries come from photographs, not vlakosimdb (`photo` names the
+reference, `source` is absent): the units are the photographed ones.
+
+| design | value | unit | look | references |
+|---|---|---|---|---|
+| `veh-cd-163` | `regiojet` (RegioJet 162) | 162 120-0, one of RegioJet's 162 112 - 120 | yellow all over, the dark grey roof, the dark machine-room shutters, no CD emblems; "\|\| REGIO" red and "JET" navy along the lower side and small on the noses | `assets/cd-163/photo-162-120-regiojet.jpg`, `photo-162-114-regiojet-side.jpg`, `photo-162-120-regiojet-front.jpg` |
+| `veh-cd-163` | `cdBlue` (CD 162 blue) | 162 039-2 | CD's current blue (the Najbrt scheme, from 2008): navy to 1.2 m, a white band to 1.92 m, light blue above, the light grey roof, the white emblem raised to 1.98 m and "České dráhy" after it, red plates | `assets/cd-163/photo-162-039-cd-blue.jpg` |
+| `veh-cd-150` | `cdBlue` (CD 150 blue) | 150 226-9 | the same scheme on the 150: navy to 1.87 m, the white line to 2.02 m, light blue to the eave, the blue-grey roof, the emblem and "České dráhy" in white | `assets/cd-150/photo-150-226-side.jpg`, `photo-150-203-side.jpg` |
+
+Both new 163-family liveries are 162s, the units RegioJet runs and the one
+photographed in the blue; a 163 or 363 in the blue is the same paint with
+another number. `test/cd163Family.test.ts` compares the vlakosimdb liveries with
+their native BMPs; the photographed ones are checked by `test/letters.test.ts`
+(their wordmarks) and by the budget and catalog tests.
+
 ## Deviations
 
 - The CD 151 and the ZSR 350 are drawn on the CD 150's body (vlakosimdb draws
@@ -116,6 +138,13 @@ design keeps one arrangement for the whole family, the grilles on the right.
   163 body (portholes, shutters), so it is a `veh-cd-163` livery.
 - The 162 and 163 (and the 362 and 363) share the same native side BMPs; their
   liveries differ in number, roof and windscreen frame only.
+- The RegioJet 162's long black window band (one side) and the CD blue 162's are
+  drawn on the model's machine room: portholes on the right and the dark
+  shutters on the left. The CD blue 162's navy edge sits at the shell's 1.2 m kink
+  (the photo: 1.3 m), one loft fewer, to stay within 16,000 triangles.
+- On the CD blue 150 the emblem and the lettering stay at the 150's emblem height
+  (1.3 m, on the navy), clear of the grille banks; the photographs show them over
+  the white line. The "Národní dopravce" line under the name is left out.
 
 ## Tests
 
@@ -125,6 +154,7 @@ material nearest to each native pixel of its machine-room column (and of its
 cab column where it has cab bands) is the band the model paints at that height,
 with at most one row off (a shaded rib or the 0.107 m rows of `cd_163.022`); the
 263's grilles, windows and the 371 005's four windows sit where the native BMP
-has them; every livery of the three designs stays within 16,000 triangles.
+has them (the photographed liveries have no native BMP and are left out of
+that check); every livery of the three designs stays within 16,000 triangles.
 The catalog sweep (`test/catalogSweep.ts`) builds the defaults and a fixed sample of the other combinations (every one with `TEST_ALL_VARIANTS=1`, [../guide/setup-and-build.md](../guide/setup-and-build.md)) for determinism, z-fighting, the rail
 envelope and the JS model.
