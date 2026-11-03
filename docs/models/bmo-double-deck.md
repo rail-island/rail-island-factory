@@ -1,6 +1,6 @@
 # Bmo double-deck coach
 
-**Covers** - the parametric `veh-bmo-double-deck-coach`: the CSD Bmo and the three CD Bmo liveries from vlakosimdb as values of one `livery` parameter, the shared body, the paint of each livery, running numbers, the measured comparison and tests.
+**Covers** - the parametric `veh-bmo-double-deck-coach`: the CSD Bmo and the three CD Bmo liveries from vlakosimdb and CD's current blue (Najbrt) from photographs as values of one `livery` parameter, the shared body, the paint of each livery, running numbers, the measured comparison and tests.
 **Code** - `generator/bmoCoach.ts`, `generator/csdCoachParts.ts`, `generator/coachTransfers.ts`, `test/csdCoaches.test.ts`, `assets/bmo-double-deck/`
 **See also** - [csd-coaches.md](csd-coaches.md) (the shared builder, coordinates, comparison method), [cd-green-white.md](cd-green-white.md), [parameters.md](parameters.md)
 
@@ -8,7 +8,8 @@
 
 `veh-bmo-double-deck-coach` ("Bmo Double-Deck Coach") replaces `veh-csd-bmo`,
 which was never published to the game. vlakosimdb's csd_bmo and cd_bmo#1..#3
-share one XML geometry; only their BMPs differ, so they are one design:
+share one XML geometry; only their BMPs differ, so they are one design (CD's
+current blue, read from photographs, is a fifth value on the same body):
 
 | `livery` | vlakosimdb | paint | running number |
 |---|---|---|---|
@@ -16,10 +17,18 @@ share one XML geometry; only their BMPs differ, so they are one design:
 | `cdBlue` | cd_bmo#1 | blue, grey roof, grey doors | 50 54 26-18 118-4 (illustrative) |
 | `cdBlueGrey` | cd_bmo#2 | grey roof, blue upper band, light grey middle, blue lower band sloping down at the doors, violet trim, blue doors | 50 54 26-18 127-5 (illustrative) |
 | `cdRedDoors` | cd_bmo#3 | as cdBlueGrey with red doors (the 2014 photographs) | 50 54 26-18 134-1 (photographed) |
+| `cdNajbrt` "CD Najbrt blue" | - (photographs) | CD's current blue: navy foot under the dropped centre, white to a navy line at 2.2 m, light blue over the upper deck to a white line at 4.0 m, navy roof; navy doors, light blue canopies; the navy emblem and "Ceske drahy" on the end section, white "2" after each door | 50 54 26-18 109-3 (photographed) |
 
-The CD liveries carry a white CD emblem on the x = 0 end section and the number
+The vlakosimdb CD liveries carry a white CD emblem on the x = 0 end section and the number
 between the decks. 26.80 m over buffers, 3.09 m wide, 4.61 m high, about 6,500
-to 6,800 triangles.
+to 6,800 triangles (7,400 in the Najbrt blue, the wordmarks).
+
+`cdNajbrt` came in after the four vlakosimdb liveries: their GLBs are unchanged
+(pinned in the tests). Its paint and markings follow
+[the source notes](../../assets/bmo-double-deck/SOURCES.md) ("CD Najbrt blue"): the
+logo group (`najbrtMarkings`) stands on the end section at the reader's left of each
+side, the number under the lower deck's windows; the hatch is white. `cdBlue`
+remains vlakosimdb's older all-blue paint.
 
 ## Body
 
@@ -44,7 +53,9 @@ and cdRedDoors 0.215 pp mean absolute error.
 
 ## Tests
 
-`test/csdCoaches.test.ts`: every livery within its landmark tolerances, length,
+`test/csdCoaches.test.ts`: every vlakosimdb livery within its landmark tolerances, length,
 axles, section, the dropped floor, the CSD lettering or the CD emblem reading
-correctly from outside, check digits, and the four liveries on one body (same
-band bounds, the livery materials). The catalog sweep (`test/catalogSweep.ts`) builds the defaults and a fixed sample of the other combinations (every one with `TEST_ALL_VARIANTS=1`, [../guide/setup-and-build.md](../guide/setup-and-build.md)).
+correctly from outside, check digits, the five liveries on one body (same
+band bounds, the livery materials), and the Najbrt blue (bands, navy doors, the
+logo group at the reader's left on both sides, white numerals) with the other
+four liveries pinned by hash. The catalog sweep (`test/catalogSweep.ts`) builds the defaults and a fixed sample of the other combinations (every one with `TEST_ALL_VARIANTS=1`, [../guide/setup-and-build.md](../guide/setup-and-build.md)).

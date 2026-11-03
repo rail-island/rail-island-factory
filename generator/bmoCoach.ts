@@ -1,5 +1,6 @@
-// The Bmo double-deck coach (later CD Bmto), one body in four liveries:
-// vlakosimdb csd_bmo (CSD blue and beige) and cd_bmo#1..#3 (the CD liveries).
+// The Bmo double-deck coach (later CD Bmto), one body in five liveries:
+// vlakosimdb csd_bmo (CSD blue and beige), cd_bmo#1..#3 (the CD liveries) and,
+// from photographs, CD's current blue (the Najbrt scheme, `cdNajbrt`).
 // The four share one XML geometry (assets/bmo-double-deck/native/<key>/index.xml)
 // and their native BMPs differ only in paint, so this is one parametric design
 // with a `livery` enum. See docs/models/bmo-double-deck.md.
@@ -8,6 +9,7 @@ import { ngon, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { Coach, px, type Pt, type Volume } from "./csdCoachParts.ts";
 import { emblem } from "./cd163.ts";
+import { wordmarkAt } from "./letters.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import { CSD, doors, doorways, endName, fpx, gangway, headstock, lamp, mirror, onSides, windows, type PxBox } from "./csdCoaches.ts";
 
@@ -17,6 +19,7 @@ export const BMO_NUMBERS = {
   cdBlue: { number: "50 54 26-18 118-4", source: "illustrative, in the series 50 54 26-18 101 to 150; no photograph of the all-blue livery" },
   cdBlueGrey: { number: "50 54 26-18 127-5", source: "illustrative, in the series 50 54 26-18 101 to 150; no photograph of the blue doors" },
   cdRedDoors: { number: "50 54 26-18 134-1", source: "legible on photo-bmto-side-praha-2014.jpg, a coach in this livery" },
+  cdNajbrt: { number: "50 54 26-18 109-3", source: "legible on photo-bmto-cd-blue-branik.jpg (Praha-Branik), a coach in this livery" },
 } as const;
 
 export type BmoLivery = keyof typeof BMO_NUMBERS;
@@ -31,6 +34,7 @@ export const BMO_PARAMS: readonly ParamSpec[] = [
       { value: "cdBlue", title: "CD blue" },
       { value: "cdBlueGrey", title: "CD blue-grey" },
       { value: "cdRedDoors", title: "CD red doors" },
+      { value: "cdNajbrt", title: "CD Najbrt blue" },
     ],
   },
 ];
@@ -43,6 +47,8 @@ interface LiveryPaint {
   canopy: string;
   /** The CD blue and grey liveries: blue lower panels on the end sections, a trim line. */
   endPanels: boolean;
+  /** The hatch under the end window; omitted, the end section's "blue". */
+  hatch?: string;
 }
 
 // the native BMP colours of each livery (z_both, x_both)
@@ -111,6 +117,24 @@ const LIVERIES: Record<BmoLivery, LiveryPaint> = {
     canopy: "canopy",
     endPanels: true,
   },
+  // the photographs (assets/bmo-double-deck/photo-bmto-cd-blue-*.jpg): a navy foot under the
+  // dropped centre, white to the navy line at the end windows' sills, light blue over the
+  // upper deck to a white line at its windows' tops, the navy roof; navy doors, light blue canopies
+  cdNajbrt: {
+    palette: {
+      navy: { color: "#1f3a7a", roughness: 0.5 },
+      skyBlue: { color: "#3c97de", roughness: 0.5 },
+      cdWhite: { color: "#eef0f2", roughness: 0.5 },
+      roofNavy: { color: "#2a3a66", roughness: 0.7 },
+      frame: { color: "#6f686f", metallic: 0.2, roughness: 0.5 },
+    },
+    bands: [[0.2, 0.5, "navy"], [0.5, 2.2, "cdWhite"], [2.2, 2.34, "navy"], [2.34, 4.0, "skyBlue"], [4.0, 4.1, "cdWhite"], [4.1, 4.7, "roofNavy"]],
+    end: "skyBlue",
+    door: "navy",
+    canopy: "skyBlue",
+    endPanels: false,
+    hatch: "cdWhite",
+  },
 };
 
 /** The section of the XML alongx: the lower deck down to 0.2 m, the upper deck's sloped walls. */
@@ -150,7 +174,7 @@ export function bmoCoach(params?: ParamValues): MeshBuilder {
       ], { fw: 0.08, sash: (b) => (b.y1 < 2 ? 1.5 : b.y0 > 3 || b.x1 - b.x0 < 1 ? undefined : 2.5) }),
       doors(c, body, H, entrances, paint.door, { fw: 0.04, opens: { kind: "plug", leaves: 2 } }),
       // the hatch under the end window (native rows 32..39), in the end section's blue
-      (s) => m.scope("hatch", () => c.door(body, s, px([24, 32, 35, 39], H), "blue")),
+      (s) => m.scope("hatch", () => c.door(body, s, px([24, 32, 35, 39], H), paint.hatch ?? "blue")),
       (s) =>
         m.scope("door canopies", () => {
           for (const [a, b] of [[5.7, 8.8], [18.0, 21.1]]) c.sidePanel(body, paint.canopy, s, { x0: a, y0: 2.6, x1: b, y1: 2.66 }, 0.04, 0.06);
@@ -161,7 +185,7 @@ export function bmoCoach(params?: ParamValues): MeshBuilder {
           for (const x of [0.85, 25.95]) c.handrail(body, s, x, 1.3, 1.9);
         }),
       ...(paint.endPanels ? [endPanels(c)] : []),
-      ...(livery === "csd" ? [csdMarkings(c, body, number)] : [cdMarkings(c, body, number)]),
+      ...(livery === "csd" ? [csdMarkings(c, body, number)] : livery === "cdNajbrt" ? [najbrtMarkings(c, body, number)] : [cdMarkings(c, body, number)]),
     );
   });
   for (const e of [-1, 1])
@@ -237,6 +261,31 @@ function cdMarkings(c: Coach, body: Volume, number: string): (s: number) => void
       c.m.facets("emblem", emblem(u0, 1.2, h, s < 0).map(([u, v]): Vec3 => [u, v, s * 1.508]), [0, 0, s]);
     });
     c.m.scope("running number", () => c.inscription(body, s, 13.25, [{ text: number, y: 2.22, h: 0.1 }], 0.008, "lettering"));
+  };
+}
+
+/**
+ * CD's current blue: on the white of the end section at the reader's left (x = 0 on the right
+ * side, x = 26.8 on the left), the navy emblem and the "Ceske drahy" wordmark after the hatch;
+ * the running number under the lower deck's windows; a white "2" after each door at the
+ * canopies' height. Placed as the reader sees each side, so the left side mirrors the right.
+ */
+function najbrtMarkings(c: Coach, body: Volume, number: string): (s: number) => void {
+  const h = 0.34;
+  const ew = EMBLEM_W * h;
+  return (s) => {
+    const sx = (x: number) => (s > 0 ? x : 26.8 - x);
+    // the group's left edge as the reader sees it, 3.8 m from the end
+    const u = c.X(sx(3.8));
+    c.m.scope("emblem", () => c.m.facets("navy", emblem(u, 1.4, h, s < 0).map(([x, y]): Vec3 => [x, y, s * 1.508]), [0, 0, s]));
+    c.m.scope("wordmark", () => {
+      for (const r of wordmarkAt([["\u010Cesk\u00E9 dr\u00E1hy", "navy"]], u + s * (ew + 0.1), 1.4 + 0.3 * h, h * 0.4, s < 0))
+        c.m.facets(r.mat, r.tris.map(([x, y]): Vec3 => [x, y, s * 1.508]), [0, 0, s]);
+    });
+    c.m.scope("running number", () => c.inscription(body, s, sx(9.8), [{ text: number, y: 0.62, h: 0.1 }], 0.008, "navy"));
+    c.m.scope("class marks", () => {
+      for (const x of [8.45, 20.75]) c.numeral(body, s, "2", sx(x), 2.62, 0.3, 0.006, "cdWhite");
+    });
   };
 }
 

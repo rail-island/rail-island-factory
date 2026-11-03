@@ -23,7 +23,7 @@ declaration order, the first the default unless noted.
 | `veh-cd-230` | `livery`: cd230, cd240, cd240No047, cd340, cd242, cd242Blue | [cd-230.md](cd-230.md) |
 | `veh-cd-263` | `livery`: cd263, cd263No015, cd371No002, cd371No005, cd372, db180, dbAg180, cd263Blue, cd371Blue | [loco-liveries.md](loco-liveries.md) |
 | `veh-csd-classic-green-coach` | `variant`: classA, classB | [csd-coaches.md](csd-coaches.md) |
-| `veh-bmo-double-deck-coach` | `livery`: csd, cdBlue, cdBlueGrey, cdRedDoors | [bmo-double-deck.md](bmo-double-deck.md) |
+| `veh-bmo-double-deck-coach` | `livery`: csd, cdBlue, cdBlueGrey, cdRedDoors, cdNajbrt | [bmo-double-deck.md](bmo-double-deck.md) |
 | `veh-cd-green-white-coach` | `variant`: a, ab, b, bee, beel, bds, ds, bdmeer, bdmtee, beeBlue (default b); `livery`: greenWhite (default), cdBlue (only on a, ab, b, bee, bds, bdmtee) | [cd-green-white.md](cd-green-white.md) |
 | `veh-nas-flat-wagon` | `cargo`: empty, wood, tubes, reels | [wagons.md](wagons.md) |
 | `veh-ua-open-wagon` | `cargo`: empty, coal, wood, sand | [wagons.md](wagons.md) |
@@ -73,7 +73,7 @@ declaration order, the first the default unless noted.
 | `veh-tgv` | `unit`: powerCar, set; `cars`: 1 .. 6, with `unit` set only (default 1); `livery`: pse, atlantique | [foreign-units.md](foreign-units.md) |
 | `veh-cd-y-coach` | `variant`: bcc, beer, bnb, wrrm | [czsk-coaches.md](czsk-coaches.md) |
 | `veh-zsr-coach` | `variant`: a, ab, b, bh, bds, bdmeer, wrrm, apee (default b) | [czsk-coaches.md](czsk-coaches.md) |
-| `veh-uic-z-coach` | `variant`: firstClass, secondClass, restaurant (default secondClass); `operator`: cd, db, obb | [czsk-coaches.md](czsk-coaches.md) |
+| `veh-uic-z-coach` | `variant`: firstClass, secondClass, restaurant (default secondClass); `operator`: cd, cdBlue, db, obb, regiojet | [czsk-coaches.md](czsk-coaches.md) |
 | `veh-db-dosto` | `variant`: firstClass, secondClass, drivingTrailer (default secondClass) | [german-coaches.md](german-coaches.md) |
 | `veh-dr-sbahn-berlin` | `variant`: coach, drivingTrailer | [german-coaches.md](german-coaches.md) |
 | `proc-char-avatar` | `hair`, `headwear`, `bag`, `body`, `clothing`; finish `skin`, `shirtColour`, `trousersColour`, `hairColour` | [characters.md](characters.md) |
