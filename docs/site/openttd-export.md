@@ -344,8 +344,30 @@ would draw it, into a scene prerendered in OpenTTD (below), each vehicle labelle
 5. the view shows the part of the scene the vehicles and labels cover, with a
    tile's margin (`viewRect`): a yard of short vehicles shows no track behind them.
 
-It opens at OpenTTD's **4x zoom**; "Normal zoom" switches to 1x. A pack of more
-than 10 vehicles is shown 10 at a time, with a button per page. A line names the
+**Fitting the space.** The Zoom choice is **Auto** by default; "4x zoom" and
+"Normal zoom" show those at their own pixels (scrolling where larger). Auto
+measures the space the view has (less its foot's controls) and takes the most
+detailed view that fits (`chooseView`), in this order:
+
+| | View | When |
+|---|---|---|
+| 1 | the whole pack at 4x, shrunk to no less than 0.7 (`MIN_4X_SCALE`), never enlarged | it fits so |
+| 2 | 4x **cut to the fronts**: the vehicles' first parts and labels (a long train's rear left out), widened to fill the space, at 0.5 or more (`MIN_FRONT_SCALE`) | a few vehicles on a small screen |
+| 3 | the whole pack at 4x, smoothly shrunk to no less than 0.25 (`MIN_SHRUNK_SCALE`: still normal zoom's size) | |
+| 4 | the whole pack at **normal zoom**, shrunk to fit (to 0.5; below, it scrolls) | a large pack on a small screen |
+
+Shrunk images are drawn smoothed, others pixel for pixel. The labels keep about
+12 CSS pixels whatever the scale (drawn larger as the view shrinks; the choice is
+made again with them at that size). Where they would overlap - normal zoom puts
+the tracks 16 pixels apart - or where leaving them out lets the vehicles be shown
+a sixth larger or more (unless the labelled view is already 4x at 0.7 or more:
+`preferTags`), the vehicles carry **number tags** instead and a **legend** under
+the picture names them (the OpenTTD name and the id, a row each, at most half the
+height, scrolling beyond); the choice is then made for the space the legend
+leaves. Picture and legend are centred as one block. The view is chosen again
+whenever its space changes size.
+
+A pack of more than 10 vehicles is shown 10 at a time, with a button per page. A line names the
 GRF id ("GRF 52490007") and the pack's size; the note, the OpenTTD and OpenGFX
 versions the scene was made with. The view's choices are not stored.
 
@@ -353,7 +375,10 @@ versions the scene was made with. The view's choices are not stored.
 software rasterizer in place of WebGL (flat Lambert, the same lights) and SVG
 labels, for checks and for images of a model's pack in OpenTTD:
 
-    pnpm exec tsx generator/openttdScenes/previewSheet.ts <model id> <out.png> [--zoom 4x|1x] [--page n]
+    pnpm exec tsx generator/openttdScenes/previewSheet.ts <model id> <out.png> [--zoom 4x|1x] [--page n] [--fit <width>x<height>]
+
+`--fit` draws the view as Auto fits it to a stage of that size (with the tags and
+legend where Auto would use them) and says what it chose.
 
 ## The preview scenes
 

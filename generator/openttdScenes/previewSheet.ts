@@ -5,7 +5,7 @@
 // in for the page's WebGL renderer (flat Lambert, the same lights). For checks and
 // for the images sent to the user; the site never runs it.
 //
-//   pnpm exec tsx generator/openttdScenes/previewSheet.ts <model id> <out.png> [--zoom 4x|1x] [--page n]
+//   pnpm exec tsx generator/openttdScenes/previewSheet.ts <model id> <out.png> [--zoom 4x|1x] [--page n] [--fit <width>x<height>]
 
 import fs from "node:fs";
 import path from "node:path";
@@ -18,7 +18,7 @@ import { zoomImages } from "../../src/openttd/pixels.ts";
 import { applyMatrix, spriteViews, type ModelBox, type SpriteView } from "../../src/openttd/projection.ts";
 import { oneClickItems, partLengths, resolveItem, type OpenttdFeature } from "../../src/openttd/properties.ts";
 import {
-  frontPoint, kindOf, labelRect, placeParts, SCENE_SLOTS, sceneName, viewRect, type Placement, type PreviewZoom, type Rect,
+  chooseView, FRONT_MARGIN, frontPoint, labelsOverlap, preferTags, kindOf, labelRect, placeParts, SCENE_SLOTS, sceneName, viewRect, type Placement, type PreviewZoom, type Rect,
 } from "../../src/openttd/scene.ts";
 import type { CatalogRecord } from "../catalog.ts";
 import { GRF_ZOOM, type GrfImage } from "../../src/openttd/grf.ts";
@@ -148,7 +148,9 @@ const escape = (t: string): string => t.replace(/&/g, "&amp;").replace(/</g, "&l
  * many tracks, labelled with its OpenTTD name and local id, cropped to the
  * vehicles. `page` picks the next 10 of a larger pack.
  */
-export async function packSheet(id: string, zoom: PreviewZoom = "4x", page = 0): Promise<{ png: Buffer; width: number; height: number; scene: string }> {
+type LabelStyle = "labels" | "tags";
+
+async function renderPack(id: string, zoom: PreviewZoom, page: number, labelPx: number, style: LabelStyle = "labels"): Promise<{ png: Buffer; all: Rect; front: Rect; labels: Rect[]; names: string[]; ids: string[]; size: [number, number]; scene: string }> {
   const design = DESIGNS.get(id);
   if (!design) throw new Error(`no model ${id}`);
   const fields = catalogFields(design);
@@ -163,6 +165,7 @@ export async function packSheet(id: string, zoom: PreviewZoom = "4x", page = 0):
   const out = await readRaw(path.join(SCENES, scene, `background-${zoom}.png`));
   const fg = await readRaw(path.join(SCENES, scene, `foreground-${zoom}.png`));
   const rects: Rect[] = [];
+  const fronts: Rect[] = [];
   for (const [i, item] of items.entries()) {
     const slot = placement.slots[i]!;
     const parts = await drawItem(id, item.cars.map((c) => ({ params: c.params, turned: !!c.turned })), feature, slot.direction, zoom);
@@ -170,33 +173,119 @@ export async function packSheet(id: string, zoom: PreviewZoom = "4x", page = 0):
       const img = parts[p.part]!.image;
       blend(out, img, p.x, p.y);
       rects.push([p.x, p.y, img.width, img.height]);
+      if (p.part === 0) fronts.push([p.x, p.y, img.width, img.height]);
     }
   }
   blend(out, { width: fg.width, height: fg.height, rgba: fg.data }, 0, 0);
   // the labels, as SVG over the image (text widths estimated: the site measures them)
   const size = placement.sizes[zoom];
-  const big = zoom === "4x";
-  const [fs1, fs2, pad, gap] = big ? [18, 15, 6, 3] : [9, 8, 3, 1];
+  // the type as OpenttdPreview.tsx labelType sizes it
+  const fs1 = labelPx;
+  const fs2 = Math.round(labelPx * 0.83);
+  const pad = Math.max(3, Math.round(labelPx / 3));
+  const gap = Math.max(1, Math.round(labelPx / 6));
+  const line = Math.round(labelPx * 1.1);
   const svg: string[] = [];
+  const labels: Rect[] = [];
+  const names: string[] = [];
+  const ids: string[] = [];
   for (const [i, item] of items.entries()) {
     const name = resolveItem(item).vehicle.name;
     const idText = item.baseId === undefined ? "-" : `0x${item.baseId.toString(16).toUpperCase().padStart(4, "0")}`;
+    names.push(name);
+    ids.push(idText);
+    if (style === "tags") {
+      const w = Math.max(Math.ceil(String(i + 1).length * fs1 * 0.62 + 2 * pad), line + pad);
+      const r = labelRect(feature, frontPoint(feature, placement.slots[i]!, zoom), w, line + 2 * pad, zoom, size);
+      rects.push(r);
+      fronts.push(r);
+      labels.push(r);
+      svg.push(`<rect x="${r[0]}" y="${r[1]}" width="${r[2]}" height="${r[3]}" fill="rgb(20,20,28)" fill-opacity="0.88"/>`);
+      svg.push(`<text x="${r[0] + r[2] / 2}" y="${r[1] + pad + fs1 * 0.85}" text-anchor="middle" font-family="DejaVu Sans, sans-serif" font-weight="bold" font-size="${fs1}" fill="white">${i + 1}</text>`);
+      continue;
+    }
     const width = Math.ceil(Math.max(name.length * fs1 * 0.58, idText.length * fs2 * 0.62) + 2 * pad);
-    const height = 2 * pad + (big ? 20 : 10) + gap + (big ? 16 : 9);
+    const height = 2 * pad + line + gap + Math.round(fs2 * 1.1);
     const r = labelRect(feature, frontPoint(feature, placement.slots[i]!, zoom), width, height, zoom, size);
     rects.push(r);
+    fronts.push(r);
+    labels.push(r);
     svg.push(`<rect x="${r[0] + 0.5}" y="${r[1] + 0.5}" width="${r[2] - 1}" height="${r[3] - 1}" fill="rgb(20,20,28)" fill-opacity="0.82" stroke="white" stroke-opacity="0.35"/>`);
     svg.push(`<text x="${r[0] + pad}" y="${r[1] + pad + fs1 * 0.85}" font-family="DejaVu Sans, sans-serif" font-weight="bold" font-size="${fs1}" fill="white">${escape(name)}</text>`);
-    svg.push(`<text x="${r[0] + pad}" y="${r[1] + pad + (big ? 20 : 10) + gap + fs2 * 0.85}" font-family="DejaVu Sans Mono, monospace" font-size="${fs2}" fill="#b8e0b0">${escape(idText)}</text>`);
+    svg.push(`<text x="${r[0] + pad}" y="${r[1] + pad + line + gap + fs2 * 0.85}" font-family="DejaVu Sans Mono, monospace" font-size="${fs2}" fill="#b8e0b0">${escape(idText)}</text>`);
   }
-  const [vx, vy, vw, vh] = viewRect(rects, zoom, size);
   const overlay = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${out.width}" height="${out.height}">${svg.join("")}</svg>`);
   const png = await sharp(Buffer.from(out.data), { raw: { width: out.width, height: out.height, channels: 4 } })
     .composite([{ input: overlay, top: 0, left: 0 }])
     .png()
     .toBuffer();
-  const cropped = await sharp(png).extract({ left: vx, top: vy, width: vw, height: vh }).png().toBuffer();
-  return { png: cropped, width: vw, height: vh, scene };
+  return { png, all: viewRect(rects, zoom, size), front: viewRect(fronts, zoom, size, FRONT_MARGIN), labels, names, ids, size: [size[0], size[1]], scene };
+}
+
+/** The labels' least size on screen, CSS pixels, and their size in image pixels at each zoom (OpenttdPreview.tsx). */
+const LABEL_CSS_PX = 12;
+const LABEL_PX: Record<PreviewZoom, number> = { "4x": 18, "1x": 9 };
+
+/**
+ * A model's whole one-click pack, as the model page's OpenTTD view draws it: at a
+ * zoom, cropped to the pack; or, with `fit` (a stage's width and height, CSS
+ * pixels), as the view's "Auto" fits it there (scene.ts chooseView) - a stage-sized
+ * image, the view centred on it, scrolled to its top left when larger.
+ */
+export async function packSheet(id: string, zoom: PreviewZoom = "4x", page = 0, fit?: [number, number]): Promise<{ png: Buffer; width: number; height: number; scene: string; note: string }> {
+  if (!fit) {
+    const r = await renderPack(id, zoom, page, LABEL_PX[zoom]);
+    const [x, y, w, h] = r.all;
+    return { png: await sharp(r.png).extract({ left: x, top: y, width: w, height: h }).png().toBuffer(), width: w, height: h, scene: r.scene, note: `${zoom}, whole` };
+  }
+  // as OpenttdPreview.tsx: choose, then again with the labels at the size the choice
+  // needs; full labels where they fit at 4x and apart, else number tags and a legend
+  const pxFor = (c: { zoom: PreviewZoom; scale: number }) => Math.max(LABEL_PX[c.zoom], Math.round(LABEL_CSS_PX / c.scale));
+  const choose = async (style: LabelStyle, room: [number, number]) => {
+    let px4 = LABEL_PX["4x"];
+    let l = await renderPack(id, "4x", page, px4, style);
+    let c = chooseView(l.all, l.front, l.size, room);
+    for (let i = 0; i < 2 && c.zoom === "4x" && pxFor(c) !== px4; i++) {
+      px4 = pxFor(c);
+      l = await renderPack(id, "4x", page, px4, style);
+      c = chooseView(l.all, l.front, l.size, room);
+    }
+    return c;
+  };
+  const n = (await renderPack(id, "1x", page, LABEL_PX["1x"])).names.length;
+  const legendH = Math.min(Math.round(fit[1] / 2), n * 18 + 8);
+  let choice = await choose("labels", fit);
+  let style: LabelStyle = "labels";
+  const crowded = async (c: { zoom: PreviewZoom; scale: number }) => labelsOverlap((await renderPack(id, c.zoom, page, pxFor(c))).labels);
+  const tagged = await choose("tags", [fit[0], Math.max(100, fit[1] - legendH)]);
+  if (preferTags(choice, tagged, await crowded(choice))) {
+    choice = tagged;
+    style = "tags";
+  }
+  const labelPx = pxFor(choice);
+  const r = await renderPack(id, choice.zoom, page, labelPx, style);
+  const [x, y, w, h] = choice.fit === "front" ? choice.rect : r.all;
+  const stageH = style === "tags" ? fit[1] - legendH : fit[1];
+  const cw = Math.round(w * choice.scale);
+  const ch = Math.round(h * choice.scale);
+  const view = await sharp(r.png).extract({ left: x, top: y, width: w, height: h })
+    .resize(cw, ch, { kernel: choice.scale < 1 ? "lanczos3" : "nearest" }).png().toBuffer();
+  // on the stage: centred, or from the top left where larger (the view scrolls)
+  // the picture and its legend as one block, centred on the stage (factory.css .factory-ottd)
+  const left = cw < fit[0] ? Math.floor((fit[0] - cw) / 2) : 0;
+  const blockH = Math.min(ch, stageH) + (style === "tags" ? legendH : 0);
+  const top = Math.max(0, Math.floor((fit[1] - blockH) / 2));
+  const shown = await sharp(view).extract({ left: 0, top: 0, width: Math.min(cw, fit[0]), height: Math.min(ch, stageH) }).png().toBuffer();
+  const layers: Array<{ input: Buffer; left: number; top: number }> = [{ input: shown, left, top }];
+  if (style === "tags") {
+    // the legend under the view, a row a vehicle (OpenttdPreview.tsx)
+    const rows = r.names.map((name, i) => `<text x="12" y="${top + Math.min(ch, stageH) + 4 + 18 * i + 13}" font-family="DejaVu Sans, sans-serif" font-size="13" fill="#e6e6ea"><tspan font-weight="bold" fill="white">${i + 1}</tspan>  ${escape(name)}  <tspan font-family="DejaVu Sans Mono, monospace" fill="#9a9aa6">${r.ids[i]}</tspan></text>`);
+    layers.push({ input: Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${fit[0]}" height="${fit[1]}">${rows.join("")}</svg>`), left: 0, top: 0 });
+  }
+  const png = await sharp({ create: { width: fit[0], height: fit[1], channels: 4, background: { r: 30, g: 30, b: 35, alpha: 1 } } })
+    .composite(layers).png().toBuffer();
+  const note = `${choice.zoom === "4x" ? "4x" : "normal zoom"}, ${choice.fit === "front" ? "cut to the fronts" : "whole"}, at ${Math.round(choice.scale * 100)}%, ${style === "tags" ? "tags and a legend" : "labels"}`;
+  return { png, width: fit[0], height: fit[1], scene: r.scene, note };
 }
 
 async function main(): Promise<void> {
@@ -210,11 +299,13 @@ async function main(): Promise<void> {
   };
   const zoom = (flag("--zoom") ?? "4x") as PreviewZoom;
   const page = Number(flag("--page") ?? "1") - 1;
+  const fitText = flag("--fit");
+  const fit = fitText ? (fitText.split("x").map(Number) as [number, number]) : undefined;
   const [id, outFile] = args;
-  if (!id || !outFile) throw new Error("usage: previewSheet.ts <model id> <out.png> [--zoom 4x|1x] [--page n]");
-  const sheet = await packSheet(id, zoom, page);
+  if (!id || !outFile) throw new Error("usage: previewSheet.ts <model id> <out.png> [--zoom 4x|1x] [--page n] [--fit <width>x<height>]");
+  const sheet = await packSheet(id, zoom, page, fit);
   fs.writeFileSync(outFile, sheet.png);
-  console.log(`${outFile}: ${sheet.width} x ${sheet.height} (${sheet.scene})`);
+  console.log(`${outFile}: ${sheet.width} x ${sheet.height} (${sheet.scene}; ${sheet.note})`);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

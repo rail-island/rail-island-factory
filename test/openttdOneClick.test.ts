@@ -19,7 +19,7 @@ import { anchorRgb, ANCHOR_COPIES, MASK, maskImages, readAnchor } from "../gener
 import { GRF_ZOOM } from "../src/openttd/grf";
 import { HEADINGS, spriteAnchor } from "../src/openttd/projection";
 import { oneClickIndex, oneClickItems, openttdFeature, resolveItem, shares } from "../src/openttd/properties";
-import { frontPoint, kindOf, labelRect, placeParts, SCENE_SLOTS, sceneName, viewRect, type Placement, type PlacementSlot } from "../src/openttd/scene";
+import { chooseView, labelsOverlap, magnification, preferTags, frontPoint, kindOf, labelRect, MIN_FRONT_SCALE, placeParts, SCENE_SLOTS, sceneName, viewRect, type Placement, type PlacementSlot, type Rect } from "../src/openttd/scene";
 
 const SCENES = path.resolve(__dirname, "../src/openttd/scenes");
 
@@ -283,6 +283,58 @@ describe("placeParts", () => {
     expect(labelRect("train", [20, 590], 100, 30, "1x", [1000, 600])).toEqual([0, 570, 100, 30]);
     expect(viewRect([[100, 100, 50, 50], [300, 200, 10, 10]], "1x", [1000, 600])).toEqual([68, 68, 274, 174]);
     expect(viewRect([[10, 10, 50, 50]], "4x", [200, 200])).toEqual([0, 0, 188, 188]);
+  });
+});
+
+describe("chooseView", () => {
+  const size4: [number, number] = [4000, 2400];
+  // a pack 2000 x 1200 at 4x; its fronts and labels 800 x 1000, at its lower left
+  const full: Rect = [400, 400, 2000, 1200];
+  const front: Rect = [400, 600, 800, 1000];
+
+  it("shows the whole pack at 4x where it fits, never above its own pixels", () => {
+    expect(chooseView(full, front, size4, [2400, 1400])).toEqual({ zoom: "4x", rect: full, scale: 1, fit: "full" });
+    const v = chooseView(full, front, size4, [1500, 900]);
+    expect(v).toMatchObject({ zoom: "4x", rect: full, scale: 0.75, fit: "full" });
+  });
+
+  it("cuts to the fronts at 4x on a small screen, widened to fill it", () => {
+    const v = chooseView(full, front, size4, [700, 800]);
+    expect(v.zoom).toBe("4x");
+    expect(v.fit).toBe("front");
+    expect(v.scale).toBeGreaterThanOrEqual(MIN_FRONT_SCALE);
+    // the cut fills the space and stays within the pack
+    expect(Math.round(v.rect[2] * v.scale)).toBeLessThanOrEqual(700);
+    expect(v.rect[2]).toBeGreaterThan(front[2]);
+    expect(v.rect[0]).toBeGreaterThanOrEqual(full[0]);
+    expect(v.rect[1] + v.rect[3]).toBeLessThanOrEqual(full[1] + full[3]);
+  });
+
+  it("shrinks the 4x images, then turns to normal zoom for a large pack on a small screen", () => {
+    const wide: Rect = [0, 0, 3600, 2000];
+    const fronts: Rect = [0, 300, 3400, 1700];
+    expect(chooseView(wide, fronts, size4, [1600, 1000])).toMatchObject({ zoom: "4x", fit: "full", scale: 1600 / 3600 });
+    // a quarter: still as large as normal zoom
+    expect(chooseView(wide, fronts, size4, [950, 600])).toMatchObject({ zoom: "4x", fit: "full" });
+    const small = chooseView(wide, fronts, size4, [700, 500]);
+    expect(small).toMatchObject({ zoom: "1x", rect: [0, 0, 900, 500], fit: "full" });
+    expect(small.scale).toBeCloseTo(0.7778, 3);
+    // too small even at normal zoom: half its size at the least, and the view scrolls
+    expect(chooseView(wide, fronts, size4, [200, 150]).scale).toBe(0.5);
+  });
+});
+
+describe("labels or tags", () => {
+  it("tags the vehicles where the labels overlap or the tags show them clearly larger", () => {
+    expect(magnification({ zoom: "4x", scale: 0.5 })).toBe(2);
+    expect(preferTags({ zoom: "1x", scale: 1 }, { zoom: "4x", scale: 0.5 }, false)).toBe(true);
+    expect(preferTags({ zoom: "4x", scale: 0.8 }, { zoom: "4x", scale: 0.85 }, false)).toBe(false);
+    // a good labelled 4x view keeps its labels, even where tags would show more
+    expect(preferTags({ zoom: "4x", scale: 0.75 }, { zoom: "4x", scale: 1 }, false)).toBe(false);
+    expect(preferTags({ zoom: "4x", scale: 0.4 }, { zoom: "4x", scale: 0.6 }, false)).toBe(true);
+    expect(preferTags({ zoom: "4x", scale: 0.8 }, { zoom: "4x", scale: 0.7 }, true)).toBe(true);
+    expect(labelsOverlap([[0, 0, 10, 10], [5, 5, 10, 10]])).toBe(true);
+    expect(labelsOverlap([[0, 0, 10, 10], [10, 0, 10, 10]])).toBe(false);
   });
 });
 

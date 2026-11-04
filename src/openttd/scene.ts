@@ -145,16 +145,113 @@ export function labelRect(feature: OpenttdFeature, front: readonly [number, numb
 }
 
 /**
- * The part of the scene the view shows: the drawn sprites and labels with a tile's
- * margin, within the scene's image - so a yard shows its tracks no further back
+ * The part of the scene the view shows: the drawn sprites and labels with a
+ * margin (normal-zoom pixels; a tile's by default), within the scene's image - so a yard shows its tracks no further back
  * than the vehicles reach.
  */
-export function viewRect(rects: readonly Rect[], zoom: PreviewZoom, size: readonly [number, number]): Rect {
+export function viewRect(rects: readonly Rect[], zoom: PreviewZoom, size: readonly [number, number], margin = 32): Rect {
   if (!rects.length) return [0, 0, size[0], size[1]];
-  const m = 32 * ZOOM_SCALE[zoom];
+  const m = margin * ZOOM_SCALE[zoom];
   const x0 = Math.max(0, Math.min(...rects.map((r) => r[0])) - m);
   const y0 = Math.max(0, Math.min(...rects.map((r) => r[1])) - m);
   const x1 = Math.min(size[0], Math.max(...rects.map((r) => r[0] + r[2])) + m);
   const y1 = Math.min(size[1], Math.max(...rects.map((r) => r[1] + r[3])) + m);
   return [Math.floor(x0), Math.floor(y0), Math.ceil(x1 - x0), Math.ceil(y1 - y0)];
+}
+
+/** How the view shows the scene: which zoom's images, the part of them, and the CSS scale it is drawn at. */
+export interface ViewChoice {
+  zoom: PreviewZoom;
+  /** In the zoom's pixels. */
+  rect: Rect;
+  /** CSS pixels per image pixel. */
+  scale: number;
+  /** "full": the whole pack; "front": cut to the vehicles' fronts and labels, the rest of their lengths left out. */
+  fit: "full" | "front";
+}
+
+/** The margin round the fronts a view cut to them keeps, normal-zoom pixels. */
+export const FRONT_MARGIN = 4;
+
+/** The least scale the 4x images are shown at whole. */
+export const MIN_4X_SCALE = 0.7;
+/**
+ * The least scale they are shown at cut to the fronts: at half size a vehicle is
+ * still twice as large as at normal zoom, which a few vehicles on a small screen
+ * are better shown at than whole and small.
+ */
+export const MIN_FRONT_SCALE = 0.5;
+/**
+ * The least scale the 4x images are shown at, whole and smoothly shrunk, when
+ * cutting to the fronts would not fit either: a quarter, normal zoom's own size -
+ * smaller, the normal-zoom images are shown instead.
+ */
+export const MIN_SHRUNK_SCALE = 0.25;
+
+const scaleToFit = (r: Rect, avail: readonly [number, number]): number => Math.min(avail[0] / r[2], avail[1] / r[3]);
+
+/**
+ * The view for `avail` CSS pixels (docs/site/openttd-export.md, "The OpenTTD view"):
+ * the most detailed one that fits, in this order -
+ *
+ *  1. the whole pack at 4x, shrunk to at most MIN_4X_SCALE;
+ *  2. at 4x cut to the vehicles' fronts and labels (`front4`) - a long train's
+ *     rear left out - widened to fill the space, at MIN_FRONT_SCALE or more (a
+ *     few vehicles on a small screen: a large pack's fronts do not fit);
+ *  3. the whole pack at 4x, shrunk to at most MIN_SHRUNK_SCALE (still at least as
+ *     large as normal zoom, and smoother than it scaled up);
+ *  4. the whole pack at normal zoom, shrunk to fit (down to 0.5; below, the view
+ *     scrolls): a large pack on a small screen.
+ *
+ * `full4` and `front4` are the pack's and the fronts' rectangles at 4x (viewRect),
+ * `size4` the scene's 4x image; never above the image's own pixels at 4x.
+ */
+export function chooseView(full4: Rect, front4: Rect, size4: readonly [number, number], avail: readonly [number, number]): ViewChoice {
+  const s4 = scaleToFit(full4, avail);
+  if (s4 >= MIN_4X_SCALE) return { zoom: "4x", rect: full4, scale: Math.min(1, s4), fit: "full" };
+  const f4 = scaleToFit(front4, avail);
+  if (f4 >= MIN_FRONT_SCALE) {
+    const scale = Math.min(1, f4);
+    // the fronts, widened towards the rest of the pack to fill the space
+    const w = Math.min(full4[2], Math.floor(avail[0] / scale));
+    const h = Math.min(full4[3], Math.floor(avail[1] / scale));
+    const cx = front4[0] + front4[2] / 2;
+    const cy = front4[1] + front4[3] / 2;
+    const x = Math.round(Math.min(Math.max(cx - w / 2, full4[0]), full4[0] + full4[2] - w));
+    const y = Math.round(Math.min(Math.max(cy - h / 2, full4[1]), full4[1] + full4[3] - h));
+    return { zoom: "4x", rect: [Math.max(0, x), Math.max(0, y), Math.min(w, size4[0]), Math.min(h, size4[1])], scale, fit: "front" };
+  }
+  if (s4 >= MIN_SHRUNK_SCALE) return { zoom: "4x", rect: full4, scale: s4, fit: "full" };
+  const full1: Rect = [Math.floor(full4[0] / 4), Math.floor(full4[1] / 4), Math.ceil(full4[2] / 4), Math.ceil(full4[3] / 4)];
+  const s1 = scaleToFit(full1, avail);
+  return { zoom: "1x", rect: full1, scale: Math.max(0.5, Math.min(1, s1)), fit: "full" };
+}
+
+/** How large a view shows the vehicles against normal zoom at its own size (a 4x view at 0.5: 2). */
+export function magnification(c: Pick<ViewChoice, "zoom" | "scale">): number {
+  return c.scale * ZOOM_SCALE[c.zoom];
+}
+
+/**
+ * Whether to tag the vehicles with numbers and name them in a legend rather than
+ * label them: where the labels overlap; or, unless the labelled view is already a
+ * good 4x one (MIN_4X_SCALE or more), where the tags let the vehicles be shown
+ * clearly larger (a sixth or more) in the space the legend leaves.
+ */
+export function preferTags(labelled: Pick<ViewChoice, "zoom" | "scale">, tagged: Pick<ViewChoice, "zoom" | "scale">, overlap: boolean): boolean {
+  if (overlap) return true;
+  if (labelled.zoom === "4x" && labelled.scale >= MIN_4X_SCALE) return false;
+  return magnification(tagged) >= magnification(labelled) * 1.15;
+}
+
+/** Whether any two labels overlap: then the view tags the vehicles with numbers and names them in a legend. */
+export function labelsOverlap(rects: readonly Rect[]): boolean {
+  for (let i = 0; i < rects.length; i++) {
+    for (let j = i + 1; j < rects.length; j++) {
+      const a = rects[i]!;
+      const b = rects[j]!;
+      if (a[0] < b[0] + b[2] && b[0] < a[0] + a[2] && a[1] < b[1] + b[3] && b[1] < a[1] + a[3]) return true;
+    }
+  }
+  return false;
 }
