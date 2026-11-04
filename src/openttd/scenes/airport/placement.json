@@ -1,48 +1,167 @@
 {
-  "version": 1,
+  "version": 2,
   "scene": "airport",
+  "kind": "airport",
   "openttd": "13.4",
   "opengfx": "7.1",
   "sizes": {
     "1x": [
-      578,
-      371
+      944,
+      596
     ],
     "4x": [
-      2312,
-      1484
+      3776,
+      2384
     ]
   },
   "slots": [
     {
-      "id": "aircraft-0",
-      "direction": 5,
-      "track": "air",
+      "id": 0,
+      "direction": 7,
       "maxLength": 16,
       "anchors": {
         "1x": [
-          338,
-          240
+          632,
+          484
         ],
         "4x": [
-          1352,
-          960
+          2528,
+          1936
         ]
       }
     },
     {
-      "id": "aircraft-1",
-      "direction": 3,
-      "track": "air",
+      "id": 1,
+      "direction": 7,
       "maxLength": 16,
       "anchors": {
         "1x": [
-          240,
-          251
+          824,
+          388
         ],
         "4x": [
-          960,
-          1004
+          3296,
+          1552
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "direction": 7,
+      "maxLength": 16,
+      "anchors": {
+        "1x": [
+          504,
+          420
+        ],
+        "4x": [
+          2016,
+          1680
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "direction": 7,
+      "maxLength": 16,
+      "anchors": {
+        "1x": [
+          696,
+          324
+        ],
+        "4x": [
+          2784,
+          1296
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "direction": 7,
+      "maxLength": 16,
+      "anchors": {
+        "1x": [
+          376,
+          356
+        ],
+        "4x": [
+          1504,
+          1424
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "direction": 7,
+      "maxLength": 16,
+      "anchors": {
+        "1x": [
+          568,
+          260
+        ],
+        "4x": [
+          2272,
+          1040
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "direction": 7,
+      "maxLength": 16,
+      "anchors": {
+        "1x": [
+          248,
+          292
+        ],
+        "4x": [
+          992,
+          1168
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "direction": 7,
+      "maxLength": 16,
+      "anchors": {
+        "1x": [
+          440,
+          196
+        ],
+        "4x": [
+          1760,
+          784
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "direction": 7,
+      "maxLength": 16,
+      "anchors": {
+        "1x": [
+          120,
+          228
+        ],
+        "4x": [
+          480,
+          912
+        ]
+      }
+    },
+    {
+      "id": 9,
+      "direction": 7,
+      "maxLength": 16,
+      "anchors": {
+        "1x": [
+          312,
+          132
+        ],
+        "4x": [
+          1248,
+          528
         ]
       }
     }

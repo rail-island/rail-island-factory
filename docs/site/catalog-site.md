@@ -233,8 +233,8 @@ orbit, wheel or pinch to zoom, no pan), the build's thumbnail and every column a
 a spec list. Its **Add to export** button puts the model, at the parameter values
 on screen, on the export list ("In the export" once that variant is listed;
 [openttd-export.md](openttd-export.md)). A vehicle OpenTTD can hold also gets, over the preview, a
-**3D / OpenTTD** switch - one vehicle of its one-click pack, picked from a list of exactly what the
-GRF holds, drawn into a scene prerendered in OpenTTD - and **Download for OpenTTD**, a GRF of its
+**3D / OpenTTD** switch - its whole one-click pack, each vehicle on its own track of a yard
+prerendered in OpenTTD and labelled with its name and id - and **Download for OpenTTD**, a GRF of its
 preset variants and formations in one click
 ([openttd-export.md](openttd-export.md)). Arrows step through the **current** filtered and sorted list;
 Escape, the app bar's back arrow or the browser's Back return to it.

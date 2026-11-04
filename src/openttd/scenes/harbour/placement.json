@@ -1,48 +1,167 @@
 {
-  "version": 1,
+  "version": 2,
   "scene": "harbour",
+  "kind": "harbour",
   "openttd": "13.4",
   "opengfx": "7.1",
   "sizes": {
     "1x": [
-      496,
-      424
+      816,
+      532
     ],
     "4x": [
-      1984,
-      1696
+      3264,
+      2128
     ]
   },
   "slots": [
     {
-      "id": "ship-0",
+      "id": 0,
       "direction": 5,
-      "track": "water",
       "maxLength": 16,
       "anchors": {
         "1x": [
-          256,
-          240
+          696,
+          420
         ],
         "4x": [
-          1024,
-          960
+          2784,
+          1680
         ]
       }
     },
     {
-      "id": "ship-1",
-      "direction": 3,
-      "track": "water",
+      "id": 1,
+      "direction": 5,
       "maxLength": 16,
       "anchors": {
         "1x": [
-          240,
-          304
+          632,
+          388
         ],
         "4x": [
-          960,
-          1216
+          2528,
+          1552
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "direction": 5,
+      "maxLength": 16,
+      "anchors": {
+        "1x": [
+          568,
+          356
+        ],
+        "4x": [
+          2272,
+          1424
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "direction": 5,
+      "maxLength": 16,
+      "anchors": {
+        "1x": [
+          504,
+          324
+        ],
+        "4x": [
+          2016,
+          1296
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "direction": 5,
+      "maxLength": 16,
+      "anchors": {
+        "1x": [
+          440,
+          292
+        ],
+        "4x": [
+          1760,
+          1168
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "direction": 5,
+      "maxLength": 16,
+      "anchors": {
+        "1x": [
+          376,
+          260
+        ],
+        "4x": [
+          1504,
+          1040
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "direction": 5,
+      "maxLength": 16,
+      "anchors": {
+        "1x": [
+          312,
+          228
+        ],
+        "4x": [
+          1248,
+          912
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "direction": 5,
+      "maxLength": 16,
+      "anchors": {
+        "1x": [
+          248,
+          196
+        ],
+        "4x": [
+          992,
+          784
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "direction": 5,
+      "maxLength": 16,
+      "anchors": {
+        "1x": [
+          184,
+          164
+        ],
+        "4x": [
+          736,
+          656
+        ]
+      }
+    },
+    {
+      "id": 9,
+      "direction": 5,
+      "maxLength": 16,
+      "anchors": {
+        "1x": [
+          120,
+          132
+        ],
+        "4x": [
+          480,
+          528
         ]
       }
     }

@@ -82,12 +82,21 @@ function vehicle(feature: OpenttdFeature, name: string, tram = false): ResolvedV
 
 /** The markers of each kind, by slot: how many there are and how many parts each has. */
 export const MARKER_KINDS = {
-  train: { feature: "train", parts: 16, count: 8 },
-  bus: { feature: "road", parts: 4, count: 4 },
-  tram: { feature: "road", parts: 4, count: 4 },
-  ship: { feature: "ship", parts: 1, count: 4 },
-  aircraft: { feature: "aircraft", parts: 1, count: 4 },
+  // 32 full-length parts: 16 tiles, a yard track's length (the longest formation)
+  train: { feature: "train", parts: 32, count: 10 },
+  bus: { feature: "road", parts: 4, count: 10 },
+  tram: { feature: "road", parts: 4, count: 10 },
+  ship: { feature: "ship", parts: 1, count: 10 },
+  aircraft: { feature: "aircraft", parts: 1, count: 10 },
 } as const;
+
+/** The heading every yard and ship lane is drawn in: south-west (OpenTTD's Direction 5). */
+export const YARD_DIRECTION = 5;
+
+/** A direction no marker stops in: one transparent pixel per zoom, to keep the GRF small. */
+function blankImages(): GrfImage[] {
+  return [GRF_ZOOM.normal, GRF_ZOOM.in2x, GRF_ZOOM.in4x].map((zoom) => ({ zoom, width: 1, height: 1, xOffs: 0, yOffs: 0, rgba: new Uint8Array(4) }));
+}
 
 export type MarkerKind = keyof typeof MARKER_KINDS;
 
@@ -109,7 +118,8 @@ export function markerGrf(): Uint8Array {
     for (let slot = 0; slot < spec.count; slot++) {
       const parts: GrfPart[] = [];
       for (let p = 0; p < spec.parts; p++) {
-        const directions = Array.from({ length: 8 }, (_, dir) => maskImages(slot, p, dir));
+        // an aircraft stops at its terminal in any direction; everything else heads south-west
+        const directions = Array.from({ length: 8 }, (_, dir) => (kind === "aircraft" || dir === YARD_DIRECTION ? maskImages(slot, p, dir) : blankImages()));
         parts.push({ id: nextId[spec.feature]++, length: 8, directions });
       }
       vehicles.push({ vehicle: vehicle(spec.feature, markerName(kind, slot), kind === "tram"), parts });

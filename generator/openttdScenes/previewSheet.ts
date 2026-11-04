@@ -1,11 +1,11 @@
-// The OpenTTD view headlessly (docs/site/openttd-export.md, "The preview"): a model
-// variant or formation drawn into its prerendered scene, as the model page's
-// OpenTTD view draws it - the same sprite frames (projection.ts), zoom filter
+// The OpenTTD view headlessly (docs/site/openttd-export.md, "The OpenTTD view"): a
+// model's whole one-click pack drawn into its prerendered yard with its labels, as
+// the model page's OpenTTD view draws it - the same sprite frames (projection.ts), zoom filter
 // (pixels.ts) and placement (scene.ts) - with a small software rasterizer standing
 // in for the page's WebGL renderer (flat Lambert, the same lights). For checks and
 // for the images sent to the user; the site never runs it.
 //
-//   pnpm exec tsx generator/openttdScenes/previewSheet.ts <model id> <out.png> [name=value ...] [--formation <name>] [--zoom 1x|4x] [--crop]
+//   pnpm exec tsx generator/openttdScenes/previewSheet.ts <model id> <out.png> [--zoom 4x|1x] [--page n]
 
 import fs from "node:fs";
 import path from "node:path";
@@ -15,9 +15,12 @@ import { catalogFields, DESIGNS, toGlb } from "../generate.ts";
 import { collectTriangles, parseGlb, triBounds, type Tri } from "../glbTriangles.ts";
 import { catalogOpenttd, openttdFeatureOf } from "../openttd.ts";
 import { zoomImages } from "../../src/openttd/pixels.ts";
-import { applyMatrix, RENDER_ZOOM, spriteViews, type ModelBox, type SpriteView } from "../../src/openttd/projection.ts";
-import { partLengths } from "../../src/openttd/properties.ts";
-import { placeParts, sceneOf, trackOf, ZOOM_SCALE, type Placement, type PreviewZoom } from "../../src/openttd/scene.ts";
+import { applyMatrix, spriteViews, type ModelBox, type SpriteView } from "../../src/openttd/projection.ts";
+import { oneClickItems, partLengths, resolveItem, type OpenttdFeature } from "../../src/openttd/properties.ts";
+import {
+  frontPoint, kindOf, labelRect, placeParts, SCENE_SLOTS, sceneName, viewRect, type Placement, type PreviewZoom, type Rect,
+} from "../../src/openttd/scene.ts";
+import type { CatalogRecord } from "../catalog.ts";
 import { GRF_ZOOM, type GrfImage } from "../../src/openttd/grf.ts";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -116,24 +119,10 @@ function blend(dst: { width: number; height: number; data: Uint8Array }, img: { 
   }
 }
 
-export async function previewSheet(id: string, params: Record<string, string>, opts: { formation?: string; zoom?: PreviewZoom }): Promise<{ width: number; height: number; data: Uint8Array; placement: Placement; boxes: Array<[number, number, number, number]> }> {
-  const design = DESIGNS.get(id);
-  if (!design) throw new Error(`no model ${id}`);
-  const fields = catalogFields(design);
-  const feature = openttdFeatureOf(fields);
-  if (!feature) throw new Error(`${id}: OpenTTD has no vehicle of this kind`);
-  const ottd = catalogOpenttd(design, fields);
-  const formation = opts.formation ? ottd?.formations?.find((f) => f.name === opts.formation) : undefined;
-  if (opts.formation && !formation) throw new Error(`${id}: no formation "${opts.formation}"`);
-  const cars: Car[] = formation ? formation.cars.map((c) => ({ params: c.params, turned: !!c.turned })) : [{ params, turned: false }];
-  const zoom = opts.zoom ?? "1x";
-  const track = trackOf(feature, ottd?.railType ?? "RAIL", fields.group === "tram");
-  const scene = sceneOf(track);
-  const placement = JSON.parse(fs.readFileSync(path.join(SCENES, scene, "placement.json"), "utf8")) as Placement;
-  const slots = placement.slots.filter((s) => s.track === track);
-  const directions = [...new Set(slots.map((s) => s.direction))];
-  // every part's images in the slots' directions
-  const parts: Array<{ length: number; images: Map<number, GrfImage> }> = [];
+/** A vehicle drawn headlessly: its cars, measured and rasterized in one direction. */
+async function drawItem(id: string, cars: Car[], feature: OpenttdFeature, direction: number, zoom: PreviewZoom): Promise<Array<{ length: number; image: GrfImage }>> {
+  const design = DESIGNS.get(id)!;
+  const out: Array<{ length: number; image: GrfImage }> = [];
   for (const car of cars) {
     const { json, bin } = parseGlb(toGlb(id, design.build(car.params)));
     const tris = collectTriangles(json, bin);
@@ -144,27 +133,70 @@ export async function previewSheet(id: string, params: Record<string, string>, o
     const lengths = partLengths(box.max[0] - box.min[0], feature);
     const views = spriteViews(feature, box, lengths, design.game?.draftFrac ?? 0);
     for (const [k, dirs] of views.entries()) {
-      const images = new Map<number, GrfImage>();
-      for (const d of directions) {
-        const zooms = zoomImages(rasterize(tris, dirs[d]!, car.turned), dirs[d]!, SUPERSAMPLE);
-        images.set(d, zooms.find((z) => z.zoom === (zoom === "1x" ? GRF_ZOOM.normal : GRF_ZOOM.in4x))!);
-      }
-      parts.push({ length: lengths[k]!, images });
+      const zooms = zoomImages(rasterize(tris, dirs[direction]!, car.turned), dirs[direction]!, SUPERSAMPLE);
+      out.push({ length: lengths[k]!, image: zooms.find((z) => z.zoom === (zoom === "1x" ? GRF_ZOOM.normal : GRF_ZOOM.in4x))! });
     }
   }
+  return out;
+}
+
+const escape = (t: string): string => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+/**
+ * A model's whole one-click pack in its scene, as the model page's OpenTTD view
+ * draws it: each preset and formation on its own slot of the yard of exactly that
+ * many tracks, labelled with its OpenTTD name and local id, cropped to the
+ * vehicles. `page` picks the next 10 of a larger pack.
+ */
+export async function packSheet(id: string, zoom: PreviewZoom = "4x", page = 0): Promise<{ png: Buffer; width: number; height: number; scene: string }> {
+  const design = DESIGNS.get(id);
+  if (!design) throw new Error(`no model ${id}`);
+  const fields = catalogFields(design);
+  const feature = openttdFeatureOf(fields);
+  if (!feature) throw new Error(`${id}: OpenTTD has no vehicle of this kind`);
+  const ottd = catalogOpenttd(design, fields)!;
+  const record = { id, title: design.title, category: fields.category, group: fields.group, traction: fields.traction, params: design.params, game: design.game, openttd: ottd } as unknown as CatalogRecord;
+  const items = oneClickItems(record).slice(page * SCENE_SLOTS, page * SCENE_SLOTS + SCENE_SLOTS);
+  const kind = kindOf(feature, ottd.railType ?? "RAIL", fields.group === "tram");
+  const scene = sceneName(kind, items.length);
+  const placement = JSON.parse(fs.readFileSync(path.join(SCENES, scene, "placement.json"), "utf8")) as Placement;
   const out = await readRaw(path.join(SCENES, scene, `background-${zoom}.png`));
   const fg = await readRaw(path.join(SCENES, scene, `foreground-${zoom}.png`));
-  const boxes: Array<[number, number, number, number]> = [];
-  for (const slot of slots) {
-    const imgs = parts.map((p) => p.images.get(slot.direction)!);
-    for (const p of placeParts(feature, slot, zoom, parts.map((q) => q.length), imgs.map((i) => [i.xOffs, i.yOffs] as const))) {
-      const img = imgs[p.part]!;
+  const rects: Rect[] = [];
+  for (const [i, item] of items.entries()) {
+    const slot = placement.slots[i]!;
+    const parts = await drawItem(id, item.cars.map((c) => ({ params: c.params, turned: !!c.turned })), feature, slot.direction, zoom);
+    for (const p of placeParts(feature, slot, zoom, parts.map((q) => q.length), parts.map((q) => [q.image.xOffs, q.image.yOffs] as const))) {
+      const img = parts[p.part]!.image;
       blend(out, img, p.x, p.y);
-      boxes.push([p.x, p.y, img.width, img.height]);
+      rects.push([p.x, p.y, img.width, img.height]);
     }
   }
   blend(out, { width: fg.width, height: fg.height, rgba: fg.data }, 0, 0);
-  return { ...out, placement, boxes };
+  // the labels, as SVG over the image (text widths estimated: the site measures them)
+  const size = placement.sizes[zoom];
+  const big = zoom === "4x";
+  const [fs1, fs2, pad, gap] = big ? [18, 15, 6, 3] : [9, 8, 3, 1];
+  const svg: string[] = [];
+  for (const [i, item] of items.entries()) {
+    const name = resolveItem(item).vehicle.name;
+    const idText = item.baseId === undefined ? "-" : `0x${item.baseId.toString(16).toUpperCase().padStart(4, "0")}`;
+    const width = Math.ceil(Math.max(name.length * fs1 * 0.58, idText.length * fs2 * 0.62) + 2 * pad);
+    const height = 2 * pad + (big ? 20 : 10) + gap + (big ? 16 : 9);
+    const r = labelRect(feature, frontPoint(feature, placement.slots[i]!, zoom), width, height, zoom, size);
+    rects.push(r);
+    svg.push(`<rect x="${r[0] + 0.5}" y="${r[1] + 0.5}" width="${r[2] - 1}" height="${r[3] - 1}" fill="rgb(20,20,28)" fill-opacity="0.82" stroke="white" stroke-opacity="0.35"/>`);
+    svg.push(`<text x="${r[0] + pad}" y="${r[1] + pad + fs1 * 0.85}" font-family="DejaVu Sans, sans-serif" font-weight="bold" font-size="${fs1}" fill="white">${escape(name)}</text>`);
+    svg.push(`<text x="${r[0] + pad}" y="${r[1] + pad + (big ? 20 : 10) + gap + fs2 * 0.85}" font-family="DejaVu Sans Mono, monospace" font-size="${fs2}" fill="#b8e0b0">${escape(idText)}</text>`);
+  }
+  const [vx, vy, vw, vh] = viewRect(rects, zoom, size);
+  const overlay = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${out.width}" height="${out.height}">${svg.join("")}</svg>`);
+  const png = await sharp(Buffer.from(out.data), { raw: { width: out.width, height: out.height, channels: 4 } })
+    .composite([{ input: overlay, top: 0, left: 0 }])
+    .png()
+    .toBuffer();
+  const cropped = await sharp(png).extract({ left: vx, top: vy, width: vw, height: vh }).png().toBuffer();
+  return { png: cropped, width: vw, height: vh, scene };
 }
 
 async function main(): Promise<void> {
@@ -176,32 +208,13 @@ async function main(): Promise<void> {
     args.splice(i, 2);
     return v;
   };
-  const crop = args.includes("--crop");
-  if (crop) args.splice(args.indexOf("--crop"), 1);
-  const formation = flag("--formation");
-  const zoom = (flag("--zoom") ?? "1x") as PreviewZoom;
-  const [id, outFile, ...rest] = args;
-  if (!id || !outFile) throw new Error("usage: previewSheet.ts <model id> <out.png> [name=value ...] [--formation <name>] [--zoom 1x|4x] [--crop]");
-  const params = Object.fromEntries(rest.map((kv) => kv.split("=") as [string, string]));
-  const img = await previewSheet(id, params, { formation, zoom });
-  let { width, height, data } = img;
-  let left = 0;
-  let top = 0;
-  if (crop) {
-    // round the drawn sprites, a margin of a tile
-    const m = 64 * ZOOM_SCALE[zoom];
-    left = Math.max(0, Math.min(...img.boxes.map((b) => b[0])) - m);
-    top = Math.max(0, Math.min(...img.boxes.map((b) => b[1])) - m);
-    const right = Math.min(width, Math.max(...img.boxes.map((b) => b[0] + b[2])) + m);
-    const bottom = Math.min(height, Math.max(...img.boxes.map((b) => b[1] + b[3])) + m);
-    width = right - left;
-    height = bottom - top;
-  }
-  await sharp(Buffer.from(data), { raw: { width: img.width, height: img.height, channels: 4 } })
-    .extract({ left, top, width, height })
-    .png()
-    .toFile(outFile);
-  console.log(`${outFile}: ${width} x ${height}`);
+  const zoom = (flag("--zoom") ?? "4x") as PreviewZoom;
+  const page = Number(flag("--page") ?? "1") - 1;
+  const [id, outFile] = args;
+  if (!id || !outFile) throw new Error("usage: previewSheet.ts <model id> <out.png> [--zoom 4x|1x] [--page n]");
+  const sheet = await packSheet(id, zoom, page);
+  fs.writeFileSync(outFile, sheet.png);
+  console.log(`${outFile}: ${sheet.width} x ${sheet.height} (${sheet.scene})`);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
@@ -211,4 +224,3 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   });
 }
 
-export { RENDER_ZOOM };
