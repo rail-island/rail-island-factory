@@ -1,0 +1,49 @@
+{
+  "version": 2,
+  "scene": "road-2",
+  "kind": "road",
+  "openttd": "13.4",
+  "opengfx": "7.1",
+  "sizes": {
+    "1x": [
+      744,
+      424
+    ],
+    "4x": [
+      2976,
+      1696
+    ]
+  },
+  "slots": [
+    {
+      "id": 0,
+      "direction": 5,
+      "maxLength": 256,
+      "anchors": {
+        "1x": [
+          160,
+          344
+        ],
+        "4x": [
+          640,
+          1376
+        ]
+      }
+    },
+    {
+      "id": 1,
+      "direction": 5,
+      "maxLength": 256,
+      "anchors": {
+        "1x": [
+          128,
+          328
+        ],
+        "4x": [
+          512,
+          1312
+        ]
+      }
+    }
+  ]
+}

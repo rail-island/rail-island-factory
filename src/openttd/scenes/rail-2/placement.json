@@ -1,0 +1,49 @@
+{
+  "version": 2,
+  "scene": "rail-2",
+  "kind": "rail",
+  "openttd": "13.4",
+  "opengfx": "7.1",
+  "sizes": {
+    "1x": [
+      752,
+      420
+    ],
+    "4x": [
+      3008,
+      1680
+    ]
+  },
+  "slots": [
+    {
+      "id": 0,
+      "direction": 5,
+      "maxLength": 256,
+      "anchors": {
+        "1x": [
+          168,
+          340
+        ],
+        "4x": [
+          672,
+          1360
+        ]
+      }
+    },
+    {
+      "id": 1,
+      "direction": 5,
+      "maxLength": 256,
+      "anchors": {
+        "1x": [
+          136,
+          324
+        ],
+        "4x": [
+          544,
+          1296
+        ]
+      }
+    }
+  ]
+}

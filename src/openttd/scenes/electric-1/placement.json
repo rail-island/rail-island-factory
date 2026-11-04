@@ -1,0 +1,34 @@
+{
+  "version": 2,
+  "scene": "electric-1",
+  "kind": "electric",
+  "openttd": "13.4",
+  "opengfx": "7.1",
+  "sizes": {
+    "1x": [
+      720,
+      404
+    ],
+    "4x": [
+      2880,
+      1616
+    ]
+  },
+  "slots": [
+    {
+      "id": 0,
+      "direction": 5,
+      "maxLength": 256,
+      "anchors": {
+        "1x": [
+          136,
+          324
+        ],
+        "4x": [
+          544,
+          1296
+        ]
+      }
+    }
+  ]
+}

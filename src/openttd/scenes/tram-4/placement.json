@@ -1,0 +1,79 @@
+{
+  "version": 2,
+  "scene": "tram-4",
+  "kind": "tram",
+  "openttd": "13.4",
+  "opengfx": "7.1",
+  "sizes": {
+    "1x": [
+      804,
+      458
+    ],
+    "4x": [
+      3216,
+      1832
+    ]
+  },
+  "slots": [
+    {
+      "id": 0,
+      "direction": 5,
+      "maxLength": 256,
+      "anchors": {
+        "1x": [
+          220,
+          378
+        ],
+        "4x": [
+          880,
+          1512
+        ]
+      }
+    },
+    {
+      "id": 1,
+      "direction": 5,
+      "maxLength": 256,
+      "anchors": {
+        "1x": [
+          188,
+          362
+        ],
+        "4x": [
+          752,
+          1448
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "direction": 5,
+      "maxLength": 256,
+      "anchors": {
+        "1x": [
+          156,
+          346
+        ],
+        "4x": [
+          624,
+          1384
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "direction": 5,
+      "maxLength": 256,
+      "anchors": {
+        "1x": [
+          124,
+          330
+        ],
+        "4x": [
+          496,
+          1320
+        ]
+      }
+    }
+  ]
+}

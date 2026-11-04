@@ -19,7 +19,7 @@ import { anchorRgb, ANCHOR_COPIES, MASK, maskImages, readAnchor } from "../gener
 import { GRF_ZOOM } from "../src/openttd/grf";
 import { HEADINGS, spriteAnchor } from "../src/openttd/projection";
 import { oneClickIndex, oneClickItems, openttdFeature, resolveItem, shares } from "../src/openttd/properties";
-import { placeParts, sceneOf, trackOf, type Placement, type PlacementSlot } from "../src/openttd/scene";
+import { frontPoint, kindOf, labelRect, placeParts, SCENE_SLOTS, sceneName, viewRect, type Placement, type PlacementSlot } from "../src/openttd/scene";
 
 const SCENES = path.resolve(__dirname, "../src/openttd/scenes");
 
@@ -183,17 +183,25 @@ describe("the one-click items", () => {
 });
 
 describe("the prerendered scenes", () => {
-  const scenes = ["railway", "road", "harbour", "airport"] as const;
   const read = (s: string): Placement => JSON.parse(fs.readFileSync(path.join(SCENES, s, "placement.json"), "utf8")) as Placement;
+  const linear = ["rail", "electric", "road", "tram"] as const;
+  const names = [...linear.flatMap((k) => Array.from({ length: SCENE_SLOTS }, (_, i) => `${k}-${i + 1}`)), "harbour", "airport"];
 
-  it("hold a placement and images of the sizes it names, for every track", async () => {
-    const tracks = new Set<string>();
-    for (const s of scenes) {
+  it("are the yards of 1..10 tracks of each kind, the harbour and the airport, and nothing else", () => {
+    const dirs = fs.readdirSync(SCENES).filter((d) => fs.existsSync(path.join(SCENES, d, "placement.json")));
+    expect(dirs.sort()).toEqual([...names].sort());
+  });
+
+  it("hold a placement and images of the sizes it names; a yard of k tracks holds k slots heading south-west", async () => {
+    for (const s of names) {
       const p = read(s);
-      expect(p).toMatchObject({ version: 1, scene: s, openttd: "13.4", opengfx: "7.1" });
-      expect(p.slots.length).toBeGreaterThan(0);
+      expect(p).toMatchObject({ version: 2, scene: s, openttd: "13.4", opengfx: "7.1" });
+      const k = /-(\d+)$/.exec(s);
+      expect(p.slots.length).toBe(k ? Number(k[1]) : SCENE_SLOTS);
+      expect(p.slots.map((sl) => sl.id)).toEqual(p.slots.map((_, i) => i));
+      if (k) for (const sl of p.slots) expect([sl.direction, sl.maxLength]).toEqual([5, 256]);
+      expect(p.sizes["4x"]).toEqual([p.sizes["1x"][0] * 4, p.sizes["1x"][1] * 4]);
       for (const zoom of ["1x", "4x"] as const) {
-        expect(p.sizes["4x"]).toEqual([p.sizes["1x"][0] * 4, p.sizes["1x"][1] * 4]);
         for (const layer of ["background", "foreground"]) {
           const meta = await sharp(path.join(SCENES, s, `${layer}-${zoom}.png`)).metadata();
           expect([meta.width, meta.height], `${s} ${layer}-${zoom}`).toEqual(p.sizes[zoom]);
@@ -204,19 +212,24 @@ describe("the prerendered scenes", () => {
         }
       }
       for (const slot of p.slots) {
-        expect(sceneOf(slot.track)).toBe(s);
-        tracks.add(slot.track);
         // the 4x anchor is the normal one's, four times, to within the marker's pixel
         expect(Math.abs(slot.anchors["4x"][0] - 4 * slot.anchors["1x"][0])).toBeLessThan(4);
         expect(Math.abs(slot.anchors["4x"][1] - 4 * slot.anchors["1x"][1])).toBeLessThan(4);
       }
+      if (k) {
+        // slot 0 nearest the viewer: each next track one tile further back (32 px left, 16 up at 1x)
+        for (const [i, sl] of p.slots.entries()) {
+          if (!i) continue;
+          const [x0, y0] = p.slots[i - 1]!.anchors["1x"];
+          expect([x0 - sl.anchors["1x"][0], y0 - sl.anchors["1x"][1]]).toEqual([32, 16]);
+        }
+      }
     }
-    expect([...tracks].sort()).toEqual(["air", "electric", "rail", "road", "tram", "water"]);
   });
 });
 
 describe("placeParts", () => {
-  const slot: PlacementSlot = { id: "t", direction: 5, track: "rail", maxLength: 40, anchors: { "1x": [500, 300], "4x": [2000, 1200] } };
+  const slot: PlacementSlot = { id: 0, direction: 5, maxLength: 40, anchors: { "1x": [500, 300], "4x": [2000, 1200] } };
 
   it("puts a full-length head where the marker's sprite was anchored", () => {
     const [p] = placeParts("train", slot, "1x", [8], [[-10, -20]]);
@@ -244,15 +257,32 @@ describe("placeParts", () => {
   });
 
   it("keeps a ship or aircraft whole at its slot", () => {
-    const ship: PlacementSlot = { ...slot, track: "water", maxLength: 16 };
+    const ship: PlacementSlot = { ...slot, maxLength: 16 };
     expect(placeParts("ship", ship, "1x", [8], [[-5, -5]])).toEqual([{ part: 0, x: 495, y: 295, depth: -0 }]);
   });
 
-  it("picks a vehicle's track and scene", () => {
-    expect(trackOf("train", "ELRL", false)).toBe("electric");
-    expect(trackOf("train", "RAIL", false)).toBe("rail");
-    expect(trackOf("road", "RAIL", true)).toBe("tram");
-    expect(sceneOf(trackOf("aircraft", "RAIL", false))).toBe("airport");
+  it("picks a vehicle's scene: its kind and the yard of exactly as many tracks", () => {
+    expect(kindOf("train", "ELRL", false)).toBe("electric");
+    expect(kindOf("train", "RAIL", false)).toBe("rail");
+    expect(kindOf("road", "RAIL", true)).toBe("tram");
+    expect(kindOf("aircraft", "RAIL", false)).toBe("airport");
+    expect(sceneName("electric", 6)).toBe("electric-6");
+    expect(sceneName("road", 14)).toBe("road-10");
+    expect(sceneName("rail", 0)).toBe("rail-1");
+    expect(sceneName("harbour", 3)).toBe("harbour");
+  });
+
+  it("puts a label ahead of a vehicle's nose, inside the scene, and crops the view to what is drawn", () => {
+    const front = frontPoint("train", slot, "1x");
+    // the front is 4 units ahead (south-west) of the 8/8 marker's position
+    const [mx, my] = spriteAnchor("train", 5, 8);
+    expect(front).toEqual([500 - 2 * (my - mx) - 8, 300 - (mx + my) + 4]);
+    const r = labelRect("train", front, 100, 30, "1x", [1000, 600]);
+    expect(r[0] + r[2]).toBe(Math.round(front[0] - 6));
+    expect(r[1] + r[3] / 2).toBe(front[1]);
+    expect(labelRect("train", [20, 590], 100, 30, "1x", [1000, 600])).toEqual([0, 570, 100, 30]);
+    expect(viewRect([[100, 100, 50, 50], [300, 200, 10, 10]], "1x", [1000, 600])).toEqual([68, 68, 274, 174]);
+    expect(viewRect([[10, 10, 50, 50]], "4x", [200, 200])).toEqual([0, 0, 188, 188]);
   });
 });
 

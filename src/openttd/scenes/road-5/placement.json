@@ -1,0 +1,94 @@
+{
+  "version": 2,
+  "scene": "road-5",
+  "kind": "road",
+  "openttd": "13.4",
+  "opengfx": "7.1",
+  "sizes": {
+    "1x": [
+      848,
+      468
+    ],
+    "4x": [
+      3392,
+      1872
+    ]
+  },
+  "slots": [
+    {
+      "id": 0,
+      "direction": 5,
+      "maxLength": 256,
+      "anchors": {
+        "1x": [
+          264,
+          388
+        ],
+        "4x": [
+          1056,
+          1552
+        ]
+      }
+    },
+    {
+      "id": 1,
+      "direction": 5,
+      "maxLength": 256,
+      "anchors": {
+        "1x": [
+          232,
+          372
+        ],
+        "4x": [
+          928,
+          1488
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "direction": 5,
+      "maxLength": 256,
+      "anchors": {
+        "1x": [
+          200,
+          356
+        ],
+        "4x": [
+          800,
+          1424
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "direction": 5,
+      "maxLength": 256,
+      "anchors": {
+        "1x": [
+          168,
+          340
+        ],
+        "4x": [
+          672,
+          1360
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "direction": 5,
+      "maxLength": 256,
+      "anchors": {
+        "1x": [
+          136,
+          324
+        ],
+        "4x": [
+          544,
+          1296
+        ]
+      }
+    }
+  ]
+}

@@ -43,61 +43,56 @@ const CACHE = path.join(os.homedir(), ".cache", "rail-island-factory", `openttd-
 /** The screen OpenTTD runs at under Xvfb, normal-zoom pixels; "big" screenshots are 4 times it. */
 const SCREEN = { width: 1280, height: 800 } as const;
 
-/** What kind of track a slot stands on: the site picks a vehicle's slots by it. */
-export type SlotTrack = "rail" | "electric" | "road" | "tram" | "water" | "air";
+/** The scene kinds: a vehicle's track picks one (src/openttd/scene.ts kindOf). */
+export type SceneKind = "rail" | "electric" | "road" | "tram" | "harbour" | "airport";
 
-interface SlotSpec {
+/** The most vehicles a scene shows: a yard's 10 tracks, the harbour's 10 lanes, the airport's 10 small airports. */
+export const SCENE_SLOTS = 10;
+
+/**
+ * Yard k's (1..10) north corner (ai/RIScenes/main.nut YardX, YardY): five a row,
+ * far enough apart that no screenshot sees two. A yard's depots stand at x, its
+ * tracks run x + 1 .. x + 20, a vehicle stops with its front at x + 17; slot s's
+ * track is row y + k - 1 - s (slot 0 nearest the viewer).
+ */
+export function yardOrigin(k: number): [number, number] {
+  return [20 + 50 * ((k - 1) % 5), 20 + 40 * Math.floor((k - 1) / 5)];
+}
+const YARD = { trackEnd: 20, stopAt: 17 } as const;
+
+/** One prerender game: a scene kind, the AI's "scene" setting, its markers and its views. */
+interface Game {
+  kind: SceneKind;
+  setting: number;
   marker: MarkerKind;
-  slot: number;
-  track: SlotTrack;
-  /** Tile units of straight track behind the slot's front: how long a vehicle may be drawn there. */
-  maxLength: number;
+  /** Each screenshot: the scene's name, the tile it centres on, how many slots it holds. */
+  views: Array<{ scene: string; centre: [number, number]; slots: number }>;
 }
 
-interface SceneSpec {
-  slots: SlotSpec[];
-}
+const yards = (kind: SceneKind): Game["views"] =>
+  Array.from({ length: SCENE_SLOTS }, (_, i) => {
+    const k = i + 1;
+    const [x, y] = yardOrigin(k);
+    return { scene: `${kind}-${k}`, centre: [x + 11, y + Math.floor(k / 2)] as [number, number], slots: k };
+  });
 
-/** The four scenes, one game each, the AI builds (ai/RIScenes/main.nut, its "scene" setting in this order), with their slots. */
-export const SCENES: Record<string, SceneSpec> = {
-  railway: {
-    slots: [
-      { marker: "train", slot: 0, track: "rail", maxLength: 16 * 17 },
-      { marker: "train", slot: 1, track: "electric", maxLength: 16 * 17 },
-      { marker: "train", slot: 2, track: "rail", maxLength: 16 * 19 },
-      { marker: "train", slot: 3, track: "electric", maxLength: 16 * 19 },
-      { marker: "train", slot: 4, track: "rail", maxLength: 16 * 18 },
-      { marker: "train", slot: 5, track: "electric", maxLength: 16 * 18 },
-    ],
-  },
-  road: {
-    slots: [
-      { marker: "bus", slot: 0, track: "road", maxLength: 16 * 15 },
-      { marker: "bus", slot: 1, track: "road", maxLength: 16 * 19 },
-      { marker: "tram", slot: 2, track: "tram", maxLength: 16 * 15 },
-      { marker: "tram", slot: 3, track: "tram", maxLength: 16 * 19 },
-    ],
-  },
-  harbour: {
-    slots: [
-      { marker: "ship", slot: 0, track: "water", maxLength: 16 },
-      { marker: "ship", slot: 1, track: "water", maxLength: 16 },
-    ],
-  },
-  airport: {
-    slots: [
-      { marker: "aircraft", slot: 0, track: "air", maxLength: 16 },
-      { marker: "aircraft", slot: 1, track: "air", maxLength: 16 },
-    ],
-  },
-};
+/** The six games and their 42 views (ai/RIScenes/main.nut, its "scene" setting). */
+export const GAMES: Game[] = [
+  { kind: "rail", setting: 0, marker: "train", views: yards("rail") },
+  { kind: "electric", setting: 1, marker: "train", views: yards("electric") },
+  { kind: "road", setting: 2, marker: "bus", views: yards("road") },
+  { kind: "tram", setting: 3, marker: "tram", views: yards("tram") },
+  { kind: "harbour", setting: 4, marker: "ship", views: [{ scene: "harbour", centre: [30, 32], slots: SCENE_SLOTS }] },
+  { kind: "airport", setting: 5, marker: "aircraft", views: [{ scene: "airport", centre: [27, 31], slots: SCENE_SLOTS }] },
+];
 
 /** One slot as the site reads it (placement.json). */
 export interface PlacementSlot {
-  id: string;
+  /** The slot's number: 0 nearest the viewer, where the pack's default stands. */
+  id: number;
   /** OpenTTD's Direction (N, NE, E, SE, S, SW, W, NW) the vehicle heads in. */
   direction: number;
-  track: SlotTrack;
+  /** Tile units of straight track behind the slot's front: how long a vehicle may be drawn there. */
   maxLength: number;
   /**
    * Per zoom, the pixel of the image where OpenTTD anchors the sprite of a
@@ -107,8 +102,9 @@ export interface PlacementSlot {
 }
 
 export interface Placement {
-  version: 1;
+  version: 2;
   scene: string;
+  kind: SceneKind;
   openttd: string;
   opengfx: string;
   sizes: { "1x": [number, number]; "4x": [number, number] };
@@ -147,8 +143,8 @@ screenshot_format = png
 display_opt = FULL_ANIMATION|FULL_DETAIL
 
 [game_creation]
-map_x = 7
-map_y = 7
+map_x = 8
+map_y = 8
 starting_year = 2000
 land_generator = 1
 tgen_smoothness = 0
@@ -169,6 +165,8 @@ vehicle_breakdowns = 0
 disasters = false
 max_no_competitors = 1
 construction_cost = 0
+# a permissive town council: no limit of two airports a town (the airport scene's ten)
+town_council_tolerance = 3
 
 [gui]
 autosave = 0
@@ -176,6 +174,9 @@ autosave_on_exit = true
 zoom_min = 0
 sprite_zoom_min = 0
 smooth_scroll = false
+
+[station]
+never_expire_airports = true
 
 [vehicle]
 train_acceleration_model = original
@@ -192,15 +193,15 @@ RIScenes = start_date=0
 RIMoney =
 `;
 
-/** A fresh OpenTTD personal directory with the config for scene `scene`, the marker GRF and the scripts. */
-function personalDir(root: string, scene: number): string {
-  const dir = path.join(root, `personal-${scene}`);
+/** A fresh OpenTTD personal directory with the config for a game, the marker GRF and the scripts. */
+function personalDir(root: string, game: Game): string {
+  const dir = path.join(root, `personal-${game.kind}`);
   fs.rmSync(dir, { recursive: true, force: true });
   fs.mkdirSync(path.join(dir, "newgrf"), { recursive: true });
   fs.mkdirSync(path.join(dir, "scripts"), { recursive: true });
   fs.mkdirSync(path.join(dir, "ai"), { recursive: true });
   fs.mkdirSync(path.join(dir, "game"), { recursive: true });
-  fs.writeFileSync(path.join(dir, "openttd.cfg"), CONFIG.replace("start_date=0", `start_date=0,scene=${scene}`));
+  fs.writeFileSync(path.join(dir, "openttd.cfg"), CONFIG.replace("start_date=0", `start_date=0,scene=${game.setting}`));
   fs.writeFileSync(path.join(dir, "newgrf", "markers.grf"), markerGrf());
   fs.cpSync(path.join(HERE, "ai", "RIScenes"), path.join(dir, "ai", "RIScenes"), { recursive: true });
   fs.cpSync(path.join(HERE, "game", "RIMoney"), path.join(dir, "game", "RIMoney"), { recursive: true });
@@ -331,58 +332,64 @@ const screen = (x: number, y: number, z = 0): [number, number] => [2 * (y - x), 
 async function main(): Promise<void> {
   const keep = process.argv.includes("--keep") ? process.argv[process.argv.indexOf("--keep") + 1]! : null;
   const root = keep ?? fs.mkdtempSync(path.join(os.tmpdir(), "ri-openttd-"));
-  const bin = openttd();
   // --reuse (with --keep): analyse the screenshots a kept run left, without OpenTTD
   const reuse = keep !== null && process.argv.includes("--reuse");
-  // --only <scene>: just that scene
+  // --only <kind>: just that kind's game
   const only = process.argv.includes("--only") ? process.argv[process.argv.indexOf("--only") + 1]! : null;
-  for (const [k, [name, scene]] of Object.entries(SCENES).entries()) {
-    if (only && name !== only) continue;
-    if (reuse && fs.existsSync(path.join(root, `personal-${k}`, "screenshot", `${name}-markers-4x.png`))) {
-      const placement = await analyse(name, scene, path.join(root, `personal-${k}`, "screenshot"));
-      console.log(`${name}: ${placement.slots.map((sl) => `${sl.id} heading ${sl.direction}`).join(", ")}`);
-      continue;
-    }
-    const dir = personalDir(root, k);
-    const exitSave = path.join(dir, "save", "autosave", "exit.sav");
-    const saves = [path.join(root, `${name}-background.sav`), path.join(root, `${name}-markers.sav`)];
-    // 1: build the scene - a new game per seed until the map's town stands clear of it;
-    // the game saves itself on exit
-    let seed = 1;
-    for (;; seed++) {
-      if (seed > 40) throw new Error(`${name}: no seed of 1..40 keeps the town out of the scene`);
-      console.log(`${name}: building the scene (seed ${seed})`);
-      fs.rmSync(exitSave, { force: true });
-      const log = await headless(bin, dir, ["-v", "null:ticks=6000", "-G", String(seed), "-g"]);
-      if (log.includes("town in the way")) continue;
-      if (!log.includes("scene built")) throw new Error(`${name}: the AI did not finish the scene`);
-      break;
-    }
-    fs.copyFileSync(exitSave, saves[0]!);
-    // 2: load it, where the AI finds its scene built and parks the markers
-    console.log(`${name}: parking the markers`);
-    fs.rmSync(exitSave, { force: true });
-    const log = await headless(bin, dir, ["-v", "null:ticks=6000", "-g", saves[0]!]);
-    if (!log.includes("markers parked")) throw new Error(`${name}: the AI did not park the markers`);
-    fs.copyFileSync(exitSave, saves[1]!);
-    // 3: the screenshots, centred on the scene's tile (32, 32)
+  const bin = reuse ? "" : openttd();
+  if (!only) {
+    // the scenes this run makes replace every earlier one
+    for (const d of fs.existsSync(OUT) ? fs.readdirSync(OUT) : []) fs.rmSync(path.join(OUT, d), { recursive: true, force: true });
+  }
+  for (const game of GAMES) {
+    if (only && game.kind !== only) continue;
+    const dir = reuse ? path.join(root, `personal-${game.kind}`) : personalDir(root, game);
     const shots = path.join(dir, "screenshot");
-    for (const [save, n] of [["background", 0], ["markers", 1]] as const) {
-      const base = `${name}-${save}`;
-      // a screenshot is drawn from the view's last position on screen, which a scroll
-      // alone does not move until the game next paints, but a zoom does: zoom in and out
-      fs.writeFileSync(path.join(dir, "scripts", "game_start.scr"),
-        `scrollto instant 32 32\nzoomto 1\nzoomto 2\nscreenshot normal ${base}-1x\nscreenshot big ${base}-4x\n`);
-      console.log(`${name}: screenshot of the ${save}`);
-      await run(bin, dir, ["-v", "sdl", "-b", "32bpp-optimized", "-r", `${SCREEN.width}x${SCREEN.height}`, "-g", saves[n]!],
-        () => written(path.join(shots, `${base}-1x.png`)) && written(path.join(shots, `${base}-4x.png`)), 300_000, true);
+    const saves = [path.join(root, `${game.kind}-background.sav`), path.join(root, `${game.kind}-markers.sav`)];
+    if (!reuse) {
+      const exitSave = path.join(dir, "save", "autosave", "exit.sav");
+      // 1: build the scene - a new game per seed until the map's town stands clear of it;
+      // the game saves itself on exit
+      let seed = 1;
+      for (;; seed++) {
+        if (seed > 60) throw new Error(`${game.kind}: no seed of 1..60 keeps the town out of the scene`);
+        console.log(`${game.kind}: building the scene (seed ${seed})`);
+        fs.rmSync(exitSave, { force: true });
+        const log = await headless(bin, dir, ["-v", "null:ticks=9000", "-G", String(seed), "-g"]);
+        if (log.includes("town in the way")) continue;
+        if (!log.includes("scene built")) throw new Error(`${game.kind}: the AI did not finish the scene`);
+        break;
+      }
+      fs.copyFileSync(exitSave, saves[0]!);
+      // 2: load it, where the AI finds its scene built and parks the markers
+      console.log(`${game.kind}: parking the markers`);
+      fs.rmSync(exitSave, { force: true });
+      // the aircraft take months to reach their terminals; headless ticks are cheap
+      const log = await headless(bin, dir, ["-v", "null:ticks=40000", "-g", saves[0]!]);
+      if (!log.includes("markers parked")) throw new Error(`${game.kind}: the AI did not park the markers`);
+      fs.copyFileSync(exitSave, saves[1]!);
+      // 3: the screenshots of every view, at normal zoom and 4x. A screenshot is drawn
+      // from the view's last position on screen, which a scroll alone does not move
+      // until the game next paints, but a zoom does: zoom in and out.
+      for (const view of game.views) {
+        for (const [save, n] of [["background", 0], ["markers", 1]] as const) {
+          const base = `${view.scene}-${save}`;
+          fs.writeFileSync(path.join(dir, "scripts", "game_start.scr"),
+            `scrollto instant ${view.centre[0]} ${view.centre[1]}\nzoomto 1\nzoomto 2\nscreenshot normal ${base}-1x\nscreenshot big ${base}-4x\n`);
+          console.log(`${view.scene}: screenshot of the ${save}`);
+          await run(bin, dir, ["-v", "sdl", "-b", "32bpp-optimized", "-r", `${SCREEN.width}x${SCREEN.height}`, "-g", saves[n]!],
+            () => written(path.join(shots, `${base}-1x.png`)) && written(path.join(shots, `${base}-4x.png`)), 300_000, true);
+        }
+      }
       fs.writeFileSync(path.join(dir, "scripts", "game_start.scr"), "");
     }
-    // 4-5: anchors, foreground, crop
-    const placement = await analyse(name, scene, shots);
-    fs.mkdirSync(path.join(OUT, name), { recursive: true });
-    for (const save of saves) fs.copyFileSync(save, path.join(OUT, name, path.basename(save).replace(`${name}-`, "scene-")));
-    console.log(`${name}: seed ${seed}; ${placement.slots.map((sl) => `${sl.id} heading ${sl.direction}`).join(", ")}`);
+    // 4-5: anchors, foreground, crop, per view
+    for (const view of game.views) {
+      const placement = await analyse(game, view, shots);
+      console.log(`${view.scene}: ${placement.sizes["4x"].join(" x ")} at 4x; ${placement.slots.map((sl) => `${sl.id} heading ${sl.direction}`).join(", ")}`);
+    }
+    fs.mkdirSync(path.join(OUT, "saves"), { recursive: true });
+    for (const save of saves) if (fs.existsSync(save)) fs.copyFileSync(save, path.join(OUT, "saves", path.basename(save)));
   }
   if (!keep) fs.rmSync(root, { recursive: true, force: true });
 }
@@ -396,7 +403,8 @@ async function headless(bin: string, dir: string, args: string[]): Promise<strin
   return log;
 }
 
-async function analyse(name: string, scene: SceneSpec, shots: string): Promise<Placement> {
+async function analyse(game: Game, view: Game["views"][number], shots: string): Promise<Placement> {
+  const name = view.scene;
   const shot = (save: string, zoom: string) => readPng(path.join(shots, `${name}-${save}-${zoom}.png`));
   const bg = { "1x": shot("background", "1x"), "4x": shot("background", "4x") };
   const mk = { "1x": shot("markers", "1x"), "4x": shot("markers", "4x") };
@@ -417,39 +425,43 @@ async function analyse(name: string, scene: SceneSpec, shots: string): Promise<P
     const [dx, dy] = step(at.direction, p, zoom);
     return { x: at.x - dx, y: at.y - dy, direction: at.direction };
   };
-  interface Found { spec: SlotSpec; direction: number; head: { "1x": { x: number; y: number }; "4x": { x: number; y: number } } }
+  interface Found { slot: number; direction: number; head: { "1x": { x: number; y: number }; "4x": { x: number; y: number } } }
   let worst = 0;
-  const found: Found[] = scene.slots.map((spec) => {
-    const h1 = headOf(spec.slot, 1);
-    const h4 = headOf(spec.slot, 4);
-    if (!h1 || !h4) throw new Error(`${name}: marker ${spec.marker} ${spec.slot} not found (is it parked in view?)`);
+  const found: Found[] = Array.from({ length: view.slots }, (_, slot) => {
+    const h1 = headOf(slot, 1);
+    const h4 = headOf(slot, 4);
+    if (!h1 || !h4) throw new Error(`${name}: marker ${game.marker} ${slot} not found (is it parked in view?)`);
     // check the spacing against every visible part
-    for (const [p, at] of anchors["1x"].get(spec.slot)!) {
+    for (const [p, at] of anchors["1x"].get(slot)!) {
       const [dx, dy] = step(h1.direction, p, 1);
       worst = Math.max(worst, Math.abs(h1.x + dx - at.x), Math.abs(h1.y + dy - at.y));
     }
-    return { spec, direction: h1.direction, head: { "1x": h1, "4x": h4 } };
+    return { slot, direction: h1.direction, head: { "1x": h1, "4x": h4 } };
   });
   if (worst > 1) throw new Error(`${name}: marker parts stand up to ${worst} px off the 8-unit spacing`);
   // the masks: every marker part's rectangle about its anchor
-  const rects = (zoom: 1 | 4): Array<[number, number, number, number]> => {
+  const parts = MARKER_KINDS[game.marker].parts;
+  const rects = (zoom: 1 | 4, from: number, to: number): Array<[number, number, number, number]> => {
     const out: Array<[number, number, number, number]> = [];
     for (const f of found) {
       const head = f.head[zoom === 1 ? "1x" : "4x"];
-      for (let p = 0; p < MARKER_KINDS[f.spec.marker].parts; p++) {
+      for (let p = from; p < to; p++) {
         const [dx, dy] = step(f.direction, p, zoom);
         out.push([head.x + dx + MASK.left * zoom, head.y + dy + MASK.top * zoom, MASK.width * zoom, MASK.height * zoom]);
       }
     }
     return out;
   };
-  // the crop: every head's mask, widened, within the shot
-  const heads = found.map((f) => f.head["1x"]);
-  const margin = 120;
-  const x0 = Math.max(0, Math.min(...heads.map((h) => h.x)) - 2 * margin);
-  const y0 = Math.max(0, Math.min(...heads.map((h) => h.y)) - 2 * margin);
-  const x1 = Math.min(bg["1x"].width, Math.max(...heads.map((h) => h.x)) + 2 * margin);
-  const y1 = Math.min(bg["1x"].height, Math.max(...heads.map((h) => h.y)) + margin);
+  // the crop: a yard's whole tracks - 3 tiles ahead of the fronts (the labels' room,
+  // the track's end) to the depots 17 tiles behind - or the harbour's and airport's
+  // vehicles, with a tile's margin
+  const linear = game.marker === "train" || game.marker === "bus" || game.marker === "tram";
+  const extent = linear ? rects(1, -2 * (YARD.trackEnd - YARD.stopAt), 2 * YARD.stopAt + 1) : rects(1, 0, 1);
+  const margin = linear ? 16 : 96;
+  const x0 = Math.max(0, Math.floor(Math.min(...extent.map((r) => r[0])) - margin));
+  const y0 = Math.max(0, Math.floor(Math.min(...extent.map((r) => r[1])) - margin));
+  const x1 = Math.min(bg["1x"].width, Math.ceil(Math.max(...extent.map((r) => r[0] + r[2])) + margin));
+  const y1 = Math.min(bg["1x"].height, Math.ceil(Math.max(...extent.map((r) => r[1] + r[3])) + margin));
   const box = { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
   const dirOut = path.join(OUT, name);
   fs.mkdirSync(dirOut, { recursive: true });
@@ -459,36 +471,43 @@ async function analyse(name: string, scene: SceneSpec, shots: string): Promise<P
     if (back.width !== mark.width || back.height !== mark.height) throw new Error(`${name}: the ${zoomName} shots differ in size`);
     // foreground: within a mask, whatever is not the mask (or an anchor) covers the vehicle
     const fg = new Uint8Array(back.data.length);
-    for (const [rx, ry, rw, rh] of rects(zoom)) {
+    for (const [rx, ry, rw, rh] of rects(zoom, 0, parts)) {
       for (let y = Math.max(0, ry); y < Math.min(back.height, ry + rh); y++) {
         for (let x = Math.max(0, rx); x < Math.min(back.width, rx + rw); x++) {
           const i = (y * back.width + x) * 4;
           const r = mark.data[i]!, g = mark.data[i + 1]!, b = mark.data[i + 2]!;
           if ((r === MASK_RGB[0] && g === MASK_RGB[1] && b === MASK_RGB[2]) || readAnchor(r, g, b)) continue;
           // the marker's pixel is not the scene's: something stands in front of it
-          if (r === back.data[i] && g === back.data[i + 1] && b === back.data[i + 2]) {
-            fg.set([r, g, b, 255], i);
-          }
+          if (r === back.data[i] && g === back.data[i + 1] && b === back.data[i + 2]) fg.set([r, g, b, 255], i);
         }
       }
     }
     await writePng(path.join(dirOut, `background-${zoomName}.png`), crop(back, box.x * zoom, box.y * zoom, box.w * zoom, box.h * zoom));
     await writePng(path.join(dirOut, `foreground-${zoomName}.png`), crop({ ...back, data: fg }, box.x * zoom, box.y * zoom, box.w * zoom, box.h * zoom));
   }
+  // A yard's markers stop where they happen to: a few units apart along their
+  // tracks. Its slots line up instead - each one track behind the one ahead, its
+  // front level with slot 0's - so the noses and labels form a line.
+  const aligned = (f: Found, zoom: "1x" | "4x"): [number, number] => {
+    const k = zoom === "1x" ? 1 : 4;
+    if (!linear) return [f.head[zoom].x, f.head[zoom].y];
+    const [dx, dy] = screen(0, -16 * f.slot);
+    return [found[0]!.head[zoom].x + dx * k, found[0]!.head[zoom].y + dy * k];
+  };
   const placement: Placement = {
-    version: 1,
+    version: 2,
     scene: name,
+    kind: game.kind,
     openttd: OPENTTD_VERSION,
     opengfx: OPENGFX_VERSION,
     sizes: { "1x": [box.w, box.h], "4x": [box.w * 4, box.h * 4] },
     slots: found.map((f) => ({
-      id: `${f.spec.marker}-${f.spec.slot}`,
+      id: f.slot,
       direction: f.direction,
-      track: f.spec.track,
-      maxLength: f.spec.maxLength,
+      maxLength: linear ? 16 * (YARD.stopAt - 1) : 16,
       anchors: {
-        "1x": [f.head["1x"].x - box.x, f.head["1x"].y - box.y],
-        "4x": [f.head["4x"].x - box.x * 4, f.head["4x"].y - box.y * 4],
+        "1x": [aligned(f, "1x")[0] - box.x, aligned(f, "1x")[1] - box.y],
+        "4x": [aligned(f, "4x")[0] - box.x * 4, aligned(f, "4x")[1] - box.y * 4],
       },
     })),
   };

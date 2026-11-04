@@ -189,7 +189,7 @@ export function ModelDetail(props: {
               />
             }
           >
-            <OpenttdPreview record={props.record} params={nonDefaultParams(props.record, values())} />
+            <OpenttdPreview record={props.record} />
           </Show>
         </Suspense>
       </div>

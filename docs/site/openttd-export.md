@@ -317,99 +317,110 @@ usual 6 to 8 ids the trains' remaining 7,632 hold about a thousand more presets.
 ## The OpenTTD view
 
 The stage's **OpenTTD** switch (`src/OpenttdPreview.tsx`, loaded with three only
-when chosen) draws one vehicle of the model's one-click pack as the GRF would draw
-it, into a scene prerendered in OpenTTD (below). Its **Vehicle in the GRF** list
-names exactly what the downloaded GRF holds, by its OpenTTD name - every preset,
-the default first, then every formation (`oneClickItems`) - and nothing else: a
-selection that is no preset (an individual-number livery) can reach a GRF only
-through the export list, so the view never draws it. It opens on the preset the
-page's parameters select (`oneClickIndex`), the default when they select none, and
-follows the parameters when they change to another preset; a model whose pack
-holds one vehicle shows no list.
+when chosen) draws the model's **whole one-click pack** - every preset, then every
+formation, exactly what the downloaded GRF holds (`oneClickItems`) - as the GRF
+would draw it, into a scene prerendered in OpenTTD (below), each vehicle labelled:
 
-1. the sprites come from the export's own renderer (`exportRun.ts`
-   `previewSprites`): the same parts, views and zoom filter, only the directions
-   the scene's slots need, at normal zoom and 4x;
-2. the vehicle's **track** picks the scene and slots (`src/openttd/scene.ts`
-   `trackOf`, `sceneOf`): a train with rail type ELRL the electrified tracks, any
-   other train plain track, a tram the tram tracks, a bus or truck the road, a
-   ship the water, an aircraft the airport's terminals;
-3. at each slot the vehicle stands where OpenTTD drew the marker (`placeParts`):
-   its front where the 8/8 marker's was, its head's position ceil(L / 2) units
-   behind it and each next part floor(L / 2) + ceil(L' / 2) behind the one ahead,
-   each sprite at its part's OpenTTD anchor (`spriteAnchor`) plus the image's
-   offsets; parts beyond the slot's straight track (`maxLength`) are left out, and
-   the nearest part is drawn last;
-4. the canvas draws the scene's background, the sprites, then its foreground (the
-   catenary, platform canopies, fences in front of the slots).
+1. the pack's kind picks the scene (`src/openttd/scene.ts` `kindOf`, `sceneName`):
+   a train with rail type ELRL the electrified yard, any other train the plain
+   one, a tram the tram yard, a bus or truck the road yard - each the yard of
+   **exactly as many tracks as the pack has vehicles** (1..10), so no track stands
+   empty - a ship the harbour, an aircraft the airport;
+2. vehicle i stands at slot i: the default on the track nearest the viewer, the
+   presets and formations behind it, all heading south-west (an aircraft as its
+   small airport's terminal turns it), their fronts in a line;
+3. the sprites come from the export's own renderer (`exportRun.ts`
+   `previewSprites`): the same parts, views and zoom filter, in the slot's
+   direction, at normal zoom and 4x; at each slot the vehicle stands where OpenTTD
+   drew the marker (`placeParts`): its front where the 8/8 marker's was, its
+   head's position ceil(L / 2) units behind it and each next part floor(L / 2) +
+   ceil(L' / 2) behind the one ahead, each sprite at its part's OpenTTD anchor
+   (`spriteAnchor`) plus the image's offsets; the nearest part is drawn last;
+4. the canvas draws the scene's background, the sprites, its foreground (the
+   catenary and fences over the vehicles), then the **labels**: the vehicle's
+   OpenTTD name and, below, its local id ("0x0190"), light text on a dark box like
+   OpenTTD's signs - ahead of a train's or road vehicle's nose, over the empty
+   track there, above a ship or aircraft (`frontPoint`, `labelRect`);
+5. the view shows the part of the scene the vehicles and labels cover, with a
+   tile's margin (`viewRect`): a yard of short vehicles shows no track behind them.
 
-A **4x zoom** checkbox swaps in the 4x images (scrolled to the first slot). Each
-list entry names its vehicle's first local id ("... - 0x0110"), and a line shows
-the ids the one-click GRF gives the vehicle drawn: the GRF id as OpenTTD's NewGRF
-window writes it ("GRF 52490007"), the vehicle's local id and, for an articulated
-one, the range of its parts' ids and the block reserved ("vehicle 0x0110 (parts
-0x0110-0x0112 of 16 reserved)"). The note names the OpenTTD and OpenGFX versions
-the scene was made with. The view's
-choices are not stored.
+It opens at OpenTTD's **4x zoom**; "Normal zoom" switches to 1x. A pack of more
+than 10 vehicles is shown 10 at a time, with a button per page. A line names the
+GRF id ("GRF 52490007") and the pack's size; the note, the OpenTTD and OpenGFX
+versions the scene was made with. The view's choices are not stored.
 
 `generator/openttdScenes/previewSheet.ts` draws the same headlessly, with a small
-software rasterizer in place of WebGL (flat Lambert, the same lights), for checks
-and for images of a model in OpenTTD:
+software rasterizer in place of WebGL (flat Lambert, the same lights) and SVG
+labels, for checks and for images of a model's pack in OpenTTD:
 
-    pnpm exec tsx generator/openttdScenes/previewSheet.ts <model id> <out.png> [name=value ...] [--formation <name>] [--zoom 1x|4x]
+    pnpm exec tsx generator/openttdScenes/previewSheet.ts <model id> <out.png> [--zoom 4x|1x] [--page n]
 
 ## The preview scenes
 
-`src/openttd/scenes/<scene>/` holds, per scene (railway, road, harbour, airport):
-`background-1x.png`, `background-4x.png`, `foreground-1x.png`,
-`foreground-4x.png` (transparent but for what covers a vehicle), `placement.json`
-and the two OpenTTD saved games they were rendered from (`scene-background.sav`,
-`scene-markers.sav`). The site imports the PNGs and JSON as Vite assets.
+`src/openttd/scenes/<scene>/` holds, per scene: `background-1x.png`,
+`background-4x.png`, `foreground-1x.png`, `foreground-4x.png` (transparent but for
+what covers a vehicle) and `placement.json`; `src/openttd/scenes/saves/` the
+OpenTTD saved games they were rendered from (per kind, the scenes without and
+with the markers). The site imports the PNGs and JSON as Vite assets and loads
+only the scene it shows. 42 scenes, about 5.8 MB:
 
-| Scene | Slots |
+| Scene | What |
 |---|---|
-| railway | heading south-west through a two-platform station, south-east along y, south on a diagonal fed by a curve; each on a plain and an electrified track |
-| road | a bus and a tram heading south-west and south-east; a bus stop |
-| harbour | two ships on a canal basin, heading south-west and south-east |
-| airport | two aircraft at a city airport's terminals |
+| `rail-1` .. `rail-10` | a yard of k parallel plain tracks along x, each 20 tiles from its depot, the vehicles heading south-west |
+| `electric-1` .. `electric-10` | the same, electrified (the catenary in the foreground) |
+| `road-1` .. `road-10` | k parallel roads |
+| `tram-1` .. `tram-10` | k parallel tram tracks |
+| `harbour` | ten ship lanes, two tiles apart, on a canal basin |
+| `airport` | ten small airports, an aircraft at each one's terminal |
 
-`placement.json`: `version` 1, `scene`, `openttd` and `opengfx` (the versions),
-`sizes` (per zoom, width and height) and `slots`: `{ id, direction (OpenTTD's
-Direction), track (rail | electric | road | tram | water | air), maxLength (tile
-units of straight track behind the front), anchors: { "1x": [x, y], "4x": [x, y]
-} }`, the anchor being the pixel where OpenTTD anchored a full-length marker
-part's sprite stopped at the slot.
+`placement.json`: `version` 2, `scene`, `kind` (rail, electric, road, tram, harbour
+or airport), `openttd` and `opengfx` (the versions), `sizes` (per zoom, width and
+height) and `slots`: `{ id (0 nearest the viewer), direction (OpenTTD's
+Direction), maxLength (tile units of straight track behind the front: 256 in a
+yard), anchors: { "1x": [x, y], "4x": [x, y] } }`, the anchor being the pixel
+where OpenTTD anchored a full-length marker part's sprite stopped at the slot. A
+yard's slots are lined up: each exactly one track behind the one ahead, its front
+level with slot 0's (the markers stop a few units apart along their tracks).
 
 **The prerender** (`generator/openttdScenes/prerender.ts`) is run by hand, never by
 the build, the tests or CI, only to change a scene; it needs Linux, Xvfb, curl,
 tar and unzip:
 
-    pnpm exec tsx generator/openttdScenes/prerender.ts [--only <scene>] [--keep <dir> [--reuse]]
+    pnpm exec tsx generator/openttdScenes/prerender.ts [--only <kind>] [--keep <dir> [--reuse]]
 
 It downloads OpenTTD 13.4 (the version the encoder was checked against) and
-OpenGFX 7.1 (GPL-2) once into `~/.cache/rail-island-factory/`, then per scene:
+OpenGFX 7.1 (GPL-2) once into `~/.cache/rail-island-factory/`, then per kind - six
+games, 42 views (`GAMES`):
 
-1. writes an OpenTTD personal directory: a config for a flat 128 x 128 map of one
-   town, the **marker GRF** (`markers.ts`, encoded by the site's own encoder), the
-   **scene AI** (`ai/RIScenes`, its `scene` setting naming the scene) and a game
-   script that pays for everything (`game/RIMoney`);
-2. runs OpenTTD headless until the AI has built the scene round tile (32, 32) -
-   trying the next map seed while the town stands within 26 tiles of it - and
-   saves the game on exit; loads it again, where the AI buys the markers, drives
-   each to its slot and stops it, and saves again;
-3. loads each save under Xvfb and screenshots it at normal zoom and at 4x
-   (`scrollto instant 32 32`, a zoom in and out so the view moves at once, then
+1. writes an OpenTTD personal directory: a config for a flat 256 x 256 map of one
+   town (a permissive council, airports that never expire), the **marker GRF**
+   (`markers.ts`, encoded by the site's own encoder), the **scene AI**
+   (`ai/RIScenes`, its `scene` setting naming the kind) and a game script that
+   pays for everything (`game/RIMoney`);
+2. runs OpenTTD headless until the AI has built the kind's scenes - a yard kind's
+   ten yards of 1..10 tracks, far enough apart that no screenshot sees two
+   (`yardOrigin`) - trying the next map seed while the town stands within 12 tiles
+   of them, and saves the game on exit; loads it again, where the AI buys the
+   markers, drives each to its slot and stops it (the aircraft wait for a full
+   load at their terminals), and saves again;
+3. loads each save under Xvfb and screenshots each view at normal zoom and at 4x
+   (`scrollto instant`, a zoom in and out so the view moves at once, then
    `screenshot normal` and `screenshot big`);
 4. finds each marker part's **anchor**: a marker's sprite is a magenta mask with
    its anchor pixel - and four copies 3 pixels off, so a catenary wire hides at
    most some - in a colour telling slot, direction, part and copy, and holes where
-   the neighbouring parts' anchors fall; the parts' 8-unit spacing is checked
-   against every visible anchor (within a pixel);
+   the neighbouring parts' anchors fall; a train marker has 32 full-length parts
+   (16 tiles, a yard track's length), and only its south-west sprites are masks
+   (the others a pixel, to keep the GRF small); the parts' 8-unit spacing is
+   checked against every visible anchor (within a pixel);
 5. takes as **foreground** every pixel of a mask that shows not the mask but the
    scene, unchanged from the save without markers: what OpenTTD drew over the
    vehicle;
-6. crops to the slots and writes palette PNGs (OpenGFX uses at most 256 colours:
-   lossless, checked) and `placement.json`.
+6. crops a yard to its whole tracks - three tiles ahead of the fronts (the labels'
+   room) to the depots - and the harbour and airport to their slots, and writes
+   palette PNGs (OpenGFX uses at most 256 colours: lossless, checked) and
+   `placement.json`. `--reuse` re-analyses a kept run's screenshots without
+   OpenTTD.
 
 ### How it was checked
 

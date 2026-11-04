@@ -39,13 +39,13 @@ Area: catalog site (model page stage bar, OpenTTD view, GRF encoder and export r
   every vehicle a GRF can hold: a GRF of its presets and formations, GRF id from
   the model id, file `<id>.grf`, with progress and Cancel.
 - **OpenTTD view.** The same bar's "3D / OpenTTD" switch shows `src/OpenttdPreview.tsx`:
-  one vehicle of the one-click pack (every preset and formation, listed by name), drawn with the
-  export's own sprite renderer into the prerendered scene of its track kind. It
-  draws background, sprites, then foreground, with a 4x zoom checkbox. The
-  placement math is in `src/openttd/scene.ts`.
-- **Prerendered scenes** (`src/openttd/scenes/{railway,road,harbour,airport}/`): the
-  background and foreground PNGs at 1x and 4x, `placement.json` and the two saved
-  games, about 770 KB in all, made by `generator/openttdScenes/prerender.ts` with
+  the whole one-click pack, each preset and formation on its own track of a yard
+  with exactly as many tracks, labelled with its name and id, drawn with the
+  export's own sprite renderer, at 4x by default (follow-up 4). The placement
+  math is in `src/openttd/scene.ts`.
+- **Prerendered scenes** (`src/openttd/scenes/`; since follow-up 4 the 42 yards,
+  harbour and airport): the background and foreground PNGs at 1x and 4x and
+  `placement.json`, with the saved games in `saves/`, about 5.8 MB in all, made by `generator/openttdScenes/prerender.ts` with
   OpenTTD 13.4 and OpenGFX 7.1. It uses:
   - a marker GRF of magenta masks with colour-coded anchor pixels;
   - a scene AI (`ai/RIScenes`) that builds each scene and parks the markers;
@@ -103,6 +103,16 @@ Area: catalog site (model page stage bar, OpenTTD view, GRF encoder and export r
    trains' remaining ids now hold about a thousand more presets instead of about
    480. Tests: test/openttdIds.test.ts.
 
+4. Show the whole pack in one OpenTTD view, labelled, at 4x by default; replace the
+   four direction scenes with yards of exactly as many tracks as the pack has
+   vehicles. The prerender now makes 42 scenes in six games: yards of 1..10
+   parallel tracks for plain rail, electrified rail, road and tram (the vehicles
+   heading south-west, their fronts aligned), a harbour of ten lanes and ten small
+   airports (palette PNGs, about 5.8 MB). The view draws every preset and formation
+   at its slot, the default nearest, with a label of its OpenTTD name and id, and
+   crops to them; more than 10 are paged. `previewSheet.ts` draws a whole pack
+   headlessly. Tests: test/openttdOneClick.test.ts.
+
 ## How to test
 
 **Automated coverage.** No E2E framework exists in the repository (AGENTS.md asks
@@ -115,22 +125,21 @@ OpenTTD 13 or 14 with any base set.
 **Steps.**
 1. Open a vehicle's model page, e.g. "CD 163 / 363". The stage shows a bar at its
    top right: "3D", "OpenTTD" and "Download for OpenTTD".
-2. Click "OpenTTD". After "Drawing the OpenTTD sprites..." the railway scene
-   appears with the locomotive on the three electrified slots: the station's lower
-   platform, the line going down-right and the diagonal. The catenary wires and
-   platform canopies are drawn over it. The "Vehicle in the GRF" list holds the six
-   names the GRF will: "CD 163 / 363", "CD 163 / 363 (CD 162)", ... "(CD 162 blue)",
-   and no "This variant".
-3. Tick "4x zoom": the scene redraws at OpenTTD's 4x zoom, scrolled to the station.
-4. Change the Livery parameter to "CD 362": the list follows to "CD 163 / 363 (CD 362)"
-   and the view redraws in that livery. Choose "CD 163 022" (no preset): the view
-   shows the default, the list stays on "CD 163 / 363".
-5. Open "Shinkansen 0 series", choose OpenTTD, then "Shinkansen 0 series (8 cars)"
-   in the list: the whole train stands on each slot, the rear end car turned.
-6. Open a steam locomotive (e.g. "CSD 475.1"): it stands on the plain tracks (upper
-   platform, the upper line, the left diagonal), not the electrified ones.
-7. Open a bus, a tram, a ship and an aircraft: the road scene (road or tram slots),
-   the harbour and the airport's terminals.
+2. Click "OpenTTD". After "Drawing the OpenTTD sprites... 1 of 6" the
+   electrified 6-track yard appears at 4x zoom: the six liveries side by side, the
+   default "CD 163 / 363" on the front track (lower right), each with a dark label
+   ahead of its nose - its OpenTTD name and its id ("0x0190"). The catenary is drawn
+   over the locomotives; no track is empty.
+3. Tick "Normal zoom": the same at 1x, smaller labels.
+4. Change the Livery parameter: the OpenTTD view does not change (it shows the
+   whole pack, whatever the page's parameters).
+5. Open "Shinkansen 0 series": eight tracks, the cars and liveries in front and the
+   8-car formation at the back, the rear end car turned.
+6. Open a steam locomotive (e.g. "CSD 475.1"): a plain 3-track yard (locomotive,
+   tender, "with tender"), no wires.
+7. Open a bus (Karosa Short: a 6-lane road yard), a tram (Tatra KT8D5: 3 tram
+   tracks), a ship (one ferry in the harbour) and an aircraft (Boeing 737-800: six
+   aircraft, each at its own small airport, labelled above).
 8. Click "Download for OpenTTD" on the Shinkansen: a progress line, then
    `proc-vehicle-shinkansen-0.grf` downloads.
 9. Put it in OpenTTD's `newgrf` folder, enable it and start a game in 2000 or
@@ -140,17 +149,15 @@ OpenTTD 13 or 14 with any base set.
 10. Download for OpenTTD on an aircraft (e.g. Boeing 737-800). In OpenTTD it leaves
     the hangar and flies.
 
-11. In the OpenTTD view, the list entries end in their ids ("- 0x0110") and the
-    line under the scene reads e.g. "GRF 52490007 - vehicle 0x0100 (parts
-    0x0100-0x0101 of 16 reserved)". In the Export panel, choose GRF: the GRF id
+11. In the OpenTTD view, the line under the scene reads e.g. "GRF 52490007 - 6
+    vehicles". In the Export panel, choose GRF: the GRF id
     field shows 5249 and four hex digits from 8000 up; type "7000" (refused,
     Export disabled), then "8A3F" (kept after a reload), then "From the set name".
 
 **Also worth trying.** Cancel during a download (no file, no error). A cable car
 or building has no stage bar. The Export panel still exports the list as before;
 its aircraft now fly too. `pnpm exec tsx generator/openttdScenes/previewSheet.ts
-proc-vehicle-tgv-duplex out.png --formation "power cars, 8 trailers" --zoom 4x`
-draws the view headlessly.
+proc-vehicle-tgv-duplex out.png` draws the view headlessly.
 
 ## What is missing
 
@@ -175,8 +182,10 @@ Nothing - the spec is implemented in full.
 - The browser's WebGL rendering of the OpenTTD view was not run here (headless
   only). The headless stand-in's lighting is an approximation of three's, so
   colours in the browser may differ slightly.
-- The scene slots are straight track only; the curve and station in the railway
-  scene are scenery.
+- The aircraft stand at their small airports' terminals facing north-west, as
+  OpenTTD parks them, not south-west like the other vehicles.
+- The airport and harbour scenes always hold ten slots: a small pack leaves some
+  airports or lanes empty, at the edge of the cropped view.
 - The prerender needs Linux with Xvfb; the scenes were rendered with OpenTTD 13.4,
   and the anchors may differ by a pixel in other versions.
 
@@ -188,19 +197,18 @@ Nothing - the spec is implemented in full.
   formations' power is right.
 - Cut a multi-car model (the TGV trailer set) at its own rig sections in the GRF.
 - Show the OpenTTD view's scene choice and zoom in the URL, as the other page state.
-- Add a curved-track slot (parts following the curve) to the railway scene.
+- Draw the aircraft facing south-west too, with an airport type whose terminals turn them so.
 
 ## Changelog
 
-- The OpenTTD view lists exactly the vehicles the downloaded GRF holds, each by its
-  OpenTTD name and id, and shows the GRF's id.
 - Each model's GRF and vehicle ids are fixed in a committed table, so a saved game
   keeps its vehicles; a user's set can be given its own GRF id in the Export panel.
 - Every vehicle's model page has "Download for OpenTTD": a NewGRF of its liveries,
   cars and fixed formations in one click, grouped as one row in OpenTTD's purchase
   list.
-- A new "OpenTTD" view on the model page shows the vehicle as it looks in OpenTTD,
-  in a railway, road, harbour or airport scene, at normal or 4x zoom.
+- A new "OpenTTD" view on the model page shows every vehicle of the model's OpenTTD
+  download side by side, as they look in OpenTTD, each labelled with its name and
+  id, at OpenTTD's 4x zoom or normal zoom.
 - Every exported vehicle has real introduction years, capacities and cargo instead
   of generic defaults, with costs that follow its power, speed and capacity.
 - Multiple units and steam locomotives with tenders can be exported as one
