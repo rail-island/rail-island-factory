@@ -39,7 +39,7 @@ Area: catalog site (model page stage bar, OpenTTD view, GRF encoder and export r
   every vehicle a GRF can hold: a GRF of its presets and formations, GRF id from
   the model id, file `<id>.grf`, with progress and Cancel.
 - **OpenTTD view.** The same bar's "3D / OpenTTD" switch shows `src/OpenttdPreview.tsx`:
-  the on-screen variant, or a formation from the Vehicle picker, drawn with the
+  one vehicle of the one-click pack (every preset and formation, listed by name), drawn with the
   export's own sprite renderer into the prerendered scene of its track kind. It
   draws background, sprites, then foreground, with a 4x zoom checkbox. The
   placement math is in `src/openttd/scene.ts`.
@@ -74,6 +74,14 @@ Area: catalog site (model page stage bar, OpenTTD view, GRF encoder and export r
   - In the prerender, the marker parts' 8-unit spacing matched OpenTTD to within
     a pixel in every scene.
 
+## Follow-up changes
+
+1. Make the OpenTTD view's list hold exactly what the one-click GRF holds, without
+   "This variant". The list now names every preset and formation by its OpenTTD
+   name (`oneClickItems`, `resolveItem`) and opens on the preset the page's
+   parameters select (`oneClickIndex`, test/openttdOneClick.test.ts), else the
+   default; a pack of one vehicle shows no list.
+
 ## How to test
 
 **Automated coverage.** No E2E framework exists in the repository (AGENTS.md asks
@@ -89,11 +97,15 @@ OpenTTD 13 or 14 with any base set.
 2. Click "OpenTTD". After "Drawing the OpenTTD sprites..." the railway scene
    appears with the locomotive on the three electrified slots: the station's lower
    platform, the line going down-right and the diagonal. The catenary wires and
-   platform canopies are drawn over it.
+   platform canopies are drawn over it. The "Vehicle in the GRF" list holds the six
+   names the GRF will: "CD 163 / 363", "CD 163 / 363 (CD 162)", ... "(CD 162 blue)",
+   and no "This variant".
 3. Tick "4x zoom": the scene redraws at OpenTTD's 4x zoom, scrolled to the station.
-4. Change the Livery parameter to "CD 362": the OpenTTD view redraws in that livery.
-5. Open "Shinkansen 0 series", choose OpenTTD, then Vehicle "Formation: 8 cars":
-   the whole train stands on each slot, the rear end car turned.
+4. Change the Livery parameter to "CD 362": the list follows to "CD 163 / 363 (CD 362)"
+   and the view redraws in that livery. Choose "CD 163 022" (no preset): the view
+   shows the default, the list stays on "CD 163 / 363".
+5. Open "Shinkansen 0 series", choose OpenTTD, then "Shinkansen 0 series (8 cars)"
+   in the list: the whole train stands on each slot, the rear end car turned.
 6. Open a steam locomotive (e.g. "CSD 475.1"): it stands on the plain tracks (upper
    platform, the upper line, the left diagonal), not the electrified ones.
 7. Open a bus, a tram, a ship and an aircraft: the road scene (road or tram slots),
@@ -150,6 +162,8 @@ Nothing - the spec is implemented in full.
 
 ## Changelog
 
+- The OpenTTD view lists exactly the vehicles the downloaded GRF holds, each by its
+  OpenTTD name.
 - Every vehicle's model page has "Download for OpenTTD": a NewGRF of its liveries,
   cars and fixed formations in one click, grouped as one row in OpenTTD's purchase
   list.

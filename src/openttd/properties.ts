@@ -271,6 +271,15 @@ export function oneClickItems(r: CatalogRecord): ExportItem[] {
   return items;
 }
 
+/**
+ * The one-click item a selection of the model page's parameters stands for: the
+ * index of the preset with exactly those non-default values, or -1 when the
+ * selection is no preset (the pack does not hold it).
+ */
+export function oneClickIndex(items: readonly ExportItem[], params: Record<string, string>): number {
+  return items.findIndex((i) => !i.formation && sameSelection(i.key, params));
+}
+
 const clampByte = (v: number): number => Math.min(255, Math.max(0, Math.round(v)));
 
 /**

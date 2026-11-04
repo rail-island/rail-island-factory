@@ -1,6 +1,6 @@
-// The model page's OpenTTD view (docs/site/openttd-export.md, "The preview"): the
-// variant on screen - or one of the model's formations - drawn as the GRF would
-// draw it, into a scene prerendered in OpenTTD (src/openttd/scenes/, made by
+// The model page's OpenTTD view (docs/site/openttd-export.md, "The OpenTTD view"):
+// one vehicle of the model's one-click pack - a preset or a formation, picked from
+// the list of exactly what the downloaded GRF holds - drawn as the GRF would draw it, into a scene prerendered in OpenTTD (src/openttd/scenes/, made by
 // generator/openttdScenes/prerender.ts): the scene's background, the vehicle's
 // sprites at every slot of its track kind, then the scene's foreground (wires,
 // canopies) over them. Normal zoom, or OpenTTD's 4x with the toggle.
@@ -11,7 +11,7 @@
 import { For, Show, createEffect, createMemo, createResource, createSignal, on, onCleanup } from "solid-js";
 import type { CatalogRecord } from "./catalogQuery";
 import { previewSprites, type PreviewPart } from "./exportRun";
-import { openttdFeature, resolveVehicle, type ExportItem } from "./openttd/properties";
+import { oneClickIndex, oneClickItems, openttdFeature, resolveItem, resolveVehicle, type ExportItem } from "./openttd/properties";
 import { placeParts, sceneOf, trackOf, type Placement, type PreviewZoom } from "./openttd/scene";
 
 const PLACEMENTS = import.meta.glob<Placement>("./openttd/scenes/*/placement.json", { eager: true, import: "default" });
@@ -54,16 +54,17 @@ export function OpenttdPreview(props: {
   params: Record<string, string>;
 }) {
   const [zoom, setZoom] = createSignal<PreviewZoom>("1x");
-  // "" draws the variant on screen; a name, that formation
-  const [formation, setFormation] = createSignal("");
-  createEffect(on(() => props.record.id, () => setFormation("")));
-  const formations = () => props.record.openttd?.formations ?? [];
-  const item = createMemo<ExportItem>(() => {
-    const f = formations().find((x) => x.name === formation());
-    return f
-      ? { record: props.record, key: { formation: f.name }, cars: f.cars.map((c) => ({ params: { ...c.params }, ...(c.turned ? { turned: true } : {}) })), formation: f.name }
-      : { record: props.record, key: { ...props.params }, cars: [{ params: { ...props.params } }] };
-  });
+  // the pack the one-click download writes (oneClickItems): every preset, then every
+  // formation; the view draws one of them, opening on the preset the page's
+  // parameters select (the default when they select none)
+  const items = createMemo(() => oneClickItems(props.record));
+  const names = createMemo(() => items().map((i) => resolveItem(i).vehicle.name));
+  const [chosen, setChosen] = createSignal(0);
+  createEffect(on([() => props.record.id, () => JSON.stringify(props.params)], () => {
+    const at = oneClickIndex(items(), props.params);
+    setChosen(at >= 0 ? at : 0);
+  }));
+  const item = createMemo<ExportItem>(() => items()[chosen()] ?? items()[0]!);
   const scene = createMemo(() => {
     const feature = openttdFeature(props.record)!;
     const v = resolveVehicle(props.record, item().cars[0]!.params);
@@ -136,10 +137,9 @@ export function OpenttdPreview(props: {
           <input type="checkbox" checked={zoom() === "4x"} onChange={(e) => setZoom(e.currentTarget.checked ? "4x" : "1x")} />
           4x zoom
         </label>
-        <Show when={formations().length > 0}>
-          <select class="factory-viewer__select" aria-label="Vehicle" value={formation()} onChange={(e) => setFormation(e.currentTarget.value)}>
-            <option value="">This variant</option>
-            <For each={formations()}>{(f) => <option value={f.name}>{`Formation: ${f.name}`}</option>}</For>
+        <Show when={items().length > 1}>
+          <select class="factory-viewer__select" aria-label="Vehicle in the GRF" value={String(chosen())} onChange={(e) => setChosen(Number(e.currentTarget.value))}>
+            <For each={names()}>{(name, i) => <option value={String(i())}>{name}</option>}</For>
           </select>
         </Show>
         <span class="factory-viewer__note">

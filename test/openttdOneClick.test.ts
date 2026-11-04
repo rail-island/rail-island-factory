@@ -18,7 +18,7 @@ import { OPENTTD_TABLE } from "../generator/openttdTable";
 import { anchorRgb, ANCHOR_COPIES, MASK, maskImages, readAnchor } from "../generator/openttdScenes/markers";
 import { GRF_ZOOM } from "../src/openttd/grf";
 import { HEADINGS, spriteAnchor } from "../src/openttd/projection";
-import { oneClickItems, openttdFeature, resolveItem, shares } from "../src/openttd/properties";
+import { oneClickIndex, oneClickItems, openttdFeature, resolveItem, shares } from "../src/openttd/properties";
 import { placeParts, sceneOf, trackOf, type Placement, type PlacementSlot } from "../src/openttd/scene";
 
 const SCENES = path.resolve(__dirname, "../src/openttd/scenes");
@@ -158,6 +158,21 @@ describe("the one-click items", () => {
     expect(vehicle.costFactor).toBe(255);
     expect(cars.reduce((n, c) => n + c.capacity, 0)).toBe(2 * 60 + 5 * 70 + 30);
     expect(openttdFeature(r)).toBe("train");
+  });
+
+  it("name the OpenTTD view's list, and find the preset the page's parameters select", () => {
+    const r = duplexRecord();
+    const items = oneClickItems(r);
+    const names = items.map((i) => resolveItem(i).vehicle.name);
+    expect(names[0]).toBe("TGV Duplex");
+    expect(names).toContain("TGV Duplex (Bar car R4)");
+    expect(names.at(-1)).toBe("TGV Duplex (power cars, 8 trailers)");
+    expect(new Set(names).size).toBe(names.length);
+    expect(oneClickIndex(items, {})).toBe(0);
+    expect(items[oneClickIndex(items, { livery: "ouigo" })]!.key).toEqual({ livery: "ouigo" });
+    // a selection the pack does not hold, and never a formation by its key
+    expect(oneClickIndex(items, { unit: "bar", livery: "ouigo" })).toBe(-1);
+    expect(oneClickIndex(items, { formation: "power cars, 8 trailers" })).toBe(-1);
   });
 
   it("split a car's capacity over its parts", () => {
