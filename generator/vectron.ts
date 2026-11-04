@@ -126,11 +126,12 @@ const EMBLEM_W_EC = 0.34 * ((us: number[]) => Math.max(...us) - Math.min(...us))
 const EC_WORD_W = runsWidth([["\u010Cesk\u00E9 dr\u00E1hy", "navy"]], 0.17);
 
 export const VECTRON_LIVERIES = {
-  // 193 298 (photo-193-298-cd-eurocity.jpg; photo-193-295-cd-eurocity-side.jpg, photo-193-293-cd-eurocity.jpg):
+  // 193 298 (photo-193-298-cd-eurocity.jpg; photo-193-289-cd-eurocity-side.jpg, photo-193-295-cd-eurocity-side.jpg, photo-193-293-cd-eurocity.jpg):
   // three bands the whole length over the dark grey frame - light blue below, the white strip, navy
-  // along the cant - the white strip narrowing at each cab and sweeping down forward to the nose's
-  // lower corner, the navy widening over the cab side above it and over the nose; white grille
-  // stripes and emblem on the navy nose over a light blue foot; the navy emblem and "Ceske drahy"
+  // along the cant - the white strip turning down in front of each cab door and running out into
+  // the navy two thirds of the way down, the navy over the cab side ahead of it and over the nose,
+  // the light blue carried forward under the lamps into the nose's light blue foot; white grille
+  // stripes and emblem on the navy nose; the navy emblem and "Ceske drahy"
   // on the white behind the reader's left cab door (the cities, skylines and slogan are left out)
   cdEurocity: {
     title: "CD Eurocity",
@@ -142,8 +143,8 @@ export const VECTRON_LIVERIES = {
     sidePaint: [
       // the white strip's lower edge curving down to the nose's corner (over the light blue) and the
       // navy's edge above it, each a chain of convex pieces from the edge forward to the corner
-      ...cabSweep("cab white", "white", [[6.6, 2.55], [7.3, 2.25], [7.8, 1.95], [8.28, 1.6]], 1),
-      ...cabSweep("cab navy", "navy", [[7.15, 3.5], [7.3, 2.8], [7.65, 2.3], [8.2, 1.95]], 2),
+      ...cabSweep("cab white", "white", [[6.4, 2.55], [6.9, 2.42], [7.4, 2.2], [7.8, 1.95]], 1),
+      ...cabSweep("cab navy", "navy", [[7.35, 3.5], [7.4, 2.9], [7.52, 2.4], [7.72, 2.08], [8.0, 1.8], [8.28, 1.62]], 2),
     ],
     endPaint: [],
     grille: "white",
