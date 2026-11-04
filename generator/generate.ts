@@ -119,6 +119,7 @@ import { buildLodModel } from "./lodModel.ts";
 import { lodBudget } from "./lod.ts";
 import { glbStats, type GlbStats } from "./glbStats.ts";
 import { catalogOpenttd, openttdFeatureOf, openttdPartCount } from "./openttd.ts";
+import { idsOf } from "./openttdIds.ts";
 import { OPENTTD_TABLE } from "./openttdTable.ts";
 import { JS_DIR, bundleDesign, gzipSize, writeIfChanged } from "./jsModel.ts";
 import { findCoplanarOverlaps, type CoplanarOverlap } from "./coplanar.ts";
@@ -305,6 +306,9 @@ export function checkOpenttdDesign(design: ProceduralDesign): void {
   const vehicle = VEHICLE_IDS.has(design.id);
   const feature = vehicle ? openttdFeatureOf(catalogFields(design)) : null;
   checkOpenttdProperties(design, vehicle, feature);
+  if (feature && !idsOf(design, feature)) {
+    throw new Error(`${design.id}: generator/openttdIds.json gives it no OpenTTD ids, or a retired one - run \`pnpm openttd:ids\` and commit the file (docs/site/openttd-export.md)`);
+  }
   const lengths = new Map<string, number>();
   for (const formation of design.openttd?.formations ?? []) {
     let parts = 0;

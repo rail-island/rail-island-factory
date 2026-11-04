@@ -8,6 +8,7 @@
 
 import type { CatalogRecord } from "../generator/catalog.ts";
 import { effectiveParams, nonDefaultParams } from "./catalogQuery";
+import { defaultSetGrfId, SET_GRF_FIRST, SET_GRF_LAST } from "./openttd/properties";
 
 /** The localStorage key; a future format bumps `version` in the value, not the key. */
 export const EXPORT_KEY = "factory.openttdExport";
@@ -23,16 +24,29 @@ export interface ExportEntry {
 export interface ExportState {
   name: string;
   entries: ExportEntry[];
+  /**
+   * The low 16 bits of the set's GRF id the user chose (0x8000..0xFFFF), or null
+   * for the default, its name's hash (setGrfId).
+   */
+  grfid: number | null;
 }
 
-/** The stored value. */
+/** The stored value; `grfid` is absent from a list stored before it existed, and for the default. */
 interface StoredExport {
   version: number;
   name: string;
   entries: ExportEntry[];
+  grfid?: number;
 }
 
-export const EMPTY_EXPORT: ExportState = { name: DEFAULT_SET_NAME, entries: [] };
+export const EMPTY_EXPORT: ExportState = { name: DEFAULT_SET_NAME, entries: [], grfid: null };
+
+/** The low 16 bits of the set's GRF id: the user's, or their set name's hash in the users' half. */
+export function setGrfId(state: Pick<ExportState, "name" | "grfid">): number {
+  return state.grfid ?? defaultSetGrfId(state.name);
+}
+
+const validSetGrfId = (v: unknown): v is number => typeof v === "number" && Number.isInteger(v) && v >= SET_GRF_FIRST && v <= SET_GRF_LAST;
 
 /** One entry's identity: the model id and its sorted non-default values. */
 export function entryKey(e: ExportEntry): string {
@@ -81,7 +95,11 @@ export function parseExport(raw: string | null, records: readonly CatalogRecord[
   }
   if (!stored || stored.version !== EXPORT_VERSION || !Array.isArray(stored.entries)) return { state: EMPTY_EXPORT, dropped: 0 };
   const byId = new Map(records.map((r) => [r.id, r]));
-  let state: ExportState = { name: typeof stored.name === "string" && stored.name.trim() ? stored.name : DEFAULT_SET_NAME, entries: [] };
+  let state: ExportState = {
+    name: typeof stored.name === "string" && stored.name.trim() ? stored.name : DEFAULT_SET_NAME,
+    entries: [],
+    grfid: validSetGrfId(stored.grfid) ? stored.grfid : null,
+  };
   let dropped = 0;
   for (const e of stored.entries) {
     const r = e && typeof e.id === "string" ? byId.get(e.id) : undefined;
@@ -102,7 +120,7 @@ export function parseExport(raw: string | null, records: readonly CatalogRecord[
 
 /** The value written to storage. */
 export function serializeExport(state: ExportState): string {
-  const stored: StoredExport = { version: EXPORT_VERSION, name: state.name, entries: state.entries };
+  const stored: StoredExport = { version: EXPORT_VERSION, name: state.name, entries: state.entries, ...(state.grfid !== null ? { grfid: state.grfid } : {}) };
   return JSON.stringify(stored);
 }
 

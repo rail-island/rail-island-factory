@@ -10,7 +10,7 @@ import { ALL_VEHICLES, DESIGNS } from "../generator/generate";
 import { downsamplePremultiplied, flipRows, unpremultiply, zoomImages } from "../src/openttd/pixels";
 import { HEADINGS, RENDER_ZOOM, applyMatrix, spriteAnchor, spriteViews, vehicleScale, type ModelBox } from "../src/openttd/projection";
 import {
-  FIRST_LOCAL_ID, LAST_LOCAL_ID, assignIds, defaultOpenttdFields, fnv1a, grfIdOf, openttdFeature, partKey, partLengths, resolveVehicle, variantName,
+  HASHED_FIRST_ID, LAST_LOCAL_ID, assignIds, defaultOpenttdFields, defaultSetGrfId, fnv1a, grfIdBytes, grfIdText, parseSetGrfId, openttdFeature, partKey, partLengths, resolveVehicle, variantName,
 } from "../src/openttd/properties";
 
 function rec(extra: Partial<CatalogRecord> = {}): CatalogRecord {
@@ -81,7 +81,7 @@ describe("ids", () => {
     const a = assignIds(keys);
     const b = assignIds([...keys].reverse());
     expect([...a.entries()].sort()).toEqual([...b.entries()].sort());
-    for (const id of a.values()) expect(id >= FIRST_LOCAL_ID && id <= LAST_LOCAL_ID).toBe(true);
+    for (const id of a.values()) expect(id >= HASHED_FIRST_ID && id <= LAST_LOCAL_ID).toBe(true);
     expect(new Set(a.values()).size).toBe(keys.length);
   });
 
@@ -89,18 +89,26 @@ describe("ids", () => {
     const base = assignIds(["x?#0"]);
     expect(assignIds(["x?#0", "y?#0", "z?#0"]).get("x?#0")).toBe(base.get("x?#0"));
     // force a collision: find a key hashing to the same slot as "x?#0"
-    const span = LAST_LOCAL_ID - FIRST_LOCAL_ID + 1;
+    const span = LAST_LOCAL_ID - HASHED_FIRST_ID + 1;
     let other = "";
     for (let i = 0; !other; i++) if (fnv1a(`k${i}`) % span === fnv1a("x?#0") % span) other = `k${i}`;
     const both = assignIds(["x?#0", other]);
     expect(new Set(both.values()).size).toBe(2);
   });
 
-  it("keys parts by model, sorted values and index; names the GRF after the set", () => {
+  it("keys parts by model, sorted values and index; writes GRF ids as RI and 16 bits, a set's in the users' half", () => {
     expect(partKey("m", { b: "2", a: "1" }, 1)).toBe("m?a=1&b=2#1");
-    expect([...grfIdOf("My set")].slice(0, 2)).toEqual([0x52, 0x49]);
-    expect(grfIdOf("My set")).toEqual(grfIdOf(" My set "));
-    expect(grfIdOf("My set")).not.toEqual(grfIdOf("Other set"));
+    expect([...grfIdBytes(0x0007)]).toEqual([0x52, 0x49, 0x00, 0x07]);
+    expect(grfIdText(0x8a3f)).toBe("52498A3F");
+    expect(() => grfIdBytes(0)).toThrow(/0001..FFFF/);
+    expect(defaultSetGrfId("My set")).toBe(defaultSetGrfId(" My set "));
+    expect(defaultSetGrfId("My set")).not.toBe(defaultSetGrfId("Other set"));
+    expect(defaultSetGrfId("My set") & 0x8000).toBe(0x8000);
+    expect(parseSetGrfId("8a3f")).toBe(0x8a3f);
+    expect(parseSetGrfId(" FFFF ")).toBe(0xffff);
+    expect(parseSetGrfId("7FFF")).toBeNull();
+    expect(parseSetGrfId("12345")).toBeNull();
+    expect(parseSetGrfId("zzzz")).toBeNull();
   });
 });
 

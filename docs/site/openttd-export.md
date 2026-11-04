@@ -1,7 +1,7 @@
 # The export: OpenTTD GRF and GLB ZIP
 
 **Covers** - the site's export list (the "Add to export" button, the app bar's Export panel, its browser storage), the two formats it writes in the browser (a NewGRF for OpenTTD and a ZIP of GLB files), the model page's one-click "Download for OpenTTD" and its OpenTTD view, how a vehicle becomes OpenTTD sprites, the GRF encoder, the `openttd` block every vehicle a GRF can hold states (facts, presets, formations) and the balance formula, the preview scenes prerendered in OpenTTD, and how the GRF was checked against nmlc and a real OpenTTD.
-**Code** - `src/exportList.ts`, `src/ExportPanel.tsx`, `src/exportRun.ts`, `src/download.ts`, `src/modelModule.ts`, `src/zip.ts`, `src/ModelDetail.tsx` (the stage bar), `src/OpenttdPreview.tsx`, `src/openttd/properties.ts`, `src/openttd/projection.ts`, `src/openttd/spriteRenderer.ts`, `src/openttd/pixels.ts`, `src/openttd/grf.ts`, `src/openttd/scene.ts`, `src/openttd/scenes/`, `generator/design.ts` (`OpenttdProperties`, `checkOpenttdProperties`), `generator/openttd.ts`, `generator/openttdTable.ts`, `generator/generate.ts` (`checkOpenttdDesign`), `generator/catalog.ts` (`catalogRecord`), `generator/openttdScenes/` (the prerender, its marker GRF, scene AI and game script, the headless preview), `test/openttdGrf.test.ts`, `test/openttdExport.test.ts`, `test/openttdOneClick.test.ts`, `test/exportList.test.ts`
+**Code** - `src/exportList.ts`, `src/ExportPanel.tsx`, `src/exportRun.ts`, `src/download.ts`, `src/modelModule.ts`, `src/zip.ts`, `src/ModelDetail.tsx` (the stage bar), `src/OpenttdPreview.tsx`, `src/openttd/properties.ts`, `src/openttd/projection.ts`, `src/openttd/spriteRenderer.ts`, `src/openttd/pixels.ts`, `src/openttd/grf.ts`, `src/openttd/scene.ts`, `src/openttd/scenes/`, `generator/design.ts` (`OpenttdProperties`, `checkOpenttdProperties`), `generator/openttd.ts`, `generator/openttdTable.ts`, `generator/openttdIds.ts`, `generator/openttdIds.json`, `generator/writeOpenttdIds.ts`, `generator/generate.ts` (`checkOpenttdDesign`), `generator/catalog.ts` (`catalogRecord`), `generator/openttdScenes/` (the prerender, its marker GRF, scene AI and game script, the headless preview), `test/openttdGrf.test.ts`, `test/openttdExport.test.ts`, `test/openttdOneClick.test.ts`, `test/openttdIds.test.ts`, `test/exportList.test.ts`
 **See also** - [catalog-site.md](catalog-site.md), [../models/openttd-figures.md](../models/openttd-figures.md) (every vehicle's figures), [../models/game-properties.md](../models/game-properties.md), [../models/js-format.md](../models/js-format.md), [../specs/2026-10-17-openttd-grf-export.md](../specs/2026-10-17-openttd-grf-export.md), [../specs/2026-11-04-one-click-openttd-export.md](../specs/2026-11-04-one-click-openttd-export.md)
 
 ## The export list
@@ -19,8 +19,12 @@ the model page:
   and cached, as the thumbnail view's are: [catalog-site.md](catalog-site.md)), title and variant ("Livery: CD 162", or
   "Default variant"), and a remove button; an entry the chosen format cannot take
   is greyed with the reason;
-- the **set name** (the GRF's name and the source of its GRF id; the file name);
+- the **set name** (the GRF's name and the file name);
 - the **format**: *GRF for OpenTTD* or *ZIP of GLB files*;
+- for a GRF, its **GRF id**: "5249" (RI) and four hex digits of the users' half,
+  8000..FFFF; until the user types one, the set name's hash in that half
+  (`defaultSetGrfId`, shown in the field), and "From the set name" returns to it.
+  Anything else is refused and Export disabled while it stands;
 - **Export**: builds the file in the browser, one model at a time, with a progress
   bar and a Cancel button, then downloads it. Entries that were skipped are listed
   afterwards.
@@ -37,6 +41,7 @@ The list lives in the browser's localStorage under one key,
 | `entries` | array | the list, in the order added |
 | `entries[].id` | string | a model id |
 | `entries[].params` | object | the variant's non-default parameter values, as the URL's `p.<name>` |
+| `grfid` | number, optional | the GRF id's low 16 bits the user chose, 0x8000..0xFFFF; absent for the default (the name's hash) and in lists stored before it existed; one out of range is dropped on reading |
 
 The site reads it once the catalog has loaded and writes it on every change.
 On reading, an entry whose model is gone, or whose values the model no longer
@@ -52,8 +57,8 @@ button builds, in the browser and at once, a GRF of that one model
 (`exportModelGrf`): every preset of its `openttd` block, the default first, then
 every formation, with a progress line and Cancel. The export list is not touched.
 
-- the set's name is the model's title; its GRF id is "RI" and the hash of the
-  **model id** (`grfIdOf(record.id)`), so downloading it again after the model
+- the set's name is the model's title; its GRF id is "RI" and the model's own
+  number from the **id table** (below), so downloading it again after the model
   changed replaces the same GRF in a saved game; the file is `<id>.grf`;
 - the presets and formations are **grouped under the default** in OpenTTD's
   purchase list: each one's head names the default's head as its engine variant
@@ -255,13 +260,46 @@ theirs; `test/openttdGrf.test.ts` pins it).
 An aircraft is always refittable to passengers: OpenTTD has no default-cargo
 property for aircraft and disables one with no refittable cargo.
 
-**Ids.** The GRF id is "RI" and a 16-bit FNV-1a hash of the set name, so the
-same name makes the same GRF. Each part's local id is a hash of its model id,
-sorted non-default values and part index into 0x0100..0x3FFF (above OpenTTD's
-original vehicles, below the 14 bits an articulated part's id has), placed in
-sorted key order with linear probing on a collision (`assignIds`), so adding or
-reordering entries keeps the other vehicles' ids and an OpenTTD saved game keeps
-its vehicles.
+**Ids.** An OpenTTD saved game finds a GRF by its GRF id and its vehicles by
+their local ids, so both stay fixed:
+
+| GRF id ("RI" and 16 bits) | Whose | Assigned by |
+|---|---|---|
+| 0000 | nobody | reserved |
+| 0001..7FFF | a model's one-click GRF | the id table, in order |
+| 8000..FFFF | a user's set (the export list) | the user, in the Export panel; by default the set name's hash in this half |
+
+| Local id, per vehicle type | Whose | Assigned by |
+|---|---|---|
+| 0100..2FFF | every preset's and formation's block of part ids, unique across all models | the id table |
+| 3000..3FFF | an export-list entry that is no preset (any other selection) | the hash of its model id, sorted values and part index (`partKey`), placed in sorted key order with linear probing (`assignIds`) |
+
+Above OpenTTD's original vehicles, below the 14 bits an articulated part's id
+has. A preset's block holds 16 ids (`PRESET_BLOCK`, a car of up to 128 m), a
+formation's 32 (`FORMATION_BLOCK`, OpenTTD's part cap); the parts take the
+block's ids in order, the head first, and a vehicle needing more refuses to export.
+An export-list entry that is one of its model's presets takes that preset's block,
+so it has the same ids in the user's set as in the model's own GRF.
+
+**The id table** is `generator/openttdIds.json` (`generator/openttdIds.ts`),
+committed: `grf` (model id -> number), `vehicles` (per vehicle type, item key ->
+`{ id, size, retired? }`; a preset's key is `<model id>?<sorted values>`, a
+formation's `<model id>?formation=<name>`) and `aliases` (a renamed item's new key
+-> its old key). `pnpm openttd:ids` gives every new model, preset and formation the
+next free number and block; ids are only ever appended:
+
+- a key no longer exported stays, marked `retired`, and its ids are never given
+  again; exported again, it is revived with them;
+- a renamed preset or formation keeps its vehicles: add an alias from the new key
+  to the old one before running the script, and the new key takes the old block;
+- the build fails while an exported model, preset or formation has no id
+  (`checkOpenttdDesign`), and `test/openttdIds.test.ts` while the table is not up
+  to date.
+
+The catalog record's block carries a model's ids (`ids`: its GRF number and each
+preset's and formation's first id, in their order). In November 2026 the 119
+models used 251 train blocks (0100..122F of the trains' 0100..2FFF), 32 road, 4
+ship and 27 aircraft blocks.
 
 ## The OpenTTD view
 
@@ -292,8 +330,13 @@ holds one vehicle shows no list.
 4. the canvas draws the scene's background, the sprites, then its foreground (the
    catenary, platform canopies, fences in front of the slots).
 
-A **4x zoom** checkbox swaps in the 4x images (scrolled to the first slot). The
-note names the OpenTTD and OpenGFX versions the scene was made with. The view's
+A **4x zoom** checkbox swaps in the 4x images (scrolled to the first slot). Each
+list entry names its vehicle's first local id ("... - 0x0110"), and a line shows
+the ids the one-click GRF gives the vehicle drawn: the GRF id as OpenTTD's NewGRF
+window writes it ("GRF 52490007"), the vehicle's local id and, for an articulated
+one, the range of its parts' ids and the block reserved ("vehicle 0x0110 (parts
+0x0110-0x0112 of 16 reserved)"). The note names the OpenTTD and OpenGFX versions
+the scene was made with. The view's
 choices are not stored.
 
 `generator/openttdScenes/previewSheet.ts` draws the same headlessly, with a small

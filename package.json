@@ -15,7 +15,8 @@
     "typecheck": "tsc --noEmit",
     "deploy": "pnpm build && wrangler deploy",
     "sets:pins": "tsx generator/sets/writePins.ts",
-    "import:sounds": "tsx generator/importSounds.ts"
+    "import:sounds": "tsx generator/importSounds.ts",
+    "openttd:ids": "tsx generator/writeOpenttdIds.ts"
   },
   "dependencies": {
     "solid-js": "^1.9.3",

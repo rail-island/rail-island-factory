@@ -9,9 +9,11 @@
 
 import { For, Show, createMemo, createSignal, onCleanup } from "solid-js";
 import type { Row } from "./catalogQuery";
-import { removeEntry, variantLabel, type ExportState } from "./exportList";
+import { removeEntry, setGrfId, variantLabel, type ExportState } from "./exportList";
 import type { ExportFormat, ExportProgress } from "./exportRun";
-import { openttdFeature } from "./openttd/properties";
+import { openttdFeature, parseSetGrfId } from "./openttd/properties";
+
+const hex4 = (v: number): string => v.toString(16).toUpperCase().padStart(4, "0");
 import { VariantThumb } from "./VariantThumb";
 import { download } from "./download";
 
@@ -28,6 +30,8 @@ export function ExportPanel(props: {
   const [progress, setProgress] = createSignal<ExportProgress | null>(null);
   const [error, setError] = createSignal<string | null>(null);
   const [report, setReport] = createSignal<{ fileName: string; skipped: string[] } | null>(null);
+  // the GRF id field's text while it is typed (null shows the set's id)
+  const [grfDraft, setGrfDraft] = createSignal<string | null>(null);
   let abort: AbortController | null = null;
   onCleanup(() => abort?.abort());
 
@@ -47,8 +51,9 @@ export function ExportPanel(props: {
     setProgress({ done: 0, total: props.state.entries.length, label: "Loading the exporter" });
     try {
       const mod = await import("./exportRun");
-      const go = format() === "grf" ? mod.exportGrf : mod.exportZip;
-      const result = await go(props.state.entries, byId(), props.state.name, setProgress, signal);
+      const result = format() === "grf"
+        ? await mod.exportGrf(props.state.entries, byId(), props.state.name, setGrfId(props.state), setProgress, signal)
+        : await mod.exportZip(props.state.entries, byId(), props.state.name, setProgress, signal);
       download(result.blob, result.fileName);
       setReport({ fileName: result.fileName, skipped: result.skipped });
     } catch (e) {
@@ -128,10 +133,43 @@ export function ExportPanel(props: {
           <span>ZIP of GLB files</span>
         </label>
       </fieldset>
+      <Show when={format() === "grf"}>
+        <label class="factory-param">
+          <span>GRF id</span>
+          <span class="factory-export__grfid">
+            <span class="factory-muted">5249</span>
+            <input
+              class="factory-search"
+              type="text"
+              inputmode="text"
+              maxlength="4"
+              aria-label="The GRF id's last four hex digits, 8000 to FFFF"
+              value={grfDraft() ?? hex4(setGrfId(props.state))}
+              onInput={(e) => {
+                const text = e.currentTarget.value;
+                setGrfDraft(text);
+                const v = parseSetGrfId(text);
+                if (v !== null) props.onState({ ...props.state, grfid: v });
+              }}
+              onBlur={() => setGrfDraft(null)}
+            />
+            <Show when={props.state.grfid !== null}>
+              <button type="button" class="factory-link" onClick={() => { setGrfDraft(null); props.onState({ ...props.state, grfid: null }); }}>
+                From the set name
+              </button>
+            </Show>
+          </span>
+        </label>
+        <p class="factory-muted factory-params__note">
+          <Show when={grfDraft() !== null && parseSetGrfId(grfDraft()!) === null} fallback={props.state.grfid === null ? "Derived from the set name. Keep it to keep a saved game's vehicles." : "Your GRF id. Keep it to keep a saved game's vehicles."}>
+            <span class="factory-error">Four hex digits, 8000 to FFFF (0001 to 7FFF are the models' own GRFs).</span>
+          </Show>
+        </p>
+      </Show>
       <Show
         when={progress()}
         fallback={
-          <button type="button" class="factory-btn factory-export__go" disabled={usable() === 0} onClick={() => void run()}>
+          <button type="button" class="factory-btn factory-export__go" disabled={usable() === 0 || (format() === "grf" && grfDraft() !== null && parseSetGrfId(grfDraft()!) === null)} onClick={() => void run()}>
             Export {format() === "grf" ? ".grf" : ".zip"} ({usable()} {usable() === 1 ? "model" : "models"})
           </button>
         }

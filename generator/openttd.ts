@@ -2,8 +2,10 @@
 // the facts its design states (generator/openttdTable.ts), the balance figures
 // derived from them by one formula, and those figures resolved for every
 // selection the export names - presets, declared variants and formation cars - so
-// the site only reads them. No node: imports; the site imports only its types.
+// the site only reads them; and its ids from the committed id table
+// (openttdIds.ts). No node: imports; the site imports only its types.
 
+import { idsOf } from "./openttdIds.ts";
 import {
   resolveParams, type CatalogFields, type OpenttdFields, type OpenttdProperties, type OpenttdVariant,
   type ParamValues, type ProceduralDesign,
@@ -164,6 +166,7 @@ export function catalogOpenttd(design: ProceduralDesign, fields: CatalogFields):
     ...base,
     ...(variants.length ? { variants } : {}),
     presets: (ottd.presets ?? [{}]).map((p) => ({ ...p })),
+    ...(idsOf(design, feature) ? { ids: idsOf(design, feature)! } : {}),
     ...(ottd.formations?.length ? { formations: ottd.formations.map((f) => ({ name: f.name, cars: f.cars.map((c) => ({ params: { ...c.params }, ...(c.turned ? { turned: true } : {}) })) })) } : {}),
   };
 }

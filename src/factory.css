@@ -1273,3 +1273,22 @@ body {
   max-width: none;
   max-height: none;
 }
+
+/* the Export panel's GRF id: "5249" and the user's four hex digits */
+.factory-export__grfid {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: ui-monospace, monospace;
+}
+
+.factory-export__grfid .factory-search {
+  width: 7ch;
+  font-family: inherit;
+  text-transform: uppercase;
+}
+
+/* the OpenTTD view's ids: GRF id and the vehicle's local ids */
+.factory-ottd__ids {
+  font-family: ui-monospace, monospace;
+}
