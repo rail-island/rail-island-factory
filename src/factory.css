@@ -1258,20 +1258,65 @@ body {
   place-items: center;
 }
 
-.factory-ottd__scroll--4x {
+/* larger than the space (a zoom asked for): scroll from the top left */
+.factory-ottd__scroll--over {
   place-items: start;
 }
 
+/* sized by OpenttdPreview (its chosen scale) */
 .factory-ottd__canvas {
   display: block;
-  max-width: 100%;
-  max-height: 100%;
-  image-rendering: pixelated;
 }
 
-.factory-ottd__scroll--4x .factory-ottd__canvas {
-  max-width: none;
-  max-height: none;
+/* the picture over the legend, the controls along the foot (OpenttdPreview CONTROLS_HEIGHT) */
+.factory-ottd {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+  padding-bottom: 48px;
+}
+
+/* the picture and its legend as one block, centred; the picture scrolls when larger */
+.factory-ottd .factory-ottd__scroll {
+  flex: 0 1 auto;
+  min-height: 0;
+  height: auto;
+}
+
+/* the names of tagged vehicles: a row each (LEGEND_ROW), at most half the view, scrolling beyond */
+.factory-ottd__legend {
+  flex: none;
+  max-height: 50%;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px 12px;
+  list-style: none;
+  font-size: 0.8125rem;
+  line-height: 18px;
+  color: var(--m-on-surface);
+}
+
+.factory-ottd__legend li {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.factory-ottd__tag {
+  display: inline-block;
+  min-width: 16px;
+  padding: 0 3px;
+  border-radius: 3px;
+  background: rgb(20, 20, 28);
+  color: #fff;
+  font-weight: bold;
+  text-align: center;
+}
+
+.factory-ottd__id {
+  color: var(--m-on-surface-variant);
+  font-family: ui-monospace, monospace;
 }
 
 /* the Export panel's GRF id: "5249" and the user's four hex digits */

@@ -113,6 +113,16 @@ Area: catalog site (model page stage bar, OpenTTD view, GRF encoder and export r
    crops to them; more than 10 are paged. `previewSheet.ts` draws a whole pack
    headlessly. Tests: test/openttdOneClick.test.ts.
 
+5. Make the OpenTTD view fit its space. A Zoom choice, Auto by default, picks the
+   most detailed view that fits the stage (`chooseView`): the whole pack at 4x
+   (from 0.7), 4x cut to the vehicles' fronts and labels (from 0.5: a few vehicles
+   on a small screen), 4x shrunk smoothly (from 0.25), or normal zoom (a large
+   pack on a small screen); 4x and normal zoom can be asked for. Labels stay about
+   12 CSS pixels; where they would overlap or cost the vehicles a sixth of their
+   size, number tags and a legend under the picture replace them (`preferTags`).
+   Chosen again on every resize. `previewSheet.ts --fit WxH` draws a stage-sized
+   view. Tests: test/openttdOneClick.test.ts.
+
 ## How to test
 
 **Automated coverage.** No E2E framework exists in the repository (AGENTS.md asks
@@ -130,7 +140,11 @@ OpenTTD 13 or 14 with any base set.
    default "CD 163 / 363" on the front track (lower right), each with a dark label
    ahead of its nose - its OpenTTD name and its id ("0x0190"). The catenary is drawn
    over the locomotives; no track is empty.
-3. Tick "Normal zoom": the same at 1x, smaller labels.
+3. Narrow the window (or open the page on a phone): the view shrinks the 4x
+   images, then cuts to the locomotives' fronts or turns to normal zoom; where the
+   labels would crowd, the locomotives carry numbers and a list under the picture
+   names them. The Zoom choice reads e.g. "Auto (4x, fronts)"; choose "Normal zoom"
+   or "4x zoom" to see those at their own pixels.
 4. Change the Livery parameter: the OpenTTD view does not change (it shows the
    whole pack, whatever the page's parameters).
 5. Open "Shinkansen 0 series": eight tracks, the cars and liveries in front and the
