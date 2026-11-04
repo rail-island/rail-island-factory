@@ -193,9 +193,17 @@ export const LAST_TABLE_ID = 0x2fff;
 export const HASHED_FIRST_ID = 0x3000;
 export const LAST_LOCAL_ID = 0x3fff;
 
-/** The part ids the table reserves for a preset (a car of up to 16 parts, 128 m) and for a formation (OpenTTD's 32). */
-export const PRESET_BLOCK = 16;
-export const FORMATION_BLOCK = 32;
+/**
+ * The part ids the table reserves for a new preset or formation: twice the parts
+ * it is measured at when its ids are first assigned, at least MIN_BLOCK, at most
+ * OpenTTD's MAX_PARTS - room to grow without its ids moving. A block keeps its
+ * size for ever; the first blocks, assigned before vehicles were measured, hold
+ * 16 (a preset) or 32 (a formation).
+ */
+export const MIN_BLOCK = 4;
+export function blockSizeFor(parts: number): number {
+  return Math.min(MAX_PARTS, Math.max(MIN_BLOCK, 2 * parts));
+}
 
 /**
  * The low 16 bits of a GRF id ("RI" and two bytes): 0x0001..0x7FFF a one-click
@@ -293,10 +301,11 @@ export interface ExportItem {
   variantOf?: number;
   /**
    * The first of the part ids the committed id table reserves for it (a preset's
-   * or formation's block); absent for an export-list entry that is no preset,
-   * whose ids are hashed (assignIds).
+   * or formation's block) and how many; absent for an export-list entry that is no
+   * preset, whose ids are hashed (assignIds).
    */
   baseId?: number;
+  blockSize?: number;
 }
 
 /**
@@ -309,7 +318,7 @@ export function oneClickItems(r: CatalogRecord): ExportItem[] {
   const items: ExportItem[] = presets.map((p, i) => ({
     record: r, key: { ...p }, cars: [{ params: { ...p } }],
     ...(i ? { variantOf: 0 } : {}),
-    ...(ids?.presets[i] !== undefined ? { baseId: ids.presets[i] } : {}),
+    ...(ids?.presets[i] ? { baseId: ids.presets[i]!.id, blockSize: ids.presets[i]!.size } : {}),
   }));
   for (const [i, f] of (r.openttd?.formations ?? []).entries()) {
     items.push({
@@ -318,7 +327,7 @@ export function oneClickItems(r: CatalogRecord): ExportItem[] {
       cars: f.cars.map((c) => ({ params: { ...c.params }, ...(c.turned ? { turned: true } : {}) })),
       formation: f.name,
       variantOf: 0,
-      ...(ids?.formations[i] !== undefined ? { baseId: ids.formations[i] } : {}),
+      ...(ids?.formations[i] ? { baseId: ids.formations[i]!.id, blockSize: ids.formations[i]!.size } : {}),
     });
   }
   return items;
@@ -328,15 +337,10 @@ export function oneClickItems(r: CatalogRecord): ExportItem[] {
  * The table's first part id of the preset with exactly these non-default values
  * (an export-list entry that is a preset keeps its one-click ids), or undefined.
  */
-export function presetBaseId(r: CatalogRecord, params: Record<string, string>): number | undefined {
+export function presetBlock(r: CatalogRecord, params: Record<string, string>): { id: number; size: number } | undefined {
   const presets = r.openttd?.presets ?? [];
   const i = presets.findIndex((p) => sameSelection(p, params));
   return i >= 0 ? r.openttd?.ids?.presets[i] : undefined;
-}
-
-/** The size of an item's block of part ids in the table. */
-export function blockSize(item: Pick<ExportItem, "formation">): number {
-  return item.formation ? FORMATION_BLOCK : PRESET_BLOCK;
 }
 
 /**

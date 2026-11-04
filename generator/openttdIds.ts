@@ -6,9 +6,9 @@
 // retired, and a renamed one takes its old block through an alias.
 
 import {
-  blockSize, FIRST_LOCAL_ID, LAST_TABLE_ID, MODEL_GRF_FIRST, MODEL_GRF_LAST, type OpenttdFeature,
+  blockSizeFor, FIRST_LOCAL_ID, LAST_TABLE_ID, MODEL_GRF_FIRST, MODEL_GRF_LAST, type OpenttdFeature,
 } from "../src/openttd/properties.ts";
-import type { OpenttdIds, ParamValues, ProceduralDesign } from "./design.ts";
+import type { OpenttdFormationCar, OpenttdIds, ParamValues, ProceduralDesign } from "./design.ts";
 import TABLE_JSON from "./openttdIds.json";
 
 /** One block of part ids: its first id and how many it holds. */
@@ -41,12 +41,18 @@ export function formationKey(model: string, name: string): string {
   return `${model}?formation=${name}`;
 }
 
-/** What one exported design needs of the table: its type and its items' keys and block sizes. */
+/** One item a design exports: its key and the cars it is made of (a preset: one). */
+export interface WantedItem {
+  key: string;
+  cars: OpenttdFormationCar[];
+}
+
+/** What one exported design needs of the table: its type and its items. */
 export interface WantedIds {
   model: string;
   feature: OpenttdFeature;
-  presets: string[];
-  formations: string[];
+  presets: WantedItem[];
+  formations: WantedItem[];
 }
 
 export function wantedIds(design: ProceduralDesign, feature: OpenttdFeature): WantedIds {
@@ -54,18 +60,22 @@ export function wantedIds(design: ProceduralDesign, feature: OpenttdFeature): Wa
   return {
     model: design.id,
     feature,
-    presets: (o.presets ?? [{}]).map((p) => presetKey(design.id, p)),
-    formations: (o.formations ?? []).map((f) => formationKey(design.id, f.name)),
+    presets: (o.presets ?? [{}]).map((p) => ({ key: presetKey(design.id, p), cars: [{ params: p }] })),
+    formations: (o.formations ?? []).map((f) => ({ key: formationKey(design.id, f.name), cars: f.cars })),
   };
 }
 
+/** How many OpenTTD parts an item is drawn as: measured on its built cars (writeOpenttdIds.ts). */
+export type MeasureParts = (wanted: WantedIds, item: WantedItem) => number;
+
 /**
  * The table with every wanted key given an id: a new model the next GRF id, a
- * new item (or one whose old key an alias names) the next free block of its
- * size; keys no longer wanted are marked retired, never removed. Returns the
+ * new item the next free block, sized to twice its measured parts (blockSizeFor;
+ * `measure` is asked only for new items), or the block of the old key an alias
+ * names; keys no longer wanted are marked retired, never removed. Returns the
  * table unchanged (deep-equal) when nothing is missing.
  */
-export function updateIds(table: IdTable, wanted: readonly WantedIds[]): IdTable {
+export function updateIds(table: IdTable, wanted: readonly WantedIds[], measure: MeasureParts): IdTable {
   const out: IdTable = JSON.parse(JSON.stringify(table)) as IdTable;
   for (const f of ["train", "road", "ship", "aircraft"] as const) out.vehicles[f] ??= {};
   out.aliases ??= {};
@@ -78,12 +88,14 @@ export function updateIds(table: IdTable, wanted: readonly WantedIds[]): IdTable
     }
     const blocks = out.vehicles[w.feature];
     let next = Math.max(FIRST_LOCAL_ID, ...Object.values(blocks).map((b) => b.id + b.size));
-    const add = (key: string, size: number) => {
+    const add = (item: WantedItem) => {
+      const key = item.key;
       live.add(`${w.feature}:${key}`);
       if (blocks[key]) {
         delete blocks[key]!.retired;
         return;
       }
+      const size = blockSizeFor(measure(w, item));
       const old = out.aliases[key];
       if (old && blocks[old] && blocks[old]!.size >= size) {
         blocks[key] = { id: blocks[old]!.id, size: blocks[old]!.size };
@@ -93,8 +105,8 @@ export function updateIds(table: IdTable, wanted: readonly WantedIds[]): IdTable
       blocks[key] = { id: next, size };
       next += size;
     };
-    for (const k of w.presets) add(k, blockSize({}));
-    for (const k of w.formations) add(k, blockSize({ formation: "x" }));
+    for (const item of w.presets) add(item);
+    for (const item of w.formations) add(item);
   }
   for (const f of ["train", "road", "ship", "aircraft"] as const) {
     for (const [key, block] of Object.entries(out.vehicles[f])) {
@@ -121,8 +133,9 @@ export function idsOf(design: ProceduralDesign, feature: OpenttdFeature, table: 
   const w = wantedIds(design, feature);
   const grf = table.grf[w.model];
   const blocks = table.vehicles[feature] ?? {};
-  const presets = w.presets.map((k) => blocks[k]);
-  const formations = w.formations.map((k) => blocks[k]);
+  const presets = w.presets.map((i) => blocks[i.key]);
+  const formations = w.formations.map((i) => blocks[i.key]);
   if (grf === undefined || presets.some((b) => !b || b.retired) || formations.some((b) => !b || b.retired)) return null;
-  return { grf, presets: presets.map((b) => b!.id), formations: formations.map((b) => b!.id) };
+  const ref = (b: IdBlock | undefined) => ({ id: b!.id, size: b!.size });
+  return { grf, presets: presets.map(ref), formations: formations.map(ref) };
 }

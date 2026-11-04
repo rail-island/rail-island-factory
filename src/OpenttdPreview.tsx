@@ -11,7 +11,7 @@
 import { For, Show, createEffect, createMemo, createResource, createSignal, on, onCleanup } from "solid-js";
 import type { CatalogRecord } from "./catalogQuery";
 import { previewSprites, type PreviewPart } from "./exportRun";
-import { blockSize, grfIdText, oneClickIndex, oneClickItems, openttdFeature, resolveItem, resolveVehicle, type ExportItem } from "./openttd/properties";
+import { grfIdText, oneClickIndex, oneClickItems, openttdFeature, resolveItem, resolveVehicle, type ExportItem } from "./openttd/properties";
 import { placeParts, sceneOf, trackOf, type Placement, type PreviewZoom } from "./openttd/scene";
 
 const PLACEMENTS = import.meta.glob<Placement>("./openttd/scenes/*/placement.json", { eager: true, import: "default" });
@@ -156,7 +156,7 @@ export function OpenttdPreview(props: {
           {(ids) => (
             <span class="factory-viewer__note factory-ottd__ids" title="The ids the one-click GRF gives this vehicle (generator/openttdIds.json); a saved game keeps its vehicles by them">
               GRF {grfIdText(ids().grf)} · vehicle {hexId(item().baseId)}
-              <Show when={sprites() && sprites()!.length > 1}>{` (parts ${hexId(item().baseId)}-${hexId(item().baseId === undefined ? undefined : item().baseId! + sprites()!.length - 1)} of ${blockSize(item())} reserved)`}</Show>
+              <Show when={sprites() && sprites()!.length > 1}>{` (parts ${hexId(item().baseId)}-${hexId(item().baseId === undefined ? undefined : item().baseId! + sprites()!.length - 1)} of ${item().blockSize ?? "-"} reserved)`}</Show>
             </span>
           )}
         </Show>

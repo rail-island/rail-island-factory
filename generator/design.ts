@@ -229,8 +229,8 @@ export interface OpenttdProperties extends OpenttdFields {
   formations?: OpenttdFormation[];
   /**
    * The ids the committed id table (generator/openttdIds.json) gives the model:
-   * its GRF id's low 16 bits and the first part id of each preset's and
-   * formation's block, in their order. Written into the catalog's block only.
+   * its GRF id's low 16 bits and each preset's and formation's block of part ids,
+   * in their order. Written into the catalog's block only.
    */
   ids?: OpenttdIds;
 }
@@ -238,8 +238,14 @@ export interface OpenttdProperties extends OpenttdFields {
 /** A model's ids from the committed OpenTTD id table (OpenttdProperties.ids). */
 export interface OpenttdIds {
   grf: number;
-  presets: number[];
-  formations: number[];
+  presets: OpenttdIdBlock[];
+  formations: OpenttdIdBlock[];
+}
+
+/** A preset's or formation's block of part ids: its first id and how many it reserves. */
+export interface OpenttdIdBlock {
+  id: number;
+  size: number;
 }
 
 /** The facts every vehicle the GRF can hold states (OpenttdRequired); the balance figures are derived. */

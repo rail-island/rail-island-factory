@@ -13,7 +13,7 @@ import { encodeGrf, GRF_ZOOM, type GrfImage, type GrfPart, type GrfVehicle } fro
 import { zoomImages } from "./openttd/pixels";
 import { spriteViews, type ModelBox } from "./openttd/projection";
 import {
-  assignIds, blockSize, grfIdBytes, MAX_PARTS, oneClickItems, openttdFeature, partKey, partLengths, presetBaseId, resolveItem, shares,
+  assignIds, grfIdBytes, MAX_PARTS, oneClickItems, openttdFeature, partKey, partLengths, presetBlock, resolveItem, shares,
   type ExportCar, type ExportItem, type OpenttdFeature,
 } from "./openttd/properties";
 import { SpriteRenderer } from "./openttd/spriteRenderer";
@@ -130,8 +130,8 @@ export async function exportGrf(
       skipped.push(`${r.title}: OpenTTD has no vehicle of this kind`);
       continue;
     }
-    const baseId = presetBaseId(r, e.params);
-    items.push({ record: r, key: { ...e.params }, cars: [{ params: { ...e.params } }], ...(baseId !== undefined ? { baseId } : {}) });
+    const block = presetBlock(r, e.params);
+    items.push({ record: r, key: { ...e.params }, cars: [{ params: { ...e.params } }], ...(block ? { baseId: block.id, blockSize: block.size } : {}) });
   }
   if (items.length === 0) throw new Error("The export list holds no vehicle OpenTTD can take.");
   const bytes = await buildGrf(items, {
@@ -191,8 +191,8 @@ async function buildGrf(
   };
   for (const p of planned) {
     const n = p.cars.reduce((k, c) => k + c.lengths.length, 0);
-    if (p.item.baseId !== undefined && n > blockSize(p.item)) {
-      throw new Error(`${p.item.record.title}: ${n} parts, over the ${blockSize(p.item)} ids the table reserves for it`);
+    if (p.item.baseId !== undefined && n > (p.item.blockSize ?? 0)) {
+      throw new Error(`${p.item.record.title}: ${n} parts, over the ${p.item.blockSize ?? 0} ids the table reserves for it (docs/site/openttd-export.md, "Ids")`);
     }
   }
   const hashed = new Map<OpenttdFeature, Map<string, number>>();
