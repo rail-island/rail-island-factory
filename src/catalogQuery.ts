@@ -351,6 +351,8 @@ export interface ViewState extends ChipPath {
   tab: DetailTab;
   /** The selected source-tree node (its slash-path id), or null. Kept only on the source tab. */
   node: string | null;
+  /** The model page's stage: the 3D viewer or, for a vehicle OpenTTD can hold, the OpenTTD view (`?stage=openttd`). */
+  stage: Stage;
   /** A parametric model's chosen values (`?p.<name>=<value>`), as given; see effectiveParams. */
   params: Record<string, string>;
 }
@@ -358,6 +360,8 @@ export interface ViewState extends ChipPath {
 export type DetailTab = "specs" | "source" | "references";
 
 export type Layout = "table" | "thumbs";
+
+export type Stage = "3d" | "openttd";
 
 const DETAIL_TABS: readonly DetailTab[] = ["specs", "source", "references"];
 
@@ -396,6 +400,7 @@ export function parseView(search: string, pathname = "/"): ViewState {
   const rawTab = p.get("tab") as DetailTab | null;
   const tab: DetailTab = model && rawTab && DETAIL_TABS.includes(rawTab) ? rawTab : "specs";
   const node = tab === "source" ? p.get("node") : null;
+  const stage: Stage = model && p.get("stage") === "openttd" ? "openttd" : "3d";
   const params: Record<string, string> = {};
   if (model) for (const [k, v] of p) if (k.startsWith("p.") && k.length > 2 && v) params[k.slice(2)] = v;
   // the chips from a category path, else as the Creator writes them: ?cat=<group>&sub=<l2>&sub2=<l3>, each only under the one above
@@ -415,6 +420,7 @@ export function parseView(search: string, pathname = "/"): ViewState {
     model,
     tab,
     node: node ?? null,
+    stage,
     params,
   };
 }
@@ -480,6 +486,7 @@ export function serializeView(v: ViewState): string {
   if (v.model) {
     if (v.tab !== "specs") p.set("tab", v.tab);
     if (v.tab === "source" && v.node != null) p.set("node", v.node);
+    if (v.stage === "openttd") p.set("stage", "openttd");
     for (const k of Object.keys(v.params).sort()) p.set(`p.${k}`, v.params[k]!);
   }
   const s = p.toString();

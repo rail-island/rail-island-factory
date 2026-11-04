@@ -1220,6 +1220,84 @@ body {
   max-width: calc(100% - 24px);
 }
 
+/* the 3D / OpenTTD switch: a segmented control on a solid surface, so the
+   option not on screen still reads as a button over a light viewer */
+.factory-segmented {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border: 1px solid var(--m-outline);
+  border-radius: 999px;
+  background: var(--m-surface-1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.factory-segmented__item {
+  min-height: 36px;
+  padding: 6px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--m-on-surface);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.factory-segmented__item:hover:not(.factory-segmented__item--active) {
+  background: var(--m-state-hover);
+}
+
+.factory-segmented__item--active {
+  background: var(--m-on-surface);
+  color: var(--m-surface);
+  cursor: default;
+}
+
+.factory-segmented__item:focus-visible {
+  outline: 2px solid var(--m-primary);
+  outline-offset: 2px;
+}
+
+/* the one-click download: a solid button over the viewer, the filled primary
+   action once the OpenTTD view is on screen */
+.factory-stage__download {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--m-surface-1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  font-weight: 500;
+}
+
+.factory-stage__download:hover {
+  background: var(--m-surface-2);
+}
+
+.factory-stage__download--primary,
+.factory-stage__download--primary:hover {
+  border-color: var(--m-primary);
+  background: var(--m-primary);
+  color: var(--m-surface);
+}
+
+.factory-stage__download--primary:hover {
+  filter: brightness(1.08);
+}
+
+.factory-stage__icon {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .factory-stage__progress {
   display: inline-flex;
   align-items: center;

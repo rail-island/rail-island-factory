@@ -122,8 +122,8 @@ export function App() {
     update({ sort: col.key, dir: v.sort === col.key ? (v.dir === "asc" ? "desc" : "asc") : col.dir });
   };
   // A node belongs to one model's tree: opening, closing or stepping drops it.
-  const openPatch = (r: Row, params: Record<string, string> = {}): Partial<ViewState> => ({ model: r.id, tab: "specs", node: null, params: { ...params } });
-  const closePatch: Partial<ViewState> = { model: null, tab: "specs", node: null, params: {} };
+  const openPatch = (r: Row, params: Record<string, string> = {}): Partial<ViewState> => ({ model: r.id, tab: "specs", node: null, stage: "3d", params: { ...params } });
+  const closePatch: Partial<ViewState> = { model: null, tab: "specs", node: null, stage: "3d", params: {} };
   const onOpen = (r: Row, params: Record<string, string> = {}) => update(openPatch(r, params), true);
   const hrefOpen = (r: Row, params: Record<string, string> = {}) => hrefOf(openPatch(r, params));
   const onClose = () => update(closePatch, true);
@@ -235,6 +235,8 @@ export function App() {
                 node={view().node}
                 onTab={(tab) => update({ tab })}
                 onNode={(node) => update({ node })}
+                stage={view().stage}
+                onStage={(stage) => update({ stage })}
                 params={view().params}
                 onParams={(params) => update({ params, node: null })}
                 exported={hasEntry(exportState().entries, entryFor(record(), view().params))}

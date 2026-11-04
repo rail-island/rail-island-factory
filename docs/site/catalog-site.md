@@ -461,10 +461,11 @@ page ([seo-pages.md](seo-pages.md)): `/model/<id>/` the open model,
 above), `/` the plain list. The query string carries the rest: `?q=` search,
 `?view=thumbs` the thumbnail layout, `?sort=` and `?dir=` ordering, on a model page the
 list's chips as `?cat=`, `?sub=` and `?sub2=` (the Creator's names), `?tab=source` or `?tab=references` its Source or Images tab and `?node=` the selected tree node (kept
-only with the Source tab; a node id no longer in the tree selects nothing), and
+only with the Source tab; a node id no longer in the tree selects nothing), `?stage=openttd`
+the OpenTTD view of a vehicle OpenTTD can hold (a model without one drops it), and
 `?p.<name>=<value>` a parametric model's non-default values (an unknown name or value falls back to the default). Defaults are left out, so the plain list is the bare URL. The old all-query form (`?model=`, `?cat=`) is still read and rewritten to the path form. Opening and
-closing a model and picking a chip push a history entry; opening and closing reset the tab and node; typing,
-sorting, stepping (which drops the node), switching tabs and selecting replace
+closing a model and picking a chip push a history entry; opening and closing reset the tab, node and stage; typing,
+sorting, stepping (which drops the node and keeps the stage), switching tabs or the stage and selecting replace
 the current one, so Back does not replay keystrokes. An unknown model shows
 "No model" with a link back.
 

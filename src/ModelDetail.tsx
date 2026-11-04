@@ -32,7 +32,7 @@ import { Link } from "./Link";
 import {
   previewLod,
   COLUMNS, effectiveParams, formatBytes, isDefaultParams, nonDefaultParams, offeredValues, pageKey, poseControls, poseOf,
-  type DetailTab, type PoseValues, type PreviewLod, type Row,
+  type DetailTab, type Stage, type PoseValues, type PreviewLod, type Row,
 } from "./catalogQuery";
 import { indexTree, type SourceTree } from "./sourceTreeView";
 import { FileCell } from "./ModelTable";
@@ -71,6 +71,9 @@ export function ModelDetail(props: {
   node: string | null;
   onTab: (tab: DetailTab) => void;
   onNode: (id: string | null) => void;
+  /** The stage on screen (from the URL, `?stage=openttd`), and the setter. Kept while stepping. */
+  stage: Stage;
+  onStage: (stage: Stage) => void;
   /** The chosen parameter values (from the URL), and the setter, which keeps only non-defaults. */
   params: Record<string, string>;
   onParams: (params: Record<string, string>) => void;
@@ -94,8 +97,9 @@ export function ModelDetail(props: {
   const posed = createMemo(() => (controls().length ? poseOf(props.record, pose()) : null));
   // the stage: the 3D viewer or the OpenTTD view (OpenttdPreview), for a vehicle OpenTTD can hold
   const exportable = createMemo(() => openttdFeature(props.record) !== null);
-  const [stage, setStage] = createSignal<"3d" | "openttd">("3d");
-  createEffect(on(exportable, (ok) => !ok && setStage("3d")));
+  // a model without an OpenTTD view drops a `?stage=openttd` it was linked or stepped to
+  const stage = createMemo<Stage>(() => (exportable() ? props.stage : "3d"));
+  createEffect(() => !exportable() && props.stage !== "3d" && props.onStage("3d"));
   // the one-click download (exportRun.ts exportModelGrf): the model's presets and formations
   const [grfProgress, setGrfProgress] = createSignal<ExportProgress | null>(null);
   const [grfError, setGrfError] = createSignal<string | null>(null);
@@ -149,17 +153,36 @@ export function ModelDetail(props: {
     <section class="factory-detail" aria-label={props.record.title}>
       <div class="factory-detail__stage">
         <Show when={exportable()}>
-          <div class="factory-stage__bar" role="group" aria-label="View">
-            <button type="button" class="factory-tab" classList={{ "factory-tab--active": stage() === "3d" }} aria-pressed={stage() === "3d"} onClick={() => setStage("3d")}>
-              3D
-            </button>
-            <button type="button" class="factory-tab" classList={{ "factory-tab--active": stage() === "openttd" }} aria-pressed={stage() === "openttd"} onClick={() => setStage("openttd")}>
-              OpenTTD
-            </button>
+          <div class="factory-stage__bar">
+            <div class="factory-segmented" role="tablist" aria-label="View">
+              <For each={[["3d", "3D model"], ["openttd", "OpenTTD"]] as const}>
+                {([key, label]) => (
+                  <button
+                    type="button"
+                    role="tab"
+                    class="factory-segmented__item"
+                    classList={{ "factory-segmented__item--active": stage() === key }}
+                    aria-selected={stage() === key}
+                    onClick={() => props.onStage(key)}
+                  >
+                    {label}
+                  </button>
+                )}
+              </For>
+            </div>
             <Show
               when={grfProgress()}
               fallback={
-                <button type="button" class="factory-btn" onClick={() => void downloadGrf()} title="A GRF of this model's preset variants and formations">
+                <button
+                  type="button"
+                  class="factory-btn factory-stage__download"
+                  classList={{ "factory-stage__download--primary": stage() === "openttd" }}
+                  onClick={() => void downloadGrf()}
+                  title="A GRF of this model's preset variants and formations"
+                >
+                  <svg class="factory-stage__icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 4v11m0 0-5-5m5 5 5-5M5 19h14" />
+                  </svg>
                   Download for OpenTTD
                 </button>
               }
