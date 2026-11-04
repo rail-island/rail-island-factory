@@ -90,18 +90,24 @@ describe("Siemens Vectron", () => {
     expect(new Set(stripes(ec).map((n) => n.material))).toEqual(new Set(["white"]));
     expect(new Set(stripes(rj).map((n) => n.material))).toEqual(new Set(["black"]));
     // the Eurocity's navy cab sections and the RegioJet's white cab caps, both ends, both sides
-    for (const [ns, name] of [[ec, "cab"], [ec, "cab-foot"], [ec, "cab-cant"], [rj, "cab-cap"]] as const)
+    for (const [ns, name] of [[ec, "cab-white-1"], [ec, "cab-white-3"], [ec, "cab-navy-1"], [ec, "cab-navy-3"], [rj, "cab-cap"]] as const)
       for (const sd of ["right-side", "left-side"])
         for (const end of ["front", "rear"]) expect(ns.some((n) => n.id.startsWith(`sides/${sd}/${name}-${end}/`)), `${name} ${sd} ${end}`).toBe(true);
   });
 
-  it("paints the Eurocity light blue along the lower half and white above, without the old wave", () => {
+  it("paints the Eurocity in three continuous bands, light blue, the white strip and navy along the cant", () => {
     const ec = leaves(vectron({ livery: "cdEurocity" }).sourceTree("v", "v").root);
     expect(ec.some((n) => n.id.includes("/wave"))).toBe(false);
-    // each side: light blue from the frame to 2.6 m, white from there to the roof
+    // each side, cab to cab: light blue from the frame to 2.55 m, the white strip to 3.5 m, navy to the roof
     for (const sd of ["side-left", "side-right"]) {
       const bands = ec.filter((n) => n.id.startsWith(`body/shell/${sd}/band-`)).map((n) => [n.material, n.min![1], n.max![1]]);
-      expect(bands, sd).toEqual([["frame", 1.3, 1.42], ["skyBlue", 1.42, 2.6], ["white", 2.6, 4]]);
+      expect(bands, sd).toEqual([["frame", 1.3, 1.42], ["skyBlue", 1.42, 2.55], ["white", 2.55, 3.5], ["navy", 3.5, 4]]);
+    }
+    // the white strip's sweep down to the nose's corner lies under the navy's (a later layer lies further out)
+    const sweep = (name: string) => ec.filter((n) => n.id.startsWith(`sides/right-side/${name}-front/`));
+    for (const i of [1, 2, 3]) {
+      expect(sweep(`cab-white-${i}`).every((n) => n.material === "white"), `white ${i}`).toBe(true);
+      expect(sweep(`cab-navy-${i}`).every((n) => n.material === "navy"), `navy ${i}`).toBe(true);
     }
   });
 

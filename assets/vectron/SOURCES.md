@@ -7,12 +7,13 @@
 ## Photographs
 
 All downloaded from Wikimedia Commons (1600 px thumbnails, saved as JPEG quality 85), but
-`photo-193-295-cd-eurocity-side.jpg`, supplied by the user.
+`photo-193-295-cd-eurocity-side.jpg` and `photo-193-293-cd-eurocity.jpg`, supplied by the user.
 
 | File | Commons page | Author | Licence | Used for |
 |---|---|---|---|---|
 | `photo-193-298-cd-eurocity.jpg` | https://commons.wikimedia.org/wiki/File:CD_193_298_Hamburg_1907190851.jpg | Clic | CC BY-SA 4.0 | the CD Eurocity livery (193 298, 91 80 6193 298-7 D-ELOC, Hamburg Hbf, 19 July 2019): the navy nose and cab, the light blue lower half and its foot under the nose, white stripes and emblem; the nose, windscreen and lamps |
 | `photo-193-295-cd-eurocity-side.jpg` | supplied by the user (a web screenshot, 816 x 368 px; origin not recorded) | unknown | unknown - reference only, not redistributed in the export | the Eurocity's full side (193 295): light blue from the frame to mid height, white above, the navy cab sections and their sweep over the cab door, the navy emblem and "České dráhy" behind the cab door; its cities, skylines and slogan are left out |
+| `photo-193-293-cd-eurocity.jpg` | supplied by the user (a phone screenshot of an image search, origin cysnews / vlaky.net / Transport-logistika; 1080 x 2400 px) | unknown | unknown - reference only, not redistributed in the export | the Eurocity's continuous bands (193 293 at Dresden, 193 295 and 193 292): the white strip and the navy cant running cab to cab, the white sweeping down to the nose's lower corner, the navy over the cab sides and noses |
 | `photo-193-205-regiojet.jpg` | https://commons.wikimedia.org/wiki/File:193_205_Vectron_RegioJet.jpg | Rainerhaufe | CC BY-SA 4.0 | the RegioJet livery (193 205, Praha-Smichov, 16 December 2017): the yellow, the white cab cap, the black windscreen surround and stripes; the three-quarter shape |
 | `photo-193-574-cd-white.jpg` | https://commons.wikimedia.org/wiki/File:%C4%8CD_193_574-1_in_Berlin_Hauptbahnhof,_2024_(01).jpg | Bahnfrend | CC BY-SA 4.0 | the white RSL unit 193 574-1 in CD service (Berlin Hbf, 4 August 2024): the plain white livery, the V lamp grille, the pantographs folded |
 | `photo-193-227-regiojet-cab-side.jpg` | https://commons.wikimedia.org/wiki/File:193_227_ELL_in_Regiojet_livery_Praha-Smichov_2017-05-17_1.jpg | PetrS. | CC BY-SA 4.0 | the cab side: the corner, the cab door, its window and handrails, the frame and steps |

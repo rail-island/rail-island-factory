@@ -63,6 +63,19 @@ function cabSidePaint(name: string, mat: string, y0: number, y1: number, back: (
   return { kind: "paint", name, x: [Math.min(...xs), Math.max(...xs)], y: [y0, y1], poly, mat, mirror: true, layer };
 }
 
+/**
+ * A paint edge across the cab section, given top to bottom as (x, y) points: the colour from the edge
+ * forward to the side's front edge, one convex piece per segment (cabSidePaint), named `<name> <i>`.
+ */
+function cabSweep(name: string, mat: string, edge: ReadonlyArray<readonly [number, number]>, layer: number): SideItem[] {
+  const out: SideItem[] = [];
+  for (let i = 0; i + 1 < edge.length; i++) {
+    const [[xa, ya], [xb, yb]] = [edge[i + 1]!, edge[i]!];
+    out.push(cabSidePaint(`${name} ${i + 1}`, mat, ya, yb, (y) => xa + ((xb - xa) * (y - ya)) / (yb - ya), layer));
+  }
+  return out;
+}
+
 /** The lamp grille: five stripes either side of the V in the middle of the lower nose. */
 function vGrille(mat: string): EndItem[] {
   const items: EndItem[] = [];
@@ -113,31 +126,29 @@ const EMBLEM_W_EC = 0.34 * ((us: number[]) => Math.max(...us) - Math.min(...us))
 const EC_WORD_W = runsWidth([["\u010Cesk\u00E9 dr\u00E1hy", "navy"]], 0.17);
 
 export const VECTRON_LIVERIES = {
-  // 193 298 (photo-193-298-cd-eurocity.jpg, photo-193-295-cd-eurocity-side.jpg): light blue along the
-  // lower half over the dark grey frame, white above to the roof; the navy cab sections, their rear
-  // edge sloping forward to the nose's foot below and reaching back over the cab door along the cant;
-  // the navy nose with white grille stripes and the white emblem over a light blue foot; the navy
-  // emblem and "Ceske drahy" behind the reader's left cab door (the cities, their skylines and the
-  // slogan are left out)
+  // 193 298 (photo-193-298-cd-eurocity.jpg; photo-193-295-cd-eurocity-side.jpg, photo-193-293-cd-eurocity.jpg):
+  // three bands the whole length over the dark grey frame - light blue below, the white strip, navy
+  // along the cant - the white strip narrowing at each cab and sweeping down forward to the nose's
+  // lower corner, the navy widening over the cab side above it and over the nose; white grille
+  // stripes and emblem on the navy nose over a light blue foot; the navy emblem and "Ceske drahy"
+  // on the white behind the reader's left cab door (the cities, skylines and slogan are left out)
   cdEurocity: {
     title: "CD Eurocity",
     numberSource: "photo-193-298-cd-eurocity.jpg (91 80 6193 298-7 D-ELOC)",
     number: runningNumber("193", "298"),
     palette: { navy: c("#1f3d8f"), skyBlue: c("#2f9be3"), white: c("#eef0f2"), plate: c("#1f3d8f") },
-    side: [FRAME, [1.42, 2.6, "skyBlue"], [2.6, ROOF, "white"]],
+    side: [FRAME, [1.42, 2.55, "skyBlue"], [2.55, 3.5, "white"], [3.5, ROOF, "navy"]],
     end: [FRAME, [1.42, 1.52, "skyBlue"], [1.52, ROOF, "navy"]],
     sidePaint: [
-      // the navy cab section in three convex pieces: the foot narrowing to the nose's corner, the
-      // cab side ahead of the door (the white sweep between them and the door is the side's white),
-      // the cant reaching back over the door
-      cabSidePaint("cab foot", "navy", 1.75, 2.6, (y) => 8.2 - (0.9 * (y - 1.75)) / 0.85),
-      cabSidePaint("cab", "navy", 2.6, 3.5, (y) => 7.3 - (0.25 * (y - 2.6)) / 0.9),
-      cabSidePaint("cab cant", "navy", 3.5, ROOF, () => 5.3),
+      // the white strip's lower edge curving down to the nose's corner (over the light blue) and the
+      // navy's edge above it, each a chain of convex pieces from the edge forward to the corner
+      ...cabSweep("cab white", "white", [[6.6, 2.55], [7.3, 2.25], [7.8, 1.95], [8.28, 1.6]], 1),
+      ...cabSweep("cab navy", "navy", [[7.15, 3.5], [7.3, 2.8], [7.65, 2.3], [8.2, 1.95]], 2),
     ],
     endPaint: [],
     grille: "white",
-    emblem: { end: true, side: true, mat: "white", sideMat: "navy", sideAt: { u: -5.85, v: 2.95, h: 0.34 } },
-    wordmark: { runs: [["\u010Cesk\u00E9 dr\u00E1hy", "navy"]], side: { h: 0.17, v: 3.02, u: -5.85 + EMBLEM_W_EC + 0.1 + EC_WORD_W / 2 } },
+    emblem: { end: true, side: true, mat: "white", sideMat: "navy", sideAt: { u: -5.85, v: 2.85, h: 0.34 } },
+    wordmark: { runs: [["\u010Cesk\u00E9 dr\u00E1hy", "navy"]], side: { h: 0.17, v: 2.92, u: -5.85 + EMBLEM_W_EC + 0.1 + EC_WORD_W / 2 } },
   },
   // 193 205 (photo-193-205-regiojet.jpg): golden yellow, the white cap over the windscreens and the
   // cab roofs, the black windscreen surround and stripes; "|| REGIO" in red and "JET" in navy
