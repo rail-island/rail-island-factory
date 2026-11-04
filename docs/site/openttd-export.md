@@ -275,9 +275,20 @@ their local ids, so both stay fixed:
 | 3000..3FFF | an export-list entry that is no preset (any other selection) | the hash of its model id, sorted values and part index (`partKey`), placed in sorted key order with linear probing (`assignIds`) |
 
 Above OpenTTD's original vehicles, below the 14 bits an articulated part's id
-has. A preset's block holds 16 ids (`PRESET_BLOCK`, a car of up to 128 m), a
-formation's 32 (`FORMATION_BLOCK`, OpenTTD's part cap); the parts take the
-block's ids in order, the head first, and a vehicle needing more refuses to export.
+has. Every OpenTTD part needs its own id, and a single car longer than 8 m is
+already several parts (a 26.8 m coach is 4), so each preset and formation
+reserves a **block** of consecutive ids, its parts taking them in order, the head
+first:
+
+- a block's size is fixed when its ids are first assigned: **twice the parts** its
+  built cars measure, at least 4 (`MIN_BLOCK`), at most 32 (`blockSizeFor`) - a
+  locomotive of 3 parts reserves 6, a coach of 4 parts 8, an 8-car formation 32 -
+  so a model may grow a little without its ids moving;
+- the 314 blocks assigned on 4 November 2026, before vehicles were measured, keep
+  the sizes they were given then: 16 for a preset, 32 for a formation;
+- a vehicle that outgrows its block refuses to export (a formation fails the
+  build); give the item a new key - a new name or values - so it gets a new block,
+  its old one retired.
 An export-list entry that is one of its model's presets takes that preset's block,
 so it has the same ids in the user's set as in the model's own GRF.
 
@@ -286,7 +297,8 @@ committed: `grf` (model id -> number), `vehicles` (per vehicle type, item key ->
 `{ id, size, retired? }`; a preset's key is `<model id>?<sorted values>`, a
 formation's `<model id>?formation=<name>`) and `aliases` (a renamed item's new key
 -> its old key). `pnpm openttd:ids` gives every new model, preset and formation the
-next free number and block; ids are only ever appended:
+next free number and block, measuring only the new items (building their cars);
+ids are only ever appended:
 
 - a key no longer exported stays, marked `retired`, and its ids are never given
   again; exported again, it is revived with them;
@@ -297,9 +309,10 @@ next free number and block; ids are only ever appended:
   to date.
 
 The catalog record's block carries a model's ids (`ids`: its GRF number and each
-preset's and formation's first id, in their order). In November 2026 the 119
-models used 251 train blocks (0100..122F of the trains' 0100..2FFF), 32 road, 4
-ship and 27 aircraft blocks.
+preset's and formation's block, `{ id, size }`, in their order). In November 2026
+the 119 models used 251 train blocks (4,400 ids, 0100..122F of the trains' 12,032
+in 0100..2FFF), 32 road, 4 ship and 27 aircraft blocks; at a measured block's
+usual 6 to 8 ids the trains' remaining 7,632 hold about a thousand more presets.
 
 ## The OpenTTD view
 

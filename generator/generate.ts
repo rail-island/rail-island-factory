@@ -310,7 +310,8 @@ export function checkOpenttdDesign(design: ProceduralDesign): void {
     throw new Error(`${design.id}: generator/openttdIds.json gives it no OpenTTD ids, or a retired one - run \`pnpm openttd:ids\` and commit the file (docs/site/openttd-export.md)`);
   }
   const lengths = new Map<string, number>();
-  for (const formation of design.openttd?.formations ?? []) {
+  const ids = feature ? idsOf(design, feature) : null;
+  for (const [i, formation] of (design.openttd?.formations ?? []).entries()) {
     let parts = 0;
     for (const car of formation.cars) {
       const key = JSON.stringify(Object.entries(car.params).sort());
@@ -319,6 +320,10 @@ export function checkOpenttdDesign(design: ProceduralDesign): void {
         lengths.set(key, stats.max[0] - stats.min[0]);
       }
       parts += openttdPartCount(lengths.get(key)!);
+    }
+    const block = ids?.formations[i];
+    if (block && parts > block.size) {
+      throw new Error(`${design.id}: the formation "${formation.name}" has ${parts} OpenTTD parts, over the ${block.size} ids generator/openttdIds.json reserves for it: give it a new name (and a new block) (docs/site/openttd-export.md, "Ids")`);
     }
     if (parts > OPENTTD_MAX_PARTS) {
       throw new Error(`${design.id}: the formation "${formation.name}" has ${parts} OpenTTD parts, over the cap of ${OPENTTD_MAX_PARTS} (docs/site/openttd-export.md)`);

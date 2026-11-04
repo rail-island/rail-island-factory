@@ -94,6 +94,15 @@ Area: catalog site (model page stage bar, OpenTTD view, GRF encoder and export r
    test/openttdExport.test.ts. All ids changed once with this: GRFs downloaded
    before it do not match the new ones (see Known problems).
 
+3. Size each new id block to the vehicle, for a much larger model database. A new
+   preset or formation now reserves twice the parts its built cars measure (at
+   least 4, at most 32; `blockSizeFor`) instead of 16 or 32; `pnpm openttd:ids`
+   measures only new items, and the 314 existing blocks keep their sizes, so no id
+   changed. The catalog's `ids` carry each block's size, the export refuses a
+   vehicle that outgrows its block, and the build a formation that does. The
+   trains' remaining ids now hold about a thousand more presets instead of about
+   480. Tests: test/openttdIds.test.ts.
+
 ## How to test
 
 **Automated coverage.** No E2E framework exists in the repository (AGENTS.md asks
