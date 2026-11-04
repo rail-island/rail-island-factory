@@ -81,7 +81,8 @@ function vGrille(mat: string): EndItem[] {
   const items: EndItem[] = [];
   for (let i = 0; i < 5; i++) {
     const y0 = 1.56 + i * 0.12, y1 = y0 + 0.065;
-    const inner = (y: number) => 0.16 + 0.42 * (y - 1.5) / 0.65;
+    // the navy wedge between the two halves: 0.2 m wide at the foot, 0.5 m at the top (193 289's photographs)
+    const inner = (y: number) => 0.1 + 0.15 * (y - 1.56) / 0.545;
     for (const s of [1, -1]) {
       const pts: Array<[number, number]> = [[inner(y0), y0], [0.98, y0], [0.98, y1], [inner(y1), y1]];
       const poly: Ring = s > 0 ? pts : pts.map(([z, y]) => [-z, y] as [number, number]).reverse();
@@ -111,10 +112,13 @@ interface Livery {
   grille: string;
   /** The CD emblem: on the ends, on the sides, its material. */
   /**
-   * The CD emblem: on the ends, on the sides, its material; `sideAt` places the side emblem at the
+   * The CD emblem: on the ends, on the sides, its material; `endU` centres the nose emblem at that
+   * offset from the middle (0.5 m by default); `sideAt` places the side emblem at the
    * reader's u (the right side's x; mirrored on the left) and height v, `h` high, in `sideMat`.
    */
-  emblem?: { end: boolean; side: boolean; mat: string; sideMat?: string; sideAt?: { u: number; v: number; h: number } };
+  emblem?: { end: boolean; side: boolean; mat: string; endU?: number; sideMat?: string; sideAt?: { u: number; v: number; h: number } };
+  /** The nose's number plate across z (seen from ahead, mirrored at the front); 0.15 .. 0.9 by default. */
+  endNumberZ?: readonly [number, number];
   /** The operator's lettered wordmark (letters.ts). */
   wordmark?: Wordmark;
 }
@@ -128,10 +132,10 @@ const EC_WORD_W = runsWidth([["\u010Cesk\u00E9 dr\u00E1hy", "navy"]], 0.17);
 export const VECTRON_LIVERIES = {
   // 193 298 (photo-193-298-cd-eurocity.jpg; photo-193-289-cd-eurocity-side.jpg, photo-193-295-cd-eurocity-side.jpg, photo-193-293-cd-eurocity.jpg):
   // three bands the whole length over the dark grey frame - light blue below, the white strip, navy
-  // along the cant - the white strip turning down in front of each cab door and running out into
-  // the navy two thirds of the way down, the navy over the cab side ahead of it and over the nose,
-  // the light blue carried forward under the lamps into the nose's light blue foot; white grille
-  // stripes and emblem on the navy nose; the navy emblem and "Ceske drahy"
+  // along the cant - the white strip turning down forward over each cab side, of an even width, and
+  // running round the corner into the nose's white at the lamps (there hidden by the grille's navy
+  // field and the lamps), the navy over the cab side above it and over the nose, the light blue
+  // below it into the nose's light blue foot; white grille stripes and emblem on the navy nose; the navy emblem and "Ceske drahy"
   // on the white behind the reader's left cab door (the cities, skylines and slogan are left out)
   cdEurocity: {
     title: "CD Eurocity",
@@ -139,16 +143,22 @@ export const VECTRON_LIVERIES = {
     number: runningNumber("193", "298"),
     palette: { navy: c("#1f3d8f"), skyBlue: c("#2f9be3"), white: c("#eef0f2"), plate: c("#1f3d8f") },
     side: [FRAME, [1.42, 2.55, "skyBlue"], [2.55, 3.5, "white"], [3.5, ROOF, "navy"]],
-    end: [FRAME, [1.42, 1.52, "skyBlue"], [1.52, ROOF, "navy"]],
+    // the white strip carried across the nose at the lamps' height, hidden there by the navy field of
+    // the grille and the lamps but for its ends round the corners
+    end: [FRAME, [1.42, 1.58, "skyBlue"], [1.58, 2.15, "white"], [2.15, ROOF, "navy"]],
     sidePaint: [
       // the white strip's lower edge curving down to the nose's corner (over the light blue) and the
       // navy's edge above it, each a chain of convex pieces from the edge forward to the corner
-      ...cabSweep("cab white", "white", [[6.4, 2.55], [6.9, 2.42], [7.4, 2.2], [7.8, 1.95]], 1),
-      ...cabSweep("cab navy", "navy", [[7.35, 3.5], [7.4, 2.9], [7.52, 2.4], [7.72, 2.08], [8.0, 1.8], [8.28, 1.62]], 2),
+      // the white strip of an even width turning down forward over the cab side to the corner, where it
+      // meets the nose's white at 1.58 - 2.15 m: its lower edge over the light blue, the navy's edge above
+      ...cabSweep("cab white", "white", [[6.2, 2.55], [6.85, 2.38], [7.45, 2.08], [7.92, 1.76], [8.28, 1.58]], 1),
+      ...cabSweep("cab navy", "navy", [[7.3, 3.5], [7.4, 3.0], [7.62, 2.62], [7.95, 2.33], [8.27, 2.15]], 2),
     ],
-    endPaint: [],
+    // the grille's navy field over the nose's white, the stripes on it
+    endPaint: [{ kind: "paint", name: "grille field", z: [-0.98, 0.98], y: [1.54, 2.17], mat: "navy" }],
     grille: "white",
-    emblem: { end: true, side: true, mat: "white", sideMat: "navy", sideAt: { u: -5.85, v: 2.85, h: 0.34 } },
+    endNumberZ: [0.4, 1.12],
+    emblem: { end: true, side: true, mat: "white", endU: 0, sideMat: "navy", sideAt: { u: -5.85, v: 2.85, h: 0.34 } },
     wordmark: { runs: [["\u010Cesk\u00E9 dr\u00E1hy", "navy"]], side: { h: 0.17, v: 2.92, u: -5.85 + EMBLEM_W_EC + 0.1 + EC_WORD_W / 2 } },
   },
   // 193 205 (photo-193-205-regiojet.jpg): golden yellow, the white cap over the windscreens and the
@@ -237,7 +247,7 @@ function spec(l: Livery): LocoSpec {
       { kind: "lamp", name: "tail lamp left", z: [1.06, 1.2], y: [1.98, 2.12], r: 0.05, mat: "lampRed" },
       { kind: "lamp", name: "tail lamp right", z: [-1.2, -1.06], y: [1.98, 2.12], r: 0.05, mat: "lampRed" },
       // the number right of the middle seen from ahead (z is mirrored at the front)
-      { kind: "plate", name: "number", z: [0.15, 0.9], y: [2.2, 2.34] },
+      { kind: "plate", name: "number", z: [...(l.endNumberZ ?? [0.15, 0.9])] as [number, number], y: [2.2, 2.34] },
     ],
     // the roof: the equipment covers between the collectors and the main switch's hood
     roofItems: [
@@ -264,7 +274,7 @@ function emblems(m: MeshBuilder, s: LocoSpec, l: Livery): void {
       for (const end of [-1, 1])
         m.scope(end > 0 ? "front" : "rear", () => {
           // seen from ahead the reader's right is -z at the front and +z at the rear
-          const h = 0.24, w = EMBLEM_W * h, uc = 0.5;
+          const h = 0.24, w = EMBLEM_W * h, uc = e.endU ?? 0.5;
           const at = onEnd(sp, end), n: Vec3 = [end, 0, 0];
           const z0 = end > 0 ? uc + w / 2 : -uc - w / 2;
           m.facets(e.mat, emblem(z0, 2.15, h, end > 0).map(([u, v]) => at(u, v, 0.008)), n);
