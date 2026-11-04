@@ -84,6 +84,14 @@ describe("Siemens Vectron", () => {
     expect(white.some((n) => n.id.startsWith("emblems/right/"))).toBe(true);
     expect(white.some((n) => n.id.startsWith("emblems/front/"))).toBe(false);
     expect(rj.some((n) => n.id.startsWith("emblems/"))).toBe(false);
+    // the Eurocity's nose emblem in the middle over the V, its number right of it
+    const nose = ec.filter((n) => n.id.startsWith("emblems/front/") && n.min);
+    const zs = [Math.min(...nose.map((n) => n.min![2])), Math.max(...nose.map((n) => n.max![2]))];
+    expect(Math.abs(zs[0]! + zs[1]!)).toBeLessThan(0.02);
+    // the V between the two halves of the grille: 0.2 m wide at the foot, 0.5 m at the top
+    const stripeZ = (k: number) => ec.filter((n) => n.id.startsWith(`front-cab/grille-stripe-left-${k}/`) && n.min).map((n) => Math.min(Math.abs(n.min![2]), Math.abs(n.max![2])));
+    expect(Math.min(...stripeZ(1))).toBeCloseTo(0.1, 1);
+    expect(Math.min(...stripeZ(5))).toBeLessThan(0.27);
     // ten stripes a nose, white on the navy, black on the yellow
     const stripes = (ns: LeafNode[]) => ns.filter((n) => n.id.startsWith("front-cab/grille-stripe-"));
     expect(new Set(stripes(ec).map((n) => n.id.split("/")[1])).size).toBe(10);
@@ -102,6 +110,12 @@ describe("Siemens Vectron", () => {
     for (const sd of ["side-left", "side-right"]) {
       const bands = ec.filter((n) => n.id.startsWith(`body/shell/${sd}/band-`)).map((n) => [n.material, n.min![1], n.max![1]]);
       expect(bands, sd).toEqual([["frame", 1.3, 1.42], ["skyBlue", 1.42, 2.55], ["white", 2.55, 3.5], ["navy", 3.5, 4]]);
+    }
+    // the white strip runs round the corners into the nose's white at the lamps (1.58 - 2.15 m), under the grille's navy field
+    for (const end of ["front", "rear"]) {
+      const bands = ec.filter((n) => n.id.startsWith(`body/shell/${end}/band-`)).map((n) => [n.material, n.min![1], n.max![1]]);
+      expect(bands, end).toEqual([["frame", 1.3, 1.42], ["skyBlue", 1.42, 1.58], ["white", 1.58, 2.15], ["navy", 2.15, 4]]);
+      expect(ec.some((n) => n.id.startsWith(`${end}-cab/grille-field/`) && n.material === "navy"), end).toBe(true);
     }
     // the white strip's sweep down to the nose's corner lies under the navy's (a later layer lies further out)
     const sweep = (name: string) => ec.filter((n) => n.id.startsWith(`sides/right-side/${name}-front/`));

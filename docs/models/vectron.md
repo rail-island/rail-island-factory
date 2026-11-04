@@ -14,7 +14,7 @@ leased from ELL and RSL; the paint scheme is the `livery` enum:
 
 | `livery` | title | unit | look |
 |---|---|---|---|
-| `cdEurocity` (default) | CD Eurocity | 193 298-7 (ELL, 2017 on) | three bands the whole length over the dark grey frame - light blue to 2.55 m, the white strip to 3.5 m, navy along the cant - the white strip turning down in front of each cab door and running out into the navy two thirds of the way down, the navy over the cab side ahead of it and over the nose, the light blue carried forward under the lamps into the nose's light blue foot; white stripes and the white emblem on the navy nose; the navy emblem and "České dráhy" behind the reader's left cab door |
+| `cdEurocity` (default) | CD Eurocity | 193 298-7 (ELL, 2017 on) | three bands the whole length over the dark grey frame - light blue to 2.55 m, the white strip to 3.5 m, navy along the cant - the white strip turning down forward over each cab side, of an even width, and running round the corner into the nose's white at the lamps (1.58 - 2.15 m, hidden there by the grille's navy field and the lamps), the navy over the cab side above it and over the nose, the light blue below it into the nose's light blue foot; white stripes and the white emblem on the navy nose; the navy emblem and "České dráhy" behind the reader's left cab door |
 | `regiojet` | RegioJet | 193 205-2 (ELL, 2015-2024) | golden yellow, the white cap over the windscreens and the cab roofs, the black windscreen surround and stripes, "\|\| REGIO" red and "JET" navy behind the cab door and small under the windscreen |
 | `cdWhite` | CD white | 193 574-1 (RSL, 2024) | white, the grey frame, the black windscreen surround and stripes, the blue CD emblem on the sides |
 
@@ -44,7 +44,7 @@ of profile tables measured on the reference photos:
   narrows toward the roof (the corner takes the end's paint);
 - **ends**: the windscreen of two panes with wipers, the top headlight, the
   headlights and tail lamps in the lower corners, the V lamp grille (five
-  stripes either side of a V widening upward, `vGrille`), the number plate;
+  stripes either side of a navy V widening upward from 0.2 m at its foot to 0.5 m at the top, `vGrille`, as 193 289's photographs show), the number plate (on the Eurocity right of the nose emblem, which sits in the middle over the V);
 - **sides**: a cab door with its window, handrails and steps behind each
   corner, louvred grilles along the cant, the side number plate;
 - **running gear and roof**: the kit's two-axle bogies at 4.75 m, the deep
