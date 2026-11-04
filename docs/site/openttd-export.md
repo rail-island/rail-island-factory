@@ -266,9 +266,15 @@ its vehicles.
 ## The OpenTTD view
 
 The stage's **OpenTTD** switch (`src/OpenttdPreview.tsx`, loaded with three only
-when chosen) draws the variant on screen - or, with the Vehicle picker, one of the
-model's formations - as the GRF would draw it, into a scene prerendered in OpenTTD
-(below):
+when chosen) draws one vehicle of the model's one-click pack as the GRF would draw
+it, into a scene prerendered in OpenTTD (below). Its **Vehicle in the GRF** list
+names exactly what the downloaded GRF holds, by its OpenTTD name - every preset,
+the default first, then every formation (`oneClickItems`) - and nothing else: a
+selection that is no preset (an individual-number livery) can reach a GRF only
+through the export list, so the view never draws it. It opens on the preset the
+page's parameters select (`oneClickIndex`), the default when they select none, and
+follows the parameters when they change to another preset; a model whose pack
+holds one vehicle shows no list.
 
 1. the sprites come from the export's own renderer (`exportRun.ts`
    `previewSprites`): the same parts, views and zoom filter, only the directions
