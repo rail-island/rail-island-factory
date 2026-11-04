@@ -179,11 +179,12 @@ export function ModelDetail(props: {
                   classList={{ "factory-stage__download--primary": stage() === "openttd" }}
                   onClick={() => void downloadGrf()}
                   title="A GRF of this model's preset variants and formations"
+                  aria-label="Download for OpenTTD"
                 >
                   <svg class="factory-stage__icon" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M12 4v11m0 0-5-5m5 5 5-5M5 19h14" />
                   </svg>
-                  Download for OpenTTD
+                  <span><span class="factory-stage__long">Download for </span>OpenTTD</span>
                 </button>
               }
             >

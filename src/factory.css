@@ -1298,6 +1298,22 @@ body {
   stroke-linejoin: round;
 }
 
+/* a phone: the download shortens to its icon and "OpenTTD" (its aria-label
+   keeps the whole name) and the switch tightens, so the bar stays one row */
+@media (max-width: 599px) {
+  .factory-stage__long {
+    display: none;
+  }
+
+  .factory-stage__download {
+    padding: 8px 12px;
+  }
+
+  .factory-segmented__item {
+    padding: 6px 12px;
+  }
+}
+
 .factory-stage__progress {
   display: inline-flex;
   align-items: center;

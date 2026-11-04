@@ -54,7 +54,8 @@ empty list. Storage that throws (a private window) only loses persistence.
 A vehicle OpenTTD can hold gets a bar over its model page's stage: a **3D model /
 OpenTTD** switch (a segmented control on a solid surface, the view on screen
 filled; the OpenTTD view, below) and **Download for OpenTTD**, a solid button
-that becomes the filled primary action while the OpenTTD view is on screen. The switch is in the
+that becomes the filled primary action while the OpenTTD view is on screen
+(on a phone, under 600 px, it shortens to its icon and "OpenTTD"). The switch is in the
 URL (`?stage=openttd`, [catalog-site.md](catalog-site.md)), so a link opens the
 OpenTTD view directly. The
 button builds, in the browser and at once, a GRF of that one model
