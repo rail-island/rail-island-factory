@@ -14,7 +14,7 @@ leased from ELL and RSL; the paint scheme is the `livery` enum:
 
 | `livery` | title | unit | look |
 |---|---|---|---|
-| `cdEurocity` (default) | CD Eurocity | 193 298-7 (ELL, 2017 on) | three bands the whole length over the dark grey frame - light blue to 2.55 m, the white strip to 3.5 m, navy along the cant - the white strip narrowing at each cab and sweeping down forward to the nose's lower corner, the navy widening over the cab side above it and over the nose; white stripes and the white emblem on the navy nose over a light blue foot; the navy emblem and "České dráhy" behind the reader's left cab door |
+| `cdEurocity` (default) | CD Eurocity | 193 298-7 (ELL, 2017 on) | three bands the whole length over the dark grey frame - light blue to 2.55 m, the white strip to 3.5 m, navy along the cant - the white strip turning down in front of each cab door and running out into the navy two thirds of the way down, the navy over the cab side ahead of it and over the nose, the light blue carried forward under the lamps into the nose's light blue foot; white stripes and the white emblem on the navy nose; the navy emblem and "České dráhy" behind the reader's left cab door |
 | `regiojet` | RegioJet | 193 205-2 (ELL, 2015-2024) | golden yellow, the white cap over the windscreens and the cab roofs, the black windscreen surround and stripes, "\|\| REGIO" red and "JET" navy behind the cab door and small under the windscreen |
 | `cdWhite` | CD white | 193 574-1 (RSL, 2024) | white, the grey frame, the black windscreen surround and stripes, the blue CD emblem on the sides |
 
@@ -75,7 +75,7 @@ lettered ([lettering.md](lettering.md)) after the kit's build in the same way,
   factory's stroke font rather than the operators' own typefaces.
 - The windscreen does not wrap round the corners, and the side windows of the
   real cab corners are left out; the nose's lamp housings are plain lamps.
-- The Eurocity's curved cab edges are chains of three straight pieces; the promotion artwork of some
+- The Eurocity's curved cab edges are chains of three to five straight pieces; the promotion artwork of some
   units (RegioJet's summer advertising on 193 227, the RSL units' service
   advertising) is not modelled.
 - The new CD class 384 (230 km/h, delivered from 2025) carries corporate decals
