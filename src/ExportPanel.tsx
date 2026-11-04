@@ -13,18 +13,7 @@ import { removeEntry, variantLabel, type ExportState } from "./exportList";
 import type { ExportFormat, ExportProgress } from "./exportRun";
 import { openttdFeature } from "./openttd/properties";
 import { VariantThumb } from "./VariantThumb";
-
-/** Hand a finished file to the browser as a download. */
-function download(blob: Blob, fileName: string): void {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = fileName;
-  document.body.append(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
-}
+import { download } from "./download";
 
 export function ExportPanel(props: {
   rows: readonly Row[];

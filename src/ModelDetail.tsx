@@ -14,7 +14,10 @@
 //
 // "Add to export" puts the model, at the parameter values on screen, on the export
 // list (exportList.ts, the app bar's Export panel); the same model may be listed
-// once per variant.
+// once per variant. A vehicle OpenTTD can hold also gets, over the stage, a
+// "3D / OpenTTD" switch (OpenttdPreview: the variant drawn into a prerendered
+// OpenTTD scene) and "Download for OpenTTD", a GRF of its preset variants and
+// formations in one click (docs/site/openttd-export.md).
 //
 // A model with sounds (a vehicle's horn and engine, a building's bell) gets a
 // Sounds block (SoundsPanel) that plays the variant on screen's.
@@ -35,9 +38,14 @@ import { FileCell } from "./ModelTable";
 import { VariantThumb } from "./VariantThumb";
 import { SourceTreePanel } from "./SourceTreePanel";
 import { SoundsPanel } from "./SoundsPanel";
+import { download } from "./download";
+import type { ExportProgress } from "./exportRun";
+import { openttdFeature } from "./openttd/properties";
 
 // three and OrbitControls arrive only once somebody opens a model.
 const ModelViewer = lazy(() => import("./ModelViewer").then((m) => ({ default: m.ModelViewer })));
+// the OpenTTD view and its sprite renderer, only once somebody switches to it
+const OpenttdPreview = lazy(() => import("./OpenttdPreview").then((m) => ({ default: m.OpenttdPreview })));
 
 async function loadTree(id: string): Promise<SourceTree> {
   const res = await fetch(`/tree/${encodeURIComponent(id)}.json`);
@@ -81,6 +89,31 @@ export function ModelDetail(props: {
   const [pose, setPose] = createSignal<PoseValues>({});
   createEffect(on(() => props.record.id, () => setPose({})));
   const posed = createMemo(() => (controls().length ? poseOf(props.record, pose()) : null));
+  // the stage: the 3D viewer or the OpenTTD view (OpenttdPreview), for a vehicle OpenTTD can hold
+  const exportable = createMemo(() => openttdFeature(props.record) !== null);
+  const [stage, setStage] = createSignal<"3d" | "openttd">("3d");
+  createEffect(on(exportable, (ok) => !ok && setStage("3d")));
+  // the one-click download (exportRun.ts exportModelGrf): the model's presets and formations
+  const [grfProgress, setGrfProgress] = createSignal<ExportProgress | null>(null);
+  const [grfError, setGrfError] = createSignal<string | null>(null);
+  let grfAbort: AbortController | null = null;
+  onCleanup(() => grfAbort?.abort());
+  const downloadGrf = async () => {
+    setGrfError(null);
+    grfAbort = new AbortController();
+    const signal = grfAbort.signal;
+    const record = props.record;
+    setGrfProgress({ done: 0, total: 1, label: "Loading the exporter" });
+    try {
+      const { exportModelGrf } = await import("./exportRun");
+      const result = await exportModelGrf(record, setGrfProgress, signal);
+      download(result.blob, result.fileName);
+    } catch (e) {
+      if (!signal.aborted) setGrfError((e as Error).message);
+    } finally {
+      setGrfProgress(null);
+    }
+  };
   const [tree] = createResource(() => (props.tab === "source" ? props.record.id : false), loadTree);
   // Only this model's tree: after a step the previous one lingers until the next lands.
   const index = createMemo(() => {
@@ -112,17 +145,52 @@ export function ModelDetail(props: {
   return (
     <section class="factory-detail" aria-label={props.record.title}>
       <div class="factory-detail__stage">
+        <Show when={exportable()}>
+          <div class="factory-stage__bar" role="group" aria-label="View">
+            <button type="button" class="factory-tab" classList={{ "factory-tab--active": stage() === "3d" }} aria-pressed={stage() === "3d"} onClick={() => setStage("3d")}>
+              3D
+            </button>
+            <button type="button" class="factory-tab" classList={{ "factory-tab--active": stage() === "openttd" }} aria-pressed={stage() === "openttd"} onClick={() => setStage("openttd")}>
+              OpenTTD
+            </button>
+            <Show
+              when={grfProgress()}
+              fallback={
+                <button type="button" class="factory-btn" onClick={() => void downloadGrf()} title="A GRF of this model's preset variants and formations">
+                  Download for OpenTTD
+                </button>
+              }
+            >
+              {(p) => (
+                <span class="factory-stage__progress" aria-live="polite">
+                  <progress max={p().total || 1} value={p().done} /> {p().label}
+                  <button type="button" class="factory-btn" onClick={() => grfAbort?.abort()}>Cancel</button>
+                </span>
+              )}
+            </Show>
+          </div>
+        </Show>
+        <Show when={grfError()}>
+          <p class="factory-error factory-stage__error">{grfError()}</p>
+        </Show>
         <Suspense fallback={<div class="factory-viewer factory-viewer--pending" />}>
-          <ModelViewer
-            record={props.record}
-            lod={lod()}
-            onTriangles={setTriangles}
-            params={values()}
-            tree={props.tab === "source" && atDefaults() && !lod() ? index() : null}
-            selected={props.node}
-            onPick={props.onNode}
-            pose={posed()}
-          />
+          <Show
+            when={stage() === "openttd"}
+            fallback={
+              <ModelViewer
+                record={props.record}
+                lod={lod()}
+                onTriangles={setTriangles}
+                params={values()}
+                tree={props.tab === "source" && atDefaults() && !lod() ? index() : null}
+                selected={props.node}
+                onPick={props.onNode}
+                pose={posed()}
+              />
+            }
+          >
+            <OpenttdPreview record={props.record} params={nonDefaultParams(props.record, values())} />
+          </Show>
         </Suspense>
       </div>
       <div class="factory-detail__specs">

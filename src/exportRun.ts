@@ -4,15 +4,18 @@
 // GLTFExporter). Lazily imported by the export panel, so three and the exporters
 // load only when somebody exports.
 
-import { Box3, type Object3D } from "three";
+import { Box3, Group, type Object3D } from "three";
 import { GLTFExporter } from "three/examples/jsm/exporters/GLTFExporter.js";
 import type { CatalogRecord } from "./catalogQuery";
 import { glbFileName, safeName, type ExportEntry } from "./exportList";
 import { loadModel } from "./modelModule";
-import { encodeGrf, type GrfPart, type GrfVehicle } from "./openttd/grf";
+import { encodeGrf, GRF_ZOOM, type GrfImage, type GrfPart, type GrfVehicle } from "./openttd/grf";
 import { zoomImages } from "./openttd/pixels";
 import { spriteViews, type ModelBox } from "./openttd/projection";
-import { assignIds, grfIdOf, openttdFeature, partKey, partLengths, resolveVehicle, type OpenttdFeature } from "./openttd/properties";
+import {
+  assignIds, grfIdOf, MAX_PARTS, oneClickItems, openttdFeature, partKey, partLengths, resolveItem, shares,
+  type ExportCar, type ExportItem, type OpenttdFeature,
+} from "./openttd/properties";
 import { SpriteRenderer } from "./openttd/spriteRenderer";
 import { zipStore } from "./zip";
 
@@ -82,13 +85,28 @@ export async function exportZip(
   return { fileName: `${safeName(name)}.zip`, blob: new Blob([zipStore(files)], { type: "application/zip" }), skipped };
 }
 
-/** One vehicle the GRF holds, measured: its record, values, parts and box. */
-interface Planned {
-  record: CatalogRecord;
-  entry: ExportEntry;
-  feature: OpenttdFeature;
-  lengths: number[];
+/** One car of a vehicle the GRF holds, measured: its values, box and parts. */
+interface PlannedCar {
+  car: ExportCar;
   box: ModelBox;
+  lengths: number[];
+}
+
+/** One vehicle the GRF holds, measured: its item, type and cars. */
+interface Planned {
+  item: ExportItem;
+  feature: OpenttdFeature;
+  cars: PlannedCar[];
+}
+
+/** A car's model, built at its values; a turned car is wrapped and turned about its vertical axis. */
+async function carModel(r: CatalogRecord, car: ExportCar): Promise<{ object: Object3D; dispose: () => void }> {
+  const { object } = await loadModel(r, car.params);
+  if (!car.turned) return { object, dispose: () => disposeModel(object) };
+  const turned = new Group();
+  turned.rotation.y = Math.PI;
+  turned.add(object);
+  return { object: turned, dispose: () => disposeModel(object) };
 }
 
 /** An OpenTTD GRF of every vehicle entry; buildings and cable cars are skipped. */
@@ -97,62 +115,149 @@ export async function exportGrf(
   onProgress: (p: ExportProgress) => void, signal: AbortSignal,
 ): Promise<ExportResult> {
   const skipped: string[] = [];
-  const planned: Planned[] = [];
-  // First pass: which entries are vehicles, and how many parts each becomes.
+  const items: ExportItem[] = [];
   for (const e of entries) {
     const r = records.get(e.id);
     if (!r) {
       skipped.push(`${e.id}: no longer in the catalog`);
       continue;
     }
-    const feature = openttdFeature(r);
-    if (!feature) {
+    if (!openttdFeature(r)) {
       skipped.push(`${r.title}: OpenTTD has no vehicle of this kind`);
       continue;
     }
-    await yieldToPage(signal);
-    const { object } = await loadModel(r, e.params);
-    const box = boxOf(object);
-    disposeModel(object);
-    planned.push({ record: r, entry: e, feature, box, lengths: partLengths(box.max[0] - box.min[0], feature) });
+    items.push({ record: r, key: { ...e.params }, cars: [{ params: { ...e.params } }] });
   }
-  if (planned.length === 0) throw new Error("The export list holds no vehicle OpenTTD can take.");
+  if (items.length === 0) throw new Error("The export list holds no vehicle OpenTTD can take.");
+  const bytes = await buildGrf(items, {
+    grfid: grfIdOf(name),
+    name,
+    description: (n) => `Rail Island Factory models (factory.railisland.com): ${n} vehicle${n === 1 ? "" : "s"}.`,
+  }, onProgress, signal);
+  return { fileName: `${safeName(name)}.grf`, blob: new Blob([bytes], { type: "application/octet-stream" }), skipped };
+}
+
+/**
+ * The one-click download of one model (docs/site/openttd-export.md): a GRF of its
+ * presets and formations, grouped under its default in OpenTTD's purchase list,
+ * named after the model, its GRF id from the model id.
+ */
+export async function exportModelGrf(
+  record: CatalogRecord, onProgress: (p: ExportProgress) => void, signal: AbortSignal,
+): Promise<ExportResult> {
+  if (!openttdFeature(record)) throw new Error(`${record.title}: OpenTTD has no vehicle of this kind`);
+  const items = oneClickItems(record);
+  const bytes = await buildGrf(items, {
+    grfid: grfIdOf(record.id),
+    name: record.title,
+    description: (n) => `${record.title} from Rail Island Factory (factory.railisland.com/#/model/${record.id}): ${n} vehicle${n === 1 ? "" : "s"}.`,
+  }, onProgress, signal);
+  return { fileName: `${safeName(record.id)}.grf`, blob: new Blob([bytes], { type: "application/octet-stream" }), skipped: [] };
+}
+
+/** Measure, draw and encode the items: the bytes of the GRF. */
+async function buildGrf(
+  items: readonly ExportItem[], meta: { grfid: Uint8Array; name: string; description: (vehicles: number) => string },
+  onProgress: (p: ExportProgress) => void, signal: AbortSignal,
+): Promise<Uint8Array<ArrayBuffer>> {
+  // First pass: every car's box, and how many parts it becomes.
+  const planned: Planned[] = [];
+  for (const item of items) {
+    const feature = openttdFeature(item.record)!;
+    const cars: PlannedCar[] = [];
+    for (const car of item.cars) {
+      await yieldToPage(signal);
+      const { object, dispose } = await carModel(item.record, car);
+      const box = boxOf(object);
+      dispose();
+      cars.push({ car, box, lengths: partLengths(box.max[0] - box.min[0], feature) });
+    }
+    const total = cars.reduce((n, c) => n + c.lengths.length, 0);
+    if (total > MAX_PARTS) throw new Error(`${item.record.title}: ${total} parts, over OpenTTD's ${MAX_PARTS}`);
+    planned.push({ item, feature, cars });
+  }
   // Local ids per vehicle type, from every part's key.
+  const keysOf = (p: Planned): string[] => {
+    const n = p.cars.reduce((k, c) => k + c.lengths.length, 0);
+    return Array.from({ length: n }, (_, i) => partKey(p.item.record.id, p.item.key, i));
+  };
   const ids = new Map<OpenttdFeature, Map<string, number>>();
   for (const f of ["train", "road", "ship", "aircraft"] as const) {
-    ids.set(f, assignIds(planned.filter((p) => p.feature === f).flatMap((p) => p.lengths.map((_, i) => partKey(p.entry.id, p.entry.params, i)))));
+    ids.set(f, assignIds(planned.filter((p) => p.feature === f).flatMap(keysOf)));
   }
   // Second pass: draw every part's 8 directions.
   const renderer = new SpriteRenderer();
   const vehicles: GrfVehicle[] = [];
   try {
     for (const [i, p] of planned.entries()) {
-      onProgress({ done: i, total: planned.length, label: p.record.title });
-      await yieldToPage(signal);
-      const { object } = await loadModel(p.record, p.entry.params);
-      SpriteRenderer.prepare(object);
-      const views = spriteViews(p.feature, p.box, p.lengths, p.record.game?.draftFrac ?? 0);
+      onProgress({ done: i, total: planned.length, label: p.item.formation ? `${p.item.record.title} (${p.item.formation})` : p.item.record.title });
+      const { vehicle, cars } = resolveItem(p.item);
       const parts: GrfPart[] = [];
-      for (const [k, dirs] of views.entries()) {
-        parts.push({
-          id: ids.get(p.feature)!.get(partKey(p.entry.id, p.entry.params, k))!,
-          length: p.lengths[k]!,
-          directions: dirs.map((view) => zoomImages(renderer.render(object, view, SUPERSAMPLE), view, SUPERSAMPLE)),
-        });
+      for (const [c, pc] of p.cars.entries()) {
+        await yieldToPage(signal);
+        const { object, dispose } = await carModel(p.item.record, pc.car);
+        SpriteRenderer.prepare(object);
+        const views = spriteViews(p.feature, pc.box, pc.lengths, p.item.record.game?.draftFrac ?? 0);
+        const carFigures = cars[c]!;
+        const split = shares(carFigures.capacity, views.length);
+        for (const [k, dirs] of views.entries()) {
+          parts.push({
+            id: ids.get(p.feature)!.get(partKey(p.item.record.id, p.item.key, parts.length))!,
+            length: pc.lengths[k]!,
+            directions: dirs.map((view) => zoomImages(renderer.render(object, view, SUPERSAMPLE), view, SUPERSAMPLE)),
+            ...(views.length > 1 || p.cars.length > 1 ? { capacity: split[k]!, cargo: carFigures.cargo, refitClasses: carFigures.refitClasses } : {}),
+            ...(c > 0 && k === 0 ? { weight: carFigures.weight } : {}),
+          });
+        }
+        dispose();
       }
-      disposeModel(object);
-      vehicles.push({ vehicle: resolveVehicle(p.record, p.entry.params), parts });
+      const parent = p.item.variantOf;
+      vehicles.push({ vehicle, parts, ...(parent !== undefined && parent !== i ? { variantOf: vehicles[parent]!.parts[0]!.id } : {}) });
     }
   } finally {
     renderer.dispose();
   }
   onProgress({ done: planned.length, total: planned.length, label: "Encoding" });
   await yieldToPage(signal);
-  const bytes = encodeGrf({
-    grfid: grfIdOf(name),
-    name,
-    description: `Rail Island Factory models (factory.railisland.com): ${vehicles.length} vehicle${vehicles.length === 1 ? "" : "s"}.`,
-    vehicles,
-  });
-  return { fileName: `${safeName(name)}.grf`, blob: new Blob([bytes], { type: "application/octet-stream" }), skipped };
+  return encodeGrf({ grfid: meta.grfid, name: meta.name, description: meta.description(vehicles.length), vehicles });
+}
+
+/** One part of a vehicle drawn for the OpenTTD preview: its eighths and, per direction asked for, its normal and 4x images. */
+export interface PreviewPart {
+  length: number;
+  images: Map<number, { "1x": GrfImage; "4x": GrfImage }>;
+}
+
+/**
+ * The sprites the GRF would hold for one item, drawn for the OpenTTD preview
+ * (OpenttdPreview.tsx): only the directions its scene's slots need, the normal
+ * and 4x images of each - the very pixels the export writes.
+ */
+export async function previewSprites(item: ExportItem, directions: readonly number[], signal: AbortSignal): Promise<PreviewPart[]> {
+  const feature = openttdFeature(item.record);
+  if (!feature) throw new Error(`${item.record.title}: OpenTTD has no vehicle of this kind`);
+  const renderer = new SpriteRenderer();
+  const out: PreviewPart[] = [];
+  try {
+    for (const car of item.cars) {
+      await yieldToPage(signal);
+      const { object, dispose } = await carModel(item.record, car);
+      const box = boxOf(object);
+      const lengths = partLengths(box.max[0] - box.min[0], feature);
+      SpriteRenderer.prepare(object);
+      const views = spriteViews(feature, box, lengths, item.record.game?.draftFrac ?? 0);
+      for (const [k, dirs] of views.entries()) {
+        const images = new Map<number, { "1x": GrfImage; "4x": GrfImage }>();
+        for (const d of directions) {
+          const zooms = zoomImages(renderer.render(object, dirs[d]!, SUPERSAMPLE), dirs[d]!, SUPERSAMPLE);
+          images.set(d, { "1x": zooms.find((z) => z.zoom === GRF_ZOOM.normal)!, "4x": zooms.find((z) => z.zoom === GRF_ZOOM.in4x)! });
+        }
+        out.push({ length: lengths[k]!, images });
+      }
+      dispose();
+    }
+  } finally {
+    renderer.dispose();
+  }
+  return out;
 }

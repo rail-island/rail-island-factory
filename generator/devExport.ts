@@ -17,6 +17,7 @@
 import { catalogRecord, isSideViewCategory, listedEntry, metaEntry, REFS_DIR, type BuiltFacts, type ModelCatalog } from "./catalog.ts";
 import { BUILDINGS, DESIGNS, VILLAGE_DESIGNS, catalogFields, designReferenceFiles, designSource, designTree } from "./generate.ts";
 import { bundleDesign } from "./jsModel.ts";
+import { catalogOpenttd } from "./openttd.ts";
 import fs from "node:fs";
 import path from "node:path";
 import { surfacesMeta, TEXTURES_DIR } from "./surfacesExport.ts";
@@ -34,7 +35,7 @@ export function devCatalog(): ModelCatalog {
       const side = isSideViewCategory(fields.category) ? { widthM: 0, heightM: 0, bottomM: 0 } : null;
       const references = designReferenceFiles(design).map(({ name, file }) => ({ name, url: `${REFS_DIR}/${design.id}/${name}`, bytes: fs.statSync(file).size }));
       const building = BUILDINGS.includes(design) || VILLAGE_DESIGNS.includes(design);
-      const record = catalogRecord(listedEntry(metaEntry(design, fields, null, side), design, building), zero, references, design.openttd);
+      const record = catalogRecord(listedEntry(metaEntry(design, fields, null, side), design, building), zero, references, catalogOpenttd(design, fields));
       return { ...record, ...(design.buildCoarse ? { coarse: true as const } : {}), ...(design.buildMax ? { maxDetail: true as const } : {}), ...(design.sourceTree === false ? { noSourceTree: true as const } : {}), pending: true as const };
     }),
   };

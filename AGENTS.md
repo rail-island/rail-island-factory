@@ -41,6 +41,11 @@ document that owns it in the same change.** Conventions:
 - **Every design supplies its own low level of detail** (`buildLod`, exported from
   its source module; docs/models/lod.md): there is no generic fallback. Reuse the
   family's LOD adapter or the shared kit (`generator/lodKit.ts`).
+- **Every vehicle an OpenTTD GRF can hold states its OpenTTD facts and presets**
+  (introduction year, capacity, cargo, refits, climates, a train's rail type; the
+  presets the one-click download exports) in `generator/openttdTable.ts`; the build
+  fails without them (docs/site/openttd-export.md, docs/models/openttd-figures.md).
+  A new vehicle adds its entry in the same change.
 - **Every vehicle states its game properties** (`game` on the design: weight,
   power, maxspeed, accel); the build fails without them.
 - **`export/` and `dist/` are generated and gitignored.** Never commit them.

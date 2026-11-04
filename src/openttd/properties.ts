@@ -229,3 +229,77 @@ export function grfIdOf(name: string): Uint8Array {
   const h = fnv1a(name.trim());
   return new Uint8Array([0x52, 0x49, (h >>> 8) & 0xff, h & 0xff]);
 }
+
+// --- presets and formations ----------------------------------------------------------
+
+/** One car of an exported vehicle: a selection of the record, drawn facing backwards when `turned`. */
+export interface ExportCar {
+  params: Record<string, string>;
+  turned?: boolean;
+}
+
+/**
+ * One vehicle a GRF holds: a single car (an export-list entry or a preset) or a
+ * formation of several. `key` names it for its ids (partKey); `variantOf` is the
+ * index of the item it is grouped under in OpenTTD's purchase list.
+ */
+export interface ExportItem {
+  record: CatalogRecord;
+  key: Record<string, string>;
+  cars: ExportCar[];
+  /** Set for a formation: its name. */
+  formation?: string;
+  variantOf?: number;
+}
+
+/**
+ * What the one-click download exports of a record: every preset, the default
+ * first, then every formation, all grouped under the default.
+ */
+export function oneClickItems(r: CatalogRecord): ExportItem[] {
+  const presets = r.openttd?.presets?.length ? r.openttd.presets : [{}];
+  const items: ExportItem[] = presets.map((p, i) => ({ record: r, key: { ...p }, cars: [{ params: { ...p } }], ...(i ? { variantOf: 0 } : {}) }));
+  for (const f of r.openttd?.formations ?? []) {
+    items.push({
+      record: r,
+      key: { formation: f.name },
+      cars: f.cars.map((c) => ({ params: { ...c.params }, ...(c.turned ? { turned: true } : {}) })),
+      formation: f.name,
+      variantOf: 0,
+    });
+  }
+  return items;
+}
+
+const clampByte = (v: number): number => Math.min(255, Math.max(0, Math.round(v)));
+
+/**
+ * The figures of an exported item: a single car's resolveVehicle; a formation's
+ * head car with the formation's name, the sum of its cars' power, purchase and
+ * running costs, and the traction of a powered train. Its cars' own figures
+ * (capacity, weight) go on their parts (exportRun.ts).
+ */
+export function resolveItem(item: ExportItem): { vehicle: ResolvedVehicle; cars: ResolvedVehicle[] } {
+  const cars = item.cars.map((c) => resolveVehicle(item.record, c.params));
+  const head = cars[0]!;
+  if (!item.formation) return { vehicle: head, cars };
+  const power = cars.reduce((s, c) => s + c.power, 0);
+  const r = item.record;
+  const traction = r.traction === "steam" || r.traction === "diesel" || r.traction === "electric" ? r.traction : null;
+  const vehicle: ResolvedVehicle = {
+    ...head,
+    name: `${variantName(r, item.cars[0]!.params)} (${item.formation})`,
+    power,
+    speed: cars.reduce((s, c) => (c.speed > 0 ? (s > 0 ? Math.min(s, c.speed) : c.speed) : s), 0),
+    costFactor: clampByte(cars.reduce((s, c) => s + c.costFactor, 0)),
+    runningCostFactor: clampByte(cars.reduce((s, c) => s + c.runningCostFactor, 0)),
+    traction: head.feature === "train" && power > 0 ? (traction ?? (r.group === "metro" ? "electric" : "diesel")) : null,
+  };
+  return { vehicle, cars };
+}
+
+/** `total` split over `n` parts as evenly as possible, the larger shares first. */
+export function shares(total: number, n: number): number[] {
+  const t = Math.max(0, Math.round(total));
+  return Array.from({ length: n }, (_, i) => Math.floor(t / n) + (i < t % n ? 1 : 0));
+}

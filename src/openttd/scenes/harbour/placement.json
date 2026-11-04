@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "scene": "harbour",
+  "openttd": "13.4",
+  "opengfx": "7.1",
+  "sizes": {
+    "1x": [
+      496,
+      424
+    ],
+    "4x": [
+      1984,
+      1696
+    ]
+  },
+  "slots": [
+    {
+      "id": "ship-0",
+      "direction": 5,
+      "track": "water",
+      "maxLength": 16,
+      "anchors": {
+        "1x": [
+          256,
+          240
+        ],
+        "4x": [
+          1024,
+          960
+        ]
+      }
+    },
+    {
+      "id": "ship-1",
+      "direction": 3,
+      "track": "water",
+      "maxLength": 16,
+      "anchors": {
+        "1x": [
+          240,
+          304
+        ],
+        "4x": [
+          960,
+          1216
+        ]
+      }
+    }
+  ]
+}
