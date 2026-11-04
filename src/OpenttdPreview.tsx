@@ -11,7 +11,7 @@
 import { For, Show, createEffect, createMemo, createResource, createSignal, on, onCleanup } from "solid-js";
 import type { CatalogRecord } from "./catalogQuery";
 import { previewSprites, type PreviewPart } from "./exportRun";
-import { oneClickIndex, oneClickItems, openttdFeature, resolveItem, resolveVehicle, type ExportItem } from "./openttd/properties";
+import { blockSize, grfIdText, oneClickIndex, oneClickItems, openttdFeature, resolveItem, resolveVehicle, type ExportItem } from "./openttd/properties";
 import { placeParts, sceneOf, trackOf, type Placement, type PreviewZoom } from "./openttd/scene";
 
 const PLACEMENTS = import.meta.glob<Placement>("./openttd/scenes/*/placement.json", { eager: true, import: "default" });
@@ -46,6 +46,16 @@ function spriteCanvas(img: { width: number; height: number; rgba: Uint8Array }):
   c.height = img.height;
   c.getContext("2d")!.putImageData(new ImageData(new Uint8ClampedArray(img.rgba), img.width, img.height), 0, 0);
   return c;
+}
+
+/** A local id as OpenTTD's debug output writes it: 0x0100. */
+function hexId(id: number | undefined): string {
+  return id === undefined ? "-" : `0x${id.toString(16).toUpperCase().padStart(4, "0")}`;
+}
+
+/** A list entry: the vehicle's OpenTTD name and its id. */
+function idLabel(item: ExportItem, name: string): string {
+  return item.baseId === undefined ? name : `${name} - ${hexId(item.baseId)}`;
 }
 
 export function OpenttdPreview(props: {
@@ -139,8 +149,16 @@ export function OpenttdPreview(props: {
         </label>
         <Show when={items().length > 1}>
           <select class="factory-viewer__select" aria-label="Vehicle in the GRF" value={String(chosen())} onChange={(e) => setChosen(Number(e.currentTarget.value))}>
-            <For each={names()}>{(name, i) => <option value={String(i())}>{name}</option>}</For>
+            <For each={names()}>{(name, i) => <option value={String(i())}>{idLabel(items()[i()]!, name)}</option>}</For>
           </select>
+        </Show>
+        <Show when={props.record.openttd?.ids}>
+          {(ids) => (
+            <span class="factory-viewer__note factory-ottd__ids" title="The ids the one-click GRF gives this vehicle (generator/openttdIds.json); a saved game keeps its vehicles by them">
+              GRF {grfIdText(ids().grf)} · vehicle {hexId(item().baseId)}
+              <Show when={sprites() && sprites()!.length > 1}>{` (parts ${hexId(item().baseId)}-${hexId(item().baseId === undefined ? undefined : item().baseId! + sprites()!.length - 1)} of ${blockSize(item())} reserved)`}</Show>
+            </span>
+          )}
         </Show>
         <span class="factory-viewer__note">
           OpenTTD {scene().placement.openttd}, OpenGFX {scene().placement.opengfx}

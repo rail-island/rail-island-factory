@@ -45,7 +45,11 @@ document that owns it in the same change.** Conventions:
   (introduction year, capacity, cargo, refits, climates, a train's rail type; the
   presets the one-click download exports) in `generator/openttdTable.ts`; the build
   fails without them (docs/site/openttd-export.md, docs/models/openttd-figures.md).
-  A new vehicle adds its entry in the same change.
+  A new vehicle adds its entry in the same change, and `pnpm openttd:ids` gives it
+  (and any new preset or formation) its ids in `generator/openttdIds.json`, which
+  is committed with it. **OpenTTD ids are stored in players' saved games**: never
+  edit or reuse an id there; a renamed preset or formation keeps its ids through
+  an alias.
 - **Every vehicle states its game properties** (`game` on the design: weight,
   power, maxspeed, accel); the build fails without them.
 - **`export/` and `dist/` are generated and gitignored.** Never commit them.

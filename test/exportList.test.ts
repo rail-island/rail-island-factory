@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from "vitest";
 import type { CatalogRecord } from "../src/catalogQuery";
-import {
+import { setGrfId,
   DEFAULT_SET_NAME, EMPTY_EXPORT, EXPORT_VERSION, addEntry, entryFor, entryKey, glbFileName, hasEntry, parseExport, removeEntry, safeName,
   serializeExport, variantLabel, type ExportState,
 } from "../src/exportList";
@@ -34,8 +34,16 @@ describe("the export list", () => {
   });
 
   it("round-trips through storage and drops what the catalog no longer has", () => {
-    const state: ExportState = { name: "My set", entries: [{ id: "loco", params: { livery: "red" } }, { id: "coach", params: {} }] };
+    const state: ExportState = { name: "My set", entries: [{ id: "loco", params: { livery: "red" } }, { id: "coach", params: {} }], grfid: null };
     expect(parseExport(serializeExport(state), RECORDS)).toEqual({ state, dropped: 0 });
+    // a GRF id the user chose is kept; one outside the users' half is dropped
+    const chosen: ExportState = { ...state, grfid: 0x8a3f };
+    expect(parseExport(serializeExport(chosen), RECORDS).state.grfid).toBe(0x8a3f);
+    expect(JSON.parse(serializeExport(state))).not.toHaveProperty("grfid");
+    expect(parseExport(JSON.stringify({ version: EXPORT_VERSION, name: "x", entries: [], grfid: 0x0042 }), RECORDS).state.grfid).toBeNull();
+    expect(setGrfId({ name: "My set", grfid: null })).toBe(setGrfId({ name: " My set ", grfid: null }));
+    expect(setGrfId({ name: "My set", grfid: null })).toBeGreaterThanOrEqual(0x8000);
+    expect(setGrfId(chosen)).toBe(0x8a3f);
     const stale = JSON.stringify({
       version: EXPORT_VERSION, name: "Old",
       entries: [
@@ -47,7 +55,7 @@ describe("the export list", () => {
         { id: "coach", params: {} },
       ],
     });
-    expect(parseExport(stale, RECORDS)).toEqual({ state: { name: "Old", entries: [{ id: "coach", params: {} }] }, dropped: 5 });
+    expect(parseExport(stale, RECORDS)).toEqual({ state: { name: "Old", entries: [{ id: "coach", params: {} }], grfid: null }, dropped: 5 });
   });
 
   it("starts empty on nothing, garbage or another version", () => {

@@ -13,7 +13,7 @@ import { encodeGrf, GRF_ZOOM, type GrfImage, type GrfPart, type GrfVehicle } fro
 import { zoomImages } from "./openttd/pixels";
 import { spriteViews, type ModelBox } from "./openttd/projection";
 import {
-  assignIds, grfIdOf, MAX_PARTS, oneClickItems, openttdFeature, partKey, partLengths, resolveItem, shares,
+  assignIds, blockSize, grfIdBytes, MAX_PARTS, oneClickItems, openttdFeature, partKey, partLengths, presetBaseId, resolveItem, shares,
   type ExportCar, type ExportItem, type OpenttdFeature,
 } from "./openttd/properties";
 import { SpriteRenderer } from "./openttd/spriteRenderer";
@@ -109,9 +109,13 @@ async function carModel(r: CatalogRecord, car: ExportCar): Promise<{ object: Obj
   return { object: turned, dispose: () => disposeModel(object) };
 }
 
-/** An OpenTTD GRF of every vehicle entry; buildings and cable cars are skipped. */
+/**
+ * An OpenTTD GRF of every vehicle entry; buildings and cable cars are skipped.
+ * `grfid` is the low 16 bits of its GRF id, the user's (0x8000..0xFFFF). An entry
+ * that is one of its model's presets keeps that preset's ids from the table.
+ */
 export async function exportGrf(
-  entries: readonly ExportEntry[], records: ReadonlyMap<string, CatalogRecord>, name: string,
+  entries: readonly ExportEntry[], records: ReadonlyMap<string, CatalogRecord>, name: string, grfid: number,
   onProgress: (p: ExportProgress) => void, signal: AbortSignal,
 ): Promise<ExportResult> {
   const skipped: string[] = [];
@@ -126,11 +130,12 @@ export async function exportGrf(
       skipped.push(`${r.title}: OpenTTD has no vehicle of this kind`);
       continue;
     }
-    items.push({ record: r, key: { ...e.params }, cars: [{ params: { ...e.params } }] });
+    const baseId = presetBaseId(r, e.params);
+    items.push({ record: r, key: { ...e.params }, cars: [{ params: { ...e.params } }], ...(baseId !== undefined ? { baseId } : {}) });
   }
   if (items.length === 0) throw new Error("The export list holds no vehicle OpenTTD can take.");
   const bytes = await buildGrf(items, {
-    grfid: grfIdOf(name),
+    grfid: grfIdBytes(grfid),
     name,
     description: (n) => `Rail Island Factory models (factory.railisland.com): ${n} vehicle${n === 1 ? "" : "s"}.`,
   }, onProgress, signal);
@@ -146,9 +151,11 @@ export async function exportModelGrf(
   record: CatalogRecord, onProgress: (p: ExportProgress) => void, signal: AbortSignal,
 ): Promise<ExportResult> {
   if (!openttdFeature(record)) throw new Error(`${record.title}: OpenTTD has no vehicle of this kind`);
+  const ids = record.openttd?.ids;
+  if (!ids) throw new Error(`${record.title}: the catalog gives it no OpenTTD ids`);
   const items = oneClickItems(record);
   const bytes = await buildGrf(items, {
-    grfid: grfIdOf(record.id),
+    grfid: grfIdBytes(ids.grf),
     name: record.title,
     description: (n) => `${record.title} from Rail Island Factory (factory.railisland.com/#/model/${record.id}): ${n} vehicle${n === 1 ? "" : "s"}.`,
   }, onProgress, signal);
@@ -176,15 +183,24 @@ async function buildGrf(
     if (total > MAX_PARTS) throw new Error(`${item.record.title}: ${total} parts, over OpenTTD's ${MAX_PARTS}`);
     planned.push({ item, feature, cars });
   }
-  // Local ids per vehicle type, from every part's key.
+  // Local ids per vehicle type: a table block's consecutive ids for a preset or
+  // formation, every other part's key hashed above the table's range.
   const keysOf = (p: Planned): string[] => {
     const n = p.cars.reduce((k, c) => k + c.lengths.length, 0);
     return Array.from({ length: n }, (_, i) => partKey(p.item.record.id, p.item.key, i));
   };
-  const ids = new Map<OpenttdFeature, Map<string, number>>();
-  for (const f of ["train", "road", "ship", "aircraft"] as const) {
-    ids.set(f, assignIds(planned.filter((p) => p.feature === f).flatMap(keysOf)));
+  for (const p of planned) {
+    const n = p.cars.reduce((k, c) => k + c.lengths.length, 0);
+    if (p.item.baseId !== undefined && n > blockSize(p.item)) {
+      throw new Error(`${p.item.record.title}: ${n} parts, over the ${blockSize(p.item)} ids the table reserves for it`);
+    }
   }
+  const hashed = new Map<OpenttdFeature, Map<string, number>>();
+  for (const f of ["train", "road", "ship", "aircraft"] as const) {
+    hashed.set(f, assignIds(planned.filter((p) => p.feature === f && p.item.baseId === undefined).flatMap(keysOf)));
+  }
+  const partId = (p: Planned, k: number): number =>
+    p.item.baseId !== undefined ? p.item.baseId + k : hashed.get(p.feature)!.get(partKey(p.item.record.id, p.item.key, k))!;
   // Second pass: draw every part's 8 directions.
   const renderer = new SpriteRenderer();
   const vehicles: GrfVehicle[] = [];
@@ -202,7 +218,7 @@ async function buildGrf(
         const split = shares(carFigures.capacity, views.length);
         for (const [k, dirs] of views.entries()) {
           parts.push({
-            id: ids.get(p.feature)!.get(partKey(p.item.record.id, p.item.key, parts.length))!,
+            id: partId(p, parts.length),
             length: pc.lengths[k]!,
             directions: dirs.map((view) => zoomImages(renderer.render(object, view, SUPERSAMPLE), view, SUPERSAMPLE)),
             ...(views.length > 1 || p.cars.length > 1 ? { capacity: split[k]!, cargo: carFigures.cargo, refitClasses: carFigures.refitClasses } : {}),

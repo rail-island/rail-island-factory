@@ -82,6 +82,18 @@ Area: catalog site (model page stage bar, OpenTTD view, GRF encoder and export r
    parameters select (`oneClickIndex`, test/openttdOneClick.test.ts), else the
    default; a pack of one vehicle shows no list.
 
+2. Keep OpenTTD ids in a committed table and let the user choose a set's GRF id;
+   show the ids in the OpenTTD view. `generator/openttdIds.json` (written by
+   `pnpm openttd:ids`, append-only, with retired keys and aliases) gives each model
+   its GRF id's low 16 bits (0001..7FFF) and each preset and formation a block of
+   16 or 32 local ids (0100..2FFF), unique across models; other export-list entries
+   are hashed into 3000..3FFF. The Export panel has a GRF id field (8000..FFFF,
+   stored as `grfid` with the list, by default the set name's hash). The OpenTTD
+   view lists each vehicle's id and shows the GRF id and the drawn vehicle's part
+   ids. Tests: test/openttdIds.test.ts, test/exportList.test.ts,
+   test/openttdExport.test.ts. All ids changed once with this: GRFs downloaded
+   before it do not match the new ones (see Known problems).
+
 ## How to test
 
 **Automated coverage.** No E2E framework exists in the repository (AGENTS.md asks
@@ -119,6 +131,12 @@ OpenTTD 13 or 14 with any base set.
 10. Download for OpenTTD on an aircraft (e.g. Boeing 737-800). In OpenTTD it leaves
     the hangar and flies.
 
+11. In the OpenTTD view, the list entries end in their ids ("- 0x0110") and the
+    line under the scene reads e.g. "GRF 52490007 - vehicle 0x0100 (parts
+    0x0100-0x0101 of 16 reserved)". In the Export panel, choose GRF: the GRF id
+    field shows 5249 and four hex digits from 8000 up; type "7000" (refused,
+    Export disabled), then "8A3F" (kept after a reload), then "From the set name".
+
 **Also worth trying.** Cancel during a download (no file, no error). A cable car
 or building has no stage bar. The Export panel still exports the list as before;
 its aircraft now fly too. `pnpm exec tsx generator/openttdScenes/previewSheet.ts
@@ -130,6 +148,9 @@ draws the view headlessly.
 Nothing - the spec is implemented in full.
 
 ## Known problems
+
+- The id table changed every GRF id and vehicle id once: a saved game made with a
+  GRF downloaded before it loses its factory vehicles when the new GRF replaces it.
 
 - The facts live in one table, `generator/openttdTable.ts`, put on the designs at
   build time, not in each design's source module, and the figures are listed in
@@ -163,7 +184,9 @@ Nothing - the spec is implemented in full.
 ## Changelog
 
 - The OpenTTD view lists exactly the vehicles the downloaded GRF holds, each by its
-  OpenTTD name.
+  OpenTTD name and id, and shows the GRF's id.
+- Each model's GRF and vehicle ids are fixed in a committed table, so a saved game
+  keeps its vehicles; a user's set can be given its own GRF id in the Export panel.
 - Every vehicle's model page has "Download for OpenTTD": a NewGRF of its liveries,
   cars and fixed formations in one click, grouped as one row in OpenTTD's purchase
   list.

@@ -1,0 +1,1391 @@
+{
+  "version": 1,
+  "grf": {
+    "proc-vehicle-aero-a10": 75,
+    "proc-vehicle-airbus-a380": 76,
+    "proc-vehicle-airbus-beluga": 74,
+    "proc-vehicle-american-truck": 5,
+    "proc-vehicle-bmo-double-deck-coach": 17,
+    "proc-vehicle-boeing-737": 77,
+    "proc-vehicle-boeing-747": 73,
+    "proc-vehicle-bus-1": 71,
+    "proc-vehicle-cd-110": 33,
+    "proc-vehicle-cd-130": 34,
+    "proc-vehicle-cd-140": 35,
+    "proc-vehicle-cd-150": 6,
+    "proc-vehicle-cd-163": 7,
+    "proc-vehicle-cd-169": 36,
+    "proc-vehicle-cd-180": 44,
+    "proc-vehicle-cd-230": 8,
+    "proc-vehicle-cd-263": 9,
+    "proc-vehicle-cd-451": 97,
+    "proc-vehicle-cd-460": 98,
+    "proc-vehicle-cd-470": 99,
+    "proc-vehicle-cd-471": 83,
+    "proc-vehicle-cd-680": 84,
+    "proc-vehicle-cd-704": 51,
+    "proc-vehicle-cd-710": 52,
+    "proc-vehicle-cd-714": 53,
+    "proc-vehicle-cd-742": 54,
+    "proc-vehicle-cd-749": 86,
+    "proc-vehicle-cd-750": 85,
+    "proc-vehicle-cd-771": 90,
+    "proc-vehicle-cd-781": 87,
+    "proc-vehicle-cd-810": 100,
+    "proc-vehicle-cd-812": 101,
+    "proc-vehicle-cd-843": 102,
+    "proc-vehicle-cd-green-white-coach": 18,
+    "proc-vehicle-cd-y-coach": 115,
+    "proc-vehicle-cistern-semi-truck": 57,
+    "proc-vehicle-cruise-ferry": 80,
+    "proc-vehicle-csd-386": 31,
+    "proc-vehicle-csd-433-0": 24,
+    "proc-vehicle-csd-456-0": 25,
+    "proc-vehicle-csd-475-1": 26,
+    "proc-vehicle-csd-477-0": 27,
+    "proc-vehicle-csd-498-1": 28,
+    "proc-vehicle-csd-556-0": 29,
+    "proc-vehicle-csd-636": 30,
+    "proc-vehicle-csd-balm": 11,
+    "proc-vehicle-csd-bam": 12,
+    "proc-vehicle-csd-bdmtee": 13,
+    "proc-vehicle-csd-be31": 14,
+    "proc-vehicle-csd-bi20": 15,
+    "proc-vehicle-csd-classic-green-coach": 10,
+    "proc-vehicle-csd-dsk": 16,
+    "proc-vehicle-csd-m112": 32,
+    "proc-vehicle-csd-m131": 103,
+    "proc-vehicle-csd-m240": 104,
+    "proc-vehicle-csd-m296": 105,
+    "proc-vehicle-csd-t499": 89,
+    "proc-vehicle-csd-t679-0": 88,
+    "proc-vehicle-db-111": 46,
+    "proc-vehicle-db-212": 55,
+    "proc-vehicle-db-628": 106,
+    "proc-vehicle-db-dosto": 118,
+    "proc-vehicle-dnt-184-5": 45,
+    "proc-vehicle-dr-243": 47,
+    "proc-vehicle-dr-sbahn-berlin": 119,
+    "proc-vehicle-dr-vt1816": 108,
+    "proc-vehicle-eas-open-wagon": 21,
+    "proc-vehicle-faccs-hopper-wagon": 41,
+    "proc-vehicle-falls-hopper-wagon": 42,
+    "proc-vehicle-habis-sliding-wall-wagon": 39,
+    "proc-vehicle-hadgs-hopper-wagon": 40,
+    "proc-vehicle-hydrofoil-ferry": 81,
+    "proc-vehicle-ice-1": 110,
+    "proc-vehicle-jr-kiha40": 107,
+    "proc-vehicle-karosa-long": 64,
+    "proc-vehicle-karosa-renault-citybus-12m": 65,
+    "proc-vehicle-karosa-renault-citybus-18m": 66,
+    "proc-vehicle-karosa-short": 63,
+    "proc-vehicle-kvag-gt4": 95,
+    "proc-vehicle-legacy-covered-wagon": 1,
+    "proc-vehicle-legacy-heavy-wagon": 3,
+    "proc-vehicle-legacy-open-wagon": 2,
+    "proc-vehicle-light-jet": 78,
+    "proc-vehicle-mav-mdmot": 109,
+    "proc-vehicle-mb-citaro": 67,
+    "proc-vehicle-mb-citaro-blue": 68,
+    "proc-vehicle-mb-o345-g": 69,
+    "proc-vehicle-mcdonnell-douglas-md11": 72,
+    "proc-vehicle-mercedes-atego-1224": 62,
+    "proc-vehicle-metro-81-71": 96,
+    "proc-vehicle-mixer-truck": 58,
+    "proc-vehicle-mtr-m-train": 113,
+    "proc-vehicle-muv-69": 56,
+    "proc-vehicle-nas-flat-wagon": 19,
+    "proc-vehicle-obb-1012": 48,
+    "proc-vehicle-obb-1040": 49,
+    "proc-vehicle-ocean-liner": 4,
+    "proc-vehicle-pao-flat-wagon": 38,
+    "proc-vehicle-passenger-ferry": 82,
+    "proc-vehicle-praga-rv": 61,
+    "proc-vehicle-rah-tank-wagon": 23,
+    "proc-vehicle-raj-hopper-wagon": 22,
+    "proc-vehicle-reefer-semi-truck": 59,
+    "proc-vehicle-shinkansen-0": 112,
+    "proc-vehicle-small-airplane": 79,
+    "proc-vehicle-solaris-urbino-15": 70,
+    "proc-vehicle-sqns-container-wagon": 37,
+    "proc-vehicle-tatra-815-tipper": 60,
+    "proc-vehicle-tatra-kt4": 94,
+    "proc-vehicle-tatra-kt8": 93,
+    "proc-vehicle-tatra-t3": 91,
+    "proc-vehicle-tatra-t6": 92,
+    "proc-vehicle-tgv": 111,
+    "proc-vehicle-tgv-duplex": 114,
+    "proc-vehicle-ua-open-wagon": 20,
+    "proc-vehicle-uic-z-coach": 117,
+    "proc-vehicle-vectron": 50,
+    "proc-vehicle-wap-hopper-wagon": 43,
+    "proc-vehicle-zsr-coach": 116
+  },
+  "vehicles": {
+    "train": {
+      "proc-vehicle-bmo-double-deck-coach?": {
+        "id": 784,
+        "size": 16
+      },
+      "proc-vehicle-bmo-double-deck-coach?livery=cdBlue": {
+        "id": 800,
+        "size": 16
+      },
+      "proc-vehicle-bmo-double-deck-coach?livery=cdNajbrt": {
+        "id": 816,
+        "size": 16
+      },
+      "proc-vehicle-cd-110?": {
+        "id": 1424,
+        "size": 16
+      },
+      "proc-vehicle-cd-110?livery=cd111": {
+        "id": 1440,
+        "size": 16
+      },
+      "proc-vehicle-cd-110?livery=cd111Blue": {
+        "id": 1472,
+        "size": 16
+      },
+      "proc-vehicle-cd-110?livery=cd210": {
+        "id": 1456,
+        "size": 16
+      },
+      "proc-vehicle-cd-130?": {
+        "id": 1488,
+        "size": 16
+      },
+      "proc-vehicle-cd-130?livery=cd123": {
+        "id": 1504,
+        "size": 16
+      },
+      "proc-vehicle-cd-140?": {
+        "id": 1520,
+        "size": 16
+      },
+      "proc-vehicle-cd-150?": {
+        "id": 336,
+        "size": 16
+      },
+      "proc-vehicle-cd-150?livery=cd151": {
+        "id": 352,
+        "size": 16
+      },
+      "proc-vehicle-cd-150?livery=cdBlue": {
+        "id": 384,
+        "size": 16
+      },
+      "proc-vehicle-cd-150?livery=zsr350": {
+        "id": 368,
+        "size": 16
+      },
+      "proc-vehicle-cd-163?": {
+        "id": 400,
+        "size": 16
+      },
+      "proc-vehicle-cd-163?livery=cd162": {
+        "id": 416,
+        "size": 16
+      },
+      "proc-vehicle-cd-163?livery=cd362": {
+        "id": 432,
+        "size": 16
+      },
+      "proc-vehicle-cd-163?livery=cd363": {
+        "id": 448,
+        "size": 16
+      },
+      "proc-vehicle-cd-163?livery=cdBlue": {
+        "id": 480,
+        "size": 16
+      },
+      "proc-vehicle-cd-163?livery=regiojet": {
+        "id": 464,
+        "size": 16
+      },
+      "proc-vehicle-cd-169?": {
+        "id": 1536,
+        "size": 16
+      },
+      "proc-vehicle-cd-180?": {
+        "id": 1728,
+        "size": 16
+      },
+      "proc-vehicle-cd-180?livery=cd180": {
+        "id": 1744,
+        "size": 16
+      },
+      "proc-vehicle-cd-180?livery=cd181Okd": {
+        "id": 1776,
+        "size": 16
+      },
+      "proc-vehicle-cd-180?livery=cd182": {
+        "id": 1760,
+        "size": 16
+      },
+      "proc-vehicle-cd-230?": {
+        "id": 496,
+        "size": 16
+      },
+      "proc-vehicle-cd-230?livery=cd240": {
+        "id": 512,
+        "size": 16
+      },
+      "proc-vehicle-cd-230?livery=cd242": {
+        "id": 528,
+        "size": 16
+      },
+      "proc-vehicle-cd-230?livery=cd242Blue": {
+        "id": 560,
+        "size": 16
+      },
+      "proc-vehicle-cd-230?livery=cd340": {
+        "id": 544,
+        "size": 16
+      },
+      "proc-vehicle-cd-263?": {
+        "id": 576,
+        "size": 16
+      },
+      "proc-vehicle-cd-263?livery=cd263Blue": {
+        "id": 640,
+        "size": 16
+      },
+      "proc-vehicle-cd-263?livery=cd371No002": {
+        "id": 608,
+        "size": 16
+      },
+      "proc-vehicle-cd-263?livery=cd372": {
+        "id": 592,
+        "size": 16
+      },
+      "proc-vehicle-cd-263?livery=db180": {
+        "id": 624,
+        "size": 16
+      },
+      "proc-vehicle-cd-451?": {
+        "id": 2672,
+        "size": 16
+      },
+      "proc-vehicle-cd-451?formation=4 cars": {
+        "id": 2720,
+        "size": 32
+      },
+      "proc-vehicle-cd-451?livery=cdBlue": {
+        "id": 2704,
+        "size": 16
+      },
+      "proc-vehicle-cd-451?unit=trailer": {
+        "id": 2688,
+        "size": 16
+      },
+      "proc-vehicle-cd-460?": {
+        "id": 2752,
+        "size": 16
+      },
+      "proc-vehicle-cd-460?formation=5 cars": {
+        "id": 2816,
+        "size": 32
+      },
+      "proc-vehicle-cd-460?livery=cdBlue": {
+        "id": 2800,
+        "size": 16
+      },
+      "proc-vehicle-cd-460?livery=csd": {
+        "id": 2784,
+        "size": 16
+      },
+      "proc-vehicle-cd-460?unit=trailer": {
+        "id": 2768,
+        "size": 16
+      },
+      "proc-vehicle-cd-470?": {
+        "id": 2848,
+        "size": 16
+      },
+      "proc-vehicle-cd-470?formation=5 cars": {
+        "id": 2880,
+        "size": 32
+      },
+      "proc-vehicle-cd-470?unit=trailer": {
+        "id": 2864,
+        "size": 16
+      },
+      "proc-vehicle-cd-471?": {
+        "id": 2192,
+        "size": 16
+      },
+      "proc-vehicle-cd-471?formation=3 cars": {
+        "id": 2272,
+        "size": 32
+      },
+      "proc-vehicle-cd-471?unit=drivingTrailer": {
+        "id": 2224,
+        "size": 16
+      },
+      "proc-vehicle-cd-471?unit=trailer": {
+        "id": 2208,
+        "size": 16
+      },
+      "proc-vehicle-cd-471?variant=cd675": {
+        "id": 2240,
+        "size": 16
+      },
+      "proc-vehicle-cd-471?variant=cdBlue": {
+        "id": 2256,
+        "size": 16
+      },
+      "proc-vehicle-cd-680?": {
+        "id": 2304,
+        "size": 16
+      },
+      "proc-vehicle-cd-680?formation=7 cars": {
+        "id": 2368,
+        "size": 32
+      },
+      "proc-vehicle-cd-680?unit=car683": {
+        "id": 2320,
+        "size": 16
+      },
+      "proc-vehicle-cd-680?unit=car685": {
+        "id": 2336,
+        "size": 16
+      },
+      "proc-vehicle-cd-680?unit=car686": {
+        "id": 2352,
+        "size": 16
+      },
+      "proc-vehicle-cd-704?": {
+        "id": 2016,
+        "size": 16
+      },
+      "proc-vehicle-cd-704?livery=t2380": {
+        "id": 2032,
+        "size": 16
+      },
+      "proc-vehicle-cd-710?": {
+        "id": 2048,
+        "size": 16
+      },
+      "proc-vehicle-cd-714?": {
+        "id": 2064,
+        "size": 16
+      },
+      "proc-vehicle-cd-742?": {
+        "id": 2080,
+        "size": 16
+      },
+      "proc-vehicle-cd-742?variant=cd743": {
+        "id": 2112,
+        "size": 16
+      },
+      "proc-vehicle-cd-742?variant=viamont740": {
+        "id": 2096,
+        "size": 16
+      },
+      "proc-vehicle-cd-749?": {
+        "id": 2464,
+        "size": 16
+      },
+      "proc-vehicle-cd-749?livery=cd749No121": {
+        "id": 2480,
+        "size": 16
+      },
+      "proc-vehicle-cd-750?": {
+        "id": 2400,
+        "size": 16
+      },
+      "proc-vehicle-cd-750?livery=cd753": {
+        "id": 2416,
+        "size": 16
+      },
+      "proc-vehicle-cd-750?livery=cd754": {
+        "id": 2432,
+        "size": 16
+      },
+      "proc-vehicle-cd-750?livery=cd754Blue": {
+        "id": 2448,
+        "size": 16
+      },
+      "proc-vehicle-cd-771?": {
+        "id": 2560,
+        "size": 16
+      },
+      "proc-vehicle-cd-771?livery=cd771": {
+        "id": 2576,
+        "size": 16
+      },
+      "proc-vehicle-cd-771?livery=cd771No421": {
+        "id": 2592,
+        "size": 16
+      },
+      "proc-vehicle-cd-781?": {
+        "id": 2496,
+        "size": 16
+      },
+      "proc-vehicle-cd-781?livery=cd781No462": {
+        "id": 2512,
+        "size": 16
+      },
+      "proc-vehicle-cd-810?": {
+        "id": 2912,
+        "size": 16
+      },
+      "proc-vehicle-cd-810?livery=blueWhite": {
+        "id": 2944,
+        "size": 16
+      },
+      "proc-vehicle-cd-810?livery=cdBlue": {
+        "id": 2960,
+        "size": 16
+      },
+      "proc-vehicle-cd-810?livery=yellowBand": {
+        "id": 2928,
+        "size": 16
+      },
+      "proc-vehicle-cd-812?": {
+        "id": 2976,
+        "size": 16
+      },
+      "proc-vehicle-cd-812?formation=with driving trailer": {
+        "id": 3008,
+        "size": 32
+      },
+      "proc-vehicle-cd-812?unit=drivingTrailer": {
+        "id": 2992,
+        "size": 16
+      },
+      "proc-vehicle-cd-843?": {
+        "id": 3040,
+        "size": 16
+      },
+      "proc-vehicle-cd-843?formation=3 cars": {
+        "id": 3104,
+        "size": 32
+      },
+      "proc-vehicle-cd-843?livery=cdBlue": {
+        "id": 3088,
+        "size": 16
+      },
+      "proc-vehicle-cd-843?unit=drivingTrailer": {
+        "id": 3072,
+        "size": 16
+      },
+      "proc-vehicle-cd-843?unit=trailer": {
+        "id": 3056,
+        "size": 16
+      },
+      "proc-vehicle-cd-green-white-coach?": {
+        "id": 832,
+        "size": 16
+      },
+      "proc-vehicle-cd-green-white-coach?variant=a": {
+        "id": 848,
+        "size": 16
+      },
+      "proc-vehicle-cd-green-white-coach?variant=ab": {
+        "id": 864,
+        "size": 16
+      },
+      "proc-vehicle-cd-green-white-coach?variant=bdmtee": {
+        "id": 928,
+        "size": 16
+      },
+      "proc-vehicle-cd-green-white-coach?variant=bds": {
+        "id": 896,
+        "size": 16
+      },
+      "proc-vehicle-cd-green-white-coach?variant=bee": {
+        "id": 880,
+        "size": 16
+      },
+      "proc-vehicle-cd-green-white-coach?variant=ds": {
+        "id": 912,
+        "size": 16
+      },
+      "proc-vehicle-cd-y-coach?": {
+        "id": 4224,
+        "size": 16
+      },
+      "proc-vehicle-cd-y-coach?variant=beer": {
+        "id": 4240,
+        "size": 16
+      },
+      "proc-vehicle-cd-y-coach?variant=bnb": {
+        "id": 4256,
+        "size": 16
+      },
+      "proc-vehicle-cd-y-coach?variant=wrrm": {
+        "id": 4272,
+        "size": 16
+      },
+      "proc-vehicle-csd-386?": {
+        "id": 1344,
+        "size": 16
+      },
+      "proc-vehicle-csd-386?formation=with tender": {
+        "id": 1376,
+        "size": 32
+      },
+      "proc-vehicle-csd-386?unit=tender": {
+        "id": 1360,
+        "size": 16
+      },
+      "proc-vehicle-csd-433-0?": {
+        "id": 1024,
+        "size": 16
+      },
+      "proc-vehicle-csd-433-0?livery=redLining": {
+        "id": 1040,
+        "size": 16
+      },
+      "proc-vehicle-csd-456-0?": {
+        "id": 1056,
+        "size": 16
+      },
+      "proc-vehicle-csd-475-1?": {
+        "id": 1072,
+        "size": 16
+      },
+      "proc-vehicle-csd-475-1?formation=with tender": {
+        "id": 1104,
+        "size": 32
+      },
+      "proc-vehicle-csd-475-1?unit=tender": {
+        "id": 1088,
+        "size": 16
+      },
+      "proc-vehicle-csd-477-0?": {
+        "id": 1136,
+        "size": 16
+      },
+      "proc-vehicle-csd-498-1?": {
+        "id": 1152,
+        "size": 16
+      },
+      "proc-vehicle-csd-498-1?formation=with tender": {
+        "id": 1184,
+        "size": 32
+      },
+      "proc-vehicle-csd-498-1?unit=tender": {
+        "id": 1168,
+        "size": 16
+      },
+      "proc-vehicle-csd-556-0?": {
+        "id": 1216,
+        "size": 16
+      },
+      "proc-vehicle-csd-556-0?formation=with tender": {
+        "id": 1248,
+        "size": 32
+      },
+      "proc-vehicle-csd-556-0?unit=tender": {
+        "id": 1232,
+        "size": 16
+      },
+      "proc-vehicle-csd-636?": {
+        "id": 1280,
+        "size": 16
+      },
+      "proc-vehicle-csd-636?formation=with tender": {
+        "id": 1312,
+        "size": 32
+      },
+      "proc-vehicle-csd-636?unit=tender": {
+        "id": 1296,
+        "size": 16
+      },
+      "proc-vehicle-csd-balm?": {
+        "id": 688,
+        "size": 16
+      },
+      "proc-vehicle-csd-bam?": {
+        "id": 704,
+        "size": 16
+      },
+      "proc-vehicle-csd-bdmtee?": {
+        "id": 720,
+        "size": 16
+      },
+      "proc-vehicle-csd-be31?": {
+        "id": 736,
+        "size": 16
+      },
+      "proc-vehicle-csd-bi20?": {
+        "id": 752,
+        "size": 16
+      },
+      "proc-vehicle-csd-classic-green-coach?": {
+        "id": 656,
+        "size": 16
+      },
+      "proc-vehicle-csd-classic-green-coach?variant=classB": {
+        "id": 672,
+        "size": 16
+      },
+      "proc-vehicle-csd-dsk?": {
+        "id": 768,
+        "size": 16
+      },
+      "proc-vehicle-csd-m112?": {
+        "id": 1408,
+        "size": 16
+      },
+      "proc-vehicle-csd-m131?": {
+        "id": 3136,
+        "size": 16
+      },
+      "proc-vehicle-csd-m131?formation=with trailer": {
+        "id": 3168,
+        "size": 32
+      },
+      "proc-vehicle-csd-m131?unit=trailer": {
+        "id": 3152,
+        "size": 16
+      },
+      "proc-vehicle-csd-m240?": {
+        "id": 3200,
+        "size": 16
+      },
+      "proc-vehicle-csd-m296?": {
+        "id": 3216,
+        "size": 16
+      },
+      "proc-vehicle-csd-m296?variant=cd853": {
+        "id": 3232,
+        "size": 16
+      },
+      "proc-vehicle-csd-m296?variant=cd854": {
+        "id": 3248,
+        "size": 16
+      },
+      "proc-vehicle-csd-m296?variant=cd854Blue": {
+        "id": 3264,
+        "size": 16
+      },
+      "proc-vehicle-csd-t499?": {
+        "id": 2544,
+        "size": 16
+      },
+      "proc-vehicle-csd-t679-0?": {
+        "id": 2528,
+        "size": 16
+      },
+      "proc-vehicle-db-111?": {
+        "id": 1824,
+        "size": 16
+      },
+      "proc-vehicle-db-111?livery=db111Bb": {
+        "id": 1840,
+        "size": 16
+      },
+      "proc-vehicle-db-111?livery=db111S": {
+        "id": 1856,
+        "size": 16
+      },
+      "proc-vehicle-db-212?": {
+        "id": 2128,
+        "size": 16
+      },
+      "proc-vehicle-db-212?livery=oceanBlue": {
+        "id": 2144,
+        "size": 16
+      },
+      "proc-vehicle-db-212?livery=trafficRed": {
+        "id": 2160,
+        "size": 16
+      },
+      "proc-vehicle-db-628?": {
+        "id": 3280,
+        "size": 16
+      },
+      "proc-vehicle-db-628?formation=with n-coaches": {
+        "id": 3360,
+        "size": 32
+      },
+      "proc-vehicle-db-628?livery=red": {
+        "id": 3344,
+        "size": 16
+      },
+      "proc-vehicle-db-628?unit=abn": {
+        "id": 3312,
+        "size": 16
+      },
+      "proc-vehicle-db-628?unit=bdnrf": {
+        "id": 3328,
+        "size": 16
+      },
+      "proc-vehicle-db-628?unit=bn": {
+        "id": 3296,
+        "size": 16
+      },
+      "proc-vehicle-db-dosto?": {
+        "id": 4512,
+        "size": 16
+      },
+      "proc-vehicle-db-dosto?formation=3 coaches, driving trailer": {
+        "id": 4560,
+        "size": 32
+      },
+      "proc-vehicle-db-dosto?variant=drivingTrailer": {
+        "id": 4544,
+        "size": 16
+      },
+      "proc-vehicle-db-dosto?variant=firstClass": {
+        "id": 4528,
+        "size": 16
+      },
+      "proc-vehicle-dnt-184-5?": {
+        "id": 1792,
+        "size": 16
+      },
+      "proc-vehicle-dnt-184-5?livery=dnt1845No1": {
+        "id": 1808,
+        "size": 16
+      },
+      "proc-vehicle-dr-243?": {
+        "id": 1872,
+        "size": 16
+      },
+      "proc-vehicle-dr-243?livery=db112": {
+        "id": 1920,
+        "size": 16
+      },
+      "proc-vehicle-dr-243?livery=db143": {
+        "id": 1888,
+        "size": 16
+      },
+      "proc-vehicle-dr-243?livery=db143vr": {
+        "id": 1904,
+        "size": 16
+      },
+      "proc-vehicle-dr-sbahn-berlin?": {
+        "id": 4592,
+        "size": 16
+      },
+      "proc-vehicle-dr-sbahn-berlin?formation=4 coaches, driving trailer": {
+        "id": 4624,
+        "size": 32
+      },
+      "proc-vehicle-dr-sbahn-berlin?variant=drivingTrailer": {
+        "id": 4608,
+        "size": 16
+      },
+      "proc-vehicle-dr-vt1816?": {
+        "id": 3440,
+        "size": 16
+      },
+      "proc-vehicle-dr-vt1816?formation=4 cars": {
+        "id": 3504,
+        "size": 32
+      },
+      "proc-vehicle-dr-vt1816?unit=dining": {
+        "id": 3456,
+        "size": 16
+      },
+      "proc-vehicle-dr-vt1816?unit=firstClass": {
+        "id": 3472,
+        "size": 16
+      },
+      "proc-vehicle-dr-vt1816?unit=trailer": {
+        "id": 3488,
+        "size": 16
+      },
+      "proc-vehicle-eas-open-wagon?": {
+        "id": 976,
+        "size": 16
+      },
+      "proc-vehicle-faccs-hopper-wagon?": {
+        "id": 1632,
+        "size": 16
+      },
+      "proc-vehicle-faccs-hopper-wagon?livery=viamont": {
+        "id": 1648,
+        "size": 16
+      },
+      "proc-vehicle-falls-hopper-wagon?": {
+        "id": 1664,
+        "size": 16
+      },
+      "proc-vehicle-falls-hopper-wagon?livery=sd": {
+        "id": 1680,
+        "size": 16
+      },
+      "proc-vehicle-falls-hopper-wagon?livery=viamont": {
+        "id": 1696,
+        "size": 16
+      },
+      "proc-vehicle-habis-sliding-wall-wagon?": {
+        "id": 1584,
+        "size": 16
+      },
+      "proc-vehicle-habis-sliding-wall-wagon?livery=tw2": {
+        "id": 1600,
+        "size": 16
+      },
+      "proc-vehicle-hadgs-hopper-wagon?": {
+        "id": 1616,
+        "size": 16
+      },
+      "proc-vehicle-ice-1?": {
+        "id": 3632,
+        "size": 16
+      },
+      "proc-vehicle-ice-1?formation=power cars, 6 coaches": {
+        "id": 3680,
+        "size": 32
+      },
+      "proc-vehicle-ice-1?unit=coach": {
+        "id": 3648,
+        "size": 16
+      },
+      "proc-vehicle-ice-1?unit=restaurant": {
+        "id": 3664,
+        "size": 16
+      },
+      "proc-vehicle-jr-kiha40?": {
+        "id": 3392,
+        "size": 16
+      },
+      "proc-vehicle-jr-kiha40?livery=jnr": {
+        "id": 3424,
+        "size": 16
+      },
+      "proc-vehicle-jr-kiha40?livery=tarako": {
+        "id": 3408,
+        "size": 16
+      },
+      "proc-vehicle-legacy-covered-wagon?": {
+        "id": 256,
+        "size": 16
+      },
+      "proc-vehicle-legacy-covered-wagon?body=beer": {
+        "id": 272,
+        "size": 16
+      },
+      "proc-vehicle-legacy-covered-wagon?body=sliding": {
+        "id": 288,
+        "size": 16
+      },
+      "proc-vehicle-legacy-heavy-wagon?": {
+        "id": 320,
+        "size": 16
+      },
+      "proc-vehicle-legacy-open-wagon?": {
+        "id": 304,
+        "size": 16
+      },
+      "proc-vehicle-mav-mdmot?": {
+        "id": 3536,
+        "size": 16
+      },
+      "proc-vehicle-mav-mdmot?formation=4 cars": {
+        "id": 3600,
+        "size": 32
+      },
+      "proc-vehicle-mav-mdmot?unit=drivingTrailer": {
+        "id": 3584,
+        "size": 16
+      },
+      "proc-vehicle-mav-mdmot?unit=trailerAx": {
+        "id": 3552,
+        "size": 16
+      },
+      "proc-vehicle-mav-mdmot?unit=trailerBx": {
+        "id": 3568,
+        "size": 16
+      },
+      "proc-vehicle-metro-81-71?": {
+        "id": 2608,
+        "size": 16
+      },
+      "proc-vehicle-metro-81-71?formation=5 cars": {
+        "id": 2640,
+        "size": 32
+      },
+      "proc-vehicle-metro-81-71?unit=middleCar": {
+        "id": 2624,
+        "size": 16
+      },
+      "proc-vehicle-mtr-m-train?": {
+        "id": 3952,
+        "size": 16
+      },
+      "proc-vehicle-mtr-m-train?formation=8 cars": {
+        "id": 4048,
+        "size": 32
+      },
+      "proc-vehicle-mtr-m-train?livery=disneyland": {
+        "id": 4032,
+        "size": 16
+      },
+      "proc-vehicle-mtr-m-train?livery=retro": {
+        "id": 4016,
+        "size": 16
+      },
+      "proc-vehicle-mtr-m-train?unit=bCar": {
+        "id": 3968,
+        "size": 16
+      },
+      "proc-vehicle-mtr-m-train?unit=cCar": {
+        "id": 3984,
+        "size": 16
+      },
+      "proc-vehicle-mtr-m-train?unit=dCar": {
+        "id": 4000,
+        "size": 16
+      },
+      "proc-vehicle-muv-69?": {
+        "id": 2176,
+        "size": 16
+      },
+      "proc-vehicle-nas-flat-wagon?": {
+        "id": 944,
+        "size": 16
+      },
+      "proc-vehicle-obb-1012?": {
+        "id": 1936,
+        "size": 16
+      },
+      "proc-vehicle-obb-1040?": {
+        "id": 1952,
+        "size": 16
+      },
+      "proc-vehicle-pao-flat-wagon?": {
+        "id": 1568,
+        "size": 16
+      },
+      "proc-vehicle-rah-tank-wagon?": {
+        "id": 1008,
+        "size": 16
+      },
+      "proc-vehicle-raj-hopper-wagon?": {
+        "id": 992,
+        "size": 16
+      },
+      "proc-vehicle-shinkansen-0?": {
+        "id": 3808,
+        "size": 16
+      },
+      "proc-vehicle-shinkansen-0?formation=8 cars": {
+        "id": 3920,
+        "size": 32
+      },
+      "proc-vehicle-shinkansen-0?livery=doctorYellow": {
+        "id": 3904,
+        "size": 16
+      },
+      "proc-vehicle-shinkansen-0?livery=freshGreen": {
+        "id": 3888,
+        "size": 16
+      },
+      "proc-vehicle-shinkansen-0?unit=buffetCar": {
+        "id": 3872,
+        "size": 16
+      },
+      "proc-vehicle-shinkansen-0?unit=greenCar": {
+        "id": 3856,
+        "size": 16
+      },
+      "proc-vehicle-shinkansen-0?unit=motorCar": {
+        "id": 3824,
+        "size": 16
+      },
+      "proc-vehicle-shinkansen-0?unit=pantographCar": {
+        "id": 3840,
+        "size": 16
+      },
+      "proc-vehicle-sqns-container-wagon?": {
+        "id": 1552,
+        "size": 16
+      },
+      "proc-vehicle-tgv-duplex?": {
+        "id": 4080,
+        "size": 16
+      },
+      "proc-vehicle-tgv-duplex?formation=power cars, 8 trailers": {
+        "id": 4192,
+        "size": 32
+      },
+      "proc-vehicle-tgv-duplex?livery=inoui": {
+        "id": 4160,
+        "size": 16
+      },
+      "proc-vehicle-tgv-duplex?livery=original": {
+        "id": 4144,
+        "size": 16
+      },
+      "proc-vehicle-tgv-duplex?livery=ouigo": {
+        "id": 4176,
+        "size": 16
+      },
+      "proc-vehicle-tgv-duplex?unit=bar": {
+        "id": 4128,
+        "size": 16
+      },
+      "proc-vehicle-tgv-duplex?unit=endTrailer": {
+        "id": 4096,
+        "size": 16
+      },
+      "proc-vehicle-tgv-duplex?unit=trailer": {
+        "id": 4112,
+        "size": 16
+      },
+      "proc-vehicle-tgv?": {
+        "id": 3712,
+        "size": 16
+      },
+      "proc-vehicle-tgv?cars=6&unit=set": {
+        "id": 3744,
+        "size": 16
+      },
+      "proc-vehicle-tgv?formation=power cars, 6 trailers": {
+        "id": 3776,
+        "size": 32
+      },
+      "proc-vehicle-tgv?livery=atlantique": {
+        "id": 3760,
+        "size": 16
+      },
+      "proc-vehicle-tgv?unit=set": {
+        "id": 3728,
+        "size": 16
+      },
+      "proc-vehicle-ua-open-wagon?": {
+        "id": 960,
+        "size": 16
+      },
+      "proc-vehicle-uic-z-coach?": {
+        "id": 4400,
+        "size": 16
+      },
+      "proc-vehicle-uic-z-coach?operator=cdBlue": {
+        "id": 4496,
+        "size": 16
+      },
+      "proc-vehicle-uic-z-coach?operator=db": {
+        "id": 4448,
+        "size": 16
+      },
+      "proc-vehicle-uic-z-coach?operator=obb": {
+        "id": 4464,
+        "size": 16
+      },
+      "proc-vehicle-uic-z-coach?operator=regiojet": {
+        "id": 4480,
+        "size": 16
+      },
+      "proc-vehicle-uic-z-coach?variant=firstClass": {
+        "id": 4416,
+        "size": 16
+      },
+      "proc-vehicle-uic-z-coach?variant=restaurant": {
+        "id": 4432,
+        "size": 16
+      },
+      "proc-vehicle-vectron?": {
+        "id": 1968,
+        "size": 16
+      },
+      "proc-vehicle-vectron?livery=cdWhite": {
+        "id": 2000,
+        "size": 16
+      },
+      "proc-vehicle-vectron?livery=regiojet": {
+        "id": 1984,
+        "size": 16
+      },
+      "proc-vehicle-wap-hopper-wagon?": {
+        "id": 1712,
+        "size": 16
+      },
+      "proc-vehicle-zsr-coach?": {
+        "id": 4288,
+        "size": 16
+      },
+      "proc-vehicle-zsr-coach?variant=a": {
+        "id": 4304,
+        "size": 16
+      },
+      "proc-vehicle-zsr-coach?variant=ab": {
+        "id": 4320,
+        "size": 16
+      },
+      "proc-vehicle-zsr-coach?variant=apee": {
+        "id": 4384,
+        "size": 16
+      },
+      "proc-vehicle-zsr-coach?variant=bdmeer": {
+        "id": 4352,
+        "size": 16
+      },
+      "proc-vehicle-zsr-coach?variant=bh": {
+        "id": 4336,
+        "size": 16
+      },
+      "proc-vehicle-zsr-coach?variant=wrrm": {
+        "id": 4368,
+        "size": 16
+      }
+    },
+    "road": {
+      "proc-vehicle-american-truck?": {
+        "id": 256,
+        "size": 16
+      },
+      "proc-vehicle-bus-1?": {
+        "id": 608,
+        "size": 16
+      },
+      "proc-vehicle-cistern-semi-truck?": {
+        "id": 272,
+        "size": 16
+      },
+      "proc-vehicle-karosa-long?": {
+        "id": 464,
+        "size": 16
+      },
+      "proc-vehicle-karosa-long?variant=b941": {
+        "id": 480,
+        "size": 16
+      },
+      "proc-vehicle-karosa-long?variant=b961": {
+        "id": 496,
+        "size": 16
+      },
+      "proc-vehicle-karosa-renault-citybus-12m?": {
+        "id": 512,
+        "size": 16
+      },
+      "proc-vehicle-karosa-renault-citybus-18m?": {
+        "id": 528,
+        "size": 16
+      },
+      "proc-vehicle-karosa-short?": {
+        "id": 368,
+        "size": 16
+      },
+      "proc-vehicle-karosa-short?variant=b732": {
+        "id": 384,
+        "size": 16
+      },
+      "proc-vehicle-karosa-short?variant=b931": {
+        "id": 432,
+        "size": 16
+      },
+      "proc-vehicle-karosa-short?variant=b951e": {
+        "id": 448,
+        "size": 16
+      },
+      "proc-vehicle-karosa-short?variant=c734": {
+        "id": 400,
+        "size": 16
+      },
+      "proc-vehicle-karosa-short?variant=lc735": {
+        "id": 416,
+        "size": 16
+      },
+      "proc-vehicle-kvag-gt4?": {
+        "id": 752,
+        "size": 16
+      },
+      "proc-vehicle-mb-citaro-blue?": {
+        "id": 560,
+        "size": 16
+      },
+      "proc-vehicle-mb-citaro?": {
+        "id": 544,
+        "size": 16
+      },
+      "proc-vehicle-mb-o345-g?": {
+        "id": 576,
+        "size": 16
+      },
+      "proc-vehicle-mercedes-atego-1224?": {
+        "id": 352,
+        "size": 16
+      },
+      "proc-vehicle-mixer-truck?": {
+        "id": 288,
+        "size": 16
+      },
+      "proc-vehicle-praga-rv?": {
+        "id": 336,
+        "size": 16
+      },
+      "proc-vehicle-reefer-semi-truck?": {
+        "id": 304,
+        "size": 16
+      },
+      "proc-vehicle-solaris-urbino-15?": {
+        "id": 592,
+        "size": 16
+      },
+      "proc-vehicle-tatra-815-tipper?": {
+        "id": 320,
+        "size": 16
+      },
+      "proc-vehicle-tatra-kt4?": {
+        "id": 736,
+        "size": 16
+      },
+      "proc-vehicle-tatra-kt8?": {
+        "id": 688,
+        "size": 16
+      },
+      "proc-vehicle-tatra-kt8?livery=modern": {
+        "id": 720,
+        "size": 16
+      },
+      "proc-vehicle-tatra-kt8?livery=red": {
+        "id": 704,
+        "size": 16
+      },
+      "proc-vehicle-tatra-t3?": {
+        "id": 624,
+        "size": 16
+      },
+      "proc-vehicle-tatra-t3?variant=t3m": {
+        "id": 640,
+        "size": 16
+      },
+      "proc-vehicle-tatra-t3?variant=t3prototype": {
+        "id": 656,
+        "size": 16
+      },
+      "proc-vehicle-tatra-t6?": {
+        "id": 672,
+        "size": 16
+      }
+    },
+    "ship": {
+      "proc-vehicle-cruise-ferry?": {
+        "id": 272,
+        "size": 16
+      },
+      "proc-vehicle-hydrofoil-ferry?": {
+        "id": 288,
+        "size": 16
+      },
+      "proc-vehicle-ocean-liner?": {
+        "id": 256,
+        "size": 16
+      },
+      "proc-vehicle-passenger-ferry?": {
+        "id": 304,
+        "size": 16
+      }
+    },
+    "aircraft": {
+      "proc-vehicle-aero-a10?": {
+        "id": 400,
+        "size": 16
+      },
+      "proc-vehicle-airbus-a380?": {
+        "id": 416,
+        "size": 16
+      },
+      "proc-vehicle-airbus-a380?livery=britishAirways": {
+        "id": 496,
+        "size": 16
+      },
+      "proc-vehicle-airbus-a380?livery=emirates": {
+        "id": 432,
+        "size": 16
+      },
+      "proc-vehicle-airbus-a380?livery=lufthansa": {
+        "id": 480,
+        "size": 16
+      },
+      "proc-vehicle-airbus-a380?livery=qantas": {
+        "id": 464,
+        "size": 16
+      },
+      "proc-vehicle-airbus-a380?livery=singapore": {
+        "id": 448,
+        "size": 16
+      },
+      "proc-vehicle-airbus-beluga?": {
+        "id": 384,
+        "size": 16
+      },
+      "proc-vehicle-boeing-737?": {
+        "id": 512,
+        "size": 16
+      },
+      "proc-vehicle-boeing-737?livery=klm": {
+        "id": 576,
+        "size": 16
+      },
+      "proc-vehicle-boeing-737?livery=ryanair": {
+        "id": 528,
+        "size": 16
+      },
+      "proc-vehicle-boeing-737?livery=southwest": {
+        "id": 544,
+        "size": 16
+      },
+      "proc-vehicle-boeing-737?livery=turkish": {
+        "id": 592,
+        "size": 16
+      },
+      "proc-vehicle-boeing-737?livery=united": {
+        "id": 560,
+        "size": 16
+      },
+      "proc-vehicle-boeing-747?": {
+        "id": 320,
+        "size": 16
+      },
+      "proc-vehicle-boeing-747?livery=britishAirways": {
+        "id": 336,
+        "size": 16
+      },
+      "proc-vehicle-boeing-747?livery=klm": {
+        "id": 368,
+        "size": 16
+      },
+      "proc-vehicle-boeing-747?livery=lufthansa": {
+        "id": 352,
+        "size": 16
+      },
+      "proc-vehicle-light-jet?": {
+        "id": 608,
+        "size": 16
+      },
+      "proc-vehicle-mcdonnell-douglas-md11?": {
+        "id": 256,
+        "size": 16
+      },
+      "proc-vehicle-mcdonnell-douglas-md11?livery=fedex": {
+        "id": 304,
+        "size": 16
+      },
+      "proc-vehicle-mcdonnell-douglas-md11?livery=klm": {
+        "id": 272,
+        "size": 16
+      },
+      "proc-vehicle-mcdonnell-douglas-md11?livery=swissair": {
+        "id": 288,
+        "size": 16
+      },
+      "proc-vehicle-small-airplane?": {
+        "id": 624,
+        "size": 16
+      },
+      "proc-vehicle-small-airplane?color=green": {
+        "id": 672,
+        "size": 16
+      },
+      "proc-vehicle-small-airplane?color=red": {
+        "id": 640,
+        "size": 16
+      },
+      "proc-vehicle-small-airplane?color=yellow": {
+        "id": 656,
+        "size": 16
+      }
+    }
+  },
+  "aliases": {}
+}

@@ -181,9 +181,31 @@ export function partLengths(metres: number, feature: OpenttdFeature): number[] {
 
 // --- ids -------------------------------------------------------------------------
 
-/** The local ids the export hands out: above every original vehicle, below the 14-bit limit of articulated parts. */
+/**
+ * The local ids the export hands out, per OpenTTD vehicle type: above every
+ * original vehicle, below the 14-bit limit of articulated parts. The committed id
+ * table (generator/openttdIds.json) owns FIRST_LOCAL_ID..LAST_TABLE_ID - every
+ * preset's and formation's block of part ids, unique across all models - and an
+ * export-list entry that is no preset is hashed into HASHED_FIRST_ID..LAST_LOCAL_ID.
+ */
 export const FIRST_LOCAL_ID = 0x0100;
+export const LAST_TABLE_ID = 0x2fff;
+export const HASHED_FIRST_ID = 0x3000;
 export const LAST_LOCAL_ID = 0x3fff;
+
+/** The part ids the table reserves for a preset (a car of up to 16 parts, 128 m) and for a formation (OpenTTD's 32). */
+export const PRESET_BLOCK = 16;
+export const FORMATION_BLOCK = 32;
+
+/**
+ * The low 16 bits of a GRF id ("RI" and two bytes): 0x0001..0x7FFF a one-click
+ * model GRF's, from the id table; 0x8000..0xFFFF a user's set's, chosen in the
+ * Export panel.
+ */
+export const MODEL_GRF_FIRST = 0x0001;
+export const MODEL_GRF_LAST = 0x7fff;
+export const SET_GRF_FIRST = 0x8000;
+export const SET_GRF_LAST = 0xffff;
 
 /** 32-bit FNV-1a of a string's UTF-16 code units. */
 export function fnv1a(text: string): number {
@@ -203,12 +225,13 @@ export function partKey(id: string, params: Record<string, string>, part: number
 
 /**
  * The local id of every key, per OpenTTD feature: hashed into
- * FIRST_LOCAL_ID..LAST_LOCAL_ID, a collision probing to the next free id. Keys
- * are placed in sorted order, so the result depends only on the set of keys, not
- * on the order they were added in, and a key keeps its id unless it collides.
+ * HASHED_FIRST_ID..LAST_LOCAL_ID (the table's ids lie below), a collision probing
+ * to the next free id. Keys are placed in sorted order, so the result depends only
+ * on the set of keys, not on the order they were added in, and a key keeps its id
+ * unless it collides.
  */
 export function assignIds(keys: readonly string[]): Map<string, number> {
-  const span = LAST_LOCAL_ID - FIRST_LOCAL_ID + 1;
+  const span = LAST_LOCAL_ID - HASHED_FIRST_ID + 1;
   if (keys.length > span) throw new Error(`too many vehicles for one GRF: ${keys.length}`);
   const out = new Map<string, number>();
   const used = new Set<number>();
@@ -216,18 +239,36 @@ export function assignIds(keys: readonly string[]): Map<string, number> {
     let slot = fnv1a(key) % span;
     while (used.has(slot)) slot = (slot + 1) % span;
     used.add(slot);
-    out.set(key, FIRST_LOCAL_ID + slot);
+    out.set(key, HASHED_FIRST_ID + slot);
   }
   return out;
 }
 
+/** The four bytes of a GRF id: "RI" and its low 16 bits, high byte first. */
+export function grfIdBytes(low: number): Uint8Array {
+  if (!Number.isInteger(low) || low < MODEL_GRF_FIRST || low > SET_GRF_LAST) throw new Error(`a GRF id's low 16 bits run 0001..FFFF: ${low}`);
+  return new Uint8Array([0x52, 0x49, (low >>> 8) & 0xff, low & 0xff]);
+}
+
+/** A GRF id as OpenTTD's NewGRF window shows it: "52490001". */
+export function grfIdText(low: number): string {
+  return [...grfIdBytes(low)].map((b) => b.toString(16).padStart(2, "0")).join("").toUpperCase();
+}
+
 /**
- * The set's four-byte GRF id: "RI" and a 16-bit hash of its name, so the same
- * name always makes the same GRF and OpenTTD keeps a saved game's vehicles.
+ * The GRF id a user's set gets until they choose one: its name hashed into the
+ * users' half, 0x8000..0xFFFF, so the same name gives the same id.
  */
-export function grfIdOf(name: string): Uint8Array {
-  const h = fnv1a(name.trim());
-  return new Uint8Array([0x52, 0x49, (h >>> 8) & 0xff, h & 0xff]);
+export function defaultSetGrfId(name: string): number {
+  return SET_GRF_FIRST | (fnv1a(name.trim()) & 0x7fff);
+}
+
+/** A user's GRF id typed as 4 hex digits ("8A3F"), or null when it is none or not in the users' half. */
+export function parseSetGrfId(text: string): number | null {
+  const t = text.trim();
+  if (!/^[0-9a-fA-F]{4}$/.test(t)) return null;
+  const v = parseInt(t, 16);
+  return v >= SET_GRF_FIRST && v <= SET_GRF_LAST ? v : null;
 }
 
 // --- presets and formations ----------------------------------------------------------
@@ -250,6 +291,12 @@ export interface ExportItem {
   /** Set for a formation: its name. */
   formation?: string;
   variantOf?: number;
+  /**
+   * The first of the part ids the committed id table reserves for it (a preset's
+   * or formation's block); absent for an export-list entry that is no preset,
+   * whose ids are hashed (assignIds).
+   */
+  baseId?: number;
 }
 
 /**
@@ -258,17 +305,38 @@ export interface ExportItem {
  */
 export function oneClickItems(r: CatalogRecord): ExportItem[] {
   const presets = r.openttd?.presets?.length ? r.openttd.presets : [{}];
-  const items: ExportItem[] = presets.map((p, i) => ({ record: r, key: { ...p }, cars: [{ params: { ...p } }], ...(i ? { variantOf: 0 } : {}) }));
-  for (const f of r.openttd?.formations ?? []) {
+  const ids = r.openttd?.ids;
+  const items: ExportItem[] = presets.map((p, i) => ({
+    record: r, key: { ...p }, cars: [{ params: { ...p } }],
+    ...(i ? { variantOf: 0 } : {}),
+    ...(ids?.presets[i] !== undefined ? { baseId: ids.presets[i] } : {}),
+  }));
+  for (const [i, f] of (r.openttd?.formations ?? []).entries()) {
     items.push({
       record: r,
       key: { formation: f.name },
       cars: f.cars.map((c) => ({ params: { ...c.params }, ...(c.turned ? { turned: true } : {}) })),
       formation: f.name,
       variantOf: 0,
+      ...(ids?.formations[i] !== undefined ? { baseId: ids.formations[i] } : {}),
     });
   }
   return items;
+}
+
+/**
+ * The table's first part id of the preset with exactly these non-default values
+ * (an export-list entry that is a preset keeps its one-click ids), or undefined.
+ */
+export function presetBaseId(r: CatalogRecord, params: Record<string, string>): number | undefined {
+  const presets = r.openttd?.presets ?? [];
+  const i = presets.findIndex((p) => sameSelection(p, params));
+  return i >= 0 ? r.openttd?.ids?.presets[i] : undefined;
+}
+
+/** The size of an item's block of part ids in the table. */
+export function blockSize(item: Pick<ExportItem, "formation">): number {
+  return item.formation ? FORMATION_BLOCK : PRESET_BLOCK;
 }
 
 /**

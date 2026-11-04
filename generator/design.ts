@@ -227,6 +227,19 @@ export interface OpenttdProperties extends OpenttdFields {
   presets?: ParamValues[];
   /** Fixed formations of the design's own cars (docs/site/openttd-export.md). */
   formations?: OpenttdFormation[];
+  /**
+   * The ids the committed id table (generator/openttdIds.json) gives the model:
+   * its GRF id's low 16 bits and the first part id of each preset's and
+   * formation's block, in their order. Written into the catalog's block only.
+   */
+  ids?: OpenttdIds;
+}
+
+/** A model's ids from the committed OpenTTD id table (OpenttdProperties.ids). */
+export interface OpenttdIds {
+  grf: number;
+  presets: number[];
+  formations: number[];
 }
 
 /** The facts every vehicle the GRF can hold states (OpenttdRequired); the balance figures are derived. */
@@ -270,7 +283,7 @@ export function checkOpenttdProperties(design: ProceduralDesign, vehicle: boolea
   }
   const checkFields = (f: OpenttdFields & { params?: ParamValues; variants?: unknown }, where: string) => {
     for (const [k, v] of Object.entries(f)) {
-      if (k === "params" || k === "variants" || (where === "" && (k === "presets" || k === "formations"))) continue;
+      if (k === "params" || k === "variants" || (where === "" && (k === "presets" || k === "formations" || k === "ids"))) continue;
       if (k in OPENTTD_RANGES) {
         const [lo, hi] = OPENTTD_RANGES[k]!;
         if (typeof v !== "number" || !Number.isInteger(v) || v < lo || v > hi) fail(`${where}have an invalid "${k}": ${String(v)}`);
