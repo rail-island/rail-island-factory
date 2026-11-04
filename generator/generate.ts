@@ -114,10 +114,12 @@ import { FAR_PROPS } from "./props/propKit.ts";
 import { generateSets } from "./sets/setsExport.ts";
 import { generateText } from "./text.ts";
 import { generateSurfaces } from "./surfacesExport.ts";
-import { checkOpenttdProperties, type CatalogFields, type ParamValues, type ProceduralDesign } from "./design.ts";
+import { checkOpenttdProperties, OPENTTD_MAX_PARTS, type CatalogFields, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { buildLodModel } from "./lodModel.ts";
 import { lodBudget } from "./lod.ts";
 import { glbStats, type GlbStats } from "./glbStats.ts";
+import { catalogOpenttd, openttdFeatureOf, openttdPartCount } from "./openttd.ts";
+import { OPENTTD_TABLE } from "./openttdTable.ts";
 import { JS_DIR, bundleDesign, gzipSize, writeIfChanged } from "./jsModel.ts";
 import { findCoplanarOverlaps, type CoplanarOverlap } from "./coplanar.ts";
 import {
@@ -225,6 +227,12 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
 ];
 
 const FAMILIES = RAW_FAMILIES.map(f => ({ ...f, designs: f.designs.map(d => { d.id = proceduralId(d.id); return d; }) }));
+// every vehicle OpenTTD can hold states its OpenTTD facts in one table (openttdTable.ts),
+// put on the design here, so no source module (and none of its JS models) changes for them
+for (const f of FAMILIES) {
+  if (f.meta !== "vehicles") continue;
+  for (const d of f.designs) if (OPENTTD_TABLE[d.id]) d.openttd = OPENTTD_TABLE[d.id];
+}
 /** Every village house (village.meta.json). */
 export const VILLAGE_DESIGNS: readonly ProceduralDesign[] = FAMILIES.filter(f => f.meta === "village").flatMap(f => f.designs);
 
@@ -286,6 +294,32 @@ export function designGlb(id: string, params?: ParamValues): Uint8Array {
   const design = DESIGNS.get(id);
   if (!design) throw new Error(`no procedural model "${id}"`);
   return toGlb(id, design.build(params));
+}
+
+/**
+ * Checks a design's OpenTTD block (design.ts checkOpenttdProperties): required on
+ * every vehicle a GRF can hold; and each formation fits OpenTTD's part cap, its
+ * cars measured on their built models.
+ */
+export function checkOpenttdDesign(design: ProceduralDesign): void {
+  const vehicle = VEHICLE_IDS.has(design.id);
+  const feature = vehicle ? openttdFeatureOf(catalogFields(design)) : null;
+  checkOpenttdProperties(design, vehicle, feature);
+  const lengths = new Map<string, number>();
+  for (const formation of design.openttd?.formations ?? []) {
+    let parts = 0;
+    for (const car of formation.cars) {
+      const key = JSON.stringify(Object.entries(car.params).sort());
+      if (!lengths.has(key)) {
+        const stats = glbStats(toGlb(design.id, design.build(car.params)));
+        lengths.set(key, stats.max[0] - stats.min[0]);
+      }
+      parts += openttdPartCount(lengths.get(key)!);
+    }
+    if (parts > OPENTTD_MAX_PARTS) {
+      throw new Error(`${design.id}: the formation "${formation.name}" has ${parts} OpenTTD parts, over the cap of ${OPENTTD_MAX_PARTS} (docs/site/openttd-export.md)`);
+    }
+  }
 }
 
 /** A vehicle's rider seat, measured on its built model (riderSeat.ts) in the yaw the game turns it by. */
@@ -595,7 +629,7 @@ export async function buildExport(
     generateSurfaces(dir);
   }
   fs.writeFileSync(path.join(dir, "industry-migration.json"), `${JSON.stringify({ version: 1, entries: INDUSTRY_MIGRATION }, null, 2)}\n`);
-  for (const design of designs) checkOpenttdProperties(design, ALL_VEHICLES.includes(design));
+  for (const design of designs) checkOpenttdDesign(design);
   // every model soundTable.ts gives a sound must exist (docs/models/sounds.md)
   if (designs.length === DESIGNS.size) {
     const unknown = unknownTableIds(designs);
@@ -612,7 +646,7 @@ export async function buildExport(
         jsGzipBytes: gzipSize(jsText),
         jsHash: crypto.createHash("sha256").update(jsText).digest("hex").slice(0, 16),
         thumbBytes: fs.statSync(built.thumb).size,
-      }, refs.get(design.id), design.openttd);
+      }, refs.get(design.id), catalogOpenttd(design, catalogFields(design)));
       return { ...record, ...(design.buildCoarse ? { coarse: true } : {}), ...(design.buildMax ? { maxDetail: true } : {}), ...(design.sourceTree === false ? { noSourceTree: true } : {}) };
     }),
   };

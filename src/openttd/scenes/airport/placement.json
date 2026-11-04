@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "scene": "airport",
+  "openttd": "13.4",
+  "opengfx": "7.1",
+  "sizes": {
+    "1x": [
+      578,
+      371
+    ],
+    "4x": [
+      2312,
+      1484
+    ]
+  },
+  "slots": [
+    {
+      "id": "aircraft-0",
+      "direction": 5,
+      "track": "air",
+      "maxLength": 16,
+      "anchors": {
+        "1x": [
+          338,
+          240
+        ],
+        "4x": [
+          1352,
+          960
+        ]
+      }
+    },
+    {
+      "id": "aircraft-1",
+      "direction": 3,
+      "track": "air",
+      "maxLength": 16,
+      "anchors": {
+        "1x": [
+          240,
+          251
+        ],
+        "4x": [
+          960,
+          1004
+        ]
+      }
+    }
+  ]
+}

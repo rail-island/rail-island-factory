@@ -3,7 +3,7 @@
 // writes for the equivalent NML (docs/site/openttd-export.md).
 
 import { describe, expect, it } from "vitest";
-import { daysSinceYearZero, encodeGrf, grfCompress, grfDecompress, GRF_ZOOM, type GrfImage, type GrfPart } from "../src/openttd/grf";
+import { aircraftAcceleration, daysSinceYearZero, encodeGrf, grfCompress, grfDecompress, GRF_ZOOM, type GrfImage, type GrfPart } from "../src/openttd/grf";
 import type { ResolvedVehicle } from "../src/openttd/properties";
 
 function vehicle(extra: Partial<ResolvedVehicle> = {}): ResolvedVehicle {
@@ -168,10 +168,54 @@ describe("encodeGrf", () => {
     expect(props[0]).toMatch(/1c 01$/);
     // nmlc: 30 km/h = 3c, capacity 200 as a word
     expect(props[1]).toContain(" 0b 3c 0f 64 0a 78 0d c8 00 0c 00 08 ff ");
-    // nmlc: 800 km/h = 3e, 150 passengers, 10 mail, a large aeroplane
-    expect(props[2]).toContain(" 0c 3e 0e 64 0b 78 0f 96 00 11 0a 09 02 0a 01 08 ff ");
+    // nmlc: 800 km/h = 3e, acceleration 40 (28), 150 passengers, 10 mail, a large aeroplane
+    expect(props[2]).toContain(" 0c 3e 0d 28 0e 64 0b 78 0f 96 00 11 0a 09 02 0a 01 08 ff ");
     // an aircraft without a refittable cargo is disabled by OpenTTD: passengers always are
     expect(props[2]).toMatch(/18 01 00 13 00 00 00 00$/);
+  });
+
+  // Regression: OpenTTD gives a GRF's new aircraft an acceleration of 0, and such an
+  // aircraft never leaves its hangar (found parking the preview prerender's markers).
+  it("gives every aircraft an acceleration in OpenTTD's own range", () => {
+    expect(aircraftAcceleration(150)).toBe(18);
+    expect(aircraftAcceleration(800)).toBe(40);
+    expect(aircraftAcceleration(1100)).toBe(50);
+    const { entries } = parse(encodeGrf({ ...set, vehicles: [{ vehicle: vehicle({ feature: "aircraft", speed: 150, capacity: 4 }), parts: [part(0x500)] }] }));
+    const props = entries.filter((e) => e.type === 0xff && e.data[0] === 0x00 && e.data[1] === 0x03).map((e) => hex(e.data));
+    expect(props[0]).toContain(" 0d 12 ");
+  });
+
+  it("groups a vehicle under another as its engine variant (OpenTTD 13+)", () => {
+    const vehicles = [
+      { vehicle: vehicle(), parts: [part(0x200, 8)] },
+      { vehicle: vehicle({ name: "Loco (Red)" }), parts: [part(0x201, 8)], variantOf: 0x200 },
+      { vehicle: vehicle({ feature: "road", speed: 80, power: 200, weight: 12 }), parts: [part(0x300, 8)], variantOf: 0x301 },
+      { vehicle: vehicle({ feature: "ship", speed: 30 }), parts: [part(0x400)], variantOf: 0x401 },
+      { vehicle: vehicle({ feature: "aircraft", speed: 800 }), parts: [part(0x500)], variantOf: 0x501 },
+    ];
+    const { entries } = parse(encodeGrf({ ...set, vehicles }));
+    const props = entries.filter((e) => e.type === 0xff && e.data[0] === 0x00 && e.data[1] !== 0x08).map((e) => hex(e.data));
+    expect(props[0]).not.toContain(" 2f ");
+    expect(props[1]).toMatch(/ 2f 00 02$/);
+    expect(props[2]).toMatch(/ 26 01 03$/);
+    expect(props[3]).toMatch(/ 20 01 04$/);
+    expect(props[4]).toMatch(/ 20 01 05$/);
+  });
+
+  it("puts each part's share of the capacity, its cargo and its own weight on it", () => {
+    const parts: GrfPart[] = [
+      { ...part(0x200, 8), capacity: 30 },
+      { ...part(0x201, 8), capacity: 29, weight: 57 },
+      { ...part(0x202, 8), capacity: 25, cargo: "MAIL", refitClasses: ["mail"], weight: 300 },
+    ];
+    const { entries } = parse(encodeGrf({ ...set, vehicles: [{ vehicle: vehicle({ capacity: 84 }), parts }] }));
+    const pseudo = entries.filter((e) => e.type === 0xff).map((e) => hex(e.data));
+    expect(pseudo[4]).toBe("00 08 01 02 00 09 50 41 53 53 4d 41 49 4c"); // PASS, MAIL
+    expect(pseudo[5]).toContain(" 14 1e 15 00 "); // the head carries its share, 30, not 84
+    // part 1: 29 passengers, refits as the vehicle's, 57 t
+    expect(pseudo[6]).toBe("00 00 0b 01 ff 01 02 06 00 05 01 0b 00 00 14 1d 15 00 28 00 00 1d 00 00 00 00 16 39 24 00 21 00 12 fd");
+    // part 2: 25 bags of mail, refittable to mail, 300 t
+    expect(pseudo[7]).toBe("00 00 0b 01 ff 02 02 06 00 05 01 0b 00 00 14 19 15 01 28 02 00 1d 00 00 00 00 16 2c 24 01 21 00 12 fd");
   });
 
   it("marks a non-ASCII name as UTF-8", () => {

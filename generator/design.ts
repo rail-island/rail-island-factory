@@ -200,11 +200,40 @@ export interface OpenttdFields {
 /** A variant's OpenTTD figures: the fields that differ from the design's. */
 export type OpenttdVariant = { params: ParamValues } & OpenttdFields;
 
+/** One car of a formation: a non-default selection of the design, `turned` drawn facing backwards. */
+export interface OpenttdFormationCar {
+  params: ParamValues;
+  turned?: boolean;
+}
+
+/**
+ * A fixed formation the GRF offers as one articulated engine: an English name
+ * (shown in OpenTTD's purchase list after the title) and its cars, front first.
+ */
+export interface OpenttdFormation {
+  name: string;
+  cars: OpenttdFormationCar[];
+}
+
 /** What an OpenTTD GRF export needs of a vehicle (ProceduralDesign.openttd). */
 export interface OpenttdProperties extends OpenttdFields {
   /** Parameter variants whose figures differ, matched like GameProperties.variants. */
   variants?: OpenttdVariant[];
+  /**
+   * The selections the one-click download exports, the default (`{}`) first:
+   * non-default parameter values, each offered and listed once; never a whole
+   * articulated train (`unit: "train"`; formations stand in for it).
+   */
+  presets?: ParamValues[];
+  /** Fixed formations of the design's own cars (docs/site/openttd-export.md). */
+  formations?: OpenttdFormation[];
 }
+
+/** The facts every vehicle the GRF can hold states (OpenttdRequired); the balance figures are derived. */
+export const OPENTTD_REQUIRED_FACTS = ["introYear", "capacity", "cargo", "refitClasses", "climates"] as const;
+
+/** The most parts a formation may have in OpenTTD (the export's cap, properties.ts MAX_PARTS). */
+export const OPENTTD_MAX_PARTS = 32;
 
 const OPENTTD_RANGES: Record<string, [number, number]> = {
   introYear: [1, 5000000], vehicleLife: [1, 255], modelLife: [1, 255], reliabilityDecay: [0, 255],
@@ -213,21 +242,35 @@ const OPENTTD_RANGES: Record<string, [number, number]> = {
 const OPENTTD_CLIMATES: readonly string[] = ["temperate", "arctic", "tropical", "toyland"];
 
 /**
- * Checks a design's optional OpenTTD properties (OpenttdProperties): only a
- * vehicle may carry them, every figure is an integer in its range, labels are four
- * printable ASCII characters, and each variant names a real, non-default parameter
- * selection at most once. Throws, naming the design.
+ * Checks a design's OpenTTD properties (OpenttdProperties): only a vehicle a GRF
+ * can hold may carry them, and every such vehicle (`exportable`, its OpenTTD type;
+ * null for one a GRF cannot hold, undefined when not known) must, with the facts
+ * OPENTTD_REQUIRED_FACTS lists (a train's rail type too) and its presets; every
+ * figure is an integer in its range, labels are four printable ASCII characters,
+ * each variant names a real, non-default parameter selection at most once, each
+ * preset and formation car a real, offered selection that is not the whole
+ * articulated train, the default preset first. Throws, naming the design.
  */
-export function checkOpenttdProperties(design: ProceduralDesign, vehicle: boolean): void {
+export function checkOpenttdProperties(design: ProceduralDesign, vehicle: boolean, exportable?: "train" | "road" | "ship" | "aircraft" | null): void {
   const ottd = design.openttd;
-  if (!ottd) return;
   const fail = (why: string): never => {
     throw new Error(`${design.id}: openttd properties ${why} (docs/site/openttd-export.md)`);
   };
+  if (!ottd) {
+    if (exportable) fail("are missing: every vehicle OpenTTD can hold states them (generator/openttdTable.ts)");
+    return;
+  }
   if (!vehicle) fail("belong to vehicles only");
+  if (vehicle && exportable === null) fail("belong to vehicles OpenTTD can hold only");
+  if (exportable) {
+    for (const k of OPENTTD_REQUIRED_FACTS) if (ottd[k] === undefined) fail(`lack the required "${k}"`);
+    if (exportable === "train" && ottd.railType === undefined) fail('lack the required "railType" of a train');
+    if (exportable !== "train" && ottd.railType !== undefined) fail('state a "railType" on a vehicle that is not a train');
+    if (!ottd.presets?.length) fail("list no presets");
+  }
   const checkFields = (f: OpenttdFields & { params?: ParamValues; variants?: unknown }, where: string) => {
     for (const [k, v] of Object.entries(f)) {
-      if (k === "params" || k === "variants") continue;
+      if (k === "params" || k === "variants" || (where === "" && (k === "presets" || k === "formations"))) continue;
       if (k in OPENTTD_RANGES) {
         const [lo, hi] = OPENTTD_RANGES[k]!;
         if (typeof v !== "number" || !Number.isInteger(v) || v < lo || v > hi) fail(`${where}have an invalid "${k}": ${String(v)}`);
@@ -262,6 +305,39 @@ export function checkOpenttdProperties(design: ProceduralDesign, vehicle: boolea
     if (seen.has(key)) fail(`list the variant ${key} twice`);
     seen.add(key);
     checkFields(variant, `variant ${key}: `);
+  }
+  // a preset or formation car: a real, offered, non-default selection (or none at all)
+  const selection = (params: ParamValues, where: string): string => {
+    let resolved: ParamValues;
+    try {
+      resolved = resolveParams(specs, params);
+    } catch (e) {
+      return fail(`list ${where} that does not resolve: ${(e as Error).message}`);
+    }
+    for (const [name, value] of Object.entries(params)) {
+      if (resolved[name] !== value) fail(`list ${where} whose "${name}" does not apply`);
+      if (specs.find((s) => s.name === name)!.default === value) fail(`list ${where} at the default "${name}"`);
+    }
+    if (resolved.unit === "train") fail(`list ${where} of the whole articulated train (a formation stands in for it)`);
+    return JSON.stringify(Object.entries(params).sort());
+  };
+  if (ottd.presets) {
+    if (!ottd.presets.length) fail("list an empty presets list");
+    if (Object.keys(ottd.presets[0]!).length) fail("list a preset ahead of the default ({} comes first)");
+    const keys = new Set<string>();
+    for (const preset of ottd.presets) {
+      const key = selection(preset, "a preset");
+      if (keys.has(key)) fail(`list the preset ${key} twice`);
+      keys.add(key);
+    }
+  }
+  const names = new Set<string>();
+  for (const f of ottd.formations ?? []) {
+    if (!/^[\x20-\x7e]{1,40}$/.test(f.name)) fail(`name a formation "${f.name}" (1..40 printable ASCII characters)`);
+    if (names.has(f.name)) fail(`name two formations "${f.name}"`);
+    names.add(f.name);
+    if (f.cars.length < 2) fail(`give the formation "${f.name}" fewer than two cars`);
+    for (const car of f.cars) selection(car.params, `a car of the formation "${f.name}"`);
   }
 }
 

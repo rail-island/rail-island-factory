@@ -45,12 +45,25 @@ export interface GrfPart {
   length: number;
   /** Indexed by OpenTTD's Direction (N, NE, E, SE, S, SW, W, NW); each holds the zoom levels' images. */
   directions: GrfImage[][];
+  /**
+   * What this part carries, when the vehicle's capacity is spread over its parts
+   * (an articulated vehicle, a formation's cars): its share of the capacity, in
+   * its cargo (the vehicle's when absent) with its refits. The head's share
+   * replaces the vehicle's capacity.
+   */
+  capacity?: number;
+  cargo?: string;
+  refitClasses?: OpenttdCargoClass[];
+  /** Tonnes this part weighs on its own: a formation car's weight on its first part; never the head's. */
+  weight?: number;
 }
 
 /** One exported vehicle: its figures and its parts, the head first. */
 export interface GrfVehicle {
   vehicle: ResolvedVehicle;
   parts: GrfPart[];
+  /** The head id of the vehicle this one is grouped under in OpenTTD's purchase list (its engine variant; OpenTTD 13+). */
+  variantOf?: number;
 }
 
 export interface GrfSet {
@@ -265,8 +278,17 @@ const B = (v: number) => (b: Bytes) => void b.u8(v);
 const W = (v: number) => (b: Bytes) => void b.u16(v);
 const D = (v: number) => (b: Bytes) => void b.u32(v);
 
-/** The head's properties for its vehicle type. */
-function headProps(v: ResolvedVehicle, length: number, articulated: boolean, cargoIndex: number, railIndex: number): Array<[number, (b: Bytes) => void]> {
+/** The engine-variant property of each vehicle type (a word: the parent's local id). */
+const VARIANT_PROP: Record<OpenttdFeature, number> = { train: 0x2f, road: 0x26, ship: 0x20, aircraft: 0x20 };
+
+/** The head's properties for its vehicle type; `capacity` is the head's own (its share on an articulated vehicle). */
+function headProps(v: ResolvedVehicle, length: number, articulated: boolean, cargoIndex: number, railIndex: number, capacity = v.capacity, variantOf?: number): Array<[number, (b: Bytes) => void]> {
+  const props = headTypeProps(v, length, articulated, cargoIndex, railIndex, capacity);
+  if (variantOf !== undefined) props.push([VARIANT_PROP[v.feature], W(variantOf)]);
+  return props;
+}
+
+function headTypeProps(v: ResolvedVehicle, length: number, articulated: boolean, cargoIndex: number, railIndex: number, capacity: number): Array<[number, (b: Bytes) => void]> {
   const common: Array<[number, (b: Bytes) => void]> = [
     [0x06, B(climateMask(v.climates))],
   ];
@@ -294,7 +316,7 @@ function headProps(v: ResolvedVehicle, length: number, articulated: boolean, car
       props.push(
         [0x0d, B(clamp(v.runningCostFactor, 0, 255))],
         [0x17, B(clamp(v.costFactor, 0, 255))],
-        [0x14, B(clamp(v.capacity, 0, 255))],
+        [0x14, B(clamp(capacity, 0, 255))],
         [0x15, B(cargoIndex)],
         [0x28, W(refits)],
         [0x1d, D(0)],
@@ -316,7 +338,7 @@ function headProps(v: ResolvedVehicle, length: number, articulated: boolean, car
         [0x0a, D(RUNNING_COST.road)],
         [0x09, B(clamp(v.runningCostFactor, 0, 255))],
         [0x11, B(clamp(v.costFactor, 0, 255))],
-        [0x0f, B(clamp(v.capacity, 0, 255))],
+        [0x0f, B(clamp(capacity, 0, 255))],
         [0x10, B(cargoIndex)],
         [0x18, B(TRACTIVE_EFFORT)],
         [0x23, B(8 - length)],
@@ -344,6 +366,9 @@ function headProps(v: ResolvedVehicle, length: number, articulated: boolean, car
       return [
         ...common, [0x1a, date], ...lifes,
         [0x0c, B(clamp(Math.floor(v.speed / 12.8), 1, 255))],
+        // OpenTTD leaves a GRF's new aircraft at acceleration 0, and such an aircraft
+        // never leaves its hangar: take OpenTTD's own range, 18 (propeller) to 50 (fast jet)
+        [0x0d, B(aircraftAcceleration(v.speed))],
         [0x0e, B(clamp(v.runningCostFactor, 0, 255))],
         [0x0b, B(clamp(v.costFactor, 0, 255))],
         [0x0f, W(clamp(v.capacity, 0, 0xffff))],
@@ -359,12 +384,34 @@ function headProps(v: ResolvedVehicle, length: number, articulated: boolean, car
   }
 }
 
-/** A hidden articulated part: no climate (never offered on its own), its length, the head's rail type. */
-function partProps(feature: OpenttdFeature, length: number, railIndex: number): Array<[number, (b: Bytes) => void]> {
+/** An aircraft's acceleration (property 0D, 3/8 mph a tick): OpenTTD's originals run 18 to 50, faster ones higher. */
+export function aircraftAcceleration(speed: number): number {
+  return clamp(speed / 20, 18, 50);
+}
+
+/**
+ * A hidden articulated part: no climate (never offered on its own), its length,
+ * the head's rail type; and what it carries and weighs, when it carries a share
+ * (GrfPart.capacity, weight).
+ */
+function partProps(feature: OpenttdFeature, part: GrfPart, railIndex: number, cargoIndex: number, refits: number): Array<[number, (b: Bytes) => void]> {
+  const cap = clamp(part.capacity ?? 0, 0, 255);
+  const carries = cap > 0;
   if (feature === "train") {
-    return [[0x06, B(0)], [0x05, B(railIndex)], [0x0b, W(0)], [0x14, B(0)], [0x21, B(8 - length)], [0x12, B(0xfd)]];
+    const tons = clamp(part.weight ?? 0, 0, 0xffff);
+    return [
+      [0x06, B(0)], [0x05, B(railIndex)], [0x0b, W(0)], [0x14, B(cap)],
+      ...(carries ? [[0x15, B(cargoIndex)], [0x28, W(refits)], [0x1d, D(0)]] as Array<[number, (b: Bytes) => void]> : []),
+      ...(tons > 0 ? [[0x16, B(tons & 0xff)], [0x24, B(tons >> 8)]] as Array<[number, (b: Bytes) => void]> : []),
+      [0x21, B(8 - part.length)], [0x12, B(0xfd)],
+    ];
   }
-  return [[0x06, B(0)], [0x0f, B(0)], [0x23, B(8 - length)], [0x0e, B(0xff)]];
+  return [
+    [0x06, B(0)], [0x0f, B(cap)],
+    ...(carries ? [[0x10, B(cargoIndex)], [0x1d, W(refits)], [0x16, D(0)]] as Array<[number, (b: Bytes) => void]> : []),
+    ...(part.weight ? [[0x14, B(clamp(part.weight * 4, 0, 255))]] as Array<[number, (b: Bytes) => void]> : []),
+    [0x23, B(8 - part.length)], [0x0e, B(0xff)],
+  ];
 }
 
 /** Encode a whole set: the bytes of the `.grf` file. */
@@ -387,7 +434,7 @@ export function encodeGrf(set: GrfSet): Uint8Array<ArrayBuffer> {
   );
   push(new Bytes().u8(0x08).u8(0x08).bytes(set.grfid).str(set.name).str(set.description).done());
 
-  const cargos = labelTable(set.vehicles.map((v) => v.vehicle.cargo), "PASS");
+  const cargos = labelTable(set.vehicles.flatMap((v) => [v.vehicle.cargo, ...v.parts.flatMap((p) => (p.cargo ? [p.cargo] : []))]), "PASS");
   const rails = labelTable(set.vehicles.filter((v) => v.vehicle.feature === "train").map((v) => v.vehicle.railType), "RAIL");
   const table = (prop: number, labels: string[]) => {
     const b = new Bytes().u8(0x00).u8(0x08).u8(1).u8(labels.length).ext(0).u8(prop);
@@ -397,7 +444,7 @@ export function encodeGrf(set: GrfSet): Uint8Array<ArrayBuffer> {
   push(table(0x12, rails));
   push(table(0x09, cargos));
 
-  for (const { vehicle: v, parts } of set.vehicles) {
+  for (const { vehicle: v, parts, variantOf } of set.vehicles) {
     if (parts.length === 0 || parts.length > MAX_PARTS) throw new Error(`${v.name}: a vehicle has 1 to ${MAX_PARTS} parts`);
     const feat = FEATURE_BYTE[v.feature];
     const articulated = parts.length > 1;
@@ -405,8 +452,10 @@ export function encodeGrf(set: GrfSet): Uint8Array<ArrayBuffer> {
     const head = parts[0]!;
     const cargoIndex = cargos.indexOf(v.cargo);
     const railIndex = v.feature === "train" ? rails.indexOf(v.railType) : 0;
-    push(action0(feat, head.id, headProps(v, head.length, articulated, cargoIndex, railIndex)));
-    for (const p of parts.slice(1)) push(action0(feat, p.id, partProps(v.feature, p.length, railIndex)));
+    push(action0(feat, head.id, headProps(v, head.length, articulated, cargoIndex, railIndex, head.capacity ?? v.capacity, variantOf)));
+    for (const p of parts.slice(1)) {
+      push(action0(feat, p.id, partProps(v.feature, p, railIndex, cargos.indexOf(p.cargo ?? v.cargo), refitClassMask(p.refitClasses ?? v.refitClasses))));
+    }
     push(new Bytes().u8(0x04).u8(feat).u8(0x7f).u8(1).ext(head.id).str(v.name).done());
 
     // Action 1: one set of 8 directions per part, then the sprites themselves.
