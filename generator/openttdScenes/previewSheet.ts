@@ -22,7 +22,7 @@ import { GRF_ZOOM, type GrfImage } from "../../src/openttd/grf.ts";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SCENES = path.resolve(HERE, "../../src/openttd/scenes");
-const SUPERSAMPLE = 4;
+export const SUPERSAMPLE = 4;
 /** Towards the light in tile units, and the lights' strengths: spriteRenderer.ts. */
 const LIGHT = (() => {
   const v = [1, -0.5, 1.5];
@@ -38,7 +38,7 @@ const toSrgb = (c: number): number => {
 };
 
 /** One sprite's frame at RENDER_ZOOM x SUPERSAMPLE, premultiplied RGBA, top row first (SpriteRenderer.render). */
-function rasterize(tris: readonly Tri[], view: SpriteView, turned: boolean): Uint8Array {
+export function rasterize(tris: readonly Tri[], view: SpriteView, turned: boolean): Uint8Array {
   const W = view.width * SUPERSAMPLE;
   const H = view.height * SUPERSAMPLE;
   const rgba = new Uint8Array(W * H * 4);

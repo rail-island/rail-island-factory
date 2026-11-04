@@ -1,8 +1,8 @@
 # The export: OpenTTD GRF and GLB ZIP
 
-**Covers** - the site's export list (the "Add to export" button, the app bar's Export panel, its browser storage), the two formats it writes in the browser (a NewGRF for OpenTTD and a ZIP of GLB files), how a vehicle becomes OpenTTD sprites, the GRF encoder, the `openttd` block on a design and its category defaults, and how the GRF was checked against nmlc and a real OpenTTD.
-**Code** - `src/exportList.ts`, `src/ExportPanel.tsx`, `src/exportRun.ts`, `src/modelModule.ts`, `src/zip.ts`, `src/openttd/properties.ts`, `src/openttd/projection.ts`, `src/openttd/spriteRenderer.ts`, `src/openttd/pixels.ts`, `src/openttd/grf.ts`, `generator/design.ts` (`OpenttdProperties`, `checkOpenttdProperties`), `generator/catalog.ts` (`catalogRecord`), `test/openttdGrf.test.ts`, `test/openttdExport.test.ts`, `test/exportList.test.ts`
-**See also** - [catalog-site.md](catalog-site.md), [../models/game-properties.md](../models/game-properties.md), [../models/js-format.md](../models/js-format.md), [../specs/2026-10-17-openttd-grf-export.md](../specs/2026-10-17-openttd-grf-export.md)
+**Covers** - the site's export list (the "Add to export" button, the app bar's Export panel, its browser storage), the two formats it writes in the browser (a NewGRF for OpenTTD and a ZIP of GLB files), the model page's one-click "Download for OpenTTD" and its OpenTTD view, how a vehicle becomes OpenTTD sprites, the GRF encoder, the `openttd` block every vehicle a GRF can hold states (facts, presets, formations) and the balance formula, the preview scenes prerendered in OpenTTD, and how the GRF was checked against nmlc and a real OpenTTD.
+**Code** - `src/exportList.ts`, `src/ExportPanel.tsx`, `src/exportRun.ts`, `src/download.ts`, `src/modelModule.ts`, `src/zip.ts`, `src/ModelDetail.tsx` (the stage bar), `src/OpenttdPreview.tsx`, `src/openttd/properties.ts`, `src/openttd/projection.ts`, `src/openttd/spriteRenderer.ts`, `src/openttd/pixels.ts`, `src/openttd/grf.ts`, `src/openttd/scene.ts`, `src/openttd/scenes/`, `generator/design.ts` (`OpenttdProperties`, `checkOpenttdProperties`), `generator/openttd.ts`, `generator/openttdTable.ts`, `generator/generate.ts` (`checkOpenttdDesign`), `generator/catalog.ts` (`catalogRecord`), `generator/openttdScenes/` (the prerender, its marker GRF, scene AI and game script, the headless preview), `test/openttdGrf.test.ts`, `test/openttdExport.test.ts`, `test/openttdOneClick.test.ts`, `test/exportList.test.ts`
+**See also** - [catalog-site.md](catalog-site.md), [../models/openttd-figures.md](../models/openttd-figures.md) (every vehicle's figures), [../models/game-properties.md](../models/game-properties.md), [../models/js-format.md](../models/js-format.md), [../specs/2026-10-17-openttd-grf-export.md](../specs/2026-10-17-openttd-grf-export.md), [../specs/2026-11-04-one-click-openttd-export.md](../specs/2026-11-04-one-click-openttd-export.md)
 
 ## The export list
 
@@ -43,6 +43,22 @@ On reading, an entry whose model is gone, or whose values the model no longer
 takes (or a default value stored as if chosen), is dropped and the panel says how
 many; duplicates collapse. An unreadable value or another `version` starts an
 empty list. Storage that throws (a private window) only loses persistence.
+
+## The one-click download
+
+A vehicle OpenTTD can hold gets a bar over its model page's stage: a **3D /
+OpenTTD** switch (the OpenTTD view, below) and **Download for OpenTTD**. The
+button builds, in the browser and at once, a GRF of that one model
+(`exportModelGrf`): every preset of its `openttd` block, the default first, then
+every formation, with a progress line and Cancel. The export list is not touched.
+
+- the set's name is the model's title; its GRF id is "RI" and the hash of the
+  **model id** (`grfIdOf(record.id)`), so downloading it again after the model
+  changed replaces the same GRF in a saved game; the file is `<id>.grf`;
+- the presets and formations are **grouped under the default** in OpenTTD's
+  purchase list: each one's head names the default's head as its engine variant
+  (property 2F / 26 / 20 / 20; OpenTTD 13 and later show one row to unfold, older
+  versions list them all).
 
 ## The ZIP of GLBs
 
@@ -89,28 +105,73 @@ a variant's value titles in brackets: "CD 163 / 363 (CD 162)".
 
 ### The `openttd` block
 
-A vehicle design may declare `openttd` (`generator/design.ts`
-`OpenttdProperties`) next to `game`; every field is optional:
+Every vehicle a GRF can hold (rail, tram, road, ship, aircraft) states its
+`openttd` block (`generator/design.ts` `OpenttdProperties`) in one table,
+`generator/openttdTable.ts`, keyed by model id; the build puts each entry on its
+design, so no source module - and none of its JS models - changes for it. Its
+figures are listed in [../models/openttd-figures.md](../models/openttd-figures.md).
 
 | Field | Range | What |
 |---|---|---|
-| `introYear` | year | introduction date (1 January) |
-| `vehicleLife`, `modelLife` | 1..255 years | how long one vehicle lasts; how long the model is offered |
-| `reliabilityDecay` | 0..255 | |
-| `costFactor`, `runningCostFactor` | 0..255 | |
-| `capacity` | 0..255 (ships, aircraft 65535) | in units of `cargo` |
-| `cargo` | 4-letter label | PASS, MAIL, GOOD, COAL, ... |
-| `climates` | list | temperate, arctic, tropical, toyland |
-| `railType` | 4-letter label | RAIL, ELRL, MONO, MGLV |
-| `refitClasses` | list | passengers, mail, express, armoured, bulk, piece, liquid, refrigerated, hazardous, covered |
-| `variants` | list | `{ params, ...fields }`, as `game.variants` |
+| `introYear` | year | **required**: the year it entered service (1 January) |
+| `capacity` | 0..65535 | **required**: seats (with standing room for a metro, tram or city bus), a freight vehicle's payload in tonnes, a tank's in kilolitres; in units of `cargo` |
+| `cargo` | 4-letter label | **required**: PASS, MAIL, GOOD, COAL, OIL_, STEL, WOOD, GRAI, ... |
+| `refitClasses` | list | **required** (may be empty): passengers, mail, express, armoured, bulk, piece, liquid, refrigerated, hazardous, covered |
+| `climates` | list | **required**: temperate, arctic, tropical, toyland |
+| `railType` | 4-letter label | **required on a train**, refused on anything else: RAIL, ELRL, MONO, MGLV |
+| `costFactor`, `runningCostFactor` | 0..255 | derived (below) unless stated |
+| `vehicleLife`, `modelLife` | 1..255 years | derived unless stated |
+| `reliabilityDecay` | 0..255 | derived unless stated |
+| `variants` | list | `{ params, ...fields }`: a selection's own figures (a livery's year, a class's seats), as `game.variants` |
+| `presets` | list | **required**: the selections the one-click download exports, `{}` (the default) first |
+| `formations` | list | `{ name, cars: [{ params, turned? }] }`: fixed formations of the design's own cars |
 
-`checkOpenttdProperties` runs for every design when the catalog is built: only
-vehicles may carry the block, figures are integers in range, labels four
-printable characters, and each variant names a real non-default selection once.
-The block goes into the site's `catalog.json` record (`openttd`) only, not into
-the game's `vehicles.meta.json`. The CD 163 declares one (introduced 1984, 40
-years, ELRL; its CD 362 livery 1990).
+`checkOpenttdDesign` (`generator/generate.ts`) runs for every design when the
+catalog is built and fails it when:
+
+- a vehicle a GRF can hold has no block, or lacks a required fact or its presets;
+  a cable car or a building has one;
+- a figure is out of range or not an integer, a label not four printable
+  characters;
+- a variant, preset or formation car is not a real, offered, non-default
+  selection, or names the whole articulated train (`unit: "train"`: formations
+  stand in for it); a preset is listed twice or the default does not come first;
+- a formation has fewer than two cars, shares another's name, or - its cars built
+  and measured - more than 32 OpenTTD parts.
+
+**The catalog's block.** The site's `catalog.json` record carries the block
+resolved (`generator/openttd.ts` `catalogOpenttd`): every field at the default
+selection, and a variant entry - only what differs - for each preset, declared
+variant and formation car whose figures differ (its own facts, or balance figures
+that follow its own power). Not in the game's `vehicles.meta.json`.
+
+**The balance formula** (`deriveBalance`), from the selection's power (kW), top
+speed (km/h) and capacity, each result rounded and clamped to 1..255:
+
+| Type | Purchase cost factor | Running cost factor | Vehicle life | Model life | Reliability decay |
+|---|---|---|---|---|---|
+| train, powered | 20 + power/40 + speed/5 + capacity/4 | 10 + power/50 + capacity/6 | 35 (steam 40) | 40 | 20 (steam 25) |
+| train, unpowered | 10 + capacity/3 + speed/10 | 5 + capacity/8 | 40 | 40 | 20 |
+| road vehicle | 20 + power/5 + capacity/3 | 10 + power/10 + capacity/6 | 15 (tram 30) | 25 (tram 35) | 20 |
+| ship | 40 + power/50 + capacity/10 | 20 + power/40 + capacity/20 | 30 | 40 | 20 |
+| aircraft | 60 + power/100 + capacity/3 | 30 + power/80 + capacity/5 | 25 | 30 | 20 |
+
+A 4,000 kW, 140 km/h locomotive costs 148 / 90, a 60-seat coach 44 / 13. A design
+or variant may state any of them instead.
+
+**Category defaults.** `defaultOpenttdFields` (`src/openttd/properties.ts`, the
+first layer above) remain for a record without a block; since every vehicle a GRF
+can hold states one, they no longer reach an export.
+
+**Formations.** A formation is one articulated OpenTTD engine of its cars, front
+first; a car marked `turned` is drawn facing backwards (its model turned about the
+vertical axis), as the rear cab car of a unit. Each car is cut into its own parts
+of at most 8/8 (below), so a cut never falls inside a car. Its head is the first
+car's: its figures, the formation's name after the title ("TGV Duplex (power
+cars, 8 trailers)"), the **sum** of the cars' power, purchase and running cost
+factors, the lowest of their top speeds; each later car's weight goes on its first
+part, and every car's capacity is spread over its parts (below). The 24
+formations are in [../models/openttd-figures.md](../models/openttd-figures.md).
 
 ### Size and parts
 
@@ -133,6 +194,12 @@ as OpenTTD spaces vehicles there, so its diagonal views are longer by the square
 root of two, as OpenTTD's own are. Ships and aircraft have no length in OpenTTD:
 they are scaled whole to fit their longer plan side into one tile, keep that
 length in every direction, and a ship is lowered by its `draftFrac`.
+
+**Capacity on the parts.** An articulated vehicle - a long single car or a
+formation - carries its capacity on its parts: each car's capacity split as evenly
+as possible over its parts (`shares`), in its own cargo with its own refits, the
+head's share in place of the vehicle's. OpenTTD adds the parts up in the purchase
+list, and a train can so carry more than the 255 one part holds.
 
 Trains therefore need long stations and, for more than a few cars, a higher
 `max_train_length` in OpenTTD's settings than its default 7 tiles. The scale was
@@ -170,7 +237,7 @@ runs and back references of up to 16 bytes, so transparent pixels cost 2 bytes i
 | 14 | INFO: palette D, BLTR 32 (OpenTTD switches to a 32bpp blitter itself) |
 | 8 | GRF version 8, the GRF id, name and description |
 | 0 (feature 08) | the rail type table (RAIL first) and the cargo table (PASS first) |
-| 0 | per vehicle the head's properties (long intro date, lives, speed, power in hp, weight, running cost base and engine class by traction, capacity and cargo by table index, refit classes, the tractive effort coefficient 0.3, length as "shorten by", custom sprites); each hidden articulated part (no climate, its length, the head's rail type) |
+| 0 | per vehicle the head's properties (long intro date, lives, speed, power in hp, weight, running cost base and engine class by traction, capacity and cargo by table index, refit classes, the tractive effort coefficient 0.3, an aircraft's acceleration, length as "shorten by", custom sprites, the engine variant it is grouped under); each hidden articulated part (no climate, its length, the head's rail type; its share of the capacity with its cargo and refits, its own weight) |
 | 4 | the name, plain ASCII or UTF-8 marked as such |
 | 1 | one sprite set of 8 directions per part |
 | 2 | a basic set per part; an articulated vehicle's callback switch (var 0C: callback 16 to the part switch) and part switch (var 10: part n's id, then "no more parts") |
@@ -179,6 +246,11 @@ runs and back references of up to 16 bytes, so transparent pixels cost 2 bytes i
 A train or road vehicle always gets OpenTTD's tractive effort coefficient, 0.3:
 a GRF's new engine otherwise has none, and with realistic acceleration an engine
 with no tractive effort barely moves whatever its power.
+
+An aircraft gets an acceleration (property 0D) of speed / 20, clamped to 18..50,
+OpenTTD's own aircraft's range: a GRF's new aircraft otherwise has 0 and never
+leaves its hangar (found when the preview prerender's marker aircraft stayed in
+theirs; `test/openttdGrf.test.ts` pins it).
 
 An aircraft is always refittable to passengers: OpenTTD has no default-cargo
 property for aircraft and disables one with no refittable cargo.
@@ -190,6 +262,92 @@ original vehicles, below the 14 bits an articulated part's id has), placed in
 sorted key order with linear probing on a collision (`assignIds`), so adding or
 reordering entries keeps the other vehicles' ids and an OpenTTD saved game keeps
 its vehicles.
+
+## The OpenTTD view
+
+The stage's **OpenTTD** switch (`src/OpenttdPreview.tsx`, loaded with three only
+when chosen) draws the variant on screen - or, with the Vehicle picker, one of the
+model's formations - as the GRF would draw it, into a scene prerendered in OpenTTD
+(below):
+
+1. the sprites come from the export's own renderer (`exportRun.ts`
+   `previewSprites`): the same parts, views and zoom filter, only the directions
+   the scene's slots need, at normal zoom and 4x;
+2. the vehicle's **track** picks the scene and slots (`src/openttd/scene.ts`
+   `trackOf`, `sceneOf`): a train with rail type ELRL the electrified tracks, any
+   other train plain track, a tram the tram tracks, a bus or truck the road, a
+   ship the water, an aircraft the airport's terminals;
+3. at each slot the vehicle stands where OpenTTD drew the marker (`placeParts`):
+   its front where the 8/8 marker's was, its head's position ceil(L / 2) units
+   behind it and each next part floor(L / 2) + ceil(L' / 2) behind the one ahead,
+   each sprite at its part's OpenTTD anchor (`spriteAnchor`) plus the image's
+   offsets; parts beyond the slot's straight track (`maxLength`) are left out, and
+   the nearest part is drawn last;
+4. the canvas draws the scene's background, the sprites, then its foreground (the
+   catenary, platform canopies, fences in front of the slots).
+
+A **4x zoom** checkbox swaps in the 4x images (scrolled to the first slot). The
+note names the OpenTTD and OpenGFX versions the scene was made with. The view's
+choices are not stored.
+
+`generator/openttdScenes/previewSheet.ts` draws the same headlessly, with a small
+software rasterizer in place of WebGL (flat Lambert, the same lights), for checks
+and for images of a model in OpenTTD:
+
+    pnpm exec tsx generator/openttdScenes/previewSheet.ts <model id> <out.png> [name=value ...] [--formation <name>] [--zoom 1x|4x]
+
+## The preview scenes
+
+`src/openttd/scenes/<scene>/` holds, per scene (railway, road, harbour, airport):
+`background-1x.png`, `background-4x.png`, `foreground-1x.png`,
+`foreground-4x.png` (transparent but for what covers a vehicle), `placement.json`
+and the two OpenTTD saved games they were rendered from (`scene-background.sav`,
+`scene-markers.sav`). The site imports the PNGs and JSON as Vite assets.
+
+| Scene | Slots |
+|---|---|
+| railway | heading south-west through a two-platform station, south-east along y, south on a diagonal fed by a curve; each on a plain and an electrified track |
+| road | a bus and a tram heading south-west and south-east; a bus stop |
+| harbour | two ships on a canal basin, heading south-west and south-east |
+| airport | two aircraft at a city airport's terminals |
+
+`placement.json`: `version` 1, `scene`, `openttd` and `opengfx` (the versions),
+`sizes` (per zoom, width and height) and `slots`: `{ id, direction (OpenTTD's
+Direction), track (rail | electric | road | tram | water | air), maxLength (tile
+units of straight track behind the front), anchors: { "1x": [x, y], "4x": [x, y]
+} }`, the anchor being the pixel where OpenTTD anchored a full-length marker
+part's sprite stopped at the slot.
+
+**The prerender** (`generator/openttdScenes/prerender.ts`) is run by hand, never by
+the build, the tests or CI, only to change a scene; it needs Linux, Xvfb, curl,
+tar and unzip:
+
+    pnpm exec tsx generator/openttdScenes/prerender.ts [--only <scene>] [--keep <dir> [--reuse]]
+
+It downloads OpenTTD 13.4 (the version the encoder was checked against) and
+OpenGFX 7.1 (GPL-2) once into `~/.cache/rail-island-factory/`, then per scene:
+
+1. writes an OpenTTD personal directory: a config for a flat 128 x 128 map of one
+   town, the **marker GRF** (`markers.ts`, encoded by the site's own encoder), the
+   **scene AI** (`ai/RIScenes`, its `scene` setting naming the scene) and a game
+   script that pays for everything (`game/RIMoney`);
+2. runs OpenTTD headless until the AI has built the scene round tile (32, 32) -
+   trying the next map seed while the town stands within 26 tiles of it - and
+   saves the game on exit; loads it again, where the AI buys the markers, drives
+   each to its slot and stops it, and saves again;
+3. loads each save under Xvfb and screenshots it at normal zoom and at 4x
+   (`scrollto instant 32 32`, a zoom in and out so the view moves at once, then
+   `screenshot normal` and `screenshot big`);
+4. finds each marker part's **anchor**: a marker's sprite is a magenta mask with
+   its anchor pixel - and four copies 3 pixels off, so a catenary wire hides at
+   most some - in a colour telling slot, direction, part and copy, and holes where
+   the neighbouring parts' anchors fall; the parts' 8-unit spacing is checked
+   against every visible anchor (within a pixel);
+5. takes as **foreground** every pixel of a mask that shows not the mask but the
+   scene, unchanged from the save without markers: what OpenTTD drew over the
+   vehicle;
+6. crops to the slots and writes palette PNGs (OpenGFX uses at most 256 colours:
+   lossless, checked) and `placement.json`.
 
 ### How it was checked
 

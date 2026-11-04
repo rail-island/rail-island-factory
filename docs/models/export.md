@@ -201,8 +201,8 @@ folder, `url` is `refs/<id>/<name>`), empty for a design without any. A road or
 rail vehicle also carries `scenery` (`sceneryOf`): the way the site's viewer draws
 under it (`rail`, `road` or `tram`) and, over an electric one or a tram, `wireTop`,
 the wire's underside ([../site/catalog-site.md](../site/catalog-site.md)). A vehicle
-whose design declares OpenTTD figures also carries them as `openttd`, for the
-site's GRF export only; the game's meta files do not
+an OpenTTD GRF can hold also carries its OpenTTD figures, resolved, as `openttd`,
+for the site's GRF export and OpenTTD view only; the game's meta files do not
 ([../site/openttd-export.md](../site/openttd-export.md)).
 
 The counts come from `generator/glbStats.ts` over the in-memory GLB: vertices and

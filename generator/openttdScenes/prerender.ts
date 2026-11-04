@@ -4,21 +4,23 @@
 //
 //   pnpm exec tsx generator/openttdScenes/prerender.ts [--only <scene>] [--keep <dir> [--reuse]]
 //
-// It downloads OpenTTD 13.4 and OpenGFX 7.1 (GPL-2) into a cache directory, then:
+// It downloads OpenTTD 13.4 and OpenGFX 7.1 (GPL-2) into a cache directory, then,
+// one OpenTTD game per scene (railway, road, harbour, airport):
 //
-//  1. writes the marker GRF (markers.ts) and the scene AI (ai/RIScenes) into a
-//     fresh OpenTTD personal directory with a config for a flat 128 x 128 map;
-//  2. runs OpenTTD headless (null video) while the AI builds the four scenes
-//     (a game script, game/RIMoney, pays for them) and saves the game on exit:
-//     the scenes without vehicles; then loads that game, where the AI parks the
-//     markers at their slots, and saves it again;
-//  3. loads each save under Xvfb, scrolls to each scene and screenshots it at
-//     normal zoom ("normal") and at 4x ("big", zoom_min 4x);
+//  1. writes a fresh OpenTTD personal directory: a config for a flat 128 x 128 map
+//     of one town, the marker GRF (markers.ts), the scene AI (ai/RIScenes, its
+//     "scene" setting naming the scene) and a game script that pays (game/RIMoney);
+//  2. runs OpenTTD headless (null video) while the AI builds the scene round tile
+//     (32, 32) - a new seed while the town stands in the way - and saves the game
+//     on exit: the scene without vehicles; then loads that game, where the AI parks
+//     the markers at their slots, and saves it again;
+//  3. loads each save under Xvfb and screenshots the scene at normal zoom
+//     ("normal") and at 4x ("big", zoom_min 4x);
 //  4. reads the markers' anchor pixels (each part's own colour), and takes as the
 //     scene's foreground every pixel of a marker's mask that the scene covers;
-//  5. writes, per scene, src/openttd/scenes/<scene>/: background-1x.png,
-//     background-4x.png, foreground-1x.png, foreground-4x.png and placement.json,
-//     cropped to the slots; and the two savegames next to them.
+//  5. writes src/openttd/scenes/<scene>/: background-1x.png, background-4x.png,
+//     foreground-1x.png, foreground-4x.png (palette PNGs) and placement.json,
+//     cropped to the slots, and the two saves.
 //
 // Needs xvfb-run, curl, tar and unzip on PATH (Linux, x86-64).
 

@@ -232,7 +232,10 @@ Clicking a row or card opens the model page: the interactive preview (drag to
 orbit, wheel or pinch to zoom, no pan), the build's thumbnail and every column as
 a spec list. Its **Add to export** button puts the model, at the parameter values
 on screen, on the export list ("In the export" once that variant is listed;
-[openttd-export.md](openttd-export.md)). Arrows step through the **current** filtered and sorted list;
+[openttd-export.md](openttd-export.md)). A vehicle OpenTTD can hold also gets, over the preview, a
+**3D / OpenTTD** switch - the variant drawn into a scene prerendered in OpenTTD - and **Download
+for OpenTTD**, a GRF of its preset variants and formations in one click
+([openttd-export.md](openttd-export.md)). Arrows step through the **current** filtered and sorted list;
 Escape, the app bar's back arrow or the browser's Back return to it.
 
 A model page always opens at its top, however far the list was scrolled, and
