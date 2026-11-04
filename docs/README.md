@@ -85,6 +85,7 @@
 | [models/game-properties.md](models/game-properties.md) | what the game needs beyond geometry: vehicle weight, power, speed, draft and rope heights, per-variant figures, building plaza and block rules, city variants (shapes, colour palettes, height bands) and party walls; declared on each design, checked, exported |
 | [models/sounds.md](models/sounds.md) | which sound each model makes: the horn, engine and bell slots, the defaults derived from traction, weight and hull length, pinned and runtime parameters, variants, the bells, the checks and `pnpm import:sounds` |
 | [site/catalog-site.md](site/catalog-site.md) | the factory.railisland.com site: listing (table, cards, variant thumbnails rendered in the browser), sorting, search, the Sounds column, 3D preview (the Sounds block, pantograph Up/Down, a character's motion buttons, the scenery under a vehicle or a character), local dev without a build |
+| [site/seo-pages.md](site/seo-pages.md) | the page URLs (`/model/<id>/`, `/category/...`), the static page the build prerenders for each (head, content, JSON-LD), `sitemap.xml`, `robots.txt`, `404.html`, the in-app links and the document head |
 
 `docs/specs/` and `docs/impl/` are planning records (a spec and the notes on how
 it was built), not reference.

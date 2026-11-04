@@ -5,6 +5,7 @@
 import { For, Show } from "solid-js";
 import { COLUMNS, cellFile, cellText, shownId, type Column, type Row, type SortDir } from "./catalogQuery";
 import { Thumb } from "./Thumb";
+import { Link } from "./Link";
 
 const TABLE_COLUMNS = COLUMNS.filter((c) => c.table);
 
@@ -39,6 +40,8 @@ export function ModelTable(props: {
   dir: SortDir;
   onSort: (col: Column) => void;
   onOpen: (r: Row) => void;
+  /** The model page's URL: the title is a link to it (the whole row still opens it). */
+  hrefOf: (r: Row) => string;
 }) {
   return (
     <div class="factory-tablewrap">
@@ -66,7 +69,7 @@ export function ModelTable(props: {
         <tbody>
           <For each={props.rows}>
             {(r) => (
-              <tr onClick={() => props.onOpen(r)} tabindex="0" onKeyDown={(e) => e.key === "Enter" && props.onOpen(r)}>
+              <tr onClick={(e) => !(e.target as Element).closest("a") && props.onOpen(r)} tabindex="0" onKeyDown={(e) => e.key === "Enter" && props.onOpen(r)}>
                 <td class="factory-table__thumbcol">
                   <Thumb record={r} />
                 </td>
@@ -74,7 +77,9 @@ export function ModelTable(props: {
                   {(c) =>
                     c.key === "title" ? (
                       <th scope="row">
-                        {r.title}
+                        <Link class="factory-rowlink" href={props.hrefOf(r)} onNavigate={() => props.onOpen(r)}>
+                          {r.title}
+                        </Link>
                         <Show when={shownId(r)}>{(id) => <span class="factory-rowid">{id()}</span>}</Show>
                       </th>
                     ) : (

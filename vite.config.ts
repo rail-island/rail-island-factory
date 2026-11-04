@@ -4,6 +4,7 @@ import { buildSync } from "esbuild";
 import { defineConfig, type Plugin } from "vite";
 import solid from "vite-plugin-solid";
 import { devExport } from "./generator/devServer.ts";
+import { writeSitePages } from "./generator/sitePages.ts";
 
 /**
  * Inline src/boot.ts (the loading line and the error box) into index.html as a
@@ -46,6 +47,27 @@ function socialPreview(): Plugin {
   };
 }
 
+/**
+ * After the bundle is written: one prerendered page per model and per category, the
+ * home page's content, 404.html, sitemap.xml and robots.txt (generator/sitePages.ts,
+ * docs/site/seo-pages.md), each from the built index.html, so they name its hashed
+ * assets.
+ */
+function sitePages(): Plugin {
+  let outDir = "dist";
+  return {
+    name: "site-pages",
+    apply: "build",
+    configResolved(config) {
+      outDir = config.build.outDir;
+    },
+    closeBundle() {
+      const n = writeSitePages(outDir);
+      this.info(`site pages: ${n} files`);
+    },
+  };
+}
+
 // The site is a static Solid SPA. Its data is the generator's export folder,
 // served as Vite's publicDir: `pnpm build:models` writes export/ (js/, thumbs/,
 // catalog.json, skyscrapers.meta.json) and `vite build` copies it into dist/ as
@@ -53,7 +75,7 @@ function socialPreview(): Plugin {
 // `pnpm dev` uses no export folder: generator/devServer.ts serves the data on
 // demand and the browser measures and renders the rest (docs/site/catalog-site.md).
 export default defineConfig(({ command }) => ({
-  plugins: [solid(), inlineBoot(), socialPreview(), devExport()],
+  plugins: [solid(), inlineBoot(), socialPreview(), sitePages(), devExport()],
   publicDir: command === "serve" ? false : "export",
   build: {
     // three (~560 kB) is its own chunk, loaded only when a model page opens

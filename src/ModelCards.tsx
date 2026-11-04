@@ -6,17 +6,18 @@
 import { For, Show } from "solid-js";
 import { cellText, column, formatBytes, formatNumber, type Row } from "./catalogQuery";
 import { Thumb } from "./Thumb";
+import { Link } from "./Link";
 
 const ALWAYS = ["triangles", "vertices", "jsBytes"];
 
-export function ModelCards(props: { rows: readonly Row[]; sort: string; onOpen: (r: Row) => void }) {
+export function ModelCards(props: { rows: readonly Row[]; sort: string; onOpen: (r: Row) => void; hrefOf: (r: Row) => string }) {
   const extra = () => (ALWAYS.includes(props.sort) || props.sort === "title" ? undefined : column(props.sort));
   return (
     <ul class="factory-cards">
       <For each={props.rows}>
         {(r) => (
           <li>
-            <button type="button" class="factory-card" onClick={() => props.onOpen(r)}>
+            <Link class="factory-card" href={props.hrefOf(r)} onNavigate={() => props.onOpen(r)}>
               <Thumb record={r} />
               <span class="factory-card__body">
                 <span class="factory-card__title">
@@ -42,7 +43,7 @@ export function ModelCards(props: { rows: readonly Row[]; sort: string; onOpen: 
                   </Show>
                 </span>
               </span>
-            </button>
+            </Link>
           </li>
         )}
       </For>

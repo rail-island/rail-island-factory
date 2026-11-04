@@ -1337,3 +1337,89 @@ body {
 .factory-ottd__ids {
   font-family: ui-monospace, monospace;
 }
+
+/* ------------------------------------------------ links that look like controls
+   The chips, the cards, the variant tiles, the back arrow and the step buttons are
+   real links (src/Link.tsx, docs/site/seo-pages.md): no underline, a button's box. */
+
+a.factory-btn,
+a.factory-filter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  text-decoration: none;
+}
+
+a.factory-card,
+a.factory-variants__head,
+a.factory-variants__tile {
+  box-sizing: border-box;
+  text-decoration: none;
+}
+
+.factory-rowlink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.factory-rowlink:hover,
+.factory-rowlink:focus-visible {
+  text-decoration: underline;
+}
+
+/* ------------------------------------------------ the prerendered page
+   What the build writes into #root of every page (generator/sitePages.ts) before the
+   app replaces it: a crawler's and a slow phone's view of the page. */
+
+.factory-static {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 16px 32px;
+  line-height: 1.5;
+}
+
+.factory-static a {
+  color: var(--m-primary);
+}
+
+.factory-static__crumbs {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.factory-static__crumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.factory-static__crumbs li + li::before {
+  content: "\203a";
+  margin-right: 8px;
+  color: var(--m-on-surface-variant);
+}
+
+.factory-static__thumb {
+  max-width: 100%;
+  height: auto;
+}
+
+.factory-static dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 2px 16px;
+}
+
+.factory-static dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.factory-static__list {
+  columns: 16rem;
+  padding-left: 18px;
+}

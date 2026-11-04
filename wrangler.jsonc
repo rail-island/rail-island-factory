@@ -8,9 +8,11 @@
   "compatibility_date": "2026-06-16",
   "assets": {
     "directory": "./dist",
-    // The site keeps its state in the query string of one page, so any unknown
-    // path falls back to index.html rather than a 404.
-    "not_found_handling": "single-page-application"
+    // Every page is a prerendered file (docs/site/seo-pages.md): `/model/<id>/` is
+    // model/<id>/index.html (the default html_handling, auto-trailing-slash, adds the
+    // slash). Any other path answers 404.html with a 404 status: the app with a
+    // noindex tag, which shows "No model ..." or the list.
+    "not_found_handling": "404-page"
   },
   // Also serve on the account's implicit rail-island-factory.<subdomain>.workers.dev.
   // Wrangler turns that address off by default once `routes` is set, so it is

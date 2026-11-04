@@ -3,10 +3,16 @@
 import { describe, expect, it } from "vitest";
 import {
   COLUMNS, DEFAULT_SORT, cellFile, cellText, column, compareRows, effectiveParams, formatBytes, isDefaultParams, nonDefaultParams, parseView,
-  NO_CHIPS, chipLabel, chipRows, groupOf, prepareRows, queryRows, serializeView, shownId,
+  NO_CHIPS, chipLabel, chipRows, groupOf, prepareRows, queryRows, serializeView, shownId, viewUrl, chipSlug, chipMatches, viewPath,
   MAX_SHOWN_VARIANTS, offeredValues, representativeVariants, variantCaption, variantCount, variantThumbKey,
   type CatalogRecord,
 } from "../src/catalogQuery";
+
+/** The view a site-relative URL shows, as the app reads location.pathname and location.search. */
+function parseUrl(url: string) {
+  const at = url.indexOf("?");
+  return at < 0 ? parseView("", url) : parseView(url.slice(at), url.slice(0, at));
+}
 
 function rec(id: string, title: string, triangles: number, extra: Partial<CatalogRecord> = {}): CatalogRecord {
   return {
@@ -160,51 +166,97 @@ describe("the filter chips", () => {
     expect(chipLabel("skyscraper_c")).toBe("skyscraper_c");
   });
 
-  it("round-trips the chips in the URL, a lower one only under the one above", () => {
+  it("round-trips the chips in the URL path, a lower one only under the one above", () => {
     const v = { ...parseView(""), group: "train", l2: "loco", l3: null };
-    expect(serializeView(v)).toBe("?cat=train&sub=loco");
-    expect(parseView(serializeView(v))).toEqual(v);
+    expect(viewUrl(v)).toBe("/category/train/loco/");
+    expect(parseUrl(viewUrl(v))).toEqual(v);
+    expect(parseUrl("/category/train/loco/electric/")).toMatchObject({ group: "train", l2: "loco", l3: "electric" });
+    expect(parseUrl("/category/bogus/loco/")).toMatchObject(NO_CHIPS);
+    // the Creator's (and the old site's) query form is still read
+    expect(parseView("?cat=train&sub=loco")).toEqual(v);
     expect(parseView("?cat=bogus&sub=loco")).toMatchObject({ group: null, l2: null, l3: null });
     expect(parseView("?sub=loco&sub2=x")).toMatchObject(NO_CHIPS);
+  });
+
+  it("names a chip value by its slug, and matches a raw value to its slug", () => {
+    expect(chipSlug("busStop")).toBe("bus-stop");
+    expect(chipSlug("Panel houses")).toBe("panel-houses");
+    expect(chipSlug("skyscraper_c")).toBe("skyscraper-c");
+    for (const v of ["busStop", "Panel houses", "loco", "skyscraper_c"]) expect(chipSlug(chipSlug(v))).toBe(chipSlug(v));
+    expect(chipMatches("busStop", "bus-stop")).toBe(true);
+    expect(chipMatches("busStop", "busStop")).toBe(true);
+    expect(chipMatches("busStop", null)).toBe(false);
+    // a raw value from an old ?sub= link is held as its slug
+    expect(parseView("?cat=structure&sub=busStop")).toMatchObject({ group: "structure", l2: "bus-stop" });
+    expect(viewUrl({ ...parseView(""), group: "structure", l2: "busStop", l3: null })).toBe("/category/structure/bus-stop/");
+  });
+
+  it("filters and offers a chip picked by its slug", () => {
+    const rows = prepareRows([rec("a", "A", 1), rec("b", "B", 1, { group: "skyscraper_r" })]);
+    const path = { group: "building", l2: "commercial", l3: null };
+    expect(queryRows(rows, "", DEFAULT_SORT, "asc", path).map((r) => r.id)).toEqual(["a", "b"]);
+    // the building's second row is its category ("Commercial"), picked as "commercial"
+    expect(chipRows(rows, path).l2).toEqual(["Commercial"]);
   });
 });
 
 describe("the URL state", () => {
   it("round-trips, leaving defaults out", () => {
-    expect(serializeView(parseView(""))).toBe("");
+    expect(viewUrl(parseView(""))).toBe("/");
     const v = { q: "tower", layout: "table" as const, ...NO_CHIPS, sort: "triangles", dir: "asc" as const, model: "proc-building-sky-pagoda", tab: "specs" as const, node: null, params: {} };
-    expect(parseView(serializeView(v))).toEqual(v);
+    expect(viewUrl(v)).toBe("/model/proc-building-sky-pagoda/?q=tower&sort=triangles&dir=asc");
+    expect(parseUrl(viewUrl(v))).toEqual(v);
+  });
+
+  it("puts an open model in the path and keeps the list's chips in the query", () => {
+    const v = { ...parseView(""), group: "train", l2: "loco", l3: "electric", model: "proc-vehicle-cd-163" };
+    expect(viewPath(v)).toBe("/model/proc-vehicle-cd-163/");
+    expect(viewUrl(v)).toBe("/model/proc-vehicle-cd-163/?cat=train&sub=loco&sub2=electric");
+    expect(parseUrl(viewUrl(v))).toEqual(v);
+  });
+
+  it("reads the old all-query form, which the app rewrites to the path form", () => {
+    const old = parseView("?model=proc-vehicle-cd-150&tab=references&cat=train");
+    expect(old).toMatchObject({ model: "proc-vehicle-cd-150", tab: "references", group: "train" });
+    expect(viewUrl(old)).toBe("/model/proc-vehicle-cd-150/?cat=train&tab=references");
+  });
+
+  it("treats any other path as the list", () => {
+    expect(parseUrl("/nowhere/")).toEqual(parseView(""));
+    expect(parseUrl("/model/")).toEqual(parseView(""));
+    expect(parseUrl("/model/a/b/")).toEqual(parseView(""));
+    expect(parseUrl("/model/%E0%A4%A/")).toEqual(parseView(""));
   });
 
   it("carries the source tab and the selected node of an open model", () => {
     const v = { q: "", layout: "table" as const, ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "proc-building-sky-art-deco", tab: "source" as const, node: "tier-3/piers", params: {} };
-    expect(serializeView(v)).toBe("?model=proc-building-sky-art-deco&tab=source&node=tier-3%2Fpiers");
-    expect(parseView(serializeView(v))).toEqual(v);
+    expect(viewUrl(v)).toBe("/model/proc-building-sky-art-deco/?tab=source&node=tier-3%2Fpiers");
+    expect(parseUrl(viewUrl(v))).toEqual(v);
     // the root scope's id is the empty string, and still a selection
     expect(parseView("?model=proc-building-sky-pagoda&tab=source&node=").node).toBe("");
-    expect(parseView(serializeView({ ...v, node: "" })).node).toBe("");
+    expect(parseUrl(viewUrl({ ...v, node: "" })).node).toBe("");
   });
 
   it("carries the references tab of an open model, without a node", () => {
     const v = { q: "", layout: "table" as const, ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "proc-vehicle-cd-150", tab: "references" as const, node: null, params: {} };
-    expect(serializeView(v)).toBe("?model=proc-vehicle-cd-150&tab=references");
-    expect(parseView(serializeView(v))).toEqual(v);
+    expect(viewUrl(v)).toBe("/model/proc-vehicle-cd-150/?tab=references");
+    expect(parseUrl(viewUrl(v))).toEqual(v);
     expect(parseView("?model=proc-vehicle-cd-150&tab=references&node=crown")).toMatchObject({ tab: "references", node: null });
-    expect(serializeView({ ...v, node: "crown" })).toBe("?model=proc-vehicle-cd-150&tab=references");
+    expect(viewUrl({ ...v, node: "crown" })).toBe("/model/proc-vehicle-cd-150/?tab=references");
   });
   it("drops a tab or node that has no model or no source tab to belong to", () => {
     expect(parseView("?tab=source&node=crown")).toMatchObject({ model: null, tab: "specs", node: null, params: {} });
     expect(parseView("?model=proc-building-sky-pagoda&node=crown")).toMatchObject({ tab: "specs", node: null });
     expect(parseView("?model=proc-building-sky-pagoda&tab=bogus")).toMatchObject({ tab: "specs", node: null });
-    expect(serializeView({ q: "", layout: "table", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc", model: "proc-building-sky-pagoda", tab: "specs", node: "crown", params: {} })).toBe("?model=proc-building-sky-pagoda");
+    expect(serializeView({ q: "", layout: "table", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc", model: "proc-building-sky-pagoda", tab: "specs", node: "crown", params: {} })).toBe("");
   });
 
   it("carries a parametric model's chosen values, only with an open model", () => {
     const v = { q: "", layout: "table" as const, ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "proc-vehicle-csd-classic-green-coach", tab: "specs" as const, node: null, params: { variant: "classB" } };
-    expect(serializeView(v)).toBe("?model=proc-vehicle-csd-classic-green-coach&p.variant=classB");
-    expect(parseView(serializeView(v))).toEqual(v);
+    expect(viewUrl(v)).toBe("/model/proc-vehicle-csd-classic-green-coach/?p.variant=classB");
+    expect(parseUrl(viewUrl(v))).toEqual(v);
     expect(parseView("?p.variant=classB").params).toEqual({});
-    expect(serializeView({ ...v, model: null })).toBe("");
+    expect(viewUrl({ ...v, model: null })).toBe("/");
   });
 
   it("gives a column its own starting direction and ignores an unknown sort", () => {

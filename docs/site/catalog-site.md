@@ -6,11 +6,11 @@ preview (its passenger view on structure pages included), and the URL state.
 **Code** - `src/main.tsx`, `src/App.tsx`, `src/catalogQuery.ts`, `src/ModelTable.tsx`,
 `src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`, `src/viewerScenery.ts`, `src/viewerMotions.ts`, `src/viewerGlass.ts`, `src/viewerInteriors.ts`, `src/viewerPassenger.ts`, `src/viewerOverlays.ts`,
 `src/SourceTreePanel.tsx`, `src/sourceTreeView.ts`, `src/Thumb.tsx`, `src/modelModule.ts`, `src/ExportPanel.tsx`,
-`src/ModelVariants.tsx`, `src/VariantThumb.tsx`, `src/SoundsPanel.tsx`, `src/modelSounds.ts`, `src/soundAudition.ts`, `test/modelSounds.test.ts`, `src/variantThumbs.ts`, `src/thumbRender.ts`,
+`src/ModelVariants.tsx`, `src/Link.tsx`, `src/VariantThumb.tsx`, `src/SoundsPanel.tsx`, `src/modelSounds.ts`, `src/soundAudition.ts`, `test/modelSounds.test.ts`, `src/variantThumbs.ts`, `src/thumbRender.ts`,
 `src/devCatalog.ts`, `src/devMeasure.ts`, `generator/devServer.ts`, `generator/devExport.ts`, `test/devExport.test.ts`,
 `src/factory.css`, `src/favicon.svg`, `src/apple-touch-icon.png`, `src/social-preview.png`, `src/boot.ts`, `src/bootEntry.ts`, `index.html`, `vite.config.ts`,
 `test/catalogQuery.test.ts`, `test/boot.test.ts`, `test/siteMeta.test.ts`, `test/rig.test.ts` (the Pose sliders), `test/scenery.test.ts`, `test/viewerInteriors.test.ts`, `test/viewerPassenger.test.ts`, `test/characters.test.ts` (the Characters chip, ground and motion buttons)
-**See also** - [../models/export.md](../models/export.md), [../guide/deploy.md](../guide/deploy.md), [openttd-export.md](openttd-export.md)
+**See also** - [../models/export.md](../models/export.md), [../guide/deploy.md](../guide/deploy.md), [openttd-export.md](openttd-export.md), [seo-pages.md](seo-pages.md)
 
 The site is the factory's counterpart of the webapp Creator's model listing,
 copied and trimmed: no sign-in, uploads, woods or packages, and English only.
@@ -54,8 +54,9 @@ into `dist/assets/` (the public folder is the generated export).
 
 `index.html` carries the page's description and canonical URL and the Open Graph
 and Twitter card tags that Facebook, Reddit, X, Slack and messengers read when a
-link to the site is shared (they do not run the app, so every page of the site
-shows the same preview). The image is `src/social-preview.png`, 1200 x 630 px:
+link to the site is shared (they do not run the app). Every model and category page
+is a prerendered copy of it with its own tags and, for a model with a big enough
+thumbnail, its own image ([seo-pages.md](seo-pages.md)). The image is `src/social-preview.png`, 1200 x 630 px:
 the site's colours and favicon, the title and a one-line description, the Eiffel
 Tower, Notre-Dame, the alpine hut, the twisted skyscraper and the Boeing 747
 above a rail line with the CSD 475.1 steam locomotive, the CD 230, the Tatra T3 and
@@ -454,15 +455,17 @@ block ships no tree (its record carries `noSourceTree`), so its page has no Sour
 
 ## URL state
 
-All state is in the query string (`parseView`/`serializeView` in
-`catalogQuery.ts`): `?q=` search, `?view=thumbs` the thumbnail layout, `?cat=`, `?sub=` and `?sub2=` the three chip
-rows (the Creator's names; a lower one only under the one above), `?sort=` and `?dir=` ordering, `?model=` the
-open model, `?tab=source` or `?tab=references` its Source or Images tab and `?node=` the selected tree node (kept
+All state is in the URL (`parseView`/`viewUrl` in `catalogQuery.ts`). The path is the
+page ([seo-pages.md](seo-pages.md)): `/model/<id>/` the open model,
+`/category/<group>/[<l2>/[<l3>/]]` the three chip rows (a lower one only under the one
+above), `/` the plain list. The query string carries the rest: `?q=` search,
+`?view=thumbs` the thumbnail layout, `?sort=` and `?dir=` ordering, on a model page the
+list's chips as `?cat=`, `?sub=` and `?sub2=` (the Creator's names), `?tab=source` or `?tab=references` its Source or Images tab and `?node=` the selected tree node (kept
 only with the Source tab; a node id no longer in the tree selects nothing), and
-`?p.<name>=<value>` a parametric model's non-default values (an unknown name or value falls back to the default). Defaults are left out, so the plain list is the bare URL. Opening and
-closing a model push a history entry and reset the tab and node; typing,
+`?p.<name>=<value>` a parametric model's non-default values (an unknown name or value falls back to the default). Defaults are left out, so the plain list is the bare URL. The old all-query form (`?model=`, `?cat=`) is still read and rewritten to the path form. Opening and
+closing a model and picking a chip push a history entry; opening and closing reset the tab and node; typing,
 sorting, stepping (which drops the node), switching tabs and selecting replace
-the current one, so Back does not replay keystrokes. An unknown `?model=` shows
+the current one, so Back does not replay keystrokes. An unknown model shows
 "No model" with a link back.
 
 ## Low level of detail

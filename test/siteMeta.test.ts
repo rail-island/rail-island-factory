@@ -3,6 +3,7 @@
 
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { HOME_DESCRIPTION, HOME_TITLE, SITE_URL } from "../src/pageMeta";
 
 const html = readFileSync("index.html", "utf8");
 
@@ -29,5 +30,14 @@ describe("index.html link preview", () => {
     expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([1200, 630]);
     expect(meta("property", "og:image:width")).toBe("1200");
     expect(meta("property", "og:image:height")).toBe("630");
+  });
+});
+
+describe("index.html and the app's head (src/pageMeta.ts)", () => {
+  it("agree on the home page's title, description and canonical URL", () => {
+    // the app writes these back when a model or category page closes
+    expect(html).toContain(`<title>${HOME_TITLE}</title>`);
+    expect(meta("name", "description")).toBe(HOME_DESCRIPTION);
+    expect(html).toContain(`<link rel="canonical" href="${SITE_URL}/" />`);
   });
 });

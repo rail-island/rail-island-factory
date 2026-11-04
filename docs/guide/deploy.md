@@ -12,8 +12,10 @@ script, no bindings, no vars. It serves `dist/` - the site plus the generated
 models it lists - on the custom domain `factory.railisland.com`, which wrangler
 provisions on deploy, and - `workers_dev: true` - on the account's implicit
 `rail-island-factory.<subdomain>.workers.dev` address too (wrangler would
-otherwise switch that off because `routes` is set). `not_found_handling: single-page-application` sends any
-unknown path to `index.html`; the site keeps its state in the query string.
+otherwise switch that off because `routes` is set). Every page is a prerendered file (`/model/<id>/` is
+`model/<id>/index.html`, [../site/seo-pages.md](../site/seo-pages.md));
+`not_found_handling: 404-page` answers any other path with `404.html` and a 404
+status (the app, marked `noindex`).
 
 There is one environment. The site is public and has no sign-in.
 

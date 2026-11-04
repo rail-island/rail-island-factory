@@ -3,11 +3,16 @@
 // a narrow one, or a row of variant thumbnails per model; a search box, and a
 // model page with an interactive 3D preview.
 //
-// All of its state is the URL's query string (catalogQuery.ts parseView), so the
-// browser's back button walks it and a model page can be linked to.
+// All of its state is the URL - the page in its path, the rest in its query string
+// (catalogQuery.ts parseView) - so the browser's back button walks it and a model or
+// a category can be linked to. Every model, category and chip is a real link
+// (Link.tsx), and the document head follows the view (pageMeta.ts,
+// docs/site/seo-pages.md).
 
 import { For, Match, Show, Switch, createEffect, createMemo, createResource, createSignal, onCleanup, onMount } from "solid-js";
-import { COLUMNS, GROUPS, chipLabel, chipRows, parseView, prepareRows, queryRows, serializeView, shownId, type Column, type Row, type ViewState } from "./catalogQuery";
+import { COLUMNS, GROUPS, NO_CHIPS, chipLabel, chipMatches, chipRows, chipSlug, parseView, prepareRows, queryRows, shownId, viewUrl, type Column, type Row, type ViewState } from "./catalogQuery";
+import { SITE_URL, categoryMeta, categoryTree, homeMeta, modelMeta, type PageMeta } from "./pageMeta";
+import { Link } from "./Link";
 import type { ModelCatalog } from "../generator/catalog.ts";
 import { ModelTable } from "./ModelTable";
 import { ModelCards } from "./ModelCards";
@@ -36,7 +41,7 @@ async function loadCatalog(): Promise<Row[]> {
 
 export function App() {
   const [rows, { mutate }] = createResource(loadCatalog);
-  const [view, setView] = createSignal<ViewState>(parseView(location.search));
+  const [view, setView] = createSignal<ViewState>(parseView(location.search, location.pathname));
   const [wide, setWide] = createSignal(true);
   // The export list (exportList.ts): read from storage once the catalog lands, written back on every change.
   const [exportState, setExportState] = createSignal<ExportState>(EMPTY_EXPORT);
@@ -60,7 +65,10 @@ export function App() {
     const sync = () => setWide(mq.matches);
     sync();
     mq.addEventListener("change", sync);
-    const onPop = () => show(parseView(location.search));
+    // An old all-query link (`/?model=...`, `/?cat=...`) becomes its path form in place.
+    const here = `${location.pathname}${location.search}`;
+    if (viewUrl(view()) !== here) history.replaceState(null, "", viewUrl(view()));
+    const onPop = () => show(parseView(location.search, location.pathname));
     window.addEventListener("popstate", onPop);
     onCleanup(() => {
       mq.removeEventListener("change", sync);
@@ -88,7 +96,7 @@ export function App() {
   const update = (patch: Partial<ViewState>, push = false) => {
     const next = { ...view(), ...patch };
     show(next);
-    const url = `${location.pathname}${serializeView(next)}`;
+    const url = viewUrl(next);
     if (push) history.pushState(null, "", url);
     else history.replaceState(null, "", url);
   };
@@ -100,9 +108,13 @@ export function App() {
 
   // One chip per row: picking a chip replaces the row's pick, picking the picked
   // chip again clears it, and a change in a row clears every row below it.
-  const pickGroup = (id: string | null) => update({ group: view().group === id ? null : id, l2: null, l3: null });
-  const pickL2 = (id: string | null) => update({ l2: view().l2 === id ? null : id, l3: null });
-  const pickL3 = (id: string | null) => update({ l3: view().l3 === id ? null : id });
+  // The view state holds chip slugs (catalogQuery.ts chipSlug). Each chip is a link to
+  // the view it picks; a new category page is a history entry of its own.
+  const groupPick = (id: string | null): Partial<ViewState> => ({ group: id === null || view().group === id ? null : id, l2: null, l3: null });
+  const l2Pick = (v: string | null): Partial<ViewState> => ({ l2: v === null || chipMatches(v, view().l2) ? null : chipSlug(v), l3: null });
+  const l3Pick = (v: string | null): Partial<ViewState> => ({ l3: v === null || chipMatches(v, view().l3) ? null : chipSlug(v) });
+  const hrefOf = (patch: Partial<ViewState>) => viewUrl({ ...view(), ...patch });
+  const pick = (patch: Partial<ViewState>) => update(patch, true);
   const open = createMemo(() => (view().model ? (rows() ?? []).find((r) => r.id === view().model) : undefined));
 
   const onSort = (col: Column) => {
@@ -110,15 +122,40 @@ export function App() {
     update({ sort: col.key, dir: v.sort === col.key ? (v.dir === "asc" ? "desc" : "asc") : col.dir });
   };
   // A node belongs to one model's tree: opening, closing or stepping drops it.
-  const onOpen = (r: Row, params: Record<string, string> = {}) => update({ model: r.id, tab: "specs", node: null, params: { ...params } }, true);
-  const onClose = () => update({ model: null, tab: "specs", node: null, params: {} }, true);
-  const onStep = (delta: number) => {
+  const openPatch = (r: Row, params: Record<string, string> = {}): Partial<ViewState> => ({ model: r.id, tab: "specs", node: null, params: { ...params } });
+  const closePatch: Partial<ViewState> = { model: null, tab: "specs", node: null, params: {} };
+  const onOpen = (r: Row, params: Record<string, string> = {}) => update(openPatch(r, params), true);
+  const hrefOpen = (r: Row, params: Record<string, string> = {}) => hrefOf(openPatch(r, params));
+  const onClose = () => update(closePatch, true);
+  const stepPatch = (delta: number): Partial<ViewState> | null => {
     const list = listed();
-    if (list.length === 0) return;
+    if (list.length === 0) return null;
     const at = list.findIndex((r) => r.id === view().model);
     const next = list[(((at < 0 ? 0 : at + delta) % list.length) + list.length) % list.length]!;
-    update({ model: next.id, node: null, params: {} });
+    return { model: next.id, node: null, params: {} };
   };
+  const onStep = (delta: number) => {
+    const patch = stepPatch(delta);
+    if (patch) update(patch);
+  };
+  const stepHref = (delta: number) => {
+    const patch = stepPatch(delta);
+    return patch ? hrefOf(patch) : viewUrl(view());
+  };
+
+  // The document head follows the page: its title, description and canonical URL
+  // are the prerendered page's (pageMeta.ts), so a shared link and a crawler agree.
+  const tree = createMemo(() => categoryTree(rows() ?? []));
+  const meta = createMemo((): PageMeta => {
+    const v = view();
+    const all = rows();
+    if (!all) return homeMeta();
+    const record = open();
+    if (record) return modelMeta(record, tree());
+    if (v.group) return categoryMeta(v, tree(), queryRows(all, "", "title", "asc", v));
+    return homeMeta();
+  });
+  createEffect(() => applyMeta(meta()));
 
   // `pnpm dev` lists every model unmeasured (generator/devExport.ts): measure them
   // from their JS models in the browser, the open model first, then as listed.
@@ -149,9 +186,9 @@ export function App() {
           <img src={logoUrl} alt="Rail Island" width="40" height="40" />
         </a>
         {open() ? (
-          <button type="button" class="factory-btn factory-bar__back" onClick={onClose} aria-label="Back to the list">
+          <Link class="factory-btn factory-bar__back" href={hrefOf(closePatch)} onNavigate={onClose} aria-label="Back to the list">
             &larr;
-          </button>
+          </Link>
         ) : null}
         <h1 class="factory-bar__title">{open()?.title ?? "Rail Island Factory"}</h1>
         <Show when={open() && shownId(open()!)}>{(id) => <span class="factory-muted factory-bar__sub">{id()}</span>}</Show>
@@ -180,9 +217,9 @@ export function App() {
           <Match when={view().model && !open()}>
             <p class="factory-error">
               No model "{view().model}".{" "}
-              <button type="button" class="factory-link" onClick={onClose}>
+              <Link class="factory-link" href={hrefOf(closePatch)} onNavigate={onClose}>
                 Back to the list
-              </button>
+              </Link>
             </p>
           </Match>
           <Match when={open()}>
@@ -192,6 +229,7 @@ export function App() {
                 index={listed().findIndex((r) => r.id === record().id) + 1}
                 total={listed().length}
                 onStep={onStep}
+                stepHref={stepHref}
                 onClose={onClose}
                 tab={view().tab}
                 node={view().node}
@@ -250,21 +288,25 @@ export function App() {
                 </button>
               </div>
               <div class="factory-chips">
-                <Chip label="All" on={view().group === null} onPick={() => pickGroup(null)} />
+                <Chip label="All" on={view().group === null} href={hrefOf({ ...NO_CHIPS })} onPick={() => pick({ ...NO_CHIPS })} />
                 <For each={GROUPS.filter((g) => chips().groups.includes(g.id))}>
-                  {(g) => <Chip label={g.label} on={view().group === g.id} onPick={() => pickGroup(g.id)} />}
+                  {(g) => <Chip label={g.label} on={view().group === g.id} href={hrefOf(groupPick(g.id))} onPick={() => pick(groupPick(g.id))} />}
                 </For>
               </div>
               <Show when={chips().l2.length > 0}>
                 <div class="factory-chips">
-                  <Chip label="All" on={view().l2 === null} onPick={() => update({ l2: null, l3: null })} />
-                  <For each={chips().l2}>{(s) => <Chip label={chipLabel(s)} on={view().l2 === s} onPick={() => pickL2(s)} />}</For>
+                  <Chip label="All" on={view().l2 === null} href={hrefOf(l2Pick(null))} onPick={() => pick(l2Pick(null))} />
+                  <For each={chips().l2}>
+                    {(s) => <Chip label={chipLabel(s)} on={chipMatches(s, view().l2)} href={hrefOf(l2Pick(s))} onPick={() => pick(l2Pick(s))} />}
+                  </For>
                 </div>
               </Show>
               <Show when={chips().l3.length > 0}>
                 <div class="factory-chips">
-                  <Chip label="All" on={view().l3 === null} onPick={() => update({ l3: null })} />
-                  <For each={chips().l3}>{(s) => <Chip label={chipLabel(s)} on={view().l3 === s} onPick={() => pickL3(s)} />}</For>
+                  <Chip label="All" on={view().l3 === null} href={hrefOf(l3Pick(null))} onPick={() => pick(l3Pick(null))} />
+                  <For each={chips().l3}>
+                    {(s) => <Chip label={chipLabel(s)} on={chipMatches(s, view().l3)} href={hrefOf(l3Pick(s))} onPick={() => pick(l3Pick(s))} />}
+                  </For>
                 </div>
               </Show>
               <span class="factory-totals">
@@ -274,11 +316,11 @@ export function App() {
             {listed().length === 0 ? (
               <p class="factory-muted">{view().q ? `No model matches "${view().q}".` : "No model matches the chosen filter."}</p>
             ) : view().layout === "thumbs" ? (
-              <ModelVariants rows={listed()} onOpen={onOpen} />
+              <ModelVariants rows={listed()} onOpen={onOpen} hrefOf={hrefOpen} />
             ) : wide() ? (
-              <ModelTable rows={listed()} sort={view().sort} dir={view().dir} onSort={onSort} onOpen={onOpen} />
+              <ModelTable rows={listed()} sort={view().sort} dir={view().dir} onSort={onSort} onOpen={onOpen} hrefOf={hrefOpen} />
             ) : (
-              <ModelCards rows={listed()} sort={view().sort} onOpen={onOpen} />
+              <ModelCards rows={listed()} sort={view().sort} onOpen={onOpen} hrefOf={hrefOpen} />
             )}
           </Match>
         </Switch>
@@ -306,11 +348,23 @@ export function App() {
   );
 }
 
-/** One filter chip: an outline while off, filled while on. */
-function Chip(props: { label: string; on: boolean; onPick: () => void }) {
+/** One filter chip: an outline while off, filled while on. A link to the view it picks. */
+function Chip(props: { label: string; on: boolean; href: string; onPick: () => void }) {
   return (
-    <button type="button" class="factory-filter" classList={{ "factory-filter--on": props.on }} aria-pressed={props.on} onClick={() => props.onPick()}>
+    <Link class="factory-filter" classList={{ "factory-filter--on": props.on }} aria-current={props.on ? "page" : undefined} href={props.href} onNavigate={() => props.onPick()}>
       {props.label}
-    </button>
+    </Link>
   );
+}
+
+/** Write a page's title, description and canonical URL into the document head. */
+function applyMeta(m: PageMeta) {
+  document.title = m.title;
+  const url = `${SITE_URL}${m.path}`;
+  const set = (selector: string, attr: string, value: string) => document.querySelector(selector)?.setAttribute(attr, value);
+  set('meta[name="description"]', "content", m.description);
+  set('link[rel="canonical"]', "href", url);
+  set('meta[property="og:url"]', "content", url);
+  set('meta[property="og:title"]', "content", m.heading);
+  set('meta[property="og:description"]', "content", m.description);
 }

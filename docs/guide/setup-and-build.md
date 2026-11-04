@@ -18,7 +18,7 @@ packages `pnpm.onlyBuiltDependencies` allows.
 |---|---|
 | `pnpm build:models` | runs the generator: writes `export/` (see [../models/export.md](../models/export.md)) |
 | `pnpm dev` | the Vite dev server, with no export folder: models are built on demand and measured and thumbnailed in the browser ([../site/catalog-site.md](../site/catalog-site.md), "Local dev") |
-| `pnpm build` | `build:models`, `tsc --noEmit`, then `vite build` into `dist/` |
+| `pnpm build` | `build:models`, `tsc --noEmit`, then `vite build` into `dist/`, which ends by writing the prerendered model and category pages, `sitemap.xml`, `robots.txt` and `404.html` ([../site/seo-pages.md](../site/seo-pages.md)) |
 | `pnpm preview` | serves `dist/` locally |
 | `pnpm test` | Vitest, once |
 | `pnpm typecheck` | `tsc --noEmit` over `src/`, `generator/`, `test/` |

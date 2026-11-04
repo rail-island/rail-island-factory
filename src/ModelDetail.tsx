@@ -28,6 +28,7 @@
 // and picking pause while another value is chosen.
 
 import { For, Match, Show, Suspense, Switch, createEffect, createMemo, createResource, createSignal, lazy, on, onCleanup } from "solid-js";
+import { Link } from "./Link";
 import {
   previewLod,
   COLUMNS, effectiveParams, formatBytes, isDefaultParams, nonDefaultParams, offeredValues, pageKey, poseControls, poseOf,
@@ -62,6 +63,8 @@ export function ModelDetail(props: {
   index: number;
   total: number;
   onStep: (delta: number) => void;
+  /** The URL the previous (-1) or next (1) model's page has: the step buttons are links to it. */
+  stepHref: (delta: number) => string;
   onClose: () => void;
   tab: DetailTab;
   /** The selected source-tree node, or null. */
@@ -195,13 +198,9 @@ export function ModelDetail(props: {
       </div>
       <div class="factory-detail__specs">
         <div class="factory-detail__nav">
-          <button type="button" class="factory-btn" onClick={() => props.onStep(-1)} disabled={props.total < 2} aria-label="Previous model">
-            &larr;
-          </button>
+          <StepLink delta={-1} total={props.total} href={props.stepHref(-1)} onStep={props.onStep} />
           <span class="factory-muted">{props.index > 0 ? `${props.index} of ${props.total}` : `not in the current list`}</span>
-          <button type="button" class="factory-btn" onClick={() => props.onStep(1)} disabled={props.total < 2} aria-label="Next model">
-            &rarr;
-          </button>
+          <StepLink delta={1} total={props.total} href={props.stepHref(1)} onStep={props.onStep} />
         </div>
         {/* a site preview (proc-preview-*) is a drawing of what the game builds, not a model to take away */}
         <Show when={!props.record.id.startsWith("proc-preview-")}>
@@ -366,5 +365,25 @@ export function ModelDetail(props: {
         </Switch>
       </div>
     </section>
+  );
+}
+
+/** The previous or next model: a link to its page, or a disabled button when the list has no other model. */
+function StepLink(props: { delta: -1 | 1; total: number; href: string; onStep: (delta: number) => void }) {
+  const label = () => (props.delta < 0 ? "Previous model" : "Next model");
+  const arrow = () => (props.delta < 0 ? "\u2190" : "\u2192");
+  return (
+    <Show
+      when={props.total >= 2}
+      fallback={
+        <button type="button" class="factory-btn" disabled aria-label={label()}>
+          {arrow()}
+        </button>
+      }
+    >
+      <Link class="factory-btn" href={props.href} onNavigate={() => props.onStep(props.delta)} aria-label={label()}>
+        {arrow()}
+      </Link>
+    </Show>
   );
 }

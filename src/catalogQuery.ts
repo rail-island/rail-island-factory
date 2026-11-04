@@ -211,8 +211,8 @@ export const NO_CHIPS: ChipPath = { group: null, l2: null, l3: null };
 
 function onPath(r: CatalogRecord, path: ChipPath): boolean {
   if (path.group !== null && groupOf(r) !== path.group) return false;
-  if (path.l2 !== null && level2Of(r) !== path.l2) return false;
-  return path.l3 === null || level3Of(r) === path.l3;
+  if (path.l2 !== null && !chipMatches(level2Of(r), path.l2)) return false;
+  return path.l3 === null || chipMatches(level3Of(r), path.l3);
 }
 
 /** The chips each row offers. A row with nothing to offer is empty. */
@@ -239,12 +239,12 @@ export function chipRows(rows: readonly CatalogRecord[], path: ChipPath): ChipRo
     if (g !== path.group) continue;
     const v2 = level2Of(r);
     l2.add(v2);
-    if (v2 !== path.l2) continue;
+    if (!chipMatches(v2, path.l2)) continue;
     l3.add(level3Of(r));
   }
   const offer = (found: Set<string>, picked: string | null, parent: string | null): string[] => {
     if (parent === null) return [];
-    if (picked !== null) found.add(picked);
+    if (picked !== null && ![...found].some((v) => chipMatches(v, picked))) found.add(picked);
     return found.size > 1 || picked !== null ? [...found].sort((a, b) => collator.compare(chipLabel(a), chipLabel(b))) : [];
   };
   return {
@@ -330,8 +330,14 @@ export function cellFile(r: CatalogRecord, col: Column): { href: string; name: s
 // ------------------------------------------------------------- the URL state
 
 /**
- * What the query string carries: the search, the chips, the ordering and the open model. All
+ * What the URL carries: the search, the chips, the ordering and the open model. All
  * of it lives in the URL so back/forward walks it and a link can share a model.
+ *
+ * The page is the PATH (docs/site/seo-pages.md): `/` is the list, `/model/<id>/` a
+ * model, `/category/<group>/[<l2>/[<l3>/]]` a chip pick. Everything else stays in the
+ * query string. A model page keeps the list's chips in the query (`?cat=&sub=&sub2=`,
+ * the webapp Creator's form) so Back returns to the same list; the old all-query form
+ * (`/?model=...`, `/?cat=...`) is still read, and the app rewrites it to the path form.
  */
 export interface ViewState extends ChipPath {
   q: string;
@@ -355,26 +361,53 @@ export type Layout = "table" | "thumbs";
 
 const DETAIL_TABS: readonly DetailTab[] = ["specs", "source", "references"];
 
-export function parseView(search: string): ViewState {
+/** The path prefixes of a model page and a category page. */
+export const MODEL_PATH = "/model/";
+export const CATEGORY_PATH = "/category/";
+
+/**
+ * A chip value as a URL segment: camelCase split, lower case, anything but letters
+ * and digits a hyphen ("busStop" -> "bus-stop", "Panel houses" -> "panel-houses").
+ * Idempotent, so a slug is its own slug: the view state holds slugs, and a chip
+ * matches by its value's slug (chipMatches).
+ */
+export function chipSlug(value: string): string {
+  return value
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/** Whether a chip value is the picked one (the view state holds slugs; a raw value matches too). */
+export function chipMatches(value: string, picked: string | null): boolean {
+  return picked !== null && chipSlug(value) === chipSlug(picked);
+}
+
+/** The view a URL shows. `search` is `location.search`, `pathname` is `location.pathname`. */
+export function parseView(search: string, pathname = "/"): ViewState {
   const p = new URLSearchParams(search);
   const sort = column(p.get("sort") ?? "") ? p.get("sort")! : DEFAULT_SORT;
   const rawDir = p.get("dir");
   const dir: SortDir = rawDir === "asc" || rawDir === "desc" ? rawDir : column(sort)!.dir;
-  const model = p.get("model") || null;
+  const route = parsePath(pathname);
+  const model = route.model ?? (p.get("model") || null);
   // the tab and the node belong to an open model; a node only to the source tab
   const rawTab = p.get("tab") as DetailTab | null;
   const tab: DetailTab = model && rawTab && DETAIL_TABS.includes(rawTab) ? rawTab : "specs";
   const node = tab === "source" ? p.get("node") : null;
   const params: Record<string, string> = {};
   if (model) for (const [k, v] of p) if (k.startsWith("p.") && k.length > 2 && v) params[k.slice(2)] = v;
-  // the chips as the Creator writes them: ?cat=<group>&sub=<l2>&sub2=<l3>, each only under the one above
-  const group = readChip(p.get("cat"));
-  const l2 = group !== null && GROUP_IDS.has(group) ? readChip(p.get("sub")) : null;
-  const l3 = l2 !== null ? readChip(p.get("sub2")) : null;
+  // the chips from a category path, else as the Creator writes them: ?cat=<group>&sub=<l2>&sub2=<l3>, each only under the one above
+  const chips = route.chips ?? [p.get("cat"), p.get("sub"), p.get("sub2")];
+  const rawGroup = readChip(chips[0] ?? null);
+  const group = rawGroup !== null && GROUP_IDS.has(rawGroup) ? rawGroup : null;
+  const l2 = group !== null ? readChip(chips[1] ?? null) : null;
+  const l3 = l2 !== null ? readChip(chips[2] ?? null) : null;
   return {
     q: p.get("q") ?? "",
     layout: p.get("view") === "thumbs" ? "thumbs" : "table",
-    group: group !== null && GROUP_IDS.has(group) ? group : null,
+    group,
     l2,
     l3,
     sort,
@@ -386,29 +419,76 @@ export function parseView(search: string): ViewState {
   };
 }
 
-/** A chip value from the address bar, sanitized by shape: one that matches nothing simply lists nothing. */
-function readChip(raw: string | null): string | null {
-  return raw && raw.length <= 40 ? raw : null;
+/** A model or category path's parts; neither for `/` or any other path. */
+function parsePath(pathname: string): { model?: string; chips?: (string | null)[] } {
+  const parts = pathname.split("/").filter((s) => s !== "");
+  let decoded: string[];
+  try {
+    decoded = parts.map((s) => decodeURIComponent(s));
+  } catch {
+    return {};
+  }
+  if (`/${decoded[0]}/` === MODEL_PATH && decoded.length === 2) return { model: decoded[1]! };
+  if (`/${decoded[0]}/` === CATEGORY_PATH && decoded.length >= 2 && decoded.length <= 4) return { chips: decoded.slice(1) };
+  return {};
 }
 
-/** The inverse of parseView; defaults are left out, so the bare list is a bare `?`-less URL. */
+/** A chip value from the address bar, sanitized by shape and slugged: one that matches nothing simply lists nothing. */
+function readChip(raw: string | null): string | null {
+  if (!raw || raw.length > 40) return null;
+  return chipSlug(raw) || null;
+}
+
+/** The path of a chip pick: `/category/<group>/[<l2>/[<l3>/]]`, or `/` for none. */
+export function categoryPath(c: ChipPath): string {
+  if (!c.group) return "/";
+  let path = `${CATEGORY_PATH}${c.group}/`;
+  if (c.l2) {
+    path += `${chipSlug(c.l2)}/`;
+    if (c.l3) path += `${chipSlug(c.l3)}/`;
+  }
+  return path;
+}
+
+/** The path of a model's page. */
+export function modelPath(id: string): string {
+  return `${MODEL_PATH}${encodeURIComponent(id)}/`;
+}
+
+/** The page a view is: its model's, else its chips' category, else `/`. */
+export function viewPath(v: ViewState): string {
+  return v.model ? modelPath(v.model) : categoryPath(v);
+}
+
+/**
+ * The query string of a view, beside its path (viewPath); defaults are left out, so
+ * the bare list is a bare `?`-less URL. A model page carries the list's chips here.
+ */
 export function serializeView(v: ViewState): string {
   const p = new URLSearchParams();
   if (v.q) p.set("q", v.q);
   if (v.layout === "thumbs") p.set("view", "thumbs");
-  if (v.group) p.set("cat", v.group);
-  if (v.group && v.l2) p.set("sub", v.l2);
-  if (v.group && v.l2 && v.l3) p.set("sub2", v.l3);
+  if (v.model && v.group) {
+    p.set("cat", v.group);
+    if (v.l2) {
+      p.set("sub", chipSlug(v.l2));
+      if (v.l3) p.set("sub2", chipSlug(v.l3));
+    }
+  }
   if (v.sort !== DEFAULT_SORT) p.set("sort", v.sort);
   if (v.dir !== (column(v.sort)?.dir ?? DEFAULT_DIR)) p.set("dir", v.dir);
   if (v.model) {
-    p.set("model", v.model);
     if (v.tab !== "specs") p.set("tab", v.tab);
     if (v.tab === "source" && v.node != null) p.set("node", v.node);
     for (const k of Object.keys(v.params).sort()) p.set(`p.${k}`, v.params[k]!);
   }
   const s = p.toString();
   return s ? `?${s}` : "";
+}
+
+/** The whole site-relative URL of a view: its path and its query. The inverse of parseView. */
+export function viewUrl(v: ViewState): string {
+  return `${viewPath(v)}${serializeView(v)}`;
 }
 
 // ------------------------------------------------------------- parameters
