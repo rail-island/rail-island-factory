@@ -99,7 +99,8 @@ async function main(): Promise<void> {
   const name = args.shift();
   if (!name || !/^[a-z0-9][a-z0-9-]*$/.test(name)) throw new Error("usage: pnpm refs:fetch <name> (--list <article> | File:<title> ... [--use <text>])");
   if (args[0] === "--list") {
-    const r = api({ action: "query", prop: "images", titles: args[1]!, imlimit: "100" });
+    // follow a redirect to its article (an alias title lists no files of its own)
+    const r = api({ action: "query", prop: "images", titles: args[1]!, imlimit: "100", redirects: "1" });
     for (const im of r.query.pages[0]?.images ?? []) console.log(im.title);
     return;
   }
