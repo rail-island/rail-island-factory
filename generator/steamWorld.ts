@@ -99,7 +99,7 @@ export function steamEngineSpec(s: WorldSteam): LocoSpec {
     title: s.title,
     palette: { paint: mat(s.palette.paint, 0.55), wheel: mat(s.palette.wheel, 0.6), frame: mat(s.palette.frame, 0.65), ...(s.palette.smokebox ? { smokebox: mat(s.palette.smokebox, 0.85) } : {}), ...(s.coupler === "knuckle" ? { knuckle: mat("#3a3b3d", 0.7), handrail: mat("#c9ccce", 0.5) } : {}) },
     heads: [0, end + 0.5],
-    beams: s.coupler === "buffers" ? { y0: 0.72, y1: 1.3, length: [0.55, 0.3], half: Math.min(1.45, s.half - 0.04) } : { front: false, rear: false },
+    beams: s.coupler === "buffers" ? { y0: 0.72, y1: 1.3, length: [0.55, 0.3], half: Math.min(1.45, s.half - 0.06) } : { front: false, rear: false },
     boiler: { x0: 1.0, x1: cab0, y, r, smokebox: 1.5, bands: domeX.map((x) => x - 0.9) },
     chimney: { x: chimneyX, top: Math.min(s.top - 0.05, y + r + 0.95), r: 0.3 },
     domes: domeX.map((x) => ({ x, top: Math.min(s.top - 0.1, y + r + 0.65), r: 0.4 })),
@@ -152,7 +152,7 @@ export function steamTenderSpec(s: WorldSteam): LocoSpec {
     title: `${s.title} tender`,
     palette: { paint: mat(s.palette.paint, 0.55), wheel: mat(s.palette.wheel, 0.6), frame: mat(s.palette.frame, 0.65), ...(s.coupler === "knuckle" ? { knuckle: mat("#3a3b3d", 0.7), handrail: mat("#c9ccce", 0.5) } : {}) },
     heads: [-0.3, L - 0.3],
-    beams: s.coupler === "buffers" ? { y0: 0.75, y1: 1.3, length: [0.3, 0.62], half: Math.min(1.45, s.half - 0.04) } : { front: false, rear: false },
+    beams: s.coupler === "buffers" ? { y0: 0.75, y1: 1.3, length: [0.3, 0.62], half: Math.min(1.45, s.half - 0.06) } : { front: false, rear: false },
     frame: { x0: 0, x1: body, top: 1.2 },
     prisms: [
       { name: "tank", x0: 0, x1: body, half: [[s.half - 0.08, 1.2], [s.half - 0.08, tankTop - 0.2], [s.half - 0.25, tankTop]] },

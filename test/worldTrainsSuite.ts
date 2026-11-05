@@ -112,6 +112,8 @@ describe("the eight countries' trains", () => {
         }
       });
       const lod = buildLodModel(d);
+      // the build refuses a flickering LOD too (generate.ts)
+      expect(findCoplanarOverlaps(lod.toGlb(d.id)), `${d.id} LOD`).toEqual([]);
       expect(lod.triangleCount()).toBeGreaterThan(0);
       expect(lod.triangleCount()).toBeLessThanOrEqual(lodBudget(d));
     });
