@@ -226,6 +226,12 @@ body {
   gap: 6px;
 }
 
+/* The country row filters beside the chip rows, not under them: set off by a rule. */
+.factory-chips--country {
+  padding-top: 6px;
+  border-top: 1px dashed var(--m-outline);
+}
+
 .factory-filter {
   min-height: 34px;
   padding: 5px 12px;

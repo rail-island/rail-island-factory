@@ -1,0 +1,107 @@
+// German electric and diesel locomotives on the box locomotive kit
+// (boxLocoKit.ts, stated with worldLocoKit.ts): the BR 103 express engine,
+// the BR 101 and BR 120, the E 18, the E 94 "German crocodile", the V 200 and
+// the BR 218. See docs/models/germany-trains.md.
+
+import type { MeshBuilder } from "./meshBuilder.ts";
+import { resolveParams, type GameProperties, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
+import { boxLocoLod, buildBoxLoco } from "./boxLocoKit.ts";
+import { c } from "./czElectricKit.ts";
+import { enumParam } from "./emuParts.ts";
+import { DIESEL_LOCO_CATALOG, ELECTRIC_LOCO_CATALOG } from "./cd163.ts";
+import { worldLocoSpec, type WorldLoco } from "./worldLocoKit.ts";
+
+/** A design's liveries: each a full WorldLoco (the body is the same, the paint differs). */
+type Liveries = Record<string, { title: string; loco: WorldLoco }>;
+
+const GREY = c("#5a5d60", 0.6);
+const coCo = (pivot: number, base: number, r: number) => [[-pivot, [-base, 0, base], r], [pivot, [-base, 0, base], r]] as const;
+const boBo = (pivot: number, base: number, r: number) => [[-pivot, [-base, base], r], [pivot, [-base, base], r]] as const;
+
+// ---------------------------------------------------------------------------
+
+const BR103_BODY = { length: 20.2, W: 1.5, y0: 1.3, roof: 3.85, nose: "streamlined", bogies: coCo(5.7, 2.25, 0.625), pantograph: "singleArm", pantographX: 5.6, room: { kind: "grilles", n: 5, y: [2.6, 3.35] } } as const;
+const BR103: Liveries = {
+  tee: { title: "TEE", loco: { ...BR103_BODY, palette: { red: c("#8a1c2b"), beige: c("#e3d3a6"), grey: GREY }, side: [[1.3, 1.6, "grey"], [1.6, 2.5, "red"], [2.5, 3.0, "beige"], [3.0, 4.0, "red"]], end: [[1.3, 1.6, "grey"], [1.6, 2.5, "red"], [2.5, 3.0, "beige"], [3.0, 4.0, "red"]], number: "103 113-7" } },
+  orientRed: { title: "Orient red", loco: { ...BR103_BODY, palette: { red: c("#c8462a"), white: c("#efefea"), grey: GREY }, side: [[1.3, 1.6, "grey"], [1.6, 2.45, "red"], [2.45, 2.55, "white"], [2.55, 4.0, "red"]], number: "103 184-8" } },
+  trafficRed: { title: "Traffic red", loco: { ...BR103_BODY, palette: { red: c("#ec0016"), grey: GREY }, side: [[1.3, 1.6, "grey"], [1.6, 4.0, "red"]], number: "103 245-7" } },
+};
+
+const BR101_BODY = { length: 19.1, W: 1.5, y0: 1.3, roof: 3.85, nose: "raked", bogies: boBo(4.95, 1.35, 0.625), pantograph: "singleArm", pantographX: 5.0, room: { kind: "grilles", n: 4, y: [2.6, 3.35] } } as const;
+const BR101: Liveries = {
+  trafficRed: { title: "Traffic red", loco: { ...BR101_BODY, palette: { red: c("#ec0016"), grey: GREY }, side: [[1.3, 1.55, "grey"], [1.55, 4.0, "red"]], number: "101 001-6" } },
+  intercity: { title: "Intercity", loco: { ...BR101_BODY, palette: { white: c("#eceeee"), red: c("#ec0016"), grey: GREY }, side: [[1.3, 1.55, "grey"], [1.55, 1.9, "white"], [1.9, 2.05, "red"], [2.05, 4.0, "white"]], number: "101 042-0" } },
+};
+
+const BR120_BODY = { length: 19.2, W: 1.5, y0: 1.3, roof: 3.85, nose: "raked", bogies: boBo(4.95, 1.4, 0.625), pantograph: "singleArm", pantographX: 5.0, room: { kind: "grilles", n: 4, y: [2.5, 3.3] } } as const;
+const BR120: Liveries = {
+  orientRed: { title: "Orient red", loco: { ...BR120_BODY, palette: { red: c("#c8462a"), white: c("#efefea"), grey: GREY }, side: [[1.3, 1.55, "grey"], [1.55, 2.3, "red"], [2.3, 2.4, "white"], [2.4, 4.0, "red"]], number: "120 137-5" } },
+  trafficRed: { title: "Traffic red", loco: { ...BR120_BODY, palette: { red: c("#ec0016"), grey: GREY }, side: [[1.3, 1.55, "grey"], [1.55, 4.0, "red"]], number: "120 160-7" } },
+};
+
+const E18_BODY = {
+  length: 16.92, W: 1.48, y0: 1.65, roof: 3.95, nose: "raked", pantograph: "diamond", pantographX: 4.6, room: { kind: "windows", n: 4, y: [2.75, 3.3] },
+  // the 1'Do1''s four coupled 1.6 m drivers, as two pairs the game can turn (the pony axles left out)
+  bogies: [[-2.3, [-1.15, 1.15], 0.8], [2.3, [-1.15, 1.15], 0.8]],
+} as const;
+const E18: Liveries = {
+  green: { title: "Green", loco: { ...E18_BODY, palette: { green: c("#284b3a"), black: c("#1e1f21", 0.7) }, side: [[1.65, 1.85, "black"], [1.85, 4.0, "green"]], number: "E 18 047" } },
+};
+
+const E94_BODY = {
+  length: 18.6, W: 1.5, y0: 1.4, roof: 4.0, nose: "hoods", cabHalf: 3.2, hoodTop: 3.0, pantograph: "diamond", pantographX: 2.2, room: { kind: "windows", n: 2, y: [2.75, 3.4] },
+  bogies: coCo(5.75, 1.65, 0.625),
+  roofItems: [{ name: "roof cover", x: [-1.2, 1.2], w: [0.9, 0.75], y: [3.98, 4.2], mat: "roof" }],
+} as const;
+const E94: Liveries = {
+  green: { title: "Green", loco: { ...E94_BODY, palette: { green: c("#2d4c3b"), black: c("#1e1f21", 0.7) }, side: [[1.4, 1.6, "black"], [1.6, 4.1, "green"]], number: "E 94 088" } },
+};
+
+const V200_BODY = { length: 18.53, W: 1.5, y0: 1.35, roof: 3.9, nose: "streamlined", bogies: boBo(4.85, 1.6, 0.475), exhausts: [-4.6, 4.6], room: { kind: "windows", n: 5, y: [2.6, 3.2] } } as const;
+const V200: Liveries = {
+  dbRed: { title: "DB red", loco: { ...V200_BODY, palette: { red: c("#8a1c2b"), silver: c("#b9bdc0", 0.3), grey: GREY }, side: [[1.35, 1.65, "grey"], [1.65, 2.35, "red"], [2.35, 2.42, "silver"], [2.42, 4.0, "red"]], number: "V 200 007" } },
+  orientRed: { title: "Orient red", loco: { ...V200_BODY, palette: { red: c("#c8462a"), white: c("#efefea"), grey: GREY }, side: [[1.35, 1.65, "grey"], [1.65, 2.35, "red"], [2.35, 2.42, "white"], [2.42, 4.0, "red"]], number: "220 053-2" } },
+};
+
+const BR218_BODY = { length: 16.4, W: 1.5, y0: 1.4, roof: 4.25, nose: "hoods", cabHalf: 1.45, hoodTop: 3.45, bogies: boBo(4.0, 1.4, 0.5), exhausts: [-4.2] } as const;
+const BR218: Liveries = {
+  purpleRed: { title: "Purple red", loco: { ...BR218_BODY, palette: { red: c("#8a1c2b"), grey: GREY, cream: c("#e3d3a6") }, side: [[1.4, 1.7, "grey"], [1.7, 1.78, "cream"], [1.78, 4.4, "red"]], number: "218 217-7" } },
+  orientRed: { title: "Orient red", loco: { ...BR218_BODY, palette: { red: c("#c8462a"), white: c("#efefea"), grey: GREY }, side: [[1.4, 1.7, "grey"], [1.7, 2.3, "red"], [2.3, 2.4, "white"], [2.4, 4.4, "red"]], number: "218 166-6" } },
+  trafficRed: { title: "Traffic red", loco: { ...BR218_BODY, palette: { red: c("#ec0016"), grey: GREY }, side: [[1.4, 1.7, "grey"], [1.7, 4.4, "red"]], number: "218 433-0" } },
+};
+
+// ---------------------------------------------------------------------------
+
+const paramsOf = (l: Liveries): ParamSpec[] => [enumParam("livery", "Livery", Object.fromEntries(Object.entries(l).map(([k, v]) => [k, v.title])))];
+const specOf = (l: Liveries, p: readonly ParamSpec[], v?: ParamValues) => worldLocoSpec(l[resolveParams(p, v).livery!]!.loco);
+
+const P = { br103: paramsOf(BR103), br101: paramsOf(BR101), br120: paramsOf(BR120), e18: paramsOf(E18), e94: paramsOf(E94), v200: paramsOf(V200), br218: paramsOf(BR218) };
+
+export function db103(v?: ParamValues): MeshBuilder { return buildBoxLoco(specOf(BR103, P.br103, v)); }
+export function db103Lod(v?: ParamValues): MeshBuilder { return boxLocoLod(specOf(BR103, P.br103, v)); }
+export function db101(v?: ParamValues): MeshBuilder { return buildBoxLoco(specOf(BR101, P.br101, v)); }
+export function db101Lod(v?: ParamValues): MeshBuilder { return boxLocoLod(specOf(BR101, P.br101, v)); }
+export function db120(v?: ParamValues): MeshBuilder { return buildBoxLoco(specOf(BR120, P.br120, v)); }
+export function db120Lod(v?: ParamValues): MeshBuilder { return boxLocoLod(specOf(BR120, P.br120, v)); }
+export function drgE18(v?: ParamValues): MeshBuilder { return buildBoxLoco(specOf(E18, P.e18, v)); }
+export function drgE18Lod(v?: ParamValues): MeshBuilder { return boxLocoLod(specOf(E18, P.e18, v)); }
+export function drgE94(v?: ParamValues): MeshBuilder { return buildBoxLoco(specOf(E94, P.e94, v)); }
+export function drgE94Lod(v?: ParamValues): MeshBuilder { return boxLocoLod(specOf(E94, P.e94, v)); }
+export function dbV200(v?: ParamValues): MeshBuilder { return buildBoxLoco(specOf(V200, P.v200, v)); }
+export function dbV200Lod(v?: ParamValues): MeshBuilder { return boxLocoLod(specOf(V200, P.v200, v)); }
+export function db218(v?: ParamValues): MeshBuilder { return buildBoxLoco(specOf(BR218, P.br218, v)); }
+export function db218Lod(v?: ParamValues): MeshBuilder { return boxLocoLod(specOf(BR218, P.br218, v)); }
+
+const game = (weight: number, power: number, maxspeed: number): GameProperties => ({ weight, power, maxspeed, accel: null });
+/** A design's parameters: none for a single livery. */
+const params = (p: ParamSpec[]) => (p[0]!.values.length > 1 ? { params: p } : {});
+
+export const DE_LOCOS: ProceduralDesign[] = [
+  { id: "proc-vehicle-db-103", title: "DB 103", build: db103, buildLod: db103Lod, ...params(P.br103), game: game(114, 7440, 200), catalog: ELECTRIC_LOCO_CATALOG, references: "db-103" },
+  { id: "proc-vehicle-db-101", title: "DB 101", build: db101, buildLod: db101Lod, ...params(P.br101), game: game(87, 6400, 220), catalog: ELECTRIC_LOCO_CATALOG, references: "db-101" },
+  { id: "proc-vehicle-db-120", title: "DB 120", build: db120, buildLod: db120Lod, ...params(P.br120), game: game(84, 5600, 200), catalog: ELECTRIC_LOCO_CATALOG, references: "db-120" },
+  { id: "proc-vehicle-drg-e18", title: "DRG E 18", build: drgE18, buildLod: drgE18Lod, ...params(P.e18), game: game(108, 3040, 150), catalog: ELECTRIC_LOCO_CATALOG, references: "drg-e18" },
+  { id: "proc-vehicle-drg-e94", title: "DRG E 94", build: drgE94, buildLod: drgE94Lod, ...params(P.e94), game: game(118, 3300, 90), catalog: ELECTRIC_LOCO_CATALOG, references: "drg-e94" },
+  { id: "proc-vehicle-db-v200", title: "DB V 200", build: dbV200, buildLod: dbV200Lod, ...params(P.v200), game: game(80, 1620, 140), catalog: DIESEL_LOCO_CATALOG, references: "db-v200" },
+  { id: "proc-vehicle-db-218", title: "DB 218", build: db218, buildLod: db218Lod, ...params(P.br218), game: game(79, 1840, 140), catalog: DIESEL_LOCO_CATALOG, references: "db-218" },
+];

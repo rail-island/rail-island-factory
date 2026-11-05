@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { ALL_VEHICLES, DESIGNS } from '../generator/generate';
+import { swept, variantsUnderTest } from './catalogCache';
 import { previewKey } from '../src/catalogQuery';
 import { glbStats } from '../generator/glbStats';
 import { buildLodModel } from '../generator/lodModel';
 import { collectTriangles, parseGlb } from '../generator/glbTriangles';
-import { swept } from './catalogCache';
 
 describe('low detail exports', () => {
   // Every design's standalone LOD and its sampled variants' LODs: the catalog
@@ -47,9 +47,11 @@ describe('vehicle LODs carry no lamps and no motion', () => {
     // and a value offered only under an earlier one's values (the MTR's Disneyland livery) the first of those
     ...(d.params ?? []).flatMap((p) => p.values.map((v) => ({ ...(p.when ? { [p.when.name]: p.when.values[0]! } : {}), ...(v.when ? { [v.when.name]: v.when.values[0]! } : {}), [p.name]: v.value }))),
   ];
-  for (const d of swept(ALL_VEHICLES))
+  // a later design of the eight-country plan's kit families: its defaults and sampled combination (test/catalogCache.ts swept)
+  const checked = (d: (typeof ALL_VEHICLES)[number]) => (swept(d.id) ? selections(d) : [undefined, ...variantsUnderTest(d).slice(1)]);
+  for (const d of ALL_VEHICLES)
     it(`${d.id} draws its low detail without a lamp material, lamps table or clip`, () => {
-      for (const values of selections(d)) {
+      for (const values of checked(d)) {
         const low = buildLodModel(d, values);
         expect(low.lamps(), JSON.stringify(values)).toBeNull();
         expect(low.animations(), JSON.stringify(values)).toEqual([]);

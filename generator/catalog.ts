@@ -37,6 +37,7 @@ export type ExportedGame = Omit<GameProperties, "city" | "variants"> & {
 import { RAIL_COLLECTOR_TOP, TRAM_COLLECTOR_TOP } from "./collector.ts";
 import { checkDesignSounds, declaredSounds, defaultValues, shipHullStuds, withSounds } from "./soundMapping.ts";
 import type { SoundMapping, SoundOverride } from "./soundTable.ts";
+import { countryName, countryOf } from "./countryTable.ts";
 
 /** What a side-view thumbnail spans, in metres (renderGlbThumb.ts SideFrame). */
 export interface ThumbSide {
@@ -238,6 +239,12 @@ export interface CatalogRecord extends MetaEntry {
    * design declares none; the site then uses its category defaults.
    */
   openttd?: OpenttdProperties;
+  /**
+   * The English name of the country the model comes from (countryTable.ts), for
+   * the site's country chips only -- not part of the game's meta.
+   * Absent for a model that names none.
+   */
+  country?: string;
   /**
    * Set by `pnpm dev` (devExport.ts) on a record whose figures - the counts, the
    * box, the JS sizes and hash, the rig and the side frame - are not measured
@@ -494,5 +501,6 @@ export function catalogRecord(entry: MetaEntry, facts: BuiltFacts, references: R
     references,
     ...(scenery ? { scenery } : {}),
     ...(openttd ? { openttd: JSON.parse(JSON.stringify(openttd)) as OpenttdProperties } : {}),
+    ...(countryOf(entry.id) ? { country: countryName(countryOf(entry.id)!) } : {}),
   };
 }

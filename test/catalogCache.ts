@@ -139,7 +139,40 @@ export const ALL_VARIANTS = process.env.TEST_ALL_VARIANTS === "1";
  * same ones every run.
  */
 export function variantsUnderTest(d: Pick<ProceduralDesign, "params" | "finishParams">): ParamValues[] {
-  return sample(coverageCombinations(d.params, d.finishParams));
+  const out = sample(coverageCombinations(d.params, d.finishParams));
+  if (ALL_VARIANTS) return out;
+  // a train's sampled length is its shortest with a middle car (3 cars where offered): the
+  // longest repeats the same cars and joints at several times the cost
+  const cars = d.params?.find((p) => p.name === "cars");
+  if (!cars) return out;
+  const values = cars.values.map((v) => v.value);
+  const short = values.find((v) => Number(v) >= 3) ?? values[values.length - 1]!;
+  return out.map((v, i) => (i > 0 && v.cars !== undefined ? { ...v, cars: short } : v));
+}
+
+/**
+ * The source modules of the eight-country plan (docs/specs/2026-11-05-trains-of-eight-countries.md):
+ * each design is data on a shared kit, its build the module's kit code with its own figures.
+ * The catalog sweep and the door suite run on each module's first design; every design of
+ * the modules gets the data checks of test/worldTrains.test.ts (z-fighting, emitters, gauge,
+ * budget, length and doors on its defaults and a sampled combination, its LOD budget).
+ * TEST_ALL_DESIGNS=1 (or TEST_ALL_VARIANTS=1) sweeps every design.
+ */
+export const KIT_FAMILY_MODULES: ReadonlySet<string> = new Set([
+  "deUnits.ts", "deLocos.ts", "frUnits.ts", "frLocos.ts", "nlUnits.ts", "nlLocos.ts", "chUnits.ts", "chLocos.ts", "esUnits.ts", "esLocos.ts", "ukUnits.ts", "ukLocos.ts", "inUnits.ts", "inLocos.ts", "worldWagons.ts", "cnUnits.ts", "cnLocos.ts", "worldSteamLocos.ts", "worldCoaches.ts",
+]);
+
+const ALL_DESIGNS = process.env.TEST_ALL_DESIGNS === "1";
+const FIRST_OF_MODULE = new Map<string, string>();
+for (const id of DESIGNS.keys()) { const src = designSource(id); if (!FIRST_OF_MODULE.has(src)) FIRST_OF_MODULE.set(src, id); }
+
+/** Whether the catalog sweep and the door suite check a design: all but the plan's families' later designs. */
+export function swept(id: string): boolean {
+  const src = designSource(id);
+  if (ALL_DESIGNS || ALL_VARIANTS) return true;
+  // the world fleet: its covering sample (generator/worldFleet.ts FLEET_SWEEP_SAMPLE, SWEPT_IDS)
+  if (!SWEPT.has(id)) return false;
+  return !KIT_FAMILY_MODULES.has(src) || FIRST_OF_MODULE.get(src) === id;
 }
 
 /** The first item and SAMPLED_VARIANTS others evenly spread; all of them with TEST_ALL_VARIANTS=1. */
@@ -159,17 +192,16 @@ export function sample<T>(list: readonly T[]): T[] {
  */
 export const SWEPT_IDS: readonly string[] = [...DESIGNS.keys()].filter((id) => ALL_VARIANTS || !FLEET_IDS.has(id) || FLEET_SWEEP_SAMPLE.has(id));
 
-/** Whether the whole-catalog suites build design `id` (SWEPT_IDS). */
+/** The fleet's part of SWEPT_IDS: whether the world fleet's rule keeps design `id`. */
 const SWEPT = new Set(SWEPT_IDS);
-export const isSwept = (id: string): boolean => SWEPT.has(id);
 
 /**
  * The designs of `list` the whole-catalog suites build: all but the world fleet's
  * outside its covering sample (docs/models/world-fleet.md). Every fleet design is
  * still checked by its family suite, test/worldFleet.test.ts and `pnpm build`.
  */
-export function swept<T extends { id: string }>(list: readonly T[]): T[] {
-  return list.filter((d) => SWEPT.has(d.id));
+export function sweptOf<T extends { id: string }>(list: readonly T[]): T[] {
+  return list.filter((d) => swept(d.id));
 }
 
 /**
@@ -177,5 +209,5 @@ export function swept<T extends { id: string }>(list: readonly T[]): T[] {
  * per-design checks spread over the workers (test/catalog-*.test.ts, sixteen).
  */
 export function shard(index: number, count: number): string[] {
-  return SWEPT_IDS.filter((_, i) => i % count === index);
+  return [...DESIGNS.keys()].filter(swept).filter((_, i) => i % count === index);
 }

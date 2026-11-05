@@ -1,6 +1,6 @@
 # Loading gauges
 
-**Covers** - the largest body a rail vehicle may have, per design: the UIC gauge every European model keeps, the US gauge North American stock is drawn to at its real size, the Shinkansen gauge, and why each clears the game's platforms.
+**Covers** - the largest body a rail vehicle may have, per design: the UIC gauge every European model keeps, the US gauge North American stock is drawn to at its real size, the Shinkansen gauge, the British W6a, and why each clears the game's platforms.
 **Code** - `generator/loadingGauge.ts` (`LOADING_GAUGES`, `loadingGaugeOf`), `generator/design.ts` (`ProceduralDesign.loadingGauge`), `test/loadingGauge.test.ts`, `test/catalogSweep.ts`
 **See also** - [vehicles.md](vehicles.md), [us-diesels.md](us-diesels.md), [sets.md](sets.md), [the railroad-vehicle skill](../../.agents/skills/railroad-vehicle/SKILL.md)
 
@@ -12,6 +12,7 @@
 | `us` | 3.3 m | 4.95 m | North American rolling stock at its real size (AAR Plate F, the taller Plate H of the newest hood units) |
 | `usDoubleStack` | 3.3 m | 6.2 m | a double-stack well car with its two containers stacked |
 | `shinkansen` | 3.3 m | 4.7 m | the Shinkansen, narrowed from their real 3.35 - 3.38 m |
+| `uk` | 2.82 m | 4.0 m | British stock at its real, smaller size (the W6a gauge; the height the A4's and the Castle's 13 ft 1 in chimneys) |
 
 The width is the widest fixed part of the vehicle, centred on the track; the
 height is the body's and its fixed roof equipment's above the rail. A raised

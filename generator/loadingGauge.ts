@@ -3,11 +3,12 @@
 // and keep the repository's 3.1 m by 4.7 m ("uic"); North American stock is
 // drawn at its real, larger size ("us") and the Shinkansen at 3.3 m, narrowed
 // from its real 3.35 - 3.38 m so it clears the game's platform edge
-// ("shinkansen"); a double-stack well car reaches 6.2 m ("usDoubleStack"). No
+// ("shinkansen"); a double-stack well car reaches 6.2 m ("usDoubleStack"); British
+// stock keeps its smaller real size ("uk", the W6a gauge). No
 // `node:` imports. See docs/models/loading-gauge.md.
 
 /** The loading gauge a design names (`ProceduralDesign.loadingGauge`). */
-export type LoadingGauge = "uic" | "us" | "usDoubleStack" | "shinkansen";
+export type LoadingGauge = "uic" | "us" | "usDoubleStack" | "shinkansen" | "uk";
 
 export interface LoadingGaugeLimits {
   /** Body width, metres: the widest fixed part, centred on the track. */
@@ -24,6 +25,8 @@ export const LOADING_GAUGES: Readonly<Record<LoadingGauge, LoadingGaugeLimits>> 
   // a well car's two stacked containers (AAR Plate H's double-stack clearance)
   usDoubleStack: { width: 3.3, height: 6.2 },
   shinkansen: { width: 3.3, height: 4.7 },
+  // Britain's W6a, its height rounded up to the A4's and the Castle's 13 ft 1 in chimneys
+  uk: { width: 2.82, height: 4.0 },
 };
 
 /** The limits a design is held to: its own gauge, the UIC one when it names none. */

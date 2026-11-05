@@ -13,8 +13,8 @@ import { isLeaf, type LeafNode, type TreeNode } from "../generator/sourceTree";
 import { TYPE_META as RAIL_TYPES } from "../generator/sets/railType";
 import { swept } from "./catalogCache";
 
-// the rail vehicles the whole-catalog suites build (catalogCache.ts swept): the world fleet's covering sample
-const RAIL = swept(ALL_VEHICLES.filter((d) => d.catalog?.category === "Rail vehicles"));
+/** The rail vehicles it checks: the eight-country plan's families by one design a module (their supports are in test/worldTrainsSuite.ts). */
+const RAIL = ALL_VEHICLES.filter((d) => d.catalog?.category === "Rail vehicles" && swept(d.id));
 
 function leaves(n: TreeNode): LeafNode[] {
   return isLeaf(n) ? [n] : n.children.flatMap(leaves);
@@ -68,8 +68,8 @@ describe("rail supports", () => {
       const t = nodes[i]!.translation!;
       expect(t[0]).toBeCloseTo(s.x, 3);
       expect(t[1]).toBeGreaterThan(0.25);
-      // up to the PRR GG1's 57 in drivers (axle at 0.72 m)
-      expect(t[1]).toBeLessThan(0.75);
+      // up to the DRG E 18's 1.6 m drivers (axle at 0.8 m)
+      expect(t[1]).toBeLessThan(0.82);
       expect(t[2]).toBe(0);
       // its own triangles reach either side of the pivot along x
       const own = collectTriangles({ ...json, scenes: [{ nodes: [i] }], scene: 0 }, bin);

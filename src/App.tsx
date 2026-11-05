@@ -10,7 +10,7 @@
 // docs/site/seo-pages.md).
 
 import { For, Match, Show, Switch, createEffect, createMemo, createResource, createSignal, onCleanup, onMount } from "solid-js";
-import { COLUMNS, GROUPS, NO_CHIPS, chipLabel, chipMatches, chipRows, chipSlug, parseView, prepareRows, queryRows, shownId, viewUrl, type Column, type Row, type ViewState } from "./catalogQuery";
+import { COLUMNS, GROUPS, NO_CHIPS, chipLabel, chipMatches, chipRows, chipSlug, countryChips, parseView, prepareRows, queryRows, shownId, viewUrl, type Column, type Row, type ViewState } from "./catalogQuery";
 import { SITE_URL, categoryMeta, categoryTree, homeMeta, modelMeta, type PageMeta } from "./pageMeta";
 import { Link } from "./Link";
 import type { ModelCatalog } from "../generator/catalog.ts";
@@ -105,6 +105,8 @@ export function App() {
   // What each chip row offers, from every model rather than the searched ones, so
   // the chips hold still while somebody types.
   const chips = createMemo(() => chipRows(rows() ?? [], view()));
+  // The country row filters on its own: it keeps its pick while the chips above change.
+  const countries = createMemo(() => countryChips(rows() ?? [], view(), view().country));
 
   // One chip per row: picking a chip replaces the row's pick, picking the picked
   // chip again clears it, and a change in a row clears every row below it.
@@ -113,6 +115,7 @@ export function App() {
   const groupPick = (id: string | null): Partial<ViewState> => ({ group: id === null || view().group === id ? null : id, l2: null, l3: null });
   const l2Pick = (v: string | null): Partial<ViewState> => ({ l2: v === null || chipMatches(v, view().l2) ? null : chipSlug(v), l3: null });
   const l3Pick = (v: string | null): Partial<ViewState> => ({ l3: v === null || chipMatches(v, view().l3) ? null : chipSlug(v) });
+  const countryPick = (v: string | null): Partial<ViewState> => ({ country: v === null || chipMatches(v, view().country) ? null : chipSlug(v) });
   const hrefOf = (patch: Partial<ViewState>) => viewUrl({ ...view(), ...patch });
   const pick = (patch: Partial<ViewState>) => update(patch, true);
   const open = createMemo(() => (view().model ? (rows() ?? []).find((r) => r.id === view().model) : undefined));
@@ -308,6 +311,14 @@ export function App() {
                   <Chip label="All" on={view().l3 === null} href={hrefOf(l3Pick(null))} onPick={() => pick(l3Pick(null))} />
                   <For each={chips().l3}>
                     {(s) => <Chip label={chipLabel(s)} on={chipMatches(s, view().l3)} href={hrefOf(l3Pick(s))} onPick={() => pick(l3Pick(s))} />}
+                  </For>
+                </div>
+              </Show>
+              <Show when={countries().length > 0}>
+                <div class="factory-chips factory-chips--country" aria-label="Country">
+                  <Chip label="All countries" on={view().country === null} href={hrefOf(countryPick(null))} onPick={() => pick(countryPick(null))} />
+                  <For each={countries()}>
+                    {(s) => <Chip label={s} on={chipMatches(s, view().country)} href={hrefOf(countryPick(s))} onPick={() => pick(countryPick(s))} />}
                   </For>
                 </div>
               </Show>

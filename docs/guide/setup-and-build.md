@@ -74,7 +74,25 @@ minutes** (AGENTS.md); it takes about four and a half on a four-core machine
   checks the defaults and the last other combination (often the heaviest:
   the longest train), the same ones every run (`variantsUnderTest` and `sample` in `test/catalogCache.ts`):
   the sweep's flicker, envelope and JS-against-generator checks, the LOD
-  checks, and the family suites' per-variant loops. **`TEST_ALL_VARIANTS=1 pnpm
+  checks, and the family suites' per-variant loops. A sampled train is the shortest with a middle
+  car (3 cars where the design offers them): the longest repeats the same cars and
+  joints at several times the cost.
+- **One design per kit family.** The eight-country plan's families
+  (`KIT_FAMILY_MODULES` in `test/catalogCache.ts`) are data on shared kits, each design's
+  build its module's kit code with its own figures: the catalog sweep and the door suite
+  run on each module's first design (`swept`). Every design of the families gets the data
+  checks of `test/worldTrains.test.ts` - no z-fighting, emitters on their mouths, inside
+  its loading gauge and the triangle budget, at its published length, doors opening
+  exactly on a passenger car, on its defaults and a sampled combination, and its LOD
+  inside its budget, and its rail supports and bogie pivots (the rail-supports suite, too,
+  checks one design a module). The pantograph suite checks a family design's collectors on
+  its last sampled combination only (its kit's pantographs are the same in every one), and
+  neither it nor the rig suite builds a later family design's defaults when it loads; the
+  LOD suite checks a later family design on its defaults and sampled combination, not on
+  every value of every parameter.
+  `test/worldTrains.test.ts` and `worldTrains-2..4.test.ts` each run a quarter
+  (`test/worldTrainsSuite.ts`); the pantograph suite builds each sampled combination once for
+  both its checks. `TEST_ALL_DESIGNS=1` (or `TEST_ALL_VARIANTS=1`) sweeps every design. **`TEST_ALL_VARIANTS=1 pnpm
   test` checks every combination**; it takes far longer, so it runs only when
   the user asks for it (AGENTS.md).
 - **Sampled fleet designs.** The world fleet's designs (docs/models/world-fleet.md) get the

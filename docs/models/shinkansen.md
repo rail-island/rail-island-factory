@@ -1,7 +1,7 @@
 # The later Shinkansen series
 
 **Covers** - the seven later Shinkansen designs (`proc-vehicle-shinkansen-n700s`, `-e5`, `-500`, `-700`, `-e6`, `-100`, `-e4`): the series specs, their cars and trains, liveries, the gauge, deviations and tests.
-**Code** - `generator/shinkansen.ts` (`SHINKANSEN_DESIGNS`, `SHINKANSEN_SERIES`, `shinkansenTrain`), `generator/usTransit.ts` (`drawCar`), `generator/carbodyKit.ts`, `test/shinkansen.test.ts`, `assets/shinkansen-*/`
+**Code** - `generator/seriesHelpers.ts`, `generator/shinkansen.ts` (`SHINKANSEN_DESIGNS`, `SHINKANSEN_SERIES`, `shinkansenTrain`), `generator/usTransit.ts` (`drawCar`), `generator/carbodyKit.ts`, `test/shinkansen.test.ts`, `assets/shinkansen-*/`
 **See also** - [shinkansen-0.md](shinkansen-0.md), [us-transit.md](us-transit.md), [us-carbodies.md](us-carbodies.md), [loading-gauge.md](loading-gauge.md)
 
 ## The designs
@@ -37,6 +37,30 @@ skirts cut over the bogies, centre couplers inside the train (the end car's cove
 nose), the pantograph on its base, the underfloor equipment. The distant model is the body
 section with its nose's centre line, the window band, the bogies and the pantograph, 100
 triangles a car, 500 at most.
+
+### The series kit beyond the Shinkansen
+
+The series spec also draws the conventional units of the eight-country plan
+([germany-trains.md](germany-trains.md)). Each option is off by default, so the
+Shinkansen's and the Japanese units' bytes are unchanged (all 271 series and car-builder
+combinations hashed before and after):
+
+- `traction: "diesel"` - no pantograph, a roof exhaust over each car's middle, filed with
+  the DMUs;
+- `cars` - the train lengths offered (default 3 - 8); a unit of two cars has no middle car;
+- `single` - one double-ended railcar, its nose (or flat cab) at both ends, no car choice;
+- `endPantograph` - the end cars raise the pantographs (a short unit without middle motor cars);
+- `endCoupler: "buffers"` - buffers and a screw coupling on a beam at the cab ends (the car
+  builder's `buffers` coupler), the coupling plane 0.65 m out;
+- `wheelbase: 0` - a single axle at each truck position (a two-axle railbus, a Talgo car);
+- `traction: "none"` - an unpowered set of coaches (the Talgo III), filed with the coaches.
+
+A short car's leading bogie comes in so that its wheels stay under the body. The kit
+refuses a wheelbase under 2.05 m (the bogie's brake cylinders would lie on its
+transoms) and a skirt bottom on the centre coupler's draft gear or on the transoms.
+
+`seriesHelpers.ts` holds the paint, nose and flat-cab helpers, the one-colour `striped`
+livery and `velaro()`, the Siemens Velaro body the ICE 3, the CRH3C and the AVE S-103 share.
 
 ## Deviations
 

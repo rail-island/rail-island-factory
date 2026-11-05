@@ -17,7 +17,7 @@ import { glbStats } from "../generator/glbStats.ts";
 import { buildLodModel } from "../generator/lodModel.ts";
 import { Coach, type Volume } from "../generator/csdCoachParts.ts";
 import { cabinHeights } from "../generator/coachCabin.ts";
-import { swept, variantsUnderTest } from "./catalogCache";
+import { sweptOf, variantsUnderTest } from "./catalogCache";
 
 const PALETTE = { ...INTERIOR_PALETTE, body: { color: "#808080" }, leaf: { color: "#c03030" } };
 
@@ -294,7 +294,7 @@ describe("windows seen from inside", () => {
 /** The groups of passenger vehicles, and the designs among them with no door to open. */
 const PASSENGER_GROUPS = new Set(["coach", "unit", "tram", "metro", "bus"]);
 const NO_DOORS = new Set(["proc-vehicle-csd-dsk", "proc-vehicle-csd-m112"]);
-const PASSENGER = swept(ALL_VEHICLES).filter((d) => PASSENGER_GROUPS.has(d.catalog?.group ?? "") && !NO_DOORS.has(d.id));
+const PASSENGER = sweptOf(ALL_VEHICLES).filter((d) => PASSENGER_GROUPS.has(d.catalog?.group ?? "") && !NO_DOORS.has(d.id));
 
 describe("every passenger vehicle", () => {
   // the defaults only: every kit's cabin is drawn the same way for its other

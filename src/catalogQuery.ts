@@ -55,6 +55,7 @@ export const COLUMNS: readonly Column[] = [
   { key: "sizeZ", label: "Depth", unit: "m", type: "num", dir: "desc", table: true, value: (r) => r.sizeZ },
   { key: "sizeY", label: "Height", unit: "m", type: "num", dir: "desc", table: true, value: (r) => r.sizeY },
   { key: "defaultScale", label: "Scale", unit: null, type: "num", dir: "desc", table: false, value: (r) => r.defaultScale ?? null },
+  { key: "country", label: "Country", unit: null, type: "text", dir: "asc", table: false, value: (r) => r.country ?? null },
   { key: "author", label: "Author", unit: null, type: "text", dir: "asc", table: false, value: (r) => r.author },
   // The sound designs it plays (docs/models/sounds.md), its variants' included.
   { key: "sounds", label: "Sounds", unit: null, type: "text", dir: "asc", table: true, value: (r) => soundIdsOf(r.game).join(", ") || null },
@@ -79,7 +80,7 @@ export function prepareRows(records: readonly CatalogRecord[]): Row[] {
   return records.map((r) => ({
     ...r,
     hay: [
-      r.title, r.id, r.gameId ?? "", r.category, r.group, r.traction ?? "", r.author, r.license, r.source,
+      r.title, r.id, r.gameId ?? "", r.category, r.group, r.traction ?? "", r.country ?? "", r.author, r.license, r.source,
       ...soundIdsOf(r.game),
       ...(r.params ?? []).flatMap((p) => p.values.flatMap((v) => [v.title, v.value])),
     ].join(" ").toLowerCase(),
@@ -113,9 +114,38 @@ export function compareRows(a: Row, b: Row, col: Column, dir: SortDir): number {
   return collator.compare(a.title, b.title) || collator.compare(a.id, b.id);
 }
 
-export function queryRows(rows: readonly Row[], q: string, sort: string, dir: SortDir, path: ChipPath = NO_CHIPS): Row[] {
+export function queryRows(rows: readonly Row[], q: string, sort: string, dir: SortDir, path: ChipPath & CountryPick = NO_CHIPS): Row[] {
   const col = column(sort) ?? column(DEFAULT_SORT)!;
-  return rows.filter((r) => onPath(r, path) && matches(r, q)).sort((a, b) => compareRows(a, b, col, dir));
+  return rows.filter((r) => onPath(r, path) && inCountry(r, path.country ?? null) && matches(r, q)).sort((a, b) => compareRows(a, b, col, dir));
+}
+
+// ------------------------------------------------------------- the country chips
+
+/**
+ * The country row: a filter of its own beside the three chip rows, not a level
+ * of them. It keeps its pick while the chips above change, offers the countries
+ * of the models on the current chip path, and is a query parameter
+ * (`?country=<slug>`, "united-kingdom"), not part of a category page's path.
+ */
+export interface CountryPick {
+  /** A country's chip slug ("united-kingdom"), or null for every country. */
+  country?: string | null;
+}
+
+function inCountry(r: CatalogRecord, country: string | null): boolean {
+  return country === null || (r.country !== undefined && chipMatches(r.country, country));
+}
+
+/**
+ * The country chips under a chip path, sorted by name: offered only when the path
+ * holds models of more than one country, or a country is picked (an old link's,
+ * even one nothing matches, so it can be switched off).
+ */
+export function countryChips(rows: readonly CatalogRecord[], path: ChipPath, picked: string | null): string[] {
+  const found = new Set<string>();
+  for (const r of rows) if (r.country && onPath(r, path)) found.add(r.country);
+  if (picked !== null && ![...found].some((v) => chipMatches(v, picked))) found.add(picked);
+  return found.size > 1 || picked !== null ? [...found].sort((a, b) => collator.compare(a, b)) : [];
 }
 
 // --------------------------------------------------------------- the chips
@@ -355,6 +385,8 @@ export interface ViewState extends ChipPath {
   stage: Stage;
   /** A parametric model's chosen values (`?p.<name>=<value>`), as given; see effectiveParams. */
   params: Record<string, string>;
+  /** The country chip's pick as a slug (`?country=<slug>`), or null for every country. */
+  country: string | null;
 }
 
 export type DetailTab = "specs" | "source" | "references";
@@ -409,6 +441,7 @@ export function parseView(search: string, pathname = "/"): ViewState {
   const group = rawGroup !== null && GROUP_IDS.has(rawGroup) ? rawGroup : null;
   const l2 = group !== null ? readChip(chips[1] ?? null) : null;
   const l3 = l2 !== null ? readChip(chips[2] ?? null) : null;
+  const country = readChip(p.get("country"));
   return {
     q: p.get("q") ?? "",
     layout: p.get("view") === "thumbs" ? "thumbs" : "table",
@@ -422,6 +455,7 @@ export function parseView(search: string, pathname = "/"): ViewState {
     node: node ?? null,
     stage,
     params,
+    country,
   };
 }
 
@@ -481,6 +515,7 @@ export function serializeView(v: ViewState): string {
       if (v.l3) p.set("sub2", chipSlug(v.l3));
     }
   }
+  if (v.country) p.set("country", chipSlug(v.country));
   if (v.sort !== DEFAULT_SORT) p.set("sort", v.sort);
   if (v.dir !== (column(v.sort)?.dir ?? DEFAULT_DIR)) p.set("dir", v.dir);
   if (v.model) {
