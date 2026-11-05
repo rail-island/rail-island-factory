@@ -105,7 +105,7 @@ that needs it. Most of the new kits are shared across countries:
 | TGV kit `tgv.ts` | existing | AVE S-100 (ES) |
 | ICE 1 kit `ice1.ts` | existing | ICE 2 (DE) |
 | double-deck coach kit | existing (`dbDoubleDeck.ts`) | VIRM (NL); Z 20500, Regio 2N, MI 09 (FR); IC 2000, FV-Dosto (CH) |
-| steam kit | existing | the 20 steam designs below |
+| steam kit | existing | the 21 steam designs below |
 | coach kits (`liveryCoach.ts`, `germanCoaches.ts`) | existing | LHB, ICF (IN); 25T (CN); ICR (NL); Mk1, Mk3, Mk4 (UK); IC Bpmz/Avmz (DE); Corail, Grand Confort, Wagons-Lits (FR); EW IV (CH) |
 | EMU/DMU kits (`dmuKit.ts`, `emuClassicKit.ts`, `unitParts.ts`) | existing | the remaining units |
 
