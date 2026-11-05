@@ -9,6 +9,10 @@ import { WORLD_CABIN_SPECS } from "./worldCabins.ts";
 import { WORLD_BUS_SPECS } from "./worldBuses.ts";
 import { busFeatures } from "./worldBusKit.ts";
 import { proceduralId } from "./modelId.ts";
+// the world trucks (worldTrucks.ts, truckKit.ts, truckBodies.ts)
+import { WORLD_TRUCK_SPECS } from "./worldTrucks.ts";
+import { truckFeatures, truckLength } from "./truckBodies.ts";
+import { coverageCombinations } from "./design.ts";
 
 /** A fleet design as the harness sees it: its id, the kit options it uses, a size to find the family's largest. */
 export interface FleetEntry {
@@ -45,6 +49,11 @@ export const WORLD_FLEET: readonly FleetEntry[] = [
     const lengths = (b.params ?? []).flatMap((p) => p.values.map((v) => b.spec({ [p.name]: v.value }).length));
     const s = b.spec();
     return { id: proceduralId(b.id), family: "buses", features: busFeatures(s, (b.params ?? []).map((p) => p.name)), size: Math.max(s.length, ...lengths) * s.height };
+  }),
+  // the world trucks: the kit options over every parameter combination; the largest by plan area (the mining trucks)
+  ...WORLD_TRUCK_SPECS.map((t) => {
+    const specs = coverageCombinations(t.params, t.finishParams).map((p) => t.spec(p));
+    return { id: proceduralId(t.id), family: "trucks", features: truckFeatures(specs, (t.params ?? []).map((p) => p.name)), size: Math.max(...specs.map((s) => truckLength(s) * s.cab.top)) };
   }),
 ];
 

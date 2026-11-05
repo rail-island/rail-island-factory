@@ -80,4 +80,9 @@ export const SOUND_TABLE: Readonly<Record<string, DeclaredSounds>> = {
   "proc-vehicle-solaris-trollino": { sounds: { engine: { id: "electric-engine-converter" } } },
   "proc-vehicle-skoda-14tr": { sounds: { engine: { id: "electric-engine-resistor" } } },
   "proc-vehicle-skoda-15tr": { sounds: { engine: { id: "electric-engine-resistor" } } },
+
+  // The world trucks with electric traction (worldTrucks.ts): the battery Tesla Semi and the
+  // fuel cell Hyundai Xcient run on inverters; the rest keep the derived truck diesel.
+  "proc-vehicle-tesla-semi": { sounds: { engine: { id: "electric-engine-converter" } } },
+  "proc-vehicle-hyundai-xcient": { variants: [{ params: { variant: "fuelCell" }, sounds: { engine: { id: "electric-engine-converter" } } }] },
 };
