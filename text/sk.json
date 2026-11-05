@@ -998,7 +998,21 @@
   "Swiss Lake Paddle Steamer": "Švajčiarsky jazerný kolesový parník",
   "Sydney First Fleet Ferry": "Sydneyský prievoz First Fleet",
   "Venice Vaporetto": "Benátske vaporetto",
-  "Bosphorus Ferry": "Bosporský trajekt"
+  "Bosphorus Ferry": "Bosporský trajekt",
+  "Canal Narrowboat": "Kanálová úzka loď",
+  "Chinese Junk": "Čínska džunka",
+  "Dhow": "Dhau",
+  "Felucca": "Feluka",
+  "Kerala Houseboat": "Keralský hausbót",
+  "North Sea Fishing Cutter": "Severomorský rybársky kutter",
+  "Polynesian Voyaging Canoe": "Polynézska plavebná kanoe",
+  "Sailing Yacht": "Plachetná jachta",
+  "Sampan": "Sampan",
+  "Superyacht": "Superjachta",
+  "Thai Longtail Boat": "Thajský longtail",
+  "Thames Sailing Barge": "Temžský plachetný čln",
+  "Venetian Gondola": "Benátska gondola",
+  "Viking Longship": "Vikingská dlhá loď"
  },
  "overrides": {
   "model.proc-building-castle.param.towers": "Veže",

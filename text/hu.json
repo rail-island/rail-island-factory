@@ -998,7 +998,21 @@
   "Swiss Lake Paddle Steamer": "Svájci tavi lapátkerekes gőzhajó",
   "Sydney First Fleet Ferry": "Sydney-i First Fleet komp",
   "Venice Vaporetto": "Velencei vaporetto",
-  "Bosphorus Ferry": "Boszporuszi komp"
+  "Bosphorus Ferry": "Boszporuszi komp",
+  "Canal Narrowboat": "Csatornahajó",
+  "Chinese Junk": "Kínai dzsunka",
+  "Dhow": "Dau",
+  "Felucca": "Feluka",
+  "Kerala Houseboat": "Keralai lakóhajó",
+  "North Sea Fishing Cutter": "Északi-tengeri halászkutter",
+  "Polynesian Voyaging Canoe": "Polinéz óceánjáró kenu",
+  "Sailing Yacht": "Vitorlás jacht",
+  "Sampan": "Szampan",
+  "Superyacht": "Szuperjacht",
+  "Thai Longtail Boat": "Thai hosszúfarkú csónak",
+  "Thames Sailing Barge": "Temzei vitorlás uszály",
+  "Venetian Gondola": "Velencei gondola",
+  "Viking Longship": "Viking hosszúhajó"
  },
  "overrides": {
   "model.proc-building-castle.param.towers": "Tornyok",

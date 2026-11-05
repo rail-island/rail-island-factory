@@ -169,19 +169,25 @@
     "proc-vehicle-ship-attenborough": 226,
     "proc-vehicle-ship-bateau-mouche": 255,
     "proc-vehicle-ship-bc-spirit": 237,
+    "proc-vehicle-ship-bluenose": 275,
     "proc-vehicle-ship-bosphorus-vapur": 241,
     "proc-vehicle-ship-cable-layer": 216,
     "proc-vehicle-ship-capesize": 200,
     "proc-vehicle-ship-channel-ropax": 246,
     "proc-vehicle-ship-chemical-tanker": 199,
     "proc-vehicle-ship-crane-vessel": 230,
+    "proc-vehicle-ship-cutty-sark": 274,
+    "proc-vehicle-ship-dhow": 269,
     "proc-vehicle-ship-drillship": 231,
     "proc-vehicle-ship-elbe-paddle": 254,
     "proc-vehicle-ship-emma-maersk": 187,
     "proc-vehicle-ship-europaschiff": 211,
     "proc-vehicle-ship-expedition-cruise": 265,
     "proc-vehicle-ship-feeder-container": 190,
+    "proc-vehicle-ship-felucca": 271,
     "proc-vehicle-ship-fireboat": 232,
+    "proc-vehicle-ship-fishing-cutter": 284,
+    "proc-vehicle-ship-gondola": 279,
     "proc-vehicle-ship-handysize": 202,
     "proc-vehicle-ship-harbour-tug": 218,
     "proc-vehicle-ship-heavy-lift": 207,
@@ -192,14 +198,18 @@
     "proc-vehicle-ship-incat": 245,
     "proc-vehicle-ship-jetfoil": 251,
     "proc-vehicle-ship-jp-overnight-ferry": 248,
+    "proc-vehicle-ship-junk": 270,
+    "proc-vehicle-ship-kettuvallam": 272,
     "proc-vehicle-ship-laker": 203,
     "proc-vehicle-ship-liberty": 209,
     "proc-vehicle-ship-lng-moss": 196,
     "proc-vehicle-ship-lng-qmax": 197,
     "proc-vehicle-ship-lobster-boat": 223,
+    "proc-vehicle-ship-longtail": 280,
     "proc-vehicle-ship-lpg-carrier": 198,
     "proc-vehicle-ship-manly-freshwater": 240,
     "proc-vehicle-ship-msc-gulsun": 188,
+    "proc-vehicle-ship-narrowboat": 267,
     "proc-vehicle-ship-nile-cruiser": 256,
     "proc-vehicle-ship-normandie": 264,
     "proc-vehicle-ship-oasis": 259,
@@ -216,30 +226,39 @@
     "proc-vehicle-ship-raketa": 250,
     "proc-vehicle-ship-reefer": 208,
     "proc-vehicle-ship-rhine-tanker": 212,
+    "proc-vehicle-ship-riva-aquarama": 283,
     "proc-vehicle-ship-river-cruise": 266,
     "proc-vehicle-ship-rnli-shannon": 233,
     "proc-vehicle-ship-roro": 206,
+    "proc-vehicle-ship-sailing-yacht": 282,
+    "proc-vehicle-ship-sampan": 285,
     "proc-vehicle-ship-seawise-giant": 193,
+    "proc-vehicle-ship-sedov": 273,
     "proc-vehicle-ship-self-unloader": 204,
     "proc-vehicle-ship-shrimp-trawler": 222,
     "proc-vehicle-ship-srn4": 249,
+    "proc-vehicle-ship-ss-great-britain": 276,
     "proc-vehicle-ship-ss-united-states": 263,
     "proc-vehicle-ship-star-ferry": 236,
     "proc-vehicle-ship-staten-island": 235,
     "proc-vehicle-ship-stena-hss": 244,
     "proc-vehicle-ship-stern-trawler": 220,
     "proc-vehicle-ship-sternwheeler": 253,
+    "proc-vehicle-ship-superyacht": 281,
     "proc-vehicle-ship-supply-vessel": 228,
     "proc-vehicle-ship-swiss-paddle": 252,
     "proc-vehicle-ship-sydney-first-fleet": 239,
     "proc-vehicle-ship-tallink-megastar": 247,
+    "proc-vehicle-ship-thames-barge": 268,
     "proc-vehicle-ship-towboat": 219,
     "proc-vehicle-ship-triple-e": 186,
     "proc-vehicle-ship-valemax": 201,
     "proc-vehicle-ship-vaporetto": 242,
     "proc-vehicle-ship-victory": 210,
+    "proc-vehicle-ship-viking-longship": 277,
     "proc-vehicle-ship-vlcc": 192,
     "proc-vehicle-ship-volga-don": 215,
+    "proc-vehicle-ship-voyaging-canoe": 278,
     "proc-vehicle-ship-wsf-jumbo": 238,
     "proc-vehicle-ship-yangtze-cargo": 214,
     "proc-vehicle-siemens-alc42": 126,
@@ -2126,6 +2145,10 @@
         "id": 616,
         "size": 4
       },
+      "proc-vehicle-ship-bluenose?": {
+        "id": 816,
+        "size": 4
+      },
       "proc-vehicle-ship-bosphorus-vapur?": {
         "id": 632,
         "size": 4
@@ -2166,6 +2189,14 @@
         "id": 588,
         "size": 4
       },
+      "proc-vehicle-ship-cutty-sark?": {
+        "id": 812,
+        "size": 4
+      },
+      "proc-vehicle-ship-dhow?": {
+        "id": 792,
+        "size": 4
+      },
       "proc-vehicle-ship-drillship?": {
         "id": 592,
         "size": 4
@@ -2194,8 +2225,24 @@
         "id": 348,
         "size": 4
       },
+      "proc-vehicle-ship-felucca?": {
+        "id": 800,
+        "size": 4
+      },
       "proc-vehicle-ship-fireboat?": {
         "id": 596,
+        "size": 4
+      },
+      "proc-vehicle-ship-fishing-cutter?": {
+        "id": 864,
+        "size": 4
+      },
+      "proc-vehicle-ship-fishing-cutter?colour=green": {
+        "id": 868,
+        "size": 4
+      },
+      "proc-vehicle-ship-gondola?": {
+        "id": 832,
         "size": 4
       },
       "proc-vehicle-ship-handysize?": {
@@ -2266,6 +2313,14 @@
         "id": 676,
         "size": 4
       },
+      "proc-vehicle-ship-junk?": {
+        "id": 796,
+        "size": 4
+      },
+      "proc-vehicle-ship-kettuvallam?": {
+        "id": 804,
+        "size": 4
+      },
       "proc-vehicle-ship-laker?": {
         "id": 428,
         "size": 4
@@ -2298,6 +2353,10 @@
         "id": 552,
         "size": 4
       },
+      "proc-vehicle-ship-longtail?": {
+        "id": 836,
+        "size": 4
+      },
       "proc-vehicle-ship-lpg-carrier?": {
         "id": 396,
         "size": 4
@@ -2308,6 +2367,18 @@
       },
       "proc-vehicle-ship-msc-gulsun?": {
         "id": 332,
+        "size": 4
+      },
+      "proc-vehicle-ship-narrowboat?": {
+        "id": 776,
+        "size": 4
+      },
+      "proc-vehicle-ship-narrowboat?colour=blue": {
+        "id": 784,
+        "size": 4
+      },
+      "proc-vehicle-ship-narrowboat?colour=red": {
+        "id": 780,
         "size": 4
       },
       "proc-vehicle-ship-nile-cruiser?": {
@@ -2398,6 +2469,10 @@
         "id": 484,
         "size": 4
       },
+      "proc-vehicle-ship-riva-aquarama?": {
+        "id": 860,
+        "size": 4
+      },
       "proc-vehicle-ship-river-cruise?": {
         "id": 764,
         "size": 4
@@ -2422,8 +2497,28 @@
         "id": 452,
         "size": 4
       },
+      "proc-vehicle-ship-sailing-yacht?": {
+        "id": 848,
+        "size": 4
+      },
+      "proc-vehicle-ship-sailing-yacht?colour=navy": {
+        "id": 852,
+        "size": 4
+      },
+      "proc-vehicle-ship-sailing-yacht?colour=red": {
+        "id": 856,
+        "size": 4
+      },
+      "proc-vehicle-ship-sampan?": {
+        "id": 872,
+        "size": 4
+      },
       "proc-vehicle-ship-seawise-giant?": {
         "id": 368,
+        "size": 4
+      },
+      "proc-vehicle-ship-sedov?": {
+        "id": 808,
         "size": 4
       },
       "proc-vehicle-ship-self-unloader?": {
@@ -2436,6 +2531,10 @@
       },
       "proc-vehicle-ship-srn4?": {
         "id": 680,
+        "size": 4
+      },
+      "proc-vehicle-ship-ss-great-britain?": {
+        "id": 820,
         "size": 4
       },
       "proc-vehicle-ship-ss-united-states?": {
@@ -2466,6 +2565,14 @@
         "id": 704,
         "size": 4
       },
+      "proc-vehicle-ship-superyacht?": {
+        "id": 840,
+        "size": 4
+      },
+      "proc-vehicle-ship-superyacht?colour=navy": {
+        "id": 844,
+        "size": 4
+      },
       "proc-vehicle-ship-supply-vessel?": {
         "id": 572,
         "size": 4
@@ -2488,6 +2595,10 @@
       },
       "proc-vehicle-ship-tallink-megastar?": {
         "id": 672,
+        "size": 4
+      },
+      "proc-vehicle-ship-thames-barge?": {
+        "id": 788,
         "size": 4
       },
       "proc-vehicle-ship-towboat?": {
@@ -2514,6 +2625,10 @@
         "id": 472,
         "size": 4
       },
+      "proc-vehicle-ship-viking-longship?": {
+        "id": 824,
+        "size": 4
+      },
       "proc-vehicle-ship-vlcc?": {
         "id": 356,
         "size": 4
@@ -2528,6 +2643,10 @@
       },
       "proc-vehicle-ship-volga-don?": {
         "id": 496,
+        "size": 4
+      },
+      "proc-vehicle-ship-voyaging-canoe?": {
+        "id": 828,
         "size": 4
       },
       "proc-vehicle-ship-wsf-jumbo?": {

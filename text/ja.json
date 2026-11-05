@@ -998,7 +998,21 @@
   "Swiss Lake Paddle Steamer": "スイスの湖の外輪船",
   "Sydney First Fleet Ferry": "シドニーのファースト・フリート型フェリー",
   "Venice Vaporetto": "ヴェネツィアのヴァポレット",
-  "Bosphorus Ferry": "ボスポラス海峡のフェリー"
+  "Bosphorus Ferry": "ボスポラス海峡のフェリー",
+  "Canal Narrowboat": "運河のナローボート",
+  "Chinese Junk": "ジャンク船",
+  "Dhow": "ダウ船",
+  "Felucca": "ファルーカ",
+  "Kerala Houseboat": "ケーララのハウスボート",
+  "North Sea Fishing Cutter": "北海の漁船",
+  "Polynesian Voyaging Canoe": "ポリネシアの航海カヌー",
+  "Sailing Yacht": "セーリングヨット",
+  "Sampan": "サンパン",
+  "Superyacht": "スーパーヨット",
+  "Thai Longtail Boat": "タイのロングテールボート",
+  "Thames Sailing Barge": "テムズ川の帆走バージ",
+  "Venetian Gondola": "ヴェネツィアのゴンドラ",
+  "Viking Longship": "ヴァイキングのロングシップ"
  },
  "overrides": {
   "model.proc-building-castle.param.towers": "塔",

@@ -998,7 +998,21 @@
   "Swiss Lake Paddle Steamer": "Schweizer Raddampfer",
   "Sydney First Fleet Ferry": "Sydney-Fähre der First-Fleet-Klasse",
   "Venice Vaporetto": "Venezianisches Vaporetto",
-  "Bosphorus Ferry": "Bosporus-Fähre"
+  "Bosphorus Ferry": "Bosporus-Fähre",
+  "Canal Narrowboat": "Kanal-Narrowboat",
+  "Chinese Junk": "Chinesische Dschunke",
+  "Dhow": "Dau",
+  "Felucca": "Feluke",
+  "Kerala Houseboat": "Hausboot aus Kerala",
+  "North Sea Fishing Cutter": "Nordsee-Fischkutter",
+  "Polynesian Voyaging Canoe": "Polynesisches Reisekanu",
+  "Sailing Yacht": "Segelyacht",
+  "Sampan": "Sampan",
+  "Superyacht": "Superyacht",
+  "Thai Longtail Boat": "Thailändisches Longtail-Boot",
+  "Thames Sailing Barge": "Themse-Segelbarge",
+  "Venetian Gondola": "Venezianische Gondel",
+  "Viking Longship": "Wikinger-Langschiff"
  },
  "overrides": {
   "model.proc-building-castle.param.towers": "Türme",

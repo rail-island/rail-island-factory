@@ -621,7 +621,7 @@ function drawSternGear(c: ShipCtx, f: HullForm, zc: number): void {
   const top = Math.min(hull.keel(ur) + 0.05, f.draft * 1.1);
   const h = Math.max(0.3, top - f.draft * 0.12);
   const t = Math.max(0.06, f.beam * 0.012);
-  m.scope("rudder", () => m.box("bottom", c.x(ur), zc, chord, t, top - h, top));
+  m.scope("rudder", () => m.box("bottom", c.x(ur), zc, chord, t, Math.max(0, top - h), Math.max(top, 0.2)));
   const n = f.screws ?? (c.spec.kind === "small" || c.spec.kind === "sail" ? 0 : 1);
   if (!n) return;
   const r = Math.max(0.25, f.draft * 0.32);

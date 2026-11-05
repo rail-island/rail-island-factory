@@ -597,4 +597,24 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-ship-normandie": pax(1935, 1_972, null, { presets: presets() }),
   "proc-vehicle-ship-expedition-cruise": pax(2019, 530, null, { presets: presets() }),
   "proc-vehicle-ship-river-cruise": pax(2010, 190, null, { presets: presets(...each("livery", "white", "red")) }), // approx.
+  // sailing ships and small craft: a trader its cargo, a fishing boat its catch, the rest passengers
+  "proc-vehicle-ship-narrowboat": truck(1900, 25, "COAL", ["bulk", "piece"], { presets: presets(...each("colour", "red", "blue")) }),
+  "proc-vehicle-ship-thames-barge": truck(1900, 100, "GRAI", ["bulk", "piece"], { presets: presets() }),
+  "proc-vehicle-ship-dhow": truck(1900, 60, "GOOD", ["piece"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-junk": truck(1900, 150, "GOOD", ["piece"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-felucca": pax(1900, 12, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-kettuvallam": pax(1990, 8, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-sedov": pax(1921, 164, null, { presets: presets() }),
+  "proc-vehicle-ship-cutty-sark": truck(1869, 1_300, "GOOD", ["piece", "covered"], { presets: presets() }),
+  "proc-vehicle-ship-bluenose": truck(1921, 100, "FOOD", ["refrigerated"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-ss-great-britain": pax(1845, 360, null, { presets: presets() }),
+  "proc-vehicle-ship-viking-longship": pax(900, 60, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-voyaging-canoe": pax(1976, 16, null, { presets: presets() }),
+  "proc-vehicle-ship-gondola": pax(1900, 6, null, { presets: presets() }),
+  "proc-vehicle-ship-longtail": pax(1960, 12, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-superyacht": pax(2015, 36, null, { presets: presets(...each("colour", "navy")) }), // approx.
+  "proc-vehicle-ship-sailing-yacht": pax(2000, 8, null, { presets: presets(...each("colour", "navy", "red")) }), // approx.
+  "proc-vehicle-ship-riva-aquarama": pax(1962, 6, null, { presets: presets() }),
+  "proc-vehicle-ship-fishing-cutter": truck(1960, 40, "FOOD", ["refrigerated"], { presets: presets(...each("colour", "green")) }), // approx.
+  "proc-vehicle-ship-sampan": pax(1950, 6, null, { presets: presets() }), // approx.
 };

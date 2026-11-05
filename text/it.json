@@ -998,7 +998,21 @@
   "Swiss Lake Paddle Steamer": "Piroscafo a ruote dei laghi svizzeri",
   "Sydney First Fleet Ferry": "Traghetto First Fleet di Sydney",
   "Venice Vaporetto": "Vaporetto veneziano",
-  "Bosphorus Ferry": "Traghetto del Bosforo"
+  "Bosphorus Ferry": "Traghetto del Bosforo",
+  "Canal Narrowboat": "Narrowboat da canale",
+  "Chinese Junk": "Giunca cinese",
+  "Dhow": "Sambuco",
+  "Felucca": "Feluca",
+  "Kerala Houseboat": "Casa galleggiante del Kerala",
+  "North Sea Fishing Cutter": "Peschereccio del Mare del Nord",
+  "Polynesian Voyaging Canoe": "Canoa polinesiana da viaggio",
+  "Sailing Yacht": "Barca a vela",
+  "Sampan": "Sampan",
+  "Superyacht": "Superyacht",
+  "Thai Longtail Boat": "Barca long-tail thailandese",
+  "Thames Sailing Barge": "Chiatta a vela del Tamigi",
+  "Venetian Gondola": "Gondola veneziana",
+  "Viking Longship": "Nave lunga vichinga"
  },
  "overrides": {
   "model.proc-char-avatar.param.body": "Corporatura",

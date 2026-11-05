@@ -998,7 +998,21 @@
   "Swiss Lake Paddle Steamer": "스위스 호수 외륜선",
   "Sydney First Fleet Ferry": "시드니 퍼스트 플리트 페리",
   "Venice Vaporetto": "베네치아 바포레토",
-  "Bosphorus Ferry": "보스포루스 페리"
+  "Bosphorus Ferry": "보스포루스 페리",
+  "Canal Narrowboat": "운하 내로보트",
+  "Chinese Junk": "중국 정크선",
+  "Dhow": "다우선",
+  "Felucca": "펠루카",
+  "Kerala Houseboat": "케랄라 하우스보트",
+  "North Sea Fishing Cutter": "북해 어선",
+  "Polynesian Voyaging Canoe": "폴리네시아 항해 카누",
+  "Sailing Yacht": "세일링 요트",
+  "Sampan": "삼판",
+  "Superyacht": "슈퍼요트",
+  "Thai Longtail Boat": "태국 롱테일 보트",
+  "Thames Sailing Barge": "템스강 범선 바지",
+  "Venetian Gondola": "베네치아 곤돌라",
+  "Viking Longship": "바이킹 롱십"
  },
  "overrides": {
   "model.proc-building-castle.param.towers": "탑",
