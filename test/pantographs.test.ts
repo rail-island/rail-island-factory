@@ -7,6 +7,10 @@
 
 import { describe, expect, it } from "vitest";
 import { ALL_VEHICLES } from "../generator/generate.ts";
+import { swept } from "./catalogCache";
+
+/** The vehicles the whole-catalog suites build (catalogCache.ts swept). */
+const SWEPT_VEHICLES = swept(ALL_VEHICLES);
 import { parseGlb } from "../generator/glbTriangles.ts";
 import { glbStats } from "../generator/glbStats.ts";
 import { poseGlb, sampleCount } from "../generator/glbPose.ts";
@@ -29,7 +33,7 @@ function topOf(m: unknown, mat?: string): number {
  * (the file built each default three times over before).
  */
 const DEFAULTS = new Map(
-  ALL_VEHICLES.map((d) => {
+  SWEPT_VEHICLES.map((d) => {
     const m = d.build();
     const groups = (m as unknown as { groups: Map<string, unknown> }).groups;
     return [d.id, { pantograph: m.positions().length > 0 && groups.has("pantograph"), carbon: groups.has("carbon"), carbonTop: topOf(m, "carbon"), top: topOf(m), lamps: m.lamps() }] as const;
@@ -37,7 +41,7 @@ const DEFAULTS = new Map(
 );
 
 /** The designs whose default model draws a pantograph (the material). */
-const ELECTRIC = ALL_VEHICLES.filter((d) => DEFAULTS.get(d.id)!.pantograph);
+const ELECTRIC = SWEPT_VEHICLES.filter((d) => DEFAULTS.get(d.id)!.pantograph);
 
 describe("pantographs", () => {
   it("are found on the electric locomotives, units and trams", () => {
@@ -79,9 +83,9 @@ describe("collector heights", () => {
   // steam and diesel locomotives, coaches and wagons collect no current: no variant of theirs is built to look for a collector
   const unpowered = (v: (typeof ALL_VEHICLES)[number]) => v.catalog?.traction === "steam" || v.catalog?.traction === "diesel" || v.catalog?.group === "coach" || v.catalog?.group === "wagon";
   it("finds no collector on the families that cannot have one", () => {
-    for (const d of ALL_VEHICLES.filter((v) => v.catalog?.category === "Rail vehicles" && unpowered(v))) expect(DEFAULTS.get(d.id)!.carbon, d.id).toBe(false);
+    for (const d of SWEPT_VEHICLES.filter((v) => v.catalog?.category === "Rail vehicles" && unpowered(v))) expect(DEFAULTS.get(d.id)!.carbon, d.id).toBe(false);
   });
-  for (const d of ALL_VEHICLES.filter((v) => v.catalog?.category === "Rail vehicles" && !unpowered(v))) {
+  for (const d of SWEPT_VEHICLES.filter((v) => v.catalog?.category === "Rail vehicles" && !unpowered(v))) {
     const wire = trams.has(d.id) ? TRAM_COLLECTOR_TOP : RAIL_COLLECTOR_TOP;
     variantsUnderTest(d).forEach((params, i) => {
       it(`${d.id} ${JSON.stringify(params)} raises its collector to the game's wire`, () => {
@@ -105,7 +109,7 @@ describe("collector heights", () => {
 
 describe("lamps", () => {
   const ROLES = new Set(["head", "tail", "brake", "indicator"]);
-  for (const d of ALL_VEHICLES) {
+  for (const d of SWEPT_VEHICLES) {
     it(`${d.id} names a known role for every lamp it draws`, () => {
       const lamps = DEFAULTS.get(d.id)!.lamps;
       if (!lamps) return;
@@ -118,7 +122,7 @@ describe("lamps", () => {
   }
 
   it("light every road vehicle's way ahead", () => {
-    for (const d of ALL_VEHICLES.filter((v) => v.catalog?.category === "Road vehicles")) {
+    for (const d of SWEPT_VEHICLES.filter((v) => v.catalog?.category === "Road vehicles")) {
       const roles = Object.values(DEFAULTS.get(d.id)!.lamps?.materials ?? {}).map((l) => l.role);
       expect(roles, d.id).toContain("head");
     }

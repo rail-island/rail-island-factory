@@ -159,6 +159,19 @@ export function sample<T>(list: readonly T[]): T[] {
  */
 export const SWEPT_IDS: readonly string[] = [...DESIGNS.keys()].filter((id) => ALL_VARIANTS || !FLEET_IDS.has(id) || FLEET_SWEEP_SAMPLE.has(id));
 
+/** Whether the whole-catalog suites build design `id` (SWEPT_IDS). */
+const SWEPT = new Set(SWEPT_IDS);
+export const isSwept = (id: string): boolean => SWEPT.has(id);
+
+/**
+ * The designs of `list` the whole-catalog suites build: all but the world fleet's
+ * outside its covering sample (docs/models/world-fleet.md). Every fleet design is
+ * still checked by its family suite, test/worldFleet.test.ts and `pnpm build`.
+ */
+export function swept<T extends { id: string }>(list: readonly T[]): T[] {
+  return list.filter((d) => SWEPT.has(d.id));
+}
+
 /**
  * The designs of shard `index` of `count`, by position among SWEPT_IDS, so the
  * per-design checks spread over the workers (test/catalog-*.test.ts, sixteen).

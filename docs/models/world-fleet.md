@@ -38,8 +38,10 @@ still checked:
 - by **`test/worldFleet.test.ts`**, on every run, without building them;
 - by their **family suite** (`test/worldCabins.test.ts` builds all ten cabins,
   `test/worldBuses.test.ts` every bus's sampled variants: they are cheap);
-- by the **shared vehicle suites** (doors, interiors, the rig, lamps), which still build every
-  vehicle;
+- the **whole-catalog suites** that build designs build only `SWEPT_IDS` too
+  (`swept(list)` and `isSwept(id)` in `test/catalogCache.ts`): the doors
+  (`test/doorsSuite.ts`), the interiors, the rig, the pantographs and lamps, the glass
+  marking and the LOD's lamps and clips (`test/lod.test.ts`);
 - by **`pnpm build`**, which builds every design with its budget, z-fighting and envelope
   checks.
 

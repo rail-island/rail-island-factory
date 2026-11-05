@@ -10,6 +10,7 @@ import { ALL_VEHICLES } from "../generator/generate";
 import { LOD_GLASS, LOD_PALETTE } from "../generator/lodKit";
 import type { MaterialSpec } from "../generator/meshCore";
 import { jsModuleOf } from "./catalogCache";
+import { swept } from "./catalogCache";
 
 /** A material name that reads as window glass; a lamp's glass is a lamp, a skirt panel is not a pane. */
 const GLASSY = /glass|windscreen|window|visor/i;
@@ -31,7 +32,7 @@ describe("window glass", () => {
   it("marks every glass material a vehicle draws", () => {
     const unmarked: string[] = [];
     let marked = 0;
-    for (const d of ALL_VEHICLES) {
+    for (const d of swept(ALL_VEHICLES)) {
       const model = d.build() as unknown as { groups: Map<string, unknown>; palette: Record<string, MaterialSpec> };
       for (const mat of model.groups.keys()) {
         const spec = model.palette[mat]!;

@@ -10,7 +10,7 @@ import { glbStats } from "../generator/glbStats.ts";
 import { poseGlb, sampleCount } from "../generator/glbPose.ts";
 import { findCoplanarOverlaps } from "../generator/coplanar.ts";
 import { buildLodModel } from "../generator/lodModel.ts";
-import { variantsUnderTest } from "./catalogCache";
+import { swept, variantsUnderTest } from "./catalogCache";
 import { isInteriorName } from "../generator/interiorTable.ts";
 
 /** The groups of passenger vehicles: every one opens its passenger doors. */
@@ -21,7 +21,7 @@ const NO_DOORS = new Set(["proc-vehicle-csd-dsk", "proc-vehicle-csd-m112", "proc
 const RIGHT_ONLY = (id: string, group: string) => group === "bus" || ["proc-vehicle-tatra-t3", "proc-vehicle-tatra-t6", "proc-vehicle-tatra-kt4", "proc-vehicle-kvag-gt4"].includes(id);
 
 const groupOf = (d: (typeof ALL_VEHICLES)[number]) => d.catalog?.group ?? "";
-const PASSENGER = ALL_VEHICLES.filter((d) => PASSENGER_GROUPS.has(groupOf(d)) && !NO_DOORS.has(d.id));
+const PASSENGER = swept(ALL_VEHICLES).filter((d) => PASSENGER_GROUPS.has(groupOf(d)) && !NO_DOORS.has(d.id));
 
 /**
  * A passenger vehicle's default build, shared by the four checks that read it
@@ -43,7 +43,7 @@ describe("vehicle doors", () => {
   if (index === 0) it("open on every passenger vehicle, and on nothing else", () => {
     // a design opens doors when one of its variants does (a set's power car opens none)
     const opens = (d: (typeof ALL_VEHICLES)[number]) => variantsUnderTest(d).some((p, i) => buildOf(d, p, i).animations().some((c) => c.drive.drive === "door"));
-    const withDoors = ALL_VEHICLES.filter(opens).map((d) => d.id);
+    const withDoors = swept(ALL_VEHICLES).filter(opens).map((d) => d.id);
     expect(withDoors.sort()).toEqual(PASSENGER.map((d) => d.id).sort());
     expect(PASSENGER.length).toBeGreaterThan(40);
   });
@@ -175,7 +175,7 @@ describe("shut doors over a doorway", () => {
   // shut, the gap between two leaves looked straight through the car. A dark strip
   // riding on a leaf now covers it, as the dark vestibule or panel used to: rays
   // across each shut door, 5 mm apart, all meet the door on its own half of the car.
-  for (const d of mine(ALL_VEHICLES.filter((v) => PASSENGER_GROUPS.has(groupOf(v)) && !NO_DOORS.has(v.id)))) {
+  for (const d of mine(swept(ALL_VEHICLES).filter((v) => PASSENGER_GROUPS.has(groupOf(v)) && !NO_DOORS.has(v.id)))) {
     it(`${d.id} shows no gap through its shut doors`, () => {
       const m = defaultBuild(d) as unknown as Internals;
       DEFAULT_BUILDS.delete(d.id);

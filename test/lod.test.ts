@@ -4,6 +4,7 @@ import { previewKey } from '../src/catalogQuery';
 import { glbStats } from '../generator/glbStats';
 import { buildLodModel } from '../generator/lodModel';
 import { collectTriangles, parseGlb } from '../generator/glbTriangles';
+import { swept } from './catalogCache';
 
 describe('low detail exports', () => {
   // Every design's standalone LOD and its sampled variants' LODs: the catalog
@@ -46,7 +47,7 @@ describe('vehicle LODs carry no lamps and no motion', () => {
     // and a value offered only under an earlier one's values (the MTR's Disneyland livery) the first of those
     ...(d.params ?? []).flatMap((p) => p.values.map((v) => ({ ...(p.when ? { [p.when.name]: p.when.values[0]! } : {}), ...(v.when ? { [v.when.name]: v.when.values[0]! } : {}), [p.name]: v.value }))),
   ];
-  for (const d of ALL_VEHICLES)
+  for (const d of swept(ALL_VEHICLES))
     it(`${d.id} draws its low detail without a lamp material, lamps table or clip`, () => {
       for (const values of selections(d)) {
         const low = buildLodModel(d, values);
