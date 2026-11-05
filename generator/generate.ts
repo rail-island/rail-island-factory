@@ -84,6 +84,7 @@ import { MDMOT_DESIGNS } from "./mavMdmot.ts";
 import { ICE1_DESIGNS } from "./ice1.ts";
 import { TGV_DESIGNS } from "./tgv.ts";
 import { CABLE_CABINS } from "./cableCabins.ts";
+import { WORLD_CABINS } from "./worldCabins.ts";
 import { DIESEL_LOCOS } from "./dieselLocos.ts";
 import { US_DIESELS } from "./usDiesels.ts";
 import { US_CARBODIES } from "./usCarbodies.ts";
@@ -199,6 +200,7 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: AIRCRAFT, source: "aircraft.ts", meta: "vehicles" },
   { designs: SHIPS, source: "ships.ts", meta: "vehicles" },
   { designs: CABLE_CABINS, source: "cableCabins.ts", meta: "vehicles" },
+  { designs: WORLD_CABINS, source: "worldCabins.ts", meta: "vehicles" },
   { designs: EMU471_DESIGNS, source: "emu471.ts", meta: "vehicles" },
   { designs: EMU680_DESIGNS, source: "emu680.ts", meta: "vehicles" },
   { designs: DIESEL_LOCOS, source: "dieselLocos.ts", meta: "vehicles" },

@@ -567,6 +567,6 @@ them has an OpenTTD entry. Each states its `ropeFrac` and `boardFrac`.
 | 5 | `veh-titlis-rotair` | Titlis Rotair | CH | 1992 | rotating floor as part | - |
 | 6 | `veh-vanoise-express` | Vanoise Express | FR | 2003 | double-deck aerial tram | - |
 | 7 | `veh-roosevelt-island-tram` | Roosevelt Island Tramway | US | 1976 | urban aerial tram | - |
-| 8 | `veh-sugarloaf-bondinho` | Sugarloaf Cable Car | BR | 1972 | glazed aerial tram | - |
+| 8 | `veh-sugarloaf-bondinho` | Sugarloaf Cable Car | BR | 2008 | glazed aerial tram (the current cabins) | - |
 | 9 | `veh-medellin-metrocable` | Medellin Metrocable | CO | 2004 | urban gondola | - |
-| 10 | `veh-ngong-ping-crystal` | Ngong Ping 360 Crystal Cabin | HK | 2006 | gondola, glass floor | variant: standard, crystal |
+| 10 | `veh-ngong-ping-crystal` | Ngong Ping 360 Cabin | HK | 2006 | gondola, glass floor | variant: standard, crystal |

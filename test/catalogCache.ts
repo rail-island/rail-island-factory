@@ -16,6 +16,10 @@ import { buildLodModel } from "../generator/lodModel";
 import type { VehicleRig } from "../generator/rig";
 import type { Emitter } from "../generator/meshCore";
 import type { SourceTree } from "../generator/sourceTree";
+import { FLEET_SWEEP_SAMPLE, WORLD_FLEET } from "../generator/worldFleet";
+
+/** Every world fleet design (generator/worldFleet.ts). */
+const FLEET_IDS = new Set(WORLD_FLEET.map((e) => e.id));
 
 export interface Built {
   glb: Uint8Array;
@@ -148,9 +152,17 @@ export function sample<T>(list: readonly T[]): T[] {
 }
 
 /**
- * The designs of shard `index` of `count`, by position in the catalog, so the
+ * The designs the catalog sweep checks: every design but the world fleet's
+ * outside its covering sample (generator/worldFleet.ts FLEET_SWEEP_SAMPLE; their
+ * data is checked in test/worldFleet.test.ts and `pnpm build` builds them all);
+ * with TEST_ALL_VARIANTS=1 every design.
+ */
+export const SWEPT_IDS: readonly string[] = [...DESIGNS.keys()].filter((id) => ALL_VARIANTS || !FLEET_IDS.has(id) || FLEET_SWEEP_SAMPLE.has(id));
+
+/**
+ * The designs of shard `index` of `count`, by position among SWEPT_IDS, so the
  * per-design checks spread over the workers (test/catalog-*.test.ts, sixteen).
  */
 export function shard(index: number, count: number): string[] {
-  return [...DESIGNS.keys()].filter((_, i) => i % count === index);
+  return SWEPT_IDS.filter((_, i) => i % count === index);
 }

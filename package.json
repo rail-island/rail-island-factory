@@ -16,7 +16,8 @@
     "deploy": "pnpm build && wrangler deploy",
     "sets:pins": "tsx generator/sets/writePins.ts",
     "import:sounds": "tsx generator/importSounds.ts",
-    "openttd:ids": "tsx generator/writeOpenttdIds.ts"
+    "openttd:ids": "tsx generator/writeOpenttdIds.ts",
+    "refs:fetch": "tsx generator/fetchRefs.ts"
   },
   "dependencies": {
     "solid-js": "^1.9.3",

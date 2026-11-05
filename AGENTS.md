@@ -81,7 +81,8 @@ document that owns it in the same change.** Conventions:
   committed with the model; the design points at it with `references: "<name>"`.
   `assets/_tmp/` is only an inbox for user uploads: when you build a model from a
   file there, `git mv` it into the model's folder in the same change, and never
-  leave downloaded references only in a scratch directory.
+  leave downloaded references only in a scratch directory. `pnpm refs:fetch`
+  downloads Commons photographs with their licences (docs/models/world-fleet.md).
 
 ## Git
 

@@ -52,12 +52,12 @@ const PALETTE: Record<string, MaterialSpec> = {
 const TAU = Math.PI * 2;
 
 /** A point at angle `a` and radius `r`, in ngon()'s convention (a = 90 deg is -z). */
-function polar(a: number, r: number): [number, number] {
+export function polar(a: number, r: number): [number, number] {
   return [r * Math.cos(a), -r * Math.sin(a)];
 }
 
 /** A rounded rectangle of half extents hx, hz, corner radius r, `seg` segments a corner, wound like ngon(). */
-function roundRect(hx: number, hz: number, r: number, seg: number): Ring {
+export function roundRect(hx: number, hz: number, r: number, seg: number): Ring {
   const ring: Ring = [];
   const centres: Array<[number, number]> = [[hx - r, -(hz - r)], [-(hx - r), -(hz - r)], [-(hx - r), hz - r], [hx - r, hz - r]];
   centres.forEach(([cx, cz], q) => {
@@ -70,7 +70,7 @@ function roundRect(hx: number, hz: number, r: number, seg: number): Ring {
 }
 
 /** One station of a lathed or lofted shell: height, size parameter and the material of the band above it. */
-type Station = [y: number, s: number, mat: string];
+export type Station = [y: number, s: number, mat: string];
 
 /**
  * A closed shell lofted through `stations`, `ringAt(s)` giving the ring at each:
@@ -78,7 +78,7 @@ type Station = [y: number, s: number, mat: string];
  * first and a top cap over the last. Two stations at one height make a flat step
  * (a proud stripe's shoulder).
  */
-function shell(m: MeshBuilder, stations: Station[], ringAt: (s: number) => Ring): void {
+export function shell(m: MeshBuilder, stations: Station[], ringAt: (s: number) => Ring): void {
   const first = stations[0]!;
   const last = stations[stations.length - 1]!;
   m.cap(first[2], ringAt(first[1]), first[0], false);
@@ -91,7 +91,7 @@ function shell(m: MeshBuilder, stations: Station[], ringAt: (s: number) => Ring)
 }
 
 /** A straight n-sided bar of radius r from p to q, capped at both ends. */
-function bar(m: MeshBuilder, mat: string, p: Vec3, q: Vec3, r: number, n = 4): void {
+export function bar(m: MeshBuilder, mat: string, p: Vec3, q: Vec3, r: number, n = 4): void {
   const d: Vec3 = [q[0] - p[0], q[1] - p[1], q[2] - p[2]];
   const len = Math.hypot(d[0], d[1], d[2]);
   const u: Vec3 = [d[0] / len, d[1] / len, d[2] / len];
@@ -113,7 +113,7 @@ function bar(m: MeshBuilder, mat: string, p: Vec3, q: Vec3, r: number, n = 4): v
 }
 
 /** A disc (wheel) of radius r and n sides, axle along `axis`, centred at (c0, cy) in its section plane, spanning a0..a1. */
-function disc(m: MeshBuilder, mat: string, axis: "x" | "z", c0: number, cy: number, r: number, a0: number, a1: number, n: number): void {
+export function disc(m: MeshBuilder, mat: string, axis: "x" | "z", c0: number, cy: number, r: number, a0: number, a1: number, n: number): void {
   const s: Ring = [];
   for (let i = 0; i < n; i++) {
     const t = (i / n) * TAU;

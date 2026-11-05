@@ -75,6 +75,8 @@
 | [models/ships.md](models/ships.md) | the cruise ferry, the hydrofoil and the passenger ferry, their waterlines |
 | [models/cable-car-stations.md](models/cable-car-stations.md) | the four cable car station types: the whole station the set module draws for the game's view (hall, head, bull wheel, curved or rectangular platform, stairs), per-type platforms, levels, clearances, budget, the pylon |
 | [models/cable-cabins.md](models/cable-cabins.md) | the aerial tramway car, the small gondola and the parametric chairlift chair (seats, bubble, colour), their rope, sill and seat datums |
+| [models/world-cabins.md](models/world-cabins.md) | the ten cable car cabins from around the world on the cabin kit: detachable gondolas, a funitel, 3S and bicable cabins, aerial tramways (double-deck, rotating, open-top); the kit's shell, doors, top deck and four hanger kinds, datums, LOD, references |
+| [models/world-fleet.md](models/world-fleet.md) | the world fleet harness: the registry and kit options, the covering sample the catalog sweep checks, the data checks of every fleet design, `pnpm refs:fetch` and the reference rules, the families landed |
 | [models/trucks.md](models/trucks.md) | the cistern semi-truck, the concrete mixer and the reefer semi-truck |
 | [models/emitters.md](models/emitters.md) | where models smoke, steam and flare, and a fountain's water: `emit`, `pool`, `jet`, the export |
 | [models/js-format.md](models/js-format.md) | the standalone JS model (`export/js/<id>.js`, `build(THREE)`), how it is bundled, the sizes |

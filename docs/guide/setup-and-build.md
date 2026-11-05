@@ -23,6 +23,7 @@ packages `pnpm.onlyBuiltDependencies` allows.
 | `pnpm test` | Vitest, once |
 | `pnpm typecheck` | `tsc --noEmit` over `src/`, `generator/`, `test/` |
 | `pnpm import:sounds` | mirrors the sibling rail-island-music export into the committed `sounds/` ([../models/sounds.md](../models/sounds.md)) |
+| `pnpm refs:fetch` | downloads Commons photographs into a model's `assets/<name>/` and lists them in its `SOURCES.md` ([../models/world-fleet.md](../models/world-fleet.md)) |
 | `pnpm deploy` | `pnpm build` and `wrangler deploy` from a workstation (CI normally does it) |
 
 `export/`, `dist/` and `.wrangler/` are gitignored: everything in them is
@@ -76,6 +77,10 @@ minutes** (AGENTS.md); it takes about four and a half on a four-core machine
   checks, and the family suites' per-variant loops. **`TEST_ALL_VARIANTS=1 pnpm
   test` checks every combination**; it takes far longer, so it runs only when
   the user asks for it (AGENTS.md).
+- **Sampled fleet designs.** The world fleet's designs (docs/models/world-fleet.md) get the
+  catalog sweep only when they are in its covering sample (`FLEET_SWEEP_SAMPLE`, every kit
+  option at least once and each family's largest); every one gets the data checks of
+  `test/worldFleet.test.ts`, its family suite and `pnpm build`.
 - **Cheap comparisons.** `test/setup.ts` decides equal typed arrays (GLB bytes)
   in one native comparison: `toEqual` walks them element by element, seconds per
   model. A check over every triangle, vertex, normal or keyframe collects the

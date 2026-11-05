@@ -2,7 +2,7 @@
 
 **Covers** - the procedural cable car cabins (the aerial tramway car, the small gondola and the parametric chairlift chair), the reference GLBs and photos they reproduce, their dimensions, the rope, door-sill and seat datums the webapp hangs them by, the chair's parameters, the triangle budget and the deviations from the references.
 **Code** - `generator/cableCabins.ts`, `test/chairlift.test.ts`, `test/referenceModels.test.ts`, `test/models.test.ts`, `test/jsModel.test.ts`
-**See also** - [vehicles.md](vehicles.md) (the `sweep` primitive, `vehicleParts.ts`), [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md)
+**See also** - [world-cabins.md](world-cabins.md) (the ten world cabins on the cabin kit), [vehicles.md](vehicles.md) (the `sweep` primitive, `vehicleParts.ts`), [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md)
 
 ## The designs
 
