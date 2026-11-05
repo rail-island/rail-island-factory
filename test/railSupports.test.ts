@@ -11,10 +11,10 @@ import { MeshBuilder, ngon } from "../generator/meshBuilder";
 import { paramCombinations, resolveParams, type ParamSpec } from "../generator/design";
 import { isLeaf, type LeafNode, type TreeNode } from "../generator/sourceTree";
 import { TYPE_META as RAIL_TYPES } from "../generator/sets/railType";
-import { swept } from "./catalogCache";
+import { checkedBySuites } from "./catalogCache";
 
 /** The rail vehicles it checks: the eight-country plan's families by one design a module (their supports are in test/worldTrainsSuite.ts). */
-const RAIL = ALL_VEHICLES.filter((d) => d.catalog?.category === "Rail vehicles" && swept(d.id));
+const RAIL = ALL_VEHICLES.filter((d) => d.catalog?.category === "Rail vehicles" && checkedBySuites(d.id));
 
 function leaves(n: TreeNode): LeafNode[] {
   return isLeaf(n) ? [n] : n.children.flatMap(leaves);

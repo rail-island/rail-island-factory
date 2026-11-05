@@ -144,6 +144,39 @@ The images of all ten cabins and their variants were sent to the user (contact s
 
      The covering sample is 103 of the 510 designs.
 
+3. **Merge to master.** While the fleet was built, `master` gained the eight countries'
+   160 trains, a country chip row in the catalog and its own test sampling (the catalog
+   sweep and the door suite check the first design of each train kit module, `swept(id)`).
+   `master` was merged into the branch first.
+   - **Conflicts.** The phrasebooks were unioned and the OpenTTD table kept both sides.
+     `openttdIds.json` was taken from `master` and regenerated: every id on `master` is
+     unchanged, the fleet's never-shipped ids were reassigned, and none overlap.
+   - **Countries.** `master`'s `test/countryTable.test.ts` requires a country for every
+     tram. All 510 fleet designs now name one in `generator/countryTable.ts`, from the
+     list's origin column. The fleet's generic types and Airbus's multinational types name
+     none, and `su` (Soviet Union) and `dd` (East Germany) follow the list's years.
+     `docs/site/catalog-site.md` says so.
+   - **Test time.** The merged suite took 5m15s, against 4m10s for `master` alone, so the
+     fleet is now checked the way `master` checks its train kits:
+     - the catalog sweep and the secondary whole-catalog suites build, of the fleet, each
+       family module's first design and each family's largest (`checkedBySuites` and
+       `FLEET_SUITE_IDS` in `test/catalogCache.ts`), plus the camello, whose hinge the rig
+       suite swings, on their defaults;
+     - the family suites keep checking every design;
+     - the aircraft suite checks a recolour-only combination through its defaults, and the
+       livery palettes on the default and the last livery;
+     - the LOD suite leaves out the fleet designs the suites do not build.
+
+     `TEST_FLEET_COVER=1 pnpm test` sweeps the whole covering sample (every kit option at
+     least once) after a kit change; it passes in 5m05s.
+
+     | check | result |
+     |---|---|
+     | `pnpm typecheck` | passes |
+     | `pnpm test` | 155 files, 10,225 tests pass in 4m41s (master alone: 4m10s) |
+     | `TEST_FLEET_COVER=1 pnpm test` | 155 files, 11,344 tests pass in 5m05s |
+     | `pnpm build` | passes, 1,046 models exported in 9m21s |
+
 ## How to test
 
 **Automated coverage.**
@@ -250,8 +283,10 @@ Nothing in the spec's models: all 510 are built. Two Phase 0 items are partial:
 - **Aircraft shape code is duplicated.** `aircraft.ts` keeps its own helpers (so the 8 older
   aircraft stay byte-identical), and `airframeShapes.ts` copies them. A shape fix has to be
   made in both files.
-- **Test time is close to the limit.** `pnpm test` takes 4m33s on an idle container, and the
-  aircraft suite (about 26 s) is the slowest family suite.
+- **Test time is close to the limit.** `pnpm test` takes 4m41s on an idle container,
+  against 4m10s for `master` alone.
+- **Fewer fleet designs through the catalog sweep.** The default run sweeps 14 of the 510.
+  The full covering sample runs only with `TEST_FLEET_COVER=1`.
 - Wikimedia rate-limits this container's shared address heavily, so fetching two photos takes
   up to a minute with retries.
 
@@ -267,7 +302,8 @@ Nothing in the spec's models: all 510 are built. Two Phase 0 items are partial:
   and a helicopter subtype in the GRF encoder.
 - Refine the most recognisable shapes per model (747 hump, Concorde droop, Oasis towers,
   famous cabs) and add clips for booms, ladders, tipper bins and propellers.
-- Trim the aircraft family suite, to give `pnpm test` some headroom.
+- Win back test time for the next additions: the collection phase (about 90 s of worker
+  time) builds every vehicle's default at import in several suites.
 - Decide with the game whether British, Irish, Hong Kong, Japanese and Australian buses
   should open on the left. That would be a `doorSide` field on the spec.
 - Break the `renderGlbThumb.ts` and `generate.ts` import cycle, so the documented thumbnail

@@ -10,10 +10,10 @@ import { glbStats } from "../generator/glbStats.ts";
 import { poseGlb, sampleCount } from "../generator/glbPose.ts";
 import { findCoplanarOverlaps } from "../generator/coplanar.ts";
 import { buildLodModel } from "../generator/lodModel.ts";
-import { swept, variantsUnderTest } from "./catalogCache";
+import { checkedBySuites, variantsUnderTest } from "./catalogCache";
 
 /** The vehicles the suite checks: the eight-country plan's families by one design a module (test/catalogCache.ts swept). */
-const ALL_VEHICLES = EVERY_VEHICLE.filter((d) => swept(d.id));
+const ALL_VEHICLES = EVERY_VEHICLE.filter((d) => checkedBySuites(d.id));
 import { isInteriorName } from "../generator/interiorTable.ts";
 import { WORLD_TRAMS_RIGHT_ONLY, WORLD_TRAMS_WITHOUT_DOORS } from "../generator/worldTrams.ts";
 

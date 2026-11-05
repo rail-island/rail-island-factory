@@ -61,7 +61,10 @@ describe("the world aircraft", () => {
 
   for (const a of ALL) {
     describe(a.id, () => {
-      const combos = sample(coverageCombinations(a.params, a.finishParams));
+      // a combination that only repaints (a livery) adds no shape to check: the defaults stand for it
+      const finish = new Set(a.finishParams ?? []);
+      const all = sample(coverageCombinations(a.params, a.finishParams));
+      const combos = (a.params ?? []).every((p) => finish.has(p.name)) ? all.slice(0, 1) : all;
       it.each(combos.map((p) => [JSON.stringify(p), p] as const))("is its real size, on y = 0, in budget, its gear a part (%s)", (_n, params: ParamValues) => {
         const m = a.build(params);
         expect(m.triangleCount(), "the aircraft budget").toBeLessThanOrEqual(10_000);
@@ -92,7 +95,8 @@ describe("the world aircraft", () => {
   it("keeps an aircraft's colours to its livery: each livery adds its own materials", () => {
     for (const a of ALL.filter((x) => x.finishParams?.length)) {
       const name = a.finishParams![0]!;
-      const values = a.params!.find((p) => p.name === name)!.values.map((v) => v.value);
+      // the default and the last livery (sampled, as test/catalogCache.ts sample does)
+      const values = sample(a.params!.find((p) => p.name === name)!.values.map((v) => v.value));
       const mats = values.map((v) => new Set(Object.keys((a.build({ [name]: v }) as unknown as { palette: Record<string, unknown> }).palette)));
       for (let i = 1; i < mats.length; i++) expect(mats[i], `${a.id} ${values[i]}`).not.toEqual(mats[0]);
     }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ALL_VEHICLES, DESIGNS } from '../generator/generate';
-import { swept, variantsUnderTest } from './catalogCache';
+import { checkedBySuites, outsideFleetSample, variantsUnderTest } from './catalogCache';
 import { previewKey } from '../src/catalogQuery';
 import { glbStats } from '../generator/glbStats';
 import { buildLodModel } from '../generator/lodModel';
@@ -48,8 +48,9 @@ describe('vehicle LODs carry no lamps and no motion', () => {
     ...(d.params ?? []).flatMap((p) => p.values.map((v) => ({ ...(p.when ? { [p.when.name]: p.when.values[0]! } : {}), ...(v.when ? { [v.when.name]: v.when.values[0]! } : {}), [p.name]: v.value }))),
   ];
   // a later design of the eight-country plan's kit families: its defaults and sampled combination (test/catalogCache.ts swept)
-  const checked = (d: (typeof ALL_VEHICLES)[number]) => (swept(d.id) ? selections(d) : [undefined, ...variantsUnderTest(d).slice(1)]);
-  for (const d of ALL_VEHICLES)
+  const checked = (d: (typeof ALL_VEHICLES)[number]) => (checkedBySuites(d.id) ? selections(d) : [undefined, ...variantsUnderTest(d).slice(1)]);
+  // a world fleet design outside the covering sample: its family suite checks its LOD (docs/models/world-fleet.md)
+  for (const d of ALL_VEHICLES.filter((v) => !outsideFleetSample(v.id)))
     it(`${d.id} draws its low detail without a lamp material, lamps table or clip`, () => {
       for (const values of checked(d)) {
         const low = buildLodModel(d, values);

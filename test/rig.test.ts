@@ -14,7 +14,7 @@ import { drawJoint, jointTriangles, pose, steerAngles, steerLock, type JointRig,
 import { block } from "../generator/vehicleParts";
 import { pageKey, poseControls, poseOf, posePreview, previewKey, steerLockDeg, type CatalogRecord } from "../src/catalogQuery";
 import { intersectingPairs, worldTriangles, type Tri } from "./collision";
-import { built, forget, glbOf, jsModuleOf, swept, sweptOf, warm, type JsModule } from "./catalogCache";
+import { checkedBySuites, built, forget, glbOf, jsModuleOf, sweptOf, warm, type JsModule } from "./catalogCache";
 import { expectSealed, jointMesh } from "./rigHelpers";
 
 const DEG = Math.PI / 180;
@@ -115,7 +115,7 @@ const moduleOf = (id: string) => jsModuleOf(id) as Promise<Module>;
 /** Every vehicle's rig, read from its build (null for an unrigged one); the builds are let go. */
 const RIGS = new Map<string, VehicleRig | null>();
 // the eight-country plan's families by one design a module (test/catalogCache.ts swept; their supports in test/worldTrainsSuite.ts)
-for (const d of ALL_VEHICLES.filter((v) => swept(v.id))) {
+for (const d of ALL_VEHICLES.filter((v) => checkedBySuites(v.id))) {
   await warm([d.id]);
   RIGS.set(d.id, built(d.id).rig);
   forget(d.id);
@@ -331,6 +331,7 @@ describe("the semi-trucks", () => {
   const SEMIS = RIGGED.filter(([id]) => RIGS.get(id)!.sections?.[1]?.node === "trailer");
 
   it("are the American truck, the two reproduced from the game, the world trucks with trailers and the Havana camello (a semi-trailer bus)", () => {
+    // (the world fleet's trucks outside the suites' designs: test/worldTrucks.test.ts swings every one)
     expect(SEMIS.map(([id]) => id)).toEqual(expect.arrayContaining(["proc-vehicle-american-truck", "proc-vehicle-cistern-semi-truck", "proc-vehicle-reefer-semi-truck", "proc-vehicle-havana-camello"]));
     for (const [id] of SEMIS) {
       const rig = RIGS.get(id)!;

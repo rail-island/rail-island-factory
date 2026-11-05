@@ -95,10 +95,12 @@ minutes** (AGENTS.md); it takes about four and a half on a four-core machine
   both its checks. `TEST_ALL_DESIGNS=1` (or `TEST_ALL_VARIANTS=1`) sweeps every design. **`TEST_ALL_VARIANTS=1 pnpm
   test` checks every combination**; it takes far longer, so it runs only when
   the user asks for it (AGENTS.md).
-- **Sampled fleet designs.** The world fleet's designs (docs/models/world-fleet.md) get the
-  catalog sweep only when they are in its covering sample (`FLEET_SWEEP_SAMPLE`, every kit
-  option at least once and each family's largest); every one gets the data checks of
-  `test/worldFleet.test.ts`, its family suite and `pnpm build`.
+- **Sampled fleet designs.** The world fleet's 510 designs (docs/models/world-fleet.md) are
+  swept like the eight-country plan's kit families: the catalog sweep and the secondary
+  whole-catalog suites build each family module's first design and each family's largest
+  (`checkedBySuites`), on their defaults. Every design gets its family suite, the data checks
+  of `test/worldFleet.test.ts` and `pnpm build`. `TEST_FLEET_COVER=1` sweeps the fleet's
+  whole covering sample, every kit option at least once, after a kit change.
 - **Cheap comparisons.** `test/setup.ts` decides equal typed arrays (GLB bytes)
   in one native comparison: `toEqual` walks them element by element, seconds per
   model. A check over every triangle, vertex, normal or keyframe collects the

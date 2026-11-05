@@ -7,7 +7,7 @@
 
 import { describe, expect, it } from "vitest";
 import { ALL_VEHICLES } from "../generator/generate.ts";
-import { sweptOf } from "./catalogCache";
+import { checkedBySuites, sweptOf } from "./catalogCache";
 
 /** The vehicles the whole-catalog suites build (catalogCache.ts swept). */
 const SWEPT_VEHICLES = sweptOf(ALL_VEHICLES);
@@ -17,7 +17,7 @@ import { poseGlb, sampleCount } from "../generator/glbPose.ts";
 import { findCoplanarOverlaps } from "../generator/coplanar.ts";
 import { LIFT_SAMPLES } from "../generator/liftable.ts";
 import { buildLodModel } from "../generator/lodModel.ts";
-import { swept, variantsUnderTest } from "./catalogCache";
+import { variantsUnderTest } from "./catalogCache";
 import { RAIL_COLLECTOR_TOP, TRAM_COLLECTOR_TOP } from "../generator/collector.ts";
 import { TRAM_DESIGNS } from "../generator/trams.ts";
 import { WORLD_TRAM_SPECS } from "../generator/worldTrams.ts";
@@ -36,7 +36,7 @@ function topOf(m: unknown, mat?: string): number {
  */
 // the eight-country plan's families by one design a module (test/catalogCache.ts swept); their later designs' collectors are checked on their last sampled combination below
 const DEFAULTS = new Map(
-  ALL_VEHICLES.filter((d) => swept(d.id)).map((d) => {
+  ALL_VEHICLES.filter((d) => checkedBySuites(d.id)).map((d) => {
     const m = d.build();
     const groups = (m as unknown as { groups: Map<string, unknown> }).groups;
     return [d.id, { pantograph: m.positions().length > 0 && groups.has("pantograph"), carbon: groups.has("carbon"), carbonTop: topOf(m, "carbon"), top: topOf(m), lamps: m.lamps() }] as const;
@@ -63,13 +63,13 @@ function sampledBuild(d: (typeof ALL_VEHICLES)[number], params: Record<string, s
  */
 function pantographVariants(d: (typeof ALL_VEHICLES)[number]): Record<string, string>[] {
   const all = variantsUnderTest(d);
-  return swept(d.id) ? all : all.slice(-1);
+  return checkedBySuites(d.id) ? all : all.slice(-1);
 }
 
 /** The designs whose default model draws a pantograph (the material). */
 // a later family design by its kind: an electric locomotive raises its pantographs on every combination
 // (a unit's default end car raises none, as the swept designs' defaults show)
-const ELECTRIC = ALL_VEHICLES.filter((d) => (swept(d.id) ? DEFAULTS.get(d.id)!.pantograph : d.catalog?.traction === "electric" && d.catalog?.group === "loco"));
+const ELECTRIC = ALL_VEHICLES.filter((d) => (checkedBySuites(d.id) ? DEFAULTS.get(d.id)!.pantograph : d.catalog?.traction === "electric" && d.catalog?.group === "loco"));
 
 describe("pantographs", () => {
   it("are found on the electric locomotives, units and trams", () => {
@@ -112,7 +112,7 @@ describe("collector heights", () => {
   // steam and diesel locomotives, coaches and wagons collect no current: no variant of theirs is built to look for a collector
   const unpowered = (v: (typeof ALL_VEHICLES)[number]) => v.catalog?.traction === "steam" || v.catalog?.traction === "diesel" || v.catalog?.group === "coach" || v.catalog?.group === "wagon";
   it("finds no collector on the families that cannot have one", () => {
-    for (const d of ALL_VEHICLES.filter((v) => v.catalog?.category === "Rail vehicles" && unpowered(v) && swept(v.id))) expect(DEFAULTS.get(d.id)!.carbon, d.id).toBe(false);
+    for (const d of ALL_VEHICLES.filter((v) => v.catalog?.category === "Rail vehicles" && unpowered(v) && checkedBySuites(v.id))) expect(DEFAULTS.get(d.id)!.carbon, d.id).toBe(false);
   });
   for (const d of SWEPT_VEHICLES.filter((v) => v.catalog?.category === "Rail vehicles" && !unpowered(v))) {
     const wire = trams.has(d.id) ? TRAM_COLLECTOR_TOP : RAIL_COLLECTOR_TOP;
@@ -140,7 +140,7 @@ describe("collector heights", () => {
 
 describe("lamps", () => {
   const ROLES = new Set(["head", "tail", "brake", "indicator"]);
-  for (const d of ALL_VEHICLES.filter((v) => swept(v.id))) {
+  for (const d of ALL_VEHICLES.filter((v) => checkedBySuites(v.id))) {
     it(`${d.id} names a known role for every lamp it draws`, () => {
       const lamps = DEFAULTS.get(d.id)!.lamps;
       if (!lamps) return;

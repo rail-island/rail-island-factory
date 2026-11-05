@@ -33,28 +33,36 @@ each truck kind, a floating module, the fronts, single or double ended, the roof
 the collector, the floor, a deck, open sides, a clerestory, a trailer, roof boxes, the
 extras, each parameter). A new family adds its entries here, with its own feature function.
 
-## The covering sample
+## What the suites build
+
+The fleet's 510 designs are data on shared kits, as the eight-country plan's trains are
+(`KIT_FAMILY_MODULES` in `test/catalogCache.ts`), and they are checked the same way:
+
+- the **catalog sweep** (`shard`) and the **secondary whole-catalog suites** that build designs
+  (the doors in `test/doorsSuite.ts`, the interiors, the rig, the pantographs and lamps, the
+  glass marking, the LOD's lamps and clips in `test/lod.test.ts`, the rail supports) build
+  `checkedBySuites(id)`: for the fleet, the **first design of each family module** and **each
+  family's largest** (`FLEET_SUITE_IDS`), plus the Havana camello, the one semi-trailer bus,
+  whose hinge the rig suite swings; `sweptOf(list)` filters a list by it;
+- a fleet design the sweep builds checks its **defaults**: `variantsUnderTest` gives a fleet
+  design its defaults only, as its family suite builds the other combinations;
+- every design gets its **family suite** (`test/world<Family>.test.ts`), which checks each design's
+  size, datums, parts, budgets and LOD on its defaults and a sampled combination (a repaint
+  only where it changes the shape). The trucks' suite also checks every truck at full lock and
+  every hinge;
+- every design gets the **data checks** of `test/worldFleet.test.ts`;
+- **`pnpm build`** builds every design with its budget, z-fighting and envelope checks.
+
+### The covering sample
 
 `coverSample(entries)` picks, greedily and in list order, the design that adds the most kit
 options not yet covered, until every option of every family is covered, then adds each
-family's largest design. The result, `FLEET_SWEEP_SAMPLE`, is fixed for a given list.
-
-`test/catalogCache.ts` sweeps `SWEPT_IDS`: every catalog design except the fleet designs
-outside the sample (with `TEST_ALL_VARIANTS=1`, every design). The fleet's other designs are
-still checked:
-
-- by **`test/worldFleet.test.ts`**, on every run, without building them;
-- by their **family suite** (`test/worldCabins.test.ts` builds all ten cabins,
-  `test/worldBuses.test.ts` every bus's sampled variants: they are cheap);
-- the **whole-catalog suites** that build designs build only `SWEPT_IDS` too
-  (`swept(list)` and `isSwept(id)` in `test/catalogCache.ts`): the doors
-  (`test/doorsSuite.ts`), the interiors, the rig, the pantographs and lamps, the glass
-  marking and the LOD's lamps and clips (`test/lod.test.ts`);
-- by **`pnpm build`**, which builds every design with its budget, z-fighting and envelope
-  checks.
-
-A kit change that adds an option adds a design to the sample by itself;
-`test/worldFleet.test.ts` checks that the sample covers every option and each family's largest.
+family's largest design. The result is `FLEET_SWEEP_SAMPLE`, about a fifth of the fleet,
+and `SWEPT_IDS` in `test/catalogCache.ts` is the catalog without the fleet designs outside it.
+**`TEST_FLEET_COVER=1 pnpm test`** sweeps that whole sample, so every kit option goes through
+the catalog sweep and the secondary suites at least once. It runs past the five-minute limit, so run it after a
+kit change rather than on every change. `test/worldFleet.test.ts` checks that the
+sample covers every option and each family's largest.
 
 ## The data checks
 

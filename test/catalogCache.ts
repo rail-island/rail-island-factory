@@ -138,9 +138,12 @@ export const ALL_VARIANTS = process.env.TEST_ALL_VARIANTS === "1";
  * defaults and SAMPLED_VARIANTS others spread evenly through the list, the
  * same ones every run.
  */
-export function variantsUnderTest(d: Pick<ProceduralDesign, "params" | "finishParams">): ParamValues[] {
+export function variantsUnderTest(d: Pick<ProceduralDesign, "params" | "finishParams"> & { id?: string }): ParamValues[] {
   const out = sample(coverageCombinations(d.params, d.finishParams));
   if (ALL_VARIANTS) return out;
+  // a world fleet design: its defaults (its family suite builds its other combinations;
+  // docs/models/world-fleet.md)
+  if (d.id && FLEET_IDS.has(d.id)) return out.slice(0, 1);
   // a train's sampled length is its shortest with a middle car (3 cars where offered): the
   // longest repeats the same cars and joints at several times the cost
   const cars = d.params?.find((p) => p.name === "cars");
@@ -200,14 +203,51 @@ const SWEPT = new Set(SWEPT_IDS);
  * outside its covering sample (docs/models/world-fleet.md). Every fleet design is
  * still checked by its family suite, test/worldFleet.test.ts and `pnpm build`.
  */
+/** Whether `id` is a world fleet design outside the covering sample (its family suite and the data checks cover it). */
+export const outsideFleetSample = (id: string): boolean => FLEET_IDS.has(id) && !checkedBySuites(id);
+
 export function sweptOf<T extends { id: string }>(list: readonly T[]): T[] {
-  return list.filter((d) => swept(d.id));
+  return list.filter((d) => checkedBySuites(d.id));
 }
+
+/**
+ * The world fleet's designs the secondary whole-catalog suites build (doors, interiors,
+ * rig, pantographs and lamps, glass, LOD lamps and clips, rail supports): the first design
+ * of each family module and each family's largest, as the eight-country plan's kit
+ * families are (KIT_FAMILY_MODULES). The catalog sweep builds the whole covering sample.
+ */
+const FLEET_SUITE_IDS: ReadonlySet<string> = (() => {
+  const out = new Set<string>();
+  const firstOf = new Map<string, string>();
+  for (const e of WORLD_FLEET) {
+    const src = designSource(e.id);
+    if (!firstOf.has(src)) firstOf.set(src, e.id);
+  }
+  for (const id of firstOf.values()) out.add(id);
+  // the fleet's one semi-trailer bus: test/rig.test.ts swings its trailer (the trucks' own suite swings theirs)
+  out.add("proc-vehicle-havana-camello");
+  for (const family of new Set(WORLD_FLEET.map((e) => e.family))) {
+    const all = WORLD_FLEET.filter((e) => e.family === family);
+    out.add(all.reduce((a, b) => (b.size > a.size ? b : a)).id);
+  }
+  return out;
+})();
+
+/** Whether the secondary whole-catalog suites build design `id`: swept, and for the fleet FLEET_SUITE_IDS. */
+export function checkedBySuites(id: string): boolean {
+  if (ALL_DESIGNS || ALL_VARIANTS) return true;
+  // TEST_FLEET_COVER=1: the fleet's whole covering sample (every kit option at least once), for a kit change
+  if (FLEET_COVER) return swept(id);
+  return swept(id) && (!FLEET_IDS.has(id) || FLEET_SUITE_IDS.has(id));
+}
+
+/** Whether the run sweeps the world fleet's whole covering sample (TEST_FLEET_COVER=1). */
+const FLEET_COVER = process.env.TEST_FLEET_COVER === "1";
 
 /**
  * The designs of shard `index` of `count`, by position among SWEPT_IDS, so the
  * per-design checks spread over the workers (test/catalog-*.test.ts, sixteen).
  */
 export function shard(index: number, count: number): string[] {
-  return [...DESIGNS.keys()].filter(swept).filter((_, i) => i % count === index);
+  return [...DESIGNS.keys()].filter(checkedBySuites).filter((_, i) => i % count === index);
 }
