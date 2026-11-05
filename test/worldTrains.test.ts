@@ -35,11 +35,13 @@ const LENGTHS: Record<string, number> = {
   "proc-vehicle-renfe-354": 17.5, "proc-vehicle-renfe-252": 20.38, "proc-vehicle-renfe-269": 17.27, "proc-vehicle-renfe-277": 20.68, "proc-vehicle-renfe-319": 20.0, "proc-vehicle-renfe-333": 20.7,
   "proc-vehicle-br-class-55": 21.18, "proc-vehicle-br-class-37": 18.75, "proc-vehicle-br-class-47": 19.38, "proc-vehicle-br-class-66": 21.35, "proc-vehicle-br-class-86": 17.83,
   "proc-vehicle-br-mk1-coach": 19.66,
+  "proc-vehicle-ir-wam4": 18.79, "proc-vehicle-ir-wap4": 18.79, "proc-vehicle-ir-wap7": 20.56, "proc-vehicle-ir-wap5": 18.16, "proc-vehicle-ir-wag12b": 35.0,
+  "proc-vehicle-ir-lhb-coach": 24.0, "proc-vehicle-ir-icf-coach": 22.3, "proc-vehicle-ir-boxn-wagon": 10.71, "proc-vehicle-cr-c70-wagon": 13.98,
   "proc-vehicle-sbb-ew4-coach": 26.4, "proc-vehicle-sbb-ic2000": 26.8, "proc-vehicle-glacier-express": 18.4,
 };
 
 /** A design's country by the operator prefix of its id. */
-const COUNTRY: Record<string, string> = { db: "de", dr: "de", drg: "de", kpev: "de", sncf: "fr", ratp: "fr", ciwl: "fr", ns: "nl", sbb: "ch", rhb: "ch", mgb: "ch", glacier: "ch", renfe: "es", talgo: "es", iryo: "es", br: "gb", lner: "gb", gwr: "gb", lms: "gb", lu: "gb", eurostar: "gb", rocket: "gb" };
+const COUNTRY: Record<string, string> = { db: "de", dr: "de", drg: "de", kpev: "de", sncf: "fr", ratp: "fr", ciwl: "fr", ns: "nl", sbb: "ch", rhb: "ch", mgb: "ch", glacier: "ch", renfe: "es", talgo: "es", iryo: "es", br: "gb", lner: "gb", gwr: "gb", lms: "gb", lu: "gb", eurostar: "gb", rocket: "gb", ir: "in", eir: "in", dhr: "in", ncrtc: "in", dmrc: "in", cr: "cn" };
 
 const PASSENGER_GROUPS = new Set(["coach", "unit", "tram", "metro", "bus"]);
 

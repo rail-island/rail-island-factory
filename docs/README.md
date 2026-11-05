@@ -50,6 +50,8 @@
 | [models/switzerland-trains.md](models/switzerland-trains.md) | the Swiss designs: RAe TEE II, Roter Pfeil, ICN, Giruno, FV-Dosto, FLIRT, KISS and Allegra, the Re 460, Re 4/4 II, Re 6/6, Ae 6/6, Ce 6/8 II and Ae 8/14, the RhB Ge 4/4 III and Ge 6/6 I and the MGB HGe 4/4 II, the EW IV, IC 2000 and Glacier Express coaches |
 | [models/spain-trains.md](models/spain-trains.md) | the Spanish designs: AVE S-100 and S-103, the Talgo S-102, S-106, S-130 and Talgo III, S-120, Civia, 446, 440, 592 and Iryo, the 354, 252, 269, 277, 319 and 333, the 141F and 242F |
 | [models/uk-trains.md](models/uk-trains.md) | the British designs on the W6a gauge: InterCity 125 and 225, Class 800, 390, e300, 158, 142 and the 1938 tube stock, the Class 55, 37, 47, 66 and 86, the A4, A3, Castle, Black Five, 9F and Rocket, the Mk1 coach |
+| [models/india-trains.md](models/india-trains.md) | the Indian designs: Vande Bharat, Namo Bharat, Mumbai EMU, MEMU and Delhi Metro, the WDM-2, WDP-4D and WDG-4G, the WAM-4, WAP-4, WAP-7, WAP-5 and WAG-12B, the WP, WG, Fairy Queen and DHR B class, the LHB and ICF coaches, the BOXN wagons |
+| [models/world-wagons.md](models/world-wagons.md) | the freight wagon generator (open and covered, knuckle couplers) and the plan's wagons |
 | [models/world-locos.md](models/world-locos.md) | box locomotives stated in a few measures for the box locomotive kit: nose types, pantographs or exhausts, the skin items |
 | [models/world-steam.md](models/world-steam.md) | the parametric steam generator (wheel arrangement, boiler, deflectors, couplers, tenders) and the plan's steam designs |
 | [models/world-coaches.md](models/world-coaches.md) | the coach generator on the car builder: measures, types of car, liveries, buffers, and the plan's coaches |

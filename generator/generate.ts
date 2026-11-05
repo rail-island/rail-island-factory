@@ -107,6 +107,9 @@ import { ES_UNITS } from "./esUnits.ts";
 import { ES_LOCOS } from "./esLocos.ts";
 import { UK_UNITS } from "./ukUnits.ts";
 import { UK_LOCOS } from "./ukLocos.ts";
+import { IN_UNITS } from "./inUnits.ts";
+import { IN_LOCOS } from "./inLocos.ts";
+import { WORLD_WAGONS } from "./worldWagons.ts";
 import { TRUCKS } from "./trucks.ts";
 import { PHOTO_TRUCKS } from "./photoTrucks.ts";
 import { TRAM_DESIGNS } from "./trams.ts";
@@ -238,6 +241,9 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: ES_LOCOS, source: "esLocos.ts", meta: "vehicles" },
   { designs: UK_UNITS, source: "ukUnits.ts", meta: "vehicles" },
   { designs: UK_LOCOS, source: "ukLocos.ts", meta: "vehicles" },
+  { designs: IN_UNITS, source: "inUnits.ts", meta: "vehicles" },
+  { designs: IN_LOCOS, source: "inLocos.ts", meta: "vehicles" },
+  { designs: WORLD_WAGONS, source: "worldWagons.ts", meta: "vehicles" },
   { designs: TRAM_DESIGNS, source: "trams.ts", meta: "vehicles" },
   { designs: METRO_DESIGNS, source: "metro.ts", meta: "vehicles" },
   { designs: EMU451_DESIGNS, source: "emu451.ts", meta: "vehicles" },

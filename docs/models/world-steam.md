@@ -46,6 +46,10 @@ wide, so a boiler radius whose saddle would lie on the frame plates' faces (0.69
 | `proc-vehicle-lms-black-five` | the United Kingdom | 2'C | 1.83 m | none | three axles |
 | `proc-vehicle-br-9f` | the United Kingdom | 1'E | 1.52 m | Wagner | three axles |
 | `proc-vehicle-rocket` | the United Kingdom | A1 | 1.435 m | none | two axles |
+| `proc-vehicle-ir-wp` | India | 2'C1' | 1.7 m | none | four axles |
+| `proc-vehicle-ir-wg` | India | 1'D1' | 1.56 m | none | four axles |
+| `proc-vehicle-eir-fairy-queen` | India | 1A1 | 1.83 m | none | two axles |
+| `proc-vehicle-dhr-b-class` | India | B | 0.66 m | none | two axles |
 
 Each design's published figures and photographs are in its `assets/<name>/SOURCES.md`;
 the layout is the class's in proportion, not to the centimetre.

@@ -24,4 +24,6 @@ the gangway diaphragms, the bogies and the couplers; the LOD is its `carLod`.
 | `proc-vehicle-sbb-ew4-coach` | Switzerland | 26.4 m | `a`, `b` | `redGrey`, `sbb` |
 | `proc-vehicle-sbb-ic2000` | Switzerland | 26.8 m, double-deck | `a`, `b` | - |
 | `proc-vehicle-glacier-express` | Switzerland | 18.4 m, metre gauge | `first`, `second` | - |
+| `proc-vehicle-ir-lhb-coach` | India | 24.0 m, knuckle couplers | `ac3`, `chairCar` | `rajdhani`, `shatabdi`, `humsafar`, `tejas` |
+| `proc-vehicle-ir-icf-coach` | India | 22.3 m | `sleeper`, `general` | `blue`, `maroon` |
 | `proc-vehicle-br-mk1-coach` | the United Kingdom | 19.66 m, W6a gauge | `tso`, `bsk` | `crimsonCream`, `maroon`, `southernGreen` |

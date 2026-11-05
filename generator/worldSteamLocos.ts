@@ -20,6 +20,8 @@ const BLACK_RED = { paint: "#1d1e20", wheel: "#a51a1f", frame: "#a51a1f", smokeb
 const ALL_BLACK = { paint: "#1d1e20", wheel: "#2a2b2d", frame: "#a51a1f", smokebox: "#1c1d22" };
 /** Britain's W6a gauge: the chimneys under 4.0 m, the cabs 2.74 m wide. */
 const UK = { top: 3.95, coupler: "buffers", half: 1.37 } as const;
+/** India's broad gauge: the bodies on the 3.3 m gauge, buffers and screw couplings; the 610 mm Darjeeling line's tiny engines. */
+const IR = { top: 4.5, coupler: "buffers", half: 1.6 } as const;
 const UIC = { top: 4.65, coupler: "buffers", half: 1.5 } as const;
 
 export const WORLD_STEAM: Record<string, SteamDesign> = {
@@ -46,6 +48,11 @@ export const WORLD_STEAM: Record<string, SteamDesign> = {
   "proc-vehicle-br-9f": { base: { ...UK, title: "BR 9F", lead: 1, coupled: 5, trail: 0, leadD: 1.0, coupledD: 1.52, trailD: 0, boilerR: 0.88, deflectors: "wagner", domes: 1, belpaire: true, palette: { paint: "#1d1e20", wheel: "#1d1e20", frame: "#a51a1f", smokebox: "#1c1d22" }, tender: { length: 8.4, axles: 3, d: 1.0 }, number: "92203" },
     liveries: { brBlack: { title: "BR black", palette: { paint: "#1d1e20", wheel: "#1d1e20", frame: "#a51a1f", smokebox: "#1c1d22" }, number: "92203" }, eveningStar: { title: "Evening Star", palette: { paint: "#1f4d2e", wheel: "#1f4d2e", frame: "#1d1e20", smokebox: "#1c1d22" }, number: "92220 EVENING STAR" } } },
   "proc-vehicle-rocket": { base: { ...UK, title: "Stephenson's Rocket", lead: 0, coupled: 1, trail: 1, leadD: 0, coupledD: 1.435, trailD: 0.76, boilerR: 0.5, deflectors: "none", domes: 0, noValveGear: true, noCab: true, palette: { paint: "#e6b422", wheel: "#e6b422", frame: "#1d1e20", smokebox: "#1c1d22" }, tender: { length: 4.2, axles: 2, d: 0.9 }, number: "ROCKET" } },
+  "proc-vehicle-ir-wp": { base: { ...IR, title: "IR WP", lead: 2, coupled: 3, trail: 1, leadD: 0.92, coupledD: 1.7, trailD: 1.1, boilerR: 0.92, deflectors: "none", domes: 2, palette: { paint: "#1d1e20", wheel: "#a51a1f", frame: "#a51a1f", smokebox: "#1c1d22" }, tender: { length: 9.9, axles: 4, d: 1.0 }, number: "7200" },
+    liveries: { black: { title: "Black", palette: { paint: "#1d1e20", wheel: "#a51a1f", frame: "#a51a1f", smokebox: "#1c1d22" }, number: "7200" }, greenYellow: { title: "Green, yellow", palette: { paint: "#2f6b3a", wheel: "#a51a1f", frame: "#d9b54a", smokebox: "#1c1d22" }, number: "7161" } } },
+  "proc-vehicle-ir-wg": { base: { ...IR, title: "IR WG", lead: 1, coupled: 4, trail: 1, leadD: 1.0, coupledD: 1.56, trailD: 1.1, boilerR: 0.92, deflectors: "none", domes: 2, palette: { paint: "#1d1e20", wheel: "#a51a1f", frame: "#a51a1f", smokebox: "#1c1d22" }, tender: { length: 9.6, axles: 4, d: 1.0 }, number: "10560" } },
+  "proc-vehicle-eir-fairy-queen": { base: { ...IR, title: "Fairy Queen", lead: 1, coupled: 1, trail: 1, leadD: 1.0, coupledD: 1.83, trailD: 1.0, boilerR: 0.6, deflectors: "none", domes: 1, noValveGear: true, palette: { paint: "#2f5e3a", wheel: "#a51a1f", frame: "#a51a1f", smokebox: "#1c1d22" }, tender: { length: 5.2, axles: 2, d: 1.0 }, number: "22 EIR" } },
+  "proc-vehicle-dhr-b-class": { base: { top: 3.2, coupler: "buffers", half: 1.05, title: "DHR B class", lead: 0, coupled: 2, trail: 0, leadD: 0, coupledD: 0.66, trailD: 0, boilerR: 0.5, deflectors: "none", domes: 1, noValveGear: true, palette: { paint: "#1d4596", wheel: "#a51a1f", frame: "#1d1e20", smokebox: "#1c1d22" }, tender: { length: 3.6, axles: 2, d: 0.6 }, number: "779" } },
 };
 
 function paramsOf(d: SteamDesign): ParamSpec[] {
@@ -89,6 +96,14 @@ export function br9f(v?: ParamValues): MeshBuilder { return buildLoco(worldSteam
 export function br9fLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-br-9f", v)); }
 export function rocket(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-rocket", v)); }
 export function rocketLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-rocket", v)); }
+export function irWp(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-ir-wp", v)); }
+export function irWpLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-ir-wp", v)); }
+export function irWg(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-ir-wg", v)); }
+export function irWgLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-ir-wg", v)); }
+export function eirFairyQueen(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-eir-fairy-queen", v)); }
+export function eirFairyQueenLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-eir-fairy-queen", v)); }
+export function dhrBClass(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-dhr-b-class", v)); }
+export function dhrBClassLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-dhr-b-class", v)); }
 export function kpevP8(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-kpev-p8", v)); }
 export function kpevP8Lod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-kpev-p8", v)); }
 
@@ -97,7 +112,7 @@ const steamGame = (weight: number, power: number, maxspeed: number, tender: numb
   weight, power, maxspeed, accel: null, variants: [{ params: { unit: "tender" }, weight: tender, power: 0 }],
 });
 
-const design = (id: string, build: (v?: ParamValues) => MeshBuilder, buildLod: (v?: ParamValues) => MeshBuilder, game: GameProperties, references: string, loadingGauge?: "uk"): ProceduralDesign => ({
+const design = (id: string, build: (v?: ParamValues) => MeshBuilder, buildLod: (v?: ParamValues) => MeshBuilder, game: GameProperties, references: string, loadingGauge?: "uk" | "us"): ProceduralDesign => ({
   id, title: WORLD_STEAM[id]!.base.title, build, buildLod, params: PARAMS[id]!, game, catalog: STEAM_CATALOG, references, ...(loadingGauge ? { loadingGauge } : {}),
 });
 
@@ -114,6 +129,10 @@ export const WORLD_STEAM_DESIGNS: ProceduralDesign[] = [
   design("proc-vehicle-lms-black-five", lmsBlackFive, lmsBlackFiveLod, steamGame(73, 1000, 130, 54), "lms-black-five", "uk"),
   design("proc-vehicle-br-9f", br9f, br9fLod, steamGame(88, 1500, 145, 53), "br-9f", "uk"),
   design("proc-vehicle-rocket", rocket, rocketLod, steamGame(4.5, 15, 47, 3), "rocket", "uk"),
+  design("proc-vehicle-ir-wp", irWp, irWpLod, steamGame(102, 1440, 110, 75), "ir-wp", "us"),
+  design("proc-vehicle-ir-wg", irWg, irWgLod, steamGame(122, 1600, 80, 80), "ir-wg", "us"),
+  design("proc-vehicle-eir-fairy-queen", eirFairyQueen, eirFairyQueenLod, steamGame(26, 97, 40, 14), "eir-fairy-queen", "us"),
+  design("proc-vehicle-dhr-b-class", dhrBClass, dhrBClassLod, steamGame(14, 60, 30, 4), "dhr-b-class"),
   design("proc-vehicle-ns-3700", ns3700, ns3700Lod, steamGame(72, 920, 100, 45), "ns-3700"),
   design("proc-vehicle-sncf-141r", sncf141r, sncf141rLod, steamGame(116, 1840, 100, 84), "sncf-141r"),
 ];

@@ -295,6 +295,27 @@ file is the authority.
 | `br-9f` | BR 9F | train RAIL | 1954 | 0 PASS | 87 / 40 | 3 | with tender |
 | `rocket` | Stephenson's Rocket | train RAIL | 1829 | 0 PASS | 30 / 10 | 2 | with tender |
 | `br-mk1-coach` | BR Mk1 coach | train RAIL | 1951 | 64 PASS | 46 / 13 | 4 | - |
+| `ir-vande-bharat` | Vande Bharat | train ELRL | 2019 | 44 PASS | 95 / 39 | 3 | 8 cars |
+| `ncrtc-namo-bharat` | Namo Bharat | train ELRL | 2023 | 60 PASS | 94 / 38 | 2 | 6 cars |
+| `ir-mumbai-emu` | Mumbai suburban EMU | train ELRL | 2007 | 100 PASS | 88 / 45 | 3 | 6 cars |
+| `ir-memu` | IR MEMU | train ELRL | 1995 | 90 PASS | 88 / 43 | 3 | 8 cars |
+| `dmrc-rs1` | Delhi Metro RS1 | train ELRL | 2002 | 240 PASS | 109 / 60 | 2 | 6 cars |
+| `ir-wdm2` | IR WDM-2 | train RAIL | 1962 | 0 PASS | 93 / 49 | 2 | - |
+| `ir-wdp4d` | IR WDP-4D | train RAIL | 2010 | 0 PASS | 135 / 76 | 1 | - |
+| `ir-wdg4g` | IR WDG-4G | train RAIL | 2018 | 0 PASS | 125 / 78 | 1 | - |
+| `ir-wam4` | IR WAM-4 | train ELRL | 1971 | 0 PASS | 112 / 64 | 2 | - |
+| `ir-wap4` | IR WAP-4 | train ELRL | 1994 | 0 PASS | 143 / 86 | 2 | - |
+| `ir-wap7` | IR WAP-7 / WAG-9 | train ELRL | 2000 | 0 PASS | 161 / 100 | 3 | - |
+| `ir-wap5` | IR WAP-5 | train ELRL | 1995 | 0 PASS | 152 / 90 | 2 | - |
+| `ir-wag12b` | IR WAG-12B | train ELRL | 2017 | 0 PASS | 255 / 190 | 1 | - |
+| `ir-wp` | IR WP | train RAIL | 1947 | 0 PASS | 78 / 39 | 3 | with tender |
+| `ir-wg` | IR WG | train RAIL | 1950 | 0 PASS | 76 / 42 | 2 | with tender |
+| `eir-fairy-queen` | Fairy Queen | train RAIL | 1855 | 0 PASS | 30 / 12 | 2 | with tender |
+| `dhr-b-class` | DHR B class | train RAIL | 1889 | 0 PASS | 28 / 11 | 2 | with tender |
+| `ir-lhb-coach` | IR LHB coach | train RAIL | 2000 | 72 PASS | 50 / 14 | 5 | - |
+| `ir-icf-coach` | IR ICF coach | train RAIL | 1955 | 72 PASS | 45 / 14 | 3 | - |
+| `ir-boxn-wagon` | IR BOXN / BCNA wagon | train RAIL | 1981 | 58 COAL | 39 / 12 | 2 | - |
+| `cr-c70-wagon` | CR C70 / P70 wagon | train RAIL | 2006 | 70 COAL | 45 / 14 | 2 | - |
 | `mtr-m-train` | MTR M-Train | train ELRL | 1979 | 230 PASS | 102 / 55 | 6 | 8 cars |
 | `tgv-duplex` | TGV Duplex | train ELRL | 1996 | 0 PASS | 194 / 98 | 7 | power cars, 8 trailers |
 | `cd-y-coach` | CD Y Coach | train RAIL | 1970* | 54 PASS | 42 / 12 | 4 | - |

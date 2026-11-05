@@ -253,7 +253,38 @@ export const BR_MK1: WorldCoach = {
   },
 };
 
-const P = { mk1: coachParams(BR_MK1), ew4: coachParams(SBB_EW4), ic2000: coachParams(SBB_IC2000), glacier: coachParams(GLACIER), nsIcr: coachParams(NS_ICR), dbIc: coachParams(DB_IC), corail: coachParams(SNCF_CORAIL), grandConfort: coachParams(SNCF_GRAND_CONFORT), ciwl: coachParams(CIWL) };
+// ---------------------------------------------------------------------------
+// India: the LHB and ICF coaches, broad-gauge bodies on the 3.3 m gauge
+
+export const IR_LHB: WorldCoach = {
+  length: 24.0, W: 1.6, Y: 1.4, S: 3.3, C: 4.03, B: 1.0, A: 1.15, rows: [[1.95, 2.8]], doorIn: 0.6, doorW: 0.8, door: [1.2, 3.1],
+  bogieCentres: 14.9, wheelR: 0.46, wheelbase: 2.56, coupler: "knuckle", maxspeed: 160,
+  types: {
+    ac3: { title: "AC three-tier", windows: 8, windowW: 1.6, number: "3A 211303", weight: 47 },
+    chairCar: { title: "AC chair car", windows: 12, windowW: 1.25, number: "CC 211251", weight: 45 },
+  },
+  liveries: {
+    rajdhani: { title: "Rajdhani", palette: { red: c("#b5232b"), cream: c("#e8dcc0"), roofG: c("#7d8084", 0.7), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 1.85, "red"], [1.85, 2.9, "cream"], [2.9, 9, "red"]], roof: "roofG", skirt: "skirtG" },
+    shatabdi: { title: "Shatabdi", palette: { blue: c("#1d3f80"), cream: c("#e8dcc0"), roofG: c("#7d8084", 0.7), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 1.85, "blue"], [1.85, 2.9, "cream"], [2.9, 9, "blue"]], roof: "roofG", skirt: "skirtG" },
+    humsafar: { title: "Humsafar", palette: { blue: c("#1d3f80"), orange: c("#f08a24"), white: c("#f1f1ee", 0.4), roofG: c("#7d8084", 0.7), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 1.85, "blue"], [1.85, 1.95, "orange"], [1.95, 9, "white"]], roof: "roofG", skirt: "skirtG" },
+    tejas: { title: "Tejas", palette: { gold: c("#c9a55a", 0.35), maroon: c("#6b1d24"), roofG: c("#7d8084", 0.7), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 1.85, "maroon"], [1.85, 9, "gold"]], roof: "roofG", skirt: "skirtG" },
+  },
+};
+
+export const IR_ICF: WorldCoach = {
+  length: 22.3, W: 1.6, Y: 1.4, S: 3.3, C: 4.03, B: 1.0, A: 1.15, rows: [[1.9, 2.7]], doorIn: 0.55, doorW: 0.75, door: [1.2, 3.05],
+  bogieCentres: 14.9, wheelR: 0.46, wheelbase: 2.9, coupler: "buffers", maxspeed: 110,
+  types: {
+    sleeper: { title: "Sleeper class", windows: 12, windowW: 1.1, number: "SL 98201", weight: 48 },
+    general: { title: "General class", windows: 13, windowW: 1.0, number: "GS 04555", weight: 46 },
+  },
+  liveries: {
+    blue: { title: "IR blue", palette: { blue: c("#1d3f80"), roofG: c("#3a3d40", 0.7), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 9, "blue"]], roof: "roofG", skirt: "skirtG" },
+    maroon: { title: "Maroon", palette: { maroon: c("#6b1d24"), roofG: c("#3a3d40", 0.7), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 9, "maroon"]], roof: "roofG", skirt: "skirtG" },
+  },
+};
+
+const P = { lhb: coachParams(IR_LHB), icf: coachParams(IR_ICF), mk1: coachParams(BR_MK1), ew4: coachParams(SBB_EW4), ic2000: coachParams(SBB_IC2000), glacier: coachParams(GLACIER), nsIcr: coachParams(NS_ICR), dbIc: coachParams(DB_IC), corail: coachParams(SNCF_CORAIL), grandConfort: coachParams(SNCF_GRAND_CONFORT), ciwl: coachParams(CIWL) };
 export function sncfCorail(v?: ParamValues): MeshBuilder { return buildCoach(SNCF_CORAIL, P.corail, v); }
 export function sncfCorailLod(v?: ParamValues): MeshBuilder { return buildCoachLod(SNCF_CORAIL, P.corail, v); }
 export function sncfGrandConfort(v?: ParamValues): MeshBuilder { return buildCoach(SNCF_GRAND_CONFORT, P.grandConfort, v); }
@@ -268,6 +299,10 @@ export function glacierExpress(v?: ParamValues): MeshBuilder { return buildCoach
 export function glacierExpressLod(v?: ParamValues): MeshBuilder { return buildCoachLod(GLACIER, P.glacier, v); }
 export function brMk1(v?: ParamValues): MeshBuilder { return buildCoach(BR_MK1, P.mk1, v); }
 export function brMk1Lod(v?: ParamValues): MeshBuilder { return buildCoachLod(BR_MK1, P.mk1, v); }
+export function irLhbCoach(v?: ParamValues): MeshBuilder { return buildCoach(IR_LHB, P.lhb, v); }
+export function irLhbCoachLod(v?: ParamValues): MeshBuilder { return buildCoachLod(IR_LHB, P.lhb, v); }
+export function irIcfCoach(v?: ParamValues): MeshBuilder { return buildCoach(IR_ICF, P.icf, v); }
+export function irIcfCoachLod(v?: ParamValues): MeshBuilder { return buildCoachLod(IR_ICF, P.icf, v); }
 export function ciwlCar(v?: ParamValues): MeshBuilder { return buildCoach(CIWL, P.ciwl, v); }
 export function ciwlCarLod(v?: ParamValues): MeshBuilder { return buildCoachLod(CIWL, P.ciwl, v); }
 export function dbIcCoach(v?: ParamValues): MeshBuilder { return buildCoach(DB_IC, P.dbIc, v); }
@@ -282,5 +317,7 @@ export const WORLD_COACHES: ProceduralDesign[] = [
   coachDesign("proc-vehicle-sbb-ic2000", "SBB IC 2000 coach", SBB_IC2000, P.ic2000, sbbIc2000, sbbIc2000Lod, "sbb-ic2000"),
   coachDesign("proc-vehicle-glacier-express", "Glacier Express coach", GLACIER, P.glacier, glacierExpress, glacierExpressLod, "glacier-express"),
   coachDesign("proc-vehicle-br-mk1-coach", "BR Mk1 coach", BR_MK1, P.mk1, brMk1, brMk1Lod, "br-mk1-coach", "uk"),
+  coachDesign("proc-vehicle-ir-lhb-coach", "IR LHB coach", IR_LHB, P.lhb, irLhbCoach, irLhbCoachLod, "ir-lhb-coach", "us"),
+  coachDesign("proc-vehicle-ir-icf-coach", "IR ICF coach", IR_ICF, P.icf, irIcfCoach, irIcfCoachLod, "ir-icf-coach", "us"),
   coachDesign("proc-vehicle-ciwl-car", "Wagons-Lits car", CIWL, P.ciwl, ciwlCar, ciwlCarLod, "ciwl-car"),
 ];

@@ -56,6 +56,7 @@
     "proc-vehicle-cd-y-coach": 115,
     "proc-vehicle-cistern-semi-truck": 57,
     "proc-vehicle-ciwl-car": 187,
+    "proc-vehicle-cr-c70-wagon": 301,
     "proc-vehicle-cruise-ferry": 80,
     "proc-vehicle-csd-386": 31,
     "proc-vehicle-csd-433-0": 24,
@@ -97,6 +98,8 @@
     "proc-vehicle-db-ice4": 162,
     "proc-vehicle-db-v200": 174,
     "proc-vehicle-db-vt98": 167,
+    "proc-vehicle-dhr-b-class": 284,
+    "proc-vehicle-dmrc-rs1": 291,
     "proc-vehicle-dnt-184-5": 45,
     "proc-vehicle-dr-243": 47,
     "proc-vehicle-dr-52": 178,
@@ -107,6 +110,7 @@
     "proc-vehicle-drg-e94": 173,
     "proc-vehicle-drg-svt877": 168,
     "proc-vehicle-eas-open-wagon": 21,
+    "proc-vehicle-eir-fairy-queen": 283,
     "proc-vehicle-emd-f7": 124,
     "proc-vehicle-emd-gp9": 120,
     "proc-vehicle-emd-sd40-2": 121,
@@ -123,6 +127,22 @@
     "proc-vehicle-hankyu-9000": 155,
     "proc-vehicle-hydrofoil-ferry": 81,
     "proc-vehicle-ice-1": 110,
+    "proc-vehicle-ir-boxn-wagon": 300,
+    "proc-vehicle-ir-icf-coach": 286,
+    "proc-vehicle-ir-lhb-coach": 285,
+    "proc-vehicle-ir-memu": 290,
+    "proc-vehicle-ir-mumbai-emu": 289,
+    "proc-vehicle-ir-vande-bharat": 287,
+    "proc-vehicle-ir-wag12b": 299,
+    "proc-vehicle-ir-wam4": 295,
+    "proc-vehicle-ir-wap4": 296,
+    "proc-vehicle-ir-wap5": 298,
+    "proc-vehicle-ir-wap7": 297,
+    "proc-vehicle-ir-wdg4g": 294,
+    "proc-vehicle-ir-wdm2": 292,
+    "proc-vehicle-ir-wdp4d": 293,
+    "proc-vehicle-ir-wg": 282,
+    "proc-vehicle-ir-wp": 281,
     "proc-vehicle-iryo-s109": 254,
     "proc-vehicle-jnr-103": 150,
     "proc-vehicle-jnr-485": 154,
@@ -160,6 +180,7 @@
     "proc-vehicle-mtr-m-train": 113,
     "proc-vehicle-muv-69": 56,
     "proc-vehicle-nas-flat-wagon": 19,
+    "proc-vehicle-ncrtc-namo-bharat": 288,
     "proc-vehicle-ns-1100": 217,
     "proc-vehicle-ns-1200": 219,
     "proc-vehicle-ns-1300": 218,
@@ -932,6 +953,14 @@
         "id": 6484,
         "size": 6
       },
+      "proc-vehicle-cr-c70-wagon?": {
+        "id": 9490,
+        "size": 4
+      },
+      "proc-vehicle-cr-c70-wagon?unit=covered": {
+        "id": 9494,
+        "size": 6
+      },
       "proc-vehicle-csd-386?": {
         "id": 1344,
         "size": 16
@@ -1320,6 +1349,30 @@
         "id": 6114,
         "size": 4
       },
+      "proc-vehicle-dhr-b-class?": {
+        "id": 9096,
+        "size": 4
+      },
+      "proc-vehicle-dhr-b-class?formation=with tender": {
+        "id": 9104,
+        "size": 4
+      },
+      "proc-vehicle-dhr-b-class?unit=tender": {
+        "id": 9100,
+        "size": 4
+      },
+      "proc-vehicle-dmrc-rs1?": {
+        "id": 9350,
+        "size": 6
+      },
+      "proc-vehicle-dmrc-rs1?formation=6 cars": {
+        "id": 9362,
+        "size": 32
+      },
+      "proc-vehicle-dmrc-rs1?unit=middleCar": {
+        "id": 9356,
+        "size": 6
+      },
       "proc-vehicle-dnt-184-5?": {
         "id": 1792,
         "size": 16
@@ -1423,6 +1476,18 @@
       "proc-vehicle-eas-open-wagon?": {
         "id": 976,
         "size": 16
+      },
+      "proc-vehicle-eir-fairy-queen?": {
+        "id": 9084,
+        "size": 4
+      },
+      "proc-vehicle-eir-fairy-queen?formation=with tender": {
+        "id": 9092,
+        "size": 4
+      },
+      "proc-vehicle-eir-fairy-queen?unit=tender": {
+        "id": 9088,
+        "size": 4
       },
       "proc-vehicle-emd-f7?": {
         "id": 4728,
@@ -1595,6 +1660,178 @@
       "proc-vehicle-ice-1?unit=restaurant": {
         "id": 3664,
         "size": 16
+      },
+      "proc-vehicle-ir-boxn-wagon?": {
+        "id": 9482,
+        "size": 4
+      },
+      "proc-vehicle-ir-boxn-wagon?unit=covered": {
+        "id": 9486,
+        "size": 4
+      },
+      "proc-vehicle-ir-icf-coach?": {
+        "id": 9138,
+        "size": 6
+      },
+      "proc-vehicle-ir-icf-coach?livery=maroon": {
+        "id": 9150,
+        "size": 6
+      },
+      "proc-vehicle-ir-icf-coach?unit=general": {
+        "id": 9144,
+        "size": 6
+      },
+      "proc-vehicle-ir-lhb-coach?": {
+        "id": 9108,
+        "size": 6
+      },
+      "proc-vehicle-ir-lhb-coach?livery=humsafar": {
+        "id": 9126,
+        "size": 6
+      },
+      "proc-vehicle-ir-lhb-coach?livery=shatabdi": {
+        "id": 9120,
+        "size": 6
+      },
+      "proc-vehicle-ir-lhb-coach?livery=tejas": {
+        "id": 9132,
+        "size": 6
+      },
+      "proc-vehicle-ir-lhb-coach?unit=chairCar": {
+        "id": 9114,
+        "size": 6
+      },
+      "proc-vehicle-ir-memu?": {
+        "id": 9300,
+        "size": 6
+      },
+      "proc-vehicle-ir-memu?formation=8 cars": {
+        "id": 9318,
+        "size": 32
+      },
+      "proc-vehicle-ir-memu?livery=alt": {
+        "id": 9312,
+        "size": 6
+      },
+      "proc-vehicle-ir-memu?unit=middleCar": {
+        "id": 9306,
+        "size": 6
+      },
+      "proc-vehicle-ir-mumbai-emu?": {
+        "id": 9250,
+        "size": 6
+      },
+      "proc-vehicle-ir-mumbai-emu?formation=6 cars": {
+        "id": 9268,
+        "size": 32
+      },
+      "proc-vehicle-ir-mumbai-emu?livery=alt": {
+        "id": 9262,
+        "size": 6
+      },
+      "proc-vehicle-ir-mumbai-emu?unit=middleCar": {
+        "id": 9256,
+        "size": 6
+      },
+      "proc-vehicle-ir-vande-bharat?": {
+        "id": 9156,
+        "size": 6
+      },
+      "proc-vehicle-ir-vande-bharat?formation=8 cars": {
+        "id": 9174,
+        "size": 32
+      },
+      "proc-vehicle-ir-vande-bharat?livery=saffron": {
+        "id": 9168,
+        "size": 6
+      },
+      "proc-vehicle-ir-vande-bharat?unit=middleCar": {
+        "id": 9162,
+        "size": 6
+      },
+      "proc-vehicle-ir-wag12b?": {
+        "id": 9472,
+        "size": 10
+      },
+      "proc-vehicle-ir-wam4?": {
+        "id": 9418,
+        "size": 6
+      },
+      "proc-vehicle-ir-wam4?livery=maroon": {
+        "id": 9424,
+        "size": 6
+      },
+      "proc-vehicle-ir-wap4?": {
+        "id": 9430,
+        "size": 6
+      },
+      "proc-vehicle-ir-wap4?livery=shatabdi": {
+        "id": 9436,
+        "size": 6
+      },
+      "proc-vehicle-ir-wap5?": {
+        "id": 9460,
+        "size": 6
+      },
+      "proc-vehicle-ir-wap5?livery=gatimaan": {
+        "id": 9466,
+        "size": 6
+      },
+      "proc-vehicle-ir-wap7?": {
+        "id": 9442,
+        "size": 6
+      },
+      "proc-vehicle-ir-wap7?livery=blue": {
+        "id": 9448,
+        "size": 6
+      },
+      "proc-vehicle-ir-wap7?livery=wag9": {
+        "id": 9454,
+        "size": 6
+      },
+      "proc-vehicle-ir-wdg4g?": {
+        "id": 9412,
+        "size": 6
+      },
+      "proc-vehicle-ir-wdm2?": {
+        "id": 9394,
+        "size": 6
+      },
+      "proc-vehicle-ir-wdm2?livery=blue": {
+        "id": 9400,
+        "size": 6
+      },
+      "proc-vehicle-ir-wdp4d?": {
+        "id": 9406,
+        "size": 6
+      },
+      "proc-vehicle-ir-wg?": {
+        "id": 9068,
+        "size": 4
+      },
+      "proc-vehicle-ir-wg?formation=with tender": {
+        "id": 9076,
+        "size": 8
+      },
+      "proc-vehicle-ir-wg?unit=tender": {
+        "id": 9072,
+        "size": 4
+      },
+      "proc-vehicle-ir-wp?": {
+        "id": 9048,
+        "size": 4
+      },
+      "proc-vehicle-ir-wp?formation=with tender": {
+        "id": 9060,
+        "size": 8
+      },
+      "proc-vehicle-ir-wp?livery=greenYellow": {
+        "id": 9056,
+        "size": 4
+      },
+      "proc-vehicle-ir-wp?unit=tender": {
+        "id": 9052,
+        "size": 4
       },
       "proc-vehicle-iryo-s109?": {
         "id": 8400,
@@ -1911,6 +2148,18 @@
       "proc-vehicle-nas-flat-wagon?": {
         "id": 944,
         "size": 16
+      },
+      "proc-vehicle-ncrtc-namo-bharat?": {
+        "id": 9206,
+        "size": 6
+      },
+      "proc-vehicle-ncrtc-namo-bharat?formation=6 cars": {
+        "id": 9218,
+        "size": 32
+      },
+      "proc-vehicle-ncrtc-namo-bharat?unit=middleCar": {
+        "id": 9212,
+        "size": 6
       },
       "proc-vehicle-ns-1100?": {
         "id": 7390,
