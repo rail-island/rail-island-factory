@@ -2,7 +2,7 @@
 
 **Covers** - the trams and the metro car transferred from vlakosimdb: the Tatra T3 (three variants), T6A5, KT8D5 (three liveries) and KT4, the GT4, and the 81-71 metro car (head and middle car); the shared tram builder and its source-to-Factory map, the articulated trams' sections and joints, pantographs, lamps and direction indicators, sources, deviations, the native comparison and tests.
 **Code** - `generator/trams.ts`, `generator/metro.ts`, `generator/tramKit.ts`, `generator/tramComparison.ts`, `generator/tramReport.ts`, `generator/orthoViews.ts`, `generator/treeIds.ts`, `test/trams.test.ts`, `test/rig.test.ts`
-**See also** - [vehicles.md](vehicles.md), [vehicle-rig.md](vehicle-rig.md), [parameters.md](parameters.md), [csd-coaches.md](csd-coaches.md) (the coach builder underneath), [../../.agents/skills/vlakosimdb-transfer/SKILL.md](../../.agents/skills/vlakosimdb-transfer/SKILL.md)
+**See also** - [world-trams.md](world-trams.md) (the world trams on the dimension-driven kit), [vehicles.md](vehicles.md), [vehicle-rig.md](vehicle-rig.md), [parameters.md](parameters.md), [csd-coaches.md](csd-coaches.md) (the coach builder underneath), [../../.agents/skills/vlakosimdb-transfer/SKILL.md](../../.agents/skills/vlakosimdb-transfer/SKILL.md)
 
 ## The designs
 

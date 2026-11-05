@@ -10,7 +10,8 @@
 |---|---|---|---|
 | cable car cabins | `cabinKit.ts` | 10 of 10 | [world-cabins.md](world-cabins.md) |
 | buses | `worldBusKit.ts` (on `cityBuses.ts`) | 25 of 100 (first batch) | [world-buses.md](world-buses.md) |
-| trucks, trams, aircraft, ships | - | 0 of 100 each | - |
+| trams | `worldTramKit.ts` (on `tramKit.ts` and the coach builder) | 100 of 100 | [world-trams.md](world-trams.md) |
+| trucks, aircraft, ships | - | 0 of 100 each | - |
 
 The waves and their order are the spec's. A design's id is the list's; once shipped it is
 frozen like every model id.
@@ -23,7 +24,10 @@ derives the options from the spec (`cabinFeatures`: the hanger kind, single or d
 a yoke, the number of glazed decks, a top deck, a round plan, doors on one or both sides, roof
 equipment, a glass floor, each parameter; `busFeatures`: the shape, the sections, the axles,
 the floor, the lamps, the mirrors, an upper deck, trolley poles, a rear window, a grille, roof
-pods, each parameter). A new family adds its entries here, with its own feature function.
+pods, each parameter; `tramFeatures`, over every parameter value's spec: the section count,
+each truck kind, a floating module, the fronts, single or double ended, the roof, the doors,
+the collector, the floor, a deck, open sides, a clerestory, a trailer, roof boxes, the gauge, the
+extras, each parameter). A new family adds its entries here, with its own feature function.
 
 ## The covering sample
 

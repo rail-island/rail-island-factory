@@ -12,13 +12,14 @@ import { findCoplanarOverlaps } from "../generator/coplanar.ts";
 import { buildLodModel } from "../generator/lodModel.ts";
 import { swept, variantsUnderTest } from "./catalogCache";
 import { isInteriorName } from "../generator/interiorTable.ts";
+import { WORLD_TRAMS_RIGHT_ONLY, WORLD_TRAMS_WITHOUT_DOORS } from "../generator/worldTrams.ts";
 
 /** The groups of passenger vehicles: every one opens its passenger doors. */
 const PASSENGER_GROUPS = new Set(["coach", "unit", "tram", "metro", "bus"]);
 /** Passenger-group designs with no door to open: a luggage van, a steam railcar whose van body draws none, the open-sided San Francisco cable car. */
-const NO_DOORS = new Set(["proc-vehicle-csd-dsk", "proc-vehicle-csd-m112", "proc-vehicle-sf-cable-car"]);
+const NO_DOORS = new Set(["proc-vehicle-csd-dsk", "proc-vehicle-csd-m112", "proc-vehicle-sf-cable-car", ...WORLD_TRAMS_WITHOUT_DOORS]);
 /** Doors on the right only: the single-ended trams and every bus (the kerb side). */
-const RIGHT_ONLY = (id: string, group: string) => group === "bus" || ["proc-vehicle-tatra-t3", "proc-vehicle-tatra-t6", "proc-vehicle-tatra-kt4", "proc-vehicle-kvag-gt4"].includes(id);
+const RIGHT_ONLY = (id: string, group: string) => group === "bus" || WORLD_TRAMS_RIGHT_ONLY.has(id) || ["proc-vehicle-tatra-t3", "proc-vehicle-tatra-t6", "proc-vehicle-tatra-kt4", "proc-vehicle-kvag-gt4"].includes(id);
 
 const groupOf = (d: (typeof ALL_VEHICLES)[number]) => d.catalog?.group ?? "";
 const PASSENGER = swept(ALL_VEHICLES).filter((d) => PASSENGER_GROUPS.has(groupOf(d)) && !NO_DOORS.has(d.id));

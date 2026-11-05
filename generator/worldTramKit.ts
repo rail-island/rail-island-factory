@@ -32,7 +32,7 @@ import type { MaterialSpec, MeshBuilder, Ring } from "./meshBuilder.ts";
 import { ngon } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { COACH_PALETTE, lerp, type Box, type Opening, type Pt, type Volume } from "./csdCoachParts.ts";
-import { Tram, TRAM_PALETTE, articulate, clipLine, type TramSection } from "./tramKit.ts";
+import { Tram, TRAM_PALETTE, articulate, clipLine, knee, type TramSection } from "./tramKit.ts";
 import { block, side } from "./vehicleParts.ts";
 import { liftable } from "./liftable.ts";
 import { TRAM_COLLECTOR_TOP } from "./collector.ts";
@@ -98,7 +98,7 @@ export interface TruckSpec {
 const underJoint = (t: TruckSpec): boolean => t.kind === "jacobs" || t.kind === "portal";
 
 export type Collector =
-  | { kind: "diamond"; at: number; reach?: number }
+  | { kind: "diamond"; at: number; reach?: number; low?: boolean }
   | { kind: "single"; at: number; low?: boolean }
   | { kind: "pole"; at: number; length?: number }
   | { kind: "none" };
@@ -412,6 +412,8 @@ function truck(t: Tram, s: WorldTramSpec, k: TruckSpec, x: number, top: number, 
   const hz = Math.min(1.06, s.width / 2 - 0.04);
   const draw = () => {
     if (k.kind === "guided") {
+      // a 16-sided tyre stands on a flat: its axle r cos(pi / 16) over the road
+      const ay = r * Math.cos(Math.PI / 16);
       m.scope("wheelset", () => {
         const axle = ngon(10, 0.08, 0, x, ay);
         m.sweep("steel", "z", axle, -hz + 0.18, axle, hz - 0.18);
@@ -471,21 +473,77 @@ function truck(t: Tram, s: WorldTramSpec, k: TruckSpec, x: number, top: number, 
  * the end, a `liftable` mechanism ("trolleypole") from lowered on the roof to
  * raised with the shoe's top at the game's trolley wire.
  */
-function trolleyPole(m: MeshBuilder, s: WorldTramSpec, xb: number, length: number): void {
+function trolleyPole(m: MeshBuilder, s: WorldTramSpec, xb: number, wanted: number, rear: number): void {
   const yb = s.height + 0.32;
   m.scope("base", () => {
     block(m, "pole", xb - 0.35, xb + 0.35, s.height - 0.05, yb - 0.12, -0.3, 0.3);
     block(m, "frame", xb - 0.12, xb + 0.12, yb - 0.13, yb - 0.04, -0.09, 0.09);
   });
+  // the pole trails back from its base, its shoe over the body's rear end at the most
+  const length = Math.min(wanted, poleReach(xb, rear));
   const shoe = 0.06;
   const shoeR = 0.035;
-  const up = Math.asin((TRAM_COLLECTOR_TOP - shoe - shoeR - yb) / length);
+  // the six-sided shoe's top: its flat, r cos 30 degrees over its axis
+  const up = Math.asin((TRAM_COLLECTOR_TOP - shoe - shoeR * Math.cos(Math.PI / 6) - yb) / length);
   const down = Math.asin(0.1 / length);
   liftable(m, "trolleypole", (mm, lift) => {
     const a = down + (up - down) * lift;
     const tip: Vec3 = [xb - length * Math.cos(a), yb + length * Math.sin(a), 0];
     mm.rod("pole", [xb, yb, 0], tip, 0.03, 6);
     mm.rod("frame", [tip[0] - 0.1, tip[1] + shoe, 0], [tip[0] + 0.1, tip[1] + shoe, 0], shoeR, 6);
+  });
+}
+
+/** How far a double-decker's low diamond pantograph stands sunk under the roof's crown. */
+const LOW_SINK = 0.15;
+
+/** The longest pole from a base at Factory x `xb` whose lowered shoe stays over the body's rear end at `rear`. */
+const poleReach = (xb: number, rear: number): number => xb - rear - 0.15;
+
+/**
+ * A single-arm pantograph that folds flat: the lower arm hinged half a metre
+ * behind the collector, the knee toward -x. Raised, the carbon strip's top is at
+ * the game's trolley wire; folding, the collector comes back toward the hinge
+ * until both arms lie along the roof, the knee beyond the hinge (the arms' 1.45
+ * and 1.6 m lengths fixed, the knee found by intersecting circles at every lift).
+ * A `liftable` mechanism. A double-decker's (`low`) stands on short insulators,
+ * its arms 0.7 and 0.76 m.
+ */
+function armPantograph(m: MeshBuilder, x: number, roof: number, low: boolean): void {
+  // a double-decker's short lift takes short arms, or the knee would stand above the wire
+  const [lower, upper] = low ? [0.7, 0.76] : [1.45, 1.6];
+  const xh = x - 0.5;
+  const base = roof + (low ? 0.06 : 0.2);
+  const hinge: [number, number] = [xh, base + 0.08];
+  const raised: [number, number] = [x, TRAM_COLLECTOR_TOP - 0.11];
+  // folded: the collector just ahead of the hinge, the arms (nearly) in line
+  const folded: [number, number] = [xh + upper - lower + 0.002, base + 0.1];
+  liftable(m, "pantograph", (mm, lift) => {
+    const c: [number, number] = [folded[0] + (raised[0] - folded[0]) * lift, folded[1] + (raised[1] - folded[1]) * lift];
+    const k = knee(hinge, lower, c, upper, 1);
+    mm.scope("base", () => {
+      for (const sd of [-1, 1]) block(mm, "pantograph", xh - 0.35, x + 0.35, base - 0.04, base, sd * 0.32 - 0.03, sd * 0.32 + 0.03);
+      for (const dx of [xh - 0.25, x + 0.25]) for (const sd of [-1, 1]) mm.prism("insulator", ngon(8, 0.045, 0, dx, sd * 0.32), roof - 0.01, base - 0.04);
+      const shaft = ngon(8, 0.035, 0, hinge[0], hinge[1]);
+      mm.sweep("pantograph", "z", shaft, -0.34, shaft, 0.34);
+    });
+    mm.scope("arms", () => {
+      for (const sd of [-1, 1]) mm.rod("pantograph", [hinge[0], hinge[1], sd * 0.22], [k[0], k[1], sd * 0.05], 0.03, 6);
+      const kt = ngon(6, 0.03, 0, k[0], k[1]);
+      mm.sweep("pantograph", "z", kt, -0.08, kt, 0.08);
+      for (const sd of [-1, 1]) mm.rod("pantograph", [k[0], k[1], sd * 0.04], [c[0], c[1], sd * 0.25], 0.018, 6);
+    });
+    mm.scope("collector", () => {
+      const y = c[1];
+      block(mm, "pantograph", c[0] - 0.06, c[0] + 0.06, y - 0.03, y + 0.03, -0.3, 0.3);
+      block(mm, "pantograph", c[0] - 0.06, c[0] + 0.06, y + 0.03, y + 0.08, -0.8, 0.8);
+      block(mm, "carbon", c[0] - 0.045, c[0] + 0.045, y + 0.08, y + 0.11, -0.75, 0.75);
+      for (const sd of [-1, 1]) {
+        const [a0, a1] = sd > 0 ? [0.8, 0.94] : [-0.94, -0.8];
+        const horn: Ring = [[c[0] - 0.03, y + 0.08], [c[0] + 0.03, y + 0.08], [c[0] + 0.03, y - 0.08], [c[0] - 0.03, y - 0.08]];
+        mm.sweep("pantograph", "z", horn, a0, horn, a1);
+      }
+    });
   });
 }
 
@@ -561,10 +619,10 @@ function drawSection(k: TramCtx, sec: SectionLayout, n: number): void {
       const x = X(c.at);
       if (x >= sec.x0 && x <= sec.x1) {
         const roof = crownAt(s, top, x);
-        if (c.kind === "diamond") m.scope("pantographs", () => m.scope("pantograph", () => t.diamond(x, roof, TRAM_COLLECTOR_TOP, c.reach ? { reach: c.reach } : {})));
-        // a double-decker's low-folding arm: its base sunk into the roof, so it folds half a metre below the wire
-        else if (c.kind === "single") m.scope("pantographs", () => m.scope("pantograph", () => t.singleArm(x - 0.5, x, -1, roof - (c.low ? 0.32 : 0), TRAM_COLLECTOR_TOP)));
-        else m.scope("trolley pole", () => trolleyPole(m, s, x, c.length ?? 5.0));
+        // a double-decker's diamond stands low on its insulators, so it folds half a metre below the wire
+        if (c.kind === "diamond") m.scope("pantographs", () => m.scope("pantograph", () => t.diamond(x, roof - (c.low ? LOW_SINK : 0), TRAM_COLLECTOR_TOP, c.reach ? { reach: c.reach } : {})));
+        else if (c.kind === "single") m.scope("pantographs", () => m.scope("pantograph", () => armPantograph(m, x, roof, c.low ?? false)));
+        else m.scope("trolley pole", () => trolleyPole(m, s, x, c.length ?? 5.0, sec.x0));
       }
     }
   });
@@ -709,11 +767,20 @@ function openCar(k: TramCtx, sec: SectionLayout): MeshBuilder {
     m.scope("posts", () => {
       for (let q = 0; q <= benches; q++) {
         const x = sec.x0 + 0.8 + ((sec.x1 - sec.x0 - 1.6) * q) / benches;
-        for (const sd of [-1, 1]) m.prism("frame", ngon(6, 0.045, 0, x, sd * (hw - 0.08)), deck + 0.04, s.eave + 0.02);
+        for (const sd of [-1, 1]) {
+          m.prism("frame", ngon(10, 0.045, 0, x, sd * (hw - 0.08)), deck + 0.04, s.eave + 0.02);
+          // the post's foot and its bracket under the roof
+          m.prism("frame", ngon(10, 0.065, 0, x, sd * (hw - 0.08)), deck + 0.04, deck + 0.16);
+          block(m, "frame", x - 0.14, x + 0.14, s.eave - 0.11, s.eave - 0.03, ...side(sd, hw - 0.115, hw - 0.045));
+        }
       }
     });
+    m.scope("curtain rails", () => {
+      for (const sd of [-1, 1]) m.rod("steel", [sec.x0 + 0.62, s.eave - 0.2, sd * (hw - 0.02)], [sec.x1 - 0.62, s.eave - 0.2, sd * (hw - 0.02)], 0.018, 6);
+    });
     m.scope("roof", () => {
-      const r: Ring = [[-hw - 0.05, s.eave], [hw + 0.05, s.eave], [hw * 0.8, s.height - 0.05], [0, s.height], [-hw * 0.8, s.height - 0.05]];
+      const r0 = s.height - s.eave;
+      const r: Ring = [[-hw - 0.05, s.eave], [hw + 0.05, s.eave], [hw + 0.05, s.eave + 0.05], [hw * 0.9, s.eave + r0 * 0.5], [hw * 0.62, s.eave + r0 * 0.86], [0, s.height], [-hw * 0.62, s.eave + r0 * 0.86], [-hw * 0.9, s.eave + r0 * 0.5], [-hw - 0.05, s.eave + 0.05]];
       m.sweep("roof", "x", r, sec.x0 - 0.15, r, sec.x1 + 0.15);
       const band: Ring = [[-hw - 0.05, s.eave - 0.18], [hw + 0.05, s.eave - 0.18], [hw + 0.05, s.eave - 0.005], [-hw - 0.05, s.eave - 0.005]];
       m.sweep(s.paint[s.paint.length - 1]![1], "x", band, sec.x0 - 0.12, band, sec.x1 + 0.12);
@@ -721,13 +788,30 @@ function openCar(k: TramCtx, sec: SectionLayout): MeshBuilder {
     m.scope("benches", () => {
       for (let q = 0; q < benches; q++) {
         const x = sec.x0 + 0.8 + ((sec.x1 - sec.x0 - 1.6) * (q + 0.5)) / benches;
-        block(m, "seatWood", x - 0.2, x + 0.2, deck + 0.42, deck + 0.47, -hw + 0.15, hw - 0.15);
-        block(m, "seatWood", x - 0.24, x - 0.19, deck + 0.47, deck + 0.9, -hw + 0.15, hw - 0.15);
-        for (const sd of [-1, 1]) block(m, "frame", x - 0.15, x + 0.15, deck + 0.04, deck + 0.42, ...side(sd, hw - 0.3, hw - 0.22));
+        // the seat's three slats, the back's three, on cast-iron ends
+        for (const d of [-0.18, -0.045, 0.09]) block(m, "seatWood", x + d, x + d + 0.11, deck + 0.42, deck + 0.47, -hw + 0.15, hw - 0.15);
+        for (const h of [0.52, 0.66, 0.8]) block(m, "seatWood", x - 0.25, x - 0.2, deck + h, deck + h + 0.1, -hw + 0.15, hw - 0.15);
+        for (const sd of [-1, 1]) {
+          block(m, "frame", x - 0.15, x + 0.15, deck + 0.04, deck + 0.415, ...side(sd, hw - 0.3, hw - 0.24));
+          block(m, "frame", x - 0.27, x - 0.18, deck + 0.475, deck + 0.92, ...side(sd, hw - 0.29, hw - 0.25));
+          m.rod("frame", [x - 0.2, deck + 0.62, sd * (hw - 0.2)], [x + 0.17, deck + 0.62, sd * (hw - 0.2)], 0.02, 6);
+        }
       }
     });
     m.scope("running boards", () => {
-      for (const sd of [-1, 1]) block(m, "timber", sec.x0 + 0.5, sec.x1 - 0.5, y0 - 0.12, y0 - 0.06, ...side(sd, hw - 0.05, hw + 0.22));
+      for (const sd of [-1, 1]) {
+        block(m, "timber", sec.x0 + 0.5, sec.x1 - 0.5, y0 - 0.12, y0 - 0.06, ...side(sd, hw - 0.05, hw + 0.22));
+        for (const x of [sec.x0 + 0.7, (sec.x0 + sec.x1) / 2, sec.x1 - 0.7]) block(m, "underframe", x - 0.04, x + 0.04, y0 - 0.06, y0 + 0.02, ...side(sd, hw - 0.1, hw + 0.1));
+      }
+    });
+    m.scope("truss rods", () => {
+      for (const sd of [-1, 1]) {
+        const z = sd * (hw - 0.22);
+        const [a, b] = [sec.x0 + 0.4, sec.x1 - 0.4];
+        m.rod("steel", [a, y0 + 0.08, z], [a + 1.2, y0 - 0.1, z], 0.02, 6);
+        m.rod("steel", [a + 1.2, y0 - 0.1, z], [b - 1.2, y0 - 0.1, z], 0.02, 6);
+        m.rod("steel", [b - 1.2, y0 - 0.1, z], [b, y0 + 0.08, z], 0.02, 6);
+      }
     });
   });
   for (const e of [1, -1]) m.scope(e > 0 ? "front end" : "rear end", () => {
@@ -739,10 +823,24 @@ function openCar(k: TramCtx, sec: SectionLayout): MeshBuilder {
       m.sweep(e > 0 ? "lampHead" : "lampRed", "x", lens, xe + e * 0.055, lens, xe + e * 0.075);
     });
     m.scope("coupler", () => t.coupler(e, xe - e * 0.5, xe + e * 0.2, Math.max(0.5, y0 + 0.1)));
+    // the dash's moulding and the route board over it
+    m.scope("dash trim", () => {
+      const [a, b] = [Math.min(xe, xe + e * 0.03), Math.max(xe, xe + e * 0.03)];
+      block(m, "frame", a, b, deck + 0.98, deck + 1.04, -hw + 0.08, hw - 0.08);
+      block(m, "frame", a, b, deck + 0.3, deck + 0.35, -hw + 0.08, hw - 0.08);
+      block(m, "display", Math.min(xe - e * 0.02, xe - e * 0.06), Math.max(xe - e * 0.02, xe - e * 0.06), s.eave - 0.16, s.eave - 0.02, -0.6, 0.6);
+    });
+    // the lifeguard: a slatted tray under the dash
+    m.scope("lifeguard", () => {
+      for (const d of [0.08, 0.22, 0.36]) {
+        const x = xe - e * d;
+        block(m, "underframe", x - 0.03, x + 0.03, 0.1, 0.16, -hw + 0.25, hw - 0.25);
+      }
+    });
   });
   m.scope("roof equipment", () => {
     const c = s.collector;
-    if (c.kind === "pole") m.scope("trolley pole", () => trolleyPole(m, { ...s, height: s.height + 0.02 }, X(c.at), c.length ?? 5.0));
+    if (c.kind === "pole") m.scope("trolley pole", () => trolleyPole(m, { ...s, height: s.height + 0.02 }, X(c.at), c.length ?? 5.0, sec.x0));
   });
   m.scope("running gear", () => s.trucks.forEach((tr, i) => m.scope(`${tr.kind} ${i + 1}`, () => truck(t, s, tr, X(tr.at), Math.max(y0, 2 * s.wheelRadius + 0.02)))));
   m.scope("extra", () => s.extra?.(k));
@@ -828,12 +926,12 @@ export function worldTramLod(s: WorldTramSpec, budget: number): MeshBuilder {
     parts.push({
       section: k,
       draw: (m) => m.scope("raised collector", () => {
-        if (c.kind === "diamond") lodDiamond(m, { x, roof, head: TRAM_COLLECTOR_TOP, ...(c.reach ? { reach: c.reach } : {}) });
-        else if (c.kind === "single") lodPantograph(m, { x: x - 0.5, roofY: roof, baseY: roof + 0.2, h: 1, raised: true, raisedTop: TRAM_COLLECTOR_TOP, lower: 1.45, upper: 1.6, halfHead: 0.8 });
+        if (c.kind === "diamond") lodDiamond(m, { x, roof: roof - (c.low ? LOW_SINK : 0), head: TRAM_COLLECTOR_TOP, ...(c.reach ? { reach: c.reach } : {}) });
+        else if (c.kind === "single") lodPantograph(m, { x: x - 0.5, roofY: roof, baseY: roof + (c.low ? 0.06 : 0.2), h: 1, raised: true, raisedTop: TRAM_COLLECTOR_TOP, lower: c.low ? 0.7 : 1.45, upper: c.low ? 0.76 : 1.6, halfHead: 0.8 });
         else {
           const yb = s.height + 0.32;
-          const len = c.length ?? 5.0;
-          const a = Math.asin((TRAM_COLLECTOR_TOP - 0.1 - yb) / len);
+          const len = Math.min(c.length ?? 5.0, poleReach(x, secs[k]!.x0));
+          const a = Math.asin((TRAM_COLLECTOR_TOP - 0.06 - 0.035 * Math.cos(Math.PI / 6) - yb) / len);
           lodRod(m, "pole", [x, roof - 0.02, 0], [x - len * Math.cos(a), yb + len * Math.sin(a), 0], 0.06);
         }
       }),
@@ -888,7 +986,7 @@ export function tramFeatures(s: WorldTramSpec, params: readonly string[]): strin
     s.doubleEnded ? "double-ended" : "single-ended",
     `roof:${s.roof}`,
     `doors:${s.doorKind}`,
-    `collector:${s.collector.kind}${s.collector.kind === "single" && s.collector.low ? "-low" : ""}`,
+    `collector:${s.collector.kind}${s.collector.kind !== "pole" && s.collector.kind !== "none" && s.collector.low ? "-low" : ""}`,
     s.floor < 0.3 ? "floor:low" : "floor:high",
     ...(s.upper || s.deck ? [`deck:${s.deck ?? "covered"}`] : []),
     ...(s.open ? ["open-sides"] : []),

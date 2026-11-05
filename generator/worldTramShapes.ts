@@ -45,7 +45,9 @@ export const portals = (...at: number[]): TruckSpec[] => at.map((a) => ({ at: a,
 export const guided = (...at: number[]): TruckSpec[] => at.map((a) => ({ at: a, kind: "guided", wb: 0 }));
 export const truck = (wb: number, ...at: number[]): TruckSpec[] => at.map((a) => ({ at: a, kind: "truck", wb }));
 export const diamond = (at: number, reach?: number): Collector => ({ kind: "diamond", at, ...(reach ? { reach } : {}) });
-export const arm = (at: number, low?: boolean): Collector => ({ kind: "single", at, ...(low ? { low } : {}) });
+export const arm = (at: number): Collector => ({ kind: "single", at });
+/** A double-decker's single arm on short insulators, folding half a metre under the wire. */
+export const lowArm = (at: number): Collector => ({ kind: "single", at, low: true });
 export const pole = (at: number, length?: number): Collector => ({ kind: "pole", at, ...(length ? { length } : {}) });
 export const NO_COLLECTOR: Collector = { kind: "none" };
 

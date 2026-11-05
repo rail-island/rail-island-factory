@@ -78,9 +78,11 @@ describe("rail supports", () => {
   });
 
   it("puts a turning bogie under every vehicle whose axles stand two or three together", () => {
+    // the trams whose axles stand alone, each a turning node of its own: the ULF's portals and the Translohr's guided axles
+    const singleAxles = new Set(["proc-vehicle-siemens-ulf", "proc-vehicle-translohr"]);
     for (const d of RAIL) {
       const v = defaultOf(d.id);
-      if (d.catalog?.traction === "steam" || v.wheelsets < 4) continue;
+      if (d.catalog?.traction === "steam" || v.wheelsets < 4 || singleAxles.has(d.id)) continue;
       const supports = v.rig.supports!;
       expect(supports.filter((s) => s.node).length, d.id).toBeGreaterThanOrEqual(2);
       expect(supports.every((s) => s.node && s.axles >= 2 && s.axles <= 3), d.id).toBe(true);

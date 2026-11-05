@@ -74,8 +74,8 @@ export function tatraK2Spec(p?: ParamValues): WorldTramSpec {
     doors: [[1.05, 2.2], [6.0, 7.4], [12.9, 14.3], [18.2, 19.35]],
     trucks: [...bogies(1.9, 3.7, 16.7), ...jacobs(1.9, 10.2)],
     collector: diamond(4.3),
-    colors: modern ? { skirt: "#c9242b", body: "#f2f2ee", upper: "#f2f2ee", band: "#5d6266" } : { skirt: "#c9242b", body: "#c9242b", upper: "#efe7cf" },
-    paint: modern ? [[0.95, "skirt"], [1.55, "body"], [2.8, "band"], [3.5, "upper"]] : [[1.0, "skirt"], [1.12, "upper"], [1.55, "body"], [3.5, "upper"]],
+    colors: modern ? { skirt: "#c9242b", body: "#f2f2ee", upper: "#f2f2ee", band: "#5d6266" } : { skirt: "#c9242b", body: "#c9242b", upper: "#efe7cf", band: "#efe7cf" },
+    paint: [[1.0, "skirt"], [1.12, "upper"], [1.55, "body"], [2.8, "band"], [3.5, "upper"]],
   });
 }
 
@@ -198,10 +198,13 @@ export const COMBINO_PARAMS: readonly ParamSpec[] = [
   liveryParam(["basel", "Basel"], ["amsterdam", "Amsterdam"], ["freiburg", "Freiburg"]),
 ];
 
+/** The Combino's paint: a skirt, a stripe over it, the body, a band along the cant rail. */
+const COMBINO_STACK: WorldTramSpec["paint"] = [[0.62, "skirt"], [0.78, "band"], [2.95, "body"], [3.6, "top"]];
+
 const COMBINO_COLORS: Record<string, { colors: Record<string, string>; paint: WorldTramSpec["paint"] }> = {
-  basel: { colors: { skirt: "#1c7a3e", body: "#1c7a3e", band: "#f2f2ee" }, paint: [[1.0, "body"], [2.95, "band"], [3.6, "body"]] },
-  amsterdam: { colors: { skirt: "#1e3f8c", body: "#f2f2ee", band: "#d3242c" }, paint: [[0.62, "skirt"], [0.78, "band"], [3.6, "body"]] },
-  freiburg: { colors: { skirt: "#d3242c", body: "#f2f2ee", band: "#d3242c" }, paint: [[0.95, "skirt"], [3.6, "body"]] },
+  basel: { colors: { skirt: "#1c7a3e", band: "#1c7a3e", body: "#1c7a3e", top: "#f2f2ee" }, paint: COMBINO_STACK },
+  amsterdam: { colors: { skirt: "#1e3f8c", band: "#d3242c", body: "#f2f2ee", top: "#f2f2ee" }, paint: COMBINO_STACK },
+  freiburg: { colors: { skirt: "#d3242c", band: "#d3242c", body: "#f2f2ee", top: "#f2f2ee" }, paint: COMBINO_STACK },
 };
 
 export function siemensCombinoSpec(p?: ParamValues): WorldTramSpec {
@@ -415,8 +418,8 @@ export function stadlerTangoSpec(p?: ParamValues): WorldTramSpec {
     doors: [[1.85, 3.15], [l.at(0, 7.6), l.at(0, 8.9)], ...[1, 2].flatMap((i) => secDoors(l, 1.3, [i, 0.6], [i, 8.7])), [l.at(3, 1.7), l.at(3, 3.0)], [l.at(3, 7.45), l.at(3, 8.75)]],
     trucks: bogies(1.8, l.at(0, 5.3), l.mid(1), l.mid(2), l.at(3, 5.3)),
     collector: arm(l.mid(1) + 1.6),
-    colors: basel ? { skirt: "#1c7a3e", body: "#1c7a3e", band: "#f2f2ee" } : { skirt: "#c8102e", body: "#f2f2ee", band: "#6f7377" },
-    paint: basel ? [[1.0, "body"], [2.95, "band"], [3.6, "body"]] : [[0.62, "skirt"], [0.98, "band"], [3.6, "body"]],
+    colors: basel ? { skirt: "#1c7a3e", band: "#1c7a3e", body: "#1c7a3e", top: "#f2f2ee" } : { skirt: "#c8102e", band: "#6f7377", body: "#f2f2ee", top: "#f2f2ee" },
+    paint: [[0.62, "skirt"], [0.98, "band"], [2.95, "body"], [3.6, "top"]],
     roofBoxes: [[0.6, 9.6, 0.95, 0.36, "body"], [l.at(3, 1.0), l.at(3, 10.0), 0.95, 0.36, "body"]],
   });
 }
@@ -734,7 +737,7 @@ export function pesaSwingSpec(p?: ParamValues): WorldTramSpec {
     trucks: bogies(1.8, l.at(0, 4.8), l.mid(2), l.at(4, 2.6)),
     collector: arm(l.mid(2) + 0.6),
     colors: krakow ? { skirt: "#1d2f6e", body: "#f2f2ee", band: "#1d2f6e" } : { skirt: "#c8102e", body: "#f2c300", band: "#c8102e" },
-    paint: krakow ? [[0.62, "skirt"], [0.85, "band"], [3.6, "body"]] : [[0.95, "skirt"], [3.6, "body"]],
+    paint: [[0.62, "skirt"], [0.95, "band"], [3.6, "body"]],
     roofBoxes: [[0.8, 6.8, 0.95, 0.36, "body"], [l.at(4, 0.6), l.at(4, 6.8), 0.95, 0.36, "body"]],
   });
 }
@@ -922,7 +925,7 @@ export function triesteOpicinaSpec(): WorldTramSpec {
     collector: diamond(5.5, 1.05),
     colors: { body: "#1d4f9c", upper: "#efe6cf" },
     paint: [[1.5, "body"], [3.5, "upper"]],
-    over: { extra: pusherPlate(11.0), extraFeatures: ["pusher-buffer"] },
+    over: { extra: pusherPlate(10.82), extraFeatures: ["pusher-buffer"] },
   });
 }
 

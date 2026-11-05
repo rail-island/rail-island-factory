@@ -9,7 +9,7 @@ import type { MeshBuilder } from "./meshBuilder.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import { worldTram, worldTramLod, tramLodBudget, type WorldTramSpec } from "./worldTramKit.ts";
 import {
-  arm, bogies, chimney, chimneyLod, classic, doorsAt, doubleDeck, g, grip, horse, horseLod, jacobs, lay, liveryParam, lowFloor, lrv, NO_COLLECTOR, pole, secDoors, tramDesign, truck, vintage,
+  arm, bogies, chimney, lowArm, chimneyLod, classic, doorsAt, doubleDeck, g, grip, horse, horseLod, jacobs, lay, liveryParam, lowFloor, lrv, NO_COLLECTOR, pole, secDoors, tramDesign, truck, vintage,
   type WorldTram,
 } from "./worldTramShapes.ts";
 import { citadis402 } from "./worldTramsEurope.ts";
@@ -185,7 +185,7 @@ export function hongKongTramSpec(p?: ParamValues): WorldTramSpec {
     sections: [11.98], width: 2.0, height: 4.5, doubleEnded: false, gauge: 1067,
     doors: [[0.75, 1.55], [10.4, 11.2]],
     trucks: truck(3.0, 6.0),
-    collector: arm(7.2, true),
+    collector: lowArm(7.2),
     colors: ad ? { skirt: "#c8102e", body: "#f2f2ee", upper: "#c8102e" } : { skirt: "#1f6b3a", body: "#efe6c8", upper: "#1f6b3a" },
     paint: [[1.25, "skirt"], [2.25, "body"], [2.9, "skirt"], [4.6, "upper"]],
     over: { pitch: 0.95 },
@@ -251,8 +251,8 @@ export function tokyu300Spec(p?: ParamValues): WorldTramSpec {
 export function kolkataTramSpec(): WorldTramSpec {
   return vintage({
     sections: [8.8, 8.8], gap: 0.9, width: 2.2, height: 3.3,
-    doors: [[0.75, 1.95], [6.3, 7.5], [9.95, 11.15], [16.4, 17.6]],
-    trucks: truck(2.5, 4.4, 14.1),
+    doors: [[0.75, 1.65], [4.4, 5.6], [10.6, 11.8], [16.9, 17.75]],
+    trucks: [...bogies(1.6, 3.0, 15.5), ...jacobs(1.6, 9.25)],
     collector: pole(3.4, 4.6),
     colors: { body: "#1d4f9c", upper: "#f2f2ee" },
     over: { clerestory: false, pitch: 1.0 },
@@ -293,7 +293,7 @@ export function alexandriaDoubleDeckSpec(): WorldTramSpec {
     sections: [13.0], width: 2.4, height: 4.6, front: "angular",
     doors: [[0.5, 1.6], [5.9, 7.1], [11.4, 12.5]],
     trucks: bogies(1.8, 3.4, 9.6),
-    collector: arm(6.5, true),
+    collector: lowArm(6.5),
     colors: { skirt: "#1d4f9c", body: "#efe6c8", upper: "#efe6c8" },
     paint: [[1.25, "skirt"], [2.25, "body"], [2.9, "skirt"], [4.6, "upper"]],
     over: { pitch: 1.3 },
