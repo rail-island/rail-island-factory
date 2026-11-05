@@ -10,7 +10,8 @@
 |---|---|---|---|
 | cable car cabins | `cabinKit.ts` | 10 of 10 | [world-cabins.md](world-cabins.md) |
 | buses | `worldBusKit.ts` (on `cityBuses.ts`) | 25 of 100 (first batch) | [world-buses.md](world-buses.md) |
-| trucks, trams, aircraft, ships | - | 0 of 100 each | - |
+| ships | `hullKit.ts` (`worldShips*.ts`) | 100 of 100 | [world-ships.md](world-ships.md) |
+| trucks, trams, aircraft | - | 0 of 100 each | - |
 
 The waves and their order are the spec's. A design's id is the list's; once shipped it is
 frozen like every model id.

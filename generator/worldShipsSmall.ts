@@ -1,4 +1,4 @@
-// The world's sailing ships and small craft (docs/models/world-ships-small.md):
+// The world's sailing ships and small craft (docs/models/world-ships-passenger.md):
 // tall ships and a schooner, traditional craft under lateen, junk, sprit and
 // crab-claw sails, a Viking longship, canal and river boats, and yachts and
 // runabouts, each a ShipSpec on the hull kit (hullKit.ts) at its real size,

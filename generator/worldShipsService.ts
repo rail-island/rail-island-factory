@@ -1,4 +1,4 @@
-// The world's service ships (docs/models/world-ships-service.md): tugs and a
+// The world's service ships (docs/models/world-ships-cargo.md): tugs and a
 // towboat, fishing vessels, icebreakers and research ships, a dredger, offshore
 // supply, anchor-handling, crane and drilling vessels, a cable layer, a fireboat,
 // a lifeboat and a pilot boat, each a ShipSpec on the hull kit (hullKit.ts) at its
@@ -105,7 +105,7 @@ export function sternTrawlerSpec(p?: ParamValues): ShipSpec {
       mast(56, D + 2.4 + 3 * 2.8, D + 18, 0.2),
       funnel([40, 45], 1.6, [D + 2.4, D + 11], [["funnel", 0.85], ["black", 1]], 0.4),
       // the stern ramp, the trawl gantry over it, the net drums
-      { k: "plate", pts: [[0.2, 2], [0.2, D], [10, D], [10, D - 0.4]], z: 0, t: 5, mat: "steel", name: "stern ramp" },
+      { k: "plate", pts: [[0.2, 2], [0.2, D - 0.1], [10, D - 0.1], [10, D - 0.5]], z: 0, t: 5, mat: "steel", name: "stern ramp" },
       { k: "gantry", u: 4, hw: 5.6, y: D, h: 8, t: 0.6, mat: "orange", name: "trawl gantry" },
       { k: "gantry", u: 30, hw: 4, y: D + 2.6, h: 6, t: 0.4, mat: "orange", name: "forward gantry" },
       { k: "cyl", u: 18, z: 3.5, y: [D, D + 3], r: 1.4, mat: "grey", name: "net drum" },

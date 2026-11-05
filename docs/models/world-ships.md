@@ -1,0 +1,154 @@
+# World ships
+
+**Covers** - the hull kit the 100 ships of the world fleet are built on: the spec record, the hull forms (bows, sterns, sections, sheer, raised decks, twin hulls, a lifted hydrofoil hull), the paint bands and the waterline, the deck furniture and the sailing rigs, the distant model, budgets, axes and datums, game properties, OpenTTD cargo, sounds, references and checks. The designs themselves are listed in [world-ships-cargo.md](world-ships-cargo.md) and [world-ships-passenger.md](world-ships-passenger.md).
+**Code** - `generator/hullKit.ts`, `generator/worldShips.ts`, `generator/worldShipsCargo.ts`, `generator/worldShipsService.ts`, `generator/worldShipsPassenger.ts`, `generator/worldShipsSmall.ts`, `test/worldShips.test.ts`, the ships' blocks of `generator/openttdTable.ts`, `generator/soundTable.ts`, `generator/worldFleet.ts`
+**See also** - [ships.md](ships.md) (the three older ships and the station-and-band hull the kit copies), [world-fleet.md](world-fleet.md) (the harness), [game-properties.md](game-properties.md) (`draftFrac`), [sounds.md](sounds.md), [lod.md](lod.md), [../specs/2026-11-05-world-vehicle-fleet.md](../specs/2026-11-05-world-vehicle-fleet.md)
+
+## The family
+
+| module | kind | designs |
+|---|---|---|
+| `worldShipsCargo.ts` | container ships, tankers, gas and bulk carriers, ro-ro, heavy-lift, reefer and general cargo ships, river cargo | 30 |
+| `worldShipsService.ts` | tugs and a towboat, fishing vessels, icebreakers and research ships, a dredger, offshore vessels, a cable layer, fire, rescue and pilot boats | 19 |
+| `worldShipsPassenger.ts` | city and car ferries, fast craft, paddle steamers and river boats, coastal and cruise ships, liners | 32 |
+| `worldShipsSmall.ts` | tall ships and schooners, traditional sailing craft, canal and river craft, yachts and runabouts | 19 |
+
+Each module exports, per ship, a spec function (`tripleESpec(p?)`) and two named build
+functions (`shipTripleE(p?)`, `shipTripleELod(p?)`): the JS model imports a design's
+builders by name, and keeping each spec in its own function lets esbuild drop the others
+from a model's bundle. The design lists are marked `/* @__PURE__ */` for the same reason,
+and the family's catalog fields are written out in `worldShips.ts` rather than imported
+from `ships.ts` (that import carried the whole older module into every bundle: a small
+craft's JS outweighed its GLB). **The ids are stored in saved maps** - never rename one.
+
+The three older ships (`ships.ts`) are untouched: the kit copies the helpers it needs
+(`lerpTable`, `TriBatch`, `hullShell`, `planRing`, `roundEnd`, `spindle`) so their models
+and JS files stay byte-identical.
+
+## Axes and datums
+
+As the cruise ferry's: metres, **+X towards the bow**, +Y up, +Z to starboard, centred on
+the length and the beam, the keel on **y = 0**; catalog `yaw` 180. A spec is written in
+metres **from the stern** (`u`; x = u - length / 2) and heights from the keel. The hull's
+**waterline is y = draft**, the edge between the bottom paint and the boot-top band (a real
+edge of the shell); `game.draftFrac` is the draft over the built model's highest point
+(mast, funnel or crane top), measured off the model the first time the export asks
+(`shipGame` in `worldShips.ts`), and again for each parameter value that changes the height
+or the draft (a push barge light or loaded states its variant's `draftFrac`).
+`test/worldShips.test.ts` checks that `draftFrac` times the height lands on the paint edge.
+
+A hydrofoil's hull stands on its foils (`lift`: the keel at y = lift, the foils on y = 0,
+the hullborne waterline still from y = 0); a hovercraft has no hull (`hull: null`) and floats
+on its skirt with a nominal 0.3 m draft. A sailing yacht's fin keel is the same: the hull
+lifted 1.4 m on its fin.
+
+## The spec
+
+`ShipSpec` holds the `kind` (cargo, passenger, service, small, sail), the `hull`
+(`HullForm`, or null), a `livery` (colours by material role over the kit's defaults:
+`bottom`, `boot`, `hull`, `stripe`, `deck`, `house`, `roof`, `funnel`, `steel`, `crane`,
+`hatch`, `sail`, `spar`, the container colours `c0`..`c7`, ...; `glass` is the window
+glass), the `items` on deck and `small` for the small-craft budget.
+
+### The hull
+
+`hullGeometry(form)` turns a few numbers into the four functions the shell is drawn from
+(the plan half-breadth, the keel line, the deck line, the half-breadth at a height) and the
+stations:
+
+| field | what |
+|---|---|
+| `length`, `beam`, `depth`, `draft` | over the hull (spars aside), moulded beam, keel to deck edge midships, keel to waterline |
+| `bow` | `raked` (a straight raked stem), `bulbous` (raked over a bulb, `bulb` its size), `ice` (a long sloping icebreaker stem), `barge` (a spoon bow: the bottom rising in a ramp to a flat end), `clipper` (a concave stem reaching forward), `canoe` (an upturned pointed end), `plumb` (an upright stem) |
+| `stern` | `transom` (a flat stern over a raised counter), `cruiser` (rounded), `sternwheel` (a square flat end for a wheel or a barge), `canoe` (pointed, as a double-ended ferry or a longship) |
+| `section` | `round` (a round bilge over a flat floor), `vee`, `flat` (a barge's box), `keel` (a sailing ship's wineglass) |
+| `entry`, `run`, `transom`, `rake` | the taper of bow and stern as fractions of the length, the transom's width, the stem's rake (defaults by form) |
+| `sheer`, `forecastle`, `poop` | the deck's rise at each end, raised decks (a ramp of 0.6 m at the break) |
+| `boot`, `stripe` | the boot-top band above the waterline and a sheer stripe under the deck edge |
+| `twin` | a catamaran's (or a crane vessel's pontoons') demihull beam; `beam` is then the overall |
+| `screws`, `rudder` | propellers and the rudder under the stern (ships default to one screw) |
+| `lift` | a hydrofoil's or fin-keel yacht's hull raised on its foils |
+
+The section blends from the midship shape to a V towards a pointed end. The paint bands
+are `bottom` (keel to draft), `boot`, `hull`, `stripe`; the deck is drawn in `deck`.
+
+### The deck furniture (`Item`)
+
+| item | what |
+|---|---|
+| `tier` | a deck of superstructure over a plan ring: fixed half-width or the hull's less an inset, rounded ends, a tapering front, rows of windows, bridge windows across a square front, bridge wings |
+| `box`, `cyl`, `rod`, `plate` | generic blocks, posts, bars and flat plates (rudders, fins, push knees, leeboards, a ferro) |
+| `funnel` | an oval or round funnel lofted through its colour bands, raked, smoke on its mouth |
+| `mast` | a signal mast with yards and a radar bar |
+| `crane`, `derrick` | a pedestal crane with its jib; a kingpost (or pair) with its boom |
+| `hatches`, `containers` | hatch covers; container stacks as blocks a few rows wide per bay, their heights and colours from a fixed seed, narrowing with the hull |
+| `domes`, `spheres`, `tanks`, `pipes` | tank domes, Moss LNG spheres on their skirts (a dome too: Icon's AquaDome, a radome), cylindrical gas tanks, deck piping |
+| `helideck`, `gantry`, `boom`, `boats` | a helideck with its H, a portal or A-frame, an unloading boom or drag arm, lifeboats and tenders |
+| `canopy`, `rail`, `portholes` | an arched roof (thatch, awnings), railings, a row of round lights in the hull |
+| `paddle` | side paddle wheels with their boxes, or a stern wheel |
+| `foil`, `skirt`, `prop` | hydrofoils on struts, a hovercraft's skirt, air propellers on pylons |
+| `rig` | masts with their sails, a bowsprit and stays |
+
+Shared shapes are in `worldShips.ts`: `oceanHull`, `deckhouse` (an accommodation stack
+with its wheelhouse and wings), `aftHouse` (that, its funnel, mast and lifeboats),
+`funnel`, `mast`, `lifeboats`, and the `load`, `livery` and `colour` parameters.
+
+### Sails
+
+A `Mast` carries its `sails`, each a double-sided face of the `sail` colour (so either
+side shows): `square` (bellied, on its yard), `gaff`, `bermuda`, `sprit`, `jib` (from a
+tack on the bow or bowsprit to the mast), `lateen` and `crabclaw` (on their long yards),
+`junk` (battened panels fanning aft). The stays run from each masthead to the next mast
+forward, the foremost to the bow or bowsprit, and shrouds to the sides.
+
+## The distant model
+
+`shipLod(spec)` (budget 100, `lod.ts`): the hull as plan rings at the keel, the waterline
+and the deck in the bottom and hull colours (one stack per demihull), then the largest
+furniture blocks that fit: a stack of tiers as one block, each Moss tank a square frustum,
+masts as bars, a mast's square sails as one face, fore-and-aft sails as triangles; hatch
+covers under containers are left out. Each part is drawn a few centimetres in from its
+neighbours' planes, so no two coplanar faces fight.
+
+## Budgets
+
+| ship | triangles | reached |
+|---|---|---|
+| ocean ships over 150 m | 20,000 | 1,800 (PCTC) to 10,300 (Icon) |
+| ships up to 150 m | 10,000 | 1,200 to 4,200 |
+| small craft (`small`) | 4,000 | 500 to 1,300 |
+| distant model | 100 | 30 to 99 |
+
+`shipBudget(spec)` gives the budget; the suite checks every sampled parameter combination.
+
+## Game properties, OpenTTD and sounds
+
+- **`game`**: displacement (t), installed power (kW), service speed (km/h) from the
+  published figures in each `SOURCES.md`; `accel` null; `draftFrac` measured. A sailing
+  ship without an engine states power 0.
+- **OpenTTD**: container ships, feeders, ro-ro and car carriers carry `GOOD` (TEU or units
+  as crates; no default climate has `VEHI`), tankers and gas carriers `OIL_` (liquid; the
+  chemical tanker hazardous too), bulkers `COAL`, `IORE` or `GRAI` with the bulk refit, the
+  reefer `FOOD`, fishing vessels their catch as `FOOD`, every passenger ship `PASS`;
+  capacities over 65,535 are capped at the GRF's word. Presets: each design's default and
+  its interesting liveries or loads.
+- **Sounds**: a ship's horn is derived from its hull length; the steamships (Liberty,
+  Victory, Ideal X, Seawise Giant, the Moss carrier, the Laker, the liners, SS Great Britain,
+  the paddle steamers and the sternwheeler) state a steam whistle in `soundTable.ts`. The
+  sailing ships and rowed craft keep the derived horn as a foghorn: rail-island-music has no
+  ship's bell (a request to that repository).
+
+## References
+
+Each ship has `assets/ship-<name>/` (the id without `veh-`) with one or two Commons
+photographs fetched by `pnpm refs:fetch` and a `## Published figures` section; figures
+read off photographs are marked approx.
+
+## Checking a change
+
+- `pnpm exec vitest run test/worldShips.test.ts` - size, keel, waterline on its paint edge,
+  budgets, LOD budget and flicker, cargo per type, load and livery parameters (about 10 s).
+- `pnpm exec vitest run test/worldFleet.test.ts` - registry, references, OpenTTD ids.
+- `pnpm exec vitest run catalog -t "proc-vehicle-ship-"` - the covering sample's full sweep.
+- A kit change moves every ship's bytes: render the contact sheets
+  (`generator/contactSheet.ts --view 3q`) and compare.
