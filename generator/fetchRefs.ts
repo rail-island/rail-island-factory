@@ -42,7 +42,7 @@ const plain = (s: string | undefined): string => (s ?? "").replace(/<[^>]*>/g, "
 
 /** Whether a licence name is one the factory may store and redistribute with attribution. */
 export function freeLicence(name: string): boolean {
-  return /^(cc0|cc[ -]by(-sa)?[ -]\d|public domain|pd\b|pd-)/i.test(name.trim());
+  return /^(cc0|cc[ -]by(-sa)?[ -]\d|public domain|pd\b|pd-|fal\b|free art licen[cs]e)/i.test(name.trim());
 }
 
 /** A file name for a Commons title: lower case, ascii, dashes, `photo-` first. */

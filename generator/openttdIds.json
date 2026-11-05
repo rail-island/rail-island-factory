@@ -1,6 +1,9 @@
 {
   "version": 1,
   "grf": {
+    "proc-vehicle-adl-enviro200": 162,
+    "proc-vehicle-adl-enviro400": 163,
+    "proc-vehicle-adl-enviro500": 164,
     "proc-vehicle-aero-a10": 75,
     "proc-vehicle-airbus-a380": 76,
     "proc-vehicle-airbus-beluga": 74,
@@ -14,6 +17,7 @@
     "proc-vehicle-boeing-747": 73,
     "proc-vehicle-budd-rdc": 134,
     "proc-vehicle-bus-1": 71,
+    "proc-vehicle-byd-k9": 184,
     "proc-vehicle-cd-110": 33,
     "proc-vehicle-cd-130": 34,
     "proc-vehicle-cd-140": 35,
@@ -82,11 +86,15 @@
     "proc-vehicle-falls-hopper-wagon": 42,
     "proc-vehicle-ge-es44ac": 122,
     "proc-vehicle-ge-p42dc": 125,
+    "proc-vehicle-gillig-low-floor": 181,
     "proc-vehicle-habis-sliding-wall-wagon": 39,
     "proc-vehicle-hadgs-hopper-wagon": 40,
     "proc-vehicle-hankyu-9000": 155,
     "proc-vehicle-hydrofoil-ferry": 81,
+    "proc-vehicle-hyundai-universe": 185,
     "proc-vehicle-ice-1": 110,
+    "proc-vehicle-ikarus-260": 178,
+    "proc-vehicle-ikarus-280": 179,
     "proc-vehicle-jnr-103": 150,
     "proc-vehicle-jnr-485": 154,
     "proc-vehicle-jnr-c62": 156,
@@ -105,18 +113,28 @@
     "proc-vehicle-legacy-covered-wagon": 1,
     "proc-vehicle-legacy-heavy-wagon": 3,
     "proc-vehicle-legacy-open-wagon": 2,
+    "proc-vehicle-leyland-national": 165,
     "proc-vehicle-light-jet": 78,
+    "proc-vehicle-man-lions-city": 169,
     "proc-vehicle-mav-mdmot": 109,
     "proc-vehicle-mb-citaro": 67,
     "proc-vehicle-mb-citaro-blue": 68,
+    "proc-vehicle-mb-ecitaro": 168,
+    "proc-vehicle-mb-o305": 166,
     "proc-vehicle-mb-o345-g": 69,
+    "proc-vehicle-mb-o405": 167,
+    "proc-vehicle-mb-tourismo": 170,
     "proc-vehicle-mcdonnell-douglas-md11": 72,
+    "proc-vehicle-mci-d4505": 183,
     "proc-vehicle-mercedes-atego-1224": 62,
     "proc-vehicle-metro-81-71": 96,
     "proc-vehicle-mixer-truck": 58,
     "proc-vehicle-mtr-m-train": 113,
     "proc-vehicle-muv-69": 56,
     "proc-vehicle-nas-flat-wagon": 19,
+    "proc-vehicle-neoplan-skyliner": 172,
+    "proc-vehicle-new-flyer-xcelsior": 182,
+    "proc-vehicle-new-routemaster": 161,
     "proc-vehicle-nyc-hudson": 131,
     "proc-vehicle-nyc-r160": 136,
     "proc-vehicle-obb-1012": 48,
@@ -132,6 +150,8 @@
     "proc-vehicle-rah-tank-wagon": 23,
     "proc-vehicle-raj-hopper-wagon": 22,
     "proc-vehicle-reefer-semi-truck": 59,
+    "proc-vehicle-scania-citywide": 174,
+    "proc-vehicle-setra-s515": 171,
     "proc-vehicle-sf-cable-car": 141,
     "proc-vehicle-shinkansen-0": 112,
     "proc-vehicle-shinkansen-100": 147,
@@ -142,7 +162,10 @@
     "proc-vehicle-shinkansen-e6": 146,
     "proc-vehicle-shinkansen-n700s": 142,
     "proc-vehicle-siemens-alc42": 126,
+    "proc-vehicle-skoda-14tr": 176,
+    "proc-vehicle-skoda-15tr": 177,
     "proc-vehicle-small-airplane": 79,
+    "proc-vehicle-solaris-trollino": 180,
     "proc-vehicle-solaris-urbino-15": 70,
     "proc-vehicle-sqns-container-wagon": 37,
     "proc-vehicle-tatra-815-tipper": 60,
@@ -158,7 +181,9 @@
     "proc-vehicle-us-boxcar": 139,
     "proc-vehicle-us-caboose": 138,
     "proc-vehicle-us-well-car": 140,
+    "proc-vehicle-van-hool-exquicity": 175,
     "proc-vehicle-vectron": 50,
+    "proc-vehicle-volvo-7900e": 173,
     "proc-vehicle-wap-hopper-wagon": 43,
     "proc-vehicle-zsr-coach": 116
   },
@@ -1694,6 +1719,26 @@
       }
     },
     "road": {
+      "proc-vehicle-adl-enviro200?": {
+        "id": 780,
+        "size": 4
+      },
+      "proc-vehicle-adl-enviro400?": {
+        "id": 784,
+        "size": 4
+      },
+      "proc-vehicle-adl-enviro400?livery=stagecoach": {
+        "id": 788,
+        "size": 4
+      },
+      "proc-vehicle-adl-enviro500?": {
+        "id": 792,
+        "size": 4
+      },
+      "proc-vehicle-adl-enviro500?livery=mta": {
+        "id": 796,
+        "size": 4
+      },
       "proc-vehicle-american-truck?": {
         "id": 256,
         "size": 16
@@ -1702,9 +1747,37 @@
         "id": 608,
         "size": 16
       },
+      "proc-vehicle-byd-k9?": {
+        "id": 912,
+        "size": 4
+      },
       "proc-vehicle-cistern-semi-truck?": {
         "id": 272,
         "size": 16
+      },
+      "proc-vehicle-gillig-low-floor?": {
+        "id": 894,
+        "size": 4
+      },
+      "proc-vehicle-hyundai-universe?": {
+        "id": 916,
+        "size": 4
+      },
+      "proc-vehicle-ikarus-260?": {
+        "id": 868,
+        "size": 4
+      },
+      "proc-vehicle-ikarus-260?livery=bkv": {
+        "id": 872,
+        "size": 4
+      },
+      "proc-vehicle-ikarus-280?": {
+        "id": 876,
+        "size": 6
+      },
+      "proc-vehicle-ikarus-280?livery=bkv": {
+        "id": 882,
+        "size": 6
       },
       "proc-vehicle-karosa-long?": {
         "id": 464,
@@ -1754,6 +1827,18 @@
         "id": 752,
         "size": 16
       },
+      "proc-vehicle-leyland-national?": {
+        "id": 800,
+        "size": 4
+      },
+      "proc-vehicle-man-lions-city?": {
+        "id": 822,
+        "size": 4
+      },
+      "proc-vehicle-man-lions-city?length=18": {
+        "id": 826,
+        "size": 6
+      },
       "proc-vehicle-mb-citaro-blue?": {
         "id": 560,
         "size": 16
@@ -1762,9 +1847,33 @@
         "id": 544,
         "size": 16
       },
+      "proc-vehicle-mb-ecitaro?": {
+        "id": 818,
+        "size": 4
+      },
+      "proc-vehicle-mb-o305?": {
+        "id": 804,
+        "size": 4
+      },
       "proc-vehicle-mb-o345-g?": {
         "id": 576,
         "size": 16
+      },
+      "proc-vehicle-mb-o405?": {
+        "id": 808,
+        "size": 4
+      },
+      "proc-vehicle-mb-o405?length=articulated": {
+        "id": 812,
+        "size": 6
+      },
+      "proc-vehicle-mb-tourismo?": {
+        "id": 832,
+        "size": 4
+      },
+      "proc-vehicle-mci-d4505?": {
+        "id": 908,
+        "size": 4
       },
       "proc-vehicle-mercedes-atego-1224?": {
         "id": 352,
@@ -1774,6 +1883,22 @@
         "id": 288,
         "size": 16
       },
+      "proc-vehicle-neoplan-skyliner?": {
+        "id": 840,
+        "size": 4
+      },
+      "proc-vehicle-new-flyer-xcelsior?": {
+        "id": 898,
+        "size": 4
+      },
+      "proc-vehicle-new-flyer-xcelsior?length=60": {
+        "id": 902,
+        "size": 6
+      },
+      "proc-vehicle-new-routemaster?": {
+        "id": 776,
+        "size": 4
+      },
       "proc-vehicle-praga-rv?": {
         "id": 336,
         "size": 16
@@ -1782,6 +1907,14 @@
         "id": 304,
         "size": 16
       },
+      "proc-vehicle-scania-citywide?": {
+        "id": 848,
+        "size": 4
+      },
+      "proc-vehicle-setra-s515?": {
+        "id": 836,
+        "size": 4
+      },
       "proc-vehicle-sf-cable-car?": {
         "id": 768,
         "size": 4
@@ -1789,6 +1922,18 @@
       "proc-vehicle-sf-cable-car?livery=california": {
         "id": 772,
         "size": 4
+      },
+      "proc-vehicle-skoda-14tr?": {
+        "id": 858,
+        "size": 4
+      },
+      "proc-vehicle-skoda-15tr?": {
+        "id": 862,
+        "size": 6
+      },
+      "proc-vehicle-solaris-trollino?": {
+        "id": 888,
+        "size": 6
       },
       "proc-vehicle-solaris-urbino-15?": {
         "id": 592,
@@ -1829,6 +1974,14 @@
       "proc-vehicle-tatra-t6?": {
         "id": 672,
         "size": 16
+      },
+      "proc-vehicle-van-hool-exquicity?": {
+        "id": 852,
+        "size": 6
+      },
+      "proc-vehicle-volvo-7900e?": {
+        "id": 844,
+        "size": 4
       }
     },
     "ship": {

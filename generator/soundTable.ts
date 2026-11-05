@@ -70,4 +70,14 @@ export const SOUND_TABLE: Readonly<Record<string, DeclaredSounds>> = {
   "proc-vehicle-ice-1": { sounds: { engine: { id: "electric-engine-converter" } } },
   // A 1960s unit with resistor control and a camshaft controller.
   "proc-vehicle-cd-451": { sounds: { engine: { id: "electric-engine-resistor" } } },
+
+  // The world buses with electric traction (worldBuses.ts): battery buses and the modern
+  // trolleybuses run on inverters; the Skoda 14Tr and 15Tr on resistor control.
+  "proc-vehicle-mb-ecitaro": { sounds: { engine: { id: "electric-engine-converter" } } },
+  "proc-vehicle-volvo-7900e": { sounds: { engine: { id: "electric-engine-converter" } } },
+  "proc-vehicle-van-hool-exquicity": { sounds: { engine: { id: "electric-engine-converter" } } },
+  "proc-vehicle-byd-k9": { sounds: { engine: { id: "electric-engine-converter" } } },
+  "proc-vehicle-solaris-trollino": { sounds: { engine: { id: "electric-engine-converter" } } },
+  "proc-vehicle-skoda-14tr": { sounds: { engine: { id: "electric-engine-resistor" } } },
+  "proc-vehicle-skoda-15tr": { sounds: { engine: { id: "electric-engine-resistor" } } },
 };

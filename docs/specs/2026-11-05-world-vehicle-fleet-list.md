@@ -252,7 +252,7 @@ and 18M, Mercedes-Benz Citaro, O 345 G, Solaris Urbino 15, Bus 1. Trolleybuses (
 | 15 | `veh-mb-o3500` | Mercedes-Benz O 3500 | DE | 1949 | bonneted | - |
 | 16 | `veh-man-sl200` | MAN SL 200 | DE | 1973 | standard city bus | livery |
 | 17 | `veh-man-lions-city` | MAN Lion's City 12 | DE | 2018 | low floor | length: 12, 18 |
-| 18 | `veh-neoplan-skyliner` | Neoplan Skyliner | DE | 1967 | double-deck coach | - |
+| 18 | `veh-neoplan-skyliner` | Neoplan Skyliner | DE | 2004 | double-deck coach (the third generation; the series since 1967) | - |
 | 19 | `veh-neoplan-cityliner` | Neoplan Cityliner | DE | 1971 | high-deck coach | - |
 | 20 | `veh-setra-s515` | Setra S 515 HD | DE | 2012 | coach | livery |
 | 21 | `veh-bussing-d2u` | Bussing D2U | DE | 1951 | double deck | - |

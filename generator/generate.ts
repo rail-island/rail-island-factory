@@ -85,6 +85,7 @@ import { ICE1_DESIGNS } from "./ice1.ts";
 import { TGV_DESIGNS } from "./tgv.ts";
 import { CABLE_CABINS } from "./cableCabins.ts";
 import { WORLD_CABINS } from "./worldCabins.ts";
+import { WORLD_BUSES } from "./worldBuses.ts";
 import { DIESEL_LOCOS } from "./dieselLocos.ts";
 import { US_DIESELS } from "./usDiesels.ts";
 import { US_CARBODIES } from "./usCarbodies.ts";
@@ -197,6 +198,7 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: PHOTO_TRUCKS, source: "photoTrucks.ts", meta: "vehicles" },
   { designs: KAROSA_DESIGNS, source: "karosa.ts", meta: "vehicles" },
   { designs: CITY_BUS_DESIGNS, source: "cityBuses.ts", meta: "vehicles" },
+  { designs: WORLD_BUSES, source: "worldBuses.ts", meta: "vehicles" },
   { designs: AIRCRAFT, source: "aircraft.ts", meta: "vehicles" },
   { designs: SHIPS, source: "ships.ts", meta: "vehicles" },
   { designs: CABLE_CABINS, source: "cableCabins.ts", meta: "vehicles" },

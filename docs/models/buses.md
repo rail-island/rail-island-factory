@@ -2,7 +2,7 @@
 
 **Covers** - the buses transferred from vlakosimdb's `db/motocar`: the two parametric Karosa families (short and articulated), the Karosa-Renault City Bus 12M and 18M, the Mercedes-Benz Citaro (two liveries) and O 345 G, the Solaris Urbino 15 and Bus 1; how a bus is built (the clipped shell, the fittings, the assembly into parts), where every measure comes from, and the tests.
 **Code** - `generator/buses.ts`, `generator/karosa.ts`, `generator/cityBuses.ts`, `generator/busAssembly.ts`, `generator/busBody.ts`, `generator/busKit.ts`, `test/buses.test.ts`
-**See also** - [vehicle-rig.md](vehicle-rig.md) (steered wheels, sections, the joint), [vehicles.md](vehicles.md), [parameters.md](parameters.md), [../../.agents/skills/road-vehicle/SKILL.md](../../.agents/skills/road-vehicle/SKILL.md), [../../.agents/skills/vlakosimdb-transfer/SKILL.md](../../.agents/skills/vlakosimdb-transfer/SKILL.md)
+**See also** - [world-buses.md](world-buses.md) (the world buses on the same builder), [vehicle-rig.md](vehicle-rig.md) (steered wheels, sections, the joint), [vehicles.md](vehicles.md), [parameters.md](parameters.md), [../../.agents/skills/road-vehicle/SKILL.md](../../.agents/skills/road-vehicle/SKILL.md), [../../.agents/skills/vlakosimdb-transfer/SKILL.md](../../.agents/skills/vlakosimdb-transfer/SKILL.md)
 
 ## The designs
 

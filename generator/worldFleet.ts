@@ -6,6 +6,8 @@
 
 import { cabinDatums, roofOf, type CabinSpec } from "./cabinKit.ts";
 import { WORLD_CABIN_SPECS } from "./worldCabins.ts";
+import { WORLD_BUS_SPECS } from "./worldBuses.ts";
+import { busFeatures } from "./worldBusKit.ts";
 import { proceduralId } from "./modelId.ts";
 
 /** A fleet design as the harness sees it: its id, the kit options it uses, a size to find the family's largest. */
@@ -37,6 +39,12 @@ export const WORLD_FLEET: readonly FleetEntry[] = [
   ...WORLD_CABIN_SPECS.map((c) => {
     const s = c.spec();
     return { id: proceduralId(c.id), family: "cabins", features: cabinFeatures(s, (c.params ?? []).map((p) => p.name)), size: 8 * s.hx * s.hz * cabinDatums(s).y1 + roofOf(s) };
+  }),
+  ...WORLD_BUS_SPECS.map((b) => {
+    // the largest: the longest of its parameter combinations (an articulated length)
+    const lengths = (b.params ?? []).flatMap((p) => p.values.map((v) => b.spec({ [p.name]: v.value }).length));
+    const s = b.spec();
+    return { id: proceduralId(b.id), family: "buses", features: busFeatures(s, (b.params ?? []).map((p) => p.name)), size: Math.max(s.length, ...lengths) * s.height };
   }),
 ];
 

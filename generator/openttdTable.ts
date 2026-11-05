@@ -454,6 +454,32 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-mb-o345-g": pax(1994, 140, null, { presets: presets() }),
   "proc-vehicle-solaris-urbino-15": pax(1999, 130, null, { presets: presets() }),
   "proc-vehicle-bus-1": pax(1990, 80, null, { presets: presets() }), // approx.
+  // the world buses, first batch (worldBuses.ts, docs/models/world-buses.md): seats and standing room
+  "proc-vehicle-new-routemaster": pax(2012, 87, null, { presets: presets() }),
+  "proc-vehicle-adl-enviro200": pax(2006, 70, null, { presets: presets() }), // approx.
+  "proc-vehicle-adl-enviro400": pax(2005, 87, null, { presets: presets(...each("livery", "stagecoach")) }), // approx.
+  "proc-vehicle-adl-enviro500": pax(2002, 130, null, { presets: presets(...each("livery", "mta")) }), // approx.
+  "proc-vehicle-leyland-national": pax(1972, 80, null, { presets: presets() }), // approx.
+  "proc-vehicle-mb-o305": pax(1967, 100, null, { presets: presets() }), // approx.
+  "proc-vehicle-mb-o405": pax(1984, 100, null, { variants: [at({ length: "articulated" }, { introYear: 1985, capacity: 150 })], presets: presets(...each("length", "articulated")) }), // approx.
+  "proc-vehicle-mb-ecitaro": pax(2018, 88, null, { presets: presets() }),
+  "proc-vehicle-man-lions-city": pax(2018, 90, null, { variants: [at({ length: "18" }, { capacity: 140 })], presets: presets(...each("length", "18")) }), // approx.
+  "proc-vehicle-mb-tourismo": pax(1994, 53, null, { presets: presets() }),
+  "proc-vehicle-setra-s515": pax(2012, 53, null, { presets: presets() }),
+  "proc-vehicle-neoplan-skyliner": pax(2004, 83, null, { presets: presets() }),
+  "proc-vehicle-volvo-7900e": pax(2018, 85, null, { presets: presets() }), // approx.
+  "proc-vehicle-scania-citywide": pax(2011, 95, null, { presets: presets() }), // approx.
+  "proc-vehicle-van-hool-exquicity": pax(2011, 120, null, { presets: presets() }), // approx.
+  "proc-vehicle-skoda-14tr": pax(1982, 90, null, { presets: presets() }), // approx.
+  "proc-vehicle-skoda-15tr": pax(1988, 160, null, { presets: presets() }), // approx.
+  "proc-vehicle-ikarus-260": pax(1971, 100, null, { presets: presets(...each("livery", "bkv")) }), // approx.
+  "proc-vehicle-ikarus-280": pax(1973, 160, null, { presets: presets(...each("livery", "bkv")) }), // approx.
+  "proc-vehicle-solaris-trollino": pax(2001, 150, null, { presets: presets() }), // approx.
+  "proc-vehicle-gillig-low-floor": pax(1997, 75, null, { presets: presets() }), // approx.
+  "proc-vehicle-new-flyer-xcelsior": pax(2008, 80, null, { variants: [at({ length: "60" }, { capacity: 120 })], presets: presets(...each("length", "60")) }), // approx.
+  "proc-vehicle-mci-d4505": pax(2001, 57, null, { presets: presets() }),
+  "proc-vehicle-byd-k9": pax(2010, 80, null, { presets: presets() }), // approx.
+  "proc-vehicle-hyundai-universe": pax(2006, 45, null, { presets: presets() }), // approx.
 
   // --- trucks ----------------------------------------------------------------------
   "proc-vehicle-american-truck": truck(1980, 25, "GOOD", ["piece", "covered", "express"], { presets: presets() }), // approx.

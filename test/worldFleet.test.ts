@@ -11,6 +11,9 @@ import { DESIGNS } from "../generator/generate";
 import { freeLicence, refFileName, thumbWidth } from "../generator/fetchRefs";
 import { coverSample, FLEET_SWEEP_SAMPLE, WORLD_FLEET, type FleetEntry } from "../generator/worldFleet";
 import { proceduralId } from "../generator/modelId";
+import { OPENTTD_TABLE } from "../generator/openttdTable";
+
+const OPENTTD_IDS = JSON.parse(readFileSync("generator/openttdIds.json", "utf8")) as { grf: Record<string, number> };
 
 const LIST = readFileSync("docs/specs/2026-11-05-world-vehicle-fleet-list.md", "utf8");
 const LISTED = new Set([...LIST.matchAll(/`(veh-[a-z0-9-]+)`/g)].map((m) => proceduralId(m[1]!)));
@@ -28,8 +31,13 @@ describe("the world fleet", () => {
     expect(ids.filter((id) => !LISTED.has(id))).toEqual([]);
   });
 
-  it.each(WORLD_FLEET.map((e) => [e.id] as const))("%s states its game properties, its LOD and its references", (id) => {
+  it.each(WORLD_FLEET.map((e) => [e.id, e.family] as const))("%s states its game properties, its LOD, its references and its OpenTTD entry", (id, family) => {
     const d = DESIGNS.get(id)!;
+    // every family but the cable cabins is a vehicle an OpenTTD GRF can hold
+    if (family !== "cabins") {
+      expect(OPENTTD_TABLE[id], "openttdTable.ts").toBeDefined();
+      expect(OPENTTD_IDS.grf[id], "openttdIds.json").toBeGreaterThan(0);
+    }
     expect(d.game?.maxspeed, "maxspeed").toBeGreaterThan(0);
     expect(typeof d.buildLod).toBe("function");
     expect(d.references, "references").toMatch(/^[a-z0-9-]+$/);
@@ -50,6 +58,12 @@ describe("the world fleet", () => {
     expect(listed.filter((f) => !files.includes(f)), "listed files missing").toEqual([]);
     // the photographs' table: file, original, URL, author, licence, use
     for (const r of rows.filter((r) => r[2]?.startsWith("https://"))) expect(freeLicence(r[4] ?? ""), `${r[0]} licence ${r[4]}`).toBe(true);
+  });
+
+  it("leaves the GRF room for the whole fleet: every OpenTTD id an extended byte's word (under 0xFFFF)", () => {
+    const ids = JSON.parse(readFileSync("generator/openttdIds.json", "utf8")) as { vehicles: Record<string, Record<string, { id: number; size: number }>> };
+    const top = Math.max(...Object.values(ids.vehicles).flatMap((f) => Object.values(f).map((v) => v.id + v.size)));
+    expect(top).toBeLessThan(0xffff);
   });
 
   it("sweeps a sample that covers every kit option of every family, and each family's largest design", () => {
@@ -80,7 +94,7 @@ describe("the covering sample", () => {
 
 describe("refs:fetch", () => {
   it("takes only free licences", () => {
-    for (const l of ["CC0", "CC BY 2.0", "CC BY-SA 4.0", "Public domain", "PD-self"]) expect(freeLicence(l), l).toBe(true);
+    for (const l of ["CC0", "CC BY 2.0", "CC BY-SA 4.0", "Public domain", "PD-self", "FAL"]) expect(freeLicence(l), l).toBe(true);
     for (const l of ["CC BY-NC 2.0", "CC BY-ND 3.0", "All rights reserved", "Fair use", "unknown"]) expect(freeLicence(l), l).toBe(false);
   });
 
