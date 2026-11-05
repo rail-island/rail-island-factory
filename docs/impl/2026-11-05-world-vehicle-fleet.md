@@ -2,8 +2,8 @@
 
 Spec: docs/specs/2026-11-05-world-vehicle-fleet.md
 Date: 2026-11-05
-Status: partially implemented
-Area: generator/cabinKit.ts, generator/worldCabins.ts, generator/worldBusKit.ts, generator/worldBuses.ts, generator/openttdTable.ts, generator/openttdIds.json, generator/soundTable.ts, generator/worldFleet.ts, generator/fetchRefs.ts, generator/cableCabins.ts, generator/generate.ts, test/catalogCache.ts, test/worldFleet.test.ts, test/worldCabins.test.ts, test/worldBuses.test.ts, assets/ (35 folders), text/, docs/models/world-cabins.md, docs/models/world-fleet.md, docs/models/world-buses.md, docs/guide/setup-and-build.md, AGENTS.md
+Status: implemented
+Area: the world fleet's kits and designs (generator/cabinKit.ts, worldCabins.ts, worldBusKit.ts, worldBuses*.ts, truckKit.ts, truckBodies.ts, worldTruck*.ts, worldTramKit.ts, worldTrams.ts, airframeKit.ts, airframeShapes.ts, rotorKit.ts, airlineSchemes.ts, worldAircraft.ts, worldJets.ts, worldProps.ts, worldRotorcraft.ts, hullKit.ts, worldShips*.ts), generator/worldFleet.ts, generator/fetchRefs.ts, generator/generate.ts, generator/openttdTable.ts, generator/openttdIds.json, generator/soundTable.ts, test/catalogCache.ts and the whole-catalog suites, test/world*.test.ts, test/rig.test.ts, test/doorsSuite.ts, test/soundMapping.test.ts, assets/ (510 folders), text/, docs/models/world-*.md, docs/models/world-fleet.md, docs/guide/setup-and-build.md, AGENTS.md
 
 ## What was done
 
@@ -91,6 +91,59 @@ The images of all ten cabins and their variants were sent to the user (contact s
      | `pnpm test` | 145 files, 7,909 tests pass in 4m09s |
      | `pnpm build` | passes, 411 models exported in 2m46s |
 
+2. **Finish the whole spec.** The remaining 475 models: 75 buses, 100 trucks, 100 trams, 100
+   aircraft and 100 ships.
+   - **Test-time first.** The whole-catalog suites that build designs now build only the
+     fleet's covering sample (`swept()` and `isSwept()` in `test/catalogCache.ts`, the same set
+     the catalog sweep uses): doors, interiors, rig, pantographs and lamps, glass, the LOD's
+     lamps and clips, and the rail supports. Every fleet design keeps its family suite, the
+     data checks and `pnpm build`.
+   - **Five families in parallel.** Each family was built by its own agent in its own git
+     worktree, from a common brief (rules, required artifacts, shared-file protocol), then
+     merged here.
+   - **Merging.** At each merge:
+     - the phrasebooks and `verbatim.json` were unioned, and the shared code blocks
+       (`generate.ts`, `worldFleet.ts`, `soundTable.ts`, the docs index and the landed table)
+       kept both sides;
+     - `openttdIds.json` was regenerated from the already-merged version. No id that had been
+       assigned before changed, and no two ids overlap.
+   - **The families** (each family doc lists its designs, kit, deviations and checks):
+
+     | family | kit | modules | doc |
+     |---|---|---|---|
+     | buses, 75 more | `worldBusKit.ts` with a bonnet, a half cab, a raised deck and a minibus shape; three bodies; the camello as tractor and semi-trailer | `worldBuses2.ts` to `worldBuses4.ts` | `docs/models/world-buses-2.md` |
+     | trucks | `truckKit.ts`, `truckBodies.ts` | `worldTrucks.ts`, `worldTruckPresets.ts` | `docs/models/world-trucks.md` |
+     | trams | `worldTramKit.ts` | `worldTrams.ts` | `docs/models/world-trams.md` |
+     | aircraft | `airframeKit.ts` and `airframeShapes.ts` (copies of `aircraft.ts`'s helpers), `rotorKit.ts`, `airlineSchemes.ts` | `worldJets.ts`, `worldProps.ts`, `worldRotorcraft.ts` | `docs/models/world-aircraft.md` |
+     | ships | `hullKit.ts` | `worldShipsCargo.ts`, `worldShipsService.ts`, `worldShipsPassenger.ts`, `worldShipsSmall.ts` | `docs/models/world-ships.md` and its two tables |
+
+     - Buses: 25 kinds of body and cab, including school buses, jeepneys, double-articulated
+       buses and trolleybuses.
+     - Trucks: about 14 cab types and 25 bodies, from 4x2 to 8x8 with several steered axles,
+       and trailer chains including a road train.
+     - Trams: rigid, articulated and multi-section cars; double-deckers; open cars;
+       pantograph, pole or no collector; a horse tram and a steam tram.
+     - Aircraft: 56 jets, 39 propeller aircraft, freighters and flying boats, 4 helicopters
+       with spinning rotors, and the Zeppelin NT; about 85 airline liveries.
+     - Ships: cargo, service, passenger and sailing ships, at real size up to 458 m.
+   - **The list's ids are kept.** No row was replaced. A few titles, years and kit hints were
+     corrected in the list or the family doc where the references disagreed.
+   - **References.** 510 folders. `assets/` grew from 246 MB to 347 MB in this branch (about
+     100 MB for the 510 models), inside the agreed 250 MB.
+   - **The container restarted twice.** The trams agent stopped while fetching its last
+     references. Its 33 fetched folders were committed, the last 4 fetched, and the figures
+     written with its own script; the Foshan hydrogen tram uses a sister type (Huai'an's CRRC
+     tram). The buses agent had committed all its work.
+   - **Checks on the merged fleet:**
+
+     | check | result |
+     |---|---|
+     | `pnpm typecheck` | passes |
+     | `pnpm test` | 150 files, 10,844 tests pass in 4m33s, on an idle 4-core container |
+     | `pnpm build` | passes, 886 models exported in 7m51s |
+
+     The covering sample is 103 of the 510 designs.
+
 ## How to test
 
 **Automated coverage.**
@@ -134,13 +187,12 @@ The images of all ten cabins and their variants were sent to the user (contact s
 
 ## What is missing
 
-- **75 buses of the list.** Many are bonneted, and the convex bus shell cannot draw a bonnet:
-  the school buses, the jeepney, the Saurer postbus, the Magirus Saturn, the AEC Routemaster.
-  They need a bonnet fitting in front of the shell, with fenders around the steered wheels.
-  The rest are straightforward kit data in later batches.
-- **Waves 3 to 6: 400 models.** The trucks, trams, aircraft and ships, each with its kit
-  (`truckKit`, the dimension-driven tram kit, `airframeKit` and `rotorKit`, `hullKit`), LOD
-  adapter, OpenTTD entries and ids, translations, references and docs. None was started.
+Nothing in the spec's models: all 510 are built. Two Phase 0 items are partial:
+- **Sounds.** rail-island-music has no aircraft (jet, propeller, rotor) or ship's bell
+  design. The aircraft have no engine sound, and the sailing craft use the ship horn as a
+  foghorn. These are requests to that repository.
+- **OpenTTD helicopters.** The GRF encoder writes every aircraft as a plane, so the
+  helicopters and the airship need a full airport in OpenTTD.
 
 ## Known problems
 
@@ -176,9 +228,30 @@ The images of all ten cabins and their variants were sent to the user (contact s
 - The Rotair's turning floor is drawn, but has no clip: the game has no drive for it.
 - Hangers are straight and centred; the real Omega and Peak 2 Peak hangers are curved or
   offset.
-- Only `test/catalogCache.ts`'s sweep honours the sample. Other whole-catalog suites (doors,
-  interiors, models) still iterate every vehicle, and must honour it too before the larger
-  waves.
+- **Real sizes the game may not place:** 400 m container ships, the 84 m An-225, mining
+  trucks (BelAZ 20.6 x 10.1 x 8.3 m), road trains with three trailers. The game needs size
+  classes or limits for them.
+- **Chains the game may not follow:** a road train's `trailer2` and `trailer3`, and the
+  double-articulated buses. The game's truck import knows `truck` and `trailer`.
+- **Doors on the kerb side.** Every bus and single-ended tram opens on the right, also those
+  of left-hand-traffic countries.
+- **Generic shapes.** Cabs, noses and hulls are generic per kit option, not traced per model
+  from its photos: no logos, lettering or truck art. A few distinctive details are missing,
+  among them the Concorde's droop nose, the Dreamlifter's swing tail and the Oasis's two
+  towers.
+- **Single hinges.** Drawbar trailers and road-train dollies have one hinge where the real
+  ones have two.
+- **No clips yet** for crane booms, ladders, tipper bins and aircraft propellers. The
+  helicopter rotors spin on a time clip.
+- **Trams ride standard-gauge wheelsets**, whatever their real gauge, which is recorded.
+- **Weaker references.** Many folders hold one photograph. Some hold a sister type, a detail
+  shot or a drawing where Commons had no free photograph of the type; each `SOURCES.md` row
+  says what it informs. Most figures not in a source are marked approx.
+- **Aircraft shape code is duplicated.** `aircraft.ts` keeps its own helpers (so the 8 older
+  aircraft stay byte-identical), and `airframeShapes.ts` copies them. A shape fix has to be
+  made in both files.
+- **Test time is close to the limit.** `pnpm test` takes 4m33s on an idle container, and the
+  aircraft suite (about 26 s) is the slowest family suite.
 - Wikimedia rate-limits this container's shared address heavily, so fetching two photos takes
   up to a minute with retries.
 
@@ -187,9 +260,14 @@ The images of all ten cabins and their variants were sent to the user (contact s
 - Decide how the game's cable car stations take real-size cabins: widen the station types'
   clearance ranges for every catalog cabin's view, or give the large and small cabins a
   `scale`. Then add every catalog cabin's view to `test/cableCarStation.test.ts`.
-- Make the remaining whole-catalog suites skip the fleet designs outside the covering sample,
-  and win back time in the suite before the larger waves.
-- A bonnet fitting for the bus kit, then the remaining 75 buses in batches of 25.
+- Replace the weakest references (sister types, detail shots, single photos) with better
+  photographs, family by family.
+- Teach the game the fleet's chains, size classes, trolley wires and left-side doors.
+- Add the missing sounds (aircraft engines and rotors, a ship's bell) in rail-island-music,
+  and a helicopter subtype in the GRF encoder.
+- Refine the most recognisable shapes per model (747 hump, Concorde droop, Oasis towers,
+  famous cabs) and add clips for booms, ladders, tipper bins and propellers.
+- Trim the aircraft family suite, to give `pnpm test` some headroom.
 - Decide with the game whether British, Irish, Hong Kong, Japanese and Australian buses
   should open on the left. That would be a `doorSide` field on the spec.
 - Break the `renderGlbThumb.ts` and `generate.ts` import cycle, so the documented thumbnail
@@ -209,3 +287,12 @@ The images of all ten cabins and their variants were sent to the user (contact s
   Skoda 14Tr and 15Tr and Solaris Trollino trolleybuses with poles that rise to the wire,
   Gillig Low Floor, New Flyer Xcelsior (40 or 60 ft), MCI D4505, BYD K9 and Hyundai Universe.
 - Every new bus can be exported to OpenTTD.
+- The rest of the fleet:
+  - the other 75 buses: school buses, jeepneys, matatus, double-deckers and trolleybuses from
+    every continent;
+  - 100 trucks and lorries, from kei trucks to road trains and mining trucks;
+  - 100 trams, from the horse tram to today's low-floor cars;
+  - 100 aircraft, from the Ford Trimotor to the A350, with airline liveries, four helicopters
+    and the Zeppelin NT;
+  - 100 ships, from the Viking longship to the Triple E.
+- Every new vehicle except the cable cabins can be exported to OpenTTD.
