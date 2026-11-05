@@ -9,7 +9,7 @@
 | family | kit | designs | doc |
 |---|---|---|---|
 | cable car cabins | `cabinKit.ts` | 10 of 10 | [world-cabins.md](world-cabins.md) |
-| buses | `worldBusKit.ts` (on `cityBuses.ts`) | 25 of 100 (first batch) | [world-buses.md](world-buses.md) |
+| buses | `worldBusKit.ts` (on `cityBuses.ts`) | 100 of 100 (four batches: `worldBuses.ts` to `worldBuses4.ts`) | [world-buses.md](world-buses.md), [world-buses-2.md](world-buses-2.md) |
 | trucks, trams, aircraft, ships | - | 0 of 100 each | - |
 
 The waves and their order are the spec's. A design's id is the list's; once shipped it is
@@ -23,7 +23,8 @@ derives the options from the spec (`cabinFeatures`: the hanger kind, single or d
 a yoke, the number of glazed decks, a top deck, a round plan, doors on one or both sides, roof
 equipment, a glass floor, each parameter; `busFeatures`: the shape, the sections, the axles,
 the floor, the lamps, the mirrors, an upper deck, trolley poles, a rear window, a grille, roof
-pods, each parameter). A new family adds its entries here, with its own feature function.
+pods, a bonnet or a half cab, a raised deck, each parameter; the Havana camello, which is no
+kit spec, states its own: a semi-trailer). A new family adds its entries here, with its own feature function.
 
 ## The covering sample
 

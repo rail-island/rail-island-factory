@@ -274,8 +274,8 @@ and 18M, Mercedes-Benz Citaro, O 345 G, Solaris Urbino 15, Bus 1. Trolleybuses (
 | 37 | `veh-irizar-i8` | Irizar i8 | ES | 2014 | coach | livery |
 | 38 | `veh-solaris-urbino-12e` | Solaris Urbino 12 Electric | PL | 2013 | low floor, battery pods | livery |
 | 39 | `veh-solaris-trollino` | Solaris Trollino 18 | PL | 2001 | articulated, trolley | livery |
-| 40 | `veh-jelcz-043` | Jelcz 043 | PL | 1964 | bonneted, ribbed sides | - |
-| 41 | `veh-skoda-706-rto` | Skoda 706 RTO | CZ | 1958 | bonneted-front coach | livery |
+| 40 | `veh-jelcz-043` | Jelcz 043 | PL | 1964 | front engine, full front (the 706 RTO under licence), ribbed sides | - |
+| 41 | `veh-skoda-706-rto` | Skoda 706 RTO | CZ | 1958 | front engine, rounded full front | livery |
 | 42 | `veh-karosa-sm11` | Karosa SM 11 | CZ | 1964 | city bus | livery |
 | 43 | `veh-sor-nb12` | SOR NB 12 | CZ | 2010 | low floor | livery |
 | 44 | `veh-skoda-14tr` | Skoda 14Tr | CZ | 1982 | trolley | livery |

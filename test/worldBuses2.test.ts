@@ -108,9 +108,10 @@ describe("the later world buses", () => {
   });
 
   it("changes only the colours with a finish parameter", () => {
+    // the specs differ in their colours alone (no build needed: the kit draws from the spec)
     for (const b of LATER.filter((x) => x.finishParams?.length)) {
-      const tris = coverageCombinations(b.params).map((p) => b.build(p).triangleCount());
-      expect(new Set(tris).size, b.id).toBe(1);
+      const shapes = coverageCombinations(b.params).map((p) => JSON.stringify({ ...b.spec(p), livery: null }));
+      expect(new Set(shapes).size, b.id).toBe(1);
     }
   });
 });

@@ -459,7 +459,7 @@ export function matatuSpec(p?: ParamValues): WorldBusSpec {
     doors: [[1.36, 2.18]],
     // the graffiti livery as bands of colour
     livery: l,
-    paint: [[-1, 6.4, 0.5, 0.6, "a"], [-1, 6.4, 0.66, 0.78, "b"], [-1, 6.4, 0.85, 1.0, "c"], [-1, 6.4, 2.05, 2.29, "a"]],
+    paint: [[-1, 6.4, 0.5, 0.62, "a"], [-1, 6.4, 0.62, 0.78, "b"], [-1, 6.4, 0.78, 0.95, "c"]],
     from: 1.0, rake: 0.65, window: 1.12,
   });
 }
