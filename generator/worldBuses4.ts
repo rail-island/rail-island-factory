@@ -320,9 +320,9 @@ export function cairoSpec(): WorldBusSpec {
     length: 12.0, height: 3.2,
     axles: [{ at: 2.6 }, { at: 8.3, drive: true }],
     doors: [[0.3, 1.5], [5.0, 6.2]],
-    // the Authority's white with red and blue bands
-    livery: { body: "#f4f4f1", rub: "#3c3c3c", red: "#c8202e", blue: "#1d4f9c" },
-    paint: [[-1, 13, 0.35, 0.78, "blue"], [-1, 13, 0.78, 0.86, "rub"], [-1, 13, 1.2, 1.4, "red"]],
+    // the Authority's current yellow with the green skirt and roof edge (the photograph)
+    livery: { body: "#f2c500", rub: "#3c3c3c", green: "#5cb82e" },
+    paint: [[-1, 13, 0.35, 0.78, "green"], [-1, 13, 0.78, 0.86, "rub"], [-1, 13, 2.95, 3.2, "green"]],
   });
 }
 

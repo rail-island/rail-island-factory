@@ -99,7 +99,7 @@ Fourth batch, `worldBuses4.ts`:
 | `veh-singapore-double-deck` | MAN A95 | double | 11.97 x 2.55 x 4.2 | 2.6 / 8.3 / 9.65 | 2 | 2015 / 131 | 3,790 |
 | `veh-ashok-leyland-viking` | Ashok Leyland Viking | city | 10.5 x 2.5 x 3.1 | 1.9 / 7.1 | 2 | 1980 / 70 | 3,020 |
 | `veh-tata-starbus` | Tata Starbus | city | 11 x 2.6 x 3.2 | 2.2 / 7.8 | 2 | 2007 / 70 | 2,884 |
-| `veh-cairo-cta-bus` | Cairo Transport Authority Bus | city | 12 x 2.5 x 3.2 | 2.6 / 8.3 | 2 | 2009 / 90 | 3,076 |
+| `veh-cairo-cta-bus` | Cairo Transport Authority Bus | city | 12 x 2.5 x 3.2 | 2.6 / 8.3 | 2 | 2009 / 90 | 3,076 (yellow and green) |
 | `veh-za-rea-vaya` | Rea Vaya BRT Bus | city, articulated | 18 x 2.55 x 3.3 | 2.7 / 9 / 15.2 | 4 | 2009 / 112 | 4,396 |
 | `veh-volgren-optimus` | Volgren Optimus | city | 12.5 x 2.5 x 3.2 | 2.5 / 8.6 | 2 | 2010 / 80 | 2,820 |
 | `veh-designline-olymbus` | Designline Olymbus | city | 12 x 2.5 x 3.2 | 2.6 / 8.6 | 2 | 2004 / 70 | 2,820 |
@@ -236,6 +236,13 @@ trolleybuses the resistor one; the rest keep the derived bus diesel.
   art (the jingle bus and the camioneta's paint are bands of colour).
 - Wheelbases, overhangs and heights not published in the sources are read off the photographs
   (approx. in `SOURCES.md`).
+- **References from a sister type** where Commons has no free photograph of the type itself;
+  each `SOURCES.md` row says what the photograph informs: the Saturn's round bonnet on a
+  Magirus-Deutz fire engine, a Buessing one-and-a-half decker for the D2U, the Irizar range for
+  the i8, the Paradiso G8 for the 1800 DD, the Yutong E10 for the E12, Tata Marcopolo and BEST
+  buses for the Starbus, Ashok Leyland city buses of Chennai and Hyderabad for the Viking,
+  DesignLine buses for the Olymbus, and Havana city buses for the camello (drawn from published
+  descriptions). Several folders hold one photograph only.
 
 ## Checking
 
