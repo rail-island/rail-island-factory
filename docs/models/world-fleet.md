@@ -12,7 +12,8 @@
 | buses | `worldBusKit.ts` (on `cityBuses.ts`) | 25 of 100 (first batch) | [world-buses.md](world-buses.md) |
 | ships | `hullKit.ts` (`worldShips*.ts`) | 100 of 100 | [world-ships.md](world-ships.md) |
 | aircraft | `airframeKit.ts`, `rotorKit.ts` (`aircraftFeatures`, `rotorFeatures`, `airshipFeatures`) | 100 of 100 | [world-aircraft.md](world-aircraft.md) |
-| trucks, trams | - | 0 of 100 each | - |
+| trucks | `truckKit.ts`, `truckBodies.ts` | 100 of 100 | [world-trucks.md](world-trucks.md) |
+| trams | - | 0 of 100 | - |
 
 The waves and their order are the spec's. A design's id is the list's; once shipped it is
 frozen like every model id.

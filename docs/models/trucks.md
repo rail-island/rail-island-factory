@@ -4,7 +4,7 @@
 MAN cistern semi-truck, the 8x4 concrete mixer and the white reefer semi-truck - their references,
 dimensions, datums, articulation, budget and deviations, and the cab-over shell they share.
 **Code** - `generator/trucks.ts`, `generator/photoTrucks.ts`, `generator/vehicleParts.ts` (`steeredWheels`), `generator/rig.ts`, `generator/meshCore.ts` (`loft`, `sweep`, `slab`, `facets`, `part`), `test/referenceModels.test.ts`, `test/models.test.ts`, `.agents/skills/road-vehicle/SKILL.md`
-**See also** - [vehicles.md](vehicles.md) (the American truck, articulation, `sweep`), [vehicle-rig.md](vehicle-rig.md) (steered wheels and the trailer hinge), [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md)
+**See also** - [world-trucks.md](world-trucks.md) (the 100 world trucks on the truck kit), [vehicles.md](vehicles.md) (the American truck, articulation, `sweep`), [vehicle-rig.md](vehicle-rig.md) (steered wheels and the trailer hinge), [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md)
 
 ## The designs
 

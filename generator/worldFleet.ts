@@ -23,6 +23,9 @@ import { WORLD_PROP_SPECS } from "./worldProps.ts";
 import { ROTOR_SPECS, WORLD_ROTORCRAFT_SPECS, zeppelinNtSpec } from "./worldRotorcraft.ts";
 import { coverageCombinations } from "./design.ts";
 import type { WorldAircraft } from "./worldAircraft.ts";
+// the world trucks (worldTrucks.ts, truckKit.ts, truckBodies.ts)
+import { WORLD_TRUCK_SPECS } from "./worldTrucks.ts";
+import { truckFeatures, truckLength } from "./truckBodies.ts";
 
 /** A fleet design as the harness sees it: its id, the kit options it uses, a size to find the family's largest. */
 export interface FleetEntry {
@@ -67,6 +70,11 @@ export const WORLD_FLEET: readonly FleetEntry[] = [
   }),
   // the world aircraft: the options of every parameter combination; the largest by length times span
   ...[...WORLD_JET_SPECS, ...WORLD_PROP_SPECS, ...WORLD_ROTORCRAFT_SPECS].map((a) => aircraftEntry(a)),
+  // the world trucks: the kit options over every parameter combination; the largest by plan area (the mining trucks)
+  ...WORLD_TRUCK_SPECS.map((t) => {
+    const specs = coverageCombinations(t.params, t.finishParams).map((p) => t.spec(p));
+    return { id: proceduralId(t.id), family: "trucks", features: truckFeatures(specs, (t.params ?? []).map((p) => p.name)), size: Math.max(...specs.map((s) => truckLength(s) * s.cab.top)) };
+  }),
 ];
 
 /** A world aircraft's fleet entry: the kit options its combinations use (a float or ski variant's too). */

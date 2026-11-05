@@ -95,6 +95,8 @@ import { SMALL_SHIPS } from "./worldShipsSmall.ts";
 import { WORLD_JETS } from "./worldJets.ts";
 import { WORLD_PROPS } from "./worldProps.ts";
 import { WORLD_ROTORCRAFT } from "./worldRotorcraft.ts";
+// the world trucks (worldTrucks.ts, docs/models/world-trucks.md)
+import { WORLD_TRUCKS } from "./worldTrucks.ts";
 import { DIESEL_LOCOS } from "./dieselLocos.ts";
 import { US_DIESELS } from "./usDiesels.ts";
 import { US_CARBODIES } from "./usCarbodies.ts";
@@ -208,6 +210,8 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: KAROSA_DESIGNS, source: "karosa.ts", meta: "vehicles" },
   { designs: CITY_BUS_DESIGNS, source: "cityBuses.ts", meta: "vehicles" },
   { designs: WORLD_BUSES, source: "worldBuses.ts", meta: "vehicles" },
+  // the world trucks
+  { designs: WORLD_TRUCKS, source: "worldTrucks.ts", meta: "vehicles" },
   { designs: AIRCRAFT, source: "aircraft.ts", meta: "vehicles" },
   // the world aircraft (worldAircraft.ts, docs/models/world-aircraft.md)
   { designs: WORLD_JETS, source: "worldJets.ts", meta: "vehicles" },

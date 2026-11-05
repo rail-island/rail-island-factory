@@ -96,4 +96,9 @@ export const SOUND_TABLE: Readonly<Record<string, DeclaredSounds>> = {
   "proc-vehicle-ship-elbe-paddle": { sounds: { horn: { id: "steam-whistle", params: { pitch: 580 } } } },
   "proc-vehicle-ship-sternwheeler": { sounds: { horn: { id: "steam-whistle", params: { pitch: 450 } } } },
   "proc-vehicle-ship-laker": { sounds: { horn: { id: "steam-whistle", params: { pitch: 420 } } } },
+
+  // The world trucks with electric traction (worldTrucks.ts): the battery Tesla Semi and the
+  // fuel cell Hyundai Xcient run on inverters; the rest keep the derived truck diesel.
+  "proc-vehicle-tesla-semi": { sounds: { engine: { id: "electric-engine-converter" } } },
+  "proc-vehicle-hyundai-xcient": { variants: [{ params: { variant: "fuelCell" }, sounds: { engine: { id: "electric-engine-converter" } } }] },
 };

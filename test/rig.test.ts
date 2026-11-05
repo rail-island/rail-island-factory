@@ -325,28 +325,39 @@ function newClashes(rest: Array<{ t: Tri; owner: string }>, posed: Array<{ t: Tr
 }
 
 describe("the semi-trucks", () => {
+  // every truck with trailers: a tractor and its semi-trailer, a rigid truck and its drawbar trailer,
+  // a road train's chain (truck, trailer, trailer2, ...), each hinge a section of the chain
   const SEMIS = RIGGED.filter(([id]) => RIGS.get(id)!.sections?.[1]?.node === "trailer");
 
-  it("are the American truck and the two reproduced from the game", () => {
-    expect(SEMIS.map(([id]) => id).sort()).toEqual(["proc-vehicle-american-truck", "proc-vehicle-cistern-semi-truck", "proc-vehicle-reefer-semi-truck"]);
+  it("are the American truck, the two reproduced from the game and the world trucks with trailers", () => {
+    expect(SEMIS.map(([id]) => id)).toEqual(expect.arrayContaining(["proc-vehicle-american-truck", "proc-vehicle-cistern-semi-truck", "proc-vehicle-reefer-semi-truck"]));
+    for (const [id] of SEMIS) {
+      const rig = RIGS.get(id)!;
+      expect(rig.joints ?? [], id).toEqual([]);
+      expect(rig.sections!.map((s) => s.node)).toEqual(rig.sections!.map((_, i) => (i === 0 ? "truck" : i === 1 ? "trailer" : `trailer${i}`)));
+    }
   });
 
-  // nothing of the trailer cuts through the tractor or its wheels at any bend up to the rig's limit
-  it.each(SEMIS)("%s swings its trailer clear of the tractor up to its bend limit", async (id) => {
+  // at each hinge, nothing behind it cuts through anything ahead of it at any bend up to the rig's limit
+  it.each(SEMIS)("%s swings its trailers clear of the units ahead up to its bend limit", async (id) => {
     const mod = await moduleOf(id);
     const group = mod.default(THREE);
     const rig = group.userData.rig as VehicleRig;
-    const [px, , pz] = rig.sections![1]!.pivot;
+    const sections = rig.sections!;
     const rest = ownedTriangles(group, rig);
-    // the king pin turns in the fifth wheel's slot: it is meant to be there
-    const kingPin = (t: Tri): boolean => t.every((p) => Math.hypot(p[0] - px, p[2] - pz) < 0.12);
     const max = rig.maxBendDeg!;
-    for (const deg of [max / 3, (2 * max) / 3, max, -max / 3, (-2 * max) / 3, -max]) {
-      mod.pose(group, { bend: [deg * DEG] });
-      const clashes = newClashes(rest, ownedTriangles(group, rig), (o) => o === "trailer", (o) => o !== "trailer", kingPin);
-      expect(clashes, `bend ${deg.toFixed(0)} degrees`).toBe(0);
+    for (let h = 1; h < sections.length; h++) {
+      const [px, , pz] = sections[h]!.pivot;
+      // the king pin turns in the fifth wheel's slot (a drawbar's eye in its jaw): it is meant to be there
+      const kingPin = (t: Tri): boolean => t.every((p) => Math.hypot(p[0] - px, p[2] - pz) < 0.12);
+      const behind = new Set(sections.slice(h).map((s) => s.node));
+      for (const deg of [max / 3, (2 * max) / 3, max, -max / 3, (-2 * max) / 3, -max]) {
+        mod.pose(group, { bend: sections.slice(1).map((_, i) => (i + 1 === h ? deg * DEG : 0)) });
+        const clashes = newClashes(rest, ownedTriangles(group, rig), (o) => behind.has(o), (o) => !behind.has(o), kingPin);
+        expect(clashes, `hinge ${h}, bend ${deg.toFixed(0)} degrees`).toBe(0);
+      }
     }
-  }, 60_000);
+  }, 120_000);
 });
 
 describe("the steered wheels", () => {
