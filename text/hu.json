@@ -963,7 +963,22 @@
   "inOui": "inOui",
   "none": "nincs",
   "red": "piros",
-  "teal": "kékeszöld"
+  "teal": "kékeszöld",
+  "Anchor Handling Tug": "Horgonykezelő vontatóhajó",
+  "Arktika Class Icebreaker": "Arktika osztályú jégtörő",
+  "Cable Layer": "Kábelfektető hajó",
+  "Drillship": "Fúróhajó",
+  "Harbour Tug": "Kikötői vontatóhajó",
+  "Maine Lobster Boat": "Maine-i homárhalászhajó",
+  "Mississippi Towboat": "Mississippi tolóhajó",
+  "Ocean-Going Tug": "Óceánjáró vontatóhajó",
+  "Pilot Boat": "Révkalauzhajó",
+  "Platform Supply Vessel": "Fúrótorony-ellátó hajó",
+  "Semi-Submersible Crane Vessel": "Félig merülő darushajó",
+  "Shrimp Trawler": "Garnélahalászhajó",
+  "Stern Trawler": "Tatközeli vonóhálós halászhajó",
+  "Trailing Suction Hopper Dredger": "Vonószívós kotróhajó",
+  "Tuna Purse Seiner": "Tonhalászó kerítőhálós hajó"
  },
  "overrides": {
   "model.proc-building-castle.param.towers": "Tornyok",

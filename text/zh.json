@@ -963,7 +963,22 @@
   "inOui": "inOui",
   "none": "无",
   "red": "红色",
-  "teal": "青绿色"
+  "teal": "青绿色",
+  "Anchor Handling Tug": "起抛锚拖轮",
+  "Arktika Class Icebreaker": "北极级破冰船",
+  "Cable Layer": "电缆敷设船",
+  "Drillship": "钻井船",
+  "Harbour Tug": "港作拖轮",
+  "Maine Lobster Boat": "缅因州龙虾船",
+  "Mississippi Towboat": "密西西比河推船",
+  "Ocean-Going Tug": "远洋拖轮",
+  "Pilot Boat": "引航船",
+  "Platform Supply Vessel": "平台供应船",
+  "Semi-Submersible Crane Vessel": "半潜式起重船",
+  "Shrimp Trawler": "虾拖网渔船",
+  "Stern Trawler": "尾滑道拖网渔船",
+  "Trailing Suction Hopper Dredger": "耙吸式挖泥船",
+  "Tuna Purse Seiner": "金枪鱼围网渔船"
  },
  "overrides": {
   "model.proc-building-castle.param.towers": "塔楼",

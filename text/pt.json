@@ -963,7 +963,22 @@
   "inOui": "inOui",
   "none": "nenhum",
   "red": "vermelho",
-  "teal": "verde-azulado"
+  "teal": "verde-azulado",
+  "Anchor Handling Tug": "Rebocador de manuseio de âncoras",
+  "Arktika Class Icebreaker": "Quebra-gelo classe Arktika",
+  "Cable Layer": "Navio lançador de cabos",
+  "Drillship": "Navio-sonda",
+  "Harbour Tug": "Rebocador de porto",
+  "Maine Lobster Boat": "Barco lagosteiro do Maine",
+  "Mississippi Towboat": "Empurrador do Mississippi",
+  "Ocean-Going Tug": "Rebocador oceânico",
+  "Pilot Boat": "Lancha de prático",
+  "Platform Supply Vessel": "Navio de apoio a plataformas",
+  "Semi-Submersible Crane Vessel": "Navio-guindaste semissubmersível",
+  "Shrimp Trawler": "Camaroeiro",
+  "Stern Trawler": "Arrastão de popa",
+  "Trailing Suction Hopper Dredger": "Draga de sucção em marcha",
+  "Tuna Purse Seiner": "Atuneiro cercador"
  },
  "overrides": {
   "model.proc-char-avatar.param.body": "Corpo",

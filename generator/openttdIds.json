@@ -162,29 +162,48 @@
     "proc-vehicle-shinkansen-e6": 146,
     "proc-vehicle-shinkansen-n700s": 142,
     "proc-vehicle-ship-aframax": 194,
+    "proc-vehicle-ship-anchor-handler": 229,
+    "proc-vehicle-ship-arktika": 224,
+    "proc-vehicle-ship-attenborough": 226,
+    "proc-vehicle-ship-cable-layer": 216,
     "proc-vehicle-ship-capesize": 200,
     "proc-vehicle-ship-chemical-tanker": 199,
+    "proc-vehicle-ship-crane-vessel": 230,
+    "proc-vehicle-ship-drillship": 231,
     "proc-vehicle-ship-emma-maersk": 187,
     "proc-vehicle-ship-europaschiff": 211,
     "proc-vehicle-ship-feeder-container": 190,
+    "proc-vehicle-ship-fireboat": 232,
     "proc-vehicle-ship-handysize": 202,
+    "proc-vehicle-ship-harbour-tug": 218,
     "proc-vehicle-ship-heavy-lift": 207,
+    "proc-vehicle-ship-hopper-dredger": 227,
     "proc-vehicle-ship-ideal-x": 191,
     "proc-vehicle-ship-laker": 203,
     "proc-vehicle-ship-liberty": 209,
     "proc-vehicle-ship-lng-moss": 196,
     "proc-vehicle-ship-lng-qmax": 197,
+    "proc-vehicle-ship-lobster-boat": 223,
     "proc-vehicle-ship-lpg-carrier": 198,
     "proc-vehicle-ship-msc-gulsun": 188,
+    "proc-vehicle-ship-ocean-tug": 217,
     "proc-vehicle-ship-panamax-container": 189,
     "proc-vehicle-ship-pctc": 205,
+    "proc-vehicle-ship-pilot-boat": 234,
+    "proc-vehicle-ship-polarstern": 225,
     "proc-vehicle-ship-product-tanker": 195,
+    "proc-vehicle-ship-purse-seiner": 221,
     "proc-vehicle-ship-push-barge": 213,
     "proc-vehicle-ship-reefer": 208,
     "proc-vehicle-ship-rhine-tanker": 212,
+    "proc-vehicle-ship-rnli-shannon": 233,
     "proc-vehicle-ship-roro": 206,
     "proc-vehicle-ship-seawise-giant": 193,
     "proc-vehicle-ship-self-unloader": 204,
+    "proc-vehicle-ship-shrimp-trawler": 222,
+    "proc-vehicle-ship-stern-trawler": 220,
+    "proc-vehicle-ship-supply-vessel": 228,
+    "proc-vehicle-ship-towboat": 219,
     "proc-vehicle-ship-triple-e": 186,
     "proc-vehicle-ship-valemax": 201,
     "proc-vehicle-ship-victory": 210,
@@ -2039,6 +2058,22 @@
         "id": 376,
         "size": 4
       },
+      "proc-vehicle-ship-anchor-handler?": {
+        "id": 584,
+        "size": 4
+      },
+      "proc-vehicle-ship-arktika?": {
+        "id": 556,
+        "size": 4
+      },
+      "proc-vehicle-ship-attenborough?": {
+        "id": 564,
+        "size": 4
+      },
+      "proc-vehicle-ship-cable-layer?": {
+        "id": 500,
+        "size": 4
+      },
       "proc-vehicle-ship-capesize?": {
         "id": 408,
         "size": 4
@@ -2053,6 +2088,14 @@
       },
       "proc-vehicle-ship-chemical-tanker?livery=navy": {
         "id": 404,
+        "size": 4
+      },
+      "proc-vehicle-ship-crane-vessel?": {
+        "id": 588,
+        "size": 4
+      },
+      "proc-vehicle-ship-drillship?": {
+        "id": 592,
         "size": 4
       },
       "proc-vehicle-ship-emma-maersk?": {
@@ -2071,6 +2114,10 @@
         "id": 348,
         "size": 4
       },
+      "proc-vehicle-ship-fireboat?": {
+        "id": 596,
+        "size": 4
+      },
       "proc-vehicle-ship-handysize?": {
         "id": 420,
         "size": 4
@@ -2079,8 +2126,24 @@
         "id": 424,
         "size": 4
       },
+      "proc-vehicle-ship-harbour-tug?": {
+        "id": 512,
+        "size": 4
+      },
+      "proc-vehicle-ship-harbour-tug?livery=black": {
+        "id": 516,
+        "size": 4
+      },
+      "proc-vehicle-ship-harbour-tug?livery=green": {
+        "id": 520,
+        "size": 4
+      },
       "proc-vehicle-ship-heavy-lift?": {
         "id": 456,
+        "size": 4
+      },
+      "proc-vehicle-ship-hopper-dredger?": {
+        "id": 568,
         "size": 4
       },
       "proc-vehicle-ship-ideal-x?": {
@@ -2107,12 +2170,32 @@
         "id": 392,
         "size": 4
       },
+      "proc-vehicle-ship-lobster-boat?": {
+        "id": 544,
+        "size": 4
+      },
+      "proc-vehicle-ship-lobster-boat?colour=green": {
+        "id": 548,
+        "size": 4
+      },
+      "proc-vehicle-ship-lobster-boat?colour=red": {
+        "id": 552,
+        "size": 4
+      },
       "proc-vehicle-ship-lpg-carrier?": {
         "id": 396,
         "size": 4
       },
       "proc-vehicle-ship-msc-gulsun?": {
         "id": 332,
+        "size": 4
+      },
+      "proc-vehicle-ship-ocean-tug?": {
+        "id": 504,
+        "size": 4
+      },
+      "proc-vehicle-ship-ocean-tug?livery=red": {
+        "id": 508,
         "size": 4
       },
       "proc-vehicle-ship-panamax-container?": {
@@ -2135,12 +2218,24 @@
         "id": 444,
         "size": 4
       },
+      "proc-vehicle-ship-pilot-boat?": {
+        "id": 604,
+        "size": 4
+      },
+      "proc-vehicle-ship-polarstern?": {
+        "id": 560,
+        "size": 4
+      },
       "proc-vehicle-ship-product-tanker?": {
         "id": 380,
         "size": 4
       },
       "proc-vehicle-ship-product-tanker?livery=navy": {
         "id": 384,
+        "size": 4
+      },
+      "proc-vehicle-ship-purse-seiner?": {
+        "id": 536,
         "size": 4
       },
       "proc-vehicle-ship-push-barge?": {
@@ -2159,6 +2254,10 @@
         "id": 484,
         "size": 4
       },
+      "proc-vehicle-ship-rnli-shannon?": {
+        "id": 600,
+        "size": 4
+      },
       "proc-vehicle-ship-roro?": {
         "id": 448,
         "size": 4
@@ -2173,6 +2272,34 @@
       },
       "proc-vehicle-ship-self-unloader?": {
         "id": 436,
+        "size": 4
+      },
+      "proc-vehicle-ship-shrimp-trawler?": {
+        "id": 540,
+        "size": 4
+      },
+      "proc-vehicle-ship-stern-trawler?": {
+        "id": 528,
+        "size": 4
+      },
+      "proc-vehicle-ship-stern-trawler?livery=blue": {
+        "id": 532,
+        "size": 4
+      },
+      "proc-vehicle-ship-supply-vessel?": {
+        "id": 572,
+        "size": 4
+      },
+      "proc-vehicle-ship-supply-vessel?livery=blue": {
+        "id": 576,
+        "size": 4
+      },
+      "proc-vehicle-ship-supply-vessel?livery=orange": {
+        "id": 580,
+        "size": 4
+      },
+      "proc-vehicle-ship-towboat?": {
+        "id": 524,
         "size": 4
       },
       "proc-vehicle-ship-triple-e?": {

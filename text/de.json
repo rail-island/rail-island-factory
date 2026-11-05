@@ -963,7 +963,22 @@
   "inOui": "inOui",
   "none": "keine",
   "red": "rot",
-  "teal": "petrol"
+  "teal": "petrol",
+  "Anchor Handling Tug": "Ankerziehschlepper",
+  "Arktika Class Icebreaker": "Eisbrecher der Arktika-Klasse",
+  "Cable Layer": "Kabelleger",
+  "Drillship": "Bohrschiff",
+  "Harbour Tug": "Hafenschlepper",
+  "Maine Lobster Boat": "Hummerboot aus Maine",
+  "Mississippi Towboat": "Mississippi-Schubboot",
+  "Ocean-Going Tug": "Hochseeschlepper",
+  "Pilot Boat": "Lotsenboot",
+  "Platform Supply Vessel": "Plattformversorger",
+  "Semi-Submersible Crane Vessel": "Halbtaucher-Kranschiff",
+  "Shrimp Trawler": "Krabbenkutter",
+  "Stern Trawler": "Heckfänger",
+  "Trailing Suction Hopper Dredger": "Laderaumsaugbagger",
+  "Tuna Purse Seiner": "Thunfisch-Ringwadenfänger"
  },
  "overrides": {
   "model.proc-building-castle.param.towers": "Türme",

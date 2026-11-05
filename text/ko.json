@@ -963,7 +963,22 @@
   "inOui": "inOui",
   "none": "없음",
   "red": "빨강",
-  "teal": "청록"
+  "teal": "청록",
+  "Anchor Handling Tug": "앵커 핸들링 예인선",
+  "Arktika Class Icebreaker": "아르크티카급 쇄빙선",
+  "Cable Layer": "해저 케이블 부설선",
+  "Drillship": "시추선",
+  "Harbour Tug": "항만 예인선",
+  "Maine Lobster Boat": "메인주 바닷가재잡이 배",
+  "Mississippi Towboat": "미시시피 푸셔선",
+  "Ocean-Going Tug": "원양 예인선",
+  "Pilot Boat": "도선선",
+  "Platform Supply Vessel": "해양 플랫폼 지원선",
+  "Semi-Submersible Crane Vessel": "반잠수식 크레인선",
+  "Shrimp Trawler": "새우 트롤선",
+  "Stern Trawler": "선미식 트롤선",
+  "Trailing Suction Hopper Dredger": "트레일링 석션 호퍼 준설선",
+  "Tuna Purse Seiner": "참치 선망선"
  },
  "overrides": {
   "model.proc-building-castle.param.towers": "탑",

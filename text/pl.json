@@ -963,7 +963,22 @@
   "inOui": "inOui",
   "none": "brak",
   "red": "czerwony",
-  "teal": "morski"
+  "teal": "morski",
+  "Anchor Handling Tug": "Holownik kotwiczny",
+  "Arktika Class Icebreaker": "Lodołamacz typu Arktika",
+  "Cable Layer": "Kablowiec",
+  "Drillship": "Statek wiertniczy",
+  "Harbour Tug": "Holownik portowy",
+  "Maine Lobster Boat": "Łódź homarowa z Maine",
+  "Mississippi Towboat": "Pchacz z Missisipi",
+  "Ocean-Going Tug": "Holownik oceaniczny",
+  "Pilot Boat": "Pilotówka",
+  "Platform Supply Vessel": "Statek zaopatrzenia platform",
+  "Semi-Submersible Crane Vessel": "Półzanurzalny statek dźwigowy",
+  "Shrimp Trawler": "Kuter krewetkowy",
+  "Stern Trawler": "Trawler rufowy",
+  "Trailing Suction Hopper Dredger": "Pogłębiarka ssąca nasiębierna",
+  "Tuna Purse Seiner": "Sejner tuńczykowy"
  },
  "overrides": {
   "model.proc-building-castle.param.towers": "Wieże",

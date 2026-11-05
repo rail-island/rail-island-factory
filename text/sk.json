@@ -963,7 +963,22 @@
   "inOui": "inOui",
   "none": "žiadne",
   "red": "červená",
-  "teal": "petrolejová"
+  "teal": "petrolejová",
+  "Anchor Handling Tug": "Remorkér na manipuláciu s kotvami",
+  "Arktika Class Icebreaker": "Ľadoborec triedy Arktika",
+  "Cable Layer": "Káblová loď",
+  "Drillship": "Vrtná loď",
+  "Harbour Tug": "Prístavný remorkér",
+  "Maine Lobster Boat": "Homárová loď z Maine",
+  "Mississippi Towboat": "Tlačný remorkér z Mississippi",
+  "Ocean-Going Tug": "Zaoceánsky remorkér",
+  "Pilot Boat": "Pilotný čln",
+  "Platform Supply Vessel": "Zásobovacia loď plošín",
+  "Semi-Submersible Crane Vessel": "Polo-ponorná žeriavová loď",
+  "Shrimp Trawler": "Krevetová traulerová loď",
+  "Stern Trawler": "Záďová traulerová loď",
+  "Trailing Suction Hopper Dredger": "Nasávacia bagrovacia loď s násypkou",
+  "Tuna Purse Seiner": "Tuniaková loď s košeľkovou sieťou"
  },
  "overrides": {
   "model.proc-building-castle.param.towers": "Veže",

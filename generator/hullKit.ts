@@ -171,7 +171,7 @@ export interface ShipSpec {
 
 const BASE_COLOURS: Record<string, string> = {
   bottom: "#8f2a22", boot: "#24282c", hull: "#1f3a5a", stripe: "#f2f2ee", deck: "#7d8479", house: "#f2f0ea",
-  houseTrim: "#2a2f36", funnel: "#20252b", steel: "#9ba1a4", crane: "#e3b021", hatch: "#6c7a52", mast: "#d8d6cf",
+  houseTrim: "#2a2f36", roof: "#c8cbc7", funnel: "#20252b", steel: "#9ba1a4", crane: "#e3b021", hatch: "#6c7a52", mast: "#d8d6cf",
   boat: "#e2691f", sail: "#efe7d2", wood: "#8a5a33", spar: "#5a3b20", rope: "#3b3026", canopy: "#2f6d8c",
   red: "#c23128", white: "#f4f4f0", black: "#1d2024", yellow: "#e8bf2a", blue: "#1f4f9a", green: "#2f7a4b",
   orange: "#e57a1f", grey: "#7d8287", skirt: "#2b2d30", tank: "#d9d6cc",
@@ -674,7 +674,7 @@ function drawTier(c: ShipCtx, t: Tier, i: number): void {
   m.scope(t.name ?? `tier ${i + 1}`, () => {
     const ring = planRing(c.x(u0), c.x(u1), (x) => w(x + c.L / 2), Math.max(4, Math.min(24, Math.round((u1 - u0) / 4))));
     m.prism(mat, ring, y0, y1, false);
-    m.cap(t.top ?? (mat === "house" ? "deck" : mat), ring, y1);
+    m.cap(t.top ?? (mat === "house" ? "roof" : mat), ring, y1);
     if (t.windows?.length) {
       m.scope("windows", () => {
         for (const win of t.windows!) {

@@ -963,7 +963,22 @@
   "inOui": "inOui",
   "none": "なし",
   "red": "赤",
-  "teal": "ティール"
+  "teal": "ティール",
+  "Anchor Handling Tug": "アンカーハンドリング曳船",
+  "Arktika Class Icebreaker": "アルクティカ級砕氷船",
+  "Cable Layer": "ケーブル敷設船",
+  "Drillship": "掘削船",
+  "Harbour Tug": "港内曳船",
+  "Maine Lobster Boat": "メイン州のロブスター漁船",
+  "Mississippi Towboat": "ミシシッピ川の押船",
+  "Ocean-Going Tug": "外洋曳船",
+  "Pilot Boat": "パイロットボート",
+  "Platform Supply Vessel": "プラットフォーム補給船",
+  "Semi-Submersible Crane Vessel": "半潜水式クレーン船",
+  "Shrimp Trawler": "エビトロール漁船",
+  "Stern Trawler": "船尾トロール漁船",
+  "Trailing Suction Hopper Dredger": "ドラグサクション浚渫船",
+  "Tuna Purse Seiner": "マグロ巻き網漁船"
  },
  "overrides": {
   "model.proc-building-castle.param.towers": "塔",

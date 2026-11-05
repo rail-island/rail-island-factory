@@ -543,4 +543,25 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-ship-push-barge": truck(1970, 2_800, "COAL", ["bulk"], { presets: presets() }),
   "proc-vehicle-ship-yangtze-cargo": truck(2010, 3_000, "GOOD", ["piece", "bulk"], { presets: presets() }), // approx.
   "proc-vehicle-ship-volga-don": truck(1960, 5_000, "GRAI", ["bulk", "piece"], { presets: presets() }), // approx.
+  // service ships: a tug, a towboat or an offshore vessel carries deck cargo, a fishing vessel its catch as food,
+  // a research ship or icebreaker its scientists or passengers, a lifeboat the people it rescues
+  "proc-vehicle-ship-cable-layer": truck(2015, 7_000, "GOOD", ["piece"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-ocean-tug": truck(2010, 100, "GOOD", ["piece"], { presets: presets(...each("livery", "red")) }), // approx.
+  "proc-vehicle-ship-harbour-tug": truck(2005, 20, "GOOD", ["piece"], { presets: presets(...each("livery", "black", "green")) }), // approx.
+  "proc-vehicle-ship-towboat": truck(1980, 50, "GOOD", ["piece", "bulk"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-stern-trawler": truck(1990, 1_500, "FOOD", ["refrigerated"], { presets: presets(...each("livery", "blue")) }), // approx.
+  "proc-vehicle-ship-purse-seiner": truck(2000, 1_200, "FOOD", ["refrigerated"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-shrimp-trawler": truck(1980, 40, "FOOD", ["refrigerated"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-lobster-boat": truck(1980, 3, "FOOD", ["refrigerated"], { presets: presets(...each("colour", "green", "red")) }), // approx.
+  "proc-vehicle-ship-arktika": pax(2007, 128, null, { presets: presets() }),
+  "proc-vehicle-ship-polarstern": pax(1982, 100, null, { presets: presets() }),
+  "proc-vehicle-ship-attenborough": pax(2021, 90, null, { presets: presets() }),
+  "proc-vehicle-ship-hopper-dredger": truck(2010, 30_000, "COAL", ["bulk"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-supply-vessel": truck(2010, 4_500, "GOOD", ["piece", "liquid", "bulk"], { presets: presets(...each("livery", "blue", "orange")) }), // approx.
+  "proc-vehicle-ship-anchor-handler": truck(2010, 2_500, "GOOD", ["piece", "liquid"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-crane-vessel": truck(2019, 20_000, "GOOD", ["piece"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-drillship": truck(2010, 10_000, "OIL_", ["liquid"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-fireboat": pax(1938, 30, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-rnli-shannon": pax(2014, 20, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-pilot-boat": pax(2010, 12, null, { presets: presets() }), // approx.
 };

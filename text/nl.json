@@ -963,7 +963,22 @@
   "inOui": "inOui",
   "none": "geen",
   "red": "rood",
-  "teal": "blauwgroen"
+  "teal": "blauwgroen",
+  "Anchor Handling Tug": "Ankerbehandelingssleepboot",
+  "Arktika Class Icebreaker": "IJsbreker van de Arktika-klasse",
+  "Cable Layer": "Kabellegger",
+  "Drillship": "Boorschip",
+  "Harbour Tug": "Havensleepboot",
+  "Maine Lobster Boat": "Kreeftenboot uit Maine",
+  "Mississippi Towboat": "Mississippi-duwboot",
+  "Ocean-Going Tug": "Zeesleepboot",
+  "Pilot Boat": "Loodsboot",
+  "Platform Supply Vessel": "Bevoorradingsschip",
+  "Semi-Submersible Crane Vessel": "Halfafzinkbaar kraanschip",
+  "Shrimp Trawler": "Garnalenkotter",
+  "Stern Trawler": "Hektrawler",
+  "Trailing Suction Hopper Dredger": "Sleephopperzuiger",
+  "Tuna Purse Seiner": "Tonijn-ringzegenvisser"
  },
  "overrides": {
   "model.proc-char-avatar.param.body": "Postuur",
