@@ -12,8 +12,8 @@
 | ships | `hullKit.ts` (`worldShips*.ts`) | 100 of 100 | [world-ships.md](world-ships.md) |
 | aircraft | `airframeKit.ts`, `rotorKit.ts` (`aircraftFeatures`, `rotorFeatures`, `airshipFeatures`) | 100 of 100 | [world-aircraft.md](world-aircraft.md) |
 | trucks | `truckKit.ts`, `truckBodies.ts` | 100 of 100 | [world-trucks.md](world-trucks.md) |
-| trams | - | 0 of 100 | - |
 | buses | `worldBusKit.ts` (on `cityBuses.ts`) | 100 of 100 (four batches: `worldBuses.ts` to `worldBuses4.ts`) | [world-buses.md](world-buses.md), [world-buses-2.md](world-buses-2.md) |
+| trams | `worldTramKit.ts` (on `tramKit.ts` and the coach builder) | 100 of 100 | [world-trams.md](world-trams.md) |
 
 The waves and their order are the spec's. A design's id is the list's; once shipped it is
 frozen like every model id.
@@ -28,6 +28,10 @@ equipment, a glass floor, each parameter; `busFeatures`: the shape, the sections
 the floor, the lamps, the mirrors, an upper deck, trolley poles, a rear window, a grille, roof
 pods, a bonnet or a half cab, a raised deck, each parameter; the Havana camello, which is no
 kit spec, states its own: a semi-trailer). A new family adds its entries here, with its own feature function.
+pods, each parameter; `tramFeatures`, over every parameter value's spec: the section count,
+each truck kind, a floating module, the fronts, single or double ended, the roof, the doors,
+the collector, the floor, a deck, open sides, a clerestory, a trailer, roof boxes, the
+extras, each parameter). A new family adds its entries here, with its own feature function.
 
 ## The covering sample
 

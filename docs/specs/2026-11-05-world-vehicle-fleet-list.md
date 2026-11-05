@@ -520,7 +520,7 @@ San Francisco cable car. Light-rail vehicles appear only where they run as trams
 | 66 | `veh-siemens-s70` | Siemens S70 | US | 2003 | three sections | livery |
 | 67 | `veh-kinki-sharyo-lrv` | Kinki Sharyo LRV | JP/US | 1996 | two sections, high floor | livery |
 | 68 | `veh-brookville-liberty` | Brookville Liberty | US | 2016 | three sections | livery |
-| 69 | `veh-philadelphia-kawasaki` | Philadelphia Kawasaki LRV | JP/US | 1981 | two sections | - |
+| 69 | `veh-philadelphia-kawasaki` | Philadelphia Kawasaki LRV | JP/US | 1981 | rigid (corrected: the K-car is one body) | - |
 | 70 | `veh-rio-bonde` | Santa Teresa Bonde | BR | 1896 | open cross-bench | - |
 | 71 | `veh-buenos-aires-premetro` | Buenos Aires Premetro | AR | 1987 | rigid | - |
 | 72 | `veh-hong-kong-tram` | Hong Kong Tram | HK | 1949 | double deck, narrow | livery: classic, advertising |
@@ -537,7 +537,7 @@ San Francisco cable car. Light-rail vehicles appear only where they run as trams
 | 83 | `veh-melbourne-b-class` | Melbourne B Class | AU | 1984 | two sections | - |
 | 84 | `veh-melbourne-e-class` | Melbourne E Class | AU | 2013 | three sections | - |
 | 85 | `veh-glenelg-h-class` | Glenelg H Class | AU | 1929 | rigid | - |
-| 86 | `veh-sydney-r-class` | Sydney R Class | AU | 1933 | rigid, cross-bench | - |
+| 86 | `veh-sydney-r-class` | Sydney R Class | AU | 1933 | rigid, drop centre (corrected: a closed saloon) | - |
 | 87 | `veh-christchurch-boon` | Christchurch Boon Tram | NZ | 1906 | rigid, open ends | - |
 | 88 | `veh-horse-tram` | Horse Tram | GB | 1880 | horse as part, open top | - |
 | 89 | `veh-steam-tram` | Steam Tram | GB | 1885 | tram engine + trailer | unit: engine, trailer |

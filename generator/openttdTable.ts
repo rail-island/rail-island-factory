@@ -434,6 +434,108 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-tatra-kt8": pax(1986, 230, null, { presets: presets(...each("livery", "red", "modern")) }),
   "proc-vehicle-tatra-kt4": pax(1974, 120, null, { presets: presets() }),
   "proc-vehicle-kvag-gt4": pax(1959, 100, null, { presets: presets() }),
+  // the world trams (worldTramsEurope.ts, worldTramsWorld.ts, docs/models/world-trams.md): seats and standing room
+  "proc-vehicle-tatra-t1": pax(1952, 95, null, { presets: presets() }),
+  "proc-vehicle-tatra-t2": pax(1955, 100, null, { presets: presets() }),
+  "proc-vehicle-tatra-t4": pax(1968, 105, null, { variants: [at({ unit: "trailer" }, { capacity: 110 })], presets: presets(...each("unit", "trailer")) }),
+  "proc-vehicle-tatra-k2": pax(1966, 157, null, { presets: presets(...each("livery", "modern")) }),
+  "proc-vehicle-tatra-t5c5": pax(1979, 116, null, { presets: presets() }),
+  "proc-vehicle-skoda-14t": pax(2005, 202, null, { presets: presets() }),
+  "proc-vehicle-skoda-15t": pax(2009, 210, null, { presets: presets(...each("livery", "riga")) }),
+  "proc-vehicle-skoda-13t": pax(2008, 210, null, { presets: presets() }), // approx.
+  "proc-vehicle-skoda-29t": pax(2015, 200, null, { presets: presets() }), // approx.
+  "proc-vehicle-skoda-10t": pax(2001, 157, null, { presets: presets(...each("livery", "tacoma")) }),
+  "proc-vehicle-vario-lf": pax(2004, 120, null, { presets: presets() }), // approx.
+  "proc-vehicle-ganz-csmg": pax(1967, 170, null, { presets: presets() }), // approx.
+  "proc-vehicle-siemens-combino": pax(1996, 180, null, { variants: [at({ length: "3" }, { capacity: 100 }), at({ length: "7" }, { capacity: 250 })], presets: presets(...each("length", "3", "7"), ...each("livery", "amsterdam", "freiburg")) }), // approx.
+  "proc-vehicle-siemens-combino-supra": pax(2006, 350, null, { presets: presets() }),
+  "proc-vehicle-siemens-avenio": pax(2014, 250, null, { presets: presets(...each("livery", "hague")) }), // approx.
+  "proc-vehicle-siemens-ulf": pax(1997, 136, null, { variants: [at({ length: "b" }, { capacity: 207 })], presets: presets(...each("length", "b")) }),
+  "proc-vehicle-vienna-e1": pax(1966, 159, null, { variants: [at({ unit: "trailer" }, { capacity: 100 })], presets: presets(...each("unit", "trailer")) }), // approx.
+  "proc-vehicle-vienna-flexity": pax(2018, 211, null, { presets: presets() }),
+  "proc-vehicle-duewag-gt8": pax(1956, 190, null, { presets: presets(...each("livery", "heidelberg")) }), // approx.
+  "proc-vehicle-duewag-u2": pax(1968, 160, null, { presets: presets(...each("livery", "edmonton", "calgary")) }), // approx.
+  "proc-vehicle-duewag-b80": pax(1973, 180, null, { presets: presets() }), // approx.
+  "proc-vehicle-gotha-t2-62": pax(1962, 80, null, { variants: [at({ unit: "trailer" }, { capacity: 85 })], presets: presets(...each("unit", "trailer")) }), // approx.
+  "proc-vehicle-berlin-flexity": pax(2011, 180, null, { variants: [at({ length: "long" }, { capacity: 240 })], presets: presets(...each("length", "long")) }),
+  "proc-vehicle-stadler-variobahn": pax(2002, 180, null, { presets: presets(...each("livery", "graz")) }), // approx.
+  "proc-vehicle-stadler-tango": pax(2009, 280, null, { presets: presets(...each("livery", "basel")) }), // approx.
+  "proc-vehicle-zurich-cobra": pax(2001, 230, null, { presets: presets() }),
+  "proc-vehicle-zurich-tram-2000": pax(1976, 150, null, { presets: presets() }), // approx.
+  "proc-vehicle-swiss-standard-tram": pax(1940, 100, null, { presets: presets() }), // approx.
+  "proc-vehicle-brussels-pcc": pax(1971, 160, null, { presets: presets() }), // approx.
+  "proc-vehicle-amsterdam-9g": pax(1979, 140, null, { presets: presets() }), // approx.
+  "proc-vehicle-hague-gtl8": pax(1981, 180, null, { presets: presets() }), // approx.
+  "proc-vehicle-lisbon-remodelado": pax(1936, 58, null, { presets: presets() }),
+  "proc-vehicle-milan-ventotto": pax(1928, 130, null, { presets: presets() }),
+  "proc-vehicle-florence-sirio": pax(2002, 190, null, { presets: presets(...each("livery", "milan", "gothenburg")) }), // approx.
+  "proc-vehicle-alstom-citadis": pax(2006, 300, null, { presets: presets(...each("livery", "dublin", "dubai")) }),
+  "proc-vehicle-alstom-citadis-x05": pax(2016, 210, null, { presets: presets(...each("livery", "nice")) }), // approx.
+  "proc-vehicle-alstom-tfs": pax(1987, 170, null, { presets: presets() }), // approx.
+  "proc-vehicle-translohr": pax(2006, 127, null, { presets: presets() }),
+  "proc-vehicle-caf-urbos": pax(2011, 250, null, { presets: presets(...each("livery", "belgrade", "kaohsiung")) }),
+  "proc-vehicle-flexity-outlook": pax(2005, 200, null, { presets: presets(...each("livery", "marseille", "innsbruck")) }), // approx.
+  "proc-vehicle-croydon-cr4000": pax(2000, 208, null, { presets: presets() }),
+  "proc-vehicle-blackpool-balloon": pax(1934, 94, null, { presets: presets() }),
+  "proc-vehicle-blackpool-flexity": pax(2012, 222, null, { presets: presets() }),
+  "proc-vehicle-sheffield-supertram": pax(1994, 250, null, { presets: presets() }),
+  "proc-vehicle-nottingham-incentro": pax(2003, 200, null, { presets: presets() }),
+  "proc-vehicle-konstal-105n": pax(1973, 125, null, { presets: presets() }), // approx.
+  "proc-vehicle-pesa-swing": pax(2011, 220, null, { presets: presets(...each("livery", "krakow")) }), // approx.
+  "proc-vehicle-solaris-tramino": pax(2011, 220, null, { presets: presets(...each("livery", "jena")) }), // approx.
+  "proc-vehicle-ktm-5": pax(1969, 129, null, { presets: presets() }),
+  "proc-vehicle-lm-68": pax(1968, 120, null, { presets: presets() }), // approx.
+  "proc-vehicle-vityaz-m": pax(2017, 260, null, { presets: presets() }), // approx.
+  "proc-vehicle-electron-t5l64": pax(2014, 200, null, { presets: presets() }), // approx.
+  "proc-vehicle-bucharest-v3a": pax(1973, 230, null, { presets: presets() }), // approx.
+  "proc-vehicle-koncar-tmk2200": pax(2005, 200, null, { presets: presets() }),
+  "proc-vehicle-durmazlar-silkworm": pax(2013, 280, null, { presets: presets() }), // approx.
+  "proc-vehicle-helsinki-artic": pax(2013, 160, null, { presets: presets() }), // approx.
+  "proc-vehicle-helsinki-valmet": pax(1973, 130, null, { presets: presets() }), // approx.
+  "proc-vehicle-oslo-sl79": pax(1982, 170, null, { presets: presets() }), // approx.
+  "proc-vehicle-gothenburg-m29": pax(1969, 100, null, { presets: presets() }), // approx.
+  "proc-vehicle-pcc-streamliner": pax(1936, 100, null, { presets: presets(...each("livery", "toronto", "philadelphia")) }),
+  "proc-vehicle-toronto-clrv": pax(1979, 132, null, { presets: presets() }),
+  "proc-vehicle-toronto-flexity": pax(2014, 251, null, { presets: presets() }),
+  "proc-vehicle-birney-safety-car": pax(1916, 40, null, { presets: presets() }), // approx.
+  "proc-vehicle-new-orleans-perley-thomas": pax(1923, 100, null, { presets: presets() }), // approx.
+  "proc-vehicle-boston-type-8": pax(1999, 165, null, { presets: presets() }), // approx.
+  "proc-vehicle-siemens-s70": pax(2003, 220, null, { presets: presets(...each("livery", "sandiego", "portland")) }), // approx.
+  "proc-vehicle-kinki-sharyo-lrv": pax(1996, 180, null, { presets: presets(...each("livery", "phoenix")) }), // approx.
+  "proc-vehicle-brookville-liberty": pax(2016, 150, null, { presets: presets(...each("livery", "milwaukee")) }), // approx.
+  "proc-vehicle-philadelphia-kawasaki": pax(1981, 100, null, { presets: presets() }), // approx.
+  "proc-vehicle-rio-bonde": pax(1896, 32, null, { presets: presets() }), // approx.
+  "proc-vehicle-buenos-aires-premetro": pax(1987, 120, null, { presets: presets() }), // approx.
+  "proc-vehicle-hong-kong-tram": pax(1949, 115, null, { presets: presets(...each("livery", "advertising")) }),
+  "proc-vehicle-hiroshima-green-mover": pax(2005, 150, null, { presets: presets() }),
+  "proc-vehicle-toei-9000": pax(2007, 62, null, { presets: presets() }), // approx.
+  "proc-vehicle-toyama-portram": pax(2006, 80, null, { presets: presets(...each("livery", "green", "blue")) }),
+  "proc-vehicle-tokyu-300": pax(1999, 120, null, { presets: presets(...each("livery", "red", "green")) }), // approx.
+  "proc-vehicle-kolkata-tram": pax(1940, 200, null, { presets: presets() }), // approx.
+  "proc-vehicle-dalian-tram": pax(1936, 90, null, { presets: presets() }), // approx.
+  "proc-vehicle-foshan-hydrogen": pax(2019, 250, null, { presets: presets() }), // approx.
+  "proc-vehicle-alexandria-double-deck": pax(1995, 200, null, { presets: presets() }), // approx.
+  "proc-vehicle-addis-ababa-lrt": pax(2015, 254, null, { presets: presets() }),
+  "proc-vehicle-melbourne-w-class": pax(1923, 80, null, { presets: presets(...each("livery", "maroon")) }), // approx.
+  "proc-vehicle-melbourne-b-class": pax(1984, 180, null, { presets: presets() }), // approx.
+  "proc-vehicle-melbourne-e-class": pax(2013, 210, null, { presets: presets() }),
+  "proc-vehicle-glenelg-h-class": pax(1929, 110, null, { presets: presets() }), // approx.
+  "proc-vehicle-sydney-r-class": pax(1933, 110, null, { presets: presets() }), // approx.
+  "proc-vehicle-christchurch-boon": pax(1906, 50, null, { presets: presets() }), // approx.
+  "proc-vehicle-horse-tram": pax(1880, 40, null, { presets: presets() }), // approx.
+  "proc-vehicle-steam-tram": pax(1885, 60, null, { presets: presets(...each("unit", "trailer")) }), // approx.: the engine's preset stands for engine and trailer
+  "proc-vehicle-cable-car-dunedin": pax(1881, 50, null, { presets: presets() }), // approx.
+  "proc-vehicle-istanbul-nostalgic": pax(1914, 50, null, { presets: presets() }), // approx.
+  "proc-vehicle-trieste-opicina": pax(1935, 90, null, { presets: presets() }), // approx.
+  "proc-vehicle-budapest-ganz-uv": pax(1956, 105, null, { presets: presets() }), // approx.
+  "proc-vehicle-wroclaw-skoda-16t": pax(2006, 200, null, { presets: presets() }), // approx.
+  "proc-vehicle-strasbourg-eurotram": pax(1994, 210, null, { presets: presets() }), // approx.
+  "proc-vehicle-montpellier-citadis": pax(2000, 220, null, { presets: presets(...each("livery", "line2")) }), // approx.
+  "proc-vehicle-gmunden-vario": pax(2014, 170, null, { presets: presets() }), // approx.
+  "proc-vehicle-sarajevo-k2yu": pax(1973, 157, null, { presets: presets() }),
+  "proc-vehicle-turin-2800": pax(1958, 150, null, { presets: presets() }), // approx.
+  "proc-vehicle-dubai-citadis": pax(2014, 300, null, { presets: presets() }),
+  // (end of the world trams)
 
   // --- buses -----------------------------------------------------------------------
   "proc-vehicle-karosa-short": pax(1981, 90, null, {

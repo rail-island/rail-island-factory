@@ -11,8 +11,10 @@ import { MeshBuilder, ngon } from "../generator/meshBuilder";
 import { paramCombinations, resolveParams, type ParamSpec } from "../generator/design";
 import { isLeaf, type LeafNode, type TreeNode } from "../generator/sourceTree";
 import { TYPE_META as RAIL_TYPES } from "../generator/sets/railType";
+import { swept } from "./catalogCache";
 
-const RAIL = ALL_VEHICLES.filter((d) => d.catalog?.category === "Rail vehicles");
+// the rail vehicles the whole-catalog suites build (catalogCache.ts swept): the world fleet's covering sample
+const RAIL = swept(ALL_VEHICLES.filter((d) => d.catalog?.category === "Rail vehicles"));
 
 function leaves(n: TreeNode): LeafNode[] {
   return isLeaf(n) ? [n] : n.children.flatMap(leaves);
@@ -78,9 +80,11 @@ describe("rail supports", () => {
   });
 
   it("puts a turning bogie under every vehicle whose axles stand two or three together", () => {
+    // the trams whose axles stand alone, each a turning node of its own: the ULF's portals and the Translohr's guided axles
+    const singleAxles = new Set(["proc-vehicle-siemens-ulf", "proc-vehicle-translohr"]);
     for (const d of RAIL) {
       const v = defaultOf(d.id);
-      if (d.catalog?.traction === "steam" || v.wheelsets < 4) continue;
+      if (d.catalog?.traction === "steam" || v.wheelsets < 4 || singleAxles.has(d.id)) continue;
       const supports = v.rig.supports!;
       expect(supports.filter((s) => s.node).length, d.id).toBeGreaterThanOrEqual(2);
       expect(supports.every((s) => s.node && s.axles >= 2 && s.axles <= 3), d.id).toBe(true);

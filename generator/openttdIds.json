@@ -1,6 +1,7 @@
 {
   "version": 1,
   "grf": {
+    "proc-vehicle-addis-ababa-lrt": 650,
     "proc-vehicle-adl-enviro200": 162,
     "proc-vehicle-adl-enviro400": 163,
     "proc-vehicle-adl-enviro500": 164,
@@ -19,9 +20,14 @@
     "proc-vehicle-airbus-beluga": 74,
     "proc-vehicle-airbus-beluga-xl": 377,
     "proc-vehicle-airbus-h145": 382,
+    "proc-vehicle-alexandria-double-deck": 649,
+    "proc-vehicle-alstom-citadis": 595,
+    "proc-vehicle-alstom-citadis-x05": 596,
+    "proc-vehicle-alstom-tfs": 597,
     "proc-vehicle-american-440": 132,
     "proc-vehicle-american-lafrance": 458,
     "proc-vehicle-american-truck": 5,
+    "proc-vehicle-amsterdam-9g": 590,
     "proc-vehicle-amtrak-acela": 128,
     "proc-vehicle-amtrak-superliner": 133,
     "proc-vehicle-antonov-an124": 372,
@@ -42,6 +48,10 @@
     "proc-vehicle-bell-206": 384,
     "proc-vehicle-bell-b60e": 483,
     "proc-vehicle-berliet-t100": 408,
+    "proc-vehicle-berlin-flexity": 583,
+    "proc-vehicle-birney-safety-car": 632,
+    "proc-vehicle-blackpool-balloon": 602,
+    "proc-vehicle-blackpool-flexity": 603,
     "proc-vehicle-blue-bird-vision": 523,
     "proc-vehicle-blue-train-24": 160,
     "proc-vehicle-bmo-double-deck-coach": 17,
@@ -63,12 +73,20 @@
     "proc-vehicle-bombardier-crj200": 332,
     "proc-vehicle-bombardier-crj900": 333,
     "proc-vehicle-bombardier-global": 337,
+    "proc-vehicle-boston-type-8": 634,
     "proc-vehicle-bristol-lodekka": 487,
+    "proc-vehicle-brookville-liberty": 637,
+    "proc-vehicle-brussels-pcc": 589,
+    "proc-vehicle-bucharest-v3a": 613,
+    "proc-vehicle-budapest-ganz-uv": 622,
     "proc-vehicle-budd-rdc": 134,
     "proc-vehicle-buenos-aires-colectivo": 535,
+    "proc-vehicle-buenos-aires-premetro": 640,
     "proc-vehicle-bus-1": 71,
     "proc-vehicle-bussing-d2u": 492,
     "proc-vehicle-byd-k9": 184,
+    "proc-vehicle-cable-car-dunedin": 659,
+    "proc-vehicle-caf-urbos": 599,
     "proc-vehicle-cairo-cta-bus": 554,
     "proc-vehicle-canadair-cl415": 378,
     "proc-vehicle-caravelle": 310,
@@ -104,6 +122,7 @@
     "proc-vehicle-cessna-caravan": 369,
     "proc-vehicle-chausson-aph": 515,
     "proc-vehicle-chicken-bus": 525,
+    "proc-vehicle-christchurch-boon": 656,
     "proc-vehicle-cistern-semi-truck": 57,
     "proc-vehicle-citroen-h-van": 409,
     "proc-vehicle-cobus-3000": 493,
@@ -111,6 +130,7 @@
     "proc-vehicle-comac-c919": 334,
     "proc-vehicle-concorde": 309,
     "proc-vehicle-convair-880": 300,
+    "proc-vehicle-croydon-cr4000": 601,
     "proc-vehicle-cruise-ferry": 80,
     "proc-vehicle-csd-386": 31,
     "proc-vehicle-csd-433-0": 24,
@@ -140,6 +160,7 @@
     "proc-vehicle-daf-2600": 400,
     "proc-vehicle-daf-cf-refuse": 401,
     "proc-vehicle-daf-xf": 399,
+    "proc-vehicle-dalian-tram": 647,
     "proc-vehicle-danfo": 531,
     "proc-vehicle-dassault-falcon-7x": 338,
     "proc-vehicle-db-111": 46,
@@ -165,7 +186,13 @@
     "proc-vehicle-dr-243": 47,
     "proc-vehicle-dr-sbahn-berlin": 119,
     "proc-vehicle-dr-vt1816": 108,
+    "proc-vehicle-dubai-citadis": 660,
+    "proc-vehicle-duewag-b80": 581,
+    "proc-vehicle-duewag-gt8": 579,
+    "proc-vehicle-duewag-u2": 580,
+    "proc-vehicle-durmazlar-silkworm": 615,
     "proc-vehicle-eas-open-wagon": 21,
+    "proc-vehicle-electron-t5l64": 612,
     "proc-vehicle-embraer-bandeirante": 352,
     "proc-vehicle-embraer-brasilia": 351,
     "proc-vehicle-embraer-e190": 329,
@@ -181,6 +208,8 @@
     "proc-vehicle-faw-j7": 478,
     "proc-vehicle-faw-jiefang-ca10": 477,
     "proc-vehicle-fiat-682": 405,
+    "proc-vehicle-flexity-outlook": 600,
+    "proc-vehicle-florence-sirio": 594,
     "proc-vehicle-flxible-clipper": 522,
     "proc-vehicle-fokker-100": 317,
     "proc-vehicle-fokker-50": 350,
@@ -190,28 +219,40 @@
     "proc-vehicle-ford-model-tt": 454,
     "proc-vehicle-ford-transit-mk1": 432,
     "proc-vehicle-ford-trimotor": 363,
+    "proc-vehicle-foshan-hydrogen": 648,
     "proc-vehicle-freightliner-cascadia": 445,
     "proc-vehicle-fuso-aero-queen": 545,
     "proc-vehicle-fuso-canter": 468,
     "proc-vehicle-fuso-super-great": 469,
+    "proc-vehicle-ganz-csmg": 572,
     "proc-vehicle-gaz-51": 423,
     "proc-vehicle-gaz-66": 424,
     "proc-vehicle-ge-es44ac": 122,
     "proc-vehicle-ge-p42dc": 125,
     "proc-vehicle-gillig-low-floor": 181,
+    "proc-vehicle-glenelg-h-class": 654,
     "proc-vehicle-gm-new-look": 520,
     "proc-vehicle-gm-scenicruiser": 521,
+    "proc-vehicle-gmunden-vario": 626,
+    "proc-vehicle-gotha-t2-62": 582,
+    "proc-vehicle-gothenburg-m29": 619,
     "proc-vehicle-gulfstream-g650": 336,
     "proc-vehicle-habis-sliding-wall-wagon": 39,
     "proc-vehicle-hadgs-hopper-wagon": 40,
+    "proc-vehicle-hague-gtl8": 591,
     "proc-vehicle-hankyu-9000": 155,
     "proc-vehicle-havana-camello": 560,
+    "proc-vehicle-helsinki-artic": 616,
+    "proc-vehicle-helsinki-valmet": 617,
     "proc-vehicle-hess-lightram": 536,
     "proc-vehicle-heuliez-gx337": 499,
     "proc-vehicle-hino-300": 464,
     "proc-vehicle-hino-blue-ribbon": 543,
     "proc-vehicle-hino-profia": 465,
+    "proc-vehicle-hiroshima-green-mover": 642,
     "proc-vehicle-hondajet": 341,
+    "proc-vehicle-hong-kong-tram": 641,
+    "proc-vehicle-horse-tram": 657,
     "proc-vehicle-hs-trident": 313,
     "proc-vehicle-hydrofoil-ferry": 81,
     "proc-vehicle-hyundai-elec-city": 546,
@@ -229,6 +270,7 @@
     "proc-vehicle-international-transtar": 449,
     "proc-vehicle-irisbus-citelis": 498,
     "proc-vehicle-irizar-i8": 502,
+    "proc-vehicle-istanbul-nostalgic": 620,
     "proc-vehicle-isuzu-elf": 466,
     "proc-vehicle-isuzu-erga": 544,
     "proc-vehicle-isuzu-giga": 467,
@@ -263,8 +305,13 @@
     "proc-vehicle-kenworth-t909-road-train": 444,
     "proc-vehicle-kenworth-w900": 440,
     "proc-vehicle-king-long-coach": 549,
+    "proc-vehicle-kinki-sharyo-lrv": 636,
     "proc-vehicle-kintetsu-hinotori": 152,
+    "proc-vehicle-kolkata-tram": 646,
+    "proc-vehicle-koncar-tmk2200": 614,
+    "proc-vehicle-konstal-105n": 606,
     "proc-vehicle-kraz-255": 427,
+    "proc-vehicle-ktm-5": 609,
     "proc-vehicle-kvag-gt4": 95,
     "proc-vehicle-kyiv-12": 559,
     "proc-vehicle-laz-695": 507,
@@ -280,6 +327,8 @@
     "proc-vehicle-liaz-677": 508,
     "proc-vehicle-liebherr-ltm": 436,
     "proc-vehicle-light-jet": 78,
+    "proc-vehicle-lisbon-remodelado": 592,
+    "proc-vehicle-lm-68": 610,
     "proc-vehicle-lockheed-constellation": 361,
     "proc-vehicle-lockheed-electra": 358,
     "proc-vehicle-lockheed-l100": 375,
@@ -321,10 +370,15 @@
     "proc-vehicle-mcdonnell-douglas-md11": 72,
     "proc-vehicle-mci-d4505": 183,
     "proc-vehicle-md-80": 297,
+    "proc-vehicle-melbourne-b-class": 652,
+    "proc-vehicle-melbourne-e-class": 653,
+    "proc-vehicle-melbourne-w-class": 651,
     "proc-vehicle-mercedes-atego-1224": 62,
     "proc-vehicle-metro-81-71": 96,
     "proc-vehicle-mil-mi8": 383,
+    "proc-vehicle-milan-ventotto": 593,
     "proc-vehicle-mixer-truck": 58,
+    "proc-vehicle-montpellier-citadis": 625,
     "proc-vehicle-mtr-m-train": 113,
     "proc-vehicle-muv-69": 56,
     "proc-vehicle-namc-ys11": 342,
@@ -332,7 +386,9 @@
     "proc-vehicle-neoplan-cityliner": 491,
     "proc-vehicle-neoplan-skyliner": 172,
     "proc-vehicle-new-flyer-xcelsior": 182,
+    "proc-vehicle-new-orleans-perley-thomas": 633,
     "proc-vehicle-new-routemaster": 161,
+    "proc-vehicle-nottingham-incentro": 605,
     "proc-vehicle-nova-lfs": 537,
     "proc-vehicle-nyc-hudson": 131,
     "proc-vehicle-nyc-r160": 136,
@@ -340,14 +396,18 @@
     "proc-vehicle-obb-1040": 49,
     "proc-vehicle-ocean-liner": 4,
     "proc-vehicle-odakyu-gse": 151,
+    "proc-vehicle-oslo-sl79": 618,
     "proc-vehicle-otokar-kent": 534,
     "proc-vehicle-pakistani-truck-art": 476,
     "proc-vehicle-pao-flat-wagon": 38,
     "proc-vehicle-passenger-ferry": 82,
     "proc-vehicle-paz-672": 518,
+    "proc-vehicle-pcc-streamliner": 629,
     "proc-vehicle-pegaso-comet": 410,
+    "proc-vehicle-pesa-swing": 607,
     "proc-vehicle-peterbilt-379": 438,
     "proc-vehicle-peterbilt-579": 439,
+    "proc-vehicle-philadelphia-kawasaki": 638,
     "proc-vehicle-pierce-arrow-xt": 457,
     "proc-vehicle-pilatus-pc12": 367,
     "proc-vehicle-pioneer-zephyr": 135,
@@ -364,9 +424,11 @@
     "proc-vehicle-renault-magnum": 407,
     "proc-vehicle-renault-pr100": 500,
     "proc-vehicle-renault-t": 406,
+    "proc-vehicle-rio-bonde": 639,
     "proc-vehicle-rosenbauer-panther": 435,
     "proc-vehicle-saab-2000": 348,
     "proc-vehicle-saab-340": 347,
+    "proc-vehicle-sarajevo-k2yu": 627,
     "proc-vehicle-saurer-postbus": 519,
     "proc-vehicle-scammell-contractor": 431,
     "proc-vehicle-scania-111": 462,
@@ -377,6 +439,7 @@
     "proc-vehicle-setra-s515": 171,
     "proc-vehicle-sf-cable-car": 141,
     "proc-vehicle-shacman-x3000": 481,
+    "proc-vehicle-sheffield-supertram": 604,
     "proc-vehicle-shinkansen-0": 112,
     "proc-vehicle-shinkansen-100": 147,
     "proc-vehicle-shinkansen-500": 144,
@@ -487,44 +550,74 @@
     "proc-vehicle-ship-wsf-jumbo": 238,
     "proc-vehicle-ship-yangtze-cargo": 214,
     "proc-vehicle-siemens-alc42": 126,
+    "proc-vehicle-siemens-avenio": 575,
+    "proc-vehicle-siemens-combino": 573,
+    "proc-vehicle-siemens-combino-supra": 574,
+    "proc-vehicle-siemens-s70": 635,
+    "proc-vehicle-siemens-ulf": 576,
     "proc-vehicle-sikorsky-s92": 381,
     "proc-vehicle-singapore-double-deck": 551,
     "proc-vehicle-sinotruk-howo": 480,
+    "proc-vehicle-skoda-10t": 570,
+    "proc-vehicle-skoda-13t": 568,
+    "proc-vehicle-skoda-14t": 566,
     "proc-vehicle-skoda-14tr": 176,
+    "proc-vehicle-skoda-15t": 567,
     "proc-vehicle-skoda-15tr": 177,
+    "proc-vehicle-skoda-29t": 569,
     "proc-vehicle-skoda-706-rt": 417,
     "proc-vehicle-skoda-706-rto": 517,
     "proc-vehicle-small-airplane": 79,
+    "proc-vehicle-solaris-tramino": 608,
     "proc-vehicle-solaris-trollino": 180,
     "proc-vehicle-solaris-urbino-12e": 503,
     "proc-vehicle-solaris-urbino-15": 70,
     "proc-vehicle-songthaew": 528,
     "proc-vehicle-sor-nb12": 505,
     "proc-vehicle-sqns-container-wagon": 37,
+    "proc-vehicle-stadler-tango": 585,
+    "proc-vehicle-stadler-variobahn": 584,
     "proc-vehicle-star-266": 418,
+    "proc-vehicle-steam-tram": 658,
+    "proc-vehicle-strasbourg-eurotram": 624,
     "proc-vehicle-sukhoi-superjet": 327,
+    "proc-vehicle-swiss-standard-tram": 588,
     "proc-vehicle-sydney-leyland-atlantean": 558,
+    "proc-vehicle-sydney-r-class": 655,
     "proc-vehicle-tata-lpt": 474,
     "proc-vehicle-tata-starbus": 553,
     "proc-vehicle-tatra-148": 411,
     "proc-vehicle-tatra-500-hb": 533,
     "proc-vehicle-tatra-815": 412,
     "proc-vehicle-tatra-815-tipper": 60,
+    "proc-vehicle-tatra-k2": 564,
     "proc-vehicle-tatra-kt4": 94,
     "proc-vehicle-tatra-kt8": 93,
     "proc-vehicle-tatra-phoenix": 413,
+    "proc-vehicle-tatra-t1": 561,
+    "proc-vehicle-tatra-t2": 562,
     "proc-vehicle-tatra-t3": 91,
+    "proc-vehicle-tatra-t4": 563,
+    "proc-vehicle-tatra-t5c5": 565,
     "proc-vehicle-tatra-t6": 92,
     "proc-vehicle-tesla-semi": 453,
     "proc-vehicle-tgv": 111,
     "proc-vehicle-tgv-duplex": 114,
     "proc-vehicle-thomas-saf-t-liner": 524,
+    "proc-vehicle-toei-9000": 643,
+    "proc-vehicle-tokyu-300": 645,
+    "proc-vehicle-toronto-clrv": 630,
+    "proc-vehicle-toronto-flexity": 631,
+    "proc-vehicle-toyama-portram": 644,
     "proc-vehicle-toyota-coaster": 526,
+    "proc-vehicle-translohr": 598,
     "proc-vehicle-transmilenio": 542,
+    "proc-vehicle-trieste-opicina": 621,
     "proc-vehicle-tupolev-tu104": 318,
     "proc-vehicle-tupolev-tu134": 319,
     "proc-vehicle-tupolev-tu144": 321,
     "proc-vehicle-tupolev-tu154": 320,
+    "proc-vehicle-turin-2800": 628,
     "proc-vehicle-ua-open-wagon": 20,
     "proc-vehicle-ud-quon": 470,
     "proc-vehicle-uic-z-coach": 117,
@@ -536,10 +629,14 @@
     "proc-vehicle-van-hool-a330": 495,
     "proc-vehicle-van-hool-astromega": 496,
     "proc-vehicle-van-hool-exquicity": 175,
+    "proc-vehicle-vario-lf": 571,
     "proc-vehicle-vdl-citea": 497,
     "proc-vehicle-vectron": 50,
     "proc-vehicle-vickers-vc10": 312,
     "proc-vehicle-vickers-viscount": 357,
+    "proc-vehicle-vienna-e1": 577,
+    "proc-vehicle-vienna-flexity": 578,
+    "proc-vehicle-vityaz-m": 611,
     "proc-vehicle-volgren-optimus": 556,
     "proc-vehicle-volvo-7900e": 173,
     "proc-vehicle-volvo-9700": 494,
@@ -552,6 +649,7 @@
     "proc-vehicle-wap-hopper-wagon": 43,
     "proc-vehicle-western-star-4900": 451,
     "proc-vehicle-white-3000": 455,
+    "proc-vehicle-wroclaw-skoda-16t": 623,
     "proc-vehicle-xian-ma60": 354,
     "proc-vehicle-yakovlev-yak40": 325,
     "proc-vehicle-yakovlev-yak42": 326,
@@ -560,7 +658,9 @@
     "proc-vehicle-zeppelin-nt": 385,
     "proc-vehicle-zil-130": 422,
     "proc-vehicle-ziu-9": 510,
-    "proc-vehicle-zsr-coach": 116
+    "proc-vehicle-zsr-coach": 116,
+    "proc-vehicle-zurich-cobra": 586,
+    "proc-vehicle-zurich-tram-2000": 587
   },
   "vehicles": {
     "train": {
@@ -2094,6 +2194,10 @@
       }
     },
     "road": {
+      "proc-vehicle-addis-ababa-lrt?": {
+        "id": 3288,
+        "size": 8
+      },
       "proc-vehicle-adl-enviro200?": {
         "id": 780,
         "size": 4
@@ -2130,6 +2234,34 @@
         "id": 1986,
         "size": 4
       },
+      "proc-vehicle-alexandria-double-deck?": {
+        "id": 3284,
+        "size": 4
+      },
+      "proc-vehicle-alstom-citadis-x05?": {
+        "id": 2768,
+        "size": 10
+      },
+      "proc-vehicle-alstom-citadis-x05?livery=nice": {
+        "id": 2778,
+        "size": 10
+      },
+      "proc-vehicle-alstom-citadis?": {
+        "id": 2732,
+        "size": 12
+      },
+      "proc-vehicle-alstom-citadis?livery=dubai": {
+        "id": 2756,
+        "size": 12
+      },
+      "proc-vehicle-alstom-citadis?livery=dublin": {
+        "id": 2744,
+        "size": 12
+      },
+      "proc-vehicle-alstom-tfs?": {
+        "id": 2788,
+        "size": 8
+      },
       "proc-vehicle-american-lafrance?": {
         "id": 1564,
         "size": 4
@@ -2137,6 +2269,10 @@
       "proc-vehicle-american-truck?": {
         "id": 256,
         "size": 16
+      },
+      "proc-vehicle-amsterdam-9g?": {
+        "id": 2680,
+        "size": 6
       },
       "proc-vehicle-ashok-leyland-captain?": {
         "id": 1714,
@@ -2186,9 +2322,33 @@
         "id": 1132,
         "size": 4
       },
+      "proc-vehicle-berlin-flexity?": {
+        "id": 2592,
+        "size": 8
+      },
+      "proc-vehicle-berlin-flexity?length=long": {
+        "id": 2600,
+        "size": 12
+      },
+      "proc-vehicle-birney-safety-car?": {
+        "id": 3126,
+        "size": 4
+      },
+      "proc-vehicle-blackpool-balloon?": {
+        "id": 2878,
+        "size": 4
+      },
+      "proc-vehicle-blackpool-flexity?": {
+        "id": 2882,
+        "size": 10
+      },
       "proc-vehicle-blue-bird-vision?": {
         "id": 2050,
         "size": 4
+      },
+      "proc-vehicle-boston-type-8?": {
+        "id": 3134,
+        "size": 6
       },
       "proc-vehicle-bristol-lodekka?": {
         "id": 1818,
@@ -2198,12 +2358,36 @@
         "id": 1822,
         "size": 4
       },
+      "proc-vehicle-brookville-liberty?": {
+        "id": 3180,
+        "size": 6
+      },
+      "proc-vehicle-brookville-liberty?livery=milwaukee": {
+        "id": 3186,
+        "size": 6
+      },
+      "proc-vehicle-brussels-pcc?": {
+        "id": 2672,
+        "size": 8
+      },
+      "proc-vehicle-bucharest-v3a?": {
+        "id": 2980,
+        "size": 8
+      },
+      "proc-vehicle-budapest-ganz-uv?": {
+        "id": 3040,
+        "size": 4
+      },
       "proc-vehicle-buenos-aires-colectivo?": {
         "id": 2142,
         "size": 4
       },
       "proc-vehicle-buenos-aires-colectivo?colour=blue": {
         "id": 2146,
+        "size": 4
+      },
+      "proc-vehicle-buenos-aires-premetro?": {
+        "id": 3200,
         "size": 4
       },
       "proc-vehicle-bus-1?": {
@@ -2217,6 +2401,22 @@
       "proc-vehicle-byd-k9?": {
         "id": 912,
         "size": 4
+      },
+      "proc-vehicle-cable-car-dunedin?": {
+        "id": 3348,
+        "size": 4
+      },
+      "proc-vehicle-caf-urbos?": {
+        "id": 2804,
+        "size": 12
+      },
+      "proc-vehicle-caf-urbos?livery=belgrade": {
+        "id": 2816,
+        "size": 12
+      },
+      "proc-vehicle-caf-urbos?livery=kaohsiung": {
+        "id": 2828,
+        "size": 12
       },
       "proc-vehicle-cairo-cta-bus?": {
         "id": 2288,
@@ -2242,6 +2442,10 @@
         "id": 2066,
         "size": 4
       },
+      "proc-vehicle-christchurch-boon?": {
+        "id": 3332,
+        "size": 4
+      },
       "proc-vehicle-cistern-semi-truck?": {
         "id": 272,
         "size": 16
@@ -2265,6 +2469,10 @@
       "proc-vehicle-cobus-3000?livery=fraport": {
         "id": 1862,
         "size": 4
+      },
+      "proc-vehicle-croydon-cr4000?": {
+        "id": 2870,
+        "size": 8
       },
       "proc-vehicle-csepel-d450?": {
         "id": 1224,
@@ -2310,6 +2518,10 @@
         "id": 1046,
         "size": 6
       },
+      "proc-vehicle-dalian-tram?": {
+        "id": 3272,
+        "size": 4
+      },
       "proc-vehicle-danfo?": {
         "id": 2118,
         "size": 4
@@ -2354,6 +2566,42 @@
         "id": 1758,
         "size": 4
       },
+      "proc-vehicle-dubai-citadis?": {
+        "id": 3352,
+        "size": 12
+      },
+      "proc-vehicle-duewag-b80?": {
+        "id": 2576,
+        "size": 8
+      },
+      "proc-vehicle-duewag-gt8?": {
+        "id": 2542,
+        "size": 8
+      },
+      "proc-vehicle-duewag-gt8?livery=heidelberg": {
+        "id": 2550,
+        "size": 8
+      },
+      "proc-vehicle-duewag-u2?": {
+        "id": 2558,
+        "size": 6
+      },
+      "proc-vehicle-duewag-u2?livery=calgary": {
+        "id": 2570,
+        "size": 6
+      },
+      "proc-vehicle-duewag-u2?livery=edmonton": {
+        "id": 2564,
+        "size": 6
+      },
+      "proc-vehicle-durmazlar-silkworm?": {
+        "id": 2998,
+        "size": 10
+      },
+      "proc-vehicle-electron-t5l64?": {
+        "id": 2972,
+        "size": 8
+      },
       "proc-vehicle-faw-j7?": {
         "id": 1742,
         "size": 6
@@ -2377,6 +2625,30 @@
       "proc-vehicle-fiat-682?body=tank": {
         "id": 1104,
         "size": 4
+      },
+      "proc-vehicle-flexity-outlook?": {
+        "id": 2840,
+        "size": 10
+      },
+      "proc-vehicle-flexity-outlook?livery=innsbruck": {
+        "id": 2860,
+        "size": 10
+      },
+      "proc-vehicle-flexity-outlook?livery=marseille": {
+        "id": 2850,
+        "size": 10
+      },
+      "proc-vehicle-florence-sirio?": {
+        "id": 2702,
+        "size": 10
+      },
+      "proc-vehicle-florence-sirio?livery=gothenburg": {
+        "id": 2722,
+        "size": 10
+      },
+      "proc-vehicle-florence-sirio?livery=milan": {
+        "id": 2712,
+        "size": 10
       },
       "proc-vehicle-flxible-clipper?": {
         "id": 2046,
@@ -2410,6 +2682,10 @@
         "id": 1328,
         "size": 4
       },
+      "proc-vehicle-foshan-hydrogen?": {
+        "id": 3276,
+        "size": 8
+      },
       "proc-vehicle-freightliner-cascadia?": {
         "id": 1448,
         "size": 6
@@ -2442,6 +2718,10 @@
         "id": 1652,
         "size": 4
       },
+      "proc-vehicle-ganz-csmg?": {
+        "id": 2420,
+        "size": 8
+      },
       "proc-vehicle-gaz-51?": {
         "id": 1260,
         "size": 4
@@ -2458,6 +2738,10 @@
         "id": 894,
         "size": 4
       },
+      "proc-vehicle-glenelg-h-class?": {
+        "id": 3320,
+        "size": 6
+      },
       "proc-vehicle-gm-new-look?": {
         "id": 2034,
         "size": 4
@@ -2470,8 +2754,36 @@
         "id": 2042,
         "size": 4
       },
+      "proc-vehicle-gmunden-vario?": {
+        "id": 3082,
+        "size": 8
+      },
+      "proc-vehicle-gotha-t2-62?": {
+        "id": 2584,
+        "size": 4
+      },
+      "proc-vehicle-gotha-t2-62?unit=trailer": {
+        "id": 2588,
+        "size": 4
+      },
+      "proc-vehicle-gothenburg-m29?": {
+        "id": 3028,
+        "size": 4
+      },
+      "proc-vehicle-hague-gtl8?": {
+        "id": 2686,
+        "size": 8
+      },
       "proc-vehicle-havana-camello?": {
         "id": 2324,
+        "size": 6
+      },
+      "proc-vehicle-helsinki-artic?": {
+        "id": 3008,
+        "size": 8
+      },
+      "proc-vehicle-helsinki-valmet?": {
+        "id": 3016,
         "size": 6
       },
       "proc-vehicle-hess-lightram?": {
@@ -2508,6 +2820,22 @@
       },
       "proc-vehicle-hino-profia?body=tipper": {
         "id": 1620,
+        "size": 4
+      },
+      "proc-vehicle-hiroshima-green-mover?": {
+        "id": 3212,
+        "size": 8
+      },
+      "proc-vehicle-hong-kong-tram?": {
+        "id": 3204,
+        "size": 4
+      },
+      "proc-vehicle-hong-kong-tram?livery=advertising": {
+        "id": 3208,
+        "size": 4
+      },
+      "proc-vehicle-horse-tram?": {
+        "id": 3336,
         "size": 4
       },
       "proc-vehicle-hyundai-elec-city?": {
@@ -2580,6 +2908,10 @@
       },
       "proc-vehicle-irizar-i8?livery=alsa": {
         "id": 1934,
+        "size": 4
+      },
+      "proc-vehicle-istanbul-nostalgic?": {
+        "id": 3032,
         "size": 4
       },
       "proc-vehicle-isuzu-elf?": {
@@ -2790,12 +3122,36 @@
         "id": 2256,
         "size": 4
       },
+      "proc-vehicle-kinki-sharyo-lrv?": {
+        "id": 3164,
+        "size": 8
+      },
+      "proc-vehicle-kinki-sharyo-lrv?livery=phoenix": {
+        "id": 3172,
+        "size": 8
+      },
+      "proc-vehicle-kolkata-tram?": {
+        "id": 3266,
+        "size": 6
+      },
+      "proc-vehicle-koncar-tmk2200?": {
+        "id": 2988,
+        "size": 10
+      },
+      "proc-vehicle-konstal-105n?": {
+        "id": 2912,
+        "size": 4
+      },
       "proc-vehicle-kraz-255?": {
         "id": 1286,
         "size": 4
       },
       "proc-vehicle-kraz-255?body=canvas": {
         "id": 1290,
+        "size": 4
+      },
+      "proc-vehicle-ktm-5?": {
+        "id": 2956,
         "size": 4
       },
       "proc-vehicle-kvag-gt4?": {
@@ -2840,6 +3196,14 @@
       },
       "proc-vehicle-liebherr-ltm?": {
         "id": 1348,
+        "size": 4
+      },
+      "proc-vehicle-lisbon-remodelado?": {
+        "id": 2694,
+        "size": 4
+      },
+      "proc-vehicle-lm-68?": {
+        "id": 2960,
         "size": 4
       },
       "proc-vehicle-lohr-car-transporter?": {
@@ -3066,13 +3430,41 @@
         "id": 908,
         "size": 4
       },
+      "proc-vehicle-melbourne-b-class?": {
+        "id": 3304,
+        "size": 6
+      },
+      "proc-vehicle-melbourne-e-class?": {
+        "id": 3310,
+        "size": 10
+      },
+      "proc-vehicle-melbourne-w-class?": {
+        "id": 3296,
+        "size": 4
+      },
+      "proc-vehicle-melbourne-w-class?livery=maroon": {
+        "id": 3300,
+        "size": 4
+      },
       "proc-vehicle-mercedes-atego-1224?": {
         "id": 352,
         "size": 16
       },
+      "proc-vehicle-milan-ventotto?": {
+        "id": 2698,
+        "size": 4
+      },
       "proc-vehicle-mixer-truck?": {
         "id": 288,
         "size": 16
+      },
+      "proc-vehicle-montpellier-citadis?": {
+        "id": 3062,
+        "size": 10
+      },
+      "proc-vehicle-montpellier-citadis?livery=line2": {
+        "id": 3072,
+        "size": 10
       },
       "proc-vehicle-neoplan-cityliner?": {
         "id": 1850,
@@ -3090,9 +3482,17 @@
         "id": 902,
         "size": 6
       },
+      "proc-vehicle-new-orleans-perley-thomas?": {
+        "id": 3130,
+        "size": 4
+      },
       "proc-vehicle-new-routemaster?": {
         "id": 776,
         "size": 4
+      },
+      "proc-vehicle-nottingham-incentro?": {
+        "id": 2902,
+        "size": 10
       },
       "proc-vehicle-nova-lfs?": {
         "id": 2158,
@@ -3101,6 +3501,10 @@
       "proc-vehicle-nova-lfs?livery=ttc": {
         "id": 2162,
         "size": 4
+      },
+      "proc-vehicle-oslo-sl79?": {
+        "id": 3022,
+        "size": 6
       },
       "proc-vehicle-otokar-kent?": {
         "id": 2134,
@@ -3126,6 +3530,18 @@
         "id": 2026,
         "size": 4
       },
+      "proc-vehicle-pcc-streamliner?": {
+        "id": 3102,
+        "size": 4
+      },
+      "proc-vehicle-pcc-streamliner?livery=philadelphia": {
+        "id": 3110,
+        "size": 4
+      },
+      "proc-vehicle-pcc-streamliner?livery=toronto": {
+        "id": 3106,
+        "size": 4
+      },
       "proc-vehicle-pegaso-comet?": {
         "id": 1148,
         "size": 4
@@ -3133,6 +3549,14 @@
       "proc-vehicle-pegaso-comet?body=box": {
         "id": 1152,
         "size": 4
+      },
+      "proc-vehicle-pesa-swing?": {
+        "id": 2916,
+        "size": 10
+      },
+      "proc-vehicle-pesa-swing?livery=krakow": {
+        "id": 2926,
+        "size": 10
       },
       "proc-vehicle-peterbilt-379?": {
         "id": 1360,
@@ -3149,6 +3573,10 @@
       "proc-vehicle-peterbilt-579?body=reefer": {
         "id": 1378,
         "size": 6
+      },
+      "proc-vehicle-philadelphia-kawasaki?": {
+        "id": 3192,
+        "size": 4
       },
       "proc-vehicle-pierce-arrow-xt?": {
         "id": 1560,
@@ -3210,9 +3638,17 @@
         "id": 1114,
         "size": 6
       },
+      "proc-vehicle-rio-bonde?": {
+        "id": 3196,
+        "size": 4
+      },
       "proc-vehicle-rosenbauer-panther?": {
         "id": 1344,
         "size": 4
+      },
+      "proc-vehicle-sarajevo-k2yu?": {
+        "id": 3090,
+        "size": 6
       },
       "proc-vehicle-saurer-postbus?": {
         "id": 2030,
@@ -3282,6 +3718,62 @@
         "id": 1778,
         "size": 4
       },
+      "proc-vehicle-sheffield-supertram?": {
+        "id": 2892,
+        "size": 10
+      },
+      "proc-vehicle-siemens-avenio?": {
+        "id": 2484,
+        "size": 10
+      },
+      "proc-vehicle-siemens-avenio?livery=hague": {
+        "id": 2494,
+        "size": 10
+      },
+      "proc-vehicle-siemens-combino-supra?": {
+        "id": 2470,
+        "size": 14
+      },
+      "proc-vehicle-siemens-combino?": {
+        "id": 2428,
+        "size": 8
+      },
+      "proc-vehicle-siemens-combino?length=3": {
+        "id": 2436,
+        "size": 6
+      },
+      "proc-vehicle-siemens-combino?length=7": {
+        "id": 2442,
+        "size": 12
+      },
+      "proc-vehicle-siemens-combino?livery=amsterdam": {
+        "id": 2454,
+        "size": 8
+      },
+      "proc-vehicle-siemens-combino?livery=freiburg": {
+        "id": 2462,
+        "size": 8
+      },
+      "proc-vehicle-siemens-s70?": {
+        "id": 3140,
+        "size": 8
+      },
+      "proc-vehicle-siemens-s70?livery=portland": {
+        "id": 3156,
+        "size": 8
+      },
+      "proc-vehicle-siemens-s70?livery=sandiego": {
+        "id": 3148,
+        "size": 8
+      },
+      "proc-vehicle-siemens-ulf?": {
+        "id": 2504,
+        "size": 8
+      },
+      "proc-vehicle-siemens-ulf?length=b": {
+        "id": 2512,
+        "size": 10
+      },
       "proc-vehicle-singapore-double-deck?": {
         "id": 2268,
         "size": 4
@@ -3294,13 +3786,41 @@
         "id": 1768,
         "size": 6
       },
+      "proc-vehicle-skoda-10t?": {
+        "id": 2404,
+        "size": 6
+      },
+      "proc-vehicle-skoda-10t?livery=tacoma": {
+        "id": 2410,
+        "size": 6
+      },
+      "proc-vehicle-skoda-13t?": {
+        "id": 2386,
+        "size": 10
+      },
+      "proc-vehicle-skoda-14t?": {
+        "id": 2362,
+        "size": 8
+      },
       "proc-vehicle-skoda-14tr?": {
         "id": 858,
         "size": 4
       },
+      "proc-vehicle-skoda-15t?": {
+        "id": 2370,
+        "size": 8
+      },
+      "proc-vehicle-skoda-15t?livery=riga": {
+        "id": 2378,
+        "size": 8
+      },
       "proc-vehicle-skoda-15tr?": {
         "id": 862,
         "size": 6
+      },
+      "proc-vehicle-skoda-29t?": {
+        "id": 2396,
+        "size": 8
       },
       "proc-vehicle-skoda-706-rt?": {
         "id": 1204,
@@ -3317,6 +3837,14 @@
       "proc-vehicle-skoda-706-rto?livery=cedok": {
         "id": 2022,
         "size": 4
+      },
+      "proc-vehicle-solaris-tramino?": {
+        "id": 2936,
+        "size": 10
+      },
+      "proc-vehicle-solaris-tramino?livery=jena": {
+        "id": 2946,
+        "size": 10
       },
       "proc-vehicle-solaris-trollino?": {
         "id": 888,
@@ -3354,6 +3882,22 @@
         "id": 1958,
         "size": 4
       },
+      "proc-vehicle-stadler-tango?": {
+        "id": 2628,
+        "size": 12
+      },
+      "proc-vehicle-stadler-tango?livery=basel": {
+        "id": 2640,
+        "size": 12
+      },
+      "proc-vehicle-stadler-variobahn?": {
+        "id": 2612,
+        "size": 8
+      },
+      "proc-vehicle-stadler-variobahn?livery=graz": {
+        "id": 2620,
+        "size": 8
+      },
       "proc-vehicle-star-266?": {
         "id": 1216,
         "size": 4
@@ -3362,9 +3906,29 @@
         "id": 1220,
         "size": 4
       },
+      "proc-vehicle-steam-tram?": {
+        "id": 3340,
+        "size": 4
+      },
+      "proc-vehicle-steam-tram?unit=trailer": {
+        "id": 3344,
+        "size": 4
+      },
+      "proc-vehicle-strasbourg-eurotram?": {
+        "id": 3052,
+        "size": 10
+      },
+      "proc-vehicle-swiss-standard-tram?": {
+        "id": 2668,
+        "size": 4
+      },
       "proc-vehicle-sydney-leyland-atlantean?": {
         "id": 2314,
         "size": 4
+      },
+      "proc-vehicle-sydney-r-class?": {
+        "id": 3326,
+        "size": 6
       },
       "proc-vehicle-tata-lpt?": {
         "id": 1702,
@@ -3410,6 +3974,14 @@
         "id": 1168,
         "size": 4
       },
+      "proc-vehicle-tatra-k2?": {
+        "id": 2346,
+        "size": 6
+      },
+      "proc-vehicle-tatra-k2?livery=modern": {
+        "id": 2352,
+        "size": 6
+      },
       "proc-vehicle-tatra-kt4?": {
         "id": 736,
         "size": 16
@@ -3434,6 +4006,14 @@
         "id": 1176,
         "size": 4
       },
+      "proc-vehicle-tatra-t1?": {
+        "id": 2330,
+        "size": 4
+      },
+      "proc-vehicle-tatra-t2?": {
+        "id": 2334,
+        "size": 4
+      },
       "proc-vehicle-tatra-t3?": {
         "id": 624,
         "size": 16
@@ -3445,6 +4025,18 @@
       "proc-vehicle-tatra-t3?variant=t3prototype": {
         "id": 656,
         "size": 16
+      },
+      "proc-vehicle-tatra-t4?": {
+        "id": 2338,
+        "size": 4
+      },
+      "proc-vehicle-tatra-t4?unit=trailer": {
+        "id": 2342,
+        "size": 4
+      },
+      "proc-vehicle-tatra-t5c5?": {
+        "id": 2358,
+        "size": 4
       },
       "proc-vehicle-tatra-t6?": {
         "id": 672,
@@ -3462,6 +4054,42 @@
         "id": 2054,
         "size": 4
       },
+      "proc-vehicle-toei-9000?": {
+        "id": 3220,
+        "size": 4
+      },
+      "proc-vehicle-tokyu-300?": {
+        "id": 3242,
+        "size": 8
+      },
+      "proc-vehicle-tokyu-300?livery=green": {
+        "id": 3258,
+        "size": 8
+      },
+      "proc-vehicle-tokyu-300?livery=red": {
+        "id": 3250,
+        "size": 8
+      },
+      "proc-vehicle-toronto-clrv?": {
+        "id": 3114,
+        "size": 4
+      },
+      "proc-vehicle-toronto-flexity?": {
+        "id": 3118,
+        "size": 8
+      },
+      "proc-vehicle-toyama-portram?": {
+        "id": 3224,
+        "size": 6
+      },
+      "proc-vehicle-toyama-portram?livery=blue": {
+        "id": 3236,
+        "size": 6
+      },
+      "proc-vehicle-toyama-portram?livery=green": {
+        "id": 3230,
+        "size": 6
+      },
       "proc-vehicle-toyota-coaster?": {
         "id": 2070,
         "size": 4
@@ -3470,8 +4098,20 @@
         "id": 2074,
         "size": 4
       },
+      "proc-vehicle-translohr?": {
+        "id": 2796,
+        "size": 8
+      },
       "proc-vehicle-transmilenio?": {
         "id": 2198,
+        "size": 6
+      },
+      "proc-vehicle-trieste-opicina?": {
+        "id": 3036,
+        "size": 4
+      },
+      "proc-vehicle-turin-2800?": {
+        "id": 3096,
         "size": 6
       },
       "proc-vehicle-ud-quon?": {
@@ -3510,6 +4150,10 @@
         "id": 852,
         "size": 6
       },
+      "proc-vehicle-vario-lf?": {
+        "id": 2416,
+        "size": 4
+      },
       "proc-vehicle-vdl-citea?": {
         "id": 1890,
         "size": 4
@@ -3517,6 +4161,22 @@
       "proc-vehicle-vdl-citea?livery=connexxion": {
         "id": 1894,
         "size": 4
+      },
+      "proc-vehicle-vienna-e1?": {
+        "id": 2522,
+        "size": 6
+      },
+      "proc-vehicle-vienna-e1?unit=trailer": {
+        "id": 2528,
+        "size": 4
+      },
+      "proc-vehicle-vienna-flexity?": {
+        "id": 2532,
+        "size": 10
+      },
+      "proc-vehicle-vityaz-m?": {
+        "id": 2964,
+        "size": 8
       },
       "proc-vehicle-volgren-optimus?": {
         "id": 2298,
@@ -3602,6 +4262,10 @@
         "id": 1552,
         "size": 4
       },
+      "proc-vehicle-wroclaw-skoda-16t?": {
+        "id": 3044,
+        "size": 8
+      },
       "proc-vehicle-yutong-e12?": {
         "id": 2244,
         "size": 4
@@ -3625,6 +4289,14 @@
       "proc-vehicle-ziu-9?": {
         "id": 1978,
         "size": 4
+      },
+      "proc-vehicle-zurich-cobra?": {
+        "id": 2652,
+        "size": 10
+      },
+      "proc-vehicle-zurich-tram-2000?": {
+        "id": 2662,
+        "size": 6
       }
     },
     "ship": {

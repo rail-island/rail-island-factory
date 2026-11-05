@@ -20,6 +20,8 @@ import { buildLodModel } from "../generator/lodModel.ts";
 import { variantsUnderTest } from "./catalogCache";
 import { RAIL_COLLECTOR_TOP, TRAM_COLLECTOR_TOP } from "../generator/collector.ts";
 import { TRAM_DESIGNS } from "../generator/trams.ts";
+import { WORLD_TRAM_SPECS } from "../generator/worldTrams.ts";
+import { proceduralId } from "../generator/modelId.ts";
 
 /** The highest y of the material `mat` (every material when absent). */
 function topOf(m: unknown, mat?: string): number {
@@ -79,7 +81,8 @@ describe("pantographs", () => {
 });
 
 describe("collector heights", () => {
-  const trams = new Set(TRAM_DESIGNS.map((d) => d.id));
+  // the trams' collectors reach the trolley wire: the vlakosimdb trams and the world trams
+  const trams = new Set([...TRAM_DESIGNS.map((d) => d.id), ...WORLD_TRAM_SPECS.map((t) => proceduralId(t.id))]);
   // steam and diesel locomotives, coaches and wagons collect no current: no variant of theirs is built to look for a collector
   const unpowered = (v: (typeof ALL_VEHICLES)[number]) => v.catalog?.traction === "steam" || v.catalog?.traction === "diesel" || v.catalog?.group === "coach" || v.catalog?.group === "wagon";
   it("finds no collector on the families that cannot have one", () => {

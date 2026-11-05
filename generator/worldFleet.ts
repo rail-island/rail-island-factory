@@ -11,6 +11,9 @@ import { WORLD_BUS_SPECS_2 } from "./worldBuses2.ts";
 import { WORLD_BUS_SPECS_3 } from "./worldBuses3.ts";
 import { CAMELLO_SIZE, HAVANA_CAMELLO, WORLD_BUS_SPECS_4 } from "./worldBuses4.ts";
 import { busFeatures } from "./worldBusKit.ts";
+// the world trams
+import { WORLD_TRAM_SPECS } from "./worldTrams.ts";
+import { tramFeatures, tramLength } from "./worldTramKit.ts";
 import { proceduralId } from "./modelId.ts";
 // the world ships
 import { shipFeatures, shipLength } from "./hullKit.ts";
@@ -80,6 +83,13 @@ export const WORLD_FLEET: readonly FleetEntry[] = [
   }),
   // the Havana camello: a tractor and semi-trailer drawn with the bus kit's shell
   { id: proceduralId(HAVANA_CAMELLO.id), family: "buses", features: ["kind:semi-trailer", "sections:2", "axles:4"], size: CAMELLO_SIZE.length * CAMELLO_SIZE.height },
+  // the world trams: the kit options of every parameter value's spec (a unit's trailer, a length)
+  ...WORLD_TRAM_SPECS.map((t) => {
+    const names = (t.params ?? []).map((p) => p.name);
+    const specs = [t.spec(), ...(t.params ?? []).flatMap((p) => p.values.map((v) => t.spec({ [p.name]: v.value })))];
+    const features = [...new Set(specs.flatMap((s) => tramFeatures(s, names)))].sort();
+    return { id: proceduralId(t.id), family: "trams", features, size: Math.max(...specs.map((s) => tramLength(s) * s.height)) };
+  }),
 ];
 
 /** A world aircraft's fleet entry: the kit options its combinations use (a float or ski variant's too). */

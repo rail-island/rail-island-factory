@@ -177,8 +177,12 @@ describe("a design's exported sounds", () => {
   });
 
   it("ring every tram's bell on departure only", () => {
-    const trams = vehicles.filter((v) => v.group === "tram");
+    // the steam tram's engine whistles and beats instead (soundTable.ts)
+    const trams = vehicles.filter((v) => v.group === "tram" && v.id !== "proc-vehicle-steam-tram");
     for (const t of trams) expect(t.game!.sounds, t.id).toEqual({ horn: tramBell() });
+    const steam = vehicles.find((v) => v.id === "proc-vehicle-steam-tram")!;
+    expect(steam.game!.sounds!.horn!.id).toBe("steam-whistle");
+    expect(steam.game!.sounds!.engine!.id).toBe("steam-chuff");
   });
 
   it("follow traction and weight on the real vehicles", () => {

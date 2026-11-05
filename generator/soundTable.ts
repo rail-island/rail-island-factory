@@ -110,4 +110,11 @@ export const SOUND_TABLE: Readonly<Record<string, DeclaredSounds>> = {
   "proc-vehicle-proterra-catalyst": { sounds: { engine: { id: "electric-engine-converter" } } },
   "proc-vehicle-hyundai-elec-city": { sounds: { engine: { id: "electric-engine-converter" } } },
   "proc-vehicle-yutong-e12": { sounds: { engine: { id: "electric-engine-converter" } } },
+  // The world trams (worldTramsWorld.ts): every tram rings the derived tram bell; the
+  // steam tram's engine whistles and beats like a small locomotive, its trailer is silent.
+  // No design fits a horse's hooves or a cable's hum yet.
+  "proc-vehicle-steam-tram": {
+    sounds: { horn: { id: "steam-whistle", params: { pitch: 880 }, calls: ["departure", "crossing"] }, engine: { id: "steam-chuff" } },
+    variants: [{ params: { unit: "trailer" }, sounds: { horn: null, engine: null } }],
+  },
 };
