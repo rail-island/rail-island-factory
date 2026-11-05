@@ -86,6 +86,11 @@ import { TGV_DESIGNS } from "./tgv.ts";
 import { CABLE_CABINS } from "./cableCabins.ts";
 import { WORLD_CABINS } from "./worldCabins.ts";
 import { WORLD_BUSES } from "./worldBuses.ts";
+// the world ships (docs/models/world-ships.md)
+import { CARGO_SHIPS } from "./worldShipsCargo.ts";
+import { SERVICE_SHIPS } from "./worldShipsService.ts";
+import { PASSENGER_SHIPS } from "./worldShipsPassenger.ts";
+import { SMALL_SHIPS } from "./worldShipsSmall.ts";
 import { DIESEL_LOCOS } from "./dieselLocos.ts";
 import { US_DIESELS } from "./usDiesels.ts";
 import { US_CARBODIES } from "./usCarbodies.ts";
@@ -203,6 +208,11 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: SHIPS, source: "ships.ts", meta: "vehicles" },
   { designs: CABLE_CABINS, source: "cableCabins.ts", meta: "vehicles" },
   { designs: WORLD_CABINS, source: "worldCabins.ts", meta: "vehicles" },
+  // the world ships (docs/models/world-ships.md)
+  { designs: CARGO_SHIPS, source: "worldShipsCargo.ts", meta: "vehicles" },
+  { designs: SERVICE_SHIPS, source: "worldShipsService.ts", meta: "vehicles" },
+  { designs: PASSENGER_SHIPS, source: "worldShipsPassenger.ts", meta: "vehicles" },
+  { designs: SMALL_SHIPS, source: "worldShipsSmall.ts", meta: "vehicles" },
   { designs: EMU471_DESIGNS, source: "emu471.ts", meta: "vehicles" },
   { designs: EMU680_DESIGNS, source: "emu680.ts", meta: "vehicles" },
   { designs: DIESEL_LOCOS, source: "dieselLocos.ts", meta: "vehicles" },

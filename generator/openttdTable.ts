@@ -508,4 +508,113 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-cruise-ferry": pax(1990, 2000, null, { presets: presets() }), // approx.
   "proc-vehicle-hydrofoil-ferry": pax(1960, 150, null, { presets: presets() }), // approx.
   "proc-vehicle-passenger-ferry": pax(1950, 300, null, { presets: presets() }), // approx.
+  // --- the world ships (worldShips*.ts, docs/models/world-ships.md) -------------------
+  // Capacity in the cargo's units (TEU as crates of goods, tonnes, kilolitres, seats),
+  // capped at the GRF's word (65,535): the largest ships carry more than it holds.
+  // A car carrier carries GOOD: no default climate has VEHI (FIRS's refits take it as piece goods).
+  // cargo ships
+  "proc-vehicle-ship-triple-e": truck(2013, 18_340, "GOOD", ["piece", "express"], { presets: presets(...each("load", "empty")) }),
+  "proc-vehicle-ship-emma-maersk": truck(2006, 15_500, "GOOD", ["piece", "express"], { presets: presets() }),
+  "proc-vehicle-ship-msc-gulsun": truck(2019, 23_756, "GOOD", ["piece", "express"], { presets: presets() }),
+  "proc-vehicle-ship-panamax-container": truck(1990, 4_500, "GOOD", ["piece", "express"], { presets: presets(...each("livery", "green", "blue")) }), // approx.
+  "proc-vehicle-ship-feeder-container": truck(2000, 1_100, "GOOD", ["piece", "express"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-ideal-x": truck(1956, 58, "GOOD", ["piece", "express"], { presets: presets() }),
+  "proc-vehicle-ship-vlcc": truck(2002, 65_535, "OIL_", ["liquid"], { presets: presets(...each("livery", "green", "black")) }),
+  "proc-vehicle-ship-seawise-giant": truck(1979, 65_535, "OIL_", ["liquid"], { presets: presets() }),
+  "proc-vehicle-ship-aframax": truck(1990, 65_535, "OIL_", ["liquid"], { presets: presets(...each("livery", "navy")) }), // approx.
+  "proc-vehicle-ship-product-tanker": truck(2005, 50_000, "OIL_", ["liquid"], { presets: presets(...each("livery", "navy")) }), // approx.
+  "proc-vehicle-ship-lng-moss": truck(1975, 65_535, "OIL_", ["liquid"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-lng-qmax": truck(2008, 65_535, "OIL_", ["liquid"], { presets: presets() }),
+  "proc-vehicle-ship-lpg-carrier": truck(2010, 8_000, "OIL_", ["liquid"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-chemical-tanker": truck(2010, 45_000, "OIL_", ["liquid", "hazardous"], { presets: presets(...each("livery", "navy")) }), // approx.
+  "proc-vehicle-ship-capesize": truck(2010, 65_535, "COAL", ["bulk"], { variants: [at({ livery: "red" }, { cargo: "IORE" })], presets: presets(...each("livery", "red")) }), // approx.
+  "proc-vehicle-ship-valemax": truck(2011, 65_535, "IORE", ["bulk"], { presets: presets() }),
+  "proc-vehicle-ship-handysize": truck(2010, 35_000, "GRAI", ["bulk", "piece"], { presets: presets(...each("livery", "black")) }), // approx.
+  "proc-vehicle-ship-laker": truck(1958, 26_000, "IORE", ["bulk"], { presets: presets(...each("livery", "black")) }), // approx.
+  "proc-vehicle-ship-self-unloader": truck(1981, 65_535, "COAL", ["bulk"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-pctc": truck(2016, 8_000, "GOOD", ["piece"], { presets: presets(...each("livery", "white")) }), // approx.
+  "proc-vehicle-ship-roro": truck(2000, 12_000, "GOOD", ["piece", "express"], { presets: presets(...each("livery", "blue")) }), // approx.
+  "proc-vehicle-ship-heavy-lift": truck(2018, 65_535, "GOOD", ["piece"], { presets: presets() }),
+  "proc-vehicle-ship-reefer": truck(1990, 9_000, "FOOD", ["refrigerated", "piece"], { presets: presets(...each("livery", "blue")) }), // approx.
+  "proc-vehicle-ship-liberty": truck(1941, 10_850, "GOOD", ["piece", "bulk"], { presets: presets() }),
+  "proc-vehicle-ship-victory": truck(1944, 10_600, "GOOD", ["piece", "bulk"], { presets: presets() }),
+  "proc-vehicle-ship-europaschiff": truck(1960, 1_350, "GOOD", ["piece", "bulk"], { presets: presets(...each("load", "empty")) }),
+  "proc-vehicle-ship-rhine-tanker": truck(2000, 3_000, "OIL_", ["liquid"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-push-barge": truck(1970, 2_800, "COAL", ["bulk"], { presets: presets() }),
+  "proc-vehicle-ship-yangtze-cargo": truck(2010, 3_000, "GOOD", ["piece", "bulk"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-volga-don": truck(1960, 5_000, "GRAI", ["bulk", "piece"], { presets: presets() }), // approx.
+  // service ships: a tug, a towboat or an offshore vessel carries deck cargo, a fishing vessel its catch as food,
+  // a research ship or icebreaker its scientists or passengers, a lifeboat the people it rescues
+  "proc-vehicle-ship-cable-layer": truck(2015, 7_000, "GOOD", ["piece"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-ocean-tug": truck(2010, 100, "GOOD", ["piece"], { presets: presets(...each("livery", "red")) }), // approx.
+  "proc-vehicle-ship-harbour-tug": truck(2005, 20, "GOOD", ["piece"], { presets: presets(...each("livery", "black", "green")) }), // approx.
+  "proc-vehicle-ship-towboat": truck(1980, 50, "GOOD", ["piece", "bulk"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-stern-trawler": truck(1990, 1_500, "FOOD", ["refrigerated"], { presets: presets(...each("livery", "blue")) }), // approx.
+  "proc-vehicle-ship-purse-seiner": truck(2000, 1_200, "FOOD", ["refrigerated"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-shrimp-trawler": truck(1980, 40, "FOOD", ["refrigerated"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-lobster-boat": truck(1980, 3, "FOOD", ["refrigerated"], { presets: presets(...each("colour", "green", "red")) }), // approx.
+  "proc-vehicle-ship-arktika": pax(2007, 128, null, { presets: presets() }),
+  "proc-vehicle-ship-polarstern": pax(1982, 100, null, { presets: presets() }),
+  "proc-vehicle-ship-attenborough": pax(2021, 90, null, { presets: presets() }),
+  "proc-vehicle-ship-hopper-dredger": truck(2010, 30_000, "COAL", ["bulk"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-supply-vessel": truck(2010, 4_500, "GOOD", ["piece", "liquid", "bulk"], { presets: presets(...each("livery", "blue", "orange")) }), // approx.
+  "proc-vehicle-ship-anchor-handler": truck(2010, 2_500, "GOOD", ["piece", "liquid"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-crane-vessel": truck(2019, 20_000, "GOOD", ["piece"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-drillship": truck(2010, 10_000, "OIL_", ["liquid"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-fireboat": pax(1938, 30, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-rnli-shannon": pax(2014, 20, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-pilot-boat": pax(2010, 12, null, { presets: presets() }), // approx.
+  // passenger ships: seats and berths (a car ferry's cars aside)
+  "proc-vehicle-ship-staten-island": pax(2004, 4_427, null, { presets: presets() }),
+  "proc-vehicle-ship-star-ferry": pax(1958, 560, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-bc-spirit": pax(1993, 2_100, null, { presets: presets() }),
+  "proc-vehicle-ship-wsf-jumbo": pax(1997, 2_500, null, { presets: presets() }),
+  "proc-vehicle-ship-sydney-first-fleet": pax(1984, 393, null, { presets: presets() }),
+  "proc-vehicle-ship-manly-freshwater": pax(1982, 1_100, null, { presets: presets() }),
+  "proc-vehicle-ship-bosphorus-vapur": pax(1960, 1_500, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-vaporetto": pax(1960, 230, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-amsterdam-ijveer": pax(2000, 400, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-stena-hss": pax(1996, 1_500, null, { presets: presets() }),
+  "proc-vehicle-ship-incat": pax(1990, 900, null, { presets: presets(...each("livery", "blue", "red")) }), // approx.
+  "proc-vehicle-ship-channel-ropax": pax(2011, 2_000, null, { presets: presets(...each("livery", "white", "red")) }),
+  "proc-vehicle-ship-tallink-megastar": pax(2017, 2_800, null, { presets: presets() }),
+  "proc-vehicle-ship-jp-overnight-ferry": pax(2017, 700, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-srn4": pax(1968, 418, null, { presets: presets() }),
+  "proc-vehicle-ship-raketa": pax(1957, 64, null, { presets: presets() }),
+  "proc-vehicle-ship-jetfoil": pax(1975, 260, null, { presets: presets(...each("livery", "red", "green")) }),
+  "proc-vehicle-ship-swiss-paddle": pax(1928, 1_200, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-sternwheeler": pax(1975, 400, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-elbe-paddle": pax(1926, 600, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-bateau-mouche": pax(1960, 600, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-nile-cruiser": pax(1990, 130, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-amazon-riverboat": pax(1990, 300, null, { presets: presets(...each("colour", "green", "red")) }), // approx.
+  "proc-vehicle-ship-hurtigruten": pax(1993, 590, null, { presets: presets() }),
+  "proc-vehicle-ship-oasis": pax(2009, 6_780, null, { presets: presets() }),
+  "proc-vehicle-ship-icon": pax(2024, 7_600, null, { presets: presets() }),
+  "proc-vehicle-ship-queen-mary-2": pax(2004, 2_695, null, { presets: presets() }),
+  "proc-vehicle-ship-olympic": pax(1911, 2_435, null, { presets: presets() }),
+  "proc-vehicle-ship-ss-united-states": pax(1952, 1_928, null, { presets: presets() }),
+  "proc-vehicle-ship-normandie": pax(1935, 1_972, null, { presets: presets() }),
+  "proc-vehicle-ship-expedition-cruise": pax(2019, 530, null, { presets: presets() }),
+  "proc-vehicle-ship-river-cruise": pax(2010, 190, null, { presets: presets(...each("livery", "white", "red")) }), // approx.
+  // sailing ships and small craft: a trader its cargo, a fishing boat its catch, the rest passengers
+  "proc-vehicle-ship-narrowboat": truck(1900, 25, "COAL", ["bulk", "piece"], { presets: presets(...each("colour", "red", "blue")) }),
+  "proc-vehicle-ship-thames-barge": truck(1900, 100, "GRAI", ["bulk", "piece"], { presets: presets() }),
+  "proc-vehicle-ship-dhow": truck(1900, 60, "GOOD", ["piece"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-junk": truck(1900, 150, "GOOD", ["piece"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-felucca": pax(1900, 12, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-kettuvallam": pax(1990, 8, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-sedov": pax(1921, 164, null, { presets: presets() }),
+  "proc-vehicle-ship-cutty-sark": truck(1869, 1_300, "GOOD", ["piece", "covered"], { presets: presets() }),
+  "proc-vehicle-ship-bluenose": truck(1921, 100, "FOOD", ["refrigerated"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-ss-great-britain": pax(1845, 360, null, { presets: presets() }),
+  "proc-vehicle-ship-viking-longship": pax(900, 60, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-voyaging-canoe": pax(1976, 16, null, { presets: presets() }),
+  "proc-vehicle-ship-gondola": pax(1900, 6, null, { presets: presets() }),
+  "proc-vehicle-ship-longtail": pax(1960, 12, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-superyacht": pax(2015, 36, null, { presets: presets(...each("colour", "navy")) }), // approx.
+  "proc-vehicle-ship-sailing-yacht": pax(2000, 8, null, { presets: presets(...each("colour", "navy", "red")) }), // approx.
+  "proc-vehicle-ship-riva-aquarama": pax(1962, 6, null, { presets: presets() }),
+  "proc-vehicle-ship-fishing-cutter": truck(1960, 40, "FOOD", ["refrigerated"], { presets: presets(...each("colour", "green")) }), // approx.
+  "proc-vehicle-ship-sampan": pax(1950, 6, null, { presets: presets() }), // approx.
 };

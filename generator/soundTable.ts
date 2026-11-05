@@ -80,4 +80,20 @@ export const SOUND_TABLE: Readonly<Record<string, DeclaredSounds>> = {
   "proc-vehicle-solaris-trollino": { sounds: { engine: { id: "electric-engine-converter" } } },
   "proc-vehicle-skoda-14tr": { sounds: { engine: { id: "electric-engine-resistor" } } },
   "proc-vehicle-skoda-15tr": { sounds: { engine: { id: "electric-engine-resistor" } } },
+  // The world ships whose horn is a steam whistle (worldShips*.ts): the steamships, the
+  // deeper the bigger. The sailing ships and rowed craft keep the derived ship's horn (a
+  // foghorn): rail-island-music has no ship's bell yet.
+  "proc-vehicle-ship-liberty": { sounds: { horn: { id: "steam-whistle", params: { pitch: 420 } } } },
+  "proc-vehicle-ship-victory": { sounds: { horn: { id: "steam-whistle", params: { pitch: 420 } } } },
+  "proc-vehicle-ship-ideal-x": { sounds: { horn: { id: "steam-whistle", params: { pitch: 430 } } } },
+  "proc-vehicle-ship-seawise-giant": { sounds: { horn: { id: "steam-whistle", params: { pitch: 400 } } } },
+  "proc-vehicle-ship-lng-moss": { sounds: { horn: { id: "steam-whistle", params: { pitch: 400 } } } },
+  "proc-vehicle-ship-olympic": { sounds: { horn: { id: "steam-whistle", params: { pitch: 400 } } } },
+  "proc-vehicle-ship-ss-united-states": { sounds: { horn: { id: "steam-whistle", params: { pitch: 400 } } } },
+  "proc-vehicle-ship-normandie": { sounds: { horn: { id: "steam-whistle", params: { pitch: 400 } } } },
+  "proc-vehicle-ship-ss-great-britain": { sounds: { horn: { id: "steam-whistle", params: { pitch: 500 } } } },
+  "proc-vehicle-ship-swiss-paddle": { sounds: { horn: { id: "steam-whistle", params: { pitch: 560 } } } },
+  "proc-vehicle-ship-elbe-paddle": { sounds: { horn: { id: "steam-whistle", params: { pitch: 580 } } } },
+  "proc-vehicle-ship-sternwheeler": { sounds: { horn: { id: "steam-whistle", params: { pitch: 450 } } } },
+  "proc-vehicle-ship-laker": { sounds: { horn: { id: "steam-whistle", params: { pitch: 420 } } } },
 };

@@ -215,10 +215,12 @@ describe("a design's exported sounds", () => {
     expect(heavy.sounds?.horn).toEqual(railHorn(false, 87));
   });
 
-  it("give every ship a horn by its hull, the bigger the deeper", () => {
+  it("give every ship a horn by its hull, the bigger the deeper, but a steamship its stated whistle", () => {
     const ships = vehicles.filter((v) => v.category === "Ships");
     expect(ships.length).toBeGreaterThan(0);
-    for (const s of ships) expect(s.game!.sounds!.horn!.id).toBe("ship-horn");
+    for (const s of ships) expect(s.game!.sounds!.horn!.id).toBe(SOUND_TABLE[s.id]?.sounds?.horn?.id ?? "ship-horn");
+    // the world fleet's steamships (soundTable.ts) whistle
+    expect(byId("proc-vehicle-ship-olympic").game!.sounds!.horn!.id).toBe("steam-whistle");
     const pitch = (id: string) => byId(id).game!.sounds!.horn!.params!.pitch as number;
     // the liner stands in for a long old model; the hydrofoil is small
     expect(pitch("proc-vehicle-cruise-ferry")).toBeLessThan(pitch("proc-vehicle-hydrofoil-ferry"));
