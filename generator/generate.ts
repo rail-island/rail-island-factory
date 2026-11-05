@@ -98,6 +98,9 @@ import { JNR_LOCOS } from "./jpLocos.ts";
 import { TRUCKS } from "./trucks.ts";
 import { PHOTO_TRUCKS } from "./photoTrucks.ts";
 import { TRAM_DESIGNS } from "./trams.ts";
+// the world trams (worldTrams.ts, docs/models/world-trams.md)
+import { EUROPE_TRAMS } from "./worldTramsEurope.ts";
+import { WORLD_REGION_TRAMS } from "./worldTramsWorld.ts";
 import { METRO_DESIGNS } from "./metro.ts";
 import { CZSK_COACHES } from "./czskCoaches.ts";
 import { STEAM_LOCOS } from "./steamLocos.ts";
@@ -215,6 +218,8 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: JP_EMUS, source: "jpEmus.ts", meta: "vehicles" },
   { designs: JNR_LOCOS, source: "jpLocos.ts", meta: "vehicles" },
   { designs: TRAM_DESIGNS, source: "trams.ts", meta: "vehicles" },
+  { designs: EUROPE_TRAMS, source: "worldTramsEurope.ts", meta: "vehicles" }, // the world trams
+  { designs: WORLD_REGION_TRAMS, source: "worldTramsWorld.ts", meta: "vehicles" }, // the world trams
   { designs: METRO_DESIGNS, source: "metro.ts", meta: "vehicles" },
   { designs: EMU451_DESIGNS, source: "emu451.ts", meta: "vehicles" },
   { designs: EMU460_DESIGNS, source: "emu460.ts", meta: "vehicles" },

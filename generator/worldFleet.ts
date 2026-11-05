@@ -8,6 +8,9 @@ import { cabinDatums, roofOf, type CabinSpec } from "./cabinKit.ts";
 import { WORLD_CABIN_SPECS } from "./worldCabins.ts";
 import { WORLD_BUS_SPECS } from "./worldBuses.ts";
 import { busFeatures } from "./worldBusKit.ts";
+// the world trams
+import { WORLD_TRAM_SPECS } from "./worldTrams.ts";
+import { tramFeatures, tramLength } from "./worldTramKit.ts";
 import { proceduralId } from "./modelId.ts";
 
 /** A fleet design as the harness sees it: its id, the kit options it uses, a size to find the family's largest. */
@@ -45,6 +48,13 @@ export const WORLD_FLEET: readonly FleetEntry[] = [
     const lengths = (b.params ?? []).flatMap((p) => p.values.map((v) => b.spec({ [p.name]: v.value }).length));
     const s = b.spec();
     return { id: proceduralId(b.id), family: "buses", features: busFeatures(s, (b.params ?? []).map((p) => p.name)), size: Math.max(s.length, ...lengths) * s.height };
+  }),
+  // the world trams: the kit options of every parameter value's spec (a unit's trailer, a length)
+  ...WORLD_TRAM_SPECS.map((t) => {
+    const names = (t.params ?? []).map((p) => p.name);
+    const specs = [t.spec(), ...(t.params ?? []).flatMap((p) => p.values.map((v) => t.spec({ [p.name]: v.value })))];
+    const features = [...new Set(specs.flatMap((s) => tramFeatures(s, names)))].sort();
+    return { id: proceduralId(t.id), family: "trams", features, size: Math.max(...specs.map((s) => tramLength(s) * s.height)) };
   }),
 ];
 
