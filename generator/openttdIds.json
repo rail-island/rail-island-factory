@@ -12,6 +12,19 @@
     "proc-vehicle-bmo-double-deck-coach": 17,
     "proc-vehicle-boeing-737": 77,
     "proc-vehicle-boeing-747": 73,
+    "proc-vehicle-br-9f": 265,
+    "proc-vehicle-br-class-142": 274,
+    "proc-vehicle-br-class-158": 273,
+    "proc-vehicle-br-class-37": 277,
+    "proc-vehicle-br-class-390": 271,
+    "proc-vehicle-br-class-47": 278,
+    "proc-vehicle-br-class-55": 276,
+    "proc-vehicle-br-class-66": 279,
+    "proc-vehicle-br-class-800": 270,
+    "proc-vehicle-br-class-86": 280,
+    "proc-vehicle-br-hst": 268,
+    "proc-vehicle-br-ic225": 269,
+    "proc-vehicle-br-mk1-coach": 267,
     "proc-vehicle-budd-rdc": 134,
     "proc-vehicle-bus-1": 71,
     "proc-vehicle-cd-110": 33,
@@ -98,11 +111,13 @@
     "proc-vehicle-emd-gp9": 120,
     "proc-vehicle-emd-sd40-2": 121,
     "proc-vehicle-emd-sd70ace": 123,
+    "proc-vehicle-eurostar-373": 272,
     "proc-vehicle-faccs-hopper-wagon": 41,
     "proc-vehicle-falls-hopper-wagon": 42,
     "proc-vehicle-ge-es44ac": 122,
     "proc-vehicle-ge-p42dc": 125,
     "proc-vehicle-glacier-express": 223,
+    "proc-vehicle-gwr-castle": 263,
     "proc-vehicle-habis-sliding-wall-wagon": 39,
     "proc-vehicle-hadgs-hopper-wagon": 40,
     "proc-vehicle-hankyu-9000": 155,
@@ -129,6 +144,10 @@
     "proc-vehicle-legacy-heavy-wagon": 3,
     "proc-vehicle-legacy-open-wagon": 2,
     "proc-vehicle-light-jet": 78,
+    "proc-vehicle-lms-black-five": 264,
+    "proc-vehicle-lner-a3": 262,
+    "proc-vehicle-lner-a4": 261,
+    "proc-vehicle-lu-1938-stock": 275,
     "proc-vehicle-mav-mdmot": 109,
     "proc-vehicle-mb-citaro": 67,
     "proc-vehicle-mb-citaro-blue": 68,
@@ -198,6 +217,7 @@
     "proc-vehicle-rhb-allegra": 231,
     "proc-vehicle-rhb-ge443": 238,
     "proc-vehicle-rhb-ge66": 239,
+    "proc-vehicle-rocket": 266,
     "proc-vehicle-sbb-ae66": 235,
     "proc-vehicle-sbb-ae814": 237,
     "proc-vehicle-sbb-ce68": 236,
@@ -335,6 +355,178 @@
       "proc-vehicle-bmo-double-deck-coach?livery=cdNajbrt": {
         "id": 816,
         "size": 16
+      },
+      "proc-vehicle-br-9f?": {
+        "id": 8580,
+        "size": 4
+      },
+      "proc-vehicle-br-9f?formation=with tender": {
+        "id": 8592,
+        "size": 6
+      },
+      "proc-vehicle-br-9f?livery=eveningStar": {
+        "id": 8588,
+        "size": 4
+      },
+      "proc-vehicle-br-9f?unit=tender": {
+        "id": 8584,
+        "size": 4
+      },
+      "proc-vehicle-br-class-142?": {
+        "id": 8918,
+        "size": 4
+      },
+      "proc-vehicle-br-class-142?formation=2 cars": {
+        "id": 8926,
+        "size": 8
+      },
+      "proc-vehicle-br-class-142?livery=northern": {
+        "id": 8922,
+        "size": 4
+      },
+      "proc-vehicle-br-class-158?": {
+        "id": 8894,
+        "size": 6
+      },
+      "proc-vehicle-br-class-158?formation=2 cars": {
+        "id": 8906,
+        "size": 12
+      },
+      "proc-vehicle-br-class-158?livery=northern": {
+        "id": 8900,
+        "size": 6
+      },
+      "proc-vehicle-br-class-37?": {
+        "id": 8982,
+        "size": 6
+      },
+      "proc-vehicle-br-class-37?livery=brBlue": {
+        "id": 8988,
+        "size": 6
+      },
+      "proc-vehicle-br-class-37?livery=railfreight": {
+        "id": 8994,
+        "size": 6
+      },
+      "proc-vehicle-br-class-390?": {
+        "id": 8790,
+        "size": 8
+      },
+      "proc-vehicle-br-class-390?formation=8 cars": {
+        "id": 8812,
+        "size": 32
+      },
+      "proc-vehicle-br-class-390?livery=avanti": {
+        "id": 8804,
+        "size": 8
+      },
+      "proc-vehicle-br-class-390?unit=middleCar": {
+        "id": 8798,
+        "size": 6
+      },
+      "proc-vehicle-br-class-47?": {
+        "id": 9000,
+        "size": 6
+      },
+      "proc-vehicle-br-class-47?livery=brBlue": {
+        "id": 9006,
+        "size": 6
+      },
+      "proc-vehicle-br-class-47?livery=intercity": {
+        "id": 9012,
+        "size": 6
+      },
+      "proc-vehicle-br-class-55?": {
+        "id": 8970,
+        "size": 6
+      },
+      "proc-vehicle-br-class-55?livery=brBlue": {
+        "id": 8976,
+        "size": 6
+      },
+      "proc-vehicle-br-class-66?": {
+        "id": 9018,
+        "size": 6
+      },
+      "proc-vehicle-br-class-66?livery=freightliner": {
+        "id": 9024,
+        "size": 6
+      },
+      "proc-vehicle-br-class-66?livery=gbrf": {
+        "id": 9030,
+        "size": 6
+      },
+      "proc-vehicle-br-class-800?": {
+        "id": 8734,
+        "size": 8
+      },
+      "proc-vehicle-br-class-800?formation=5 cars": {
+        "id": 8758,
+        "size": 32
+      },
+      "proc-vehicle-br-class-800?livery=azuma": {
+        "id": 8750,
+        "size": 8
+      },
+      "proc-vehicle-br-class-800?unit=middleCar": {
+        "id": 8742,
+        "size": 8
+      },
+      "proc-vehicle-br-class-86?": {
+        "id": 9036,
+        "size": 6
+      },
+      "proc-vehicle-br-class-86?livery=intercity": {
+        "id": 9042,
+        "size": 6
+      },
+      "proc-vehicle-br-hst?": {
+        "id": 8634,
+        "size": 6
+      },
+      "proc-vehicle-br-hst?formation=8 cars": {
+        "id": 8652,
+        "size": 32
+      },
+      "proc-vehicle-br-hst?livery=blueGrey": {
+        "id": 8646,
+        "size": 6
+      },
+      "proc-vehicle-br-hst?unit=middleCar": {
+        "id": 8640,
+        "size": 6
+      },
+      "proc-vehicle-br-ic225?": {
+        "id": 8684,
+        "size": 6
+      },
+      "proc-vehicle-br-ic225?formation=8 cars": {
+        "id": 8702,
+        "size": 32
+      },
+      "proc-vehicle-br-ic225?livery=lner": {
+        "id": 8696,
+        "size": 6
+      },
+      "proc-vehicle-br-ic225?unit=middleCar": {
+        "id": 8690,
+        "size": 6
+      },
+      "proc-vehicle-br-mk1-coach?": {
+        "id": 8610,
+        "size": 6
+      },
+      "proc-vehicle-br-mk1-coach?livery=maroon": {
+        "id": 8622,
+        "size": 6
+      },
+      "proc-vehicle-br-mk1-coach?livery=southernGreen": {
+        "id": 8628,
+        "size": 6
+      },
+      "proc-vehicle-br-mk1-coach?unit=bsk": {
+        "id": 8616,
+        "size": 6
       },
       "proc-vehicle-budd-rdc?": {
         "id": 4954,
@@ -1280,6 +1472,22 @@
         "id": 4716,
         "size": 6
       },
+      "proc-vehicle-eurostar-373?": {
+        "id": 8844,
+        "size": 6
+      },
+      "proc-vehicle-eurostar-373?formation=8 cars": {
+        "id": 8862,
+        "size": 32
+      },
+      "proc-vehicle-eurostar-373?livery=eurostar2011": {
+        "id": 8856,
+        "size": 6
+      },
+      "proc-vehicle-eurostar-373?unit=middleCar": {
+        "id": 8850,
+        "size": 6
+      },
       "proc-vehicle-faccs-hopper-wagon?": {
         "id": 1632,
         "size": 16
@@ -1331,6 +1539,18 @@
       "proc-vehicle-glacier-express?unit=second": {
         "id": 7476,
         "size": 6
+      },
+      "proc-vehicle-gwr-castle?": {
+        "id": 8552,
+        "size": 4
+      },
+      "proc-vehicle-gwr-castle?formation=with tender": {
+        "id": 8560,
+        "size": 6
+      },
+      "proc-vehicle-gwr-castle?unit=tender": {
+        "id": 8556,
+        "size": 4
       },
       "proc-vehicle-habis-sliding-wall-wagon?": {
         "id": 1584,
@@ -1563,6 +1783,62 @@
       "proc-vehicle-legacy-open-wagon?": {
         "id": 304,
         "size": 16
+      },
+      "proc-vehicle-lms-black-five?": {
+        "id": 8566,
+        "size": 4
+      },
+      "proc-vehicle-lms-black-five?formation=with tender": {
+        "id": 8574,
+        "size": 6
+      },
+      "proc-vehicle-lms-black-five?unit=tender": {
+        "id": 8570,
+        "size": 4
+      },
+      "proc-vehicle-lner-a3?": {
+        "id": 8534,
+        "size": 4
+      },
+      "proc-vehicle-lner-a3?formation=with tender": {
+        "id": 8546,
+        "size": 6
+      },
+      "proc-vehicle-lner-a3?livery=brGreen": {
+        "id": 8542,
+        "size": 4
+      },
+      "proc-vehicle-lner-a3?unit=tender": {
+        "id": 8538,
+        "size": 4
+      },
+      "proc-vehicle-lner-a4?": {
+        "id": 8514,
+        "size": 4
+      },
+      "proc-vehicle-lner-a4?formation=with tender": {
+        "id": 8526,
+        "size": 8
+      },
+      "proc-vehicle-lner-a4?livery=brGreen": {
+        "id": 8522,
+        "size": 4
+      },
+      "proc-vehicle-lner-a4?unit=tender": {
+        "id": 8518,
+        "size": 4
+      },
+      "proc-vehicle-lu-1938-stock?": {
+        "id": 8934,
+        "size": 4
+      },
+      "proc-vehicle-lu-1938-stock?formation=7 cars": {
+        "id": 8942,
+        "size": 28
+      },
+      "proc-vehicle-lu-1938-stock?unit=middleCar": {
+        "id": 8938,
+        "size": 4
       },
       "proc-vehicle-mav-mdmot?": {
         "id": 3536,
@@ -2210,6 +2486,18 @@
       },
       "proc-vehicle-rhb-ge66?livery=green": {
         "id": 7858,
+        "size": 4
+      },
+      "proc-vehicle-rocket?": {
+        "id": 8598,
+        "size": 4
+      },
+      "proc-vehicle-rocket?formation=with tender": {
+        "id": 8606,
+        "size": 4
+      },
+      "proc-vehicle-rocket?unit=tender": {
+        "id": 8602,
         "size": 4
       },
       "proc-vehicle-sbb-ae66?": {

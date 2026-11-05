@@ -33,6 +33,10 @@ export interface WorldSteam {
   /** The domes on the boiler (1 - 3) and whether the firebox is a square Belpaire. */
   domes: number;
   belpaire?: boolean;
+  /** An early engine without Walschaerts valve gear (the Rocket): the cylinders drive the wheels directly. */
+  noValveGear?: boolean;
+  /** An open footplate without a cab (the Rocket). */
+  noCab?: boolean;
   palette: { paint: string; wheel: string; frame: string; smokebox?: string };
   /** The tender: its length over the buffers, its axles (4 on two bogies, else rigid) and wheel diameter. */
   tender: { length: number; axles: number; d: number };
@@ -74,7 +78,7 @@ export function steamEngineSpec(s: WorldSteam): LocoSpec {
   // the kit's smokebox saddle is 1.5 r wide: its sides must not lie on the frame plates' outer faces (|z| 0.52 - 0.6)
   if (r * 0.75 >= 0.52 && r * 0.75 <= 0.6) throw new Error(`${s.title}: boiler radius ${r} puts the saddle's sides on the frames`);
   const rb = Math.max(1.52, s.coupledD + 0.23);
-  const cab0 = end - 2.7;
+  const cab0 = s.noCab ? end - 0.9 : end - 2.7;
   const chimneyX = 1.9;
   const span = cab0 - 1.5 - 3.2;
   const domeX = Array.from({ length: s.domes }, (_, i) => 3.2 + span * ((i + 0.5) / s.domes));
@@ -92,7 +96,7 @@ export function steamEngineSpec(s: WorldSteam): LocoSpec {
     title: s.title,
     palette: { paint: mat(s.palette.paint, 0.55), wheel: mat(s.palette.wheel, 0.6), frame: mat(s.palette.frame, 0.65), ...(s.palette.smokebox ? { smokebox: mat(s.palette.smokebox, 0.85) } : {}) },
     heads: [0, end + 0.5],
-    beams: s.coupler === "buffers" ? { y0: 0.72, y1: 1.3, length: [0.55, 0.3] } : { front: false, rear: false },
+    beams: s.coupler === "buffers" ? { y0: 0.72, y1: 1.3, length: [0.55, 0.3], half: Math.min(1.45, s.half - 0.04) } : { front: false, rear: false },
     boiler: { x0: 1.0, x1: cab0, y, r, smokebox: 1.5, bands: domeX.map((x) => x - 0.9) },
     chimney: { x: chimneyX, top: Math.min(s.top - 0.05, y + r + 0.95), r: 0.3 },
     domes: domeX.map((x) => ({ x, top: Math.min(s.top - 0.1, y + r + 0.65), r: 0.4 })),
@@ -100,11 +104,11 @@ export function steamEngineSpec(s: WorldSteam): LocoSpec {
     handrail: { x0: 2.2, x1: cab0 - 1.6, y: y + r * 0.25 },
     runningBoard: { profile: [[0.45, 1.33], [1.3, 1.33], [1.9, rb], [end, rb]], half: s.half - 0.08, valance: 0.08 },
     frame: { x0: 0.55, x1: end, top: Math.min(rb - 0.08, y - r - 0.05) },
-    cab: {
+    ...(s.noCab ? {} : { cab: {
       x0: cab0, x1: end, half: [[s.half, rb], [s.half, roofY - 0.3], [s.half - 0.2, roofY - 0.05], [s.half * 0.55, roofY + 0.12], [0, roofY + 0.17]], roofY: roofY - 0.05,
       windows: [{ x0: cab0 + 0.3, x1: cab0 + 1.1, y0: roofY - 1.05, y1: roofY - 0.45 }, { x0: cab0 + 1.3, x1: cab0 + 2.1, y0: roofY - 1.05, y1: roofY - 0.45 }],
       front: [{ z0: 0.75, z1: s.half - 0.25, y0: roofY - 0.95, y1: roofY - 0.45 }, { z0: -(s.half - 0.25), z1: -0.75, y0: roofY - 0.95, y1: roofY - 0.45 }],
-    },
+    } }),
     prisms: [{ name: "firebox", x0: cab0 - 1.5, x1: cab0, half: firebox }],
     ...(deflectors ? { deflectors } : {}),
     bogies: [
@@ -119,12 +123,12 @@ export function steamEngineSpec(s: WorldSteam): LocoSpec {
       ],
       engines: [{
         coupled: a.coupled.map((_, i) => s.lead + i), main: s.lead + Math.min(s.coupled - 1, Math.floor(s.coupled / 2)),
-        cylinder: { x0: cylX - 0.5, x1: cylX + 0.5, y: 1.05, r: 0.32 }, crank: Math.min(0.36, s.coupledD * 0.2), phase: 0.3, valveGear: true,
+        cylinder: { x0: cylX - 0.5, x1: cylX + 0.5, y: 1.05, r: 0.32 }, crank: Math.min(0.36, s.coupledD * 0.2), phase: 0.3, valveGear: !s.noValveGear,
       }],
-      cylinderZ: 1.12, reference: s.lead, wheelMaterial: "wheel",
+      cylinderZ: Math.min(1.12, s.half - 0.36), reference: s.lead, wheelMaterial: "wheel",
     },
     ...(s.coupler === "buffers" ? { lamps: { front: [[0.56, 1.3, 0.85], [0.56, 1.3, -0.85]], rear: [[end + 0.45, 1.3, 0.7], [end + 0.45, 1.3, -0.7]] } } : {}),
-    number: { text: s.number, side: [cab0 + 1.35, rb + 0.4, s.half], front: [0.98, y] },
+    number: s.noCab ? { text: s.number, front: [0.98, y] } : { text: s.number, side: [cab0 + 1.35, rb + 0.4, s.half], front: [0.98, y] },
     extras: (t) => {
       frontCoupler(s, t, 0);
       if (s.coupler === "knuckle") t.m.scope("drawbar", () => t.box("frame", end, end + 0.5, 0.8, 1.0, -0.15, 0.15));
@@ -145,7 +149,7 @@ export function steamTenderSpec(s: WorldSteam): LocoSpec {
     title: `${s.title} tender`,
     palette: { paint: mat(s.palette.paint, 0.55), wheel: mat(s.palette.wheel, 0.6), frame: mat(s.palette.frame, 0.65) },
     heads: [-0.3, L - 0.3],
-    beams: s.coupler === "buffers" ? { y0: 0.75, y1: 1.3, length: [0.3, 0.62] } : { front: false, rear: false },
+    beams: s.coupler === "buffers" ? { y0: 0.75, y1: 1.3, length: [0.3, 0.62], half: Math.min(1.45, s.half - 0.04) } : { front: false, rear: false },
     frame: { x0: 0, x1: body, top: 1.2 },
     prisms: [
       { name: "tank", x0: 0, x1: body, half: [[s.half - 0.08, 1.2], [s.half - 0.08, tankTop - 0.2], [s.half - 0.25, tankTop]] },

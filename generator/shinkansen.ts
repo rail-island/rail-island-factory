@@ -21,6 +21,7 @@ import { diamond, singleArm } from "./czElectricKit.ts";
 import type { LoadingGauge } from "./loadingGauge.ts";
 import { DMU_CATALOG, EMU_CATALOG, enumParam } from "./emuParts.ts";
 import { COACH_CATALOG } from "./csdCoaches.ts";
+import { METRO_CATALOG } from "./metro.ts";
 import { articulate } from "./tramKit.ts";
 import { LOD_GLASS, type LodBand, type LodPart, type LodSections } from "./lodKit.ts";
 import { bogieParts, fitUnit, roofPart, turnBody, type UnitBody } from "./lodUnits.ts";
@@ -90,6 +91,8 @@ export interface ShinkansenSeries {
   single?: boolean;
   /** The end cars raise the pantographs (a short unit without intermediate motor cars). */
   endPantograph?: boolean;
+  /** A metro or tube train fed from a conductor rail: no pantograph, filed with the metros. */
+  metro?: boolean;
   /** The coupler at a cab end: the unit's centre coupler (default) or buffers and a screw coupling. */
   endCoupler?: "centre" | "buffers";
 }
@@ -98,7 +101,7 @@ export interface ShinkansenSeries {
 const BUFFER_GAP = 0.65;
 const isDiesel = (s: ShinkansenSeries) => s.traction === "diesel";
 /** No pantograph: a diesel unit or an unpowered set. */
-const unwired = (s: ShinkansenSeries) => s.traction === "diesel" || s.traction === "none";
+const unwired = (s: ShinkansenSeries) => s.traction === "diesel" || s.traction === "none" || s.metro === true;
 /** The train lengths a series offers, and its default. */
 export const carsOf = (s: ShinkansenSeries): readonly number[] => s.cars ?? SHINKANSEN_CARS;
 const defaultCars = (s: ShinkansenSeries) => (carsOf(s).includes(4) ? 4 : carsOf(s)[0]!);
@@ -171,7 +174,7 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
       if (end && !s.flatCab) noseFittings(m, s, b, X);
       if (s.single && !s.flatCab) m.scope("rear nose", () => m.turned((X(0) + X(L)) / 2, () => noseFittings(m, s, b, X)));
       if (isDiesel(s))
-        m.scope("exhaust", () => exhaust(m, X(L / 2), 0, s.C - 0.05, s.C + 0.25, 0.14, 0.14));
+        m.scope("exhaust", () => exhaust(m, X(L / 2), 0, s.C - 0.05, s.C + 0.1, 0.14, 0.14));
       if (pantograph) m.scope("pantograph", () => {
         const x = X(tr[1] - 1.5);
         block(m, l.roof, x - 1.6, x + 1.6, s.C - 0.06, s.C + 0.05, -0.85, 0.85);
@@ -467,7 +470,7 @@ export const SHINKANSEN_SERIES: Record<string, ShinkansenSeries> = {
 
 /** A series' design: its builders (named exports of its module), parameters and gauge. */
 export const seriesDesign = (id: string, title: string, s: ShinkansenSeries, params: ParamSpec[], b: (v?: ParamValues) => MeshBuilder, l: (v?: ParamValues) => MeshBuilder, refs: string, gauge: LoadingGauge = "shinkansen"): ProceduralDesign => ({
-  id, title, build: b, buildLod: l, params, lodTriangles: s.single ? 100 : 500, game: gameOf(s, params), catalog: s.traction === "none" ? COACH_CATALOG : isDiesel(s) ? DMU_CATALOG : EMU_CATALOG, ...(gauge === "uic" ? {} : { loadingGauge: gauge }), references: refs,
+  id, title, build: b, buildLod: l, params, lodTriangles: s.single ? 100 : 500, game: gameOf(s, params), catalog: s.metro ? METRO_CATALOG : s.traction === "none" ? COACH_CATALOG : isDiesel(s) ? DMU_CATALOG : EMU_CATALOG, ...(gauge === "uic" ? {} : { loadingGauge: gauge }), references: refs,
 });
 
 export const SHINKANSEN_DESIGNS: ProceduralDesign[] = [

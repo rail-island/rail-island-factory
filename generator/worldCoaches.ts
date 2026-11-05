@@ -114,7 +114,7 @@ export function coachGame(s: WorldCoach): GameProperties {
   return { weight: first![1].weight, power: 0, maxspeed: s.maxspeed, accel: null, variants: rest.map(([unit, t]) => ({ params: { unit }, weight: t.weight })) };
 }
 
-export const coachDesign = (id: string, title: string, s: WorldCoach, params: ParamSpec[], build: (v?: ParamValues) => MeshBuilder, buildLod: (v?: ParamValues) => MeshBuilder, references: string, loadingGauge?: "us"): ProceduralDesign => ({
+export const coachDesign = (id: string, title: string, s: WorldCoach, params: ParamSpec[], build: (v?: ParamValues) => MeshBuilder, buildLod: (v?: ParamValues) => MeshBuilder, references: string, loadingGauge?: "us" | "uk"): ProceduralDesign => ({
   id, title, build, buildLod, params, game: coachGame(s), catalog: COACH_CATALOG, references, ...(loadingGauge ? { loadingGauge } : {}),
 });
 
@@ -236,7 +236,24 @@ export const GLACIER: WorldCoach = {
   liveries: { glacier: { title: "Glacier Express", palette: { red: c("#c8102e"), white: c("#f1f1ee", 0.4), roofG: c("#3a3d40", 0.6), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 1.45, "red"], [1.45, 9, "white"]], roof: "roofG", skirt: "skirtG" } },
 };
 
-const P = { ew4: coachParams(SBB_EW4), ic2000: coachParams(SBB_IC2000), glacier: coachParams(GLACIER), nsIcr: coachParams(NS_ICR), dbIc: coachParams(DB_IC), corail: coachParams(SNCF_CORAIL), grandConfort: coachParams(SNCF_GRAND_CONFORT), ciwl: coachParams(CIWL) };
+// ---------------------------------------------------------------------------
+// The United Kingdom: BR's Mk1 coaches, on the W6a gauge
+
+export const BR_MK1: WorldCoach = {
+  length: 19.66, W: 1.37, Y: 1.35, S: 3.1, C: 3.86, B: 1.0, A: 1.15, rows: [[1.9, 2.7]], doorIn: 0.55, doorW: 0.7, door: [1.15, 2.95],
+  bogieCentres: 14.17, wheelR: 0.46, wheelbase: 2.6, coupler: "buffers", maxspeed: 145,
+  types: {
+    tso: { title: "Open second", windows: 8, windowW: 1.55, number: "E4383", weight: 33 },
+    bsk: { title: "Brake second", windows: 5, windowW: 1.45, number: "M35021", weight: 35 },
+  },
+  liveries: {
+    crimsonCream: { title: "Crimson, cream", palette: { crimson: c("#7a1f2e"), cream: c("#e6dcc0"), roofG: c("#3a3d40", 0.7), skirtG: c("#1d1e20", 0.8) }, bands: [[0, 1.8, "crimson"], [1.8, 2.8, "cream"], [2.8, 9, "crimson"]], roof: "roofG", skirt: "skirtG" },
+    maroon: { title: "BR maroon", palette: { maroon: c("#5a1a24"), lining: c("#d9b54a"), roofG: c("#3a3d40", 0.7), skirtG: c("#1d1e20", 0.8) }, bands: [[0, 2.8, "maroon"], [2.8, 2.84, "lining"], [2.84, 9, "maroon"]], roof: "roofG", skirt: "skirtG" },
+    southernGreen: { title: "Southern green", palette: { green: c("#1f5d3a"), roofG: c("#3a3d40", 0.7), skirtG: c("#1d1e20", 0.8) }, bands: [[0, 9, "green"]], roof: "roofG", skirt: "skirtG" },
+  },
+};
+
+const P = { mk1: coachParams(BR_MK1), ew4: coachParams(SBB_EW4), ic2000: coachParams(SBB_IC2000), glacier: coachParams(GLACIER), nsIcr: coachParams(NS_ICR), dbIc: coachParams(DB_IC), corail: coachParams(SNCF_CORAIL), grandConfort: coachParams(SNCF_GRAND_CONFORT), ciwl: coachParams(CIWL) };
 export function sncfCorail(v?: ParamValues): MeshBuilder { return buildCoach(SNCF_CORAIL, P.corail, v); }
 export function sncfCorailLod(v?: ParamValues): MeshBuilder { return buildCoachLod(SNCF_CORAIL, P.corail, v); }
 export function sncfGrandConfort(v?: ParamValues): MeshBuilder { return buildCoach(SNCF_GRAND_CONFORT, P.grandConfort, v); }
@@ -249,6 +266,8 @@ export function sbbIc2000(v?: ParamValues): MeshBuilder { return buildCoach(SBB_
 export function sbbIc2000Lod(v?: ParamValues): MeshBuilder { return buildCoachLod(SBB_IC2000, P.ic2000, v); }
 export function glacierExpress(v?: ParamValues): MeshBuilder { return buildCoach(GLACIER, P.glacier, v); }
 export function glacierExpressLod(v?: ParamValues): MeshBuilder { return buildCoachLod(GLACIER, P.glacier, v); }
+export function brMk1(v?: ParamValues): MeshBuilder { return buildCoach(BR_MK1, P.mk1, v); }
+export function brMk1Lod(v?: ParamValues): MeshBuilder { return buildCoachLod(BR_MK1, P.mk1, v); }
 export function ciwlCar(v?: ParamValues): MeshBuilder { return buildCoach(CIWL, P.ciwl, v); }
 export function ciwlCarLod(v?: ParamValues): MeshBuilder { return buildCoachLod(CIWL, P.ciwl, v); }
 export function dbIcCoach(v?: ParamValues): MeshBuilder { return buildCoach(DB_IC, P.dbIc, v); }
@@ -262,5 +281,6 @@ export const WORLD_COACHES: ProceduralDesign[] = [
   coachDesign("proc-vehicle-sbb-ew4-coach", "SBB EW IV coach", SBB_EW4, P.ew4, sbbEw4, sbbEw4Lod, "sbb-ew4-coach"),
   coachDesign("proc-vehicle-sbb-ic2000", "SBB IC 2000 coach", SBB_IC2000, P.ic2000, sbbIc2000, sbbIc2000Lod, "sbb-ic2000"),
   coachDesign("proc-vehicle-glacier-express", "Glacier Express coach", GLACIER, P.glacier, glacierExpress, glacierExpressLod, "glacier-express"),
+  coachDesign("proc-vehicle-br-mk1-coach", "BR Mk1 coach", BR_MK1, P.mk1, brMk1, brMk1Lod, "br-mk1-coach", "uk"),
   coachDesign("proc-vehicle-ciwl-car", "Wagons-Lits car", CIWL, P.ciwl, ciwlCar, ciwlCarLod, "ciwl-car"),
 ];

@@ -14,14 +14,16 @@
 // - `nezCasse`: Paul Arzens's "broken nose", the windscreen leaning forward
 //   under a visor (CC 6500, BB 22200, NS 1700);
 // - `hoods`: a centre cab between two lower hoods (a crocodile, BR 218), the
-//   hoods drawn at the cab's width (a deviation the families' docs state).
+//   hoods drawn at the cab's width (a deviation the families' docs state);
+// - `bonnets`: a short, lower nose ahead of the cab at each end (Class 37, the
+//   Deltic, India's and China's road diesels), `bonnet` long, `hoodTop` high.
 
 import type { MaterialSpec } from "./meshBuilder.ts";
 import type { Band } from "./cd163.ts";
 import { c } from "./czElectricKit.ts";
 import type { BogieSpec, EndItem, LocoSpec, RoofBox, SideItem } from "./boxLocoKit.ts";
 
-export type NoseType = "flat" | "raked" | "streamlined" | "nezCasse" | "hoods";
+export type NoseType = "flat" | "raked" | "streamlined" | "nezCasse" | "hoods" | "bonnets";
 
 export interface WorldLoco {
   /** Length over the buffers (or couplers). */
@@ -33,8 +35,10 @@ export interface WorldLoco {
   nose: NoseType;
   /** How far the cab's front stands back from the buffer beam, for `hoods` the cab's half length. */
   cabHalf?: number;
-  /** For `hoods`: the hoods' top. */
+  /** For `hoods` and `bonnets`: the hoods' top. */
   hoodTop?: number;
+  /** For `bonnets`: how far the nose reaches ahead of the cab. */
+  bonnet?: number;
   /** The bogies: centre, axle offsets, wheel radius. */
   bogies: ReadonlyArray<readonly [number, readonly number[], number]>;
   /** Pantographs (electric) or exhaust stacks (diesel, x positions). */
@@ -70,6 +74,11 @@ function tipTable(s: WorldLoco, N: number): Array<readonly [number, number]> {
     case "nezCasse":
       // the lower nose, the break, the windscreen leaning out to the visor
       return [[y0, N], [y0 + h * 0.36, N], [y0 + h * 0.46, N - 0.55], [roof - 0.3, N - 0.25], [roof - 0.12, N - 0.2], [roof, N - 0.5]];
+    case "bonnets": {
+      const top = s.hoodTop ?? y0 + h * 0.5;
+      const cab = N - (s.bonnet ?? 1.6);
+      return [[y0, N], [top - 0.12, N], [top, N - 0.15], [top + 0.01, cab], [roof - 0.12, cab], [roof, cab - 0.25]];
+    }
     case "hoods": {
       const top = s.hoodTop ?? y0 + h * 0.55;
       const cab = s.cabHalf ?? 1.6;
@@ -96,6 +105,7 @@ function planOf(s: WorldLoco): (y: number, w: number) => ReadonlyArray<readonly 
 function screen(s: WorldLoco): [number, number] {
   const h = s.roof - s.y0;
   if (s.nose === "hoods") return [Math.max((s.hoodTop ?? s.y0 + h * 0.55) + 0.25, s.roof - 1.0), s.roof - 0.3];
+  if (s.nose === "bonnets") return [Math.max((s.hoodTop ?? s.y0 + h * 0.5) + 0.2, s.roof - 0.95), s.roof - 0.3];
   if (s.nose === "nezCasse") return [s.y0 + h * 0.5, s.roof - 0.35];
   return [s.y0 + h * 0.52, s.roof - (s.nose === "flat" ? 0.45 : 0.4)];
 }
@@ -106,7 +116,7 @@ export function worldLocoSpec(s: WorldLoco): LocoSpec {
   const W = s.W;
   const [w0, w1] = screen(s);
   const lampY = s.y0 + 0.35;
-  const cabX = s.nose === "hoods" ? s.cabHalf ?? 1.6 : N - (s.nose === "streamlined" ? 1.9 : s.nose === "raked" ? 1.0 : 0.6);
+  const cabX = s.nose === "hoods" ? s.cabHalf ?? 1.6 : s.nose === "bonnets" ? N - (s.bonnet ?? 1.6) - 0.3 : N - (s.nose === "streamlined" ? 1.9 : s.nose === "raked" ? 1.0 : 0.6);
   const doorX = s.nose === "hoods" ? [cabX - 1.0, cabX - 0.2] as const : [cabX - 1.15, cabX - 0.35] as const;
   const room = s.room;
   const roomItems: SideItem[] = [];

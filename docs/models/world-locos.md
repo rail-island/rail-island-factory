@@ -27,6 +27,8 @@ those tables from native XML; the eight-country families state them with
 - `raked` - the windscreen leaning back above the waist (BR 120, 101, E 18).
 - `streamlined` - rounded in plan and elevation, low at the beam (BR 103, V 200, Re 460).
 - `nezCasse` - Paul Arzens's broken nose: the windscreen leaning forward to a visor.
+- `bonnets` - a short, lower nose ahead of the cab at each end (`bonnet` long, `hoodTop`
+  high): the Class 37 and 55, the Indian and Chinese road diesels.
 - `hoods` - a centre cab between lower hoods (a crocodile, the BR 218). The shell has
   one half width per height, so the hoods are as wide as the cab: a deviation each
   family's doc states.

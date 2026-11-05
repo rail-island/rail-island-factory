@@ -21,6 +21,8 @@ metres. `WorldSteam` states a tender engine in a few measures and derives the sp
   automatic coupler front and rear, a drawbar to the tender).
 - **Tender.** Its length, four axles on two bogies or a rigid row, the wheel diameter.
 
+`noValveGear` and `noCab` draw an early engine (the Rocket); on a narrow gauge the
+buffer beams and the outside cylinders come in with the running boards' half width.
 A design is the engine and its tender as `unit` (`locomotive`, `tender`), with an
 optional `livery` that swaps the paint and number. The kit's smokebox saddle is 1.5 r
 wide, so a boiler radius whose saddle would lie on the frame plates' faces (0.69 -
@@ -38,6 +40,12 @@ wide, so a boiler radius whose saddle would lie on the frame plates' faces (0.69
 | `proc-vehicle-ns-3700` | the Netherlands | 2'C | 1.85 m | none | four axles |
 | `proc-vehicle-renfe-141f` | Spain | 1'D1' | 1.56 m | none | four axles |
 | `proc-vehicle-renfe-242f` | Spain | 2'D1' | 1.9 m | Wagner | four axles |
+| `proc-vehicle-lner-a4` | the United Kingdom | 2'C1' | 2.03 m | none | four axles |
+| `proc-vehicle-lner-a3` | the United Kingdom | 2'C1' | 2.03 m | Witte | four axles |
+| `proc-vehicle-gwr-castle` | the United Kingdom | 2'C | 2.04 m | none | three axles |
+| `proc-vehicle-lms-black-five` | the United Kingdom | 2'C | 1.83 m | none | three axles |
+| `proc-vehicle-br-9f` | the United Kingdom | 1'E | 1.52 m | Wagner | three axles |
+| `proc-vehicle-rocket` | the United Kingdom | A1 | 1.435 m | none | two axles |
 
 Each design's published figures and photographs are in its `assets/<name>/SOURCES.md`;
 the layout is the class's in proportion, not to the centimetre.

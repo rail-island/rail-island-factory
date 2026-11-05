@@ -18,6 +18,8 @@ interface SteamDesign {
 
 const BLACK_RED = { paint: "#1d1e20", wheel: "#a51a1f", frame: "#a51a1f", smokebox: "#1c1d22" };
 const ALL_BLACK = { paint: "#1d1e20", wheel: "#2a2b2d", frame: "#a51a1f", smokebox: "#1c1d22" };
+/** Britain's W6a gauge: the chimneys under 4.0 m, the cabs 2.74 m wide. */
+const UK = { top: 3.95, coupler: "buffers", half: 1.37 } as const;
 const UIC = { top: 4.65, coupler: "buffers", half: 1.5 } as const;
 
 export const WORLD_STEAM: Record<string, SteamDesign> = {
@@ -35,6 +37,15 @@ export const WORLD_STEAM: Record<string, SteamDesign> = {
   "proc-vehicle-ns-3700": { base: { ...UIC, title: "NS 3700", lead: 2, coupled: 3, trail: 0, leadD: 1.0, coupledD: 1.85, trailD: 0, boilerR: 0.84, deflectors: "none", domes: 1, palette: { paint: "#244a33", wheel: "#2a2b2d", frame: "#7a2e22", smokebox: "#1c1d22" }, tender: { length: 7.8, axles: 4, d: 1.0 }, number: "3737" } },
   "proc-vehicle-renfe-141f": { base: { ...UIC, title: "Renfe 141F Mikado", lead: 1, coupled: 4, trail: 1, leadD: 1.0, coupledD: 1.56, trailD: 1.06, boilerR: 0.9, deflectors: "none", domes: 2, palette: ALL_BLACK, tender: { length: 8.9, axles: 4, d: 0.95 }, number: "141F 2111" } },
   "proc-vehicle-renfe-242f": { base: { ...UIC, title: "Renfe 242F", lead: 2, coupled: 4, trail: 1, leadD: 0.95, coupledD: 1.9, trailD: 1.1, boilerR: 0.9, deflectors: "wagner", domes: 2, palette: { paint: "#244a33", wheel: "#2a2b2d", frame: "#a51a1f", smokebox: "#1c1d22" }, tender: { length: 10.4, axles: 4, d: 1.0 }, number: "242F 2009" } },
+  "proc-vehicle-lner-a4": { base: { ...UK, title: "LNER A4", lead: 2, coupled: 3, trail: 1, leadD: 0.97, coupledD: 2.03, trailD: 1.17, boilerR: 0.85, deflectors: "none", domes: 1, palette: { paint: "#1d3f80", wheel: "#a51a1f", frame: "#a51a1f", smokebox: "#1c1d22" }, tender: { length: 8.6, axles: 4, d: 1.0 }, number: "4468 MALLARD" },
+    liveries: { garterBlue: { title: "Garter blue", palette: { paint: "#1d3f80", wheel: "#a51a1f", frame: "#a51a1f", smokebox: "#1c1d22" }, number: "4468 MALLARD" }, brGreen: { title: "BR green", palette: { paint: "#1f4d2e", wheel: "#1f4d2e", frame: "#1d1e20", smokebox: "#1c1d22" }, number: "60022" } } },
+  "proc-vehicle-lner-a3": { base: { ...UK, title: "LNER A3", lead: 2, coupled: 3, trail: 1, leadD: 0.97, coupledD: 2.03, trailD: 1.12, boilerR: 0.85, deflectors: "witte", domes: 1, palette: { paint: "#3a7a3a", wheel: "#3a7a3a", frame: "#7a2e22", smokebox: "#1c1d22" }, tender: { length: 8.0, axles: 4, d: 1.0 }, number: "4472" },
+    liveries: { appleGreen: { title: "Apple green", palette: { paint: "#3a7a3a", wheel: "#3a7a3a", frame: "#7a2e22", smokebox: "#1c1d22" }, number: "4472" }, brGreen: { title: "BR green", palette: { paint: "#1f4d2e", wheel: "#1f4d2e", frame: "#1d1e20", smokebox: "#1c1d22" }, number: "60103" } } },
+  "proc-vehicle-gwr-castle": { base: { ...UK, title: "GWR Castle", lead: 2, coupled: 3, trail: 0, leadD: 0.96, coupledD: 2.04, trailD: 0, boilerR: 0.84, deflectors: "none", domes: 1, belpaire: true, palette: { paint: "#235a33", wheel: "#235a33", frame: "#1d1e20", smokebox: "#1c1d22" }, tender: { length: 7.6, axles: 3, d: 1.23 }, number: "4073 CAERPHILLY CASTLE" } },
+  "proc-vehicle-lms-black-five": { base: { ...UK, title: "LMS Black Five", lead: 2, coupled: 3, trail: 0, leadD: 0.91, coupledD: 1.83, trailD: 0, boilerR: 0.84, deflectors: "none", domes: 1, belpaire: true, palette: { paint: "#1d1e20", wheel: "#1d1e20", frame: "#1d1e20", smokebox: "#1c1d22" }, tender: { length: 7.8, axles: 3, d: 1.07 }, number: "45407" } },
+  "proc-vehicle-br-9f": { base: { ...UK, title: "BR 9F", lead: 1, coupled: 5, trail: 0, leadD: 1.0, coupledD: 1.52, trailD: 0, boilerR: 0.88, deflectors: "wagner", domes: 1, belpaire: true, palette: { paint: "#1d1e20", wheel: "#1d1e20", frame: "#a51a1f", smokebox: "#1c1d22" }, tender: { length: 8.4, axles: 3, d: 1.0 }, number: "92203" },
+    liveries: { brBlack: { title: "BR black", palette: { paint: "#1d1e20", wheel: "#1d1e20", frame: "#a51a1f", smokebox: "#1c1d22" }, number: "92203" }, eveningStar: { title: "Evening Star", palette: { paint: "#1f4d2e", wheel: "#1f4d2e", frame: "#1d1e20", smokebox: "#1c1d22" }, number: "92220 EVENING STAR" } } },
+  "proc-vehicle-rocket": { base: { ...UK, title: "Stephenson's Rocket", lead: 0, coupled: 1, trail: 1, leadD: 0, coupledD: 1.435, trailD: 0.76, boilerR: 0.5, deflectors: "none", domes: 0, noValveGear: true, noCab: true, palette: { paint: "#e6b422", wheel: "#e6b422", frame: "#1d1e20", smokebox: "#1c1d22" }, tender: { length: 4.2, axles: 2, d: 0.9 }, number: "ROCKET" } },
 };
 
 function paramsOf(d: SteamDesign): ParamSpec[] {
@@ -66,6 +77,18 @@ export function renfe141f(v?: ParamValues): MeshBuilder { return buildLoco(world
 export function renfe141fLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-renfe-141f", v)); }
 export function renfe242f(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-renfe-242f", v)); }
 export function renfe242fLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-renfe-242f", v)); }
+export function lnerA4(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-lner-a4", v)); }
+export function lnerA4Lod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-lner-a4", v)); }
+export function lnerA3(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-lner-a3", v)); }
+export function lnerA3Lod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-lner-a3", v)); }
+export function gwrCastle(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-gwr-castle", v)); }
+export function gwrCastleLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-gwr-castle", v)); }
+export function lmsBlackFive(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-lms-black-five", v)); }
+export function lmsBlackFiveLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-lms-black-five", v)); }
+export function br9f(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-br-9f", v)); }
+export function br9fLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-br-9f", v)); }
+export function rocket(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-rocket", v)); }
+export function rocketLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-rocket", v)); }
 export function kpevP8(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-kpev-p8", v)); }
 export function kpevP8Lod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-kpev-p8", v)); }
 
@@ -74,8 +97,8 @@ const steamGame = (weight: number, power: number, maxspeed: number, tender: numb
   weight, power, maxspeed, accel: null, variants: [{ params: { unit: "tender" }, weight: tender, power: 0 }],
 });
 
-const design = (id: string, build: (v?: ParamValues) => MeshBuilder, buildLod: (v?: ParamValues) => MeshBuilder, game: GameProperties, references: string): ProceduralDesign => ({
-  id, title: WORLD_STEAM[id]!.base.title, build, buildLod, params: PARAMS[id]!, game, catalog: STEAM_CATALOG, references,
+const design = (id: string, build: (v?: ParamValues) => MeshBuilder, buildLod: (v?: ParamValues) => MeshBuilder, game: GameProperties, references: string, loadingGauge?: "uk"): ProceduralDesign => ({
+  id, title: WORLD_STEAM[id]!.base.title, build, buildLod, params: PARAMS[id]!, game, catalog: STEAM_CATALOG, references, ...(loadingGauge ? { loadingGauge } : {}),
 });
 
 export const WORLD_STEAM_DESIGNS: ProceduralDesign[] = [
@@ -85,6 +108,12 @@ export const WORLD_STEAM_DESIGNS: ProceduralDesign[] = [
   design("proc-vehicle-sncf-241p", sncf241p, sncf241pLod, steamGame(131, 2980, 120, 85), "sncf-241p"),
   design("proc-vehicle-renfe-141f", renfe141f, renfe141fLod, steamGame(102, 1460, 90, 60), "renfe-141f"),
   design("proc-vehicle-renfe-242f", renfe242f, renfe242fLod, steamGame(138, 2100, 135, 90), "renfe-242f"),
+  design("proc-vehicle-lner-a4", lnerA4, lnerA4Lod, steamGame(104, 1360, 160, 65), "lner-a4", "uk"),
+  design("proc-vehicle-lner-a3", lnerA3, lnerA3Lod, steamGame(98, 1300, 160, 58), "lner-a3", "uk"),
+  design("proc-vehicle-gwr-castle", gwrCastle, gwrCastleLod, steamGame(81, 1100, 145, 47), "gwr-castle", "uk"),
+  design("proc-vehicle-lms-black-five", lmsBlackFive, lmsBlackFiveLod, steamGame(73, 1000, 130, 54), "lms-black-five", "uk"),
+  design("proc-vehicle-br-9f", br9f, br9fLod, steamGame(88, 1500, 145, 53), "br-9f", "uk"),
+  design("proc-vehicle-rocket", rocket, rocketLod, steamGame(4.5, 15, 47, 3), "rocket", "uk"),
   design("proc-vehicle-ns-3700", ns3700, ns3700Lod, steamGame(72, 920, 100, 45), "ns-3700"),
   design("proc-vehicle-sncf-141r", sncf141r, sncf141rLod, steamGame(116, 1840, 100, 84), "sncf-141r"),
 ];

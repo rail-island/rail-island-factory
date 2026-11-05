@@ -275,6 +275,26 @@ file is the authority.
 | `renfe-333` | Renfe 333 | train RAIL | 1974 | 0 PASS | 110 / 56 | 2 | - |
 | `renfe-141f` | Renfe 141F Mikado | train RAIL | 1953 | 0 PASS | 75 / 39 | 2 | with tender |
 | `renfe-242f` | Renfe 242F | train RAIL | 1956 | 0 PASS | 100 / 52 | 2 | with tender |
+| `br-hst` | InterCity 125 | train RAIL | 1976 | 0 PASS | 102 / 44 | 3 | 8 cars |
+| `br-ic225` | InterCity 225 | train ELRL | 1988 | 0 PASS | 183 / 104 | 3 | 8 cars |
+| `br-class-800` | Class 800 IET | train ELRL | 2017 | 60 PASS | 93 / 34 | 3 | 5 cars |
+| `br-class-390` | Class 390 Pendolino | train ELRL | 2002 | 40 PASS | 96 / 34 | 3 | 8 cars |
+| `eurostar-373` | Eurostar e300 | train ELRL | 1994 | 0 PASS | 118 / 40 | 3 | 8 cars |
+| `br-class-158` | Class 158 | train RAIL | 1989 | 70 PASS | 73 / 27 | 2 | 2 cars |
+| `br-class-142` | Class 142 Pacer | train RAIL | 1985 | 56 PASS | 62 / 23 | 2 | 2 cars |
+| `lu-1938-stock` | London 1938 Stock | train ELRL | 1938 | 100 PASS | 66 / 32 | 2 | 7 cars |
+| `br-class-55` | Class 55 Deltic | train RAIL | 1961 | 0 PASS | 114 / 59 | 2 | - |
+| `br-class-37` | Class 37 | train RAIL | 1960 | 0 PASS | 82 / 36 | 3 | - |
+| `br-class-47` | Class 47 | train RAIL | 1962 | 0 PASS | 99 / 49 | 3 | - |
+| `br-class-66` | Class 66 | train RAIL | 1998 | 0 PASS | 104 / 58 | 3 | - |
+| `br-class-86` | Class 86 | train ELRL | 1965 | 0 PASS | 127 / 70 | 2 | - |
+| `lner-a4` | LNER A4 | train RAIL | 1935 | 0 PASS | 86 / 37 | 3 | with tender |
+| `lner-a3` | LNER A3 | train RAIL | 1923 | 0 PASS | 85 / 36 | 3 | with tender |
+| `gwr-castle` | GWR Castle | train RAIL | 1923 | 0 PASS | 77 / 32 | 2 | with tender |
+| `lms-black-five` | LMS Black Five | train RAIL | 1934 | 0 PASS | 71 / 30 | 2 | with tender |
+| `br-9f` | BR 9F | train RAIL | 1954 | 0 PASS | 87 / 40 | 3 | with tender |
+| `rocket` | Stephenson's Rocket | train RAIL | 1829 | 0 PASS | 30 / 10 | 2 | with tender |
+| `br-mk1-coach` | BR Mk1 coach | train RAIL | 1951 | 64 PASS | 46 / 13 | 4 | - |
 | `mtr-m-train` | MTR M-Train | train ELRL | 1979 | 230 PASS | 102 / 55 | 6 | 8 cars |
 | `tgv-duplex` | TGV Duplex | train ELRL | 1996 | 0 PASS | 194 / 98 | 7 | power cars, 8 trailers |
 | `cd-y-coach` | CD Y Coach | train RAIL | 1970* | 54 PASS | 42 / 12 | 4 | - |
