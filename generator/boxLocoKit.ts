@@ -19,6 +19,7 @@ import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "./meshBuilder.t
 import type { Vec3 } from "./meshCore.ts";
 import { block, plate, side } from "./vehicleParts.ts";
 import { coil, tubeX, type Band } from "./cd163.ts";
+import { exhaust } from "./dieselParts.ts";
 import { fitLod, lodBogie, lodPantograph, lodRoofBox, lodSideBox, windowBands, type LodPart, type LodShell, type Table as LodTable } from "./lodKit.ts";
 import {
   KIT_PALETTE, bogie, buffers, diamond, insulator, kinks, lerpTable, numberOn, onEnd, onSide, rect, roundRect, shell, singleArm,
@@ -112,7 +113,10 @@ export interface LocoSpec {
   /** The underframe under the shell: from y0 to y1, `half` long, `hw` wide. */
   frame: { y0: number; y1: number; half: number; hw: number; mat: string };
   bogies: readonly BogieSpec[];
-  pantograph: { kind: "singleArm" | "diamond"; x: number; roofY: number; baseY: number; lower?: number; upper?: number };
+  /** The pantographs at +-x (the rear raised, the front folded); none on a diesel. */
+  pantograph?: { kind: "singleArm" | "diamond"; x: number; roofY: number; baseY: number; lower?: number; upper?: number };
+  /** A diesel's exhaust stacks on the roof: x, z, the roof's height there. */
+  exhausts?: ReadonlyArray<readonly [number, number, number]>;
   /** A roof cable from an insulator at |x| to each pantograph, at height y. */
   hvLine?: { x: number; y: number; z: number };
   sideItems: readonly SideItem[];
@@ -410,14 +414,15 @@ export function buildBoxLoco(s: LocoSpec): MeshBuilder {
         m.loft(r.mat, ring(r.w[0]), r.y[0], ring(r.w[1]), r.y[1]);
       });
     const p = s.pantograph;
-    m.scope("pantographs", () => {
+    for (const [x, z, y] of s.exhausts ?? []) m.scope("exhaust", () => exhaust(m, x, z, y - 0.03, y + 0.22, 0.2, 0.32));
+    if (p) m.scope("pantographs", () => {
       for (const e of [-1, 1])
         m.scope(e > 0 ? "front pantograph" : "rear pantograph", () => {
           if (p.kind === "diamond") diamond(m, { xc: e * p.x, roofY: p.roofY, baseY: p.baseY, raised: e < 0 });
           else singleArm(m, { xc: e * p.x, roofY: p.roofY, baseY: p.baseY, h: -e, raised: e < 0, lower: p.lower, upper: p.upper });
         });
     });
-    if (s.hvLine) {
+    if (s.hvLine && p) {
       const h = s.hvLine;
       m.scope("high voltage line", () => {
         for (const e of [-1, 1]) {
@@ -475,8 +480,10 @@ export function boxLocoLod(s: LocoSpec, budget = 100): MeshBuilder {
       ...(r.x[1] - r.x[0] < 2 ? { optional: 10 + (r.x[1] - r.x[0]) } : {}),
       draw: (m) => m.scope(r.name, () => lodRoofBox(m, r.mat, r.x[0], r.x[1], r.w[0], r.w[1], r.y[0], r.y[1])),
     })),
-    { draw: (m) => m.scope("raised pantograph", () => lodPantograph(m, { x: -p.x, roofY: p.roofY, baseY: p.baseY, h: 1, raised: true, lower: p.lower, upper: p.upper })) },
-    { optional: 0, draw: (m) => m.scope("folded pantograph", () => lodPantograph(m, { x: p.x, roofY: p.roofY, baseY: p.baseY, h: -1, raised: false })) },
+    ...(p ? [
+      { draw: (m: MeshBuilder) => m.scope("raised pantograph", () => lodPantograph(m, { x: -p.x, roofY: p.roofY, baseY: p.baseY, h: 1, raised: true, lower: p.lower, upper: p.upper })) },
+      { optional: 0, draw: (m: MeshBuilder) => m.scope("folded pantograph", () => lodPantograph(m, { x: p.x, roofY: p.roofY, baseY: p.baseY, h: -1, raised: false })) },
+    ] : []),
   ];
   return fitLod({ palette: { ...KIT_PALETTE, ...s.palette }, shells: [shell], parts }, budget);
 }

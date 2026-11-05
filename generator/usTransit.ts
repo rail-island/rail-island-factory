@@ -9,7 +9,7 @@
 import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
 import { MeshBuilder as Builder } from "./meshBuilder.ts";
 import { resolveParams, type GameProperties, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
-import { bogieGeometry, exhaust, horn, paint, type BogieSpec } from "./dieselParts.ts";
+import { bogieGeometry, buffers, coupling, exhaust, horn, paint, type BogieSpec } from "./dieselParts.ts";
 import { block } from "./vehicleParts.ts";
 import type { Pt } from "./sliceLoft.ts";
 import { crownPane, sideDecal, sideLettering, sidePanel, sliceCabin, type SliceBody, type SliceDoorway } from "./sliceBody.ts";
@@ -51,7 +51,8 @@ export interface CarDef {
   /** Trucks at d, their spec; the coupler kind and height. */
   trucks: readonly number[];
   truck: BogieSpec;
-  coupler: "knuckle" | "centre";
+  /** The coupler: AAR knuckle, a unit's centre coupler, or buffers and a screw coupling on a buffer beam (European stock). */
+  coupler: "knuckle" | "centre" | "buffers";
   couplerY: number;
   /** The coupling planes beyond the body's ends. */
   gap: readonly [number, number];
@@ -166,7 +167,13 @@ export function drawCar(m: MeshBuilder, c: CarDef, X: (d: number) => number, o: 
         m.scope("coupler", () => {
           const face = e * x + c.gap[e > 0 ? 0 : 1];
           if (c.coupler === "knuckle") knuckleCoupler(m, e, e * x - 0.3, face, c.couplerY);
-          else centreCoupler(m, e, x - e * 0.6, e * face, c.couplerY, "knuckle");
+          else if (c.coupler === "buffers") {
+            // the beam under the end, the buffer heads at the coupling plane
+            const beam = face - 0.62;
+            block(m, "underframe", ...((e > 0 ? [beam - 0.25, beam] : [-beam, -beam + 0.25]) as [number, number]), c.couplerY - 0.25, c.couplerY + 0.22, -1.3, 1.3);
+            buffers(m, e, beam, face, c.couplerY, "round");
+            coupling(m, e, beam, c.couplerY - 0.05);
+          } else centreCoupler(m, e, x - e * 0.6, e * face, c.couplerY, "knuckle");
         });
     });
   m.scope("running gear", () => {
