@@ -36,6 +36,8 @@ wide, so a boiler radius whose saddle would lie on the frame plates' faces (0.69
 | `proc-vehicle-sncf-241p` | France | 2'D1' | 2.02 m | Wagner | four axles |
 | `proc-vehicle-sncf-141r` | France | 1'D1' | 1.65 m | none | four axles |
 | `proc-vehicle-ns-3700` | the Netherlands | 2'C | 1.85 m | none | four axles |
+| `proc-vehicle-renfe-141f` | Spain | 1'D1' | 1.56 m | none | four axles |
+| `proc-vehicle-renfe-242f` | Spain | 2'D1' | 1.9 m | Wagner | four axles |
 
 Each design's published figures and photographs are in its `assets/<name>/SOURCES.md`;
 the layout is the class's in proportion, not to the centimetre.

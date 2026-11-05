@@ -108,6 +108,7 @@
     "proc-vehicle-hankyu-9000": 155,
     "proc-vehicle-hydrofoil-ferry": 81,
     "proc-vehicle-ice-1": 110,
+    "proc-vehicle-iryo-s109": 254,
     "proc-vehicle-jnr-103": 150,
     "proc-vehicle-jnr-485": 154,
     "proc-vehicle-jnr-c62": 156,
@@ -176,6 +177,24 @@
     "proc-vehicle-raj-hopper-wagon": 22,
     "proc-vehicle-ratp-mi09": 190,
     "proc-vehicle-reefer-semi-truck": 59,
+    "proc-vehicle-renfe-141f": 241,
+    "proc-vehicle-renfe-242f": 242,
+    "proc-vehicle-renfe-252": 256,
+    "proc-vehicle-renfe-269": 257,
+    "proc-vehicle-renfe-277": 258,
+    "proc-vehicle-renfe-319": 259,
+    "proc-vehicle-renfe-333": 260,
+    "proc-vehicle-renfe-354": 255,
+    "proc-vehicle-renfe-440": 252,
+    "proc-vehicle-renfe-446": 251,
+    "proc-vehicle-renfe-592": 253,
+    "proc-vehicle-renfe-civia": 250,
+    "proc-vehicle-renfe-s100": 243,
+    "proc-vehicle-renfe-s102": 245,
+    "proc-vehicle-renfe-s103": 244,
+    "proc-vehicle-renfe-s106": 246,
+    "proc-vehicle-renfe-s120": 249,
+    "proc-vehicle-renfe-s130": 247,
     "proc-vehicle-rhb-allegra": 231,
     "proc-vehicle-rhb-ge443": 238,
     "proc-vehicle-rhb-ge66": 239,
@@ -225,6 +244,7 @@
     "proc-vehicle-sncf-z20500": 189,
     "proc-vehicle-solaris-urbino-15": 70,
     "proc-vehicle-sqns-container-wagon": 37,
+    "proc-vehicle-talgo-iii": 248,
     "proc-vehicle-tatra-815-tipper": 60,
     "proc-vehicle-tatra-kt4": 94,
     "proc-vehicle-tatra-kt8": 93,
@@ -1356,6 +1376,18 @@
         "id": 3664,
         "size": 16
       },
+      "proc-vehicle-iryo-s109?": {
+        "id": 8400,
+        "size": 8
+      },
+      "proc-vehicle-iryo-s109?formation=8 cars": {
+        "id": 8416,
+        "size": 32
+      },
+      "proc-vehicle-iryo-s109?unit=middleCar": {
+        "id": 8408,
+        "size": 8
+      },
       "proc-vehicle-jnr-103?": {
         "id": 5496,
         "size": 6
@@ -1944,6 +1976,218 @@
         "id": 6602,
         "size": 6
       },
+      "proc-vehicle-renfe-141f?": {
+        "id": 7866,
+        "size": 4
+      },
+      "proc-vehicle-renfe-141f?formation=with tender": {
+        "id": 7874,
+        "size": 8
+      },
+      "proc-vehicle-renfe-141f?unit=tender": {
+        "id": 7870,
+        "size": 4
+      },
+      "proc-vehicle-renfe-242f?": {
+        "id": 7882,
+        "size": 6
+      },
+      "proc-vehicle-renfe-242f?formation=with tender": {
+        "id": 7892,
+        "size": 10
+      },
+      "proc-vehicle-renfe-242f?unit=tender": {
+        "id": 7888,
+        "size": 4
+      },
+      "proc-vehicle-renfe-252?": {
+        "id": 8454,
+        "size": 6
+      },
+      "proc-vehicle-renfe-252?livery=mercancias": {
+        "id": 8460,
+        "size": 6
+      },
+      "proc-vehicle-renfe-269?": {
+        "id": 8466,
+        "size": 6
+      },
+      "proc-vehicle-renfe-269?livery=estrella": {
+        "id": 8472,
+        "size": 6
+      },
+      "proc-vehicle-renfe-277?": {
+        "id": 8478,
+        "size": 6
+      },
+      "proc-vehicle-renfe-277?livery=blue": {
+        "id": 8484,
+        "size": 6
+      },
+      "proc-vehicle-renfe-319?": {
+        "id": 8490,
+        "size": 6
+      },
+      "proc-vehicle-renfe-319?livery=mercancias": {
+        "id": 8496,
+        "size": 6
+      },
+      "proc-vehicle-renfe-333?": {
+        "id": 8502,
+        "size": 6
+      },
+      "proc-vehicle-renfe-333?livery=talgo": {
+        "id": 8508,
+        "size": 6
+      },
+      "proc-vehicle-renfe-354?": {
+        "id": 8448,
+        "size": 6
+      },
+      "proc-vehicle-renfe-440?": {
+        "id": 8304,
+        "size": 8
+      },
+      "proc-vehicle-renfe-440?formation=3 cars": {
+        "id": 8328,
+        "size": 24
+      },
+      "proc-vehicle-renfe-440?livery=cercanias": {
+        "id": 8320,
+        "size": 8
+      },
+      "proc-vehicle-renfe-440?unit=middleCar": {
+        "id": 8312,
+        "size": 8
+      },
+      "proc-vehicle-renfe-446?": {
+        "id": 8270,
+        "size": 6
+      },
+      "proc-vehicle-renfe-446?formation=3 cars": {
+        "id": 8284,
+        "size": 20
+      },
+      "proc-vehicle-renfe-446?unit=middleCar": {
+        "id": 8276,
+        "size": 8
+      },
+      "proc-vehicle-renfe-592?": {
+        "id": 8352,
+        "size": 8
+      },
+      "proc-vehicle-renfe-592?formation=3 cars": {
+        "id": 8376,
+        "size": 24
+      },
+      "proc-vehicle-renfe-592?livery=mediaDistancia": {
+        "id": 8368,
+        "size": 8
+      },
+      "proc-vehicle-renfe-592?unit=middleCar": {
+        "id": 8360,
+        "size": 8
+      },
+      "proc-vehicle-renfe-civia?": {
+        "id": 8234,
+        "size": 6
+      },
+      "proc-vehicle-renfe-civia?formation=4 cars": {
+        "id": 8246,
+        "size": 24
+      },
+      "proc-vehicle-renfe-civia?unit=middleCar": {
+        "id": 8240,
+        "size": 6
+      },
+      "proc-vehicle-renfe-s100?": {
+        "id": 7902,
+        "size": 6
+      },
+      "proc-vehicle-renfe-s100?formation=8 cars": {
+        "id": 7920,
+        "size": 32
+      },
+      "proc-vehicle-renfe-s100?livery=avlo": {
+        "id": 7914,
+        "size": 6
+      },
+      "proc-vehicle-renfe-s100?unit=middleCar": {
+        "id": 7908,
+        "size": 6
+      },
+      "proc-vehicle-renfe-s102?": {
+        "id": 8000,
+        "size": 6
+      },
+      "proc-vehicle-renfe-s102?formation=8 cars": {
+        "id": 8016,
+        "size": 32
+      },
+      "proc-vehicle-renfe-s102?livery=avlo": {
+        "id": 8010,
+        "size": 6
+      },
+      "proc-vehicle-renfe-s102?unit=middleCar": {
+        "id": 8006,
+        "size": 4
+      },
+      "proc-vehicle-renfe-s103?": {
+        "id": 7952,
+        "size": 8
+      },
+      "proc-vehicle-renfe-s103?formation=8 cars": {
+        "id": 7968,
+        "size": 32
+      },
+      "proc-vehicle-renfe-s103?unit=middleCar": {
+        "id": 7960,
+        "size": 8
+      },
+      "proc-vehicle-renfe-s106?": {
+        "id": 8048,
+        "size": 6
+      },
+      "proc-vehicle-renfe-s106?formation=8 cars": {
+        "id": 8064,
+        "size": 32
+      },
+      "proc-vehicle-renfe-s106?livery=ave": {
+        "id": 8058,
+        "size": 6
+      },
+      "proc-vehicle-renfe-s106?unit=middleCar": {
+        "id": 8054,
+        "size": 4
+      },
+      "proc-vehicle-renfe-s120?": {
+        "id": 8178,
+        "size": 8
+      },
+      "proc-vehicle-renfe-s120?formation=4 cars": {
+        "id": 8202,
+        "size": 32
+      },
+      "proc-vehicle-renfe-s120?livery=mediaDistancia": {
+        "id": 8194,
+        "size": 8
+      },
+      "proc-vehicle-renfe-s120?unit=middleCar": {
+        "id": 8186,
+        "size": 8
+      },
+      "proc-vehicle-renfe-s130?": {
+        "id": 8096,
+        "size": 6
+      },
+      "proc-vehicle-renfe-s130?formation=8 cars": {
+        "id": 8106,
+        "size": 32
+      },
+      "proc-vehicle-renfe-s130?unit=middleCar": {
+        "id": 8102,
+        "size": 4
+      },
       "proc-vehicle-rhb-allegra?": {
         "id": 7764,
         "size": 6
@@ -2451,6 +2695,18 @@
       "proc-vehicle-sqns-container-wagon?": {
         "id": 1552,
         "size": 16
+      },
+      "proc-vehicle-talgo-iii?": {
+        "id": 8138,
+        "size": 4
+      },
+      "proc-vehicle-talgo-iii?formation=8 cars": {
+        "id": 8146,
+        "size": 32
+      },
+      "proc-vehicle-talgo-iii?unit=middleCar": {
+        "id": 8142,
+        "size": 4
       },
       "proc-vehicle-tgv-duplex?": {
         "id": 4080,

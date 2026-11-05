@@ -20,6 +20,7 @@ import { drawCar, type CarDef } from "./usTransit.ts";
 import { diamond, singleArm } from "./czElectricKit.ts";
 import type { LoadingGauge } from "./loadingGauge.ts";
 import { DMU_CATALOG, EMU_CATALOG, enumParam } from "./emuParts.ts";
+import { COACH_CATALOG } from "./csdCoaches.ts";
 import { articulate } from "./tramKit.ts";
 import { LOD_GLASS, type LodBand, type LodPart, type LodSections } from "./lodKit.ts";
 import { bogieParts, fitUnit, roofPart, turnBody, type UnitBody } from "./lodUnits.ts";
@@ -81,8 +82,8 @@ export interface ShinkansenSeries {
   flatCab?: NonNullable<CarDef["cab"]>;
   power: number;
   maxspeed: number;
-  /** A diesel unit: no pantograph, exhaust stacks on the roof, filed with the DMUs (default electric). */
-  traction?: "electric" | "diesel";
+  /** A diesel unit: no pantograph, exhaust stacks on the roof, filed with the DMUs (default electric); `none` an unpowered set of coaches. */
+  traction?: "electric" | "diesel" | "none";
   /** The train lengths offered (default 3 - 8; 4 the default when offered, else the shortest). */
   cars?: readonly number[];
   /** One double-ended railcar, a cab or nose at both ends: no car or train choice. */
@@ -96,6 +97,8 @@ export interface ShinkansenSeries {
 /** The coupling plane's distance beyond a buffered cab end. */
 const BUFFER_GAP = 0.65;
 const isDiesel = (s: ShinkansenSeries) => s.traction === "diesel";
+/** No pantograph: a diesel unit or an unpowered set. */
+const unwired = (s: ShinkansenSeries) => s.traction === "diesel" || s.traction === "none";
 /** The train lengths a series offers, and its default. */
 export const carsOf = (s: ShinkansenSeries): readonly number[] => s.cars ?? SHINKANSEN_CARS;
 const defaultCars = (s: ShinkansenSeries) => (carsOf(s).includes(4) ? 4 : carsOf(s)[0]!);
@@ -113,14 +116,15 @@ function bogies(s: ShinkansenSeries, end: boolean): [number, number] {
   const L = end ? endBody(s) : midBody(s);
   if (s.single) return [L / 2 - s.bogieCentres / 2, L / 2 + s.bogieCentres / 2];
   const back = L - 3.5;
-  return [back - s.bogieCentres, back];
+  // a short car's leading bogie comes in so that its wheels stay under the body
+  return [Math.max(back - s.bogieCentres, s.wheelbase / 2 + s.wheelR + 0.2), back];
 }
 
 function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantograph: boolean, number: string): CarDef {
   // the centre coupler's draft gear ends 0.3 m below its centre: a skirt bottom there would lie on it
   if (Math.abs(s.B - (COUPLER_Y - 0.3)) < 0.005) throw new Error(`series: skirt bottom ${s.B} m lies on the coupler's draft gear`);
   // the bogie's brake cylinders stand 0.55 m inside its axles: a shorter wheelbase puts them on its transoms (0 is a single axle)
-  if (s.wheelbase > 0 && s.wheelbase < 2.15) throw new Error(`series: wheelbase ${s.wheelbase} m is shorter than the bogie kit's 2.15 m`);
+  if (s.wheelbase > 0 && s.wheelbase < 2.05) throw new Error(`series: wheelbase ${s.wheelbase} m is shorter than the bogie kit's 2.05 m`);
   // the bogie's end transoms reach down to 0.2 m above the wheel radius: the car's underside must not lie there
   if (Math.abs(s.B - (s.wheelR + 0.2)) < 0.005) throw new Error(`series: skirt bottom ${s.B} m lies on the bogies' transoms`);
   const L = end ? endBody(s) : midBody(s);
@@ -206,7 +210,7 @@ export interface ShinkansenSlot { end: boolean; pantograph: boolean; lo: number;
 
 /** The cars of an n-car train, front first: an end car at each end (the rear one turned), the second and the next-to-last raising a pantograph (the middle one of three). */
 export function shinkansenTrain(s: ShinkansenSeries, n: number): ShinkansenSlot[] {
-  const pan = (k: number) => (isDiesel(s) ? false : s.endPantograph ? k === 0 || k === n - 1 : n <= 3 ? k === 1 : k === 2 || k === n - 3);
+  const pan = (k: number) => (unwired(s) ? false : s.endPantograph ? k === 0 || k === n - 1 : n <= 3 ? k === 1 : k === 2 || k === n - 3);
   const total = 2 * s.endLength + (n - 2) * s.midLength;
   let hi = total / 2;
   return Array.from({ length: n }, (_, k) => {
@@ -226,7 +230,7 @@ export function buildSeries(s: ShinkansenSeries, params: readonly ParamSpec[], v
   if (unit !== "train") {
     const end = unit === "endCar";
     const len = end ? s.endLength : s.midLength;
-    const panto = !isDiesel(s) && (s.endPantograph ? end : !end);
+    const panto = !unwired(s) && (s.endPantograph ? end : !end);
     // the nose covers its coupler; buffers stand out at a cab end
     const inside = !end || s.endCoupler === "buffers" ? [] : s.single ? [1, -1] : [1];
     drawCar(m, carDef(s, l, end, panto, l.number), (d) => len / 2 - frontGap(s, end) - d, inside.length ? { inside } : {});
@@ -282,7 +286,7 @@ export function buildSeriesLod(s: ShinkansenSeries, params: readonly ParamSpec[]
   if (unit !== "train") {
     const end = unit === "endCar";
     const len = end ? s.endLength : s.midLength;
-    const { body, parts } = carLod(s, l, end, !isDiesel(s) && (s.endPantograph ? end : !end), (d) => len / 2 - frontGap(s, end) - d, 0, false);
+    const { body, parts } = carLod(s, l, end, !unwired(s) && (s.endPantograph ? end : !end), (d) => len / 2 - frontGap(s, end) - d, 0, false);
     return fitUnit({ palette, bodies: [body], parts }, 100);
   }
   const slots = shinkansenTrain(s, carsIn(s, p));
@@ -463,7 +467,7 @@ export const SHINKANSEN_SERIES: Record<string, ShinkansenSeries> = {
 
 /** A series' design: its builders (named exports of its module), parameters and gauge. */
 export const seriesDesign = (id: string, title: string, s: ShinkansenSeries, params: ParamSpec[], b: (v?: ParamValues) => MeshBuilder, l: (v?: ParamValues) => MeshBuilder, refs: string, gauge: LoadingGauge = "shinkansen"): ProceduralDesign => ({
-  id, title, build: b, buildLod: l, params, lodTriangles: s.single ? 100 : 500, game: gameOf(s, params), catalog: isDiesel(s) ? DMU_CATALOG : EMU_CATALOG, ...(gauge === "uic" ? {} : { loadingGauge: gauge }), references: refs,
+  id, title, build: b, buildLod: l, params, lodTriangles: s.single ? 100 : 500, game: gameOf(s, params), catalog: s.traction === "none" ? COACH_CATALOG : isDiesel(s) ? DMU_CATALOG : EMU_CATALOG, ...(gauge === "uic" ? {} : { loadingGauge: gauge }), references: refs,
 });
 
 export const SHINKANSEN_DESIGNS: ProceduralDesign[] = [

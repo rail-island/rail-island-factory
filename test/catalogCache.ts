@@ -155,7 +155,7 @@ export function variantsUnderTest(d: Pick<ProceduralDesign, "params" | "finishPa
  * TEST_ALL_DESIGNS=1 (or TEST_ALL_VARIANTS=1) sweeps every design.
  */
 export const KIT_FAMILY_MODULES: ReadonlySet<string> = new Set([
-  "deUnits.ts", "deLocos.ts", "frUnits.ts", "frLocos.ts", "nlUnits.ts", "nlLocos.ts", "chUnits.ts", "chLocos.ts", "worldSteamLocos.ts", "worldCoaches.ts",
+  "deUnits.ts", "deLocos.ts", "frUnits.ts", "frLocos.ts", "nlUnits.ts", "nlLocos.ts", "chUnits.ts", "chLocos.ts", "esUnits.ts", "esLocos.ts", "worldSteamLocos.ts", "worldCoaches.ts",
 ]);
 
 const ALL_DESIGNS = process.env.TEST_ALL_DESIGNS === "1";

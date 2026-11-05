@@ -65,7 +65,7 @@ const truck = (s: WorldCoach): BogieSpec => ({
 
 function coachDef(s: WorldCoach, t: CoachType, l: CoachLivery): CarDef {
   // the bogie's brake cylinders stand 0.55 m inside its axles: a shorter wheelbase puts them on its transoms
-  if (s.wheelbase < 2.15) throw new Error(`coach: wheelbase ${s.wheelbase} m is shorter than the bogie kit's 2.15 m`);
+  if (s.wheelbase < 2.05) throw new Error(`coach: wheelbase ${s.wheelbase} m is shorter than the bogie kit's 2.05 m`);
   const L = s.length - 2 * gapOf(s);
   const tr = [L / 2 - s.bogieCentres / 2, L / 2 + s.bogieCentres / 2];
   const from = s.doorIn + s.doorW + 0.5, to = L - s.doorIn - s.doorW - 0.5;

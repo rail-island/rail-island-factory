@@ -53,6 +53,8 @@ export const COUNTRY_OF: ReadonlyMap<string, string> = new Map([
     "ns-v250", "ns-1700", "ns-1100", "ns-1300", "ns-1200", "ns-2200", "ns-3700", "ns-icr-coach"),
   ...each("ch", "sbb-rae-tee", "sbb-roter-pfeil", "sbb-icn", "sbb-giruno", "sbb-fv-dosto", "sbb-flirt", "sbb-kiss", "rhb-allegra", "sbb-re460",
     "sbb-re420", "sbb-re620", "sbb-ae66", "sbb-ce68", "sbb-ae814", "rhb-ge443", "rhb-ge66", "mgb-hge442", "sbb-ew4-coach", "sbb-ic2000", "glacier-express"),
+  ...each("es", "renfe-s100", "renfe-s103", "renfe-s102", "renfe-s106", "renfe-s130", "talgo-iii", "renfe-s120", "renfe-civia", "renfe-446",
+    "renfe-440", "renfe-592", "iryo-s109", "renfe-354", "renfe-252", "renfe-269", "renfe-277", "renfe-319", "renfe-333", "renfe-141f", "renfe-242f"),
   ...each("at", "obb-1012", "obb-1040"),
   ...each("hu", "mav-mdmot"),
   ...each("pl", "solaris-urbino-15"),

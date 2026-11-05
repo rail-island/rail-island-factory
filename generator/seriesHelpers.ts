@@ -68,3 +68,18 @@ export function kiss(o: Pick<ShinkansenSeries, "liveries" | "weight" | "power" |
     liveries: o.liveries, weight: o.weight, power: o.power, maxspeed: o.maxspeed,
   };
 }
+
+/**
+ * A Talgo set: short, low cars on single axles (the real train shares one wheel
+ * pair between two cars at each joint; the kit stands each car on two of its own).
+ */
+export function talgo(o: Pick<ShinkansenSeries, "liveries" | "weight" | "power" | "maxspeed" | "nose" | "windscreen" | "lamps"> & { endLength?: number; cars?: readonly number[]; traction?: ShinkansenSeries["traction"]; C?: number }): ShinkansenSeries {
+  return {
+    endLength: o.endLength ?? 20.0, midLength: 13.14, W: 1.47, Y: 1.25, S: 2.95, C: o.C ?? 3.4, lean: 0.95, B: 0.75, A: 0.9,
+    nose: o.nose, windscreen: o.windscreen, lamps: o.lamps,
+    windows: [[1.55, 2.45]], windowW: 1.1, pitch: 1.4, door: [0.95, 2.85, 1.55, 2.45], doorW: 0.8,
+    // the power cars at the ends raise the pantographs; the Talgo coaches between them none
+    bogieCentres: 5.6, wheelR: 0.4, wheelbase: 0, cars: o.cars ?? [4, 8], endPantograph: true, ...(o.traction ? { traction: o.traction } : {}),
+    liveries: o.liveries, weight: o.weight, power: o.power, maxspeed: o.maxspeed,
+  };
+}
