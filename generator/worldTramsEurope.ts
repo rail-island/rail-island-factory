@@ -32,7 +32,8 @@ export function tatraT1Spec(): WorldTramSpec {
     trucks: bogies(1.9, 3.9, 10.6),
     collector: diamond(4.6),
     colors: { skirt: "#c8202a", body: "#c8202a", upper: "#ece4cc" },
-    paint: [[1.55, "skirt"], [3.5, "upper"]],
+    // cream below the red belt and over it (the photographed Ostrava car)
+    paint: [[0.78, "upper"], [1.55, "body"], [3.5, "upper"]],
     roofBoxes: [[9.8, 11.8, 0.5, 0.3, "roofBox"]],
   });
 }
