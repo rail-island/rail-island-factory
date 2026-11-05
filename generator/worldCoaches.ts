@@ -284,7 +284,23 @@ export const IR_ICF: WorldCoach = {
   },
 };
 
-const P = { lhb: coachParams(IR_LHB), icf: coachParams(IR_ICF), mk1: coachParams(BR_MK1), ew4: coachParams(SBB_EW4), ic2000: coachParams(SBB_IC2000), glacier: coachParams(GLACIER), nsIcr: coachParams(NS_ICR), dbIc: coachParams(DB_IC), corail: coachParams(SNCF_CORAIL), grandConfort: coachParams(SNCF_GRAND_CONFORT), ciwl: coachParams(CIWL) };
+// ---------------------------------------------------------------------------
+// China: the 25-series coaches (the 25T Z express and the green 25B)
+
+export const CR_25: WorldCoach = {
+  length: 26.6, W: 1.55, Y: 1.4, S: 3.3, C: 4.25, B: 1.0, A: 1.15, rows: [[1.95, 2.8]], doorIn: 0.6, doorW: 0.8, door: [1.2, 3.1],
+  bogieCentres: 18.0, wheelR: 0.46, wheelbase: 2.5, coupler: "knuckle", maxspeed: 160,
+  types: {
+    softSleeper: { title: "Soft sleeper", windows: 10, windowW: 1.2, number: "RW25T 550001", weight: 52 },
+    hardSeat: { title: "Hard seat", windows: 14, windowW: 1.0, number: "YZ25T 345001", weight: 48 },
+  },
+  liveries: {
+    z25t: { title: "25T white, blue", palette: { white: c("#f1f1ee", 0.4), blue: c("#1d3f80"), roofG: c("#9aa0a5", 0.7), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 1.75, "blue"], [1.75, 1.85, "white"], [1.85, 1.92, "blue"], [1.92, 9, "white"]], roof: "roofG", skirt: "skirtG" },
+    green25b: { title: "25B green", palette: { green: c("#1f5d3a"), yellow: c("#f2c31a"), roofG: c("#6a6c6e", 0.7), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 1.85, "green"], [1.85, 1.92, "yellow"], [1.92, 2.86, "green"], [2.86, 2.92, "yellow"], [2.92, 9, "green"]], roof: "roofG", skirt: "skirtG" },
+  },
+};
+
+const P = { cr25: coachParams(CR_25), lhb: coachParams(IR_LHB), icf: coachParams(IR_ICF), mk1: coachParams(BR_MK1), ew4: coachParams(SBB_EW4), ic2000: coachParams(SBB_IC2000), glacier: coachParams(GLACIER), nsIcr: coachParams(NS_ICR), dbIc: coachParams(DB_IC), corail: coachParams(SNCF_CORAIL), grandConfort: coachParams(SNCF_GRAND_CONFORT), ciwl: coachParams(CIWL) };
 export function sncfCorail(v?: ParamValues): MeshBuilder { return buildCoach(SNCF_CORAIL, P.corail, v); }
 export function sncfCorailLod(v?: ParamValues): MeshBuilder { return buildCoachLod(SNCF_CORAIL, P.corail, v); }
 export function sncfGrandConfort(v?: ParamValues): MeshBuilder { return buildCoach(SNCF_GRAND_CONFORT, P.grandConfort, v); }
@@ -303,6 +319,8 @@ export function irLhbCoach(v?: ParamValues): MeshBuilder { return buildCoach(IR_
 export function irLhbCoachLod(v?: ParamValues): MeshBuilder { return buildCoachLod(IR_LHB, P.lhb, v); }
 export function irIcfCoach(v?: ParamValues): MeshBuilder { return buildCoach(IR_ICF, P.icf, v); }
 export function irIcfCoachLod(v?: ParamValues): MeshBuilder { return buildCoachLod(IR_ICF, P.icf, v); }
+export function cr25Coach(v?: ParamValues): MeshBuilder { return buildCoach(CR_25, P.cr25, v); }
+export function cr25CoachLod(v?: ParamValues): MeshBuilder { return buildCoachLod(CR_25, P.cr25, v); }
 export function ciwlCar(v?: ParamValues): MeshBuilder { return buildCoach(CIWL, P.ciwl, v); }
 export function ciwlCarLod(v?: ParamValues): MeshBuilder { return buildCoachLod(CIWL, P.ciwl, v); }
 export function dbIcCoach(v?: ParamValues): MeshBuilder { return buildCoach(DB_IC, P.dbIc, v); }
@@ -319,5 +337,6 @@ export const WORLD_COACHES: ProceduralDesign[] = [
   coachDesign("proc-vehicle-br-mk1-coach", "BR Mk1 coach", BR_MK1, P.mk1, brMk1, brMk1Lod, "br-mk1-coach", "uk"),
   coachDesign("proc-vehicle-ir-lhb-coach", "IR LHB coach", IR_LHB, P.lhb, irLhbCoach, irLhbCoachLod, "ir-lhb-coach", "us"),
   coachDesign("proc-vehicle-ir-icf-coach", "IR ICF coach", IR_ICF, P.icf, irIcfCoach, irIcfCoachLod, "ir-icf-coach", "us"),
+  coachDesign("proc-vehicle-cr-25t-coach", "CR 25-series coach", CR_25, P.cr25, cr25Coach, cr25CoachLod, "cr-25t-coach", "us"),
   coachDesign("proc-vehicle-ciwl-car", "Wagons-Lits car", CIWL, P.ciwl, ciwlCar, ciwlCarLod, "ciwl-car"),
 ];

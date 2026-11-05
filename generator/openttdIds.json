@@ -56,7 +56,26 @@
     "proc-vehicle-cd-y-coach": 115,
     "proc-vehicle-cistern-semi-truck": 57,
     "proc-vehicle-ciwl-car": 187,
+    "proc-vehicle-cr-25t-coach": 305,
     "proc-vehicle-cr-c70-wagon": 301,
+    "proc-vehicle-cr-cr200j": 312,
+    "proc-vehicle-cr-cr400af": 306,
+    "proc-vehicle-cr-cr400bf": 307,
+    "proc-vehicle-cr-crh2a": 309,
+    "proc-vehicle-cr-crh380a": 308,
+    "proc-vehicle-cr-crh3c": 310,
+    "proc-vehicle-cr-crh5a": 311,
+    "proc-vehicle-cr-crh6a": 313,
+    "proc-vehicle-cr-df11": 320,
+    "proc-vehicle-cr-df4": 319,
+    "proc-vehicle-cr-hxd1": 315,
+    "proc-vehicle-cr-hxd3d": 316,
+    "proc-vehicle-cr-hxn5": 314,
+    "proc-vehicle-cr-js": 304,
+    "proc-vehicle-cr-qj": 302,
+    "proc-vehicle-cr-ss1": 317,
+    "proc-vehicle-cr-ss8": 318,
+    "proc-vehicle-cr-sy": 303,
     "proc-vehicle-cruise-ferry": 80,
     "proc-vehicle-csd-386": 31,
     "proc-vehicle-csd-433-0": 24,
@@ -953,6 +972,18 @@
         "id": 6484,
         "size": 6
       },
+      "proc-vehicle-cr-25t-coach?": {
+        "id": 9548,
+        "size": 8
+      },
+      "proc-vehicle-cr-25t-coach?livery=green25b": {
+        "id": 9564,
+        "size": 8
+      },
+      "proc-vehicle-cr-25t-coach?unit=hardSeat": {
+        "id": 9556,
+        "size": 8
+      },
       "proc-vehicle-cr-c70-wagon?": {
         "id": 9490,
         "size": 4
@@ -960,6 +991,182 @@
       "proc-vehicle-cr-c70-wagon?unit=covered": {
         "id": 9494,
         "size": 6
+      },
+      "proc-vehicle-cr-cr200j?": {
+        "id": 9876,
+        "size": 6
+      },
+      "proc-vehicle-cr-cr200j?formation=8 cars": {
+        "id": 9896,
+        "size": 32
+      },
+      "proc-vehicle-cr-cr200j?livery=whiteRed": {
+        "id": 9890,
+        "size": 6
+      },
+      "proc-vehicle-cr-cr200j?unit=middleCar": {
+        "id": 9882,
+        "size": 8
+      },
+      "proc-vehicle-cr-cr400af?": {
+        "id": 9572,
+        "size": 8
+      },
+      "proc-vehicle-cr-cr400af?formation=8 cars": {
+        "id": 9596,
+        "size": 32
+      },
+      "proc-vehicle-cr-cr400af?livery=smart": {
+        "id": 9588,
+        "size": 8
+      },
+      "proc-vehicle-cr-cr400af?unit=middleCar": {
+        "id": 9580,
+        "size": 8
+      },
+      "proc-vehicle-cr-cr400bf?": {
+        "id": 9628,
+        "size": 8
+      },
+      "proc-vehicle-cr-cr400bf?formation=8 cars": {
+        "id": 9652,
+        "size": 32
+      },
+      "proc-vehicle-cr-cr400bf?livery=red": {
+        "id": 9644,
+        "size": 8
+      },
+      "proc-vehicle-cr-cr400bf?unit=middleCar": {
+        "id": 9636,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh2a?": {
+        "id": 9732,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh2a?formation=8 cars": {
+        "id": 9748,
+        "size": 32
+      },
+      "proc-vehicle-cr-crh2a?unit=middleCar": {
+        "id": 9740,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh380a?": {
+        "id": 9684,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh380a?formation=8 cars": {
+        "id": 9700,
+        "size": 32
+      },
+      "proc-vehicle-cr-crh380a?unit=middleCar": {
+        "id": 9692,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh3c?": {
+        "id": 9780,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh3c?formation=8 cars": {
+        "id": 9796,
+        "size": 32
+      },
+      "proc-vehicle-cr-crh3c?unit=middleCar": {
+        "id": 9788,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh5a?": {
+        "id": 9828,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh5a?formation=8 cars": {
+        "id": 9844,
+        "size": 32
+      },
+      "proc-vehicle-cr-crh5a?unit=middleCar": {
+        "id": 9836,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh6a?": {
+        "id": 9928,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh6a?formation=8 cars": {
+        "id": 9944,
+        "size": 32
+      },
+      "proc-vehicle-cr-crh6a?unit=middleCar": {
+        "id": 9936,
+        "size": 8
+      },
+      "proc-vehicle-cr-df11?": {
+        "id": 10022,
+        "size": 6
+      },
+      "proc-vehicle-cr-df4?": {
+        "id": 10010,
+        "size": 6
+      },
+      "proc-vehicle-cr-df4?livery=green": {
+        "id": 10016,
+        "size": 6
+      },
+      "proc-vehicle-cr-hxd1?": {
+        "id": 9982,
+        "size": 10
+      },
+      "proc-vehicle-cr-hxd3d?": {
+        "id": 9992,
+        "size": 6
+      },
+      "proc-vehicle-cr-hxn5?": {
+        "id": 9976,
+        "size": 6
+      },
+      "proc-vehicle-cr-js?": {
+        "id": 9532,
+        "size": 4
+      },
+      "proc-vehicle-cr-js?formation=with tender": {
+        "id": 9540,
+        "size": 8
+      },
+      "proc-vehicle-cr-js?unit=tender": {
+        "id": 9536,
+        "size": 4
+      },
+      "proc-vehicle-cr-qj?": {
+        "id": 9500,
+        "size": 4
+      },
+      "proc-vehicle-cr-qj?formation=with tender": {
+        "id": 9508,
+        "size": 8
+      },
+      "proc-vehicle-cr-qj?unit=tender": {
+        "id": 9504,
+        "size": 4
+      },
+      "proc-vehicle-cr-ss1?": {
+        "id": 9998,
+        "size": 6
+      },
+      "proc-vehicle-cr-ss8?": {
+        "id": 10004,
+        "size": 6
+      },
+      "proc-vehicle-cr-sy?": {
+        "id": 9516,
+        "size": 4
+      },
+      "proc-vehicle-cr-sy?formation=with tender": {
+        "id": 9524,
+        "size": 8
+      },
+      "proc-vehicle-cr-sy?unit=tender": {
+        "id": 9520,
+        "size": 4
       },
       "proc-vehicle-csd-386?": {
         "id": 1344,

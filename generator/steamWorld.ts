@@ -74,10 +74,13 @@ export function steamEngineSpec(s: WorldSteam): LocoSpec {
   const lastD = s.trail ? s.trailD : s.coupledD;
   const end = lastWheel + lastD / 2 + 1.1;
   const y = Math.max(2.5, s.coupledD + 0.95 + (s.boilerR - 0.85) * 0.5);
-  const r = s.boilerR;
+  // the kit's cylinder block tops out at 1.29 m: the smokebox saddle (from y - r - 0.35) must not end there
+  const r = Math.abs(y - s.boilerR - 0.35 - 1.29) < 0.01 ? s.boilerR + 0.02 : s.boilerR;
   // the kit's smokebox saddle is 1.5 r wide: its sides must not lie on the frame plates' outer faces (|z| 0.52 - 0.6)
   if (r * 0.75 >= 0.52 && r * 0.75 <= 0.6) throw new Error(`${s.title}: boiler radius ${r} puts the saddle's sides on the frames`);
-  const rb = Math.max(1.52, s.coupledD + 0.23);
+  // the kit's valve gear tops out at 1.6 m: a running board there would lie on it
+  const rb0 = Math.max(1.52, s.coupledD + 0.23);
+  const rb = Math.abs(rb0 - 1.6) < 0.015 ? 1.62 : rb0;
   const cab0 = s.noCab ? end - 0.9 : end - 2.7;
   const chimneyX = 1.9;
   const span = cab0 - 1.5 - 3.2;
@@ -94,7 +97,7 @@ export function steamEngineSpec(s: WorldSteam): LocoSpec {
     : [[r + 0.05, rb], [r + 0.05, y + 0.3], [r * 0.85, y + r * 0.6], [r * 0.5, y + r * 0.9], [0, y + r]];
   return {
     title: s.title,
-    palette: { paint: mat(s.palette.paint, 0.55), wheel: mat(s.palette.wheel, 0.6), frame: mat(s.palette.frame, 0.65), ...(s.palette.smokebox ? { smokebox: mat(s.palette.smokebox, 0.85) } : {}) },
+    palette: { paint: mat(s.palette.paint, 0.55), wheel: mat(s.palette.wheel, 0.6), frame: mat(s.palette.frame, 0.65), ...(s.palette.smokebox ? { smokebox: mat(s.palette.smokebox, 0.85) } : {}), ...(s.coupler === "knuckle" ? { knuckle: mat("#3a3b3d", 0.7), handrail: mat("#c9ccce", 0.5) } : {}) },
     heads: [0, end + 0.5],
     beams: s.coupler === "buffers" ? { y0: 0.72, y1: 1.3, length: [0.55, 0.3], half: Math.min(1.45, s.half - 0.04) } : { front: false, rear: false },
     boiler: { x0: 1.0, x1: cab0, y, r, smokebox: 1.5, bands: domeX.map((x) => x - 0.9) },
@@ -147,7 +150,7 @@ export function steamTenderSpec(s: WorldSteam): LocoSpec {
   const tankTop = Math.min(s.top - 0.9, 3.0);
   return {
     title: `${s.title} tender`,
-    palette: { paint: mat(s.palette.paint, 0.55), wheel: mat(s.palette.wheel, 0.6), frame: mat(s.palette.frame, 0.65) },
+    palette: { paint: mat(s.palette.paint, 0.55), wheel: mat(s.palette.wheel, 0.6), frame: mat(s.palette.frame, 0.65), ...(s.coupler === "knuckle" ? { knuckle: mat("#3a3b3d", 0.7), handrail: mat("#c9ccce", 0.5) } : {}) },
     heads: [-0.3, L - 0.3],
     beams: s.coupler === "buffers" ? { y0: 0.75, y1: 1.3, length: [0.3, 0.62], half: Math.min(1.45, s.half - 0.04) } : { front: false, rear: false },
     frame: { x0: 0, x1: body, top: 1.2 },

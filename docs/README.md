@@ -51,6 +51,7 @@
 | [models/spain-trains.md](models/spain-trains.md) | the Spanish designs: AVE S-100 and S-103, the Talgo S-102, S-106, S-130 and Talgo III, S-120, Civia, 446, 440, 592 and Iryo, the 354, 252, 269, 277, 319 and 333, the 141F and 242F |
 | [models/uk-trains.md](models/uk-trains.md) | the British designs on the W6a gauge: InterCity 125 and 225, Class 800, 390, e300, 158, 142 and the 1938 tube stock, the Class 55, 37, 47, 66 and 86, the A4, A3, Castle, Black Five, 9F and Rocket, the Mk1 coach |
 | [models/india-trains.md](models/india-trains.md) | the Indian designs: Vande Bharat, Namo Bharat, Mumbai EMU, MEMU and Delhi Metro, the WDM-2, WDP-4D and WDG-4G, the WAM-4, WAP-4, WAP-7, WAP-5 and WAG-12B, the WP, WG, Fairy Queen and DHR B class, the LHB and ICF coaches, the BOXN wagons |
+| [models/china-trains.md](models/china-trains.md) | the Chinese designs: CR400AF, CR400BF, CRH380A, CRH2A, CRH3C, CRH5A, CR200J and CRH6A, the HXN5, HXD1, HXD3D, SS1, SS8, DF4 and DF11, the QJ, SY and JS, the 25-series coaches, the C70 wagons |
 | [models/world-wagons.md](models/world-wagons.md) | the freight wagon generator (open and covered, knuckle couplers) and the plan's wagons |
 | [models/world-locos.md](models/world-locos.md) | box locomotives stated in a few measures for the box locomotive kit: nose types, pantographs or exhausts, the skin items |
 | [models/world-steam.md](models/world-steam.md) | the parametric steam generator (wheel arrangement, boiler, deflectors, couplers, tenders) and the plan's steam designs |

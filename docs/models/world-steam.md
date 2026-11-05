@@ -23,6 +23,9 @@ metres. `WorldSteam` states a tender engine in a few measures and derives the sp
 
 `noValveGear` and `noCab` draw an early engine (the Rocket); on a narrow gauge the
 buffer beams and the outside cylinders come in with the running boards' half width.
+The generator keeps clear of two heights where the kit's own parts stand: a running
+board at 1.6 m (the valve gear's top) moves to 1.62 m, and a boiler whose saddle would
+end at 1.29 m (the cylinder block's top) grows by 2 cm.
 A design is the engine and its tender as `unit` (`locomotive`, `tender`), with an
 optional `livery` that swaps the paint and number. The kit's smokebox saddle is 1.5 r
 wide, so a boiler radius whose saddle would lie on the frame plates' faces (0.69 -
@@ -50,6 +53,9 @@ wide, so a boiler radius whose saddle would lie on the frame plates' faces (0.69
 | `proc-vehicle-ir-wg` | India | 1'D1' | 1.56 m | none | four axles |
 | `proc-vehicle-eir-fairy-queen` | India | 1A1 | 1.83 m | none | two axles |
 | `proc-vehicle-dhr-b-class` | India | B | 0.66 m | none | two axles |
+| `proc-vehicle-cr-qj` | China | 1'E1' | 1.5 m | Wagner | four axles |
+| `proc-vehicle-cr-sy` | China | 1'D1' | 1.37 m | none | four axles |
+| `proc-vehicle-cr-js` | China | 1'D1' | 1.37 m | Wagner | four axles |
 
 Each design's published figures and photographs are in its `assets/<name>/SOURCES.md`;
 the layout is the class's in proportion, not to the centimetre.

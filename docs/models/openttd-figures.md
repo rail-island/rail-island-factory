@@ -316,6 +316,25 @@ file is the authority.
 | `ir-icf-coach` | IR ICF coach | train RAIL | 1955 | 72 PASS | 45 / 14 | 3 | - |
 | `ir-boxn-wagon` | IR BOXN / BCNA wagon | train RAIL | 1981 | 58 COAL | 39 / 12 | 2 | - |
 | `cr-c70-wagon` | CR C70 / P70 wagon | train RAIL | 2006 | 70 COAL | 45 / 14 | 2 | - |
+| `cr-cr400af` | Fuxing CR400AF | train ELRL | 2017 | 40 PASS | 131 / 42 | 3 | 8 cars |
+| `cr-cr400bf` | Fuxing CR400BF | train ELRL | 2017 | 40 PASS | 131 / 42 | 3 | 8 cars |
+| `cr-crh380a` | CRH380A | train ELRL | 2010 | 40 PASS | 130 / 41 | 2 | 8 cars |
+| `cr-crh2a` | CRH2A | train ELRL | 2007 | 50 PASS | 109 / 39 | 2 | 8 cars |
+| `cr-crh3c` | CRH3C | train ELRL | 2008 | 40 PASS | 128 / 39 | 2 | 8 cars |
+| `cr-crh5a` | CRH5A | train ELRL | 2007 | 50 PASS | 110 / 40 | 2 | 8 cars |
+| `cr-cr200j` | Fuxing CR200J | train ELRL | 2019 | 0 PASS | 192 / 122 | 3 | 8 cars |
+| `cr-crh6a` | CRH6A | train ELRL | 2014 | 60 PASS | 90 / 32 | 2 | 8 cars |
+| `cr-hxn5` | CR HXN5 | train RAIL | 2008 | 0 PASS | 161 / 103 | 1 | - |
+| `cr-hxd1` | CR HXD1 | train ELRL | 2006 | 0 PASS | 255 / 202 | 1 | - |
+| `cr-hxd3d` | CR HXD3D | train ELRL | 2013 | 0 PASS | 232 / 154 | 1 | - |
+| `cr-ss1` | CR SS1 Shaoshan | train ELRL | 1958 | 0 PASS | 134 / 86 | 1 | - |
+| `cr-ss8` | CR SS8 Shaoshan | train ELRL | 1997 | 0 PASS | 144 / 82 | 1 | - |
+| `cr-df4` | CR DF4 Dongfeng | train RAIL | 1969 | 0 PASS | 90 / 50 | 2 | - |
+| `cr-df11` | CR DF11 Dongfeng | train RAIL | 1992 | 0 PASS | 130 / 71 | 1 | - |
+| `cr-qj` | CR QJ | train RAIL | 1956 | 0 PASS | 91 / 54 | 2 | with tender |
+| `cr-sy` | CR SY | train RAIL | 1960 | 0 PASS | 64 / 32 | 2 | with tender |
+| `cr-js` | CR JS | train RAIL | 1957 | 0 PASS | 75 / 40 | 2 | with tender |
+| `cr-25t-coach` | CR 25-series coach | train RAIL | 1999 | 36 PASS | 38 / 10 | 3 | - |
 | `mtr-m-train` | MTR M-Train | train ELRL | 1979 | 230 PASS | 102 / 55 | 6 | 8 cars |
 | `tgv-duplex` | TGV Duplex | train ELRL | 1996 | 0 PASS | 194 / 98 | 7 | power cars, 8 trailers |
 | `cd-y-coach` | CD Y Coach | train RAIL | 1970* | 54 PASS | 42 / 12 | 4 | - |
