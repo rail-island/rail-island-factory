@@ -15,6 +15,14 @@ import { CARGO_SHIP_SPECS } from "./worldShipsCargo.ts";
 import { SERVICE_SHIP_SPECS } from "./worldShipsService.ts";
 import { PASSENGER_SHIP_SPECS } from "./worldShipsPassenger.ts";
 import { SMALL_SHIP_SPECS } from "./worldShipsSmall.ts";
+// the world aircraft (docs/models/world-aircraft.md)
+import { aircraftFeatures } from "./airframeKit.ts";
+import { airshipFeatures, rotorFeatures } from "./rotorKit.ts";
+import { WORLD_JET_SPECS } from "./worldJets.ts";
+import { WORLD_PROP_SPECS } from "./worldProps.ts";
+import { ROTOR_SPECS, WORLD_ROTORCRAFT_SPECS, zeppelinNtSpec } from "./worldRotorcraft.ts";
+import { coverageCombinations } from "./design.ts";
+import type { WorldAircraft } from "./worldAircraft.ts";
 
 /** A fleet design as the harness sees it: its id, the kit options it uses, a size to find the family's largest. */
 export interface FleetEntry {
@@ -57,7 +65,32 @@ export const WORLD_FLEET: readonly FleetEntry[] = [
     const s = w.spec();
     return { id: proceduralId(w.id), family: "ships", features: shipFeatures(s, (w.params ?? []).map((p) => p.name)), size: shipLength(s) };
   }),
+  // the world aircraft: the options of every parameter combination; the largest by length times span
+  ...[...WORLD_JET_SPECS, ...WORLD_PROP_SPECS, ...WORLD_ROTORCRAFT_SPECS].map((a) => aircraftEntry(a)),
 ];
+
+/** A world aircraft's fleet entry: the kit options its combinations use (a float or ski variant's too). */
+function aircraftEntry(a: WorldAircraft): FleetEntry {
+  const names = (a.params ?? []).map((p) => p.name);
+  const combos = coverageCombinations(a.params, a.finishParams);
+  const features = new Set<string>();
+  let size = 0;
+  for (const p of combos) {
+    if (a.spec) {
+      const s = a.spec(p);
+      aircraftFeatures(s, names).forEach((f) => features.add(f));
+      size = Math.max(size, s.length * s.wing.span);
+    } else if (ROTOR_SPECS[a.id]) {
+      const s = ROTOR_SPECS[a.id]!(p);
+      rotorFeatures(s, names).forEach((f) => features.add(f));
+      size = Math.max(size, s.length * s.main.r * 2);
+    } else {
+      airshipFeatures(zeppelinNtSpec(p), names).forEach((f) => features.add(f));
+      size = Math.max(size, 75.1 * 19.5);
+    }
+  }
+  return { id: proceduralId(a.id), family: "aircraft", features: [...features], size };
+}
 
 /**
  * The covering sample of `entries`: greedily the design that adds the most kit

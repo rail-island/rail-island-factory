@@ -91,6 +91,10 @@ import { CARGO_SHIPS } from "./worldShipsCargo.ts";
 import { SERVICE_SHIPS } from "./worldShipsService.ts";
 import { PASSENGER_SHIPS } from "./worldShipsPassenger.ts";
 import { SMALL_SHIPS } from "./worldShipsSmall.ts";
+// the world aircraft (docs/models/world-aircraft.md)
+import { WORLD_JETS } from "./worldJets.ts";
+import { WORLD_PROPS } from "./worldProps.ts";
+import { WORLD_ROTORCRAFT } from "./worldRotorcraft.ts";
 import { DIESEL_LOCOS } from "./dieselLocos.ts";
 import { US_DIESELS } from "./usDiesels.ts";
 import { US_CARBODIES } from "./usCarbodies.ts";
@@ -205,6 +209,10 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: CITY_BUS_DESIGNS, source: "cityBuses.ts", meta: "vehicles" },
   { designs: WORLD_BUSES, source: "worldBuses.ts", meta: "vehicles" },
   { designs: AIRCRAFT, source: "aircraft.ts", meta: "vehicles" },
+  // the world aircraft (worldAircraft.ts, docs/models/world-aircraft.md)
+  { designs: WORLD_JETS, source: "worldJets.ts", meta: "vehicles" },
+  { designs: WORLD_PROPS, source: "worldProps.ts", meta: "vehicles" },
+  { designs: WORLD_ROTORCRAFT, source: "worldRotorcraft.ts", meta: "vehicles" },
   { designs: SHIPS, source: "ships.ts", meta: "vehicles" },
   { designs: CABLE_CABINS, source: "cableCabins.ts", meta: "vehicles" },
   { designs: WORLD_CABINS, source: "worldCabins.ts", meta: "vehicles" },
