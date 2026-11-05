@@ -502,6 +502,9 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-boeing-737": pax(1998, 189, null, { presets: presets(...each("livery", "ryanair", "southwest", "united", "klm", "turkish")) }),
   "proc-vehicle-light-jet": pax(2000, 7, null, { presets: presets() }), // approx.
   "proc-vehicle-small-airplane": pax(1960, 3, null, { presets: presets(...each("color", "red", "yellow", "green")) }), // approx.
+  // the world aircraft (worldJets.ts, worldProps.ts, worldRotorcraft.ts; docs/models/world-aircraft.md):
+  // typical seats (a freighter's payload in tonnes); presets of every other livery and variant
+  ...worldAircraftTable(),
 
   // --- ships -----------------------------------------------------------------------
   "proc-vehicle-ocean-liner": pax(1930, 2000, null, { presets: presets() }), // approx.
@@ -509,3 +512,81 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-hydrofoil-ferry": pax(1960, 150, null, { presets: presets() }), // approx.
   "proc-vehicle-passenger-ferry": pax(1950, 300, null, { presets: presets() }), // approx.
 };
+
+// --- the world aircraft -------------------------------------------------------------
+
+/**
+ * The world aircraft's entries: [id, introduction year, seats, the other liveries or
+ * colours worth a preset]. Every aircraft takes passengers (an aircraft is always
+ * refittable to them); the freighters carry goods, their capacity their payload in
+ * tonnes. OpenTTD's helicopter subtype is not written by the GRF encoder, so the
+ * helicopters are planes there.
+ */
+function worldAircraftTable(): Record<string, OpenttdProperties> {
+  const L = (...v: string[]) => each("livery", ...v);
+  const C = each("colour", "red", "green", "gold", "black");
+  const rows: Array<[string, number, number, ParamValues[]]> = [
+    ["boeing-707", 1959, 189, L("qantas", "lufthansa")], ["boeing-727", 1967, 189, L("lufthansa", "american")],
+    ["boeing-737-200", 1968, 130, L("united", "malaysia")], ["boeing-737-max", 2017, 189, L("ryanair", "aeromexico")],
+    ["boeing-757", 1983, 200, L("britishAirways", "icelandair")], ["boeing-767", 1986, 269, L("american", "lot")],
+    ["boeing-777", 2004, 396, L("airFrance", "cathay")], ["boeing-787", 2014, 296, L("qatar", "united")],
+    ["douglas-dc8", 1967, 259, L("sas", "united")], ["douglas-dc9", 1967, 115, L("delta", "alitalia")],
+    ["md-80", 1981, 155, L("alitalia", "sas")], ["douglas-dc10", 1972, 270, L("lufthansa", "swissair")],
+    ["lockheed-tristar", 1972, 256, L("twa", "britishAirways")], ["convair-880", 1960, 110, L("twa", "cathay")],
+    ["airbus-a300", 1974, 266, L("lufthansa", "thai")], ["airbus-a310", 1983, 220, L("lufthansa", "airIndia")],
+    ["airbus-a320neo", 2017, 220, L("turkish", "chinaSouthern")], ["airbus-a330", 1994, 300, L("turkish", "aerLingus")],
+    ["airbus-a340", 2002, 380, L("iberia", "etihad")], ["airbus-a350", 2015, 325, L("singapore", "finnair")],
+    ["airbus-a220", 2016, 140, L("airCanada", "delta")], ["concorde", 1976, 100, L("airFrance")],
+    ["caravelle", 1959, 80, L("sas", "sabena")], ["dh-comet", 1958, 81, L("bea", "aerolineas")],
+    ["vickers-vc10", 1964, 135, L("britishAirways", "kenya")], ["hs-trident", 1964, 115, L("britishAirways", "airChina")],
+    ["bac-111", 1965, 119, L("tarom", "aerLingus")], ["bae-146", 1983, 100, L("lufthansa", "swiss")],
+    ["fokker-f28", 1969, 65, L("garuda", "sas")], ["fokker-100", 1988, 107, L("swissair", "american")],
+    ["tupolev-tu104", 1956, 70, L("csa")], ["tupolev-tu134", 1967, 76, L("csa", "interflug")],
+    ["tupolev-tu154", 1972, 164, L("balkan", "malev")], ["tupolev-tu144", 1977, 140, []],
+    ["ilyushin-il62", 1967, 174, L("csa", "interflug")], ["ilyushin-il86", 1980, 350, L("aeroflotNew")],
+    ["ilyushin-il96", 1993, 262, L("cubana", "rossiya")], ["yakovlev-yak40", 1968, 32, L("csa")],
+    ["yakovlev-yak42", 1980, 120, L("cubana")], ["sukhoi-superjet", 2011, 98, L("rossiya")],
+    ["antonov-an148", 2009, 75, L("ukraine")], ["embraer-e190", 2005, 100, L("lot", "aeromexico")],
+    ["embraer-e195-e2", 2019, 132, L("embraer", "klm")], ["embraer-erj145", 1997, 50, L("airFrance", "lot")],
+    ["bombardier-crj200", 1992, 50, L("delta", "airCanada")], ["bombardier-crj900", 2003, 90, L("lufthansa", "garuda")],
+    ["comac-c919", 2023, 168, L("comac", "airChina")], ["comac-arj21", 2016, 90, L("chinaSouthern", "airChina")],
+    ["namc-ys11", 1965, 64, L("jalClassic", "olympic")], ["dhc-dash8", 2000, 78, L("airCanada", "sas")],
+    ["saab-340", 1984, 34, L("swissair", "finnair")], ["saab-2000", 1994, 50, L("swiss")],
+    ["fokker-f27", 1958, 48, L("aerLingus", "sabena")], ["fokker-50", 1987, 56, L("sas", "austrian")],
+    ["embraer-brasilia", 1985, 30, L("united", "embraer")], ["embraer-bandeirante", 1973, 18, L("navyBand")],
+    ["let-l410", 1971, 19, L("aeroflot", "navyBand")], ["xian-ma60", 2000, 60, L("garuda", "plain")],
+    ["antonov-an24", 1962, 50, L("interflug", "cubana")], ["ilyushin-il18", 1959, 100, L("interflug", "csa")],
+    ["vickers-viscount", 1953, 75, L("aerLingus", "lufthansa")], ["lockheed-electra", 1959, 98, L("american", "klm")],
+    ["douglas-dc3", 1936, 28, L("klm", "swissair")], ["douglas-dc6", 1951, 102, L("sas", "sabena")],
+    ["lockheed-constellation", 1951, 95, L("lufthansa", "airFrance")], ["boeing-377", 1949, 100, L("boac", "united")],
+    ["ford-trimotor", 1926, 15, []], ["junkers-ju52", 1932, 17, L("lufthansa")], ["dh-dragon-rapide", 1935, 8, []],
+    ["bn-islander", 1967, 9, L("coastGuard")], ["pilatus-pc12", 1994, 9, L("navyBand")], ["cessna-172", 1956, 3, C],
+    ["piper-cherokee", 1961, 3, C], ["beech-king-air", 1990, 11, C],
+    ["antonov-an2", 1949, 12, each("gear", "floats")], ["canadair-cl415", 1994, 8, L("coastGuard")],
+    ["shinmaywa-us2", 2007, 20, []], ["boeing-314", 1939, 74, []],
+    ["gulfstream-g650", 2012, 19, C], ["bombardier-global", 2018, 19, C], ["dassault-falcon-7x", 2007, 16, C],
+    ["learjet-35", 1974, 8, C], ["embraer-phenom-300", 2009, 9, C], ["hondajet", 2015, 6, C],
+    ["sikorsky-s92", 2004, 19, L("rescue")], ["airbus-h145", 2014, 9, L("police")], ["mil-mi8", 1967, 24, L("utair")],
+    ["bell-206", 1967, 4, C], ["zeppelin-nt", 1997, 12, L("goodyear")],
+    ["dhc-twin-otter", 1966, 19, each("gear", "floats", "skis")], ["dhc-beaver", 1948, 6, each("gear", "floats")],
+    ["cessna-caravan", 1985, 13, each("gear", "floats")],
+  ];
+  const out: Record<string, OpenttdProperties> = {};
+  for (const [id, year, seats, more] of rows) out[`proc-vehicle-${id}`] = pax(year, seats, null, { presets: presets(...more) });
+  // the length variants and the freighters
+  out["proc-vehicle-airbus-a320"] = pax(1988, 180, null, {
+    variants: [at({ length: "a319" }, { introYear: 1996, capacity: 140 }), at({ length: "a321" }, { introYear: 1994, capacity: 220 })],
+    presets: presets(...each("length", "a319", "a321"), ...L("easyJet", "iberia")),
+  });
+  out["proc-vehicle-atr-72"] = pax(2011, 72, null, { variants: [at({ length: "42" }, { capacity: 48 })], presets: presets({ length: "42" }, ...L("alitalia", "malaysia")) });
+  out["proc-vehicle-boeing-747-8"] = pax(2011, 467, null, {
+    variants: [at({ variant: "freighter" }, { capacity: 134, cargo: "GOOD", refitClasses: ["piece", "express"] })],
+    presets: presets({ variant: "freighter" }),
+  });
+  out["proc-vehicle-antonov-an124"] = truck(1986, 150, "GOOD", ["piece", "express"], { presets: presets(...L("volgaDnepr")) });
+  out["proc-vehicle-antonov-an225"] = truck(1988, 250, "GOOD", ["piece", "express"], { presets: presets() });
+  out["proc-vehicle-lockheed-l100"] = truck(1965, 22, "GOOD", ["piece", "express"], { presets: presets(...L("navyBand", "saa")) });
+  out["proc-vehicle-boeing-dreamlifter"] = truck(2007, 113, "GOOD", ["piece", "express"], { presets: presets() });
+  out["proc-vehicle-airbus-beluga-xl"] = truck(2020, 51, "GOOD", ["piece", "express"], { presets: presets() });
+  return out;
+}

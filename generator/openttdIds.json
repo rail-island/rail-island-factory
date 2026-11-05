@@ -5,19 +5,57 @@
     "proc-vehicle-adl-enviro400": 163,
     "proc-vehicle-adl-enviro500": 164,
     "proc-vehicle-aero-a10": 75,
+    "proc-vehicle-airbus-a220": 208,
+    "proc-vehicle-airbus-a300": 201,
+    "proc-vehicle-airbus-a310": 202,
+    "proc-vehicle-airbus-a320": 203,
+    "proc-vehicle-airbus-a320neo": 204,
+    "proc-vehicle-airbus-a330": 205,
+    "proc-vehicle-airbus-a340": 206,
+    "proc-vehicle-airbus-a350": 207,
     "proc-vehicle-airbus-a380": 76,
     "proc-vehicle-airbus-beluga": 74,
+    "proc-vehicle-airbus-beluga-xl": 277,
+    "proc-vehicle-airbus-h145": 282,
     "proc-vehicle-american-440": 132,
     "proc-vehicle-american-truck": 5,
     "proc-vehicle-amtrak-acela": 128,
     "proc-vehicle-amtrak-superliner": 133,
+    "proc-vehicle-antonov-an124": 272,
+    "proc-vehicle-antonov-an148": 228,
+    "proc-vehicle-antonov-an2": 274,
+    "proc-vehicle-antonov-an225": 273,
+    "proc-vehicle-antonov-an24": 255,
+    "proc-vehicle-atr-72": 243,
+    "proc-vehicle-bac-111": 214,
+    "proc-vehicle-bae-146": 215,
+    "proc-vehicle-beech-king-air": 271,
+    "proc-vehicle-bell-206": 284,
     "proc-vehicle-blue-train-24": 160,
     "proc-vehicle-bmo-double-deck-coach": 17,
+    "proc-vehicle-bn-islander": 266,
+    "proc-vehicle-boeing-314": 280,
+    "proc-vehicle-boeing-377": 262,
+    "proc-vehicle-boeing-707": 186,
+    "proc-vehicle-boeing-727": 187,
     "proc-vehicle-boeing-737": 77,
+    "proc-vehicle-boeing-737-200": 188,
+    "proc-vehicle-boeing-737-max": 189,
     "proc-vehicle-boeing-747": 73,
+    "proc-vehicle-boeing-747-8": 190,
+    "proc-vehicle-boeing-757": 191,
+    "proc-vehicle-boeing-767": 192,
+    "proc-vehicle-boeing-777": 193,
+    "proc-vehicle-boeing-787": 194,
+    "proc-vehicle-boeing-dreamlifter": 276,
+    "proc-vehicle-bombardier-crj200": 232,
+    "proc-vehicle-bombardier-crj900": 233,
+    "proc-vehicle-bombardier-global": 237,
     "proc-vehicle-budd-rdc": 134,
     "proc-vehicle-bus-1": 71,
     "proc-vehicle-byd-k9": 184,
+    "proc-vehicle-canadair-cl415": 278,
+    "proc-vehicle-caravelle": 210,
     "proc-vehicle-cd-110": 33,
     "proc-vehicle-cd-130": 34,
     "proc-vehicle-cd-140": 35,
@@ -45,7 +83,13 @@
     "proc-vehicle-cd-843": 102,
     "proc-vehicle-cd-green-white-coach": 18,
     "proc-vehicle-cd-y-coach": 115,
+    "proc-vehicle-cessna-172": 268,
+    "proc-vehicle-cessna-caravan": 269,
     "proc-vehicle-cistern-semi-truck": 57,
+    "proc-vehicle-comac-arj21": 235,
+    "proc-vehicle-comac-c919": 234,
+    "proc-vehicle-concorde": 209,
+    "proc-vehicle-convair-880": 200,
     "proc-vehicle-cruise-ferry": 80,
     "proc-vehicle-csd-386": 31,
     "proc-vehicle-csd-433-0": 24,
@@ -69,32 +113,61 @@
     "proc-vehicle-csd-t499": 89,
     "proc-vehicle-csd-t679-0": 88,
     "proc-vehicle-cta-5000": 137,
+    "proc-vehicle-dassault-falcon-7x": 238,
     "proc-vehicle-db-111": 46,
     "proc-vehicle-db-212": 55,
     "proc-vehicle-db-628": 106,
     "proc-vehicle-db-dosto": 118,
+    "proc-vehicle-dh-comet": 211,
+    "proc-vehicle-dh-dragon-rapide": 265,
+    "proc-vehicle-dhc-beaver": 246,
+    "proc-vehicle-dhc-dash8": 244,
+    "proc-vehicle-dhc-twin-otter": 245,
     "proc-vehicle-dnt-184-5": 45,
+    "proc-vehicle-douglas-dc10": 198,
+    "proc-vehicle-douglas-dc3": 259,
+    "proc-vehicle-douglas-dc6": 260,
+    "proc-vehicle-douglas-dc8": 195,
+    "proc-vehicle-douglas-dc9": 196,
     "proc-vehicle-dr-243": 47,
     "proc-vehicle-dr-sbahn-berlin": 119,
     "proc-vehicle-dr-vt1816": 108,
     "proc-vehicle-eas-open-wagon": 21,
+    "proc-vehicle-embraer-bandeirante": 252,
+    "proc-vehicle-embraer-brasilia": 251,
+    "proc-vehicle-embraer-e190": 229,
+    "proc-vehicle-embraer-e195-e2": 230,
+    "proc-vehicle-embraer-erj145": 231,
+    "proc-vehicle-embraer-phenom-300": 240,
     "proc-vehicle-emd-f7": 124,
     "proc-vehicle-emd-gp9": 120,
     "proc-vehicle-emd-sd40-2": 121,
     "proc-vehicle-emd-sd70ace": 123,
     "proc-vehicle-faccs-hopper-wagon": 41,
     "proc-vehicle-falls-hopper-wagon": 42,
+    "proc-vehicle-fokker-100": 217,
+    "proc-vehicle-fokker-50": 250,
+    "proc-vehicle-fokker-f27": 249,
+    "proc-vehicle-fokker-f28": 216,
+    "proc-vehicle-ford-trimotor": 263,
     "proc-vehicle-ge-es44ac": 122,
     "proc-vehicle-ge-p42dc": 125,
     "proc-vehicle-gillig-low-floor": 181,
+    "proc-vehicle-gulfstream-g650": 236,
     "proc-vehicle-habis-sliding-wall-wagon": 39,
     "proc-vehicle-hadgs-hopper-wagon": 40,
     "proc-vehicle-hankyu-9000": 155,
+    "proc-vehicle-hondajet": 241,
+    "proc-vehicle-hs-trident": 213,
     "proc-vehicle-hydrofoil-ferry": 81,
     "proc-vehicle-hyundai-universe": 185,
     "proc-vehicle-ice-1": 110,
     "proc-vehicle-ikarus-260": 178,
     "proc-vehicle-ikarus-280": 179,
+    "proc-vehicle-ilyushin-il18": 256,
+    "proc-vehicle-ilyushin-il62": 222,
+    "proc-vehicle-ilyushin-il86": 223,
+    "proc-vehicle-ilyushin-il96": 224,
     "proc-vehicle-jnr-103": 150,
     "proc-vehicle-jnr-485": 154,
     "proc-vehicle-jnr-c62": 156,
@@ -104,17 +177,24 @@
     "proc-vehicle-jr-e235": 149,
     "proc-vehicle-jr-e259": 153,
     "proc-vehicle-jr-kiha40": 107,
+    "proc-vehicle-junkers-ju52": 264,
     "proc-vehicle-karosa-long": 64,
     "proc-vehicle-karosa-renault-citybus-12m": 65,
     "proc-vehicle-karosa-renault-citybus-18m": 66,
     "proc-vehicle-karosa-short": 63,
     "proc-vehicle-kintetsu-hinotori": 152,
     "proc-vehicle-kvag-gt4": 95,
+    "proc-vehicle-learjet-35": 239,
     "proc-vehicle-legacy-covered-wagon": 1,
     "proc-vehicle-legacy-heavy-wagon": 3,
     "proc-vehicle-legacy-open-wagon": 2,
+    "proc-vehicle-let-l410": 253,
     "proc-vehicle-leyland-national": 165,
     "proc-vehicle-light-jet": 78,
+    "proc-vehicle-lockheed-constellation": 261,
+    "proc-vehicle-lockheed-electra": 258,
+    "proc-vehicle-lockheed-l100": 275,
+    "proc-vehicle-lockheed-tristar": 199,
     "proc-vehicle-man-lions-city": 169,
     "proc-vehicle-mav-mdmot": 109,
     "proc-vehicle-mb-citaro": 67,
@@ -126,11 +206,14 @@
     "proc-vehicle-mb-tourismo": 170,
     "proc-vehicle-mcdonnell-douglas-md11": 72,
     "proc-vehicle-mci-d4505": 183,
+    "proc-vehicle-md-80": 197,
     "proc-vehicle-mercedes-atego-1224": 62,
     "proc-vehicle-metro-81-71": 96,
+    "proc-vehicle-mil-mi8": 283,
     "proc-vehicle-mixer-truck": 58,
     "proc-vehicle-mtr-m-train": 113,
     "proc-vehicle-muv-69": 56,
+    "proc-vehicle-namc-ys11": 242,
     "proc-vehicle-nas-flat-wagon": 19,
     "proc-vehicle-neoplan-skyliner": 172,
     "proc-vehicle-new-flyer-xcelsior": 182,
@@ -143,13 +226,17 @@
     "proc-vehicle-odakyu-gse": 151,
     "proc-vehicle-pao-flat-wagon": 38,
     "proc-vehicle-passenger-ferry": 82,
+    "proc-vehicle-pilatus-pc12": 267,
     "proc-vehicle-pioneer-zephyr": 135,
+    "proc-vehicle-piper-cherokee": 270,
     "proc-vehicle-praga-rv": 61,
     "proc-vehicle-prr-gg1": 127,
     "proc-vehicle-prr-k4s": 130,
     "proc-vehicle-rah-tank-wagon": 23,
     "proc-vehicle-raj-hopper-wagon": 22,
     "proc-vehicle-reefer-semi-truck": 59,
+    "proc-vehicle-saab-2000": 248,
+    "proc-vehicle-saab-340": 247,
     "proc-vehicle-scania-citywide": 174,
     "proc-vehicle-setra-s515": 171,
     "proc-vehicle-sf-cable-car": 141,
@@ -161,13 +248,16 @@
     "proc-vehicle-shinkansen-e5": 143,
     "proc-vehicle-shinkansen-e6": 146,
     "proc-vehicle-shinkansen-n700s": 142,
+    "proc-vehicle-shinmaywa-us2": 279,
     "proc-vehicle-siemens-alc42": 126,
+    "proc-vehicle-sikorsky-s92": 281,
     "proc-vehicle-skoda-14tr": 176,
     "proc-vehicle-skoda-15tr": 177,
     "proc-vehicle-small-airplane": 79,
     "proc-vehicle-solaris-trollino": 180,
     "proc-vehicle-solaris-urbino-15": 70,
     "proc-vehicle-sqns-container-wagon": 37,
+    "proc-vehicle-sukhoi-superjet": 227,
     "proc-vehicle-tatra-815-tipper": 60,
     "proc-vehicle-tatra-kt4": 94,
     "proc-vehicle-tatra-kt8": 93,
@@ -175,6 +265,10 @@
     "proc-vehicle-tatra-t6": 92,
     "proc-vehicle-tgv": 111,
     "proc-vehicle-tgv-duplex": 114,
+    "proc-vehicle-tupolev-tu104": 218,
+    "proc-vehicle-tupolev-tu134": 219,
+    "proc-vehicle-tupolev-tu144": 221,
+    "proc-vehicle-tupolev-tu154": 220,
     "proc-vehicle-ua-open-wagon": 20,
     "proc-vehicle-uic-z-coach": 117,
     "proc-vehicle-up-big-boy": 129,
@@ -183,8 +277,14 @@
     "proc-vehicle-us-well-car": 140,
     "proc-vehicle-van-hool-exquicity": 175,
     "proc-vehicle-vectron": 50,
+    "proc-vehicle-vickers-vc10": 212,
+    "proc-vehicle-vickers-viscount": 257,
     "proc-vehicle-volvo-7900e": 173,
     "proc-vehicle-wap-hopper-wagon": 43,
+    "proc-vehicle-xian-ma60": 254,
+    "proc-vehicle-yakovlev-yak40": 225,
+    "proc-vehicle-yakovlev-yak42": 226,
+    "proc-vehicle-zeppelin-nt": 285,
     "proc-vehicle-zsr-coach": 116
   },
   "vehicles": {
@@ -2007,6 +2107,110 @@
         "id": 400,
         "size": 16
       },
+      "proc-vehicle-airbus-a220?": {
+        "id": 956,
+        "size": 4
+      },
+      "proc-vehicle-airbus-a220?livery=airCanada": {
+        "id": 960,
+        "size": 4
+      },
+      "proc-vehicle-airbus-a220?livery=delta": {
+        "id": 964,
+        "size": 4
+      },
+      "proc-vehicle-airbus-a300?": {
+        "id": 864,
+        "size": 4
+      },
+      "proc-vehicle-airbus-a300?livery=lufthansa": {
+        "id": 868,
+        "size": 4
+      },
+      "proc-vehicle-airbus-a300?livery=thai": {
+        "id": 872,
+        "size": 4
+      },
+      "proc-vehicle-airbus-a310?": {
+        "id": 876,
+        "size": 4
+      },
+      "proc-vehicle-airbus-a310?livery=airIndia": {
+        "id": 884,
+        "size": 4
+      },
+      "proc-vehicle-airbus-a310?livery=lufthansa": {
+        "id": 880,
+        "size": 4
+      },
+      "proc-vehicle-airbus-a320?": {
+        "id": 888,
+        "size": 4
+      },
+      "proc-vehicle-airbus-a320?length=a319": {
+        "id": 892,
+        "size": 4
+      },
+      "proc-vehicle-airbus-a320?length=a321": {
+        "id": 896,
+        "size": 4
+      },
+      "proc-vehicle-airbus-a320?livery=easyJet": {
+        "id": 900,
+        "size": 4
+      },
+      "proc-vehicle-airbus-a320?livery=iberia": {
+        "id": 904,
+        "size": 4
+      },
+      "proc-vehicle-airbus-a320neo?": {
+        "id": 908,
+        "size": 4
+      },
+      "proc-vehicle-airbus-a320neo?livery=chinaSouthern": {
+        "id": 916,
+        "size": 4
+      },
+      "proc-vehicle-airbus-a320neo?livery=turkish": {
+        "id": 912,
+        "size": 4
+      },
+      "proc-vehicle-airbus-a330?": {
+        "id": 920,
+        "size": 4
+      },
+      "proc-vehicle-airbus-a330?livery=aerLingus": {
+        "id": 928,
+        "size": 4
+      },
+      "proc-vehicle-airbus-a330?livery=turkish": {
+        "id": 924,
+        "size": 4
+      },
+      "proc-vehicle-airbus-a340?": {
+        "id": 932,
+        "size": 4
+      },
+      "proc-vehicle-airbus-a340?livery=etihad": {
+        "id": 940,
+        "size": 4
+      },
+      "proc-vehicle-airbus-a340?livery=iberia": {
+        "id": 936,
+        "size": 4
+      },
+      "proc-vehicle-airbus-a350?": {
+        "id": 944,
+        "size": 4
+      },
+      "proc-vehicle-airbus-a350?livery=finnair": {
+        "id": 952,
+        "size": 4
+      },
+      "proc-vehicle-airbus-a350?livery=singapore": {
+        "id": 948,
+        "size": 4
+      },
       "proc-vehicle-airbus-a380?": {
         "id": 416,
         "size": 16
@@ -2031,9 +2235,213 @@
         "id": 448,
         "size": 16
       },
+      "proc-vehicle-airbus-beluga-xl?": {
+        "id": 1756,
+        "size": 4
+      },
       "proc-vehicle-airbus-beluga?": {
         "id": 384,
         "size": 16
+      },
+      "proc-vehicle-airbus-h145?": {
+        "id": 1784,
+        "size": 4
+      },
+      "proc-vehicle-airbus-h145?livery=police": {
+        "id": 1788,
+        "size": 4
+      },
+      "proc-vehicle-antonov-an124?": {
+        "id": 1720,
+        "size": 4
+      },
+      "proc-vehicle-antonov-an124?livery=volgaDnepr": {
+        "id": 1724,
+        "size": 4
+      },
+      "proc-vehicle-antonov-an148?": {
+        "id": 1164,
+        "size": 4
+      },
+      "proc-vehicle-antonov-an148?livery=ukraine": {
+        "id": 1168,
+        "size": 4
+      },
+      "proc-vehicle-antonov-an225?": {
+        "id": 1728,
+        "size": 4
+      },
+      "proc-vehicle-antonov-an24?": {
+        "id": 1524,
+        "size": 4
+      },
+      "proc-vehicle-antonov-an24?livery=cubana": {
+        "id": 1532,
+        "size": 4
+      },
+      "proc-vehicle-antonov-an24?livery=interflug": {
+        "id": 1528,
+        "size": 4
+      },
+      "proc-vehicle-antonov-an2?": {
+        "id": 1732,
+        "size": 4
+      },
+      "proc-vehicle-antonov-an2?gear=floats": {
+        "id": 1736,
+        "size": 4
+      },
+      "proc-vehicle-atr-72?": {
+        "id": 1388,
+        "size": 4
+      },
+      "proc-vehicle-atr-72?length=42": {
+        "id": 1392,
+        "size": 4
+      },
+      "proc-vehicle-atr-72?livery=alitalia": {
+        "id": 1396,
+        "size": 4
+      },
+      "proc-vehicle-atr-72?livery=malaysia": {
+        "id": 1400,
+        "size": 4
+      },
+      "proc-vehicle-bac-111?": {
+        "id": 1024,
+        "size": 4
+      },
+      "proc-vehicle-bac-111?livery=aerLingus": {
+        "id": 1032,
+        "size": 4
+      },
+      "proc-vehicle-bac-111?livery=tarom": {
+        "id": 1028,
+        "size": 4
+      },
+      "proc-vehicle-bae-146?": {
+        "id": 1036,
+        "size": 4
+      },
+      "proc-vehicle-bae-146?livery=lufthansa": {
+        "id": 1040,
+        "size": 4
+      },
+      "proc-vehicle-bae-146?livery=swiss": {
+        "id": 1044,
+        "size": 4
+      },
+      "proc-vehicle-beech-king-air?": {
+        "id": 1700,
+        "size": 4
+      },
+      "proc-vehicle-beech-king-air?colour=black": {
+        "id": 1716,
+        "size": 4
+      },
+      "proc-vehicle-beech-king-air?colour=gold": {
+        "id": 1712,
+        "size": 4
+      },
+      "proc-vehicle-beech-king-air?colour=green": {
+        "id": 1708,
+        "size": 4
+      },
+      "proc-vehicle-beech-king-air?colour=red": {
+        "id": 1704,
+        "size": 4
+      },
+      "proc-vehicle-bell-206?": {
+        "id": 1800,
+        "size": 4
+      },
+      "proc-vehicle-bell-206?colour=black": {
+        "id": 1816,
+        "size": 4
+      },
+      "proc-vehicle-bell-206?colour=gold": {
+        "id": 1812,
+        "size": 4
+      },
+      "proc-vehicle-bell-206?colour=green": {
+        "id": 1808,
+        "size": 4
+      },
+      "proc-vehicle-bell-206?colour=red": {
+        "id": 1804,
+        "size": 4
+      },
+      "proc-vehicle-bn-islander?": {
+        "id": 1636,
+        "size": 4
+      },
+      "proc-vehicle-bn-islander?livery=coastGuard": {
+        "id": 1640,
+        "size": 4
+      },
+      "proc-vehicle-boeing-314?": {
+        "id": 1772,
+        "size": 4
+      },
+      "proc-vehicle-boeing-377?": {
+        "id": 1608,
+        "size": 4
+      },
+      "proc-vehicle-boeing-377?livery=boac": {
+        "id": 1612,
+        "size": 4
+      },
+      "proc-vehicle-boeing-377?livery=united": {
+        "id": 1616,
+        "size": 4
+      },
+      "proc-vehicle-boeing-707?": {
+        "id": 688,
+        "size": 4
+      },
+      "proc-vehicle-boeing-707?livery=lufthansa": {
+        "id": 696,
+        "size": 4
+      },
+      "proc-vehicle-boeing-707?livery=qantas": {
+        "id": 692,
+        "size": 4
+      },
+      "proc-vehicle-boeing-727?": {
+        "id": 700,
+        "size": 4
+      },
+      "proc-vehicle-boeing-727?livery=american": {
+        "id": 708,
+        "size": 4
+      },
+      "proc-vehicle-boeing-727?livery=lufthansa": {
+        "id": 704,
+        "size": 4
+      },
+      "proc-vehicle-boeing-737-200?": {
+        "id": 712,
+        "size": 4
+      },
+      "proc-vehicle-boeing-737-200?livery=malaysia": {
+        "id": 720,
+        "size": 4
+      },
+      "proc-vehicle-boeing-737-200?livery=united": {
+        "id": 716,
+        "size": 4
+      },
+      "proc-vehicle-boeing-737-max?": {
+        "id": 724,
+        "size": 4
+      },
+      "proc-vehicle-boeing-737-max?livery=aeromexico": {
+        "id": 732,
+        "size": 4
+      },
+      "proc-vehicle-boeing-737-max?livery=ryanair": {
+        "id": 728,
+        "size": 4
       },
       "proc-vehicle-boeing-737?": {
         "id": 512,
@@ -2059,6 +2467,14 @@
         "id": 560,
         "size": 16
       },
+      "proc-vehicle-boeing-747-8?": {
+        "id": 736,
+        "size": 4
+      },
+      "proc-vehicle-boeing-747-8?variant=freighter": {
+        "id": 740,
+        "size": 4
+      },
       "proc-vehicle-boeing-747?": {
         "id": 320,
         "size": 16
@@ -2075,9 +2491,637 @@
         "id": 352,
         "size": 16
       },
+      "proc-vehicle-boeing-757?": {
+        "id": 744,
+        "size": 4
+      },
+      "proc-vehicle-boeing-757?livery=britishAirways": {
+        "id": 748,
+        "size": 4
+      },
+      "proc-vehicle-boeing-757?livery=icelandair": {
+        "id": 752,
+        "size": 4
+      },
+      "proc-vehicle-boeing-767?": {
+        "id": 756,
+        "size": 4
+      },
+      "proc-vehicle-boeing-767?livery=american": {
+        "id": 760,
+        "size": 4
+      },
+      "proc-vehicle-boeing-767?livery=lot": {
+        "id": 764,
+        "size": 4
+      },
+      "proc-vehicle-boeing-777?": {
+        "id": 768,
+        "size": 4
+      },
+      "proc-vehicle-boeing-777?livery=airFrance": {
+        "id": 772,
+        "size": 4
+      },
+      "proc-vehicle-boeing-777?livery=cathay": {
+        "id": 776,
+        "size": 4
+      },
+      "proc-vehicle-boeing-787?": {
+        "id": 780,
+        "size": 4
+      },
+      "proc-vehicle-boeing-787?livery=qatar": {
+        "id": 784,
+        "size": 4
+      },
+      "proc-vehicle-boeing-787?livery=united": {
+        "id": 788,
+        "size": 4
+      },
+      "proc-vehicle-boeing-dreamlifter?": {
+        "id": 1752,
+        "size": 4
+      },
+      "proc-vehicle-bombardier-crj200?": {
+        "id": 1208,
+        "size": 4
+      },
+      "proc-vehicle-bombardier-crj200?livery=airCanada": {
+        "id": 1216,
+        "size": 4
+      },
+      "proc-vehicle-bombardier-crj200?livery=delta": {
+        "id": 1212,
+        "size": 4
+      },
+      "proc-vehicle-bombardier-crj900?": {
+        "id": 1220,
+        "size": 4
+      },
+      "proc-vehicle-bombardier-crj900?livery=garuda": {
+        "id": 1228,
+        "size": 4
+      },
+      "proc-vehicle-bombardier-crj900?livery=lufthansa": {
+        "id": 1224,
+        "size": 4
+      },
+      "proc-vehicle-bombardier-global?": {
+        "id": 1276,
+        "size": 4
+      },
+      "proc-vehicle-bombardier-global?colour=black": {
+        "id": 1292,
+        "size": 4
+      },
+      "proc-vehicle-bombardier-global?colour=gold": {
+        "id": 1288,
+        "size": 4
+      },
+      "proc-vehicle-bombardier-global?colour=green": {
+        "id": 1284,
+        "size": 4
+      },
+      "proc-vehicle-bombardier-global?colour=red": {
+        "id": 1280,
+        "size": 4
+      },
+      "proc-vehicle-canadair-cl415?": {
+        "id": 1760,
+        "size": 4
+      },
+      "proc-vehicle-canadair-cl415?livery=coastGuard": {
+        "id": 1764,
+        "size": 4
+      },
+      "proc-vehicle-caravelle?": {
+        "id": 976,
+        "size": 4
+      },
+      "proc-vehicle-caravelle?livery=sabena": {
+        "id": 984,
+        "size": 4
+      },
+      "proc-vehicle-caravelle?livery=sas": {
+        "id": 980,
+        "size": 4
+      },
+      "proc-vehicle-cessna-172?": {
+        "id": 1652,
+        "size": 4
+      },
+      "proc-vehicle-cessna-172?colour=black": {
+        "id": 1668,
+        "size": 4
+      },
+      "proc-vehicle-cessna-172?colour=gold": {
+        "id": 1664,
+        "size": 4
+      },
+      "proc-vehicle-cessna-172?colour=green": {
+        "id": 1660,
+        "size": 4
+      },
+      "proc-vehicle-cessna-172?colour=red": {
+        "id": 1656,
+        "size": 4
+      },
+      "proc-vehicle-cessna-caravan?": {
+        "id": 1672,
+        "size": 4
+      },
+      "proc-vehicle-cessna-caravan?gear=floats": {
+        "id": 1676,
+        "size": 4
+      },
+      "proc-vehicle-comac-arj21?": {
+        "id": 1244,
+        "size": 4
+      },
+      "proc-vehicle-comac-arj21?livery=airChina": {
+        "id": 1252,
+        "size": 4
+      },
+      "proc-vehicle-comac-arj21?livery=chinaSouthern": {
+        "id": 1248,
+        "size": 4
+      },
+      "proc-vehicle-comac-c919?": {
+        "id": 1232,
+        "size": 4
+      },
+      "proc-vehicle-comac-c919?livery=airChina": {
+        "id": 1240,
+        "size": 4
+      },
+      "proc-vehicle-comac-c919?livery=comac": {
+        "id": 1236,
+        "size": 4
+      },
+      "proc-vehicle-concorde?": {
+        "id": 968,
+        "size": 4
+      },
+      "proc-vehicle-concorde?livery=airFrance": {
+        "id": 972,
+        "size": 4
+      },
+      "proc-vehicle-convair-880?": {
+        "id": 852,
+        "size": 4
+      },
+      "proc-vehicle-convair-880?livery=cathay": {
+        "id": 860,
+        "size": 4
+      },
+      "proc-vehicle-convair-880?livery=twa": {
+        "id": 856,
+        "size": 4
+      },
+      "proc-vehicle-dassault-falcon-7x?": {
+        "id": 1296,
+        "size": 4
+      },
+      "proc-vehicle-dassault-falcon-7x?colour=black": {
+        "id": 1312,
+        "size": 4
+      },
+      "proc-vehicle-dassault-falcon-7x?colour=gold": {
+        "id": 1308,
+        "size": 4
+      },
+      "proc-vehicle-dassault-falcon-7x?colour=green": {
+        "id": 1304,
+        "size": 4
+      },
+      "proc-vehicle-dassault-falcon-7x?colour=red": {
+        "id": 1300,
+        "size": 4
+      },
+      "proc-vehicle-dh-comet?": {
+        "id": 988,
+        "size": 4
+      },
+      "proc-vehicle-dh-comet?livery=aerolineas": {
+        "id": 996,
+        "size": 4
+      },
+      "proc-vehicle-dh-comet?livery=bea": {
+        "id": 992,
+        "size": 4
+      },
+      "proc-vehicle-dh-dragon-rapide?": {
+        "id": 1632,
+        "size": 4
+      },
+      "proc-vehicle-dhc-beaver?": {
+        "id": 1428,
+        "size": 4
+      },
+      "proc-vehicle-dhc-beaver?gear=floats": {
+        "id": 1432,
+        "size": 4
+      },
+      "proc-vehicle-dhc-dash8?": {
+        "id": 1404,
+        "size": 4
+      },
+      "proc-vehicle-dhc-dash8?livery=airCanada": {
+        "id": 1408,
+        "size": 4
+      },
+      "proc-vehicle-dhc-dash8?livery=sas": {
+        "id": 1412,
+        "size": 4
+      },
+      "proc-vehicle-dhc-twin-otter?": {
+        "id": 1416,
+        "size": 4
+      },
+      "proc-vehicle-dhc-twin-otter?gear=floats": {
+        "id": 1420,
+        "size": 4
+      },
+      "proc-vehicle-dhc-twin-otter?gear=skis": {
+        "id": 1424,
+        "size": 4
+      },
+      "proc-vehicle-douglas-dc10?": {
+        "id": 828,
+        "size": 4
+      },
+      "proc-vehicle-douglas-dc10?livery=lufthansa": {
+        "id": 832,
+        "size": 4
+      },
+      "proc-vehicle-douglas-dc10?livery=swissair": {
+        "id": 836,
+        "size": 4
+      },
+      "proc-vehicle-douglas-dc3?": {
+        "id": 1572,
+        "size": 4
+      },
+      "proc-vehicle-douglas-dc3?livery=klm": {
+        "id": 1576,
+        "size": 4
+      },
+      "proc-vehicle-douglas-dc3?livery=swissair": {
+        "id": 1580,
+        "size": 4
+      },
+      "proc-vehicle-douglas-dc6?": {
+        "id": 1584,
+        "size": 4
+      },
+      "proc-vehicle-douglas-dc6?livery=sabena": {
+        "id": 1592,
+        "size": 4
+      },
+      "proc-vehicle-douglas-dc6?livery=sas": {
+        "id": 1588,
+        "size": 4
+      },
+      "proc-vehicle-douglas-dc8?": {
+        "id": 792,
+        "size": 4
+      },
+      "proc-vehicle-douglas-dc8?livery=sas": {
+        "id": 796,
+        "size": 4
+      },
+      "proc-vehicle-douglas-dc8?livery=united": {
+        "id": 800,
+        "size": 4
+      },
+      "proc-vehicle-douglas-dc9?": {
+        "id": 804,
+        "size": 4
+      },
+      "proc-vehicle-douglas-dc9?livery=alitalia": {
+        "id": 812,
+        "size": 4
+      },
+      "proc-vehicle-douglas-dc9?livery=delta": {
+        "id": 808,
+        "size": 4
+      },
+      "proc-vehicle-embraer-bandeirante?": {
+        "id": 1492,
+        "size": 4
+      },
+      "proc-vehicle-embraer-bandeirante?livery=navyBand": {
+        "id": 1496,
+        "size": 4
+      },
+      "proc-vehicle-embraer-brasilia?": {
+        "id": 1480,
+        "size": 4
+      },
+      "proc-vehicle-embraer-brasilia?livery=embraer": {
+        "id": 1488,
+        "size": 4
+      },
+      "proc-vehicle-embraer-brasilia?livery=united": {
+        "id": 1484,
+        "size": 4
+      },
+      "proc-vehicle-embraer-e190?": {
+        "id": 1172,
+        "size": 4
+      },
+      "proc-vehicle-embraer-e190?livery=aeromexico": {
+        "id": 1180,
+        "size": 4
+      },
+      "proc-vehicle-embraer-e190?livery=lot": {
+        "id": 1176,
+        "size": 4
+      },
+      "proc-vehicle-embraer-e195-e2?": {
+        "id": 1184,
+        "size": 4
+      },
+      "proc-vehicle-embraer-e195-e2?livery=embraer": {
+        "id": 1188,
+        "size": 4
+      },
+      "proc-vehicle-embraer-e195-e2?livery=klm": {
+        "id": 1192,
+        "size": 4
+      },
+      "proc-vehicle-embraer-erj145?": {
+        "id": 1196,
+        "size": 4
+      },
+      "proc-vehicle-embraer-erj145?livery=airFrance": {
+        "id": 1200,
+        "size": 4
+      },
+      "proc-vehicle-embraer-erj145?livery=lot": {
+        "id": 1204,
+        "size": 4
+      },
+      "proc-vehicle-embraer-phenom-300?": {
+        "id": 1336,
+        "size": 4
+      },
+      "proc-vehicle-embraer-phenom-300?colour=black": {
+        "id": 1352,
+        "size": 4
+      },
+      "proc-vehicle-embraer-phenom-300?colour=gold": {
+        "id": 1348,
+        "size": 4
+      },
+      "proc-vehicle-embraer-phenom-300?colour=green": {
+        "id": 1344,
+        "size": 4
+      },
+      "proc-vehicle-embraer-phenom-300?colour=red": {
+        "id": 1340,
+        "size": 4
+      },
+      "proc-vehicle-fokker-100?": {
+        "id": 1060,
+        "size": 4
+      },
+      "proc-vehicle-fokker-100?livery=american": {
+        "id": 1068,
+        "size": 4
+      },
+      "proc-vehicle-fokker-100?livery=swissair": {
+        "id": 1064,
+        "size": 4
+      },
+      "proc-vehicle-fokker-50?": {
+        "id": 1468,
+        "size": 4
+      },
+      "proc-vehicle-fokker-50?livery=austrian": {
+        "id": 1476,
+        "size": 4
+      },
+      "proc-vehicle-fokker-50?livery=sas": {
+        "id": 1472,
+        "size": 4
+      },
+      "proc-vehicle-fokker-f27?": {
+        "id": 1456,
+        "size": 4
+      },
+      "proc-vehicle-fokker-f27?livery=aerLingus": {
+        "id": 1460,
+        "size": 4
+      },
+      "proc-vehicle-fokker-f27?livery=sabena": {
+        "id": 1464,
+        "size": 4
+      },
+      "proc-vehicle-fokker-f28?": {
+        "id": 1048,
+        "size": 4
+      },
+      "proc-vehicle-fokker-f28?livery=garuda": {
+        "id": 1052,
+        "size": 4
+      },
+      "proc-vehicle-fokker-f28?livery=sas": {
+        "id": 1056,
+        "size": 4
+      },
+      "proc-vehicle-ford-trimotor?": {
+        "id": 1620,
+        "size": 4
+      },
+      "proc-vehicle-gulfstream-g650?": {
+        "id": 1256,
+        "size": 4
+      },
+      "proc-vehicle-gulfstream-g650?colour=black": {
+        "id": 1272,
+        "size": 4
+      },
+      "proc-vehicle-gulfstream-g650?colour=gold": {
+        "id": 1268,
+        "size": 4
+      },
+      "proc-vehicle-gulfstream-g650?colour=green": {
+        "id": 1264,
+        "size": 4
+      },
+      "proc-vehicle-gulfstream-g650?colour=red": {
+        "id": 1260,
+        "size": 4
+      },
+      "proc-vehicle-hondajet?": {
+        "id": 1356,
+        "size": 4
+      },
+      "proc-vehicle-hondajet?colour=black": {
+        "id": 1372,
+        "size": 4
+      },
+      "proc-vehicle-hondajet?colour=gold": {
+        "id": 1368,
+        "size": 4
+      },
+      "proc-vehicle-hondajet?colour=green": {
+        "id": 1364,
+        "size": 4
+      },
+      "proc-vehicle-hondajet?colour=red": {
+        "id": 1360,
+        "size": 4
+      },
+      "proc-vehicle-hs-trident?": {
+        "id": 1012,
+        "size": 4
+      },
+      "proc-vehicle-hs-trident?livery=airChina": {
+        "id": 1020,
+        "size": 4
+      },
+      "proc-vehicle-hs-trident?livery=britishAirways": {
+        "id": 1016,
+        "size": 4
+      },
+      "proc-vehicle-ilyushin-il18?": {
+        "id": 1536,
+        "size": 4
+      },
+      "proc-vehicle-ilyushin-il18?livery=csa": {
+        "id": 1544,
+        "size": 4
+      },
+      "proc-vehicle-ilyushin-il18?livery=interflug": {
+        "id": 1540,
+        "size": 4
+      },
+      "proc-vehicle-ilyushin-il62?": {
+        "id": 1108,
+        "size": 4
+      },
+      "proc-vehicle-ilyushin-il62?livery=csa": {
+        "id": 1112,
+        "size": 4
+      },
+      "proc-vehicle-ilyushin-il62?livery=interflug": {
+        "id": 1116,
+        "size": 4
+      },
+      "proc-vehicle-ilyushin-il86?": {
+        "id": 1120,
+        "size": 4
+      },
+      "proc-vehicle-ilyushin-il86?livery=aeroflotNew": {
+        "id": 1124,
+        "size": 4
+      },
+      "proc-vehicle-ilyushin-il96?": {
+        "id": 1128,
+        "size": 4
+      },
+      "proc-vehicle-ilyushin-il96?livery=cubana": {
+        "id": 1132,
+        "size": 4
+      },
+      "proc-vehicle-ilyushin-il96?livery=rossiya": {
+        "id": 1136,
+        "size": 4
+      },
+      "proc-vehicle-junkers-ju52?": {
+        "id": 1624,
+        "size": 4
+      },
+      "proc-vehicle-junkers-ju52?livery=lufthansa": {
+        "id": 1628,
+        "size": 4
+      },
+      "proc-vehicle-learjet-35?": {
+        "id": 1316,
+        "size": 4
+      },
+      "proc-vehicle-learjet-35?colour=black": {
+        "id": 1332,
+        "size": 4
+      },
+      "proc-vehicle-learjet-35?colour=gold": {
+        "id": 1328,
+        "size": 4
+      },
+      "proc-vehicle-learjet-35?colour=green": {
+        "id": 1324,
+        "size": 4
+      },
+      "proc-vehicle-learjet-35?colour=red": {
+        "id": 1320,
+        "size": 4
+      },
+      "proc-vehicle-let-l410?": {
+        "id": 1500,
+        "size": 4
+      },
+      "proc-vehicle-let-l410?livery=aeroflot": {
+        "id": 1504,
+        "size": 4
+      },
+      "proc-vehicle-let-l410?livery=navyBand": {
+        "id": 1508,
+        "size": 4
+      },
       "proc-vehicle-light-jet?": {
         "id": 608,
         "size": 16
+      },
+      "proc-vehicle-lockheed-constellation?": {
+        "id": 1596,
+        "size": 4
+      },
+      "proc-vehicle-lockheed-constellation?livery=airFrance": {
+        "id": 1604,
+        "size": 4
+      },
+      "proc-vehicle-lockheed-constellation?livery=lufthansa": {
+        "id": 1600,
+        "size": 4
+      },
+      "proc-vehicle-lockheed-electra?": {
+        "id": 1560,
+        "size": 4
+      },
+      "proc-vehicle-lockheed-electra?livery=american": {
+        "id": 1564,
+        "size": 4
+      },
+      "proc-vehicle-lockheed-electra?livery=klm": {
+        "id": 1568,
+        "size": 4
+      },
+      "proc-vehicle-lockheed-l100?": {
+        "id": 1740,
+        "size": 4
+      },
+      "proc-vehicle-lockheed-l100?livery=navyBand": {
+        "id": 1744,
+        "size": 4
+      },
+      "proc-vehicle-lockheed-l100?livery=saa": {
+        "id": 1748,
+        "size": 4
+      },
+      "proc-vehicle-lockheed-tristar?": {
+        "id": 840,
+        "size": 4
+      },
+      "proc-vehicle-lockheed-tristar?livery=britishAirways": {
+        "id": 848,
+        "size": 4
+      },
+      "proc-vehicle-lockheed-tristar?livery=twa": {
+        "id": 844,
+        "size": 4
       },
       "proc-vehicle-mcdonnell-douglas-md11?": {
         "id": 256,
@@ -2095,6 +3139,98 @@
         "id": 288,
         "size": 16
       },
+      "proc-vehicle-md-80?": {
+        "id": 816,
+        "size": 4
+      },
+      "proc-vehicle-md-80?livery=alitalia": {
+        "id": 820,
+        "size": 4
+      },
+      "proc-vehicle-md-80?livery=sas": {
+        "id": 824,
+        "size": 4
+      },
+      "proc-vehicle-mil-mi8?": {
+        "id": 1792,
+        "size": 4
+      },
+      "proc-vehicle-mil-mi8?livery=utair": {
+        "id": 1796,
+        "size": 4
+      },
+      "proc-vehicle-namc-ys11?": {
+        "id": 1376,
+        "size": 4
+      },
+      "proc-vehicle-namc-ys11?livery=jalClassic": {
+        "id": 1380,
+        "size": 4
+      },
+      "proc-vehicle-namc-ys11?livery=olympic": {
+        "id": 1384,
+        "size": 4
+      },
+      "proc-vehicle-pilatus-pc12?": {
+        "id": 1644,
+        "size": 4
+      },
+      "proc-vehicle-pilatus-pc12?livery=navyBand": {
+        "id": 1648,
+        "size": 4
+      },
+      "proc-vehicle-piper-cherokee?": {
+        "id": 1680,
+        "size": 4
+      },
+      "proc-vehicle-piper-cherokee?colour=black": {
+        "id": 1696,
+        "size": 4
+      },
+      "proc-vehicle-piper-cherokee?colour=gold": {
+        "id": 1692,
+        "size": 4
+      },
+      "proc-vehicle-piper-cherokee?colour=green": {
+        "id": 1688,
+        "size": 4
+      },
+      "proc-vehicle-piper-cherokee?colour=red": {
+        "id": 1684,
+        "size": 4
+      },
+      "proc-vehicle-saab-2000?": {
+        "id": 1448,
+        "size": 4
+      },
+      "proc-vehicle-saab-2000?livery=swiss": {
+        "id": 1452,
+        "size": 4
+      },
+      "proc-vehicle-saab-340?": {
+        "id": 1436,
+        "size": 4
+      },
+      "proc-vehicle-saab-340?livery=finnair": {
+        "id": 1444,
+        "size": 4
+      },
+      "proc-vehicle-saab-340?livery=swissair": {
+        "id": 1440,
+        "size": 4
+      },
+      "proc-vehicle-shinmaywa-us2?": {
+        "id": 1768,
+        "size": 4
+      },
+      "proc-vehicle-sikorsky-s92?": {
+        "id": 1776,
+        "size": 4
+      },
+      "proc-vehicle-sikorsky-s92?livery=rescue": {
+        "id": 1780,
+        "size": 4
+      },
       "proc-vehicle-small-airplane?": {
         "id": 624,
         "size": 16
@@ -2110,6 +3246,110 @@
       "proc-vehicle-small-airplane?color=yellow": {
         "id": 656,
         "size": 16
+      },
+      "proc-vehicle-sukhoi-superjet?": {
+        "id": 1156,
+        "size": 4
+      },
+      "proc-vehicle-sukhoi-superjet?livery=rossiya": {
+        "id": 1160,
+        "size": 4
+      },
+      "proc-vehicle-tupolev-tu104?": {
+        "id": 1072,
+        "size": 4
+      },
+      "proc-vehicle-tupolev-tu104?livery=csa": {
+        "id": 1076,
+        "size": 4
+      },
+      "proc-vehicle-tupolev-tu134?": {
+        "id": 1080,
+        "size": 4
+      },
+      "proc-vehicle-tupolev-tu134?livery=csa": {
+        "id": 1084,
+        "size": 4
+      },
+      "proc-vehicle-tupolev-tu134?livery=interflug": {
+        "id": 1088,
+        "size": 4
+      },
+      "proc-vehicle-tupolev-tu144?": {
+        "id": 1104,
+        "size": 4
+      },
+      "proc-vehicle-tupolev-tu154?": {
+        "id": 1092,
+        "size": 4
+      },
+      "proc-vehicle-tupolev-tu154?livery=balkan": {
+        "id": 1096,
+        "size": 4
+      },
+      "proc-vehicle-tupolev-tu154?livery=malev": {
+        "id": 1100,
+        "size": 4
+      },
+      "proc-vehicle-vickers-vc10?": {
+        "id": 1000,
+        "size": 4
+      },
+      "proc-vehicle-vickers-vc10?livery=britishAirways": {
+        "id": 1004,
+        "size": 4
+      },
+      "proc-vehicle-vickers-vc10?livery=kenya": {
+        "id": 1008,
+        "size": 4
+      },
+      "proc-vehicle-vickers-viscount?": {
+        "id": 1548,
+        "size": 4
+      },
+      "proc-vehicle-vickers-viscount?livery=aerLingus": {
+        "id": 1552,
+        "size": 4
+      },
+      "proc-vehicle-vickers-viscount?livery=lufthansa": {
+        "id": 1556,
+        "size": 4
+      },
+      "proc-vehicle-xian-ma60?": {
+        "id": 1512,
+        "size": 4
+      },
+      "proc-vehicle-xian-ma60?livery=garuda": {
+        "id": 1516,
+        "size": 4
+      },
+      "proc-vehicle-xian-ma60?livery=plain": {
+        "id": 1520,
+        "size": 4
+      },
+      "proc-vehicle-yakovlev-yak40?": {
+        "id": 1140,
+        "size": 4
+      },
+      "proc-vehicle-yakovlev-yak40?livery=csa": {
+        "id": 1144,
+        "size": 4
+      },
+      "proc-vehicle-yakovlev-yak42?": {
+        "id": 1148,
+        "size": 4
+      },
+      "proc-vehicle-yakovlev-yak42?livery=cubana": {
+        "id": 1152,
+        "size": 4
+      },
+      "proc-vehicle-zeppelin-nt?": {
+        "id": 1820,
+        "size": 4
+      },
+      "proc-vehicle-zeppelin-nt?livery=goodyear": {
+        "id": 1824,
+        "size": 4
       }
     }
   },
