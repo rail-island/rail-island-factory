@@ -204,6 +204,19 @@ export const US_PALETTE: Record<string, MaterialSpec> = {
   walk: paint("#55585b", 0.9),
 };
 
+/**
+ * An AAR knuckle coupler on end e: the draft gear from 0.3 m inside the end sill
+ * at |x| = sill, the shank, and the head and knuckle reaching the coupler face at
+ * |x| = face; the uncoupling lever across the sill. Its centre at height y.
+ */
+export function knuckleCoupler(m: MeshBuilder, e: number, sill: number, face: number, y: number): void {
+  const along = (a: number, b: number): [number, number] => (e > 0 ? [a, b] : [-b, -a]);
+  block(m, "knuckle", ...along(sill - 0.3, sill + 0.35), y - 0.09, y + 0.09, -0.11, 0.11);
+  block(m, "knuckle", ...along(sill + 0.35, face), y - 0.2, y + 0.16, -0.17, 0.13);
+  block(m, "knuckle", ...along(sill + 0.38, face - 0.02), y - 0.14, y + 0.1, 0.13, 0.25);
+  m.rod("handrail", [e * (sill + 0.06), y + 0.32, -1.0], [e * (sill + 0.06), y + 0.32, 0.2], 0.015, 6);
+}
+
 // ---------------------------------------------------------------------------
 
 /** The section of a hood: a box with chamfered roof corners, `half` wide, `top` high, from the deck. */
@@ -275,14 +288,7 @@ function frame(m: MeshBuilder, s: UsHoodSpec, l: UsLivery): void {
         }
       });
       // the end sill's face over the pilot (the sill sweep's end cap is it); the coupler
-      m.scope("coupler", () => {
-        const y = 0.88;
-        block(m, "knuckle", ...along(L - 0.3, L + 0.35), y - 0.09, y + 0.09, -0.11, 0.11);
-        block(m, "knuckle", ...along(L + 0.35, s.length / 2), y - 0.2, y + 0.16, -0.17, 0.13);
-        block(m, "knuckle", ...along(L + 0.38, s.length / 2 - 0.02), y - 0.14, y + 0.1, 0.13, 0.25);
-        // the uncoupling lever across the end sill
-        m.rod("handrail", [e * (L + 0.06), y + 0.32, -1.0], [e * (L + 0.06), y + 0.32, 0.2], 0.015, 6);
-      });
+      m.scope("coupler", () => knuckleCoupler(m, e, L, s.length / 2, 0.88));
       m.scope("hoses", () => {
         for (const z of [-0.42, 0.42]) {
           const x0 = e * (L - 0.02), x1 = e * (L + 0.18);

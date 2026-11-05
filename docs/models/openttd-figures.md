@@ -116,6 +116,11 @@ file is the authority.
 | `emd-sd40-2` | EMD SD40-2 | train RAIL | 1972 | 0 PASS | 97 / 55 | 3 | - |
 | `ge-es44ac` | GE ES44AC | train RAIL | 2005 | 0 PASS | 126 / 76 | 3 | - |
 | `emd-sd70ace` | EMD SD70ACe | train RAIL | 2004 | 0 PASS | 123 / 74 | 3 | - |
+| `emd-f7` | EMD F7 | train RAIL | 1949 | 0 PASS | 72 / 32 | 3 | - |
+| `ge-p42dc` | GE P42DC Genesis | train RAIL | 1996 | 0 PASS | 135 / 73 | 3 | - |
+| `siemens-alc42` | Siemens ALC-42 Charger | train RAIL | 2022 | 0 PASS | 139 / 73 | 2 | - |
+| `prr-gg1` | PRR GG1 | train ELRL | 1935 | 0 PASS | 138 / 79 | 3 | - |
+| `amtrak-acela` | Acela Express | train ELRL | 2000 | 0 PASS | 183 / 102 | 4 | 8 cars |
 | `tatra-t3` | Tatra T3 | road | 1962 | 110 PASS | 92 / 46 | 3 | - |
 | `tatra-t6` | Tatra T6A5 | road | 1991 | 130 PASS | 99 / 50 | 1 | - |
 | `tatra-kt8` | Tatra KT8D5 | road | 1986 | 230 PASS | 137 / 68 | 3 | - |

@@ -5,6 +5,7 @@
     "proc-vehicle-airbus-a380": 76,
     "proc-vehicle-airbus-beluga": 74,
     "proc-vehicle-american-truck": 5,
+    "proc-vehicle-amtrak-acela": 128,
     "proc-vehicle-bmo-double-deck-coach": 17,
     "proc-vehicle-boeing-737": 77,
     "proc-vehicle-boeing-747": 73,
@@ -68,12 +69,14 @@
     "proc-vehicle-dr-sbahn-berlin": 119,
     "proc-vehicle-dr-vt1816": 108,
     "proc-vehicle-eas-open-wagon": 21,
+    "proc-vehicle-emd-f7": 124,
     "proc-vehicle-emd-gp9": 120,
     "proc-vehicle-emd-sd40-2": 121,
     "proc-vehicle-emd-sd70ace": 123,
     "proc-vehicle-faccs-hopper-wagon": 41,
     "proc-vehicle-falls-hopper-wagon": 42,
     "proc-vehicle-ge-es44ac": 122,
+    "proc-vehicle-ge-p42dc": 125,
     "proc-vehicle-habis-sliding-wall-wagon": 39,
     "proc-vehicle-hadgs-hopper-wagon": 40,
     "proc-vehicle-hydrofoil-ferry": 81,
@@ -105,10 +108,12 @@
     "proc-vehicle-pao-flat-wagon": 38,
     "proc-vehicle-passenger-ferry": 82,
     "proc-vehicle-praga-rv": 61,
+    "proc-vehicle-prr-gg1": 127,
     "proc-vehicle-rah-tank-wagon": 23,
     "proc-vehicle-raj-hopper-wagon": 22,
     "proc-vehicle-reefer-semi-truck": 59,
     "proc-vehicle-shinkansen-0": 112,
+    "proc-vehicle-siemens-alc42": 126,
     "proc-vehicle-small-airplane": 79,
     "proc-vehicle-solaris-urbino-15": 70,
     "proc-vehicle-sqns-container-wagon": 37,
@@ -127,6 +132,26 @@
   },
   "vehicles": {
     "train": {
+      "proc-vehicle-amtrak-acela?": {
+        "id": 4788,
+        "size": 6
+      },
+      "proc-vehicle-amtrak-acela?formation=8 cars": {
+        "id": 4818,
+        "size": 32
+      },
+      "proc-vehicle-amtrak-acela?unit=businessClass": {
+        "id": 4794,
+        "size": 8
+      },
+      "proc-vehicle-amtrak-acela?unit=cafe": {
+        "id": 4810,
+        "size": 8
+      },
+      "proc-vehicle-amtrak-acela?unit=firstClass": {
+        "id": 4802,
+        "size": 8
+      },
       "proc-vehicle-bmo-double-deck-coach?": {
         "id": 784,
         "size": 16
@@ -799,6 +824,18 @@
         "id": 976,
         "size": 16
       },
+      "proc-vehicle-emd-f7?": {
+        "id": 4728,
+        "size": 4
+      },
+      "proc-vehicle-emd-f7?livery=southernPacific": {
+        "id": 4736,
+        "size": 4
+      },
+      "proc-vehicle-emd-f7?livery=unionPacific": {
+        "id": 4732,
+        "size": 4
+      },
       "proc-vehicle-emd-gp9?": {
         "id": 4656,
         "size": 6
@@ -865,6 +902,18 @@
       },
       "proc-vehicle-ge-es44ac?livery=unionPacific": {
         "id": 4698,
+        "size": 6
+      },
+      "proc-vehicle-ge-p42dc?": {
+        "id": 4740,
+        "size": 6
+      },
+      "proc-vehicle-ge-p42dc?livery=phaseIII": {
+        "id": 4746,
+        "size": 6
+      },
+      "proc-vehicle-ge-p42dc?livery=via": {
+        "id": 4752,
         "size": 6
       },
       "proc-vehicle-habis-sliding-wall-wagon?": {
@@ -1007,6 +1056,18 @@
         "id": 1568,
         "size": 16
       },
+      "proc-vehicle-prr-gg1?": {
+        "id": 4770,
+        "size": 6
+      },
+      "proc-vehicle-prr-gg1?livery=pennCentral": {
+        "id": 4782,
+        "size": 6
+      },
+      "proc-vehicle-prr-gg1?livery=tuscan": {
+        "id": 4776,
+        "size": 6
+      },
       "proc-vehicle-rah-tank-wagon?": {
         "id": 1008,
         "size": 16
@@ -1046,6 +1107,14 @@
       "proc-vehicle-shinkansen-0?unit=pantographCar": {
         "id": 3840,
         "size": 16
+      },
+      "proc-vehicle-siemens-alc42?": {
+        "id": 4758,
+        "size": 6
+      },
+      "proc-vehicle-siemens-alc42?livery=midwest": {
+        "id": 4764,
+        "size": 6
       },
       "proc-vehicle-sqns-container-wagon?": {
         "id": 1552,

@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from "vitest";
 import * as THREE from "three";
-import { ALL_VEHICLES, designGlb, designSource } from "../generator/generate";
+import { ALL_VEHICLES, designSource, toGlb } from "../generator/generate";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles";
 import { bundleDesign } from "../generator/jsModel";
 import { MeshBuilder, ngon } from "../generator/meshBuilder";
@@ -25,17 +25,30 @@ function wheelsets(m: MeshBuilder): number[] {
     .map((n) => (n.min![0] + n.max![0]) / 2);
 }
 
+/**
+ * What the per-design checks read of a rail vehicle's default build - its GLB, its
+ * rig and its wheelset count - from one build, shared by the three checks that
+ * read it (each built it afresh before, and two of them twice).
+ */
+const DEFAULTS = new Map<string, { glb: Uint8Array; rig: NonNullable<MeshBuilder["rig"]>; wheelsets: number }>();
+function defaultOf(id: string): { glb: Uint8Array; rig: NonNullable<MeshBuilder["rig"]>; wheelsets: number } {
+  let v = DEFAULTS.get(id);
+  if (!v) {
+    const m = RAIL.find((d) => d.id === id)!.build();
+    DEFAULTS.set(id, (v = { glb: toGlb(id, m), rig: m.rig!, wheelsets: wheelsets(m).length }));
+  }
+  return v;
+}
+
 type GlbNode = { name: string; translation?: number[]; children?: number[]; mesh?: number };
 
 describe("rail supports", () => {
   it.each(RAIL.map((d) => [d.id] as const))("%s rides on at least two supports, its bogies nodes pivoted between their wheelsets", (id) => {
-    const d = RAIL.find((x) => x.id === id)!;
-    const m = d.build();
-    const rig = m.rig!;
+    const { glb, rig } = defaultOf(id);
     const supports = rig.supports!;
     expect(supports.length).toBeGreaterThanOrEqual(2);
     expect(supports.map((s) => s.x)).toEqual([...supports.map((s) => s.x)].sort((a, b) => a - b));
-    const { json, bin } = parseGlb(designGlb(id));
+    const { json, bin } = parseGlb(glb);
     const nodes = json.nodes as GlbNode[];
     const roots = new Set((json.scenes![0]!.nodes as number[]));
     for (const s of supports) {
@@ -53,7 +66,8 @@ describe("rail supports", () => {
       const t = nodes[i]!.translation!;
       expect(t[0]).toBeCloseTo(s.x, 3);
       expect(t[1]).toBeGreaterThan(0.25);
-      expect(t[1]).toBeLessThan(0.7);
+      // up to the PRR GG1's 57 in drivers (axle at 0.72 m)
+      expect(t[1]).toBeLessThan(0.75);
       expect(t[2]).toBe(0);
       // its own triangles reach either side of the pivot along x
       const own = collectTriangles({ ...json, scenes: [{ nodes: [i] }], scene: 0 }, bin);
@@ -65,9 +79,9 @@ describe("rail supports", () => {
 
   it("puts a turning bogie under every vehicle whose axles stand two or three together", () => {
     for (const d of RAIL) {
-      const m = d.build();
-      if (d.catalog?.traction === "steam" || wheelsets(m).length < 4) continue;
-      const supports = m.rig!.supports!;
+      const v = defaultOf(d.id);
+      if (d.catalog?.traction === "steam" || v.wheelsets < 4) continue;
+      const supports = v.rig.supports!;
       expect(supports.filter((s) => s.node).length, d.id).toBeGreaterThanOrEqual(2);
       expect(supports.every((s) => s.node && s.axles >= 2 && s.axles <= 3), d.id).toBe(true);
     }
@@ -198,7 +212,7 @@ describe("wheels on the rail type set's rails", () => {
   const headIn = (rail.gauge - rail.headWidth) / 2 / STUDS_PER_M;
   const headOut = (rail.gauge + rail.headWidth) / 2 / STUDS_PER_M;
   it.each(RAIL.map((d) => [d.id] as const))("%s runs with both rail heads under its wheel treads", (id) => {
-    const { json, bin } = parseGlb(designGlb(id));
+    const { json, bin } = parseGlb(defaultOf(id).glb);
     const low = collectTriangles(json, bin).flatMap((t) => t.p).filter((p) => Math.abs(p[1]) < 0.005);
     for (const side of [-1, 1]) {
       const zs = low.filter((p) => p[2] * side > 0).map((p) => Math.abs(p[2]));

@@ -200,6 +200,19 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-emd-sd40-2": loco(1972, RAIL, { presets: presets(...each("livery", "conrail", "unionPacific")) }),
   "proc-vehicle-ge-es44ac": loco(2005, RAIL, { presets: presets(...each("livery", "unionPacific", "csx")) }),
   "proc-vehicle-emd-sd70ace": loco(2004, RAIL, { presets: presets(...each("livery", "norfolkSouthern", "bnsf")) }),
+  "proc-vehicle-emd-f7": loco(1949, RAIL, { presets: presets(...each("livery", "unionPacific", "southernPacific")) }),
+  "proc-vehicle-ge-p42dc": loco(1996, RAIL, { presets: presets(...each("livery", "phaseIII", "via")) }),
+  "proc-vehicle-siemens-alc42": loco(2022, RAIL, { variants: [at({ livery: "midwest" }, { introYear: 2017 })], presets: presets({ livery: "midwest" }) }),
+  "proc-vehicle-prr-gg1": loco(1935, ELRL, { presets: presets(...each("livery", "tuscan", "pennCentral")) }),
+  "proc-vehicle-amtrak-acela": loco(2000, ELRL, {
+    variants: [
+      at({ unit: "businessClass" }, { capacity: 65, cargo: "PASS", refitClasses: ["passengers"] }),
+      at({ unit: "firstClass" }, { capacity: 44, cargo: "PASS", refitClasses: ["passengers"] }),
+      at({ unit: "cafe" }, { capacity: 20, cargo: "PASS", refitClasses: ["passengers"] }),
+    ],
+    presets: presets(...each("unit", "businessClass", "firstClass", "cafe")),
+    formations: [formation("8 cars", {}, { unit: "firstClass" }, { unit: "businessClass" }, { unit: "businessClass" }, { unit: "cafe" }, { unit: "businessClass" }, { unit: "businessClass" }, [{}, "turned"])],
+  }),
 
   // --- electric units --------------------------------------------------------------
   "proc-vehicle-cd-471": pax(1997, 92, ELRL, {
