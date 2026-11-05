@@ -329,8 +329,8 @@ describe("the semi-trucks", () => {
   // a road train's chain (truck, trailer, trailer2, ...), each hinge a section of the chain
   const SEMIS = RIGGED.filter(([id]) => RIGS.get(id)!.sections?.[1]?.node === "trailer");
 
-  it("are the American truck, the two reproduced from the game and the world trucks with trailers", () => {
-    expect(SEMIS.map(([id]) => id)).toEqual(expect.arrayContaining(["proc-vehicle-american-truck", "proc-vehicle-cistern-semi-truck", "proc-vehicle-reefer-semi-truck"]));
+  it("are the American truck, the two reproduced from the game, the world trucks with trailers and the Havana camello (a semi-trailer bus)", () => {
+    expect(SEMIS.map(([id]) => id)).toEqual(expect.arrayContaining(["proc-vehicle-american-truck", "proc-vehicle-cistern-semi-truck", "proc-vehicle-reefer-semi-truck", "proc-vehicle-havana-camello"]));
     for (const [id] of SEMIS) {
       const rig = RIGS.get(id)!;
       expect(rig.joints ?? [], id).toEqual([]);

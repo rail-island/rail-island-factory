@@ -480,6 +480,84 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-mci-d4505": pax(2001, 57, null, { presets: presets() }),
   "proc-vehicle-byd-k9": pax(2010, 80, null, { presets: presets() }), // approx.
   "proc-vehicle-hyundai-universe": pax(2006, 45, null, { presets: presets() }), // approx.
+  // the world buses, later batches (worldBuses2.ts, docs/models/world-buses-2.md): seats and standing room
+  "proc-vehicle-leyland-atlantean": pax(1958, 78, null, { presets: presets(...each("livery", "glasgow")) }),
+  "proc-vehicle-bristol-lodekka": pax(1949, 60, null, { presets: presets(...each("livery", "eastern")) }),
+  "proc-vehicle-plaxton-panorama": pax(1968, 49, null, { presets: presets(...each("livery", "national")) }), // approx.
+  "proc-vehicle-mb-o302": pax(1965, 50, null, { presets: presets(...each("livery", "touring")) }), // approx.
+  "proc-vehicle-man-sl200": pax(1973, 100, null, { presets: presets(...each("livery", "mvg")) }), // approx.
+  "proc-vehicle-neoplan-cityliner": pax(1971, 49, null, { presets: presets() }), // approx.
+  "proc-vehicle-bussing-d2u": pax(1951, 100, null, { presets: presets() }), // approx.
+  "proc-vehicle-cobus-3000": pax(1999, 110, null, { presets: presets(...each("livery", "fraport")) }),
+  "proc-vehicle-volvo-9700": pax(2001, 55, null, { presets: presets(...each("livery", "flixbus")) }), // approx.
+  "proc-vehicle-van-hool-a330": pax(1995, 100, null, { presets: presets(...each("livery", "stib")) }), // approx.
+  "proc-vehicle-van-hool-astromega": pax(2010, 80, null, { presets: presets(...each("livery", "megabus")) }), // approx.
+  "proc-vehicle-vdl-citea": pax(2009, 95, null, { presets: presets(...each("livery", "connexxion")) }), // approx.
+  "proc-vehicle-irisbus-citelis": pax(2005, 100, null, { presets: presets(...each("livery", "atm")) }), // approx.
+  "proc-vehicle-heuliez-gx337": pax(2013, 100, null, { presets: presets(...each("livery", "tcl")) }), // approx.
+  "proc-vehicle-renault-pr100": pax(1971, 100, null, { presets: presets(...each("livery", "tcl")) }), // approx.
+  "proc-vehicle-iveco-crossway": pax(2006, 60, null, { presets: presets(...each("livery", "postbus")) }), // approx.
+  "proc-vehicle-irizar-i8": pax(2014, 55, null, { presets: presets(...each("livery", "alsa")) }), // approx.
+  "proc-vehicle-solaris-urbino-12e": pax(2013, 90, null, { presets: presets(...each("livery", "bvg")) }), // approx.
+  "proc-vehicle-karosa-sm11": pax(1964, 100, null, { presets: presets(...each("livery", "csad")) }), // approx.
+  "proc-vehicle-sor-nb12": pax(2010, 100, null, { presets: presets(...each("livery", "dpmb")) }), // approx.
+  "proc-vehicle-ikarus-55": pax(1953, 41, null, { presets: presets() }), // approx.
+  "proc-vehicle-laz-695": pax(1956, 67, null, { presets: presets() }), // approx.
+  "proc-vehicle-liaz-677": pax(1967, 110, null, { presets: presets() }),
+  "proc-vehicle-liaz-5292": pax(2004, 108, null, { presets: presets() }), // approx.
+  "proc-vehicle-ziu-9": pax(1972, 120, null, { presets: presets() }), // approx.
+  // (worldBuses3.ts) the bonneted buses, minibuses and historic types
+  "proc-vehicle-aec-routemaster": pax(1956, 64, null, { presets: presets(...each("livery", "greenLine")) }),
+  "proc-vehicle-mb-o3500": pax(1949, 40, null, { presets: presets() }), // approx.
+  "proc-vehicle-magirus-saturn": pax(1956, 45, null, { presets: presets() }), // approx.
+  "proc-vehicle-vw-t1-samba": pax(1951, 8, null, { presets: presets(...each("colour", "blue", "green")) }),
+  "proc-vehicle-chausson-aph": pax(1950, 60, null, { presets: presets() }), // approx.
+  "proc-vehicle-jelcz-043": pax(1964, 45, null, { presets: presets() }), // approx.
+  "proc-vehicle-skoda-706-rto": pax(1958, 41, null, { presets: presets(...each("livery", "cedok")) }), // approx.
+  "proc-vehicle-paz-672": pax(1967, 45, null, { presets: presets() }), // approx.
+  "proc-vehicle-saurer-postbus": pax(1959, 37, null, { presets: presets() }), // approx.
+  "proc-vehicle-gm-new-look": pax(1959, 70, null, { presets: presets(...each("livery", "nycta")) }), // approx.
+  "proc-vehicle-gm-scenicruiser": pax(1954, 43, null, { presets: presets() }),
+  "proc-vehicle-flxible-clipper": pax(1937, 29, null, { presets: presets() }), // approx.
+  "proc-vehicle-blue-bird-vision": pax(2003, 72, null, { presets: presets() }),
+  "proc-vehicle-thomas-saf-t-liner": pax(2004, 77, null, { presets: presets() }),
+  "proc-vehicle-chicken-bus": pax(1990, 70, null, { presets: presets(...each("colour", "blue", "green")) }), // approx.
+  "proc-vehicle-toyota-coaster": pax(1969, 29, null, { presets: presets(...each("colour", "blue")) }),
+  "proc-vehicle-jeepney": pax(1950, 18, null, { presets: presets(...each("colour", "blue", "yellow")) }), // approx.
+  "proc-vehicle-songthaew": pax(1980, 12, null, { presets: presets(...each("colour", "blue", "yellow")) }), // approx.
+  "proc-vehicle-jingle-bus": pax(1970, 60, null, { presets: presets(...each("colour", "green")) }), // approx.
+  "proc-vehicle-matatu": pax(2000, 14, null, { presets: presets(...each("colour", "red")) }),
+  "proc-vehicle-danfo": pax(1990, 14, null, { presets: presets() }), // approx.
+  "proc-vehicle-mb-sprinter-minibus": pax(2006, 20, null, { presets: presets(...each("colour", "yellow")) }), // approx.
+  "proc-vehicle-tatra-500-hb": pax(1953, 45, null, { presets: presets() }), // approx.
+  "proc-vehicle-otokar-kent": pax(2008, 100, null, { presets: presets(...each("livery", "eshot")) }), // approx.
+  "proc-vehicle-buenos-aires-colectivo": pax(1990, 60, null, { presets: presets(...each("colour", "blue")) }), // approx.
+  // (worldBuses4.ts) the Americas, Asia, Africa and Oceania; the camello's trailer is the load
+  "proc-vehicle-hess-lightram": pax(2003, 210, null, { presets: presets() }), // approx.
+  "proc-vehicle-nova-lfs": pax(1996, 75, null, { presets: presets(...each("livery", "ttc")) }), // approx.
+  "proc-vehicle-proterra-catalyst": pax(2014, 77, null, { presets: presets(...each("livery", "kingCounty")) }), // approx.
+  "proc-vehicle-marcopolo-paradiso-dd": pax(2009, 66, null, { presets: presets(...each("livery", "itapemirim")) }), // approx.
+  "proc-vehicle-marcopolo-torino": pax(2007, 80, null, { presets: presets(...each("livery", "urbs")) }), // approx.
+  "proc-vehicle-curitiba-biarticulado": pax(1992, 270, null, { presets: presets() }),
+  "proc-vehicle-transmilenio": pax(2000, 160, null, { presets: presets() }),
+  "proc-vehicle-havana-camello": pax(1995, 300, null, { presets: presets() }), // approx.
+  "proc-vehicle-hino-blue-ribbon": pax(1982, 77, null, { presets: presets(...each("livery", "yokohama")) }), // approx.
+  "proc-vehicle-isuzu-erga": pax(2000, 77, null, { presets: presets(...each("livery", "kyoto")) }), // approx.
+  "proc-vehicle-fuso-aero-queen": pax(1982, 55, null, { presets: presets(...each("livery", "nishitetsu")) }), // approx.
+  "proc-vehicle-hyundai-elec-city": pax(2017, 70, null, { presets: presets(...each("colour", "green")) }), // approx.
+  "proc-vehicle-daewoo-bs106": pax(1991, 70, null, { presets: presets(...each("colour", "green")) }), // approx.
+  "proc-vehicle-yutong-e12": pax(2016, 80, null, { presets: presets(...each("colour", "green")) }), // approx.
+  "proc-vehicle-king-long-coach": pax(2010, 53, null, { presets: presets(...each("colour", "red")) }), // approx.
+  "proc-vehicle-dennis-trident-hk": pax(1997, 130, null, { presets: presets(...each("livery", "citybus")) }), // approx.
+  "proc-vehicle-singapore-double-deck": pax(2015, 131, null, { presets: presets() }),
+  "proc-vehicle-ashok-leyland-viking": pax(1980, 70, null, { presets: presets(...each("livery", "dtc")) }), // approx.
+  "proc-vehicle-tata-starbus": pax(2007, 70, null, { presets: presets(...each("livery", "best")) }), // approx.
+  "proc-vehicle-cairo-cta-bus": pax(2009, 90, null, { presets: presets() }), // approx.
+  "proc-vehicle-za-rea-vaya": pax(2009, 112, null, { presets: presets() }), // approx.
+  "proc-vehicle-volgren-optimus": pax(2010, 80, null, { presets: presets(...each("livery", "translink")) }), // approx.
+  "proc-vehicle-designline-olymbus": pax(2004, 70, null, { presets: presets(...each("livery", "metro")) }), // approx.
+  "proc-vehicle-sydney-leyland-atlantean": pax(1970, 85, null, { presets: presets() }), // approx.
+  "proc-vehicle-kyiv-12": pax(1993, 165, null, { presets: presets() }), // approx.
 
   // --- trucks ----------------------------------------------------------------------
   "proc-vehicle-american-truck": truck(1980, 25, "GOOD", ["piece", "covered", "express"], { presets: presets() }), // approx.

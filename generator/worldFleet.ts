@@ -7,6 +7,9 @@
 import { cabinDatums, roofOf, type CabinSpec } from "./cabinKit.ts";
 import { WORLD_CABIN_SPECS } from "./worldCabins.ts";
 import { WORLD_BUS_SPECS } from "./worldBuses.ts";
+import { WORLD_BUS_SPECS_2 } from "./worldBuses2.ts";
+import { WORLD_BUS_SPECS_3 } from "./worldBuses3.ts";
+import { CAMELLO_SIZE, HAVANA_CAMELLO, WORLD_BUS_SPECS_4 } from "./worldBuses4.ts";
 import { busFeatures } from "./worldBusKit.ts";
 import { proceduralId } from "./modelId.ts";
 // the world ships
@@ -57,7 +60,7 @@ export const WORLD_FLEET: readonly FleetEntry[] = [
     const s = c.spec();
     return { id: proceduralId(c.id), family: "cabins", features: cabinFeatures(s, (c.params ?? []).map((p) => p.name)), size: 8 * s.hx * s.hz * cabinDatums(s).y1 + roofOf(s) };
   }),
-  ...WORLD_BUS_SPECS.map((b) => {
+  ...[...WORLD_BUS_SPECS, ...WORLD_BUS_SPECS_2, ...WORLD_BUS_SPECS_3, ...WORLD_BUS_SPECS_4].map((b) => {
     // the largest: the longest of its parameter combinations (an articulated length)
     const lengths = (b.params ?? []).flatMap((p) => p.values.map((v) => b.spec({ [p.name]: v.value }).length));
     const s = b.spec();
@@ -75,6 +78,8 @@ export const WORLD_FLEET: readonly FleetEntry[] = [
     const specs = coverageCombinations(t.params, t.finishParams).map((p) => t.spec(p));
     return { id: proceduralId(t.id), family: "trucks", features: truckFeatures(specs, (t.params ?? []).map((p) => p.name)), size: Math.max(...specs.map((s) => truckLength(s) * s.cab.top)) };
   }),
+  // the Havana camello: a tractor and semi-trailer drawn with the bus kit's shell
+  { id: proceduralId(HAVANA_CAMELLO.id), family: "buses", features: ["kind:semi-trailer", "sections:2", "axles:4"], size: CAMELLO_SIZE.length * CAMELLO_SIZE.height },
 ];
 
 /** A world aircraft's fleet entry: the kit options its combinations use (a float or ski variant's too). */

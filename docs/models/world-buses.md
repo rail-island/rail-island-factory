@@ -2,7 +2,7 @@
 
 **Covers** - the buses from around the world on the world bus kit, first batch of 25 (city buses with high and low floors, coaches, double-deckers, articulated buses, trolleybuses): the kit's `WorldBusSpec` and its four shapes, what it draws on every bus, the trolley poles, the parameters, game properties, OpenTTD figures and sounds, references, deviations and tests.
 **Code** - `generator/worldBusKit.ts`, `generator/worldBuses.ts`, `generator/cityBuses.ts` (`cityBus`, `roofBox`, the mirrors), `generator/busAssembly.ts`, `generator/busBody.ts`, `generator/busKit.ts`, `generator/liftable.ts`, `generator/openttdTable.ts`, `generator/soundTable.ts`, `test/worldBuses.test.ts`, `test/worldFleet.test.ts`
-**See also** - [buses.md](buses.md) (the vlakosimdb buses and the shell builder), [world-fleet.md](world-fleet.md) (references, data checks, the sweep sample), [vehicle-rig.md](vehicle-rig.md), [doors.md](doors.md), [interiors.md](interiors.md), [animation.md](animation.md) (liftable mechanisms), [openttd-figures.md](openttd-figures.md), [sounds.md](sounds.md)
+**See also** - [buses.md](buses.md) (the vlakosimdb buses and the shell builder), [world-buses-2.md](world-buses-2.md) (the later 75 buses and the kit's bonnet, half cab, raised deck and minibus shape), [world-fleet.md](world-fleet.md) (references, data checks, the sweep sample), [vehicle-rig.md](vehicle-rig.md), [doors.md](doors.md), [interiors.md](interiors.md), [animation.md](animation.md) (liftable mechanisms), [openttd-figures.md](openttd-figures.md), [sounds.md](sounds.md)
 
 ## The designs
 

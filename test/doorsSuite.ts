@@ -16,7 +16,9 @@ import { isInteriorName } from "../generator/interiorTable.ts";
 /** The groups of passenger vehicles: every one opens its passenger doors. */
 const PASSENGER_GROUPS = new Set(["coach", "unit", "tram", "metro", "bus"]);
 /** Passenger-group designs with no door to open: a luggage van, a steam railcar whose van body draws none, the open-sided San Francisco cable car. */
-const NO_DOORS = new Set(["proc-vehicle-csd-dsk", "proc-vehicle-csd-m112", "proc-vehicle-sf-cable-car"]);
+const NO_DOORS = new Set(["proc-vehicle-csd-dsk", "proc-vehicle-csd-m112", "proc-vehicle-sf-cable-car",
+  // the jeepney and the songthaew board at their open rears; the camello's trailer is drawn without the kit's doors
+  "proc-vehicle-jeepney", "proc-vehicle-songthaew", "proc-vehicle-havana-camello"]);
 /** Doors on the right only: the single-ended trams and every bus (the kerb side). */
 const RIGHT_ONLY = (id: string, group: string) => group === "bus" || ["proc-vehicle-tatra-t3", "proc-vehicle-tatra-t6", "proc-vehicle-tatra-kt4", "proc-vehicle-kvag-gt4"].includes(id);
 
