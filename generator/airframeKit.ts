@@ -895,6 +895,20 @@ function drawFuselage(m: MeshBuilder, g: Geometry): void {
   const tailMat = l.cut?.mat ?? l.skin!(0, first.a);
   const sDuct = g.spec.engines.some((e) => e.kind === "tail" && e.duct === "s");
   m.scope("tail cone", () => (sDuct ? fan(m, tailMat, "x", first.sec, first.a, -1) : fan(m, tailMat, "x", first.sec, first.a, -1, g.tailTip)));
+  // a low-wing airliner's belly fairing under the wing box
+  const w = g.spec.wing;
+  if (w.pos === "low" && g.W >= 2.9 && !w.plan && !g.spec.fuselage.hull) m.scope("belly fairing", () => {
+    const [d0, d1] = [w.at - w.root * 0.12, w.at + w.root * 0.95];
+    const y = g.keel((d0 + d1) / 2) + g.D * 0.06;
+    const hw = g.W * 0.4;
+    const dy = g.D * 0.11;
+    const st: Station[] = [[0, 0.15, 0.3], [0.08, 0.6, 0.7], [0.25, 1, 1], [0.75, 1, 1], [0.92, 0.65, 0.75], [1, 0.15, 0.3]]
+      .map(([f, fw, fh]) => ({ a: g.x(lerp(d1, d0, f!)), sec: oval(14, 0, y + dy * (1 - fh!) * 0.5, hw * fw!, dy * fh!, dy * fh!) }));
+    const mat = l.skin!(-0.95, g.x((d0 + d1) / 2)) === "white" ? "belly" : l.skin!(-0.95, g.x((d0 + d1) / 2));
+    body(m, mat, "x", st);
+    fan(m, mat, "x", st[0]!.sec, st[0]!.a, -1);
+    fan(m, mat, "x", st[st.length - 1]!.sec, st[st.length - 1]!.a, 1);
+  });
 }
 
 /** Builds an aircraft from its spec. */

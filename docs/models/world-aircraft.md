@@ -16,56 +16,56 @@ defaults (budget 10,000, LOD 200). Parameters list their values, the default fir
 
 | id | title | kit | size (m) | parameters | OpenTTD year / capacity | triangles |
 |---|---|---|---|---|---|---|
-| `veh-boeing-707` | Boeing 707-320 | airliner nose, low wing, pods x4, conventional tail, tricycle | 46.61 x 44.42 x 12.93 | livery: panAm, qantas, lufthansa | 1959 / 189 | 5,432 |
-| `veh-boeing-727` | Boeing 727-200 | airliner nose, low wing, rear x2 + tail (S-duct), T tail, tricycle | 46.68 x 32.92 x 10.36 | livery: eastern, lufthansa, american | 1967 / 189 | 4,436 |
-| `veh-boeing-737-200` | Boeing 737-200 | airliner nose, low wing, pods x2, conventional tail, tricycle | 30.53 x 28.35 x 11.28 | livery: lufthansa, united, malaysia | 1968 / 130 | 4,084 |
-| `veh-boeing-737-max` | Boeing 737 MAX 8 | airliner nose, low wing, pods x2, conventional tail, tricycle | 39.52 x 35.92 x 12.3 | livery: southwest, ryanair, aeromexico | 2017 / 189 | 3,932 |
-| `veh-boeing-747-8` | Boeing 747-8 | airliner nose, low wing, pods x4, conventional tail, tricycle | 76.25 x 68.4 x 19.35 | variant: passenger, freighter | 2011 / 467 | 8,520 |
-| `veh-boeing-757` | Boeing 757-200 | airliner nose, low wing, pods x2, conventional tail, tricycle | 47.32 x 38.05 x 13.56 | livery: delta, britishAirways, icelandair | 1983 / 200 | 4,494 |
-| `veh-boeing-767` | Boeing 767-300ER | airliner nose, low wing, pods x2, conventional tail, tricycle | 54.94 x 47.57 x 15.85 | livery: ana, american, lot | 1986 / 269 | 4,884 |
-| `veh-boeing-777` | Boeing 777-300ER | airliner nose, low wing, pods x2, conventional tail, tricycle | 73.86 x 64.8 x 18.5 | livery: emirates, airFrance, cathay | 2004 / 396 | 5,744 |
-| `veh-boeing-787` | Boeing 787-9 | airliner nose, low wing, pods x2, conventional tail, tricycle | 62.81 x 60.12 x 17.02 | livery: airNewZealand, qatar, united | 2014 / 296 | 5,388 |
-| `veh-douglas-dc8` | Douglas DC-8-63 | airliner nose, low wing, pods x4, conventional tail, tricycle | 57.12 x 45.23 x 12.92 | livery: klm, sas, united | 1967 / 259 | 5,410 |
-| `veh-douglas-dc9` | McDonnell Douglas DC-9-30 | airliner nose, low wing, rear x2, T tail, tricycle | 36.37 x 28.47 x 8.38 | livery: swissair, delta, alitalia | 1967 / 115 | 4,032 |
-| `veh-md-80` | McDonnell Douglas MD-82 | airliner nose, low wing, rear x2, T tail, tricycle | 45.06 x 32.87 x 9.04 | livery: american, alitalia, sas | 1981 / 155 | 4,264 |
-| `veh-douglas-dc10` | McDonnell Douglas DC-10-30 | airliner nose, low wing, pods x2 + tail (straight), conventional tail, tricycle | 55.5 x 50.4 x 17.7 | livery: american, lufthansa, swissair | 1972 / 270 | 5,926 |
-| `veh-lockheed-tristar` | Lockheed L-1011 TriStar | airliner nose, low wing, pods x2 + tail (S-duct), conventional tail, tricycle | 54.17 x 47.35 x 16.87 | livery: eastern, twa, britishAirways | 1972 / 256 | 5,432 |
-| `veh-convair-880` | Convair 880 | airliner nose, low wing, pods x4, conventional tail, tricycle | 39.42 x 36.58 x 11 | livery: delta, twa, cathay | 1960 / 110 | 5,186 |
-| `veh-airbus-a300` | Airbus A300B4 | airliner nose, low wing, pods x2, conventional tail, tricycle | 53.62 x 44.84 x 16.53 | livery: airFrance, lufthansa, thai | 1974 / 266 | 5,040 |
-| `veh-airbus-a310` | Airbus A310 | airliner nose, low wing, pods x2, conventional tail, tricycle | 46.66 x 43.9 x 15.8 | livery: swissair, lufthansa, airIndia | 1983 / 220 | 5,024 |
-| `veh-airbus-a320` | Airbus A320 | airliner nose, low wing, pods x2, conventional tail, tricycle | 37.57 x 34.1 x 11.76 | length: a319, a320, a321; livery: lufthansa, easyJet, iberia | 1988 / 180 | 4,184 |
-| `veh-airbus-a320neo` | Airbus A321neo | airliner nose, low wing, pods x2, conventional tail, tricycle | 44.51 x 35.8 x 11.76 | livery: wizz, turkish, chinaSouthern | 2017 / 220 | 4,092 |
-| `veh-airbus-a330` | Airbus A330-300 | airliner nose, low wing, pods x2, conventional tail, tricycle | 63.66 x 60.3 x 16.79 | livery: cathay, turkish, aerLingus | 1994 / 300 | 5,354 |
-| `veh-airbus-a340` | Airbus A340-600 | airliner nose, low wing, pods x4, conventional tail, tricycle | 75.36 x 63.45 x 17.22 | livery: lufthansa2018, iberia, etihad | 2002 / 380 | 7,096 |
-| `veh-airbus-a350` | Airbus A350-900 | airliner nose, low wing, pods x2, conventional tail, tricycle | 66.8 x 64.75 x 17.05 | livery: qatar, singapore, finnair | 2015 / 325 | 5,154 |
-| `veh-airbus-a220` | Airbus A220-300 | airliner nose, low wing, pods x2, conventional tail, tricycle | 38.71 x 35.1 x 11.5 | livery: swiss, airCanada, delta | 2016 / 140 | 4,084 |
+| `veh-boeing-707` | Boeing 707-320 | airliner nose, low wing, pods x4, conventional tail, tricycle | 46.61 x 44.42 x 12.93 | livery: panAm, qantas, lufthansa | 1959 / 189 | 5,600 |
+| `veh-boeing-727` | Boeing 727-200 | airliner nose, low wing, rear x2 + tail (S-duct), T tail, tricycle | 46.68 x 32.92 x 10.36 | livery: eastern, lufthansa, american | 1967 / 189 | 4,604 |
+| `veh-boeing-737-200` | Boeing 737-200 | airliner nose, low wing, pods x2, conventional tail, tricycle | 30.53 x 28.35 x 11.28 | livery: lufthansa, united, malaysia | 1968 / 130 | 4,252 |
+| `veh-boeing-737-max` | Boeing 737 MAX 8 | airliner nose, low wing, pods x2, conventional tail, tricycle | 39.52 x 35.92 x 12.3 | livery: southwest, ryanair, aeromexico | 2017 / 189 | 4,100 |
+| `veh-boeing-747-8` | Boeing 747-8 | airliner nose, low wing, pods x4, conventional tail, tricycle | 76.25 x 68.4 x 19.35 | variant: passenger, freighter | 2011 / 467 | 8,688 |
+| `veh-boeing-757` | Boeing 757-200 | airliner nose, low wing, pods x2, conventional tail, tricycle | 47.32 x 38.05 x 13.56 | livery: delta, britishAirways, icelandair | 1983 / 200 | 4,662 |
+| `veh-boeing-767` | Boeing 767-300ER | airliner nose, low wing, pods x2, conventional tail, tricycle | 54.94 x 47.57 x 15.85 | livery: ana, american, lot | 1986 / 269 | 5,052 |
+| `veh-boeing-777` | Boeing 777-300ER | airliner nose, low wing, pods x2, conventional tail, tricycle | 73.86 x 64.8 x 18.5 | livery: emirates, airFrance, cathay | 2004 / 396 | 5,912 |
+| `veh-boeing-787` | Boeing 787-9 | airliner nose, low wing, pods x2, conventional tail, tricycle | 62.81 x 60.12 x 17.02 | livery: airNewZealand, qatar, united | 2014 / 296 | 5,556 |
+| `veh-douglas-dc8` | Douglas DC-8-63 | airliner nose, low wing, pods x4, conventional tail, tricycle | 57.12 x 45.23 x 12.92 | livery: klm, sas, united | 1967 / 259 | 5,578 |
+| `veh-douglas-dc9` | McDonnell Douglas DC-9-30 | airliner nose, low wing, rear x2, T tail, tricycle | 36.37 x 28.47 x 8.38 | livery: swissair, delta, alitalia | 1967 / 115 | 4,200 |
+| `veh-md-80` | McDonnell Douglas MD-82 | airliner nose, low wing, rear x2, T tail, tricycle | 45.06 x 32.87 x 9.04 | livery: american, alitalia, sas | 1981 / 155 | 4,432 |
+| `veh-douglas-dc10` | McDonnell Douglas DC-10-30 | airliner nose, low wing, pods x2 + tail (straight), conventional tail, tricycle | 55.5 x 50.4 x 17.7 | livery: american, lufthansa, swissair | 1972 / 270 | 6,094 |
+| `veh-lockheed-tristar` | Lockheed L-1011 TriStar | airliner nose, low wing, pods x2 + tail (S-duct), conventional tail, tricycle | 54.17 x 47.35 x 16.87 | livery: eastern, twa, britishAirways | 1972 / 256 | 5,600 |
+| `veh-convair-880` | Convair 880 | airliner nose, low wing, pods x4, conventional tail, tricycle | 39.42 x 36.58 x 11 | livery: delta, twa, cathay | 1960 / 110 | 5,354 |
+| `veh-airbus-a300` | Airbus A300B4 | airliner nose, low wing, pods x2, conventional tail, tricycle | 53.62 x 44.84 x 16.53 | livery: airFrance, lufthansa, thai | 1974 / 266 | 5,208 |
+| `veh-airbus-a310` | Airbus A310 | airliner nose, low wing, pods x2, conventional tail, tricycle | 46.66 x 43.9 x 15.8 | livery: swissair, lufthansa, airIndia | 1983 / 220 | 5,192 |
+| `veh-airbus-a320` | Airbus A320 | airliner nose, low wing, pods x2, conventional tail, tricycle | 37.57 x 34.1 x 11.76 | length: a319, a320, a321; livery: lufthansa, easyJet, iberia | 1988 / 180 | 4,352 |
+| `veh-airbus-a320neo` | Airbus A321neo | airliner nose, low wing, pods x2, conventional tail, tricycle | 44.51 x 35.8 x 11.76 | livery: wizz, turkish, chinaSouthern | 2017 / 220 | 4,260 |
+| `veh-airbus-a330` | Airbus A330-300 | airliner nose, low wing, pods x2, conventional tail, tricycle | 63.66 x 60.3 x 16.79 | livery: cathay, turkish, aerLingus | 1994 / 300 | 5,522 |
+| `veh-airbus-a340` | Airbus A340-600 | airliner nose, low wing, pods x4, conventional tail, tricycle | 75.36 x 63.45 x 17.22 | livery: lufthansa2018, iberia, etihad | 2002 / 380 | 7,264 |
+| `veh-airbus-a350` | Airbus A350-900 | airliner nose, low wing, pods x2, conventional tail, tricycle | 66.8 x 64.75 x 17.05 | livery: qatar, singapore, finnair | 2015 / 325 | 5,322 |
+| `veh-airbus-a220` | Airbus A220-300 | airliner nose, low wing, pods x2, conventional tail, tricycle | 38.71 x 35.1 x 11.5 | livery: swiss, airCanada, delta | 2016 / 140 | 4,252 |
 | `veh-concorde` | Concorde | pointed nose, low wing, pods x4, conventional tail, tricycle | 61.66 x 25.6 x 12.2 | livery: britishAirways, airFrance | 1976 / 100 | 5,624 |
-| `veh-caravelle` | Sud Aviation Caravelle | airliner nose, low wing, rear x2, cruciform tail, tricycle | 32.01 x 34.3 x 8.72 | livery: airFrance, sas, sabena | 1959 / 80 | 4,152 |
-| `veh-dh-comet` | de Havilland Comet 4 | airliner nose, low wing, buried x4, conventional tail, tricycle | 33.99 x 35 x 8.99 | livery: boac, bea, aerolineas | 1958 / 81 | 4,900 |
-| `veh-vickers-vc10` | Vickers VC10 | airliner nose, low wing, rear x4, T tail, tricycle | 48.36 x 44.55 x 12.04 | livery: boac, britishAirways, kenya | 1964 / 135 | 5,200 |
-| `veh-hs-trident` | Hawker Siddeley Trident | airliner nose, low wing, rear x2 + tail (S-duct), T tail, tricycle | 35 x 29.87 x 8.23 | livery: bea, britishAirways, airChina | 1964 / 115 | 4,436 |
-| `veh-bac-111` | BAC One-Eleven | airliner nose, low wing, rear x2, T tail, tricycle | 32.61 x 28.5 x 7.47 | livery: bea, tarom, aerLingus | 1965 / 119 | 3,776 |
+| `veh-caravelle` | Sud Aviation Caravelle | airliner nose, low wing, rear x2, cruciform tail, tricycle | 32.01 x 34.3 x 8.72 | livery: airFrance, sas, sabena | 1959 / 80 | 4,320 |
+| `veh-dh-comet` | de Havilland Comet 4 | airliner nose, low wing, buried x4, conventional tail, tricycle | 33.99 x 35 x 8.99 | livery: boac, bea, aerolineas | 1958 / 81 | 5,068 |
+| `veh-vickers-vc10` | Vickers VC10 | airliner nose, low wing, rear x4, T tail, tricycle | 48.36 x 44.55 x 12.04 | livery: boac, britishAirways, kenya | 1964 / 135 | 5,368 |
+| `veh-hs-trident` | Hawker Siddeley Trident | airliner nose, low wing, rear x2 + tail (S-duct), T tail, tricycle | 35 x 29.87 x 8.23 | livery: bea, britishAirways, airChina | 1964 / 115 | 4,604 |
+| `veh-bac-111` | BAC One-Eleven | airliner nose, low wing, rear x2, T tail, tricycle | 32.61 x 28.5 x 7.47 | livery: bea, tarom, aerLingus | 1965 / 119 | 3,944 |
 | `veh-bae-146` | BAe 146-200 | blunt nose, high wing, pods x4, T tail, tricycle | 28.6 x 26.21 x 8.61 | livery: britishAirways, lufthansa, swiss | 1983 / 100 | 5,220 |
-| `veh-fokker-f28` | Fokker F28 Fellowship | airliner nose, low wing, rear x2, T tail, tricycle | 29.61 x 25.07 x 8.47 | livery: klm, garuda, sas | 1969 / 65 | 3,698 |
-| `veh-fokker-100` | Fokker 100 | airliner nose, low wing, rear x2, T tail, tricycle | 35.53 x 28.08 x 8.5 | livery: klm, swissair, american | 1988 / 107 | 3,778 |
-| `veh-tupolev-tu104` | Tupolev Tu-104 | glazed nose, low wing, buried x2, conventional tail, tricycle | 38.85 x 34.54 x 11.9 | livery: aeroflot, csa | 1956 / 70 | 4,568 |
-| `veh-tupolev-tu134` | Tupolev Tu-134 | glazed nose, low wing, rear x2, T tail, tricycle | 37.1 x 29.01 x 9.02 | livery: aeroflot, csa, interflug | 1967 / 76 | 4,508 |
-| `veh-tupolev-tu154` | Tupolev Tu-154M | airliner nose, low wing, rear x2 + tail (S-duct), T tail, tricycle | 47.9 x 37.55 x 11.4 | livery: aeroflot, balkan, malev | 1972 / 164 | 5,356 |
+| `veh-fokker-f28` | Fokker F28 Fellowship | airliner nose, low wing, rear x2, T tail, tricycle | 29.61 x 25.07 x 8.47 | livery: klm, garuda, sas | 1969 / 65 | 3,866 |
+| `veh-fokker-100` | Fokker 100 | airliner nose, low wing, rear x2, T tail, tricycle | 35.53 x 28.08 x 8.5 | livery: klm, swissair, american | 1988 / 107 | 3,946 |
+| `veh-tupolev-tu104` | Tupolev Tu-104 | glazed nose, low wing, buried x2, conventional tail, tricycle | 38.85 x 34.54 x 11.9 | livery: aeroflot, csa | 1956 / 70 | 4,736 |
+| `veh-tupolev-tu134` | Tupolev Tu-134 | glazed nose, low wing, rear x2, T tail, tricycle | 37.1 x 29.01 x 9.02 | livery: aeroflot, csa, interflug | 1967 / 76 | 4,676 |
+| `veh-tupolev-tu154` | Tupolev Tu-154M | airliner nose, low wing, rear x2 + tail (S-duct), T tail, tricycle | 47.9 x 37.55 x 11.4 | livery: aeroflot, balkan, malev | 1972 / 164 | 5,524 |
 | `veh-tupolev-tu144` | Tupolev Tu-144 | pointed nose, low wing, pods x4, conventional tail, tricycle | 65.7 x 28.8 x 12.5 | livery: aeroflot, plain | 1977 / 140 | 5,848 |
-| `veh-ilyushin-il62` | Ilyushin Il-62M | airliner nose, low wing, rear x4, T tail, tricycle | 53.12 x 43.2 x 12.35 | livery: aeroflot, csa, interflug | 1967 / 174 | 5,704 |
-| `veh-ilyushin-il86` | Ilyushin Il-86 | airliner nose, low wing, pods x4, conventional tail, tricycle | 59.54 x 48.06 x 15.81 | livery: aeroflot, aeroflotNew | 1980 / 350 | 6,616 |
-| `veh-ilyushin-il96` | Ilyushin Il-96-300 | airliner nose, low wing, pods x4, conventional tail, tricycle | 55.35 x 57.66 x 17.57 | livery: aeroflotNew, cubana, rossiya | 1993 / 262 | 6,528 |
+| `veh-ilyushin-il62` | Ilyushin Il-62M | airliner nose, low wing, rear x4, T tail, tricycle | 53.12 x 43.2 x 12.35 | livery: aeroflot, csa, interflug | 1967 / 174 | 5,872 |
+| `veh-ilyushin-il86` | Ilyushin Il-86 | airliner nose, low wing, pods x4, conventional tail, tricycle | 59.54 x 48.06 x 15.81 | livery: aeroflot, aeroflotNew | 1980 / 350 | 6,784 |
+| `veh-ilyushin-il96` | Ilyushin Il-96-300 | airliner nose, low wing, pods x4, conventional tail, tricycle | 55.35 x 57.66 x 17.57 | livery: aeroflotNew, cubana, rossiya | 1993 / 262 | 6,696 |
 | `veh-yakovlev-yak40` | Yakovlev Yak-40 | blunt nose, low wing, rear x2 + tail (S-duct), T tail, tricycle | 20.36 x 25 x 6.5 | livery: aeroflot, csa | 1968 / 32 | 3,640 |
-| `veh-yakovlev-yak42` | Yakovlev Yak-42 | airliner nose, low wing, rear x2 + tail (S-duct), T tail, tricycle | 36.38 x 34.88 x 9.83 | livery: aeroflot, cubana | 1980 / 120 | 4,840 |
-| `veh-sukhoi-superjet` | Sukhoi Superjet 100 | airliner nose, low wing, pods x2, conventional tail, tricycle | 29.94 x 27.8 x 10.28 | livery: aeroflotNew, rossiya | 2011 / 98 | 4,012 |
+| `veh-yakovlev-yak42` | Yakovlev Yak-42 | airliner nose, low wing, rear x2 + tail (S-duct), T tail, tricycle | 36.38 x 34.88 x 9.83 | livery: aeroflot, cubana | 1980 / 120 | 5,008 |
+| `veh-sukhoi-superjet` | Sukhoi Superjet 100 | airliner nose, low wing, pods x2, conventional tail, tricycle | 29.94 x 27.8 x 10.28 | livery: aeroflotNew, rossiya | 2011 / 98 | 4,180 |
 | `veh-antonov-an148` | Antonov An-148 | blunt nose, high wing, pods x2, T tail, tricycle | 29.13 x 28.91 x 8.19 | livery: rossiya, ukraine | 2009 / 75 | 4,200 |
-| `veh-embraer-e190` | Embraer E190 | airliner nose, low wing, pods x2, conventional tail, tricycle | 36.24 x 28.72 x 10.57 | livery: klm, lot, aeromexico | 2005 / 100 | 3,930 |
-| `veh-embraer-e195-e2` | Embraer E195-E2 | airliner nose, low wing, pods x2, conventional tail, tricycle | 41.5 x 35.12 x 10.9 | livery: azul, embraer, klm | 2019 / 132 | 3,988 |
+| `veh-embraer-e190` | Embraer E190 | airliner nose, low wing, pods x2, conventional tail, tricycle | 36.24 x 28.72 x 10.57 | livery: klm, lot, aeromexico | 2005 / 100 | 4,098 |
+| `veh-embraer-e195-e2` | Embraer E195-E2 | airliner nose, low wing, pods x2, conventional tail, tricycle | 41.5 x 35.12 x 10.9 | livery: azul, embraer, klm | 2019 / 132 | 4,156 |
 | `veh-embraer-erj145` | Embraer ERJ 145 | bizjet nose, low wing, rear x2, T tail, tricycle | 29.87 x 20.04 x 6.76 | livery: american, airFrance, lot | 1997 / 50 | 3,896 |
 | `veh-bombardier-crj200` | Bombardier CRJ200 | bizjet nose, low wing, rear x2, T tail, tricycle | 26.77 x 21.21 x 6.22 | livery: lufthansa, delta, airCanada | 1992 / 50 | 4,016 |
 | `veh-bombardier-crj900` | Bombardier CRJ900 | bizjet nose, low wing, rear x2, T tail, tricycle | 36.2 x 24.85 x 7.51 | livery: delta, lufthansa, garuda | 2003 / 90 | 3,942 |
-| `veh-comac-c919` | COMAC C919 | airliner nose, low wing, pods x2, conventional tail, tricycle | 38.9 x 35.8 x 11.95 | livery: chinaEastern, comac, airChina | 2023 / 168 | 4,252 |
-| `veh-comac-arj21` | COMAC ARJ21 | airliner nose, low wing, rear x2, T tail, tricycle | 33.46 x 27.29 x 8.44 | livery: comac, chinaSouthern, airChina | 2016 / 90 | 3,940 |
+| `veh-comac-c919` | COMAC C919 | airliner nose, low wing, pods x2, conventional tail, tricycle | 38.9 x 35.8 x 11.95 | livery: chinaEastern, comac, airChina | 2023 / 168 | 4,420 |
+| `veh-comac-arj21` | COMAC ARJ21 | airliner nose, low wing, rear x2, T tail, tricycle | 33.46 x 27.29 x 8.44 | livery: comac, chinaSouthern, airChina | 2016 / 90 | 4,108 |
 | `veh-gulfstream-g650` | Gulfstream G650 | bizjet nose, low wing, rear x2, T tail, tricycle | 30.41 x 30.36 x 7.82 | colour: blue, red, green, gold, black | 2012 / 19 | 3,404 |
 | `veh-bombardier-global` | Bombardier Global 7500 | bizjet nose, low wing, rear x2, T tail, tricycle | 33.88 x 31.68 x 8.23 | colour: blue, red, green, gold, black | 2018 / 19 | 3,612 |
 | `veh-dassault-falcon-7x` | Dassault Falcon 7X | bizjet nose, low wing, rear x2 + tail (S-duct), cruciform tail, tricycle | 23.38 x 26.21 x 7.83 | colour: blue, red, green, gold, black | 2007 / 16 | 3,604 |
@@ -86,13 +86,13 @@ defaults (budget 10,000, LOD 200). Parameters list their values, the default fir
 | `veh-let-l410` | Let L-410 Turbolet | blunt nose, high wing, turboprop x2, conventional tail, tricycle | 14.42 x 19.98 x 5.83 | livery: csa, aeroflot, navyBand | 1971 / 19 | 3,008 |
 | `veh-xian-ma60` | Xian MA60 | blunt nose, high wing, turboprop x2, conventional tail, tricycle | 24.71 x 29.2 x 8.85 | livery: chinaSouthern, garuda, plain | 2000 / 60 | 3,904 |
 | `veh-antonov-an24` | Antonov An-24 | glazed nose, high wing, turboprop x2, conventional tail, tricycle | 23.53 x 29.2 x 8.32 | livery: aeroflot, interflug, cubana | 1962 / 50 | 3,788 |
-| `veh-ilyushin-il18` | Ilyushin Il-18 | blunt nose, low wing, turboprop x4, conventional tail, tricycle | 35.9 x 37.4 x 10.17 | livery: aeroflot, interflug, csa | 1959 / 100 | 5,080 |
-| `veh-vickers-viscount` | Vickers Viscount | blunt nose, low wing, turboprop x4, conventional tail, tricycle | 26.11 x 28.56 x 8.15 | livery: bea, aerLingus, lufthansa | 1953 / 75 | 4,300 |
-| `veh-lockheed-electra` | Lockheed L-188 Electra | blunt nose, low wing, turboprop x4, conventional tail, tricycle | 31.85 x 30.18 x 10 | livery: eastern, american, klm | 1959 / 98 | 4,532 |
+| `veh-ilyushin-il18` | Ilyushin Il-18 | blunt nose, low wing, turboprop x4, conventional tail, tricycle | 35.9 x 37.4 x 10.17 | livery: aeroflot, interflug, csa | 1959 / 100 | 5,248 |
+| `veh-vickers-viscount` | Vickers Viscount | blunt nose, low wing, turboprop x4, conventional tail, tricycle | 26.11 x 28.56 x 8.15 | livery: bea, aerLingus, lufthansa | 1953 / 75 | 4,468 |
+| `veh-lockheed-electra` | Lockheed L-188 Electra | blunt nose, low wing, turboprop x4, conventional tail, tricycle | 31.85 x 30.18 x 10 | livery: eastern, american, klm | 1959 / 98 | 4,700 |
 | `veh-douglas-dc3` | Douglas DC-3 | blunt nose, low wing, radial x2, conventional tail, taildragger | 19.7 x 29 x 5.16 | livery: american, klm, swissair | 1936 / 28 | 3,392 |
-| `veh-douglas-dc6` | Douglas DC-6B | blunt nose, low wing, radial x4, conventional tail, tricycle | 32.18 x 35.81 x 8.74 | livery: panAm, sas, sabena | 1951 / 102 | 4,324 |
-| `veh-lockheed-constellation` | Lockheed L-1049 Super Constellation | blunt nose, low wing, radial x4, triple tail, tricycle | 35.42 x 37.49 x 7.54 | livery: twa, lufthansa, airFrance | 1951 / 95 | 4,448 |
-| `veh-boeing-377` | Boeing 377 Stratocruiser | blunt nose, low wing, radial x4, conventional tail, tricycle | 33.63 x 43.05 x 11.66 | livery: panAm, boac, united | 1949 / 100 | 5,152 |
+| `veh-douglas-dc6` | Douglas DC-6B | blunt nose, low wing, radial x4, conventional tail, tricycle | 32.18 x 35.81 x 8.74 | livery: panAm, sas, sabena | 1951 / 102 | 4,492 |
+| `veh-lockheed-constellation` | Lockheed L-1049 Super Constellation | blunt nose, low wing, radial x4, triple tail, tricycle | 35.42 x 37.49 x 7.54 | livery: twa, lufthansa, airFrance | 1951 / 95 | 4,616 |
+| `veh-boeing-377` | Boeing 377 Stratocruiser | blunt nose, low wing, radial x4, conventional tail, tricycle | 33.63 x 43.05 x 11.66 | livery: panAm, boac, united | 1949 / 100 | 5,320 |
 | `veh-ford-trimotor` | Ford Trimotor | cowl nose, high wing, radial nose x1 + radial x2, conventional tail, taildragger (fixed) | 15.32 x 23.72 x 3.86 | - | 1926 / 15 | 2,728 |
 | `veh-junkers-ju52` | Junkers Ju 52/3m | cowl nose, low wing, radial nose x1 + radial x2, conventional tail, taildragger (fixed) | 18.9 x 29.25 x 4.5 | livery: bareMetal, lufthansa | 1932 / 17 | 3,032 |
 | `veh-dh-dragon-rapide` | de Havilland Dragon Rapide | blunt nose, low wing (biplane), inline x2, conventional tail, taildragger (fixed) | 10.52 x 14.63 x 3.12 | - | 1935 / 8 | 2,884 |
@@ -106,16 +106,16 @@ defaults (budget 10,000, LOD 200). Parameters list their values, the default fir
 | `veh-antonov-an225` | Antonov An-225 Mriya | airliner nose, shoulder wing, pods x6, twin tail, tricycle | 84 x 88.4 x 18.1 | - | 1988 / 250 t | 9,372 |
 | `veh-antonov-an2` | Antonov An-2 | cowl nose, low wing (biplane), radial nose x1, conventional tail, taildragger (fixed) | 12.4 x 18.18 x 4.1 | gear: wheels, floats | 1949 / 12 | 2,636 |
 | `veh-lockheed-l100` | Lockheed L-100 Hercules | blunt nose, high wing, turboprop x4, conventional tail, tricycle | 34.37 x 40.41 x 11.66 | livery: plain, navyBand, saa | 1965 / 22 t | 4,372 |
-| `veh-boeing-dreamlifter` | Boeing 747 Dreamlifter | airliner nose, low wing, pods x4, conventional tail, tricycle | 71.68 x 64.44 x 21.54 | - | 2007 / 113 t | 7,048 |
-| `veh-airbus-beluga-xl` | Airbus BelugaXL | airliner nose, low wing, pods x2, conventional tail, tricycle | 63.1 x 60.3 x 18.9 | - | 2020 / 51 t | 4,592 |
+| `veh-boeing-dreamlifter` | Boeing 747 Dreamlifter | airliner nose, low wing, pods x4, conventional tail, tricycle | 71.68 x 64.44 x 21.54 | - | 2007 / 113 t | 7,216 |
+| `veh-airbus-beluga-xl` | Airbus BelugaXL | airliner nose, low wing, pods x2, conventional tail, tricycle | 63.1 x 60.3 x 18.9 | - | 2020 / 51 t | 4,760 |
 | `veh-canadair-cl415` | Canadair CL-415 | boat nose, high wing, turboprop x2, T tail, tricycle | 19.82 x 28.6 x 8.98 | livery: firefighter, coastGuard | 1994 / 8 | 3,416 |
 | `veh-shinmaywa-us2` | ShinMaywa US-2 | boat nose, high wing, turboprop x4, T tail, tricycle | 33.46 x 33.15 x 9.8 | - | 2007 / 20 | 4,500 |
 | `veh-boeing-314` | Boeing 314 Clipper | boat nose, high wing, radial x4, triple tail, none (fixed) | 32.31 x 46.36 x 8.41 | - | 1939 / 74 | 3,944 |
-| `veh-sikorsky-s92` | Sikorsky S-92 | rotor kit: 4-blade rotor, tail rotor, wheels | 17.1 x 17.16 (rotor) x 4.95 | livery: offshore, rescue | 2004 / 19 | 2,358 |
-| `veh-airbus-h145` | Airbus Helicopters H145 | rotor kit: 5-blade rotor, fenestron, skids | 11.64 x 11 (rotor) x 3.96 | livery: airAmbulance, police | 2014 / 9 | 1,894 |
-| `veh-mil-mi8` | Mil Mi-8 | rotor kit: 5-blade rotor, tail rotor, wheels | 18.17 x 21.3 (rotor) x 5.65 | livery: aeroflot, utair | 1967 / 24 | 2,214 |
-| `veh-bell-206` | Bell 206 JetRanger | rotor kit: 2-blade rotor, tail rotor, skids | 9.5 x 10.16 (rotor) x 2.91 | colour: blue, red, green, gold, black | 1967 / 4 | 1,626 |
-| `veh-zeppelin-nt` | Zeppelin NT | airship: envelope, Y fins, gondola, three propellers | 75.1 x 14.16 (diameter) | livery: zeppelin, goodyear | 1997 / 12 | 1,812 |
+| `veh-sikorsky-s92` | Sikorsky S-92 | rotor kit: 4-blade rotor, tail rotor, wheels | 17.1 x 17.16 (rotor) x 4.95 | livery: offshore, rescue | 2004 / 19 | 2,278 |
+| `veh-airbus-h145` | Airbus Helicopters H145 | rotor kit: 5-blade rotor, fenestron, skids | 11.64 x 11 (rotor) x 3.96 | livery: airAmbulance, police | 2014 / 9 | 1,814 |
+| `veh-mil-mi8` | Mil Mi-8 | rotor kit: 5-blade rotor, tail rotor, wheels | 18.17 x 21.3 (rotor) x 5.65 | livery: aeroflot, utair | 1967 / 24 | 2,134 |
+| `veh-bell-206` | Bell 206 JetRanger | rotor kit: 2-blade rotor, tail rotor, skids | 9.5 x 10.16 (rotor) x 2.91 | colour: blue, red, green, gold, black | 1967 / 4 | 1,546 |
+| `veh-zeppelin-nt` | Zeppelin NT | airship: envelope, Y fins, gondola, three propellers | 75.1 x 14.16 (diameter) | livery: zeppelin, goodyear | 1997 / 12 | 2,596 |
 
 The list's ids and titles are kept; no row was replaced. Corrections against the list: the
 A320 row is the A320 family (`length` A319, A320, A321) and the ATR row the ATR 42/72
@@ -236,8 +236,8 @@ engines, tail, gear, doors and windows are read off photographs and three-views 
 ## Deviations
 
 - Every airframe is a kit approximation: noses, tail cones, wing-root fairings and fillets
-  are generic for the nose kind; there are no belly fairings, flap-track fairings or
-  antennas on the kit's airliners (the original aircraft have them).
+  are generic for the nose kind; a low-wing airliner gets a generic belly fairing under
+  the wing box, but no flap-track fairings or antennas (the original aircraft have them).
 - Propellers stand still; only the helicopters' rotors turn.
 - Taildraggers stand level, not tail-down.
 - The Concorde's nose is not drooped; the Tu-144's canards are flat plates.
