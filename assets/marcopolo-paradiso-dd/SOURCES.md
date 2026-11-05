@@ -10,8 +10,8 @@ Downloaded from Wikimedia Commons as standard thumbnails, at most 1280 px on the
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-paradiso-g8-1200-da-ande-transportes.jpg` | Paradiso G8 1200 da Ande Transportes.jpg | https://commons.wikimedia.org/wiki/File:Paradiso_G8_1200_da_Ande_Transportes.jpg | André L P de Souza | CC BY 4.0 | shape, proportions and colours |
-| `photo-paradiso-g8-da-transportes-nica.jpg` | Paradiso G8 da Transportes Única.jpg | https://commons.wikimedia.org/wiki/File:Paradiso_G8_da_Transportes_%C3%9Anica.jpg | André L P de Souza | CC BY 4.0 | shape, proportions and colours |
+| `photo-paradiso-g8-1200-da-ande-transportes.jpg` | Paradiso G8 1200 da Ande Transportes.jpg | https://commons.wikimedia.org/wiki/File:Paradiso_G8_1200_da_Ande_Transportes.jpg | André L P de Souza | CC BY 4.0 | the Marcopolo Paradiso G8 (the single-deck sister of the 1800 DD): the front and glazing |
+| `photo-paradiso-g8-da-transportes-nica.jpg` | Paradiso G8 da Transportes Única.jpg | https://commons.wikimedia.org/wiki/File:Paradiso_G8_da_Transportes_%C3%9Anica.jpg | André L P de Souza | CC BY 4.0 | the Marcopolo Paradiso G8 (the single-deck sister of the 1800 DD): the front and glazing |
 
 ## Published figures
 

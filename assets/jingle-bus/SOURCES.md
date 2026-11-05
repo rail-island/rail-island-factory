@@ -11,7 +11,7 @@ Downloaded from Wikimedia Commons as standard thumbnails, at most 1280 px on the
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
 | `photo-london-pakistani-decorated-bus.jpg` | London - Pakistani decorated bus.jpg | https://commons.wikimedia.org/wiki/File:London_-_Pakistani_decorated_bus.jpg | Oxfordian Kissuth | CC BY-SA 3.0 | shape, proportions and colours |
-| `photo-pakistani-decorated-wheels-trucks.jpg` | Pakistani decorated Wheels Trucks.jpg | https://commons.wikimedia.org/wiki/File:Pakistani_decorated_Wheels_Trucks.jpg | Murtaza Imran Ali from Karachi, Pakistan | CC BY 2.0 | shape, proportions and colours |
+| `photo-pakistani-decorated-wheels-trucks.jpg` | Pakistani decorated Wheels Trucks.jpg | https://commons.wikimedia.org/wiki/File:Pakistani_decorated_Wheels_Trucks.jpg | Murtaza Imran Ali from Karachi, Pakistan | CC BY 2.0 | Pakistani truck art: the decoration the jingle bus shares |
 
 ## Published figures
 

@@ -10,8 +10,8 @@ Downloaded from Wikimedia Commons as standard thumbnails, at most 1280 px on the
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-autobus-yutong-e10-w-mrgowie.jpg` | Autobus YUTONG E10 w Mrągowie.jpg | https://commons.wikimedia.org/wiki/File:Autobus_YUTONG_E10_w_Mr%C4%85gowie.jpg | PiotrSkrajny | CC0 | shape, proportions and colours |
-| `photo-yutong-busworld-europe-2023-brussels-p1140388.jpg` | Yutong, Busworld Europe 2023, Brussels (P1140388).jpg | https://commons.wikimedia.org/wiki/File:Yutong,_Busworld_Europe_2023,_Brussels_(P1140388).jpg | MB-one | CC BY-SA 4.0 | shape, proportions and colours |
+| `photo-autobus-yutong-e10-w-mrgowie.jpg` | Autobus YUTONG E10 w Mrągowie.jpg | https://commons.wikimedia.org/wiki/File:Autobus_YUTONG_E10_w_Mr%C4%85gowie.jpg | PiotrSkrajny | CC0 | the Yutong E10, the shorter sister of the E12: the front, glazing and battery pods |
+| `photo-yutong-busworld-europe-2023-brussels-p1140388.jpg` | Yutong, Busworld Europe 2023, Brussels (P1140388).jpg | https://commons.wikimedia.org/wiki/File:Yutong,_Busworld_Europe_2023,_Brussels_(P1140388).jpg | MB-one | CC BY-SA 4.0 | the current Irizar coach range: the front, glazing and proportions |
 
 ## Published figures
 
