@@ -13,12 +13,12 @@ import { air, aircraftDesigns, brief, chosen, fixed, liveries, type WorldAircraf
 /** A livery parameter over the named carriers. */
 const L = (...keys: string[]) => liveries(schemes(...keys));
 /** A business jet's colour parameter. */
-const COLOUR = liveries(colourSchemes(...COLOURS), "colour", "Colour");
+const COLOUR = /* @__PURE__ */ liveries(colourSchemes(...COLOURS), "colour", "Colour");
 
 // ---------------------------------------------------------------------------
 // Boeing
 
-const B707 = L("panAm", "qantas", "lufthansa");
+const B707 = /* @__PURE__ */ L("panAm", "qantas", "lufthansa");
 export const boeing707Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 46.61, H: 12.93, W: 3.76, D: 4.1, k: 1.35, nose: "airliner", ns: 1.1, tl: 11.5, ty: 0.7,
   span: 44.42, root: 10.4, kink: [0.3, 6.6], tip: 2.3, sweep: 36, dih: 7, at: 15.8,
@@ -28,7 +28,7 @@ export const boeing707Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[6.2, 37.5, 0.51]], doors: [5.1, 38.6],
 }), ...chosen(B707, p) });
 
-const B727 = L("eastern", "lufthansa", "american");
+const B727 = /* @__PURE__ */ L("eastern", "lufthansa", "american");
 export const boeing727Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 46.68, H: 10.36, W: 3.76, D: 4.1, k: 1.2, nose: "airliner", tl: 10.5, ty: 0.62, te: 0.6,
   span: 32.92, root: 9.0, kink: [0.32, 5.4], tip: 1.6, sweep: 34, dih: 3, at: 16.8,
@@ -38,7 +38,7 @@ export const boeing727Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[6.0, 35.0, 0.51]], doors: [4.8],
 }), ...chosen(B727, p) });
 
-const B737_200 = L("lufthansa", "united", "malaysia");
+const B737_200 = /* @__PURE__ */ L("lufthansa", "united", "malaysia");
 export const boeing737200Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 30.53, H: 11.28, W: 3.76, D: 4.01, k: 1.0, nose: "airliner", tl: 8.5,
   span: 28.35, root: 7.3, kink: [0.3, 4.5], tip: 1.4, sweep: 27, dih: 6, at: 11.0,
@@ -48,7 +48,7 @@ export const boeing737200Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[5.0, 25.6, 0.51]], doors: [3.8, 27.0],
 }), ...chosen(B737_200, p) });
 
-const B737_MAX = L("southwest", "ryanair", "aeromexico");
+const B737_MAX = /* @__PURE__ */ L("southwest", "ryanair", "aeromexico");
 export const boeing737MaxSpec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 39.52, H: 12.3, W: 3.76, D: 4.01, k: 1.25, nose: "airliner", tl: 9.2,
   span: 35.92, root: 8.1, kink: [0.3, 5.0], tip: 1.3, sweep: 27, dih: 6, at: 14.0, dev: "split", dh: 2.9,
@@ -73,7 +73,7 @@ export const boeing7478Spec = (p?: ParamValues): AirframeSpec => {
   }), ...(cargo ? fixed(SCHEMES, "cargolux") : fixed(SCHEMES, "lufthansa2018")) };
 };
 
-const B757 = L("delta", "britishAirways", "icelandair");
+const B757 = /* @__PURE__ */ L("delta", "britishAirways", "icelandair");
 export const boeing757Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 47.32, H: 13.56, W: 3.76, D: 4.1, k: 1.45, nose: "airliner", tl: 10.0,
   span: 38.05, root: 9.0, kink: [0.3, 5.5], tip: 1.7, sweep: 27, dih: 5, at: 17.5,
@@ -83,7 +83,7 @@ export const boeing757Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[6.2, 41, 0.51]], doors: [4.9, 16.5, 42.5],
 }), ...chosen(B757, p) });
 
-const B767 = L("ana", "american", "lot");
+const B767 = /* @__PURE__ */ L("ana", "american", "lot");
 export const boeing767Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 54.94, H: 15.85, W: 5.03, D: 5.41, k: 1.65, nose: "airliner", tl: 13.0,
   span: 47.57, root: 12.0, kink: [0.33, 6.6], tip: 2.2, sweep: 34, dih: 6, at: 19.5,
@@ -93,7 +93,7 @@ export const boeing767Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[6.5, 48, 0.51]], doors: [5.5, 18, 47.5],
 }), ...chosen(B767, p) });
 
-const B777 = L("emirates", "airFrance", "cathay");
+const B777 = /* @__PURE__ */ L("emirates", "airFrance", "cathay");
 export const boeing777Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 73.86, H: 18.5, W: 6.2, D: 6.2, k: 2.0, nose: "airliner", tl: 17,
   span: 64.8, root: 15.5, kink: [0.32, 8.3], tip: 2.6, sweep: 35, dih: 6, at: 27.5, dev: "raked",
@@ -103,7 +103,7 @@ export const boeing777Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[8.0, 66, 0.53]], doors: [6.5, 19.5, 41, 63],
 }), ...chosen(B777, p) });
 
-const B787 = L("airNewZealand", "qatar", "united");
+const B787 = /* @__PURE__ */ L("airNewZealand", "qatar", "united");
 export const boeing787Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 62.81, H: 17.02, W: 5.77, D: 5.97, k: 1.9, nose: "airliner", ns: 1.15, tl: 15,
   span: 60.12, root: 13.5, kink: [0.33, 7.5], tip: 2.0, sweep: 35, dih: 6, at: 23.6, dev: "raked",
@@ -116,7 +116,7 @@ export const boeing787Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
 // ---------------------------------------------------------------------------
 // Douglas, McDonnell Douglas, Lockheed, Convair
 
-const DC8 = L("klm", "sas", "united");
+const DC8 = /* @__PURE__ */ L("klm", "sas", "united");
 export const douglasDc8Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 57.12, H: 12.92, W: 3.73, D: 4.0, k: 1.4, nose: "airliner", ns: 1.25, tl: 12,
   span: 45.23, root: 10.5, kink: [0.3, 6.8], tip: 2.3, sweep: 33, dih: 6.5, at: 21.0,
@@ -126,7 +126,7 @@ export const douglasDc8Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[6.5, 49, 0.51]], doors: [5.5, 48.5],
 }), ...chosen(DC8, p) });
 
-const DC9 = L("swissair", "delta", "alitalia");
+const DC9 = /* @__PURE__ */ L("swissair", "delta", "alitalia");
 export const douglasDc9Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 36.37, H: 8.38, W: 3.34, D: 3.6, k: 1.0, nose: "airliner", tl: 9.5,
   span: 28.47, root: 6.8, kink: [0.3, 4.3], tip: 1.4, sweep: 26, dih: 3, at: 13.5,
@@ -136,7 +136,7 @@ export const douglasDc9Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[5.0, 26, 0.51]], doors: [3.8],
 }), ...chosen(DC9, p) });
 
-const MD80 = L("american", "alitalia", "sas");
+const MD80 = /* @__PURE__ */ L("american", "alitalia", "sas");
 export const md80Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 45.06, H: 9.04, W: 3.34, D: 3.6, k: 1.05, nose: "airliner", tl: 9.8,
   span: 32.87, root: 7.6, kink: [0.3, 4.8], tip: 1.5, sweep: 27, dih: 3, at: 18.5,
@@ -146,7 +146,7 @@ export const md80Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[5.0, 35, 0.51]], doors: [3.9],
 }), ...chosen(MD80, p) });
 
-const DC10 = L("american", "lufthansa", "swissair");
+const DC10 = /* @__PURE__ */ L("american", "lufthansa", "swissair");
 export const douglasDc10Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 55.5, H: 17.7, W: 6.02, D: 6.02, k: 1.99, nose: "airliner", tl: 14,
   span: 50.4, root: 12.0, kink: [0.33, 6.3], tip: 2.3, sweep: 38, dih: 5, at: 19.5,
@@ -156,7 +156,7 @@ export const douglasDc10Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[6, 45, 0.53]], doors: [4.8, 14.2, 31.5, 44],
 }), ...chosen(DC10, p) });
 
-const L1011 = L("eastern", "twa", "britishAirways");
+const L1011 = /* @__PURE__ */ L("eastern", "twa", "britishAirways");
 export const lockheedTristarSpec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 54.17, H: 16.87, W: 5.97, D: 6.0, k: 1.9, nose: "airliner", tl: 13, te: 0.95,
   span: 47.35, root: 11.5, kink: [0.32, 6.4], tip: 2.2, sweep: 35, dih: 7, at: 19.5,
@@ -166,7 +166,7 @@ export const lockheedTristarSpec = (p?: ParamValues): AirframeSpec => ({ ...brie
   win: [[6, 46, 0.53]], doors: [5, 15, 31, 44],
 }), ...chosen(L1011, p) });
 
-const CV880 = L("delta", "twa", "cathay");
+const CV880 = /* @__PURE__ */ L("delta", "twa", "cathay");
 export const convair880Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 39.42, H: 11.0, W: 3.5, D: 3.75, k: 1.3, nose: "airliner", ns: 1.2, tl: 10,
   span: 36.58, root: 8.7, kink: [0.3, 5.6], tip: 2.0, sweep: 35, dih: 7, at: 14.0,
@@ -179,7 +179,7 @@ export const convair880Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
 // ---------------------------------------------------------------------------
 // Airbus
 
-const A300 = L("airFrance", "lufthansa", "thai");
+const A300 = /* @__PURE__ */ L("airFrance", "lufthansa", "thai");
 export const airbusA300Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 53.62, H: 16.53, W: 5.64, D: 5.64, k: 1.95, nose: "airliner", tl: 13.5,
   span: 44.84, root: 11.0, kink: [0.33, 6.1], tip: 2.5, sweep: 32, dih: 5, at: 18.5,
@@ -189,7 +189,7 @@ export const airbusA300Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[6, 46, 0.53]], doors: [5, 16.5, 44],
 }), ...chosen(A300, p) });
 
-const A310 = L("swissair", "lufthansa", "airIndia");
+const A310 = /* @__PURE__ */ L("swissair", "lufthansa", "airIndia");
 export const airbusA310Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 46.66, H: 15.8, W: 5.64, D: 5.64, k: 1.95, nose: "airliner", tl: 12,
   span: 43.9, root: 10.5, kink: [0.33, 5.8], tip: 2.0, sweep: 31, dih: 5, at: 16.0, dev: "fence",
@@ -201,7 +201,7 @@ export const airbusA310Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
 
 /** The A320 family's lengths: the A319, A320 and A321, their wings moved with their plugs. */
 const A320_LENGTH: ParamSpec = { name: "length", title: "Length", default: "a320", values: [{ value: "a319", title: "A319" }, { value: "a320", title: "A320" }, { value: "a321", title: "A321" }] };
-const A320 = L("lufthansa", "easyJet", "iberia");
+const A320 = /* @__PURE__ */ L("lufthansa", "easyJet", "iberia");
 export const airbusA320Spec = (p?: ParamValues): AirframeSpec => {
   const len = resolveParams([A320_LENGTH, ...A320.params], p).length!;
   const [l, fwd, base] = len === "a319" ? [33.84, -1.6, 11.04] : len === "a321" ? [44.51, 3.4, 16.9] : [37.57, 0, 12.64];
@@ -215,7 +215,7 @@ export const airbusA320Spec = (p?: ParamValues): AirframeSpec => {
   }), ...chosen(A320, p, [A320_LENGTH]) };
 };
 
-const A321NEO = L("wizz", "turkish", "chinaSouthern");
+const A321NEO = /* @__PURE__ */ L("wizz", "turkish", "chinaSouthern");
 export const airbusA321neoSpec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 44.51, H: 11.76, W: 3.95, D: 4.14, k: 1.2, nose: "airliner", tl: 9.5,
   span: 35.8, root: 7.0, kink: [0.33, 4.2], tip: 1.4, sweep: 27, dih: 5, at: 16.6, dev: "sharklet", dh: 2.43,
@@ -225,7 +225,7 @@ export const airbusA321neoSpec = (p?: ParamValues): AirframeSpec => ({ ...brief(
   win: [[6.2, 37.5, 0.53]], doors: [4.5, 12.5, 30.0, 39.0],
 }), ...chosen(A321NEO, p) });
 
-const A330 = L("cathay", "turkish", "aerLingus");
+const A330 = /* @__PURE__ */ L("cathay", "turkish", "aerLingus");
 export const airbusA330Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 63.66, H: 16.79, W: 5.64, D: 5.64, k: 2.0, nose: "airliner", tl: 15,
   span: 60.3, root: 12.5, kink: [0.3, 7.8], tip: 2.6, sweep: 33, dih: 5.5, at: 24.0, dev: "canted", dh: 2.74,
@@ -235,7 +235,7 @@ export const airbusA330Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[6.5, 56, 0.53]], doors: [5.5, 18, 37, 55],
 }), ...chosen(A330, p) });
 
-const A340 = L("lufthansa2018", "iberia", "etihad");
+const A340 = /* @__PURE__ */ L("lufthansa2018", "iberia", "etihad");
 export const airbusA340Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 75.36, H: 17.22, W: 5.64, D: 5.64, k: 2.1, nose: "airliner", tl: 16,
   span: 63.45, root: 14.0, kink: [0.3, 8.5], tip: 2.4, sweep: 33, dih: 5.5, at: 30.5, dev: "canted", dh: 2.74,
@@ -245,7 +245,7 @@ export const airbusA340Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[6.5, 67, 0.53]], doors: [5.5, 20, 42, 66],
 }), ...chosen(A340, p) });
 
-const A350 = L("qatar", "singapore", "finnair");
+const A350 = /* @__PURE__ */ L("qatar", "singapore", "finnair");
 export const airbusA350Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 66.8, H: 17.05, W: 5.96, D: 6.09, k: 2.0, nose: "airliner", ns: 1.15, tl: 15.5,
   span: 64.75, root: 15, kink: [0.3, 8.0], tip: 1.8, sweep: 34, dih: 6, at: 25.5, dev: "curved", dh: 3.2,
@@ -255,7 +255,7 @@ export const airbusA350Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[7, 58, 0.54, 0.6, 0.14, 0.2]], doors: [6, 18, 39, 58],
 }), ...chosen(A350, p) });
 
-const A220 = L("swiss", "airCanada", "delta");
+const A220 = /* @__PURE__ */ L("swiss", "airCanada", "delta");
 export const airbusA220Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 38.71, H: 11.5, W: 3.7, D: 3.7, k: 1.25, nose: "airliner", tl: 9.5,
   span: 35.1, root: 7.5, kink: [0.3, 4.4], tip: 1.3, sweep: 27, dih: 5, at: 14.5, dev: "blended", dh: 2.0,
@@ -268,7 +268,7 @@ export const airbusA220Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
 // ---------------------------------------------------------------------------
 // Europe: France, Britain, the Netherlands
 
-const CONCORDE = L("britishAirways", "airFrance");
+const CONCORDE = /* @__PURE__ */ L("britishAirways", "airFrance");
 export const concordeSpec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 61.66, H: 12.2, W: 2.88, D: 3.32, k: 2.45, nose: "pointed", ns: 0.85, tl: 14, ty: 0.55,
   span: 25.6, root: 37.5, tip: 3.2, sweep: 60, dih: 0, at: 21.0, wy: 2.95, thick: [0.035, 0.03],
@@ -279,7 +279,7 @@ export const concordeSpec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[12, 47, 0.55, 0.62, 0.08, 0.11]], doors: [11.5, 45],
 }), ...chosen(CONCORDE, p) });
 
-const CARAVELLE = L("airFrance", "sas", "sabena");
+const CARAVELLE = /* @__PURE__ */ L("airFrance", "sas", "sabena");
 export const caravelleSpec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 32.01, H: 8.72, W: 3.2, D: 3.2, k: 1.05, nose: "airliner", ns: 1.2, tl: 9.5,
   span: 34.3, root: 7.0, tip: 2.3, sweep: 20, dih: 3, at: 11.5,
@@ -289,7 +289,7 @@ export const caravelleSpec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[5, 23, 0.86, 0.6, 0.22, 0.2, "tri"]], doors: [3.8, 24.5],
 }), ...chosen(CARAVELLE, p) });
 
-const COMET = L("boac", "bea", "aerolineas");
+const COMET = /* @__PURE__ */ L("boac", "bea", "aerolineas");
 export const dhCometSpec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 33.99, H: 8.99, W: 3.0, D: 3.0, k: 1.1, nose: "airliner", ns: 1.4, tl: 9.5,
   span: 35.0, root: 9.0, tip: 2.0, sweep: 20, dih: 2, at: 10.5,
@@ -299,7 +299,7 @@ export const dhCometSpec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[4.5, 25, 1.0, 0.6, 0.2, 0.14]], doors: [3.7, 24.0],
 }), ...chosen(COMET, p) });
 
-const VC10 = L("boac", "britishAirways", "kenya");
+const VC10 = /* @__PURE__ */ L("boac", "britishAirways", "kenya");
 export const vickersVc10Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 48.36, H: 12.04, W: 3.76, D: 3.9, k: 1.4, nose: "airliner", ns: 1.15, tl: 12,
   span: 44.55, root: 10.5, kink: [0.3, 6.0], tip: 2.3, sweep: 32.5, dih: 3, at: 15.0,
@@ -309,7 +309,7 @@ export const vickersVc10Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[6, 35, 0.53]], doors: [5.0, 34.0],
 }), ...chosen(VC10, p) });
 
-const TRIDENT = L("bea", "britishAirways", "airChina");
+const TRIDENT = /* @__PURE__ */ L("bea", "britishAirways", "airChina");
 export const hsTridentSpec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 35.0, H: 8.23, W: 3.44, D: 3.7, k: 1.2, nose: "airliner", tl: 9, te: 0.5,
   span: 29.87, root: 7.5, kink: [0.3, 4.5], tip: 1.5, sweep: 35, dih: 3, at: 13.0,
@@ -319,7 +319,7 @@ export const hsTridentSpec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[5, 25, 0.51]], doors: [3.6],
 }), ...chosen(TRIDENT, p) });
 
-const BAC111 = L("bea", "tarom", "aerLingus");
+const BAC111 = /* @__PURE__ */ L("bea", "tarom", "aerLingus");
 export const bac111Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 32.61, H: 7.47, W: 3.15, D: 3.3, k: 0.95, nose: "airliner", tl: 8.5,
   span: 28.5, root: 6.5, kink: [0.3, 4.0], tip: 1.4, sweep: 20, dih: 2, at: 13.0,
@@ -329,7 +329,7 @@ export const bac111Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[4.5, 24, 0.51]], doors: [3.4],
 }), ...chosen(BAC111, p) });
 
-const BAE146 = L("britishAirways", "lufthansa", "swiss");
+const BAE146 = /* @__PURE__ */ L("britishAirways", "lufthansa", "swiss");
 export const bae146Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 28.6, H: 8.61, W: 3.56, D: 3.6, k: 0.85, nose: "blunt", tl: 8.5,
   span: 26.21, root: 4.6, tip: 1.5, sweep: 15, dih: -3, at: 11.0, pos: "high",
@@ -339,7 +339,7 @@ export const bae146Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[4, 23, 0.55]], doors: [3.2, 24.5],
 }), ...chosen(BAE146, p) });
 
-const F28 = L("klm", "garuda", "sas");
+const F28 = /* @__PURE__ */ L("klm", "garuda", "sas");
 export const fokkerF28Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 29.61, H: 8.47, W: 3.3, D: 3.3, k: 0.9, nose: "airliner", tl: 8,
   span: 25.07, root: 5.5, tip: 1.6, sweep: 16, dih: 2.5, at: 11.5,
@@ -349,7 +349,7 @@ export const fokkerF28Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[4.5, 22, 0.51]], doors: [3.3],
 }), ...chosen(F28, p) });
 
-const F100 = L("klm", "swissair", "american");
+const F100 = /* @__PURE__ */ L("klm", "swissair", "american");
 export const fokker100Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 35.53, H: 8.5, W: 3.3, D: 3.3, k: 0.95, nose: "airliner", tl: 8.5,
   span: 28.08, root: 6.0, tip: 1.5, sweep: 17, dih: 2.5, at: 14.5,
@@ -362,7 +362,7 @@ export const fokker100Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
 // ---------------------------------------------------------------------------
 // The Soviet Union and Russia
 
-const TU104 = L("aeroflot", "csa");
+const TU104 = /* @__PURE__ */ L("aeroflot", "csa");
 export const tupolevTu104Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 38.85, H: 11.9, W: 3.5, D: 3.5, k: 1.6, nose: "glazed", tl: 10,
   span: 34.54, root: 9.0, kink: [0.25, 6.0], tip: 2.5, sweep: 37, dih: -3, at: 13.5,
@@ -372,7 +372,7 @@ export const tupolevTu104Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[6, 30, 0.9, 0.6, 0.17, 0.17, "round"]], doors: [5.6, 29.5],
 }), ...chosen(TU104, p) });
 
-const TU134 = L("aeroflot", "csa", "interflug");
+const TU134 = /* @__PURE__ */ L("aeroflot", "csa", "interflug");
 export const tupolevTu134Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 37.1, H: 9.02, W: 2.9, D: 2.9, k: 1.05, nose: "glazed", tl: 9.5,
   span: 29.01, root: 6.5, kink: [0.3, 4.5], tip: 1.4, sweep: 38, dih: -1.5, at: 13.5,
@@ -382,7 +382,7 @@ export const tupolevTu134Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[5, 25, 0.9, 0.6, 0.17, 0.17, "round"]], doors: [5.0],
 }), ...chosen(TU134, p) });
 
-const TU154 = L("aeroflot", "balkan", "malev");
+const TU154 = /* @__PURE__ */ L("aeroflot", "balkan", "malev");
 export const tupolevTu154Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 47.9, H: 11.4, W: 3.8, D: 3.8, k: 1.4, nose: "airliner", tl: 11.5, te: 0.6,
   span: 37.55, root: 8.5, kink: [0.3, 5.5], tip: 1.8, sweep: 41, dih: -1, at: 18.5,
@@ -392,7 +392,7 @@ export const tupolevTu154Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[6, 37, 0.51]], doors: [5.5, 15.5],
 }), ...chosen(TU154, p) });
 
-const TU144 = L("aeroflot", "plain");
+const TU144 = /* @__PURE__ */ L("aeroflot", "plain");
 export const tupolevTu144Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 65.7, H: 12.5, W: 3.4, D: 3.6, k: 2.6, nose: "pointed", ns: 0.85, tl: 14, ty: 0.55,
   span: 28.8, root: 38.0, tip: 3.0, sweep: 60, dih: 0, at: 25.0, wy: 3.15, thick: [0.035, 0.03],
@@ -410,7 +410,7 @@ export const tupolevTu144Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   }),
 }), ...chosen(TU144, p) });
 
-const IL62 = L("aeroflot", "csa", "interflug");
+const IL62 = /* @__PURE__ */ L("aeroflot", "csa", "interflug");
 export const ilyushinIl62Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 53.12, H: 12.35, W: 3.75, D: 4.1, k: 1.4, nose: "airliner", ns: 1.15, tl: 12,
   span: 43.2, root: 10.0, kink: [0.3, 6.5], tip: 2.2, sweep: 35, dih: -1, at: 19.0,
@@ -420,7 +420,7 @@ export const ilyushinIl62Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[6, 39, 0.51, 0.6, 0.15, 0.15, "round"]], doors: [5.5, 24],
 }), ...chosen(IL62, p) });
 
-const IL86 = L("aeroflot", "aeroflotNew");
+const IL86 = /* @__PURE__ */ L("aeroflot", "aeroflotNew");
 export const ilyushinIl86Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 59.54, H: 15.81, W: 6.08, D: 6.08, k: 2.0, nose: "airliner", tl: 14,
   span: 48.06, root: 12.5, kink: [0.33, 7.3], tip: 2.6, sweep: 35, dih: 6, at: 23.0,
@@ -430,7 +430,7 @@ export const ilyushinIl86Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[7, 50, 0.55]], doors: [6, 18, 33, 49],
 }), ...chosen(IL86, p) });
 
-const IL96 = L("aeroflotNew", "cubana", "rossiya");
+const IL96 = /* @__PURE__ */ L("aeroflotNew", "cubana", "rossiya");
 export const ilyushinIl96Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 55.35, H: 17.57, W: 6.08, D: 6.08, k: 2.05, nose: "airliner", tl: 14,
   span: 57.66, root: 12.5, kink: [0.3, 7.3], tip: 2.2, sweep: 30, dih: 5, at: 21.5, dev: "canted", dh: 2.6,
@@ -440,7 +440,7 @@ export const ilyushinIl96Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[7, 47, 0.55]], doors: [6.5, 17, 33, 46],
 }), ...chosen(IL96, p) });
 
-const YAK40 = L("aeroflot", "csa");
+const YAK40 = /* @__PURE__ */ L("aeroflot", "csa");
 export const yakovlevYak40Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 20.36, H: 6.5, W: 2.4, D: 2.4, k: 0.65, nose: "blunt", ns: 1.2, tl: 6.5, te: 0.42,
   span: 25.0, root: 4.0, tip: 1.4, sweep: 1, dih: 4, at: 7.5,
@@ -450,7 +450,7 @@ export const yakovlevYak40Spec = (p?: ParamValues): AirframeSpec => ({ ...brief(
   win: [[3, 14, 0.8, 0.6, 0.17, 0.17, "round"]], doors: [2.8],
 }), ...chosen(YAK40, p) });
 
-const YAK42 = L("aeroflot", "cubana");
+const YAK42 = /* @__PURE__ */ L("aeroflot", "cubana");
 export const yakovlevYak42Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 36.38, H: 9.83, W: 3.8, D: 3.8, k: 1.1, nose: "airliner", tl: 10, te: 0.6,
   span: 34.88, root: 6.5, kink: [0.3, 4.5], tip: 1.5, sweep: 23, dih: -2, at: 14.0,
@@ -460,7 +460,7 @@ export const yakovlevYak42Spec = (p?: ParamValues): AirframeSpec => ({ ...brief(
   win: [[5, 26, 0.55, 0.6, 0.15, 0.15, "round"]], doors: [4.0, 30],
 }), ...chosen(YAK42, p) });
 
-const SSJ = L("aeroflotNew", "rossiya");
+const SSJ = /* @__PURE__ */ L("aeroflotNew", "rossiya");
 export const sukhoiSuperjetSpec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 29.94, H: 10.28, W: 3.46, D: 3.24, k: 1.05, nose: "airliner", tl: 8,
   span: 27.8, root: 6.3, kink: [0.3, 4.0], tip: 1.3, sweep: 27, dih: 5, at: 11.5, dev: "sharklet", dh: 1.6,
@@ -470,7 +470,7 @@ export const sukhoiSuperjetSpec = (p?: ParamValues): AirframeSpec => ({ ...brief
   win: [[4.5, 24, 0.51]], doors: [3.8, 27.5],
 }), ...chosen(SSJ, p) });
 
-const AN148 = L("rossiya", "ukraine");
+const AN148 = /* @__PURE__ */ L("rossiya", "ukraine");
 export const antonovAn148Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 29.13, H: 8.19, W: 3.35, D: 3.35, k: 0.9, nose: "blunt", tl: 8.5,
   span: 28.91, root: 4.8, tip: 1.6, sweep: 25, dih: -3, at: 10.5, pos: "high", dev: "blended", dh: 1.4,
@@ -483,7 +483,7 @@ export const antonovAn148Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
 // ---------------------------------------------------------------------------
 // Regional jets: Brazil, Canada, China
 
-const E190 = L("klm", "lot", "aeromexico");
+const E190 = /* @__PURE__ */ L("klm", "lot", "aeromexico");
 export const embraerE190Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 36.24, H: 10.57, W: 3.01, D: 3.35, k: 1.05, nose: "airliner", ns: 1.1, tl: 8.5,
   span: 28.72, root: 6.0, kink: [0.3, 3.8], tip: 1.3, sweep: 24, dih: 5, at: 13.5, dev: "blended", dh: 1.5,
@@ -493,7 +493,7 @@ export const embraerE190Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[4.5, 28, 0.51]], doors: [3.7, 33.5],
 }), ...chosen(E190, p) });
 
-const E195E2 = L("azul", "embraer", "klm");
+const E195E2 = /* @__PURE__ */ L("azul", "embraer", "klm");
 export const embraerE195E2Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 41.5, H: 10.9, W: 3.01, D: 3.35, k: 1.15, nose: "airliner", ns: 1.1, tl: 9,
   span: 35.12, root: 7.0, kink: [0.3, 4.3], tip: 1.2, sweep: 26, dih: 5, at: 15.5, dev: "raked",
@@ -503,7 +503,7 @@ export const embraerE195E2Spec = (p?: ParamValues): AirframeSpec => ({ ...brief(
   win: [[4.5, 33, 0.51]], doors: [3.8, 38.5],
 }), ...chosen(E195E2, p) });
 
-const ERJ145 = L("american", "airFrance", "lot");
+const ERJ145 = /* @__PURE__ */ L("american", "airFrance", "lot");
 export const embraerErj145Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 29.87, H: 6.76, W: 2.28, D: 2.28, k: 0.75, nose: "bizjet", tl: 7.5,
   span: 20.04, root: 3.9, tip: 1.2, sweep: 23, dih: 4, at: 12.0, dev: "blended", dh: 0.9,
@@ -513,7 +513,7 @@ export const embraerErj145Spec = (p?: ParamValues): AirframeSpec => ({ ...brief(
   win: [[4, 22, 0.55, 0.6, 0.13, 0.16]], doors: [3.0],
 }), ...chosen(ERJ145, p) });
 
-const CRJ200 = L("lufthansa", "delta", "airCanada");
+const CRJ200 = /* @__PURE__ */ L("lufthansa", "delta", "airCanada");
 export const bombardierCrj200Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 26.77, H: 6.22, W: 2.69, D: 2.69, k: 0.8, nose: "bizjet", tl: 7.5,
   span: 21.21, root: 4.2, kink: [0.3, 2.9], tip: 1.0, sweep: 26, dih: 3, at: 10.5, dev: "blended", dh: 1.2,
@@ -523,7 +523,7 @@ export const bombardierCrj200Spec = (p?: ParamValues): AirframeSpec => ({ ...bri
   win: [[4, 19, 0.51]], doors: [2.9],
 }), ...chosen(CRJ200, p) });
 
-const CRJ900 = L("delta", "lufthansa", "garuda");
+const CRJ900 = /* @__PURE__ */ L("delta", "lufthansa", "garuda");
 export const bombardierCrj900Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 36.2, H: 7.51, W: 2.69, D: 2.69, k: 0.85, nose: "bizjet", tl: 8.5,
   span: 24.85, root: 5.0, kink: [0.3, 3.3], tip: 1.1, sweep: 26, dih: 3, at: 15.5, dev: "blended", dh: 1.3,
@@ -533,7 +533,7 @@ export const bombardierCrj900Spec = (p?: ParamValues): AirframeSpec => ({ ...bri
   win: [[4, 28, 0.51]], doors: [3.0, 33],
 }), ...chosen(CRJ900, p) });
 
-const C919 = L("chinaEastern", "comac", "airChina");
+const C919 = /* @__PURE__ */ L("chinaEastern", "comac", "airChina");
 export const comacC919Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 38.9, H: 11.95, W: 3.96, D: 4.17, k: 1.2, nose: "airliner", tl: 9.5,
   span: 35.8, root: 7.6, kink: [0.3, 4.6], tip: 1.4, sweep: 27, dih: 5, at: 14.3, dev: "sharklet", dh: 2.4,
@@ -543,7 +543,7 @@ export const comacC919Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[6, 32, 0.51]], doors: [5.0, 35.5],
 }), ...chosen(C919, p) });
 
-const ARJ21 = L("comac", "chinaSouthern", "airChina");
+const ARJ21 = /* @__PURE__ */ L("comac", "chinaSouthern", "airChina");
 export const comacArj21Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 33.46, H: 8.44, W: 3.14, D: 3.14, k: 1.0, nose: "airliner", tl: 8.5,
   span: 27.29, root: 5.8, kink: [0.3, 3.9], tip: 1.3, sweep: 25, dih: 4, at: 13.7, dev: "blended", dh: 1.4,
@@ -737,7 +737,7 @@ const entry = ([id, title, spec, build, buildLod, params, game]: Entry): WorldAi
   return { id, title, spec, build, buildLod, ...(ps ? { params: ps, finishParams: ps.filter((x) => x.name === "livery" || x.name === "colour").map((x) => x.name) } : {}), game, references: id.replace(/^veh-/, "") };
 };
 
-export const WORLD_JET_SPECS: readonly WorldAircraft[] = ([
+export const WORLD_JET_SPECS: readonly WorldAircraft[] = /* @__PURE__ */ ([
   ["veh-boeing-707", "Boeing 707-320", boeing707Spec, boeing707, boeing707Lod, B707, air(151, 3200, 960, "big", 0.3)],
   ["veh-boeing-727", "Boeing 727-200", boeing727Spec, boeing727, boeing727Lod, B727, air(95, 2130, 950, "medium", 0.32)],
   ["veh-boeing-737-200", "Boeing 737-200", boeing737200Spec, boeing737200, boeing737200Lod, B737_200, air(52, 1420, 780, "medium", 0.3)],
@@ -796,4 +796,4 @@ export const WORLD_JET_SPECS: readonly WorldAircraft[] = ([
   ["veh-hondajet", "HondaJet HA-420", hondajetSpec, hondajet, hondajetLod, COLOUR, air(4.8, 180, 780, "small", 0.35)],
 ] as Entry[]).map(entry);
 
-export const WORLD_JETS = aircraftDesigns(WORLD_JET_SPECS);
+export const WORLD_JETS = /* @__PURE__ */ aircraftDesigns(WORLD_JET_SPECS);

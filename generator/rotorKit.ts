@@ -317,8 +317,8 @@ export function rotorcraftLod(s: RotorSpec): MeshBuilder {
         lodBar(m, "alloy", [g.x(gs.d1), 0.06, side * gs.track / 2], [g.x(gs.d0), 0.06, side * gs.track / 2], 0.06, 3);
         for (const d of [lerp(gs.d0, gs.d1, 0.22), lerp(gs.d0, gs.d1, 0.72)]) lodBar(m, "alloy", [g.x(d), 0.06, side * gs.track / 2], [g.x(d), s.keel + 0.1, side * s.width * 0.3], 0.05, 3);
       } else if (!gs.retract) {
-        lodAxleWheel(m, "tyre", "z", g.x(gs.nose.d), gs.nose.r, gs.nose.r, -gs.nose.r * 0.3, gs.nose.r * 0.3, 6);
-        for (const side of [-1, 1]) lodAxleWheel(m, "tyre", "z", g.x(gs.mains.d), gs.mains.r, gs.mains.r, side * gs.mains.z - gs.mains.r * 0.3, side * gs.mains.z + gs.mains.r * 0.3, 6);
+        lodAxleWheel(m, "darkGrey", "z", g.x(gs.nose.d), gs.nose.r, gs.nose.r, -gs.nose.r * 0.3, gs.nose.r * 0.3, 6);
+        for (const side of [-1, 1]) lodAxleWheel(m, "darkGrey", "z", g.x(gs.mains.d), gs.mains.r, gs.mains.r, side * gs.mains.z - gs.mains.r * 0.3, side * gs.mains.z + gs.mains.r * 0.3, 6);
       }
     } },
   ];

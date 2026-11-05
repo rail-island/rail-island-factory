@@ -13,7 +13,7 @@ import { air, aircraftDesigns, brief, chosen, fixed, liveries, type WorldAircraf
 import { lobe, closeTo, curve } from "./airframeShapes.ts";
 
 const L = (...keys: string[]) => liveries(schemes(...keys));
-const COLOUR = liveries(colourSchemes(...COLOURS), "colour", "Colour");
+const COLOUR = /* @__PURE__ */ liveries(colourSchemes(...COLOURS), "colour", "Colour");
 
 /** A gear parameter: wheels and the other choices named. */
 const gearParam = (...values: Array<[string, string]>): ParamSpec => ({ name: "gear", title: "Gear", default: values[0]![0], values: values.map(([value, title]) => ({ value, title })) });
@@ -22,7 +22,7 @@ const gearOf = (ps: ParamSpec, p?: ParamValues): string => resolveParams([ps], p
 // ---------------------------------------------------------------------------
 // Turboprop airliners
 
-const YS11 = L("ana", "jalClassic", "olympic");
+const YS11 = /* @__PURE__ */ L("ana", "jalClassic", "olympic");
 export const namcYs11Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 26.3, H: 8.99, W: 2.88, D: 2.88, k: 1.1, nose: "blunt", tl: 8,
   span: 32.0, root: 3.8, tip: 1.5, sweep: 3, dih: 6, at: 9.5,
@@ -34,7 +34,7 @@ export const namcYs11Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
 
 /** The ATR's lengths: the 42 and the 72. */
 const ATR_LENGTH: ParamSpec = { name: "length", title: "Length", default: "72", values: [{ value: "42", title: "ATR 42" }, { value: "72", title: "ATR 72" }] };
-const ATR = L("airFrance", "alitalia", "malaysia");
+const ATR = /* @__PURE__ */ L("airFrance", "alitalia", "malaysia");
 export const atr72Spec = (p?: ParamValues): AirframeSpec => {
   const short = resolveParams([ATR_LENGTH, ...ATR.params], p).length === "42";
   const [l, span, at, base] = short ? [22.67, 24.57, 8.6, 8.78] : [27.17, 27.05, 10.6, 10.77];
@@ -48,7 +48,7 @@ export const atr72Spec = (p?: ParamValues): AirframeSpec => {
   }), ...chosen(ATR, p, [ATR_LENGTH]) };
 };
 
-const DASH8 = L("alaska", "airCanada", "sas");
+const DASH8 = /* @__PURE__ */ L("alaska", "airCanada", "sas");
 export const dhcDash8Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 32.81, H: 8.34, W: 2.69, D: 2.69, k: 0.95, nose: "blunt", ns: 1.1, tl: 8.5,
   span: 28.42, root: 3.1, tip: 1.3, sweep: 3, dih: 2.5, at: 13.0, pos: "high",
@@ -58,7 +58,7 @@ export const dhcDash8Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[5, 27, 0.8, 0.6, 0.14, 0.2]], doors: [3.5, 29.0],
 }), ...chosen(DASH8, p) });
 
-const TWIN_OTTER_GEAR = gearParam(["wheels", "Wheels"], ["floats", "Floats"], ["skis", "Skis"]);
+const TWIN_OTTER_GEAR = /* @__PURE__ */ gearParam(["wheels", "Wheels"], ["floats", "Floats"], ["skis", "Skis"]);
 export const dhcTwinOtterSpec = (p?: ParamValues): AirframeSpec => {
   const gear = gearOf(TWIN_OTTER_GEAR, p);
   const k = gear === "floats" ? 1.85 : gear === "skis" ? 0.67 : 0.55;
@@ -73,7 +73,7 @@ export const dhcTwinOtterSpec = (p?: ParamValues): AirframeSpec => {
   }), ...fixed(SCHEMES, "coastGuard") };
 };
 
-const BEAVER_GEAR = gearParam(["wheels", "Wheels"], ["floats", "Floats"]);
+const BEAVER_GEAR = /* @__PURE__ */ gearParam(["wheels", "Wheels"], ["floats", "Floats"]);
 export const dhcBeaverSpec = (p?: ParamValues): AirframeSpec => {
   const floats = gearOf(BEAVER_GEAR, p) === "floats";
   const k = floats ? 1.75 : 0.75;
@@ -88,7 +88,7 @@ export const dhcBeaverSpec = (p?: ParamValues): AirframeSpec => {
   }), ...fixed(SCHEMES, "bush") };
 };
 
-const SAAB340 = L("sas", "swissair", "finnair");
+const SAAB340 = /* @__PURE__ */ L("sas", "swissair", "finnair");
 export const saab340Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 19.73, H: 6.97, W: 2.31, D: 2.31, k: 0.8, nose: "blunt", ns: 1.2, tl: 6.5,
   span: 21.44, root: 3.1, tip: 1.3, sweep: 3, dih: 7, at: 7.8,
@@ -98,7 +98,7 @@ export const saab340Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[4, 15, 0.75, 0.6, 0.14, 0.18]], doors: [3.0],
 }), ...chosen(SAAB340, p) });
 
-const SAAB2000 = L("swissair", "swiss");
+const SAAB2000 = /* @__PURE__ */ L("swissair", "swiss");
 export const saab2000Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 27.28, H: 7.73, W: 2.31, D: 2.31, k: 0.95, nose: "blunt", ns: 1.3, tl: 7.5,
   span: 24.76, root: 3.2, tip: 1.2, sweep: 3, dih: 7, at: 10.5,
@@ -108,7 +108,7 @@ export const saab2000Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[4, 22, 0.75, 0.6, 0.14, 0.18]], doors: [3.0],
 }), ...chosen(SAAB2000, p) });
 
-const F27 = L("klm", "aerLingus", "sabena");
+const F27 = /* @__PURE__ */ L("klm", "aerLingus", "sabena");
 export const fokkerF27Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 23.56, H: 8.5, W: 2.7, D: 2.7, k: 0.95, nose: "blunt", tl: 7.5,
   span: 29.0, root: 3.45, tip: 1.4, sweep: 2, dih: 2.5, at: 9.0, pos: "high",
@@ -118,7 +118,7 @@ export const fokkerF27Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[4, 18, 0.9, 0.6, 0.2, 0.3]], doors: [3.0, 18.0],
 }), ...chosen(F27, p) });
 
-const F50 = L("klm", "sas", "austrian");
+const F50 = /* @__PURE__ */ L("klm", "sas", "austrian");
 export const fokker50Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 25.25, H: 8.32, W: 2.7, D: 2.7, k: 0.95, nose: "blunt", tl: 7.5,
   span: 29.0, root: 3.45, tip: 1.4, sweep: 2, dih: 2.5, at: 9.7, pos: "high",
@@ -128,7 +128,7 @@ export const fokker50Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[4, 19, 0.6, 0.6, 0.14, 0.2, "rect"]], doors: [3.0, 19.8],
 }), ...chosen(F50, p) });
 
-const EMB120 = L("delta", "united", "embraer");
+const EMB120 = /* @__PURE__ */ L("delta", "united", "embraer");
 export const embraerBrasiliaSpec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 20.0, H: 6.35, W: 2.28, D: 2.28, k: 0.85, nose: "blunt", ns: 1.2, tl: 6.5,
   span: 19.78, root: 2.6, tip: 1.2, sweep: 3, dih: 6.5, at: 7.8,
@@ -138,7 +138,7 @@ export const embraerBrasiliaSpec = (p?: ParamValues): AirframeSpec => ({ ...brie
   win: [[4, 15, 0.7, 0.6, 0.13, 0.17]], doors: [3.0, 16],
 }), ...chosen(EMB120, p) });
 
-const EMB110 = L("embraer", "navyBand");
+const EMB110 = /* @__PURE__ */ L("embraer", "navyBand");
 export const embraerBandeiranteSpec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 15.1, H: 4.92, W: 1.65, D: 1.65, k: 0.7, nose: "blunt", ns: 1.6, tl: 5.5, n: 28,
   span: 15.33, root: 2.0, tip: 1.4, sweep: 0, dih: 7, at: 5.8,
@@ -148,7 +148,7 @@ export const embraerBandeiranteSpec = (p?: ParamValues): AirframeSpec => ({ ...b
   win: [[4, 10, 0.8, 0.6, 0.15, 0.15, "rect"]], doors: [10.5],
 }), ...chosen(EMB110, p) });
 
-const L410 = L("csa", "aeroflot", "navyBand");
+const L410 = /* @__PURE__ */ L("csa", "aeroflot", "navyBand");
 export const letL410Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 14.42, H: 5.83, W: 2.08, D: 1.92, k: 0.65, nose: "blunt", ns: 1.2, tl: 5.5, corner: 0.35, n: 24,
   span: 19.98, root: 2.5, tip: 1.2, sweep: 0, dih: 1.75, at: 5.0, pos: "high",
@@ -158,7 +158,7 @@ export const letL410Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[4, 9.5, 0.65, 0.62, 0.2, 0.18, "rect"]], doors: [10.4],
 }), ...chosen(L410, p) });
 
-const MA60 = L("chinaSouthern", "garuda", "plain");
+const MA60 = /* @__PURE__ */ L("chinaSouthern", "garuda", "plain");
 export const xianMa60Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 24.71, H: 8.85, W: 2.9, D: 2.9, k: 0.95, nose: "blunt", tl: 7.5,
   span: 29.2, root: 3.4, tip: 1.45, sweep: 3, dih: 0, at: 9.5, pos: "high",
@@ -168,7 +168,7 @@ export const xianMa60Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[4, 18, 0.8, 0.6, 0.16, 0.16, "round"]], doors: [3.5, 19.5],
 }), ...chosen(MA60, p) });
 
-const AN24 = L("aeroflot", "interflug", "cubana");
+const AN24 = /* @__PURE__ */ L("aeroflot", "interflug", "cubana");
 export const antonovAn24Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 23.53, H: 8.32, W: 2.9, D: 2.9, k: 0.95, nose: "glazed", tl: 7.5,
   span: 29.2, root: 3.5, tip: 1.45, sweep: 3, dih: 0, at: 9.5, pos: "high",
@@ -178,7 +178,7 @@ export const antonovAn24Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[4, 17, 0.85, 0.6, 0.16, 0.16, "round"]], doors: [17.5],
 }), ...chosen(AN24, p) });
 
-const IL18 = L("aeroflot", "interflug", "csa");
+const IL18 = /* @__PURE__ */ L("aeroflot", "interflug", "csa");
 export const ilyushinIl18Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 35.9, H: 10.17, W: 3.5, D: 3.5, k: 1.25, nose: "blunt", ns: 1.2, tl: 9.5,
   span: 37.4, root: 5.6, tip: 1.8, sweep: 3, dih: 3, at: 12.5,
@@ -188,7 +188,7 @@ export const ilyushinIl18Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[5, 27, 0.9, 0.6, 0.16, 0.16, "round"]], doors: [5.0, 26],
 }), ...chosen(IL18, p) });
 
-const VISCOUNT = L("bea", "aerLingus", "lufthansa");
+const VISCOUNT = /* @__PURE__ */ L("bea", "aerLingus", "lufthansa");
 export const vickersViscountSpec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 26.11, H: 8.15, W: 3.0, D: 3.0, k: 1.15, nose: "blunt", ns: 1.1, tl: 8,
   span: 28.56, root: 4.6, tip: 1.6, sweep: 2, dih: 7, at: 9.0,
@@ -198,7 +198,7 @@ export const vickersViscountSpec = (p?: ParamValues): AirframeSpec => ({ ...brie
   win: [[4.5, 19, 1.1, 0.6, 0.3, 0.4]], doors: [3.3, 20],
 }), ...chosen(VISCOUNT, p) });
 
-const ELECTRA = L("eastern", "american", "klm");
+const ELECTRA = /* @__PURE__ */ L("eastern", "american", "klm");
 export const lockheedElectraSpec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 31.85, H: 10.0, W: 3.45, D: 3.45, k: 1.3, nose: "blunt", ns: 1.1, tl: 8.5,
   span: 30.18, root: 4.8, tip: 1.7, sweep: 0, dih: 6, at: 11.0,
@@ -211,7 +211,7 @@ export const lockheedElectraSpec = (p?: ParamValues): AirframeSpec => ({ ...brie
 // ---------------------------------------------------------------------------
 // Piston airliners
 
-const DC3 = L("american", "klm", "swissair");
+const DC3 = /* @__PURE__ */ L("american", "klm", "swissair");
 export const douglasDc3Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 19.7, H: 5.16, W: 2.35, D: 2.5, k: 1.35, nose: "blunt", ns: 1.15, tl: 8.5, ty: 0.68,
   span: 29.0, root: 4.4, tip: 1.3, sweep: 12, dih: 6, at: 5.6, thick: [0.16, 0.1],
@@ -221,7 +221,7 @@ export const douglasDc3Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[5.0, 13.0, 0.95, 0.6, 0.22, 0.18, "rect"]], doors: [14.5],
 }), ...chosen(DC3, p) });
 
-const DC6 = L("panAm", "sas", "sabena");
+const DC6 = /* @__PURE__ */ L("panAm", "sas", "sabena");
 export const douglasDc6Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 32.18, H: 8.74, W: 3.15, D: 3.15, k: 1.6, nose: "blunt", ns: 1.1, tl: 9,
   span: 35.81, root: 5.5, tip: 1.8, sweep: 5, dih: 6, at: 11.0,
@@ -231,7 +231,7 @@ export const douglasDc6Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[5, 25, 1.0, 0.6, 0.2, 0.2, "rect"]], doors: [25.5],
 }), ...chosen(DC6, p) });
 
-const CONNIE = L("twa", "lufthansa", "airFrance");
+const CONNIE = /* @__PURE__ */ L("twa", "lufthansa", "airFrance");
 export const lockheedConstellationSpec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 35.42, H: 7.54, W: 3.5, D: 3.5, k: 1.7, nose: "blunt", ns: 1.5, tl: 11, ty: 0.65,
   span: 37.49, root: 5.6, tip: 1.8, sweep: 5, dih: 7, at: 12.5,
@@ -241,7 +241,7 @@ export const lockheedConstellationSpec = (p?: ParamValues): AirframeSpec => ({ .
   win: [[5, 27, 0.9, 0.6, 0.18, 0.2, "rect"]], doors: [27],
 }), ...chosen(CONNIE, p) });
 
-const B377 = L("panAm", "boac", "united");
+const B377 = /* @__PURE__ */ L("panAm", "boac", "united");
 export const boeing377Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 33.63, H: 11.66, W: 3.0, D: 3.0, k: 1.6, nose: "blunt", ns: 1.1, tl: 9.5,
   hump: { start: 0.9, full: 6.5, end: 29, crown: 5.95, hw: 1.7 },
@@ -262,7 +262,7 @@ export const fordTrimotorSpec = (): AirframeSpec => ({ ...brief({
   win: [[4, 8.5, 0.7, 0.62, 0.22, 0.18, "rect"]], doors: [9.5],
 }), ...fixed(SCHEMES, "bareMetal") });
 
-const JU52 = L("bareMetal", "lufthansa");
+const JU52 = /* @__PURE__ */ L("bareMetal", "lufthansa");
 export const junkersJu52Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 18.9, H: 4.5, W: 1.95, D: 2.2, k: 1.0, nose: "cowl", tl: 8.5, ty: 0.6, corner: 0.2, n: 24,
   span: 29.25, root: 5.0, tip: 2.0, sweep: 5, dih: 4, at: 4.5, thick: [0.18, 0.12],
@@ -282,7 +282,7 @@ export const dhDragonRapideSpec = (): AirframeSpec => ({ ...brief({
   win: [[2.3, 5.3, 0.7, 0.65, 0.2, 0.16, "rect"]], doors: [6.3],
 }), ...fixed(SCHEMES, "vintage") });
 
-const ISLANDER = L("navyBand", "coastGuard", "plain");
+const ISLANDER = /* @__PURE__ */ L("navyBand", "coastGuard", "plain");
 export const bnIslanderSpec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 10.86, H: 4.18, W: 1.2, D: 1.3, k: 0.62, nose: "blunt", ns: 1.4, tl: 5.0, corner: 0.3, n: 24,
   span: 14.94, root: 2.03, tip: 2.03, sweep: 0, dih: 0, at: 3.6, pos: "high", thick: [0.15, 0.14],
@@ -295,7 +295,7 @@ export const bnIslanderSpec = (p?: ParamValues): AirframeSpec => ({ ...brief({
 // ---------------------------------------------------------------------------
 // Light aircraft and business turboprops
 
-const PC12 = L("rfds", "navyBand", "plain");
+const PC12 = /* @__PURE__ */ L("rfds", "navyBand", "plain");
 export const pilatusPc12Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 14.4, H: 4.26, W: 1.52, D: 1.6, k: 0.7, nose: "cowl", tl: 5.0, n: 28,
   span: 16.28, root: 2.3, tip: 1.2, sweep: 2, dih: 6, at: 5.4, dev: "blended", dh: 0.8,
@@ -315,7 +315,7 @@ export const cessna172Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   win: [[2.1, 3.3, 0.6, 0.75, 0.28, 0.2, "rect"]], doors: [],
 }), ...chosen(C172, p) });
 
-const CARAVAN_GEAR = gearParam(["wheels", "Wheels"], ["floats", "Amphibian floats"]);
+const CARAVAN_GEAR = /* @__PURE__ */ gearParam(["wheels", "Wheels"], ["floats", "Amphibian floats"]);
 export const cessnaCaravanSpec = (p?: ParamValues): AirframeSpec => {
   const floats = gearOf(CARAVAN_GEAR, p) === "floats";
   const k = floats ? 1.95 : 0.85;
@@ -351,7 +351,7 @@ export const beechKingAirSpec = (p?: ParamValues): AirframeSpec => ({ ...brief({
 // ---------------------------------------------------------------------------
 // Freighters
 
-const AN124 = L("antonov", "volgaDnepr");
+const AN124 = /* @__PURE__ */ L("antonov", "volgaDnepr");
 export const antonovAn124Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 69.1, H: 20.78, W: 7.3, D: 7.6, k: 1.4, nose: "airliner", ns: 0.9, tl: 18, ty: 0.78,
   span: 73.3, root: 15.5, kink: [0.3, 9.5], tip: 3.0, sweep: 35, dih: -3, at: 24.0, pos: "shoulder",
@@ -372,7 +372,7 @@ export const antonovAn225Spec = (): AirframeSpec => ({ ...brief({
   win: [[8, 20, 1.5, 0.92, 0.12, 0.12, "round"]], doors: [6.5, 50],
 }), ...fixed(SCHEMES, "antonov") });
 
-const AN2_GEAR = gearParam(["wheels", "Wheels"], ["floats", "Floats"]);
+const AN2_GEAR = /* @__PURE__ */ gearParam(["wheels", "Wheels"], ["floats", "Floats"]);
 export const antonovAn2Spec = (p?: ParamValues): AirframeSpec => {
   const floats = gearOf(AN2_GEAR, p) === "floats";
   const k = floats ? 2.25 : 1.1;
@@ -388,7 +388,7 @@ export const antonovAn2Spec = (p?: ParamValues): AirframeSpec => {
   }), ...fixed(SCHEMES, "aeroflot") };
 };
 
-const L100 = L("plain", "navyBand", "saa");
+const L100 = /* @__PURE__ */ L("plain", "navyBand", "saa");
 export const lockheedL100Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 34.37, H: 11.66, W: 4.3, D: 4.3, k: 0.9, nose: "blunt", ns: 0.95, tl: 12, ty: 0.85,
   span: 40.41, root: 4.9, tip: 2.5, sweep: 2, dih: 2.5, at: 11.5, pos: "high",
@@ -483,7 +483,7 @@ function belugaSmile(m: MeshBuilder, g: Geometry): void {
 // ---------------------------------------------------------------------------
 // Flying boats and amphibians
 
-const CL415 = L("firefighter", "coastGuard");
+const CL415 = /* @__PURE__ */ L("firefighter", "coastGuard");
 export const canadairCl415Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 19.82, H: 8.98, W: 2.6, D: 2.8, k: 0.75, nose: "boat", tl: 8, hull: 0.5,
   span: 28.6, root: 3.9, tip: 3.6, sweep: 0, dih: 0, at: 6.5, pos: "high",
@@ -607,7 +607,7 @@ const entry = ([id, title, spec, build, buildLod, params, game]: Entry): WorldAi
   game, references: id.replace(/^veh-/, ""),
 });
 
-export const WORLD_PROP_SPECS: readonly WorldAircraft[] = ([
+export const WORLD_PROP_SPECS: readonly WorldAircraft[] = /* @__PURE__ */ ([
   ["veh-namc-ys11", "NAMC YS-11", namcYs11Spec, namcYs11, namcYs11Lod, YS11.params, air(24.5, 4540, 470, "medium", 0.3)],
   ["veh-atr-72", "ATR 72-600", atr72Spec, atr72, atr72Lod, [ATR_LENGTH, ...ATR.params], air(23, 3700, 510, "medium", 0.5, [{ params: { length: "42" }, weight: 18.6, power: 3000 }])],
   ["veh-dhc-dash8", "De Havilland Canada Dash 8 Q400", dhcDash8Spec, dhcDash8, dhcDash8Lod, DASH8.params, air(29.3, 7560, 667, "medium", 0.55)],
@@ -649,4 +649,4 @@ export const WORLD_PROP_SPECS: readonly WorldAircraft[] = ([
   ["veh-boeing-314", "Boeing 314 Clipper", boeing314Spec, boeing314, boeing314Lod, null, air(38.1, 4470, 296, "medium", 0.4)],
 ] as Entry[]).map(entry);
 
-export const WORLD_PROPS = aircraftDesigns(WORLD_PROP_SPECS);
+export const WORLD_PROPS = /* @__PURE__ */ aircraftDesigns(WORLD_PROP_SPECS);

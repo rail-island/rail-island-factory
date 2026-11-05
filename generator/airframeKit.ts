@@ -713,7 +713,7 @@ function drawGear(m: MeshBuilder, g: Geometry): void {
       } else wheel(m, "z", z - width / 2, z + width / 2, [a, y], l.r, l.r * 0.45, "alloy", tyreN);
       if (gs.kind === "skis") m.scope("ski", () => {
         const len = l.r * 4.2;
-        plate(m, "metalGrey", [a, 0.07, z], [1, 0, 0], [0, 0, 1], [[-len * 0.45, -width * 0.9], [len * 0.4, -width * 0.9], [len * 0.55, -width * 0.6], [len * 0.55, width * 0.6], [len * 0.4, width * 0.9], [-len * 0.45, width * 0.9]], 0.06);
+        plate(m, "metalGrey", [a, 0.06, z], [1, 0, 0], [0, 0, 1], [[-len * 0.45, -width * 0.9], [len * 0.4, -width * 0.9], [len * 0.55, -width * 0.6], [len * 0.55, width * 0.6], [len * 0.4, width * 0.9], [-len * 0.45, width * 0.9]], 0.06);
       });
     }
     if (gs.spats) m.scope("spat", () => pod(m, matOfCowl(g), xg, z, y + l.r * 0.15, [[-l.r * 1.6, l.r * 0.25], [-l.r * 0.6, width * 0.9], [l.r * 0.5, width * 0.95], [l.r * 1.3, width * 0.5]], 8));
@@ -1029,7 +1029,7 @@ export function airframeLod(spec: AirframeSpec): MeshBuilder {
       for (const leg of [...(gs.nose ? [gs.nose] : []), ...gs.mains]) for (const side of leg.z === 0 ? [1] : [-1, 1]) {
         const z = side * leg.z;
         const xg = g.x(leg.d);
-        lodAxleWheel(m, "tyre", "z", xg, leg.r, leg.r, z - leg.r * 0.25, z + leg.r * 0.25 * (z === 0 ? 1 : 1), 6);
+        lodAxleWheel(m, "darkGrey", "z", xg, leg.r, leg.r, z - leg.r * 0.25, z + leg.r * 0.25 * (z === 0 ? 1 : 1), 6);
       }
     } });
     parts.push({ optional: 2, draw: (m) => {

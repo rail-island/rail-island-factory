@@ -10,7 +10,7 @@ import { airship, airshipLod, rotorcraft, rotorcraftLod, type AirshipSpec, type 
 import { colourSchemes, COLOURS, schemes } from "./airlineSchemes.ts";
 import { air, aircraftDesigns, chosen, liveries, type WorldAircraft } from "./worldAircraft.ts";
 
-const S92 = liveries(schemes("offshore", "rescue"));
+const S92 = /* @__PURE__ */ liveries(schemes("offshore", "rescue"));
 export const sikorskyS92Spec = (p?: ParamValues): RotorSpec => ({
   length: 17.1, height: 4.95, width: 2.1, depth: 2.05, keel: 0.55, noseLen: 1.7, podLen: 10.8,
   boom: { r0: 0.75, r1: 0.35, y: 3.0 },
@@ -24,7 +24,7 @@ export const sikorskyS92Spec = (p?: ParamValues): RotorSpec => ({
   ...chosen(S92, p),
 });
 
-const H145 = liveries(schemes("airAmbulance", "police"));
+const H145 = /* @__PURE__ */ liveries(schemes("airAmbulance", "police"));
 export const airbusH145Spec = (p?: ParamValues): RotorSpec => ({
   length: 11.64, height: 3.96, width: 1.73, depth: 1.7, keel: 0.55, noseLen: 1.25, podLen: 6.6,
   boom: { r0: 0.45, r1: 0.25, y: 2.35 },
@@ -37,7 +37,7 @@ export const airbusH145Spec = (p?: ParamValues): RotorSpec => ({
   ...chosen(H145, p),
 });
 
-const MI8 = liveries(schemes("aeroflot", "utair"));
+const MI8 = /* @__PURE__ */ liveries(schemes("aeroflot", "utair"));
 export const milMi8Spec = (p?: ParamValues): RotorSpec => ({
   length: 18.17, height: 5.65, width: 2.5, depth: 2.4, keel: 0.6, noseLen: 1.9, podLen: 12.0,
   boom: { r0: 0.7, r1: 0.35, y: 3.1 },
@@ -51,7 +51,7 @@ export const milMi8Spec = (p?: ParamValues): RotorSpec => ({
   ...chosen(MI8, p),
 });
 
-const B206 = liveries(colourSchemes(...COLOURS), "colour", "Colour");
+const B206 = /* @__PURE__ */ liveries(colourSchemes(...COLOURS), "colour", "Colour");
 export const bell206Spec = (p?: ParamValues): RotorSpec => ({
   length: 9.5, height: 2.91, width: 1.3, depth: 1.45, keel: 0.6, noseLen: 1.15, podLen: 4.4,
   boom: { r0: 0.35, r1: 0.18, y: 1.85 },
@@ -64,7 +64,7 @@ export const bell206Spec = (p?: ParamValues): RotorSpec => ({
   ...chosen(B206, p),
 });
 
-const ZEPPELIN = liveries(schemes("zeppelin", "goodyear"));
+const ZEPPELIN = /* @__PURE__ */ liveries(schemes("zeppelin", "goodyear"));
 export const zeppelinNtSpec = (p?: ParamValues): AirshipSpec => ({
   length: 75.1, diameter: 14.16, axisY: 9.83, gondola: { d0: 20.5, d1: 31.5, hw: 1.3, h: 2.6 },
   fins: { root: 9.0, tip: 6.0, span: 4.6, at: 61.0 }, props: { d: 27.5, r: 1.35, stern: 1.5 },
@@ -97,4 +97,4 @@ export const ROTOR_SPECS: Record<string, (p?: ParamValues) => RotorSpec> = {
   "veh-sikorsky-s92": sikorskyS92Spec, "veh-airbus-h145": airbusH145Spec, "veh-mil-mi8": milMi8Spec, "veh-bell-206": bell206Spec,
 };
 
-export const WORLD_ROTORCRAFT = aircraftDesigns(WORLD_ROTORCRAFT_SPECS);
+export const WORLD_ROTORCRAFT = /* @__PURE__ */ aircraftDesigns(WORLD_ROTORCRAFT_SPECS);
