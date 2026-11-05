@@ -63,6 +63,8 @@ export interface HullForm {
   rudder?: boolean;
   /** The bulb of a bulbous bow, as a fraction of the beam (default 0.16). */
   bulb?: number;
+  /** A hydrofoil's hull stands this high on its foils: the keel at y = lift, the waterline (draft) still from y = 0. */
+  lift?: number;
 }
 
 /** A row of windows on a tier: height above its base, pane height and width, pitch; along u from..to (default the tier's length). */
@@ -112,7 +114,7 @@ export type Item =
   | { k: "hatches"; u: readonly [number, number]; n: number; hw: number; y: number; h: number; mat?: string; gap?: number; name?: string }
   | { k: "containers"; u: readonly [number, number]; bays: number; hw: number; y: number; tiers: number; groups?: number; seed?: number; name?: string }
   | { k: "domes"; u: readonly [number, number]; n: number; r: number; y: number; h: number; mat?: string; z?: number; name?: string }
-  | { k: "spheres"; u: readonly [number, number]; n: number; r: number; y: number; mat?: string; cover?: string; name?: string }
+  | { k: "spheres"; u: readonly [number, number]; n: number; r: number; y: number; base?: number; mat?: string; cover?: string; name?: string }
   | { k: "tanks"; u: readonly [number, number]; n: number; r: number; y: number; z?: readonly number[]; mat?: string; name?: string }
   | { k: "pipes"; u: readonly [number, number]; z: readonly number[]; y: number; r: number; mat?: string; name?: string }
   | { k: "helideck"; u: number; y: number; r: number; z?: number; legs?: number; name?: string }
@@ -522,7 +524,9 @@ export function hullGeometry(f: HullForm): HullGeometry {
   if (f.forecastle) for (const d of [-0.05, 0.6]) add(L - f.forecastle[0] - 0.6 + d + 0.05);
   if (f.poop) for (const d of [-0.05, 0.6]) add(f.poop[0] + 0.6 - d - 0.05);
   const stations = [...st].sort((a, b) => a - b);
-  return { form: f, L, plan, keel, deck, halfBeam, stations, centres };
+  const lift = f.lift ?? 0;
+  if (!lift) return { form: f, L, plan, keel, deck, halfBeam, stations, centres };
+  return { form: f, L, plan, keel: (u) => keel(u) + lift, deck: (u) => deck(u) + lift, halfBeam: (u, y) => halfBeam(u, y - lift), stations, centres };
 }
 
 // --- the build context -------------------------------------------------------------
@@ -611,10 +615,11 @@ function drawSternGear(c: ShipCtx, f: HullForm, zc: number): void {
   const L = f.length;
   if (f.stern === "canoe" || f.stern === "sternwheel" || f.rudder === false) return;
   const hull = c.hull!;
-  const ur = L * 0.012;
+  const chord = Math.max(0.3, f.draft * 0.5);
+  // the rudder's after edge just inside the stern
+  const ur = Math.max(L * 0.012, chord / 2 + 0.05);
   const top = Math.min(hull.keel(ur) + 0.05, f.draft * 1.1);
   const h = Math.max(0.3, top - f.draft * 0.12);
-  const chord = Math.max(0.3, f.draft * 0.5);
   const t = Math.max(0.06, f.beam * 0.012);
   m.scope("rudder", () => m.box("bottom", c.x(ur), zc, chord, t, top - h, top));
   const n = f.screws ?? (c.spec.kind === "small" || c.spec.kind === "sail" ? 0 : 1);
@@ -874,7 +879,7 @@ function drawItem(c: ShipCtx, it: Item, i: number): void {
           const rings = st.map(([y, r]) => [y, ngon(16, r, 0, x(u), 0)] as const);
           for (let j = 0; j + 1 < rings.length; j++) m.loft(it.mat ?? "tank", rings[j]![1], rings[j]![0], rings[j + 1]![1], rings[j + 1]![0], j + 2 === rings.length);
           // the skirt down to the deck, in the cover colour
-          m.prism(it.cover ?? it.mat ?? "tank", ngon(16, it.r * 1.02, 0, x(u), 0), c.deck(u) - 0.2, it.y - 0.01, true);
+          m.prism(it.cover ?? it.mat ?? "tank", ngon(16, it.r * 1.02, 0, x(u), 0), it.base ?? c.deck(u) - 0.2, it.y - 0.01, true);
         }
       });
       return;
@@ -1234,7 +1239,7 @@ function lodHull(c: ShipCtx): LodPrim[] {
   };
   return hull.centres.map((zc) => ({
     tris: 1000, weight: Infinity,
-    draw: (m: MeshBuilder) => m.scope("hull", () => lodStack(m, [0.0, f.draft, deckY].map((y) => [y, ring(y, zc)] as const), ["bottom", "hull"], "deck")),
+    draw: (m: MeshBuilder) => m.scope("hull", () => lodStack(m, [f.lift ?? 0, f.draft, deckY].map((y) => [y, ring(y, zc)] as const), ["bottom", "hull"], "deck")),
   }));
 }
 

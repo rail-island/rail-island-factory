@@ -162,31 +162,49 @@
     "proc-vehicle-shinkansen-e6": 146,
     "proc-vehicle-shinkansen-n700s": 142,
     "proc-vehicle-ship-aframax": 194,
+    "proc-vehicle-ship-amazon-riverboat": 257,
+    "proc-vehicle-ship-amsterdam-ijveer": 243,
     "proc-vehicle-ship-anchor-handler": 229,
     "proc-vehicle-ship-arktika": 224,
     "proc-vehicle-ship-attenborough": 226,
+    "proc-vehicle-ship-bateau-mouche": 255,
+    "proc-vehicle-ship-bc-spirit": 237,
+    "proc-vehicle-ship-bosphorus-vapur": 241,
     "proc-vehicle-ship-cable-layer": 216,
     "proc-vehicle-ship-capesize": 200,
+    "proc-vehicle-ship-channel-ropax": 246,
     "proc-vehicle-ship-chemical-tanker": 199,
     "proc-vehicle-ship-crane-vessel": 230,
     "proc-vehicle-ship-drillship": 231,
+    "proc-vehicle-ship-elbe-paddle": 254,
     "proc-vehicle-ship-emma-maersk": 187,
     "proc-vehicle-ship-europaschiff": 211,
+    "proc-vehicle-ship-expedition-cruise": 265,
     "proc-vehicle-ship-feeder-container": 190,
     "proc-vehicle-ship-fireboat": 232,
     "proc-vehicle-ship-handysize": 202,
     "proc-vehicle-ship-harbour-tug": 218,
     "proc-vehicle-ship-heavy-lift": 207,
     "proc-vehicle-ship-hopper-dredger": 227,
+    "proc-vehicle-ship-hurtigruten": 258,
+    "proc-vehicle-ship-icon": 260,
     "proc-vehicle-ship-ideal-x": 191,
+    "proc-vehicle-ship-incat": 245,
+    "proc-vehicle-ship-jetfoil": 251,
+    "proc-vehicle-ship-jp-overnight-ferry": 248,
     "proc-vehicle-ship-laker": 203,
     "proc-vehicle-ship-liberty": 209,
     "proc-vehicle-ship-lng-moss": 196,
     "proc-vehicle-ship-lng-qmax": 197,
     "proc-vehicle-ship-lobster-boat": 223,
     "proc-vehicle-ship-lpg-carrier": 198,
+    "proc-vehicle-ship-manly-freshwater": 240,
     "proc-vehicle-ship-msc-gulsun": 188,
+    "proc-vehicle-ship-nile-cruiser": 256,
+    "proc-vehicle-ship-normandie": 264,
+    "proc-vehicle-ship-oasis": 259,
     "proc-vehicle-ship-ocean-tug": 217,
+    "proc-vehicle-ship-olympic": 262,
     "proc-vehicle-ship-panamax-container": 189,
     "proc-vehicle-ship-pctc": 205,
     "proc-vehicle-ship-pilot-boat": 234,
@@ -194,21 +212,35 @@
     "proc-vehicle-ship-product-tanker": 195,
     "proc-vehicle-ship-purse-seiner": 221,
     "proc-vehicle-ship-push-barge": 213,
+    "proc-vehicle-ship-queen-mary-2": 261,
+    "proc-vehicle-ship-raketa": 250,
     "proc-vehicle-ship-reefer": 208,
     "proc-vehicle-ship-rhine-tanker": 212,
+    "proc-vehicle-ship-river-cruise": 266,
     "proc-vehicle-ship-rnli-shannon": 233,
     "proc-vehicle-ship-roro": 206,
     "proc-vehicle-ship-seawise-giant": 193,
     "proc-vehicle-ship-self-unloader": 204,
     "proc-vehicle-ship-shrimp-trawler": 222,
+    "proc-vehicle-ship-srn4": 249,
+    "proc-vehicle-ship-ss-united-states": 263,
+    "proc-vehicle-ship-star-ferry": 236,
+    "proc-vehicle-ship-staten-island": 235,
+    "proc-vehicle-ship-stena-hss": 244,
     "proc-vehicle-ship-stern-trawler": 220,
+    "proc-vehicle-ship-sternwheeler": 253,
     "proc-vehicle-ship-supply-vessel": 228,
+    "proc-vehicle-ship-swiss-paddle": 252,
+    "proc-vehicle-ship-sydney-first-fleet": 239,
+    "proc-vehicle-ship-tallink-megastar": 247,
     "proc-vehicle-ship-towboat": 219,
     "proc-vehicle-ship-triple-e": 186,
     "proc-vehicle-ship-valemax": 201,
+    "proc-vehicle-ship-vaporetto": 242,
     "proc-vehicle-ship-victory": 210,
     "proc-vehicle-ship-vlcc": 192,
     "proc-vehicle-ship-volga-don": 215,
+    "proc-vehicle-ship-wsf-jumbo": 238,
     "proc-vehicle-ship-yangtze-cargo": 214,
     "proc-vehicle-siemens-alc42": 126,
     "proc-vehicle-skoda-14tr": 176,
@@ -2058,6 +2090,22 @@
         "id": 376,
         "size": 4
       },
+      "proc-vehicle-ship-amazon-riverboat?": {
+        "id": 720,
+        "size": 4
+      },
+      "proc-vehicle-ship-amazon-riverboat?colour=green": {
+        "id": 724,
+        "size": 4
+      },
+      "proc-vehicle-ship-amazon-riverboat?colour=red": {
+        "id": 728,
+        "size": 4
+      },
+      "proc-vehicle-ship-amsterdam-ijveer?": {
+        "id": 640,
+        "size": 4
+      },
       "proc-vehicle-ship-anchor-handler?": {
         "id": 584,
         "size": 4
@@ -2070,6 +2118,18 @@
         "id": 564,
         "size": 4
       },
+      "proc-vehicle-ship-bateau-mouche?": {
+        "id": 712,
+        "size": 4
+      },
+      "proc-vehicle-ship-bc-spirit?": {
+        "id": 616,
+        "size": 4
+      },
+      "proc-vehicle-ship-bosphorus-vapur?": {
+        "id": 632,
+        "size": 4
+      },
       "proc-vehicle-ship-cable-layer?": {
         "id": 500,
         "size": 4
@@ -2080,6 +2140,18 @@
       },
       "proc-vehicle-ship-capesize?livery=red": {
         "id": 412,
+        "size": 4
+      },
+      "proc-vehicle-ship-channel-ropax?": {
+        "id": 660,
+        "size": 4
+      },
+      "proc-vehicle-ship-channel-ropax?livery=red": {
+        "id": 668,
+        "size": 4
+      },
+      "proc-vehicle-ship-channel-ropax?livery=white": {
+        "id": 664,
         "size": 4
       },
       "proc-vehicle-ship-chemical-tanker?": {
@@ -2098,6 +2170,10 @@
         "id": 592,
         "size": 4
       },
+      "proc-vehicle-ship-elbe-paddle?": {
+        "id": 708,
+        "size": 4
+      },
       "proc-vehicle-ship-emma-maersk?": {
         "id": 328,
         "size": 4
@@ -2108,6 +2184,10 @@
       },
       "proc-vehicle-ship-europaschiff?load=empty": {
         "id": 480,
+        "size": 4
+      },
+      "proc-vehicle-ship-expedition-cruise?": {
+        "id": 760,
         "size": 4
       },
       "proc-vehicle-ship-feeder-container?": {
@@ -2146,8 +2226,44 @@
         "id": 568,
         "size": 4
       },
+      "proc-vehicle-ship-hurtigruten?": {
+        "id": 732,
+        "size": 4
+      },
+      "proc-vehicle-ship-icon?": {
+        "id": 740,
+        "size": 4
+      },
       "proc-vehicle-ship-ideal-x?": {
         "id": 352,
+        "size": 4
+      },
+      "proc-vehicle-ship-incat?": {
+        "id": 648,
+        "size": 4
+      },
+      "proc-vehicle-ship-incat?livery=blue": {
+        "id": 652,
+        "size": 4
+      },
+      "proc-vehicle-ship-incat?livery=red": {
+        "id": 656,
+        "size": 4
+      },
+      "proc-vehicle-ship-jetfoil?": {
+        "id": 688,
+        "size": 4
+      },
+      "proc-vehicle-ship-jetfoil?livery=green": {
+        "id": 696,
+        "size": 4
+      },
+      "proc-vehicle-ship-jetfoil?livery=red": {
+        "id": 692,
+        "size": 4
+      },
+      "proc-vehicle-ship-jp-overnight-ferry?": {
+        "id": 676,
         "size": 4
       },
       "proc-vehicle-ship-laker?": {
@@ -2186,8 +2302,24 @@
         "id": 396,
         "size": 4
       },
+      "proc-vehicle-ship-manly-freshwater?": {
+        "id": 628,
+        "size": 4
+      },
       "proc-vehicle-ship-msc-gulsun?": {
         "id": 332,
+        "size": 4
+      },
+      "proc-vehicle-ship-nile-cruiser?": {
+        "id": 716,
+        "size": 4
+      },
+      "proc-vehicle-ship-normandie?": {
+        "id": 756,
+        "size": 4
+      },
+      "proc-vehicle-ship-oasis?": {
+        "id": 736,
         "size": 4
       },
       "proc-vehicle-ship-ocean-tug?": {
@@ -2196,6 +2328,10 @@
       },
       "proc-vehicle-ship-ocean-tug?livery=red": {
         "id": 508,
+        "size": 4
+      },
+      "proc-vehicle-ship-olympic?": {
+        "id": 748,
         "size": 4
       },
       "proc-vehicle-ship-panamax-container?": {
@@ -2242,6 +2378,14 @@
         "id": 488,
         "size": 4
       },
+      "proc-vehicle-ship-queen-mary-2?": {
+        "id": 744,
+        "size": 4
+      },
+      "proc-vehicle-ship-raketa?": {
+        "id": 684,
+        "size": 4
+      },
       "proc-vehicle-ship-reefer?": {
         "id": 460,
         "size": 4
@@ -2252,6 +2396,18 @@
       },
       "proc-vehicle-ship-rhine-tanker?": {
         "id": 484,
+        "size": 4
+      },
+      "proc-vehicle-ship-river-cruise?": {
+        "id": 764,
+        "size": 4
+      },
+      "proc-vehicle-ship-river-cruise?livery=red": {
+        "id": 772,
+        "size": 4
+      },
+      "proc-vehicle-ship-river-cruise?livery=white": {
+        "id": 768,
         "size": 4
       },
       "proc-vehicle-ship-rnli-shannon?": {
@@ -2278,12 +2434,36 @@
         "id": 540,
         "size": 4
       },
+      "proc-vehicle-ship-srn4?": {
+        "id": 680,
+        "size": 4
+      },
+      "proc-vehicle-ship-ss-united-states?": {
+        "id": 752,
+        "size": 4
+      },
+      "proc-vehicle-ship-star-ferry?": {
+        "id": 612,
+        "size": 4
+      },
+      "proc-vehicle-ship-staten-island?": {
+        "id": 608,
+        "size": 4
+      },
+      "proc-vehicle-ship-stena-hss?": {
+        "id": 644,
+        "size": 4
+      },
       "proc-vehicle-ship-stern-trawler?": {
         "id": 528,
         "size": 4
       },
       "proc-vehicle-ship-stern-trawler?livery=blue": {
         "id": 532,
+        "size": 4
+      },
+      "proc-vehicle-ship-sternwheeler?": {
+        "id": 704,
         "size": 4
       },
       "proc-vehicle-ship-supply-vessel?": {
@@ -2296,6 +2476,18 @@
       },
       "proc-vehicle-ship-supply-vessel?livery=orange": {
         "id": 580,
+        "size": 4
+      },
+      "proc-vehicle-ship-swiss-paddle?": {
+        "id": 700,
+        "size": 4
+      },
+      "proc-vehicle-ship-sydney-first-fleet?": {
+        "id": 624,
+        "size": 4
+      },
+      "proc-vehicle-ship-tallink-megastar?": {
+        "id": 672,
         "size": 4
       },
       "proc-vehicle-ship-towboat?": {
@@ -2312,6 +2504,10 @@
       },
       "proc-vehicle-ship-valemax?": {
         "id": 416,
+        "size": 4
+      },
+      "proc-vehicle-ship-vaporetto?": {
+        "id": 636,
         "size": 4
       },
       "proc-vehicle-ship-victory?": {
@@ -2332,6 +2528,10 @@
       },
       "proc-vehicle-ship-volga-don?": {
         "id": 496,
+        "size": 4
+      },
+      "proc-vehicle-ship-wsf-jumbo?": {
+        "id": 620,
         "size": 4
       },
       "proc-vehicle-ship-yangtze-cargo?": {

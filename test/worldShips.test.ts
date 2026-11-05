@@ -68,7 +68,7 @@ describe("the world ships", () => {
         expect(lo[1]).toBeCloseTo(0, 5);
         if (spec.hull) {
           // the hull: as long as the ship (its spars aside), as wide as its beam
-          const hull = cornersOf(m, "hull");
+          const hull = ["bottom", "boot", "hull", "stripe"].flatMap((mat) => cornersOf(m, mat));
           const [hl, hh] = bounds(hull);
           expect(hh[0]! - hl[0]!, "length").toBeCloseTo(spec.hull.length, 0);
           expect(hh[2]! - hl[2]!, "beam").toBeLessThanOrEqual(spec.hull.beam + 0.05);

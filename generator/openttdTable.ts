@@ -564,4 +564,37 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-ship-fireboat": pax(1938, 30, null, { presets: presets() }), // approx.
   "proc-vehicle-ship-rnli-shannon": pax(2014, 20, null, { presets: presets() }), // approx.
   "proc-vehicle-ship-pilot-boat": pax(2010, 12, null, { presets: presets() }), // approx.
+  // passenger ships: seats and berths (a car ferry's cars aside)
+  "proc-vehicle-ship-staten-island": pax(2004, 4_427, null, { presets: presets() }),
+  "proc-vehicle-ship-star-ferry": pax(1958, 560, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-bc-spirit": pax(1993, 2_100, null, { presets: presets() }),
+  "proc-vehicle-ship-wsf-jumbo": pax(1997, 2_500, null, { presets: presets() }),
+  "proc-vehicle-ship-sydney-first-fleet": pax(1984, 393, null, { presets: presets() }),
+  "proc-vehicle-ship-manly-freshwater": pax(1982, 1_100, null, { presets: presets() }),
+  "proc-vehicle-ship-bosphorus-vapur": pax(1960, 1_500, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-vaporetto": pax(1960, 230, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-amsterdam-ijveer": pax(2000, 400, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-stena-hss": pax(1996, 1_500, null, { presets: presets() }),
+  "proc-vehicle-ship-incat": pax(1990, 900, null, { presets: presets(...each("livery", "blue", "red")) }), // approx.
+  "proc-vehicle-ship-channel-ropax": pax(2011, 2_000, null, { presets: presets(...each("livery", "white", "red")) }),
+  "proc-vehicle-ship-tallink-megastar": pax(2017, 2_800, null, { presets: presets() }),
+  "proc-vehicle-ship-jp-overnight-ferry": pax(2017, 700, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-srn4": pax(1968, 418, null, { presets: presets() }),
+  "proc-vehicle-ship-raketa": pax(1957, 64, null, { presets: presets() }),
+  "proc-vehicle-ship-jetfoil": pax(1975, 260, null, { presets: presets(...each("livery", "red", "green")) }),
+  "proc-vehicle-ship-swiss-paddle": pax(1928, 1_200, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-sternwheeler": pax(1975, 400, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-elbe-paddle": pax(1926, 600, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-bateau-mouche": pax(1960, 600, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-nile-cruiser": pax(1990, 130, null, { presets: presets() }), // approx.
+  "proc-vehicle-ship-amazon-riverboat": pax(1990, 300, null, { presets: presets(...each("colour", "green", "red")) }), // approx.
+  "proc-vehicle-ship-hurtigruten": pax(1993, 590, null, { presets: presets() }),
+  "proc-vehicle-ship-oasis": pax(2009, 6_780, null, { presets: presets() }),
+  "proc-vehicle-ship-icon": pax(2024, 7_600, null, { presets: presets() }),
+  "proc-vehicle-ship-queen-mary-2": pax(2004, 2_695, null, { presets: presets() }),
+  "proc-vehicle-ship-olympic": pax(1911, 2_435, null, { presets: presets() }),
+  "proc-vehicle-ship-ss-united-states": pax(1952, 1_928, null, { presets: presets() }),
+  "proc-vehicle-ship-normandie": pax(1935, 1_972, null, { presets: presets() }),
+  "proc-vehicle-ship-expedition-cruise": pax(2019, 530, null, { presets: presets() }),
+  "proc-vehicle-ship-river-cruise": pax(2010, 190, null, { presets: presets(...each("livery", "white", "red")) }), // approx.
 };
