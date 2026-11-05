@@ -12,3 +12,15 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 |---|---|---|---|---|---|
 | `photo-scania-g410-man-tgl-12-220-rwg-westerstede-klamperesch-2023.jpg` | Scania G410 & MAN TGL 12.220, RWG Westerstede-Klamperesch (2023).jpg | https://commons.wikimedia.org/wiki/File:Scania_G410_%26_MAN_TGL_12.220,_RWG_Westerstede-Klamperesch_(2023).jpg | JoachimKohler-HB | CC BY-SA 4.0 | shape, proportions and colours |
 | `photo-man-tgl-lenz-abschleppdienst.jpg` | MAN TGL Lenz Abschleppdienst.jpg | https://commons.wikimedia.org/wiki/File:MAN_TGL_Lenz_Abschleppdienst.jpg | Reise Reise | CC BY-SA 4.0 | shape, proportions and colours |
+
+## Published figures
+
+From the maker's data and the Wikipedia article on the type; figures marked approx. are estimates read off
+the photographs or taken from a sister model, and the dimensions are those of the modelled configuration.
+
+- In service from: 2005
+- Length over the combination at the defaults: 7.7 m (approx.); cab width 2.24 m; height 3.55 m (approx.)
+- Axle layout: 4x2, 1 steered axle; wheelbase about 3.70 m (approx.); tyre diameter about 0.88 m (approx.)
+- Trailers: none
+- Engine power: 132 kW; top speed 90 km/h; gross weight 12 t (approx.)
+- Payload: 5 t (approx.)
