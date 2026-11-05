@@ -203,7 +203,8 @@ export const COMBINO_PARAMS: readonly ParamSpec[] = [
 const COMBINO_STACK: WorldTramSpec["paint"] = [[0.62, "skirt"], [0.78, "band"], [2.95, "body"], [3.6, "top"]];
 
 const COMBINO_COLORS: Record<string, { colors: Record<string, string>; paint: WorldTramSpec["paint"] }> = {
-  basel: { colors: { skirt: "#1c7a3e", band: "#1c7a3e", body: "#1c7a3e", top: "#f2f2ee" }, paint: COMBINO_STACK },
+  // BVB green with a white stripe (the photographed car)
+  basel: { colors: { skirt: "#4cb04a", band: "#f2f2ee", body: "#4cb04a", top: "#4cb04a" }, paint: COMBINO_STACK },
   amsterdam: { colors: { skirt: "#1e3f8c", band: "#d3242c", body: "#f2f2ee", top: "#f2f2ee" }, paint: COMBINO_STACK },
   freiburg: { colors: { skirt: "#d3242c", band: "#d3242c", body: "#f2f2ee", top: "#f2f2ee" }, paint: COMBINO_STACK },
 };
@@ -926,7 +927,7 @@ export function triesteOpicinaSpec(): WorldTramSpec {
     collector: diamond(5.5, 1.05),
     colors: { body: "#1d4f9c", upper: "#efe6cf" },
     paint: [[1.5, "body"], [3.5, "upper"]],
-    over: { extra: pusherPlate(10.82), extraFeatures: ["pusher-buffer"] },
+    over: { extra: pusherPlate(10.82) },
   });
 }
 

@@ -994,7 +994,6 @@ export function tramFeatures(s: WorldTramSpec, params: readonly string[]): strin
     ...(s.trailer ? ["trailer"] : []),
     ...(s.skirted ? ["skirted"] : []),
     ...(s.roofBoxes?.length ? ["roof-boxes"] : []),
-    ...(s.gauge !== 1435 ? ["gauge:other"] : ["gauge:standard"]),
     ...(s.extraFeatures ?? []),
     ...params.map((p) => `param:${p}`),
   ];

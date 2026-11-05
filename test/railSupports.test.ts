@@ -11,8 +11,10 @@ import { MeshBuilder, ngon } from "../generator/meshBuilder";
 import { paramCombinations, resolveParams, type ParamSpec } from "../generator/design";
 import { isLeaf, type LeafNode, type TreeNode } from "../generator/sourceTree";
 import { TYPE_META as RAIL_TYPES } from "../generator/sets/railType";
+import { swept } from "./catalogCache";
 
-const RAIL = ALL_VEHICLES.filter((d) => d.catalog?.category === "Rail vehicles");
+// the rail vehicles the whole-catalog suites build (catalogCache.ts swept): the world fleet's covering sample
+const RAIL = swept(ALL_VEHICLES.filter((d) => d.catalog?.category === "Rail vehicles"));
 
 function leaves(n: TreeNode): LeafNode[] {
   return isLeaf(n) ? [n] : n.children.flatMap(leaves);

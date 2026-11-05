@@ -26,7 +26,7 @@ equipment, a glass floor, each parameter; `busFeatures`: the shape, the sections
 the floor, the lamps, the mirrors, an upper deck, trolley poles, a rear window, a grille, roof
 pods, each parameter; `tramFeatures`, over every parameter value's spec: the section count,
 each truck kind, a floating module, the fronts, single or double ended, the roof, the doors,
-the collector, the floor, a deck, open sides, a clerestory, a trailer, roof boxes, the gauge, the
+the collector, the floor, a deck, open sides, a clerestory, a trailer, roof boxes, the
 extras, each parameter). A new family adds its entries here, with its own feature function.
 
 ## The covering sample

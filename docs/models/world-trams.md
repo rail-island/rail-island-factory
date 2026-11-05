@@ -245,7 +245,7 @@ design fits a horse's hooves or a cable's hum yet (a request to rail-island-musi
   sections, joints and supports, door sides, LOD budget and glazing, `checkSpec` on every
   combination, the finish liveries, the special rows' parts (about 20 s).
 - `pnpm exec vitest run test/worldFleet.test.ts` - the registry, references, OpenTTD entries.
-- The covering sample (`FLEET_SWEEP_SAMPLE`, 15 of the 100 trams, the Combino Supra the
+- The covering sample (`FLEET_SWEEP_SAMPLE`, 14 of the 100 trams, the Combino Supra the
   largest) gets the full catalog sweep, doors, interiors and pantograph suites;
   `pnpm build` checks all 100.
 - Contact sheets: `pnpm exec tsx generator/contactSheet.ts <out.png> --view 3q|side --cols 5

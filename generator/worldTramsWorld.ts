@@ -281,7 +281,6 @@ export function foshanHydrogenSpec(): WorldTramSpec {
     paint: [[0.62, "skirt"], [0.9, "band"], [3.9, "body"]],
     // the hydrogen tanks and fuel cells on the roof
     roofBoxes: [[0.8, 9.6, 0.95, 0.5, "body"], [l.at(1, 0.4), l.at(1, 5.6), 0.95, 0.5, "body"], [l.at(2, 0.8), l.at(2, 9.6), 0.95, 0.5, "body"]],
-    over: { extraFeatures: ["hydrogen"] },
   });
 }
 
