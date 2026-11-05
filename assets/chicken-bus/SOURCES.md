@@ -10,7 +10,6 @@ Downloaded from Wikimedia Commons as standard thumbnails, at most 1280 px on the
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-autobus-articulado-transmetro-guatemala.jpg` | Autobus articulado Transmetro Guatemala.jpg | https://commons.wikimedia.org/wiki/File:Autobus_articulado_Transmetro_Guatemala.jpg | Julio Fernando Lorenzana | CC BY-SA 4.0 | shape, proportions and colours |
 | `photo-colorful-buses-in-antigua-guatemala-2020.jpg` | Colorful Buses in Antigua Guatemala, 2020.jpg | https://commons.wikimedia.org/wiki/File:Colorful_Buses_in_Antigua_Guatemala,_2020.jpg | Roberto Zuñiga | CC BY-SA 2.0 | shape, proportions and colours |
 
 ## Published figures

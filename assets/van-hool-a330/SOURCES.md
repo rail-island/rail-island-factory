@@ -10,7 +10,6 @@ Downloaded from Wikimedia Commons as standard thumbnails, at most 1280 px on the
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-intrieur-van-hool-a330-tec-1.jpg` | Intérieur Van Hool A330 TEC (1).jpg | https://commons.wikimedia.org/wiki/File:Int%C3%A9rieur_Van_Hool_A330_TEC_(1).jpg | Jean Philippe Dheure | CC BY-SA 4.0 | shape, proportions and colours |
 | `photo-van-hool-a330-7214-auto-cole.jpg` | Van Hool A330 7214 auto-école.jpg | https://commons.wikimedia.org/wiki/File:Van_Hool_A330_7214_auto-%C3%A9cole.jpg | Olbaussart75 | CC BY-SA 4.0 | shape, proportions and colours |
 
 ## Published figures

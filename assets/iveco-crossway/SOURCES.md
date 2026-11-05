@@ -10,7 +10,6 @@ Downloaded from Wikimedia Commons as standard thumbnails, at most 1280 px on the
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-cadrans-iveco-crossway-nuit.jpg` | Cadrans Iveco Crossway nuit.jpg | https://commons.wikimedia.org/wiki/File:Cadrans_Iveco_Crossway_nuit.jpg | Dacia 1410 Sport | CC BY-SA 4.0 | shape, proportions and colours |
 | `photo-irisbus-crossway-penn-ar-bed-morlaix.jpg` | Irisbus Crossway Penn-ar-Bed à Morlaix.JPG | https://commons.wikimedia.org/wiki/File:Irisbus_Crossway_Penn-ar-Bed_%C3%A0_Morlaix.JPG | Guillanst | CC BY-SA 4.0 | shape, proportions and colours |
 
 ## Published figures

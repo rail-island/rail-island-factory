@@ -10,7 +10,6 @@ Downloaded from Wikimedia Commons as standard thumbnails, at most 1280 px on the
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-fribourg-saurer-trolleybus-35-at-gare-in-1983.jpg` | Fribourg Saurer trolleybus 35 at Gare in 1983.jpg | https://commons.wikimedia.org/wiki/File:Fribourg_Saurer_trolleybus_35_at_Gare_in_1983.jpg | Steve Morgan | CC BY-SA 4.0 | shape, proportions and colours |
 | `photo-postauto-saurer-3-duk-alpenwagen-iv-u-1964.jpg` | Postauto Saurer 3-DUK Alpenwagen IV-U (1964).jpg | https://commons.wikimedia.org/wiki/File:Postauto_Saurer_3-DUK_Alpenwagen_IV-U_(1964).jpg | JoachimKohler-HB | CC BY-SA 4.0 | shape, proportions and colours |
 
 ## Published figures

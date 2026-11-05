@@ -11,7 +11,6 @@ Downloaded from Wikimedia Commons as standard thumbnails, at most 1280 px on the
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
 | `photo-bus-m11-brno-1.jpg` | Bus ŠM11 Brno(1).jpg | https://commons.wikimedia.org/wiki/File:Bus_%C5%A0M11_Brno(1).jpg | User:Harold17 | Public domain | shape, proportions and colours |
-| `photo-ostrava-karosa-m-11-interir.jpg` | Ostrava, Karosa ŠM 11 (interiér).jpg | https://commons.wikimedia.org/wiki/File:Ostrava,_Karosa_%C5%A0M_11_(interi%C3%A9r).jpg | Petr Dadák from Ostrava-Poruba 8, Czech Republic | CC BY-SA 2.0 | shape, proportions and colours |
 
 ## Published figures
 
