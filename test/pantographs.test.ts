@@ -76,7 +76,12 @@ describe("pantographs", () => {
 
 describe("collector heights", () => {
   const trams = new Set(TRAM_DESIGNS.map((d) => d.id));
-  for (const d of ALL_VEHICLES.filter((v) => v.catalog?.category === "Rail vehicles")) {
+  // steam and diesel locomotives, coaches and wagons collect no current: no variant of theirs is built to look for a collector
+  const unpowered = (v: (typeof ALL_VEHICLES)[number]) => v.catalog?.traction === "steam" || v.catalog?.traction === "diesel" || v.catalog?.group === "coach" || v.catalog?.group === "wagon";
+  it("finds no collector on the families that cannot have one", () => {
+    for (const d of ALL_VEHICLES.filter((v) => v.catalog?.category === "Rail vehicles" && unpowered(v))) expect(DEFAULTS.get(d.id)!.carbon, d.id).toBe(false);
+  });
+  for (const d of ALL_VEHICLES.filter((v) => v.catalog?.category === "Rail vehicles" && !unpowered(v))) {
     const wire = trams.has(d.id) ? TRAM_COLLECTOR_TOP : RAIL_COLLECTOR_TOP;
     variantsUnderTest(d).forEach((params, i) => {
       it(`${d.id} ${JSON.stringify(params)} raises its collector to the game's wire`, () => {

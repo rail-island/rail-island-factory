@@ -8,6 +8,7 @@
     "proc-vehicle-american-truck": 5,
     "proc-vehicle-amtrak-acela": 128,
     "proc-vehicle-amtrak-superliner": 133,
+    "proc-vehicle-blue-train-24": 160,
     "proc-vehicle-bmo-double-deck-coach": 17,
     "proc-vehicle-boeing-737": 77,
     "proc-vehicle-boeing-747": 73,
@@ -83,13 +84,23 @@
     "proc-vehicle-ge-p42dc": 125,
     "proc-vehicle-habis-sliding-wall-wagon": 39,
     "proc-vehicle-hadgs-hopper-wagon": 40,
+    "proc-vehicle-hankyu-9000": 155,
     "proc-vehicle-hydrofoil-ferry": 81,
     "proc-vehicle-ice-1": 110,
+    "proc-vehicle-jnr-103": 150,
+    "proc-vehicle-jnr-485": 154,
+    "proc-vehicle-jnr-c62": 156,
+    "proc-vehicle-jnr-d51": 157,
+    "proc-vehicle-jnr-dd51": 159,
+    "proc-vehicle-jnr-ef66": 158,
+    "proc-vehicle-jr-e235": 149,
+    "proc-vehicle-jr-e259": 153,
     "proc-vehicle-jr-kiha40": 107,
     "proc-vehicle-karosa-long": 64,
     "proc-vehicle-karosa-renault-citybus-12m": 65,
     "proc-vehicle-karosa-renault-citybus-18m": 66,
     "proc-vehicle-karosa-short": 63,
+    "proc-vehicle-kintetsu-hinotori": 152,
     "proc-vehicle-kvag-gt4": 95,
     "proc-vehicle-legacy-covered-wagon": 1,
     "proc-vehicle-legacy-heavy-wagon": 3,
@@ -111,6 +122,7 @@
     "proc-vehicle-obb-1012": 48,
     "proc-vehicle-obb-1040": 49,
     "proc-vehicle-ocean-liner": 4,
+    "proc-vehicle-odakyu-gse": 151,
     "proc-vehicle-pao-flat-wagon": 38,
     "proc-vehicle-passenger-ferry": 82,
     "proc-vehicle-pioneer-zephyr": 135,
@@ -203,6 +215,14 @@
       "proc-vehicle-amtrak-superliner?unit=sleeper": {
         "id": 4946,
         "size": 8
+      },
+      "proc-vehicle-blue-train-24?": {
+        "id": 5854,
+        "size": 6
+      },
+      "proc-vehicle-blue-train-24?unit=dining": {
+        "id": 5860,
+        "size": 6
       },
       "proc-vehicle-bmo-double-deck-coach?": {
         "id": 784,
@@ -992,6 +1012,22 @@
         "id": 1616,
         "size": 16
       },
+      "proc-vehicle-hankyu-9000?": {
+        "id": 5740,
+        "size": 6
+      },
+      "proc-vehicle-hankyu-9000?formation=6 cars": {
+        "id": 5758,
+        "size": 32
+      },
+      "proc-vehicle-hankyu-9000?livery=allMaroon": {
+        "id": 5752,
+        "size": 6
+      },
+      "proc-vehicle-hankyu-9000?unit=middleCar": {
+        "id": 5746,
+        "size": 6
+      },
       "proc-vehicle-ice-1?": {
         "id": 3632,
         "size": 16
@@ -1008,6 +1044,118 @@
         "id": 3664,
         "size": 16
       },
+      "proc-vehicle-jnr-103?": {
+        "id": 5496,
+        "size": 6
+      },
+      "proc-vehicle-jnr-103?formation=6 cars": {
+        "id": 5514,
+        "size": 32
+      },
+      "proc-vehicle-jnr-103?livery=yamanote": {
+        "id": 5508,
+        "size": 6
+      },
+      "proc-vehicle-jnr-103?unit=middleCar": {
+        "id": 5502,
+        "size": 6
+      },
+      "proc-vehicle-jnr-485?": {
+        "id": 5690,
+        "size": 6
+      },
+      "proc-vehicle-jnr-485?formation=6 cars": {
+        "id": 5708,
+        "size": 32
+      },
+      "proc-vehicle-jnr-485?livery=kyushu": {
+        "id": 5702,
+        "size": 6
+      },
+      "proc-vehicle-jnr-485?unit=middleCar": {
+        "id": 5696,
+        "size": 6
+      },
+      "proc-vehicle-jnr-c62?": {
+        "id": 5790,
+        "size": 4
+      },
+      "proc-vehicle-jnr-c62?formation=with tender": {
+        "id": 5798,
+        "size": 8
+      },
+      "proc-vehicle-jnr-c62?unit=tender": {
+        "id": 5794,
+        "size": 4
+      },
+      "proc-vehicle-jnr-d51?": {
+        "id": 5806,
+        "size": 4
+      },
+      "proc-vehicle-jnr-d51?formation=Namekuji with tender": {
+        "id": 5824,
+        "size": 6
+      },
+      "proc-vehicle-jnr-d51?formation=with tender": {
+        "id": 5818,
+        "size": 6
+      },
+      "proc-vehicle-jnr-d51?unit=tender": {
+        "id": 5810,
+        "size": 4
+      },
+      "proc-vehicle-jnr-d51?variant=namekuji": {
+        "id": 5814,
+        "size": 4
+      },
+      "proc-vehicle-jnr-dd51?": {
+        "id": 5842,
+        "size": 6
+      },
+      "proc-vehicle-jnr-dd51?livery=hokutosei": {
+        "id": 5848,
+        "size": 6
+      },
+      "proc-vehicle-jnr-ef66?": {
+        "id": 5830,
+        "size": 6
+      },
+      "proc-vehicle-jnr-ef66?livery=jrFreight": {
+        "id": 5836,
+        "size": 6
+      },
+      "proc-vehicle-jr-e235?": {
+        "id": 5446,
+        "size": 6
+      },
+      "proc-vehicle-jr-e235?formation=6 cars": {
+        "id": 5464,
+        "size": 32
+      },
+      "proc-vehicle-jr-e235?livery=yokosuka": {
+        "id": 5458,
+        "size": 6
+      },
+      "proc-vehicle-jr-e235?unit=middleCar": {
+        "id": 5452,
+        "size": 6
+      },
+      "proc-vehicle-jr-e259?": {
+        "id": 5640,
+        "size": 6
+      },
+      "proc-vehicle-jr-e259?formation=6 cars": {
+        "id": 5658,
+        "size": 32
+      },
+      "proc-vehicle-jr-e259?livery=original": {
+        "id": 5652,
+        "size": 6
+      },
+      "proc-vehicle-jr-e259?unit=middleCar": {
+        "id": 5646,
+        "size": 6
+      },
       "proc-vehicle-jr-kiha40?": {
         "id": 3392,
         "size": 16
@@ -1019,6 +1167,22 @@
       "proc-vehicle-jr-kiha40?livery=tarako": {
         "id": 3408,
         "size": 16
+      },
+      "proc-vehicle-kintetsu-hinotori?": {
+        "id": 5590,
+        "size": 6
+      },
+      "proc-vehicle-kintetsu-hinotori?formation=6 cars": {
+        "id": 5608,
+        "size": 32
+      },
+      "proc-vehicle-kintetsu-hinotori?livery=ace": {
+        "id": 5602,
+        "size": 6
+      },
+      "proc-vehicle-kintetsu-hinotori?unit=middleCar": {
+        "id": 5596,
+        "size": 6
       },
       "proc-vehicle-legacy-covered-wagon?": {
         "id": 256,
@@ -1135,6 +1299,22 @@
       "proc-vehicle-obb-1040?": {
         "id": 1952,
         "size": 16
+      },
+      "proc-vehicle-odakyu-gse?": {
+        "id": 5546,
+        "size": 6
+      },
+      "proc-vehicle-odakyu-gse?formation=6 cars": {
+        "id": 5562,
+        "size": 28
+      },
+      "proc-vehicle-odakyu-gse?livery=lse": {
+        "id": 5556,
+        "size": 6
+      },
+      "proc-vehicle-odakyu-gse?unit=middleCar": {
+        "id": 5552,
+        "size": 4
       },
       "proc-vehicle-pao-flat-wagon?": {
         "id": 1568,

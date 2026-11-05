@@ -325,6 +325,49 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
     presets: presets({ unit: "middleCar" }, { livery: "toki" }),
     formations: [formation("8 cars", {}, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, [{}, "turned"])],
   }),
+  "proc-vehicle-jr-e235": pax(2015, 40, ELRL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 54 })],
+    presets: presets({ unit: "middleCar" }, { livery: "yokosuka" }),
+    formations: [formation("6 cars", {}, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, [{}, "turned"])],
+  }),
+  "proc-vehicle-jnr-103": pax(1963, 48, ELRL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 54 })],
+    presets: presets({ unit: "middleCar" }, { livery: "yamanote" }),
+    formations: [formation("6 cars", {}, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, [{}, "turned"])],
+  }),
+  "proc-vehicle-odakyu-gse": pax(2018, 42, ELRL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 52 })],
+    presets: presets({ unit: "middleCar" }, { livery: "lse" }),
+    formations: [formation("6 cars", {}, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, [{}, "turned"])],
+  }),
+  "proc-vehicle-kintetsu-hinotori": pax(2020, 32, ELRL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 42 })],
+    presets: presets({ unit: "middleCar" }, { livery: "ace" }),
+    formations: [formation("6 cars", {}, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, [{}, "turned"])],
+  }),
+  "proc-vehicle-jr-e259": pax(2009, 28, ELRL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 56 })],
+    presets: presets({ unit: "middleCar" }, { livery: "original" }),
+    formations: [formation("6 cars", {}, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, [{}, "turned"])],
+  }),
+  "proc-vehicle-jnr-485": pax(1964, 48, ELRL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 64 })],
+    presets: presets({ unit: "middleCar" }, { livery: "kyushu" }),
+    formations: [formation("6 cars", {}, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, [{}, "turned"])],
+  }),
+  "proc-vehicle-hankyu-9000": pax(2006, 120, ELRL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 140 })],
+    presets: presets({ unit: "middleCar" }, { livery: "allMaroon" }),
+    formations: [formation("6 cars", {}, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, [{}, "turned"])],
+  }),
+  "proc-vehicle-jnr-c62": loco(1948, RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
+  "proc-vehicle-jnr-d51": loco(1936, RAIL, {
+    presets: presets({ unit: "tender" }, { variant: "namekuji" }),
+    formations: [formation("with tender", {}, { unit: "tender" }), formation("Namekuji with tender", { variant: "namekuji" }, { unit: "tender", variant: "namekuji" })],
+  }),
+  "proc-vehicle-jnr-ef66": loco(1968, ELRL, { presets: presets({ livery: "jrFreight" }) }),
+  "proc-vehicle-jnr-dd51": loco(1962, RAIL, { presets: presets({ livery: "hokutosei" }) }),
+  "proc-vehicle-blue-train-24": pax(1973, 34, RAIL, { variants: [at({ unit: "dining" }, { capacity: 24 })], presets: presets({ unit: "dining" }) }),
   "proc-vehicle-mtr-m-train": pax(1979, 230, ELRL, {
     variants: [at({ unit: "bCar" }, { capacity: 250 }), at({ unit: "cCar" }, { capacity: 250 }), at({ unit: "dCar" }, { capacity: 250 })],
     presets: presets(...each("unit", "bCar", "cCar", "dCar"), ...each("livery", "retro", "disneyland")),

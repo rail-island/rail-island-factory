@@ -16,7 +16,8 @@ import { crownPane, surfaceDisc, type SliceBody } from "./sliceBody.ts";
 import { CARBODY_PALETTE, type NoseShape } from "./carbodyKit.ts";
 import { INTERIOR_PALETTE } from "./interior.ts";
 import { drawCar, type CarDef } from "./usTransit.ts";
-import { singleArm } from "./czElectricKit.ts";
+import { diamond, singleArm } from "./czElectricKit.ts";
+import type { LoadingGauge } from "./loadingGauge.ts";
 import { EMU_CATALOG, enumParam } from "./emuParts.ts";
 import { articulate } from "./tramKit.ts";
 import { LOD_GLASS, type LodBand, type LodPart, type LodSections } from "./lodKit.ts";
@@ -71,6 +72,12 @@ export interface ShinkansenSeries {
   liveries: Record<string, ShinkansenLivery>;
   /** Per car, for the game: weight (t), power (kW) of a motor car, the top speed, seats. */
   weight: { end: number; middle: number };
+  /** A commuter car's doors: this many a side, evenly along the car, windows between them (default: one at each end). */
+  doorCount?: number;
+  /** The pantograph: a single arm (default) or a diamond. */
+  pantograph?: "single" | "diamond";
+  /** A flat cab front in place of the nose: its windscreen panes (z0, z1, y0, y1), lamps (z, y, r, lens) and the front's mask. */
+  flatCab?: NonNullable<CarDef["cab"]>;
   power: number;
   maxspeed: number;
 }
@@ -78,7 +85,9 @@ export interface ShinkansenSeries {
 // ---------------------------------------------------------------------------
 // Building a series
 
-const endBody = (s: ShinkansenSeries) => s.endLength - GAP;
+/** The body's +X end behind the car's front: the nose tip at it, a flat cab's lamps 7 cm proud of the wall, an inner wall a coupling gap behind. */
+const frontGap = (s: ShinkansenSeries, end: boolean) => (end ? (s.flatCab ? 0.07 : 0) : GAP);
+const endBody = (s: ShinkansenSeries) => s.endLength - GAP - frontGap(s, true);
 const midBody = (s: ShinkansenSeries) => s.midLength - 2 * GAP;
 
 /** Bogie positions (d) of a car: 2.5 m in from each body end, the end car's leading one behind the nose. */
@@ -91,25 +100,35 @@ function bogies(s: ShinkansenSeries, end: boolean): [number, number] {
 function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantograph: boolean, number: string): CarDef {
   const L = end ? endBody(s) : midBody(s);
   const tr = bogies(s, end);
-  const first = end ? Math.max(s.nose.len, s.windscreen[1]) + 1.6 : 2.0;
-  const doors: Array<[number, number]> = end ? [[first - 1.0, first - 1.0 + s.doorW], [L - 1.4 - s.doorW, L - 1.4]] : [[0.6, 0.6 + s.doorW], [L - 0.6 - s.doorW, L - 0.6]];
-  const from = end ? first + 0.4 : 0.6 + s.doorW + 0.8;
-  const to = L - 1.4 - s.doorW - 0.8;
-  const n = Math.max(1, Math.floor((to - from) / s.pitch));
-  const spans = Array.from({ length: n }, (_, i): [number, number] => {
-    const d = from + (to - from) * ((i + 0.5) / n);
-    return [d - s.windowW / 2, d + s.windowW / 2];
-  });
+  const first = end ? (s.flatCab ? 2.2 : Math.max(s.nose.len, s.windscreen[1]) + 1.6) : 2.0;
+  let doors: Array<[number, number]> = end ? [[first - 1.0, first - 1.0 + s.doorW], [L - 1.4 - s.doorW, L - 1.4]] : [[0.6, 0.6 + s.doorW], [L - 0.6 - s.doorW, L - 0.6]];
+  const row = (from: number, to: number): Array<[number, number]> => {
+    const n = Math.max(1, Math.floor((to - from) / s.pitch));
+    return Array.from({ length: n }, (_, i): [number, number] => {
+      const d = from + (to - from) * ((i + 0.5) / n);
+      return [d - s.windowW / 2, d + s.windowW / 2];
+    });
+  };
+  let spans = row(end ? first + 0.4 : 0.6 + s.doorW + 0.8, L - 1.4 - s.doorW - 0.8);
+  if (s.doorCount) {
+    // a commuter car: doors evenly along it, windows in the piers between them
+    const [a, b] = [end ? first - 0.6 : 0.4, L - 0.4];
+    const k = s.doorCount;
+    doors = Array.from({ length: k }, (_, i): [number, number] => { const c = a + ((b - a) * (i + 0.5)) / k; return [c - s.doorW / 2, c + s.doorW / 2]; });
+    const edges = [end ? first - 0.4 : 0.6, ...doors.flatMap(([p, q]) => [p, q]), L - 0.6];
+    spans = [];
+    for (let i = 0; i + 1 < edges.length; i += 2) if (edges[i + 1]! - edges[i]! > s.windowW + 0.4) spans.push(...row(edges[i]! + 0.2, edges[i + 1]! - 0.2));
+  }
   const reach = s.wheelbase / 2 + s.wheelR + 0.25;
   return {
     spec: {
       length: L, W: s.W, Y: s.Y, S: s.S, C: s.C, lean: s.lean, arc: 8, B: s.B, wl: s.W * 0.9, A: s.A, wa: s.W * 0.97,
-      ...(end ? { front: s.nose } : {}), cuts: tr.map((d) => [d - reach, d + reach] as const), edges: [], step: 1.0, noseStep: 0.25,
+      ...(end && !s.flatCab ? { front: s.nose } : {}), cuts: tr.map((d) => [d - reach, d + reach] as const), edges: [], step: 1.0, noseStep: 0.25,
     },
     bands: l.bands, roof: l.roof, skirt: l.skirt, under: "under",
     windows: s.windows.map((y) => ({ y, spans, frame: "rubber" })),
     doors: { spans: doors, y: [s.door[0], s.door[1]], glass: [s.door[2], s.door[3]] },
-    cabEnds: [], diaphragm: [s.door[0], s.door[1] + 0.3],
+    ...(s.flatCab ? { cab: s.flatCab } : {}), cabEnds: end && s.flatCab ? [1] : [], diaphragm: [s.door[0], s.door[1] + 0.3],
     trucks: tr, truck: {
       axles: [-s.wheelbase / 2, s.wheelbase / 2], wheelR: s.wheelR, frameHalf: s.wheelbase / 2 + s.wheelR + 0.15, frameTop: s.wheelR + 0.4, frameBottom: s.wheelR + 0.08,
       frameZ: [0.92, 1.04], primary: "coil", secondary: [-0.42, 0.42], secondaryZ: 1.1, bolster: s.B,
@@ -118,11 +137,12 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
     ...(end ? { cabin: [first - 1.2, L] as const } : {}),
     lettering: [{ text: number, d: L - 3.0, y: s.Y + 0.1, h: 0.1, mat: "lettering" }],
     extras: (m, b, X) => {
-      if (end) noseFittings(m, s, b, X);
+      if (end && !s.flatCab) noseFittings(m, s, b, X);
       if (pantograph) m.scope("pantograph", () => {
         const x = X(tr[1] - 1.5);
         block(m, l.roof, x - 1.6, x + 1.6, s.C - 0.06, s.C + 0.05, -0.85, 0.85);
-        singleArm(m, { xc: x, roofY: s.C + 0.05, baseY: s.C + 0.3, h: 1, raised: true });
+        if (s.pantograph === "diamond") diamond(m, { xc: x, roofY: s.C + 0.05, baseY: s.C + 0.35, raised: true });
+        else singleArm(m, { xc: x, roofY: s.C + 0.05, baseY: s.C + 0.3, h: 1, raised: true });
       });
       m.scope("underfloor", () => block(m, "under", X(tr[1] - 2.6), X(tr[0] + 2.6), s.B - 0.35, s.B, -s.W * 0.8, s.W * 0.8));
     },
@@ -168,7 +188,7 @@ export function shinkansenTrain(s: ShinkansenSeries, n: number): ShinkansenSlot[
   });
 }
 
-function build(s: ShinkansenSeries, params: readonly ParamSpec[], v?: ParamValues): MeshBuilder {
+export function buildSeries(s: ShinkansenSeries, params: readonly ParamSpec[], v?: ParamValues): MeshBuilder {
   const p = resolveParams(params, v);
   const l = s.liveries[p.livery!]!;
   const m = new MeshBuilder({ ...PALETTE, ...l.palette });
@@ -177,14 +197,14 @@ function build(s: ShinkansenSeries, params: readonly ParamSpec[], v?: ParamValue
     const end = unit === "endCar";
     const len = end ? s.endLength : s.midLength;
     // the nose covers its coupler
-    drawCar(m, carDef(s, l, end, !end, l.number), (d) => len / 2 - (end ? 0 : GAP) - d, end ? { inside: [1] } : {});
+    drawCar(m, carDef(s, l, end, !end, l.number), (d) => len / 2 - frontGap(s, end) - d, end ? { inside: [1] } : {});
     return m;
   }
   const slots = shinkansenTrain(s, Number(p.cars));
   const sections = slots.map((slot, k) => {
     const cx = (slot.lo + slot.hi) / 2;
     const len = slot.end ? s.endLength : s.midLength;
-    const X = (d: number) => cx + len / 2 - (slot.end ? 0 : GAP) - d;
+    const X = (d: number) => cx + len / 2 - frontGap(s, slot.end) - d;
     const def = carDef(s, l, slot.end, slot.pantograph, l.number);
     const inside = [1, -1];
     return {
@@ -221,7 +241,7 @@ function carLod(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
   return { body, parts };
 }
 
-function buildLod(s: ShinkansenSeries, params: readonly ParamSpec[], v?: ParamValues): MeshBuilder {
+export function buildSeriesLod(s: ShinkansenSeries, params: readonly ParamSpec[], v?: ParamValues): MeshBuilder {
   const p = resolveParams(params, v);
   const l = s.liveries[p.livery!]!;
   const palette = { ...PALETTE, ...l.palette };
@@ -229,14 +249,14 @@ function buildLod(s: ShinkansenSeries, params: readonly ParamSpec[], v?: ParamVa
   if (unit !== "train") {
     const end = unit === "endCar";
     const len = end ? s.endLength : s.midLength;
-    const { body, parts } = carLod(s, l, end, !end, (d) => len / 2 - (end ? 0 : GAP) - d, 0, false);
+    const { body, parts } = carLod(s, l, end, !end, (d) => len / 2 - frontGap(s, end) - d, 0, false);
     return fitUnit({ palette, bodies: [body], parts }, 100);
   }
   const slots = shinkansenTrain(s, Number(p.cars));
   const built = slots.map((slot, k) => {
     const cx = (slot.lo + slot.hi) / 2;
     const len = slot.end ? s.endLength : s.midLength;
-    return carLod(s, l, slot.end, slot.pantograph, (d) => cx + len / 2 - (slot.end ? 0 : GAP) - d, cx, slot.turned, k);
+    return carLod(s, l, slot.end, slot.pantograph, (d) => cx + len / 2 - frontGap(s, slot.end) - d, cx, slot.turned, k);
   });
   const sections: LodSections = {
     pivots: slots.map((_, i): [number, number, number] => (i === 0 ? [0, 0, 0] : [slots[i - 1]!.lo, COUPLER_Y, 0])),
@@ -249,7 +269,7 @@ function buildLod(s: ShinkansenSeries, params: readonly ParamSpec[], v?: ParamVa
   return fitUnit({ palette, bodies: built.map((x) => x.body), parts: built.flatMap((x) => x.parts), sections }, Math.min(500, 100 * slots.length));
 }
 
-function paramsOf(s: ShinkansenSeries): ParamSpec[] {
+export function seriesParams(s: ShinkansenSeries): ParamSpec[] {
   return [
     enumParam("unit", "Car", { endCar: "End car", middleCar: "Middle car", train: "Full train" }),
     { ...enumParam("cars", "Cars", Object.fromEntries(SHINKANSEN_CARS.map((n) => [String(n), `${n} cars`]))), default: "4", when: { name: "unit", values: ["train"] } },
@@ -375,38 +395,39 @@ export const E4: ShinkansenSeries = {
 // ---------------------------------------------------------------------------
 // Designs: named builders (a design's JS model imports its builder by name)
 
-const P = { n700s: paramsOf(N700S), e5: paramsOf(E5), s500: paramsOf(S500), s700: paramsOf(S700), e6: paramsOf(E6), s100: paramsOf(S100), e4: paramsOf(E4) };
+const P = { n700s: seriesParams(N700S), e5: seriesParams(E5), s500: seriesParams(S500), s700: seriesParams(S700), e6: seriesParams(E6), s100: seriesParams(S100), e4: seriesParams(E4) };
 
-export function shinkansenN700s(v?: ParamValues): MeshBuilder { return build(N700S, P.n700s, v); }
-export function shinkansenN700sLod(v?: ParamValues): MeshBuilder { return buildLod(N700S, P.n700s, v); }
-export function shinkansenE5(v?: ParamValues): MeshBuilder { return build(E5, P.e5, v); }
-export function shinkansenE5Lod(v?: ParamValues): MeshBuilder { return buildLod(E5, P.e5, v); }
-export function shinkansen500(v?: ParamValues): MeshBuilder { return build(S500, P.s500, v); }
-export function shinkansen500Lod(v?: ParamValues): MeshBuilder { return buildLod(S500, P.s500, v); }
-export function shinkansen700(v?: ParamValues): MeshBuilder { return build(S700, P.s700, v); }
-export function shinkansen700Lod(v?: ParamValues): MeshBuilder { return buildLod(S700, P.s700, v); }
-export function shinkansenE6(v?: ParamValues): MeshBuilder { return build(E6, P.e6, v); }
-export function shinkansenE6Lod(v?: ParamValues): MeshBuilder { return buildLod(E6, P.e6, v); }
-export function shinkansen100(v?: ParamValues): MeshBuilder { return build(S100, P.s100, v); }
-export function shinkansen100Lod(v?: ParamValues): MeshBuilder { return buildLod(S100, P.s100, v); }
-export function shinkansenE4(v?: ParamValues): MeshBuilder { return build(E4, P.e4, v); }
-export function shinkansenE4Lod(v?: ParamValues): MeshBuilder { return buildLod(E4, P.e4, v); }
+export function shinkansenN700s(v?: ParamValues): MeshBuilder { return buildSeries(N700S, P.n700s, v); }
+export function shinkansenN700sLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(N700S, P.n700s, v); }
+export function shinkansenE5(v?: ParamValues): MeshBuilder { return buildSeries(E5, P.e5, v); }
+export function shinkansenE5Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(E5, P.e5, v); }
+export function shinkansen500(v?: ParamValues): MeshBuilder { return buildSeries(S500, P.s500, v); }
+export function shinkansen500Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(S500, P.s500, v); }
+export function shinkansen700(v?: ParamValues): MeshBuilder { return buildSeries(S700, P.s700, v); }
+export function shinkansen700Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(S700, P.s700, v); }
+export function shinkansenE6(v?: ParamValues): MeshBuilder { return buildSeries(E6, P.e6, v); }
+export function shinkansenE6Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(E6, P.e6, v); }
+export function shinkansen100(v?: ParamValues): MeshBuilder { return buildSeries(S100, P.s100, v); }
+export function shinkansen100Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(S100, P.s100, v); }
+export function shinkansenE4(v?: ParamValues): MeshBuilder { return buildSeries(E4, P.e4, v); }
+export function shinkansenE4Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(E4, P.e4, v); }
 
 export const SHINKANSEN_SERIES: Record<string, ShinkansenSeries> = {
   "proc-vehicle-shinkansen-n700s": N700S, "proc-vehicle-shinkansen-e5": E5, "proc-vehicle-shinkansen-500": S500, "proc-vehicle-shinkansen-700": S700,
   "proc-vehicle-shinkansen-e6": E6, "proc-vehicle-shinkansen-100": S100, "proc-vehicle-shinkansen-e4": E4,
 };
 
-const design = (id: string, title: string, s: ShinkansenSeries, params: ParamSpec[], b: (v?: ParamValues) => MeshBuilder, l: (v?: ParamValues) => MeshBuilder, refs: string): ProceduralDesign => ({
-  id, title, build: b, buildLod: l, params, lodTriangles: 500, game: gameOf(s, params), catalog: EMU_CATALOG, loadingGauge: "shinkansen", references: refs,
+/** A series' design: its builders (named exports of its module), parameters and gauge. */
+export const seriesDesign = (id: string, title: string, s: ShinkansenSeries, params: ParamSpec[], b: (v?: ParamValues) => MeshBuilder, l: (v?: ParamValues) => MeshBuilder, refs: string, gauge: LoadingGauge = "shinkansen"): ProceduralDesign => ({
+  id, title, build: b, buildLod: l, params, lodTriangles: 500, game: gameOf(s, params), catalog: EMU_CATALOG, ...(gauge === "uic" ? {} : { loadingGauge: gauge }), references: refs,
 });
 
 export const SHINKANSEN_DESIGNS: ProceduralDesign[] = [
-  design("proc-vehicle-shinkansen-n700s", "Shinkansen N700S", N700S, P.n700s, shinkansenN700s, shinkansenN700sLod, "shinkansen-n700s"),
-  design("proc-vehicle-shinkansen-e5", "Shinkansen E5 / H5", E5, P.e5, shinkansenE5, shinkansenE5Lod, "shinkansen-e5"),
-  design("proc-vehicle-shinkansen-500", "Shinkansen 500 series", S500, P.s500, shinkansen500, shinkansen500Lod, "shinkansen-500"),
-  design("proc-vehicle-shinkansen-700", "Shinkansen 700 / 923", S700, P.s700, shinkansen700, shinkansen700Lod, "shinkansen-700"),
-  design("proc-vehicle-shinkansen-e6", "Shinkansen E6", E6, P.e6, shinkansenE6, shinkansenE6Lod, "shinkansen-e6"),
-  design("proc-vehicle-shinkansen-100", "Shinkansen 100 series", S100, P.s100, shinkansen100, shinkansen100Lod, "shinkansen-100"),
-  design("proc-vehicle-shinkansen-e4", "Shinkansen E4 Max", E4, P.e4, shinkansenE4, shinkansenE4Lod, "shinkansen-e4"),
+  seriesDesign("proc-vehicle-shinkansen-n700s", "Shinkansen N700S", N700S, P.n700s, shinkansenN700s, shinkansenN700sLod, "shinkansen-n700s"),
+  seriesDesign("proc-vehicle-shinkansen-e5", "Shinkansen E5 / H5", E5, P.e5, shinkansenE5, shinkansenE5Lod, "shinkansen-e5"),
+  seriesDesign("proc-vehicle-shinkansen-500", "Shinkansen 500 series", S500, P.s500, shinkansen500, shinkansen500Lod, "shinkansen-500"),
+  seriesDesign("proc-vehicle-shinkansen-700", "Shinkansen 700 / 923", S700, P.s700, shinkansen700, shinkansen700Lod, "shinkansen-700"),
+  seriesDesign("proc-vehicle-shinkansen-e6", "Shinkansen E6", E6, P.e6, shinkansenE6, shinkansenE6Lod, "shinkansen-e6"),
+  seriesDesign("proc-vehicle-shinkansen-100", "Shinkansen 100 series", S100, P.s100, shinkansen100, shinkansen100Lod, "shinkansen-100"),
+  seriesDesign("proc-vehicle-shinkansen-e4", "Shinkansen E4 Max", E4, P.e4, shinkansenE4, shinkansenE4Lod, "shinkansen-e4"),
 ];

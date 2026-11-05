@@ -156,7 +156,7 @@ export interface UsHoodSpec {
   /** The dynamic brake housing on the hood roof (x span, top, half width). */
   blister?: { x0: number; x1: number; top: number; half: number };
   exhaustX: number;
-  trucks: { centre: number; spec: BogieSpec; sideFrame: "blomberg" | "htc" | "hiad" };
+  trucks: { centre: number; spec: BogieSpec; sideFrame: "blomberg" | "htc" | "hiad"; middle?: BogieSpec };
   tank: { x0: number; x1: number; y0: number; half: number };
   /** Ditch lights on the pilots (the newer units). */
   ditchLights: boolean;
@@ -234,6 +234,8 @@ export function buildUsHood(s: UsHoodSpec, l: UsLivery): MeshBuilder {
   m.scope("trucks", () => {
     m.scope("front truck", () => bogie(m, s.trucks.centre, s.trucks.spec));
     m.scope("rear truck", () => bogie(m, -s.trucks.centre, s.trucks.spec));
+    // a third truck under the middle (the DD51's idle truck)
+    if (s.trucks.middle) m.scope("middle truck", () => bogie(m, 0, s.trucks.middle!));
   });
   m.scope("underframe", () => underframe(m, s, l));
   return m;
@@ -588,6 +590,6 @@ export function usHoodLod(s: UsHoodSpec, l: UsLivery, budget = 100): MeshBuilder
     palette: { ...US_PALETTE, ...l.palette },
     shells: [hoodShell, frontShell, cabShell],
     boxes,
-    gear: [-1, 1].map((e) => ({ xc: e * s.trucks.centre, half: s.trucks.spec.frameHalf, top: s.trucks.spec.frameTop })),
+    gear: [...[-1, 1].map((e) => ({ xc: e * s.trucks.centre, half: s.trucks.spec.frameHalf, top: s.trucks.spec.frameTop })), ...(s.trucks.middle ? [{ xc: 0, half: s.trucks.middle.frameHalf, top: s.trucks.middle.frameTop }] : [])],
   }, budget);
 }

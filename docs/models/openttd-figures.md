@@ -163,6 +163,18 @@ file is the authority.
 | `shinkansen-e6` | Shinkansen E6 | train ELRL | 2013 | 22 PASS | 120 / 38 | 3 | 8 cars |
 | `shinkansen-100` | Shinkansen 100 series | train ELRL | 1985 | 65 PASS | 105 / 39 | 3 | 8 cars |
 | `shinkansen-e4` | Shinkansen E4 Max | train ELRL | 1997 | 75 PASS | 108 / 39 | 3 | 8 cars |
+| `jr-e235` | JR E235 | train ELRL | 2015 | 40 PASS | 68 / 28 | 3 | 6 cars |
+| `jnr-103` | JNR 103 series | train ELRL | 1963 | 48 PASS | 63 / 27 | 3 | 6 cars |
+| `odakyu-gse` | Odakyu Romancecar GSE | train ELRL | 2018 | 42 PASS | 62 / 25 | 3 | 6 cars |
+| `kintetsu-hinotori` | Kintetsu Hinotori | train ELRL | 2020 | 32 PASS | 62 / 21 | 3 | 6 cars |
+| `jr-e259` | JR E259 Narita Express | train ELRL | 2009 | 28 PASS | 67 / 25 | 3 | 6 cars |
+| `jnr-485` | JNR 485 series | train ELRL | 1964 | 48 PASS | 68 / 28 | 3 | 6 cars |
+| `hankyu-9000` | Hankyu 9000 series | train ELRL | 2006 | 120 PASS | 88 / 42 | 3 | 6 cars |
+| `jnr-c62` | JNR C62 | train RAIL | 1948 | 0 PASS | 70 / 34 | 2 | with tender |
+| `jnr-d51` | JNR D51 | train RAIL | 1936 | 0 PASS | 61 / 29 | 3 | with tender, Namekuji with tender |
+| `jnr-ef66` | JNR EF66 | train ELRL | 1968 | 0 PASS | 140 / 88 | 2 | - |
+| `jnr-dd51` | JNR DD51 | train RAIL | 1962 | 0 PASS | 80 / 43 | 2 | - |
+| `blue-train-24` | Blue Train 24 series | train RAIL | 1973 | 34 PASS | 32 / 9 | 2 | - |
 | `mtr-m-train` | MTR M-Train | train ELRL | 1979 | 230 PASS | 102 / 55 | 6 | 8 cars |
 | `tgv-duplex` | TGV Duplex | train ELRL | 1996 | 0 PASS | 194 / 98 | 7 | power cars, 8 trailers |
 | `cd-y-coach` | CD Y Coach | train RAIL | 1970* | 54 PASS | 42 / 12 | 4 | - |

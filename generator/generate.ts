@@ -91,6 +91,8 @@ import { US_STEAM } from "./usSteam.ts";
 import { US_TRANSIT } from "./usTransit.ts";
 import { US_FREIGHT } from "./usFreight.ts";
 import { SHINKANSEN_DESIGNS } from "./shinkansen.ts";
+import { JP_EMUS } from "./jpEmus.ts";
+import { JNR_LOCOS } from "./jpLocos.ts";
 import { TRUCKS } from "./trucks.ts";
 import { PHOTO_TRUCKS } from "./photoTrucks.ts";
 import { TRAM_DESIGNS } from "./trams.ts";
@@ -206,6 +208,8 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: US_TRANSIT, source: "usTransit.ts", meta: "vehicles" },
   { designs: US_FREIGHT, source: "usFreight.ts", meta: "vehicles" },
   { designs: SHINKANSEN_DESIGNS, source: "shinkansen.ts", meta: "vehicles" },
+  { designs: JP_EMUS, source: "jpEmus.ts", meta: "vehicles" },
+  { designs: JNR_LOCOS, source: "jpLocos.ts", meta: "vehicles" },
   { designs: TRAM_DESIGNS, source: "trams.ts", meta: "vehicles" },
   { designs: METRO_DESIGNS, source: "metro.ts", meta: "vehicles" },
   { designs: EMU451_DESIGNS, source: "emu451.ts", meta: "vehicles" },
