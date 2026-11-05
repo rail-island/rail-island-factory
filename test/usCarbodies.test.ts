@@ -1,7 +1,7 @@
 // The North American streamlined carbodies (generator/usCarbodies.ts, carbodyKit.ts).
 // See docs/models/us-carbodies.md.
 import { describe, expect, it } from "vitest";
-import { ACELA_LENGTH, US_CARBODIES, acela, acelaTrain } from "../generator/usCarbodies";
+import { ACELA_LENGTH, SUPERLINER_LENGTH, US_CARBODIES, acela, acelaTrain, amtrakSuperliner } from "../generator/usCarbodies";
 import { LOADING_GAUGES } from "../generator/loadingGauge";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { glbStats } from "../generator/glbStats";
@@ -26,7 +26,7 @@ const LOCOS: Record<string, { length: number; axles: number; liveries: string[] 
 
 describe("the US carbodies", () => {
   it("are five designs on the US loading gauge with their references", () => {
-    expect(US_CARBODIES.map((d) => d.id)).toEqual([...Object.keys(LOCOS), "proc-vehicle-amtrak-acela"]);
+    expect(US_CARBODIES.map((d) => d.id)).toEqual([...Object.keys(LOCOS), "proc-vehicle-amtrak-superliner", "proc-vehicle-amtrak-acela"]);
     for (const d of US_CARBODIES) {
       expect(d.loadingGauge).toBe("us");
       expect(d.references).toBe(d.id.replace("proc-vehicle-", "").replace("amtrak-", "amtrak-"));
@@ -89,6 +89,21 @@ describe("the US carbodies", () => {
       expect(s.max[0] - s.min[0]).toBeCloseTo(unit === "powerCar" ? ACELA_LENGTH.powerCar : ACELA_LENGTH.coach, 1);
       expect(findCoplanarOverlaps(glb)).toEqual([]);
       expect(m.rig!.supports).toHaveLength(2);
+    }
+  });
+
+  it("builds the Superliner coach and sleeper at 85 ft and 16 ft 2 in, on two trucks, with a door each side", () => {
+    for (const unit of ["coach", "sleeper"]) {
+      const m = amtrakSuperliner({ unit });
+      const glb = m.toGlb(unit);
+      const s = glbStats(glb);
+      expect(s.max[0] - s.min[0]).toBeCloseTo(SUPERLINER_LENGTH, 1);
+      expect(s.max[1]).toBeCloseTo(ft(16, 2), 1);
+      expect(s.max[2] - s.min[2]).toBeLessThanOrEqual(LOADING_GAUGES.us.width);
+      expect(s.triangles).toBeLessThanOrEqual(16000);
+      expect(findCoplanarOverlaps(glb)).toEqual([]);
+      expect(m.rig!.supports).toHaveLength(2);
+      expect(new Set(m.animations().filter((c) => c.drive.drive === "door").map((c) => (c.drive as { side: string }).side))).toEqual(new Set(["left", "right"]));
     }
   });
 

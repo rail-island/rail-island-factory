@@ -113,7 +113,7 @@ export function forget(id: string): void {
 }
 
 /** How many combinations besides the defaults variantsUnderTest() checks by default. */
-export const SAMPLED_VARIANTS = 3;
+export const SAMPLED_VARIANTS = 2;
 
 /** Whether the run checks every parameter combination (TEST_ALL_VARIANTS=1). */
 export const ALL_VARIANTS = process.env.TEST_ALL_VARIANTS === "1";

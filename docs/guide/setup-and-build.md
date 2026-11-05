@@ -70,7 +70,7 @@ minutes** (AGENTS.md); it takes about four and a half on a four-core machine
   `test/doors.test.ts` shares each passenger vehicle's default build between its
   four checks).
 - **Sampled variants.** A test that builds a design's parameter combinations
-  checks the defaults and three others spread evenly through the list, the same
+  checks the defaults and two others spread evenly through the list, the same
   ones every run (`variantsUnderTest` and `sample` in `test/catalogCache.ts`):
   the sweep's flicker, envelope and JS-against-generator checks, the LOD
   checks, and the family suites' per-variant loops. **`TEST_ALL_VARIANTS=1 pnpm

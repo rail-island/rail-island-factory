@@ -22,6 +22,7 @@ import { CARBODY_PALETTE, bandPainter, carbody, carbodyShell, endDiaphragm, face
 import { knuckleCoupler } from "./usHoodKit.ts";
 import { diamond, singleArm } from "./czElectricKit.ts";
 import { EMU_CATALOG, enumParam } from "./emuParts.ts";
+import { COACH_CATALOG } from "./csdCoaches.ts";
 import { articulate } from "./tramKit.ts";
 import { LOD_GLASS, type LodBand, type LodPart, type LodSections } from "./lodKit.ts";
 import { bogieParts, fitUnit, pantographParts, roofPart, turnBody, type UnitBody } from "./lodUnits.ts";
@@ -701,8 +702,7 @@ function acelaWindows(c: AcelaCar): Array<[number, number]> {
 const acelaLeaves = (): SliceDoorway[] => [1, -1].flatMap((s) => ACELA_DOORS.map(([a, b]) => ({ s, d0: a + LEAF_INSET, d1: b - LEAF_INSET, y0: ACELA_DOOR_Y[0] + LEAF_INSET, y1: ACELA_DOOR_Y[1] - LEAF_INSET })));
 
 /** A plug door: its frame round the doorway, the leaf in the body's bands with its window, sliding toward the car's middle; the step. */
-function acelaDoor(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, d0: number, d1: number): void {
-  const [y0, y1] = ACELA_DOOR_Y;
+function plugDoor(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, d0: number, d1: number, bands: ReadonlyArray<readonly [number, number, string]>, [y0, y1]: [number, number], glass: [number, number], step: string): void {
   const k = LEAF_INSET;
   m.scope("outline", () => {
     sidePanel(m, b, X, s, "rubber", d0, d0 + k, y0, y1, 0.004, 0.03);
@@ -715,15 +715,19 @@ function acelaDoor(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: nu
   openable(m, (mm, o) =>
     mm.moved(plugMove(o, s, dx), () => {
       mm.scope("leaf", () => {
-        for (const [a, c, mat] of ACELA_BANDS) {
+        for (const [a, c, mat] of bands) {
           const [lo, hi] = [Math.max(a, y0 + 0.02), Math.min(c, y1 - 0.02)];
           if (hi - lo > 1e-6) sidePanel(mm, b, X, s, mat, d0 + 0.02, d1 - 0.02, lo, hi, 0.008, 0.003);
         }
       });
-      mm.scope("glass", () => sidePanel(mm, b, X, s, "glass", d0 + 0.2, d1 - 0.2, 2.4, 2.95, 0.012, 0.004));
+      mm.scope("glass", () => sidePanel(mm, b, X, s, "glass", d0 + 0.2, d1 - 0.2, glass[0], glass[1], 0.012, 0.004));
     }),
   );
-  m.scope("step", () => sidePanel(m, b, X, s, "truckBlack", d0, d1, 1.22, 1.3, 0.006, 0.2));
+  m.scope("step", () => sidePanel(m, b, X, s, step, d0, d1, y0 - 0.08, y0, 0.006, 0.2));
+}
+
+function acelaDoor(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, d0: number, d1: number): void {
+  plugDoor(m, b, X, s, d0, d1, ACELA_BANDS, ACELA_DOOR_Y, [2.4, 2.95], "truckBlack");
 }
 
 /** A car facing +X drawn into m with X(d) the map from d to model x. */
@@ -830,6 +834,103 @@ export function acela(params?: ParamValues): MeshBuilder {
   });
   articulate({ m }, sections, COUPLER_Y, { profile: ACELA_BELLOWS, folds: 4, depth: 0.03 }, 10, slots.slice(0, -1).map((s) => s.lo));
   return m;
+}
+
+// ---------------------------------------------------------------------------
+// Amtrak Superliner: the bi-level long-distance car (1979), coach and sleeper
+
+export type SuperlinerUnit = "coach" | "sleeper";
+export const SUPERLINER_PARAMS: readonly ParamSpec[] = [enumParam("unit", "Car", { coach: "Coach", sleeper: "Sleeper" })];
+export const SUPERLINER_LENGTH = ft(85);
+const SL_GAP = 0.35;
+const SL_BODY = SUPERLINER_LENGTH - 2 * SL_GAP;
+const SL_TRUCKS = ft(59, 6);
+const SL_PAL = { slSilver: paint("#c3c7cb", 0.3), slRed: paint("#c0222c"), slBlue: paint("#24407a"), slDark: paint("#2a2c2f", 0.85) };
+/** Phase IV: fluted stainless steel, a red line low, two red lines over the blue band under the upper windows. */
+const SL_BANDS: ReadonlyArray<readonly [number, number, string]> = [
+  [0, 1.1, "slSilver"], [1.1, 1.15, "slRed"], [1.15, 2.6, "slSilver"], [2.6, 2.64, "slRed"], [2.64, 2.68, "slSilver"],
+  [2.68, 2.72, "slRed"], [2.72, 2.76, "slSilver"], [2.76, 2.9, "slBlue"], [2.9, 9, "slSilver"],
+];
+const SL_DOOR_Y: [number, number] = [0.72, 2.75];
+const SL_DOOR: [number, number] = [SL_BODY / 2 - 0.55, SL_BODY / 2 + 0.55];
+const SL_UPPER: [number, number] = [3.05, 3.8];
+const SL_LOWER: [number, number] = [1.4, 1.95];
+const SL_SPEC: CarbodySpec = {
+  length: SL_BODY, W: 1.55, Y: 1.0, S: 4.35, C: 4.9, lean: 0.97, arc: 6, B: 0.6, wl: 1.45, A: 0.7, wa: 1.53,
+  cuts: [SL_BODY / 2 - SL_TRUCKS / 2, SL_BODY / 2 + SL_TRUCKS / 2].map((d) => [d - 1.6, d + 1.6] as const),
+  edges: [], step: 1.0,
+};
+
+/** The windows (d spans) of each deck on a side. */
+function superlinerWindows(u: SuperlinerUnit): { upper: Array<[number, number]>; lower: Array<[number, number]> } {
+  const row = (from: number, to: number, n: number, w: number) =>
+    Array.from({ length: n }, (_, i): [number, number] => { const d = from + ((to - from) * (i + 0.5)) / n; return [d - w / 2, d + w / 2]; });
+  if (u === "coach") return { upper: row(1.2, SL_BODY - 1.2, 12, 1.55), lower: [...row(1.4, SL_DOOR[0] - 4.2, 2, 1.1), ...row(SL_DOOR[1] + 4.2, SL_BODY - 1.4, 2, 1.1)] };
+  return { upper: row(1.2, SL_BODY - 1.2, 14, 1.05), lower: [...row(1.4, SL_DOOR[0] - 4.2, 3, 0.85), ...row(SL_DOOR[1] + 4.2, SL_BODY - 1.4, 3, 0.85)] };
+}
+
+const slPaint = bandPainter(SL_BANDS, "slSilver", "slDark", "slDark");
+
+function drawSuperliner(m: MeshBuilder, u: SuperlinerUnit, X: (d: number) => number): void {
+  const b = carbody({ ...SL_SPEC, edges: edgesOf({ bands: SL_BANDS } as CarbodyLivery, SL_SPEC.Y, SL_SPEC.S) });
+  const leaves: SliceDoorway[] = [1, -1].map((s) => ({ s, d0: SL_DOOR[0] + LEAF_INSET, d1: SL_DOOR[1] - LEAF_INSET, y0: SL_DOOR_Y[0] + LEAF_INSET, y1: SL_DOOR_Y[1] - LEAF_INSET }));
+  const cut = leaves.map((o) => ({ ...o, d0: o.d0 - 0.002, d1: o.d1 + 0.002, y0: o.y0 - 0.002, y1: o.y1 + 0.002 }));
+  const win = superlinerWindows(u);
+  m.scope("body", () => {
+    m.scope("shell", () => carbodyShell(m, b, X, slPaint, { front: true, rear: true }, cut));
+    for (const s of [1, -1])
+      m.scope(s > 0 ? "right side" : "left side", () => {
+        m.scope("upper windows", () => win.upper.forEach(([a, e], i) => m.scope(`window ${i + 1}`, () => sideWindow(m, b, X, s, a, e, SL_UPPER[0], SL_UPPER[1], "slDark", "glass"))));
+        m.scope("lower windows", () => win.lower.forEach(([a, e], i) => m.scope(`window ${i + 1}`, () => sideWindow(m, b, X, s, a, e, SL_LOWER[0], SL_LOWER[1], "slDark", "glass"))));
+        m.scope("door", () => plugDoor(m, b, X, s, SL_DOOR[0], SL_DOOR[1], SL_BANDS, SL_DOOR_Y, [1.75, 2.3], "slDark"));
+        // the fluting of the lower body, broken by the door
+        m.scope("fluting", () => {
+          for (let y = 1.2; y < 2.55; y += 0.09)
+            for (const [a, e] of [[0.3, SL_DOOR[0] - 0.08], [SL_DOOR[1] + 0.08, SL_BODY - 0.3]] as const) {
+              const clear = win.lower.filter(([p, q]) => q > a && p < e && y > SL_LOWER[0] - 0.06 && y < SL_LOWER[1] + 0.06);
+              const spans: Array<[number, number]> = [];
+              let from = a;
+              for (const [p, q] of clear.sort((x, z) => x[0] - z[0])) { if (p - 0.05 > from) spans.push([from, p - 0.05]); from = q + 0.05; }
+              if (e > from) spans.push([from, e]);
+              for (const [p, q] of spans) stripDecal(m, b, X, s, "slDark", p, q, () => y, () => y + 0.018, 0.003, 1);
+            }
+        });
+        m.scope("lettering", () => sideLettering(m, b, X, s, "AMTRAK", SL_DOOR[1] + 2.2, 2.25, 0.22, "slBlue", 0.012));
+      });
+    const panes = [1, -1].flatMap((s) => [...win.upper.map(([a, e]) => ({ s, d0: a + 0.04, d1: e - 0.04, y0: SL_UPPER[0] + 0.04, y1: SL_UPPER[1] - 0.04 })), ...win.lower.map(([a, e]) => ({ s, d0: a + 0.04, d1: e - 0.04, y0: SL_LOWER[0] + 0.04, y1: SL_LOWER[1] - 0.04 }))]);
+    sliceCabin(m, b, X, 0, b.length, leaves, panes);
+  });
+  for (const e of [1, -1])
+    m.scope(e > 0 ? "front end" : "rear end", () => {
+      const x = X(e > 0 ? 0 : b.length);
+      endDiaphragm(m, e, x, 2.3, 4.3, 0.5);
+      m.scope("coupler", () => knuckleCoupler(m, e, e * x - 0.3, e * x + SL_GAP, COUPLER_Y));
+    });
+  m.scope("running gear", () => {
+    const spec = truckSpec([-ft(4, 3), ft(4, 3)], ft(0, 18), 1.9, 0.6);
+    const [t1, t2] = [SL_BODY / 2 - SL_TRUCKS / 2, SL_BODY / 2 + SL_TRUCKS / 2];
+    m.scope("front truck", () => truck(m, X(t1), spec));
+    m.scope("rear truck", () => truck(m, X(t2), spec));
+  });
+}
+
+export function amtrakSuperliner(params?: ParamValues): MeshBuilder {
+  const u = resolveParams(SUPERLINER_PARAMS, params).unit as SuperlinerUnit;
+  const m = new Builder({ ...INTERIOR_PALETTE, ...CARBODY_PALETTE, ...SL_PAL });
+  drawSuperliner(m, u, (d) => SUPERLINER_LENGTH / 2 - SL_GAP - d);
+  return m;
+}
+
+export function amtrakSuperlinerLod(params?: ParamValues): MeshBuilder {
+  const u = resolveParams(SUPERLINER_PARAMS, params).unit as SuperlinerUnit;
+  const b = carbody({ ...SL_SPEC, edges: [] });
+  const X = (d: number) => SUPERLINER_LENGTH / 2 - SL_GAP - d;
+  const bands: LodBand[] = [...lodBandsOf({ bands: SL_BANDS } as CarbodyLivery, SL_SPEC.B, SL_SPEC.S), [SL_SPEC.S, SL_SPEC.C, "slSilver"]];
+  const win = superlinerWindows(u);
+  const glass = [[win.upper[0]![0], win.upper[win.upper.length - 1]![1], SL_UPPER[0], SL_UPPER[1]] as const];
+  const body = carbodyLodBody(b, X, bands, "slSilver", false, false, glass);
+  const parts = bogieParts([X(SL_BODY / 2 - SL_TRUCKS / 2), X(SL_BODY / 2 + SL_TRUCKS / 2)].map((x) => [x, 1.9] as const), SL_SPEC.B);
+  return fitUnit({ palette: { ...CARBODY_PALETTE, ...SL_PAL }, bodies: [body], parts }, 100);
 }
 
 // ---------------------------------------------------------------------------
@@ -969,5 +1070,6 @@ export const US_CARBODIES: ProceduralDesign[] = [
   { id: "proc-vehicle-ge-p42dc", title: "GE P42DC Genesis", build: geP42dc, buildLod: geP42dcLod, params: P42_PARAMS, game: { weight: 122, power: 3169, maxspeed: 177, accel: null }, catalog: DIESEL_LOCO_CATALOG, loadingGauge: "us", references: "ge-p42dc" },
   { id: "proc-vehicle-siemens-alc42", title: "Siemens ALC-42 Charger", build: siemensAlc42, buildLod: siemensAlc42Lod, params: ALC_PARAMS, game: { weight: 120, power: 3132, maxspeed: 201, accel: null }, catalog: DIESEL_LOCO_CATALOG, loadingGauge: "us", references: "siemens-alc42" },
   { id: "proc-vehicle-prr-gg1", title: "PRR GG1", build: prrGg1, buildLod: prrGg1Lod, params: GG1_PARAMS, game: { weight: 215, power: 3445, maxspeed: 161, accel: null }, catalog: ELECTRIC_LOCO_CATALOG, loadingGauge: "us", references: "prr-gg1" },
+  { id: "proc-vehicle-amtrak-superliner", title: "Amtrak Superliner", build: amtrakSuperliner, buildLod: amtrakSuperlinerLod, params: SUPERLINER_PARAMS, game: { weight: 75, power: 0, maxspeed: 161, accel: null, variants: [{ params: { unit: "sleeper" }, weight: 73 }] }, catalog: COACH_CATALOG, loadingGauge: "us", references: "amtrak-superliner" },
   { id: "proc-vehicle-amtrak-acela", title: "Acela Express", build: acela, buildLod: acelaLod, params: ACELA_PARAMS, lodTriangles: 500, game: acelaGame(), catalog: EMU_CATALOG, loadingGauge: "us", references: "amtrak-acela" },
 ];

@@ -4,8 +4,10 @@
     "proc-vehicle-aero-a10": 75,
     "proc-vehicle-airbus-a380": 76,
     "proc-vehicle-airbus-beluga": 74,
+    "proc-vehicle-american-440": 132,
     "proc-vehicle-american-truck": 5,
     "proc-vehicle-amtrak-acela": 128,
+    "proc-vehicle-amtrak-superliner": 133,
     "proc-vehicle-bmo-double-deck-coach": 17,
     "proc-vehicle-boeing-737": 77,
     "proc-vehicle-boeing-747": 73,
@@ -102,6 +104,7 @@
     "proc-vehicle-mtr-m-train": 113,
     "proc-vehicle-muv-69": 56,
     "proc-vehicle-nas-flat-wagon": 19,
+    "proc-vehicle-nyc-hudson": 131,
     "proc-vehicle-obb-1012": 48,
     "proc-vehicle-obb-1040": 49,
     "proc-vehicle-ocean-liner": 4,
@@ -109,6 +112,7 @@
     "proc-vehicle-passenger-ferry": 82,
     "proc-vehicle-praga-rv": 61,
     "proc-vehicle-prr-gg1": 127,
+    "proc-vehicle-prr-k4s": 130,
     "proc-vehicle-rah-tank-wagon": 23,
     "proc-vehicle-raj-hopper-wagon": 22,
     "proc-vehicle-reefer-semi-truck": 59,
@@ -126,12 +130,37 @@
     "proc-vehicle-tgv-duplex": 114,
     "proc-vehicle-ua-open-wagon": 20,
     "proc-vehicle-uic-z-coach": 117,
+    "proc-vehicle-up-big-boy": 129,
     "proc-vehicle-vectron": 50,
     "proc-vehicle-wap-hopper-wagon": 43,
     "proc-vehicle-zsr-coach": 116
   },
   "vehicles": {
     "train": {
+      "proc-vehicle-american-440?": {
+        "id": 4910,
+        "size": 4
+      },
+      "proc-vehicle-american-440?formation=No. 119 with tender": {
+        "id": 4932,
+        "size": 6
+      },
+      "proc-vehicle-american-440?formation=with tender": {
+        "id": 4926,
+        "size": 6
+      },
+      "proc-vehicle-american-440?livery=no119": {
+        "id": 4918,
+        "size": 4
+      },
+      "proc-vehicle-american-440?livery=no119&unit=tender": {
+        "id": 4922,
+        "size": 4
+      },
+      "proc-vehicle-american-440?unit=tender": {
+        "id": 4914,
+        "size": 4
+      },
       "proc-vehicle-amtrak-acela?": {
         "id": 4788,
         "size": 6
@@ -150,6 +179,14 @@
       },
       "proc-vehicle-amtrak-acela?unit=firstClass": {
         "id": 4802,
+        "size": 8
+      },
+      "proc-vehicle-amtrak-superliner?": {
+        "id": 4938,
+        "size": 8
+      },
+      "proc-vehicle-amtrak-superliner?unit=sleeper": {
+        "id": 4946,
         "size": 8
       },
       "proc-vehicle-bmo-double-deck-coach?": {
@@ -1044,6 +1081,18 @@
         "id": 944,
         "size": 16
       },
+      "proc-vehicle-nyc-hudson?": {
+        "id": 4890,
+        "size": 6
+      },
+      "proc-vehicle-nyc-hudson?formation=with tender": {
+        "id": 4900,
+        "size": 10
+      },
+      "proc-vehicle-nyc-hudson?unit=tender": {
+        "id": 4896,
+        "size": 4
+      },
       "proc-vehicle-obb-1012?": {
         "id": 1936,
         "size": 16
@@ -1067,6 +1116,18 @@
       "proc-vehicle-prr-gg1?livery=tuscan": {
         "id": 4776,
         "size": 6
+      },
+      "proc-vehicle-prr-k4s?": {
+        "id": 4874,
+        "size": 4
+      },
+      "proc-vehicle-prr-k4s?formation=with tender": {
+        "id": 4882,
+        "size": 8
+      },
+      "proc-vehicle-prr-k4s?unit=tender": {
+        "id": 4878,
+        "size": 4
       },
       "proc-vehicle-rah-tank-wagon?": {
         "id": 1008,
@@ -1203,6 +1264,18 @@
       "proc-vehicle-uic-z-coach?variant=restaurant": {
         "id": 4432,
         "size": 16
+      },
+      "proc-vehicle-up-big-boy?": {
+        "id": 4850,
+        "size": 8
+      },
+      "proc-vehicle-up-big-boy?formation=with tender": {
+        "id": 4862,
+        "size": 12
+      },
+      "proc-vehicle-up-big-boy?unit=tender": {
+        "id": 4858,
+        "size": 4
       },
       "proc-vehicle-vectron?": {
         "id": 1968,

@@ -120,7 +120,12 @@ file is the authority.
 | `ge-p42dc` | GE P42DC Genesis | train RAIL | 1996 | 0 PASS | 135 / 73 | 3 | - |
 | `siemens-alc42` | Siemens ALC-42 Charger | train RAIL | 2022 | 0 PASS | 139 / 73 | 2 | - |
 | `prr-gg1` | PRR GG1 | train ELRL | 1935 | 0 PASS | 138 / 79 | 3 | - |
+| `amtrak-superliner` | Amtrak Superliner | train RAIL | 1979 | 74 PASS | 51 / 14 | 2 | - |
 | `amtrak-acela` | Acela Express | train ELRL | 2000 | 0 PASS | 183 / 102 | 4 | 8 cars |
+| `up-big-boy` | UP Big Boy | train RAIL | 1941 | 0 PASS | 163 / 104 | 2 | with tender |
+| `prr-k4s` | PRR K4s | train RAIL | 1914 | 0 PASS | 112 / 58 | 2 | with tender |
+| `nyc-hudson` | NYC J-3a Hudson | train RAIL | 1938 | 0 PASS | 140 / 80 | 2 | with tender |
+| `american-440` | Golden Spike 4-4-0 | train RAIL | 1868 | 0 PASS | 45 / 17 | 4 | with tender, No. 119 with tender |
 | `tatra-t3` | Tatra T3 | road | 1962 | 110 PASS | 92 / 46 | 3 | - |
 | `tatra-t6` | Tatra T6A5 | road | 1991 | 130 PASS | 99 / 50 | 1 | - |
 | `tatra-kt8` | Tatra KT8D5 | road | 1986 | 230 PASS | 137 / 68 | 3 | - |

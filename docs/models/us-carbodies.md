@@ -1,7 +1,7 @@
 # North American carbody locomotives and the Acela
 
-**Covers** - the streamlined North American designs (`proc-vehicle-emd-f7`, `proc-vehicle-ge-p42dc`, `proc-vehicle-siemens-alc42`, `proc-vehicle-prr-gg1`, `proc-vehicle-amtrak-acela`): measures, liveries, the carbody kit they are lofted with, the Acela's cars and train, deviations and tests.
-**Code** - `generator/usCarbodies.ts` (`US_CARBODIES`), `generator/carbodyKit.ts`, `generator/sliceBody.ts`, `test/usCarbodies.test.ts`, `assets/emd-f7/`, `assets/ge-p42dc/`, `assets/siemens-alc42/`, `assets/prr-gg1/`, `assets/amtrak-acela/`
+**Covers** - the streamlined North American designs (`proc-vehicle-emd-f7`, `proc-vehicle-ge-p42dc`, `proc-vehicle-siemens-alc42`, `proc-vehicle-prr-gg1`, `proc-vehicle-amtrak-superliner`, `proc-vehicle-amtrak-acela`): measures, liveries, the carbody kit they are lofted with, the Acela's cars and train, deviations and tests.
+**Code** - `generator/usCarbodies.ts` (`US_CARBODIES`), `generator/carbodyKit.ts`, `generator/sliceBody.ts`, `test/usCarbodies.test.ts`, `assets/emd-f7/`, `assets/ge-p42dc/`, `assets/siemens-alc42/`, `assets/prr-gg1/`, `assets/amtrak-superliner/`, `assets/amtrak-acela/`
 **See also** - [us-diesels.md](us-diesels.md), [loading-gauge.md](loading-gauge.md), [shinkansen-0.md](shinkansen-0.md), [vehicles.md](vehicles.md), [openttd-figures.md](openttd-figures.md)
 
 ## The designs
@@ -12,11 +12,12 @@
 | `proc-vehicle-ge-p42dc` | GE P42DC Genesis | `livery`: `phaseV`, `phaseIII`, `via` | 21.03 m | 8,400 - 8,800 |
 | `proc-vehicle-siemens-alc42` | Siemens ALC-42 Charger | `livery`: `phaseVII`, `midwest` (the SC-44's Amtrak Midwest scheme) | 21.79 m | about 10,300 |
 | `proc-vehicle-prr-gg1` | PRR GG1 | `livery`: `brunswick`, `tuscan`, `pennCentral` | 24.23 m | 13,300 - 14,400 |
+| `proc-vehicle-amtrak-superliner` | Amtrak Superliner | `unit`: `coach`, `sleeper` | 25.91 m | 8,500 - 8,700 |
 | `proc-vehicle-amtrak-acela` | Acela Express | `unit`: `powerCar`, `businessClass`, `firstClass`, `cafe`, `train` (`cars` 3 - 8, default 4) | 21.22 m power car, 26.64 m coach | 7,200 - 10,200 a car |
 
 All are drawn at their real size to the US loading gauge ([loading-gauge.md](loading-gauge.md)),
 3.04 - 3.16 m wide. The F7, P42DC and ALC-42 are diesel locomotives (`DIESEL_LOCO_CATALOG`),
-the GG1 an electric locomotive (`ELECTRIC_LOCO_CATALOG`), the Acela an electric trainset
+the GG1 an electric locomotive (`ELECTRIC_LOCO_CATALOG`), the Superliner a coach (`COACH_CATALOG`), the Acela an electric trainset
 (`EMU_CATALOG`). All have AAR knuckle couplers (`knuckleCoupler`, usHoodKit.ts) and US trucks
 (the diesel toolkit's bogie); the GG1 has its own 2-C+C-2 running gear.
 
@@ -50,6 +51,13 @@ where the centre line reaches their height (`noseLamps`).
   game's wire, the front one folded), and the running gear: on each half three 57 in drivers
   and the two-axle guiding truck under one frame, a bogie node each. The five gold
   pinstripes gather into the "cat whiskers" at both noses.
+- **Amtrak Superliner** - the bi-level long-distance car (built from the user's reference and
+  photographs): 85 ft long and 16 ft 2 in high, its fluted lower body (thin dark lines on the
+  stainless steel, broken by the door and the lower windows), the Phase IV stripes - a red
+  line low, two red lines over the blue band under the upper deck's windows - and the low centre
+  door on each side, a plug door opening onto the car's cabin (`plugDoor`, shared with the
+  Acela's coaches). The coach has 12 large upper windows a side and four on the lower deck,
+  the sleeper 14 smaller upper and six lower ones. Diaphragms at the upper deck's height.
 - **Acela Express** - the power car's long sloping nose and windscreen, its single-arm
   pantograph (raised) and grilles; the coaches' window bands (business class 13 windows a
   side, first class 11 wider ones, the cafe 8) and end doors. `train` is an articulated set
