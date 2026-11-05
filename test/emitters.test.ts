@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { DESIGNS } from "../generator/generate.ts";
 import { paramCombinations, resolveParams, type ProceduralDesign } from "../generator/design.ts";
 import type { Emitter } from "../generator/meshCore.ts";
-import { ALL_VARIANTS, sample } from "./catalogCache";
+import { expectEmittersOnMouths } from "./emitterCheck";
 
 function built(d: ProceduralDesign, params: Record<string, string> = {}): { emitters: readonly Emitter[]; pos: number[] } {
   const m = d.build(resolveParams(d.params ?? [], params));
@@ -17,11 +17,6 @@ function built(d: ProceduralDesign, params: Record<string, string> = {}): { emit
 /** Every combination of a design's parameters it offers (small for the designs that smoke); a conditional value only where it applies. */
 function combos(d: ProceduralDesign): Record<string, string>[] {
   return paramCombinations(d.params ?? []) as Record<string, string>[];
-}
-
-/** Whether `params` are the design's defaults (the build `built(d)` made). */
-function isDefault(d: ProceduralDesign, params: Record<string, string>): boolean {
-  return JSON.stringify(resolveParams(d.params ?? [], params)) === JSON.stringify(resolveParams(d.params ?? [], {}));
 }
 
 const SMOKERS = [
@@ -36,33 +31,15 @@ const SMOKERS = [
 ];
 
 describe("emitters", () => {
-  // one test per design: a single loop over every design ran for minutes without
-  // yielding, long enough to time out the worker's reports to Vitest
-  describe("sit on the mouth they rise from, never inside or above the model", () => {
-    // Every combination of a design that smokes (a SMOKERS design, or one whose
-    // defaults emit); the defaults and the sampled few of the others
-    // (catalogCache.sample), every one with TEST_ALL_VARIANTS=1.
-    for (const d of DESIGNS.values()) it(d.id, () => {
-      const all = combos(d);
-      if (all.length > 64) return;
-      const first = built(d);
-      const list = ALL_VARIANTS || SMOKERS.includes(d.id) || first.emitters.length > 0 ? all : sample(all);
-      for (const params of list) {
-        const { emitters, pos } = isDefault(d, params) ? first : built(d, params);
-        for (const e of emitters) {
-          const [x, y, z] = e.at;
-          const reach = 2 * e.radius + 0.1;
-          let rim = false;
-          let over = false;
-          for (let i = 0; i < pos.length; i += 3) {
-            const h = Math.hypot(pos[i]! - x, pos[i + 2]! - z);
-            if (h <= reach && Math.abs(pos[i + 1]! - y) < 0.1) rim = true;
-            if (h < e.radius * 0.5 && pos[i + 1]! > y + 0.2) over = true;
-          }
-          const what = `${d.id} ${JSON.stringify(params)} ${e.kind} at ${e.at.map((v) => v.toFixed(2))}`;
-          expect(rim, `${what}: no mouth there`).toBe(true);
-          expect(over, `${what}: covered by geometry`).toBe(false);
-        }
+  // Every design's defaults and its sampled combinations are checked by the catalog
+  // sweep (test/catalogSweep.ts); here every combination of the designs that smoke:
+  // the named stacks and funnels and the steam locomotives.
+  const steam = [...DESIGNS.values()].filter((d) => d.catalog?.traction === "steam");
+  describe("sit on the mouth they rise from, never inside or above the model, in every combination", () => {
+    for (const d of [...SMOKERS.map((id) => DESIGNS.get(id)!), ...steam]) it(d.id, () => {
+      for (const params of combos(d)) {
+        const { emitters, pos } = built(d, params);
+        expectEmittersOnMouths(emitters, pos, `${d.id} ${JSON.stringify(params)}`);
       }
     }, 300_000);
   });
@@ -105,7 +82,7 @@ describe("fountain water", () => {
     expect(fountains.map((d) => d.id).sort()).toEqual(["proc-building-fountain-classical", "proc-building-fountain-modern", "proc-building-fountain-obelisk"]);
     const styles = fountains.map((d) => d.build().fountain()?.style).sort();
     expect(styles).toEqual(["classical", "modern", "sculptural"]);
-    for (const d of DESIGNS.values()) if (!fountains.includes(d) && combos(d).length <= 1) expect(d.build().fountain(), d.id).toBeNull();
+    // that nothing else states fountain water is the catalog sweep's (test/catalogSweep.ts)
   });
 
   it("fills its basins and lands every jet on water", () => {

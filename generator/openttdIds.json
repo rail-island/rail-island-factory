@@ -11,6 +11,7 @@
     "proc-vehicle-bmo-double-deck-coach": 17,
     "proc-vehicle-boeing-737": 77,
     "proc-vehicle-boeing-747": 73,
+    "proc-vehicle-budd-rdc": 134,
     "proc-vehicle-bus-1": 71,
     "proc-vehicle-cd-110": 33,
     "proc-vehicle-cd-130": 34,
@@ -62,6 +63,7 @@
     "proc-vehicle-csd-m296": 105,
     "proc-vehicle-csd-t499": 89,
     "proc-vehicle-csd-t679-0": 88,
+    "proc-vehicle-cta-5000": 137,
     "proc-vehicle-db-111": 46,
     "proc-vehicle-db-212": 55,
     "proc-vehicle-db-628": 106,
@@ -105,18 +107,28 @@
     "proc-vehicle-muv-69": 56,
     "proc-vehicle-nas-flat-wagon": 19,
     "proc-vehicle-nyc-hudson": 131,
+    "proc-vehicle-nyc-r160": 136,
     "proc-vehicle-obb-1012": 48,
     "proc-vehicle-obb-1040": 49,
     "proc-vehicle-ocean-liner": 4,
     "proc-vehicle-pao-flat-wagon": 38,
     "proc-vehicle-passenger-ferry": 82,
+    "proc-vehicle-pioneer-zephyr": 135,
     "proc-vehicle-praga-rv": 61,
     "proc-vehicle-prr-gg1": 127,
     "proc-vehicle-prr-k4s": 130,
     "proc-vehicle-rah-tank-wagon": 23,
     "proc-vehicle-raj-hopper-wagon": 22,
     "proc-vehicle-reefer-semi-truck": 59,
+    "proc-vehicle-sf-cable-car": 141,
     "proc-vehicle-shinkansen-0": 112,
+    "proc-vehicle-shinkansen-100": 147,
+    "proc-vehicle-shinkansen-500": 144,
+    "proc-vehicle-shinkansen-700": 145,
+    "proc-vehicle-shinkansen-e4": 148,
+    "proc-vehicle-shinkansen-e5": 143,
+    "proc-vehicle-shinkansen-e6": 146,
+    "proc-vehicle-shinkansen-n700s": 142,
     "proc-vehicle-siemens-alc42": 126,
     "proc-vehicle-small-airplane": 79,
     "proc-vehicle-solaris-urbino-15": 70,
@@ -131,6 +143,9 @@
     "proc-vehicle-ua-open-wagon": 20,
     "proc-vehicle-uic-z-coach": 117,
     "proc-vehicle-up-big-boy": 129,
+    "proc-vehicle-us-boxcar": 139,
+    "proc-vehicle-us-caboose": 138,
+    "proc-vehicle-us-well-car": 140,
     "proc-vehicle-vectron": 50,
     "proc-vehicle-wap-hopper-wagon": 43,
     "proc-vehicle-zsr-coach": 116
@@ -200,6 +215,14 @@
       "proc-vehicle-bmo-double-deck-coach?livery=cdNajbrt": {
         "id": 816,
         "size": 16
+      },
+      "proc-vehicle-budd-rdc?": {
+        "id": 4954,
+        "size": 8
+      },
+      "proc-vehicle-budd-rdc?variant=rdc2": {
+        "id": 4962,
+        "size": 8
       },
       "proc-vehicle-cd-110?": {
         "id": 1424,
@@ -737,6 +760,10 @@
         "id": 2528,
         "size": 16
       },
+      "proc-vehicle-cta-5000?": {
+        "id": 5018,
+        "size": 4
+      },
       "proc-vehicle-db-111?": {
         "id": 1824,
         "size": 16
@@ -1093,6 +1120,14 @@
         "id": 4896,
         "size": 4
       },
+      "proc-vehicle-nyc-r160?": {
+        "id": 5006,
+        "size": 6
+      },
+      "proc-vehicle-nyc-r160?unit=trailer": {
+        "id": 5012,
+        "size": 6
+      },
       "proc-vehicle-obb-1012?": {
         "id": 1936,
         "size": 16
@@ -1104,6 +1139,22 @@
       "proc-vehicle-pao-flat-wagon?": {
         "id": 1568,
         "size": 16
+      },
+      "proc-vehicle-pioneer-zephyr?": {
+        "id": 4970,
+        "size": 6
+      },
+      "proc-vehicle-pioneer-zephyr?formation=3 cars": {
+        "id": 4988,
+        "size": 18
+      },
+      "proc-vehicle-pioneer-zephyr?unit=coach": {
+        "id": 4976,
+        "size": 6
+      },
+      "proc-vehicle-pioneer-zephyr?unit=observation": {
+        "id": 4982,
+        "size": 6
       },
       "proc-vehicle-prr-gg1?": {
         "id": 4770,
@@ -1168,6 +1219,118 @@
       "proc-vehicle-shinkansen-0?unit=pantographCar": {
         "id": 3840,
         "size": 16
+      },
+      "proc-vehicle-shinkansen-100?": {
+        "id": 5334,
+        "size": 8
+      },
+      "proc-vehicle-shinkansen-100?formation=8 cars": {
+        "id": 5358,
+        "size": 32
+      },
+      "proc-vehicle-shinkansen-100?livery=jrWest": {
+        "id": 5350,
+        "size": 8
+      },
+      "proc-vehicle-shinkansen-100?unit=middleCar": {
+        "id": 5342,
+        "size": 8
+      },
+      "proc-vehicle-shinkansen-500?": {
+        "id": 5172,
+        "size": 8
+      },
+      "proc-vehicle-shinkansen-500?formation=8 cars": {
+        "id": 5196,
+        "size": 32
+      },
+      "proc-vehicle-shinkansen-500?livery=kodama": {
+        "id": 5188,
+        "size": 8
+      },
+      "proc-vehicle-shinkansen-500?unit=middleCar": {
+        "id": 5180,
+        "size": 8
+      },
+      "proc-vehicle-shinkansen-700?": {
+        "id": 5228,
+        "size": 8
+      },
+      "proc-vehicle-shinkansen-700?formation=8 cars": {
+        "id": 5252,
+        "size": 32
+      },
+      "proc-vehicle-shinkansen-700?livery=doctorYellow": {
+        "id": 5244,
+        "size": 8
+      },
+      "proc-vehicle-shinkansen-700?unit=middleCar": {
+        "id": 5236,
+        "size": 8
+      },
+      "proc-vehicle-shinkansen-e4?": {
+        "id": 5390,
+        "size": 8
+      },
+      "proc-vehicle-shinkansen-e4?formation=8 cars": {
+        "id": 5414,
+        "size": 32
+      },
+      "proc-vehicle-shinkansen-e4?livery=toki": {
+        "id": 5406,
+        "size": 8
+      },
+      "proc-vehicle-shinkansen-e4?unit=middleCar": {
+        "id": 5398,
+        "size": 8
+      },
+      "proc-vehicle-shinkansen-e5?": {
+        "id": 5116,
+        "size": 8
+      },
+      "proc-vehicle-shinkansen-e5?formation=8 cars": {
+        "id": 5140,
+        "size": 32
+      },
+      "proc-vehicle-shinkansen-e5?livery=h5": {
+        "id": 5132,
+        "size": 8
+      },
+      "proc-vehicle-shinkansen-e5?unit=middleCar": {
+        "id": 5124,
+        "size": 8
+      },
+      "proc-vehicle-shinkansen-e6?": {
+        "id": 5284,
+        "size": 6
+      },
+      "proc-vehicle-shinkansen-e6?formation=8 cars": {
+        "id": 5302,
+        "size": 32
+      },
+      "proc-vehicle-shinkansen-e6?livery=akita": {
+        "id": 5296,
+        "size": 6
+      },
+      "proc-vehicle-shinkansen-e6?unit=middleCar": {
+        "id": 5290,
+        "size": 6
+      },
+      "proc-vehicle-shinkansen-n700s?": {
+        "id": 5060,
+        "size": 8
+      },
+      "proc-vehicle-shinkansen-n700s?formation=8 cars": {
+        "id": 5084,
+        "size": 32
+      },
+      "proc-vehicle-shinkansen-n700s?livery=jrKyushu": {
+        "id": 5076,
+        "size": 8
+      },
+      "proc-vehicle-shinkansen-n700s?unit=middleCar": {
+        "id": 5068,
+        "size": 8
       },
       "proc-vehicle-siemens-alc42?": {
         "id": 4758,
@@ -1276,6 +1439,34 @@
       "proc-vehicle-up-big-boy?unit=tender": {
         "id": 4858,
         "size": 4
+      },
+      "proc-vehicle-us-boxcar?": {
+        "id": 5030,
+        "size": 6
+      },
+      "proc-vehicle-us-boxcar?livery=railbox": {
+        "id": 5036,
+        "size": 6
+      },
+      "proc-vehicle-us-caboose?": {
+        "id": 5022,
+        "size": 4
+      },
+      "proc-vehicle-us-caboose?livery=unionPacific": {
+        "id": 5026,
+        "size": 4
+      },
+      "proc-vehicle-us-well-car?": {
+        "id": 5042,
+        "size": 6
+      },
+      "proc-vehicle-us-well-car?cargo=double": {
+        "id": 5054,
+        "size": 6
+      },
+      "proc-vehicle-us-well-car?cargo=empty": {
+        "id": 5048,
+        "size": 6
       },
       "proc-vehicle-vectron?": {
         "id": 1968,
@@ -1410,6 +1601,14 @@
       "proc-vehicle-reefer-semi-truck?": {
         "id": 304,
         "size": 16
+      },
+      "proc-vehicle-sf-cable-car?": {
+        "id": 768,
+        "size": 4
+      },
+      "proc-vehicle-sf-cable-car?livery=california": {
+        "id": 772,
+        "size": 4
       },
       "proc-vehicle-solaris-urbino-15?": {
         "id": 592,

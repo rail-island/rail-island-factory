@@ -23,6 +23,7 @@ import { VEHICLES } from "../generator/vehicles";
 import { loadingGaugeOf } from "../generator/loadingGauge";
 import { built, built as cached, design, forget, glbOf, jsModuleOf, jsTextOf, lodGlbOf, variantsUnderTest } from "./catalogCache";
 import { expectSealed, jointMesh } from "./rigHelpers";
+import { expectEmittersOnMouths } from "./emitterCheck";
 
 /** The most a prop's or a set preview's JS model may weigh: the builder runtime and its boxes. */
 const PROP_JS_LIMIT = 24_000;
@@ -110,6 +111,15 @@ export function sweep(ids: readonly string[]): void {
       // tier's dark core, its stone piers and its cornice all ended at one height.
       it("has no z-fighting faces", () => {
         expect(findCoplanarOverlaps(glbOf(id))).toEqual([]);
+      });
+
+      // Smoke, steam and flames rise from the mouth of a stack (docs/models/emitters.md):
+      // the defaults here, the sampled combinations below, every combination of the
+      // designs test/emitters.test.ts names
+      it("puts its emitters on the mouths they rise from, and states fountain water only if a fountain", () => {
+        const b = built(id);
+        expectEmittersOnMouths(b.emitters, b.positions ?? [], id);
+        expect(b.fountain).toBe(/fountain/.test(id));
       });
 
       // (a parametric design's second build is its defaults combination's, below)
@@ -325,6 +335,7 @@ export function sweep(ids: readonly string[]): void {
           const vehicle = VEHICLES.includes(d);
           const built = d.build(combo);
           const glb = built.toGlb(d.id);
+          expectEmittersOnMouths(built.emitters(), built.emitters().length ? built.positions() : [], `${id} ${JSON.stringify(combo)}`);
           // the first combination is the defaults, built a second time: the same bytes
           // and source tree as the cached build given no values (the design builds the
           // same every time, the game's LOD cache relies on it), whose faces "has no

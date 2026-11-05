@@ -3,10 +3,11 @@
 // and keep the repository's 3.1 m by 4.7 m ("uic"); North American stock is
 // drawn at its real, larger size ("us") and the Shinkansen at 3.3 m, narrowed
 // from its real 3.35 - 3.38 m so it clears the game's platform edge
-// ("shinkansen"). No `node:` imports. See docs/models/loading-gauge.md.
+// ("shinkansen"); a double-stack well car reaches 6.2 m ("usDoubleStack"). No
+// `node:` imports. See docs/models/loading-gauge.md.
 
 /** The loading gauge a design names (`ProceduralDesign.loadingGauge`). */
-export type LoadingGauge = "uic" | "us" | "shinkansen";
+export type LoadingGauge = "uic" | "us" | "usDoubleStack" | "shinkansen";
 
 export interface LoadingGaugeLimits {
   /** Body width, metres: the widest fixed part, centred on the track. */
@@ -20,6 +21,8 @@ export const LOADING_GAUGES: Readonly<Record<LoadingGauge, LoadingGaugeLimits>> 
   // AAR Plate F (3.25 m, 4.80 m) with the taller Plate H of the newest hood units
   // and the Superliner; 3.3 m is what the platform edge leaves room for
   us: { width: 3.3, height: 4.95 },
+  // a well car's two stacked containers (AAR Plate H's double-stack clearance)
+  usDoubleStack: { width: 3.3, height: 6.2 },
   shinkansen: { width: 3.3, height: 4.7 },
 };
 

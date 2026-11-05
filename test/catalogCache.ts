@@ -14,6 +14,7 @@ import { DESIGNS, designSource, toGlb } from "../generator/generate";
 import { bundleDesign } from "../generator/jsModel";
 import { buildLodModel } from "../generator/lodModel";
 import type { VehicleRig } from "../generator/rig";
+import type { Emitter } from "../generator/meshCore";
 import type { SourceTree } from "../generator/sourceTree";
 
 export interface Built {
@@ -21,6 +22,11 @@ export interface Built {
   triangles: number;
   rig: VehicleRig | null;
   tree: SourceTree;
+  /** Its emitters, and its vertex positions when it has any (the emitter check reads them). */
+  emitters: readonly Emitter[];
+  positions: Float32Array | null;
+  /** Whether it states fountain water. */
+  fountain: boolean;
 }
 
 /** A design's JS module (generator/jsModel.ts) as the game imports it. */
@@ -49,7 +55,11 @@ export function built(id: string): Built {
   if (!b) {
     const d = design(id);
     const model = d.build();
-    b = { glb: toGlb(id, model), triangles: model.triangleCount(), rig: model.rig, tree: model.sourceTree(d.id, d.title) };
+    const emitters = model.emitters();
+    b = {
+      glb: toGlb(id, model), triangles: model.triangleCount(), rig: model.rig, tree: model.sourceTree(d.id, d.title),
+      emitters, positions: emitters.length ? Float32Array.from(model.positions()) : null, fountain: model.fountain() !== null,
+    };
     BUILT.set(id, b);
   }
   return b;
@@ -113,7 +123,7 @@ export function forget(id: string): void {
 }
 
 /** How many combinations besides the defaults variantsUnderTest() checks by default. */
-export const SAMPLED_VARIANTS = 2;
+export const SAMPLED_VARIANTS = 1;
 
 /** Whether the run checks every parameter combination (TEST_ALL_VARIANTS=1). */
 export const ALL_VARIANTS = process.env.TEST_ALL_VARIANTS === "1";

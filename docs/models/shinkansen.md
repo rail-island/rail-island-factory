@@ -1,0 +1,55 @@
+# The later Shinkansen series
+
+**Covers** - the seven later Shinkansen designs (`proc-vehicle-shinkansen-n700s`, `-e5`, `-500`, `-700`, `-e6`, `-100`, `-e4`): the series specs, their cars and trains, liveries, the gauge, deviations and tests.
+**Code** - `generator/shinkansen.ts` (`SHINKANSEN_DESIGNS`, `SHINKANSEN_SERIES`, `shinkansenTrain`), `generator/usTransit.ts` (`drawCar`), `generator/carbodyKit.ts`, `test/shinkansen.test.ts`, `assets/shinkansen-*/`
+**See also** - [shinkansen-0.md](shinkansen-0.md), [us-transit.md](us-transit.md), [us-carbodies.md](us-carbodies.md), [loading-gauge.md](loading-gauge.md)
+
+## The designs
+
+| id | title | `livery` (default first) | end car / middle car | nose |
+|---|---|---|---|---|
+| `proc-vehicle-shinkansen-n700s` | Shinkansen N700S | `jrCentral`, `jrKyushu` | 27.35 / 25.0 m | 10.7 m "dual supreme wing" |
+| `proc-vehicle-shinkansen-e5` | Shinkansen E5 / H5 | `hayabusa` (E5), `h5` | 26.5 / 25.0 m | 15 m, the canopy cab |
+| `proc-vehicle-shinkansen-500` | Shinkansen 500 series | `original` (Nozomi), `kodama` | 27.0 / 25.0 m | 15 m needle, round body |
+| `proc-vehicle-shinkansen-700` | Shinkansen 700 / 923 | `jrCentral`, `doctorYellow` (the 923) | 27.35 / 25.0 m | 9.2 m "duck bill" |
+| `proc-vehicle-shinkansen-e6` | Shinkansen E6 | `komachi`, `akita` | 23.075 / 20.5 m | 13 m, a mini-shinkansen 2.945 m wide |
+| `proc-vehicle-shinkansen-100` | Shinkansen 100 series | `jnr`, `jrWest` | 26.05 / 25.0 m | 5 m, after the 0 series |
+| `proc-vehicle-shinkansen-e4` | Shinkansen E4 Max | `max`, `toki` | 25.7 / 25.0 m | 11.5 m, double-deck, 4.485 m high |
+
+Each design's `unit` is the end car (the default: the car with the nose, a motor car),
+`middleCar` (raising its single-arm pantograph to the game's wire) or `train` with `cars`
+3 - 8 (default 4): an end car at each end, the rear one turned, the second and next-to-last
+cars raising their pantographs (the middle one of three; `shinkansenTrain`); each car a section
+of an articulated set (`articulate`), bellows between them. All are electric units
+(`EMU_CATALOG`) on the Shinkansen gauge ([loading-gauge.md](loading-gauge.md)): narrowed from
+their real 3.35 - 3.38 m to 3.24 - 3.28 m; the E6 keeps its 2.945 m.
+
+## The series spec (`ShinkansenSeries`)
+
+A series is its car lengths, the section (belly, shoulder, crown, skirt), its nose as a
+`NoseShape` (the carbody kit's tables of crown, shoulder, belly and apron over the distance
+from the tip, and the plan's superellipse), the windscreen's span on the nose's crown and the
+headlights on its sides, the window rows (two on the E4's double-deck cars), the doors and the
+bogies, its liveries (side bands by height, roof and skirt) and game figures. `carDef` turns a
+series into a `CarDef` for the shared car builder (`drawCar`, [us-transit.md](us-transit.md)):
+the lofted body, windows, plug doors onto the cabin (behind the cab on the end car), the
+skirts cut over the bogies, centre couplers inside the train (the end car's covered by its
+nose), the pantograph on its base, the underfloor equipment. The distant model is the body
+section with its nose's centre line, the window band, the bogies and the pantograph, 100
+triangles a car, 500 at most.
+
+## Deviations
+
+- The bodies' widths (above); the noses are drawn from tables, not measured drawings, and
+  their cab windscreens are panes on the crown; the E5's and E6's pointed lower noses and the
+  N700S's wing edges are approximations.
+- The 700's two liveries share the 700's body: the 923 Doctor Yellow's own detail (its
+  measurement dome, the observation windows) is not drawn.
+- The E4's double-deck cars have the doors at the lower deck's level and the standard cabin.
+
+## Checking
+
+`pnpm exec vitest run test/shinkansen.test.ts` (ids, parameters and two liveries each; the end
+and middle cars at their lengths, inside the gauge and 16,000 triangles, without coplanar
+faces, on two bogies, the pantograph raised to the wire; the sampled trains at their
+formation's length, one section a car; the formation's pantographs and the turned rear car).

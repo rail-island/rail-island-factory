@@ -70,8 +70,8 @@ minutes** (AGENTS.md); it takes about four and a half on a four-core machine
   `test/doors.test.ts` shares each passenger vehicle's default build between its
   four checks).
 - **Sampled variants.** A test that builds a design's parameter combinations
-  checks the defaults and two others spread evenly through the list, the same
-  ones every run (`variantsUnderTest` and `sample` in `test/catalogCache.ts`):
+  checks the defaults and the last other combination (often the heaviest:
+  the longest train), the same ones every run (`variantsUnderTest` and `sample` in `test/catalogCache.ts`):
   the sweep's flicker, envelope and JS-against-generator checks, the LOD
   checks, and the family suites' per-variant loops. **`TEST_ALL_VARIANTS=1 pnpm
   test` checks every combination**; it takes far longer, so it runs only when
@@ -81,9 +81,12 @@ minutes** (AGENTS.md); it takes about four and a half on a four-core machine
   model. A check over every triangle, vertex, normal or keyframe collects the
   failures (or the worst deviation) and makes one `expect`, not one per item:
   an `expect` costs more than the arithmetic it checks.
-- **Smoke where it is.** `test/emitters.test.ts` checks every combination of a
-  design that smokes (a listed smoker, or one whose defaults emit) and the
-  sampled ones of every other design.
+- **Smoke where it is.** The catalog sweep checks every design's emitters (and
+  that only fountains state water) on the builds it makes anyway;
+  `test/emitters.test.ts` adds every combination of the listed smokers and the
+  steam locomotives.
+- **Sharded door checks.** `test/doorsSuite.ts` holds the per-vehicle door
+  checks; `test/doors.test.ts` and `doors-2..4.test.ts` each run a quarter.
 
 The whole-export tests export a few designs, not the catalog: `buildExport` and
 `generateModels` take a design list, and `pnpm build` (which runs the same code

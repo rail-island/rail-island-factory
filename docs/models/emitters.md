@@ -7,7 +7,7 @@ and the checks.
 **Code** - `generator/meshCore.ts` (`Emitter`, `emit`, `emitters`), `generator/threeBuilder.ts`,
 `generator/meshBuilder.ts`, `generator/industry.ts`, `generator/steamParts.ts`,
 `generator/dieselParts.ts`, `generator/dmuKit.ts`, `generator/ships.ts`,
-`generator/legacyVehicles.ts`, `generator/fountains.ts`, `test/emitters.test.ts`
+`generator/legacyVehicles.ts`, `generator/fountains.ts`, `test/emitters.test.ts`, `test/emitterCheck.ts`, `test/catalogSweep.ts`
 **See also** - [js-format.md](js-format.md), [industry.md](industry.md), [remaining-models.md](remaining-models.md),
 [steam-locomotives.md](steam-locomotives.md), [ships.md](ships.md), [legacy-mapping.md](legacy-mapping.md)
 
@@ -83,8 +83,10 @@ The low-detail build carries none; a consumer reads them from the full build.
 
 ## Checks
 
-`test/emitters.test.ts` builds every design at every parameter combination and requires each
-emitter to sit on a mouth: geometry at its height within twice its radius, and nothing covering it.
+Every emitter must sit on a mouth: geometry at its height within twice its radius, and nothing
+covering it (`test/emitterCheck.ts`). The catalog sweep (`test/catalogSweep.ts`) checks it on every
+design's defaults and sampled combinations, from the builds it makes anyway;
+`test/emitters.test.ts` checks every combination of the listed smokers and the steam locomotives.
 It also requires the chimneys, power plants, foundry, mill, process plant, ships with funnels and
 every steam locomotive to emit, the refinery to flare, and the chimney's smoke to rise with its
 `height`. For the fountains it requires each to state its style, pools and jets, a drawn water

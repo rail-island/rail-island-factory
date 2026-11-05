@@ -10,6 +10,7 @@
 |---|---|---|---|
 | `uic` (default) | 3.1 m | 4.7 m | every European model; a design that names none |
 | `us` | 3.3 m | 4.95 m | North American rolling stock at its real size (AAR Plate F, the taller Plate H of the newest hood units) |
+| `usDoubleStack` | 3.3 m | 6.2 m | a double-stack well car with its two containers stacked |
 | `shinkansen` | 3.3 m | 4.7 m | the Shinkansen, narrowed from their real 3.35 - 3.38 m |
 
 The width is the widest fixed part of the vehicle, centred on the track; the
@@ -33,5 +34,5 @@ height (1.75 studs, 1.17 m) would stand in the platform. 3.3 m leaves 1.7 cm a
 side; a Shinkansen at its real 3.38 m would cut 2.3 cm into the edge, so it is
 narrowed. Tracks are 8 studs (5.33 m) apart, so two 3.3 m bodies still pass with
 2 m between them. Overhead structures leave far more than any gauge's height:
-station roofs stand 12.5 studs (8.3 m) over the rail and bridges 13.16 studs
+station roofs stand 12.5 studs (8.3 m) over the rail (the double-stack's 6.2 m clears them, but not a catenary: it is a freight-line load) and bridges 13.16 studs
 (8.8 m). `test/loadingGauge.test.ts` holds every gauge inside the platform edge.

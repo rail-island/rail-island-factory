@@ -133,8 +133,8 @@ export interface ProceduralDesign {
   /**
    * The loading gauge a rail vehicle is drawn to (loadingGauge.ts,
    * docs/models/loading-gauge.md): "uic" (3.1 m by 4.7 m, the default), "us"
-   * (North American Plate F/H bodies, 3.3 m by 4.95 m) or "shinkansen" (3.3 m by
-   * 4.7 m). Every one stays inside the game's platform edge.
+   * (North American Plate F/H bodies, 3.3 m by 4.95 m), "usDoubleStack" (a well car's
+   * two stacked containers, 3.3 m by 6.2 m) or "shinkansen" (3.3 m by 4.7 m). Every one stays inside the game's platform edge.
    */
   loadingGauge?: LoadingGauge;
   /**

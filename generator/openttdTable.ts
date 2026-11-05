@@ -212,6 +212,18 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
     formations: [formation("with tender", {}, { unit: "tender" }), formation("No. 119 with tender", { livery: "no119" }, { unit: "tender", livery: "no119" })],
   }),
   "proc-vehicle-amtrak-superliner": pax(1979, 74, RAIL, { variants: [at({ unit: "sleeper" }, { capacity: 44 })], presets: presets({ unit: "sleeper" }) }),
+  "proc-vehicle-budd-rdc": pax(1949, 90, RAIL, { variants: [at({ variant: "rdc2" }, { capacity: 70 })], presets: presets({ variant: "rdc2" }) }),
+  "proc-vehicle-pioneer-zephyr": pax(1934, 0, RAIL, {
+    variants: [at({ unit: "coach" }, { capacity: 40 }), at({ unit: "observation" }, { capacity: 32 }), at({ unit: "train" }, { capacity: 72 })],
+    presets: presets(...each("unit", "coach", "observation")),
+    formations: [formation("3 cars", {}, { unit: "coach" }, { unit: "observation" })],
+  }),
+  "proc-vehicle-nyc-r160": pax(2005, 240, ELRL, { variants: [at({ unit: "trailer" }, { capacity: 246 })], presets: presets({ unit: "trailer" }) }),
+  "proc-vehicle-cta-5000": pax(2009, 110, ELRL, { presets: presets() }),
+  "proc-vehicle-us-caboose": wagon(1925, 5, "MAIL", ["mail"], { presets: presets({ livery: "unionPacific" }) }), // approx.
+  "proc-vehicle-us-boxcar": wagon(1970, 70, "GOOD", ["piece", "covered", "express"], { presets: presets({ livery: "railbox" }) }), // approx.
+  "proc-vehicle-us-well-car": wagon(1984, 40, "GOOD", ["piece", "express"], { variants: [at({ cargo: "double" }, { capacity: 80 })], presets: presets({ cargo: "empty" }, { cargo: "double" }) }),
+  "proc-vehicle-sf-cable-car": pax(1888, 60, null, { presets: presets({ livery: "california" }) }), // approx.
   "proc-vehicle-amtrak-acela": loco(2000, ELRL, {
     variants: [
       at({ unit: "businessClass" }, { capacity: 65, cargo: "PASS", refitClasses: ["passengers"] }),
@@ -277,6 +289,41 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
     ],
     presets: presets(...each("unit", "motorCar", "pantographCar", "greenCar", "buffetCar"), ...each("livery", "freshGreen", "doctorYellow")),
     formations: [formation("8 cars", {}, { unit: "motorCar" }, { unit: "pantographCar" }, { unit: "greenCar" }, { unit: "buffetCar" }, { unit: "motorCar" }, { unit: "pantographCar" }, [{}, "turned"])],
+  }),
+  "proc-vehicle-shinkansen-n700s": pax(2020, 60, ELRL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 85 })],
+    presets: presets({ unit: "middleCar" }, { livery: "jrKyushu" }),
+    formations: [formation("8 cars", {}, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, [{}, "turned"])],
+  }),
+  "proc-vehicle-shinkansen-e5": pax(2011, 29, ELRL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 100 })],
+    presets: presets({ unit: "middleCar" }, { livery: "h5" }),
+    formations: [formation("8 cars", {}, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, [{}, "turned"])],
+  }),
+  "proc-vehicle-shinkansen-500": pax(1997, 53, ELRL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 80 })],
+    presets: presets({ unit: "middleCar" }, { livery: "kodama" }),
+    formations: [formation("8 cars", {}, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, [{}, "turned"])],
+  }),
+  "proc-vehicle-shinkansen-700": pax(1999, 65, ELRL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 100 })],
+    presets: presets({ unit: "middleCar" }, { livery: "doctorYellow" }),
+    formations: [formation("8 cars", {}, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, [{}, "turned"])],
+  }),
+  "proc-vehicle-shinkansen-e6": pax(2013, 22, ELRL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 60 })],
+    presets: presets({ unit: "middleCar" }, { livery: "akita" }),
+    formations: [formation("8 cars", {}, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, [{}, "turned"])],
+  }),
+  "proc-vehicle-shinkansen-100": pax(1985, 65, ELRL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 90 })],
+    presets: presets({ unit: "middleCar" }, { livery: "jrWest" }),
+    formations: [formation("8 cars", {}, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, [{}, "turned"])],
+  }),
+  "proc-vehicle-shinkansen-e4": pax(1997, 75, ELRL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 135 })],
+    presets: presets({ unit: "middleCar" }, { livery: "toki" }),
+    formations: [formation("8 cars", {}, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, [{}, "turned"])],
   }),
   "proc-vehicle-mtr-m-train": pax(1979, 230, ELRL, {
     variants: [at({ unit: "bCar" }, { capacity: 250 }), at({ unit: "cCar" }, { capacity: 250 }), at({ unit: "dCar" }, { capacity: 250 })],

@@ -122,6 +122,14 @@ file is the authority.
 | `prr-gg1` | PRR GG1 | train ELRL | 1935 | 0 PASS | 138 / 79 | 3 | - |
 | `amtrak-superliner` | Amtrak Superliner | train RAIL | 1979 | 74 PASS | 51 / 14 | 2 | - |
 | `amtrak-acela` | Acela Express | train ELRL | 2000 | 0 PASS | 183 / 102 | 4 | 8 cars |
+| `budd-rdc` | Budd RDC | train RAIL | 1949 | 90 PASS | 80 / 33 | 2 | - |
+| `pioneer-zephyr` | Pioneer Zephyr | train RAIL | 1934 | 0 PASS | 67 / 19 | 3 | 3 cars |
+| `nyc-r160` | NYC Subway R160 | train ELRL | 2005 | 240 PASS | 106 / 57 | 2 | - |
+| `cta-5000` | Chicago 'L' 5000-series | train ELRL | 2009 | 110 PASS | 73 / 35 | 1 | - |
+| `us-caboose` | Cupola caboose | train RAIL | 1925* | 5 MAIL | 23 / 6 | 2 | - |
+| `us-boxcar` | 50 ft boxcar | train RAIL | 1970* | 70 GOOD | 45 / 14 | 2 | - |
+| `us-well-car` | Double-stack well car | train RAIL | 1984 | 40 GOOD | 35 / 10 | 3 | - |
+| `sf-cable-car` | San Francisco cable car | road | 1888* | 60 PASS | 48 / 24 | 2 | - |
 | `up-big-boy` | UP Big Boy | train RAIL | 1941 | 0 PASS | 163 / 104 | 2 | with tender |
 | `prr-k4s` | PRR K4s | train RAIL | 1914 | 0 PASS | 112 / 58 | 2 | with tender |
 | `nyc-hudson` | NYC J-3a Hudson | train RAIL | 1938 | 0 PASS | 140 / 80 | 2 | with tender |
@@ -148,6 +156,13 @@ file is the authority.
 | `ice-1` | ICE 1 | train ELRL | 1991 | 0 PASS | 255 / 202 | 3 | power cars, 6 coaches |
 | `tgv` | TGV | train ELRL | 1981 | 0 PASS | 157 / 75 | 4 | power cars, 6 trailers |
 | `shinkansen-0` | Shinkansen 0 series | train ELRL | 1964 | 75 PASS | 101 / 37 | 7 | 8 cars |
+| `shinkansen-n700s` | Shinkansen N700S | train ELRL | 2020 | 60 PASS | 126 / 44 | 3 | 8 cars |
+| `shinkansen-e5` | Shinkansen E5 / H5 | train ELRL | 2011 | 29 PASS | 121 / 39 | 3 | 8 cars |
+| `shinkansen-500` | Shinkansen 500 series | train ELRL | 1997 | 53 PASS | 122 / 42 | 3 | 8 cars |
+| `shinkansen-700` | Shinkansen 700 / 923 | train ELRL | 1999 | 65 PASS | 121 / 43 | 3 | 8 cars |
+| `shinkansen-e6` | Shinkansen E6 | train ELRL | 2013 | 22 PASS | 120 / 38 | 3 | 8 cars |
+| `shinkansen-100` | Shinkansen 100 series | train ELRL | 1985 | 65 PASS | 105 / 39 | 3 | 8 cars |
+| `shinkansen-e4` | Shinkansen E4 Max | train ELRL | 1997 | 75 PASS | 108 / 39 | 3 | 8 cars |
 | `mtr-m-train` | MTR M-Train | train ELRL | 1979 | 230 PASS | 102 / 55 | 6 | 8 cars |
 | `tgv-duplex` | TGV Duplex | train ELRL | 1996 | 0 PASS | 194 / 98 | 7 | power cars, 8 trailers |
 | `cd-y-coach` | CD Y Coach | train RAIL | 1970* | 54 PASS | 42 / 12 | 4 | - |
