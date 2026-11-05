@@ -327,8 +327,8 @@ function newClashes(rest: Array<{ t: Tri; owner: string }>, posed: Array<{ t: Tr
 describe("the semi-trucks", () => {
   const SEMIS = RIGGED.filter(([id]) => RIGS.get(id)!.sections?.[1]?.node === "trailer");
 
-  it("are the American truck and the two reproduced from the game", () => {
-    expect(SEMIS.map(([id]) => id).sort()).toEqual(["proc-vehicle-american-truck", "proc-vehicle-cistern-semi-truck", "proc-vehicle-reefer-semi-truck"]);
+  it("are the American truck, the two reproduced from the game and the Havana camello (a semi-trailer bus)", () => {
+    expect(SEMIS.map(([id]) => id).sort()).toEqual(["proc-vehicle-american-truck", "proc-vehicle-cistern-semi-truck", "proc-vehicle-havana-camello", "proc-vehicle-reefer-semi-truck"]);
   });
 
   // nothing of the trailer cuts through the tractor or its wheels at any bend up to the rig's limit

@@ -13,10 +13,10 @@ import { BUS_CATALOG } from "./buses.ts";
 // ---------------------------------------------------------------------------
 // the shapes the batch shares
 
-type Doors = ReadonlyArray<readonly [number, number]>;
-type Axles = WorldBusSpec["axles"];
+export type Doors = ReadonlyArray<readonly [number, number]>;
+export type Axles = WorldBusSpec["axles"];
 
-interface Base {
+export interface Base {
   length: number;
   width?: number;
   height: number;
@@ -33,13 +33,13 @@ interface Base {
 }
 
 /** The window runs of each body, clear of its ends (a rigid bus has one, from the nose's corner to the tail's). */
-function runs(o: Base, from: number, toTail: number): Array<[number, number]> {
+export function runs(o: Base, from: number, toTail: number): Array<[number, number]> {
   const bodies = o.bodies ?? [[0, o.length]];
   return bodies.map(([a, b], i) => [i === 0 ? from : a + 0.2, i + 1 === bodies.length ? b - toTail : b - 0.2]);
 }
 
 /** A low-floor city bus: floor 0.27 m, deep bonded glazing, plug doors, a big windscreen under the display. */
-function lowFloor(o: Base): WorldBusSpec {
+export function lowFloor(o: Base): WorldBusSpec {
   const hw = (o.width ?? 2.55) / 2;
   const eave = o.height - 0.13;
   const door: DoorStyle = { bottom: 0.3, top: eave - 0.14, leafMat: "frame", panes: [[0.42, eave - 0.22]], leaves: 2 };
@@ -62,7 +62,7 @@ function lowFloor(o: Base): WorldBusSpec {
 }
 
 /** A high-floor city bus: floor 0.35 m, framed windows over a tall skirt, steps behind the doors. */
-function highFloor(o: Base): WorldBusSpec {
+export function highFloor(o: Base): WorldBusSpec {
   const hw = (o.width ?? 2.5) / 2;
   const eave = o.height - 0.13;
   const door: DoorStyle = { bottom: 0.36, top: eave - 0.2, leafMat: "frame", panes: [[1.1, eave - 0.28], [0.45, 1.02]], leaves: 2 };
@@ -84,7 +84,7 @@ function highFloor(o: Base): WorldBusSpec {
 }
 
 /** A coach: floor 0.35 m, the passengers high over the luggage bays, a deep raked windscreen, a front door (and a middle one). */
-function coach(o: Base): WorldBusSpec {
+export function coach(o: Base): WorldBusSpec {
   const hw = (o.width ?? 2.55) / 2;
   const eave = o.height - 0.12;
   const door: DoorStyle = { bottom: 0.38, top: eave - 0.16, leafMat: "frame", panes: [[0.5, eave - 0.24]], leafWidth: 0.6 };
@@ -107,7 +107,7 @@ function coach(o: Base): WorldBusSpec {
 }
 
 /** A double-decker: the lower deck's glazing over a short skirt, the upper deck's under the roof, the stairs inside. */
-function doubleDeck(o: Base & { coach?: boolean }): WorldBusSpec {
+export function doubleDeck(o: Base & { coach?: boolean }): WorldBusSpec {
   const hw = (o.width ?? 2.55) / 2;
   const eave = o.height - 0.14;
   const low = o.coach ? [1.1, 2.05] as const : [1.05, 2.12] as const;
@@ -133,7 +133,7 @@ function doubleDeck(o: Base & { coach?: boolean }): WorldBusSpec {
 }
 
 /** An articulated bus's two bodies over `length`, the joint's gap centred at `at` metres from the nose. */
-const twoBodies = (length: number, at: number): Array<[number, number]> => [[0, at - 0.4], [at + 0.4, length]];
+export const twoBodies = (length: number, at: number): Array<[number, number]> => [[0, at - 0.4], [at + 0.4, length]];
 
 // ---------------------------------------------------------------------------
 // the designs' specs
@@ -532,10 +532,10 @@ export interface WorldBus {
   game: GameProperties;
   references: string;
   /** The LOD budget, where a parameter makes the bus articulated: two sections' (lod.ts lodBudget). */
-  lodTriangles?: 200;
+  lodTriangles?: 200 | 300;
 }
 
-const g = (weight: number, power: number, maxspeed: number, variants?: GameProperties["variants"]): GameProperties =>
+export const g = (weight: number, power: number, maxspeed: number, variants?: GameProperties["variants"]): GameProperties =>
   ({ weight, power, maxspeed, accel: null, ...(variants ? { variants } : {}) });
 
 /** The batch, in the list's order (docs/specs/2026-11-05-world-vehicle-fleet-list.md). */
@@ -567,7 +567,8 @@ export const WORLD_BUS_SPECS: readonly WorldBus[] = [
   { id: "veh-hyundai-universe", title: "Hyundai Universe", spec: universeSpec, build: hyundaiUniverse, buildLod: hyundaiUniverseLod, game: g(13.0, 302, 110), references: "hyundai-universe" },
 ];
 
-export const WORLD_BUSES: ProceduralDesign[] = WORLD_BUS_SPECS.map((b) => ({
+/** A world bus as a catalog design (every batch's). */
+export const worldBusDesign = (b: WorldBus): ProceduralDesign => ({
   id: b.id,
   title: b.title,
   game: b.game,
@@ -578,7 +579,9 @@ export const WORLD_BUSES: ProceduralDesign[] = WORLD_BUS_SPECS.map((b) => ({
   references: b.references,
   ...(b.lodTriangles ? { lodTriangles: b.lodTriangles } : {}),
   catalog: BUS_CATALOG,
-}));
+});
+
+export const WORLD_BUSES: ProceduralDesign[] = WORLD_BUS_SPECS.map(worldBusDesign);
 
 /** The kind of every bus in the batch, for the docs and tests. */
 export const busKindOf = (b: WorldBus): BusKind => b.spec().kind;

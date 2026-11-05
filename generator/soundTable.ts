@@ -80,4 +80,13 @@ export const SOUND_TABLE: Readonly<Record<string, DeclaredSounds>> = {
   "proc-vehicle-solaris-trollino": { sounds: { engine: { id: "electric-engine-converter" } } },
   "proc-vehicle-skoda-14tr": { sounds: { engine: { id: "electric-engine-resistor" } } },
   "proc-vehicle-skoda-15tr": { sounds: { engine: { id: "electric-engine-resistor" } } },
+  // The world buses, later batches (worldBuses2.ts): the battery buses on inverters, the
+  // ZiU-9 trolleybus on resistor control.
+  "proc-vehicle-solaris-urbino-12e": { sounds: { engine: { id: "electric-engine-converter" } } },
+  "proc-vehicle-ziu-9": { sounds: { engine: { id: "electric-engine-resistor" } } },
+  "proc-vehicle-kyiv-12": { sounds: { engine: { id: "electric-engine-resistor" } } },
+  "proc-vehicle-hess-lightram": { sounds: { engine: { id: "electric-engine-converter" } } },
+  "proc-vehicle-proterra-catalyst": { sounds: { engine: { id: "electric-engine-converter" } } },
+  "proc-vehicle-hyundai-elec-city": { sounds: { engine: { id: "electric-engine-converter" } } },
+  "proc-vehicle-yutong-e12": { sounds: { engine: { id: "electric-engine-converter" } } },
 };
