@@ -508,4 +508,39 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-cruise-ferry": pax(1990, 2000, null, { presets: presets() }), // approx.
   "proc-vehicle-hydrofoil-ferry": pax(1960, 150, null, { presets: presets() }), // approx.
   "proc-vehicle-passenger-ferry": pax(1950, 300, null, { presets: presets() }), // approx.
+  // --- the world ships (worldShips*.ts, docs/models/world-ships.md) -------------------
+  // Capacity in the cargo's units (TEU as crates of goods, tonnes, kilolitres, seats),
+  // capped at the GRF's word (65,535): the largest ships carry more than it holds.
+  // A car carrier carries GOOD: no default climate has VEHI (FIRS's refits take it as piece goods).
+  // cargo ships
+  "proc-vehicle-ship-triple-e": truck(2013, 18_340, "GOOD", ["piece", "express"], { presets: presets(...each("load", "empty")) }),
+  "proc-vehicle-ship-emma-maersk": truck(2006, 15_500, "GOOD", ["piece", "express"], { presets: presets() }),
+  "proc-vehicle-ship-msc-gulsun": truck(2019, 23_756, "GOOD", ["piece", "express"], { presets: presets() }),
+  "proc-vehicle-ship-panamax-container": truck(1990, 4_500, "GOOD", ["piece", "express"], { presets: presets(...each("livery", "green", "blue")) }), // approx.
+  "proc-vehicle-ship-feeder-container": truck(2000, 1_100, "GOOD", ["piece", "express"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-ideal-x": truck(1956, 58, "GOOD", ["piece", "express"], { presets: presets() }),
+  "proc-vehicle-ship-vlcc": truck(2002, 65_535, "OIL_", ["liquid"], { presets: presets(...each("livery", "green", "black")) }),
+  "proc-vehicle-ship-seawise-giant": truck(1979, 65_535, "OIL_", ["liquid"], { presets: presets() }),
+  "proc-vehicle-ship-aframax": truck(1990, 65_535, "OIL_", ["liquid"], { presets: presets(...each("livery", "navy")) }), // approx.
+  "proc-vehicle-ship-product-tanker": truck(2005, 50_000, "OIL_", ["liquid"], { presets: presets(...each("livery", "navy")) }), // approx.
+  "proc-vehicle-ship-lng-moss": truck(1975, 65_535, "OIL_", ["liquid"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-lng-qmax": truck(2008, 65_535, "OIL_", ["liquid"], { presets: presets() }),
+  "proc-vehicle-ship-lpg-carrier": truck(2010, 8_000, "OIL_", ["liquid"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-chemical-tanker": truck(2010, 45_000, "OIL_", ["liquid", "hazardous"], { presets: presets(...each("livery", "navy")) }), // approx.
+  "proc-vehicle-ship-capesize": truck(2010, 65_535, "COAL", ["bulk"], { variants: [at({ livery: "red" }, { cargo: "IORE" })], presets: presets(...each("livery", "red")) }), // approx.
+  "proc-vehicle-ship-valemax": truck(2011, 65_535, "IORE", ["bulk"], { presets: presets() }),
+  "proc-vehicle-ship-handysize": truck(2010, 35_000, "GRAI", ["bulk", "piece"], { presets: presets(...each("livery", "black")) }), // approx.
+  "proc-vehicle-ship-laker": truck(1958, 26_000, "IORE", ["bulk"], { presets: presets(...each("livery", "black")) }), // approx.
+  "proc-vehicle-ship-self-unloader": truck(1981, 65_535, "COAL", ["bulk"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-pctc": truck(2016, 8_000, "GOOD", ["piece"], { presets: presets(...each("livery", "white")) }), // approx.
+  "proc-vehicle-ship-roro": truck(2000, 12_000, "GOOD", ["piece", "express"], { presets: presets(...each("livery", "blue")) }), // approx.
+  "proc-vehicle-ship-heavy-lift": truck(2018, 65_535, "GOOD", ["piece"], { presets: presets() }),
+  "proc-vehicle-ship-reefer": truck(1990, 9_000, "FOOD", ["refrigerated", "piece"], { presets: presets(...each("livery", "blue")) }), // approx.
+  "proc-vehicle-ship-liberty": truck(1941, 10_850, "GOOD", ["piece", "bulk"], { presets: presets() }),
+  "proc-vehicle-ship-victory": truck(1944, 10_600, "GOOD", ["piece", "bulk"], { presets: presets() }),
+  "proc-vehicle-ship-europaschiff": truck(1960, 1_350, "GOOD", ["piece", "bulk"], { presets: presets(...each("load", "empty")) }),
+  "proc-vehicle-ship-rhine-tanker": truck(2000, 3_000, "OIL_", ["liquid"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-push-barge": truck(1970, 2_800, "COAL", ["bulk"], { presets: presets() }),
+  "proc-vehicle-ship-yangtze-cargo": truck(2010, 3_000, "GOOD", ["piece", "bulk"], { presets: presets() }), // approx.
+  "proc-vehicle-ship-volga-don": truck(1960, 5_000, "GRAI", ["bulk", "piece"], { presets: presets() }), // approx.
 };

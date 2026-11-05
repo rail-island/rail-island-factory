@@ -161,6 +161,36 @@
     "proc-vehicle-shinkansen-e5": 143,
     "proc-vehicle-shinkansen-e6": 146,
     "proc-vehicle-shinkansen-n700s": 142,
+    "proc-vehicle-ship-aframax": 194,
+    "proc-vehicle-ship-capesize": 200,
+    "proc-vehicle-ship-chemical-tanker": 199,
+    "proc-vehicle-ship-emma-maersk": 187,
+    "proc-vehicle-ship-europaschiff": 211,
+    "proc-vehicle-ship-feeder-container": 190,
+    "proc-vehicle-ship-handysize": 202,
+    "proc-vehicle-ship-heavy-lift": 207,
+    "proc-vehicle-ship-ideal-x": 191,
+    "proc-vehicle-ship-laker": 203,
+    "proc-vehicle-ship-liberty": 209,
+    "proc-vehicle-ship-lng-moss": 196,
+    "proc-vehicle-ship-lng-qmax": 197,
+    "proc-vehicle-ship-lpg-carrier": 198,
+    "proc-vehicle-ship-msc-gulsun": 188,
+    "proc-vehicle-ship-panamax-container": 189,
+    "proc-vehicle-ship-pctc": 205,
+    "proc-vehicle-ship-product-tanker": 195,
+    "proc-vehicle-ship-push-barge": 213,
+    "proc-vehicle-ship-reefer": 208,
+    "proc-vehicle-ship-rhine-tanker": 212,
+    "proc-vehicle-ship-roro": 206,
+    "proc-vehicle-ship-seawise-giant": 193,
+    "proc-vehicle-ship-self-unloader": 204,
+    "proc-vehicle-ship-triple-e": 186,
+    "proc-vehicle-ship-valemax": 201,
+    "proc-vehicle-ship-victory": 210,
+    "proc-vehicle-ship-vlcc": 192,
+    "proc-vehicle-ship-volga-don": 215,
+    "proc-vehicle-ship-yangtze-cargo": 214,
     "proc-vehicle-siemens-alc42": 126,
     "proc-vehicle-skoda-14tr": 176,
     "proc-vehicle-skoda-15tr": 177,
@@ -2000,6 +2030,186 @@
       "proc-vehicle-passenger-ferry?": {
         "id": 304,
         "size": 16
+      },
+      "proc-vehicle-ship-aframax?": {
+        "id": 372,
+        "size": 4
+      },
+      "proc-vehicle-ship-aframax?livery=navy": {
+        "id": 376,
+        "size": 4
+      },
+      "proc-vehicle-ship-capesize?": {
+        "id": 408,
+        "size": 4
+      },
+      "proc-vehicle-ship-capesize?livery=red": {
+        "id": 412,
+        "size": 4
+      },
+      "proc-vehicle-ship-chemical-tanker?": {
+        "id": 400,
+        "size": 4
+      },
+      "proc-vehicle-ship-chemical-tanker?livery=navy": {
+        "id": 404,
+        "size": 4
+      },
+      "proc-vehicle-ship-emma-maersk?": {
+        "id": 328,
+        "size": 4
+      },
+      "proc-vehicle-ship-europaschiff?": {
+        "id": 476,
+        "size": 4
+      },
+      "proc-vehicle-ship-europaschiff?load=empty": {
+        "id": 480,
+        "size": 4
+      },
+      "proc-vehicle-ship-feeder-container?": {
+        "id": 348,
+        "size": 4
+      },
+      "proc-vehicle-ship-handysize?": {
+        "id": 420,
+        "size": 4
+      },
+      "proc-vehicle-ship-handysize?livery=black": {
+        "id": 424,
+        "size": 4
+      },
+      "proc-vehicle-ship-heavy-lift?": {
+        "id": 456,
+        "size": 4
+      },
+      "proc-vehicle-ship-ideal-x?": {
+        "id": 352,
+        "size": 4
+      },
+      "proc-vehicle-ship-laker?": {
+        "id": 428,
+        "size": 4
+      },
+      "proc-vehicle-ship-laker?livery=black": {
+        "id": 432,
+        "size": 4
+      },
+      "proc-vehicle-ship-liberty?": {
+        "id": 468,
+        "size": 4
+      },
+      "proc-vehicle-ship-lng-moss?": {
+        "id": 388,
+        "size": 4
+      },
+      "proc-vehicle-ship-lng-qmax?": {
+        "id": 392,
+        "size": 4
+      },
+      "proc-vehicle-ship-lpg-carrier?": {
+        "id": 396,
+        "size": 4
+      },
+      "proc-vehicle-ship-msc-gulsun?": {
+        "id": 332,
+        "size": 4
+      },
+      "proc-vehicle-ship-panamax-container?": {
+        "id": 336,
+        "size": 4
+      },
+      "proc-vehicle-ship-panamax-container?livery=blue": {
+        "id": 344,
+        "size": 4
+      },
+      "proc-vehicle-ship-panamax-container?livery=green": {
+        "id": 340,
+        "size": 4
+      },
+      "proc-vehicle-ship-pctc?": {
+        "id": 440,
+        "size": 4
+      },
+      "proc-vehicle-ship-pctc?livery=white": {
+        "id": 444,
+        "size": 4
+      },
+      "proc-vehicle-ship-product-tanker?": {
+        "id": 380,
+        "size": 4
+      },
+      "proc-vehicle-ship-product-tanker?livery=navy": {
+        "id": 384,
+        "size": 4
+      },
+      "proc-vehicle-ship-push-barge?": {
+        "id": 488,
+        "size": 4
+      },
+      "proc-vehicle-ship-reefer?": {
+        "id": 460,
+        "size": 4
+      },
+      "proc-vehicle-ship-reefer?livery=blue": {
+        "id": 464,
+        "size": 4
+      },
+      "proc-vehicle-ship-rhine-tanker?": {
+        "id": 484,
+        "size": 4
+      },
+      "proc-vehicle-ship-roro?": {
+        "id": 448,
+        "size": 4
+      },
+      "proc-vehicle-ship-roro?livery=blue": {
+        "id": 452,
+        "size": 4
+      },
+      "proc-vehicle-ship-seawise-giant?": {
+        "id": 368,
+        "size": 4
+      },
+      "proc-vehicle-ship-self-unloader?": {
+        "id": 436,
+        "size": 4
+      },
+      "proc-vehicle-ship-triple-e?": {
+        "id": 320,
+        "size": 4
+      },
+      "proc-vehicle-ship-triple-e?load=empty": {
+        "id": 324,
+        "size": 4
+      },
+      "proc-vehicle-ship-valemax?": {
+        "id": 416,
+        "size": 4
+      },
+      "proc-vehicle-ship-victory?": {
+        "id": 472,
+        "size": 4
+      },
+      "proc-vehicle-ship-vlcc?": {
+        "id": 356,
+        "size": 4
+      },
+      "proc-vehicle-ship-vlcc?livery=black": {
+        "id": 364,
+        "size": 4
+      },
+      "proc-vehicle-ship-vlcc?livery=green": {
+        "id": 360,
+        "size": 4
+      },
+      "proc-vehicle-ship-volga-don?": {
+        "id": 496,
+        "size": 4
+      },
+      "proc-vehicle-ship-yangtze-cargo?": {
+        "id": 492,
+        "size": 4
       }
     },
     "aircraft": {

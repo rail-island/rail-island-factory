@@ -9,6 +9,12 @@ import { WORLD_CABIN_SPECS } from "./worldCabins.ts";
 import { WORLD_BUS_SPECS } from "./worldBuses.ts";
 import { busFeatures } from "./worldBusKit.ts";
 import { proceduralId } from "./modelId.ts";
+// the world ships
+import { shipFeatures, shipLength } from "./hullKit.ts";
+import { CARGO_SHIP_SPECS } from "./worldShipsCargo.ts";
+import { SERVICE_SHIP_SPECS } from "./worldShipsService.ts";
+import { PASSENGER_SHIP_SPECS } from "./worldShipsPassenger.ts";
+import { SMALL_SHIP_SPECS } from "./worldShipsSmall.ts";
 
 /** A fleet design as the harness sees it: its id, the kit options it uses, a size to find the family's largest. */
 export interface FleetEntry {
@@ -45,6 +51,11 @@ export const WORLD_FLEET: readonly FleetEntry[] = [
     const lengths = (b.params ?? []).flatMap((p) => p.values.map((v) => b.spec({ [p.name]: v.value }).length));
     const s = b.spec();
     return { id: proceduralId(b.id), family: "buses", features: busFeatures(s, (b.params ?? []).map((p) => p.name)), size: Math.max(s.length, ...lengths) * s.height };
+  }),
+  // the world ships: the largest is the longest
+  ...[...CARGO_SHIP_SPECS, ...SERVICE_SHIP_SPECS, ...PASSENGER_SHIP_SPECS, ...SMALL_SHIP_SPECS].map((w) => {
+    const s = w.spec();
+    return { id: proceduralId(w.id), family: "ships", features: shipFeatures(s, (w.params ?? []).map((p) => p.name)), size: shipLength(s) };
   }),
 ];
 
