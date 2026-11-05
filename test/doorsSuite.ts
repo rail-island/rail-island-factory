@@ -5,12 +5,15 @@
 
 import { describe, expect, it } from "vitest";
 import { DOOR_SAMPLES } from "../generator/doors.ts";
-import { ALL_VEHICLES } from "../generator/generate.ts";
+import { ALL_VEHICLES as EVERY_VEHICLE } from "../generator/generate.ts";
 import { glbStats } from "../generator/glbStats.ts";
 import { poseGlb, sampleCount } from "../generator/glbPose.ts";
 import { findCoplanarOverlaps } from "../generator/coplanar.ts";
 import { buildLodModel } from "../generator/lodModel.ts";
-import { variantsUnderTest } from "./catalogCache";
+import { swept, variantsUnderTest } from "./catalogCache";
+
+/** The vehicles the suite checks: the eight-country plan's families by one design a module (test/catalogCache.ts swept). */
+const ALL_VEHICLES = EVERY_VEHICLE.filter((d) => swept(d.id));
 import { isInteriorName } from "../generator/interiorTable.ts";
 
 /** The groups of passenger vehicles: every one opens its passenger doors. */

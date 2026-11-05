@@ -21,3 +21,6 @@ the gangway diaphragms, the bogies and the couplers; the LOD is its `carLod`.
 | `proc-vehicle-sncf-grand-confort` | France | 24.5 m | `a8u` (compartments), `a7d` (bar car) | `capitole`, `tee` |
 | `proc-vehicle-ciwl-car` | France | 23.45 m | `pullman`, `sleeping` | `pullman`, `ciwlBlue` |
 | `proc-vehicle-ns-icr-coach` | the Netherlands | 26.4 m | `a`, `b` | `yellowGrey`, `yellowBlue` |
+| `proc-vehicle-sbb-ew4-coach` | Switzerland | 26.4 m | `a`, `b` | `redGrey`, `sbb` |
+| `proc-vehicle-sbb-ic2000` | Switzerland | 26.8 m, double-deck | `a`, `b` | - |
+| `proc-vehicle-glacier-express` | Switzerland | 18.4 m, metre gauge | `first`, `second` | - |

@@ -101,6 +101,8 @@ import { FR_UNITS } from "./frUnits.ts";
 import { FR_LOCOS } from "./frLocos.ts";
 import { NL_UNITS } from "./nlUnits.ts";
 import { NL_LOCOS } from "./nlLocos.ts";
+import { CH_UNITS } from "./chUnits.ts";
+import { CH_LOCOS } from "./chLocos.ts";
 import { TRUCKS } from "./trucks.ts";
 import { PHOTO_TRUCKS } from "./photoTrucks.ts";
 import { TRAM_DESIGNS } from "./trams.ts";
@@ -226,6 +228,8 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: FR_LOCOS, source: "frLocos.ts", meta: "vehicles" },
   { designs: NL_UNITS, source: "nlUnits.ts", meta: "vehicles" },
   { designs: NL_LOCOS, source: "nlLocos.ts", meta: "vehicles" },
+  { designs: CH_UNITS, source: "chUnits.ts", meta: "vehicles" },
+  { designs: CH_LOCOS, source: "chLocos.ts", meta: "vehicles" },
   { designs: TRAM_DESIGNS, source: "trams.ts", meta: "vehicles" },
   { designs: METRO_DESIGNS, source: "metro.ts", meta: "vehicles" },
   { designs: EMU451_DESIGNS, source: "emu451.ts", meta: "vehicles" },

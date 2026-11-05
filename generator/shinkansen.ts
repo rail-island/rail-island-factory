@@ -119,6 +119,10 @@ function bogies(s: ShinkansenSeries, end: boolean): [number, number] {
 function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantograph: boolean, number: string): CarDef {
   // the centre coupler's draft gear ends 0.3 m below its centre: a skirt bottom there would lie on it
   if (Math.abs(s.B - (COUPLER_Y - 0.3)) < 0.005) throw new Error(`series: skirt bottom ${s.B} m lies on the coupler's draft gear`);
+  // the bogie's brake cylinders stand 0.55 m inside its axles: a shorter wheelbase puts them on its transoms (0 is a single axle)
+  if (s.wheelbase > 0 && s.wheelbase < 2.15) throw new Error(`series: wheelbase ${s.wheelbase} m is shorter than the bogie kit's 2.15 m`);
+  // the bogie's end transoms reach down to 0.2 m above the wheel radius: the car's underside must not lie there
+  if (Math.abs(s.B - (s.wheelR + 0.2)) < 0.005) throw new Error(`series: skirt bottom ${s.B} m lies on the bogies' transoms`);
   const L = end ? endBody(s) : midBody(s);
   const tr = bogies(s, end);
   const first = end ? (s.flatCab ? 2.2 : Math.max(s.nose.len, s.windscreen[1]) + 1.6) : 2.0;

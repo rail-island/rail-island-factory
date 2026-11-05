@@ -64,6 +64,8 @@ const truck = (s: WorldCoach): BogieSpec => ({
 });
 
 function coachDef(s: WorldCoach, t: CoachType, l: CoachLivery): CarDef {
+  // the bogie's brake cylinders stand 0.55 m inside its axles: a shorter wheelbase puts them on its transoms
+  if (s.wheelbase < 2.15) throw new Error(`coach: wheelbase ${s.wheelbase} m is shorter than the bogie kit's 2.15 m`);
   const L = s.length - 2 * gapOf(s);
   const tr = [L / 2 - s.bogieCentres / 2, L / 2 + s.bogieCentres / 2];
   const from = s.doorIn + s.doorW + 0.5, to = L - s.doorIn - s.doorW - 0.5;
@@ -193,13 +195,60 @@ export const NS_ICR: WorldCoach = {
   },
 };
 
-const P = { nsIcr: coachParams(NS_ICR), dbIc: coachParams(DB_IC), corail: coachParams(SNCF_CORAIL), grandConfort: coachParams(SNCF_GRAND_CONFORT), ciwl: coachParams(CIWL) };
+// ---------------------------------------------------------------------------
+// Switzerland: the EW IV, the IC 2000 double-deck coach and the metre-gauge Glacier Express
+
+const sbbBands = (o: { white?: string; grey?: string; red?: string } = {}): CoachLivery => ({
+  title: "SBB", palette: { white: c(o.white ?? "#f1f1ee", 0.4), grey: c(o.grey ?? "#4d5257"), red: c(o.red ?? "#eb0000"), roofG: c("#9aa0a5", 0.6), skirtG: c("#3a3d40", 0.8) },
+  bands: [[0, 1.6, "grey"], [1.6, 1.72, "red"], [1.72, 9, "white"]], roof: "roofG", skirt: "skirtG",
+});
+
+export const SBB_EW4: WorldCoach = {
+  length: 26.4, W: 1.41, Y: 1.4, S: 3.25, C: 4.05, B: 1.0, A: 1.15, rows: [[1.95, 2.85]], doorIn: 0.7, doorW: 0.8, door: [1.2, 3.1],
+  bogieCentres: 19.0, wheelR: 0.46, wheelbase: 2.5, coupler: "buffers", maxspeed: 200,
+  types: {
+    a: { title: "First class", windows: 11, windowW: 1.35, number: "50 85 19-73 101-5", weight: 43 },
+    b: { title: "Second class", windows: 12, windowW: 1.25, number: "50 85 20-73 201-3", weight: 42 },
+  },
+  liveries: {
+    redGrey: { title: "Red and grey", palette: { red: c("#c8102e"), grey: c("#9aa0a5", 0.45), roofG: c("#6a6c6e", 0.7), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 1.85, "red"], [1.85, 9, "grey"]], roof: "roofG", skirt: "skirtG" },
+    sbb: sbbBands(),
+  },
+};
+
+export const SBB_IC2000: WorldCoach = {
+  length: 26.8, W: 1.4, Y: 1.2, S: 3.85, C: 4.6, B: 0.7, A: 0.9, rows: [[1.25, 1.95], [2.85, 3.55]], doorIn: 3.3, doorW: 1.3, door: [1.0, 3.05],
+  bogieCentres: 20.0, wheelR: 0.46, wheelbase: 2.5, coupler: "buffers", maxspeed: 200,
+  types: {
+    a: { title: "First class", windows: 10, windowW: 1.4, number: "50 85 26-94 001-8", weight: 50 },
+    b: { title: "Second class", windows: 11, windowW: 1.3, number: "50 85 26-94 101-6", weight: 49 },
+  },
+  liveries: { sbb: sbbBands() },
+};
+
+export const GLACIER: WorldCoach = {
+  length: 18.4, W: 1.32, Y: 1.25, S: 2.65, C: 3.55, B: 0.85, A: 1.0, rows: [[1.6, 3.3]], doorIn: 0.6, doorW: 0.75, door: [1.05, 2.9],
+  bogieCentres: 12.5, wheelR: 0.38, wheelbase: 2.2, coupler: "centre", maxspeed: 90,
+  types: {
+    first: { title: "First class", windows: 6, windowW: 2.1, number: "A 4021", weight: 21 },
+    second: { title: "Second class", windows: 7, windowW: 1.8, number: "B 4041", weight: 20 },
+  },
+  liveries: { glacier: { title: "Glacier Express", palette: { red: c("#c8102e"), white: c("#f1f1ee", 0.4), roofG: c("#3a3d40", 0.6), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 1.45, "red"], [1.45, 9, "white"]], roof: "roofG", skirt: "skirtG" } },
+};
+
+const P = { ew4: coachParams(SBB_EW4), ic2000: coachParams(SBB_IC2000), glacier: coachParams(GLACIER), nsIcr: coachParams(NS_ICR), dbIc: coachParams(DB_IC), corail: coachParams(SNCF_CORAIL), grandConfort: coachParams(SNCF_GRAND_CONFORT), ciwl: coachParams(CIWL) };
 export function sncfCorail(v?: ParamValues): MeshBuilder { return buildCoach(SNCF_CORAIL, P.corail, v); }
 export function sncfCorailLod(v?: ParamValues): MeshBuilder { return buildCoachLod(SNCF_CORAIL, P.corail, v); }
 export function sncfGrandConfort(v?: ParamValues): MeshBuilder { return buildCoach(SNCF_GRAND_CONFORT, P.grandConfort, v); }
 export function sncfGrandConfortLod(v?: ParamValues): MeshBuilder { return buildCoachLod(SNCF_GRAND_CONFORT, P.grandConfort, v); }
 export function nsIcr(v?: ParamValues): MeshBuilder { return buildCoach(NS_ICR, P.nsIcr, v); }
 export function nsIcrLod(v?: ParamValues): MeshBuilder { return buildCoachLod(NS_ICR, P.nsIcr, v); }
+export function sbbEw4(v?: ParamValues): MeshBuilder { return buildCoach(SBB_EW4, P.ew4, v); }
+export function sbbEw4Lod(v?: ParamValues): MeshBuilder { return buildCoachLod(SBB_EW4, P.ew4, v); }
+export function sbbIc2000(v?: ParamValues): MeshBuilder { return buildCoach(SBB_IC2000, P.ic2000, v); }
+export function sbbIc2000Lod(v?: ParamValues): MeshBuilder { return buildCoachLod(SBB_IC2000, P.ic2000, v); }
+export function glacierExpress(v?: ParamValues): MeshBuilder { return buildCoach(GLACIER, P.glacier, v); }
+export function glacierExpressLod(v?: ParamValues): MeshBuilder { return buildCoachLod(GLACIER, P.glacier, v); }
 export function ciwlCar(v?: ParamValues): MeshBuilder { return buildCoach(CIWL, P.ciwl, v); }
 export function ciwlCarLod(v?: ParamValues): MeshBuilder { return buildCoachLod(CIWL, P.ciwl, v); }
 export function dbIcCoach(v?: ParamValues): MeshBuilder { return buildCoach(DB_IC, P.dbIc, v); }
@@ -210,5 +259,8 @@ export const WORLD_COACHES: ProceduralDesign[] = [
   coachDesign("proc-vehicle-sncf-corail-coach", "SNCF Corail coach", SNCF_CORAIL, P.corail, sncfCorail, sncfCorailLod, "sncf-corail-coach"),
   coachDesign("proc-vehicle-sncf-grand-confort", "SNCF Grand Confort", SNCF_GRAND_CONFORT, P.grandConfort, sncfGrandConfort, sncfGrandConfortLod, "sncf-grand-confort"),
   coachDesign("proc-vehicle-ns-icr-coach", "NS ICR coach", NS_ICR, P.nsIcr, nsIcr, nsIcrLod, "ns-icr-coach"),
+  coachDesign("proc-vehicle-sbb-ew4-coach", "SBB EW IV coach", SBB_EW4, P.ew4, sbbEw4, sbbEw4Lod, "sbb-ew4-coach"),
+  coachDesign("proc-vehicle-sbb-ic2000", "SBB IC 2000 coach", SBB_IC2000, P.ic2000, sbbIc2000, sbbIc2000Lod, "sbb-ic2000"),
+  coachDesign("proc-vehicle-glacier-express", "Glacier Express coach", GLACIER, P.glacier, glacierExpress, glacierExpressLod, "glacier-express"),
   coachDesign("proc-vehicle-ciwl-car", "Wagons-Lits car", CIWL, P.ciwl, ciwlCar, ciwlCarLod, "ciwl-car"),
 ];

@@ -76,13 +76,14 @@ minutes** (AGENTS.md); it takes about four and a half on a four-core machine
   checks, and the family suites' per-variant loops. A sampled train is the shortest with a middle
   car (3 cars where the design offers them): the longest repeats the same cars and
   joints at several times the cost.
-- **One JS rebuild per kit family.** The eight-country plan's families
-  (`KIT_FAMILY_MODULES` in `test/catalogCache.ts`) are data on shared kits, every design's
-  JS model the same bundled kit code as its module's other designs: the sweep's second
-  JS rebuild of a sampled combination, compared with the generator's build, runs on each
-  module's first design. Every design keeps its generator-side checks (flicker, envelope,
-  budget, z-fighting of the sampled combination), its defaults' JS build and its pose;
-  `TEST_ALL_DESIGNS=1` (or `TEST_ALL_VARIANTS=1`) rebuilds every design's sample in JS. **`TEST_ALL_VARIANTS=1 pnpm
+- **One design per kit family.** The eight-country plan's families
+  (`KIT_FAMILY_MODULES` in `test/catalogCache.ts`) are data on shared kits, each design's
+  build its module's kit code with its own figures: the catalog sweep and the door suite
+  run on each module's first design (`swept`). Every design of the families gets the data
+  checks of `test/worldTrains.test.ts` - no z-fighting, emitters on their mouths, inside
+  its loading gauge and the triangle budget, at its published length, doors opening
+  exactly on a passenger car, on its defaults and a sampled combination, and its LOD
+  inside its budget. `TEST_ALL_DESIGNS=1` (or `TEST_ALL_VARIANTS=1`) sweeps every design. **`TEST_ALL_VARIANTS=1 pnpm
   test` checks every combination**; it takes far longer, so it runs only when
   the user asks for it (AGENTS.md).
 - **Cheap comparisons.** `test/setup.ts` decides equal typed arrays (GLB bytes)

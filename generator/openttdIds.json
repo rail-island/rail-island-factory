@@ -102,6 +102,7 @@
     "proc-vehicle-falls-hopper-wagon": 42,
     "proc-vehicle-ge-es44ac": 122,
     "proc-vehicle-ge-p42dc": 125,
+    "proc-vehicle-glacier-express": 223,
     "proc-vehicle-habis-sliding-wall-wagon": 39,
     "proc-vehicle-hadgs-hopper-wagon": 40,
     "proc-vehicle-hankyu-9000": 155,
@@ -134,6 +135,7 @@
     "proc-vehicle-mcdonnell-douglas-md11": 72,
     "proc-vehicle-mercedes-atego-1224": 62,
     "proc-vehicle-metro-81-71": 96,
+    "proc-vehicle-mgb-hge442": 240,
     "proc-vehicle-mixer-truck": 58,
     "proc-vehicle-mtr-m-train": 113,
     "proc-vehicle-muv-69": 56,
@@ -174,6 +176,24 @@
     "proc-vehicle-raj-hopper-wagon": 22,
     "proc-vehicle-ratp-mi09": 190,
     "proc-vehicle-reefer-semi-truck": 59,
+    "proc-vehicle-rhb-allegra": 231,
+    "proc-vehicle-rhb-ge443": 238,
+    "proc-vehicle-rhb-ge66": 239,
+    "proc-vehicle-sbb-ae66": 235,
+    "proc-vehicle-sbb-ae814": 237,
+    "proc-vehicle-sbb-ce68": 236,
+    "proc-vehicle-sbb-ew4-coach": 221,
+    "proc-vehicle-sbb-flirt": 229,
+    "proc-vehicle-sbb-fv-dosto": 228,
+    "proc-vehicle-sbb-giruno": 227,
+    "proc-vehicle-sbb-ic2000": 222,
+    "proc-vehicle-sbb-icn": 226,
+    "proc-vehicle-sbb-kiss": 230,
+    "proc-vehicle-sbb-rae-tee": 224,
+    "proc-vehicle-sbb-re420": 233,
+    "proc-vehicle-sbb-re460": 232,
+    "proc-vehicle-sbb-re620": 234,
+    "proc-vehicle-sbb-roter-pfeil": 225,
     "proc-vehicle-sf-cable-car": 141,
     "proc-vehicle-shinkansen-0": 112,
     "proc-vehicle-shinkansen-100": 147,
@@ -1284,6 +1304,14 @@
         "id": 4752,
         "size": 6
       },
+      "proc-vehicle-glacier-express?": {
+        "id": 7470,
+        "size": 6
+      },
+      "proc-vehicle-glacier-express?unit=second": {
+        "id": 7476,
+        "size": 6
+      },
       "proc-vehicle-habis-sliding-wall-wagon?": {
         "id": 1584,
         "size": 16
@@ -1535,6 +1563,10 @@
       "proc-vehicle-metro-81-71?unit=middleCar": {
         "id": 2624,
         "size": 16
+      },
+      "proc-vehicle-mgb-hge442?": {
+        "id": 7862,
+        "size": 4
       },
       "proc-vehicle-mtr-m-train?": {
         "id": 3952,
@@ -1910,6 +1942,170 @@
       },
       "proc-vehicle-ratp-mi09?unit=middleCar": {
         "id": 6602,
+        "size": 6
+      },
+      "proc-vehicle-rhb-allegra?": {
+        "id": 7764,
+        "size": 6
+      },
+      "proc-vehicle-rhb-allegra?formation=3 cars": {
+        "id": 7774,
+        "size": 16
+      },
+      "proc-vehicle-rhb-allegra?unit=middleCar": {
+        "id": 7770,
+        "size": 4
+      },
+      "proc-vehicle-rhb-ge443?": {
+        "id": 7850,
+        "size": 4
+      },
+      "proc-vehicle-rhb-ge66?": {
+        "id": 7854,
+        "size": 4
+      },
+      "proc-vehicle-rhb-ge66?livery=green": {
+        "id": 7858,
+        "size": 4
+      },
+      "proc-vehicle-sbb-ae66?": {
+        "id": 7816,
+        "size": 6
+      },
+      "proc-vehicle-sbb-ae66?livery=red": {
+        "id": 7822,
+        "size": 6
+      },
+      "proc-vehicle-sbb-ae814?": {
+        "id": 7840,
+        "size": 10
+      },
+      "proc-vehicle-sbb-ce68?": {
+        "id": 7828,
+        "size": 6
+      },
+      "proc-vehicle-sbb-ce68?livery=green": {
+        "id": 7834,
+        "size": 6
+      },
+      "proc-vehicle-sbb-ew4-coach?": {
+        "id": 7430,
+        "size": 8
+      },
+      "proc-vehicle-sbb-ew4-coach?livery=sbb": {
+        "id": 7446,
+        "size": 8
+      },
+      "proc-vehicle-sbb-ew4-coach?unit=b": {
+        "id": 7438,
+        "size": 8
+      },
+      "proc-vehicle-sbb-flirt?": {
+        "id": 7680,
+        "size": 6
+      },
+      "proc-vehicle-sbb-flirt?formation=4 cars": {
+        "id": 7692,
+        "size": 24
+      },
+      "proc-vehicle-sbb-flirt?unit=middleCar": {
+        "id": 7686,
+        "size": 6
+      },
+      "proc-vehicle-sbb-fv-dosto?": {
+        "id": 7632,
+        "size": 8
+      },
+      "proc-vehicle-sbb-fv-dosto?formation=8 cars": {
+        "id": 7648,
+        "size": 32
+      },
+      "proc-vehicle-sbb-fv-dosto?unit=middleCar": {
+        "id": 7640,
+        "size": 8
+      },
+      "proc-vehicle-sbb-giruno?": {
+        "id": 7586,
+        "size": 8
+      },
+      "proc-vehicle-sbb-giruno?formation=8 cars": {
+        "id": 7600,
+        "size": 32
+      },
+      "proc-vehicle-sbb-giruno?unit=middleCar": {
+        "id": 7594,
+        "size": 6
+      },
+      "proc-vehicle-sbb-ic2000?": {
+        "id": 7454,
+        "size": 8
+      },
+      "proc-vehicle-sbb-ic2000?unit=b": {
+        "id": 7462,
+        "size": 8
+      },
+      "proc-vehicle-sbb-icn?": {
+        "id": 7538,
+        "size": 8
+      },
+      "proc-vehicle-sbb-icn?formation=7 cars": {
+        "id": 7554,
+        "size": 32
+      },
+      "proc-vehicle-sbb-icn?unit=middleCar": {
+        "id": 7546,
+        "size": 8
+      },
+      "proc-vehicle-sbb-kiss?": {
+        "id": 7716,
+        "size": 8
+      },
+      "proc-vehicle-sbb-kiss?formation=6 cars": {
+        "id": 7732,
+        "size": 32
+      },
+      "proc-vehicle-sbb-kiss?unit=middleCar": {
+        "id": 7724,
+        "size": 8
+      },
+      "proc-vehicle-sbb-rae-tee?": {
+        "id": 7482,
+        "size": 6
+      },
+      "proc-vehicle-sbb-rae-tee?formation=6 cars": {
+        "id": 7500,
+        "size": 32
+      },
+      "proc-vehicle-sbb-rae-tee?livery=gottardo": {
+        "id": 7494,
+        "size": 6
+      },
+      "proc-vehicle-sbb-rae-tee?unit=middleCar": {
+        "id": 7488,
+        "size": 6
+      },
+      "proc-vehicle-sbb-re420?": {
+        "id": 7796,
+        "size": 4
+      },
+      "proc-vehicle-sbb-re420?livery=red": {
+        "id": 7800,
+        "size": 4
+      },
+      "proc-vehicle-sbb-re460?": {
+        "id": 7790,
+        "size": 6
+      },
+      "proc-vehicle-sbb-re620?": {
+        "id": 7804,
+        "size": 6
+      },
+      "proc-vehicle-sbb-re620?livery=red": {
+        "id": 7810,
+        "size": 6
+      },
+      "proc-vehicle-sbb-roter-pfeil?": {
+        "id": 7532,
         "size": 6
       },
       "proc-vehicle-shinkansen-0?": {

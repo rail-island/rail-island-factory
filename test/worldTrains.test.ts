@@ -1,26 +1,26 @@
 // The trains of the eight-country plan (docs/specs/2026-11-05-trains-of-eight-countries.md):
-// every family's designs at their defaults - inside their loading gauge, within the
-// triangle budget, at their published length, filed under their country, every
-// parameter value fitting the game's 16-character button. The catalog sweep runs
-// the per-design checks on a sampled combination too.
+// every design of the plan's kit families (KIT_FAMILY_MODULES, test/catalogCache.ts), on
+// its defaults and a sampled combination - no z-fighting, emitters on their mouths, inside
+// its loading gauge and the triangle budget, doors opening exactly on a passenger car -
+// at its published length, its LOD inside its budget, filed under its country, every
+// parameter value fitting the game's 16-character button. The catalog sweep and the door
+// suite run their full checks on each module's first design (docs/guide/setup-and-build.md).
 
 import { describe, expect, it } from "vitest";
-import type { ProceduralDesign } from "../generator/design";
-import { DE_UNITS } from "../generator/deUnits";
-import { DE_LOCOS } from "../generator/deLocos";
-import { FR_UNITS } from "../generator/frUnits";
-import { FR_LOCOS } from "../generator/frLocos";
-import { NL_UNITS } from "../generator/nlUnits";
-import { NL_LOCOS } from "../generator/nlLocos";
-import { WORLD_STEAM_DESIGNS } from "../generator/worldSteamLocos";
-import { WORLD_COACHES } from "../generator/worldCoaches";
+import { DESIGNS, designSource } from "../generator/generate";
 import { COUNTRY_OF } from "../generator/countryTable";
 import { loadingGaugeOf } from "../generator/loadingGauge";
 import { glbStats } from "../generator/glbStats";
+import { findCoplanarOverlaps } from "../generator/coplanar";
 import { RAIL_COLLECTOR_TOP } from "../generator/collector";
+import { lodBudget } from "../generator/lod";
+import { buildLodModel } from "../generator/lodModel";
+import { KIT_FAMILY_MODULES, variantsUnderTest } from "./catalogCache";
+import { expectEmittersOnMouths } from "./emitterCheck";
 
-/** Every design of the plan's families, and the length (m) each default build spans over its buffers or couplers. */
-const FAMILIES: ProceduralDesign[] = [...DE_UNITS, ...DE_LOCOS, ...FR_UNITS, ...FR_LOCOS, ...NL_UNITS, ...NL_LOCOS, ...WORLD_STEAM_DESIGNS, ...WORLD_COACHES];
+const FAMILIES = [...DESIGNS.values()].filter((d) => KIT_FAMILY_MODULES.has(designSource(d.id)));
+
+/** The length (m) each default build spans over its buffers or couplers, where the design states one. */
 const LENGTHS: Record<string, number> = {
   "proc-vehicle-db-103": 20.2, "proc-vehicle-db-101": 19.1, "proc-vehicle-db-120": 19.2, "proc-vehicle-drg-e18": 16.92,
   "proc-vehicle-drg-e94": 18.6, "proc-vehicle-db-v200": 18.53, "proc-vehicle-db-218": 16.4, "proc-vehicle-db-ic-coach": 26.4,
@@ -30,11 +30,19 @@ const LENGTHS: Record<string, number> = {
   "proc-vehicle-sncf-corail-coach": 26.4, "proc-vehicle-sncf-grand-confort": 24.5, "proc-vehicle-ciwl-car": 23.45, "proc-vehicle-sncf-x3800": 21.85, "proc-vehicle-sncf-x73500": 28.9,
   "proc-vehicle-ns-1700": 17.48, "proc-vehicle-ns-1100": 12.93, "proc-vehicle-ns-1300": 18.95, "proc-vehicle-ns-1200": 18.08, "proc-vehicle-ns-2200": 14.1,
   "proc-vehicle-ns-icr-coach": 26.4, "proc-vehicle-ns-de1": 26.0,
+  "proc-vehicle-sbb-re460": 18.5, "proc-vehicle-sbb-re420": 15.41, "proc-vehicle-sbb-re620": 19.31, "proc-vehicle-sbb-ae66": 18.4, "proc-vehicle-sbb-ce68": 19.46,
+  "proc-vehicle-sbb-ae814": 34.0, "proc-vehicle-rhb-ge443": 16.0, "proc-vehicle-rhb-ge66": 13.3, "proc-vehicle-mgb-hge442": 14.8, "proc-vehicle-sbb-roter-pfeil": 22.4,
+  "proc-vehicle-sbb-ew4-coach": 26.4, "proc-vehicle-sbb-ic2000": 26.8, "proc-vehicle-glacier-express": 18.4,
 };
-const COUNTRY: Record<string, string> = { db: "de", dr: "de", drg: "de", kpev: "de", sncf: "fr", ratp: "fr", ciwl: "fr", ns: "nl" };
+
+/** A design's country by the operator prefix of its id. */
+const COUNTRY: Record<string, string> = { db: "de", dr: "de", drg: "de", kpev: "de", sncf: "fr", ratp: "fr", ciwl: "fr", ns: "nl", sbb: "ch", rhb: "ch", mgb: "ch", glacier: "ch" };
+
+const PASSENGER_GROUPS = new Set(["coach", "unit", "tram", "metro", "bus"]);
 
 describe("the eight countries' trains", () => {
-  it("file every design under its country", () => {
+  it("are all filed under their country", () => {
+    expect(FAMILIES.length).toBeGreaterThanOrEqual(60);
     for (const d of FAMILIES) {
       const prefix = d.id.replace("proc-vehicle-", "").split("-")[0]!;
       expect(COUNTRY_OF.get(d.id), d.id).toBe(COUNTRY[prefix]);
@@ -46,14 +54,34 @@ describe("the eight countries' trains", () => {
   });
 
   for (const d of FAMILIES)
-    it(`${d.id}: its default inside its gauge and budget, at its length`, () => {
-      const s = glbStats(d.build().toGlb(d.id));
+    it(`${d.id}: its defaults and a sampled combination clean, in gauge and budget, its doors, length and LOD`, () => {
       const g = loadingGaugeOf(d);
-      expect(s.max[2] - s.min[2]).toBeLessThanOrEqual(g.width);
-      // a raised pantograph reaches for the wire, above the body's gauge
-      expect(s.max[1]).toBeLessThanOrEqual(d.catalog?.traction === "electric" ? RAIL_COLLECTOR_TOP + 0.01 : g.height);
-      expect(s.triangles).toBeLessThanOrEqual(16000);
-      const want = LENGTHS[d.id];
-      if (want) expect(Math.abs(s.max[0] - s.min[0] - want), `${d.id} length`).toBeLessThan(0.05 * want);
+      const combos = variantsUnderTest(d);
+      const sampled = combos.length > 1 ? [combos[0]!, combos[combos.length - 1]!] : [combos[0] ?? {}];
+      sampled.forEach((v, i) => {
+        const label = `${d.id} ${JSON.stringify(v)}`;
+        const m = d.build(v);
+        const glb = m.toGlb(d.id);
+        expect(findCoplanarOverlaps(glb), label).toEqual([]);
+        expectEmittersOnMouths(m.emitters(), m.emitters().length ? m.positions() : [], label);
+        const s = glbStats(glb);
+        expect(s.min[1], label).toBeCloseTo(0, 5);
+        expect(s.min[2], label).toBeCloseTo(-s.max[2], 5);
+        expect(s.max[2] - s.min[2], label).toBeLessThanOrEqual(g.width);
+        // a raised pantograph reaches for the wire, above the body's gauge
+        expect(s.max[1], label).toBeLessThanOrEqual(d.catalog?.traction === "electric" ? RAIL_COLLECTOR_TOP + 0.01 : g.height);
+        const cars = m.rig?.sections?.length ?? 1;
+        expect(s.triangles, label).toBeLessThanOrEqual(16_000 * cars);
+        if (i === 0) {
+          // doors open on a passenger car (a unit's cars, a coach), never on a locomotive
+          const opens = m.animations().some((c) => c.drive.drive === "door");
+          expect(opens, label).toBe(PASSENGER_GROUPS.has(d.catalog?.group ?? "") && !(d.id === "proc-vehicle-db-ice2"));
+          const want = LENGTHS[d.id];
+          if (want) expect(Math.abs(s.max[0] - s.min[0] - want), `${d.id} length`).toBeLessThan(0.05 * want);
+        }
+      });
+      const lod = buildLodModel(d);
+      expect(lod.triangleCount()).toBeGreaterThan(0);
+      expect(lod.triangleCount()).toBeLessThanOrEqual(lodBudget(d));
     });
 });
