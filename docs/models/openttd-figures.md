@@ -175,6 +175,66 @@ file is the authority.
 | `jnr-ef66` | JNR EF66 | train ELRL | 1968 | 0 PASS | 140 / 88 | 2 | - |
 | `jnr-dd51` | JNR DD51 | train RAIL | 1962 | 0 PASS | 80 / 43 | 2 | - |
 | `blue-train-24` | Blue Train 24 series | train RAIL | 1973 | 34 PASS | 32 / 9 | 2 | - |
+| `db-ice3` | ICE 3 | train ELRL | 2000 | 50 PASS | 124 / 38 | 3 | 8 cars |
+| `db-ice4` | ICE 4 | train ELRL | 2017 | 60 PASS | 106 / 37 | 3 | 8 cars |
+| `db-ice-t` | ICE T | train ELRL | 1999 | 45 PASS | 90 / 28 | 3 | 7 cars |
+| `db-ice2` | ICE 2 | train ELRL | 1996 | 0 PASS | 196 / 106 | 3 | 7 cars |
+| `db-423` | DB 423 | train ELRL | 1998 | 50 PASS | 75 / 30 | 2 | 4 cars |
+| `db-642` | DB 642 Desiro | train RAIL | 2000 | 60 PASS | 66 / 26 | 2 | 2 cars |
+| `db-650` | RegioShuttle RS1 | train RAIL | 1996 | 71 PASS | 75 / 32 | 2 | - |
+| `db-vt98` | Uerdingen railbus VT 98 | train RAIL | 1955 | 56 PASS | 58 / 24 | 2 | - |
+| `drg-svt877` | Fliegender Hamburger | train RAIL | 1933 | 51 PASS | 72 / 25 | 2 | 2 cars |
+| `db-103` | DB 103 | train ELRL | 1970 | 0 PASS | 246 / 159 | 3 | - |
+| `db-101` | DB 101 | train ELRL | 1996 | 0 PASS | 224 / 138 | 2 | - |
+| `db-120` | DB 120 | train ELRL | 1979 | 0 PASS | 200 / 122 | 2 | - |
+| `drg-e18` | DRG E 18 | train ELRL | 1935 | 0 PASS | 126 / 71 | 1 | - |
+| `drg-e94` | DRG E 94 | train ELRL | 1940 | 0 PASS | 121 / 76 | 1 | - |
+| `db-v200` | DB V 200 | train RAIL | 1953 | 0 PASS | 89 / 42 | 2 | - |
+| `db-218` | DB 218 | train RAIL | 1968 | 0 PASS | 94 / 47 | 3 | - |
+| `drg-01` | DRG 01 | train RAIL | 1926 | 0 PASS | 88 / 43 | 2 | with tender |
+| `dr-52` | DR 52 | train RAIL | 1942 | 0 PASS | 66 / 34 | 2 | with tender |
+| `kpev-p8` | Prussian P 8 | train RAIL | 1906 | 0 PASS | 62 / 27 | 3 | with tender |
+| `db-ic-coach` | DB Intercity coach | train RAIL | 1971 | 54 PASS | 48 / 12 | 4 | - |
+| `sncf-tgv-m` | TGV M | train ELRL | 2025 | 40 PASS | 119 / 37 | 3 | 8 cars |
+| `sncf-z20500` | SNCF Z 20500 | train ELRL | 1988 | 140 PASS | 101 / 47 | 3 | 4 cars |
+| `ratp-mi09` | RER MI 09 | train ELRL | 2011 | 100 PASS | 88 / 42 | 2 | 5 cars |
+| `sncf-regio2n` | Regio 2N | train ELRL | 2014 | 90 PASS | 87 / 35 | 3 | 4 cars |
+| `sncf-regiolis` | Regiolis | train ELRL | 2014 | 60 PASS | 78 / 29 | 3 | 4 cars |
+| `sncf-x3800` | SNCF X 3800 Picasso | train RAIL | 1950 | 62 PASS | 66 / 25 | 1 | - |
+| `sncf-x73500` | SNCF X 73500 | train RAIL | 1999 | 64 PASS | 77 / 31 | 2 | - |
+| `sncf-cc6500` | SNCF CC 6500 | train ELRL | 1969 | 0 PASS | 208 / 128 | 3 | - |
+| `sncf-cc40100` | SNCF CC 40100 | train ELRL | 1964 | 0 PASS | 164 / 100 | 1 | - |
+| `sncf-bb22200` | SNCF BB 22200 | train ELRL | 1976 | 0 PASS | 161 / 97 | 3 | - |
+| `sncf-cc7100` | SNCF CC 7100 | train ELRL | 1952 | 0 PASS | 137 / 80 | 2 | - |
+| `sncf-bb9200` | SNCF BB 9200 | train ELRL | 1957 | 0 PASS | 148 / 87 | 2 | - |
+| `sncf-bb27000` | SNCF BB 27000 Prima | train ELRL | 2001 | 0 PASS | 153 / 94 | 1 | - |
+| `sncf-bb67400` | SNCF BB 67400 | train RAIL | 1969 | 0 PASS | 92 / 45 | 2 | - |
+| `sncf-cc72000` | SNCF CC 72000 | train RAIL | 1967 | 0 PASS | 118 / 63 | 2 | - |
+| `sncf-241p` | SNCF 241 P | train RAIL | 1948 | 0 PASS | 119 / 70 | 2 | with tender |
+| `sncf-141r` | SNCF 141 R | train RAIL | 1945 | 0 PASS | 86 / 47 | 2 | with tender |
+| `sncf-corail-coach` | SNCF Corail coach | train RAIL | 1975 | 58 PASS | 49 / 12 | 3 | - |
+| `sncf-grand-confort` | SNCF Grand Confort | train RAIL | 1970 | 48 PASS | 46 / 11 | 3 | - |
+| `ciwl-car` | Wagons-Lits car | train RAIL | 1929 | 28 PASS | 33 / 9 | 3 | - |
+| `ns-mat46` | NS Mat '46 | train ELRL | 1949 | 76 PASS | 70 / 28 | 2 | 2 cars |
+| `ns-mat54` | NS Mat '54 Hondekop | train ELRL | 1957 | 64 PASS | 72 / 27 | 3 | 4 cars |
+| `ns-plan-v` | NS Plan V | train ELRL | 1966 | 72 PASS | 74 / 28 | 2 | 2 cars |
+| `ns-de1` | NS DE-I Blauwe Engel | train RAIL | 1954 | 64 PASS | 68 / 27 | 1 | - |
+| `ns-icm` | NS ICM Koploper | train ELRL | 1977 | 64 PASS | 76 / 27 | 3 | 4 cars |
+| `ns-virm` | NS VIRM | train ELRL | 1994 | 100 PASS | 85 / 33 | 3 | 6 cars |
+| `ns-ddz` | NS DDZ | train ELRL | 1992 | 110 PASS | 86 / 36 | 3 | 4 cars |
+| `ns-sgm` | NS SGM Sprinter | train ELRL | 1975 | 76 PASS | 72 / 29 | 3 | 3 cars |
+| `ns-slt` | NS SLT | train ELRL | 2009 | 40 PASS | 72 / 24 | 2 | 4 cars |
+| `ns-sng` | NS SNG | train ELRL | 2018 | 44 PASS | 72 / 25 | 2 | 4 cars |
+| `ns-icng` | NS ICNG | train ELRL | 2023 | 50 PASS | 83 / 26 | 2 | 5 cars |
+| `ns-flirt` | NS Flirt | train ELRL | 2016 | 44 PASS | 72 / 25 | 2 | 4 cars |
+| `ns-v250` | Fyra V250 | train ELRL | 2012 | 40 PASS | 97 / 30 | 2 | 8 cars |
+| `ns-1700` | NS 1600 / 1700 | train ELRL | 1981 | 0 PASS | 166 / 101 | 2 | - |
+| `ns-1100` | NS 1100 | train ELRL | 1950 | 0 PASS | 106 / 57 | 2 | - |
+| `ns-1300` | NS 1300 | train ELRL | 1952 | 0 PASS | 106 / 57 | 2 | - |
+| `ns-1200` | NS 1200 | train ELRL | 1951 | 0 PASS | 109 / 57 | 2 | - |
+| `ns-2200` | NS 2200 | train RAIL | 1955 | 0 PASS | 57 / 23 | 2 | - |
+| `ns-3700` | NS 3700 | train RAIL | 1910 | 0 PASS | 63 / 28 | 2 | with tender |
+| `ns-icr-coach` | NS ICR coach | train RAIL | 1981 | 52 PASS | 43 / 12 | 3 | - |
 | `mtr-m-train` | MTR M-Train | train ELRL | 1979 | 230 PASS | 102 / 55 | 6 | 8 cars |
 | `tgv-duplex` | TGV Duplex | train ELRL | 1996 | 0 PASS | 194 / 98 | 7 | power cars, 8 trailers |
 | `cd-y-coach` | CD Y Coach | train RAIL | 1970* | 54 PASS | 42 / 12 | 4 | - |

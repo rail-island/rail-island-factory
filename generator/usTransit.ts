@@ -214,7 +214,7 @@ function carLodBody(c: CarDef, X: (d: number) => number, section?: number): Unit
   };
 }
 
-function carLod(c: CarDef, X: (d: number) => number, palette: Record<string, MaterialSpec>): MeshBuilder {
+export function carLod(c: CarDef, X: (d: number) => number, palette: Record<string, MaterialSpec>): MeshBuilder {
   const body = carLodBody(c, X);
   const parts = bogieParts(c.trucks.map((d) => [X(d), c.truck.frameHalf] as const), c.spec.B);
   return fitUnit({ palette, bodies: [body], parts }, 100);

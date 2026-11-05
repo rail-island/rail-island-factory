@@ -66,8 +66,8 @@ describe("rail supports", () => {
       const t = nodes[i]!.translation!;
       expect(t[0]).toBeCloseTo(s.x, 3);
       expect(t[1]).toBeGreaterThan(0.25);
-      // up to the PRR GG1's 57 in drivers (axle at 0.72 m)
-      expect(t[1]).toBeLessThan(0.75);
+      // up to the DRG E 18's 1.6 m drivers (axle at 0.8 m)
+      expect(t[1]).toBeLessThan(0.82);
       expect(t[2]).toBe(0);
       // its own triangles reach either side of the pivot along x
       const own = collectTriangles({ ...json, scenes: [{ nodes: [i] }], scene: 0 }, bin);

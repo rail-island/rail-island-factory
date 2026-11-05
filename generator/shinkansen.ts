@@ -117,6 +117,8 @@ function bogies(s: ShinkansenSeries, end: boolean): [number, number] {
 }
 
 function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantograph: boolean, number: string): CarDef {
+  // the centre coupler's draft gear ends 0.3 m below its centre: a skirt bottom there would lie on it
+  if (Math.abs(s.B - (COUPLER_Y - 0.3)) < 0.005) throw new Error(`series: skirt bottom ${s.B} m lies on the coupler's draft gear`);
   const L = end ? endBody(s) : midBody(s);
   const tr = bogies(s, end);
   const first = end ? (s.flatCab ? 2.2 : Math.max(s.nose.len, s.windscreen[1]) + 1.6) : 2.0;
@@ -150,7 +152,7 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
     doors: { spans: doors, y: [s.door[0], s.door[1]], glass: [s.door[2], s.door[3]] },
     ...(s.flatCab ? { cab: s.flatCab } : {}), cabEnds: end && s.flatCab ? (s.single ? [1, -1] : [1]) : [], diaphragm: [s.door[0], s.door[1] + 0.3],
     trucks: tr, truck: {
-      axles: [-s.wheelbase / 2, s.wheelbase / 2], wheelR: s.wheelR, frameHalf: s.wheelbase / 2 + s.wheelR + 0.15, frameTop: s.wheelR + 0.4, frameBottom: s.wheelR + 0.08,
+      axles: s.wheelbase > 0 ? [-s.wheelbase / 2, s.wheelbase / 2] : [0], wheelR: s.wheelR, frameHalf: s.wheelbase > 0 ? s.wheelbase / 2 + s.wheelR + 0.15 : s.wheelR + 0.45, frameTop: s.wheelR + 0.4, frameBottom: s.wheelR + 0.08,
       frameZ: [0.92, 1.04], primary: "coil", secondary: [-0.42, 0.42], secondaryZ: 1.1, bolster: s.B,
     },
     coupler: s.endCoupler === "buffers" ? "buffers" : "centre", couplerY: COUPLER_Y,
@@ -161,7 +163,7 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
       if (end && !s.flatCab) noseFittings(m, s, b, X);
       if (s.single && !s.flatCab) m.scope("rear nose", () => m.turned((X(0) + X(L)) / 2, () => noseFittings(m, s, b, X)));
       if (isDiesel(s))
-        m.scope("exhaust", () => exhaust(m, X(L / 2), 0.35, s.C - 0.05, s.C + 0.25, 0.14, 0.14));
+        m.scope("exhaust", () => exhaust(m, X(L / 2), 0, s.C - 0.05, s.C + 0.25, 0.14, 0.14));
       if (pantograph) m.scope("pantograph", () => {
         const x = X(tr[1] - 1.5);
         block(m, l.roof, x - 1.6, x + 1.6, s.C - 0.06, s.C + 0.05, -0.85, 0.85);
@@ -214,7 +216,7 @@ export function shinkansenTrain(s: ShinkansenSeries, n: number): ShinkansenSlot[
 
 export function buildSeries(s: ShinkansenSeries, params: readonly ParamSpec[], v?: ParamValues): MeshBuilder {
   const p = resolveParams(params, v);
-  const l = s.liveries[p.livery!]!;
+  const l = liveryOf(s, p);
   const m = new MeshBuilder({ ...PALETTE, ...l.palette });
   const unit = (s.single ? "endCar" : p.unit) as ShinkansenUnit;
   if (unit !== "train") {
@@ -226,7 +228,7 @@ export function buildSeries(s: ShinkansenSeries, params: readonly ParamSpec[], v
     drawCar(m, carDef(s, l, end, panto, l.number), (d) => len / 2 - frontGap(s, end) - d, inside.length ? { inside } : {});
     return m;
   }
-  const slots = shinkansenTrain(s, Number(p.cars));
+  const slots = shinkansenTrain(s, carsIn(s, p));
   const sections = slots.map((slot, k) => {
     const cx = (slot.lo + slot.hi) / 2;
     const len = slot.end ? s.endLength : s.midLength;
@@ -270,7 +272,7 @@ function carLod(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
 
 export function buildSeriesLod(s: ShinkansenSeries, params: readonly ParamSpec[], v?: ParamValues): MeshBuilder {
   const p = resolveParams(params, v);
-  const l = s.liveries[p.livery!]!;
+  const l = liveryOf(s, p);
   const palette = { ...PALETTE, ...l.palette };
   const unit = (s.single ? "endCar" : p.unit) as ShinkansenUnit;
   if (unit !== "train") {
@@ -279,7 +281,7 @@ export function buildSeriesLod(s: ShinkansenSeries, params: readonly ParamSpec[]
     const { body, parts } = carLod(s, l, end, !isDiesel(s) && (s.endPantograph ? end : !end), (d) => len / 2 - frontGap(s, end) - d, 0, false);
     return fitUnit({ palette, bodies: [body], parts }, 100);
   }
-  const slots = shinkansenTrain(s, Number(p.cars));
+  const slots = shinkansenTrain(s, carsIn(s, p));
   const built = slots.map((slot, k) => {
     const cx = (slot.lo + slot.hi) / 2;
     const len = slot.end ? s.endLength : s.midLength;
@@ -297,27 +299,32 @@ export function buildSeriesLod(s: ShinkansenSeries, params: readonly ParamSpec[]
 }
 
 export function seriesParams(s: ShinkansenSeries): ParamSpec[] {
-  const livery = enumParam("livery", "Livery", Object.fromEntries(Object.entries(s.liveries).map(([k, v]) => [k, v.title])));
-  if (s.single) return [livery];
+  // a parameter of one value is no choice: a single livery or train length is left out
+  const livery = Object.keys(s.liveries).length > 1 ? [enumParam("livery", "Livery", Object.fromEntries(Object.entries(s.liveries).map(([k, v]) => [k, v.title])))] : [];
+  if (s.single) return livery;
   // a two-car unit has no intermediate car
   const units: Record<string, string> = carsOf(s).every((n) => n <= 2) ? { endCar: "End car", train: "Full train" } : { endCar: "End car", middleCar: "Middle car", train: "Full train" };
   return [
     enumParam("unit", "Car", units),
-    { ...enumParam("cars", "Cars", Object.fromEntries(carsOf(s).map((n) => [String(n), `${n} cars`]))), default: String(defaultCars(s)), when: { name: "unit", values: ["train"] } },
-    livery,
+    ...(carsOf(s).length > 1 ? [{ ...enumParam("cars", "Cars", Object.fromEntries(carsOf(s).map((n) => [String(n), `${n} cars`]))), default: String(defaultCars(s)), when: { name: "unit", values: ["train"] } }] : []),
+    ...livery,
   ];
 }
 
+/** The livery and train length of a series' values, a left-out parameter at its only value. */
+const liveryOf = (s: ShinkansenSeries, p: ParamValues): ShinkansenLivery => s.liveries[p.livery ?? Object.keys(s.liveries)[0]!]!;
+const carsIn = (s: ShinkansenSeries, p: ParamValues): number => (p.cars ? Number(p.cars) : defaultCars(s));
+
 function gameOf(s: ShinkansenSeries, params: readonly ParamSpec[]): GameProperties {
   const variants: NonNullable<GameProperties["variants"]> = [];
-  const lp = params.find((p) => p.name === "livery")!;
-  const liveries = lp.values.map((v) => v.value);
+  const lp = params.find((p) => p.name === "livery");
+  const liveries = lp ? lp.values.map((v) => v.value) : [""];
   if (s.single) return { weight: s.weight.end, power: s.power, maxspeed: s.maxspeed, accel: null };
   for (const livery of liveries) {
-    const base: ParamValues = livery === lp.default ? {} : { livery };
+    const base: ParamValues = !lp || livery === lp.default ? {} : { livery };
     if (carsOf(s).some((n) => n > 2)) variants.push({ params: { ...base, unit: "middleCar" }, weight: s.weight.middle });
     for (const n of carsOf(s))
-      variants.push({ params: { ...(n === defaultCars(s) ? {} : { cars: String(n) }), ...base, unit: "train" }, weight: 2 * s.weight.end + (n - 2) * s.weight.middle, power: s.power * n });
+      variants.push({ params: { ...(n === defaultCars(s) || carsOf(s).length < 2 ? {} : { cars: String(n) }), ...base, unit: "train" }, weight: 2 * s.weight.end + (n - 2) * s.weight.middle, power: s.power * n });
   }
   return { weight: s.weight.end, power: s.power, maxspeed: s.maxspeed, accel: null, variants };
 }

@@ -93,6 +93,14 @@ import { US_FREIGHT } from "./usFreight.ts";
 import { SHINKANSEN_DESIGNS } from "./shinkansen.ts";
 import { JP_EMUS } from "./jpEmus.ts";
 import { JNR_LOCOS } from "./jpLocos.ts";
+import { DE_UNITS } from "./deUnits.ts";
+import { DE_LOCOS } from "./deLocos.ts";
+import { WORLD_STEAM_DESIGNS } from "./worldSteamLocos.ts";
+import { WORLD_COACHES } from "./worldCoaches.ts";
+import { FR_UNITS } from "./frUnits.ts";
+import { FR_LOCOS } from "./frLocos.ts";
+import { NL_UNITS } from "./nlUnits.ts";
+import { NL_LOCOS } from "./nlLocos.ts";
 import { TRUCKS } from "./trucks.ts";
 import { PHOTO_TRUCKS } from "./photoTrucks.ts";
 import { TRAM_DESIGNS } from "./trams.ts";
@@ -210,6 +218,14 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: SHINKANSEN_DESIGNS, source: "shinkansen.ts", meta: "vehicles" },
   { designs: JP_EMUS, source: "jpEmus.ts", meta: "vehicles" },
   { designs: JNR_LOCOS, source: "jpLocos.ts", meta: "vehicles" },
+  { designs: DE_UNITS, source: "deUnits.ts", meta: "vehicles" },
+  { designs: DE_LOCOS, source: "deLocos.ts", meta: "vehicles" },
+  { designs: WORLD_STEAM_DESIGNS, source: "worldSteamLocos.ts", meta: "vehicles" },
+  { designs: WORLD_COACHES, source: "worldCoaches.ts", meta: "vehicles" },
+  { designs: FR_UNITS, source: "frUnits.ts", meta: "vehicles" },
+  { designs: FR_LOCOS, source: "frLocos.ts", meta: "vehicles" },
+  { designs: NL_UNITS, source: "nlUnits.ts", meta: "vehicles" },
+  { designs: NL_LOCOS, source: "nlLocos.ts", meta: "vehicles" },
   { designs: TRAM_DESIGNS, source: "trams.ts", meta: "vehicles" },
   { designs: METRO_DESIGNS, source: "metro.ts", meta: "vehicles" },
   { designs: EMU451_DESIGNS, source: "emu451.ts", meta: "vehicles" },

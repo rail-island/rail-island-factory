@@ -21,7 +21,7 @@ import { steerAngles, type VehicleRig } from "../generator/rig";
 import { isLeaf, type TreeNode } from "../generator/sourceTree";
 import { VEHICLES } from "../generator/vehicles";
 import { loadingGaugeOf } from "../generator/loadingGauge";
-import { built, built as cached, design, forget, glbOf, jsModuleOf, jsTextOf, lodGlbOf, variantsUnderTest } from "./catalogCache";
+import { built, built as cached, design, forget, glbOf, jsModuleOf, jsTextOf, lodGlbOf, rebuildsSampleInJs, variantsUnderTest } from "./catalogCache";
 import { expectSealed, jointMesh } from "./rigHelpers";
 import { expectEmittersOnMouths } from "./emitterCheck";
 
@@ -357,7 +357,7 @@ export function sweep(ids: readonly string[]): void {
           const mod = await jsModuleOf(id);
           expect(mod.params).toEqual(d.params);
           // the defaults' JS group is "builds in JS the GLB's triangles"'s
-          if (i > 0) expectSameVertices(groupVertices(mod.default(THREE, combo)), glbVertices(glb).positions);
+          if (i > 0 && rebuildsSampleInJs(id)) expectSameVertices(groupVertices(mod.default(THREE, combo)), glbVertices(glb).positions);
           expect(() => mod.default(THREE, { variant: "nope" })).toThrow();
         });
       }

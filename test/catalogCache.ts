@@ -135,7 +135,37 @@ export const ALL_VARIANTS = process.env.TEST_ALL_VARIANTS === "1";
  * same ones every run.
  */
 export function variantsUnderTest(d: Pick<ProceduralDesign, "params" | "finishParams">): ParamValues[] {
-  return sample(coverageCombinations(d.params, d.finishParams));
+  const out = sample(coverageCombinations(d.params, d.finishParams));
+  if (ALL_VARIANTS) return out;
+  // a train's sampled length is its shortest with a middle car (3 cars where offered): the
+  // longest repeats the same cars and joints at several times the cost
+  const cars = d.params?.find((p) => p.name === "cars");
+  if (!cars) return out;
+  const values = cars.values.map((v) => v.value);
+  const short = values.find((v) => Number(v) >= 3) ?? values[values.length - 1]!;
+  return out.map((v, i) => (i > 0 && v.cars !== undefined ? { ...v, cars: short } : v));
+}
+
+/**
+ * The source modules of the eight-country plan (docs/specs/2026-11-05-trains-of-eight-countries.md):
+ * each design is data on a shared kit, its JS model the same bundled kit code as its
+ * module's other designs. The sweep's second JS rebuild of a sampled combination, compared
+ * with the generator's, runs on each module's first design; every design keeps its
+ * generator-side checks, its defaults' JS build and its pose (TEST_ALL_DESIGNS=1, or
+ * TEST_ALL_VARIANTS=1, runs the rebuild on every design).
+ */
+export const KIT_FAMILY_MODULES: ReadonlySet<string> = new Set([
+  "deUnits.ts", "deLocos.ts", "frUnits.ts", "frLocos.ts", "nlUnits.ts", "nlLocos.ts", "worldSteamLocos.ts", "worldCoaches.ts",
+]);
+
+const ALL_DESIGNS = process.env.TEST_ALL_DESIGNS === "1";
+const FIRST_OF_MODULE = new Map<string, string>();
+for (const id of DESIGNS.keys()) { const src = designSource(id); if (!FIRST_OF_MODULE.has(src)) FIRST_OF_MODULE.set(src, id); }
+
+/** Whether the sweep rebuilds a design's sampled combination in JS: all but the plan's families' later designs. */
+export function rebuildsSampleInJs(id: string): boolean {
+  const src = designSource(id);
+  return ALL_DESIGNS || ALL_VARIANTS || !KIT_FAMILY_MODULES.has(src) || FIRST_OF_MODULE.get(src) === id;
 }
 
 /** The first item and SAMPLED_VARIANTS others evenly spread; all of them with TEST_ALL_VARIANTS=1. */

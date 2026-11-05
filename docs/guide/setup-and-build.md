@@ -73,7 +73,16 @@ minutes** (AGENTS.md); it takes about four and a half on a four-core machine
   checks the defaults and the last other combination (often the heaviest:
   the longest train), the same ones every run (`variantsUnderTest` and `sample` in `test/catalogCache.ts`):
   the sweep's flicker, envelope and JS-against-generator checks, the LOD
-  checks, and the family suites' per-variant loops. **`TEST_ALL_VARIANTS=1 pnpm
+  checks, and the family suites' per-variant loops. A sampled train is the shortest with a middle
+  car (3 cars where the design offers them): the longest repeats the same cars and
+  joints at several times the cost.
+- **One JS rebuild per kit family.** The eight-country plan's families
+  (`KIT_FAMILY_MODULES` in `test/catalogCache.ts`) are data on shared kits, every design's
+  JS model the same bundled kit code as its module's other designs: the sweep's second
+  JS rebuild of a sampled combination, compared with the generator's build, runs on each
+  module's first design. Every design keeps its generator-side checks (flicker, envelope,
+  budget, z-fighting of the sampled combination), its defaults' JS build and its pose;
+  `TEST_ALL_DESIGNS=1` (or `TEST_ALL_VARIANTS=1`) rebuilds every design's sample in JS. **`TEST_ALL_VARIANTS=1 pnpm
   test` checks every combination**; it takes far longer, so it runs only when
   the user asks for it (AGENTS.md).
 - **Cheap comparisons.** `test/setup.ts` decides equal typed arrays (GLB bytes)

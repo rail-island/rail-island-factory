@@ -57,6 +57,24 @@ const formation = (name: string, ...cars: Array<ParamValues | [ParamValues, "tur
 const ELRL = "ELRL";
 const RAIL = "RAIL";
 
+/**
+ * A unit on the series kit (shinkansen.ts): the end car's and a middle car's
+ * seats, its presets (the middle car, every other livery) and its formation of
+ * `cars` (end car, middle cars, the end car turned). A two-car unit has no
+ * middle car; a single railcar only its liveries.
+ */
+const series = (introYear: number, endSeats: number, midSeats: number, railType: string, o: { cars: number; liveries?: string[] } | { single: true; liveries?: string[] }): OpenttdProperties => {
+  const liveries = each("livery", ...(o.liveries ?? []));
+  if ("single" in o) return pax(introYear, endSeats, railType, { presets: presets(...liveries) });
+  if (o.cars <= 2) return pax(introYear, endSeats, railType, { presets: presets(...liveries), formations: [formation("2 cars", {}, [{}, "turned"])] });
+  const middles = Array.from({ length: o.cars - 2 }, () => ({ unit: "middleCar" }));
+  return pax(introYear, endSeats, railType, {
+    variants: [at({ unit: "middleCar" }, { capacity: midSeats })],
+    presets: presets({ unit: "middleCar" }, ...liveries),
+    formations: [formation(`${o.cars} cars`, {}, ...middles, [{}, "turned"])],
+  });
+};
+
 export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   // --- freight wagons --------------------------------------------------------------
   "proc-vehicle-legacy-covered-wagon": wagon(1950, 25, "GOOD", ["piece", "covered", "express"], {
@@ -482,4 +500,71 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-cruise-ferry": pax(1990, 2000, null, { presets: presets() }), // approx.
   "proc-vehicle-hydrofoil-ferry": pax(1960, 150, null, { presets: presets() }), // approx.
   "proc-vehicle-passenger-ferry": pax(1950, 300, null, { presets: presets() }), // approx.
+  // Germany (docs/models/germany-trains.md)
+  "proc-vehicle-db-ice3": series(2000, 50, 60, ELRL, { cars: 8, liveries: ["nsInternational"] }),
+  "proc-vehicle-db-ice4": series(2017, 60, 80, ELRL, { cars: 8, liveries: ["greenStripe"] }),
+  "proc-vehicle-db-ice-t": series(1999, 45, 60, ELRL, { cars: 7, liveries: ["obb"] }),
+  "proc-vehicle-db-423": series(1998, 50, 50, ELRL, { cars: 4 }),
+  "proc-vehicle-db-642": series(2000, 60, 60, RAIL, { cars: 2, liveries: ["erzgebirgsbahn"] }),
+  "proc-vehicle-db-650": series(1996, 71, 71, RAIL, { single: true, liveries: ["odeg"] }),
+  "proc-vehicle-db-vt98": series(1955, 56, 56, RAIL, { single: true, liveries: ["orientRed"] }),
+  "proc-vehicle-drg-svt877": series(1933, 51, 51, RAIL, { cars: 2, liveries: ["dbVt04"] }),
+  "proc-vehicle-db-103": loco(1970, ELRL, { presets: presets(...each("livery", "orientRed", "trafficRed")) }),
+  "proc-vehicle-db-101": loco(1996, ELRL, { presets: presets(...each("livery", "intercity")) }),
+  "proc-vehicle-db-120": loco(1979, ELRL, { presets: presets(...each("livery", "trafficRed")) }),
+  "proc-vehicle-drg-e18": loco(1935, ELRL, { presets: presets() }),
+  "proc-vehicle-drg-e94": loco(1940, ELRL, { presets: presets() }),
+  "proc-vehicle-db-v200": loco(1953, RAIL, { presets: presets(...each("livery", "orientRed")) }),
+  "proc-vehicle-db-218": loco(1968, RAIL, { presets: presets(...each("livery", "orientRed", "trafficRed")) }),
+  "proc-vehicle-drg-01": loco(1926, RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
+  "proc-vehicle-dr-52": loco(1942, RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
+  "proc-vehicle-kpev-p8": loco(1906, RAIL, { presets: presets({ unit: "tender" }, { livery: "drBlack" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
+  "proc-vehicle-db-ice2": loco(1996, ELRL, {
+    variants: [at({ unit: "coach" }, { capacity: 64, cargo: "PASS", refitClasses: ["passengers"] }), at({ unit: "drivingTrailer" }, { capacity: 50, cargo: "PASS", refitClasses: ["passengers"] })],
+    presets: presets({ unit: "coach" }, { unit: "drivingTrailer" }),
+    formations: [formation("7 cars", {}, { unit: "coach" }, { unit: "coach" }, { unit: "coach" }, { unit: "coach" }, { unit: "coach" }, [{ unit: "drivingTrailer" }, "turned"])],
+  }),
+  "proc-vehicle-db-ic-coach": pax(1971, 54, RAIL, { variants: [at({ unit: "bpmz" }, { capacity: 72 })], presets: presets({ unit: "bpmz" }, ...each("livery", "oceanBlue", "intercity")) }),
+  // France (docs/models/france-trains.md)
+  "proc-vehicle-sncf-tgv-m": series(2025, 40, 90, ELRL, { cars: 8, liveries: ["ouigo"] }),
+  "proc-vehicle-sncf-z20500": series(1988, 140, 160, ELRL, { cars: 4, liveries: ["ileDeFrance"] }),
+  "proc-vehicle-ratp-mi09": series(2011, 100, 110, ELRL, { cars: 5 }),
+  "proc-vehicle-sncf-regio2n": series(2014, 90, 100, ELRL, { cars: 4, liveries: ["transilien"] }),
+  "proc-vehicle-sncf-regiolis": series(2014, 60, 60, ELRL, { cars: 4, liveries: ["grandEst"] }),
+  "proc-vehicle-sncf-x3800": series(1950, 62, 62, RAIL, { single: true }),
+  "proc-vehicle-sncf-x73500": series(1999, 64, 64, RAIL, { single: true, liveries: ["alsace"] }),
+  "proc-vehicle-sncf-cc6500": loco(1969, ELRL, { presets: presets(...each("livery", "maurienne", "beton")) }),
+  "proc-vehicle-sncf-cc40100": loco(1964, ELRL, { presets: presets() }),
+  "proc-vehicle-sncf-bb22200": loco(1976, ELRL, { presets: presets(...each("livery", "enVoyage", "fret")) }),
+  "proc-vehicle-sncf-cc7100": loco(1952, ELRL, { presets: presets(...each("livery", "green")) }),
+  "proc-vehicle-sncf-bb9200": loco(1957, ELRL, { presets: presets(...each("livery", "capitole")) }),
+  "proc-vehicle-sncf-bb27000": loco(2001, ELRL, { presets: presets() }),
+  "proc-vehicle-sncf-bb67400": loco(1969, RAIL, { presets: presets(...each("livery", "fret")) }),
+  "proc-vehicle-sncf-cc72000": loco(1967, RAIL, { presets: presets(...each("livery", "multiservice")) }),
+  "proc-vehicle-sncf-241p": loco(1948, RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
+  "proc-vehicle-sncf-141r": loco(1945, RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
+  "proc-vehicle-sncf-corail-coach": pax(1975, 58, RAIL, { variants: [at({ unit: "b11tu" }, { capacity: 88 })], presets: presets({ unit: "b11tu" }, ...each("livery", "teoz")) }),
+  "proc-vehicle-sncf-grand-confort": pax(1970, 48, RAIL, { variants: [at({ unit: "a7d" }, { capacity: 30 })], presets: presets({ unit: "a7d" }, ...each("livery", "tee")) }),
+  "proc-vehicle-ciwl-car": pax(1929, 28, RAIL, { variants: [at({ unit: "sleeping" }, { capacity: 20 })], presets: presets({ unit: "sleeping" }, ...each("livery", "ciwlBlue")) }), // approx.
+  // the Netherlands (docs/models/netherlands-trains.md)
+  "proc-vehicle-ns-mat46": series(1949, 76, 76, ELRL, { cars: 2, liveries: ["yellowGrey"] }),
+  "proc-vehicle-ns-mat54": series(1957, 64, 80, ELRL, { cars: 4, liveries: ["yellowGrey"] }),
+  "proc-vehicle-ns-plan-v": series(1966, 72, 72, ELRL, { cars: 2, liveries: ["yellowBlue"] }),
+  "proc-vehicle-ns-de1": series(1954, 64, 64, RAIL, { single: true }),
+  "proc-vehicle-ns-icm": series(1977, 64, 80, ELRL, { cars: 4, liveries: ["yellowGrey"] }),
+  "proc-vehicle-ns-virm": series(1994, 100, 140, ELRL, { cars: 6, liveries: ["yellowGrey"] }),
+  "proc-vehicle-ns-ddz": series(1992, 110, 140, ELRL, { cars: 4, liveries: ["yellowGrey"] }),
+  "proc-vehicle-ns-sgm": series(1975, 76, 84, ELRL, { cars: 3, liveries: ["sprinter"] }),
+  "proc-vehicle-ns-slt": series(2009, 40, 50, ELRL, { cars: 4 }),
+  "proc-vehicle-ns-sng": series(2018, 44, 54, ELRL, { cars: 4 }),
+  "proc-vehicle-ns-icng": series(2023, 50, 64, ELRL, { cars: 5 }),
+  "proc-vehicle-ns-flirt": series(2016, 44, 52, ELRL, { cars: 4 }),
+  "proc-vehicle-ns-v250": series(2012, 40, 64, ELRL, { cars: 8 }),
+  "proc-vehicle-ns-1700": loco(1981, ELRL, { presets: presets(...each("livery", "railion")) }),
+  "proc-vehicle-ns-1100": loco(1950, ELRL, { presets: presets(...each("livery", "yellowGrey")) }),
+  "proc-vehicle-ns-1300": loco(1952, ELRL, { presets: presets(...each("livery", "yellowGrey")) }),
+  "proc-vehicle-ns-1200": loco(1951, ELRL, { presets: presets(...each("livery", "yellowGrey")) }),
+  "proc-vehicle-ns-2200": loco(1955, RAIL, { presets: presets(...each("livery", "yellowGrey")) }),
+  "proc-vehicle-ns-3700": loco(1910, RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
+  "proc-vehicle-ns-icr-coach": pax(1981, 52, RAIL, { variants: [at({ unit: "b" }, { capacity: 80 })], presets: presets({ unit: "b" }, ...each("livery", "yellowBlue")) }),
 };
