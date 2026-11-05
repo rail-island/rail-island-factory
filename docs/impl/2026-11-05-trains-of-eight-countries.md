@@ -79,10 +79,11 @@ view of `proc-vehicle-ns-virm` offers its 6-car formation.
 
 ## What is missing
 
-- **References.** Commons throttled this session (HTTP 429 even at one request a second);
-  the German sets fetched early are committed, the rest are being fetched slowly and are
-  committed as they land. Designs whose `assets/<name>/` is still missing have
-  `references` pointing at no folder yet; their figures are in the family docs.
+- **References.** Commons throttled this session (HTTP 429 even at one request every
+  three seconds): 19 of the 160 designs have their photographs and `SOURCES.md` in
+  `assets/<name>/` (most of Germany's); the other 141 name a `references` folder that does
+  not exist yet, and their figures are only in the family docs. AGENTS.md wants every
+  model's references committed with it - this is the main gap.
 - **A4 streamlining.** The LNER A4 is drawn without its casing (the steam kit's volumes
   were not used).
 - **Headless thumbnails of every design** were rendered as contact sheets for the user, not
