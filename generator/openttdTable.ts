@@ -195,6 +195,12 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-csd-t499": loco(1973, RAIL, { presets: presets() }),
   "proc-vehicle-cd-771": loco(1968, RAIL, { presets: presets(...each("livery", "cd771", "cd771No421")) }),
 
+  // --- North American diesels ------------------------------------------------------
+  "proc-vehicle-emd-gp9": loco(1954, RAIL, { presets: presets(...each("livery", "pennsylvania", "santaFe")) }),
+  "proc-vehicle-emd-sd40-2": loco(1972, RAIL, { presets: presets(...each("livery", "conrail", "unionPacific")) }),
+  "proc-vehicle-ge-es44ac": loco(2005, RAIL, { presets: presets(...each("livery", "unionPacific", "csx")) }),
+  "proc-vehicle-emd-sd70ace": loco(2004, RAIL, { presets: presets(...each("livery", "norfolkSouthern", "bnsf")) }),
+
   // --- electric units --------------------------------------------------------------
   "proc-vehicle-cd-471": pax(1997, 92, ELRL, {
     variants: [at({ unit: "trailer" }, { capacity: 134 }), at({ unit: "drivingTrailer" }, { capacity: 98 })],

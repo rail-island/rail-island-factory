@@ -8,6 +8,7 @@
 // meta and catalog entries list the parameters, and the standalone JS model's
 // `build(THREE, params)` builds any combination (docs/models/parameters.md).
 
+import type { LoadingGauge } from "./loadingGauge.ts";
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { CityUse } from "./cityVariants.ts";
 
@@ -129,6 +130,13 @@ export interface ProceduralDesign {
    * Required for a vehicle; a building sets it only for plaza or block rules.
    */
   game?: GameProperties;
+  /**
+   * The loading gauge a rail vehicle is drawn to (loadingGauge.ts,
+   * docs/models/loading-gauge.md): "uic" (3.1 m by 4.7 m, the default), "us"
+   * (North American Plate F/H bodies, 3.3 m by 4.95 m) or "shinkansen" (3.3 m by
+   * 4.7 m). Every one stays inside the game's platform edge.
+   */
+  loadingGauge?: LoadingGauge;
   /**
    * What an OpenTTD GRF export needs of a vehicle beyond `game`: dates, costs,
    * capacity, climates (OpenttdProperties). Optional: the site fills every missing

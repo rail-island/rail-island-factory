@@ -4,7 +4,7 @@
 // the dot and M of the steam locomotives' numbers ("433.049", "M 112.001"), the
 // freight wagons' "MAERSK", "TRANSWAGGON" and "VIAMONT", the G and T of the TGV's
 // lettering (tgv.ts) and the L and U of the Beluga's "AIRBUS BELUGA" titles
-// (aircraft.ts). Each glyph
+// (aircraft.ts), and the H, J, Q, Y and Z of the US railroads' names. Each glyph
 // is polylines in a unit cell (x right 0..1, y up 0..1, the caron above 1);
 // strokeText turns them into thin bars, triangles in (u, v), for MeshCore.facets.
 // No `node:` imports: it is bundled into the standalone JS models.
@@ -52,6 +52,12 @@ const GLYPHS: Record<string, Glyph> = {
   L: [[[0.15, 1], [0.15, 0], [0.85, 0]]],
   U: [[[0.15, 1], [0.15, 0.22], [0.32, 0], [0.68, 0], [0.85, 0.22], [0.85, 1]]],
   W: [[[0.05, 1], [0.27, 0], [0.5, 0.65], [0.73, 0], [0.95, 1]]],
+  // the US railroads' names (usDiesels.ts): "NORTHERN", "PENNSYLVANIA"
+  H: [[[0.15, 0], [0.15, 1]], [[0.85, 0], [0.85, 1]], [[0.15, 0.52], [0.85, 0.52]]],
+  J: [[[0.4, 1], [0.85, 1]], [[0.7, 1], [0.7, 0.18], [0.52, 0], [0.3, 0], [0.15, 0.15]]],
+  Q: [[[0.3, 0], [0.7, 0], [0.85, 0.15], [0.85, 0.85], [0.7, 1], [0.3, 1], [0.15, 0.85], [0.15, 0.15], [0.3, 0]], [[0.55, 0.28], [0.9, -0.05]]],
+  Y: [[[0.1, 1], [0.5, 0.48], [0.9, 1]], [[0.5, 0.48], [0.5, 0]]],
+  Z: [[[0.15, 1], [0.85, 1], [0.15, 0], [0.85, 0]]],
   a: [[[0.2, 0.55], [0.35, 0.65], [0.7, 0.65], [0.82, 0.52], [0.82, 0]], [[0.82, 0.38], [0.35, 0.38], [0.18, 0.25], [0.18, 0.12], [0.32, 0], [0.65, 0], [0.82, 0.15]]],
   e: [[[0.18, 0.35], [0.82, 0.35], [0.82, 0.5], [0.68, 0.65], [0.32, 0.65], [0.18, 0.5], [0.18, 0.15], [0.32, 0], [0.75, 0]]],
   i: [[[0.5, 0], [0.5, 0.65]], [[0.5, 0.82], [0.5, 0.94]]],

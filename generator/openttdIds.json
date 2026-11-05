@@ -68,8 +68,12 @@
     "proc-vehicle-dr-sbahn-berlin": 119,
     "proc-vehicle-dr-vt1816": 108,
     "proc-vehicle-eas-open-wagon": 21,
+    "proc-vehicle-emd-gp9": 120,
+    "proc-vehicle-emd-sd40-2": 121,
+    "proc-vehicle-emd-sd70ace": 123,
     "proc-vehicle-faccs-hopper-wagon": 41,
     "proc-vehicle-falls-hopper-wagon": 42,
+    "proc-vehicle-ge-es44ac": 122,
     "proc-vehicle-habis-sliding-wall-wagon": 39,
     "proc-vehicle-hadgs-hopper-wagon": 40,
     "proc-vehicle-hydrofoil-ferry": 81,
@@ -795,6 +799,42 @@
         "id": 976,
         "size": 16
       },
+      "proc-vehicle-emd-gp9?": {
+        "id": 4656,
+        "size": 6
+      },
+      "proc-vehicle-emd-gp9?livery=pennsylvania": {
+        "id": 4662,
+        "size": 6
+      },
+      "proc-vehicle-emd-gp9?livery=santaFe": {
+        "id": 4668,
+        "size": 6
+      },
+      "proc-vehicle-emd-sd40-2?": {
+        "id": 4674,
+        "size": 6
+      },
+      "proc-vehicle-emd-sd40-2?livery=conrail": {
+        "id": 4680,
+        "size": 6
+      },
+      "proc-vehicle-emd-sd40-2?livery=unionPacific": {
+        "id": 4686,
+        "size": 6
+      },
+      "proc-vehicle-emd-sd70ace?": {
+        "id": 4710,
+        "size": 6
+      },
+      "proc-vehicle-emd-sd70ace?livery=bnsf": {
+        "id": 4722,
+        "size": 6
+      },
+      "proc-vehicle-emd-sd70ace?livery=norfolkSouthern": {
+        "id": 4716,
+        "size": 6
+      },
       "proc-vehicle-faccs-hopper-wagon?": {
         "id": 1632,
         "size": 16
@@ -814,6 +854,18 @@
       "proc-vehicle-falls-hopper-wagon?livery=viamont": {
         "id": 1696,
         "size": 16
+      },
+      "proc-vehicle-ge-es44ac?": {
+        "id": 4692,
+        "size": 6
+      },
+      "proc-vehicle-ge-es44ac?livery=csx": {
+        "id": 4704,
+        "size": 6
+      },
+      "proc-vehicle-ge-es44ac?livery=unionPacific": {
+        "id": 4698,
+        "size": 6
       },
       "proc-vehicle-habis-sliding-wall-wagon?": {
         "id": 1584,

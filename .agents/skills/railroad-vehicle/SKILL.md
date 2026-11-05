@@ -53,9 +53,12 @@ documentation in English.
 - Establish length over buffers/couplers, body width and height, track gauge,
   wheel diameter, bogie centres and axle spacing from dependable references.
   Preserve mechanical constraints when a coarse texture suggests otherwise.
-- The current repository envelope is 3.1 m wide and 4.7 m high for fixed body
-  and roof equipment; these are project checks, not universal railway limits.
-  Evaluate an extended pantograph separately against the operating envelope.
+- Draw the vehicle to its loading gauge (`loadingGauge` on the design,
+  docs/models/loading-gauge.md): the default UIC gauge is 3.1 m wide and 4.7 m
+  high for fixed body and roof equipment; North American stock is drawn at its
+  real size to the US gauge (3.3 m by 4.95 m), the Shinkansen to 3.3 m by 4.7 m.
+  No gauge is wider than the platform edge allows. Evaluate an extended
+  pantograph separately against the operating envelope.
 - Build the body from measured profiles, not just a rectangular box. Keep cab
   corner chamfers and both upper and lower face slopes where the prototype has
   them. Fit windows, plates, lamps and handrails to the actual supporting plane.

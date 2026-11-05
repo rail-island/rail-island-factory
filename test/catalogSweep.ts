@@ -20,6 +20,7 @@ import { collectTriangles, parseGlb } from "../generator/glbTriangles";
 import { steerAngles, type VehicleRig } from "../generator/rig";
 import { isLeaf, type TreeNode } from "../generator/sourceTree";
 import { VEHICLES } from "../generator/vehicles";
+import { loadingGaugeOf } from "../generator/loadingGauge";
 import { built, built as cached, design, forget, glbOf, jsModuleOf, jsTextOf, lodGlbOf, variantsUnderTest } from "./catalogCache";
 import { expectSealed, jointMesh } from "./rigHelpers";
 
@@ -336,7 +337,7 @@ export function sweep(ids: readonly string[]): void {
           expect(s.min[1]).toBeCloseTo(0, 5);
           if (vehicle) expect(s.min[2]).toBeCloseTo(-s.max[2], 5);
           if (rail) {
-            expect(s.max[2] - s.min[2]).toBeLessThanOrEqual(3.1);
+            expect(s.max[2] - s.min[2]).toBeLessThanOrEqual(loadingGaugeOf(d).width);
             // a whole train of rigid cars (an articulated set whose sections ride on
             // their own bogies) may spend a car's budget on every car
             const cars = built.rig?.sections?.length ?? 1;

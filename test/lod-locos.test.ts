@@ -11,7 +11,7 @@ import { LOD_GLASS } from '../generator/lodKit';
 import { sample } from './catalogCache';
 
 const ELECTRICS = ['cd-110', 'cd-130', 'cd-140', 'cd-169'];
-const DIESELS = ['cd-750', 'cd-749', 'cd-781', 'csd-t679-0', 'csd-t499', 'cd-771', 'cd-704', 'cd-710', 'cd-714', 'cd-742', 'db-212', 'muv-69'];
+const DIESELS = ['cd-750', 'cd-749', 'cd-781', 'csd-t679-0', 'csd-t499', 'cd-771', 'emd-gp9', 'emd-sd40-2', 'ge-es44ac', 'emd-sd70ace', 'cd-704', 'cd-710', 'cd-714', 'cd-742', 'db-212', 'muv-69'];
 
 const faces = (id: string, values?: Record<string, string>) => {
   const m = DESIGNS.get(id)!.buildLod(values);

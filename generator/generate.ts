@@ -85,6 +85,7 @@ import { ICE1_DESIGNS } from "./ice1.ts";
 import { TGV_DESIGNS } from "./tgv.ts";
 import { CABLE_CABINS } from "./cableCabins.ts";
 import { DIESEL_LOCOS } from "./dieselLocos.ts";
+import { US_DIESELS } from "./usDiesels.ts";
 import { TRUCKS } from "./trucks.ts";
 import { PHOTO_TRUCKS } from "./photoTrucks.ts";
 import { TRAM_DESIGNS } from "./trams.ts";
@@ -194,6 +195,7 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: EMU471_DESIGNS, source: "emu471.ts", meta: "vehicles" },
   { designs: EMU680_DESIGNS, source: "emu680.ts", meta: "vehicles" },
   { designs: DIESEL_LOCOS, source: "dieselLocos.ts", meta: "vehicles" },
+  { designs: US_DIESELS, source: "usDiesels.ts", meta: "vehicles" },
   { designs: TRAM_DESIGNS, source: "trams.ts", meta: "vehicles" },
   { designs: METRO_DESIGNS, source: "metro.ts", meta: "vehicles" },
   { designs: EMU451_DESIGNS, source: "emu451.ts", meta: "vehicles" },

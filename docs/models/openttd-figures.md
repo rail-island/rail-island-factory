@@ -112,6 +112,10 @@ file is the authority.
 | `csd-t679-0` | CSD T 679.0 Pomeranc | train RAIL | 1963 | 0 PASS | 77 / 39 | 1 | - |
 | `csd-t499` | CSD T 499.0 / CD 759 Kyklop | train RAIL | 1973 | 0 PASS | 123 / 70 | 1 | - |
 | `cd-771` | CD 770 / 771 Cmelak | train RAIL | 1968 | 0 PASS | 58 / 25 | 3 | - |
+| `emd-gp9` | EMD GP9 | train RAIL | 1954 | 0 PASS | 74 / 36 | 3 | - |
+| `emd-sd40-2` | EMD SD40-2 | train RAIL | 1972 | 0 PASS | 97 / 55 | 3 | - |
+| `ge-es44ac` | GE ES44AC | train RAIL | 2005 | 0 PASS | 126 / 76 | 3 | - |
+| `emd-sd70ace` | EMD SD70ACe | train RAIL | 2004 | 0 PASS | 123 / 74 | 3 | - |
 | `tatra-t3` | Tatra T3 | road | 1962 | 110 PASS | 92 / 46 | 3 | - |
 | `tatra-t6` | Tatra T6A5 | road | 1991 | 130 PASS | 99 / 50 | 1 | - |
 | `tatra-kt8` | Tatra KT8D5 | road | 1986 | 230 PASS | 137 / 68 | 3 | - |
