@@ -15,11 +15,12 @@ import { MeshBuilder, ngon } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { airframePalette, type Scheme } from "./airframeKit.ts";
 import {
-  axleY, body, circle, closeTo, fan, fin, gridTris, hullSec, insideAny, lerp, liveryFin, lobe, oval, ovalOutline, paintedBody,
-  plate, rod, skinDecal, skinEnd, skinY, wheel, wing, type FinRing, type Livery, type P2, type Station, type WingStation,
+  axleY, body, circle, closeTo, fan, fin, gridTris, hullSec, lerp, liveryFin, lobe, oval, ovalOutline, paintedBody,
+  plate, rod, skinDecal, skinY, splitLong, wheel, wing, type FinRing, type Livery, type P2, type Station, type WingStation,
 } from "./airframeShapes.ts";
 import { airLod, lodAxleWheel, lodBar, type AirFin, type AirPod } from "./lodAir.ts";
-import { lodPolygon } from "./lodKit.ts";
+import { LOD_GLASS, lodPolygon } from "./lodKit.ts";
+import { strokeText, strokeWidth } from "./strokeFont.ts";
 
 export interface RotorSpec {
   /** The fuselage from the nose to the boom's end; the height to the rotor head's top. */
@@ -123,7 +124,10 @@ function rotorGeometry(s: RotorSpec): RotorGeometry {
   const mat = (c: string | undefined, d: string): string => (c === undefined ? d : sc.colors[c] !== undefined ? `${s.schemeKey}${c[0]!.toUpperCase()}${c.slice(1)}` : c);
   const base = mat(sc.body, "white");
   const tailX = sc.tail ? x(sc.tail.from * L) : -Infinity;
+  // the wrap-round glazing of the nose is painted on the skin, so its edge follows the sections
+  const glassX = x(s.noseLen * 1.15 * 0.83 + 1e-6);
   const skin = (sv: number, a: number): string => {
+    if (a > glassX && sv > -0.45) return "glass";
     if (sc.tail && a < tailX) return mat(sc.tail.mat, base);
     if (sc.top && sv > sc.top[0]) return mat(sc.top[1], base);
     if (sc.belly && sv < sc.belly[0]) return mat(sc.belly[1], base);
@@ -163,14 +167,6 @@ export function rotorcraft(s: RotorSpec): MeshBuilder {
       m.scope("skin", () => paintedBody(m, "x", fus, g.livery.skin!));
       m.scope("nose", () => fan(m, g.livery.skin!(0, fus[fus.length - 1]!.a), "x", fus[fus.length - 1]!.sec, fus[fus.length - 1]!.a, 1, g.noseTip));
       m.scope("boom end", () => fan(m, g.livery.skin!(0, fus[0]!.a), "x", fus[0]!.sec, fus[0]!.a, -1, g.tailTip));
-      m.scope("windscreen", () => {
-        // the big wrap-round glazing of the nose: bands of panes over the front
-        const sc = g.screen;
-        for (const side of [-1, 1]) {
-          const pts = gridTris((u, v) => skinEnd("x", fus, side * lerp(0.03, s.width * 0.46, u), lerp(sc.y0, sc.y1, v), g.x(s.noseLen * 1.6), g.half, off * 2, insideAny), 5, 4);
-          m.facets("glass", pts, [0.7, 0.3, side * 0.6]);
-        }
-      });
       m.scope("cabin windows", () => {
         for (const side of [-1, 1]) {
           const pts: P2[][] = [];
@@ -324,8 +320,8 @@ export function rotorcraftLod(s: RotorSpec): MeshBuilder {
   ];
   return airLod({
     palette: airframePalette({ scheme: s.scheme, schemeKey: s.schemeKey } as never), axis: "x", fuselage: g.stations,
-    nose: g.noseTip, tail: g.tailTip, paint: (sv, a) => g.livery.skin!(sv, a),
-    windscreen: { a0: g.x(s.noseLen * 1.1), a1: g.x(0.1), s: -0.2 },
+    nose: g.noseTip, tail: g.tailTip, paint: (sv, a) => (g.livery.skin!(sv, a) === "glass" ? LOD_GLASS : g.livery.skin!(sv, a)),
+
     wings: [{ axis: "z", stations: g.stab, mirror: true, mat: g.livery.winglet }],
     fins, engines: [], pods, parts,
   });
@@ -376,6 +372,19 @@ export function airship(s: AirshipSpec): MeshBuilder {
     paintedBody(m, "x", st, skin);
     fan(m, base, "x", st[st.length - 1]!.sec, st[st.length - 1]!.a, 1, [half, s.axisY, 0]);
     fan(m, base, "x", st[0]!.sec, st[0]!.a, -1, [-half, s.axisY, 0]);
+  });
+  if (sc.titles) m.scope("titles", () => {
+    // plain titles along the envelope's flanks, read from the nose aft on the left and from the tail forward on the right
+    const h = s.diameter * 0.16;
+    const [w, gap] = [h * 0.72, h * 0.22];
+    const text = sc.titles!.text;
+    const width = strokeWidth(text, w, gap);
+    const c = half - s.length * 0.42;
+    const mt = mat(sc.titles!.mat, base);
+    for (const side of [-1, 1]) {
+      const uv = strokeText(text, side > 0 ? c - width / 2 : c + width / 2, s.axisY - h * 0.3, h, w, gap, side < 0, h * 0.16);
+      m.facets(mt, splitLong(uv, 0.8).map(([u, v]) => skinY("x", st, u, v, side, 0.06)), [0, 0, side]);
+    }
   });
   m.scope("fins", () => {
     const f = s.fins;
@@ -479,4 +488,4 @@ export function rotorFeatures(s: RotorSpec, params: readonly string[]): string[]
 }
 
 /** The kit options of an airship spec. */
-export const airshipFeatures = (_s: AirshipSpec, params: readonly string[]): string[] => ["airship", ...params.map((p) => `param:${p}`)];
+export const airshipFeatures = (_s: AirshipSpec, params: readonly string[]): string[] => ["airship", ...(_s.scheme.titles ? ["titles"] : []), ...params.map((p) => `param:${p}`)];

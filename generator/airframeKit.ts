@@ -628,7 +628,8 @@ function drawEngines(m: MeshBuilder, g: Geometry): void {
     } else if (e.kind === "buried") {
       for (const side of [-1, 1]) for (const s of e.s) m.scope("engine", () => {
         const w = wingAt(g.wing, s);
-        const front = w.lead + 0.4;
+        // the intake stands a little ahead of the leading edge, the nacelle's top and bottom just proud of the wing's skin
+        const front = w.lead + e.r * 1.2;
         nacelle(m, "x", 1, { c: [side * s, w.mid], front, back: front - e.len, r: e.r, nozzle: e.r * 0.5, plug: e.r * 0.25, mats: ENGINE_MATS(g.mats.wing) }, sides);
       });
     } else {
@@ -983,7 +984,7 @@ export function airframeLod(spec: AirframeSpec): MeshBuilder {
     } else if (e.kind === "buried") {
       for (const side of [-1, 1]) for (const s of e.s) {
         const w = wingAt(g.wing, s);
-        engines.push({ axis: "x", c: [side * s, w.mid], front: w.lead + 0.4, back: w.lead + 0.4 - e.len, r: e.r, cowl: g.mats.wing, intake: "darkGrey", nozzle: "metalGrey", optional: 3 });
+        engines.push({ axis: "x", c: [side * s, w.mid], front: w.lead + e.r * 1.2, back: w.lead + e.r * 1.2 - e.len, r: e.r, cowl: g.mats.wing, intake: "darkGrey", nozzle: "metalGrey", optional: 3 });
       }
     } else {
       const nose = e.s.includes(0);

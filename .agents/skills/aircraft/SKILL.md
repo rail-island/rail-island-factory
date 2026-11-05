@@ -8,6 +8,19 @@ description: Create or change a procedural aircraft (airliner, business jet, his
 How to add or change an aircraft in `generator/aircraft.ts`. The reference for
 the code is `docs/models/aircraft.md`; this skill is the checklist.
 
+## The world aircraft: kits, not modules
+
+The 100 world aircraft (`docs/models/world-aircraft.md`) are spec records, not drawn by
+hand: a fixed-wing aircraft is a `Brief` (`generator/worldAircraft.ts`) on the airframe
+kit (`generator/airframeKit.ts`), a helicopter or the airship a spec on the rotor kit
+(`generator/rotorKit.ts`), its livery a `Scheme` from `generator/airlineSchemes.ts`. Add
+a new aircraft of that kind as a spec in `worldJets.ts`, `worldProps.ts` or
+`worldRotorcraft.ts`, with its two named builder exports, its row in the module's list,
+its OpenTTD row (`worldAircraftTable` in `openttdTable.ts`) and its references; extend
+the kit (and `aircraftFeatures`) for what it cannot say, or use the spec's `extra` hook.
+The kit's shapes are a copy of this module's (`airframeShapes.ts`): `aircraft.ts` stays
+byte-identical, so the original eight keep their GLBs and JS models.
+
 ## Budget
 
 **10,000 triangles** per aircraft, every livery included (hard cap, enforced by

@@ -293,7 +293,7 @@ const COMET = /* @__PURE__ */ L("boac", "bea", "aerolineas");
 export const dhCometSpec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 33.99, H: 8.99, W: 3.0, D: 3.0, k: 1.1, nose: "airliner", ns: 1.4, tl: 9.5,
   span: 35.0, root: 9.0, tip: 2.0, sweep: 20, dih: 2, at: 10.5,
-  eng: [{ kind: "buried", s: [1.9, 2.9], r: 0.45, len: 6.5 }],
+  eng: [{ kind: "buried", s: [1.95, 3.0], r: 0.52, len: 6.5 }],
   fin: [5.5, 1.7, 40, 27.0, 2.0], tp: [11.6, 3.5, 1.4, 25, 29.0, 10],
   ng: [3.0, 0.38, true], mg: [[13.5, 4.6, 0.5, true, 2]],
   win: [[4.5, 25, 1.0, 0.6, 0.2, 0.14]], doors: [3.7, 24.0],
@@ -366,7 +366,7 @@ const TU104 = /* @__PURE__ */ L("aeroflot", "csa");
 export const tupolevTu104Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 38.85, H: 11.9, W: 3.5, D: 3.5, k: 1.6, nose: "glazed", tl: 10,
   span: 34.54, root: 9.0, kink: [0.25, 6.0], tip: 2.5, sweep: 37, dih: -3, at: 13.5,
-  eng: [{ kind: "buried", s: [2.6], r: 0.8, len: 8 }],
+  eng: [{ kind: "buried", s: [2.7], r: 0.85, len: 8 }],
   fin: [6.5, 2.4, 40, 30.5, 2], tp: [11.75, 3.8, 1.4, 40, 33, 6],
   ng: [5.0, 0.45, true], mg: [[19.0, 5.0, 0.6, true, 2]], gx: { pods: true },
   win: [[6, 30, 0.9, 0.6, 0.17, 0.17, "round"]], doors: [5.6, 29.5],
