@@ -10,7 +10,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-gas-flame.jpg` | Gas flame.jpg | https://commons.wikimedia.org/wiki/File:Gas_flame.jpg | George Shuklin | Public domain | shape, proportions and colours |
 | `photo-gaschem-jumme.jpg` | Gaschem Jümme.jpg | https://commons.wikimedia.org/wiki/File:Gaschem_J%C3%BCmme.jpg | Daniel Schwen | CC BY-SA 4.0 | shape, proportions and colours |
 
 ## Published figures

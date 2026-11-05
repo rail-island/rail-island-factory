@@ -38,7 +38,7 @@ in `assets/ship-<name>/SOURCES.md`.
 | `veh-ship-hurtigruten` | Hurtigruten Coastal Ship | 121.8 x 19.2 x 35.4 | 4.7 (0.1328) | bulbous / transom | 3911 (89) | - |
 | `veh-ship-oasis` | Oasis Class Cruise Ship | 362.0 x 47.0 x 72.0 | 9.3 (0.1292) | bulbous / transom | 9700 (93) | - |
 | `veh-ship-icon` | Icon Class Cruise Ship | 364.8 x 48.5 x 80.0 | 9.3 (0.1156) | bulbous / transom | 10280 (93) | - |
-| `veh-ship-queen-mary-2` | Queen Mary 2 | 345.0 x 41.0 x 59.4 | 10.0 (0.1684) | bulbous / transom | 7067 (79) | - |
+| `veh-ship-queen-mary-2` | Queen Mary 2 | 345.0 x 41.0 x 63.4 | 10.0 (0.1577) | bulbous / transom | 7067 (79) | - |
 | `veh-ship-olympic` | Olympic Class Ocean Liner | 269.0 x 28.2 x 69.7 | 10.5 (0.1506) | plumb / cruiser | 5033 (99) | - |
 | `veh-ship-ss-united-states` | SS United States | 302.0 x 31.0 x 52.4 | 9.5 (0.1813) | raked / cruiser | 5121 (79) | - |
 | `veh-ship-normandie` | SS Normandie | 313.8 x 36.4 x 63.4 | 11.2 (0.1767) | clipper / cruiser | 4943 (99) | - |

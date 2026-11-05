@@ -514,7 +514,7 @@ function linerFunnel(u: number, hw: number, y0: number, h: number, bands: Array<
 
 export function queenMary2Spec(): ShipSpec {
   const L = 345;
-  const D = 15;
+  const D = 19;
   return {
     kind: "passenger",
     hull: { length: L, beam: 41, depth: D, draft: 10, bow: "bulbous", stern: "transom", section: "round", entry: 0.3, run: 0.18, transom: 0.7, rake: 0.05, sheer: [0, 2], boot: 0.8, stripe: 0, screws: 0, bulb: 0.1 },

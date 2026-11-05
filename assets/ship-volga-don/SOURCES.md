@@ -10,7 +10,7 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-lighthouse-at-the-entrance-of-the-volga-don-canal-2023-07-18.jpg` | Lighthouse at the entrance of the Volga-Don Canal 2023-07-18 6818.jpg | https://commons.wikimedia.org/wiki/File:Lighthouse_at_the_entrance_of_the_Volga-Don_Canal_2023-07-18_6818.jpg | Mike1979 Russia | CC BY-SA 4.0 | shape, proportions and colours |
+| `photo-volgo-don-191-in-butakovskiy-gulf-2016-05-12-pic-02.jpg` | Volgo-Don 191 in Butakovskiy Gulf 2016-05-12 Pic 02.JPG | https://commons.wikimedia.org/wiki/File:Volgo-Don_191_in_Butakovskiy_Gulf_2016-05-12_Pic_02.JPG | Mike1979 Russia | CC BY-SA 4.0 | shape, proportions and colours |
 
 ## Published figures
 
