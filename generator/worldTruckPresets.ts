@@ -9,6 +9,8 @@ import type { AxleSpec, BodyKind, BodySpec, CabSpec, ChassisSpec, Livery, Traile
 export const ax = (at: number, o: Partial<AxleSpec> = {}): AxleSpec => ({ at, ...o });
 /** A steered front axle. */
 export const steer = (at: number): AxleSpec => ({ at, steer: true });
+/** A steered and driven front axle (all-wheel drive). */
+export const steerDrive = (at: number): AxleSpec => ({ at, steer: true, drive: true });
 /** Driven wheels, dual by default. */
 export const drive = (at: number, dual = true): AxleSpec => ({ at, drive: true, dual });
 /** A trailing (tag or trailer) axle. */

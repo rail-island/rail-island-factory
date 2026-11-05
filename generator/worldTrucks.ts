@@ -12,7 +12,7 @@ import type { BodyKind, CabSpec, Livery, TrailerSpec, TruckSpec } from "./truckK
 import { buildTruck, buildTruckLod } from "./truckBodies.ts";
 import { TRUCK_CATALOG } from "./trucks.ts";
 import {
-  behindCab, body, drawbar, drive, euCab, euSemi, frame, group, narrowCab, oldBonnet, oldCab, rigid, squareBonnet, steer, tag, tractor, usCabover, usHood, usSemi,
+  behindCab, body, drawbar, drive, euCab, steerDrive, euSemi, frame, group, narrowCab, oldBonnet, oldCab, rigid, squareBonnet, steer, tag, tractor, usCabover, usHood, usSemi,
   type SemiOpts,
 } from "./worldTruckPresets.ts";
 
@@ -129,7 +129,7 @@ export const UNIMOG_PARAMS = bodyParam(FLATBED, ["plough", "Snowplough"]);
 export function mbUnimogSpec(p?: ParamValues): TruckSpec {
   const kind = pick(UNIMOG_PARAMS, p);
   const cab: CabSpec = { kind: "cabover", length: 1.6, width: 2.3, floor: 1.45, top: 2.95, screen: [1.95, 2.65], rake: 0.12, corner: 0.18, grille: "slots", lamps: "round", mirrors: "arm", beacon: "amber" };
-  const ch = frame(5.55, 0.6, [steer(1.15), drive(4.75, false)], { frame: 1.25, tanks: "box", tyre: 0.42 });
+  const ch = frame(5.55, 0.6, [steerDrive(1.15), drive(4.75, false)], { frame: 1.25, tanks: "box", tyre: 0.42 });
   return rigid(cab, ch, behindCab(kind === "plough" ? "plough" : "flatbed", cab, ch, 1.95, { floor: 1.55, hw: 1.15 }), { cab: "#f39200", cab2: "#2b2b2b", body: "#f39200", art: "#e0a400" });
 }
 export function mbUnimog(p?: ParamValues): MeshBuilder { return buildTruck(mbUnimogSpec(p)); }
@@ -263,7 +263,7 @@ export function renaultMagnumLod(p?: ParamValues): MeshBuilder { return lodOf(re
 
 export function berlietT100Spec(): TruckSpec {
   const cab = squareBonnet({ length: 2.2, width: 3.2, floor: 2.6, top: 4.7, screen: [3.45, 4.25], hood: { length: 3.2, top: 3.4, hw: 1.6 }, grille: "bars", mirrors: "arm" });
-  const ch = frame(13.4, 1.15, [steer(2.1), drive(8.2, false), drive(10.4, false)], { frame: 2.0, track: 2.45, tyre: 0.8, tanks: "box" });
+  const ch = frame(13.4, 1.15, [steerDrive(2.1), drive(8.2, false), drive(10.4, false)], { frame: 2.0, track: 2.45, tyre: 0.8, tanks: "box" });
   return rigid(cab, ch, behindCab("tipper", cab, ch, 4.85, { floor: 2.6, hw: 2.4, gap: 0.3 }), { cab: "#c79a2b", cab2: "#3a3b3e", body: "#b98d27" }, { steerDeg: 32 });
 }
 export function berlietT100(): MeshBuilder { return buildTruck(berlietT100Spec()); }
@@ -295,7 +295,7 @@ export const TATRA_148_PARAMS = bodyParam(TIPPER, DROPSIDE);
 export function tatra148Spec(p?: ParamValues): TruckSpec {
   const kind = pick(TATRA_148_PARAMS, p);
   const cab = squareBonnet({ length: 1.55, width: 2.5, floor: 1.35, top: 2.85, screen: [1.95, 2.55], hood: { length: 1.75, top: 1.9, hw: 0.75, style: "round" }, grille: "slots", lamps: "round", mirrors: "small" });
-  const ch = frame(8.3, 0.56, [steer(1.15), drive(5.25), drive(6.57)], { frame: 1.2, tanks: "box" });
+  const ch = frame(8.3, 0.56, [steerDrive(1.15), drive(5.25), drive(6.57)], { frame: 1.2, tanks: "box" });
   return rigid(cab, ch, behindCab(kind === "tipper" ? "tipper" : "dropside", cab, ch, kind === "tipper" ? 2.55 : 2.1, { floor: 1.45, hw: 1.24, load: kind === "tipper" ? "gravel" : "none" }),
     { cab: "#e07b1f", cab2: "#2a2b2d", body: kind === "tipper" ? "#e07b1f" : "#6e6a5e" });
 }
@@ -306,7 +306,7 @@ export const TATRA_815_PARAMS = bodyParam(TIPPER, ["crane", "Crane"]);
 export function tatra815Spec(p?: ParamValues): TruckSpec {
   const kind = pick(TATRA_815_PARAMS, p);
   const cab = oldCab({ length: 1.95, width: 2.5, floor: 1.5, top: 3.2, screen: [2.15, 2.85], rake: 0.12, corner: 0.1, grille: "bars", lamps: "round", mirrors: "arm" });
-  const ch = frame(9.6, 0.6, [steer(1.5), steer(3.15), drive(6.6), drive(8.05)], { frame: 1.3 });
+  const ch = frame(9.6, 0.6, [steerDrive(1.5), steerDrive(3.15), drive(6.6), drive(8.05)], { frame: 1.3 });
   return rigid(cab, ch, behindCab(kind === "crane" ? "crane" : "tipper", cab, ch, kind === "crane" ? 2.1 : 2.95, { floor: 1.6, hw: 1.24, load: kind === "tipper" ? "gravel" : "none", gap: kind === "crane" ? 1.0 : 0.12 }),
     { cab: "#cf2d27", cab2: "#2b2c2e", body: kind === "crane" ? "#5e5d58" : "#cf2d27", body2: kind === "crane" ? "#2f6fb7" : "#a32420" });
 }
@@ -317,7 +317,7 @@ export const TATRA_PHOENIX_PARAMS = bodyParam(TIPPER, MIXER);
 export function tatraPhoenixSpec(p?: ParamValues): TruckSpec {
   const kind = pick(TATRA_PHOENIX_PARAMS, p);
   const cab = euCab("day", { length: 1.75, width: 2.5, floor: 1.55, top: 3.3, screen: [2.25, 3.05], visor: false, band: 1.95, grille: "bars" });
-  const ch = frame(8.2, 0.57, [steer(1.5), drive(5.0), drive(6.35)], { frame: 1.3 });
+  const ch = frame(8.2, 0.57, [steerDrive(1.5), drive(5.0), drive(6.35)], { frame: 1.3 });
   return rigid(cab, ch, behindCab(kind === "mixer" ? "mixer" : "tipper", cab, ch, kind === "mixer" ? 3.95 : 2.95, { floor: 1.55, load: "gravel" }),
     { cab: "#2a6db3", cab2: "#3a3b3f", body: kind === "mixer" ? "#eceeef" : "#5b5d61", body2: "#9fa4aa" });
 }
@@ -346,7 +346,7 @@ export const PRAGA_V3S_PARAMS = bodyParam(CANVAS, DROPSIDE);
 export function pragaV3sSpec(p?: ParamValues): TruckSpec {
   const kind = pick(PRAGA_V3S_PARAMS, p) as BodyKind;
   const cab = oldBonnet({ width: 2.3, top: 2.5, floor: 1.3, screen: [1.8, 2.25], hood: { length: 1.55, top: 1.95, hw: 0.5, style: "square" }, split: true });
-  const ch = frame(6.9, 0.53, [steer(1.0), drive(4.4), drive(5.52)], { frame: 1.1, tanks: "none" });
+  const ch = frame(6.9, 0.53, [steerDrive(1.0), drive(4.4), drive(5.52)], { frame: 1.1, tanks: "none" });
   return rigid(cab, ch, behindCab(kind, cab, ch, kind === "canvas" ? 2.9 : 1.95, { floor: 1.35, hw: 1.15 }), { cab: "#556b3a", body: "#556b3a", canvas: "#5f6b4c", rim: "#4a5a33" });
 }
 export function pragaV3s(p?: ParamValues): MeshBuilder { return buildTruck(pragaV3sSpec(p)); }
@@ -368,7 +368,7 @@ export const STAR_266_PARAMS = bodyParam(CANVAS, DROPSIDE);
 export function star266Spec(p?: ParamValues): TruckSpec {
   const kind = pick(STAR_266_PARAMS, p) as BodyKind;
   const cab = oldCab({ length: 1.75, width: 2.5, floor: 1.45, top: 2.95, screen: [2.05, 2.62], rake: 0.12, corner: 0.08, grille: "slots", lamps: "round", mirrors: "small" });
-  const ch = frame(7.0, 0.56, [steer(1.35), drive(4.6), drive(5.85)], { frame: 1.2 });
+  const ch = frame(7.0, 0.56, [steerDrive(1.35), drive(4.6), drive(5.85)], { frame: 1.2 });
   return rigid(cab, ch, behindCab(kind, cab, ch, kind === "canvas" ? 3.0 : 2.1, { floor: 1.45, hw: 1.22 }), { cab: "#4e5d3a", body: "#4e5d3a", canvas: "#59664a", rim: "#3e4a30" });
 }
 export function star266(p?: ParamValues): MeshBuilder { return buildTruck(star266Spec(p)); }
@@ -428,7 +428,7 @@ export const GAZ_66_PARAMS = bodyParam(CANVAS, DROPSIDE);
 export function gaz66Spec(p?: ParamValues): TruckSpec {
   const kind = pick(GAZ_66_PARAMS, p) as BodyKind;
   const cab = oldCab({ length: 1.55, width: 2.32, floor: 1.4, top: 2.5, screen: [1.85, 2.3], rake: 0.08, corner: 0.15, grille: "slots", lamps: "round", mirrors: "small", split: true });
-  const ch = frame(5.65, 0.55, [steer(1.2), drive(4.5)], { frame: 1.2, tanks: "none", tyre: 0.33 });
+  const ch = frame(5.65, 0.55, [steerDrive(1.2), drive(4.5)], { frame: 1.2, tanks: "none", tyre: 0.33 });
   return rigid(cab, ch, behindCab(kind, cab, ch, kind === "canvas" ? 2.52 : 1.95, { floor: 1.35, hw: 1.1 }), { cab: "#4f5d3a", body: "#4f5d3a", canvas: "#5a664a", rim: "#3e4a30" }, { steerDeg: 36 });
 }
 export function gaz66(p?: ParamValues): MeshBuilder { return buildTruck(gaz66Spec(p)); }
@@ -449,7 +449,7 @@ export function belaz75710Spec(): TruckSpec {
   return {
     livery: { cab: "#f1f1ee", cab2: "#2b2b2b", body: "#f1f1ee", body2: "#1f7a3a", load: "#6d5f50" },
     cab: { kind: "mining", length: 2.6, width: 2.3, floor: 6.0, top: 8.16, screen: [6.7, 7.9], rake: 0.1, grille: "bars", lamps: "rect", mirrors: "arm", deck: { y: 6.0, to: 5.0 }, offset: -3.4 },
-    chassis: frame(19.6, 1.78, [steer(3.1), steer(6.4), drive(13.8), drive(17.1)], { frame: 3.2, tanks: "none", track: 4.9, tyre: 1.45 }),
+    chassis: frame(19.6, 1.78, [steerDrive(3.1), steerDrive(6.4), drive(13.8), drive(17.1)], { frame: 3.2, tanks: "none", track: 4.9, tyre: 1.45 }),
     body: body("dump", 4.6, 20.6, 3.6, 7.6, { hw: 4.94, load: "none" }),
     steerDeg: 30,
   };
@@ -461,7 +461,7 @@ export const KRAZ_255_PARAMS = bodyParam(DROPSIDE, CANVAS);
 export function kraz255Spec(p?: ParamValues): TruckSpec {
   const kind = pick(KRAZ_255_PARAMS, p) as BodyKind;
   const cab = squareBonnet({ length: 1.6, width: 2.75, floor: 1.45, top: 2.94, screen: [2.05, 2.6], hood: { length: 2.2, top: 2.0, hw: 1.15 }, grille: "bars", lamps: "round", mirrors: "small", split: true });
-  const ch = frame(8.65, 0.69, [steer(1.3), drive(6.0, false), drive(7.4, false)], { frame: 1.3, tanks: "box", tyre: 0.42, track: 1.36 });
+  const ch = frame(8.65, 0.69, [steerDrive(1.3), drive(6.0, false), drive(7.4, false)], { frame: 1.3, tanks: "box", tyre: 0.42, track: 1.36 });
   return rigid(cab, ch, behindCab(kind, cab, ch, kind === "canvas" ? 3.1 : 2.3, { floor: 1.6, hw: 1.3 }), { cab: "#4d5a35", body: "#4d5a35", canvas: "#59644a", rim: "#3a4428" }, { steerDeg: 34 });
 }
 export function kraz255(p?: ParamValues): MeshBuilder { return buildTruck(kraz255Spec(p)); }
@@ -471,7 +471,7 @@ export const URAL_4320_PARAMS = bodyParam(CANVAS, DROPSIDE);
 export function ural4320Spec(p?: ParamValues): TruckSpec {
   const kind = pick(URAL_4320_PARAMS, p) as BodyKind;
   const cab = squareBonnet({ length: 1.55, width: 2.5, floor: 1.55, top: 2.87, screen: [2.1, 2.6], hood: { length: 1.9, top: 2.0, hw: 1.05, style: "round" }, grille: "slots", lamps: "round", mirrors: "small", split: true });
-  const ch = frame(7.37, 0.61, [steer(1.2), drive(4.9, false), drive(6.3, false)], { frame: 1.35, tanks: "box", tyre: 0.38, track: 1.25 });
+  const ch = frame(7.37, 0.61, [steerDrive(1.2), drive(4.9, false), drive(6.3, false)], { frame: 1.35, tanks: "box", tyre: 0.38, track: 1.25 });
   return rigid(cab, ch, behindCab(kind, cab, ch, kind === "canvas" ? 3.0 : 2.3, { floor: 1.55, hw: 1.22 }), { cab: "#4b5a38", body: "#4b5a38", canvas: "#57634a", rim: "#384428" }, { steerDeg: 34 });
 }
 export function ural4320(p?: ParamValues): MeshBuilder { return buildTruck(ural4320Spec(p)); }
@@ -544,7 +544,7 @@ export function magirusLadderLod(): MeshBuilder { return lodOf(magirusLadderSpec
 
 export function rosenbauerPantherSpec(): TruckSpec {
   const cab: CabSpec = { kind: "cabover", length: 2.3, width: 3.0, floor: 0.8, top: 3.4, screen: [1.75, 3.05], rake: 0.75, corner: 0.35, grille: "none", lamps: "slim", mirrors: "arm", beacon: "bar", crew: true, band: 1.2 };
-  return fireEngine(cab, 12.0, [steer(1.75), drive(6.9, false), drive(8.6, false)], 0.62, 3.45, { cab: "#d42a1f", cab2: "#ece9e2", body: "#d42a1f", body2: "#c8cbcf", art: "#ece9e2" }, { monitor: true, frameY: 1.15 });
+  return fireEngine(cab, 12.0, [steerDrive(1.75), drive(6.9, false), drive(8.6, false)], 0.62, 3.45, { cab: "#d42a1f", cab2: "#ece9e2", body: "#d42a1f", body2: "#c8cbcf", art: "#ece9e2" }, { monitor: true, frameY: 1.15 });
 }
 export function rosenbauerPanther(): MeshBuilder { return buildTruck(rosenbauerPantherSpec()); }
 export function rosenbauerPantherLod(): MeshBuilder { return lodOf(rosenbauerPantherSpec()); }
@@ -1027,7 +1027,7 @@ export const ZETROS_PARAMS = bodyParam(CANVAS, DROPSIDE);
 export function mbZetrosSpec(p?: ParamValues): TruckSpec {
   const kind = pick(ZETROS_PARAMS, p) as BodyKind;
   const cab = squareBonnet({ length: 1.7, width: 2.5, floor: 1.55, top: 3.2, screen: [2.15, 2.9], rake: 0.1, corner: 0.12, hood: { length: 1.7, top: 2.2, hw: 1.05 }, grille: "bars", lamps: "rect", mirrors: "arm" });
-  const ch = frame(7.6, 0.65, [steer(1.15), drive(5.0, false), drive(6.45, false)], { frame: 1.35, tyre: 0.42, track: 1.25 });
+  const ch = frame(7.6, 0.65, [steerDrive(1.15), drive(5.0, false), drive(6.45, false)], { frame: 1.35, tyre: 0.42, track: 1.25 });
   return rigid(cab, ch, behindCab(kind, cab, ch, kind === "canvas" ? 3.4 : 2.4, { floor: 1.6, hw: 1.24 }), { cab: "#c8b48a", body: "#c8b48a", canvas: "#b5a37c", cab2: "#2b2b2b" }, { steerDeg: 36 });
 }
 export function mbZetros(p?: ParamValues): MeshBuilder { return buildTruck(mbZetrosSpec(p)); }

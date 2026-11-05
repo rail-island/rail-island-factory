@@ -996,7 +996,7 @@ export function truckFeatures(specs: readonly TruckSpec[], params: readonly stri
     ...(c.hood ? [`hood:${c.hood.style}`] : []),
     ...(c.sleeper ? ["sleeper"] : []), ...(c.crew ? ["crew-cab"] : []), ...(c.stacks ? ["stacks"] : []),
     ...(c.offset ? ["offset-cab"] : []), ...(s.art ? [`art:${s.art}`] : []),
-    `mirrors:${c.mirrors}`, `grille:${c.grille}`, `lamps:${c.lamps}`,
+    `mirrors:${c.mirrors}`,
     ...params.map((p) => `param:${p}`),
   ]);
   for (const v of specs) {
