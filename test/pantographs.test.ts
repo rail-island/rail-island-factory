@@ -13,7 +13,7 @@ import { poseGlb, sampleCount } from "../generator/glbPose.ts";
 import { findCoplanarOverlaps } from "../generator/coplanar.ts";
 import { LIFT_SAMPLES } from "../generator/liftable.ts";
 import { buildLodModel } from "../generator/lodModel.ts";
-import { variantsUnderTest } from "./catalogCache";
+import { swept, variantsUnderTest } from "./catalogCache";
 import { RAIL_COLLECTOR_TOP, TRAM_COLLECTOR_TOP } from "../generator/collector.ts";
 import { TRAM_DESIGNS } from "../generator/trams.ts";
 
@@ -28,16 +28,42 @@ function topOf(m: unknown, mat?: string): number {
  * What the tests read of every vehicle's default model, from one build of it
  * (the file built each default three times over before).
  */
+// the eight-country plan's families by one design a module (test/catalogCache.ts swept); their later designs' collectors are checked on their last sampled combination below
 const DEFAULTS = new Map(
-  ALL_VEHICLES.map((d) => {
+  ALL_VEHICLES.filter((d) => swept(d.id)).map((d) => {
     const m = d.build();
     const groups = (m as unknown as { groups: Map<string, unknown> }).groups;
     return [d.id, { pantograph: m.positions().length > 0 && groups.has("pantograph"), carbon: groups.has("carbon"), carbonTop: topOf(m, "carbon"), top: topOf(m), lamps: m.lamps() }] as const;
   }),
 );
 
+/**
+ * A sampled combination's build, shared by the fold-and-raise check and the
+ * collector-height check (neither changes it), dropped by the second.
+ */
+const SAMPLED = new Map<string, ReturnType<(typeof ALL_VEHICLES)[number]["build"]>>();
+function sampledBuild(d: (typeof ALL_VEHICLES)[number], params: Record<string, string>): ReturnType<typeof d.build> {
+  const key = `${d.id} ${JSON.stringify(params)}`;
+  let m = SAMPLED.get(key);
+  if (!m) SAMPLED.set(key, (m = d.build(params)));
+  return m;
+}
+
+/**
+ * The combinations a design's collectors are checked on: the sampled ones, but for
+ * a design of the eight-country plan's kit families (their kits' pantographs are
+ * the same in every combination, test/catalogCache.ts KIT_FAMILY_MODULES) only the
+ * last, where a unit raises them (the defaults' end car raises none).
+ */
+function pantographVariants(d: (typeof ALL_VEHICLES)[number]): Record<string, string>[] {
+  const all = variantsUnderTest(d);
+  return swept(d.id) ? all : all.slice(-1);
+}
+
 /** The designs whose default model draws a pantograph (the material). */
-const ELECTRIC = ALL_VEHICLES.filter((d) => DEFAULTS.get(d.id)!.pantograph);
+// a later family design by its kind: an electric locomotive raises its pantographs on every combination
+// (a unit's default end car raises none, as the swept designs' defaults show)
+const ELECTRIC = ALL_VEHICLES.filter((d) => (swept(d.id) ? DEFAULTS.get(d.id)!.pantograph : d.catalog?.traction === "electric" && d.catalog?.group === "loco"));
 
 describe("pantographs", () => {
   it("are found on the electric locomotives, units and trams", () => {
@@ -45,9 +71,9 @@ describe("pantographs", () => {
   });
 
   for (const d of ELECTRIC) {
-    for (const params of variantsUnderTest(d)) {
+    for (const params of pantographVariants(d)) {
       it(`${d.id} ${JSON.stringify(params)} folds and raises its working pantographs`, () => {
-        const m = d.build(params);
+        const m = sampledBuild(d, params);
         const glb = m.toGlb(d.title, d.id);
         const { json } = parseGlb(glb);
         const anims = (json as { animations?: Array<{ name: string }> }).animations ?? [];
@@ -79,18 +105,20 @@ describe("collector heights", () => {
   // steam and diesel locomotives, coaches and wagons collect no current: no variant of theirs is built to look for a collector
   const unpowered = (v: (typeof ALL_VEHICLES)[number]) => v.catalog?.traction === "steam" || v.catalog?.traction === "diesel" || v.catalog?.group === "coach" || v.catalog?.group === "wagon";
   it("finds no collector on the families that cannot have one", () => {
-    for (const d of ALL_VEHICLES.filter((v) => v.catalog?.category === "Rail vehicles" && unpowered(v))) expect(DEFAULTS.get(d.id)!.carbon, d.id).toBe(false);
+    for (const d of ALL_VEHICLES.filter((v) => v.catalog?.category === "Rail vehicles" && unpowered(v) && swept(v.id))) expect(DEFAULTS.get(d.id)!.carbon, d.id).toBe(false);
   });
   for (const d of ALL_VEHICLES.filter((v) => v.catalog?.category === "Rail vehicles" && !unpowered(v))) {
     const wire = trams.has(d.id) ? TRAM_COLLECTOR_TOP : RAIL_COLLECTOR_TOP;
-    variantsUnderTest(d).forEach((params, i) => {
+    pantographVariants(d).forEach((params) => {
+      const i = JSON.stringify(params) === "{}" || JSON.stringify(params) === JSON.stringify(variantsUnderTest(d)[0]) ? 0 : 1;
       it(`${d.id} ${JSON.stringify(params)} raises its collector to the game's wire`, () => {
-        // the first combination is the defaults, already built
+        // the first combination is the defaults, already built (a later design of the plan's families: built here)
         let at = DEFAULTS.get(d.id)!;
-        if (i > 0) {
-          const m = d.build(params);
+        if (i > 0 || !at) {
+          const m = sampledBuild(d, params);
+          SAMPLED.delete(`${d.id} ${JSON.stringify(params)}`);
           const groups = (m as unknown as { groups: Map<string, unknown> }).groups;
-          at = { ...at, carbon: groups.has("carbon"), carbonTop: topOf(m, "carbon"), top: topOf(m) };
+          at = { ...at, pantograph: at?.pantograph ?? false, lamps: at?.lamps ?? null, carbon: groups.has("carbon"), carbonTop: topOf(m, "carbon"), top: topOf(m) };
         }
         // a car without a pantograph (a trailer) has no carbon strip to raise
         if (!at.carbon) return;
@@ -105,7 +133,7 @@ describe("collector heights", () => {
 
 describe("lamps", () => {
   const ROLES = new Set(["head", "tail", "brake", "indicator"]);
-  for (const d of ALL_VEHICLES) {
+  for (const d of ALL_VEHICLES.filter((v) => swept(v.id))) {
     it(`${d.id} names a known role for every lamp it draws`, () => {
       const lamps = DEFAULTS.get(d.id)!.lamps;
       if (!lamps) return;

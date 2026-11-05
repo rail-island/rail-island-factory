@@ -83,7 +83,15 @@ minutes** (AGENTS.md); it takes about four and a half on a four-core machine
   checks of `test/worldTrains.test.ts` - no z-fighting, emitters on their mouths, inside
   its loading gauge and the triangle budget, at its published length, doors opening
   exactly on a passenger car, on its defaults and a sampled combination, and its LOD
-  inside its budget. `TEST_ALL_DESIGNS=1` (or `TEST_ALL_VARIANTS=1`) sweeps every design. **`TEST_ALL_VARIANTS=1 pnpm
+  inside its budget, and its rail supports and bogie pivots (the rail-supports suite, too,
+  checks one design a module). The pantograph suite checks a family design's collectors on
+  its last sampled combination only (its kit's pantographs are the same in every one), and
+  neither it nor the rig suite builds a later family design's defaults when it loads; the
+  LOD suite checks a later family design on its defaults and sampled combination, not on
+  every value of every parameter.
+  `test/worldTrains.test.ts` and `worldTrains-2..4.test.ts` each run a quarter
+  (`test/worldTrainsSuite.ts`); the pantograph suite builds each sampled combination once for
+  both its checks. `TEST_ALL_DESIGNS=1` (or `TEST_ALL_VARIANTS=1`) sweeps every design. **`TEST_ALL_VARIANTS=1 pnpm
   test` checks every combination**; it takes far longer, so it runs only when
   the user asks for it (AGENTS.md).
 - **Cheap comparisons.** `test/setup.ts` decides equal typed arrays (GLB bytes)

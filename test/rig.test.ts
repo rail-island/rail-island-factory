@@ -14,7 +14,7 @@ import { drawJoint, jointTriangles, pose, steerAngles, steerLock, type JointRig,
 import { block } from "../generator/vehicleParts";
 import { pageKey, poseControls, poseOf, posePreview, previewKey, steerLockDeg, type CatalogRecord } from "../src/catalogQuery";
 import { intersectingPairs, worldTriangles, type Tri } from "./collision";
-import { built, forget, glbOf, jsModuleOf, warm, type JsModule } from "./catalogCache";
+import { built, forget, glbOf, jsModuleOf, swept, warm, type JsModule } from "./catalogCache";
 import { expectSealed, jointMesh } from "./rigHelpers";
 
 const DEG = Math.PI / 180;
@@ -114,12 +114,13 @@ const moduleOf = (id: string) => jsModuleOf(id) as Promise<Module>;
 
 /** Every vehicle's rig, read from its build (null for an unrigged one); the builds are let go. */
 const RIGS = new Map<string, VehicleRig | null>();
-for (const d of ALL_VEHICLES) {
+// the eight-country plan's families by one design a module (test/catalogCache.ts swept; their supports in test/worldTrainsSuite.ts)
+for (const d of ALL_VEHICLES.filter((v) => swept(v.id))) {
   await warm([d.id]);
   RIGS.set(d.id, built(d.id).rig);
   forget(d.id);
 }
-const RIGGED = ALL_VEHICLES.filter((d) => RIGS.get(d.id) !== null).map((d) => [d.id] as const);
+const RIGGED = ALL_VEHICLES.filter((d) => RIGS.has(d.id) && RIGS.get(d.id) !== null).map((d) => [d.id] as const);
 /** The rigged vehicles with steered wheels: every road vehicle (an articulated tram has none). */
 const STEERED = RIGGED.filter(([id]) => RIGS.get(id)!.steer !== undefined);
 const ARTICULATED = RIGGED.filter(([id]) => (RIGS.get(id)!.joints ?? []).length > 0);
