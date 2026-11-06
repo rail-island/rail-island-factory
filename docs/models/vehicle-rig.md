@@ -28,7 +28,9 @@ three trucks reproduced from the game ([trucks.md](trucks.md)) and the buses
 and no `steer` (a rail vehicle follows the track). The articulated trams - the
 KT8D5, KT4 and GT4 ([trams.md](trams.md)) - the TGV's trailer set
 ([foreign-units.md](foreign-units.md)) and the VT 18.16's full train, every car a
-section on its own two bogies ([dr-vt1816.md](dr-vt1816.md)), also have sections and joints; the site shows
+section on its own two bogies ([dr-vt1816.md](dr-vt1816.md)), also have sections and joints. The horse tram is two
+sections and no joint - the horse hitched ahead of its car, on two lone supports under its legs
+([world-trams.md](world-trams.md)). The site shows
 only the joint sliders. The air and water vehicles have none.
 
 ## The rig

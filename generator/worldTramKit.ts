@@ -230,6 +230,12 @@ export interface WorldTramSpec {
   /** What the kit cannot say, drawn into the first section (a horse, a chimney, a cable grip), and its distant model. */
   extra?: (k: TramCtx) => void;
   extraLod?: (m: MeshBuilder, k: { s: WorldTramSpec; X: (u: number) => number }) => void;
+  /**
+   * The extra is a section of its own, hitched to the first at this pivot with no
+   * joint (the horse tram's horse): the distant model draws `extraLod` in it, as the
+   * full model draws the horse.
+   */
+  extraSection?: Vec3;
   /** Kit options to report beyond those the spec shows (worldFleet.ts), for an `extra`. */
   extraFeatures?: readonly string[];
 }
@@ -1245,14 +1251,14 @@ export function worldTramLod(s: WorldTramSpec, budget: number): MeshBuilder {
       }),
     });
   }
-  if (s.extraLod) parts.push({ section: 0, draw: (m) => m.scope("extra", () => s.extraLod!(m, { s, X })) });
-  const sections: LodSections | undefined = n > 1 ? {
-    pivots: secs.map((sec, i): Vec3 => {
+  if (s.extraLod) parts.push({ section: s.extraSection ? n : 0, draw: (m) => m.scope("extra", () => s.extraLod!(m, { s, X })) });
+  const sections: LodSections | undefined = n > 1 || s.extraSection ? {
+    pivots: [...secs.map((sec, i): Vec3 => {
       if (i === 0) return [0, 0, 0];
       const mid = (secs[i - 1]!.x0 + sec.x1) / 2;
       const j = s.trucks.find((tr) => underJoint(tr) && Math.abs(X(tr.at) - mid) < (s.gap ?? 0.5));
       return [j ? X(j.at) : mid, HINGE_Y, 0];
-    }),
+    }), ...(s.extraSection ? [s.extraSection] : [])],
     joints: secs.slice(0, -1).map((sec, i) => ({ sections: [i, i + 1] as [number, number], front: sec.x0, rear: secs[i + 1]!.x1, profile: lodBellows(s) })),
     maxBendDeg: s.maxBendDeg ?? 30,
     material: "bellows",
