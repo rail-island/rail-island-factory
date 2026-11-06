@@ -61,6 +61,8 @@ export interface NoseSpec {
   half: Pt[];
   /** The plan's corner radius: [y, r], ascending y. */
   corner: Pt[];
+  /** The corner's depth back from the face (default its radius): an elliptical corner tapering the plan over this length. */
+  cornerD?: Pt[];
   /** Extra recess of the face at its edges (|u| = 1) over its centre: a parabolic plan bulge. */
   bulge?: number;
   /** The grid's rows, ascending; the first is the bottom, the last the crown. */
@@ -111,7 +113,7 @@ export class CabNose {
    * column, with the slice there (half width, corner radius, centreline face):
    * looked up once, not once a scan (the lookups were most of a nose's build).
    */
-  private scan?: { n: number; y: Float64Array; hw: Float64Array; r: Float64Array; dF: Float64Array };
+  private scan?: { n: number; y: Float64Array; hw: Float64Array; r: Float64Array; dF: Float64Array; rd: Float64Array };
   /** The pieces drawn so far, by scope name: material, triangles, normal. */
   private readonly out = new Map<string, Array<[string, Vec3[], Vec3]>>();
 
@@ -123,13 +125,14 @@ export class CabNose {
   /** The surface at (u, y): the query a layer sees and the model point. */
   at(u: number, y: number): NoseQuery & { p: Vec3 } {
     const s = this.s;
-    return this.atSlice(u, y, lerp(s.half, y), lerp(s.corner, y), lerp(s.profile, y));
+    return this.atSlice(u, y, lerp(s.half, y), lerp(s.corner, y), lerp(s.profile, y), s.cornerD ? lerp(s.cornerD, y) : -1);
   }
 
-  /** at(u, y) given the slice at y: its half width, its plan's corner radius and its centreline face. */
-  private atSlice(u: number, y: number, hw: number, corner: number, dF: number): NoseQuery & { p: Vec3 } {
+  /** at(u, y) given the slice at y: its half width, its plan's corner radius, its centreline face and the corner's depth (negative: its radius). */
+  private atSlice(u: number, y: number, hw: number, corner: number, dF: number, depth: number): NoseQuery & { p: Vec3 } {
     const s = this.s;
     const r = Math.min(corner, hw * 0.98);
+    const rd = depth < 0 ? r : depth;
     const a = hw - r;
     const b = s.bulge ?? 0;
     const au = Math.min(4, Math.abs(u));
@@ -142,10 +145,10 @@ export class CabNose {
     } else if (au <= 2) {
       const th = ((au - 1) * Math.PI) / 2;
       lat = a + r * Math.sin(th);
-      d = dF + b + r * (1 - Math.cos(th));
+      d = dF + b + rd * (1 - Math.cos(th));
     } else {
       lat = hw;
-      const dA = dF + b + r;
+      const dA = dF + b + rd;
       const dS = Math.min(Math.max(dA, s.dSide), s.dJoin);
       d = au <= 3 ? dA + (au - 2) * (dS - dA) : dS + (au - 3) * (s.dJoin - dS);
     }
@@ -194,7 +197,7 @@ export class CabNose {
     let first = -1;
     let last = -1;
     for (let i = 0; i <= n; i++) {
-      if (L.inside(this.atSlice(u, S.y[i]!, S.hw[i]!, S.r[i]!, S.dF[i]!))) {
+      if (L.inside(this.atSlice(u, S.y[i]!, S.hw[i]!, S.r[i]!, S.dF[i]!, S.rd[i]!))) {
         if (first < 0) first = i;
         last = i;
       }
@@ -227,13 +230,15 @@ export class CabNose {
       const hw = new Float64Array(n + 1);
       const r = new Float64Array(n + 1);
       const dF = new Float64Array(n + 1);
+      const rd = new Float64Array(n + 1);
       for (let i = 0; i <= n; i++) {
         y[i] = this.yBot + ((this.yTop - this.yBot) * i) / n;
         hw[i] = lerp(s.half, y[i]!);
         r[i] = lerp(s.corner, y[i]!);
         dF[i] = lerp(s.profile, y[i]!);
+        rd[i] = s.cornerD ? lerp(s.cornerD, y[i]!) : -1;
       }
-      this.scan = { n, y, hw, r, dF };
+      this.scan = { n, y, hw, r, dF, rd };
     }
     return this.scan;
   }

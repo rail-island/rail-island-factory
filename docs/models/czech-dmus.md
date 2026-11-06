@@ -100,7 +100,8 @@ sides back to a join, where the body volume takes over with the same section.
   rounded rectangle seen from above: the centreline face's distance back from
   the tip (`profile`, by height: an upright apron, a raked windscreen, the roof
   rounding to the crown), the body's half width (`half`, its section), the plan
-  corner's radius and an optional plan bulge. Across a slice, u runs over the
+  corner's radius (and optionally its depth, `cornerD`: an elliptical corner tapering the
+  plan, the ICN's) and an optional plan bulge. Across a slice, u runs over the
   face (|u| <= 1), the corner arc (1..2), a straight run back to `dSide` (2..3)
   and the cab side to `dJoin` (3..4). Crown and bottom caps close it.
 - **Paint.** A base material and layers on top of it, each a predicate on a
