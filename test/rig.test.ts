@@ -96,6 +96,30 @@ describe("jointTriangles", () => {
     expect(rear).toBeGreaterThan(0);
   });
 
+  it("rings a framed bellows' middle with its band, halfway between the sections, and leaves an unframed one as it was", () => {
+    const rig = articulated();
+    const j = rig.joints![0]!;
+    const sections = rig.sections!;
+    const plain = jointTriangles(j, sections);
+    // 2 * folds + 1 rings, 5 points round each: (rings - 1) bands of 5 quads
+    expect(plain.length / 3).toBe(2 * j.folds * 5 * 2);
+    const framed: JointRig = { ...j, frame: { width: 0.1, depth: 0.12 } };
+    const rest = jointTriangles(framed, sections);
+    // three rings more: the band's two faces and the valley after it
+    expect(rest.length / 3).toBe((2 * j.folds + 3) * 5 * 2);
+    // the band: the widest points, at the middle +- half its width, and nowhere else
+    const top = Math.max(...rest.map((p) => p[1]));
+    const band = rest.filter((p) => Math.abs(p[1] - top) < 1e-9).map((p) => p[0]);
+    const mid = (j.front + j.rear) / 2;
+    expect(Math.min(...band)).toBeCloseTo(mid - 0.05, 9);
+    expect(Math.max(...band)).toBeCloseTo(mid + 0.05, 9);
+    expect(top).toBeGreaterThan(2.8 + j.depth);
+    // bent, the band stays halfway: its points ride both sections equally
+    const b = new THREE.Matrix4().makeRotationY(0.5).setPosition(-1, 0.5, 0);
+    const posed = jointTriangles(framed, sections, undefined, b.elements);
+    expect(posed.length).toBe(rest.length);
+  });
+
   it("winds the bellows outward", () => {
     const rig = articulated();
     const t = jointTriangles(rig.joints![0]!, rig.sections!);

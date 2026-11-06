@@ -247,7 +247,7 @@ trolleybuses the resistor one; the rest keep the derived bus diesel.
 ## Checking
 
 `pnpm exec vitest run test/worldBuses2.test.ts test/worldFleet.test.ts`: every bus's size,
-axles, sections and joints, budgets (exterior 10,000, interior 1,500, the distant model 100 a
+axles, sections and joints, budgets (exterior 10,000, an articulated bus 15,000 with one joint and 20,000 with two, interior 1,500, the distant model 100 a
 section) for its sampled parameter combinations; every bonnet's windscreen on the shell's
 front and its fenders clear of the tyre at lock; the half cab's body carried to the nose; the
 raised deck's height; the finish parameters changing colours only. The shared vehicle suites

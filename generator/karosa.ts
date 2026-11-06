@@ -14,7 +14,8 @@ import type { MeshBuilder } from "./meshBuilder.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import type { Arch, Paint } from "./busBody.ts";
 import { BusDraft, type Axle, type BusSpec, type DoorStyle, type PaneStyle } from "./busAssembly.ts";
-import { busPalette, endLamp, endSlab, mirror, sideSlab } from "./busKit.ts";
+import { busPalette, endLamp, endLettering, endSlab, mirror, sideSlab, wiper, wrappedBumper, type BusFrame } from "./busKit.ts";
+import { ngon } from "./meshBuilder.ts";
 import { block } from "./vehicleParts.ts";
 
 type Series = "700" | "900" | "951";
@@ -108,6 +109,10 @@ const BELT = 1.5;
 const EAVE = 2.9;
 const ROOF = 3.1; // the XML's crown; the hatches bring it to the quoted 3.165 m
 const WHEEL_R = 0.52;
+/** A 900-series mask's front corners in plan: how far back along the side and how far in across the front they curve. */
+const CORNER_900: [number, number] = [0.5, 0.26];
+/** The roof's edge, rounded from the eave over to the crown's slope (the XML's single chamfer, smoothed). */
+const ROOF_EDGE: Array<[number, number]> = [[HW - 0.05, EAVE], [HW - 0.07, 2.955], [HW - 0.12, 2.995], [HW - 0.2, 3.025]];
 
 /** The source-to-factory mapping of one family. */
 class Karosa {
@@ -142,7 +147,7 @@ function karosaDraft(variant: KarosaVariant, long: boolean): { draft: BusDraft; 
   const series = variant.series;
 
   const section: Array<[number, number]> = [
-    [-HW, BOTTOM], [HW, BOTTOM], [HW, BELT], [HW - 0.05, EAVE], [HW - 0.15, 3.0], [0, ROOF], [-(HW - 0.15), 3.0], [-(HW - 0.05), EAVE], [-HW, BELT],
+    [-HW, BOTTOM], [HW, BOTTOM], [HW, BELT], ...ROOF_EDGE, [0, ROOF], ...ROOF_EDGE.map(([z, y]): [number, number] => [-z, y]).reverse(), [-HW, BELT],
   ];
   // side elevation: an upright lower nose, the windscreen raked back to the roof; the
   // tail upright to the rear window, then raked in
@@ -151,11 +156,21 @@ function karosaDraft(variant: KarosaVariant, long: boolean): { draft: BusDraft; 
     [x(K.f.tail - 0.4), ROOF], [x(K.f.tail - 0.2), EAVE], [tail, 1.8], [tail, 0.5], [x(K.f.tail - 0.6), BOTTOM],
   ];
   // plan: the front corners rounded off (more on the 900s), small rear chamfers
-  const fc = series === "700" ? [0.4, 0.06] : [0.5, 0.12];
-  const plan: Array<[number, number]> = [
+  // (the 900s' photographs: the mask wraps round its corners in a wide curve, a
+  // quarter ellipse CORNER_900 long along the side and across, in five pieces)
+  const fc = [0.4, 0.06];
+  const corner = (sz: number): Array<[number, number]> => {
+    const out: Array<[number, number]> = [];
+    for (let i = 0; i <= 5; i++) {
+      const t = (i / 5) * (Math.PI / 2);
+      out.push([nose - CORNER_900[0] + CORNER_900[0] * Math.cos(t), sz * (HW - CORNER_900[1] + CORNER_900[1] * Math.sin(t))]);
+    }
+    return out;
+  };
+  const plan: Array<[number, number]> = series === "700" ? [
     [tail, -(HW - 0.08)], [tail + 0.12, -HW], [nose - fc[0]!, -HW], [nose - fc[0]! * 0.35, -(HW - fc[1]! * 0.45)], [nose, -(HW - fc[1]! * 1.6)],
     [nose, HW - fc[1]! * 1.6], [nose - fc[0]! * 0.35, HW - fc[1]! * 0.45], [nose - fc[0]!, HW], [tail + 0.12, HW], [tail, HW - 0.08],
-  ];
+  ] : [[tail, -(HW - 0.08)], [tail + 0.12, -HW], ...corner(-1).reverse(), ...corner(1), [tail + 0.12, HW], [tail, HW - 0.08]];
 
   const stripe = "stripe";
   const bumper = variant.greyBumpers ? "bumperGrey" : stripe;
@@ -174,7 +189,8 @@ function karosaDraft(variant: KarosaVariant, long: boolean): { draft: BusDraft; 
   const arches: Arch[] = axles.map((a) => ({ x: a.x, half: a.steer ? 0.62 : 0.6, side: 0.72, top: 1.14 }));
   const bodies: Array<[number, number]> = K.f.bodies.map(([u0, u1]) => [x(u1), x(u0)]);
 
-  const draft = new BusDraft({ section, side });
+  // the end fittings wrap round the plan's corners (busKit.ts BusFrame.plan)
+  const draft = new BusDraft({ section, side, plan });
   const frame = draft.frame;
   const m = (): MeshBuilder => draft.m;
   const fit = (group: string, at: number, draw: () => void): void => draft.fit(group, at, draw);
@@ -220,7 +236,8 @@ function karosaDraft(variant: KarosaVariant, long: boolean): { draft: BusDraft; 
     // the destination display behind the windscreen's top, and the wipers at rest
     endSlab(m(), "sign", frame, 1, -0.72, 0.72, wsTop - 0.3, wsTop - 0.06, 0.026);
     endSlab(m(), "signText", frame, 1, -0.6, 0.6, wsTop - 0.22, wsTop - 0.14, 0.03);
-    for (const z of [-0.98, 0.08]) endSlab(m(), "frame", frame, 1, z, z + 0.86, wsBottom + 0.05, wsBottom + 0.08, 0.03);
+    // the wipers at rest (photographs: three on a 700, two on a 900), rising to the right
+    for (const z of series === "700" ? [-1.0, -0.25, 0.5] : [-1.02, -0.02]) wiper(m(), frame, 1, z, wsBottom + 0.07, series === "700" ? 0.72 : 0.95, series === "700" ? 14 : 9);
     if (series === "700") {
       // louvres right of the centre in the coloured panel, indicators at its ends
       endSlab(m(), "grille", frame, 1, -0.42, 0.98, 1.21, 1.47, 0.008);
@@ -229,12 +246,16 @@ function karosaDraft(variant: KarosaVariant, long: boolean): { draft: BusDraft; 
         endSlab(m(), "stripe", frame, 1, z, z + 0.035, 1.21, 1.47, 0.016);
       }
       for (const s of [-1, 1]) endSlab(m(), "lampAmber", frame, 1, s * 1.12 - 0.06, s * 1.12 + 0.06, 1.2, 1.44, 0.014);
+      // the two towing hooks on the white strip over the panel
+      for (const z of [-0.55, 0.5]) endSlab(m(), "frame", frame, 1, z - 0.03, z + 0.03, 1.57, 1.64, 0.03);
       // the black band: the grille's mesh between two round headlamps in square housings
       endSlab(m(), "grille", frame, 1, -0.78, 0.78, 0.7, 1.08, 0.008);
       for (let i = 0; i < 5; i++) endSlab(m(), "frame", frame, 1, -0.76, 0.76, 0.74 + i * 0.07, 0.76 + i * 0.07, 0.014);
       for (const s of [-1, 1]) {
         endSlab(m(), "frame", frame, 1, s * 0.95 - 0.17, s * 0.95 + 0.17, 0.72, 1.06, 0.008);
         endLamp(m(), "lampHead", frame, 1, s * 0.95, 0.89, 0.105, 0.016, "chrome", 12);
+        // the lens's centre: the bulb behind its fluting
+        endLamp(m(), "chrome", frame, 1, s * 0.95, 0.89, 0.03, 0.022, undefined, 8);
       }
     } else {
       // the 900s (photographs of B 941 E, B 961 E): a white panel under the
@@ -247,21 +268,32 @@ function karosaDraft(variant: KarosaVariant, long: boolean): { draft: BusDraft; 
       } else {
         for (const [z0, z1] of [[-0.95, -0.3], [0.2, 0.85]] as const) endSlab(m(), "grille", frame, 1, z0, z1, 1.14, 1.22, 0.008);
       }
-      const front = nose + 0.08;
-      block(m(), bumper, nose - 0.05, front, 0.33, 0.98, -1.24, 1.24);
+      // the bumper wraps round the mask's corners, 8 cm proud of it: the plan's front
+      // grown, within the body's width; its lamps, grille and plate stand on it (bf)
+      const bp = wrappedBumper(plan, nose, 0.08, HW - 0.01);
+      const bf: BusFrame = { section, side: [[nose - 0.6, 0.3], [nose + 0.08, 0.3], [nose + 0.08, 1.0], [nose - 0.6, 1.0]], plan: bp };
+      m().prism(bumper, bp, 0.33, 0.98);
+      m().cap(bumper, bp, 0.33, false);
       for (const s of [-1, 1]) {
-        block(m(), "frame", front - 0.01, front + 0.008, 0.71, 0.89, s * 0.93 - 0.11, s * 0.93 + 0.11);
-        block(m(), "lampHead", front, front + 0.015, 0.74, 0.86, s * 0.93 - 0.08, s * 0.93 + 0.08);
-        block(m(), "lampAmber", front - 0.01, front + 0.012, 0.72, 0.86, s * 1.14 - 0.07, s * 1.14 + 0.07);
+        endSlab(m(), "frame", bf, 1, s * 0.93 - 0.11, s * 0.93 + 0.11, 0.71, 0.89, 0.008, 0.01);
+        endSlab(m(), "lampHead", bf, 1, s * 0.93 - 0.08, s * 0.93 + 0.08, 0.74, 0.86, 0.015);
+        endSlab(m(), "lampAmber", bf, 1, s * 1.14 - 0.07, s * 1.14 + 0.07, 0.72, 0.86, 0.012);
+        // each headlamp's two lenses
+        endSlab(m(), "frame", bf, 1, s * 0.93 - 0.006, s * 0.93 + 0.006, 0.74, 0.86, 0.02);
       }
-      block(m(), "grille", front - 0.01, front + 0.008, 0.74, 0.87, -0.6, 0.6);
-      block(m(), "plateYellow", front, front + 0.015, 0.47, 0.6, -0.26, 0.26);
+      endSlab(m(), "grille", bf, 1, -0.6, 0.6, 0.74, 0.87, 0.008, 0.01);
+      endSlab(m(), "plateYellow", bf, 1, -0.26, 0.26, 0.47, 0.6, 0.015);
+      // the bumper's rubber foot, the maker's name on the panel
+      endSlab(m(), "rubber", bf, 1, -1.24, 1.24, 0.32, 0.37, 0.012);
+      endLettering(m(), frame, 1, -0.6, -0.15, 1.02, 0.04, 0.012);
     }
     if (series === "700") {
       // the bumper: a deep bar with rubber blocks; the plate on it, right of the centre
       block(m(), "stripe", nose - 0.04, nose + 0.08, 0.33, 0.62, -1.24, 1.24);
       for (const z of [-0.78, 0.86]) block(m(), "rubber", nose + 0.07, nose + 0.1, 0.36, 0.6, z - 0.05, z + 0.05);
       block(m(), "plateYellow", nose + 0.07, nose + 0.095, 0.41, 0.53, 0.02, 0.54);
+      // the tow eye's cover left of the plate
+      block(m(), "frame", nose + 0.07, nose + 0.092, 0.38, 0.44, -0.6, -0.42);
     }
   });
 
@@ -288,14 +320,24 @@ function karosaDraft(variant: KarosaVariant, long: boolean): { draft: BusDraft; 
     endSlab(m(), "body", frame, -1, -0.84, 0.84, 0.6, 1.34, 0.01);
     endSlab(m(), "chrome", frame, -1, -0.16, 0.16, 1.02, 1.06, 0.02);
     endSlab(m(), "plateYellow", frame, -1, -0.17, 0.17, 0.78, 0.98, 0.016);
+    // the lamp columns (photographs): amber, red, red and the reversing lamp, in a black housing
     for (const s of [-1, 1]) {
       const z = s * 1.04;
-      endSlab(m(), "lampAmber", frame, -1, z - 0.08, z + 0.08, 1.06, 1.16, 0.014);
-      endSlab(m(), "lampRed", frame, -1, z - 0.08, z + 0.08, 0.88, 1.05, 0.014);
-      endSlab(m(), "lampHead", frame, -1, z - 0.08, z + 0.08, 0.77, 0.87, 0.014);
+      endSlab(m(), "frame", frame, -1, z - 0.1, z + 0.1, 0.76, 1.27, 0.008);
+      endSlab(m(), "lampAmber", frame, -1, z - 0.08, z + 0.08, 1.15, 1.25, 0.014);
+      endSlab(m(), "lampRed", frame, -1, z - 0.08, z + 0.08, 1.03, 1.13, 0.014);
+      endSlab(m(), "lampRed", frame, -1, z - 0.08, z + 0.08, 0.91, 1.01, 0.014);
+      endSlab(m(), "lampHead", frame, -1, z - 0.08, z + 0.08, 0.78, 0.89, 0.014);
     }
+    // the trim under the belt, the maker's name on the flap
+    endSlab(m(), "frame", frame, -1, -1.2, 1.2, 1.37, 1.395, 0.006);
+    endLettering(m(), frame, -1, 0.3, 0.72, 1.22, 0.035, 0.016);
     block(m(), bumper, tail - 0.07, tail + 0.03, 0.33, 0.56, -1.24, 1.24);
-    for (const s of [-1, 1]) block(m(), "lampRed", tail - 0.085, tail - 0.065, 0.4, 0.48, s * 1.0 - 0.04, s * 1.0 + 0.04);
+    // round reflectors on the bumper, its rubber end caps
+    for (const s of [-1, 1]) {
+      m().sweep("reflector", "x", ngon(10, 0.045, 0, s * 1.0, 0.445), tail - 0.085, ngon(10, 0.045, 0, s * 1.0, 0.445), tail - 0.065);
+      block(m(), "rubber", tail - 0.075, tail + 0.035, 0.32, 0.57, ...(s > 0 ? [1.14, 1.25] : [-1.25, -1.14]) as [number, number]);
+    }
   });
   // the engine's side grille, low on the right behind the last door (a short
   // three-door Karosa's rear door reaches to within 0.9 m of the tail)
@@ -317,7 +359,17 @@ function karosaDraft(variant: KarosaVariant, long: boolean): { draft: BusDraft; 
     if (u1 > K.f.tail - 0.4) continue;
     if (bodyRanges.every(([b0, b1]) => u0 < b0 + 0.2 || u1 > b1 - 0.2)) continue;
     draft.roofItem(x(u1), x(u0), -0.4, 0.4, ROOF - 0.04, ROOF + h, "roofHatch");
-    fit("roof hatches", x((u0 + u1) / 2), () => block(m(), "roofHatch", x(u1), x(u0), ROOF - 0.04, ROOF + h, -0.4, 0.4));
+    fit("roof hatches", x((u0 + u1) / 2), () => {
+      // a frame on the roof, the lid raised on it
+      block(m(), "frame", x(u1) - 0.03, x(u0) + 0.03, ROOF - 0.05, ROOF + 0.025, -0.43, 0.43);
+      block(m(), "roofHatch", x(u1), x(u0), ROOF - 0.04, ROOF + h, -0.4, 0.4);
+    });
+  }
+  // the rain gutter along each side, between the windows' surrounds and the eave: one
+  // per body, so an articulated Karosa's stays on its section when it bends
+  for (const [b0, b1] of bodyRanges) {
+    const [u0, u1] = [b0 === K.f.nose ? b0 + 0.25 : b0 + 0.02, b1 === K.f.tail ? b1 - 0.25 : b1 - 0.02];
+    for (const s of [-1, 1]) fit(s > 0 ? "right gutter" : "left gutter", x((u0 + u1) / 2), () => sideSlab(m(), "frame", frame, s, x(u1), x(u0), 2.835, 2.86, 0.012));
   }
   fit("mirrors", nose, () => {
     for (const s of [-1, 1]) mirror(m(), frame, s, nose, s > 0 ? 2.8 : 2.55, { h: 0.42, w: 0.2, drop: 0.06 });
@@ -341,6 +393,7 @@ function karosaDraft(variant: KarosaVariant, long: boolean): { draft: BusDraft; 
     tyres: { single: [0.94, 1.2], inner: [0.62, 0.9], outer: [0.93, 1.21] },
     bellows: { profile: [[-1.18, 0.42], [1.18, 0.42], [1.18, 2.7], [1.05, 2.92], [0, 2.98], [-1.05, 2.92], [-1.18, 2.7]], folds: 9, depth: 0.05 },
     hingeY: 0.6,
+    detail: true,
     maxSteerDeg: 50,
     maxBendDeg: 50,
   } };

@@ -10,7 +10,7 @@ import { designGlb, designTree } from "../generator/generate";
 import { glbStats } from "../generator/glbStats";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles";
 import { KAROSA_LONG, KAROSA_SHORT } from "../generator/karosa";
-import { jointTriangles, steerLock } from "../generator/rig";
+import { jointTriangles, roadTriangleBudget, steerLock } from "../generator/rig";
 import { isLeaf, type ScopeNode, type TreeNode } from "../generator/sourceTree";
 import type { MeshBuilder } from "../generator/meshBuilder";
 import { insideSeen, type Tri, type V3 } from "./collision";
@@ -130,11 +130,35 @@ describe("the buses", () => {
   it.each(BUSES)("%s fits the road and the budget in every variant", (id) => {
     const d = BUS_DESIGNS.find((x) => x.id === id)!;
     for (const params of sample(paramCombinations(d.params))) {
-      const s = glbStats(d.build(params).toGlb("t", "vehicle"));
+      const m = d.build(params);
+      const s = glbStats(m.toGlb("t", "vehicle"));
       expect(s.min[1]).toBeCloseTo(0, 5);
       expect(s.max[2] - s.min[2]).toBeLessThanOrEqual(2.7);
       expect(s.max[1]).toBeLessThanOrEqual(3.45); // roof equipment included
-      expect(s.triangles).toBeLessThanOrEqual(10_000);
+      // 10,000, 15,000 with one joint, 20,000 with two (generator/rig.ts roadTriangleBudget)
+      expect(s.triangles).toBeLessThanOrEqual(roadTriangleBudget(m.rig));
+    }
+  });
+
+  it("budgets 10,000 triangles for a rigid bus, 15,000 with one joint, 20,000 with two", () => {
+    expect(roadTriangleBudget(BUS_DESIGNS.find((d) => d.id === "proc-vehicle-mb-citaro")!.build().rig)).toBe(10_000);
+    expect(roadTriangleBudget(BUS_DESIGNS.find((d) => d.id === "proc-vehicle-karosa-long")!.build().rig)).toBe(15_000);
+    expect(roadTriangleBudget({ joints: [{}, {}] as never })).toBe(20_000);
+    expect(roadTriangleBudget(null)).toBe(10_000);
+  });
+
+  // the detail (busDetail.ts): ten nuts on every wheel seen from outside, a trim round
+  // the arches, mudflaps behind the rear wheels, side markers, the route displays
+  it.each(BUSES)("%s carries the wheel, arch and side detail", (id) => {
+    const d = BUS_DESIGNS.find((x) => x.id === id)!;
+    const tris = trianglesOf(d.build());
+    // a nut is a hexagonal prism with its back in the dish, 16 triangles; a hub cap two rings of 16 quads and a fan
+    const nuts = tris.filter((t) => t.material === "nut").length / 16;
+    const wheels = tris.filter((t) => t.material === "hub").length / (2 * 32 + 16);
+    expect(wheels).toBeGreaterThanOrEqual(4);
+    expect(nuts).toBe(wheels * 10);
+    for (const scope of ["arch-trims", "mudflaps", "side-markers", "side-route-display", "rear-route-display"]) {
+      expect(tris.some((t) => t.leaf.split("/").some((p) => p.startsWith(scope))), scope).toBe(true);
     }
   });
 });
@@ -301,6 +325,34 @@ describe("the bus bodies", () => {
       expect(boxes.flatMap((bx) => [bx.lo, bx.hi, [bx.lo[0], bx.hi[1], bx.lo[2]] as V3, [bx.lo[0], bx.lo[1], bx.hi[2]] as V3]).some((p) => inside(shell, p)), `side ${s}`).toBe(true);
     }
   }, 30_000);
+
+  // Regression: the long Karosa's rain gutters ran the whole bus inside its front
+  // section, so they swung out over the rear section's roof when the bus bent
+  it.each(BUILDS.filter((b) => (b.m().rig?.joints?.length ?? 0) > 0).map((b) => [b.label, b] as const))("%s draws each section within its own ends", (_, b) => {
+    const m = b.m();
+    const rig = m.rig!;
+    const nodes = walk(m.sourceTree(b.id, b.label).root);
+    // a section's leaves but the turntable, which turns under the bellows about the hinge
+    const span = (i: number): [number, number] => {
+      const leaves = walk(nodes.find((n) => n.id === rig.sections![i]!.node)!).filter((n) => isLeaf(n) && !/turntable/.test(n.id));
+      return [Math.min(...leaves.map((l) => l.min![0])), Math.max(...leaves.map((l) => l.max![0]))];
+    };
+    rig.joints!.forEach((j) => {
+      // the bellows' frames reach 3 cm into the gap
+      expect(span(j.sections[0])[0], `${rig.sections![j.sections[0]]!.node} reaches back past its end`).toBeGreaterThanOrEqual(j.front - 0.035);
+      expect(span(j.sections[1])[1], `${rig.sections![j.sections[1]]!.node} reaches forward past its end`).toBeLessThanOrEqual(j.rear + 0.035);
+    });
+  });
+
+  // the Karosa 900s' and the Citaro's masks curve round their front corners, and
+  // the windscreen, the lamps and the bumper with them (busKit.ts BusFrame.plan)
+  it.each([["proc-vehicle-karosa-short", { variant: "b931e" }], ["proc-vehicle-karosa-long", { variant: "b961" }], ["proc-vehicle-mb-citaro", {}]] as const)("%s wraps its front fittings round the corners", (id, params) => {
+    const tris = trianglesOf(BUS_DESIGNS.find((d) => d.id === id)!.build(params));
+    const nose = Math.max(...tris.filter((t) => /(^|\/)shell\//.test(t.leaf)).flatMap((t) => t.p.map((p) => p[0])));
+    const corner = tris.filter((t) => /(^|\/)front\//.test(t.leaf)).flatMap((t) => t.p).filter((p) => Math.abs(p[2]) > 1.2);
+    expect(corner.length).toBeGreaterThan(0);
+    for (const p of corner) expect(p[0], `at z ${p[2].toFixed(2)}, y ${p[1].toFixed(2)}`).toBeLessThan(nose - 0.02);
+  });
 
   it.each(BUILDS.map((b) => [b.label, b] as const))("%s has double doors (the LC 735's rear one single)", (label, b) => {
     const tree = b.m().sourceTree(b.id, b.label);

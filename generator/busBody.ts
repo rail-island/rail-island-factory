@@ -185,7 +185,7 @@ export interface Shell {
 const ARCH_STEPS = 6;
 
 /** The arch's crown: (x, y) points from its rear foot round to its front foot. */
-function archOutline(a: Arch): Array<[number, number]> {
+export function archOutline(a: Arch): Array<[number, number]> {
   const pts: Array<[number, number]> = [];
   for (let i = 0; i <= ARCH_STEPS; i++) {
     const t = Math.PI * (1 - i / ARCH_STEPS); // from the rear (pi) to the front (0)

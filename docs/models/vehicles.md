@@ -262,7 +262,8 @@ the final table and before/after errors to the user.
 
 ## Budget
 
-At most **10,000 triangles** per road vehicle and about **15,000** per rail vehicle (tested at most 16,000); there is no file-size budget.
+At most **10,000 triangles** per road vehicle - an articulated bus **15,000** with one joint and **20,000** with two
+(`roadTriangleBudget()`, generator/rig.ts) - and about **15,000** per rail vehicle (tested at most 16,000); there is no file-size budget.
 A **tram** has the road vehicle's **10,000**; an articulated tram (sections and joints) up to
 **15,000** (test/models.test.ts, test/worldTrams.test.ts; [world-trams.md](world-trams.md#triangle-budget)).
 A vehicle's GLB is the same format as a skyscraper's: non-indexed triangle
