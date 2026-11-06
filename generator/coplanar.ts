@@ -85,6 +85,12 @@ export function findCoplanarOverlaps(glb: Uint8Array, minArea = 1e-3, opts: { in
  * triangles of one `mat` never fight) and what the report calls it (`name`). The
  * station set's check runs it on the game's own geometry (test/stationSet.test.ts).
  */
+/** Whether every corner of g lies within the bucket's resolution (1 mm) of f's plane. */
+function onPlane(f: Face, g: Face): boolean {
+  const d = f.n[0] * f.p[0][0] + f.n[1] * f.p[0][1] + f.n[2] * f.p[0][2];
+  return g.p.every((q) => Math.abs(f.n[0] * q[0] + f.n[1] * q[1] + f.n[2] * q[2] - d) < 1e-3);
+}
+
 export function findCoplanarTriangles(tris: ReadonlyArray<{ p: [V3, V3, V3]; mat: string; name: string }>, minArea = 1e-3): CoplanarOverlap[] {
   const faces: Face[] = tris.map((t) => {
     const n = cross(sub(t.p[1], t.p[0]), sub(t.p[2], t.p[0]));
@@ -133,6 +139,9 @@ export function findCoplanarTriangles(tris: ReadonlyArray<{ p: [V3, V3, V3]; mat
       for (let j = i + 1; j < flat.length && flat[j].minU <= a.maxU; j++) {
         const b = flat[j];
         if (a.f.mat === b.f.mat || b.minV > a.maxV || b.maxV < a.minV) continue;
+        // the bucket rounds the normal, and far from the origin that rounding moves the
+        // offset a centimetre: the two must really share a plane, each one's corners on the other's
+        if (!onPlane(a.f, b.f) || !onPlane(b.f, a.f)) continue;
         const area = Math.abs(area2(clipPolygon(a.poly, b.poly)));
         if (area < minArea) continue;
         const d = n[0] * a.f.p[0][0] + n[1] * a.f.p[0][1] + n[2] * a.f.p[0][2];

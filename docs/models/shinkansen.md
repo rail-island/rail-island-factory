@@ -65,7 +65,7 @@ livery and `velaro()`, the Siemens Velaro body the ICE 3, the CRH3C and the AVE 
 ## Deviations
 
 - The bodies' widths (above); the noses are drawn from tables, not measured drawings, and
-  their cab windscreens are panes on the crown; the E5's and E6's pointed lower noses and the
+  their cab windscreens are panes laid on the crown's own facets ([vehicles.md](vehicles.md), "Closed ends"), and the nose below the body's shoulder takes the side's colour under the shoulder; the E5's and E6's pointed lower noses and the
   N700S's wing edges are approximations.
 - The 700's two liveries share the 700's body: the 923 Doctor Yellow's own detail (its
   measurement dome, the observation windows) is not drawn.

@@ -82,13 +82,16 @@ export interface SliceDoorway {
 /**
  * Lofts the slices: quads wound outward, each painted by `mat` from the middle
  * of its station span and its edge (k as in halfSlice); and the end caps,
- * painted in `bands` (bottom to crown) of their slice, unless left out. Over a
+ * painted in `bands` (bottom to crown) of their slice. Both ends are always
+ * closed: a nose's tip too, however narrow (a blunt tip left open is a hole
+ * through the front). Over a
  * doorway (its ends are stations too) a side's quads leave out what lies
  * between its sill and head.
  */
-export function drawShell(m: MeshBuilder, b: SliceBody, X: (d: number) => number, mat: (d: number, k: number) => string, bands: (d: number) => Array<[number, number, string]>, caps: { front: boolean; rear: boolean }, doorways: readonly SliceDoorway[] = []): void {
+export function drawShell(m: MeshBuilder, b: SliceBody, X: (d: number) => number, mat: (d: number, k: number) => string, bands: (d: number) => Array<[number, number, string]>, doorways: readonly SliceDoorway[] = []): void {
   const ds = doorways.length ? [...new Set([...b.stations, ...doorways.flatMap((o) => [o.d0, o.d1])])].sort((p, q) => p - q) : b.stations;
-  const halves = ds.map((d) => halfSlice(b, d));
+  // a doorway's ends cut the shell without reshaping it: between two stations they lie on the straight line the shell draws there
+  const halves = ds.map((d) => (b.stations.includes(d) ? halfSlice(b, d) : between(b, d)));
   for (const s of [1, -1])
     for (let i = 0; i + 1 < ds.length; i++) {
       const [ha, hb] = [halves[i]!, halves[i + 1]!];
@@ -107,8 +110,8 @@ export function drawShell(m: MeshBuilder, b: SliceBody, X: (d: number) => number
       }
     }
   m.scope("end caps", () => {
-    if (caps.front) capSlice(m, halves[0]!, X(ds[0]!), Math.sign(X(ds[0]!) - X(ds[ds.length - 1]!)), bands(ds[0]!));
-    if (caps.rear) capSlice(m, halves[ds.length - 1]!, X(ds[ds.length - 1]!), Math.sign(X(ds[ds.length - 1]!) - X(ds[0]!)), bands(ds[ds.length - 1]!));
+    capSlice(m, halves[0]!, X(ds[0]!), Math.sign(X(ds[0]!) - X(ds[ds.length - 1]!)), bands(ds[0]!));
+    capSlice(m, halves[ds.length - 1]!, X(ds[ds.length - 1]!), Math.sign(X(ds[ds.length - 1]!) - X(ds[0]!)), bands(ds[ds.length - 1]!));
   });
 }
 
@@ -196,30 +199,89 @@ export function crownPoint(b: SliceBody, d: number, z: number): Pt {
   return z > h[k0]![0] ? h[k0]! : [0, b.C(d)];
 }
 
+/** The shell's slice at d between two stations: the straight line between theirs, point by point (on a station, its own). */
+function between(b: SliceBody, d: number): Pt[] {
+  const st = b.stations;
+  let i = 0;
+  while (i + 2 < st.length && st[i + 1]! < d) i++;
+  const [a, c] = [st[i]!, st[i + 1] ?? st[i]!];
+  const t = c - a < 1e-9 ? 0 : Math.min(1, Math.max(0, (d - a) / (c - a)));
+  const [ha, hc] = [halfSlice(b, a), halfSlice(b, c)];
+  return ha.map((p, k): Pt => [p[0] + (hc[k]![0] - p[0]) * t, p[1] + (hc[k]![1] - p[1]) * t]);
+}
+
 /**
  * A pane laid on the body's upper surface over d0..d1 and half widths z0..z1
- * on side s -- a windscreen, a cab's side window: a grid of facets following
- * the lofted surface, `proud` off it.
+ * on side s -- a windscreen, a cab's side window: `proud` off the lofted shell
+ * and following it facet for facet. Its rows stand on the shell's own stations
+ * (d0 and d1 between two of them on the straight line the shell draws there),
+ * its columns on the slices' own points over the shoulder and the arc, each
+ * row cut to z0..z1, and every cell is split along the shell's own diagonal, so
+ * no chord of the pane dips into the body however coarse or curved the nose.
+ * Over a slice narrower than z1 the pane ends at the shoulder. `nd` and `nz`
+ * are kept for the callers; the shell sets the pane's resolution.
  */
-export function crownPane(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, mat: string, [d0, d1]: [number, number], [z0, z1]: [number, number], proud: number, nd = 6, nz = 4): void {
-  const P = (i: number, j: number): Vec3 => {
-    const d = d0 + ((d1 - d0) * i) / nd;
-    const [z, y] = crownPoint(b, d, z0 + ((z1 - z0) * j) / nz);
-    return [X(d), y, s * z];
+export function crownPane(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, mat: string, [d0, d1]: [number, number], [z0, z1]: [number, number], proud: number, _nd = 6, _nz = 4): void {
+  if (d1 - d0 < 1e-6 || z1 - z0 < 1e-6) return;
+  const st = b.stations;
+  const ds = [d0, ...st.filter((d) => d > d0 + 1e-6 && d < d1 - 1e-6), d1];
+  const rows = ds.map((d) => between(b, d));
+  const k0 = 4 + b.edges(d0).length;
+  const n = rows[0]!.length;
+  // the slice's point at parameter u (k0 the shoulder, n - 1 the crown) and the u where its half width is z
+  const at = (h: Pt[], u: number): Pt => {
+    const k = Math.min(n - 2, Math.floor(u));
+    const t = u - k;
+    return [h[k]![0] + (h[k + 1]![0] - h[k]![0]) * t, h[k]![1] + (h[k + 1]![1] - h[k]![1]) * t];
   };
-  const grid = Array.from({ length: nd + 1 }, (_, i) => Array.from({ length: nz + 1 }, (_, j) => P(i, j)));
-  const normalAt = (i: number, j: number): Vec3 => {
-    const a = grid[Math.min(nd, i + 1)]![j]!, c = grid[Math.max(0, i - 1)]![j]!;
-    const e = grid[i]![Math.min(nz, j + 1)]!, f = grid[i]![Math.max(0, j - 1)]!;
-    let n = norm(cross(sub(a, c), sub(e, f)));
-    if (n[1] < 0) n = mul(n, -1);
-    return n;
+  const uOf = (h: Pt[], z: number): number => {
+    if (z >= h[k0]![0]) return k0;
+    for (let k = k0; k + 1 < n; k++) {
+      const [za, zb] = [h[k]![0], h[k + 1]![0]];
+      if (z <= za + 1e-12 && z >= zb - 1e-12) return za - zb < 1e-12 ? k : k + (za - z) / (za - zb);
+    }
+    return n - 1;
   };
-  const out = grid.map((row, i) => row.map((q, j) => add(q, mul(normalAt(i, j), proud))));
-  for (let i = 0; i < nd; i++)
-    for (let j = 0; j < nz; j++) {
-      const [a, q, c, e] = [out[i]![j]!, out[i + 1]![j]!, out[i + 1]![j + 1]!, out[i]![j + 1]!];
-      m.facets(mat, [a, q, c, a, c, e], normalAt(i, j));
+  const lo = rows.map((h) => uOf(h, z1)), hi = rows.map((h) => uOf(h, z0));
+  // the columns: every slice point between the pane's widest reach, each row clamped to its own cut
+  const cols = [...new Set([Math.min(...lo), ...Array.from({ length: n - k0 }, (_, i) => k0 + i), Math.max(...hi)])]
+    .filter((u) => u >= Math.min(...lo) - 1e-9 && u <= Math.max(...hi) + 1e-9).sort((p, q) => p - q);
+  const P = (r: number, u: number): Vec3 => {
+    const [z, y] = at(rows[r]!, Math.min(hi[r]!, Math.max(lo[r]!, u)));
+    return [X(ds[r]!), y, s * z];
+  };
+  const raw = (r: number, u: number): Vec3 => {
+    const [z, y] = at(rows[r]!, u);
+    return [X(ds[r]!), y, s * z];
+  };
+  // outward: away from the body's axis line at the slice's mid height
+  const out = (v: Vec3, p: Vec3, r: number): Vec3 => {
+    const axis: Vec3 = [p[0], (rows[r]![0]![1] + rows[r]![n - 1]![1]) / 2, 0];
+    return dot(v, sub(p, axis)) < 0 ? mul(v, -1) : v;
+  };
+  const normalAt = (r: number, u: number): Vec3 => {
+    const e = 0.02;
+    const tu = sub(raw(r, Math.min(n - 1, u + e)), raw(r, Math.max(k0, u - e)));
+    const td = sub(raw(Math.min(rows.length - 1, r + 1), u), raw(Math.max(0, r - 1), u));
+    let v = cross(td, tu);
+    if (Math.hypot(...v) < 1e-12) v = [0, 1, 0];
+    return out(norm(v), raw(r, u), r);
+  };
+  const Q = (r: number, u: number): Vec3 => {
+    const cu = Math.min(hi[r]!, Math.max(lo[r]!, u));
+    return add(P(r, u), mul(normalAt(r, cu), proud));
+  };
+  for (let r = 0; r + 1 < rows.length; r++)
+    for (let j = 0; j + 1 < cols.length; j++) {
+      const [ua, ub] = [cols[j]!, cols[j + 1]!];
+      // the shell's quad (r, ua) (r, ub) (r + 1, ub) (r + 1, ua), split along its own diagonal
+      const a = Q(r, ua), q = Q(r, ub), c = Q(r + 1, ub), e = Q(r + 1, ua);
+      for (const tri of [[a, q, c], [a, c, e]] as Vec3[][]) {
+        const fn = cross(sub(tri[1]!, tri[0]!), sub(tri[2]!, tri[0]!));
+        if (Math.hypot(...fn) < 1e-10) continue;
+        const centre = mul(add(add(tri[0]!, tri[1]!), tri[2]!), 1 / 3);
+        m.facets(mat, tri, out(norm(fn), centre, r));
+      }
     }
 }
 

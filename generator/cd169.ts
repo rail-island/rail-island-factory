@@ -168,7 +168,7 @@ const PANTO_X = 4.05;
 function roofEquipment(m: MeshBuilder): void {
   m.scope("roof cover", () => {
     const X = 2.04;
-    const ring = (w: number): Ring => [[X, -w], [X, w], [-X, w], [-X, -w]];
+    const ring = (w: number): Ring => [[X, w], [X, -w], [-X, -w], [-X, w]];
     m.loft("roof", ring(1.15), 3.89, ring(0.8), 4.3);
     for (const s of [-1, 1]) m.scope(s > 0 ? "right vent" : "left vent", () => block(m, "grille", -1.7, 1.7, 3.95, 4.2, ...side(s, 0.98, 1.06)));
   });

@@ -236,7 +236,7 @@ const PANTO_X = 4.75;
 function roofEquipment(m: MeshBuilder, l: Cd130Livery): void {
   m.scope("roof hump", () => {
     // sloped louvred sides up to a flat top at 4.4 m (XML roof clip, photographs)
-    const ring = (w: number): Ring => [[HUMP, -w], [HUMP, w], [-HUMP, w], [-HUMP, -w]];
+    const ring = (w: number): Ring => [[HUMP, w], [HUMP, -w], [-HUMP, -w], [-HUMP, w]];
     m.loft("roof", ring(1.25), 3.85, ring(0.85), 4.4);
     for (const s of [-1, 1])
       m.scope(s > 0 ? "right louvres" : "left louvres", () => {
