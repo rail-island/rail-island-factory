@@ -104,13 +104,17 @@ interior benches and skid bars are left out (the glass is opaque).
 
 A detachable chair of the kind in the user's photo (`assets/chairlift/`):
 orange tinted weather bubbles over six-seat chairs, a curved hanger, a grip
-running on small rollers. The rope runs along **x** (yaw 0, like the gondola);
-the riders face **+z**. Parameters (defaults first), 36 variants:
+running on small rollers. The rope runs along **x** (yaw 0, like the gondola)
+through the grip; the seats line up across it (along **z**) and the riders face
+**-x**, the travel, as the game carries a cabin with its +x along -travel. The
+chair and its hanger are drawn with the riders facing +z (the `CHAIR` datums)
+and turned a quarter by `CHAIR_TURN`; the grip is drawn in the model's frame.
+Parameters (defaults first), 36 variants:
 
 | parameter | values | what changes |
 |---|---|---|
 | `seats` | `6`, `4`, `8` | the chair's width: 0.53 m a place, 2.12 / 3.18 / 4.24 m of seats; the photo's six-seater is the default |
-| `cover` | `bubble`, `none` | the closed weather bubble, or an open chair (the frame, safety bar and footrest stay) |
+| `cover` | `none`, `bubble` | an open chair (the default), or the closed weather bubble of the photo; the frame, safety bar and footrest stay either way |
 | `color` | `orange`, `blue`, `red`, `yellow`, `green`, `grey` | finish only: the bubble and, a shade darker, the cushions |
 
 - **Seat** - a dark seat pan between a front and a rear cross tube, a cushion
@@ -120,10 +124,10 @@ the riders face **+z**. Parameters (defaults first), 36 variants:
   bubble's pivot hub to the seat and forward into an armrest loop; the steel
   top beam joins the two over the backrest.
 - **Safety bar and footrest** - the bar lies along the bubble's lower edge
-  (y 0.90, z 0.62) on arms from the pivot hubs; links drop from it to the
+  (y 0.90, 0.62 m ahead of the seats) on arms from the pivot hubs; links drop from it to the
   footrest bar (underside at y 0) with a footplate per place.
 - **Bubble** - a 2.5 cm shell on an arc of radius 0.95 m about the pivot axis
-  (y 1.25, z -0.30), from 100 degrees (just behind the top) to -20 degrees (the
+  (y 1.25, 0.30 m behind the seat front datum), from 100 degrees (just behind the top) to -20 degrees (the
   riders' laps), straight across the seats and closing to the hubs in
   superelliptic domes 0.42 m long. Opaque tinted colour, as the factory has no
   transparent materials; it is drawn closed, as in the photo.

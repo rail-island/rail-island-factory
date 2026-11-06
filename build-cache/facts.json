@@ -3986,7 +3986,7 @@
    "extents": {}
   },
   "proc-preview-cablecar-line": {
-   "key": "4422a17ef32ccbeb24d31537b587f674d74e910ef8e1712afda9b96643519ddc",
+   "key": "bcc37778b927c8b9ad9ba2f9da561926d186ebe461036368c8a931fea44ff2ec",
    "triangles": 19250,
    "stats": {
     "triangles": 19250,
@@ -13085,7 +13085,7 @@
    "extents": {}
   },
   "proc-vehicle-cablecar-cabin": {
-   "key": "38bf57bb5171bb367367e64ef0b82719207cc65ad359e9f6394a03e6876dfa81",
+   "key": "ddcba657d00831d189365f89897fc18fe6e303215bde1297783e6fff69e52abe",
    "triangles": 3416,
    "stats": {
     "triangles": 3416,
@@ -15860,28 +15860,28 @@
    "extents": {}
   },
   "proc-vehicle-chairlift-chair": {
-   "key": "25b84d48177abc1979fee4b7c00b637a8d297d02b7156450cbef10778a6e1d1c",
-   "triangles": 2182,
+   "key": "620ab4cd8abe18fbbd0820926715e1ee3cf22db21022c5421ddbb59b1b97c0d0",
+   "triangles": 1462,
    "stats": {
-    "triangles": 2182,
-    "vertices": 6546,
-    "primitives": 7,
-    "materials": 7,
+    "triangles": 1462,
+    "vertices": 4386,
+    "primitives": 6,
+    "materials": 6,
     "min": [
-     -1.7100000381469727,
+     -0.7300000190734863,
      0,
-     -0.5
+     -1.7100000381469727
     ],
     "max": [
-     1.7100000381469727,
+     0.5,
      3.799999952316284,
-     0.7300000190734863
+     1.7100000381469727
     ]
    },
    "rig": null,
    "side": null,
    "seat": [
-    -0.06,
+    0.02,
     3.8,
     0
    ],
@@ -21806,7 +21806,7 @@
    "extents": {}
   },
   "proc-vehicle-doppelmayr-omega": {
-   "key": "74cbd8e806a31d57e728bb4fea596e3bdb236af9d58394757dcd238775965359",
+   "key": "b44ab29b11c591762719b5f645f06080170f48de7452f10f9d25e8839b76bed9",
    "triangles": 1016,
    "stats": {
     "triangles": 1016,
@@ -26972,7 +26972,7 @@
    "extents": {}
   },
   "proc-vehicle-gondola-cabin": {
-   "key": "61c551e40ec30e6f35e60525f9cc0b004abed3d9ce213d2121cecf4012ea2dbc",
+   "key": "8c9e3a7f5d9f5aa6001d4f2e0d50f0c723d9ac54078d1be20ed77594759792fd",
    "triangles": 3110,
    "stats": {
     "triangles": 3110,
@@ -37381,7 +37381,7 @@
    "extents": {}
   },
   "proc-vehicle-medellin-metrocable": {
-   "key": "6ecd084e37a259db082a5a2e729cae12077a058085032ad21252ce3c674ae94f",
+   "key": "4a3005a5ebd94f009dfcbab702d4e4fc9e48e1d4067ae3b84efb23b135bcf48c",
    "triangles": 1104,
    "stats": {
     "triangles": 1104,
@@ -38951,7 +38951,7 @@
    "extents": {}
   },
   "proc-vehicle-ngong-ping-crystal": {
-   "key": "c7077541a0b5f46f1ec17fb4def34cab9afe401b04136c50e7f4f8b932b5ac45",
+   "key": "cdd3828c11b1e67496bd4138ab5005079edc535f1fb5afdb461c3ee88453278f",
    "triangles": 1548,
    "stats": {
     "triangles": 1548,
@@ -41373,7 +41373,7 @@
    "extents": {}
   },
   "proc-vehicle-peak-2-peak": {
-   "key": "1ae2bd4b8baf507e280af24a35f47ea903c29d047a903260e623dbcf6a6f5e9d",
+   "key": "336b21bdf20423d8fce8d92d177917dc4a8715e4cb063da569769ea0c056f977",
    "triangles": 2224,
    "stats": {
     "triangles": 2224,
@@ -42165,7 +42165,7 @@
    "extents": {}
   },
   "proc-vehicle-poma-funitel": {
-   "key": "7f05bb4420a7493f65f3ed44fc721dc4450ef90df919ff27d02c8674d9a6e392",
+   "key": "221d49bee1fd7488e7b11e0d7e27e7381b43f589527647d2787a3a5a90be9602",
    "triangles": 2112,
    "stats": {
     "triangles": 2112,
@@ -44416,7 +44416,7 @@
    }
   },
   "proc-vehicle-roosevelt-island-tram": {
-   "key": "e5cf6e703886267be553454a21c351ca67c0ac33a55285a3baa4a22478e963d0",
+   "key": "f4b111e61562755235cd2e4197104a795a1c8aa36de353bfbd9af7832a908d40",
    "triangles": 3620,
    "stats": {
     "triangles": 3620,
@@ -55790,7 +55790,7 @@
    "extents": {}
   },
   "proc-vehicle-stanserhorn-cabrio": {
-   "key": "4450c57ac1527684f915e48e32dd9d8816afe4516e215a9f9de221d1d99588b6",
+   "key": "fc9f1932e35e5bf2c5fbb91ff118fe278004694bd89508387dd50ee2ed55a249",
    "triangles": 2924,
    "stats": {
     "triangles": 2924,
@@ -56293,7 +56293,7 @@
    "extents": {}
   },
   "proc-vehicle-sugarloaf-bondinho": {
-   "key": "180e4ba16279d7cd91ae001830a6ef7aee13391dc29a5fe5056c2c62a8e561f2",
+   "key": "63a35f2039bbd81215686a4779d4c081b8b1453a12dc4aef9bdf1a96ab817482",
    "triangles": 3500,
    "stats": {
     "triangles": 3500,
@@ -58062,7 +58062,7 @@
    "extents": {}
   },
   "proc-vehicle-titlis-rotair": {
-   "key": "046c1b8327d96e5f31da4eb9a8d81f5fb43213da7b63f944c64024b8f748392c",
+   "key": "fe659e5f2e318faccfdb1731bb6265319495657985ce4ce645537c04203ef534",
    "triangles": 3528,
    "stats": {
     "triangles": 3528,
@@ -60216,7 +60216,7 @@
    "extents": {}
   },
   "proc-vehicle-vanoise-express": {
-   "key": "68543ad29956b116735d5fe79fcc61f97ce49192a08bf27118ed91c8b95660a7",
+   "key": "32811694e4a2c3f9e7b10e35a9d11dcec3e52f78420d944b2c9e1a2345f77973",
    "triangles": 4024,
    "stats": {
     "triangles": 4024,
