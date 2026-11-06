@@ -6,9 +6,10 @@
 // cars are drawn here on the two-axle railcar kit the CD 810 uses (dmuKit.ts,
 // cabNose.ts): the straight bus sides with their window row and the double
 // door behind the cab, the flat yellow cab front with the black surround over
-// the two windscreens and the destination blind, the lamp clusters low on the
+// the three windscreens and the destination blind, the lamp clusters low on the
 // face, buffers and a coupling on the buffer beam, single axles 9.0 m apart in
-// their axle guards under the underframe's engine, cooler and tanks, the roof
+// horn guides on coil springs with dampers and brake blocks, the underframe's
+// engine, cooler and tanks between them, the roof
 // pod and the exhaust at the inner end. Proportions and paint from the
 // photographs in assets/br-class-142/ (SOURCES.md). See docs/models/uk-trains.md.
 
@@ -17,6 +18,7 @@ import type { Pt, Volume } from "./csdCoachParts.ts";
 import { COACH_PALETTE } from "./csdCoachParts.ts";
 import { INTERIOR_PALETTE } from "./interior.ts";
 import { block } from "./vehicleParts.ts";
+import { coil } from "./cd163.ts";
 import { strokeText } from "./strokeFont.ts";
 import { CabNose, inRoundRect, type NoseLayer, type NoseQuery } from "./cabNose.ts";
 import { Car, DMU_PALETTE, sideItems, sideNumber, step, tankX, underBoxes, type CarFrame, type PxBox, type SideItem } from "./dmuKit.ts";
@@ -24,7 +26,7 @@ import { articulate } from "./tramKit.ts";
 import { LOD_GLASS, type LodSections } from "./lodKit.ts";
 import { axleParts, dmuBody, fitUnit, noseEnd, paintOver, roofPart, shiftBody, turnBody, underPart, type UnitBody } from "./lodUnits.ts";
 
-export type C142Livery = "provincial" | "northern" | "walesTeal";
+export type C142Livery = "provincial" | "northern" | "walesTeal" | "provincialBlue" | "metro" | "walesWrap";
 export type C142Unit = "endCar" | "train";
 
 /** One car over its coupling planes (m): the buffers at the cab end, the bar coupling at the inner end. */
@@ -49,6 +51,8 @@ const HW = 1.37;
 const BOTTOM = 0.95;
 const EAVE = 3.15;
 const CROWN = 3.7;
+/** The doorway's front (inner-end) edge, source x. */
+const DOOR_FRONT = 11.0;
 /** Where the cab nose meets the body, back from the face. */
 const D_JOIN = 0.55;
 
@@ -62,14 +66,55 @@ interface Paint {
   roof: string;
   /** The door leaves' paint. */
   door: string;
-  /** A light panel over the doorway end of the side (Arriva's): [x0, x1, y0] steps toward the cab, up to the eave. */
-  panel?: { mat: string; steps: ReadonlyArray<readonly [number, number, number]> };
+  /**
+   * Paint laid over the bands on the flat of both sides (1.08 to 3.12 m): convex polygons in
+   * source x and height, each a scope of its name - a panel, a sweep, a livery's triangles.
+   */
+  shapes?: ReadonlyArray<{ name: string; mat: string; pts: readonly Pt[]; layer?: number }>;
+  /** The cab sides' paint from this height to the eave, over the bands (a panel reaching the cab). */
+  cabSide?: readonly [number, string];
   /** The side number's ink and the running number. */
   ink: string;
   number: string;
 }
 
 const c = (color: string, roughness = 0.5): MaterialSpec => ({ color, roughness });
+
+/** The flat of the sides, where `shapes` lie. */
+const FLAT: readonly [number, number] = [1.1, 3.1];
+/** The doorway end of the side ahead of the door, to the cab nose. */
+const AHEAD: readonly [number, number] = [12.42, LB - D_JOIN + 0.05];
+
+/**
+ * Arriva's white panel from the door to the cab: its foot sweeping down toward the cab as a
+ * parabola (convex, so one polygon), from `hi` at the door to `lo` where the cab begins.
+ */
+function sweepPanel(lo: number, hi: number, n = 10): Pt[] {
+  const [x0, x1] = AHEAD;
+  const foot = Array.from({ length: n + 1 }, (_, i): Pt => {
+    const x = x1 - ((x1 - x0) * i) / n;
+    const t = (x1 - x) / (x1 - x0);
+    return [x, lo + (hi - lo) * t * t];
+  });
+  return [[x0, FLAT[1]], [x1, FLAT[1]], ...foot];
+}
+
+/** West Yorkshire Metro's triangles: upright ones and inverted ones between them along the saloon. */
+function metroTriangles(): Array<{ name: string; mat: string; pts: Pt[] }> {
+  const [y0, y1] = [FLAT[0], 2.95];
+  const w = 2.0;
+  const out: Array<{ name: string; mat: string; pts: Pt[] }> = [];
+  for (let k = 0; k < 5; k++) {
+    const a = 0.4 + k * w;
+    out.push({ name: `triangle up ${k + 1}`, mat: "lime", pts: [[a, y0], [a + w, y0], [a + w / 2, y1]] });
+    if (k < 4) out.push({ name: `triangle down ${k + 1}`, mat: "leaf", pts: [[a + w / 2, y1], [a + w / 2 + w, y1], [a + w, y0]] });
+  }
+  return out;
+}
+
+const rect = (x0: number, x1: number, y0: number, y1: number): Pt[] => [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
+
+const WALES_PALETTE = { teal: c("#0f8c9c"), white: c("#eef0ee"), lineYellow: c("#f0c020"), doorPale: c("#c4d9e0"), roofDark: c("#5d6265", 0.6) };
 
 const PAINTS: Record<C142Livery, Paint> = {
   // the series kit's first scheme: chocolate below, cream at the windows
@@ -89,10 +134,40 @@ const PAINTS: Record<C142Livery, Paint> = {
   // line under the windows, the white panel from the door to the cab with its
   // sweep down toward the cab, pale door leaves, the dark roof
   walesTeal: {
-    palette: { teal: c("#0f8c9c"), white: c("#eef0ee"), lineYellow: c("#f0c020"), doorPale: c("#c4d9e0"), roofDark: c("#5d6265", 0.6) },
+    palette: WALES_PALETTE,
     bands: [[BOTTOM, 1.7, "teal"], [1.7, 1.74, "lineYellow"], [1.74, EAVE, "teal"], [EAVE, 3.8, "roofDark"]],
     roof: "roofDark", door: "doorPale", ink: "letteringDark", number: "142 080",
-    panel: { mat: "white", steps: [[12.42, 12.95, 1.62], [12.95, 13.5, 1.48], [13.5, LB - D_JOIN - 0.001, 1.36]] },
+    shapes: [{ name: "panel", mat: "white", pts: sweepPanel(1.36, 1.7) }], cabSide: [1.36, "white"],
+  },
+  // BR Provincial's blue, read from photo-castleford-railway-station-geograph-org-uk-332898.jpg
+  // (142 088): light blue at the windows, the white line under them, dark blue below, a light
+  // blue line at the foot, the pale roof
+  provincialBlue: {
+    palette: { darkBlue: c("#1f3f8f"), lightBlue: c("#8fb0d8"), white: c("#eef0ee"), doorGrey: c("#9aa6b4"), roofPale: c("#c9cdd0", 0.6) },
+    bands: [[BOTTOM, 1.1, "lightBlue"], [1.1, 1.72, "darkBlue"], [1.72, 1.8, "white"], [1.8, EAVE, "lightBlue"], [EAVE, 3.8, "roofPale"]],
+    roof: "roofPale", door: "doorGrey", ink: "lettering", number: "142 088",
+  },
+  // West Yorkshire Metro (Arriva Trains Northern), read from photo-wakefield-kirkgate-2.jpg:
+  // teal with lime and leaf-green triangles along the saloon, the dark roof
+  metro: {
+    palette: { teal: c("#1497a6"), lime: c("#a6cf3a"), leaf: c("#3faa4c"), roofDark: c("#5d6265", 0.6) },
+    bands: [[BOTTOM, EAVE, "teal"], [EAVE, 3.8, "roofDark"]],
+    roof: "roofDark", door: "teal", ink: "lettering", number: "142 066",
+    shapes: metroTriangles(),
+  },
+  // Transport for Wales' wrapped Arriva teal, read from
+  // photo-142075-to-cardiff-central-at-treforest-48476252042.jpg: the navy wrap along the
+  // saloon under the windows with its white line, the white panel ahead of the door
+  walesWrap: {
+    palette: { ...WALES_PALETTE, wrapNavy: c("#1d2440") },
+    bands: [[BOTTOM, EAVE, "teal"], [EAVE, 3.8, "roofDark"]],
+    roof: "roofDark", door: "doorPale", ink: "letteringDark", number: "142 075",
+    shapes: [
+      { name: "panel", mat: "white", pts: sweepPanel(1.36, 1.7) },
+      { name: "wrap", mat: "wrapNavy", pts: rect(0.3, DOOR_FRONT - 0.15, 1.18, 1.82) },
+      { name: "wrap line", mat: "white", pts: rect(0.5, DOOR_FRONT - 0.35, 1.3, 1.33), layer: 1 },
+    ],
+    cabSide: [1.36, "white"],
   },
 };
 
@@ -124,7 +199,7 @@ const X_TIP = LB - CENTRE;
 const SILL = 1.85;
 const HEAD = 2.75;
 const SASH = (4 - 2.52) * 10;
-const DOOR: [number, number] = [11.0, 12.35];
+const DOOR: [number, number] = [DOOR_FRONT, 12.35];
 const WINDOWS: SideItem[] = [
   { kind: "window", box: px(12.6, 13.85, SILL, HEAD), name: "cab-side window", fw: 0.06, mat: "rubber" },
   ...Array.from({ length: 7 }, (_, i): SideItem => {
@@ -149,31 +224,33 @@ const PROFILE: Pt[] = [[BOTTOM, 0.05], [1.2, 0], [1.95, 0], [2.95, 0.07], [3.15,
 const CORNER: Pt[] = [[BOTTOM, 0.18], [3.12, 0.18], [3.46, 0.12], [CROWN, 0.05]];
 const ROWS = [BOTTOM, 1.08, 1.2, 1.5, 1.95, 2.5, 2.95, 3.12, 3.3, 3.46, 3.62, CROWN];
 
-/** The black surround over the windscreens and the blind; the two panes either side of the pillar; the blind. */
+/**
+ * The black surround over the windscreens and the blind; the three panes (the driver's, the
+ * centre one and the second man's, photo-castleford-...jpg and photo-142075-...jpg); the blind.
+ */
 const MASK = { cy: 2.6, hw: 1.22, hh: 0.66, r: 0.12 };
-const PANE = { inner: 0.05, outer: 1.12, y0: 2.02, y1: 2.86, r: 0.06 };
+const PANE = { outer: 1.12, y0: 2.02, y1: 2.86, r: 0.06 };
+const PANES: ReadonlyArray<readonly [number, number]> = [[-PANE.outer, -0.44], [-0.36, 0.36], [0.44, PANE.outer]];
 const BLIND = { hw: 0.5, y0: 2.96, y1: 3.18 };
 const LAMP_Y = 1.42;
 
-const inPane = (q: NoseQuery, s: number, inset: number): boolean => {
-  const cx = (PANE.inner + PANE.outer) / 2;
-  return !q.side && inRoundRect(s * q.lat, q.y, cx, (PANE.y0 + PANE.y1) / 2, (PANE.outer - PANE.inner) / 2 - inset, (PANE.y1 - PANE.y0) / 2 - inset, PANE.r);
-};
+const inPane = (q: NoseQuery, [a, b]: readonly [number, number]): boolean =>
+  !q.side && inRoundRect(q.lat, q.y, (a + b) / 2, (PANE.y0 + PANE.y1) / 2, (b - a) / 2, (PANE.y1 - PANE.y0) / 2, PANE.r);
 
 function layers(p: Paint): NoseLayer[] {
   // the yellow end wraps round the corners; the cab sides take the body's bands
   const end = (q: NoseQuery) => Math.abs(q.u) <= 2;
   const out: NoseLayer[] = p.bands.map(([y0, y1, mat]): NoseLayer => ({ mat, name: `${mat} side`, inside: (q) => !end(q) && q.y >= y0 && q.y < y1 }));
-  if (p.panel) {
-    const y0 = p.panel.steps[p.panel.steps.length - 1]![2];
-    out.push({ mat: p.panel.mat, name: "cab side panel", inside: (q) => !end(q) && q.y >= y0 && q.y < EAVE });
+  if (p.cabSide) {
+    const [y0, mat] = p.cabSide;
+    out.push({ mat, name: "cab side panel", inside: (q) => !end(q) && q.y >= y0 && q.y < EAVE });
   }
   out.push(
     { mat: p.roof, name: "roof", inside: (q) => q.y >= 3.3 || (!end(q) && q.y >= EAVE) },
     { mat: "rubber", name: "surround", inside: (q) => Math.abs(q.u) <= 1 && inRoundRect(q.lat, q.y, 0, MASK.cy, MASK.hw, MASK.hh, MASK.r) },
     { mat: "destGlass", name: "blind", inside: (q) => Math.abs(q.u) <= 1 && Math.abs(q.lat) < BLIND.hw && q.y >= BLIND.y0 && q.y < BLIND.y1 },
   );
-  for (const [i, s] of [-1, 1].entries()) out.push({ mat: "glass", name: `pane ${i + 1}`, inside: (q) => inPane(q, s, 0) });
+  PANES.forEach((pane, i) => out.push({ mat: "glass", name: `pane ${i + 1}`, inside: (q) => inPane(q, pane) }));
   return out;
 }
 
@@ -209,8 +286,8 @@ function cabEnd(car: Car, p: Paint, number: string): void {
   });
   m.scope("wipers", () => {
     for (const s of [-1, 1]) {
-      const a: Pt = [s * 0.75, 2.08];
-      const b: Pt = [s * 0.4, 2.76];
+      const a: Pt = [s * 0.95, 2.08];
+      const b: Pt = [s * 0.6, 2.76];
       const t = 0.012;
       n.decal("black", [[a[0] - t, a[1]], [a[0] + t, a[1]], [b[0] + t, b[1]], [a[0] - t, a[1]], [b[0] + t, b[1]], [b[0] - t, b[1]]], 0.03);
     }
@@ -231,6 +308,36 @@ function cabEnd(car: Car, p: Paint, number: string): void {
 // ---------------------------------------------------------------------------
 // A car
 
+/**
+ * One axle at model x `x`, as photographed (photo-142075-...jpg): the wheelset, and on each side
+ * the axle box between its horn guides, the coil spring from it up to the solebar, a damper
+ * leaning in from the solebar, the brake blocks on the tread either side and their hangers.
+ */
+function axleGear(m: MeshBuilder, x: number, car: Car): void {
+  const r = WHEEL_R;
+  const ay = r * Math.cos(Math.PI / 24);
+  m.scope("wheelset", () => car.c.wheelset(x, r));
+  m.scope("suspension", () => {
+    for (const s of [-1, 1]) {
+      const z = (a: number, b: number) => (s > 0 ? [a, b] : [-b, -a]) as [number, number];
+      m.scope("axle box", () => block(m, "bogie", x - 0.15, x + 0.15, ay - 0.13, ay + 0.13, ...z(0.86, 1.08)));
+      m.scope("horn guides", () => { for (const d of [-0.2, 0.2]) block(m, "underframe", x + d - 0.03, x + d + 0.03, ay - 0.2, 0.82, ...z(0.9, 1.04)); });
+      m.scope("spring", () => coil(m, "steel", x, s * 0.98, ay + 0.13, 0.8, 0.11, 4, 10));
+      m.scope("damper", () => {
+        m.rod("black", [x + 0.32, ay + 0.02, s * 0.98], [x + 0.55, 0.81, s * 0.98], 0.04, 8);
+        m.rod("steel", [x + 0.32, ay + 0.02, s * 0.98], [x + 0.4, 0.3 + ay, s * 0.98], 0.025, 6);
+      });
+      m.scope("brakes", () => {
+        for (const d of [-1, 1]) {
+          const xb = x + d * (r + 0.05);
+          block(m, "underframe", xb - 0.04, xb + 0.04, ay - 0.14, ay + 0.14, ...z(0.68, 0.79));
+          m.rod("underframe", [xb, ay + 0.12, s * 0.735], [xb + d * 0.08, 0.82, s * 0.735], 0.022, 6);
+        }
+      });
+    }
+  });
+}
+
 /** Draws one car, cab at +X and centred between its coupling planes, into `m`; `inner` draws its gangway and coupling bar (a lone car). */
 function drawCar(m: MeshBuilder, livery: C142Livery, inner: boolean, place: (p: [number, number, number]) => [number, number, number] = (p) => p): void {
   const p = PAINTS[livery];
@@ -239,10 +346,9 @@ function drawCar(m: MeshBuilder, livery: C142Livery, inner: boolean, place: (p: 
   m.scope("body", () => {
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
-        if (p.panel) {
-          const panel = p.panel;
-          m.scope("panel", () => { for (const [x0, x1, y0] of panel.steps) car.c.sidePanel(body, panel.mat, s, car.side(px(x0, x1, y0, EAVE - 0.03)), 0.004, 0.003); });
-        }
+        // the livery's polygons on the flat of the side, each 2 mm prouder than the one before it overlaps
+        for (const sh of p.shapes ?? [])
+          m.scope(sh.name, () => m.slab(sh.mat, sh.pts.map(([x, y]): [number, number, number] => [car.X(x), y, s * (HW + 0.004 + 0.002 * (sh.layer ?? 0))]), [0, 0, -s * 0.003]));
         m.scope("windows", () => sideItems(car, body, s, WINDOWS));
         m.scope("door", () => car.openingDoor(body, s, DOOR_BOX, DOOR_GLASS, p.door, 0.03, { kind: "plug", leaves: 2 }, (j) => `light ${j}`, { fw: 0.04, frame: "rubber" }));
         m.scope("step", () => step(car, s, px(DOOR[0] + 0.05, DOOR[1] - 0.05, 0.7, 0.74), HW));
@@ -255,7 +361,7 @@ function drawCar(m: MeshBuilder, livery: C142Livery, inner: boolean, place: (p: 
     m.scope("coupling bar", () => block(m, "coupler", car.X(-INNER), car.X(0.05), 0.92, 1.08, -0.09, 0.09));
   });
   m.scope("running gear", () => {
-    for (const [i, d] of [-1, 1].entries()) m.scope(`axle ${i + 1}`, () => car.c.axle(car.sx(CENTRE + (d * C142_WHEELBASE) / 2), WHEEL_R, BOTTOM));
+    for (const [i, d] of [-1, 1].entries()) m.scope(`axle ${i + 1}`, () => axleGear(m, car.X(CENTRE + (d * C142_WHEELBASE) / 2), car));
   });
   m.scope("underframe", () => {
     m.scope("solebars", () => { for (const s of [-1, 1]) block(m, "underframe", car.X(0.1), car.X(LB - 0.3), 0.8, 0.97, ...(s > 0 ? [1.22, 1.32] : [-1.32, -1.22]) as [number, number]); });
@@ -267,6 +373,9 @@ function drawCar(m: MeshBuilder, livery: C142Livery, inner: boolean, place: (p: 
     ]);
     m.scope("fuel tank", () => tankX(car, 4.0, 5.1, 0.69, 0.7, 0.28));
     m.scope("air tank", () => tankX(car, 4.0, 5.1, 0.76, -0.75, 0.2));
+    m.scope("silencer", () => tankX(car, 7.85, 8.75, 0.7, 0.85, 0.17, "exhaust"));
+    m.scope("conduits", () => { for (const s of [-1, 1]) block(m, "grey", car.X(4.0), car.X(10.7), 0.86, 0.92, ...(s > 0 ? [1.12, 1.2] : [-1.2, -1.12]) as [number, number]); });
+    m.scope("brake cylinders", () => { for (const d of [-1, 1]) tankX(car, CENTRE + d * (C142_WHEELBASE / 2 - 1.3) - 0.22, CENTRE + d * (C142_WHEELBASE / 2 - 1.3) + 0.22, 0.78, 0.45, 0.11, "underframe"); });
   });
   m.scope("roof equipment", () => {
     m.scope("pod", () => block(m, p.roof, car.X(2.4), car.X(6.6), 3.55, 3.8, -0.62, 0.62));

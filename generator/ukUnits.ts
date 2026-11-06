@@ -101,7 +101,7 @@ export const C142: ShinkansenSeries = {
   windscreen: [0.02, 0.35, 0.07, 1.2], lamps: [0.03, 1.5],
   windows: [[1.8, 2.6]], windowW: 1.1, pitch: 1.35, door: [1.2, 2.85, 1.8, 2.5], doorW: 1.0,
   bogieCentres: 9.0, wheelR: 0.43, wheelbase: 0, traction: "diesel", cars: [2],
-  liveries: { provincial: lv("Provincial", "142 001", [1.75, "#7a4a2a"], [2.7, "#e6dcc0"], [9, "#7a4a2a"]), northern: lv("Northern", "142 096", [1.45, "#262262"], [9, "#d0d3d4"]), walesTeal: lv("Wales teal", "142 080", [9, "#0f8c9c"]) },
+  liveries: { provincial: lv("Provincial", "142 001", [1.75, "#7a4a2a"], [2.7, "#e6dcc0"], [9, "#7a4a2a"]), northern: lv("Northern", "142 096", [1.45, "#262262"], [9, "#d0d3d4"]), walesTeal: lv("Wales teal", "142 080", [9, "#0f8c9c"]), provincialBlue: lv("Provincial blue", "142 088", [1.72, "#1f3f8f"], [9, "#8fb0d8"]), metro: lv("Metro", "142 066", [9, "#1497a6"]), walesWrap: lv("Wales navy wrap", "142 075", [9, "#0f8c9c"]) },
   weight: { end: 25, middle: 25 }, power: 165, maxspeed: 120,
 };
 

@@ -17,7 +17,7 @@ The catalog had no British train before; the archived webapp Eurostar is now the
 | `proc-vehicle-br-class-390` | Class 390 Pendolino | series | `unit`, `cars` 4 - 8, `livery` (`virgin`, `avanti`) | tilting; 225 km/h |
 | `proc-vehicle-eurostar-373` | Eurostar e300 | series | `unit`, `cars` 4 - 8, `livery` (`eurostar`, `eurostar2011`) | 300 km/h |
 | `proc-vehicle-br-class-158` | Class 158 | series, diesel | `unit`, `livery` (`regional`, `northern`) | two cars of 22.57 m; 145 km/h |
-| `proc-vehicle-br-class-142` | Class 142 Pacer | its own two-axle cars (`brClass142.ts`) | `unit`, `livery` (`provincial`, `northern`, `walesTeal`) | two cars of 15.45 m; 120 km/h |
+| `proc-vehicle-br-class-142` | Class 142 Pacer | its own two-axle cars (`brClass142.ts`) | `unit`, `livery` (`provincial`, `northern`, `walesTeal`, `provincialBlue`, `metro`, `walesWrap`) | two cars of 15.45 m; 120 km/h |
 | `proc-vehicle-lu-1938-stock` | London 1938 Stock | series, metro | `unit`, `cars` 3 - 7 | tube profile, 2.88 m high; 72 km/h |
 | `proc-vehicle-br-class-55` | Class 55 Deltic | box locomotive, bonnets | `livery` (`twoToneGreen`, `brBlue`) | Co-Co, 21.18 m, 2,460 kW, 160 km/h |
 | `proc-vehicle-br-class-37` | Class 37 | box locomotive, bonnets | `livery` (`green`, `brBlue`, `railfreight`) | Co-Co, 18.75 m, 1,300 kW, 145 km/h |
@@ -55,21 +55,29 @@ its cars are drawn by `brClass142.ts` on the two-axle railcar kit the CD 810 use
   narrowed so the window frames stay within the W6a gauge's 2.82 m). One cab-side window, the
   double plug door behind it, seven saloon windows with their hoppers.
 - **Cab.** A flat face, upright to the windscreens' sill and leaning back over the blind into the
-  roof, its corners rounded: the yellow end wrapping round them, the black surround over the two
-  windscreens and the destination blind, the lamp clusters (head, marker, tail) low either side,
+  roof, its corners rounded: the yellow end wrapping round them, the black surround over the three
+  windscreens (the driver's, the centre one, the second man's) and the destination blind, the lamp clusters (head, marker, tail) low either side,
   the horn grille, the number, the wipers; the buffer beam with buffers and a screw coupling, the
   life guards and hoses.
-- **Running gear.** Two single axles 9.0 m apart in axle guards with leaf springs (no bogies: the
-  rig's two supports carry one axle each), the solebars, the engine, gearbox, cooler, batteries
-  and tanks between them; the roof pod, its vents and the exhaust at the inner end.
+- **Running gear.** Two single axles 9.0 m apart (no bogies: the rig's two supports carry one
+  axle each), each axle box between horn guides with a coil spring up to the solebar, a damper
+  leaning in from the solebar and brake blocks on hangers either side of each wheel; the solebars,
+  cable conduits, the engine, gearbox, silencer, cooler, batteries, fuel and air tanks and brake
+  cylinders between the axles; the roof pod, its vents and the exhaust at the inner end.
 - **Unit.** `train` couples two cars, the rear one turned, as two sections hinged at the coupling
   plane between them under a bellows; a lone car keeps its gangway and coupling bar.
-- **Liveries.** `provincial` (chocolate and cream, the default), `northern` (navy and silver) and
-  `walesTeal` (Arriva Trains Wales: teal, the yellow line, the white panel from the door to the cab
-  stepping down toward it, pale door leaves). Every scheme has the full yellow cab end.
+- **Liveries.** `provincial` (chocolate and cream, the default), `northern` (navy and silver),
+  `walesTeal` (Arriva Trains Wales: teal, the yellow line, the white panel from the door to the cab,
+  its foot sweeping down toward the cab, pale door leaves), `provincialBlue` (BR Provincial: light
+  blue at the windows, a white line, dark blue below), `metro` (West Yorkshire Metro: teal with lime
+  and leaf-green triangles along the saloon) and `walesWrap` (Transport for Wales: the teal with a
+  navy wrap under the saloon windows). A livery's panels, sweeps and triangles are convex polygons
+  laid on the flat of the sides (`Paint.shapes`). Every scheme has the full yellow cab end; the
+  three new ones have no OpenTTD preset yet.
 
 `test/brClass142.test.ts` checks the parameters, each livery's car (length over the buffers, the
-gauge, the budget, no coplanar faces), the two axles, the coupled unit's sections and supports and
+gauge, the budget, no coplanar faces), the three panes, the panel and each axle's spring, damper
+and brakes, the two axles, the coupled unit's sections and supports and
 the distant models' budgets.
 
 ## Tests

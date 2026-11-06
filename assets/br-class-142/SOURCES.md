@@ -27,5 +27,8 @@ Commons photograph of 142 080 instead.
 | body width | 2.80 m (drawn 2.74 m, within the W6a gauge) | published figure |
 | height | 3.86 m over the roof pod (drawn 3.84 m) | published figure |
 | axles | single axles 9.0 m apart, 0.84 m wheels | published figure; photographs |
-| windows, door, cab face | the cab-side window, the double door behind it, seven saloon windows; the black surround over two windscreens and the blind | `photo-142080-at-cardiff-central-29805614596.jpg`, `photo-142075-...jpg` |
-| running numbers | 142 080 (teal, photographed); 142 001 and 142 096 kept from the series design | photographs; earlier model |
+| windows, door, cab face | the cab-side window, the double door behind it, seven saloon windows; the black surround over the windscreens and the blind | `photo-142080-at-cardiff-central-29805614596.jpg`, `photo-142075-...jpg` |
+| windscreens | three panes in the black surround | `photo-castleford-...jpg`, `photo-142075-...jpg` |
+| suspension | axle box in horn guides, a coil spring to the solebar, a damper, brake blocks | `photo-142075-...jpg` |
+| liveries | `provincialBlue` from the Castleford photograph (142 088), `metro` from Wakefield Kirkgate, `walesTeal` from Cardiff (142 080), `walesWrap` from Treforest (142 075) | photographs |
+| running numbers | 142 080, 142 088 and 142 075 photographed; 142 066 (Metro) illustrative, the Wakefield number not legible; 142 001 and 142 096 kept from the series design | photographs; earlier model |

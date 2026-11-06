@@ -7,7 +7,7 @@ import type { ParamValues } from "../generator/design.ts";
 
 // the Class 142 Pacer's own two-axle cars (generator/brClass142.ts, docs/models/uk-trains.md)
 const design = UK_UNITS.find((d) => d.id === "proc-vehicle-br-class-142")!;
-const LIVERIES = ["provincial", "northern", "walesTeal"];
+const LIVERIES = ["provincial", "northern", "walesTeal", "provincialBlue", "metro", "walesWrap"];
 
 function bounds(params: ParamValues) {
   const m = design.build(params);
@@ -19,7 +19,7 @@ function bounds(params: ParamValues) {
 }
 
 describe("Class 142 Pacer", () => {
-  it("keeps the series kit's parameters and adds the Arriva Wales teal", () => {
+  it("keeps the series kit's parameters and adds the liveries of the photographs", () => {
     expect((design.params ?? []).map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([
       ["unit", "endCar", ["endCar", "train"]],
       ["livery", "provincial", LIVERIES],
@@ -37,6 +37,16 @@ describe("Class 142 Pacer", () => {
       expect(b.z[1] - b.z[0]).toBeLessThanOrEqual(2.82);
       expect(findCoplanarOverlaps(b.glb)).toEqual([]);
     });
+
+  it("draws three windscreen panes, the sweep of the white panel and each axle's spring and damper", () => {
+    const tree = design.build({ livery: "walesTeal" }).sourceTree(design.id, design.title).root;
+    const ids: string[] = [];
+    const walk = (n: any) => { ids.push(n.id); for (const k of n.children ?? []) walk(k); };
+    walk(tree);
+    expect(ids.filter((id) => /^cab-end\/skin\/pane-\d$/.test(id))).toHaveLength(3);
+    expect(ids.some((id) => /^body\/right-side\/panel$/.test(id))).toBe(true);
+    for (const a of [1, 2]) for (const part of ["spring", "damper", "brakes"]) expect(ids.some((id) => id.startsWith(`running-gear/axle-${a}/suspension/${part}`)), `${a} ${part}`).toBe(true);
+  });
 
   it("rides on two single axles 9.0 m apart, not on bogies", () => {
     const rig = design.build({}).rig!;
