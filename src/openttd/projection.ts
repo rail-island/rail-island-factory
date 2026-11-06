@@ -103,6 +103,21 @@ export function spriteAnchor(feature: OpenttdFeature, direction: number, length:
   }
 }
 
+/**
+ * Tile units a tram's sprite is moved by, per direction, to put it on its rails.
+ * OpenTTD drives a tram along a road vehicle's lane, not the tile's middle: its
+ * straight tram drive data are the road's (OpenTTD 13.4 table/roadveh_movement.h,
+ * `_road_tram_drive_data`), which on the default right-hand side run at y 5
+ * heading SW, y 9 heading NE, x 9 heading SE and x 5 heading NW, while the tram
+ * track - like a train's - lies at 8. A bus belongs on its lane; a tram's sprite
+ * takes the difference back. The N, E, S and W views (in curves) take the mean of
+ * their two neighbours. Every shift lands on whole normal-zoom pixels. A game set
+ * to drive on the left puts the lanes on the other side, which a sprite cannot know.
+ */
+export const TRAM_LANE_SHIFT: ReadonlyArray<readonly [number, number]> = [
+  [1.5, -0.5], [0, -1], [-0.5, -0.5], [-1, 0], [-0.5, 1.5], [0, 3], [1.5, 1.5], [3, 0],
+];
+
 /** One sprite to render: where the model goes and the image's frame. */
 export interface SpriteView {
   /** Model metres to tile units, a column-major 4x4 matrix (three's Matrix4.fromArray). */
@@ -127,9 +142,10 @@ function toScreen(x: number, y: number, z: number): [number, number] {
  * Every sprite of a vehicle: `[part][direction]`. `lengths` are the parts'
  * eighths, the head first (one entry for a ship or aircraft). Each part is the
  * slice of the model along its length that the part covers, drawn about the
- * part's own position.
+ * part's own position. A tram's views are moved from its lane onto its rails
+ * (TRAM_LANE_SHIFT).
  */
-export function spriteViews(feature: OpenttdFeature, box: ModelBox, lengths: readonly number[], draftFrac = 0): SpriteView[][] {
+export function spriteViews(feature: OpenttdFeature, box: ModelBox, lengths: readonly number[], draftFrac = 0, tram = false): SpriteView[][] {
   const total = lengths.reduce((a, b) => a + b, 0);
   const k = vehicleScale(feature, box, total, draftFrac);
   const single = feature === "ship" || feature === "aircraft";
@@ -209,7 +225,8 @@ export function spriteViews(feature: OpenttdFeature, box: ModelBox, lengths: rea
           ];
       // the offsets count from OpenTTD's anchor, not the vehicle's position
       const [ax, ay] = spriteAnchor(feature, dir, len);
-      const [anchorX, anchorY] = toScreen(ax, ay, 0);
+      const [lx, ly] = tram && feature === "road" ? TRAM_LANE_SHIFT[dir]! : [0, 0];
+      const [anchorX, anchorY] = toScreen(ax - lx, ay - ly, 0);
       views.push({ model, projection, clip, width, height, xOffs: left - anchorX, yOffs: top - anchorY });
     }
     out.push(views);
