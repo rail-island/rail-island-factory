@@ -8,7 +8,7 @@
 
 | id | title | parameters (default first) | over couplers | triangles |
 |---|---|---|---|---|
-| `proc-vehicle-budd-rdc` | Budd RDC | `variant`: `rdc1` (all coach), `rdc2` (a baggage section) | 25.91 m | 8,500 - 8,600 |
+| `proc-vehicle-budd-rdc` | Budd RDC | `variant`: `rdc1` (all coach), `rdc2` (a baggage section) | 25.91 m | 8,800 - 9,000 |
 | `proc-vehicle-nyc-r160` | NYC Subway R160 | `unit`: `cabCar`, `trailer` | 18.35 m | 6,900 - 7,300 |
 | `proc-vehicle-cta-5000` | Chicago 'L' 5000-series | fixed | 14.63 m | about 6,900 |
 
@@ -29,8 +29,12 @@ trucks a Jacobs bogie replaces.
 
 - **Budd RDC** - the stainless railcar with a cab at each rounded end: 14 windows a side on the
   RDC-1, ten behind a baggage section and its door on the RDC-2; fluting under the windows,
-  a red line along the skirt, end doors at both ends, two roof radiators, two exhausts (smoke
-  emitters), underfloor engines and horns.
+  a red line along the skirt, side doors at both ends, two roof radiators, two exhausts (smoke
+  emitters), underfloor engines and horns. Each cab end (`rdcEndFace`) carries the end door's
+  seams around the middle windscreen pane, down to the floor, with a grab handle beside it,
+  and over the door the headlight hood: a rounded darker-stainless oblong standing 16 cm out
+  of the end under the roof line, with twin headlights on its front (the drawing and the
+  Farina photograph in `assets/budd-rdc/`).
 - **Pioneer Zephyr** - its own module ([pioneer-zephyr.md](pioneer-zephyr.md)): the power
   car's nose is a hull of its own; the coach and the observation car are `CarDef`s drawn here.
 - **R160** - four doors a side, window pairs between them, fluting, the black front mask with

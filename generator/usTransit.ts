@@ -247,7 +247,7 @@ function rdcDef(t: RdcType): CarDef {
     windows: [{ y: [2.1, 2.85], spans: win, frame: "ssDark" }],
     doors: { spans: [[0.75, 1.65], [L - 1.65, L - 0.75]], y: [1.25, 3.05], glass: [2.15, 2.8] },
     fluting: { y0: 1.32, y1: 2.0, pitch: 0.09, mat: "ssDark" },
-    cab: { panes: [[-1.15, -0.45, 2.25, 2.95], [0.45, 1.15, 2.25, 2.95], [-0.3, 0.3, 2.25, 2.95]], lamps: [[0, 3.45, 0.12, "lampHead"], [-1.0, 1.55, 0.07, "lampRed"], [1.0, 1.55, 0.07, "lampRed"]] },
+    cab: { panes: [[-1.15, -0.45, 2.25, 2.95], [0.45, 1.15, 2.25, 2.95], [-0.3, 0.3, 2.25, 2.95]], lamps: [[-1.0, 1.55, 0.07, "lampRed"], [1.0, 1.55, 0.07, "lampRed"]] },
     cabEnds: [1, -1], diaphragm: null,
     trucks: [L / 2 - RDC_TRUCKS / 2, L / 2 + RDC_TRUCKS / 2], truck: truckSpec(ft(8, 6), ft(0, 16.5), 0.95),
     coupler: "knuckle", couplerY: 0.88, gap: [RDC_GAP, RDC_GAP],
@@ -262,8 +262,40 @@ function rdcDef(t: RdcType): CarDef {
         horn(m, -1, X(L - 1.2), -0.3, 4.05);
       });
       m.scope("underfloor", () => { for (const d of [L / 2 - 4.0, L / 2 + 4.0]) block(m, "under", X(d + 1.5), X(d - 1.5), 0.45, 0.96, -1.05, 1.05); });
+      for (const e of [1, -1]) m.scope(e > 0 ? "front end" : "rear end", () => rdcEndFace(m, e, Math.abs(X(e > 0 ? 0 : L))));
     },
   };
+}
+
+/** The RDC end door's outline (z half width, sill, head) around the middle windscreen pane, and the headlight hood over it. */
+const RDC_END_DOOR = { z: 0.4, y0: 1.3, y1: 3.12, seam: 0.025 };
+const RDC_HOOD = { z: 0.44, y0: 3.24, y1: 3.62, r: 0.14, depth: 0.16 };
+
+/** A rounded-top oblong in (z, y): half width w, from y0 to y1, top corners of radius r. */
+function hoodRing(w: number, y0: number, y1: number, r: number): Pt[] {
+  const ring: Pt[] = [[-w, y0], [w, y0]];
+  for (let i = 0; i <= 4; i++) { const a = (i / 4) * (Math.PI / 2); ring.push([w - r + r * Math.cos(a), y1 - r + r * Math.sin(a)]); }
+  for (let i = 0; i <= 4; i++) { const a = Math.PI / 2 + (i / 4) * (Math.PI / 2); ring.push([-w + r + r * Math.cos(a), y1 - r + r * Math.sin(a)]); }
+  return ring;
+}
+
+/** An RDC cab end at |x| = face, facing e: the end door's seams and grab handle, the headlight hood and its twin lamps. */
+function rdcEndFace(m: MeshBuilder, e: number, face: number): void {
+  const x = e * face, { z, y0, y1, seam } = RDC_END_DOOR;
+  m.scope("end door", () => {
+    const on = x + e * 0.004;
+    decalX(m, "rubber", on, e, -z, -z + seam, y0, y1);
+    decalX(m, "rubber", on, e, z - seam, z, y0, y1);
+    decalX(m, "rubber", on, e, -z + seam, z - seam, y1 - seam, y1);
+    // the grab handle beside the door, on the engineer's side
+    const hz = e * (z - 0.09);
+    block(m, "ssDark", ...((e > 0 ? [x - 0.01, x + 0.04] : [x - 0.04, x + 0.01]) as [number, number]), 1.75, 2.05, hz - 0.015, hz + 0.015);
+  });
+  m.scope("headlight hood", () => {
+    const h = RDC_HOOD, ring = hoodRing(h.z, h.y0, h.y1, h.r);
+    m.sweep("ssDark", "x", ring, x - e * 0.03, ring, x + e * h.depth);
+    faceLamps(m, e, face + h.depth, [[-0.16, (h.y0 + h.y1) / 2, 0.09, "lampHead"], [0.16, (h.y0 + h.y1) / 2, 0.09, "lampHead"]]);
+  });
 }
 
 export function buddRdc(params?: ParamValues): MeshBuilder {
