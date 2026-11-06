@@ -9,7 +9,8 @@
 All are at their real size (no `scale`), modelled on the photographs in `assets/<references>/`,
 whose `SOURCES.md` gives the published figures and marks the estimates. `WORLD_CABINS`
 lists them with `CABLE_CABIN_CATALOG` (category `Cable car`, group `cabin`). **The ids are
-stored in saved maps: never rename one.** None has an OpenTTD entry (OpenTTD has no cable
+stored in saved maps: never rename one.** All ten are confirmed into the catalog
+(`generator/catalogModels.json`, [../site/workshop.md](../site/workshop.md)), so the game imports them. None has an OpenTTD entry (OpenTTD has no cable
 cars).
 
 | id | title | size x * y * z (m) | hanger | rope y / ropeFrac | sill y / boardFrac | triangles | LOD |
