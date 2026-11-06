@@ -11,7 +11,7 @@ rule), how a design opts a material into one, the UVs the JS model then carries,
 
 ## The library
 
-`assets/textures/<name>_{albedo,normal,rough}.jpg`: 15 photo sets from Poly Haven (CC0), every
+`assets/textures/<name>_{albedo,normal,rough}.jpg`: 16 photo sets from Poly Haven (CC0), every
 map 512 x 512, listed with slug, licence and use in `assets/textures/SOURCES.md`. They are the
 only photos the game draws with - terrain, track, roads, structures and any factory design that
 names a surface. `MAX_TEXTURES` caps the library at 16 sets: there is no texture compression and
@@ -37,7 +37,7 @@ its average.
 | `flat` | the sRGB colour the surface reads as without its photo (the far band, a headless build) |
 
 The `bridge-*`, `road-*`, `stop-*`, `rail-*`, `tram-tie`, `airport-*`, `dam-*`, `tunnel-portal`,
-`gallery-concrete` and `house-plinth` presets are what the game binds its own structures with;
+`gallery-concrete`, `house-plinth` and `river-boulder` presets are what the game binds its own structures (and a rapid's boulders) with;
 the `model-*` presets are for factory designs, and the `swatch-*` presets (each photo untinted, four
 units a repeat) for the site's texture pages ([previews.md](previews.md)).
 
