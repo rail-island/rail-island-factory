@@ -109,7 +109,10 @@ sides back to a join, where the body volume takes over with the same section.
   surface point (height, distance back, lateral position, side or face) that
   holds on one height interval at each u (found by testing the predicate every
   6 mm up the nose and bisecting each end; the slice at each of those heights is
-  looked up once a nose, not once a column, which was most of its build time).
+  looked up once a nose, not once a column, which was most of its build time;
+  the surface points at a column are worked out once for all the layers, and a
+  layer's optional `where` - only the face, only the cab sides, between two
+  heights - skips the columns and heights where it cannot hold).
   The grid's columns are refined until
   every layer boundary is straight within 12 mm, each cell is cut along the
   boundaries, and cells of one colour are merged, so a rounded windscreen, a
