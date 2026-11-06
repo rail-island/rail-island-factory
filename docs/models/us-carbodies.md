@@ -1,7 +1,7 @@
 # North American carbody locomotives and the Acela
 
-**Covers** - the streamlined North American designs (`proc-vehicle-emd-f7`, `proc-vehicle-ge-p42dc`, `proc-vehicle-siemens-alc42`, `proc-vehicle-prr-gg1`, `proc-vehicle-amtrak-superliner`, `proc-vehicle-amtrak-acela`): measures, liveries, the carbody kit they are lofted with, the Acela's cars and train, deviations and tests.
-**Code** - `generator/usCarbodies.ts` (`US_CARBODIES`), `generator/carbodyKit.ts`, `generator/sliceBody.ts`, `test/usCarbodies.test.ts`, `assets/emd-f7/`, `assets/ge-p42dc/`, `assets/siemens-alc42/`, `assets/prr-gg1/`, `assets/amtrak-superliner/`, `assets/amtrak-acela/`
+**Covers** - the streamlined North American designs (`proc-vehicle-emd-f7`, `proc-vehicle-emd-f40ph`, `proc-vehicle-ge-p42dc`, `proc-vehicle-siemens-alc42`, `proc-vehicle-prr-gg1`, `proc-vehicle-amtrak-superliner`, `proc-vehicle-amtrak-acela`): measures, liveries, the carbody kit they are lofted with, the Acela's cars and train, deviations and tests.
+**Code** - `generator/usCarbodies.ts` (`US_CARBODIES`), `generator/carbodyKit.ts`, `generator/sliceBody.ts`, `test/usCarbodies.test.ts`, `assets/emd-f7/`, `assets/emd-f40ph/`, `assets/ge-p42dc/`, `assets/siemens-alc42/`, `assets/prr-gg1/`, `assets/amtrak-superliner/`, `assets/amtrak-acela/`
 **See also** - [us-diesels.md](us-diesels.md), [loading-gauge.md](loading-gauge.md), [shinkansen-0.md](shinkansen-0.md), [vehicles.md](vehicles.md), [openttd-figures.md](openttd-figures.md)
 
 ## The designs
@@ -9,6 +9,7 @@
 | id | title | parameters (default first) | over couplers | triangles |
 |---|---|---|---|---|
 | `proc-vehicle-emd-f7` | EMD F7 | `livery`: `santaFe` (red warbonnet), `unionPacific`, `southernPacific` (Daylight) | 15.44 m | 10,800 - 11,700 |
+| `proc-vehicle-emd-f40ph` | EMD F40PH (draft) | `livery`: `phaseIII` | 17.12 m | about 10,300 |
 | `proc-vehicle-ge-p42dc` | GE P42DC Genesis | `livery`: `phaseV`, `phaseIII`, `via` | 21.03 m | 8,400 - 8,800 |
 | `proc-vehicle-siemens-alc42` | Siemens ALC-42 Charger | `livery`: `phaseVII`, `midwest` (the SC-44's Amtrak Midwest scheme) | 21.79 m | about 10,300 |
 | `proc-vehicle-prr-gg1` | PRR GG1 | `livery`: `brunswick`, `tuscan`, `pennCentral` | 24.23 m | 13,300 - 14,400 |
@@ -16,7 +17,7 @@
 | `proc-vehicle-amtrak-acela` | Acela Express | `unit`: `powerCar`, `businessClass`, `firstClass`, `cafe`, `train` (`cars` 3 - 8, default 4) | 21.22 m power car, 26.64 m coach | 7,200 - 10,200 a car |
 
 All are drawn at their real size to the US loading gauge ([loading-gauge.md](loading-gauge.md)),
-3.04 - 3.16 m wide. The F7, P42DC and ALC-42 are diesel locomotives (`DIESEL_LOCO_CATALOG`),
+3.04 - 3.24 m wide. The F7, F40PH, P42DC and ALC-42 are diesel locomotives (`DIESEL_LOCO_CATALOG`),
 the GG1 an electric locomotive (`ELECTRIC_LOCO_CATALOG`), the Superliner a coach (`COACH_CATALOG`), the Acela an electric trainset
 (`EMU_CATALOG`). All have AAR knuckle couplers (`knuckleCoupler`, usHoodKit.ts) and US trucks
 (the diesel toolkit's bogie); the GG1 has its own 2-C+C-2 running gear.
@@ -42,6 +43,13 @@ where the centre line reaches their height (`noseLamps`).
   carbody's, three portholes and the filter grilles between them, three radiator fans, the
   dynamic brake fan and exhaust, the pilot, a rear diaphragm. Santa Fe's warbonnet: the red
   bonnet over the nose and its band sweeping back to a point, outlined in yellow, on silver.
+- **EMD F40PH** - Amtrak's cowl unit of 1976: the tall short nose with chamfered corners and
+  the twin headlight, the raked two-pane windscreen under the number boards and red markers,
+  the cab's two side windows and door, the full-width body with vertical sides, the inertial
+  filter and dynamic brake grilles behind the cab, the long radiator grille along the rear,
+  the dynamic brake blister and its fan, the exhaust and two large radiator fans, the pilots,
+  fuel tank and two Blomberg trucks. Phase III: silver, the blue, white and red stripes, the
+  black nose top and cab front (anti-glare), black frame and pilots. A draft in the workshop.
 - **GE P42DC** - the Genesis's angular nose with its chamfered corners and long raked
   windscreen, the side grilles, three roof fans, the skirt cut over the trucks.
 - **Siemens ALC-42** - the Charger's beaked nose, its windscreen, grilles and two radiator

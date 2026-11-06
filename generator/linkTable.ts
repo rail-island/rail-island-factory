@@ -53,6 +53,9 @@ export const MODEL_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
     { title: "Wikipedia: EMD SD70 series", url: "https://en.wikipedia.org/wiki/EMD_SD70_series" },
     { title: "The Diesel Shop: EMD SD70ACe data", url: "https://www.thedieselshop.us/Data%20EMD%20SD70ACe.HTML" },
   ],
+  "proc-vehicle-emd-f40ph": [
+    { title: "Wikipedia: EMD F40PH", url: "https://en.wikipedia.org/wiki/EMD_F40PH" },
+  ],
   "proc-vehicle-ge-es44ac": [
     { title: "Wikipedia: GE Evolution Series", url: "https://en.wikipedia.org/wiki/GE_Evolution_Series" },
     { title: "American-Rails: GE ES44AC", url: "https://american-rails.com/es44ac.html" },
