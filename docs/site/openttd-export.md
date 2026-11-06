@@ -263,6 +263,11 @@ A train or road vehicle always gets OpenTTD's tractive effort coefficient, 0.3:
 a GRF's new engine otherwise has none, and with realistic acceleration an engine
 with no tractive effort barely moves whatever its power.
 
+An aircraft's subtype (property 09) is 0 for a helicopter (`game.aircraftKind:
+"helicopter"`; `ResolvedVehicle.helicopter`), which lands at OpenTTD's heliports, helipads
+and oil rigs and is never large, and 2 for every other aircraft, large (property 0A) unless
+its `sizeClass` is `small`.
+
 An aircraft gets an acceleration (property 0D) of speed / 20, clamped to 18..50,
 OpenTTD's own aircraft's range: a GRF's new aircraft otherwise has 0 and never
 leaves its hangar (found when the preview prerender's marker aircraft stayed in

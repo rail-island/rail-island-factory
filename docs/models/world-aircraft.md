@@ -266,10 +266,11 @@ propeller.
 - OpenTTD (`worldAircraftTable` in openttdTable.ts): the introduction year, typical seats
   (every aircraft is refittable to passengers), the freighters' payload in tonnes of goods
   (An-124, An-225, L-100, Dreamlifter, Beluga XL, the 747-8F variant), and presets of the
-  other liveries, lengths and gear. **The GRF encoder writes every aircraft as a plane**
-  (property 09 = 2): it has no helicopter subtype, so the helicopters and the airship are
-  planes in OpenTTD and need an airport. Supporting the subtype is a change to
-  `src/openttd/grf.ts` and the OpenTTD properties, not made here.
+  other liveries, lengths and gear. The GRF encoder writes the helicopters
+  (`aircraftKind: "helicopter"`) with **OpenTTD's helicopter subtype** (property 09 = 0, never
+  large), so they use OpenTTD's heliports, helipads and oil rigs; every other aircraft,
+  the airship included, is a plane (09 = 2). No GRF exported the helicopters before they
+  were written as helicopters, so no saved game holds a plane version of them.
 - Sounds: none. `soundMapping.ts` derives no aircraft sound and rail-island-music has no
   jet, propeller or rotor design yet; a rotor sound for the helicopters is a request to that
   repository.

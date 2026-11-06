@@ -373,7 +373,8 @@ function headTypeProps(v: ResolvedVehicle, length: number, articulated: boolean,
         [0x0b, B(clamp(v.costFactor, 0, 255))],
         [0x0f, W(clamp(v.capacity, 0, 0xffff))],
         [0x11, B(clamp(v.capacity / 15, 0, 255))],
-        [0x09, B(0x02)],
+        // the subtype: 0 a helicopter, 2 an aeroplane
+        [0x09, B(v.helicopter ? 0x00 : 0x02)],
         [0x0a, B(v.largeAircraft ? 0x01 : 0x00)],
         [0x08, B(0xff)],
         // An aircraft has no default-cargo property: OpenTTD takes the first refittable
