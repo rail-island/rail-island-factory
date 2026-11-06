@@ -6,7 +6,8 @@
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
-import { c, flatCab, flirt, nose } from "./seriesHelpers.ts";
+import { c, flatCab, flirt, nose, NO_NOSE } from "./seriesHelpers.ts";
+import type { SeriesCabFace } from "./seriesCab.ts";
 
 const NS_YELLOW = "#ffc917";
 const NS_BLUE = "#003082";
@@ -25,13 +26,36 @@ export function nsLivery(kind: "yellowBlue" | "yellowGrey" | "green" | "fyra" | 
 
 const DD_ROWS: ReadonlyArray<readonly [number, number]> = [[1.25, 1.95], [2.8, 3.5]];
 
+/** The Mat '46 in NS green, read from photo-spoorwegmuseum-treinstel-ns-273.jpg: the silver skirt, the red waist and cantrail bands, the silver roof; the red band rising over the front's windows. */
+const MAT46_GREEN: ShinkansenLivery = {
+  title: "NS green", number: "273",
+  palette: { green: c("#2f4a36"), red: c("#c42127"), silver: c("#b6babd", 0.35), roofG: c("#aeb2b5", 0.45), skirtG: c("#2a2c2f", 0.75), cabMask: c("#1d1f22", 0.3) },
+  bands: [[0, 1.22, "silver"], [1.22, 1.36, "red"], [1.36, 2.95, "green"], [2.95, 9, "red"]],
+  front: [[0, 1.22, "silver"], [1.22, 1.36, "red"], [1.36, 2.98, "green"], [2.98, 9, "red"]],
+  roof: "roofG", skirt: "skirtG",
+};
+
+/**
+ * The "Muizenneus" (mouse nose): the end half-round in plan, a band of five windows wrapping
+ * round it under the red band and the silver dome, two lamps low, the Scharfenberg coupler.
+ */
+const MOUSE_NOSE: SeriesCabFace = {
+  dJoin: 1.35, dSide: 1.3, reach: 0.35, first: 3.2, roofFrom: 3.32,
+  profile: [[1.0, 0.15], [1.15, 0.05], [1.35, 0], [2.0, 0], [2.9, 0.06], [3.15, 0.16], [3.4, 0.36], [3.65, 0.72], [3.85, 1.35]],
+  corner: [[1.0, 1.0], [3.0, 1.0], [3.5, 0.6], [3.85, 0.1]], bulge: 0.04,
+  rows: [1.0, 1.15, 1.22, 1.36, 1.55, 2.0, 2.05, 2.45, 2.88, 2.98, 3.15, 3.32, 3.45, 3.65, 3.85],
+  masks: [{ lat: [-1.37, 1.37], y: [2.0, 2.93], r: 0.06, mat: "frameSilver" }],
+  panes: [-2, -1, 0, 1, 2].map((k) => ({ lat: [k * 0.535 - 0.235, k * 0.535 + 0.235] as const, y: [2.05, 2.88] as const, r: 0.05 })),
+  lamps: [[-0.42, 1.6, 0.13, "lampHead"], [0.42, 1.6, 0.13, "lampHead"]], roofLamp: [0, 3.18, 0.06],
+  wipers: [[[-0.6, 2.1], [-0.4, 2.7]], [[0.4, 2.1], [0.6, 2.7]]],
+};
+
 export const MAT46: ShinkansenSeries = {
   endLength: 25.9, midLength: 25.9, W: 1.47, Y: 1.4, S: 3.15, C: 3.85, lean: 0.97, B: 1.0, A: 1.15,
-  nose: nose(0.8, 0.6, 2.2, [[0, 3.3], [0.3, 3.65], [0.8, 3.85]], [[0, 3.1], [0.4, 3.15]], [[0, 1.4], [0.5, 1.4]], [[0, 1.2], [0.4, 1.15]], [[0, 1.1], [0.2, 1.0]]),
-  windscreen: [0.05, 0.6, 0.07, 1.25], lamps: [0.05, 1.55],
+  nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: MOUSE_NOSE,
   windows: [[1.95, 2.8]], windowW: 1.0, pitch: 1.25, door: [1.2, 3.05, 1.95, 2.65], doorW: 0.9,
-  bogieCentres: 18.0, wheelR: 0.5, wheelbase: 3.0, cars: [2], endPantograph: true, endCoupler: "buffers",
-  liveries: { green: nsLivery("green", "273"), yellowGrey: nsLivery("yellowGrey", "283") },
+  bogieCentres: 18.0, wheelR: 0.5, wheelbase: 3.0, cars: [2], endPantograph: true,
+  liveries: { green: MAT46_GREEN, yellowGrey: nsLivery("yellowGrey", "283") },
   weight: { end: 55, middle: 55 }, power: 280, maxspeed: 120,
 };
 
