@@ -17,7 +17,13 @@ Each is a `LocoSpec` drawn by `buildLoco` (steamLoco.ts) in source x from the fr
 face, the locomotive and its tender as the `unit` parameter (`UNIT_PARAM`), animated by the
 steam kit's `running` clip (cylinders, rods and Walschaerts valve gear; the 4-4-0 has its
 Stephenson gear inside and no outside valve gear). The Big Boy's two engines (`front`,
-`rear`) are the articulated arrangement the CSD 636 Mallet uses. All are on the US loading
+`rear`) are the articulated arrangement the CSD 636 Mallet uses, and on the Big Boy the front
+one really is articulated: the front engine - its four-wheel lead truck, four drivers,
+cylinders, rods and valve gear and its frame to source x 12.0 - is drawn as the rail bogie
+`bogie0` (the gear spec's `swivel`), a support of six axles the game turns under the boiler on
+a curve, while the rear engine, the trailing truck and the rest stay on the body, which rests on
+that bogie and on the trailing truck ([animation.md](animation.md), "A swivelling front engine";
+[vehicle-rig.md](vehicle-rig.md)). All are on the US loading
 gauge: the Big Boy is 3.29 m over its cylinders and 4.95 m high (the real engine is 11 ft
 wide over its cab: narrowed to the gauge's 3.3 m), the others 2.7 - 3.13 m.
 
@@ -41,7 +47,8 @@ box), the bell, the railroad's name on the tender sides.
 
 - Wheels are the kit's spoked or disc wheels; the Big Boy's and Hudson's Boxpok and
   Scullin drivers are drawn as discs. Air pumps, feedwater heaters and pipework are reduced to
-  a few cylinders; the K4s's keystone number plate is a plain plate.
+  a few cylinders (the Big Boy's air pumps are hexagonal prisms, leaving the triangles its split
+  frame needs within the 16,000); the K4s's keystone number plate is a plain plate.
 - The tenders' lengths are their published lengths over the drawbar end and rear coupler;
   the 4-4-0's tender carries no water hatch or tool boxes.
 
@@ -50,5 +57,6 @@ box), the bell, the railroad's name on the tender sides.
 `pnpm exec vitest run test/usSteam.test.ts` (ids, parameters; the published wheel arrangement
 and driver diameters; every combination inside the US gauge, 16,000 triangles, without
 coplanar faces, a smoke emitter on each locomotive; the distant models; the Big Boy's two
-engines; Jupiter's taller balloon stack). The motion and its posed frames are also checked
+engines, its front engine as a bogie carrying the lead truck, front drivers and front motion,
+animated within the bogie exactly as on a rigid frame; Jupiter's taller balloon stack). The motion and its posed frames are also checked
 by the steam kit's generic tests.
