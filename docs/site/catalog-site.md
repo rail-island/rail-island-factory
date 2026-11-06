@@ -10,7 +10,7 @@ preview (its passenger view on structure pages included), and the URL state.
 `src/devCatalog.ts`, `src/devMeasure.ts`, `generator/devServer.ts`, `generator/devExport.ts`, `test/devExport.test.ts`,
 `src/factory.css`, `src/favicon.svg`, `src/apple-touch-icon.png`, `src/social-preview.png`, `src/boot.ts`, `src/bootEntry.ts`, `index.html`, `vite.config.ts`,
 `test/catalogQuery.test.ts`, `test/countryTable.test.ts`, `test/boot.test.ts`, `test/siteMeta.test.ts`, `test/rig.test.ts` (the Pose sliders), `test/scenery.test.ts`, `test/viewerInteriors.test.ts`, `test/viewerPassenger.test.ts`, `test/characters.test.ts` (the Characters chip, ground and motion buttons)
-**See also** - [../models/export.md](../models/export.md), [../guide/deploy.md](../guide/deploy.md), [openttd-export.md](openttd-export.md), [seo-pages.md](seo-pages.md)
+**See also** - [workshop.md](workshop.md) (the catalog and the workshop, web links), [../models/export.md](../models/export.md), [../guide/deploy.md](../guide/deploy.md), [openttd-export.md](openttd-export.md), [seo-pages.md](seo-pages.md)
 
 The site is the factory's counterpart of the webapp Creator's model listing,
 copied and trimmed: no sign-in, uploads, woods or packages, and English only.
@@ -38,12 +38,16 @@ white page. So `index.html` carries, without waiting for anything else:
 
 The bar at the top opens with the Rail Island logo (`src/rail-island-logo.webp`,
 the game's logo from www.railisland.com at 96 px), a link to the game at
-`play.railisland.com` (`PLAY_URL`), then shows "Rail Island Factory" (on a model page, the model's title,
+`play.railisland.com` (`PLAY_URL`), then shows "Rail Island Catalog" or, in the workshop,
+"Rail Island Workshop" ([workshop.md](workshop.md); on a model page, the model's title,
 its id and a back arrow) and, on the right, an **Add your model** link to the
 repository's README on GitHub - the landing page for someone who wants to make a
 model (`ADD_MODEL_URL` in `App.tsx`) - and an **Export (n)** button, the number
 of model variants on the export list, which opens the export panel: a GRF for
 OpenTTD or a ZIP of GLBs, built in the browser ([openttd-export.md](openttd-export.md)).
+Both carry an icon (a plus, an arrow into a tray) before their label; on a phone
+(under 600 px) they shrink to round icon buttons, the export keeping its count as a
+bare number, so the title has the room.
 
 The favicon (`src/favicon.svg`) is a sawtooth-roofed factory with a chimney on a
 rail, in the site's colours; `src/apple-touch-icon.png` is the same drawing at
@@ -264,10 +268,11 @@ scrolls, in its own column (`.factory--detail`). A narrow screen scrolls the who
 page, preview first.
 
 The side panel has up to three tabs: **Specs** (the thumbnail and the spec list),
-**Source** (below) and **Images** - the source images the model was made from
+**Source** (below) and **Sources** - the web pages the model was built from (the
+record's `links`, [workshop.md](workshop.md)), then the source images
 (photos, drawings, native textures; the record's `references`,
-[../models/export.md](../models/export.md)). The Images tab appears only for a
-model that has any; each image is shown at the panel's width with its path and
+[../models/export.md](../models/export.md)). The Sources tab appears only for a
+model that has either; each image is shown at the panel's width with its path and
 size and opens full size in a new tab. Low-resolution `.bmp`/`.gif` textures are
 scaled with `image-rendering: pixelated`, so their pixels stay sharp.
 
@@ -475,8 +480,8 @@ All state is in the URL (`parseView`/`viewUrl` in `catalogQuery.ts`). The path i
 page ([seo-pages.md](seo-pages.md)): `/model/<id>/` the open model,
 `/category/<group>/[<l2>/[<l3>/]]` the three chip rows (a lower one only under the one
 above), `/` the plain list. The query string carries the rest: `?q=` search,
-`?view=thumbs` the thumbnail layout, `?country=` the country chip (its name's slug, `united-kingdom`), `?sort=` and `?dir=` ordering, on a model page the
-list's chips as `?cat=`, `?sub=` and `?sub2=` (the Creator's names), `?tab=source` or `?tab=references` its Source or Images tab and `?node=` the selected tree node (kept
+`?section=workshop` the workshop's drafts ([workshop.md](workshop.md)), `?view=thumbs` the thumbnail layout, `?country=` the country chip (its name's slug, `united-kingdom`), `?sort=` and `?dir=` ordering, on a model page the
+list's chips as `?cat=`, `?sub=` and `?sub2=` (the Creator's names), `?tab=source` or `?tab=references` its Source or Sources tab and `?node=` the selected tree node (kept
 only with the Source tab; a node id no longer in the tree selects nothing), `?stage=openttd`
 the OpenTTD view of a vehicle OpenTTD can hold (a model without one drops it), and
 `?p.<name>=<value>` a parametric model's non-default values (an unknown name or value falls back to the default). Defaults are left out, so the plain list is the bare URL. The old all-query form (`?model=`, `?cat=`) is still read and rewritten to the path form. Opening and

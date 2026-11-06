@@ -203,7 +203,7 @@ describe("the filter chips", () => {
 describe("the URL state", () => {
   it("round-trips, leaving defaults out", () => {
     expect(viewUrl(parseView(""))).toBe("/");
-    const v = { q: "tower", layout: "table" as const, ...NO_CHIPS, sort: "triangles", dir: "asc" as const, model: "proc-building-sky-pagoda", tab: "specs" as const, node: null, stage: "3d" as const, params: {}, country: null };
+    const v = { q: "tower", layout: "table" as const, ...NO_CHIPS, sort: "triangles", dir: "asc" as const, model: "proc-building-sky-pagoda", tab: "specs" as const, node: null, stage: "3d" as const, params: {}, country: null, section: "catalog" as const };
     expect(viewUrl(v)).toBe("/model/proc-building-sky-pagoda/?q=tower&sort=triangles&dir=asc");
     expect(parseUrl(viewUrl(v))).toEqual(v);
   });
@@ -229,7 +229,7 @@ describe("the URL state", () => {
   });
 
   it("carries the source tab and the selected node of an open model", () => {
-    const v = { q: "", layout: "table" as const, ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "proc-building-sky-art-deco", tab: "source" as const, node: "tier-3/piers", stage: "3d" as const, params: {}, country: null };
+    const v = { q: "", layout: "table" as const, ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "proc-building-sky-art-deco", tab: "source" as const, node: "tier-3/piers", stage: "3d" as const, params: {}, country: null, section: "catalog" as const };
     expect(viewUrl(v)).toBe("/model/proc-building-sky-art-deco/?tab=source&node=tier-3%2Fpiers");
     expect(parseUrl(viewUrl(v))).toEqual(v);
     // the root scope's id is the empty string, and still a selection
@@ -238,21 +238,21 @@ describe("the URL state", () => {
   });
 
   it("carries the references tab of an open model, without a node", () => {
-    const v = { q: "", layout: "table" as const, ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "proc-vehicle-cd-150", tab: "references" as const, node: null, stage: "3d" as const, params: {}, country: null };
+    const v = { q: "", layout: "table" as const, ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "proc-vehicle-cd-150", tab: "references" as const, node: null, stage: "3d" as const, params: {}, country: null, section: "catalog" as const };
     expect(viewUrl(v)).toBe("/model/proc-vehicle-cd-150/?tab=references");
     expect(parseUrl(viewUrl(v))).toEqual(v);
     expect(parseView("?model=proc-vehicle-cd-150&tab=references&node=crown")).toMatchObject({ tab: "references", node: null });
     expect(viewUrl({ ...v, node: "crown" })).toBe("/model/proc-vehicle-cd-150/?tab=references");
   });
   it("drops a tab or node that has no model or no source tab to belong to", () => {
-    expect(parseView("?tab=source&node=crown")).toMatchObject({ model: null, tab: "specs", node: null, stage: "3d" as const, params: {}, country: null });
+    expect(parseView("?tab=source&node=crown")).toMatchObject({ model: null, tab: "specs", node: null, stage: "3d" as const, params: {}, country: null, section: "catalog" as const });
     expect(parseView("?model=proc-building-sky-pagoda&node=crown")).toMatchObject({ tab: "specs", node: null });
     expect(parseView("?model=proc-building-sky-pagoda&tab=bogus")).toMatchObject({ tab: "specs", node: null });
-    expect(serializeView({ q: "", layout: "table", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc", model: "proc-building-sky-pagoda", tab: "specs", node: "crown", stage: "3d", params: {}, country: null })).toBe("");
+    expect(serializeView({ q: "", layout: "table", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc", model: "proc-building-sky-pagoda", tab: "specs", node: "crown", stage: "3d", params: {}, country: null, section: "catalog" as const })).toBe("");
   });
 
   it("carries a parametric model's chosen values, only with an open model", () => {
-    const v = { q: "", layout: "table" as const, ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "proc-vehicle-csd-classic-green-coach", tab: "specs" as const, node: null, stage: "3d" as const, params: { variant: "classB" }, country: null };
+    const v = { q: "", layout: "table" as const, ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "proc-vehicle-csd-classic-green-coach", tab: "specs" as const, node: null, stage: "3d" as const, params: { variant: "classB" }, country: null, section: "catalog" as const };
     expect(viewUrl(v)).toBe("/model/proc-vehicle-csd-classic-green-coach/?p.variant=classB");
     expect(parseUrl(viewUrl(v))).toEqual(v);
     expect(parseView("?p.variant=classB").params).toEqual({});
@@ -260,7 +260,7 @@ describe("the URL state", () => {
   });
 
   it("carries the OpenTTD stage of an open model, so a link opens that view", () => {
-    const v = { q: "", layout: "table" as const, ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "proc-vehicle-cd-163", tab: "specs" as const, node: null, stage: "openttd" as const, params: {}, country: null };
+    const v = { q: "", layout: "table" as const, ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc" as const, model: "proc-vehicle-cd-163", tab: "specs" as const, node: null, stage: "openttd" as const, params: {}, country: null, section: "catalog" as const };
     expect(viewUrl(v)).toBe("/model/proc-vehicle-cd-163/?stage=openttd");
     expect(parseUrl(viewUrl(v))).toEqual(v);
     expect(viewUrl({ ...v, stage: "3d" })).toBe("/model/proc-vehicle-cd-163/");
@@ -271,7 +271,7 @@ describe("the URL state", () => {
 
   it("gives a column its own starting direction and ignores an unknown sort", () => {
     expect(parseView("?sort=triangles").dir).toBe("desc");
-    expect(parseView("?sort=bogus&dir=sideways")).toEqual({ q: "", layout: "table", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc", model: null, tab: "specs", node: null, stage: "3d" as const, params: {}, country: null });
+    expect(parseView("?sort=bogus&dir=sideways")).toEqual({ q: "", layout: "table", ...NO_CHIPS, sort: DEFAULT_SORT, dir: "asc", model: null, tab: "specs", node: null, stage: "3d" as const, params: {}, country: null, section: "catalog" as const });
   });
 });
 

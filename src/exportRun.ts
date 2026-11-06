@@ -213,7 +213,7 @@ async function buildGrf(
         await yieldToPage(signal);
         const { object, dispose } = await carModel(p.item.record, pc.car);
         SpriteRenderer.prepare(object);
-        const views = spriteViews(p.feature, pc.box, pc.lengths, p.item.record.game?.draftFrac ?? 0);
+        const views = spriteViews(p.feature, pc.box, pc.lengths, p.item.record.game?.draftFrac ?? 0, p.item.record.group === "tram");
         const carFigures = cars[c]!;
         const split = shares(carFigures.capacity, views.length);
         for (const [k, dirs] of views.entries()) {
@@ -261,7 +261,7 @@ export async function previewSprites(item: ExportItem, directions: readonly numb
       const box = boxOf(object);
       const lengths = partLengths(box.max[0] - box.min[0], feature);
       SpriteRenderer.prepare(object);
-      const views = spriteViews(feature, box, lengths, item.record.game?.draftFrac ?? 0);
+      const views = spriteViews(feature, box, lengths, item.record.game?.draftFrac ?? 0, item.record.group === "tram");
       for (const [k, dirs] of views.entries()) {
         const images = new Map<number, { "1x": GrfImage; "4x": GrfImage }>();
         for (const d of directions) {

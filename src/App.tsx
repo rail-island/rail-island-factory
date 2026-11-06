@@ -10,7 +10,7 @@
 // docs/site/seo-pages.md).
 
 import { For, Match, Show, Switch, createEffect, createMemo, createResource, createSignal, onCleanup, onMount } from "solid-js";
-import { COLUMNS, GROUPS, NO_CHIPS, chipLabel, chipMatches, chipRows, chipSlug, countryChips, parseView, prepareRows, queryRows, shownId, viewUrl, type Column, type Row, type ViewState } from "./catalogQuery";
+import { COLUMNS, GROUPS, NO_CHIPS, chipLabel, chipMatches, chipRows, chipSlug, countryChips, parseView, prepareRows, queryRows, sectionHeading, sectionOf, sectionRows, shownId, viewUrl, type Column, type Row, type Section, type ViewState } from "./catalogQuery";
 import { SITE_URL, categoryMeta, categoryTree, homeMeta, modelMeta, type PageMeta } from "./pageMeta";
 import { Link } from "./Link";
 import type { ModelCatalog } from "../generator/catalog.ts";
@@ -101,12 +101,22 @@ export function App() {
     else history.replaceState(null, "", url);
   };
 
-  const listed = createMemo(() => queryRows(rows() ?? [], view().q, view().sort, view().dir, view()));
-  // What each chip row offers, from every model rather than the searched ones, so
-  // the chips hold still while somebody types.
-  const chips = createMemo(() => chipRows(rows() ?? [], view()));
+  const open = createMemo(() => (view().model ? (rows() ?? []).find((r) => r.id === view().model) : undefined));
+  // The list the page belongs to (docs/site/workshop.md): the catalog of confirmed
+  // models, or the workshop of drafts. A model page is in its own model's section,
+  // so a draft linked to directly steps through the workshop.
+  const section = createMemo<Section>(() => {
+    const record = open();
+    return record ? sectionOf(record) : view().section;
+  });
+  const inSection = createMemo(() => sectionRows(rows() ?? [], section()));
+  const counts = createMemo(() => ({ catalog: sectionRows(rows() ?? [], "catalog").length, workshop: sectionRows(rows() ?? [], "workshop").length }));
+  const listed = createMemo(() => queryRows(inSection(), view().q, view().sort, view().dir, view()));
+  // What each chip row offers, from every model of the section rather than the
+  // searched ones, so the chips hold still while somebody types.
+  const chips = createMemo(() => chipRows(inSection(), view()));
   // The country row filters on its own: it keeps its pick while the chips above change.
-  const countries = createMemo(() => countryChips(rows() ?? [], view(), view().country));
+  const countries = createMemo(() => countryChips(inSection(), view(), view().country));
 
   // One chip per row: picking a chip replaces the row's pick, picking the picked
   // chip again clears it, and a change in a row clears every row below it.
@@ -118,7 +128,6 @@ export function App() {
   const countryPick = (v: string | null): Partial<ViewState> => ({ country: v === null || chipMatches(v, view().country) ? null : chipSlug(v) });
   const hrefOf = (patch: Partial<ViewState>) => viewUrl({ ...view(), ...patch });
   const pick = (patch: Partial<ViewState>) => update(patch, true);
-  const open = createMemo(() => (view().model ? (rows() ?? []).find((r) => r.id === view().model) : undefined));
 
   const onSort = (col: Column) => {
     const v = view();
@@ -126,10 +135,11 @@ export function App() {
   };
   // A node belongs to one model's tree: opening, closing or stepping drops it.
   const openPatch = (r: Row, params: Record<string, string> = {}): Partial<ViewState> => ({ model: r.id, tab: "specs", node: null, stage: "3d", params: { ...params } });
-  const closePatch: Partial<ViewState> = { model: null, tab: "specs", node: null, stage: "3d", params: {} };
+  // closing returns to the list of the model's own section
+  const closePatch = (): Partial<ViewState> => ({ model: null, tab: "specs", node: null, stage: "3d", params: {}, section: section() });
   const onOpen = (r: Row, params: Record<string, string> = {}) => update(openPatch(r, params), true);
   const hrefOpen = (r: Row, params: Record<string, string> = {}) => hrefOf(openPatch(r, params));
-  const onClose = () => update(closePatch, true);
+  const onClose = () => update(closePatch(), true);
   const stepPatch = (delta: number): Partial<ViewState> | null => {
     const list = listed();
     if (list.length === 0) return null;
@@ -189,24 +199,30 @@ export function App() {
           <img src={logoUrl} alt="Rail Island" width="40" height="40" />
         </a>
         {open() ? (
-          <Link class="factory-btn factory-bar__back" href={hrefOf(closePatch)} onNavigate={onClose} aria-label="Back to the list">
+          <Link class="factory-btn factory-bar__back" href={hrefOf(closePatch())} onNavigate={onClose} aria-label="Back to the list">
             &larr;
           </Link>
         ) : null}
-        <h1 class="factory-bar__title">{open()?.title ?? "Rail Island Factory"}</h1>
+        <h1 class="factory-bar__title">{open()?.title ?? sectionHeading(section())}</h1>
         <Show when={open() && shownId(open()!)}>{(id) => <span class="factory-muted factory-bar__sub">{id()}</span>}</Show>
-        <a class="factory-bar__add" href={ADD_MODEL_URL} target="_blank" rel="noopener">
-          Add your model
+        {/* on a phone both buttons shrink to their icons (factory.css), the export keeping its count */}
+        <a class="factory-bar__add" href={ADD_MODEL_URL} target="_blank" rel="noopener" aria-label="Add your model" title="Add your model">
+          <PlusIcon />
+          <span class="factory-bar__label">Add your model</span>
         </a>
         <button
           type="button"
           class="factory-bar__export"
           classList={{ "factory-bar__export--on": exportOpen() }}
           aria-pressed={exportOpen()}
+          aria-label={`Export (${exportState().entries.length})`}
+          title="Export"
           disabled={!exportLoaded()}
           onClick={() => setExportOpen(!exportOpen())}
         >
-          Export ({exportState().entries.length})
+          <ExportIcon />
+          <span class="factory-bar__label">Export</span>
+          <span class="factory-bar__count">{exportState().entries.length}</span>
         </button>
       </header>
       <main class="factory-main">
@@ -220,7 +236,7 @@ export function App() {
           <Match when={view().model && !open()}>
             <p class="factory-error">
               No model "{view().model}".{" "}
-              <Link class="factory-link" href={hrefOf(closePatch)} onNavigate={onClose}>
+              <Link class="factory-link" href={hrefOf(closePatch())} onNavigate={onClose}>
                 Back to the list
               </Link>
             </p>
@@ -249,6 +265,24 @@ export function App() {
           </Match>
           <Match when={true}>
             <div class="factory-toolbar">
+              <div class="factory-sections" role="group" aria-label="Section">
+                <For each={["catalog", "workshop"] as const}>
+                  {(s) => (
+                    <Link
+                      class="factory-filter factory-section"
+                      classList={{ "factory-filter--on": section() === s }}
+                      aria-current={section() === s ? "page" : undefined}
+                      href={hrefOf({ section: s })}
+                      onNavigate={() => pick({ section: s })}
+                    >
+                      {s === "workshop" ? "Workshop" : "Catalog"} <span class="factory-section__count">{counts()[s]}</span>
+                    </Link>
+                  )}
+                </For>
+              </div>
+              <Show when={section() === "workshop"}>
+                <p class="factory-muted factory-sections__note">Drafts not yet confirmed: they are not exported to the game.</p>
+              </Show>
               <input
                 class="factory-search"
                 type="search"
@@ -358,6 +392,24 @@ export function App() {
         />
       </Show>
     </div>
+  );
+}
+
+/** The app bar's "Add your model" icon: a plus. */
+function PlusIcon() {
+  return (
+    <svg class="factory-bar__icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+      <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+    </svg>
+  );
+}
+
+/** The app bar's "Export" icon: an arrow down into a tray. */
+function ExportIcon() {
+  return (
+    <svg class="factory-bar__icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+      <path d="M12 4v11M7 10l5 5 5-5M5 19h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
   );
 }
 

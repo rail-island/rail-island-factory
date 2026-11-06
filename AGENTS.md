@@ -72,6 +72,11 @@ document that owns it in the same change.** Conventions:
 - **Props** (docs/models/props.md) are the fixed models the game's structures place
   (`proc-prop-*`: a shed, a crane, a tower): drawn in studs from the game's box
   vocabulary, materials named `<kind>#<rrggbb>`, listed in props.meta.json only.
+- **Drafts and the workshop** (docs/site/workshop.md): a model whose id is not in
+  `generator/catalogModels.json` is a draft - the site lists it under Workshop and no
+  game meta file carries it. A new model starts as a draft; add its id to the list only
+  when the user confirms it, and never remove a confirmed id. A model's web links
+  (sources beside its images) go in `generator/linkTable.ts`.
 - Every bug fix ships with a regression test in the suite that owns the behaviour.
 - Use ASCII in code and comments; no emoji.
 - **Source inspiration is stored in git.** Every reference a model is built
