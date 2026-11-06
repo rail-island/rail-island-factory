@@ -6,7 +6,7 @@
 
 import type { MeshBuilder } from "./meshBuilder.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
-import { worldTram, worldTramLod, tramLodBudget, type WorldTramSpec } from "./worldTramKit.ts";
+import { worldTram, worldTramLod, tramLodBudget, type EndShape, type WorldTramSpec } from "./worldTramKit.ts";
 import {
   arm, bogies, classic, diamond, doorsAt, g, jacobs, lay, liveryParam, lowFloor, lrv, NO_COLLECTOR, pole, portals, pusherPlate, secDoors, tramDesign, guided, truck, vintage, doubleDeck,
   type WorldTram,
@@ -68,6 +68,14 @@ export function tatraT4Spec(p?: ParamValues): WorldTramSpec {
 
 export const K2_PARAMS: readonly ParamSpec[] = [liveryParam(["classic", "Classic"], ["modern", "Modern"])];
 
+/** The Tatra T3 and K2 front: a round plan, an upright screen, the roof domed over it. */
+const TATRA_K_NOSE: EndShape = {
+  plan: [[0, 0.72], [0.15, 0.84], [0.35, 0.93], [0.65, 0.98], [0.9, 1]],
+  upper: [[0, 0.66], [0.2, 0.8], [0.45, 0.91], [0.75, 0.98], [0.9, 1]],
+  top: [[0, 0.68], [0.1, 0.84], [0.3, 0.95], [0.7, 1]],
+  apron: [[0, 0.55], [0.12, -1]],
+};
+
 export function tatraK2Spec(p?: ParamValues): WorldTramSpec {
   const modern = resolveParams(K2_PARAMS, p).livery === "modern";
   return classic({
@@ -75,8 +83,25 @@ export function tatraK2Spec(p?: ParamValues): WorldTramSpec {
     doors: [[1.05, 2.2], [6.0, 7.4], [12.9, 14.3], [18.2, 19.35]],
     trucks: [...bogies(1.9, 3.7, 16.7), ...jacobs(1.9, 10.2)],
     collector: diamond(4.3),
-    colors: modern ? { skirt: "#c9242b", body: "#f2f2ee", upper: "#f2f2ee", band: "#5d6266" } : { skirt: "#c9242b", body: "#c9242b", upper: "#efe7cf", band: "#efe7cf" },
+    colors: modern
+      ? { skirt: "#c9242b", body: "#f2f2ee", upper: "#f2f2ee", band: "#5d6266", bumper: "#3b3d40", gold: "#3b3d40" }
+      : { skirt: "#c9242b", body: "#c9242b", upper: "#efe7cf", band: "#efe7cf", bumper: "#7a3b1e", gold: "#c9a23a" },
     paint: [[1.0, "skirt"], [1.12, "upper"], [1.55, "body"], [2.8, "band"], [3.5, "upper"]],
+    // the route number box on the cab roof
+    roofBoxes: [[0.25, 0.95, 0.36, 0.3, "upper"]],
+    over: {
+      // the round front: the wide screen in a cream frame, its side panes round the corners, the big
+      // head lamps in the red apron, the bumper rail over the cream skirt
+      frontShape: TATRA_K_NOSE, screen: [1.66, 2.64], sign: 0,
+      cabPaint: [[0.62, "upper"], [1.58, "body"], [3.5, "upper"]],
+      nose: {
+        heads: [[0.9, 0.74, 0.1]], tails: [[0.9, 1.0, 0.035]], housing: "steel",
+        panes: [{ y: [1.66, 2.64], z: [-0.72, 0.72] }, { y: [1.66, 2.64], z: [0.8, 1.18] }, { y: [1.66, 2.64], z: [-1.18, -0.8] }],
+        wipers: [0.25, -0.45], wiperLength: 0.7, mirrors: "arm", mirrorY: 2.35,
+        bumper: [0.55, 0.68, "bumper", 0.07],
+        number: ["1123", -0.3, 1.06, 0.12, "gold"], indicators: [[1.25, 1.0]],
+      },
+    },
   });
 }
 
@@ -109,6 +134,18 @@ export function skoda14tSpec(): WorldTramSpec {
 
 export const SKODA_15T_PARAMS: readonly ParamSpec[] = [liveryParam(["prague", "Prague"], ["riga", "Riga"])];
 
+/**
+ * The ForCity's nose (the Porsche-designed front): an almost upright screen
+ * whose corners lean in under a rounded hood, a silver lamp band under it and
+ * the red bumper below.
+ */
+const FORCITY_NOSE: EndShape = {
+  plan: [[0, 0.74], [0.15, 0.87], [0.4, 0.95], [0.75, 1]],
+  upper: [[0, 0.56], [0.35, 0.77], [0.75, 0.91], [1.1, 1]],
+  top: [[0, 0.05], [0.3, 0.76], [0.6, 0.93], [0.95, 1]],
+  apron: [[0, 0.45], [0.12, -1]],
+};
+
 export function skoda15tSpec(p?: ParamValues): WorldTramSpec {
   const riga = resolveParams(SKODA_15T_PARAMS, p).livery === "riga";
   const l = lay([7.6, 7.6, 7.6, 7.6], 0.4);
@@ -117,9 +154,22 @@ export function skoda15tSpec(p?: ParamValues): WorldTramSpec {
     doors: [[1.95, 3.15], ...secDoors(l, 1.3, [1, 0.3], [1, 5.35], [2, 0.3], [2, 5.35]), [l.at(3, 4.6), l.at(3, 5.8)]],
     trucks: bogies(1.8, l.at(0, 4.6), l.mid(1), l.mid(2), l.at(3, 3.0)),
     collector: arm(l.mid(1) + 1.6),
-    colors: riga ? { skirt: "#d1222b", body: "#f2f2ef", band: "#1d1f22" } : PRAGUE_NEW,
-    paint: [[0.62, "skirt"], [3.6, "body"]],
-    roofBoxes: [[0.8, 6.8, 0.95, 0.38, "body"], [24.8, 30.6, 0.95, 0.38, "body"]],
+    // Prague: red below, a silver band, the black window band, a red cant rail (the photographed 9203); Riga white
+    colors: riga
+      ? { skirt: "#d1222b", body: "#f2f2ef", band: "#1d1f22", top: "#d1222b", frame2: "#1d1f22" }
+      : { skirt: "#d2232a", band: "#b9bcbf", body: "#1c1d20", top: "#d2232a", frame2: "#1c1d20" },
+    paint: [[0.9, "skirt"], [1.18, "band"], [3.12, "body"], [3.6, "top"]],
+    roofBoxes: [[0.8, 6.8, 0.95, 0.38, "body", 0.9], [24.8, 30.6, 0.95, 0.38, "body", 0.9]],
+    over: {
+      frontShape: FORCITY_NOSE, screen: [1.32, 3.2], sign: 0.3,
+      cabPaint: [[0.62, "skirt"], [0.68, "frame2"], [0.98, "skirt"], [1.24, "band"], [1.32, "frame2"], [3.6, "top"]],
+      nose: {
+        heads: [[1.1, 0.74, 0.07], [1.1, 0.56, 0.05]], tails: [[0.8, 0.86, 0.035]],
+        wipers: [0.3], wiperLength: 1.05, mirrors: "arm", mirrorY: 2.85,
+        route: "18", number: ["9203", 0.4, 1.28, 0.075], badges: [[1.1, 0, 0.065, "frame2"]], indicators: [[1.1, 0.92]],
+        grille: [0.74, 0.86, 0.6, 2, "frame2"],
+      },
+    },
   });
 }
 
@@ -204,9 +254,17 @@ const COMBINO_STACK: WorldTramSpec["paint"] = [[0.62, "skirt"], [0.78, "band"], 
 
 const COMBINO_COLORS: Record<string, { colors: Record<string, string>; paint: WorldTramSpec["paint"] }> = {
   // BVB green with a white stripe (the photographed car)
-  basel: { colors: { skirt: "#4cb04a", band: "#f2f2ee", body: "#4cb04a", top: "#4cb04a" }, paint: COMBINO_STACK },
-  amsterdam: { colors: { skirt: "#1e3f8c", band: "#d3242c", body: "#f2f2ee", top: "#f2f2ee" }, paint: COMBINO_STACK },
-  freiburg: { colors: { skirt: "#d3242c", band: "#d3242c", body: "#f2f2ee", top: "#f2f2ee" }, paint: COMBINO_STACK },
+  basel: { colors: { skirt: "#4cb04a", band: "#f2f2ee", body: "#4cb04a", top: "#4cb04a", badge: "#f2c300" }, paint: COMBINO_STACK },
+  amsterdam: { colors: { skirt: "#1e3f8c", band: "#d3242c", body: "#f2f2ee", top: "#f2f2ee", badge: "#1e3f8c" }, paint: COMBINO_STACK },
+  freiburg: { colors: { skirt: "#d3242c", band: "#d3242c", body: "#f2f2ee", top: "#f2f2ee", badge: "#d3242c" }, paint: COMBINO_STACK },
+};
+
+/** The Combino's front: almost flat and upright, round corners, the screen's corners leaning in a little. */
+const COMBINO_NOSE: EndShape = {
+  plan: [[0, 0.86], [0.2, 0.95], [0.4, 1]],
+  upper: [[0, 0.8], [0.3, 0.93], [0.55, 1]],
+  top: [[0, 0.86], [0.15, 0.95], [0.4, 1]],
+  apron: [[0, 0.4], [0.1, -1]],
 };
 
 export function siemensCombinoSpec(p?: ParamValues): WorldTramSpec {
@@ -226,7 +284,19 @@ export function siemensCombinoSpec(p?: ParamValues): WorldTramSpec {
     trucks,
     collector: arm(l.mid(Math.floor(sections.length / 2)) + (n === 3 ? 1.4 : 0.6)),
     colors: L.colors, paint: L.paint,
-    roofBoxes: [[0.8, 5.9, 0.95, 0.36, "body"], [l.at(end, 0.5), l.at(end, 5.6), 0.95, 0.36, "body"]],
+    roofBoxes: [[0.8, 5.9, 0.95, 0.36, "body", 0.5], [l.at(end, 0.5), l.at(end, 5.6), 0.95, 0.36, "body", 0.5]],
+    over: {
+      // the upright front: a tall screen from 1.25 m, the display in a black band over it,
+      // the big round head lamps in the body colour below, a black coupler cover
+      frontShape: COMBINO_NOSE, screen: [1.25, 3.12], sign: 0.3,
+      cabPaint: [[0.62, "skirt"], [3.6, "body"]],
+      nose: {
+        heads: [[0.98, 0.78, 0.075]], tails: [[0.74, 0.8, 0.04]], housing: "steel",
+        wipers: [0.35], wiperLength: 1.0, mirrors: "arm", mirrorY: 2.8,
+        route: "8", number: ["326", -0.45, 1.12, 0.12], badges: [[1.1, 0.42, 0.11, "badge"]], indicators: [[0.98, 0.98]],
+        bumper: [0.62, 0.82, "underframe", 0.04],
+      },
+    },
   });
 }
 
@@ -264,6 +334,14 @@ export function siemensAvenioSpec(p?: ParamValues): WorldTramSpec {
 
 export const ULF_PARAMS: readonly ParamSpec[] = [{ name: "length", title: "Length", default: "a", values: [{ value: "a", title: "ULF A" }, { value: "b", title: "ULF B" }] }];
 
+/** The ULF's box front: flat and upright, tight round corners. */
+const ULF_NOSE: EndShape = {
+  plan: [[0, 0.9], [0.15, 0.97], [0.3, 1]],
+  upper: [[0, 0.87], [0.2, 0.96], [0.35, 1]],
+  top: [[0, 0.9], [0.1, 0.97], [0.3, 1]],
+  apron: [[0, 0.3], [0.05, -1]],
+};
+
 export function viennaUlfSpec(p?: ParamValues): WorldTramSpec {
   const b = resolveParams(ULF_PARAMS, p).length === "b";
   // the portals stand under the joints; every section hangs between them
@@ -275,10 +353,23 @@ export function viennaUlfSpec(p?: ParamValues): WorldTramSpec {
     doors: [[1.0, 2.3], ...Array.from({ length: n - 2 }, (_, k) => k + 1).filter((i) => i % 2 === 1).flatMap((i) => secDoors(l, 1.3, [i, 2.0])), [l.at(n - 1, 1.9), l.at(n - 1, 3.2)]],
     trucks: portals(...Array.from({ length: n - 1 }, (_, i) => l.joint(i))),
     collector: arm(l.mid(Math.floor(n / 2))),
-    colors: { skirt: "#d3242c", body: "#f2f2ee", band: "#d3242c" },
-    paint: [[0.62, "skirt"], [2.95, "body"], [3.6, "band"]],
-    over: { floor: 0.18, doorSill: 0.22, wheelRadius: 0.3, maxBendDeg: 25 },
-    roofBoxes: [[0.6, 3.6, 0.95, 0.36, "body"], [l.at(n - 1, 0.6), l.at(n - 1, 3.6), 0.95, 0.36, "body"]],
+    // Wiener Linien: a dark grey skirt, the red band, white above (the photographed A on the Ring)
+    colors: { skirt: "#3d4044", body: "#f0f0ed", band: "#d3242c", trim: "#1d1f21" },
+    paint: [[0.6, "skirt"], [1.0, "band"], [3.6, "body"]],
+    over: {
+      floor: 0.18, doorSill: 0.22, wheelRadius: 0.3, maxBendDeg: 25,
+      // the box front: an upright screen in a black frame, the lamps in black recesses in the white panel
+      frontShape: ULF_NOSE, screen: [1.5, 3.02], sign: 0.3,
+      cabPaint: [[0.6, "skirt"], [0.92, "band"], [1.42, "body"], [1.5, "trim"], [3.6, "body"]],
+      nose: {
+        heads: [[1.13, 0.8, 0.065]], tails: [[1.13, 0.98, 0.035]], housing: "trim",
+        pillars: [1.06], pillarPaint: "trim", wipers: [0.3], wiperLength: 0.95, mirrors: "arm", mirrorY: 2.75,
+        bumper: [0.24, 0.6, "skirt", 0.05],
+        route: "J", number: ["25", 0, 0.73, 0.14], badges: [[1.18, 0, 0.07, "band"]], indicators: [[1.32, 0.95]],
+        grille: [0.38, 0.5, 0.3, 3, "trim"],
+      },
+    },
+    roofBoxes: [[0.6, 3.6, 0.95, 0.36, "body", 0.3], [l.at(n - 1, 0.6), l.at(n - 1, 3.6), 0.95, 0.36, "body", 0.3]],
   });
 }
 
@@ -428,6 +519,14 @@ export function stadlerTangoSpec(p?: ParamValues): WorldTramSpec {
 
 const ZURICH = { skirt: "#0a58a6", body: "#f2f2ee", band: "#0a58a6" };
 
+/** The Cobra's nose: a long pointed jaw, the screen leaning back over it, the A-pillars leaning in. */
+const COBRA_NOSE: EndShape = {
+  plan: [[0, 0.56], [0.4, 0.79], [0.9, 0.93], [1.45, 1]],
+  upper: [[0, 0.46], [0.55, 0.72], [1.15, 0.91], [1.65, 1]],
+  top: [[0, 0.0], [0.55, 0.55], [1.0, 0.85], [1.35, 0.97], [1.65, 1]],
+  apron: [[0, 0.6], [0.35, -1]],
+};
+
 export function zurichCobraSpec(): WorldTramSpec {
   const sections = [7.4, 7.0, 6.6, 7.0, 7.4];
   const l = lay(sections, 0.4);
@@ -436,9 +535,23 @@ export function zurichCobraSpec(): WorldTramSpec {
     doors: [[1.85, 3.15], ...secDoors(l, 1.3, [1, 0.5], [1, 5.2], [3, 0.5], [3, 5.2]), [l.at(4, 4.3), l.at(4, 5.6)]],
     trucks: bogies(1.8, l.at(0, 4.9), l.mid(2), l.at(4, 2.5)),
     collector: arm(l.mid(2) + 0.5),
-    colors: ZURICH,
-    paint: [[0.62, "band"], [2.95, "body"], [3.6, "band"]],
-    roofBoxes: [[0.8, 6.8, 0.95, 0.38, "body"], [l.at(4, 0.6), l.at(4, 6.8), 0.95, 0.38, "body"]],
+    colors: { ...ZURICH, lampBand: "#1b1c1f" },
+    // VBZ: blue below the windows and a blue stripe over them, white between and on the roof
+    paint: [[1.0, "band"], [2.82, "body"], [3.05, "band"], [3.6, "body"]],
+    roofBoxes: [[1.7, 6.8, 0.9, 0.38, "body", 0.8], [l.at(4, 0.6), l.at(4, 5.7), 0.9, 0.38, "body", 0.8]],
+    over: {
+      // the pointed nose: a blue jaw thrust forward, a black lamp band, the screen leaning far back
+      // under a blue cap with the display
+      frontShape: COBRA_NOSE, screen: [1.45, 3.3], sign: 0.3,
+      cabPaint: [[0.95, "band"], [1.05, "body"], [1.45, "lampBand"], [3.6, "band"]],
+      nose: {
+        heads: [[1.2, 0.68, 0.055], [1.2, 0.54, 0.04]], tails: [[1.2, 0.84, 0.03]],
+        wipers: [0.3], wiperLength: 1.0, mirrors: "arm", mirrorY: 2.95,
+        route: "9", number: ["3002", 0.62, 0.32, 0.1], badges: [[1.24, 0, 0.06, "body"]], indicators: [[1.33, 0.78]],
+        grille: [0.4, 0.52, 0.24, 4, "lampBand"],
+        bumper: [0.62, 0.72, "lampBand", 0.03],
+      },
+    },
   });
 }
 
@@ -547,6 +660,14 @@ export function florenceSirioSpec(p?: ParamValues): WorldTramSpec {
 
 export const CITADIS_PARAMS: readonly ParamSpec[] = [liveryParam(["bordeaux", "Bordeaux"], ["dublin", "Dublin"], ["dubai", "Dubai"])];
 
+/** The Citadis nose: a rounded bumper, the screen raked back from it, its corners leaning in under a hood. */
+const CITADIS_NOSE: EndShape = {
+  plan: [[0, 0.58], [0.3, 0.79], [0.7, 0.92], [1.2, 0.98], [1.7, 1]],
+  upper: [[0, 0.44], [0.5, 0.68], [1.0, 0.86], [1.5, 0.96], [1.95, 1]],
+  top: [[0, 0.0], [0.35, 0.45], [0.75, 0.78], [1.1, 0.93], [1.5, 1]],
+  apron: [[0, 0.5], [0.25, -1]],
+};
+
 /** The Citadis 402: seven sections, bogies under the cab sections and the third and fifth. */
 export function citadis402(colors: Record<string, string>, paint: WorldTramSpec["paint"], o: { width?: number; collector?: WorldTramSpec["collector"] } = {}): WorldTramSpec {
   const sections = [7.5, 4.6, 6.4, 4.6, 6.4, 4.6, 7.5];
@@ -556,8 +677,20 @@ export function citadis402(colors: Record<string, string>, paint: WorldTramSpec[
     doors: [[2.15, 3.45], ...[1, 3, 5].flatMap((i) => secDoors(l, 1.3, [i, 1.65])), [l.at(6, 4.1), l.at(6, 5.4)]],
     trucks: bogies(1.8, l.at(0, 5.0), l.mid(2), l.mid(4), l.at(6, 2.5)),
     collector: o.collector ?? arm(l.mid(3)),
-    colors, paint,
-    roofBoxes: [[0.8, 6.9, 0.95, 0.36, "body"], [l.at(2, 0.4), l.at(2, 6.0), 0.95, 0.36, "body"], [l.at(6, 0.6), l.at(6, 6.7), 0.95, 0.36, "body"]],
+    colors: { lampBand: "#1b1c1f", ...colors }, paint,
+    roofBoxes: [[1.7, 6.9, 0.9, 0.36, "body", 0.8], [l.at(2, 0.4), l.at(2, 6.0), 0.9, 0.36, "body", 0.5], [l.at(6, 0.6), l.at(6, 5.6), 0.9, 0.36, "body", 0.8]],
+    over: {
+      // the round nose: the bumper bulging ahead of a raked screen whose corners lean in under
+      // the hood, the lamps in a black band at its foot
+      frontShape: CITADIS_NOSE, screen: [1.2, 3.02], sign: 0.3,
+      cabPaint: [[0.62, "skirt"], [0.92, "body"], [1.2, "lampBand"], [3.6, "body"]],
+      nose: {
+        heads: [[1.06, 0.82, 0.065], [1.06, 0.68, 0.05]], tails: [[1.06, 0.55, 0.04]],
+        wipers: [0.4], wiperLength: 1.05, mirrors: "arm", mirrorY: 2.65,
+        route: "1", number: ["1806", 0.55, 0.8, 0.1, "lampBand"], badges: [[1.06, 0, 0.06, "skirt"]], indicators: [[1.06, 0.95]],
+        grille: [0.68, 0.8, 0.3, 2, "lampBand"],
+      },
+    },
   });
 }
 
@@ -661,6 +794,13 @@ export function croydonCr4000Spec(): WorldTramSpec {
   });
 }
 
+/** The Balloon's end: a round plan, upright to the top deck, the roof rounding over its front windows. */
+const BALLOON_NOSE: EndShape = {
+  plan: [[0, 0.56], [0.3, 0.78], [0.7, 0.92], [1.2, 0.99], [1.6, 1]],
+  top: [[0, 0.83], [0.3, 0.93], [0.7, 0.99], [1.1, 1]],
+  apron: [[0, 0.5], [0.15, -1]],
+};
+
 export function blackpoolBalloonSpec(): WorldTramSpec {
   return doubleDeck({
     sections: [12.8], width: 2.29, height: 4.75, front: "pcc", doubleEnded: true,
@@ -669,7 +809,24 @@ export function blackpoolBalloonSpec(): WorldTramSpec {
     collector: pole(6.4, 4.6),
     colors: { skirt: "#1f6b3a", body: "#efe6c8", upper: "#efe6c8" },
     paint: [[1.25, "skirt"], [2.25, "body"], [2.9, "skirt"], [4.6, "upper"]],
-    over: { pitch: 1.1 },
+    over: {
+      pitch: 1.1,
+      // the streamlined end: three driver's windows, the indicator box between the decks,
+      // the two big curved windows of the upper deck's front
+      frontShape: BALLOON_NOSE, screen: [1.55, 2.22], sign: 0,
+      nose: {
+        heads: [[1.05, 0.72, 0.08]], tails: [[0.82, 0.72, 0.05]],
+        // the driver's screen round the corners in three lights, the upper windows and the box laid on
+        screenBand: true, pillars: [0.36], pillarPaint: "body",
+        panes: [
+          { y: [2.5, 2.82], z: [-0.55, 0.55], mat: "display" },
+          { y: [3.15, 4.2], z: [0.06, 1.0] }, { y: [3.15, 4.2], z: [-1.0, -0.06] },
+        ],
+        wipers: [0.2], wiperLength: 0.5,
+        bumper: [0.5, 0.66, "underframe", 0.08],
+        route: "", display: 0, number: ["726", 0, 1.4, 0.13, "skirt"], indicators: [[1.32, 0.78]],
+      },
+    },
   });
 }
 
@@ -956,6 +1113,14 @@ export function skoda16tSpec(): WorldTramSpec {
   });
 }
 
+/** The Eurotram's bubble: a round low nose, the glass dome sweeping back and in to the roof. */
+const EUROTRAM_NOSE: EndShape = {
+  plan: [[0, 0.46], [0.25, 0.7], [0.6, 0.87], [1.1, 0.97], [1.6, 1]],
+  upper: [[0, 0.28], [0.5, 0.56], [1.1, 0.8], [1.7, 0.95], [2.3, 1]],
+  top: [[0, 0.0], [0.3, 0.3], [0.7, 0.6], [1.2, 0.84], [1.7, 0.96], [2.2, 1]],
+  apron: [[0, 0.55], [0.3, -1]],
+};
+
 export function strasbourgEurotramSpec(): WorldTramSpec {
   const sections = [6.0, 3.9, 5.2, 3.9, 5.2, 3.9, 6.0];
   const l = lay(sections, 0.4);
@@ -964,10 +1129,22 @@ export function strasbourgEurotramSpec(): WorldTramSpec {
     doors: [...[1, 3, 5].flatMap((i) => secDoors(l, 1.3, [i, 1.3]))],
     trucks: bogies(1.8, l.at(0, 3.6), l.mid(2), l.mid(4), l.at(6, 2.4)),
     collector: arm(l.mid(3)),
-    colors: { skirt: "#5c6064", body: "#e3e5e6", band: "#9aa0a6" },
-    paint: [[0.62, "skirt"], [0.85, "band"], [3.6, "body"]],
-    // the bay windows: glazing almost to the floor
-    over: { windows: [0.75, 3.0], pitch: 2.0 },
+    // CTS: a dark green skirt, a white band, the champagne-silver body (the photographed 1003)
+    colors: { skirt: "#1f5a4c", body: "#bdb7ad", band: "#f2f2ee" },
+    paint: [[0.55, "skirt"], [0.85, "band"], [3.6, "body"]],
+    over: {
+      // the bay windows: glazing almost to the floor
+      windows: [0.9, 3.0], pitch: 2.0,
+      // the glass bubble: the screen from the green lamp panel up into the roof, a white rim round the nose
+      frontShape: EUROTRAM_NOSE, screen: [1.32, 3.14], sign: 0.14,
+      cabPaint: [[0.55, "skirt"], [0.9, "band"], [1.32, "skirt"], [3.6, "body"]],
+      nose: {
+        heads: [[1.12, 0.62, 0.055]], tails: [[1.12, 0.44, 0.03]],
+        wipers: [0.25], wiperLength: 0.9, mirrors: "camera", mirrorY: 2.5,
+        route: "A", number: ["1003", 0, 0.8, 0.1, "skirt"], badges: [[1.12, 0, 0.05, "band"]], indicators: [[1.12, 0.32]],
+        bumper: [0.72, 0.88, "band", 0.05],
+      },
+    },
   });
 }
 

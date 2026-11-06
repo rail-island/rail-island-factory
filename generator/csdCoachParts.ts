@@ -54,6 +54,13 @@ export interface Volume {
    * door shows the interior (doors.ts).
    */
   openings?: Opening[];
+  /**
+   * A second plan the body narrows to above `y0`, reached at `y1` and kept above
+   * it (a tram cab's windscreen leaning in at the corners): the half width of a
+   * point at height y blends from `plan` to `upper.plan` between y0 and y1. The
+   * plan's stations and these must be the same span. Omit for upright sides.
+   */
+  upper?: { y0: number; y1: number; plan: Pt[] };
 }
 
 /** A doorway through side `s` of a volume, over the side-view box x0..x1, y0..y1 (source metres). */
@@ -128,9 +135,17 @@ export function sectionHalf(section: Pt[], y: number): number {
 export const halfWidth = (v: Volume): number => Math.max(...v.section.map((p) => Math.abs(p[0])));
 export const hiAt = (v: Volume, x: number): number => (v.top ? lerp(v.top, x) : Infinity);
 export const loAt = (v: Volume, x: number): number => (v.bottom ? lerp(v.bottom, x) : -Infinity);
+/** The scale of the section's half width at x and height y: the plan's, blended into `upper`'s above its y0. */
+export function planK(v: Volume, x: number, y: number): number {
+  const k = lerp(v.plan, x) / halfWidth(v);
+  if (!v.upper) return k;
+  const { y0, y1, plan } = v.upper;
+  const t = Math.min(1, Math.max(0, (y - y0) / (y1 - y0)));
+  return k + (lerp(plan, x) / halfWidth(v) - k) * t;
+}
 /** The x of every plan and elevation station within the plan, ascending. */
 const stations = (v: Volume): number[] =>
-  [...new Set([...v.plan, ...(v.top ?? []), ...(v.bottom ?? [])].map((p) => p[0]))]
+  [...new Set([...v.plan, ...(v.top ?? []), ...(v.bottom ?? []), ...(v.upper?.plan ?? [])].map((p) => p[0]))]
     .filter((x) => x >= v.plan[0]![0] - 1e-9 && x <= v.plan[v.plan.length - 1]![0] + 1e-9)
     .sort((a, b) => a - b);
 
@@ -185,6 +200,7 @@ export class Coach {
       const k = lerp(v.plan, x) / hw0;
       const hi = Math.max(hiAt(v, x), y0 + 0.002);
       const lo = Math.min(loAt(v, x), y1 - 0.002);
+      if (v.upper) return poly.map(([z, y]) => { const yy = Math.min(hi, Math.max(lo, y)); return [z * planK(v, x, yy), yy]; });
       return poly.map(([z, y]) => [z * k, Math.min(hi, Math.max(lo, y))]);
     };
     // internal band boundaries sit 2.5 mm above their nominal heights, so the
@@ -334,6 +350,49 @@ export class Coach {
   }
 
   /**
+   * A panel with rounded corners on side s of v over the box b: corner arcs of
+   * radius r (at most half the box) in `n` steps, each outline point laid on the
+   * skin `proud` off it, the face a fan from the box's centre, the back `depth`
+   * in. A rounded window's frame and glass (`window`'s `round`).
+   */
+  roundPanel(v: Volume, mat: string, s: number, b: Box, r: number, proud: number, depth = 0.04, n = 3): void {
+    const hw0 = halfWidth(v);
+    const ys0 = v.section.map((p) => p[1]);
+    const [minY, maxY] = [Math.min(...ys0), Math.max(...ys0)];
+    const surf = (x: number, y: number): Vec3 => {
+      const yy = Math.min(maxY - 1e-6, Math.max(minY + 1e-6, y));
+      return [this.X(x), y, s * ((sectionHalf(v.section, yy) * lerp(v.plan, x)) / hw0 + proud)];
+    };
+    const rr = Math.max(0, Math.min(r, (b.x1 - b.x0) / 2 - 1e-4, (b.y1 - b.y0) / 2 - 1e-4));
+    // the outline counter-clockwise in (x, y): each corner's arc about its centre
+    const corners: Array<[number, number, number]> = [[b.x1 - rr, b.y0 + rr, -Math.PI / 2], [b.x1 - rr, b.y1 - rr, 0], [b.x0 + rr, b.y1 - rr, Math.PI / 2], [b.x0 + rr, b.y0 + rr, Math.PI]];
+    const ring: Array<[number, number]> = corners.flatMap(([cx, cy, a0]) =>
+      Array.from({ length: n + 1 }, (_, k): [number, number] => {
+        const a = a0 + (k / n) * (Math.PI / 2);
+        return [cx + rr * Math.cos(a), cy + rr * Math.sin(a)];
+      }),
+    );
+    const [mx, my] = [(b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2];
+    const c = surf(mx, my);
+    const f = ring.map(([x, y]) => surf(x, y));
+    const back = (p: Vec3): Vec3 => [p[0], p[1], p[2] - s * depth];
+    const cb = back(c);
+    const pts: Vec3[] = [];
+    const backPts: Vec3[] = [];
+    for (let i = 0; i < f.length; i++) {
+      const [a, d] = [f[i]!, f[(i + 1) % f.length]!];
+      pts.push(c, a, d);
+      backPts.push(cb, back(a), back(d));
+      // the wall between the two outline points, facing out of the panel
+      const [ra, rd] = [ring[i]!, ring[(i + 1) % ring.length]!];
+      const out: Vec3 = [this.X((ra[0] + rd[0]) / 2) - this.X(mx), (ra[1] + rd[1]) / 2 - my, 0];
+      this.m.facets(mat, [a, d, back(d), a, back(d), back(a)], out);
+    }
+    this.m.facets(mat, pts, [0, 0, s]);
+    this.m.facets(mat, backPts, [0, 0, -s]);
+  }
+
+  /**
    * A flat panel on a volume's end `e` (+1 the high-x end) over the front-view
    * box `b` (x0..x1 is z across, y up), laid on the end cap and on the plan's
    * end facets wherever the box reaches them.
@@ -380,16 +439,19 @@ export class Coach {
   }
 
   /** A framed window: the frame over the whole box, the glass inset by `fw`. */
-  window(v: Volume, s: number, b: Box, opts: { frame?: string; glass?: string; fw?: number; end?: boolean; sash?: number } = {}): void {
+  window(v: Volume, s: number, b: Box, opts: { frame?: string; glass?: string; fw?: number; end?: boolean; sash?: number; depth?: number; round?: number } = {}): void {
     const fw = opts.fw ?? 0.06;
-    const draw = (mat: string, bb: Box, proud: number, depth = 0.04) =>
-      opts.end ? this.endPanel(v, mat, s, bb, proud, depth) : this.sidePanel(v, mat, s, bb, proud, depth);
-    this.m.scope("frame", () => draw(opts.frame ?? "frame", b, 0.012));
+    // `round`: the frame's corner radius on a side window (the glass's follows it, fw in)
+    const r = opts.end ? undefined : opts.round;
+    const draw = (mat: string, bb: Box, proud: number, depth = 0.04, radius?: number) =>
+      opts.end ? this.endPanel(v, mat, s, bb, proud, depth) : radius ? this.roundPanel(v, mat, s, bb, radius, proud, depth) : this.sidePanel(v, mat, s, bb, proud, depth);
+    // `depth`: how deep the frame reaches in (a pocket door's light keeps shallow)
+    this.m.scope("frame", () => draw(opts.frame ?? "frame", b, 0.012, opts.depth, r));
     // the glass is a thin layer in front of the frame: its walls never meet the frame's
     const glass = { x0: b.x0 + fw, y0: b.y0 + fw, x1: b.x1 - fw, y1: b.y1 - fw };
     this.inWindow = true;
     try {
-      this.m.scope("glass", () => draw(opts.glass ?? "glass", glass, 0.022, 0.008));
+      this.m.scope("glass", () => draw(opts.glass ?? "glass", glass, 0.022, 0.008, r === undefined ? undefined : Math.max(0.02, r - fw)));
     } finally {
       this.inWindow = false;
     }

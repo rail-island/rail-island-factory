@@ -128,11 +128,25 @@ function picassoFittings(m: MeshBuilder, _b: SliceBody, X: (d: number) => number
   m.scope("turret", () => {
     m.scope("shell", () => m.sweep("cream", "z", prof, z0, prof, z1));
     const glass = (name: string, f: () => void) => m.scope(name, f);
+    // each windscreen: upright up to the rounded top, then curving back over it
+    const curved = (mat: string, e: number, x: number, za: number, zb: number, y0: number, aMax: number, proud: number) => {
+      decalX(m, mat, x + e * proud, e, za, zb, y0, t.top - t.r);
+      const [cx, cy] = [x - e * t.r, t.top - t.r];
+      const steps = Math.max(1, Math.ceil(aMax / (Math.PI / 8)));
+      const pts: Array<[number, number, number]> = [];
+      for (let i = 0; i < steps; i++) {
+        const [p, q] = [(aMax * i) / steps, (aMax * (i + 1)) / steps];
+        const at = (a: number, z: number): [number, number, number] => [cx + e * (t.r + proud) * Math.cos(a), cy + (t.r + proud) * Math.sin(a), z];
+        pts.push(at(p, za), at(q, za), at(q, zb), at(p, za), at(q, zb), at(p, zb));
+      }
+      const mid = aMax / 2;
+      m.facets(mat, pts, [e * Math.cos(mid), Math.sin(mid), 0]);
+    };
     for (const [e, x] of [[1, xb], [-1, xa]] as const)
       glass(e > 0 ? "front windscreen" : "rear windscreen", () => {
         for (const [a, b2] of [[z0 + 0.08, (z0 + z1) / 2 - 0.03], [(z0 + z1) / 2 + 0.03, z1 - 0.08]] as const) {
-          decalX(m, "rubber", x + e * 0.004, e, a, b2, 3.62, 4.05);
-          decalX(m, "cabGlass", x + e * 0.008, e, a + 0.03, b2 - 0.03, 3.65, 4.02);
+          curved("rubber", e, x, a, b2, 3.62, (Math.PI * 3) / 8, 0.004);
+          curved("cabGlass", e, x, a + 0.03, b2 - 0.03, 3.65, (Math.PI * 5) / 16, 0.008);
         }
       });
     glass("side windows", () => {
@@ -172,6 +186,8 @@ export const X3800: ShinkansenSeries = {
   endLength: 21.85, midLength: 21.85, W: 1.45, Y: 1.4, S: 3.0, C: 3.6, lean: 0.97, B: 1.0, A: 1.15,
   nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: PICASSO_END,
   lodRoof: { d: TURRET.d, hw: 0.62, y: [3.3, TURRET.top], mat: "cream" }, fittings: picassoFittings,
+  // the engine room's louvres on the red behind the cab door (photo-mine-museum-...-x4042-...jpg), body d behind the join
+  endGrilles: [[2.35, 2.9, 1.35, 1.75, 6, "h"], [2.97, 3.52, 1.35, 1.75, 6, "h"], [3.59, 4.14, 1.35, 1.75, 6, "h"]],
   windows: [[1.95, 2.7]], windowW: 1.05, pitch: 1.3, door: [1.2, 2.9, 1.95, 2.6], doorW: 0.85,
   bogieCentres: 13.5, wheelR: 0.45, wheelbase: 2.4, traction: "diesel", single: true, endCoupler: "buffers",
   liveries: {

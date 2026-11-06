@@ -73,7 +73,10 @@ A rail vehicle tells the game where it rides on the track. `rig.supports` lists,
 model x, every point it stands on:
 
 - a **bogie** - two or three axles close together, the four- and six-axle vehicles
-  and the Bo'Bo'Bo' DNT 184.5 - with `node` naming its own top-level node, pivoted
+  and the Bo'Bo'Bo' DNT 184.5, or an articulated steam locomotive's front engine
+  unit (the Big Boy's six axles, the CSD 636's four; its wheelsets and rods moving
+  parts inside it) -
+  with `node` naming its own top-level node, pivoted
   at `(x, axle height, 0)`, `x` the mean of its axles;
 - a **lone wheelset** outside any bogie - a two-axle coach, wagon or railcar, a
   small diesel's rigid axles, a steam locomotive's wheelsets - without `node`;

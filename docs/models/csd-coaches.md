@@ -86,14 +86,19 @@ designs, the Bmo and the CD green and white coach).
   0.9 m to 0.2 m between the bogies. Each paint band of the section is one open
   sweep per station segment, closed only by end-cap slabs (`trimCaps` leaves out
   the caps of bands a sloped nose clips away at its tip; the German coaches' cabs,
-  [german-coaches.md](german-coaches.md)). Be31 (main body,
+  [german-coaches.md](german-coaches.md)). An optional `upper` plan narrows the
+  section above a height (`planK`: blended from `plan` between its y0 and y1): a
+  tram cab's screen corners leaning in ([world-trams.md](world-trams.md)). Be31 (main body,
   narrower vestibules, roof), Bi20 (compartments, roof, platforms) and Dsk (van,
   roof, platform) are several volumes.
 - **Panels.** `sidePanel` lays a box from a side BMP on the skin, split at plan
   stations and section corners, so windows follow tapered ends and the Bmo's
   sloped upper wall. `endPanel` lays a box from an end BMP on the end cap and on
   the plan's end facets (the Balm's wrap-round windows). Windows are a frame
-  slab with a thin glass layer in front (and an optional sash bar); doors are a
+  slab with a thin glass layer in front (and an optional sash bar); a side window
+  with `round` draws both with rounded corners (`roundPanel`: corner arcs of that
+  radius, the glass's `fw` smaller, each outline point laid on the skin, the face a
+  fan from the centre - the 81-71's windows and door lights); doors are a
   dark seam with a thin leaf layer.
 - **Flicker rules.** Internal band boundaries sit 2.5 mm above their nominal
   heights, end-wall paint is inset 2.5 mm, and a panel edge that would meet the

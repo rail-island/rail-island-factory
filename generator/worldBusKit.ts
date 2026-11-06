@@ -310,6 +310,20 @@ function bonnet(c: CityCtx, s: WorldBusSpec): void {
   const zr = cab ? 0.05 : b.half;
   const a0 = 0.12;
   const yTop = ay + R2;
+  // a detailed bus's wing (WorldBusSpec.detail): its arch filled up to a flat top 4 cm
+  // over the crown, from the shell's front to the nose, 4 mm inside the body's side;
+  // every point of it at least R2 from the axle, clear of the tyre at any lock
+  const wingTop = ay + R2 + 0.04;
+  const solidWing = (mm: MeshBuilder, mat: string, sd: number, z0: number, z1: number): void => {
+    const [za, zb] = sd > 0 ? [z0, z1 - 0.004] : [z0 + 0.004, z1];
+    const up = (pts: Ring): Ring => pts.map(([x]) => [x, wingTop] as [number, number]);
+    const front = arc(ax, ay, R2, a0, Math.PI / 2, 4);
+    plate(mm, mat, up(front), front, za, zb);
+    const back = Math.acos(Math.max(-1, Math.min(1, (xs - 0.03 - ax) / R2)));
+    const rear = arc(ax, ay, R2, Math.PI / 2, Math.min(Math.PI - a0, back), 4);
+    plate(mm, mat, up(rear), rear, za, zb);
+    block(mm, mat, ax + R2 * Math.cos(a0) - 0.005, xf - 0.02, 0.42, wingTop, za, zb);
+  };
   // the distant model: the hood and fenders as one box (up to a half cab's body, carried on above it)
   c.d.roofItem(xs, xf, -hw + 0.05, hw - 0.05, 0.4, cab ? cab.from : Math.max(h0, h1), hood);
   if (cab) c.d.roofItem(xs, L, -hw, hw, cab.from, s.height, "body");
@@ -321,7 +335,17 @@ function bonnet(c: CityCtx, s: WorldBusSpec): void {
     for (const sd of [-1, 1]) {
       const [z0, z1] = sd > 0 ? [b.half - 0.03, hw] : [-hw, -b.half + 0.03];
       plate(m, fender, arc(ax, ay, R2, a0, Math.PI - a0, 7), arc(ax, ay, R1, a0, Math.PI - a0, 7), z0, z1);
-      block(m, fender, ax + R1 + 0.01, xf - 0.02, 0.42, ay + R1 * 0.55, z0, z1);
+      if (s.detail) solidWing(m, fender, sd, z0, z1);
+      else block(m, fender, ax + R1 + 0.01, xf - 0.02, 0.42, ay + R1 * 0.55, z0, z1);
+    }
+    if (s.detail) {
+      // the apron between the wings, under the hood and the radiator, that the bumper meets
+      for (const sd of [-1, 1]) {
+        const [za, zb] = sd > 0 ? [inner - 0.01, b.half - 0.02] : [-b.half + 0.02, -inner + 0.01];
+        block(m, fender, ax + R2, L - 0.075, 0.42, yb + 0.03, za, zb);
+      }
+      // a half cab's lower panel under the cab, down to the hood's underside
+      if (cab) block(m, "body", xs - 0.02, xf - 0.03, yb, yTop + 0.03, zr - 0.01, hw - 0.02);
     }
     block(m, b.bumper ?? "bumper", L - 0.08, L, 0.36, 0.56, -hw + 0.04, hw - 0.04);
     block(m, "plate", L - 0.02, L + 0.012, 0.39, 0.53, -0.26, 0.26);

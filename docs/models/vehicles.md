@@ -56,7 +56,7 @@ how to add one.
 | `proc-vehicle-db-ice3` ... `proc-vehicle-db-ic-coach` | Germany's twenty trains | units on the series kit (`deUnits.ts`), locomotives on the box locomotive kit (`deLocos.ts`, [world-locos.md](world-locos.md)), steam (`worldSteamLocos.ts`, [world-steam.md](world-steam.md)), coaches (`worldCoaches.ts`, [world-coaches.md](world-coaches.md)). See [germany-trains.md](germany-trains.md) |
 | `proc-vehicle-sncf-*`, `-ratp-mi09`, `-ciwl-car` | France's twenty trains | `frUnits.ts`, `frLocos.ts`, steam and coaches. See [france-trains.md](france-trains.md) |
 | `proc-vehicle-ns-*` | the Netherlands' twenty trains | `nlUnits.ts`, `nlLocos.ts`, steam and coaches. See [netherlands-trains.md](netherlands-trains.md) |
-| `proc-vehicle-sbb-*`, `-rhb-*`, `-mgb-hge442`, `-glacier-express` | Switzerland's twenty trains | `chUnits.ts`, `chLocos.ts`, coaches. See [switzerland-trains.md](switzerland-trains.md) |
+| `proc-vehicle-sbb-*`, `-rhb-*`, `-mgb-hge442`, `-glacier-express` | Switzerland's twenty trains | `chUnits.ts`, `chLocos.ts`, `mgbHge442.ts`, coaches. See [switzerland-trains.md](switzerland-trains.md) |
 | `proc-vehicle-renfe-*`, `-talgo-iii`, `-iryo-s109` | Spain's twenty trains | `esUnits.ts`, `esLocos.ts`, steam. See [spain-trains.md](spain-trains.md) |
 | `proc-vehicle-br-*`, `-lner-*`, `-gwr-castle`, `-lms-black-five`, `-lu-1938-stock`, `-eurostar-373`, `-rocket` | the United Kingdom's twenty trains | `ukUnits.ts`, `ukLocos.ts`, steam and coaches, on the `uk` gauge. See [uk-trains.md](uk-trains.md) |
 | `proc-vehicle-ir-*`, `-eir-fairy-queen`, `-dhr-b-class`, `-ncrtc-namo-bharat`, `-dmrc-rs1` | India's twenty trains | `inUnits.ts`, `inLocos.ts`, steam, coaches and `worldWagons.ts`. See [india-trains.md](india-trains.md) |
@@ -70,7 +70,7 @@ how to add one.
 | `veh-tgv-duplex` | TGV Duplex | SNCF's double-deck TGV from photographs and published figures: `unit` powerCar (the default: the beak, one raised and one folded pantograph; 22.15 m), endTrailer, trailer, bar (21.845 and 18.70 m, two decks of windows), or train: `cars` 4 .. 8 (default 4), the trailers articulated on Jacobs bogies; `livery` carmillon, original, inoui, ouigo; about 3,900 to 8,100 triangles a car. See [tgv-duplex.md](tgv-duplex.md) |
 | `veh-raj-hopper-wagon`, `veh-rah-tank-wagon` | Raj Hopper Wagon, Rah Tank Wagon | rigid: the Raj with four yellow pressure-discharge hoppers and the silver CPAVEX ammonia tank wagon, about 4,200 and 4,400 triangles. See [wagons.md](wagons.md) |
 | `veh-sqns-container-wagon`, `veh-pao-flat-wagon`, `veh-habis-sliding-wall-wagon`, `veh-hadgs-hopper-wagon`, `veh-faccs-hopper-wagon`, `veh-falls-hopper-wagon`, `veh-wap-hopper-wagon` | Sqns Container Wagon, Pao Flat Wagon, Habis Sliding-Wall Wagon, Hadgs Covered Hopper Wagon, Faccs, Falls and Wap Hopper Wagon | their own family (`freightWagons.ts`, `hopperWagons.ts`): the Sqns (`cargo` empty/maersk) and Pao (`cargo` empty/tubes) with their vlakosimdb loads, the Habis (`livery` tw1/tw2), Faccs (`livery` cd/viamont) and Falls (`livery` cd/sd/viamont) in their paints, the Hadgs and the loaded Wap; 12.8 to 23.2 m, about 3,500 to 5,100 triangles. See [freight-wagons.md](freight-wagons.md) |
-| `veh-tatra-t3`, `veh-tatra-t6`, `veh-tatra-kt8`, `veh-tatra-kt4`, `veh-kvag-gt4`, `veh-metro-81-71` | Tatra T3, Tatra T6A5, Tatra KT8D5, Tatra KT4, GT4, Metro 81-71 | the trams and the metro car from vlakosimdb (`trams.ts`, `metro.ts`, `tramKit.ts`): the T3 (`variant` t3, t3m, t3prototype), the T6A5, the KT8D5 (`livery` redWhite, red, modern), the KT4 and the GT4 - the last three articulated, sections and joints in a rig without steering - and the 81-71 (`unit` headCar, middleCar) with third-rail shoes; one raised pantograph per tram; 5,500 to 11,800 triangles. See [trams.md](trams.md) |
+| `veh-tatra-t3`, `veh-tatra-t6`, `veh-tatra-kt8`, `veh-tatra-kt4`, `veh-kvag-gt4`, `veh-metro-81-71` | Tatra T3, Tatra T6A5, Tatra KT8D5, Tatra KT4, GT4, Metro 81-71 | the trams and the metro car from vlakosimdb (`trams.ts`, `metro.ts`, `tramKit.ts`): the T3 (`variant` t3, t3m, t3prototype), the T6A5, the KT8D5 (`livery` redWhite, red, modern), the KT4 and the GT4 - the last three articulated, sections and joints in a rig without steering - and the 81-71 (`unit` headCar, middleCar; `livery` prague, budapest) with third-rail shoes and doors sliding into the wall; one raised pantograph per tram; 6,600 to 12,000 triangles. See [trams.md](trams.md) |
 
 `VEHICLES` in `vehicles.ts` lists them as `{ id, title, build }`, the same
 `ProceduralDesign` shape as the skyscrapers (`design.ts`). `VEHICLE_CATALOG`
@@ -264,8 +264,9 @@ the final table and before/after errors to the user.
 
 At most **10,000 triangles** per road vehicle - an articulated bus **15,000** with one joint and **20,000** with two
 (`roadTriangleBudget()`, generator/rig.ts) - and about **15,000** per rail vehicle (tested at most 16,000); there is no file-size budget.
-A **tram** has the road vehicle's **10,000**; an articulated tram (sections and joints) up to
-**15,000** (test/models.test.ts, test/worldTrams.test.ts; [world-trams.md](world-trams.md#triangle-budget)).
+A **tram** has the road vehicle's **10,000** for a single body, and **5,000 more for each
+joint**: 15,000 with one, 20,000 with two (`tramTriangleBudget`; test/trams.test.ts,
+test/worldTrams.test.ts; [world-trams.md](world-trams.md#triangle-budget)).
 A vehicle's GLB is the same format as a skyscraper's: non-indexed triangle
 soups with **flat normals stored** per face (tested). The normals are
 redundant - a loader could compute the same ones - but storing them means no

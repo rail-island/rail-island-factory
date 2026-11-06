@@ -2846,6 +2846,18 @@
         "id": 2640,
         "size": 32
       },
+      "proc-vehicle-metro-81-71?formation=5 cars Budapest": {
+        "id": 10126,
+        "size": 30
+      },
+      "proc-vehicle-metro-81-71?livery=budapest": {
+        "id": 10114,
+        "size": 6
+      },
+      "proc-vehicle-metro-81-71?livery=budapest&unit=middleCar": {
+        "id": 10120,
+        "size": 6
+      },
       "proc-vehicle-metro-81-71?unit=middleCar": {
         "id": 2624,
         "size": 16

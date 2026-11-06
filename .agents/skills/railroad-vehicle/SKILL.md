@@ -18,10 +18,13 @@ documentation in English.
 - Aim at about **15,000 triangles per rail vehicle**. A small overflow is fine
   when it keeps a detail that matters (the tests cap it at 16,000); do not
   thin out a fine, visible pattern such as shutter slats just to get under 15k.
-- **Trams are the exception: 10,000 triangles**, as a road vehicle (they share the
-  street with them). An **articulated tram** (sections and joints) may spend more,
-  up to **15,000** for the whole car. The hard caps are tested
-  (`test/models.test.ts`, `test/worldTrams.test.ts`; docs/models/world-trams.md
+- **Trams are the exception: 10,000 triangles** for a single-body tram, as a road
+  vehicle (they share the street with them). An **articulated tram** gets **5,000
+  more for each joint**: 15,000 with one joint, 20,000 with two, 30,000 for a
+  five-section car (`tramTriangleBudget` in `generator/worldTramKit.ts`). Spend
+  the extra on the nose - its shape against photographs, lamps, screen pillars,
+  wipers, mirrors - before anything else. The hard caps are tested
+  (`test/trams.test.ts`, `test/worldTrams.test.ts`; docs/models/world-trams.md
   "Triangle budget"); the interior behind the doors has its own 2,000. There is no file-size budget. Spend detail on the silhouette,
   cab, running gear and recognizable roof equipment; keep round parts as coarse
   as their size allows (small lamps, tanks, axle boxes and pipes 6-12 sides,

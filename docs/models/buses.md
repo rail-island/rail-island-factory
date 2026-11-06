@@ -106,8 +106,8 @@ and a hub cap at most 3 cm proud of the tyre; an inner twin, hidden behind its o
 one, is the plain 16-gon. The rim, hub and nuts sit in the tyre's bore as a rolling
 part (`wheel-front-<side>-spin` in each steered wheel's node, `wheel-rear-<axle>-<side>`
 on the bodies) and the bus's `rolling` clip turns them with the distance travelled
-([animation.md](animation.md#rolling-wheels)); the round tyre stays with the body. Each wheel arch has a dark rubber trim 4.5 cm
-wide, 5 mm outside the notch (left off a side where a doorway comes within 5 cm), each
+([animation.md](animation.md#rolling-wheels)); the round tyre stays with the body. Each wheel arch cut into the shell has a dark rubber trim 4.5 cm
+wide, 5 mm outside the notch (left off a side where a doorway comes within 5 cm; none on a bonneted bus's front arch, which lies ahead of the shell under its wings), each
 rear axle mudflaps hung from its arch's rear wall behind the tyres, each stretch
 between two arches an amber side marker (`marker`, no lamp role) unless a doorway is
 there, and the route displays sit in the top front corner of the frontmost right-hand

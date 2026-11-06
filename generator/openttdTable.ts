@@ -269,8 +269,11 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   }), // approx.
   "proc-vehicle-metro-81-71": pax(1974, 160, ELRL, {
     variants: [at({ unit: "middleCar" }, { capacity: 170 })],
-    presets: presets({ unit: "middleCar" }),
-    formations: [formation("5 cars", {}, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, [{}, "turned"])],
+    presets: presets({ unit: "middleCar" }, { livery: "budapest" }, { unit: "middleCar", livery: "budapest" }),
+    formations: [
+      formation("5 cars", {}, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, [{}, "turned"]),
+      formation("5 cars Budapest", { livery: "budapest" }, ...[1, 2, 3].map(() => ({ unit: "middleCar", livery: "budapest" })), [{ livery: "budapest" }, "turned"]),
+    ],
   }),
   "proc-vehicle-cd-451": pax(1964, 80, ELRL, {
     variants: [at({ unit: "trailer" }, { capacity: 90 })],

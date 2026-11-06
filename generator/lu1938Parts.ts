@@ -104,6 +104,39 @@ function cabFront(m: MeshBuilder, b: SliceBody, X: (d: number) => number): void 
   });
 }
 
+/** The frame strips' width around a window, and the rain strip under the shoulder. */
+const FRAME = 0.035;
+const GUTTER = [2.265, 2.295] as const;
+/** The roof's transverse panel seams: their pitch and width. */
+const SEAM_PITCH = 1.3, SEAM_W = 0.03;
+
+/**
+ * What breaks up the plain red: a polished frame around every side window, the
+ * rain strip along the side under the roof's edge, and the roof's transverse panel
+ * seams (the photographs in assets/lu-1938-stock/).
+ */
+function bodyDetail(m: MeshBuilder, b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number }): void {
+  const [y0, y1] = TUBE_WINDOW;
+  const windows = (car.end ? TUBE_LAYOUT.end : TUBE_LAYOUT.middle).windows;
+  const front = car.end ? 0.25 : 0.2, back = car.length - 0.2;
+  for (const s of [1, -1]) {
+    m.scope("window frames", () => {
+      for (const [d0, d1] of windows)
+        for (const [a, e, v0, v1] of [[d0 - FRAME, d1 + FRAME, y1, y1 + FRAME], [d0 - FRAME, d1 + FRAME, y0 - FRAME, y0], [d0 - FRAME, d0, y0, y1], [d1, d1 + FRAME, y0, y1]] as const)
+          sidePanel(m, b, X, s, "winFrame", a, e, v0, v1, 0.005, 0.012);
+    });
+    m.scope("rain strip", () => sidePanel(m, b, X, s, "gutter", front, back, GUTTER[0], GUTTER[1], 0.012, 0.02));
+    m.scope("roof seams", () => {
+      const n = Math.floor((back - front) / SEAM_PITCH);
+      const start = (front + back - (n - 1) * SEAM_PITCH) / 2;
+      for (let i = 0; i < n; i++) {
+        const d = start + i * SEAM_PITCH;
+        crownPane(m, b, X, s, "seam", [d - SEAM_W / 2, d + SEAM_W / 2], [0, b.w(d) * 0.97], 0.003);
+      }
+    });
+  }
+}
+
 /** The fittings of a car: the cab front and cab side doors on the driving car, the underfloor equipment on both. */
 export function tubeFittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }): void {
   if (car.end) {
@@ -116,6 +149,7 @@ export function tubeFittings(m: MeshBuilder, b: SliceBody, X: (d: number) => num
       }
     });
   }
+  m.scope("body detail", () => bodyDetail(m, b, X, car));
   m.scope("underfloor", () => {
     // control and resistance boxes between the bogies: the 1938 Stock's equipment is all under the floor
     const c = car.length / 2;

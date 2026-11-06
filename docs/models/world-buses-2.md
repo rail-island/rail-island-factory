@@ -50,7 +50,7 @@ Third batch, `worldBuses3.ts`:
 
 | id | title | kind | size (m) | axles (m from the nose) | doors | OpenTTD year / capacity | triangles |
 |---|---|---|---|---|---|---|---|
-| `veh-aec-routemaster` | AEC Routemaster | double, half cab | 8.38 x 2.44 x 4.38 | 1.15 / 6.28 | 1 | 1956 / 64 | 5,792 |
+| `veh-aec-routemaster` | AEC Routemaster | double, half cab | 8.38 x 2.44 x 4.38 | 1.15 / 6.28 | 1 | 1956 / 64 | 5,924 |
 | `veh-mb-o3500` | Mercedes-Benz O 3500 | city, bonnet | 9.3 x 2.48 x 2.95 | 1.25 / 5.75 | 2 | 1949 / 40 | 2,617 |
 | `veh-magirus-saturn` | Magirus-Deutz Saturn II | city, bonnet | 10 x 2.5 x 3 | 1.3 / 6.3 | 2 | 1956 / 45 | 2,661 |
 | `veh-vw-t1-samba` | Volkswagen Type 2 Samba | minibus | 4.28 x 1.75 x 1.94 | 0.7 / 3.1 | 1 | 1951 / 8 | 2,328 |
@@ -62,7 +62,7 @@ Third batch, `worldBuses3.ts`:
 | `veh-gm-new-look` | GM New Look | city | 12.2 x 2.59 x 3.05 | 2.1 / 9.34 | 2 | 1959 / 70 | 3,056 |
 | `veh-gm-scenicruiser` | GM Scenicruiser | coach, raised deck | 12.2 x 2.44 x 2.95 (deck 3.4) | 2.3 / 9.25 / 10.45 | 1 | 1954 / 43 | 9,186 |
 | `veh-flxible-clipper` | Flxible Clipper | coach | 10.06 x 2.44 x 2.9 | 2.5 / 7.6 | 1 | 1937 / 29 | 2,590 |
-| `veh-blue-bird-vision` | Blue Bird Vision | city, bonnet | 11.7 x 2.44 x 3.2 | 1.1 / 7.2 | 1 | 2003 / 72 | 8,566 |
+| `veh-blue-bird-vision` | Blue Bird Vision | city, bonnet | 10.6 x 2.44 x 3.2 | 0.9 / 7.0 | 1 | 2003 / 72 | 8,646 |
 | `veh-thomas-saf-t-liner` | Thomas Saf-T-Liner C2 | city, bonnet | 11.9 x 2.44 x 3.2 | 1.2 / 7.3 | 1 | 2004 / 77 | 2,838 |
 | `veh-chicken-bus` | Guatemalan Camioneta | city, bonnet | 10.7 x 2.44 x 3.05 | 1.2 / 6.9 | 1 | 1990 / 70 | 2,767 |
 | `veh-toyota-coaster` | Toyota Coaster | minibus | 6.99 x 2.03 x 2.6 | 1.15 / 5.08 | 1 | 1969 / 29 | 2,608 |
@@ -146,6 +146,11 @@ there, u still metres from the nose, the axles placed by `u`), and the kit draws
   `fenderRadius(r, w)` = r + w/2 + 6 cm, clear of the tyre's side outline at any lock (a tyre
   turning about its vertical shows a disc shifted by at most half its width), from the hood
   out to the body's side, and its nose down ahead of the tyre;
+  on a refined bus (`detail`, [world-buses-detail.md](world-buses-detail.md)) each is a solid
+  **wing** instead - the arch filled up to a flat top 4 cm over its crown, from the shell's
+  front to the nose, 4 mm inside the body's side, every point at least the plate's outer radius
+  from the axle - with an **apron** between the wings under the hood that the bumper meets, and
+  under a half cab the cab's lower panel down to the hood's underside;
 - the **bumper** and the plate, the **grille** (`grille`), the round **head lamps** and amber
   indicators on the hood's front (on the engine's below the hood's bottom).
 

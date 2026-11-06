@@ -289,7 +289,8 @@ export const newRoutemaster: Extras = (c, s) => {
  * triangle, the route number and "via" boxes over the
  * cab, the upper deck's split front windows with their top vents, the rear route
  * box, the open rear platform (no doors: DoorStyle.open) with its grab pole, roof
- * vents over the front.
+ * vents over the front, the lower saloon's front window over the bonnet (and, in the
+ * kit's bonnet, the solid wings and the apron a detailed bus has).
  */
 export const routemaster: Extras = (c, s) => {
   const L = s.length;
@@ -316,6 +317,12 @@ export const routemaster: Extras = (c, s) => {
     for (const z of [-0.45, 0.45]) block(m, "frame", L - 0.55, L - 0.25, s.height - 0.06, s.height + 0.03, z - 0.18, z + 0.18);
   });
   c.d.roofItem(L - 0.55, L - 0.25, -0.63, 0.63, s.height - 0.06, s.height + 0.03, "frame");
+  // the lower saloon's front window over the bonnet, left of the cab, in its frame
+  const hood = Math.max(...b.top);
+  c.d.fit("bulkhead window", c.nose, () => {
+    endSlab(c.m(), "frame", c.frame, 1, -c.hw + 0.08, zr - 0.06, hood + 0.08, s.screen.y1 - 0.02, 0.01);
+    endSlab(c.m(), "glass", c.frame, 1, -c.hw + 0.13, zr - 0.11, hood + 0.13, s.screen.y1 - 0.07, 0.02);
+  });
   rearRouteBox(c, 2.24, 2.5);
   platformPole(c, s);
   gutters(c, s, s.eave - 0.08);
@@ -448,8 +455,21 @@ export const vision: Extras = (c, s) => {
   });
   // the hood's badge
   c.d.fit("hood badge", L - 0.1, () => block(c.m(), "chrome", L - 0.1, L - 0.08, 1.28, 1.34, -0.12, 0.12));
-  for (const sd of [-1, 1]) sideName(c, sd, 3.6, 6.4, 1.33, 0.2, "black", 0.11);
-  hatches(c, s, [4.6, 8.6]);
+  for (const sd of [-1, 1]) sideName(c, sd, 3.6, 6.4, 1.71, 0.16, "black", 0.11);
+  // the black stripe just under the side glass
+  for (const sd of [-1, 1]) sideStrip(c, s, sd, s.bonnet!.length + 0.05, L - 0.12, 1.9, 1.96, "black");
+  hatches(c, s, [4.4, 8.0]);
+  // the stepwell under the service door, below the body's underside: the dark steps
+  // behind the leaves, the panel behind the door down to the steps' foot
+  const [d0, d1] = s.doors[0]!;
+  c.d.fit("stepwell", c.x((d0 + d1) / 2), () => {
+    const m = c.m();
+    const y0 = s.door.bottom + 0.02;
+    block(m, "black", c.x(d1) + 0.02, c.x(d0) - 0.02, y0, s.floor + 0.01, hw - 0.7, hw - 0.03);
+    block(m, "body", c.x(d1 + 0.55), c.x(d1), y0, s.floor + 0.01, hw - 0.7, hw - 0.004);
+    // the dark box under the floor behind them, so nothing shows through from the left
+    block(m, "black", c.x(d1 + 0.55) + 0.015, c.x(d0) - 0.02, y0 + 0.04, s.floor + 0.005, -hw + 0.25, hw - 0.69);
+  });
   // side marker lamps at the cap's ends
   c.d.fit("side lamps", c.nose - 0.3, () => {
     for (const sd of [-1, 1]) sideSlab(c.m(), "marker", c.frame, sd, c.nose - 0.36, c.nose - 0.26, s.eave - 0.1, s.eave - 0.04, 0.02);

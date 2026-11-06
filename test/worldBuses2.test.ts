@@ -16,6 +16,7 @@ import { proceduralId } from "../generator/modelId";
 import { collectTriangles, parseGlb, type Tri } from "../generator/glbTriangles";
 import { coverageCombinations } from "../generator/design";
 import { sample } from "./catalogCache";
+import { poseGlb, sampleCount } from "../generator/glbPose";
 
 const LATER = [...WORLD_BUS_SPECS_2, ...WORLD_BUS_SPECS_3, ...WORLD_BUS_SPECS_4];
 
@@ -103,11 +104,70 @@ describe("the later world buses", () => {
     expect(span(upper, 0)[1]).toBeCloseTo(s.length, 2);
   });
 
+  // regression: a detailed bonneted bus showed holes round its front wheels (thin fender
+  // arcs, an open gap under the hood) and an arch trim floating ahead of its shell
+  it.each(LATER.filter((b) => b.spec().bonnet && b.spec().detail).map((b) => [b.id, b] as const))("%s closes its front: solid wings and an apron, no trim ahead of the shell", (_id, b) => {
+    const s = b.spec();
+    const m = b.build();
+    const ts = collectTriangles(...(Object.values(parseGlb(m.toGlb(b.id))) as [never, never]));
+    const hw = s.width / 2;
+    const ax = s.length - s.axles[0]!.at;
+    const ay = s.wheelRadius * Math.cos(Math.PI / 16);
+    const R2 = fenderRadius(s.wheelRadius, 0.26) + 0.05;
+    // a ray from ahead of the nose, straight back along -x: the nearest face it meets
+    const hit = (y: number, z: number): number => {
+      let best = -Infinity;
+      for (const t of ts) {
+        const [a, b2, c] = t.p as [number[], number[], number[]];
+        const [e1y, e1z, e2y, e2z] = [b2[1]! - a[1]!, b2[2]! - a[2]!, c[1]! - a[1]!, c[2]! - a[2]!];
+        const det = e1y * e2z - e1z * e2y;
+        if (Math.abs(det) < 1e-12) continue;
+        const [py, pz] = [y - a[1]!, z - a[2]!];
+        const u = (py * e2z - pz * e2y) / det;
+        const v = (e1y * pz - e1z * py) / det;
+        if (u < 0 || v < 0 || u + v > 1) continue;
+        best = Math.max(best, a[0]! + u * (b2[0]! - a[0]!) + v * (c[0]! - a[0]!));
+      }
+      return best;
+    };
+    // across each wing, from its foot up to just under its top, ahead of the wheel
+    for (const sd of [-1, 1]) for (const y of [0.5, ay + 0.2, ay + R2 - 0.05]) for (const z of [hw - 0.05, hw - 0.2]) {
+      expect(hit(y, sd * z), `y ${y.toFixed(2)} z ${(sd * z).toFixed(2)}`).toBeGreaterThan(ax + R2 - 0.02);
+    }
+    // the shell starts behind the front arch: no trim belongs to it
+    const shellFront = s.length - s.bonnet!.length;
+    expect(ts.filter((t) => t.material === "archTrim" && t.p.some((p) => p[0]! > shellFront + 0.01))).toEqual([]);
+  });
+
   it("raises the Scenicruiser's rear deck over its lower front", () => {
     const b = LATER.find((x) => x.id === "veh-gm-scenicruiser")!;
     const s = b.spec();
     const ts = collectTriangles(...(Object.values(parseGlb(b.build().toGlb(b.id))) as [never, never]));
     expect(span(ts.filter((t) => t.material === "body"), 1)[1]).toBeCloseTo(s.deck!.height, 2);
+  });
+
+  it("swings the Blue Bird Vision's two door leaves out from the side, light framed", () => {
+    const b = LATER.find((x) => x.id === "veh-blue-bird-vision")!;
+    const s = b.spec();
+    const bytes = b.build().toGlb(b.id);
+    const clip = (parseGlb(bytes).json as { animations: Array<{ name: string }> }).animations.findIndex((a) => a.name.startsWith("doors-right"));
+    expect(clip).toBeGreaterThanOrEqual(0);
+    const leaves = (glb: Uint8Array) => collectTriangles(...(Object.values(parseGlb(glb)) as [never, never])).filter((t) => t.material === "doorFrame" && t.p.every((p) => p[1] > s.door.bottom - 1e-3));
+    // shut: flat on the side; open: both leaves stand out of it, about their width
+    const shut = span(leaves(bytes), 2);
+    expect(shut[1]).toBeLessThan(s.width / 2 + 0.05);
+    // on the side even though the sill hangs below the body's underside (the stepwell):
+    // the side's width was once taken under the shell, putting the leaves on the centre line
+    expect(s.door.bottom).toBeLessThan(s.floor);
+    expect(span(leaves(bytes).filter((t) => t.p.every((p) => p[2] > 0)), 2)[0]).toBeGreaterThan(s.width / 2 - 0.05);
+    const open = leaves(poseGlb(bytes, sampleCount(bytes, clip) - 1, clip));
+    expect(span(open, 2)[1]).toBeGreaterThan(s.width / 2 + 0.25);
+    const [d0, d1] = s.doors[0]!;
+    const mid = s.length - (d0 + d1) / 2;
+    // one leaf hangs at each jamb: open pieces reach out both ahead of and behind the door's middle
+    const outside = open.filter((t) => t.p.some((p) => p[2] > s.width / 2 + 0.15));
+    expect(outside.some((t) => t.p.every((p) => p[0] > mid))).toBe(true);
+    expect(outside.some((t) => t.p.every((p) => p[0] < mid))).toBe(true);
   });
 
   it("changes only the colours with a finish parameter", () => {
