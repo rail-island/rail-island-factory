@@ -35,6 +35,9 @@ export interface SeriesCabFace {
   profile: Pt[];
   /** The plan's corner radius by height: [y, r]. */
   corner: Pt[];
+  /** The grid's base columns per half (face, corner, run, side; default 8, 4, 1, 1) and a paint edge's straightness tolerance (m). */
+  cols?: [number, number, number, number];
+  tolerance?: number;
   /** The face's bow: its edges this much behind its centre. */
   bulge?: number;
   /** Grid rows, ascending, from the body's bottom to its crown (the profile's and the paint's heights). */
@@ -44,6 +47,12 @@ export interface SeriesCabFace {
   roofFrom: number;
   /** Painted fields over the face's bands: surrounds and masks. */
   masks?: readonly FaceRect[];
+  /** Painted polygons over the face's bands, [lat, y] corners (one y-interval at each lat): a livery's sweep or emblem. */
+  fields?: ReadonlyArray<{ mat: string; pts: readonly Pt[] }>;
+  /** Convex polygons laid as decals on the face, [lat, y] corners, subdivided to follow its curve: a livery's point, an emblem (cheaper than a field). */
+  decals?: ReadonlyArray<{ mat: string; pts: readonly Pt[] }>;
+  /** The face's bands wrap round onto the cab sides back to the join (default the sides' bands there). */
+  wrap?: boolean;
   /** The windscreens and other panes, painted glass. */
   panes: readonly FaceRect[];
   /** Round lamps on the face: lat, y, radius, lens. */
@@ -70,6 +79,16 @@ export function bodyHalf(b: SliceBody, d: number): Pt[] {
   return out;
 }
 
+/** Inside a polygon (ray casting). */
+function inPoly(x: number, y: number, pts: readonly Pt[]): boolean {
+  let inside = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const [xi, yi] = pts[i]!, [xj, yj] = pts[j]!;
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
 const inRect = (q: NoseQuery, f: FaceRect) => inRoundRect(q.lat, q.y, (f.lat[0] + f.lat[1]) / 2, (f.y[0] + f.y[1]) / 2, (f.lat[1] - f.lat[0]) / 2, (f.y[1] - f.y[0]) / 2, f.r);
 
 /** The paint a cab face takes from the livery: its face bands, the cab sides' bands, roof and skirt. */
@@ -86,10 +105,12 @@ export interface FacePaint {
 
 function layers(f: SeriesCabFace, p: FacePaint): NoseLayer[] {
   const onFace = (q: NoseQuery) => Math.abs(q.u) <= 2;
+  const banded = (q: NoseQuery) => f.wrap || onFace(q);
   const out: NoseLayer[] = p.sides.map(([y0, y1, mat]): NoseLayer => ({ mat, name: `${mat} side`, inside: (q) => !onFace(q) && q.y >= y0 && q.y < y1 }));
   out.push({ mat: p.skirt, name: "skirt", inside: (q) => !onFace(q) && q.y < p.A });
-  for (const [y0, y1, mat] of p.face) out.push({ mat, name: `${mat} face`, inside: (q) => onFace(q) && q.y >= y0 && q.y < y1 });
-  out.push({ mat: p.roof, name: "roof", inside: (q) => (onFace(q) ? q.y >= f.roofFrom : q.y >= p.S) });
+  for (const [y0, y1, mat] of p.face) out.push({ mat, name: `${mat} face`, inside: (q) => banded(q) && q.y >= y0 && q.y < y1 && (onFace(q) || q.y >= p.A) });
+  out.push({ mat: p.roof, name: "roof", inside: (q) => (banded(q) ? q.y >= f.roofFrom : q.y >= p.S) });
+  (f.fields ?? []).forEach((r, i) => out.push({ mat: r.mat, name: `field ${i + 1}`, inside: (q) => onFace(q) && inPoly(q.lat, q.y, r.pts) }));
   (f.masks ?? []).forEach((r, i) => out.push({ mat: r.mat ?? "cabMask", name: `surround ${i + 1}`, inside: (q) => onFace(q) && inRect(q, r) }));
   f.panes.forEach((r, i) => out.push({ mat: r.mat ?? "cabGlass", name: `pane ${i + 1}`, inside: (q) => onFace(q) && inRect(q, r) }));
   return out;
@@ -104,11 +125,28 @@ const rect = (x0: number, x1: number, y0: number, y1: number): Pt[] => {
   return [[x0 - cx, y0 - cy], [x1 - cx, y0 - cy], [x1 - cx, y1 - cy], [x0 - cx, y1 - cy]];
 };
 
+/** A convex polygon as a fan of triangles, each cut into k x k smaller ones (a decal that follows a curved face). */
+function subdivide(pts: readonly Pt[], k: number): Pt[] {
+  const out: Pt[] = [];
+  const lerp2 = (a: Pt, b: Pt, t: number): Pt => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+  for (let i = 1; i + 1 < pts.length; i++) {
+    const [a, b, c] = [pts[0]!, pts[i]!, pts[i + 1]!];
+    // barycentric grid: point (p, q) = a + p/k (b - a) + q/k (c - a)
+    const P = (p: number, q: number): Pt => { const u = lerp2(a, b, p / k); return [u[0] + ((c[0] - a[0]) * q) / k, u[1] + ((c[1] - a[1]) * q) / k]; };
+    for (let p = 0; p < k; p++)
+      for (let q = 0; p + q < k; q++) {
+        out.push(P(p, q), P(p + 1, q), P(p, q + 1));
+        if (p + q + 1 < k) out.push(P(p + 1, q), P(p + 1, q + 1), P(p, q + 1));
+      }
+  }
+  return out;
+}
+
 /** Draws a cab face on end e (+1 the +X end), its tip at model x e * xTip, joined to the body's section `half`. */
 export function drawCabFace(m: MeshBuilder, f: SeriesCabFace, e: number, xTip: number, half: Pt[], p: FacePaint): void {
   const n = new CabNose(m, {
     ...spec(f, e, xTip, half), dJoin: f.dJoin, dSide: f.dSide ?? f.dJoin / 2,
-    base: p.face[0]?.[2] ?? p.sides[0]![2], layers: layers(f, p), cols: [8, 4, 1, 1], capTop: p.roof, capBottom: p.skirt,
+    base: p.face[0]?.[2] ?? p.sides[0]![2], layers: layers(f, p), cols: f.cols ?? [8, 4, 1, 1], ...(f.tolerance ? { tolerance: f.tolerance } : {}), capTop: p.roof, capBottom: p.skirt,
   });
   m.scope("skin", () => n.draw());
   const g = f.gangway;
@@ -124,6 +162,8 @@ export function drawCabFace(m: MeshBuilder, f: SeriesCabFace, e: number, xTip: n
       m.scope("leaf", () => n.plate(g.leaf, 0, (y0 + y1) / 2, rect(a, b, y0, y1), 0.03, 0.05));
       if (g.light) m.scope("light", () => n.plate("cabGlass", 0, y1 - 0.5, rect(a + 0.1, b - 0.1, y1 - 0.9, y1 - 0.1), 0.035, 0.01));
     });
+  if (f.decals?.length)
+    m.scope("decals", () => f.decals!.forEach((dc, i) => m.scope(`decal ${i + 1}`, () => n.decal(dc.mat, subdivide(dc.pts, 5), 0.012))));
   if (f.lamps?.length)
     m.scope("lamps", () => f.lamps!.forEach(([lat, y, r, lens], i) => m.scope(`lamp ${i + 1}`, () => n.lamp(lat, y, r, lens, "black", 12, 0))));
   if (f.roofLamp) {

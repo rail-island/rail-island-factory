@@ -82,7 +82,9 @@ combinations hashed before and after):
   of the lofted nose: its centre-line profile (upright, raked or domed), the plan's corner radius
   and bow, the face's bands (the livery's `front`, else its sides), black surrounds and glass
   panes as paint over them, lamps, a gangway door's frame and leaf standing off the face, the
-  number, the wipers and a roof lamp; the body ends square `dJoin` behind the tip and the face's
+  number, the wipers and a roof lamp; painted polygon `fields` (each refines the face's grid)
+  and cheaper `decals` laid on the surface; `wrap` carries the face's bands round onto the cab
+  sides; `cols` and `tolerance` set the grid's resolution; the body ends square `dJoin` behind the tip and the face's
   slices meet the body's own section there (both ends of a `single` railcar). The distant model
   takes its profile, plan, bands and the panes as glass (the VT 98 and the other short-nosed
   regional and metro units, [germany-trains.md](germany-trains.md));

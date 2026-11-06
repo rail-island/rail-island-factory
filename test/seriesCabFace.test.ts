@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { DE_UNITS, VT98 } from "../generator/deUnits.ts";
-import { MAT46, NL_UNITS } from "../generator/nlUnits.ts";
+import { DE1, MAT46, NL_UNITS } from "../generator/nlUnits.ts";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles.ts";
 import type { ProceduralDesign } from "../generator/design.ts";
@@ -11,6 +11,7 @@ import type { ShinkansenSeries } from "../generator/shinkansen.ts";
 const CASES: Array<{ design: ProceduralDesign; series: ShinkansenSeries; panes: number; single: boolean }> = [
   { design: DE_UNITS.find((d) => d.id === "proc-vehicle-db-vt98")!, series: VT98, panes: 2, single: true },
   { design: NL_UNITS.find((d) => d.id === "proc-vehicle-ns-mat46")!, series: MAT46, panes: 5, single: false },
+  { design: NL_UNITS.find((d) => d.id === "proc-vehicle-ns-de1")!, series: DE1, panes: 5, single: true },
 ];
 
 function points(d: ProceduralDesign) {

@@ -13,7 +13,7 @@ The catalog had no Dutch train before. Every design is filed under the Netherlan
 | `proc-vehicle-ns-mat46` | NS Mat '46 | series, cab face, centre coupler | `unit`, `livery` (`green`, `yellowGrey`) | two cars of 25.9 m; 120 km/h |
 | `proc-vehicle-ns-mat54` | NS Mat '54 Hondekop | series | `unit`, `cars` 2 - 4, `livery` (`green`, `yellowGrey`) | the bonnet nose; 140 km/h |
 | `proc-vehicle-ns-plan-v` | NS Plan V | series, flat cab | `unit`, `livery` (`yellowGrey`, `yellowBlue`) | two cars of 26.0 m; 140 km/h |
-| `proc-vehicle-ns-de1` | NS DE-I Blauwe Engel | series, diesel, single | - | 26.0 m; 120 km/h |
+| `proc-vehicle-ns-de1` | NS DE-I Blauwe Engel | series, diesel, single, cab face | - | 26.0 m; 120 km/h |
 | `proc-vehicle-ns-icm` | NS ICM Koploper | series | `unit`, `cars` 3 - 4, `livery` (`yellowBlue`, `yellowGrey`) | the raised cab over the nose door; 160 km/h |
 | `proc-vehicle-ns-virm` | NS VIRM | series, double-deck | `unit`, `cars` 4 - 6, `livery` | 27.0 / 26.4 m; 160 km/h |
 | `proc-vehicle-ns-ddz` | NS DDZ | series, double-deck, flat cab | `unit`, `cars` 4 - 6, `livery` | 140 km/h |
@@ -41,6 +41,11 @@ Sprinter white, the Fyra) for the units; the locomotives' are in `nlLocos.ts`.
   frames wrapping round it under the red band and the silver dome, the marker lamp in the band,
   two lamps low, the Scharfenberg centre coupler (no buffers). The green scheme is the museum
   unit 273's: the silver skirt, the red waist and cantrail bands, the silver roof.
+- **DE-I.** Both ends are the Mat '46's rounded cab face (after the photographs in
+  `assets/ns-de1/`) with the Blauwe Engel's paint: petrol blue over a silver skirt, the
+  orange-red waist band rising to a point under the winged emblem between the yellow lamps,
+  the red band over the front's windows wrapping round the cab (the real one runs back to the
+  first door), white window frames, the silver roof, Scharfenberg couplers (no buffers).
 
 - **2200.** A centre cab between hoods, drawn at the cab's width; the real cab stands
   off centre between narrow hoods with walkways.
