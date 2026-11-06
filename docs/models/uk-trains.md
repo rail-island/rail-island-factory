@@ -1,7 +1,7 @@
 # The United Kingdom's trains
 
 **Covers** - the twenty British designs of the eight-country plan, at their real size on the W6a gauge (`uk`): the InterCity 125 and 225, the Class 800 IET and the Class 390 Pendolino, the Eurostar e300, the Class 158 and the Class 142 Pacer, London's 1938 tube stock; the Class 55 Deltic, 37, 47, 66 and 86; the LNER A4 and A3, the GWR Castle, the LMS Black Five, the BR 9F and Stephenson's Rocket; the BR Mk1 coach. Their kits, figures, deviations and tests.
-**Code** - `generator/ukUnits.ts` (`UK_UNITS`), `generator/ukLocos.ts` (`UK_LOCOS`), `generator/loadingGauge.ts` (`uk`), `generator/worldLocoKit.ts` (the `bonnets` nose), `generator/worldSteamLocos.ts`, `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `assets/br-*/`, `assets/lner-*/`, `assets/gwr-castle/`, `assets/lms-black-five/`, `assets/lu-1938-stock/`, `assets/eurostar-373/`, `assets/rocket/`
+**Code** - `generator/ukUnits.ts` (`UK_UNITS`), `generator/ukLocos.ts` (`UK_LOCOS`), `generator/loadingGauge.ts` (`uk`), `generator/worldLocoKit.ts` (the `bonnets` nose), `generator/worldSteamLocos.ts`, `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `test/ukIc225.test.ts`, `assets/br-*/`, `assets/lner-*/`, `assets/gwr-castle/`, `assets/lms-black-five/`, `assets/lu-1938-stock/`, `assets/eurostar-373/`, `assets/rocket/`
 **See also** - [loading-gauge.md](loading-gauge.md), [shinkansen.md](shinkansen.md), [world-locos.md](world-locos.md), [world-steam.md](world-steam.md), [world-coaches.md](world-coaches.md)
 
 The catalog had no British train before; the archived webapp Eurostar is now the
@@ -34,9 +34,13 @@ The catalog had no British train before; the archived webapp Eurostar is now the
 
 ## Deviations
 
-- **Power cars.** The HST's Class 43, the IC225's Class 91 and the Eurostar's power cars
-  are the series kit's end cars, with passenger windows; the IC225's driving van
-  trailer is the end car turned, its pantograph raised too.
+- **Power cars.** The HST's Class 43 and the Eurostar's power cars are the series kit's
+  end cars, with passenger windows. The IC225's Class 91 is drawn as a locomotive: its
+  short wedge No. 1 end with the yellow panel, lamps and grille on the front, buffers,
+  bogies 10.5 m apart under the middle of the body, plain sides with the cab doors and
+  four small windows (photographs in `assets/br-ic225/`). The driving van trailer is that
+  end car turned, its pantograph folded away (only the leading Class 91 raises one); its
+  own blunt van body is not drawn.
 - **A4.** The streamlined casing is not drawn: the generator's boiler, cab and running
   boards in garter blue (a follow-up for the steam kit's streamlined volumes).
 - **Rocket.** An open footplate on the generator's frame, its boiler level (the real one
@@ -46,5 +50,6 @@ The catalog had no British train before; the archived webapp Eurostar is now the
 
 ## Tests
 
-`test/worldTrains.test.ts` (with the `uk` gauge: every British design within 2.82 m by
+`test/ukIc225.test.ts` (the Class 91's bogies, its nose without a gangway frame, the
+warning panel, the leading pantograph), `test/worldTrains.test.ts` (with the `uk` gauge: every British design within 2.82 m by
 4.0 m) and, for each module's first design, the catalog sweep.

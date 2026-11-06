@@ -37,6 +37,8 @@ export interface CarDef {
   roof: string;
   skirt: string;
   under: string;
+  /** A painted field over the bands from the front end: up to d behind it, between two heights (a nose's warning panel). */
+  field?: { d: number; y: readonly [number, number]; mat: string };
   /** Window rows: their sill and head, their d spans, frame paint. */
   windows: ReadonlyArray<{ y: readonly [number, number]; spans: ReadonlyArray<readonly [number, number]>; frame: string }>;
   /** Passenger doors on both sides: d spans, sill and head, the leaf's window. */
@@ -127,7 +129,9 @@ function fluting(m: MeshBuilder, c: CarDef, b: SliceBody, X: (d: number) => numb
  */
 export function drawCar(m: MeshBuilder, c: CarDef, X: (d: number) => number, o: { trucks?: readonly boolean[]; inside?: readonly number[] } = {}): SliceBody {
   const b = carBody(c);
-  const painter: Painter = bandPainter(c.bands, c.roof, c.under, c.skirt, c.spec.S);
+  const bandPaint: Painter = bandPainter(c.bands, c.roof, c.under, c.skirt, c.spec.S);
+  const f = c.field;
+  const painter: Painter = f ? (d, y, r) => (r !== "bottom" && d <= f.d && y >= f.y[0] && y <= f.y[1] ? f.mat : bandPaint(d, y, r)) : bandPaint;
   const leaves = leavesOf(c);
   const cut = leaves.map((l) => ({ ...l, d0: l.d0 - 0.002, d1: l.d1 + 0.002, y0: l.y0 - 0.002, y1: l.y1 + 0.002 }));
   m.scope("body", () => {
@@ -161,7 +165,7 @@ export function drawCar(m: MeshBuilder, c: CarDef, X: (d: number) => number, o: 
           }
           faceLamps(m, e, e * x, c.cab!.lamps);
         });
-      } else if (c.diaphragm && !inside) endDiaphragm(m, e, x, c.diaphragm[0], c.diaphragm[1], 0.5);
+      } else if (c.diaphragm && !inside && !(e > 0 ? c.spec.front : c.spec.rear)) endDiaphragm(m, e, x, c.diaphragm[0], c.diaphragm[1], 0.5);
       if (!inside)
         m.scope("coupler", () => {
           const face = e * x + c.gap[e > 0 ? 0 : 1];

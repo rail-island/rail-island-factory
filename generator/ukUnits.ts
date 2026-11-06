@@ -34,9 +34,16 @@ export const HST: ShinkansenSeries = {
 
 export const IC225: ShinkansenSeries = {
   ...MK3, endLength: 19.4,
-  // the Class 91's raked streamlined end
-  nose: nose(3.0, 0.25, 2.4, [[0, 1.6], [0.4, 2.15], [1.6, 2.9], [2.8, 3.55], [3.6, 3.88]], [[0, 1.55], [0.4, 2.0], [1.6, 2.6], [2.8, 2.95], [3.6, 3.1]], [[0, 1.3], [1.0, 1.3]], [[0, 1.15], [0.8, 1.05]], [[0, 1.05], [0.4, 0.85]]),
-  windscreen: [1.4, 2.8, 0.07, 1.0], lamps: [0.4, 1.45], endPantograph: true, cars: [4, 6, 8],
+  // the Class 91's No. 1 end: a short wedge, its lower front nearly upright under
+  // the yellow panel, the windscreen raked back to the roof; buffers at the beam
+  nose: nose(0.9, 0.72, 2.4, [[0, 1.65], [0.35, 2.3], [1.0, 3.0], [1.7, 3.55], [2.3, 3.82], [2.6, 3.88]], [[0, 1.6], [0.35, 2.25], [1.0, 2.75], [1.7, 3.0], [2.3, 3.1]], [[0, 1.3], [1.0, 1.3]], [[0, 1.15], [0.8, 1.05]], [[0, 1.05], [0.4, 0.85]]),
+  windscreen: [0.45, 1.6, 0.07, 1.05], lamps: [0.05, 1.5], faceLamps: [[0.62, 1.4, 0.08, "lampHead"], [-0.62, 1.4, 0.08, "lampHead"], [0.8, 1.4, 0.05, "lampRed"], [-0.8, 1.4, 0.05, "lampRed"]], faceGrille: { z: 0.45, y: [1.28, 1.52], slats: 4 }, endPantograph: "lead", endCoupler: "buffers", cars: [4, 6, 8],
+  // a locomotive, not a coach: its bogies 10.5 m apart under the middle of the
+  // body (18.5 m between the buffer beams), plain sides with the cab doors and a
+  // few small windows
+  endBogies: [3.8, 14.3],
+  endSides: { windows: [[1.45, 2.05], [5.4, 5.8], [11.0, 11.4], [16.2, 16.6]], doors: [[2.3, 2.95], [17.3, 17.95]] },
+  cabPanel: { d: 0.6, y: [1.05, 2.3], colour: "#f2c400" },
   liveries: {
     intercity: lv("InterCity", "91 101", [1.0, "#3a3d40"], [1.75, "#f1f1ee"], [1.83, "#c8102e"], [1.88, "#f1f1ee"], [9, "#3a3d40"]),
     lner: lv("LNER", "91 111", [1.75, "#c8102e"], [9, "#f1f1ee"]),
