@@ -41,6 +41,18 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
 - **Ae 8/14.** One 34 m body on its eight driving axles in four groups; the articulation
   between its two halves and the six idle guiding axles are left out.
 - **Glacier Express.** The panorama roof is drawn as the dark roof band over tall windows.
+- **KISS (RABe 511).** Its own layout (`layout` with per-row `rows`) from the photographs, the
+  RABe 512 profile corrected for perspective: on every car the double deck lies between the two
+  doors (end car 9.0 - 10.6 and 18.95 - 20.55 m behind the tip), five lower windows between them
+  (six on a middle car), the upper row from over the first door to over the second, and one narrow
+  mid-floor window over each bogie section; the end car's locker, the SBB emblem and a dark roof
+  fairing behind the cab. The red runs up each door to the upper window (`overDoors`, a navy class
+  panel in it); the inter-deck stripe starts behind the locker. One single-arm pantograph on each
+  end car's rear (both drawn raised); the bogies under the cab section and the cars' mid-floor ends.
+  The face (head on from 511 120): a windscreen narrower at its foot, white wedges over the black
+  lamp pods, the grilles in the navy apron. The locker is on both sides (the real one only on the
+  left); the windscreen's rake (about 37 degrees) is estimated from three-quarter views, no true
+  profile of a 511 being at hand.
 
 ## Tests
 

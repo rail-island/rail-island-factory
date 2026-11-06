@@ -42,7 +42,7 @@ export interface CarDef {
   /** Window rows: their sill and head, their d spans, frame paint. */
   windows: ReadonlyArray<{ y: readonly [number, number]; spans: ReadonlyArray<readonly [number, number]>; frame: string }>;
   /** Passenger doors on both sides: d spans, sill and head, the leaf's window. */
-  doors: { spans: ReadonlyArray<readonly [number, number]>; y: readonly [number, number]; glass: readonly [number, number]; slides?: readonly number[]; glassW?: number };
+  doors: { spans: ReadonlyArray<readonly [number, number]>; y: readonly [number, number]; glass: readonly [number, number]; slides?: readonly number[]; glassW?: number; glassPair?: number };
   /** The door leaves' own paint bands (default the side's bands). */
   doorBands?: readonly Band[];
   /** A cab front painted apart from the sides: its bands, on the shell from the +X tip back to d. */
@@ -104,8 +104,11 @@ function door(m: MeshBuilder, c: CarDef, b: SliceBody, X: (d: number) => number,
       });
       mm.scope("glass", () => {
         // a narrow window centred on the leaf, or the leaf's full width
-        const w = c.doors.glassW, dm = (d0 + d1) / 2;
-        sidePanel(mm, b, X, s, "glass", w ? dm - w / 2 : d0 + 0.12, w ? dm + w / 2 : d1 - 0.12, c.doors.glass[0], c.doors.glass[1], 0.012, 0.004);
+        const w = c.doors.glassW, dm = (d0 + d1) / 2, pair = c.doors.glassPair;
+        // a double leaf: two narrow windows `glassPair` apart, the leaves' seam between them
+        if (w && pair) for (const k of [-1, 1]) sidePanel(mm, b, X, s, "glass", dm + (k * pair) / 2 - w / 2, dm + (k * pair) / 2 + w / 2, c.doors.glass[0], c.doors.glass[1], 0.012, 0.004);
+        else sidePanel(mm, b, X, s, "glass", w ? dm - w / 2 : d0 + 0.12, w ? dm + w / 2 : d1 - 0.12, c.doors.glass[0], c.doors.glass[1], 0.012, 0.004);
+        if (w && pair) sidePanel(mm, b, X, s, "rubber", dm - 0.012, dm + 0.012, y0 + 0.04, y1 - 0.04, 0.011, 0.004);
       });
     }),
   );
