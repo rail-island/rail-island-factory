@@ -53,7 +53,8 @@ combinations hashed before and after):
   `"lead"` only the leading end car (a locomotive and its driving trailer, the IC225);
 - `endBogies`, `endSides` - a locomotive end car: its bogies at given d behind the nose
   (centred under its body, not the coaches' rule) and its own side windows and doors in
-  place of the passenger layout (the IC225's Class 91);
+  place of the passenger layout (the IC225's Class 91, the HST's Class 43); `endGrilles` -
+  its side grilles with vertical slats (the Class 43's radiator);
 - `faceLamps`, `faceGrille` - a blunt nose's headlights and grille on its front face, in
   place of the side lamps; `cabPanel` - a warning panel painted over the bands at the
   nose (`cabPanel` paint, the car builder's `field`);

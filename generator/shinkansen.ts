@@ -13,7 +13,7 @@ import { paint } from "./dieselParts.ts";
 import { block } from "./vehicleParts.ts";
 import { exhaust } from "./dieselParts.ts";
 import type { Pt } from "./sliceLoft.ts";
-import { crownPane, surfaceDisc, type SliceBody } from "./sliceBody.ts";
+import { crownPane, sidePanel, surfaceDisc, type SliceBody } from "./sliceBody.ts";
 import { CARBODY_PALETTE, faceLamps, type NoseShape } from "./carbodyKit.ts";
 import { INTERIOR_PALETTE } from "./interior.ts";
 import { drawCar, type CarDef } from "./usTransit.ts";
@@ -101,6 +101,8 @@ export interface ShinkansenSeries {
   faceLamps?: ReadonlyArray<readonly [number, number, number, string]>;
   /** A grille on the nose's front face between the face lamps: its half width, bottom and top, and its slats. */
   faceGrille?: { z: number; y: readonly [number, number]; slats: number };
+  /** A locomotive end car's side grilles (d0, d1, y0, y1, vertical slats): a power car's radiator and air intakes. */
+  endGrilles?: ReadonlyArray<readonly [number, number, number, number, number]>;
   /** A warning panel on the nose: painted up to d behind the tip, between two heights. */
   cabPanel?: { d: number; y: readonly [number, number]; colour: string };
   /** A metro or tube train fed from a conductor rail: no pantograph, filed with the metros. */
@@ -190,6 +192,15 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
     lettering: [{ text: number, d: L - 3.0, y: s.Y + 0.1, h: 0.1, mat: "lettering" }],
     extras: (m, b, X) => {
       if (end && !s.flatCab) noseFittings(m, s, b, X);
+      if (end && s.endGrilles) m.scope("grilles", () => {
+        for (const sd of [1, -1]) for (const [d0, d1, y0, y1, n] of s.endGrilles!) {
+          sidePanel(m, b, X, sd, "black", d0, d1, y0, y1, 0.006, 0.03);
+          for (let i = 1; i < n; i++) {
+            const d = d0 + ((d1 - d0) * i) / n;
+            sidePanel(m, b, X, sd, "rubber", d - 0.012, d + 0.012, y0 + 0.03, y1 - 0.03, 0.014, 0.008);
+          }
+        }
+      });
       if (s.single && !s.flatCab) m.scope("rear nose", () => m.turned((X(0) + X(L)) / 2, () => noseFittings(m, s, b, X)));
       if (isDiesel(s))
         m.scope("exhaust", () => exhaust(m, X(L / 2), 0, s.C - 0.05, s.C + 0.1, 0.14, 0.14));

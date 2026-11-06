@@ -23,8 +23,15 @@ const MK3 = { midLength: 23.0, W: 1.37, Y: 1.3, S: 3.1, C: 3.88, lean: 0.95, B: 
 export const HST: ShinkansenSeries = {
   ...MK3, endLength: 17.79,
   // the Class 43's wedge nose, the cab windscreen low in it
-  nose: nose(3.6, 0.2, 2.4, [[0, 1.45], [0.4, 1.95], [1.8, 2.7], [3.2, 3.5], [4.2, 3.88]], [[0, 1.4], [0.4, 1.85], [1.8, 2.5], [3.2, 2.95], [4.2, 3.1]], [[0, 1.3], [1.0, 1.3]], [[0, 1.15], [0.8, 1.05]], [[0, 1.05], [0.4, 0.85]]),
+  nose: nose(3.6, 0.2, 2.4, [[0, 1.45], [0.4, 1.95], [1.8, 2.7], [3.2, 3.5], [4.2, 3.88]], [[0, 1.4], [0.4, 1.85], [1.8, 2.5], [3.2, 2.95], [4.2, 3.1]], [[0, 1.3], [1.0, 1.3]], [[0, 1.15], [0.8, 1.05]], [[0, 0.85], [0.5, 0.6], [1.5, 0.6], [1.7, 0.85]]),
   windscreen: [1.7, 3.0, 0.07, 1.0], lamps: [0.4, 1.4], traction: "diesel", cars: [4, 6, 8],
+  // a locomotive, not a coach: its bogies 10.29 m apart under the middle of the
+  // power car, plain sides with the cab door, the radiator grille and the van's
+  // door and window at the inner end, the yellow nose below the windscreen
+  endBogies: [3.75, 14.04],
+  endSides: { windows: [[3.1, 3.6], [15.3, 15.8]], doors: [[3.85, 4.5], [16.2, 16.85]] },
+  endGrilles: [[12.6, 14.4, 2.05, 3.0, 14], [5.2, 6.2, 2.25, 2.85, 8]],
+  cabPanel: { d: 1.6, y: [0.5, 2.75], colour: "#f2c400" },
   liveries: {
     swallow: lv("InterCity", "43 096", [1.0, "#3a3d40"], [1.75, "#f1f1ee"], [1.83, "#c8102e"], [1.88, "#f1f1ee"], [9, "#3a3d40"]),
     blueGrey: lv("BR blue, grey", "43 002", [1.85, "#1d3f80"], [9, "#c9cccd"]),
