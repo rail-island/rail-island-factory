@@ -85,6 +85,19 @@ Checks, factory:
 **Music (rail-island-music)**: `pnpm typecheck`, `pnpm test` (75 tests, 2.3 s), `pnpm build`
 and `pnpm build:music` pass.
 
+## Follow-up changes
+
+1. **Import into the game and merge to master** (asked after the hand-back).
+   - The factory branch merged origin/master twice. `pnpm cache:resolve` rebuilt the conflicted `build-cache/`, and the factory's full `pnpm test` passed (171 files, 10,571 tests).
+   - In rail-island-webapp, `pnpm import:factory` and `pnpm import:sounds` brought in:
+     - the helicopters, the heliport type, the helipads and the spin clips;
+     - the `helicopter` sound;
+     - the moved airport pins (`pnpm sets:baseline`).
+   - The import exposed one gap: the airport type picker had a hard-coded list of types. It now lists the registry's types, so the heliport can be chosen.
+   - The game's tests now expect a building's `helipad` and a helicopter's engine sound. The unused `HELICOPTER_SOUND` constant is gone.
+   - The game passes `pnpm typecheck`, `pnpm test` (654 files, 8,893 tests) and `pnpm build`.
+   - All three repositories are merged into master: music fast-forwarded, the factory after merging master in, the game after merging master in.
+
 ## How to test
 
 **Automated coverage.** No E2E test was written: the factory has no E2E framework, and the
@@ -98,12 +111,9 @@ game's rules forbid driving a browser without the user's agreement. Coverage:
   and the storage round trips;
 - music: `test/sounds.test.ts` ("the helicopter").
 
-**Setup.** The game sees nothing of the factory or music side until both exports are imported
-into it. That is a separate publishing step, and it was not run. In rail-island-webapp, with
-the factory and music checkouts beside it on their `claude/gallant-franklin-cw8nwy` branches:
-`pnpm import:factory`, then `pnpm import:sounds`, then `pnpm build:assets` and `pnpm dev`. Move
-the `helicopter` id into `GAME_SOUNDS` in the game's `src/render/sound/soundIds.ts`; the game
-agent left it out because the current committed sound export lacks it.
+**Setup.** The factory and music exports are imported into the game, and all three
+repositories are on master (Follow-up changes 1). In rail-island-webapp: `pnpm build:assets`,
+then `pnpm dev`.
 
 **Steps.**
 1. Factory site, Vehicles > Aircraft > Sikorsky S-92: press **Spin down**. The blur discs fade, the main blades droop, and the rotors slow to a stop. Press **Spin up** and the disc returns at full speed.
@@ -124,13 +134,12 @@ agent left it out because the current committed sound export lacks it.
 
 - The helicopters' transit height is above the higher of the two pads, not above the terrain in between (the game's sim worker has no terrain).
 - The game does not yet include helicopters in cinematic scenarios, lines, vehicle cameras, the MCP debug dump or simulation recording. The spec's game plan does not name these, and the board works without them.
-- No import into the game, by rule (Setup above).
 
 ## Known problems
 
 - Run time:
-  - The factory's full `pnpm test` took 9 min 29 s while two other agents built and tested on the same machine. The re-run on a quiet machine is in the final report.
-  - The game's full suite runs 6 min 54 s; the game states no limit.
+  - On a quiet machine the factory's full `pnpm test` takes 5 min 44 s. Master alone took 5 min 20 s on the same machine, so the suite was over the 5-minute limit before this change; this change adds 24 s (41 tests, including the four newly confirmed helicopters in the catalog sweep).
+  - The game's full suite runs about 5.5 minutes; the game states no limit.
 - Aircraft undo in the game does not apply aircraft definitions, and helicopters inherit that: helicopter edits are captured but cannot be undone.
 - A helicopter reloaded mid-flight flies to the nearest stop ahead of it, because the saved record has no target.
 - An airport's pads extend its footprint beyond the terminal's +Z end, so `footprint.cz` can sit off zero. The readers that were checked handle it.
@@ -140,7 +149,8 @@ agent left it out because the current committed sound export lacks it.
 
 ## Recommended follow-ups
 
-- Import the factory and music exports into the game and check the helicopters in a browser.
+- Check the helicopters, the heliport and the board in a browser.
+- Bring the factory's full test run back under 5 minutes: it was over before this change.
 - Give the game a working undo for aircraft and helicopters.
 - Fly helicopters over the terrain between pads (a height probe in the sim).
 - Add more helicopter types and give the airship the pads.
