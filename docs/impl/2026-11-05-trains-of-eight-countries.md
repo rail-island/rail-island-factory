@@ -48,6 +48,13 @@ door, rail-support, rig, pantograph and LOD suites check one design per kit-fami
 full and the later ones on what differs (`test/catalogCache.ts` `swept`), while
 `test/worldTrains*.test.ts` runs the data checks on all 160 designs.
 
+## Follow-up changes
+
+1. **Missing reference photos and web links.** The lead image of each class's Wikipedia
+   article, fetched through batched Commons queries, for the designs without references;
+   156 designs got their web links in `generator/linkTable.ts` (the article - en, or nl / de
+   Wikipedia - and each photo's Commons page), shown on the model page's Sources tab.
+
 ## How to test
 
 **Automated coverage.** No E2E framework in the repository. `pnpm test` covers the designs
@@ -79,11 +86,10 @@ view of `proc-vehicle-ns-virm` offers its 6-car formation.
 
 ## What is missing
 
-- **References.** Commons throttled this session (HTTP 429 even at one request every
-  three seconds): 19 of the 160 designs have their photographs and `SOURCES.md` in
-  `assets/<name>/` (most of Germany's); the other 141 name a `references` folder that does
-  not exist yet, and their figures are only in the family docs. AGENTS.md wants every
-  model's references committed with it - this is the main gap.
+- **References.** Commons throttled every session (HTTP 429): 78 of the 160 designs have their
+  photographs and `SOURCES.md` in `assets/<name>/` (the second pass took one photo each: the
+  lead image of the class's Wikipedia article); the other 82 name a `references` folder
+  that does not exist yet. AGENTS.md wants every model's references committed with it.
 - **A4 streamlining.** The LNER A4 is drawn without its casing (the steam kit's volumes
   were not used).
 - **Headless thumbnails of every design** were rendered as contact sheets for the user, not
