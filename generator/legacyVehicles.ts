@@ -40,7 +40,7 @@ export function oceanLiner():MeshBuilder {
   });return m;
 }
 export const LEGACY_VEHICLES:ProceduralDesign[]=[
-  {id:'veh-cabin-classic',game:{ weight: null, power: null, maxspeed: 22, accel: null, scale: 1.0582, ropeFrac: 0.9556, boardFrac: 0.0375 },title:'Classic Cable Car Cabin',build:classicCabin,buildLod:classicCabinLod,catalog:{category:'Cable car',group:'cablecar',defaultScale:1,license:'CC0',author:'Rail Island',source:'Rail Island'}},
+  {id:'veh-cabin-classic',game:{ weight: null, power: null, maxspeed: 22, accel: null, scale: 1.0582, ropeFrac: 0.9556, boardFrac: 0.0375, ropes: [{ kind: 'haul', zFrac: 0, dyFrac: 0 }], ropeway: 'circulating' },title:'Classic Cable Car Cabin',build:classicCabin,buildLod:classicCabinLod,catalog:{category:'Cable car',group:'cablecar',defaultScale:1,license:'CC0',author:'Rail Island',source:'Rail Island'}},
   {id:'veh-ocean-liner',game:{ weight: 400, power: 2400, maxspeed: 45, accel: 0.35, draftFrac: 0.16 },title:'Ocean Liner',build:oceanLiner,buildLod:oceanLinerLod,catalog:{category:'Ships',yaw:0,group:'ships',defaultScale:1,license:'CC0',author:'Rail Island',source:'Rail Island'}},
 ];
 

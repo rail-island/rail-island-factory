@@ -1,6 +1,6 @@
 # World cable car cabins
 
-**Covers** - the ten cable car cabins from around the world (detachable gondolas, a funitel, 3S and bicable cabins, aerial tramways among them a double-decker, a rotating one and an open-top one), the cabin kit they are built on (`CabinSpec`: shell stations, glazing, doors, roof, top deck, the four hanger kinds), their datums and game properties, their LOD, budgets, references and deviations.
+**Covers** - the ten cable car cabins from around the world (detachable gondolas, a funitel, 3S and bicable cabins, aerial tramways among them a double-decker, a rotating one and an open-top one), the cabin kit they are built on (`CabinSpec`: shell stations, glazing, doors, roof, top deck, the four hanger kinds), their datums, the ropes the game draws for them and how their lines run (`game.ropes`, `game.ropeway`), their LOD, budgets, references and deviations.
 **Code** - `generator/cabinKit.ts`, `generator/worldCabins.ts`, `generator/cableCabins.ts` (the shared `shell`, `roundRect`, `bar`, `disc`), `generator/lodAir.ts` (`cabinLod`), `test/worldCabins.test.ts`, `test/worldFleet.test.ts`
 **See also** - [cable-cabins.md](cable-cabins.md) (the first three cabins), [world-fleet.md](world-fleet.md) (the fleet's references, data checks and sweep sample), [cable-car-stations.md](cable-car-stations.md), [game-properties.md](game-properties.md), [lod.md](lod.md)
 
@@ -34,7 +34,30 @@ Parameters (defaults first):
 | Ngong Ping 360 Cabin | `variant` | `standard`, `crystal` (a glass belly, a lighter blue band) |
 
 The line speed is each design's `maxspeed` in km/h: 22, 25, 27, 29, 36, 43, 29, 36, 18, 25 in
-the table's order.
+the table's order. The aerial tramways - the Cabrio, the Rotair, the Vanoise Express, the
+Roosevelt Island and Sugarloaf cabins - are `ropeway: "jigback"` (one or two to a line); the
+others `"circulating"` (`WORLD_CABIN_SPECS[].ropeway`).
+
+## Ropes
+
+**A cabin draws no rope**: the game draws every rope of its line, so the model carries only
+what runs on them - the grips' jaws and running wheels, the carriages' sheaves, the haul rope
+clamp. `cabinRopes(spec)` (`cabinKit.ts`) says where they run, metres from the rope datum: `z`
+across the rope on the cabin's +z side (its platform side, which the game turns away from the
+line's centre on both strands) and `dy` up:
+
+| hanger | ropes |
+|---|---|
+| `grip` | one haul rope at z 0 |
+| `funitel` | two haul ropes at z +-`gap`/2 |
+| `carriage` | two track ropes at z +-`track` (one at z 0 for a bicable), the haul rope `HAUL_GAP` (0.3) under them at z 0 |
+| `side` | two track ropes at z +-`track` |
+
+The design states them as `game.ropes` (`cabinRopeFracs`): `{ kind, zFrac, dyFrac }`, fractions
+of the model's height like `ropeFrac`, so the game's scale and stud size apply to them as to
+the rope datum ([game-properties.md](game-properties.md)). A haul rope goes round the
+stations' bull wheels (a rim per haul rope, [cable-car-stations.md](cable-car-stations.md));
+a track rope is fixed and ends at each station.
 
 ## Axes and datums
 
@@ -43,12 +66,13 @@ As the small gondola's: metres, the rope along **x** (the game's yaw 0), the pla
 sill and the model's top (the grip's running wheels or the carriage's sheave rims, or the top
 deck's railing), and the design's `ropeFrac` and `boardFrac` are taken from it, so they cannot
 drift from the geometry. `test/worldCabins.test.ts` checks the built model against them: the
-underside at 0, the top within 1 cm, a rope piece through the rope height, the sill plates' top
-at the sill, the LOD over the same height range, and every variant at the same datums.
+underside at 0, the top within 1 cm, no rope drawn and the running gear at every rope it states,
+the sill plates' top at the sill, the game's `ropes` and `ropeway`, the LOD over the same height
+range, and every variant at the same datums.
 
 ## The cabin kit
 
-`buildCabin(spec)` draws three scopes:
+`buildCabin(spec)` draws three scopes (no rope: see [Ropes](#ropes)):
 
 - **body** - one lofted shell over rounded-rectangle plan rings (`roundRect`, `hx`, `hz`,
   `corner`; a corner of the full half width makes a round cabin). `stations` give, bottom
@@ -71,9 +95,7 @@ at the sill, the LOD over the same height range, and every variant at the same d
 | `carriage` | an aerial tramway's, 3S or bicable cabin's: an optional yoke on the roof, a plated arm tapering up to the head, the haul rope clamped under it, a carriage of `sheaves` sheaves on each track rope | two track ropes at z +-`track` (one at z 0 when `track` is 0), the haul rope 0.3 m under them |
 | `side` | an open-top cabin's: a bracket on each side at `attach`, a post up beside the cabin to a carriage | one track rope each side, at z +-`track` |
 
-Every rope is drawn as a short piece of rubber cylinder through the grips or sheaves, as on the
-first three cabins. Budget: the cabins' 8,000 triangles; the largest, the Vanoise Express, has
-about 4,100.
+Budget: the cabins' 8,000 triangles; the largest, the Vanoise Express, has about 4,100.
 
 ## LOD
 
