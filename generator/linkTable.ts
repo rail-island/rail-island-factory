@@ -8,6 +8,8 @@
 // bundled into each of its models' JS files, so a field stated there would rewrite
 // every model of that module. No `node:` imports.
 
+import { FLEET_LINKS } from "./fleetLinks.ts";
+
 /** One web link of a model. */
 export interface ModelLink {
   /** What the page is, as the site shows it: "Wikipedia: Siemens Vectron". */
@@ -19,6 +21,8 @@ export interface ModelLink {
 /** Each model's web links, in the order the site lists them. */
 export const MODEL_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-vectron": [{ title: "Wikipedia: Siemens Vectron", url: "https://en.wikipedia.org/wiki/Siemens_Vectron" }],
+  // the world fleet: its articles and its photographs' Commons pages (docs/models/world-fleet.md)
+  ...FLEET_LINKS,
 };
 
 /** A model's web links; empty when it has none. */
