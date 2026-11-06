@@ -137,6 +137,19 @@ combinations hashed before and after):
 - a livery's `doors` and `front` - the door leaves' own bands, and the cab front's bands over
   the nose (the Class 378's orange doors and yellow front); the front's band heights become
   paint edges of the car's slices.
+- a cab face's `pods` - flat-fronted rounded housings standing off the face, with lamps on
+  their fronts (the RAe TEE II's twin-lamp pods and its coupler cover), and `texts` - lettering
+  on the face, its strokes cut finer so they follow a face curving between the grid's rows (the
+  TEE emblem);
+- `cabWindows` take a fifth element, +1 or -1, for a window on one side only (the TEE's cab
+  side window on the right, its destination board ahead of the door on the left, behind it on
+  the right);
+- `powerCar` - a machine car of its own among the intermediate cars, the unit value `powerCar`
+  ("Power car"): its length, centred bogies of any axle count (A1A), one window row and layout,
+  diamond pantographs at given d (one raised, the others folded, a folded one's base `lift`
+  higher where two interlace), a roof line on insulators between them, louvres on the roof's
+  edges, its slot in a train of n cars, its weight and power. It is the train's only pantograph
+  car; the other intermediate cars draw none, and the train's power is the power car's.
 
 A nose end never carries a gangway frame, buffered or not. A short car's leading bogie comes in so that its wheels stay under the body. The kit
 refuses a wheelbase under 2.05 m (the bogie's brake cylinders would lie on its
