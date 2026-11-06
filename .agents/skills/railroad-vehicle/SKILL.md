@@ -17,7 +17,12 @@ documentation in English.
 
 - Aim at about **15,000 triangles per rail vehicle**. A small overflow is fine
   when it keeps a detail that matters (the tests cap it at 16,000); do not
-  thin out a fine, visible pattern such as shutter slats just to get under 15k. There is no file-size budget. Spend detail on the silhouette,
+  thin out a fine, visible pattern such as shutter slats just to get under 15k.
+- **Trams are the exception: 10,000 triangles**, as a road vehicle (they share the
+  street with them). An **articulated tram** (sections and joints) may spend more,
+  up to **15,000** for the whole car. The hard caps are tested
+  (`test/models.test.ts`, `test/worldTrams.test.ts`; docs/models/world-trams.md
+  "Triangle budget"); the interior behind the doors has its own 2,000. There is no file-size budget. Spend detail on the silhouette,
   cab, running gear and recognizable roof equipment; keep round parts as coarse
   as their size allows (small lamps, tanks, axle boxes and pipes 6-12 sides,
   wheels and portholes 16-24), build a coil spring as one lofted tube with a
@@ -231,6 +236,14 @@ docs/models/animation.md): keep each moving piece in its own z plane, keep
 spoke counts so a tyre has twice the spokes in facets, and check posed frames
 (`poseGlb`) for flicker as `test/steam.test.ts` does. A rigid vehicle without
 moving parts stays one body node plus its bogie nodes.
+
+Other moving parts follow the same pattern: wheels with spokes roll by distance
+(`spin` parts and `rollWheels`, `rolling.ts`), and a horse tram's horse is a tree of
+`spin` parts whose `trot` clip is a `distance` clip at `ROLLING_SPEED` too
+(`horseTram.ts`, docs/models/world-trams.md "The trot"), so the game plays every
+such clip by the vehicle's speed and the site's Start/Stop plays it. Keep the clip a
+closed loop, the planted feet on the ground without slipping, and check posed
+frames for flicker.
 
 ## Electric locomotives and pantographs
 

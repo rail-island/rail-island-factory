@@ -1,7 +1,7 @@
 # World trams
 
 **Covers** - the 100 trams from around the world on the dimension-driven world tram kit: rigid cars on bogies or a single truck, two- and three-section articulated cars on Jacobs bogies, multi-articulated low-floor cars on floating modules, the ULF's portals, the rubber-tyred Translohr, double-deckers with a covered or open top deck, open cross-bench cars, the horse, steam and cable trams; the kit's `WorldTramSpec`, its front library, shapes and extras, the collectors, the doors, the distant model, the parameters, game properties, OpenTTD figures and sounds, references, deviations and tests.
-**Code** - `generator/worldTramKit.ts`, `generator/worldTramShapes.ts`, `generator/worldTramsEurope.ts`, `generator/worldTramsWorld.ts`, `generator/worldTrams.ts`, `generator/tramKit.ts` (`Tram`, `articulate`, the pantographs), `generator/csdCoachParts.ts` (volumes, windows, doors), `generator/lodTrams.ts` (`volumeShell`), `generator/openttdTable.ts`, `generator/soundTable.ts`, `test/worldTrams.test.ts`, `test/worldFleet.test.ts`, `test/doorsSuite.ts`, `test/pantographs.test.ts`
+**Code** - `generator/worldTramKit.ts`, `generator/worldTramShapes.ts`, `generator/worldTramsEurope.ts`, `generator/worldTramsWorld.ts`, `generator/worldTrams.ts`, `generator/horseTram.ts` (the horse tram's own builder and the horse's trot), `generator/tramKit.ts` (`Tram`, `articulate`, the pantographs), `generator/csdCoachParts.ts` (volumes, windows, doors), `generator/lodTrams.ts` (`volumeShell`), `generator/openttdTable.ts`, `generator/soundTable.ts`, `test/worldTrams.test.ts`, `test/horseTram.test.ts`, `test/worldFleet.test.ts`, `test/doorsSuite.ts`, `test/pantographs.test.ts`
 **See also** - [trams.md](trams.md) (the vlakosimdb trams the kit builds on), [world-fleet.md](world-fleet.md) (references, data checks, the sweep sample), [vehicle-rig.md](vehicle-rig.md), [doors.md](doors.md), [interiors.md](interiors.md), [loading-gauge.md](loading-gauge.md), [animation.md](animation.md) (liftable mechanisms, collector heights), [lod.md](lod.md), [openttd-figures.md](openttd-figures.md), [sounds.md](sounds.md)
 
 ## The designs
@@ -105,7 +105,7 @@ standing room); exterior triangles at the defaults.
 | `veh-glenelg-h-class` | Glenelg H Class | 1 | 18 x 2.64 x 3.35 | retro, 2 cabs | BB | pole | 1435 | 1929 / 110 | 5,378 | - |
 | `veh-sydney-r-class` | Sydney R Class | 1 | 16.6 x 2.9 x 3.35 | retro, 2 cabs | BB | pole | 1435 | 1933 / 110 | 5,282 | - |
 | `veh-christchurch-boon` | Christchurch Boon Tram | 1 | 9.6 x 2.3 x 3.2 | retro, 2 cabs | T | pole | 1435 | 1906 / 50 | 3,368 | - |
-| `veh-horse-tram` | Horse Tram | 1, open top | 6.4 x 2 x 2.6 | retro, 2 cabs | T | none | 1435 | 1880 / 40 | 4,024 | - |
+| `veh-horse-tram` | Horse Tram | 1, open top | 6.4 x 2 x 2.6 | retro, open platforms | T | none | 1435 | 1880 / 40 | 9,946 | - |
 | `veh-steam-tram` | Steam Tram | 1 | 4.6 x 2.1 x 3.2 | angular, 2 cabs | T | none | 1435 | 1885 / 60 | 2,956 | unit: engine, trailer |
 | `veh-cable-car-dunedin` | Dunedin Cable Car | 1, open | 6.6 x 2.2 x 3 | retro, 2 cabs | T | none | 1067 | 1881 / 50 | 3,572 | - |
 | `veh-istanbul-nostalgic` | Istanbul Nostalgic Tram | 1 | 8.8 x 2.2 x 3.3 | retro, 2 cabs | T | pole | 1435 | 1914 / 50 | 3,624 | - |
@@ -170,8 +170,8 @@ the largest x), +Y up, +Z right, centred on x 0 and z 0, the treads on y 0.
 - **Open sides** (`open`): a cross-bench car - underframe, floor, dashes, posts, benches of slats
   on cast-iron ends, curtain rails, the roof, running boards, truss rods, lifeguards.
 - **Roof equipment** (`roofBoxes`) and a `clerestory`.
-- **Extras** (`extra`, `extraLod`): what the kit cannot say, from `worldTramShapes.ts` - the horse
-  in its shafts ahead of the horse tram, the tram engine's chimney (with its smoke emitter), the
+- **Extras** (`extra`, `extraLod`): what the kit cannot say, from `worldTramShapes.ts` - the
+  horse tram's distant horse (its full model is its own, below), the tram engine's chimney (with its smoke emitter), the
   cable car's grip and lever, the pusher buffer under the Opicina car's lower end.
 - **`checkSpec(spec)`** lists what the kit cannot draw well: a door off the straight side or over
   a truck's cut-out, a truck not under a section (or a joint, for a Jacobs bogie or portal), the
@@ -187,6 +187,68 @@ doors, 700 mm wheels), `lrv` (a high-floor light rail car, plug doors), `lowFloo
 body, a clerestory, swinging doors) and `doubleDeck`; the layout helpers `lay`, `secDoors`,
 `bogies`, `jacobs`, `portals`, `guided`, `truck`; the collectors `diamond`, `lowDiamond`, `arm`,
 `pole`.
+
+## Triangle budget
+
+A rigid tram - one section, on bogies or a single truck - has at most **10,000 triangles** at
+full detail, like a road vehicle; an articulated tram, longer and of several bodies, at most
+**15,000** (`test/worldTrams.test.ts`, exterior triangles; the interior behind the doors has its
+own 2,000, [interiors.md](interiors.md)). Every world tram is within them today: the rigid cars
+up to the horse tram's 9,946, the articulated ones up to the KT8D5's 13,158.
+
+## The horse tram
+
+`veh-horse-tram` (`generator/horseTram.ts`) is the one world tram with a builder of its own; its
+spec (`horseTramSpec`) stays the kit's record of the car - size, gauge, collector, features - and
+its distant model is the kit's (`worldTramLod`, the horse as two side boxes). After the Victor
+Harbor double-deck horse cars (`assets/horse-tram/`), green with cream panels and brass rails:
+
+- **The saloon**: panelled lower sides with gold lining, six windows a side between varnished
+  pillars with a sash rail and orange curtains drawn back, the letterboard with a cream name
+  panel, the cream cornice; at each end a bulkhead with end windows and a glazed door.
+- **An open platform at each end** under the top deck's canopy: the bowed dash with its emblem,
+  lining and brass rail, a head and a tail lamp, the corner stanchions, the brake staff and
+  handle, a brass gate on the boarding side with a step under it, and on the other side a steep
+  stair of six treads between green stringers with scrolled ironwork and brass handrails. The
+  two ends are one drawing turned about the vertical axis (`turned`), so the stairs stand on
+  opposite sides, as on the real cars.
+- **The top deck**: the floor over the saloon and both canopies, the stair wells open, the
+  railing of posts and two rails round it, the decency boards, the knifeboard (two slatted
+  seats back to back on cast-iron legs), a cross bench over each platform, a bell.
+- **The truck**: two **spoked wheelsets that roll** (`wheelset-1`, `wheelset-2`, the `rolling`
+  clip, [animation.md](animation.md#rolling-wheels)), outside frames, axle boxes, leaf springs and
+  hangers, wooden brake blocks and rodding; the draw hook at each end, the swingletree at the
+  front.
+- **The horse**: a bay Clydesdale with a white blaze and white feathered legs, 2.1 m ahead of the
+  nose - barrel, neck and head, mane, forelock and ears, the tail - in its harness: the padded
+  collar with brass hames, the back pad with terrets and the girth, the breeching and crupper,
+  the bridle with blinkers and bit, the traces back to the swingletree and the reins back to the
+  driver's dash. Its parts are jointed and **trot** (below).
+
+### The trot
+
+The horse is a tree of moving parts (`MeshCore.spin`): `horse` (the body, pivot at its middle)
+carries `horse-head` (neck and head, pivot at the neck's root), `horse-tail` and per leg
+`horse-leg-<front|hind>-<left|right>` (pivot at the shoulder or hip) with its child
+`horse-shin-<...>` (pivot at the knee or hock, holding the cannon, the feather and the hoof).
+The clip **`trot`** (`TROT_CLIP`) moves them - drive `distance` at `ROLLING_SPEED` (5 m/s), like
+the wheels' `rolling` clip, so the game plays it by the tram's speed and stops it when the tram
+stands, and the site's **Start** and **Stop** play it with the wheels:
+
+- one loop is one stride of `TROT_STRIDE` = 1.6 m (0.32 s at 5 m/s), `TROT_SAMPLES` = 24 steps
+  plus the closing sample, a closed loop;
+- a trot: the diagonal pairs (front left with hind right, front right with hind left) move
+  together, half a stride apart; each leg is planted for half the stride, straight, its hoof
+  sliding back under the body exactly as far as the horse goes on (no slip), then swings forward
+  with its knee or hock folded (the front knee deeper);
+- the body is lifted at each sample so the lowest sole stands on the ground (`trotPose`), a bob
+  of a few centimetres; the head nods twice a stride, the tail swishes once.
+
+The rest pose - the thumbnail, the source tree and the build's checks - is the horse standing
+square. The harness, traces and reins ride on the body, so they follow its bob but not the legs.
+`test/horseTram.test.ts` checks the budget, the drives, the closed loop, the pairs and the planted
+hoof's no-slip, the soles on the ground and no z-fighting through the stride, the JS model's
+nested parts playing the clip, and a static distant model; `test/rolling.test.ts` its wheels.
 
 ## The distant model
 
@@ -234,14 +296,16 @@ design fits a horse's hooves or a cable's hum yet (a request to rail-island-musi
   OpenTTD capacity stands for the engine and its trailer.
 - **Simplifications.** Roofs are one grey; the roof fairings are boxes in the body colour; no
   mirrors, wipers or fleet numbers; the clerestory is a raised box. The Opicina car's cable
-  pusher is only the buffer it leans on. The horse is a static figure of boxes.
+  pusher is only the buffer it leans on. The horse's hind legs bend at one joint, the hock, like
+  its front legs at the knee; its harness does not follow the legs.
 - **Sizes.** Most figures are from the type's Wikipedia infobox and the operators' data; the
   heights of the historic cars and every door position are read off photographs (approx. in the
   folders' `SOURCES.md`).
 
 ## Checking
 
-- `pnpm exec vitest run test/worldTrams.test.ts` - sizes, centring, collectors and their clips,
+- `pnpm exec vitest run test/horseTram.test.ts` - the horse tram's budget and trot.
+- `pnpm exec vitest run test/worldTrams.test.ts` - the triangle budgets, sizes, centring, collectors and their clips,
   sections, joints and supports, door sides, LOD budget and glazing, `checkSpec` on every
   combination, the finish liveries, the special rows' parts (about 20 s).
 - `pnpm exec vitest run test/worldFleet.test.ts` - the registry, references, OpenTTD entries.

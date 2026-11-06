@@ -304,6 +304,11 @@ describe("the vehicles", () => {
     // much larger and seen closer along the track, aims at about 15k with
     // room for a small overflow (.agents/skills/railroad-vehicle)
     expect(s.triangles).toBeLessThanOrEqual(rail ? 16_000 : 10_000);
+    // a tram: a rigid one has a road vehicle's 10,000, an articulated one (sections) up to 15,000
+    if (DESIGNS.get(proceduralId(id))!.catalog?.group === "tram") {
+      const articulated = (built(proceduralId(id)).rig?.sections?.length ?? 1) > 1;
+      expect(s.triangles).toBeLessThanOrEqual(articulated ? 15_000 : 10_000);
+    }
     expect(faces(glb).length).toBe(s.triangles);
     const { json } = parseGlb(glb);
     // flat normals are stored, not left to the loader: a pipeline step that
