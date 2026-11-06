@@ -74,11 +74,11 @@ describe("the US carbodies", () => {
   it("gives the F7 and the Acela shaped windscreens and their own nose lamps", () => {
     const scopes = (id: string, params?: Record<string, string>) => leaves(design(id).build(params).sourceTree(id, design(id).title).root).map((n) => n.id);
     // the F7: rounded panes narrowing toward the roof, the headlight in its hood, number boards, class lights
-    const pane = roundedPane([1.88, 2.48], 0.05, [1.0, 0.86], 0.16, 0.05, 0.2);
-    expect(pane.z1(2.1)).toBeLessThan(1.0);
-    expect(pane.z1(1.88)).toBeLessThan(pane.z1(2.04) - 0.1);
-    expect(pane.z1(2.48)).toBeLessThan(pane.z1(2.28) - 0.1);
-    expect(pane.z1(2.3)).toBeLessThan(pane.z1(2.05));
+    const pane = roundedPane([2.0, 2.26], 0.11, [1.18, 0.98], 0.14, 0.03, 0.16);
+    expect(pane.z1(2.13)).toBeLessThan(1.18);
+    expect(pane.z1(2.0)).toBeLessThan(pane.z1(2.1) - 0.05);
+    expect(pane.z1(2.26)).toBeLessThan(pane.z1(2.16) - 0.05);
+    expect(pane.z1(2.2)).toBeLessThan(pane.z1(2.06));
     const f7 = scopes("proc-vehicle-emd-f7");
     expect(f7.some((n) => n.startsWith("nose/headlights/hood/"))).toBe(true);
     expect(f7.filter((n) => n.startsWith("nose/class-lights/")).length).toBe(4);
@@ -94,9 +94,15 @@ describe("the US carbodies", () => {
     const nodes = leaves(emdF7().sourceTree("f7", "F7").root);
     const panes = nodes.filter((n) => n.id.startsWith("nose/windscreen/"));
     expect(panes.length).toBeGreaterThan(0);
-    // the panes about 0.7 m high, from about 3.6 m up to the cab roof
-    expect(Math.min(...panes.map((n) => n.min![1]))).toBeGreaterThan(3.55);
-    expect(Math.max(...panes.map((n) => n.max![1]))).toBeLessThan(4.42);
+    // wide, low panes: the glass about 0.5 m high where its outer corner follows the crown down (3.68 - 4.17 m), twice as wide
+    const cab = panes.filter((n) => n.material === "cabGlass");
+    expect(cab.length).toBeGreaterThan(0);
+    const [y0, y1] = [Math.min(...cab.map((n) => n.min![1])), Math.max(...cab.map((n) => n.max![1]))];
+    expect(y0).toBeGreaterThan(3.6);
+    expect(y1).toBeLessThan(4.25);
+    expect(y1 - y0).toBeLessThan(0.55);
+    const zs = cab.filter((n) => n.min![2] > 0);
+    expect(Math.max(...zs.map((n) => n.max![2])) - Math.min(...zs.map((n) => n.min![2]))).toBeGreaterThan(1.8 * (y1 - y0));
     const top = (re: RegExp, f: (n: LeafNode) => number) => nodes.filter((n) => re.test(n.id)).map(f);
     expect(Math.min(...top(/right-side\/grilles\//, (n) => n.min![1]))).toBeGreaterThan(Math.max(...top(/right-side\/portholes\//, (n) => n.max![1])));
   });
@@ -134,7 +140,7 @@ describe("the US carbodies", () => {
       if (n === 3) expect(findCoplanarOverlaps(g)).toEqual([]);
     }
     const f7 = design("proc-vehicle-emd-f7");
-    for (const params of [{ unit: "bUnit" }, { unit: "train", cars: "4" }]) {
+    for (const params of [{ unit: "bUnit" }, { unit: "train", cars: "4" }] as Array<Record<string, string>>) {
       const low = buildLodModel(f7, params);
       expect(low.triangleCount()).toBeGreaterThan(0);
       expect(low.triangleCount()).toBeLessThanOrEqual(lodBudget(f7));

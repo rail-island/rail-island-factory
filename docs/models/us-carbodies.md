@@ -46,9 +46,10 @@ nose along the surface's chord (`chordBox`).
 ## The models
 
 - **EMD F7** - the A unit: the bulldog nose rising to the low raked windscreen under the cab
-  roof (about 0.65 m high, 3.65 - 4.35 m): two panes either side of the centre post, narrowing
-  toward the roof with their outer corners rounded, each in a rubber gasket and a frame of the
-  cab's paint; the headlight in its hood on top of the nose, the second light in the nose door,
+  roof's brow: two wide, low panes either side of the centre post (about 1.1 m wide and 0.44 m
+  up the rake, 3.8 - 4.17 m at the centre post), their outer edge slanting in toward the roof
+  and its corners rounded, each in a rubber gasket and a frame of the cab's paint;
+  the headlight in its hood on top of the nose, the second light in the nose door,
   red class lights on the nose's corners and the number boards standing out of its flanks; the
   cab roof over the carbody's; along the top of the side a band of filter grilles (framed
   vents of vertical slats in the metal's grey, not windows) and under it the round portholes

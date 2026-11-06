@@ -477,15 +477,16 @@ function drawF7A(m: MeshBuilder, l: F7Livery, rearFree: boolean): void {
   });
   const nosePaint = f7Painter(l);
   m.scope("nose", () => {
-    // two low panes either side of the centre post under the cab roof, narrowing
-    // toward it, their outer corners rounded, set in a rubber gasket in a frame of
-    // the cab's paint
+    // two wide, low panes either side of the centre post under the cab roof's brow
+    // (more than twice as wide as high: 1.1 m by 0.44 m up the rake), their outer edge
+    // slanting in toward the roof, its corners rounded, set in a rubber gasket in a
+    // frame of the cab's paint
     m.scope("windscreen", () => {
       const frame = nosePaint(2.1, 4.0, "arc");
       for (const s of [1, -1]) {
-        outlinePane(m, b, X, s, frame, roundedPane([1.88, 2.48], 0.05, [1.0, 0.86], 0.16, 0.05, 0.2), 0.004);
-        outlinePane(m, b, X, s, "rubber", roundedPane([1.91, 2.45], 0.08, [0.96, 0.82], 0.13, 0.04, 0.17), 0.008);
-        outlinePane(m, b, X, s, "cabGlass", roundedPane([1.94, 2.42], 0.11, [0.92, 0.78], 0.11, 0.03, 0.14), 0.012);
+        outlinePane(m, b, X, s, frame, roundedPane([1.94, 2.32], 0.05, [1.26, 1.04], 0.18, 0.05, 0.2), 0.004);
+        outlinePane(m, b, X, s, "rubber", roundedPane([1.97, 2.29], 0.08, [1.22, 1.01], 0.16, 0.04, 0.18), 0.008);
+        outlinePane(m, b, X, s, "cabGlass", roundedPane([2.0, 2.26], 0.11, [1.18, 0.98], 0.14, 0.03, 0.16), 0.012);
       }
     });
     if (l.front) m.scope("herald", () => l.front!(m, b, X));
