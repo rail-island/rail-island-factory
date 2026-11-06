@@ -6,6 +6,9 @@ import { INDUSTRY_MIGRATION } from '../generator/industryMigration.ts';
 import { paramCombinations, resolveParams } from '../generator/design.ts';
 import { findCoplanarOverlaps } from '../generator/coplanar.ts';
 import { glbStats } from '../generator/glbStats.ts';
+import { measureHelipad } from '../generator/helipad.ts';
+import { HELIPAD_D } from '../generator/design.ts';
+import { PLATFORM_HELIDECK } from '../generator/offshorePlatform.ts';
 import { parseGlb } from '../generator/glbTriangles.ts';
 it('covers the 35 audited Industry entries with valid target parameters', () => {
   expect(INDUSTRY_MIGRATION).toHaveLength(35);
@@ -62,4 +65,27 @@ it('plans hall openings that never overlap each other or a pilaster', () => {
       }
     }
   }
+});
+// The offshore platform stands in the sea and carries a large helideck (docs/models/industry.md,
+// "Offshore platform"; docs/models/game-properties.md, "Helipads"): the jacket's legs stand on the
+// waterline (y = 0), the export measures a level pad of at least HELIPAD_D.large on the helideck, and
+// its flare burns at the tip of the boom.
+it('stands the offshore platform on the waterline with a large helideck and a burning flare', () => {
+  const d = INDUSTRY.find(d => proceduralId(d.id) === 'proc-building-industry-offshore-platform')!;
+  const m = d.build();
+  expect(glbStats(m.toGlb('platform')).min[1]).toBe(0);
+  const pad = measureHelipad(d, d.game!.helipad!);
+  expect(pad.pad).toBe('large');
+  expect(pad.size).toBeGreaterThanOrEqual(HELIPAD_D.large);
+  expect(pad.centre).toEqual([PLATFORM_HELIDECK.x, PLATFORM_HELIDECK.y1, PLATFORM_HELIDECK.z]);
+  // above everything on the platform but the derrick, the crane's boom and the flare
+  const tops = m.positions().filter((_, i) => i % 3 === 1);
+  expect(Math.max(...tops)).toBeGreaterThan(pad.centre[1]);
+  expect(m.emitters().map(e => e.kind)).toEqual(['flame']);
+  // the low detail keeps the deck's silhouette, in the same material
+  const low = d.buildLod();
+  expect(low.triangleCount()).toBeLessThanOrEqual(500);
+  const lp = low.materialPositions('helipad');
+  const xs = lp.filter((_, i) => i % 3 === 0);
+  expect(Math.max(...xs) - Math.min(...xs)).toBeCloseTo(PLATFORM_HELIDECK.side, 5);
 });
