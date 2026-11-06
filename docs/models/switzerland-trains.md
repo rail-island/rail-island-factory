@@ -1,7 +1,7 @@
 # Switzerland's trains
 
 **Covers** - the twenty Swiss designs of the eight-country plan: the RAe TEE II, the Roter Pfeil, the ICN, the Giruno, the FV-Dosto, SBB's FLIRT and KISS and the Rhaetian Railway's Allegra; the Re 460, Re 4/4 II, Re 6/6, Ae 6/6, Ce 6/8 II Krokodil and Ae 8/14 Landi; on the metre gauge the RhB Ge 4/4 III and Ge 6/6 I Krokodil and the MGB HGe 4/4 II; the EW IV, IC 2000 and Glacier Express coaches. Their kits, figures, deviations and tests.
-**Code** - `generator/chUnits.ts` (`CH_UNITS`, `chLivery`), `generator/chLocos.ts` (`CH_LOCOS`), `generator/seriesHelpers.ts` (`flirt`, `kiss`), `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `assets/sbb-*/`, `assets/rhb-*/`, `assets/mgb-hge442/`, `assets/glacier-express/`
+**Code** - `generator/chUnits.ts` (`CH_UNITS`, `chLivery`), `generator/chLocos.ts` (`CH_LOCOS`), `generator/mgbHge442.ts`, `generator/seriesHelpers.ts` (`flirt`, `kiss`), `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `assets/sbb-*/`, `assets/rhb-*/`, `assets/mgb-hge442/`, `assets/glacier-express/`
 **See also** - [shinkansen.md](shinkansen.md), [world-locos.md](world-locos.md), [world-coaches.md](world-coaches.md), [netherlands-trains.md](netherlands-trains.md) (the FLIRT's Dutch sister)
 
 The catalog had no Swiss train before. Every design is filed under Switzerland.
@@ -26,10 +26,34 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
 | `proc-vehicle-sbb-ae814` | SBB Ae 8/14 Landi | box locomotive, raked | - | 34.0 m, 8,160 kW, 110 km/h |
 | `proc-vehicle-rhb-ge443` | RhB Ge 4/4 III | box locomotive, metre gauge | - | Bo-Bo, 16.0 m, 2,400 kW, 100 km/h |
 | `proc-vehicle-rhb-ge66` | RhB Ge 6/6 I Krokodil | box locomotive, hoods, metre gauge | `livery` (`brown`, `green`) | 13.3 m, 794 kW, 55 km/h |
-| `proc-vehicle-mgb-hge442` | MGB HGe 4/4 II | box locomotive, metre gauge | - | Bo-Bo rack, 14.8 m, 1,932 kW, 90 km/h |
+| `proc-vehicle-mgb-hge442` | MGB HGe 4/4 II | box locomotive kit, its own profiles (`mgbHge442.ts`), metre gauge | - | Bo-Bo rack, 14.776 m, 64 t, 1,932 kW, 90 km/h |
 | `proc-vehicle-sbb-ew4-coach` | SBB EW IV coach | coach | `unit` (`a`, `b`), `livery` (`redGrey`, `sbb`) | 26.4 m; 200 km/h |
 | `proc-vehicle-sbb-ic2000` | SBB IC 2000 coach | coach, double-deck | `unit` (`a`, `b`) | 26.8 m; 200 km/h |
 | `proc-vehicle-glacier-express` | Glacier Express coach | coach, metre gauge | `unit` (`first`, `second`) | 18.4 m, the panorama windows; 90 km/h |
+
+## The HGe 4/4 II
+
+Unlike the other Swiss locomotives, which state a few measures for the world
+locomotive kit, the HGe 4/4 II has its own `LocoSpec` (`mgbHge442.ts`), measured
+on the Commons photograph of FO 105 and a side view of the LGB model
+(assets/mgb-hge442/SOURCES.md):
+
+- **Profile.** A grey skirt (0.95 - 1.12 m) a little proud of the red; the cab
+  front upright to 1.6 m, then leaning back 0.34 m to the eave at 3.08 m; the cab
+  roof rounding down to the front, with the top headlight on the slope, to 3.38 m.
+  The machine-room roof (the three aluminium roof elements) stands higher, to
+  3.6 m, between |x| = 4.65 m, its sloped sides carrying four louvre panels a side;
+  the single-arm pantographs stand on it at |x| = 3.75 m.
+- **Sides.** Ribbed walls without machine-room openings; one cab door a side,
+  diagonally opposite the other side's (left side at the front, right side at the
+  rear), the cab windows at both ends. The FO logo's seven bars lie in the flats
+  between the ribs on the half away from the door, F before O as read from the side.
+- **Ends.** The asymmetric windscreen (the driver's pane, on the left, wider) in
+  silver frames, two headlights and two tail lamps low, the number 105 painted
+  under the driver's pane and below the cab side windows; a centre coupler at
+  0.8 m instead of side buffers.
+- **Running gear.** Bogie pivots 7.26 m apart, a 2.98 m bogie wheelbase, 0.94 m
+  wheels, the transformer and tanks between the bogies.
 
 ## Deviations
 

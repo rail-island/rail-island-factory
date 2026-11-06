@@ -35,7 +35,7 @@ const LENGTHS: Record<string, number> = {
   "proc-vehicle-ns-1700": 17.48, "proc-vehicle-ns-1100": 12.93, "proc-vehicle-ns-1300": 18.95, "proc-vehicle-ns-1200": 18.08, "proc-vehicle-ns-2200": 14.1,
   "proc-vehicle-ns-icr-coach": 26.4, "proc-vehicle-ns-de1": 26.0,
   "proc-vehicle-sbb-re460": 18.5, "proc-vehicle-sbb-re420": 15.41, "proc-vehicle-sbb-re620": 19.31, "proc-vehicle-sbb-ae66": 18.4, "proc-vehicle-sbb-ce68": 19.46,
-  "proc-vehicle-sbb-ae814": 34.0, "proc-vehicle-rhb-ge443": 16.0, "proc-vehicle-rhb-ge66": 13.3, "proc-vehicle-mgb-hge442": 14.8, "proc-vehicle-sbb-roter-pfeil": 22.4,
+  "proc-vehicle-sbb-ae814": 34.0, "proc-vehicle-rhb-ge443": 16.0, "proc-vehicle-rhb-ge66": 13.3, "proc-vehicle-mgb-hge442": 14.776, "proc-vehicle-sbb-roter-pfeil": 22.4,
   "proc-vehicle-renfe-354": 17.5, "proc-vehicle-renfe-252": 20.38, "proc-vehicle-renfe-269": 17.27, "proc-vehicle-renfe-277": 20.68, "proc-vehicle-renfe-319": 20.0, "proc-vehicle-renfe-333": 20.7,
   "proc-vehicle-br-class-55": 21.18, "proc-vehicle-br-class-37": 18.75, "proc-vehicle-br-class-47": 19.38, "proc-vehicle-br-class-66": 21.35, "proc-vehicle-br-class-86": 17.83,
   "proc-vehicle-br-mk1-coach": 19.66, "proc-vehicle-br-class-378": 20.4,

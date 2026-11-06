@@ -70,7 +70,9 @@ the native mapping.
   height it spans, and paint is cut into slabs at the profile's kinks so a
   slanted edge (the 112's chevron, the 1012's sweeps) stays on the skin;
 - **running gear** - the kit's two-axle `bogie`, or `bogie3` (three wheelsets on
-  a long dipping plate frame) for the Co'Co' 180; the kit's `buffers`; a plough;
+  a long dipping plate frame) for the Co'Co' 180; the kit's `buffers`, or a centre coupler at
+  `centreCoupler`'s height in their place (the metre-gauge MGB HGe 4/4 II,
+  [switzerland-trains.md](switzerland-trains.md)); a plough;
 - **roof** - trapezoidal boxes, an optional high-voltage line, and the kit's
   `diamond` or `singleArm` pantographs.
 
