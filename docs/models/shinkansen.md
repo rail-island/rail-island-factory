@@ -50,10 +50,11 @@ combinations hashed before and after):
 - `cars` - the train lengths offered (default 3 - 8); a unit of two cars has no middle car;
 - `single` - one double-ended railcar, its nose (or flat cab) at both ends, no car choice;
 - `endPantograph` - the end cars raise the pantographs (a short unit without middle motor cars);
-  `"lead"` only the leading end car (a locomotive and its driving trailer, the IC225);
+  `"lead"` only the leading end car (a locomotive and its driving trailer, the IC225),
+  `"trail"` only the rear one (a power-car train fed from one collector, the Eurostar);
 - `endBogies`, `endSides` - a locomotive end car: its bogies at given d behind the nose
   (centred under its body, not the coaches' rule) and its own side windows and doors in
-  place of the passenger layout (the IC225's Class 91, the HST's Class 43); `endGrilles` -
+  place of the passenger layout (the IC225's Class 91, the HST's Class 43, the Eurostar's power cars); `endGrilles` -
   its side grilles with vertical slats (the Class 43's radiator);
 - `faceLamps`, `faceGrille` - a blunt nose's headlights and grille on its front face, in
   place of the side lamps; `cabPanel` - a warning panel painted over the bands at the

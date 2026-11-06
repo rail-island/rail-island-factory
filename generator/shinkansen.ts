@@ -91,8 +91,8 @@ export interface ShinkansenSeries {
   cars?: readonly number[];
   /** One double-ended railcar, a cab or nose at both ends: no car or train choice. */
   single?: boolean;
-  /** The end cars raise the pantographs (a short unit without intermediate motor cars); `lead` only the leading one (a locomotive and its driving trailer). */
-  endPantograph?: boolean | "lead";
+  /** The end cars raise the pantographs (a short unit without intermediate motor cars); `lead` only the leading one (a locomotive and its driving trailer), `trail` only the rear one (a power-car train feeding both from one collector). */
+  endPantograph?: boolean | "lead" | "trail";
   /** The end car's bogies (d behind the nose tip) where they do not follow the coaches' rule: a locomotive's, centred under its body. */
   endBogies?: readonly [number, number];
   /** A locomotive end car's sides: its windows (d spans, on the first window row) and doors in place of the passenger layout. */
@@ -258,7 +258,7 @@ export interface ShinkansenSlot { end: boolean; pantograph: boolean; lo: number;
 
 /** The cars of an n-car train, front first: an end car at each end (the rear one turned), the second and the next-to-last raising a pantograph (the middle one of three). */
 export function shinkansenTrain(s: ShinkansenSeries, n: number): ShinkansenSlot[] {
-  const pan = (k: number) => (unwired(s) ? false : s.endPantograph === "lead" ? k === 0 : s.endPantograph ? k === 0 || k === n - 1 : n <= 3 ? k === 1 : k === 2 || k === n - 3);
+  const pan = (k: number) => (unwired(s) ? false : s.endPantograph === "lead" ? k === 0 : s.endPantograph === "trail" ? k === n - 1 : s.endPantograph ? k === 0 || k === n - 1 : n <= 3 ? k === 1 : k === 2 || k === n - 3);
   const total = 2 * s.endLength + (n - 2) * s.midLength;
   let hi = total / 2;
   return Array.from({ length: n }, (_, k) => {

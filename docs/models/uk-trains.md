@@ -34,8 +34,11 @@ The catalog had no British train before; the archived webapp Eurostar is now the
 
 ## Deviations
 
-- **Power cars.** The Eurostar's power cars are the series kit's end cars, with passenger
-  windows. The HST's Class 43 is drawn as a locomotive: its wedge nose yellow below the
+- **Power cars.** The Eurostar's power cars are drawn as locomotives: bogies 14 m apart
+  under the middle, the cab door and a porthole behind the cab, the machine room's long
+  louvre band, and the pantograph on the power car - raised on the trailing one in a train,
+  none on the trailers (photographs in `assets/eurostar-373/`); the leading power car's
+  folded pantograph is not drawn. The HST's Class 43 is drawn as a locomotive: its wedge nose yellow below the
   windscreen, the yellow valance low ahead of the bogie, bogies 10.29 m apart under the
   middle of the body, plain sides with the cab door, the radiator grille and the van's
   door and window at the inner end (photographs in `assets/br-hst/`); the nose's lamp
@@ -54,7 +57,7 @@ The catalog had no British train before; the archived webapp Eurostar is now the
 
 ## Tests
 
-`test/ukPowerCars.test.ts` (the Class 91's and the Class 43's bogies, their noses without
+`test/ukPowerCars.test.ts` (the Class 91's, the Class 43's and the Eurostar's bogies, their noses without
 a gangway frame, the warning panels, the Class 43's radiator grille, the IC225's leading
-pantograph), `test/worldTrains.test.ts` (with the `uk` gauge: every British design within 2.82 m by
+and the Eurostar's trailing pantograph), `test/worldTrains.test.ts` (with the `uk` gauge: every British design within 2.82 m by
 4.0 m) and, for each module's first design, the catalog sweep.

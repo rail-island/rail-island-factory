@@ -85,6 +85,13 @@ export const E300: ShinkansenSeries = {
   windscreen: [3.6, 5.4, 0.07, 1.0], lamps: [1.3, 1.45],
   windows: [[1.9, 2.65]], windowW: 1.1, pitch: 1.4, door: [1.25, 2.95, 1.9, 2.55], doorW: 0.8,
   bogieCentres: 14.0, wheelR: 0.46, wheelbase: 3.0, cars: [4, 6, 8],
+  // the power cars are locomotives, not coaches: bogies 14 m apart under the
+  // middle, the cab door and a porthole behind the cab, the machine room's long
+  // louvre band; the pantograph on the power car, the rear one raised in a train
+  endBogies: [4.07, 18.07],
+  endSides: { windows: [[5.25, 5.55]], doors: [[4.35, 5.0]] },
+  endGrilles: [[8.6, 20.3, 2.15, 3.1, 36]],
+  endPantograph: "trail",
   liveries: {
     eurostar: lv("Eurostar", "3001", [1.25, "#1d2a5a"], [1.35, "#f2c31a"], [9, "#f1f1ee"]),
     eurostar2011: lv("Eurostar 2011", "3201", [1.25, "#1d2a5a"], [1.33, "#e8c547"], [9, "#e9ebec"]),

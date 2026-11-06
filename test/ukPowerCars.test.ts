@@ -1,11 +1,11 @@
 // The British power cars on the series kit (generator/ukUnits.ts): the InterCity
-// 225's Class 91 and the InterCity 125's Class 43 are locomotives - bogies under
+// 225's Class 91, the InterCity 125's Class 43 and the Eurostar's are locomotives - bogies under
 // the middle of the body, plain sides, the yellow panel on the nose, no gangway
 // frame at the nose; only the IC225's leading car raises a pantograph. See
 // docs/models/uk-trains.md.
 import { describe, expect, it } from "vitest";
 import { DESIGNS } from "../generator/generate";
-import { HST, IC225 } from "../generator/ukUnits";
+import { E300, HST, IC225 } from "../generator/ukUnits";
 import { shinkansenTrain, type ShinkansenSeries } from "../generator/shinkansen";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles";
 
@@ -18,7 +18,10 @@ const tris = (id: string, v: Record<string, string> = {}) => {
 const CASES: Array<[string, ShinkansenSeries, number, number]> = [
   ["proc-vehicle-br-ic225", IC225, 10.5, IC225.endLength / 2 - 0.65],
   ["proc-vehicle-br-hst", HST, 10.29, HST.endLength / 2],
+  ["proc-vehicle-eurostar-373", E300, 14.0, E300.endLength / 2],
 ];
+// the designs whose nose carries the yellow warning panel
+const PANEL = new Set(["proc-vehicle-br-ic225", "proc-vehicle-br-hst"]);
 
 describe("the British power cars", () => {
   for (const [id, s, centres, tip] of CASES) {
@@ -36,7 +39,7 @@ describe("the British power cars", () => {
       for (const t of d) for (const p of t.p) expect(p[0]).toBeLessThan(0);
     });
 
-    it(`${id}: paints the yellow warning panel on the nose only`, () => {
+    if (PANEL.has(id)) it(`${id}: paints the yellow warning panel on the nose only`, () => {
       const y = tris(id).filter((t) => t.material === "cabPanel");
       expect(y.length).toBeGreaterThan(0);
       for (const t of y) for (const p of t.p) expect(p[0]).toBeGreaterThan(tip - s.cabPanel!.d - 0.3);
@@ -44,7 +47,8 @@ describe("the British power cars", () => {
 
     it(`${id}: has locomotive sides, not a coach's row of windows`, () => {
       expect(s.endSides!.windows.length).toBeLessThanOrEqual(4);
-      expect(s.endSides!.doors).toHaveLength(2);
+      expect(s.endSides!.doors.length).toBeGreaterThanOrEqual(1);
+      expect(s.endSides!.doors.length).toBeLessThanOrEqual(2);
     });
   }
 
@@ -52,6 +56,13 @@ describe("the British power cars", () => {
     const g = tris("proc-vehicle-br-hst").filter((t) => t.material === "black" && t.p.every((p) => p[1] > 2.0 && p[1] < 3.05));
     expect(g.some((t) => t.p.every((p) => p[2] > 1))).toBe(true);
     expect(g.some((t) => t.p.every((p) => p[2] < -1))).toBe(true);
+  });
+
+  it("raises the Eurostar's pantograph on the trailing power car only, none on the trailers", () => {
+    for (const n of E300.cars!) {
+      const t = shinkansenTrain(E300, n);
+      expect(t.map((x) => x.pantograph)).toEqual(t.map((_, k) => k === n - 1));
+    }
   });
 
   it("raises a pantograph on the IC225's leading Class 91 only, not on the driving van trailer", () => {
