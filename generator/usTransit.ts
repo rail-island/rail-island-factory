@@ -1,27 +1,27 @@
 // North American passenger cars and urban rail on the carbody kit
-// (carbodyKit.ts): the Budd RDC railcar (1949), the Burlington's Pioneer Zephyr
-// (1934), the New York subway's R160 (2005) and the Chicago 'L' 5000-series
-// (2009). One car builder (`drawCar`) draws any flat- or round-ended car from a
+// (carbodyKit.ts): the Budd RDC railcar (1949), the New York subway's R160
+// (2005) and the Chicago 'L' 5000-series (2009); the Pioneer Zephyr's coach and
+// observation car (pioneerZephyr.ts) are drawn by the same builder. One car
+// builder (`drawCar`) draws any flat- or round-ended car from a
 // `CarDef`: its lofted body, window rows, plug doors opening onto its cabin,
 // cab ends with their windscreens and lamps, couplers and trucks. Real size on
 // the US loading gauge. See docs/models/us-transit.md.
 
 import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
 import { MeshBuilder as Builder } from "./meshBuilder.ts";
-import { resolveParams, type GameProperties, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
+import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { bogieGeometry, buffers, coupling, exhaust, horn, paint, type BogieSpec } from "./dieselParts.ts";
 import { block } from "./vehicleParts.ts";
 import type { Pt } from "./sliceLoft.ts";
-import { crownPane, sideDecal, sideLettering, sidePanel, sliceCabin, type SliceBody, type SliceDoorway } from "./sliceBody.ts";
+import { sideDecal, sideLettering, sidePanel, sliceCabin, type SliceBody, type SliceDoorway } from "./sliceBody.ts";
 import { openable, plugMove } from "./doors.ts";
 import { INTERIOR_PALETTE } from "./interior.ts";
-import { CARBODY_PALETTE, bandPainter, carbody, carbodyShell, endDiaphragm, faceLamps, pilotPlate, type CarbodySpec, type Painter } from "./carbodyKit.ts";
+import { CARBODY_PALETTE, bandPainter, carbody, carbodyShell, endDiaphragm, faceLamps, type CarbodySpec, type Painter } from "./carbodyKit.ts";
 import { decalX, knuckleCoupler } from "./usHoodKit.ts";
 import { centreCoupler, enumParam } from "./emuParts.ts";
 import { METRO_CATALOG } from "./metro.ts";
 import { RAIL_CATALOG } from "./cd163.ts";
-import { articulate } from "./tramKit.ts";
-import { LOD_GLASS, type LodBand, type LodPart, type LodSections } from "./lodKit.ts";
+import { LOD_GLASS, type LodBand } from "./lodKit.ts";
 import { bogieParts, fitUnit, type UnitBody } from "./lodUnits.ts";
 
 const ft = (feet: number, inches = 0) => Math.round((feet * 0.3048 + inches * 0.0254) * 1000) / 1000;
@@ -188,7 +188,7 @@ export function drawCar(m: MeshBuilder, c: CarDef, X: (d: number) => number, o: 
   return b;
 }
 
-const truckSpec = (wb: number, wheelR: number, bolster: number): BogieSpec => ({
+export const truckSpec = (wb: number, wheelR: number, bolster: number): BogieSpec => ({
   axles: [-wb / 2, wb / 2], wheelR, frameHalf: wb / 2 + wheelR + 0.15, frameTop: wheelR + 0.42, frameBottom: wheelR + 0.08, frameZ: [0.92, 1.04], primary: "coil",
   secondary: [-0.4, 0.4], secondaryZ: 1.08, bolster,
 });
@@ -198,7 +198,7 @@ const row = (d0: number, d1: number, n: number, w: number): Array<[number, numbe
   Array.from({ length: n }, (_, i): [number, number] => { const d = d0 + ((d1 - d0) * (i + 0.5)) / n; return [d - w / 2, d + w / 2]; });
 
 /** The LOD body of a car. */
-function carLodBody(c: CarDef, X: (d: number) => number, section?: number): UnitBody {
+export function carLodBody(c: CarDef, X: (d: number) => number, section?: number): UnitBody {
   const b = carbody({ ...c.spec, edges: [] });
   const mid = b.length / 2;
   const top = b.C(mid);
@@ -278,104 +278,6 @@ export function buddRdcLod(params?: ParamValues): MeshBuilder {
 }
 
 // ---------------------------------------------------------------------------
-// Pioneer Zephyr: three stainless cars on Jacobs bogies, a shovel nose and a round observation end
-
-export type ZephyrCar = "powerCar" | "coach" | "observation";
-export type ZephyrUnit = ZephyrCar | "train";
-export const ZEPHYR_PARAMS: readonly ParamSpec[] = [enumParam("unit", "Car", { powerCar: "Power car", coach: "Coach", observation: "Observation", train: "Full train" })];
-export const ZEPHYR_LENGTH: Record<ZephyrCar, number> = { powerCar: 20.4, coach: 19.4, observation: 20.25 };
-const ZE_GAP = 0.3;
-const ZEPHYR_PAL = { ss: paint("#c9cdd0", 0.28), ssDark: paint("#9ea2a5", 0.4), zBlack: paint("#1f2022"), under: paint("#2a2c2f", 0.85) };
-const ZE_BANDS: readonly Band[] = [[0, 9, "ss"]];
-const zeNose = { len: 2.6, tip: 0.18, power: 2.1, C: [[0, 1.4], [0.3, 1.95], [1.5, 2.6], [2.8, 3.1], [3.6, 3.42], [4.2, 3.58]] as Pt[], S: [[0, 1.35], [0.3, 1.85], [1.5, 2.45], [2.8, 2.9], [3.6, 3.1], [4.2, 3.2]] as Pt[], Y: [[0, 1.25], [0.6, 1.3]] as Pt[], A: [[0, 1.2], [0.6, 0.9]] as Pt[], B: [[0, 1.15], [0.4, 0.45], [2.5, 0.45]] as Pt[] };
-const zeTail = { len: 1.9, tip: 0.35, power: 2.2, C: [[0, 3.1], [1.0, 3.45], [1.9, 3.58]] as Pt[], S: [[0, 2.9], [1.0, 3.12], [1.9, 3.2]] as Pt[], B: [[0, 0.8], [0.6, 0.55]] as Pt[] };
-
-/** Truck positions (d) of a single car: its own two trucks, near its ends. */
-const zeTrucks = (c: ZephyrCar): number[] => (c === "powerCar" ? [3.2, ZEPHYR_LENGTH.powerCar - ZE_GAP - 2.0] : [2.0, ZEPHYR_LENGTH[c] - 2 * ZE_GAP - (c === "observation" ? 3.0 : 2.0)]);
-
-function zephyrDef(c: ZephyrCar): CarDef {
-  const body = ZEPHYR_LENGTH[c] - (c === "powerCar" ? 0.4 + ZE_GAP : 2 * ZE_GAP);
-  const trucks = zeTrucks(c);
-  const windows = c === "powerCar" ? row(9.5, body - 1.5, 3, 0.9) : row(2.2, body - (c === "observation" ? 1.2 : 2.2), c === "coach" ? 9 : 8, 1.25);
-  return {
-    spec: { length: body, W: 1.52, Y: 1.3, S: 3.2, C: 3.58, lean: 0.97, arc: 7, B: 0.55, wl: 1.44, A: 0.9, wa: 1.5,
-      ...(c === "powerCar" ? { front: zeNose } : {}), ...(c === "observation" ? { rear: zeTail } : {}),
-      cuts: trucks.map((d) => [d - 1.6, d + 1.6] as const), edges: [], step: 1.0, noseStep: 0.15 },
-    bands: ZE_BANDS, roof: "ss", skirt: "ssDark", under: "under",
-    windows: [{ y: [1.95, 2.65], spans: windows, frame: "zBlack" }],
-    doors: c === "powerCar" ? { spans: [], y: [1.2, 2.9], glass: [2.0, 2.6] } : { spans: [[0.55, 1.45]], y: [1.2, 2.95], glass: [2.0, 2.6] },
-    fluting: { y0: 1.0, y1: 1.85, pitch: 0.08, mat: "ssDark" },
-    cabEnds: [], diaphragm: [1.2, 3.0],
-    trucks, truck: truckSpec(ft(8, 6), ft(0, 18), 0.55),
-    coupler: "knuckle", couplerY: 0.88, gap: [c === "powerCar" ? 0.4 : ZE_GAP, ZE_GAP],
-    lettering: c === "powerCar" ? [{ text: "BURLINGTON", d: 6.4, y: 2.2, h: 0.3, mat: "zBlack" }] : c === "coach" ? [{ text: "ZEPHYR", d: body / 2, y: 2.8, h: 0.24, mat: "zBlack" }] : [],
-    extras: (m, b, X) => {
-      if (c === "powerCar") {
-        m.scope("windscreen", () => { for (const s of [1, -1]) { crownPane(m, b, X, s, "rubber", [2.85, 3.62], [0.05, 1.05], 0.006); crownPane(m, b, X, s, "cabGlass", [2.9, 3.57], [0.09, 1.0], 0.012); } });
-        m.scope("headlight", () => { for (let k = 0; k <= 400; k++) { const d = k * 0.01; if (b.C(d) >= 2.2) { faceLamps(m, 1, X(d + 0.02), [[0, 2.2, 0.14, "lampHead"]]); break; } } });
-        m.scope("baggage door", () => { for (const s of [-1, 1]) sidePanel(m, b, X, s, "ssDark", 5.0, 6.4, 1.2, 2.9, 0.005, 0.006); });
-        m.scope("grilles", () => { for (const s of [-1, 1]) for (let d = 4.4; d < 8.4; d += 0.12) sidePanel(m, b, X, s, "zBlack", d, d + 0.05, 2.75, 3.1, 0.006, 0.004); });
-        m.scope("pilot", () => pilotPlate(m, "ssDark", 1, X(0) - 0.05, 0.15, 0.6, 1.2, 0.35, 0.9));
-      }
-    },
-  };
-}
-
-const zeFront = (c: ZephyrCar) => (c === "powerCar" ? 0.4 : ZE_GAP);
-
-export interface ZephyrSlot { car: ZephyrCar; lo: number; hi: number }
-/** The three cars front to back, their spans over the coupling planes, centred. */
-export function zephyrTrain(): ZephyrSlot[] {
-  const cars: ZephyrCar[] = ["powerCar", "coach", "observation"];
-  let hi = cars.reduce((t, c) => t + ZEPHYR_LENGTH[c], 0) / 2;
-  return cars.map((car) => { const lo = hi - ZEPHYR_LENGTH[car]; const out = { car, lo, hi }; hi = lo; return out; });
-}
-
-export function pioneerZephyr(params?: ParamValues): MeshBuilder {
-  const u = resolveParams(ZEPHYR_PARAMS, params).unit as ZephyrUnit;
-  const m = new Builder({ ...INTERIOR_PALETTE, ...CARBODY_PALETTE, ...ZEPHYR_PAL });
-  if (u !== "train") {
-    drawCar(m, zephyrDef(u), (d) => ZEPHYR_LENGTH[u] / 2 - zeFront(u) - d);
-    return m;
-  }
-  const slots = zephyrTrain();
-  const jacobs = truckSpec(ft(8, 6), ft(0, 18), 0.55);
-  const sections = slots.map((slot, k) => {
-    const X = (d: number) => slot.hi - zeFront(slot.car) - d;
-    return {
-      x0: slot.lo + ZE_GAP, x1: slot.hi - (k === 0 ? 0 : ZE_GAP),
-      draw: () => m.scope(`car ${k + 1}`, () => {
-        // the inner ends ride on the Jacobs bogies under the joints
-        drawCar(m, zephyrDef(slot.car), X, { trucks: [k === 0, k === slots.length - 1], inside: [...(k > 0 ? [1] : []), ...(k < slots.length - 1 ? [-1] : [])] });
-        if (k < slots.length - 1) m.scope("jacobs bogie", () => m.bogie(() => bogieGeometry(m, slot.lo, jacobs), { sections: [k, k + 1] }));
-      }),
-    };
-  });
-  articulate({ m }, sections, 0.88, { profile: [[-0.75, 1.0], [0.75, 1.0], [0.75, 3.1], [-0.75, 3.1]], folds: 4, depth: 0.03 }, 12, slots.slice(0, -1).map((s) => s.lo));
-  return m;
-}
-
-export function pioneerZephyrLod(params?: ParamValues): MeshBuilder {
-  const u = resolveParams(ZEPHYR_PARAMS, params).unit as ZephyrUnit;
-  const palette = { ...CARBODY_PALETTE, ...ZEPHYR_PAL };
-  if (u !== "train") return carLod(zephyrDef(u), (d) => ZEPHYR_LENGTH[u] / 2 - zeFront(u) - d, palette);
-  const slots = zephyrTrain();
-  const bodies = slots.map((slot, k) => carLodBody(zephyrDef(slot.car), (d) => slot.hi - zeFront(slot.car) - d, k));
-  const xs = [zephyrDef("powerCar").trucks[0]!, ...slots.slice(0, -1).map((s) => s.lo), 0];
-  const parts: LodPart[] = [
-    ...bogieParts([[slots[0]!.hi - 0.4 - xs[0]!, 1.6, 0]], 0.55),
-    ...slots.slice(0, -1).map((s, i) => bogieParts([[s.lo, 1.6, i]], 0.55)[0]!),
-    ...bogieParts([[slots[2]!.lo + ZE_GAP + 2.6 + 0.9 - 0.9, 1.6, 2]], 0.55),
-  ];
-  const sections: LodSections = {
-    pivots: slots.map((_, i): [number, number, number] => (i === 0 ? [0, 0, 0] : [slots[i - 1]!.lo, 0.88, 0])),
-    joints: slots.slice(0, -1).map((s, i) => ({ sections: [i, i + 1] as [number, number], front: s.lo + ZE_GAP, rear: slots[i + 1]!.hi - ZE_GAP, profile: [[-0.75, 1.0], [0.75, 1.0], [0.75, 3.1], [-0.75, 3.1]] as Array<[number, number]> })),
-    maxBendDeg: 12,
-  };
-  return fitUnit({ palette, bodies, parts, sections }, 300);
-}
-
-// ---------------------------------------------------------------------------
 // Subway and 'L' cars
 
 export type MetroCar = "cabCar" | "trailer";
@@ -449,19 +351,8 @@ export function cta5000Lod(): MeshBuilder {
 
 const UNIT_CATALOG = { ...RAIL_CATALOG, group: "unit" };
 
-const ZEPHYR_WEIGHT: Record<ZephyrCar, number> = { powerCar: 40, coach: 30, observation: 30 };
-const ZEPHYR_GAME: GameProperties = {
-  weight: ZEPHYR_WEIGHT.powerCar, power: 447, maxspeed: 180, accel: null,
-  variants: [
-    { params: { unit: "coach" }, weight: ZEPHYR_WEIGHT.coach, power: 0 },
-    { params: { unit: "observation" }, weight: ZEPHYR_WEIGHT.observation, power: 0 },
-    { params: { unit: "train" }, weight: 100, power: 447 },
-  ],
-};
-
 export const US_TRANSIT: ProceduralDesign[] = [
   { id: "proc-vehicle-budd-rdc", title: "Budd RDC", build: buddRdc, buildLod: buddRdcLod, params: RDC_PARAMS, game: { weight: 54, power: 410, maxspeed: 137, accel: null }, catalog: { ...UNIT_CATALOG, traction: "diesel" }, loadingGauge: "us", references: "budd-rdc" },
-  { id: "proc-vehicle-pioneer-zephyr", title: "Pioneer Zephyr", build: pioneerZephyr, buildLod: pioneerZephyrLod, params: ZEPHYR_PARAMS, lodTriangles: 300, game: ZEPHYR_GAME, catalog: { ...UNIT_CATALOG, traction: "diesel" }, loadingGauge: "us", references: "pioneer-zephyr" },
   { id: "proc-vehicle-nyc-r160", title: "NYC Subway R160", build: nycR160, buildLod: nycR160Lod, params: R160_PARAMS, game: { weight: 38, power: 345, maxspeed: 89, accel: null, variants: [{ params: { unit: "trailer" }, weight: 36 }] }, catalog: METRO_CATALOG, loadingGauge: "us", references: "nyc-r160" },
   { id: "proc-vehicle-cta-5000", title: "Chicago 'L' 5000-series", build: cta5000, buildLod: cta5000Lod, game: { weight: 30, power: 320, maxspeed: 89, accel: null }, catalog: METRO_CATALOG, loadingGauge: "us", references: "cta-5000" },
 ];

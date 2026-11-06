@@ -10,7 +10,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-metro-cable-medellin-1.jpg` | Metro cable medellin 1.JPG | https://commons.wikimedia.org/wiki/File:Metro_cable_medellin_1.JPG | Staticshakedown | CC BY-SA 3.0 | the urban gondola cabin and colours |
 | `photo-metrocablemed.jpg` | Metrocablemed.jpg | https://commons.wikimedia.org/wiki/File:Metrocablemed.jpg | Camilo Sanchez (talk · contribs) | CC BY-SA 3.0 | the urban gondola cabin and colours |
 
 ## Published figures

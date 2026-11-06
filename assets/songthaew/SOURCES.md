@@ -10,7 +10,6 @@ Downloaded from Wikimedia Commons as standard thumbnails, at most 1280 px on the
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-empty-songthaew-sakon-nakhon.jpg` | Empty Songthaew-Sakon Nakhon.JPG | https://commons.wikimedia.org/wiki/File:Empty_Songthaew-Sakon_Nakhon.JPG | User:Mattes | Public domain | shape, proportions and colours |
 | `photo-isuzu-n-series-songthaew-01.jpg` | Isuzu N-Series songthaew 01.jpg | https://commons.wikimedia.org/wiki/File:Isuzu_N-Series_songthaew_01.jpg | The original uploader was Henry Flower at English Wikipedia. | CC BY-SA 3.0 | shape, proportions and colours |
 
 ## Published figures

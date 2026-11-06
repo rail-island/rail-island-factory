@@ -10,7 +10,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-al-farabi-chemical-tanker-2.jpg` | Al Farabi chemical tanker 2.jpg | https://commons.wikimedia.org/wiki/File:Al_Farabi_chemical_tanker_2.jpg | Hervé Cozanet | CC BY-SA 3.0 | shape, proportions and colours |
 | `photo-sten-aurora-clyde-2019.jpg` | STEN AURORA Clyde 2019.jpg | https://commons.wikimedia.org/wiki/File:STEN_AURORA_Clyde_2019.jpg | Niels Johannes | CC BY-SA 4.0 | shape, proportions and colours |
 
 ## Published figures

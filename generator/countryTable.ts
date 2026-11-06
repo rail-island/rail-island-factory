@@ -108,7 +108,7 @@ export const COUNTRY_OF: ReadonlyMap<string, string> = new Map([
   ...each("jp", "shinkansen-0", "shinkansen-n700s", "shinkansen-e5", "shinkansen-500", "shinkansen-700", "shinkansen-e6", "shinkansen-100", "shinkansen-e4",
     "jr-e235", "jnr-103", "odakyu-gse", "kintetsu-hinotori", "jr-e259", "jnr-485", "hankyu-9000", "jnr-c62", "jnr-d51", "jnr-ef66", "jnr-dd51",
     "blue-train-24", "jr-kiha40"),
-  ...each("us", "emd-gp9", "emd-sd40-2", "ge-es44ac", "emd-sd70ace", "emd-f7", "ge-p42dc", "siemens-alc42", "prr-gg1", "amtrak-superliner",
+  ...each("us", "emd-gp9", "emd-sd40-2", "ge-es44ac", "emd-sd70ace", "emd-f7", "emd-f40ph", "ge-p42dc", "siemens-alc42", "prr-gg1", "amtrak-superliner",
     "amtrak-acela", "up-big-boy", "prr-k4s", "nyc-hudson", "american-440", "budd-rdc", "pioneer-zephyr", "nyc-r160", "cta-5000", "us-caboose",
     "us-boxcar", "us-well-car", "sf-cable-car", "american-truck", "boeing-737", "boeing-747", "mcdonnell-douglas-md11"),
   // the world fleet (docs/specs/2026-11-05-world-vehicle-fleet-list.md): its list's origin column,
