@@ -35,17 +35,19 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
 
 - **RAe TEE II.** Drawn from eight photographs (assets/sbb-rae-tee/SOURCES.md) and de.wikipedia's
   figures: the driving car's own cab face (`TEE_FACE`): the full lower face with its tip at the
-  twin-lamp pods, the TEE emblem, the red coupler cover beside the pocket, the louvred grille,
+  big twin-lamp pods on the corners of the bulging lower face (it stands 0.7 m ahead of the
+  windscreen's foot), the TEE emblem with its rings, the red coupler cover beside the pocket, the louvred grille,
   the chrome strip, four windscreen panes wrapping onto the cab sides, the rear-rounded quarter
   window, the domed roof end with its top lamp; the cab side window on the right only, the
-  destination board ahead of the door on the left and behind it on the right. The machine car
+  destination board ahead of the door on the left and behind it on the right; nine windows on the
+  driving car, ten on the intermediate car, 1.3 m wide at a 2.05 m pitch. The machine car
   (`powerCar`, second in four and five cars, third in six) on two A1A bogies with its corridor
   windows, roof-edge louvres and the four diamond pantographs interlaced in pairs, the outer one
   over the +X bogie raised. The TEE livery's crimson to the window sills and beige to the roof;
   the RABe EC grey ("Graue Maus") with its white lines round the dark window band. The dining
   car is drawn as an intermediate car, the machine car's two sides alike (its compartment side
   not modelled), the side TEE emblem and the grey's "EuroCity" lettering are left out (the stroke
-  font has no C or lower-case u and o), and the emblem's three rings are not drawn.
+  font has no C or lower-case u and o).
 
 - **Metre gauge.** The RhB and MGB stock keeps its real 2.65 m bodies on the game's
   standard-gauge wheelsets, as the KiHa 40 does; the HGe 4/4 II's rack pinions are

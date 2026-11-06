@@ -50,7 +50,7 @@ export interface SeriesCabFace {
   /** Painted polygons over the face's bands, [lat, y] corners (one y-interval at each lat): a livery's sweep or emblem. */
   fields?: ReadonlyArray<{ mat: string; pts: readonly Pt[] }>;
   /** Convex polygons laid as decals on the face, [lat, y] corners, subdivided to follow its curve: a livery's point, an emblem (cheaper than a field). */
-  decals?: ReadonlyArray<{ mat: string; pts: readonly Pt[] }>;
+  decals?: ReadonlyArray<{ mat: string; pts: readonly Pt[]; fine?: number }>;
   /** The face's bands wrap round onto the cab sides back to the join (default the sides' bands there). */
   wrap?: boolean;
   /** The windscreens and other panes, painted glass. */
@@ -189,7 +189,7 @@ export function drawCabFace(m: MeshBuilder, f: SeriesCabFace, e: number, xTip: n
       if (g.light) m.scope("light", () => n.plate("cabGlass", 0, y1 - 0.5, rect(a + 0.1, b - 0.1, y1 - 0.9, y1 - 0.1), 0.035, 0.01));
     });
   if (f.decals?.length)
-    m.scope("decals", () => f.decals!.forEach((dc, i) => m.scope(`decal ${i + 1}`, () => n.decal(dc.mat, subdivide(dc.pts, 5), 0.012))));
+    m.scope("decals", () => f.decals!.forEach((dc, i) => m.scope(`decal ${i + 1}`, () => n.decal(dc.mat, subdivide(dc.pts, dc.fine ?? 5), 0.012))));
   if (f.pods?.length)
     m.scope("pods", () => f.pods!.forEach((pd, i) => m.scope(`pod ${i + 1}`, () => {
       const r = Math.min(pd.r ?? pd.h / 2, pd.h / 2, pd.w / 2), k = 4;

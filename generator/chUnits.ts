@@ -55,6 +55,13 @@ const GOTTARDO_LIVERY: ShinkansenLivery = {
   roof: "roofG", skirt: "grey", endSweeps: TEE_SWEEPS,
 };
 
+/** The emblem's rings: three circles round the letters, 12 segments each. */
+const TEE_RINGS = [-0.155, 0, 0.155].flatMap((cx) => Array.from({ length: 12 }, (_, k) => {
+  const [a0, a1, r0, r1, cy] = [(Math.PI * k) / 6, (Math.PI * (k + 1)) / 6, 0.108, 0.128, 1.835];
+  const pts: Pt[] = [[cx + r0 * Math.cos(a0), cy + r0 * Math.sin(a0)], [cx + r1 * Math.cos(a0), cy + r1 * Math.sin(a0)], [cx + r1 * Math.cos(a1), cy + r1 * Math.sin(a1)], [cx + r0 * Math.cos(a1), cy + r0 * Math.sin(a1)]];
+  return { mat: "emblem", pts, fine: 2 };
+}));
+
 /**
  * The RAe TEE II's driving end (the photographs above, photo-ffs-rae-1053-a-como-sg.jpg in three-quarter
  * view, the Bern photograph head on): the lower face upright and full, its tip at the lamps; the twin
@@ -64,10 +71,10 @@ const GOTTARDO_LIVERY: ShinkansenLivery = {
  * rounding 3 m back to the roof with the top lamp on it.
  */
 const TEE_FACE: SeriesCabFace = {
-  dJoin: 3.0, dSide: 1.6, first: 5.3, roofFrom: 3.9, reach: 0.3, bulge: 0.1, cols: [8, 4, 1, 2], tolerance: 0.015,
-  profile: [[0.72, 0.25], [0.95, 0.1], [1.2, 0.02], [1.45, 0], [1.65, 0.02], [1.85, 0.1], [2.0, 0.2], [2.07, 0.26], [2.12, 0.3], [2.27, 0.38], [3.1, 0.76], [3.2, 0.82], [3.45, 1.02], [3.65, 1.3], [3.8, 1.7], [3.92, 2.2], [4.0, 3.0]],
-  corner: [[0.72, 0.45], [1.85, 0.45], [2.27, 0.7], [3.1, 0.8], [3.45, 0.9], [3.8, 0.9], [4.0, 0.5]],
-  rows: [0.72, 0.85, 0.95, 1.2, 1.25, 1.3, 1.45, 1.65, 1.84, 1.85, 1.9, 2.0, 2.07, 2.12, 2.16, 2.24, 2.27, 2.6, 3.1, 3.13, 3.2, 3.34, 3.4, 3.45, 3.65, 3.8, 3.9, 3.92, 4.0],
+  dJoin: 3.0, dSide: 1.8, first: 5.3, roofFrom: 3.9, reach: 0.3, bulge: 0.22, cols: [8, 4, 1, 2], tolerance: 0.015,
+  profile: [[0.72, 0.2], [0.95, 0.08], [1.2, 0.04], [1.45, 0.01], [1.6, 0], [1.75, 0.02], [1.9, 0.1], [2.0, 0.2], [2.07, 0.3], [2.12, 0.4], [2.2, 0.55], [2.27, 0.68], [3.1, 1.1], [3.3, 1.25], [3.5, 1.5], [3.65, 1.75], [3.8, 2.1], [3.92, 2.5], [4.0, 3.0]],
+  corner: [[0.72, 0.65], [1.6, 0.6], [2.0, 0.65], [2.27, 0.75], [3.1, 0.85], [3.45, 0.9], [3.8, 0.9], [4.0, 0.5]],
+  rows: [0.72, 0.85, 0.95, 1.2, 1.25, 1.3, 1.45, 1.6, 1.75, 1.84, 1.9, 2.0, 2.07, 2.12, 2.16, 2.2, 2.24, 2.27, 2.6, 3.1, 3.13, 3.3, 3.34, 3.4, 3.5, 3.65, 3.8, 3.9, 3.92, 4.0],
   masks: [
     // the coupler's pocket, the windscreen's chrome frame
     { lat: [0.0, 0.42], y: [0.85, 1.3], r: 0.06, mat: "cabMask" },
@@ -83,14 +90,16 @@ const TEE_FACE: SeriesCabFace = {
   decals: [
     { mat: "frameSilver", pts: [[-1.3, 2.12], [1.3, 2.12], [1.3, 2.155], [-1.3, 2.155]] },
     ...[0.93, 1.02, 1.11].map((y) => ({ mat: "pod", pts: [[-1.16, y], [-0.88, y], [-0.88, y + 0.045], [-1.16, y + 0.045]] as Pt[] })),
+    // the TEE emblem's three linked rings round its letters
+    ...TEE_RINGS,
   ],
   pods: [
-    { lat: -0.86, y: 1.5, w: 0.68, h: 0.3, proud: 0.22, depth: 0.4, mat: "pod", lamps: [[-0.15, 0.1, "lampHead"], [0.15, 0.1, "lampHead"]] },
-    { lat: 0.86, y: 1.5, w: 0.68, h: 0.3, proud: 0.22, depth: 0.4, mat: "pod", lamps: [[-0.15, 0.1, "lampHead"], [0.15, 0.1, "lampHead"]] },
+    { lat: -0.84, y: 1.62, w: 0.74, h: 0.34, proud: 0.26, depth: 0.55, mat: "pod", lamps: [[-0.17, 0.12, "lampHead"], [0.17, 0.12, "lampHead"]] },
+    { lat: 0.84, y: 1.62, w: 0.74, h: 0.34, proud: 0.26, depth: 0.55, mat: "pod", lamps: [[-0.17, 0.12, "lampHead"], [0.17, 0.12, "lampHead"]] },
     // the red cover over the coupling's head
-    { lat: -0.42, y: 1.08, w: 0.75, h: 0.48, r: 0.07, proud: 0.29, depth: 0.45, mat: "boxRed" },
+    { lat: -0.42, y: 1.08, w: 0.75, h: 0.48, r: 0.07, proud: 0.32, depth: 0.5, mat: "boxRed" },
   ],
-  texts: [{ text: "TEE", lat: 0, y: 1.7, h: 0.26, mat: "emblem" }],
+  texts: [{ text: "TEE", lat: 0, y: 1.735, h: 0.2, mat: "emblem" }],
   roofLamp: [0, 3.52, 0.09],
   wipers: [[[-0.3, 3.05], [-0.55, 2.4]], [[0.35, 3.05], [0.1, 2.4]]],
 };
@@ -106,13 +115,13 @@ export const RAE_TEE: ShinkansenSeries = {
   nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: TEE_FACE,
   // the cab's side window on the right (+Z) side only, the destination board behind the door there and ahead of it on the left
   cabWindows: [[0.05, 1.05, 2.17, 3.2, 1], [2.3, 2.62, 2.35, 3.15, 1], [0.75, 1.07, 2.35, 3.15, -1]],
-  windows: [[2.15, 3.3]], windowW: 1.65, pitch: 2.33, door: [1.0, 3.42, 2.3, 3.3], doorW: 0.75, doorGlassW: 0.22,
+  windows: [[2.15, 3.3]], windowW: 1.3, pitch: 2.05, door: [1.0, 3.42, 2.3, 3.3], doorW: 0.75, doorGlassW: 0.22,
   bogieCentres: 18.3, wheelR: 0.47, wheelbase: 2.5, cars: [4, 5, 6], centredBogies: true,
   layout: {
-    // d behind the body's front end: the end car's door behind the cab, eight wide windows; the
-    // intermediate car's toilet window and door at its front, nine windows
-    end: { doors: [[1.3, 2.05, 1]], windows: Array.from({ length: 8 }, (_, i): [number, number] => [3.4 + i * 2.33, 5.05 + i * 2.33]) },
-    middle: { doors: [[1.45, 2.2, 1]], windows: [[0.45, 1.05], ...Array.from({ length: 9 }, (_, i): [number, number] => [3.0 + i * 2.28, 4.6 + i * 2.28])] },
+    // d behind the body's front end: the end car's door behind the cab, nine windows; the
+    // intermediate car's toilet window and door at its front, ten windows
+    end: { doors: [[1.3, 2.05, 1]], windows: Array.from({ length: 9 }, (_, i): [number, number] => [3.3 + i * 2.05, 4.6 + i * 2.05]) },
+    middle: { doors: [[1.45, 2.2, 1]], windows: [[0.45, 1.05], ...Array.from({ length: 10 }, (_, i): [number, number] => [3.0 + i * 2.05, 4.3 + i * 2.05])] },
   },
   powerCar: {
     length: 24.43, bogieCentres: 17.0, wheelR: 0.555, axles: [-1.75, 0, 1.75], windows: [2.32, 3.25],
