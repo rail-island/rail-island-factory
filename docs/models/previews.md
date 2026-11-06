@@ -5,7 +5,8 @@ decoration, catenary style, city block type and texture, drawn from the set modu
 props on a representative fixture; their categories, bound build functions, preview parameters,
 surfaces, the passenger-view hints, the drawing kit, the block composer, and the checks they pass.
 **Code** - `generator/previews/` (`index.ts`, `sketch.ts`, `wayKit.ts`, `bridges.ts`, `stations.ts`,
-`structures.ts`, `ways.ts`, `props.ts`, `textures.ts`, `blockKit.ts`, `blocks*.ts`),
+`structures.ts`, `cableCarLine.ts`, `ways.ts`, `props.ts`, `textures.ts`, `blockKit.ts`, `blocks*.ts`),
+`generator/cableCarLine.ts`,
 `generator/design.ts` (`bound`, `boundDesign`, `ParamSpec.preview`), `generator/jsModel.ts`,
 `generator/passengerHints.ts`, `src/catalogQuery.ts`, `src/ModelDetail.tsx`,
 `src/viewerPassenger.ts`, `src/viewerOverlays.ts`, `test/previews.test.ts`, `test/catalogSweep.ts`, `test/viewerPassenger.test.ts`
@@ -30,7 +31,7 @@ cable-car pylon draw no set type and show no id.
 
 | Category (first chip) | Second chip | Pages |
 |---|---|---|
-| Structures | the set: bridges, bus stops, railway stations, bus and truck stations, cable car stations (a `platform` parameter: rectangular or curved), ports, airports, dams, tunnel portals | one per type of the set |
+| Structures | the set: bridges, bus stops, railway stations, bus and truck stations, cable car stations (a `platform` parameter: rectangular or curved), ports, airports, dams, tunnel portals | one per type of the set, and the **Cable Car Line** (`proc-preview-cablecar-line`, with the cable car stations, bound to no type) |
 | Rails and roads | rail types, road types, line decorations | one per type |
 | City blocks | the block's district (residential, commercial, industrial, historic, high-rise) | one per block type |
 | Props | - | the cable-car pylon and each catenary style's support, beside the fixed props |
@@ -99,6 +100,30 @@ from 0.67, concrete sleepers, the rails; the railhead at `RAILHEAD_Y`, 1.526 stu
 1.528), so a parked train stands as in the game, its wheels just below the platform's edge.
 The overlays are the viewer's, not the station's: the station's JS, thumbnails and pins stay as
 they are.
+
+## The cable car line
+
+`proc-preview-cablecar-line` (`previews/cableCarLine.ts`) is a short line as the game builds
+it, to check a cabin as it will look there. Its preview parameters: `cabin` (every cable car
+cabin of the catalog, by its id less `proc-vehicle-` or `veh-`, in camelCase: `doppelmayrOmega`), `station` (the four station
+types, `openGantry` ...) and `cabins` (one, two or six; a jig-back cabin runs at most two).
+
+- **The scene** - flat ground a stud thick, two stations of the type facing each other with
+  their rope heads 120 studs apart (two spans of the game's shortest), each on its levelled pad
+  and drawn by `buildStation` for the cabin's own view (`cabinLine`, `cabinView`: its sill,
+  width, length, depth and ropes measured as the game measures them), the pylon at mid-line for
+  the cabin's ropes, and the ropes themselves: each rope of the cabin along both strands with
+  the game's sag (2% of a span), a haul rope round both wheels, a track rope ending at the heads.
+- **The cabins** - parts (`cabin0`, ...) moved by a `time` clip, `running`, sampled 8 times a
+  second over one period from the game's kinematics: one cabin shuttles, two run a jig-back (a
+  10 s dwell at each end, the speed ramped over a quarter of the leg), six circulate round the
+  wheels; a big cabin stops ahead of the wheel (`cabinStop`); the speed is the cabin's
+  `maxspeed`. Each hangs level from its rope datum, recentred and scaled as the game does it,
+  its platform side turned away from the line's centre. The site's Start and Stop buttons play it.
+- **The distant level** - the stations' and the pylon's low levels, each rope as two straight
+  spans, a box per cabin where it rests; `lodTriangles` 3,000.
+
+No counterweight hangs on a one-cabin line here, and the bull wheels stand still.
 
 ## City blocks
 

@@ -422,7 +422,27 @@ export interface BlockShape {
  * entry (catalog.ts). Taken over once from the game's old hand-authored models
  * (docs/models/game-properties.md); a new design states its own.
  */
+/**
+ * One rope a cable car cabin hangs from or is hauled by, which the game draws (the
+ * cabin itself draws none): `zFrac` across the rope (the cabin's +z, in the frame
+ * where the rope runs along +x after the catalog's yaw) and `dyFrac` up from the rope
+ * datum, both as fractions of the model's height, like ropeFrac. A haul rope goes
+ * round the stations' bull wheels; a track rope is fixed and ends at each station.
+ */
+export interface CabinRopeFrac { kind: "haul" | "track"; zFrac: number; dyFrac: number }
+
+/**
+ * How a cable car cabin's line may run: `circulating` cabins (detachable gondolas, a
+ * funitel, 3S and bicable cabins) may go round the wheels, any count; a `jigback`
+ * cabin (an aerial tramway's) shuttles, one or two to a line.
+ */
+export type Ropeway = "circulating" | "jigback";
+
 export interface GameProperties extends Partial<VehicleGameFields> {
+  /** The ropes a cable car cabin hangs from (cable car cabins only, required there). */
+  ropes?: CabinRopeFrac[];
+  /** How a cable car cabin's line may run (cable car cabins only, required there). */
+  ropeway?: Ropeway;
   /**
    * The vehicle's on-map size factor, where the game does not derive it from the
    * legacy table (a ship's or aircraft's length scale). Absent means 1.
@@ -471,6 +491,14 @@ export function checkGameProperties(design: ProceduralDesign, vehicle: boolean):
     if (v === undefined) fail(`lack "${k}" (use null for none)`);
     if (v !== null && (typeof v !== "number" || !Number.isFinite(v) || v < 0)) fail(`have an invalid "${k}": ${String(v)}`);
   }
+  if (game.ropeFrac !== undefined) {
+    if (!game.ropes?.length) fail('of a cable car cabin lack "ropes" (the ropes the game draws for it)');
+    if (game.ropeway !== "circulating" && game.ropeway !== "jigback") fail('of a cable car cabin lack "ropeway" (circulating or jigback)');
+    for (const r of game.ropes!) {
+      if ((r.kind !== "haul" && r.kind !== "track") || !Number.isFinite(r.zFrac) || !Number.isFinite(r.dyFrac)) fail(`have an invalid rope: ${JSON.stringify(r)}`);
+    }
+    if (!game.ropes!.some((r) => r.dyFrac === 0)) fail("have no rope at the rope datum (ropeFrac)");
+  } else if (game.ropes || game.ropeway) fail('hold "ropes" or "ropeway", which are for cable car cabins only');
   const seats = [game.seatFrac, ...(game.variants ?? []).map((v) => v.seatFrac)].filter((v) => v !== undefined);
   if (seats.length && design.catalog?.category !== "Aircraft") fail('hold a "seatFrac", which is for aircraft only');
   for (const v of seats) {
