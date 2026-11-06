@@ -20,7 +20,7 @@
 
 import type { MaterialSpec } from "./meshBuilder.ts";
 import type { Band } from "./cd163.ts";
-import { c } from "./czElectricKit.ts";
+import { c, lerpTable } from "./czElectricKit.ts";
 import type { BogieSpec, EndItem, LocoSpec, RoofBox, SideItem } from "./boxLocoKit.ts";
 
 export type NoseType = "flat" | "raked" | "streamlined" | "nezCasse" | "hoods" | "bonnets";
@@ -101,6 +101,15 @@ function planOf(s: WorldLoco): (y: number, w: number) => ReadonlyArray<readonly 
   }
 }
 
+/** How far the cab side window stays behind the corner where the side wall meets the end. */
+export const CAB_WINDOW_MARGIN = 0.12;
+
+/** Where the side wall ends at height y: the end's centre line less the setback of the plan's corner. */
+export function sideEndAt(s: WorldLoco, N: number, y: number): number {
+  const plan = planOf(s)(y, s.W);
+  return lerpTable(tipTable(s, N), y) - plan[plan.length - 1]![1];
+}
+
 /** The height of the windscreens' sill and head for a nose type. */
 function screen(s: WorldLoco): [number, number] {
   const h = s.roof - s.y0;
@@ -116,8 +125,21 @@ export function worldLocoSpec(s: WorldLoco): LocoSpec {
   const W = s.W;
   const [w0, w1] = screen(s);
   const lampY = s.y0 + 0.35;
-  const cabX = s.nose === "hoods" ? s.cabHalf ?? 1.6 : s.nose === "bonnets" ? N - (s.bonnet ?? 1.6) - 0.3 : N - (s.nose === "streamlined" ? 1.9 : s.nose === "raked" ? 1.0 : 0.6);
-  const doorX = s.nose === "hoods" ? [cabX - 1.0, cabX - 0.2] as const : [cabX - 1.15, cabX - 0.35] as const;
+  const noseCabX = s.nose === "hoods" ? s.cabHalf ?? 1.6 : s.nose === "bonnets" ? N - (s.bonnet ?? 1.6) - 0.3 : N - (s.nose === "streamlined" ? 1.9 : s.nose === "raked" ? 1.0 : 0.6);
+  // The cab door and side window lie flat on the side wall, which ends where it
+  // meets the end - for every nose but a flat one well behind the buffer beam at
+  // the windows' height (a raked or streamlined end leaning back, a bonnet's or a
+  // hood's cab front). They keep their sizes and move back until both stay on the
+  // wall; a hood cab, with no room before its door, has its window in the door.
+  const winY = [w0, w1 - 0.05] as const;
+  const wallEnd = (ys: readonly number[]) => Math.min(...ys.map((y) => sideEndAt(s, N, y))) - CAB_WINDOW_MARGIN;
+  const winEnd = wallEnd(winY);
+  const doorEnd = wallEnd([s.y0 + 0.1, (s.y0 + w1) / 2, w0, w1]);
+  const noseWinFront = Math.min(noseCabX + 0.55, N - 0.35);
+  const back = s.nose === "hoods" ? 0 : Math.max(0, noseWinFront - winEnd, noseCabX - 0.35 - doorEnd);
+  const cabX = noseCabX - back;
+  const doorX = s.nose === "hoods" ? [cabX - 1.0, Math.min(cabX - 0.2, doorEnd)] as const : [cabX - 1.15, cabX - 0.35] as const;
+  const winX = s.nose === "hoods" ? [doorX[0] + 0.1, doorX[1] - 0.1] as const : [doorX[1] + 0.1, noseWinFront - back] as const;
   const room = s.room;
   const roomItems: SideItem[] = [];
   if (room) {
@@ -149,7 +171,7 @@ export function worldLocoSpec(s: WorldLoco): LocoSpec {
     ...(s.exhausts ? { exhausts: s.exhausts.map((x) => [x, 0, s.roof] as const) } : {}),
     sideItems: [
       { kind: "door", name: "cab door", x: doorX, y: [s.y0 + 0.1, w1], rails: true, mirror: true },
-      { kind: "window", name: "cab window", x: [doorX[1] + 0.1, Math.min(cabX + 0.55, N - 0.35)], y: [w0, w1 - 0.05], mat: "rubber", mirror: true },
+      { kind: "window", name: "cab window", x: winX, y: winY, mat: "rubber", mirror: true },
       ...roomItems,
       ...(s.paint ?? []),
       { kind: "plate", name: "number", x: [-0.5, 0.5], y: [s.y0 + 0.08, s.y0 + 0.26] },
