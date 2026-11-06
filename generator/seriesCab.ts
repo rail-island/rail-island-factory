@@ -49,6 +49,8 @@ export interface SeriesCabFace {
   /** The face's paint by height (default the livery's `front`, else its side bands); the roof's colour from `roofFrom` up. */
   bands?: (livery: { bands: readonly Band[]; front?: readonly Band[] }) => readonly Band[];
   roofFrom: number;
+  /** The distant model's face bands (default the face's own): a face painted by its fields. */
+  lodBands?: readonly Band[];
   /** Painted fields over the face's bands: surrounds and masks. */
   masks?: readonly FaceRect[];
   /** Painted polygons over the face's bands, [lat, y] corners (one y-interval at each lat): a livery's sweep or emblem. */
@@ -106,7 +108,7 @@ export interface FacePaint {
   A: number;
   number: string;
   /** The livery's sweeps (shinkansen.ts `endSweeps`, d behind the tip), painted on the face's cab sides too. */
-  sweeps?: ReadonlyArray<{ mat: string; front: readonly Pt[]; back: readonly Pt[] }>;
+  sweeps?: ReadonlyArray<{ mat: string; front: readonly Pt[]; back: readonly Pt[]; top?: number }>;
 }
 
 /** Value of a [y, d] edge at height y (held past its ends). */
@@ -126,10 +128,10 @@ function layers(f: SeriesCabFace, p: FacePaint): NoseLayer[] {
   out.push({ mat: p.skirt, name: "skirt", inside: (q) => !onFace(q) && q.y < p.A });
   for (const [y0, y1, mat] of p.face) out.push({ mat, name: `${mat} face`, inside: (q) => banded(q) && q.y >= y0 && q.y < y1 && (onFace(q) || q.y >= p.A) });
   out.push({ mat: p.roof, name: "roof", inside: (q) => (banded(q) ? q.y >= f.roofFrom : q.y >= p.S) });
-  // a sweep on the cab sides, between the skirt's top and the shoulder
+  // a sweep on the cab sides, between the skirt's top and the shoulder (or its own top, over the cab's roof)
   (p.sweeps ?? []).forEach((w, i) => out.push({
     mat: w.mat, name: `sweep ${i + 1}`,
-    inside: (q) => q.side && q.y >= p.A && q.y < p.S && q.y >= w.front[0]![0] && q.y <= w.front[w.front.length - 1]![0] && q.d >= edgeAt(w.front, q.y) && q.d <= edgeAt(w.back, q.y),
+    inside: (q) => q.side && q.y >= p.A && q.y < (w.top ?? p.S) && q.y >= w.front[0]![0] && q.y <= w.front[w.front.length - 1]![0] && q.d >= edgeAt(w.front, q.y) && q.d <= edgeAt(w.back, q.y),
   }));
   (f.fields ?? []).forEach((r, i) => out.push({ mat: r.mat, name: `field ${i + 1}`, inside: (q) => onFace(q) && inPoly(q.lat, q.y, r.pts) }));
   (f.masks ?? []).forEach((r, i) => out.push({ mat: r.mat ?? "cabMask", name: `surround ${i + 1}`, inside: (q) => onFace(q) && inRect(q, r) }));
@@ -210,7 +212,7 @@ export function drawCabFace(m: MeshBuilder, f: SeriesCabFace, e: number, xTip: n
 export function cabFaceLod(face: SeriesCabFace, e: number, xTip: number, half: Pt[], p: FacePaint, C: number): UnitEnd {
   const f: SeriesCabFace = face.lod ? { ...face, profile: face.lod.profile, corner: face.lod.corner, rows: face.lod.rows, ...(face.lod.bulge !== undefined ? { bulge: face.lod.bulge } : {}) } : face;
   const B = f.rows[0]!;
-  const paint: LodBand[] = [...p.face.map(([a, b, mt]): LodBand => [Math.max(a, B), Math.min(b, f.roofFrom), mt]).filter(([a, b]) => b > a + 1e-6), [f.roofFrom, C, p.roof]];
+  const paint: LodBand[] = [...(f.lodBands ?? p.face).map(([a, b, mt]): LodBand => [Math.max(a, B), Math.min(b, f.roofFrom), mt]).filter(([a, b]) => b > a + 1e-6), [f.roofFrom, C, p.roof]];
   const lo = Math.min(...f.panes.map((r) => r.y[0])), hi = Math.max(...f.panes.map((r) => r.y[1]));
   const w = Math.max(...f.panes.map((r) => Math.max(Math.abs(r.lat[0]), Math.abs(r.lat[1]))));
   return noseEnd(spec(f, e, xTip, half), paint, f.panes.length && f.lod?.glass !== false ? [{ u: [-w, w], y: [lo, hi], mat: LOD_GLASS }] : []);

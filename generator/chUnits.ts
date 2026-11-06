@@ -4,6 +4,7 @@
 // metre-gauge Allegra. See docs/models/switzerland-trains.md.
 
 import type { MeshBuilder } from "./meshBuilder.ts";
+import type { Ring } from "./meshCore.ts";
 import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type SeriesLayout, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, flirt, kiss, nose, NO_NOSE } from "./seriesHelpers.ts";
@@ -108,14 +109,117 @@ export const RED_ARROW: ShinkansenSeries = {
   weight: { end: 40, middle: 40 }, power: 380, maxspeed: 125,
 };
 
+/**
+ * The ICN's paint (photo-rabde-500-icn-emu-54826117727.jpg, photo-icn1.jpg, photo-sbb-rabde500.jpg,
+ * photo-sbb-rabde-500-bei-twann.jpg): white over a dark grey lower band, a thin red line along the
+ * roof's edge, a red flag beside every door; the cab's side window on the end car (the face carries
+ * its own red and black).
+ */
+const ICN_SBB: ShinkansenLivery = {
+  title: "SBB", number: "500 001",
+  palette: { white: c("#f1f1ee"), dark: c("#3b3f44", 0.6), red: c(SBB_RED), black: c("#151719", 0.3), roofG: c("#c3c6c8", 0.6), skirtG: c("#2b2e32", 0.75), cabMask: c("#151719", 0.25) },
+  bands: [[0, 1.12, "dark"], [1.12, 3.33, "white"], [3.33, 9, "red"]], doors: [[0, 1.12, "dark"], [1.12, 9, "white"]],
+  roof: "roofG", skirt: "skirtG",
+  doorFlags: { w: 0.36, gap: 0.06, y: [1.92, 2.92], mat: "red" },
+  endSweeps: [
+    // d behind the tip, over the cab's roof behind the face: the red frame along the roof's edge, the cap's rounded end
+    { mat: "black", front: [[3.4, -9], [3.95, -9]], back: [[3.4, 4.8], [3.6, 5.0], [3.85, 5.35], [3.95, 5.7]], top: 3.96 },
+    { mat: "red", front: [[3.3, -9], [3.6, -9]], back: [[3.3, 6.5], [3.4, 6.5], [3.42, 5.6], [3.6, 4.9]], top: 3.6 },
+    // the cab's side window, its front edge raked with the red frame
+    { mat: "cabGlass", front: [[2.15, 3.45], [2.6, 3.8], [2.85, 4.1], [3.0, 4.4]], back: [[2.15, 4.95], [3.0, 4.95]] },
+  ],
+};
+
+/**
+ * The face's red, [lat, y]: the red lip and lamp face over the white bumper, and the frame round the
+ * windscreen field up to the roof's edge, where it runs on as the body's red line; over the roof
+ * between the cap and the edges.
+ */
+const ICN_RED: Pt[] = [
+  [-1.1, 1.45], [1.1, 1.45], [1.12, 1.8], [1.17, 2.2], [1.24, 2.6], [1.24, 3.31], [1.5, 3.33], [1.5, 4.1],
+  [-1.5, 4.1], [-1.5, 3.33], [-1.24, 3.31], [-1.24, 2.6], [-1.17, 2.2], [-1.12, 1.8],
+];
+/** The black windscreen field and roof cap inside the red frame, [lat, y]: rounded at the bottom; over the roof the cap between the red lines along its edges. */
+const ICN_FIELD: Pt[] = [
+  [-0.3, 2.1], [0.3, 2.1], [0.55, 2.15], [0.7, 2.24], [0.8, 2.36], [0.86, 2.55], [0.89, 2.9], [0.88, 3.3], [0.86, 3.5], [1.1, 3.6], [1.5, 3.62], [1.5, 4.1],
+  [-1.5, 4.1], [-1.5, 3.62], [-1.1, 3.6], [-0.86, 3.5], [-0.88, 3.3], [-0.89, 2.9], [-0.86, 2.55], [-0.8, 2.36], [-0.7, 2.24], [-0.55, 2.15],
+];
+
+/**
+ * The ICN's front (the photographs above): a narrow, rounded black chin protruding under a white
+ * bumper that wraps the corners, the red lip over it, then the red lamp face with two upright black
+ * lamp housings and the SBB emblem; the black windscreen field, a rounded U over the lamps, raked
+ * about 40 degrees (the roof at full height 3.6 m behind the tip) and running on
+ * as the roof cap 5.6 m back, the red frame round it. In plan the face tapers strongly: its corners
+ * are elliptical, 0.7 - 0.9 m across and up to 2.5 m deep, the white cab sides curving in to it.
+ */
+const ICN_FACE: SeriesCabFace = {
+  dJoin: 5.6, first: 7.9, roofFrom: 9, bulge: 0.12, cols: [8, 8, 1, 2], tolerance: 0.015,
+  profile: [[0.95, 0.1], [1.1, 0.02], [1.27, 0], [1.42, 0.03], [1.46, 0.04], [1.74, 0.07], [1.79, 0.15], [2.14, 0.35], [2.45, 0.56], [3.25, 1.35], [3.55, 1.9], [3.75, 2.4], [3.88, 2.95], [3.94, 3.6], [3.95, 5.6]],
+  corner: [[0.95, 0.7], [1.45, 0.75], [1.8, 0.7], [2.45, 0.85], [3.25, 0.9], [3.6, 0.6], [3.95, 0.1]],
+  cornerDepth: [[0.95, 0.9], [1.45, 1.0], [1.8, 1.8], [2.45, 2.5], [3.0, 2.5], [3.25, 2.3], [3.6, 1.4], [3.95, 0.2]],
+  rows: [0.95, 1.05, 1.1, 1.12, 1.27, 1.42, 1.45, 1.46, 1.6, 1.74, 1.79, 1.95, 2.1, 2.14, 2.3, 2.45, 2.6, 2.75, 2.95, 3.25, 3.3, 3.31, 3.33, 3.4, 3.42, 3.45, 3.46, 3.48, 3.5, 3.55, 3.6, 3.62, 3.68, 3.75, 3.8, 3.82, 3.88, 3.92, 3.94, 3.95],
+  bands: () => [[0, 1.1, "skirtG"], [1.1, 3.42, "white"], [3.42, 9, "black"]],
+  // the distant model's end: the red face and frame, the black cap
+  lodBands: [[0, 1.1, "skirtG"], [1.1, 1.45, "white"], [1.45, 3.42, "red"], [3.42, 9, "black"]],
+  fields: [{ mat: "red", pts: ICN_RED }, { mat: "black", pts: ICN_FIELD }],
+  masks: [
+    // the lamp housings, and the cap's two grilles
+    { lat: [-1.0, -0.7], y: [1.78, 2.3], r: 0.1, mat: "black" }, { lat: [0.7, 1.0], y: [1.78, 2.3], r: 0.1, mat: "black" },
+    { lat: [-0.62, -0.2], y: [3.66, 3.76], r: 0.03, mat: "rubber" }, { lat: [0.2, 0.62], y: [3.66, 3.76], r: 0.03, mat: "rubber" },
+  ],
+  panes: [{ lat: [-0.78, 0.78], y: [2.48, 3.25], r: 0.2 }],
+  decals: [
+    { mat: "white", pts: [[-0.12, 1.95], [0.12, 1.95], [0.12, 1.99], [-0.12, 1.99]] },
+    { mat: "white", pts: [[-0.025, 1.89], [0.025, 1.89], [0.025, 2.05], [-0.025, 2.05]] },
+    { mat: "white", pts: [[-0.2, 1.97], [-0.11, 1.89], [-0.11, 2.05]] },
+    { mat: "white", pts: [[0.2, 1.97], [0.11, 2.05], [0.11, 1.89]] },
+  ],
+  lamps: [[-0.85, 2.13, 0.06, "lampHead"], [0.85, 2.13, 0.06, "lampHead"], [-0.85, 1.95, 0.06, "lampHead"], [0.85, 1.95, 0.06, "lampHead"]], roofLamp: [0, 3.71, 0.06],
+  wipers: [[[-0.1, 2.52], [-0.7, 3.05]]],
+};
+
+/** The chin under the ICN's face: black, narrow and rounding forward to a protruding lower lip; [y, d of its front, d of its back, half width, corner across, corner depth]. */
+const ICN_CHIN: ReadonlyArray<readonly [number, number, number, number, number, number]> = [
+  [0.37, 0.5, 1.9, 0.75, 0.5, 0.6], [0.43, 0.2, 2.1, 0.95, 0.7, 0.9], [0.52, 0.02, 2.35, 1.08, 0.8, 1.1], [0.62, 0.0, 2.5, 1.15, 0.85, 1.2], [0.8, 0.06, 2.6, 1.22, 0.85, 1.2], [0.98, 0.12, 2.6, 1.25, 0.8, 1.1],
+];
+
+/** The ICN's own fittings: the chin on the end car and the dark skirt between the bogies. */
+function icnFittings(m: MeshBuilder, b: SliceBody, X: (dd: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }): void {
+  const [t0, t1] = [car.trucks[0]!, car.trucks[1]!];
+  m.scope("underfloor", () => block(m, "skirtG", X(t1 - 2.6), X(Math.max(t0 + 2.6, 0.3)), ICN.B - 0.3, ICN.B + 0.02, -ICN.W * 0.94, ICN.W * 0.94));
+  if (!car.end) return;
+  const dj = ICN_FACE.dJoin;
+  // a rounded rectangle in plan, d behind the tip: the front corners elliptical, the back square
+  const ring = ([, df, db, hw, r, rd]: readonly [number, number, number, number, number, number]): Ring => {
+    const pts: Array<[number, number]> = [];
+    const n = 5;
+    for (let i = 0; i <= n; i++) { const t = (i / n) * (Math.PI / 2); pts.push([df + rd * (1 - Math.sin(t)), -(hw - r + r * Math.cos(t))]); }
+    for (let i = 0; i <= n; i++) { const t = (i / n) * (Math.PI / 2); pts.push([df + rd * (1 - Math.cos(t)), hw - r + r * Math.sin(t)]); }
+    pts.push([db, hw], [db, -hw]);
+    const out: Ring = pts.map(([d, z]): [number, number] => [X(d - dj), z]);
+    let area = 0;
+    for (let i = 0; i < out.length; i++) { const [p, q] = [out[i]!, out[(i + 1) % out.length]!]; area += p[0] * q[1] - q[0] * p[1]; }
+    // counter-clockwise seen from above (+y): negative shoelace area in (x, z)
+    return area > 0 ? out.reverse() : out;
+  };
+  void b;
+  m.scope("chin", () => {
+    const rings = ICN_CHIN.map(ring);
+    m.cap("skirtG", rings[0]!, ICN_CHIN[0]![0], false);
+    for (let i = 0; i + 1 < rings.length; i++) m.loft("skirtG", rings[i]!, ICN_CHIN[i]![0], rings[i + 1]!, ICN_CHIN[i + 1]![0], i + 2 === rings.length);
+  });
+}
+
 export const ICN: ShinkansenSeries = {
-  endLength: 27.0, midLength: 26.9, W: 1.42, Y: 1.35, S: 3.0, C: 4.0, lean: 0.92, B: 0.8, A: 1.0,
-  // the tilting train's raked front and narrow, tucked-in body
-  nose: nose(3.2, 0.2, 2.3, [[0, 1.6], [0.4, 2.2], [1.6, 3.0], [2.8, 3.7], [3.6, 4.0]], [[0, 1.55], [0.4, 2.05], [1.6, 2.65], [2.8, 2.95], [3.6, 3.0]], [[0, 1.35], [1.0, 1.35]], [[0, 1.15], [0.8, 1.0]], [[0, 1.05], [0.4, 0.8]]),
-  windscreen: [1.4, 3.0, 0.07, 1.1], lamps: [0.4, 1.5],
-  windows: [[1.9, 2.75]], windowW: 1.4, pitch: 1.65, door: [1.2, 3.05, 1.9, 2.6], doorW: 0.9,
+  endLength: 27.0, midLength: 26.9, W: 1.415, Y: 1.55, S: 3.4, C: 3.95, lean: 0.85, B: 0.95, A: 1.05,
+  nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: ICN_FACE,
+  // the dark window band: wide windows, thin pillars; tall single-leaf doors, a narrow window high in the leaf
+  windows: [[1.92, 2.92]], windowW: 1.52, pitch: 1.65, door: [1.12, 3.3, 2.05, 3.0], doorW: 0.95, doorGlassW: 0.3,
+  // the leading bogie under the cab's side window (4.6 m behind the tip), the rear one 3.75 m from the coupling
+  endBogies: [4.6 - 5.6, 27.0 - 0.25 - 5.67 - 3.5],
   bogieCentres: 19.0, wheelR: 0.46, wheelbase: 2.5, cars: [7],
-  liveries: { sbb: chLivery("sbb", "500 001") },
+  liveries: { sbb: ICN_SBB }, fittings: icnFittings,
   weight: { end: 50, middle: 50 }, power: 740, maxspeed: 200,
 };
 

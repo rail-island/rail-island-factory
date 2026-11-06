@@ -121,6 +121,23 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
   number 3502 stands under the cab door's window, lower than on the real car, because the
   kit puts it on every car at one height. The kit's single wheel radius (0.4 m) serves the
   middle car's smaller trailer wheels too.
+- **ICN.** A cab face (`ICN_FACE`, four photographs in `assets/sbb-icn/`) in place of the lofted
+  nose, tapering strongly in plan: its corners are elliptical (the cab face's `cornerDepth`, a kit
+  option: 0.7 - 0.9 m across, up to 2.5 m deep), so the white cab sides curve in to a face much
+  narrower than the body. A narrow, rounded black chin protruding under the face (`icnFittings`,
+  drawn under the face's 0.95 m bottom so the leading bogie, 4.6 m behind the tip under the cab's
+  side window, clears it); the white bumper wrapping the corners, the red lip and red lamp face with
+  two upright lamp housings and the emblem, the black windscreen field (a rounded U over the
+  lamps) raked about 40 degrees, the roof at full height 3.6 m behind the tip,
+  running on as the roof cap, the red frame round it running on as the red lines along the roof's
+  edges (face fields; sweeps over the cab roof, the kit's sweep `top` carrying paint above the
+  shoulder on the face's sides). Its own livery (`ICN_SBB`, key `sbb`): white over a dark band below
+  1.12 m, a thin red line at the roof's edge, the red flag beside every door (the livery's
+  `doorFlags`). The narrow, strongly tucked-in tilting body (lean 0.85), tall single-leaf doors with
+  a narrow window high in the leaf, a dark window band of wide windows. The lamp housings are
+  rounded rectangles (slanted wedges on the real face), the cab side's vent grille and the
+  pictograms are not drawn; the running number on the photographs is not legible, 500 001 is
+  illustrative.
 
 ## Tests
 

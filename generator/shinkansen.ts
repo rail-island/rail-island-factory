@@ -64,7 +64,9 @@ export interface ShinkansenLivery {
    * the side between a front and a back edge, [y, d] by height (d behind the nose's or cab face's
    * tip, ascending y), later sweeps over earlier ones; a cab face paints them on its cab sides too.
    */
-  endSweeps?: ReadonlyArray<{ mat: string; front: readonly Pt[]; back: readonly Pt[] }>;
+  endSweeps?: ReadonlyArray<{ mat: string; front: readonly Pt[]; back: readonly Pt[]; top?: number }>;
+  /** A flag of paint beside every door, on the side toward the car's middle: its width, gap from the door, heights and paint (SBB's red door marks). */
+  doorFlags?: { w: number; gap: number; y: readonly [number, number]; mat: string };
   /** Paint over each door's span above its head on every car, bands [y0, y1, mat]: a door's colour carried up the side. */
   overDoors?: readonly Band[];
   /**
@@ -309,6 +311,15 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
         for (const sd of [1, -1]) for (const [d0, d1] of doors) for (const [y0, y1, mat] of l.overDoors!) sidePanel(m, b, X, sd, mat, d0, d1, y0, y1, 0.004, 0.003);
       });
       if (end && l.endSweeps) m.scope("sweeps", () => l.endSweeps!.forEach((w, i) => m.scope(`sweep ${i + 1}`, () => endSweep(m, b, X, w, s.cabFace?.dJoin ?? 0, 0.003 + 0.0015 * i))));
+      if (l.doorFlags) m.scope("door flags", () => {
+        const f = l.doorFlags!;
+        for (const [d0, d1] of doors) {
+          // toward the car's middle
+          const [a, e] = (d0 + d1) / 2 < L / 2 ? [d1 + f.gap, d1 + f.gap + f.w] : [d0 - f.gap - f.w, d0 - f.gap];
+          const tris: Pt[] = [[a, f.y[0]], [e, f.y[0]], [e, f.y[1]], [a, f.y[0]], [e, f.y[1]], [a, f.y[1]]];
+          for (const sd of [1, -1]) sideDecal(m, b, X, sd, f.mat, tris, 0.004);
+        }
+      });
       if (end && s.cabWindows) m.scope("cab windows", () => {
         // a single railcar's rear cab too, mirrored
         const spans = s.cabWindows!.flatMap(([d0, d1, y0, y1]) => [[d0, d1, y0, y1], ...(s.single ? [[L - d1, L - d0, y0, y1]] : [])]);
