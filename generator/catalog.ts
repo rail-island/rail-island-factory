@@ -40,6 +40,7 @@ import type { SoundMapping, SoundOverride } from "./soundTable.ts";
 import { countryName, countryOf } from "./countryTable.ts";
 import { isDraft } from "./workshop.ts";
 import { linksOf, type ModelLink } from "./linkTable.ts";
+import { LINE_COUNTS, LINE_PREVIEW_ID, LINE_STATIONS, lineCabinValue, lineStationValue } from "./cableCarLineIds.ts";
 
 /** What a side-view thumbnail spans, in metres (renderGlbThumb.ts SideFrame). */
 export interface ThumbSide {
@@ -181,21 +182,40 @@ export interface ReferenceImage {
  * over the railhead (generator/collector.ts).
  */
 export interface Scenery {
-  way: "rail" | "road" | "tram" | "ground";
+  way: "rail" | "road" | "tram" | "ground" | "ropeway";
   wireTop?: number;
   /**
    * The height of a marker pole beside the model, metres: a character stands on
    * a strip of ground beside a pole the height of the game's vehicle doors.
    */
   marker?: number;
+  /**
+   * A cable car cabin's line (`way` "ropeway"): the line preview the viewer shows the
+   * cabin in -- two stations, a pylon, the game's ropes, the cabins running -- with its
+   * `cabin` value, the station types it offers and the cabin counts this cabin may run
+   * at (a jig-back cabin one or two). The viewer picks the station and the count.
+   */
+  ropeway?: { line: string; cabin: string; stations: Array<{ value: string; title: string }>; counts: Array<{ value: string; title: string }> };
 }
 
 /** A vehicle door's height, metres: the scale a character is checked against on the site. */
 export const DOOR_HEIGHT = 2;
 
 /** The scenery of a catalog entry; null for anything that is not a road or rail vehicle. */
-export function sceneryOf(entry: Pick<MetaEntry, "category" | "group" | "traction">): Scenery | null {
+export function sceneryOf(entry: Pick<MetaEntry, "category" | "group" | "traction"> & Partial<Pick<MetaEntry, "id" | "game">>): Scenery | null {
   if (entry.category === "Road vehicles") return { way: "road" };
+  if (entry.category === "Cable car" && entry.id && entry.game?.ropeFrac !== undefined) {
+    const jigback = entry.game.ropeway === "jigback";
+    return {
+      way: "ropeway",
+      ropeway: {
+        line: LINE_PREVIEW_ID,
+        cabin: lineCabinValue(entry.id),
+        stations: LINE_STATIONS.map((t) => ({ value: lineStationValue(t.type), title: t.title })),
+        counts: LINE_COUNTS.filter((c) => !jigback || Number(c.value) <= 2).map((c) => ({ ...c })),
+      },
+    };
+  }
   if (entry.category === "Characters") return { way: "ground", marker: DOOR_HEIGHT };
   if (entry.category !== "Rail vehicles") return null;
   if (entry.group === "tram") return { way: "tram", wireTop: TRAM_COLLECTOR_TOP };

@@ -79,8 +79,14 @@ export interface SteamEngine {
   coupled: number[];
   /** The index of the driving wheel the main rod works. */
   main: number;
-  /** The cylinder: source x range, axis height, radius (with lagging). */
-  cylinder: { x0: number; x1: number; y: number; r: number };
+  /**
+   * The cylinder: source x range, axis height, radius (with lagging). With
+   * `incline` (radians) the cylinder is inclined, as on the Rocket: its axis
+   * runs through the driving axle and rises at that angle away from it, x0 and
+   * x1 are its ends' source x and `y` is not used; the crosshead slides along
+   * that axis. An inclined cylinder has no valve gear.
+   */
+  cylinder: { x0: number; x1: number; y: number; r: number; incline?: number };
   /** Crank radius: half the piston stroke. */
   crank: number;
   /** The right crank's angle at rest (radians, 0 = forward, counter-clockwise seen from the right). */
@@ -100,6 +106,13 @@ export interface RunningGearSpec {
   reference: number;
   /** Paint of spokes, hubs and counterweights. */
   wheelMaterial: string;
+  /**
+   * More parts riding on an inclined cylinder's crosshead (the Rocket's feed pump
+   * ram), drawn into its moving part at rest on side s: `at(k, off, dz)` is the
+   * model point k metres along the axis outward from the crosshead, `off` across
+   * it in the x-y plane (positive upward) and `dz` outward from the rods' plane.
+   */
+  crossheadParts?: (m: MeshBuilder, s: number, at: (k: number, off?: number, dz?: number) => Vec3) => void;
 }
 
 type P2 = [number, number];
@@ -159,6 +172,8 @@ class EngineSide {
   readonly unionLink: number = 0;
   readonly armDrop = 0.3;
   private last: { psi: number; xs: number; lam: number } | null = null;
+  /** An inclined cylinder: the unit axis from the driving axle out to the cylinder, its ends' distances along it. */
+  readonly incline: { u: P2; near: number; far: number } | null = null;
 
   constructor(readonly e: SteamEngine, readonly sign: number, readonly phaseOffset: number, axle: P2, cylX0: number, cylX1: number) {
     this.axle = axle;
@@ -167,6 +182,18 @@ class EngineSide {
     const near = this.d > 0 ? Math.min(cylX0, cylX1) : Math.max(cylX0, cylX1);
     const far = this.d > 0 ? Math.max(cylX0, cylX1) : Math.min(cylX0, cylX1);
     this.cyl = { near, far, y: e.cylinder.y, r: e.cylinder.r };
+    if (e.cylinder.incline !== undefined) {
+      if (e.valveGear) throw new Error("an inclined cylinder has no valve gear");
+      const a = e.cylinder.incline;
+      const u: P2 = [this.d * Math.cos(a), Math.sin(a)];
+      const t = (x: number) => Math.abs(x - axle[0]) / Math.cos(a);
+      this.incline = { u, near: t(near), far: t(far) };
+      this.mainRod = this.incline.near - this.gap - e.crank;
+      this.crossheadMid = 0;
+      this.pistonRod = Math.min(this.gap + 2 * e.crank + 0.08, this.gap + this.incline.far - this.incline.near - 0.05);
+      this.eccentricR = 0;
+      return;
+    }
     this.crossheadMid = near - this.d * (this.gap + e.crank);
     this.mainRod = Math.hypot(this.crossheadMid - axle[0], e.cylinder.y - axle[1]);
     this.pistonRod = Math.min(this.gap + 2 * e.crank + 0.08, this.gap + Math.abs(far - near) - 0.05);
@@ -199,6 +226,14 @@ class EngineSide {
   solve(phi: number): EnginePose {
     const e = this.e;
     const crank = add(this.axle, polar(e.crank, phi));
+    if (this.incline) {
+      // the crosshead on the inclined axis, a main rod's length from the crank pin
+      const { u } = this.incline;
+      const w: P2 = [this.axle[0] - crank[0], this.axle[1] - crank[1]];
+      const wu = w[0] * u[0] + w[1] * u[1];
+      const k = -wu + Math.sqrt(wu * wu - (w[0] * w[0] + w[1] * w[1]) + this.mainRod ** 2);
+      return { crank, crosshead: add(this.axle, scale(u, k)) };
+    }
     const dy = e.cylinder.y - crank[1];
     const crosshead: P2 = [crank[0] + this.d * Math.sqrt(this.mainRod ** 2 - dy * dy), e.cylinder.y];
     if (!e.valveGear) return { crank, crosshead };
@@ -344,6 +379,7 @@ export class RunningGear {
     const z = this.spec.cylinderZ;
     for (const { engine, s, side: es } of this.sides) {
       m.scope(`cylinder ${this.suffix(engine, s)}`, () => {
+        if (es.incline) return this.inclinedCylinder(m, paint, es, s);
         const { near, far, y, r } = es.cyl;
         const [x0, x1] = [Math.min(near, far), Math.max(near, far)];
         const zc = s * z;
@@ -389,6 +425,20 @@ export class RunningGear {
         }
       });
     });
+  }
+
+  /** An inclined cylinder with its covers and the slide bars along its axis, toward the driving axle. */
+  private inclinedCylinder(m: MeshBuilder, paint: string, es: EngineSide, s: number): void {
+    const { u, near, far } = es.incline!;
+    const z = s * this.spec.cylinderZ;
+    const r = es.cyl.r;
+    const v: P2 = [-u[1], u[0]];
+    const at = (k: number, off = 0, dz = 0): Vec3 => [es.axle[0] + u[0] * k + v[0] * off, es.axle[1] + u[1] * k + v[1] * off, z + s * dz];
+    m.rod(paint, at(near + 0.05), at(far - 0.05), r, 16);
+    for (const [a, b] of [[near, near + 0.06], [far - 0.06, far]] as const) m.rod("steel", at(a), at(b), r + 0.035, 16);
+    // the guides, outside the main rod's plane, reach the crosshead's lowest point
+    const low = es.mainRod - es.e.crank - 0.15;
+    for (const off of [0.11, -0.11]) m.rod("rod", at(near + 0.03, off, 0.06), at(low, off, 0.06), 0.022, 6);
   }
 
   /**
@@ -468,6 +518,17 @@ export class RunningGear {
       }
       link("crosshead", (p) => p.crosshead, (p) => p.crosshead, () => {
         const [cx, cy] = rest.crosshead;
+        const inc = es.incline;
+        if (inc) {
+          // the crosshead block and the piston rod along the inclined axis
+          const z = s * spec.cylinderZ;
+          const at = (k: number): Vec3 => [cx + inc.u[0] * k, cy + inc.u[1] * k, z];
+          m.rod("steel", at(-0.15), at(0.15), 0.075, 4);
+          m.rod("rod", at(0.15), at(es.pistonRod), 0.035, 8, false);
+          const v: P2 = [-inc.u[1] * es.d, inc.u[0] * es.d];
+          spec.crossheadParts?.(m, s, (k, off = 0, dz = 0) => [cx + inc.u[0] * k + v[0] * off, cy + inc.u[1] * k + v[1] * off, z + s * dz]);
+          return;
+        }
         const z = spec.cylinderZ;
         block(m, "steel", cx - 0.17, cx + 0.17, cy - 0.085, cy + 0.085, ...side(s, Z.crosshead0, z + 0.035));
         // the piston rod into the cylinder
