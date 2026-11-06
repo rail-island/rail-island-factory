@@ -62,7 +62,7 @@ Third batch, `worldBuses3.ts`:
 | `veh-gm-new-look` | GM New Look | city | 12.2 x 2.59 x 3.05 | 2.1 / 9.34 | 2 | 1959 / 70 | 3,056 |
 | `veh-gm-scenicruiser` | GM Scenicruiser | coach, raised deck | 12.2 x 2.44 x 2.95 (deck 3.4) | 2.3 / 9.25 / 10.45 | 1 | 1954 / 43 | 9,186 |
 | `veh-flxible-clipper` | Flxible Clipper | coach | 10.06 x 2.44 x 2.9 | 2.5 / 7.6 | 1 | 1937 / 29 | 2,590 |
-| `veh-blue-bird-vision` | Blue Bird Vision | city, bonnet | 11.7 x 2.44 x 3.2 | 1.1 / 7.2 | 1 | 2003 / 72 | 8,646 |
+| `veh-blue-bird-vision` | Blue Bird Vision | city, bonnet | 10.6 x 2.44 x 3.2 | 0.9 / 7.0 | 1 | 2003 / 72 | 8,646 |
 | `veh-thomas-saf-t-liner` | Thomas Saf-T-Liner C2 | city, bonnet | 11.9 x 2.44 x 3.2 | 1.2 / 7.3 | 1 | 2004 / 77 | 2,838 |
 | `veh-chicken-bus` | Guatemalan Camioneta | city, bonnet | 10.7 x 2.44 x 3.05 | 1.2 / 6.9 | 1 | 1990 / 70 | 2,767 |
 | `veh-toyota-coaster` | Toyota Coaster | minibus | 6.99 x 2.03 x 2.6 | 1.15 / 5.08 | 1 | 1969 / 29 | 2,608 |

@@ -113,6 +113,19 @@ export interface RunningGearSpec {
    * it in the x-y plane (positive upward) and `dz` outward from the rods' plane.
    */
   crossheadParts?: (m: MeshBuilder, s: number, at: (k: number, off?: number, dz?: number) => Vec3) => void;
+  /**
+   * An articulated locomotive's front engine unit (the Big Boy): these engines
+   * (indices into `engines`), their coupled wheels and these carrying wheels
+   * (indices into `wheels`) ride a frame that turns under the boiler. The
+   * builder draws them inside a rail bogie (MeshCore.bogie) with `drawStatic(m,
+   * paint, true)` and `drawSwivel`; everything else stays on the body.
+   */
+  swivel?: {
+    engines: number[];
+    carrying: number[];
+    /** The source x where the unit's frame ends and the body's begins (read by buildLoco). */
+    x1: number;
+  };
 }
 
 type P2 = [number, number];
@@ -326,6 +339,9 @@ export class RunningGear {
   readonly sides: Array<{ engine: SteamEngine; index: number; s: number; side: EngineSide }> = [];
   readonly duration: number;
   readonly times: number[];
+  private readonly tracks: AnimationTrack[] = [];
+  /** The bogie node `drawSwivel` drew the front engine unit into, and the nodes it drew there. */
+  private swivelBogie: { node: string; parts: Set<string> } | null = null;
 
   constructor(readonly spec: RunningGearSpec, readonly X: (x: number) => number) {
     const ref = spec.wheels[spec.reference]!;
@@ -365,6 +381,18 @@ export class RunningGear {
     return `${s > 0 ? "right" : "left"}${engine.name ? `-${engine.name}` : ""}`;
   }
 
+  /** Whether engine `index` rides the swivelling front unit. */
+  private swivelEngine(index: number): boolean {
+    return this.spec.swivel?.engines.includes(index) ?? false;
+  }
+
+  /** Whether wheel `i` rides the swivelling front unit: a carrying wheel of it, or a coupled wheel of its engines. */
+  swivelWheel(i: number): boolean {
+    const sw = this.spec.swivel;
+    if (!sw) return false;
+    return sw.carrying.includes(i) || sw.engines.some((e) => this.spec.engines[e]!.coupled.includes(i));
+  }
+
   /** The engine side whose crank a coupled wheel carries. */
   private engineOf(wheel: number): SteamEngine | null {
     return this.spec.engines.find((e) => e.coupled.includes(wheel)) ?? null;
@@ -373,11 +401,13 @@ export class RunningGear {
   /**
    * The static gear, drawn inside the body part: cylinders with covers and valve
    * chests, slide bars, the expansion link brackets, and the axle boxes of the
-   * carrying wheels.
+   * carrying wheels. With `swivel` only the front engine unit's (drawn inside its
+   * bogie), without it everything else.
    */
-  drawStatic(m: MeshBuilder, paint: string): void {
+  drawStatic(m: MeshBuilder, paint: string, swivel = false): void {
     const z = this.spec.cylinderZ;
-    for (const { engine, s, side: es } of this.sides) {
+    for (const { engine, index, s, side: es } of this.sides) {
+      if (this.swivelEngine(index) !== swivel) continue;
       m.scope(`cylinder ${this.suffix(engine, s)}`, () => {
         if (es.incline) return this.inclinedCylinder(m, paint, es, s);
         const { near, far, y, r } = es.cyl;
@@ -413,7 +443,7 @@ export class RunningGear {
       });
     }
     this.spec.wheels.forEach((w, i) => {
-      if (!w.outsideBoxes) return;
+      if (!w.outsideBoxes || this.swivelWheel(i) !== swivel) return;
       const X = this.X(w.x);
       const ay = axleHeight(w);
       m.scope(`axle boxes ${i + 1}`, () => {
@@ -442,23 +472,62 @@ export class RunningGear {
   }
 
   /**
+   * The front engine unit's moving gear (`spec.swivel`), drawn inside the bogie
+   * being drawn as moving child parts of it (MeshCore.spin): its wheelsets, then
+   * its engines' rods and valve gear. Call inside `m.bogie`, before `drawParts`,
+   * which animates them with the rest.
+   */
+  drawSwivel(m: MeshBuilder): void {
+    const node = m.currentPartName();
+    if (!this.spec.swivel || !node) throw new Error("drawSwivel(): no swivel unit, or not inside a bogie");
+    this.swivelBogie = { node, parts: new Set() };
+    this.drawMoving(m, true);
+  }
+
+  /**
    * The moving gear as parts, then the animation clip: a wheelset part per axle
    * (wheels, axle, crank pins, counterweights, return cranks), then per engine
    * side the coupling rod, crosshead, main rod and valve gear. Call after the
-   * body part.
+   * body part. The front engine unit's parts, drawn by `drawSwivel`, are children
+   * of its bogie: their translations are taken relative to the bogie's pivot.
    */
   drawParts(m: MeshBuilder): void {
+    this.drawMoving(m, false);
+    const sb = this.swivelBogie;
+    if (this.spec.swivel && !sb) throw new Error("drawParts(): the swivel unit was not drawn (drawSwivel)");
+    if (sb) {
+      // the bogie's pivot as MeshCore.bogie sets it: its axles' mean, to the millimetre
+      const axles = this.spec.wheels.map((w, i) => ({ w, i })).filter(({ i }) => this.swivelWheel(i));
+      const mean = (f: (w: SteamWheel) => number) => Math.round((axles.reduce((t, a) => t + f(a.w), 0) / axles.length) * 1000) / 1000;
+      const pivot = [mean((w) => this.X(w.x)), mean(axleHeight), 0];
+      for (const t of this.tracks) {
+        if (t.path !== "translation" || !sb.parts.has(t.node)) continue;
+        t.values = t.values.map((v, k) => v - pivot[k % 3]!);
+      }
+    }
+    m.animate({ name: RUNNING_CLIP, times: this.times, tracks: this.tracks, drive: { drive: "distance", speed: RUNNING_SPEED } });
+  }
+
+  /** The moving parts of the swivelling unit (`swivel`) or of the rest, their tracks into `tracks`. */
+  private drawMoving(m: MeshBuilder, swivel: boolean): void {
     const spec = this.spec;
     const ref = spec.wheels[spec.reference]!;
-    const tracks: AnimationTrack[] = [];
+    const tracks = this.tracks;
     const thetas = this.times.map((_, k) => (2 * Math.PI * k) / N_SAMPLES);
+    // a top-level part, or a moving child of the swivel bogie
+    const part = (name: string, pivot: Vec3, draw: () => void): void => {
+      if (!swivel) return void m.part(name, pivot, draw);
+      this.swivelBogie!.parts.add(name);
+      m.spin(name, pivot, draw);
+    };
 
     spec.wheels.forEach((w, i) => {
+      if (this.swivelWheel(i) !== swivel) return;
       const name = `wheelset-${i + 1}`;
       const X = this.X(w.x);
       const ay = axleHeight(w);
       const engine = this.engineOf(i);
-      m.part(name, [X, ay, 0], () => {
+      part(name, [X, ay, 0], () => {
         m.axleAt(X, ay);
         m.scope("axle", () => {
           const axle = ngon(8, 0.085, 0, X, ay);
@@ -475,14 +544,15 @@ export class RunningGear {
       tracks.push({ node: name, path: "rotation", values: thetas.flatMap((t) => quatZ(-t * turns)) });
     });
 
-    for (const { engine, s, side: es } of this.sides) {
+    for (const { engine, index, s, side: es } of this.sides) {
+      if (this.swivelEngine(index) !== swivel) continue;
       const sfx = this.suffix(engine, s);
       const poses = thetas.map((t) => es.solve(es.phi(t)));
       const rest = poses[0]!;
       // a rigid link: drawn at rest between joints a and b, turned with them
       const link = (name: string, a: (p: EnginePose) => P2, b: (p: EnginePose) => P2, draw: () => void, turn = true) => {
         const a0 = a(rest);
-        m.part(`${name}-${sfx}`, [a0[0], a0[1], 0], draw);
+        part(`${name}-${sfx}`, [a0[0], a0[1], 0], draw);
         tracks.push({ node: `${name}-${sfx}`, path: "translation", values: poses.flatMap((p) => [...a(p), 0]) });
         if (turn) {
           const ang0 = Math.atan2(b(rest)[1] - a0[1], b(rest)[0] - a0[0]);
@@ -577,7 +647,6 @@ export class RunningGear {
         }, false);
       }
     }
-    m.animate({ name: RUNNING_CLIP, times: this.times, tracks, drive: { drive: "distance", speed: RUNNING_SPEED } });
   }
 
   /**

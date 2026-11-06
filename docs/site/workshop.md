@@ -14,6 +14,7 @@ lives in the workshop until somebody confirms it.
   added since - the world fleet (aircraft, ships, buses, trucks, trams, cable car
   cabins), the US, Japanese, Chinese and Indian trains and the trains of the eight
   countries - is a draft (711 models when the workshop was introduced).
+- Confirmed since: the 19 draft buses of 7,000 triangles and more (2026-11).
 - **A new model starts as a draft**: nothing to do when adding one. It reaches the
   game only once confirmed.
 - **Confirming** a model is adding its id to `ids` in `catalogModels.json` (sorted). Do it

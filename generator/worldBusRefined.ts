@@ -455,8 +455,21 @@ export const vision: Extras = (c, s) => {
   });
   // the hood's badge
   c.d.fit("hood badge", L - 0.1, () => block(c.m(), "chrome", L - 0.1, L - 0.08, 1.28, 1.34, -0.12, 0.12));
-  for (const sd of [-1, 1]) sideName(c, sd, 3.6, 6.4, 1.33, 0.2, "black", 0.11);
-  hatches(c, s, [4.6, 8.6]);
+  for (const sd of [-1, 1]) sideName(c, sd, 3.6, 6.4, 1.71, 0.16, "black", 0.11);
+  // the black stripe just under the side glass
+  for (const sd of [-1, 1]) sideStrip(c, s, sd, s.bonnet!.length + 0.05, L - 0.12, 1.9, 1.96, "black");
+  hatches(c, s, [4.4, 8.0]);
+  // the stepwell under the service door, below the body's underside: the dark steps
+  // behind the leaves, the panel behind the door down to the steps' foot
+  const [d0, d1] = s.doors[0]!;
+  c.d.fit("stepwell", c.x((d0 + d1) / 2), () => {
+    const m = c.m();
+    const y0 = s.door.bottom + 0.02;
+    block(m, "black", c.x(d1) + 0.02, c.x(d0) - 0.02, y0, s.floor + 0.01, hw - 0.7, hw - 0.03);
+    block(m, "body", c.x(d1 + 0.55), c.x(d1), y0, s.floor + 0.01, hw - 0.7, hw - 0.004);
+    // the dark box under the floor behind them, so nothing shows through from the left
+    block(m, "black", c.x(d1 + 0.55) + 0.015, c.x(d0) - 0.02, y0 + 0.04, s.floor + 0.005, -hw + 0.25, hw - 0.69);
+  });
   // side marker lamps at the cap's ends
   c.d.fit("side lamps", c.nose - 0.3, () => {
     for (const sd of [-1, 1]) sideSlab(c.m(), "marker", c.frame, sd, c.nose - 0.36, c.nose - 0.26, s.eave - 0.1, s.eave - 0.04, 0.02);

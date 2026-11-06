@@ -3,6 +3,7 @@
 import { describe, expect, it } from "vitest";
 import { lu1938Stock, TUBE1938 } from "../generator/ukUnits";
 import { TUBE_LAYOUT } from "../generator/lu1938Parts";
+import { collectTriangles, parseGlb } from "../generator/glbTriangles";
 
 const bounds = (pos: number[]) => {
   const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
@@ -49,5 +50,14 @@ describe("London 1938 Stock", () => {
       expect(m.triangleCount()).toBeLessThanOrEqual(16000);
     }
     expect(TUBE1938.centredBogies).toBe(true);
+  });
+
+  it("breaks up the plain red: window frames, the rain strip and the roof's panel seams on every car", () => {
+    for (const unit of ["endCar", "middleCar"]) {
+      const { json, bin } = parseGlb(lu1938Stock({ unit }).toGlb("tube"));
+      const mats = new Map<string, number>();
+      for (const t of collectTriangles(json, bin)) mats.set(t.material, (mats.get(t.material) ?? 0) + 1);
+      for (const mat of ["winFrame", "gutter", "seam"]) expect(mats.get(mat) ?? 0, `${unit} ${mat}`).toBeGreaterThan(0);
+    }
   });
 });

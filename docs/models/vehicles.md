@@ -56,7 +56,7 @@ how to add one.
 | `proc-vehicle-db-ice3` ... `proc-vehicle-db-ic-coach` | Germany's twenty trains | units on the series kit (`deUnits.ts`), locomotives on the box locomotive kit (`deLocos.ts`, [world-locos.md](world-locos.md)), steam (`worldSteamLocos.ts`, [world-steam.md](world-steam.md)), coaches (`worldCoaches.ts`, [world-coaches.md](world-coaches.md)). See [germany-trains.md](germany-trains.md) |
 | `proc-vehicle-sncf-*`, `-ratp-mi09`, `-ciwl-car` | France's twenty trains | `frUnits.ts`, `frLocos.ts`, steam and coaches. See [france-trains.md](france-trains.md) |
 | `proc-vehicle-ns-*` | the Netherlands' twenty trains | `nlUnits.ts`, `nlLocos.ts`, steam and coaches. See [netherlands-trains.md](netherlands-trains.md) |
-| `proc-vehicle-sbb-*`, `-rhb-*`, `-mgb-hge442`, `-glacier-express` | Switzerland's twenty trains | `chUnits.ts`, `chLocos.ts`, coaches. See [switzerland-trains.md](switzerland-trains.md) |
+| `proc-vehicle-sbb-*`, `-rhb-*`, `-mgb-hge442`, `-glacier-express` | Switzerland's twenty trains | `chUnits.ts`, `chLocos.ts`, `mgbHge442.ts`, coaches. See [switzerland-trains.md](switzerland-trains.md) |
 | `proc-vehicle-renfe-*`, `-talgo-iii`, `-iryo-s109` | Spain's twenty trains | `esUnits.ts`, `esLocos.ts`, steam. See [spain-trains.md](spain-trains.md) |
 | `proc-vehicle-br-*`, `-lner-*`, `-gwr-castle`, `-lms-black-five`, `-lu-1938-stock`, `-eurostar-373`, `-rocket` | the United Kingdom's twenty trains | `ukUnits.ts`, `ukLocos.ts`, steam and coaches, on the `uk` gauge. See [uk-trains.md](uk-trains.md) |
 | `proc-vehicle-ir-*`, `-eir-fairy-queen`, `-dhr-b-class`, `-ncrtc-namo-bharat`, `-dmrc-rs1` | India's twenty trains | `inUnits.ts`, `inLocos.ts`, steam, coaches and `worldWagons.ts`. See [india-trains.md](india-trains.md) |
