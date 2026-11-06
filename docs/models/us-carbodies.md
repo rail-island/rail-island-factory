@@ -8,7 +8,7 @@
 
 | id | title | parameters (default first) | over couplers | triangles |
 |---|---|---|---|---|
-| `proc-vehicle-emd-f7` | EMD F7 | `livery`: `santaFe` (red warbonnet), `unionPacific`, `southernPacific` (Daylight) | 15.44 m | 10,800 - 11,700 |
+| `proc-vehicle-emd-f7` | EMD F7 | `livery`: `santaFe` (red warbonnet), `unionPacific`, `southernPacific` (Daylight); `unit`: `aUnit` (cab), `bUnit` (booster), `train` (`cars` 2 A-B, 3 A-B-A, 4 A-B-B-A) | 15.44 m A, 15.24 m B | about 11,000 - 13,000 a unit |
 | `proc-vehicle-emd-f40ph` | EMD F40PH (draft) | `livery`: `phaseIII`, `phaseII` | 17.12 m | about 11,000 |
 | `proc-vehicle-ge-p42dc` | GE P42DC Genesis | `livery`: `phaseV`, `phaseIII`, `via` | 21.03 m | 8,400 - 8,800 |
 | `proc-vehicle-siemens-alc42` | Siemens ALC-42 Charger | `livery`: `phaseVII`, `midwest` (the SC-44's Amtrak Midwest scheme) | 21.79 m | about 10,300 |
@@ -45,14 +45,29 @@ nose along the surface's chord (`chordBox`).
 
 ## The models
 
-- **EMD F7A** - the bulldog nose rising to the raked windscreen: two panes either side of the
-  centre post, narrowing toward the roof with their outer corners rounded, each in a rubber
-  gasket and a frame of the roof's paint; the headlight in its hood on top of the nose (the
-  hood in the nose's paint), the second light in the nose door, red class lights on the
-  nose's corners and the number boards standing out of its flanks; the cab roof over the
-  carbody's, three portholes and the filter grilles between them, three radiator fans, the
-  dynamic brake fan and exhaust, the pilot, a rear diaphragm. Santa Fe's warbonnet: the red
-  bonnet over the nose and its band sweeping back to a point, outlined in yellow, on silver.
+- **EMD F7** - the A unit: the bulldog nose rising to the low raked windscreen under the cab
+  roof's brow: two wide, low panes either side of the centre post (about 1.1 m wide and 0.48 m
+  up the rake, 3.96 - 4.3 m at the centre post, under a thin brow), their outer edge slanting in toward the roof
+  and its corners rounded, each in a rubber gasket and a frame of the cab's paint;
+  the headlight in its hood on top of the nose, the second light in the nose door,
+  red class lights on the nose's corners and the number boards standing out of its flanks; the
+  cab roof over the carbody's; along the top of the side a band of filter grilles (framed
+  vents of vertical slats in the metal's grey, not windows) and under it the round portholes
+  (two on the A unit, three on the B); three radiator fans, the dynamic brake fan and exhaust,
+  the pilot, a rear diaphragm. The B unit (`bUnit`, 50 ft) is the same engine room between
+  two flat ends with diaphragms, no cab and no lamps. `train` is a set of units (`f7Set`):
+  the A unit leading, B units behind, and with three or more units a second A unit turned at
+  the rear; drawn as an articulated vehicle (`articulate`, tramKit.ts) hinged at the coupling
+  planes with a diaphragm over each gap, each unit on its own two trucks.
+  **Santa Fe's warbonnet**: the red cab, its roof too; the red bonnet carried back under the
+  shoulder to its rounded tail, the silver tongue reaching forward into it over the red stripe
+  that runs the whole length (on the B unit too), every edge against the silver outlined in
+  yellow; on the nose the yellow stripe down its middle from the yellow headlight hood with
+  black pinstripes between the lamps, the yellow oval herald outlined in black and lettered
+  SANTA FE, and the yellow whiskers with black pinstripes running back along both flanks
+  (`santaFeNose`: decals laid on the lofted nose seen from the front, `frontDecal`, in one
+  layer of pieces side by side - the stripe cut round the herald, its black ring round its
+  yellow field - so none sinks into another where the blunt tip meets the rounded nose).
 - **EMD F40PH** - Amtrak's cowl unit of 1976: the tall short nose with chamfered corners and
   the twin headlight, the raked two-pane windscreen under the number boards and red markers,
   the cab's two side windows and door, the full-width body with vertical sides, the inertial
@@ -94,14 +109,15 @@ nose along the surface's chord (`chordBox`).
 ## Liveries
 
 Simplified schemes: colour fields, stripes and plain stroke letters, no heralds or logos
-(but the F40PH's Amtrak wordmark).
+(but the F40PH's Amtrak wordmark and the F7's Santa Fe nose herald).
 Running numbers are illustrative, but for the GG1's preserved 4935 and 4800.
 
 ## Deviations
 
 - The trucks are the diesel toolkit's generic cast truck (the Acela's and the Charger's are
   not modelled in detail); the Acela's tilt is not drawn.
-- The F7's B unit, the P42DC's and ALC-42's interiors and the Acela's cabins are not drawn.
+- The P42DC's and ALC-42's interiors and the Acela's cabins are not drawn. The F7 set's units
+  are hinged as one articulated vehicle, not coupled loose.
 - The GG1's quill drive and its frames are simplified; its wheels have six spokes.
 
 ## Checking
@@ -109,6 +125,6 @@ Running numbers are illustrative, but for the GG1's preserved 4935 and 4800.
 `pnpm exec vitest run test/usCarbodies.test.ts` (ids, references, short value titles; every
 livery at its published length, inside the US gauge and 16,000 triangles, without coplanar
 faces, its axles and two supports, the fixed parts under the gauge's height; the GG1's two
-pantographs; the Acela's formations, train lengths and sections, each car on two trucks;
+pantographs; the F7's low windscreen, grilles over the portholes, Santa Fe herald, B unit and sets (formations, lengths, sections, joints, supports, distant models); the Acela's formations, train lengths and sections, each car on two trucks;
 deterministic bytes and the distant models). The pantographs are also in
 `test/pantographs.test.ts`.

@@ -2222,12 +2222,24 @@
         "id": 4728,
         "size": 4
       },
+      "proc-vehicle-emd-f7?formation=A-B": {
+        "id": 10090,
+        "size": 8
+      },
+      "proc-vehicle-emd-f7?formation=A-B-B-A": {
+        "id": 10098,
+        "size": 16
+      },
       "proc-vehicle-emd-f7?livery=southernPacific": {
         "id": 4736,
         "size": 4
       },
       "proc-vehicle-emd-f7?livery=unionPacific": {
         "id": 4732,
+        "size": 4
+      },
+      "proc-vehicle-emd-f7?unit=bUnit": {
+        "id": 10086,
         "size": 4
       },
       "proc-vehicle-emd-gp9?": {

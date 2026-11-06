@@ -1,7 +1,7 @@
 # World aircraft
 
-**Covers** - the 100 aircraft from around the world on the airframe kit and the rotor kit (airliners, regional and business jets, turboprop and piston airliners, light aircraft, freighters, flying boats, four helicopters and the Zeppelin NT): the kits' specs and what they draw, the shared airline liveries, the helicopters' rotor clip, game properties, OpenTTD figures, sounds, references, deviations and tests.
-**Code** - `generator/airframeKit.ts`, `generator/airframeShapes.ts`, `generator/rotorKit.ts`, `generator/airlineSchemes.ts`, `generator/worldAircraft.ts`, `generator/worldJets.ts`, `generator/worldProps.ts`, `generator/worldRotorcraft.ts`, `generator/lodAir.ts` (`airLod`), `generator/openttdTable.ts` (`worldAircraftTable`), `generator/worldFleet.ts`, `test/worldAircraft.test.ts`, `test/worldFleet.test.ts`
+**Covers** - the 100 aircraft (their turning propellers, the big jets' flaps and Concorde's drooping nose) from around the world on the airframe kit and the rotor kit (airliners, regional and business jets, turboprop and piston airliners, light aircraft, freighters, flying boats, four helicopters and the Zeppelin NT): the kits' specs and what they draw, the shared airline liveries, the helicopters' rotor clip, game properties, OpenTTD figures, sounds, references, deviations and tests.
+**Code** - `generator/airframeKit.ts`, `generator/airframeShapes.ts`, `generator/rotorKit.ts`, `generator/propellers.ts`, `generator/airlineSchemes.ts`, `generator/worldAircraft.ts`, `generator/worldJets.ts`, `generator/worldProps.ts`, `generator/worldRotorcraft.ts`, `generator/lodAir.ts` (`airLod`), `generator/openttdTable.ts` (`worldAircraftTable`), `generator/worldFleet.ts`, `test/worldAircraft.test.ts`, `test/worldFleet.test.ts`
 **See also** - [aircraft.md](aircraft.md) (the eight original aircraft and the body/decal technique), [world-fleet.md](world-fleet.md) (references, data checks, the sweep sample), [animation.md](animation.md) (time clips), [game-properties.md](game-properties.md), [../site/openttd-export.md](../site/openttd-export.md), [lod.md](lod.md)
 
 ## The designs
@@ -163,7 +163,7 @@ metres behind the nose tip. The kit draws:
   engines buried in the wing roots (Comet, Tu-104); propeller engines on the wing or the
   nose - turboprop nacelles deep under a high wing or with their axis above a low one,
   radial cowls with the cylinders' dark face, inline nacelles - each with a spinner and its
-  blades standing still. All nacelles are `nacelle` (aircraft.ts's turbofan) or bodies.
+  blades, the part `propeller-<n>` (see "Moving parts"). All nacelles are `nacelle` (aircraft.ts's turbofan) or bodies.
 - **The empennage**: `conventional`, `T`, `cruciform`, `twin` (end-plate fins, An-225) and
   `triple` (Constellation, Boeing 314), a dorsal fillet, or no tailplane (the deltas). The
   fin and tailplane move forward as a whole when they would reach past the published length.
@@ -173,8 +173,11 @@ metres behind the nose tip. The kit draws:
   legs retract into (`fairing`: ATR, BAe 146, An-124, Hercules), gear pods behind the wing
   (Tu-104, Tu-134, Tu-154), floats, skis, a flying boat's wingtip floats and sponsons.
 - **Windows and doors**: rows of oval, round, rectangular or triangular (Caravelle) panes
-  as decals, broken at the doors; an upper-deck row; the windscreen on the nose and the
-  side panes behind it. A freighter (`cargo`) has none but its crew door.
+  as decals, broken at the doors; an upper-deck row; the windscreen on the nose - from
+  where the crown passes 0.6 of the depth (its foot, d0) up to 0.76 (its top edge, d1,
+  behind the foot; a needle nose 0.66 to 0.82, the screen at most 0.55 W long) - and the
+  side panes behind its outer edge, raked as it is. The LOD paints the faces over the
+  screen in its glass where they fit the 200 triangles. A freighter (`cargo`) has none but its crew door.
 - **The livery** (`Scheme`, `airlineSchemes.ts`): one record per carrier and era in the
   kit's relative terms, so one scheme fits every airframe - the skin by section height
   (belly, crown, bands), a tail colour behind a slanted cut, a nose colour, cheatlines by
@@ -189,6 +192,39 @@ metres behind the nose tip. The kit draws:
 The kit copies aircraft.ts's shapes into `airframeShapes.ts` rather than importing them:
 exporting them from `aircraft.ts` renames the minified symbols of the eight original
 aircraft's JS models, whose bytes must not change. Change a shape in both files together.
+
+## Moving parts: propellers, flaps, the drooping nose
+
+Every propeller (wing, nose or the airship's) is a part `propeller-<n>` (the Zeppelin's
+`propeller-left`, `-right`, `-stern`; the small airplane's `propeller`), drawn with
+`MeshCore.spin` and pivoted on its hub: a child of `airframe` when the gear retracts,
+beside the body when it is fixed. The clip **`propellers`** (`propellers.ts`
+`turnPropellers`, drive `time`, `PROP_PERIOD` = 0.24 s, 12 steps and the closing sample)
+turns each once about its axis, clockwise seen from behind.
+
+The big jets - 707, 747-8, 777, A350 and An-225 (`flaps: true` on the brief,
+`WingSpec.flaps`) - have **Fowler flaps**: per wing, panels from the fuselage side to 72 %
+of the half span, broken 1.2 nacelle radii either side of each underwing engine, the
+parts `flap-<left|right>-<n>`. A panel's airfoil lies between 60 and 90 % of the local
+chord at 0.36 of the wing's thickness, so at rest it sits inside the wing and does not
+show. The clip **`flaps`** (drive `flaps`, times 0 to 1, 8 steps) runs each panel aft,
+square to its hinge in the wing's plane, until its leading edge sits under the
+trailing edge, a little down, and turns it `FLAP_ANGLE` = 35 degrees down about its
+leading edge (the run first, the turn following).
+
+**Concorde's nose** (`droop: { angle: 12.5 }`, `FuselageSpec.droop`) is the part `nose`:
+the skin ahead of a hinge 0.15 m in front of the windscreen's foot, pivoted on the hinge's
+keel. A collar inside it, 5 % smaller, follows the nose's shape and closes the gap the
+drooped nose opens over the hinge. The clip **`nose`** (drive `droop`, times 0 to 1, 8
+steps, eased) turns it down 12.5 degrees, Concorde's landing setting. `flaps` and `droop`
+are state clips with drives of their own (`meshCore.ts` `ClipDrive`), so the game,
+which does not know them, leaves them alone, and nothing moves a pantograph-like
+`state` clip there; the site has buttons for them
+([../site/catalog-site.md](../site/catalog-site.md)). The LOD stands everything still, flaps in and nose up.
+
+`test/worldAircraft.test.ts` checks the windscreen's glass on every kit aircraft's nose,
+the propeller, flap and nose clips and their end poses free of z-fighting. The
+helicopters' painted glazing has a centre post and a sill in the body colour.
 
 ## The rotor kit
 
@@ -238,9 +274,11 @@ engines, tail, gear, doors and windows are read off photographs and three-views 
 - Every airframe is a kit approximation: noses, tail cones, wing-root fairings and fillets
   are generic for the nose kind; a low-wing airliner gets a generic belly fairing under
   the wing box, but no flap-track fairings or antennas (the original aircraft have them).
-- Propellers stand still; only the helicopters' rotors turn.
+- The propellers turn at a visual rate (0.24 s a turn), all clockwise seen from behind.
 - Taildraggers stand level, not tail-down.
-- The Concorde's nose is not drooped; the Tu-144's canards are flat plates.
+- Concorde's visor is not drawn: its windscreen shows with the nose up; the Tu-144's
+  canards are flat plates.
+- The flaps are single Fowler panels (no flap-track fairings, no slats or spoilers).
 - The Beluga XL's eyes and smile are simplified decals; the Dreamlifter's swing tail and
   the An-124's visor are not drawn as separate parts.
 - Liveries are simplified colour fields with plain titles; emblems are basic shapes.

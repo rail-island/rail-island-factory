@@ -102,6 +102,10 @@ const CLICK_SLOP = 5;
 const LIFT_SECONDS = 1.5;
 /** Seconds a door takes from shut to open. */
 const DOOR_SECONDS = 2;
+/** Seconds an aircraft's flaps or drooping nose take from one setting to the other. */
+const CONFIG_SECONDS = 3;
+/** The aircraft's configuration clips: their drives in userData.clipDrives. */
+type ConfigKind = "flaps" | "droop";
 /** Seconds a character's cross-fade from one motion to the next (or to rest) takes. */
 const MOTION_FADE = 0.25;
 
@@ -115,6 +119,12 @@ function isStateClip(model: Object3D, clip: AnimationClip): boolean {
 function doorSide(model: Object3D, clip: AnimationClip): DoorSide | null {
   const drive = (model.userData.clipDrives as Record<string, { drive?: string; side?: string }> | undefined)?.[clip.name];
   return drive?.drive === "door" && (drive.side === "left" || drive.side === "right") ? drive.side : null;
+}
+
+/** The configuration a clip of the model sets (an aircraft's flaps, its drooping nose), or null for another clip. */
+function configKind(model: Object3D, clip: AnimationClip): ConfigKind | null {
+  const drive = (model.userData.clipDrives as Record<string, { drive?: string }> | undefined)?.[clip.name]?.drive;
+  return drive === "flaps" || drive === "droop" ? drive : null;
 }
 
 /** Slow at both ends: a door's position (0 shut, 1 open) for how far its move has run. */
@@ -193,6 +203,15 @@ export function ModelViewer(props: {
   const [doorTarget, setDoorTarget] = createSignal<Record<DoorSide, number>>({ left: 0, right: 0 });
   const doorAt: Record<DoorSide, number> = { left: 0, right: 0 };
   let doorActions: Array<{ action: AnimationAction; side: DoorSide }> = [];
+  // An aircraft's flaps and drooping nose: where each stands (0 flight, 1 extended, before easing) and where it goes.
+  const [configClips, setConfigClips] = createSignal<Array<{ clip: AnimationClip; kind: ConfigKind }>>([]);
+  const [configTarget, setConfigTarget] = createSignal<Record<ConfigKind, number>>({ flaps: 0, droop: 0 });
+  const configAt: Record<ConfigKind, number> = { flaps: 0, droop: 0 };
+  let configActions: Array<{ action: AnimationAction; kind: ConfigKind }> = [];
+  // An aircraft's retractable gear: the node the game hides in flight, and whether it is shown.
+  let gearNode: Object3D | null = null;
+  const [hasGear, setHasGear] = createSignal(false);
+  const [gearDown, setGearDown] = createSignal(true);
   // Its interiors, hidden but while their doors open (or with the Interior toggle), and the toggle's cut.
   let interiors: Interior[] = [];
   const [interiorCount, setInteriorCount] = createSignal(0);
@@ -273,6 +292,13 @@ export function ModelViewer(props: {
         a.time = ease(doorAt[side]) * clip.duration;
         return { action: a.play(), side };
       });
+      // and a flap or nose action: its time is set from its configuration
+      configActions = configClips().map(({ clip, kind }) => {
+        const a = mixer!.clipAction(clip);
+        a.paused = true;
+        a.time = ease(configAt[kind]) * clip.duration;
+        return { action: a.play(), kind };
+      });
       mixer.addEventListener("finished", (e) => onMotionFinished((e as unknown as { action: AnimationAction }).action));
     }
     return mixer;
@@ -322,7 +348,8 @@ export function ModelViewer(props: {
   };
   const motionMoving = () => (motionAction !== null && !motionHeld) || restAt > 0;
   const doorsMoving = () => doorAt.left !== doorTarget().left || doorAt.right !== doorTarget().right;
-  const moving = () => running() || lift !== liftTarget() || doorsMoving() || motionMoving();
+  const configMoving = () => configAt.flaps !== configTarget().flaps || configAt.droop !== configTarget().droop;
+  const moving = () => running() || lift !== liftTarget() || doorsMoving() || configMoving() || motionMoving();
   const tick = (now: number) => {
     const dt = Math.min(0.1, (now - lastFrame) / 1000);
     lastFrame = now;
@@ -335,6 +362,12 @@ export function ModelViewer(props: {
       if (at !== to) doorAt[side] = to > at ? Math.min(to, at + dt / DOOR_SECONDS) : Math.max(to, at - dt / DOOR_SECONDS);
     }
     for (const { action, side } of doorActions) action.time = ease(doorAt[side]) * action.getClip().duration;
+    const config = configTarget();
+    for (const kind of ["flaps", "droop"] as const) {
+      const [at, to] = [configAt[kind], config[kind]];
+      if (at !== to) configAt[kind] = to > at ? Math.min(to, at + dt / CONFIG_SECONDS) : Math.max(to, at - dt / CONFIG_SECONDS);
+    }
+    for (const { action, kind } of configActions) action.time = ease(configAt[kind]) * action.getClip().duration;
     applyInteriors(interiors, doorAt, showInterior());
     mixer?.update(dt);
     // a fade to rest is over: the stopped actions hand every part back its rest pose
@@ -374,6 +407,20 @@ export function ModelViewer(props: {
     animate();
   };
   const hasDoors = (side: DoorSide) => doorClips().some((d) => d.side === side);
+  /** Extends (1) or retracts (0) an aircraft's flaps, or lowers (1) or raises (0) its nose, from where they stand. */
+  const configTo = (kind: ConfigKind, target: number) => {
+    if (!configClips().some((c) => c.kind === kind) || !ensureMixer()) return;
+    setConfigTarget({ ...configTarget(), [kind]: target });
+    animate();
+  };
+  const hasConfig = (kind: ConfigKind) => configClips().some((c) => c.kind === kind);
+  /** Shows (down) or hides (up) the retractable gear, as the game does in flight. */
+  const gearTo = (down: boolean) => {
+    if (!gearNode) return;
+    gearNode.visible = down;
+    setGearDown(down);
+    render();
+  };
   /** Shows the interiors as the doors and the Interior toggle say, the model cut away above them with the toggle on. */
   const showInteriors = () => {
     applyInteriors(interiors, doorAt, showInterior());
@@ -391,6 +438,13 @@ export function ModelViewer(props: {
     loopActions = [];
     stateActions = [];
     doorActions = [];
+    configActions = [];
+    setConfigClips([]);
+    configAt.flaps = configAt.droop = 0;
+    setConfigTarget({ flaps: 0, droop: 0 });
+    gearNode = null;
+    setHasGear(false);
+    setGearDown(true);
     setClips([]);
     setStateClips([]);
     setDoorClips([]);
@@ -840,7 +894,15 @@ export function ModelViewer(props: {
         const buttons = motionButtons(loadedClips, group.userData.clipDrives as Record<string, { drive?: string; speed?: number }> | undefined);
         setMotions(buttons);
         motionClips = new Map(loadedClips.filter((c) => buttons.some((b) => b.name === c.name)).map((c) => [c.name, c]));
-        setClips(loadedClips.filter((c) => !isStateClip(group, c) && !doorSide(group, c) && !motionClips.has(c.name)));
+        setClips(loadedClips.filter((c) => !isStateClip(group, c) && !doorSide(group, c) && !configKind(group, c) && !motionClips.has(c.name)));
+        setConfigClips(loadedClips.flatMap((clip) => {
+          const kind = configKind(group, clip);
+          return kind ? [{ clip, kind }] : [];
+        }));
+        // an aircraft's retractable gear is the node named exactly `gear` (the game hides it in flight)
+        gearNode = record.category === "Aircraft" ? group.getObjectByName("gear") ?? null : null;
+        setHasGear(gearNode !== null);
+        setGearDown(true);
         setStateClips(loadedClips.filter((c) => isStateClip(group, c)));
         setDoorClips(loadedClips.flatMap((clip) => {
           const side = doorSide(group, clip);
@@ -1006,8 +1068,8 @@ export function ModelViewer(props: {
       <Show when={walking()}>
         <p class="factory-viewer__hint">W A S D or arrows walk, Q E turn, Shift runs, drag looks, two fingers walk, Esc returns</p>
       </Show>
-      <Show when={clips().length > 0 || motions().length > 0 || stateClips().length > 0 || doorClips().length > 0 || lampCount() > 0 || props.record.scenery || isStructure()}>
-        <div class="factory-viewer__controls" role="group" aria-label="Animation, motions, pantographs, doors, interior, lights, scenery and passenger view">
+      <Show when={clips().length > 0 || motions().length > 0 || stateClips().length > 0 || doorClips().length > 0 || configClips().length > 0 || hasGear() || lampCount() > 0 || props.record.scenery || isStructure()}>
+        <div class="factory-viewer__controls" role="group" aria-label="Animation, motions, pantographs, doors, gear, flaps, nose, interior, lights, scenery and passenger view">
           <Show when={motions().length > 0}>
             <For each={motions()}>
               {(b) => (
@@ -1034,6 +1096,30 @@ export function ModelViewer(props: {
             </button>
             <button type="button" class="factory-btn" onClick={() => liftTo(0)} disabled={liftTarget() === 0} title="Lower the pantographs">
               Down
+            </button>
+          </Show>
+          <Show when={hasGear()}>
+            <button type="button" class="factory-btn" onClick={() => gearTo(false)} disabled={!gearDown()} title="Retract the landing gear (hidden in flight, as the game does)">
+              Gear up
+            </button>
+            <button type="button" class="factory-btn" onClick={() => gearTo(true)} disabled={gearDown()} title="Lower the landing gear">
+              Gear down
+            </button>
+          </Show>
+          <Show when={hasConfig("flaps")}>
+            <button type="button" class="factory-btn" onClick={() => configTo("flaps", 1)} disabled={configTarget().flaps === 1} title="Extend the flaps to the landing setting">
+              Flaps out
+            </button>
+            <button type="button" class="factory-btn" onClick={() => configTo("flaps", 0)} disabled={configTarget().flaps === 0} title="Retract the flaps for cruise">
+              Flaps in
+            </button>
+          </Show>
+          <Show when={hasConfig("droop")}>
+            <button type="button" class="factory-btn" onClick={() => configTo("droop", 1)} disabled={configTarget().droop === 1} title="Droop the nose for the airport">
+              Nose down
+            </button>
+            <button type="button" class="factory-btn" onClick={() => configTo("droop", 0)} disabled={configTarget().droop === 0} title="Raise the nose for flight">
+              Nose up
             </button>
           </Show>
           <Show when={doorClips().length > 0}>

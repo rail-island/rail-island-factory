@@ -122,7 +122,9 @@ wheels on y = 0. Parts, front to back:
   teardrop **spats** with the tyres showing below.
 
 The `color` parameter (finish) is `blue` (the reference's, default), `red`, `yellow`
-or `green`. The gear is fixed, so the model has **no parts**. Deviations from the
+or `green`. The gear is fixed; its one part is the propeller and spinner, `propeller`
+(`MeshCore.spin`, pivoted on the hub at (0, 1.0, 3.47)), which the clip `propellers`
+(`propellers.ts`, drive `time`, 0.24 s a turn) turns clockwise seen from behind. Deviations from the
 inspiration model: its navigation lights were swapped (red on the right wing); here
 red is on the left as on a real aircraft. The canopy is opaque tinted glass, like the
 other aircraft's glazing, and there is no cabin interior.

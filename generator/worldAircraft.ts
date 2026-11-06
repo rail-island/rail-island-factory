@@ -31,6 +31,8 @@ export interface Brief {
   tk?: TailKind; fin: [number, number, number, number, number?]; tp?: [number, number, number, number, number, number?, number?];
   ng?: [number, number, boolean?]; mg?: Array<[number, number, number, boolean?, number?, number?]>; retract?: boolean; gk?: GearSpec["kind"]; gx?: Partial<GearSpec>;
   win?: Array<[number, number, number, number?, number?, number?, WindowRow["shape"]?]>; doors?: number[]; cargo?: boolean; extra?: AirframeSpec["extra"];
+  /** Fowler flaps (WingSpec.flaps) and a drooping nose (FuselageSpec.droop). */
+  flaps?: boolean; droop?: FuselageSpec["droop"];
 }
 
 /** The spec of a brief, all but its livery. */
@@ -43,11 +45,13 @@ export function brief(b: Brief): Omit<AirframeSpec, "scheme" | "schemeKey"> {
       width: b.W, ...(b.D ? { depth: b.D } : {}), keel: b.k, nose: b.nose, ...(b.ns ? { noseScale: b.ns } : {}), tailLen: b.tl,
       ...(b.ty !== undefined ? { tailY: b.ty } : {}), ...(b.te !== undefined ? { tailEnd: b.te } : {}), ...(b.corner !== undefined ? { corner: b.corner } : {}),
       ...(b.hump ? { hump: b.hump } : {}), ...(b.hull ? { hull: b.hull } : {}), ...(b.bulge ? { bulge: b.bulge } : {}), ...(b.n ? { n: b.n } : {}),
+      ...(b.droop ? { droop: b.droop } : {}),
     },
     wing: {
       span: b.span, root: b.root, ...(b.kink ? { kink: { at: b.kink[0], chord: b.kink[1] } } : {}), tip: b.tip, sweep: b.sweep, dihedral: b.dih, at: b.at, pos: b.pos ?? "low",
       ...(b.wy !== undefined ? { y: b.wy } : {}), ...(b.thick ? { thick: b.thick } : {}), ...(b.dev ? { tipDevice: b.dev } : {}), ...(b.dh ? { devHeight: b.dh } : {}),
       ...(b.strut !== undefined ? { strut: b.strut } : {}), ...(b.upper ? { upper: b.upper } : {}), ...(b.plan ? { plan: b.plan } : {}),
+      ...(b.flaps ? { flaps: true } : {}),
     },
     engines: b.eng,
     tail: {
