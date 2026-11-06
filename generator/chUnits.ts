@@ -106,8 +106,8 @@ const DOSTO_SBB: ShinkansenLivery = {
     white: c("#f1f1ee"), dark: c("#2c3034", 0.55), red: c(SBB_RED), black: c("#17191b", 0.45), roofG: c("#5c6166", 0.6), skirtG: c("#232528", 0.75), cabMask: c("#17191b", 0.3),
     blue: c("#2a4f9e"), cream: c("#ddd5b8", 0.5), lampBox: c("#8d9397", 0.25), amber: c("#f08a1c", 0.4),
   },
-  // the upper deck's windows in a grey band under the roof
-  bands: [[0, 1.2, "dark"], [1.2, 3.15, "white"], [3.15, 9, "roofG"]], doors: [[0, 2.62, "red"], [2.62, 9, "blue"]],
+  // white up to the upper deck's window tops, the dark grey roof band from the shoulder just above them
+  bands: [[0, 1.2, "dark"], [1.2, 3.94, "white"], [3.94, 9, "roofG"]], doors: [[0, 2.62, "red"], [2.62, 9, "blue"]],
   roof: "roofG", skirt: "skirtG",
   // d behind the tip; the red covers the body up to the black's front edge
   endSweeps: [

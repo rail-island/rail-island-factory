@@ -49,8 +49,8 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
   windows between, the intermediate car's 5.2 m in from each end with seven; white service doors over the
   bogies, and behind the cab the destination display and the service door with its window and grille
   (series `sidePanels`). The pantograph stands on each end car's roof 5 m behind the tip (`pantographD`),
-  the trailing one folded (`trailingLowered`). The upper deck's windows sit in the grey band as the user
-  asked, though the photographs show white between them. The distant model draws only the lower window
+  the trailing one folded (`trailingLowered`). The sides are white up to the upper deck's window tops,
+  the dark grey roof band starting at the shoulder just above them, as the photographs show. The distant model draws only the lower window
   row's span, now short on the end car.
 
 ## Tests
