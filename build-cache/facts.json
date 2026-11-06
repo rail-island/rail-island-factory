@@ -3986,7 +3986,7 @@
    "extents": {}
   },
   "proc-preview-cablecar-line": {
-   "key": "3d353c162c11bed2f0d58c50dd7f75f17a57174aac1ba3e0330fa51bbe45ebfb",
+   "key": "4422a17ef32ccbeb24d31537b587f674d74e910ef8e1712afda9b96643519ddc",
    "triangles": 19250,
    "stats": {
     "triangles": 19250,
@@ -8474,7 +8474,7 @@
    "extents": {}
   },
   "proc-vehicle-american-truck": {
-   "key": "8f523189126044a5a10995189936e212b7e8b5e1d436e27d8dbf2348ddd0e499",
+   "key": "1caeb28f25663b345fac70d8357bf5efdcaf522b9388d795d7b92cda4215fdd1",
    "triangles": 4936,
    "stats": {
     "triangles": 4936,
@@ -8676,7 +8676,7 @@
    "extents": {}
   },
   "proc-vehicle-amtrak-acela": {
-   "key": "a83ce55d1f388cd606865dacd9fc2bda9dbe2ec8e33d87f26171716199365001",
+   "key": "bdc67e9ba94928b329796097efdaab2de26bf37529175cc9d41c60bfc9f52301",
    "triangles": 10308,
    "stats": {
     "triangles": 10308,
@@ -8754,7 +8754,7 @@
    }
   },
   "proc-vehicle-amtrak-superliner": {
-   "key": "91f278b1e8a24e138c89d8d1ba3d797cb0ad8ffadf1dfe8e15b39329434fe351",
+   "key": "e0fe8c2fd17f84b6c84ff4906fece35d5a4257175e0c7a8dc9354a6e15db5f5b",
    "triangles": 8468,
    "stats": {
     "triangles": 8468,
@@ -10281,7 +10281,7 @@
    "extents": {}
   },
   "proc-vehicle-blue-train-24": {
-   "key": "8ac4f7644e786f7acd34f191084bec8a4eea65b8fe129dc227aec27c378cd088",
+   "key": "f7fa03d63fc883eb8c8aa571f10a09a776138cb431300ed2061fa2c3028a53dd",
    "triangles": 7416,
    "stats": {
     "triangles": 7416,
@@ -10338,7 +10338,7 @@
    "extents": {}
   },
   "proc-vehicle-bmo-double-deck-coach": {
-   "key": "a49d6706ed513896b1e8a86d56c8df5a9c13dd88ade11704ee06305400e0a895",
+   "key": "5f12117f4d128cb675b90c81fb2933348337d84b007848cdba5506b427394e8c",
    "triangles": 6946,
    "stats": {
     "triangles": 6946,
@@ -11225,37 +11225,35 @@
    }
   },
   "proc-vehicle-br-class-142": {
-   "key": "d338daf954c9174c2de54b6b57f2dbf3a7ce992bbd666709fed1b710f2a84b0b",
-   "triangles": 6124,
+   "key": "f9050cf7d5846e51688310ecc2b1ecc1d082695fe43b81ce6cf007f5b6a3b284",
+   "triangles": 6119,
    "stats": {
-    "triangles": 6124,
-    "vertices": 20532,
-    "primitives": 44,
-    "materials": 24,
+    "triangles": 6119,
+    "vertices": 20517,
+    "primitives": 43,
+    "materials": 29,
     "min": [
      -7.724999904632568,
-     -1.1920928966180355e-8,
-     -1.4005471467971802
+     0,
+     -1.402999997138977
     ],
     "max": [
-     7.865079879760742,
-     3.700000047683716,
-     1.4005471467971802
+     7.724999904632568,
+     3.859999895095825,
+     1.402999997138977
     ]
    },
    "rig": {
     "supports": [
      {
-      "x": -3.975,
-      "node": "bogie1",
+      "x": -4.5,
       "axles": 1,
       "sections": [
        0
       ]
      },
      {
-      "x": 5.025,
-      "node": "bogie0",
+      "x": 4.5,
       "axles": 1,
       "sections": [
        0
@@ -11264,13 +11262,13 @@
     ]
    },
    "side": {
-    "widthM": 16.190079784393312,
+    "widthM": 16.049999809265138,
     "heightM": 6.3,
     "bottomM": -0.3
    },
    "seat": [
-    7.1151,
-    3.6,
+    6.575,
+    3.7,
     0
    ],
    "bundle": {
@@ -11281,14 +11279,14 @@
    },
    "extents": {
     "[]": [
-     15.59007978439331,
-     3.700000059604645,
-     2.8010942935943604
+     15.449999809265137,
+     3.859999895095825,
+     2.805999994277954
     ]
    }
   },
   "proc-vehicle-br-class-158": {
-   "key": "5977a32af6db259127bb2658df963a22264ad3bea4354bdba0610095adf02464",
+   "key": "8d81d819c43f7b83367630fbb7cc8d3ffc88f7b5fdd43f83ae2bddeff695364c",
    "triangles": 8880,
    "stats": {
     "triangles": 8880,
@@ -11408,7 +11406,7 @@
    "extents": {}
   },
   "proc-vehicle-br-class-378": {
-   "key": "3b24d56f3b4e43207378bf5bc8924ca332c7177c326ccafbda5318fd536ed95f",
+   "key": "5e345a77e7e5244f6c47b3f6623145f7e1cd4e5e06a48e7b7f3f838df2c0a0d3",
    "triangles": 8487,
    "stats": {
     "triangles": 8487,
@@ -11476,7 +11474,7 @@
    }
   },
   "proc-vehicle-br-class-390": {
-   "key": "5cd0785f88195168ba42c588b53786da61149972fe32810044fc4246b5581e42",
+   "key": "00024f7e72ddf0cc23a7164a462990f34b1bd7922e8ef864e509f46495fb0651",
    "triangles": 9080,
    "stats": {
     "triangles": 9080,
@@ -11715,7 +11713,7 @@
    "extents": {}
   },
   "proc-vehicle-br-class-800": {
-   "key": "5f61be06725d316d387fb631cd883d7e985463aa7ec2f2ec14582c7a5553751d",
+   "key": "200d8cd49aa5001b4bf7e5ac88ca3a4ce220b827944fc39d12d2f6359f9e155c",
    "triangles": 9134,
    "stats": {
     "triangles": 9134,
@@ -11840,22 +11838,22 @@
    "extents": {}
   },
   "proc-vehicle-br-hst": {
-   "key": "f2e76e6a4d29696a1f645fa460ffec9a16c3e8b3c3168c09a037a9012c6d4667",
-   "triangles": 9416,
+   "key": "0f5b2d779ff04f1a0253fe10669aed637ac65d4e805005241ab463f1bd3085fa",
+   "triangles": 8742,
    "stats": {
-    "triangles": 9416,
-    "vertices": 30324,
-    "primitives": 52,
-    "materials": 28,
+    "triangles": 8742,
+    "vertices": 28350,
+    "primitives": 50,
+    "materials": 26,
     "min": [
      -8.895000457763672,
      3.814697280279944e-9,
-     -1.384766697883606
+     -1.3847484588623047
     ],
     "max": [
      8.895000457763672,
      3.9800000190734863,
-     1.384766697883606
+     1.3847484588623047
     ]
    },
    "rig": {
@@ -11869,7 +11867,7 @@
       ]
      },
      {
-      "x": 5.145,
+      "x": 6.935,
       "node": "bogie0",
       "axles": 2,
       "sections": [
@@ -11903,18 +11901,18 @@
     "[]": [
      17.790000915527344,
      3.980000015258789,
-     2.769533395767212
+     2.7694969177246094
     ]
    }
   },
   "proc-vehicle-br-ic225": {
-   "key": "ef03c593bb8e984a3745d3a57edd1d07a5e3e356507c402de198aab2c77fd077",
-   "triangles": 10048,
+   "key": "1365e8ab2ac041298d31630be404234c9270308df4aa49d7f7349da41d80c20b",
+   "triangles": 9446,
    "stats": {
-    "triangles": 10048,
-    "vertices": 32688,
-    "primitives": 61,
-    "materials": 30,
+    "triangles": 9446,
+    "vertices": 30762,
+    "primitives": 59,
+    "materials": 28,
     "min": [
      -9.699999809265137,
      3.814697280279944e-9,
@@ -11929,7 +11927,7 @@
    "rig": {
     "supports": [
      {
-      "x": -5.25,
+      "x": -5.95,
       "node": "bogie1",
       "axles": 2,
       "sections": [
@@ -11937,7 +11935,7 @@
       ]
      },
      {
-      "x": 5.25,
+      "x": 7.74,
       "node": "bogie0",
       "axles": 2,
       "sections": [
@@ -11952,7 +11950,7 @@
     "bottomM": -0.3
    },
    "seat": [
-    6.75,
+    6.25,
     3.88,
     0
    ],
@@ -11976,7 +11974,7 @@
    }
   },
   "proc-vehicle-br-mk1-coach": {
-   "key": "97d0b40c40432918f8780b7f0285f2750cd2d8205b41951d4bd3e561fec85c36",
+   "key": "9ab7a836ec0587001331db5df71b45adce96367997d3932baa9462f92b240a82",
    "triangles": 7708,
    "stats": {
     "triangles": 7708,
@@ -12664,7 +12662,7 @@
    "extents": {}
   },
   "proc-vehicle-budd-rdc": {
-   "key": "0998cf0b9fcfba648112620fbd94c5140cafd1fdb89e3ac256535f5354f156a7",
+   "key": "73abf88de2efd26e4d7fbd14a0eae74ce3fcd3afdc937e9ed8b03dfe468fd7b5",
    "triangles": 8960,
    "stats": {
     "triangles": 8960,
@@ -13870,7 +13868,7 @@
    }
   },
   "proc-vehicle-cd-150": {
-   "key": "9cf03b8871748465afd0f1994ef3ad7a163de5b268357476dc17af1d8d1bdbea",
+   "key": "cabbbea4b86ac60f6dec4af7f0c6c5c8ec7a8184c5ef3fccbd57f2a493a22031",
    "triangles": 12564,
    "stats": {
     "triangles": 12564,
@@ -13968,7 +13966,7 @@
    }
   },
   "proc-vehicle-cd-163": {
-   "key": "2f3297c472c30d1348d5f3e47e581c7d6285c71ac4a62df3a4da0a606f04dcf5",
+   "key": "0ae563fe0a1a2040747abd59f2a862fb3cf5003147ddf15801c26a9992f3f319",
    "triangles": 15436,
    "stats": {
     "triangles": 15436,
@@ -14217,7 +14215,7 @@
    }
   },
   "proc-vehicle-cd-230": {
-   "key": "b6437bbc809681a17e03aae165bf4076ec6c2c49ce7b7c9876efbdab8d1a75d3",
+   "key": "d6965ad4ef99d56076d64511fbce49230f210541dc12e29532ebeed00bfa55cb",
    "triangles": 15900,
    "stats": {
     "triangles": 15900,
@@ -14300,7 +14298,7 @@
    }
   },
   "proc-vehicle-cd-263": {
-   "key": "fa398bb3a62989e8b2de6b3b680af94c2db54aa40e4fe5bed5dbf3962b1ca65e",
+   "key": "b99651dae37c5e6ada29bc67bb1931c29e2d3ab2f873838d81e390c83cdfe6d5",
    "triangles": 15360,
    "stats": {
     "triangles": 15360,
@@ -14393,7 +14391,7 @@
    }
   },
   "proc-vehicle-cd-451": {
-   "key": "9644c1944a7b0b3d389d6b329ae35d17215ff9ef2fc9178aa83ec69c61e2c63b",
+   "key": "ed698ed37c33afaeb43112b3cd7fb6f520b5504b2d5c215ab0a1118a26cf13d0",
    "triangles": 7399,
    "stats": {
     "triangles": 7399,
@@ -14471,7 +14469,7 @@
    }
   },
   "proc-vehicle-cd-460": {
-   "key": "eb8dcaad2582377599278405949f45ed11de54bfb3cb62a3dd7ef631f357568b",
+   "key": "85c0cb8777f66245f48aad9da89867482652e793cd83272d4d207199b39d768c",
    "triangles": 8134,
    "stats": {
     "triangles": 8134,
@@ -14569,7 +14567,7 @@
    }
   },
   "proc-vehicle-cd-470": {
-   "key": "580fecaf1b1734907b7ef3a01111aeded42c1b86378e8187ad78afc0d82a34a3",
+   "key": "801f86df8e371a0840bf4203ed66659bca75a9df8eb9a2d538db31043cbf6d1f",
    "triangles": 8164,
    "stats": {
     "triangles": 8164,
@@ -14642,7 +14640,7 @@
    }
   },
   "proc-vehicle-cd-471": {
-   "key": "45baf6928891b55a36cd7e8d50fd1624d9d68bdec5233c101395fb6d699381b5",
+   "key": "a8f576e26f2f886b6bf214aeb0f7c94a00b9b26a83db5711ed48828c345c08a1",
    "triangles": 7800,
    "stats": {
     "triangles": 7800,
@@ -14745,7 +14743,7 @@
    }
   },
   "proc-vehicle-cd-680": {
-   "key": "f782423da8542d6522625e59d1f7f2b143bf8a86daf796c44e80618f806eff59",
+   "key": "de13982d74de5c52e8c8b1e13e7e1c129835fbf79197117a2c78b497a21a2418",
    "triangles": 8186,
    "stats": {
     "triangles": 8186,
@@ -15373,7 +15371,7 @@
    }
   },
   "proc-vehicle-cd-810": {
-   "key": "71e528d73607a7933a40c809bb3ffc4e5a8fad9fe3fe96931d194875981781a4",
+   "key": "337af147a2c6130d3f4fae360d791aed602ec706a55e14eec3a7bf712f3170d4",
    "triangles": 9404,
    "stats": {
     "triangles": 9404,
@@ -15449,7 +15447,7 @@
    }
   },
   "proc-vehicle-cd-812": {
-   "key": "1a49ab209996fa42b2587fd584404499dd34496e2ff15e1ef5178c0d42f03dae",
+   "key": "5d2f34296ae94d23ddf5785a60dbba84454eacb997d8f2f7874be6ab63999884",
    "triangles": 14878,
    "stats": {
     "triangles": 14878,
@@ -15520,7 +15518,7 @@
    }
   },
   "proc-vehicle-cd-843": {
-   "key": "3efb5af735ec929b7fd75f419c0f5146a870f97f63d176b4caeb09099a773c5d",
+   "key": "2a1892be4f6b951f658c1ea752c448f4b4ba34ea9b4627ded41508e08909bf15",
    "triangles": 6818,
    "stats": {
     "triangles": 6818,
@@ -15608,7 +15606,7 @@
    }
   },
   "proc-vehicle-cd-green-white-coach": {
-   "key": "a9921db2a0e2f56ba044cffa26d153d24a9ea61e0ac68db0cc6c53cb6cc79b84",
+   "key": "ebbcda9d6b3f6eaf154dd9922aa18c1a7e02a61d5ae5b8b31d5ca26e135fed57",
    "triangles": 6332,
    "stats": {
     "triangles": 6332,
@@ -15716,7 +15714,7 @@
    }
   },
   "proc-vehicle-cd-y-coach": {
-   "key": "c6e6a96c40afa212ca1b98b05bdd7eb1dfe8f4bfb73e648d94ab3f17b44db5df",
+   "key": "3d29eb1a5d1af33dbdaee8043c20104fc23ad0099ae75543b7f85c20003fa166",
    "triangles": 6268,
    "stats": {
     "triangles": 6268,
@@ -16184,7 +16182,7 @@
    "extents": {}
   },
   "proc-vehicle-ciwl-car": {
-   "key": "0795b904cd2af9405c6044d3a50faf94886c6f661a52bff136db76c39bc813b1",
+   "key": "1dc7592362e6665f39e57e06262e7aa2a260110b62eaff5d0182add608c0e8e8",
    "triangles": 8012,
    "stats": {
     "triangles": 8012,
@@ -16429,7 +16427,7 @@
    "extents": {}
   },
   "proc-vehicle-cr-25t-coach": {
-   "key": "9d9ed53a68321b9cdd43b07106f5d45031f4fb768c395f087816315bfd9a7981",
+   "key": "26730b8321d2d9574cf634ec59b4d22e56f108390f94dbbf22b77d0235e62ff5",
    "triangles": 7960,
    "stats": {
     "triangles": 7960,
@@ -16486,7 +16484,7 @@
    "extents": {}
   },
   "proc-vehicle-cr-c70-wagon": {
-   "key": "fd218bb768f61c23bf2f4bf68a2a0d33e82e63304958d13a7a5b9ccc66ff3dec",
+   "key": "0ad0a961db48ed6958df262df538139fb0a110dcbe29efdbddcd8d1fe867c464",
    "triangles": 3814,
    "stats": {
     "triangles": 3814,
@@ -16543,7 +16541,7 @@
    "extents": {}
   },
   "proc-vehicle-cr-cr200j": {
-   "key": "f8ec7ca311402309ed6cfd8dc2ebe563ecfd4c5833ee1818048ada8139bdbe18",
+   "key": "cefdf3ded4b9af61ce0cc24d41073177ea5ce0fab9db2fd66030942ab51915ff",
    "triangles": 9550,
    "stats": {
     "triangles": 9550,
@@ -16611,7 +16609,7 @@
    }
   },
   "proc-vehicle-cr-cr400af": {
-   "key": "6f0e5c4a83e0b93dcf341ed5e679287bc3a11468fa96515a9a748dec833b61be",
+   "key": "08e491d30e79d86a6ab287df27d142832b1a8f43e1852976bfc00ea454ba58ad",
    "triangles": 10670,
    "stats": {
     "triangles": 10670,
@@ -16679,7 +16677,7 @@
    }
   },
   "proc-vehicle-cr-cr400bf": {
-   "key": "a8d6c56a245c994b729d1fcb688a43ada9dd6296a0e2d4ebb7391e14f6811b95",
+   "key": "93155610875049b47793bf98628310e2d4bc1648f05130151ef07fe24b064004",
    "triangles": 10806,
    "stats": {
     "triangles": 10806,
@@ -16747,7 +16745,7 @@
    }
   },
   "proc-vehicle-cr-crh2a": {
-   "key": "ebfe32a64c5964b766b1cbd7184ff6c42be35feb34161974988be2bc6736866b",
+   "key": "a6e6fcff431b3d416f528cbb06e3e391456d0984feba541a85856af54a720aec",
    "triangles": 10078,
    "stats": {
     "triangles": 10078,
@@ -16815,7 +16813,7 @@
    }
   },
   "proc-vehicle-cr-crh380a": {
-   "key": "50e6e164427bc3d1466b5610dec12919eec63b65596dd329c294b64f1d5c34db",
+   "key": "1f45934926698792f7afebe4f6a322fd4ba77b83a45c534f6c47b1412ababa7f",
    "triangles": 10946,
    "stats": {
     "triangles": 10946,
@@ -16883,7 +16881,7 @@
    }
   },
   "proc-vehicle-cr-crh3c": {
-   "key": "3f480ceefa8fa0f4a61ae74756d9ff6cf5f47a818326640fef8311a1b3953bf3",
+   "key": "d7270c8328ee16a08ee9904eef8759e6741d79097b9a09b90fa1812b079ab18a",
    "triangles": 9988,
    "stats": {
     "triangles": 9988,
@@ -16951,7 +16949,7 @@
    }
   },
   "proc-vehicle-cr-crh5a": {
-   "key": "b816b861fa4cc5c8a06b207950f66a82abc9e58a1beea7d357cbd7ba0fd2bd44",
+   "key": "d0d1b1d94a93a357696b2c9ddb3d1b39c8bc721b89d0cf8dfc7d88e458b7e875",
    "triangles": 9770,
    "stats": {
     "triangles": 9770,
@@ -17019,7 +17017,7 @@
    }
   },
   "proc-vehicle-cr-crh6a": {
-   "key": "f3c923a18f2047a4f88a076dd2894ad5aa3a5553956e45e2280c565b0f40dc06",
+   "key": "099c1190b50c9a1b44c0df23de7b9e009650907f96b4207c10acb76a62951cfc",
    "triangles": 9832,
    "stats": {
     "triangles": 9832,
@@ -18453,7 +18451,7 @@
    }
   },
   "proc-vehicle-csd-balm": {
-   "key": "9593f80fdad80d2ae077e8c98e180d22bd85ba07c74a547abb46b8f3c394416e",
+   "key": "b69e7e9d369e0842fcef0b0bf1790a71e646a433a30e117a85f67abae32cadc3",
    "triangles": 6370,
    "stats": {
     "triangles": 6370,
@@ -18516,7 +18514,7 @@
    }
   },
   "proc-vehicle-csd-bam": {
-   "key": "7e236d102e3516f324e862be904e4bcd8109d03531c9a39edabf5d0a93982231",
+   "key": "300dde9fa880b34e0634b039c829ec5bafed261fc371d59ea7410a544d586933",
    "triangles": 5914,
    "stats": {
     "triangles": 5914,
@@ -18579,7 +18577,7 @@
    }
   },
   "proc-vehicle-csd-bdmtee": {
-   "key": "158a09d10aae247459bda0a4cdc87e82154f6a262b18b3ebd1b6e26274728d0d",
+   "key": "176e8ed38959bc8331052abffcc6a4b526905bee072032158241c0b07721e6e6",
    "triangles": 6434,
    "stats": {
     "triangles": 6434,
@@ -18642,7 +18640,7 @@
    }
   },
   "proc-vehicle-csd-be31": {
-   "key": "907cbd5665d29df390d9c0c377f850b3e63ceceaa621b7693f3c5aa00281b280",
+   "key": "06a115b6a247cf4de4da32e5e2438a7e3fc696b8fe995b562ac4858331365eb3",
    "triangles": 4058,
    "stats": {
     "triangles": 4058,
@@ -18703,7 +18701,7 @@
    }
   },
   "proc-vehicle-csd-bi20": {
-   "key": "2059eeb7b306fb3c203a6ede155a4f61aafad5cc75ddbe542e0bd5b3c6c0da8c",
+   "key": "133d767ebee36d58d73018e25c9bf89dc82ea22d66074cc5ff0d35650357b7e2",
    "triangles": 4286,
    "stats": {
     "triangles": 4286,
@@ -18764,7 +18762,7 @@
    }
   },
   "proc-vehicle-csd-classic-green-coach": {
-   "key": "8c16e02abd6dead9430d27bb6114bf1911a472a22f99561a5cce4537832ce48b",
+   "key": "a9636f95fac10989ae0c830574ac8e5627a6ef770ab8cc16bfc50453ace08c9c",
    "triangles": 6218,
    "stats": {
     "triangles": 6218,
@@ -18832,7 +18830,7 @@
    }
   },
   "proc-vehicle-csd-dsk": {
-   "key": "523c4b8e152b4bb2ac249572c78be976a1b35ab7806c6bd124e13793c63db697",
+   "key": "200629355128474674481f3139ee0af22f4ba21ba98c566b61e3b502e4712f4d",
    "triangles": 3240,
    "stats": {
     "triangles": 3240,
@@ -18954,7 +18952,7 @@
    }
   },
   "proc-vehicle-csd-m131": {
-   "key": "4b63e3d02a59a8d8382ab639039df5c1fd10c8510bbffecda4c2fd06023dece3",
+   "key": "f60d1feae4005034d77355e170434dcf7a8ee389fb471c53ae2cff9c1d0c91b2",
    "triangles": 4352,
    "stats": {
     "triangles": 4352,
@@ -19025,7 +19023,7 @@
    }
   },
   "proc-vehicle-csd-m240": {
-   "key": "62a89d538b3c9a04fe4470a09090d751e8c8d170fc05122f164a4eaaaf1ec155",
+   "key": "20cfa25db8c0ceef7c996def59571bff3b4f8060e80f23909b738502b6c4e67e",
    "triangles": 6514,
    "stats": {
     "triangles": 6514,
@@ -19088,7 +19086,7 @@
    }
   },
   "proc-vehicle-csd-m296": {
-   "key": "e1cd39cb11c3632c7df0c6bb405e821be88fd82b6d0bd6e6c074a5b9fbc5534c",
+   "key": "aaaa298a1317150150a7f54d236224e64dc213f6bb96c045952dcde1c1beddb8",
    "triangles": 6304,
    "stats": {
     "triangles": 6304,
@@ -19339,7 +19337,7 @@
    "extents": {}
   },
   "proc-vehicle-cta-5000": {
-   "key": "a73a569bc35d372537187c8d7d7682695b51e3b9cf506a707c7459b8454b5273",
+   "key": "4035d996d0a3e668f2a4b198991c14e9c4e9ca11f6d6f43617196ec2fbba5913",
    "triangles": 6858,
    "stats": {
     "triangles": 6858,
@@ -20324,7 +20322,7 @@
    "extents": {}
   },
   "proc-vehicle-db-423": {
-   "key": "2e66bca493e2d86d05ccf242d46d75d35f499e748a9c7cc912a146e7f5f11d7f",
+   "key": "7d2c8e8b92b0971d5ca217763333fc8f84cc0c8ca6a4cd181b4bb219abcc5fc3",
    "triangles": 9733,
    "stats": {
     "triangles": 9733,
@@ -20392,7 +20390,7 @@
    }
   },
   "proc-vehicle-db-628": {
-   "key": "1bac525c79c250ad756b95af82b0cc0fbde4f39f8e00f532cd9dee43bd511428",
+   "key": "8ba9d752e4a8c485858730cdbbdbfbca56ebb0ae7dce666014771ab6ec0529fe",
    "triangles": 6244,
    "stats": {
     "triangles": 6244,
@@ -20510,7 +20508,7 @@
    }
   },
   "proc-vehicle-db-642": {
-   "key": "e561493991429ffa310d5bff229d735775c28661afa488f5677380f01a531c28",
+   "key": "d846df78b2c73362a09fef0e5248a0ec5c9e8829fec920972ab390e3bab174b4",
    "triangles": 8841,
    "stats": {
     "triangles": 8841,
@@ -20573,7 +20571,7 @@
    }
   },
   "proc-vehicle-db-650": {
-   "key": "0ba4cb5f605130a08fe930e5de44800379f78c1a82b09623d94aa2448dbb487d",
+   "key": "fe73bce2058d98d5fad2096ba0282cc57f3f0780bfea4c45e6d28bb87aae18c1",
    "triangles": 8518,
    "stats": {
     "triangles": 8518,
@@ -20630,7 +20628,7 @@
    "extents": {}
   },
   "proc-vehicle-db-dosto": {
-   "key": "dff78ba1c5e3a274dfbf78a0ecec226c2573a1110e30c602cf3f8e5ac3fc4fa8",
+   "key": "5b5b08b7ef60ad1710985ff3d96c3477e249c2db97f886d160705ad5b9666362",
    "triangles": 7548,
    "stats": {
     "triangles": 7548,
@@ -20708,7 +20706,7 @@
    }
   },
   "proc-vehicle-db-ic-coach": {
-   "key": "a63559a0d43b4660430e3518436e47f9e93ce1a34e001bf24ddbd2366595ef6d",
+   "key": "79da9d0ee797bc3d788337af48f33ab30086ef5c64c385282b7c0ec3c4aeb04e",
    "triangles": 8356,
    "stats": {
     "triangles": 8356,
@@ -20765,7 +20763,7 @@
    "extents": {}
   },
   "proc-vehicle-db-ice-t": {
-   "key": "bb3724bc7e7649fbfe1f0e8101a1f2d3d6512974f199474d6acb770f653451e1",
+   "key": "9a999901128c262b17505f8d07a9b27197c96c7ba6cea3f9da0af5e3a33dc287",
    "triangles": 9644,
    "stats": {
     "triangles": 9644,
@@ -20833,7 +20831,7 @@
    }
   },
   "proc-vehicle-db-ice2": {
-   "key": "f249f3f952d7322b92b23b22dfffac47cfa776453bb381d8da38d2b66c9b9abd",
+   "key": "439f1d0bf0d554a5a8d7e03a0fafb5cf558c59cb3bbb21a69fa8f29f58d171bb",
    "triangles": 6402,
    "stats": {
     "triangles": 6402,
@@ -20906,7 +20904,7 @@
    }
   },
   "proc-vehicle-db-ice3": {
-   "key": "05fd72a86ce02c3d158c86f3ea0e43750ae9f8a97a64733ec100a3d62ac3f9f6",
+   "key": "1cd8e41d7c3b4e28707ddf71be698d0431bd277b1286b8e16e8b4f8b07186161",
    "triangles": 9906,
    "stats": {
     "triangles": 9906,
@@ -20974,7 +20972,7 @@
    }
   },
   "proc-vehicle-db-ice4": {
-   "key": "a4034b4d52ba6a6c7eff8baccf7d66d6281e4a0be04879876749d4ea457fc263",
+   "key": "789c35d94137eda2f5ff324ad73f4c562df918b0d178245f2540cec2f595a7e1",
    "triangles": 9480,
    "stats": {
     "triangles": 9480,
@@ -21099,13 +21097,13 @@
    "extents": {}
   },
   "proc-vehicle-db-vt98": {
-   "key": "6a31f6cc8d8b96874005821309455da7bf57d906353bdaa2b9068bf9db6d5795",
-   "triangles": 6992,
+   "key": "609b975fc16ff3e9df304c0256fa7c4293ca5f0bd492c63aa6e5714ae6cab80e",
+   "triangles": 7064,
    "stats": {
-    "triangles": 6992,
-    "vertices": 22536,
-    "primitives": 35,
-    "materials": 22,
+    "triangles": 7064,
+    "vertices": 22752,
+    "primitives": 36,
+    "materials": 23,
     "min": [
      -6.974999904632568,
      -5.72204589266434e-9,
@@ -21607,7 +21605,7 @@
    }
   },
   "proc-vehicle-dmrc-rs1": {
-   "key": "34e30e53d463690e307095e7a0ae2c3bcb25fa62682dc11c07101667f7691ea6",
+   "key": "e9150f1f1db385e6238c41f62aab3f1986526817903cb4b4f8d2530c326b8367",
    "triangles": 8760,
    "stats": {
     "triangles": 8760,
@@ -22156,7 +22154,7 @@
    }
   },
   "proc-vehicle-dr-sbahn-berlin": {
-   "key": "91f0abe688289607e349c7004c6b867a4209f9e8e697b8ce644f4e7f4e1c46c9",
+   "key": "4ae1fa941f3cebc9b9c2918f48f1d281fd0e447e5026533764571b252eb6cf1f",
    "triangles": 7168,
    "stats": {
     "triangles": 7168,
@@ -22229,7 +22227,7 @@
    }
   },
   "proc-vehicle-dr-vt1816": {
-   "key": "924e7d5c5799743078710be9ff47325812b6fc0f28b9c055f4b75904cdda1831",
+   "key": "c93cf3a1ef60decb47f9154b8d9f1ac3551530f8f66498a0a9662368f3cddf8c",
    "triangles": 9804,
    "stats": {
     "triangles": 9804,
@@ -22482,7 +22480,7 @@
    "extents": {}
   },
   "proc-vehicle-drg-svt877": {
-   "key": "e440cafb5ce9177754679fb355cd2a31d2108530f018997fb1a796129039fe67",
+   "key": "d605ebd62ce6ec2994f6d25799761c95944bd5797e1d8cd4263d31d1afbb8ab9",
    "triangles": 8752,
    "stats": {
     "triangles": 8752,
@@ -23599,7 +23597,7 @@
    "extents": {}
   },
   "proc-vehicle-eas-open-wagon": {
-   "key": "5957a8bee24eeeb5220fc0cc885c296486923ec640d7125db78104ddfe8ac374",
+   "key": "6d3f21665049d1e803825c72aa73d120c0ae757bab806258d949a474614450e9",
    "triangles": 4000,
    "stats": {
     "triangles": 4000,
@@ -24204,7 +24202,7 @@
    "extents": {}
   },
   "proc-vehicle-emd-f40ph": {
-   "key": "88d889f11bfaaa1e062c92d919d6e31f81f4ade62c6b9b1d8a6c7443b7732729",
+   "key": "0e26451bdaa47646af819e593abdc65ffd70c823e151abb52f4c359a28cdd13f",
    "triangles": 11011,
    "stats": {
     "triangles": 11011,
@@ -24261,7 +24259,7 @@
    "extents": {}
   },
   "proc-vehicle-emd-f7": {
-   "key": "76b11efcc882f69796eb49ce40248771a8b77ffe2d10d37bdcda864701a8f649",
+   "key": "308a7eb9e00b05dce703e78c11d6397fef6e98092d733eb55d06a63c1640aa2f",
    "triangles": 10756,
    "stats": {
     "triangles": 10756,
@@ -24489,28 +24487,28 @@
    "extents": {}
   },
   "proc-vehicle-eurostar-373": {
-   "key": "43a0e899a91cec3a0873d1235d6780e3f2bc17bb3f7679e2dd7254714e50938f",
-   "triangles": 9898,
+   "key": "9dd40102a47867ef2eb5607be53b9665503c4abc96e9b6b78fb726b832924271",
+   "triangles": 8938,
    "stats": {
-    "triangles": 9898,
-    "vertices": 32310,
-    "primitives": 43,
-    "materials": 26,
+    "triangles": 8938,
+    "vertices": 29274,
+    "primitives": 39,
+    "materials": 23,
     "min": [
      -11.074999809265137,
      3.814697280279944e-9,
-     -1.398640513420105
+     -1.4035764932632446
     ],
     "max": [
      11.074999809265137,
-     5.87999999833107,
-     1.398640513420105
+     3.9000000953674316,
+     1.4035764932632446
     ]
    },
    "rig": {
     "supports": [
      {
-      "x": -6.995,
+      "x": -7.325,
       "node": "bogie1",
       "axles": 2,
       "sections": [
@@ -24518,7 +24516,7 @@
       ]
      },
      {
-      "x": 7.005,
+      "x": 6.675,
       "node": "bogie0",
       "axles": 2,
       "sections": [
@@ -24534,7 +24532,7 @@
    },
    "seat": [
     5.625,
-    3.7199,
+    3.7198,
     0
    ],
    "bundle": {
@@ -24546,13 +24544,13 @@
    "extents": {
     "[[\"unit\",\"middleCar\"]]": [
      18.700000762939453,
-     3.900000091552734,
+     5.879999994516373,
      2.8071529865264893
     ],
     "[]": [
      22.149999618530273,
-     5.879999994516373,
-     2.79728102684021
+     3.900000091552734,
+     2.8071529865264893
     ]
    }
   },
@@ -26477,7 +26475,7 @@
    "extents": {}
   },
   "proc-vehicle-ge-p42dc": {
-   "key": "70a6de483423e830e6932835f314d6e49b931c4a99fe1df059341f0d9ab71fe3",
+   "key": "fe66632670ff20025f966523905bbb07e6913aff1e15f970f49beb0dda46d2f9",
    "triangles": 8570,
    "stats": {
     "triangles": 8570,
@@ -26586,7 +26584,7 @@
    "extents": {}
   },
   "proc-vehicle-glacier-express": {
-   "key": "fd078dd687054b08a10f841cf0a7ea2056292537b7752918cc505c0e4cff45f4",
+   "key": "c0497c32f3bdf60eeff46a918a552feff73db809de46de8127d23f30f00e6c14",
    "triangles": 6634,
    "stats": {
     "triangles": 6634,
@@ -27537,7 +27535,7 @@
    "extents": {}
   },
   "proc-vehicle-hankyu-9000": {
-   "key": "2b2fbdcb80e6e50b00f33b9f0b69c3cf9ed7674a7ea709afdb07c9435c048e69",
+   "key": "d14b5e771243b194318b2960fc66c998b20d46c59b8c346a5ea56d043f23cc9d",
    "triangles": 7734,
    "stats": {
     "triangles": 7734,
@@ -29006,7 +29004,7 @@
    "extents": {}
   },
   "proc-vehicle-ice-1": {
-   "key": "16901d49915d2dc75565b46fba64a98751e01729202ca16d62c29705e17ee277",
+   "key": "cfde7dd65d8ae48e3a3dcd018cd13ba391f786381ea2c9d3efa28b3e88a50783",
    "triangles": 6402,
    "stats": {
     "triangles": 6402,
@@ -29562,7 +29560,7 @@
    "extents": {}
   },
   "proc-vehicle-ir-boxn-wagon": {
-   "key": "0275027ff4f177a2e3711d5c48f22bfa41183a6cca7db5cba9e4916459896e49",
+   "key": "668d1b23a633fe90528d2c310279105892eb0df5c2f0c9a51a5028c9a9673f7b",
    "triangles": 3786,
    "stats": {
     "triangles": 3786,
@@ -29619,7 +29617,7 @@
    "extents": {}
   },
   "proc-vehicle-ir-icf-coach": {
-   "key": "53b0e8b741f2ffd0d0795db9298c7a715f91dccc2eb9d2b3cbdc5a95be69e189",
+   "key": "6afc843ffd1425400675be68f63dd7ffe8d029226ec4b204d4a860767527104f",
    "triangles": 7680,
    "stats": {
     "triangles": 7680,
@@ -29676,7 +29674,7 @@
    "extents": {}
   },
   "proc-vehicle-ir-lhb-coach": {
-   "key": "9078b09c420caff3e68a1031cbe1179821a9befb9bd332d9b9ee883f5cd7f1ae",
+   "key": "b79d9728d7340b791d153e7cc0a28a7943b5ca2853a92624be7f81bfa29dd3ec",
    "triangles": 7508,
    "stats": {
     "triangles": 7508,
@@ -29733,7 +29731,7 @@
    "extents": {}
   },
   "proc-vehicle-ir-memu": {
-   "key": "696c9f1c0b0abf80a0e2d5842ef6384a963d0b69b0900fbc102d2cbc889cb191",
+   "key": "660207ef44d8a8074c89c1fc3ca31f4f834b3430a5f68c43244c9b97ca193b49",
    "triangles": 7910,
    "stats": {
     "triangles": 7910,
@@ -29801,7 +29799,7 @@
    }
   },
   "proc-vehicle-ir-mumbai-emu": {
-   "key": "0c6e7955685cc1ec65d69c79a4173ffac421f7c1707ba673b83368d581a9885e",
+   "key": "9047c32ad8fb9c36ef09e0dbd5f84a142fd4d1942bd479e93e1f23abe71b31c0",
    "triangles": 8186,
    "stats": {
     "triangles": 8186,
@@ -29869,7 +29867,7 @@
    }
   },
   "proc-vehicle-ir-vande-bharat": {
-   "key": "8a6dec59df908fe665f6480af158737776fdd7455c0db723702a51db51b23949",
+   "key": "374b8077f8e7992341bf04672d6fb2d2b3d6ca559de9a42ce750dabd4d987742",
    "triangles": 9200,
    "stats": {
     "triangles": 9200,
@@ -30645,7 +30643,7 @@
    "extents": {}
   },
   "proc-vehicle-iryo-s109": {
-   "key": "7d455c0d24c7787d34e1208599abc1022ecc9bd5f5703607041039ddd8bf9633",
+   "key": "486fe3e5edf07302270dde801655d4488fe287b0cae11f17cb5adca87d79029f",
    "triangles": 9426,
    "stats": {
     "triangles": 9426,
@@ -31333,7 +31331,7 @@
    "extents": {}
   },
   "proc-vehicle-jnr-103": {
-   "key": "18fa8ff774fa592e0bc97910505f8b48771739ec96ec2ca364f74b70bc6ddd19",
+   "key": "0a9e25941a88dafa7b4204a0d6ce3b8f22ae4cc86f881fe2949e6229d9d05ada",
    "triangles": 7858,
    "stats": {
     "triangles": 7858,
@@ -31401,7 +31399,7 @@
    }
   },
   "proc-vehicle-jnr-485": {
-   "key": "7c87956664e6b2f1f791d14de51f93d2993155b653005671675e195fc339208d",
+   "key": "590208dbec51cfb0048c3a2537d6cd24e256473c345bca0a1585f3ab3724966e",
    "triangles": 9195,
    "stats": {
     "triangles": 9195,
@@ -31469,7 +31467,7 @@
    }
   },
   "proc-vehicle-jnr-c62": {
-   "key": "e5e4bf8d9d2a5bb9b9ffa64507db2bfd5eac0c583f6fe50356c38390df24dae4",
+   "key": "884fc6a312048dbd47c7e6791d09f617bb58201857b6151a6c9e214c28d110e0",
    "triangles": 11540,
    "stats": {
     "triangles": 11540,
@@ -31535,7 +31533,7 @@
    }
   },
   "proc-vehicle-jnr-d51": {
-   "key": "c59b93d394b9e13d5f7910128922a4ca8e3c1d6beb25704daa69ab51c2e3d874",
+   "key": "bd23e6508f3a483a2e32754748718bbca1550bc1e4f36b3289f9e239dd8b19db",
    "triangles": 10608,
    "stats": {
     "triangles": 10608,
@@ -31611,7 +31609,7 @@
    }
   },
   "proc-vehicle-jnr-dd51": {
-   "key": "36a032eda6666f20f176baddf65038bb9228eef2515e1caac95242e4a0409e24",
+   "key": "9461697a0978f121f50b6451b7f5cced82e38db43f772e7f3e254ec60f7d5457",
    "triangles": 8796,
    "stats": {
     "triangles": 8796,
@@ -31676,7 +31674,7 @@
    "extents": {}
   },
   "proc-vehicle-jnr-ef66": {
-   "key": "c8e47c33334946a49bb5f70fffde60cc2cd487fe734775ccd68b64ed4c957843",
+   "key": "86e80c6a243170c5a015a2f552e45011b1668ae66de5bcd52accd31cb0b77d55",
    "triangles": 10816,
    "stats": {
     "triangles": 10816,
@@ -31741,7 +31739,7 @@
    "extents": {}
   },
   "proc-vehicle-jr-e235": {
-   "key": "69e374fb5e3fcf6e0b759a2fa98d57ab3c817a8cea6398d7b53b8ab9a2cd2d52",
+   "key": "dd1c6a76e7fd3c25acb6e75e2abe8a51720156a5a1e3ed5f271b8203268af830",
    "triangles": 8306,
    "stats": {
     "triangles": 8306,
@@ -31809,7 +31807,7 @@
    }
   },
   "proc-vehicle-jr-e259": {
-   "key": "fdf3e42841e76f66a981bc2fc697255a63f928d331ee5b986117be92eeec5cde",
+   "key": "5fd73e4effe2a8e613e5b0de0b925581e5979745e3b2e593df418c7583350702",
    "triangles": 9641,
    "stats": {
     "triangles": 9641,
@@ -31877,7 +31875,7 @@
    }
   },
   "proc-vehicle-jr-kiha40": {
-   "key": "82a29026d02e7bc62bf33af8af9ee86e07a21882ff22306962bc7284f51f1849",
+   "key": "b225e05275cf578764b077583abc8c7ff7d0ea9b1b7e8ca63663cc227d323bae",
    "triangles": 7344,
    "stats": {
     "triangles": 7344,
@@ -33138,7 +33136,7 @@
    "extents": {}
   },
   "proc-vehicle-kintetsu-hinotori": {
-   "key": "9e2c1cbff2b3e2e1e7ccc5b9ed381d6ef91d7c77aeaf8aa9dfd0e13f080abd19",
+   "key": "a3278b282c8dc7add3473e75d6936c95b2fe4692d93fec248ef548406c9163bf",
    "triangles": 9134,
    "stats": {
     "triangles": 9134,
@@ -35272,7 +35270,7 @@
    "extents": {}
   },
   "proc-vehicle-lu-1938-stock": {
-   "key": "6c2a7bc3a325dd83245e487f5c1df99619659b0e30f6f861ebd3d50967449f41",
+   "key": "96cd57d228af4c8e74bfa2ecdd0bad0839e28a8cb9173661555f504848785126",
    "triangles": 9140,
    "stats": {
     "triangles": 9140,
@@ -36073,7 +36071,7 @@
    "extents": {}
   },
   "proc-vehicle-mav-mdmot": {
-   "key": "836c2b222d631fc32d00003a0596e26b7981ce47786cf8636c78cf50c18170f9",
+   "key": "e79282940434f610849460f11cae153b349966d093ae55a0cb03fa17f104f6b1",
    "triangles": 7300,
    "stats": {
     "triangles": 7300,
@@ -38369,7 +38367,7 @@
    "extents": {}
   },
   "proc-vehicle-mtr-m-train": {
-   "key": "ca4a912735282ad829c79248fea31620a723e71461b48d6068ac001008808fdd",
+   "key": "8e935c8bc8fa4aee9a4666c02c315ce5e88727fdfbe7eb631c7f770570243bad",
    "triangles": 7344,
    "stats": {
     "triangles": 7344,
@@ -38542,7 +38540,7 @@
    "extents": {}
   },
   "proc-vehicle-nas-flat-wagon": {
-   "key": "c30a82243e6a2107abfda86cad6eae7ec4753b2ee62f584eb161a18f27155c5f",
+   "key": "524ad30690ea3c9cfbdd4f6da7a433090961a6df3418519219249f350f26a086",
    "triangles": 4276,
    "stats": {
     "triangles": 4276,
@@ -38620,7 +38618,7 @@
    }
   },
   "proc-vehicle-ncrtc-namo-bharat": {
-   "key": "b3527876d8791c848f8614a6b9aa626614f836355b526f112497b19a82904abf",
+   "key": "da372134f4d85326a660fa144f0a2e8caedfece9f877320caf1b2d6a2029ec52",
    "triangles": 8941,
    "stats": {
     "triangles": 8941,
@@ -39652,7 +39650,7 @@
    }
   },
   "proc-vehicle-ns-ddz": {
-   "key": "3da2b63dab12aed8821933f608863d8ba04b46fb74e08b2af1526793bad366fd",
+   "key": "f17d26014714be608c726fe780c2a6d2254d834f241aac7550444310f8ec2776",
    "triangles": 9032,
    "stats": {
     "triangles": 9032,
@@ -39720,13 +39718,13 @@
    }
   },
   "proc-vehicle-ns-de1": {
-   "key": "181d39da5395fc4c09ed3f62331c1b61556f56b284be16635ccece67f4c1e96d",
-   "triangles": 10040,
+   "key": "d1b4d303e122971addf39d57338a4077c39875b3f7f4a886f42bbc3fef1412f6",
+   "triangles": 10112,
    "stats": {
-    "triangles": 10040,
-    "vertices": 33672,
-    "primitives": 39,
-    "materials": 22,
+    "triangles": 10112,
+    "vertices": 33888,
+    "primitives": 40,
+    "materials": 23,
     "min": [
      -13,
      1.2159347528850617e-8,
@@ -39777,7 +39775,7 @@
    "extents": {}
   },
   "proc-vehicle-ns-flirt": {
-   "key": "5eba3e7352eac2951ec36d7f0b6914493294bd3844ce83d0dc6b781e5ac1d285",
+   "key": "aa5c918769b8ea3bf7601655ec2b5b1d2db38221817c7fe87897be7fd39d3057",
    "triangles": 8547,
    "stats": {
     "triangles": 8547,
@@ -39845,7 +39843,7 @@
    }
   },
   "proc-vehicle-ns-icm": {
-   "key": "eb6a5b04c2f35542fc1ea5f68e584671089ddc01c867f44b95704333846835ed",
+   "key": "9cf1f474a447b477cf3d32a4581d4b3b4a4fdcae61383e5ac51bcb10b8a88fec",
    "triangles": 9139,
    "stats": {
     "triangles": 9139,
@@ -39913,7 +39911,7 @@
    }
   },
   "proc-vehicle-ns-icng": {
-   "key": "e3299000421aa72559f9e082e490406d2d21203ebed770a070487e9a32d8d206",
+   "key": "81aa8912a544d517623443fc0506f0f3bbe04af678c54353807c3d4ffe7fe2c4",
    "triangles": 9424,
    "stats": {
     "triangles": 9424,
@@ -39981,7 +39979,7 @@
    }
   },
   "proc-vehicle-ns-icr-coach": {
-   "key": "97e60dbc1e916299a7598e4861853cc0368daba9291771a7455ae4e3aa0a4691",
+   "key": "2c327a8f4a1a076ab2cefe088e500451d34d018fa1b30d2e6ecdafbad3e24295",
    "triangles": 7892,
    "stats": {
     "triangles": 7892,
@@ -40038,11 +40036,11 @@
    "extents": {}
   },
   "proc-vehicle-ns-mat46": {
-   "key": "afc86acec37f8b7acac4111eed570c11ddeb25a8f274f5e80db9e2e6d16d7eb5",
-   "triangles": 10348,
+   "key": "20e8351d13a1827446d61582a0197f7051a11839d5bbc5c65df7acda969a3501",
+   "triangles": 10384,
    "stats": {
-    "triangles": 10348,
-    "vertices": 34884,
+    "triangles": 10384,
+    "vertices": 34992,
     "primitives": 48,
     "materials": 25,
     "min": [
@@ -40101,7 +40099,7 @@
    }
   },
   "proc-vehicle-ns-mat54": {
-   "key": "f30bbe3099830e3f5524ebb63d540409246c4182c71130b8caf6edb3daa25d0b",
+   "key": "981609c0f902268ce340f851e72c56bd54a634ce9263bcd7effc9b457630f77b",
    "triangles": 9417,
    "stats": {
     "triangles": 9417,
@@ -40169,7 +40167,7 @@
    }
   },
   "proc-vehicle-ns-plan-v": {
-   "key": "62e136a24ad31840c7f6575946fff4eb8cf3e0d931c560cc1b7201eb717f84ce",
+   "key": "78d72e5407d5c9ccfa113ddb0cf6b1fb4eb6e74425b91a2aadc431fa29e8a370",
    "triangles": 8710,
    "stats": {
     "triangles": 8710,
@@ -40232,7 +40230,7 @@
    }
   },
   "proc-vehicle-ns-sgm": {
-   "key": "6035e3e9510dc6cbd1a84361a2eb3d84e6d4f52a147f1d2d38610ad6f83f64e3",
+   "key": "c5fe080a71cd22aeb28d8112446651381a97f5971f6ac6f2ee906d1b4b157bc4",
    "triangles": 7842,
    "stats": {
     "triangles": 7842,
@@ -40300,7 +40298,7 @@
    }
   },
   "proc-vehicle-ns-slt": {
-   "key": "caa6e63c10e0100c3b76e84539552fb8e333ed70b911f203f63019a3958f4a2a",
+   "key": "b8c21568caa5e6241331befaa4185420741aa0833eefcaa1b963e1059d5383a5",
    "triangles": 8447,
    "stats": {
     "triangles": 8447,
@@ -40368,7 +40366,7 @@
    }
   },
   "proc-vehicle-ns-sng": {
-   "key": "b2bc6f676a0505993ae3cec7a1ceb84e83a848cb53eedde2a5161b5d5e3d304d",
+   "key": "3222f1e5d27c1255102ae5e4006cba3d0d72e6f180eabebe89af634f7e0fa27f",
    "triangles": 8551,
    "stats": {
     "triangles": 8551,
@@ -40436,7 +40434,7 @@
    }
   },
   "proc-vehicle-ns-v250": {
-   "key": "a30e5b789bbf24157d87c06a7384bdec2e123135b9a817ebf0e18974bf563943",
+   "key": "3aea2ce6e6a7dc97c7219c08c2379f413c1f60e0b782eace68162f7099508144",
    "triangles": 10040,
    "stats": {
     "triangles": 10040,
@@ -40504,7 +40502,7 @@
    }
   },
   "proc-vehicle-ns-virm": {
-   "key": "0065519ea9bc07179ec9a0cb17c35f30be037e8a69d262b2fb5e85e9c4049451",
+   "key": "f05e14b57a0a1de47a4ca0800293229cc50080142ade8d2b1f0d316c9b5ee137",
    "triangles": 10034,
    "stats": {
     "triangles": 10034,
@@ -40638,7 +40636,7 @@
    }
   },
   "proc-vehicle-nyc-r160": {
-   "key": "bf2f131f3773558d8aa58889770dfc886758093e002846404d325fda97815a50",
+   "key": "1f97d48ad2a103c445944ebe6a4ce1faf34e9b8dfcc7648f4a9cde53874043b1",
    "triangles": 7254,
    "stats": {
     "triangles": 7254,
@@ -40861,7 +40859,7 @@
    }
   },
   "proc-vehicle-odakyu-gse": {
-   "key": "6084c439a0a2d1448a301ca09acdcf1fc0897d20e9eee54d6299541f5ca84eca",
+   "key": "7a3c8ddb559e1ef6bf904e895bfbf4aa2ae4c86e34f057888c1afeffd53b668c",
    "triangles": 8866,
    "stats": {
     "triangles": 8866,
@@ -42008,7 +42006,7 @@
    "extents": {}
   },
   "proc-vehicle-pioneer-zephyr": {
-   "key": "1fe252c8a637eefda5490bfe35d621d9743dca9ec794995207f45d89afd58a1a",
+   "key": "d7a2a2bbdb1724ebefff31f87a9a2731d7314ef46a1ab127b2635628581e4a92",
    "triangles": 13876,
    "stats": {
     "triangles": 13876,
@@ -42357,7 +42355,7 @@
    "extents": {}
   },
   "proc-vehicle-prr-gg1": {
-   "key": "208c797e848e3a68575282c54a16968ac00234b270a9cc29edb3eaee15d0cc15",
+   "key": "78e95ebb2004ac5e13252e3900b6dbae154ee938bbc3ba312301354c4629e412",
    "triangles": 14428,
    "stats": {
     "triangles": 14428,
@@ -42496,7 +42494,7 @@
    }
   },
   "proc-vehicle-rah-tank-wagon": {
-   "key": "22a9782e845c2424a4c205da50ae9a9907dbd600172608566d948b074658eaff",
+   "key": "57d5fd8488d0e9be03fb80e47e60ef1495b6356b468d92152135be0a0e77f422",
    "triangles": 4442,
    "stats": {
     "triangles": 4442,
@@ -42559,7 +42557,7 @@
    }
   },
   "proc-vehicle-raj-hopper-wagon": {
-   "key": "255062a50a0954643ed60f973f91cffaee299267612c0010978fbf574cbcd9e3",
+   "key": "af33d4ca9f5a2a622d4063110f61221f3a57e47dc643790d5a08a6c12ddc249f",
    "triangles": 4194,
    "stats": {
     "triangles": 4194,
@@ -42622,7 +42620,7 @@
    }
   },
   "proc-vehicle-ratp-mi09": {
-   "key": "6c2da97277e3f3fbec9a0e94fb6e035289d75eb320fc0c209eff3ec129374efa",
+   "key": "e815de1a64b496002e8c4ff8e4216dfeb5062f28576ff8cbbf00b3e6c7e015a1",
    "triangles": 9849,
    "stats": {
     "triangles": 9849,
@@ -43435,7 +43433,7 @@
    "extents": {}
   },
   "proc-vehicle-renfe-440": {
-   "key": "ca5501d8f6066fa57406d7d2b01e59fc01554de517048ca30a7309e0eea433cd",
+   "key": "d0f82fa30f4ec770d58a184d4bb195101db39c218519b349ecef474ad0a2199e",
    "triangles": 8258,
    "stats": {
     "triangles": 8258,
@@ -43503,7 +43501,7 @@
    }
   },
   "proc-vehicle-renfe-446": {
-   "key": "355df0d7398f35353ccac06900efc82a60ee14c454b0d254b2e63f2964dfd17f",
+   "key": "8d92fbd1d65c258269c0cd4187349cb90387565e5d80fc65d5296a94739089c1",
    "triangles": 8064,
    "stats": {
     "triangles": 8064,
@@ -43571,7 +43569,7 @@
    }
   },
   "proc-vehicle-renfe-592": {
-   "key": "539bd39b4feb5c7e1047db111af6289cd730e2c761e3065d347052a168ff4878",
+   "key": "977f2508962aa8e6399e95da1da2511e8907a85d791dbd3facda650d5ef69439",
    "triangles": 8314,
    "stats": {
     "triangles": 8314,
@@ -43639,7 +43637,7 @@
    }
   },
   "proc-vehicle-renfe-civia": {
-   "key": "d5a5061dd0e66fca11a745eb74a6deb51e8deff70d877ea08e2cff2ed6c7d315",
+   "key": "c3c675fba61f7f7ba544d7070b7023a63b23206f8cb5c3d88c9654293ea696aa",
    "triangles": 8529,
    "stats": {
     "triangles": 8529,
@@ -43707,7 +43705,7 @@
    }
   },
   "proc-vehicle-renfe-s100": {
-   "key": "fef4ca0f6b62d2f08bcbd3dddd0d56e5b49dcc730e314c6aded0c277d6af2129",
+   "key": "d5f23fedc4c8991fa2a33b680414e2a6cc8f46587b8bc48dacf824e5d23dffe9",
    "triangles": 9026,
    "stats": {
     "triangles": 9026,
@@ -43775,7 +43773,7 @@
    }
   },
   "proc-vehicle-renfe-s102": {
-   "key": "19603fa50da63ed41920ae2ec1ba2bdd283dc44c29379269fa11dc728ef54c10",
+   "key": "8f02c919bc85b115c1f6d02ee4a3fdfb1afc4deb59dd3878d2b5a89f055d7388",
    "triangles": 8174,
    "stats": {
     "triangles": 8174,
@@ -43843,7 +43841,7 @@
    }
   },
   "proc-vehicle-renfe-s103": {
-   "key": "4d776fbe7df79bf911b9b4196e5c8f18e08ecd5f68081e798e3f20af2c32b38c",
+   "key": "2949652abbe499d466c83978b3b58c36c0792bdb96d75dbbcf3655711cb6a7cf",
    "triangles": 9418,
    "stats": {
     "triangles": 9418,
@@ -43911,7 +43909,7 @@
    }
   },
   "proc-vehicle-renfe-s106": {
-   "key": "70e42251d8e3b1031e073bc3e27f6eb9b2862aef476983fa7a26dbde4184297c",
+   "key": "8acf4fb4ed9650880132321b9b241cf247ce1e5d8e8eb4c5eddd6d93414a33e0",
    "triangles": 8234,
    "stats": {
     "triangles": 8234,
@@ -43979,7 +43977,7 @@
    }
   },
   "proc-vehicle-renfe-s120": {
-   "key": "cef7506964136e8ca43b52a3254acb53ea799f806ea9937b3c4456ba52c04164",
+   "key": "5a33dca450a2c5c78b3e204cfe2336b627fe614b928fe75391ee890acbd6d968",
    "triangles": 8988,
    "stats": {
     "triangles": 8988,
@@ -44047,7 +44045,7 @@
    }
   },
   "proc-vehicle-renfe-s130": {
-   "key": "e9826743d7e0cb47f0f50c57110cb7d00076cb243b4b1a345e9076fcacd73d94",
+   "key": "3a53e27115c1faed2bedba40d22249eabfde3a96cbbd21adb8944355a804d3cf",
    "triangles": 8154,
    "stats": {
     "triangles": 8154,
@@ -44115,7 +44113,7 @@
    }
   },
   "proc-vehicle-rhb-allegra": {
-   "key": "761efcb2bb29386effc2ac6d1a130764fc2b3f5ba13c74e7cfc9e6c219689804",
+   "key": "005ec6ba507c8ff57d2a78a8b0dda35bd689dd79d4ef611e7ddc1db2586b60ef",
    "triangles": 9105,
    "stats": {
     "triangles": 9105,
@@ -44936,7 +44934,7 @@
    "extents": {}
   },
   "proc-vehicle-sbb-ew4-coach": {
-   "key": "96b2ee7f4162e15c39ab32307e8dcb2aba58faad61da3e604c020af8ccaba368",
+   "key": "9801c85558ca93b6829c8c457964f3ad8feebfcaf30db8744375b5dade17fad9",
    "triangles": 8176,
    "stats": {
     "triangles": 8176,
@@ -44993,7 +44991,7 @@
    "extents": {}
   },
   "proc-vehicle-sbb-flirt": {
-   "key": "1c022dad4a81ba31239b03b9e0760febd1160903f5cbbbc33c01181b1c785934",
+   "key": "359a6ed7cce8f7baedb604aa0953ffd66eff9a821dd27dd1ea67013339be0b53",
    "triangles": 8463,
    "stats": {
     "triangles": 8463,
@@ -45061,7 +45059,7 @@
    }
   },
   "proc-vehicle-sbb-fv-dosto": {
-   "key": "1ea95512199ac8f78f73eb923239a1586e80c3e6dfda362c6ff22354132a84b0",
+   "key": "40b17b432c76b1dcc6a8e439baafd47d954061337243a9d6b3185e43b1a73ca8",
    "triangles": 10214,
    "stats": {
     "triangles": 10214,
@@ -45129,7 +45127,7 @@
    }
   },
   "proc-vehicle-sbb-giruno": {
-   "key": "c08d4862c1e69ed44b7a4d4db46f105102771cdb85384d3d9eaf97b2b90f7b07",
+   "key": "3270f550934f9269ee6a0ceffab75392b0b91841449f21733be3914e1cd92e7c",
    "triangles": 9412,
    "stats": {
     "triangles": 9412,
@@ -45197,7 +45195,7 @@
    }
   },
   "proc-vehicle-sbb-ic2000": {
-   "key": "9606de60096072556965d654f0762a2d36255b2a8036a4a2954011722761c685",
+   "key": "8abdab9ccf874f7fc2be8828b2ac5066fa4c41bf028ae9bd90f79c70c3635e42",
    "triangles": 9182,
    "stats": {
     "triangles": 9182,
@@ -45254,7 +45252,7 @@
    "extents": {}
   },
   "proc-vehicle-sbb-icn": {
-   "key": "68ac05f9b0fcfa54d663d7bce92d3ae4501b0b0eec4d5227a03207cfe94b5916",
+   "key": "4dba2f9cab24220e99cba5dd498ce851f4468f7c75e9a8da59a3acd22d8d5dc2",
    "triangles": 9510,
    "stats": {
     "triangles": 9510,
@@ -45322,7 +45320,7 @@
    }
   },
   "proc-vehicle-sbb-kiss": {
-   "key": "d1d25205c37607212e8082094b0bad1746ba0d31093ab0852fc86e1900be7c49",
+   "key": "cac115c4881165959517a0fa3ce41216ac50f829666f9a9382f1bd82417d8921",
    "triangles": 9926,
    "stats": {
     "triangles": 9926,
@@ -45390,7 +45388,7 @@
    }
   },
   "proc-vehicle-sbb-rae-tee": {
-   "key": "f7962df38599d02c3080ca9c1d7a942e0aefa09e596d7cb2a0df12a0bc7740e3",
+   "key": "0d4c92830999d20629cdb6ded6931af6bfb68e8bd2305c04734aeb0d15c34a20",
    "triangles": 8918,
    "stats": {
     "triangles": 8918,
@@ -45637,7 +45635,7 @@
    "extents": {}
   },
   "proc-vehicle-sbb-roter-pfeil": {
-   "key": "6ab148c90ec842d4ec07d0520051e1aae76e406beed9f61ebae1c79d7c1d71d3",
+   "key": "69bd88590f6f85997c1e20408973272af65fa7cb7f5fe441e3b83b9b2823cfa4",
    "triangles": 10048,
    "stats": {
     "triangles": 10048,
@@ -46153,7 +46151,7 @@
    "extents": {}
   },
   "proc-vehicle-sf-cable-car": {
-   "key": "497a73f8ab22dbb36142e1122fd98a6040e22c253ae00aff455d62685b971dd7",
+   "key": "7262ae30a7aeb1be159e176a3ae16d43b9550c52ca51d45ea9aceb194e269fca",
    "triangles": 4212,
    "stats": {
     "triangles": 4212,
@@ -46449,7 +46447,7 @@
    "extents": {}
   },
   "proc-vehicle-shinkansen-0": {
-   "key": "731cda65d7f47098550cbdd09119fd00be6a9445293d60eb6174464e10c27a6e",
+   "key": "6f82049a677323624deb443b319398db6b6d4b6031c372ab6196eeee3854bb87",
    "triangles": 7812,
    "stats": {
     "triangles": 7812,
@@ -46547,7 +46545,7 @@
    }
   },
   "proc-vehicle-shinkansen-100": {
-   "key": "5ae297a33f6e02400a8a90b72f3b3568a7c5a5d4b3a10acae87a856753ceeab9",
+   "key": "511402beb05def6f9eb863be290f6510e193c6679057d9b00a8ff0c2267ff740",
    "triangles": 10218,
    "stats": {
     "triangles": 10218,
@@ -46615,7 +46613,7 @@
    }
   },
   "proc-vehicle-shinkansen-500": {
-   "key": "37f7bdea05a9a13135ed0c73cca33356685ddb64c5987e4bf1c29c90685bcc57",
+   "key": "6cef3500daae26ab6da4898d4bdbb07efe425b1f98985a803c2846c62ffe5209",
    "triangles": 10818,
    "stats": {
     "triangles": 10818,
@@ -46683,7 +46681,7 @@
    }
   },
   "proc-vehicle-shinkansen-700": {
-   "key": "4c6a1ca9da8f7380ade124b967205cd2de9d405127803db347c7e201c00bfabd",
+   "key": "a1c5cd00e076856b1e28225ba51fcbb2d5772a9185ed3e0d2eef66693cee0788",
    "triangles": 10442,
    "stats": {
     "triangles": 10442,
@@ -46751,7 +46749,7 @@
    }
   },
   "proc-vehicle-shinkansen-e4": {
-   "key": "c8eb6508cf110f6adf549807e5cde3e1e739d1a57d0ef852d958e3c06f6f1aec",
+   "key": "63d3ea22459bbabc72f061697981ae752af0e69a671b31b7f32e9c710310ddde",
    "triangles": 11262,
    "stats": {
     "triangles": 11262,
@@ -46819,7 +46817,7 @@
    }
   },
   "proc-vehicle-shinkansen-e5": {
-   "key": "ed2dbbdb91d85a42e713e2f5544b296c55db0a6415b623b4da4580c4eb8da0c0",
+   "key": "12e87560e9c305b2e3d1fe3d5811281de47654974d4281efaee98a7a051a11d4",
    "triangles": 10315,
    "stats": {
     "triangles": 10315,
@@ -46887,7 +46885,7 @@
    }
   },
   "proc-vehicle-shinkansen-e6": {
-   "key": "5fcbbb7f1c091cb316fc66f9ad4e9a0228c4ef50f4cf6d6620ae8f94ca7152b2",
+   "key": "f7ab3d9e4ccf2ea67f692261fb48f96bd1fcb190bc455d25868cefe8350ec765",
    "triangles": 9947,
    "stats": {
     "triangles": 9947,
@@ -46955,7 +46953,7 @@
    }
   },
   "proc-vehicle-shinkansen-n700s": {
-   "key": "ffb442a3584ba7e5fa3bfba09dd4542d6f5c78a2b8b67a5996186f8c0eb6d9ce",
+   "key": "01866dac9567be1d2d9f30b4da1c851cf160e39b3d424841d0bd6f472f65ce26",
    "triangles": 10678,
    "stats": {
     "triangles": 10678,
@@ -50457,7 +50455,7 @@
    "extents": {}
   },
   "proc-vehicle-siemens-alc42": {
-   "key": "f871c442ff0218679b9595391dd56928e40a0313b1df57c26a4c11ae343f2a80",
+   "key": "e7a994243f1fe0c35d65e18b77590c5eff57ca506f71907a478f7f68aeb2e20a",
    "triangles": 10352,
    "stats": {
     "triangles": 10352,
@@ -54147,7 +54145,7 @@
    "extents": {}
   },
   "proc-vehicle-sncf-corail-coach": {
-   "key": "5fd6d599337fe90d64e9f37537428f454c84fd64b7794c935d0a584bfe5a50c3",
+   "key": "d593fe38b16d3f930e58b52f2801f18137f47f6214663ed7ca69281b083ccaae",
    "triangles": 8424,
    "stats": {
     "triangles": 8424,
@@ -54204,7 +54202,7 @@
    "extents": {}
   },
   "proc-vehicle-sncf-grand-confort": {
-   "key": "7235a4f534ff73741212dd728b2c1e62e1a00992f0f0597bc8c3337c2eddfc56",
+   "key": "1de6cef2ccb5d71f091a9f081b461317be66163b444fc8bbc90a9e62c3d50859",
    "triangles": 8184,
    "stats": {
     "triangles": 8184,
@@ -54261,7 +54259,7 @@
    "extents": {}
   },
   "proc-vehicle-sncf-regio2n": {
-   "key": "6e7236362b6002baeec95846b6dce1f51e02dba3ce429d18a75407ec40333e32",
+   "key": "38a214e5bd131486f23834295554c55cec544a35c4147a597a93bc6811252e67",
    "triangles": 8432,
    "stats": {
     "triangles": 8432,
@@ -54329,7 +54327,7 @@
    }
   },
   "proc-vehicle-sncf-regiolis": {
-   "key": "33bcf46e6c5d11b1368de3f05d86e8479dcff7f1c0cfae3b32d650bc140fcd0b",
+   "key": "5bd98307fa5b8bc8896089044fd73a313701a6d962e72c5898e4297e8569b702",
    "triangles": 8529,
    "stats": {
     "triangles": 8529,
@@ -54397,7 +54395,7 @@
    }
   },
   "proc-vehicle-sncf-tgv-m": {
-   "key": "486e40aed2944ff4cad2238afed1db24869498704cb6a57eded6e0fac96bf9f4",
+   "key": "9ffbe169e24fe62d220abfad132c7da76a9422dc6b889c9557d65700eb08648c",
    "triangles": 9800,
    "stats": {
     "triangles": 9800,
@@ -54465,13 +54463,13 @@
    }
   },
   "proc-vehicle-sncf-x3800": {
-   "key": "20fdfdf2d0d97615148dbb0660d4bc12227ffa29062e75e7f29d12ddb0419f6d",
-   "triangles": 9770,
+   "key": "012cb5fd2707aeb8b3b4bdc2f0e0b4f92d0d8577a76a0fce72954ee08f9a3dd5",
+   "triangles": 9842,
    "stats": {
-    "triangles": 9770,
-    "vertices": 32082,
-    "primitives": 39,
-    "materials": 22,
+    "triangles": 9842,
+    "vertices": 32298,
+    "primitives": 40,
+    "materials": 23,
     "min": [
      -10.925000190734863,
      -5.72204589266434e-9,
@@ -54522,7 +54520,7 @@
    "extents": {}
   },
   "proc-vehicle-sncf-x73500": {
-   "key": "65afcdaa6617057a31ad6d4d18dbaca4ce1e9de52a048520cc35de38ff94d423",
+   "key": "c3f6c854ab657983d92c82e2129d8692da498d978a0aea4d8a99fd4a32a68afa",
    "triangles": 9684,
    "stats": {
     "triangles": 9684,
@@ -54579,7 +54577,7 @@
    "extents": {}
   },
   "proc-vehicle-sncf-z20500": {
-   "key": "d2459023d8b81a14f41f82905755e2d8cd63b7dc840fca012342bf1cbbf9ae21",
+   "key": "d39f7b69a2e04e2b19f9efdd60b9fe2003b7c96719b46f050f029dc50311e224",
    "triangles": 8846,
    "stats": {
     "triangles": 8846,
@@ -56529,7 +56527,7 @@
    "extents": {}
   },
   "proc-vehicle-talgo-iii": {
-   "key": "f9c4e19356c66b66b5012b7752822c41de1cfed66b8a92a62822fbbf102d46e6",
+   "key": "578b4e464503fc7c6c063d5e35525d7d04a0ec58b1f37452010888637de7a695",
    "triangles": 6093,
    "stats": {
     "triangles": 6093,
@@ -57846,7 +57844,7 @@
    "extents": {}
   },
   "proc-vehicle-tgv": {
-   "key": "af48fd2a6fc624a7a390b3f7224a45b32422233e3ceb86e2513d26058b5f1d35",
+   "key": "2867eee4272155e0bf65cc289f6b169038c5f13221466428bfea0eff0ee9088c",
    "triangles": 7936,
    "stats": {
     "triangles": 7936,
@@ -57934,7 +57932,7 @@
    }
   },
   "proc-vehicle-tgv-duplex": {
-   "key": "b459469ff0cc57ea0f11df489d74f49810d01d84b8b96b121ca2f2dc8ae64e3a",
+   "key": "cbc19e565242acea9337905d64377f7e8348fc27e02afd3da3a281f49b85d5f7",
    "triangles": 8486,
    "stats": {
     "triangles": 8486,
@@ -59470,7 +59468,7 @@
    "extents": {}
   },
   "proc-vehicle-ua-open-wagon": {
-   "key": "99d837e65daed39f5ace572369589e9ec7a78a49a9f97ed2a83168eb1bd92d72",
+   "key": "edecc3173a003c8e70ceaf3d3af224738f8edb303d6df275d41cedaef2cce45b",
    "triangles": 4052,
    "stats": {
     "triangles": 4052,
@@ -59607,7 +59605,7 @@
    "extents": {}
   },
   "proc-vehicle-uic-z-coach": {
-   "key": "a005e902573c28396f5d100c5163fd8f4cee9f934da9c6e6e28a5b26bdefd749",
+   "key": "693db4d570347fd70af2b8e342cf075fe4d07b32196d80b4c1927a92f7282831",
    "triangles": 5946,
    "stats": {
     "triangles": 5946,
@@ -59828,7 +59826,7 @@
    "extents": {}
   },
   "proc-vehicle-us-boxcar": {
-   "key": "a91cb82a6e65213977d0234922791e866787eac04185a4e62e01ee626a31c1d8",
+   "key": "def5e1866b8b202fc5f6559a7b8ba494cb2de0c93c6d5ec6124fca145b056ab2",
    "triangles": 5086,
    "stats": {
     "triangles": 5086,
@@ -59885,7 +59883,7 @@
    "extents": {}
   },
   "proc-vehicle-us-caboose": {
-   "key": "97b09bfe43960f32f452e79f86e8cbbb0b9fd197cca9ec3ab1f652f406ff70a9",
+   "key": "4abf57fdf38b9ddd66308f7bf7f71af73cad44e474ad7852b431bead0911af72",
    "triangles": 4508,
    "stats": {
     "triangles": 4508,
@@ -59942,7 +59940,7 @@
    "extents": {}
   },
   "proc-vehicle-us-well-car": {
-   "key": "666730f4af27315f41c478cfd94359844e407a2a01dc89af73345ce58abd5d60",
+   "key": "cb81768fb41cd7a309a887b602320acbfd6b8b482f9a3ed4b90f1cfdda4d6cf3",
    "triangles": 3808,
    "stats": {
     "triangles": 3808,
@@ -62462,7 +62460,7 @@
    "extents": {}
   },
   "proc-vehicle-zsr-coach": {
-   "key": "58c0bff22a1e68e9701a24c911b70434726fc9f24ba1c0c04727deaf3f8006fb",
+   "key": "faae92309e870f31fcf6761708ddf8e749846a6e5907b2efea33646fd4be31fc",
    "triangles": 6154,
    "stats": {
     "triangles": 6154,

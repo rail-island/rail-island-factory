@@ -1,12 +1,13 @@
 // British units on the series kit (shinkansen.ts), at their real size on the
 // W6a gauge ("uk", loadingGauge.ts): the InterCity 125 and InterCity 225 (their
 // power car and driving end as the end cars), the Class 800 and the Class 390
-// Pendolino, the Eurostar e300, the Class 158 and the Class 142 Pacer, and
-// London Underground's 1938 tube stock, and London Overground's Class 378
-// Capitalstar. See docs/models/uk-trains.md.
+// Pendolino, the Eurostar e300, the Class 158 and the Class 142 Pacer (its own
+// two-axle cars, brClass142.ts), and London Underground's 1938 tube stock, and
+// London Overground's Class 378 Capitalstar. See docs/models/uk-trains.md.
 
 import type { MeshBuilder } from "./meshBuilder.ts";
-import type { ParamValues, ProceduralDesign } from "./design.ts";
+import { resolveParams, type ParamValues, type ProceduralDesign } from "./design.ts";
+import { class142, class142Lod, type C142Livery, type C142Unit } from "./brClass142.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, nose } from "./seriesHelpers.ts";
 import { TUBE_CAB, TUBE_DOOR, TUBE_LAYOUT, TUBE_WINDOW, tubeFittings } from "./lu1938Parts.ts";
@@ -116,12 +117,13 @@ export const C158: ShinkansenSeries = {
 
 export const C142: ShinkansenSeries = {
   endLength: 15.45, midLength: 15.45, W: 1.39, Y: 1.3, S: 2.95, C: 3.6, lean: 0.97, B: 1.0, A: 1.15,
-  // the Pacer: a bus body on a two-axle wagon underframe
+  // the Pacer: a bus body on a two-axle wagon underframe, drawn by brClass142.ts (the series
+  // kit's fields here give the design its parameters and figures)
   nose: nose(0.5, 0.7, 2.2, [[0, 3.1], [0.3, 3.45], [0.5, 3.6]], [[0, 2.85], [0.3, 2.95]], [[0, 1.35], [0.3, 1.3]], [[0, 1.2], [0.3, 1.15]], [[0, 1.1], [0.2, 1.0]]),
   windscreen: [0.02, 0.35, 0.07, 1.2], lamps: [0.03, 1.5],
   windows: [[1.8, 2.6]], windowW: 1.1, pitch: 1.35, door: [1.2, 2.85, 1.8, 2.5], doorW: 1.0,
   bogieCentres: 9.0, wheelR: 0.43, wheelbase: 0, traction: "diesel", cars: [2],
-  liveries: { provincial: lv("Provincial", "142 001", [1.75, "#7a4a2a"], [2.7, "#e6dcc0"], [9, "#7a4a2a"]), northern: lv("Northern", "142 096", [1.45, "#262262"], [9, "#d0d3d4"]) },
+  liveries: { provincial: lv("Provincial", "142 001", [1.75, "#7a4a2a"], [2.7, "#e6dcc0"], [9, "#7a4a2a"]), northern: lv("Northern", "142 096", [1.45, "#262262"], [9, "#d0d3d4"]), walesTeal: lv("Wales teal", "142 080", [9, "#0f8c9c"]), provincialBlue: lv("Provincial blue", "142 088", [1.72, "#1f3f8f"], [9, "#8fb0d8"]), metro: lv("Metro", "142 066", [9, "#1497a6"]), walesWrap: lv("Wales navy wrap", "142 075", [9, "#0f8c9c"]) },
   weight: { end: 25, middle: 25 }, power: 165, maxspeed: 120,
 };
 
@@ -188,8 +190,8 @@ export function eurostar373(v?: ParamValues): MeshBuilder { return buildSeries(E
 export function eurostar373Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(E300, P.e300, v); }
 export function brClass158(v?: ParamValues): MeshBuilder { return buildSeries(C158, P.c158, v); }
 export function brClass158Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(C158, P.c158, v); }
-export function brClass142(v?: ParamValues): MeshBuilder { return buildSeries(C142, P.c142, v); }
-export function brClass142Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(C142, P.c142, v); }
+export function brClass142(v?: ParamValues): MeshBuilder { const p = resolveParams(P.c142, v); return class142(p.unit as C142Unit, p.livery as C142Livery); }
+export function brClass142Lod(v?: ParamValues): MeshBuilder { const p = resolveParams(P.c142, v); return class142Lod(p.unit as C142Unit, p.livery as C142Livery); }
 export function lu1938Stock(v?: ParamValues): MeshBuilder { return buildSeries(TUBE1938, P.tube, v); }
 export function lu1938StockLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(TUBE1938, P.tube, v); }
 

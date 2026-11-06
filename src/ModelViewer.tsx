@@ -81,6 +81,7 @@ import { applyLamps, disposeLamps, lampsOf, type Lamp } from "./viewerLamps";
 import { applySurfaces } from "./viewerSurfaces";
 import { applyInteriors, cutHeight, interiorsOf, type DoorSide, type Interior } from "./viewerInteriors";
 import { buildScenery } from "./viewerScenery";
+import { lineParams, loadLine, type Line } from "./viewerLine";
 import { motionButtons, motionTitle, restingMotion, type MotionButton } from "./viewerMotions";
 import { eyeOf, findPresets, forwardOf, Ground, hintsOf, MAX_STEP, PITCH_LIMIT, trianglesOf, walk, type Preset, type Stance } from "./viewerPassenger";
 import { buildCatenary, placeTrain, TRAIN_ID, trainTrack, type Overlay } from "./viewerOverlays";
@@ -120,6 +121,9 @@ function doorSide(model: Object3D, clip: AnimationClip): DoorSide | null {
 const ease = (t: number): number => t * t * (3 - 2 * t);
 // Whether the Scenery checkbox shows the way and the wire, kept across models.
 const [showScenery, setShowScenery] = createSignal(true);
+// A cable car cabin's line (viewerLine.ts): the station type and the cabin count, kept across cabins.
+const [lineStation, setLineStation] = createSignal("openGantry");
+const [lineCount, setLineCount] = createSignal("6");
 // Whether the Interior toggle shows every cabin, the model cut away above them, kept across models.
 const [showInterior, setShowInterior] = createSignal(false);
 // Whether a railway station page shows the parked train and the catenary, kept across pages.
@@ -208,6 +212,13 @@ export function ModelViewer(props: {
   let lastFrame = 0;
   // The way and wire around the current model, when it has them.
   let scenery: { group: Object3D; dispose: () => void } | null = null;
+  // A cable car cabin's line (viewerLine.ts), the parameters it was built for, its clip's loop.
+  let line: Line | null = null;
+  let lineKey: string | null = null;
+  let lineToken = 0;
+  let lineRaf = 0;
+  // The cabin the camera was last framed on its line for.
+  let lineFramed: string | null = null;
   // The current model's lamps, and whether the Lights button has them lit.
   let lamps: Lamp[] = [];
   const [lampCount, setLampCount] = createSignal(0);
@@ -401,6 +412,64 @@ export function ModelViewer(props: {
     scene?.remove(scenery.group);
     scenery.dispose();
     scenery = null;
+  };
+  const dropLine = () => {
+    if (lineRaf) cancelAnimationFrame(lineRaf);
+    lineRaf = 0;
+    lineToken++;
+    lineKey = null;
+    if (!line) return;
+    scene?.remove(line.group);
+    line.dispose();
+    line = null;
+  };
+  /** Runs the line's cabins while it is shown. */
+  const lineLoop = () => {
+    if (lineRaf) return;
+    let last = performance.now();
+    const step = (now: number) => {
+      if (!line || !line.group.visible) {
+        lineRaf = 0;
+        return;
+      }
+      line.tick(Math.min(0.1, (now - last) / 1000));
+      last = now;
+      render();
+      lineRaf = requestAnimationFrame(step);
+    };
+    lineRaf = requestAnimationFrame(step);
+  };
+  /** Frames the camera on a box: from above a corner, the depth range fitted to it. */
+  const frameOn = (box: Box3, near: number, far: number) => {
+    if (!camera || !controls) return;
+    const center = box.getCenter(new Vector3());
+    const size = box.getSize(new Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z, 1);
+    const dist = maxDim * near;
+    camera.position.set(center.x + dist * 0.8, center.y + dist * 0.7, center.z + dist * 0.9);
+    controls.target.copy(center);
+    controls.minDistance = Math.max(1, maxDim * 0.02);
+    controls.maxDistance = maxDim * far;
+    camera.near = controls.minDistance * 0.05;
+    camera.far = controls.maxDistance + maxDim * 2;
+    camera.updateProjectionMatrix();
+    controls.update();
+  };
+  /** Shows the line (and hides the lone cabin, which the line draws itself) as the Scenery checkbox says. */
+  const showLine = () => {
+    const on = showScenery() && line !== null;
+    if (line) line.group.visible = showScenery();
+    if (current) current.visible = !on;
+    if (on && line && lineFramed !== props.record.id) {
+      lineFramed = props.record.id;
+      frameOn(line.box, 0.7, 3);
+    } else if (!on && current && lineFramed === props.record.id) {
+      // back to the cabin alone, framed as it was
+      lineFramed = null;
+      frameOn(new Box3().setFromObject(current), 1.3, 4);
+    }
+    if (on) lineLoop();
+    render();
   };
 
   // --- the passenger view (viewerPassenger.ts) and a station's overlays (viewerOverlays.ts) ---
@@ -702,6 +771,7 @@ export function ModelViewer(props: {
     onCleanup(() => {
       dropAnimation();
       dropScenery();
+      dropLine();
       if (resizeRaf) cancelAnimationFrame(resizeRaf);
       ro.disconnect();
       canvas.removeEventListener("pointerdown", onDown);
@@ -781,7 +851,7 @@ export function ModelViewer(props: {
         if (interiors.length) cut = new Plane(new Vector3(0, -1, 0), cutHeight(interiors));
         showInteriors();
         dropScenery();
-        if (record.scenery) {
+        if (record.scenery && record.scenery.way !== "ropeway") {
           scenery = buildScenery(record.scenery, new Box3().setFromObject(group));
           scenery.group.visible = showScenery();
           scene.add(scenery.group);
@@ -811,6 +881,8 @@ export function ModelViewer(props: {
           return;
         }
         framed = record.id;
+        // framed on the cabin alone: its line, when shown, frames itself again
+        lineFramed = null;
         const box = new Box3().setFromObject(group);
         const center = box.getCenter(new Vector3());
         const size = box.getSize(new Vector3());
@@ -880,7 +952,40 @@ export function ModelViewer(props: {
     loaded();
     const visible = showScenery();
     if (scenery) scenery.group.visible = visible;
+    showLine();
     render();
+  });
+
+  // a cable car cabin's line: built for the chosen station and count, rebuilt when they change
+  createEffect(() => {
+    loaded();
+    const ropeway = props.record.scenery?.ropeway;
+    const params = ropeway ? lineParams(ropeway, lineStation(), lineCount()) : null;
+    const key = params ? `${props.record.id}:${JSON.stringify(params)}` : null;
+    if (key === lineKey) {
+      showLine();
+      return;
+    }
+    dropLine();
+    if (!ropeway || !params) {
+      if (current) current.visible = true;
+      return;
+    }
+    lineKey = key;
+    const mine = ++lineToken;
+    loadLine(ropeway, params).then(
+      (l) => {
+        if (mine !== lineToken || !scene) {
+          l.dispose();
+          return;
+        }
+        line = l;
+        scene.add(l.group);
+        showLine();
+      },
+      // no line to show (a build without the preview): the cabin stays on its own
+      () => undefined,
+    );
   });
 
   createEffect(() => {
@@ -976,6 +1081,30 @@ export function ModelViewer(props: {
               <input type="checkbox" checked={showScenery()} onChange={(e) => setShowScenery(e.currentTarget.checked)} />
               Scenery
             </label>
+          </Show>
+          <Show when={showScenery() && props.record.scenery?.ropeway}>
+            {(ropeway) => (
+              <>
+                <select
+                  class="factory-viewer__select"
+                  aria-label="Station"
+                  title="The station type the line runs between"
+                  value={lineParams(ropeway(), lineStation(), lineCount()).station}
+                  onChange={(e) => setLineStation(e.currentTarget.value)}
+                >
+                  <For each={ropeway().stations}>{(s) => <option value={s.value}>{s.title}</option>}</For>
+                </select>
+                <select
+                  class="factory-viewer__select"
+                  aria-label="Cabins"
+                  title="How many cabins run: one shuttles, two run a jig-back, six circulate"
+                  value={lineParams(ropeway(), lineStation(), lineCount()).cabins}
+                  onChange={(e) => setLineCount(e.currentTarget.value)}
+                >
+                  <For each={ropeway().counts}>{(c) => <option value={c.value}>{c.title}</option>}</For>
+                </select>
+              </>
+            )}
           </Show>
           <Show when={isStructure()}>
             <button

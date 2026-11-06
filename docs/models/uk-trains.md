@@ -1,7 +1,7 @@
 # The United Kingdom's trains
 
 **Covers** - the twenty British designs of the eight-country plan and London Overground's Class 378 Capitalstar (a draft), at their real size on the W6a gauge (`uk`): the InterCity 125 and 225, the Class 800 IET and the Class 390 Pendolino, the Eurostar e300, the Class 158 and the Class 142 Pacer, London's 1938 tube stock; the Class 55 Deltic, 37, 47, 66 and 86; the LNER A4 and A3, the GWR Castle, the LMS Black Five, the BR 9F and Stephenson's Rocket; the BR Mk1 coach. Their kits, figures, deviations and tests.
-**Code** - `generator/ukUnits.ts` (`UK_UNITS`), `generator/lu1938Parts.ts`, `generator/ukLocos.ts` (`UK_LOCOS`), `generator/loadingGauge.ts` (`uk`), `generator/worldLocoKit.ts` (the `bonnets` nose), `generator/worldSteamLocos.ts`, `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `test/lu1938.test.ts`, `test/ukPowerCars.test.ts`, `test/brClass378.test.ts`, `assets/br-*/`, `assets/lner-*/`, `assets/gwr-castle/`, `assets/lms-black-five/`, `assets/lu-1938-stock/`, `assets/eurostar-373/`, `assets/rocket/`, `assets/br-class-378/`
+**Code** - `generator/ukUnits.ts` (`UK_UNITS`), `generator/brClass142.ts` (the Pacer's cars), `generator/lu1938Parts.ts`, `generator/ukLocos.ts` (`UK_LOCOS`), `generator/loadingGauge.ts` (`uk`), `generator/worldLocoKit.ts` (the `bonnets` nose), `generator/worldSteamLocos.ts`, `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `test/lu1938.test.ts`, `test/ukPowerCars.test.ts`, `test/brClass142.test.ts`, `test/brClass378.test.ts`, `assets/br-*/`, `assets/lner-*/`, `assets/gwr-castle/`, `assets/lms-black-five/`, `assets/lu-1938-stock/`, `assets/eurostar-373/`, `assets/rocket/`, `assets/br-class-378/`
 **See also** - [loading-gauge.md](loading-gauge.md), [shinkansen.md](shinkansen.md), [world-locos.md](world-locos.md), [world-steam.md](world-steam.md), [world-coaches.md](world-coaches.md)
 
 The catalog had no British train before; the archived webapp Eurostar is now the
@@ -17,7 +17,7 @@ The catalog had no British train before; the archived webapp Eurostar is now the
 | `proc-vehicle-br-class-390` | Class 390 Pendolino | series | `unit`, `cars` 4 - 8, `livery` (`virgin`, `avanti`) | tilting; 225 km/h |
 | `proc-vehicle-eurostar-373` | Eurostar e300 | series | `unit`, `cars` 4 - 8, `livery` (`eurostar`, `eurostar2011`) | 300 km/h |
 | `proc-vehicle-br-class-158` | Class 158 | series, diesel | `unit`, `livery` (`regional`, `northern`) | two cars of 22.57 m; 145 km/h |
-| `proc-vehicle-br-class-142` | Class 142 Pacer | series, diesel, single axles | `unit`, `livery` (`provincial`, `northern`) | two cars of 15.45 m; 120 km/h |
+| `proc-vehicle-br-class-142` | Class 142 Pacer | its own two-axle cars (`brClass142.ts`) | `unit`, `livery` (`provincial`, `northern`, `walesTeal`, `provincialBlue`, `metro`, `walesWrap`) | two cars of 15.45 m; 120 km/h |
 | `proc-vehicle-br-class-378` | Class 378 Capitalstar | series, two doors a side | `unit`, `cars` 3 - 5 (4 default) | Electrostar, 2.80 m wide, end car 20.4 m, middle 20.1 m; 2,400 kW a five-car unit; 121 km/h |
 | `proc-vehicle-lu-1938-stock` | London 1938 Stock | series, metro, flat domed cab | `unit`, `cars` 3 - 7 | tube profile, 2.62 m by 2.88 m; 72 km/h |
 | `proc-vehicle-br-class-55` | Class 55 Deltic | box locomotive, bonnets | `livery` (`twoToneGreen`, `brBlue`) | Co-Co, 21.18 m, 2,460 kW, 160 km/h |
@@ -86,6 +86,42 @@ step under it and the coupler under the floor at 0.45 m. All the equipment hangs
 floor between the bogies, as the type introduced. About 9,700 triangles the driving car,
 8,900 the trailer. `test/lu1938.test.ts` checks the profile, the domed cab, the layout and
 the budget.
+
+## The Class 142 Pacer
+
+The Pacer keeps the series kit's parameters and figures (the `C142` spec in `ukUnits.ts`), but
+its cars are drawn by `brClass142.ts` on the two-axle railcar kit the CD 810 uses (`dmuKit.ts`,
+`cabNose.ts`; docs/models/czech-dmus.md), after the photographs in `assets/br-class-142/`:
+
+- **Body.** The Leyland National bus body: straight sides tucked in at the foot, the shallow roof on
+  small shoulders, 14.65 m from the inner end wall to the cab face, 2.74 m wide (the real 2.80 m
+  narrowed so the window frames stay within the W6a gauge's 2.82 m). One cab-side window, the
+  double plug door behind it, seven saloon windows with their hoppers.
+- **Cab.** A flat face, upright to the windscreens' sill and leaning back over the blind into the
+  roof, its corners rounded: the yellow end wrapping round them, the black surround over the three
+  windscreens (the driver's, the centre one, the second man's) and the destination blind, the lamp clusters (head, marker, tail) low either side,
+  the horn grille, the number, the wipers; the buffer beam with buffers and a screw coupling, the
+  life guards and hoses.
+- **Running gear.** Two single axles 9.0 m apart (no bogies: the rig's two supports carry one
+  axle each), each axle box between horn guides with a coil spring up to the solebar, a damper
+  leaning in from the solebar and brake blocks on hangers either side of each wheel; the solebars,
+  cable conduits, the engine, gearbox, silencer, cooler, batteries, fuel and air tanks and brake
+  cylinders between the axles; the roof pod, its vents and the exhaust at the inner end.
+- **Unit.** `train` couples two cars, the rear one turned, as two sections hinged at the coupling
+  plane between them under a bellows; a lone car keeps its gangway and coupling bar.
+- **Liveries.** `provincial` (chocolate and cream, the default), `northern` (navy and silver),
+  `walesTeal` (Arriva Trains Wales: teal, the yellow line, the white panel from the door to the cab,
+  its foot sweeping down toward the cab, pale door leaves), `provincialBlue` (BR Provincial: light
+  blue at the windows, a white line, dark blue below), `metro` (West Yorkshire Metro: teal with lime
+  and leaf-green triangles along the saloon) and `walesWrap` (Transport for Wales: the teal with a
+  navy wrap under the saloon windows). A livery's panels, sweeps and triangles are convex polygons
+  laid on the flat of the sides (`Paint.shapes`). Every scheme has the full yellow cab end; the
+  three new ones have no OpenTTD preset yet.
+
+`test/brClass142.test.ts` checks the parameters, each livery's car (length over the buffers, the
+gauge, the budget, no coplanar faces), the three panes, the panel and each axle's spring, damper
+and brakes, the two axles, the coupled unit's sections and supports and
+the distant models' budgets.
 
 ## Tests
 
