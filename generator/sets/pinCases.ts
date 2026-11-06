@@ -9,6 +9,7 @@ import * as busStop from "./busStop.ts";
 import * as cableCarStation from "./cableCarStation.ts";
 import * as port from "./port.ts";
 import * as airport from "./airport.ts";
+import { AIRFIELD_FIXTURES } from "./airfieldFixtures.ts";
 import * as decoration from "./decoration.ts";
 import * as tunnelPortal from "./tunnelPortal.ts";
 import * as railType from "./railType.ts";
@@ -159,6 +160,15 @@ export function setPinCases(): Record<string, PinCase[]> {
         name: `${t}.${n}`, build: () => ({ terminal: airport.terminal(pad, t), furniture: airport.furniture(pad, t) }),
       }))),
       ...(["small", "large"] as const).map((c) => ({ name: `helipad.${c}`, build: () => ({ side: airport.HELIPAD_SIDE[c], boxes: airport.helipad({ cx: 12, cz: -30, pad: c }, "heliport") }) })),
+      // the whole field on the saved layouts (airfieldFixtures.ts), at a heading that is not 0
+      ...Object.entries(AIRFIELD_FIXTURES).map(([name, layout]) => ({
+        name: `airfield.${name}`,
+        build: () => {
+          const type = name.split(".")[0]!;
+          const field = airport.airfield(layout, type, 20);
+          return { ...field, low: airport.airfieldLowDetail(field.boxes) };
+        },
+      })),
     ],
   };
 }
