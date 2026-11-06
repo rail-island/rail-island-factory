@@ -8,10 +8,10 @@
 
 | `unit` | what | length | triangles |
 |---|---|---|---|
-| `powerCar` (default) | the power car: shovel nose, cab, engine room under the cowl, railway post office, storage mail | 22.60 m from the tip | about 11,500 |
-| `coach` | baggage and express, the buffet-grill, the entrance, the 20-seat smoking compartment | 17.60 m | about 8,200 |
-| `observation` | the 40-seat compartment, the entrance, the 12-seat lounge with its round end | 19.80 m to the drumhead | about 10,000 |
-| `train` | the three cars articulated on two Jacobs bogies | 60.00 m | about 24,700 |
+| `powerCar` (default) | the power car: shovel nose, cab, engine room under the cowl, railway post office, storage mail | 22.60 m from the tip | about 13,900 |
+| `coach` | baggage and express, the buffet-grill, the entrance, the 20-seat smoking compartment | 17.60 m | about 9,700 |
+| `observation` | the 40-seat compartment, the entrance, the 12-seat lounge with its round end | 19.80 m to the drumhead | about 12,200 |
+| `train` | the three cars articulated on two Jacobs bogies | 60.00 m | about 29,500 (16,000 a car at most) |
 
 Each car's length is its span between the joint planes (the power car from its pilot's tip,
 the observation car to its tail): the Railway Age drawing's 13 ft 6 in from the tip to the
@@ -30,10 +30,11 @@ The nose is a hull of its own (`drawNose`): the slice body's own section at the 
 2.40 m behind the tip (`halfSlice` of the body behind, point by point), drawn as horizontal
 waterlines. Each waterline is a U in plan - a flat front panel (`TIP`, 38 % of the half
 width), a quarter ellipse round the corner reaching the full width `PLAN_LEN` behind the tip,
-the straight side to the joint - set back by the side profile `PROFILE`: the pilot raked
+the straight side to the joint - set back by the side profile (`PROFILE` to the shoulder, `DOME` over it): the pilot raked
 from the tip at 0.32 m to the belt 0.38 m behind it, the face leaning back to the window sill
-(0.72 m), the raked windscreen to its head (1.07 m), the dome rising to the cowl's crown 1.8 m
-behind the tip. Because the last column of every waterline is the body's own slice, the hull
+(0.72 m), the raked windscreen to its head (1.07 m), and over the shoulder the dome as a quarter
+ellipse on the windscreen's rake, rounding back to the cowl's crown 1.85 m behind the tip. The
+power car's roof arc has 12 segments (the other cars 8), so the dome's waterlines are close. Because the last column of every waterline is the body's own slice, the hull
 closes on the body without a seam.
 
 Laid on the hull (`hullPatch`, `hullBand`, points found by `at`, `normal` and `qOf`):
@@ -42,7 +43,7 @@ Laid on the hull (`hullPatch`, `hullBand`, points found by `at`, `normal` and `q
   over three panes a side (the flat front split by a centre post, the corner, the side),
   stainless posts between them;
 - the two **arched grilles** over the windscreen, either side of a centre pillar, black with
-  15 stainless bars and a rim each;
+  15 stainless bars and a continuous rim round each arch's head;
 - the **headlight** on top of the dome between them (the 1934 single lamp, its housing running
   back into the dome), and a marker lamp on each side of the dome;
 - the **ribbed belt** (four bright ribs on a dark band, 1.16 - 1.41 m) wrapping round the nose
@@ -52,7 +53,8 @@ Laid on the hull (`hullPatch`, `hullBand`, points found by `at`, `normal` and `q
 
 Behind the nose the car is the carbody kit's slice body (`carbody`, `carbodyShell`): the
 cowl as a crown and shoulder table, the skirt cut over the motor truck and over the rear truck
-or, in the train, the Jacobs bogie. Its sides carry the belt, the fluting (`sideSteel`, broken
+or, in the train, the Jacobs bogie, its cut-outs rounded into arches (`cutRadius` 0.55 m) on
+every car. Its sides carry the belt, the fluting (`sideSteel`, broken
 over doors and the BURLINGTON panel), the crew door, the railway post office's door, barred
 windows and lettering, the storage mail door, and the roof's corrugations behind the cowl.
 
@@ -83,7 +85,7 @@ builder's `carLodBody`. About 90 triangles a car, under 300 for the train.
 ## Deviations
 
 - The nose is faceted (14 columns round the corner, the section's own waterlines up the dome),
-  so its curves read as panels; the grilles' arches are quarter ellipses.
+  so its curves read as panels; the grilles' arches are half ellipses.
 - The cars' interiors beyond the generic cabin (the railway post office, the buffet, the
   lounge's chairs) and the engine are not drawn; the side door and window positions follow
   the drawing to about 0.2 m.
