@@ -76,6 +76,24 @@ export function buildLoco(spec: LocoSpec): MeshBuilder {
   const t = new Steam(spec.palette, xc);
   const m = t.m;
   const gear = new RunningGear(spec.gear, (x) => t.X(x));
+  // an articulated locomotive's front engine unit takes the frame ahead of its
+  // end and the truck frames there; the body keeps the rest
+  const split = spec.gear.swivel?.x1;
+  const frames = (x0: number, x1: number) => {
+    const f = spec.frame!;
+    // 2 cm short of the stated ends, clear of the beams and running board ends there
+    m.scope("frames", () => { for (const s of [-1, 1]) t.sideBox("frame", s, x0 + 0.02, x1 - 0.02, 0.45, f.top, 0.52, 0.6); });
+  };
+  const bogieFrames = (list: NonNullable<LocoSpec["bogies"]>) => {
+    if (!list.length) return;
+    m.scope("bogie frames", () => {
+      for (const b of list) for (const s of [-1, 1]) {
+        t.sideBox("black", s, b.x0, b.x1, b.y - 0.09, b.y + 0.09, 0.88, 0.97);
+        t.sideBox("steel", s, (b.x0 + b.x1) / 2 - 0.35, (b.x0 + b.x1) / 2 + 0.35, b.y - 0.2, b.y - 0.09, 0.89, 0.96);
+      }
+    });
+  };
+  const onSwivel = (b: { x1: number }) => split !== undefined && b.x1 <= split;
   m.part("body", [0, 0, 0], () => {
     const b = spec.boiler;
     if (b) m.scope("boiler", () => t.boiler(b));
@@ -99,24 +117,6 @@ export function buildLoco(spec: LocoSpec): MeshBuilder {
       const h = spec.handrail;
       m.scope("handrails", () => t.handrail(h.x0, h.x1, h.y, halfAt(boilerSection(b.r, b.y), h.y) + 0.07, 0));
     }
-    // an articulated locomotive's front engine unit takes the frame ahead of its
-    // end and the truck frames there; the body keeps the rest
-    const split = spec.gear.swivel?.x1;
-    const frames = (x0: number, x1: number) => {
-      const f = spec.frame!;
-      // 2 cm short of the stated ends, clear of the beams and running board ends there
-      m.scope("frames", () => { for (const s of [-1, 1]) t.sideBox("frame", s, x0 + 0.02, x1 - 0.02, 0.45, f.top, 0.52, 0.6); });
-    };
-    const bogieFrames = (list: NonNullable<LocoSpec["bogies"]>) => {
-      if (!list.length) return;
-      m.scope("bogie frames", () => {
-        for (const b of list) for (const s of [-1, 1]) {
-          t.sideBox("black", s, b.x0, b.x1, b.y - 0.09, b.y + 0.09, 0.88, 0.97);
-          t.sideBox("steel", s, (b.x0 + b.x1) / 2 - 0.35, (b.x0 + b.x1) / 2 + 0.35, b.y - 0.2, b.y - 0.09, 0.89, 0.96);
-        }
-      });
-    };
-    const onSwivel = (b: { x1: number }) => split !== undefined && b.x1 <= split;
     if (spec.frame) frames(split ?? spec.frame.x0, spec.frame.x1);
     if (spec.runningBoard) {
       const r = spec.runningBoard;
@@ -170,17 +170,20 @@ export function buildLoco(spec: LocoSpec): MeshBuilder {
       });
     }
     m.scope("cylinders and motion", () => gear.drawStatic(m, "paint"));
-    if (split !== undefined) {
-      // the front engine: a rail bogie the game turns under the boiler, its rods and wheels moving parts of it
-      m.scope("front engine", () => m.bogie(() => {
+    spec.extras?.(t);
+  });
+  if (split !== undefined) {
+    // the front engine: a rail bogie beside the body that the game turns under the
+    // boiler; its wheelsets and rods are moving parts of it, named as on a rigid frame
+    m.bogie(() => {
+      m.scope("front engine", () => {
         if (spec.frame) frames(spec.frame.x0, split);
         bogieFrames((spec.bogies ?? []).filter(onSwivel));
         m.scope("cylinders and motion", () => gear.drawStatic(m, "paint", true));
-        gear.drawSwivel(m);
-      }));
-    }
-    spec.extras?.(t);
-  });
+      });
+      gear.drawSwivel(m);
+    });
+  }
   gear.drawParts(m);
   return m;
 }
