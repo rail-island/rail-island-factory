@@ -158,6 +158,7 @@ export function setPinCases(): Record<string, PinCase[]> {
       ...Object.keys(airport.TYPE_META).flatMap((t) => pads.map(([n, pad]) => ({
         name: `${t}.${n}`, build: () => ({ terminal: airport.terminal(pad, t), furniture: airport.furniture(pad, t) }),
       }))),
+      ...(["small", "large"] as const).map((c) => ({ name: `helipad.${c}`, build: () => ({ side: airport.HELIPAD_SIDE[c], boxes: airport.helipad({ cx: 12, cz: -30, pad: c }, "heliport") }) })),
     ],
   };
 }

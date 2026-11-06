@@ -56,6 +56,16 @@ piers and window panels; a brick slab rises to the roof slab), the glass office 
 `partyRight` and `partyBack` on its podium (a dark slab under the cornice). These multiply their
 combination counts by four and eight; they never move the extent.
 
+**Helipad.** The glass office takes `helipad` (`none`, the default, or `roof`): `roof` replaces
+its plant box and mast with a helideck - a 17 m square steel deck (`HELIDECK_SIDE`, a small pad
+by `HELIPAD_D`) on four columns and a stair core 3.4 m above the crown's roof, clear of the
+crown blades, with a white edge and "H", a yellow aiming circle of eight stripes, green corner
+lights and a safety shelf a little below the deck. Its touchdown surface is the material
+`helipad`, which the design declares as its helipad (`game.helipad: { material: "helipad", pad:
+"small", when: { helipad: "roof" } }`) and the export measures
+([game-properties.md](game-properties.md), "Helipads"); the game lands helicopters on it. It
+doubles the glass office's combinations; a city never varies it (cities vary only `size`).
+
 Original finishes preserve each tower's own palette. Glass colour changes both
 light glazing and its darker panels; cladding changes the structural and masonry
 materials. Planting and warning lights retain their colours. These two finish
