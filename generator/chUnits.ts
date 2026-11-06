@@ -6,7 +6,8 @@
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
-import { c, flirt, kiss, nose } from "./seriesHelpers.ts";
+import { c, flirt, kiss, nose, NO_NOSE } from "./seriesHelpers.ts";
+import type { SeriesCabFace } from "./seriesCab.ts";
 
 const SBB_RED = "#eb0000";
 
@@ -67,13 +68,60 @@ export const GIRUNO: ShinkansenSeries = {
   weight: { end: 48, middle: 36 }, power: 750, maxspeed: 250,
 };
 
+/**
+ * The FV-Dosto's livery, read from photo-sbb-rabe-502-203-ossingen.jpg and photo-sbb-rabe-502-405.jpg:
+ * white over a dark lower band, red doors, and behind the red cab a red sweep and a black crescent
+ * (the cab's side window in it) curving down the side from the roof.
+ */
+const DOSTO_SBB: ShinkansenLivery = {
+  title: "SBB", number: "502 203",
+  palette: { white: c("#f1f1ee"), dark: c("#2c3034", 0.55), red: c(SBB_RED), black: c("#17191b", 0.45), roofG: c("#5c6166", 0.6), skirtG: c("#232528", 0.75), cabMask: c("#17191b", 0.3) },
+  bands: [[0, 1.55, "dark"], [1.55, 9, "white"]], doors: [[0, 1.55, "red"], [1.55, 9, "red"]],
+  roof: "roofG", skirt: "skirtG",
+  endSweeps: [
+    // d behind the cab face's join (1.6 m behind the tip), both leaning back toward the roof
+    { mat: "red", front: [[1.2, -0.03], [3.85, -0.03]], back: [[1.2, 0], [2.5, 0.8], [3.85, 2.1]] },
+    { mat: "black", front: [[1.2, 0], [2.5, 0.8], [3.85, 2.1]], back: [[1.2, 0.6], [1.55, 0.6], [2.2, 1.5], [3.07, 2.45], [3.85, 3.0]] },
+  ],
+};
+
+/**
+ * The FV-Dosto's front (photo-sbb-rabde-502-009.jpg, -203-ossingen, -405): an upright, bowed face
+ * with wide rounded corners, the chin forward at the coupler and the windscreen raked back to a
+ * black brow that runs into the roof. A tall black mask holds the windscreen, the two lamp
+ * clusters and the SBB emblem; a white rim frames it from below and at the sides, the red round it.
+ */
+const DOSTO_FACE: SeriesCabFace = {
+  dJoin: 1.6, dSide: 1.45, first: 6.9, roofFrom: 4.45, wrap: true, bulge: 0.1, cols: [8, 4, 1, 1], tolerance: 0.015,
+  profile: [[0.72, 0.22], [0.9, 0.05], [1.1, 0], [1.4, 0.03], [2.0, 0.1], [2.6, 0.2], [3.3, 0.4], [3.95, 0.64], [4.2, 0.86], [4.4, 1.12], [4.52, 1.36], [4.6, 1.6]],
+  corner: [[0.72, 0.75], [2.6, 0.72], [3.95, 0.68], [4.3, 0.45], [4.6, 0.1]],
+  rows: [0.72, 0.9, 0.95, 1.1, 1.24, 1.47, 1.7, 2.0, 2.25, 2.5, 2.62, 3.3, 3.95, 4.05, 4.2, 4.4, 4.52, 4.6],
+  bands: () => [[0, 0.95, "skirtG"], [0.95, 9, "red"]],
+  // the black mask narrows from the windscreen to the emblem's panel; the white rim follows it
+  fields: [
+    { mat: "white", pts: [[-1.1, 4.1], [1.1, 4.1], [1.03, 2.6], [0.99, 2.2], [0.91, 1.6], [0.8, 1.33], [0.56, 1.24], [-0.56, 1.24], [-0.8, 1.33], [-0.91, 1.6], [-0.99, 2.2], [-1.03, 2.6]] },
+    { mat: "cabMask", pts: [[-1.0, 4.7], [1.0, 4.7], [0.94, 2.6], [0.9, 2.2], [0.82, 1.7], [0.72, 1.53], [0.55, 1.47], [-0.55, 1.47], [-0.72, 1.53], [-0.82, 1.7], [-0.9, 2.2], [-0.94, 2.6]] },
+  ],
+  panes: [{ lat: [-0.86, 0.86], y: [2.64, 3.95], r: 0.12 }],
+  // the SBB emblem: a cross, its bar ending in arrowheads
+  decals: [
+    { mat: "white", pts: [[-0.13, 1.83], [0.13, 1.83], [0.13, 1.87], [-0.13, 1.87]] },
+    { mat: "white", pts: [[-0.025, 1.76], [0.025, 1.76], [0.025, 1.94], [-0.025, 1.94]] },
+    { mat: "white", pts: [[-0.22, 1.85], [-0.12, 1.76], [-0.12, 1.94]] },
+    { mat: "white", pts: [[0.22, 1.85], [0.12, 1.94], [0.12, 1.76]] },
+  ],
+  lamps: [[-0.7, 2.38, 0.1, "lampHead"], [0.7, 2.38, 0.1, "lampHead"], [-0.52, 2.35, 0.06, "lampHead"], [0.52, 2.35, 0.06, "lampHead"]], roofLamp: [0, 4.32, 0.07],
+  wipers: [[[0.15, 2.7], [0.55, 3.45]]],
+};
+
 export const FV_DOSTO: ShinkansenSeries = {
   endLength: 26.8, midLength: 25.0, W: 1.4, Y: 1.2, S: 3.85, C: 4.6, lean: 0.97, B: 0.72, A: 0.9,
-  nose: nose(2.8, 0.3, 2.3, [[0, 2.2], [0.5, 3.2], [1.8, 4.2], [3.0, 4.6]], [[0, 2.1], [0.5, 3.0], [1.8, 3.65], [3.0, 3.85]], [[0, 1.2], [1.0, 1.2]], [[0, 1.0], [0.8, 0.9]], [[0, 0.9], [0.4, 0.7]]),
-  windscreen: [0.8, 2.6, 0.07, 1.15], lamps: [0.2, 1.4],
+  nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: DOSTO_FACE,
+  // the cab's side window in the black crescent, d behind the join
+  cabWindows: [[1.3, 1.85, 2.7, 3.35]],
   windows: [[1.25, 1.95], [2.85, 3.55]], windowW: 1.4, pitch: 1.7, door: [1.0, 3.05, 1.65, 2.6], doorW: 1.3,
   bogieCentres: 18.0, wheelR: 0.46, wheelbase: 2.5, cars: [4, 8],
-  liveries: { sbb: chLivery("sbb", "502 001") },
+  liveries: { sbb: DOSTO_SBB },
   weight: { end: 64, middle: 55 }, power: 500, maxspeed: 200,
 };
 

@@ -59,6 +59,12 @@ export interface ShinkansenLivery {
   endLettering?: ReadonlyArray<{ text: string; d: number; y: number; h: number; mat: string }>;
   /** The end car's own side bands (default the livery's): a power car painted apart from its coaches. */
   endBands?: readonly Band[];
+  /**
+   * Sweeps of paint on both sides of the end car behind its nose or cab face, between the belly
+   * and the shoulder: each fills the side between a front and a back edge, [y, d] by height (d
+   * behind the body's front end, ascending y), later sweeps over earlier ones.
+   */
+  endSweeps?: ReadonlyArray<{ mat: string; front: readonly Pt[]; back: readonly Pt[] }>;
 }
 
 export interface ShinkansenSeries {
@@ -105,6 +111,8 @@ export interface ShinkansenSeries {
   flatCab?: NonNullable<CarDef["cab"]>;
   /** An upright cab on the nose's flat front face (its tip): the panes and lamps drawn there, in place of the windscreen and headlights on the crown, and a gangway door's outline (half width, sill and head). */
   noseCab?: NonNullable<CarDef["cab"]> & { gangway?: readonly [number, number, number] };
+  /** The cab's side windows on the end car (d span behind the body's front end, sill and head), both sides. */
+  cabWindows?: ReadonlyArray<readonly [number, number, number, number]>;
   /** A cab face drawn as one painted surface (seriesCab.ts) in place of the nose: the body ends square `dJoin` behind its tip (both ends of a `single` railcar). */
   cabFace?: SeriesCabFace;
   power: number;
@@ -259,6 +267,13 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
         if (s.single) m.scope("rear cab face", () => drawCabFace(m, f, -1, -X(L + f.dJoin), half, fp));
       } else if (end && !s.flatCab) noseFittings(m, s, b, X);
       if (end && l.capSlope && l.frontRoof) m.scope("cab roof", () => capSlope(m, b, X, l.capSlope!, l.frontRoof!));
+      if (end && l.endSweeps) m.scope("sweeps", () => l.endSweeps!.forEach((w, i) => m.scope(`sweep ${i + 1}`, () => endSweep(m, b, X, w, 0.003 + 0.0015 * i))));
+      if (end && s.cabWindows) m.scope("cab windows", () => {
+        for (const sd of [1, -1]) for (const [d0, d1, y0, y1] of s.cabWindows!) {
+          sidePanel(m, b, X, sd, "rubber", d0, d1, y0, y1, 0.007, 0.03);
+          sidePanel(m, b, X, sd, "glass", d0 + 0.04, d1 - 0.04, y0 + 0.04, y1 - 0.04, 0.012, 0.004);
+        }
+      });
       if (end && s.endGrilles) m.scope("grilles", () => {
         for (const sd of [1, -1]) for (const [d0, d1, y0, y1, n, dir] of s.endGrilles!) {
           // vertical slats on black, or horizontal louvres ("h") pressed in the side's own paint
@@ -298,6 +313,32 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
 function facePaint(s: ShinkansenSeries, l: ShinkansenLivery, number: string): FacePaint {
   const face = s.cabFace?.bands?.(l) ?? l.front ?? l.bands;
   return { sides: l.bands, face, roof: l.roof, skirt: l.skirt, S: s.S, A: s.A, number };
+}
+
+/** Value of a [y, d] edge at height y (held past its ends). */
+const edgeAt = (pts: readonly Pt[], y: number): number => {
+  if (y <= pts[0]![0]) return pts[0]![1];
+  for (let i = 1; i < pts.length; i++) {
+    const [ya, da] = pts[i - 1]!, [yb, db] = pts[i]!;
+    if (y <= yb) return yb - ya < 1e-9 ? db : da + ((y - ya) / (yb - ya)) * (db - da);
+  }
+  return pts[pts.length - 1]![1];
+};
+
+/** A sweep of paint on both sides between its front and back edges, in strips 0.1 m tall, clamped to the belly and the shoulder. */
+function endSweep(m: MeshBuilder, b: SliceBody, X: (d: number) => number, w: NonNullable<ShinkansenLivery["endSweeps"]>[number], proud: number): void {
+  const lo = Math.max(w.front[0]![0], w.back[0]![0], b.Y(0) + 0.005);
+  const hi = Math.min(w.front[w.front.length - 1]![0], w.back[w.back.length - 1]![0], b.S(0) - 0.005);
+  const n = Math.max(1, Math.ceil((hi - lo) / 0.1));
+  const tris: Pt[] = [];
+  for (let i = 0; i < n; i++) {
+    const [ya, yb] = [lo + ((hi - lo) * i) / n, lo + ((hi - lo) * (i + 1)) / n];
+    const [fa, fb, ba, bb] = [edgeAt(w.front, ya), edgeAt(w.front, yb), edgeAt(w.back, ya), edgeAt(w.back, yb)];
+    if (ba - fa < 0.005 && bb - fb < 0.005) continue;
+    if (ba - fa >= 0.005) tris.push([fa, ya], [ba, ya], [bb, yb]);
+    if (bb - fb >= 0.005) tris.push([fa, ya], [bb, yb], [fb, yb]);
+  }
+  for (const sd of [1, -1]) sideDecal(m, b, X, sd, w.mat, tris, proud);
 }
 
 /** The front's colour over the cab roof behind `frontD`, up to a slanted edge: strips on both sides and across the roof's arc. */
