@@ -2,7 +2,7 @@
 // worldLocoKit.ts): the Re 460, Re 4/4 II, Re 6/6 and Ae 6/6, the Ce 6/8 II
 // "Krokodil" and the Ae 8/14 "Landi"; on the metre gauge, the Rhaetian
 // Railway's Ge 4/4 III and Ge 6/6 I "Krokodil" and the Matterhorn Gotthard
-// Bahn's rack HGe 4/4 II. See docs/models/switzerland-trains.md.
+// Bahn's rack HGe 4/4 II (its own profile tables, mgbHge442.ts). See docs/models/switzerland-trains.md.
 
 import type { MeshBuilder, Ring } from "./meshBuilder.ts";
 import type { ParamValues, ProceduralDesign } from "./design.ts";
@@ -11,6 +11,9 @@ import { c } from "./czElectricKit.ts";
 import { ELECTRIC_LOCO_CATALOG } from "./cd163.ts";
 import { liveryParams, liverySpec, locoGame, paramsOf, type Liveries } from "./frLocos.ts";
 import type { WorldLoco } from "./worldLocoKit.ts";
+import { mgbHge442, mgbHge442Lod } from "./mgbHge442.ts";
+
+export { mgbHge442, mgbHge442Lod };
 
 type Body = Omit<WorldLoco, "palette" | "side" | "number">;
 const GREY = c("#5a5d60", 0.6);
@@ -37,7 +40,6 @@ const CE68: Body = { length: 19.46, W: 1.45, y0: 1.4, roof: 4.0, nose: "hoods", 
 const AE814: Body = { length: 34.0, W: 1.48, y0: 1.35, roof: 3.95, nose: "raked", bogies: [[-12.0, [-1.4, 1.4], 0.675], [-4.2, [-1.4, 1.4], 0.675], [4.2, [-1.4, 1.4], 0.675], [12.0, [-1.4, 1.4], 0.675]], pantograph: "diamond", pantographX: 13.0, room: { kind: "windows", n: 5, y: [2.6, 3.2] } };
 const GE443: Body = { length: 16.0, W: 1.32, y0: 1.2, roof: 3.75, nose: "raked", bogies: pair(4.0, 1.3, 0.53, 2), pantograph: "singleArm", pantographX: 4.0, room: { kind: "grilles", n: 3, y: [2.4, 3.2] } };
 const GE66: Body = { length: 13.3, W: 1.32, y0: 1.2, roof: 3.8, nose: "hoods", cabHalf: 2.2, hoodTop: 2.8, bogies: pair(3.1, 1.05, 0.54, 3), pantograph: "diamond", pantographX: 1.5, room: { kind: "windows", n: 2, y: [2.5, 3.2] } };
-const HGE442: Body = { length: 14.8, W: 1.32, y0: 1.2, roof: 3.75, nose: "flat", bogies: pair(3.6, 1.25, 0.5, 2), pantograph: "singleArm", pantographX: 3.6, room: { kind: "grilles", n: 3, y: [2.4, 3.2] } };
 
 const L: Record<string, Liveries> = {
   re460: { sbbRed: { title: "SBB red", loco: { ...painted(RE460, SBB_RED, RE460_NUMBER), palette: { paint: c(SBB_RED), white: WHITE, grey: c("#2a2c2e", 0.7), groove: c("#a80000"), roof: c("#4b4e52", 0.75) } } } },
@@ -48,7 +50,6 @@ const L: Record<string, Liveries> = {
   ae814: { green: { title: "SBB green", loco: painted(AE814, SBB_GREEN, "11852") } },
   ge443: { rhb: { title: "RhB red", loco: painted(GE443, RHB_RED, "641") } },
   ge66: { brown: { title: "Brown", loco: painted(GE66, "#5a3a22", "414", false) }, green: { title: "RhB green", loco: painted(GE66, "#2f5e3a", "415", false) } },
-  hge442: { mgb: { title: "MGB red", loco: painted(HGE442, "#c8102e", "101 961-0") } },
 };
 
 const P = Object.fromEntries(Object.entries(L).map(([k, l]) => [k, liveryParams(l)]));
@@ -181,8 +182,6 @@ export function rhbGe443(v?: ParamValues): MeshBuilder { return b("ge443")(v); }
 export function rhbGe443Lod(v?: ParamValues): MeshBuilder { return lod("ge443")(v); }
 export function rhbGe66(v?: ParamValues): MeshBuilder { return b("ge66")(v); }
 export function rhbGe66Lod(v?: ParamValues): MeshBuilder { return lod("ge66")(v); }
-export function mgbHge442(v?: ParamValues): MeshBuilder { return b("hge442")(v); }
-export function mgbHge442Lod(v?: ParamValues): MeshBuilder { return lod("hge442")(v); }
 
 const E = ELECTRIC_LOCO_CATALOG;
 const d = (id: string, title: string, k: string, build: (v?: ParamValues) => MeshBuilder, buildLod: (v?: ParamValues) => MeshBuilder, weight: number, power: number, maxspeed: number): ProceduralDesign =>
@@ -197,5 +196,6 @@ export const CH_LOCOS: ProceduralDesign[] = [
   d("sbb-ae814", "SBB Ae 8/14 Landi", "ae814", sbbAe814, sbbAe814Lod, 240, 8160, 110),
   d("rhb-ge443", "RhB Ge 4/4 III", "ge443", rhbGe443, rhbGe443Lod, 62, 2400, 100),
   d("rhb-ge66", "RhB Ge 6/6 I Krokodil", "ge66", rhbGe66, rhbGe66Lod, 66, 794, 55),
-  d("mgb-hge442", "MGB HGe 4/4 II", "hge442", mgbHge442, mgbHge442Lod, 64, 1932, 90),
+  // its own profile tables (mgbHge442.ts), no livery parameter
+  { id: "proc-vehicle-mgb-hge442", title: "MGB HGe 4/4 II", build: mgbHge442, buildLod: mgbHge442Lod, game: locoGame(64, 1932, 90), catalog: E, references: "mgb-hge442" },
 ];

@@ -16,7 +16,7 @@ import { block, steeredWheels } from "./vehicleParts.ts";
 import { rollWheels } from "./rolling.ts";
 import { BUS_DETAIL_PALETTE, detailedBusWheel, detailedJoint, drawBusDetail, drawRouteDisplays, jointCollar, turntable, type DetailBus } from "./busDetail.ts";
 import { busLod, emptyBusLodNotes, type BusLodNotes } from "./lodRoad.ts";
-import { openable, plugMove } from "./doors.ts";
+import { doorLeaves, openable, plugMove } from "./doors.ts";
 import { CABIN_INSET, drawCabin, INTERIOR_PALETTE, type CabinDoor } from "./interior.ts";
 import type { Vec3 } from "./meshCore.ts";
 
@@ -347,6 +347,11 @@ export interface DoorStyle {
   leaves?: number;
   /** An open platform (a Routemaster's): the doorway and its frame, no leaves to open. */
   open?: boolean;
+  /**
+   * Leaves hinged at the jambs that swing out from the side (a school bus's split
+   * service door: two leaves, one at each jamb) instead of sliding plug leaves.
+   */
+  swing?: "out";
 }
 
 /**
@@ -421,7 +426,25 @@ export class BusDraft {
         sideSlab(m, mat, this.frame, s, ls, le, st.top, st.top + 0.04, 0.01);
       });
       if (st.open) return;
-      const hw = halfWidth(this.frame.section, st.bottom + 0.2);
+      // the side's half width just over the sill, or over the shell's underside where a
+      // stepwell's sill hangs below it (the section has no width under the shell)
+      const hw = halfWidth(this.frame.section, Math.max(st.bottom, Math.min(...this.frame.section.map(([, y]) => y))) + 0.2);
+      if (st.swing === "out") {
+        // hinged on the leaves' outer face at the jambs, each turning out of the side
+        const sw = doorLeaves(ls, le, s, { kind: "swing", leaves: leaves === 1 ? 1 : 2, outward: true });
+        const hz = s * (hw + 0.02);
+        openable(m, (mm, o) => {
+          sw.forEach((l, k) => {
+            mm.moved(l.move(o, hz), () => {
+              block(mm, st.leafMat, l.x0, l.x1, st.bottom, st.top, ...onSide(s, hw + 0.006, hw + 0.02));
+              for (const [y0, y1] of st.panes) block(mm, "glass", l.x0 + 0.05, l.x1 - 0.05, y0, y1, ...onSide(s, hw + 0.014, hw + 0.026));
+              // a dark strip behind the meeting gap, riding on the first leaf, 1 cm into the frame above and below
+              if (k + 1 < sw.length) block(mm, "frame", l.x1 - 0.02, l.x1 + 0.03, st.bottom - 0.01, st.top + 0.01, ...onSide(s, hw - 0.022, hw + 0.002));
+            });
+          });
+        });
+        return;
+      }
       openable(m, (mm, o) => {
         for (let l = 0; l < leaves; l++) {
           const a = x0 + 0.03 + l * lw;

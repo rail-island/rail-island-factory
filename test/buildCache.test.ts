@@ -110,7 +110,7 @@ describe("a design's key", () => {
 
 describe("a cached design", () => {
   // a confirmed building and a draft vehicle with a side view
-  const SAMPLE = ["proc-building-sky-pyramid", "proc-vehicle-new-routemaster"].map((id) => DESIGNS.get(id)!);
+  const SAMPLE = ["proc-building-sky-pyramid", "proc-vehicle-aec-routemaster"].map((id) => DESIGNS.get(id)!);
 
   it("is neither built nor bundled again, and its export files stay", async () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "factory-cache-"));

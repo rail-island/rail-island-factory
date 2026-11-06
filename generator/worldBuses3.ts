@@ -315,18 +315,27 @@ export function clipperSpec(): WorldBusSpec {
 const SCHOOL = { body: "#f7b500", rub: "#15181c", black: "#15181c", bumper: "#15181c", grilleMat: "#2a2c30" };
 
 export function visionSpec(): WorldBusSpec {
+  // the side photographs: the front axle 0.9 m behind the bumper and the shell 0.7 m
+  // behind it, the rear overhang about 0.6 of the wheelbase, the body's underside
+  // 0.7 m over the road (the stepwell under the door lower), the glass from 2.0 m to
+  // the eave's band, four black stripes under it, the name between the upper two
+  const L = 10.6;
   const s = bonneted({
-    length: 11.7, width: 2.44, height: 3.2,
-    axles: [{ at: 1.1 }, { at: 7.2, drive: true }],
-    doors: [[2.1, 2.85]],
-    livery: SCHOOL,
-    paint: bands(11.7, [0.78, 0.86, "rub"], [1.2, 1.26, "rub"], [1.6, 1.66, "rub"]),
-    bonnet: { length: 1.8, top: [1.32, 1.62], half: 0.62, grille: [0.7, 1.25, 0.32], fender: "black" },
-    lamps: [1.0, 1.2], rake: 0.18,
+    length: L, width: 2.44, height: 3.2,
+    axles: [{ at: 0.9 }, { at: 7.0, drive: true }],
+    doors: [[1.75, 2.5]],
+    livery: { ...SCHOOL, doorFrame: "#b8bcc0" },
+    // the stripe just under the glass is a fitting (worldBusRefined.ts vision): the coarse LOD keeps three bands
+    paint: bands(L, [0.7, 0.75, "rub"], [1.31, 1.38, "rub"], [1.6, 1.67, "rub"]),
+    bonnet: { length: 1.6, top: [1.32, 1.62], half: 0.62, grille: [0.7, 1.25, 0.32], fender: "black" },
+    lamps: [1.0, 1.2], rake: 0.18, floor: 0.7,
   });
   // the eight-way warning lamps never blink as indicators: their own colours, no lamp role
   return {
-    ...s, pitch: 0.8, back: { window: [1.65, 2.6, 0.5], lamps: 0.9 },
+    ...s, pitch: 0.62, back: { window: [2.02, 2.72, 0.5], lamps: 0.9 },
+    pane: { ...s.pane, glass: [2.04, s.eave - 0.18], surround: [1.99, s.eave - 0.13] },
+    // the split service door: two glazed leaves in a bright aluminium frame, swinging out
+    door: { ...s.door, leafMat: "doorFrame", surround: "doorFrame", panes: [[1.2, s.eave - 0.3], [0.5, 1.1]], leaves: 2, swing: "out" },
     livery: { ...s.livery, warnAmber: "#ffab2e", warnRed: "#d0202a" },
     // the windscreen's top lowered under the cap that carries the warning lamps and the sign
     screen: { ...s.screen, y1: 2.66 },
@@ -425,7 +434,7 @@ export function songthaewSpec(p?: ParamValues): WorldBusSpec {
     doors: [],
     livery: l,
     paint: bands(5.3, [0.42, 0.55, "grey"]),
-    bonnet: { length: 1.45, top: [0.98, 1.06], half: 0.75, grille: [0.62, 0.95, 0.5], fender: "body" },
+    bonnet: { length: 1.6, top: [0.98, 1.06], half: 0.75, grille: [0.62, 0.95, 0.5], fender: "body" },
     lamps: [0.78, 0.92], rake: 0.4, floor: 0.45,
   });
   // the pickup's cab and the covered bed with its benches, open above the waist
