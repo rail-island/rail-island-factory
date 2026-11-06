@@ -58,7 +58,7 @@ declaration order, the first the default unless noted.
 | `veh-cd-771` | `livery`: cd771, cd771No235, cd771No421 (default cd771No235) | [diesel-locos.md](diesel-locos.md) |
 | `veh-tatra-t3` | `variant`: t3, t3m, t3prototype | [trams.md](trams.md) |
 | `veh-tatra-kt8` | `livery`: redWhite, red, modern | [trams.md](trams.md) |
-| `veh-metro-81-71` | `unit`: headCar, middleCar | [trams.md](trams.md) |
+| `veh-metro-81-71` | `unit`: headCar, middleCar; `livery`: prague, budapest | [trams.md](trams.md) |
 | `veh-cd-451` | `unit`: motorCar, trailer; `livery`: cd, cdBlue | [czech-emus-classic.md](czech-emus-classic.md) |
 | `veh-cd-460` | `unit`: motorCar, trailer; `livery`: cd, cd003, cd007, csd, cdBlue | [czech-emus-classic.md](czech-emus-classic.md) |
 | `veh-cd-470` | `unit`: motorCar, trailer | [czech-emus-classic.md](czech-emus-classic.md) |
