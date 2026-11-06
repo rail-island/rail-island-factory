@@ -9,6 +9,8 @@ import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type Shinkanse
 import { c, flirt, kiss, nose, NO_NOSE } from "./seriesHelpers.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
 import type { Pt } from "./sliceLoft.ts";
+import type { SliceBody } from "./sliceBody.ts";
+import { block } from "./vehicleParts.ts";
 
 const SBB_RED = "#eb0000";
 
@@ -151,7 +153,106 @@ export const FV_DOSTO: ShinkansenSeries = {
   weight: { end: 64, middle: 55 }, power: 500, maxspeed: 200,
 };
 
-export const SBB_FLIRT: ShinkansenSeries = flirt({ W: 1.44, liveries: { sbbRegio: chLivery("sbbRegio", "523 001") }, weight: { end: 42, middle: 32 }, power: 650, maxspeed: 160 });
+/**
+ * The FLIRT's SBB Regio paint (photo-flirt-523-021.jpg, photo-ffs-rabe-522-205-basel-sbb-180611.jpg,
+ * photo-rabe523-flirt-yverdon-3-sep-2011.jpg, photo-rames-rabe523-flirt-montreux-290910.jpg): white over
+ * a dark grey foot 0.88 m high, a red stripe under the roof's edge along every car, red doors; on the end
+ * car the front's red rising past the windscreen to that stripe and the big rounded cab side window.
+ */
+const FLIRT_SBB: ShinkansenLivery = {
+  title: "SBB Regio", number: "523 021",
+  palette: {
+    white: c("#f1f1ee"), red: c(SBB_RED), grey: c("#4a4f54", 0.6), roofG: c("#a4a9ad", 0.6), roofE: c("#7d8287", 0.6), skirtG: c("#34383c", 0.75),
+    cabMask: c("#17191c", 0.3), display: c("#a8c43c", 0.35),
+  },
+  bands: [[0, 0.88, "grey"], [0.88, 3.56, "white"], [3.56, 9, "red"]], doors: [[0, 0.88, "grey"], [0.88, 9, "red"]],
+  roof: "roofG", skirt: "skirtG",
+  endSweeps: [
+    // d behind the tip: the front's red up the windscreen's side to the roof stripe, the cab's side window behind it
+    { mat: "red", front: [[2.9, -9], [3.56, -9]], back: [[2.9, 1.7], [3.1, 1.95], [3.35, 2.3], [3.56, 2.9]] },
+    { mat: "cabGlass", front: [[1.68, 4.75], [1.72, 4.0], [1.82, 3.3], [1.98, 2.8], [2.2, 2.45], [2.4, 2.35], [2.6, 2.45], [2.98, 3.0]], back: [[1.68, 5.05], [1.76, 5.4], [1.92, 5.5], [2.98, 5.5]] },
+  ],
+};
+
+/**
+ * The FLIRT's front (the photographs above; photo-tilo-...-biasca-2026.jpg close up): an upright bumper
+ * 1.4 m high, white over the grey apron with the coupler and two black grille boxes, then the red panel
+ * with the two lamp pods and the number, the windscreen raked about 43 degrees and the black dome over it
+ * rounding back 3.6 m to the roof, the red rising either side of it.
+ */
+const FLIRT_FACE: SeriesCabFace = {
+  dJoin: 3.6, dSide: 2.4, first: 8.8, roofFrom: 4.2, bulge: 0.12, cols: [8, 4, 1, 2], tolerance: 0.015,
+  profile: [[0.45, 0.3], [0.6, 0.12], [0.95, 0.02], [1.3, 0], [1.4, 0.05], [1.76, 0.12], [2.08, 0.22], [2.6, 0.62], [3.0, 1.0], [3.3, 1.35], [3.55, 1.75], [3.75, 2.2], [3.92, 2.8], [4.05, 3.6]],
+  corner: [[0.45, 0.45], [1.3, 0.5], [2.08, 0.55], [2.6, 0.7], [3.3, 0.8], [3.75, 0.6], [4.05, 0.15]],
+  rows: [0.45, 0.5, 0.6, 0.88, 0.95, 1.3, 1.4, 1.52, 1.76, 2.08, 2.2, 2.6, 3.0, 3.25, 3.32, 3.52, 3.75, 3.92, 4.05],
+  // red from the lamp panel up (the distant model's front too), white where the corners round off under and over it
+  bands: () => [[0, 0.88, "grey"], [0.88, 1.4, "white"], [1.4, 9, "red"]],
+  fields: [
+    ...[1, -1].flatMap((sd) => [
+      { mat: "white", pts: [[1.7, 1.4], [1.18, 1.4], [1.24, 1.8], [1.24, 2.9], [1.6, 3.4], [1.7, 3.4]].map(([l, y]): Pt => [sd * l!, y!]) },
+      { mat: "white", pts: [[1.7, 3.7], [1.6, 3.7], [1.0, 4.4], [1.7, 4.4]].map(([l, y]): Pt => [sd * l!, y!]) },
+    ]),
+    // the black windscreen and dome, narrowing as the face rounds back
+    { mat: "cabMask", pts: [[-0.8, 2.08], [0.8, 2.08], [0.94, 2.25], [0.86, 3.6], [0.7, 4.4], [-0.7, 4.4], [-0.86, 3.6], [-0.94, 2.25]] },
+  ],
+  masks: [
+    // the lamp pods
+    { lat: [-1.4, -0.62], y: [1.52, 1.76], r: 0.12, mat: "cabMask" }, { lat: [0.62, 1.4], y: [1.52, 1.76], r: 0.12, mat: "cabMask" },
+  ],
+  panes: [{ lat: [-0.84, 0.84], y: [2.18, 3.25], r: 0.14 }, { lat: [-0.6, 0.6], y: [3.34, 3.54], r: 0.03, mat: "display" }],
+  lamps: [[-0.8, 1.64, 0.095, "lampHead"], [0.8, 1.64, 0.095, "lampHead"], [-1.14, 1.64, 0.05, "lampRed"], [1.14, 1.64, 0.05, "lampRed"]], roofLamp: [0, 3.68, 0.07],
+  number: { lat: 0.25, y: 1.44, h: 0.08, mat: "white" },
+  wipers: [[[-0.15, 2.25], [-0.7, 3.1]]],
+};
+
+/** The RABe 523's roof: the end car's machine housing behind the cab, the cars' air-conditioning boxes; little under the low floor. */
+function flirtFittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }): void {
+  const box = (d0: number, d1: number, y0: number, y1: number, hw: number, mat: string) => block(m, mat, Math.min(X(d0), X(d1)), Math.max(X(d0), X(d1)), y0, y1, -hw, hw);
+  const C = b.C(car.length / 2);
+  m.scope("roof equipment", () => {
+    if (car.end) {
+      // the cab's black crown running on behind the face, then the transformer's housing
+      box(-0.05, 2.4, C - 0.04, C + 0.035, 0.7, "cabMask");
+      box(2.6, 6.4, C - 0.05, C + 0.13, 0.8, "roofE");
+      box(13.0, 15.2, C - 0.05, C + 0.14, 0.8, "roofE");
+    } else {
+      box(4.0, 6.0, C - 0.05, C + 0.14, 0.8, "roofE");
+      box(car.length - 4.6, car.length - 2.6, C - 0.05, C + 0.14, 0.8, "roofE");
+    }
+  });
+  if (car.end) m.scope("front gear", () => {
+    // the grille boxes either side of the apron and the automatic coupler standing out of it
+    const tip = X(-FLIRT_FACE.dJoin), k = Math.sign(tip - X(0));
+    const at = (a: number, e: number, y0: number, y1: number, z0: number, z1: number) => block(m, "carbon", Math.min(tip + k * a, tip + k * e), Math.max(tip + k * a, tip + k * e), y0, y1, z0, z1);
+    for (const sd of [1, -1]) at(-0.42, -0.04, 0.5, 0.88, sd > 0 ? 0.75 : -1.25, sd > 0 ? 1.25 : -0.75);
+    at(-0.5, 0.0, 0.9, 1.08, -0.14, 0.14);
+    at(-0.06, 0.06, 0.84, 1.14, -0.2, 0.2);
+  });
+  m.scope("underfloor", () => (car.end ?box(car.trucks[0]! + 2.0, car.trucks[0]! + 4.2, b.B(car.length / 2) - 0.3, b.B(car.length / 2), 1.1, "under") : undefined));
+}
+
+export const SBB_FLIRT: ShinkansenSeries = {
+  // RABe 523: 58.166 m over three cars, 74.266 m over four (de.wikipedia, Stadler data sheets): end cars 21.03 m to the joint, middle cars 16.1 m
+  ...flirt({ W: 1.44, endLength: 21.03, midLength: 16.1, liveries: { sbbRegio: FLIRT_SBB }, weight: { end: 42, middle: 32 }, power: 650, maxspeed: 160 }),
+  Y: 1.25, S: 3.8, C: 4.05, lean: 0.96, B: 0.45, A: 0.88,
+  nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: FLIRT_FACE,
+  windows: [[1.25, 2.72]], door: [0.6, 2.72, 1.05, 2.5],
+  // the motor bogie under the cab, Jacobs bogies under the joints; one pantograph on the second car over its leading bogie
+  jacobs: true, endBogies: [1.7, 0], wheelR: 0.43, wheelbase: 2.5, onePantograph: true, pantographAt: 1.9,
+  cabWindows: [[5.0, 6.65, 1.62, 2.6]],
+  layout: {
+    // d behind the body's front end (the cab face's join on the end car); double doors as two leaves sliding apart
+    end: {
+      doors: [[8.35, 9.025, -1], [9.025, 9.7, 1], [13.05, 13.7, -1], [13.7, 14.35, 1]],
+      windows: [[6.8, 8.15], [9.95, 11.35], [11.45, 12.8], [14.6, 16.3]],
+    },
+    middle: {
+      doors: [[4.55, 5.2, -1], [5.2, 5.85, 1], [9.75, 10.4, -1], [10.4, 11.05, 1]],
+      windows: [[1.1, 2.65], [2.75, 4.3], [6.1, 7.75], [7.85, 9.5], [11.3, 12.85], [12.95, 14.5]],
+    },
+  },
+  fittings: flirtFittings,
+};
 /**
  * The KISS's S-Bahn paint (photo-rabe-511-044-...-weinfelden.jpg, photo-sbb-rabe-511-tossmuhle.jpg): white
  * over a navy lower band, a navy stripe between the decks, red doors, a dark roof; the front's red

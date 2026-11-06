@@ -15,7 +15,7 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
 | `proc-vehicle-sbb-icn` | SBB ICN | series | `unit` (seven cars) | tilting; 200 km/h |
 | `proc-vehicle-sbb-giruno` | SBB Giruno | series | `unit`, `cars` 4 - 8 | 250 km/h |
 | `proc-vehicle-sbb-fv-dosto` | SBB FV-Dosto | series, double-deck | `unit`, `cars` 4 - 8 | 200 km/h |
-| `proc-vehicle-sbb-flirt` | SBB FLIRT | series, Stadler FLIRT | `unit`, `cars` 3 - 4 | 160 km/h |
+| `proc-vehicle-sbb-flirt` | SBB FLIRT | series, Stadler FLIRT, cab face, Jacobs bogies | `unit`, `cars` 3 - 4 | RABe 523 021; 21.03 m end cars, 16.1 m middle cars; 160 km/h |
 | `proc-vehicle-sbb-kiss` | SBB KISS | series, Stadler KISS | `unit`, `cars` 4 - 6 | double-deck; 160 km/h |
 | `proc-vehicle-rhb-allegra` | RhB Allegra | series, metre gauge | `unit` (three cars) | 2.65 m wide; 120 km/h |
 | `proc-vehicle-sbb-re460` | SBB Re 460 | box locomotive, streamlined | - | Bo-Bo, 18.5 m, 6,100 kW, 230 km/h |
@@ -40,6 +40,17 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
   (the `hoods` nose type) on two three-axle groups; the side rods are not drawn.
 - **Ae 8/14.** One 34 m body on its eight driving axles in four groups; the articulation
   between its two halves and the six idle guiding axles are left out.
+- **FLIRT.** A RABe 523 (assets/sbb-flirt/SOURCES.md) on its own spec, not the shared
+  `flirt()` base (the NS Flirt's): a cab face (`FLIRT_FACE`) with the upright bumper, the
+  red lamp panel and pods, the windscreen raked about 43 degrees under a black dome, the
+  red rising either side of it to the roof stripe every car carries; the rounded cab side
+  window an `endSweeps` pane. Its own paint (`FLIRT_SBB`, key `sbbRegio`): white over a
+  grey foot, red doors. Each car's doors and windows are laid out from the Yverdon
+  photograph (two double doors a car, the raised window behind the cab). The cars ride
+  on Jacobs bogies under the joints (kit `jacobs`), the motor bogie 5.3 m behind the
+  front; one pantograph on the second car over its leading bogie (`onePantograph`,
+  `pantographAt`). An end or middle car shown alone stands on its joint bogies, half
+  beyond its body. Not drawn: the cab door's outline, the side emblem, the grilles' slats.
 - **Glacier Express.** The panorama roof is drawn as the dark roof band over tall windows.
 
 ## Tests
