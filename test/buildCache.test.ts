@@ -14,12 +14,14 @@ import { isDraft } from "../generator/workshop";
 
 const GENERATOR = path.resolve(__dirname, "../generator");
 const ALL = [...DESIGNS.values()];
+// one graph and one keying of the catalog for the whole file
+const GRAPH = new SourceGraph();
+const KEYS = designKeys(ALL, GRAPH);
 
 describe("the committed build cache", () => {
   it("holds every design's facts under its current key and every confirmed model's thumbnail", () => {
     const stored = (JSON.parse(fs.readFileSync(path.join(BUILD_CACHE_DIR, "facts.json"), "utf8")) as { designs: Record<string, DesignFacts> }).designs;
-    const keys = designKeys(ALL);
-    const stale = ALL.filter((d) => stored[d.id]?.key !== keys.get(d.id)).map((d) => d.id);
+    const stale = ALL.filter((d) => stored[d.id]?.key !== KEYS.get(d.id)).map((d) => d.id);
     const extra = Object.keys(stored).filter((id) => !DESIGNS.has(id));
     const thumbs = fs.readdirSync(path.join(BUILD_CACHE_DIR, "thumbs")).filter((n) => n.endsWith(".png")).map((n) => n.slice(0, -4)).sort();
     const confirmed = ALL.filter((d) => !isDraft(d.id)).map((d) => d.id).sort();
@@ -34,7 +36,7 @@ describe("a design's key", () => {
   it("reads no table the site or the game's meta files change for other reasons", () => {
     // confirming a model, a web link, a sound, an OpenTTD figure or a translation must re-key no model
     const outside = /(^|\/)(generate|workshop|catalog|linkTable|soundTable|openttdTable|openttdIds|text|countryTable)\.(ts|json)$|catalogModels\.json$/;
-    const graph = new SourceGraph();
+    const graph = GRAPH;
     const modules = [...new Set(ALL.map((d) => designSource(d.id)))];
     const roots = [PIPELINE.map((f) => path.join(GENERATOR, f)), ...modules.map((m) => [path.join(GENERATOR, m)])];
     const found = roots.flatMap((r) => graph.files(r).filter((f) => outside.test(f)).map((f) => `${r.length > 1 ? "pipeline" : r[0]}: ${f}`));
@@ -42,11 +44,10 @@ describe("a design's key", () => {
   });
 
   it("is unique per design and changes with the design's data", () => {
-    const keys = designKeys(ALL);
-    expect(new Set(keys.values()).size).toBe(ALL.length);
+    expect(new Set(KEYS.values()).size).toBe(ALL.length);
     const d = DESIGNS.get("proc-vehicle-vectron")!;
     const renamed: ProceduralDesign = { ...d, title: `${d.title} II` };
-    expect(designKeys([renamed]).get(d.id)).not.toBe(keys.get(d.id));
+    expect(designKeys([renamed], GRAPH).get(d.id)).not.toBe(KEYS.get(d.id));
   });
 
   it("covers every file a module imports, at any depth, and no dynamic import", () => {

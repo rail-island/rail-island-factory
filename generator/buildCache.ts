@@ -71,7 +71,7 @@ export function paramsKey(params: Readonly<Record<string, unknown>>): string {
 }
 
 // static `import ... from`, `export ... from` and bare `import "..."`; a dynamic
-// import() is a command-line entry's (renderGlbThumb.ts loads generate.ts so), not a build's
+// import (an import call) is a command-line entry's (renderGlbThumb.ts loads generate.ts so), not a build's
 const IMPORTS = [/\b(?:import|export)\b[^;'"`]*?\bfrom\s*["']([^"']+)["']/g, /\bimport\s+["']([^"']+)["']/g];
 
 /** The import graph of the generator's sources, each file read and hashed once. */
