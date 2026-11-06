@@ -57,7 +57,9 @@ The fleet's 510 designs are data on shared kits, as the eight-country plan's tra
 
 `coverSample(entries)` picks, greedily and in list order, the design that adds the most kit
 options not yet covered, until every option of every family is covered, then adds each
-family's largest design. The result is `FLEET_SWEEP_SAMPLE`, about a fifth of the fleet,
+family's largest design. Between designs that add as many, an entry's `cost` (a ship's
+length) picks the cheaper one, so the sweep does not build the heaviest detailed ships when
+a shorter one covers the same options. The result is `FLEET_SWEEP_SAMPLE`, about a fifth of the fleet,
 and `SWEPT_IDS` in `test/catalogCache.ts` is the catalog without the fleet designs outside it.
 **`TEST_FLEET_COVER=1 pnpm test`** sweeps that whole sample, so every kit option goes through
 the catalog sweep and the secondary suites at least once. It runs past the five-minute limit, so run it after a

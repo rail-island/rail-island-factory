@@ -20,6 +20,20 @@ import { sample } from "./catalogCache";
 
 const ALL = [...CARGO_SHIP_SPECS, ...SERVICE_SHIP_SPECS, ...PASSENGER_SHIP_SPECS, ...SMALL_SHIP_SPECS];
 
+/** One build per design and parameters, shared by the tests below (the suite stays inside its time). */
+const builds = new Map<string, ReturnType<(typeof ALL)[number]["build"]>>();
+function built(s: (typeof ALL)[number], params: ParamValues = {}): ReturnType<(typeof ALL)[number]["build"]> {
+  const key = `${s.id} ${JSON.stringify(params)}`;
+  let m = builds.get(key);
+  if (!m) builds.set(key, (m = s.build(params)));
+  return m;
+}
+
+/** The sampled parameter combinations of a design, the defaults first. */
+function combos(s: (typeof ALL)[number]): ParamValues[] {
+  return sample(coverageCombinations(s.params, s.finishParams));
+}
+
 /** Each axis's [min, max] over the corners of the given materials (all when none). */
 function bounds(pos: number[]): [number[], number[]] {
   const lo = [Infinity, Infinity, Infinity];
@@ -59,10 +73,9 @@ describe("the world ships", () => {
 
   for (const s of ALL) {
     describe(s.id, () => {
-      const combos = sample(coverageCombinations(s.params, s.finishParams));
-      it.each(combos.map((p) => [JSON.stringify(p), p] as const))("is its real size, on its keel, in budget, its waterline on a paint edge (%s)", (_n, params: ParamValues) => {
+      it.each(combos(s).map((p) => [JSON.stringify(p), p] as const))("is its real size, on its keel, in budget, its waterline on a paint edge (%s)", (_n, params: ParamValues) => {
         const spec = s.spec(params);
-        const m = s.build(params);
+        const m = built(s, params);
         expect(m.triangleCount()).toBeLessThanOrEqual(shipBudget(spec));
         const [lo, hi] = bounds(m.positions());
         expect(lo[1]).toBeCloseTo(0, 5);
@@ -104,7 +117,7 @@ describe("the world ships", () => {
     expect(shipLength(CARGO_SHIP_SPECS.find((s) => s.id === "veh-ship-seawise-giant")!.spec())).toBeCloseTo(458.45, 2);
   });
 
-  it("gives the detailed ships (the list's first 25) their fittings, detailed houses and a fair share of their budget", () => {
+  it("gives the detailed ships (the list's first 50) their fittings, detailed houses and a fair share of their budget", () => {
     for (const s of CARGO_SHIP_SPECS.slice(0, 25)) {
       const spec = s.spec();
       const kinds = new Set(spec.items.map((it) => it.k));
@@ -113,7 +126,16 @@ describe("the world ships", () => {
       expect(kinds.has("bulwark") || kinds.has("mooring"), `${s.id} bulwark or mooring gear`).toBe(true);
       // every house deck has its deck edge
       expect(spec.items.some((it) => it.k === "tier" && it.lip), `${s.id} deck edges`).toBe(true);
-      expect(s.build().triangleCount(), s.id).toBeGreaterThan(shipBudget(spec) * (shipLength(spec) > 150 ? 0.15 : 0.35));
+      expect(built(s, combos(s)[0]).triangleCount(), s.id).toBeGreaterThan(shipBudget(spec) * (shipLength(spec) > 150 ? 0.15 : 0.35));
+    }
+    // the second batch (the list's 26th to 50th): service ships, river cargo and traditional craft
+    const second = ["cable-layer", "ocean-tug", "harbour-tug", "towboat", "europaschiff", "rhine-tanker", "push-barge", "yangtze-cargo", "volga-don", "narrowboat", "thames-barge", "dhow", "junk", "felucca", "stern-trawler", "purse-seiner", "shrimp-trawler", "lobster-boat", "arktika", "polarstern", "attenborough", "hopper-dredger", "supply-vessel", "anchor-handler", "crane-vessel"];
+    for (const name of second) {
+      const s = ALL.find((x) => x.id === `veh-ship-${name}`)!;
+      const spec = s.spec();
+      expect(spec.hull?.fine, s.id).toBe(true);
+      expect(spec.items.some((it) => ["anchors", "bulwark", "mooring", "fender", "strakes", "marks"].includes(it.k)), `${s.id} fittings`).toBe(true);
+      expect(built(s, combos(s)[0]).triangleCount(), s.id).toBeGreaterThan(shipBudget(spec) * (spec.small ? 0.35 : shipLength(spec) > 150 ? 0.15 : 0.25));
     }
     // a loaded container ship draws a stack per row of boxes and its lashing bridges
     const t = CARGO_SHIP_SPECS[0]!.spec();

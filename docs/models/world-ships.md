@@ -93,10 +93,12 @@ are `bottom` (keel to draft), `boot`, `hull`, `stripe`; the deck is drawn in `de
 | `anchors` | the anchor pocket and the anchor laid on the hull each side, as decals |
 | `mooring` | bollard pairs each side at each station, with windlass drums when `winch` |
 | `catwalk` | a raised walkway on posts with its handrails |
-| `vents` | vent risers, mushroom vents, or cowl ventilators facing forward (`cowl`) |
+| `vents` | vent risers, mushroom vents, or cowl ventilators facing forward (`cowl`), on the deck or at `y` |
 | `freefall` | a freefall lifeboat tilted aft down its launch ramp |
 | `lashing` | container lashing bridges across the bay gaps |
-| `marks` | draft marks (a tick a metre) and the bow thruster's sign on the hull, as decals |
+| `marks` | draft marks (a tick a metre) and the bow thruster's sign (or with `eye`, a painted eye) on the hull, as decals |
+| `fender` | a rubber fender band outside the hull, from u0 to u1 between two heights |
+| `strakes` | thin lines along the hull at given heights: plank seams, painted bands |
 
 Some items take detail options: a `tier`'s `lip` (the deck above overhanging the walls, its
 underside closed), a window row's `mat` (vent grilles, a painted line), `hatches`'
@@ -110,8 +112,9 @@ and `colour` parameters.
 
 ### Detail
 
-The detailed ships (so far the first 25 of the list, the ocean cargo ships, Triple E to the
-Victory ship) carry, beyond their hull and blocks:
+The detailed ships (so far the first 50 of the list: the ocean and river cargo ships, the
+service ships but the drillship, fireboat, Shannon and pilot boat, and the narrowboat, Thames
+barge, dhow, junk and felucca) carry, beyond their hull and blocks:
 
 - **the hull**: `fine` stations; `fittings()` gives the forecastle's bulwark, the anchors, the
   windlasses and bollards forward, mooring winches aft, the draft marks and the bow thruster
@@ -123,9 +126,13 @@ Victory ship) carry, beyond their hull and blocks:
   on coamings; the tanker deck (cargo lines on supports, fire main, catwalk on posts, manifold
   crossovers, hose cranes, tank hatches, vent risers); the gas carriers' domes, walkways and
   vent masts; the bulkers' ridged and ribbed covers and hold vents; the old cargo ships' cowl
-  ventilators, mast houses and well-deck bulwarks.
+  ventilators, mast houses and well-deck bulwarks; the tugs' fenders and towing gear, the
+  fishing gear, the research and offshore ships' deck equipment;
+- **the small craft** (4,000 triangles): plank seams (`strakes`), gunwales, rudders and tillers,
+  the deck clutter of their trade, a painted eye (`marks` with `eye`), the running rigging that
+  reads (sprit, vangs, sheets).
 
-The other 75 ships are still at the first round's level and are to be brought up to it in
+The other 50 ships are still at the first round's level and are to be brought up to it in
 later batches (the `ship` skill, `.agents/skills/ship/`, is the checklist).
 
 ### Sails
@@ -150,8 +157,8 @@ neighbours' planes, so no two coplanar faces fight.
 | ship | triangles | reached |
 |---|---|---|
 | ocean ships over 150 m | 25,000 | 3,900 (PCTC) to 17,500 (MSC Gulsun) for the detailed ships; 2,500 to 10,300 (Icon) for the others |
-| ships up to 150 m | 15,000 | 5,600 to 6,200 for the detailed ships; 1,200 to 4,200 for the others |
-| small craft (`small`) | 4,000 | 500 to 1,300 |
+| ships up to 150 m | 15,000 | 3,800 (push barge) to 6,200 for the detailed ships; 1,200 to 4,200 for the others |
+| small craft (`small`) | 4,000 | 2,300 to 3,900 for the detailed ones; 500 to 1,300 for the others |
 | distant model | 100 | 30 to 99 |
 
 `shipBudget(spec)` gives the budget; the suite checks every sampled parameter combination.

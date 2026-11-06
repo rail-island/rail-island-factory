@@ -141,10 +141,12 @@ export type Item =
   | { k: "anchors"; u: number; y: number; s: number; mat?: string; name?: string }
   | { k: "mooring"; at: readonly number[]; hw: number; s?: number; winch?: boolean; mat?: string; name?: string }
   | { k: "catwalk"; u: readonly [number, number]; y: number; z?: number; w?: number; pitch?: number; mat?: string; name?: string }
-  | { k: "vents"; at: ReadonlyArray<readonly [number, number]>; h: number; r: number; cowl?: boolean; mat?: string; name?: string }
+  | { k: "vents"; at: ReadonlyArray<readonly [number, number]>; y?: number; h: number; r: number; cowl?: boolean; mat?: string; name?: string }
   | { k: "freefall"; u: number; y: number; len: number; r?: number; tilt?: number; mat?: string; name?: string }
   | { k: "lashing"; at: readonly number[]; hw: number; y: number; h: number; mat?: string; name?: string }
-  | { k: "marks"; at: readonly number[]; y: readonly [number, number]; step?: number; s?: number; thruster?: number; mat?: string; name?: string };
+  | { k: "fender"; u: readonly [number, number]; y: readonly [number, number]; out: number; mat?: string; name?: string }
+  | { k: "strakes"; u: readonly [number, number]; y: readonly number[]; w?: number; mat?: string; name?: string }
+  | { k: "marks"; at: readonly number[]; y: readonly [number, number]; step?: number; s?: number; thruster?: number; eye?: boolean; mat?: string; name?: string };
 
 export type SailKind = "square" | "gaff" | "lateen" | "junk" | "sprit" | "crabclaw" | "bermuda" | "jib";
 
@@ -1139,7 +1141,8 @@ function drawItem(c: ShipCtx, it: Item, i: number): void {
             const a = pts[k]!;
             const b = pts[k + 1]!;
             out.quad([a.x, a.yd - 0.05, a.zo], [b.x, b.yd - 0.05, b.zo], [b.x, b.yd + it.h, b.zo], [a.x, a.yd + it.h, a.zo], [0, 0, side]);
-            inn.quad([a.x, a.yd - 0.05, a.zi], [b.x, b.yd - 0.05, b.zi], [b.x, b.yd + it.h, b.zi], [a.x, a.yd + it.h, a.zi], [0, 0, -side]);
+            // at a pointed bow both sides meet: no inner face on the centreline
+            if (Math.abs(a.zi) > 1e-3 || Math.abs(b.zi) > 1e-3) inn.quad([a.x, a.yd - 0.05, a.zi], [b.x, b.yd - 0.05, b.zi], [b.x, b.yd + it.h, b.zi], [a.x, a.yd + it.h, a.zi], [0, 0, -side]);
             top.quad([a.x, a.yd + it.h, a.zi], [b.x, b.yd + it.h, b.zi], [b.x, b.yd + it.h, b.zo], [a.x, a.yd + it.h, a.zo], [0, 1, 0]);
           }
           out.draw(m, it.mat ?? "hull");
@@ -1206,7 +1209,7 @@ function drawItem(c: ShipCtx, it: Item, i: number): void {
       m.scope(nm("ventilators"), () => {
         const mat = it.mat ?? "white";
         for (const [u, z] of it.at) {
-          const y = c.deck(u);
+          const y = it.y ?? c.deck(u);
           m.prism(mat, ngon(8, it.r, 0, x(u), z), y - 0.05, y + it.h, !it.cowl);
           if (it.cowl) {
             // the cowl: a bell turned to face forward, its mouth dark
@@ -1263,6 +1266,53 @@ function drawItem(c: ShipCtx, it: Item, i: number): void {
       });
       return;
     }
+    case "fender": {
+      m.scope(nm("fender"), () => {
+        const [ya, yb] = it.y;
+        const ym = (ya + yb) / 2;
+        const hi = Math.min(c.L, it.u[1]);
+        const us = [...new Set([...spaced(it.u[0], hi, Math.max(0.5, Math.min(4, (hi - it.u[0]) / 24))), ...(c.hull?.stations ?? []).filter((v) => v > it.u[0] && v < hi)].map((v) => Math.round(v * 1000) / 1000))].sort((a, b) => a - b);
+        for (const side of [1, -1]) {
+          const face = new TriBatch();
+          const top = new TriBatch();
+          const bot = new TriBatch();
+          const pts = us.map((u) => {
+            const zi = c.side(u, ym);
+            return { x: x(u), zi: side * Math.max(0, zi - 0.05), zo: side * (zi + it.out) };
+          });
+          for (let k = 0; k + 1 < pts.length; k++) {
+            const a = pts[k]!;
+            const b = pts[k + 1]!;
+            face.quad([a.x, ya, a.zo], [b.x, ya, b.zo], [b.x, yb, b.zo], [a.x, yb, a.zo], [0, 0, side]);
+            top.quad([a.x, yb, a.zi], [b.x, yb, b.zi], [b.x, yb, b.zo], [a.x, yb, a.zo], [0, 1, 0]);
+            bot.quad([a.x, ya, a.zi], [b.x, ya, b.zi], [b.x, ya, b.zo], [a.x, ya, a.zo], [0, -1, 0]);
+          }
+          for (const bt of [face, top, bot]) bt.draw(m, it.mat ?? "skirt");
+        }
+      });
+      return;
+    }
+    case "strakes": {
+      m.scope(nm("strakes"), () => {
+        const w = it.w ?? 0.06;
+        const hi = Math.min(c.L, it.u[1]);
+        const us = [...new Set([...spaced(it.u[0], hi, Math.max(0.3, (hi - it.u[0]) / 16)), ...(c.hull?.stations ?? []).filter((v) => v > it.u[0] && v < hi)].map((v) => Math.round(v * 1000) / 1000))].sort((a, b) => a - b);
+        for (const side of [1, -1]) {
+          const batch = new TriBatch();
+          const P = (u: number, y: number): Vec3 => [x(u), y, side * (c.side(u, y) + 0.02)];
+          for (const y of it.y) {
+            for (let k = 0; k + 1 < us.length; k++) {
+              const a = us[k]!;
+              const b = us[k + 1]!;
+              if (c.side(a, y) < 0.05 || c.side(b, y) < 0.05) continue;
+              batch.quad(P(a, y - w / 2), P(b, y - w / 2), P(b, y + w / 2), P(a, y + w / 2), [0, 0, side]);
+            }
+          }
+          batch.draw(m, it.mat ?? "black");
+        }
+      });
+      return;
+    }
     case "marks": {
       m.scope(nm("hull marks"), () => {
         const mat = it.mat ?? "white";
@@ -1287,9 +1337,26 @@ function drawItem(c: ShipCtx, it: Item, i: number): void {
               const b = ((k + 1) / 10) * Math.PI * 2;
               batch.quad(P(u + Math.cos(a) * r, yc + Math.sin(a) * r), P(u + Math.cos(b) * r, yc + Math.sin(b) * r), P(u + Math.cos(b) * r * 0.8, yc + Math.sin(b) * r * 0.8), P(u + Math.cos(a) * r * 0.8, yc + Math.sin(a) * r * 0.8), [0, 0, side]);
             }
-            quad(u - r * 0.8, u + r * 0.8, yc - r * 0.08, yc + r * 0.08);
-            quad(u - r * 0.08, u + r * 0.08, yc - r * 0.8, yc - r * 0.08);
-            quad(u - r * 0.08, u + r * 0.08, yc + r * 0.08, yc + r * 0.8);
+            if (it.eye) {
+              // a painted eye: the ring filled, its pupil dark, a little proud of it
+              for (let k = 0; k < 10; k++) {
+                const a = (k / 10) * Math.PI * 2;
+                const b = ((k + 1) / 10) * Math.PI * 2;
+                batch.add(P(u, yc), P(u + Math.cos(a) * r * 0.8, yc + Math.sin(a) * r * 0.8), P(u + Math.cos(b) * r * 0.8, yc + Math.sin(b) * r * 0.8), [0, 0, side]);
+              }
+              const pupil = new TriBatch();
+              const Q = (uu: number, y: number): Vec3 => [x(uu), y, side * (c.side(uu, y) + 0.09)];
+              for (let k = 0; k < 8; k++) {
+                const a = (k / 8) * Math.PI * 2;
+                const b = ((k + 1) / 8) * Math.PI * 2;
+                pupil.add(Q(u, yc), Q(u + Math.cos(a) * r * 0.4, yc + Math.sin(a) * r * 0.4), Q(u + Math.cos(b) * r * 0.4, yc + Math.sin(b) * r * 0.4), [0, 0, side]);
+              }
+              pupil.draw(m, "black");
+            } else {
+              quad(u - r * 0.8, u + r * 0.8, yc - r * 0.08, yc + r * 0.08);
+              quad(u - r * 0.08, u + r * 0.08, yc - r * 0.8, yc - r * 0.08);
+              quad(u - r * 0.08, u + r * 0.08, yc + r * 0.08, yc + r * 0.8);
+            }
           }
           batch.draw(m, mat);
         }

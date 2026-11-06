@@ -11,6 +11,8 @@ import { shipLod, worldShip, type Item, type ShipSpec } from "./hullKit.ts";
 import { aftHouse, bayGaps, deckhouse, exhausts, fittings, funnel, LOAD_PARAM, liveryParam, mast, oceanHull, pick, shipDesigns, type WorldShip } from "./worldShips.ts";
 
 const loaded = (p: ParamValues | undefined, params: readonly ParamSpec[] = [LOAD_PARAM]): boolean => pick(params, p, "load") === "full";
+/** A rod between two points (u, y, z). */
+const rod = (a: [number, number, number], b: [number, number, number], r: number, mat: string, name?: string): Item => ({ k: "rod", a, b, r, mat, ...(name ? { name } : {}) });
 /** The items only a loaded ship carries. */
 const cargo = (p: ParamValues | undefined, items: Item[], params: readonly ParamSpec[] = [LOAD_PARAM]): Item[] => (loaded(p, params) ? items : []);
 
@@ -705,22 +707,48 @@ export function victorySpec(): ShipSpec {
 // river and coastal cargo
 
 export const EUROPA_PARAMS: readonly ParamSpec[] = [LOAD_PARAM];
+/** A river vessel's fittings: bollards along both sides, the anchors in the bow and the stern, the rubbing strake, the draft marks. */
+function riverFittings(L: number, B: number, D: number, T: number, every = 12): Item[] {
+  const at = Array.from({ length: Math.max(2, Math.round((L - 4) / every) + 1) }, (_, i) => 2 + ((L - 4) * i) / Math.max(1, Math.round((L - 4) / every)));
+  return [
+    { k: "mooring", at, hw: B / 2 - 0.45, s: 0.45 },
+    { k: "anchors", u: L - 2.2, y: D - 0.6, s: 1.1 },
+    { k: "fender", u: [0, L], y: [D - 0.55, D - 0.25], out: 0.15, mat: "black", name: "rubbing strake" },
+    { k: "marks", at: [L * 0.85, L * 0.5, L * 0.12], y: [Math.max(0.6, T - 1.5), T + 0.5], step: 0.5, s: 0.3 },
+  ];
+}
+
+/** A river vessel's wheelhouse on its lift, the car on the deck aft, the radar mast and the exhaust. */
+function riverAft(u0: number, u1: number, D: number, hw: number, car = true): Item[] {
+  return [
+    { k: "tier", u: [u0, u1], y: [D - 0.1, D + 2.4], hw, lip: 0.25, windows: [{ y: 0.9, h: 0.8, w: 0.9, pitch: 1.8 }], front: { y: 0.9, h: 0.8, w: 0.9, n: 5 }, name: "accommodation" },
+    { k: "cyl", u: u1 - 2.2, z: 0, y: [D + 2.4, D + 3.4], r: 1, n: 10, mat: "steel", name: "wheelhouse lift" },
+    { k: "tier", u: [u1 - 4.2, u1 - 0.2], y: [D + 3.4, D + 5.6], hw: Math.min(2.6, hw - 1.6), lip: 0.35, front: { y: 0.8, h: 1.1, w: 0.9, n: 3 }, windows: [{ y: 0.8, h: 1.1, w: 1, pitch: 1.4 }], name: "wheelhouse" },
+    { k: "rail", u: [u0 + 0.4, u1 - 4.6], y: D + 2.4, hw: hw - 0.2, h: 0.9, name: "roof rail" },
+    { k: "cyl", u: u0 + 1.5, z: hw - 1, y: [D + 2.4, D + 4.4], r: 0.25, mat: "funnel", name: "exhaust" },
+    { k: "mast", u: u1 - 2.2, y: [D + 5.6, D + 7.4], r: 0.07, radar: true, name: "radar mast" },
+    ...(car ? [{ k: "box", u: [u0 + 1, u0 + 5], z: [-0.9, 0.9], y: [D + 2.4, D + 3.4], mat: "c1", name: "car" } as Item, { k: "tier", u: [u0 + 2, u0 + 4], y: [D + 3.4, D + 4], hw: 0.8, mat: "c1", windows: [{ y: 0.1, h: 0.4, w: 0.5, pitch: 0.8 }], name: "car cabin" } as Item] : []),
+  ];
+}
+
 export function europaschiffSpec(p?: ParamValues): ShipSpec {
   const L = 80;
   const D = 2.9;
   return {
     kind: "cargo",
-    hull: { length: L, beam: 9.5, depth: D, draft: 2.5, bow: "barge", stern: "transom", section: "flat", entry: 0.07, run: 0.1, transom: 0.8, rake: 0.06, sheer: [0.2, 0.6], boot: 0.15, stripe: 0.2, screws: 1 },
+    hull: { length: L, beam: 9.5, depth: D, draft: 2.5, bow: "barge", stern: "transom", section: "flat", entry: 0.07, run: 0.1, transom: 0.8, rake: 0.06, sheer: [0.2, 0.6], boot: 0.15, stripe: 0.2, screws: 1, fine: true },
     livery: { hull: "#1d2024", bottom: "#8f2a22", boot: "#1d2024", stripe: "#c23128", deck: "#6b6f6c", house: "#f2f0ea", hatch: "#5a6a72", funnel: "#1d2024" },
     items: [
       { k: "box", u: [12, 74], z: [-4.25, 4.25], y: [D - 0.1, D + 0.9], mat: "hull", name: "hold coaming" },
       ...(loaded(p)
-        ? [{ k: "containers", u: [12.4, 73.6], bays: 5, hw: 3.9, y: D + 0.9, tiers: 2, groups: 3, seed: 43 } as Item]
-        : [{ k: "hatches", u: [12.4, 73.6], n: 12, hw: 4.1, y: D + 0.9, h: 0.5, gap: 0.15 } as Item]),
-      { k: "tier", u: [1.5, 10], y: [D - 0.1, D + 2.4], hw: 4.4, windows: [{ y: 0.9, h: 0.8, w: 0.9, pitch: 1.8 }], name: "accommodation" },
-      { k: "tier", u: [6, 10], y: [D + 2.4, D + 4.6], hw: 2.3, front: { y: 0.8, h: 1.1, w: 0.9, n: 3 }, windows: [{ y: 0.8, h: 1.1, w: 1, pitch: 1.4 }], name: "wheelhouse" },
-      { k: "cyl", u: 3, z: 3.2, y: [D + 2.4, D + 4.2], r: 0.25, mat: "funnel", name: "exhaust" },
-      mast(8, D + 4.6, D + 6.6, 0.08),
+        ? [{ k: "containers", u: [12.4, 73.6], bays: 5, hw: 3.9, y: D + 0.9, tiers: 2, seed: 43, rows: 2.5 } as Item]
+        : [{ k: "hatches", u: [12.4, 73.6], n: 12, hw: 4.1, y: D + 0.9, h: 0.5, gap: 0.15, ridge: 0.2 } as Item]),
+      ...riverAft(1.5, 10, D, 4.4),
+      // the fore deck: its cabin and the anchor winch
+      { k: "tier", u: [L - 5.5, L - 2], y: [D - 0.1, D + 1.8], hw: 3.6, lip: 0.2, windows: [{ y: 0.7, h: 0.6, w: 0.6, pitch: 1.4 }], name: "fore cabin" },
+      rod([L - 1.2, D + 0.5, -1], [L - 1.2, D + 0.5, 1], 0.35, "red", "anchor winch"),
+      { k: "pipes", u: [12, 74], z: [4.5, -4.5], y: D + 0.15, r: 0.06, mat: "white", name: "gangboard rails" },
+      ...riverFittings(L, 9.5, D, 2.5),
     ],
   };
 }
@@ -730,18 +758,21 @@ export function rhineTankerSpec(): ShipSpec {
   const D = 5;
   return {
     kind: "cargo",
-    hull: { length: L, beam: 11.45, depth: D, draft: 3.5, bow: "barge", stern: "transom", section: "flat", entry: 0.07, run: 0.1, transom: 0.82, rake: 0.05, sheer: [0.2, 0.6], boot: 0.2, stripe: 0.3, screws: 2 },
+    hull: { length: L, beam: 11.45, depth: D, draft: 3.5, bow: "barge", stern: "transom", section: "flat", entry: 0.07, run: 0.1, transom: 0.82, rake: 0.05, sheer: [0.2, 0.6], boot: 0.2, stripe: 0.3, screws: 2, fine: true },
     livery: { hull: "#1f3a5a", bottom: "#8f2a22", boot: "#1d2024", stripe: "#e8bf2a", deck: "#c23128", house: "#f2f0ea", funnel: "#1d2024" },
     items: [
       { k: "pipes", u: [14, 104], z: [-1.6, -0.8, 0, 0.8, 1.6], y: D + 0.5, r: 0.14 },
-      { k: "box", u: [14, 104], z: [-0.25, 0.25], y: [D, D + 1.3], mat: "steel", name: "catwalk" },
-      { k: "domes", u: [18, 100], n: 6, r: 0.6, y: D, h: 0.9, z: 3.5, mat: "steel" },
-      { k: "box", u: [55, 59], z: [-5.2, 5.2], y: [D, D + 1], mat: "steel", name: "manifold" },
+      ...Array.from({ length: 11 }, (_, i): Item => ({ k: "box", u: [16 + i * 8.6 - 0.15, 16 + i * 8.6 + 0.15], z: [-1.9, 1.9], y: [D - 0.05, D + 0.36], mat: "steel", top: false, name: "pipe support" })),
+      { k: "catwalk", u: [14, 104], y: D + 1.8, z: 2.4, w: 0.9, pitch: 6 },
+      { k: "domes", u: [18, 100], n: 9, r: 0.6, y: D, h: 0.9, z: -3.5, mat: "steel", name: "tank hatches" },
+      { k: "vents", at: [[22, 4.4], [40, 4.4], [58, 4.4], [76, 4.4], [94, 4.4]], h: 1.6, r: 0.12, mat: "steel", name: "vent risers" },
+      { k: "box", u: [55, 59], z: [-5.2, 5.2], y: [D, D + 0.4], mat: "steel", name: "manifold" },
+      ...[-1.2, 0, 1.2].map((du): Item => rod([57 + du, D + 0.8, -5.2], [57 + du, D + 0.8, 5.2], 0.12, "steel", "manifold crossover")),
       { k: "crane", u: 61, z: 3, y: D, h: 2, jib: 7, dir: Math.PI * 0.97, mat: "white", name: "hose crane" },
-      { k: "tier", u: [1.5, 12], y: [D - 0.1, D + 2.5], hw: 5.2, windows: [{ y: 0.9, h: 0.8, w: 0.9, pitch: 1.8 }], name: "accommodation" },
-      { k: "tier", u: [7, 11.5], y: [D + 2.5, D + 4.8], hw: 2.6, front: { y: 0.8, h: 1.1, w: 1, n: 3 }, windows: [{ y: 0.8, h: 1.1, w: 1, pitch: 1.4 }], name: "wheelhouse" },
-      { k: "cyl", u: 3, z: 3.6, y: [D + 2.5, D + 4.4], r: 0.28, mat: "funnel", name: "exhaust" },
+      ...riverAft(1.5, 12, D, 5.2),
       { k: "box", u: [L - 6, L - 2], z: [-4, 4], y: [D, D + 1.8], mat: "house", name: "fore cabin" },
+      rod([L - 1.2, D + 0.5, -1], [L - 1.2, D + 0.5, 1], 0.35, "red", "anchor winch"),
+      ...riverFittings(L, 11.45, D, 3.5),
     ],
   };
 }
@@ -750,17 +781,25 @@ export const PUSH_BARGE_PARAMS: readonly ParamSpec[] = [LOAD_PARAM];
 export function pushBargeSpec(p?: ParamValues): ShipSpec {
   const L = 76.5;
   const D = 4;
+  const T = loaded(p) ? 3.5 : 0.7;
   return {
     kind: "cargo",
-    hull: { length: L, beam: 11.4, depth: D, draft: loaded(p) ? 3.5 : 0.7, bow: "barge", stern: "sternwheel", section: "flat", entry: 0.07, run: 0.04, transom: 0.96, rake: 0.06, boot: 0.15, rudder: false },
+    hull: { length: L, beam: 11.4, depth: D, draft: T, bow: "barge", stern: "sternwheel", section: "flat", entry: 0.07, run: 0.04, transom: 0.96, rake: 0.06, boot: 0.15, rudder: false, fine: true },
     livery: { hull: "#2b2f33", bottom: "#8f2a22", boot: "#1d2024", deck: "#5f6466", hatch: "#3b3f43", black: "#1b1c1d" },
     items: [
       { k: "box", u: [4, 72], z: [-5.3, 5.3], y: [D - 0.1, D + 1], mat: "hull", top: false, name: "hold coaming" },
       ...cargo(p, [
         { k: "box", u: [6, 70], z: [-4.8, 4.8], y: [D + 0.4, D + 1.4], mat: "black", name: "coal" },
         { k: "box", u: [12, 64], z: [-3.6, 3.6], y: [D + 1.4, D + 2.2], mat: "black", name: "coal heap" },
+        { k: "box", u: [20, 56], z: [-2.2, 2.2], y: [D + 2.2, D + 2.7], mat: "black", name: "coal crest" },
       ]),
+      // the coupling winches and the bollards along both sides, the stiffeners of the coaming
       { k: "box", u: [1, 3], z: [-5, 5], y: [D, D + 0.5], mat: "steel", name: "coupling" },
+      ...[2, L - 2].flatMap((u): Item[] => [3.6, -3.6].map((z): Item => rod([u, D + 0.6, z - 0.6], [u, D + 0.6, z + 0.6], 0.3, "steel", "coupling winch"))),
+      ...[12, 24, 36, 48, 60].flatMap((u): Item[] => [5.35, -5.35].map((z): Item => ({ k: "box", u: [u - 0.15, u + 0.15], z: [z - 0.15, z + 0.15], y: [D - 0.1, D + 1], mat: "hull", name: "coaming stiffener" }))),
+      { k: "mooring", at: [3.5, 20, 38, 56, L - 3.5], hw: 5.25, s: 0.45 },
+      { k: "fender", u: [0, L], y: [D - 0.5, D - 0.2], out: 0.15, mat: "black", name: "rubbing strake" },
+      { k: "marks", at: [L * 0.9, L * 0.5, L * 0.1], y: [0.5, 3.5], step: 0.5, s: 0.3 },
     ],
   };
 }
@@ -771,14 +810,19 @@ export function yangtzeSpec(p?: ParamValues): ShipSpec {
   const D = 4.5;
   return {
     kind: "cargo",
-    hull: { length: L, beam: 15.8, depth: D, draft: 3.5, bow: "raked", stern: "transom", section: "flat", entry: 0.14, run: 0.1, transom: 0.8, rake: 0.05, sheer: [0.3, 1.2], boot: 0.3, stripe: 0.3, screws: 2 },
+    hull: { length: L, beam: 15.8, depth: D, draft: 3.5, bow: "raked", stern: "transom", section: "flat", entry: 0.14, run: 0.1, transom: 0.8, rake: 0.05, sheer: [0.3, 1.2], boot: 0.3, stripe: 0.3, screws: 2, fine: true },
     livery: { hull: "#2a3b5f", bottom: "#8f2a22", boot: "#1d2024", stripe: "#c23128", deck: "#6b6f6c", house: "#f2f0ea", funnel: "#2a3b5f" },
     items: [
       { k: "box", u: [14, 82], z: [-7.2, 7.2], y: [D - 0.1, D + 1.2], mat: "hull", top: false, name: "hold coaming" },
-      ...cargo(p, [{ k: "containers", u: [14.5, 81.5], bays: 5, hw: 6.6, y: D + 0.4, tiers: 3, groups: 5, seed: 47 }]),
-      ...deckhouse({ u: [1, 12], y0: D - 0.1, decks: 3, hw: 7, h: 2.6, step: 0.3, wings: 7.6 }),
+      ...cargo(p, [{ k: "containers", u: [14.5, 81.5], bays: 5, hw: 6.6, y: D + 0.4, tiers: 3, seed: 47, rows: 2.5 }, { k: "lashing", at: bayGaps([14.5, 81.5], 5), hw: 6.4, y: D + 0.4, h: 2.6 }]),
+      ...deckhouse({ u: [1, 12], y0: D - 0.1, decks: 3, hw: 7, h: 2.6, step: 0.3, wings: 7.6, detail: true }),
       { k: "cyl", u: 2.5, z: 4.5, y: [D + 5.2, D + 9], r: 0.4, mat: "funnel", name: "exhaust" },
+      { k: "cyl", u: 2.5, z: -4.5, y: [D + 5.2, D + 9], r: 0.4, mat: "funnel", name: "exhaust port" },
       mast(8, D + 7.7, D + 11, 0.1),
+      { k: "box", u: [83, 88], z: [-6, 6], y: [D - 0.1, D + 1], mat: "hull", name: "forecastle deck" },
+      { k: "mast", u: 86, y: [D + 1, D + 7], r: 0.1, name: "fore mast" },
+      { k: "bulwark", u: [82, L], h: 1, t: 0.2 },
+      ...riverFittings(L, 15.8, D, 3.5, 14),
     ],
   };
 }
@@ -786,16 +830,20 @@ export function yangtzeSpec(p?: ParamValues): ShipSpec {
 export function volgaDonSpec(): ShipSpec {
   const L = 138.3;
   const D = 5.5;
+  const B = 16.5;
   return {
     kind: "cargo",
-    hull: { length: L, beam: 16.5, depth: D, draft: 3.5, bow: "raked", stern: "transom", section: "flat", entry: 0.12, run: 0.1, transom: 0.8, rake: 0.04, sheer: [0.3, 1.4], forecastle: [10, 1.8], boot: 0.3, screws: 2 },
+    hull: { length: L, beam: B, depth: D, draft: 3.5, bow: "raked", stern: "transom", section: "flat", entry: 0.12, run: 0.1, transom: 0.8, rake: 0.04, sheer: [0.3, 1.4], forecastle: [10, 1.8], boot: 0.3, screws: 2, fine: true },
     livery: { hull: "#25303a", bottom: "#8f2a22", boot: "#f2f0ea", deck: "#7d4a3a", house: "#f2f0ea", funnel: "#c23128", hatch: "#6c6f72" },
     items: [
-      { k: "hatches", u: [16, 126], n: 4, hw: 6.8, y: D, h: 1.8, gap: 2.2 },
-      ...deckhouse({ u: [2, 14], y0: D - 0.1, decks: 3, hw: 7.4, h: 2.6, step: 0.3, wings: 8.1 }),
+      { k: "hatches", u: [16, 126], n: 4, hw: 6.8, y: D, h: 1.2, gap: 2.2, coaming: 0.8, coamingMat: "hull", ribs: 4 },
+      ...deckhouse({ u: [2, 14], y0: D - 0.1, decks: 3, hw: 7.4, h: 2.6, step: 0.3, wings: 8.1, detail: true }),
       funnel([3, 6], 1.3, [D + 5, D + 9.5], [["funnel", 0.8], ["black", 1]], 0.3),
+      { k: "boats", at: [9], z: 7.9, y: D + 2.6, len: 5, r: 0.8 },
       mast(10, D + 7.7, D + 12, 0.12),
       mast(L - 6, D + 1.8, D + 9, 0.15),
+      { k: "pipes", u: [16, 126], z: [B / 2 - 0.8, -(B / 2 - 0.8)], y: D + 0.4, r: 0.08, mat: "white", name: "deck rails" },
+      ...fittings({ L, B, D, fc: [10, 1.8], aft: [], draft: 3.5, anchor: 1.4 }),
     ],
   };
 }
