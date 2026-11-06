@@ -203,3 +203,22 @@ describe("the small airplane", () => {
     expect(design(id).build({ color: "yellow" }).toGlb(id)).toEqual(design(id).build({ color: "yellow" }).toGlb(id));
   });
 });
+
+describe("the propellers of the original aircraft", () => {
+  // Regression: the Aero A.10's propeller was drawn into the body and never turned
+  // (docs/models/aircraft.md); every original propeller aircraft now turns on the
+  // time clip `propellers` and spins up on `spin`, its blur disc full size at rest.
+  it.each(["proc-vehicle-aero-a10", "proc-vehicle-small-airplane"])("%s turns its propeller and shows its blur disc at full speed", (id) => {
+    const m = design(id).build();
+    expect(m.clipDrives()).toEqual({ propellers: { drive: "time" }, spin: { drive: "spin" } });
+    const parts = (m as unknown as { parts: Array<{ name: string }> }).parts.map((p) => p.name);
+    expect(parts).toEqual(["propeller", "propeller-disc"]);
+    const glb = m.toGlb(id);
+    const { json, bin } = parseGlb(glb);
+    expect(collectTriangles(json, bin).some((t) => t.material === "blur")).toBe(true);
+    expect(findCoplanarOverlaps(glb)).toEqual([]);
+    // the distant level carries the disc too
+    const lod = parseGlb(design(id).buildLod().toGlb(id));
+    expect(collectTriangles(lod.json, lod.bin).some((t) => t.material === "blur")).toBe(true);
+  });
+});

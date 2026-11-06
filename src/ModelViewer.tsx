@@ -104,8 +104,10 @@ const LIFT_SECONDS = 1.5;
 const DOOR_SECONDS = 2;
 /** Seconds an aircraft's flaps or drooping nose take from one setting to the other. */
 const CONFIG_SECONDS = 3;
-/** The aircraft's configuration clips: their drives in userData.clipDrives. */
-type ConfigKind = "flaps" | "droop";
+/** The aircraft's configuration clips: their drives in userData.clipDrives (`spin`: the rotors' and propellers' speed, 1 full). */
+type ConfigKind = "flaps" | "droop" | "spin";
+/** Where each configuration starts: flaps in, nose up, rotors and propellers at full speed (the rest pose). */
+const CONFIG_REST: Record<ConfigKind, number> = { flaps: 0, droop: 0, spin: 1 };
 /** Seconds a character's cross-fade from one motion to the next (or to rest) takes. */
 const MOTION_FADE = 0.25;
 
@@ -124,7 +126,7 @@ function doorSide(model: Object3D, clip: AnimationClip): DoorSide | null {
 /** The configuration a clip of the model sets (an aircraft's flaps, its drooping nose), or null for another clip. */
 function configKind(model: Object3D, clip: AnimationClip): ConfigKind | null {
   const drive = (model.userData.clipDrives as Record<string, { drive?: string }> | undefined)?.[clip.name]?.drive;
-  return drive === "flaps" || drive === "droop" ? drive : null;
+  return drive === "flaps" || drive === "droop" || drive === "spin" ? drive : null;
 }
 
 /** Slow at both ends: a door's position (0 shut, 1 open) for how far its move has run. */
@@ -205,8 +207,8 @@ export function ModelViewer(props: {
   let doorActions: Array<{ action: AnimationAction; side: DoorSide }> = [];
   // An aircraft's flaps and drooping nose: where each stands (0 flight, 1 extended, before easing) and where it goes.
   const [configClips, setConfigClips] = createSignal<Array<{ clip: AnimationClip; kind: ConfigKind }>>([]);
-  const [configTarget, setConfigTarget] = createSignal<Record<ConfigKind, number>>({ flaps: 0, droop: 0 });
-  const configAt: Record<ConfigKind, number> = { flaps: 0, droop: 0 };
+  const [configTarget, setConfigTarget] = createSignal<Record<ConfigKind, number>>({ ...CONFIG_REST });
+  const configAt: Record<ConfigKind, number> = { ...CONFIG_REST };
   let configActions: Array<{ action: AnimationAction; kind: ConfigKind }> = [];
   // An aircraft's retractable gear: the node the game hides in flight, and whether it is shown.
   let gearNode: Object3D | null = null;
@@ -348,7 +350,7 @@ export function ModelViewer(props: {
   };
   const motionMoving = () => (motionAction !== null && !motionHeld) || restAt > 0;
   const doorsMoving = () => doorAt.left !== doorTarget().left || doorAt.right !== doorTarget().right;
-  const configMoving = () => configAt.flaps !== configTarget().flaps || configAt.droop !== configTarget().droop;
+  const configMoving = () => (["flaps", "droop", "spin"] as const).some((k) => configAt[k] !== configTarget()[k]);
   const moving = () => running() || lift !== liftTarget() || doorsMoving() || configMoving() || motionMoving();
   const tick = (now: number) => {
     const dt = Math.min(0.1, (now - lastFrame) / 1000);
@@ -363,11 +365,13 @@ export function ModelViewer(props: {
     }
     for (const { action, side } of doorActions) action.time = ease(doorAt[side]) * action.getClip().duration;
     const config = configTarget();
-    for (const kind of ["flaps", "droop"] as const) {
+    for (const kind of ["flaps", "droop", "spin"] as const) {
       const [at, to] = [configAt[kind], config[kind]];
       if (at !== to) configAt[kind] = to > at ? Math.min(to, at + dt / CONFIG_SECONDS) : Math.max(to, at - dt / CONFIG_SECONDS);
     }
     for (const { action, kind } of configActions) action.time = ease(configAt[kind]) * action.getClip().duration;
+    // the rotors and propellers turn at the speed they are spun up to
+    if (hasConfig("spin")) for (const a of loopActions) a.timeScale = ease(configAt.spin);
     applyInteriors(interiors, doorAt, showInterior());
     mixer?.update(dt);
     // a fade to rest is over: the stopped actions hand every part back its rest pose
@@ -440,8 +444,8 @@ export function ModelViewer(props: {
     doorActions = [];
     configActions = [];
     setConfigClips([]);
-    configAt.flaps = configAt.droop = 0;
-    setConfigTarget({ flaps: 0, droop: 0 });
+    Object.assign(configAt, CONFIG_REST);
+    setConfigTarget({ ...CONFIG_REST });
     gearNode = null;
     setHasGear(false);
     setGearDown(true);
@@ -1112,6 +1116,14 @@ export function ModelViewer(props: {
             </button>
             <button type="button" class="factory-btn" onClick={() => configTo("flaps", 0)} disabled={configTarget().flaps === 0} title="Retract the flaps for cruise">
               Flaps in
+            </button>
+          </Show>
+          <Show when={hasConfig("spin")}>
+            <button type="button" class="factory-btn" onClick={() => configTo("spin", 1)} disabled={configTarget().spin === 1} title="Spin the rotors or propellers up to full speed (the blur disc shows)">
+              Spin up
+            </button>
+            <button type="button" class="factory-btn" onClick={() => configTo("spin", 0)} disabled={configTarget().spin === 0} title="Spin the rotors or propellers down to a stop (the main blades droop)">
+              Spin down
             </button>
           </Show>
           <Show when={hasConfig("droop")}>

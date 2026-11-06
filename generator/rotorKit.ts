@@ -21,7 +21,7 @@ import {
 import { airLod, lodAxleWheel, lodBar, type AirFin, type AirPod } from "./lodAir.ts";
 import { LOD_GLASS, lodPolygon } from "./lodKit.ts";
 import { strokeText, strokeWidth } from "./strokeFont.ts";
-import { turnPropellers, type PropellerNode } from "./propellers.ts";
+import { blurDisc, lodBlurDisc, spinClip, turnPropellers, type DroopNode, type PropellerNode } from "./propellers.ts";
 
 export interface RotorSpec {
   /** The fuselage from the nose to the boom's end; the height to the rotor head's top. */
@@ -253,14 +253,20 @@ export function rotorcraft(s: RotorSpec): MeshBuilder {
   m.part("airframe", [0, 0, 0], airframeDraw);
   if (s.gear.kind === "wheels" && s.gear.retract) m.part("gear", [0, 0, 0], () => drawWheels(m, g));
   // the main rotor: hub and blades, turning about the mast
+  const droops: DroopNode[] = [];
   m.part("rotor", g.mast, () => m.scope("main rotor", () => {
     const [mx, my] = [g.mast[0], g.mast[1]];
     const hub = ngon(12, Math.max(0.2, s.main.r * 0.05), 0, mx, 0);
     m.loft("metalGrey", hub, my - 0.18, hub, my + 0.12);
+    // each blade its own node on the hub, which the clip `spin` droops when stopped
     for (let i = 0; i < s.main.blades; i++) {
       const t = (i * 2 * Math.PI) / s.main.blades + Math.PI / 4;
-      blade(m, "prop", [mx, my - 0.02, 0], [Math.cos(t), 0, Math.sin(t)], [-Math.sin(t) * 0.995, 0.1, Math.cos(t) * 0.995], s.main.r * 0.04, s.main.r, s.main.chord, 0.05);
+      const node = `rotor-blade-${i + 1}`;
+      // up x along the blade: the horizontal axis that tips its tip down
+      droops.push({ node, axis: [Math.sin(t), 0, -Math.cos(t)] });
+      m.spin(node, [mx, my - 0.02, 0], () => blade(m, "prop", [mx, my - 0.02, 0], [Math.cos(t), 0, Math.sin(t)], [-Math.sin(t) * 0.995, 0.1, Math.cos(t) * 0.995], s.main.r * 0.04, s.main.r, s.main.chord, 0.05));
     }
+    blurDisc(m, "rotor-disc", [mx, my, 0], [0, 1, 0], s.main.r, 0.07);
   }));
   // the tail rotor (or the fenestron's fan) turning about its hub across the boom
   m.part("tailrotor", g.tailHub, () => m.scope(s.tail.kind === "fenestron" ? "fenestron fan" : "tail rotor", () => {
@@ -271,6 +277,8 @@ export function rotorcraft(s: RotorSpec): MeshBuilder {
       const t = (i * 2 * Math.PI) / s.tail.blades;
       blade(m, "prop", [hx, hy, hz], [Math.cos(t), Math.sin(t), 0], [-Math.sin(t) * 0.97, Math.cos(t) * 0.97, 0.24], s.tail.r * 0.12, s.tail.r * (s.tail.kind === "fenestron" ? 0.98 : 1), s.tail.r * (s.tail.kind === "fenestron" ? 0.16 : 0.2), 0.03);
     }
+    // the disc on the blades' outer side, clear of the fin (a fenestron's inside its duct)
+    blurDisc(m, "tailrotor-disc", [hx, hy, hz], [0, 0, 1], s.tail.r * (s.tail.kind === "fenestron" ? 0.97 : 1), 0.09 * Math.sign(hz || s.tail.side));
   }));
   const times = Array.from({ length: ROTOR_SAMPLES + 1 }, (_, i) => (i * ROTOR_PERIOD) / ROTOR_SAMPLES);
   m.animate({
@@ -280,6 +288,7 @@ export function rotorcraft(s: RotorSpec): MeshBuilder {
       { node: "tailrotor", path: "rotation", values: times.flatMap((_, i) => quat([0, 0, 1], (i * TAIL_TURNS * 2 * Math.PI) / ROTOR_SAMPLES)) },
     ],
   });
+  spinClip(m, ["rotor-disc", "tailrotor-disc"], droops);
   return m;
 }
 
@@ -313,6 +322,8 @@ export function rotorcraftLod(s: RotorSpec): MeshBuilder {
         lodPolygon(m, "prop", [q(0.2, -w), q(0.2, w), q(s.main.r, w), q(s.main.r, -w)].map(([px, py, pz]): Vec3 => [px, py - 0.01, pz]), [0, -1, 0]);
       }
     } },
+    // the main rotor's blur disc (the full model's at full speed), given up after the tail rotor
+    { optional: 2, draw: (m) => lodBlurDisc(m, [g.mast[0], g.mast[1], 0], [0, 1, 0], s.main.r, 0.07, 10) },
     { optional: 1, draw: (m) => {
       const [hx, hy, hz] = g.tailHub;
       const r = s.tail.r;
@@ -445,8 +456,9 @@ export function airship(s: AirshipSpec): MeshBuilder {
       fan(m, "white", "x", nac[nac.length - 1]!.sec, nac[nac.length - 1]!.a, 1);
       const hub: Vec3 = [x(p.d) + 1.25, s.axisY - R * 0.15, z];
       const node = side > 0 ? "propeller-right" : "propeller-left";
-      props.push({ node, axis: [1, 0, 0], dir: 1 });
+      props.push({ node, axis: [1, 0, 0], dir: 1, disc: `${node}-disc` });
       m.spin(node, hub, () => {
+        blurDisc(m, `${node}-disc`, hub, [1, 0, 0], p.r, 0.06);
         for (let i = 0; i < 4; i++) {
           const t = (i * Math.PI) / 2 + Math.PI / 4;
           plate(m, "prop", hub, [0, Math.sin(t), Math.cos(t)], [0.3, Math.cos(t), -Math.sin(t)], [[0.25, -0.12], [p.r, -0.06], [p.r, 0.06], [0.25, 0.12]], 0.04);
@@ -455,8 +467,9 @@ export function airship(s: AirshipSpec): MeshBuilder {
     }
     // the stern propeller behind the tail
     const sternHub: Vec3 = [-half - 0.6, s.axisY, 0];
-    props.push({ node: "propeller-stern", axis: [1, 0, 0], dir: 1 });
+    props.push({ node: "propeller-stern", axis: [1, 0, 0], dir: 1, disc: "propeller-stern-disc" });
     m.spin("propeller-stern", sternHub, () => {
+      blurDisc(m, "propeller-stern-disc", sternHub, [1, 0, 0], p.stern, -0.06);
       for (let i = 0; i < 5; i++) {
         const t = (i * 2 * Math.PI) / 5;
         plate(m, "prop", sternHub, [0, Math.sin(t), Math.cos(t)], [0.3, Math.cos(t), -Math.sin(t)], [[0.2, -0.12], [p.stern, -0.06], [p.stern, 0.06], [0.2, 0.12]], 0.04);

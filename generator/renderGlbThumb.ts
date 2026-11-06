@@ -100,9 +100,14 @@ export function rasterize(
   const H = height * SS;
   const depth = new Float64Array(W * H).fill(Infinity);
   const rgb = new Float64Array(W * H * 3);
-  const cov = new Uint8Array(W * H);
+  // coverage 0..1: a see-through triangle (Tri.alpha) over the background covers only partly
+  const cov = new Float64Array(W * H);
 
-  for (const tri of tris) {
+  // the opaque triangles first, then the see-through ones blended over them, farthest first,
+  // tested against the depth but writing none (as the game draws a blur disc)
+  const eyeDepth = (t: Tri): number => { const e = toEye(t.p[0]); return dot(e, e); };
+  const ordered = [...tris.filter((t) => t.alpha === undefined), ...tris.filter((t) => t.alpha !== undefined).sort((a, b) => eyeDepth(b) - eyeDepth(a))];
+  for (const tri of ordered) {
     const ps = tri.p.map(project);
     if (ps.some((v) => v === null)) continue;
     const [a, b, c] = ps as [Projected, Projected, Projected];
@@ -138,7 +143,8 @@ export function rasterize(
         }
         const at = y * W + x;
         if (z >= depth[at]) continue;
-        depth[at] = z;
+        const alpha = tri.alpha;
+        if (alpha === undefined) depth[at] = z;
         let n: Vec3 = norm([
           tri.n[0][0] * b0 + tri.n[1][0] * b1 + tri.n[2][0] * b2,
           tri.n[0][1] * b0 + tri.n[1][1] * b1 + tri.n[2][1] * b2,
@@ -156,10 +162,19 @@ export function rasterize(
         const k0 = c ? c[0][0] * b0 + c[1][0] * b1 + c[2][0] * b2 : 1;
         const k1 = c ? c[0][1] * b0 + c[1][1] * b1 + c[2][1] * b2 : 1;
         const k2 = c ? c[0][2] * b0 + c[1][2] * b1 + c[2][2] * b2 : 1;
-        rgb[at * 3] = tri.color[0] * k0 * lit;
-        rgb[at * 3 + 1] = tri.color[1] * k1 * lit;
-        rgb[at * 3 + 2] = tri.color[2] * k2 * lit;
-        cov[at] = 1;
+        const col: Vec3 = [tri.color[0] * k0 * lit, tri.color[1] * k1 * lit, tri.color[2] * k2 * lit];
+        if (alpha === undefined) {
+          rgb[at * 3] = col[0];
+          rgb[at * 3 + 1] = col[1];
+          rgb[at * 3 + 2] = col[2];
+          cov[at] = 1;
+        } else {
+          // "over": premultiplied by coverage, then back to straight colour
+          const under = cov[at]!;
+          const out = alpha + under * (1 - alpha);
+          for (let k = 0; k < 3; k++) rgb[at * 3 + k] = (col[k]! * alpha + rgb[at * 3 + k]! * under * (1 - alpha)) / out;
+          cov[at] = out;
+        }
       }
     }
   }
@@ -172,11 +187,12 @@ export function rasterize(
       for (let sy = 0; sy < SS; sy++) {
         for (let sx = 0; sx < SS; sx++) {
           const at = (y * SS + sy) * W + (x * SS + sx);
-          if (!cov[at]) continue;
-          r += rgb[at * 3];
-          g += rgb[at * 3 + 1];
-          b += rgb[at * 3 + 2];
-          a += 1;
+          const w = cov[at]!;
+          if (!w) continue;
+          r += rgb[at * 3] * w;
+          g += rgb[at * 3 + 1] * w;
+          b += rgb[at * 3 + 2] * w;
+          a += w;
         }
       }
       const o = (y * width + x) * 4;

@@ -344,11 +344,12 @@ export class MeshBuilder extends MeshCore {
       json.materials.push({
         name: mat,
         pbrMetallicRoughness: {
-          baseColorFactor: [...linearRgb(spec.color), 1],
+          baseColorFactor: [...linearRgb(spec.color), spec.opacity ?? 1],
           metallicFactor: spec.metallic ?? 0,
           roughnessFactor: spec.roughness ?? 0.85,
         },
         ...(spec.doubleSided ? { doubleSided: true } : {}),
+        ...(spec.opacity !== undefined ? { alphaMode: "BLEND" } : {}),
       });
     }
     units.forEach((unit, u) => {

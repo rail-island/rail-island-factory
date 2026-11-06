@@ -9,8 +9,9 @@
 A model with parts (`MeshCore.part`: a node per part, translated to its pivot)
 may add **animation clips** with `animate({ name, times, tracks, drive })`: shared
 sample times from 0, and per track a part (`node`), a `path` - `rotation`
-(x, y, z, w quaternions about the part's pivot) or `translation` (the node's
-position; at rest, the pivot) - and one value per time. The call refuses an
+(x, y, z, w quaternions about the part's pivot), `translation` (the node's
+position; at rest, the pivot) or `scale` (x, y, z factors about the pivot; at rest
+1, 1, 1: a blur disc growing in) - and one value per time. The call refuses an
 unknown part, a part name three.js cannot bind (spaces, dots, colons, slashes,
 brackets), a values count that does not match the times and times that do not
 start at 0 and rise, and a clip without a valid `drive`.
@@ -21,7 +22,7 @@ Every clip states what advances it in a consumer, so the game plays any clip wit
 knowing any model or clip by name:
 
 ```ts
-type ClipDrive = { drive: "time" } | { drive: "distance"; speed: number } | { drive: "state" } | { drive: "door"; side: "left" | "right" } | { drive: "motion" } | { drive: "flaps" } | { drive: "droop" };
+type ClipDrive = { drive: "time" } | { drive: "distance"; speed: number } | { drive: "state" } | { drive: "door"; side: "left" | "right" } | { drive: "motion" } | { drive: "flaps" } | { drive: "droop" } | { drive: "spin" };
 ```
 
 - **`time`** - loop at the clip's own duration, whatever the model does: the wind
@@ -55,6 +56,9 @@ type ClipDrive = { drive: "time" } | { drive: "distance"; speed: number } | { dr
   ([world-aircraft.md](world-aircraft.md)). The consumer scrubs them as a state; drives of
   their own so that a consumer moving every `state` clip as a pantograph leaves them
   alone. The aircraft's propellers turn on a `time` clip, `propellers`.
+- **`spin`** - a state clip of everything that turns in the air: a helicopter's
+  rotors and every propeller, from stopped (0) to full speed (1, **the rest pose**).
+  See "Spin" below.
 
 `animate` refuses any other drive kind. A consumer that does not know a drive must
 leave its clip alone, so a new kind never moves a model in an old consumer.
@@ -70,13 +74,35 @@ A model without clips has neither.
   GLB is byte-identical.
 - `toGroup` (the JS model) puts the same clips in the group's `animations` as
   `THREE.AnimationClip`s of `QuaternionKeyframeTrack` and `VectorKeyframeTrack`
-  bound to `<part>.quaternion` and `<part>.position` - what GLTFLoader returns
+  bound to `<part>.quaternion`, `<part>.position` and `<part>.scale` - what GLTFLoader returns
   for the GLB. The three.js namespace handed to an animated model's `build`
   therefore needs those three classes.
 - `poseGlb(glb, k)` (`glbPose.ts`) returns the GLB with a clip applied at sample
   `k`, so the tools that read a GLB at rest (coplanar check, stats, renderers)
   can check any frame. The thumbnail, the source tree and the coplanar check of
   the build use the rest pose, sample 0.
+
+## Spin
+
+Every rotor and propeller has a **blur disc**: a thin see-through plate of the blades'
+radius, square to the axis they turn about, a few centimetres off the blades' plane
+(`blurDisc` in `propellers.ts`, the child node `<part>-disc` of the turning part, pivoted on
+its hub; material `blur`, `MaterialSpec.opacity` 0.22 - transparent and writing no depth in
+the JS model, `alphaMode` BLEND in the GLB). A helicopter's main rotor draws each blade as
+its own child node `rotor-blade-<n>` on the hub.
+
+The clip **`spin`** (drive `spin`, times 0 to 1, `SPIN_SAMPLES` = 8 steps; `spinClip`)
+scales every disc from `BLUR_HIDDEN` (0.001: hidden) at and below `BLUR_FROM` = 0.75 up to
+full size at 1, and turns each main-rotor blade `BLADE_DROOP` = 3 degrees down at its tip at
+0, level at 1. **Time 1 is the rest pose**: a consumer that does not know the drive leaves
+the clip alone and shows full speed - the disc over blades turning on their time clip, as
+before. A consumer that drives `spin` (the game; the site's Spin up / Spin down buttons)
+scrubs it to the speed it eases itself and plays the time clips (`propellers`, `rotor`) at
+the same fraction of their rate, so a stopped rotor stands still with its blades drooping
+and no disc. The distant levels draw the disc too, standing still (`lodBlurDisc`).
+`test/worldAircraft.test.ts` and `test/aircraft.test.ts` check every rotor and propeller has
+its disc on the clip, full size at rest and hidden stopped, the droop, and no z-fighting at
+rest or stopped.
 
 ## The wind turbine
 

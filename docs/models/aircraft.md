@@ -46,7 +46,11 @@ the front and rear plane of each bay and out to the tips. A cruciform tail with
 rounded tailplane tips and fin, tail bracing wires, a walnut tail skid. The fixed
 undercarriage is two V-legs, a cross brace and an axle, with black tyres and cream
 wheel discs (the photo). It stands level on the wheels, y = 0, as the reference does.
-The gear is fixed, so the model has **no parts**.
+The gear is fixed; its one part is the propeller and spinner, `propeller` (`MeshCore.spin`,
+pivoted on the hub at (0, 2.13, 4.545)), with its blur disc `propeller-disc`, which the clip
+`propellers` (`propellers.ts`, drive `time`, 0.24 s a turn) turns and the clip `spin` spins
+up ([animation.md](animation.md#spin)). It stood still until the change that gave every
+propeller aircraft the spin treatment.
 
 ### Airbus A380
 
@@ -124,7 +128,8 @@ wheels on y = 0. Parts, front to back:
 The `color` parameter (finish) is `blue` (the reference's, default), `red`, `yellow`
 or `green`. The gear is fixed; its one part is the propeller and spinner, `propeller`
 (`MeshCore.spin`, pivoted on the hub at (0, 1.0, 3.47)), which the clip `propellers`
-(`propellers.ts`, drive `time`, 0.24 s a turn) turns clockwise seen from behind. Deviations from the
+(`propellers.ts`, drive `time`, 0.24 s a turn) turns clockwise seen from behind, and the clip
+`spin` spins up, with its blur disc `propeller-disc` ([animation.md](animation.md#spin)). Deviations from the
 inspiration model: its navigation lights were swapped (red on the right wing); here
 red is on the left as on a real aircraft. The canopy is opaque tinted glass, like the
 other aircraft's glazing, and there is no cabin interior.

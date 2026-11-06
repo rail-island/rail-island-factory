@@ -34,7 +34,7 @@ import { block } from "./vehicleParts.ts";
 import { strokeText, strokeWidth } from "./strokeFont.ts";
 import { airLod, lodAxleWheel, lodBar, type AirEngine, type AirFin, type AirLodSpec, type AirWing } from "./lodAir.ts";
 import { LOD_GLASS, lodPolygon } from "./lodKit.ts";
-import { turnPropellers } from "./propellers.ts";
+import { BLUR_MATERIAL, BLUR_SPEC, blurDisc, lodBlurDisc, turnPropellers } from "./propellers.ts";
 
 // The colours are the reference models' own. Metal is only mildly metallic:
 // the game lights models without an environment map.
@@ -737,7 +737,7 @@ const A10_FIN: FinRing[] = [[2.4, -4.01, 1.44, 0.18, 0], [3.3, -4.45, 1.14, 0.16
 const A10_SPARS = { lower: [0.81, -0.36], upper: [0.81, -0.36] };
 
 export function aeroA10(): MeshBuilder {
-  const m = new MeshBuilder(PALETTE);
+  const m = new MeshBuilder({ ...PALETTE, [BLUR_MATERIAL]: BLUR_SPEC });
   const fus = a10Stations(A10_FUSELAGE, 20, 3.2);
   const cowl = a10Stations(A10_COWL, 20, 3.6);
   const lowerTop = A10_LOWER.y + A10_LOWER.thick * 0.45;
@@ -791,8 +791,10 @@ export function aeroA10(): MeshBuilder {
     });
   });
 
-  m.scope("propeller", () => {
+  // the propeller and spinner turn (the clip `propellers`, drive time) on the crankshaft's axis
+  m.spin("propeller", A10_PROP, () => {
     const [px, py, pz] = A10_PROP;
+    blurDisc(m, "propeller-disc", A10_PROP, [0, 0, 1], 1.42, 0.12);
     m.scope("spinner", () => {
       const r = circle(12, px, py, 0.16);
       body(m, "steel", "z", [{ a: 4.42, sec: r }, { a: 4.52, sec: r }]);
@@ -888,6 +890,7 @@ export function aeroA10(): MeshBuilder {
       });
     }
   });
+  turnPropellers(m, [{ node: "propeller", axis: [0, 0, 1], dir: 1, disc: "propeller-disc" }]);
   return m;
 }
 
@@ -2332,6 +2335,7 @@ const SMALL_PARAMS: readonly ParamSpec[] = [{
   values: Object.entries(SMALL_COLORS).map(([value, c]) => ({ value, title: c.title })),
 }];
 const SMALL_PALETTE: Record<string, MaterialSpec> = {
+  [BLUR_MATERIAL]: BLUR_SPEC,
   ...PALETTE,
   planeWhite: { color: "#f3f4f5", roughness: 0.35 },
   canopy: { color: "#2e4456", metallic: 0.2, roughness: 0.1, glass: true },
@@ -2462,6 +2466,7 @@ export function smallAirplane(params?: ParamValues): MeshBuilder {
 
   // the propeller turns (the clip `propellers`, drive time) on the spinner's axis
   m.spin("propeller", SMALL_HUB, () => {
+    blurDisc(m, "propeller-disc", SMALL_HUB, [0, 0, 1], 0.81, 0.1);
     m.scope("spinner", () => {
       const [cx, cy] = SMALL_HUB;
       const rows: Array<[number, number]> = [[3.38, 0.19], [3.52, 0.175], [3.62, 0.13], [3.69, 0.07]];
@@ -2542,7 +2547,7 @@ export function smallAirplane(params?: ParamValues): MeshBuilder {
       smallSpat(m, 0, yc, g.noseZ, 0.09, 0.52);
     });
   });
-  turnPropellers(m, [{ node: "propeller", axis: [0, 0, 1], dir: 1 }]);
+  turnPropellers(m, [{ node: "propeller", axis: [0, 0, 1], dir: 1, disc: "propeller-disc" }]);
   return m;
 }
 
@@ -2577,7 +2582,7 @@ export function aeroA10Lod(): MeshBuilder {
   const upperBot = A10_UPPER.y - A10_UPPER.thick * 0.4;
   const [px, py, pz] = A10_PROP;
   return airLod({
-    palette: PALETTE, axis: "z", fuselage: fus,
+    palette: { ...PALETTE, [BLUR_MATERIAL]: BLUR_SPEC }, axis: "z", fuselage: fus,
     paint: (_s, a) => (a > 3.0 ? "aluminium" : "fabric"), noseMat: "aluminium", tailMat: "fabric",
     // the open cockpit behind the cabin, a dark opening in the deck
     windscreen: { a0: -1.65, a1: -1.05, s: 0.9 },
@@ -2607,6 +2612,8 @@ export function aeroA10Lod(): MeshBuilder {
           lodPolygon(m, "walnut", [[px - 0.11, py - 1.42, z], [px + 0.11, py - 1.42, z], [px + 0.11, py + 1.42, z], [px - 0.11, py + 1.42, z]], [0, 0, nz]);
         }
       } },
+      // its blur disc (the full model's at full speed)
+      { optional: 4, draw: (m) => lodBlurDisc(m, A10_PROP, [0, 0, 1], 1.42, 0.12) },
     ],
   });
 }
@@ -2737,6 +2744,9 @@ export function smallAirplaneLod(params?: ParamValues): MeshBuilder {
       { optional: 2, draw: (m) => {
         for (const s of [-1, 1]) lodBar(m, "alloy", [s * 0.42, 0.58, 0.3], [s * g.track, axleY(0, g.mainR) + 0.2, g.mainZ], 0.04, 3);
       } },
+      // the propeller's blur disc (the full model's at full speed)
+      // (always kept, at six corners: the 200-triangle level has no room for it as an optional part)
+      { draw: (m) => lodBlurDisc(m, SMALL_HUB, [0, 0, 1], 0.81, 0.1, 6) },
       // the three-blade propeller standing still, a flat blade each
       { optional: 1, draw: (m) => {
         const [cx, cy, cz] = SMALL_HUB;

@@ -17,6 +17,8 @@ export interface Tri {
   p: [Vec3, Vec3, Vec3]; // world position
   n: [Vec3, Vec3, Vec3]; // world normal
   color: Vec3; // linear base colour
+  /** The material's opacity, when it blends (alphaMode BLEND: a blur disc); absent for opaque. */
+  alpha?: number;
   /** Corner colours (COLOR_0, linear multipliers of `color`), when the primitive has them. */
   corners?: [Vec3, Vec3, Vec3];
   /** The primitive's material name, or `#<index>` when it has none. */
@@ -54,6 +56,8 @@ export function collectTriangles(json: Gltf, bin: Uint8Array, opts: { interiors?
         const color: Vec3 = [factor[0], factor[1], factor[2]];
         const material = prim.material != null ? (json.materials?.[prim.material]?.name ?? `#${prim.material}`) : "default";
         const doubleSided = prim.material != null && json.materials?.[prim.material]?.doubleSided === true;
+        const blend = prim.material != null && (json.materials?.[prim.material] as { alphaMode?: string } | undefined)?.alphaMode === "BLEND";
+        const alpha = blend ? (factor[3] ?? 1) : undefined;
         for (let i = 0; i + 2 < idx.length; i += 3) {
           const p: Vec3[] = [];
           const n: Vec3[] = [];
@@ -69,7 +73,7 @@ export function collectTriangles(json: Gltf, bin: Uint8Array, opts: { interiors?
           const corners = col
             ? (idx.slice(i, i + 3).map((v) => [col[v * 3], col[v * 3 + 1], col[v * 3 + 2]]) as [Vec3, Vec3, Vec3])
             : undefined;
-          tris.push({ p: p as [Vec3, Vec3, Vec3], n: n as [Vec3, Vec3, Vec3], color, material, ...(corners ? { corners } : {}), ...(interior ? { interior } : {}), ...(doubleSided ? { doubleSided } : {}) });
+          tris.push({ p: p as [Vec3, Vec3, Vec3], n: n as [Vec3, Vec3, Vec3], color, material, ...(corners ? { corners } : {}), ...(interior ? { interior } : {}), ...(doubleSided ? { doubleSided } : {}), ...(alpha !== undefined ? { alpha } : {}) });
         }
       }
     }
