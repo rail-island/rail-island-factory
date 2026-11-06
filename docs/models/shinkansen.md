@@ -88,6 +88,7 @@ combinations hashed before and after):
   slices meet the body's own section there (both ends of a `single` railcar). The distant model
   takes its profile, plan, bands and the panes as glass (the VT 98 and the other short-nosed
   regional and metro units, [germany-trains.md](germany-trains.md));
+- `lodRoof` - a block on the end car's roof in the distant model (the X 3800's turret);
 - `wheelbase: 0` cars hang each axle in horn guides reaching up into the body over the skirt's
   cut, on leaf springs.
 - a livery's `doors` and `front` - the door leaves' own bands, and the cab front's bands over

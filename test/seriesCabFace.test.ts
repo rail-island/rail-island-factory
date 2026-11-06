@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { DE_UNITS, VT98 } from "../generator/deUnits.ts";
 import { DE1, MAT46, NL_UNITS } from "../generator/nlUnits.ts";
+import { FR_UNITS, X3800 } from "../generator/frUnits.ts";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles.ts";
 import type { ProceduralDesign } from "../generator/design.ts";
@@ -12,6 +13,7 @@ const CASES: Array<{ design: ProceduralDesign; series: ShinkansenSeries; panes: 
   { design: DE_UNITS.find((d) => d.id === "proc-vehicle-db-vt98")!, series: VT98, panes: 2, single: true },
   { design: NL_UNITS.find((d) => d.id === "proc-vehicle-ns-mat46")!, series: MAT46, panes: 5, single: false },
   { design: NL_UNITS.find((d) => d.id === "proc-vehicle-ns-de1")!, series: DE1, panes: 5, single: true },
+  { design: FR_UNITS.find((d) => d.id === "proc-vehicle-sncf-x3800")!, series: X3800, panes: 4, single: true },
 ];
 
 function points(d: ProceduralDesign) {
@@ -34,7 +36,7 @@ describe("series cab faces", () => {
       const tree = ids(c.design);
       const ends = c.single ? ["cab-face", "rear-cab-face"] : ["cab-face"];
       for (const e of ends) expect(tree.filter((id) => new RegExp(`(^|/)${e}/skin/pane-\\d+$`).test(id)), e).toHaveLength(c.panes);
-      expect(tree.some((id) => /windscreen/.test(id))).toBe(false);
+      expect(tree.some((id) => /(^|\/)windscreen(\/|$)/.test(id))).toBe(false);
       const { glb } = points(c.design);
       expect(findCoplanarOverlaps(glb)).toEqual([]);
     });
@@ -51,6 +53,22 @@ describe("series cab faces", () => {
       expect(maxX - foot).toBeLessThan(0.9);
     });
   }
+
+  it("sets the Picasso's driver in a turret on the roof, off to one side, in the full and the distant model", () => {
+    const d = FR_UNITS.find((x) => x.id === "proc-vehicle-sncf-x3800")!;
+    const { pts } = points(d);
+    const top = Math.max(...pts.map((p) => p[1]!));
+    expect(top).toBeGreaterThan(X3800.C + 0.5);
+    const high = pts.filter((p) => p[1]! > X3800.C + 0.3);
+    // off to one side: all of it on one side of the roof's middle
+    expect(Math.min(...high.map((p) => p[2]!))).toBeGreaterThan(0);
+    // near the front end
+    expect(Math.min(...high.map((p) => p[0]!))).toBeGreaterThan(X3800.endLength / 2 - 4.5);
+    expect(ids(d).filter((id) => /turret\/(front|rear)-windscreen$/.test(id))).toHaveLength(2);
+    const lod = d.buildLod({}).toGlb("lod");
+    const { json, bin } = parseGlb(lod);
+    expect(Math.max(...collectTriangles(json, bin).flatMap((t) => t.p).map((p) => p[1]!))).toBeGreaterThan(X3800.C + 0.5);
+  });
 
   it("hangs a single axle's horn guides up into the body: no gap over the wheels", () => {
     for (const c of CASES.filter((x) => x.series.wheelbase === 0)) {

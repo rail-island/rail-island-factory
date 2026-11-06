@@ -131,6 +131,8 @@ export interface ShinkansenSeries {
   layout?: { end: SeriesLayout; middle: SeriesLayout };
   /** The side number: d behind the body's centre, its foot and height (default 3 m from the rear, just above the belly). */
   numberAt?: readonly [number, number, number];
+  /** A block on the end car's roof in the distant model (d span behind the tip, half width, heights, paint): a cab turret's silhouette. */
+  lodRoof?: { d: readonly [number, number]; hw: number; y: readonly [number, number]; mat: string };
   /** Fittings of the series' own, drawn in place of the plain underfloor box. */
   fittings?: (m: MeshBuilder, b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }) => void;
 }
@@ -385,6 +387,7 @@ function carLod(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
   const tr = bogies(s, end);
   const parts: LodPart[] = [
     ...bogieParts(tr.map((d) => [T(X(d)), s.wheelbase / 2 + s.wheelR + 0.2, ...(section !== undefined ? [section] : [])] as const) as unknown as ReadonlyArray<readonly [number, number, number?]>, s.B),
+    ...(end && s.lodRoof ? [roofPart(s.lodRoof.mat, T(X(s.lodRoof.d[0] - (s.cabFace?.dJoin ?? 0))), T(X(s.lodRoof.d[1] - (s.cabFace?.dJoin ?? 0))), s.lodRoof.hw, s.lodRoof.hw, s.lodRoof.y[0], s.lodRoof.y[1], section)] : []),
     ...(pantograph ? [{ ...roofPart("pantograph", T(X(tr[1] - 1.5)) - 0.8, T(X(tr[1] - 1.5)) + 0.8, 0.45, 0.45, s.C, RAIL_COLLECTOR_TOP, section), optional: 8 }] : []),
   ];
   return { body, parts };
