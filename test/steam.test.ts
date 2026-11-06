@@ -17,7 +17,7 @@ import { isLeaf, type TreeNode } from "../generator/sourceTree.ts";
 import { sample } from "./catalogCache";
 
 type Gltf = {
-  nodes: Array<{ name: string; translation?: number[] }>;
+  nodes: Array<{ name: string; translation?: number[]; children?: number[] }>;
   animations?: Array<{ name: string; channels: Array<{ sampler: number; target: { node: number; path: string } }>; samplers: Array<{ input: number; output: number; interpolation: string }> }>;
 };
 
@@ -109,9 +109,9 @@ describe("the running animation", () => {
     expect(times[times.length - 1]).toBeCloseTo((Math.PI * ref.d) / RUNNING_SPEED, 5);
     // the consumer plays it by distance travelled, at the reference speed
     expect((json as { scenes: Array<{ extras?: { clipDrives?: unknown } }> }).scenes[0]!.extras?.clipDrives).toEqual({ [RUNNING_CLIP]: { drive: "distance", speed: RUNNING_SPEED } });
-    // every part but the body is animated, and every sampler is linear and shares the times
+    // every part but the body (and a swivelling front engine's bogie) is animated, and every sampler is linear and shares the times
     const animated = new Set(a.channels.map((c) => g.nodes[c.target.node]!.name));
-    expect(g.nodes.map((n) => n.name).filter((n) => !animated.has(n))).toEqual(["body"]);
+    expect(g.nodes.map((n) => n.name).filter((n) => !animated.has(n))).toEqual(spec.gear.swivel ? ["body", "bogie0"] : ["body"]);
     for (const s of a.samplers) {
       expect(s.input).toBe(a.samplers[0]!.input);
       expect(s.interpolation).toBe("LINEAR");
@@ -149,6 +149,19 @@ describe("the running animation", () => {
         expect(turns * k).toBeCloseTo(Math.round(turns * k), 4); // float32 samples
       }
     });
+  });
+
+  it("turns the 636's front engine under the boiler: a bogie carrying its leading axle, front drivers and front motion", () => {
+    const m = STEAM_LOCOS.find((x) => x.id === "proc-vehicle-csd-636")!.build();
+    const supports = m.rig!.supports!;
+    expect(supports.filter((s) => s.node)).toEqual([expect.objectContaining({ node: "bogie0", axles: 4, sections: [0] })]);
+    expect(supports.filter((s) => !s.node)).toHaveLength(2);
+    const g = parseGlb(m.toGlb("t", "vehicle")).json as unknown as Gltf;
+    const bogie = g.nodes.find((n) => n.name === "bogie0")!;
+    const carried = (bogie.children ?? []).map((i) => g.nodes[i]!.name);
+    expect(carried.filter((n) => n.startsWith("wheelset-")).sort()).toEqual(["wheelset-1", "wheelset-2", "wheelset-3", "wheelset-4"]);
+    expect(g.nodes.filter((n) => /-(right|left)-front$/.test(n.name)).map((n) => n.name).sort()).toEqual(carried.filter((n) => !n.startsWith("wheelset-")).sort());
+    expect(carried.some((n) => n === "main-rod-right-front")).toBe(true);
   });
 
   it.each(COMBOS.filter((c) => steamSpec(c.d.id, c.p).gear.engines.length).map((c) => [c.label, c] as const))("%s keeps its rods' lengths at every sample", (_, { d, p }) => {
