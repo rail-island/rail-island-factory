@@ -62,7 +62,8 @@ export const RED_ARROW: ShinkansenSeries = {
   // the cab's two side windows over the bonnet's end, d behind the join
   cabWindows: [[0.1, 0.9, 1.92, 2.7], [1.0, 1.8, 1.92, 2.7]],
   windows: [[1.9, 2.65]], windowW: 1.2, pitch: 1.5, door: [1.2, 2.95, 1.9, 2.55], doorW: 0.8,
-  bogieCentres: 17.1, wheelR: 0.45, wheelbase: 2.7, single: true, endPantograph: true,
+  // the diamond pantograph of the photographs and the works drawing
+  bogieCentres: 17.1, wheelR: 0.45, wheelbase: 2.7, single: true, endPantograph: true, pantograph: "diamond",
   liveries: { redArrow: chLivery("redArrow", "RCE 203") },
   weight: { end: 40, middle: 40 }, power: 380, maxspeed: 125,
 };
