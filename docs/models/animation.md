@@ -87,8 +87,8 @@ A model without clips has neither.
 Every rotor and propeller has a **blur disc**: a thin see-through plate of the blades'
 radius, square to the axis they turn about, a few centimetres off the blades' plane
 (`blurDisc` in `propellers.ts`, the child node `<part>-disc` of the turning part, pivoted on
-its hub; material `blur`, `MaterialSpec.opacity` 0.22 - transparent and writing no depth in
-the JS model, `alphaMode` BLEND in the GLB). A helicopter's main rotor draws each blade as
+its hub; material `blur`, `seeThrough` at opacity 0.22 - transparent and writing no depth in the JS
+model, `alphaMode` BLEND in the GLB, [js-format.md](js-format.md)). A helicopter's main rotor draws each blade as
 its own child node `rotor-blade-<n>` on the hub.
 
 The clip **`spin`** (drive `spin`, times 0 to 1, `SPIN_SAMPLES` = 8 steps; `spinClip`)

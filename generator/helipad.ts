@@ -8,9 +8,12 @@
 
 import type { HelipadClass, HelipadDecl, ParamValues, ProceduralDesign } from "./design.ts";
 import { resolveParams } from "./design.ts";
+import { materialPositions } from "./meshAudit.ts";
 
 /** A helipad as the meta entry carries it: the declaration and what the export measured. */
 export interface ExportedHelipad {
+  /** The material its touchdown surface is drawn in, as declared. */
+  material: string;
   pad: HelipadClass;
   /** The parameter selection that draws it; absent: every build of the model has it. */
   when?: ParamValues;
@@ -31,7 +34,7 @@ const r4 = (v: number): number => Math.round(v * 1e4) / 1e4 + 0;
 export function measureHelipad(design: ProceduralDesign, decl: HelipadDecl): ExportedHelipad {
   const values = resolveParams(design.params ?? [], decl.when ?? {});
   const m = design.build(values);
-  const pos = m.materialPositions(decl.material);
+  const pos = materialPositions(m, decl.material);
   if (!pos.length) throw new Error(`${design.id}: helipad material "${decl.material}" is not drawn${decl.when ? ` with ${JSON.stringify(decl.when)}` : ""} (docs/models/game-properties.md)`);
   const min = [Infinity, Infinity, Infinity];
   const max = [-Infinity, -Infinity, -Infinity];
@@ -47,6 +50,7 @@ export function measureHelipad(design: ProceduralDesign, decl: HelipadDecl): Exp
     throw new Error(`${design.id}: helipad material "${decl.material}" is not a level surface`);
   }
   return {
+    material: decl.material,
     pad: decl.pad,
     ...(decl.when ? { when: decl.when } : {}),
     centre: [r4((min[0]! + max[0]!) / 2), r4(max[1]!), r4((min[2]! + max[2]!) / 2)],

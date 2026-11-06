@@ -40,6 +40,12 @@ export interface MaterialSpec {
    */
   opacity?: number;
   /**
+   * Options the JS model hands its MeshStandardMaterial as they are (a see-through
+   * material's `transparent`, `opacity` and `depthWrite: false`; `seeThrough`).
+   * Data, not code in the builder: every model's JS bundles the builder.
+   */
+  jsMaterial?: Record<string, unknown>;
+  /**
    * A named surface (surfaces.ts SURFACES) the game binds a photo to; `color` stays
    * the honest flat colour. Set both with `surfaceMaterial(id)`: the JS model then
    * carries box-projected UVs at `surfaceTile` units per repeat and lists the
@@ -48,6 +54,11 @@ export interface MaterialSpec {
   surface?: string;
   /** Model units one repeat of the surface's photo spans (from its preset). */
   surfaceTile?: number;
+}
+
+/** A see-through material at `opacity` (0..1): the GLB's alpha and the JS model's options. */
+export function seeThrough(spec: MaterialSpec, opacity: number): MaterialSpec {
+  return { ...spec, opacity, jsMaterial: { transparent: true, opacity, depthWrite: false } };
 }
 
 /**
@@ -760,12 +771,6 @@ export class MeshCore {
     }
   }
 
-  /** Whether any triangle carries a corner colour (see `triShaded`). */
-  hasVertexColors(): boolean {
-    for (const g of this.groups.values()) if (g.col) return true;
-    return false;
-  }
-
   quad(mat: string, a: Vec3, b: Vec3, c: Vec3, d: Vec3): void {
     this.tri(mat, a, b, c);
     this.tri(mat, a, c, d);
@@ -984,11 +989,6 @@ export class MeshCore {
     const out: number[] = [];
     for (const g of this.groups.values()) for (const v of g.pos) out.push(v);
     return out;
-  }
-
-  /** The triangle corners drawn in one material, model coordinates, x,y,z flat (a helipad's surface; helipad.ts). */
-  materialPositions(mat: string): number[] {
-    return [...(this.groups.get(mat)?.pos ?? [])];
   }
 
   triangleCount(): number {

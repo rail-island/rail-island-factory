@@ -4,7 +4,7 @@
 // kit, the airship and the small airplane.
 
 import type { MeshBuilder } from "./meshBuilder.ts";
-import type { Vec3 } from "./meshCore.ts";
+import { seeThrough, type MaterialSpec, type Vec3 } from "./meshCore.ts";
 
 /** Seconds a propeller takes for one turn on the clip: a visual rate, not the real one. */
 export const PROP_PERIOD = 0.24;
@@ -56,7 +56,7 @@ export const BLUR_HIDDEN = 0.001;
 export const BLADE_DROOP = (3 * Math.PI) / 180;
 /** The blur disc's material name and spec (MaterialSpec.opacity). */
 export const BLUR_MATERIAL = "blur";
-export const BLUR_SPEC = { color: "#33363b", roughness: 0.7, opacity: 0.22, doubleSided: true };
+export const BLUR_SPEC: MaterialSpec = /* @__PURE__ */ seeThrough({ color: "#33363b", roughness: 0.7, doubleSided: true }, 0.22);
 /** Corners of a blur disc's rim. */
 const DISC_SIDES = 32;
 

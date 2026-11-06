@@ -11,6 +11,7 @@ import os from "node:os";
 import path from "node:path";
 import { AIRCRAFT_CATALOG } from "../generator/aircraft";
 import { SKYSCRAPERS } from "../generator/skyscrapers";
+import { materialPositions } from "../generator/meshAudit";
 import { VEHICLES } from "../generator/vehicles";
 import { ALL_VEHICLES, BUILDINGS, DESIGNS, buildExport, generateReferences, vehicleSeat } from "../generator/generate";
 import { VILLAGE_HOUSES } from "../generator/village";
@@ -219,7 +220,7 @@ describe("helipads", () => {
     expect(pad.centre[2]).toBeCloseTo(0, 3);
     expect(pad.centre[1]).toBeGreaterThan(top - 1);
     // the default tower keeps its mast and has no pad
-    expect(design.build().materialPositions("helipad")).toEqual([]);
+    expect(materialPositions(design.build(), "helipad")).toEqual([]);
     const fake = { ...design, id: "proc-building-test", game: { helipad: { material: "helipad", pad: "small" as const } } };
     expect(() => exportMeta([fake])).toThrow(/helipad material "helipad" is not drawn/);
     expect(() => exportMeta([{ ...design, id: "proc-building-test", game: { helipad: { material: "helipad", pad: "small" as const, when: { helipad: "deck" } } } }])).toThrow(/does not resolve/);

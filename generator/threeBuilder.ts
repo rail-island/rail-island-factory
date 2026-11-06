@@ -36,8 +36,8 @@ export class MeshBuilder extends MeshCore {
       const m = new THREE.MeshStandardMaterial({
         color: spec.color, metalness: spec.metallic ?? 0, roughness: spec.roughness ?? 0.85,
         ...(spec.doubleSided ? { side: THREE.DoubleSide } : {}),
-        // a blur disc (MaterialSpec.opacity): see-through, behind nothing it hides
-        ...(spec.opacity !== undefined ? { transparent: true, opacity: spec.opacity, depthWrite: false } : {}),
+        // a blur disc: see-through (MaterialSpec.jsMaterial, `seeThrough`)
+        ...spec.jsMaterial,
         ...(this.groups.get(mat)!.col ? { vertexColors: true } : {}),
       });
       m.name = mat;
@@ -89,7 +89,7 @@ export class MeshBuilder extends MeshCore {
       clip.times[clip.times.length - 1]!,
       clip.tracks.map((t) => t.path === "rotation"
         ? new THREE.QuaternionKeyframeTrack(`${t.node}.quaternion`, clip.times, t.values)
-        : new THREE.VectorKeyframeTrack(`${t.node}.${t.path === "scale" ? "scale" : "position"}`, clip.times, t.values)),
+        : new THREE.VectorKeyframeTrack(`${t.node}.${t.path[0] === "s" ? t.path : "position"}`, clip.times, t.values)),
     ));
     const data = root.userData;
     // a deep copy, as GLTFLoader hands the GLB's scene extras over

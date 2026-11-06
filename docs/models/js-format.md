@@ -44,10 +44,12 @@ scene.add(build(THREE)); // a THREE.Group named after the model id
   no UVs.
 - **Lamps.** A vehicle that draws a lamp material carries `userData.lamps`: each lamp material's role, lit
   colour and intensity, and `midX`, which splits its front lamps from its rear ([lamps.md](lamps.md)).
-- **See-through.** A material with `opacity` (`MaterialSpec.opacity`, below 1: a rotor's or a
-  propeller's blur disc, [animation.md](animation.md#spin)) is built `transparent` at that opacity,
-  double-sided and writing no depth; the GLB's is `alphaMode` BLEND with the opacity as its base
-  colour's alpha.
+- **See-through.** A material made with `seeThrough(spec, opacity)` (`meshCore.ts`: a rotor's or a
+  propeller's blur disc, [animation.md](animation.md#spin)) carries `opacity` - the GLB's material
+  is `alphaMode` BLEND with it as the base colour's alpha - and `jsMaterial`, the options the JS
+  model hands its MeshStandardMaterial as they are (`transparent`, `opacity`, `depthWrite: false`).
+  The options are palette data rather than code in the builder because every model's JS bundles
+  the builder (`test/catalogSweep.ts` keeps each JS under its GLB's size).
 - **Glass.** A vehicle's window glass material - a palette entry with `glass: true` (a windscreen, a side
   window, a tinted visor, frosted toilet glass) - carries `userData.glass = true`, and the game draws it
   with a reflection of the sky. The GLB does not carry the flag. Every vehicle family marks its glass in its
