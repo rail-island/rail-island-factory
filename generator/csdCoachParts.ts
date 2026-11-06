@@ -380,11 +380,12 @@ export class Coach {
   }
 
   /** A framed window: the frame over the whole box, the glass inset by `fw`. */
-  window(v: Volume, s: number, b: Box, opts: { frame?: string; glass?: string; fw?: number; end?: boolean; sash?: number } = {}): void {
+  window(v: Volume, s: number, b: Box, opts: { frame?: string; glass?: string; fw?: number; end?: boolean; sash?: number; depth?: number } = {}): void {
     const fw = opts.fw ?? 0.06;
     const draw = (mat: string, bb: Box, proud: number, depth = 0.04) =>
       opts.end ? this.endPanel(v, mat, s, bb, proud, depth) : this.sidePanel(v, mat, s, bb, proud, depth);
-    this.m.scope("frame", () => draw(opts.frame ?? "frame", b, 0.012));
+    // `depth`: how deep the frame reaches in (a pocket door's light keeps shallow)
+    this.m.scope("frame", () => draw(opts.frame ?? "frame", b, 0.012, opts.depth));
     // the glass is a thin layer in front of the frame: its walls never meet the frame's
     const glass = { x0: b.x0 + fw, y0: b.y0 + fw, x1: b.x1 - fw, y1: b.y1 - fw };
     this.inWindow = true;

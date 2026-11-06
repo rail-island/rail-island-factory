@@ -223,10 +223,10 @@
     45
    ],
    "nodes": [
-    "body/cab/glass-band"
+    "front-end/windscreens"
    ],
    "tolerancePixels": 2,
-   "uncertainty": "the dark mask and the glass are one colour in the BMP"
+   "uncertainty": "the dark mask and the glass are one colour in the BMP; the two windscreens are drawn from the photographs (photo-81-71-head-car-front.jpg), moved deliberately"
   },
   {
    "id": "lamps",
@@ -242,7 +242,7 @@
     "front-end/lamps"
    ],
    "tolerancePixels": 2,
-   "uncertainty": "the light grey lamp strip; the model has four round lamps"
+   "uncertainty": "the light grey lamp strip; the model has four round lamps, raised onto the foot of the dark mask as the photographs show them, moved deliberately"
   }
  ]
 }

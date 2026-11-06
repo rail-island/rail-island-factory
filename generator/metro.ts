@@ -8,6 +8,7 @@
 // a third rail through shoes on the bogies. See docs/models/trams.md.
 
 import type { MeshBuilder } from "./meshBuilder.ts";
+import type { MaterialSpec } from "./meshCore.ts";
 import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
 import { Tram, type Pt, type PxBox, type SourceVolume, type TramMap } from "./tramKit.ts";
@@ -24,6 +25,7 @@ export const METRO_CATALOG: CatalogFields = {
 };
 
 export type MetroUnit = "headCar" | "middleCar";
+export type MetroLivery = "prague" | "budapest";
 
 export const METRO_PARAMS: readonly ParamSpec[] = [{
   name: "unit",
@@ -33,6 +35,14 @@ export const METRO_PARAMS: readonly ParamSpec[] = [{
     { value: "middleCar", title: "Middle car" },
   ],
   default: "headCar",
+}, {
+  name: "livery",
+  title: "Livery",
+  values: [
+    { value: "prague", title: "Prague" },
+    { value: "budapest", title: "Budapest" },
+  ],
+  default: "prague",
 }];
 
 /** 780 mm wheels, 2.1 m bogie wheelbase, 12.6 m between the bogie pivots. */
@@ -94,17 +104,81 @@ const CARS: Record<MetroUnit, MetroCar> = {
 /** Underfloor equipment boxes between the bogies (source x0, x1, bottom y), from the XML. */
 const EQUIPMENT: Array<[number, number, number]> = [[6.3, 7.0, 0.6], [7.0, 7.8, 0.3], [7.8, 10.8, 0.4], [10.8, 11.5, 0.3], [11.6, 12.0, 0.4], [12.1, 12.5, 0.5], [12.7, 13.4, 0.3], [13.4, 13.7, 0.4], [13.9, 14.2, 0.5]];
 
-const PALETTE = {
-  silver: { color: "#c3c8cc", metallic: 0.4, roughness: 0.4 },
-  rib: { color: "#9ea4a9", metallic: 0.4, roughness: 0.45 },
-  doorRed: { color: "#cf2a2a", roughness: 0.5 },
-  doorYellow: { color: "#e5bf1d", roughness: 0.5 },
-  mask: { color: "#3f4245", roughness: 0.6 },
+/**
+ * A livery's paint (assets/metro-81-71/PHOTOS.md): `silver` the body, `rib` the
+ * side ribs, `trim` the sill moulding and the gutter, `doorRed` the door leaves,
+ * `doorYellow` the band across them (none where the livery has no band), `mask`
+ * the cab front, `roof` the roof.
+ */
+interface MetroPaint {
+  palette: Record<string, MaterialSpec>;
+  doorBand: boolean;
+}
+
+const COMMON: Record<string, MaterialSpec> = {
   shoe: { color: "#d5b51c", roughness: 0.6 },
+  sign: { color: "#e9ebe6", roughness: 0.4 },
+  anticlimber: { color: "#7f8487", metallic: 0.2, roughness: 0.6 },
 };
-// silver above a ribbed lower side, the roof grey over 3.4 m; the head car's cab paint
-const BANDS: Array<[number, number, string]> = [[0, 1.9, "rib"], [1.9, 3.4, "silver"], [3.4, 3.8, "roof"]];
-const CAB_BANDS: Array<[number, number, string]> = [[0, 1.55, "mask"], [1.55, 1.9, "silver"], [1.9, 2.95, "glass"], [2.95, 3.4, "silver"], [3.4, 3.8, "roof"]];
+
+export const METRO_LIVERIES: Record<MetroLivery, MetroPaint> = {
+  // Prague: the stainless-look silver body, red doors with a yellow band, the dark cab mask
+  prague: {
+    palette: {
+      ...COMMON,
+      silver: { color: "#c3c8cc", metallic: 0.4, roughness: 0.4 },
+      rib: { color: "#8f959a", metallic: 0.4, roughness: 0.45 },
+      trim: { color: "#e1e4e6", metallic: 0.6, roughness: 0.3 },
+      doorRed: { color: "#cf2a2a", roughness: 0.5 },
+      doorYellow: { color: "#e5bf1d", roughness: 0.5 },
+      mask: { color: "#2b2d30", roughness: 0.6 },
+      roof: { color: "#8e9496", roughness: 0.75 },
+    },
+    doorBand: true,
+  },
+  // Budapest (the M3's Soviet cars): blue all over, roof, vents and doors too, dark grey mouldings and window frames
+  budapest: {
+    palette: {
+      ...COMMON,
+      silver: { color: "#2f66ad", roughness: 0.5 },
+      rib: { color: "#244f88", roughness: 0.55 },
+      trim: { color: "#4b4f54", metallic: 0.3, roughness: 0.5 },
+      doorRed: { color: "#2c62a8", roughness: 0.5 },
+      doorYellow: { color: "#2c62a8", roughness: 0.5 },
+      mask: { color: "#2a5c9f", roughness: 0.55 },
+      roof: { color: "#2b5e9f", roughness: 0.7 },
+      roofBox: { color: "#26548f", roughness: 0.7 },
+      frame: { color: "#3d4247", metallic: 0.2, roughness: 0.5 },
+    },
+    doorBand: false,
+  },
+};
+
+/** The body is one colour, the roof grey over 3.4 m; the head car's cab is the mask above its apron. */
+const BANDS: Array<[number, number, string]> = [[0, 3.4, "silver"], [3.4, 3.8, "roof"]];
+const CAB_BANDS: Array<[number, number, string]> = [[0, 1.3, "silver"], [1.3, 3.4, "mask"], [3.4, 3.8, "roof"]];
+/** The roof's row of ventilators (source x). */
+const VENTS = [3.0, 5.6, 8.2, 10.8, 13.4, 16.0];
+/** The side ribs (source heights of their feet): five on the lower side, four in the piers between the windows. */
+const LOWER_RIBS = [1.1, 1.25, 1.4, 1.55, 1.7];
+const PIER_RIBS = [2.27, 2.47, 2.67, 2.87];
+const RIB_H = 0.035;
+/** The sill moulding (source heights), under the windows from end to end but for the doors. */
+const MOULDING: [number, number] = [1.95, 2.06];
+/** Where the fleet number sits (source x), clear of doors and windows, under the moulding. */
+const NUMBER_X: Record<MetroUnit, number> = { headCar: 4.15, middleCar: 3.95 };
+
+/** Spans along the side (source px) from `from` to `to` that keep 0.3 px clear of every box in `stops`. */
+function spansBetween(stops: PxBox[], from: number, to: number): Array<[number, number]> {
+  const spans: Array<[number, number]> = [];
+  let at = from;
+  for (const d of [...stops].sort((p, q) => p[0] - q[0])) {
+    if (d[0] - 0.3 - at > 0.5) spans.push([at, d[0] - 0.3]);
+    at = Math.max(at, d[2] + 0.3);
+  }
+  if (to - at > 0.5) spans.push([at, to]);
+  return spans;
+}
 
 /**
  * A car of the 81-71 for distant views, by the tram kit's adapter (lodTrams.ts):
@@ -112,13 +186,14 @@ const CAB_BANDS: Array<[number, number, string]> = [[0, 1.55, "mask"], [1.55, 1.
  * band, the side window bands, the roof vents and the bogies.
  */
 export function metro8171Lod(params?: ParamValues): MeshBuilder {
-  const unit = resolveParams(METRO_PARAMS, params).unit as MetroUnit;
+  const p = resolveParams(METRO_PARAMS, params);
+  const unit = p.unit as MetroUnit;
   const car = CARS[unit];
   const head = unit === "headCar";
   const [a, b] = car.ends;
   return tramLod({
     map: { ...METRO_MAP, c: (car.couplers[0] + car.couplers[1]) / 2 },
-    palette: PALETTE,
+    palette: METRO_LIVERIES[p.livery as MetroLivery].palette,
     section: SECTION,
     body: car.body,
     bodies: [[a, b]],
@@ -135,49 +210,53 @@ export function metro8171Lod(params?: ParamValues): MeshBuilder {
 }
 
 export function metro8171(params?: ParamValues): MeshBuilder {
-  const unit = resolveParams(METRO_PARAMS, params).unit as MetroUnit;
+  const p = resolveParams(METRO_PARAMS, params);
+  const unit = p.unit as MetroUnit;
+  const livery = METRO_LIVERIES[p.livery as MetroLivery];
   const car = CARS[unit];
   const head = unit === "headCar";
-  const t = new Tram(PALETTE, { ...METRO_MAP, c: (car.couplers[0] + car.couplers[1]) / 2 });
+  const t = new Tram(livery.palette, { ...METRO_MAP, c: (car.couplers[0] + car.couplers[1]) / 2 });
   const m = t.m;
   const [a, b] = car.ends;
-  const bands = BANDS;
-  const cabBands = CAB_BANDS;
   const vols = head
-    ? [t.vol("cab", SECTION, car.body, a, 0.75, cabBands), t.vol("saloon", SECTION, car.body, 0.75, b, bands)]
-    : [t.vol("saloon", SECTION, car.body, a, b, bands)];
+    ? [t.vol("cab", SECTION, car.body, a, 0.75, CAB_BANDS), t.vol("saloon", SECTION, car.body, 0.75, b, BANDS)]
+    : [t.vol("saloon", SECTION, car.body, a, b, BANDS)];
   const saloon = vols[vols.length - 1]!;
-  // the saloon's doorways on both sides, so the open plug doors show the interior (doors.ts)
+  // the saloon's doorways on both sides, so the doors sliding into the wall show the interior (doors.ts)
   saloon.openings = [1, -1].flatMap((s) => car.doors.map((d) => t.doorOpening(s, t.box(d))));
   m.scope("body", () => vols.forEach((v) => m.scope(v.name, () => t.volume(v))));
+  // where the side's ribs and moulding run: from behind the cab (or the end's rounding) to the far end
+  const [from, to] = head ? [18, 196] : [6, 193];
+  const doorStops: PxBox[] = [...(car.cabDoor ? [car.cabDoor] : []), ...car.doors];
+  // a strip along the side over source px u0..u1, its foot at source height y, h metres tall
+  const strip = (s: number, mat: string, u0: number, u1: number, y: number, h: number, proud: number, depth: number) =>
+    t.sidePanel(saloon, mat, s, { x0: t.fx(u1 / 10), x1: t.fx(u0 / 10), y0: t.fy(y), y1: t.fy(y) + h }, proud, depth);
   for (const s of [1, -1]) m.scope(s > 0 ? "right side" : "left side", () => {
-    // the ribs of the stainless lower side: light strips over the darker band
+    // the corrugated sides: raised ribs over the lower side and in the piers between the windows
     m.scope("ribs", () => {
-      // between the doors (and the cab door): a rib never runs under a door's seam
-      const stops = [...(car.cabDoor ? [car.cabDoor] : []), ...car.doors].map((d) => [d[0], d[2]] as const);
-      const spans: Array<[number, number]> = [];
-      let from = head ? 18 : 6;
-      for (const [d0, d1] of stops) {
-        if (d0 - from > 1) spans.push([from, d0 - 0.3]);
-        from = Math.max(from, d1 + 0.3);
-      }
-      spans.push([from, head ? 196 : 193]);
-      for (const [u0, u1] of spans) for (let r = 41; r <= 47; r += 2) t.paint(saloon, s, "silver", [u0, r, u1, r + 1]);
+      for (const [u0, u1] of spansBetween(doorStops, from, to)) for (const y of LOWER_RIBS) strip(s, "rib", u0, u1, y, RIB_H, 0.008, 0.012);
+      for (const [u0, u1] of spansBetween([...doorStops, ...car.windows], from, to))
+        for (const y of PIER_RIBS) strip(s, "rib", u0, u1, y, RIB_H, 0.008, 0.012);
     });
+    m.scope("moulding", () => {
+      for (const [u0, u1] of spansBetween(doorStops, head ? 8 : from, to)) strip(s, "trim", u0, u1, MOULDING[0], t.fy(MOULDING[1]) - t.fy(MOULDING[0]), 0.016, 0.03);
+    });
+    m.scope("gutter", () => strip(s, "trim", head ? 8 : from, to, 3.12, 0.045, 0.02, 0.03));
     m.scope("windows", () => t.windows(saloon, s, car.windows, { frame: "frame", fw: 0.06 }));
     m.scope("doors", () =>
       car.doors.forEach((d, i) =>
         m.scope(`door ${i + 1}`, () => {
-          // two sliding plug leaves, the yellow stripe and a light riding on each (doors.ts)
+          // two leaves sliding apart into pockets in the wall, the band and a light riding on each (doors.ts)
           const mid = (d[0] + d[2]) / 2;
           t.door(saloon, s, t.box(d), "doorRed", {
-            opens: { kind: "plug", leaves: 2 },
+            opens: { kind: "pocket", leaves: 2 },
             leafWork: (clip) => {
-              const stripe = clip(t.box([d[0] + 1, 39, d[2] - 1, 41]));
-              if (stripe) t.sidePanel(saloon, "doorYellow", s, stripe, 0.014, 0.003);
+              const band = livery.doorBand ? clip(t.box([d[0] + 1, 39, d[2] - 1, 41])) : null;
+              if (band) t.sidePanel(saloon, "doorYellow", s, band, 0.014, 0.003);
               for (const [u0, u1] of [[d[0] + 1, mid - 0.5], [mid + 0.5, d[2] - 1]] as const) {
                 const w = clip(t.box([u0, 30, u1, 39]));
-                if (w) t.m.scope("light", () => t.window(saloon, s, w, { frame: "seam", fw: 0.04 }));
+                // a shallow frame: the leaf slides behind the skin, clear of the cabin wall
+                if (w) t.m.scope("light", () => t.window(saloon, s, w, { frame: "seam", fw: 0.04, depth: 0.012 }));
               }
             },
           });
@@ -188,16 +267,24 @@ export function metro8171(params?: ParamValues): MeshBuilder {
       t.door(saloon, s, t.box(car.cabDoor!), "silver");
       t.window(saloon, s, t.box([10, 30, 16, 38]), { frame: "frame", fw: 0.04 });
     });
-    m.scope("fleet number", () => t.inscription(saloon, s, t.fx(head ? 3.3 : 2.9), [{ text: METRO_NUMBERS[unit], y: t.fy(2.05), h: 0.13 }], 0.006, "marking"));
+    m.scope("fleet number", () => t.inscription(saloon, s, t.fx(NUMBER_X[unit]), [{ text: METRO_NUMBERS[unit], y: t.fy(1.79), h: 0.12 }], 0.006, "marking"));
   });
   for (const e of [1, -1]) m.scope(e > 0 ? "front end" : "rear end", () => {
     const v = e > 0 ? vols[0]! : saloon;
     if (head && e > 0) {
-      m.scope("lamps", () => {
-        for (const u of [6, 24]) t.lamp(v, e, u, 50, 0.09, "lampHead");
-        for (const u of [9, 21]) t.lamp(v, e, u, 50, 0.05, "lampRed");
+      // the cab front: the wide windscreen with the destination sign, the driver's window, the lamps low on the mask
+      m.scope("windscreens", () => {
+        for (const w of [[4, 30, 17, 39], [18, 30, 26, 39]] as PxBox[]) {
+          t.endPaint(v, e, "seam", [w[0] - 0.4, w[1] - 0.4, w[2] + 0.4, w[3] + 0.4], 0.004);
+          t.endPaint(v, e, "glass", w, 0.008);
+        }
       });
-      m.scope("windscreen pillar", () => t.endPaint(v, e, "mask", [14, 30, 16, 45], 0.03));
+      m.scope("destination sign", () => t.endPaint(v, e, "sign", [6, 36.6, 15, 38.4], 0.012));
+      m.scope("lamps", () => {
+        for (const u of [5, 25]) t.lamp(v, e, u, 45, 0.09, "lampHead");
+        for (const u of [8.5, 21.5]) t.lamp(v, e, u, 45, 0.05, "lampRed");
+      });
+      m.scope("anticlimber", () => block(m, "anticlimber", t.fx(a + 0.02), t.fx(a) + 0.1, t.fy(0.74), t.fy(0.95), -1.0, 1.0));
     } else {
       // an intercar end: the gangway door between two windows
       m.scope("end door", () => {
@@ -211,7 +298,7 @@ export function metro8171(params?: ParamValues): MeshBuilder {
     m.scope("coupler", () => t.coupler(e, t.fx(e > 0 ? a + 0.6 : b - 0.6), t.fx(e > 0 ? car.couplers[0] : car.couplers[1]), t.fy(0.85)));
   });
   m.scope("roof equipment", () => {
-    for (const x of [4.5, 10, 15.5]) m.scope("vent", () => t.roofBox("roofBox", x - 0.4, x + 0.4, 3.66, 3.76, 0.25, 0.03));
+    for (const x of VENTS) m.scope("vent", () => t.roofBox("roofBox", x - 0.35, x + 0.35, 3.66, 3.76, 0.25, 0.03));
   });
   m.scope("underframe", () => {
     for (const [x0, x1, y0] of EQUIPMENT) m.scope("equipment box", () => block(m, "underframe", t.fx(x1), t.fx(x0), t.fy(y0), t.fy(1.0) - 0.004, -1.2, 1.2));

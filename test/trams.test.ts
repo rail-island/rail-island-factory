@@ -15,6 +15,8 @@ import { meanAbsoluteError } from "../generator/csdCoachComparison.ts";
 import { findCoplanarOverlaps } from "../generator/coplanar.ts";
 import { glbStats } from "../generator/glbStats.ts";
 import { parseGlb } from "../generator/glbParse.ts";
+import { poseGlb } from "../generator/glbPose.ts";
+import { DOOR_POCKET_IN, DOOR_SAMPLES } from "../generator/doors.ts";
 import { collectTriangles } from "../generator/glbTriangles.ts";
 import { isLeaf, type TreeNode } from "../generator/sourceTree.ts";
 import type { ParamValues } from "../generator/design.ts";
@@ -53,8 +55,9 @@ describe("the tram and metro designs", () => {
     expect(DESIGNS.get(proceduralId("proc-vehicle-tatra-t3"))!.params![0]!.values.map((v) => v.value)).toEqual(["t3", "t3m", "t3prototype"]);
     expect(params("proc-vehicle-tatra-kt8")).toEqual({ livery: "redWhite" });
     expect(DESIGNS.get(proceduralId("proc-vehicle-tatra-kt8"))!.params![0]!.values.map((v) => v.value)).toEqual(["redWhite", "red", "modern"]);
-    expect(params("proc-vehicle-metro-81-71")).toEqual({ unit: "headCar" });
+    expect(params("proc-vehicle-metro-81-71")).toEqual({ unit: "headCar", livery: "prague" });
     expect(DESIGNS.get(proceduralId("proc-vehicle-metro-81-71"))!.params![0]!.values.map((v) => v.value)).toEqual(["headCar", "middleCar"]);
+    expect(DESIGNS.get(proceduralId("proc-vehicle-metro-81-71"))!.params![1]!.values.map((v) => v.value)).toEqual(["prague", "budapest"]);
     expect(DESIGNS.get(proceduralId("proc-vehicle-tatra-t6"))!.params).toBeUndefined();
   });
 
@@ -145,6 +148,23 @@ describe("the published dimensions", () => {
       const tree = DESIGNS.get(proceduralId("proc-vehicle-metro-81-71"))!.build({ unit }).sourceTree("m", "m");
       const xs = walk(tree.root).filter((n) => /running-gear\/bogie-\d$/.test(n.id)).map((n) => centreX(n as Box));
       expect(Math.abs(xs[0]! - xs[1]!)).toBeCloseTo(METRO_PIVOTS, 2);
+    }
+  });
+
+  it("slides the 81-71's door leaves into the wall, never out over the side", () => {
+    // regression: the leaves stepped out and slid over the body like plug doors
+    for (const unit of ["headCar", "middleCar"]) {
+      const glb = DESIGNS.get(proceduralId("proc-vehicle-metro-81-71"))!.build({ unit }).toGlb("metro");
+      const clip = (parseGlb(glb).json as unknown as { animations: Array<{ name: string }> }).animations.findIndex((a) => a.name === "doors-right");
+      expect(clip).toBeGreaterThanOrEqual(0);
+      const leafZ = (k: number) => {
+        const { json, bin } = parseGlb(poseGlb(glb, k, clip));
+        const zs = collectTriangles(json, bin).filter((t) => t.material === "doorRed").flatMap((t) => t.p.map((q) => q[2])).filter((z) => z > 0);
+        return Math.max(...zs);
+      };
+      const shut = leafZ(0);
+      for (let k = 1; k <= DOOR_SAMPLES; k++) expect(leafZ(k)).toBeLessThanOrEqual(shut + 1e-6);
+      expect(leafZ(DOOR_SAMPLES)).toBeCloseTo(shut - DOOR_POCKET_IN, 3);
     }
   });
 
@@ -291,7 +311,9 @@ describe("the native comparison", () => {
   });
 
   it("holds the recorded mean absolute errors", () => {
-    const limits: Record<string, number> = { tram_ckd_t3: 1.6, tram_ckd_t6: 1.7, tram_ckd_kt8: 1.35, tram_ckd_kt4: 2.65, tram_kvag_gt4: 4.15, "m_mmz_81-71l": 1.3 };
+    // the 81-71's cab front follows the photographs, not its drawing: two windscreens in the
+    // dark mask, the lamps raised onto its foot (assets/metro-81-71/COMPARISON.md)
+    const limits: Record<string, number> = { tram_ckd_t3: 1.6, tram_ckd_t6: 1.7, tram_ckd_kt8: 1.35, tram_ckd_kt4: 2.65, tram_kvag_gt4: 4.15, "m_mmz_81-71l": 1.75 };
     for (const t of TRAM_TRANSFERS) expect(meanAbsoluteError(tramComparison(t.key)), t.key).toBeLessThanOrEqual(limits[t.key]!);
   });
 

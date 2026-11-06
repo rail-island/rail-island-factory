@@ -1,6 +1,6 @@
 # Trams and metro
 
-**Covers** - the trams and the metro car transferred from vlakosimdb: the Tatra T3 (three variants), T6A5, KT8D5 (three liveries) and KT4, the GT4, and the 81-71 metro car (head and middle car); the shared tram builder and its source-to-Factory map, the articulated trams' sections and joints, pantographs, lamps and direction indicators, sources, deviations, the native comparison and tests.
+**Covers** - the trams and the metro car transferred from vlakosimdb: the Tatra T3 (three variants), T6A5, KT8D5 (three liveries) and KT4, the GT4, and the 81-71 metro car (head and middle car, Prague and Budapest liveries); the shared tram builder and its source-to-Factory map, the articulated trams' sections and joints, pantographs, lamps and direction indicators, sources, deviations, the native comparison and tests.
 **Code** - `generator/trams.ts`, `generator/metro.ts`, `generator/tramKit.ts`, `generator/tramComparison.ts`, `generator/tramReport.ts`, `generator/orthoViews.ts`, `generator/treeIds.ts`, `test/trams.test.ts`, `test/rig.test.ts`
 **See also** - [world-trams.md](world-trams.md) (the world trams on the dimension-driven kit), [vehicles.md](vehicles.md), [vehicle-rig.md](vehicle-rig.md), [parameters.md](parameters.md), [csd-coaches.md](csd-coaches.md) (the coach builder underneath), [../../.agents/skills/vlakosimdb-transfer/SKILL.md](../../.agents/skills/vlakosimdb-transfer/SKILL.md)
 
@@ -13,7 +13,7 @@
 | `veh-tatra-kt8` | Tatra KT8D5 | `livery`: `redWhite` (tram_ckd_kt8, default), `red` (tram_ckd_kt8#2), `modern` (tram_ckd_kt8m) | three sections, two joints | 12,000 |
 | `veh-tatra-kt4` | Tatra KT4 | - (tram_ckd_kt4) | two sections, one joint | 7,900 |
 | `veh-kvag-gt4` | GT4 | - (tram_kvag_gt4) | two sections, one joint | 7,600 |
-| `veh-metro-81-71` | Metro 81-71 | `unit`: `headCar` (m_mmz_81-71l, default), `middleCar` (m_mmz_81-71v) | rigid | 6,200 / 5,500 |
+| `veh-metro-81-71` | Metro 81-71 | `unit`: `headCar` (m_mmz_81-71l, default), `middleCar` (m_mmz_81-71v); `livery`: `prague` (default), `budapest` | rigid | 8,600 / 7,800 |
 
 The trams take `TRAM_CATALOG` (category `Rail vehicles`, group `tram`), the metro
 car `METRO_CATALOG` (group `metro`). Every design has its `assets/<folder>/`
@@ -148,7 +148,20 @@ Pose block shows a slider per joint and no steering.
 - **KT4.** The end BMPs draw the bands at other heights than the sides; the model
   follows the sides.
 - **81-71.** The drawing is 3.0 m wide; the model is the published 2.7 m. The bogie
-  pivots are the published 12.6 m apart about the drawing's bogie midpoint.
+  pivots are the published 12.6 m apart about the drawing's bogie midpoint. The
+  photographs (assets/metro-81-71/PHOTOS.md) refine the drawing: the corrugated sides
+  are raised ribs over the lower side and in the piers between the windows (five and
+  four, `LOWER_RIBS`, `PIER_RIBS`), a sill moulding runs under the windows from end
+  to end but for the doors, a gutter under the roof's rounding; the head car's front
+  is a dark mask above a light apron, with a wide windscreen (its destination sign)
+  and the driver's window, the four lamps raised onto the mask's foot, a grey
+  anticlimber across the apron; six roof ventilators. The doors slide apart into
+  pockets in the body side (`pocket` 2, [doors.md](doors.md)).
+- **81-71 liveries** (`METRO_LIVERIES`): `prague` the silver body, red doors with a
+  yellow band, the dark mask; `budapest` (the M3's Soviet cars,
+  `photo-budapest-metro-3-kobanya-kispest-58.jpg`) blue all over - body, roof,
+  vents, doors and front - with dark grey mouldings and window frames, no door band.
+  Both share the body; only the palette and the door band differ.
 - **T3 / KT8D5 / T6A5.** The XML plan's ends (15.3 / 27.8 m) are kept where the BMP
   draws the body 0.2 m shorter.
 - The KT8D5's `modern` drawing is not the KT8D5R.N2 low-floor rebuild (its middle
@@ -175,10 +188,12 @@ the current boxes as `baseline.json`.
 | tram_ckd_kt8 | 23 | 1.310 pp | 1.312 pp |
 | tram_ckd_kt4 | 17 | 2.628 pp | 2.628 pp |
 | tram_kvag_gt4 | 15 | 4.102 pp | 4.102 pp |
-| m_mmz_81-71l | 15 | 1.195 pp | 1.223 pp |
+| m_mmz_81-71l | 15 | 1.195 pp | 1.726 pp |
 
 The KT8D5 and 81-71 rose slightly when the published length (the XML's 0.5 m body
-end) and bogie pivot distance replaced the first mapping.
+end) and bogie pivot distance replaced the first mapping; the 81-71 rose again when
+its cab front was drawn from the photographs (its windscreens and lamps, moved
+deliberately off the end BMP, whose mask and glass are one colour).
 
 ## Reviewing a model
 

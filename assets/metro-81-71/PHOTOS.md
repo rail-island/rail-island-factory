@@ -1,6 +1,6 @@
 # Metro 81-71 - reference photos
 
-One parametric model, `unit` headCar (vlakosimdb m_mmz_81-71l) and middleCar (m_mmz_81-71v), as Prague ran it on standard gauge.
+One parametric model, `unit` headCar (vlakosimdb m_mmz_81-71l) and middleCar (m_mmz_81-71v), as Prague ran it on standard gauge; `livery` prague and budapest.
 
 All files were downloaded from Wikimedia Commons, downscaled to at most 1600 px on the long side and saved as JPEG (quality 85). The page URL is the exact percent-encoded title. All licences require attribution (BY) and, for BY-SA, share-alike.
 
@@ -30,3 +30,11 @@ All files were downloaded from Wikimedia Commons, downscaled to at most 1600 px 
 - Licence: GFDL
 - Date: 16 September 2006
 - Shows: The third-rail current collector (shoe) on an 81-71 bogie, Hostivar depot open day.
+
+## photo-budapest-metro-3-kobanya-kispest-58.jpg
+
+- Commons title: File:Budapest, metró 3, Kőbánya-Kispest, 58.jpg
+- Page: https://commons.wikimedia.org/wiki/File:Budapest,_metr%C3%B3_3,_K%C5%91b%C3%A1nya-Kispest,_58.jpg
+- Author: Christo
+- Licence: CC BY-SA 4.0
+- Shows: Budapest M3 Ev3 set at Kobanya-Kispest in its blue paint: blue body, roof, doors and front, dark grey sill mouldings and window frames, the ribbed sides over the lower side and the window piers. Informs the `budapest` livery.

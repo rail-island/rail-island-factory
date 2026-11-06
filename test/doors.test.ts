@@ -8,7 +8,7 @@ import * as THREE from "three";
 import { MeshBuilder } from "../generator/meshBuilder.ts";
 import { MeshBuilder as ThreeMeshBuilder } from "../generator/threeBuilder.ts";
 import type { MeshCore, Vec3 } from "../generator/meshCore.ts";
-import { DOOR_FOLD_ANGLE, DOOR_PLUG_OUT, DOOR_SAMPLES, doorLeaves, openable, type DoorMotion } from "../generator/doors.ts";
+import { DOOR_FOLD_ANGLE, DOOR_PLUG_OUT, DOOR_POCKET_IN, DOOR_SAMPLES, doorLeaves, openable, type DoorMotion } from "../generator/doors.ts";
 import { liftable } from "../generator/liftable.ts";
 import { parseGlb } from "../generator/glbParse.ts";
 import { Coach, type Volume } from "../generator/csdCoachParts.ts";
@@ -63,6 +63,8 @@ describe("door leaves", () => {
     { kind: "swing", leaves: 2 },
     { kind: "plug", leaves: 1, toward: "high" },
     { kind: "plug", leaves: 2 },
+    { kind: "pocket", leaves: 1, toward: "low" },
+    { kind: "pocket", leaves: 2 },
   ];
   for (const motion of motions) {
     it(`${JSON.stringify(motion)}: fill the door, stand still shut`, () => {
@@ -99,6 +101,19 @@ describe("door leaves", () => {
     expect(open[0]).toBeCloseTo(0.3 - (a!.x1 - a!.x0) - 0.012, 9);
     expect(open[2]).toBeCloseTo(-1 - DOOR_PLUG_OUT, 9);
     expect(b!.move(1, -1)([0.9, 1, -1])[0]).toBeGreaterThan(1.2);
+  });
+
+  it("pocket: step in behind the skin, then slide apart into the wall", () => {
+    // the 81-71 metro car's doors slide into the body side, never out over it
+    for (const s of [1, -1]) {
+      const [a, b] = doorLeaves(0, 1.2, s, { kind: "pocket", leaves: 2 });
+      const p: Vec3 = [0.3, 1, s];
+      expect(a!.move(0.25, s)(p)).toEqual([0.3, 1, s - s * DOOR_POCKET_IN]);
+      const open = a!.move(1, s)(p);
+      expect(open[0]).toBeCloseTo(0.3 - (a!.x1 - a!.x0) - 0.012, 9);
+      expect(Math.abs(open[2])).toBeCloseTo(1 - DOOR_POCKET_IN, 9);
+      expect(b!.move(1, s)([0.9, 1, s])[0]).toBeGreaterThan(1.2);
+    }
   });
 });
 
