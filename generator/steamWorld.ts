@@ -144,9 +144,12 @@ export function steamTenderSpec(s: WorldSteam): LocoSpec {
   const d = s.tender.d;
   const n = s.tender.axles;
   const body = L - 0.6;
+  // a rigid row 1 m in from the ends, or, where that would put the wheels too close, centred at the
+  // closest pitch that keeps their treads 0.3 m apart
+  const pitch = Math.max(d + 0.3, (body - 2.0 - d) / Math.max(1, n - 1));
   const wheels = n === 4
     ? [0.9, 0.9 + 1.7, body - 0.9 - 1.7, body - 0.9]
-    : Array.from({ length: n }, (_, i) => 1.0 + d / 2 + ((body - 2.0 - d) * i) / Math.max(1, n - 1));
+    : Array.from({ length: n }, (_, i) => body / 2 + pitch * (i - (n - 1) / 2));
   const tankTop = Math.min(s.top - 0.9, 3.0);
   return {
     title: `${s.title} tender`,
