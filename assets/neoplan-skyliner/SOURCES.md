@@ -12,6 +12,7 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 |---|---|---|---|---|---|
 | `photo-neoplan-skyliner-2011-autobus-oberbayern.jpg` | Neoplan Skyliner 2011 Autobus Oberbayern.jpg | https://commons.wikimedia.org/wiki/File:Neoplan_Skyliner_2011_Autobus_Oberbayern.jpg | Anhuber | CC BY-SA 3.0 | the double-deck coach body |
 | `photo-neoplan-skyliner-iaa-2016-3-travelarz.jpg` | Neoplan Skyliner IAA 2016 (3) Travelarz.JPG | https://commons.wikimedia.org/wiki/File:Neoplan_Skyliner_IAA_2016_(3)_Travelarz.JPG | Travelarz | CC BY-SA 3.0 pl | the double-deck coach body |
+| `photo-flixbus-vestmotorvejen-in-2019-04.jpg` | Flixbus (Vestmotorvejen) in 2019.04.jpg | https://commons.wikimedia.org/wiki/File:Flixbus_(Vestmotorvejen)_in_2019.04.jpg | CAPTAIN RAJU | CC BY-SA 4.0 | the whole Neoplan Skyliner (the lead photograph of Wikipedia's "Neoplan Skyliner") |
 
 ## Published figures
 
