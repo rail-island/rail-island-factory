@@ -104,6 +104,8 @@ Details in [docs/models/lod.md](docs/models/lod.md) and the skills in
 | Freight wagons | 8,000 | 100 | - | - |
 | Chairlift chairs | 8,000 | 100 | - | - |
 | Aircraft | 10,000 | 200 | - | - |
+| Ships over 150 m | 25,000 | 100 | - | - |
+| Ships up to 150 m | 15,000 (small craft 4,000) | 100 | - | - |
 | Row houses and ordinary buildings | 10,000 | 100 | - | - |
 | Skyscrapers and towers | 10,000 | 500 | - | - |
 | Historical landmarks | 20,000-30,000 | 500 | - | - |
