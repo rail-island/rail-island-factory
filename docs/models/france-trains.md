@@ -57,7 +57,9 @@ on the CC 7100's and the 1100 on a shortened BB 9200's ([netherlands-trains.md](
   faces (the series kit's `cabFace`): upright with rounded corners, two big and two narrow windows
   in rubber, the big lamps at the corners, the red rising from a V in the middle to them, the
   number, buffers and a screw coupling. Red below the windows, cream above and on the roof. The
-  turret's curved windscreen tops and the engine compartment's grilles are not drawn.
+  turret's windscreens curve back over its rounded top; three louvred grilles in the red behind
+  the cab door (the series kit's horizontal `endGrilles`) stand for the engine room's. The
+  sides are painted steel, not fluted.
 - **TGV M.** The ends are drawn as passenger cars with a nose (the series kit); the
   real Avelia Horizon's ends are power cars with no seats.
 - **CIWL.** One body for the Pullman and the sleeping car; the liveries are separate

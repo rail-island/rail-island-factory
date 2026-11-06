@@ -17,7 +17,7 @@ import { crownDisc, crownPane, sideDecal, sidePanel, surfaceDisc, type SliceBody
 import { decalX } from "./usHoodKit.ts";
 import { CARBODY_PALETTE, faceLamps, type NoseShape } from "./carbodyKit.ts";
 import { INTERIOR_PALETTE } from "./interior.ts";
-import { drawCar, type CarDef } from "./usTransit.ts";
+import { drawCar, type CarDef, type Flutes } from "./usTransit.ts";
 import { diamond, singleArm } from "./czElectricKit.ts";
 import type { LoadingGauge } from "./loadingGauge.ts";
 import { DMU_CATALOG, EMU_CATALOG, enumParam } from "./emuParts.ts";
@@ -126,7 +126,11 @@ export interface ShinkansenSeries {
   /** A grille on the nose's front face between the face lamps: its half width, bottom and top, and its slats. */
   faceGrille?: { z: number; y: readonly [number, number]; slats: number };
   /** A locomotive end car's side grilles (d0, d1, y0, y1, vertical slats): a power car's radiator and air intakes. */
-  endGrilles?: ReadonlyArray<readonly [number, number, number, number, number]>;
+  endGrilles?: ReadonlyArray<readonly [number, number, number, number, number] | readonly [number, number, number, number, number, "h"]>;
+  /** Ribs on every car's sides (the kit car's fluting), skipping the windows and doors: a stainless body. */
+  fluting?: readonly Flutes[];
+  /** Ribs along the roof: either side of the crown out to |z| = zMax, one every `pitch`. */
+  roofRibs?: { pitch: number; zMax: number; mat: string };
   /** A warning panel on the nose: painted up to d behind the tip, between two heights. */
   cabPanel?: { d: number; y: readonly [number, number]; colour: string };
   /** A metro or tube train fed from a conductor rail: no pantograph, filed with the metros. */
@@ -233,6 +237,7 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
     bands: (end && l.endBands) || l.bands, roof: l.roof, skirt: l.skirt, under: "under",
     ...(end && s.cabPanel ? { field: { d: s.cabPanel.d, y: s.cabPanel.y, mat: "cabPanel" } } : {}),
     windows: s.windows.map((y, r) => ({ y, spans: end && s.endSides && r > 0 ? [] : spans, frame: "rubber" })),
+    ...(s.fluting ? { fluting: s.fluting } : {}),
     doors: { spans: doors, y: [s.door[0], s.door[1]], glass: [s.door[2], s.door[3]], ...(own && !(end && s.endSides) ? { slides: own.doors.map((o) => o[2]) } : {}) },
     ...(l.doors ? { doorBands: l.doors } : {}), ...(end && l.front && !s.flatCab ? { front: { d: l.frontD ?? s.nose.len + 0.05, bands: l.front, ...(l.frontRoof ? { roof: l.frontRoof } : {}) } } : {}),
     // a cab face draws its own panes and lamps: an empty cab keeps the gangway frame off its end
@@ -255,15 +260,26 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
       } else if (end && !s.flatCab) noseFittings(m, s, b, X);
       if (end && l.capSlope && l.frontRoof) m.scope("cab roof", () => capSlope(m, b, X, l.capSlope!, l.frontRoof!));
       if (end && s.endGrilles) m.scope("grilles", () => {
-        for (const sd of [1, -1]) for (const [d0, d1, y0, y1, n] of s.endGrilles!) {
-          sidePanel(m, b, X, sd, "black", d0, d1, y0, y1, 0.006, 0.03);
+        for (const sd of [1, -1]) for (const [d0, d1, y0, y1, n, dir] of s.endGrilles!) {
+          // vertical slats on black, or horizontal louvres ("h") pressed in the side's own paint
+          sidePanel(m, b, X, sd, dir === "h" ? l.bands.find(([, top]) => top > y0)![2] : "black", d0, d1, y0, y1, 0.006, 0.03);
           for (let i = 1; i < n; i++) {
-            const d = d0 + ((d1 - d0) * i) / n;
-            sidePanel(m, b, X, sd, "rubber", d - 0.012, d + 0.012, y0 + 0.03, y1 - 0.03, 0.014, 0.008);
+            if (dir === "h") {
+              const y = y0 + ((y1 - y0) * i) / n;
+              sidePanel(m, b, X, sd, "black", d0 + 0.03, d1 - 0.03, y - 0.01, y + 0.01, 0.014, 0.008);
+            } else {
+              const d = d0 + ((d1 - d0) * i) / n;
+              sidePanel(m, b, X, sd, "rubber", d - 0.012, d + 0.012, y0 + 0.03, y1 - 0.03, 0.014, 0.008);
+            }
           }
         }
       });
       if (s.single && !s.flatCab && !s.cabFace) m.scope("rear nose", () => m.turned((X(0) + X(L)) / 2, () => noseFittings(m, s, b, X)));
+      if (s.roofRibs) m.scope("roof ribs", () => {
+        const r = s.roofRibs!;
+        for (const sd of [1, -1])
+          for (let z = r.pitch / 2; z + 0.025 <= r.zMax; z += r.pitch) crownPane(m, b, X, sd, r.mat, [0.3, L - 0.3], [z, z + 0.025], 0.004);
+      });
       if (isDiesel(s))
         m.scope("exhaust", () => exhaust(m, X(L / 2), 0, s.C - 0.05, s.C + 0.1, 0.14, 0.14));
       if (pantograph) m.scope("pantograph", () => {

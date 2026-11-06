@@ -21,7 +21,7 @@ export function esLivery(kind: "ave" | "avlo" | "alvia" | "cercanias" | "regiona
     case "regional": return { title: "Regionales", number, palette: pal({ white: "#f1f1ee", green: "#2f8a5a", grey: "#6f757a" }), bands: [[0, 1.25, "grey"], [1.25, 1.45, "green"], [1.45, 9, "white"]], roof: "roofG", skirt: "skirtG" };
     case "mediaDistancia": return { title: "Media Distancia", number, palette: pal({ white: "#f1f1ee", grey: "#6f757a", violet: "#7a3e8e" }), bands: [[0, 1.25, "grey"], [1.25, 1.4, "violet"], [1.4, 9, "white"]], roof: "roofG", skirt: "skirtG" };
     // the Talgo III's, read from photo-bf-granada-talgo-iii-endwagen-tg1-26.jpg: the stainless lower body and roof, the red window band between dark lines
-    case "talgo": return { title: "Talgo", number, palette: pal({ silver: "#c3c7ca", red: "#c8282e", line: "#2e3033" }), bands: [[0, 1.45, "silver"], [1.45, 1.5, "line"], [1.5, 2.5, "red"], [2.5, 2.55, "line"], [2.55, 9, "silver"]], roof: "roofG", skirt: "skirtG" };
+    case "talgo": return { title: "Talgo", number, palette: pal({ silver: "#c3c7ca", red: "#c8282e", line: "#2e3033", flute: "#9ea3a7" }), bands: [[0, 1.45, "silver"], [1.45, 1.5, "line"], [1.5, 2.5, "red"], [2.5, 2.55, "line"], [2.55, 9, "silver"]], roof: "roofG", skirt: "skirtG" };
     case "iryo": return { title: "Iryo", number, palette: pal({ red: "#c8102e", white: "#f1f1ee", dark: "#3a1d24" }), bands: [[0, 1.3, "dark"], [1.3, 9, "red"]], roof: "roofG", skirt: "skirtG" };
     case "estrella": return { title: "Estrella", number, palette: pal({ blue: "#1d3f80", white: "#f1f1ee" }), bands: [[0, 1.45, "blue"], [1.45, 1.55, "white"], [1.55, 9, "blue"]], roof: "roofG", skirt: "skirtG" };
   }
@@ -101,6 +101,9 @@ export const TALGO_III: ShinkansenSeries = {
   }),
   // the buffers' beam 2 cm clear of the low body's bottom (0.75 m)
   cabFace: TALGO_TAIL, endCoupler: "buffers", couplerY: 1.02,
+  // the stainless body's fluting below and above the red band, the roof's ribs (photo-bf-granada-...jpg)
+  fluting: [{ y0: 0.96, y1: 1.42, pitch: 0.075, mat: "flute" }, { y0: 2.6, y1: 2.92, pitch: 0.075, mat: "flute" }],
+  roofRibs: { pitch: 0.13, zMax: 1.3, mat: "flute" },
 };
 
 export const S120: ShinkansenSeries = {
