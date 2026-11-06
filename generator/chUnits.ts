@@ -99,12 +99,15 @@ const DOSTO_RED_EDGE: Pt[] = [[1.0, 0.6], [1.9, 1.6], [2.7, 2.45], [3.3, 3.25], 
 const DOSTO_SBB: ShinkansenLivery = {
   title: "SBB", number: "502 203",
   palette: { white: c("#f1f1ee"), dark: c("#2c3034", 0.55), red: c(SBB_RED), black: c("#17191b", 0.45), roofG: c("#5c6166", 0.6), skirtG: c("#232528", 0.75), cabMask: c("#17191b", 0.3) },
-  bands: [[0, 1.2, "dark"], [1.2, 9, "white"]], doors: [[0, 9, "red"]],
+  // the upper deck's windows in a grey band under the roof
+  bands: [[0, 1.2, "dark"], [1.2, 3.15, "white"], [3.15, 9, "roofG"]], doors: [[0, 9, "red"]],
   roof: "roofG", skirt: "skirtG",
   // d behind the tip; the red covers the body up to the black's front edge
   endSweeps: [
     { mat: "red", front: [[1.0, -9], [3.85, -9]], back: DOSTO_RED_EDGE },
     { mat: "black", front: DOSTO_RED_EDGE, back: [[1.0, 3.6], [1.2, 3.6], [2.0, 4.05], [2.7, 4.8], [3.55, 6.0], [3.85, 7.6]] },
+    // the cab's side window in the black, its front edge raked with the windscreen
+    { mat: "cabGlass", front: [[2.45, 2.65], [3.3, 3.2]], back: [[2.45, 4.05], [3.3, 4.05]] },
   ],
 };
 
@@ -140,9 +143,8 @@ const DOSTO_FACE: SeriesCabFace = {
 export const FV_DOSTO: ShinkansenSeries = {
   endLength: 26.8, midLength: 25.0, W: 1.4, Y: 1.2, S: 3.85, C: 4.6, lean: 0.97, B: 0.72, A: 0.9,
   nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: DOSTO_FACE,
-  // the cab's side window in the black sweep, d behind the join
-  cabWindows: [[0.05, 0.85, 2.5, 3.2]],
-  windows: [[1.25, 1.95], [2.85, 3.55]], windowW: 1.4, pitch: 1.7, door: [1.0, 3.05, 1.65, 2.6], doorW: 1.3,
+  // the doors under the upper deck's windows, a narrow window in the leaf
+  windows: [[1.25, 1.95], [3.25, 3.8]], windowW: 1.4, pitch: 1.7, door: [1.0, 2.85, 1.4, 2.45], doorW: 1.3, doorGlassW: 0.32, upperOverDoors: true,
   bogieCentres: 18.0, wheelR: 0.46, wheelbase: 2.5, cars: [4, 8],
   liveries: { sbb: DOSTO_SBB },
   weight: { end: 64, middle: 55 }, power: 500, maxspeed: 200,

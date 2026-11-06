@@ -97,6 +97,10 @@ export interface ShinkansenSeries {
   /** Doors: sill, head, the leaf's window; their width. */
   door: readonly [number, number, number, number];
   doorW: number;
+  /** The door leaf's window: its width, centred (default the leaf's width less 0.24 m). */
+  doorGlassW?: number;
+  /** The upper window rows run on over the doors, from the first door to the car's end (a double-deck car's upper deck). */
+  upperOverDoors?: boolean;
   bogieCentres: number;
   wheelR: number;
   wheelbase: number;
@@ -244,9 +248,9 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
     },
     bands: (end && l.endBands) || l.bands, roof: l.roof, skirt: l.skirt, under: "under",
     ...(end && s.cabPanel ? { field: { d: s.cabPanel.d, y: s.cabPanel.y, mat: "cabPanel" } } : {}),
-    windows: s.windows.map((y, r) => ({ y, spans: end && s.endSides && r > 0 ? [] : spans, frame: "rubber" })),
+    windows: s.windows.map((y, r) => ({ y, spans: end && s.endSides && r > 0 ? [] : r > 0 && s.upperOverDoors ? row(end ? doors[0]![0] : 0.6, s.single ? L - doors[0]![0] : L - 0.6) : spans, frame: "rubber" })),
     ...(s.fluting ? { fluting: s.fluting } : {}),
-    doors: { spans: doors, y: [s.door[0], s.door[1]], glass: [s.door[2], s.door[3]], ...(own && !(end && s.endSides) ? { slides: own.doors.map((o) => o[2]) } : {}) },
+    doors: { spans: doors, y: [s.door[0], s.door[1]], glass: [s.door[2], s.door[3]], ...(s.doorGlassW ? { glassW: s.doorGlassW } : {}), ...(own && !(end && s.endSides) ? { slides: own.doors.map((o) => o[2]) } : {}) },
     ...(l.doors ? { doorBands: l.doors } : {}), ...(end && l.front && !s.flatCab ? { front: { d: l.frontD ?? s.nose.len + 0.05, bands: l.front, ...(l.frontRoof ? { roof: l.frontRoof } : {}) } } : {}),
     // a cab face draws its own panes and lamps: an empty cab keeps the gangway frame off its end
     ...(s.flatCab ? { cab: s.flatCab } : end && s.noseCab ? { cab: s.noseCab } : end && s.cabFace ? { cab: { panes: [], lamps: [] } } : {}), cabEnds: end && (s.flatCab || s.noseCab || s.cabFace) ? (s.single ? [1, -1] : [1]) : [], diaphragm: [s.door[0], s.door[1] + 0.3],
