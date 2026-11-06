@@ -118,7 +118,8 @@ revolution of the reference wheel (the main driver; a tender's first axle) in
 - **Kinematics**: the crank pin runs on its circle (the left side a quarter turn
   behind the right); the crosshead sits a main rod's length from it on the
   cylinder axis (an inclined cylinder's, `cylinder.incline`, runs through the
-  driving axle: the Rocket's, without valve gear); the expansion-link foot is where a circle about the trunnion
+  driving axle: the Rocket's, without valve gear, its feed pump's ram drawn into
+  the crosshead's part by the spec's `crossheadParts`); the expansion-link foot is where a circle about the trunnion
   meets one about the return crank; the combination lever's lean and the spindle's
   position are solved by Newton's method so the radius rod and union link keep
   the lengths they have in mid gear. Every link keeps its length at every sample

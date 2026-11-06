@@ -106,6 +106,13 @@ export interface RunningGearSpec {
   reference: number;
   /** Paint of spokes, hubs and counterweights. */
   wheelMaterial: string;
+  /**
+   * More parts riding on an inclined cylinder's crosshead (the Rocket's feed pump
+   * ram), drawn into its moving part at rest on side s: `at(k, off, dz)` is the
+   * model point k metres along the axis outward from the crosshead, `off` across
+   * it in the x-y plane (positive upward) and `dz` outward from the rods' plane.
+   */
+  crossheadParts?: (m: MeshBuilder, s: number, at: (k: number, off?: number, dz?: number) => Vec3) => void;
 }
 
 type P2 = [number, number];
@@ -518,6 +525,8 @@ export class RunningGear {
           const at = (k: number): Vec3 => [cx + inc.u[0] * k, cy + inc.u[1] * k, z];
           m.rod("steel", at(-0.15), at(0.15), 0.075, 4);
           m.rod("rod", at(0.15), at(es.pistonRod), 0.035, 8, false);
+          const v: P2 = [-inc.u[1] * es.d, inc.u[0] * es.d];
+          spec.crossheadParts?.(m, s, (k, off = 0, dz = 0) => [cx + inc.u[0] * k + v[0] * off, cy + inc.u[1] * k + v[1] * off, z + s * dz]);
           return;
         }
         const z = spec.cylinderZ;

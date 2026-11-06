@@ -29,7 +29,7 @@ The catalog had no British train before; the archived webapp Eurostar is now the
 | `proc-vehicle-gwr-castle` | GWR Castle | steam | `unit` | 4-6-0, 2.04 m drivers, Belpaire firebox |
 | `proc-vehicle-lms-black-five` | LMS Black Five | steam | `unit` | 4-6-0, 1.83 m drivers |
 | `proc-vehicle-br-9f` | BR 9F | steam | `unit`, `livery` (`brBlack`, `eveningStar`) | 2-10-0, 1.52 m drivers |
-| `proc-vehicle-rocket` | Stephenson's Rocket | steam, no cab, no valve gear | `unit` | 0-2-2, 1.435 m drivers; 47 km/h |
+| `proc-vehicle-rocket` | Stephenson's Rocket | steam, no cab, no valve gear | `unit`, `version` (`rainhill`, `rebuilt`) | 0-2-2, 1.435 m drivers; 47 km/h |
 | `proc-vehicle-br-mk1-coach` | BR Mk1 coach | coach | `unit` (`tso`, `bsk`), `livery` (`crimsonCream`, `maroon`, `southernGreen`) | 19.66 m; 145 km/h |
 
 ## Deviations
@@ -47,6 +47,14 @@ The catalog had no British train before; the archived webapp Eurostar is now the
   tender is a four-wheeled wagon on an outside frame, the axles 1.7 m apart, with slatted
   sides, coke and the water barrel lying across. The chimney's crown stops at 3.96 m,
   inside the W6a gauge; the real one stood about 4.4 m high.
+  The feed pump on the right side runs along the cylinder: its ram rides on an arm
+  from the crosshead (`crossheadParts`, docs/models/animation.md), its pipes go to a
+  clack on the boiler and back to the tender. A driver in tailcoat and top hat stands
+  on the footplate with a hand on the regulator, a fireman shovels coke on the tender.
+  `version`: `rainhill` is the engine of the 1829 trials; `rebuilt` is the 1830
+  rebuild, its cylinders lowered to 8 degrees beside the firebox (the pump above
+  them), a drum smokebox ahead of the boiler and a plain black chimney on it, 3.88 m
+  high. The tender is the same for both.
 - **1938 Stock.** A metro on the series kit: no collector is drawn (the tube's conductor
   rails are not modelled).
 

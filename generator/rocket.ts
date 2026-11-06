@@ -4,6 +4,10 @@
 // firebox at the rear, the two cylinders inclined at 35 degrees beside the
 // firebox driving the front wheels, the bar frame with its springs, and the
 // four-wheeled tender with its slatted sides, the coke and the water barrel.
+// The feed pump on the right is worked by the crosshead; a driver stands on the
+// footplate and a fireman on the tender. The `version` is the engine as it ran
+// at Rainhill in 1829 or as rebuilt in 1830: its cylinders lowered to 8
+// degrees, a smokebox ahead of the boiler and a plain black chimney on it.
 // See docs/models/uk-trains.md and assets/rocket/SOURCES.md.
 //
 // Every length is in metres along the vehicle from its front end (source x,
@@ -33,6 +37,14 @@ export const ROCKET_PALETTE: Record<string, MaterialSpec> = {
   copper: mat("#b8733a", 0.35, 0.5),
   deck: mat("#6b4a2b", 0.85),
   lining: mat("#a51a1f", 0.55),
+  // the crew's clothes
+  coat: mat("#2f3340", 0.85),
+  trousers: mat("#8a7a5e", 0.85),
+  shirt: mat("#e8e4d8", 0.8),
+  boots: mat("#1a1614", 0.6),
+  skin: mat("#e0b48a", 0.7),
+  hair: mat("#4a3020", 0.9),
+  hat: mat("#141416", 0.6),
 };
 
 /** The engine's measures (source metres). */
@@ -49,8 +61,7 @@ export const ROCKET = {
   /** The chimney's axis and its crown's tips (the gauge's 4.0 m with a margin). */
   chimneyX: 0.56,
   chimneyTop: 3.96,
-  /** The cylinders' incline and their ends' distances from the driving axle along it. */
-  incline: (35 * Math.PI) / 180,
+  /** The cylinders' ends' distances from the driving axle along their axis. */
   cylinder: { near: 1.45, far: 2.1, r: 0.13 },
   /** Half the 16.5 in stroke. */
   crank: 0.21,
@@ -67,14 +78,29 @@ export const ROCKET_TENDER = {
   barrel: { x: 2.3, y: 1.74, r: 0.56, half: 0.6 },
 } as const;
 
+/** The engine as built (Rainhill, 1829) or as rebuilt in 1830. */
+export type RocketVersion = "rainhill" | "rebuilt";
+
+/** What the two versions differ in. */
+export const ROCKET_VERSIONS = {
+  rainhill: { title: "Rainhill 1829", incline: (35 * Math.PI) / 180, chimneyX: 0.56, chimneyTop: 3.96, pump: -0.3 },
+  rebuilt: { title: "Rebuilt 1830", incline: (8 * Math.PI) / 180, chimneyX: 0.38, chimneyTop: 3.88, pump: 0.3 },
+} as const;
+
+type V = (typeof ROCKET_VERSIONS)[RocketVersion];
+
 const DRIVER: SteamWheel = { x: ROCKET.driverX, d: ROCKET.driverD, spokes: 12 };
 const TRAILER: SteamWheel = { x: ROCKET.trailX, d: ROCKET.trailD, spokes: 10 };
 
-/** Source (x, y) on the cylinder's axis, `t` metres out from the driving axle. */
-export function cylinderAxis(t: number): Pt {
+/** Source (x, y) on the cylinder's axis, `t` metres out from the driving axle and `off` across it (upward). */
+export function cylinderAxis(v: V, t: number, off = 0): Pt {
   const ay = axleHeight(DRIVER);
-  return [ROCKET.driverX + t * Math.cos(ROCKET.incline), ay + t * Math.sin(ROCKET.incline)];
+  const [c, s] = [Math.cos(v.incline), Math.sin(v.incline)];
+  return [ROCKET.driverX + t * c - off * s, ay + t * s + off * c];
 }
+
+/** The feed pump's barrel: from `t0` to `t1` along the axis, `dz` outside the rods' plane. */
+export const PUMP = { t0: 1.2, t1: 1.7, r: 0.055, ram: 0.5, dz: 0.1 } as const;
 
 /** The firebox's right half section: square sides, a rounded top. */
 const FIREBOX: Pt[] = [[0.47, 0.62], [0.47, 1.72], [0.43, 1.84], [0.32, 1.92], [0.16, 1.96], [0, 1.97]];
@@ -115,19 +141,21 @@ function frame(t: Steam): void {
 }
 
 /** The boiler barrel and its bands, the smokebox closing its front, safety valves, feed and steam pipes. */
-function boiler(t: Steam): void {
+function boiler(t: Steam, v: V): void {
   const m = t.m;
   const b = ROCKET.boiler;
+  const front = v === ROCKET_VERSIONS.rebuilt ? 0.12 : 0.42;
   m.scope("boiler", () => {
     m.scope("barrel", () => t.cylX("paint", b.x0, b.x1, 0, b.y, b.r, 24, false));
     m.scope("boiler bands", () => {
       for (const x of [1.05, 1.55, 2.05]) t.cylX("black", x - 0.025, x + 0.025, 0, b.y, b.r + 0.012, 24, false);
     });
     m.scope("smokebox", () => {
-      t.cylX("smokebox", 0.42, b.x0 + 0.02, 0, b.y, b.r + 0.04, 24);
+      // as built a short drum closing the barrel; the rebuild's smokebox reaches ahead of it
+      t.cylX("smokebox", front, b.x0 + 0.02, 0, b.y, b.r + 0.04, 24);
       // the front plate's rim and the cleaning door
-      t.cylX("black", 0.4, 0.42, 0, b.y, b.r + 0.06, 24);
-      t.endPanel("frame", 1, 0.4, -0.18, 0.18, b.y - 0.36, b.y - 0.06, 0.03);
+      t.cylX("black", front - 0.02, front, 0, b.y, b.r + 0.06, 24);
+      t.endPanel("frame", 1, front - 0.02, -0.18, 0.18, b.y - 0.36, b.y - 0.06, 0.03);
     });
     m.scope("safety valves", () => {
       for (const x of [1.3, 2.15]) {
@@ -138,22 +166,28 @@ function boiler(t: Steam): void {
     m.scope("steam pipes", () => {
       // from the firebox's top to each cylinder's upper end, the exhaust forward to the chimney's base
       for (const s of [-1, 1]) {
-        const [cx, cy] = cylinderAxis(ROCKET.cylinder.far - 0.08);
+        const [cx, cy] = cylinderAxis(v, ROCKET.cylinder.far - 0.08);
         rod(t, "copper", [2.6, 1.98, s * 0.2], [cx, cy + 0.15, s * (ROCKET.cylinderZ - 0.06)], 0.035);
-        rod(t, "copper", [cx - 0.1, cy - 0.05, s * (ROCKET.cylinderZ - 0.12)], [0.5, b.y + 0.1, s * (b.r + 0.02)], 0.035);
+        if (v === ROCKET_VERSIONS.rebuilt) {
+          // from the lowered cylinder up to the boiler's flank, then forward along it into the smokebox
+          const bend: Vec3 = [cx - 0.3, b.y - 0.1, s * (b.r + 0.1)];
+          rod(t, "copper", [cx - 0.1, cy + 0.05, s * (ROCKET.cylinderZ - 0.12)], bend, 0.035);
+          rod(t, "copper", bend, [front + 0.15, b.y - 0.1, s * (b.r + 0.1)], 0.035);
+        } else rod(t, "copper", [cx - 0.1, cy - 0.05, s * (ROCKET.cylinderZ - 0.12)], [0.5, b.y + 0.1, s * (b.r + 0.02)], 0.035);
       }
     });
   });
 }
 
 /** The tall chimney: a black base on the smokebox, the white stack with its bands, the crown, its stays. */
-function chimney(t: Steam): void {
+function chimney(t: Steam, v: V): void {
   const m = t.m;
-  const x = ROCKET.chimneyX;
+  const x = v.chimneyX;
   const X = t.X(x);
   const b = ROCKET.boiler;
   const r = 0.2;
-  const lip = ROCKET.chimneyTop - 0.17;
+  if (v === ROCKET_VERSIONS.rebuilt) return rebuiltChimney(t, v);
+  const lip = v.chimneyTop - 0.17;
   m.emit("smoke", [X, lip, 0], r);
   m.scope("chimney", () => {
     m.scope("base", () => {
@@ -175,23 +209,43 @@ function chimney(t: Steam): void {
         const am = (a0 + a1) / 2;
         const rr = r + 0.05;
         const p = (a: number, rad: number, y: number): Vec3 => [X + rad * Math.cos(a), y, rad * Math.sin(a)];
-        const tip = p(am, rr + 0.05, ROCKET.chimneyTop);
+        const tip = p(am, rr + 0.05, v.chimneyTop);
         const outline: Vec3[] = [p(a0 + 0.04, rr, lip - 0.01), p(a1 - 0.04, rr, lip - 0.01), tip];
         m.slab("white", outline, [-Math.cos(am) * 0.02, 0, -Math.sin(am) * 0.02]);
       }
     });
-    m.scope("stays", () => {
-      // two stays back to the firebox's top corners and two forward to the front beam
-      for (const s of [-1, 1]) {
-        rod(t, "black", [x + 0.12, 3.4, s * 0.12], [ROCKET.firebox.x1 - 0.1, 1.94, s * 0.25], 0.018);
-        rod(t, "black", [x - 0.1, 2.9, s * 0.15], [0.05, 1.06, s * 0.7], 0.018);
-      }
-    });
+    stays(t, x);
+  });
+}
+
+/** Two stays from the chimney back to the firebox's top corners and two forward to the front beam. */
+function stays(t: Steam, x: number): void {
+  t.m.scope("stays", () => {
+    for (const s of [-1, 1]) {
+      rod(t, "black", [x + 0.12, 3.4, s * 0.12], [ROCKET.firebox.x1 - 0.1, 1.94, s * 0.25], 0.018);
+      rod(t, "black", [x - 0.1, 2.9, s * 0.15], [0.05, 1.06, s * 0.7], 0.018);
+    }
+  });
+}
+
+/** The rebuild's chimney: a plain black stack with a lip, standing on the smokebox ahead of the boiler. */
+function rebuiltChimney(t: Steam, v: V): void {
+  const m = t.m;
+  const X = t.X(v.chimneyX);
+  const b = ROCKET.boiler;
+  const r = 0.2;
+  const lip = v.chimneyTop - 0.08;
+  m.emit("smoke", [X, v.chimneyTop, 0], r);
+  m.scope("chimney", () => {
+    m.scope("base", () => m.loft("smokebox", ngon(20, 0.32, 0, X, 0), b.y + b.r - 0.08, ngon(20, r, 0, X, 0), b.y + b.r + 0.2, false));
+    m.scope("stack", () => m.prism("smokebox", ngon(20, r, 0, X, 0), b.y + b.r + 0.15, lip, false));
+    m.scope("lip", () => m.prism("smokebox", ngon(20, r + 0.05, 0, X, 0), lip, v.chimneyTop, true));
+    stays(t, v.chimneyX);
   });
 }
 
 /** The firebox behind the boiler, its fire door, the brackets carrying the cylinders, the footplate. */
-function firebox(t: Steam): void {
+function firebox(t: Steam, v: V): void {
   const m = t.m;
   const f = ROCKET.firebox;
   m.scope("firebox", () => {
@@ -211,19 +265,45 @@ function firebox(t: Steam): void {
   });
   m.scope("cylinder brackets", () => {
     for (const s of [-1, 1]) {
-      const [x, y] = cylinderAxis((ROCKET.cylinder.near + ROCKET.cylinder.far) / 2);
-      t.sideBox("frame", s, x - 0.12, x + 0.12, y - 0.32, y - 0.12, 0.47, ROCKET.cylinderZ - 0.09);
-      t.sideBox("frame", s, x - 0.04, x + 0.04, 1.0, y - 0.32, 0.56, 0.62);
+      const [x, y] = cylinderAxis(v, (ROCKET.cylinder.near + ROCKET.cylinder.far) / 2);
+      if (v === ROCKET_VERSIONS.rebuilt) {
+        // the lowered cylinders sit on the frame, above the trailing wheels
+        t.sideBox("frame", s, x - 0.12, x + 0.12, y - 0.06, y + 0.06, 0.6, ROCKET.cylinderZ - 0.09);
+      } else {
+        t.sideBox("frame", s, x - 0.12, x + 0.12, y - 0.32, y - 0.12, 0.47, ROCKET.cylinderZ - 0.09);
+        t.sideBox("frame", s, x - 0.04, x + 0.04, 1.0, y - 0.32, 0.56, 0.62);
+      }
     }
   });
   m.scope("footplate", () => t.box("deck", f.x1, ROCKET.length - 0.1, 1.14, 1.19, -0.8, 0.8));
 }
 
+/** The feed pump on the right: its barrel along the cylinder, a bracket, the delivery pipe to the boiler, the suction pipe to the tender. */
+function feedPump(t: Steam, v: V): void {
+  const z = ROCKET.cylinderZ + PUMP.dz;
+  const [x0, y0] = cylinderAxis(v, PUMP.t0, v.pump);
+  const [x1, y1] = cylinderAxis(v, PUMP.t1, v.pump);
+  const b = ROCKET.boiler;
+  t.m.scope("feed pump", () => {
+    rod(t, "copper", [x0, y0, z], [x1, y1, z], PUMP.r, 10);
+    // the glands at both ends
+    const at = (k: number): Vec3 => { const [x, y] = cylinderAxis(v, k, v.pump); return [x, y, z]; };
+    for (const [a, c] of [[PUMP.t0 - 0.01, PUMP.t0 + 0.05], [PUMP.t1 - 0.05, PUMP.t1 + 0.01]] as const) rod(t, "steel", at(a), at(c), PUMP.r + 0.008, 10);
+    // the bracket to the cylinder's cover
+    const [bx, by] = cylinderAxis(v, ROCKET.cylinder.near + 0.03, v.pump * 0.5);
+    rod(t, "frame", [bx, by, ROCKET.cylinderZ + 0.04], at(ROCKET.cylinder.near + 0.03), 0.025, 4);
+    // the delivery pipe up to the clack on the boiler's side, the suction pipe back to the rear beam
+    rod(t, "copper", at(PUMP.t0 + 0.02), [x0 - 0.05, b.y - 0.15, b.r + 0.04], 0.022);
+    t.cylY("copper", x0 - 0.05, b.r + 0.02, b.y - 0.2, b.y - 0.08, 0.05, 8);
+    rod(t, "copper", at(PUMP.t1 - 0.02), [ROCKET.length - 0.05, 0.95, 0.7], 0.022);
+  });
+}
+
 /** The engine's spec: the kit draws the running gear; the body is this module's (`extras`). */
-function engineSpec(): LocoSpec {
+function engineSpec(v: V): LocoSpec {
   const { near, far, r } = ROCKET.cylinder;
-  const [x0] = cylinderAxis(near);
-  const [x1] = cylinderAxis(far);
+  const [x0] = cylinderAxis(v, near);
+  const [x1] = cylinderAxis(v, far);
   return {
     title: "Stephenson's Rocket",
     palette: ROCKET_PALETTE,
@@ -231,26 +311,40 @@ function engineSpec(): LocoSpec {
     beams: { front: false, rear: false },
     gear: {
       wheels: [DRIVER, TRAILER],
-      engines: [{ coupled: [0], main: 0, cylinder: { x0, x1, y: 0, r, incline: ROCKET.incline }, crank: ROCKET.crank, phase: 0.3, valveGear: false }],
+      engines: [{ coupled: [0], main: 0, cylinder: { x0, x1, y: 0, r, incline: v.incline }, crank: ROCKET.crank, phase: 0.3, valveGear: false }],
       cylinderZ: ROCKET.cylinderZ, reference: 0, wheelMaterial: "wheel",
+      // the pump's ram, on an arm from the right crosshead
+      crossheadParts: (m, s, at) => {
+        if (s < 0) return;
+        m.scope("pump ram", () => {
+          // a stub out of the block between the guides, then the arm outside them
+          const k = Math.sign(v.pump) * 0.05;
+          m.rod("steel", at(0, k, 0.03), at(0, k, PUMP.dz + 0.01), 0.018, 4);
+          m.rod("steel", at(0, k, PUMP.dz + 0.01), at(0, v.pump, PUMP.dz + 0.01), 0.018, 4);
+          m.rod("rod", at(0, v.pump, PUMP.dz), at(PUMP.ram, v.pump, PUMP.dz), 0.03, 8);
+        });
+      },
     },
     extras: (t) => {
       frame(t);
-      boiler(t);
-      chimney(t);
-      firebox(t);
+      boiler(t, v);
+      chimney(t, v);
+      firebox(t, v);
+      feedPump(t, v);
+      crewman(t, { x: 3.49, z: 0.05, y: 1.19, facing: 1, pose: "driver" });
     },
   };
 }
 
 /** The engine as the low level of detail reads it: boiler, smokebox, chimney, firebox and frame. */
-function engineLodSpec(): LocoSpec {
+function engineLodSpec(v: V): LocoSpec {
   const b = ROCKET.boiler;
+  const front = v === ROCKET_VERSIONS.rebuilt ? 0.12 : 0.42;
   return {
-    ...engineSpec(),
+    ...engineSpec(v),
     beams: { front: false, rear: false },
-    boiler: { x0: 0.42, x1: b.x1, y: b.y, r: b.r, smokebox: b.x0 - 0.42 },
-    chimney: { x: ROCKET.chimneyX, top: ROCKET.chimneyTop - 0.1, r: 0.22, mat: "white" },
+    boiler: { x0: front, x1: b.x1, y: b.y, r: b.r, smokebox: b.x0 - front },
+    chimney: { x: v.chimneyX, top: v.chimneyTop - 0.1, r: 0.22, mat: v === ROCKET_VERSIONS.rebuilt ? "smokebox" : "white" },
     prisms: [{ name: "firebox", x0: ROCKET.firebox.x0, x1: ROCKET.firebox.x1, half: FIREBOX }],
     frame: { x0: 0.1, x1: ROCKET.length - 0.1, top: 1.0 },
     extras: undefined,
@@ -342,7 +436,7 @@ function tenderSpec(): LocoSpec {
     palette: ROCKET_PALETTE,
     heads: [-0.1, L + 0.1],
     beams: { front: false, rear: false },
-    coal: { x0: 0.2, x1: 1.55, y: 1.04, half: 0.82, rise: 0.32 },
+    coal: { x0: 0.75, x1: 1.6, y: 1.04, half: 0.82, rise: 0.32 },
     gear: {
       wheels: ROCKET_TENDER.axles.map((x) => ({ x, d: ROCKET_TENDER.wheelD, spokes: 10, outsideBoxes: true })),
       engines: [], cylinderZ: 1.1, reference: 0, wheelMaterial: "wheel",
@@ -351,6 +445,7 @@ function tenderSpec(): LocoSpec {
       tenderFrame(t);
       tenderSides(t);
       barrel(t);
+      crewman(t, { x: 0.42, z: -0.3, y: 1.04, facing: -1, pose: "fireman" });
     },
   };
 }
@@ -368,7 +463,91 @@ function tenderLodSpec(): LocoSpec {
   };
 }
 
-export const rocketSpec = (unit: string): LocoSpec => (unit === "tender" ? tenderSpec() : engineSpec());
-export const rocketLodSpec = (unit: string): LocoSpec => (unit === "tender" ? tenderLodSpec() : engineLodSpec());
-export const buildRocket = (unit: string): MeshBuilder => buildLoco(rocketSpec(unit));
-export const buildRocketLod = (unit: string): MeshBuilder => steamLocoLod(rocketLodSpec(unit));
+export const rocketSpec = (unit: string, version: RocketVersion = "rainhill"): LocoSpec => (unit === "tender" ? tenderSpec() : engineSpec(ROCKET_VERSIONS[version]));
+export const rocketLodSpec = (unit: string, version: RocketVersion = "rainhill"): LocoSpec => (unit === "tender" ? tenderLodSpec() : engineLodSpec(ROCKET_VERSIONS[version]));
+export const buildRocket = (unit: string, version: RocketVersion = "rainhill"): MeshBuilder => buildLoco(rocketSpec(unit, version));
+export const buildRocketLod = (unit: string, version: RocketVersion = "rainhill"): MeshBuilder => steamLocoLod(rocketLodSpec(unit, version));
+
+/** Where a crewman stands (source x of his middle, z, the floor's height), which way he faces (+1 forward) and what he does. */
+interface Crew {
+  x: number;
+  z: number;
+  y: number;
+  facing: 1 | -1;
+  pose: "driver" | "fireman";
+}
+
+/**
+ * A crewman of 1829 in a tailcoat and top hat, about 1.8 m tall: the driver with
+ * his left hand on the regulator, or the fireman with a shovel in the coke.
+ */
+function crewman(t: Steam, c: Crew): void {
+  const m = t.m;
+  // a point of the figure: `f` metres ahead of his middle, `h` above the floor, `w` to his right
+  const P = (f: number, h: number, w: number): Vec3 => [t.X(c.x - c.facing * f), c.y + h, c.z + c.facing * w];
+  const box = (mat: string, f0: number, f1: number, h0: number, h1: number, w0: number, w1: number) => {
+    const [a, b] = [P(f0, h0, w0), P(f1, h1, w1)];
+    m.sweep(mat, "x", [[Math.min(a[2], b[2]), a[1]], [Math.max(a[2], b[2]), a[1]], [Math.max(a[2], b[2]), b[1]], [Math.min(a[2], b[2]), b[1]]], Math.min(a[0], b[0]), [[Math.min(a[2], b[2]), a[1]], [Math.max(a[2], b[2]), a[1]], [Math.max(a[2], b[2]), b[1]], [Math.min(a[2], b[2]), b[1]]], Math.max(a[0], b[0]));
+  };
+  const limb = (mat: string, a: Vec3, b: Vec3, r: number) => m.rod(mat, a, b, r, 6);
+  const driver = c.pose === "driver";
+  m.scope(driver ? "driver" : "fireman", () => {
+    m.scope("legs", () => {
+      for (const w of [-0.09, 0.09]) {
+        // the fireman stoops: his knees bent forward
+        const knee = driver ? P(0.02, 0.47, w) : P(0.12, 0.45, w);
+        limb("trousers", P(0, 0.86, w), knee, 0.068);
+        limb("trousers", knee, P(0, 0.08, w), 0.06);
+        box("boots", -0.06, 0.14, -0.005, 0.08, w - 0.055, w + 0.055);
+      }
+    });
+    // the torso leans forward over the shovel
+    const lean = driver ? 0 : 0.14;
+    m.scope("coat", () => {
+      m.rod("coat", P(lean * 0.3, 0.84, 0), P(lean, 1.42, 0), 0.2, 4);
+      // the tails hanging behind
+      box("coat", -0.13, -0.05, 0.5, 0.86, -0.15, 0.15);
+      box("shirt", lean + 0.07, lean + 0.115, 1.22, 1.4, -0.06, 0.06);
+    });
+    const shoulder = (w: number) => P(lean, 1.38, w);
+    m.scope("arms", () => {
+      if (driver) {
+        // the left hand on the regulator ahead of him, the right one at his side
+        const hand: Vec3 = [t.X(ROCKET.firebox.x1 + 0.06), 1.575, -0.12];
+        const elbow = P(0.2, 1.2, -0.24);
+        limb("coat", shoulder(-0.21), elbow, 0.055);
+        limb("coat", elbow, hand, 0.05);
+        limb("skin", hand, [hand[0] - c.facing * 0.03, hand[1], hand[2]], 0.04);
+        limb("coat", shoulder(0.21), P(0.03, 1.08, 0.25), 0.055);
+        limb("coat", P(0.03, 1.08, 0.25), P(0.08, 0.86, 0.24), 0.05);
+      } else {
+        // both hands on the shovel's shaft, its blade down in the coke
+        const top = P(0.3, 1.0, 0.0);
+        const low = P(0.5, 0.78, 0.04);
+        limb("coat", shoulder(-0.21), P(0.22, 1.08, -0.2), 0.055);
+        limb("coat", P(0.22, 1.08, -0.2), top, 0.05);
+        limb("coat", shoulder(0.21), P(0.36, 1.0, 0.2), 0.055);
+        limb("coat", P(0.36, 1.0, 0.2), low, 0.05);
+        m.scope("shovel", () => {
+          const blade = P(0.82, 0.32, 0.06);
+          limb("wood", P(0.24, 1.05, -0.01), blade, 0.02);
+          const [bx, by, bz] = blade;
+          const e = -c.facing;
+          m.slab("steel", [[bx, by + 0.02, bz - 0.13], [bx, by + 0.02, bz + 0.13], [bx + e * 0.28, by - 0.06, bz + 0.12], [bx + e * 0.28, by - 0.06, bz - 0.12]], [0, 0.015, 0]);
+        });
+      }
+    });
+    m.scope("head", () => {
+      const hx = lean + 0.02;
+      limb("skin", P(lean, 1.42, 0), P(hx, 1.5, 0), 0.05);
+      const head = P(hx, 1.47, 0);
+      m.prism("skin", ngon(8, 0.1, Math.PI / 8, head[0], head[2]), head[1], head[1] + 0.21);
+      // sideburns and hair under the hat
+      m.prism("hair", ngon(8, 0.104, Math.PI / 8, head[0] + c.facing * 0.01, head[2]), head[1] + 0.13, head[1] + 0.2, false);
+      m.scope("top hat", () => {
+        m.prism("hat", ngon(12, 0.165, 0, head[0], head[2]), head[1] + 0.2, head[1] + 0.22);
+        m.prism("hat", ngon(12, 0.105, 0, head[0], head[2]), head[1] + 0.22, head[1] + 0.42);
+      });
+    });
+  });
+}

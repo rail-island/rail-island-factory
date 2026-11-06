@@ -4,7 +4,7 @@
 // See docs/models/uk-trains.md.
 
 import { describe, expect, it } from "vitest";
-import { ROCKET, ROCKET_TENDER, rocketSpec } from "../generator/rocket.ts";
+import { PUMP, ROCKET, ROCKET_TENDER, ROCKET_VERSIONS, rocketSpec, type RocketVersion } from "../generator/rocket.ts";
 import { N_SAMPLES, RunningGear } from "../generator/steamGear.ts";
 import { WORLD_STEAM } from "../generator/worldSteamLocos.ts";
 import { steamTenderSpec } from "../generator/steamWorld.ts";
@@ -12,8 +12,11 @@ import { DESIGNS } from "../generator/generate.ts";
 import { glbStats } from "../generator/glbStats.ts";
 
 describe("Stephenson's Rocket", () => {
-  it("drives its front wheels from cylinders inclined at 35 degrees", () => {
-    const spec = rocketSpec("locomotive");
+  const VERSIONS = Object.keys(ROCKET_VERSIONS) as RocketVersion[];
+
+  it.each(VERSIONS)("%s: drives its front wheels from its inclined cylinders", (version) => {
+    const incline = ROCKET_VERSIONS[version].incline;
+    const spec = rocketSpec("locomotive", version);
     const xc = (spec.heads[0] + spec.heads[1]) / 2;
     const gear = new RunningGear(spec.gear, (x) => xc - x);
     const sides = gear.solvedPoses();
@@ -27,7 +30,7 @@ describe("Stephenson's Rocket", () => {
         // the crosshead stays on the axis through the axle, rising rearward (model -X) at the incline
         const dx = side.axle[0] - p.crosshead[0];
         const dy = p.crosshead[1] - side.axle[1];
-        expect(Math.atan2(dy, dx)).toBeCloseTo(ROCKET.incline, 6);
+        expect(Math.atan2(dy, dx)).toBeCloseTo(incline, 6);
         ts.push(Math.hypot(dx, dy));
       }
       // a full stroke, twice the crank
@@ -35,11 +38,31 @@ describe("Stephenson's Rocket", () => {
     }
   });
 
-  it("keeps its crowned chimney inside the 4.0 m British gauge", () => {
+  it("lowered its cylinders from 35 to 8 degrees in the 1830 rebuild", () => {
+    expect(ROCKET_VERSIONS.rainhill.incline).toBeCloseTo((35 * Math.PI) / 180, 9);
+    expect(ROCKET_VERSIONS.rebuilt.incline).toBeCloseTo((8 * Math.PI) / 180, 9);
+  });
+
+  it.each(VERSIONS)("%s: keeps its chimney inside the 4.0 m British gauge", (version) => {
     const d = DESIGNS.get("proc-vehicle-rocket")!;
-    const s = glbStats(d.build({ unit: "locomotive" }).toGlb(d.id));
-    expect(s.max[1]).toBeCloseTo(ROCKET.chimneyTop, 2);
+    const s = glbStats(d.build({ unit: "locomotive", version }).toGlb(d.id));
+    expect(s.max[1]).toBeCloseTo(ROCKET_VERSIONS[version].chimneyTop, 2);
     expect(s.max[1]).toBeLessThanOrEqual(4.0);
+  });
+
+  it.each(VERSIONS)("%s: works its feed pump from the right crosshead and carries its crew", (version) => {
+    const d = DESIGNS.get("proc-vehicle-rocket")!;
+    const tree = (unit: string) => JSON.stringify(d.build({ unit, version }).sourceTree(d.id, d.title));
+    const engine = tree("locomotive");
+    for (const name of ["feed pump", "pump ram", "driver", "top hat"]) expect(engine).toContain(`"${name}"`);
+    expect(tree("tender")).toContain('"fireman"');
+    // the ram, riding on the crosshead, stays in the pump's barrel through the whole stroke
+    const spec = rocketSpec("locomotive", version);
+    const xc = (spec.heads[0] + spec.heads[1]) / 2;
+    const side = new RunningGear(spec.gear, (x) => xc - x).solvedPoses().find((p) => p.suffix === "right")!;
+    const ts = side.poses.map((p) => Math.hypot(p.crosshead[0] - side.axle[0], p.crosshead[1] - side.axle[1]));
+    expect(Math.min(...ts) + PUMP.ram).toBeGreaterThan(PUMP.t0 + 0.02);
+    expect(Math.max(...ts) + PUMP.ram).toBeLessThan(PUMP.t1);
   });
 
   it("stands its tender on two wheelsets well apart", () => {

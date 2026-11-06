@@ -1049,7 +1049,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-gwr-castle": loco(1923, RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
   "proc-vehicle-lms-black-five": loco(1934, RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
   "proc-vehicle-br-9f": loco(1954, RAIL, { presets: presets({ unit: "tender" }, { livery: "eveningStar" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
-  "proc-vehicle-rocket": loco(1829, RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
+  "proc-vehicle-rocket": loco(1829, RAIL, { presets: presets({ unit: "tender" }, { version: "rebuilt" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
   "proc-vehicle-br-mk1-coach": pax(1951, 64, RAIL, { variants: [at({ unit: "bsk" }, { capacity: 24 })], presets: presets({ unit: "bsk" }, ...each("livery", "maroon", "southernGreen")) }),
   // India (docs/models/india-trains.md)
   "proc-vehicle-ir-vande-bharat": series(2019, 44, 78, ELRL, { cars: 8, liveries: ["saffron"] }),
