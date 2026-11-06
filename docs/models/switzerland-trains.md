@@ -15,7 +15,7 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
 | `proc-vehicle-sbb-icn` | SBB ICN | series | `unit` (seven cars) | tilting; 200 km/h |
 | `proc-vehicle-sbb-giruno` | SBB Giruno | series | `unit`, `cars` 4 - 8 | 250 km/h |
 | `proc-vehicle-sbb-fv-dosto` | SBB FV-Dosto | series, double-deck | `unit`, `cars` 4 - 8 | 200 km/h |
-| `proc-vehicle-sbb-flirt` | SBB FLIRT | series, Stadler FLIRT | `unit`, `cars` 3 - 4 | 160 km/h |
+| `proc-vehicle-sbb-flirt` | SBB FLIRT | series, Stadler FLIRT, cab face, Jacobs bogies | `unit`, `cars` 3 - 4 | RABe 523 021; 21.03 m end cars, 16.1 m middle cars; 160 km/h |
 | `proc-vehicle-sbb-kiss` | SBB KISS | series, Stadler KISS | `unit`, `cars` 4 - 6 | double-deck; 160 km/h |
 | `proc-vehicle-rhb-allegra` | RhB Allegra | series, metre gauge | `unit` (three cars) | 2.65 m wide; 120 km/h |
 | `proc-vehicle-sbb-re460` | SBB Re 460 | box locomotive, streamlined | - | Bo-Bo, 18.5 m, 6,100 kW, 230 km/h |
@@ -63,7 +63,21 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
   is 25.2 m long. The roof carries the three resistor grids of the electric brake and the two
   fairings beside the diamond pantograph over cab I. The distant model keeps the bonnet's
   step in its profile (the face's `lod`) and gives up the cab's glass for the pantograph.
-- **Glacier Express.** The panorama roof is drawn as the dark roof band over tall windows.
+- **FLIRT.** A RABe 523 (assets/sbb-flirt/SOURCES.md) on its own spec, not the shared
+  `flirt()` base (the NS Flirt's): a cab face (`FLIRT_FACE`) with the upright bumper, the
+  red lamp panel and pods, the windscreen raked about 43 degrees under a black dome, the
+  red rising either side of it to the roof stripe every car carries; the rounded cab side
+  window an `endSweeps` pane, the cab door's droplight and outline behind it. Its own
+  paint (`FLIRT_SBB`, key `sbbRegio`): white over a grey foot, red doors, the windows'
+  upper parts joined in a black band (1.5 - 2.72 m), white over it ahead of the
+  passenger room. The face is round in plan (corner radii 0.75 - 0.95 m) with a rounded
+  bumper; the red frames the windscreen as a band 0.2 - 0.35 m wide over the lamp panel.
+  Each car's doors and windows are laid out from the Yverdon photograph (two double
+  doors a car, tall windows from 1.05 m, the raised window behind the cab). The cars ride
+  on Jacobs bogies under the joints (kit `jacobs`), the motor bogie 5.3 m behind the
+  front; one pantograph on the second car over its leading bogie (`onePantograph`,
+  `pantographAt`). An end or middle car shown alone stands on its joint bogies, half
+  beyond its body. Not drawn: the side emblem, the grilles' slats; the distant model carries the black band over the cab too.
 - **KISS (RABe 511).** Its own layout (`layout` with per-row `rows`) from the photographs, the
   RABe 512 profile corrected for perspective: on every car the double deck lies between the two
   doors (end car 9.0 - 10.6 and 18.95 - 20.55 m behind the tip), five lower windows between them

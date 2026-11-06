@@ -66,7 +66,11 @@ combinations hashed before and after):
   intermediate car's bogies at given d behind its +X end (the Allegra's low-floor middle car,
   a bogie near each end); `pantographAt` - where the raised pantograph stands, d behind the
   body's +X end of the car raising it (default 1.5 m ahead of the rear bogie; the Allegra's
-  over the cab), in the distant model too;
+  over the cab, the FLIRT's over its leading bogie), in the distant model too;
+- `jacobs` - Jacobs bogies: one bogie centred on each joint, carrying both cars (a car shown
+  alone stands on its joint bogies, half beyond its body; the cabin stops short of their
+  skirt cuts), the end car's leading bogie at `endBogies[0]` (the SBB FLIRT);
+  `onePantograph` - one pantograph only, on the second car;
 - `faceLamps`, `faceGrille` - a blunt nose's headlights and grille on its front face, in
   place of the side lamps; `cabPanel` - a warning panel painted over the bands at the
   nose (`cabPanel` paint, the car builder's `field`); `lampPair` - twin headlights side by
