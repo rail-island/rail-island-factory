@@ -110,13 +110,15 @@ function bigBoySpec(): LocoSpec {
         { coupled: [6, 7, 8, 9], main: 8, cylinder: { x0: 12.0, x1: 13.6, y: 1.12, r: 0.42 }, crank: 0.41, phase: -0.5, valveGear: true, name: "rear" },
       ],
       cylinderZ: 1.2, reference: 4, wheelMaterial: "wheel",
+      // the front engine, its four-wheel lead truck and its frame turn under the boiler
+      swivel: { engines: [0], carrying: [0, 1], x1: 12.0 },
     },
     number: { text: "4014", side: [22.9, 2.7, 1.63], front: [1.37, 2.85] },
     extras: (t) => {
       headlight(t, 1.35, 3.55, 0.2);
       bell(t, 1.9, 4.5);
       pilot(t, 1, 0, 1.45, 1.35, "paint");
-      t.m.scope("air pumps", () => { for (const s of [-1, 1]) t.cylY("graphite", 2.3, s * 1.35, 2.25, 3.3, 0.18, 10); });
+      t.m.scope("air pumps", () => { for (const s of [-1, 1]) t.cylY("graphite", 2.3, s * 1.35, 2.25, 3.3, 0.18, 6); });
       t.m.scope("drawbar", () => t.box("black", 24.6, 26.0, 0.8, 1.0, -0.15, 0.15));
     },
   };
