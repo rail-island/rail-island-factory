@@ -11,7 +11,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
 | `photo-brand-new-sl79-in-1982.jpg` | Brand new SL79 in 1982.jpg | https://commons.wikimedia.org/wiki/File:Brand_new_SL79_in_1982.jpg | Rolf Thoresen | CC BY-SA 3.0 | shape, proportions and colours |
-| `photo-oslo-tram-holtet.jpg` | Oslo tram holtet.jpg | https://commons.wikimedia.org/wiki/File:Oslo_tram_holtet.jpg | Thierry Gschwind | CC BY 3.0 | shape, proportions and colours |
 
 ## Published figures
 

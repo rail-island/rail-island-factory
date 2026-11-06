@@ -11,7 +11,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
 | `photo-21ay-scandinavian-airlines-md-87-oy-khi-zrh-22-04-1998-51347.jpg` | 21ay - Scandinavian Airlines MD-87; OY-KHI@ZRH;22.04.1998 (5134779519).jpg | https://commons.wikimedia.org/wiki/File:21ay_-_Scandinavian_Airlines_MD-87;_OY-KHI@ZRH;22.04.1998_(5134779519).jpg | Aero Icarus from Zürich, Switzerland | CC BY-SA 2.0 | the airframe's shape, proportions and livery |
-| `photo-aeronaves-tsm-md-82-sf-xa-utx-at-bjx.jpg` | Aeronaves TSM MD-82(SF) (XA-UTX) at BJX.jpg | https://commons.wikimedia.org/wiki/File:Aeronaves_TSM_MD-82(SF)_(XA-UTX)_at_BJX.jpg | NS777 | CC BY-SA 4.0 | the airframe's shape, proportions and livery |
 
 ## Published figures
 

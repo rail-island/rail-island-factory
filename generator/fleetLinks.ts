@@ -36,11 +36,9 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-airbus-a220": [
     { title: "Wikipedia: Airbus A220", url: "https://en.wikipedia.org/wiki/Airbus_A220" },
     { title: "Wikimedia Commons: (SGP-Singapore) Air Niugini Airbus A220-300 P2-PGA @ Singapore Airshow 2026-02-07.jpg", url: "https://commons.wikimedia.org/wiki/File:(SGP-Singapore)_Air_Niugini_Airbus_A220-300_P2-PGA_@_Singapore_Airshow_2026-02-07.jpg" },
-    { title: "Wikimedia Commons: AirBaltic Bombardier CS300 maintenance (33221388195).jpg", url: "https://commons.wikimedia.org/wiki/File:AirBaltic_Bombardier_CS300_maintenance_(33221388195).jpg" },
   ],
   "proc-vehicle-airbus-a300": [
     { title: "Wikipedia: Airbus A300", url: "https://en.wikipedia.org/wiki/Airbus_A300" },
-    { title: "Wikimedia Commons: 28.10.72 1er Vol d'Airbus (1972) - 53Fi1992 (cropped).jpg", url: "https://commons.wikimedia.org/wiki/File:28.10.72_1er_Vol_d%27Airbus_(1972)_-_53Fi1992_(cropped).jpg" },
     { title: "Wikimedia Commons: AIRBUS A 300 B (16428835251).jpg", url: "https://commons.wikimedia.org/wiki/File:AIRBUS_A_300_B_(16428835251).jpg" },
   ],
   "proc-vehicle-airbus-a310": [
@@ -50,7 +48,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-airbus-a320": [
     { title: "Wikipedia: Airbus A320 family", url: "https://en.wikipedia.org/wiki/Airbus_A320_family" },
     { title: "Wikimedia Commons: 14cd - Swissair Airbus A319-112; HB-IPY@ZRH;15.02.1998 (5424583398).jpg", url: "https://commons.wikimedia.org/wiki/File:14cd_-_Swissair_Airbus_A319-112;_HB-IPY@ZRH;15.02.1998_(5424583398).jpg" },
-    { title: "Wikimedia Commons: A320 Wingtip EasyJet.jpg", url: "https://commons.wikimedia.org/wiki/File:A320_Wingtip_EasyJet.jpg" },
   ],
   "proc-vehicle-airbus-a320neo": [
     { title: "Wikipedia: Airbus A321neo", url: "https://en.wikipedia.org/wiki/Airbus_A321neo" },
@@ -59,7 +56,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   ],
   "proc-vehicle-airbus-a330": [
     { title: "Wikipedia: Airbus A330", url: "https://en.wikipedia.org/wiki/Airbus_A330" },
-    { title: "Wikimedia Commons: 1 - TLS (9987338765).jpg", url: "https://commons.wikimedia.org/wiki/File:1_-_TLS_(9987338765).jpg" },
     { title: "Wikimedia Commons: 9K-APF Airbus A330-841 Kuwait Airways Frankfurt 22.6.22 (cropped).jpg", url: "https://commons.wikimedia.org/wiki/File:9K-APF_Airbus_A330-841_Kuwait_Airways_Frankfurt_22.6.22_(cropped).jpg" },
   ],
   "proc-vehicle-airbus-a340": [
@@ -74,7 +70,7 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   ],
   "proc-vehicle-airbus-beluga-xl": [
     { title: "Wikipedia: Airbus BelugaXL", url: "https://en.wikipedia.org/wiki/Airbus_BelugaXL" },
-    { title: "Wikimedia Commons: AirTanker Services white unliveried Airbus A330-243, registration G-VYGM, operating on lease for Thomas Cook Airlines, departing Manchester Airport (EGCC), 9 April 2019.jpg", url: "https://commons.wikimedia.org/wiki/File:AirTanker_Services_white_unliveried_Airbus_A330-243,_registration_G-VYGM,_operating_on_lease_for_Thomas_Cook_Airlines,_departing_Manchester_Airport_(EGCC),_9_April_2019.jpg" },
+    { title: "Wikimedia Commons: Hamburg-Finkenwerder Airport Airbus Transport International Airbus A330-743L Beluga XL F-GXLH (DSC09365).jpg", url: "https://commons.wikimedia.org/wiki/File:Hamburg-Finkenwerder_Airport_Airbus_Transport_International_Airbus_A330-743L_Beluga_XL_F-GXLH_(DSC09365).jpg" },
   ],
   "proc-vehicle-airbus-h145": [
     { title: "Wikipedia: Eurocopter EC145", url: "https://en.wikipedia.org/wiki/Eurocopter_EC145" },
@@ -117,7 +113,7 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   ],
   "proc-vehicle-antonov-an225": [
     { title: "Wikipedia: Antonov An-225 Mriya", url: "https://en.wikipedia.org/wiki/Antonov_An-225_Mriya" },
-    { title: "Wikimedia Commons: 50 \u0434\u043d\u0456\u0432 \u0430\u043a\u0442\u0438\u0432\u043d\u043e\u0433\u043e \u0441\u043f\u0440\u043e\u0442\u0438\u0432\u0443 \u043e\u043a\u0443\u043f\u0430\u043d\u0442\u0443 02.jpg", url: "https://commons.wikimedia.org/wiki/File:50_%D0%B4%D0%BD%D1%96%D0%B2_%D0%B0%D0%BA%D1%82%D0%B8%D0%B2%D0%BD%D0%BE%D0%B3%D0%BE_%D1%81%D0%BF%D1%80%D0%BE%D1%82%D0%B8%D0%B2%D1%83_%D0%BE%D0%BA%D1%83%D0%BF%D0%B0%D0%BD%D1%82%D1%83_02.jpg" },
+    { title: "Wikimedia Commons: Antonov Design Bureau Antonov An-225 Mriya at Leipzig Halle (EDDP-LEJ).jpg", url: "https://commons.wikimedia.org/wiki/File:Antonov_Design_Bureau_Antonov_An-225_Mriya_at_Leipzig_Halle_(EDDP-LEJ).jpg" },
   ],
   "proc-vehicle-antonov-an24": [
     { title: "Wikipedia: Antonov An-24", url: "https://en.wikipedia.org/wiki/Antonov_An-24" },
@@ -148,7 +144,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-bae-146": [
     { title: "Wikipedia: British Aerospace 146", url: "https://en.wikipedia.org/wiki/British_Aerospace_146" },
     { title: "Wikimedia Commons: Air tanker at Range Fire.jpg", url: "https://commons.wikimedia.org/wiki/File:Air_tanker_at_Range_Fire.jpg" },
-    { title: "Wikimedia Commons: AvroRJjets.JPG", url: "https://commons.wikimedia.org/wiki/File:AvroRJjets.JPG" },
   ],
   "proc-vehicle-bedford-tk": [
     { title: "Wikipedia: Bedford TK", url: "https://en.wikipedia.org/wiki/Bedford_TK" },
@@ -228,7 +223,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-boeing-747-8": [
     { title: "Wikipedia: Boeing 747-8", url: "https://en.wikipedia.org/wiki/Boeing_747-8" },
     { title: "Wikimedia Commons: 747-8I (N6067E) takeoff.jpg", url: "https://commons.wikimedia.org/wiki/File:747-8I_(N6067E)_takeoff.jpg" },
-    { title: "Wikimedia Commons: Boeing 747-8R7F-SCD, Cargolux AN2120338.jpg", url: "https://commons.wikimedia.org/wiki/File:Boeing_747-8R7F-SCD,_Cargolux_AN2120338.jpg" },
   ],
   "proc-vehicle-boeing-757": [
     { title: "Wikipedia: Boeing 757", url: "https://en.wikipedia.org/wiki/Boeing_757" },
@@ -243,12 +237,10 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-boeing-777": [
     { title: "Wikipedia: Boeing 777", url: "https://en.wikipedia.org/wiki/Boeing_777" },
     { title: "Wikimedia Commons: 20251024 Boeing 777-36NER(SF) of Kalitta Air (N778CK) on final approach at HKG.jpg", url: "https://commons.wikimedia.org/wiki/File:20251024_Boeing_777-36NER(SF)_of_Kalitta_Air_(N778CK)_on_final_approach_at_HKG.jpg" },
-    { title: "Wikimedia Commons: 22-OCT-2022 - OS51 VIE-NRT (B777-200 - OE-LPD) (01) (cropped).jpg", url: "https://commons.wikimedia.org/wiki/File:22-OCT-2022_-_OS51_VIE-NRT_(B777-200_-_OE-LPD)_(01)_(cropped).jpg" },
   ],
   "proc-vehicle-boeing-787": [
     { title: "Wikipedia: Boeing 787 Dreamliner", url: "https://en.wikipedia.org/wiki/Boeing_787_Dreamliner" },
-    { title: "Wikimedia Commons: 787fuselage.jpg", url: "https://commons.wikimedia.org/wiki/File:787fuselage.jpg" },
-    { title: "Wikimedia Commons: ANA 787s grounded at HND.jpg", url: "https://commons.wikimedia.org/wiki/File:ANA_787s_grounded_at_HND.jpg" },
+    { title: "Wikimedia Commons: Boeing 787 N1015B ANA Airlines (27611880663) (cropped).jpg", url: "https://commons.wikimedia.org/wiki/File:Boeing_787_N1015B_ANA_Airlines_(27611880663)_(cropped).jpg" },
   ],
   "proc-vehicle-boeing-dreamlifter": [
     { title: "Wikipedia: Boeing Dreamlifter", url: "https://en.wikipedia.org/wiki/Boeing_Dreamlifter" },
@@ -272,7 +264,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   ],
   "proc-vehicle-bristol-lodekka": [
     { title: "Wikipedia: Bristol Lodekka", url: "https://en.wikipedia.org/wiki/Bristol_Lodekka" },
-    { title: "Wikimedia Commons: Bristol Lodekka FHW 158D, passenger door.jpg", url: "https://commons.wikimedia.org/wiki/File:Bristol_Lodekka_FHW_158D,_passenger_door.jpg" },
     { title: "Wikimedia Commons: Lodekka Double Decker Dress Shop.jpg", url: "https://commons.wikimedia.org/wiki/File:Lodekka_Double_Decker_Dress_Shop.jpg" },
     { title: "Wikimedia Commons: Bristol Omnibus bus 7283 (HHY 186D), 2012 Bristol Vintage Bus Group open day (2) (cropped).jpg", url: "https://commons.wikimedia.org/wiki/File:Bristol_Omnibus_bus_7283_(HHY_186D),_2012_Bristol_Vintage_Bus_Group_open_day_(2)_(cropped).jpg" },
   ],
@@ -325,7 +316,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   ],
   "proc-vehicle-caravelle": [
     { title: "Wikipedia: Sud Aviation Caravelle", url: "https://en.wikipedia.org/wiki/Sud_Aviation_Caravelle" },
-    { title: "Wikimedia Commons: 2 et 3.02.1962. Michel Debr\u00e9 \u00e0 Toulouse. L. Bazerque. Pr\u00e9fet Morin. (1962) - 53Fi3390 (cropped).jpg", url: "https://commons.wikimedia.org/wiki/File:2_et_3.02.1962._Michel_Debr%C3%A9_%C3%A0_Toulouse._L._Bazerque._Pr%C3%A9fet_Morin._(1962)_-_53Fi3390_(cropped).jpg" },
     { title: "Wikimedia Commons: Aero Jet Caravelle; HB-ICJ@ZRH;11.08.1994 (4848256908).jpg", url: "https://commons.wikimedia.org/wiki/File:Aero_Jet_Caravelle;_HB-ICJ@ZRH;11.08.1994_(4848256908).jpg" },
   ],
   "proc-vehicle-cat-797": [
@@ -370,12 +360,10 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-concorde": [
     { title: "Wikipedia: Concorde", url: "https://en.wikipedia.org/wiki/Concorde" },
     { title: "Wikimedia Commons: 02.03.69 1er vol de Concorde (1969) - 53Fi1931 - cropped.jpg", url: "https://commons.wikimedia.org/wiki/File:02.03.69_1er_vol_de_Concorde_(1969)_-_53Fi1931_-_cropped.jpg" },
-    { title: "Wikimedia Commons: 11.12.67 Pr\u00e9sentation officielle du Concorde (1967) - 53Fi1800.jpg", url: "https://commons.wikimedia.org/wiki/File:11.12.67_Pr%C3%A9sentation_officielle_du_Concorde_(1967)_-_53Fi1800.jpg" },
   ],
   "proc-vehicle-convair-880": [
     { title: "Wikipedia: Convair 880", url: "https://en.wikipedia.org/wiki/Convair_880" },
     { title: "Wikimedia Commons: Air-to-air with a Convair 880.jpg", url: "https://commons.wikimedia.org/wiki/File:Air-to-air_with_a_Convair_880.jpg" },
-    { title: "Wikimedia Commons: Convair 880 Lisa Marie Graceland Memphis TN 2013-04-01 007.jpg", url: "https://commons.wikimedia.org/wiki/File:Convair_880_Lisa_Marie_Graceland_Memphis_TN_2013-04-01_007.jpg" },
   ],
   "proc-vehicle-croydon-cr4000": [
     { title: "Wikipedia: Bombardier CR4000", url: "https://en.wikipedia.org/wiki/Bombardier_CR4000" },
@@ -486,7 +474,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-douglas-dc9": [
     { title: "Wikipedia: McDonnell Douglas DC-9", url: "https://en.wikipedia.org/wiki/McDonnell_Douglas_DC-9" },
     { title: "Wikimedia Commons: Air Canada DC-9-32; CF-TLU@JFK, August 1968.jpg", url: "https://commons.wikimedia.org/wiki/File:Air_Canada_DC-9-32;_CF-TLU@JFK,_August_1968.jpg" },
-    { title: "Wikimedia Commons: At Gran Canaria 2021 0044.jpg", url: "https://commons.wikimedia.org/wiki/File:At_Gran_Canaria_2021_0044.jpg" },
   ],
   "proc-vehicle-dubai-citadis": [
     { title: "Wikipedia: Dubai Tram", url: "https://en.wikipedia.org/wiki/Dubai_Tram" },
@@ -532,7 +519,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-embraer-erj145": [
     { title: "Wikipedia: Embraer ERJ family", url: "https://en.wikipedia.org/wiki/Embraer_ERJ_family" },
     { title: "Wikimedia Commons: 465ka (4263619765).jpg", url: "https://commons.wikimedia.org/wiki/File:465ka_(4263619765).jpg" },
-    { title: "Wikimedia Commons: American Eagle EMB-145LR (N627AE) (6983751319).jpg", url: "https://commons.wikimedia.org/wiki/File:American_Eagle_EMB-145LR_(N627AE)_(6983751319).jpg" },
   ],
   "proc-vehicle-embraer-phenom-300": [
     { title: "Wikipedia: Embraer Phenom 300", url: "https://en.wikipedia.org/wiki/Embraer_Phenom_300" },
@@ -563,7 +549,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   ],
   "proc-vehicle-fokker-100": [
     { title: "Wikipedia: Fokker 100", url: "https://en.wikipedia.org/wiki/Fokker_100" },
-    { title: "Wikimedia Commons: Fokker6.jpg", url: "https://commons.wikimedia.org/wiki/File:Fokker6.jpg" },
     { title: "Wikimedia Commons: Fokker 100 (KLM) PH-OFN (10676665315).jpg", url: "https://commons.wikimedia.org/wiki/File:Fokker_100_(KLM)_PH-OFN_(10676665315).jpg" },
   ],
   "proc-vehicle-fokker-50": [
@@ -617,7 +602,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-ganz-csmg": [
     { title: "Wikipedia: Ganz CSMG", url: "https://en.wikipedia.org/wiki/Ganz_CSMG" },
     { title: "Wikimedia Commons: 14-05-06-Tram-Budapest-Keleti-p\u00e1lyaudvar-RalfR.jpg", url: "https://commons.wikimedia.org/wiki/File:14-05-06-Tram-Budapest-Keleti-p%C3%A1lyaudvar-RalfR.jpg" },
-    { title: "Wikimedia Commons: Ipari csukl\u00f3s villamos, utast\u00e9r.jpg", url: "https://commons.wikimedia.org/wiki/File:Ipari_csukl%C3%B3s_villamos,_utast%C3%A9r.jpg" },
   ],
   "proc-vehicle-gaz-51": [
     { title: "Wikipedia: GAZ-51", url: "https://en.wikipedia.org/wiki/GAZ-51" },
@@ -638,8 +622,8 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   ],
   "proc-vehicle-gm-new-look": [
     { title: "Wikipedia: GM New Look bus", url: "https://en.wikipedia.org/wiki/GM_New_Look_bus" },
-    { title: "Wikimedia Commons: ACT206 No. 976 (New Look, 6V71) (11177940814).jpg", url: "https://commons.wikimedia.org/wiki/File:ACT206_No._976_(New_Look,_6V71)_(11177940814).jpg" },
     { title: "Wikimedia Commons: SPEED - Santa Monica Intercity Bus Lines 2525 GM New Look Bus at Tokyo Comic con 2024 (forward-right).jpg", url: "https://commons.wikimedia.org/wiki/File:SPEED_-_Santa_Monica_Intercity_Bus_Lines_2525_GM_New_Look_Bus_at_Tokyo_Comic_con_2024_(forward-right).jpg" },
+    { title: "Wikimedia Commons: TTC T6H 5307N Bus 2284.jpg", url: "https://commons.wikimedia.org/wiki/File:TTC_T6H_5307N_Bus_2284.jpg" },
   ],
   "proc-vehicle-gm-scenicruiser": [
     { title: "Wikipedia: PD-4501 Scenicruiser", url: "https://en.wikipedia.org/wiki/PD-4501_Scenicruiser" },
@@ -736,7 +720,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-ikarus-280": [
     { title: "Wikipedia: Ikarus 280", url: "https://en.wikipedia.org/wiki/Ikarus_280" },
     { title: "Wikimedia Commons: Muzeum MHD, Ikarus 280.jpg", url: "https://commons.wikimedia.org/wiki/File:Muzeum_MHD,_Ikarus_280.jpg" },
-    { title: "Wikimedia Commons: Brno, \u0158e\u010dkovice, autobus Ikarus 280 IV.JPG", url: "https://commons.wikimedia.org/wiki/File:Brno,_%C5%98e%C4%8Dkovice,_autobus_Ikarus_280_IV.JPG" },
   ],
   "proc-vehicle-ikarus-55": [
     { title: "Wikipedia: Ikarus 55", url: "https://en.wikipedia.org/wiki/Ikarus_55" },
@@ -755,7 +738,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-ilyushin-il86": [
     { title: "Wikipedia: Ilyushin Il-86", url: "https://en.wikipedia.org/wiki/Ilyushin_Il-86" },
     { title: "Wikimedia Commons: Airborne command and control aircraft IL-86VKP (2).jpg", url: "https://commons.wikimedia.org/wiki/File:Airborne_command_and_control_aircraft_IL-86VKP_(2).jpg" },
-    { title: "Wikimedia Commons: Il-86 Soviet stamp.jpg", url: "https://commons.wikimedia.org/wiki/File:Il-86_Soviet_stamp.jpg" },
   ],
   "proc-vehicle-ilyushin-il96": [
     { title: "Wikipedia: Ilyushin Il-96", url: "https://en.wikipedia.org/wiki/Ilyushin_Il-96" },
@@ -773,7 +755,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
     { title: "Wikimedia Commons: VER Ennepetal Irisbus Citelis 100 8033.jpg", url: "https://commons.wikimedia.org/wiki/File:VER_Ennepetal_Irisbus_Citelis_100_8033.jpg" },
   ],
   "proc-vehicle-irizar-i8": [
-    { title: "Wikimedia Commons: Irizar, Busworld Europe 2023, Brussels (P1140261).jpg", url: "https://commons.wikimedia.org/wiki/File:Irizar,_Busworld_Europe_2023,_Brussels_(P1140261).jpg" },
     { title: "Wikimedia Commons: Irizar i4.jpg", url: "https://commons.wikimedia.org/wiki/File:Irizar_i4.jpg" },
   ],
   "proc-vehicle-istanbul-nostalgic": [
@@ -820,7 +801,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-jingle-bus": [
     { title: "Wikipedia: Truck art in South Asia", url: "https://en.wikipedia.org/wiki/Truck_art_in_South_Asia" },
     { title: "Wikimedia Commons: London - Pakistani decorated bus.jpg", url: "https://commons.wikimedia.org/wiki/File:London_-_Pakistani_decorated_bus.jpg" },
-    { title: "Wikimedia Commons: Pakistani decorated Wheels Trucks.jpg", url: "https://commons.wikimedia.org/wiki/File:Pakistani_decorated_Wheels_Trucks.jpg" },
   ],
   "proc-vehicle-junkers-ju52": [
     { title: "Wikipedia: Junkers Ju 52", url: "https://en.wikipedia.org/wiki/Junkers_Ju_52" },
@@ -857,7 +837,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   ],
   "proc-vehicle-king-long-coach": [
     { title: "Wikipedia: King Long", url: "https://en.wikipedia.org/wiki/King_Long" },
-    { title: "Wikimedia Commons: King Long Jockey 01 China 2015-04-13.jpg", url: "https://commons.wikimedia.org/wiki/File:King_Long_Jockey_01_China_2015-04-13.jpg" },
     { title: "Wikimedia Commons: King Long KLQ 6118GQ bus in Damascus.JPG", url: "https://commons.wikimedia.org/wiki/File:King_Long_KLQ_6118GQ_bus_in_Damascus.JPG" },
   ],
   "proc-vehicle-kinki-sharyo-lrv": [
@@ -921,8 +900,8 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   ],
   "proc-vehicle-liaz-677": [
     { title: "Wikipedia: LiAZ-677", url: "https://en.wikipedia.org/wiki/LiAZ-677" },
-    { title: "Wikimedia Commons: -\u041c\u043e\u0441\u043a\u0432\u0430 \u041b\u0438\u0410\u0417-677 (9028031652).jpg", url: "https://commons.wikimedia.org/wiki/File:-%D0%9C%D0%BE%D1%81%D0%BA%D0%B2%D0%B0_%D0%9B%D0%B8%D0%90%D0%97-677_(9028031652).jpg" },
     { title: "Wikimedia Commons: Gagarinsky District bus \u0412677\u041d\u0422750 2023-02 Kosygina Street LiAZ-677M 220.jpg", url: "https://commons.wikimedia.org/wiki/File:Gagarinsky_District_bus_%D0%92677%D0%9D%D0%A2750_2023-02_Kosygina_Street_LiAZ-677M_220.jpg" },
+    { title: "Wikimedia Commons: \u041b\u0438\u0410\u0417 677.jpg", url: "https://commons.wikimedia.org/wiki/File:%D0%9B%D0%B8%D0%90%D0%97_677.jpg" },
   ],
   "proc-vehicle-liebherr-ltm": [
     { title: "Wikimedia Commons: Liebherr LTM 1100-5.1.jpg", url: "https://commons.wikimedia.org/wiki/File:Liebherr_LTM_1100-5.1.jpg" },
@@ -1081,11 +1060,9 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-md-80": [
     { title: "Wikipedia: McDonnell Douglas MD-80", url: "https://en.wikipedia.org/wiki/McDonnell_Douglas_MD-80" },
     { title: "Wikimedia Commons: 21ay - Scandinavian Airlines MD-87; OY-KHI@ZRH;22.04.1998 (5134779519).jpg", url: "https://commons.wikimedia.org/wiki/File:21ay_-_Scandinavian_Airlines_MD-87;_OY-KHI@ZRH;22.04.1998_(5134779519).jpg" },
-    { title: "Wikimedia Commons: Aeronaves TSM MD-82(SF) (XA-UTX) at BJX.jpg", url: "https://commons.wikimedia.org/wiki/File:Aeronaves_TSM_MD-82(SF)_(XA-UTX)_at_BJX.jpg" },
   ],
   "proc-vehicle-medellin-metrocable": [
     { title: "Wikipedia: Metrocable (Medell\u00edn)", url: "https://en.wikipedia.org/wiki/Metrocable_(Medell%C3%ADn)" },
-    { title: "Wikimedia Commons: Metro cable medellin 1.JPG", url: "https://commons.wikimedia.org/wiki/File:Metro_cable_medellin_1.JPG" },
     { title: "Wikimedia Commons: Metrocablemed.jpg", url: "https://commons.wikimedia.org/wiki/File:Metrocablemed.jpg" },
   ],
   "proc-vehicle-melbourne-b-class": [
@@ -1124,7 +1101,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-neoplan-skyliner": [
     { title: "Wikipedia: Neoplan Skyliner", url: "https://en.wikipedia.org/wiki/Neoplan_Skyliner" },
     { title: "Wikimedia Commons: Neoplan Skyliner 2011 Autobus Oberbayern.jpg", url: "https://commons.wikimedia.org/wiki/File:Neoplan_Skyliner_2011_Autobus_Oberbayern.jpg" },
-    { title: "Wikimedia Commons: Neoplan Skyliner IAA 2016 (3) Travelarz.JPG", url: "https://commons.wikimedia.org/wiki/File:Neoplan_Skyliner_IAA_2016_(3)_Travelarz.JPG" },
     { title: "Wikimedia Commons: Flixbus (Vestmotorvejen) in 2019.04.jpg", url: "https://commons.wikimedia.org/wiki/File:Flixbus_(Vestmotorvejen)_in_2019.04.jpg" },
   ],
   "proc-vehicle-new-flyer-xcelsior": [
@@ -1158,7 +1134,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-oslo-sl79": [
     { title: "Wikipedia: SL79", url: "https://en.wikipedia.org/wiki/SL79" },
     { title: "Wikimedia Commons: Brand new SL79 in 1982.jpg", url: "https://commons.wikimedia.org/wiki/File:Brand_new_SL79_in_1982.jpg" },
-    { title: "Wikimedia Commons: Oslo tram holtet.jpg", url: "https://commons.wikimedia.org/wiki/File:Oslo_tram_holtet.jpg" },
   ],
   "proc-vehicle-otokar-kent": [
     { title: "Wikipedia: Otokar", url: "https://en.wikipedia.org/wiki/Otokar" },
@@ -1219,7 +1194,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
     { title: "Wikipedia: Funitel", url: "https://en.wikipedia.org/wiki/Funitel" },
     { title: "Wikimedia Commons: Funitel 1.jpg", url: "https://commons.wikimedia.org/wiki/File:Funitel_1.jpg" },
     { title: "Wikimedia Commons: Squaw Valley Funitel Olympic Valley.jpg", url: "https://commons.wikimedia.org/wiki/File:Squaw_Valley_Funitel_Olympic_Valley.jpg" },
-    { title: "Wikimedia Commons: Funitel de Rocharbois, seen from the Rochebrune side, Meg\u00e8ve, 2025.jpg", url: "https://commons.wikimedia.org/wiki/File:Funitel_de_Rocharbois,_seen_from_the_Rochebrune_side,_Meg%C3%A8ve,_2025.jpg" },
     { title: "Wikimedia Commons: Funitel Fond.JPG", url: "https://commons.wikimedia.org/wiki/File:Funitel_Fond.JPG" },
   ],
   "proc-vehicle-praga-v3s": [
@@ -1312,7 +1286,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-ship-aframax": [
     { title: "Wikipedia: Aframax", url: "https://en.wikipedia.org/wiki/Aframax" },
     { title: "Wikimedia Commons: Atlas Maritime's Mitera Marigo Aframax Oil Tanker.jpg", url: "https://commons.wikimedia.org/wiki/File:Atlas_Maritime%27s_Mitera_Marigo_Aframax_Oil_Tanker.jpg" },
-    { title: "Wikimedia Commons: FS Etoile-icon.jpg", url: "https://commons.wikimedia.org/wiki/File:FS_Etoile-icon.jpg" },
   ],
   "proc-vehicle-ship-amazon-riverboat": [
     { title: "Wikipedia: Riverboat", url: "https://en.wikipedia.org/wiki/Riverboat" },
@@ -1357,7 +1330,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-ship-capesize": [
     { title: "Wikipedia: Capesize", url: "https://en.wikipedia.org/wiki/Capesize" },
     { title: "Wikimedia Commons: 140303 Cape Elise - 03.jpg", url: "https://commons.wikimedia.org/wiki/File:140303_Cape_Elise_-_03.jpg" },
-    { title: "Wikimedia Commons: Capesize bulk carrier at Suez Canal Bridge.JPG", url: "https://commons.wikimedia.org/wiki/File:Capesize_bulk_carrier_at_Suez_Canal_Bridge.JPG" },
   ],
   "proc-vehicle-ship-channel-ropax": [
     { title: "Wikimedia Commons: Spirit of Britain in pursuit.jpg", url: "https://commons.wikimedia.org/wiki/File:Spirit_of_Britain_in_pursuit.jpg" },
@@ -1365,7 +1337,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   ],
   "proc-vehicle-ship-chemical-tanker": [
     { title: "Wikipedia: Chemical tanker", url: "https://en.wikipedia.org/wiki/Chemical_tanker" },
-    { title: "Wikimedia Commons: Al Farabi chemical tanker 2.jpg", url: "https://commons.wikimedia.org/wiki/File:Al_Farabi_chemical_tanker_2.jpg" },
     { title: "Wikimedia Commons: STEN AURORA Clyde 2019.jpg", url: "https://commons.wikimedia.org/wiki/File:STEN_AURORA_Clyde_2019.jpg" },
   ],
   "proc-vehicle-ship-crane-vessel": [
@@ -1424,7 +1395,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-ship-handysize": [
     { title: "Wikipedia: Handysize", url: "https://en.wikipedia.org/wiki/Handysize" },
     { title: "Wikimedia Commons: Polish Bulk Carrier Kociewie in the Port of Hamburg.jpg", url: "https://commons.wikimedia.org/wiki/File:Polish_Bulk_Carrier_Kociewie_in_the_Port_of_Hamburg.jpg" },
-    { title: "Wikimedia Commons: HandySize Tug.jpg", url: "https://commons.wikimedia.org/wiki/File:HandySize_Tug.jpg" },
   ],
   "proc-vehicle-ship-harbour-tug": [
     { title: "Wikipedia: Tugboat", url: "https://en.wikipedia.org/wiki/Tugboat" },
@@ -1444,7 +1414,7 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   ],
   "proc-vehicle-ship-icon": [
     { title: "Wikipedia: Icon of the Seas", url: "https://en.wikipedia.org/wiki/Icon_of_the_Seas" },
-    { title: "Wikimedia Commons: Icon Aquadome.jpg", url: "https://commons.wikimedia.org/wiki/File:Icon_Aquadome.jpg" },
+    { title: "Wikimedia Commons: Icon of the Seas Puerto Rico 2025 (cropped).jpg", url: "https://commons.wikimedia.org/wiki/File:Icon_of_the_Seas_Puerto_Rico_2025_(cropped).jpg" },
   ],
   "proc-vehicle-ship-ideal-x": [
     { title: "Wikipedia: SS Ideal X", url: "https://en.wikipedia.org/wiki/SS_Ideal_X" },
@@ -1486,7 +1456,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   ],
   "proc-vehicle-ship-lng-qmax": [
     { title: "Wikipedia: Q-Max", url: "https://en.wikipedia.org/wiki/Q-Max" },
-    { title: "Wikimedia Commons: Max-Q - Burbank, Wetherbee.jpg", url: "https://commons.wikimedia.org/wiki/File:Max-Q_-_Burbank,_Wetherbee.jpg" },
     { title: "Wikimedia Commons: Mozah.JPG", url: "https://commons.wikimedia.org/wiki/File:Mozah.JPG" },
   ],
   "proc-vehicle-ship-lobster-boat": [
@@ -1530,16 +1499,14 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   ],
   "proc-vehicle-ship-olympic": [
     { title: "Wikipedia: RMS Olympic", url: "https://en.wikipedia.org/wiki/RMS_Olympic" },
-    { title: "Wikimedia Commons: Arthur Lismer - Olympic with Returned Soldiers.jpg", url: "https://commons.wikimedia.org/wiki/File:Arthur_Lismer_-_Olympic_with_Returned_Soldiers.jpg" },
+    { title: "Wikimedia Commons: Olympic in New York cropped.jpg", url: "https://commons.wikimedia.org/wiki/File:Olympic_in_New_York_cropped.jpg" },
   ],
   "proc-vehicle-ship-panamax-container": [
     { title: "Wikipedia: Panamax", url: "https://en.wikipedia.org/wiki/Panamax" },
-    { title: "Wikimedia Commons: Bayonne Bridge 2 deck with ship.agr.jpg", url: "https://commons.wikimedia.org/wiki/File:Bayonne_Bridge_2_deck_with_ship.agr.jpg" },
     { title: "Wikimedia Commons: Container Ship CMA CGM Theodore Roosevelt in NY Harbor on Sept 7, 2017 (36415318053).jpg", url: "https://commons.wikimedia.org/wiki/File:Container_Ship_CMA_CGM_Theodore_Roosevelt_in_NY_Harbor_on_Sept_7,_2017_(36415318053).jpg" },
   ],
   "proc-vehicle-ship-pctc": [
     { title: "Wikipedia: Roll-on/roll-off", url: "https://en.wikipedia.org/wiki/Roll-on%2Froll-off" },
-    { title: "Wikimedia Commons: Atlantic Conveyor .jpg", url: "https://commons.wikimedia.org/wiki/File:Atlantic_Conveyor_.jpg" },
     { title: "Wikimedia Commons: BYD Hefei, Porto di Livorno, 2025.jpg", url: "https://commons.wikimedia.org/wiki/File:BYD_Hefei,_Porto_di_Livorno,_2025.jpg" },
   ],
   "proc-vehicle-ship-pilot-boat": [
@@ -1573,7 +1540,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-ship-reefer": [
     { title: "Wikipedia: Reefer ship", url: "https://en.wikipedia.org/wiki/Reefer_ship" },
     { title: "Wikimedia Commons: BALTIC JASMINE.jpg", url: "https://commons.wikimedia.org/wiki/File:BALTIC_JASMINE.jpg" },
-    { title: "Wikimedia Commons: Dole Honduras in San Diego.jpg", url: "https://commons.wikimedia.org/wiki/File:Dole_Honduras_in_San_Diego.jpg" },
   ],
   "proc-vehicle-ship-rhine-tanker": [
     { title: "Wikipedia: Barge", url: "https://en.wikipedia.org/wiki/Barge" },
@@ -1613,7 +1579,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   ],
   "proc-vehicle-ship-self-unloader": [
     { title: "Wikimedia Commons: CarlDBradley ship.jpg", url: "https://commons.wikimedia.org/wiki/File:CarlDBradley_ship.jpg" },
-    { title: "Wikimedia Commons: 6-20-49 Str. Carl D. Bradley unloading stone at Gary, Indiana.jpg", url: "https://commons.wikimedia.org/wiki/File:6-20-49_Str._Carl_D._Bradley_unloading_stone_at_Gary,_Indiana.jpg" },
   ],
   "proc-vehicle-ship-shrimp-trawler": [
     { title: "Wikipedia: Trawling", url: "https://en.wikipedia.org/wiki/Trawling" },
@@ -1637,7 +1602,7 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   ],
   "proc-vehicle-ship-staten-island": [
     { title: "Wikipedia: Staten Island Ferry", url: "https://en.wikipedia.org/wiki/Staten_Island_Ferry" },
-    { title: "Wikimedia Commons: Ferry dongan hills 1945.jpg", url: "https://commons.wikimedia.org/wiki/File:Ferry_dongan_hills_1945.jpg" },
+    { title: "Wikimedia Commons: Spirit of America - Staten Island Ferry.jpg", url: "https://commons.wikimedia.org/wiki/File:Spirit_of_America_-_Staten_Island_Ferry.jpg" },
   ],
   "proc-vehicle-ship-stena-hss": [
     { title: "Wikipedia: HSS 1500", url: "https://en.wikipedia.org/wiki/HSS_1500" },
@@ -1795,7 +1760,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-solaris-tramino": [
     { title: "Wikipedia: Solaris Tramino", url: "https://en.wikipedia.org/wiki/Solaris_Tramino" },
     { title: "Wikimedia Commons: Braunschweig Emsstra\u00dfe Solaris Tramino 1452.JPG", url: "https://commons.wikimedia.org/wiki/File:Braunschweig_Emsstra%C3%9Fe_Solaris_Tramino_1452.JPG" },
-    { title: "Wikimedia Commons: InnoTrans14 Solaris Tramino Braunschweig (2).jpg", url: "https://commons.wikimedia.org/wiki/File:InnoTrans14_Solaris_Tramino_Braunschweig_(2).jpg" },
   ],
   "proc-vehicle-solaris-trollino": [
     { title: "Wikipedia: Solaris Trollino", url: "https://en.wikipedia.org/wiki/Solaris_Trollino" },
@@ -1807,7 +1771,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   ],
   "proc-vehicle-songthaew": [
     { title: "Wikipedia: Songthaew", url: "https://en.wikipedia.org/wiki/Songthaew" },
-    { title: "Wikimedia Commons: Empty Songthaew-Sakon Nakhon.JPG", url: "https://commons.wikimedia.org/wiki/File:Empty_Songthaew-Sakon_Nakhon.JPG" },
     { title: "Wikimedia Commons: Isuzu N-Series songthaew 01.jpg", url: "https://commons.wikimedia.org/wiki/File:Isuzu_N-Series_songthaew_01.jpg" },
   ],
   "proc-vehicle-sor-nb12": [
@@ -1921,8 +1884,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-titlis-rotair": [
     { title: "Wikipedia: Titlis", url: "https://en.wikipedia.org/wiki/Titlis" },
     { title: "Wikimedia Commons: Titlis Rotair.jpg", url: "https://commons.wikimedia.org/wiki/File:Titlis_Rotair.jpg" },
-    { title: "Wikimedia Commons: Engelberg-Titlis cableway wallpaper.JPG", url: "https://commons.wikimedia.org/wiki/File:Engelberg-Titlis_cableway_wallpaper.JPG" },
-    { title: "Wikimedia Commons: Titlis W.jpg", url: "https://commons.wikimedia.org/wiki/File:Titlis_W.jpg" },
   ],
   "proc-vehicle-toei-9000": [
     { title: "Wikipedia: Toei 9000 series", url: "https://en.wikipedia.org/wiki/Toei_9000_series" },
@@ -1955,7 +1916,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-transmilenio": [
     { title: "Wikipedia: TransMilenio", url: "https://en.wikipedia.org/wiki/TransMilenio" },
     { title: "Wikimedia Commons: Articulado de Transmilenio en el Eje Ambiental.JPG", url: "https://commons.wikimedia.org/wiki/File:Articulado_de_Transmilenio_en_el_Eje_Ambiental.JPG" },
-    { title: "Wikimedia Commons: Av 26 a la altura de la 13, fase III Transmilenio, Bogot\u00e1.JPG", url: "https://commons.wikimedia.org/wiki/File:Av_26_a_la_altura_de_la_13,_fase_III_Transmilenio,_Bogot%C3%A1.JPG" },
   ],
   "proc-vehicle-trieste-opicina": [
     { title: "Wikipedia: Trieste\u2013Opicina tramway", url: "https://en.wikipedia.org/wiki/Trieste%E2%80%93Opicina_tramway" },
@@ -1963,12 +1923,10 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   ],
   "proc-vehicle-tupolev-tu104": [
     { title: "Wikipedia: Tupolev Tu-104", url: "https://en.wikipedia.org/wiki/Tupolev_Tu-104" },
-    { title: "Wikimedia Commons: 1958 CPA 2185 (cropped).jpg", url: "https://commons.wikimedia.org/wiki/File:1958_CPA_2185_(cropped).jpg" },
     { title: "Wikimedia Commons: Aeroflot Tupolev Tu-104A at Arlanda, July 1972.jpg", url: "https://commons.wikimedia.org/wiki/File:Aeroflot_Tupolev_Tu-104A_at_Arlanda,_July_1972.jpg" },
   ],
   "proc-vehicle-tupolev-tu134": [
     { title: "Wikipedia: Tupolev Tu-134", url: "https://en.wikipedia.org/wiki/Tupolev_Tu-134" },
-    { title: "Wikimedia Commons: Aeroflot-Nord Tupolev Tu-134 nose view Mishin.jpg", url: "https://commons.wikimedia.org/wiki/File:Aeroflot-Nord_Tupolev_Tu-134_nose_view_Mishin.jpg" },
     { title: "Wikimedia Commons: CCCP-45075 Tupolev Tu.124A ( Converted Into 1st Tu.134 Prototype ) (8019060107).jpg", url: "https://commons.wikimedia.org/wiki/File:CCCP-45075_Tupolev_Tu.124A_(_Converted_Into_1st_Tu.134_Prototype_)_(8019060107).jpg" },
   ],
   "proc-vehicle-tupolev-tu144": [
@@ -2022,7 +1980,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-vickers-vc10": [
     { title: "Wikipedia: Vickers VC10", url: "https://en.wikipedia.org/wiki/Vickers_VC10" },
     { title: "Wikimedia Commons: BAC Super VC10 (48866255332).jpg", url: "https://commons.wikimedia.org/wiki/File:BAC_Super_VC10_(48866255332).jpg" },
-    { title: "Wikimedia Commons: BOAC-Cunard Vickers VC10 G-ASGC Duxford 2006 (03).jpg", url: "https://commons.wikimedia.org/wiki/File:BOAC-Cunard_Vickers_VC10_G-ASGC_Duxford_2006_(03).jpg" },
   ],
   "proc-vehicle-vickers-viscount": [
     { title: "Wikipedia: Vickers Viscount", url: "https://en.wikipedia.org/wiki/Vickers_Viscount" },
@@ -2087,7 +2044,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-wroclaw-skoda-16t": [
     { title: "Wikipedia: \u0160koda 16 T", url: "https://en.wikipedia.org/wiki/%C5%A0koda_16_T" },
     { title: "Wikimedia Commons: 16T Wroclaw 3002.jpg", url: "https://commons.wikimedia.org/wiki/File:16T_Wroclaw_3002.jpg" },
-    { title: "Wikimedia Commons: Skoda-16T-08061508.jpg", url: "https://commons.wikimedia.org/wiki/File:Skoda-16T-08061508.jpg" },
   ],
   "proc-vehicle-xian-ma60": [
     { title: "Wikipedia: Xi'an MA60", url: "https://en.wikipedia.org/wiki/Xi'an_MA60" },
@@ -2100,7 +2056,6 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   ],
   "proc-vehicle-yakovlev-yak42": [
     { title: "Wikipedia: Yakovlev Yak-42", url: "https://en.wikipedia.org/wiki/Yakovlev_Yak-42" },
-    { title: "Wikimedia Commons: Volga-Aviaexpress Yak-42 tail.jpg", url: "https://commons.wikimedia.org/wiki/File:Volga-Aviaexpress_Yak-42_tail.jpg" },
     { title: "Wikimedia Commons: Yak-42D (5453983163).jpg", url: "https://commons.wikimedia.org/wiki/File:Yak-42D_(5453983163).jpg" },
   ],
   "proc-vehicle-yutong-e12": [

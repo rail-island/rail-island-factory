@@ -10,7 +10,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-1-tls-9987338765.jpg` | 1 - TLS (9987338765).jpg | https://commons.wikimedia.org/wiki/File:1_-_TLS_(9987338765).jpg | Ken Fielding | CC BY-SA 3.0 | the airframe's shape, proportions and livery |
 | `photo-9k-apf-airbus-a330-841-kuwait-airways-frankfurt-22-6-22-crop.jpg` | 9K-APF Airbus A330-841 Kuwait Airways Frankfurt 22.6.22 (cropped).jpg | https://commons.wikimedia.org/wiki/File:9K-APF_Airbus_A330-841_Kuwait_Airways_Frankfurt_22.6.22_(cropped).jpg | Colin Cooke Photo | CC BY-SA 2.0 | the airframe's shape, proportions and livery |
 
 ## Published figures

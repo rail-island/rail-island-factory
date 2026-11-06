@@ -12,7 +12,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 |---|---|---|---|---|---|
 | `photo-funitel-1.jpg` | Funitel 1.jpg | https://commons.wikimedia.org/wiki/File:Funitel_1.jpg | Slgreenx at English Wikipedia | Public domain | the funitel cabin and its two-rope hanger |
 | `photo-squaw-valley-funitel-olympic-valley.jpg` | Squaw Valley Funitel Olympic Valley.jpg | https://commons.wikimedia.org/wiki/File:Squaw_Valley_Funitel_Olympic_Valley.jpg | Eric Gunderson | CC BY-SA 3.0 | the funitel cabin and its two-rope hanger |
-| `photo-funitel-de-rocharbois-seen-from-the-rochebrune-side-megeve-2.jpg` | Funitel de Rocharbois, seen from the Rochebrune side, Megève, 2025.jpg | https://commons.wikimedia.org/wiki/File:Funitel_de_Rocharbois,_seen_from_the_Rochebrune_side,_Meg%C3%A8ve,_2025.jpg | DimiTalen | CC0 | the funitel cabin and its two-rope hanger |
 | `photo-funitel-fond.jpg` | Funitel Fond.JPG | https://commons.wikimedia.org/wiki/File:Funitel_Fond.JPG | unknown | Public domain | the whole Funitel Cabin (the lead photograph of Wikipedia's "Funitel") |
 
 ## Published figures
