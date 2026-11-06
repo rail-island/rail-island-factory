@@ -117,7 +117,7 @@ describe("the world ships", () => {
     expect(shipLength(CARGO_SHIP_SPECS.find((s) => s.id === "veh-ship-seawise-giant")!.spec())).toBeCloseTo(458.45, 2);
   });
 
-  it("gives the detailed ships (the list's first 75) their fittings, detailed houses and a fair share of their budget", () => {
+  it("gives every world ship its detail (the list's 100 in four batches) their fittings, detailed houses and a fair share of their budget", () => {
     for (const s of CARGO_SHIP_SPECS.slice(0, 25)) {
       const spec = s.spec();
       const kinds = new Set(spec.items.map((it) => it.k));
@@ -146,6 +146,15 @@ describe("the world ships", () => {
       expect(spec.items.some((it) => it.k === "rail"), `${s.id} railings`).toBe(true);
       expect(spec.items.some((it) => it.k === "tier" && it.lip), `${s.id} deck edges`).toBe(true);
       expect(built(s, combos(s)[0]).triangleCount(), s.id).toBeGreaterThan(shipBudget(spec) * (spec.small ? 0.4 : spec.hull ? 0.15 : 0.12));
+    }
+    // the last batch (the list's 76th to 100th): cruise ships and liners, river boats, tall ships, traditional and small craft
+    const fourth = ["nile-cruiser", "kettuvallam", "amazon-riverboat", "hurtigruten", "oasis", "icon", "queen-mary-2", "olympic", "ss-united-states", "normandie", "expedition-cruise", "river-cruise", "sedov", "cutty-sark", "bluenose", "ss-great-britain", "viking-longship", "voyaging-canoe", "gondola", "longtail", "superyacht", "sailing-yacht", "riva-aquarama", "fishing-cutter", "sampan"];
+    for (const name of fourth) {
+      const s = ALL.find((x) => x.id === `veh-ship-${name}`)!;
+      const spec = s.spec();
+      expect(spec.hull?.fine, s.id).toBe(true);
+      expect(spec.items.some((it) => ["rail", "edgeRail", "bulwark", "strakes"].includes(it.k)), `${s.id} rails, bulwark or strakes`).toBe(true);
+      expect(built(s, combos(s)[0]).triangleCount(), s.id).toBeGreaterThan(shipBudget(spec) * 0.25);
     }
     // a loaded container ship draws a stack per row of boxes and its lashing bridges
     const t = CARGO_SHIP_SPECS[0]!.spec();

@@ -12,29 +12,29 @@ in `assets/ship-<name>/SOURCES.md`.
 
 | id | title | L x B x H (m) | draft (draftFrac) | bow / stern | triangles (LOD) | params |
 |---|---|---|---|---|---|---|
-| `veh-ship-triple-e` | Maersk Triple E Class | 399.0 x 59.0 x 75.4 | 14.5 (0.1923) | bulbous / transom | 16836 (99) | load: full, empty |
-| `veh-ship-emma-maersk` | Emma Maersk | 397.7 x 56.4 x 71.6 | 15.5 (0.2165) | bulbous / transom | 15891 (99) | load: full, empty |
-| `veh-ship-msc-gulsun` | MSC Gulsun Class | 399.9 x 61.5 x 78.6 | 16.0 (0.2036) | bulbous / transom | 17497 (99) | load: full, empty |
-| `veh-ship-panamax-container` | Panamax Container Ship | 294.0 x 32.2 x 51.5 | 12.0 (0.2331) | bulbous / transom | 9971 (99) | load: full, empty; livery: orange, green, blue |
-| `veh-ship-feeder-container` | Feeder Container Ship | 134.0 x 22.5 x 45.8 | 8.0 (0.1747) | bulbous / transom | 6171 (99) | load: full, empty |
+| `veh-ship-triple-e` | Maersk Triple E Class | 399.0 x 59.0 x 75.4 | 14.5 (0.1923) | bulbous / transom | 18772 (99) | load: full, empty |
+| `veh-ship-emma-maersk` | Emma Maersk | 397.7 x 56.4 x 71.6 | 15.5 (0.2165) | bulbous / transom | 17827 (99) | load: full, empty |
+| `veh-ship-msc-gulsun` | MSC Gulsun Class | 399.9 x 61.5 x 78.6 | 16.0 (0.2036) | bulbous / transom | 19433 (99) | load: full, empty |
+| `veh-ship-panamax-container` | Panamax Container Ship | 294.0 x 32.2 x 51.5 | 12.0 (0.2331) | bulbous / transom | 11907 (99) | load: full, empty; livery: orange, green, blue |
+| `veh-ship-feeder-container` | Feeder Container Ship | 134.0 x 22.5 x 45.8 | 8.0 (0.1747) | bulbous / transom | 7755 (99) | load: full, empty |
 | `veh-ship-ideal-x` | Ideal X | 159.6 x 20.7 x 30.6 | 9.2 (0.3007) | raked / cruiser | 5840 (99) | - |
-| `veh-ship-vlcc` | Very Large Crude Carrier | 330.0 x 60.0 x 64.6 | 21.0 (0.3252) | bulbous / transom | 7964 (99) | livery: navy, green, black |
-| `veh-ship-seawise-giant` | Seawise Giant | 458.4 x 68.8 x 70.6 | 24.6 (0.3484) | raked / transom | 9149 (99) | - |
-| `veh-ship-aframax` | Aframax Tanker | 245.0 x 42.0 x 50.9 | 14.8 (0.2909) | bulbous / transom | 7108 (99) | livery: red, navy, black |
-| `veh-ship-product-tanker` | Product Tanker | 183.0 x 32.2 x 45.6 | 12.0 (0.2629) | bulbous / transom | 6632 (99) | livery: red, navy, green |
-| `veh-ship-lng-moss` | Moss LNG Carrier | 290.0 x 48.0 x 62.3 | 11.5 (0.1845) | bulbous / transom | 7635 (99) | - |
-| `veh-ship-lng-qmax` | Q-Max LNG Carrier | 345.0 x 53.8 x 63.0 | 12.0 (0.1905) | bulbous / transom | 7194 (99) | - |
-| `veh-ship-lpg-carrier` | LPG Carrier | 120.0 x 19.6 x 32.6 | 7.2 (0.2209) | bulbous / transom | 5647 (99) | - |
-| `veh-ship-chemical-tanker` | Chemical Tanker | 183.0 x 32.0 x 44.6 | 11.5 (0.2576) | bulbous / transom | 6989 (99) | livery: red, navy, green, black |
-| `veh-ship-capesize` | Capesize Bulk Carrier | 292.0 x 45.0 x 54.6 | 18.2 (0.3335) | bulbous / transom | 6887 (99) | livery: black, red, blue |
-| `veh-ship-valemax` | Valemax Ore Carrier | 362.0 x 65.0 x 67.3 | 23.0 (0.342) | bulbous / transom | 7410 (99) | - |
-| `veh-ship-handysize` | Handysize Bulk Carrier | 180.0 x 30.0 x 47.5 | 10.0 (0.2105) | bulbous / transom | 6329 (99) | livery: red, black, blue, grey |
+| `veh-ship-vlcc` | Very Large Crude Carrier | 330.0 x 60.0 x 64.6 | 21.0 (0.3252) | bulbous / transom | 9930 (99) | livery: navy, green, black |
+| `veh-ship-seawise-giant` | Seawise Giant | 458.4 x 68.8 x 70.6 | 24.6 (0.3484) | raked / transom | 11115 (99) | - |
+| `veh-ship-aframax` | Aframax Tanker | 245.0 x 42.0 x 50.9 | 14.8 (0.2909) | bulbous / transom | 9074 (99) | livery: red, navy, black |
+| `veh-ship-product-tanker` | Product Tanker | 183.0 x 32.2 x 45.6 | 12.0 (0.2629) | bulbous / transom | 8598 (99) | livery: red, navy, green |
+| `veh-ship-lng-moss` | Moss LNG Carrier | 290.0 x 48.0 x 62.3 | 11.5 (0.1845) | bulbous / transom | 9571 (99) | - |
+| `veh-ship-lng-qmax` | Q-Max LNG Carrier | 345.0 x 53.8 x 63.0 | 12.0 (0.1905) | bulbous / transom | 9130 (99) | - |
+| `veh-ship-lpg-carrier` | LPG Carrier | 120.0 x 19.6 x 32.6 | 7.2 (0.2209) | bulbous / transom | 7071 (99) | - |
+| `veh-ship-chemical-tanker` | Chemical Tanker | 183.0 x 32.0 x 44.6 | 11.5 (0.2576) | bulbous / transom | 8925 (99) | livery: red, navy, green, black |
+| `veh-ship-capesize` | Capesize Bulk Carrier | 292.0 x 45.0 x 54.6 | 18.2 (0.3335) | bulbous / transom | 9023 (99) | livery: black, red, blue |
+| `veh-ship-valemax` | Valemax Ore Carrier | 362.0 x 65.0 x 67.3 | 23.0 (0.342) | bulbous / transom | 9506 (99) | - |
+| `veh-ship-handysize` | Handysize Bulk Carrier | 180.0 x 30.0 x 47.5 | 10.0 (0.2105) | bulbous / transom | 8385 (99) | livery: red, black, blue, grey |
 | `veh-ship-laker` | Great Lakes Freighter | 222.5 x 22.9 x 25.7 | 7.9 (0.3074) | raked / transom | 5316 (99) | livery: red, black |
 | `veh-ship-self-unloader` | Self-Unloading Laker | 304.8 x 32.0 x 31.4 | 9.4 (0.2994) | raked / transom | 5742 (99) | - |
 | `veh-ship-pctc` | Pure Car and Truck Carrier | 199.9 x 32.3 x 46.4 | 9.5 (0.2047) | bulbous / transom | 3862 (89) | livery: blue, white, red |
-| `veh-ship-roro` | Ro-Ro Cargo Ship | 190.0 x 26.0 x 38.4 | 7.5 (0.1953) | bulbous / transom | 6423 (99) | load: full, empty; livery: white, blue, orange |
+| `veh-ship-roro` | Ro-Ro Cargo Ship | 190.0 x 26.0 x 38.4 | 7.5 (0.1953) | bulbous / transom | 6695 (99) | load: full, empty; livery: white, blue, orange |
 | `veh-ship-heavy-lift` | Semi-Submersible Heavy-Lift Ship | 275.0 x 70.0 x 75.5 | 10.5 (0.1391) | raked / transom | 6684 (93) | load: full, empty |
-| `veh-ship-reefer` | Refrigerated Cargo Ship | 150.0 x 23.0 x 35.6 | 9.0 (0.2528) | bulbous / transom | 5922 (99) | livery: white, blue, red |
+| `veh-ship-reefer` | Refrigerated Cargo Ship | 150.0 x 23.0 x 35.6 | 9.0 (0.2528) | bulbous / transom | 7378 (99) | livery: white, blue, red |
 | `veh-ship-liberty` | Liberty Ship | 134.6 x 17.3 x 31.4 | 8.5 (0.2707) | raked / cruiser | 5731 (99) | - |
 | `veh-ship-victory` | Victory Ship | 138.8 x 18.9 x 34.0 | 8.7 (0.2559) | raked / cruiser | 5839 (99) | - |
 | `veh-ship-europaschiff` | Rhine Motor Cargo Vessel | 80.0 x 9.5 x 10.7 | 2.5 (0.2336) | barge / transom | 4951 (98) | load: full, empty |
@@ -80,24 +80,24 @@ Notes:
 
 | id | title | L x B x H (m) | draft (draftFrac) | bow / stern | triangles (LOD) | params |
 |---|---|---|---|---|---|---|
-| `veh-ship-cable-layer` | Cable Layer | 140.0 x 30.0 x 38.4 | 7.0 (0.1823) | raked / transom | 6170 (99) | - |
+| `veh-ship-cable-layer` | Cable Layer | 140.0 x 30.0 x 38.4 | 7.0 (0.1823) | raked / transom | 7530 (99) | - |
 | `veh-ship-ocean-tug` | Ocean-Going Tug | 80.0 x 18.0 x 30.4 | 6.5 (0.2138) | bulbous / transom | 6142 (99) | livery: black, red, blue |
 | `veh-ship-harbour-tug` | Harbour Tug | 32.0 x 12.8 x 15.8 | 3.6 (0.2278) | raked / transom | 5202 (99) | livery: red, black, green |
 | `veh-ship-towboat` | Mississippi Towboat | 60.0 x 16.0 x 20.8 | 2.7 (0.1298) | barge / transom | 5550 (94) | - |
-| `veh-ship-stern-trawler` | Stern Trawler | 70.0 x 15.0 x 27.4 | 6.5 (0.2372) | bulbous / transom | 5188 (99) | livery: red, blue, green |
+| `veh-ship-stern-trawler` | Stern Trawler | 70.0 x 15.0 x 27.4 | 6.5 (0.2372) | bulbous / transom | 5588 (99) | livery: red, blue, green |
 | `veh-ship-purse-seiner` | Tuna Purse Seiner | 80.0 x 14.0 x 33.5 | 6.0 (0.1791) | raked / transom | 5345 (99) | - |
-| `veh-ship-shrimp-trawler` | Shrimp Trawler | 23.0 x 7.0 x 14.2 | 2.7 (0.1901) | raked / transom | 3272 (93) | - |
+| `veh-ship-shrimp-trawler` | Shrimp Trawler | 23.0 x 7.0 x 14.2 | 2.7 (0.1901) | raked / transom | 3368 (93) | - |
 | `veh-ship-lobster-boat` | Maine Lobster Boat | 12.0 x 4.2 x 6.0 | 1.1 (0.1833) | raked / transom | 3281 (93) | colour: white, green, blue, red, yellow |
-| `veh-ship-arktika` | Arktika Class Icebreaker | 159.6 x 30.0 x 47.6 | 11.0 (0.2311) | ice / transom | 7048 (99) | - |
+| `veh-ship-arktika` | Arktika Class Icebreaker | 159.6 x 30.0 x 47.6 | 11.0 (0.2311) | ice / transom | 8472 (99) | - |
 | `veh-ship-polarstern` | Polarstern | 118.0 x 25.0 x 41.0 | 11.2 (0.2732) | ice / transom | 6349 (99) | - |
 | `veh-ship-attenborough` | RRS Sir David Attenborough | 128.9 x 24.0 x 40.4 | 7.5 (0.1856) | ice / transom | 6618 (99) | - |
-| `veh-ship-hopper-dredger` | Trailing Suction Hopper Dredger | 150.0 x 32.0 x 37.4 | 11.0 (0.2941) | bulbous / transom | 5304 (99) | - |
+| `veh-ship-hopper-dredger` | Trailing Suction Hopper Dredger | 150.0 x 32.0 x 37.4 | 11.0 (0.2941) | bulbous / transom | 7048 (99) | - |
 | `veh-ship-supply-vessel` | Platform Supply Vessel | 89.0 x 19.0 x 30.0 | 6.3 (0.21) | raked / transom | 5427 (99) | livery: red, blue, orange |
 | `veh-ship-anchor-handler` | Anchor Handling Tug | 91.0 x 22.0 x 33.9 | 7.8 (0.2301) | raked / transom | 5591 (99) | - |
 | `veh-ship-crane-vessel` | Semi-Submersible Crane Vessel | 220.0 x 102.0 x 175.9 | 12.0 (0.0682) | barge / sternwheel, twin | 9327 (96) | - |
-| `veh-ship-drillship` | Drillship | 228.0 x 42.0 x 96.0 | 12.0 (0.125) | raked / transom | 7624 (93) | - |
+| `veh-ship-drillship` | Drillship | 228.0 x 42.0 x 96.0 | 12.0 (0.125) | raked / transom | 9560 (93) | - |
 | `veh-ship-fireboat` | Fire Fighter | 40.5 x 9.1 x 14.5 | 3.0 (0.2062) | raked / cruiser | 4818 (99) | - |
-| `veh-ship-rnli-shannon` | RNLI Shannon Class | 13.6 x 4.5 x 5.8 | 0.9 (0.1552) | raked / transom | 2676 (93) | - |
+| `veh-ship-rnli-shannon` | RNLI Shannon Class | 13.6 x 4.5 x 5.8 | 0.9 (0.1552) | raked / transom | 2672 (93) | - |
 | `veh-ship-pilot-boat` | Pilot Boat | 17.0 x 5.5 x 6.7 | 1.4 (0.2105) | raked / transom | 2736 (93) | - |
 
 All 19 are detailed ships:

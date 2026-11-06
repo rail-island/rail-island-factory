@@ -188,15 +188,18 @@ export function exhausts(u: readonly [number, number], hw: number, y: number, ra
  * An ocean ship's fittings (docs/models/world-ships.md, "Detail"): the forecastle's
  * bulwark, the anchors in their pockets each side of the bow, the windlasses and
  * bollards on the forecastle, the mooring winches aft at `aft` (metres from the
- * stern; none when empty) and, given the `draft`, the draft marks and the bow
- * thruster's sign on the hull.
+ * stern; none when empty), the railing along the main deck's edge (`rail`: its
+ * span, or false) and, given the `draft`, the draft marks and the bow thruster's
+ * sign on the hull.
  */
-export function fittings(o: { L: number; B: number; D: number; fc: readonly [number, number]; aft?: readonly number[]; anchor?: number; bulwark?: number; rake?: number; draft?: number }): Item[] {
+export function fittings(o: { L: number; B: number; D: number; fc: readonly [number, number]; aft?: readonly number[]; anchor?: number; bulwark?: number; rake?: number; draft?: number; rail?: readonly [number, number] | false }): Item[] {
   const s = o.anchor ?? Math.min(4.5, Math.max(1.1, o.L / 85));
   const k = Math.min(1.6, Math.max(0.5, o.L / 200));
   const top = o.D + o.fc[1];
   const T = o.draft;
   return [
+    // the railing along the main deck's edge, from the stern (or `rail`) to the forecastle
+    ...(o.rail !== false ? [{ k: "edgeRail", u: o.rail ?? [0.6, o.L - o.fc[0] - 0.4], h: 1.1 } as Item] : []),
     ...(T ? [{ k: "marks", at: [o.L * 0.9, o.L * 0.5], y: [Math.max(1, T - 4 * k), T + 4 * k], step: Math.max(0.5, Math.round(k * 2) / 2), s: 0.6 * k, thruster: o.L * 0.95 } as Item] : []),
     { k: "bulwark", u: [o.L - o.fc[0] + 0.8, o.L], h: o.bulwark ?? Math.min(2, Math.max(1, o.L / 220)), t: 0.3 },
     { k: "anchors", u: o.L * (1 - (o.rake ?? 0.03)) - s * 0.9, y: top - s * 1.1, s },
@@ -251,7 +254,7 @@ export function detailed(items: readonly Item[]): Item[] {
  */
 export function passengerFittings(o: { L: number; B: number; D: number; T: number; both?: boolean; fender?: number; anchor?: number; mooring?: boolean }): Item[] {
   const k = Math.min(1.4, Math.max(0.3, o.L / 120));
-  const s = o.anchor ?? Math.min(3, Math.max(0.5, o.L / 70));
+  const s = o.anchor ?? Math.min(3, Math.max(0.5, o.L / 70), o.D / 1.8);
   return [
     ...(o.fender !== 0 ? [{ k: "fender", u: [0, o.L], y: [o.D - 0.6 * k - 0.2, o.D - 0.2], out: o.fender ?? 0.25 * k, mat: "black", name: "rubbing fender" } as Item] : []),
     { k: "anchors", u: o.L * 0.96 - s * 0.6, y: o.D - s * 0.9, s },

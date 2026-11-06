@@ -48,7 +48,7 @@ export function oceanTugSpec(p?: ParamValues): ShipSpec {
       { k: "boats", at: [54], z: 8.4, y: D + 4.4, len: 6, r: 0.9, name: "rescue boat" },
       ...[46, 48.6].map((u): Item => ({ k: "cyl", u, z: 7.4, y: [D + 2.5, D + 3.5], r: 0.45, mat: "white", name: "liferaft" })),
       { k: "fender", u: [L - 4, L], y: [D + 0.6, D + 2.4], out: 0.5, name: "bow fender" },
-      ...fittings({ L, B, D, fc: [34, 2.6], aft: [], draft: 6.5 }),
+      ...fittings({ L, B, D, fc: [34, 2.6], aft: [], draft: 6.5, rail: false }),
     ],
   };
 }
@@ -151,7 +151,7 @@ export function sternTrawlerSpec(p?: ParamValues): ShipSpec {
       { k: "crane", u: 62, z: -4, y: D + 2.6, h: 3, jib: 10, dir: Math.PI * 0.9, mat: "orange" },
       { k: "bulwark", u: [0, 14], h: 1.2, t: 0.25 },
       ...[48, 50].map((u): Item => ({ k: "cyl", u, z: 6.6, y: [D + 2.5, D + 3.4], r: 0.4, mat: "white", name: "liferaft" })),
-      ...fittings({ L, B, D, fc: [24, 2.6], aft: [], draft: 6.5 }),
+      ...fittings({ L, B, D, fc: [24, 2.6], aft: [], draft: 6.5, rail: [14.4, L - 24.4] }),
     ],
   };
 }
@@ -187,7 +187,7 @@ export function purseSeinerSpec(): ShipSpec {
       { k: "box", u: [30, 40], z: [-5.6, -2], y: [D, D + 2.3], mat: "house", name: "purse winch house" },
       { k: "bulwark", u: [0, L - 30.6], h: 1.1, t: 0.25 },
       mast(70, D + 2.4, D + 12, 0.2),
-      ...fittings({ L, B, D, fc: [30, 2.4], aft: [], draft: 6 }),
+      ...fittings({ L, B, D, fc: [30, 2.4], aft: [], draft: 6, rail: false }),
     ],
   };
 }
@@ -216,8 +216,8 @@ export function shrimpTrawlerSpec(): ShipSpec {
       rod([9, D + 5.4, -10.5], [9, D + 2.2, -10], 0.03, "rope", "port warp"),
       { k: "box", u: [8, 10], z: [9.8, 10.2], y: [D + 1, D + 2.2], mat: "wood", name: "starboard door" },
       { k: "box", u: [8, 10], z: [-10.2, -9.8], y: [D + 1, D + 2.2], mat: "wood", name: "port door" },
-      { k: "plate", pts: [[2, D + 1.6], [8, D + 2], [8, D + 1.2], [3, D + 0.9]], z: 9.6, t: 0.1, mat: "green", name: "starboard net" },
-      { k: "plate", pts: [[2, D + 1.6], [8, D + 2], [8, D + 1.2], [3, D + 0.9]], z: -9.6, t: 0.1, mat: "green", name: "port net" },
+      // the nets streaming aft from the doors: bags tapering to their cod ends
+      ...[1, -1].flatMap((sd): Item[] => [[8, 6, 0.42], [6, 4, 0.32], [4, 2.4, 0.22]].map(([a, b, r]): Item => rod([a!, D + 1.5 - (8 - a!) * 0.12, sd * (9.8 - (8 - a!) * 0.1)], [b!, D + 1.5 - (8 - b!) * 0.12, sd * (9.8 - (8 - b!) * 0.1)], r!, "green", sd > 0 ? "starboard net" : "port net"))),
       rod([2, D, 0], [9, D + 9, 0], 0.1, "mast", "boom"),
       rod([11, D + 0.8, -1.2], [11, D + 0.8, 1.2], 0.5, "red", "trawl winch"),
       { k: "box", u: [10.2, 11.8], z: [-1.4, 1.4], y: [D - 0.05, D + 0.4], mat: "steel", name: "winch bed" },
@@ -288,7 +288,7 @@ export function arktikaSpec(): ShipSpec {
       { k: "bulwark", u: [112, L], h: 1.6, t: 0.3 },
       // the towing notch on the stern for the escorted ship's bow
       { k: "fender", u: [0, 3], y: [D - 2, D - 0.2], out: 0.6, name: "stern fender" },
-      ...fittings({ L, B: 30, D, fc: [30, 0], aft: [8], draft: 11, rake: 0.08 }),
+      ...fittings({ L, B: 30, D, fc: [30, 0], aft: [8], draft: 11, rake: 0.08, rail: [0.6, 111.6] }),
     ],
   };
 }
@@ -317,7 +317,7 @@ export function polarsternSpec(): ShipSpec {
       ...[4, -4].map((z): Item => rod([10, D + 1.2, z - 1.4], [10, D + 1.2, z + 1.4], 0.9, "grey", "deep-sea winch")),
       ...[66, 80].map((u): Item => ({ k: "boats", at: [u], z: 11.6, y: D + 3, len: 8, r: 1.2, name: "lifeboats" })),
       { k: "bulwark", u: [0, L - 40.6], h: 1.2, t: 0.3 },
-      ...fittings({ L, B: 25, D, fc: [40, 2.6], aft: [], draft: 11.2, rake: 0.08 }),
+      ...fittings({ L, B: 25, D, fc: [40, 2.6], aft: [], draft: 11.2, rake: 0.08, rail: false }),
     ],
   };
 }
@@ -346,7 +346,7 @@ export function attenboroughSpec(): ShipSpec {
       { k: "containers", u: [10, 30], bays: 3, hw: 6, y: D, tiers: 1, seed: 67, rows: 2.5, name: "laboratory containers" },
       ...[84, 98].map((u): Item => ({ k: "boats", at: [u], z: 11.6, y: D + 3.4, len: 8, r: 1.2, name: "lifeboats" })),
       { k: "bulwark", u: [0, L - 46.6], h: 1.2, t: 0.3 },
-      ...fittings({ L, B: 24, D, fc: [46, 2.8], aft: [], draft: 7.5, rake: 0.08 }),
+      ...fittings({ L, B: 24, D, fc: [46, 2.8], aft: [], draft: 7.5, rake: 0.08, rail: false }),
     ],
   };
 }
@@ -418,7 +418,7 @@ export function supplyVesselSpec(p?: ParamValues): ShipSpec {
       { k: "crane", u: 54, z: 7.6, y: D, h: 4, jib: 12, dir: Math.PI, mat: "yellow" },
       ...[2.2, -2.2].map((z): Item => rod([77, top + 0.4, z], [79, top + 1.4, z * 1.2], 0.18, "red", "fire monitor")),
       { k: "boats", at: [68], z: 9.6, y: D + 5.2, len: 6, r: 0.9, name: "rescue boat" },
-      ...fittings({ L, B, D, fc: [30, 2.8], aft: [], draft: 6.3 }),
+      ...fittings({ L, B, D, fc: [30, 2.8], aft: [], draft: 6.3, rail: false }),
     ],
   };
 }
@@ -451,7 +451,7 @@ export function anchorHandlerSpec(): ShipSpec {
       { k: "crane", u: 20, z: -9, y: D + 2.6, h: 2, jib: 8, dir: -Math.PI * 0.95, mat: "crane", name: "knuckle crane" },
       ...[2.2, -2.2].map((z): Item => rod([81, top + 0.4, z], [83, top + 1.4, z * 1.2], 0.18, "red", "fire monitor")),
       { k: "boats", at: [70], z: 10.6, y: D + 5.2, len: 6, r: 0.9, name: "rescue boat" },
-      ...fittings({ L, B, D, fc: [36, 2.8], aft: [], draft: 7.8 }),
+      ...fittings({ L, B, D, fc: [36, 2.8], aft: [], draft: 7.8, rail: false }),
     ],
   };
 }
@@ -484,11 +484,18 @@ export function craneVesselSpec(): ShipSpec {
       ...[1, -1].flatMap((sd): Item[] => [
         { k: "cyl", u: 22, z: sd * 32, y: [Y, 66], r: 14, mat: "crane", n: 16, name: `crane ${sd > 0 ? "starboard" : "port"} slew` },
         { k: "tier", u: [10, 40], y: [66, 82], hw: 11, mat: "crane", lip: 0.3, windows: [{ y: 6, h: 1.4, w: 2, pitch: 4, from: 32, to: 38 }], name: `crane house ${sd > 0 ? "starboard" : "port"}` },
-        ...[-4, 4].map((dz): Item => rod([40, 70, sd * 30 + dz], [150, 175, sd * 30 + dz * 0.3], 1.4, "crane", `crane boom chord ${sd > 0 ? "starboard" : "port"}`)),
-        ...[0.2, 0.4, 0.6, 0.8].map((f): Item => rod([40 + 110 * f, 70 + 105 * f, sd * 30 - 4 + 2.8 * f], [40 + 110 * f, 70 + 105 * f, sd * 30 + 4 - 2.8 * f], 0.6, "crane", "crane boom brace")),
-        rod([16, 82, sd * 30], [150, 175, sd * 30], 0.4, "rope", `crane topping ${sd > 0 ? "starboard" : "port"}`),
-        rod([150, 174, sd * 30], [150, 120, sd * 30], 0.25, "rope", "hook falls"),
-        { k: "box", u: [147, 153], z: [sd * 30 - 3, sd * 30 + 3], y: [114, 120], mat: "yellow", name: "hook block" },
+        // the starboard boom raised forward over the deck, the port one slewed out over the side
+        ...((): Item[] => {
+          const tip: [number, number, number] = sd > 0 ? [150, 175, 30] : [122, 160, -96];
+          const at = (f: number, dz: number): [number, number, number] => [40 + (tip[0] - 40) * f, 70 + (tip[1] - 70) * f, sd * 30 + (tip[2] - sd * 30) * f + dz * (1 - 0.7 * f)];
+          return [
+            ...[-4, 4].map((dz): Item => rod(at(0, dz), at(1, dz), 1.4, "crane", `crane boom chord ${sd > 0 ? "starboard" : "port"}`)),
+            ...[0.2, 0.4, 0.6, 0.8].map((f): Item => rod(at(f, -4), at(f, 4), 0.6, "crane", "crane boom brace")),
+            rod([16, 82, sd * 30], tip, 0.4, "rope", `crane topping ${sd > 0 ? "starboard" : "port"}`),
+            rod(tip, [tip[0], tip[1] - 54, tip[2]], 0.25, "rope", "hook falls"),
+            { k: "box", u: [tip[0] - 3, tip[0] + 3], z: [tip[2] - 3, tip[2] + 3], y: [tip[1] - 60, tip[1] - 54], mat: "yellow", name: "hook block" },
+          ];
+        })(),
         { k: "box", u: [12, 22], z: sd > 0 ? [26, 34] : [-34, -26], y: [82, 112], mat: "crane", name: `crane A-frame ${sd > 0 ? "starboard" : "port"}` },
       ]),
       { k: "marks", at: [L * 0.9, L * 0.5, L * 0.1], y: [8, 13], step: 1, s: 1 },
