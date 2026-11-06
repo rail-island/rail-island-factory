@@ -35,6 +35,8 @@ export interface SeriesCabFace {
   profile: Pt[];
   /** The plan's corner radius by height: [y, r]. */
   corner: Pt[];
+  /** The corner's depth back along the car by height: [y, depth] (default its radius): a deeper, elliptic corner tapers the face in plan. */
+  cornerDepth?: Pt[];
   /** The grid's base columns per half (face, corner, run, side; default 8, 4, 1, 1) and a paint edge's straightness tolerance (m). */
   cols?: [number, number, number, number];
   tolerance?: number;
@@ -133,8 +135,8 @@ function layers(f: SeriesCabFace, p: FacePaint): NoseLayer[] {
   return out;
 }
 
-const spec = (f: SeriesCabFace, e: number, xTip: number, half: Pt[]): Pick<NoseSpec, "e" | "xTip" | "profile" | "half" | "corner" | "bulge" | "rows"> => ({
-  e, xTip, profile: f.profile, half, corner: f.corner, rows: f.rows, ...(f.bulge ? { bulge: f.bulge } : {}),
+const spec = (f: SeriesCabFace, e: number, xTip: number, half: Pt[]): Pick<NoseSpec, "e" | "xTip" | "profile" | "half" | "corner" | "cornerDepth" | "bulge" | "rows"> => ({
+  e, xTip, profile: f.profile, half, corner: f.corner, rows: f.rows, ...(f.bulge ? { bulge: f.bulge } : {}), ...(f.cornerDepth ? { cornerDepth: f.cornerDepth } : {}),
 });
 
 const rect = (x0: number, x1: number, y0: number, y1: number): Pt[] => {

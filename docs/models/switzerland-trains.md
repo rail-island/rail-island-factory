@@ -43,8 +43,11 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
 - **Glacier Express.** The panorama roof is drawn as the dark roof band over tall windows.
 - **Allegra.** Its own cab face (`ALLEGRA_FACE`) and livery (`ALLEGRA_RHB`, key `rhb`; the
   shared `chLivery("rhb")` is unchanged), read from four photographs (assets/rhb-allegra/):
-  the upright glass-fibre front under the silver hood, the big black mask with the
-  windscreen and destination display between red A-pillars, the lamps low in black pods, the
+  the upright glass-fibre front under the silver hood, tapering in plan (a flat face about
+  1.35 m wide; elliptic corners 0.62 - 0.68 m across reach the full 2.65 m about 1.0 m behind
+  the tip low down and 1.45 m at the windscreen's top, the kit's `cornerDepth`), the black
+  mask (1.72 m wide) with the 1.2 m tall windscreen and destination display between the
+  broad red corner panels, the lamps low in black pods on the corners, the
   Graubuenden arms, the camera box, sockets, coupler and snowplough; the white line low on
   the sides (12 cm lower on the face, a step at the corner where the real one ramps down);
   the cab side window behind the pillar, the cab door, the first class's yellow line, white

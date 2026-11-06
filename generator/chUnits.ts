@@ -227,8 +227,8 @@ const ALLEGRA_RHB: ShinkansenLivery = {
   roof: "roofG", skirt: "skirtG",
   // d behind the tip: the cab's side window behind the red A-pillar, its front raked with it, in a black frame
   endSweeps: [
-    { mat: "cabMask", front: [[1.85, 0.62], [1.9, 0.42], [2.0, 0.34], [3.15, 1.58]], back: [[1.85, 2.2], [3.15, 2.2]] },
-    { mat: "cabGlass", front: [[1.92, 0.6], [1.97, 0.47], [2.06, 0.42], [3.08, 1.66]], back: [[1.92, 2.13], [3.08, 2.13]] },
+    { mat: "cabMask", front: [[1.85, 1.15], [3.15, 1.55]], back: [[1.85, 2.2], [3.15, 2.2]] },
+    { mat: "cabGlass", front: [[1.92, 1.2], [3.08, 1.6]], back: [[1.92, 2.13], [3.08, 2.13]] },
   ],
 };
 
@@ -255,19 +255,22 @@ const ALLEGRA_SHIELD: Pick<SeriesCabFace, "fields" | "decals"> = {
  * box on the hood.
  */
 const ALLEGRA_FACE: SeriesCabFace = {
-  dJoin: 1.6, dSide: 1.2, first: 4.4, roofFrom: 3.42, bulge: 0.12, cols: [8, 4, 1, 2], tolerance: 0.015,
+  dJoin: 1.6, dSide: 1.5, first: 4.4, roofFrom: 3.42, bulge: 0.1, cols: [8, 5, 1, 2], tolerance: 0.015,
   profile: [[0.62, 0.2], [0.72, 0.08], [0.9, 0.02], [1.2, 0], [1.6, 0], [1.85, 0.03], [2.4, 0.1], [3.05, 0.2], [3.3, 0.28], [3.42, 0.37], [3.52, 0.58], [3.6, 0.9], [3.65, 1.25], [3.68, 1.6]],
-  corner: [[0.62, 0.5], [1.5, 0.55], [1.9, 0.6], [2.6, 0.72], [3.3, 0.9], [3.42, 0.8], [3.52, 0.55], [3.6, 0.35], [3.68, 0.1]],
-  rows: [0.62, 0.72, 0.9, 1.02, 1.14, 1.2, 1.27, 1.5, 1.6, 1.85, 2.0, 2.4, 3.05, 3.12, 3.3, 3.33, 3.42, 3.47, 3.52, 3.6, 3.65, 3.68],
+  // the plan tapers: a flat face about 1.35 m wide between corners 0.62 - 0.68 m across that reach the
+  // body's full width about 1.0 m behind the tip low down and about 1.45 m at the windscreen's top
+  corner: [[0.62, 0.62], [1.0, 0.62], [1.5, 0.62], [1.9, 0.65], [2.6, 0.66], [3.1, 0.68], [3.3, 0.72], [3.42, 0.8], [3.52, 0.62], [3.6, 0.4], [3.68, 0.1]],
+  cornerDepth: [[0.62, 0.9], [1.0, 0.95], [1.5, 0.95], [1.9, 1.0], [2.6, 1.08], [3.1, 1.15], [3.3, 1.12], [3.42, 1.08], [3.52, 0.9], [3.6, 0.6], [3.68, 0.1]],
+  rows: [0.62, 0.72, 0.9, 1.02, 1.14, 1.2, 1.27, 1.5, 1.6, 1.76, 1.85, 1.92, 2.4, 2.6, 3.05, 3.12, 3.17, 3.3, 3.36, 3.42, 3.47, 3.52, 3.6, 3.65, 3.68],
   bands: () => [[0, 1.02, "red"], [1.02, 1.14, "white"], [1.14, 9, "red"]],
   ...ALLEGRA_SHIELD,
   masks: [
-    { lat: [-1.12, 1.12], y: [1.85, 3.42], r: 0.2, mat: "cabMask" },
-    { lat: [-1.16, -0.7], y: [1.27, 1.5], r: 0.09, mat: "cabMask" }, { lat: [0.7, 1.16], y: [1.27, 1.5], r: 0.09, mat: "cabMask" },
+    { lat: [-0.86, 0.86], y: [1.76, 3.42], r: 0.16, mat: "cabMask" },
+    { lat: [-1.05, -0.55], y: [1.27, 1.5], r: 0.09, mat: "cabMask" }, { lat: [0.55, 1.05], y: [1.27, 1.5], r: 0.09, mat: "cabMask" },
     { lat: [-0.28, 0.28], y: [3.47, 3.62], r: 0.05, mat: "cabMask" },
   ],
-  panes: [{ lat: [-1.0, 1.0], y: [2.0, 3.05], r: 0.12 }, { lat: [-0.72, 0.72], y: [3.12, 3.33], r: 0.03, mat: "display" }],
-  lamps: [[-1.02, 1.385, 0.075, "lampHead"], [-0.82, 1.385, 0.05, "lampHead"], [0.82, 1.385, 0.05, "lampHead"], [1.02, 1.385, 0.075, "lampHead"], [-1.17, 3.32, 0.045, "lampRed"], [1.17, 3.32, 0.045, "lampRed"]],
+  panes: [{ lat: [-0.76, 0.76], y: [1.92, 3.12], r: 0.1 }, { lat: [-0.58, 0.58], y: [3.17, 3.36], r: 0.03, mat: "display" }],
+  lamps: [[-0.88, 1.385, 0.07, "lampHead"], [-0.66, 1.385, 0.045, "lampHead"], [0.66, 1.385, 0.045, "lampHead"], [0.88, 1.385, 0.07, "lampHead"], [-1.15, 3.3, 0.045, "lampRed"], [1.15, 3.3, 0.045, "lampRed"]],
   roofLamp: [0, 3.545, 0.055],
   wipers: [[[-0.1, 2.06], [0.42, 2.95]]],
 };
@@ -289,12 +292,12 @@ function allegraFittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number,
     m.scope("underfloor", () => block(m, "under", x0, x1, B - 0.3, B, -1.0, 1.0));
     roof([[3.4, car.length - 0.35]]);
     const tip = X(-ALLEGRA_FACE.dJoin);
-    m.scope("snowplough", () => pilotPlate(m, "plough", 1, tip - 0.02, 0.18, 0.6, 1.1, 0.24, 0.5));
+    m.scope("snowplough", () => pilotPlate(m, "plough", 1, tip - 0.02, 0.18, 0.6, 0.95, 0.24, 0.5));
     // the automatic coupler's head over the plough
     m.scope("coupler", () => block(m, "black", tip - 0.1, tip + 0.06, 0.46, 0.68, -0.26, 0.26));
     // the train line's sockets over the lamps: red boxes, a yellow cap on each
     m.scope("sockets", () => {
-      for (const z of [-0.68, 0.68]) {
+      for (const z of [-0.6, 0.6]) {
         block(m, "red", tip - 0.24, tip - 0.04, 1.55, 1.74, z - 0.12, z + 0.12);
         block(m, "yellow", tip - 0.06, tip - 0.01, 1.6, 1.69, z - 0.04, z + 0.04);
       }
