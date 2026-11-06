@@ -53,6 +53,8 @@ const REAR_TRUCK = ft(53, 7);
 const OWN_TRUCK = 2.2;
 /** The skirt's cut at a joint over the Jacobs bogie, from the body's end. */
 const JACOBS_CUT = 1.75;
+/** The skirt's cut-outs round up into arches over the trucks. */
+const CUT_RADIUS = 0.55;
 
 const PAL = {
   ss: paint("#c9cdd0", 0.28),
@@ -89,7 +91,14 @@ const RIDE = truck(ft(0, 15));
 // The nose hull
 
 /** The nose's side profile: [y, d of its foremost point], bottom up. */
-const PROFILE: Pt[] = [[0.32, 0.0], [1.0, 0.33], [1.15, 0.38], [2.05, 0.72], [2.85, 1.07], [3.15, 1.15], [3.4, 1.22], [3.6, 1.31], [3.75, 1.43], [3.85, 1.58], [3.9, 1.8]];
+const PROFILE: Pt[] = [[0.32, 0.0], [1.0, 0.33], [1.15, 0.38], [2.05, 0.72], [2.85, 1.07], [3.15, 1.15]];
+/** Over the shoulder the dome rounds back to the cowl's crown: a quarter ellipse on the windscreen's rake. */
+const DOME = { y0: 3.15, f0: 1.15, rake: 0.27, back: 0.5 };
+const setback = (y: number): number => {
+  if (y <= DOME.y0) return lerp(PROFILE, y);
+  const u = Math.min(1, (y - DOME.y0) / (COWL - DOME.y0));
+  return DOME.f0 + DOME.rake * (y - DOME.y0) + DOME.back * (1 - Math.sqrt(Math.max(0, 1 - u * u)));
+};
 /** How far behind its tip each waterline reaches the full width, and its flat front panel's share of the half width. */
 const PLAN_LEN: Pt[] = [[0.32, 1.9], [2.0, 1.7], [3.15, 1.3], [3.9, 0.5]];
 const TIP = 0.38;
@@ -100,7 +109,7 @@ interface Waterline { y: number; z: number; f: number; L: number }
 /** The hull's waterlines: the slice body's own section at the joint, point by point. */
 function waterlines(b: SliceBody): Waterline[] {
   return halfSlice(b, 0).map(([z, y]) => {
-    const f = lerp(PROFILE, y);
+    const f = setback(y);
     return { y, z, f, L: Math.min(lerp(PLAN_LEN, y), NOSE - f - 0.03) };
   });
 }
@@ -280,11 +289,21 @@ function drawNose(m: MeshBuilder, b: SliceBody, X: (d: number) => number): void 
         if (top < GRILLE.y0 + 0.05) continue;
         hullPatch(m, h, s, "ss", GRILLE.y0, top, () => z - 0.014, () => z + 0.014, 0.016, 1);
       }
-      // the arch's rim
-      for (let i = 0; i < 12; i++) {
-        const [za, zb] = [GRILLE.z0 + ((GRILLE.z1 - GRILLE.z0) * i) / 12, GRILLE.z0 + ((GRILLE.z1 - GRILLE.z0) * (i + 1)) / 12];
-        const [ya, yb] = [grilleTop(za), grilleTop(zb)];
-        hullPatch(m, h, s, "ss", Math.min(ya, yb) - 0.005, Math.max(ya, yb) + 0.035, () => za, () => zb, 0.018, 1);
+      // the arch's rim: a band round its head, following the dome
+      const [c, r] = [(GRILLE.z0 + GRILLE.z1) / 2, (GRILLE.z1 - GRILLE.z0) / 2];
+      const rimAt = (phi: number, grow: number): Vec3 => {
+        const [z, y] = [c - (r + grow) * Math.cos(phi), GRILLE.y0 + (GRILLE.rise + grow) * Math.sin(phi)];
+        const q = h.qOf(z, y);
+        return add(h.at(q, y, s), mul(h.normal(q, y, s), 0.012));
+      };
+      const N = 20;
+      for (let i = 0; i < N; i++) {
+        const [pa, pb] = [(Math.PI * i) / N, (Math.PI * (i + 1)) / N];
+        const [a0, b0, b1, a1] = [rimAt(pa, 0), rimAt(pb, 0), rimAt(pb, 0.04), rimAt(pa, 0.04)];
+        const zm = c - r * Math.cos((pa + pb) / 2), ym = GRILLE.y0 + GRILLE.rise * Math.sin((pa + pb) / 2);
+        const n = h.normal(h.qOf(zm, ym), ym, s);
+        tri(m, "ss", a0, b0, b1, n);
+        tri(m, "ss", a0, b1, a1, n);
       }
     }
   });
@@ -446,7 +465,7 @@ function powerBody(lone: boolean): SliceBody {
   const cowl: NoseShape = { len: 0.001, tip: 1, power: 2, C: [[0, COWL], [COWL_END[0] - NOSE, COWL], [COWL_END[1] - NOSE, SEC.C]], S: [[0, COWL_S], [COWL_END[0] - NOSE, COWL_S], [COWL_END[1] - NOSE, SEC.S]] };
   const motor = ZEPHYR_MOTOR_TRUCK - NOSE;
   const own = ZEPHYR_LENGTH.powerCar - OWN_TRUCK - NOSE;
-  const spec: CarbodySpec = { length, ...SEC, front: cowl, cuts: [[Math.max(0.05, motor - 1.55), motor + 1.55], lone ? [own - 1.5, own + 1.5] : [length - JACOBS_CUT, length + 0.01]], edges: EDGES, step: 1.0, noseStep: 0.8 };
+  const spec: CarbodySpec = { length, ...SEC, arc: 12, cutRadius: CUT_RADIUS, front: cowl, cuts: [[Math.max(0.05, motor - 1.55), motor + 1.55], lone ? [own - 1.5, own + 1.5] : [length - JACOBS_CUT, length + 0.01]], edges: EDGES, step: 1.0, noseStep: 0.8 };
   return carbody(spec);
 }
 
@@ -510,7 +529,7 @@ const TAIL: NoseShape = {
 };
 
 const carSpec = (length: number, cuts: ReadonlyArray<readonly [number, number]>, rear?: NoseShape): CarbodySpec => ({
-  length, ...SEC, ...(rear ? { rear } : {}), cuts, edges: EDGES, step: 1.0, noseStep: 0.2,
+  length, ...SEC, ...(rear ? { rear } : {}), cuts, cutRadius: CUT_RADIUS, edges: EDGES, step: 1.0, noseStep: 0.2,
 });
 
 /** The drumhead's reach beyond the observation car's tail. */

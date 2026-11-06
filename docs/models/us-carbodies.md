@@ -29,7 +29,9 @@ lower body's foot, the side's lean) and, at either end, a `NoseShape`: a plan th
 a blunt tip to the full width over `len` (a superellipse of `power`), and tables over d (metres
 from the tip) of the crown, shoulder, belly, skirt top and skirt bottom; past a table's last row
 the body's own value holds. A double-ended body (the GG1) has a nose at both ends; a flat end
-is a wall. `cuts` lift the skirt over the trucks. `carbody(spec)` turns it into a `SliceBody`
+is a wall. `cuts` lift the skirt over the trucks; with `cutRadius` the skirt's edge rounds up
+into an arch at each end of a cut that lies on the body (a quarter ellipse over that length,
+four stations round it; default 0, a square drop). `carbody(spec)` turns it into a `SliceBody`
 (sliceBody.ts) with stations dense in the noses, and `carbodyShell` lofts it with every face
 painted by a `Painter` - a function of the face's d, its height and its region - so a livery is
 horizontal bands (`bandPainter`), a nose field and decals laid on the lofted surface
