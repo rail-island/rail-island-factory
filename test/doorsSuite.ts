@@ -22,7 +22,9 @@ const PASSENGER_GROUPS = new Set(["coach", "unit", "tram", "metro", "bus"]);
 /** Passenger-group designs with no door to open: a luggage van, a steam railcar whose van body draws none, the open-sided San Francisco cable car. */
 const NO_DOORS = new Set(["proc-vehicle-csd-dsk", "proc-vehicle-csd-m112", "proc-vehicle-sf-cable-car", ...WORLD_TRAMS_WITHOUT_DOORS,
   // the jeepney and the songthaew board at their open rears; the camello's trailer is drawn without the kit's doors
-  "proc-vehicle-jeepney", "proc-vehicle-songthaew", "proc-vehicle-havana-camello"]);
+  "proc-vehicle-jeepney", "proc-vehicle-songthaew", "proc-vehicle-havana-camello",
+  // the AEC Routemaster and the Bristol Lodekka board at their open rear platforms (DoorStyle.open)
+  "proc-vehicle-aec-routemaster", "proc-vehicle-bristol-lodekka"]);
 /** Doors on the right only: the single-ended trams and every bus (the kerb side). */
 const RIGHT_ONLY = (id: string, group: string) => group === "bus" || WORLD_TRAMS_RIGHT_ONLY.has(id) || ["proc-vehicle-tatra-t3", "proc-vehicle-tatra-t6", "proc-vehicle-tatra-kt4", "proc-vehicle-kvag-gt4"].includes(id);
 
