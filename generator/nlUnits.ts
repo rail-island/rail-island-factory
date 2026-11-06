@@ -129,9 +129,9 @@ export const SNG: ShinkansenSeries = {
 
 export const ICNG: ShinkansenSeries = {
   endLength: 23.6, midLength: 18.4, W: 1.41, Y: 1.3, S: 3.2, C: 4.1, lean: 0.95, B: 0.65, A: 0.85,
-  // the Coradia Stream's long, smooth nose
-  nose: nose(3.0, 0.3, 2.4, [[0, 1.9], [0.5, 2.6], [1.8, 3.5], [3.2, 4.1]], [[0, 1.8], [0.5, 2.45], [1.8, 3.0], [3.2, 3.2]], [[0, 1.3], [1.0, 1.3]], [[0, 1.0], [0.6, 0.85]], [[0, 0.9], [0.3, 0.65]]),
-  windscreen: [1.0, 2.8, 0.07, 1.15], lamps: [0.25, 1.35],
+  // the Coradia Stream's long, smooth nose: its lower front rounded in plan and in profile to a small tip
+  nose: nose(3.0, 0.14, 2.2, [[0, 1.6], [0.15, 1.85], [0.5, 2.45], [1.0, 2.9], [1.8, 3.5], [3.2, 4.1]], [[0, 1.55], [0.15, 1.78], [0.5, 2.3], [1.0, 2.65], [1.8, 3.0], [3.2, 3.2]], [[0, 1.3], [1.0, 1.3]], [[0, 1.15], [0.15, 1.02], [0.45, 0.92], [0.9, 0.85]], [[0, 1.1], [0.12, 0.92], [0.35, 0.72], [0.6, 0.65]]),
+  windscreen: [1.0, 2.8, 0.07, 1.15], windscreenMask: 0.18, lamps: [0.3, 1.35],
   windows: [[1.55, 2.7]], windowW: 1.6, pitch: 1.85, door: [1.0, 3.0, 1.55, 2.6], doorW: 1.3,
   bogieCentres: 13.0, wheelR: 0.43, wheelbase: 2.5, cars: [5, 8],
   liveries: { yellowBlue: nsLivery("yellowBlue", "3101") },

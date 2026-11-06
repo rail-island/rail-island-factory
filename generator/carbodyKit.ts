@@ -119,8 +119,8 @@ export function carbody(s: CarbodySpec): SliceBody {
   };
 }
 
-/** The lofted shell, every face painted by `paint`; the ends capped where they are flat walls, open over `doorways`. */
-export function carbodyShell(m: MeshBuilder, b: SliceBody, X: (d: number) => number, paint: Painter, caps: { front: boolean; rear: boolean }, doorways: readonly SliceDoorway[] = []): void {
+/** The lofted shell, every face painted by `paint`; both ends closed (a wall or a nose's tip), open over `doorways`. */
+export function carbodyShell(m: MeshBuilder, b: SliceBody, X: (d: number) => number, paint: Painter, doorways: readonly SliceDoorway[] = []): void {
   const mat = (d: number, k: number) => {
     const h = halfSlice(b, d);
     const y = (h[k]![1] + h[k + 1]![1]) / 2;
@@ -139,15 +139,24 @@ export function carbodyShell(m: MeshBuilder, b: SliceBody, X: (d: number) => num
     }
     return out;
   };
-  drawShell(m, b, X, mat, bands, caps, doorways);
+  drawShell(m, b, X, mat, bands, doorways);
 }
 
-/** A horizontal band painter: by height, `under` below the skirt's top, `roof` over the shoulder. */
-export function bandPainter(bands: ReadonlyArray<readonly [number, number, string]>, roof: string, under: string, skirt: string): Painter {
+/**
+ * A horizontal band painter: by height, `under` below the skirt's top, `roof`
+ * over the shoulder. With `roofFrom` (the body's shoulder height) the roof
+ * colour starts there: where a nose's arc falls down its front below it, it
+ * takes the side's colour just under the shoulder instead of the roof's running
+ * down to the tip (one colour, so no stripe steps across the nose's facets).
+ */
+export function bandPainter(bands: ReadonlyArray<readonly [number, number, string]>, roof: string, under: string, skirt: string, roofFrom = -Infinity): Painter {
   return (_d, y, region) => {
     if (region === "bottom") return under;
     if (region === "skirt") return skirt;
-    if (region === "arc") return roof;
+    if (region === "arc") {
+      if (y >= roofFrom - 1e-9) return roof;
+      y = roofFrom - 0.01;
+    }
     for (const [a, b, mt] of bands) if (y >= a - 1e-9 && y < b - 1e-9) return mt;
     return bands[bands.length - 1]![2];
   };

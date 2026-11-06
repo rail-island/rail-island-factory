@@ -9,10 +9,13 @@ import type { MeshBuilder } from "./meshBuilder.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import { worldTram, worldTramLod, tramLodBudget, type WorldTramSpec } from "./worldTramKit.ts";
 import {
-  arm, bogies, chimney, lowArm, chimneyLod, classic, doorsAt, doubleDeck, g, grip, horse, horseLod, jacobs, lay, liveryParam, lowFloor, lrv, NO_COLLECTOR, pole, secDoors, tramDesign, truck, vintage,
+  arm, bogies, chimney, lowArm, chimneyLod, classic, doorsAt, doubleDeck, g, grip, jacobs, lay, liveryParam, lowFloor, lrv, NO_COLLECTOR, pole, secDoors, tramDesign, truck, vintage,
   type WorldTram,
 } from "./worldTramShapes.ts";
 import { citadis402 } from "./worldTramsEurope.ts";
+// the horse tram has its own builder (horseTram.ts); this module re-exports it for the JS model
+import { horseTram, horseTramLod, horseTramSpec } from "./horseTram.ts";
+export { horseTram, horseTramLod, horseTramSpec };
 
 const lod = (s: WorldTramSpec): MeshBuilder => worldTramLod(s, tramLodBudget(s));
 
@@ -398,21 +401,6 @@ export function christchurchBoonSpec(): WorldTramSpec {
 // ---------------------------------------------------------------------------
 // the historic horse, steam and cable trams
 
-export function horseTramSpec(): WorldTramSpec {
-  const s = doubleDeck({
-    sections: [6.4], width: 2.0, height: 2.6, front: "retro",
-    doors: [],
-    trucks: truck(1.6, 3.2),
-    collector: NO_COLLECTOR,
-    wheelRadius: 0.38,
-    colors: { skirt: "#8a1f22", body: "#efe2c2", upper: "#8a1f22", horseCoat: "#7a4a2a", horseMane: "#2a1c14", harness: "#1c1c1e" },
-    paint: [[1.25, "skirt"], [2.25, "body"], [2.6, "upper"]],
-    over: { deck: "open", windows: [1.3, 2.1], screen: [1.3, 2.15], eave: 2.42, pitch: 0.8, extra: horse(-2.6), extraLod: horseLod(-2.6), extraFeatures: ["horse"] },
-  });
-  const { upper: _upper, ...rest } = s;
-  return rest;
-}
-
 export const STEAM_TRAM_PARAMS: readonly ParamSpec[] = [{
   name: "unit", title: "Unit", default: "engine",
   values: [{ value: "engine", title: "Tram engine" }, { value: "trailer", title: "Trailer" }],
@@ -512,8 +500,6 @@ export function sydneyRClass(): MeshBuilder { return worldTram(sydneyRClassSpec(
 export function sydneyRClassLod(): MeshBuilder { return lod(sydneyRClassSpec()); }
 export function christchurchBoon(): MeshBuilder { return worldTram(christchurchBoonSpec()); }
 export function christchurchBoonLod(): MeshBuilder { return lod(christchurchBoonSpec()); }
-export function horseTram(): MeshBuilder { return worldTram(horseTramSpec()); }
-export function horseTramLod(): MeshBuilder { return lod(horseTramSpec()); }
 export function steamTram(p?: ParamValues): MeshBuilder { return worldTram(steamTramSpec(p)); }
 export function steamTramLod(p?: ParamValues): MeshBuilder { return lod(steamTramSpec(p)); }
 export function dunedinCableCar(): MeshBuilder { return worldTram(dunedinCableCarSpec()); }
