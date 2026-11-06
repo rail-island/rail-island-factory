@@ -34,6 +34,7 @@ import { block } from "./vehicleParts.ts";
 import { strokeText, strokeWidth } from "./strokeFont.ts";
 import { airLod, lodAxleWheel, lodBar, type AirEngine, type AirFin, type AirLodSpec, type AirWing } from "./lodAir.ts";
 import { LOD_GLASS, lodPolygon } from "./lodKit.ts";
+import { turnPropellers } from "./propellers.ts";
 
 // The colours are the reference models' own. Metal is only mildly metallic:
 // the game lights models without an environment map.
@@ -2459,7 +2460,8 @@ export function smallAirplane(params?: ParamValues): MeshBuilder {
     });
   });
 
-  m.scope("propeller", () => {
+  // the propeller turns (the clip `propellers`, drive time) on the spinner's axis
+  m.spin("propeller", SMALL_HUB, () => {
     m.scope("spinner", () => {
       const [cx, cy] = SMALL_HUB;
       const rows: Array<[number, number]> = [[3.38, 0.19], [3.52, 0.175], [3.62, 0.13], [3.69, 0.07]];
@@ -2540,6 +2542,7 @@ export function smallAirplane(params?: ParamValues): MeshBuilder {
       smallSpat(m, 0, yc, g.noseZ, 0.09, 0.52);
     });
   });
+  turnPropellers(m, [{ node: "propeller", axis: [0, 0, 1], dir: 1 }]);
   return m;
 }
 

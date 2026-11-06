@@ -158,10 +158,14 @@ export interface FountainWater {
  * is +Z), from shut at the clip's start to open at its end; the shut pose is the
  * rest pose (doors.ts). `motion` is a clip a character plays by name when it
  * chooses that motion - a jump, a fall, sitting down (characters.ts): nothing in
- * the model's own movement plays it. A consumer that does not know a drive leaves
- * its clip alone.
+ * the model's own movement plays it. `flaps` and `droop` are state clips of an
+ * aircraft (airframeKit.ts): its flaps from retracted (the rest pose, the clip's
+ * start) to the landing setting, and a drooping nose (Concorde) from raised for
+ * flight to lowered for the airport; drives of their own, so a consumer moving
+ * every `state` clip as a pantograph leaves them alone. A consumer that does not
+ * know a drive leaves its clip alone.
  */
-export type ClipDrive = { drive: "time" } | { drive: "distance"; speed: number } | { drive: "state" } | { drive: "door"; side: DoorSide } | { drive: "motion" };
+export type ClipDrive = { drive: "time" } | { drive: "distance"; speed: number } | { drive: "state" } | { drive: "door"; side: DoorSide } | { drive: "motion" } | { drive: "flaps" } | { drive: "droop" };
 
 /** A side of a vehicle, seen facing its +X end: right is +Z. */
 export type DoorSide = "left" | "right";
@@ -519,10 +523,10 @@ export class MeshCore {
   animate(clip: AnimationClipSpec): void {
     if (this.clips.some((c) => c.name === clip.name)) throw new Error(`animation "${clip.name}" added twice`);
     const t = clip.times;
-    if (t.length < 2 || t[0] !== 0 || t.some((v, i) => i > 0 && v <= t[i - 1]!)) throw new Error(`animation "${clip.name}": times must start at 0 and rise`);
+    if (t.length < 2 || t[0] !== 0 || t.some((v, i) => i > 0 && v <= t[i - 1]!)) throw new Error(`animation "${clip.name}": times must start at 0, rising`);
     const d = clip.drive;
     const k = d?.drive;
-    if (!(k === "time" || k === "state" || k === "motion" || (k === "distance" && d.speed > 0) || (k === "door" && /^(left|right)$/.test(d.side)))) throw new Error(`animation "${clip.name}": bad drive`);
+    if (!(/^(time|state|motion|flaps|droop)$/.test(k) || (k === "distance" && d.speed > 0) || (k === "door" && /^(left|right)$/.test(d.side)))) throw new Error(`animation "${clip.name}": bad drive`);
     for (const track of clip.tracks) {
       if (!this.parts.some((p) => p.name === track.node)) throw new Error(`animation "${clip.name}": no part "${track.node}"`);
       if (/[\s.:/\[\]]/.test(track.node)) throw new Error(`animated part "${track.node}" has a name three.js cannot bind`);
