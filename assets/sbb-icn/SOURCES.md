@@ -12,6 +12,7 @@ Used for: the body's proportions, the paint and the running gear.
 | file | original | URL | author | licence |
 |---|---|---|---|---|
 | `photo-rabde-500-icn-emu-54826117727.jpg` | RABDe 500 ICN EMU - 54826117727.jpg | https://commons.wikimedia.org/wiki/File:RABDe_500_ICN_EMU_-_54826117727.jpg | Samson Ng . D201@EAL | CC BY-SA 4.0 |
+| `photo-sbb-rabde-500-bei-twann.jpg` | SBB RABDe 500 bei Twann.jpg | https://commons.wikimedia.org/wiki/File:SBB_RABDe_500_bei_Twann.jpg | Kabelleger / David Gubler (https://www.bahnbilder.ch) | CC BY-SA 3.0 | the ICN's front: the long sloping nose, the black windscreen band and the lamps |
 
 ## Published figures
 
