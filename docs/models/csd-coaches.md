@@ -93,7 +93,10 @@ designs, the Bmo and the CD green and white coach).
   stations and section corners, so windows follow tapered ends and the Bmo's
   sloped upper wall. `endPanel` lays a box from an end BMP on the end cap and on
   the plan's end facets (the Balm's wrap-round windows). Windows are a frame
-  slab with a thin glass layer in front (and an optional sash bar); doors are a
+  slab with a thin glass layer in front (and an optional sash bar); a side window
+  with `round` draws both with rounded corners (`roundPanel`: corner arcs of that
+  radius, the glass's `fw` smaller, each outline point laid on the skin, the face a
+  fan from the centre - the 81-71's windows and door lights); doors are a
   dark seam with a thin leaf layer.
 - **Flicker rules.** Internal band boundaries sit 2.5 mm above their nominal
   heights, end-wall paint is inset 2.5 mm, and a panel edge that would meet the
