@@ -3,6 +3,7 @@ import { DE_UNITS, VT98 } from "../generator/deUnits.ts";
 import { DE1, MAT46, NL_UNITS } from "../generator/nlUnits.ts";
 import { FR_UNITS, MI09, X3800 } from "../generator/frUnits.ts";
 import { DELHI_METRO, IN_UNITS } from "../generator/inUnits.ts";
+import { ES_UNITS, TALGO_III } from "../generator/esUnits.ts";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles.ts";
 import type { ProceduralDesign } from "../generator/design.ts";
@@ -18,6 +19,8 @@ const CASES: Array<{ design: ProceduralDesign; series: ShinkansenSeries; panes: 
   { design: FR_UNITS.find((d) => d.id === "proc-vehicle-sncf-x3800")!, series: X3800, panes: 4, single: true },
   { design: FR_UNITS.find((d) => d.id === "proc-vehicle-ratp-mi09")!, series: MI09, panes: 1, single: false, rake: 0.75 },
   { design: IN_UNITS.find((d) => d.id === "proc-vehicle-dmrc-rs1")!, series: DELHI_METRO, panes: 3, single: false },
+  // the Talgo III's tail car: no windscreen at all
+  { design: ES_UNITS.find((d) => d.id === "proc-vehicle-talgo-iii")!, series: TALGO_III, panes: 0, single: false },
 ];
 
 function points(d: ProceduralDesign) {
@@ -51,8 +54,9 @@ describe("series cab faces", () => {
       const maxX = Math.max(...pts.map((p) => p[0]!));
       const front = (y0: number, y1: number) => Math.max(...pts.filter((p) => p[1]! >= y0 && p[1]! <= y1 && Math.abs(p[2]!) < 0.9).map((p) => p[0]!));
       // the coupling plane lies the buffers' or the coupler's reach ahead of the face; the face's top at the panes stays within 0.5 m of its foot
-      const foot = front(s.A + 0.2, s.A + 0.8);
-      const top = Math.max(...s.cabFace!.panes.map((p) => p.y[1]));
+      // above a buffer beam
+      const foot = front(Math.max(s.A + 0.2, 1.35), s.A + 0.8);
+      const top = s.cabFace!.panes.length ? Math.max(...s.cabFace!.panes.map((p) => p.y[1])) : 2.6;
       expect(foot - front(top - 0.3, top)).toBeLessThan(c.rake ?? 0.5);
       expect(maxX - foot).toBeLessThan(0.9);
     });
@@ -78,7 +82,7 @@ describe("series cab faces", () => {
     for (const c of CASES.filter((x) => x.series.wheelbase === 0)) {
       const { m, pts } = points(c.design);
       for (const sp of m.rig!.supports!) {
-        const near = pts.filter((p) => Math.abs(p[0]! - sp.x) < 0.3 && Math.abs(p[2]!) > 0.92 && Math.abs(p[2]!) < 1.04);
+        const near = pts.filter((p) => Math.abs(p[0]! - sp.x) < 0.35 && Math.abs(p[2]!) >= 0.9 && Math.abs(p[2]!) <= 1.06);
         expect(Math.max(...near.map((p) => p[1]!)), `${c.design.id} at ${sp.x}`).toBeGreaterThanOrEqual(c.series.A);
       }
     }

@@ -30643,7 +30643,7 @@
    "extents": {}
   },
   "proc-vehicle-iryo-s109": {
-   "key": "c610103fb2e74e153190509951608da0ef4a0c5fcfa1b57ccae6cd4469a41414",
+   "key": "0a32888c900c2abc726b454e476c451dbd9752bc4a38a07bb555c72ddefcc805",
    "triangles": 9426,
    "stats": {
     "triangles": 9426,
@@ -43433,7 +43433,7 @@
    "extents": {}
   },
   "proc-vehicle-renfe-440": {
-   "key": "c1675b30fe93da0e2a312dda7da61784a4e5b358a4c5d6a003b8b97f76a5974f",
+   "key": "2db985666f83434d6823206642c07e6767dd88acdfbd5f445b5387b3330afcaa",
    "triangles": 8258,
    "stats": {
     "triangles": 8258,
@@ -43501,7 +43501,7 @@
    }
   },
   "proc-vehicle-renfe-446": {
-   "key": "c0edcb60a6b0fa5da46f390487d67b0a3ce3f3b570aa6147a46caec62d61e571",
+   "key": "6738944ba9d6be1978d1177fdeea971ddf960814c5ec40725d66d695b7554bb7",
    "triangles": 8064,
    "stats": {
     "triangles": 8064,
@@ -43569,7 +43569,7 @@
    }
   },
   "proc-vehicle-renfe-592": {
-   "key": "d70930b868667aa312c12b9c58e9f8cf039442c0478a3e24cc3caa62b4a2ac76",
+   "key": "b9303d366abbd61937e1d294ed43ec9343e1f9a4d2d249065bd8a78bdf026af9",
    "triangles": 8314,
    "stats": {
     "triangles": 8314,
@@ -43637,7 +43637,7 @@
    }
   },
   "proc-vehicle-renfe-civia": {
-   "key": "9bf96d10925078e1f7f91f176a867b074f3a0fdf056df275c2c4a6b5cc790917",
+   "key": "ca6dcd8f09aa0ad40ae770486dd7989851fe38c967c39471c7f9607e2d757880",
    "triangles": 8529,
    "stats": {
     "triangles": 8529,
@@ -43705,7 +43705,7 @@
    }
   },
   "proc-vehicle-renfe-s100": {
-   "key": "707656d087afdbc24ba07ecf377def51c9a18872d74d5d9df1b41064f7dc72c7",
+   "key": "61ca1753f6b2dc9706886019920bbeee3f6cbc59b4632d8473a6fc736e288d12",
    "triangles": 9026,
    "stats": {
     "triangles": 9026,
@@ -43773,7 +43773,7 @@
    }
   },
   "proc-vehicle-renfe-s102": {
-   "key": "816ac54a12fbea1945b7ff16151078cd9a5a969ec9d62471d6401993ac5f6295",
+   "key": "e3d3bfb3fcd984f0dd828d4f1ad7b902f5841251dad98b551a5fca18d80e9929",
    "triangles": 7710,
    "stats": {
     "triangles": 7710,
@@ -43841,7 +43841,7 @@
    }
   },
   "proc-vehicle-renfe-s103": {
-   "key": "d2b03b0b7fe48855e5122814f52e21e8907a636d79195a940b9a4e9ec8f64e79",
+   "key": "c5e3f10ed56356cb4ce59d46d2757a8f032674edc5a6d550061a7868124ca064",
    "triangles": 9418,
    "stats": {
     "triangles": 9418,
@@ -43909,7 +43909,7 @@
    }
   },
   "proc-vehicle-renfe-s106": {
-   "key": "981c876ae4e0168cfdea6d7d56b45c4c87f56940e90a1383ecbc0dc648a3acdc",
+   "key": "62b37b75147e4c6110de531a5ac7c8cf5fb4233a18ed6279bf506b83545b21e3",
    "triangles": 7770,
    "stats": {
     "triangles": 7770,
@@ -43977,7 +43977,7 @@
    }
   },
   "proc-vehicle-renfe-s120": {
-   "key": "c77da106c2208441409cb2fb7363ad334048bd076495ac82c35a380dfd10db25",
+   "key": "b449c2501f2cb8232f36bcb7188635524a215f38608175147d69d7c95d856ba4",
    "triangles": 8988,
    "stats": {
     "triangles": 8988,
@@ -44045,7 +44045,7 @@
    }
   },
   "proc-vehicle-renfe-s130": {
-   "key": "3dd2aea042fdd3b6b08962f3a6bc22594b3221e968818d99736d27764dca589a",
+   "key": "f541bff882d4b47191c529c0db1421b42d54dcf518109f8451997bc32ba96213",
    "triangles": 7690,
    "stats": {
     "triangles": 7690,
@@ -56527,20 +56527,20 @@
    "extents": {}
   },
   "proc-vehicle-talgo-iii": {
-   "key": "bfdc8f0a2852b764f4a7a748a89c8dd96ca53d876e41204dadae33cc0875b39a",
-   "triangles": 5629,
+   "key": "4fe814dabbd2b31ff2a92da91ceeb3ca72343eb8dbe7242c3ecca6ad038ac4b5",
+   "triangles": 7494,
    "stats": {
-    "triangles": 5629,
-    "vertices": 18579,
-    "primitives": 38,
-    "materials": 22,
+    "triangles": 7494,
+    "vertices": 24174,
+    "primitives": 46,
+    "materials": 25,
     "min": [
      -6.570000171661377,
      -1.0728836041806744e-8,
      -1.4924237728118896
     ],
     "max": [
-     6.574802398681641,
+     6.570000171661377,
      3.299999952316284,
      1.4924237728118896
     ]
@@ -56566,12 +56566,12 @@
     ]
    },
    "side": {
-    "widthM": 13.744802570343017,
+    "widthM": 13.740000343322754,
     "heightM": 6.3,
     "bottomM": -0.3
    },
    "seat": [
-    5.3248,
+    5.32,
     3.3,
     0
    ],
@@ -56588,7 +56588,7 @@
      2.9848475456237793
     ],
     "[]": [
-     13.144802570343018,
+     13.140000343322754,
      3.29999996304512,
      2.9848475456237793
     ]

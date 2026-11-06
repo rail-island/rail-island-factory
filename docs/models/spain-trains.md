@@ -15,7 +15,7 @@ The catalog had no Spanish train before. Every design is filed under Spain.
 | `proc-vehicle-renfe-s102` | AVE S-102 Pato | series, Talgo base | `unit`, `cars` 4 - 8, `livery` (`ave`, `avlo`) | the duck-bill power cars; 330 km/h |
 | `proc-vehicle-renfe-s106` | Talgo Avril S-106 | series, Talgo base | `unit`, `cars` 4 - 8, `livery` (`avlo`, `ave`) | 330 km/h |
 | `proc-vehicle-renfe-s130` | Alvia S-130 | series, Talgo base | `unit`, `cars` 4 - 8 | 250 km/h |
-| `proc-vehicle-talgo-iii` | Talgo III | series, Talgo base, unpowered | `unit`, `cars` 4 - 8 | short coaches; 140 km/h |
+| `proc-vehicle-talgo-iii` | Talgo III | series, Talgo base, unpowered, tail face | `unit`, `cars` 4 - 8 | short coaches; 140 km/h |
 | `proc-vehicle-renfe-s120` | Renfe S-120 | series | `unit` (four cars), `livery` (`alvia`, `mediaDistancia`) | 250 km/h |
 | `proc-vehicle-renfe-civia` | Renfe Civia | series | `unit`, `cars` 3 - 5 | 120 km/h |
 | `proc-vehicle-renfe-446` | Renfe 446 | series, flat cab | `unit` (three cars) | 100 km/h |
@@ -38,6 +38,12 @@ the end cars raising the pantographs (`endPantograph`), `traction: "none"` for t
 unpowered Talgo III set (filed with the coaches).
 
 ## Deviations
+
+- **Talgo III.** The end car is the set's tail (after the photographs in `assets/talgo-iii/`): a
+  cab face with no windscreen (the series kit's `cabFace`), bowed and upright with rounded corners,
+  the red window band between dark lines carried round it over the stainless lower body and under
+  the silver roof, the door off to one side with its porthole and outline, the marker lamps high
+  and low, the number, buffers at 1.02 m. The roof's ribs and the sides' fluting are not drawn.
 
 - **Gauge.** The Iberian broad gauge (1,668 mm) stock keeps its bodies on the game's
   standard-gauge wheelsets.
