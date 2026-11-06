@@ -8,6 +8,8 @@
 // bundled into each of its models' JS files, so a field stated there would rewrite
 // every model of that module. No `node:` imports.
 
+import { FLEET_LINKS } from "./fleetLinks.ts";
+
 /** One web link of a model. */
 export interface ModelLink {
   /** What the page is, as the site shows it: "Wikipedia: Siemens Vectron". */
@@ -310,6 +312,8 @@ export const MODEL_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-sncf-x73500": [{ title: "Wikipedia: A TER", url: "https://en.wikipedia.org/wiki/A_TER" }, { title: "Wikimedia Commons: Moreuil - X73595 en gare.jpg", url: "https://commons.wikimedia.org/wiki/File:Moreuil_-_X73595_en_gare.jpg" }],
   "proc-vehicle-sncf-z20500": [{ title: "Wikipedia: SNCF Class Z 20500", url: "https://en.wikipedia.org/wiki/SNCF_Class_Z_20500" }, { title: "Wikimedia Commons: Z 20500 IDF Mobilités Ligne P.jpg", url: "https://commons.wikimedia.org/wiki/File:Z_20500_IDF_Mobilit%C3%A9s_Ligne_P.jpg" }],
   "proc-vehicle-talgo-iii": [{ title: "Wikipedia: Talgo", url: "https://en.wikipedia.org/wiki/Talgo" }],
+  // the world fleet: its articles and its photographs' Commons pages (docs/models/world-fleet.md)
+  ...FLEET_LINKS,
 };
 
 /** A model's web links; empty when it has none. */

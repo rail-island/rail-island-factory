@@ -10,7 +10,7 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-arthur-lismer-olympic-with-returned-soldiers.jpg` | Arthur Lismer - Olympic with Returned Soldiers.jpg | https://commons.wikimedia.org/wiki/File:Arthur_Lismer_-_Olympic_with_Returned_Soldiers.jpg | Arthur Lismer | Public domain | shape, proportions and colours |
+| `photo-olympic-in-new-york-cropped.jpg` | Olympic in New York cropped.jpg | https://commons.wikimedia.org/wiki/File:Olympic_in_New_York_cropped.jpg | Paul Thompson | Public domain | the whole Olympic Class Ocean Liner (the lead photograph of Wikipedia's "RMS Olympic") |
 
 ## Published figures
 

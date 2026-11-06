@@ -10,7 +10,7 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-ferry-dongan-hills-1945.jpg` | Ferry dongan hills 1945.jpg | https://commons.wikimedia.org/wiki/File:Ferry_dongan_hills_1945.jpg | unknown | Public domain | shape, proportions and colours |
+| `photo-spirit-of-america-staten-island-ferry.jpg` | Spirit of America - Staten Island Ferry.jpg | https://commons.wikimedia.org/wiki/File:Spirit_of_America_-_Staten_Island_Ferry.jpg | InSapphoWeTrust | CC BY-SA 2.0 | the whole Staten Island Ferry (the lead photograph of Wikipedia's "Staten Island Ferry") |
 
 ## Published figures
 

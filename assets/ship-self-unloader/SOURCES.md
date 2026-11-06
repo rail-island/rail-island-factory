@@ -11,7 +11,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
 | `photo-carldbradley-ship.jpg` | CarlDBradley ship.jpg | https://commons.wikimedia.org/wiki/File:CarlDBradley_ship.jpg | unknown - published by NOAA, a scientific agency within the United States Department of Commerce | Public domain | shape, proportions and colours |
-| `photo-6-20-49-str-carl-d-bradley-unloading-stone-at-gary-indiana.jpg` | 6-20-49 Str. Carl D. Bradley unloading stone at Gary, Indiana.jpg | https://commons.wikimedia.org/wiki/File:6-20-49_Str._Carl_D._Bradley_unloading_stone_at_Gary,_Indiana.jpg | Unknown authorUnknown author | CC BY 4.0 | shape, proportions and colours |
 
 ## Published figures
 

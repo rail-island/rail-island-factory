@@ -11,7 +11,6 @@ Downloaded from Wikimedia Commons as standard thumbnails, at most 1280 px on the
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
 | `photo-articulado-de-transmilenio-en-el-eje-ambiental.jpg` | Articulado de Transmilenio en el Eje Ambiental.JPG | https://commons.wikimedia.org/wiki/File:Articulado_de_Transmilenio_en_el_Eje_Ambiental.JPG | Felipe Restrepo Acosta | CC BY-SA 3.0 | shape, proportions and colours |
-| `photo-av-26-a-la-altura-de-la-13-fase-iii-transmilenio-bogot.jpg` | Av 26 a la altura de la 13, fase III Transmilenio, Bogotá.JPG | https://commons.wikimedia.org/wiki/File:Av_26_a_la_altura_de_la_13,_fase_III_Transmilenio,_Bogot%C3%A1.JPG | Felipe Restrepo Acosta | CC BY-SA 3.0 | shape, proportions and colours |
 
 ## Published figures
 

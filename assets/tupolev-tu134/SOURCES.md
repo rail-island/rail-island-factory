@@ -10,7 +10,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-aeroflot-nord-tupolev-tu-134-nose-view-mishin.jpg` | Aeroflot-Nord Tupolev Tu-134 nose view Mishin.jpg | https://commons.wikimedia.org/wiki/File:Aeroflot-Nord_Tupolev_Tu-134_nose_view_Mishin.jpg | Alexander Mishin | CC BY-SA 3.0 | the airframe's shape, proportions and livery |
 | `photo-cccp-45075-tupolev-tu-124a-converted-into-1st-tu-134-prototy.jpg` | CCCP-45075 Tupolev Tu.124A ( Converted Into 1st Tu.134 Prototype ) (8019060107).jpg | https://commons.wikimedia.org/wiki/File:CCCP-45075_Tupolev_Tu.124A_(_Converted_Into_1st_Tu.134_Prototype_)_(8019060107).jpg | Aeroprints.com | CC BY-SA 3.0 | the airframe's shape, proportions and livery |
 
 ## Published figures

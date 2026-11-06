@@ -10,7 +10,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-1958-cpa-2185-cropped.jpg` | 1958 CPA 2185 (cropped).jpg | https://commons.wikimedia.org/wiki/File:1958_CPA_2185_(cropped).jpg | Post of USSR | Public domain | the airframe's shape, proportions and livery |
 | `photo-aeroflot-tupolev-tu-104a-at-arlanda-july-1972.jpg` | Aeroflot Tupolev Tu-104A at Arlanda, July 1972.jpg | https://commons.wikimedia.org/wiki/File:Aeroflot_Tupolev_Tu-104A_at_Arlanda,_July_1972.jpg | Lars Söderström | CC BY-SA 3.0 | the airframe's shape, proportions and livery |
 
 ## Published figures
