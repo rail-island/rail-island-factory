@@ -698,7 +698,7 @@ describe("generateModels", () => {
       expect(first.map((b) => b.id).sort()).toEqual(SAMPLE.map((d) => d.id).sort());
       for (const b of first) {
         expect(b.changed).toBe(true);
-        expect(fs.readFileSync(b.thumb).subarray(1, 4).toString()).toBe("PNG");
+        expect(fs.readFileSync(b.thumb!).subarray(1, 4).toString()).toBe("PNG");
         expect(JSON.parse(fs.readFileSync(b.tree!, "utf8"))).toEqual(built(b.id).tree);
       }
       expect(fs.existsSync(path.join(dir, "tree", "sky-retired.json"))).toBe(false);
@@ -706,9 +706,9 @@ describe("generateModels", () => {
       expect(fs.existsSync(path.join(dir, "glb"))).toBe(false);
       expect(fs.existsSync(path.join(dir, "thumbs", "sky-retired.png"))).toBe(false);
       // a second run finds nothing to rewrite, and leaves the thumbnails alone
-      const mtime = fs.statSync(first[0]!.thumb).mtimeMs;
+      const mtime = fs.statSync(first[0]!.thumb!).mtimeMs;
       expect(generateModels(dir, SAMPLE).every((b) => !b.changed)).toBe(true);
-      expect(fs.statSync(first[0]!.thumb).mtimeMs).toBe(mtime);
+      expect(fs.statSync(first[0]!.thumb!).mtimeMs).toBe(mtime);
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }

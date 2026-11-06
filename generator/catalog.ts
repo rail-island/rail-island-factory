@@ -38,6 +38,8 @@ import { RAIL_COLLECTOR_TOP, TRAM_COLLECTOR_TOP } from "./collector.ts";
 import { checkDesignSounds, declaredSounds, defaultValues, shipHullStuds, withSounds } from "./soundMapping.ts";
 import type { SoundMapping, SoundOverride } from "./soundTable.ts";
 import { countryName, countryOf } from "./countryTable.ts";
+import { isDraft } from "./workshop.ts";
+import { linksOf, type ModelLink } from "./linkTable.ts";
 
 /** What a side-view thumbnail spans, in metres (renderGlbThumb.ts SideFrame). */
 export interface ThumbSide {
@@ -225,6 +227,17 @@ export interface CatalogRecord extends MetaEntry {
   sizeZ: number;
   /** The source images the model was made from, by name; empty when it has none. */
   references: ReferenceImage[];
+  /**
+   * The web pages the model was made from (linkTable.ts), for the site's Sources
+   * tab only -- not part of the game's meta. Absent when it has none.
+   */
+  links?: ModelLink[];
+  /**
+   * Set on a draft (workshop.ts): a model not yet confirmed into the catalog. The
+   * site lists it under Workshop, and no game meta file carries it
+   * (docs/site/workshop.md). Absent for a confirmed model.
+   */
+  draft?: true;
   /** What the viewer draws under (and over) a road or rail vehicle; absent for anything else. */
   scenery?: Scenery;
   /** Set when the JS model also exports buildCoarse (a tree's third level, docs/models/trees.md). */
@@ -502,5 +515,7 @@ export function catalogRecord(entry: MetaEntry, facts: BuiltFacts, references: R
     ...(scenery ? { scenery } : {}),
     ...(openttd ? { openttd: JSON.parse(JSON.stringify(openttd)) as OpenttdProperties } : {}),
     ...(countryOf(entry.id) ? { country: countryName(countryOf(entry.id)!) } : {}),
+    ...(linksOf(entry.id).length ? { links: linksOf(entry.id).map((l) => ({ ...l })) } : {}),
+    ...(isDraft(entry.id) ? { draft: true as const } : {}),
   };
 }

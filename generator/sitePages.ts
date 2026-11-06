@@ -209,7 +209,8 @@ function modelBody(r: CatalogRecord, meta: PageMeta, crumbs: readonly Crumb[], s
   return (
     `<div class="factory-static">${crumbsHtml([...crumbs, { label: r.title, path: meta.path }])}` +
     `<h1>${escapeHtml(meta.heading)}</h1>` +
-    `<img class="factory-static__thumb" src="/${escapeHtml(r.thumbUrl)}" alt="${escapeHtml(`${r.title} - 3D model`)}"${size} />` +
+    // a draft has no thumbnail file: the app renders it in the browser
+    (r.draft ? "" : `<img class="factory-static__thumb" src="/${escapeHtml(r.thumbUrl)}" alt="${escapeHtml(`${r.title} - 3D model`)}"${size} />`) +
     `<p>${escapeHtml(meta.description)}</p><dl>${facts}</dl>${params}${more}</div>`
   );
 }
@@ -235,8 +236,12 @@ function homeBody(meta: PageMeta, groups: readonly { path: string; label: string
 /** Every file the build adds to dist/, from the app shell (dist/index.html as Vite wrote it) and the catalog. */
 export function sitePages(shell: string, records: readonly CatalogRecord[], thumbSize: ThumbSize = () => null): SiteFiles {
   const files: SiteFiles = new Map();
-  const tree = categoryTree(records);
-  const categories = categoryPages(records, tree);
+  // the home and category pages list the catalog only; a workshop draft has its own
+  // page, kept out of the index and the sitemap (docs/site/workshop.md)
+  const published = records.filter((r) => !r.draft);
+  const tree = categoryTree(published);
+  const fullTree = categoryTree(records);
+  const categories = categoryPages(published, tree);
   const sorted = [...records].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   for (let i = 1; i < sorted.length; i++) if (sorted[i]!.id === sorted[i - 1]!.id) throw new Error(`site pages: two records share the id ${sorted[i]!.id}`);
   const urls: string[] = [];
@@ -274,10 +279,14 @@ export function sitePages(shell: string, records: readonly CatalogRecord[], thum
   for (const page of categories) deepest.set(categoryCrumbs(page.chips, tree).at(-1)!.path, page.records);
   for (const r of sorted) {
     if (!ID_SHAPE.test(r.id)) throw new Error(`site pages: the model id "${r.id}" is not a plain URL segment`);
-    const meta = modelMeta(r, tree);
-    const crumbs = categoryCrumbs(categoryOf(r, tree), tree);
-    const siblings = (deepest.get(crumbs.at(-1)!.path) ?? []).filter((o) => o.id !== r.id);
-    const size = thumbSize(r);
+    // a draft's breadcrumb stops at its group, the deepest catalog page sure to exist
+    const own = r.draft ? fullTree : tree;
+    const meta = modelMeta(r, own);
+    const group = groupOf(r);
+    const draftChips: ChipPath = published.some((o) => groupOf(o) === group) ? { group, l2: null, l3: null } : { group: null, l2: null, l3: null };
+    const crumbs = categoryCrumbs(r.draft ? draftChips : categoryOf(r, tree), tree);
+    const siblings = r.draft ? [] : (deepest.get(crumbs.at(-1)!.path) ?? []).filter((o) => o.id !== r.id);
+    const size = r.draft ? null : thumbSize(r);
     const imageUrl = `${SITE_URL}/${r.thumbUrl}`;
     const image = size && size.width >= MIN_PREVIEW_PX && size.height >= MIN_PREVIEW_PX ? { url: imageUrl, ...size, alt: `${r.title} - 3D model` } : undefined;
     const model: Record<string, unknown> = {
@@ -286,13 +295,13 @@ export function sitePages(shell: string, records: readonly CatalogRecord[], thum
       name: r.title,
       description: meta.description,
       url: `${SITE_URL}${meta.path}`,
-      image: imageUrl,
+      ...(r.draft ? {} : { image: imageUrl }),
       isPartOf: { "@type": "WebSite", name: SITE_NAME, url: `${SITE_URL}/` },
     };
     if (r.author) model.author = { "@type": "Person", name: r.author };
     if (r.license) model.license = r.license;
-    files.set(`${meta.path.slice(1)}index.html`, withBody(withHead(shell, { meta, image, ld: [breadcrumbLd([...crumbs, { label: r.title, path: meta.path }]), model] }), modelBody(r, meta, crumbs, siblings, size)));
-    urls.push(meta.path);
+    files.set(`${meta.path.slice(1)}index.html`, withBody(withHead(shell, { meta, image, ld: [breadcrumbLd([...crumbs, { label: r.title, path: meta.path }]), model], noindex: r.draft }), modelBody(r, meta, crumbs, siblings, size)));
+    if (!r.draft) urls.push(meta.path);
   }
 
   // what any other path answers: the app, which shows "No model ..." or the list, kept out of the index
