@@ -101,6 +101,18 @@ export interface FacePaint {
   S: number;
   A: number;
   number: string;
+  /** The livery's sweeps (shinkansen.ts `endSweeps`, d behind the tip), painted on the face's cab sides too. */
+  sweeps?: ReadonlyArray<{ mat: string; front: readonly Pt[]; back: readonly Pt[] }>;
+}
+
+/** Value of a [y, d] edge at height y (held past its ends). */
+export function edgeAt(pts: readonly Pt[], y: number): number {
+  if (y <= pts[0]![0]) return pts[0]![1];
+  for (let i = 1; i < pts.length; i++) {
+    const [ya, da] = pts[i - 1]!, [yb, db] = pts[i]!;
+    if (y <= yb) return yb - ya < 1e-9 ? db : da + ((y - ya) / (yb - ya)) * (db - da);
+  }
+  return pts[pts.length - 1]![1];
 }
 
 function layers(f: SeriesCabFace, p: FacePaint): NoseLayer[] {
@@ -110,6 +122,11 @@ function layers(f: SeriesCabFace, p: FacePaint): NoseLayer[] {
   out.push({ mat: p.skirt, name: "skirt", inside: (q) => !onFace(q) && q.y < p.A });
   for (const [y0, y1, mat] of p.face) out.push({ mat, name: `${mat} face`, inside: (q) => banded(q) && q.y >= y0 && q.y < y1 && (onFace(q) || q.y >= p.A) });
   out.push({ mat: p.roof, name: "roof", inside: (q) => (banded(q) ? q.y >= f.roofFrom : q.y >= p.S) });
+  // a sweep on the cab sides, between the skirt's top and the shoulder
+  (p.sweeps ?? []).forEach((w, i) => out.push({
+    mat: w.mat, name: `sweep ${i + 1}`,
+    inside: (q) => q.side && q.y >= p.A && q.y < p.S && q.y >= w.front[0]![0] && q.y <= w.front[w.front.length - 1]![0] && q.d >= edgeAt(w.front, q.y) && q.d <= edgeAt(w.back, q.y),
+  }));
   (f.fields ?? []).forEach((r, i) => out.push({ mat: r.mat, name: `field ${i + 1}`, inside: (q) => onFace(q) && inPoly(q.lat, q.y, r.pts) }));
   (f.masks ?? []).forEach((r, i) => out.push({ mat: r.mat ?? "cabMask", name: `surround ${i + 1}`, inside: (q) => onFace(q) && inRect(q, r) }));
   f.panes.forEach((r, i) => out.push({ mat: r.mat ?? "cabGlass", name: `pane ${i + 1}`, inside: (q) => onFace(q) && inRect(q, r) }));

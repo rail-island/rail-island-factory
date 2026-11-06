@@ -27,7 +27,7 @@ import { articulate } from "./tramKit.ts";
 import { LOD_GLASS, type LodBand, type LodPart, type LodSections } from "./lodKit.ts";
 import { bogieParts, fitUnit, roofPart, turnBody, type UnitBody } from "./lodUnits.ts";
 import { carbody } from "./carbodyKit.ts";
-import { bodyHalf, cabFaceLod, drawCabFace, type FacePaint, type SeriesCabFace } from "./seriesCab.ts";
+import { bodyHalf, cabFaceLod, drawCabFace, edgeAt, type FacePaint, type SeriesCabFace } from "./seriesCab.ts";
 import { RAIL_COLLECTOR_TOP } from "./collector.ts";
 
 type Band = readonly [number, number, string];
@@ -60,9 +60,9 @@ export interface ShinkansenLivery {
   /** The end car's own side bands (default the livery's): a power car painted apart from its coaches. */
   endBands?: readonly Band[];
   /**
-   * Sweeps of paint on both sides of the end car behind its nose or cab face, between the belly
-   * and the shoulder: each fills the side between a front and a back edge, [y, d] by height (d
-   * behind the body's front end, ascending y), later sweeps over earlier ones.
+   * Sweeps of paint on both sides of the end car, between the belly and the shoulder: each fills
+   * the side between a front and a back edge, [y, d] by height (d behind the nose's or cab face's
+   * tip, ascending y), later sweeps over earlier ones; a cab face paints them on its cab sides too.
    */
   endSweeps?: ReadonlyArray<{ mat: string; front: readonly Pt[]; back: readonly Pt[] }>;
 }
@@ -267,7 +267,7 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
         if (s.single) m.scope("rear cab face", () => drawCabFace(m, f, -1, -X(L + f.dJoin), half, fp));
       } else if (end && !s.flatCab) noseFittings(m, s, b, X);
       if (end && l.capSlope && l.frontRoof) m.scope("cab roof", () => capSlope(m, b, X, l.capSlope!, l.frontRoof!));
-      if (end && l.endSweeps) m.scope("sweeps", () => l.endSweeps!.forEach((w, i) => m.scope(`sweep ${i + 1}`, () => endSweep(m, b, X, w, 0.003 + 0.0015 * i))));
+      if (end && l.endSweeps) m.scope("sweeps", () => l.endSweeps!.forEach((w, i) => m.scope(`sweep ${i + 1}`, () => endSweep(m, b, X, w, s.cabFace?.dJoin ?? 0, 0.003 + 0.0015 * i))));
       if (end && s.cabWindows) m.scope("cab windows", () => {
         for (const sd of [1, -1]) for (const [d0, d1, y0, y1] of s.cabWindows!) {
           sidePanel(m, b, X, sd, "rubber", d0, d1, y0, y1, 0.007, 0.03);
@@ -312,28 +312,19 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
 /** The paint a cab face takes from a livery. */
 function facePaint(s: ShinkansenSeries, l: ShinkansenLivery, number: string): FacePaint {
   const face = s.cabFace?.bands?.(l) ?? l.front ?? l.bands;
-  return { sides: l.bands, face, roof: l.roof, skirt: l.skirt, S: s.S, A: s.A, number };
+  return { sides: l.bands, face, roof: l.roof, skirt: l.skirt, S: s.S, A: s.A, number, ...(l.endSweeps ? { sweeps: l.endSweeps } : {}) };
 }
 
-/** Value of a [y, d] edge at height y (held past its ends). */
-const edgeAt = (pts: readonly Pt[], y: number): number => {
-  if (y <= pts[0]![0]) return pts[0]![1];
-  for (let i = 1; i < pts.length; i++) {
-    const [ya, da] = pts[i - 1]!, [yb, db] = pts[i]!;
-    if (y <= yb) return yb - ya < 1e-9 ? db : da + ((y - ya) / (yb - ya)) * (db - da);
-  }
-  return pts[pts.length - 1]![1];
-};
-
 /** A sweep of paint on both sides between its front and back edges, in strips 0.1 m tall, clamped to the belly and the shoulder. */
-function endSweep(m: MeshBuilder, b: SliceBody, X: (d: number) => number, w: NonNullable<ShinkansenLivery["endSweeps"]>[number], proud: number): void {
+function endSweep(m: MeshBuilder, b: SliceBody, X: (d: number) => number, w: NonNullable<ShinkansenLivery["endSweeps"]>[number], dTip: number, proud: number): void {
   const lo = Math.max(w.front[0]![0], w.back[0]![0], b.Y(0) + 0.005);
   const hi = Math.min(w.front[w.front.length - 1]![0], w.back[w.back.length - 1]![0], b.S(0) - 0.005);
   const n = Math.max(1, Math.ceil((hi - lo) / 0.1));
   const tris: Pt[] = [];
   for (let i = 0; i < n; i++) {
     const [ya, yb] = [lo + ((hi - lo) * i) / n, lo + ((hi - lo) * (i + 1)) / n];
-    const [fa, fb, ba, bb] = [edgeAt(w.front, ya), edgeAt(w.front, yb), edgeAt(w.back, ya), edgeAt(w.back, yb)];
+    // on the body only: from its front end (a cab face's join) back
+    const [fa, fb, ba, bb] = [Math.max(-0.03, edgeAt(w.front, ya) - dTip), Math.max(-0.03, edgeAt(w.front, yb) - dTip), edgeAt(w.back, ya) - dTip, edgeAt(w.back, yb) - dTip];
     if (ba - fa < 0.005 && bb - fb < 0.005) continue;
     if (ba - fa >= 0.005) tris.push([fa, ya], [ba, ya], [bb, yb]);
     if (bb - fb >= 0.005) tris.push([fa, ya], [bb, yb], [fb, yb]);
