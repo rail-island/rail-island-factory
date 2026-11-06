@@ -41,6 +41,10 @@ export interface CarDef {
   windows: ReadonlyArray<{ y: readonly [number, number]; spans: ReadonlyArray<readonly [number, number]>; frame: string }>;
   /** Passenger doors on both sides: d spans, sill and head, the leaf's window. */
   doors: { spans: ReadonlyArray<readonly [number, number]>; y: readonly [number, number]; glass: readonly [number, number]; slides?: readonly number[] };
+  /** The door leaves' own paint bands (default the side's bands). */
+  doorBands?: readonly Band[];
+  /** A cab front painted apart from the sides: its bands, on the shell from the +X tip back to d. */
+  front?: { d: number; bands: readonly Band[] };
   /** Fluting: thin lines along the side between these heights (stainless cars). */
   fluting?: { y0: number; y1: number; pitch: number; mat: string };
   /** A flat cab end: windscreen panes (z0, z1, y0, y1), lamps (z, y, r, lens), the front's paint. */
@@ -67,7 +71,7 @@ const LEAF_INSET = 0.02;
 
 /** The body of a car. */
 export const carBody = (c: CarDef): SliceBody => {
-  const edges = [...new Set([...c.bands.flatMap(([a, b]) => [a, b]), ...c.windows.flatMap((w) => [w.y[0], w.y[1]])])]
+  const edges = [...new Set([...c.bands.flatMap(([a, b]) => [a, b]), ...(c.front?.bands ?? []).flatMap(([a, b]) => [a, b]), ...c.windows.flatMap((w) => [w.y[0], w.y[1]])])]
     .filter((y) => y > c.spec.Y + 0.01 && y < c.spec.S - 0.01).sort((a, b) => a - b);
   return carbody({ ...c.spec, edges: [...new Set([...c.spec.edges, ...edges])].sort((a, b) => a - b) });
 };
@@ -90,7 +94,7 @@ function door(m: MeshBuilder, c: CarDef, b: SliceBody, X: (d: number) => number,
   openable(m, (mm, o) =>
     mm.moved(plugMove(o, s, dx), () => {
       mm.scope("leaf", () => {
-        for (const [a, cc, mat] of c.bands) {
+        for (const [a, cc, mat] of c.doorBands ?? c.bands) {
           const [lo, hi] = [Math.max(a, y0 + 0.02), Math.min(cc, y1 - 0.02)];
           if (hi - lo > 1e-6) sidePanel(mm, b, X, s, mat, d0 + 0.02, d1 - 0.02, lo, hi, 0.008, 0.003);
         }
@@ -127,7 +131,9 @@ function fluting(m: MeshBuilder, c: CarDef, b: SliceBody, X: (d: number) => numb
  */
 export function drawCar(m: MeshBuilder, c: CarDef, X: (d: number) => number, o: { trucks?: readonly boolean[]; inside?: readonly number[] } = {}): SliceBody {
   const b = carBody(c);
-  const painter: Painter = bandPainter(c.bands, c.roof, c.under, c.skirt, c.spec.S);
+  const sides: Painter = bandPainter(c.bands, c.roof, c.under, c.skirt, c.spec.S);
+  const front = c.front && { d: c.front.d, paint: bandPainter(c.front.bands, c.roof, c.under, c.skirt, c.spec.S) };
+  const painter: Painter = front ? (d, y, r) => (d < front.d && r !== "bottom" && r !== "skirt" ? front.paint : sides)(d, y, r) : sides;
   const leaves = leavesOf(c);
   const cut = leaves.map((l) => ({ ...l, d0: l.d0 - 0.002, d1: l.d1 + 0.002, y0: l.y0 - 0.002, y1: l.y1 + 0.002 }));
   m.scope("body", () => {
@@ -241,7 +247,7 @@ function rdcDef(t: RdcType): CarDef {
     windows: [{ y: [2.1, 2.85], spans: win, frame: "ssDark" }],
     doors: { spans: [[0.75, 1.65], [L - 1.65, L - 0.75]], y: [1.25, 3.05], glass: [2.15, 2.8] },
     fluting: { y0: 1.32, y1: 2.0, pitch: 0.09, mat: "ssDark" },
-    cab: { panes: [[-1.15, -0.45, 2.25, 2.95], [0.45, 1.15, 2.25, 2.95], [-0.3, 0.3, 2.25, 2.95]], lamps: [[0, 3.45, 0.12, "lampHead"], [-1.0, 1.55, 0.07, "lampRed"], [1.0, 1.55, 0.07, "lampRed"]] },
+    cab: { panes: [[-1.15, -0.45, 2.25, 2.95], [0.45, 1.15, 2.25, 2.95], [-0.3, 0.3, 2.25, 2.95]], lamps: [[-1.0, 1.55, 0.07, "lampRed"], [1.0, 1.55, 0.07, "lampRed"]] },
     cabEnds: [1, -1], diaphragm: null,
     trucks: [L / 2 - RDC_TRUCKS / 2, L / 2 + RDC_TRUCKS / 2], truck: truckSpec(ft(8, 6), ft(0, 16.5), 0.95),
     coupler: "knuckle", couplerY: 0.88, gap: [RDC_GAP, RDC_GAP],
@@ -256,8 +262,40 @@ function rdcDef(t: RdcType): CarDef {
         horn(m, -1, X(L - 1.2), -0.3, 4.05);
       });
       m.scope("underfloor", () => { for (const d of [L / 2 - 4.0, L / 2 + 4.0]) block(m, "under", X(d + 1.5), X(d - 1.5), 0.45, 0.96, -1.05, 1.05); });
+      for (const e of [1, -1]) m.scope(e > 0 ? "front end" : "rear end", () => rdcEndFace(m, e, Math.abs(X(e > 0 ? 0 : L))));
     },
   };
+}
+
+/** The RDC end door's outline (z half width, sill, head) around the middle windscreen pane, and the headlight hood over it. */
+const RDC_END_DOOR = { z: 0.4, y0: 1.3, y1: 3.12, seam: 0.025 };
+const RDC_HOOD = { z: 0.44, y0: 3.24, y1: 3.62, r: 0.14, depth: 0.16 };
+
+/** A rounded-top oblong in (z, y): half width w, from y0 to y1, top corners of radius r. */
+function hoodRing(w: number, y0: number, y1: number, r: number): Pt[] {
+  const ring: Pt[] = [[-w, y0], [w, y0]];
+  for (let i = 0; i <= 4; i++) { const a = (i / 4) * (Math.PI / 2); ring.push([w - r + r * Math.cos(a), y1 - r + r * Math.sin(a)]); }
+  for (let i = 0; i <= 4; i++) { const a = Math.PI / 2 + (i / 4) * (Math.PI / 2); ring.push([-w + r + r * Math.cos(a), y1 - r + r * Math.sin(a)]); }
+  return ring;
+}
+
+/** An RDC cab end at |x| = face, facing e: the end door's seams and grab handle, the headlight hood and its twin lamps. */
+function rdcEndFace(m: MeshBuilder, e: number, face: number): void {
+  const x = e * face, { z, y0, y1, seam } = RDC_END_DOOR;
+  m.scope("end door", () => {
+    const on = x + e * 0.004;
+    decalX(m, "rubber", on, e, -z, -z + seam, y0, y1);
+    decalX(m, "rubber", on, e, z - seam, z, y0, y1);
+    decalX(m, "rubber", on, e, -z + seam, z - seam, y1 - seam, y1);
+    // the grab handle beside the door, on the engineer's side
+    const hz = e * (z - 0.09);
+    block(m, "ssDark", ...((e > 0 ? [x - 0.01, x + 0.04] : [x - 0.04, x + 0.01]) as [number, number]), 1.75, 2.05, hz - 0.015, hz + 0.015);
+  });
+  m.scope("headlight hood", () => {
+    const h = RDC_HOOD, ring = hoodRing(h.z, h.y0, h.y1, h.r);
+    m.sweep("ssDark", "x", ring, x - e * 0.03, ring, x + e * h.depth);
+    faceLamps(m, e, face + h.depth, [[-0.16, (h.y0 + h.y1) / 2, 0.09, "lampHead"], [0.16, (h.y0 + h.y1) / 2, 0.09, "lampHead"]]);
+  });
 }
 
 export function buddRdc(params?: ParamValues): MeshBuilder {
