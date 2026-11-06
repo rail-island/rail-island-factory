@@ -17,15 +17,15 @@ cabin adds 370-620 within the interiors' own cap ([interiors.md](interiors.md)).
 
 | id | title | vlakosimdb | real bus | triangles |
 |---|---|---|---|---|
-| `veh-karosa-short` | Karosa Short | `variant`: `b731` (default), `b732`, `c734`, `lc735`, `b931`, `b931e`, `b951e` = `bus_kar_*` | 700 series 10.975 m, 900 series 11.345 m, B 951 11.32 m | 5,650-6,500 |
-| `veh-karosa-long` | Karosa Long | `variant`: `b741` (default), `b941`, `b941e`, `b961` | articulated, 17.355 / 17.615 / 17.59 m | 9,250-10,200 |
-| `veh-karosa-renault-citybus-12m` | Karosa Renault City Bus 12M | `bus_karrencity12m` | low floor, 11.99 m | 5,900 |
-| `veh-karosa-renault-citybus-18m` | Karosa Renault City Bus 18M | `bus_karrencity18m` | articulated low floor, 17.80 m | 9,450 |
-| `veh-mb-citaro` | Mercedes-Benz Citaro | `bus_mb_citaro` | O 530, 11.95 m, white and teal | 5,950 |
-| `veh-mb-citaro-blue` | Mercedes-Benz Citaro (blue) | `bus_mb_citarob` | the same bus in dark blue | 5,950 |
-| `veh-mb-o345-g` | Mercedes-Benz O 345 G | `bus_mb_o345` | articulated, 17.94 m, 2-2-2-2 doors | 9,550 |
-| `veh-solaris-urbino-15` | Solaris Urbino 15 | `solaris_urbino_15` | three axles, 14.59 m | 7,950 |
-| `veh-bus-1` | Bus 1 | `bus_1` | vlakosimdb's generic coach, 11.3 m | 5,600 |
+| `veh-karosa-short` | Karosa Short | `variant`: `b731` (default), `b732`, `c734`, `lc735`, `b931`, `b931e`, `b951e` = `bus_kar_*` | 700 series 10.975 m, 900 series 11.345 m, B 951 11.32 m | 6,100-6,550 |
+| `veh-karosa-long` | Karosa Long | `variant`: `b741` (default), `b941`, `b941e`, `b961` | articulated, 17.355 / 17.615 / 17.59 m | 9,700-10,300 |
+| `veh-karosa-renault-citybus-12m` | Karosa Renault City Bus 12M | `bus_karrencity12m` | low floor, 11.99 m | 6,300 |
+| `veh-karosa-renault-citybus-18m` | Karosa Renault City Bus 18M | `bus_karrencity18m` | articulated low floor, 17.80 m | 9,800 |
+| `veh-mb-citaro` | Mercedes-Benz Citaro | `bus_mb_citaro` | O 530, 11.95 m, white and teal | 6,450 |
+| `veh-mb-citaro-blue` | Mercedes-Benz Citaro (blue) | `bus_mb_citarob` | the same bus in dark blue | 6,450 |
+| `veh-mb-o345-g` | Mercedes-Benz O 345 G | `bus_mb_o345` | articulated, 17.94 m, 2-2-2-2 doors | 9,850 |
+| `veh-solaris-urbino-15` | Solaris Urbino 15 | `solaris_urbino_15` | three axles, 14.59 m | 8,150 |
+| `veh-bus-1` | Bus 1 | `bus_1` | vlakosimdb's generic coach, 11.3 m | 5,900 |
 
 The Karosa variants differ in series (front mask, rear, length), doors and livery:
 
@@ -128,6 +128,11 @@ the windscreen's wipers are each design's), `endBar` and `endShape` (a bar or a
 polygon following the end's rake), `endBadge` (a chrome disc in a dark ring, the
 three-pointed star on the Mercedes-Benz buses) and `endLettering` (a maker's name as
 a row of chrome strokes). Rear reflectors are `reflector`, red without a lamp role.
+On a confirmed bus the end fittings also **wrap round the plan's corners**: its frame
+carries the plan (`BusFrame.plan`), a fitting stands on whichever of the side's rake
+and the plan's corner is further in, and a slab across a plan corner is one solid
+bent there and at the side's corners (`gridSlab`); a slab on the flat of the end is
+drawn as before.
 
 **The assembly** (`assembleBus`) draws each rigid body as a part with its shell, axles,
 twin or single tyres, the fittings whose x falls in it and its detail, then the two steered front
@@ -158,6 +163,11 @@ runs, axles, and a `details` callback for the nose, the tail and the roof.
   951 and 961 - with the maker's name, and a deep bumper on a rubber foot carrying the
   twin-lens headlamps and indicators; two wipers; a smaller rear
   window with louvres in the belt; the 951 and 961 with a roof air-conditioning pod.
+  The mask wraps round its front corners in a wide curve (`CORNER_900`, a quarter
+  ellipse 0.5 m along the side and 0.26 m across, five pieces), the windscreen frame
+  and lamps round it, and the bumper wraps with it (`wrappedBumper`: the plan's front
+  grown 8 cm, within the body's width), its lamps, grille, plate and rubber foot on
+  its curved face.
   All Karosas have the engine's grille low on the right of the tail, between the
   last door and the tail (0.6 m long behind a short three-door Karosa's rear door).
 - **City Bus 12M / 18M** (photographs): a black band from the deep bonded windows to
@@ -168,7 +178,8 @@ runs, axles, and a `details` callback for the nose, the tail and the roof.
   the engine flap, the Renault and Karosa names under the rear window, the flap's
   latches, red and reversing lamps in the black band, a black bumper with reflectors. The 18M's joint ends
   ramp up on the roof, as the XML's `roof2` outlines and the photographs show.
-- **Citaro**: an upright box, a black glazing band ending short of the white tail
+- **Citaro**: an upright box, its front corners curving round wide (0.42 m along the side,
+  0.26 m across) with the windscreen and the lamp clusters wrapped round them, a black glazing band ending short of the white tail
   (which carries the rear window and the engine grille), the destination display in a
   black panel over the windscreen, "rabbit ear" mirrors, a roof pod and the engine's
   intake tower at the rear left; the star on the front grille, round lenses in the

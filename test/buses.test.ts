@@ -344,6 +344,16 @@ describe("the bus bodies", () => {
     });
   });
 
+  // the Karosa 900s' and the Citaro's masks curve round their front corners, and
+  // the windscreen, the lamps and the bumper with them (busKit.ts BusFrame.plan)
+  it.each([["proc-vehicle-karosa-short", { variant: "b931e" }], ["proc-vehicle-karosa-long", { variant: "b961" }], ["proc-vehicle-mb-citaro", {}]] as const)("%s wraps its front fittings round the corners", (id, params) => {
+    const tris = trianglesOf(BUS_DESIGNS.find((d) => d.id === id)!.build(params));
+    const nose = Math.max(...tris.filter((t) => /(^|\/)shell\//.test(t.leaf)).flatMap((t) => t.p.map((p) => p[0])));
+    const corner = tris.filter((t) => /(^|\/)front\//.test(t.leaf)).flatMap((t) => t.p).filter((p) => Math.abs(p[2]) > 1.2);
+    expect(corner.length).toBeGreaterThan(0);
+    for (const p of corner) expect(p[0], `at z ${p[2].toFixed(2)}, y ${p[1].toFixed(2)}`).toBeLessThan(nose - 0.02);
+  });
+
   it.each(BUILDS.map((b) => [b.label, b] as const))("%s has double doors (the LC 735's rear one single)", (label, b) => {
     const tree = b.m().sourceTree(b.id, b.label);
     // the leaves: tall, thin and not glass; a door's leaves stand 2 cm apart, doors further

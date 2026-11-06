@@ -111,7 +111,8 @@ function cityDraft(sp: CitySpec): { d: BusDraft; spec: Omit<BusSpec, "fittings">
   const arches: Arch[] = axles.map((a) => ({ x: a.x, half: sp.arch.half, side: sp.arch.side, top: sp.arch.top }));
   const bodies: Array<[number, number]> = sp.bodies.map(([u0, u1]) => [x(u1), x(u0)]);
 
-  const d = new BusDraft({ section, side });
+  // a confirmed bus's end fittings wrap round its plan's corners (busKit.ts BusFrame.plan)
+  const d = new BusDraft({ section, side, ...(sp.detail ? { plan } : {}) });
   // the right side's windows, cut by the doors
   for (const [w0, w1] of sp.windows) {
     let at = w0;
@@ -395,7 +396,8 @@ function citaroSpec(livery: "teal" | "blue"): CitySpec {
     // 5.845 m wheelbase, 2.869 m without the roof pod (pl.wikipedia); the overhang from the texture
     axles: [{ at: 2.75, dual: false }, { at: 8.595, dual: true, drive: true }],
     wheelRadius: 0.48, hw: 1.27, bottom: 0.27, belt: 1.0, eave: 2.74, roof: 2.869, tumble: 0.01, corner: 0.12,
-    front: { from: 1.0, rake: 0.1, cap: 0.12, low: 0.18, chamfer: [0.3, 0.12] },
+    // (photographs) the front corners curve round wide, 0.42 m along the side and 0.26 m across
+    front: { from: 1.0, rake: 0.1, cap: 0.12, low: 0.18, chamfer: [0.42, 0.26] },
     rear: { from: 2.6, rake: 0.05, cap: 0.15, low: 0.5, chamfer: [0.2, 0.08] },
     paint: [
       { u0: 0, u1: 12, y0: 0.27, y1: 0.62, mat: "skirt" },
