@@ -10,7 +10,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-fokker6.jpg` | Fokker6.jpg | https://commons.wikimedia.org/wiki/File:Fokker6.jpg | Austrian Airlines | CC BY-SA 2.0 | the airframe's shape, proportions and livery |
 | `photo-fokker-100-klm-ph-ofn-10676665315.jpg` | Fokker 100 (KLM) PH-OFN (10676665315).jpg | https://commons.wikimedia.org/wiki/File:Fokker_100_(KLM)_PH-OFN_(10676665315).jpg | Laurent ERRERA from L'Union, France | CC BY-SA 2.0 | the airframe's shape, proportions and livery |
 
 ## Published figures

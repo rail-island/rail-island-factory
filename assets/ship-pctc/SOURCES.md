@@ -10,7 +10,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-atlantic-conveyor.jpg` | Atlantic Conveyor .jpg | https://commons.wikimedia.org/wiki/File:Atlantic_Conveyor_.jpg | DM Gerard | CC BY-SA 2.5 | shape, proportions and colours |
 | `photo-byd-hefei-porto-di-livorno-2025.jpg` | BYD Hefei, Porto di Livorno, 2025.jpg | https://commons.wikimedia.org/wiki/File:BYD_Hefei,_Porto_di_Livorno,_2025.jpg | Marcxosm | CC BY 4.0 | shape, proportions and colours |
 
 ## Published figures

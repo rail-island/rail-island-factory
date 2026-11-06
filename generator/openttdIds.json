@@ -255,6 +255,7 @@
     "proc-vehicle-embraer-e195-e2": 565,
     "proc-vehicle-embraer-erj145": 566,
     "proc-vehicle-embraer-phenom-300": 575,
+    "proc-vehicle-emd-f40ph": 821,
     "proc-vehicle-emd-f7": 124,
     "proc-vehicle-emd-gp9": 120,
     "proc-vehicle-emd-sd40-2": 121,
@@ -2195,6 +2196,14 @@
       "proc-vehicle-eir-fairy-queen?unit=tender": {
         "id": 9088,
         "size": 4
+      },
+      "proc-vehicle-emd-f40ph?": {
+        "id": 10028,
+        "size": 6
+      },
+      "proc-vehicle-emd-f40ph?livery=phaseII": {
+        "id": 10034,
+        "size": 6
       },
       "proc-vehicle-emd-f7?": {
         "id": 4728,

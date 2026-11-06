@@ -1,7 +1,8 @@
 // The North American passenger cars, urban rail and freight cars
 // (generator/usTransit.ts, usFreight.ts). See docs/models/us-transit.md and us-freight.md.
 import { describe, expect, it } from "vitest";
-import { CTA_LENGTH, R160_LENGTH, RDC_LENGTH, US_TRANSIT, ZEPHYR_LENGTH, pioneerZephyr, zephyrTrain } from "../generator/usTransit";
+import { CTA_LENGTH, R160_LENGTH, RDC_LENGTH, US_TRANSIT } from "../generator/usTransit";
+import { PIONEER_ZEPHYR, ZEPHYR_LENGTH, pioneerZephyr, zephyrTrain } from "../generator/pioneerZephyr";
 import { BOXCAR_LENGTH, CABLE_CAR_LENGTH, CABOOSE_LENGTH, US_FREIGHT, WELL_LENGTH, wellCar } from "../generator/usFreight";
 import { LOADING_GAUGES, loadingGaugeOf } from "../generator/loadingGauge";
 import { findCoplanarOverlaps } from "../generator/coplanar";
@@ -20,7 +21,7 @@ const LENGTH: Record<string, number> = {
   "proc-vehicle-us-well-car": WELL_LENGTH,
   "proc-vehicle-sf-cable-car": CABLE_CAR_LENGTH,
 };
-const ALL = [...US_TRANSIT, ...US_FREIGHT];
+const ALL = [US_TRANSIT[0]!, PIONEER_ZEPHYR, ...US_TRANSIT.slice(1), ...US_FREIGHT];
 
 describe("the US passenger cars, urban rail and freight cars", () => {
   it("are eight designs with their catalog groups and references", () => {

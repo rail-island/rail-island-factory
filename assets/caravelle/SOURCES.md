@@ -10,7 +10,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-2-et-3-02-1962-michel-debre-a-toulouse-l-bazerque-prefet-mor.jpg` | 2 et 3.02.1962. Michel Debré à Toulouse. L. Bazerque. Préfet Morin. (1962) - 53Fi3390 (cropped).jpg | https://commons.wikimedia.org/wiki/File:2_et_3.02.1962._Michel_Debr%C3%A9_%C3%A0_Toulouse._L._Bazerque._Pr%C3%A9fet_Morin._(1962)_-_53Fi3390_(cropped).jpg | André Cros | CC BY-SA 4.0 | the airframe's shape, proportions and livery |
 | `photo-aero-jet-caravelle-hb-icj-zrh-11-08-1994-4848256908.jpg` | Aero Jet Caravelle; HB-ICJ@ZRH;11.08.1994 (4848256908).jpg | https://commons.wikimedia.org/wiki/File:Aero_Jet_Caravelle;_HB-ICJ@ZRH;11.08.1994_(4848256908).jpg | Aero Icarus from Zürich, Switzerland | CC BY-SA 2.0 | the airframe's shape, proportions and livery |
 
 ## Published figures

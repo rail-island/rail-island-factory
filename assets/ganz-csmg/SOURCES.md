@@ -11,7 +11,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
 | `photo-14-05-06-tram-budapest-keleti-palyaudvar-ralfr.jpg` | 14-05-06-Tram-Budapest-Keleti-pályaudvar-RalfR.jpg | https://commons.wikimedia.org/wiki/File:14-05-06-Tram-Budapest-Keleti-p%C3%A1lyaudvar-RalfR.jpg | Ralf Roletschek | CC BY-SA 3.0 | shape, proportions and colours |
-| `photo-ipari-csuklos-villamos-utaster.jpg` | Ipari csuklós villamos, utastér.jpg | https://commons.wikimedia.org/wiki/File:Ipari_csukl%C3%B3s_villamos,_utast%C3%A9r.jpg | Christo | CC BY-SA 4.0 | shape, proportions and colours |
 
 ## Published figures
 

@@ -11,7 +11,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
 | `photo-14cd-swissair-airbus-a319-112-hb-ipy-zrh-15-02-1998-54245833.jpg` | 14cd - Swissair Airbus A319-112; HB-IPY@ZRH;15.02.1998 (5424583398).jpg | https://commons.wikimedia.org/wiki/File:14cd_-_Swissair_Airbus_A319-112;_HB-IPY@ZRH;15.02.1998_(5424583398).jpg | Aero Icarus from Zürich, Switzerland | CC BY-SA 2.0 | the airframe's shape, proportions and livery |
-| `photo-a320-wingtip-easyjet.jpg` | A320 Wingtip EasyJet.jpg | https://commons.wikimedia.org/wiki/File:A320_Wingtip_EasyJet.jpg | Ddoherty958 | CC0 | the airframe's shape, proportions and livery |
 
 ## Published figures
 

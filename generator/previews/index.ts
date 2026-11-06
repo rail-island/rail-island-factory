@@ -18,6 +18,7 @@ import {
   CABLE_CAR_PARAMS, cableCarStationPreview, cableCarStationPreviewLod, damPreview, damPreviewLod, portPreview, portPreviewLod, tunnelPortalPreview, tunnelPortalPreviewLod,
 } from "./structures.ts";
 import { WAY_PARAMS, decorationPreview, decorationPreviewLod, railTypePreview, railTypePreviewLod, roadTypePreview, roadTypePreviewLod } from "./ways.ts";
+import { LINE_PARAMS, cableCarLinePreview, cableCarLinePreviewLod } from "./cableCarLine.ts";
 import { MAST_PARAMS, PYLON_PARAMS, catenaryPreview, catenaryPreviewLod, pylonPreview, pylonPreviewLod } from "./props.ts";
 import { texturePreview, texturePreviewLod } from "./textures.ts";
 import { BLOCK_PARAMS } from "./blockKit.ts";
@@ -98,6 +99,16 @@ export const PREVIEW_FAMILIES: readonly PreviewFamily[] = [
       ...designs({ category: "Rails and roads", group: "roadType", prefix: "road-type", build: roadTypePreview, buildLod: roadTypePreviewLod, params: WAY_PARAMS }, typesOf("roadType")),
       ...designs({ category: "Rails and roads", group: "decoration", prefix: "decoration", build: decorationPreview, buildLod: decorationPreviewLod, params: WAY_PARAMS, lodTriangles: 12000 }, typesOf("decoration")),
     ],
+  },
+  // a short line of the chosen cabin between two stations of the chosen type, its cabins
+  // running as the game runs them (a `time` clip); its distant level is two stations' low
+  // levels, the pylon's, the ropes and a box per cabin
+  {
+    source: "previews/cableCarLine.ts",
+    designs: [{
+      id: "proc-preview-cablecar-line", title: "Cable Car Line", build: cableCarLinePreview, buildLod: cableCarLinePreviewLod,
+      params: LINE_PARAMS, lodTriangles: 3000, catalog: previewCatalog("Structures", "cableCarStation"),
+    }],
   },
   {
     source: "previews/props.ts",
