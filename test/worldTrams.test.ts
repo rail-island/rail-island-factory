@@ -63,7 +63,8 @@ describe("the world trams", () => {
         const m = t.build(params);
         const { json, bin } = parseGlb(m.toGlb(t.id));
         const ts = collectTriangles(json, bin);
-        expect(m.triangleCount() - m.interiorTriangleCount()).toBeLessThanOrEqual(15_000);
+        // a rigid tram's budget is a road vehicle's 10,000; an articulated tram's 15,000
+        expect(m.triangleCount() - m.interiorTriangleCount()).toBeLessThanOrEqual(s.sections.length === 1 ? 10_000 : 15_000);
         expect(m.interiorTriangleCount()).toBeLessThanOrEqual(2_000);
         // on the rail, centred, as long as its bodies (couplers and lamps beyond them; a horse ahead)
         const L = tramLength(s);
