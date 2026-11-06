@@ -391,7 +391,7 @@ export const F40_SPEC: CarbodySpec = {
 
 const F40_PAL = {
   silver: paint("#c3c7cb", 0.35), amBlue: paint("#1f4f9e"), amRed: paint("#c8262c"), amWhite: paint("#eeeeea"), amBlack: paint("#202225"),
-  truckBlack: paint("#242527", 0.85),
+  truckBlack: paint("#242527", 0.85), bell: paint("#b08d3c", 0.4),
 };
 
 /** Amtrak's Phase III: silver with the red, white and blue stripes, the nose top and cab front black. */
@@ -400,23 +400,63 @@ export const F40_LIVERIES: Record<string, CarbodyLivery> = {
     title: "Amtrak Phase III", palette: F40_PAL,
     bands: [[0, 2.16, "silver"], [2.16, 2.36, "amBlue"], [2.36, 2.54, "amWhite"], [2.54, 2.76, "amRed"], [2.76, 9, "silver"]],
     roof: "silver", skirt: "amBlack", under: "truckBlack",
-    lettering: { text: "AMTRAK", d: 10.0, y: 3.15, h: 0.5, mat: "amBlack" },
+    lettering: { text: "Amtrak", d: 9.6, y: 3.15, h: 0.66, mat: "amBlack" },
     number: "406", numberMat: "amBlack",
   },
   phaseII: {
     title: "Amtrak Phase II", palette: F40_PAL,
     bands: [[0, 2.44, "silver"], [2.44, 2.56, "amBlue"], [2.56, 2.68, "amWhite"], [2.68, 2.8, "amRed"], [2.8, 9, "silver"]],
     roof: "silver", skirt: "amBlack", under: "truckBlack",
-    lettering: { text: "AMTRAK", d: 9.0, y: 3.25, h: 0.5, mat: "amBlack" },
+    lettering: { text: "Amtrak", d: 9.0, y: 3.2, h: 0.66, mat: "amBlack" },
     number: "257", numberMat: "amBlack",
   },
 };
+
+/** The cab roof's black ends here (d from the nose tip): behind the cab door. */
+const F40_CAB_ROOF = 4.6;
+
+/**
+ * The Amtrak wordmark's glyphs ("Amtrak" in the bold lower-case sans of the
+ * Phase II-IV schemes): polylines in units of the capital's height, each with its
+ * advance width. Drawn by `wordmark` as bars on the side, like strokeFont.ts.
+ */
+const AMTRAK_GLYPHS: ReadonlyArray<{ w: number; lines: Array<Array<[number, number]>> }> = [
+  { w: 0.78, lines: [[[0, 0], [0.39, 1], [0.78, 0]], [[0.17, 0.36], [0.61, 0.36]]] },
+  { w: 0.74, lines: [[[0, 0], [0, 0.64]], [[0, 0.44], [0.1, 0.58], [0.22, 0.64], [0.31, 0.6], [0.37, 0.48], [0.37, 0]], [[0.37, 0.44], [0.47, 0.58], [0.59, 0.64], [0.68, 0.6], [0.74, 0.48], [0.74, 0]]] },
+  { w: 0.34, lines: [[[0.14, 0.86], [0.14, 0.1], [0.22, 0.01], [0.34, 0.01]], [[0, 0.62], [0.32, 0.62]]] },
+  { w: 0.34, lines: [[[0, 0], [0, 0.64]], [[0, 0.42], [0.1, 0.57], [0.21, 0.63], [0.34, 0.63]]] },
+  { w: 0.5, lines: [[[0.5, 0.64], [0.5, 0]], [[0.5, 0.44], [0.4, 0.59], [0.25, 0.64], [0.1, 0.58], [0.01, 0.42], [0.01, 0.22], [0.1, 0.06], [0.25, 0], [0.4, 0.05], [0.5, 0.2]]] },
+  { w: 0.46, lines: [[[0, 0], [0, 1]], [[0.44, 0.64], [0, 0.26]], [[0.14, 0.38], [0.46, 0]]] },
+];
+
+/** The wordmark on side s, centred at d, its foot at y, capitals h tall: bold bars (a fifth of h) as decals. */
+function wordmark(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, d: number, y: number, h: number, mat: string, proud = 0.012): void {
+  const gap = 0.15, t = h * 0.2;
+  const width = AMTRAK_GLYPHS.reduce((a, g) => a + g.w + gap, -gap) * h;
+  const dir = Math.sign(X(0) - X(1));
+  const tris: Pt[] = [];
+  let u0 = -width / 2;
+  for (const g of AMTRAK_GLYPHS) {
+    for (const line of g.lines)
+      for (let j = 1; j < line.length; j++) {
+        const [x0, y0] = [u0 + line[j - 1]![0] * h, line[j - 1]![1] * h];
+        const [x1, y1] = [u0 + line[j]![0] * h, line[j]![1] * h];
+        const len = Math.hypot(x1 - x0, y1 - y0) || 1;
+        const [dx, dy] = [((x1 - x0) / len) * (t / 2), ((y1 - y0) / len) * (t / 2)];
+        const q: Pt[] = [[x0 - dx - dy, y0 - dy + dx], [x0 - dx + dy, y0 - dy - dx], [x1 + dx + dy, y1 + dy - dx], [x1 + dx - dy, y1 + dy + dx]];
+        for (const k of [0, 1, 2, 0, 2, 3]) tris.push([d - dir * s * q[k]![0], y + q[k]![1]]);
+      }
+    u0 += (g.w + gap) * h;
+  }
+  sideDecal(m, b, X, s, mat, tris, proud);
+}
 
 /** The livery's bands, the black nose top and cab front (anti-glare) over them. */
 function f40Painter(l: CarbodyLivery): Painter {
   const base = painter(l, F40_BODY, false);
   return (d, y, region) => {
-    if (region === "arc" && d < 2.42) return "amBlack";
+    // the cab's roof black back to the cab's rear wall, as on Kato's Phase III model
+    if (region === "arc" && d < F40_CAB_ROOF) return "amBlack";
     if (region === "side" && d < F40_CAB + 0.04 && y > F40_NOSE_TOP - 0.12) return "amBlack";
     if (region === "lower" || region === "skirt") return "amBlack";
     return base(d, y, region);
@@ -448,11 +488,11 @@ export function buildF40(l: CarbodyLivery): MeshBuilder {
           sideGrille(m, b, X, s, 6.2, 7.6, 3.95, 4.25);
           sideGrille(m, b, X, s, 10.6, F40_BODY - 0.25, 3.85, 4.28, true);
         });
-        if (l.lettering) m.scope("lettering", () => sideLettering(m, b, X, s, l.lettering!.text, l.lettering!.d, l.lettering!.y, l.lettering!.h, l.lettering!.mat, 0.012));
-        // the nose's lettering in the white stripe, the number under the side's
+        if (l.lettering) m.scope("logo", () => wordmark(m, b, X, s, l.lettering!.d, l.lettering!.y, l.lettering!.h, l.lettering!.mat));
+        // the nose's wordmark in the white stripe, the number under the side's
         const white = l.bands.find((band) => band[2] === "amWhite")!;
-        m.scope("nose lettering", () => sideLettering(m, b, X, s, "AMTRAK", 0.95, white[0] + 0.025, white[1] - white[0] - 0.05, "amBlack", 0.012));
-        if (l.lettering) m.scope("number", () => sideLettering(m, b, X, s, l.number, l.lettering!.d, l.lettering!.y - 0.3, 0.24, l.numberMat, 0.012));
+        m.scope("nose logo", () => wordmark(m, b, X, s, 0.95, white[0] + 0.022, white[1] - white[0] - 0.044, "amBlack"));
+        if (l.lettering) m.scope("number", () => sideLettering(m, b, X, s, l.number, l.lettering!.d, l.lettering!.y - 0.36, 0.24, l.numberMat, 0.012));
         m.scope("handrails", () => {
           for (const d of [3.78, 4.58]) {
             const z = s * (bodyHalf(b, d) + 0.03);
@@ -493,12 +533,34 @@ export function buildF40(l: CarbodyLivery): MeshBuilder {
   });
   m.scope("roof", () => {
     m.scope("dynamic brake", () => {
+      // the blister over the grids, louvred either side of its fan
       block(m, "silver", X(6.6), X(4.6), roofY - 0.06, roofY + 0.1, -1.05, 1.05);
       roofFan(m, X(5.6), 0, roofY + 0.12, 0.42);
+      for (let d = 4.75; d < 6.5; d += 0.16) for (const sz of [-1, 1]) block(m, "louvre", X(d) - 0.035, X(d) + 0.035, roofY + 0.09, roofY + 0.125, ...side(sz, 0.5, 0.97));
     });
     m.scope("exhaust", () => exhaust(m, X(8.6), 0, roofY - 0.02, roofY + 0.18, 0.35, 0.7));
-    m.scope("fans", () => { for (const d of [12.3, 14.3]) roofFan(m, X(d), 0, roofY, 0.68); });
-    m.scope("horn", () => horn(m, 1, X(3.2), 0.5, roofY + 0.14));
+    m.scope("fans", () => {
+      for (const d of [12.3, 14.3]) {
+        roofFan(m, X(d), 0, roofY, 0.68);
+        // the guard's bars across the fan
+        for (const k of [-2, -1, 0, 1, 2]) block(m, "fanGuard", X(d) + k * 0.24 - 0.018, X(d) + k * 0.24 + 0.018, roofY + 0.065, roofY + 0.09, -Math.sqrt(0.62 ** 2 - (k * 0.24) ** 2), Math.sqrt(0.62 ** 2 - (k * 0.24) ** 2));
+        block(m, "fanGuard", X(d) - 0.62, X(d) + 0.62, roofY + 0.09, roofY + 0.11, -0.02, 0.02);
+      }
+    });
+    m.scope("horn", () => {
+      // a five-chime horn on its stand behind the cab: three trumpets forward, two back
+      block(m, "horn", X(3.35) - 0.12, X(3.35) + 0.12, roofY - 0.04, roofY + 0.08, 0.38, 0.62);
+      for (const [e, dx, z, dy] of [[1, 0, 0.42, 0.18], [1, 0.08, 0.5, 0.28], [1, -0.06, 0.58, 0.18], [-1, 0.05, 0.44, 0.24], [-1, -0.04, 0.56, 0.24]] as const) horn(m, e, X(3.35) + dx, z, roofY + dy);
+    });
+    m.scope("bell", () => {
+      const x = X(7.4), z = -0.55, y = roofY - 0.03;
+      block(m, "horn", x - 0.1, x + 0.1, y, y + 0.06, z - 0.03, z + 0.03);
+      m.loft("bell", ngon(10, 0.11, 0, x, z), y + 0.04, ngon(10, 0.06, 0, x, z), y + 0.2);
+    });
+    m.scope("antenna", () => {
+      block(m, "fanGuard", X(3.9) - 0.08, X(3.9) + 0.08, roofY - 0.03, roofY + 0.02, -0.38, -0.22);
+      m.rod("horn", [X(3.9), roofY, -0.3], [X(3.9), roofY + 0.32, -0.3], 0.012, 6);
+    });
   });
   m.scope("running gear", () => {
     const spec = truckSpec([-ft(4, 6), ft(4, 6)], ft(0, 20), 2.0, 1.3);
