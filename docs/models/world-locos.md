@@ -35,6 +35,13 @@ those tables from native XML; the eight-country families state them with
 
 The skin items are the usual ones: two windscreens with wipers, three headlights and
 two tail lamps, a cab door and window at each end, number plates on the sides and ends.
+The cab door and side window lie flat on the side wall, so they stay behind the corner
+where the side wall meets the end at every height they span (`sideEndAt`, less
+`CAB_WINDOW_MARGIN`): on a raked, streamlined or broken nose the end leans back over the
+cab, and a bonnet's or a hood's cab front stands back from the buffer beam, so the door
+and window keep their sizes and move back as far as that takes. A hood cab, with no room
+ahead of its door, has its window in the door. A `flat` end needs no move.
+test/worldLocoKit.test.ts checks one body of every nose type.
 A frame of coupled wheels in the middle (the E 18) leaves out the tanks between the
 bogies, which would lie on its plates.
 
