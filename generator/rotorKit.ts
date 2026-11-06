@@ -16,11 +16,12 @@ import type { Vec3 } from "./meshCore.ts";
 import { airframePalette, type Scheme } from "./airframeKit.ts";
 import {
   axleY, body, circle, closeTo, fan, fin, gridTris, hullSec, lerp, liveryFin, lobe, oval, ovalOutline, paintedBody,
-  plate, rod, skinDecal, skinY, splitLong, wheel, wing, type FinRing, type Livery, type P2, type Station, type WingStation,
+  plate, rod, skinDecal, skinEnd, skinStripe, skinY, insideAny, splitLong, wheel, wing, type FinRing, type Livery, type P2, type Station, type WingStation,
 } from "./airframeShapes.ts";
 import { airLod, lodAxleWheel, lodBar, type AirFin, type AirPod } from "./lodAir.ts";
 import { LOD_GLASS, lodPolygon } from "./lodKit.ts";
 import { strokeText, strokeWidth } from "./strokeFont.ts";
+import { turnPropellers, type PropellerNode } from "./propellers.ts";
 
 export interface RotorSpec {
   /** The fuselage from the nose to the boom's end; the height to the rotor head's top. */
@@ -167,6 +168,16 @@ export function rotorcraft(s: RotorSpec): MeshBuilder {
       m.scope("skin", () => paintedBody(m, "x", fus, g.livery.skin!));
       m.scope("nose", () => fan(m, g.livery.skin!(0, fus[fus.length - 1]!.a), "x", fus[fus.length - 1]!.sec, fus[fus.length - 1]!.a, 1, g.noseTip));
       m.scope("boom end", () => fan(m, g.livery.skin!(0, fus[0]!.a), "x", fus[0]!.sec, fus[0]!.a, -1, g.tailTip));
+      m.scope("glazing frame", () => {
+        // the canopy's centre post up the nose and a sill along each side, in the body colour over the painted glass
+        const base = g.livery.skin!(0, g.stations[0]!.a);
+        const top = g.crown(s.noseLen * 0.95) - 0.04;
+        const low = g.keel(s.noseLen * 0.3) + s.depth * 0.18;
+        const post = gridTris((u, v) => skinEnd("x", fus, lerp(-0.045, 0.045, u), lerp(low, top, v), g.x(s.noseLen * 1.3), g.noseTip[0], off * 2, insideAny), 1, 8);
+        m.facets(base, post.filter((p) => p.every(Number.isFinite)), [1, 0.3, 0]);
+        const sill = s.keel + s.depth * 0.52;
+        for (const side of [-1, 1]) m.facets(base, skinStripe("x", fus, g.x(s.noseLen * 1.0), g.x(s.noseLen * 0.25), sill - 0.03, sill + 0.03, side, off * 2), [0, 0, side]);
+      });
       m.scope("cabin windows", () => {
         for (const side of [-1, 1]) {
           const pts: P2[][] = [];
@@ -417,6 +428,7 @@ export function airship(s: AirshipSpec): MeshBuilder {
     rod(m, "alloy", [x(gd.d0 + (gd.d1 - gd.d0) * 0.45), y0 + 0.1, 0], [x(gd.d0 + (gd.d1 - gd.d0) * 0.45), yc, 0], 0.07);
     wheel(m, "z", -0.14, 0.14, [x(gd.d0 + (gd.d1 - gd.d0) * 0.45), yc], 0.35, 0.16, "alloy", 12);
   });
+  const props: PropellerNode[] = [];
   m.scope("propellers", () => {
     const p = s.props;
     const R = s.diameter / 2;
@@ -431,18 +443,28 @@ export function airship(s: AirshipSpec): MeshBuilder {
       body(m, "white", "x", nac);
       fan(m, "white", "x", nac[0]!.sec, nac[0]!.a, -1);
       fan(m, "white", "x", nac[nac.length - 1]!.sec, nac[nac.length - 1]!.a, 1);
-      for (let i = 0; i < 4; i++) {
-        const t = (i * Math.PI) / 2 + Math.PI / 4;
-        plate(m, "prop", [x(p.d) + 1.25, s.axisY - R * 0.15, z], [0, Math.sin(t), Math.cos(t)], [0.3, Math.cos(t), -Math.sin(t)], [[0.25, -0.12], [p.r, -0.06], [p.r, 0.06], [0.25, 0.12]], 0.04);
-      }
+      const hub: Vec3 = [x(p.d) + 1.25, s.axisY - R * 0.15, z];
+      const node = side > 0 ? "propeller-right" : "propeller-left";
+      props.push({ node, axis: [1, 0, 0], dir: 1 });
+      m.spin(node, hub, () => {
+        for (let i = 0; i < 4; i++) {
+          const t = (i * Math.PI) / 2 + Math.PI / 4;
+          plate(m, "prop", hub, [0, Math.sin(t), Math.cos(t)], [0.3, Math.cos(t), -Math.sin(t)], [[0.25, -0.12], [p.r, -0.06], [p.r, 0.06], [0.25, 0.12]], 0.04);
+        }
+      });
     }
     // the stern propeller behind the tail
-    for (let i = 0; i < 5; i++) {
-      const t = (i * 2 * Math.PI) / 5;
-      plate(m, "prop", [-half - 0.6, s.axisY, 0], [0, Math.sin(t), Math.cos(t)], [0.3, Math.cos(t), -Math.sin(t)], [[0.2, -0.12], [p.stern, -0.06], [p.stern, 0.06], [0.2, 0.12]], 0.04);
-    }
+    const sternHub: Vec3 = [-half - 0.6, s.axisY, 0];
+    props.push({ node: "propeller-stern", axis: [1, 0, 0], dir: 1 });
+    m.spin("propeller-stern", sternHub, () => {
+      for (let i = 0; i < 5; i++) {
+        const t = (i * 2 * Math.PI) / 5;
+        plate(m, "prop", sternHub, [0, Math.sin(t), Math.cos(t)], [0.3, Math.cos(t), -Math.sin(t)], [[0.2, -0.12], [p.stern, -0.06], [p.stern, 0.06], [0.2, 0.12]], 0.04);
+      }
+    });
     rod(m, "metalGrey", [-half + 0.3, s.axisY, 0], [-half - 0.75, s.axisY, 0], 0.15, 8);
   });
+  turnPropellers(m, props);
   return m;
 }
 
