@@ -82,9 +82,10 @@ export const FAMILY_VALUES: Readonly<Record<string, Readonly<Record<string, read
   skyscraper_c: { size: ["compact", "medium", "standard"] },
 };
 
-/** Designs in a city pool that no city builds: wider than any city lot at their placed scale, or not yet tuned. */
+/** Designs in a city pool that no city builds: wider than any city lot at their placed scale, standing at sea, or not yet tuned. */
 export const NOT_IN_CITIES: ReadonlySet<string> = new Set([
   "proc-building-chemical-factory",
+  "proc-building-industry-offshore-platform",
   "proc-building-industry-oil-pump",
   "proc-building-industry-power-plant",
   "proc-building-sky-dark-slab",

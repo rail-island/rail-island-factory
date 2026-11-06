@@ -4,6 +4,9 @@ import { chamferedRect, MeshBuilder, ngon, type Ring } from './meshBuilder.ts';
 import { airUnit, drums, hall, lamp, pallets, PLINTH, roofVent, rooflight, type HallSpec } from './industryHall.ts';
 import { PUMP_CLIP, pumpjackLayout, pumpjackTracks } from './pumpjack.ts';
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign, type CatalogFields } from './design.ts';
+import { offshorePlatform, offshorePlatformLod } from './offshorePlatform.ts';
+// the offshore platform's build functions, re-exported: this module is its JS bundle's entry (generate.ts)
+export { offshorePlatform, offshorePlatformLod };
 
 export const INDUSTRY_CATALOG: CatalogFields = { category: 'Industry', group: 'industry', defaultScale: 1, license: 'CC0', author: 'Rail Island', source: 'Rail Island procedural industry' };
 const choice = (name: string, title: string, values: string[], initial = values[0]!): ParamSpec => ({ name, title, default: initial, values: values.map(value => ({ value, title: value[0]!.toUpperCase() + value.slice(1) })) });
@@ -376,6 +379,11 @@ export const INDUSTRY: readonly ProceduralDesign[] = [
   design('chemical-factory', 'Chemical and refining plant', industrialProcess, PROCESS_PARAMS),
   design('industry-oil-pump', 'Oil pumpjack', industrialOilPump, MACHINE_PARAMS),
   { ...design('industry-wind-turbine', 'Wind turbine', industrialWind, MACHINE_PARAMS), game: { block: { rects: [{ x: 0, z: 0, w: 0.2, d: 0.59 }] } } },
+  // at sea, with a helideck (docs/models/industry.md, "Offshore platform"); no city builds it (cityVariants.ts)
+  {
+    id: 'industry-offshore-platform', title: 'Offshore oil platform', build: offshorePlatform, buildLod: offshorePlatformLod, lodTriangles: 500,
+    references: 'offshore-platform', catalog: INDUSTRY_CATALOG, game: { helipad: { material: 'helipad', pad: 'large' } },
+  },
 ];
 
 // Explicit distant silhouettes: no facade panels, pipework, ladders or railings.
