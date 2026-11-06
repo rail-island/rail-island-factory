@@ -29,7 +29,7 @@ introduction year and capacity (seats and standing room), exterior triangles at 
 | `veh-neoplan-skyliner` | Neoplan Skyliner | double | 13.8 x 2.55 x 4 | 2.8 / 9.3 / 10.65 | 2 | 2004 / 83 | 9,243 |
 | `veh-volvo-7900e` | Volvo 7900 Electric | city | 12 x 2.55 x 2.95 | 2.7 / 8.6 | 3 | 2018 / 85 | 2,968 |
 | `veh-scania-citywide` | Scania Citywide | city | 12 x 2.55 x 3 | 2.7 / 8.65 | 3 | 2011 / 95 | 2,956 |
-| `veh-van-hool-exquicity` | Van Hool Exqui.City | city, articulated | 18.6 x 2.55 x 3.05 | 3.3 / 9 / 15.3 | 4 | 2011 / 120 | 10,402 |
+| `veh-van-hool-exquicity` | Van Hool Exqui.City | city, articulated | 18.6 x 2.55 x 3.05 | 3.3 / 9 / 15.3 | 4 | 2011 / 120 | 10,470 |
 | `veh-skoda-14tr` | Skoda 14Tr | city, trolley | 11.34 x 2.5 x 3.05 | 2.6 / 8 | 3 | 1982 / 90 | 7,356 |
 | `veh-skoda-15tr` | Skoda 15Tr | city, trolley, articulated | 17.4 x 2.5 x 3.05 | 2.6 / 8.1 / 14.2 | 4 | 1988 / 160 | 10,312 |
 | `veh-ikarus-260` | Ikarus 260 | city | 11 x 2.5 x 3 | 2.4 / 7.8 | 3 | 1971 / 100 | 7,290 |

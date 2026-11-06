@@ -331,7 +331,7 @@ export function exquiCitySpec(): WorldBusSpec {
     livery: { body: "#c9cdd1", skirt: "#8cc63f", band: "#15181c", pod: "#8cc63f" },
     roof: [[3.0, 8.5, 1.0, 3.4, "pod"], [12.0, 17.0, 1.0, 3.4, "pod"]],
     rake: 0.55,
-  }), front: { from: 1.0, rake: 0.55, chamfer: [0.62, 0.36] }, detail: true, extras: refined.exquiCity };
+  }), front: { from: 1.0, rake: 0.55, chamfer: [0.95, 0.55] }, detail: true, extras: refined.exquiCity };
 }
 
 export const IKARUS_PARAMS: readonly ParamSpec[] = [{

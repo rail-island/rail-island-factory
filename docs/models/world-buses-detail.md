@@ -61,7 +61,7 @@ with two; [buses.md](buses.md)).
 | `veh-neoplan-skyliner` | 3,663 | 9,250 | luggage bays both sides with handles, the rear corners' engine louvres, a chrome strip, roof air conditioning, hatches |
 | `veh-ikarus-280` | 4,498 | 10,260 | rain gutters, three hatches, the underfloor engine's grille on the left, the dark lamp panel and the name on the nose |
 | `veh-skoda-15tr` | 4,520 | 10,312 | the trolley gear (converter box, rope reels, pole hooks), hatches, gutters, the traction motor's grille |
-| `veh-van-hool-exquicity` | 4,346 | 10,402 | the roof fairings ramped at their ends, a light strip across the nose, the chin spoiler, the rear wheels behind covers, the nose's plan rounded wide (0.62 by 0.36 m), the driver's door and window on the left |
+| `veh-van-hool-exquicity` | 4,346 | 10,470 | the roof fairings ramped at their ends, a light strip across the nose, the chin spoiler, the rear wheels behind covers, the nose's plan rounded wide (0.95 m along the side, 0.55 m across), the driver's door and window on the left |
 | `veh-blue-bird-vision` | 2,938 | 8,560 | the eight-way warning lamps (amber, red) and the SCHOOL BUS sign on both caps (the windscreen lowered under the front one), the stop arm folded on the left, the crossing arm on the bumper, cross-view mirrors on stalks, the rear emergency door, the district's name, clearance lamps, hatches |
 | `veh-gm-scenicruiser` | 3,686 | 9,190 | the fluted aluminium sides (chrome strips cut round the arches and the door), the windscreen's pillar, clearance lamps front and rear, a hatch |
 | `veh-skoda-706-rto` | 3,520 | 8,520 | the chrome bars across the grille and the name over it, a chrome belt strip, the roof rack on posts and the ladder up the rear, a hatch, gutters |
