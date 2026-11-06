@@ -41,6 +41,17 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
 - **Ae 8/14.** One 34 m body on its eight driving axles in four groups; the articulation
   between its two halves and the six idle guiding axles are left out.
 - **Glacier Express.** The panorama roof is drawn as the dark roof band over tall windows.
+- **FV-Dosto.** Measured from a near side view of the cab end and the upper windows' 1.5 m pitch: the
+  black sweep's back edge one straight line from the white's point 1.4 m behind the tip to the shoulder
+  at 6.75 m, the red over the roof's edge (livery `endRoofEdge`) to 7.7 m; on the cab's sides the dark
+  band and the white's point are painted forward to the red. The doors stand at the low floor's ends
+  inside the bogies (series `layout`): the end car's at 9.35 m and 17.6 m behind the tip with three lower
+  windows between, the intermediate car's 5.2 m in from each end with seven; white service doors over the
+  bogies, and behind the cab the destination display and the service door with its window and grille
+  (series `sidePanels`). The pantograph stands on each end car's roof 5 m behind the tip (`pantographD`),
+  the trailing one folded (`trailingLowered`). The upper deck's windows sit in the grey band as the user
+  asked, though the photographs show white between them. The distant model draws only the lower window
+  row's span, now short on the end car.
 
 ## Tests
 

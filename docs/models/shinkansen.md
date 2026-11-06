@@ -52,6 +52,13 @@ combinations hashed before and after):
 - `endPantograph` - the end cars raise the pantographs (a short unit without middle motor cars);
   `"lead"` only the leading end car (a locomotive and its driving trailer, the IC225),
   `"trail"` only the rear one (a power-car train fed from one collector, the Eurostar);
+  `trailingLowered` with `true` folds the rear end car's down; `pantographD` - the
+  pantograph's centre at a given d behind the car's front (the FV-Dosto's behind its cab);
+- `sidePanels` - fittings on the end car's and the intermediate car's sides (d behind the
+  car's front): a seam (a service door's outline), a framed window, louvres pressed in the
+  side's paint, or a framed panel with a screen (a destination display); a livery's
+  `endRoofEdge` - paint along the end car's roof edges from the shoulder up to a height,
+  its rear end slanted (the FV-Dosto's red);
 - `endBogies`, `endSides` - a locomotive end car: its bogies at given d behind the nose
   (centred under its body, not the coaches' rule) and its own side windows and doors in
   place of the passenger layout (the IC225's Class 91, the HST's Class 43, the Eurostar's power cars); `endGrilles` -
