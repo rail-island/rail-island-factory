@@ -18,7 +18,7 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
 | `proc-vehicle-sbb-flirt` | SBB FLIRT | series, Stadler FLIRT | `unit`, `cars` 3 - 4 | 160 km/h |
 | `proc-vehicle-sbb-kiss` | SBB KISS | series, Stadler KISS | `unit`, `cars` 4 - 6 | double-deck; 160 km/h |
 | `proc-vehicle-rhb-allegra` | RhB Allegra | series, metre gauge | `unit` (three cars) | 2.65 m wide; 120 km/h |
-| `proc-vehicle-sbb-re460` | SBB Re 460 | box locomotive, streamlined | - | Bo-Bo, 18.5 m, 6,100 kW, 230 km/h |
+| `proc-vehicle-sbb-re460` | SBB Re 460 | box locomotive, its own profile (below) | - | Bo-Bo, 18.5 m, 6,100 kW, 230 km/h; 460 014-4 |
 | `proc-vehicle-sbb-re420` | SBB Re 4/4 II | box locomotive, flat | `livery` (`green`, `red`) | Bo-Bo, 15.41 m, 4,700 kW, 140 km/h |
 | `proc-vehicle-sbb-re620` | SBB Re 6/6 | box locomotive, flat | `livery` (`green`, `red`) | Bo-Bo-Bo, 19.31 m, 7,850 kW, 140 km/h |
 | `proc-vehicle-sbb-ae66` | SBB Ae 6/6 | box locomotive, raked | `livery` (`green`, `red`) | Co-Co, 18.4 m, 4,300 kW, 125 km/h |
@@ -30,6 +30,25 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
 | `proc-vehicle-sbb-ew4-coach` | SBB EW IV coach | coach | `unit` (`a`, `b`), `livery` (`redGrey`, `sbb`) | 26.4 m; 200 km/h |
 | `proc-vehicle-sbb-ic2000` | SBB IC 2000 coach | coach, double-deck | `unit` (`a`, `b`) | 26.8 m; 200 km/h |
 | `proc-vehicle-glacier-express` | Glacier Express coach | coach, metre gauge | `unit` (`first`, `second`) | 18.4 m, the panorama windows; 90 km/h |
+
+## The Re 460's body
+
+The Re 460 (`re460Spec`, `generator/chLocos.ts`) keeps the box locomotive kit but
+replaces the generic streamlined profile with its own, measured on the reference
+photograph (`assets/sbb-re460/`):
+
+- **Nose** - low and rounded, the lower nose leaning back into one large windscreen
+  raked about 40 degrees, bowed in plan with the corners rounded 0.68 m back into the
+  sides; a black surround behind the two screen halves, the headlights at the lower
+  corners, the top headlight on the grey cap, the SBB emblem under the screen.
+- **Section** - the sides upright from the dark skirt (1.55 m) to the windows' head
+  (3.48 m), then the grey roof sloping in steeply to a narrow top at 4.15 m, with the
+  louvres along each slope between the pantographs.
+- **Sides** - the cab door and the cab window close behind the nose, the machine room
+  ribbed over 8.4 m with the SBB emblem drawn in white between its ribs (the "arrows"
+  of shorter bar pairs closing in, `re460EmblemBars`); no white line, no lettering.
+- **Running gear** - bogie pivots 11 m apart, 2.8 m wheelbase, 1.1 m wheels, a dark
+  skirt between the bogies.
 
 ## Deviations
 
