@@ -86,7 +86,9 @@ designs, the Bmo and the CD green and white coach).
   0.9 m to 0.2 m between the bogies. Each paint band of the section is one open
   sweep per station segment, closed only by end-cap slabs (`trimCaps` leaves out
   the caps of bands a sloped nose clips away at its tip; the German coaches' cabs,
-  [german-coaches.md](german-coaches.md)). Be31 (main body,
+  [german-coaches.md](german-coaches.md)). An optional `upper` plan narrows the
+  section above a height (`planK`: blended from `plan` between its y0 and y1): a
+  tram cab's screen corners leaning in ([world-trams.md](world-trams.md)). Be31 (main body,
   narrower vestibules, roof), Bi20 (compartments, roof, platforms) and Dsk (van,
   roof, platform) are several volumes.
 - **Panels.** `sidePanel` lays a box from a side BMP on the skin, split at plan

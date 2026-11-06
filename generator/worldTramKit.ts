@@ -31,10 +31,11 @@
 import type { MaterialSpec, MeshBuilder, Ring } from "./meshBuilder.ts";
 import { ngon } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
-import { COACH_PALETTE, lerp, type Box, type Opening, type Pt, type Volume } from "./csdCoachParts.ts";
+import { COACH_PALETTE, hiAt, lerp, loAt, planK, sectionHalf, type Box, type Opening, type Pt, type Volume } from "./csdCoachParts.ts";
 import { Tram, TRAM_PALETTE, articulate, clipLine, knee, type TramSection } from "./tramKit.ts";
 import { block, side } from "./vehicleParts.ts";
 import { liftable } from "./liftable.ts";
+import { strokeText, strokeWidth } from "./strokeFont.ts";
 import { TRAM_COLLECTOR_TOP } from "./collector.ts";
 import type { DoorMotion } from "./doors.ts";
 import { volumeShell } from "./lodTrams.ts";
@@ -55,6 +56,66 @@ export interface EndShape {
   top: ReadonlyArray<readonly [number, number]>;
   /** [metres back, height]: where the bottom clamps the end (a sloped apron); none for an upright end. */
   apron?: ReadonlyArray<readonly [number, number]>;
+  /**
+   * The plan at the eave, as `plan`: the end narrows to it from the windscreen's
+   * foot up (the screen's corners leaning in, a hood over the cab). Omit for
+   * upright sides.
+   */
+  upper?: ReadonlyArray<readonly [number, number]>;
+}
+
+/**
+ * What a cab end carries beyond its shape (heights and offsets in metres, z from
+ * the centre line, each offset drawn mirrored on both sides; 0 draws one):
+ * head and tail lamps on the end's surface, the windscreen's pillars, the
+ * wipers, rear-view mirrors or camera arms, a bumper across the nose.
+ */
+export interface NoseDress {
+  /** Head lamps [y, z, radius]; with `tails`, these replace the kit's default lamps. */
+  heads?: ReadonlyArray<readonly [number, number, number]>;
+  /** Tail lamps [y, z, radius], at every end. */
+  tails?: ReadonlyArray<readonly [number, number, number]>;
+  /** The lamps' housing paint (default a dark grey). */
+  housing?: string;
+  /** The windscreen's pillars and frame bars: z of each bar (mirrored), its paint. */
+  pillars?: readonly number[];
+  pillarPaint?: string;
+  /** A horizontal frame bar across the screen at each height (a split screen, a sash). */
+  bars?: readonly number[];
+  /** The wipers' pivots: z of each (as listed, not mirrored), their length. */
+  wipers?: readonly number[];
+  wiperLength?: number;
+  /** Rear-view mirrors on arms, or camera arms, at the cab's top corners; their height. */
+  mirrors?: "arm" | "camera";
+  mirrorY?: number;
+  /** A bumper across the nose: its bottom and top, paint, how far it stands proud. */
+  bumper?: readonly [y0: number, y1: number, mat: string, depth?: number];
+  /**
+   * The end's windows as panes laid on its surface, each over y0..y1 and z0..z1
+   * in a frame (glass, or a display's `mat`), in place of the screen band across
+   * the whole end: an old car's three front windows, a double-decker's two rows.
+   */
+  panes?: ReadonlyArray<{ y: readonly [number, number]; z: readonly [number, number]; mat?: string }>;
+  /** Keep the screen band (`screen`, `sign`) as well as the panes: a screen round the corners, a sign or upper windows laid on. */
+  screenBand?: boolean;
+  /**
+   * The destination display's lit text: the route number at the display's left and the
+   * destination as a row of lit characters after it, over the band's `sign` (or the
+   * display pane `display`, its index in `panes`), in `ledPaint` (default amber).
+   */
+  route?: string;
+  display?: number;
+  ledPaint?: string;
+  /** The fleet number painted on the nose: its text, the centre's z and height, the figures' height and paint. */
+  number?: readonly [text: string, z: number, y: number, h: number, mat?: string];
+  /** Emblems on the nose: [y, z, radius, paint] each, a disc in a steel ring. */
+  badges?: ReadonlyArray<readonly [number, number, number, string]>;
+  /** Direction indicators [y, z] (mirrored): small amber lamps. */
+  indicators?: ReadonlyArray<readonly [number, number]>;
+  /** A grille: slats from y0 to y1, `half` wide each side of the middle, `n` of them, in `mat`. */
+  grille?: readonly [y0: number, y1: number, half: number, n: number, mat: string];
+  /** No rubber gasket along the screen's foot and head (an end with panes has none either). */
+  noGasket?: boolean;
 }
 
 /** The front library: one shape per kind of end. */
@@ -119,6 +180,13 @@ export interface WorldTramSpec {
   roof: "arched" | "flat";
   /** The ends: the front and the rear shape, and whether the rear has a cab (a double-ended car). */
   front: FrontKind;
+  /** A design's own end shapes, in place of the front library's `front` (and `rear`; the rear defaults to the front's). */
+  frontShape?: EndShape;
+  rearShape?: EndShape;
+  /** What the cab ends carry (lamps, pillars, wipers, mirrors, a bumper). */
+  nose?: NoseDress;
+  /** The cab ends' own paint stack (a nose's lamp band, a screen's surround); default `paint`. */
+  cabPaint?: Stack;
   rear?: FrontKind;
   doubleEnded: boolean;
   /** The side windows' band, the panes' pitch; a double-decker's upper band. */
@@ -140,8 +208,8 @@ export interface WorldTramSpec {
   /** The real track gauge, mm (the model rides on standard-gauge wheelsets). */
   gauge: number;
   collector: Collector;
-  /** Roof boxes: metres from the nose, half width, height over the crown, material. */
-  roofBoxes?: ReadonlyArray<readonly [number, number, number, number, string]>;
+  /** Roof boxes: metres from the nose, half width, height over the crown, material; the ends' rake (a fairing sloping down to the roof). */
+  roofBoxes?: ReadonlyArray<readonly [number, number, number, number, string, number?]>;
   /** A clerestory along the saloon (an old car's raised roof lights). */
   clerestory?: boolean;
   /** Colours by material name; the paint stack from the skirt up to the eave (the roof above is `roof`). */
@@ -197,8 +265,16 @@ function paletteOf(s: WorldTramSpec): Record<string, MaterialSpec> {
     timber: { color: "#8a5a32", roughness: 0.8 },
     seatWood: { color: "#a0703e", roughness: 0.7 },
     tyre: { color: "#1c1c1e", roughness: 0.95 },
+    displayLed: { color: "#ffb21f", roughness: 0.3 },
+    lettering: { color: "#f4f4f2", roughness: 0.4 },
     ...Object.fromEntries(Object.entries(s.colors).map(([k, v]) => [k, COLOR(v)])),
   };
+}
+
+/** The shape of a section's front (+1) or rear (-1) end. */
+function endShape(s: WorldTramSpec, e: number): EndShape {
+  if (e > 0) return s.frontShape ?? FRONTS[s.front];
+  return s.rearShape ?? (s.rear ? FRONTS[s.rear] : s.frontShape ?? FRONTS[s.front]);
 }
 
 /** The cross-section (z, y) of the body: vertical sides to the eave, the roof arched or flat. */
@@ -214,22 +290,22 @@ function sectionRing(s: WorldTramSpec): Pt[] {
 }
 
 /** A section's plan, elevation top and bottom (ascending Factory x), from its ends and the trucks under it. */
-function profiles(s: WorldTramSpec, sec: SectionLayout, X: (u: number) => number): { plan: Pt[]; top: Pt[]; bottom: Pt[] } {
+function profiles(s: WorldTramSpec, sec: SectionLayout, X: (u: number) => number): { plan: Pt[]; top: Pt[]; bottom: Pt[]; upper: Pt[] } {
   const hw = s.width / 2;
   const foot = s.screen[0] - 0.05;
-  const rearKind = s.rear ?? s.front;
-  const end = (kind: FrontKind | null, at: number, dir: number) => {
+  const end = (shape: EndShape | null, at: number, dir: number) => {
     // dir +1: the front end at x1, the shape running back toward -x
-    const shape: EndShape | null = kind ? FRONTS[kind] : null;
     const plan: Pt[] = shape ? shape.plan.map(([b, f]): Pt => [at - dir * b, f * hw]) : [[at, hw]];
+    const upper: Pt[] = shape ? (shape.upper ?? shape.plan).map(([b, f]): Pt => [at - dir * b, f * hw]) : [[at, hw]];
     const top: Pt[] = shape ? shape.top.map(([b, f]): Pt => [at - dir * b, foot + f * (s.height - foot)]) : [[at, s.height]];
     const apron: Pt[] = shape?.apron ? shape.apron.map(([b, y]): Pt => [at - dir * b, y < 0 ? s.floor : Math.max(y, s.floor)]) : [[at, s.floor]];
-    return { plan, top, apron };
+    return { plan, top, apron, upper };
   };
-  const f = end(sec.front ? s.front : null, sec.x1, 1);
-  const r = end(sec.rear ? rearKind : null, sec.x0, -1);
+  const f = end(sec.front ? endShape(s, 1) : null, sec.x1, 1);
+  const r = end(sec.rear ? endShape(s, -1) : null, sec.x0, -1);
   const asc = (a: Pt[], b: Pt[]) => [...a, ...[...b].reverse()].sort((p, q) => p[0] - q[0]);
   const plan = asc(r.plan, f.plan);
+  const upper = asc(r.upper, f.upper);
   const top = asc(r.top, f.top);
   // the bottom: the aprons, and each truck's cut-out (the skirt raised over its wheels)
   const cuts: Array<(x: number) => number> = [];
@@ -249,7 +325,7 @@ function profiles(s: WorldTramSpec, sec: SectionLayout, X: (u: number) => number
   const lo = [apronAt(r.apron), apronAt(f.apron), ...cuts];
   const xs = [...breaks].filter((x) => x >= sec.x0 - 1e-9 && x <= sec.x1 + 1e-9).sort((a, b) => a - b);
   const bottom = xs.map((x): Pt => [x, Math.max(s.floor, ...lo.map((g) => g(x)))]);
-  return { plan: dedupe(plan), top: dedupe(top), bottom: dedupe(bottom) };
+  return { plan: dedupe(plan), top: dedupe(top), bottom: dedupe(bottom), upper: dedupe(upper) };
 }
 
 /** A polyline's value at x, `out` outside its span. */
@@ -287,19 +363,23 @@ function overlay(st: Array<[number, number, string]>, y0: number, y1: number, ma
 
 /** The cab's bands: the windscreen in glass, the display at its top (and a double-decker's upper front windows). */
 function cabBands(s: WorldTramSpec): Array<[number, number, string]> {
-  let b = bands(s, s.paint);
+  let b = bands(s, s.cabPaint ?? s.paint);
+  // windows laid on the end as panes: no glass band across it
+  if (s.nose?.panes && !s.nose.screenBand) return b;
   const sign = s.sign ?? 0.22;
   b = overlay(b, s.screen[0], s.screen[1] - sign, "glass");
   if (sign > 0) b = overlay(b, s.screen[1] - sign, s.screen[1], "display");
-  if (s.upper && s.deck !== "open") b = overlay(b, s.upper[0], s.upper[1], "glass");
+  if (s.upper && s.deck !== "open" && !s.nose?.panes) b = overlay(b, s.upper[0], s.upper[1], "glass");
   return b;
 }
 
 /** How far back from each end the cab volume reaches. */
-function cabLength(kind: FrontKind): number {
-  const sh: EndShape = FRONTS[kind];
-  return Math.max(sh.plan[sh.plan.length - 1]![0], sh.top[sh.top.length - 1]![0], ...(sh.apron ?? []).map((p) => p[0])) + 0.15;
+function cabLength(sh: EndShape): number {
+  return Math.max(sh.plan[sh.plan.length - 1]![0], ...(sh.upper ?? []).map((p) => p[0]), sh.top[sh.top.length - 1]![0], ...(sh.apron ?? []).map((p) => p[0])) + 0.15;
 }
+
+/** How far back from the end its plan tapers (the straight side starts beyond it). */
+const taperLength = (sh: EndShape): number => Math.max(sh.plan[sh.plan.length - 1]![0], ...(sh.upper ?? []).map((p) => p[0]));
 
 // ---------------------------------------------------------------------------
 // drawing
@@ -345,25 +425,27 @@ function panes(x0: number, x1: number, doors: Array<[number, number]>, pitch: nu
 
 /** The Factory x span where a section's side is straight and full width (clear of the tapered ends). */
 function straight(s: WorldTramSpec, sec: SectionLayout): [number, number] {
-  const back = (k: FrontKind) => FRONTS[k].plan[FRONTS[k].plan.length - 1]![0] + 0.1;
-  return [sec.x0 + (sec.rear ? back(s.rear ?? s.front) : 0.2), sec.x1 - (sec.front ? back(s.front) : 0.2)];
+  const back = (e: number) => taperLength(endShape(s, e)) + 0.1;
+  return [sec.x0 + (sec.rear ? back(-1) : 0.2), sec.x1 - (sec.front ? back(1) : 0.2)];
 }
 
 /** The volumes of a section: the cab (or rear end), the saloon with its doorways, the rear end. */
 function volumes(s: WorldTramSpec, sec: SectionLayout, X: (u: number) => number, t: Tram): { vols: Volume[]; saloon: Volume } {
-  const { plan, top, bottom } = profiles(s, sec, X);
+  const { plan, top, bottom, upper } = profiles(s, sec, X);
   const ring = sectionRing(s);
   const main = bands(s, s.paint);
   const cab = cabBands(s);
+  const leans = upper.some((p) => Math.abs(p[1] - lerp(plan, p[0])) > 1e-6) || plan.some((p) => Math.abs(p[1] - lerp(upper, p[0])) > 1e-6);
   const vol = (name: string, a: number, b: number, bs: Array<[number, number, string]>, openings?: Opening[]): Volume => ({
     name, section: ring, plan: clipLine(plan, a, b), top: clipLine(top, a, b), bottom: clipLine(bottom, a, b), bands: bs,
     ...(openings?.length ? { openings } : {}), trimCaps: true,
+    ...(leans && !openings ? { upper: { y0: s.screen[0], y1: s.eave, plan: clipLine(upper, a, b) } } : {}),
   });
   const doorX = (side: number) => doorsOn(s, side).map(([u0, u1]) => [X(u1), X(u0)] as [number, number]).filter(([a, b]) => a >= sec.x0 - 1e-6 && b <= sec.x1 + 1e-6);
   const firstDoor = Math.max(sec.x0, ...[1, -1].flatMap((sd) => doorX(sd).map(([, b]) => b)));
   const lastDoor = Math.min(sec.x1, ...[1, -1].flatMap((sd) => doorX(sd).map(([a]) => a)));
-  const fCab = sec.front ? Math.max(sec.x1 - cabLength(s.front), firstDoor + 0.06) : sec.x1;
-  const rCab = sec.rear ? Math.min(sec.x0 + cabLength(s.rear ?? s.front), lastDoor - 0.06) : sec.x0;
+  const fCab = sec.front ? Math.max(sec.x1 - cabLength(endShape(s, 1)), firstDoor + 0.06) : sec.x1;
+  const rCab = sec.rear ? Math.min(sec.x0 + cabLength(endShape(s, -1)), lastDoor - 0.06) : sec.x0;
   const openings = [1, -1].flatMap((sd) => doorX(sd).map(([a, b]) => t.doorOpening(sd, doorBox(s, a, b))));
   const saloon = vol("saloon", rCab, fCab, main, openings);
   const vols: Volume[] = [];
@@ -376,7 +458,7 @@ function volumes(s: WorldTramSpec, sec: SectionLayout, X: (u: number) => number,
 const doorBox = (s: WorldTramSpec, x0: number, x1: number): Box => ({ x0, x1, y0: s.doorSill ?? s.floor + 0.06, y1: s.doorTop ?? s.eave - 0.12 });
 
 /** A box on the roof from x0 to x1, `half` across, its top `h` over the crown, its foot sunk into the roof. */
-function roofBox(m: MeshBuilder, s: WorldTramSpec, mat: string, x0: number, x1: number, half: number, h: number): void {
+function roofBox(m: MeshBuilder, s: WorldTramSpec, mat: string, x0: number, x1: number, half: number, h: number, rake = 0): void {
   const ring = sectionRing(s);
   // the roof's height at the box's edge: the section's outline there
   const yEdge = roofAt(ring, half);
@@ -384,7 +466,18 @@ function roofBox(m: MeshBuilder, s: WorldTramSpec, mat: string, x0: number, x1: 
   const y1 = s.height + h;
   const c = Math.min(0.06, (y1 - y0) / 2, half / 2);
   const r: Ring = [[-half, y0], [half, y0], [half, y1 - c], [half - c, y1], [-half + c, y1], [-half, y1 - c]];
-  m.sweep(mat, "x", r, x0, r, x1);
+  const k = Math.min(rake, (x1 - x0) / 3);
+  if (k <= 0) { m.sweep(mat, "x", r, x0, r, x1); return; }
+  // a fairing: its ends slope down to the roof, in two steps (a rounded nose)
+  const low = (f: number, w: number): Ring => r.map(([z, y]) => [z * w, y0 + (y - y0) * f]);
+  const [a, b] = [low(0.08, 0.96), low(0.7, 0.99)];
+  m.sweep(mat, "x", a, x0, b, x0 + k * 0.45, false);
+  m.sweep(mat, "x", b, x0 + k * 0.45, r, x0 + k, false);
+  m.sweep(mat, "x", r, x0 + k, r, x1 - k, false);
+  m.sweep(mat, "x", r, x1 - k, b, x1 - k * 0.45, false);
+  m.sweep(mat, "x", b, x1 - k * 0.45, a, x1, false);
+  m.slab(mat, a.map(([z, y]): Vec3 => [x0, y, z]), [0.002, 0, 0]);
+  m.slab(mat, a.map(([z, y]): Vec3 => [x1, y, z]), [-0.002, 0, 0]);
 }
 
 /** The height of the section's upper outline at |z|. */
@@ -552,6 +645,210 @@ function crownAt(s: WorldTramSpec, top: Pt[], x: number): number {
   return Math.min(s.height, lerp(top, x));
 }
 
+/** An offset and its mirror image (0 once). */
+const mirrored = (z: number): number[] => (Math.abs(z) < 1e-9 ? [0] : [z, -z]);
+
+/**
+ * The end surface of cab volume v at end e (+1 the larger x): the outermost x
+ * where the body holds the point (y, z), searched back from the end in 5 mm
+ * steps, with the outward normal there (from the neighbouring points).
+ */
+function noseAt(v: Volume, e: number, y: number, z: number): { x: number; n: Vec3 } {
+  const xs = v.plan.map((p) => p[0]);
+  const [lo, hi] = [Math.min(...xs), Math.max(...xs)];
+  const inside = (x: number, yy: number, zz: number) =>
+    yy <= hiAt(v, x) + 1e-9 && yy >= loAt(v, x) - 1e-9 && Math.abs(zz) <= sectionHalf(v.section, yy) * planK(v, x, yy) + 1e-9;
+  const find = (yy: number, zz: number): number => {
+    // 2 cm steps to the body, then back and in 2.5 mm steps
+    let x = e > 0 ? hi : lo;
+    const stop = e > 0 ? lo : hi;
+    while ((x - stop) * e > 0 && !inside(x, yy, zz)) x -= e * 0.02;
+    if ((x - stop) * e <= 0) return stop;
+    x += e * 0.02;
+    while (!inside(x, yy, zz)) x -= e * 0.0025;
+    return x;
+  };
+  const x = find(y, z);
+  const d = 0.03;
+  const fy = (find(y + d, z) - find(y - d, z)) / (2 * d);
+  const fz = (find(y, z + d) - find(y, z - d)) / (2 * d);
+  const n: Vec3 = [e, -fy, -fz];
+  const len = Math.hypot(...n);
+  return { x, n: [n[0] / len, n[1] / len, n[2] / len] };
+}
+
+/** A round lamp on the end surface of v at (y, z): its housing and lens along the surface's normal. */
+function noseLamp(m: MeshBuilder, v: Volume, e: number, y: number, z: number, r: number, lens: string, housing: string): void {
+  const { x, n } = noseAt(v, e, y, z);
+  const at = (d: number): Vec3 => [x + n[0] * d, y + n[1] * d, z + n[2] * d];
+  m.rod(housing, at(-0.02), at(0.025), r * 1.35, 16);
+  // the reflector's chrome ring round the lens
+  m.rod("steel", at(0.02), at(0.03), r * 1.14, 16);
+  m.rod(lens, at(0.025), at(0.04), r, 16);
+}
+
+/**
+ * Flat (u, v) triangles laid on the end surface of v, `lift` off it: u runs from
+ * the viewer's left to right as seen from ahead of the end (toward -z at the
+ * front, +z at the rear), v is the height.
+ */
+function onNoseFlat(m: MeshBuilder, v: Volume, e: number, mat: string, tris: ReadonlyArray<readonly [number, number]>, lift: number): void {
+  if (!tris.length) return;
+  const u = tris.map((p) => p[0]);
+  const w = tris.map((p) => p[1]);
+  const c = noseAt(v, e, (Math.min(...w) + Math.max(...w)) / 2, -e * (Math.min(...u) + Math.max(...u)) / 2);
+  const pts = tris.map(([uu, y]): Vec3 => {
+    const z = -e * uu;
+    const { x } = noseAt(v, e, y, z);
+    return [x + c.n[0] * lift, y + c.n[1] * lift, z + c.n[2] * lift];
+  });
+  m.facets(mat, pts, c.n);
+}
+
+/** A rectangle of (u, v) triangles. */
+const rectUV = (u0: number, v0: number, u1: number, v1: number): Array<[number, number]> => [[u0, v0], [u1, v0], [u1, v1], [u0, v0], [u1, v1], [u0, v1]];
+
+/** Lettering in (u, v), centred on u = uc, from height v0, figures h tall (strokeFont.ts). */
+function letters(text: string, uc: number, v0: number, h: number, stroke = h * 0.14): Array<[number, number]> {
+  const [w, gap] = [h * 0.6, h * 0.18];
+  return strokeText(text, uc - strokeWidth(text, w, gap) / 2, v0, h, w, gap, false, stroke);
+}
+
+/** A rod laid on the end surface of v along the (y, z) points, `lift` off it. */
+function onNose(m: MeshBuilder, v: Volume, e: number, mat: string, pts: ReadonlyArray<readonly [number, number]>, r: number, lift: number): void {
+  const ps = pts.map(([y, z]) => { const { x, n } = noseAt(v, e, y, z); return [x + n[0] * lift, y + n[1] * lift, z + n[2] * lift] as Vec3; });
+  for (let i = 1; i < ps.length; i++) m.rod(mat, ps[i - 1]!, ps[i]!, r, 6);
+}
+
+/** What a cab end carries: the screen's pillars and bars, the wipers, the mirrors, the bumper (NoseDress). */
+function noseDress(m: MeshBuilder, s: WorldTramSpec, v: Volume, e: number, cab: boolean): void {
+  const d = cab ? s.nose! : { ...(s.nose!.panes ? { panes: s.nose!.panes } : {}), ...(s.nose!.bumper ? { bumper: s.nose!.bumper } : {}), ...(s.nose!.pillarPaint ? { pillarPaint: s.nose!.pillarPaint } : {}) };
+  const hw = s.width / 2;
+  const [g0, g1] = [s.screen[0], s.screen[1] - (s.sign ?? 0.22)];
+  const steps = (a: number, b: number, n: number) => Array.from({ length: n + 1 }, (_, i) => a + ((b - a) * i) / n);
+  const frame = d.pillarPaint ?? "seam";
+  if (d.pillars?.length) m.scope("screen pillars", () => {
+    for (const p of d.pillars!) for (const z of mirrored(p)) onNose(m, v, e, frame, steps(g0 + 0.02, g1 - 0.02, 6).map((y) => [y, z] as const), 0.035, 0.004);
+  });
+  if (d.bars?.length) m.scope("screen bars", () => {
+    for (const y of d.bars!) {
+      const w = sectionHalf(v.section, y) * planK(v, v.plan[e > 0 ? v.plan.length - 1 : 0]![0], y) * 0.96;
+      onNose(m, v, e, frame, steps(-w, w, 10).map((z) => [y, z] as const), 0.03, 0.004);
+    }
+  });
+  if (d.wipers?.length) m.scope("wipers", () => {
+    const len = d.wiperLength ?? 0.8;
+    for (const z0 of d.wipers!) {
+      // parked, leaning toward the middle at 70 degrees
+      const sgn = z0 > 0 ? -1 : 1;
+      const [y0, y1, z1] = [g0 + 0.08, g0 + 0.08 + len * Math.sin(1.22), z0 + sgn * len * Math.cos(1.22)];
+      // the arm, and the blade beside it along its outer four fifths
+      onNose(m, v, e, "seam", steps(0, 1, 4).map((t) => [y0 + (y1 - y0) * t, z0 + (z1 - z0) * t] as const), 0.012, 0.03);
+      const [oy, oz] = [-(z1 - z0) / len * 0.035, (y1 - y0) / len * 0.035];
+      onNose(m, v, e, "rubber", steps(0.18, 1, 4).map((t) => [y0 + (y1 - y0) * t + oy, z0 + (z1 - z0) * t + oz] as const), 0.01, 0.016);
+      const { x, n } = noseAt(v, e, y0, z0);
+      m.rod("seam", [x, y0, z0], [x + n[0] * 0.05, y0 + n[1] * 0.05, z0 + n[2] * 0.05], 0.03, 8);
+    }
+  });
+  // the screen's rubber gasket along its foot and its head
+  const band = !s.nose!.panes || s.nose!.screenBand;
+  const xEnd0 = v.plan[e > 0 ? v.plan.length - 1 : 0]![0];
+  const faceAt = (y: number) => sectionHalf(v.section, y) * planK(v, xEnd0, y);
+  if (cab && band && !d.noGasket) m.scope("screen gasket", () => {
+    for (const y of [g0 + 0.01, g1 - 0.01]) {
+      const w = faceAt(y) - 0.06;
+      onNose(m, v, e, "rubber", steps(-w, w, 12).map((z) => [y, z] as const), 0.014, 0.004);
+    }
+  });
+  if (cab && d.route !== undefined) m.scope("display text", () => {
+    const pane = d.display !== undefined ? d.panes?.[d.display] : undefined;
+    const [y0, y1] = pane ? pane.y : [g1, s.screen[1]];
+    const half = pane ? Math.max(Math.abs(pane.z[0]), Math.abs(pane.z[1])) - 0.05 : faceAt(y1) * 0.8;
+    const h = Math.min(0.2, (y1 - y0) * 0.62);
+    const yb = (y0 + y1) / 2 - h / 2;
+    const led = d.ledPaint ?? "displayLed";
+    const lift = pane ? 0.02 : 0.01;
+    const tris: Array<[number, number]> = d.route ? letters(d.route, -half + 0.08 + strokeWidth(d.route, h * 0.6, h * 0.18) / 2, yb, h) : [];
+    // the destination: a row of lit characters after the number (words of five and six)
+    const start = -half + 0.2 + (d.route ? strokeWidth(d.route, h * 0.6, h * 0.18) : 0);
+    const cw = h * 0.42;
+    let u = start;
+    for (const word of [5, 6, 4]) {
+      for (let k = 0; k < word && u + cw < half - 0.05; k++, u += cw * 1.3) tris.push(...rectUV(u, yb + h * 0.18, u + cw, yb + h * 0.8));
+      u += cw * 1.3;
+    }
+    onNoseFlat(m, v, e, led, tris, lift);
+  });
+  if (cab && d.number) m.scope("fleet number", () => {
+    const [text, z, y, h, mat] = d.number!;
+    onNoseFlat(m, v, e, mat ?? "lettering", letters(text, -e * z, y - h / 2, h), 0.006);
+  });
+  if (cab && d.badges) m.scope("badges", () => d.badges!.forEach(([y, z, r, mat]) => {
+    const { x, n } = noseAt(v, e, y, z);
+    const at = (k: number): Vec3 => [x + n[0] * k, y + n[1] * k, z + n[2] * k];
+    m.rod("steel", at(-0.01), at(0.008), r * 1.15, 16);
+    m.rod(mat, at(0.006), at(0.014), r, 16);
+  }));
+  if (d.indicators) m.scope("indicators", () => {
+    for (const [y, z0] of d.indicators!) for (const z of mirrored(z0)) noseLamp(m, v, e, y, z, 0.03, "lampAmber", d.housing ?? "underframe");
+  });
+  if (d.grille) m.scope("grille", () => {
+    const [y0, y1, half, n, mat] = d.grille!;
+    for (let k = 0; k < n; k++) {
+      const y = n > 1 ? y0 + ((y1 - y0) * k) / (n - 1) : y0;
+      onNose(m, v, e, mat, steps(-half, half, 6).map((z) => [y, z] as const), 0.012, 0.008);
+    }
+  });
+  if (d.mirrors) m.scope("mirrors", () => {
+    const y = d.mirrorY ?? g1 - 0.1;
+    for (const sd of [-1, 1]) {
+      const { x } = noseAt(v, e, y, sd * (sectionHalf(v.section, y) * planK(v, v.plan[e > 0 ? v.plan.length - 1 : 0]![0], y) - 0.02));
+      const xb = x - e * 0.12;
+      const zb = sd * hw;
+      const camera = d.mirrors === "camera";
+      const out = camera ? 0.16 : 0.24;
+      const tip: Vec3 = [xb + e * (camera ? 0.12 : 0.22), y - 0.06, sd * (hw + out)];
+      m.rod("seam", [xb, y + 0.04, zb - sd * 0.02], [xb + e * 0.05, y + 0.06, sd * (hw + out * 0.5)], 0.022, 6);
+      m.rod("seam", [xb + e * 0.05, y + 0.06, sd * (hw + out * 0.5)], tip, 0.022, 6);
+      const [hx, hy, hz] = camera ? [0.07, 0.06, 0.06] : [0.04, 0.17, 0.09];
+      block(m, "seam", tip[0] - hx, tip[0] + hx, tip[1] - hy, tip[1] + hy * 0.6, tip[2] - hz, tip[2] + hz);
+      if (!camera) block(m, "glass", e > 0 ? tip[0] - hx - 0.006 : tip[0] + hx, e > 0 ? tip[0] - hx : tip[0] + hx + 0.006, tip[1] - hy + 0.02, tip[1] + hy * 0.6 - 0.02, tip[2] - hz + 0.015, tip[2] + hz - 0.015);
+    }
+  });
+  if (d.panes?.length) m.scope("panes", () => d.panes!.forEach((p, i) => m.scope(`pane ${i + 1}`, () => {
+    // kept on the end's face, short of its corners
+    const xEnd = v.plan[e > 0 ? v.plan.length - 1 : 0]![0];
+    const face = Math.min(...[p.y[0], p.y[1]].map((y) => sectionHalf(v.section, y) * planK(v, xEnd, y))) - 0.08;
+    const clampZ = (z: number) => Math.max(-face, Math.min(face, z));
+    const patch = (mat: string, grow: number, lift: number) => {
+      const ys = steps(p.y[0] - grow, p.y[1] + grow, 3);
+      const zs = steps(clampZ(p.z[0]) - grow, clampZ(p.z[1]) + grow, 4);
+      const at = ys.map((y) => zs.map((z) => { const { x, n } = noseAt(v, e, y, z); return { p: [x + n[0] * lift, y + n[1] * lift, z + n[2] * lift] as Vec3, n }; }));
+      for (let a = 0; a + 1 < ys.length; a++) for (let b = 0; b + 1 < zs.length; b++) {
+        const [p00, p01, p10, p11] = [at[a]![b]!, at[a]![b + 1]!, at[a + 1]![b]!, at[a + 1]![b + 1]!];
+        const n: Vec3 = [(p00.n[0] + p11.n[0]) / 2, (p00.n[1] + p11.n[1]) / 2, (p00.n[2] + p11.n[2]) / 2];
+        m.facets(mat, [p00.p, p01.p, p11.p, p00.p, p11.p, p10.p], n);
+      }
+    };
+    patch(d.pillarPaint ?? "frame", 0.045, 0.004);
+    patch(p.mat ?? "glass", 0, 0.014);
+  })));
+  if (d.bumper) m.scope("bumper", () => {
+    const [y0, y1, mat, depth] = d.bumper!;
+    // on the body's end: below its underside, at the underside's edge
+    const xEnd = v.plan[e > 0 ? v.plan.length - 1 : 0]![0];
+    const ym = Math.max((y0 + y1) / 2, loAt(v, xEnd) + 0.03);
+    const w = sectionHalf(v.section, ym) * planK(v, xEnd, ym);
+    const zs = steps(-w * 0.94, w * 0.94, 8);
+    for (let i = 1; i < zs.length; i++) {
+      const [za, zb] = [zs[i - 1]!, zs[i]!];
+      const xa = e > 0 ? Math.min(noseAt(v, e, ym, za).x, noseAt(v, e, ym, zb).x) : Math.max(noseAt(v, e, ym, za).x, noseAt(v, e, ym, zb).x);
+      const [p, q] = [xa - e * 0.08, xa + e * (depth ?? 0.06)];
+      block(m, mat, Math.min(p, q), Math.max(p, q), y0, y1, za, zb);
+    }
+  });
+}
+
 /** Draws one section (its body, sides, ends, roof and the trucks it owns). */
 function drawSection(k: TramCtx, sec: SectionLayout, n: number): void {
   const { t, m, s, X } = k;
@@ -596,12 +893,21 @@ function drawSection(k: TramCtx, sec: SectionLayout, n: number): void {
     const head = !s.trailer && (e > 0 || s.doubleEnded);
     m.scope(e > 0 ? "front end" : "rear end", () => {
       const y = s.lamps ?? Math.max(s.floor + 0.3, 0.75);
-      m.scope("lamps", () => {
+      const dress = s.nose;
+      if (dress?.heads || dress?.tails) m.scope("lamps", () => {
+        const housing = dress.housing ?? "underframe";
+        if (head) for (const [ly, lz, r] of dress.heads ?? []) for (const z of mirrored(lz)) noseLamp(m, v, e, ly, z, r, "lampHead", housing);
+        for (const [ly, lz, r] of dress.tails ?? []) for (const z of mirrored(lz)) noseLamp(m, v, e, ly, z, r, "lampRed", housing);
+      });
+      else m.scope("lamps", () => {
         for (const sd of [-1, 1]) {
           if (head) t.cornerLamp(v, e, sd * hw * 0.62, y, 0.075, "lampHead");
           t.cornerLamp(v, e, sd * hw * 0.8, y + (head ? 0.2 : 0), 0.045, "lampRed");
         }
       });
+      // a cab end's screen frame, wipers, mirrors and bumper
+      // (a single-ended car's rear end keeps its windows, without wipers or mirrors)
+      if (dress) m.scope("nose", () => noseDress(m, s, v, e, !s.trailer && (e > 0 || s.doubleEnded)));
       const xe = e > 0 ? sec.x1 : sec.x0;
       m.scope("coupler", () => t.coupler(e, xe - e * 0.7, xe + e * 0.18, Math.max(0.5, s.floor + 0.15)));
     });
@@ -609,10 +915,10 @@ function drawSection(k: TramCtx, sec: SectionLayout, n: number): void {
   // the roof: equipment boxes, the collector
   const { top } = profiles(s, sec, X);
   m.scope("roof equipment", () => {
-    (s.roofBoxes ?? []).forEach(([u0, u1, half, h, mat], i) => {
+    (s.roofBoxes ?? []).forEach(([u0, u1, half, h, mat, rake], i) => {
       const [a, b] = [X(u1), X(u0)];
       if ((a + b) / 2 < sec.x0 || (a + b) / 2 > sec.x1) return;
-      m.scope(`box ${i + 1}`, () => roofBox(m, s, mat, Math.max(a, sec.x0 + 0.1), Math.min(b, sec.x1 - 0.1), half, h));
+      m.scope(`box ${i + 1}`, () => roofBox(m, s, mat, Math.max(a, sec.x0 + 0.1), Math.min(b, sec.x1 - 0.1), half, h, rake ?? 0));
     });
     const c = s.collector;
     if (c.kind !== "none") {
@@ -867,7 +1173,9 @@ export function worldTramLod(s: WorldTramSpec, budget: number): MeshBuilder {
   const parts: LodPart[] = [];
   const n = secs.length;
   const main = bands(s, s.paint);
-  const cab = cabBands(s);
+  // the cab's own paint (a lamp band, a screen frame) is too fine to see from afar: the body's stack
+  const { cabPaint: _fine, ...plain } = s;
+  const cab = cabBands(plain);
   const crowns: number[] = [];
   for (const sec of secs) {
     const { plan, top, bottom } = profiles(s, sec, X);
@@ -882,14 +1190,14 @@ export function worldTramLod(s: WorldTramSpec, budget: number): MeshBuilder {
       const up = s.upper && s.deck !== "open" ? panes(xa, xb, [], s.pitch).map(([a, b]) => ({ u: [a, b] as const, y: s.upper! })) : [];
       return [...windowBands(list, 0.35), ...windowBands(up, 0.35)].map((w) => ({ ...w, sides: [sd] }));
     };
-    const cl = (k: FrontKind) => cabLength(k);
+    const cl = (e: number) => cabLength(endShape(s, e));
     shells.push({
       y0: tab.y0, hw: tab.hw, front: tab.front, rear: tab.rear,
       side: glazed(main, tab.y0, tab.top),
       end: glazed(cab, tab.y0, tab.top),
       ...(sec.front || sec.rear ? { cabs: [
-        ...(sec.front ? [{ x0: sec.x1 - cl(s.front), x1: 1e3, side: glazed(cab, tab.y0, tab.top) }] : []),
-        ...(sec.rear ? [{ x0: -1e3, x1: sec.x0 + cl(s.rear ?? s.front), side: glazed(cab, tab.y0, tab.top) }] : []),
+        ...(sec.front ? [{ x0: sec.x1 - cl(1), x1: 1e3, side: glazed(cab, tab.y0, tab.top) }] : []),
+        ...(sec.rear ? [{ x0: -1e3, x1: sec.x0 + cl(-1), side: glazed(cab, tab.y0, tab.top) }] : []),
       ] } : {}),
       roof: "roof",
       sideWindows: [...rects(1), ...rects(-1)],
@@ -957,6 +1265,15 @@ function lodBellows(s: WorldTramSpec): Array<[number, number]> {
   const hw = s.width / 2 - 0.08;
   const y0 = Math.max(s.floor + 0.1, 0.45);
   return [[-hw, y0], [hw, y0], [hw, s.height - 0.1], [-hw, s.height - 0.1]];
+}
+
+/**
+ * A tram's full-detail triangle budget (exterior; docs/models/world-trams.md
+ * "Triangle budget"): 10,000 for a single body, and 5,000 more for each joint -
+ * 15,000 with one joint, 20,000 with two.
+ */
+export function tramTriangleBudget(sections: number): number {
+  return 10_000 + 5_000 * Math.max(0, sections - 1);
 }
 
 /** The distant model's budget (docs/models/lod.md): 100 a section, at most 500. */

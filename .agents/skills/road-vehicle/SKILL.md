@@ -14,8 +14,8 @@ About **10,000 triangles** per vehicle; an **articulated bus 15,000 with one joi
 and 20,000 with two** (a semi-trailer's hitch has no joint, so a truck with its
 trailer keeps 10,000). The hard caps are `roadTriangleBudget()` in `generator/rig.ts`,
 enforced by `test/models.test.ts`, `test/buses.test.ts` and the world-bus tests; they
-count the exterior, the cabin interior has its own 1,500. A **tram** has 10,000 (an
-articulated tram up to 15,000; the railroad-vehicle skill). There is no file-size budget. Spend triangles where they
+count the exterior, the cabin interior has its own 1,500. A **tram** has 10,000 for a
+single body and 5,000 more a joint (15,000 with one, 20,000 with two; the railroad-vehicle skill). There is no file-size budget. Spend triangles where they
 read from the game's camera - wheels, the front, the silhouette - not on parts
 under the body. The count is in the `pnpm build:models` output and in
 `export/catalog.json` (`triangles`).
