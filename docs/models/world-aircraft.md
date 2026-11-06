@@ -248,8 +248,14 @@ propeller.
 - `game`: `weight` the maximum take-off mass (t), `power` a jet's total static thrust in kN
   times 10 (as the original airliners state it) or a propeller aircraft's shaft power (kW),
   `maxspeed` the cruising speed, `accel` null, `sizeClass` (small: light aircraft, business
-  jets, small turboprops, helicopters and the airship; medium: narrow bodies, regional jets,
-  larger turboprops; big: wide bodies and the big freighters) and `seatFrac`.
+  jets, small turboprops and the airship; medium: narrow bodies, regional jets,
+  larger turboprops; big: wide bodies and the big freighters) and `seatFrac`. The four
+  helicopters state no `sizeClass`: they are `aircraftKind: "helicopter"` with `flight`
+  (`heli()` in worldAircraft.ts; [game-properties.md](game-properties.md)) - the published
+  rate of climb (S-92 and H145 8.1 m/s, 1,600 ft/min; Mi-8 9 m/s; Bell 206B 6.9 m/s,
+  1,350 ft/min), a transit height (150 m for the light H145 and Bell 206, 300 m for the
+  S-92 and Mi-8) and the pad class their D-value fits (small: H145 13.6 m, Bell 206
+  12.1 m; large: S-92 20.9 m, Mi-8 25.4 m).
 - OpenTTD (`worldAircraftTable` in openttdTable.ts): the introduction year, typical seats
   (every aircraft is refittable to passengers), the freighters' payload in tonnes of goods
   (An-124, An-225, L-100, Dreamlifter, Beluga XL, the 747-8F variant), and presets of the

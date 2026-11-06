@@ -14,7 +14,7 @@ import { ROTOR_SPECS, WORLD_ROTORCRAFT, WORLD_ROTORCRAFT_SPECS } from "../genera
 import { DESIGNS } from "../generator/generate";
 import { OPENTTD_TABLE } from "../generator/openttdTable";
 import { proceduralId } from "../generator/modelId";
-import { coverageCombinations, type ParamValues } from "../generator/design";
+import { coverageCombinations, HELIPAD_D, type ParamValues } from "../generator/design";
 import { geometry } from "../generator/airframeKit";
 import type { MeshBuilder } from "../generator/meshBuilder";
 import { sample } from "./catalogCache";
@@ -66,7 +66,28 @@ describe("the world aircraft", () => {
       expect(o, id).toBeDefined();
       expect(o!.capacity).toBeGreaterThan(0);
       expect(["PASS", "GOOD"]).toContain(o!.cargo);
-      expect(a.game.sizeClass, id).toBeDefined();
+      // a helicopter uses pads, not airport classes (docs/models/game-properties.md)
+      if (a.game.aircraftKind === "helicopter") {
+        expect(a.game.sizeClass, id).toBeUndefined();
+        expect(a.game.flight, id).toBeDefined();
+      } else expect(a.game.sizeClass, id).toBeDefined();
+    }
+  });
+
+  it("gives every rotor-kit design the helicopter kind, and the pad class its D-value fits", () => {
+    for (const a of WORLD_ROTORCRAFT_SPECS) {
+      const spec = ROTOR_SPECS[a.id];
+      if (!spec) {
+        expect(a.game.aircraftKind, a.id).toBeUndefined(); // the airship stays an aeroplane-like aircraft
+        continue;
+      }
+      expect(a.game.aircraftKind, a.id).toBe("helicopter");
+      const s = spec();
+      // the overall length with the rotors turning: the main disc ahead of the nose to the boom's end or the disc's rear
+      const d = Math.max(s.length, s.main.d + s.main.r) - Math.min(0, s.main.d - s.main.r);
+      const pad = a.game.flight!.pad;
+      expect(d, a.id).toBeLessThanOrEqual(HELIPAD_D[pad]);
+      if (pad === "large") expect(d, a.id).toBeGreaterThan(HELIPAD_D.small);
     }
   });
 

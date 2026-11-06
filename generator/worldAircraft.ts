@@ -7,7 +7,7 @@
 // game's saved maps: never rename one.
 
 import type { MeshBuilder } from "./meshBuilder.ts";
-import { resolveParams, type GameProperties, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
+import { resolveParams, type GameProperties, type HelicopterFlight, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { schemeParam, type AirframeSpec, type EngineSpec, type FuselageSpec, type GearSpec, type NoseKind, type Scheme, type TailKind, type TipDevice, type WindowRow, type WingSpec } from "./airframeKit.ts";
 import { AIRCRAFT_CATALOG } from "./aircraft.ts";
 
@@ -117,6 +117,15 @@ export function chosen(l: Liveries, p?: ParamValues, extra: readonly ParamSpec[]
  */
 export const air = (weight: number, power: number, maxspeed: number, sizeClass: "small" | "medium" | "big", seatFrac: number, variants?: GameProperties["variants"]): GameProperties =>
   ({ weight, power, maxspeed, accel: null, sizeClass, seatFrac, ...(variants ? { variants } : {}) });
+
+/**
+ * A helicopter's game properties: as `air` (shaft power in kW, cruising speed), but
+ * the kind "helicopter" and its flight figures in place of an airport class --
+ * the vertical rate of climb (m/s, published), the height it transits at (m) and
+ * the smallest pad class its D-value fits (design.ts HELIPAD_D).
+ */
+export const heli = (weight: number, power: number, maxspeed: number, seatFrac: number, flight: HelicopterFlight): GameProperties =>
+  ({ weight, power, maxspeed, accel: null, seatFrac, aircraftKind: "helicopter", flight });
 
 /** The catalog designs of a module's list. */
 export function aircraftDesigns(list: readonly WorldAircraft[]): ProceduralDesign[] {

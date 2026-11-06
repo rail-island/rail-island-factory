@@ -8,7 +8,7 @@ import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamValues } from "./design.ts";
 import { airship, airshipLod, rotorcraft, rotorcraftLod, type AirshipSpec, type RotorSpec } from "./rotorKit.ts";
 import { colourSchemes, COLOURS, schemes } from "./airlineSchemes.ts";
-import { air, aircraftDesigns, chosen, liveries, type WorldAircraft } from "./worldAircraft.ts";
+import { air, aircraftDesigns, heli, chosen, liveries, type WorldAircraft } from "./worldAircraft.ts";
 
 const S92 = /* @__PURE__ */ liveries(schemes("offshore", "rescue"));
 export const sikorskyS92Spec = (p?: ParamValues): RotorSpec => ({
@@ -85,10 +85,10 @@ export function zeppelinNtLod(p?: ParamValues): MeshBuilder { return airshipLod(
 
 /** The rotorcraft in the list's order: game properties from the published mass, shaft power and cruising speed. */
 export const WORLD_ROTORCRAFT_SPECS: readonly WorldAircraft[] = [
-  { id: "veh-sikorsky-s92", title: "Sikorsky S-92", build: sikorskyS92, buildLod: sikorskyS92Lod, params: S92.params, finishParams: ["livery"], game: air(12.0, 3760, 280, "small", 0.3), references: "sikorsky-s92" },
-  { id: "veh-airbus-h145", title: "Airbus Helicopters H145", build: airbusH145, buildLod: airbusH145Lod, params: H145.params, finishParams: ["livery"], game: air(3.8, 1540, 246, "small", 0.3), references: "airbus-h145" },
-  { id: "veh-mil-mi8", title: "Mil Mi-8", build: milMi8, buildLod: milMi8Lod, params: MI8.params, finishParams: ["livery"], game: air(12.0, 2500, 230, "small", 0.3), references: "mil-mi8" },
-  { id: "veh-bell-206", title: "Bell 206 JetRanger", build: bell206, buildLod: bell206Lod, params: B206.params, finishParams: ["colour"], game: air(1.45, 313, 216, "small", 0.25), references: "bell-206" },
+  { id: "veh-sikorsky-s92", title: "Sikorsky S-92", build: sikorskyS92, buildLod: sikorskyS92Lod, params: S92.params, finishParams: ["livery"], game: heli(12.0, 3760, 280, 0.3, { climb: 8.1, cruiseHeight: 300, pad: "large" }), references: "sikorsky-s92" },
+  { id: "veh-airbus-h145", title: "Airbus Helicopters H145", build: airbusH145, buildLod: airbusH145Lod, params: H145.params, finishParams: ["livery"], game: heli(3.8, 1540, 246, 0.3, { climb: 8.1, cruiseHeight: 150, pad: "small" }), references: "airbus-h145" },
+  { id: "veh-mil-mi8", title: "Mil Mi-8", build: milMi8, buildLod: milMi8Lod, params: MI8.params, finishParams: ["livery"], game: heli(12.0, 2500, 230, 0.3, { climb: 9.0, cruiseHeight: 300, pad: "large" }), references: "mil-mi8" },
+  { id: "veh-bell-206", title: "Bell 206 JetRanger", build: bell206, buildLod: bell206Lod, params: B206.params, finishParams: ["colour"], game: heli(1.45, 313, 216, 0.25, { climb: 6.9, cruiseHeight: 150, pad: "small" }), references: "bell-206" },
   { id: "veh-zeppelin-nt", title: "Zeppelin NT", build: zeppelinNt, buildLod: zeppelinNtLod, params: ZEPPELIN.params, finishParams: ["livery"], game: air(10.7, 441, 125, "small", 0.35), references: "zeppelin-nt" },
 ];
 

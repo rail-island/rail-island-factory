@@ -381,6 +381,41 @@ export interface VehiclePhysics {
   accel: number | null;
 }
 
+/** An aircraft's kind (GameProperties.aircraftKind). */
+export type AircraftKind = "helicopter";
+
+/**
+ * A helipad's class: the largest helicopter it takes, by the helicopter's overall
+ * length with its rotors turning (its D-value). A small pad takes up to
+ * HELIPAD_D.small metres, a large one up to HELIPAD_D.large.
+ */
+export type HelipadClass = "small" | "large";
+
+/** The largest D-value (overall length, rotors turning, metres) each pad class takes. */
+export const HELIPAD_D: Record<HelipadClass, number> = { small: 16, large: 26 };
+
+/**
+ * How a helicopter flies, in the game's units: `climb` the vertical rate of climb
+ * at lift-off (m/s), `cruiseHeight` the height above the ground it transits at (m),
+ * `pad` the smallest helipad class it fits (HELIPAD_D).
+ */
+export interface HelicopterFlight {
+  climb: number;
+  cruiseHeight: number;
+  pad: HelipadClass;
+}
+
+/**
+ * A building's helipad (GameProperties.helipad): `node` is the JS model's object
+ * that draws the pad (its top is the touchdown surface), `pad` its class, `when`
+ * the parameter selection that draws it (absent: every build has it).
+ */
+export interface HelipadDecl {
+  node: string;
+  pad: HelipadClass;
+  when?: ParamValues;
+}
+
 /** A vehicle's game properties that may differ per parameter variant. */
 export interface VehicleGameFields extends VehiclePhysics {
   /** Fraction of the model's height below the waterline. Ships only. */
@@ -459,6 +494,20 @@ export interface GameProperties extends Partial<VehicleGameFields> {
   /** A building's blocking footprint. Buildings only. */
   block?: BlockShape;
   /**
+   * How the aircraft flies: "helicopter" lifts off and lands vertically on pads and
+   * needs no runway. Aircraft only; absent means an aeroplane, which uses airports
+   * by its sizeClass. A helicopter states `flight` and no sizeClass.
+   */
+  aircraftKind?: AircraftKind;
+  /** A helicopter's flight figures (docs/models/game-properties.md). Helicopters only, required there. */
+  flight?: HelicopterFlight;
+  /**
+   * A building's helipad, which the game uses as a helicopter stop: the node the
+   * model draws it as, its class and, when a parameter value draws it, that
+   * selection. Buildings only; the build measures the pad on the model (helipad.ts).
+   */
+  helipad?: HelipadDecl;
+  /**
    * Which of its parameters the game's cities vary, replacing its pool's family
    * default (cityVariants.ts). Buildings only; usually left to the default.
    */
@@ -481,11 +530,14 @@ export function checkGameProperties(design: ProceduralDesign, vehicle: boolean):
     throw new Error(`${design.id}: game properties ${why} (docs/models/game-properties.md)`);
   };
   if (!vehicle) {
-    if (game && Object.keys(game).some((k) => k !== "plaza" && k !== "block" && k !== "city")) fail("of a building may hold only plaza, block and city");
+    if (game && Object.keys(game).some((k) => k !== "plaza" && k !== "block" && k !== "city" && k !== "helipad")) fail("of a building may hold only plaza, block, city and helipad");
+    if (game?.helipad) checkHelipadDecl(design, game.helipad, fail);
     return;
   }
   if (!game) return fail("missing: a vehicle states its weight, power, maxspeed and accel");
   if (game.plaza || game.block || game.city) fail("of a vehicle hold no plaza, block or city");
+  if (game.helipad) fail('hold a "helipad", which is for buildings only');
+  checkAircraftKind(design, game, fail);
   for (const k of PHYSICS_KEYS) {
     const v = game[k];
     if (v === undefined) fail(`lack "${k}" (use null for none)`);
@@ -523,6 +575,47 @@ export function checkGameProperties(design: ProceduralDesign, vehicle: boolean):
     if (seen.has(key)) fail(`list the variant ${key} twice`);
     seen.add(key);
     if (Object.keys(variant).some((k) => k !== "params" && !VEHICLE_KEYS.includes(k))) fail("list a variant with an unknown field");
+  }
+}
+
+/**
+ * A helicopter states `flight` (a positive climb and cruise height, a pad class)
+ * and no sizeClass, in its variants either; nothing else states a kind or flight.
+ */
+function checkAircraftKind(design: ProceduralDesign, game: GameProperties, fail: (why: string) => never): void {
+  if (game.aircraftKind === undefined) {
+    if (game.flight) fail('hold "flight", which is for helicopters only (aircraftKind "helicopter")');
+    return;
+  }
+  if (game.aircraftKind !== "helicopter") fail(`have an unknown "aircraftKind": ${String(game.aircraftKind)}`);
+  if (design.catalog?.category !== "Aircraft") fail('hold an "aircraftKind", which is for aircraft only');
+  if (game.sizeClass !== undefined || (game.variants ?? []).some((v) => v.sizeClass !== undefined)) {
+    fail('of a helicopter hold a "sizeClass": a helicopter uses pads (flight.pad), not airport classes');
+  }
+  const f = game.flight;
+  if (!f) return fail('of a helicopter lack "flight" (climb, cruiseHeight, pad)');
+  for (const k of ["climb", "cruiseHeight"] as const) {
+    if (typeof f[k] !== "number" || !Number.isFinite(f[k]) || f[k] <= 0) fail(`have an invalid "flight.${k}": ${String(f[k])}`);
+  }
+  if (!(f.pad in HELIPAD_D)) fail(`have an invalid "flight.pad": ${String(f.pad)} (small or large)`);
+  if (Object.keys(f).some((k) => k !== "climb" && k !== "cruiseHeight" && k !== "pad")) fail('have an unknown field in "flight"');
+}
+
+/** A building's helipad names a node and a pad class, and a `when` that resolves to a non-default selection. */
+function checkHelipadDecl(design: ProceduralDesign, h: HelipadDecl, fail: (why: string) => never): void {
+  if (typeof h.node !== "string" || !h.node) fail('have a "helipad" without a node');
+  if (!(h.pad in HELIPAD_D)) fail(`have an invalid "helipad.pad": ${String(h.pad)} (small or large)`);
+  if (h.when) {
+    const specs = design.params ?? [];
+    let resolved: ParamValues;
+    try {
+      resolved = resolveParams(specs, h.when);
+    } catch (e) {
+      return fail(`have a "helipad.when" that does not resolve: ${(e as Error).message}`);
+    }
+    for (const [name, value] of Object.entries(h.when)) {
+      if (resolved[name] !== value) fail(`have a "helipad.when" whose "${name}" does not apply`);
+    }
   }
 }
 

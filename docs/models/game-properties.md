@@ -49,7 +49,9 @@ The fields below are set only where they apply:
 | `boardFrac` | cable car cabins | fraction of the height at the door sill |
 | `ropes` | cable car cabins (required there) | the ropes the game draws for the cabin, which draws none: `{ kind: "haul" \| "track", zFrac, dyFrac }`, across the rope (+ the cabin's platform side) and up from the rope datum, as fractions of the height ([world-cabins.md](world-cabins.md#ropes)) |
 | `ropeway` | cable car cabins (required there) | `"jigback"`: an aerial tramway's cabin, one or two to a line; `"circulating"`: any count |
-| `sizeClass` | aircraft | the largest airport class it needs: `small`, `medium` or `big` |
+| `sizeClass` | aircraft but helicopters | the largest airport class it needs: `small`, `medium` or `big`. A helicopter has none (the build refuses it): it uses pads. |
+| `aircraftKind` | helicopters | `"helicopter"`: it lifts off and lands vertically on helipads and needs no runway. Absent on every other aircraft. The build refuses it on anything but an aircraft. |
+| `flight` | helicopters (required there) | `{ climb, cruiseHeight, pad }`: the vertical rate of climb at lift-off (m/s, published), the height above the ground it transits at (m), and the smallest helipad class it fits, `small` or `large`, by its D-value - its overall length with the rotors turning - against `HELIPAD_D` (`design.ts`: a small pad takes up to 16 m, a large one up to 26 m; `test/worldAircraft.test.ts` checks every helicopter's class). The build refuses it on anything but a helicopter. |
 | `seatFrac` | aircraft, optional | where the game's Passenger camera sits, as a fraction of the body length from the nose (0..1): the window seat with the best outlook, ahead of or behind the wing as the design judges it. Absent, the game uses its own default. The build refuses it outside 0..1 or on anything but an aircraft. |
 | `sounds` | any vehicle (exported) | its horn and engine, derived from its traction and weight or stated in `generator/soundTable.ts`; written by the export, never set on the design ([sounds.md](sounds.md)) |
 

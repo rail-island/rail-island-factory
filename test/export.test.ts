@@ -164,7 +164,7 @@ describe("game properties", () => {
     expect(() => exportVehicleMeta([{ ...base, params, game: { ...physics, variants: [{ params: { livery: "red" }, maxspeed: 140 }] } }])).toThrow(/at the default/);
     expect(() => exportVehicleMeta([{ ...base, params, game: { ...physics, variants: [{ params: { livery: "blue" } }, { params: { livery: "blue" } }] } }])).toThrow(/twice/);
     expect(exportVehicleMeta([{ ...base, params, game: { ...physics, variants: [{ params: { livery: "blue" }, maxspeed: 140 }] } }]).vehicles[0]!.game!.variants).toHaveLength(1);
-    expect(() => exportMeta([{ ...base, id: "proc-building-test", game: { ...physics } }])).toThrow(/of a building may hold only plaza, block and city/);
+    expect(() => exportMeta([{ ...base, id: "proc-building-test", game: { ...physics } }])).toThrow(/of a building may hold only plaza, block, city and helipad/);
   });
 
   it("carry an aircraft's passenger seat, a fraction of its length, and refuse one elsewhere", () => {
@@ -182,6 +182,27 @@ describe("game properties", () => {
     expect(exportVehicleMeta([{ ...plane, game: { ...physics, seatFrac: 0.3 } }]).vehicles[0]!.game!.seatFrac).toBe(0.3);
     expect(() => exportVehicleMeta([{ ...plane, game: { ...physics, seatFrac: 1.5 } }])).toThrow(/invalid "seatFrac"/);
     expect(() => exportVehicleMeta([{ ...base, game: { ...physics, seatFrac: 0.3 } }])).toThrow(/for aircraft only/);
+  });
+
+  it("carry a helicopter's kind and flight figures, without an airport class, and refuse them elsewhere", () => {
+    // The game flies a helicopter off pads by its flight figures; sizeClass is for runways.
+    const heli = exportVehicleMeta(ALL_VEHICLES).vehicles.find((v) => v.id === "proc-vehicle-airbus-h145");
+    if (heli) {
+      expect(heli.game).toMatchObject({ aircraftKind: "helicopter", flight: { pad: "small" } });
+      expect(heli.game!.sizeClass).toBeUndefined();
+    }
+    const base = { id: "proc-vehicle-test", title: "Test", build: SKYSCRAPERS[0]!.build, buildLod: SKYSCRAPERS[0]!.buildLod };
+    const physics = { weight: 3, power: 1500, maxspeed: 240, accel: null };
+    const plane = { ...base, catalog: AIRCRAFT_CATALOG };
+    const flight = { climb: 8, cruiseHeight: 150, pad: "small" as const };
+    expect(exportVehicleMeta([{ ...plane, game: { ...physics, aircraftKind: "helicopter", flight } }]).vehicles[0]!.game!.flight).toEqual(flight);
+    expect(() => exportVehicleMeta([{ ...plane, game: { ...physics, aircraftKind: "helicopter" } }])).toThrow(/lack "flight"/);
+    expect(() => exportVehicleMeta([{ ...plane, game: { ...physics, aircraftKind: "helicopter", flight, sizeClass: "small" } }])).toThrow(/hold a "sizeClass"/);
+    expect(() => exportVehicleMeta([{ ...plane, game: { ...physics, aircraftKind: "helicopter", flight: { ...flight, climb: 0 } } }])).toThrow(/invalid "flight.climb"/);
+    expect(() => exportVehicleMeta([{ ...plane, game: { ...physics, aircraftKind: "helicopter", flight: { ...flight, pad: "huge" as "small" } } }])).toThrow(/invalid "flight.pad"/);
+    expect(() => exportVehicleMeta([{ ...plane, game: { ...physics, flight } }])).toThrow(/for helicopters only/);
+    expect(() => exportVehicleMeta([{ ...base, game: { ...physics, aircraftKind: "helicopter", flight } }])).toThrow(/for aircraft only/);
+    expect(() => exportVehicleMeta([{ ...plane, game: { ...physics, helipad: { node: "helipad", pad: "small" } } }])).toThrow(/for buildings only/);
   });
 });
 
