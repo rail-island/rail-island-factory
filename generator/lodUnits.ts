@@ -320,12 +320,12 @@ export function coachBody(vols: readonly PlacedVolume[], o: CoachBodyOpts = {}):
  * and its rounded corners and bulge as the setback of a vee leaving out as
  * much plan.
  */
-export function noseEnd(s: Pick<NoseSpec, "e" | "xTip" | "profile" | "half" | "corner" | "bulge" | "rows">, paint?: readonly LodBand[], windows?: readonly LodRect[]): UnitEnd {
+export function noseEnd(s: Pick<NoseSpec, "e" | "xTip" | "profile" | "half" | "corner" | "bulge" | "rows" | "cornerDepth">, paint?: readonly LodBand[], windows?: readonly LodRect[]): UnitEnd {
   const ys = [...new Set([...s.profile.map((p) => p[0]), ...s.half.map((p) => p[0]), ...s.corner.map((p) => p[0]), ...(Array.isArray(s.bulge) ? s.bulge.map((p) => p[0]) : [])])].filter((y) => y >= s.rows[0]! - 1e-9 && y <= s.rows[s.rows.length - 1]! + 1e-9).sort((a, b) => a - b);
   const tip: Table = ys.map((y) => [y, Math.round(s.e * (s.xTip - lerp(s.profile, y)) * 1e4) / 1e4] as const);
   const setback: Table = ys.map((y) => {
-    const hw = lerp(s.half, y), r = Math.min(lerp(s.corner, y), hw * 0.98), a = hw - r, b = bulgeAt(s.bulge, y);
-    return [y, Math.round(((2 * (b * a / 3 + b * r + r * r * (1 - Math.PI / 4))) / Math.max(hw, 1e-6)) * 1e4) / 1e4] as const;
+    const hw = lerp(s.half, y), r = Math.min(lerp(s.corner, y), hw * 0.98), a = hw - r, b = bulgeAt(s.bulge, y), k = s.cornerDepth ? lerp(s.cornerDepth, y) : 1;
+    return [y, Math.round(((2 * (b * a / 3 + b * r + (s.cornerDepth ? k * r * r * (1 - Math.PI / 4) : r * r * (1 - Math.PI / 4)))) / Math.max(hw, 1e-6)) * 1e4) / 1e4] as const;
   });
   return { tip, ...(setback.some(([, v]) => v > NOSE_VEE) ? { setback } : {}), ...(paint ? { paint } : {}), ...(windows ? { windows } : {}) };
 }

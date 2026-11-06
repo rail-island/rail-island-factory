@@ -43,12 +43,14 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
 - **Glacier Express.** The panorama roof is drawn as the dark roof band over tall windows.
 - **Giruno.** Its own cab face (`GIRUNO_FACE`) and paint (`GIRUNO_SBB`, livery key `sbb`), read from
   four photographs in `assets/sbb-giruno/` (the near profile's perspective undone with the cars'
-  lengths): a 4.6 m nose pointed in plan, a white chin and red muzzle upright to 1.9 m, the
-  windscreen in its black field raked about 30 degrees to the roof, the red sweeping back round the
-  black into a stripe under the dark roof, white over a dark grey lower band, the windows in a black
+  lengths): a 4.6 m nose rounded to a point in plan (elliptic corners, the kit's `cornerDepth`); a
+  bulbous white bumper upright to 1.85 m with a red cap rising from 1.4 m at the middle to 1.85 m at
+  its corners; the red face behind its lip with the slanted lamp clusters, grille and emblem; the
+  large light windscreen in a narrow black surround raked about 30 degrees to the roof, the red
+  running up beside it into a stripe under the dark roof; white over a dark grey lower band, the windows in a black
   band, red doors. The cars are 22.25 m and 17.5 m over the joints (de.wikipedia's formation table)
   on Jacobs bogies (the kit's `jacobs`), the end car's leading bogie under the cab door, one door a
-  side behind each car's middle. Left out: the cab door's step and the coupler flap, the yellow first
+  side behind each car's middle. Left out: the cab door's step and the coupler flap's outline, the yellow first
   class band over the doors, the roof fairings, the low-floor (55 cm) doors of cars F and H, and the
   eleven-car formation (the kit offers 4 and 8 cars, two pantograph cars).
 

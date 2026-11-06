@@ -98,7 +98,7 @@ combinations hashed before and after):
   slices meet the body's own section there (both ends of a `single` railcar). The distant model
   takes its profile, plan, bands and the panes as glass (the VT 98 and the other short-nosed
   regional and metro units, [germany-trains.md](germany-trains.md)). Its `bulge` may vary by
-  height ([y, b]: a long nose pointed in plan, deep at the chin and easing off to the roof), and
+  height ([y, b]), its `cornerDepth` makes the corner arcs elliptic ([y, k], the depth over the radius: a nose rounded to a point in plan, the Giruno's), and
   its `paint` lays colour fields over the whole surface, face and cab sides alike, between front
   and back edges in [y, d] (a field that runs from the front round the corners and back along a
   long nose: the Giruno's red and black);

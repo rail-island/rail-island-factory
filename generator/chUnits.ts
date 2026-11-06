@@ -84,69 +84,77 @@ export const ICN: ShinkansenSeries = {
 /**
  * The Giruno's paint (photo-ec250-giruno-close-to-erlen.jpg in near profile, photo-sbb-rabde-501-029-...,
  * photo-stadler-ec250-innotrans-2016-3.jpg head on): white over a dark grey lower band, red doors, a
- * dark roof with a red stripe under its edge along the whole train. On the nose the red covers the
- * muzzle and the face round the lamps and sweeps back and up round the black windscreen field into
- * that stripe; the grey lower band rises along the nose's bottom to the chin. Edges are [y, d behind
- * the tip], measured on the near-profile photograph (its perspective undone with the cars' lengths).
+ * dark roof with a red stripe under its edge along the whole train. On the nose the white bumper
+ * carries a red cap; the red face above it holds the lamps and the grille and runs up beside the
+ * windscreen's black surround into that stripe; the grey lower band rises along the nose's bottom.
+ * Edges are [y, d behind the tip].
  */
-const GIRUNO_RED_BACK: Pt[] = [[1.33, -1], [1.36, 0.9], [1.6, 1.3], [1.9, 1.6], [2.2, 1.95], [2.5, 2.5], [2.8, 3.2], [3.1, 3.75], [3.35, 4.25], [3.56, 4.85], [3.75, 5.4]];
-const GIRUNO_BLACK_BACK: Pt[] = [[2.48, -1], [2.52, 0.9], [2.6, 1.9], [2.75, 2.6], [3.0, 3.1], [3.25, 3.6], [3.5, 4.1], [3.7, 4.6], [3.86, 5.1], [4.0, 5.6]];
+const GIRUNO_RED_BACK: Pt[] = [[1.9, 1.55], [2.2, 1.85], [2.5, 2.2], [2.8, 2.7], [3.1, 3.1], [3.35, 3.7], [3.56, 4.4], [3.75, 5.2]];
 const GIRUNO_SBB: ShinkansenLivery = {
   title: "SBB", number: "501 029",
-  palette: { white: c("#f1f1ee"), grey: c("#3b3f44", 0.6), red: c(SBB_RED), black: c("#14171a", 0.35), screen: c("#4a5866", 0.12), roofG: c("#262c35", 0.55), skirtG: c("#24272b", 0.75), cabMask: c("#14171a", 0.3) },
+  palette: { white: c("#f1f1ee"), grey: c("#3b3f44", 0.6), red: c(SBB_RED), black: c("#14171a", 0.35), screen: c("#6d7c89", 0.1), roofG: c("#262c35", 0.55), skirtG: c("#24272b", 0.75), cabMask: c("#14171a", 0.3) },
   // the windows in a black band
   bands: [[0, 1.0, "grey"], [1.0, 1.7, "white"], [1.7, 2.75, "black"], [2.75, 3.55, "white"], [3.55, 3.75, "red"], [3.75, 9, "roofG"]], doors: [[0, 9, "red"]],
   roof: "roofG", skirt: "skirtG",
-  // the cab's sides white back to the first window; the red and the black field reach a metre past
-  // the cab face's join onto the body
+  // the cab's sides white back to the first window; the red beside the windscreen reaches past the
+  // cab face's join onto the body
   endSweeps: [
     { mat: "white", front: [[1.65, -9], [2.8, -9]], back: [[1.65, 7.95], [2.8, 7.95]] },
-    { mat: "red", front: [[2.7, -9], [3.75, -9]], back: GIRUNO_RED_BACK.filter(([y]) => y >= 2.7) },
-    { mat: "black", front: [[3.2, -9], [3.75, -9]], back: GIRUNO_BLACK_BACK.filter(([y]) => y >= 3.2) },
+    { mat: "red", front: [[3.35, -9], [3.75, -9]], back: GIRUNO_RED_BACK.filter(([y]) => y >= 3.35) },
   ],
   endLettering: [{ text: "SBB CFF FFS", d: 12.4, y: 1.4, h: 0.13, mat: "red" }],
 };
 
 /**
- * The Giruno's nose (the photographs above): long and pointed in plan, its sides reaching full width
- * 2 m behind the tip. A white chin and a red muzzle under a lip stand upright to 1.9 m; the red face
- * above carries the two sloping lamp housings, the grille and the SBB emblem; the black field with the
- * very large windscreen rakes back about 30 degrees from 2.5 m to the roof, 4.6 m behind the tip.
+ * The Giruno's nose (the photographs above): 4.6 m long, rounded to a point in plan (elliptic corners
+ * twice as deep as they are wide). Its bottom is a bulbous white bumper, upright from the skirt to
+ * 1.85 m and rounded under it, its red cap rising from 1.4 m at the middle to 1.85 m at the corners;
+ * the red face stands back behind its lip with the slanted lamp clusters, the grille and the SBB
+ * emblem; above it the large windscreen in a narrow black surround rakes back about 30 degrees to the
+ * roof, the surround dipping to the grille where the wipers park.
  */
 const GIRUNO_FACE: SeriesCabFace = {
-  dJoin: 4.6, dSide: 3.6, first: 8.0, roofFrom: 4.0, cols: [8, 6, 2, 2], tolerance: 0.015,
-  profile: [[0.55, 0.6], [0.65, 0.3], [0.8, 0.14], [1.0, 0.07], [1.3, 0.03], [1.4, 0], [1.8, 0], [1.92, 0.08], [2.0, 0.22], [2.2, 0.38], [2.5, 0.6], [2.7, 0.8], [3.0, 1.25], [3.3, 1.75], [3.6, 2.3], [3.85, 2.85], [4.0, 3.3], [4.1, 3.75], [4.17, 4.2], [4.2, 4.6]],
-  // the plan: a broad bow rounding into wide corners, easing off up the windscreen to the roof
-  bulge: [[0.55, 1.1], [2.6, 1.1], [3.3, 0.9], [3.9, 0.45], [4.2, 0.0]],
-  corner: [[0.55, 0.2], [3.3, 0.2], [3.9, 0.25], [4.2, 0.1]],
-  rows: [0.55, 0.65, 0.8, 1.0, 1.3, 1.36, 1.4, 1.45, 1.62, 1.8, 1.92, 2.0, 2.2, 2.35, 2.5, 2.7, 3.0, 3.3, 3.6, 3.75, 3.85, 4.0, 4.1, 4.17, 4.2],
+  dJoin: 4.6, dSide: 3.6, first: 8.0, roofFrom: 4.0, cols: [8, 7, 1, 2], tolerance: 0.015,
+  profile: [[0.55, 0.5], [0.62, 0.25], [0.75, 0.1], [0.95, 0.03], [1.2, 0], [1.75, 0], [1.85, 0.04], [1.92, 0.14], [1.97, 0.3], [2.05, 0.4], [2.3, 0.52], [2.55, 0.7], [2.7, 0.85], [3.0, 1.3], [3.3, 1.8], [3.6, 2.35], [3.85, 2.9], [4.0, 3.35], [4.1, 3.8], [4.17, 4.25], [4.2, 4.6]],
+  // the plan: a narrow front rounding in deep elliptic corners to the sides
+  // (no bow: a parabola would meet the elliptic corners at a kink)
+  corner: [[0.55, 1.1], [1.9, 1.1], [2.0, 1.2], [3.3, 1.25], [3.9, 0.9], [4.2, 0.1]],
+  cornerDepth: [[0.55, 1.25], [1.9, 1.25], [2.0, 1.5], [3.3, 1.6], [3.9, 1.2], [4.2, 1.0]],
+  rows: [0.55, 0.62, 0.75, 0.95, 1.0, 1.2, 1.4, 1.6, 1.75, 1.85, 1.92, 1.97, 2.05, 2.2, 2.3, 2.55, 2.7, 3.0, 3.3, 3.6, 3.75, 3.85, 4.0, 4.1, 4.17, 4.2],
   // (the centre line's colours, which the distant model shows; the paint below draws the near ones)
-  bands: () => [[0, 0.62, "skirtG"], [0.62, 1.33, "white"], [1.33, 2.5, "red"], [2.5, 9, "black"]],
+  bands: () => [[0, 0.62, "skirtG"], [0.62, 1.4, "white"], [1.4, 2.55, "red"], [2.55, 9, "black"]],
   paint: [
     // white under the cab sides' window band, the grey lower band rising forward along the nose's bottom
     { mat: "white", front: [[1.0, -9], [3.55, -9]], back: [[1.0, 99], [3.55, 99]] },
     { mat: "grey", front: [[0.55, 1.3], [0.75, 2.6], [1.0, 4.4]], back: [[0.55, 99], [1.0, 99]] },
-    { mat: "red", front: [[1.33, -9], [3.75, -9]], back: GIRUNO_RED_BACK, top: 3.75 },
-    { mat: "black", front: [[2.48, -9], [4.0, -9]], back: GIRUNO_BLACK_BACK },
+    // the red face behind the bumper's lip, round the lamps and up beside the windscreen
+    { mat: "red", front: [[1.9, -9], [3.75, -9]], back: GIRUNO_RED_BACK, top: 3.75 },
   ],
   fields: [
-    // the windscreen, narrowing to the top; the lamp housings sloping down to the middle
-    { mat: "screen", pts: [[-1.12, 2.8], [-1.0, 2.68], [1.0, 2.68], [1.12, 2.8], [0.84, 3.86], [0.74, 3.93], [-0.74, 3.93], [-0.84, 3.86]] },
-    // the black field's wedge down to the grille, where the wipers park
-    { mat: "black", pts: [[-0.8, 2.56], [-0.4, 2.42], [0.4, 2.42], [0.8, 2.56]] },
-    { mat: "cabMask", pts: [[-1.25, 2.2], [-0.55, 1.96], [-0.52, 2.24], [-1.2, 2.5]] },
-    { mat: "cabMask", pts: [[0.55, 1.96], [1.25, 2.2], [1.2, 2.5], [0.52, 2.24]] },
+    // the bumper's red cap, narrower than the face, its lower edge rising to the corners
+    { mat: "red", pts: [[-1.12, 1.88], [-0.95, 1.62], [-0.65, 1.47], [-0.3, 1.41], [0.3, 1.41], [0.65, 1.47], [0.95, 1.62], [1.12, 1.88], [1.12, 1.93], [-1.12, 1.93]] },
+    // the windscreen's black surround, dipping to the grille where the wipers park, and the glass
+    { mat: "black", pts: [[-1.36, 2.68], [-1.2, 2.56], [-0.55, 2.48], [-0.3, 2.36], [0.3, 2.36], [0.55, 2.48], [1.2, 2.56], [1.36, 2.68], [1.0, 4.02], [-1.0, 4.02]] },
+    { mat: "screen", pts: [[-1.28, 2.72], [-1.15, 2.62], [1.15, 2.62], [1.28, 2.72], [0.93, 3.9], [0.85, 3.96], [-0.85, 3.96], [-0.93, 3.9]] },
+    // the lamp clusters, slanted down to the middle
+    { mat: "cabMask", pts: [[-1.4, 2.26], [-1.34, 2.43], [-1.1, 2.45], [-0.5, 2.1], [-0.55, 1.98], [-0.92, 1.99]] },
+    { mat: "cabMask", pts: [[0.92, 1.99], [0.55, 1.98], [0.5, 2.1], [1.1, 2.45], [1.34, 2.43], [1.4, 2.26]] },
   ],
-  masks: [{ lat: [-0.2, 0.2], y: [2.27, 2.4], r: 0.03, mat: "black" }],
-  panes: [{ lat: [-0.7, 0.7], y: [2.75, 3.85], r: 0.2, mat: "screen" }],
+  masks: [{ lat: [-0.22, 0.22], y: [2.2, 2.32], r: 0.03, mat: "black" }],
+  panes: [{ lat: [-0.8, 0.8], y: [2.7, 3.88], r: 0.2, mat: "screen" }],
   decals: [
-    { mat: "white", pts: [[-0.1, 2.07], [0.1, 2.07], [0.1, 2.1], [-0.1, 2.1]] },
-    { mat: "white", pts: [[-0.02, 2.02], [0.02, 2.02], [0.02, 2.15], [-0.02, 2.15]] },
-    { mat: "white", pts: [[-0.17, 2.085], [-0.09, 2.02], [-0.09, 2.15]] },
-    { mat: "white", pts: [[0.17, 2.085], [0.09, 2.15], [0.09, 2.02]] },
+    { mat: "white", pts: [[-0.1, 2.08], [0.1, 2.08], [0.1, 2.11], [-0.1, 2.11]] },
+    { mat: "white", pts: [[-0.02, 2.03], [0.02, 2.03], [0.02, 2.16], [-0.02, 2.16]] },
+    { mat: "white", pts: [[-0.17, 2.095], [-0.09, 2.03], [-0.09, 2.16]] },
+    { mat: "white", pts: [[0.17, 2.095], [0.09, 2.16], [0.09, 2.03]] },
   ],
-  lamps: [[-1.0, 2.27, 0.09, "lampHead"], [-0.72, 2.16, 0.06, "lampRed"], [1.0, 2.27, 0.09, "lampHead"], [0.72, 2.16, 0.06, "lampRed"]],
-  wipers: [[[0.08, 2.74], [0.42, 3.4]], [[0.55, 2.74], [0.82, 3.25]]],
+  lamps: [
+    [-1.17, 2.34, 0.07, "lampHead"], [-0.9, 2.22, 0.08, "lampHead"], [-0.68, 2.09, 0.05, "lampRed"],
+    [1.17, 2.34, 0.07, "lampHead"], [0.9, 2.22, 0.08, "lampHead"], [0.68, 2.09, 0.05, "lampRed"],
+    // the coupler's opening in the bumper
+    [0.45, 0.85, 0.06, "black"],
+  ],
+  wipers: [[[0.08, 2.66], [0.45, 3.4]], [[0.6, 2.66], [0.9, 3.25]]],
 };
 
 /** Window panes of a black band from d0 to d1 (body d), about `pitch` apart, 8 cm pillars between them. */

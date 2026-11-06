@@ -63,6 +63,8 @@ export interface NoseSpec {
   corner: Pt[];
   /** Extra recess of the face at its edges (|u| = 1) over its centre: a parabolic plan bulge; by height as [y, b] (a pointed nose's plan). */
   bulge?: number | Pt[];
+  /** The corner arc's depth over its radius by height, [y, k] (default 1, a quarter circle): an elliptic corner, a nose rounded to a point in plan. */
+  cornerDepth?: Pt[];
   /** The grid's rows, ascending; the first is the bottom, the last the crown. */
   rows: number[];
   base: string;
@@ -145,10 +147,10 @@ export class CabNose {
     } else if (au <= 2) {
       const th = ((au - 1) * Math.PI) / 2;
       lat = a + r * Math.sin(th);
-      d = dF + b + r * (1 - Math.cos(th));
+      d = dF + b + (s.cornerDepth ? lerp(s.cornerDepth, y) * r * (1 - Math.cos(th)) : r * (1 - Math.cos(th)));
     } else {
       lat = hw;
-      const dA = dF + b + r;
+      const dA = dF + b + (s.cornerDepth ? lerp(s.cornerDepth, y) * r : r);
       const dS = Math.min(Math.max(dA, s.dSide), s.dJoin);
       d = au <= 3 ? dA + (au - 2) * (dS - dA) : dS + (au - 3) * (s.dJoin - dS);
     }

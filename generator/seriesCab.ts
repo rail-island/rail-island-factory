@@ -40,6 +40,8 @@ export interface SeriesCabFace {
   tolerance?: number;
   /** The face's bow: its edges this much behind its centre. */
   bulge?: number | Pt[];
+  /** The corner arc's depth over its radius by height (cabNose.ts `cornerDepth`). */
+  cornerDepth?: Pt[];
   /** Grid rows, ascending, from the body's bottom to its crown (the profile's and the paint's heights). */
   rows: number[];
   /** The face's paint by height (default the livery's `front`, else its side bands); the roof's colour from `roofFrom` up. */
@@ -144,8 +146,8 @@ function layers(f: SeriesCabFace, p: FacePaint): NoseLayer[] {
   return out;
 }
 
-const spec = (f: SeriesCabFace, e: number, xTip: number, half: Pt[]): Pick<NoseSpec, "e" | "xTip" | "profile" | "half" | "corner" | "bulge" | "rows"> => ({
-  e, xTip, profile: f.profile, half, corner: f.corner, rows: f.rows, ...(f.bulge ? { bulge: f.bulge } : {}),
+const spec = (f: SeriesCabFace, e: number, xTip: number, half: Pt[]): Pick<NoseSpec, "e" | "xTip" | "profile" | "half" | "corner" | "bulge" | "rows" | "cornerDepth"> => ({
+  e, xTip, profile: f.profile, half, corner: f.corner, rows: f.rows, ...(f.bulge ? { bulge: f.bulge } : {}), ...(f.cornerDepth ? { cornerDepth: f.cornerDepth } : {}),
 });
 
 const rect = (x0: number, x1: number, y0: number, y1: number): Pt[] => {
