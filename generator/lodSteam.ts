@@ -380,7 +380,7 @@ export function steamLodSpec(spec: LocoSpec, ring: (y: number, r: number) => Tab
   if (spec.chimney) {
     const ch = spec.chimney;
     const base = ch.base ?? (b ? b.y + b.r * 0.6 : 0);
-    parts.push({ draw: (m) => m.scope("chimney", () => lodShell(m, standing(X(ch.x), base, ch.top, ch.r + 0.03, ch.r + 0.03, "smokebox"))) });
+    parts.push({ draw: (m) => m.scope("chimney", () => lodShell(m, standing(X(ch.x), base, ch.top, ch.r + 0.03, ch.r + 0.03, ch.mat ?? "smokebox"))) });
   }
   if (b) for (const d of spec.domes ?? []) {
     // a dome from afar: a hipped block from inside the boiler to its top

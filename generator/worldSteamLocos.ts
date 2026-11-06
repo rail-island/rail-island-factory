@@ -8,6 +8,7 @@ import { buildLoco } from "./steamLoco.ts";
 import { steamLocoLod } from "./lodSteam.ts";
 import { STEAM_CATALOG, UNIT_PARAM } from "./steamLocos.ts";
 import { enumParam } from "./emuParts.ts";
+import { buildRocket, buildRocketLod } from "./rocket.ts";
 import { steamEngineSpec, steamTenderSpec, type WorldSteam } from "./steamWorld.ts";
 
 /** A design: its engine and, by livery, the paint and number. */
@@ -99,8 +100,9 @@ export function lmsBlackFive(v?: ParamValues): MeshBuilder { return buildLoco(wo
 export function lmsBlackFiveLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-lms-black-five", v)); }
 export function br9f(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-br-9f", v)); }
 export function br9fLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-br-9f", v)); }
-export function rocket(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-rocket", v)); }
-export function rocketLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-rocket", v)); }
+// the Rocket has its own parts (rocket.ts); its WORLD_STEAM entry gives the title and the parameters
+export function rocket(v?: ParamValues): MeshBuilder { return buildRocket(resolveParams(PARAMS["proc-vehicle-rocket"]!, v).unit!); }
+export function rocketLod(v?: ParamValues): MeshBuilder { return buildRocketLod(resolveParams(PARAMS["proc-vehicle-rocket"]!, v).unit!); }
 export function irWp(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-ir-wp", v)); }
 export function irWpLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-ir-wp", v)); }
 export function irWg(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-ir-wg", v)); }

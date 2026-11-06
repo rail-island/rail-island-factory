@@ -1,7 +1,7 @@
 # The United Kingdom's trains
 
 **Covers** - the twenty British designs of the eight-country plan, at their real size on the W6a gauge (`uk`): the InterCity 125 and 225, the Class 800 IET and the Class 390 Pendolino, the Eurostar e300, the Class 158 and the Class 142 Pacer, London's 1938 tube stock; the Class 55 Deltic, 37, 47, 66 and 86; the LNER A4 and A3, the GWR Castle, the LMS Black Five, the BR 9F and Stephenson's Rocket; the BR Mk1 coach. Their kits, figures, deviations and tests.
-**Code** - `generator/ukUnits.ts` (`UK_UNITS`), `generator/ukLocos.ts` (`UK_LOCOS`), `generator/loadingGauge.ts` (`uk`), `generator/worldLocoKit.ts` (the `bonnets` nose), `generator/worldSteamLocos.ts`, `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `assets/br-*/`, `assets/lner-*/`, `assets/gwr-castle/`, `assets/lms-black-five/`, `assets/lu-1938-stock/`, `assets/eurostar-373/`, `assets/rocket/`
+**Code** - `generator/ukUnits.ts` (`UK_UNITS`), `generator/ukLocos.ts` (`UK_LOCOS`), `generator/loadingGauge.ts` (`uk`), `generator/worldLocoKit.ts` (the `bonnets` nose), `generator/worldSteamLocos.ts`, `generator/rocket.ts`, `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `test/rocket.test.ts`, `assets/br-*/`, `assets/lner-*/`, `assets/gwr-castle/`, `assets/lms-black-five/`, `assets/lu-1938-stock/`, `assets/eurostar-373/`, `assets/rocket/`
 **See also** - [loading-gauge.md](loading-gauge.md), [shinkansen.md](shinkansen.md), [world-locos.md](world-locos.md), [world-steam.md](world-steam.md), [world-coaches.md](world-coaches.md)
 
 The catalog had no British train before; the archived webapp Eurostar is now the
@@ -39,12 +39,19 @@ The catalog had no British train before; the archived webapp Eurostar is now the
   trailer is the end car turned, its pantograph raised too.
 - **A4.** The streamlined casing is not drawn: the generator's boiler, cab and running
   boards in garter blue (a follow-up for the steam kit's streamlined volumes).
-- **Rocket.** An open footplate on the generator's frame, its boiler level (the real one
-  is tilted) and its cylinders driving the wheels without valve gear.
+- **Rocket.** Its own parts (`generator/rocket.ts`, on the steam kit's running gear): the
+  level 6 ft boiler with its black smokebox, the white chimney with its bands, crown and
+  four stays, the firebox at the rear, the bar frame with its springs, and the two
+  cylinders inclined at 35 degrees beside the firebox, the crosshead sliding along their
+  axis to the front wheels' cranks (`cylinder.incline`, docs/models/animation.md). The
+  tender is a four-wheeled wagon on an outside frame, the axles 1.7 m apart, with slatted
+  sides, coke and the water barrel lying across. The chimney's crown stops at 3.96 m,
+  inside the W6a gauge; the real one stood about 4.4 m high.
 - **1938 Stock.** A metro on the series kit: no collector is drawn (the tube's conductor
   rails are not modelled).
 
 ## Tests
 
-`test/worldTrains.test.ts` (with the `uk` gauge: every British design within 2.82 m by
+`test/rocket.test.ts` (the Rocket's inclined cylinders, its chimney in the gauge, every
+parametric tender's wheels apart), `test/worldTrains.test.ts` (with the `uk` gauge: every British design within 2.82 m by
 4.0 m) and, for each module's first design, the catalog sweep.

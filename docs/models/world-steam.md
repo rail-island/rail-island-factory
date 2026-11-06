@@ -20,8 +20,12 @@ metres. `WorldSteam` states a tender engine in a few measures and derives the sp
 - **Couplers.** `buffers` (beams with buffers and the kit's lamps) or `knuckle` (an
   automatic coupler front and rear, a drawbar to the tender).
 - **Tender.** Its length, four axles on two bogies or a rigid row, the wheel diameter.
+  A rigid row stands 1 m in from the ends; where that would bring the wheels closer
+  than 0.3 m between treads (a short two-axle tender), it is centred at that pitch.
 
-`noValveGear` and `noCab` draw an early engine (the Rocket); on a narrow gauge the
+`noValveGear` and `noCab` draw an early engine; the Rocket's entry gives only its title
+and parameters, its engine and tender are drawn by `generator/rocket.ts`
+([uk-trains.md](uk-trains.md)). On a narrow gauge the
 buffer beams and the outside cylinders come in with the running boards' half width.
 The generator keeps clear of two heights where the kit's own parts stand: a running
 board at 1.6 m (the valve gear's top) moves to 1.62 m, and a boiler whose saddle would
