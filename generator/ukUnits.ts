@@ -2,7 +2,8 @@
 // W6a gauge ("uk", loadingGauge.ts): the InterCity 125 and InterCity 225 (their
 // power car and driving end as the end cars), the Class 800 and the Class 390
 // Pendolino, the Eurostar e300, the Class 158 and the Class 142 Pacer, and
-// London Underground's 1938 tube stock. See docs/models/uk-trains.md.
+// London Underground's 1938 tube stock, and London Overground's Class 378
+// Capitalstar. See docs/models/uk-trains.md.
 
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamValues, ProceduralDesign } from "./design.ts";
@@ -146,7 +147,34 @@ export const TUBE1938: ShinkansenSeries = {
   weight: { end: 28, middle: 22 }, power: 270, maxspeed: 72,
 };
 
-const P = { hst: seriesParams(HST), ic225: seriesParams(IC225), c800: seriesParams(C800), c390: seriesParams(C390), e300: seriesParams(E300), c158: seriesParams(C158), c142: seriesParams(C142), tube: seriesParams(TUBE1938) };
+/** London Overground's scheme: blue skirt, white sides, a black window band, orange doors; the cab front yellow. */
+const overground = (number: string): ShinkansenLivery => ({
+  title: "London Overground", number,
+  palette: { blue: c("#0019a8"), orange: c("#ee7c0e"), white: c("#f1f1ee"), black: c("#1d1f22", 0.3), yellow: c("#ffcd00"), roofG: c("#9a9ea2", 0.6), skirtG: c("#2a2c2f", 0.75), cabMask: c("#1d1f22", 0.3) },
+  bands: [[0, 1.55, "blue"], [1.55, 1.62, "orange"], [1.62, 1.85, "white"], [1.85, 2.85, "black"], [2.85, 9, "white"]],
+  doors: [[0, 9, "orange"]],
+  front: [[0, 1.45, "blue"], [1.45, 1.52, "orange"], [1.52, 2.3, "yellow"], [2.3, 9, "black"]],
+  roof: "roofG", skirt: "skirtG",
+});
+
+/** The Class 378 Capitalstar: Bombardier's Electrostar for London Overground, 2.8 m wide, two wide doors a side, five cars (101.35 m). */
+export const C378: ShinkansenSeries = {
+  endLength: 20.4, midLength: 20.1, W: 1.395, Y: 1.3, S: 3.3, C: 3.77, lean: 0.96, B: 0.9, A: 1.05,
+  // the Electrostar's upright cab: a flat front face, its top and corners rounded, the windscreens either side of the gangway door
+  nose: nose(0.7, 0.8, 2.6, [[0, 3.3], [0.3, 3.6], [0.7, 3.77]], [[0, 3.2], [0.35, 3.3]], [[0, 1.3]], [[0, 1.1], [0.3, 1.05]], [[0, 0.95], [0.2, 0.9]]),
+  windscreen: [0, 0, 0, 0], lamps: [0, 0],
+  noseCab: {
+    panes: [[0.4, 1.02, 2.35, 3.05], [-0.26, 0.26, 2.4, 3.05], [-1.02, -0.4, 2.35, 3.05]],
+    lamps: [[-0.72, 1.85, 0.09, "lampHead"], [0.72, 1.85, 0.09, "lampHead"], [-0.95, 1.85, 0.05, "lampRed"], [0.95, 1.85, 0.05, "lampRed"]],
+    gangway: [0.32, 1.35, 3.12],
+  },
+  windows: [[1.9, 2.75]], windowW: 1.4, pitch: 1.75, door: [1.15, 3.05, 1.9, 2.7], doorW: 1.6, doorCount: 2,
+  bogieCentres: 14.173, wheelR: 0.42, wheelbase: 2.6, cars: [3, 4, 5],
+  liveries: { overground: overground("378 204") },
+  weight: { end: 45.5, middle: 40.7 }, power: 480, maxspeed: 121,
+};
+
+const P = { hst: seriesParams(HST), ic225: seriesParams(IC225), c800: seriesParams(C800), c390: seriesParams(C390), e300: seriesParams(E300), c158: seriesParams(C158), c142: seriesParams(C142), tube: seriesParams(TUBE1938), c378: seriesParams(C378) };
 
 export function brHst(v?: ParamValues): MeshBuilder { return buildSeries(HST, P.hst, v); }
 export function brHstLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(HST, P.hst, v); }
@@ -165,6 +193,9 @@ export function brClass142Lod(v?: ParamValues): MeshBuilder { return buildSeries
 export function lu1938Stock(v?: ParamValues): MeshBuilder { return buildSeries(TUBE1938, P.tube, v); }
 export function lu1938StockLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(TUBE1938, P.tube, v); }
 
+export function brClass378(v?: ParamValues): MeshBuilder { return buildSeries(C378, P.c378, v); }
+export function brClass378Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(C378, P.c378, v); }
+
 export const UK_UNITS: ProceduralDesign[] = [
   seriesDesign("proc-vehicle-br-hst", "InterCity 125", HST, P.hst, brHst, brHstLod, "br-hst", "uk"),
   seriesDesign("proc-vehicle-br-ic225", "InterCity 225", IC225, P.ic225, brIc225, brIc225Lod, "br-ic225", "uk"),
@@ -174,4 +205,5 @@ export const UK_UNITS: ProceduralDesign[] = [
   seriesDesign("proc-vehicle-br-class-158", "Class 158", C158, P.c158, brClass158, brClass158Lod, "br-class-158", "uk"),
   seriesDesign("proc-vehicle-br-class-142", "Class 142 Pacer", C142, P.c142, brClass142, brClass142Lod, "br-class-142", "uk"),
   seriesDesign("proc-vehicle-lu-1938-stock", "London 1938 Stock", TUBE1938, P.tube, lu1938Stock, lu1938StockLod, "lu-1938-stock", "uk"),
+  seriesDesign("proc-vehicle-br-class-378", "Class 378 Capitalstar", C378, P.c378, brClass378, brClass378Lod, "br-class-378", "uk"),
 ];

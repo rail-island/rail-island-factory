@@ -8,6 +8,7 @@ import { PIONEER_ZEPHYR, ZEPHYR_LENGTH, ZEPHYR_MOTOR_TRUCK, pioneerZephyr, zephy
 import { readTriangles } from "../generator/renderGlbThumb";
 import { glbStats } from "../generator/glbStats";
 import type { Tri } from "../generator/glbTriangles";
+import { carbody, type CarbodySpec } from "../generator/carbodyKit";
 
 const power = pioneerZephyr({ unit: "powerCar" });
 const tris = readTriangles(power.toGlb("z"));
@@ -78,6 +79,23 @@ describe("the Pioneer Zephyr", () => {
     // nothing of the knuckle coupler or the diaphragm within 2 m of the tail
     expect(t.filter((q) => (q.material === "knuckle" || q.material === "diaphragm") && q.p.some((p) => p[0] < rear + 2))).toEqual([]);
     expect(t.filter((q) => q.material === "ssRib" && q.p.some((p) => p[0] < rear + 0.1)).length).toBeGreaterThan(0);
+  });
+
+  it("rounds the skirt's cut-outs into arches, and the kit's default stays a square drop", () => {
+    const spec: CarbodySpec = { length: 10, W: 1.4, Y: 1.15, S: 2.95, C: 3.7, lean: 0.97, arc: 6, B: 0.3, wl: 1.3, A: 1.0, wa: 1.37, cuts: [[3, 6]], edges: [] };
+    const square = carbody(spec), arched = carbody({ ...spec, cutRadius: 0.5 });
+    expect(square.B(3.25)).toBeCloseTo(1.0, 6);
+    expect(square.stations).toEqual(carbody({ ...spec, cutRadius: 0 }).stations);
+    // a quarter ellipse: at the cut's end the skirt's bottom, r inside it the skirt's top
+    expect(arched.B(3)).toBeCloseTo(0.3, 6);
+    expect(arched.B(3.25)).toBeCloseTo(0.3 + 0.7 * Math.sqrt(0.75), 6);
+    expect(arched.B(3.5)).toBeCloseTo(1.0, 6);
+    expect(arched.B(5.9)).toBeGreaterThan(0.3);
+    expect(arched.B(5.9)).toBeLessThan(1.0);
+    expect(arched.stations.filter((d) => d > 3 && d < 3.5).length).toBeGreaterThanOrEqual(3);
+    // the power car's shell has the arch: skirt vertices between its foot and top just behind the motor truck's cut
+    const arch = tris.filter((t) => t.material === "ss").flatMap((t) => t.p).filter((p) => Math.abs(p[2]) > 1.2 && p[1] > 0.45 && p[1] < 0.9 && p[0] < TIP - 2.45 && p[0] > TIP - 3.1);
+    expect(arch.length).toBeGreaterThan(4);
   });
 
   it("builds the same bytes every time", () => {

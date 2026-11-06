@@ -14,6 +14,7 @@ import { block } from "./vehicleParts.ts";
 import { exhaust } from "./dieselParts.ts";
 import type { Pt } from "./sliceLoft.ts";
 import { crownPane, sidePanel, surfaceDisc, type SliceBody } from "./sliceBody.ts";
+import { decalX } from "./usHoodKit.ts";
 import { CARBODY_PALETTE, faceLamps, type NoseShape } from "./carbodyKit.ts";
 import { INTERIOR_PALETTE } from "./interior.ts";
 import { drawCar, type CarDef } from "./usTransit.ts";
@@ -43,6 +44,10 @@ export interface ShinkansenLivery {
   skirt: string;
   /** Number on the sides. */
   number: string;
+  /** The door leaves' bands (default the side's). */
+  doors?: readonly Band[];
+  /** The cab front's bands, over the nose (default the side's). */
+  front?: readonly Band[];
 }
 
 export interface ShinkansenSeries {
@@ -83,6 +88,8 @@ export interface ShinkansenSeries {
   pantograph?: "single" | "diamond";
   /** A flat cab front in place of the nose: its windscreen panes (z0, z1, y0, y1), lamps (z, y, r, lens) and the front's mask. */
   flatCab?: NonNullable<CarDef["cab"]>;
+  /** An upright cab on the nose's flat front face (its tip): the panes and lamps drawn there, in place of the windscreen and headlights on the crown, and a gangway door's outline (half width, sill and head). */
+  noseCab?: NonNullable<CarDef["cab"]> & { gangway?: readonly [number, number, number] };
   power: number;
   maxspeed: number;
   /** A diesel unit: no pantograph, exhaust stacks on the roof, filed with the DMUs (default electric); `none` an unpowered set of coaches. */
@@ -145,7 +152,7 @@ const defaultCars = (s: ShinkansenSeries) => (carsOf(s).includes(4) ? 4 : carsOf
 // Building a series
 
 /** The body's +X end behind the car's front: the nose tip at it, a flat cab's lamps 7 cm proud of the wall, an inner wall a coupling gap behind. */
-const frontGap = (s: ShinkansenSeries, end: boolean) => (end ? (s.endCoupler === "buffers" ? BUFFER_GAP : s.flatCab ? 0.07 : 0) : GAP);
+const frontGap = (s: ShinkansenSeries, end: boolean) => (end ? (s.endCoupler === "buffers" ? BUFFER_GAP : s.flatCab || s.noseCab ? 0.07 : 0) : GAP);
 const endBody = (s: ShinkansenSeries) => s.endLength - (s.single ? frontGap(s, true) : GAP) - frontGap(s, true);
 const midBody = (s: ShinkansenSeries) => s.midLength - 2 * GAP;
 
@@ -208,7 +215,8 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
     ...(end && s.cabPanel ? { field: { d: s.cabPanel.d, y: s.cabPanel.y, mat: "cabPanel" } } : {}),
     windows: s.windows.map((y, r) => ({ y, spans: end && s.endSides && r > 0 ? [] : spans, frame: "rubber" })),
     doors: { spans: doors, y: [s.door[0], s.door[1]], glass: [s.door[2], s.door[3]], ...(own && !(end && s.endSides) ? { slides: own.doors.map((o) => o[2]) } : {}) },
-    ...(s.flatCab ? { cab: s.flatCab } : {}), cabEnds: end && s.flatCab ? (s.single ? [1, -1] : [1]) : [], diaphragm: [s.door[0], s.door[1] + 0.3],
+    ...(l.doors ? { doorBands: l.doors } : {}), ...(end && l.front && !s.flatCab ? { front: { d: s.nose.len + 0.05, bands: l.front } } : {}),
+    ...(s.flatCab ? { cab: s.flatCab } : end && s.noseCab ? { cab: s.noseCab } : {}), cabEnds: end && (s.flatCab || s.noseCab) ? (s.single ? [1, -1] : [1]) : [], diaphragm: [s.door[0], s.door[1] + 0.3],
     trucks: tr, truck: {
       axles: s.wheelbase > 0 ? [-s.wheelbase / 2, s.wheelbase / 2] : [0], wheelR: s.wheelR, frameHalf: s.wheelbase > 0 ? s.wheelbase / 2 + s.wheelR + 0.15 : s.wheelR + 0.45, frameTop: s.wheelR + 0.4, frameBottom: s.wheelR + 0.08,
       frameZ: [0.92, 1.04], primary: "coil", secondary: [-0.42, 0.42], secondaryZ: 1.1, bolster: s.B,
@@ -244,6 +252,18 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
 }
 
 function noseFittings(m: MeshBuilder, s: ShinkansenSeries, b: SliceBody, X: (d: number) => number): void {
+  if (s.noseCab) {
+    // the panes and lamps are the car's cab (drawCar); here the gangway door's outline on the front face
+    const g = s.noseCab.gangway;
+    if (g) m.scope("gangway door", () => {
+      const [hw, y0, y1] = g, x = X(0) + 0.005, k = 0.025;
+      decalX(m, "rubber", x, 1, -hw, -hw + k, y0, y1);
+      decalX(m, "rubber", x, 1, hw - k, hw, y0, y1);
+      decalX(m, "rubber", x, 1, -hw + k, hw - k, y0, y0 + k);
+      decalX(m, "rubber", x, 1, -hw + k, hw - k, y1 - k, y1);
+    });
+    return;
+  }
   const [d0, d1, z0, z1] = s.windscreen;
   m.scope("windscreen", () => {
     const k = s.windscreenMask;

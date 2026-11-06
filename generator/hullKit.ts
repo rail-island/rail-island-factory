@@ -65,6 +65,8 @@ export interface HullForm {
   bulb?: number;
   /** A hydrofoil's hull stands this high on its foils: the keel at y = lift, the waterline (draft) still from y = 0. */
   lift?: number;
+  /** Twice the stations along the hull (a smoother entry, run and flare; the detailed ships). */
+  fine?: boolean;
 }
 
 /** A row of windows on a tier: height above its base, pane height and width, pitch; along u from..to (default the tier's length). */
@@ -77,6 +79,8 @@ export interface Windows {
   to?: number;
   /** One side only: +1 starboard, -1 port (default both). */
   side?: number;
+  /** The panes' material (default glass): a vent grille, a door. */
+  mat?: string;
 }
 
 /** A tier of superstructure: from u0 to u1, base y0 to top y1, half-width (or the hull's less `inset`). */
@@ -97,6 +101,8 @@ export interface Tier {
   front?: { y: number; h: number; w: number; n: number };
   /** Bridge wings: their half-width and depth below the top. */
   wings?: { hw: number; h: number; len?: number };
+  /** A deck edge: the deck above overhanging the walls by this much, metres (its depth 0.3 m). */
+  lip?: number;
   name?: string;
 }
 
@@ -111,8 +117,8 @@ export type Item =
   | { k: "mast"; u: number; z?: number; y: readonly [number, number]; r?: number; yards?: ReadonlyArray<readonly [number, number]>; mat?: string; radar?: boolean; name?: string }
   | { k: "crane"; u: number; z: number; y: number; h: number; jib: number; dir: number; lift?: number; mat?: string; name?: string }
   | { k: "derrick"; u: number; y: number; h: number; boom: number; dir: number; mat?: string; pair?: boolean; name?: string }
-  | { k: "hatches"; u: readonly [number, number]; n: number; hw: number; y: number; h: number; mat?: string; gap?: number; name?: string }
-  | { k: "containers"; u: readonly [number, number]; bays: number; hw: number; y: number; tiers: number; groups?: number; seed?: number; name?: string }
+  | { k: "hatches"; u: readonly [number, number]; n: number; hw: number; y: number; h: number; mat?: string; gap?: number; name?: string; coaming?: number; coamingMat?: string; ridge?: number; ribs?: number }
+  | { k: "containers"; u: readonly [number, number]; bays: number; hw: number; y: number; tiers: number; groups?: number; seed?: number; name?: string; rows?: number }
   | { k: "domes"; u: readonly [number, number]; n: number; r: number; y: number; h: number; mat?: string; z?: number; name?: string }
   | { k: "spheres"; u: readonly [number, number]; n: number; r: number; y: number; base?: number; mat?: string; cover?: string; name?: string }
   | { k: "tanks"; u: readonly [number, number]; n: number; r: number; y: number; z?: readonly number[]; mat?: string; name?: string }
@@ -129,7 +135,18 @@ export type Item =
   | { k: "plate"; pts: ReadonlyArray<readonly [number, number]>; z: number; t: number; mat: string; name?: string }
   | { k: "portholes"; u: readonly [number, number]; y: number; pitch: number; r: number; mat?: string; name?: string }
   | { k: "rig"; masts: readonly Mast[]; bowsprit?: { len: number; rise: number }; stays?: boolean; name?: string }
-  | { k: "rail"; u: readonly [number, number]; y: number; hw: number; h?: number; mat?: string; name?: string };
+  | { k: "rail"; u: readonly [number, number]; y: number; hw: number; h?: number; mat?: string; name?: string }
+  // the detail items (docs/models/world-ships.md, "Detail"): drawn only where a spec asks for them
+  | { k: "bulwark"; u: readonly [number, number]; h: number; t?: number; mat?: string; name?: string }
+  | { k: "anchors"; u: number; y: number; s: number; mat?: string; name?: string }
+  | { k: "mooring"; at: readonly number[]; hw: number; s?: number; winch?: boolean; mat?: string; name?: string }
+  | { k: "catwalk"; u: readonly [number, number]; y: number; z?: number; w?: number; pitch?: number; mat?: string; name?: string }
+  | { k: "vents"; at: ReadonlyArray<readonly [number, number]>; y?: number; h: number; r: number; cowl?: boolean; mat?: string; name?: string }
+  | { k: "freefall"; u: number; y: number; len: number; r?: number; tilt?: number; mat?: string; name?: string }
+  | { k: "lashing"; at: readonly number[]; hw: number; y: number; h: number; mat?: string; name?: string }
+  | { k: "fender"; u: readonly [number, number]; y: readonly [number, number]; out: number; mat?: string; name?: string }
+  | { k: "strakes"; u: readonly [number, number]; y: readonly number[]; w?: number; mat?: string; name?: string }
+  | { k: "marks"; at: readonly number[]; y: readonly [number, number]; step?: number; s?: number; thruster?: number; eye?: boolean; mat?: string; name?: string };
 
 export type SailKind = "square" | "gaff" | "lateen" | "junk" | "sprit" | "crabclaw" | "bermuda" | "jib";
 
@@ -513,11 +530,13 @@ export function hullGeometry(f: HullForm): HullGeometry {
   const add = (u: number): void => { st.add(Math.round(Math.min(L, Math.max(0, u)) * 1000) / 1000); };
   const ua = L * run;
   const ub = L * (1 - entry);
-  for (let i = 0; i <= 6; i++) add((ua * i) / 6);
+  const nRun = f.fine ? 12 : 6;
+  const nEntry = f.fine ? 18 : 9;
+  for (let i = 0; i <= nRun; i++) add((ua * i) / nRun);
   for (const t of [0.01, 0.03, 0.06]) add(ua * t);
-  const mids = Math.max(2, Math.min(8, Math.round((ub - ua) / Math.max(4, L / 12))));
+  const mids = f.fine ? Math.max(4, Math.min(16, Math.round((ub - ua) / Math.max(3, L / 24)))) : Math.max(2, Math.min(8, Math.round((ub - ua) / Math.max(4, L / 12))));
   for (let i = 0; i <= mids; i++) add(ua + ((ub - ua) * i) / mids);
-  for (let i = 0; i <= 9; i++) add(ub + ((L - ub) * i) / 9);
+  for (let i = 0; i <= nEntry; i++) add(ub + ((L - ub) * i) / nEntry);
   for (const t of [0.95, 0.975, 0.99]) add(ub + (L - ub) * t);
   const foot = L - rake;
   for (const d of [-0.04, -0.015, 0, 0.3, 0.6].map((v) => v * L)) if (foot + d > ub && foot + d < L) add(foot + d);
@@ -561,10 +580,10 @@ function ctxOf(m: MeshBuilder, s: ShipSpec): ShipCtx {
   return { m, spec: s, L, x: (u) => u - L / 2, hull, deck, side };
 }
 
-/** The triangle budget of a ship (docs/specs/2026-11-05-world-vehicle-fleet.md): 20,000 over 150 m, 4,000 small craft, else 10,000. */
+/** The triangle budget of a ship (docs/models/world-ships.md, "Budgets"): 25,000 over 150 m, 4,000 small craft, else 15,000. */
 export function shipBudget(s: ShipSpec): number {
   if (s.small) return 4000;
-  return shipLength(s) > 150 ? 20_000 : 10_000;
+  return shipLength(s) > 150 ? 25_000 : 15_000;
 }
 
 // --- the hull ------------------------------------------------------------------------
@@ -677,9 +696,32 @@ function drawTier(c: ShipCtx, t: Tier, i: number): void {
   const [u0, u1] = t.u;
   const [y0, y1] = t.y;
   m.scope(t.name ?? `tier ${i + 1}`, () => {
-    const ring = planRing(c.x(u0), c.x(u1), (x) => w(x + c.L / 2), Math.max(4, Math.min(24, Math.round((u1 - u0) / 4))));
-    m.prism(mat, ring, y0, y1, false);
-    m.cap(t.top ?? (mat === "house" ? "roof" : mat), ring, y1);
+    const nRing = Math.max(4, Math.min(24, Math.round((u1 - u0) / 4)));
+    const ring = planRing(c.x(u0), c.x(u1), (x) => w(x + c.L / 2), nRing);
+    if (t.lip) {
+      // the deck edge: the walls stop under a slab that overhangs them, its underside closing the gap
+      const lt = Math.min(0.3, (y1 - y0) * 0.2);
+      const lw = t.lip;
+      const xa = c.x(u0) + 1e-6;
+      const xb = c.x(u1) - 1e-6;
+      const outer: Ring = ring.map(([px, pz]) => [px <= xa ? px - lw : px >= xb ? px + lw : px, pz + Math.sign(pz) * lw]);
+      m.prism(mat, ring, y0, y1 - lt, false);
+      m.scope("deck edge", () => {
+        m.prism(mat, outer, y1 - lt, y1, false);
+        m.cap(t.top ?? (mat === "house" ? "roof" : mat), outer, y1);
+        for (let k = 0; k < ring.length; k++) {
+          const j = (k + 1) % ring.length;
+          const a: Vec3 = [ring[k]![0], y1 - lt, ring[k]![1]];
+          const b: Vec3 = [ring[j]![0], y1 - lt, ring[j]![1]];
+          const d: Vec3 = [outer[j]![0], y1 - lt, outer[j]![1]];
+          const e: Vec3 = [outer[k]![0], y1 - lt, outer[k]![1]];
+          m.facets(mat, [a, b, d, a, d, e], [0, -1, 0]);
+        }
+      });
+    } else {
+      m.prism(mat, ring, y0, y1, false);
+      m.cap(t.top ?? (mat === "house" ? "roof" : mat), ring, y1);
+    }
     if (t.windows?.length) {
       m.scope("windows", () => {
         for (const win of t.windows!) {
@@ -701,7 +743,7 @@ function drawTier(c: ShipCtx, t: Tier, i: number): void {
                 batch.quad([xa, y0 + win.y, z], [xb, y0 + win.y, z], [xb, y0 + win.y + win.h, z], [xa, y0 + win.y + win.h, z], [0, 0, side]);
               }
             }
-            batch.draw(m, "glass");
+            batch.draw(m, win.mat ?? "glass");
           }
         }
         if (t.front) {
@@ -829,7 +871,22 @@ function drawItem(c: ShipCtx, it: Item, i: number): void {
         for (let k = 0; k < it.n; k++) {
           const u = it.u[0] + k * (len + gap) + len / 2;
           const hw = Math.min(it.hw, fitWidth(c, u - len / 2, u + len / 2, it.y));
-          m.box(it.mat ?? "hatch", x(u), 0, len, hw * 2, it.y, it.y + it.h);
+          if (!it.coaming && !it.ridge && !it.ribs) {
+            m.box(it.mat ?? "hatch", x(u), 0, len, hw * 2, it.y, it.y + it.h);
+            continue;
+          }
+          // the detailed hatch: a coaming under the cover, a ridged top, ribs across it
+          const co = it.coaming ?? 0;
+          const ridge = Math.min(it.ridge ?? 0, it.h * 0.6);
+          const y0 = it.y + co;
+          const ya = y0 + it.h - ridge;
+          if (co > 0) m.box(it.coamingMat ?? "steel", x(u), 0, len - 0.6, hw * 2 - 0.6, it.y - 0.05, y0, 0, false);
+          m.box(it.mat ?? "hatch", x(u), 0, len, hw * 2, y0, ya, 0, ridge <= 0);
+          if (ridge > 0) m.sweep(it.mat ?? "hatch", "x", [[hw, ya], [0, ya + ridge], [-hw, ya]], x(u - len / 2), [[hw, ya], [0, ya + ridge], [-hw, ya]], x(u + len / 2), true);
+          for (let r = 1; r <= (it.ribs ?? 0); r++) {
+            const ur = u - len / 2 + (len * r) / ((it.ribs ?? 0) + 1);
+            m.box(it.mat ?? "hatch", x(ur), 0, 0.35, hw * 2 + 0.16, y0 + (ya - y0) * 0.25, ya + ridge * 0.35);
+          }
         }
       });
       return;
@@ -845,6 +902,21 @@ function drawItem(c: ShipCtx, it: Item, i: number): void {
           // a bay narrows with the hull, a stack's width at a time
           const fit = fitWidth(c, u - len / 2, u + len / 2, it.y);
           const hw = Math.min(it.hw, fit);
+          if (it.rows) {
+            // one stack per row of boxes, its lower and upper boxes in two colours
+            const nr = Math.max(1, Math.round((hw * 2) / it.rows));
+            const rw = (hw * 2) / nr;
+            for (let g = 0; g < nr; g++) {
+              const tiers = Math.max(1, it.tiers - (rnd() < 0.3 ? 1 + Math.floor(rnd() * 3) : 0));
+              const split = tiers > 1 && rnd() < 0.7 ? 1 + Math.floor(rnd() * (tiers - 1)) : tiers;
+              const ca = BOXES[Math.floor(rnd() * BOXES.length)]!;
+              const cb = BOXES[Math.floor(rnd() * BOXES.length)]!;
+              const zc = -hw + (g + 0.5) * rw;
+              m.box(ca, x(u), zc, len, rw - 0.1, it.y, it.y + split * 2.6, 0, split === tiers);
+              if (split < tiers) m.box(cb, x(u), zc, len, rw - 0.1, it.y + split * 2.6, it.y + tiers * 2.6, 0, true);
+            }
+            continue;
+          }
           const ng = Math.max(1, Math.round((groups * hw) / it.hw));
           const gw = (hw * 2) / ng;
           for (let g = 0; g < ng; g++) {
@@ -1052,6 +1124,254 @@ function drawItem(c: ShipCtx, it: Item, i: number): void {
       return;
     }
     case "rig": drawRig(c, it); return;
+    case "bulwark": {
+      m.scope(nm("bulwark"), () => {
+        const t = it.t ?? 0.25;
+        const us = [...new Set([...spaced(it.u[0], Math.min(c.L, it.u[1]), Math.max(1, Math.min(6, (it.u[1] - it.u[0]) / 24))), ...(c.hull?.stations ?? []).filter((v) => v > it.u[0] && v < Math.min(c.L, it.u[1]))].map((v) => Math.round(v * 1000) / 1000))].sort((a, b) => a - b);
+        for (const side of [1, -1]) {
+          const out = new TriBatch();
+          const inn = new TriBatch();
+          const top = new TriBatch();
+          const pts = us.map((u) => {
+            const yd = c.deck(u);
+            const zo = Math.max(0, c.side(u, yd) - 0.01);
+            return { x: x(u), yd, zo: side * zo, zi: side * Math.max(0, zo - t) };
+          });
+          for (let k = 0; k + 1 < pts.length; k++) {
+            const a = pts[k]!;
+            const b = pts[k + 1]!;
+            out.quad([a.x, a.yd - 0.05, a.zo], [b.x, b.yd - 0.05, b.zo], [b.x, b.yd + it.h, b.zo], [a.x, a.yd + it.h, a.zo], [0, 0, side]);
+            // at a pointed bow both sides meet: no inner face on the centreline
+            if (Math.abs(a.zi) > 1e-3 || Math.abs(b.zi) > 1e-3) inn.quad([a.x, a.yd - 0.05, a.zi], [b.x, b.yd - 0.05, b.zi], [b.x, b.yd + it.h, b.zi], [a.x, a.yd + it.h, a.zi], [0, 0, -side]);
+            top.quad([a.x, a.yd + it.h, a.zi], [b.x, b.yd + it.h, b.zi], [b.x, b.yd + it.h, b.zo], [a.x, a.yd + it.h, a.zo], [0, 1, 0]);
+          }
+          out.draw(m, it.mat ?? "hull");
+          inn.draw(m, it.mat ?? "hull");
+          top.draw(m, it.mat ?? "hull");
+        }
+      });
+      return;
+    }
+    case "anchors": {
+      m.scope(nm("anchors"), () => {
+        const s = it.s;
+        for (const side of [1, -1]) {
+          // a decal on the hull: each corner at the hull's side there, `off` proud of it
+          const decal = (mat: string, off: number, pts: ReadonlyArray<readonly [number, number]>): void => {
+            const batch = new TriBatch();
+            const P = ([u, y]: readonly [number, number]): Vec3 => [x(u), y, side * (c.side(u, y) + off)];
+            for (let k = 1; k + 1 < pts.length; k++) batch.add(P(pts[0]!), P(pts[k]!), P(pts[k + 1]!), [0, 0, side]);
+            batch.draw(m, mat);
+          };
+          const u = it.u;
+          const y = it.y;
+          decal("black", 0.05, [[u - s * 0.45, y - s * 0.15], [u + s * 0.45, y - s * 0.15], [u + s * 0.5, y + s * 0.5], [u - s * 0.4, y + s * 0.5]]);
+          decal(it.mat ?? "black", 0.14, [[u - s * 0.06, y + s * 0.35], [u + s * 0.06, y + s * 0.35], [u + s * 0.06, y - s * 0.55], [u - s * 0.06, y - s * 0.55]]);
+          decal(it.mat ?? "black", 0.14, [[u - s * 0.4, y - s * 0.45], [u + s * 0.4, y - s * 0.45], [u + s * 0.16, y - s * 0.72], [u - s * 0.16, y - s * 0.72]]);
+        }
+      });
+      return;
+    }
+    case "mooring": {
+      m.scope(nm("mooring gear"), () => {
+        const s = it.s ?? 1;
+        const mat = it.mat ?? "black";
+        for (const u of it.at) {
+          const y = c.deck(u);
+          const hw = Math.min(it.hw, c.side(u, y) - 0.8 * s);
+          for (const side of [1, -1]) {
+            for (const du of [-0.6 * s, 0.6 * s]) m.prism(mat, ngon(8, 0.28 * s, 0, x(u + du), side * hw), y - 0.05, y + 0.7 * s);
+            m.box(mat, x(u), side * hw, 1.9 * s, 0.5 * s, y - 0.05, y + 0.15 * s, 0, true);
+            if (it.winch) {
+              const zw = side * Math.max(0.8 * s, hw * 0.45);
+              m.box("steel", x(u - 1.6 * s), zw, 1.4 * s, 2.2 * s, y - 0.05, y + 0.7 * s);
+              m.rod("red", [x(u - 1.6 * s), y + 1.1 * s, zw - 1.2 * s], [x(u - 1.6 * s), y + 1.1 * s, zw + 1.2 * s], 0.55 * s, 8);
+            }
+          }
+        }
+      });
+      return;
+    }
+    case "catwalk": {
+      m.scope(nm("catwalk"), () => {
+        const mat = it.mat ?? "steel";
+        const w = it.w ?? 1.2;
+        const z = it.z ?? 0;
+        const xa = x(it.u[0]);
+        const xb = x(it.u[1]);
+        m.box(mat, (xa + xb) / 2, z, xb - xa, w, it.y - 0.15, it.y);
+        for (const sd of [1, -1]) m.box(mat, (xa + xb) / 2, z + sd * (w / 2 - 0.04), xb - xa, 0.08, it.y + 0.95, it.y + 1.05);
+        for (const u of spaced(it.u[0] + 0.5, it.u[1] - 0.5, it.pitch ?? 8)) m.box(mat, x(u), z, 0.3, 0.3, c.deck(u) - 0.05, it.y - 0.15, 0, false);
+      });
+      return;
+    }
+    case "vents": {
+      m.scope(nm("ventilators"), () => {
+        const mat = it.mat ?? "white";
+        for (const [u, z] of it.at) {
+          const y = it.y ?? c.deck(u);
+          m.prism(mat, ngon(8, it.r, 0, x(u), z), y - 0.05, y + it.h, !it.cowl);
+          if (it.cowl) {
+            // the cowl: a bell turned to face forward, its mouth dark
+            const hy = y + it.h + it.r * 0.9;
+            m.rod(mat, [x(u - it.r * 0.6), hy, z], [x(u + it.r * 1.1), hy, z], it.r * 1.5, 8);
+            m.facets("black", ngon(8, it.r * 1.2, 0, 0, 0).flatMap((p, k, ring): Vec3[] => {
+              const q = ring[(k + 1) % ring.length]!;
+              return [[x(u + it.r * 1.1) + 0.02, hy, z], [x(u + it.r * 1.1) + 0.02, hy + p[0], z + p[1]], [x(u + it.r * 1.1) + 0.02, hy + q[0], z + q[1]]];
+            }), [1, 0, 0]);
+          } else {
+            m.prism(mat, ngon(8, it.r * 1.8, 0, x(u), z), y + it.h, y + it.h + it.r * 0.7);
+          }
+        }
+      });
+      return;
+    }
+    case "freefall": {
+      m.scope(nm("freefall lifeboat"), () => {
+        const mat = it.mat ?? "boat";
+        const r = it.r ?? it.len * 0.17;
+        const a = it.tilt ?? 0.55;
+        // the boat's axis points aft and down its launch ramp; rings square to it
+        const d: Vec3 = [-Math.cos(a), -Math.sin(a), 0];
+        const n: Vec3 = [-Math.sin(a), Math.cos(a), 0];
+        const C: Vec3 = [x(it.u), it.y + r, 0];
+        const st: Array<readonly [number, number, number]> = [[-0.5, 0.25, 0.6], [-0.42, 0.85, 1], [-0.2, 1, 1.15], [0.2, 1, 1.15], [0.4, 0.8, 1], [0.5, 0.15, 0.3]];
+        const ring = ([t, rz, ry]: readonly [number, number, number]): Vec3[] => Array.from({ length: 8 }, (_, k) => {
+          const f = (k / 8) * Math.PI * 2;
+          const o: Vec3 = [C[0] + d[0] * t * it.len, C[1] + d[1] * t * it.len, C[2]];
+          const cy = Math.sin(f) * r * ry;
+          const cz = Math.cos(f) * r * rz;
+          return [o[0] + n[0] * cy, o[1] + n[1] * cy, o[2] + cz];
+        });
+        const rings = st.map(ring);
+        const batch = new TriBatch();
+        for (let i = 0; i + 1 < rings.length; i++) {
+          const ra = rings[i]!;
+          const rb = rings[i + 1]!;
+          const mid: Vec3 = [C[0] + d[0] * (st[i]![0] + st[i + 1]![0]) * 0.5 * it.len, C[1] + d[1] * (st[i]![0] + st[i + 1]![0]) * 0.5 * it.len, 0];
+          for (let k = 0; k < 8; k++) {
+            const j = (k + 1) % 8;
+            const pc: Vec3 = [(ra[k]![0] + rb[j]![0]) / 2 - mid[0], (ra[k]![1] + rb[j]![1]) / 2 - mid[1], (ra[k]![2] + rb[j]![2]) / 2];
+            batch.quad(ra[k]!, ra[j]!, rb[j]!, rb[k]!, pc);
+          }
+        }
+        for (const [i, dir] of [[0, -1], [rings.length - 1, 1]] as const) {
+          const rr = rings[i]!;
+          for (let k = 1; k + 1 < 8; k++) batch.add(rr[0]!, rr[k]!, rr[k + 1]!, [d[0] * dir, d[1] * dir, 0]);
+        }
+        batch.draw(m, mat);
+        // the ramp under it: two rails and their frame
+        for (const sd of [1, -1]) m.rod("steel", [C[0] - d[0] * it.len * 0.45 - n[0] * r, C[1] - d[1] * it.len * 0.45 - n[1] * r, sd * r * 0.7], [C[0] + d[0] * it.len * 0.55 - n[0] * r, C[1] + d[1] * it.len * 0.55 - n[1] * r, sd * r * 0.7], 0.12, 4);
+        m.box("steel", C[0] - d[0] * it.len * 0.45, 0, 0.4, r * 1.8, it.y - 0.05, C[1] - d[1] * it.len * 0.45 - n[1] * r);
+      });
+      return;
+    }
+    case "fender": {
+      m.scope(nm("fender"), () => {
+        const [ya, yb] = it.y;
+        const ym = (ya + yb) / 2;
+        const hi = Math.min(c.L, it.u[1]);
+        const us = [...new Set([...spaced(it.u[0], hi, Math.max(0.5, Math.min(4, (hi - it.u[0]) / 24))), ...(c.hull?.stations ?? []).filter((v) => v > it.u[0] && v < hi)].map((v) => Math.round(v * 1000) / 1000))].sort((a, b) => a - b);
+        for (const side of [1, -1]) {
+          const face = new TriBatch();
+          const top = new TriBatch();
+          const bot = new TriBatch();
+          const pts = us.map((u) => {
+            const zi = c.side(u, ym);
+            return { x: x(u), zi: side * Math.max(0, zi - 0.05), zo: side * (zi + it.out) };
+          });
+          for (let k = 0; k + 1 < pts.length; k++) {
+            const a = pts[k]!;
+            const b = pts[k + 1]!;
+            face.quad([a.x, ya, a.zo], [b.x, ya, b.zo], [b.x, yb, b.zo], [a.x, yb, a.zo], [0, 0, side]);
+            top.quad([a.x, yb, a.zi], [b.x, yb, b.zi], [b.x, yb, b.zo], [a.x, yb, a.zo], [0, 1, 0]);
+            bot.quad([a.x, ya, a.zi], [b.x, ya, b.zi], [b.x, ya, b.zo], [a.x, ya, a.zo], [0, -1, 0]);
+          }
+          for (const bt of [face, top, bot]) bt.draw(m, it.mat ?? "skirt");
+        }
+      });
+      return;
+    }
+    case "strakes": {
+      m.scope(nm("strakes"), () => {
+        const w = it.w ?? 0.06;
+        const hi = Math.min(c.L, it.u[1]);
+        const us = [...new Set([...spaced(it.u[0], hi, Math.max(0.3, (hi - it.u[0]) / 16)), ...(c.hull?.stations ?? []).filter((v) => v > it.u[0] && v < hi)].map((v) => Math.round(v * 1000) / 1000))].sort((a, b) => a - b);
+        for (const side of [1, -1]) {
+          const batch = new TriBatch();
+          const P = (u: number, y: number): Vec3 => [x(u), y, side * (c.side(u, y) + 0.02)];
+          for (const y of it.y) {
+            for (let k = 0; k + 1 < us.length; k++) {
+              const a = us[k]!;
+              const b = us[k + 1]!;
+              if (c.side(a, y) < 0.05 || c.side(b, y) < 0.05) continue;
+              batch.quad(P(a, y - w / 2), P(b, y - w / 2), P(b, y + w / 2), P(a, y + w / 2), [0, 0, side]);
+            }
+          }
+          batch.draw(m, it.mat ?? "black");
+        }
+      });
+      return;
+    }
+    case "marks": {
+      m.scope(nm("hull marks"), () => {
+        const mat = it.mat ?? "white";
+        const s = it.s ?? 0.6;
+        const step = it.step ?? 1;
+        for (const side of [1, -1]) {
+          const batch = new TriBatch();
+          const P = (u: number, y: number): Vec3 => [x(u), y, side * (c.side(u, y) + 0.05)];
+          const quad = (u0: number, u1: number, y0: number, y1: number): void => batch.quad(P(u0, y0), P(u1, y0), P(u1, y1), P(u0, y1), [0, 0, side]);
+          // the draft marks: a tick each `step` metres, every other one longer
+          for (const u of it.at) {
+            for (let k = 0, y = it.y[0]; y <= it.y[1] + 1e-6; k++, y += step) quad(u - s * (k % 2 ? 0.5 : 1), u + s * 0.15, y, y + step * 0.18);
+            quad(u - s * 0.05, u + s * 0.15, it.y[0], it.y[1] + step * 0.18);
+          }
+          // the bow thruster sign: a ring with a cross
+          if (it.thruster !== undefined) {
+            const r = s * 2.2;
+            const yc = (it.y[0] + it.y[1]) / 2 + 0.5;
+            const u = it.thruster;
+            for (let k = 0; k < 10; k++) {
+              const a = (k / 10) * Math.PI * 2;
+              const b = ((k + 1) / 10) * Math.PI * 2;
+              batch.quad(P(u + Math.cos(a) * r, yc + Math.sin(a) * r), P(u + Math.cos(b) * r, yc + Math.sin(b) * r), P(u + Math.cos(b) * r * 0.8, yc + Math.sin(b) * r * 0.8), P(u + Math.cos(a) * r * 0.8, yc + Math.sin(a) * r * 0.8), [0, 0, side]);
+            }
+            if (it.eye) {
+              // a painted eye: the ring filled, its pupil dark, a little proud of it
+              for (let k = 0; k < 10; k++) {
+                const a = (k / 10) * Math.PI * 2;
+                const b = ((k + 1) / 10) * Math.PI * 2;
+                batch.add(P(u, yc), P(u + Math.cos(a) * r * 0.8, yc + Math.sin(a) * r * 0.8), P(u + Math.cos(b) * r * 0.8, yc + Math.sin(b) * r * 0.8), [0, 0, side]);
+              }
+              const pupil = new TriBatch();
+              const Q = (uu: number, y: number): Vec3 => [x(uu), y, side * (c.side(uu, y) + 0.09)];
+              for (let k = 0; k < 8; k++) {
+                const a = (k / 8) * Math.PI * 2;
+                const b = ((k + 1) / 8) * Math.PI * 2;
+                pupil.add(Q(u, yc), Q(u + Math.cos(a) * r * 0.4, yc + Math.sin(a) * r * 0.4), Q(u + Math.cos(b) * r * 0.4, yc + Math.sin(b) * r * 0.4), [0, 0, side]);
+              }
+              pupil.draw(m, "black");
+            } else {
+              quad(u - r * 0.8, u + r * 0.8, yc - r * 0.08, yc + r * 0.08);
+              quad(u - r * 0.08, u + r * 0.08, yc - r * 0.8, yc - r * 0.08);
+              quad(u - r * 0.08, u + r * 0.08, yc + r * 0.08, yc + r * 0.8);
+            }
+          }
+          batch.draw(m, mat);
+        }
+      });
+      return;
+    }
+    case "lashing": {
+      m.scope(nm("lashing bridges"), () => {
+        for (const u of it.at) {
+          const hw = Math.min(it.hw, fitWidth(c, u - 0.3, u + 0.3, it.y));
+          m.box(it.mat ?? "grey", x(u), 0, 0.45, hw * 2, it.y, it.y + it.h);
+        }
+      });
+      return;
+    }
     case "rail": {
       m.scope(nm("railing"), () => {
         const h = it.h ?? 1;
