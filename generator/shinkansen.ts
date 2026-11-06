@@ -65,6 +65,8 @@ export interface ShinkansenLivery {
    * tip, ascending y), later sweeps over earlier ones; a cab face paints them on its cab sides too.
    */
   endSweeps?: ReadonlyArray<{ mat: string; front: readonly Pt[]; back: readonly Pt[] }>;
+  /** Paint over each door's span above its head on every car, bands [y0, y1, mat]: a door's colour carried up the side. */
+  overDoors?: readonly Band[];
 }
 
 export interface ShinkansenSeries {
@@ -101,6 +103,8 @@ export interface ShinkansenSeries {
   doorGlassW?: number;
   /** The upper window rows run on over the doors, from the first door to the car's end (a double-deck car's upper deck). */
   upperOverDoors?: boolean;
+  /** The door's two leaves, each with a narrow window (`doorGlassW` wide) this far apart, centre to centre. */
+  doorGlassPair?: number;
   bogieCentres: number;
   wheelR: number;
   wheelbase: number;
@@ -171,6 +175,8 @@ export interface ShinkansenSeries {
 export interface SeriesLayout {
   doors: ReadonlyArray<readonly [number, number, number]>;
   windows: ReadonlyArray<readonly [number, number]>;
+  /** Each window row's own spans (by the series' `windows` index), in place of `windows` for that row. */
+  rows?: ReadonlyArray<ReadonlyArray<readonly [number, number]> | undefined>;
 }
 
 /** The coupling plane's distance beyond a buffered cab end. */
@@ -248,9 +254,9 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
     },
     bands: (end && l.endBands) || l.bands, roof: l.roof, skirt: l.skirt, under: "under",
     ...(end && s.cabPanel ? { field: { d: s.cabPanel.d, y: s.cabPanel.y, mat: "cabPanel" } } : {}),
-    windows: s.windows.map((y, r) => ({ y, spans: end && s.endSides && r > 0 ? [] : r > 0 && s.upperOverDoors ? row(end ? doors[0]![0] : 0.6, s.single ? L - doors[0]![0] : L - 0.6) : spans, frame: "rubber" })),
+    windows: s.windows.map((y, r) => ({ y, spans: own?.rows?.[r] ? own.rows[r]!.map(([a, e]): [number, number] => [a, e]) : end && s.endSides && r > 0 ? [] : r > 0 && s.upperOverDoors ? row(end ? doors[0]![0] : 0.6, s.single ? L - doors[0]![0] : L - 0.6) : spans, frame: "rubber" })),
     ...(s.fluting ? { fluting: s.fluting } : {}),
-    doors: { spans: doors, y: [s.door[0], s.door[1]], glass: [s.door[2], s.door[3]], ...(s.doorGlassW ? { glassW: s.doorGlassW } : {}), ...(own && !(end && s.endSides) ? { slides: own.doors.map((o) => o[2]) } : {}) },
+    doors: { spans: doors, y: [s.door[0], s.door[1]], glass: [s.door[2], s.door[3]], ...(s.doorGlassW ? { glassW: s.doorGlassW } : {}), ...(s.doorGlassPair ? { glassPair: s.doorGlassPair } : {}), ...(own && !(end && s.endSides) ? { slides: own.doors.map((o) => o[2]) } : {}) },
     ...(l.doors ? { doorBands: l.doors } : {}), ...(end && l.front && !s.flatCab ? { front: { d: l.frontD ?? s.nose.len + 0.05, bands: l.front, ...(l.frontRoof ? { roof: l.frontRoof } : {}) } } : {}),
     // a cab face draws its own panes and lamps: an empty cab keeps the gangway frame off its end
     ...(s.flatCab ? { cab: s.flatCab } : end && s.noseCab ? { cab: s.noseCab } : end && s.cabFace ? { cab: { panes: [], lamps: [] } } : {}), cabEnds: end && (s.flatCab || s.noseCab || s.cabFace) ? (s.single ? [1, -1] : [1]) : [], diaphragm: [s.door[0], s.door[1] + 0.3],
@@ -271,6 +277,9 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
         if (s.single) m.scope("rear cab face", () => drawCabFace(m, f, -1, -X(L + f.dJoin), half, fp));
       } else if (end && !s.flatCab) noseFittings(m, s, b, X);
       if (end && l.capSlope && l.frontRoof) m.scope("cab roof", () => capSlope(m, b, X, l.capSlope!, l.frontRoof!));
+      if (l.overDoors) m.scope("over doors", () => {
+        for (const sd of [1, -1]) for (const [d0, d1] of doors) for (const [y0, y1, mat] of l.overDoors!) sidePanel(m, b, X, sd, mat, d0, d1, y0, y1, 0.004, 0.003);
+      });
       if (end && l.endSweeps) m.scope("sweeps", () => l.endSweeps!.forEach((w, i) => m.scope(`sweep ${i + 1}`, () => endSweep(m, b, X, w, s.cabFace?.dJoin ?? 0, 0.003 + 0.0015 * i))));
       if (end && s.cabWindows) m.scope("cab windows", () => {
         // a single railcar's rear cab too, mirrored

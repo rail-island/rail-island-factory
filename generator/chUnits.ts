@@ -5,7 +5,7 @@
 
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamValues, ProceduralDesign } from "./design.ts";
-import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
+import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type SeriesLayout, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, flirt, kiss, nose, NO_NOSE } from "./seriesHelpers.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
 import type { Pt } from "./sliceLoft.ts";
@@ -189,56 +189,111 @@ export const FV_DOSTO: ShinkansenSeries = {
 
 export const SBB_FLIRT: ShinkansenSeries = flirt({ W: 1.44, liveries: { sbbRegio: chLivery("sbbRegio", "523 001") }, weight: { end: 42, middle: 32 }, power: 650, maxspeed: 160 });
 /**
- * The KISS's S-Bahn paint (photo-rabe-511-044-...-weinfelden.jpg, photo-sbb-rabe-511-tossmuhle.jpg): white
- * over a navy lower band, a navy stripe between the decks, red doors, a dark roof; the front's red
- * wrapping round the cab's corners and up its edge to the roof, the cab's big side window behind.
+ * The KISS's S-Bahn paint (photo-rabe-511-044-...-weinfelden.jpg, photo-sbb-rabe-511-tossmuhle.jpg,
+ * photo-sbb-511-022-st-margrethen.jpg): white over a navy lower band 1.48 m high, a navy stripe
+ * between the decks from behind the cab's locker back, red doors whose red runs on up to the upper
+ * windows, a dark roof. On the cab side the face's red rises to the roof ahead of the cab window,
+ * the window a raked pane and a narrow one behind its pillar; a dark equipment fairing over the cab
+ * section, the locker panel and the SBB emblem behind it.
  */
-const KISS_RED_BACK: Pt[] = [[1.55, 0.75], [2.2, 0.95], [3.0, 1.45], [3.6, 1.95], [3.85, 2.2]];
 const KISS_SBB: ShinkansenLivery = {
   title: "SBB Regio", number: "511 044",
-  palette: { white: c("#f1f1ee"), blue: c("#1f2f6b"), red: c(SBB_RED), roofG: c("#3d4247", 0.6), skirtG: c("#2a2d31", 0.75), cabMask: c("#1b1d20", 0.3) },
-  bands: [[0, 1.35, "blue"], [1.35, 2.82, "white"], [2.82, 2.94, "blue"], [2.94, 9, "white"]], doors: [[0, 9, "red"]],
+  palette: { white: c("#f1f1ee"), blue: c("#1f2f6b"), red: c(SBB_RED), roofG: c("#3d4247", 0.6), skirtG: c("#2a2d31", 0.75), cabMask: c("#1b1d20", 0.3), lockerG: c("#c9cac6", 0.6) },
+  bands: [[0, 1.48, "blue"], [1.48, 2.62, "white"], [2.62, 2.82, "blue"], [2.82, 9, "white"]], doors: [[0, 9, "red"]],
+  // the red over each door up to the upper window, a navy class panel in it
+  overDoors: [[2.82, 3.02, "red"], [3.02, 3.22, "blue"], [3.22, 3.32, "red"]],
   roof: "roofG", skirt: "skirtG",
+  endLettering: [{ text: "SBB CFF FFS", d: 2.85, y: 3.33, h: 0.18, mat: "lettering" }],
+  // d behind the tip
   endSweeps: [
-    // d behind the tip: the red edge on the cab side, then the cab's side window, its front rounded
-    { mat: "red", front: [[1.55, -9], [3.85, -9]], back: KISS_RED_BACK },
-    { mat: "cabGlass", front: [[2.3, 2.2], [2.45, 2.0], [2.9, 1.9], [3.15, 2.0], [3.25, 2.15]], back: [[2.3, 3.85], [3.25, 3.85]] },
+    // no stripe ahead of the locker's back edge
+    { mat: "white", front: [[2.58, -9], [2.86, -9]], back: [[2.58, 5.4], [2.86, 5.4]] },
+    // the face's red over the cab window, up to the roof's edge
+    { mat: "red", front: [[3.3, -9], [4.15, -9]], back: [[3.3, 1.45], [3.7, 2.1], [4.0, 3.0], [4.15, 3.6]] },
+    // the cab window: a raked pane, its front corner rounded, and a narrow one behind the black pillar
+    { mat: "cabGlass", front: [[2.22, 1.16], [3.2, 1.8], [3.4, 2.0], [3.5, 2.25]], back: [[2.22, 4.04], [3.5, 4.04]] },
+    { mat: "cabMask", front: [[2.22, 3.45], [3.5, 3.45]], back: [[2.22, 3.58], [3.5, 3.58]] },
+    // the equipment fairing over the cab section
+    { mat: "roofG", front: [[3.78, 2.34], [4.0, 3.0], [4.15, 3.6]], back: [[3.78, 8.7], [4.15, 8.7]] },
+    // the locker: its seam and grille panel; the SBB emblem's red square
+    { mat: "roofG", front: [[1.57, 4.5], [3.03, 4.5]], back: [[1.57, 5.3], [3.03, 5.3]] },
+    { mat: "lockerG", front: [[1.6, 4.525], [3.0, 4.525]], back: [[1.6, 5.275], [3.0, 5.275]] },
+    { mat: "red", front: [[3.25, 4.5], [3.6, 4.5]], back: [[3.25, 4.95], [3.6, 4.95]] },
   ],
 };
 
+/** [lat, y] points mirrored to the face's other side. */
+const kissMirror = (pts: readonly Pt[]): Pt[] => pts.map(([l, y]): Pt => [-l, y]);
+const KISS_WEDGE: Pt[] = [[0.6, 1.6], [1.6, 1.6], [1.6, 3.62], [1.36, 3.62], [1.06, 2.67], [0.8, 1.99], [0.62, 1.9]];
+const KISS_POD: Pt[] = [[0.48, 1.62], [0.55, 1.61], [1.0, 1.68], [1.13, 1.74], [1.17, 1.82], [1.12, 1.9], [0.55, 1.89], [0.48, 1.87]];
+
 /**
- * The KISS's front (the photographs above and photo-sbb-ir-dosto-rabe-512-...jpg in profile): upright
- * from the skirt to the chin, the windscreen raked about 37 degrees and the dark dome over it rounding
- * 3.2 m back to the roof. The red chin under the windscreen holds the SBB emblem between two black
- * lamp pods; white and the number under them, the navy apron with the coupler below.
+ * The KISS's front (photo-ffs-rabe-511120-ziegelbruecke-...jpg head on, the photographs above): upright
+ * from the apron to the lamps, the windscreen raked about 37 degrees and the dark dome over it rounding
+ * 3.2 m back to the roof. The windscreen is narrower at its foot than at its head; the red runs down
+ * from the roof's corners beside it to the chin between two black lamp pods, white wedges coming in
+ * from the corners over the pods. White and the number under them, the navy apron with two grilles.
  */
 const KISS_FACE: SeriesCabFace = {
-  dJoin: 3.2, dSide: 2.6, first: 5.0, roofFrom: 4.4, bulge: 0.1, cols: [8, 4, 1, 2], tolerance: 0.015,
-  profile: [[0.6, 0.18], [0.75, 0.05], [1.0, 0], [1.6, 0], [2.0, 0.1], [2.2, 0.2], [2.75, 0.6], [3.35, 1.05], [3.9, 1.5], [4.2, 1.9], [4.45, 2.45], [4.6, 3.2]],
-  corner: [[0.6, 0.55], [2.2, 0.55], [3.35, 0.5], [4.0, 0.45], [4.4, 0.3], [4.6, 0.1]],
-  rows: [0.6, 0.75, 1.0, 1.35, 1.48, 1.55, 1.76, 2.0, 2.2, 2.3, 2.75, 3.35, 3.45, 3.7, 3.9, 4.2, 4.4, 4.45, 4.6],
-  bands: () => [[0, 0.75, "skirtG"], [0.75, 1.35, "blue"], [1.35, 1.55, "white"], [1.55, 9, "red"]],
-  masks: [
-    // the dark dome over the windscreen, up to the roof, and the lamp pods
-    { lat: [-1.06, 1.06], y: [2.12, 4.8], r: 0.3, mat: "cabMask" },
-    { lat: [-1.34, -0.74], y: [1.47, 1.77], r: 0.12, mat: "cabMask" }, { lat: [0.74, 1.34], y: [1.47, 1.77], r: 0.12, mat: "cabMask" },
+  dJoin: 3.2, dSide: 2.6, first: 5.0, roofFrom: 4.4, bulge: 0.1, cols: [6, 4, 1, 1], tolerance: 0.05,
+  profile: [[0.6, 0.18], [0.75, 0.05], [1.0, 0], [1.6, 0], [1.9, 0.05], [2.2, 0.2], [2.75, 0.6], [3.47, 1.15], [3.9, 1.5], [4.2, 1.8], [4.45, 2.3], [4.6, 3.2]],
+  corner: [[0.6, 0.55], [1.5, 0.6], [2.2, 0.75], [3.35, 0.7], [4.0, 0.55], [4.4, 0.35], [4.6, 0.1]],
+  rows: [0.6, 0.75, 1.0, 1.48, 1.6, 2.21, 2.75, 3.47, 3.9, 4.2, 4.45, 4.6],
+  bands: () => [[0, 0.75, "skirtG"], [0.75, 1.48, "blue"], [1.48, 1.6, "white"], [1.6, 9, "red"]],
+  fields: [
+    { mat: "white", pts: KISS_WEDGE }, { mat: "white", pts: kissMirror(KISS_WEDGE) },
+    // the dark dome over the windscreen, up to the roof, and the windscreen itself
+    { mat: "cabMask", pts: [[-0.73, 2.18], [0.73, 2.18], [0.98, 3.47], [1.04, 3.47], [1.04, 4.9], [-1.04, 4.9], [-1.04, 3.47], [-0.98, 3.47]] },
+    { mat: "cabGlass", pts: [[-0.71, 2.21], [0.71, 2.21], [0.95, 3.44], [-0.95, 3.44]] },
+    { mat: "cabMask", pts: KISS_POD }, { mat: "cabMask", pts: kissMirror(KISS_POD) },
   ],
-  panes: [{ lat: [-1.0, 1.0], y: [2.2, 3.35], r: 0.1 }, { lat: [-0.55, 0.55], y: [3.45, 3.7], r: 0.04 }],
+  // the windscreen's middle (the distant model's glass) and the destination display
+  panes: [{ lat: [-0.7, 0.7], y: [2.21, 3.44], r: 0.02 }, { lat: [-0.68, 0.68], y: [3.54, 3.82], r: 0.02 }],
   decals: [
-    { mat: "white", pts: [[-0.11, 1.64], [0.11, 1.64], [0.11, 1.675], [-0.11, 1.675]] },
-    { mat: "white", pts: [[-0.02, 1.58], [0.02, 1.58], [0.02, 1.735], [-0.02, 1.735]] },
-    { mat: "white", pts: [[-0.19, 1.657], [-0.1, 1.58], [-0.1, 1.735]] },
-    { mat: "white", pts: [[0.19, 1.657], [0.1, 1.735], [0.1, 1.58]] },
+    // the apron's grilles either side of the coupler
+    { mat: "rubber", pts: [[-1.1, 0.86], [-0.64, 0.86], [-0.64, 1.36], [-1.1, 1.36]] }, { mat: "rubber", pts: [[0.64, 0.86], [1.1, 0.86], [1.1, 1.36], [0.64, 1.36]] },
+    { mat: "white", pts: [[-0.08, 1.705], [0.08, 1.705], [0.08, 1.735], [-0.08, 1.735]] },
+    { mat: "white", pts: [[-0.016, 1.655], [0.016, 1.655], [0.016, 1.785], [-0.016, 1.785]] },
+    { mat: "white", pts: [[-0.145, 1.72], [-0.075, 1.655], [-0.075, 1.785]] },
+    { mat: "white", pts: [[0.145, 1.72], [0.075, 1.785], [0.075, 1.655]] },
   ],
-  lamps: [[-0.95, 1.62, 0.08, "lampRed"], [0.95, 1.62, 0.08, "lampRed"], [-1.17, 1.62, 0.07, "lampHead"], [1.17, 1.62, 0.07, "lampHead"]], roofLamp: [0, 3.95, 0.09],
-  number: { lat: -0.4, y: 1.4, h: 0.08, mat: "cabMask" },
-  wipers: [[[0.1, 2.28], [0.55, 3.1]]],
+  lamps: [[-0.73, 1.76, 0.085, "lampHead"], [0.73, 1.76, 0.085, "lampHead"], [-0.93, 1.78, 0.06, "lampHead"], [0.93, 1.78, 0.06, "lampHead"]], roofLamp: [0, 3.98, 0.08],
+  number: { lat: -0.17, y: 1.515, h: 0.07, mat: "cabMask" },
+  wipers: [[[0.05, 2.25], [0.6, 3.15]]],
+};
+
+/** n windows w wide, evenly over d0..d1. */
+const kissRow = (d0: number, d1: number, n: number, w: number): Array<[number, number]> =>
+  Array.from({ length: n }, (_, i): [number, number] => { const d = d0 + ((d1 - d0) * (i + 0.5)) / n; return [d - w / 2, d + w / 2]; });
+
+/**
+ * The KISS's sides (d behind the body's ends; photographs above and photo-sbb-ir-dosto-rabe-512-...jpg
+ * in profile, corrected for its perspective): each car's double deck lies between its two doors, the
+ * lower windows between them, the upper ones from over the first door to over the second; the
+ * mid-floor sections over the bogies have a narrow window each. The end car's first door stands
+ * 9 m behind the tip, behind the cab section's locker.
+ */
+const KISS_END: SeriesLayout = {
+  doors: [[5.85, 7.45, 1], [15.75, 17.35, -1]],
+  windows: kissRow(8.0, 15.2, 5, 1.05),
+  rows: [kissRow(8.0, 15.2, 5, 1.05), kissRow(5.8, 17.2, 7, 1.35), [[3.8, 4.4], [19.1, 19.8]]],
+};
+const KISS_MIDDLE: SeriesLayout = {
+  doors: [[5.93, 7.53, 1], [16.97, 18.57, -1]],
+  windows: kissRow(8.03, 16.47, 6, 1.05),
+  rows: [kissRow(8.03, 16.47, 6, 1.05), kissRow(5.93, 18.57, 8, 1.32), [[3.48, 4.18], [20.32, 21.02]]],
 };
 
 export const SBB_KISS: ShinkansenSeries = {
   ...kiss({ liveries: { sbbRegio: KISS_SBB }, weight: { end: 62, middle: 50 }, power: 1000, maxspeed: 160 }),
+  // the side upright to the upper windows' heads, the roof's tight edge above them
+  S: 4.1, A: 0.68,
   nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: KISS_FACE,
-  windows: [[1.5, 2.25], [3.1, 3.75]], door: [0.95, 2.8, 1.6, 2.55], upperOverDoors: true,
+  // lower deck, upper deck, the mid-floor windows over the bogies
+  windows: [[1.32, 2.05], [3.3, 4.05], [2.2, 3.05]], door: [0.68, 2.62, 1.3, 2.5], doorW: 1.6, doorGlassW: 0.28, doorGlassPair: 0.62,
+  layout: { end: KISS_END, middle: KISS_MIDDLE },
+  // the driving bogie under the cab section, the others under the mid-floor ends; one single-arm pantograph on each end car's rear
+  endBogies: [2.5, 20.5], centredBogies: true, bogieCentres: 18.7, endPantograph: true,
 };
 
 export const ALLEGRA: ShinkansenSeries = {
