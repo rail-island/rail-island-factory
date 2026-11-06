@@ -194,11 +194,11 @@ export class Tram extends Coach {
     };
   }
 
-  /** Framed windows on side s of v, one per native box; `sash` the source height of a horizontal bar. */
-  windows(v: Volume, s: number, list: PxBox[], opts: { glass?: string; frame?: string; fw?: number; sash?: number } = {}): void {
+  /** Framed windows on side s of v, one per native box; `sash` the source height of a horizontal bar, `round` the corner radius. */
+  windows(v: Volume, s: number, list: PxBox[], opts: { glass?: string; frame?: string; fw?: number; sash?: number; round?: number } = {}): void {
     list.forEach((b, i) =>
       this.m.scope(`window ${i + 1}`, () =>
-        this.window(v, s, this.box(b), { glass: opts.glass, frame: opts.frame, fw: opts.fw ?? 0.05, sash: opts.sash === undefined ? undefined : this.fy(opts.sash) }),
+        this.window(v, s, this.box(b), { glass: opts.glass, frame: opts.frame, fw: opts.fw ?? 0.05, sash: opts.sash === undefined ? undefined : this.fy(opts.sash), ...(opts.round ? { round: opts.round } : {}) }),
       ),
     );
   }

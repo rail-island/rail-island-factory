@@ -165,6 +165,9 @@ const PIER_RIBS = [2.27, 2.47, 2.67, 2.87];
 const RIB_H = 0.035;
 /** The sill moulding (source heights), under the windows from end to end but for the doors. */
 const MOULDING: [number, number] = [1.95, 2.06];
+/** The corner radii (metres) of the side windows and of the lights in the doors, rounded as the photographs show them. */
+const WINDOW_ROUND = 0.14;
+const LIGHT_ROUND = 0.11;
 /** Where the fleet number sits (source x), clear of doors and windows, under the moulding. */
 const NUMBER_X: Record<MetroUnit, number> = { headCar: 4.15, middleCar: 3.95 };
 
@@ -242,7 +245,7 @@ export function metro8171(params?: ParamValues): MeshBuilder {
       for (const [u0, u1] of spansBetween(doorStops, head ? 8 : from, to)) strip(s, "trim", u0, u1, MOULDING[0], t.fy(MOULDING[1]) - t.fy(MOULDING[0]), 0.016, 0.03);
     });
     m.scope("gutter", () => strip(s, "trim", head ? 8 : from, to, 3.12, 0.045, 0.02, 0.03));
-    m.scope("windows", () => t.windows(saloon, s, car.windows, { frame: "frame", fw: 0.06 }));
+    m.scope("windows", () => t.windows(saloon, s, car.windows, { frame: "frame", fw: 0.06, round: WINDOW_ROUND }));
     m.scope("doors", () =>
       car.doors.forEach((d, i) =>
         m.scope(`door ${i + 1}`, () => {
@@ -256,7 +259,7 @@ export function metro8171(params?: ParamValues): MeshBuilder {
               for (const [u0, u1] of [[d[0] + 1, mid - 0.5], [mid + 0.5, d[2] - 1]] as const) {
                 const w = clip(t.box([u0, 30, u1, 39]));
                 // a shallow frame: the leaf slides behind the skin, clear of the cabin wall
-                if (w) t.m.scope("light", () => t.window(saloon, s, w, { frame: "seam", fw: 0.04, depth: 0.012 }));
+                if (w) t.m.scope("light", () => t.window(saloon, s, w, { frame: "seam", fw: 0.04, depth: 0.012, round: LIGHT_ROUND }));
               }
             },
           });
@@ -265,7 +268,7 @@ export function metro8171(params?: ParamValues): MeshBuilder {
     );
     if (car.cabDoor) m.scope("cab door", () => {
       t.door(saloon, s, t.box(car.cabDoor!), "silver");
-      t.window(saloon, s, t.box([10, 30, 16, 38]), { frame: "frame", fw: 0.04 });
+      t.window(saloon, s, t.box([10, 30, 16, 38]), { frame: "frame", fw: 0.04, round: LIGHT_ROUND });
     });
     m.scope("fleet number", () => t.inscription(saloon, s, t.fx(NUMBER_X[unit]), [{ text: METRO_NUMBERS[unit], y: t.fy(1.79), h: 0.12 }], 0.006, "marking"));
   });

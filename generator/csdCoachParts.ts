@@ -334,6 +334,49 @@ export class Coach {
   }
 
   /**
+   * A panel with rounded corners on side s of v over the box b: corner arcs of
+   * radius r (at most half the box) in `n` steps, each outline point laid on the
+   * skin `proud` off it, the face a fan from the box's centre, the back `depth`
+   * in. A rounded window's frame and glass (`window`'s `round`).
+   */
+  roundPanel(v: Volume, mat: string, s: number, b: Box, r: number, proud: number, depth = 0.04, n = 3): void {
+    const hw0 = halfWidth(v);
+    const ys0 = v.section.map((p) => p[1]);
+    const [minY, maxY] = [Math.min(...ys0), Math.max(...ys0)];
+    const surf = (x: number, y: number): Vec3 => {
+      const yy = Math.min(maxY - 1e-6, Math.max(minY + 1e-6, y));
+      return [this.X(x), y, s * ((sectionHalf(v.section, yy) * lerp(v.plan, x)) / hw0 + proud)];
+    };
+    const rr = Math.max(0, Math.min(r, (b.x1 - b.x0) / 2 - 1e-4, (b.y1 - b.y0) / 2 - 1e-4));
+    // the outline counter-clockwise in (x, y): each corner's arc about its centre
+    const corners: Array<[number, number, number]> = [[b.x1 - rr, b.y0 + rr, -Math.PI / 2], [b.x1 - rr, b.y1 - rr, 0], [b.x0 + rr, b.y1 - rr, Math.PI / 2], [b.x0 + rr, b.y0 + rr, Math.PI]];
+    const ring: Array<[number, number]> = corners.flatMap(([cx, cy, a0]) =>
+      Array.from({ length: n + 1 }, (_, k): [number, number] => {
+        const a = a0 + (k / n) * (Math.PI / 2);
+        return [cx + rr * Math.cos(a), cy + rr * Math.sin(a)];
+      }),
+    );
+    const [mx, my] = [(b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2];
+    const c = surf(mx, my);
+    const f = ring.map(([x, y]) => surf(x, y));
+    const back = (p: Vec3): Vec3 => [p[0], p[1], p[2] - s * depth];
+    const cb = back(c);
+    const pts: Vec3[] = [];
+    const backPts: Vec3[] = [];
+    for (let i = 0; i < f.length; i++) {
+      const [a, d] = [f[i]!, f[(i + 1) % f.length]!];
+      pts.push(c, a, d);
+      backPts.push(cb, back(a), back(d));
+      // the wall between the two outline points, facing out of the panel
+      const [ra, rd] = [ring[i]!, ring[(i + 1) % ring.length]!];
+      const out: Vec3 = [this.X((ra[0] + rd[0]) / 2) - this.X(mx), (ra[1] + rd[1]) / 2 - my, 0];
+      this.m.facets(mat, [a, d, back(d), a, back(d), back(a)], out);
+    }
+    this.m.facets(mat, pts, [0, 0, s]);
+    this.m.facets(mat, backPts, [0, 0, -s]);
+  }
+
+  /**
    * A flat panel on a volume's end `e` (+1 the high-x end) over the front-view
    * box `b` (x0..x1 is z across, y up), laid on the end cap and on the plan's
    * end facets wherever the box reaches them.
@@ -380,17 +423,19 @@ export class Coach {
   }
 
   /** A framed window: the frame over the whole box, the glass inset by `fw`. */
-  window(v: Volume, s: number, b: Box, opts: { frame?: string; glass?: string; fw?: number; end?: boolean; sash?: number; depth?: number } = {}): void {
+  window(v: Volume, s: number, b: Box, opts: { frame?: string; glass?: string; fw?: number; end?: boolean; sash?: number; depth?: number; round?: number } = {}): void {
     const fw = opts.fw ?? 0.06;
-    const draw = (mat: string, bb: Box, proud: number, depth = 0.04) =>
-      opts.end ? this.endPanel(v, mat, s, bb, proud, depth) : this.sidePanel(v, mat, s, bb, proud, depth);
+    // `round`: the frame's corner radius on a side window (the glass's follows it, fw in)
+    const r = opts.end ? undefined : opts.round;
+    const draw = (mat: string, bb: Box, proud: number, depth = 0.04, radius?: number) =>
+      opts.end ? this.endPanel(v, mat, s, bb, proud, depth) : radius ? this.roundPanel(v, mat, s, bb, radius, proud, depth) : this.sidePanel(v, mat, s, bb, proud, depth);
     // `depth`: how deep the frame reaches in (a pocket door's light keeps shallow)
-    this.m.scope("frame", () => draw(opts.frame ?? "frame", b, 0.012, opts.depth));
+    this.m.scope("frame", () => draw(opts.frame ?? "frame", b, 0.012, opts.depth, r));
     // the glass is a thin layer in front of the frame: its walls never meet the frame's
     const glass = { x0: b.x0 + fw, y0: b.y0 + fw, x1: b.x1 - fw, y1: b.y1 - fw };
     this.inWindow = true;
     try {
-      this.m.scope("glass", () => draw(opts.glass ?? "glass", glass, 0.022, 0.008));
+      this.m.scope("glass", () => draw(opts.glass ?? "glass", glass, 0.022, 0.008, r === undefined ? undefined : Math.max(0.02, r - fw)));
     } finally {
       this.inWindow = false;
     }

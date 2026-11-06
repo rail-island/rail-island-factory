@@ -13,7 +13,7 @@
 | `veh-tatra-kt8` | Tatra KT8D5 | `livery`: `redWhite` (tram_ckd_kt8, default), `red` (tram_ckd_kt8#2), `modern` (tram_ckd_kt8m) | three sections, two joints | 12,000 |
 | `veh-tatra-kt4` | Tatra KT4 | - (tram_ckd_kt4) | two sections, one joint | 7,900 |
 | `veh-kvag-gt4` | GT4 | - (tram_kvag_gt4) | two sections, one joint | 7,600 |
-| `veh-metro-81-71` | Metro 81-71 | `unit`: `headCar` (m_mmz_81-71l, default), `middleCar` (m_mmz_81-71v); `livery`: `prague` (default), `budapest` | rigid | 8,600 / 7,800 |
+| `veh-metro-81-71` | Metro 81-71 | `unit`: `headCar` (m_mmz_81-71l, default), `middleCar` (m_mmz_81-71v); `livery`: `prague` (default), `budapest` | rigid | 11,300 / 10,500 |
 
 The trams take `TRAM_CATALOG` (category `Rail vehicles`, group `tram`), the metro
 car `METRO_CATALOG` (group `metro`). Every design has its `assets/<folder>/`
@@ -151,7 +151,9 @@ Pose block shows a slider per joint and no steering.
   pivots are the published 12.6 m apart about the drawing's bogie midpoint. The
   photographs (assets/metro-81-71/PHOTOS.md) refine the drawing: the corrugated sides
   are raised ribs over the lower side and in the piers between the windows (five and
-  four, `LOWER_RIBS`, `PIER_RIBS`), a sill moulding runs under the windows from end
+  four, `LOWER_RIBS`, `PIER_RIBS`), the side windows, the door lights and the cab
+  door's window with rounded corners (`WINDOW_ROUND` 0.14 m, `LIGHT_ROUND` 0.11 m,
+  `Coach.window`'s `round`; their boxes stay the drawing's), a sill moulding runs under the windows from end
   to end but for the doors, a gutter under the roof's rounding; the head car's front
   is a dark mask above a light apron, with a wide windscreen (its destination sign)
   and the driver's window, the four lamps raised onto the mask's foot, a grey

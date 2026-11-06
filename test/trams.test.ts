@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 import { paramCombinations, resolveParams } from "../generator/design.ts";
 import { ALL_VEHICLES, DESIGNS } from "../generator/generate.ts";
 import { GT4_BOGIES, GT4_MAP, KT4_BOGIES, KT4_MAP, KT8_BOGIES, KT8_MAP, T3_MAP, T6_MAP, TRAM_CATALOG, TRAM_DESIGNS, TRAM_WIRE } from "../generator/trams.ts";
-import { METRO_CATALOG, METRO_DESIGNS, METRO_PIVOTS } from "../generator/metro.ts";
+import { METRO_CATALOG, METRO_DESIGNS, METRO_MAP, METRO_PIVOTS } from "../generator/metro.ts";
 import { TRAM_TRANSFERS, tramComparison, worstTramPixels } from "../generator/tramComparison.ts";
 import { meanAbsoluteError } from "../generator/csdCoachComparison.ts";
 import { findCoplanarOverlaps } from "../generator/coplanar.ts";
@@ -17,6 +17,7 @@ import { glbStats } from "../generator/glbStats.ts";
 import { parseGlb } from "../generator/glbParse.ts";
 import { poseGlb } from "../generator/glbPose.ts";
 import { DOOR_POCKET_IN, DOOR_SAMPLES } from "../generator/doors.ts";
+import { Tram } from "../generator/tramKit.ts";
 import { collectTriangles } from "../generator/glbTriangles.ts";
 import { isLeaf, type TreeNode } from "../generator/sourceTree.ts";
 import type { ParamValues } from "../generator/design.ts";
@@ -166,6 +167,27 @@ describe("the published dimensions", () => {
       for (let k = 1; k <= DOOR_SAMPLES; k++) expect(leafZ(k)).toBeLessThanOrEqual(shut + 1e-6);
       expect(leafZ(DOOR_SAMPLES)).toBeCloseTo(shut - DOOR_POCKET_IN, 3);
     }
+  });
+
+  it("rounds a window's corners on the skin, inside its box", () => {
+    const t = new Tram({}, METRO_MAP);
+    const v = t.vol("saloon", [[-1.5, 0.7], [1.5, 0.7], [1.5, 3.1], [-1.5, 3.1]], { plan: [[0, 1.5], [20, 1.5]] }, 0, 20, [[0, 3.1, "roof"]]);
+    const b = { x0: 1, x1: 2, y0: 2, y1: 2.8 };
+    t.roundPanel(v, "frame", 1, b, 0.14, 0.012, 0.04);
+    const p = t.m.positions();
+    const pts = Array.from({ length: p.length / 3 }, (_, i) => [p[3 * i]!, p[3 * i + 1]!, p[3 * i + 2]!]);
+    for (const [x, y] of pts) {
+      expect(x).toBeGreaterThanOrEqual(b.x0 - 1e-9);
+      expect(x).toBeLessThanOrEqual(b.x1 + 1e-9);
+      expect(y).toBeGreaterThanOrEqual(b.y0 - 1e-9);
+      expect(y).toBeLessThanOrEqual(b.y1 + 1e-9);
+      // no point stands in a corner the arc cuts away
+      const [dx, dy] = [Math.min(x - b.x0, b.x1 - x), Math.min(y - b.y0, b.y1 - y)];
+      if (dx < 0.14 && dy < 0.14) expect(Math.hypot(0.14 - dx, 0.14 - dy)).toBeLessThanOrEqual(0.14 + 1e-9);
+    }
+    // the face 12 mm proud of the skin, the back 40 mm in
+    expect(Math.max(...pts.map((q) => q[2]!))).toBeCloseTo(1.5 * METRO_MAP.kz + 0.012, 9);
+    expect(Math.min(...pts.map((q) => q[2]!))).toBeCloseTo(1.5 * METRO_MAP.kz - 0.028, 9);
   });
 
   it("puts every wheel on standard gauge", () => {
