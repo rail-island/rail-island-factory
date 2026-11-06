@@ -736,7 +736,7 @@ function glacierSide(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: 
 
 export const GLACIER: WorldCoach = {
   length: 18.4, W: 1.34, Y: 1.2, S: 3.0, C: 3.695, B: 0.75, A: 0.95, rows: [[1.8, 3.0]], doorIn: 0.6, doorW: 0.85, door: [1.0, 2.95],
-  bogieCentres: 12.83, wheelR: 0.343, wheelbase: 2.05, coupler: "centre", maxspeed: 90,
+  bogieCentres: 12.83, wheelR: 0.343, wheelbase: 2.2, coupler: "centre", maxspeed: 90,
   types: {
     first: { title: "First class", windows: 6, windowW: 2.0, number: "A 4021", weight: 21 },
     second: { title: "Second class", windows: 7, windowW: 1.7, number: "B 4041", weight: 20 },

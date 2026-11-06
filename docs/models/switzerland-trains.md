@@ -64,7 +64,7 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
   the roof (side wedges and crown panes), the roof glass's ends slanted with it; a white body over a red lower
   band; one white entrance a side at one end with its narrow window, the white flags and the class
   digit. The photographs show one side; the other side is drawn the same (mirrored), not verified.
-  The bogie wheelbase stays at the kit's 2.05 m minimum (real 1.8 m); 90 km/h (the datasheet's
+  The bogie wheelbase is 2.2 m (real 1.8 m): at the kit's 2.05 m minimum the brake cylinders' ends lay on the transoms' ends and flickered; 90 km/h (the datasheet's
   100 km/h adhesion speed is not taken over). The distant model has the red ends and a glazed roof
   band under the white crown (`lodBody`).
 - **Roter Pfeil.** The RCe 2/4 604 of 1947 - 1956, measured on the SBB works drawing of the CLe
