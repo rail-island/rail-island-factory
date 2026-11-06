@@ -8,6 +8,7 @@ import { buildLoco } from "./steamLoco.ts";
 import { steamLocoLod } from "./lodSteam.ts";
 import { STEAM_CATALOG, UNIT_PARAM } from "./steamLocos.ts";
 import { enumParam } from "./emuParts.ts";
+import { ROCKET_VERSIONS, buildRocket, buildRocketLod, type RocketVersion } from "./rocket.ts";
 import { steamEngineSpec, steamTenderSpec, type WorldSteam } from "./steamWorld.ts";
 
 /** A design: its engine and, by livery, the paint and number. */
@@ -65,6 +66,8 @@ function paramsOf(d: SteamDesign): ParamSpec[] {
 }
 
 const PARAMS: Record<string, ParamSpec[]> = Object.fromEntries(Object.entries(WORLD_STEAM).map(([id, d]) => [id, paramsOf(d)]));
+// the Rocket as built for Rainhill or as rebuilt in 1830 (rocket.ts)
+PARAMS["proc-vehicle-rocket"] = [UNIT_PARAM, enumParam("version", "Version", Object.fromEntries(Object.entries(ROCKET_VERSIONS).map(([k, v]) => [k, v.title])))];
 
 /** The spec of a design's engine or tender for the given values. */
 export function worldSteamSpec(id: string, v?: ParamValues) {
@@ -99,8 +102,9 @@ export function lmsBlackFive(v?: ParamValues): MeshBuilder { return buildLoco(wo
 export function lmsBlackFiveLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-lms-black-five", v)); }
 export function br9f(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-br-9f", v)); }
 export function br9fLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-br-9f", v)); }
-export function rocket(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-rocket", v)); }
-export function rocketLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-rocket", v)); }
+// the Rocket has its own parts (rocket.ts); its WORLD_STEAM entry gives the title and the parameters
+export function rocket(v?: ParamValues): MeshBuilder { const p = resolveParams(PARAMS["proc-vehicle-rocket"]!, v); return buildRocket(p.unit!, p.version as RocketVersion); }
+export function rocketLod(v?: ParamValues): MeshBuilder { const p = resolveParams(PARAMS["proc-vehicle-rocket"]!, v); return buildRocketLod(p.unit!, p.version as RocketVersion); }
 export function irWp(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-ir-wp", v)); }
 export function irWpLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-ir-wp", v)); }
 export function irWg(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-ir-wg", v)); }
