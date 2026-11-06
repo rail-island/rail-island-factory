@@ -25,6 +25,6 @@ show the same unit type and scheme.
   15 ft 7.5 in high, 40 in wheels on 9 ft Blomberg trucks, 3,000 hp (2,237 kW), about
   260,000 lb (118 t), 103 mph (166 km/h), built from 1976. Truck centres (30 ft 6 in), the
   nose, cab and grille positions are measured from the side photograph of Amtrak 257.
-- **Running number** - 406, the unit in the Phase III photograph (illustrative).
-- **Paint** - Phase III simplified: silver, the blue, white and red stripes, the black nose
+- **Running numbers** - 406 (Phase III) and 257 (Phase II), the units in the photographs.
+- **Paint** - Phase III and Phase II (Amtrak 257) simplified: silver, the blue, white and red stripes, the black nose
   top and cab front, plain stroke letters; no flag or logo.

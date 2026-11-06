@@ -20,7 +20,7 @@ const design = (id: string) => US_CARBODIES.find((d) => d.id === id)!;
 const LOCOS: Record<string, { length: number; axles: number; liveries: string[] }> = {
   "proc-vehicle-emd-f7": { length: ft(50, 8), axles: 4, liveries: ["santaFe", "unionPacific", "southernPacific"] },
   "proc-vehicle-ge-p42dc": { length: ft(69), axles: 4, liveries: ["phaseV", "phaseIII", "via"] },
-  "proc-vehicle-emd-f40ph": { length: ft(56, 2), axles: 4, liveries: ["phaseIII"] },
+  "proc-vehicle-emd-f40ph": { length: ft(56, 2), axles: 4, liveries: ["phaseIII", "phaseII"] },
   "proc-vehicle-siemens-alc42": { length: 21.79, axles: 4, liveries: ["phaseVII", "midwest"] },
   "proc-vehicle-prr-gg1": { length: ft(79, 6), axles: 10, liveries: ["brunswick", "tuscan", "pennCentral"] },
 };

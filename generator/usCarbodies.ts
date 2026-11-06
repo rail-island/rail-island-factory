@@ -403,6 +403,13 @@ export const F40_LIVERIES: Record<string, CarbodyLivery> = {
     lettering: { text: "AMTRAK", d: 10.0, y: 3.15, h: 0.5, mat: "amBlack" },
     number: "406", numberMat: "amBlack",
   },
+  phaseII: {
+    title: "Amtrak Phase II", palette: F40_PAL,
+    bands: [[0, 2.44, "silver"], [2.44, 2.56, "amBlue"], [2.56, 2.68, "amWhite"], [2.68, 2.8, "amRed"], [2.8, 9, "silver"]],
+    roof: "silver", skirt: "amBlack", under: "truckBlack",
+    lettering: { text: "AMTRAK", d: 9.0, y: 3.25, h: 0.5, mat: "amBlack" },
+    number: "257", numberMat: "amBlack",
+  },
 };
 
 /** The livery's bands, the black nose top and cab front (anti-glare) over them. */
@@ -442,8 +449,10 @@ export function buildF40(l: CarbodyLivery): MeshBuilder {
           sideGrille(m, b, X, s, 10.6, F40_BODY - 0.25, 3.85, 4.28, true);
         });
         if (l.lettering) m.scope("lettering", () => sideLettering(m, b, X, s, l.lettering!.text, l.lettering!.d, l.lettering!.y, l.lettering!.h, l.lettering!.mat, 0.012));
-        m.scope("nose lettering", () => sideLettering(m, b, X, s, "AMTRAK", 0.95, 2.385, 0.14, "amBlack", 0.012));
-        m.scope("number", () => sideLettering(m, b, X, s, l.number, 10.0, 2.85, 0.24, l.numberMat, 0.012));
+        // the nose's lettering in the white stripe, the number under the side's
+        const white = l.bands.find((band) => band[2] === "amWhite")!;
+        m.scope("nose lettering", () => sideLettering(m, b, X, s, "AMTRAK", 0.95, white[0] + 0.025, white[1] - white[0] - 0.05, "amBlack", 0.012));
+        if (l.lettering) m.scope("number", () => sideLettering(m, b, X, s, l.number, l.lettering!.d, l.lettering!.y - 0.3, 0.24, l.numberMat, 0.012));
         m.scope("handrails", () => {
           for (const d of [3.78, 4.58]) {
             const z = s * (bodyHalf(b, d) + 0.03);
