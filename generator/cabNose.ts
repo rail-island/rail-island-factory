@@ -44,6 +44,12 @@ export interface NoseLayer {
   /** The scope its pieces are drawn in (the material's name when omitted). */
   name?: string;
   inside: (q: NoseQuery) => boolean;
+  /**
+   * Where `inside` can hold at all, a promise that saves the scan the points it cannot
+   * hold on: only on the face and its corners (|u| <= 2), only on the cab sides (|u| >= 2),
+   * only between two heights (closed).
+   */
+  where?: { face?: boolean; side?: boolean; y?: readonly [number, number] };
 }
 
 export interface NoseSpec {
@@ -113,6 +119,8 @@ export class CabNose {
   readonly yBot: number;
   readonly yTop: number;
   private readonly memo = new Map<string, [number, number] | null>();
+  /** The scan's surface points by column (see `column`). */
+  private readonly scanCols = new Map<string, Array<NoseQuery & { p: Vec3 }>>();
   /**
    * The heights every interval() scan samples, the same for every layer and
    * column, with the slice there (half width, corner radius, centreline face):
@@ -202,8 +210,20 @@ export class CabNose {
     const n = S.n;
     let first = -1;
     let last = -1;
-    for (let i = 0; i <= n; i++) {
-      if (L.inside(this.atSlice(u, S.y[i]!, S.hw[i]!, S.r[i]!, S.dF[i]!, S.rd[i]!))) {
+    const w = L.where;
+    if (w && ((w.face && Math.abs(u) > 2) || (w.side && Math.abs(u) < 2))) {
+      this.memo.set(key, null);
+      return null;
+    }
+    const Q = this.column(u);
+    // the samples within the layer's heights (the others cannot hold)
+    let i0 = 0, i1 = n;
+    if (w?.y) {
+      while (i0 <= n && S.y[i0]! < w.y[0]) i0++;
+      while (i1 >= 0 && S.y[i1]! > w.y[1]) i1--;
+    }
+    for (let i = i0; i <= i1; i++) {
+      if (L.inside(Q[i]!)) {
         if (first < 0) first = i;
         last = i;
       }
@@ -225,6 +245,23 @@ export class CabNose {
     }
     this.memo.set(key, out);
     return out;
+  }
+
+  /**
+   * The surface points of the scan's samples at u: every layer's interval() at a column
+   * tests the same points, so they are worked out once a column (the scan was most of
+   * a face's build when a face carries many layers).
+   */
+  private column(u: number): Array<NoseQuery & { p: Vec3 }> {
+    const key = u.toFixed(7);
+    let q = this.scanCols.get(key);
+    if (!q) {
+      const S = this.samples();
+      q = new Array(S.n + 1);
+      for (let i = 0; i <= S.n; i++) q[i] = this.atSlice(u, S.y[i]!, S.hw[i]!, S.r[i]!, S.dF[i]!, S.rd[i]!);
+      this.scanCols.set(key, q);
+    }
+    return q;
   }
 
   /** The scan's sample heights and the slice at each (see `scan`). */

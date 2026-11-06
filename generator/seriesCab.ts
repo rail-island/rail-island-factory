@@ -142,22 +142,27 @@ export function edgeAt(pts: readonly Pt[], y: number): number {
 function layers(f: SeriesCabFace, p: FacePaint): NoseLayer[] {
   const onFace = (q: NoseQuery) => Math.abs(q.u) <= 2;
   const banded = (q: NoseQuery) => f.wrap || onFace(q);
-  const out: NoseLayer[] = p.sides.map(([y0, y1, mat]): NoseLayer => ({ mat, name: `${mat} side`, inside: (q) => !onFace(q) && q.y >= y0 && q.y < y1 }));
-  out.push({ mat: p.skirt, name: "skirt", inside: (q) => !onFace(q) && q.y < p.A });
+  const out: NoseLayer[] = p.sides.map(([y0, y1, mat]): NoseLayer => ({ mat, name: `${mat} side`, where: { side: true, y: [y0, y1] }, inside: (q) => !onFace(q) && q.y >= y0 && q.y < y1 }));
+  out.push({ mat: p.skirt, name: "skirt", where: { side: true }, inside: (q) => !onFace(q) && q.y < p.A });
   for (const [y0, y1, mat] of p.face) out.push({ mat, name: `${mat} face`, inside: (q) => banded(q) && q.y >= y0 && q.y < y1 && (onFace(q) || q.y >= p.A) });
   out.push({ mat: p.roof, name: "roof", inside: (q) => (banded(q) ? q.y >= f.roofFrom : q.y >= p.S) });
   // a sweep on the cab sides, between the skirt's top and the shoulder (or its own top, over the cab's roof)
   (p.sweeps ?? []).forEach((w, i) => out.push({
-    mat: w.mat, name: `sweep ${i + 1}`,
+    mat: w.mat, name: `sweep ${i + 1}`, where: { side: true, y: [w.front[0]![0], w.front[w.front.length - 1]![0]] },
     inside: (q) => q.side && q.y >= p.A && q.y < (w.top ?? p.S) && q.y >= w.front[0]![0] && q.y <= w.front[w.front.length - 1]![0] && q.d >= edgeAt(w.front, q.y) && q.d <= edgeAt(w.back, q.y),
   }));
   (f.paint ?? []).forEach((w, i) => out.push({
-    mat: w.mat, name: `paint ${i + 1}`,
+    mat: w.mat, name: `paint ${i + 1}`, where: { y: [w.front[0]![0], w.front[w.front.length - 1]![0]] },
     inside: (q) => q.y >= w.front[0]![0] && q.y <= w.front[w.front.length - 1]![0] && q.y < (w.top ?? f.roofFrom) && q.d >= edgeAt(w.front, q.y) && q.d <= edgeAt(w.back, q.y),
   }));
-  (f.fields ?? []).forEach((r, i) => out.push({ mat: r.mat, name: `field ${i + 1}`, inside: (q) => onFace(q) && inPoly(q.lat, q.y, r.pts) }));
-  (f.masks ?? []).forEach((r, i) => out.push({ mat: r.mat ?? "cabMask", name: `surround ${i + 1}`, inside: (q) => onFace(q) && inRect(q, r) }));
-  f.panes.forEach((r, i) => out.push({ mat: r.mat ?? "cabGlass", name: `pane ${i + 1}`, inside: (q) => onFace(q) && inRect(q, r) }));
+  (f.fields ?? []).forEach((r, i) => {
+    // the polygon's bounds first: a point outside them is never inside it (inPoly is the scan's cost)
+    const lats = r.pts.map((t) => t[0]), ys = r.pts.map((t) => t[1]);
+    const [l0, l1, y0, y1] = [Math.min(...lats), Math.max(...lats), Math.min(...ys), Math.max(...ys)];
+    out.push({ mat: r.mat, name: `field ${i + 1}`, where: { face: true, y: [y0, y1] }, inside: (q) => q.y >= y0 && q.y <= y1 && q.lat >= l0 && q.lat <= l1 && onFace(q) && inPoly(q.lat, q.y, r.pts) });
+  });
+  (f.masks ?? []).forEach((r, i) => out.push({ mat: r.mat ?? "cabMask", name: `surround ${i + 1}`, where: { face: true, y: [r.y[0] - 1e-6, r.y[1] + 1e-6] }, inside: (q) => onFace(q) && inRect(q, r) }));
+  f.panes.forEach((r, i) => out.push({ mat: r.mat ?? "cabGlass", name: `pane ${i + 1}`, where: { face: true, y: [r.y[0] - 1e-6, r.y[1] + 1e-6] }, inside: (q) => onFace(q) && inRect(q, r) }));
   return out;
 }
 
