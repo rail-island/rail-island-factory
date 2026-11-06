@@ -224,6 +224,13 @@ describe("helipads", () => {
     expect(() => exportMeta([fake])).toThrow(/helipad material "helipad" is not drawn/);
     expect(() => exportMeta([{ ...design, id: "proc-building-test", game: { helipad: { material: "helipad", pad: "small" as const, when: { helipad: "deck" } } } }])).toThrow(/does not resolve/);
   });
+  it("measure the hospital's rooftop pad and the offshore platform's helideck on every build, each at least its class's D-value", () => {
+    const ids = ["proc-building-hospital", "proc-building-industry-offshore-platform"];
+    const pads = exportMeta(ids.map((id) => DESIGNS.get(id)!)).buildings.map((b) => b.game!.helipad!);
+    expect(pads.map((p) => [p.pad, p.when])).toEqual([["small", undefined], ["large", undefined]]);
+    expect(pads[0]!.size).toBeGreaterThanOrEqual(16);
+    expect(pads[1]!.size).toBeGreaterThanOrEqual(26);
+  });
 });
 
 describe("catalogRecord", () => {

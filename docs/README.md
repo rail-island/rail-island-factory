@@ -19,7 +19,8 @@
 | [models/commercial-streets.md](models/commercial-streets.md) | eleven additional street and historic commercial families, the 82-object legacy inventory and provisional mapping |
 | [models/panel-houses.md](models/panel-houses.md) | the panel houses of a housing estate (the slab and the point tower block): sections, storeys, facades, balconies, flat or pitched roofs, colours, party walls, city use and the `panel_estate` block type |
 | [models/commercial.md](models/commercial.md) | five Kenney-style commercial families with 3,000 architectural and finish variants, a 10,000-triangle ceiling, catalog and export |
-| [models/industry.md](models/industry.md) | Industry audit, eleven procedural families, budgets and future migration mapping |
+| [models/industry.md](models/industry.md) | Industry audit, twelve procedural families (the offshore platform with its helideck among them), budgets and future migration mapping |
+| [models/hospital.md](models/hospital.md) | the general hospital (a draft): ward block, treatment wing, emergency department and ambulance bay, the rooftop helipad it exports, budget and checks |
 | [models/vehicles.md](models/vehicles.md) | the procedural road and rail vehicles, budgets, articulation, pantograph operating poses, native-reference calibration and adding a vehicle |
 | [models/buses.md](models/buses.md) | the buses from vlakosimdb: the Karosa short and long families, the single models, the shared bus builder, sources and tests |
 | [models/rider-seat.md](models/rider-seat.md) | where the game's avatar sits riding a vehicle: the seat measured on every vehicle's roof (head section first, clear of pantographs), the `rider` meta field |
