@@ -39,9 +39,9 @@ The catalog had no British train before; the archived webapp Eurostar is now the
   livery, so no `livery` parameter: blue skirt, a thin orange stripe, white sides and a black
   window band, the door leaves orange (the livery's `doors`) and the cab front yellow under
   the black windscreen field (its `front`, the series kit's colour field over the nose; the
-  orange outline round the cab is not drawn). The windscreens sit on a raked upper front, the
-  real one being nearly upright, and the centre gangway door is only the black mask between
-  them. The three- and five-car trains raise one pantograph, on the middle car as on the
+  orange outline round the cab is not drawn). The cab is upright: its flat front face carries
+  the two windscreens, the gangway door's outline and its window between them, and the lamps
+  (the series kit's `noseCab`); the door has no handle or steps. The three- and five-car trains raise one pantograph, on the middle car as on the
   378/2; the four-car train raises two (the series kit's formation rule). The 750 V
   third-rail shoes are not drawn. The seats (272 a
   five-car unit, tip-ups included) and the 2,400 kW are shared evenly over the cars.

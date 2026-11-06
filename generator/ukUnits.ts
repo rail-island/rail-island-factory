@@ -125,10 +125,15 @@ const overground = (number: string): ShinkansenLivery => ({
 
 /** The Class 378 Capitalstar: Bombardier's Electrostar for London Overground, 2.8 m wide, two wide doors a side, five cars (101.35 m). */
 export const C378: ShinkansenSeries = {
-  endLength: 20.4, midLength: 20.1, W: 1.4, Y: 1.3, S: 3.3, C: 3.77, lean: 0.96, B: 0.9, A: 1.05,
-  // the Electrostar's blunt cab: an upright lower front, the windscreens on its raked upper face, the corners rounded
-  nose: nose(1.1, 0.6, 2.3, [[0, 2.3], [0.25, 2.75], [0.7, 3.45], [1.1, 3.77]], [[0, 2.25], [0.4, 2.9], [0.9, 3.3]], [[0, 1.35], [0.5, 1.3]], [[0, 1.15], [0.4, 1.05]], [[0, 1.0], [0.2, 0.9]]),
-  windscreen: [0.06, 0.72, 0.3, 1.15], windscreenMask: 0.06, lamps: [0.03, 1.75],
+  endLength: 20.4, midLength: 20.1, W: 1.395, Y: 1.3, S: 3.3, C: 3.77, lean: 0.96, B: 0.9, A: 1.05,
+  // the Electrostar's upright cab: a flat front face, its top and corners rounded, the windscreens either side of the gangway door
+  nose: nose(0.7, 0.8, 2.6, [[0, 3.3], [0.3, 3.6], [0.7, 3.77]], [[0, 3.2], [0.35, 3.3]], [[0, 1.3]], [[0, 1.1], [0.3, 1.05]], [[0, 0.95], [0.2, 0.9]]),
+  windscreen: [0, 0, 0, 0], lamps: [0, 0],
+  noseCab: {
+    panes: [[0.4, 1.02, 2.35, 3.05], [-0.26, 0.26, 2.4, 3.05], [-1.02, -0.4, 2.35, 3.05]],
+    lamps: [[-0.72, 1.85, 0.09, "lampHead"], [0.72, 1.85, 0.09, "lampHead"], [-0.95, 1.85, 0.05, "lampRed"], [0.95, 1.85, 0.05, "lampRed"]],
+    gangway: [0.32, 1.35, 3.12],
+  },
   windows: [[1.9, 2.75]], windowW: 1.4, pitch: 1.75, door: [1.15, 3.05, 1.9, 2.7], doorW: 1.6, doorCount: 2,
   bogieCentres: 14.173, wheelR: 0.42, wheelbase: 2.6, cars: [3, 4, 5],
   liveries: { overground: overground("378 204") },
