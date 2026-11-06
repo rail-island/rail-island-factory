@@ -19,6 +19,7 @@ import {
 } from "./structures.ts";
 import { WAY_PARAMS, decorationPreview, decorationPreviewLod, railTypePreview, railTypePreviewLod, roadTypePreview, roadTypePreviewLod } from "./ways.ts";
 import { LINE_PARAMS, cableCarLinePreview, cableCarLinePreviewLod } from "./cableCarLine.ts";
+import { LINE_PREVIEW_ID } from "../cableCarLineIds.ts";
 import { MAST_PARAMS, PYLON_PARAMS, catenaryPreview, catenaryPreviewLod, pylonPreview, pylonPreviewLod } from "./props.ts";
 import { texturePreview, texturePreviewLod } from "./textures.ts";
 import { BLOCK_PARAMS } from "./blockKit.ts";
@@ -106,7 +107,7 @@ export const PREVIEW_FAMILIES: readonly PreviewFamily[] = [
   {
     source: "previews/cableCarLine.ts",
     designs: [{
-      id: "proc-preview-cablecar-line", title: "Cable Car Line", build: cableCarLinePreview, buildLod: cableCarLinePreviewLod,
+      id: LINE_PREVIEW_ID, title: "Cable Car Line", build: cableCarLinePreview, buildLod: cableCarLinePreviewLod,
       params: LINE_PARAMS, lodTriangles: 3000, catalog: previewCatalog("Structures", "cableCarStation"),
     }],
   },
