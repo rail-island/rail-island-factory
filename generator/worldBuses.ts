@@ -159,7 +159,7 @@ export const ENVIRO400_PARAMS: readonly ParamSpec[] = [{
 export function enviro400Spec(params?: ParamValues): WorldBusSpec {
   const p = resolveParams(ENVIRO400_PARAMS, params);
   const stage = p.livery === "stagecoach";
-  return doubleDeck({
+  return { ...doubleDeck({
     length: 10.8, height: 4.3,
     axles: [{ at: 2.5 }, { at: 7.85, drive: true }],
     doors: [[0.3, 1.45], [4.2, 5.4]],
@@ -168,7 +168,7 @@ export function enviro400Spec(params?: ParamValues): WorldBusSpec {
       [-1, 10.55, 1.01, 2.16, "band"], [-1, 10.55, 2.56, 4.2, "band"],
       [7.6, 11.8, 0.3, 0.7, "blue"], [8.6, 11.8, 0.7, 0.85, "orange"], [9.4, 11.8, 0.85, 0.98, "red"],
     ] as const } : {}),
-  });
+  }), detail: true, extras: refined.enviro400 };
 }
 
 export const ENVIRO500_PARAMS: readonly ParamSpec[] = [{
@@ -200,7 +200,7 @@ export function enviro200Spec(): WorldBusSpec {
 }
 
 export function leylandNationalSpec(): WorldBusSpec {
-  return highFloor({
+  return { ...highFloor({
     length: 11.3, height: 3.05,
     axles: [{ at: 2.35 }, { at: 8.0, drive: true }],
     doors: [[0.3, 1.45], [4.6, 5.75]],
@@ -208,18 +208,18 @@ export function leylandNationalSpec(): WorldBusSpec {
     paint: [[-1, 12.3, 1.3, 1.42, "white"], [-1, 12.3, 0.78, 0.86, "rub"]],
     // the roof pod at the rear, the National's trademark (its heating unit)
     roof: [[9.2, 11.1, 0.95, 3.45, "body"]],
-  });
+  }), detail: true, extras: refined.leylandNational };
 }
 
 export function o305Spec(): WorldBusSpec {
-  return highFloor({
+  return { ...highFloor({
     length: 11.0, height: 2.94,
     axles: [{ at: 2.6 }, { at: 8.2, drive: true }],
     doors: [[0.3, 1.5], [4.4, 5.6], [9.05, 10.25]],
     // ivory with a red skirt and roof edge (the photographs)
     livery: { body: "#efe6c8", rub: "#4a4a48", red: "#8f1d22" },
     paint: [[-1, 12, 0.35, 0.86, "red"], [-1, 12, 2.68, 2.94, "red"]],
-  });
+  }), finish: { badge: { y: 1.04, r: 0.085, star: true } }, detail: true, extras: refined.o305 };
 }
 
 export const O405_PARAMS: readonly ParamSpec[] = [{
@@ -331,7 +331,7 @@ export function exquiCitySpec(): WorldBusSpec {
     livery: { body: "#c9cdd1", skirt: "#8cc63f", band: "#15181c", pod: "#8cc63f" },
     roof: [[3.0, 8.5, 1.0, 3.4, "pod"], [12.0, 17.0, 1.0, 3.4, "pod"]],
     rake: 0.55,
-  }), detail: true, extras: refined.exquiCity };
+  }), front: { from: 1.0, rake: 0.55, chamfer: [0.62, 0.36] }, detail: true, extras: refined.exquiCity };
 }
 
 export const IKARUS_PARAMS: readonly ParamSpec[] = [{
@@ -343,13 +343,13 @@ const ikarusLivery = (params?: ParamValues): Record<string, string> =>
   resolveParams(IKARUS_PARAMS, params).livery === "bkv" ? { body: "#1f5aa6", rub: "#f2f1ea", white: "#f2f1ea" } : { body: "#f2a900", rub: "#3c3c3c", white: "#f2efe4" };
 
 export function ikarus260Spec(params?: ParamValues): WorldBusSpec {
-  return highFloor({
+  return { ...highFloor({
     length: 11.0, height: 3.0,
     axles: [{ at: 2.4 }, { at: 7.8, drive: true }],
     doors: [[0.3, 1.5], [4.3, 5.5], [8.8, 10.0]],
     livery: ikarusLivery(params),
     paint: [[-1, 12, 0.78, 0.86, "rub"], [-1, 12, 2.6, 2.87, "white"]],
-  });
+  }), detail: true, extras: refined.ikarus260 };
 }
 
 export function ikarus280Spec(params?: ParamValues): WorldBusSpec {
@@ -366,14 +366,14 @@ export function ikarus280Spec(params?: ParamValues): WorldBusSpec {
 const SKODA_TR = { body: "#efe3c0", rub: "#3c3c3c", red: "#c42a26" };
 
 export function skoda14trSpec(): WorldBusSpec {
-  return highFloor({
+  return { ...highFloor({
     length: 11.34, height: 3.05,
     axles: [{ at: 2.6 }, { at: 8.0, drive: true }],
     doors: [[0.3, 1.5], [4.4, 5.6], [9.0, 10.2]],
     livery: SKODA_TR,
     paint: [[-1, 12.4, 0.35, 0.86, "red"], [-1, 12.4, 2.72, 2.92, "red"]],
     trolley: 3.8,
-  });
+  }), detail: true, extras: refined.skoda14tr };
 }
 
 export function skoda15trSpec(): WorldBusSpec {

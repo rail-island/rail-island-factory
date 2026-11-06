@@ -110,6 +110,8 @@ export function routemasterSpec(p?: ParamValues): WorldBusSpec {
     lamps: { kind: "round", y0: 0.72, y1: 0.92 },
     back: { ...s.back, grille: undefined },
     bonnet: { length: 1.86, top: [1.32, 1.32], half: 1.0, grille: [0.55, 1.28, 0.32], halfCab: { from: 2.17 } },
+    // the open rear platform: a doorway with no doors
+    door: { ...s.door, open: true },
     detail: true, extras: refined.routemaster,
   };
 }
@@ -518,6 +520,7 @@ export function tatra500Spec(): WorldBusSpec {
     ...s, kind: "city", belt: 1.35, pane: { glass: [1.45, s.eave - 0.1], surround: [1.41, s.eave - 0.06], inset: 0.05 },
     front: { from: 1.1, rake: 0.6, chamfer: [0.6, 0.4] }, rear: { from: 1.4, rake: 0.8, chamfer: [0.5, 0.35] },
     screen: { ...s.screen, y0: 1.4 }, grille: undefined, back: { lamps: 0.62, grille: [0.8, 1.3] },
+    detail: true, extras: refined.tatra500,
   };
 }
 

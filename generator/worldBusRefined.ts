@@ -10,7 +10,7 @@
 
 import type { MeshBuilder, Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
-import { endBar, endLamp, endLettering, endPoint, endSlab, sidePoint, sideSlab, type BusFrame } from "./busKit.ts";
+import { endBadge, endBar, endLamp, endLettering, endPoint, endSlab, sidePoint, sideSlab, type BusFrame } from "./busKit.ts";
 import { roofBox, type CityCtx } from "./cityBuses.ts";
 import { block } from "./vehicleParts.ts";
 import type { WorldBusSpec } from "./worldBusKit.ts";
@@ -111,6 +111,148 @@ function sideStrip(c: CityCtx, s: WorldBusSpec, sd: number, u0: number, u1: numb
   }
 }
 
+/**
+ * A double-decker's glazed staircase on side `sd`: a band of glass `w` long rising
+ * diagonally from the lower deck's windows at ua to the upper deck's at ub, in a frame.
+ */
+function staircase(c: CityCtx, s: WorldBusSpec, sd: number, ua: number, ub: number, w: number): void {
+  const low = s.screen.y1;
+  const up = s.upper!.pane.glass[0];
+  const [xa, xb] = [c.x(ua), c.x(ub)];
+  const d = w * Math.sign(xb - xa);
+  c.d.fit("staircase glazing", (xa + xb) / 2, () => {
+    const m = c.m();
+    sidePoly(m, "frame", c.frame, sd, [[xa - d * 0.06, low - 0.06], [xa + d * 1.06, low - 0.06], [xb + d * 1.06, up + 0.06], [xb - d * 0.06, up + 0.06]], 0.012);
+    sidePoly(m, "glassDark", c.frame, sd, [[xa, low - 0.04], [xa + d, low - 0.04], [xb + d, up + 0.04], [xb, up + 0.04]], 0.03);
+  });
+}
+
+/** The route box on the tail between the decks (or under the rear window): a dark box and its lit text. */
+function rearRouteBox(c: CityCtx, y0: number, y1: number, half = 0.45): void {
+  c.d.fit("rear route box", c.tail, () => {
+    endSlab(c.m(), "sign", c.frame, -1, -half, half, y0, y1, 0.03);
+    endSlab(c.m(), "signText", c.frame, -1, -half + 0.07, half - 0.07, y0 + 0.06, y1 - 0.06, 0.034);
+  });
+}
+
+/** An open rear platform's grab pole: chrome, floor to ceiling, in the middle of the doorway, at its outer edge. */
+function platformPole(c: CityCtx, s: WorldBusSpec): void {
+  const [d0, d1] = s.doors[s.doors.length - 1]!;
+  const xp = c.x((d0 + d1) / 2);
+  c.d.fit("platform pole", xp, () => c.m().rod("chrome", [xp, s.door.bottom + 0.02, c.hw - 0.05], [xp, s.door.top - 0.02, c.hw - 0.05], 0.022, 8));
+}
+
+/** The maker's name on the nose at height y, and (`band`) the dark panel the head lamps sit in, across the nose. */
+function noseName(c: CityCtx, s: WorldBusSpec, y: number, band = false): void {
+  c.d.fit("nose name", c.nose, () => {
+    const m = c.m();
+    endLettering(m, c.frame, 1, -0.3, 0.3, y, 0.05, 0.02);
+    if (band) endSlab(m, "frame", c.frame, 1, -c.hw + 0.06, c.hw - 0.06, s.lamps.y0 - 0.06, s.lamps.y1 + 0.06, 0.004);
+  });
+}
+
+/**
+ * A roof rack over u0..u1: two rails on posts and cross bars at its ends, and
+ * (`ladder`) the ladder up the tail's right beside the rear window.
+ */
+function roofRack(c: CityCtx, s: WorldBusSpec, u0: number, u1: number, ladder: boolean): void {
+  const [x0, x1] = [c.x(u1), c.x(u0)];
+  const yr = s.height + 0.16;
+  const zr = Math.min(0.88, c.hw - 0.37);
+  c.d.roofItem(x0, x1, -zr - 0.04, zr + 0.04, s.height - 0.1, yr + 0.02, "frame");
+  c.d.fit("roof rack", (x0 + x1) / 2, () => {
+    const m = c.m();
+    for (const z of [-zr, zr]) {
+      m.rod("frame", [x0, yr, z], [x1, yr, z], 0.018, 6);
+      for (let i = 0; i <= 5; i++) {
+        const x = x0 + ((x1 - x0) * i) / 5;
+        m.rod("frame", [x, s.height - 0.1, z * 0.95], [x, yr, z], 0.015, 6);
+      }
+    }
+    for (const x of [x0, x1]) m.rod("frame", [x, yr, -zr], [x, yr, zr], 0.018, 6);
+  });
+  if (ladder) c.d.fit("ladder", c.tail, () => {
+    const m = c.m();
+    const at = (z: number, y: number): Vec3 => endPoint(c.frame, -1, z, y, 0.05);
+    const [ya, yb] = [1.0, s.eave - 0.02];
+    const [za, zb] = [c.hw - 0.27, c.hw - 0.09];
+    for (const z of [za, zb]) m.rod("frame", at(z, ya), at(z, yb), 0.015, 6);
+    for (let y = ya + 0.15; y < yb - 0.05; y += 0.25) m.rod("frame", at(za, y), at(zb, y), 0.012, 6);
+  });
+}
+
+/**
+ * A trolleybus's roof gear behind its poles' base (the poles' tips lie about u 9.8
+ * lowered): the converter's box with ventilation grilles over u 4.7..8.1, the two
+ * rope retrievers' reels at u 8.5 and the hooks the lowered poles rest in at u 9.15.
+ * (The ropes are not drawn: the poles' clip moves rigid pieces, and a rope from a
+ * fixed reel to a moving tip changes length.)
+ */
+function trolleyGear(c: CityCtx, s: WorldBusSpec): void {
+  const H = s.height;
+  const [x0, x1] = [c.x(8.1), c.x(4.7)];
+  roofBox(c, "roof equipment", x0, x1, -0.95, 0.95, H + 0.32, "pod", H - 0.08);
+  c.d.fit("roof equipment", (x0 + x1) / 2, () => {
+    const m = c.m();
+    for (const sd of [-1, 1]) for (let i = 0; i < 3; i++) {
+      const y = H + 0.06 + i * 0.075;
+      const [z0, z1] = sd > 0 ? [0.94, 0.965] : [-0.965, -0.94];
+      block(m, "grille", x0 + 0.2, x1 - 0.2, y, y + 0.04, z0, z1);
+    }
+  });
+  // the retrievers: a housing and its drum under each pole
+  const xr = c.x(8.5);
+  c.d.roofItem(xr - 0.15, xr + 0.15, -0.44, 0.44, H - 0.06, H + 0.24, "frame");
+  c.d.fit("retrievers", xr, () => {
+    const m = c.m();
+    for (const sd of [-1, 1]) {
+      block(m, "frame", xr - 0.15, xr + 0.15, H - 0.06, H + 0.1, ...(sd > 0 ? [0.16, 0.44] as [number, number] : [-0.44, -0.16] as [number, number]));
+      m.rod("pole", [xr, H + 0.15, sd * 0.19], [xr, H + 0.15, sd * 0.41], 0.085, 10);
+    }
+  });
+  // the poles' hooks, under the lowered poles
+  const xh = c.x(9.15);
+  c.d.roofItem(xh - 0.06, xh + 0.06, -0.36, 0.36, H - 0.08, H + 0.38, "frame");
+  c.d.fit("pole hooks", xh, () => {
+    for (const z of [-0.3, 0.3]) {
+      block(c.m(), "frame", xh - 0.04, xh + 0.04, H - 0.08, H + 0.34, z - 0.06, z - 0.045);
+      block(c.m(), "frame", xh - 0.04, xh + 0.04, H - 0.08, H + 0.34, z + 0.045, z + 0.06);
+    }
+  });
+}
+
+/**
+ * Wheel covers (spats) over the rear wheels' arches, both sides: a panel on the shell
+ * from below the tyre's middle up over the arch, its back 5 mm into the shell, clear
+ * of the tyres and hub caps behind it. The steered wheels stay open.
+ */
+function spats(c: CityCtx, s: WorldBusSpec, mat: string): void {
+  const r = s.wheelRadius;
+  const half = r + 0.12 + 0.07;
+  const top = Math.max(r * 2.17, s.floor + 0.35) + 0.07;
+  for (const a of s.axles.slice(1)) {
+    const x = c.x(a.at);
+    c.d.fit("wheel covers", x, () => {
+      for (const sd of [-1, 1]) sideSlab(c.m(), mat, c.frame, sd, x - half, x + half, 0.4, top, 0.024, 0.005);
+    });
+  }
+}
+
+/**
+ * Service flaps low on the left between the axles (the batteries, the fuel filler, the
+ * heater): two flaps with handles, clear of the arches, and the filler's chrome cap.
+ */
+function serviceFlaps(c: CityCtx, s: WorldBusSpec): void {
+  const r = s.wheelRadius + 0.12;
+  const a0 = s.axles[0]!.at + r + 0.25;
+  const a1 = s.axles[1]!.at - r - 0.25;
+  if (a1 - a0 < 2.0) return;
+  const top = Math.min(s.belt - 0.08, s.floor + 0.62);
+  flaps(c, -1, [[a0, a0 + 0.9], [a1 - 0.9, a1]], s.floor + 0.08, top);
+  const xf = c.x(a0 + 1.25);
+  c.d.fit("fuel filler", xf, () => sideSlab(c.m(), "chrome", c.frame, -1, xf - 0.07, xf + 0.07, top - 0.16, top - 0.04, 0.016));
+}
+
 /** A round lamp on an end in a dark housing, `mat` its lens. */
 const endRound = (m: MeshBuilder, f: BusFrame, end: 1 | -1, mat: string, z: number, y: number, r: number, proud = 0.026): void =>
   endLamp(m, mat, f, end, z, y, r, proud, "frame", 10);
@@ -129,21 +271,10 @@ const ringOn = (n: number, r: number, z: number, y: number, rot = 0): Ring =>
  * route number over the middle door, two roof hatches and a gutter.
  */
 export const newRoutemaster: Extras = (c, s) => {
-  const low = s.screen.y1;
-  const up = s.upper!.pane.glass[0];
-  const stair = (sd: number, ua: number, ub: number): void => {
-    // ua at the lower deck, rising to ub at the upper deck
-    const [xa, xb] = [c.x(ua), c.x(ub)];
-    const w = 0.7 * Math.sign(xb - xa);
-    c.d.fit("staircase glazing", (xa + xb) / 2, () => {
-      const m = c.m();
-      sidePoly(m, "frame", c.frame, sd, [[xa - w * 0.08, low - 0.06], [xa + w * 1.08, low - 0.06], [xb + w * 1.08, up + 0.06], [xb - w * 0.08, up + 0.06]], 0.012);
-      sidePoly(m, "glassDark", c.frame, sd, [[xa, low - 0.04], [xa + w, low - 0.04], [xb + w, up + 0.04], [xb, up + 0.04]], 0.03);
-    });
-  };
-  stair(-1, 1.0, 2.4);
-  stair(1, 10.9, 9.4);
+  staircase(c, s, -1, 1.0, 2.6, 1.25);
+  staircase(c, s, 1, 10.95, 9.2, 1.25);
   // the route number over the middle door, in the upper deck's first right-hand window
+  const up = s.upper!.pane.glass[0];
   const xd = c.x(5.1);
   c.d.fit("route number", xd, () => {
     sideSlab(c.m(), "sign", c.frame, 1, xd - 0.32, xd + 0.32, up + 0.1, up + 0.36, 0.034);
@@ -157,7 +288,8 @@ export const newRoutemaster: Extras = (c, s) => {
  * AEC Routemaster: the chrome radiator surround on the bonnet with the maker's
  * triangle, the route number and "via" boxes over the
  * cab, the upper deck's split front windows with their top vents, the rear route
- * box and the platform's grab rails, roof vents over the front.
+ * box, the open rear platform (no doors: DoorStyle.open) with its grab pole, roof
+ * vents over the front.
  */
 export const routemaster: Extras = (c, s) => {
   const L = s.length;
@@ -184,17 +316,8 @@ export const routemaster: Extras = (c, s) => {
     for (const z of [-0.45, 0.45]) block(m, "frame", L - 0.55, L - 0.25, s.height - 0.06, s.height + 0.03, z - 0.18, z + 0.18);
   });
   c.d.roofItem(L - 0.55, L - 0.25, -0.63, 0.63, s.height - 0.06, s.height + 0.03, "frame");
-  // the rear: the route box under the emergency window
-  c.d.fit("rear route box", c.tail, () => {
-    endSlab(c.m(), "sign", c.frame, -1, -0.45, 0.45, 2.24, 2.5, 0.03);
-    endSlab(c.m(), "signText", c.frame, -1, -0.38, 0.38, 2.3, 2.44, 0.034);
-  });
-  // the platform's grab rails, at the doorway's rear edge, inside it
-  const d1 = s.doors[0]![1];
-  const xr = c.x(d1) + 0.06;
-  c.d.fit("grab rail", xr, () => {
-    c.m().rod("chrome", [xr, 0.5, c.hw - 0.12], [xr, 2.1, c.hw - 0.12], 0.02, 6);
-  });
+  rearRouteBox(c, 2.24, 2.5);
+  platformPole(c, s);
   gutters(c, s, s.eave - 0.08);
 };
 
@@ -217,40 +340,15 @@ export const ikarus280: Extras = (c, s) => {
   gutters(c, s, s.eave - 0.12);
   hatches(c, s, [3.6, 7.2, 13.0]);
   louvres(c, -1, 5.0, 6.6, 0.45, 0.72);
-  c.d.fit("nose name", c.nose, () => {
-    const m = c.m();
-    endLettering(m, c.frame, 1, -0.3, 0.3, s.lamps.y1 + 0.22, 0.05, 0.02);
-    // the dark panel the lamps sit in, across the nose
-    endSlab(m, "frame", c.frame, 1, -c.hw + 0.06, c.hw - 0.06, s.lamps.y0 - 0.06, s.lamps.y1 + 0.06, 0.004);
-  });
+  noseName(c, s, s.lamps.y1 + 0.22, true);
 };
 
 /**
- * Skoda 15Tr: the trolleybus's roof equipment under its covers (the converter's
- * box with ventilation grilles along the front section's roof), the hooks the
- * lowered poles rest in, hatches, gutters and the traction motor's grille.
+ * Skoda 15Tr: the trolleybus's roof gear (trolleyGear: the converter's box, the rope
+ * retrievers' reels, the poles' hooks), hatches, gutters and the traction motor's grille.
  */
 export const skoda15tr: Extras = (c, s) => {
-  const top = s.height + 0.32;
-  const [x0, x1] = [c.x(8.9), c.x(5.0)];
-  roofBox(c, "roof equipment", x0, x1, -0.95, 0.95, top, "pod", s.height - 0.08);
-  c.d.fit("roof equipment", (x0 + x1) / 2, () => {
-    const m = c.m();
-    for (const sd of [-1, 1]) for (let i = 0; i < 3; i++) {
-      const y = s.height + 0.06 + i * 0.075;
-      const [z0, z1] = sd > 0 ? [0.94, 0.965] : [-0.965, -0.94];
-      block(m, "grille", x0 + 0.2, x1 - 0.2, y, y + 0.04, z0, z1);
-    }
-  });
-  // the poles' hooks at the front section's rear, under the lowered poles
-  const xh = c.x(9.15);
-  c.d.roofItem(xh - 0.06, xh + 0.06, -0.36, 0.36, s.height - 0.08, s.height + 0.38, "frame");
-  c.d.fit("pole hooks", xh, () => {
-    for (const z of [-0.3, 0.3]) {
-      block(c.m(), "frame", xh - 0.04, xh + 0.04, s.height - 0.08, s.height + 0.34, z - 0.06, z - 0.045);
-      block(c.m(), "frame", xh - 0.04, xh + 0.04, s.height - 0.08, s.height + 0.34, z + 0.045, z + 0.06);
-    }
-  });
+  trolleyGear(c, s);
   hatches(c, s, [2.2, 12.2, 15.2]);
   gutters(c, s, s.eave - 0.1);
   louvres(c, -1, 13.0, 14.0, 0.95, 1.32);
@@ -258,8 +356,9 @@ export const skoda15tr: Extras = (c, s) => {
 
 /**
  * Van Hool Exqui.City: the tram's look - the roof fairings ramped down at their
- * ends, a light strip across the nose, the driver's door on the left, a chin
- * spoiler in the skirt's colour.
+ * ends, a light strip across the nose, the rear wheels behind covers, the
+ * driver's door on the left, a chin spoiler in the skirt's colour (and, in its
+ * spec, the nose's plan rounded wide).
  */
 export const exquiCity: Extras = (c, s) => {
   for (const [u0, u1, half, top, mat] of s.roof ?? []) {
@@ -280,6 +379,7 @@ export const exquiCity: Extras = (c, s) => {
     endSlab(m, "lampHead", c.frame, 1, -c.hw + 0.3, c.hw - 0.3, 1.02, 1.06, 0.018);
     endSlab(m, "skirt", c.frame, 1, -c.hw + 0.05, c.hw - 0.05, s.floor + 0.02, s.floor + 0.09, 0.024);
   });
+  spats(c, s, "body");
   // the driver's door on the left, ahead of the front axle
   flaps(c, -1, [[0.75, 1.55]], 0.4, s.eave - 0.3);
   c.d.fit("driver's window", c.x(1.15), () => sideSlab(c.m(), "glassDark", c.frame, -1, c.x(1.5), c.x(0.8), 1.3, s.eave - 0.4, 0.03));
@@ -389,30 +489,7 @@ export const rto: Extras = (c, s) => {
     endLettering(m, c.frame, 1, -0.28, 0.28, g1 + 0.06, 0.05, 0.02);
   });
   for (const sd of [-1, 1]) sideStrip(c, s, sd, 0.6, s.length - 0.6, 1.26, 1.29, "chrome", 0.014);
-  // the roof rack: two rails on posts, cross bars at its ends
-  const [u0, u1] = [2.2, 9.4];
-  const [x0, x1] = [c.x(u1), c.x(u0)];
-  const yr = s.height + 0.16;
-  c.d.roofItem(x0, x1, -0.92, 0.92, s.height - 0.1, yr + 0.02, "frame");
-  c.d.fit("roof rack", (x0 + x1) / 2, () => {
-    const m = c.m();
-    for (const z of [-0.88, 0.88]) {
-      m.rod("frame", [x0, yr, z], [x1, yr, z], 0.018, 6);
-      for (let i = 0; i <= 5; i++) {
-        const x = x0 + ((x1 - x0) * i) / 5;
-        m.rod("frame", [x, s.height - 0.1, z * 0.95], [x, yr, z], 0.015, 6);
-      }
-    }
-    for (const x of [x0, x1]) m.rod("frame", [x, yr, -0.88], [x, yr, 0.88], 0.018, 6);
-  });
-  // the ladder up the rear's right, beside the window
-  c.d.fit("ladder", c.tail, () => {
-    const m = c.m();
-    const at = (z: number, y: number): Vec3 => endPoint(c.frame, -1, z, y, 0.05);
-    const [ya, yb] = [1.0, s.eave - 0.02];
-    for (const z of [0.98, 1.16]) m.rod("frame", at(z, ya), at(z, yb), 0.015, 6);
-    for (let y = ya + 0.15; y < yb - 0.05; y += 0.25) m.rod("frame", at(0.98, y), at(1.16, y), 0.012, 6);
-  });
+  roofRack(c, s, 2.2, 9.4, true);
   hatches(c, s, [1.4], "cream");
   gutters(c, s, s.eave - 0.08);
 };
@@ -436,4 +513,148 @@ export const biarticulado: Extras = (c, s) => {
   hatches(c, s, [7.6, 16.4, 23.6], "white");
   gutters(c, s, s.eave - 0.24);
   c.d.fit("nose name", c.nose, () => endLettering(c.m(), c.frame, 1, -0.32, 0.32, s.lamps.y1 + 0.24, 0.05, 0.02));
+};
+
+// ---------------------------------------------------------------------------
+// the second batch
+
+/** Ikarus 260: the 280's solo sister - gutters, hatches, the rear engine's grille on the left, the dark lamp panel and the name. */
+export const ikarus260: Extras = (c, s) => {
+  gutters(c, s, s.eave - 0.12);
+  hatches(c, s, [3.0, 7.0]);
+  louvres(c, -1, 9.4, 10.5, 0.48, 0.78);
+  noseName(c, s, s.lamps.y1 + 0.22, true);
+  serviceFlaps(c, s);
+};
+
+/**
+ * Leyland National: its trademark roof pod at the rear (the heating unit) faired at
+ * its front and slatted along its sides, hatches, gutters, the engine's louvres low on
+ * the rear left.
+ */
+export const leylandNational: Extras = (c, s) => {
+  const [u0, u1, half, top, mat] = s.roof![0]!;
+  const xe = c.x(u0);
+  const xr = xe + 0.8;
+  const base = s.height - 0.08;
+  c.d.roofItem(xe, xr, -half, half, base, top, mat);
+  c.d.fit("pod fairing", xe, () => {
+    const m = c.m();
+    const prof: Ring = [[xe - 0.02, base], [xr, base], [xe - 0.02, top]];
+    m.sweep(mat, "z", prof, -half + 0.05, prof, half - 0.05);
+    const x1 = c.x(u1);
+    for (const sd of [-1, 1]) for (let i = 0; i < 3; i++) {
+      const y = s.height + 0.08 + i * 0.09;
+      const [z0, z1] = sd > 0 ? [half - 0.01, half + 0.015] : [-half - 0.015, -half + 0.01];
+      block(m, "grille", x1 + 0.15, xe - 0.15, y, y + 0.05, z0, z1);
+    }
+  });
+  hatches(c, s, [3.0, 6.2]);
+  gutters(c, s, s.eave - 0.1);
+  louvres(c, -1, 9.6, 10.8, 0.45, 0.75);
+  serviceFlaps(c, s);
+};
+
+/** Mercedes-Benz O 305, the German standard bus: the dark lamp band, the star on the nose (its finish) and the tail, hatches in the red roof, gutters, the engine's louvres. */
+export const o305: Extras = (c, s) => {
+  noseName(c, s, s.lamps.y1 + 0.3, true);
+  c.d.fit("rear star", c.tail, () => endBadge(c.m(), c.frame, -1, 0, s.back.grille![1] + 0.14, 0.07, 0.026, true));
+  hatches(c, s, [2.6, 6.0, 9.0], "red");
+  gutters(c, s, s.eave - 0.1);
+  louvres(c, -1, 9.0, 10.4, 0.5, 0.8);
+  serviceFlaps(c, s);
+};
+
+/** Skoda 14Tr: the trolleybus's roof gear (trolleyGear), hatches, gutters, the traction motor's grille. */
+export const skoda14tr: Extras = (c, s) => {
+  trolleyGear(c, s);
+  hatches(c, s, [2.2, 10.3]);
+  gutters(c, s, s.eave - 0.1);
+  louvres(c, -1, 8.7, 9.7, 0.95, 1.32);
+  serviceFlaps(c, s);
+};
+
+/** Alexander Dennis Enviro400: the staircase window behind the driver, the engine bay's louvres at the rear corners, the rear route box, hatches and gutters. */
+export const enviro400: Extras = (c, s) => {
+  staircase(c, s, -1, 1.3, 2.5, 0.85);
+  for (const sd of [-1, 1]) louvres(c, sd, 9.4, 10.5, 0.5, 0.95);
+  rearRouteBox(c, 2.22, 2.48);
+  hatches(c, s, [3.0, 7.6]);
+  gutters(c, s, s.eave - 0.08);
+};
+
+/** Karosa SM 11: the dark lamp band and the name on the nose, three hatches, gutters, the engine's grille behind the rear axle on the left. */
+export const sm11: Extras = (c, s) => {
+  noseName(c, s, s.lamps.y1 + 0.22, true);
+  hatches(c, s, [2.5, 6.0, 9.5]);
+  gutters(c, s, s.eave - 0.1);
+  louvres(c, -1, 8.9, 10.4, 0.5, 0.8);
+  serviceFlaps(c, s);
+};
+
+/**
+ * LiAZ-677: the glazed roof edge over the windows (skylights both sides), a chrome bar
+ * across the nose under the lamps, hatches, the engine's louvres at the rear left.
+ */
+export const liaz677: Extras = (c, s) => {
+  for (const [u0, u1] of s.windows) {
+    const n = Math.max(1, Math.round((u1 - u0) / s.pitch));
+    const w = (u1 - u0) / n;
+    for (let i = 0; i < n; i++) {
+      const [x0, x1] = [c.x(u0 + (i + 1) * w) + 0.08, c.x(u0 + i * w) - 0.08];
+      c.d.fit("skylights", (x0 + x1) / 2, () => {
+        for (const sd of [-1, 1]) {
+          sideSlab(c.m(), "frame", c.frame, sd, x0 - 0.03, x1 + 0.03, s.eave + 0.004, s.eave + 0.075, 0.008);
+          sideSlab(c.m(), "glassLight", c.frame, sd, x0, x1, s.eave + 0.014, s.eave + 0.065, 0.016);
+        }
+      });
+    }
+  }
+  c.d.fit("nose bar", c.nose, () => endSlab(c.m(), "chrome", c.frame, 1, -c.hw + 0.62, c.hw - 0.62, s.lamps.y0 - 0.02, s.lamps.y0 + 0.015, 0.02));
+  hatches(c, s, [3.0, 7.0], "white");
+  louvres(c, -1, 8.6, 9.9, 0.48, 0.78);
+  serviceFlaps(c, s);
+};
+
+/**
+ * Bristol Lodekka: the radiator in its chrome surround with the badge on it, the open
+ * rear platform (DoorStyle.open) and its pole, the rear route box, the split upper
+ * front windows, hatches and gutters.
+ */
+export const lodekka: Extras = (c, s) => {
+  const [g0, g1, gh] = s.grille!;
+  c.d.fit("radiator", c.nose, () => endSlab(c.m(), "chrome", c.frame, 1, -gh - 0.06, gh + 0.06, g0 - 0.06, g1 + 0.05, 0.012));
+  platformPole(c, s);
+  rearRouteBox(c, 2.22, 2.48);
+  hatches(c, s, [2.5, 5.6]);
+  gutters(c, s, s.eave - 0.08);
+};
+
+/** Bussing D2U: the staircase window behind the driver, the engine's louvres at the rear left, the rear route box, hatches and gutters. */
+export const d2u: Extras = (c, s) => {
+  staircase(c, s, -1, 1.4, 2.6, 0.9);
+  louvres(c, -1, 8.4, 9.4, 0.5, 0.95);
+  rearRouteBox(c, 2.22, 2.48);
+  hatches(c, s, [3.0, 6.8]);
+  gutters(c, s, s.eave - 0.08);
+};
+
+/**
+ * Tatra 500 HB: chrome strips along the skirt's top and under the windows, the rear
+ * engine's air intakes on both sides, the long-distance bus's roof rack and ladder, a hatch,
+ * the chrome bars across the nose, the service flaps.
+ */
+export const tatra500: Extras = (c, s) => {
+  for (const sd of [-1, 1]) {
+    sideStrip(c, s, sd, 0.5, s.length - 0.6, 1.29, 1.32, "chrome", 0.014);
+    louvres(c, sd, 8.7, 9.6, 0.55, 1.05);
+  }
+  roofRack(c, s, 2.0, 8.8, true);
+  hatches(c, s, [1.3]);
+  // the chrome bars swept across the nose between the lamps, and the badge over them
+  c.d.fit("nose chrome", c.nose, () => {
+    const m = c.m();
+    for (let i = 0; i < 3; i++) endSlab(m, "chrome", c.frame, 1, -0.62 + i * 0.06, 0.62 - i * 0.06, 0.56 + i * 0.09, 0.585 + i * 0.09, 0.024);
+  });
+  serviceFlaps(c, s);
 };

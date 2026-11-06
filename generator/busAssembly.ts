@@ -18,6 +18,7 @@ import { BUS_DETAIL_PALETTE, detailedBusWheel, detailedJoint, drawBusDetail, dra
 import { busLod, emptyBusLodNotes, type BusLodNotes } from "./lodRoad.ts";
 import { openable, plugMove } from "./doors.ts";
 import { CABIN_INSET, drawCabin, INTERIOR_PALETTE, type CabinDoor } from "./interior.ts";
+import type { Vec3 } from "./meshCore.ts";
 
 /** One axle: where it is, and what it carries. */
 export interface Axle {
@@ -79,6 +80,37 @@ export interface Doorway {
   x1: number;
   y0: number;
   y1: number;
+  /** An open platform's: no cabin behind it, a platform alcove (`platformAlcove`) instead. */
+  open?: boolean;
+}
+
+/** How deep an open platform's alcove reaches into the bus. */
+const PLATFORM_DEPTH = 0.95;
+
+/**
+ * The alcove behind an open platform's doorway `d` (DoorStyle.open): its floor, back
+ * wall, ends and ceiling, all facing into it, from just outside the shell to
+ * PLATFORM_DEPTH in. Part of the exterior: with no doors to open, it is always seen.
+ */
+function platformAlcove(m: MeshBuilder, spec: BusSpec, d: Doorway): void {
+  const s = d.s;
+  const [x0, x1, y0, y1] = [d.x0 + 0.002, d.x1 - 0.002, d.y0 + 0.003, d.y1 - 0.003];
+  const zo = s * (halfWidth(spec.section, (y0 + y1) / 2) + 0.004);
+  const zi = s * (halfWidth(spec.section, (y0 + y1) / 2) - PLATFORM_DEPTH);
+  const face = (mat: string, a: Vec3, b: Vec3, c: Vec3, e: Vec3, n: Vec3): void => {
+    const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+    const v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+    const w = [u[1]! * v[2]! - u[2]! * v[1]!, u[2]! * v[0]! - u[0]! * v[2]!, u[0]! * v[1]! - u[1]! * v[0]!];
+    if (w[0]! * n[0] + w[1]! * n[1] + w[2]! * n[2] >= 0) m.quad(mat, a, b, c, e);
+    else m.quad(mat, e, c, b, a);
+  };
+  m.scope("platform", () => {
+    face("rubber", [x0, y0, zo], [x1, y0, zo], [x1, y0, zi], [x0, y0, zi], [0, 1, 0]);
+    face("frame", [x0, y1, zo], [x1, y1, zo], [x1, y1, zi], [x0, y1, zi], [0, -1, 0]);
+    face("frame", [x0, y0, zi], [x1, y0, zi], [x1, y1, zi], [x0, y1, zi], [0, 0, s]);
+    face("frame", [x0, y0, zo], [x0, y1, zo], [x0, y1, zi], [x0, y0, zi], [1, 0, 0]);
+    face("frame", [x1, y0, zo], [x1, y1, zo], [x1, y1, zi], [x1, y0, zi], [-1, 0, 0]);
+  });
 }
 
 /** The lowest and highest b where the line a = `at` crosses a convex outline of (a, b) points, or null. */
@@ -208,7 +240,9 @@ export function assembleBus(spec: BusSpec, bind?: (m: MeshBuilder) => void): Mes
         arches: spec.arches, under: "under", x0: lo, x1: hi,
         ...(doors.length ? { doorways: doors.map((d) => ({ ...d, x0: d.x0 - 0.002, x1: d.x1 + 0.002, y0: d.y0 - 0.002, y1: d.y1 + 0.002 })) } : {}),
       });
-      if (doors.length) busCabin(m, spec, lo, hi, doors);
+      const closed = doors.filter((d) => !d.open);
+      if (closed.length) busCabin(m, spec, lo, hi, closed);
+      for (const d of doors) if (d.open) platformAlcove(m, spec, d);
       spec.axles.forEach((a, ai) => {
         if (a.x < lo || a.x > hi) return;
         m.scope(a.steer ? "front axle" : `axle ${ai + 1}`, () => {
@@ -311,6 +345,8 @@ export interface DoorStyle {
   leafWidth?: number;
   /** The number of leaves, whatever the width (a double door: 2). */
   leaves?: number;
+  /** An open platform (a Routemaster's): the doorway and its frame, no leaves to open. */
+  open?: boolean;
 }
 
 /**
@@ -371,7 +407,7 @@ export class BusDraft {
     // the leaves' span; the doorway 3 cm inside it all round, so the flat leaves
     // overlap the shell at their edges, where its sides lean in under them
     const [ls, le] = [x0 + 0.03, x0 + 0.03 + leaves * lw - 0.02];
-    const hole: Doorway = { s, x0: ls + 0.03, x1: le - 0.03, y0: st.bottom + 0.03, y1: st.top - 0.03 };
+    const hole: Doorway = { s, x0: ls + 0.03, x1: le - 0.03, y0: st.bottom + 0.03, y1: st.top - 0.03, ...(st.open ? { open: true } : {}) };
     this.doorways.push(hole);
     this.fit(s > 0 ? "right doors" : "left doors", (x0 + x1) / 2, () => {
       const m = this.m;
@@ -384,6 +420,7 @@ export class BusDraft {
         if (st.bottom - sill > 1e-3) sideSlab(m, mat, this.frame, s, ls, le, sill, st.bottom, 0.01);
         sideSlab(m, mat, this.frame, s, ls, le, st.top, st.top + 0.04, 0.01);
       });
+      if (st.open) return;
       const hw = halfWidth(this.frame.section, st.bottom + 0.2);
       openable(m, (mm, o) => {
         for (let l = 0; l < leaves; l++) {

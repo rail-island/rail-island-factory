@@ -60,6 +60,16 @@ const ROLLING: Array<{ id: string; d: number; nodes: string[] }> = [
     ["proc-vehicle-gm-scenicruiser", 1.0, 2, false],
     ["proc-vehicle-skoda-706-rto", 1.0, 1, false],
     ["proc-vehicle-curitiba-biarticulado", 1.0, 3, true],
+    ["proc-vehicle-ikarus-260", 1.0, 1, false],
+    ["proc-vehicle-leyland-national", 1.0, 1, false],
+    ["proc-vehicle-mb-o305", 1.0, 1, false],
+    ["proc-vehicle-skoda-14tr", 1.0, 1, false],
+    ["proc-vehicle-adl-enviro400", 1.0, 1, false],
+    ["proc-vehicle-karosa-sm11", 1.0, 1, false],
+    ["proc-vehicle-liaz-677", 1.0, 1, false],
+    ["proc-vehicle-bristol-lodekka", 1.0, 1, false],
+    ["proc-vehicle-bussing-d2u", 1.0, 1, false],
+    ["proc-vehicle-tatra-500-hb", 1.0, 1, false],
   ] as const).map(([id, d, rear, articulated]) => {
     const pair = (k: number): string[] => [`wheel-rear-${k}-left`, `wheel-rear-${k}-right`];
     const front = ["wheel-front-left-spin", "wheel-front-right-spin"];

@@ -17,10 +17,10 @@ introduction year and capacity (seats and standing room), exterior triangles at 
 |---|---|---|---|---|---|---|---|
 | `veh-new-routemaster` | New Routemaster | double | 11.23 x 2.52 x 4.39 | 2.6 / 8.5 | 3 | 2012 / 87 | 7,298 |
 | `veh-adl-enviro200` | Alexander Dennis Enviro200 | city | 10.8 x 2.44 x 2.95 | 2.45 / 7.75 | 2 | 2006 / 70 | 2,796 |
-| `veh-adl-enviro400` | Alexander Dennis Enviro400 | double | 10.8 x 2.55 x 4.3 | 2.5 / 7.85 | 2 | 2005 / 87 | 3,020 |
+| `veh-adl-enviro400` | Alexander Dennis Enviro400 | double | 10.8 x 2.55 x 4.3 | 2.5 / 7.85 | 2 | 2005 / 87 | 7,292 |
 | `veh-adl-enviro500` | Alexander Dennis Enviro500 | double | 12 x 2.55 x 4.4 | 2.65 / 8.4 / 9.75 | 2 | 2002 / 130 | 3,794 |
-| `veh-leyland-national` | Leyland National | city | 11.3 x 2.5 x 3.05 | 2.35 / 8 | 2 | 1972 / 80 | 3,088 |
-| `veh-mb-o305` | Mercedes-Benz O 305 | city | 11 x 2.5 x 2.94 | 2.6 / 8.2 | 3 | 1967 / 100 | 2,994 |
+| `veh-leyland-national` | Leyland National | city | 11.3 x 2.5 x 3.05 | 2.35 / 8 | 2 | 1972 / 80 | 7,168 |
+| `veh-mb-o305` | Mercedes-Benz O 305 | city | 11 x 2.5 x 2.94 | 2.6 / 8.2 | 3 | 1967 / 100 | 7,326 |
 | `veh-mb-o405` | Mercedes-Benz O 405 | city | 11.7 x 2.5 x 2.96 | 2.65 / 8.5 | 3 | 1984 / 100 | 3,118 |
 | `veh-mb-ecitaro` | Mercedes-Benz eCitaro | city | 12.135 x 2.55 x 2.95 | 2.85 / 8.725 | 3 | 2018 / 88 | 2,968 |
 | `veh-man-lions-city` | MAN Lion's City | city | 12.2 x 2.55 x 3 | 2.7 / 8.5 | 3 | 2018 / 90 | 2,968 |
@@ -29,10 +29,10 @@ introduction year and capacity (seats and standing room), exterior triangles at 
 | `veh-neoplan-skyliner` | Neoplan Skyliner | double | 13.8 x 2.55 x 4 | 2.8 / 9.3 / 10.65 | 2 | 2004 / 83 | 9,243 |
 | `veh-volvo-7900e` | Volvo 7900 Electric | city | 12 x 2.55 x 2.95 | 2.7 / 8.6 | 3 | 2018 / 85 | 2,968 |
 | `veh-scania-citywide` | Scania Citywide | city | 12 x 2.55 x 3 | 2.7 / 8.65 | 3 | 2011 / 95 | 2,956 |
-| `veh-van-hool-exquicity` | Van Hool Exqui.City | city, articulated | 18.6 x 2.55 x 3.05 | 3.3 / 9 / 15.3 | 4 | 2011 / 120 | 10,050 |
-| `veh-skoda-14tr` | Skoda 14Tr | city, trolley | 11.34 x 2.5 x 3.05 | 2.6 / 8 | 3 | 1982 / 90 | 3,152 |
-| `veh-skoda-15tr` | Skoda 15Tr | city, trolley, articulated | 17.4 x 2.5 x 3.05 | 2.6 / 8.1 / 14.2 | 4 | 1988 / 160 | 10,216 |
-| `veh-ikarus-260` | Ikarus 260 | city | 11 x 2.5 x 3 | 2.4 / 7.8 | 3 | 1971 / 100 | 3,118 |
+| `veh-van-hool-exquicity` | Van Hool Exqui.City | city, articulated | 18.6 x 2.55 x 3.05 | 3.3 / 9 / 15.3 | 4 | 2011 / 120 | 10,402 |
+| `veh-skoda-14tr` | Skoda 14Tr | city, trolley | 11.34 x 2.5 x 3.05 | 2.6 / 8 | 3 | 1982 / 90 | 7,356 |
+| `veh-skoda-15tr` | Skoda 15Tr | city, trolley, articulated | 17.4 x 2.5 x 3.05 | 2.6 / 8.1 / 14.2 | 4 | 1988 / 160 | 10,312 |
+| `veh-ikarus-260` | Ikarus 260 | city | 11 x 2.5 x 3 | 2.4 / 7.8 | 3 | 1971 / 100 | 7,290 |
 | `veh-ikarus-280` | Ikarus 280 | city, articulated | 16.5 x 2.5 x 3.16 | 2.4 / 7.8 / 13.6 | 4 | 1973 / 160 | 10,258 |
 | `veh-solaris-trollino` | Solaris Trollino 18 | city, trolley, articulated | 18 x 2.55 x 3 | 2.7 / 8.5 / 14.6 | 4 | 2001 / 150 | 4,432 |
 | `veh-gillig-low-floor` | Gillig Low Floor | city | 12.2 x 2.59 x 3.1 | 2.1 / 9.25 | 2 | 1997 / 75 | 2,820 |
@@ -111,8 +111,9 @@ the Solaris Trollino state the inverter engine sound (`electric-engine-converter
 - **Doors on the right.** Every bus has its passenger doors on the right (+z), the game's kerb
   side, also the British and Hong Kong double-deckers whose real doors are on the left.
 - The shell is convex, so a bus's curves are a few flat panels: the New Routemaster's
-  asymmetric wrap-round glazing and the Exqui.City's tram-like nose and faired wheels are
-  approximated by the raked front and the dark glazing band.
+  asymmetric wrap-round glazing and the Exqui.City's tram-like nose are approximated by the
+  raked front, a wide plan curve and the dark glazing band (its rear wheels' covers are
+  panels; [world-buses-detail.md](world-buses-detail.md)).
 - Liveries are one operator's colours as plain bands; no wordmarks, logos or advertising.
 - Wheelbases not published in the sources are read off the photographs (approx.).
 - The trolley poles are always drawn raised at rest (the game lowers them through the clip).
