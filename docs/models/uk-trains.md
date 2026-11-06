@@ -1,7 +1,7 @@
 # The United Kingdom's trains
 
 **Covers** - the twenty British designs of the eight-country plan, at their real size on the W6a gauge (`uk`): the InterCity 125 and 225, the Class 800 IET and the Class 390 Pendolino, the Eurostar e300, the Class 158 and the Class 142 Pacer, London's 1938 tube stock; the Class 55 Deltic, 37, 47, 66 and 86; the LNER A4 and A3, the GWR Castle, the LMS Black Five, the BR 9F and Stephenson's Rocket; the BR Mk1 coach. Their kits, figures, deviations and tests.
-**Code** - `generator/ukUnits.ts` (`UK_UNITS`), `generator/ukLocos.ts` (`UK_LOCOS`), `generator/loadingGauge.ts` (`uk`), `generator/worldLocoKit.ts` (the `bonnets` nose), `generator/worldSteamLocos.ts`, `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `test/ukPowerCars.test.ts`, `assets/br-*/`, `assets/lner-*/`, `assets/gwr-castle/`, `assets/lms-black-five/`, `assets/lu-1938-stock/`, `assets/eurostar-373/`, `assets/rocket/`
+**Code** - `generator/ukUnits.ts` (`UK_UNITS`), `generator/lu1938Parts.ts`, `generator/ukLocos.ts` (`UK_LOCOS`), `generator/loadingGauge.ts` (`uk`), `generator/worldLocoKit.ts` (the `bonnets` nose), `generator/worldSteamLocos.ts`, `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `test/lu1938.test.ts`, `test/ukPowerCars.test.ts`, `assets/br-*/`, `assets/lner-*/`, `assets/gwr-castle/`, `assets/lms-black-five/`, `assets/lu-1938-stock/`, `assets/eurostar-373/`, `assets/rocket/`
 **See also** - [loading-gauge.md](loading-gauge.md), [shinkansen.md](shinkansen.md), [world-locos.md](world-locos.md), [world-steam.md](world-steam.md), [world-coaches.md](world-coaches.md)
 
 The catalog had no British train before; the archived webapp Eurostar is now the
@@ -18,7 +18,7 @@ The catalog had no British train before; the archived webapp Eurostar is now the
 | `proc-vehicle-eurostar-373` | Eurostar e300 | series | `unit`, `cars` 4 - 8, `livery` (`eurostar`, `eurostar2011`) | 300 km/h |
 | `proc-vehicle-br-class-158` | Class 158 | series, diesel | `unit`, `livery` (`regional`, `northern`) | two cars of 22.57 m; 145 km/h |
 | `proc-vehicle-br-class-142` | Class 142 Pacer | series, diesel, single axles | `unit`, `livery` (`provincial`, `northern`) | two cars of 15.45 m; 120 km/h |
-| `proc-vehicle-lu-1938-stock` | London 1938 Stock | series, metro | `unit`, `cars` 3 - 7 | tube profile, 2.88 m high; 72 km/h |
+| `proc-vehicle-lu-1938-stock` | London 1938 Stock | series, metro, flat domed cab | `unit`, `cars` 3 - 7 | tube profile, 2.62 m by 2.88 m; 72 km/h |
 | `proc-vehicle-br-class-55` | Class 55 Deltic | box locomotive, bonnets | `livery` (`twoToneGreen`, `brBlue`) | Co-Co, 21.18 m, 2,460 kW, 160 km/h |
 | `proc-vehicle-br-class-37` | Class 37 | box locomotive, bonnets | `livery` (`green`, `brBlue`, `railfreight`) | Co-Co, 18.75 m, 1,300 kW, 145 km/h |
 | `proc-vehicle-br-class-47` | Class 47 | box locomotive, raked | `livery` (`twoToneGreen`, `brBlue`, `intercity`) | Co-Co, 19.38 m, 1,925 kW, 153 km/h |
@@ -53,7 +53,27 @@ The catalog had no British train before; the archived webapp Eurostar is now the
 - **Rocket.** An open footplate on the generator's frame, its boiler level (the real one
   is tilted) and its cylinders driving the wheels without valve gear.
 - **1938 Stock.** A metro on the series kit: no collector is drawn (the tube's conductor
-  rails are not modelled).
+  rails are not modelled), nor the shoe gear on the bogies.
+
+## London 1938 Stock
+
+Measured on the photographs in `assets/lu-1938-stock/` (the South Ealing and Amersham
+heritage unit, the London Transport Museum's car 10012). The body is the tube profile:
+2.62 m wide, upright sides to the window and door heads at 2.3 m, then a low dome to the
+2.88 m crown, painted the roof's oxide red over the body's LT red; the side number (10012)
+in gold. The driving motor car (16.0 m over the couplers) and the trailer (15.5 m) stand on
+bogies centred 10 m apart. Each side has double doors parting in the middle either side of
+a bay of four windows, a single door near each end (the driving car's at its rear) and, on
+the driving car, the cab door behind the cab; the leaves open (docs/models/doors.md).
+
+The cab front (`lu1938Parts.ts`) is flat, its corners rounded in plan and its roof domed
+down to it with the fan vent on the dome: the centre door between two windscreens, the set
+number box (747) on it and the car letter beside it, the destination blind and the marker
+and tail lamps on the left seen from ahead, grab handles on stand-offs, the headstock and
+step under it and the coupler under the floor at 0.45 m. All the equipment hangs under the
+floor between the bogies, as the type introduced. About 9,700 triangles the driving car,
+8,900 the trailer. `test/lu1938.test.ts` checks the profile, the domed cab, the layout and
+the budget.
 
 ## Tests
 

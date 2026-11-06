@@ -65,6 +65,16 @@ combinations hashed before and after):
 - `traction: "none"` - an unpowered set of coaches (the Talgo III), filed with the coaches.
 - `windscreenMask` - a black band (`cabMask`) round a nose's windscreen, under its rubber,
   reaching this far past the panes and joined over the centre pillar (the ICNG).
+- `arc` - the roof arc's segments (default 8); `couplerY` - the centre coupler's height
+  (default 1.0 m, the tube's under its low floor);
+- `cabNose` - with `flatCab`, a short nose under the cab's decals: the end's corners rounded
+  in plan and its roof domed down to the front (the 1938 Stock);
+- `centredBogies` - every car's two bogies centred on its body, `bogieCentres` apart;
+- `layout` - the end and middle car's own door leaves (each with the way it slides, so a
+  double door parts in the middle: `CarDef.doors.slides` in `usTransit.ts`) and windows, in
+  place of the generated ones; `numberAt` - the side number's place;
+- `fittings` - the series' own fittings (a cab front, underfloor equipment), drawn in place
+  of the plain underfloor box.
 
 A nose end never carries a gangway frame, buffered or not. A short car's leading bogie comes in so that its wheels stay under the body. The kit
 refuses a wheelbase under 2.05 m (the bogie's brake cylinders would lie on its

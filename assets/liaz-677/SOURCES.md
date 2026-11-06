@@ -10,8 +10,8 @@ Downloaded from Wikimedia Commons as standard thumbnails, at most 1280 px on the
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-677-9028031652.jpg` | -Москва ЛиАЗ-677 (9028031652).jpg | https://commons.wikimedia.org/wiki/File:-%D0%9C%D0%BE%D1%81%D0%BA%D0%B2%D0%B0_%D0%9B%D0%B8%D0%90%D0%97-677_(9028031652).jpg | Artem Svetlov from Moscow, Russia | CC BY 2.0 | shape, proportions and colours |
 | `photo-gagarinsky-district-bus-677750-2023-02-kosygina-street-liaz-.jpg` | Gagarinsky District bus В677НТ750 2023-02 Kosygina Street LiAZ-677M 220.jpg | https://commons.wikimedia.org/wiki/File:Gagarinsky_District_bus_%D0%92677%D0%9D%D0%A2750_2023-02_Kosygina_Street_LiAZ-677M_220.jpg | Artyom Svetlov | CC BY 4.0 | shape, proportions and colours |
+| `photo-677.jpg` | ЛиАЗ 677.jpg | https://commons.wikimedia.org/wiki/File:%D0%9B%D0%B8%D0%90%D0%97_677.jpg | Крылов Иван | CC BY-SA 4.0 | the whole LiAZ-677 (the lead photograph of Wikipedia's "LiAZ-677") |
 
 ## Published figures
 

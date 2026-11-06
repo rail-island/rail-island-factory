@@ -10,7 +10,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-28-10-72-1er-vol-d-airbus-1972-53fi1992-cropped.jpg` | 28.10.72 1er Vol d'Airbus (1972) - 53Fi1992 (cropped).jpg | https://commons.wikimedia.org/wiki/File:28.10.72_1er_Vol_d%27Airbus_(1972)_-_53Fi1992_(cropped).jpg | André Cros | CC BY-SA 4.0 | the airframe's shape, proportions and livery |
 | `photo-airbus-a-300-b-16428835251.jpg` | AIRBUS A 300 B (16428835251).jpg | https://commons.wikimedia.org/wiki/File:AIRBUS_A_300_B_(16428835251).jpg | sebastien loubet | CC BY 2.0 | the airframe's shape, proportions and livery |
 
 ## Published figures

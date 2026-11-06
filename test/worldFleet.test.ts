@@ -12,6 +12,8 @@ import { freeLicence, refFileName, thumbWidth } from "../generator/fetchRefs";
 import { coverSample, FLEET_SWEEP_SAMPLE, WORLD_FLEET, type FleetEntry } from "../generator/worldFleet";
 import { proceduralId } from "../generator/modelId";
 import { OPENTTD_TABLE } from "../generator/openttdTable";
+import { FLEET_LINKS } from "../generator/fleetLinks";
+import { linksOf } from "../generator/linkTable";
 
 const OPENTTD_IDS = JSON.parse(readFileSync("generator/openttdIds.json", "utf8")) as { grf: Record<string, number> };
 
@@ -58,6 +60,22 @@ describe("the world fleet", () => {
     expect(listed.filter((f) => !files.includes(f)), "listed files missing").toEqual([]);
     // the photographs' table: file, original, URL, author, licence, use
     for (const r of rows.filter((r) => r[2]?.startsWith("https://"))) expect(freeLicence(r[4] ?? ""), `${r[0]} licence ${r[4]}`).toBe(true);
+    // its web links (fleetLinks.ts): every photograph's Commons page, and no page of a photograph it no longer holds
+    const filePage = (u: string): boolean => /^https:\/\/(commons\.wikimedia|en\.wikipedia)\.org\/wiki\/File:/.test(u);
+    const pages = rows.map((r) => r[2] ?? "").filter(filePage);
+    const linked = linksOf(_id).map((l) => l.url).filter(filePage);
+    expect([...linked].sort(), "Commons links").toEqual([...new Set(pages)].sort());
+  });
+
+  it("gives every fleet model its web links, the article first", () => {
+    const without = WORLD_FLEET.filter((e) => !(FLEET_LINKS[e.id]?.length)).map((e) => e.id);
+    expect(without).toEqual([]);
+    for (const [id, links] of Object.entries(FLEET_LINKS)) {
+      expect(linksOf(id)).toEqual(links);
+      const wiki = links.filter((l) => l.title.startsWith("Wikipedia: "));
+      expect(wiki.length, id).toBeLessThanOrEqual(1);
+      if (wiki.length) expect(links[0], id).toEqual(wiki[0]);
+    }
   });
 
   it("leaves the GRF room for the whole fleet: every OpenTTD id an extended byte's word (under 0xFFFF)", () => {

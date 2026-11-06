@@ -28,7 +28,7 @@ import type { Vec3 } from "./meshCore.ts";
 import { block } from "./vehicleParts.ts";
 import { cabinLod, lodBar, lodPlanRect, lodStack } from "./lodAir.ts";
 import { lodBlock, LOD_GLASS, lodPolygon } from "./lodKit.ts";
-import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
+import { resolveParams, type CabinRopeFrac, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 
 const PALETTE: Record<string, MaterialSpec> = {
   // the tramway car (the reference's colours)
@@ -405,7 +405,6 @@ function gonHanger(m: MeshBuilder): void {
       }
     });
   });
-  m.scope("haul rope", () => disc(m, "rubber", "x", 0, GON.rope, 0.032, -0.75, 0.75, 8));
 }
 
 export function gondolaCabin(): MeshBuilder {
@@ -624,7 +623,6 @@ function chairHanger(m: MeshBuilder): void {
       }
     });
   });
-  m.scope("haul rope", () => disc(m, "rubber", "x", 0, r, 0.025, -0.7, 0.7, 8));
 }
 
 export function chairliftChair(params?: ParamValues): MeshBuilder {
@@ -765,14 +763,23 @@ export const CABLE_CABIN_CATALOG: CatalogFields = {
 };
 
 /** Every design of the family, by catalog id; `references` is the folder of its source photos under assets/. */
+/** A gondola's or chair's one haul rope, through its grip (game.ropes; the model draws no rope). */
+export const ONE_HAUL_ROPE: CabinRopeFrac[] = [{ kind: "haul", zFrac: 0, dyFrac: 0 }];
+/**
+ * The tramway car's track rope under its four sheaves and its haul rope through the grip
+ * beside the carriage (model x 0.72, y 6.23 of 6.93; the catalog's yaw 90 turns model +x
+ * to the game's -z). It keeps "circulating" as the game's first cabin always has.
+ */
+const TRAMWAY_ROPES: CabinRopeFrac[] = [{ kind: "track", zFrac: 0, dyFrac: 0 }, { kind: "haul", zFrac: -0.1039, dyFrac: -0.062 }];
+
 export const CABLE_CABINS: ProceduralDesign[] = [
   // Modelled long along Z; the game runs a cabin along X, so it is turned a quarter
   // (the old cablecar-cabin model carried the same yaw).
-  { id: "proc-vehicle-cablecar-cabin", game: { weight: null, power: null, maxspeed: 30, accel: null, scale: 0.9195, ropeFrac: 0.9603, boardFrac: 0.1009 }, title: "Aerial Tramway Car", build: cablecarCabin, buildLod: cablecarCabinLod, references: "cablecar-cabin", catalog: { ...CABLE_CABIN_CATALOG, yaw: 90 } },
-  { id: "proc-vehicle-gondola-cabin", game: { weight: null, power: null, maxspeed: 24, accel: null, scale: 1.4448, ropeFrac: 0.866, boardFrac: 0.109 }, title: "Small Gondola", build: gondolaCabin, buildLod: gondolaCabinLod, references: "gondola-cabin", catalog: CABLE_CABIN_CATALOG },
+  { id: "proc-vehicle-cablecar-cabin", game: { weight: null, power: null, maxspeed: 30, accel: null, scale: 0.9195, ropeFrac: 0.9603, boardFrac: 0.1009, ropes: TRAMWAY_ROPES, ropeway: "circulating" }, title: "Aerial Tramway Car", build: cablecarCabin, buildLod: cablecarCabinLod, references: "cablecar-cabin", catalog: { ...CABLE_CABIN_CATALOG, yaw: 90 } },
+  { id: "proc-vehicle-gondola-cabin", game: { weight: null, power: null, maxspeed: 24, accel: null, scale: 1.4448, ropeFrac: 0.866, boardFrac: 0.109, ropes: ONE_HAUL_ROPE, ropeway: "circulating" }, title: "Small Gondola", build: gondolaCabin, buildLod: gondolaCabinLod, references: "gondola-cabin", catalog: CABLE_CABIN_CATALOG },
   {
     // a detachable chair at 5 m/s; rope and boarding platform as docs/models/cable-cabins.md states them
-    id: "proc-vehicle-chairlift-chair", game: { weight: null, power: null, maxspeed: 18, accel: null, ropeFrac: 0.947, boardFrac: 0.045 }, title: "Chairlift Chair", build: chairliftChair, buildLod: chairliftChairLod, params: CHAIRLIFT_PARAMS,
+    id: "proc-vehicle-chairlift-chair", game: { weight: null, power: null, maxspeed: 18, accel: null, ropeFrac: 0.947, boardFrac: 0.045, ropes: ONE_HAUL_ROPE, ropeway: "circulating" }, title: "Chairlift Chair", build: chairliftChair, buildLod: chairliftChairLod, params: CHAIRLIFT_PARAMS,
     finishParams: ["color"], references: "chairlift", catalog: CABLE_CABIN_CATALOG,
   },
 ];
