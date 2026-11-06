@@ -22,7 +22,8 @@ A `CarDef` is a carbody spec ([us-carbodies.md](us-carbodies.md), `carbodyKit.ts
 fittings: side paint bands, window rows (sill, head, spans), passenger doors (spans, sill,
 head, the leaf's window) - plug doors that open onto the car's generic cabin (`openable`,
 `plugMove`, `sliceCabin`; doors.md, interiors.md) - stainless fluting (one band or several) broken over windows and
-doors, a flat cab end's windscreen panes, front mask and lamps, the diaphragm, trucks at d
+doors, a flat cab end's windscreen panes, front mask and lamps, both ends painted apart (`ends`: their bands up to
+d from each end and the end walls' paint), the diaphragm, trucks at d
 (the diesel toolkit's bogie geometry), knuckle or centre couplers, lettering and extras.
 `drawCar` takes the ends inside an articulated set (no coupler or diaphragm there) and the
 trucks a Jacobs bogie replaces.

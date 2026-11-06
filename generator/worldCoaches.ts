@@ -3,10 +3,14 @@
 // the buffers, the body, the window row of each type of car (`unit`), the end
 // doors, the bogies, the coupler and the liveries. See docs/models/world-coaches.md.
 
-import { MeshBuilder, type MaterialSpec } from "./meshBuilder.ts";
+import { MeshBuilder, ngon, type MaterialSpec } from "./meshBuilder.ts";
 import { resolveParams, type GameProperties, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { paint, type BogieSpec } from "./dieselParts.ts";
-import { block } from "./vehicleParts.ts";
+import { block, side } from "./vehicleParts.ts";
+import { sideDecal, sideLettering, sidePanel, surfacePoint, type SliceBody } from "./sliceBody.ts";
+import type { Pt } from "./sliceLoft.ts";
+import { decalX } from "./usHoodKit.ts";
+import { faceLamps } from "./carbodyKit.ts";
 import { INTERIOR_PALETTE } from "./interior.ts";
 import { CARBODY_PALETTE } from "./carbodyKit.ts";
 import { carLod, drawCar, type CarDef } from "./usTransit.ts";
@@ -22,6 +26,8 @@ export interface CoachType {
   windowW: number;
   number: string;
   weight: number;
+  /** A first-class car: the livery's first-class bands (a yellow line) where it has them. */
+  first?: boolean;
 }
 
 export interface CoachLivery {
@@ -30,6 +36,46 @@ export interface CoachLivery {
   bands: readonly Band[];
   roof: string;
   skirt: string;
+  /** Optional (default none): a first-class car's side bands; the door leaves' bands; the ends painted apart up to the
+   * doors' inner edges (their bands, a first-class car's, the end walls' paint); the running number's paint. */
+  firstBands?: readonly Band[];
+  doorBands?: readonly Band[];
+  ends?: { bands: readonly Band[]; firstBands?: readonly Band[]; cap: string };
+  numberMat?: string;
+  /** The class sign beside each door (CoachDetails.classSign): its panel's paint, or none for the bare numeral. */
+  classPanel?: string;
+}
+
+/** A coach's optional details (default none: the plain kit). d is metres from each body end. */
+export interface CoachDetails {
+  /** The skirt's and the lower body's half widths (default 0.95 W and 0.99 W): the tumblehome below the belly. */
+  wl?: number;
+  wa?: number;
+  /** A window d0..d1 from each end (the vestibule or toilet), beside the end doors; with a louvred vent over its bottom `louvre` m. */
+  endWindow?: readonly [number, number];
+  endLouvre?: number;
+  /** The door leaves' window: its sill and head and its width. */
+  doorGlass?: { y: readonly [number, number]; w: number };
+  /** The door leaves reach down to this height beside the steps, below the body over the bogies. */
+  doorFoot?: number;
+  /** The roof's rounded end caps: the crown's height by d from each end. */
+  roofEnd?: Pt[];
+  /** With the roof's end caps: the body's corners in plan, rounded over `len` to `tip` of the half width at the end wall. */
+  endCorner?: { len: number; tip: number };
+  /** Longitudinal roof ribs between d `from` of each end, at these heights on the roof's arc. */
+  roofRibs?: { from: number; y: readonly number[] };
+  /** A louvred air intake on the roof's end cap (d0, d1, y0, y1): at the +X end on the right side, the -X end on the left. */
+  grille?: readonly [number, number, number, number];
+  /** A UIC rubber-roll gangway with the end door (instead of the kit's diaphragm frame), and the tail lamps. */
+  rubberGangway?: boolean;
+  /** The railway's emblem (a red square with a white cross) and name on both sides: the emblem's centre d, height and size. */
+  logo?: { d: number; y: number; h: number; name: string };
+  /** The running number's place (default mid-car above the belly). */
+  numberAt?: { d: number; y: number; h: number };
+  /** The class numeral (1 or 2, by `first`) beside each door, d0..d1 from each end and y0..y1, on the livery's class panel. */
+  classSign?: { d: readonly [number, number]; y: readonly [number, number] };
+  /** The underfloor equipment between the bogies: its bottom and half width (default 0.4 m under the skirt, 0.75 W). */
+  underfloor?: { y0: number; half: number };
 }
 
 export interface WorldCoach {
@@ -54,6 +100,7 @@ export interface WorldCoach {
   types: Record<string, CoachType>;
   liveries: Record<string, CoachLivery>;
   maxspeed: number;
+  details?: CoachDetails;
 }
 
 const GAP = 0.65;
@@ -67,24 +114,160 @@ function coachDef(s: WorldCoach, t: CoachType, l: CoachLivery): CarDef {
   // the bogie's brake cylinders stand 0.55 m inside its axles: a shorter wheelbase puts them on its transoms
   if (s.wheelbase < 2.05) throw new Error(`coach: wheelbase ${s.wheelbase} m is shorter than the bogie kit's 2.05 m`);
   const L = s.length - 2 * gapOf(s);
+  const x = s.details ?? {};
   const tr = [L / 2 - s.bogieCentres / 2, L / 2 + s.bogieCentres / 2];
   const from = s.doorIn + s.doorW + 0.5, to = L - s.doorIn - s.doorW - 0.5;
-  const spans = Array.from({ length: t.windows }, (_, i): [number, number] => { const d = from + (to - from) * ((i + 0.5) / t.windows); return [d - t.windowW / 2, d + t.windowW / 2]; });
+  const row = Array.from({ length: t.windows }, (_, i): [number, number] => { const d = from + (to - from) * ((i + 0.5) / t.windows); return [d - t.windowW / 2, d + t.windowW / 2]; });
+  const ew = x.endWindow;
+  const spans: Array<readonly [number, number]> = ew ? [[ew[0], ew[1]], ...row, [L - ew[1], L - ew[0]]] : row;
   const reach = s.wheelbase / 2 + s.wheelR + 0.25;
+  const roofEnd = x.roofEnd && { len: x.endCorner?.len ?? 0.05, tip: x.endCorner?.tip ?? 1, power: 2, C: x.roofEnd, S: [] };
+  const first = t.first === true;
+  const ends = l.ends && { d: s.doorIn + s.doorW, bands: (first && l.ends.firstBands) || l.ends.bands, cap: l.ends.cap };
+  const lettering = [{ text: t.number, d: x.numberAt?.d ?? L / 2, y: x.numberAt?.y ?? s.Y + 0.12, h: x.numberAt?.h ?? 0.1, mat: l.numberMat ?? "lettering" }];
   return {
-    spec: { length: L, W: s.W, Y: s.Y, S: s.S, C: s.C, lean: 0.98, arc: 6, B: s.B, wl: s.W * 0.95, A: s.A, wa: s.W * 0.99, edges: [], step: 1.0, cuts: tr.map((d) => [d - reach, d + reach] as const) },
-    bands: l.bands, roof: l.roof, skirt: l.skirt, under: "under",
+    spec: {
+      length: L, W: s.W, Y: s.Y, S: s.S, C: s.C, lean: 0.98, arc: 6, B: s.B, wl: x.wl ?? s.W * 0.95, A: s.A, wa: x.wa ?? s.W * 0.99, edges: [], step: 1.0, cuts: tr.map((d) => [d - reach, d + reach] as const),
+      ...(roofEnd ? { front: roofEnd, rear: roofEnd } : {}),
+    },
+    bands: (first && l.firstBands) || l.bands, roof: l.roof, skirt: l.skirt, under: "under",
+    ...(l.doorBands ? { doorBands: l.doorBands } : {}),
+    ...(ends ? { ends } : {}),
     windows: s.rows.map((y) => ({ y, spans, frame: "rubber" })),
-    doors: { spans: [[s.doorIn, s.doorIn + s.doorW], [L - s.doorIn - s.doorW, L - s.doorIn]], y: s.door, glass: [s.rows[0]![0] + 0.05, s.rows[0]![1] - 0.05] },
+    doors: {
+      spans: [[s.doorIn, s.doorIn + s.doorW], [L - s.doorIn - s.doorW, L - s.doorIn]], y: s.door,
+      glass: x.doorGlass?.y ?? [s.rows[0]![0] + 0.05, s.rows[0]![1] - 0.05], ...(x.doorGlass ? { glassW: x.doorGlass.w } : {}),
+    },
     cabEnds: [], diaphragm: [s.door[0], s.door[1] + 0.2],
     trucks: tr, truck: truck(s),
     coupler: s.coupler, couplerY: s.coupler === "buffers" ? 1.03 : 0.88, gap: [gapOf(s), gapOf(s)],
-    lettering: [{ text: t.number, d: L / 2, y: s.Y + 0.12, h: 0.1, mat: "lettering" }],
-    extras: (m, _b, X) => m.scope("underfloor", () => block(m, "under", X(L / 2 + 3.5), X(L / 2 - 3.5), s.B - 0.4, s.B, -s.W * 0.75, s.W * 0.75)),
+    lettering,
+    extras: (m, b, X) => {
+      const uf = x.underfloor ?? { y0: s.B - 0.4, half: s.W * 0.75 };
+      m.scope("underfloor", () => block(m, "under", X(L / 2 + 3.5), X(L / 2 - 3.5), uf.y0, s.B, -uf.half, uf.half));
+      if (s.details) coachDetails(m, s, x, b, X, L, l, first);
+    },
   };
 }
 
+/** A strip on the body's outer surface on side s from d0 to d1 between heights ya and yb (the side or the roof's arc), `proud` off it. */
+function surfaceStrip(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, mat: string, d0: number, d1: number, ya: number, yb: number, proud: number, depth = 0.02): void {
+  const dm = (d0 + d1) / 2;
+  const pa = surfacePoint(b, dm, ya, s), pb = surfacePoint(b, dm, yb, s);
+  const nz = ((pa.n[2] + pb.n[2]) / 2) * s, ny = (pa.n[1] + pb.n[1]) / 2;
+  const at = (p: Pt, k: number): Pt => [s * (p[0] + nz * k), p[1] + ny * k];
+  const ring: Pt[] = [at(pa.p, -depth), at(pb.p, -depth), at(pb.p, proud), at(pa.p, proud)];
+  m.sweep(mat, "x", ring, X(d0), ring, X(d1));
+}
+
+/** The optional details of a coach (CoachDetails): roof ribs and intake, the rubber gangways and end doors, the emblem. */
+function coachDetails(m: MeshBuilder, s: WorldCoach, x: CoachDetails, b: SliceBody, X: (d: number) => number, L: number, l: CoachLivery, first: boolean): void {
+  const ew = x.endWindow, lv = x.endLouvre;
+  if (ew && lv)
+    m.scope("end window vents", () => {
+      const [y0] = s.rows[0]!;
+      for (const sd of [1, -1])
+        for (const [a, c] of [[ew[0], ew[1]], [L - ew[1], L - ew[0]]] as const) {
+          sidePanel(m, b, X, sd, "frameSilver", a + 0.05, c - 0.05, y0 + 0.05, y0 + 0.05 + lv, 0.014, 0.004);
+          for (let i = 0; i < 4; i++) {
+            const y = y0 + 0.08 + ((lv - 0.06) * (i + 0.5)) / 4;
+            sidePanel(m, b, X, sd, "louvre", a + 0.09, c - 0.09, y - 0.012, y + 0.012, 0.017, 0.002);
+          }
+        }
+    });
+  const cs = x.classSign;
+  if (cs)
+    m.scope("class signs", () => {
+      const [d0, d1] = cs.d, [y0, y1] = cs.y;
+      for (const sd of [1, -1])
+        for (const [a, c] of [[d0, d1], [L - d1, L - d0]] as const) {
+          if (l.classPanel) sidePanel(m, b, X, sd, l.classPanel, a, c, y0, y1, 0.005, 0.003);
+          const h = Math.min(0.24, (c - a) * 0.8);
+          sideLettering(m, b, X, sd, first ? "1" : "2", (a + c) / 2, y1 - h - 0.05, h, "letterW", 0.008);
+        }
+    });
+  const foot = x.doorFoot;
+  if (foot !== undefined)
+    m.scope("door feet", () => {
+      const bands = l.doorBands ?? l.bands;
+      const mat = bands.find(([a, c]) => (foot + s.door[0]) / 2 >= a && (foot + s.door[0]) / 2 < c)?.[2] ?? bands[0]![2];
+      const z = x.wa ?? s.W * 0.99;
+      for (const [d0, d1] of [[s.doorIn, s.doorIn + s.doorW], [L - s.doorIn - s.doorW, L - s.doorIn]] as const)
+        for (const sd of [1, -1]) {
+          const [a, c] = [X(d0 + 0.02), X(d1 - 0.02)].sort((p, q) => p - q) as [number, number];
+          block(m, mat, a, c, foot, s.door[0] - 0.08, ...side(sd, z - 0.05, z + 0.005));
+        }
+    });
+  const ribs = x.roofRibs;
+  if (ribs)
+    m.scope("roof ribs", () => {
+      for (const sd of [1, -1]) for (const y of ribs.y) surfaceStrip(m, b, X, sd, "roofRib", ribs.from, L - ribs.from, y - 0.025, y + 0.025, 0.018, 0.03);
+    });
+  const g = x.grille;
+  if (g)
+    m.scope("roof intake", () => {
+      const [d0, d1, y0, y1] = g;
+      for (const [sd, a, c] of [[1, d0, d1], [-1, L - d1, L - d0]] as const) {
+        surfaceStrip(m, b, X, sd, "louvre", a, c, y0, y1, 0.008, 0.03);
+        const n = 7;
+        for (let i = 0; i < n; i++) {
+          const y = y0 + 0.03 + ((y1 - y0 - 0.06) * (i + 0.5)) / n;
+          surfaceStrip(m, b, X, sd, "louvreSlat", a + 0.03, c - 0.03, y - 0.012, y + 0.012, 0.016, 0.01);
+        }
+      }
+    });
+  if (x.rubberGangway)
+    for (const e of [1, -1])
+      m.scope(e > 0 ? "front gangway" : "rear gangway", () => {
+        const wall = X(e > 0 ? 0 : L), out = e * (gapOf(s) - 0.04);
+        const [y0, y1] = [s.A + 0.1, s.S - 0.12];
+        const r = 0.11, hw = 0.68;
+        // the end door between the rolls and its window
+        m.scope("end door", () => {
+          decalX(m, "endDoor", wall + e * 0.004, e, -0.42, 0.42, s.A + 0.25, y1 - 0.2);
+          decalX(m, "rubber", wall + e * 0.008, e, -0.27, 0.27, 2.15, 2.85);
+          decalX(m, "glass", wall + e * 0.011, e, -0.23, 0.23, 2.19, 2.81);
+        });
+        // the rubber rolls: a U round the door, standing out to the buffers' plane
+        m.scope("rubber roll", () => {
+          const tip = wall + out - e * r;
+          const [a, c] = [wall, tip].sort((p, q) => p - q) as [number, number];
+          for (const sd of [1, -1]) {
+            block(m, "rubber", a, c, y0, y1 - r, ...side(sd, hw - 0.06, hw + 0.06));
+            m.prism("rubber", ngon(8, r, Math.PI / 8, tip, sd * hw), y0, y1 - r);
+          }
+          block(m, "rubber", a, c, y1 - 2 * r, y1, -hw - 0.09, hw + 0.09);
+          const top = ngon(8, r, Math.PI / 8, tip, y1 - r);
+          m.sweep("rubber", "z", top, -hw - 0.09, top, hw + 0.09);
+        });
+        m.scope("tail lamps", () => faceLamps(m, e, e * wall, [[-1.0, 1.62, 0.065, "lampRed"], [1.0, 1.62, 0.065, "lampRed"]]));
+      });
+  const lg = x.logo;
+  if (lg)
+    for (const sd of [1, -1])
+      m.scope(sd > 0 ? "right emblem" : "left emblem", () => {
+        const { d, y, h } = lg;
+        const w = h * 1.6;
+        sidePanel(m, b, X, sd, "logoRed", d - w / 2, d + w / 2, y - h / 2, y + h / 2, 0.006, 0.003);
+        // the white cross with its two arrowheads, simplified
+        const k = h * 0.12;
+        const tris: Pt[] = [];
+        const quad = (u0: number, u1: number, v0: number, v1: number) => tris.push([u0, v0], [u1, v0], [u1, v1], [u0, v0], [u1, v1], [u0, v1]);
+        quad(d - w * 0.3, d + w * 0.3, y - k / 2, y + k / 2);
+        quad(d - k / 2, d + k / 2, y - h * 0.34, y + h * 0.34);
+        for (const e of [1, -1]) tris.push([d + e * w * 0.4, y], [d + e * w * 0.27, y - h * 0.2], [d + e * w * 0.27, y + h * 0.2]);
+        sideDecal(m, b, X, sd, "white", tris, 0.009);
+        const th = h * 0.55, tw = lg.name.length * th * 0.76;
+        sideLettering(m, b, X, sd, lg.name, d - sd * (w / 2 + 0.12 + tw / 2), y - th / 2, th, "lettering", 0.008);
+      });
+}
+
 const PALETTE: Record<string, MaterialSpec> = { ...INTERIOR_PALETTE, ...CARBODY_PALETTE, under: paint("#2a2c2f", 0.85), lettering: paint("#2a2c30") };
+// the materials of the optional details, merged in only for a coach that has them (the others' palettes stay as they were)
+const DETAIL_PALETTE: Record<string, MaterialSpec> = {
+  letterW: paint("#e8e8e4", 0.5), roofRib: paint("#6c7075", 0.7), louvre: paint("#1d1f21", 0.8), louvreSlat: paint("#55595d", 0.6),
+  endDoor: paint("#3a3d41", 0.7), logoRed: paint("#eb0000", 0.45), white: paint("#f4f4f2", 0.4), classBlue: paint("#1f4e9a", 0.45),
+};
 
 export function coachParams(s: WorldCoach): ParamSpec[] {
   const out = [enumParam("unit", "Car", Object.fromEntries(Object.entries(s.types).map(([k, v]) => [k, v.title])))];
@@ -99,7 +282,7 @@ function pick(s: WorldCoach, params: readonly ParamSpec[], v?: ParamValues): { t
 
 export function buildCoach(s: WorldCoach, params: readonly ParamSpec[], v?: ParamValues): MeshBuilder {
   const { t, l } = pick(s, params, v);
-  const m = new MeshBuilder({ ...PALETTE, ...l.palette });
+  const m = new MeshBuilder({ ...PALETTE, ...(s.details ? DETAIL_PALETTE : {}), ...l.palette });
   drawCar(m, coachDef(s, t, l), (d) => s.length / 2 - gapOf(s) - d);
   return m;
 }
@@ -203,16 +386,62 @@ const sbbBands = (o: { white?: string; grey?: string; red?: string } = {}): Coac
   bands: [[0, 1.6, "grey"], [1.6, 1.72, "red"], [1.72, 9, "white"]], roof: "roofG", skirt: "skirtG",
 });
 
+// The EW IV (1981): measured on photographs of the B 50 85 21-95 149-3 and the A 50 85 10-95 031-6 and on side
+// views of the A and the B (assets/sbb-ew4-coach/SOURCES.md). 26.4 m over the buffers, the bogies 18.6 m apart (both
+// painted on the car); the swing-plug doors set in from the ends with a toilet or vestibule window beside them; ten
+// windows between the doors in first class, eleven in second; the ribbed roof with rounded end caps and an air intake.
+const EW4_BODY: readonly Band[] = [[0, 1.33, "low"], [1.33, 2.03, "cream"], [2.03, 3.1, "band"], [3.1, 9, "cream"]];
+const ew4 = (o: { low: string; band: string; endBand: string; cap: string; door: readonly Band[]; red?: boolean }): Pick<CoachLivery, "bands" | "firstBands" | "doorBands" | "ends"> => {
+  const swap = (bands: readonly Band[], band: string): Band[] => bands.map(([a, b, mt]): Band => [a, b, mt === "low" ? o.low : mt === "band" ? band : mt]);
+  // the red line along the side's top (2021) and the first-class yellow strip at the top of the window band
+  const line = (bands: Band[]): Band[] => (o.red ? bands.flatMap(([a, b, mt]): Band[] => (a === 3.1 ? [[3.1, 3.38, mt], [3.38, 3.46, "red"], [3.46, b, mt]] : [[a, b, mt]])) : bands);
+  const yellow = (bands: Band[]): Band[] => bands.flatMap(([a, b, mt]): Band[] => (a === 2.03 ? [[2.03, 3.0, mt], [3.0, 3.1, "yellow"]] : [[a, b, mt]]));
+  return {
+    bands: line(swap(EW4_BODY, o.band)),
+    doorBands: o.door,
+    ends: { bands: line(swap(EW4_BODY, o.endBand)), firstBands: line(yellow(swap(EW4_BODY, o.endBand))), cap: o.cap },
+  };
+};
+
 export const SBB_EW4: WorldCoach = {
-  length: 26.4, W: 1.41, Y: 1.4, S: 3.25, C: 4.05, B: 1.0, A: 1.15, rows: [[1.95, 2.85]], doorIn: 0.7, doorW: 0.8, door: [1.2, 3.1],
-  bogieCentres: 19.0, wheelR: 0.46, wheelbase: 2.5, coupler: "buffers", maxspeed: 200,
+  length: 26.4, W: 1.41, Y: 1.3, S: 3.48, C: 4.05, B: 0.76, A: 1.04, rows: [[2.1, 2.95]], doorIn: 1.4, doorW: 0.95, door: [1.07, 3.1],
+  bogieCentres: 18.6, wheelR: 0.46, wheelbase: 2.5, coupler: "buffers", maxspeed: 200,
   types: {
-    a: { title: "First class", windows: 11, windowW: 1.35, number: "50 85 19-73 101-5", weight: 43 },
-    b: { title: "Second class", windows: 12, windowW: 1.25, number: "50 85 20-73 201-3", weight: 42 },
+    a: { title: "First class", windows: 10, windowW: 1.36, number: "A 50 85 10-95 031-6", weight: 43, first: true },
+    b: { title: "Second class", windows: 11, windowW: 1.42, number: "B 50 85 21-95 149-3", weight: 42 },
   },
   liveries: {
-    redGrey: { title: "Red and grey", palette: { red: c("#c8102e"), grey: c("#9aa0a5", 0.45), roofG: c("#6a6c6e", 0.7), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 1.85, "red"], [1.85, 9, "grey"]], roof: "roofG", skirt: "skirtG" },
-    sbb: sbbBands(),
+    // 2004-2021: cream, the black window band red at the ends, a grey skirt and grey end walls
+    redGrey: {
+      title: "White and red", roof: "roofG", skirt: "low", numberMat: "letterW", classPanel: "classBlue",
+      palette: { cream: c("#ebe7dc", 0.4), black: c("#1f2124", 0.35), red: c("#d0201c"), yellow: c("#f0c010"), low: c("#73787c", 0.6), endGrey: c("#5b5f63", 0.6), roofG: c("#707478", 0.7) },
+      ...ew4({ low: "low", band: "black", endBand: "red", cap: "endGrey", door: [[0, 1.33, "low"], [1.33, 2.03, "cream"], [2.03, 9, "red"]] }),
+    },
+    // since 2021: red doors, the skirt, the ends' window band and the end walls black, a red line under the roof
+    sbb: {
+      title: "SBB", roof: "roofG", skirt: "low", numberMat: "letterW", classPanel: "classBlue",
+      palette: { cream: c("#ebe7dc", 0.4), black: c("#1f2124", 0.35), red: c("#d0201c"), yellow: c("#f0c010"), low: c("#232528", 0.6), roofG: c("#64686c", 0.7) },
+      ...ew4({ low: "low", band: "black", endBand: "black", cap: "black", door: [[0, 9, "red"]], red: true }),
+    },
+    // 1981: fir green with a stone-grey band under the windows and under the roof, first class a yellow line
+    greenGrey: {
+      title: "Green and grey", roof: "roofG", skirt: "greenD", numberMat: "letterW",
+      palette: { green: c("#2d4a3f", 0.5), greenD: c("#25302c", 0.7), stone: c("#c3c6c1", 0.5), yellow: c("#e8c21a"), roofG: c("#55595c", 0.75) },
+      bands: [[0, 1.14, "green"], [1.14, 1.88, "stone"], [1.88, 3.1, "green"], [3.1, 9, "stone"]],
+      firstBands: [[0, 1.14, "green"], [1.14, 1.88, "stone"], [1.88, 3.0, "green"], [3.0, 3.1, "yellow"], [3.1, 9, "stone"]],
+      doorBands: [[0, 9, "green"]],
+    },
+  },
+  details: {
+    wl: 1.3, wa: 1.37, endWindow: [0.47, 1.07], endLouvre: 0.26, doorGlass: { y: [2.15, 2.9], w: 0.5 }, doorFoot: 0.8,
+    roofEnd: [[0, 3.7], [0.05, 3.84], [0.14, 3.94], [0.28, 4.0], [0.45, 4.05]], endCorner: { len: 0.2, tip: 0.9 },
+    roofRibs: { from: 1.45, y: [3.62, 3.76, 3.88, 3.97, 4.02] },
+    grille: [0.25, 1.3, 3.5, 3.8],
+    rubberGangway: true,
+    logo: { d: 6.6, y: 1.68, h: 0.36, name: "SBB CFF FFS" },
+    numberAt: { d: 4.6, y: 1.12, h: 0.09 },
+    classSign: { d: [1.1, 1.36], y: [2.03, 3.0] },
+    underfloor: { y0: 0.5, half: 1.05 },
   },
 };
 
