@@ -7,7 +7,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { BUILD_CACHE_DIR, PIPELINE, SourceGraph, paramsKey, type DesignFacts } from "../generator/buildCache";
+import { BUILD_CACHE_DIR, BuildCache, CACHE_VERSION, PIPELINE, SourceGraph, paramsKey, readStoredFacts, type DesignFacts } from "../generator/buildCache";
 import { DESIGNS, designKeys, designSource, generateJsModels, generateModels } from "../generator/generate";
 import type { ProceduralDesign } from "../generator/design";
 import { isDraft } from "../generator/workshop";
@@ -20,7 +20,7 @@ const KEYS = designKeys(ALL, GRAPH);
 
 describe("the committed build cache", () => {
   it("holds every design's facts under its current key and every confirmed model's thumbnail", () => {
-    const stored = (JSON.parse(fs.readFileSync(path.join(BUILD_CACHE_DIR, "facts.json"), "utf8")) as { designs: Record<string, DesignFacts> }).designs;
+    const stored = Object.fromEntries(readStoredFacts(BUILD_CACHE_DIR));
     const stale = ALL.filter((d) => stored[d.id]?.key !== KEYS.get(d.id)).map((d) => d.id);
     const extra = Object.keys(stored).filter((id) => !DESIGNS.has(id));
     const thumbs = fs.readdirSync(path.join(BUILD_CACHE_DIR, "thumbs")).filter((n) => n.endsWith(".png")).map((n) => n.slice(0, -4)).sort();
@@ -29,6 +29,37 @@ describe("the committed build cache", () => {
     expect(stale.length, `${stale.length} designs changed since build-cache/ was written - ${hint}: ${stale.slice(0, 20).join(", ")}`).toBe(0);
     expect(extra, `build-cache/ holds designs that no longer exist - ${hint}`).toEqual([]);
     expect(thumbs, `build-cache/thumbs/ must hold exactly the confirmed models' thumbnails - ${hint}`).toEqual(confirmed);
+  });
+});
+
+describe("the cache's files", () => {
+  // a file per design, so two branches that change different designs merge without
+  // a conflict; a file a merge left conflicted only costs its design a rebuild
+  it("keeps each design's facts in a file of its own, carries the old single file over, and skips a file that does not parse", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "facts-"));
+    try {
+      const facts = (key: string): DesignFacts => ({ key, extents: { b: [1, 2, 3], a: [4, 5, 6] } }) as unknown as DesignFacts;
+      // the old layout: one facts.json
+      fs.writeFileSync(path.join(dir, "facts.json"), JSON.stringify({ version: CACHE_VERSION, designs: { "x-a": facts("ka") } }));
+      // and a per-design file older than the single file's entry: the entry under the current key counts
+      fs.mkdirSync(path.join(dir, "facts"));
+      fs.writeFileSync(path.join(dir, "facts", "x-a.json"), JSON.stringify({ version: CACHE_VERSION, facts: facts("old") }));
+      const cache = new BuildCache(dir);
+      expect(cache.get("x-a", "ka")).not.toBeNull();
+      cache.set("x-b", facts("kb"));
+      cache.save(new Set(["x-a", "x-b"]), new Set());
+      expect(fs.existsSync(path.join(dir, "facts.json"))).toBe(false);
+      expect(fs.readdirSync(path.join(dir, "facts")).sort()).toEqual(["x-a.json", "x-b.json"]);
+      expect([...readStoredFacts(dir).keys()]).toEqual(["x-a", "x-b"]);
+      // a design dropped from the catalog loses its file
+      new BuildCache(dir).save(new Set(["x-a"]), new Set());
+      expect(fs.readdirSync(path.join(dir, "facts"))).toEqual(["x-a.json"]);
+      // conflict markers: that design is built again, the others stay cached
+      fs.writeFileSync(path.join(dir, "facts", "x-b.json"), "<<<<<<< ours\n{}\n=======\n{}\n>>>>>>> theirs\n");
+      expect([...readStoredFacts(dir).keys()]).toEqual(["x-a"]);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
 
