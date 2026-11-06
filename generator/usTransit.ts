@@ -40,7 +40,7 @@ export interface CarDef {
   /** Window rows: their sill and head, their d spans, frame paint. */
   windows: ReadonlyArray<{ y: readonly [number, number]; spans: ReadonlyArray<readonly [number, number]>; frame: string }>;
   /** Passenger doors on both sides: d spans, sill and head, the leaf's window. */
-  doors: { spans: ReadonlyArray<readonly [number, number]>; y: readonly [number, number]; glass: readonly [number, number] };
+  doors: { spans: ReadonlyArray<readonly [number, number]>; y: readonly [number, number]; glass: readonly [number, number]; slides?: readonly number[] };
   /** The door leaves' own paint bands (default the side's bands). */
   doorBands?: readonly Band[];
   /** A cab front painted apart from the sides: its bands, on the shell from the +X tip back to d. */
@@ -80,7 +80,7 @@ export const carBody = (c: CarDef): SliceBody => {
 const leavesOf = (c: CarDef): SliceDoorway[] =>
   [1, -1].flatMap((s) => c.doors.spans.map(([a, b]) => ({ s, d0: a + LEAF_INSET, d1: b - LEAF_INSET, y0: c.doors.y[0] + LEAF_INSET, y1: c.doors.y[1] - LEAF_INSET })));
 
-function door(m: MeshBuilder, c: CarDef, b: SliceBody, X: (d: number) => number, s: number, d0: number, d1: number): void {
+function door(m: MeshBuilder, c: CarDef, b: SliceBody, X: (d: number) => number, s: number, d0: number, d1: number, i: number): void {
   const [y0, y1] = c.doors.y;
   const k = LEAF_INSET;
   m.scope("outline", () => {
@@ -89,7 +89,7 @@ function door(m: MeshBuilder, c: CarDef, b: SliceBody, X: (d: number) => number,
     sidePanel(m, b, X, s, "rubber", d0 + k, d1 - k, y0, y0 + k, 0.004, 0.03);
     sidePanel(m, b, X, s, "rubber", d0 + k, d1 - k, y1 - k, y1, 0.004, 0.03);
   });
-  const slide = (d0 + d1) / 2 < b.length / 2 ? 1 : -1;
+  const slide = c.doors.slides?.[i] ?? ((d0 + d1) / 2 < b.length / 2 ? 1 : -1);
   const dx = X(d0 + slide * (d1 - d0)) - X(d0);
   openable(m, (mm, o) =>
     mm.moved(plugMove(o, s, dx), () => {
@@ -145,7 +145,7 @@ export function drawCar(m: MeshBuilder, c: CarDef, X: (d: number) => number, o: 
             sidePanel(m, b, X, s, w.frame, a, e, w.y[0], w.y[1], 0.006, 0.03);
             sidePanel(m, b, X, s, "glass", a + 0.04, e - 0.04, w.y[0] + 0.04, w.y[1] - 0.04, 0.012, 0.004);
           }))));
-        m.scope("doors", () => c.doors.spans.forEach(([a, e], i) => m.scope(`door ${i + 1}`, () => door(m, c, b, X, s, a, e))));
+        m.scope("doors", () => c.doors.spans.forEach(([a, e], i) => m.scope(`door ${i + 1}`, () => door(m, c, b, X, s, a, e, i))));
         if (c.fluting) m.scope("fluting", () => fluting(m, c, b, X, s));
         for (const l of c.lettering ?? []) m.scope("lettering", () => sideLettering(m, b, X, s, l.text, l.d, l.y, l.h, l.mat, 0.012));
       });
