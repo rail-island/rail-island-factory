@@ -95,12 +95,12 @@ Notes:
 | `veh-ship-supply-vessel` | Platform Supply Vessel | 89.0 x 19.0 x 30.0 | 6.3 (0.21) | raked / transom | 5427 (99) | livery: red, blue, orange |
 | `veh-ship-anchor-handler` | Anchor Handling Tug | 91.0 x 22.0 x 33.9 | 7.8 (0.2301) | raked / transom | 5591 (99) | - |
 | `veh-ship-crane-vessel` | Semi-Submersible Crane Vessel | 220.0 x 102.0 x 175.9 | 12.0 (0.0682) | barge / sternwheel, twin | 9327 (96) | - |
-| `veh-ship-drillship` | Drillship | 228.0 x 42.0 x 96.0 | 12.0 (0.125) | raked / transom | 2642 (93) | - |
-| `veh-ship-fireboat` | Fire Fighter | 40.5 x 9.1 x 14.5 | 3.0 (0.2062) | raked / cruiser | 1780 (79) | - |
-| `veh-ship-rnli-shannon` | RNLI Shannon Class | 13.6 x 4.5 x 5.7 | 0.9 (0.1593) | raked / transom | 746 (83) | - |
-| `veh-ship-pilot-boat` | Pilot Boat | 17.0 x 5.5 x 6.7 | 1.4 (0.2105) | raked / transom | 896 (83) | - |
+| `veh-ship-drillship` | Drillship | 228.0 x 42.0 x 96.0 | 12.0 (0.125) | raked / transom | 7624 (93) | - |
+| `veh-ship-fireboat` | Fire Fighter | 40.5 x 9.1 x 14.5 | 3.0 (0.2062) | raked / cruiser | 4818 (99) | - |
+| `veh-ship-rnli-shannon` | RNLI Shannon Class | 13.6 x 4.5 x 5.8 | 0.9 (0.1552) | raked / transom | 2676 (93) | - |
+| `veh-ship-pilot-boat` | Pilot Boat | 17.0 x 5.5 x 6.7 | 1.4 (0.2105) | raked / transom | 2736 (93) | - |
 
-All but the drillship, the fireboat, the Shannon and the pilot boat are detailed ships:
+All 19 are detailed ships:
 fine hulls, detailed houses with radomes, monkey-island rails and fire monitors, the
 fittings, and their working gear - the tugs' winch drums, towing pins and staples and their
 rubber fenders (the harbour tug's sheer band, bow and stern fenders and tyres), the
@@ -108,7 +108,9 @@ trawlers' net drums, trawl doors and winches, the seiner's helideck, power block
 pile, the research ships' laboratory containers and deep-sea winches, the dredger's drag
 heads, hopper beams and rainbow nozzle, the offshore vessels' crash rails, cargo and
 tuggers, the crane vessel's lattice booms, hook blocks, grillage and fairleads, the cable
-layer's carousel rim, tensioner frames, plough and ROV hangar.
+layer's carousel rim, tensioner frames, plough and ROV hangar; the drillship's braced derrick,
+drill pipe and risers; the fireboat's hose reels and searchlight; the Shannon's fender collar and
+the pilot boat's heavy fenders and boarding deck rail.
 
 Notes:
 

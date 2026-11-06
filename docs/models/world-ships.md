@@ -107,14 +107,15 @@ lower and upper boxes in two colours).
 
 Shared shapes are in `worldShips.ts`: `oceanHull`, `deckhouse` (an accommodation stack
 with its wheelhouse and wings), `aftHouse` (that, its funnel, mast and lifeboats),
-`funnel`, `mast`, `lifeboats`, `exhausts`, `fittings`, `bayGaps`, and the `load`, `livery`
+`funnel`, `mast`, `lifeboats`, `exhausts`, `fittings`, `bayGaps`, `detailed`,
+`passengerFittings`, `liferafts`, and the `load`, `livery`
 and `colour` parameters.
 
 ### Detail
 
-The detailed ships (so far the first 50 of the list: the ocean and river cargo ships, the
-service ships but the drillship, fireboat, Shannon and pilot boat, and the narrowboat, Thames
-barge, dhow, junk and felucca) carry, beyond their hull and blocks:
+The detailed ships (so far the first 75 of the list: the cargo and service ships, the
+narrowboat, Thames barge, dhow, junk and felucca, and the passenger ships up to the
+bateau-mouche) carry, beyond their hull and blocks:
 
 - **the hull**: `fine` stations; `fittings()` gives the forecastle's bulwark, the anchors, the
   windlasses and bollards forward, mooring winches aft, the draft marks and the bow thruster
@@ -128,11 +129,14 @@ barge, dhow, junk and felucca) carry, beyond their hull and blocks:
   vent masts; the bulkers' ridged and ribbed covers and hold vents; the old cargo ships' cowl
   ventilators, mast houses and well-deck bulwarks; the tugs' fenders and towing gear, the
   fishing gear, the research and offshore ships' deck equipment;
+- **the passenger ships**: `detailed()` (deck edges, front windows) and `passengerFittings()`
+  (rubbing fender, anchors, bollards, draft marks), railings round the open decks, liferafts
+  (`liferafts()`), lifeboats, exhausts and radomes;
 - **the small craft** (4,000 triangles): plank seams (`strakes`), gunwales, rudders and tillers,
   the deck clutter of their trade, a painted eye (`marks` with `eye`), the running rigging that
   reads (sprit, vangs, sheets).
 
-The other 50 ships are still at the first round's level and are to be brought up to it in
+The other 25 ships are still at the first round's level and are to be brought up to it in
 later batches (the `ship` skill, `.agents/skills/ship/`, is the checklist).
 
 ### Sails
@@ -157,8 +161,8 @@ neighbours' planes, so no two coplanar faces fight.
 | ship | triangles | reached |
 |---|---|---|
 | ocean ships over 150 m | 25,000 | 3,900 (PCTC) to 17,500 (MSC Gulsun) for the detailed ships; 2,500 to 10,300 (Icon) for the others |
-| ships up to 150 m | 15,000 | 3,800 (push barge) to 6,200 for the detailed ships; 1,200 to 4,200 for the others |
-| small craft (`small`) | 4,000 | 2,300 to 3,900 for the detailed ones; 500 to 1,300 for the others |
+| ships up to 150 m | 15,000 | 2,600 (SR.N4) to 8,200 (sternwheeler) for the detailed ships; 1,200 to 4,200 for the others |
+| small craft (`small`) | 4,000 | 2,000 to 3,900 for the detailed ones; 500 to 1,300 for the others |
 | distant model | 100 | 30 to 99 |
 
 `shipBudget(spec)` gives the budget; the suite checks every sampled parameter combination.

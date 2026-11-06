@@ -117,7 +117,7 @@ describe("the world ships", () => {
     expect(shipLength(CARGO_SHIP_SPECS.find((s) => s.id === "veh-ship-seawise-giant")!.spec())).toBeCloseTo(458.45, 2);
   });
 
-  it("gives the detailed ships (the list's first 50) their fittings, detailed houses and a fair share of their budget", () => {
+  it("gives the detailed ships (the list's first 75) their fittings, detailed houses and a fair share of their budget", () => {
     for (const s of CARGO_SHIP_SPECS.slice(0, 25)) {
       const spec = s.spec();
       const kinds = new Set(spec.items.map((it) => it.k));
@@ -136,6 +136,16 @@ describe("the world ships", () => {
       expect(spec.hull?.fine, s.id).toBe(true);
       expect(spec.items.some((it) => ["anchors", "bulwark", "mooring", "fender", "strakes", "marks"].includes(it.k)), `${s.id} fittings`).toBe(true);
       expect(built(s, combos(s)[0]).triangleCount(), s.id).toBeGreaterThan(shipBudget(spec) * (spec.small ? 0.35 : shipLength(spec) > 150 ? 0.15 : 0.25));
+    }
+    // the third batch (the list's 51st to 75th): the last service craft and the ferries, fast craft and river boats
+    const third = ["drillship", "fireboat", "rnli-shannon", "pilot-boat", "staten-island", "star-ferry", "bc-spirit", "wsf-jumbo", "sydney-first-fleet", "manly-freshwater", "bosphorus-vapur", "vaporetto", "amsterdam-ijveer", "stena-hss", "incat", "channel-ropax", "tallink-megastar", "jp-overnight-ferry", "srn4", "raketa", "jetfoil", "swiss-paddle", "sternwheeler", "elbe-paddle", "bateau-mouche"];
+    for (const name of third) {
+      const s = ALL.find((x) => x.id === `veh-ship-${name}`)!;
+      const spec = s.spec();
+      if (spec.hull) expect(spec.hull.fine, s.id).toBe(true);
+      expect(spec.items.some((it) => it.k === "rail"), `${s.id} railings`).toBe(true);
+      expect(spec.items.some((it) => it.k === "tier" && it.lip), `${s.id} deck edges`).toBe(true);
+      expect(built(s, combos(s)[0]).triangleCount(), s.id).toBeGreaterThan(shipBudget(spec) * (spec.small ? 0.4 : spec.hull ? 0.15 : 0.12));
     }
     // a loaded container ship draws a stack per row of boxes and its lashing bridges
     const t = CARGO_SHIP_SPECS[0]!.spec();

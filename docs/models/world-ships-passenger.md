@@ -12,27 +12,27 @@ in `assets/ship-<name>/SOURCES.md`.
 
 | id | title | L x B x H (m) | draft (draftFrac) | bow / stern | triangles (LOD) | params |
 |---|---|---|---|---|---|---|
-| `veh-ship-staten-island` | Staten Island Ferry | 94.5 x 21.0 x 24.9 | 4.1 (0.1647) | canoe / canoe | 2408 (90) | - |
-| `veh-ship-star-ferry` | Star Ferry | 33.8 x 9.1 x 12.0 | 2.4 (0.2) | canoe / canoe | 1496 (78) | - |
-| `veh-ship-bc-spirit` | BC Ferries Spirit Class | 167.5 x 32.9 x 33.0 | 6.7 (0.203) | canoe / canoe | 3388 (88) | - |
-| `veh-ship-wsf-jumbo` | Washington Jumbo Mark II | 140.0 x 27.0 x 26.0 | 5.3 (0.2038) | canoe / canoe | 2530 (88) | - |
-| `veh-ship-sydney-first-fleet` | Sydney First Fleet Ferry | 25.4 x 7.5 x 9.2 | 1.9 (0.2065) | canoe / canoe | 1015 (58) | - |
-| `veh-ship-manly-freshwater` | Manly Freshwater Class | 70.4 x 12.5 x 13.0 | 2.4 (0.1846) | canoe / canoe | 1878 (68) | - |
-| `veh-ship-bosphorus-vapur` | Bosphorus Ferry | 70.0 x 12.5 x 14.5 | 2.5 (0.1724) | raked / cruiser | 1999 (69) | - |
-| `veh-ship-vaporetto` | Venice Vaporetto | 23.5 x 4.5 x 4.4 | 1.2 (0.2727) | raked / cruiser | 1015 (73) | - |
-| `veh-ship-amsterdam-ijveer` | Amsterdam IJ Ferry | 34.0 x 13.0 x 7.0 | 1.5 (0.2143) | barge / sternwheel | 1516 (78) | - |
-| `veh-ship-stena-hss` | Stena HSS 1500 | 126.6 x 40.0 x 21.6 | 4.8 (0.2222) | raked / transom, twin | 3140 (96) | - |
-| `veh-ship-incat` | Incat Wave-Piercer | 98.0 x 26.6 x 22.4 | 3.5 (0.1563) | raked / transom, twin | 2989 (96) | livery: white, blue, red |
-| `veh-ship-channel-ropax` | Channel Ro-Pax Ferry | 213.0 x 31.4 x 46.0 | 6.5 (0.1413) | bulbous / transom | 4469 (99) | livery: blue, white, red |
-| `veh-ship-tallink-megastar` | Tallink Megastar | 212.0 x 30.6 x 45.0 | 7.1 (0.1578) | bulbous / transom | 4499 (89) | - |
-| `veh-ship-jp-overnight-ferry` | Japanese Overnight Ferry | 199.9 x 27.0 x 46.9 | 6.9 (0.1471) | bulbous / transom | 4897 (89) | - |
-| `veh-ship-srn4` | SR.N4 Hovercraft | 56.4 x 23.2 x 14.9 | 0.3 (0.0201) | skirt | 772 (30) | - |
-| `veh-ship-raketa` | Raketa Hydrofoil | 27.0 x 5.0 x 6.3 | 1.8 (0.2857) | raked / transom, on foils | 892 (63) | - |
-| `veh-ship-jetfoil` | Boeing Jetfoil | 27.4 x 8.5 x 10.0 | 2.6 (0.26) | raked / transom, on foils | 1159 (73) | livery: blue, red, green |
-| `veh-ship-swiss-paddle` | Swiss Lake Paddle Steamer | 62.5 x 7.5 x 12.8 | 1.5 (0.1172) | clipper / cruiser | 2491 (99) | - |
-| `veh-ship-sternwheeler` | Mississippi Sternwheeler | 116.0 x 21.0 x 27.4 | 2.6 (0.0949) | raked / sternwheel | 3259 (83) | - |
-| `veh-ship-elbe-paddle` | Elbe Paddle Steamer | 68.7 x 6.6 x 10.4 | 0.9 (0.0865) | plumb / cruiser | 2549 (99) | - |
-| `veh-ship-bateau-mouche` | Bateau-Mouche | 55.0 x 10.0 x 5.8 | 1.3 (0.2241) | raked / transom | 1977 (63) | - |
+| `veh-ship-staten-island` | Staten Island Ferry | 94.5 x 21.0 x 24.9 | 4.1 (0.1647) | canoe / canoe | 6324 (100) | - |
+| `veh-ship-star-ferry` | Star Ferry | 33.8 x 9.1 x 12.0 | 2.4 (0.2) | canoe / canoe | 4200 (98) | - |
+| `veh-ship-bc-spirit` | BC Ferries Spirit Class | 167.5 x 32.9 x 34.2 | 6.7 (0.1959) | canoe / canoe | 8396 (98) | - |
+| `veh-ship-wsf-jumbo` | Washington Jumbo Mark II | 140.0 x 27.0 x 27.0 | 5.3 (0.1963) | canoe / canoe | 6842 (98) | - |
+| `veh-ship-sydney-first-fleet` | Sydney First Fleet Ferry | 25.4 x 7.5 x 9.2 | 1.9 (0.2065) | canoe / canoe | 3131 (98) | - |
+| `veh-ship-manly-freshwater` | Manly Freshwater Class | 70.4 x 12.5 x 14.6 | 2.4 (0.1644) | canoe / canoe | 5370 (100) | - |
+| `veh-ship-bosphorus-vapur` | Bosphorus Ferry | 70.0 x 12.5 x 15.5 | 2.5 (0.1613) | raked / cruiser | 5279 (89) | - |
+| `veh-ship-vaporetto` | Venice Vaporetto | 23.5 x 4.5 x 5.4 | 1.2 (0.2222) | raked / cruiser | 2023 (93) | - |
+| `veh-ship-amsterdam-ijveer` | Amsterdam IJ Ferry | 34.0 x 13.0 x 7.4 | 1.5 (0.2027) | barge / sternwheel | 3784 (98) | - |
+| `veh-ship-stena-hss` | Stena HSS 1500 | 126.6 x 40.0 x 28.4 | 4.8 (0.169) | raked / transom, twin | 6502 (96) | - |
+| `veh-ship-incat` | Incat Wave-Piercer | 98.0 x 26.6 x 23.4 | 3.5 (0.1496) | raked / transom, twin | 6315 (96) | livery: white, blue, red |
+| `veh-ship-channel-ropax` | Channel Ro-Pax Ferry | 213.0 x 31.4 x 46.0 | 6.5 (0.1413) | bulbous / transom | 9369 (99) | livery: blue, white, red |
+| `veh-ship-tallink-megastar` | Tallink Megastar | 212.0 x 30.6 x 45.0 | 7.1 (0.1578) | bulbous / transom | 9543 (99) | - |
+| `veh-ship-jp-overnight-ferry` | Japanese Overnight Ferry | 199.9 x 27.0 x 46.9 | 6.9 (0.1471) | bulbous / transom | 10209 (99) | - |
+| `veh-ship-srn4` | SR.N4 Hovercraft | 56.4 x 23.2 x 14.9 | 0.3 (0.0201) | skirt | 2413 (100) | - |
+| `veh-ship-raketa` | Raketa Hydrofoil | 27.0 x 5.0 x 7.1 | 1.8 (0.2535) | raked / transom, on foils | 2704 (93) | - |
+| `veh-ship-jetfoil` | Boeing Jetfoil | 27.4 x 8.5 x 11.8 | 2.6 (0.2203) | raked / transom, on foils | 3203 (99) | livery: blue, red, green |
+| `veh-ship-swiss-paddle` | Swiss Lake Paddle Steamer | 62.5 x 7.5 x 12.8 | 1.5 (0.1172) | clipper / cruiser | 5319 (99) | - |
+| `veh-ship-sternwheeler` | Mississippi Sternwheeler | 116.0 x 21.0 x 28.4 | 2.6 (0.0915) | raked / sternwheel | 8187 (93) | - |
+| `veh-ship-elbe-paddle` | Elbe Paddle Steamer | 68.7 x 6.6 x 10.4 | 0.9 (0.0865) | plumb / cruiser | 5417 (99) | - |
+| `veh-ship-bateau-mouche` | Bateau-Mouche | 55.0 x 10.0 x 6.6 | 1.3 (0.197) | raked / transom | 4433 (93) | - |
 | `veh-ship-nile-cruiser` | Nile Cruise Boat | 72.0 x 14.4 x 13.6 | 1.6 (0.1176) | raked / transom | 2811 (73) | - |
 | `veh-ship-amazon-riverboat` | Amazon Riverboat | 30.0 x 7.0 x 9.7 | 1.8 (0.1856) | raked / transom | 1915 (93) | colour: blue, green, red, yellow |
 | `veh-ship-hurtigruten` | Hurtigruten Coastal Ship | 121.8 x 19.2 x 35.4 | 4.7 (0.1328) | bulbous / transom | 3911 (89) | - |
@@ -60,6 +60,16 @@ Notes:
   drawn as one superstructure with a green strip (approx.).
 - **Liners**: Olympic's four funnels (the aft one a dummy), United States's two, Normandie's
   three over her clipper bow and whaleback; Queen Mary 2's funnel and bridge wings.
+
+The first 21 (the Staten Island ferry to the bateau-mouche) are **detailed ships** (see
+"Detail" in [world-ships.md](world-ships.md)): `detailed()` gives every house tier its deck edge
+(and its front windows where the front is square), `passengerFittings()` the rubbing fender,
+the anchors (at both ends of a double-ended ferry), the bollards and the draft marks; each adds
+the railings round its open decks, liferafts and lifeboats, exhaust pipes, radomes and radar
+masts, and its own: the ro-pax ships' car deck openings, stern door and rescue boat, the
+hovercraft's skirt band, rudders, intakes and bow ramp, the paddle steamers' awnings,
+flagstaffs and lifebuoys, the sternwheeler's stack crowns, landing stage and bell, the IJ
+ferry's shelters and lamp posts. The Nile cruise boat and the ships after it are not yet.
 
 ## Sailing ships and small craft (`worldShipsSmall.ts`)
 
