@@ -103,23 +103,24 @@ const ICN_RED: Pt[] = [
 ];
 /** The black windscreen field and roof cap inside the red frame, [lat, y]: rounded at the bottom; over the roof the cap between the red lines along its edges. */
 const ICN_FIELD: Pt[] = [
-  [-0.6, 2.12], [0.6, 2.12], [0.78, 2.18], [0.88, 2.3], [0.92, 2.45], [0.94, 2.9], [0.92, 3.3], [0.9, 3.5], [1.1, 3.6], [1.5, 3.62], [1.5, 4.1],
-  [-1.5, 4.1], [-1.5, 3.62], [-1.1, 3.6], [-0.9, 3.5], [-0.92, 3.3], [-0.94, 2.9], [-0.92, 2.45], [-0.88, 2.3], [-0.78, 2.18],
+  [-0.3, 2.1], [0.3, 2.1], [0.55, 2.15], [0.7, 2.24], [0.8, 2.36], [0.86, 2.55], [0.89, 2.9], [0.88, 3.3], [0.86, 3.5], [1.1, 3.6], [1.5, 3.62], [1.5, 4.1],
+  [-1.5, 4.1], [-1.5, 3.62], [-1.1, 3.6], [-0.86, 3.5], [-0.88, 3.3], [-0.89, 2.9], [-0.86, 2.55], [-0.8, 2.36], [-0.7, 2.24], [-0.55, 2.15],
 ];
 
 /**
  * The ICN's front (the photographs above): a narrow, rounded black chin protruding under a white
  * bumper that wraps the corners, the red lip over it, then the red lamp face with two upright black
- * lamp housings and the SBB emblem; the black windscreen field raked about 30 degrees and running on
+ * lamp housings and the SBB emblem; the black windscreen field, a rounded U over the lamps, raked
+ * about 40 degrees (the roof at full height 3.6 m behind the tip) and running on
  * as the roof cap 5.6 m back, the red frame round it. In plan the face tapers strongly: its corners
  * are elliptical, 0.7 - 0.9 m across and up to 2.5 m deep, the white cab sides curving in to it.
  */
 const ICN_FACE: SeriesCabFace = {
   dJoin: 5.6, first: 7.9, roofFrom: 9, bulge: 0.12, cols: [8, 8, 1, 2], tolerance: 0.015,
-  profile: [[0.95, 0.1], [1.1, 0.02], [1.27, 0], [1.42, 0.03], [1.46, 0.04], [1.74, 0.07], [1.79, 0.17], [2.14, 0.42], [2.45, 0.68], [3.25, 2.0], [3.55, 2.85], [3.75, 3.6], [3.88, 4.4], [3.95, 5.6]],
+  profile: [[0.95, 0.1], [1.1, 0.02], [1.27, 0], [1.42, 0.03], [1.46, 0.04], [1.74, 0.07], [1.79, 0.15], [2.14, 0.35], [2.45, 0.56], [3.25, 1.35], [3.55, 1.9], [3.75, 2.4], [3.88, 2.95], [3.94, 3.6], [3.95, 5.6]],
   corner: [[0.95, 0.7], [1.45, 0.75], [1.8, 0.7], [2.45, 0.85], [3.25, 0.9], [3.6, 0.6], [3.95, 0.1]],
   cornerDepth: [[0.95, 0.9], [1.45, 1.0], [1.8, 1.8], [2.45, 2.5], [3.0, 2.5], [3.25, 2.3], [3.6, 1.4], [3.95, 0.2]],
-  rows: [0.95, 1.05, 1.1, 1.12, 1.27, 1.42, 1.45, 1.46, 1.6, 1.74, 1.79, 1.95, 2.14, 2.3, 2.45, 2.6, 2.75, 2.95, 3.25, 3.3, 3.31, 3.33, 3.4, 3.42, 3.45, 3.46, 3.48, 3.5, 3.55, 3.6, 3.62, 3.68, 3.75, 3.8, 3.82, 3.88, 3.92, 3.95],
+  rows: [0.95, 1.05, 1.1, 1.12, 1.27, 1.42, 1.45, 1.46, 1.6, 1.74, 1.79, 1.95, 2.1, 2.14, 2.3, 2.45, 2.6, 2.75, 2.95, 3.25, 3.3, 3.31, 3.33, 3.4, 3.42, 3.45, 3.46, 3.48, 3.5, 3.55, 3.6, 3.62, 3.68, 3.75, 3.8, 3.82, 3.88, 3.92, 3.94, 3.95],
   bands: () => [[0, 1.1, "skirtG"], [1.1, 3.42, "white"], [3.42, 9, "black"]],
   // the distant model's end: the red face and frame, the black cap
   lodBands: [[0, 1.1, "skirtG"], [1.1, 1.45, "white"], [1.45, 3.42, "red"], [3.42, 9, "black"]],
@@ -129,7 +130,7 @@ const ICN_FACE: SeriesCabFace = {
     { lat: [-1.0, -0.7], y: [1.78, 2.3], r: 0.1, mat: "black" }, { lat: [0.7, 1.0], y: [1.78, 2.3], r: 0.1, mat: "black" },
     { lat: [-0.62, -0.2], y: [3.66, 3.76], r: 0.03, mat: "rubber" }, { lat: [0.2, 0.62], y: [3.66, 3.76], r: 0.03, mat: "rubber" },
   ],
-  panes: [{ lat: [-0.82, 0.82], y: [2.45, 3.25], r: 0.14 }],
+  panes: [{ lat: [-0.78, 0.78], y: [2.48, 3.25], r: 0.2 }],
   decals: [
     { mat: "white", pts: [[-0.12, 1.95], [0.12, 1.95], [0.12, 1.99], [-0.12, 1.99]] },
     { mat: "white", pts: [[-0.025, 1.89], [0.025, 1.89], [0.025, 2.05], [-0.025, 2.05]] },

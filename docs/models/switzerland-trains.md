@@ -47,7 +47,8 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
   narrower than the body. A narrow, rounded black chin protruding under the face (`icnFittings`,
   drawn under the face's 0.95 m bottom so the leading bogie, 4.6 m behind the tip under the cab's
   side window, clears it); the white bumper wrapping the corners, the red lip and red lamp face with
-  two upright lamp housings and the emblem, the black windscreen field raked about 30 degrees
+  two upright lamp housings and the emblem, the black windscreen field (a rounded U over the
+  lamps) raked about 40 degrees, the roof at full height 3.6 m behind the tip,
   running on as the roof cap, the red frame round it running on as the red lines along the roof's
   edges (face fields; sweeps over the cab roof, the kit's sweep `top` carrying paint above the
   shoulder on the face's sides). Its own livery (`ICN_SBB`, key `sbb`): white over a dark band below
