@@ -67,6 +67,23 @@ export interface ShinkansenLivery {
   endSweeps?: ReadonlyArray<{ mat: string; front: readonly Pt[]; back: readonly Pt[] }>;
   /** Paint over each door's span above its head on every car, bands [y0, y1, mat]: a door's colour carried up the side. */
   overDoors?: readonly Band[];
+  /**
+   * Paint along the end car's roof edges, from the shoulder up to height y on the roof's arc: from
+   * d[0] behind the tip back to d[1] at the shoulder and d[2] at y (a slanted rear end); both sides.
+   */
+  endRoofEdge?: { mat: string; y: number; d: readonly [number, number, number] };
+}
+
+/** A fitting on a car's sides, both sides (d span behind the car's front, the end car's from its tip; sill and head). */
+export interface SeriesSidePanel {
+  d: readonly [number, number];
+  y: readonly [number, number];
+  /** A seam (a service door's outline in thin dark lines), a framed window, louvres pressed in the side's paint, or a framed panel. */
+  kind: "seam" | "window" | "louvres" | "panel";
+  /** A panel's paint and the screen inset in it (a display), or the louvres' count. */
+  mat?: string;
+  screen?: string;
+  louvres?: number;
 }
 
 export interface ShinkansenSeries {
@@ -115,6 +132,12 @@ export interface ShinkansenSeries {
   doorCount?: number;
   /** The pantograph: a single arm (default) or a diamond. */
   pantograph?: "single" | "diamond";
+  /** The pantograph's centre, d behind the car's front (an end car's tip), in place of 1.5 m ahead of the rear bogie. */
+  pantographD?: number;
+  /** With `endPantograph` true: the rear end car's pantograph folded down, only the leading one raised. */
+  trailingLowered?: boolean;
+  /** Fittings on the sides of the end car and of an intermediate car: service doors, grilles, displays. */
+  sidePanels?: { end?: readonly SeriesSidePanel[]; middle?: readonly SeriesSidePanel[] };
   /** A flat cab front in place of the nose: its windscreen panes (z0, z1, y0, y1), lamps (z, y, r, lens) and the front's mask. */
   flatCab?: NonNullable<CarDef["cab"]>;
   /** An upright cab on the nose's flat front face (its tip): the panes and lamps drawn there, in place of the windscreen and headlights on the crown, and a gangway door's outline (half width, sill and head). */
@@ -207,7 +230,7 @@ function bogies(s: ShinkansenSeries, end: boolean): [number, number] {
   return [Math.max(back - s.bogieCentres, s.wheelbase / 2 + s.wheelR + 0.2), back];
 }
 
-function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantograph: boolean, number: string): CarDef {
+function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantograph: boolean | "lowered", number: string): CarDef {
   // the centre coupler's draft gear ends 0.3 m below its centre: a skirt bottom there would lie on it
   if (Math.abs(s.B - (couplerOf(s) - 0.3)) < 0.005) throw new Error(`series: skirt bottom ${s.B} m lies on the coupler's draft gear`);
   // the bogie's brake cylinders stand 0.55 m inside its axles: a shorter wheelbase puts them on its transoms (0 is a single axle)
@@ -312,11 +335,15 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
       });
       if (isDiesel(s))
         m.scope("exhaust", () => exhaust(m, X(L / 2), 0, s.C - 0.05, s.C + 0.1, 0.14, 0.14));
+      if (end && l.endRoofEdge) m.scope("roof edge", () => roofEdge(m, b, X, l.endRoofEdge!, s.cabFace?.dJoin ?? 0));
+      const panels = s.sidePanels?.[end ? "end" : "middle"];
+      if (panels) m.scope("side panels", () => sidePanels(m, b, X, l, panels, end ? (s.cabFace?.dJoin ?? 0) : 0));
       if (pantograph) m.scope("pantograph", () => {
-        const x = X(tr[1] - 1.5);
+        const x = X(pantographAt(s, end, tr));
+        const raised = pantograph !== "lowered";
         block(m, l.roof, x - 1.6, x + 1.6, s.C - 0.06, s.C + 0.05, -0.85, 0.85);
-        if (s.pantograph === "diamond") diamond(m, { xc: x, roofY: s.C + 0.05, baseY: s.C + 0.35, raised: true });
-        else singleArm(m, { xc: x, roofY: s.C + 0.05, baseY: s.C + 0.3, h: 1, raised: true });
+        if (s.pantograph === "diamond") diamond(m, { xc: x, roofY: s.C + 0.05, baseY: s.C + 0.35, raised });
+        else singleArm(m, { xc: x, roofY: s.C + 0.05, baseY: s.C + 0.3, h: 1, raised });
       });
       if (s.fittings) s.fittings(m, b, X, { end, length: L, trucks: tr });
       else m.scope("underfloor", () => block(m, "under", X(tr[1] - 2.6), X(tr[0] + 2.6), s.B - 0.35, s.B, -s.W * 0.8, s.W * 0.8));
@@ -345,6 +372,52 @@ function endSweep(m: MeshBuilder, b: SliceBody, X: (d: number) => number, w: Non
     if (bb - fb >= 0.005) tris.push([fa, ya], [bb, yb], [fb, yb]);
   }
   for (const sd of [1, -1]) sideDecal(m, b, X, sd, w.mat, tris, proud);
+}
+
+/** The pantograph's centre on a car (d behind the body's front): the series' own place, else 1.5 m ahead of the rear bogie. */
+function pantographAt(s: ShinkansenSeries, end: boolean, tr: readonly number[]): number {
+  return s.pantographD !== undefined ? s.pantographD - (end && s.cabFace ? s.cabFace.dJoin : 0) : tr[1]! - 1.5;
+}
+
+/** Paint along the roof's edges from the shoulder up to a height: strips in half width, each ending further back toward the top. */
+function roofEdge(m: MeshBuilder, b: SliceBody, X: (d: number) => number, r: NonNullable<ShinkansenLivery["endRoofEdge"]>, dTip: number): void {
+  const [d0, dS, dY] = [Math.max(0, r.d[0] - dTip), r.d[1] - dTip, r.d[2] - dTip];
+  const half = bodyHalf(b, Math.max(0, dS));
+  const zS = b.w(Math.max(0, dS)) * b.lean, zY = edgeAt(half, r.y);
+  const k = 16;
+  for (const sd of [1, -1])
+    for (let i = 0; i < k; i++) {
+      const [zHi, zLo] = [zS - ((zS - zY) * i) / k, zS - ((zS - zY) * (i + 1)) / k];
+      crownPane(m, b, X, sd, r.mat, [d0, dS + ((dY - dS) * (i + 0.5)) / k], [zLo, zHi + (i === 0 ? 0.05 : 0)], 0.004);
+    }
+}
+
+/** A car's side fittings on both sides (d behind the car's front, less `dTip` on the body). */
+function sidePanels(m: MeshBuilder, b: SliceBody, X: (d: number) => number, l: ShinkansenLivery, panels: readonly SeriesSidePanel[], dTip: number): void {
+  const paintAt = (y: number) => l.bands.find(([, top]) => top > y)?.[2] ?? l.bands[l.bands.length - 1]![2];
+  for (const sd of [1, -1]) for (const p of panels) {
+    const [d0, d1, y0, y1] = [p.d[0] - dTip, p.d[1] - dTip, p.y[0], p.y[1]];
+    if (p.kind === "seam") {
+      const t = 0.012;
+      sidePanel(m, b, X, sd, "rubber", d0, d0 + t, y0, y1, 0.005, 0.004);
+      sidePanel(m, b, X, sd, "rubber", d1 - t, d1, y0, y1, 0.005, 0.004);
+      sidePanel(m, b, X, sd, "rubber", d0 + t, d1 - t, y1 - t, y1, 0.005, 0.004);
+      sidePanel(m, b, X, sd, "rubber", d0 + t, d1 - t, y0, y0 + t, 0.005, 0.004);
+    } else if (p.kind === "window") {
+      sidePanel(m, b, X, sd, "rubber", d0, d1, y0, y1, 0.007, 0.03);
+      sidePanel(m, b, X, sd, "glass", d0 + 0.04, d1 - 0.04, y0 + 0.04, y1 - 0.04, 0.012, 0.004);
+    } else if (p.kind === "louvres") {
+      const n = p.louvres ?? 6;
+      sidePanel(m, b, X, sd, paintAt(y0), d0, d1, y0, y1, 0.006, 0.03);
+      for (let i = 1; i < n; i++) {
+        const y = y0 + ((y1 - y0) * i) / n;
+        sidePanel(m, b, X, sd, "black", d0 + 0.03, d1 - 0.03, y - 0.01, y + 0.01, 0.014, 0.008);
+      }
+    } else {
+      sidePanel(m, b, X, sd, p.mat ?? "rubber", d0, d1, y0, y1, 0.007, 0.03);
+      if (p.screen) sidePanel(m, b, X, sd, p.screen, d0 + 0.06, d1 - 0.06, y0 + 0.06, y1 - 0.06, 0.012, 0.004);
+    }
+  }
 }
 
 /** The front's colour over the cab roof behind `frontD`, up to a slanted edge: strips on both sides and across the roof's arc. */
@@ -481,7 +554,7 @@ export function buildSeries(s: ShinkansenSeries, params: readonly ParamSpec[], v
     const cx = (slot.lo + slot.hi) / 2;
     const len = slot.end ? s.endLength : s.midLength;
     const X = (d: number) => cx + len / 2 - frontGap(s, slot.end) - d;
-    const def = carDef(s, l, slot.end, slot.pantograph, l.number);
+    const def = carDef(s, l, slot.end, slot.pantograph && s.trailingLowered && s.endPantograph === true && slot.turned ? "lowered" : slot.pantograph, l.number);
     // a buffered cab end keeps its buffers at the train's two ends
     const inside = slot.end && s.endCoupler === "buffers" ? [-1] : [1, -1];
     return {
@@ -514,7 +587,7 @@ function carLod(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
   const parts: LodPart[] = [
     ...bogieParts(tr.map((d) => [T(X(d)), s.wheelbase / 2 + s.wheelR + 0.2, ...(section !== undefined ? [section] : [])] as const) as unknown as ReadonlyArray<readonly [number, number, number?]>, s.B),
     ...(end && s.lodRoof ? [roofPart(s.lodRoof.mat, T(X(s.lodRoof.d[0] - (s.cabFace?.dJoin ?? 0))), T(X(s.lodRoof.d[1] - (s.cabFace?.dJoin ?? 0))), s.lodRoof.hw, s.lodRoof.hw, s.lodRoof.y[0], s.lodRoof.y[1], section)] : []),
-    ...(pantograph ? [{ ...roofPart("pantograph", T(X(tr[1] - 1.5)) - 0.8, T(X(tr[1] - 1.5)) + 0.8, 0.45, 0.45, s.C, RAIL_COLLECTOR_TOP, section), optional: 8 }] : []),
+    ...(pantograph ? [{ ...roofPart("pantograph", T(X(pantographAt(s, end, tr))) - 0.8, T(X(pantographAt(s, end, tr))) + 0.8, 0.45, 0.45, s.C, RAIL_COLLECTOR_TOP, section), optional: 8 }] : []),
   ];
   return { body, parts };
 }
@@ -534,7 +607,7 @@ export function buildSeriesLod(s: ShinkansenSeries, params: readonly ParamSpec[]
   const built = slots.map((slot, k) => {
     const cx = (slot.lo + slot.hi) / 2;
     const len = slot.end ? s.endLength : s.midLength;
-    return carLod(s, l, slot.end, slot.pantograph, (d) => cx + len / 2 - frontGap(s, slot.end) - d, cx, slot.turned, k);
+    return carLod(s, l, slot.end, slot.pantograph && !(s.trailingLowered && s.endPantograph === true && slot.turned), (d) => cx + len / 2 - frontGap(s, slot.end) - d, cx, slot.turned, k);
   });
   const sections: LodSections = {
     pivots: slots.map((_, i): [number, number, number] => (i === 0 ? [0, 0, 0] : [slots[i - 1]!.lo, couplerOf(s), 0])),

@@ -91,6 +91,17 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
   deck's gangway door. Left out: the first class car's one side with four lower windows, the
   Bt control car, AD and dining cars, the windows' rounded corners. Numbers: A 50 85 16-94 073-3,
   B 50 85 26-94 101-0 (check digits per UIC).
+- **FV-Dosto.** Measured from a near side view of the cab end and the upper windows' 1.5 m pitch: the
+  black sweep's back edge one straight line from the white's point 1.4 m behind the tip to the shoulder
+  at 6.75 m, the red over the roof's edge (livery `endRoofEdge`) to 7.7 m; on the cab's sides the dark
+  band and the white's point are painted forward to the red. The doors stand at the low floor's ends
+  inside the bogies (series `layout`): the end car's at 9.35 m and 17.6 m behind the tip with three lower
+  windows between, the intermediate car's 5.2 m in from each end with seven; white service doors over the
+  bogies, and behind the cab the destination display and the service door with its window and grille
+  (series `sidePanels`). The pantograph stands on each end car's roof 5 m behind the tip (`pantographD`),
+  the trailing one folded (`trailingLowered`). The sides are white up to the upper deck's window tops,
+  the dark grey roof band starting at the shoulder just above them, as the photographs show. The distant model draws only the lower window
+  row's span, now short on the end car.
 
 ## Tests
 
