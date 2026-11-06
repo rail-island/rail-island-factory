@@ -9,12 +9,15 @@ import { describe, expect, it } from "vitest";
 import { paramCombinations, resolveParams } from "../generator/design.ts";
 import { ALL_VEHICLES, DESIGNS } from "../generator/generate.ts";
 import { GT4_BOGIES, GT4_MAP, KT4_BOGIES, KT4_MAP, KT8_BOGIES, KT8_MAP, T3_MAP, T6_MAP, TRAM_CATALOG, TRAM_DESIGNS, TRAM_WIRE } from "../generator/trams.ts";
-import { METRO_CATALOG, METRO_DESIGNS, METRO_PIVOTS } from "../generator/metro.ts";
+import { METRO_CATALOG, METRO_DESIGNS, METRO_MAP, METRO_PIVOTS } from "../generator/metro.ts";
 import { TRAM_TRANSFERS, tramComparison, worstTramPixels } from "../generator/tramComparison.ts";
 import { meanAbsoluteError } from "../generator/csdCoachComparison.ts";
 import { findCoplanarOverlaps } from "../generator/coplanar.ts";
 import { glbStats } from "../generator/glbStats.ts";
 import { parseGlb } from "../generator/glbParse.ts";
+import { poseGlb } from "../generator/glbPose.ts";
+import { DOOR_POCKET_IN, DOOR_SAMPLES } from "../generator/doors.ts";
+import { Tram } from "../generator/tramKit.ts";
 import { collectTriangles } from "../generator/glbTriangles.ts";
 import { isLeaf, type TreeNode } from "../generator/sourceTree.ts";
 import type { ParamValues } from "../generator/design.ts";
@@ -53,8 +56,9 @@ describe("the tram and metro designs", () => {
     expect(DESIGNS.get(proceduralId("proc-vehicle-tatra-t3"))!.params![0]!.values.map((v) => v.value)).toEqual(["t3", "t3m", "t3prototype"]);
     expect(params("proc-vehicle-tatra-kt8")).toEqual({ livery: "redWhite" });
     expect(DESIGNS.get(proceduralId("proc-vehicle-tatra-kt8"))!.params![0]!.values.map((v) => v.value)).toEqual(["redWhite", "red", "modern"]);
-    expect(params("proc-vehicle-metro-81-71")).toEqual({ unit: "headCar" });
+    expect(params("proc-vehicle-metro-81-71")).toEqual({ unit: "headCar", livery: "prague" });
     expect(DESIGNS.get(proceduralId("proc-vehicle-metro-81-71"))!.params![0]!.values.map((v) => v.value)).toEqual(["headCar", "middleCar"]);
+    expect(DESIGNS.get(proceduralId("proc-vehicle-metro-81-71"))!.params![1]!.values.map((v) => v.value)).toEqual(["prague", "budapest"]);
     expect(DESIGNS.get(proceduralId("proc-vehicle-tatra-t6"))!.params).toBeUndefined();
   });
 
@@ -146,6 +150,44 @@ describe("the published dimensions", () => {
       const xs = walk(tree.root).filter((n) => /running-gear\/bogie-\d$/.test(n.id)).map((n) => centreX(n as Box));
       expect(Math.abs(xs[0]! - xs[1]!)).toBeCloseTo(METRO_PIVOTS, 2);
     }
+  });
+
+  it("slides the 81-71's door leaves into the wall, never out over the side", () => {
+    // regression: the leaves stepped out and slid over the body like plug doors
+    for (const unit of ["headCar", "middleCar"]) {
+      const glb = DESIGNS.get(proceduralId("proc-vehicle-metro-81-71"))!.build({ unit }).toGlb("metro");
+      const clip = (parseGlb(glb).json as unknown as { animations: Array<{ name: string }> }).animations.findIndex((a) => a.name === "doors-right");
+      expect(clip).toBeGreaterThanOrEqual(0);
+      const leafZ = (k: number) => {
+        const { json, bin } = parseGlb(poseGlb(glb, k, clip));
+        const zs = collectTriangles(json, bin).filter((t) => t.material === "doorRed").flatMap((t) => t.p.map((q) => q[2])).filter((z) => z > 0);
+        return Math.max(...zs);
+      };
+      const shut = leafZ(0);
+      for (let k = 1; k <= DOOR_SAMPLES; k++) expect(leafZ(k)).toBeLessThanOrEqual(shut + 1e-6);
+      expect(leafZ(DOOR_SAMPLES)).toBeCloseTo(shut - DOOR_POCKET_IN, 3);
+    }
+  });
+
+  it("rounds a window's corners on the skin, inside its box", () => {
+    const t = new Tram({}, METRO_MAP);
+    const v = t.vol("saloon", [[-1.5, 0.7], [1.5, 0.7], [1.5, 3.1], [-1.5, 3.1]], { plan: [[0, 1.5], [20, 1.5]] }, 0, 20, [[0, 3.1, "roof"]]);
+    const b = { x0: 1, x1: 2, y0: 2, y1: 2.8 };
+    t.roundPanel(v, "frame", 1, b, 0.14, 0.012, 0.04);
+    const p = t.m.positions();
+    const pts = Array.from({ length: p.length / 3 }, (_, i) => [p[3 * i]!, p[3 * i + 1]!, p[3 * i + 2]!]);
+    for (const [x, y] of pts) {
+      expect(x).toBeGreaterThanOrEqual(b.x0 - 1e-9);
+      expect(x).toBeLessThanOrEqual(b.x1 + 1e-9);
+      expect(y).toBeGreaterThanOrEqual(b.y0 - 1e-9);
+      expect(y).toBeLessThanOrEqual(b.y1 + 1e-9);
+      // no point stands in a corner the arc cuts away
+      const [dx, dy] = [Math.min(x - b.x0, b.x1 - x), Math.min(y - b.y0, b.y1 - y)];
+      if (dx < 0.14 && dy < 0.14) expect(Math.hypot(0.14 - dx, 0.14 - dy)).toBeLessThanOrEqual(0.14 + 1e-9);
+    }
+    // the face 12 mm proud of the skin, the back 40 mm in
+    expect(Math.max(...pts.map((q) => q[2]!))).toBeCloseTo(1.5 * METRO_MAP.kz + 0.012, 9);
+    expect(Math.min(...pts.map((q) => q[2]!))).toBeCloseTo(1.5 * METRO_MAP.kz - 0.028, 9);
   });
 
   it("puts every wheel on standard gauge", () => {
@@ -291,7 +333,9 @@ describe("the native comparison", () => {
   });
 
   it("holds the recorded mean absolute errors", () => {
-    const limits: Record<string, number> = { tram_ckd_t3: 1.6, tram_ckd_t6: 1.7, tram_ckd_kt8: 1.35, tram_ckd_kt4: 2.65, tram_kvag_gt4: 4.15, "m_mmz_81-71l": 1.3 };
+    // the 81-71's cab front follows the photographs, not its drawing: two windscreens in the
+    // dark mask, the lamps raised onto its foot (assets/metro-81-71/COMPARISON.md)
+    const limits: Record<string, number> = { tram_ckd_t3: 1.6, tram_ckd_t6: 1.7, tram_ckd_kt8: 1.35, tram_ckd_kt4: 2.65, tram_kvag_gt4: 4.15, "m_mmz_81-71l": 1.75 };
     for (const t of TRAM_TRANSFERS) expect(meanAbsoluteError(tramComparison(t.key)), t.key).toBeLessThanOrEqual(limits[t.key]!);
   });
 
