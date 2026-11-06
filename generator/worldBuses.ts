@@ -7,6 +7,7 @@
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { DoorStyle, PaneStyle } from "./busAssembly.ts";
 import { resolveParams, type GameProperties, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
+import * as refined from "./worldBusRefined.ts";
 import { worldBus, worldBusLod, type Band, type BusKind, type WorldBusSpec } from "./worldBusKit.ts";
 import { BUS_CATALOG } from "./buses.ts";
 
@@ -141,13 +142,13 @@ export const twoBodies = (length: number, at: number): Array<[number, number]> =
 const LONDON_RED = "#c8102e";
 
 export function newRoutemasterSpec(): WorldBusSpec {
-  return doubleDeck({
+  return { ...doubleDeck({
     length: 11.23, width: 2.52, height: 4.39,
     axles: [{ at: 2.6 }, { at: 8.5, drive: true }],
     doors: [[0.3, 1.45], [4.5, 5.75], [9.5, 10.75]],
     livery: { body: LONDON_RED, band: "#15181c" },
     rake: 0.3,
-  });
+  }), detail: true, extras: refined.newRoutemaster };
 }
 
 export const ENVIRO400_PARAMS: readonly ParamSpec[] = [{
@@ -289,14 +290,14 @@ export function setraS515Spec(): WorldBusSpec {
 }
 
 export function skylinerSpec(): WorldBusSpec {
-  return doubleDeck({
+  return { ...doubleDeck({
     coach: true, length: 13.8, height: 4.0,
     axles: [{ at: 2.8 }, { at: 9.3, drive: true }, { at: 10.65, dual: false }],
     doors: [[0.2, 1.2], [6.3, 7.2]],
     livery: { body: "#f2f2f0", band: "#15181c", skirt: "#5c6166" },
     paint: [[-1, 14.8, 0.35, 0.62, "skirt"], [-1, 13.5, 1.06, 2.09, "band"], [-1, 13.5, 2.49, 3.8, "band"]],
     rake: 0.35,
-  });
+  }), detail: true, extras: refined.skyliner };
 }
 
 export function volvo7900eSpec(): WorldBusSpec {
@@ -321,7 +322,7 @@ export function citywideSpec(): WorldBusSpec {
 }
 
 export function exquiCitySpec(): WorldBusSpec {
-  return lowFloor({
+  return { ...lowFloor({
     length: 18.6, height: 3.05,
     axles: [{ at: 3.3 }, { at: 9.0 }, { at: 15.3, drive: true }],
     doors: [[0.9, 2.2], [4.8, 6.1], [11.4, 12.7], [16.2, 17.5]],
@@ -330,7 +331,7 @@ export function exquiCitySpec(): WorldBusSpec {
     livery: { body: "#c9cdd1", skirt: "#8cc63f", band: "#15181c", pod: "#8cc63f" },
     roof: [[3.0, 8.5, 1.0, 3.4, "pod"], [12.0, 17.0, 1.0, 3.4, "pod"]],
     rake: 0.55,
-  });
+  }), detail: true, extras: refined.exquiCity };
 }
 
 export const IKARUS_PARAMS: readonly ParamSpec[] = [{
@@ -352,14 +353,14 @@ export function ikarus260Spec(params?: ParamValues): WorldBusSpec {
 }
 
 export function ikarus280Spec(params?: ParamValues): WorldBusSpec {
-  return highFloor({
+  return { ...highFloor({
     length: 16.5, height: 3.16,
     axles: [{ at: 2.4 }, { at: 7.8 }, { at: 13.6, drive: true }],
     doors: [[0.3, 1.5], [4.3, 5.5], [10.5, 11.7], [14.6, 15.8]],
     bodies: twoBodies(16.5, 9.75),
     livery: ikarusLivery(params),
     paint: [[-1, 17.5, 0.78, 0.86, "rub"], [-1, 17.5, 2.75, 3.03, "white"]],
-  });
+  }), detail: true, extras: refined.ikarus280 };
 }
 
 const SKODA_TR = { body: "#efe3c0", rub: "#3c3c3c", red: "#c42a26" };
@@ -376,7 +377,7 @@ export function skoda14trSpec(): WorldBusSpec {
 }
 
 export function skoda15trSpec(): WorldBusSpec {
-  return highFloor({
+  return { ...highFloor({
     length: 17.4, height: 3.05,
     axles: [{ at: 2.6 }, { at: 8.1 }, { at: 14.2, drive: true }],
     doors: [[0.3, 1.5], [4.4, 5.6], [10.8, 12.0], [15.2, 16.4]],
@@ -384,7 +385,7 @@ export function skoda15trSpec(): WorldBusSpec {
     livery: SKODA_TR,
     paint: [[-1, 18.4, 0.35, 0.86, "red"], [-1, 18.4, 2.72, 2.92, "red"]],
     trolley: 3.8,
-  });
+  }), detail: true, extras: refined.skoda15tr };
 }
 
 export function trollinoSpec(): WorldBusSpec {

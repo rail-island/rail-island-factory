@@ -50,19 +50,19 @@ Third batch, `worldBuses3.ts`:
 
 | id | title | kind | size (m) | axles (m from the nose) | doors | OpenTTD year / capacity | triangles |
 |---|---|---|---|---|---|---|---|
-| `veh-aec-routemaster` | AEC Routemaster | double, half cab | 8.38 x 2.44 x 4.38 | 1.15 / 6.28 | 1 | 1956 / 64 | 2,706 |
+| `veh-aec-routemaster` | AEC Routemaster | double, half cab | 8.38 x 2.44 x 4.38 | 1.15 / 6.28 | 1 | 1956 / 64 | 5,834 |
 | `veh-mb-o3500` | Mercedes-Benz O 3500 | city, bonnet | 9.3 x 2.48 x 2.95 | 1.25 / 5.75 | 2 | 1949 / 40 | 2,617 |
 | `veh-magirus-saturn` | Magirus-Deutz Saturn II | city, bonnet | 10 x 2.5 x 3 | 1.3 / 6.3 | 2 | 1956 / 45 | 2,661 |
 | `veh-vw-t1-samba` | Volkswagen Type 2 Samba | minibus | 4.28 x 1.75 x 1.94 | 0.7 / 3.1 | 1 | 1951 / 8 | 2,328 |
 | `veh-chausson-aph` | Chausson APH | city, bonnet | 9.65 x 2.5 x 2.95 | 1.1 / 6 | 2 | 1950 / 60 | 2,545 |
 | `veh-jelcz-043` | Jelcz 043 | city | 10.7 x 2.5 x 2.95 | 2.1 / 7.25 | 2 | 1964 / 45 | 3,520 |
-| `veh-skoda-706-rto` | Skoda 706 RTO | city | 10.7 x 2.5 x 2.95 | 2.1 / 7.25 | 2 | 1958 / 41 | 3,520 |
+| `veh-skoda-706-rto` | Skoda 706 RTO | city | 10.7 x 2.5 x 2.95 | 2.1 / 7.25 | 2 | 1958 / 41 | 8,520 |
 | `veh-paz-672` | PAZ-672 | city | 7.15 x 2.44 x 2.95 | 1.5 / 5.1 | 2 | 1967 / 45 | 2,976 |
 | `veh-saurer-postbus` | Saurer L4C Postbus | city, bonnet | 10 x 2.4 x 3 | 1.3 / 6 | 2 | 1959 / 37 | 2,585 |
 | `veh-gm-new-look` | GM New Look | city | 12.2 x 2.59 x 3.05 | 2.1 / 9.34 | 2 | 1959 / 70 | 3,056 |
-| `veh-gm-scenicruiser` | GM Scenicruiser | coach, raised deck | 12.2 x 2.44 x 2.95 (deck 3.4) | 2.3 / 9.25 / 10.45 | 1 | 1954 / 43 | 3,686 |
+| `veh-gm-scenicruiser` | GM Scenicruiser | coach, raised deck | 12.2 x 2.44 x 2.95 (deck 3.4) | 2.3 / 9.25 / 10.45 | 1 | 1954 / 43 | 9,186 |
 | `veh-flxible-clipper` | Flxible Clipper | coach | 10.06 x 2.44 x 2.9 | 2.5 / 7.6 | 1 | 1937 / 29 | 2,590 |
-| `veh-blue-bird-vision` | Blue Bird Vision | city, bonnet | 11.7 x 2.44 x 3.2 | 1.1 / 7.2 | 1 | 2003 / 72 | 2,938 |
+| `veh-blue-bird-vision` | Blue Bird Vision | city, bonnet | 11.7 x 2.44 x 3.2 | 1.1 / 7.2 | 1 | 2003 / 72 | 8,566 |
 | `veh-thomas-saf-t-liner` | Thomas Saf-T-Liner C2 | city, bonnet | 11.9 x 2.44 x 3.2 | 1.2 / 7.3 | 1 | 2004 / 77 | 2,838 |
 | `veh-chicken-bus` | Guatemalan Camioneta | city, bonnet | 10.7 x 2.44 x 3.05 | 1.2 / 6.9 | 1 | 1990 / 70 | 2,767 |
 | `veh-toyota-coaster` | Toyota Coaster | minibus | 6.99 x 2.03 x 2.6 | 1.15 / 5.08 | 1 | 1969 / 29 | 2,608 |
@@ -85,7 +85,7 @@ Fourth batch, `worldBuses4.ts`:
 | `veh-proterra-catalyst` | Proterra Catalyst | city | 12.8 x 2.59 x 3.35 | 2.4 / 8.9 | 2 | 2014 / 77 | 2,808 |
 | `veh-marcopolo-paradiso-dd` | Marcopolo Paradiso G7 1800 DD | double | 15 x 2.6 x 4.1 | 2.75 / 10.3 / 11.7 | 2 | 2009 / 66 | 3,699 |
 | `veh-marcopolo-torino` | Marcopolo Torino | city | 12.5 x 2.5 x 3.2 | 2.4 / 8.4 | 3 | 2007 / 80 | 3,170 |
-| `veh-curitiba-biarticulado` | Curitiba Biarticulated Bus | city, double articulated | 25 x 2.6 x 3.3 | 2.6 / 8.4 / 15.2 / 22.4 | 4 | 1992 / 270 | 5,797 |
+| `veh-curitiba-biarticulado` | Curitiba Biarticulated Bus | city, double articulated | 25 x 2.6 x 3.3 | 2.6 / 8.4 / 15.2 / 22.4 | 4 | 1992 / 270 | 13,241 |
 | `veh-transmilenio` | TransMilenio Articulated | city, articulated | 18 x 2.6 x 3.3 | 2.7 / 9.2 / 15.4 | 4 | 2000 / 160 | 4,468 |
 | `veh-havana-camello` | Havana Camello | tractor and semi-trailer | 21.3 x 2.5 x 3.75 | 1.1 / 5.0 / 18.4 / 19.7 | 3 (shut) | 1995 / 300 | 2,480 |
 | `veh-hino-blue-ribbon` | Hino Blue Ribbon | city | 10.5 x 2.49 x 3.1 | 2.3 / 7.1 | 2 | 1982 / 77 | 2,952 |

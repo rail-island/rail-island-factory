@@ -10,6 +10,7 @@
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { DoorStyle, PaneStyle } from "./busAssembly.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
+import * as refined from "./worldBusRefined.ts";
 import { worldBus, worldBusLod, type Band, type Bonnet, type WorldBusSpec } from "./worldBusKit.ts";
 import { doubleDeck, highFloor, lowFloor, runs, worldBusDesign, g, type Base, type WorldBus } from "./worldBuses.ts";
 import { liveryParam } from "./worldBuses2.ts";
@@ -109,6 +110,7 @@ export function routemasterSpec(p?: ParamValues): WorldBusSpec {
     lamps: { kind: "round", y0: 0.72, y1: 0.92 },
     back: { ...s.back, grille: undefined },
     bonnet: { length: 1.86, top: [1.32, 1.32], half: 1.0, grille: [0.55, 1.28, 0.32], halfCab: { from: 2.17 } },
+    detail: true, extras: refined.routemaster,
   };
 }
 
@@ -198,13 +200,13 @@ export function rtoSpec(p?: ParamValues): WorldBusSpec {
     csad: { body: "#c42a26", rub: "#3c3c3c", cream: "#efe6c8", rib: "#d8d0b8" },
     cedok: { body: "#1d4f9c", rub: "#3c3c3c", cream: "#efe6c8", rib: "#d8d0b8" },
   }, p);
-  return rto({
+  return { ...rto({
     length: 10.7, height: 2.95,
     axles: [{ at: 2.1 }, { at: 7.25, drive: true }],
     doors: [[2.7, 3.6], [8.9, 9.8]],
     livery: l,
     paint: [[-1, 11.7, 1.3, 3.0, "cream"], ...ribs(10.7, "rib")],
-  });
+  }), detail: true, extras: refined.rto };
 }
 
 export function paz672Spec(): WorldBusSpec {
@@ -266,7 +268,7 @@ export function scenicruiserSpec(): WorldBusSpec {
     rake: 0.3, mirrors: "arm",
   });
   // the split level: the raised rear deck over the lower front saloon
-  return { ...s, windows: [[0.4, 11.6]], deck: { from: 4.3, to: 12.2, height: 3.4, windows: [[4.8, 11.7]], pitch: 1.3 } };
+  return { ...s, windows: [[0.4, 11.6]], deck: { from: 4.3, to: 12.2, height: 3.4, windows: [[4.8, 11.7]], pitch: 1.3 }, detail: true, extras: refined.scenicruiser };
 }
 
 /** The coach shape (its own import kept local). */
@@ -320,7 +322,14 @@ export function visionSpec(): WorldBusSpec {
     bonnet: { length: 1.8, top: [1.32, 1.62], half: 0.62, grille: [0.7, 1.25, 0.32], fender: "black" },
     lamps: [1.0, 1.2], rake: 0.18,
   });
-  return { ...s, pitch: 0.8, back: { window: [1.65, 2.6, 0.5], lamps: 0.9 } };
+  // the eight-way warning lamps never blink as indicators: their own colours, no lamp role
+  return {
+    ...s, pitch: 0.8, back: { window: [1.65, 2.6, 0.5], lamps: 0.9 },
+    livery: { ...s.livery, warnAmber: "#ffab2e", warnRed: "#d0202a" },
+    // the windscreen's top lowered under the cap that carries the warning lamps and the sign
+    screen: { ...s.screen, y1: 2.66 },
+    detail: true, extras: refined.vision,
+  };
 }
 
 export function safTLinerSpec(): WorldBusSpec {
