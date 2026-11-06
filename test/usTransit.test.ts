@@ -43,7 +43,8 @@ describe("the US passenger cars, urban rail and freight cars", () => {
         const m = d.build(v);
         const glb = m.toGlb(d.id);
         const s = glbStats(glb);
-        expect(s.triangles).toBeLessThanOrEqual(25000);
+        // a car within the rail budget's cap; the Zephyr's three-car train adds its cars up
+        expect(s.triangles).toBeLessThanOrEqual(v.unit === "train" ? 3 * 16000 : 25000);
         expect(s.min[1]).toBeCloseTo(0, 2);
         expect(s.max[2] - s.min[2]).toBeLessThanOrEqual(g.width);
         expect(s.max[1]).toBeLessThanOrEqual(g.height);
