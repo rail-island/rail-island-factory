@@ -1,8 +1,8 @@
 # World ships
 
-**Covers** - the hull kit the 100 ships of the world fleet are built on: the spec record, the hull forms (bows, sterns, sections, sheer, raised decks, twin hulls, a lifted hydrofoil hull), the paint bands and the waterline, the deck furniture and the sailing rigs, the distant model, budgets, axes and datums, game properties, OpenTTD cargo, sounds, references and checks. The designs themselves are listed in [world-ships-cargo.md](world-ships-cargo.md) and [world-ships-passenger.md](world-ships-passenger.md).
+**Covers** - the hull kit the 100 ships of the world fleet are built on: the spec record, the hull forms (bows, sterns, sections, sheer, raised decks, twin hulls, a lifted hydrofoil hull), the paint bands and the waterline, the deck furniture, the detail items and the sailing rigs, the distant model, budgets, axes and datums, game properties, OpenTTD cargo, sounds, references and checks. The designs themselves are listed in [world-ships-cargo.md](world-ships-cargo.md) and [world-ships-passenger.md](world-ships-passenger.md).
 **Code** - `generator/hullKit.ts`, `generator/worldShips.ts`, `generator/worldShipsCargo.ts`, `generator/worldShipsService.ts`, `generator/worldShipsPassenger.ts`, `generator/worldShipsSmall.ts`, `test/worldShips.test.ts`, the ships' blocks of `generator/openttdTable.ts`, `generator/soundTable.ts`, `generator/worldFleet.ts`
-**See also** - [ships.md](ships.md) (the three older ships and the station-and-band hull the kit copies), [world-fleet.md](world-fleet.md) (the harness), [game-properties.md](game-properties.md) (`draftFrac`), [sounds.md](sounds.md), [lod.md](lod.md), [../specs/2026-11-05-world-vehicle-fleet.md](../specs/2026-11-05-world-vehicle-fleet.md)
+**See also** - `.agents/skills/ship/SKILL.md` (the checklist), [ships.md](ships.md) (the three older ships and the station-and-band hull the kit copies), [world-fleet.md](world-fleet.md) (the harness), [game-properties.md](game-properties.md) (`draftFrac`), [sounds.md](sounds.md), [lod.md](lod.md), [../specs/2026-11-05-world-vehicle-fleet.md](../specs/2026-11-05-world-vehicle-fleet.md)
 
 ## The family
 
@@ -68,6 +68,7 @@ stations:
 | `twin` | a catamaran's (or a crane vessel's pontoons') demihull beam; `beam` is then the overall |
 | `screws`, `rudder` | propellers and the rudder under the stern (ships default to one screw) |
 | `lift` | a hydrofoil's or fin-keel yacht's hull raised on its foils |
+| `fine` | twice the stations along the hull: a smoother entry, run and flare (the detailed ships) |
 
 The section blends from the midship shape to a V towards a pointed end. The paint bands
 are `bottom` (keel to draft), `boot`, `hull`, `stripe`; the deck is drawn in `deck`.
@@ -88,10 +89,44 @@ are `bottom` (keel to draft), `boot`, `hull`, `stripe`; the deck is drawn in `de
 | `paddle` | side paddle wheels with their boxes, or a stern wheel |
 | `foil`, `skirt`, `prop` | hydrofoils on struts, a hovercraft's skirt, air propellers on pylons |
 | `rig` | masts with their sails, a bowsprit and stays |
+| `bulwark` | a solid bulwark following the deck edge on both sides, from u0 to u1 |
+| `anchors` | the anchor pocket and the anchor laid on the hull each side, as decals |
+| `mooring` | bollard pairs each side at each station, with windlass drums when `winch` |
+| `catwalk` | a raised walkway on posts with its handrails |
+| `vents` | vent risers, mushroom vents, or cowl ventilators facing forward (`cowl`) |
+| `freefall` | a freefall lifeboat tilted aft down its launch ramp |
+| `lashing` | container lashing bridges across the bay gaps |
+| `marks` | draft marks (a tick a metre) and the bow thruster's sign on the hull, as decals |
+
+Some items take detail options: a `tier`'s `lip` (the deck above overhanging the walls, its
+underside closed), a window row's `mat` (vent grilles, a painted line), `hatches`'
+`coaming`, `ridge` and `ribs`, and `containers`' `rows` (one stack per row of boxes, the
+lower and upper boxes in two colours).
 
 Shared shapes are in `worldShips.ts`: `oceanHull`, `deckhouse` (an accommodation stack
 with its wheelhouse and wings), `aftHouse` (that, its funnel, mast and lifeboats),
-`funnel`, `mast`, `lifeboats`, and the `load`, `livery` and `colour` parameters.
+`funnel`, `mast`, `lifeboats`, `exhausts`, `fittings`, `bayGaps`, and the `load`, `livery`
+and `colour` parameters.
+
+### Detail
+
+The detailed ships (so far the first 25 of the list, the ocean cargo ships, Triple E to the
+Victory ship) carry, beyond their hull and blocks:
+
+- **the hull**: `fine` stations; `fittings()` gives the forecastle's bulwark, the anchors, the
+  windlasses and bollards forward, mooring winches aft, the draft marks and the bow thruster
+  sign;
+- **the house**: `deckhouse`'s and `aftHouse`'s `detail` - a deck edge on every deck, windows
+  on the front of every deck and all round the wheelhouse; `aftHouse` adds exhaust pipes in the
+  funnel's mouth and, with `freefall`, the freefall lifeboat over the stern and a rescue boat;
+- **the cargo gear of the type**: container stacks by rows with lashing bridges, hatch covers
+  on coamings; the tanker deck (cargo lines on supports, fire main, catwalk on posts, manifold
+  crossovers, hose cranes, tank hatches, vent risers); the gas carriers' domes, walkways and
+  vent masts; the bulkers' ridged and ribbed covers and hold vents; the old cargo ships' cowl
+  ventilators, mast houses and well-deck bulwarks.
+
+The other 75 ships are still at the first round's level and are to be brought up to it in
+later batches (the `ship` skill, `.agents/skills/ship/`, is the checklist).
 
 ### Sails
 
@@ -114,8 +149,8 @@ neighbours' planes, so no two coplanar faces fight.
 
 | ship | triangles | reached |
 |---|---|---|
-| ocean ships over 150 m | 20,000 | 1,800 (PCTC) to 10,300 (Icon) |
-| ships up to 150 m | 10,000 | 1,200 to 4,200 |
+| ocean ships over 150 m | 25,000 | 3,900 (PCTC) to 17,500 (MSC Gulsun) for the detailed ships; 2,500 to 10,300 (Icon) for the others |
+| ships up to 150 m | 15,000 | 5,600 to 6,200 for the detailed ships; 1,200 to 4,200 for the others |
 | small craft (`small`) | 4,000 | 500 to 1,300 |
 | distant model | 100 | 30 to 99 |
 

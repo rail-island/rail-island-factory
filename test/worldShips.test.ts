@@ -1,8 +1,8 @@
 // The world ships on the hull kit (generator/hullKit.ts, generator/worldShips*.ts,
 // docs/models/world-ships.md): each at its real length and beam, standing on its
 // keel at y = 0, its waterline (draftFrac of its height) on the edge between the
-// bottom paint and the boot top, in its budget (20,000 triangles over 150 m, 4,000
-// for small craft, else 10,000) with a distant model of at most 100 triangles that
+// bottom paint and the boot top, in its budget (25,000 triangles over 150 m, 4,000
+// for small craft, else 15,000) with a distant model of at most 100 triangles that
 // does not flicker; every ship has its OpenTTD entry with the cargo of its type.
 
 import { describe, expect, it } from "vitest";
@@ -93,15 +93,32 @@ describe("the world ships", () => {
     });
   }
 
-  it("budgets 20,000 triangles for the ocean ships over 150 m, 4,000 for small craft", () => {
+  it("budgets 25,000 triangles for the ocean ships over 150 m, 15,000 below, 4,000 for small craft", () => {
     for (const s of ALL) {
       const spec = s.spec();
-      const want = spec.small ? 4000 : shipLength(spec) > 150 ? 20_000 : 10_000;
+      const want = spec.small ? 4000 : shipLength(spec) > 150 ? 25_000 : 15_000;
       expect(shipBudget(spec), s.id).toBe(want);
     }
     // real sizes: the largest container ship and the largest ship ever built
     expect(shipLength(CARGO_SHIP_SPECS.find((s) => s.id === "veh-ship-triple-e")!.spec())).toBe(399);
     expect(shipLength(CARGO_SHIP_SPECS.find((s) => s.id === "veh-ship-seawise-giant")!.spec())).toBeCloseTo(458.45, 2);
+  });
+
+  it("gives the detailed ships (the list's first 25) their fittings, detailed houses and a fair share of their budget", () => {
+    for (const s of CARGO_SHIP_SPECS.slice(0, 25)) {
+      const spec = s.spec();
+      const kinds = new Set(spec.items.map((it) => it.k));
+      expect(spec.hull?.fine, s.id).toBe(true);
+      expect(kinds.has("anchors"), `${s.id} anchors`).toBe(true);
+      expect(kinds.has("bulwark") || kinds.has("mooring"), `${s.id} bulwark or mooring gear`).toBe(true);
+      // every house deck has its deck edge
+      expect(spec.items.some((it) => it.k === "tier" && it.lip), `${s.id} deck edges`).toBe(true);
+      expect(s.build().triangleCount(), s.id).toBeGreaterThan(shipBudget(spec) * (shipLength(spec) > 150 ? 0.15 : 0.35));
+    }
+    // a loaded container ship draws a stack per row of boxes and its lashing bridges
+    const t = CARGO_SHIP_SPECS[0]!.spec();
+    expect(t.items.filter((it) => it.k === "containers").every((it) => it.k === "containers" && it.rows === 2.5)).toBe(true);
+    expect(t.items.some((it) => it.k === "lashing")).toBe(true);
   });
 
   it("drops the containers of an empty container ship, and changes only colours with a livery", () => {
