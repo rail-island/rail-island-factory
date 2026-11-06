@@ -317,7 +317,9 @@ four or more (a design with a length parameter takes its longest).
 ## Game properties, OpenTTD and sounds
 
 Each design states its weight, power and top speed from its published data (the trailers and
-the steam tram's trailer as variants). Its OpenTTD entry (`openttdTable.ts`, the trams' block) is
+the steam tram's trailer as variants). The horse tram is the exception: a horse has no rated power, so it
+states 10 kW (a pair of horses starting the car), enough for the game to hold its 10 km/h on a
+5 % grade; with 1 kW it crawled up the island's hills at 1-3 km/h. Its OpenTTD entry (`openttdTable.ts`, the trams' block) is
 a passenger road vehicle on tram track with seats and standing room; its presets export every
 livery, length and unit; `pnpm openttd:ids` gave the ids. A tram rings the derived tram bell;
 the steam tram's engine whistles and beats (`soundTable.ts`), its trailer is silent. No sound
