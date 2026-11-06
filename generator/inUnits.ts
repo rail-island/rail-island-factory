@@ -6,7 +6,8 @@
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
-import { c, flatCab, nose } from "./seriesHelpers.ts";
+import { c, flatCab, nose, NO_NOSE } from "./seriesHelpers.ts";
+import type { SeriesCabFace } from "./seriesCab.ts";
 
 const lv = (title: string, number: string, ...list: Array<[number, string]>): ShinkansenLivery => {
   const palette: ShinkansenLivery["palette"] = { roofG: c("#9aa0a5", 0.6), skirtG: c("#2a2c2f", 0.75), cabMask: c("#1d1f22", 0.3) };
@@ -51,13 +52,36 @@ const flatEmu = (o: { number: string; title: string; colours: Array<[number, str
 export const MUMBAI_EMU = flatEmu({ number: "SIEMENS 001", title: "Mumbai suburban", colours: [[1.85, "#6a2c8e"], [2.95, "#e8dcc0"], [9, "#6a2c8e"]], second: ["Western Railway", [[1.85, "#b5232b"], [2.95, "#e8dcc0"], [9, "#b5232b"]]], doorCount: 3, doorW: 1.25, power: 920, maxspeed: 100, cars: [3, 6] });
 export const MEMU = flatEmu({ number: "MEMU 001", title: "MEMU maroon", colours: [[1.85, "#6b1d24"], [2.95, "#e8dcc0"], [9, "#6b1d24"]], second: ["MEMU blue", [[1.85, "#1d3f80"], [2.95, "#e8dcc0"], [9, "#1d3f80"]]], doorCount: 2, doorW: 1.0, power: 920, maxspeed: 110, cars: [4, 8] });
 
+/**
+ * The RS1's cab: a flat face raked back over the windscreens, its corners rounded; the black
+ * glazed field across its top with the two windscreens and the emergency door's light in the
+ * middle, the door's outline below it, the red stripe carried across, the lamps low at the
+ * corners. No free photograph of the front was found: see assets/dmrc-rs1/SOURCES.md.
+ */
+const RS1_CAB: SeriesCabFace = {
+  dJoin: 0.8, dSide: 0.7, first: 2.6, reach: 0.3, roofFrom: 3.62,
+  profile: [[0.75, 0.06], [0.9, 0.02], [1.2, 0], [2.0, 0], [3.4, 0.22], [3.65, 0.38], [3.85, 0.6], [3.9, 0.8]],
+  corner: [[0.75, 0.3], [3.4, 0.3], [3.85, 0.12], [3.9, 0.05]], bulge: 0.04, cols: [6, 3, 1, 1],
+  rows: [0.75, 0.9, 1.2, 1.55, 1.67, 2.0, 2.6, 3.4, 3.65, 3.85, 3.9],
+  masks: [{ lat: [-1.36, 1.36], y: [1.95, 3.45], r: 0.1, mat: "cabMask" }],
+  panes: [{ lat: [-1.28, -0.44], y: [2.08, 3.28], r: 0.06 }, { lat: [-0.32, 0.32], y: [2.08, 3.12], r: 0.04 }, { lat: [0.44, 1.28], y: [2.08, 3.28], r: 0.06 }],
+  // the emergency door's outline under the glazed field
+  decals: [
+    { mat: "rubber", pts: [[-0.38, 1.05], [-0.35, 1.05], [-0.35, 1.95], [-0.38, 1.95]] },
+    { mat: "rubber", pts: [[0.35, 1.05], [0.38, 1.05], [0.38, 1.95], [0.35, 1.95]] },
+    { mat: "rubber", pts: [[-0.38, 1.02], [0.38, 1.02], [0.38, 1.05], [-0.38, 1.05]] },
+  ],
+  lamps: [[-1.15, 1.35, 0.09, "lampHead"], [1.15, 1.35, 0.09, "lampHead"], [-0.92, 1.35, 0.05, "lampRed"], [0.92, 1.35, 0.05, "lampRed"]],
+  wipers: [[[-0.8, 2.12], [-1.05, 2.9]], [[0.8, 2.12], [1.05, 2.9]]],
+};
+
 export const DELHI_METRO: ShinkansenSeries = {
   endLength: 21.6, midLength: 21.3, W: 1.6, Y: 1.25, S: 3.25, C: 3.9, lean: 0.97, B: 0.75, A: 0.9,
-  nose: nose(1.2, 0.5, 2.3, [[0, 2.9], [0.4, 3.45], [1.2, 3.9]], [[0, 2.8], [0.5, 3.25]], [[0, 1.25], [0.6, 1.25]], [[0, 1.0], [0.4, 0.9]], [[0, 0.9], [0.3, 0.75]]),
-  windscreen: [0.1, 1.0, 0.07, 1.25], lamps: [0.05, 1.45],
+  nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: RS1_CAB,
   windows: [[1.75, 2.75]], windowW: 1.2, pitch: 1.45, door: [1.1, 3.05, 1.75, 2.7], doorW: 1.4, doorCount: 4,
   bogieCentres: 14.7, wheelR: 0.43, wheelbase: 2.2, cars: [4, 6, 8],
-  liveries: { dmrc: lv("DMRC", "TS 01", [1.2, "#3a3d40"], [1.4, "#c8102e"], [9, "#c9cccd"]) },
+  // read from photo-delhi-metro-train-red-line-...jpg: the stainless body, the red stripe under the windows
+  liveries: { dmrc: lv("DMRC", "TS 01", [1.55, "#c3c6c8"], [1.67, "#d8434a"], [9, "#c3c6c8"]) },
   weight: { end: 42, middle: 40 }, power: 500, maxspeed: 80,
 };
 

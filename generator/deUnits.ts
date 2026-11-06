@@ -10,7 +10,7 @@ import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign 
 import { ice1, ice1Lod } from "./ice1.ts";
 import { EMU_CATALOG, enumParam } from "./emuParts.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenSeries } from "./shinkansen.ts";
-import { c, flatCab, nose, striped, velaro } from "./seriesHelpers.ts";
+import { c, flatCab, nose, NO_NOSE, striped, velaro } from "./seriesHelpers.ts";
 
 const ICE_WHITE = "#eceeee";
 const TRAFFIC_RED = "#ec0016";
@@ -96,9 +96,17 @@ export const BR650: ShinkansenSeries = {
 
 export const VT98: ShinkansenSeries = {
   endLength: 13.95, midLength: 13.95, W: 1.5, Y: 1.4, S: 3.0, C: 3.28, lean: 0.97, B: 1.0, A: 1.15,
-  // the railbus's rounded ends, the drivers' windows high under the roof
-  nose: nose(0.9, 0.55, 2.2, [[0, 2.7], [0.3, 3.05], [0.9, 3.28]], [[0, 2.6], [0.3, 2.9], [0.9, 3.0]], [[0, 1.4], [0.5, 1.4]], [[0, 1.25], [0.4, 1.15]], [[0, 1.15], [0.3, 1.0]]),
-  windscreen: [0.05, 0.75, 0.07, 1.25], lamps: [0.1, 1.45],
+  // the railbus's upright ends, bowed in plan with wide rounded corners: the two big front
+  // windows wrapping round them up to the roof dome, the lamps low at the corners, the roof lamp
+  nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0],
+  cabFace: {
+    dJoin: 0.5, dSide: 0.45, profile: [[1.0, 0.02], [1.15, 0], [2.9, 0], [3.05, 0.07], [3.18, 0.2], [3.28, 0.5]],
+    corner: [[1.0, 0.5], [2.9, 0.5], [3.18, 0.3], [3.28, 0.1]], bulge: 0.1, rows: [1.0, 1.15, 1.4, 1.9, 2.0, 2.45, 2.9, 3.05, 3.18, 3.28], roofFrom: 3.0,
+    masks: [{ lat: [-1.32, -0.02], y: [1.95, 2.9], r: 0.1, mat: "rubber" }, { lat: [0.02, 1.32], y: [1.95, 2.9], r: 0.1, mat: "rubber" }],
+    panes: [{ lat: [-1.28, -0.07], y: [1.99, 2.86], r: 0.08 }, { lat: [0.07, 1.28], y: [1.99, 2.86], r: 0.08 }],
+    lamps: [[-1.05, 1.55, 0.1, "lampHead"], [1.05, 1.55, 0.1, "lampHead"]], roofLamp: [0, 3.12, 0.08],
+    wipers: [[[-0.7, 2.04], [-0.35, 2.7]], [[0.55, 2.04], [0.9, 2.7]]], first: 2.4,
+  },
   windows: [[1.95, 2.75]], windowW: 1.05, pitch: 1.2, door: [1.2, 2.85, 1.95, 2.6], doorW: 0.9,
   bogieCentres: 6.0, wheelR: 0.45, wheelbase: 0, traction: "diesel", single: true, endCoupler: "buffers",
   liveries: {

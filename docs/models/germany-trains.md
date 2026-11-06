@@ -19,7 +19,7 @@ design is filed under Germany (`generator/countryTable.ts`).
 | `proc-vehicle-db-423` | DB 423 | series | `unit`, `cars` 4, `livery` | four cars, 67.4 m, the end cars' pantographs; 140 km/h |
 | `proc-vehicle-db-642` | DB 642 Desiro | series, diesel | `unit` (`endCar`, `train`), `cars` 2, `livery` (`dbRegio`, `erzgebirgsbahn`) | two cars, 41.7 m; 120 km/h |
 | `proc-vehicle-db-650` | RegioShuttle RS1 | series, diesel, single | `livery` (`dbRegio`, `odeg`) | 25.5 m, flat cabs; 120 km/h |
-| `proc-vehicle-db-vt98` | Uerdingen railbus VT 98 | series, diesel, single | `livery` (`dbRed`, `orientRed`) | 13.95 m over buffers, two axles 6 m apart; 90 km/h |
+| `proc-vehicle-db-vt98` | Uerdingen railbus VT 98 | series, diesel, single, cab face | `livery` (`dbRed`, `orientRed`) | 13.95 m over buffers, two axles 6 m apart; 90 km/h |
 | `proc-vehicle-drg-svt877` | Fliegender Hamburger | series, diesel | `unit`, `cars` 2, `livery` (`drg`, `dbVt04`) | two cars, 41.9 m; 160 km/h |
 | `proc-vehicle-db-103` | DB 103 | box locomotive, streamlined | `livery` (`tee`, `orientRed`, `trafficRed`) | Co'Co', 20.2 m, 7,440 kW, 200 km/h |
 | `proc-vehicle-db-101` | DB 101 | box locomotive, raked | `livery` (`trafficRed`, `intercity`) | Bo'Bo', 19.1 m, 6,400 kW, 220 km/h |
@@ -42,6 +42,12 @@ articles on each class, cited there. Seats and introduction years are in
 - **ICE 3 and Velaro.** The ICE 3 is the shared Velaro body (`velaro()` in
   `seriesHelpers.ts`), which the CRH3C and the AVE S-103 reuse; the differences
   between the classes (BR 403 / 406 / 407) are only the livery's title.
+- **VT 98.** Both ends are a cab face (the series kit's `cabFace`, after the photographs in
+  `assets/db-vt98/`): upright and bowed in plan with wide rounded corners, the two big front
+  windows in their rubber wrapping round the corners up to the roof dome, the round lamps low at
+  the corners, the roof lamp and the wipers; the buffers stand on the beam under it. The front's
+  gangway door is not drawn (its window is one of the two front windows). Each axle hangs in horn
+  guides reaching up into the body on leaf springs.
 - **Articulation.** The 642's and the SVT 877's two cars share a Jacobs bogie in
   reality; the series kit gives each car its own two bogies.
 - **ICE 2.** The power car and the coach are the ICE 1's (`ice1.ts`, its pixel-map

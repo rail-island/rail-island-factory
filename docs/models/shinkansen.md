@@ -1,7 +1,7 @@
 # The later Shinkansen series
 
 **Covers** - the seven later Shinkansen designs (`proc-vehicle-shinkansen-n700s`, `-e5`, `-500`, `-700`, `-e6`, `-100`, `-e4`): the series specs, their cars and trains, liveries, the gauge, deviations and tests.
-**Code** - `generator/seriesHelpers.ts`, `generator/shinkansen.ts` (`SHINKANSEN_DESIGNS`, `SHINKANSEN_SERIES`, `shinkansenTrain`), `generator/usTransit.ts` (`drawCar`), `generator/carbodyKit.ts`, `test/shinkansen.test.ts`, `assets/shinkansen-*/`
+**Code** - `generator/seriesCab.ts`, `generator/seriesHelpers.ts`, `generator/shinkansen.ts` (`SHINKANSEN_DESIGNS`, `SHINKANSEN_SERIES`, `shinkansenTrain`), `generator/usTransit.ts` (`drawCar`), `generator/carbodyKit.ts`, `test/shinkansen.test.ts`, `assets/shinkansen-*/`
 **See also** - [shinkansen-0.md](shinkansen-0.md), [us-transit.md](us-transit.md), [us-carbodies.md](us-carbodies.md), [loading-gauge.md](loading-gauge.md)
 
 ## The designs
@@ -88,6 +88,19 @@ combinations hashed before and after):
 - `noseCab` - an upright cab on the nose's flat front face: its panes and lamps drawn there
   as a flat cab's are, in place of the crown's windscreen and headlights, and a gangway
   door's outline (the Class 378);
+- `cabFace` - the end drawn as one painted cab surface (`seriesCab.ts` on `cabNose.ts`) in place
+  of the lofted nose: its centre-line profile (upright, raked or domed), the plan's corner radius
+  and bow, the face's bands (the livery's `front`, else its sides), black surrounds and glass
+  panes as paint over them, lamps, a gangway door's frame and leaf standing off the face, the
+  number, the wipers and a roof lamp; painted polygon `fields` (each refines the face's grid)
+  and cheaper `decals` laid on the surface; `wrap` carries the face's bands round onto the cab
+  sides; `cols` and `tolerance` set the grid's resolution; the body ends square `dJoin` behind the tip and the face's
+  slices meet the body's own section there (both ends of a `single` railcar). The distant model
+  takes its profile, plan, bands and the panes as glass (the VT 98 and the other short-nosed
+  regional and metro units, [germany-trains.md](germany-trains.md));
+- `lodRoof` - a block on the end car's roof in the distant model (the X 3800's turret);
+- `wheelbase: 0` cars hang each axle in horn guides reaching up into the body over the skirt's
+  cut, on leaf springs.
 - a livery's `doors` and `front` - the door leaves' own bands, and the cab front's bands over
   the nose (the Class 378's orange doors and yellow front); the front's band heights become
   paint edges of the car's slices.
