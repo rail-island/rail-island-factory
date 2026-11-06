@@ -464,8 +464,8 @@ export function buildF40(l: CarbodyLivery): MeshBuilder {
   m.scope("nose", () => {
     m.scope("windscreen", () => {
       for (const s of [1, -1]) {
-        crownPane(m, b, X, s, "rubber", [F40_CAB + 0.12, 1.96], [0.08, 1.4], 0.006);
-        crownPane(m, b, X, s, "cabGlass", [F40_CAB + 0.16, 1.92], [0.13, 1.35], 0.012);
+        crownPane(m, b, X, s, "rubber", [F40_CAB + 0.06, 2.12], [0.08, 1.4], 0.006);
+        crownPane(m, b, X, s, "cabGlass", [F40_CAB + 0.1, 2.08], [0.13, 1.35], 0.012);
       }
     });
     m.scope("headlights", () => {
@@ -474,7 +474,7 @@ export function buildF40(l: CarbodyLivery): MeshBuilder {
     });
     m.scope("number boards", () => {
       // the boards and the red marker lamps over the windscreen, on the cab front's head
-      const d = 2.08, y = 4.17;
+      const d = 2.3, y = 4.43;
       for (const sz of [-1, 1]) {
         block(m, "amBlack", X(d) - 0.12, X(d) + 0.1, y - 0.12, y + 0.12, ...side(sz, 0.22, 0.75));
         block(m, "numberBoard", X(d) + 0.1, X(d) + 0.11, y - 0.08, y + 0.08, ...side(sz, 0.26, 0.71));
