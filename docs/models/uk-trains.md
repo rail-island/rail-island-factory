@@ -61,8 +61,13 @@ The catalog had no British train before; the archived webapp Eurostar is now the
   (`noseGrille`). In the `swallow` livery the nose is yellow up to the windscreen; in
   `blueGrey`, the original InterCity 125 scheme, the power car is painted apart from its
   blue and grey Mk3s (the livery's `endBands`, `front`, `frontD` and `frontRoof`): the
-  whole nose and the cab roof yellow back to 4.0 m, the yellow carried along the lower
-  side under rail blue. The IC225's Class 91 is drawn as a locomotive: its
+  whole nose yellow to 3.55 m behind the tip, the yellow carried back over the cab roof to
+  a slanted edge (the livery's `capSlope`: from 3.55 m at the yellow line up to 4.7 m at
+  the shoulder and 5.3 m on the crown, so the blue comes forward beside the windscreen),
+  the yellow along the lower side under rail blue, and on the blue, behind the cab door,
+  the white British Rail double arrow and "Inter-City 125" (the livery's `endLettering`,
+  in the stroke font). The small intake grille once drawn behind the cab door is gone:
+  the photographs show none there, the emblem stands in its place. The IC225's Class 91 is drawn as a locomotive: its
   short wedge No. 1 end with the yellow panel, lamps and grille on the front, buffers,
   bogies 10.5 m apart under the middle of the body, plain sides with the cab doors and
   four small windows (photographs in `assets/br-ic225/`). The driving van trailer is that

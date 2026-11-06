@@ -13,7 +13,7 @@ import { paint } from "./dieselParts.ts";
 import { block } from "./vehicleParts.ts";
 import { exhaust } from "./dieselParts.ts";
 import type { Pt } from "./sliceLoft.ts";
-import { crownDisc, crownPane, sidePanel, surfaceDisc, type SliceBody } from "./sliceBody.ts";
+import { crownDisc, crownPane, sideDecal, sidePanel, surfaceDisc, type SliceBody } from "./sliceBody.ts";
 import { decalX } from "./usHoodKit.ts";
 import { CARBODY_PALETTE, faceLamps, type NoseShape } from "./carbodyKit.ts";
 import { INTERIOR_PALETTE } from "./interior.ts";
@@ -52,6 +52,10 @@ export interface ShinkansenLivery {
   frontD?: number;
   /** The front's roof paint (default the livery's roof). */
   frontRoof?: string;
+  /** The front's colour carried back over the cab roof along a slanted edge, drawn over the bands in `frontRoof` paint: from d[0] (the front's `frontD`) at height y up to d[1] at the shoulder and d[2] at the crown. */
+  capSlope?: { y: number; d: readonly [number, number, number] };
+  /** The end car's own markings on both sides (d from the body's front, foot, height): a power car's emblem and name. */
+  endLettering?: ReadonlyArray<{ text: string; d: number; y: number; h: number; mat: string }>;
   /** The end car's own side bands (default the livery's): a power car painted apart from its coaches. */
   endBands?: readonly Band[];
 }
@@ -234,9 +238,10 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
     coupler: s.endCoupler === "buffers" ? "buffers" : "centre", couplerY: couplerOf(s),
     gap: [end ? frontGap(s, true) : GAP, s.single ? frontGap(s, true) : GAP],
     ...(end ? { cabin: [first - 1.2, s.single ? L - first + 1.2 : L] as const } : {}),
-    lettering: [s.numberAt ? { text: number, d: L / 2 + s.numberAt[0], y: s.numberAt[1], h: s.numberAt[2], mat: "lettering" } : { text: number, d: L - 3.0, y: s.Y + 0.1, h: 0.1, mat: "lettering" }],
+    lettering: [s.numberAt ? { text: number, d: L / 2 + s.numberAt[0], y: s.numberAt[1], h: s.numberAt[2], mat: "lettering" } : { text: number, d: L - 3.0, y: s.Y + 0.1, h: 0.1, mat: "lettering" }, ...(end ? (l.endLettering ?? []) : [])],
     extras: (m, b, X) => {
       if (end && !s.flatCab) noseFittings(m, s, b, X);
+      if (end && l.capSlope && l.frontRoof) m.scope("cab roof", () => capSlope(m, b, X, l.capSlope!, l.frontRoof!));
       if (end && s.endGrilles) m.scope("grilles", () => {
         for (const sd of [1, -1]) for (const [d0, d1, y0, y1, n] of s.endGrilles!) {
           sidePanel(m, b, X, sd, "black", d0, d1, y0, y1, 0.006, 0.03);
@@ -259,6 +264,30 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
       else m.scope("underfloor", () => block(m, "under", X(tr[1] - 2.6), X(tr[0] + 2.6), s.B - 0.35, s.B, -s.W * 0.8, s.W * 0.8));
     },
   };
+}
+
+/** The front's colour over the cab roof behind `frontD`, up to a slanted edge: strips on both sides and across the roof's arc. */
+function capSlope(m: MeshBuilder, b: SliceBody, X: (d: number) => number, c: NonNullable<ShinkansenLivery["capSlope"]>, mat: string): void {
+  const [d0, dS, dC] = c.d;
+  const step = 0.2;
+  const n = Math.max(1, Math.ceil((dS - d0) / step));
+  // the side: columns from the slanted edge up to the shoulder
+  const edge = (d: number) => c.y + ((d - d0) / (dS - d0)) * (b.S(d) - c.y);
+  const tris: Pt[] = [];
+  for (let i = 0; i < n; i++) {
+    const [a, e] = [d0 + ((dS - d0) * i) / n, d0 + ((dS - d0) * (i + 1)) / n];
+    const [ya, ye, ta, te] = [edge(a), edge(e), b.S(a), b.S(e)];
+    tris.push([a, ya], [e, ye], [e, te], [a, ya], [e, te], [a, ta]);
+  }
+  for (const sd of [1, -1]) sideDecal(m, b, X, sd, mat, tris, 0.004);
+  // the arc: narrow strips in half width, each reaching further back toward the crown
+  // (fine enough that the edge reads as one slanted line)
+  const zS = b.w(dS) * b.lean, k = 16;
+  for (const sd of [1, -1])
+    for (let i = 0; i < k; i++) {
+      const [zHi, zLo] = [(zS * (k - i)) / k, (zS * (k - i - 1)) / k];
+      crownPane(m, b, X, sd, mat, [d0, dS + ((dC - dS) * (i + 0.5)) / k], [zLo, zHi + (i === 0 ? 0.05 : 0)], 0.004);
+    }
 }
 
 function noseFittings(m: MeshBuilder, s: ShinkansenSeries, b: SliceBody, X: (d: number) => number): void {

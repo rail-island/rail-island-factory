@@ -21,10 +21,16 @@ const lv = (title: string, number: string, ...list: Array<[number, string]>): Sh
   return { title, number, palette, bands, roof: "roofG", skirt: "skirtG" };
 };
 
-/** A power car painted apart from its coaches: the yellow nose and cab roof back to d, the yellow along the side up to y under the coaches' lowest colour. */
-const withNose = (l: ShinkansenLivery, yellow: string, y: number, d: number): ShinkansenLivery => ({
-  ...l, palette: { ...l.palette, nose: c(yellow) },
-  endBands: [[0, y, "nose"], [y, 9, "b0"]], front: [[0, 9, "nose"]], frontD: d, frontRoof: "nose",
+/**
+ * A power car painted apart from its coaches: the yellow nose, carried back over the
+ * cab roof to a slanted edge (from d[0] at the yellow's top line y to d[1] at the
+ * shoulder and d[2] at the crown), the yellow along the side up to y under the
+ * coaches' lowest colour, and the white double arrow and name on the side.
+ */
+const withNose = (l: ShinkansenLivery, yellow: string, y: number, d: readonly [number, number, number], name: string): ShinkansenLivery => ({
+  ...l, palette: { ...l.palette, nose: c(yellow), markWhite: c("#f4f4f1", 0.5) },
+  endBands: [[0, y, "nose"], [y, 9, "b0"]], front: [[0, 9, "nose"]], frontD: d[0], frontRoof: "nose", capSlope: { y, d },
+  endLettering: [{ text: "\u21c4", d: 7.2, y: 2.42, h: 0.58, mat: "markWhite" }, { text: name, d: 9.75, y: 2.55, h: 0.3, mat: "markWhite" }],
 });
 
 const MK3 = { midLength: 23.0, W: 1.37, Y: 1.3, S: 3.1, C: 3.88, lean: 0.95, B: 0.85, A: 1.05, windows: [[1.85, 2.65]] as Array<readonly [number, number]>, windowW: 1.6, pitch: 2.1, door: [1.15, 2.95, 1.85, 2.55] as const, doorW: 0.8, bogieCentres: 16.0, wheelR: 0.46, wheelbase: 2.6 };
@@ -45,13 +51,13 @@ export const HST: ShinkansenSeries = {
   // door and window at the inner end, the yellow nose below the windscreen
   endBogies: [3.75, 14.04],
   endSides: { windows: [[4.65, 5.15], [15.3, 15.8]], doors: [[5.3, 5.95], [16.2, 16.85]] },
-  endGrilles: [[12.6, 14.4, 2.05, 3.0, 14], [6.6, 7.4, 2.25, 2.85, 8]],
+  endGrilles: [[12.6, 14.4, 2.05, 3.0, 14]],
   cabPanel: { d: 2.35, y: [0.45, 2.6], colour: "#f2c400" },
   liveries: {
     swallow: lv("InterCity", "43 096", [1.0, "#3a3d40"], [1.75, "#f1f1ee"], [1.83, "#c8102e"], [1.88, "#f1f1ee"], [9, "#3a3d40"]),
     // the original InterCity 125 power car: yellow nose and cab roof, the yellow
     // carried along the lower side under rail blue; the Mk3s blue and grey
-    blueGrey: withNose(lv("BR blue, grey", "43 002", [1.85, "#1d3f80"], [9, "#c9cccd"]), "#f2c400", 2.3, 4.0),
+    blueGrey: withNose(lv("BR blue, grey", "43 002", [1.85, "#1d3f80"], [9, "#c9cccd"]), "#f2c400", 2.3, [3.55, 4.7, 5.3], "Inter-City 125"),
   },
   weight: { end: 70, middle: 34 }, power: 1680, maxspeed: 200,
 };

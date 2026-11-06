@@ -66,6 +66,9 @@ combinations hashed before and after):
 - a livery's `endBands` - the end car's own side bands (a power car painted apart from its
   coaches); `frontD` and `frontRoof` - how far behind the tip the livery's `front` bands
   reach and the roof paint there (the original InterCity 125's yellow cab roof);
+  `capSlope` - that colour carried on back over the cab roof to a slanted edge, drawn over
+  the bands (columns on the sides, narrow strips across the arc); `endLettering` - the end
+  car's own markings on both sides (the InterCity 125's double arrow and name);
 - `endCoupler: "buffers"` - buffers and a screw coupling on a beam at the cab ends (the car
   builder's `buffers` coupler), the coupling plane 0.65 m out;
 - `wheelbase: 0` - a single axle at each truck position (a two-axle railbus, a Talgo car);
