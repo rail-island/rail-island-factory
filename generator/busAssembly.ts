@@ -13,6 +13,7 @@ import { drawJoint, type JointRig, type SectionRig, type VehicleRig } from "./ri
 import { drawShell, halfWidth, type Arch, type Paint } from "./busBody.ts";
 import { AXLE_FACTOR, axleBeam, busWheel, onSide, sideSlab, type BusFrame } from "./busKit.ts";
 import { block, steeredWheels } from "./vehicleParts.ts";
+import { BUS_DETAIL_PALETTE, detailedBusWheel, drawBusDetail, drawRouteDisplays, type DetailBus } from "./busDetail.ts";
 import { busLod, emptyBusLodNotes, type BusLodNotes } from "./lodRoad.ts";
 import { openable, plugMove } from "./doors.ts";
 import { CABIN_INSET, drawCabin, INTERIOR_PALETTE, type CabinDoor } from "./interior.ts";
@@ -60,6 +61,14 @@ export interface BusSpec {
   doorways?: Doorway[];
   /** The side windows' glass (`s` +1 right), seen from inside on the cabin's walls (BusDraft.pane). */
   windows?: Doorway[];
+  /**
+   * The fine detail (busDetail.ts): lathe-turned wheels, arch trims, mudflaps, side
+   * markers and route displays. The confirmed buses (buses.ts) carry it; the drafts
+   * on the same builder keep the plain wheels.
+   */
+  detail?: boolean;
+  /** The end glass (`end` +1 the nose), where the rear route display goes (BusDraft.glaze). */
+  endGlass?: Array<{ end: number; z: [number, number]; y: [number, number] }>;
 }
 
 /** A doorway through side `s` of the shell: x0..x1 along it, sill y0 to head y1. */
@@ -155,7 +164,7 @@ export function busSections(spec: Pick<BusSpec, "bodies" | "hingeY">): SectionRi
  * the fittings' closures, written before it existed, can draw into it.
  */
 export function assembleBus(spec: BusSpec, bind?: (m: MeshBuilder) => void): MeshBuilder {
-  const m = new MeshBuilder({ ...INTERIOR_PALETTE, ...spec.palette });
+  const m = new MeshBuilder({ ...INTERIOR_PALETTE, ...(spec.detail ? BUS_DETAIL_PALETTE : {}), ...spec.palette });
   bind?.(m);
   const articulated = spec.bodies.length > 1;
   const steer = spec.axles.find((a) => a.steer);
@@ -164,6 +173,16 @@ export function assembleBus(spec: BusSpec, bind?: (m: MeshBuilder) => void): Mes
   const r = spec.wheelRadius;
   const ay = r * AXLE_FACTOR;
   let wheelNodes: [string, string] = ["", ""];
+  const wheel = (x: number, z0: number, z1: number, face: number | null): void =>
+    spec.detail ? detailedBusWheel(m, x, r, z0, z1, face) : busWheel(m, x, r, z0, z1, face);
+  const detail: DetailBus = {
+    frame: { section: spec.section, side: spec.side },
+    arches: spec.arches,
+    rear: spec.axles.filter((a) => !a.steer).map((a) => ({ x: a.x, inner: (a.dual ? spec.tyres.inner : spec.tyres.single)[0] })),
+    doorways: spec.doorways ?? [],
+    glass: (spec.windows ?? []).map((w) => ({ s: w.s, x: [w.x0, w.x1], y: [w.y0, w.y1] })),
+    ends: spec.endGlass ?? [],
+  };
 
   spec.bodies.forEach(([lo, hi], i) => {
     const node = sections[i]!.node;
@@ -184,16 +203,20 @@ export function assembleBus(spec: BusSpec, bind?: (m: MeshBuilder) => void): Mes
           if (a.steer) return; // its wheels are parts of their own
           for (const s of [-1, 1]) m.scope(s > 0 ? "right wheels" : "left wheels", () => {
             if (a.dual) {
-              busWheel(m, a.x, r, ...onSide(s, ...spec.tyres.inner), null);
-              busWheel(m, a.x, r, ...onSide(s, ...spec.tyres.outer), s);
-            } else busWheel(m, a.x, r, ...onSide(s, ...spec.tyres.single), s);
+              wheel(a.x, ...onSide(s, ...spec.tyres.inner), null);
+              wheel(a.x, ...onSide(s, ...spec.tyres.outer), s);
+            } else wheel(a.x, ...onSide(s, ...spec.tyres.single), s);
           });
         });
       });
       drawFittings(m, spec.fittings, lo, hi);
+      if (spec.detail) {
+        drawBusDetail(m, detail, lo, hi);
+        drawRouteDisplays(m, detail, lo, hi);
+      }
     });
     if (i === 0) {
-      wheelNodes = steeredWheels(m, node, steer.x, ay, (s, z0, z1) => busWheel(m, steer.x, r, z0, z1, s), spec.tyres.single);
+      wheelNodes = steeredWheels(m, node, steer.x, ay, (s, z0, z1) => wheel(steer.x, z0, z1, s), spec.tyres.single);
     }
   });
 
@@ -386,7 +409,7 @@ export class BusDraft {
   /** Builds the bus with these fittings. */
   build(spec: Omit<BusSpec, "fittings">): MeshBuilder {
     const windows = this.lod.glass.map((g) => ({ s: g.s, x0: g.x[0], x1: g.x[1], y0: g.y[0], y1: g.y[1] }));
-    return assembleBus({ ...spec, fittings: this.fittings, doorways: this.doorways, windows }, (b) => (this.builder = b));
+    return assembleBus({ ...spec, fittings: this.fittings, doorways: this.doorways, windows, endGlass: this.lod.ends }, (b) => (this.builder = b));
   }
 
   /** Builds the bus's distant model (lodRoad.ts busLod) from the same description and the notes. */

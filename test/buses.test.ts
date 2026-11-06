@@ -137,6 +137,21 @@ describe("the buses", () => {
       expect(s.triangles).toBeLessThanOrEqual(10_000);
     }
   });
+
+  // the detail (busDetail.ts): ten nuts on every wheel seen from outside, a trim round
+  // the arches, mudflaps behind the rear wheels, side markers, the route displays
+  it.each(BUSES)("%s carries the wheel, arch and side detail", (id) => {
+    const d = BUS_DESIGNS.find((x) => x.id === id)!;
+    const tris = trianglesOf(d.build());
+    // a nut is a hexagonal prism, 20 triangles; a hub cap three rings of 16 quads and a fan
+    const nuts = tris.filter((t) => t.material === "nut").length / 20;
+    const wheels = tris.filter((t) => t.material === "hub").length / (3 * 32 + 16);
+    expect(wheels).toBeGreaterThanOrEqual(4);
+    expect(nuts).toBe(wheels * 10);
+    for (const scope of ["arch-trims", "mudflaps", "side-markers", "side-route-display", "rear-route-display"]) {
+      expect(tris.some((t) => t.leaf.split("/").some((p) => p.startsWith(scope))), scope).toBe(true);
+    }
+  });
 });
 
 describe("the articulated buses", () => {

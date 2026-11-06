@@ -108,6 +108,8 @@ const BELT = 1.5;
 const EAVE = 2.9;
 const ROOF = 3.1; // the XML's crown; the hatches bring it to the quoted 3.165 m
 const WHEEL_R = 0.52;
+/** The roof's edge, rounded from the eave over to the crown's slope (the XML's single chamfer, smoothed). */
+const ROOF_EDGE: Array<[number, number]> = [[HW - 0.05, EAVE], [HW - 0.07, 2.955], [HW - 0.12, 2.995], [HW - 0.2, 3.025]];
 
 /** The source-to-factory mapping of one family. */
 class Karosa {
@@ -142,7 +144,7 @@ function karosaDraft(variant: KarosaVariant, long: boolean): { draft: BusDraft; 
   const series = variant.series;
 
   const section: Array<[number, number]> = [
-    [-HW, BOTTOM], [HW, BOTTOM], [HW, BELT], [HW - 0.05, EAVE], [HW - 0.15, 3.0], [0, ROOF], [-(HW - 0.15), 3.0], [-(HW - 0.05), EAVE], [-HW, BELT],
+    [-HW, BOTTOM], [HW, BOTTOM], [HW, BELT], ...ROOF_EDGE, [0, ROOF], ...ROOF_EDGE.map(([z, y]): [number, number] => [-z, y]).reverse(), [-HW, BELT],
   ];
   // side elevation: an upright lower nose, the windscreen raked back to the roof; the
   // tail upright to the rear window, then raked in
@@ -317,8 +319,14 @@ function karosaDraft(variant: KarosaVariant, long: boolean): { draft: BusDraft; 
     if (u1 > K.f.tail - 0.4) continue;
     if (bodyRanges.every(([b0, b1]) => u0 < b0 + 0.2 || u1 > b1 - 0.2)) continue;
     draft.roofItem(x(u1), x(u0), -0.4, 0.4, ROOF - 0.04, ROOF + h, "roofHatch");
-    fit("roof hatches", x((u0 + u1) / 2), () => block(m(), "roofHatch", x(u1), x(u0), ROOF - 0.04, ROOF + h, -0.4, 0.4));
+    fit("roof hatches", x((u0 + u1) / 2), () => {
+      // a frame on the roof, the lid raised on it
+      block(m(), "frame", x(u1) - 0.03, x(u0) + 0.03, ROOF - 0.05, ROOF + 0.025, -0.43, 0.43);
+      block(m(), "roofHatch", x(u1), x(u0), ROOF - 0.04, ROOF + h, -0.4, 0.4);
+    });
   }
+  // the rain gutter along each side, between the windows' surrounds and the eave
+  for (const s of [-1, 1]) fit(s > 0 ? "right gutter" : "left gutter", (nose + tail) / 2, () => sideSlab(m(), "frame", frame, s, x(K.f.tail - 0.25), x(K.f.nose + 0.25), 2.835, 2.86, 0.012));
   fit("mirrors", nose, () => {
     for (const s of [-1, 1]) mirror(m(), frame, s, nose, s > 0 ? 2.8 : 2.55, { h: 0.42, w: 0.2, drop: 0.06 });
   });
@@ -341,6 +349,7 @@ function karosaDraft(variant: KarosaVariant, long: boolean): { draft: BusDraft; 
     tyres: { single: [0.94, 1.2], inner: [0.62, 0.9], outer: [0.93, 1.21] },
     bellows: { profile: [[-1.18, 0.42], [1.18, 0.42], [1.18, 2.7], [1.05, 2.92], [0, 2.98], [-1.05, 2.92], [-1.18, 2.7]], folds: 9, depth: 0.05 },
     hingeY: 0.6,
+    detail: true,
     maxSteerDeg: 50,
     maxBendDeg: 50,
   } };

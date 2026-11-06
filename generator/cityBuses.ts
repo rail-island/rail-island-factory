@@ -65,6 +65,8 @@ export interface CitySpec {
   maxBendDeg?: number;
   /** The nose, the tail and the roof, drawn by the design. */
   details: (c: CityCtx) => void;
+  /** The fine detail (busAssembly.ts BusSpec.detail) and a roof edge rounded in five pieces, not three. */
+  detail?: boolean;
 }
 
 /** Builds one city bus from its description. */
@@ -87,7 +89,7 @@ function cityDraft(sp: CitySpec): { d: BusDraft; spec: Omit<BusSpec, "fittings">
   const tail = x(sp.tail);
   const { hw, bottom } = sp;
   // the roof's edge and the plan's corners rounded in three straight pieces
-  const ROUND = 3;
+  const ROUND = sp.detail ? 5 : 3;
   const edge = (s: number): Array<[number, number]> => quarter(s * (hw - sp.tumble - sp.corner), sp.eave, s * sp.corner, sp.roof - 0.03 - sp.eave, ROUND);
   const right = edge(1);
   const left = edge(-1).reverse();
@@ -131,6 +133,7 @@ function cityDraft(sp: CitySpec): { d: BusDraft; spec: Omit<BusSpec, "fittings">
     tyres: sp.tyres,
     ...(sp.bellows ? { bellows: sp.bellows } : {}),
     hingeY: 0.6,
+    ...(sp.detail ? { detail: true } : {}),
     maxSteerDeg: sp.maxSteerDeg,
     ...(sp.maxBendDeg ? { maxBendDeg: sp.maxBendDeg } : {}),
   } };
@@ -267,6 +270,7 @@ function karosaRenaultSpec(long: boolean): CitySpec {
     tyres: { single: [0.95, 1.21], inner: [0.64, 0.9], outer: [0.93, 1.19] },
     bellows: { profile: [[-1.18, 0.4], [1.18, 0.4], [1.18, 2.62], [1.05, 2.84], [0, 2.88], [-1.05, 2.84], [-1.18, 2.62]], folds: 9, depth: 0.05 },
     maxSteerDeg: 50,
+    detail: true,
     maxBendDeg: 50,
     details: (c) => {
       const { x } = c;
@@ -369,6 +373,7 @@ function citaroSpec(livery: "teal" | "blue"): CitySpec {
     arch: { half: 0.6, side: 0.6, top: 1.04 },
     tyres: { single: [0.96, 1.22], inner: [0.66, 0.92], outer: [0.95, 1.21] },
     maxSteerDeg: 50,
+    detail: true,
     details: (c) => {
       const { x } = c;
       const ws = windscreen(c, 1.12, 2.42, 1.14, null);
@@ -452,6 +457,7 @@ function o345Spec(): CitySpec {
     tyres: { single: [0.95, 1.21], inner: [0.62, 0.9], outer: [0.93, 1.21] },
     bellows: { profile: [[-1.18, 0.45], [1.18, 0.45], [1.18, 2.66], [1.05, 2.86], [0, 2.92], [-1.05, 2.86], [-1.18, 2.66]], folds: 8, depth: 0.05 },
     maxSteerDeg: 50,
+    detail: true,
     maxBendDeg: 50,
     details: (c) => {
       const { x } = c;
@@ -524,6 +530,7 @@ function urbinoSpec(): CitySpec {
     arch: { half: 0.58, side: 0.6, top: 1.02 },
     tyres: { single: [0.98, 1.24], inner: [0.68, 0.94], outer: [0.97, 1.23] },
     maxSteerDeg: 50,
+    detail: true,
     details: (c) => {
       const { x } = c;
       const ws = windscreen(c, 1.24, 2.56, 1.18, [2.3, 2.52]);
@@ -594,6 +601,7 @@ function bus1Spec(): CitySpec {
     arch: { half: 0.6, side: 0.66, top: 1.12 },
     tyres: { single: [0.92, 1.18], inner: [0.62, 0.88], outer: [0.91, 1.17] },
     maxSteerDeg: 45,
+    detail: true,
     details: (c) => {
       const { x } = c;
       // the mint sweep under the windows, its lower edge falling from u 5.75 to the

@@ -1,7 +1,7 @@
 # Buses
 
-**Covers** - the buses transferred from vlakosimdb's `db/motocar`: the two parametric Karosa families (short and articulated), the Karosa-Renault City Bus 12M and 18M, the Mercedes-Benz Citaro (two liveries) and O 345 G, the Solaris Urbino 15 and Bus 1; how a bus is built (the clipped shell, the fittings, the assembly into parts), where every measure comes from, and the tests.
-**Code** - `generator/buses.ts`, `generator/karosa.ts`, `generator/cityBuses.ts`, `generator/busAssembly.ts`, `generator/busBody.ts`, `generator/busKit.ts`, `test/buses.test.ts`
+**Covers** - the buses transferred from vlakosimdb's `db/motocar`: the two parametric Karosa families (short and articulated), the Karosa-Renault City Bus 12M and 18M, the Mercedes-Benz Citaro (two liveries) and O 345 G, the Solaris Urbino 15 and Bus 1; how a bus is built (the clipped shell, the fittings, the detail, the assembly into parts), where every measure comes from, and the tests.
+**Code** - `generator/buses.ts`, `generator/karosa.ts`, `generator/cityBuses.ts`, `generator/busAssembly.ts`, `generator/busBody.ts`, `generator/busKit.ts`, `generator/busDetail.ts`, `test/buses.test.ts`
 **See also** - [world-buses.md](world-buses.md) (the world buses on the same builder), [vehicle-rig.md](vehicle-rig.md) (steered wheels, sections, the joint), [vehicles.md](vehicles.md), [parameters.md](parameters.md), [../../.agents/skills/road-vehicle/SKILL.md](../../.agents/skills/road-vehicle/SKILL.md), [../../.agents/skills/vlakosimdb-transfer/SKILL.md](../../.agents/skills/vlakosimdb-transfer/SKILL.md)
 
 ## The designs
@@ -11,17 +11,20 @@ Karosas are two parametric families, one body each; the others are single models
 All are road vehicles in the `bus` group (`BUS_CATALOG`), with steered front wheels,
 and the articulated ones with sections and a joint ([vehicle-rig.md](vehicle-rig.md)).
 
+The triangle counts are the exterior's (the 10,000-triangle road-vehicle budget); each
+cabin adds 370-620 within the interiors' own cap ([interiors.md](interiors.md)).
+
 | id | title | vlakosimdb | real bus | triangles |
 |---|---|---|---|---|
-| `veh-karosa-short` | Karosa Short | `variant`: `b731` (default), `b732`, `c734`, `lc735`, `b931`, `b931e`, `b951e` = `bus_kar_*` | 700 series 10.975 m, 900 series 11.345 m, B 951 11.32 m | 2,800-3,650 |
-| `veh-karosa-long` | Karosa Long | `variant`: `b741` (default), `b941`, `b941e`, `b961` | articulated, 17.355 / 17.615 / 17.59 m | 4,100-5,000 |
-| `veh-karosa-renault-citybus-12m` | Karosa Renault City Bus 12M | `bus_karrencity12m` | low floor, 11.99 m | 2,600 |
-| `veh-karosa-renault-citybus-18m` | Karosa Renault City Bus 18M | `bus_karrencity18m` | articulated low floor, 17.80 m | 3,850 |
-| `veh-mb-citaro` | Mercedes-Benz Citaro | `bus_mb_citaro` | O 530, 11.95 m, white and teal | 2,650 |
-| `veh-mb-citaro-blue` | Mercedes-Benz Citaro (blue) | `bus_mb_citarob` | the same bus in dark blue | 2,650 |
-| `veh-mb-o345-g` | Mercedes-Benz O 345 G | `bus_mb_o345` | articulated, 17.94 m, 2-2-2-2 doors | 4,250 |
-| `veh-solaris-urbino-15` | Solaris Urbino 15 | `solaris_urbino_15` | three axles, 14.59 m | 3,600 |
-| `veh-bus-1` | Bus 1 | `bus_1` | vlakosimdb's generic coach, 11.3 m | 2,840 |
+| `veh-karosa-short` | Karosa Short | `variant`: `b731` (default), `b732`, `c734`, `lc735`, `b931`, `b931e`, `b951e` = `bus_kar_*` | 700 series 10.975 m, 900 series 11.345 m, B 951 11.32 m | 5,750-6,600 |
+| `veh-karosa-long` | Karosa Long | `variant`: `b741` (default), `b941`, `b941e`, `b961` | articulated, 17.355 / 17.615 / 17.59 m | 8,450-9,450 |
+| `veh-karosa-renault-citybus-12m` | Karosa Renault City Bus 12M | `bus_karrencity12m` | low floor, 11.99 m | 5,600 |
+| `veh-karosa-renault-citybus-18m` | Karosa Renault City Bus 18M | `bus_karrencity18m` | articulated low floor, 17.80 m | 8,300 |
+| `veh-mb-citaro` | Mercedes-Benz Citaro | `bus_mb_citaro` | O 530, 11.95 m, white and teal | 5,550 |
+| `veh-mb-citaro-blue` | Mercedes-Benz Citaro (blue) | `bus_mb_citarob` | the same bus in dark blue | 5,550 |
+| `veh-mb-o345-g` | Mercedes-Benz O 345 G | `bus_mb_o345` | articulated, 17.94 m, 2-2-2-2 doors | 8,800 |
+| `veh-solaris-urbino-15` | Solaris Urbino 15 | `solaris_urbino_15` | three axles, 14.59 m | 7,700 |
+| `veh-bus-1` | Bus 1 | `bus_1` | vlakosimdb's generic coach, 11.3 m | 5,600 |
 
 The Karosa variants differ in series (front mask, rear, length), doors and livery:
 
@@ -94,8 +97,22 @@ of the nose's corners on an arm that starts inside the body at its height (a rak
 front recedes) and a stem down into the head, and reach at most 1.345 m out (the
 road-width rule).
 
+**The detail** (`busDetail.ts`), drawn by the assembly on every bus, spends the
+budget where the game's camera sees it. The wheels are turned on a lathe (a profile
+revolved on the tyre's 16-gon, a flat side down): bevelled shoulders, the sidewall, a
+dished steel rim with ten wheel nuts and a hub cap at most 3 cm proud of the tyre; an
+inner twin is the bevelled tyre alone. Each wheel arch has a dark rubber trim 4.5 cm
+wide, 5 mm outside the notch (left off a side where a doorway comes within 5 cm), each
+rear axle mudflaps hung from its arch's rear wall behind the tyres, each stretch
+between two arches an amber side marker (`marker`, no lamp role) unless a doorway is
+there, and the route displays sit in the top front corner of the frontmost right-hand
+window and the top right corner of the rear window. The shell's roof edge is rounded:
+the city buses' plan and roof corners in five pieces, the Karosas' roof edge in four
+(the XML's single chamfer smoothed); the Karosas also carry a rain gutter along each
+side under the eave and a frame under each roof hatch's lid.
+
 **The assembly** (`assembleBus`) draws each rigid body as a part with its shell, axles,
-twin or single tyres and the fittings whose x falls in it, then the two steered front
+twin or single tyres, the fittings whose x falls in it and its detail, then the two steered front
 wheels (`steeredWheels`) inside the front body, then one joint part per gap, drawn by
 the rig's joint renderer ([vehicle-rig.md](vehicle-rig.md)), and sets the rig: the
 steering's wheelbase to the axle the bus turns about (the front section's rear axle),
