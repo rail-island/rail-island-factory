@@ -328,8 +328,8 @@ export function ModelDetail(props: {
         <Switch>
           <Match when={props.tab === "specs"}>
             {/* A side view at 16 px per metre (half its pixels), so vehicles compare by length. */}
-            {import.meta.env.DEV ? (
-              // `pnpm dev` writes no thumbnails: the browser renders the default (VariantThumb)
+            {import.meta.env.DEV || props.record.draft ? (
+              // `pnpm dev` writes no thumbnails, nor does the build for a draft: the browser renders the default (VariantThumb)
               <VariantThumb record={props.record} params={{}} size="large" title={`${props.record.title} thumbnail`} />
             ) : (
               <img

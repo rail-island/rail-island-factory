@@ -521,7 +521,8 @@ function buildAll(designs: readonly ProceduralDesign[]): Array<{ design: Procedu
 
 export interface GeneratedModel {
   id: string;
-  thumb: string; // absolute path
+  /** The thumbnail's absolute path; null for a workshop draft, whose thumbnail the site renders in the browser (docs/site/workshop.md). */
+  thumb: string | null;
   tree: string | null; // absolute path; null for a design without one (`sourceTree: false`)
   triangles: number;
   /** What the catalog lists of the built model: counts and bounding box (glbStats.ts). */
@@ -550,7 +551,9 @@ const sha256 = (bytes: Uint8Array): string => crypto.createHash("sha256").update
  * `dir`/tree. The thumbnail is only re-rendered when the model changed (its
  * hash in thumbs/.sources.json), the PNG is missing or THUMB_VERSION moved on,
  * and a tree file is only rewritten when its text changed; files of designs that
- * no longer exist are removed, and so is an old export's glb/ folder. Throws a
+ * no longer exist are removed, and so is an old export's glb/ folder. A workshop
+ * draft (workshop.ts) gets no thumbnail: rendering one is the slow part, and the
+ * site draws a draft's in the browser when it is shown. Throws a
  * ZFightingError, writing nothing, when any design would flicker.
  */
 export function generateModels(
@@ -560,7 +563,7 @@ export function generateModels(
   const built = buildAll(designs); // throws before anything touches the disk
   const treeTexts = new Map(built.filter((b) => b.design.sourceTree !== false).map((b) => [b.design.id, `${JSON.stringify(b.tree)}\n`]));
   checkTreeSizes(treeTexts); // so does this
-  const known = new Set(designs.map((d) => d.id));
+  const withThumb = new Set(designs.filter((d) => !isDraft(d.id)).map((d) => d.id));
   const withTree = new Set(treeTexts.keys());
   const thumbDir = path.join(dir, "thumbs");
   const treeDir = path.join(dir, TREE_DIR);
@@ -574,16 +577,20 @@ export function generateModels(
   const sources: Record<string, string> = {};
   const out: GeneratedModel[] = [];
   for (const { design, bytes, triangles, rig } of built) {
-    const thumb = path.join(thumbDir, `${design.id}.png`);
+    const draft = !withThumb.has(design.id);
+    const thumb = draft ? null : path.join(thumbDir, `${design.id}.png`);
     const treeText = treeTexts.get(design.id);
     const tree = treeText === undefined ? null : path.join(treeDir, `${design.id}.json`);
     if (tree && (!fs.existsSync(tree) || fs.readFileSync(tree, "utf8") !== treeText)) fs.writeFileSync(tree, treeText!);
     const hash = sha256(bytes);
-    sources[design.id] = hash;
+    // a draft records no hash: confirmed later, its thumbnail is rendered then
+    if (thumb) sources[design.id] = hash;
     const changed = previous[design.id] !== hash;
     const sideView = isSideViewCategory(catalogFields(design).category);
     let side: SideFrame | null = null;
-    if (changed || stale || !fs.existsSync(thumb)) {
+    if (!thumb) {
+      if (sideView) side = glbSideFrame(bytes);
+    } else if (changed || stale || !fs.existsSync(thumb)) {
       if (sideView) {
         const r = renderGlbSideThumb(bytes);
         side = r.frame;
@@ -600,7 +607,7 @@ export function generateModels(
   if (stale) fs.writeFileSync(versionFile, `${THUMB_VERSION}\n`);
   const sorted = Object.fromEntries(Object.entries(sources).sort(([a], [b]) => a.localeCompare(b)));
   writeIfChanged(sourcesFile, `${JSON.stringify(sorted, null, 2)}\n`);
-  for (const [sub, ext, keep] of [[thumbDir, ".png", known], [treeDir, ".json", withTree]] as const) {
+  for (const [sub, ext, keep] of [[thumbDir, ".png", withThumb], [treeDir, ".json", withTree]] as const) {
     for (const name of fs.readdirSync(sub)) {
       if (name !== THUMB_SOURCES_FILE && name.endsWith(ext) && !keep.has(name.slice(0, -ext.length))) fs.rmSync(path.join(sub, name));
     }
@@ -754,7 +761,7 @@ export async function buildExport(
         jsBytes: Buffer.byteLength(jsText),
         jsGzipBytes: gzipSize(jsText),
         jsHash: crypto.createHash("sha256").update(jsText).digest("hex").slice(0, 16),
-        thumbBytes: fs.statSync(built.thumb).size,
+        thumbBytes: built.thumb ? fs.statSync(built.thumb).size : 0,
       }, refs.get(design.id), catalogOpenttd(design, catalogFields(design)));
       return { ...record, ...(design.buildCoarse ? { coarse: true } : {}), ...(design.buildMax ? { maxDetail: true } : {}), ...(design.sourceTree === false ? { noSourceTree: true } : {}) };
     }),

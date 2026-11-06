@@ -29,13 +29,14 @@ The build fails when the list names a model that does not exist.
 | Output | A draft |
 |---|---|
 | `skyscrapers.meta.json`, `village.meta.json`, `vehicles.meta.json`, `props.meta.json`, `characters.meta.json` | **left out**: the game imports no draft |
-| `catalog.json` | listed, with `draft: true` |
-| `js/<id>.js`, `thumbs/<id>.png`, `tree/`, `refs/` | written, so the site can show it |
+| `catalog.json` | listed, with `draft: true` and `thumbBytes: 0` (its `thumbUrl` names no file); a road or rail vehicle keeps its `thumbSide` frame |
+| `thumbs/<id>.png` | **not rendered** - the slow part of the build; the site renders a draft's thumbnail in the browser when it is shown, below. No hash is recorded in `thumbs/.sources.json`, so a confirmed model's first build renders it |
+| `js/<id>.js`, `tree/`, `refs/` | written, so the site can show it |
 | `text/<code>.json` | its texts stay, so confirming it needs no translation work |
-| prerendered pages | its own model page, with `noindex`; not on the home or category pages, not in `sitemap.xml` ([seo-pages.md](seo-pages.md)) |
+| prerendered pages | its own model page, with `noindex` and no thumbnail image; not on the home or category pages, not in `sitemap.xml` ([seo-pages.md](seo-pages.md)) |
 
-The game's importer reads the meta files, so a draft's JS model and thumbnail in the
-export folder are ignored by the game. The site's OpenTTD downloads still work for a
+The game's importer reads the meta files, so a draft's JS model in the export folder
+is ignored by the game. The site's OpenTTD downloads still work for a
 draft: OpenTTD is not the game.
 
 ## The site
@@ -50,6 +51,12 @@ section.
 A model page belongs to its model's section, whatever the URL says: a draft linked to
 directly steps (previous / next) through the workshop, and closing it returns to the
 workshop. A draft's page shows a **Workshop draft** badge above its export button.
+
+**Thumbnails on the fly.** A draft has no thumbnail file, so wherever the site shows
+one (the table's and cards' thumbnail, the model page's Specs tab) it renders the
+default variant from the JS model in the browser (`VariantThumb`, `variantThumbs.ts`),
+as `pnpm dev` does for every model: only once the box scrolls into view, and cached in
+the browser keyed on the model's JS hash.
 
 ## Web links
 

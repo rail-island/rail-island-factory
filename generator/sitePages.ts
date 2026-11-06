@@ -209,7 +209,8 @@ function modelBody(r: CatalogRecord, meta: PageMeta, crumbs: readonly Crumb[], s
   return (
     `<div class="factory-static">${crumbsHtml([...crumbs, { label: r.title, path: meta.path }])}` +
     `<h1>${escapeHtml(meta.heading)}</h1>` +
-    `<img class="factory-static__thumb" src="/${escapeHtml(r.thumbUrl)}" alt="${escapeHtml(`${r.title} - 3D model`)}"${size} />` +
+    // a draft has no thumbnail file: the app renders it in the browser
+    (r.draft ? "" : `<img class="factory-static__thumb" src="/${escapeHtml(r.thumbUrl)}" alt="${escapeHtml(`${r.title} - 3D model`)}"${size} />`) +
     `<p>${escapeHtml(meta.description)}</p><dl>${facts}</dl>${params}${more}</div>`
   );
 }
@@ -285,7 +286,7 @@ export function sitePages(shell: string, records: readonly CatalogRecord[], thum
     const draftChips: ChipPath = published.some((o) => groupOf(o) === group) ? { group, l2: null, l3: null } : { group: null, l2: null, l3: null };
     const crumbs = categoryCrumbs(r.draft ? draftChips : categoryOf(r, tree), tree);
     const siblings = r.draft ? [] : (deepest.get(crumbs.at(-1)!.path) ?? []).filter((o) => o.id !== r.id);
-    const size = thumbSize(r);
+    const size = r.draft ? null : thumbSize(r);
     const imageUrl = `${SITE_URL}/${r.thumbUrl}`;
     const image = size && size.width >= MIN_PREVIEW_PX && size.height >= MIN_PREVIEW_PX ? { url: imageUrl, ...size, alt: `${r.title} - 3D model` } : undefined;
     const model: Record<string, unknown> = {
@@ -294,7 +295,7 @@ export function sitePages(shell: string, records: readonly CatalogRecord[], thum
       name: r.title,
       description: meta.description,
       url: `${SITE_URL}${meta.path}`,
-      image: imageUrl,
+      ...(r.draft ? {} : { image: imageUrl }),
       isPartOf: { "@type": "WebSite", name: SITE_NAME, url: `${SITE_URL}/` },
     };
     if (r.author) model.author = { "@type": "Person", name: r.author };

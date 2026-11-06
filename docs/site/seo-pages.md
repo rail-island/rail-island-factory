@@ -52,7 +52,7 @@ then writes:
 
 The home and category pages list the confirmed catalog only. A workshop draft (a
 record with `draft: true`, [workshop.md](workshop.md)) still gets its model page, so
-a link to it works, but with `noindex`, a breadcrumb that stops at its group, no
+a link to it works, but with `noindex`, no thumbnail (none is rendered), a breadcrumb that stops at its group, no
 siblings, and no entry in `sitemap.xml`.
 
 `sitePages(shell, records, thumbSize)` is a pure function. Its output is sorted and has

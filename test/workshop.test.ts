@@ -48,9 +48,17 @@ describe("a draft in the export", () => {
       expect(vehicles.vehicles.map((v) => v.id)).toEqual([CONFIRMED]);
       expect(vehicles.count).toBe(1);
       expect(catalog.records.map((r) => [r.id, r.draft ?? false])).toEqual([[CONFIRMED, false], [DRAFT, true]]);
-      // the site still shows it: its model and thumbnail are written
+      // the site still shows it: its model is written, its thumbnail is not (the
+      // browser renders it when shown); the confirmed model's is
       expect(fs.existsSync(path.join(dir, "js", `${DRAFT}.js`))).toBe(true);
-      expect(fs.existsSync(path.join(dir, "thumbs", `${DRAFT}.png`))).toBe(true);
+      expect(fs.existsSync(path.join(dir, "thumbs", `${DRAFT}.png`))).toBe(false);
+      expect(fs.existsSync(path.join(dir, "thumbs", `${CONFIRMED}.png`))).toBe(true);
+      const draft = catalog.records.find((r) => r.id === DRAFT)!;
+      expect(draft.thumbBytes).toBe(0);
+      // a side-view vehicle still states its frame, so the browser's thumbnail keeps the scale
+      expect(draft.thumbSide).toBeDefined();
+      const sources = JSON.parse(fs.readFileSync(path.join(dir, "thumbs", ".sources.json"), "utf8")) as Record<string, string>;
+      expect(Object.keys(sources)).toEqual([CONFIRMED]);
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
@@ -93,6 +101,9 @@ describe("the site's sections", () => {
     expect(files.get("sitemap.xml")!).not.toContain("proc-vehicle-b");
     expect(files.get("sitemap.xml")!).toContain("proc-vehicle-a");
     expect(files.get("index.html")!).not.toContain("/model/proc-vehicle-b/");
+    // no thumbnail file to point at: neither an <img> nor a link preview image
+    expect(draftPage).not.toContain("thumbs/proc-vehicle-b.png");
+    expect(files.get("model/proc-vehicle-a/index.html")!).toContain("thumbs/proc-vehicle-a.png");
   });
 });
 
