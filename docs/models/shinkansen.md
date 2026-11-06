@@ -54,6 +54,8 @@ combinations hashed before and after):
   builder's `buffers` coupler), the coupling plane 0.65 m out;
 - `wheelbase: 0` - a single axle at each truck position (a two-axle railbus, a Talgo car);
 - `traction: "none"` - an unpowered set of coaches (the Talgo III), filed with the coaches.
+- `windscreenMask` - a black band (`cabMask`) round a nose's windscreen, under its rubber,
+  reaching this far past the panes and joined over the centre pillar (the ICNG).
 
 A short car's leading bogie comes in so that its wheels stay under the body. The kit
 refuses a wheelbase under 2.05 m (the bogie's brake cylinders would lie on its

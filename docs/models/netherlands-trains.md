@@ -20,7 +20,7 @@ The catalog had no Dutch train before. Every design is filed under the Netherlan
 | `proc-vehicle-ns-sgm` | NS SGM Sprinter | series, flat cab | `unit`, `cars` 2 - 3, `livery` (`yellowGrey`, `sprinter`) | 26.1 m cars; 125 km/h |
 | `proc-vehicle-ns-slt` | NS SLT | series | `unit`, `cars` 4 - 6 | 160 km/h |
 | `proc-vehicle-ns-sng` | NS SNG | series | `unit`, `cars` 3 - 4 | 160 km/h |
-| `proc-vehicle-ns-icng` | NS ICNG | series | `unit`, `cars` 5 - 8 | the long nose; 200 km/h |
+| `proc-vehicle-ns-icng` | NS ICNG | series | `unit`, `cars` 5 - 8 | the long nose, its lower front rounded to a small tip, the black band round the windscreen; 200 km/h |
 | `proc-vehicle-ns-flirt` | NS Flirt | series, Stadler FLIRT | `unit`, `cars` 3 - 4 | 160 km/h |
 | `proc-vehicle-ns-v250` | Fyra V250 | series | `unit`, `cars` 3 - 8 | 27.15 / 26.0 m; 250 km/h |
 | `proc-vehicle-ns-1700` | NS 1600 / 1700 | box locomotive, BB 22200 body | `livery` (`yellowGrey`, `railion`) | B-B, 17.48 m, 4,540 kW, 160 km/h |
@@ -38,6 +38,8 @@ Sprinter white, the Fyra) for the units; the locomotives' are in `nlLocos.ts`.
 
 - **2200.** A centre cab between hoods, drawn at the cab's width; the real cab stands
   off centre between narrow hoods with walkways.
+- **ICNG.** The nose is drawn from tables, not measured drawings; no reference photographs
+  are stored yet (Wikimedia refused the downloads when the nose was reworked).
 - **1100.** The original flat-fronted body; the "hondekop" noses some received in the
   1970s are not drawn.
 - **Units.** Articulated Jacobs bogies (the SLT, SNG, ICNG, FLIRT) are drawn as each
