@@ -5,10 +5,10 @@
 // nose (the texture columns, 10 pixels a metre), stretched to the real bus's
 // length. See docs/models/buses.md.
 
-import type { MeshBuilder } from "./meshBuilder.ts";
+import { ngon, type MeshBuilder } from "./meshBuilder.ts";
 import type { Arch, Paint } from "./busBody.ts";
 import { BusDraft, type Axle, type BusSpec, type DoorStyle, type PaneStyle } from "./busAssembly.ts";
-import { bentSlab, busPalette, endLamp, endSlab, mirror, sideSlab, type BusFrame } from "./busKit.ts";
+import { bentSlab, busPalette, endBadge, endLamp, endLettering, endShape, endSlab, mirror, sideSlab, wiper, type BusFrame } from "./busKit.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { block } from "./vehicleParts.ts";
 
@@ -65,6 +65,8 @@ export interface CitySpec {
   maxBendDeg?: number;
   /** The nose, the tail and the roof, drawn by the design. */
   details: (c: CityCtx) => void;
+  /** The fine detail (busAssembly.ts BusSpec.detail) and a roof edge rounded in five pieces, not three. */
+  detail?: boolean;
 }
 
 /** Builds one city bus from its description. */
@@ -87,7 +89,7 @@ function cityDraft(sp: CitySpec): { d: BusDraft; spec: Omit<BusSpec, "fittings">
   const tail = x(sp.tail);
   const { hw, bottom } = sp;
   // the roof's edge and the plan's corners rounded in three straight pieces
-  const ROUND = 3;
+  const ROUND = sp.detail ? 5 : 3;
   const edge = (s: number): Array<[number, number]> => quarter(s * (hw - sp.tumble - sp.corner), sp.eave, s * sp.corner, sp.roof - 0.03 - sp.eave, ROUND);
   const right = edge(1);
   const left = edge(-1).reverse();
@@ -109,7 +111,8 @@ function cityDraft(sp: CitySpec): { d: BusDraft; spec: Omit<BusSpec, "fittings">
   const arches: Arch[] = axles.map((a) => ({ x: a.x, half: sp.arch.half, side: sp.arch.side, top: sp.arch.top }));
   const bodies: Array<[number, number]> = sp.bodies.map(([u0, u1]) => [x(u1), x(u0)]);
 
-  const d = new BusDraft({ section, side });
+  // a confirmed bus's end fittings wrap round its plan's corners (busKit.ts BusFrame.plan)
+  const d = new BusDraft({ section, side, ...(sp.detail ? { plan } : {}) });
   // the right side's windows, cut by the doors
   for (const [w0, w1] of sp.windows) {
     let at = w0;
@@ -131,6 +134,7 @@ function cityDraft(sp: CitySpec): { d: BusDraft; spec: Omit<BusSpec, "fittings">
     tyres: sp.tyres,
     ...(sp.bellows ? { bellows: sp.bellows } : {}),
     hingeY: 0.6,
+    ...(sp.detail ? { detail: true } : {}),
     maxSteerDeg: sp.maxSteerDeg,
     ...(sp.maxBendDeg ? { maxBendDeg: sp.maxBendDeg } : {}),
   } };
@@ -212,19 +216,37 @@ function tailLamps(c: CityCtx, y0: number, inset: number, w = 0.16): void {
  * its top, two wipers. Noted for the distant model now; drawn by the function
  * it returns, in the nose's fitting.
  */
-function windscreen(c: CityCtx, y0: number, y1: number, half: number, sign: [number, number] | null): () => void {
+function windscreen(c: CityCtx, y0: number, y1: number, half: number, sign: [number, number] | null, wipers?: Wipers): () => void {
   c.d.glaze(1, -half, half, y0, y1);
-  return () => drawWindscreen(c, y0, y1, half, sign);
+  return () => drawWindscreen(c, y0, y1, half, sign, wipers);
 }
 
-function drawWindscreen(c: CityCtx, y0: number, y1: number, half: number, sign: [number, number] | null): void {
+/** Wipers at rest: each its pivot's z, its length and its angle (busKit.ts wiper). */
+type Wipers = Array<[number, number, number]>;
+
+function drawWindscreen(c: CityCtx, y0: number, y1: number, half: number, sign: [number, number] | null, wipers: Wipers = [[-half + 0.12, half * 0.9, 7], [0.08, half * 0.9, 7]]): void {
   endSlab(c.m(), "frame", c.frame, 1, -half - 0.05, half + 0.05, y0 - 0.04, y1 + 0.03, 0.01);
   endSlab(c.m(), "glass", c.frame, 1, -half, half, y0, y1, 0.02);
   if (sign) {
     endSlab(c.m(), "sign", c.frame, 1, -half + 0.12, half - 0.12, sign[0], sign[1], 0.026);
     endSlab(c.m(), "signText", c.frame, 1, -half + 0.3, half - 0.3, sign[0] + 0.07, sign[1] - 0.07, 0.03);
   }
-  for (const z of [-half + 0.1, 0.06]) endSlab(c.m(), "frame", c.frame, 1, z, z + half - 0.16, y0 + 0.05, y0 + 0.08, 0.03);
+  for (const [z, len, deg] of wipers) wiper(c.m(), c.frame, 1, z, y0 + 0.06, len, deg);
+}
+
+/** A maker's name on an end (busKit.ts endLettering). */
+function lettering(c: CityCtx, end: 1 | -1, z0: number, z1: number, y: number, h: number, proud: number): void {
+  endLettering(c.m(), c.frame, end, z0, z1, y, h, proud);
+}
+
+/** A round lamp in a dark bezel on an end. */
+function roundLamp(c: CityCtx, end: 1 | -1, mat: string, z: number, y: number, r: number, proud = 0.02): void {
+  endLamp(c.m(), mat, c.frame, end, z, y, r, proud, "frame", 10);
+}
+
+/** A round red reflector low on each rear corner (busDetail.ts `reflector`: no lamp role, it never lights). */
+function reflectors(c: CityCtx, y: number, inset: number, proud = 0.02): void {
+  for (const sd of [-1, 1]) endLamp(c.m(), "reflector", c.frame, -1, sd * (c.hw - inset), y, 0.035, proud, undefined, 8);
 }
 
 // --- the Karosa-Renault City Bus ---------------------------------------------------
@@ -267,10 +289,12 @@ function karosaRenaultSpec(long: boolean): CitySpec {
     tyres: { single: [0.95, 1.21], inner: [0.64, 0.9], outer: [0.93, 1.19] },
     bellows: { profile: [[-1.18, 0.4], [1.18, 0.4], [1.18, 2.62], [1.05, 2.84], [0, 2.88], [-1.05, 2.84], [-1.18, 2.62]], folds: 9, depth: 0.05 },
     maxSteerDeg: 50,
+    detail: true,
     maxBendDeg: 50,
     details: (c) => {
       const { x } = c;
-      const ws = windscreen(c, 1.0, 2.5, 1.12, null);
+      // (photograph) two long wipers parked along the screen's foot
+      const ws = windscreen(c, 1.0, 2.5, 1.12, null, [[-1.0, 1.05, 5], [0.02, 1.05, 5]]);
       c.d.roofItem(c.nose - 0.62, c.nose - 0.18, -1.16, 1.16, 2.5, 3.06, "band");
       c.d.endPaint(-1, 0.7, 0.88, "band");
       c.d.fit("front", c.nose, () => {
@@ -279,11 +303,19 @@ function karosaRenaultSpec(long: boolean): CitySpec {
         block(c.m(), "band", c.nose - 0.62, c.nose - 0.18, 2.5, 3.06, -1.16, 1.16);
         block(c.m(), "signText", c.nose - 0.185, c.nose - 0.165, 2.72, 2.84, -0.7, 0.7);
         // headlamps in the red lower front, the plate between them, black bumper corners
+        // (photograph: twin round lenses under one glass in a dark cluster, the
+        // indicator outside, the Renault diamond in the middle, the Karosa name left)
         for (const sd of [-1, 1]) {
           endSlab(c.m(), "frame", c.frame, 1, sd * 0.88 - 0.25, sd * 0.88 + 0.25, 0.66, 0.8, 0.008);
           endSlab(c.m(), "lampHead", c.frame, 1, sd * 0.88 - 0.2, sd * 0.88 + 0.12, 0.68, 0.78, 0.016);
+          for (const dz of [-0.11, 0.04]) roundLamp(c, 1, "lampHead", sd * 0.88 + sd * dz, 0.73, 0.04, 0.032);
           endSlab(c.m(), "lampAmber", c.frame, 1, sd * 1.13 - 0.06, sd * 1.13 + 0.06, 0.68, 0.78, 0.016);
+          // the black corner pieces of the bumper
+          endSlab(c.m(), "band", c.frame, 1, Math.min(sd * 0.55, sd * 1.24), Math.max(sd * 0.55, sd * 1.24), 0.4, 0.5, 0.012);
         }
+        endShape(c.m(), "chrome", c.frame, 1, [[0, 0.71], [0.07, 0.8], [0, 0.89], [-0.07, 0.8]], 0.016);
+        endShape(c.m(), "red", c.frame, 1, [[0, 0.75], [0.035, 0.8], [0, 0.85], [-0.035, 0.8]], 0.02);
+        lettering(c, 1, -0.95, -0.6, 0.9, 0.035, 0.012);
         endSlab(c.m(), "plateYellow", c.frame, 1, -0.26, 0.26, 0.45, 0.57, 0.016);
       });
       c.d.glaze(-1, -0.95, 0.95, 2.16, 2.48);
@@ -293,8 +325,19 @@ function karosaRenaultSpec(long: boolean): CitySpec {
         // the engine flap's grilles on the right, the lamps in a black band, the plate
         for (let i = 0; i < 6; i++) endSlab(c.m(), "grille", c.frame, -1, 0.05, 1.05, 1.1 + i * 0.12, 1.16 + i * 0.12, 0.012);
         endSlab(c.m(), "band", c.frame, -1, -1.22, 1.22, 0.7, 0.88, 0.008);
-        for (const sd of [-1, 1]) endSlab(c.m(), "lampRed", c.frame, -1, sd * 0.95 - 0.22, sd * 0.95 + 0.22, 0.73, 0.85, 0.016);
-        endSlab(c.m(), "plateYellow", c.frame, -1, 0.02, 0.54, 0.73, 0.85, 0.016);
+        // (photograph) each cluster red outside, the reversing lamp inside
+        for (const sd of [-1, 1]) {
+          endSlab(c.m(), "lampRed", c.frame, -1, Math.min(sd * 0.82, sd * 1.17), Math.max(sd * 0.82, sd * 1.17), 0.73, 0.85, 0.016);
+          endSlab(c.m(), "lampHead", c.frame, -1, Math.min(sd * 0.73, sd * 0.8), Math.max(sd * 0.73, sd * 0.8), 0.73, 0.85, 0.016);
+          // the flap's two latches, the Renault and Karosa names under the window
+          endSlab(c.m(), "chrome", c.frame, -1, sd * 0.45 - 0.08, sd * 0.45 + 0.08, 0.95, 0.99, 0.016);
+          lettering(c, -1, Math.min(sd * 0.45, sd * 0.9), Math.max(sd * 0.45, sd * 0.9), 2.0, 0.04, 0.014);
+        }
+        endSlab(c.m(), "plateYellow", c.frame, -1, 0.02, 0.54, 0.73, 0.85, 0.022);
+        // the bumper: a black bar under the band, a tow hitch's cover, the reflectors
+        endSlab(c.m(), "band", c.frame, -1, -1.24, 1.24, 0.3, 0.5, 0.012);
+        endSlab(c.m(), "frame", c.frame, -1, -0.12, 0.12, 0.36, 0.46, 0.02);
+        reflectors(c, 0.4, 0.12, 0.022);
       });
       // the rear corners' big louvred grilles, both sides
       c.d.fit("rear grilles", c.tail + 0.4, () => {
@@ -353,7 +396,8 @@ function citaroSpec(livery: "teal" | "blue"): CitySpec {
     // 5.845 m wheelbase, 2.869 m without the roof pod (pl.wikipedia); the overhang from the texture
     axles: [{ at: 2.75, dual: false }, { at: 8.595, dual: true, drive: true }],
     wheelRadius: 0.48, hw: 1.27, bottom: 0.27, belt: 1.0, eave: 2.74, roof: 2.869, tumble: 0.01, corner: 0.12,
-    front: { from: 1.0, rake: 0.1, cap: 0.12, low: 0.18, chamfer: [0.3, 0.12] },
+    // (photographs) the front corners curve round wide, 0.42 m along the side and 0.26 m across
+    front: { from: 1.0, rake: 0.1, cap: 0.12, low: 0.18, chamfer: [0.42, 0.26] },
     rear: { from: 2.6, rake: 0.05, cap: 0.15, low: 0.5, chamfer: [0.2, 0.08] },
     paint: [
       { u0: 0, u1: 12, y0: 0.27, y1: 0.62, mat: "skirt" },
@@ -369,25 +413,42 @@ function citaroSpec(livery: "teal" | "blue"): CitySpec {
     arch: { half: 0.6, side: 0.6, top: 1.04 },
     tyres: { single: [0.96, 1.22], inner: [0.66, 0.92], outer: [0.95, 1.21] },
     maxSteerDeg: 50,
+    detail: true,
     details: (c) => {
       const { x } = c;
-      const ws = windscreen(c, 1.12, 2.42, 1.14, null);
+      const ws = windscreen(c, 1.12, 2.42, 1.14, null, [[-1.02, 1.0, 6], [0.06, 1.0, 6]]);
       c.d.fit("front", c.nose, () => {
         // the black panel over the windscreen holds the destination display
         endSlab(c.m(), "band", c.frame, 1, -1.2, 1.2, 2.46, 2.72, 0.006);
         endSlab(c.m(), "signText", c.frame, 1, -0.8, 0.8, 2.52, 2.66, 0.014);
         ws();
         cornerLamps(c, 0.52, 0.7, 0.36, 0.06);
+        // (photograph) each cluster's two round lenses behind its glass
+        for (const sd of [-1, 1]) for (const dz of [0.1, 0.22]) roundLamp(c, 1, "lampHead", sd * (c.hw - 0.06 - dz), 0.61, 0.05, 0.024);
         endSlab(c.m(), "grille", c.frame, 1, -0.5, 0.5, 0.82, 1.02, 0.012);
+        // the three-pointed star on the grille, the model's name on the right
+        endBadge(c.m(), c.frame, 1, 0, 0.92, 0.085, 0.02, true);
+        lettering(c, 1, 0.62, 0.92, 0.8, 0.03, 0.012);
         endSlab(c.m(), "plate", c.frame, 1, -0.26, 0.26, 0.39, 0.51, 0.016);
+        // the bumper's black foot, the tow eye's cover
+        endSlab(c.m(), "band", c.frame, 1, -1.2, 1.2, 0.28, 0.34, 0.01);
+        endSlab(c.m(), "frame", c.frame, 1, 0.45, 0.6, 0.4, 0.48, 0.018);
       });
       c.d.glaze(-1, -1.0, 1.0, 1.9, 2.48);
       c.d.fit("rear", c.tail, () => {
         endSlab(c.m(), "glassDark", c.frame, -1, -1.0, 1.0, 1.9, 2.48, 0.02);
-        endSlab(c.m(), "signText", c.frame, -1, -0.5, 0.5, 2.52, 2.64, 0.012);
         for (let i = 0; i < 6; i++) endSlab(c.m(), "grille", c.frame, -1, -0.9, 0.9, 1.0 + i * 0.12, 1.06 + i * 0.12, 0.012);
         tailLamps(c, 0.62, 0.04);
+        // (photograph) the name and the star under the rear window, the flap's seam and
+        // latches, the plate lamp, the bumper's black foot and its reflectors
+        lettering(c, -1, -0.85, -0.45, 1.8, 0.04, 0.012);
+        endBadge(c.m(), c.frame, -1, 0.75, 1.82, 0.05, 0.014, true);
+        for (const [z0, z1, y0, y1] of [[-0.95, 0.95, 0.56, 0.58], [-0.95, -0.93, 0.56, 0.94], [0.93, 0.95, 0.56, 0.94]] as const) endSlab(c.m(), "frame", c.frame, -1, z0, z1, y0, y1, 0.006);
+        for (const sd of [-1, 1]) endSlab(c.m(), "chrome", c.frame, -1, sd * 0.55 - 0.07, sd * 0.55 + 0.07, 0.86, 0.9, 0.016);
         endSlab(c.m(), "plate", c.frame, -1, -0.26, 0.26, 0.4, 0.52, 0.016);
+        endSlab(c.m(), "chrome", c.frame, -1, -0.1, 0.1, 0.53, 0.55, 0.02);
+        endSlab(c.m(), "band", c.frame, -1, -1.2, 1.2, 0.28, 0.34, 0.01);
+        reflectors(c, 0.44, 0.1);
       });
       // the air-conditioning pod and the engine's intake tower at the rear left
       roofBox(c, "roof", x(5.6), x(2.6), -0.85, 0.85, 3.1, "pod", 2.84);
@@ -452,10 +513,11 @@ function o345Spec(): CitySpec {
     tyres: { single: [0.95, 1.21], inner: [0.62, 0.9], outer: [0.93, 1.21] },
     bellows: { profile: [[-1.18, 0.45], [1.18, 0.45], [1.18, 2.66], [1.05, 2.86], [0, 2.92], [-1.05, 2.86], [-1.18, 2.66]], folds: 8, depth: 0.05 },
     maxSteerDeg: 50,
+    detail: true,
     maxBendDeg: 50,
     details: (c) => {
       const { x } = c;
-      const ws = windscreen(c, 1.5, 2.74, 1.15, [2.42, 2.68]);
+      const ws = windscreen(c, 1.5, 2.74, 1.15, [2.42, 2.68], [[-1.05, 1.1, 5], [0.0, 1.05, 5]]);
       c.d.fit("front", c.nose, () => {
         // (photographs) one windscreen over the black band, the display behind its top
         ws();
@@ -463,7 +525,16 @@ function o345Spec(): CitySpec {
           endSlab(c.m(), "frame", c.frame, 1, sd * 0.93 - 0.22, sd * 0.93 + 0.22, 0.76, 0.92, 0.008);
           for (const dz of [-0.1, 0.1]) endLamp(c.m(), "lampHead", c.frame, 1, sd * 0.93 + dz, 0.84, 0.06, 0.016, undefined, 10);
           endLamp(c.m(), "lampHead", c.frame, 1, sd * 0.93, 0.47, 0.045, 0.016, "frame", 8);
+          // the indicator outside each cluster
+          endSlab(c.m(), "lampAmber", c.frame, 1, Math.min(sd * 1.17, sd * 1.23), Math.max(sd * 1.17, sd * 1.23), 0.77, 0.91, 0.016);
         }
+        // (photographs) the big star between the clusters, the model plate on the right,
+        // louvres in the white panel under the band, the bumper's rubber strip and tow eye
+        endBadge(c.m(), c.frame, 1, 0, 1.0, 0.12, 0.02, true);
+        lettering(c, 1, 0.5, 0.88, 1.0, 0.035, 0.012);
+        for (let i = 0; i < 3; i++) endSlab(c.m(), "grille", c.frame, 1, -0.55, 0.55, 1.16 + i * 0.045, 1.185 + i * 0.045, 0.012);
+        endSlab(c.m(), "rubber", c.frame, 1, -1.22, 1.22, 0.6, 0.63, 0.012);
+        endSlab(c.m(), "frame", c.frame, 1, 0.42, 0.58, 0.4, 0.48, 0.018);
         endSlab(c.m(), "plate", c.frame, 1, -0.26, 0.26, 0.45, 0.57, 0.016);
       });
       c.d.glaze(-1, -1.0, 1.0, 1.65, 2.64);
@@ -472,7 +543,16 @@ function o345Spec(): CitySpec {
         endSlab(c.m(), "glass", c.frame, -1, -1.0, 1.0, 1.65, 2.64, 0.02);
         tailLamps(c, 0.66, 0.05);
         for (let i = 0; i < 5; i++) endSlab(c.m(), "grille", c.frame, -1, -0.8, 0.8, 0.95 + i * 0.1, 1.0 + i * 0.1, 0.012);
+        // the engine flap's seam and latches, the star over it, the plate lamp, the
+        // bumper's rubber strip, a tow eye and the reflectors
+        for (const [z0, z1, y0, y1] of [[-0.9, 0.9, 1.48, 1.5], [-0.9, -0.88, 0.64, 1.5], [0.88, 0.9, 0.64, 1.5]] as const) endSlab(c.m(), "frame", c.frame, -1, z0, z1, y0, y1, 0.006);
+        endBadge(c.m(), c.frame, -1, 0, 1.53 - 0.1, 0.05, 0.016, true);
+        for (const sd of [-1, 1]) endSlab(c.m(), "chrome", c.frame, -1, sd * 0.5 - 0.07, sd * 0.5 + 0.07, 0.88, 0.91, 0.016);
         endSlab(c.m(), "plate", c.frame, -1, -0.26, 0.26, 0.7, 0.82, 0.016);
+        endSlab(c.m(), "chrome", c.frame, -1, -0.1, 0.1, 0.83, 0.85, 0.018);
+        endSlab(c.m(), "rubber", c.frame, -1, -1.22, 1.22, 0.58, 0.61, 0.012);
+        endSlab(c.m(), "frame", c.frame, -1, -0.62, -0.46, 0.4, 0.48, 0.018);
+        reflectors(c, 0.45, 0.12);
       });
       // the engine's side grille, at the rear on the right
       c.d.fit("engine grille", x(17.3), () => {
@@ -524,24 +604,46 @@ function urbinoSpec(): CitySpec {
     arch: { half: 0.58, side: 0.6, top: 1.02 },
     tyres: { single: [0.98, 1.24], inner: [0.68, 0.94], outer: [0.97, 1.23] },
     maxSteerDeg: 50,
+    detail: true,
     details: (c) => {
       const { x } = c;
-      const ws = windscreen(c, 1.24, 2.56, 1.18, [2.3, 2.52]);
+      // (photograph) one long wiper from the left and a short one on the right
+      const ws = windscreen(c, 1.24, 2.56, 1.18, [2.3, 2.52], [[-1.08, 1.45, 4], [1.02, 0.7, -8]]);
       c.d.fit("front", c.nose, () => {
         ws();
         // the cat's-eye clusters: three round lamps each side, a plate between
         for (const sd of [-1, 1]) {
           endSlab(c.m(), "frame", c.frame, 1, sd * 0.97 - 0.22, sd * 0.97 + 0.22, 0.87, 1.0, 0.008);
           for (const dz of [-0.13, 0, 0.13]) endLamp(c.m(), "lampHead", c.frame, 1, sd * 0.97 + dz, 0.935, 0.045, 0.016, undefined, 8);
+          // a chrome ring round each lens, the indicator at the cluster's outer end
+          for (const dz of [-0.13, 0, 0.13]) endLamp(c.m(), "chrome", c.frame, 1, sd * 0.97 + dz, 0.935, 0.018, 0.022, undefined, 6);
+          endSlab(c.m(), "lampAmber", c.frame, 1, Math.min(sd * 1.16, sd * 1.22), Math.max(sd * 1.16, sd * 1.22), 0.89, 0.98, 0.016);
+          // the fog lamps in the bumper
+          roundLamp(c, 1, "lampHead", sd * 0.92, 0.5, 0.04);
         }
+        // (photograph) the Solaris badge in the middle, the name right, the plate's recess
+        endBadge(c.m(), c.frame, 1, 0, 0.95, 0.08, 0.018);
+        endShape(c.m(), "body", c.frame, 1, ngon(10, 0.05, 0, 0, 0.95), 0.024, 0.01);
+        lettering(c, 1, 0.55, 0.95, 1.1, 0.035, 0.012);
+        endSlab(c.m(), "band", c.frame, 1, -0.32, 0.32, 0.38, 0.58, 0.01);
         endSlab(c.m(), "plate", c.frame, 1, -0.26, 0.26, 0.42, 0.54, 0.016);
       });
       c.d.glaze(-1, -1.12, 1.12, 1.25, 2.45);
       c.d.fit("rear", c.tail, () => {
         endSlab(c.m(), "glassDark", c.frame, -1, -1.12, 1.12, 1.25, 2.45, 0.02);
         for (const sd of [-1, 1]) for (const y of [1.08, 2.58]) endLamp(c.m(), "lampRed", c.frame, -1, sd * 1.07, y, 0.06, 0.016, "frame", 8);
-        endSlab(c.m(), "band", c.frame, -1, -1.22, 1.22, 0.62, 0.96, 0.008);
+        // (photograph) each lower cluster: a second red lamp and the reversing lamp
+        // under it, a reflector low at each corner
+        for (const sd of [-1, 1]) {
+          endLamp(c.m(), "lampRed", c.frame, -1, sd * 1.07, 0.93, 0.05, 0.016, "frame", 8);
+          endLamp(c.m(), "lampHead", c.frame, -1, sd * 0.93, 0.93, 0.035, 0.016, "frame", 8);
+        }
+        endSlab(c.m(), "band", c.frame, -1, -1.22, 1.22, 0.62, 0.86, 0.008);
         endSlab(c.m(), "plate", c.frame, -1, -0.26, 0.26, 0.66, 0.78, 0.016);
+        endSlab(c.m(), "frame", c.frame, -1, -0.3, 0.3, 0.63, 0.81, 0.012);
+        lettering(c, -1, -0.95, -0.55, 1.12, 0.035, 0.012);
+        endSlab(c.m(), "rubber", c.frame, -1, -1.22, 1.22, 0.3, 0.36, 0.01);
+        reflectors(c, 0.5, 0.1);
       });
       // the engine stands in a tower in the rear left corner: no window there
       c.d.cover(-1, x(13.5), x(12.4));
@@ -594,6 +696,7 @@ function bus1Spec(): CitySpec {
     arch: { half: 0.6, side: 0.66, top: 1.12 },
     tyres: { single: [0.92, 1.18], inner: [0.62, 0.88], outer: [0.91, 1.17] },
     maxSteerDeg: 45,
+    detail: true,
     details: (c) => {
       const { x } = c;
       // the mint sweep under the windows, its lower edge falling from u 5.75 to the
@@ -629,7 +732,7 @@ function bus1Spec(): CitySpec {
       c.d.fit("side markers", x(5.4), () => {
         for (const s of [-1, 1]) for (const u of [1.75, 9.2]) sideSlab(c.m(), "marker", c.frame, s, x(u) - 0.05, x(u) + 0.05, 0.5, 0.56, 0.016);
       });
-      const ws = windscreen(c, 1.45, 2.68, 1.08, [2.42, 2.64]);
+      const ws = windscreen(c, 1.45, 2.68, 1.08, [2.42, 2.64], [[-0.98, 0.95, 7], [0.04, 0.95, 7]]);
       c.d.fit("front", c.nose, () => {
         ws();
         // headlamp clusters in the corners, a grille between them, a badge over it
@@ -639,6 +742,10 @@ function bus1Spec(): CitySpec {
         endSlab(c.m(), "chrome", c.frame, 1, -0.16, 0.16, 1.08, 1.16, 0.014);
         // fog lamps in the bumper, the plate between them
         for (const s of [-1, 1]) endSlab(c.m(), "lampHead", c.frame, 1, s * 0.85 - 0.09, s * 0.85 + 0.09, 0.42, 0.5, 0.016);
+        // a coach's twin round headlamps in each cluster, the bumper's rubber strip, a tow eye
+        for (const s of [-1, 1]) for (const dz of [0.14, 0.26]) roundLamp(c, 1, "lampHead", s * (c.hw - 0.08 - dz), 0.71, 0.055, 0.024);
+        endSlab(c.m(), "rubber", c.frame, 1, -1.16, 1.16, 0.55, 0.58, 0.012);
+        endSlab(c.m(), "frame", c.frame, 1, 0.4, 0.55, 0.42, 0.5, 0.02);
         endSlab(c.m(), "plate", c.frame, 1, -0.26, 0.26, 0.4, 0.52, 0.016);
       });
       c.d.glaze(-1, -0.95, 0.95, 2.05, 2.6);
@@ -651,6 +758,12 @@ function bus1Spec(): CitySpec {
         tailLamps(c, 0.7, 0.04);
         endSlab(c.m(), "bumper", c.frame, -1, -1.18, 1.18, 0.34, 0.6, 0.008);
         endSlab(c.m(), "plate", c.frame, -1, -0.26, 0.26, 0.4, 0.52, 0.016);
+        // the engine flap's seam and latches, the badge, the plate lamp, the reflectors
+        for (const [z0, z1, y0, y1] of [[-0.9, 0.9, 1.92, 1.94], [-0.9, -0.88, 1.0, 1.94], [0.88, 0.9, 1.0, 1.94]] as const) endSlab(c.m(), "frame", c.frame, -1, z0, z1, y0, y1, 0.006);
+        for (const s of [-1, 1]) endSlab(c.m(), "chrome", c.frame, -1, s * 0.5 - 0.07, s * 0.5 + 0.07, 1.08, 1.11, 0.016);
+        endSlab(c.m(), "chrome", c.frame, -1, -0.16, 0.16, 1.02, 1.1, 0.014);
+        endSlab(c.m(), "chrome", c.frame, -1, -0.1, 0.1, 0.53, 0.55, 0.018);
+        reflectors(c, 0.47, 0.1, 0.022);
       });
       // the air-conditioning unit over the front half, two roof hatches behind it
       roofBox(c, "roof", x(6.0), x(3.0), -0.8, 0.8, 3.16, "roofUnit", 2.95);

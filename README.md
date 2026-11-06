@@ -98,7 +98,7 @@ Details in [docs/models/lod.md](docs/models/lod.md) and the skills in
 
 | Object type | Full | Low (distant) | Coarse | Max detail |
 | --- | ---: | ---: | ---: | ---: |
-| Road vehicles (cars, vans, trucks, buses) | 10,000 | 100; articulated 100 per section, at most 300 | - | - |
+| Road vehicles (cars, vans, trucks, buses) | 10,000; articulated buses 15,000 with one joint, 20,000 with two | 100; articulated 100 per section, at most 300 | - | - |
 | Rail vehicles | about 15,000 a car, cap 16,000 a car | 100 a car, at most 300 (500 for the Shinkansen 0 and TGV Duplex) | - | - |
 | Trams | 10,000; articulated trams up to 15,000 | 100 a section up to three, 500 for four or more | - | - |
 | Freight wagons | 8,000 | 100 | - | - |

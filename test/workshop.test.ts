@@ -14,6 +14,7 @@ import { CATALOG_IDS, isDraft, unknownCatalogIds } from "../generator/workshop";
 import { MODEL_LINKS, linkTableProblems, linksOf } from "../generator/linkTable";
 import { sitePages } from "../generator/sitePages";
 import { parseView, prepareRows, sectionHeading, sectionRows, viewUrl } from "../src/catalogQuery";
+import { readStoredFacts } from "../generator/buildCache";
 
 const CONFIRMED = "proc-vehicle-cd-150";
 // a world fleet bus, added after the Vectron: a draft
@@ -58,8 +59,8 @@ describe("a draft in the export", () => {
       // a side-view vehicle still states its frame, so the browser's thumbnail keeps the scale
       expect(draft.thumbSide).toBeDefined();
       // the build cache keeps both models' facts, and only the confirmed model's thumbnail
-      const cache = JSON.parse(fs.readFileSync(path.join(dir, ".build-cache", "facts.json"), "utf8")) as { designs: Record<string, unknown> };
-      expect(Object.keys(cache.designs)).toEqual([CONFIRMED, DRAFT].sort());
+      const cache = readStoredFacts(path.join(dir, ".build-cache"));
+      expect([...cache.keys()]).toEqual([CONFIRMED, DRAFT].sort());
       expect(fs.readdirSync(path.join(dir, ".build-cache", "thumbs"))).toEqual([`${CONFIRMED}.png`]);
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });

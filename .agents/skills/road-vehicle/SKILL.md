@@ -1,6 +1,6 @@
 ---
 name: road-vehicle
-description: Model or change a procedural road vehicle (truck, articulated truck with trailer, bus, articulated bus, van, car) in generator/vehicles.ts or generator/buses.ts - the triangle budget it must meet (about 10k triangles), the steered front wheels every road vehicle has as parts, the truck/trailer split at the coupling's rotation point, an articulated bus's sections and joints, the conventions, and how to check the result headlessly. Use whenever a road vehicle model is added or changed in this repository.
+description: Model or change a procedural road vehicle (truck, articulated truck with trailer, bus, articulated bus, van, car) in generator/vehicles.ts or generator/buses.ts - the triangle budget it must meet (10k triangles; an articulated bus 15k with one joint, 20k with two), the steered front wheels every road vehicle has as parts, the truck/trailer split at the coupling's rotation point, an articulated bus's sections and joints, the conventions, and how to check the result headlessly. Use whenever a road vehicle model is added or changed in this repository.
 ---
 
 # Road vehicle
@@ -10,9 +10,12 @@ for the code is `docs/models/vehicles.md`; this skill is the checklist.
 
 ## Budget
 
-About **10,000 triangles** per vehicle (hard cap 10,000, enforced by
-`test/models.test.ts`). The same 10,000 holds for a **tram** (an articulated tram up
-to 15,000; the railroad-vehicle skill). There is no file-size budget. Spend triangles where they
+About **10,000 triangles** per vehicle; an **articulated bus 15,000 with one joint
+and 20,000 with two** (a semi-trailer's hitch has no joint, so a truck with its
+trailer keeps 10,000). The hard caps are `roadTriangleBudget()` in `generator/rig.ts`,
+enforced by `test/models.test.ts`, `test/buses.test.ts` and the world-bus tests; they
+count the exterior, the cabin interior has its own 1,500. A **tram** has 10,000 (an
+articulated tram up to 15,000; the railroad-vehicle skill). There is no file-size budget. Spend triangles where they
 read from the game's camera - wheels, the front, the silhouette - not on parts
 under the body. The count is in the `pnpm build:models` output and in
 `export/catalog.json` (`triangles`).

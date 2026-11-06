@@ -4,6 +4,7 @@
 // its parameters changing what they say, in budget; a trolleybus's poles raise to
 // the game's trolley wire; and every bus has its OpenTTD entry.
 
+import { roadTriangleBudget } from "../generator/rig";
 import { describe, expect, it } from "vitest";
 import { WORLD_BUS_SPECS, WORLD_BUSES } from "../generator/worldBuses";
 import { DESIGNS } from "../generator/generate";
@@ -47,7 +48,7 @@ describe("the world buses", () => {
         const spec = b.spec(params);
         const m = b.build(params);
         const ts = collectTriangles(...(Object.values(parseGlb(m.toGlb(b.id))) as [never, never]));
-        expect(m.triangleCount() - m.interiorTriangleCount()).toBeLessThanOrEqual(10_000);
+        expect(m.triangleCount() - m.interiorTriangleCount()).toBeLessThanOrEqual(roadTriangleBudget(m.rig));
         expect(m.interiorTriangleCount()).toBeLessThanOrEqual(1_500);
         // the shell: as long as the bus, as wide, as high at its crown
         const shell = ts.filter((t) => t.material === "body");
