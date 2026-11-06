@@ -9,6 +9,10 @@ import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type Shinkanse
 import { c, flirt, kiss, nose, NO_NOSE } from "./seriesHelpers.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
 import type { Pt } from "./sliceLoft.ts";
+import { sidePanel, type SliceBody } from "./sliceBody.ts";
+import { block } from "./vehicleParts.ts";
+import { pilotPlate } from "./carbodyKit.ts";
+import { singleArm } from "./czElectricKit.ts";
 
 const SBB_RED = "#eb0000";
 
@@ -205,14 +209,141 @@ export const SBB_KISS: ShinkansenSeries = {
   windows: [[1.5, 2.25], [3.1, 3.75]], door: [0.95, 2.8, 1.6, 2.55], upperOverDoors: true,
 };
 
+/**
+ * The Allegra's paint (photo-rhb-abe-8-12-allegra-in-pontresina.jpg, photo-allegra-3515-delivered.jpg,
+ * photo-rhb-abe-8-12-allegra-between-lagalb-and-ospizio-bernina.jpg): RhB red down to a dark grey
+ * skirt, a white line low on the sides (dropping on the face under the lamps), the silver roof
+ * fairings coming down over the cab as a hood; the first class marked by a yellow line over its
+ * windows. The running number of the Pontresina photograph.
+ */
+const ALLEGRA_RHB: ShinkansenLivery = {
+  title: "RhB red", number: "3502",
+  palette: {
+    red: c("#cc1426"), white: c("#ecebe6"), yellow: c("#f0b800"), blue: c("#1f4fa0"), black: c("#141516", 0.5),
+    roofG: c("#b3b7ba", 0.45), roofDark: c("#3c4044", 0.7), skirtG: c("#2c2f33", 0.75), cabMask: c("#141618", 0.3),
+    plough: c("#a4a8ab", 0.55), display: c("#3a2c12", 0.2), doorG: c("#d9dad7"), lettering: c("#f1f1ee"),
+  },
+  bands: [[0, 1.13, "red"], [1.13, 1.25, "white"], [1.25, 9, "red"]], doors: [[0, 9, "doorG"]],
+  roof: "roofG", skirt: "skirtG",
+  // d behind the tip: the cab's side window behind the red A-pillar, its front raked with it, in a black frame
+  endSweeps: [
+    { mat: "cabMask", front: [[1.85, 0.62], [1.9, 0.42], [2.0, 0.34], [3.15, 1.58]], back: [[1.85, 2.2], [3.15, 2.2]] },
+    { mat: "cabGlass", front: [[1.92, 0.6], [1.97, 0.47], [2.06, 0.42], [3.08, 1.66]], back: [[1.92, 2.13], [3.08, 2.13]] },
+  ],
+};
+
+/** The Graubuenden arms on the face: the white shield, the Ten Jurisdictions' quarter yellow under four blue squares. */
+const ALLEGRA_SHIELD: Pick<SeriesCabFace, "fields" | "decals"> = {
+  fields: [
+    { mat: "white", pts: [[-0.2, 1.4], [0.2, 1.4], [0.2, 1.06], [0.11, 0.94], [0, 0.89], [-0.11, 0.94], [-0.2, 1.06]] },
+    { mat: "yellow", pts: [[0.01, 1.37], [0.17, 1.37], [0.17, 1.17], [0.01, 1.17]] },
+  ],
+  decals: [
+    // the Grey League's black half, the blue round the yellow cross, the ibex
+    { mat: "black", pts: [[-0.17, 1.37], [-0.09, 1.37], [-0.09, 1.17], [-0.17, 1.17]] },
+    ...([[0.01, 0.08], [0.1, 0.17]] as const).flatMap(([a, b]) => ([[1.17, 1.255], [1.285, 1.37]] as const).map(([y0, y1]) => ({ mat: "blue", pts: [[a, y0], [b, y0], [b, y1], [a, y1]] as Pt[] }))),
+    { mat: "black", pts: [[-0.09, 1.12], [0.07, 1.12], [0.09, 1.05], [0.02, 0.99], [-0.06, 0.99], [-0.1, 1.05]] },
+  ],
+};
+
+/**
+ * The Allegra's front (the photographs above and photo-abe-812-luen.jpg head-on): a glass-fibre hood,
+ * upright from the snowplough to the windscreen and leaning back a little over it, the silver roof
+ * rounding down over its top. A big black mask holds the windscreen and the destination display
+ * between red A-pillars that sweep back to the roof's corners; the lamps sit low in black pods at
+ * the corners, the canton's arms between them over the white line, the camera and top lamp in a
+ * box on the hood.
+ */
+const ALLEGRA_FACE: SeriesCabFace = {
+  dJoin: 1.6, dSide: 1.2, first: 4.4, roofFrom: 3.42, bulge: 0.12, cols: [8, 4, 1, 2], tolerance: 0.015,
+  profile: [[0.62, 0.2], [0.72, 0.08], [0.9, 0.02], [1.2, 0], [1.6, 0], [1.85, 0.03], [2.4, 0.1], [3.05, 0.2], [3.3, 0.28], [3.42, 0.37], [3.52, 0.58], [3.6, 0.9], [3.65, 1.25], [3.68, 1.6]],
+  corner: [[0.62, 0.5], [1.5, 0.55], [1.9, 0.6], [2.6, 0.72], [3.3, 0.9], [3.42, 0.8], [3.52, 0.55], [3.6, 0.35], [3.68, 0.1]],
+  rows: [0.62, 0.72, 0.9, 1.02, 1.14, 1.2, 1.27, 1.5, 1.6, 1.85, 2.0, 2.4, 3.05, 3.12, 3.3, 3.33, 3.42, 3.47, 3.52, 3.6, 3.65, 3.68],
+  bands: () => [[0, 1.02, "red"], [1.02, 1.14, "white"], [1.14, 9, "red"]],
+  ...ALLEGRA_SHIELD,
+  masks: [
+    { lat: [-1.12, 1.12], y: [1.85, 3.42], r: 0.2, mat: "cabMask" },
+    { lat: [-1.16, -0.7], y: [1.27, 1.5], r: 0.09, mat: "cabMask" }, { lat: [0.7, 1.16], y: [1.27, 1.5], r: 0.09, mat: "cabMask" },
+    { lat: [-0.28, 0.28], y: [3.47, 3.62], r: 0.05, mat: "cabMask" },
+  ],
+  panes: [{ lat: [-1.0, 1.0], y: [2.0, 3.05], r: 0.12 }, { lat: [-0.72, 0.72], y: [3.12, 3.33], r: 0.03, mat: "display" }],
+  lamps: [[-1.02, 1.385, 0.075, "lampHead"], [-0.82, 1.385, 0.05, "lampHead"], [0.82, 1.385, 0.05, "lampHead"], [1.02, 1.385, 0.075, "lampHead"], [-1.17, 3.32, 0.045, "lampRed"], [1.17, 3.32, 0.045, "lampRed"]],
+  roofLamp: [0, 3.545, 0.055],
+  wipers: [[[-0.1, 2.06], [0.42, 2.95]]],
+};
+
+/** The Allegra's roof fairings (silver, over a dark equipment well), underfloor, snowplough, first-class line, cab door, the middle car's tall window and its folded pantograph. */
+function allegraFittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }): void {
+  const C = 3.68, B = 0.62;
+  const x = (d0: number, d1: number) => [Math.min(X(d0), X(d1)), Math.max(X(d0), X(d1))] as const;
+  const roof = (spans: ReadonlyArray<readonly [number, number]>) => m.scope("roof fairings", () => {
+    for (const [d0, d1] of spans) {
+      const [x0, x1] = x(d0, d1);
+      block(m, "roofDark", x0, x1, C - 0.12, C + 0.07, -0.55, 0.55);
+      block(m, "roofG", x0, x1, C - 0.3, C + 0.12, 0.55, 0.98);
+      block(m, "roofG", x0, x1, C - 0.3, C + 0.12, -0.98, -0.55);
+    }
+  });
+  if (car.end) {
+    const [x0, x1] = x(car.trucks[0]! + 1.9, car.trucks[1]! - 1.9);
+    m.scope("underfloor", () => block(m, "under", x0, x1, B - 0.3, B, -1.0, 1.0));
+    roof([[3.4, car.length - 0.35]]);
+    const tip = X(-ALLEGRA_FACE.dJoin);
+    m.scope("snowplough", () => pilotPlate(m, "plough", 1, tip - 0.02, 0.18, 0.6, 1.1, 0.24, 0.5));
+    // the automatic coupler's head over the plough
+    m.scope("coupler", () => block(m, "black", tip - 0.1, tip + 0.06, 0.46, 0.68, -0.26, 0.26));
+    // the train line's sockets over the lamps: red boxes, a yellow cap on each
+    m.scope("sockets", () => {
+      for (const z of [-0.68, 0.68]) {
+        block(m, "red", tip - 0.24, tip - 0.04, 1.55, 1.74, z - 0.12, z + 0.12);
+        block(m, "yellow", tip - 0.06, tip - 0.01, 1.6, 1.69, z - 0.04, z + 0.04);
+      }
+    });
+    for (const sd of [1, -1]) {
+      // the yellow line over the first class's windows; the cab door's outline round its narrow window
+      m.scope("first class", () => sidePanel(m, b, X, sd, "yellow", 2.4, 6.7, 3.1, 3.22, 0.004, 0.01));
+      m.scope("cab door", () => {
+        for (const d of [0.7, 1.53]) sidePanel(m, b, X, sd, "rubber", d, d + 0.02, 1.3, 3.1, 0.004, 0.01);
+        sidePanel(m, b, X, sd, "rubber", 0.72, 1.53, 3.08, 3.1, 0.004, 0.01);
+      });
+    }
+  } else {
+    // the low floor between the bogies leaves no room under it; the AC pantograph folded on the roof
+    roof([[0.35, 1.7], [4.4, car.length - 0.35]]);
+    const xc = X(3.05);
+    m.scope("pantograph", () => {
+      block(m, "roofG", xc - 1.2, xc + 1.2, C - 0.06, C + 0.05, -0.85, 0.85);
+      singleArm(m, { xc, roofY: C + 0.05, baseY: C + 0.3, h: 1, raised: false });
+    });
+    // the low-floor bay's window reaches down to the white line
+    for (const sd of [1, -1]) m.scope("tall window", () => {
+      sidePanel(m, b, X, sd, "rubber", 3.85, 5.25, 1.3, 1.87, 0.006, 0.03);
+      sidePanel(m, b, X, sd, "glass", 3.89, 5.21, 1.34, 1.89, 0.012, 0.004);
+    });
+  }
+}
+
+/**
+ * The RhB ABe 8/12 Allegra: two motor end cars on Bo'Bo' and a low-floor middle car on two trailer
+ * bogies, 49.5 m over the couplers. Layout read from the three side photographs (a projective fit
+ * along each car; d behind the body's front, the cab face's join 1.6 m behind the tip): the end car's
+ * cab door, two wide first-class windows, the door and three second-class windows; the middle car's
+ * four windows, the low-floor bay's double door and two windows. Each end car raises its pantograph
+ * for the Bernina line's direct current, over the cab; the middle car's AC pantograph lies folded.
+ */
 export const ALLEGRA: ShinkansenSeries = {
-  endLength: 17.8, midLength: 14.2, W: 1.32, Y: 1.2, S: 3.0, C: 3.6, lean: 0.95, B: 0.64, A: 0.8,
-  // the metre-gauge unit's rounded front
-  nose: nose(1.8, 0.35, 2.3, [[0, 2.1], [0.4, 2.8], [1.3, 3.35], [2.0, 3.6]], [[0, 2.0], [0.4, 2.6], [1.3, 2.9], [2.0, 3.0]], [[0, 1.2], [0.8, 1.2]], [[0, 0.95], [0.6, 0.8]], [[0, 0.85], [0.3, 0.6]]),
-  windscreen: [0.4, 1.6, 0.07, 1.1], lamps: [0.15, 1.3],
-  windows: [[1.4, 2.5]], windowW: 1.3, pitch: 1.55, door: [0.9, 2.85, 1.45, 2.45], doorW: 1.2,
-  bogieCentres: 10.5, wheelR: 0.4, wheelbase: 2.2, cars: [3], endPantograph: true,
-  liveries: { rhb: chLivery("rhb", "3501") },
+  endLength: 17.75, midLength: 14.0, W: 1.325, Y: 0.8, S: 3.35, C: 3.68, lean: 0.96, B: 0.62, A: 0.72,
+  nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: ALLEGRA_FACE,
+  cabWindows: [[0.9, 1.33, 1.9, 3.0]],
+  windows: [[1.85, 3.05]], windowW: 1.6, pitch: 1.75, door: [0.8, 3.02, 1.85, 2.75], doorW: 1.1, doorGlassW: 0.42,
+  layout: {
+    end: { doors: [[7.5, 8.6, 1]], windows: [[2.4, 4.45], [4.7, 6.7], [9.9, 11.5], [11.65, 13.3], [13.45, 15.0]] },
+    middle: { doors: [[7.65, 8.29, -1], [8.31, 8.95, 1]], windows: [[0.75, 2.15], [2.25, 3.75], [3.85, 5.25], [5.35, 7.0], [10.2, 11.45], [11.55, 12.85]] },
+  },
+  numberAt: [-5.87, 1.62, 0.17],
+  bogieCentres: 10.6, midBogies: [2.5, 11.0], wheelR: 0.4, wheelbase: 2.2, cars: [3], endPantograph: true, pantographAt: 1.4,
+  fittings: allegraFittings,
+  liveries: { rhb: ALLEGRA_RHB },
   weight: { end: 37, middle: 33 }, power: 1050, maxspeed: 120,
 };
 

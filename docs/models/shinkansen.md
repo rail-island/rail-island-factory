@@ -55,7 +55,11 @@ combinations hashed before and after):
 - `endBogies`, `endSides` - a locomotive end car: its bogies at given d behind the nose
   (centred under its body, not the coaches' rule) and its own side windows and doors in
   place of the passenger layout (the IC225's Class 91, the HST's Class 43, the Eurostar's power cars); `endGrilles` -
-  its side grilles with vertical slats (the Class 43's radiator);
+  its side grilles with vertical slats (the Class 43's radiator); `midBogies` - an
+  intermediate car's bogies at given d behind its +X end (the Allegra's low-floor middle car,
+  a bogie near each end); `pantographAt` - where the raised pantograph stands, d behind the
+  body's +X end of the car raising it (default 1.5 m ahead of the rear bogie; the Allegra's
+  over the cab), in the distant model too;
 - `faceLamps`, `faceGrille` - a blunt nose's headlights and grille on its front face, in
   place of the side lamps; `cabPanel` - a warning panel painted over the bands at the
   nose (`cabPanel` paint, the car builder's `field`); `lampPair` - twin headlights side by

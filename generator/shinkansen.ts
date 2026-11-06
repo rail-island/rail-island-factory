@@ -131,6 +131,10 @@ export interface ShinkansenSeries {
   endPantograph?: boolean | "lead" | "trail";
   /** The end car's bogies (d behind the nose tip) where they do not follow the coaches' rule: a locomotive's, centred under its body. */
   endBogies?: readonly [number, number];
+  /** An intermediate car's bogies (d behind its +X end) where they do not follow the rule: a low-floor car's, near both ends. */
+  midBogies?: readonly [number, number];
+  /** Where the raised pantograph stands, d behind the body's +X end of the car raising it (default 1.5 m ahead of its rear bogie). */
+  pantographAt?: number;
   /** A locomotive end car's sides: its windows (d spans, on the first window row) and doors in place of the passenger layout. */
   endSides?: { windows: ReadonlyArray<readonly [number, number]>; doors: ReadonlyArray<readonly [number, number]> };
   /** Headlights on the nose's front face (z, y, radius, lens) in place of the side lamps: a blunt nose. */
@@ -194,6 +198,7 @@ const midBody = (s: ShinkansenSeries) => s.midLength - 2 * GAP;
 /** Bogie positions (d) of a car: 2.5 m in from each body end, the end car's leading one behind the nose. */
 function bogies(s: ShinkansenSeries, end: boolean): [number, number] {
   if (end && s.endBogies) return [s.endBogies[0], s.endBogies[1]];
+  if (!end && s.midBogies) return [s.midBogies[0], s.midBogies[1]];
   const L = end ? endBody(s) : midBody(s);
   if (s.single || s.centredBogies) return [L / 2 - s.bogieCentres / 2, L / 2 + s.bogieCentres / 2];
   const back = L - 3.5;
@@ -304,7 +309,7 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
       if (isDiesel(s))
         m.scope("exhaust", () => exhaust(m, X(L / 2), 0, s.C - 0.05, s.C + 0.1, 0.14, 0.14));
       if (pantograph) m.scope("pantograph", () => {
-        const x = X(tr[1] - 1.5);
+        const x = X(s.pantographAt ?? tr[1] - 1.5);
         block(m, l.roof, x - 1.6, x + 1.6, s.C - 0.06, s.C + 0.05, -0.85, 0.85);
         if (s.pantograph === "diamond") diamond(m, { xc: x, roofY: s.C + 0.05, baseY: s.C + 0.35, raised: true });
         else singleArm(m, { xc: x, roofY: s.C + 0.05, baseY: s.C + 0.3, h: 1, raised: true });
@@ -505,7 +510,7 @@ function carLod(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
   const parts: LodPart[] = [
     ...bogieParts(tr.map((d) => [T(X(d)), s.wheelbase / 2 + s.wheelR + 0.2, ...(section !== undefined ? [section] : [])] as const) as unknown as ReadonlyArray<readonly [number, number, number?]>, s.B),
     ...(end && s.lodRoof ? [roofPart(s.lodRoof.mat, T(X(s.lodRoof.d[0] - (s.cabFace?.dJoin ?? 0))), T(X(s.lodRoof.d[1] - (s.cabFace?.dJoin ?? 0))), s.lodRoof.hw, s.lodRoof.hw, s.lodRoof.y[0], s.lodRoof.y[1], section)] : []),
-    ...(pantograph ? [{ ...roofPart("pantograph", T(X(tr[1] - 1.5)) - 0.8, T(X(tr[1] - 1.5)) + 0.8, 0.45, 0.45, s.C, RAIL_COLLECTOR_TOP, section), optional: 8 }] : []),
+    ...(pantograph ? [{ ...roofPart("pantograph", T(X(s.pantographAt ?? tr[1] - 1.5)) - 0.8, T(X(s.pantographAt ?? tr[1] - 1.5)) + 0.8, 0.45, 0.45, s.C, RAIL_COLLECTOR_TOP, section), optional: 8 }] : []),
   ];
   return { body, parts };
 }

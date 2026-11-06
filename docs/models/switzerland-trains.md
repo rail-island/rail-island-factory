@@ -41,6 +41,22 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
 - **Ae 8/14.** One 34 m body on its eight driving axles in four groups; the articulation
   between its two halves and the six idle guiding axles are left out.
 - **Glacier Express.** The panorama roof is drawn as the dark roof band over tall windows.
+- **Allegra.** Its own cab face (`ALLEGRA_FACE`) and livery (`ALLEGRA_RHB`, key `rhb`; the
+  shared `chLivery("rhb")` is unchanged), read from four photographs (assets/rhb-allegra/):
+  the upright glass-fibre front under the silver hood, the big black mask with the
+  windscreen and destination display between red A-pillars, the lamps low in black pods, the
+  Graubuenden arms, the camera box, sockets, coupler and snowplough; the white line low on
+  the sides (12 cm lower on the face, a step at the corner where the real one ramps down);
+  the cab side window behind the pillar, the cab door, the first class's yellow line, white
+  door leaves; silver roof fairings over a dark equipment well. End cars 17.75 m and the
+  middle car 14.0 m (49.5 m); the layout of each car comes from a projective fit along the
+  photographed sides. Of the three pantographs each end car raises its DC one over the cab
+  (the Bernina line, as photographed) and the middle car's AC one lies folded. The middle
+  car's bogies stand near its ends with no underfloor box between them (the lowered floor),
+  its low-floor bay has a double door and one window reaching down to the white line. The
+  number 3502 stands under the cab door's window, lower than on the real car, because the
+  kit puts it on every car at one height. The kit's single wheel radius (0.4 m) serves the
+  middle car's smaller trailer wheels too.
 
 ## Tests
 
