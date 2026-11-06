@@ -21605,20 +21605,20 @@
    }
   },
   "proc-vehicle-dmrc-rs1": {
-   "key": "4f30830c56d5ef2b2e37cd04509a8c62ff8c8b1a22cc5b968f8d1f21e915ebaf",
-   "triangles": 8760,
+   "key": "7ea6108baad3085531db51e904ce36398aaaf1069669e05a1b9ed7e7401dc8ae",
+   "triangles": 10362,
    "stats": {
-    "triangles": 8760,
-    "vertices": 28848,
-    "primitives": 59,
-    "materials": 23,
+    "triangles": 10362,
+    "vertices": 33654,
+    "primitives": 61,
+    "materials": 25,
     "min": [
      -10.800000190734863,
      -1.1920928966180355e-8,
      -1.6115182638168335
     ],
     "max": [
-     10.92000675201416,
+     10.517561912536621,
      3.9000000953674316,
      1.6115182638168335
     ]
@@ -21644,12 +21644,12 @@
     ]
    },
    "side": {
-    "widthM": 22.320006942749025,
+    "widthM": 21.917562103271486,
     "heightM": 6.3,
     "bottomM": -0.3
    },
    "seat": [
-    9.67,
+    9.7676,
     3.9,
     0
    ],
@@ -21666,7 +21666,7 @@
      3.223036527633667
     ],
     "[]": [
-     21.720006942749023,
+     21.317562103271484,
      3.9000001072883608,
      3.223036527633667
     ]
@@ -29731,7 +29731,7 @@
    "extents": {}
   },
   "proc-vehicle-ir-memu": {
-   "key": "ee844480025040715f486d08a3101efa1aa53584a7c05ba81194c448d7d1245f",
+   "key": "ebf8e068ffccc0d65514b0fe80662c6063b7900247b60921bc8c87985bab1535",
    "triangles": 7910,
    "stats": {
     "triangles": 7910,
@@ -29799,7 +29799,7 @@
    }
   },
   "proc-vehicle-ir-mumbai-emu": {
-   "key": "829a0dff48bc221af88e2f0fa0f94688edb76c33ef50b58cd86c68084155d1cd",
+   "key": "759103a43f8391737dd313bcb2696ec31d804987c9cbf48d083abdf9dc7cf673",
    "triangles": 8186,
    "stats": {
     "triangles": 8186,
@@ -29867,7 +29867,7 @@
    }
   },
   "proc-vehicle-ir-vande-bharat": {
-   "key": "ecfe4f52f418ed3d66a848df9582c864b813dafcc47530d7e89fdcc039bd0b05",
+   "key": "028ea70f0978109c716c7b84d10d6c227a7cb75bc61e2caeda4fcd8b126fb1dc",
    "triangles": 9200,
    "stats": {
     "triangles": 9200,
@@ -38618,7 +38618,7 @@
    }
   },
   "proc-vehicle-ncrtc-namo-bharat": {
-   "key": "995914c24c7bfefab1d58ffacee388f04663187213ed02711717da076664eed0",
+   "key": "27f2957ade6f246e72b4a759a689f94fc791bde2a5e06c47d782e0970d467e80",
    "triangles": 8941,
    "stats": {
     "triangles": 8941,

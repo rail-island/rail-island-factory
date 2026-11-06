@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { DE_UNITS, VT98 } from "../generator/deUnits.ts";
 import { DE1, MAT46, NL_UNITS } from "../generator/nlUnits.ts";
 import { FR_UNITS, MI09, X3800 } from "../generator/frUnits.ts";
+import { DELHI_METRO, IN_UNITS } from "../generator/inUnits.ts";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles.ts";
 import type { ProceduralDesign } from "../generator/design.ts";
@@ -16,6 +17,7 @@ const CASES: Array<{ design: ProceduralDesign; series: ShinkansenSeries; panes: 
   { design: NL_UNITS.find((d) => d.id === "proc-vehicle-ns-de1")!, series: DE1, panes: 5, single: true },
   { design: FR_UNITS.find((d) => d.id === "proc-vehicle-sncf-x3800")!, series: X3800, panes: 4, single: true },
   { design: FR_UNITS.find((d) => d.id === "proc-vehicle-ratp-mi09")!, series: MI09, panes: 1, single: false, rake: 0.75 },
+  { design: IN_UNITS.find((d) => d.id === "proc-vehicle-dmrc-rs1")!, series: DELHI_METRO, panes: 3, single: false },
 ];
 
 function points(d: ProceduralDesign) {
