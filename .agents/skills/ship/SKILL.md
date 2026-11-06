@@ -76,9 +76,12 @@ A ship without these looks like a toy. The helpers are in `worldShips.ts`:
    rescue boat (older ships: lifeboats in davits, the default).
 2. **The fittings** - `fittings({ L, B, D, fc, aft, draft })`: the forecastle's
    bulwark, the anchors in their pockets each side of the bow, windlasses and
-   bollards on the forecastle, mooring winches aft, the draft marks and the bow
-   thruster sign on the hull. Without a forecastle use the items directly
-   (`bulwark`, `anchors`, `mooring`, `marks`).
+   bollards on the forecastle, mooring winches aft, the railing along the deck's
+   edge (`rail`: its span, or false where a bulwark or crash rail runs), the draft
+   marks and the bow thruster sign on the hull. A passenger ship takes
+   `detailed(items)` (deck edges, front windows) and `passengerFittings()`; small
+   craft use the items directly (`bulwark`, `edgeRail`, `strakes`, `anchors`,
+   `mooring`, `marks`).
 3. **The cargo gear of the type** - what makes the type recognisable:
    - container ships: hatch covers on coamings, `containers` with `rows: 2.5`
      (one stack per row of boxes, two colours each), `lashing` bridges in the bay

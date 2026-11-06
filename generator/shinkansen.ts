@@ -13,9 +13,9 @@ import { paint } from "./dieselParts.ts";
 import { block } from "./vehicleParts.ts";
 import { exhaust } from "./dieselParts.ts";
 import type { Pt } from "./sliceLoft.ts";
-import { crownPane, surfaceDisc, type SliceBody } from "./sliceBody.ts";
+import { crownPane, sidePanel, surfaceDisc, type SliceBody } from "./sliceBody.ts";
 import { decalX } from "./usHoodKit.ts";
-import { CARBODY_PALETTE, type NoseShape } from "./carbodyKit.ts";
+import { CARBODY_PALETTE, faceLamps, type NoseShape } from "./carbodyKit.ts";
 import { INTERIOR_PALETTE } from "./interior.ts";
 import { drawCar, type CarDef } from "./usTransit.ts";
 import { diamond, singleArm } from "./czElectricKit.ts";
@@ -98,8 +98,20 @@ export interface ShinkansenSeries {
   cars?: readonly number[];
   /** One double-ended railcar, a cab or nose at both ends: no car or train choice. */
   single?: boolean;
-  /** The end cars raise the pantographs (a short unit without intermediate motor cars). */
-  endPantograph?: boolean;
+  /** The end cars raise the pantographs (a short unit without intermediate motor cars); `lead` only the leading one (a locomotive and its driving trailer), `trail` only the rear one (a power-car train feeding both from one collector). */
+  endPantograph?: boolean | "lead" | "trail";
+  /** The end car's bogies (d behind the nose tip) where they do not follow the coaches' rule: a locomotive's, centred under its body. */
+  endBogies?: readonly [number, number];
+  /** A locomotive end car's sides: its windows (d spans, on the first window row) and doors in place of the passenger layout. */
+  endSides?: { windows: ReadonlyArray<readonly [number, number]>; doors: ReadonlyArray<readonly [number, number]> };
+  /** Headlights on the nose's front face (z, y, radius, lens) in place of the side lamps: a blunt nose. */
+  faceLamps?: ReadonlyArray<readonly [number, number, number, string]>;
+  /** A grille on the nose's front face between the face lamps: its half width, bottom and top, and its slats. */
+  faceGrille?: { z: number; y: readonly [number, number]; slats: number };
+  /** A locomotive end car's side grilles (d0, d1, y0, y1, vertical slats): a power car's radiator and air intakes. */
+  endGrilles?: ReadonlyArray<readonly [number, number, number, number, number]>;
+  /** A warning panel on the nose: painted up to d behind the tip, between two heights. */
+  cabPanel?: { d: number; y: readonly [number, number]; colour: string };
   /** A metro or tube train fed from a conductor rail: no pantograph, filed with the metros. */
   metro?: boolean;
   /** The coupler at a cab end: the unit's centre coupler (default) or buffers and a screw coupling. */
@@ -146,6 +158,7 @@ const midBody = (s: ShinkansenSeries) => s.midLength - 2 * GAP;
 
 /** Bogie positions (d) of a car: 2.5 m in from each body end, the end car's leading one behind the nose. */
 function bogies(s: ShinkansenSeries, end: boolean): [number, number] {
+  if (end && s.endBogies) return [s.endBogies[0], s.endBogies[1]];
   const L = end ? endBody(s) : midBody(s);
   if (s.single || s.centredBogies) return [L / 2 - s.bogieCentres / 2, L / 2 + s.bogieCentres / 2];
   const back = L - 3.5;
@@ -187,6 +200,10 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
     doors = own.doors.map(([a, e]): [number, number] => [a, e]);
     spans = own.windows.map(([a, e]): [number, number] => [a, e]);
   }
+  if (end && s.endSides) {
+    spans = s.endSides.windows.map(([a, e]) => [a, e]);
+    doors = s.endSides.doors.map(([a, e]) => [a, e]);
+  }
   const reach = s.wheelbase / 2 + s.wheelR + 0.25;
   return {
     spec: {
@@ -195,8 +212,9 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
       ...(end && s.flatCab && s.cabNose ? { front: s.cabNose, ...(s.single ? { rear: s.cabNose } : {}) } : {}), cuts: tr.map((d) => [d - reach, d + reach] as const), edges: [], step: 1.0, noseStep: 0.25,
     },
     bands: l.bands, roof: l.roof, skirt: l.skirt, under: "under",
-    windows: s.windows.map((y) => ({ y, spans, frame: "rubber" })),
-    doors: { spans: doors, y: [s.door[0], s.door[1]], glass: [s.door[2], s.door[3]], ...(own ? { slides: own.doors.map((o) => o[2]) } : {}) },
+    ...(end && s.cabPanel ? { field: { d: s.cabPanel.d, y: s.cabPanel.y, mat: "cabPanel" } } : {}),
+    windows: s.windows.map((y, r) => ({ y, spans: end && s.endSides && r > 0 ? [] : spans, frame: "rubber" })),
+    doors: { spans: doors, y: [s.door[0], s.door[1]], glass: [s.door[2], s.door[3]], ...(own && !(end && s.endSides) ? { slides: own.doors.map((o) => o[2]) } : {}) },
     ...(l.doors ? { doorBands: l.doors } : {}), ...(end && l.front && !s.flatCab ? { front: { d: s.nose.len + 0.05, bands: l.front } } : {}),
     ...(s.flatCab ? { cab: s.flatCab } : end && s.noseCab ? { cab: s.noseCab } : {}), cabEnds: end && (s.flatCab || s.noseCab) ? (s.single ? [1, -1] : [1]) : [], diaphragm: [s.door[0], s.door[1] + 0.3],
     trucks: tr, truck: {
@@ -209,6 +227,15 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
     lettering: [s.numberAt ? { text: number, d: L / 2 + s.numberAt[0], y: s.numberAt[1], h: s.numberAt[2], mat: "lettering" } : { text: number, d: L - 3.0, y: s.Y + 0.1, h: 0.1, mat: "lettering" }],
     extras: (m, b, X) => {
       if (end && !s.flatCab) noseFittings(m, s, b, X);
+      if (end && s.endGrilles) m.scope("grilles", () => {
+        for (const sd of [1, -1]) for (const [d0, d1, y0, y1, n] of s.endGrilles!) {
+          sidePanel(m, b, X, sd, "black", d0, d1, y0, y1, 0.006, 0.03);
+          for (let i = 1; i < n; i++) {
+            const d = d0 + ((d1 - d0) * i) / n;
+            sidePanel(m, b, X, sd, "rubber", d - 0.012, d + 0.012, y0 + 0.03, y1 - 0.03, 0.014, 0.008);
+          }
+        }
+      });
       if (s.single && !s.flatCab) m.scope("rear nose", () => m.turned((X(0) + X(L)) / 2, () => noseFittings(m, s, b, X)));
       if (isDiesel(s))
         m.scope("exhaust", () => exhaust(m, X(L / 2), 0, s.C - 0.05, s.C + 0.1, 0.14, 0.14));
@@ -246,6 +273,17 @@ function noseFittings(m: MeshBuilder, s: ShinkansenSeries, b: SliceBody, X: (d: 
       crownPane(m, b, X, sd, "cabGlass", [d0 + 0.08, d1 - 0.08], [z0 + 0.05, z1 - 0.05], 0.04, 5, 3);
     }
   });
+  if (s.faceLamps) {
+    m.scope("headlights", () => faceLamps(m, 1, X(0), s.faceLamps!));
+    const g = s.faceGrille;
+    if (g) m.scope("grille", () => {
+      const x = X(0);
+      block(m, "black", x - 0.01, x + 0.03, g.y[0], g.y[1], -g.z, g.z);
+      const pitch = (g.y[1] - g.y[0]) / (g.slats + 1);
+      for (let i = 1; i <= g.slats; i++) block(m, "rubber", x + 0.03, x + 0.045, g.y[0] + i * pitch - 0.012, g.y[0] + i * pitch + 0.012, -g.z + 0.03, g.z - 0.03);
+    });
+    return;
+  }
   m.scope("headlights", () => {
     const [d, y] = s.lamps;
     for (const sd of [1, -1]) {
@@ -261,11 +299,14 @@ const PALETTE: Record<string, MaterialSpec> = {
   under: paint("#2a2c2f", 0.85), lettering: paint("#2a2c30"),
 };
 
+/** The nose's warning panel paint, when the series has one. */
+const panelPaint = (s: ShinkansenSeries): Record<string, MaterialSpec> => (s.cabPanel ? { cabPanel: paint(s.cabPanel.colour, 0.45) } : {});
+
 export interface ShinkansenSlot { end: boolean; pantograph: boolean; lo: number; hi: number; turned: boolean }
 
 /** The cars of an n-car train, front first: an end car at each end (the rear one turned), the second and the next-to-last raising a pantograph (the middle one of three). */
 export function shinkansenTrain(s: ShinkansenSeries, n: number): ShinkansenSlot[] {
-  const pan = (k: number) => (unwired(s) ? false : s.endPantograph ? k === 0 || k === n - 1 : n <= 3 ? k === 1 : k === 2 || k === n - 3);
+  const pan = (k: number) => (unwired(s) ? false : s.endPantograph === "lead" ? k === 0 : s.endPantograph === "trail" ? k === n - 1 : s.endPantograph ? k === 0 || k === n - 1 : n <= 3 ? k === 1 : k === 2 || k === n - 3);
   const total = 2 * s.endLength + (n - 2) * s.midLength;
   let hi = total / 2;
   return Array.from({ length: n }, (_, k) => {
@@ -280,7 +321,7 @@ export function shinkansenTrain(s: ShinkansenSeries, n: number): ShinkansenSlot[
 export function buildSeries(s: ShinkansenSeries, params: readonly ParamSpec[], v?: ParamValues): MeshBuilder {
   const p = resolveParams(params, v);
   const l = liveryOf(s, p);
-  const m = new MeshBuilder({ ...PALETTE, ...l.palette });
+  const m = new MeshBuilder({ ...PALETTE, ...l.palette, ...panelPaint(s) });
   const unit = (s.single ? "endCar" : p.unit) as ShinkansenUnit;
   if (unit !== "train") {
     const end = unit === "endCar";

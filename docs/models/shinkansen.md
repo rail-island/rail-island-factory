@@ -50,6 +50,15 @@ combinations hashed before and after):
 - `cars` - the train lengths offered (default 3 - 8); a unit of two cars has no middle car;
 - `single` - one double-ended railcar, its nose (or flat cab) at both ends, no car choice;
 - `endPantograph` - the end cars raise the pantographs (a short unit without middle motor cars);
+  `"lead"` only the leading end car (a locomotive and its driving trailer, the IC225),
+  `"trail"` only the rear one (a power-car train fed from one collector, the Eurostar);
+- `endBogies`, `endSides` - a locomotive end car: its bogies at given d behind the nose
+  (centred under its body, not the coaches' rule) and its own side windows and doors in
+  place of the passenger layout (the IC225's Class 91, the HST's Class 43, the Eurostar's power cars); `endGrilles` -
+  its side grilles with vertical slats (the Class 43's radiator);
+- `faceLamps`, `faceGrille` - a blunt nose's headlights and grille on its front face, in
+  place of the side lamps; `cabPanel` - a warning panel painted over the bands at the
+  nose (`cabPanel` paint, the car builder's `field`);
 - `endCoupler: "buffers"` - buffers and a screw coupling on a beam at the cab ends (the car
   builder's `buffers` coupler), the coupling plane 0.65 m out;
 - `wheelbase: 0` - a single axle at each truck position (a two-axle railbus, a Talgo car);
@@ -73,7 +82,7 @@ combinations hashed before and after):
   the nose (the Class 378's orange doors and yellow front); the front's band heights become
   paint edges of the car's slices.
 
-A short car's leading bogie comes in so that its wheels stay under the body. The kit
+A nose end never carries a gangway frame, buffered or not. A short car's leading bogie comes in so that its wheels stay under the body. The kit
 refuses a wheelbase under 2.05 m (the bogie's brake cylinders would lie on its
 transoms) and a skirt bottom on the centre coupler's draft gear or on the transoms.
 

@@ -172,7 +172,7 @@ export function idealXSpec(): ShipSpec {
       mast(84, D + 7.2, D + 16, 0.2),
       { k: "vents", at: [[20, -5], [20, 5], [140, -3], [140, 3]], h: 2.2, r: 0.35, cowl: true },
       { k: "bulwark", u: [26, 145.6], h: 1.1, t: 0.25 },
-      ...fittings({ L, B: 20.7, D: D + 2.2, fc: [14, 0], aft: [2], rake: 0.03, draft: 9.2 }),
+      ...fittings({ L, B: 20.7, D: D + 2.2, fc: [14, 0], aft: [2], rake: 0.03, draft: 9.2, rail: false }),
     ],
   };
 }
@@ -208,6 +208,9 @@ function tankDeck(u0: number, u1: number, D: number, hw: number, hose = 0.5): It
     { k: "pipes", u: [u0, u1], z: Array.from({ length: n }, (_, i) => -2.5 - i * 1.3 * s), y: D + 0.8 * s, r: 0.35 * s },
     { k: "pipes", u: [u0, u1], z: [hw * 0.55], y: D + 0.5, r: 0.25 * s, mat: "red", name: "fire main" },
     { k: "catwalk", u: [u0, u1], y: D + 2.6 * s, z: 0.8, w: 1.4, pitch: 9 },
+    // the deck paint: the green walkway under the catwalk, the yellow lines of the safe ways along both sides
+    { k: "box", u: [u0, u1], z: [-0.4, 2], y: [D - 0.02, D + 0.03], mat: "green", name: "walkway paint" },
+    ...[1, -1].map((sd): Item => ({ k: "box", u: [u0, u1], z: sd > 0 ? [hw * 0.82, hw * 0.82 + 0.4] : [-hw * 0.82 - 0.4, -hw * 0.82], y: [D - 0.02, D + 0.03], mat: "yellow", name: "safe way line" })),
     ...spacedAt(u0 + 2, u1 - 2, Math.round((u1 - u0) / 9)).map((u): Item => ({ k: "box", u: [u - 0.25, u + 0.25], z: [-3 - n * 1.3 * s, -1.8], y: [D - 0.05, D + 0.5 * s], mat: "steel", top: false, name: "pipe support" })),
     { k: "box", u: [mid - 3, mid + 3], z: [-hw * 0.95, hw * 0.95], y: [D, D + 0.5], mat: "steel", name: "manifold platform" },
     ...[-1.8, 0, 1.8].map((du, i): Item => ({ k: "rod", a: [mid + du, D + 1.3, -hw * 0.95], b: [mid + du, D + 1.3, hw * 0.95], r: 0.3 * s, mat: "steel", name: `manifold crossover ${i + 1}` })),
@@ -402,7 +405,12 @@ const bulkLivery = (...keys: string[]): ParamSpec => /* @__PURE__ */ liveryParam
 
 /** A bulker's side-rolling hatch covers: each pair on its coaming, ridged along the centreline, ribbed across. */
 function bulkHatches(u: readonly [number, number], n: number, hw: number, D: number, h: number, gap: number): Item {
-  return { k: "hatches", u, n, hw, y: D, h, gap, coaming: h * 0.9, coamingMat: "deck", ridge: h * 0.35, ribs: 3 };
+  return { k: "hatches", u, n, hw, y: D, h, gap, coaming: h * 0.9, coamingMat: "deck", ridge: h * 0.55, ribs: 5, ribMat: "steel" };
+}
+
+/** A bulker's deck paint: the green walkways along both sides of the hatches. */
+function bulkWalkways(u: readonly [number, number], z: number, D: number): Item[] {
+  return [1, -1].map((sd): Item => ({ k: "box", u, z: sd > 0 ? [z, z + 1.2] : [-z - 1.2, -z], y: [D - 0.02, D + 0.03], mat: "green", name: "walkway paint" }));
 }
 
 export const CAPESIZE_PARAMS: readonly ParamSpec[] = [/* @__PURE__ */ bulkLivery("black", "red", "blue")];
@@ -416,6 +424,7 @@ export function capesizeSpec(p?: ParamValues): ShipSpec {
     items: [
       ...aftHouse({ u: [6, 30], D, decks: 6, hw: 15, wings: 22.5, funnel: { u: [8, 16], hw: 3.2, h: 12 }, detail: true, freefall: 8 }),
       bulkHatches([40, 272], 9, 11, D, 2.2, 9),
+      ...bulkWalkways([36, 276], 13, D),
       { k: "pipes", u: [36, 276], z: [19.5], y: D + 0.5, r: 0.25, mat: "red", name: "fire main" },
       { k: "vents", at: spacedAt(48, 264, 9).flatMap((u) => [[u, 16.5], [u, -16.5]] as const), h: 1.4, r: 0.4, mat: "steel", name: "hold vents" },
       mast(282, D + 2.6, D + 14),
@@ -434,6 +443,7 @@ export function valemaxSpec(): ShipSpec {
     items: [
       ...aftHouse({ u: [8, 38], D, decks: 7, hw: 21, h: 2.9, wings: 32.5, funnel: { u: [10, 20], hw: 4.4, h: 15 }, detail: true, freefall: 9 }),
       bulkHatches([46, 342], 7, 15, D, 2.6, 14),
+      ...bulkWalkways([42, 346], 18, D),
       { k: "pipes", u: [42, 346], z: [28], y: D + 0.5, r: 0.3, mat: "red", name: "fire main" },
       { k: "vents", at: spacedAt(56, 332, 7).flatMap((u) => [[u, 22], [u, -22]] as const), h: 1.6, r: 0.5, mat: "steel", name: "hold vents" },
       mast(352, D + 2.8, D + 16),
@@ -453,6 +463,7 @@ export function handysizeSpec(p?: ParamValues): ShipSpec {
     items: [
       ...aftHouse({ u: [4, 22], D, decks: 6, hw: 11, wings: 15, funnel: { u: [5, 11], hw: 2.4, h: 8 }, detail: true, freefall: 7 }),
       bulkHatches([30, 166], 5, 8.5, D, 1.8, 9),
+      ...bulkWalkways([26, 170], 10, D),
       // the four deck cranes between the hatches, each on its pedestal with its cab
       ...[59.8, 88.6, 117.4, 146.2].flatMap((u): Item[] => [
         { k: "cyl", u, z: 0, y: [D - 0.1, D + 4], r: 2, n: 12, mat: "crane", name: "crane pedestal" },
@@ -577,7 +588,7 @@ export function roroSpec(p?: ParamValues): ShipSpec {
       { k: "bulwark", u: [22, L - 30], h: 1.1, t: 0.25 },
       { k: "freefall", u: L - 34, y: D + 5.6, len: 7, tilt: 0.55 },
       { k: "freefall", u: L - 46, y: D + 5.6, len: 7, tilt: -0.45, name: "freefall lifeboat aft-facing" },
-      ...fittings({ L, B: 26, D, fc: [30, 3], aft: [3], draft: 7.5 }),
+      ...fittings({ L, B: 26, D, fc: [30, 3], aft: [3], draft: 7.5, rail: [0.6, 21.6] }),
     ],
   };
 }
@@ -634,7 +645,7 @@ export function reeferSpec(p?: ParamValues): ShipSpec {
       ...[52, 82, 112].map((u): Item => ({ k: "box", u: [u - 1.4, u + 1.4], z: [-4, 4], y: [D - 0.1, D + 2.6], mat: "house", name: "winch house" })),
       { k: "vents", at: [[27, 7.5], [27, -7.5], [66, 7.5], [66, -7.5], [97, 7.5], [97, -7.5]], h: 2, r: 0.45, cowl: true, mat: "house", name: "hold ventilators" },
       { k: "bulwark", u: [0, 24], h: 1.1, t: 0.25 },
-      ...fittings({ L, B: 23, D, fc: [12, 2.4], aft: [], draft: 9 }),
+      ...fittings({ L, B: 23, D, fc: [12, 2.4], aft: [], draft: 9, rail: [24.4, L - 12.4] }),
     ],
   };
 }
@@ -843,7 +854,7 @@ export function volgaDonSpec(): ShipSpec {
       mast(10, D + 7.7, D + 12, 0.12),
       mast(L - 6, D + 1.8, D + 9, 0.15),
       { k: "pipes", u: [16, 126], z: [B / 2 - 0.8, -(B / 2 - 0.8)], y: D + 0.4, r: 0.08, mat: "white", name: "deck rails" },
-      ...fittings({ L, B, D, fc: [10, 1.8], aft: [], draft: 3.5, anchor: 1.4 }),
+      ...fittings({ L, B, D, fc: [10, 1.8], aft: [], draft: 3.5, anchor: 1.4, rail: false }),
     ],
   };
 }
