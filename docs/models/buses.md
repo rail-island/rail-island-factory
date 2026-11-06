@@ -103,7 +103,10 @@ budget where the game's camera sees it. The wheels are turned on a lathe (a prof
 revolved on the tyre's 16-gon, a flat side down): bevelled shoulders, the sidewall, a
 dished steel rim with ten wheel nuts (hexagonal prisms, their backs hidden in the dish)
 and a hub cap at most 3 cm proud of the tyre; an inner twin, hidden behind its outer
-one, is the plain 16-gon. Each wheel arch has a dark rubber trim 4.5 cm
+one, is the plain 16-gon. The rim, hub and nuts sit in the tyre's bore as a rolling
+part (`wheel-front-<side>-spin` in each steered wheel's node, `wheel-rear-<axle>-<side>`
+on the bodies) and the bus's `rolling` clip turns them with the distance travelled
+([animation.md](animation.md#rolling-wheels)); the round tyre stays with the body. Each wheel arch has a dark rubber trim 4.5 cm
 wide, 5 mm outside the notch (left off a side where a doorway comes within 5 cm), each
 rear axle mudflaps hung from its arch's rear wall behind the tyres, each stretch
 between two arches an amber side marker (`marker`, no lamp role) unless a doorway is

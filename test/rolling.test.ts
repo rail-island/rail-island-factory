@@ -37,6 +37,25 @@ const ROLLING: Array<{ id: string; d: number; nodes: string[] }> = [
       ...Array.from({ length: rear as number }, (_, k) => [`wheel-rear-${k + 1}-left`, `wheel-rear-${k + 1}-right`]).flat(),
     ],
   })),
+  // the confirmed buses (busDetail.ts detailedBusWheel): each outer wheel's rim, hub and ten
+  // nuts, the bodies' rear wheels in drawing order, the steered ones in their own nodes
+  ...([
+    ["proc-vehicle-karosa-short", 1.04, 1, false],
+    ["proc-vehicle-karosa-long", 1.04, 2, true],
+    ["proc-vehicle-karosa-renault-citybus-12m", 0.96, 1, false],
+    ["proc-vehicle-karosa-renault-citybus-18m", 0.96, 2, true],
+    ["proc-vehicle-mb-citaro", 0.96, 1, false],
+    ["proc-vehicle-mb-citaro-blue", 0.96, 1, false],
+    ["proc-vehicle-mb-o345-g", 1.0, 2, true],
+    ["proc-vehicle-solaris-urbino-15", 0.96, 2, false],
+    ["proc-vehicle-bus-1", 1.0, 1, false],
+  ] as const).map(([id, d, rear, articulated]) => {
+    const pair = (k: number): string[] => [`wheel-rear-${k}-left`, `wheel-rear-${k}-right`];
+    const front = ["wheel-front-left-spin", "wheel-front-right-spin"];
+    // an articulated bus draws its front section (middle axle, then the steered wheels) before the rear one
+    const nodes = articulated ? [...pair(1), ...front, ...pair(2)] : [...Array.from({ length: rear }, (_, k) => pair(k + 1)).flat(), ...front];
+    return { id, d, nodes };
+  }),
 ];
 
 const COMBOS = ROLLING.flatMap((r) => {
@@ -127,7 +146,7 @@ describe("rolling wheels", () => {
   });
 
   it("leave a plain wheel static: vehicles whose wheels are rings about the axle get no rolling clip", () => {
-    for (const id of ["proc-vehicle-cd-163", "proc-vehicle-cd-130", "proc-vehicle-cd-y-coach", "proc-vehicle-karosa-short", "proc-vehicle-american-truck", "proc-vehicle-boeing-737"]) {
+    for (const id of ["proc-vehicle-cd-163", "proc-vehicle-cd-130", "proc-vehicle-cd-y-coach", "proc-vehicle-mb-o405", "proc-vehicle-american-truck", "proc-vehicle-boeing-737"]) {
       const names = DESIGNS.get(id)!.build().animations().map((a) => a.name);
       expect(names, id).not.toContain(ROLLING_CLIP);
     }

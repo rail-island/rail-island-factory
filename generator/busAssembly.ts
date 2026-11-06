@@ -13,6 +13,7 @@ import { drawJoint, type JointRig, type SectionRig, type VehicleRig } from "./ri
 import { drawShell, halfWidth, type Arch, type Paint } from "./busBody.ts";
 import { AXLE_FACTOR, axleBeam, busWheel, onSide, sideSlab, type BusFrame } from "./busKit.ts";
 import { block, steeredWheels } from "./vehicleParts.ts";
+import { rollWheels } from "./rolling.ts";
 import { BUS_DETAIL_PALETTE, detailedBusWheel, detailedJoint, drawBusDetail, drawRouteDisplays, jointCollar, turntable, type DetailBus } from "./busDetail.ts";
 import { busLod, emptyBusLodNotes, type BusLodNotes } from "./lodRoad.ts";
 import { openable, plugMove } from "./doors.ts";
@@ -173,8 +174,20 @@ export function assembleBus(spec: BusSpec, bind?: (m: MeshBuilder) => void): Mes
   const r = spec.wheelRadius;
   const ay = r * AXLE_FACTOR;
   let wheelNodes: [string, string] = ["", ""];
-  const wheel = (x: number, z0: number, z1: number, face: number | null): void =>
-    spec.detail ? detailedBusWheel(m, x, r, z0, z1, face) : busWheel(m, x, r, z0, z1, face);
+  // a confirmed bus's wheels carry nuts the eye follows round: their rims roll
+  // (rolling.ts), the front ones in a child of each steered wheel's node
+  const rolling: string[] = [];
+  const wheel = (x: number, z0: number, z1: number, face: number | null, spin?: string): void => {
+    if (!spec.detail) return busWheel(m, x, r, z0, z1, face);
+    if (spin && face !== null) rolling.push(spin);
+    detailedBusWheel(m, x, r, z0, z1, face, face !== null ? spin : undefined);
+  };
+  /** The rolling part of a wheel: wheel-front-<side>-spin, or wheel-rear-<axle behind the front one>-<side>. */
+  const spinName = (ai: number, s: number): string => {
+    const side = s < 0 ? "left" : "right";
+    if (spec.axles[ai]!.steer) return `wheel-front-${side}-spin`;
+    return `wheel-rear-${spec.axles.filter((a, k) => !a.steer && k <= ai).length}-${side}`;
+  };
   const detail: DetailBus = {
     frame: { section: spec.section, side: spec.side },
     arches: spec.arches,
@@ -204,8 +217,8 @@ export function assembleBus(spec: BusSpec, bind?: (m: MeshBuilder) => void): Mes
           for (const s of [-1, 1]) m.scope(s > 0 ? "right wheels" : "left wheels", () => {
             if (a.dual) {
               wheel(a.x, ...onSide(s, ...spec.tyres.inner), null);
-              wheel(a.x, ...onSide(s, ...spec.tyres.outer), s);
-            } else wheel(a.x, ...onSide(s, ...spec.tyres.single), s);
+              wheel(a.x, ...onSide(s, ...spec.tyres.outer), s, spinName(ai, s));
+            } else wheel(a.x, ...onSide(s, ...spec.tyres.single), s, spinName(ai, s));
           });
         });
       });
@@ -226,7 +239,7 @@ export function assembleBus(spec: BusSpec, bind?: (m: MeshBuilder) => void): Mes
       }
     });
     if (i === 0) {
-      wheelNodes = steeredWheels(m, node, steer.x, ay, (s, z0, z1) => wheel(steer.x, z0, z1, s), spec.tyres.single);
+      wheelNodes = steeredWheels(m, node, steer.x, ay, (s, z0, z1) => wheel(steer.x, z0, z1, s, spinName(spec.axles.indexOf(steer), s)), spec.tyres.single);
     }
   });
 
@@ -265,6 +278,7 @@ export function assembleBus(spec: BusSpec, bind?: (m: MeshBuilder) => void): Mes
     rig.maxBendDeg = spec.maxBendDeg ?? 45;
   }
   m.rig = rig;
+  if (rolling.length) rollWheels(m, rolling, 2 * r);
   return m;
 }
 
