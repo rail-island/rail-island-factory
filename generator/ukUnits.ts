@@ -165,7 +165,7 @@ export const TUBE1938: ShinkansenSeries = {
       palette: {
         ltRed: c("#c3161c", 0.35), ltRoof: c("#8c3a30", 0.7), skirtG: c("#232426", 0.8), cabMask: c("#1d1f22", 0.3),
         lettering: c("#c9a24a", 0.35), blind: c("#f1efe6", 0.5), lineMagenta: c("#c0267e"), lineBlue: c("#1c2f6e"),
-        vent: c("#5e2620", 0.7), step: c("#b9b6ae", 0.5), underBox: c("#3a3c3f", 0.8),
+        vent: c("#5e2620", 0.7), winFrame: c("#b4b7b9", 0.3), gutter: c("#4a1512", 0.6), seam: c("#6e2b23", 0.75), step: c("#b9b6ae", 0.5), underBox: c("#3a3c3f", 0.8),
       },
     },
   },
