@@ -1,8 +1,8 @@
-# Helicopter game support
+# Helicopter game support (with rotor and propeller animation)
 
 Status: agreed
 Date: 2026-11-06
-Area: rotor kit and world rotorcraft, game properties and vehicle meta export, airport set (and any new heliport set or props), OpenTTD GRF export, catalog confirmation; the game (`rail-island-webapp`) consumes the result
+Area: rotor kit and world rotorcraft, propeller animation on every propeller aircraft (aircraft.ts, airframe kit, propellers.ts), game properties and vehicle meta export, airport set (and any new heliport set or props), OpenTTD GRF export, catalog confirmation; the game (`rail-island-webapp`) consumes the result
 
 ## Context of the change
 
@@ -26,15 +26,32 @@ The OpenTTD GRF encoder (`src/openttd/grf.ts`) writes every aircraft with proper
 (a plane). It has no helicopter subtype, so in OpenTTD the helicopters also need an
 airport (docs/site/openttd-export.md).
 
+Propellers turn on the `time` clip `propellers` (`generator/propellers.ts`, 0.24 s a turn)
+on the Small Airplane (`proc-vehicle-small-airplane`, confirmed) and on every draft world
+propeller aircraft and the Zeppelin NT. The other confirmed propeller aircraft, the Aero
+A.10 (`proc-vehicle-aero-a10`, `generator/aircraft.ts`), has no parts: its propeller is
+drawn inside the body and stands still. No propeller or rotor has a stopped pose; they
+always turn.
+
 rail-island-music has no rotor sound, and `soundMapping.ts` derives no aircraft sound
 (docs/models/sounds.md).
 
-The game repository is not part of this change. This spec covers what the factory exports
-and what the game is expected to do with it.
+The game (`rail-island-webapp`, `src/core/air/AircraftSim.ts`) flies runway legs only
+(`taxi_out`, `takeoff`, `cruise`, `hold`, `landing`, `taxi_in`) and picks an airport by
+`sizeClass`, or by the measured span when the class is absent. This spec covers the
+factory and music changes in detail and the game side at a high level.
 
 ## User request
 
 "I want to support helicopters in the game."
+
+On sound: "create sound, I added music repo". On the game's save: "Separate helicopter
+record, make it clean. Helicopters don't exist now, don't solve migration". On OpenTTD:
+"make it clean, now there are no helicopters exports to OpenTTD".
+
+"Add to spec - rotor animation for aircrafts with propellers. Should be already on factory
+(for older aircraft is missing, add it. But for draft aircrafts, propellers are already
+working)"
 
 ## Decisions
 
@@ -169,6 +186,17 @@ and what the game is expected to do with it.
 
 **Answer: Same ids, new subtype** - then refined by the user: "make it clean, now there are no helicopters exports to OpenTTD". The helicopters are drafts, so no released GRF and no player's saved game holds them. They are written as helicopters from the start, with no compatibility handling for a plane version.
 
+### Propellers: should they get the same stopped-to-spinning `spin` drive and blur disc as the helicopter rotors, or only turn?
+| Option | What it means |
+|---|---|
+| Same as rotors | Every propeller aircraft (the A.10, the Small Airplane, all draft world propeller aircraft, the Zeppelin) gets the `spin` state drive and a blur disc at full speed; the game spins them up before taxi-out and down on the stand; the drafts' models change too. |
+| Only add the turning clip | Only make the A.10's propeller a part on the existing time clip, like the Small Airplane; drafts unchanged. |
+| Turn + spin drive, no disc | The A.10's clip, and the `spin` drive on every propeller, but no blur disc. |
+
+**Answer: Same as rotors.** This follows the user's request that the older aircraft missing
+propeller animation get it (the Aero A.10), while the drafts' already-working propellers
+keep turning and gain the same drive and disc.
+
 ## High-level plan
 
 1. **Helicopter properties (factory).** Helicopters become their own aircraft kind in the
@@ -178,11 +206,18 @@ and what the game is expected to do with it.
    H145, Mi-8, Bell 206) state their figures from their published data. The Zeppelin NT
    stays an ordinary small aircraft. The figures are exported in the vehicle meta and
    documented in the game properties document.
-2. **Rotor animation (factory).** A `spin` state drive on the rotor kit, from stopped
-   (blades drooping slightly, not turning) to full speed. The existing time clip still
-   turns the blades, and at full speed a translucent blur disc shows over each rotor so it
-   does not flicker at a distance. The low level of detail carries the disc. Depends on 1
-   only for documentation.
+2. **Rotor and propeller animation (factory).** One shared treatment for everything that
+   turns in the air. A `spin` state drive runs from stopped (a rotor's blades drooping
+   slightly, a propeller standing with a blade up, not turning) to full speed. The existing
+   time clips (`rotor`, `propellers`) still turn the blades, and at full speed a
+   translucent blur disc shows over each rotor and propeller so it does not flicker at a
+   distance. The low level of detail carries the disc.
+   - **The Aero A.10** gains its propeller and spinner as a part on the `propellers` clip,
+     as the Small Airplane has. It is the one older confirmed aircraft that lacks it.
+   - **The Small Airplane** and every **draft** propeller aircraft (the world aircraft on
+     the airframe kit, the Zeppelin NT) keep their working clip and gain the drive and disc.
+   The game spins a propeller aircraft up before taxi-out and down on the stand, and a
+   helicopter before lift-off and after landing. Depends on 1 only for documentation.
 3. **Helicopter sound (music, then factory).** rail-island-music gains an `aircraft`
    category and one `helicopter` engine loop: blade slap plus turbine whine, with `size`
    and `blades` as character parameters and `spin` and `load` as runtime ones. The factory
@@ -240,6 +275,9 @@ and that persistence is the cost of the change:
 - **Factory export (vehicle and building meta, read by the game's import):** the
   helicopters' `aircraftKind` and flight figures, no `sizeClass`; the buildings'
   `helipad` property; the helicopters' `sounds.engine` slot.
+- **Changed confirmed models:** the Aero A.10 gains a part and a clip, and the Small
+  Airplane gains the drive and disc. Their ids and parameters are unchanged, so saved
+  maps that place them need nothing.
 - **Factory `build-cache/`:** refreshed for every changed design (a generated cache).
 - **rail-island-music export (sounds meta and module, imported by factory and game):** the
   new design id `helicopter` and category `aircraft`. Never renamed once shipped.
@@ -249,6 +287,9 @@ and that persistence is the cost of the change:
 
 ## Architecture decisions
 
+- **One spin treatment for rotors and propellers.** A single drive and one disc
+  technique shared by the rotor kit and the propeller helper. The game then drives one
+  clip name per aircraft, whatever turns on it, instead of a mechanism per kind.
 - **A kind with flight figures instead of a new size class.** How a vehicle flies is
   separate from which field fits it. A `sizeClass: "heli"` would have put two meanings in
   one field and still left the game guessing climb rate and pad size.
@@ -290,6 +331,12 @@ and that persistence is the cost of the change:
 - **Rotor blur disc.** A translucent disc can sort wrongly against glass and water and
   adds draw calls. Medium likelihood. Mitigation: one disc per rotor, drawn in the
   existing transparent pass and checked headlessly at several distances.
+- **Every propeller model changes.** The drive and disc rewrite every propeller
+  aircraft's JS model, about 40 drafts (the world propeller aircraft and the Zeppelin) plus the A.10 and the Small Airplane, and their
+  build-cache entries. The catalog sweep (flicker, determinism) has to pass on the discs.
+  The game, until it knows the `spin` drive, leaves a state clip alone (as it does flaps),
+  so a propeller shows its default pose. Open question: should that default be full speed,
+  so propellers keep turning in a game that does not yet drive `spin`?
 - **Set pins and skyscraper models move.** The airport types' pins move on purpose. The
   skyscrapers' default models must not change, because the new parameter defaults to
   `none`, and the build-cache check guards that.
