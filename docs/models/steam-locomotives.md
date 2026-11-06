@@ -59,7 +59,11 @@ bands), smoke deflectors, bogie side frames, buffer beams with buffers and
 coupling (4 mm proud of the body end, a shorter draw gear between a locomotive
 and its tender), lamps and number plates, cylinders with valve chests, slide
 bars, motion brackets and expansion-link brackets - and then the moving parts
-of `RunningGear` and the `running` clip ([animation.md](animation.md)).
+of `RunningGear` and the `running` clip ([animation.md](animation.md)). A
+spec whose gear names a `swivel` unit (the Big Boy, [us-steam.md](us-steam.md))
+splits its frame at `swivel.x1` and draws the front engine - that frame, the
+truck frames ahead of it, its cylinders and axle boxes and its moving gear - as
+a rail bogie inside the body, which the game turns under the boiler.
 
 ## Deliberate deviations
 
