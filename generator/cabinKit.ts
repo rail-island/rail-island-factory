@@ -15,7 +15,8 @@
 // - `side`     two hangers beside the cabin (an open-top cabin's) up to two carriages,
 //              one on each track rope at z +-track.
 //
-// `cabinDatums(spec)` gives the rope and sill heights and the model's height
+// No rope is drawn on a cabin: the game draws every rope (`cabinRopes(spec)` says
+// where they run). `cabinDatums(spec)` gives the rope and sill heights and the model's height
 // range analytically, so the design's ropeFrac and boardFrac are stated from the
 // spec and tested against the built model (test/cabinKit.test.ts).
 
@@ -77,6 +78,31 @@ export const roofOf = (s: CabinSpec): number => s.stations[s.stations.length - 1
 /** The running gear's sizes: a gondola grip's wheels and a carriage's sheaves. */
 const SHEAVE_R = 0.24;
 const GRIP_WHEEL_R = 0.145;
+
+/** How far a carriage's haul rope runs under its track ropes, metres. */
+export const HAUL_GAP = 0.3;
+
+/**
+ * One rope a cabin hangs from or is hauled by, as the game draws it
+ * (docs/models/world-cabins.md, "Ropes"): `z` across the rope (the cabin's +z, the
+ * platform side) and `dy` up from the rope datum, metres. A haul rope goes round the
+ * stations' bull wheels; a track rope is fixed and ends at each station.
+ */
+export interface CabinRope { kind: "haul" | "track"; z: number; dy: number }
+
+/** The ropes a spec's cabin hangs from: none of them is drawn on the model, the game draws them. */
+export function cabinRopes(s: CabinSpec): CabinRope[] {
+  const h = s.hanger;
+  switch (h.kind) {
+    case "grip": return [{ kind: "haul", z: 0, dy: 0 }];
+    case "funitel": return [{ kind: "haul", z: -h.gap / 2, dy: 0 }, { kind: "haul", z: h.gap / 2, dy: 0 }];
+    case "carriage": return [
+      ...(h.track > 0 ? [{ kind: "track" as const, z: -h.track, dy: 0 }, { kind: "track" as const, z: h.track, dy: 0 }] : [{ kind: "track" as const, z: 0, dy: 0 }]),
+      { kind: "haul", z: 0, dy: -HAUL_GAP },
+    ];
+    case "side": return [{ kind: "track", z: -h.track, dy: 0 }, { kind: "track", z: h.track, dy: 0 }];
+  }
+}
 
 /** The rope, sill and height range a spec's cabin is built to (y0 is always 0). */
 export function cabinDatums(s: CabinSpec): { rope: number; sill: number; y0: number; y1: number; ropeFrac: number; boardFrac: number } {
@@ -193,7 +219,6 @@ function carriage(m: MeshBuilder, rope: number, zc: number, length: number, shea
       disc(m, "steel", "z", x, yc, 0.05, zc - 0.1, zc - 0.06, 8);
     });
   }
-  m.scope("track rope", () => disc(m, "rubber", "x", zc, rope, 0.035, -length / 2 - 0.5, length / 2 + 0.5, 8));
 }
 
 function hanger(m: MeshBuilder, s: CabinSpec): void {
@@ -205,7 +230,6 @@ function hanger(m: MeshBuilder, s: CabinSpec): void {
       m.scope("arm", () => block(m, "steel", -0.09, 0.09, top + 0.06, h.rope - 0.22, -0.09, 0.09));
       m.scope("collar", () => block(m, "frame", -0.14, 0.14, top + 0.12, top + 0.26, -0.14, 0.14));
       m.scope("grip", () => grip(m, 0, h.rope, 0));
-      m.scope("haul rope", () => disc(m, "rubber", "x", 0, h.rope, 0.032, -0.75, 0.75, 8));
       break;
     }
     case "funitel": {
@@ -220,7 +244,6 @@ function hanger(m: MeshBuilder, s: CabinSpec): void {
       });
       for (const zs of [-1, 1]) m.scope(zs > 0 ? "right grips" : "left grips", () => {
         for (const x of [-h.gripX, h.gripX]) grip(m, x, h.rope, zs * h.gap / 2);
-        disc(m, "rubber", "x", zs * h.gap / 2, h.rope, 0.032, -h.gripX - 0.75, h.gripX + 0.75, 8);
       });
       break;
     }
@@ -235,10 +258,7 @@ function hanger(m: MeshBuilder, s: CabinSpec): void {
         m.cap("steel", roundRect(a.w / 2, a.d / 2, 0.06, 2), y0, false);
       });
       m.scope("head", () => block(m, "dark", -h.length / 2 + 0.2, h.length / 2 - 0.2, h.rope - 0.47, yb - 0.02, -Math.max(h.track, 0.3) + 0.05, Math.max(h.track, 0.3) - 0.05));
-      m.scope("haul rope clamp", () => {
-        block(m, "dark", -0.3, 0.3, h.rope - 0.4, h.rope - 0.2, -0.12, 0.12);
-        disc(m, "rubber", "x", 0, h.rope - 0.3, 0.03, -h.length / 2 - 0.5, h.length / 2 + 0.5, 8);
-      });
+      m.scope("haul rope clamp", () => block(m, "dark", -0.3, 0.3, h.rope - 0.4, h.rope - 0.2, -0.12, 0.12));
       for (const zs of h.track > 0 ? [-1, 1] : [1]) m.scope(zs > 0 ? "right carriage" : "left carriage", () => {
         block(m, "dark", -h.length / 2 + 0.2, h.length / 2 - 0.2, yb - 0.02, yb + 0.06, zs * h.track - (h.track > 0 ? zs : -1) * 0.25 - 0.06, zs * h.track - (h.track > 0 ? zs : -1) * 0.25 + 0.06);
         carriage(m, h.rope, zs * h.track, h.length, h.sheaves);

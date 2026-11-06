@@ -11,7 +11,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
 | `photo-sgp-singapore-air-niugini-airbus-a220-300-p2-pga-singapore-a.jpg` | (SGP-Singapore) Air Niugini Airbus A220-300 P2-PGA @ Singapore Airshow 2026-02-07.jpg | https://commons.wikimedia.org/wiki/File:(SGP-Singapore)_Air_Niugini_Airbus_A220-300_P2-PGA_@_Singapore_Airshow_2026-02-07.jpg | S5A-0043 | CC BY 4.0 | the airframe's shape, proportions and livery |
-| `photo-airbaltic-bombardier-cs300-maintenance-33221388195.jpg` | AirBaltic Bombardier CS300 maintenance (33221388195).jpg | https://commons.wikimedia.org/wiki/File:AirBaltic_Bombardier_CS300_maintenance_(33221388195).jpg | Kārlis Dambrāns from Latvia | CC BY 2.0 | the airframe's shape, proportions and livery |
 
 ## Published figures
 

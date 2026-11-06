@@ -11,7 +11,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
 | `photo-polish-bulk-carrier-kociewie-in-the-port-of-hamburg.jpg` | Polish Bulk Carrier Kociewie in the Port of Hamburg.jpg | https://commons.wikimedia.org/wiki/File:Polish_Bulk_Carrier_Kociewie_in_the_Port_of_Hamburg.jpg | Buonasera | CC BY-SA 3.0 | shape, proportions and colours |
-| `photo-handysize-tug.jpg` | HandySize Tug.jpg | https://commons.wikimedia.org/wiki/File:HandySize_Tug.jpg | GreatLakesTowing | CC BY-SA 3.0 | shape, proportions and colours |
 
 ## Published figures
 

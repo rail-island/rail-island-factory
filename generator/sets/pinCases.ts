@@ -94,6 +94,14 @@ export function setPinCases(): Record<string, PinCase[]> {
         name: `${t}.${circulating ? "ring" : "shuttle"}`, build: () => cableCarStation.buildStation(t, { ...cableCarStation.DEFAULT_VIEW, circulating }),
       }))),
       ...[12, 31.5, 60].map((h) => ({ name: `pylon.${h}`, build: () => cableCarStation.buildPylon(h) })),
+      // a cabin's own view: a funitel's two haul ropes (two rims), a small cabin's high deck
+      // (stairs from the front), a big aerial tram stopped ahead of the wheel on two track ropes
+      ...Object.keys(cableCarStation.TYPE_META).flatMap((t) => [
+        { name: `${t}.funitel`, build: () => cableCarStation.buildStation(t, { circulating: true, sillDrop: 4.7, halfWidth: 2.72, drop: 5.3, halfLength: 2.07, ropes: [{ kind: "haul", z: -2.4, dy: 0 }, { kind: "haul", z: 2.4, dy: 0 }] }) },
+        { name: `${t}.tram`, build: () => cableCarStation.buildStation(t, { circulating: false, sillDrop: 13.7, halfWidth: 3.54, drop: 14.4, halfLength: 6.95, ropes: [{ kind: "track", z: -0.9, dy: 0 }, { kind: "track", z: 0.9, dy: 0 }, { kind: "haul", z: 0, dy: -0.45 }] }) },
+      ]),
+      { name: "pylon.funitel", build: () => cableCarStation.buildPylon(31.5, [{ kind: "haul", z: -2.4, dy: 0 }, { kind: "haul", z: 2.4, dy: 0 }]) },
+      { name: "pylon.tram", build: () => cableCarStation.buildPylon(31.5, [{ kind: "track", z: -0.9, dy: 0 }, { kind: "track", z: 0.9, dy: 0 }, { kind: "haul", z: 0, dy: -0.45 }]) },
     ],
     port: [{ name: "types", build: () => ({ types: port.TYPE_META, props: port.PROPS }) }],
     decoration: [
