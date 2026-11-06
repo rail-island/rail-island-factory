@@ -4,7 +4,7 @@
 // Railway's Ge 4/4 III and Ge 6/6 I "Krokodil" and the Matterhorn Gotthard
 // Bahn's rack HGe 4/4 II. See docs/models/switzerland-trains.md.
 
-import type { MeshBuilder } from "./meshBuilder.ts";
+import type { MeshBuilder, Ring } from "./meshBuilder.ts";
 import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { boxLocoLod, buildBoxLoco, type EndItem, type LocoSpec, type SideItem } from "./boxLocoKit.ts";
 import { c } from "./czElectricKit.ts";
@@ -114,23 +114,58 @@ function re460Spec(v?: ParamValues): LocoSpec {
       { kind: "window", name: "windscreen left", z: [0.025, 1.25], y: [2.5, 3.4], wiper: true },
       { kind: "window", name: "windscreen right", z: [-1.25, -0.025], y: [2.5, 3.4], wiper: true },
       ...frontEmblem,
-      { kind: "lamp", name: "top headlight", z: [-0.08, 0.08], y: [3.62, 3.78], r: 0.065 },
-      { kind: "lamp", name: "headlight left", z: [1.05, 1.19], y: [1.62, 1.76], r: 0.065 },
-      { kind: "lamp", name: "headlight right", z: [-1.19, -1.05], y: [1.62, 1.76], r: 0.065 },
-      { kind: "lamp", name: "tail lamp left", z: [0.82, 0.94], y: [1.63, 1.75], r: 0.05, mat: "lampRed" },
-      { kind: "lamp", name: "tail lamp right", z: [-0.94, -0.82], y: [1.63, 1.75], r: 0.05, mat: "lampRed" },
+      { kind: "lamp", name: "top headlight", z: [-0.15, 0.15], y: [3.64, 3.74], rect: true },
+      // a black housing at each lower corner, the headlight outboard and the tail lamp inboard
+      { kind: "paint", name: "lamp housing left", z: [0.74, 1.26], y: [1.57, 1.79], mat: "black", layer: 1 },
+      { kind: "paint", name: "lamp housing right", z: [-1.26, -0.74], y: [1.57, 1.79], mat: "black", layer: 1 },
+      { kind: "lamp", name: "headlight left", z: [0.99, 1.21], y: [1.62, 1.74], rect: true },
+      { kind: "lamp", name: "headlight right", z: [-1.21, -0.99], y: [1.62, 1.74], rect: true },
+      { kind: "lamp", name: "tail lamp left", z: [0.79, 0.93], y: [1.62, 1.74], rect: true, mat: "lampRed" },
+      { kind: "lamp", name: "tail lamp right", z: [-0.93, -0.79], y: [1.62, 1.74], rect: true, mat: "lampRed" },
       { kind: "plate", name: "number", z: [-0.45, 0.45], y: [1.35, 1.5] },
     ],
     roofItems: [],
     pantograph: { ...base.pantograph!, baseY: top + 0.08 },
-    // the skirt between the bogies
+    // the skirt between the bogies; the black apron under each end replaces the kit's plough
     underItems: [[-3.3, 3.3, 0.62, 0.95, 1.36]],
+    plough: undefined,
+    bufferHead: "rect",
   };
+}
+
+/** The front apron's plan at its top and bottom: [x, |z|] from the nose's centre back to the side. */
+const RE460_APRON = {
+  y: [0.35, 0.96] as const,
+  top: [[RE460_BEAM + 0.02, 0.6], [RE460_BEAM - 0.05, 1.1], [RE460_BEAM - 0.25, 1.36], [7.75, 1.36]] as const,
+  bottom: [[RE460_BEAM - 0.2, 0.55], [RE460_BEAM - 0.3, 1.0], [RE460_BEAM - 0.48, 1.22], [7.75, 1.22]] as const,
+};
+
+/**
+ * The black apron under each end: from the frame down to the plough's edge, bowed in plan
+ * like the nose above it and leaning back toward the bottom, the buffers and the
+ * coupling standing out of it.
+ */
+function re460Aprons(m: MeshBuilder): void {
+  // counter-clockwise from above: down the -z side toward the back, up the +z side to the front
+  const ring = (pts: ReadonlyArray<readonly [number, number]>, e: number): Ring =>
+    [...pts.map(([x, z]) => [x, -z] as const), ...[...pts].reverse().map(([x, z]) => [x, z] as const)].map(([x, z]) => [e * x, e * z] as [number, number]);
+  m.scope("front aprons", () => {
+    for (const e of [-1, 1])
+      m.scope(e > 0 ? "front apron" : "rear apron", () => {
+        const [bottom, top] = [ring(RE460_APRON.bottom, e), ring(RE460_APRON.top, e)];
+        m.loft("black", bottom, RE460_APRON.y[0], top, RE460_APRON.y[1], false);
+        m.cap("black", bottom, RE460_APRON.y[0], false);
+      });
+  });
 }
 const b = (k: string) => (v?: ParamValues): MeshBuilder => buildBoxLoco(liverySpec(L[k]!, P[k]!, v));
 const lod = (k: string) => (v?: ParamValues): MeshBuilder => boxLocoLod(liverySpec(L[k]!, P[k]!, v));
 
-export function sbbRe460(v?: ParamValues): MeshBuilder { return buildBoxLoco(re460Spec(v)); }
+export function sbbRe460(v?: ParamValues): MeshBuilder {
+  const m = buildBoxLoco(re460Spec(v));
+  m.scope("body", () => re460Aprons(m));
+  return m;
+}
 export function sbbRe460Lod(v?: ParamValues): MeshBuilder { return boxLocoLod(re460Spec(v)); }
 export function sbbRe420(v?: ParamValues): MeshBuilder { return b("re420")(v); }
 export function sbbRe420Lod(v?: ParamValues): MeshBuilder { return lod("re420")(v); }

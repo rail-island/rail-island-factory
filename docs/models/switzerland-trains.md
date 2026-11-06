@@ -39,8 +39,12 @@ photograph (`assets/sbb-re460/`):
 
 - **Nose** - low and rounded, the lower nose leaning back into one large windscreen
   raked about 40 degrees, bowed in plan with the corners rounded 0.68 m back into the
-  sides; a black surround behind the two screen halves, the headlights at the lower
-  corners, the top headlight on the grey cap, the SBB emblem under the screen.
+  sides; a black surround behind the two screen halves, the SBB emblem under the screen.
+- **Lights and apron** - rectangular lamps (the kit's `rect` lamp): at each lower corner
+  a black housing with the headlight outboard and the red tail lamp inboard, a wide
+  top headlight on the grey cap. Under each end a black apron (`re460Aprons`), bowed in
+  plan like the nose and leaning back down to 0.35 m, replaces the kit's plough; the
+  buffers have rectangular heads.
 - **Section** - the sides upright from the dark skirt (1.55 m) to the windows' head
   (3.48 m), then the grey roof sloping in steeply to a narrow top at 4.15 m, with the
   louvres along each slope between the pantographs.

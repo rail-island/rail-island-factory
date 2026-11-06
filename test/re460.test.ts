@@ -40,4 +40,16 @@ describe("SBB Re 460", () => {
     }
     expect(beamFront - roofFront).toBeGreaterThan(1.8);
   });
+
+  it("hangs a black apron under each end, down to the plough's edge", () => {
+    const pos = sbbRe460().positions();
+    for (const e of [-1, 1]) {
+      let low = Infinity;
+      for (let i = 0; i < pos.length; i += 3) {
+        const x = e * pos[i]!;
+        if (x > 7.9 && x < 8.6) low = Math.min(low, pos[i + 1]!);
+      }
+      expect(low, `end ${e}`).toBeLessThan(0.4);
+    }
+  });
 });

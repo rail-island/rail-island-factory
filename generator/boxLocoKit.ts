@@ -70,6 +70,8 @@ export interface EndItem {
   layer?: number;
   /** A lamp: a round lens of this radius at the centre of z, y. */
   r?: number;
+  /** A lamp: a rectangular lens filling z, y (its corners rounded) instead of the round one. */
+  rect?: boolean;
   /** A window's wiper. */
   wiper?: boolean;
 }
@@ -302,8 +304,11 @@ function cabEnd(m: MeshBuilder, s: LocoSpec, sp: ShellSpec, e: number, vB: reado
           break;
         case "lamp": {
           const cz = (z[0] + z[1]) / 2, cy = (it.y[0] + it.y[1]) / 2, r = it.r ?? 0.08;
-          m.scope("rim", () => surfacePanel(m, "rim", at, n, ngon(12, r + 0.03, 0, cz, cy), -0.01, 0.025, uB, vB));
-          m.scope("lens", () => surfacePanel(m, it.mat ?? "lampHead", at, n, ngon(12, r, 0, cz, cy), -0.005, 0.035, uB, vB));
+          const [rim, lens] = it.rect
+            ? [roundRect(z[0] - 0.025, z[1] + 0.025, it.y[0] - 0.025, it.y[1] + 0.025, 0.03), roundRect(z[0], z[1], it.y[0], it.y[1], 0.015)]
+            : [ngon(12, r + 0.03, 0, cz, cy), ngon(12, r, 0, cz, cy)];
+          m.scope("rim", () => surfacePanel(m, "rim", at, n, rim, -0.01, 0.025, uB, vB));
+          m.scope("lens", () => surfacePanel(m, it.mat ?? "lampHead", at, n, lens, -0.005, 0.035, uB, vB));
           break;
         }
         case "plate":
