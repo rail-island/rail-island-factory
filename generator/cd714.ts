@@ -56,7 +56,7 @@ function body(m: MeshBuilder): void {
     m.scope("shell", () => shell(m, cab));
     // the roof flares out to 7.3..10.2 m and falls to 2.2 m across at 4.2 m (XML cab clips, native rows 8-9)
     m.scope("roof", () => {
-      const ring = (x0: number, x1: number, w: number) => [[x1, -w], [x1, w], [x0, w], [x0, -w]] as Array<[number, number]>;
+      const ring = (x0: number, x1: number, w: number) => [[x1, w], [x1, -w], [x0, -w], [x0, w]] as Array<[number, number]>;
       m.loft("roofGrey", ring(CAB.x0 + 0.03, CAB.x1 - 0.03, 1.3), 3.8, ring(px(72), px(103), 1.4), 3.98, false);
       m.loft("roofGrey", ring(px(72), px(103), 1.4), 3.98, ring(px(72.5), px(102.5), 1.1), 4.2);
     });

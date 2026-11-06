@@ -54,6 +54,8 @@ combinations hashed before and after):
   builder's `buffers` coupler), the coupling plane 0.65 m out;
 - `wheelbase: 0` - a single axle at each truck position (a two-axle railbus, a Talgo car);
 - `traction: "none"` - an unpowered set of coaches (the Talgo III), filed with the coaches.
+- `windscreenMask` - a black band (`cabMask`) round a nose's windscreen, under its rubber,
+  reaching this far past the panes and joined over the centre pillar (the ICNG).
 
 A short car's leading bogie comes in so that its wheels stay under the body. The kit
 refuses a wheelbase under 2.05 m (the bogie's brake cylinders would lie on its
@@ -65,7 +67,7 @@ livery and `velaro()`, the Siemens Velaro body the ICE 3, the CRH3C and the AVE 
 ## Deviations
 
 - The bodies' widths (above); the noses are drawn from tables, not measured drawings, and
-  their cab windscreens are panes on the crown; the E5's and E6's pointed lower noses and the
+  their cab windscreens are panes laid on the crown's own facets ([vehicles.md](vehicles.md), "Closed ends"), and the nose below the body's shoulder takes the side's colour under the shoulder; the E5's and E6's pointed lower noses and the
   N700S's wing edges are approximations.
 - The 700's two liveries share the 700's body: the 923 Doctor Yellow's own detail (its
   measurement dome, the observation windows) is not drawn.
