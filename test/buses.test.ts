@@ -326,6 +326,24 @@ describe("the bus bodies", () => {
     }
   }, 30_000);
 
+  // Regression: the long Karosa's rain gutters ran the whole bus inside its front
+  // section, so they swung out over the rear section's roof when the bus bent
+  it.each(BUILDS.filter((b) => (b.m().rig?.joints?.length ?? 0) > 0).map((b) => [b.label, b] as const))("%s draws each section within its own ends", (_, b) => {
+    const m = b.m();
+    const rig = m.rig!;
+    const nodes = walk(m.sourceTree(b.id, b.label).root);
+    // a section's leaves but the turntable, which turns under the bellows about the hinge
+    const span = (i: number): [number, number] => {
+      const leaves = walk(nodes.find((n) => n.id === rig.sections![i]!.node)!).filter((n) => isLeaf(n) && !/turntable/.test(n.id));
+      return [Math.min(...leaves.map((l) => l.min![0])), Math.max(...leaves.map((l) => l.max![0]))];
+    };
+    rig.joints!.forEach((j) => {
+      // the bellows' frames reach 3 cm into the gap
+      expect(span(j.sections[0])[0], `${rig.sections![j.sections[0]]!.node} reaches back past its end`).toBeGreaterThanOrEqual(j.front - 0.035);
+      expect(span(j.sections[1])[1], `${rig.sections![j.sections[1]]!.node} reaches forward past its end`).toBeLessThanOrEqual(j.rear + 0.035);
+    });
+  });
+
   it.each(BUILDS.map((b) => [b.label, b] as const))("%s has double doors (the LC 735's rear one single)", (label, b) => {
     const tree = b.m().sourceTree(b.id, b.label);
     // the leaves: tall, thin and not glass; a door's leaves stand 2 cm apart, doors further

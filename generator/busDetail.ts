@@ -10,6 +10,7 @@ import { ngon, type MeshBuilder, type MaterialSpec } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { archOutline, halfWidth, type Arch } from "./busBody.ts";
 import { AXLE_FACTOR, bentSlab, endSlab, sideSlab, type BusFrame } from "./busKit.ts";
+import { grown, type JointRig } from "./rig.ts";
 import { block } from "./vehicleParts.ts";
 
 /** The materials the detail adds to a bus's palette. */
@@ -219,4 +220,99 @@ export function drawRouteDisplays(m: MeshBuilder, b: DetailBus, lo: number, hi: 
     endSlab(m, "sign", b.frame, -1, z1 - 0.5, z1, y1 - h, y1, 0.03);
     endSlab(m, "signText", b.frame, -1, z1 - 0.42, z1 - 0.08, y1 - h * 0.7, y1 - h * 0.3, 0.034);
   });
+}
+
+// --- the joint --------------------------------------------------------------------------
+
+/** The bellows' fold pitch, metres a ridge (photographs of a Karosa B 941: about 25 over 1.9 m). */
+const FOLD_PITCH = 0.075;
+/** The frame ring round the bellows' middle: its width and how far it stands out of the valleys. */
+const JOINT_FRAME = { width: 0.07, extra: 0.02 };
+
+/**
+ * The bellows' outline with its upper corners rounded: each corner above the floor
+ * cut back along both its edges (a convex outline stays convex).
+ */
+function roundedProfile(profile: Array<[number, number]>): Array<[number, number]> {
+  const floor = Math.min(...profile.map(([, y]) => y));
+  const n = profile.length;
+  const out: Array<[number, number]> = [];
+  profile.forEach(([z, y], i) => {
+    if (y < floor + 0.1) {
+      out.push([z, y]);
+      return;
+    }
+    const [za, ya] = profile[(i + n - 1) % n]!;
+    const [zb, yb] = profile[(i + 1) % n]!;
+    const la = Math.hypot(za - z, ya - y);
+    const lb = Math.hypot(zb - z, yb - y);
+    const c = Math.min(0.09, la / 3, lb / 3);
+    out.push([z + ((za - z) * c) / la, y + ((ya - y) * c) / la], [z + ((zb - z) * c) / lb, y + ((yb - y) * c) / lb]);
+  });
+  return out;
+}
+
+/**
+ * A confirmed bus's bellows between the section ends `front` and `rear`: the spec's
+ * outline with its upper corners rounded, a ridge every FOLD_PITCH, and the frame
+ * ring round its middle (rig.ts JointRig.frame).
+ */
+export function detailedJoint(i: number, front: number, rear: number, b: { profile: Array<[number, number]>; folds: number; depth: number }): JointRig {
+  const folds = Math.max(b.folds, Math.round((front - rear - JOINT_FRAME.width) / FOLD_PITCH));
+  return {
+    node: `joint${i}`,
+    sections: [i, i + 1],
+    front, rear,
+    profile: roundedProfile(b.profile),
+    folds,
+    depth: b.depth,
+    material: "bellows",
+    frame: { width: JOINT_FRAME.width, depth: b.depth + JOINT_FRAME.extra },
+  };
+}
+
+/**
+ * The bellows' frame on a section's end at x, the gap on side `dir` (-1 behind it,
+ * +1 ahead): a ring round the bellows' outline, from 1 cm inside the shell to 3 cm
+ * into the gap, its outside flush with the ridges' frame, its inside within the valleys.
+ */
+export function jointCollar(m: MeshBuilder, j: JointRig, x: number, dir: number): void {
+  const outer = grown(j.profile, j.frame!.depth - 0.008);
+  const inner = grown(j.profile, -0.035);
+  const [xa, xb] = [x - dir * 0.01, x + dir * 0.03];
+  const n = outer.length;
+  let area = 0;
+  for (let i = 0; i < n; i++) area += outer[i]![0] * outer[(i + 1) % n]![1] - outer[(i + 1) % n]![0] * outer[i]![1];
+  const sgn = area > 0 ? 1 : -1;
+  const P = ([z, y]: [number, number], px: number): Vec3 => [px, y, z];
+  for (let i = 0; i < n; i++) {
+    const i1 = (i + 1) % n;
+    const [o0, o1, n0, n1] = [outer[i]!, outer[i1]!, inner[i]!, inner[i1]!];
+    // the edge's outward normal in (z, y)
+    const nz = sgn * (o1[1] - o0[1]);
+    const ny = -sgn * (o1[0] - o0[0]);
+    orient(m, "frame", P(o0, xa), P(o1, xa), P(o1, xb), [0, ny, nz]);
+    orient(m, "frame", P(o0, xa), P(o1, xb), P(o0, xb), [0, ny, nz]);
+    orient(m, "frame", P(n0, xa), P(n1, xa), P(n1, xb), [0, -ny, -nz]);
+    orient(m, "frame", P(n0, xa), P(n1, xb), P(n0, xb), [0, -ny, -nz]);
+    for (const [px, nx] of [[xb, dir], [xa, -dir]] as const) {
+      orient(m, "frame", P(o0, px), P(o1, px), P(n1, px), [nx, 0, 0]);
+      orient(m, "frame", P(o0, px), P(n1, px), P(n0, px), [nx, 0, 0]);
+    }
+  }
+}
+
+/**
+ * The turntable under the hinge at x: a round dark plate about the hinge's
+ * vertical, so the sections turn about it without meeting it, clear of both
+ * ends of the gap `gap` and under the bellows' floor.
+ */
+export function turntable(m: MeshBuilder, x: number, gap: number, b: { profile: Array<[number, number]>; depth: number }): void {
+  const floor = Math.min(...b.profile.map(([, y]) => y)) - b.depth;
+  const r = Math.min(0.75, gap / 2 - 0.08);
+  const ring = ngon(16, r, Math.PI / 16, x, 0);
+  const y0 = Math.max(0.2, floor - 0.12);
+  m.prism("under", ring, y0, floor - 0.02);
+  // a prism has no bottom: seen from the road it needs one
+  m.cap("under", ring, y0, false);
 }

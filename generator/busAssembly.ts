@@ -13,7 +13,7 @@ import { drawJoint, type JointRig, type SectionRig, type VehicleRig } from "./ri
 import { drawShell, halfWidth, type Arch, type Paint } from "./busBody.ts";
 import { AXLE_FACTOR, axleBeam, busWheel, onSide, sideSlab, type BusFrame } from "./busKit.ts";
 import { block, steeredWheels } from "./vehicleParts.ts";
-import { BUS_DETAIL_PALETTE, detailedBusWheel, drawBusDetail, drawRouteDisplays, type DetailBus } from "./busDetail.ts";
+import { BUS_DETAIL_PALETTE, detailedBusWheel, detailedJoint, drawBusDetail, drawRouteDisplays, jointCollar, turntable, type DetailBus } from "./busDetail.ts";
 import { busLod, emptyBusLodNotes, type BusLodNotes } from "./lodRoad.ts";
 import { openable, plugMove } from "./doors.ts";
 import { CABIN_INSET, drawCabin, INTERIOR_PALETTE, type CabinDoor } from "./interior.ts";
@@ -213,6 +213,16 @@ export function assembleBus(spec: BusSpec, bind?: (m: MeshBuilder) => void): Mes
       if (spec.detail) {
         drawBusDetail(m, detail, lo, hi);
         drawRouteDisplays(m, detail, lo, hi);
+        if (articulated && spec.bellows) {
+          // the bellows' frames on this section's ends, and under the hinge ahead of it the turntable
+          const ends: Array<[number, number]> = [];
+          if (i + 1 < spec.bodies.length) ends.push([lo, -1]);
+          if (i > 0) ends.push([hi, 1]);
+          m.scope("joint frames", () => {
+            for (const [x, dir] of ends) jointCollar(m, detailedJoint(0, 0, 0, spec.bellows!), x, dir);
+          });
+          if (i > 0) m.scope("turntable", () => turntable(m, sections[i]!.pivot[0], spec.bodies[i - 1]![0] - hi, spec.bellows!));
+        }
       }
     });
     if (i === 0) {
@@ -224,7 +234,7 @@ export function assembleBus(spec: BusSpec, bind?: (m: MeshBuilder) => void): Mes
   if (articulated) {
     if (!spec.bellows) throw new Error("an articulated bus needs its bellows");
     for (let i = 0; i + 1 < spec.bodies.length; i++) {
-      const j: JointRig = {
+      const j: JointRig = spec.detail ? detailedJoint(i, spec.bodies[i]![0], spec.bodies[i + 1]![1], spec.bellows) : {
         node: `joint${i}`,
         sections: [i, i + 1],
         front: spec.bodies[i]![0],

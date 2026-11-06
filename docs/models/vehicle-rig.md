@@ -41,7 +41,7 @@ interface VehicleRig {
   supports?: Array<{ x; node?; axles; sections: number[] }>;  // a rail vehicle's, by x
   steer?: { axles: Array<{ nodes: [atMinusZ, atPlusZ]; wheelbase }>; maxAngleDeg; track };
   sections?: Array<{ node; pivot: [x, y, z] }>;      // front first; pivot = the node's rest origin
-  joints?: Array<{ node; sections: [front, rear]; front; rear; profile: Array<[z, y]>; folds; depth; material }>;
+  joints?: Array<{ node; sections: [front, rear]; front; rear; profile: Array<[z, y]>; folds; depth; material; frame?: { width; depth } }>;
   maxBendDeg?: number;
 }
 ```
@@ -55,8 +55,10 @@ interface VehicleRig {
   first). For a bus it is the middle of the gap the joint covers, 0.6 m above the
   road; for the truck the king pin.
 - A joint is described, not stored: its front and rear faces' x, its inner (valley)
-  cross-section, the number of outer ridges and their depth. The GLB holds its rest
-  pose, drawn by the same function the game calls.
+  cross-section, the number of outer ridges and their depth, and optionally the
+  `frame` ring round its middle (`width` along the bus, `depth` out of the valleys) that
+  joins a long bellows' two halves. The GLB holds its rest pose, drawn by the same
+  function the game calls.
 
 The rig travels three ways: the GLB's **scene extras** (`scenes[0].extras.rig`,
 which three's GLTFLoader puts in `scene.userData.rig`) and the vehicle's **meta
@@ -169,7 +171,10 @@ with a plain float triangle list of the joint's own layout.
 `jointTriangles(joint, sections, ma, mb)` is the joint itself, three.js-free: rings
 of the cross-section stacked from the front face (t = 0) to the rear face (t = 1),
 the odd ones grown outward by `depth` (the ridges, so the accordion reads without a
-texture). Every vertex rides **both** sections: its position under the front
+texture). With a `frame`, each half carries half the folds and between them, at
+t = 0.5, a flat band grown by the frame's depth, stepping up from and down to a valley;
+it rides both sections like every ring, so it stays halfway round a bend. Without one
+the rings are exactly as before. Every vertex rides **both** sections: its position under the front
 section's matrix and under the rear section's, blended by its t. The rings at the two
 faces therefore move exactly with their sections, and the ones between fan out on
 the outside of a bend and close up on the inside - at any yaw, pitch or roll, with no

@@ -347,8 +347,12 @@ function karosaDraft(variant: KarosaVariant, long: boolean): { draft: BusDraft; 
       block(m(), "roofHatch", x(u1), x(u0), ROOF - 0.04, ROOF + h, -0.4, 0.4);
     });
   }
-  // the rain gutter along each side, between the windows' surrounds and the eave
-  for (const s of [-1, 1]) fit(s > 0 ? "right gutter" : "left gutter", (nose + tail) / 2, () => sideSlab(m(), "frame", frame, s, x(K.f.tail - 0.25), x(K.f.nose + 0.25), 2.835, 2.86, 0.012));
+  // the rain gutter along each side, between the windows' surrounds and the eave: one
+  // per body, so an articulated Karosa's stays on its section when it bends
+  for (const [b0, b1] of bodyRanges) {
+    const [u0, u1] = [b0 === K.f.nose ? b0 + 0.25 : b0 + 0.02, b1 === K.f.tail ? b1 - 0.25 : b1 - 0.02];
+    for (const s of [-1, 1]) fit(s > 0 ? "right gutter" : "left gutter", x((u0 + u1) / 2), () => sideSlab(m(), "frame", frame, s, x(u1), x(u0), 2.835, 2.86, 0.012));
+  }
   fit("mirrors", nose, () => {
     for (const s of [-1, 1]) mirror(m(), frame, s, nose, s > 0 ? 2.8 : 2.55, { h: 0.42, w: 0.2, drop: 0.06 });
   });

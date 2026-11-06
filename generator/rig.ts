@@ -76,6 +76,13 @@ export interface JointRig {
   depth: number;
   /** The model material the bellows is drawn in. */
   material: string;
+  /**
+   * The frame ring round the bellows' middle (a long bellows is two halves joined by
+   * one): `width` along the bus, standing `depth` out of the valley outline, carried
+   * halfway between the sections; the folds share the rest of the length. None: the
+   * folds run the whole length.
+   */
+  frame?: { width: number; depth: number };
 }
 
 /**
@@ -159,7 +166,7 @@ export function steerLock(s: SteerRig): number {
 // --- the joint --------------------------------------------------------------------
 
 /** A closed convex (z, y) outline moved outward by `d` along each corner's bisector. */
-function grown(profile: Array<[number, number]>, d: number): Array<[number, number]> {
+export function grown(profile: Array<[number, number]>, d: number): Array<[number, number]> {
   const n = profile.length;
   let area = 0;
   for (let i = 0; i < n; i++) {
@@ -215,17 +222,31 @@ export function jointTriangles(j: JointRig, sections: readonly SectionRig[], ma?
   const fb = mb ?? translation(pb);
   const valley = j.profile;
   const ridge = grown(valley, j.depth);
-  const rings = 2 * j.folds + 1;
   const n = valley.length;
+  // the rings: (t along the bellows, outline), valleys and ridges in turn; with a
+  // frame, each half's folds and between them the frame's flat band, its two faces
+  // the steps up from and down to a valley at the same t
+  const spec: Array<[number, Array<[number, number]>]> = [];
+  const folds = (t0: number, t1: number, count: number): void => {
+    for (let k = spec.length ? 1 : 0; k <= 2 * count; k++) spec.push([t0 + ((t1 - t0) * k) / (2 * count), k % 2 === 1 ? ridge : valley]);
+  };
+  if (j.frame) {
+    const band = grown(valley, j.frame.depth);
+    const h = j.frame.width / 2 / Math.abs(j.front - j.rear);
+    const first = Math.ceil(j.folds / 2);
+    folds(0, 0.5 - h, first);
+    spec.push([0.5 - h, band], [0.5 + h, band], [0.5 + h, valley]);
+    // the second half starts at the valley just pushed
+    folds(0.5 + h, 1, j.folds - first);
+  } else folds(0, 1, j.folds);
+  const rings = spec.length;
   // the outline's winding decides which way round a quad faces out
   let area = 0;
   for (let i = 0; i < n; i++) area += valley[i]![0] * valley[(i + 1) % n]![1] - valley[(i + 1) % n]![0] * valley[i]![1];
   const flip = area > 0;
   const posed: Vec3[][] = [];
-  for (let k = 0; k < rings; k++) {
-    const t = k / (rings - 1);
+  for (const [t, outline] of spec) {
     const x = j.front + (j.rear - j.front) * t;
-    const outline = k % 2 === 1 ? ridge : valley;
     posed.push(outline.map(([z, y]) => carry([x, y, z], t, pa, fa, pb, fb)));
   }
   const out: Vec3[] = [];

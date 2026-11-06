@@ -18,12 +18,12 @@ cabin adds 370-620 within the interiors' own cap ([interiors.md](interiors.md)).
 | id | title | vlakosimdb | real bus | triangles |
 |---|---|---|---|---|
 | `veh-karosa-short` | Karosa Short | `variant`: `b731` (default), `b732`, `c734`, `lc735`, `b931`, `b931e`, `b951e` = `bus_kar_*` | 700 series 10.975 m, 900 series 11.345 m, B 951 11.32 m | 5,650-6,500 |
-| `veh-karosa-long` | Karosa Long | `variant`: `b741` (default), `b941`, `b941e`, `b961` | articulated, 17.355 / 17.615 / 17.59 m | 8,000-8,950 |
+| `veh-karosa-long` | Karosa Long | `variant`: `b741` (default), `b941`, `b941e`, `b961` | articulated, 17.355 / 17.615 / 17.59 m | 9,250-10,200 |
 | `veh-karosa-renault-citybus-12m` | Karosa Renault City Bus 12M | `bus_karrencity12m` | low floor, 11.99 m | 5,900 |
-| `veh-karosa-renault-citybus-18m` | Karosa Renault City Bus 18M | `bus_karrencity18m` | articulated low floor, 17.80 m | 8,250 |
+| `veh-karosa-renault-citybus-18m` | Karosa Renault City Bus 18M | `bus_karrencity18m` | articulated low floor, 17.80 m | 9,450 |
 | `veh-mb-citaro` | Mercedes-Benz Citaro | `bus_mb_citaro` | O 530, 11.95 m, white and teal | 5,950 |
 | `veh-mb-citaro-blue` | Mercedes-Benz Citaro (blue) | `bus_mb_citarob` | the same bus in dark blue | 5,950 |
-| `veh-mb-o345-g` | Mercedes-Benz O 345 G | `bus_mb_o345` | articulated, 17.94 m, 2-2-2-2 doors | 8,550 |
+| `veh-mb-o345-g` | Mercedes-Benz O 345 G | `bus_mb_o345` | articulated, 17.94 m, 2-2-2-2 doors | 9,550 |
 | `veh-solaris-urbino-15` | Solaris Urbino 15 | `solaris_urbino_15` | three axles, 14.59 m | 7,950 |
 | `veh-bus-1` | Bus 1 | `bus_1` | vlakosimdb's generic coach, 11.3 m | 5,600 |
 
@@ -111,7 +111,16 @@ there, and the route displays sit in the top front corner of the frontmost right
 window and the top right corner of the rear window. The shell's roof edge is rounded:
 the city buses' plan and roof corners in five pieces, the Karosas' roof edge in four
 (the XML's single chamfer smoothed); the Karosas also carry a rain gutter along each
-side under the eave and a frame under each roof hatch's lid.
+side under the eave (one per section on a long one) and a frame under each roof hatch's lid.
+
+**The joint** of an articulated bus (`busDetail.ts` `detailedJoint`; the photograph of
+a B 941's side): the bellows' outline with its upper corners rounded, a ridge every
+7.5 cm (19 to 24 over the gaps, up from 8 or 9), and the frame ring round its middle
+(`JointRig.frame`, [vehicle-rig.md](vehicle-rig.md)), all redrawn by the game's
+`renderJoint` at every bend. Each section's end carries the bellows' frame, a dark ring
+3 cm into the gap round the bellows' first fold, and under the hinge the rear section
+carries the turntable: a dark round plate under the bellows' floor, about the hinge's
+vertical axis, so neither section meets it at any bend.
 
 **The ends** carry each model's own fittings (below), drawn with the end kit in
 `busKit.ts`: `wiper` (an arm and a blade at rest from a spindle cap, rising to one side;
