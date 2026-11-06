@@ -24,12 +24,13 @@ import { cabinLine, cabinView, type CabinLine } from "../cableCarLine.ts";
 import { CABLE_CABINS } from "../cableCabins.ts";
 import { WORLD_CABINS } from "../worldCabins.ts";
 import { LEGACY_VEHICLES } from "../legacyVehicles.ts";
+import { LINE_COUNTS, LINE_STATIONS, lineCabinValue, lineStationValue } from "../cableCarLineIds.ts";
 import { Sketch, type Rgb } from "./sketch.ts";
 
 /** Every cable car cabin the catalog has, by the value the preview names it with. */
 const CABINS: ReadonlyArray<{ value: string; design: ProceduralDesign }> = [...CABLE_CABINS, ...LEGACY_VEHICLES, ...WORLD_CABINS]
   .filter((d) => d.game?.ropeFrac !== undefined)
-  .map((design) => ({ value: design.id.replace(/^(proc-vehicle-|veh-)/, "").replace(/-([a-z0-9])/g, (_, c: string) => c.toUpperCase()), design }));
+  .map((design) => ({ value: lineCabinValue(design.id), design }));
 
 /** The cabins' names, at most 16 letters as a value title must be (the full title is on the cabin's page). */
 const SHORT: Record<string, string> = {
@@ -39,19 +40,13 @@ const SHORT: Record<string, string> = {
   medellinMetrocable: "Metrocable", ngongPingCrystal: "Ngong Ping 360",
 };
 
-const STATION_TITLES: Record<string, string> = {
-  open_gantry: "Open gantry", alpine_chalet: "Alpine chalet", glass_modern: "Glass modern", concrete_drive: "Concrete drive",
-};
-
-/** A set type id as a parameter value (letters and digits only): open_gantry -> openGantry. */
-const camel = (id: string): string => id.replace(/_([a-z0-9])/g, (_, c: string) => c.toUpperCase());
 
 export const LINE_PARAMS: ParamSpec[] = [
   { name: "cabin", title: "Cabin", default: "doppelmayrOmega", preview: true, values: CABINS.map((c) => ({ value: c.value, title: SHORT[c.value] ?? c.design.title })) },
-  { name: "station", title: "Station", default: "openGantry", preview: true, values: Object.keys(station.TYPE_META).map((type) => ({ value: camel(type), title: STATION_TITLES[type] ?? type })) },
+  { name: "station", title: "Station", default: "openGantry", preview: true, values: LINE_STATIONS.map((t) => ({ value: lineStationValue(t.type), title: t.title })) },
   {
     name: "cabins", title: "Cabins", default: "6", preview: true,
-    values: [{ value: "1", title: "One, shuttle" }, { value: "2", title: "Two, jig-back" }, { value: "6", title: "Six, circulating" }],
+    values: LINE_COUNTS.map((c) => ({ ...c })),
   },
 ];
 
@@ -169,7 +164,7 @@ function layout(values: ParamValues | undefined): Layout {
   const v = resolveParams(LINE_PARAMS, values);
   const design = CABINS.find((c) => c.value === v.cabin)!.design;
   const line = cabinLine(design);
-  const type = Object.keys(station.TYPE_META).find((t) => camel(t) === v.station)!;
+  const type = LINE_STATIONS.find((t) => lineStationValue(t.type) === v.station)!.type;
   const meta = station.TYPE_META[type]!;
   // a jig-back cabin runs one or two to a line, as the game's Cabins tab offers
   const asked = Number(v.cabins);

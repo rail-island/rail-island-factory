@@ -4,7 +4,7 @@
 the table, card and thumbnail layouts, browser-rendered variant thumbnails, sorting and search, the model page with its 3D
 preview (its passenger view on structure pages included), and the URL state.
 **Code** - `src/main.tsx`, `src/App.tsx`, `src/catalogQuery.ts`, `generator/countryTable.ts`, `src/ModelTable.tsx`,
-`src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`, `src/viewerScenery.ts`, `src/viewerMotions.ts`, `src/viewerGlass.ts`, `src/viewerInteriors.ts`, `src/viewerPassenger.ts`, `src/viewerOverlays.ts`,
+`src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`, `src/viewerScenery.ts`, `src/viewerLine.ts`, `src/viewerMotions.ts`, `src/viewerGlass.ts`, `src/viewerInteriors.ts`, `src/viewerPassenger.ts`, `src/viewerOverlays.ts`,
 `src/SourceTreePanel.tsx`, `src/sourceTreeView.ts`, `src/Thumb.tsx`, `src/modelModule.ts`, `src/ExportPanel.tsx`,
 `src/ModelVariants.tsx`, `src/Link.tsx`, `src/VariantThumb.tsx`, `src/SoundsPanel.tsx`, `src/modelSounds.ts`, `src/soundAudition.ts`, `test/modelSounds.test.ts`, `src/variantThumbs.ts`, `src/thumbRender.ts`,
 `src/devCatalog.ts`, `src/devMeasure.ts`, `generator/devServer.ts`, `generator/devExport.ts`, `test/devExport.test.ts`,
@@ -380,6 +380,17 @@ walking direction), 3 m past it either way, its surface at y = 0 the soles, besi
 (longer each metre), with a crossbar at the top - so the figure's height reads
 against the scale the game expects. The marker is scenery too. A **Scenery**
 checkbox beside the buttons hides it, for every model until it is ticked again.
+
+A **cable car cabin** is shown on a line (`scenery.way` `ropeway`, `src/viewerLine.ts`):
+the viewer loads the Cable Car Line preview (`scenery.ropeway.line`,
+[../models/previews.md](../models/previews.md#the-cable-car-line)) with the cabin's
+`cabin` value (`generator/cableCarLineIds.ts`), between two stations of the type the
+**Station** select picks and with the cabin count the **Cabins** select picks - one, two
+or six, a jig-back cabin one or two (`scenery.ropeway.counts`); both are kept across cabins.
+The line draws the cabin itself, in the game's studs and hung from the game's ropes, so
+the page's own model is hidden while the line is shown, and the line's `running` clip
+plays for as long as it is. The camera frames the whole line when it appears and the
+cabin again when the checkbox hides it. The line shows the cabin's default variant.
 
 ### Passenger view
 
