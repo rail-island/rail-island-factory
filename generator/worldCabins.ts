@@ -10,8 +10,8 @@
 
 import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
 import type { Station } from "./cableCabins.ts";
-import { buildCabin, buildCabinLod, cabinDatums, type CabinSpec } from "./cabinKit.ts";
-import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
+import { buildCabin, buildCabinLod, cabinDatums, cabinRopes, type CabinSpec } from "./cabinKit.ts";
+import { resolveParams, type CabinRopeFrac, type ParamSpec, type Ropeway, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { CABLE_CABIN_CATALOG } from "./cableCabins.ts";
 
 const paint = (color: string, metallic = 0.25, roughness = 0.35): MaterialSpec => ({ color, metallic, roughness });
@@ -235,10 +235,17 @@ export function ngongPingLod(params?: ParamValues): MeshBuilder { return buildCa
 type SpecFn = (params?: ParamValues) => CabinSpec;
 type BuildFn = (params?: ParamValues) => MeshBuilder;
 
-/** A design's game properties from its spec: the rope and sill datums, the line speed (km/h). */
-function cabinGame(spec: CabinSpec, maxspeed: number): ProceduralDesign["game"] {
+/** A spec's ropes as the game properties state them: fractions of the model's height. */
+export function cabinRopeFracs(spec: CabinSpec): CabinRopeFrac[] {
+  const { y1 } = cabinDatums(spec);
+  const r4 = (v: number): number => Math.round(v * 1e4) / 1e4 + 0;
+  return cabinRopes(spec).map((r) => ({ kind: r.kind, zFrac: r4(r.z / y1), dyFrac: r4(r.dy / y1) }));
+}
+
+/** A design's game properties from its spec: the rope and sill datums, its ropes and running, the line speed (km/h). */
+function cabinGame(spec: CabinSpec, maxspeed: number, ropeway: Ropeway): ProceduralDesign["game"] {
   const d = cabinDatums(spec);
-  return { weight: null, power: null, maxspeed, accel: null, ropeFrac: d.ropeFrac, boardFrac: d.boardFrac };
+  return { weight: null, power: null, maxspeed, accel: null, ropeFrac: d.ropeFrac, boardFrac: d.boardFrac, ropes: cabinRopeFracs(spec), ropeway };
 }
 
 interface WorldCabin {
@@ -251,27 +258,29 @@ interface WorldCabin {
   finishParams?: readonly string[];
   /** Line speed, km/h. */
   maxspeed: number;
+  /** Detachable gondolas, the funitel, 3S and bicable cabins circulate; the aerial tramways shuttle. */
+  ropeway: Ropeway;
   references: string;
 }
 
 /** Every world cabin, in the list's order (docs/specs/2026-11-05-world-vehicle-fleet-list.md). */
 export const WORLD_CABIN_SPECS: readonly WorldCabin[] = [
-  { id: "veh-doppelmayr-omega", title: "Doppelmayr Omega IV", spec: omegaSpec, build: doppelmayrOmega, buildLod: doppelmayrOmegaLod, params: OMEGA_PARAMS, finishParams: ["color"], maxspeed: 22, references: "doppelmayr-omega" },
-  { id: "veh-poma-funitel", title: "Funitel Cabin", spec: funitelSpec, build: pomaFunitel, buildLod: pomaFunitelLod, maxspeed: 25, references: "poma-funitel" },
-  { id: "veh-peak-2-peak", title: "Peak 2 Peak Cabin", spec: peak2PeakSpec, build: peak2Peak, buildLod: peak2PeakLod, params: GLASS_FLOOR_PARAMS, maxspeed: 27, references: "peak-2-peak" },
-  { id: "veh-stanserhorn-cabrio", title: "Stanserhorn Cabrio", spec: cabrioSpec, build: stanserhornCabrio, buildLod: stanserhornCabrioLod, maxspeed: 29, references: "stanserhorn-cabrio" },
-  { id: "veh-titlis-rotair", title: "Titlis Rotair", spec: rotairSpec, build: titlisRotair, buildLod: titlisRotairLod, maxspeed: 36, references: "titlis-rotair" },
-  { id: "veh-vanoise-express", title: "Vanoise Express", spec: vanoiseSpec, build: vanoiseExpress, buildLod: vanoiseExpressLod, maxspeed: 43, references: "vanoise-express" },
-  { id: "veh-roosevelt-island-tram", title: "Roosevelt Island Tramway", spec: rooseveltSpec, build: rooseveltIslandTram, buildLod: rooseveltIslandTramLod, maxspeed: 29, references: "roosevelt-island-tram" },
-  { id: "veh-sugarloaf-bondinho", title: "Sugarloaf Cable Car", spec: sugarloafSpec, build: sugarloafBondinho, buildLod: sugarloafBondinhoLod, maxspeed: 36, references: "sugarloaf-bondinho" },
-  { id: "veh-medellin-metrocable", title: "Medellin Metrocable", spec: metrocableSpec, build: medellinMetrocable, buildLod: medellinMetrocableLod, maxspeed: 18, references: "medellin-metrocable" },
-  { id: "veh-ngong-ping-crystal", title: "Ngong Ping 360 Cabin", spec: ngongPingSpec, build: ngongPing, buildLod: ngongPingLod, params: CRYSTAL_PARAMS, maxspeed: 25, references: "ngong-ping-crystal" },
+  { id: "veh-doppelmayr-omega", title: "Doppelmayr Omega IV", spec: omegaSpec, build: doppelmayrOmega, buildLod: doppelmayrOmegaLod, params: OMEGA_PARAMS, finishParams: ["color"], ropeway: "circulating", maxspeed: 22, references: "doppelmayr-omega" },
+  { id: "veh-poma-funitel", title: "Funitel Cabin", spec: funitelSpec, build: pomaFunitel, buildLod: pomaFunitelLod, ropeway: "circulating", maxspeed: 25, references: "poma-funitel" },
+  { id: "veh-peak-2-peak", title: "Peak 2 Peak Cabin", spec: peak2PeakSpec, build: peak2Peak, buildLod: peak2PeakLod, params: GLASS_FLOOR_PARAMS, ropeway: "circulating", maxspeed: 27, references: "peak-2-peak" },
+  { id: "veh-stanserhorn-cabrio", title: "Stanserhorn Cabrio", spec: cabrioSpec, build: stanserhornCabrio, buildLod: stanserhornCabrioLod, ropeway: "jigback", maxspeed: 29, references: "stanserhorn-cabrio" },
+  { id: "veh-titlis-rotair", title: "Titlis Rotair", spec: rotairSpec, build: titlisRotair, buildLod: titlisRotairLod, ropeway: "jigback", maxspeed: 36, references: "titlis-rotair" },
+  { id: "veh-vanoise-express", title: "Vanoise Express", spec: vanoiseSpec, build: vanoiseExpress, buildLod: vanoiseExpressLod, ropeway: "jigback", maxspeed: 43, references: "vanoise-express" },
+  { id: "veh-roosevelt-island-tram", title: "Roosevelt Island Tramway", spec: rooseveltSpec, build: rooseveltIslandTram, buildLod: rooseveltIslandTramLod, ropeway: "jigback", maxspeed: 29, references: "roosevelt-island-tram" },
+  { id: "veh-sugarloaf-bondinho", title: "Sugarloaf Cable Car", spec: sugarloafSpec, build: sugarloafBondinho, buildLod: sugarloafBondinhoLod, ropeway: "jigback", maxspeed: 36, references: "sugarloaf-bondinho" },
+  { id: "veh-medellin-metrocable", title: "Medellin Metrocable", spec: metrocableSpec, build: medellinMetrocable, buildLod: medellinMetrocableLod, ropeway: "circulating", maxspeed: 18, references: "medellin-metrocable" },
+  { id: "veh-ngong-ping-crystal", title: "Ngong Ping 360 Cabin", spec: ngongPingSpec, build: ngongPing, buildLod: ngongPingLod, params: CRYSTAL_PARAMS, ropeway: "circulating", maxspeed: 25, references: "ngong-ping-crystal" },
 ];
 
 export const WORLD_CABINS: ProceduralDesign[] = WORLD_CABIN_SPECS.map((c) => ({
   id: c.id,
   title: c.title,
-  game: cabinGame(c.spec(), c.maxspeed),
+  game: cabinGame(c.spec(), c.maxspeed, c.ropeway),
   build: c.build,
   buildLod: c.buildLod,
   ...(c.params ? { params: c.params } : {}),

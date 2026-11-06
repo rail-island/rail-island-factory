@@ -10,7 +10,7 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-airtanker-services-white-unliveried-airbus-a330-243-registra.jpg` | AirTanker Services white unliveried Airbus A330-243, registration G-VYGM, operating on lease for Thomas Cook Airlines, departing Manchester Airport (EGCC), 9 April 2019.jpg | https://commons.wikimedia.org/wiki/File:AirTanker_Services_white_unliveried_Airbus_A330-243,_registration_G-VYGM,_operating_on_lease_for_Thomas_Cook_Airlines,_departing_Manchester_Airport_(EGCC),_9_April_2019.jpg | Riik@mctr | CC BY-SA 2.0 | the airframe's shape, proportions and livery |
+| `photo-hamburg-finkenwerder-airport-airbus-transport-international-.jpg` | Hamburg-Finkenwerder Airport Airbus Transport International Airbus A330-743L Beluga XL F-GXLH (DSC09365).jpg | https://commons.wikimedia.org/wiki/File:Hamburg-Finkenwerder_Airport_Airbus_Transport_International_Airbus_A330-743L_Beluga_XL_F-GXLH_(DSC09365).jpg | MarcelX42 | CC BY-SA 4.0 | the whole Airbus BelugaXL (the lead photograph of Wikipedia's "Airbus BelugaXL") |
 
 ## Published figures
 

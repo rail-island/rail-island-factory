@@ -11,7 +11,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
 | `photo-baltic-jasmine.jpg` | BALTIC JASMINE.jpg | https://commons.wikimedia.org/wiki/File:BALTIC_JASMINE.jpg | Niels Johannes | CC BY-SA 4.0 | shape, proportions and colours |
-| `photo-dole-honduras-in-san-diego.jpg` | Dole Honduras in San Diego.jpg | https://commons.wikimedia.org/wiki/File:Dole_Honduras_in_San_Diego.jpg | Port of San Diego from San Diego, CA | CC BY 2.0 | shape, proportions and colours |
 
 ## Published figures
 

@@ -11,7 +11,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
 | `photo-titlis-rotair.jpg` | Titlis Rotair.jpg | https://commons.wikimedia.org/wiki/File:Titlis_Rotair.jpg | Björn Söderqvist | CC BY-SA 2.0 | the round rotating cabin, glazing, hanger |
-| `photo-engelberg-titlis-cableway-wallpaper.jpg` | Engelberg-Titlis cableway wallpaper.JPG | https://commons.wikimedia.org/wiki/File:Engelberg-Titlis_cableway_wallpaper.JPG | Natan Flayer | CC BY-SA 3.0 | the round rotating cabin, glazing, hanger |
 
 ## Published figures
 

@@ -10,7 +10,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-bayonne-bridge-2-deck-with-ship-agr.jpg` | Bayonne Bridge 2 deck with ship.agr.jpg | https://commons.wikimedia.org/wiki/File:Bayonne_Bridge_2_deck_with_ship.agr.jpg | ArnoldReinhold | CC BY 3.0 | shape, proportions and colours |
 | `photo-container-ship-cma-cgm-theodore-roosevelt-in-ny-harbor-on-se.jpg` | Container Ship CMA CGM Theodore Roosevelt in NY Harbor on Sept 7, 2017 (36415318053).jpg | https://commons.wikimedia.org/wiki/File:Container_Ship_CMA_CGM_Theodore_Roosevelt_in_NY_Harbor_on_Sept_7,_2017_(36415318053).jpg | USACE NY | CC BY 2.0 | shape, proportions and colours |
 
 ## Published figures

@@ -1,7 +1,7 @@
 # World fleet
 
 **Covers** - the harness the world vehicle fleet is built with: the fleet registry and the kit options of each design, the covering sample the catalog sweep checks in full, the data checks every fleet design gets, the reference fetch script `pnpm refs:fetch` and the reference rules; which families have landed.
-**Code** - `generator/worldFleet.ts`, `generator/fetchRefs.ts`, `test/worldFleet.test.ts`, `test/catalogCache.ts` (`SWEPT_IDS`, `shard`)
+**Code** - `generator/worldFleet.ts`, `generator/fetchRefs.ts`, `generator/fleetLinks.ts`, `test/worldFleet.test.ts`, `test/catalogCache.ts` (`SWEPT_IDS`, `shard`)
 **See also** - [../specs/2026-11-05-world-vehicle-fleet.md](../specs/2026-11-05-world-vehicle-fleet.md) (the plan), [../specs/2026-11-05-world-vehicle-fleet-list.md](../specs/2026-11-05-world-vehicle-fleet-list.md) (the candidate list and ids), [world-cabins.md](world-cabins.md), [../guide/setup-and-build.md](../guide/setup-and-build.md)
 
 ## What has landed
@@ -27,8 +27,7 @@ a yoke, the number of glazed decks, a top deck, a round plan, doors on one or bo
 equipment, a glass floor, each parameter; `busFeatures`: the shape, the sections, the axles,
 the floor, the lamps, the mirrors, an upper deck, trolley poles, a rear window, a grille, roof
 pods, a bonnet or a half cab, a raised deck, each parameter; the Havana camello, which is no
-kit spec, states its own: a semi-trailer). A new family adds its entries here, with its own feature function.
-pods, each parameter; `tramFeatures`, over every parameter value's spec: the section count,
+kit spec, states its own: a semi-trailer; `tramFeatures`, over every parameter value's spec: the section count,
 each truck kind, a floating module, the fronts, single or double ended, the roof, the doors,
 the collector, the floor, a deck, open sides, a clerestory, a trailer, roof boxes, the
 extras, each parameter). A new family adds its entries here, with its own feature function.
@@ -100,6 +99,16 @@ The first lists the Commons files an article shows. The second downloads each fi
 It runs `curl`, so the session's HTTPS proxy applies; Wikimedia rate-limits bursts, so leave a
 few seconds between calls. After fetching, add the `## Published figures` section by hand:
 the line, the published capacity and speed, the dimensions, and which figures are estimates.
+
+## Web links
+
+`FLEET_LINKS` (`generator/fleetLinks.ts`), spread into `MODEL_LINKS` (`linkTable.ts`,
+[../site/workshop.md](../site/workshop.md)), gives every fleet model the links its model page's
+Sources tab lists: the Wikipedia article it is built from first (`Wikipedia: <article>`), then
+the Commons page of each photograph in its `SOURCES.md` (`Wikimedia Commons: <original>`). A
+photograph added or removed changes the list in the same change; `test/worldFleet.test.ts`
+checks that every photograph row's Commons page is linked and that no link points at a
+photograph the folder no longer holds.
 
 The user accepted about 250 MB of references for the whole fleet (two or three photos per
 design at this size are 300 to 600 KB).

@@ -177,6 +177,24 @@ The images of all ten cabins and their variants were sent to the user (contact s
      | `TEST_FLEET_COVER=1 pnpm test` | 155 files, 11,344 tests pass in 5m05s |
      | `pnpm build` | passes, 1,046 models exported in 9m21s |
 
+4. **Better references and web links.** After the merge, on a fresh `master`:
+   - every fleet model's references were reviewed on contact sheets; 111 weak photographs
+     were marked (interiors, cockpits, details, stamps, empty scenes and other vehicles: a
+     737-800 for the 737-200, an A330 for the BelugaXL, a horse wagon for the Autocar ACX,
+     British Atlanteans for Sydney's, an old boat for the Staten Island ferry);
+   - each folder's Wikipedia article was resolved (410 of 510; the rest have none) and its
+     lead photograph fetched where it was a free photo of the right vehicle (11 new photos,
+     one dropped as a landscape); 52 weak photos were removed where the folder keeps another,
+     the other 59 stay until a better photo is found (see Known problems);
+   - `generator/fleetLinks.ts` (`FLEET_LINKS`, spread into `MODEL_LINKS`) gives every fleet
+     model its article and its photographs' Commons pages on the Sources tab;
+     `test/worldFleet.test.ts` keeps it in step with each `SOURCES.md`.
+
+     | check | result |
+     |---|---|
+     | `pnpm typecheck` | passes |
+     | `pnpm test` | 156 files, 10,235 tests pass in 5m15s (the machine was loaded; 4m41s before) |
+
 ## How to test
 
 **Automated coverage.**
@@ -289,6 +307,9 @@ Nothing in the spec's models: all 510 are built. Two Phase 0 items are partial:
   The full covering sample runs only with `TEST_FLEET_COVER=1`.
 - Wikimedia rate-limits this container's shared address heavily, so fetching two photos takes
   up to a minute with retries.
+
+- 59 weak reference photographs stay in folders with no better free photo yet (737-200,
+  Autocar ACX, Sydney Atlantean, many ship folders): their models are still drafts.
 
 ## Recommended follow-ups
 

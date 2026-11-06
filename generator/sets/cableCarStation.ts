@@ -62,6 +62,17 @@ export interface StationSector {
   level: StationLevel;
 }
 
+/**
+ * One rope of a cabin, in studs: `z` across the strand (the cabin's +z, its right side,
+ * which faces away from the line's centre on both strands) and `dy` up from the strand
+ * the cabin hangs at. A haul rope wraps the bull wheel at radius WHEEL_RADIUS + z; a
+ * track rope is fixed and ends at the station.
+ */
+export interface StationRope { kind: "haul" | "track"; z: number; dy: number }
+
+/** A cabin's ropes when the view states none: one haul rope through its grip. */
+export const DEFAULT_ROPES: readonly StationRope[] = [{ kind: "haul", z: 0, dy: 0 }];
+
 /** What the game tells a station about the line through it. */
 export interface StationView {
   /** Three or more cabins go round the wheel: a curved platform. Otherwise a rectangular U. */
@@ -70,6 +81,12 @@ export interface StationView {
   sillDrop: number;
   /** Half the cabin's width, so the platform's inner edge stands beside the cabin. */
   halfWidth: number;
+  /** Studs from the rope down to the cabin's underside; CABIN_DROP when absent. */
+  drop?: number;
+  /** Half the cabin's length along the rope; where a big shuttling cabin stops (`cabinStop`). */
+  halfLength?: number;
+  /** The cabin's ropes (DEFAULT_ROPES when absent): the wheel carries one rim per haul rope. */
+  ropes?: readonly StationRope[];
 }
 
 /**
@@ -127,6 +144,41 @@ export const CABIN_HALF_WIDTH = 2.5;
 /** The ring a cabin sweeps about the wheel axis. */
 export const SWEEP_INNER_R: number = WHEEL_RADIUS - CABIN_HALF_WIDTH;
 export const SWEEP_OUTER_R: number = WHEEL_RADIUS + CABIN_HALF_WIDTH;
+
+/** How far the view's cabin hangs below the rope: never less than the catalog's budget the halls are drawn to. */
+export function viewDrop(view: StationView): number {
+  return Math.max(CABIN_DROP, view.drop ?? 0);
+}
+
+/**
+ * How far ahead of the wheel axis, along its strand, a shuttling cabin stops: at the
+ * axis (0) when it fits the ring the head is drawn round, otherwise with its whole body
+ * ahead of the axis, in the lanes every station keeps clear -- a big aerial tram cabin
+ * waits in front of the wheel, as a real one does. Circulating cabins never stop.
+ */
+export function cabinStop(view: StationView): number {
+  if (view.circulating) return 0;
+  if (view.halfWidth <= CABIN_HALF_WIDTH && (view.drop ?? 0) <= CABIN_DROP) return 0;
+  return (view.halfLength ?? CABIN_HALF_WIDTH) + 1;
+}
+
+/** The ring a circulating view's cabin sweeps about the wheel axis: never narrower than the catalog's. */
+function sweepRing(view: StationView): { rIn: number; rOut: number } {
+  const half = Math.max(CABIN_HALF_WIDTH, view.circulating ? view.halfWidth : 0);
+  return { rIn: WHEEL_RADIUS - half, rOut: WHEEL_RADIUS + half };
+}
+
+/** The radii and heights of the wheel's rims: one per haul rope (a funitel's two coaxial wheels). */
+export function wheelRims(view: StationView): { r: number; dy: number }[] {
+  const out: { r: number; dy: number }[] = [];
+  for (const rope of view.ropes ?? DEFAULT_ROPES) {
+    if (rope.kind !== "haul") continue;
+    const r = Math.round((WHEEL_RADIUS + rope.z) * 1e4) / 1e4;
+    if (r > 0.9 && !out.some((o) => o.r === r && o.dy === rope.dy)) out.push({ r, dy: rope.dy });
+  }
+  if (!out.length) out.push({ r: WHEEL_RADIUS, dy: 0 });
+  return out.sort((a, b) => a.r - b.r);
+}
 /** Above the rope the wheel's bearing cap and the cabins' grips reach this high. */
 export const HEAD_TOP = 1.3;
 const HEAD_CLEARANCE = 2;
@@ -142,6 +194,8 @@ export function headOverhangFor(depth: number): number {
 /** How far the deck sits below the sill, so a passenger steps DOWN into the cabin. */
 const PLATFORM_STEP = 0.25;
 const PLATFORM_WIDTH = 4.5;
+/** The width of each arm of the platform beside a cabin stopped ahead of the wheel. */
+const ARM_WIDTH = 3.2;
 /** Air between the cabin's flank and the deck edge. */
 const PLATFORM_GAP = 0.5;
 const RAIL_HEIGHT = 1.1;
@@ -160,18 +214,61 @@ export function platformBand(view: StationView): { rIn: number; rOut: number } {
   return { rIn, rOut: rIn + PLATFORM_WIDTH };
 }
 
-/** The platform's walking surface for a view, above the station's level. */
-export function deckLevel(ropeHeadY: number, view: StationView): number {
-  return ropeHeadY - view.sillDrop - PLATFORM_STEP;
+/** How far ahead of the wheel axis the rectangular platform's arms reach: past the curve's ends, and past a stopped cabin's nose. */
+export function platformFront(view: StationView): number {
+  const curve = platformBand(view).rOut * Math.max(0, -Math.cos(BOARD_ARC_HALF));
+  const stop = cabinStop(view);
+  return stop > 0 ? Math.max(curve, stop + (view.halfLength ?? CABIN_HALF_WIDTH) + PLATFORM_GAP) : curve;
 }
 
-/** The stairs from the platform: each tread's z range and top, the first one level with the deck. */
+/**
+ * The highest a type's deck may stand above the station's level: under the alpine
+ * chalet's roof edge, which a small cabin's high deck would otherwise meet. A cabin
+ * whose sill is higher still is boarded up a step.
+ */
+const DECK_MAX: Record<string, number> = { alpine_chalet: 9.4 };
+
+/** The platform's walking surface for a view, above the station's level (`type` caps it, DECK_MAX). */
+export function deckLevel(ropeHeadY: number, view: StationView, type?: string): number {
+  return Math.min(ropeHeadY - view.sillDrop - PLATFORM_STEP, DECK_MAX[type ?? ""] ?? Infinity);
+}
+
+/** How much higher than the default cabin's deck the back flight still clears the halls' door lintels. */
+const FRONT_STAIRS_RISE = 0.5;
+
+/**
+ * Whether the stairs leave from the platform's front ends, away from the hall, rather than
+ * from its back edge into it: for a cabin stopped ahead of the wheel, and for a deck higher
+ * than the default cabin's by FRONT_STAIRS_RISE, whose flight would otherwise meet the
+ * hall's door lintels (the halls are drawn for the default flight and up to that much higher).
+ */
+export function frontStairs(type: string, view: StationView): boolean {
+  const h = (TYPE_META[type] ?? TYPE_META.open_gantry!).ropeHeadY;
+  return cabinStop(view) > 0 || deckLevel(h, view, type) > deckLevel(h, DEFAULT_VIEW, type) + FRONT_STAIRS_RISE;
+}
+
+/** How many treads the stairs down from a deck at `deckY` take: one per STEP_RISE. */
+function stairSteps(deckY: number): number {
+  return Math.max(3, Math.round(deckY / STEP_RISE));
+}
+
+/**
+ * The plan of the platform for a cabin stopped ahead of the wheel (`cabinStop`): an arm
+ * beside each strand, outboard of the cabin, from just ahead of the axis to past its nose,
+ * relative to the axis (x across, z along +Z). Its stairs leave each arm's front end.
+ */
+export function armPlan(view: StationView): { xIn: number; xOut: number; z0: number; z1: number } {
+  const xIn = WHEEL_RADIUS + view.halfWidth + PLATFORM_GAP;
+  return { xIn, xOut: xIn + ARM_WIDTH, z0: 0.8, z1: platformFront(view) };
+}
+
+/** The stairs from the platform's back edge: each tread's z range and top, the first one level with the deck (none when they leave from its front, `frontStairs`). */
 export function stairTreads(type: string, view: StationView = DEFAULT_VIEW): { z0: number; z1: number; top: number }[] {
   const dims = TYPE_META[type] ?? TYPE_META.open_gantry!;
-  const deckY = deckLevel(dims.ropeHeadY, view);
-  if (deckY <= STEP_RISE) return [];
+  const deckY = deckLevel(dims.ropeHeadY, view, type);
+  if (deckY <= STEP_RISE || frontStairs(type, view)) return [];
   const topZ = headOverhangFor(dims.d) - platformBand(view).rOut;
-  const steps = Math.max(3, Math.round(deckY / STEP_RISE));
+  const steps = stairSteps(deckY);
   return Array.from({ length: steps }, (_, i) => {
     const z = topZ - (0.5 + i) * STEP_TREAD;
     return { z0: z - STEP_TREAD / 2, z1: z + STEP_TREAD / 2, top: deckY - (deckY * i) / steps };
@@ -231,10 +328,12 @@ function sectorAhead(s: StationSector, zMin: number): [number, number][] {
   return out;
 }
 
-/** Whether an extent fouls the ring a cabin sweeps about the wheel. */
-function inCabinRing(headY: number, e: Extent): boolean {
-  if (e.y1 <= headY - CABIN_DROP || e.y0 >= headY - 0.5) return false;
-  return !(e.far < SWEEP_INNER_R || e.near > SWEEP_OUTER_R);
+/** Whether an extent fouls the ring a cabin sweeps about the wheel (none when it stops ahead of it). */
+function inCabinRing(headY: number, view: StationView, e: Extent): boolean {
+  if (cabinStop(view) > 0) return false;
+  if (e.y1 <= headY - viewDrop(view) || e.y0 >= headY - 0.5) return false;
+  const ring = sweepRing(view);
+  return !(e.far < ring.rIn || e.near > ring.rOut);
 }
 
 /**
@@ -254,24 +353,31 @@ export function stationFouls(type: string, view: StationView, item: StationBox |
   const sector = "rIn" in item;
   const e = sector ? sectorExtent(item, headZ) : boxExtent(item, headZ);
   if (item.part === "wheel") return null;
-  if (inCabinRing(headY, e)) return "cabin ring";
+  if (inCabinRing(headY, view, e)) return "cabin ring";
   if (item.part !== "head" && e.near < SWEEP_OUTER_R + 0.1 && e.y0 < headY + HEAD_TOP && e.y1 > headY - CABIN_DROP - 2) return "head";
   if (e.z1 > headZ + 0.6 && item.part !== "head") {
     if (e.y1 > headY + HEAD_TOP) return "lanes";
     // the lanes: a cabin of the view's width beside each strand, with a little air
     const lo = WHEEL_RADIUS - view.halfWidth - 0.3, hi = WHEEL_RADIUS + view.halfWidth + 0.3;
     const inLane = (x0: number, x1: number): boolean => (x0 < hi && x1 > lo) || (x0 < -lo && x1 > -hi);
-    if (e.y1 > headY - CABIN_DROP) {
+    if (e.y1 > headY - viewDrop(view)) {
       if (sector) {
         if (sectorAhead(item, headZ + 0.6).some(([x]) => inLane(x, x))) return "lanes";
       } else if (inLane(e.x0, e.x1)) return "lanes";
     }
   }
   if (item.part !== "platform" && item.part !== "stairs") {
-    const { rIn, rOut } = platformBand(view);
-    const deckY = deckLevel(headY, view);
-    const band = e.near < rOut && e.far > rIn && e.y1 > deckY - 1 && e.y0 < deckY + RAIL_HEIGHT + 0.3;
-    if (band) return "platform";
+    const deckY = deckLevel(headY, view, type);
+    const level = e.y1 > deckY - 1 && e.y0 < deckY + RAIL_HEIGHT + 0.3;
+    if (cabinStop(view) > 0) {
+      // the two arms beside the stopped cabin
+      const a = armPlan(view);
+      const arm = (x0: number, x1: number): boolean => x0 < a.xOut && x1 > a.xIn;
+      if (level && e.z1 > headZ + a.z0 && e.z0 < headZ + a.z1 && (arm(e.x0, e.x1) || arm(-e.x1, -e.x0))) return "platform";
+    } else {
+      const { rIn, rOut } = platformBand(view);
+      if (level && e.near < rOut && e.far > rIn) return "platform";
+    }
   }
   if (item.part !== "stairs" && e.x0 < STAIR_HALF_WIDTH && e.x1 > -STAIR_HALF_WIDTH) {
     // a sector by the points of its plan (its bounding square would cover the gap left for the stairs)
@@ -939,8 +1045,9 @@ function buildHead(c: Ctx, style: HeadStyle): void {
   if (style.mount === "pedestal") {
     // NO pad under the column: a slab on uneven ground reads as floating, so it is sunk
     blk(c, -1.4, 1.4, -COLUMN_SINK, y - 4.2, z - 1.4, z + 1.4, style.column, style.columnMaterial, "both");
-    blk(c, -1.7, 1.7, y - 4.2, y - 1.0, z - 1.7, z + 1.7, style.housing, style.columnMaterial === "stone" ? "timber" : "steel", "both");
-    blk(c, -1.75, 1.75, y - 3.0, y - 2.6, z - 1.75, z + 1.75, STEEL_DARK, "steel");
+    // the housing stays inside the ring a funitel's wide cabins sweep (radius 2.28)
+    blk(c, -1.55, 1.55, y - 4.2, y - 1.0, z - 1.55, z + 1.55, style.housing, style.columnMaterial === "stone" ? "timber" : "steel", "both");
+    blk(c, -1.6, 1.6, y - 3.0, y - 2.6, z - 1.6, z + 1.6, STEEL_DARK, "steel");
     blk(c, -1.1, 1.1, y - 1.0, y - 0.45, z - 1.1, z + 1.1, STEEL, "steel");
   } else {
     // the shaft down from the gearbox under the roof to the wheel's hub
@@ -951,13 +1058,22 @@ function buildHead(c: Ctx, style: HeadStyle): void {
   blk(c, -0.6, 0.6, y + 0.4, y + 0.85, z - 0.6, z + 0.6, STEEL, "steel");
 }
 
-/** The wheel the rope wraps: an open rim on spokes round a hub, turning about (0, headY, headZ). */
-function buildWheel(c: Ctx, style: HeadStyle): void {
+/**
+ * The wheel the rope wraps: an open rim on spokes round a hub, turning about (0, headY,
+ * headZ). A rim per haul rope of the view's cabin (`wheelRims`): one at WHEEL_RADIUS for
+ * a gondola, two coaxial ones for a funitel's pair, one under the track ropes for a
+ * tram's haul rope. The spokes reach the outermost rim, at its height.
+ */
+function buildWheel(c: Ctx, style: HeadStyle, rims: readonly { r: number; dy: number }[]): void {
   c.part = "wheel";
-  const y = c.headY;
-  sector(c, WHEEL_RADIUS - 0.35, WHEEL_RADIUS + 0.35, y, WHEEL_THICK, 0, Math.PI, WHEEL, "wheel");
-  for (let i = 0; i < 8; i++) sector(c, 0.7, WHEEL_RADIUS - 0.3, y, WHEEL_THICK * 0.4, (i / 8) * Math.PI * 2, 0.045, style.spokes, "steel");
-  blk(c, -0.75, 0.75, y - WHEEL_THICK * 0.7, y + WHEEL_THICK * 0.55, c.headZ - 0.75, c.headZ + 0.75, STEEL_DARK, "steel");
+  const outer = rims[rims.length - 1]!;
+  const y = c.headY + outer.dy;
+  for (const rim of rims) {
+    const half = rims.length > 1 ? 0.25 : 0.35;
+    sector(c, rim.r - half, rim.r + half, c.headY + rim.dy, WHEEL_THICK, 0, Math.PI, WHEEL, "wheel");
+  }
+  for (let i = 0; i < 8; i++) sector(c, 0.7, outer.r - 0.3, y, WHEEL_THICK * 0.4, (i / 8) * Math.PI * 2, 0.045, style.spokes, "steel");
+  blk(c, -0.75, 0.75, y - WHEEL_THICK * 0.7, Math.max(y + WHEEL_THICK * 0.55, c.headY + 0.4), c.headZ - 0.75, c.headZ + 0.75, STEEL_DARK, "steel");
 }
 
 // --- the boarding platform and its stairs ---
@@ -1103,18 +1219,23 @@ function railArc(c: Ctx, st: PlatformStyle, r: number, apex: number, half: numbe
  * the wheel axis, its edge beams, the railing round its outer rim with a gap where the
  * stairs leave from the apex behind the wheel, and legs under it.
  */
-function curvedPlatform(c: Ctx, st: PlatformStyle, deckY: number, rIn: number, rOut: number): void {
+function curvedPlatform(c: Ctx, st: PlatformStyle, deckY: number, rIn: number, rOut: number, fwd: boolean): void {
   const t = st.deckThick;
   sector(c, rIn, rOut, deckY - t / 2, t, 0, BOARD_ARC_HALF, st.deck, "deck", "both");
   const under = deckY - t;
   sector(c, rOut - 0.3, rOut, under - st.fasciaDepth / 2, st.fasciaDepth, 0, BOARD_ARC_HALF, st.fascia, st.fasciaMaterial);
   sector(c, rIn, rIn + 0.3, under - st.fasciaDepth / 2, st.fasciaDepth, 0, BOARD_ARC_HALF, st.fascia, st.fasciaMaterial);
-  // the railing either side of the stairs' opening
-  const gap = Math.asin(Math.min(1, (STAIR_HALF_WIDTH + 0.1) / rOut));
+  // the railing either side of the stairs' opening (all round when the stairs leave from the ends)
+  const gap = fwd ? 0 : Math.asin(Math.min(1, (STAIR_HALF_WIDTH + 0.1) / rOut));
   const half = (BOARD_ARC_HALF - gap) / 2;
   for (const s of [-1, 1]) railArc(c, st, rOut, s * (gap + half), half, deckY);
-  // closing each end of the curve
+  // closing each end of the curve, or the landing the stairs leave each end from
   for (const s of [-1, 1]) {
+    if (fwd) {
+      const a = Math.sin(BOARD_ARC_HALF), b = -Math.cos(BOARD_ARC_HALF);
+      blk(c, s > 0 ? rIn * a : -rOut * a, s > 0 ? rOut * a : -rIn * a, deckY - t, deckY, c.headZ + rIn * b - 0.3, c.headZ + rOut * b, st.deck, "deck", "both");
+      continue;
+    }
     const a = s * BOARD_ARC_HALF;
     const r0 = rIn + 0.2, r1 = rOut;
     railRun(c, st, Math.sin(a) * r0, c.headZ - Math.cos(a) * r0, Math.sin(a) * r1, c.headZ - Math.cos(a) * r1, deckY);
@@ -1134,11 +1255,11 @@ function curvedPlatform(c: Ctx, st: PlatformStyle, deckY: number, rIn: number, r
  * with the railing on the outboard edges (the inboard edge is where you board) and a gap
  * in the back one where the stairs leave.
  */
-function rectPlatform(c: Ctx, st: PlatformStyle, deckY: number, rIn: number, rOut: number): void {
+function rectPlatform(c: Ctx, st: PlatformStyle, deckY: number, rIn: number, rOut: number, front: number, fwd: boolean): void {
   const t = st.deckThick, under = deckY - t;
   const zBack = c.headZ - rOut, zIn = c.headZ - rIn;
-  // the arms reach as far forward as the curve's ends do
-  const zFront = c.headZ + rOut * Math.max(0, -Math.cos(BOARD_ARC_HALF));
+  // the arms reach as far forward as the curve's ends do, or past a cabin stopped ahead of the wheel
+  const zFront = c.headZ + front;
   const deck = (x0: number, x1: number, z0: number, z1: number): void => {
     blk(c, x0, x1, under, deckY, z0, z1, st.deck, "deck", "both");
   };
@@ -1156,54 +1277,88 @@ function rectPlatform(c: Ctx, st: PlatformStyle, deckY: number, rIn: number, rOu
     beam(s > 0 ? rIn : -rOut, s > 0 ? rOut : -rIn, zFront - 0.3, zFront);
   }
   // the railing: the back edge either side of the stairs, each arm's outboard edge and front end
-  const g = STAIR_HALF_WIDTH + 0.1;
+  // (stairs leaving from the arms' front ends close the back edge and open the front ends instead)
+  const g = fwd ? 0 : STAIR_HALF_WIDTH + 0.1;
   for (const s of [-1, 1]) {
     railRun(c, st, s * g, zBack + 0.15, s * (rOut - 0.15), zBack + 0.15, deckY);
     railRun(c, st, s * (rOut - 0.15), zBack + 0.15, s * (rOut - 0.15), zFront - 0.15, deckY);
-    railRun(c, st, s * (rIn + 0.4), zFront - 0.15, s * (rOut - 0.15), zFront - 0.15, deckY);
+    if (!fwd) railRun(c, st, s * (rIn + 0.4), zFront - 0.15, s * (rOut - 0.15), zFront - 0.15, deckY);
   }
   // legs: three under each arm, three under the back deck between them
   const rMid = (rIn + rOut) / 2, zMid = (zBack + zIn) / 2;
   for (const s of [-1, 1]) {
-    for (const z of [zMid, (zIn + zFront) / 2, zFront - 0.8]) leg(c, st, s * rMid, z, under - fd * 0.5, [[s * (rIn + 0.4), z], [s * (rOut - 0.4), z]]);
+    // three legs under each arm, more along an arm reaching out to a stopped cabin's nose
+    const n = Math.max(3, Math.round((zFront - zMid) / 6));
+    const zs = n === 3 ? [zMid, (zIn + zFront) / 2, zFront - 0.8] : Array.from({ length: n }, (_, i) => zMid + ((zFront - 0.8 - zMid) * i) / (n - 1));
+    for (const z of zs) leg(c, st, s * rMid, z, under - fd * 0.5, [[s * (rIn + 0.4), z], [s * (rOut - 0.4), z]]);
   }
   for (const x of [-rMid / 2, 0, rMid / 2]) leg(c, st, x, zMid, under - fd * 0.5, [[x, zBack + 0.4], [x, zIn - 0.4]]);
 }
 
-/** The stairs down from the platform's back edge toward the hall, which leaves them a door. */
-function stairs(c: Ctx, st: PlatformStyle, deckY: number, topZ: number): void {
+/**
+ * The stairs down from the platform: from its back edge toward the hall, which leaves them
+ * a door (`dir` -1, about x 0), or from an arm's front end out along it (`dir` +1, about `xc`).
+ */
+function stairs(c: Ctx, st: PlatformStyle, deckY: number, topZ: number, xc = 0, w = STAIR_HALF_WIDTH - 0.1, dir = -1): void {
   if (deckY <= STEP_RISE) return;
-  const steps = Math.max(3, Math.round(deckY / STEP_RISE));
-  const w = STAIR_HALF_WIDTH - 0.1;
-  const zAt = (i: number): number => topZ - (0.5 + i) * STEP_TREAD;
-  const footZ = topZ - steps * STEP_TREAD;
+  const steps = stairSteps(deckY);
+  const zAt = (i: number): number => topZ + dir * (0.5 + i) * STEP_TREAD;
+  const footZ = topZ + dir * steps * STEP_TREAD;
   for (let i = 0; i < steps; i++) {
     const h = deckY - (deckY * i) / steps;
     const z = zAt(i);
     if (st.stairs === "solid") {
       // each tread is a block down past the ground, so a flight on a slope never floats
-      blk(c, -w, w, -COLUMN_SINK, h, z - STEP_TREAD / 2, z + STEP_TREAD / 2, st.stair, st.stairMaterial, i % 4 === 0 ? "both" : "full");
+      blk(c, xc - w, xc + w, -COLUMN_SINK, h, z - STEP_TREAD / 2, z + STEP_TREAD / 2, st.stair, st.stairMaterial, i % 4 === 0 ? "both" : "full");
     } else {
-      blk(c, -w + 0.3, w - 0.3, h - 0.15, h, z - STEP_TREAD / 2, z + STEP_TREAD / 2, st.deck, "deck");
+      blk(c, xc - w + 0.3, xc + w - 0.3, h - 0.15, h, z - STEP_TREAD / 2, z + STEP_TREAD / 2, st.deck, "deck");
     }
   }
   if (st.stairs === "solid") {
     // a cheek wall each side, stepped with the flight
-    for (const s of [-1, 1]) bar(c, [s * (w + 0.12), deckY * 0.5 + 0.2, topZ], [s * (w + 0.12), 0.2, footZ + STEP_TREAD], 0.24, CONC_LIGHT, "concrete");
+    for (const s of [-1, 1]) bar(c, [xc + s * (w + 0.12), deckY * 0.5 + 0.2, topZ], [xc + s * (w + 0.12), 0.2, footZ - dir * STEP_TREAD], 0.24, CONC_LIGHT, "concrete");
     return;
   }
   // two stringers carry the open treads; a post under each at the deck end and halfway
   for (const s of [-1, 1]) {
-    const x = s * (w - 0.15);
+    const x = xc + s * (w - 0.15);
     bar(c, [x, deckY - 0.1, topZ], [x, 0.05, footZ], 0.3, st.stair, st.stairMaterial);
-    bar(c, [s * (w + 0.05), deckY + RAIL_HEIGHT, topZ - 0.2], [s * (w + 0.05), RAIL_HEIGHT, footZ + 0.4], 0.12, st.stair, st.stairMaterial);
+    bar(c, [xc + s * (w + 0.05), deckY + RAIL_HEIGHT, topZ + dir * 0.2], [xc + s * (w + 0.05), RAIL_HEIGHT, footZ - dir * 0.4], 0.12, st.stair, st.stairMaterial);
     for (const f of [0.15, 0.55]) {
       const z = topZ + (footZ - topZ) * f, top = deckY - deckY * f - 0.3;
       blk(c, x - 0.15, x + 0.15, -1, top, z - 0.15, z + 0.15, st.stair, st.stairMaterial);
     }
   }
   // the flight's silhouette for the distant level: a sloping beam
-  bar(c, [0, deckY - 0.2, topZ - 0.3], [0, 0.1, footZ + 0.3], 0.3, st.stair, st.stairMaterial, "low");
+  bar(c, [xc, deckY - 0.2, topZ + dir * 0.3], [xc, 0.1, footZ - dir * 0.3], 0.3, st.stair, st.stairMaterial, "low");
+}
+
+/**
+ * The platform beside a cabin stopped ahead of the wheel (`cabinStop`, `armPlan`): an arm
+ * outboard of each strand, its edge beams, the railing on its outboard edge and back end
+ * (the inboard edge is where you board), its legs, and stairs down from its front end.
+ */
+function armPlatform(c: Ctx, st: PlatformStyle, deckY: number, view: StationView): void {
+  const a = armPlan(view);
+  const t = st.deckThick, under = deckY - t, fd = st.fasciaDepth;
+  const z0 = c.headZ + a.z0, z1 = c.headZ + a.z1;
+  for (const s of [-1, 1]) {
+    const x0 = s > 0 ? a.xIn : -a.xOut, x1 = s > 0 ? a.xOut : -a.xIn;
+    c.part = "platform";
+    blk(c, x0, x1, under, deckY, z0, z1, st.deck, "deck", "both");
+    blk(c, s > 0 ? a.xOut - 0.3 : -a.xOut, s > 0 ? a.xOut : -a.xOut + 0.3, under - fd, under, z0, z1, st.fascia, st.fasciaMaterial);
+    blk(c, s > 0 ? a.xIn : -a.xIn - 0.3, s > 0 ? a.xIn + 0.3 : -a.xIn, under - fd, under, z0, z1, st.fascia, st.fasciaMaterial);
+    railRun(c, st, s * (a.xOut - 0.15), z0 + 0.15, s * (a.xOut - 0.15), z1 - 0.15, deckY);
+    railRun(c, st, s * (a.xIn + 0.4), z0 + 0.15, s * (a.xOut - 0.15), z0 + 0.15, deckY);
+    const xm = s * (a.xIn + a.xOut) / 2;
+    const n = Math.max(2, Math.round((z1 - z0) / 6) + 1);
+    for (let i = 0; i < n; i++) {
+      const z = z0 + 0.8 + ((z1 - z0 - 1.6) * i) / (n - 1);
+      leg(c, st, xm, z, under - fd * 0.5, [[s * (a.xIn + 0.4), z], [s * (a.xOut - 0.4), z]]);
+    }
+    c.part = "stairs";
+    stairs(c, st, deckY, z1, xm, ARM_WIDTH / 2 - 0.2, 1);
+  }
 }
 
 // --- the whole station ---
@@ -1234,26 +1389,38 @@ export function buildStation(type: string, view: StationView = DEFAULT_VIEW): St
   const key = TYPE_META[type] ? type : "open_gantry";
   const dims = TYPE_META[key]!;
   const headZ = headOverhangFor(dims.d);
-  const deckY = deckLevel(dims.ropeHeadY, view);
+  const deckY = deckLevel(dims.ropeHeadY, view, key);
   const hasDeck = deckY > 1;
   const c: Ctx = {
     w: dims.w, d: dims.d, headY: dims.ropeHeadY, headZ,
     eaveY: dims.ropeHeadY + ROOF_CLEAR, zF: headZ + 0.5,
     forkY: hasDeck ? deckY + RAIL_HEIGHT + 1.0 : dims.ropeHeadY - 6.5,
-    deck: hasDeck ? { circulating: view.circulating, ...platformBand(view), zFront: headZ + platformBand(view).rOut * Math.max(0, -Math.cos(BOARD_ARC_HALF)) } : null,
+    // a platform ahead of the wheel (a cabin stopped there) leaves the hall's columns where they are
+    deck: hasDeck && cabinStop(view) === 0 ? { circulating: view.circulating, ...platformBand(view), zFront: headZ + platformFront(view) } : null,
     part: "hall", boxes: [], sectors: [],
   };
   HALLS[key]!(c);
   buildHead(c, HEADS[key]!);
-  buildWheel(c, HEADS[key]!);
+  buildWheel(c, HEADS[key]!, wheelRims(view));
   if (hasDeck) {
     const st = PLATFORMS[key]!;
     const { rIn, rOut } = platformBand(view);
-    c.part = "platform";
-    if (view.circulating) curvedPlatform(c, st, deckY, rIn, rOut);
-    else rectPlatform(c, st, deckY, rIn, rOut);
-    c.part = "stairs";
-    stairs(c, st, deckY, headZ - rOut);
+    if (cabinStop(view) > 0) {
+      armPlatform(c, st, deckY, view);
+    } else {
+      const fwd = frontStairs(key, view);
+      c.part = "platform";
+      if (view.circulating) curvedPlatform(c, st, deckY, rIn, rOut, fwd);
+      else rectPlatform(c, st, deckY, rIn, rOut, platformFront(view), fwd);
+      c.part = "stairs";
+      if (!fwd) stairs(c, st, deckY, headZ - rOut);
+      else {
+        // down from each front end, out along the strand, clear of the hall
+        const z1 = view.circulating ? headZ + rOut * -Math.cos(BOARD_ARC_HALF) : headZ + platformFront(view);
+        const xm = (view.circulating ? Math.sin(BOARD_ARC_HALF) : 1) * (rIn + rOut) / 2;
+        for (const s of [-1, 1]) stairs(c, st, deckY, z1, s * xm, (rOut - rIn) / 2 - 0.4, 1);
+      }
+    }
   }
   return { boxes: separateCoplanar(c.boxes), sectors: c.sectors, headY: dims.ropeHeadY, headZ, deckY: hasDeck ? deckY : null };
 }
@@ -1272,14 +1439,34 @@ const PYLON_DARK: Rgb = [70, 76, 72];
  *
  * The first three boxes are the mast, the collar and the cross-head: the silhouette a
  * distant pylon keeps.
+ *
+ * `ropes` are the line's cabin's (the view's ropes; one haul rope when absent): a rocker
+ * of sheaves under every haul rope, a saddle shoe under every track rope, on each strand.
+ * A cabin hung BETWEEN its ropes (a funitel's pair, an open-top cabin's two track ropes,
+ * any rope more than PORTAL_ROPE off its strand) would pass through a cross-head under
+ * them, so its pylon is a portal: two masts outside the line, a beam over the carriages
+ * and a hanger down to each rope's support.
  */
-export function buildPylon(height: number): PylonBox[] {
+/** How far off its strand a rope may run before the cabin hangs between its ropes and the pylon becomes a portal. */
+export const PORTAL_ROPE = 1.2;
+
+/** The ropes' supports on a pylon: each strand's ropes, x across the line (the strand at +-WHEEL_RADIUS). */
+function pylonRopes(ropes: readonly StationRope[]): { x: number; dy: number; kind: StationRope["kind"] }[] {
+  const out: { x: number; dy: number; kind: StationRope["kind"] }[] = [];
+  for (const s of [-1, 1]) for (const r of ropes) out.push({ x: s * (WHEEL_RADIUS + r.z), dy: r.dy, kind: r.kind });
+  return out;
+}
+
+export function buildPylon(height: number, ropes: readonly StationRope[] = DEFAULT_ROPES): PylonBox[] {
   const out: PylonBox[] = [];
   const push = (x: number, y: number, z: number, sx: number, sy: number, sz: number, color: Rgb, material: CableCarMaterial): void => {
     out.push({ x, y, z, sx, sy, sz, color, material });
   };
+  const supports = pylonRopes(ropes);
+  if (ropes.some((r) => Math.abs(r.z) > PORTAL_ROPE)) return portalPylon(height, supports);
   const top = height - 2.4;
-  const arm = 2 * WHEEL_RADIUS + 2.4;
+  const reach = Math.max(...supports.map((r) => Math.abs(r.x)));
+  const arm = 2 * reach + 2.4;
   push(0, (top - COLUMN_SINK) / 2, 0, 1.3, top + COLUMN_SINK, 1.3, PYLON_PAINT, "steel");
   push(0, -0.4, 0, 3.0, 2.4, 3.0, CONCRETE, "concrete");
   push(0, top + 0.45, 0, arm, 0.9, 1.1, PYLON_PAINT, "steel");
@@ -1302,14 +1489,64 @@ export function buildPylon(height: number): PylonBox[] {
   push(0, top - 1.2, -1.15, arm - 0.6, 0.15, 1.2, PYLON_DARK, "steel");
   push(0, top - 0.2, -1.7, arm - 0.6, 0.08, 0.08, PYLON_DARK, "steel");
   for (const s of [-1, 1]) push(s * (arm / 2 - 0.35), top - 0.7, -1.7, 0.08, 1.0, 0.08, PYLON_DARK, "steel");
-  // a rocker of four sheaves under each strand, hung from the cross-head
-  for (const s of [-1, 1]) {
-    const x = s * WHEEL_RADIUS;
-    push(x, height - 1.25, 0, 0.35, 0.5, 0.35, PYLON_DARK, "steel");
-    push(x, height - 0.85, 0, 0.5, 0.35, 4.2, PYLON_PAINT, "steel");
-    for (const z of [-1.5, -0.5, 0.5, 1.5]) push(x, height - 0.45, z, 0.32, 0.8, 0.8, WHEEL, "wheel");
-  }
+  // under each rope of each strand, hung from the cross-head: a rocker of four sheaves under
+  // a haul rope, a saddle shoe under a track rope
+  for (const r of supports) ropeSupport(push, r.x, height + r.dy, r.kind, top + 0.9);
   // the lightning rod
   push(0, top + 0.9 + 1.0, 0, 0.12, 2.0, 0.12, PYLON_DARK, "steel");
+  return out;
+}
+
+type Push = (x: number, y: number, z: number, sx: number, sy: number, sz: number, color: Rgb, material: CableCarMaterial) => void;
+
+/** What carries one rope at (x, y) on a pylon, hung from `from` (the cross-head's top or the portal beam). */
+function ropeSupport(push: Push, x: number, y: number, kind: StationRope["kind"], from: number): void {
+  if (kind === "haul") {
+    // the hanger down from the cross-head (above it on a portal), the rocker beam, its sheaves
+    if (from > y) push(x, (from + y - 0.65) / 2, 0.8, 0.3, from - y + 0.65, 0.3, PYLON_DARK, "steel");
+    else push(x, y - 1.25, 0, 0.35, 0.5, 0.35, PYLON_DARK, "steel");
+    push(x, y - 0.85, 0, 0.5, 0.35, 4.2, PYLON_PAINT, "steel");
+    for (const z of [-1.5, -0.5, 0.5, 1.5]) push(x, y - 0.45, z, 0.32, 0.8, 0.8, WHEEL, "wheel");
+    return;
+  }
+  // a track rope rides a long curved saddle: a shoe, its grooved top and its seat
+  if (from > y) push(x, (from + y - 0.65) / 2, 1.3, 0.3, from - y + 0.65, 0.3, PYLON_DARK, "steel");
+  else push(x, y - 1.25, 0, 0.35, 0.5, 0.35, PYLON_DARK, "steel");
+  push(x, y - 0.75, 0, 0.5, 0.5, 3.0, PYLON_PAINT, "steel");
+  push(x, y - 0.25, 0, 0.36, 0.4, 2.2, WHEEL, "wheel");
+}
+
+/**
+ * A portal pylon for a cabin hung between its ropes: two masts outside the line, a beam
+ * over the carriages, and each rope's support hung from the beam on a hanger set back
+ * along the line, so the cabins pass through between the masts and under the beam.
+ * The first three boxes (two masts and the beam) are the distant silhouette.
+ */
+function portalPylon(height: number, supports: readonly { x: number; dy: number; kind: StationRope["kind"] }[]): PylonBox[] {
+  const out: PylonBox[] = [];
+  const reach = Math.max(...supports.map((r) => Math.abs(r.x)));
+  const legX = reach + 2.2;
+  const beamY = height + 2.6;
+  for (const s of [-1, 1]) out.push({ x: s * legX, y: (beamY - COLUMN_SINK) / 2, z: 0, sx: 1.3, sy: beamY + COLUMN_SINK, sz: 1.3, color: PYLON_PAINT, material: "steel" });
+  out.push({ x: 0, y: beamY + 0.45, z: 0, sx: 2 * legX + 1.3, sy: 0.9, sz: 1.1, color: PYLON_PAINT, material: "steel" });
+  const q: Push = (x, y, z, sx, sy, sz, color, material) => { out.push({ x, y, z, sx, sy, sz, color, material }); };
+  for (const s of [-1, 1]) {
+    const x = s * legX;
+    q(x, -0.4, 0, 3.0, 2.4, 3.0, CONCRETE, "concrete");
+    for (const [frac, size] of [[0.55, 1.75], [0.3, 1.5]] as const) {
+      const y1 = Math.max(1.2, beamY * frac);
+      q(x, (y1 - COLUMN_SINK) / 2, 0, size, y1 + COLUMN_SINK, size, PYLON_PAINT, "steel");
+      q(x, y1 - 0.12, 0, size + 0.3, 0.24, size + 0.3, PYLON_DARK, "steel");
+    }
+    // the knee brace under each end of the beam
+    q(s * (legX - 1.1), beamY - 0.6, 0, 1.6, 0.9, 0.9, PYLON_DARK, "steel");
+    // the ladder up the mast's outer face
+    for (const k of [-1, 1]) q(x + s * 0.95, (0.6 + beamY) / 2, k * 0.3, 0.08, beamY - 0.6, 0.08, PYLON_DARK, "steel");
+  }
+  // the walkway along the beam's back
+  q(0, beamY - 0.05, -1.15, 2 * legX - 1.3, 0.15, 1.2, PYLON_DARK, "steel");
+  q(0, beamY + 0.95, -1.7, 2 * legX - 1.3, 0.08, 0.08, PYLON_DARK, "steel");
+  for (const r of supports) ropeSupport(q, r.x, height + r.dy, r.kind, beamY);
+  q(0, beamY + 0.9 + 1.0, 0, 0.12, 2.0, 0.12, PYLON_DARK, "steel");
   return out;
 }

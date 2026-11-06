@@ -11,7 +11,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
 | `photo-air-canada-dc-9-32-cf-tlu-jfk-august-1968.jpg` | Air Canada DC-9-32; CF-TLU@JFK, August 1968.jpg | https://commons.wikimedia.org/wiki/File:Air_Canada_DC-9-32;_CF-TLU@JFK,_August_1968.jpg | Aero Icarus | CC BY-SA 2.0 | the airframe's shape, proportions and livery |
-| `photo-at-gran-canaria-2021-0044.jpg` | At Gran Canaria 2021 0044.jpg | https://commons.wikimedia.org/wiki/File:At_Gran_Canaria_2021_0044.jpg | Photograph by Mike Peel (www.mikepeel.net). | CC BY-SA 4.0 | the airframe's shape, proportions and livery |
 
 ## Published figures
 
