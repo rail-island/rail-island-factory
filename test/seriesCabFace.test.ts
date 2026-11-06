@@ -78,6 +78,31 @@ describe("series cab faces", () => {
     expect(Math.max(...collectTriangles(json, bin).flatMap((t) => t.p).map((p) => p[1]!))).toBeGreaterThan(X3800.C + 0.5);
   });
 
+  it("flutes the Talgo III's stainless sides below and above the red band and ribs its roof", () => {
+    const d = ES_UNITS.find((x) => x.id === "proc-vehicle-talgo-iii")!;
+    const tree = ids(d);
+    for (const side of ["right-side", "left-side"]) expect(tree.filter((id) => new RegExp(`^body/${side}/fluting`).test(id)).length, side).toBeGreaterThan(0);
+    expect(tree.some((id) => /(^|\/)roof-ribs$/.test(id))).toBe(true);
+    // ribs in both bands: some fluting scopes low on the stainless skirt, some over the windows
+    const tri = d.build({}).sourceTree(d.id, d.title).root;
+    const ys: number[] = [];
+    const walk = (n: any) => { if (/^body\/right-side\/fluting/.test(n.id) && n.min && n.max) ys.push(n.min[1], n.max[1]); for (const k of n.children ?? []) walk(k); };
+    walk(tri);
+    expect(Math.min(...ys)).toBeLessThan(1.1);
+    expect(Math.max(...ys)).toBeGreaterThan(2.8);
+  });
+
+  it("curves the Picasso's turret windscreens over its rounded top and louvres its engine room", () => {
+    const d = FR_UNITS.find((x) => x.id === "proc-vehicle-sncf-x3800")!;
+    const root = d.build({}).sourceTree(d.id, d.title).root;
+    let screenTop = 0;
+    const walk = (n: any) => { if (/turret\/front-windscreen$/.test(n.id)) screenTop = n.max[1]; for (const k of n.children ?? []) walk(k); };
+    walk(root);
+    // past the upright part (the top's radius below the turret's top)
+    expect(screenTop).toBeGreaterThan(4.3 - 0.3 + 0.1);
+    expect(ids(d).filter((id) => /^grilles/.test(id)).length).toBeGreaterThan(0);
+  });
+
   it("hangs a single axle's horn guides up into the body: no gap over the wheels", () => {
     for (const c of CASES.filter((x) => x.series.wheelbase === 0)) {
       const { m, pts } = points(c.design);
