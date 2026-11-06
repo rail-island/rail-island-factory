@@ -25,15 +25,105 @@ export function chLivery(kind: "sbb" | "sbbRegio" | "tee" | "gottardo" | "rhb" |
   }
 }
 
+/**
+ * The RAe TEE II's two schemes (photo-sbb-rae-tee-ii-silenen-erstfeld.jpg, photo-raeteeairolo.jpg,
+ * photo-ffs-rae-tee-ii-1053-satigny-150414.jpg; photo-graue-maus-in-bern.jpg and the Zurich Comet
+ * photograph for the grey): the TEE's crimson below the window sills and beige above, up to a grey
+ * roof, aluminium doors; the RABe EC's "Graue Maus" grey below a white line, dark grey round the
+ * windows and the windscreen, a white line over them and light grey above.
+ */
+const TEE_PALETTE = { roofG: c("#8f9499", 0.55), alu: c("#b8bcbf", 0.3), boxRed: c("#c0272d", 0.5), cabMask: c("#1d1f22", 0.6) };
+/** d behind the tip: the wrap-round windscreen carried onto the cab sides, the pillar, the small rear-rounded quarter window. */
+const TEE_SWEEPS: NonNullable<ShinkansenLivery["endSweeps"]> = [
+  { mat: "frameSilver", front: [[2.24, 0], [3.13, 0]], back: [[2.24, 2.22], [3.13, 2.06]] },
+  { mat: "cabGlass", front: [[2.27, 0], [3.1, 0]], back: [[2.27, 2.18], [3.1, 2.02]] },
+  { mat: "frameSilver", front: [[2.27, 2.3], [2.97, 2.3]], back: [[2.27, 2.52], [2.41, 2.7], [2.62, 2.77], [2.83, 2.7], [2.97, 2.52]] },
+  { mat: "cabGlass", front: [[2.3, 2.33], [2.94, 2.33]], back: [[2.3, 2.5], [2.43, 2.67], [2.62, 2.74], [2.81, 2.67], [2.94, 2.5]] },
+];
+const TEE_LIVERY: ShinkansenLivery = {
+  title: "TEE", number: "1053",
+  palette: { ...TEE_PALETTE, red: c("#9b1b2a"), beige: c("#e6d9b4"), pod: c("#9b1b2a"), emblem: c("#d9dcde", 0.3), lettering: c("#e6d9b4"), letterTee: c("#7a2c27") },
+  bands: [[0, 2.07, "red"], [2.07, 9, "beige"]], doors: [[0, 9, "alu"]],
+  roof: "roofG", skirt: "red",
+  endLettering: [{ text: "T R A N S  E U R O P  E X P R E S S", d: 10.0, y: 3.36, h: 0.15, mat: "letterTee" }],
+  endSweeps: TEE_SWEEPS,
+};
+const GOTTARDO_LIVERY: ShinkansenLivery = {
+  title: "Gottardo grey", number: "1051",
+  palette: { ...TEE_PALETTE, grey: c("#959a9e"), dark: c("#4b5156"), white: c("#e9e9e4"), roofG: c("#a7abae", 0.55), pod: c("#959a9e"), emblem: c("#2e3236", 0.4), lettering: c("#e9e9e4") },
+  bands: [[0, 1.84, "grey"], [1.84, 1.9, "white"], [1.9, 3.34, "dark"], [3.34, 3.4, "white"], [3.4, 9, "grey"]], doors: [[0, 9, "alu"]],
+  roof: "roofG", skirt: "grey", endSweeps: TEE_SWEEPS,
+};
+
+/**
+ * The RAe TEE II's driving end (the photographs above, photo-ffs-rae-1053-a-como-sg.jpg in three-quarter
+ * view, the Bern photograph head on): the lower face upright and full, its tip at the lamps; the twin
+ * lamps in pods on its corners, the TEE emblem between them, the red coupler cover off to one side and
+ * the coupler's pocket beside it; a chrome strip at the paint line; the windscreen of two front panes
+ * and two wrapping round the corners onto the cab sides, raked about 24 degrees; the beige dome
+ * rounding 3 m back to the roof with the top lamp on it.
+ */
+const TEE_FACE: SeriesCabFace = {
+  dJoin: 3.0, dSide: 1.6, first: 5.3, roofFrom: 3.9, reach: 0.3, bulge: 0.1, cols: [8, 4, 1, 2], tolerance: 0.015,
+  profile: [[0.72, 0.25], [0.95, 0.1], [1.2, 0.02], [1.45, 0], [1.65, 0.02], [1.85, 0.1], [2.0, 0.2], [2.07, 0.26], [2.12, 0.3], [2.27, 0.38], [3.1, 0.76], [3.2, 0.82], [3.45, 1.02], [3.65, 1.3], [3.8, 1.7], [3.92, 2.2], [4.0, 3.0]],
+  corner: [[0.72, 0.45], [1.85, 0.45], [2.27, 0.7], [3.1, 0.8], [3.45, 0.9], [3.8, 0.9], [4.0, 0.5]],
+  rows: [0.72, 0.85, 0.95, 1.2, 1.25, 1.3, 1.45, 1.65, 1.84, 1.85, 1.9, 2.0, 2.07, 2.12, 2.16, 2.24, 2.27, 2.6, 3.1, 3.13, 3.2, 3.34, 3.4, 3.45, 3.65, 3.8, 3.9, 3.92, 4.0],
+  masks: [
+    // the coupler's pocket, the windscreen's chrome frame
+    { lat: [0.0, 0.42], y: [0.85, 1.3], r: 0.06, mat: "cabMask" },
+    { lat: [-1.45, 1.45], y: [2.24, 3.13], r: 0.1, mat: "frameSilver" },
+    // the louvred grille under the left lamp pod
+    { lat: [-1.18, -0.86], y: [0.85, 1.25], r: 0.04, mat: "cabMask" },
+  ],
+  panes: [
+    { lat: [-1.45, -0.68], y: [2.27, 3.1], r: 0.08 }, { lat: [-0.62, -0.04], y: [2.27, 3.1], r: 0.08 },
+    { lat: [0.04, 0.62], y: [2.27, 3.1], r: 0.08 }, { lat: [0.68, 1.45], y: [2.27, 3.1], r: 0.08 },
+  ],
+  // the chrome strip along the paint line under the windscreen
+  decals: [
+    { mat: "frameSilver", pts: [[-1.3, 2.12], [1.3, 2.12], [1.3, 2.155], [-1.3, 2.155]] },
+    ...[0.93, 1.02, 1.11].map((y) => ({ mat: "pod", pts: [[-1.16, y], [-0.88, y], [-0.88, y + 0.045], [-1.16, y + 0.045]] as Pt[] })),
+  ],
+  pods: [
+    { lat: -0.86, y: 1.5, w: 0.68, h: 0.3, proud: 0.22, depth: 0.4, mat: "pod", lamps: [[-0.15, 0.1, "lampHead"], [0.15, 0.1, "lampHead"]] },
+    { lat: 0.86, y: 1.5, w: 0.68, h: 0.3, proud: 0.22, depth: 0.4, mat: "pod", lamps: [[-0.15, 0.1, "lampHead"], [0.15, 0.1, "lampHead"]] },
+    // the red cover over the coupling's head
+    { lat: -0.42, y: 1.08, w: 0.75, h: 0.48, r: 0.07, proud: 0.29, depth: 0.45, mat: "boxRed" },
+  ],
+  texts: [{ text: "TEE", lat: 0, y: 1.7, h: 0.26, mat: "emblem" }],
+  roofLamp: [0, 3.52, 0.09],
+  wipers: [[[-0.3, 3.05], [-0.55, 2.4]], [[0.35, 3.05], [0.1, 2.4]]],
+};
+
+/**
+ * The RAe TEE II (de.wikipedia's figures: 149.76 m in six cars, 125.33 m in five, so the intermediate
+ * cars 24.43 m and the driving cars 26.0 m; 2.84 m wide; bogie centres 18.3 m, the machine car's 17.0 m
+ * on two A1A bogies of 1110 mm driving wheels; 2310 kW). The driving trailers lead; the machine car
+ * second (third in six cars) carries the four diamond pantographs, interlaced in pairs over its bogies.
+ */
 export const RAE_TEE: ShinkansenSeries = {
-  endLength: 23.0, midLength: 21.0, W: 1.45, Y: 1.4, S: 3.1, C: 3.9, lean: 0.95, B: 0.85, A: 1.05,
-  // the rounded TEE front, its windscreen high under a bulging roof
-  nose: nose(2.8, 0.25, 2.2, [[0, 1.8], [0.4, 2.35], [1.6, 3.05], [2.8, 3.6], [3.4, 3.9]], [[0, 1.75], [0.4, 2.2], [1.6, 2.8], [2.8, 3.05], [3.4, 3.1]], [[0, 1.5], [1.0, 1.45]], [[0, 1.25], [0.8, 1.05]], [[0, 1.15], [0.4, 0.85]]),
-  windscreen: [1.6, 2.8, 0.07, 1.05], lamps: [0.4, 1.6],
-  windows: [[1.95, 2.75]], windowW: 1.2, pitch: 1.45, door: [1.25, 3.0, 1.95, 2.6], doorW: 0.8,
-  bogieCentres: 15.5, wheelR: 0.5, wheelbase: 2.8, cars: [4, 6],
-  liveries: { tee: chLivery("tee", "1053"), gottardo: chLivery("gottardo", "1051") },
-  weight: { end: 52, middle: 45 }, power: 580, maxspeed: 160,
+  endLength: 26.0, midLength: 24.43, W: 1.42, Y: 1.45, S: 3.67, C: 4.0, lean: 0.95, B: 0.72, A: 0.95,
+  nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: TEE_FACE,
+  // the cab's side window on the right (+Z) side only, the destination board behind the door there and ahead of it on the left
+  cabWindows: [[0.05, 1.05, 2.17, 3.2, 1], [2.3, 2.62, 2.35, 3.15, 1], [0.75, 1.07, 2.35, 3.15, -1]],
+  windows: [[2.15, 3.3]], windowW: 1.65, pitch: 2.33, door: [1.0, 3.42, 2.3, 3.3], doorW: 0.75, doorGlassW: 0.22,
+  bogieCentres: 18.3, wheelR: 0.47, wheelbase: 2.5, cars: [4, 5, 6], centredBogies: true,
+  layout: {
+    // d behind the body's front end: the end car's door behind the cab, eight wide windows; the
+    // intermediate car's toilet window and door at its front, nine windows
+    end: { doors: [[1.3, 2.05, 1]], windows: Array.from({ length: 8 }, (_, i): [number, number] => [3.4 + i * 2.33, 5.05 + i * 2.33]) },
+    middle: { doors: [[1.45, 2.2, 1]], windows: [[0.45, 1.05], ...Array.from({ length: 9 }, (_, i): [number, number] => [3.0 + i * 2.28, 4.6 + i * 2.28])] },
+  },
+  powerCar: {
+    length: 24.43, bogieCentres: 17.0, wheelR: 0.555, axles: [-1.75, 0, 1.75], windows: [2.32, 3.25],
+    // the side corridor's windows and the louvres over them (Satigny photograph, scaled to the body)
+    layout: { doors: [], windows: [[0.67, 1.24], ...[3.6, 5.53, 7.53, 9.63, 11.88, 14.1, 16.55, 19.05].map((m): [number, number] => [m - 0.58, m + 0.58]), [21.7, 22.4]] },
+    louvres: [[0.5, 1.6, 1.02, 1.3, 2], [3.95, 7.75, 1.02, 1.3, 6], [16.5, 19.6, 1.02, 1.3, 5], [22.2, 23.4, 1.02, 1.3, 2]],
+    pantographs: [{ d: 2.5, raised: true }, { d: 4.4, lift: 0.08 }, { d: 19.5 }, { d: 21.4, lift: 0.08 }],
+    slot: (n) => (n >= 6 ? 2 : 1), weight: 93, power: 2310,
+  },
+  liveries: { tee: TEE_LIVERY, gottardo: GOTTARDO_LIVERY },
+  weight: { end: 43, middle: 40 }, power: 2310, maxspeed: 160,
 };
 
 /**

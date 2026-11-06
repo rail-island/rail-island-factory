@@ -10,7 +10,7 @@ import type { MeshBuilder } from "./meshBuilder.ts";
 import type { Pt } from "./sliceLoft.ts";
 import { halfSlice, type SliceBody } from "./sliceBody.ts";
 import { CabNose, inRoundRect, type NoseLayer, type NoseQuery, type NoseSpec } from "./cabNose.ts";
-import { strokeText } from "./strokeFont.ts";
+import { strokeText, strokeWidth } from "./strokeFont.ts";
 import { noseEnd, type UnitEnd } from "./lodUnits.ts";
 import { LOD_GLASS, type LodBand } from "./lodKit.ts";
 
@@ -69,6 +69,15 @@ export interface SeriesCabFace {
   reach?: number;
   /** The first door's d behind the tip on the end car (default 2.4 m). */
   first?: number;
+  /**
+   * Housings standing off the face, flat-fronted rounded rectangles (lat and y of the centre, width,
+   * height, corner radius - default half the height -, how far the front stands proud, how deep the
+   * back sinks in, paint): a lamp pod, a coupler cover. A pod's lamps (lat offset from its centre,
+   * radius, lens) sit on its front.
+   */
+  pods?: ReadonlyArray<{ lat: number; y: number; w: number; h: number; r?: number; proud: number; depth: number; mat: string; lamps?: ReadonlyArray<readonly [number, number, string]> }>;
+  /** Lettering on the face: text, lat of its centre, foot, letter height, ink. */
+  texts?: ReadonlyArray<{ text: string; lat: number; y: number; h: number; mat: string }>;
 }
 
 /** The body's half widths by height ([y, half width], ascending, crown last), from its own section at d. */
@@ -181,6 +190,31 @@ export function drawCabFace(m: MeshBuilder, f: SeriesCabFace, e: number, xTip: n
     });
   if (f.decals?.length)
     m.scope("decals", () => f.decals!.forEach((dc, i) => m.scope(`decal ${i + 1}`, () => n.decal(dc.mat, subdivide(dc.pts, 5), 0.012))));
+  if (f.pods?.length)
+    m.scope("pods", () => f.pods!.forEach((pd, i) => m.scope(`pod ${i + 1}`, () => {
+      const r = Math.min(pd.r ?? pd.h / 2, pd.h / 2, pd.w / 2), k = 4;
+      const [hx, hy] = [pd.w / 2 - r, pd.h / 2 - r];
+      // the rounded rectangle, counter-clockwise from its right edge
+      const ring: Pt[] = [];
+      for (const [cx, cy, a0] of [[hx, hy, 0], [-hx, hy, 90], [-hx, -hy, 180], [hx, -hy, 270]] as const)
+        for (let j = 0; j <= k; j++) { const a = ((a0 + (90 * j) / k) * Math.PI) / 180; ring.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]); }
+      m.scope("housing", () => n.plate(pd.mat, pd.lat, pd.y, ring, pd.proud, pd.depth));
+      const at = { lat: pd.lat, y: pd.y };
+      const disc = (rr: number): Pt[] => Array.from({ length: 12 }, (_, j) => [rr * Math.cos((2 * Math.PI * j) / 12), rr * Math.sin((2 * Math.PI * j) / 12)]);
+      (pd.lamps ?? []).forEach(([dl, rr, lens], j) => m.scope(`lamp ${j + 1}`, () => {
+        m.scope("bezel", () => n.plate("frameSilver", pd.lat + dl, pd.y, disc(rr), pd.proud + 0.02, 0.03, at));
+        m.scope("lens", () => n.plate(lens, pd.lat + dl, pd.y, disc(rr * 0.78), pd.proud + 0.026, 0.004, at));
+      }));
+    })));
+  if (f.texts?.length)
+    m.scope("lettering", () => f.texts!.forEach((t) => {
+      const w = t.h * 0.58, gap = t.h * 0.18, width = strokeWidth(t.text, w, gap);
+      // each stroke cut finer, so that it follows a face curving between the rows
+      const tris = strokeText(t.text, t.lat - width / 2, t.y, t.h, w, gap, false, t.h * 0.14);
+      const fine: Pt[] = [];
+      for (let i = 0; i + 2 < tris.length; i += 3) fine.push(...subdivide([tris[i]!, tris[i + 1]!, tris[i + 2]!], 3));
+      n.decal(t.mat, fine, 0.006);
+    }));
   if (f.lamps?.length)
     m.scope("lamps", () => f.lamps!.forEach(([lat, y, r, lens], i) => m.scope(`lamp ${i + 1}`, () => n.lamp(lat, y, r, lens, "black", 12, 0))));
   if (f.roofLamp) {
