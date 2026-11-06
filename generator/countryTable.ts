@@ -89,7 +89,7 @@ export const COUNTRY_OF: ReadonlyMap<string, string> = new Map([
     "sbb-re420", "sbb-re620", "sbb-ae66", "sbb-ce68", "sbb-ae814", "rhb-ge443", "rhb-ge66", "mgb-hge442", "sbb-ew4-coach", "sbb-ic2000", "glacier-express"),
   ...each("es", "renfe-s100", "renfe-s103", "renfe-s102", "renfe-s106", "renfe-s130", "talgo-iii", "renfe-s120", "renfe-civia", "renfe-446",
     "renfe-440", "renfe-592", "iryo-s109", "renfe-354", "renfe-252", "renfe-269", "renfe-277", "renfe-319", "renfe-333", "renfe-141f", "renfe-242f"),
-  ...each("gb", "br-hst", "br-ic225", "br-class-800", "br-class-390", "eurostar-373", "br-class-158", "br-class-142", "lu-1938-stock",
+  ...each("gb", "br-hst", "br-ic225", "br-class-800", "br-class-390", "eurostar-373", "br-class-158", "br-class-142", "lu-1938-stock", "br-class-378",
     "br-class-55", "br-class-37", "br-class-47", "br-class-66", "br-class-86", "lner-a4", "lner-a3", "gwr-castle", "lms-black-five", "br-9f",
     "rocket", "br-mk1-coach"),
   ...each("in", "ir-vande-bharat", "ncrtc-namo-bharat", "ir-mumbai-emu", "ir-memu", "dmrc-rs1", "ir-wdm2", "ir-wdp4d", "ir-wdg4g", "ir-wam4",

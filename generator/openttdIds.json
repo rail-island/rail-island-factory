@@ -78,6 +78,7 @@
     "proc-vehicle-br-class-142": 274,
     "proc-vehicle-br-class-158": 273,
     "proc-vehicle-br-class-37": 277,
+    "proc-vehicle-br-class-378": 821,
     "proc-vehicle-br-class-390": 271,
     "proc-vehicle-br-class-47": 278,
     "proc-vehicle-br-class-55": 276,
@@ -934,6 +935,18 @@
       },
       "proc-vehicle-br-class-158?livery=northern": {
         "id": 8900,
+        "size": 6
+      },
+      "proc-vehicle-br-class-378?": {
+        "id": 10028,
+        "size": 6
+      },
+      "proc-vehicle-br-class-378?formation=5 cars": {
+        "id": 10040,
+        "size": 30
+      },
+      "proc-vehicle-br-class-378?unit=middleCar": {
+        "id": 10034,
         "size": 6
       },
       "proc-vehicle-br-class-37?": {

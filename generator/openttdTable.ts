@@ -1039,6 +1039,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-br-class-158": series(1989, 70, 70, RAIL, { cars: 2, liveries: ["northern"] }),
   "proc-vehicle-br-class-142": series(1985, 56, 56, RAIL, { cars: 2, liveries: ["northern"] }),
   "proc-vehicle-lu-1938-stock": series(1938, 100, 110, ELRL, { cars: 7 }),
+  "proc-vehicle-br-class-378": series(2009, 50, 57, ELRL, { cars: 5 }),
   "proc-vehicle-br-class-55": loco(1961, RAIL, { presets: presets(...each("livery", "brBlue")) }),
   "proc-vehicle-br-class-37": loco(1960, RAIL, { presets: presets(...each("livery", "brBlue", "railfreight")) }),
   "proc-vehicle-br-class-47": loco(1962, RAIL, { presets: presets(...each("livery", "brBlue", "intercity")) }),

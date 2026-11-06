@@ -43,6 +43,10 @@ export interface ShinkansenLivery {
   skirt: string;
   /** Number on the sides. */
   number: string;
+  /** The door leaves' bands (default the side's). */
+  doors?: readonly Band[];
+  /** The cab front's bands, over the nose (default the side's). */
+  front?: readonly Band[];
 }
 
 export interface ShinkansenSeries {
@@ -163,6 +167,7 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
     bands: l.bands, roof: l.roof, skirt: l.skirt, under: "under",
     windows: s.windows.map((y) => ({ y, spans, frame: "rubber" })),
     doors: { spans: doors, y: [s.door[0], s.door[1]], glass: [s.door[2], s.door[3]] },
+    ...(l.doors ? { doorBands: l.doors } : {}), ...(end && l.front && !s.flatCab ? { front: { d: s.nose.len + 0.05, bands: l.front } } : {}),
     ...(s.flatCab ? { cab: s.flatCab } : {}), cabEnds: end && s.flatCab ? (s.single ? [1, -1] : [1]) : [], diaphragm: [s.door[0], s.door[1] + 0.3],
     trucks: tr, truck: {
       axles: s.wheelbase > 0 ? [-s.wheelbase / 2, s.wheelbase / 2] : [0], wheelR: s.wheelR, frameHalf: s.wheelbase > 0 ? s.wheelbase / 2 + s.wheelR + 0.15 : s.wheelR + 0.45, frameTop: s.wheelR + 0.4, frameBottom: s.wheelR + 0.08,
