@@ -142,7 +142,7 @@ export interface ShinkansenSeries {
   sidePanels?: { end?: readonly SeriesSidePanel[]; middle?: readonly SeriesSidePanel[] };
   /** One pantograph only, on the second car (default two from four cars up). */
   onePantograph?: boolean;
-  /** Jacobs bogies: the cars' inner ends share one bogie centred on each joint (the end car's leading bogie at `endBogies[0]`, else bogieCentres ahead of the joint). */
+  /** Jacobs bogies: the cars' inner ends share one bogie centred on each joint (the end car's leading bogie at `endBogies[0]`, else bogieCentres ahead of the joint); a lone car stands on its joint bogies, half beyond its body (the FLIRT; `jacobsInset` the Giruno's). */
   jacobs?: boolean;
   /** A flat cab front in place of the nose: its windscreen panes (z0, z1, y0, y1), lamps (z, y, r, lens) and the front's mask. */
   flatCab?: NonNullable<CarDef["cab"]>;
@@ -192,6 +192,13 @@ export interface ShinkansenSeries {
   couplerY?: number;
   /** A flat cab's plan and dome: a short nose the cab's decals stand on (default a square end). */
   cabNose?: NoseShape;
+  /**
+   * The set rides on Jacobs bogies: in the train one bogie under each joint carries both cars; a lone
+   * car stands on its own bogie this far inside each inner end (an end car's leading bogie as the rule
+   * or `endBogies` places it); in the train the skirt is cut open at the inner ends over the joints
+   * (the Giruno; `jacobs` is the FLIRT's set, whose lone car stands on its joint bogies instead).
+   */
+  jacobsInset?: number;
   /** Both bogies of every car centred on its body, bogieCentres apart (default 3.5 m in from the rear, the other ahead of it). */
   centredBogies?: boolean;
   /** The doors and windows of the end and the middle car (d from the body's +X end), in place of the generated layout. */
@@ -237,13 +244,14 @@ function bogies(s: ShinkansenSeries, end: boolean): [number, number] {
   if (s.jacobs) return end ? [s.endBogies?.[0] ?? L + GAP - s.bogieCentres, L + GAP] : [-GAP, L + GAP];
   if (end && s.endBogies) return [s.endBogies[0], s.endBogies[1]];
   if (!end && s.midBogies) return [s.midBogies[0], s.midBogies[1]];
+  if (s.jacobsInset !== undefined && !end) return [s.jacobsInset, L - s.jacobsInset];
   if (s.single || s.centredBogies) return [L / 2 - s.bogieCentres / 2, L / 2 + s.bogieCentres / 2];
-  const back = L - 3.5;
+  const back = s.jacobsInset !== undefined ? L - s.jacobsInset : L - 3.5;
   // a short car's leading bogie comes in so that its wheels stay under the body
   return [Math.max(back - s.bogieCentres, s.wheelbase / 2 + s.wheelR + 0.2), back];
 }
 
-function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantograph: boolean | "lowered", number: string): CarDef {
+function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantograph: boolean | "lowered", number: string, joint = false): CarDef {
   // the centre coupler's draft gear ends 0.3 m below its centre: a skirt bottom there would lie on it
   if (Math.abs(s.B - (couplerOf(s) - 0.3)) < 0.005) throw new Error(`series: skirt bottom ${s.B} m lies on the coupler's draft gear`);
   // the bogie's brake cylinders stand 0.55 m inside its axles: a shorter wheelbase puts them on its transoms (0 is a single axle)
@@ -286,7 +294,7 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
     spec: {
       length: L, W: s.W, Y: s.Y, S: s.S, C: s.C, lean: s.lean, arc: s.arc ?? 8, B: s.B, wl: s.W * 0.9, A: s.A, wa: s.W * 0.97,
       ...(end && !s.flatCab && !s.cabFace ? { front: s.nose, ...(s.single ? { rear: s.nose } : {}) } : {}),
-      ...(end && s.flatCab && s.cabNose ? { front: s.cabNose, ...(s.single ? { rear: s.cabNose } : {}) } : {}), cuts: tr.map((d) => [d - reach, d + reach] as const), edges: [], step: 1.0, noseStep: 0.25,
+      ...(end && s.flatCab && s.cabNose ? { front: s.cabNose, ...(s.single ? { rear: s.cabNose } : {}) } : {}), cuts: jacobsCuts(s, end, L, tr, reach, joint), edges: [], step: 1.0, noseStep: 0.25,
     },
     bands: (end && l.endBands) || l.bands, roof: l.roof, skirt: l.skirt, under: "under",
     ...(end && s.cabPanel ? { field: { d: s.cabPanel.d, y: s.cabPanel.y, mat: "cabPanel" } } : {}),
@@ -372,6 +380,12 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
       else m.scope("underfloor", () => block(m, "under", X(tr[1] - 2.6), X(tr[0] + 2.6), s.B - 0.35, s.B, -s.W * 0.8, s.W * 0.8));
     },
   };
+}
+
+/** The skirt's cuts round a car's bogies; a Jacobs set's car in the train open at its inner ends over the joints' bogies (`joint`). */
+function jacobsCuts(s: ShinkansenSeries, end: boolean, L: number, tr: readonly number[], reach: number, joint: boolean): Array<readonly [number, number]> {
+  if (s.jacobsInset === undefined || !joint) return tr.map((d) => [d - reach, d + reach] as const);
+  return [end ? [tr[0]! - reach, tr[0]! + reach] : [-0.01, reach - GAP], [L + GAP - reach, L + 0.01]];
 }
 
 /** The paint a cab face takes from a livery. */
@@ -578,18 +592,29 @@ export function buildSeries(s: ShinkansenSeries, params: readonly ParamSpec[], v
     const cx = (slot.lo + slot.hi) / 2;
     const len = slot.end ? s.endLength : s.midLength;
     const X = (d: number) => cx + len / 2 - frontGap(s, slot.end) - d;
-    const def = carDef(s, l, slot.end, slot.pantograph && s.trailingLowered && s.endPantograph === true && slot.turned ? "lowered" : slot.pantograph, l.number);
+    const def = carDef(s, l, slot.end, slot.pantograph && s.trailingLowered && s.endPantograph === true && slot.turned ? "lowered" : slot.pantograph, l.number, s.jacobsInset !== undefined);
     // a buffered cab end keeps its buffers at the train's two ends
     const inside = slot.end && s.endCoupler === "buffers" ? [-1] : [1, -1];
-    // Jacobs bogies: a car keeps only an end car's leading bogie; each joint's bogie is drawn once, carrying both cars
-    const o = s.jacobs ? { inside, trucks: [slot.end, false] } : { inside };
+    if (s.jacobs) {
+      // Jacobs bogies: a car keeps only an end car's leading bogie; each joint's bogie is drawn once, carrying both cars
+      const o = { inside, trucks: [slot.end, false] };
+      return {
+        x0: slot.lo + GAP, x1: slot.hi - (k === 0 ? 0 : GAP),
+        draw: () => m.scope(`car ${k + 1}`, () => {
+          if (slot.turned) m.turned(cx, () => drawCar(m, def, X, o));
+          else drawCar(m, def, X, o);
+          if (k < slots.length - 1) m.scope("jacobs bogie", () => m.bogie(() => bogieGeometry(m, slot.lo, def.truck), { sections: [k, k + 1] }));
+        }),
+      };
+    }
+    // a Jacobs set with inset lone-car bogies: the cars' inner-end bogies give way to the joints' own
+    const o = s.jacobsInset !== undefined ? { inside, trucks: slot.end ? [true, false] : [false, false] } : { inside };
     return {
       x0: slot.lo + GAP, x1: slot.hi - (k === 0 ? 0 : GAP),
-      draw: () => m.scope(`car ${k + 1}`, () => {
-        if (slot.turned) m.turned(cx, () => drawCar(m, def, X, o));
-        else drawCar(m, def, X, o);
-        if (s.jacobs && k < slots.length - 1) m.scope("jacobs bogie", () => m.bogie(() => bogieGeometry(m, slot.lo, def.truck), { sections: [k, k + 1] }));
-      }),
+      draw: () => {
+        m.scope(`car ${k + 1}`, () => (slot.turned ? m.turned(cx, () => drawCar(m, def, X, o)) : drawCar(m, def, X, o)));
+        if (s.jacobsInset !== undefined && k + 1 < slots.length) m.scope(`jacobs bogie ${k + 1}`, () => m.bogie(() => bogieGeometry(m, slot.lo, def.truck), { sections: [k, k + 1] }));
+      },
     };
   });
   const bellows: Array<[number, number]> = [[-0.78, s.door[0]], [0.78, s.door[0]], [0.78, s.door[1] + 0.25], [-0.78, s.door[1] + 0.25]];
@@ -597,7 +622,7 @@ export function buildSeries(s: ShinkansenSeries, params: readonly ParamSpec[], v
   return m;
 }
 
-function carLod(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantograph: boolean, X: (d: number) => number, cx: number, turned: boolean, section?: number): { body: UnitBody; parts: LodPart[] } {
+function carLod(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantograph: boolean, X: (d: number) => number, cx: number, turned: boolean, section?: number, trucks: readonly boolean[] = [true, true]): { body: UnitBody; parts: LodPart[] } {
   const def = carDef(s, l, end, pantograph, l.number);
   const b = carbody({ ...def.spec, edges: [] });
   const side: LodBand[] = [...((end && l.endBands) || l.bands).map(([a, e, mt]): [number, number, string] => [Math.max(a, s.B), Math.min(e, s.S), mt]).filter(([a, e]) => e > a + 1e-6), [s.S, s.C, l.roof]];
@@ -616,7 +641,7 @@ function carLod(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
   // Jacobs bogies in a train: each joint's bogie once, with the car ahead of it
   const all = bogies(s, end), tr = all.filter((_, i) => !(s.jacobs && section !== undefined) || (i === 0 ? end : !turned));
   const parts: LodPart[] = [
-    ...bogieParts(tr.map((d) => [T(X(d)), s.wheelbase / 2 + s.wheelR + 0.2, ...(section !== undefined ? [section] : [])] as const) as unknown as ReadonlyArray<readonly [number, number, number?]>, s.B),
+    ...bogieParts(tr.filter((_, i) => trucks[i] !== false).map((d) => [T(X(d)), s.wheelbase / 2 + s.wheelR + 0.2, ...(section !== undefined ? [section] : [])] as const) as unknown as ReadonlyArray<readonly [number, number, number?]>, s.B),
     ...(end && s.lodRoof ? [roofPart(s.lodRoof.mat, T(X(s.lodRoof.d[0] - (s.cabFace?.dJoin ?? 0))), T(X(s.lodRoof.d[1] - (s.cabFace?.dJoin ?? 0))), s.lodRoof.hw, s.lodRoof.hw, s.lodRoof.y[0], s.lodRoof.y[1], section)] : []),
     ...(pantograph ? [{ ...roofPart("pantograph", T(X(pantographAt(s, end, all))) - 0.8, T(X(pantographAt(s, end, all))) + 0.8, 0.45, 0.45, s.C, RAIL_COLLECTOR_TOP, section), optional: 8 }] : []),
   ];
@@ -638,7 +663,11 @@ export function buildSeriesLod(s: ShinkansenSeries, params: readonly ParamSpec[]
   const built = slots.map((slot, k) => {
     const cx = (slot.lo + slot.hi) / 2;
     const len = slot.end ? s.endLength : s.midLength;
-    return carLod(s, l, slot.end, slot.pantograph && !(s.trailingLowered && s.endPantograph === true && slot.turned), (d) => cx + len / 2 - frontGap(s, slot.end) - d, cx, slot.turned, k);
+    const own = s.jacobsInset === undefined ? [true, true] : slot.end ? [true, false] : [false, false];
+    const car = carLod(s, l, slot.end, slot.pantograph && !(s.trailingLowered && s.endPantograph === true && slot.turned), (d) => cx + len / 2 - frontGap(s, slot.end) - d, cx, slot.turned, k, own);
+    // a Jacobs set's bogie under the joint behind this car
+    if (s.jacobsInset !== undefined && k + 1 < slots.length) car.parts.push(...bogieParts([[slot.lo, s.wheelbase / 2 + s.wheelR + 0.2, k]], s.B));
+    return car;
   });
   const sections: LodSections = {
     pivots: slots.map((_, i): [number, number, number] => (i === 0 ? [0, 0, 0] : [slots[i - 1]!.lo, couplerOf(s), 0])),

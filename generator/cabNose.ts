@@ -65,6 +65,8 @@ export interface NoseSpec {
   cornerDepth?: Pt[];
   /** Extra recess of the face at its edges (|u| = 1) over its centre: a parabolic plan bulge; by height ([y, bulge], ascending) for a face whose vee deepens or flattens. */
   bulge?: number | readonly Pt[];
+  /** The corner arc's depth over its radius by height, [y, k] (default 1, a quarter circle): an elliptic corner, a nose rounded to a point in plan (the Giruno's; `cornerDepth` states the depth itself). */
+  cornerRatio?: Pt[];
   /** The grid's rows, ascending; the first is the bottom, the last the crown. */
   rows: number[];
   base: string;
@@ -135,7 +137,8 @@ export class CabNose {
   private atSlice(u: number, y: number, hw: number, corner: number, dF: number, depth: number): NoseQuery & { p: Vec3 } {
     const s = this.s;
     const r = Math.min(corner, hw * 0.98);
-    const rd = depth < 0 ? r : depth;
+    // the corner's depth along the car: stated, or its radius times a ratio, else its radius (a round corner)
+    const rd = depth >= 0 ? depth : s.cornerRatio ? lerp(s.cornerRatio, y) * r : r;
     const a = hw - r;
     const b = bulgeAt(s.bulge, y);
     const au = Math.min(4, Math.abs(u));

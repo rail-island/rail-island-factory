@@ -223,14 +223,118 @@ export const ICN: ShinkansenSeries = {
   weight: { end: 50, middle: 50 }, power: 740, maxspeed: 200,
 };
 
+/**
+ * The Giruno's paint (photo-ec250-giruno-close-to-erlen.jpg in near profile, photo-sbb-rabde-501-029-...,
+ * photo-stadler-ec250-innotrans-2016-3.jpg head on): white over a dark grey lower band, red doors, a
+ * dark roof with a red stripe under its edge along the whole train. On the nose the white bumper
+ * carries a red cap; the red face above it holds the lamps and the grille and runs up beside the
+ * windscreen's black surround into that stripe; the grey lower band rises along the nose's bottom.
+ * Edges are [y, d behind the tip].
+ */
+const GIRUNO_RED_BACK: Pt[] = [[1.9, 1.55], [2.2, 1.85], [2.5, 2.2], [2.8, 2.7], [3.1, 3.1], [3.35, 3.7], [3.56, 4.4], [3.75, 5.2]];
+const GIRUNO_SBB: ShinkansenLivery = {
+  title: "SBB", number: "501 029",
+  palette: { white: c("#f1f1ee"), grey: c("#3b3f44", 0.6), red: c(SBB_RED), black: c("#14171a", 0.35), screen: c("#6d7c89", 0.1), roofG: c("#262c35", 0.55), skirtG: c("#24272b", 0.75), cabMask: c("#14171a", 0.3) },
+  // the windows in a black band
+  bands: [[0, 1.0, "grey"], [1.0, 1.7, "white"], [1.7, 2.75, "black"], [2.75, 3.55, "white"], [3.55, 3.75, "red"], [3.75, 9, "roofG"]], doors: [[0, 9, "red"]],
+  roof: "roofG", skirt: "skirtG",
+  // the cab's sides white back to the first window; the red beside the windscreen reaches past the
+  // cab face's join onto the body
+  endSweeps: [
+    { mat: "white", front: [[1.65, -9], [2.8, -9]], back: [[1.65, 7.95], [2.8, 7.95]] },
+    { mat: "red", front: [[3.35, -9], [3.75, -9]], back: GIRUNO_RED_BACK.filter(([y]) => y >= 3.35) },
+  ],
+  endLettering: [{ text: "SBB CFF FFS", d: 12.4, y: 1.4, h: 0.13, mat: "red" }],
+};
+
+/**
+ * The Giruno's nose (the photographs above): 4.6 m long, rounded to a point in plan (elliptic corners
+ * twice as deep as they are wide). Its bottom is a bulbous white bumper, upright from the skirt to
+ * 1.85 m and rounded under it, its red cap rising from 1.4 m at the middle to 1.85 m at the corners;
+ * the red face stands back behind its lip with the slanted lamp clusters, the grille and the SBB
+ * emblem; above it the large windscreen in a narrow black surround rakes back about 30 degrees to the
+ * roof, the surround dipping to the grille where the wipers park.
+ */
+const GIRUNO_FACE: SeriesCabFace = {
+  dJoin: 4.6, dSide: 3.6, first: 8.0, roofFrom: 4.0, cols: [8, 7, 1, 2], tolerance: 0.015,
+  profile: [[0.55, 0.5], [0.62, 0.25], [0.75, 0.1], [0.95, 0.03], [1.2, 0], [1.75, 0], [1.85, 0.04], [1.92, 0.14], [1.97, 0.3], [2.05, 0.4], [2.3, 0.52], [2.55, 0.7], [2.7, 0.85], [3.0, 1.3], [3.3, 1.8], [3.6, 2.35], [3.85, 2.9], [4.0, 3.35], [4.1, 3.8], [4.17, 4.25], [4.2, 4.6]],
+  // the plan: a narrow front rounding in deep elliptic corners to the sides
+  // (no bow: a parabola would meet the elliptic corners at a kink)
+  corner: [[0.55, 1.1], [1.9, 1.1], [2.0, 1.2], [3.3, 1.25], [3.9, 0.9], [4.2, 0.1]],
+  cornerRatio: [[0.55, 1.25], [1.9, 1.25], [2.0, 1.5], [3.3, 1.6], [3.9, 1.2], [4.2, 1.0]],
+  rows: [0.55, 0.62, 0.75, 0.95, 1.0, 1.2, 1.4, 1.6, 1.75, 1.85, 1.92, 1.97, 2.05, 2.2, 2.3, 2.55, 2.7, 3.0, 3.3, 3.6, 3.75, 3.85, 4.0, 4.1, 4.17, 4.2],
+  // (the centre line's colours, which the distant model shows; the paint below draws the near ones)
+  bands: () => [[0, 0.62, "skirtG"], [0.62, 1.4, "white"], [1.4, 2.55, "red"], [2.55, 9, "black"]],
+  paint: [
+    // white under the cab sides' window band, the grey lower band rising forward along the nose's bottom
+    { mat: "white", front: [[1.0, -9], [3.55, -9]], back: [[1.0, 99], [3.55, 99]] },
+    { mat: "grey", front: [[0.55, 1.3], [0.75, 2.6], [1.0, 4.4]], back: [[0.55, 99], [1.0, 99]] },
+    // the red face behind the bumper's lip, round the lamps and up beside the windscreen
+    { mat: "red", front: [[1.9, -9], [3.75, -9]], back: GIRUNO_RED_BACK, top: 3.75 },
+  ],
+  fields: [
+    // the bumper's red cap, narrower than the face, its lower edge rising to the corners
+    { mat: "red", pts: [[-1.12, 1.88], [-0.95, 1.62], [-0.65, 1.47], [-0.3, 1.41], [0.3, 1.41], [0.65, 1.47], [0.95, 1.62], [1.12, 1.88], [1.12, 1.93], [-1.12, 1.93]] },
+    // the windscreen's black surround, dipping to the grille where the wipers park, and the glass
+    { mat: "black", pts: [[-1.36, 2.68], [-1.2, 2.56], [-0.55, 2.48], [-0.3, 2.36], [0.3, 2.36], [0.55, 2.48], [1.2, 2.56], [1.36, 2.68], [1.0, 4.02], [-1.0, 4.02]] },
+    { mat: "screen", pts: [[-1.28, 2.72], [-1.15, 2.62], [1.15, 2.62], [1.28, 2.72], [0.93, 3.9], [0.85, 3.96], [-0.85, 3.96], [-0.93, 3.9]] },
+    // the lamp clusters, slanted down to the middle
+    { mat: "cabMask", pts: [[-1.4, 2.26], [-1.34, 2.43], [-1.1, 2.45], [-0.5, 2.1], [-0.55, 1.98], [-0.92, 1.99]] },
+    { mat: "cabMask", pts: [[0.92, 1.99], [0.55, 1.98], [0.5, 2.1], [1.1, 2.45], [1.34, 2.43], [1.4, 2.26]] },
+  ],
+  masks: [{ lat: [-0.22, 0.22], y: [2.2, 2.32], r: 0.03, mat: "black" }],
+  panes: [{ lat: [-0.8, 0.8], y: [2.7, 3.88], r: 0.2, mat: "screen" }],
+  decals: [
+    { mat: "white", pts: [[-0.1, 2.08], [0.1, 2.08], [0.1, 2.11], [-0.1, 2.11]] },
+    { mat: "white", pts: [[-0.02, 2.03], [0.02, 2.03], [0.02, 2.16], [-0.02, 2.16]] },
+    { mat: "white", pts: [[-0.17, 2.095], [-0.09, 2.03], [-0.09, 2.16]] },
+    { mat: "white", pts: [[0.17, 2.095], [0.09, 2.16], [0.09, 2.03]] },
+  ],
+  lamps: [
+    [-1.17, 2.34, 0.07, "lampHead"], [-0.9, 2.22, 0.08, "lampHead"], [-0.68, 2.09, 0.05, "lampRed"],
+    [1.17, 2.34, 0.07, "lampHead"], [0.9, 2.22, 0.08, "lampHead"], [0.68, 2.09, 0.05, "lampRed"],
+    // the coupler's opening in the bumper
+    [0.45, 0.85, 0.06, "black"],
+  ],
+  wipers: [[[0.08, 2.66], [0.45, 3.4]], [[0.6, 2.66], [0.9, 3.25]]],
+};
+
+/** Window panes of a black band from d0 to d1 (body d), about `pitch` apart, 8 cm pillars between them. */
+const paneRow = (d0: number, d1: number, pitch: number): Array<readonly [number, number]> => {
+  const n = Math.max(1, Math.round((d1 - d0) / pitch)), w = (d1 - d0) / n;
+  return Array.from({ length: n }, (_, i) => [d0 + i * w + (i ? 0.04 : 0), d0 + (i + 1) * w - (i < n - 1 ? 0.04 : 0)] as const);
+};
+
+/** The Giruno's cab door: its seams on the body sides, under the cab side window, and the underfloor equipment. */
+function girunoFittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }): void {
+  if (car.end) m.scope("cab door", () => {
+    const [d0, d1, y0, y1, k] = [1.75, 2.5, 1.2, 2.88, 0.02];
+    for (const sd of [1, -1]) {
+      sidePanel(m, b, X, sd, "rubber", d0, d0 + k, y0, y1, 0.004, 0.01);
+      sidePanel(m, b, X, sd, "rubber", d1 - k, d1, y0, y1, 0.004, 0.01);
+      sidePanel(m, b, X, sd, "rubber", d0 + k, d1 - k, y1 - k, y1, 0.004, 0.01);
+      sidePanel(m, b, X, sd, "rubber", d0 + 0.12, d0 + 0.16, 1.85, 2.05, 0.008, 0.01);
+    }
+  });
+  m.scope("underfloor", () => block(m, "under", X(car.trucks[1]! - 2.6), X(car.trucks[0]! + 2.6), 0.55 - 0.35, 0.55, -1.45 * 0.8, 1.45 * 0.8));
+}
+
 export const GIRUNO: ShinkansenSeries = {
-  endLength: 27.4, midLength: 24.0, W: 1.45, Y: 1.3, S: 3.15, C: 4.1, lean: 0.95, B: 0.65, A: 0.85,
-  // the long, sharp nose of Stadler's SMILE
-  nose: nose(5.0, 0.1, 2.4, [[0, 1.3], [0.6, 1.8], [2.2, 2.6], [3.8, 3.4], [5.2, 4.1]], [[0, 1.25], [0.6, 1.7], [2.2, 2.4], [3.8, 2.95], [5.2, 3.15]], [[0, 1.2], [1.5, 1.3]], [[0, 1.0], [1.0, 0.85]], [[0, 0.95], [0.5, 0.65]]),
-  windscreen: [3.0, 4.8, 0.07, 1.1], lamps: [1.0, 1.4],
-  windows: [[1.55, 2.7]], windowW: 1.5, pitch: 1.75, door: [0.95, 3.0, 1.55, 2.6], doorW: 1.0,
-  bogieCentres: 14.0, wheelR: 0.46, wheelbase: 2.7, cars: [4, 8],
-  liveries: { sbb: chLivery("sbb", "501 001") },
+  // 22.25 m end cars and 17.5 m intermediate cars over the joints (de.wikipedia, Wagenreihung)
+  endLength: 22.25, midLength: 17.5, W: 1.45, Y: 1.0, S: 3.75, C: 4.2, lean: 0.93, B: 0.55, A: 0.85,
+  nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: GIRUNO_FACE,
+  // the cab's small side window ahead of its door, d behind the join
+  cabWindows: [[0.5, 1.3, 2.65, 3.17]],
+  // windows in a black band from the cab back; one door a side, behind the middle of each car
+  layout: {
+    end: { doors: [[10.5, 11.8, 1]], windows: [...paneRow(3.4, 10.4, 1.15), ...paneRow(11.9, 17.0, 1.15)] },
+    middle: { doors: [[10.2, 11.6, 1]], windows: [...paneRow(0.5, 10.1, 1.15), ...paneRow(11.7, 16.5, 1.15)] },
+  },
+  windows: [[1.7, 2.75]], windowW: 1.07, pitch: 1.15, door: [0.9, 2.62, 1.5, 2.48], doorW: 1.3,
+  // Jacobs bogies under the joints; the end car's leading bogie under the cab door
+  bogieCentres: 13.4, wheelR: 0.46, wheelbase: 2.75, jacobsInset: 2.3, endBogies: [2.0, 17.33 - 2.3],
+  cars: [4, 8], fittings: girunoFittings,
+  liveries: { sbb: GIRUNO_SBB },
   weight: { end: 48, middle: 36 }, power: 750, maxspeed: 250,
 };
 

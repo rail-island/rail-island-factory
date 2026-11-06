@@ -116,7 +116,16 @@ combinations hashed before and after):
   table by height, a vee that deepens or flattens (the Roter Pfeil's cab); `lod` gives the
   distant model its own profile, plan and rows, and `glass: false` leaves its panes out, for a
   face with a bonnet drawn ahead of it in the series' `fittings`
-  ([switzerland-trains.md](switzerland-trains.md));
+  ([switzerland-trains.md](switzerland-trains.md)). Its `cornerDepth` makes the corner arcs
+  elliptic by stating their depth back from the face ([y, depth]: a face tapering in plan, the
+  Allegra's and the ICN's), `cornerRatio` by stating the depth over the radius ([y, k]: a nose
+  rounded to a point in plan, the Giruno's); its `paint` lays colour fields over the whole
+  surface, face and cab sides alike, between front and back edges in [y, d] (a field that runs
+  from the front round the corners and back along a long nose: the Giruno's red and black);
+- `jacobsInset` - the set rides on Jacobs bogies: in the train one bogie under each joint carries both
+  cars (its rig support names both sections) and the cars' skirts are cut open at their inner
+  ends; a lone car stands on its own bogie `jacobsInset` inside each inner end (the Giruno; the
+  FLIRT's `jacobs` stands a lone car on its joint bogies instead);
 - `fluting` - bands of horizontal ribs on every car's sides, round the windows and doors (the car
   builder's `fluting`, which takes several bands); `roofRibs` - ribs along the roof either side of
   the crown (the Talgo III's stainless body);

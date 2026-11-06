@@ -1,7 +1,7 @@
 # Switzerland's trains
 
 **Covers** - the twenty Swiss designs of the eight-country plan: the RAe TEE II, the Roter Pfeil, the ICN, the Giruno, the FV-Dosto, SBB's FLIRT and KISS and the Rhaetian Railway's Allegra; the Re 460, Re 4/4 II, Re 6/6, Ae 6/6, Ce 6/8 II Krokodil and Ae 8/14 Landi; on the metre gauge the RhB Ge 4/4 III and Ge 6/6 I Krokodil and the MGB HGe 4/4 II; the EW IV, IC 2000 and Glacier Express coaches. Their kits, figures, deviations and tests.
-**Code** - `generator/chUnits.ts` (`CH_UNITS`, `chLivery`), `generator/roterPfeil.ts`, `generator/chLocos.ts` (`CH_LOCOS`), `generator/seriesHelpers.ts` (`flirt`, `kiss`), `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `assets/sbb-*/`, `assets/rhb-*/`, `assets/mgb-hge442/`, `assets/glacier-express/`
+**Code** - `generator/chUnits.ts` (`CH_UNITS`, `chLivery`), `generator/roterPfeil.ts`, `generator/chLocos.ts` (`CH_LOCOS`), `generator/seriesHelpers.ts` (`flirt`, `kiss`), `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `test/giruno.test.ts`, `assets/sbb-*/`, `assets/rhb-*/`, `assets/mgb-hge442/`, `assets/glacier-express/`
 **See also** - [shinkansen.md](shinkansen.md), [world-locos.md](world-locos.md), [world-coaches.md](world-coaches.md), [netherlands-trains.md](netherlands-trains.md) (the FLIRT's Dutch sister)
 
 The catalog had no Swiss train before. Every design is filed under Switzerland.
@@ -161,7 +161,19 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
   grey skirt and end walls), `sbb` the 2021 repaint (red doors, black ends and skirt, a red line under the roof),
   `greenGrey` the 1981 fir green with stone-grey bands; first class adds its yellow strip. The windows' rounded
   corners are drawn square; the SBB emblem is simplified to a cross with two arrowheads.
+- **Giruno.** Its own cab face (`GIRUNO_FACE`) and paint (`GIRUNO_SBB`, livery key `sbb`), read from
+  four photographs in `assets/sbb-giruno/` (the near profile's perspective undone with the cars'
+  lengths): a 4.6 m nose rounded to a point in plan (elliptic corners, the kit's `cornerRatio`); a
+  bulbous white bumper upright to 1.85 m with a red cap rising from 1.4 m at the middle to 1.85 m at
+  its corners; the red face behind its lip with the slanted lamp clusters, grille and emblem; the
+  large light windscreen in a narrow black surround raked about 30 degrees to the roof, the red
+  running up beside it into a stripe under the dark roof; white over a dark grey lower band, the windows in a black
+  band, red doors. The cars are 22.25 m and 17.5 m over the joints (de.wikipedia's formation table)
+  on Jacobs bogies (the kit's `jacobsInset`), the end car's leading bogie under the cab door, one door a
+  side behind each car's middle. Left out: the cab door's step and the coupler flap's outline, the yellow first
+  class band over the doors, the roof fairings, the low-floor (55 cm) doors of cars F and H, and the
+  eleven-car formation (the kit offers 4 and 8 cars, two pantograph cars).
 
 ## Tests
 
-`test/worldTrains.test.ts` and, for each module's first design, the catalog sweep.
+`test/worldTrains.test.ts`, `test/giruno.test.ts` (the Giruno's cars and its Jacobs bogies) and, for each module's first design, the catalog sweep.
