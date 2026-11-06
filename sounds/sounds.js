@@ -129,6 +129,198 @@ function loop(def) {
 }
 var LEVEL = { name: "level", title: "Level", kind: "number", min: 0, max: 1, step: 0.05, default: 1 };
 
+// sounds/designs/aircraft.ts
+var SPIN = { name: "spin", title: "Rotor speed", kind: "number", min: 0, max: 1, step: 0.01, default: 1 };
+var LOAD = { name: "load", title: "Collective", kind: "number", min: 0, max: 1, step: 0.05, default: 0.5 };
+var SIZE = { name: "size", title: "Size", kind: "number", min: 0, max: 1, step: 0.05, default: 0.5 };
+var BLADES = { name: "blades", title: "Main rotor blades", kind: "number", min: 2, max: 6, step: 1, default: 4 };
+var TIP_SPEED = 212;
+var ROTOR_DIAMETER = { light: 10.2, heavy: 21.3 };
+var TAIL_RATIO = 6.2;
+function rotorDiameter(size) {
+  return ROTOR_DIAMETER.light + (ROTOR_DIAMETER.heavy - ROTOR_DIAMETER.light) * size;
+}
+function rotorRev(size) {
+  return TIP_SPEED / (Math.PI * rotorDiameter(size));
+}
+function bladePass(size, blades) {
+  return Math.round(blades) * rotorRev(size);
+}
+function tailPass(size) {
+  return rotorRev(size) * TAIL_RATIO * (2 + size);
+}
+function turbineTone(size) {
+  return 2600 - 1100 * size;
+}
+var MIN_PASS = 1.5;
+var SPIN_GLIDE = 0.6;
+var GLIDE = 0.25;
+var PULSE_ATTACK = 25e-4;
+function helicopterMix(spin, load, size) {
+  const s = Math.max(0, Math.min(1, spin));
+  return {
+    thump: Math.pow(s, 1.5) * (0.55 + 0.6 * load) * (0.8 + 0.4 * size),
+    slap: Math.pow(s, 2) * (0.25 + 1 * load) * (0.85 + 0.3 * size),
+    turbine: s * (0.7 + 0.3 * load) * (1.1 - 0.3 * size),
+    tail: Math.pow(s, 2) * (0.8 + 0.3 * load) * (1 - 0.4 * size),
+    wash: Math.pow(s, 2) * (0.7 + 0.5 * load) * (0.8 + 0.4 * size)
+  };
+}
+function turbinePitch(spin, load, size) {
+  return turbineTone(size) * (0.3 + 0.7 * spin) * (1 + 0.03 * (load - 0.5));
+}
+function glide(param, value, at, tau = GLIDE) {
+  if (tau > 0) param.setTargetAtTime(value, at, tau);
+  else param.setValueAtTime(value, at);
+}
+var helicopter = /* @__PURE__ */ loop({
+  id: "helicopter",
+  title: "Helicopter",
+  category: "aircraft",
+  description: "A helicopter's rotor and turbine: the blade slap at the rotor's rate, heavier as it climbs, a turbine whine, the tail rotor's buzz and the wash; silent while the rotor stands.",
+  params: [SPIN, LOAD, SIZE, BLADES, LEVEL],
+  start(ctx, dest, t, initial) {
+    const out = gain(ctx, num(initial, "level") * 0.12);
+    out.connect(dest);
+    const sources = [];
+    const start = (s) => {
+      s.start(t);
+      sources.push(s);
+      return s;
+    };
+    const thumpPart = gain(ctx);
+    const thumpPulse = gain(ctx);
+    thumpPulse.connect(thumpPart).connect(out);
+    const thumpOsc = start(ctx.createOscillator());
+    thumpOsc.type = "sine";
+    const thumpOscG = gain(ctx, 0.2);
+    thumpOsc.connect(thumpOscG).connect(thumpPulse);
+    const thumpNoise = start(noiseSource(ctx, true));
+    const thumpLp = filter(ctx, "lowpass", 400, 0.9);
+    const thumpNoiseG = gain(ctx, 1.4);
+    thumpNoise.connect(thumpLp).connect(thumpNoiseG).connect(thumpPulse);
+    const slapPart = gain(ctx);
+    const slapPulse = gain(ctx);
+    slapPulse.connect(slapPart).connect(out);
+    const slapNoise = start(noiseSource(ctx, true));
+    const slapBp = filter(ctx, "bandpass", 700, 0.8);
+    const slapHp = filter(ctx, "highpass", 180);
+    const slapG = gain(ctx, 1.6);
+    slapNoise.connect(slapHp).connect(slapBp).connect(slapG).connect(slapPulse);
+    const turbinePart = gain(ctx);
+    const turbineLp = filter(ctx, "lowpass", 3200, 0.5);
+    turbinePart.connect(turbineLp).connect(out);
+    const whine = [
+      [1, 0.02],
+      [1.5, 7e-3],
+      [0.25, 0.012]
+    ].map(([ratio, level], i) => {
+      const osc = start(ctx.createOscillator());
+      osc.type = "sine";
+      osc.detune.value = (i - 1) * 4;
+      const g = gain(ctx, level);
+      osc.connect(g).connect(turbinePart);
+      return { osc, ratio };
+    });
+    const roar = start(noiseSource(ctx, true));
+    const roarBp = filter(ctx, "bandpass", 1200, 0.8);
+    const roarG = gain(ctx, 0.12);
+    roar.connect(roarBp).connect(roarG).connect(turbinePart);
+    const tailPart = gain(ctx);
+    const tail = start(ctx.createOscillator());
+    tail.type = "sawtooth";
+    const tailHp = filter(ctx, "highpass", 140, 0.7);
+    const tailLp = filter(ctx, "lowpass", 380, 0.8);
+    const tailG = gain(ctx, 0.3);
+    tail.connect(tailHp).connect(tailLp).connect(tailG).connect(tailPart).connect(out);
+    const washPart = gain(ctx);
+    const wash = start(noiseSource(ctx, true));
+    const washHp = filter(ctx, "highpass", 90);
+    const washLp = filter(ctx, "lowpass", 1800, 0.5);
+    const washG = gain(ctx, 0.26);
+    wash.connect(washHp).connect(washLp).connect(washG).connect(washPart).connect(out);
+    const base = voiceOf(out, sources, Infinity);
+    let v = initial;
+    let stopped = false;
+    let spinNow = num(initial, "spin");
+    let spinAt = t;
+    let nextPulse = t;
+    let blade = 0;
+    let scheduled = -Infinity;
+    const random = seeded(17);
+    const bladeLevel = Array.from({ length: 6 }, (_, i) => i === 0 ? 1 : 0.78 + 0.14 * random());
+    let first = true;
+    const update = (at) => {
+      const tau = first ? 0 : SPIN_GLIDE;
+      const quick = first ? 0 : GLIDE;
+      first = false;
+      const spin = num(v, "spin");
+      const load = num(v, "load");
+      const size = num(v, "size");
+      const mix = helicopterMix(spin, load, size);
+      glide(thumpPart.gain, mix.thump, at, tau);
+      glide(slapPart.gain, mix.slap, at, tau);
+      glide(turbinePart.gain, mix.turbine, at, tau);
+      glide(tailPart.gain, mix.tail, at, tau);
+      glide(washPart.gain, mix.wash, at, tau);
+      const f = turbinePitch(spin, load, size);
+      for (const { osc, ratio } of whine) glide(osc.frequency, f * ratio, at, tau);
+      glide(tail.frequency, Math.max(1, tailPass(size) * spin), at, tau);
+      glide(thumpOsc.frequency, 110 - 50 * size, at, quick);
+      glide(thumpLp.frequency, 400 - 180 * size, at, quick);
+      glide(slapBp.frequency, 820 - 380 * size, at, quick);
+      glide(washLp.frequency, 1800 - 700 * size, at, quick);
+      glide(roarBp.frequency, 1300 - 500 * size, at, quick);
+    };
+    update(t);
+    const pulses = (from, to) => {
+      const target = num(v, "spin");
+      const load = num(v, "load");
+      const size = num(v, "size");
+      const blades = Math.round(num(v, "blades"));
+      const full = bladePass(size, blades);
+      if (nextPulse < from) nextPulse = from;
+      while (nextPulse < to) {
+        spinNow = target + (spinNow - target) * Math.exp(-(nextPulse - spinAt) / SPIN_GLIDE);
+        spinAt = nextPulse;
+        const rate = full * spinNow;
+        if (rate < MIN_PASS) {
+          nextPulse += 0.05;
+          continue;
+        }
+        const period = 1 / rate;
+        const k = blade % blades;
+        blade = k + 1;
+        const peak = bladeLevel[k];
+        const sharp = 0.7 + 0.6 * load;
+        thumpPulse.gain.setTargetAtTime(peak, nextPulse, PULSE_ATTACK);
+        thumpPulse.gain.setTargetAtTime(0.08, nextPulse + 0.012, period * 0.3);
+        slapPulse.gain.setTargetAtTime(peak * sharp, nextPulse + 2e-3, PULSE_ATTACK);
+        slapPulse.gain.setTargetAtTime(0.04, nextPulse + 0.01, period * 0.18);
+        nextPulse += period;
+      }
+    };
+    const voice = {
+      endsAt: Infinity,
+      stop(at) {
+        stopped = true;
+        base.stop(at);
+      },
+      set(values) {
+        v = values;
+      },
+      tick(now, horizon) {
+        if (stopped) return;
+        update(now);
+        const from = Math.max(now, scheduled);
+        if (from < now + horizon) pulses(from, now + horizon);
+        scheduled = Math.max(scheduled, now + horizon);
+      }
+    };
+    return voice;
+  }
+});
+
 // sounds/designs/bells.ts
 var CHURCH_PARTIALS = [
   { ratio: 0.5, level: 0.5, ring: 9 },
@@ -303,8 +495,9 @@ var notreDameBell = /* @__PURE__ */ oneShot({
 });
 
 // sounds/designs/editor.ts
+var EDIT_TRIM = 0.3;
 function knock(ctx, dest, t, v, demolish) {
-  const out = gain(ctx, num(v, "level"));
+  const out = gain(ctx, EDIT_TRIM * num(v, "level"));
   out.connect(dest);
   const thud = ctx.createOscillator();
   thud.type = "sine";
@@ -724,13 +917,13 @@ var tramBell = /* @__PURE__ */ oneShot({
 
 // sounds/designs/electric.ts
 var SPEED = { name: "speed", title: "Speed", kind: "number", min: 0, max: 1, step: 0.01, default: 0.5 };
-var LOAD = { name: "load", title: "Pull", kind: "number", min: 0, max: 1, step: 0.05, default: 0.5 };
+var LOAD2 = { name: "load", title: "Pull", kind: "number", min: 0, max: 1, step: 0.05, default: 0.5 };
 var WHEEL = 1.25;
 var GEAR_TEETH = 79;
 function gearMesh(v) {
   return v / (Math.PI * WHEEL) * GEAR_TEETH;
 }
-var GLIDE = 0.25;
+var GLIDE2 = 0.25;
 var NOTCH_BELOW = 0.66;
 var CONVERTER_TONES = [
   { freq: 1180, level: 1 },
@@ -743,7 +936,7 @@ var AUX_TONE = 620;
 var CONVERTER_RISE = 0.08;
 var CONVERTER_RISE_AT = 0.35;
 var TOP_SPEED = { resistor: 33, converter: 44, shinkansen: 83 };
-function glide(param, value, at, tau = GLIDE) {
+function glide2(param, value, at, tau = GLIDE2) {
   param.setTargetAtTime(value, at, tau);
 }
 function rolling(ctx, out, t, cutoff) {
@@ -786,7 +979,7 @@ var electricEngineResistor = /* @__PURE__ */ loop({
   title: "Electric locomotive, resistor control",
   category: "trains",
   description: "An old DC electric locomotive: blowers, a compressor while it stands, gears whining with its speed and the controller clacking notch by notch as it pulls away.",
-  params: [SPEED, LOAD, LEVEL],
+  params: [SPEED, LOAD2, LEVEL],
   start(ctx, dest, t, initial) {
     const out = gain(ctx, num(initial, "level") * 0.028);
     out.connect(dest);
@@ -846,9 +1039,9 @@ var electricEngineResistor = /* @__PURE__ */ loop({
       (v, at) => {
         const speed = num(v, "speed");
         const ms = speed * TOP_SPEED.resistor;
-        for (const { osc, ratio } of tones) glide(osc.frequency, Math.max(1, gearMesh(ms) * ratio), at);
-        glide(motor.gain, (0.25 + 0.75 * num(v, "load")) * Math.min(1, ms / 6) * 2.4, at);
-        glide(roll.g.gain, rollingLevel(speed) * 0.9, at);
+        for (const { osc, ratio } of tones) glide2(osc.frequency, Math.max(1, gearMesh(ms) * ratio), at);
+        glide2(motor.gain, (0.25 + 0.75 * num(v, "load")) * Math.min(1, ms / 6) * 2.4, at);
+        glide2(roll.g.gain, rollingLevel(speed) * 0.9, at);
       },
       (v, from, to) => {
         const speed = num(v, "speed");
@@ -879,7 +1072,7 @@ var electricEngineConverter = /* @__PURE__ */ loop({
   title: "Electric train, three-phase",
   category: "trains",
   description: "A modern electric train or locomotive: the converters' cluster of high tones while it pulls, rising a little with its speed, over a steady hum.",
-  params: [SPEED, LOAD, LEVEL],
+  params: [SPEED, LOAD2, LEVEL],
   start(ctx, dest, t, initial) {
     const out = gain(ctx, num(initial, "level") * 0.079);
     out.connect(dest);
@@ -921,12 +1114,12 @@ var electricEngineConverter = /* @__PURE__ */ loop({
       const speed = num(v, "speed");
       const ms = speed * TOP_SPEED.converter;
       const rise = 1 + CONVERTER_RISE * Math.min(1, speed / CONVERTER_RISE_AT);
-      for (const { osc, freq } of tones) glide(osc.frequency, freq * rise, at);
+      for (const { osc, freq } of tones) glide2(osc.frequency, freq * rise, at);
       const pulling = speed > 0 ? Math.min(1, num(v, "load") * 1.2) * Math.max(0.4, 1 - ms / 50) : 0;
-      glide(converter.gain, pulling, at);
-      glide(gear.frequency, Math.max(1, gearMesh(ms)), at);
-      glide(gearG.gain, 0.25 * Math.min(1, ms / 10), at);
-      glide(roll.g.gain, rollingLevel(speed) * 0.9, at);
+      glide2(converter.gain, pulling, at);
+      glide2(gear.frequency, Math.max(1, gearMesh(ms)), at);
+      glide2(gearG.gain, 0.25 * Math.min(1, ms / 10), at);
+      glide2(roll.g.gain, rollingLevel(speed) * 0.9, at);
     });
   }
 });
@@ -935,7 +1128,7 @@ var electricEngineShinkansen = /* @__PURE__ */ loop({
   title: "Shinkansen",
   category: "trains",
   description: "A Japanese high-speed train: a soft inverter whine pulling out, the roar of the wind and the pantograph's hiss at speed.",
-  params: [SPEED, LOAD, LEVEL],
+  params: [SPEED, LOAD2, LEVEL],
   start(ctx, dest, t, initial) {
     const out = gain(ctx, num(initial, "level") * 0.112);
     out.connect(dest);
@@ -968,11 +1161,11 @@ var electricEngineShinkansen = /* @__PURE__ */ loop({
       const speed = num(v, "speed");
       const ms = speed * TOP_SPEED.shinkansen;
       const f = 420 + 24 * Math.min(ms, 45);
-      for (const { osc, ratio } of partials) glide(osc.frequency, f * ratio, at);
+      for (const { osc, ratio } of partials) glide2(osc.frequency, f * ratio, at);
       const level = ms < 0.3 ? 0 : Math.min(1, ms / 3) * Math.max(0.15, 1 - ms / 70) * (0.5 + 0.5 * num(v, "load"));
-      glide(whine.gain, level * 0.6, at);
-      glide(pantoG.gain, Math.pow(speed, 3) * 0.5, at);
-      glide(roll.g.gain, rollingLevel(speed) * 1.6, at);
+      glide2(whine.gain, level * 0.6, at);
+      glide2(pantoG.gain, Math.pow(speed, 3) * 0.5, at);
+      glide2(roll.g.gain, rollingLevel(speed) * 1.6, at);
     });
   }
 });
@@ -1085,7 +1278,7 @@ var DIESEL_PROFILES = {
 function dieselProfile(engine) {
   return DIESEL_PROFILES[engine] ?? DIESEL_PROFILES.mainline;
 }
-var SIZE = { name: "size", title: "Size", kind: "number", min: 0, max: 1, step: 0.05, default: 0.5 };
+var SIZE2 = { name: "size", title: "Size", kind: "number", min: 0, max: 1, step: 0.05, default: 0.5 };
 function sizeScale(size) {
   return 1.2 - 0.4 * size;
 }
@@ -1344,7 +1537,7 @@ function dieselEngineOf(kind) {
     params: [
       { name: "rpm", title: "Revs", kind: "number", min: 0, max: 1, step: 0.05, default: 0.4 },
       { name: "load", title: "Effort", kind: "number", min: 0, max: 1, step: 0.05, default: 0.5 },
-      SIZE,
+      SIZE2,
       STATE,
       LEVEL
     ],
@@ -1775,6 +1968,7 @@ var SOUNDS = [
   crossingBell,
   tramBell,
   shipHorn,
+  helicopter,
   riverRapids,
   waterfall,
   springFountain,
@@ -1789,6 +1983,7 @@ var SOUNDS = [
 var CATEGORIES = [
   { id: "trains", title: "Trains", description: "Locomotives and the railway: horns, whistles, the exhaust beat, diesel engines (railcars, shunters, mainline locomotives, buses and trucks) running, starting and stopping, electric locomotives and trains old and new, the Shinkansen, the level crossing's bell and the tram bell." },
   { id: "ships", title: "Ships", description: "Vessels in port and at sea." },
+  { id: "aircraft", title: "Aircraft", description: "Aircraft in the air and on the pad: the helicopter's rotor and turbine." },
   { id: "water", title: "Water", description: "Ambient water, played while it is in view: rivers, waterfalls, springs and the sea." },
   { id: "nature", title: "Nature", description: "Ambient life of the land: woods and their birds." },
   { id: "bells", title: "Bells", description: "Tower bells tolling: a village church, Westminster's Great Bell and Notre-Dame's bourdon." },

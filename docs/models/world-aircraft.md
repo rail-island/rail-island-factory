@@ -271,9 +271,11 @@ propeller.
   large), so they use OpenTTD's heliports, helipads and oil rigs; every other aircraft,
   the airship included, is a plane (09 = 2). No GRF exported the helicopters before they
   were written as helicopters, so no saved game holds a plane version of them.
-- Sounds: none. `soundMapping.ts` derives no aircraft sound and rail-island-music has no
-  jet, propeller or rotor design yet; a rotor sound for the helicopters is a request to that
-  repository.
+- Sounds: the helicopters run rail-island-music's `helicopter` loop (rotor slap, turbine,
+  tail rotor and wash) in their engine slot, their rotor size and blade count pinned in
+  `soundTable.ts` and the rotor speed (`spin`) and effort (`load`) the game's
+  ([sounds.md](sounds.md)). The aeroplanes and the airship have no sound: rail-island-music
+  has no jet or propeller design yet.
 
 ## References
 

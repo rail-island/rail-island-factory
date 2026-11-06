@@ -278,3 +278,24 @@ describe("the catalog's Sounds column", () => {
     expect(catalogFields(ALL_VEHICLES[0]!).category).toBeTruthy();
   });
 });
+
+describe("the helicopters' sound", () => {
+  // docs/models/sounds.md: each helicopter runs rail-island-music's `helicopter` loop in its
+  // engine slot, its rotor size and blade count pinned; the game sets `spin` and `load`
+  it("is the helicopter loop, its character pinned and its rotor speed left to the game", () => {
+    const vehicles = exportVehicleMeta(ALL_VEHICLES).vehicles;
+    const expected: Record<string, { size: number; blades: number }> = {
+      "proc-vehicle-bell-206": { size: 0, blades: 2 }, "proc-vehicle-airbus-h145": { size: 0.07, blades: 5 },
+      "proc-vehicle-sikorsky-s92": { size: 0.63, blades: 4 }, "proc-vehicle-mil-mi8": { size: 1, blades: 5 },
+    };
+    for (const [id, params] of Object.entries(expected)) {
+      const v = vehicles.find((x) => x.id === id);
+      if (!v) continue; // a draft is not in the game's meta
+      expect(v.game!.sounds!.engine, id).toEqual({ id: "helicopter", params });
+      expect(v.game!.sounds!.horn, id).toBeUndefined();
+    }
+    for (const [id, d] of Object.entries(SOUND_TABLE)) {
+      if (d.sounds?.engine?.id === "helicopter") expect(Object.keys(d.sounds.engine.params ?? {}), id).not.toContain("spin");
+    }
+  });
+});
