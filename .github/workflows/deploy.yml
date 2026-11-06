@@ -6,9 +6,8 @@
 #
 # `pnpm build` generates the models (export/), typechecks and builds the site
 # with export/ as its publicDir; `wrangler deploy` uploads dist/ to an
-# assets-only Worker (wrangler.jsonc). No tests here: test.yml runs them in
-# parallel and is deliberately NOT a dependency -- a red run shows up as a failed
-# check without holding the deploy back.
+# assets-only Worker (wrangler.jsonc). No tests here: test.yml runs them, by
+# hand only, and is deliberately NOT a dependency of the deploy.
 #
 # Required repository secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID (the
 # same pair as rail-island-webapp). The custom domain provisions on deploy, so the
