@@ -78,6 +78,7 @@
     "proc-vehicle-br-class-142": 274,
     "proc-vehicle-br-class-158": 273,
     "proc-vehicle-br-class-37": 277,
+    "proc-vehicle-br-class-378": 822,
     "proc-vehicle-br-class-390": 271,
     "proc-vehicle-br-class-47": 278,
     "proc-vehicle-br-class-55": 276,
@@ -255,6 +256,7 @@
     "proc-vehicle-embraer-e195-e2": 565,
     "proc-vehicle-embraer-erj145": 566,
     "proc-vehicle-embraer-phenom-300": 575,
+    "proc-vehicle-emd-f40ph": 821,
     "proc-vehicle-emd-f7": 124,
     "proc-vehicle-emd-gp9": 120,
     "proc-vehicle-emd-sd40-2": 121,
@@ -934,6 +936,18 @@
       },
       "proc-vehicle-br-class-158?livery=northern": {
         "id": 8900,
+        "size": 6
+      },
+      "proc-vehicle-br-class-378?": {
+        "id": 10040,
+        "size": 6
+      },
+      "proc-vehicle-br-class-378?formation=5 cars": {
+        "id": 10052,
+        "size": 30
+      },
+      "proc-vehicle-br-class-378?unit=middleCar": {
+        "id": 10046,
         "size": 6
       },
       "proc-vehicle-br-class-37?": {
@@ -2195,6 +2209,14 @@
       "proc-vehicle-eir-fairy-queen?unit=tender": {
         "id": 9088,
         "size": 4
+      },
+      "proc-vehicle-emd-f40ph?": {
+        "id": 10028,
+        "size": 6
+      },
+      "proc-vehicle-emd-f40ph?livery=phaseII": {
+        "id": 10034,
+        "size": 6
       },
       "proc-vehicle-emd-f7?": {
         "id": 4728,

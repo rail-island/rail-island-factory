@@ -30,7 +30,7 @@ The build fails when the list names a model that does not exist.
 |---|---|
 | `skyscrapers.meta.json`, `village.meta.json`, `vehicles.meta.json`, `props.meta.json`, `characters.meta.json` | **left out**: the game imports no draft |
 | `catalog.json` | listed, with `draft: true` and `thumbBytes: 0` (its `thumbUrl` names no file); a road or rail vehicle keeps its `thumbSide` frame |
-| `thumbs/<id>.png` | **not rendered** - the slow part of the build; the site renders a draft's thumbnail in the browser when it is shown, below. No hash is recorded in `thumbs/.sources.json`, so a confirmed model's first build renders it |
+| `thumbs/<id>.png` | **not rendered** - the slow part of the build; the site renders a draft's thumbnail in the browser when it is shown, below. `build-cache/thumbs/` keeps none, so a confirmed model's first build renders it ([../guide/build-cache.md](../guide/build-cache.md)) |
 | `js/<id>.js`, `tree/`, `refs/` | written, so the site can show it |
 | `text/<code>.json` | its texts stay, so confirming it needs no translation work |
 | prerendered pages | its own model page, with `noindex` and no thumbnail image; not on the home or category pages, not in `sitemap.xml` ([seo-pages.md](seo-pages.md)) |

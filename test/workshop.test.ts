@@ -57,8 +57,10 @@ describe("a draft in the export", () => {
       expect(draft.thumbBytes).toBe(0);
       // a side-view vehicle still states its frame, so the browser's thumbnail keeps the scale
       expect(draft.thumbSide).toBeDefined();
-      const sources = JSON.parse(fs.readFileSync(path.join(dir, "thumbs", ".sources.json"), "utf8")) as Record<string, string>;
-      expect(Object.keys(sources)).toEqual([CONFIRMED]);
+      // the build cache keeps both models' facts, and only the confirmed model's thumbnail
+      const cache = JSON.parse(fs.readFileSync(path.join(dir, ".build-cache", "facts.json"), "utf8")) as { designs: Record<string, unknown> };
+      expect(Object.keys(cache.designs)).toEqual([CONFIRMED, DRAFT].sort());
+      expect(fs.readdirSync(path.join(dir, ".build-cache", "thumbs"))).toEqual([`${CONFIRMED}.png`]);
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
@@ -131,7 +133,11 @@ describe("web links", () => {
     expect(vectron.links).toEqual(MODEL_LINKS["proc-vehicle-vectron"]);
     expect("draft" in vectron).toBe(false);
     const truck = catalogRecord(metaEntry(DESIGNS.get(DRAFT)!), facts);
-    expect("links" in truck).toBe(false);
+    expect(truck.links).toEqual(MODEL_LINKS[DRAFT]);
     expect(truck.draft).toBe(true);
+    // a model without links carries no links field
+    const cd150 = catalogRecord(metaEntry(DESIGNS.get(CONFIRMED)!), facts);
+    expect(MODEL_LINKS[CONFIRMED]).toBeUndefined();
+    expect("links" in cd150).toBe(false);
   });
 });

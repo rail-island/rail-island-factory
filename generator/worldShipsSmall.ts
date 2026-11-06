@@ -11,6 +11,9 @@ import type { ParamSpec, ParamValues } from "./design.ts";
 import { shipLod, worldShip, type Item, type Mast, type Sail, type ShipSpec } from "./hullKit.ts";
 import { colourParam, funnel, pick, shipDesigns, type WorldShip } from "./worldShips.ts";
 
+/** A rod between two points (u, y, z). */
+const rod = (a: [number, number, number], b: [number, number, number], r: number, mat: string, name?: string): Item => ({ k: "rod", a, b, r, mat, ...(name ? { name } : {}) });
+
 const COLOURS: Record<string, string> = { white: "#f2f0ea", green: "#2f6a45", blue: "#23426e", red: "#b02a22", yellow: "#e8bf2a", black: "#1d2024", navy: "#1f2f4f", grey: "#7d8287", orange: "#d9681e" };
 
 /** A square-rigged mast's sails from the course up: [bottom, top, half-span at the foot] each, tapering 6 %. */
@@ -133,12 +136,26 @@ export function thamesBargeSpec(): ShipSpec {
   const D = 2;
   return {
     kind: "sail", small: true,
-    hull: { length: L, beam: 6, depth: D, draft: 1, bow: "plumb", stern: "transom", section: "flat", entry: 0.22, run: 0.12, transom: 0.7, sheer: [0.3, 0.6], boot: 0.1, stripe: 0.3, rudder: true, screws: 0 },
+    hull: { length: L, beam: 6, depth: D, draft: 1, bow: "plumb", stern: "transom", section: "flat", entry: 0.22, run: 0.12, transom: 0.7, sheer: [0.3, 0.6], boot: 0.1, stripe: 0.3, rudder: true, screws: 0, fine: true },
     livery: { hull: "#1d2024", stripe: "#c23128", bottom: "#1d2024", boot: "#c9a14a", deck: "#7d6a55", house: "#7d6a55", sail: "#9a4a2a", spar: "#5a3b20", wood: "#4a3420" },
     items: [
+      { k: "bulwark", u: [0, L], h: 0.45, t: 0.12, mat: "wood" },
+      { k: "strakes", u: [0, L], y: [0.6, 1.0, 1.4], w: 0.04, mat: "black", name: "plank seams" },
       { k: "box", u: [6, 19], z: [-2.4, 2.4], y: [D - 0.1, D + 0.6], mat: "house", name: "hatch coamings" },
-      { k: "plate", pts: [[9, 0.2], [13, 0.4], [13, D + 0.3], [9, D + 0.3]], z: 3.1, t: 0.15, mat: "wood", name: "starboard leeboard" },
-      { k: "plate", pts: [[9, 0.2], [13, 0.4], [13, D + 0.3], [9, D + 0.3]], z: -3.1, t: 0.15, mat: "wood", name: "port leeboard" },
+      { k: "hatches", u: [6.2, 18.8], n: 2, hw: 2.25, y: D + 0.6, h: 0.25, gap: 0.6, mat: "black", ridge: 0.15, ribs: 3, name: "hatch covers" },
+      ...[1, -1].flatMap((sd): Item[] => [
+        { k: "plate", pts: [[9, 0.2], [13, 0.4], [13, D + 0.3], [9, D + 0.3]], z: sd * 3.1, t: 0.15, mat: "wood", name: sd > 0 ? "starboard leeboard" : "port leeboard" },
+        rod([11, D + 0.5, sd * 2.6], [11, D + 0.5, sd * 1.6], 0.2, "wood", "leeboard winch"),
+      ]),
+      // the windlass on the fore deck, the wheel and its shelter aft, the cabin skylight, the boat on its davits
+      rod([22.6, D + 0.4, -1.2], [22.6, D + 0.4, 1.2], 0.25, "wood", "windlass"),
+      { k: "box", u: [2.6, 4.6], z: [-1.6, 1.6], y: [D - 0.05, D + 0.5], mat: "wood", name: "cabin top" },
+      { k: "box", u: [3.2, 4], z: [-0.6, 0.6], y: [D + 0.5, D + 0.8], mat: "glass", name: "skylight" },
+      { k: "cyl", u: 1.8, z: 0, y: [D, D + 0.9], r: 0.08, mat: "wood", name: "wheel post" },
+      { k: "cyl", u: 1.8, z: 0, y: [D + 0.9, D + 1.0], r: 0.4, mat: "wood", name: "wheel" },
+      { k: "cyl", u: 5, z: 1.6, y: [D + 0.5, D + 1.3], r: 0.1, mat: "black", name: "cabin chimney" },
+      { k: "boats", at: [-1.4], z: 0, y: D + 0.4, len: 3.6, r: 0.5, mat: "wood", name: "tender" },
+      { k: "anchors", u: L - 0.8, y: D - 0.3, s: 0.6 },
       {
         k: "rig", bowsprit: { len: 3, rise: 0.6 },
         masts: [
@@ -146,6 +163,9 @@ export function thamesBargeSpec(): ShipSpec {
           { u: 1, y: [D, D + 8], r: 0.12, sails: [{ kind: "sprit", y: [D + 1, D + 7], len: 3, head: 2.6 }] },
         ],
       },
+      // the sprit, the vangs from its peak and the mast's shrouds
+      rod([17, D + 1.4, 0.3], [7.4, D + 15, 0.3], 0.14, "spar", "sprit"),
+      ...[1, -1].map((sd): Item => rod([7.4, D + 15, 0.3], [5, D + 0.4, sd * 2.8], 0.025, "rope", "vang")),
     ],
   };
 }
@@ -155,11 +175,23 @@ export function dhowSpec(): ShipSpec {
   const D = 3;
   return {
     kind: "sail", small: true,
-    hull: { length: L, beam: 6, depth: D, draft: 2.5, bow: "clipper", stern: "transom", section: "round", entry: 0.4, run: 0.25, transom: 0.6, rake: 0.18, sheer: [1.2, 1.4], poop: [5, 0.8], boot: 0.1, stripe: 0.3, screws: 0 },
+    hull: { length: L, beam: 6, depth: D, draft: 2.5, bow: "clipper", stern: "transom", section: "round", entry: 0.4, run: 0.25, transom: 0.6, rake: 0.18, sheer: [1.2, 1.4], poop: [5, 0.8], boot: 0.1, stripe: 0.3, screws: 0, fine: true },
     livery: { hull: "#a87a4a", stripe: "#f2f0ea", bottom: "#f2f0ea", boot: "#5a3b20", deck: "#8a5a33", sail: "#f2ead8", spar: "#5a3b20" },
     items: [
+      { k: "strakes", u: [0, L], y: [1.4, 1.8, 2.2, 2.6, 3.0, 3.4], w: 0.035, mat: "spar", name: "plank seams" },
+      { k: "bulwark", u: [0, L], h: 0.5, t: 0.12, mat: "wood" },
       { k: "rig", masts: [{ u: 12, y: [D, D + 15], r: 0.25, rake: -1.2, sails: [{ kind: "lateen", y: [D + 1.6, D + 19], len: 22, fwd: 9.5 }] }] },
       { k: "box", u: [1, 5], z: [-2.4, 2.4], y: [D + 0.7, D + 1.6], mat: "wood", name: "poop rail" },
+      ...[1.4, 2.6, 3.8].flatMap((u): Item[] => [2.3, -2.3].map((z): Item => ({ k: "cyl", u, z, y: [D + 1.6, D + 2.2], r: 0.07, mat: "wood", name: "rail post" }))),
+      { k: "box", u: [0.8, 5.2], z: [-2.5, 2.5], y: [D + 2.2, D + 2.35], mat: "wood", name: "poop rail top" },
+      // the carved transom board, the rudder and its tiller lines, the crew's shelter, the water jars, the boat
+      { k: "box", u: [-0.15, 0.1], z: [-1.6, 1.6], y: [D + 1.2, D + 2.8], mat: "spar", name: "transom board" },
+      { k: "plate", pts: [[-0.6, 0.2], [0.2, 0.2], [0.2, D + 1.6], [-0.2, D + 1.6]], z: 0, t: 0.15, mat: "spar", name: "rudder" },
+      ...[1, -1].map((sd): Item => rod([-0.1, D + 1.2, 0], [1, D + 1.2, sd * 2.3], 0.02, "rope", "rudder line")),
+      { k: "canopy", u: [5.6, 8.4], hw: 1.6, y: D + 1.2, h: 0.8, mat: "sail", posts: "wood", name: "crew shelter" },
+      ...[[14.4, 0.8], [14.4, -0.8], [15.4, 0]].map(([u, z]): Item => ({ k: "cyl", u: u!, z: z!, y: [D, D + 0.7], r: 0.3, mat: "red", name: "water jar" })),
+      { k: "boats", at: [16.5], z: 0, y: D + 0.4, len: 3, r: 0.4, mat: "wood", name: "boat" },
+      rod([12, D + 0.3, 0], [12, D + 0.3, 0.01], 0.4, "wood", "mast step"),
     ],
   };
 }
@@ -169,10 +201,23 @@ export function junkSpec(): ShipSpec {
   const D = 3.5;
   return {
     kind: "sail", small: true,
-    hull: { length: L, beam: 7, depth: D, draft: 2.5, bow: "barge", stern: "transom", section: "round", entry: 0.18, run: 0.22, transom: 0.7, rake: 0.08, sheer: [2.4, 1.4], poop: [8, 1.6], boot: 0.1, stripe: 0.4, screws: 0 },
+    hull: { length: L, beam: 7, depth: D, draft: 2.5, bow: "barge", stern: "transom", section: "round", entry: 0.18, run: 0.22, transom: 0.7, rake: 0.08, sheer: [2.4, 1.4], poop: [8, 1.6], boot: 0.1, stripe: 0.4, screws: 0, fine: true },
     livery: { hull: "#5a3b20", stripe: "#c23128", bottom: "#2b2d30", boot: "#2b2d30", deck: "#8a5a33", house: "#8a5a33", sail: "#a8452e", spar: "#3b2a1a" },
     items: [
-      { k: "tier", u: [1.5, 7], y: [D + 1.4, D + 3.2], hw: 2.4, mat: "house", top: "red", name: "stern cabin" },
+      { k: "strakes", u: [0, L], y: [1.6, 2.1, 2.6, 3.1], w: 0.05, mat: "spar", name: "wales" },
+      { k: "bulwark", u: [0, L], h: 0.6, t: 0.14, mat: "house" },
+      // the stern cabin with its windows and its gallery, the wheelhouse roof and the lanterns
+      { k: "tier", u: [1.5, 7], y: [D + 1.4, D + 3.2], hw: 2.4, mat: "house", top: "red", lip: 0.3, windows: [{ y: 0.6, h: 0.6, w: 0.5, pitch: 1 }], front: { y: 0.6, h: 0.6, w: 0.5, n: 4 }, name: "stern cabin" },
+      { k: "rail", u: [1.8, 6.8], y: D + 3.2, hw: 2.4, h: 0.6, mat: "red", name: "cabin roof rail" },
+      ...[2, 6.4].map((u): Item => ({ k: "cyl", u, z: 2.6, y: [D + 3.2, D + 3.7], r: 0.15, mat: "red", name: "lantern" })),
+      // the painted eye on the bow, the great rudder, the windlass and the anchor
+      { k: "marks", at: [], y: [D - 1.4, D - 0.6], s: 0.26, thruster: L - 1.8, eye: true, mat: "white", name: "bow eye" },
+      { k: "plate", pts: [[-1.4, 0.4], [0.3, 0.2], [0.3, D + 2], [-0.6, D + 2]], z: 0, t: 0.2, mat: "spar", name: "rudder" },
+      rod([0.2, D + 2.4, 0], [3, D + 2.6, 0], 0.08, "spar", "tiller"),
+      rod([26, D + 0.6, -1.2], [26, D + 0.6, 1.2], 0.25, "spar", "windlass"),
+      { k: "anchors", u: L - 1.2, y: D + 0.4, s: 0.9 },
+      { k: "box", u: [10, 20], z: [-2.4, 2.4], y: [D - 0.05, D + 0.5], mat: "house", name: "hatch" },
+      ...[11.6, 14.2, 16.8].map((u): Item => ({ k: "box", u: [u - 1.1, u + 1.1], z: [-2.2, 2.2], y: [D + 0.5, D + 0.7], mat: "spar", name: "hatch boards" })),
       {
         k: "rig", stays: false,
         masts: [
@@ -181,6 +226,8 @@ export function junkSpec(): ShipSpec {
           { u: 6, y: [D + 1.4, D + 13], r: 0.18, sails: [{ kind: "junk", y: [D + 3.4, D + 12.4], len: 5.5 }] },
         ],
       },
+      // the sheets fanning from the battens' ends to the deck aft of each mast
+      ...[[16, 11, 20], [25, 7, 13], [6, 5.5, 12.4]].flatMap(([u, len, top]): Item[] => [0.35, 0.6, 0.85].map((f): Item => rod([u! - len!, D + 1.6 + (top! - 1.6) * f, 0], [u! - len! * 0.55, D + 0.8, 0], 0.02, "rope", "sheet"))),
     ],
   };
 }
@@ -190,10 +237,22 @@ export function feluccaSpec(): ShipSpec {
   const D = 1;
   return {
     kind: "sail", small: true,
-    hull: { length: L, beam: 3, depth: D, draft: 0.6, bow: "clipper", stern: "transom", section: "round", entry: 0.45, run: 0.25, transom: 0.6, rake: 0.15, sheer: [0.3, 0.5], boot: 0.08, stripe: 0.15, screws: 0 },
-    livery: { hull: "#f2f0ea", stripe: "#2a6fae", bottom: "#2a6fae", boot: "#1d2024", deck: "#a07a52", sail: "#f4efe2", spar: "#5a3b20" },
+    hull: { length: L, beam: 3, depth: D, draft: 0.6, bow: "clipper", stern: "transom", section: "round", entry: 0.45, run: 0.25, transom: 0.6, rake: 0.15, sheer: [0.3, 0.5], boot: 0.08, stripe: 0.15, screws: 0, fine: true },
+    livery: { hull: "#f2f0ea", stripe: "#2a6fae", bottom: "#2a6fae", boot: "#1d2024", deck: "#a07a52", sail: "#f4efe2", spar: "#5a3b20", red: "#c23128" },
     items: [
+      { k: "bulwark", u: [0, L], h: 0.18, t: 0.07, mat: "red" },
+      { k: "strakes", u: [0.3, L - 0.3], y: [0.55, 0.7], w: 0.04, mat: "red", name: "painted bands" },
       { k: "rig", stays: false, masts: [{ u: 6, y: [D, D + 7], r: 0.1, sails: [{ kind: "lateen", y: [D + 0.6, D + 12], len: 14, fwd: 5 }] }] },
+      rod([6, D + 6.8, 0], [L + 0.1, D + 0.1, 0], 0.015, "rope", "forestay"),
+      ...[1, -1].map((sd): Item => rod([6, D + 6.6, 0], [5.4, D + 0.1, sd * 1.35], 0.012, "rope", "shroud")),
+      // the cushioned benches round the cockpit, the awning poles, the rudder and its tiller
+      ...[1, -1].map((sd): Item => ({ k: "box", u: [1.2, 5.2], z: sd > 0 ? [0.7, 1.3] : [-1.3, -0.7], y: [D - 0.05, D + 0.35], mat: "red", name: "bench" })),
+      { k: "box", u: [0.8, 1.4], z: [-1.2, 1.2], y: [D - 0.05, D + 0.35], mat: "red", name: "stern bench" },
+      ...[1, 5].flatMap((u): Item[] => [1.2, -1.2].map((z): Item => ({ k: "cyl", u, z, y: [D, D + 1.8], r: 0.03, mat: "wood", name: "awning pole" }))),
+      { k: "box", u: [1, 5], z: [-1.25, 1.25], y: [D + 1.8, D + 1.84], mat: "canopy", name: "awning" },
+      { k: "plate", pts: [[-0.4, 0.1], [0.15, 0.1], [0.15, D + 0.3], [-0.1, D + 0.3]], z: 0, t: 0.09, mat: "spar", name: "rudder" },
+      rod([0, D + 0.4, 0], [1.4, D + 0.55, 0], 0.03, "spar", "tiller"),
+      { k: "mooring", at: [L - 0.8], hw: 0.6, s: 0.15 },
     ],
   };
 }
@@ -245,10 +304,25 @@ export function narrowboatSpec(p?: ParamValues): ShipSpec {
   const c = COLOURS[pick(NARROWBOAT_PARAMS, p, "colour")]!;
   return {
     kind: "small", small: true,
-    hull: { length: L, beam: 2.08, depth: D, draft: 0.6, bow: "raked", stern: "cruiser", section: "flat", entry: 0.14, run: 0.1, rake: 0.04, sheer: [0.1, 0.35], boot: 0.08, stripe: 0, screws: 1 },
+    hull: { length: L, beam: 2.08, depth: D, draft: 0.6, bow: "raked", stern: "cruiser", section: "flat", entry: 0.14, run: 0.1, rake: 0.04, sheer: [0.1, 0.35], boot: 0.08, stripe: 0, screws: 1, fine: true },
     livery: { hull: "#1d2024", bottom: "#1d2024", boot: "#c23128", deck: "#3b3f43", house: c, roof: "#c23128", yellow: "#e8bf2a" },
     items: [
-      { k: "tier", u: [2.4, 18.2], y: [D - 0.05, D + 1.2], hw: 0.98, windows: [{ y: 0.4, h: 0.45, w: 0.5, pitch: 1.4 }], name: "cabin" },
+      { k: "tier", u: [2.4, 18.2], y: [D - 0.05, D + 1.2], hw: 0.98, lip: 0.04, windows: [{ y: 0.4, h: 0.45, w: 0.5, pitch: 1.4, to: 12 }, { y: 0.55, h: 0.22, w: 0.22, pitch: 0.9, from: 13, to: 17.4 }], front: { y: 0.3, h: 0.5, w: 0.35, n: 2 }, name: "cabin" },
+      { k: "strakes", u: [0.3, L - 0.3], y: [D - 0.35, D - 0.2], w: 0.05, mat: "yellow", name: "rubbing strakes" },
+      // the cabin doors aft and the side hatches, the roof's mushroom vents, plants, water can and pole
+      { k: "box", u: [2.35, 2.42], z: [-0.5, 0.5], y: [D + 0.05, D + 1.1], mat: "roof", name: "stern doors" },
+      ...[1, -1].map((sd): Item => ({ k: "box", u: [8, 9], z: sd > 0 ? [0.98, 1.0] : [-1.0, -0.98], y: [D + 0.15, D + 0.9], mat: "roof", name: "side hatch" })),
+      { k: "vents", at: [[5, 0.3], [9, -0.3], [14, 0.3]], y: D + 1.2, h: 0.08, r: 0.08, mat: "yellow", name: "mushroom vents" },
+      { k: "box", u: [4, 4.9], z: [-0.25, 0.25], y: [D + 1.2, D + 1.45], mat: "green", name: "plant box" },
+      { k: "cyl", u: 6, z: -0.5, y: [D + 1.2, D + 1.55], r: 0.13, mat: "red", name: "water can" },
+      rod([3, D + 1.25, -0.7], [15, D + 1.25, -0.7], 0.025, "wood", "boat pole"),
+      // the tiller and the rudder, the button fenders at bow and stern, the cratch
+      { k: "plate", pts: [[-0.5, 0.05], [0.1, 0.05], [0.1, D + 0.1], [-0.3, D + 0.1]], z: 0, t: 0.05, mat: "black", name: "rudder" },
+      rod([-0.2, D + 0.2, 0], [1.4, D + 0.9, 0], 0.025, "yellow", "tiller"),
+      { k: "cyl", u: L - 0.05, z: 0, y: [D - 0.4, D], r: 0.18, n: 8, mat: "wood", name: "bow button" },
+      { k: "cyl", u: 0.05, z: 0, y: [D - 0.4, D], r: 0.16, n: 8, mat: "wood", name: "stern button" },
+      { k: "plate", pts: [[18.2, D + 1.1], [19.6, D + 0.1], [18.2, D + 0.1]], z: 0, t: 0.04, mat: "yellow", name: "cratch board" },
+      { k: "mooring", at: [1, L - 1.4], hw: 0.7, s: 0.15 },
       { k: "box", u: [2.6, 18], z: [0.99, 1.01], y: [D + 0.95, D + 1.05], mat: "yellow", name: "starboard coach line" },
       { k: "box", u: [2.6, 18], z: [-1.01, -0.99], y: [D + 0.95, D + 1.05], mat: "yellow", name: "port coach line" },
       { k: "cyl", u: 16.8, z: 0.4, y: [D + 1.2, D + 1.75], r: 0.07, mat: "black", name: "chimney" },

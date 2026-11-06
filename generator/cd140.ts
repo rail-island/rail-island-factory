@@ -188,7 +188,7 @@ const UPPER = [px(116), px(55)] as const;
 const PANTO_X = 3.8;
 function roofEquipment(m: MeshBuilder): void {
   m.scope("resistor box", () => {
-    const ring = (x0: number, x1: number, w: number): Ring => [[x1, -w], [x1, w], [x0, w], [x0, -w]];
+    const ring = (x0: number, x1: number, w: number): Ring => [[x1, w], [x1, -w], [x0, -w], [x0, w]];
     m.loft("roofBox", ring(BOX[0], BOX[1], 1.0), 3.8, ring(BOX[0], BOX[1], 1.0), 4.1);
     m.loft("roofBox", ring(UPPER[0], UPPER[1], 0.8), 4.1, ring(UPPER[0], UPPER[1], 0.8), 4.2);
     m.scope("slats", () => {

@@ -54,6 +54,24 @@ combinations hashed before and after):
   builder's `buffers` coupler), the coupling plane 0.65 m out;
 - `wheelbase: 0` - a single axle at each truck position (a two-axle railbus, a Talgo car);
 - `traction: "none"` - an unpowered set of coaches (the Talgo III), filed with the coaches.
+- `windscreenMask` - a black band (`cabMask`) round a nose's windscreen, under its rubber,
+  reaching this far past the panes and joined over the centre pillar (the ICNG).
+- `arc` - the roof arc's segments (default 8); `couplerY` - the centre coupler's height
+  (default 1.0 m, the tube's under its low floor);
+- `cabNose` - with `flatCab`, a short nose under the cab's decals: the end's corners rounded
+  in plan and its roof domed down to the front (the 1938 Stock);
+- `centredBogies` - every car's two bogies centred on its body, `bogieCentres` apart;
+- `layout` - the end and middle car's own door leaves (each with the way it slides, so a
+  double door parts in the middle: `CarDef.doors.slides` in `usTransit.ts`) and windows, in
+  place of the generated ones; `numberAt` - the side number's place;
+- `fittings` - the series' own fittings (a cab front, underfloor equipment), drawn in place
+  of the plain underfloor box.
+- `noseCab` - an upright cab on the nose's flat front face: its panes and lamps drawn there
+  as a flat cab's are, in place of the crown's windscreen and headlights, and a gangway
+  door's outline (the Class 378);
+- a livery's `doors` and `front` - the door leaves' own bands, and the cab front's bands over
+  the nose (the Class 378's orange doors and yellow front); the front's band heights become
+  paint edges of the car's slices.
 
 A short car's leading bogie comes in so that its wheels stay under the body. The kit
 refuses a wheelbase under 2.05 m (the bogie's brake cylinders would lie on its
@@ -65,7 +83,7 @@ livery and `velaro()`, the Siemens Velaro body the ICE 3, the CRH3C and the AVE 
 ## Deviations
 
 - The bodies' widths (above); the noses are drawn from tables, not measured drawings, and
-  their cab windscreens are panes on the crown; the E5's and E6's pointed lower noses and the
+  their cab windscreens are panes laid on the crown's own facets ([vehicles.md](vehicles.md), "Closed ends"), and the nose below the body's shoulder takes the side's colour under the shoulder; the E5's and E6's pointed lower noses and the
   N700S's wing edges are approximations.
 - The 700's two liveries share the 700's body: the 923 Doctor Yellow's own detail (its
   measurement dome, the observation windows) is not drawn.

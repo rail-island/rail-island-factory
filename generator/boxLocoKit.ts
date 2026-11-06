@@ -389,7 +389,8 @@ export function buildBoxLoco(s: LocoSpec): MeshBuilder {
     m.scope("shell", () => shell(m, sp));
     m.scope("frame", () => {
       const { half: H, hw: W, y0, y1, mat } = s.frame;
-      const r: Ring = [[H, -W + 0.15], [H, W - 0.15], [H - 0.15, W], [-H + 0.15, W], [-H, W - 0.15], [-H, -W + 0.15], [-H + 0.15, -W], [H - 0.15, -W]];
+      // counter-clockwise from above (meshCore's rings), so the walls face out: wound the other way the frame is inside out and the game culls it
+      const r: Ring = [[H, -W + 0.15], [H - 0.15, -W], [-H + 0.15, -W], [-H, -W + 0.15], [-H, W - 0.15], [-H + 0.15, W], [H - 0.15, W], [H, W - 0.15]];
       m.prism(mat, r, y0, y1, false);
       m.cap("underframe", r, y0, false);
     });
@@ -410,7 +411,7 @@ export function buildBoxLoco(s: LocoSpec): MeshBuilder {
   m.scope("roof equipment", () => {
     for (const r of s.roofItems)
       m.scope(r.name, () => {
-        const ring = (w: number): Ring => [[r.x[1], -w], [r.x[1], w], [r.x[0], w], [r.x[0], -w]];
+        const ring = (w: number): Ring => [[r.x[1], w], [r.x[1], -w], [r.x[0], -w], [r.x[0], w]];
         m.loft(r.mat, ring(r.w[0]), r.y[0], ring(r.w[1]), r.y[1]);
       });
     const p = s.pantograph;

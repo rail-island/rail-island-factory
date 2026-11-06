@@ -53,6 +53,10 @@ document that owns it in the same change.** Conventions:
 - **Every vehicle states its game properties** (`game` on the design: weight,
   power, maxspeed, accel); the build fails without them.
 - **`export/` and `dist/` are generated and gitignored.** Never commit them.
+- **`build-cache/` is generated and committed** (docs/guide/build-cache.md): every
+  design's build facts and the confirmed models' thumbnails, keyed on their inputs.
+  After a model change run `pnpm build:models` and commit `build-cache/` with it;
+  `pnpm test` fails while it is stale. Never edit it by hand.
 - The site UI is **English only**, but every text the game shows from the factory -
   model titles, parameter titles and values, set type names and descriptions,
   woods and species names, categories - is **exported in the game's 14 languages**
@@ -124,6 +128,9 @@ document that owns it in the same change.** Conventions:
 - **`aircraft`** (`.agents/skills/aircraft/`) - use it whenever an aircraft or an
   airline livery is added or changed: the 10,000-triangle budget, bodies and decals,
   the airframe/gear parts, liveries and headless checks.
+- **`ship`** (`.agents/skills/ship/`) - use it whenever a ship is added or changed: the
+  25,000/15,000-triangle budgets (4,000 for small craft), the hull kit, the house, fittings
+  and cargo gear every ship carries, the waterline, OpenTTD, references and headless checks.
 - **`vlakosimdb-transfer`** (`.agents/skills/vlakosimdb-transfer/`) - use it when
   reconstructing or correcting a vehicle from vlakosimdb: XML shapes, original
   BMP measurements, comparison-table optimization and presentation to the user.
@@ -144,7 +151,7 @@ design's defaults and a fixed sample of its other parameter combinations
   alone.
 
 For a model change, also look at `export/thumbs/<id>.png` after
-`pnpm build:models`.
+`pnpm build:models`, and commit the `build-cache/` it updated.
 
 **Headless verification only**: do not drive a real browser (no dev server +
 browser automation) unless the task is about browser tooling and the user agreed

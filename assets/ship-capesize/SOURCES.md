@@ -11,7 +11,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
 | `photo-140303-cape-elise-03.jpg` | 140303 Cape Elise - 03.jpg | https://commons.wikimedia.org/wiki/File:140303_Cape_Elise_-_03.jpg | dave souza | CC BY-SA 3.0 | shape, proportions and colours |
-| `photo-capesize-bulk-carrier-at-suez-canal-bridge.jpg` | Capesize bulk carrier at Suez Canal Bridge.JPG | https://commons.wikimedia.org/wiki/File:Capesize_bulk_carrier_at_Suez_Canal_Bridge.JPG | AashayBaindur | CC BY-SA 3.0 | shape, proportions and colours |
 
 ## Published figures
 

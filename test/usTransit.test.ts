@@ -1,7 +1,8 @@
 // The North American passenger cars, urban rail and freight cars
 // (generator/usTransit.ts, usFreight.ts). See docs/models/us-transit.md and us-freight.md.
 import { describe, expect, it } from "vitest";
-import { CTA_LENGTH, R160_LENGTH, RDC_LENGTH, US_TRANSIT, ZEPHYR_LENGTH, pioneerZephyr, zephyrTrain } from "../generator/usTransit";
+import { CTA_LENGTH, R160_LENGTH, RDC_LENGTH, US_TRANSIT } from "../generator/usTransit";
+import { PIONEER_ZEPHYR, ZEPHYR_LENGTH, pioneerZephyr, zephyrTrain } from "../generator/pioneerZephyr";
 import { BOXCAR_LENGTH, CABLE_CAR_LENGTH, CABOOSE_LENGTH, US_FREIGHT, WELL_LENGTH, wellCar } from "../generator/usFreight";
 import { LOADING_GAUGES, loadingGaugeOf } from "../generator/loadingGauge";
 import { findCoplanarOverlaps } from "../generator/coplanar";
@@ -9,6 +10,8 @@ import { glbStats } from "../generator/glbStats";
 import { coverageCombinations } from "../generator/design";
 import { buildLodModel } from "../generator/lodModel";
 import { lodBudget } from "../generator/lod";
+import { designGlb } from "../generator/generate";
+import { readTriangles } from "../generator/renderGlbThumb";
 
 const LENGTH: Record<string, number> = {
   "proc-vehicle-budd-rdc": RDC_LENGTH,
@@ -20,7 +23,7 @@ const LENGTH: Record<string, number> = {
   "proc-vehicle-us-well-car": WELL_LENGTH,
   "proc-vehicle-sf-cable-car": CABLE_CAR_LENGTH,
 };
-const ALL = [...US_TRANSIT, ...US_FREIGHT];
+const ALL = [US_TRANSIT[0]!, PIONEER_ZEPHYR, ...US_TRANSIT.slice(1), ...US_FREIGHT];
 
 describe("the US passenger cars, urban rail and freight cars", () => {
   it("are eight designs with their catalog groups and references", () => {
@@ -40,7 +43,8 @@ describe("the US passenger cars, urban rail and freight cars", () => {
         const m = d.build(v);
         const glb = m.toGlb(d.id);
         const s = glbStats(glb);
-        expect(s.triangles).toBeLessThanOrEqual(25000);
+        // a car within the rail budget's cap; the Zephyr's three-car train adds its cars up
+        expect(s.triangles).toBeLessThanOrEqual(v.unit === "train" ? 3 * 16000 : 25000);
         expect(s.min[1]).toBeCloseTo(0, 2);
         expect(s.max[2] - s.min[2]).toBeLessThanOrEqual(g.width);
         expect(s.max[1]).toBeLessThanOrEqual(g.height);
@@ -61,6 +65,30 @@ describe("the US passenger cars, urban rail and freight cars", () => {
     expect(m.rig!.supports!.filter((s) => s.sections.length === 2)).toHaveLength(2);
     const s = glbStats(m.toGlb("z"));
     expect(s.max[0] - s.min[0]).toBeCloseTo(zephyrTrain().reduce((t, c) => t + ZEPHYR_LENGTH[c.car], 0), 1);
+  });
+
+  it("gives each RDC cab end its door outline and a headlight hood with twin lamps", () => {
+    for (const variant of ["rdc1", "rdc2"]) {
+      const tris = readTriangles(designGlb("proc-vehicle-budd-rdc", { variant }));
+      // the end walls: the cab glass farthest out at each end
+      const glassX = tris.filter((t) => t.material === "cabGlass").flatMap((t) => t.p.map((p) => p[0]));
+      for (const [e, face] of [[1, Math.max(...glassX)], [-1, -Math.min(...glassX)]] as const) {
+        const out = (mat: string, beyond: number) => tris.filter((t) => t.material === mat && t.p.every((p) => e * p[0] > face + beyond));
+        // the hood stands out of the end over the door, below the roof
+        const hood = out("ssDark", 0.1).flatMap((t) => t.p);
+        expect(hood.length, `${variant} ${e}`).toBeGreaterThan(0);
+        expect(Math.min(...hood.map((p) => p[1]))).toBeGreaterThan(3.1);
+        expect(Math.max(...hood.map((p) => p[1]))).toBeLessThan(3.7);
+        // two headlights on its front, one each side of the middle
+        const lamps = out("lampHead", 0.15).map((t) => (t.p[0][2] + t.p[1][2] + t.p[2][2]) / 3);
+        expect(lamps.some((z) => z < -0.05) && lamps.some((z) => z > 0.05)).toBe(true);
+        // the door's seams frame the middle pane down to the floor
+        const seams = tris.filter((t) => t.material === "rubber" && t.p.every((p) => Math.abs(e * p[0] - face) < 0.01 && Math.abs(Math.abs(p[2]) - 0.39) < 0.02));
+        const ys = seams.flatMap((t) => t.p.map((p) => p[1]));
+        expect(Math.min(...ys)).toBeLessThan(1.4);
+        expect(Math.max(...ys)).toBeGreaterThan(3.0);
+      }
+    }
   });
 
   it("stacks the well car's containers to the double-stack gauge, single by default", () => {

@@ -5,7 +5,7 @@ truck, the trucks reproduced from the game, and the vlakosimdb transfers: buses,
 locomotives, electric and diesel units, high-speed trains, coaches, freight wagons, trams and the metro car), their triangle budget and conventions, articulated vehicles'
 parts, steered front wheels and animated running gear, the `sweep` primitive they are mostly built from, and
 how to add one.
-**Code** - `generator/vehicles.ts`, `generator/cd150.ts`, `generator/cd150Comparison.ts`, `generator/cd150Report.ts`, `test/cd150.test.ts`, `generator/cd163.ts`, `generator/cd163Family.ts`, `generator/cd230.ts`, `generator/cdLogo.ts`, `generator/vehicleParts.ts`, `generator/design.ts`, `generator/meshCore.ts` (`sweep`, `part`), `generator/meshBuilder.ts` (`toGlb`), `src/viewerHighlight.ts`, `test/models.test.ts`, `test/cdLogo.test.ts`, `test/viewerHighlight.test.ts`, `.agents/skills/road-vehicle/SKILL.md`, `.agents/skills/railroad-vehicle/SKILL.md`, `.agents/skills/vlakosimdb-transfer/SKILL.md`
+**Code** - `generator/vehicles.ts`, `generator/cd150.ts`, `generator/cd150Comparison.ts`, `generator/cd150Report.ts`, `test/cd150.test.ts`, `generator/cd163.ts`, `generator/cd163Family.ts`, `generator/cd230.ts`, `generator/cdLogo.ts`, `generator/vehicleParts.ts`, `generator/design.ts`, `generator/meshCore.ts` (`sweep`, `part`), `generator/meshBuilder.ts` (`toGlb`), `src/viewerHighlight.ts`, `test/models.test.ts`, `test/cdLogo.test.ts`, `test/viewerHighlight.test.ts`, `generator/sliceBody.ts` (`drawShell`, `crownPane`), `generator/carbodyKit.ts` (`bandPainter`), `generator/boxLocoKit.ts`, `test/vehicleEnds.test.ts`, `.agents/skills/road-vehicle/SKILL.md`, `.agents/skills/railroad-vehicle/SKILL.md`, `.agents/skills/vlakosimdb-transfer/SKILL.md`
 **See also** - [buses.md](buses.md) (the buses), [vehicle-rig.md](vehicle-rig.md) (steered wheels, sections, joints), [trucks.md](trucks.md), [loco-liveries.md](loco-liveries.md) (the locomotives' liveries and the CD 263), [cd-230.md](cd-230.md) (the laminatka), [cz-electrics.md](cz-electrics.md) (CD 110, 130, 140, 169), [csd-coaches.md](csd-coaches.md) (the CSD coaches), [wagons.md](wagons.md) (the freight wagons), [cd-green-white.md](cd-green-white.md), [bmo-double-deck.md](bmo-double-deck.md), [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md), [wagons.md](wagons.md) and [freight-wagons.md](freight-wagons.md) (the freight wagons), [trams.md](trams.md) (the trams and the metro), [mainline-electrics.md](mainline-electrics.md) (CD 180 / 181 / 182, DNT 184.5, DB 111, DR 243 / DB 143 / 112, OBB 1012, 1040), [vectron.md](vectron.md) (the Siemens Vectron), [small-diesels.md](small-diesels.md) (CD 704, 710, 714, 742, DB 212, MUV 69), [czsk-coaches.md](czsk-coaches.md) (the CD Y, ZSR and UIC-Z coaches), [german-coaches.md](german-coaches.md)
 
 ## The designs
@@ -45,9 +45,10 @@ how to add one.
 | `veh-cd-471`, `veh-cd-680` | CD 471 CityElefant, CD 680 Pendolino | parametric electric units from vlakosimdb, one car per `unit` value: the Skoda double-deck set (motorCar 471, the default, trailer 071, drivingTrailer 971; `variant` cd471, vlakosimdb's repainted cd675, or cdBlue, CD's current blue after a photograph) with the low-floor centre between the bogies and both decks' windows, and the Alstom tilting train (endCar 681, the default, car683, car685, car686) with its tapered body; 25.7 to 27.7 m, about 5,900 to 8,100 triangles. See [czech-emus.md](czech-emus.md) |
 | `veh-cd-750`, `veh-cd-749`, `veh-cd-781`, `veh-csd-t679-0`, `veh-csd-t499`, `veh-cd-771` | CD 750 / 753 / 754 Brejlovec, CD 749 Bardotka, CD 781 Sergej, CSD T 679.0 Pomeranc, CSD T 499.0 / CD 759 Kyklop, CD 770 / 771 Cmelak | the Czech mainline diesels from vlakosimdb, their own family (`dieselLocos.ts`): the T 478 Brejlovec and Bardotka, two designs on one builder (`livery`), the M62 and the hood unit (`livery`), the T 679.0 and T 499.0 prototypes; Bo'Bo' and Co'Co' bogies, 16.5 to 18.0 m over the buffers, 9,100 to 12,700 triangles. See [diesel-locos.md](diesel-locos.md) |
 | `proc-vehicle-emd-gp9`, `proc-vehicle-emd-sd40-2`, `proc-vehicle-ge-es44ac`, `proc-vehicle-emd-sd70ace` | EMD GP9, EMD SD40-2, GE ES44AC, EMD SD70ACe | the North American hood units at their real size on the US loading gauge, their own family (`usDiesels.ts`, `usHoodKit.ts`), each with a `livery` of railroad schemes; B-B and C-C trucks, 17.1 to 22.6 m over the couplers, 6,900 to 9,100 triangles. See [us-diesels.md](us-diesels.md) |
-| `proc-vehicle-emd-f7`, `proc-vehicle-ge-p42dc`, `proc-vehicle-siemens-alc42`, `proc-vehicle-prr-gg1`, `proc-vehicle-amtrak-acela` | EMD F7, GE P42DC Genesis, Siemens ALC-42 Charger, PRR GG1, Acela Express | the North American streamliners on the US gauge, their own family (`usCarbodies.ts`), lofted by the carbody kit (`carbodyKit.ts`); the Acela with its coaches and articulated train (`unit`, `cars`). See [us-carbodies.md](us-carbodies.md) |
+| `proc-vehicle-emd-f7`, `proc-vehicle-emd-f40ph`, `proc-vehicle-ge-p42dc`, `proc-vehicle-siemens-alc42`, `proc-vehicle-prr-gg1`, `proc-vehicle-amtrak-acela` | EMD F7, EMD F40PH, GE P42DC Genesis, Siemens ALC-42 Charger, PRR GG1, Acela Express | the North American streamliners on the US gauge, their own family (`usCarbodies.ts`), lofted by the carbody kit (`carbodyKit.ts`); the Acela with its coaches and articulated train (`unit`, `cars`). See [us-carbodies.md](us-carbodies.md) |
 | `proc-vehicle-up-big-boy`, `proc-vehicle-prr-k4s`, `proc-vehicle-nyc-hudson`, `proc-vehicle-american-440` | UP Big Boy, PRR K4s, NYC J-3a Hudson, Golden Spike 4-4-0 | North American steam on the steam kit, their own family (`usSteam.ts`), each with its tender (`unit`). See [us-steam.md](us-steam.md) |
-| `proc-vehicle-budd-rdc`, `proc-vehicle-pioneer-zephyr`, `proc-vehicle-nyc-r160`, `proc-vehicle-cta-5000` | Budd RDC, Pioneer Zephyr, NYC Subway R160, Chicago 'L' 5000-series | North American passenger cars and metro cars on one car builder (`usTransit.ts`). See [us-transit.md](us-transit.md) |
+| `proc-vehicle-budd-rdc`, `proc-vehicle-nyc-r160`, `proc-vehicle-cta-5000` | Budd RDC, NYC Subway R160, Chicago 'L' 5000-series | North American passenger cars and metro cars on one car builder (`usTransit.ts`). See [us-transit.md](us-transit.md) |
+| `proc-vehicle-pioneer-zephyr` | Pioneer Zephyr | The Burlington's 1934 stainless streamliner: a shovel-nose hull on the power car, the coach and observation car on the US car builder, articulated on Jacobs bogies (`pioneerZephyr.ts`). See [pioneer-zephyr.md](pioneer-zephyr.md) |
 | `proc-vehicle-us-caboose`, `proc-vehicle-us-boxcar`, `proc-vehicle-us-well-car`, `proc-vehicle-sf-cable-car` | Cupola caboose, 50 ft boxcar, Double-stack well car, San Francisco cable car | North American freight cars and the cable car (`usFreight.ts`). See [us-freight.md](us-freight.md) |
 | `proc-vehicle-shinkansen-n700s`, `-e5`, `-500`, `-700`, `-e6`, `-100`, `-e4` | the later Shinkansen | one spec per series on the passenger car builder (`shinkansen.ts`): end car, middle car and train of 3 - 8 cars, two liveries each, on the Shinkansen gauge. See [shinkansen.md](shinkansen.md) |
 | `proc-vehicle-jr-e235`, `-jnr-103`, `-odakyu-gse`, `-kintetsu-hinotori`, `-jr-e259`, `-jnr-485`, `-hankyu-9000` | Japanese conventional-line units | on the series kit (`jpEmus.ts`). See [jp-emus.md](jp-emus.md) |
@@ -371,6 +372,32 @@ A non-convex outline, such as a fender's arch, is several convex sweeps: `plate(
 makes one quad per segment, and neighbouring quads meet back to back.
 
 Vertical cylinders (exhaust stacks, air cleaners) are ordinary `prism`s.
+
+## Closed ends
+
+The game culls every back face, so a part wound inside out, or a shell left open,
+is a hole the player sees through. Three rules hold for rail vehicles:
+
+- **A lofted shell is closed at both ends** (`drawShell`, `carbodyShell` in
+  `sliceBody.ts` and `carbodyKit.ts`): a flat wall and a nose's tip alike. A blunt nose
+  (the series kit's `tip`, e.g. the ICNG's 0.3) ends in a slice of real width; it was
+  once left open and showed the cab through the front of some 56 units.
+- **Rings for `prism`, `loft` and `cap` wind counter-clockwise seen from above**
+  (`ngon`'s order: from +x toward -z). A rectangle is `[[x1, w], [x1, -w], [x0, -w],
+  [x0, w]]`; the other order turns the walls inward (the box locomotive kit's frame
+  and roof boxes, the CD 130/140/169/704/714 and DB 212 roofs were drawn that way).
+  `sweep` and `block` orient themselves; these do not.
+- **A windscreen follows the shell facet for facet** (`crownPane`): its rows on the
+  shell's stations, its columns on the slices' points over the shoulder and the arc,
+  each cell split along the shell's own diagonal, so no chord of the glass dips under
+  a curved nose. `bandPainter`'s `roofFrom` (the series kit and the car builder pass
+  the body's shoulder) keeps the roof colour above the shoulder: below it a nose's arc
+  takes the side's colour just under the shoulder (one colour, so no stripe steps across
+  the nose's facets) instead of the roof colour running down to its tip.
+
+`test/vehicleEnds.test.ts` casts rays at both ends of a sample of each kit's designs
+(a first hit on a face turned away from the ray is a hole) and checks that the body
+does not cover a windscreen's glass seen from straight ahead.
 
 ## Flicker
 

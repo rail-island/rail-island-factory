@@ -236,7 +236,7 @@ function drawPowerCar(coach: Coach, L: Livery, X: (d: number) => number): void {
   const m = coach.m;
   const b = powerProfile();
   m.scope("body", () => {
-    m.scope("shell", () => drawShell(m, b, X, (d, k) => powerMat(L, b, d, k), (d) => powerBands(L, b, d), { front: true, rear: true }));
+    m.scope("shell", () => drawShell(m, b, X, (d, k) => powerMat(L, b, d, k), (d) => powerBands(L, b, d)));
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
         m.scope("cab door", () => {
@@ -451,7 +451,7 @@ function drawTrailer(coach: Coach, L: Livery, f: TrailerFrame, X: (d: number) =>
   const [da, dq] = lay.door;
   const leaves: SliceDoorway[] = [1, -1].map((s) => ({ s, d0: da + 0.03, d1: dq - 0.03, y0: 1.13, y1: 3.19 }));
   m.scope("body", () => {
-    m.scope("shell", () => drawShell(m, b, X, (_d, k) => trailerMat(L, b, k), (d) => trailerBands(L, b, d), { front: true, rear: true }, leaves.map((o) => ({ ...o, d0: o.d0 - 0.002, d1: o.d1 + 0.002, y0: o.y0 - 0.002, y1: o.y1 + 0.002 }))));
+    m.scope("shell", () => drawShell(m, b, X, (_d, k) => trailerMat(L, b, k), (d) => trailerBands(L, b, d), leaves.map((o) => ({ ...o, d0: o.d0 - 0.002, d1: o.d1 + 0.002, y0: o.y0 - 0.002, y1: o.y1 + 0.002 }))));
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
         m.scope("door", () => {

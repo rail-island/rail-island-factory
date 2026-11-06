@@ -11,7 +11,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
 | `photo-airborne-command-and-control-aircraft-il-86vkp-2.jpg` | Airborne command and control aircraft IL-86VKP (2).jpg | https://commons.wikimedia.org/wiki/File:Airborne_command_and_control_aircraft_IL-86VKP_(2).jpg | Vitaly V. Kuzmin | CC BY-SA 4.0 | the airframe's shape, proportions and livery |
-| `photo-il-86-soviet-stamp.jpg` | Il-86 Soviet stamp.jpg | https://commons.wikimedia.org/wiki/File:Il-86_Soviet_stamp.jpg | Postal Service of USSR | Public domain | the airframe's shape, proportions and livery |
 
 ## Published figures
 

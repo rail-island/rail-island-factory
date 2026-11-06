@@ -51,6 +51,12 @@ export interface CarbodySpec {
   rear?: NoseShape;
   /** Spans of d where the skirt is cut up to its top: over the trucks. */
   cuts?: ReadonlyArray<readonly [number, number]>;
+  /**
+   * The radius of a cut's corners: the skirt's lower edge rounds up from its bottom
+   * to its top over this length inside each end of a cut that lies on the body
+   * (a wheel arch). Default 0: the skirt drops square at the cut's ends.
+   */
+  cutRadius?: number;
   /** Heights of the paint edges on the side, between belly and shoulder, bottom up. */
   edges: readonly number[];
   /** Station spacing along the flat body (default 1.0 m) and in a nose (default 0.2 m). */
@@ -91,7 +97,25 @@ export function carbody(s: CarbodySpec): SliceBody {
   };
   const A = (d: number) => along(s, d, s.A, (n) => n.A);
   const cut = (d: number) => (s.cuts ?? []).some(([a, b]) => d >= a - 1e-9 && d <= b + 1e-9);
-  const B = (d: number) => (cut(d) ? A(d) : along(s, d, s.B, (n) => n.B));
+  const r = s.cutRadius ?? 0;
+  // inside a cut: its distance from the nearer of its ends that lie on the body
+  const inCut = (d: number): number => {
+    let best = Infinity;
+    for (const [a, b] of s.cuts ?? []) {
+      if (d < a - 1e-9 || d > b + 1e-9) continue;
+      const ea = a <= 1e-6 ? Infinity : d - a, eb = b >= L - 1e-6 ? Infinity : b - d;
+      best = Math.min(best, Math.max(0, Math.min(ea, eb)));
+    }
+    return best;
+  };
+  const B = (d: number) => {
+    const base = along(s, d, s.B, (n) => n.B);
+    if (!cut(d)) return base;
+    const e = inCut(d);
+    if (r <= 0 || e >= r) return A(d);
+    // a quarter ellipse: square to the skirt's bottom at the cut's end, level with its top r inside
+    return base + (A(d) - base) * Math.sqrt(Math.max(0, 1 - (1 - e / r) ** 2));
+  };
   const Y = (d: number) => along(s, d, s.Y, (n) => n.Y);
   const S = (d: number) => along(s, d, s.S, (n) => n.S);
   const C = (d: number) => Math.max(S(d) + 0.02, along(s, d, s.C, (n) => n.C));
@@ -109,6 +133,14 @@ export function carbody(s: CarbodySpec): SliceBody {
   }
   // a cut's two ends: the skirt drops just outside them
   for (const [a, b] of s.cuts ?? []) for (const d of [a - 0.001, a, b, b + 0.001]) st.add(Math.round(d * 1000) / 1000);
+  // a rounded cut's corners: stations round each arch
+  if (r > 0)
+    for (const [a, b] of s.cuts ?? [])
+      for (let k = 1; k <= 4; k++) {
+        const e = r * (1 - Math.cos((k / 4) * (Math.PI / 2)));
+        if (a > 1e-6) st.add(Math.round((a + e) * 1000) / 1000);
+        if (b < L - 1e-6) st.add(Math.round((b - e) * 1000) / 1000);
+      }
   const stations = [...st].filter((d) => d >= 0 && d <= L).sort((a, b) => a - b);
   return {
     length: L,
@@ -119,8 +151,8 @@ export function carbody(s: CarbodySpec): SliceBody {
   };
 }
 
-/** The lofted shell, every face painted by `paint`; the ends capped where they are flat walls, open over `doorways`. */
-export function carbodyShell(m: MeshBuilder, b: SliceBody, X: (d: number) => number, paint: Painter, caps: { front: boolean; rear: boolean }, doorways: readonly SliceDoorway[] = []): void {
+/** The lofted shell, every face painted by `paint`; both ends closed (a wall or a nose's tip), open over `doorways`. */
+export function carbodyShell(m: MeshBuilder, b: SliceBody, X: (d: number) => number, paint: Painter, doorways: readonly SliceDoorway[] = []): void {
   const mat = (d: number, k: number) => {
     const h = halfSlice(b, d);
     const y = (h[k]![1] + h[k + 1]![1]) / 2;
@@ -139,15 +171,24 @@ export function carbodyShell(m: MeshBuilder, b: SliceBody, X: (d: number) => num
     }
     return out;
   };
-  drawShell(m, b, X, mat, bands, caps, doorways);
+  drawShell(m, b, X, mat, bands, doorways);
 }
 
-/** A horizontal band painter: by height, `under` below the skirt's top, `roof` over the shoulder. */
-export function bandPainter(bands: ReadonlyArray<readonly [number, number, string]>, roof: string, under: string, skirt: string): Painter {
+/**
+ * A horizontal band painter: by height, `under` below the skirt's top, `roof`
+ * over the shoulder. With `roofFrom` (the body's shoulder height) the roof
+ * colour starts there: where a nose's arc falls down its front below it, it
+ * takes the side's colour just under the shoulder instead of the roof's running
+ * down to the tip (one colour, so no stripe steps across the nose's facets).
+ */
+export function bandPainter(bands: ReadonlyArray<readonly [number, number, string]>, roof: string, under: string, skirt: string, roofFrom = -Infinity): Painter {
   return (_d, y, region) => {
     if (region === "bottom") return under;
     if (region === "skirt") return skirt;
-    if (region === "arc") return roof;
+    if (region === "arc") {
+      if (y >= roofFrom - 1e-9) return roof;
+      y = roofFrom - 0.01;
+    }
     for (const [a, b, mt] of bands) if (y >= a - 1e-9 && y < b - 1e-9) return mt;
     return bands[bands.length - 1]![2];
   };

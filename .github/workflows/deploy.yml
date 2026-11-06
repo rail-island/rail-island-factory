@@ -49,7 +49,19 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # The models take a few seconds to generate, so there is no asset cache.
+      # The committed build-cache/ spares the build every unchanged design's checks,
+      # measurements and thumbnail; the last deploy's export/ spares it the rest
+      # (the JS models and source trees). export/.build-keys.json records which
+      # design each file was written for, so a stale file is rewritten, never
+      # shipped. The newest export is restored and this run's saved under its commit
+      # (docs/guide/build-cache.md).
+      - name: Restore the last export
+        uses: actions/cache@v4
+        with:
+          path: export
+          key: export-${{ github.sha }}
+          restore-keys: export-
+
       - name: Build
         run: pnpm build
 

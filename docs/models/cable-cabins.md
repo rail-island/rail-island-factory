@@ -1,6 +1,6 @@
 # Cable car cabins
 
-**Covers** - the procedural cable car cabins (the aerial tramway car, the small gondola and the parametric chairlift chair), the reference GLBs and photos they reproduce, their dimensions, the rope, door-sill and seat datums the webapp hangs them by, the chair's parameters, the triangle budget and the deviations from the references.
+**Covers** - the procedural cable car cabins (the aerial tramway car, the small gondola and the parametric chairlift chair), the reference GLBs and photos they reproduce, their dimensions, the rope, door-sill and seat datums the webapp hangs them by, the ropes the game draws for them, the chair's parameters, the triangle budget and the deviations from the references.
 **Code** - `generator/cableCabins.ts`, `test/chairlift.test.ts`, `test/referenceModels.test.ts`, `test/models.test.ts`, `test/jsModel.test.ts`
 **See also** - [world-cabins.md](world-cabins.md) (the ten world cabins on the cabin kit), [vehicles.md](vehicles.md) (the `sweep` primitive, `vehicleParts.ts`), [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md)
 
@@ -34,6 +34,13 @@ the station's boarding platform is built to). The models are drawn so both stay 
 
 The constants are `CAR.axis` / `CAR.sill` and `GON.rope` / `GON.sill`; change a
 datum only together with the meta entry.
+
+**No cabin draws its rope**: the game draws every rope of a line from the cabin's
+`game.ropes` ([world-cabins.md](world-cabins.md#ropes)). The gondola, the chair and the
+classic cabin (`legacyVehicles.ts`) state one haul rope at the datum (`ONE_HAUL_ROPE`); the
+tramway car its track rope under the sheaves and its haul rope through the grip beside the
+carriage (model x 0.72, y 6.23: `TRAMWAY_ROPES`, the catalog's yaw 90 turning model +x to the
+game's -z). All four keep `ropeway: "circulating"`, the counts the game has always offered them.
 
 The chairlift chair has no meta entry yet (no webapp model); its datums are fixed
 for every variant so one entry will fit them all: the rope at **y 3.60** (`CHAIR.rope`,
@@ -82,8 +89,9 @@ The rope runs along **x** (yaw 0); the door faces +z.
 - **Roof** - six dark vents and the steel hanger plate.
 - **Hanger** - a steel arm with a dark collar, then the detachable grip: its
   body under the rope, two steel jaws closing on a short piece of haul rope at
-  y 4.14, a spring box beside it and a carriage carrying two running wheels on
-  top (to 4.795 m), as in the photo where the grip head rises above the cable.
+  y 4.14 (the game's rope), a spring box beside it and a carriage carrying two
+  running wheels on top (to 4.795 m), as in the photo where the grip head rises
+  above the cable.
 
 Deviation from the reference GLB: the reference's hanger put the rope at the
 very top (y 4.74, a fraction of 0.989) and its floor pan at 0.315 (0.085),
@@ -121,8 +129,8 @@ the riders face **+z**. Parameters (defaults first), 36 variants:
   transparent materials; it is drawn closed, as in the photo.
 - **Hanger and grip** - a steel tube straight down from the grip, curving back
   over the riders' heads to the top beam (six straight lengths of a quadratic
-  curve), a number plate, the grip body under the rope, two jaws closing on a
-  short piece of haul rope and a head plate carrying four rollers above it.
+  curve), a number plate, the grip body under the rope, two jaws closing on the
+  game's haul rope and a head plate carrying four rollers above it.
 
 The parts: one mesh, no rig. The LOD keeps the `body` scope (the chair and its
 bubble). The budget is the cabins' 8,000 triangles; the eight-seater with the

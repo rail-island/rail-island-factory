@@ -10,7 +10,6 @@ Downloaded from Wikimedia Commons as standard thumbnails, at most 1280 px on the
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-king-long-jockey-01-china-2015-04-13.jpg` | King Long Jockey 01 China 2015-04-13.jpg | https://commons.wikimedia.org/wiki/File:King_Long_Jockey_01_China_2015-04-13.jpg | Navigator84 | CC BY-SA 4.0 | shape, proportions and colours |
 | `photo-king-long-klq-6118gq-bus-in-damascus.jpg` | King Long KLQ 6118GQ bus in Damascus.JPG | https://commons.wikimedia.org/wiki/File:King_Long_KLQ_6118GQ_bus_in_Damascus.JPG | High Contrast | CC BY 3.0 de | shape, proportions and colours |
 
 ## Published figures

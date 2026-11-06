@@ -616,7 +616,7 @@ function drawCar(coach: Coach, S: Scheme, car: MtrCar, front: MtrFront, X: (d: n
   m.scope("body", () => {
     m.scope("shell", () => {
       const cut = leaves.map((o) => ({ ...o, d0: o.d0 - 0.002, d1: o.d1 + 0.002, y0: o.y0 - 0.002, y1: o.y1 + 0.002 }));
-      drawShell(m, p, X, (_d, k) => edgeMat(k), (d) => [[p.B(d), SHOULDER, "body"], [SHOULDER, p.C(d), "roof"]], { front: true, rear: true }, cut);
+      drawShell(m, p, X, (_d, k) => edgeMat(k), (d) => [[p.B(d), SHOULDER, "body"], [SHOULDER, p.C(d), "roof"]], cut);
     });
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {

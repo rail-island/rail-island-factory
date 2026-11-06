@@ -1,13 +1,16 @@
 // British units on the series kit (shinkansen.ts), at their real size on the
 // W6a gauge ("uk", loadingGauge.ts): the InterCity 125 and InterCity 225 (their
 // power car and driving end as the end cars), the Class 800 and the Class 390
-// Pendolino, the Eurostar e300, the Class 158 and the Class 142 Pacer, and
-// London Underground's 1938 tube stock. See docs/models/uk-trains.md.
+// Pendolino, the Eurostar e300, the Class 158 and the Class 142 Pacer (its own
+// two-axle cars, brClass142.ts), and London Underground's 1938 tube stock, and
+// London Overground's Class 378 Capitalstar. See docs/models/uk-trains.md.
 
 import type { MeshBuilder } from "./meshBuilder.ts";
-import type { ParamValues, ProceduralDesign } from "./design.ts";
+import { resolveParams, type ParamValues, type ProceduralDesign } from "./design.ts";
+import { class142, class142Lod, type C142Livery, type C142Unit } from "./brClass142.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, nose } from "./seriesHelpers.ts";
+import { TUBE_CAB, TUBE_DOOR, TUBE_LAYOUT, TUBE_WINDOW, tubeFittings } from "./lu1938Parts.ts";
 
 /** A livery from [top of band, colour] pairs, bottom first. */
 const lv = (title: string, number: string, ...list: Array<[number, string]>): ShinkansenLivery => {
@@ -93,26 +96,66 @@ export const C158: ShinkansenSeries = {
 
 export const C142: ShinkansenSeries = {
   endLength: 15.45, midLength: 15.45, W: 1.39, Y: 1.3, S: 2.95, C: 3.6, lean: 0.97, B: 1.0, A: 1.15,
-  // the Pacer: a bus body on a two-axle wagon underframe
+  // the Pacer: a bus body on a two-axle wagon underframe, drawn by brClass142.ts (the series
+  // kit's fields here give the design its parameters and figures)
   nose: nose(0.5, 0.7, 2.2, [[0, 3.1], [0.3, 3.45], [0.5, 3.6]], [[0, 2.85], [0.3, 2.95]], [[0, 1.35], [0.3, 1.3]], [[0, 1.2], [0.3, 1.15]], [[0, 1.1], [0.2, 1.0]]),
   windscreen: [0.02, 0.35, 0.07, 1.2], lamps: [0.03, 1.5],
   windows: [[1.8, 2.6]], windowW: 1.1, pitch: 1.35, door: [1.2, 2.85, 1.8, 2.5], doorW: 1.0,
   bogieCentres: 9.0, wheelR: 0.43, wheelbase: 0, traction: "diesel", cars: [2],
-  liveries: { provincial: lv("Provincial", "142 001", [1.75, "#7a4a2a"], [2.7, "#e6dcc0"], [9, "#7a4a2a"]), northern: lv("Northern", "142 096", [1.45, "#262262"], [9, "#d0d3d4"]) },
+  liveries: { provincial: lv("Provincial", "142 001", [1.75, "#7a4a2a"], [2.7, "#e6dcc0"], [9, "#7a4a2a"]), northern: lv("Northern", "142 096", [1.45, "#262262"], [9, "#d0d3d4"]), walesTeal: lv("Wales teal", "142 080", [9, "#0f8c9c"]), provincialBlue: lv("Provincial blue", "142 088", [1.72, "#1f3f8f"], [9, "#8fb0d8"]), metro: lv("Metro", "142 066", [9, "#1497a6"]), walesWrap: lv("Wales navy wrap", "142 075", [9, "#0f8c9c"]) },
   weight: { end: 25, middle: 25 }, power: 165, maxspeed: 120,
 };
 
 export const TUBE1938: ShinkansenSeries = {
-  endLength: 16.0, midLength: 15.5, W: 1.3, Y: 0.95, S: 2.45, C: 2.88, lean: 0.9, B: 0.5, A: 0.62,
+  // the tube profile: 2.62 m wide and 2.88 m high, the sides upright to the window heads, a low dome over them
+  endLength: 16.0, midLength: 15.5, W: 1.31, Y: 0.7, S: 2.3, C: 2.88, lean: 0.985, B: 0.6, A: 0.66, arc: 10,
   nose: nose(0.6, 0.5, 2.2, [[0, 2.3], [0.3, 2.65], [0.6, 2.88]], [[0, 2.2], [0.3, 2.4]], [[0, 0.95], [0.3, 0.95]], [[0, 0.7], [0.3, 0.62]], [[0, 0.6], [0.2, 0.5]]),
+  // the flat cab front, its corners rounded in plan and its roof domed down to it
+  flatCab: TUBE_CAB, cabNose: nose(0.3, 0.9, 2.5, [[0, 2.62], [0.25, 2.8], [0.6, 2.88]], [[0, 2.24], [0.25, 2.3]], [], [], []),
   windscreen: [0.05, 0.5, 0.07, 1.05], lamps: [0.05, 1.0],
-  windows: [[1.15, 1.95]], windowW: 1.1, pitch: 1.4, door: [0.7, 2.2, 1.15, 1.95], doorW: 1.0, doorCount: 3,
-  bogieCentres: 10.5, wheelR: 0.4, wheelbase: 2.1, metro: true, cars: [3, 4, 7],
-  liveries: { lu: lv("London Transport", "10012", [9, "#c8102e"]) },
+  windows: [TUBE_WINDOW], windowW: 1.0, pitch: 1.12, door: TUBE_DOOR, doorW: 0.7, layout: TUBE_LAYOUT, numberAt: [-1.6, 0.92, 0.13],
+  bogieCentres: 10.0, centredBogies: true, wheelR: 0.43, wheelbase: 2.1, couplerY: 0.45, metro: true, cars: [3, 4, 7], fittings: tubeFittings,
+  liveries: {
+    lu: {
+      title: "London Transport", number: "10012", bands: [[0, 9, "ltRed"]], roof: "ltRoof", skirt: "skirtG",
+      palette: {
+        ltRed: c("#c3161c", 0.35), ltRoof: c("#8c3a30", 0.7), skirtG: c("#232426", 0.8), cabMask: c("#1d1f22", 0.3),
+        lettering: c("#c9a24a", 0.35), blind: c("#f1efe6", 0.5), lineMagenta: c("#c0267e"), lineBlue: c("#1c2f6e"),
+        vent: c("#5e2620", 0.7), step: c("#b9b6ae", 0.5), underBox: c("#3a3c3f", 0.8),
+      },
+    },
+  },
   weight: { end: 28, middle: 22 }, power: 270, maxspeed: 72,
 };
 
-const P = { hst: seriesParams(HST), ic225: seriesParams(IC225), c800: seriesParams(C800), c390: seriesParams(C390), e300: seriesParams(E300), c158: seriesParams(C158), c142: seriesParams(C142), tube: seriesParams(TUBE1938) };
+/** London Overground's scheme: blue skirt, white sides, a black window band, orange doors; the cab front yellow. */
+const overground = (number: string): ShinkansenLivery => ({
+  title: "London Overground", number,
+  palette: { blue: c("#0019a8"), orange: c("#ee7c0e"), white: c("#f1f1ee"), black: c("#1d1f22", 0.3), yellow: c("#ffcd00"), roofG: c("#9a9ea2", 0.6), skirtG: c("#2a2c2f", 0.75), cabMask: c("#1d1f22", 0.3) },
+  bands: [[0, 1.55, "blue"], [1.55, 1.62, "orange"], [1.62, 1.85, "white"], [1.85, 2.85, "black"], [2.85, 9, "white"]],
+  doors: [[0, 9, "orange"]],
+  front: [[0, 1.45, "blue"], [1.45, 1.52, "orange"], [1.52, 2.3, "yellow"], [2.3, 9, "black"]],
+  roof: "roofG", skirt: "skirtG",
+});
+
+/** The Class 378 Capitalstar: Bombardier's Electrostar for London Overground, 2.8 m wide, two wide doors a side, five cars (101.35 m). */
+export const C378: ShinkansenSeries = {
+  endLength: 20.4, midLength: 20.1, W: 1.395, Y: 1.3, S: 3.3, C: 3.77, lean: 0.96, B: 0.9, A: 1.05,
+  // the Electrostar's upright cab: a flat front face, its top and corners rounded, the windscreens either side of the gangway door
+  nose: nose(0.7, 0.8, 2.6, [[0, 3.3], [0.3, 3.6], [0.7, 3.77]], [[0, 3.2], [0.35, 3.3]], [[0, 1.3]], [[0, 1.1], [0.3, 1.05]], [[0, 0.95], [0.2, 0.9]]),
+  windscreen: [0, 0, 0, 0], lamps: [0, 0],
+  noseCab: {
+    panes: [[0.4, 1.02, 2.35, 3.05], [-0.26, 0.26, 2.4, 3.05], [-1.02, -0.4, 2.35, 3.05]],
+    lamps: [[-0.72, 1.85, 0.09, "lampHead"], [0.72, 1.85, 0.09, "lampHead"], [-0.95, 1.85, 0.05, "lampRed"], [0.95, 1.85, 0.05, "lampRed"]],
+    gangway: [0.32, 1.35, 3.12],
+  },
+  windows: [[1.9, 2.75]], windowW: 1.4, pitch: 1.75, door: [1.15, 3.05, 1.9, 2.7], doorW: 1.6, doorCount: 2,
+  bogieCentres: 14.173, wheelR: 0.42, wheelbase: 2.6, cars: [3, 4, 5],
+  liveries: { overground: overground("378 204") },
+  weight: { end: 45.5, middle: 40.7 }, power: 480, maxspeed: 121,
+};
+
+const P = { hst: seriesParams(HST), ic225: seriesParams(IC225), c800: seriesParams(C800), c390: seriesParams(C390), e300: seriesParams(E300), c158: seriesParams(C158), c142: seriesParams(C142), tube: seriesParams(TUBE1938), c378: seriesParams(C378) };
 
 export function brHst(v?: ParamValues): MeshBuilder { return buildSeries(HST, P.hst, v); }
 export function brHstLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(HST, P.hst, v); }
@@ -126,10 +169,13 @@ export function eurostar373(v?: ParamValues): MeshBuilder { return buildSeries(E
 export function eurostar373Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(E300, P.e300, v); }
 export function brClass158(v?: ParamValues): MeshBuilder { return buildSeries(C158, P.c158, v); }
 export function brClass158Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(C158, P.c158, v); }
-export function brClass142(v?: ParamValues): MeshBuilder { return buildSeries(C142, P.c142, v); }
-export function brClass142Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(C142, P.c142, v); }
+export function brClass142(v?: ParamValues): MeshBuilder { const p = resolveParams(P.c142, v); return class142(p.unit as C142Unit, p.livery as C142Livery); }
+export function brClass142Lod(v?: ParamValues): MeshBuilder { const p = resolveParams(P.c142, v); return class142Lod(p.unit as C142Unit, p.livery as C142Livery); }
 export function lu1938Stock(v?: ParamValues): MeshBuilder { return buildSeries(TUBE1938, P.tube, v); }
 export function lu1938StockLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(TUBE1938, P.tube, v); }
+
+export function brClass378(v?: ParamValues): MeshBuilder { return buildSeries(C378, P.c378, v); }
+export function brClass378Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(C378, P.c378, v); }
 
 export const UK_UNITS: ProceduralDesign[] = [
   seriesDesign("proc-vehicle-br-hst", "InterCity 125", HST, P.hst, brHst, brHstLod, "br-hst", "uk"),
@@ -140,4 +186,5 @@ export const UK_UNITS: ProceduralDesign[] = [
   seriesDesign("proc-vehicle-br-class-158", "Class 158", C158, P.c158, brClass158, brClass158Lod, "br-class-158", "uk"),
   seriesDesign("proc-vehicle-br-class-142", "Class 142 Pacer", C142, P.c142, brClass142, brClass142Lod, "br-class-142", "uk"),
   seriesDesign("proc-vehicle-lu-1938-stock", "London 1938 Stock", TUBE1938, P.tube, lu1938Stock, lu1938StockLod, "lu-1938-stock", "uk"),
+  seriesDesign("proc-vehicle-br-class-378", "Class 378 Capitalstar", C378, P.c378, brClass378, brClass378Lod, "br-class-378", "uk"),
 ];

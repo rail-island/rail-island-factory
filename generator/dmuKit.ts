@@ -94,8 +94,9 @@ export function frameMaps(f: CarFrame): { X: (x: number) => number; side: (b: Px
 export class Car {
   readonly c: Coach;
   readonly m: MeshBuilder;
-  constructor(palette: Record<string, MaterialSpec>, readonly f: CarFrame) {
-    this.c = new Coach({ ...DMU_PALETTE, ...palette }, f.centre * f.kx);
+  /** A car drawing into its own builder, or into `m` (another car of the same unit; its palette must hold the car's). */
+  constructor(palette: Record<string, MaterialSpec>, readonly f: CarFrame, m?: MeshBuilder) {
+    this.c = new Coach({ ...DMU_PALETTE, ...palette }, f.centre * f.kx, m);
     this.m = this.c.m;
   }
 

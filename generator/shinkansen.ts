@@ -14,6 +14,7 @@ import { block } from "./vehicleParts.ts";
 import { exhaust } from "./dieselParts.ts";
 import type { Pt } from "./sliceLoft.ts";
 import { crownPane, surfaceDisc, type SliceBody } from "./sliceBody.ts";
+import { decalX } from "./usHoodKit.ts";
 import { CARBODY_PALETTE, type NoseShape } from "./carbodyKit.ts";
 import { INTERIOR_PALETTE } from "./interior.ts";
 import { drawCar, type CarDef } from "./usTransit.ts";
@@ -43,6 +44,10 @@ export interface ShinkansenLivery {
   skirt: string;
   /** Number on the sides. */
   number: string;
+  /** The door leaves' bands (default the side's). */
+  doors?: readonly Band[];
+  /** The cab front's bands, over the nose (default the side's). */
+  front?: readonly Band[];
 }
 
 export interface ShinkansenSeries {
@@ -60,6 +65,8 @@ export interface ShinkansenSeries {
   nose: NoseShape;
   /** The windscreen on the nose: d span and half widths. */
   windscreen: readonly [number, number, number, number];
+  /** A black band round the windscreen, on the nose under its rubber: how far it reaches past the panes (d and half width), joined over the centre pillar. */
+  windscreenMask?: number;
   /** The headlights on the nose's sides: d and height. */
   lamps: readonly [number, number];
   /** Window rows: sill and head of each (two on a double-deck car), the window's width and pitch. */
@@ -81,6 +88,8 @@ export interface ShinkansenSeries {
   pantograph?: "single" | "diamond";
   /** A flat cab front in place of the nose: its windscreen panes (z0, z1, y0, y1), lamps (z, y, r, lens) and the front's mask. */
   flatCab?: NonNullable<CarDef["cab"]>;
+  /** An upright cab on the nose's flat front face (its tip): the panes and lamps drawn there, in place of the windscreen and headlights on the crown, and a gangway door's outline (half width, sill and head). */
+  noseCab?: NonNullable<CarDef["cab"]> & { gangway?: readonly [number, number, number] };
   power: number;
   maxspeed: number;
   /** A diesel unit: no pantograph, exhaust stacks on the roof, filed with the DMUs (default electric); `none` an unpowered set of coaches. */
@@ -95,11 +104,32 @@ export interface ShinkansenSeries {
   metro?: boolean;
   /** The coupler at a cab end: the unit's centre coupler (default) or buffers and a screw coupling. */
   endCoupler?: "centre" | "buffers";
+  /** The roof arc's segments (default 8). */
+  arc?: number;
+  /** The centre coupler's height (default 1.0 m; a tube car's sits under its low floor). */
+  couplerY?: number;
+  /** A flat cab's plan and dome: a short nose the cab's decals stand on (default a square end). */
+  cabNose?: NoseShape;
+  /** Both bogies of every car centred on its body, bogieCentres apart (default 3.5 m in from the rear, the other ahead of it). */
+  centredBogies?: boolean;
+  /** The doors and windows of the end and the middle car (d from the body's +X end), in place of the generated layout. */
+  layout?: { end: SeriesLayout; middle: SeriesLayout };
+  /** The side number: d behind the body's centre, its foot and height (default 3 m from the rear, just above the belly). */
+  numberAt?: readonly [number, number, number];
+  /** Fittings of the series' own, drawn in place of the plain underfloor box. */
+  fittings?: (m: MeshBuilder, b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }) => void;
+}
+
+/** A car's own layout: door leaves (d0, d1 and the way each slides, +1 toward the rear) and window spans. */
+export interface SeriesLayout {
+  doors: ReadonlyArray<readonly [number, number, number]>;
+  windows: ReadonlyArray<readonly [number, number]>;
 }
 
 /** The coupling plane's distance beyond a buffered cab end. */
 const BUFFER_GAP = 0.65;
 const isDiesel = (s: ShinkansenSeries) => s.traction === "diesel";
+const couplerOf = (s: ShinkansenSeries) => s.couplerY ?? COUPLER_Y;
 /** No pantograph: a diesel unit or an unpowered set. */
 const unwired = (s: ShinkansenSeries) => s.traction === "diesel" || s.traction === "none" || s.metro === true;
 /** The train lengths a series offers, and its default. */
@@ -110,14 +140,14 @@ const defaultCars = (s: ShinkansenSeries) => (carsOf(s).includes(4) ? 4 : carsOf
 // Building a series
 
 /** The body's +X end behind the car's front: the nose tip at it, a flat cab's lamps 7 cm proud of the wall, an inner wall a coupling gap behind. */
-const frontGap = (s: ShinkansenSeries, end: boolean) => (end ? (s.endCoupler === "buffers" ? BUFFER_GAP : s.flatCab ? 0.07 : 0) : GAP);
+const frontGap = (s: ShinkansenSeries, end: boolean) => (end ? (s.endCoupler === "buffers" ? BUFFER_GAP : s.flatCab || s.noseCab ? 0.07 : 0) : GAP);
 const endBody = (s: ShinkansenSeries) => s.endLength - (s.single ? frontGap(s, true) : GAP) - frontGap(s, true);
 const midBody = (s: ShinkansenSeries) => s.midLength - 2 * GAP;
 
 /** Bogie positions (d) of a car: 2.5 m in from each body end, the end car's leading one behind the nose. */
 function bogies(s: ShinkansenSeries, end: boolean): [number, number] {
   const L = end ? endBody(s) : midBody(s);
-  if (s.single) return [L / 2 - s.bogieCentres / 2, L / 2 + s.bogieCentres / 2];
+  if (s.single || s.centredBogies) return [L / 2 - s.bogieCentres / 2, L / 2 + s.bogieCentres / 2];
   const back = L - 3.5;
   // a short car's leading bogie comes in so that its wheels stay under the body
   return [Math.max(back - s.bogieCentres, s.wheelbase / 2 + s.wheelR + 0.2), back];
@@ -125,7 +155,7 @@ function bogies(s: ShinkansenSeries, end: boolean): [number, number] {
 
 function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantograph: boolean, number: string): CarDef {
   // the centre coupler's draft gear ends 0.3 m below its centre: a skirt bottom there would lie on it
-  if (Math.abs(s.B - (COUPLER_Y - 0.3)) < 0.005) throw new Error(`series: skirt bottom ${s.B} m lies on the coupler's draft gear`);
+  if (Math.abs(s.B - (couplerOf(s) - 0.3)) < 0.005) throw new Error(`series: skirt bottom ${s.B} m lies on the coupler's draft gear`);
   // the bogie's brake cylinders stand 0.55 m inside its axles: a shorter wheelbase puts them on its transoms (0 is a single axle)
   if (s.wheelbase > 0 && s.wheelbase < 2.05) throw new Error(`series: wheelbase ${s.wheelbase} m is shorter than the bogie kit's 2.05 m`);
   // the bogie's end transoms reach down to 0.2 m above the wheel radius: the car's underside must not lie there
@@ -152,24 +182,31 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
     spans = [];
     for (let i = 0; i + 1 < edges.length; i += 2) if (edges[i + 1]! - edges[i]! > s.windowW + 0.4) spans.push(...row(edges[i]! + 0.2, edges[i + 1]! - 0.2));
   }
+  const own = s.layout?.[end ? "end" : "middle"];
+  if (own) {
+    doors = own.doors.map(([a, e]): [number, number] => [a, e]);
+    spans = own.windows.map(([a, e]): [number, number] => [a, e]);
+  }
   const reach = s.wheelbase / 2 + s.wheelR + 0.25;
   return {
     spec: {
-      length: L, W: s.W, Y: s.Y, S: s.S, C: s.C, lean: s.lean, arc: 8, B: s.B, wl: s.W * 0.9, A: s.A, wa: s.W * 0.97,
-      ...(end && !s.flatCab ? { front: s.nose, ...(s.single ? { rear: s.nose } : {}) } : {}), cuts: tr.map((d) => [d - reach, d + reach] as const), edges: [], step: 1.0, noseStep: 0.25,
+      length: L, W: s.W, Y: s.Y, S: s.S, C: s.C, lean: s.lean, arc: s.arc ?? 8, B: s.B, wl: s.W * 0.9, A: s.A, wa: s.W * 0.97,
+      ...(end && !s.flatCab ? { front: s.nose, ...(s.single ? { rear: s.nose } : {}) } : {}),
+      ...(end && s.flatCab && s.cabNose ? { front: s.cabNose, ...(s.single ? { rear: s.cabNose } : {}) } : {}), cuts: tr.map((d) => [d - reach, d + reach] as const), edges: [], step: 1.0, noseStep: 0.25,
     },
     bands: l.bands, roof: l.roof, skirt: l.skirt, under: "under",
     windows: s.windows.map((y) => ({ y, spans, frame: "rubber" })),
-    doors: { spans: doors, y: [s.door[0], s.door[1]], glass: [s.door[2], s.door[3]] },
-    ...(s.flatCab ? { cab: s.flatCab } : {}), cabEnds: end && s.flatCab ? (s.single ? [1, -1] : [1]) : [], diaphragm: [s.door[0], s.door[1] + 0.3],
+    doors: { spans: doors, y: [s.door[0], s.door[1]], glass: [s.door[2], s.door[3]], ...(own ? { slides: own.doors.map((o) => o[2]) } : {}) },
+    ...(l.doors ? { doorBands: l.doors } : {}), ...(end && l.front && !s.flatCab ? { front: { d: s.nose.len + 0.05, bands: l.front } } : {}),
+    ...(s.flatCab ? { cab: s.flatCab } : end && s.noseCab ? { cab: s.noseCab } : {}), cabEnds: end && (s.flatCab || s.noseCab) ? (s.single ? [1, -1] : [1]) : [], diaphragm: [s.door[0], s.door[1] + 0.3],
     trucks: tr, truck: {
       axles: s.wheelbase > 0 ? [-s.wheelbase / 2, s.wheelbase / 2] : [0], wheelR: s.wheelR, frameHalf: s.wheelbase > 0 ? s.wheelbase / 2 + s.wheelR + 0.15 : s.wheelR + 0.45, frameTop: s.wheelR + 0.4, frameBottom: s.wheelR + 0.08,
       frameZ: [0.92, 1.04], primary: "coil", secondary: [-0.42, 0.42], secondaryZ: 1.1, bolster: s.B,
     },
-    coupler: s.endCoupler === "buffers" ? "buffers" : "centre", couplerY: COUPLER_Y,
+    coupler: s.endCoupler === "buffers" ? "buffers" : "centre", couplerY: couplerOf(s),
     gap: [end ? frontGap(s, true) : GAP, s.single ? frontGap(s, true) : GAP],
     ...(end ? { cabin: [first - 1.2, s.single ? L - first + 1.2 : L] as const } : {}),
-    lettering: [{ text: number, d: L - 3.0, y: s.Y + 0.1, h: 0.1, mat: "lettering" }],
+    lettering: [s.numberAt ? { text: number, d: L / 2 + s.numberAt[0], y: s.numberAt[1], h: s.numberAt[2], mat: "lettering" } : { text: number, d: L - 3.0, y: s.Y + 0.1, h: 0.1, mat: "lettering" }],
     extras: (m, b, X) => {
       if (end && !s.flatCab) noseFittings(m, s, b, X);
       if (s.single && !s.flatCab) m.scope("rear nose", () => m.turned((X(0) + X(L)) / 2, () => noseFittings(m, s, b, X)));
@@ -181,14 +218,29 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
         if (s.pantograph === "diamond") diamond(m, { xc: x, roofY: s.C + 0.05, baseY: s.C + 0.35, raised: true });
         else singleArm(m, { xc: x, roofY: s.C + 0.05, baseY: s.C + 0.3, h: 1, raised: true });
       });
-      m.scope("underfloor", () => block(m, "under", X(tr[1] - 2.6), X(tr[0] + 2.6), s.B - 0.35, s.B, -s.W * 0.8, s.W * 0.8));
+      if (s.fittings) s.fittings(m, b, X, { end, length: L, trucks: tr });
+      else m.scope("underfloor", () => block(m, "under", X(tr[1] - 2.6), X(tr[0] + 2.6), s.B - 0.35, s.B, -s.W * 0.8, s.W * 0.8));
     },
   };
 }
 
 function noseFittings(m: MeshBuilder, s: ShinkansenSeries, b: SliceBody, X: (d: number) => number): void {
+  if (s.noseCab) {
+    // the panes and lamps are the car's cab (drawCar); here the gangway door's outline on the front face
+    const g = s.noseCab.gangway;
+    if (g) m.scope("gangway door", () => {
+      const [hw, y0, y1] = g, x = X(0) + 0.005, k = 0.025;
+      decalX(m, "rubber", x, 1, -hw, -hw + k, y0, y1);
+      decalX(m, "rubber", x, 1, hw - k, hw, y0, y1);
+      decalX(m, "rubber", x, 1, -hw + k, hw - k, y0, y0 + k);
+      decalX(m, "rubber", x, 1, -hw + k, hw - k, y1 - k, y1);
+    });
+    return;
+  }
   const [d0, d1, z0, z1] = s.windscreen;
   m.scope("windscreen", () => {
+    const k = s.windscreenMask;
+    if (k) for (const sd of [1, -1]) crownPane(m, b, X, sd, "cabMask", [d0 - k, d1 + k * 0.5], [0, z1 + k], 0.006);
     for (const sd of [1, -1]) {
       crownPane(m, b, X, sd, "rubber", [d0, d1], [z0, z1], 0.012, 5, 3);
       crownPane(m, b, X, sd, "cabGlass", [d0 + 0.08, d1 - 0.08], [z0 + 0.05, z1 - 0.05], 0.04, 5, 3);
@@ -253,7 +305,7 @@ export function buildSeries(s: ShinkansenSeries, params: readonly ParamSpec[], v
     };
   });
   const bellows: Array<[number, number]> = [[-0.78, s.door[0]], [0.78, s.door[0]], [0.78, s.door[1] + 0.25], [-0.78, s.door[1] + 0.25]];
-  articulate({ m }, sections, COUPLER_Y, { profile: bellows, folds: 4, depth: 0.03 }, 10, slots.slice(0, -1).map((x) => x.lo));
+  articulate({ m }, sections, couplerOf(s), { profile: bellows, folds: 4, depth: 0.03 }, 10, slots.slice(0, -1).map((x) => x.lo));
   return m;
 }
 
@@ -299,7 +351,7 @@ export function buildSeriesLod(s: ShinkansenSeries, params: readonly ParamSpec[]
     return carLod(s, l, slot.end, slot.pantograph, (d) => cx + len / 2 - frontGap(s, slot.end) - d, cx, slot.turned, k);
   });
   const sections: LodSections = {
-    pivots: slots.map((_, i): [number, number, number] => (i === 0 ? [0, 0, 0] : [slots[i - 1]!.lo, COUPLER_Y, 0])),
+    pivots: slots.map((_, i): [number, number, number] => (i === 0 ? [0, 0, 0] : [slots[i - 1]!.lo, couplerOf(s), 0])),
     joints: slots.slice(0, -1).map((slot, i) => ({
       sections: [i, i + 1] as [number, number], front: slot.lo + GAP, rear: slots[i + 1]!.hi - GAP,
       profile: [[-0.78, s.door[0]], [0.78, s.door[0]], [0.78, s.door[1] + 0.25], [-0.78, s.door[1] + 0.25]] as Array<[number, number]>,

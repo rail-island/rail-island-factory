@@ -7,7 +7,16 @@ import {
   COLUMN_SINK, DEFAULT_VIEW, SWEEP_INNER_R, TYPE_META, WHEEL_RADIUS, boxCorners, buildPylon, buildStation, deckLevel,
   headOverhangFor, platformBand, stairTreads, stationFouls,
   type StationBox, type StationModel, type StationSector, type StationView,
+  cabinStop, platformFront, wheelRims, PORTAL_ROPE,
 } from "../generator/sets/cableCarStation";
+import { DESIGNS } from "../generator/generate";
+import { cabinLine, cabinView, type CabinLine } from "../generator/cableCarLine";
+
+/** Every cable car cabin in the catalog, measured as the game measures it. */
+const CATALOG: Array<[string, CabinLine]> = [...DESIGNS.values()].filter((d) => d.game?.ropeFrac !== undefined).map((d) => [d.id, cabinLine(d)]);
+/** Each catalog cabin's views: both plans, or only the shuttle's for a jig-back cabin. */
+const CATALOG_VIEWS: Array<[string, StationView]> = CATALOG.flatMap(([id, l]) =>
+  (l.ropeway === "jigback" ? [false] : [false, true]).map((circ) => [`${id} ${circ ? "ring" : "shuttle"}`, cabinView(l, circ)] as [string, StationView]));
 
 const TYPES = Object.keys(TYPE_META);
 /** The catalog's cabins and a margin either side: the default, the gondola, the classic cabin, a narrow and a wide one. */
@@ -41,6 +50,41 @@ describe("cable car station types", () => {
       const fouls = [...m.boxes, ...m.sectors].map((b) => stationFouls(type, view, b)).filter((f) => f !== null);
       expect({ view: viewName(view), fouls }).toEqual({ view: viewName(view), fouls: [] });
     }
+  });
+
+  it.each(TYPES)("%s keeps every clearance for every cabin of the catalog, as the game measures it", (type) => {
+    expect(CATALOG.length).toBeGreaterThanOrEqual(14);
+    for (const [name, view] of CATALOG_VIEWS) {
+      const m = buildStation(type, view);
+      const fouls = [...m.boxes, ...m.sectors].map((b) => stationFouls(type, view, b)).filter((f) => f !== null);
+      expect({ name, fouls }).toEqual({ name, fouls: [] });
+      if (m.deckY !== null) expect(m.deckY).toBeCloseTo(deckLevel(TYPE_META[type]!.ropeHeadY, view, type), 9);
+    }
+  });
+
+  it("stops a big shuttling cabin ahead of the wheel, beside its platform's arms, and every other cabin at the wheel", () => {
+    const stops = Object.fromEntries(CATALOG_VIEWS.map(([n, v]) => [n, cabinStop(v)]));
+    for (const n of ["proc-vehicle-titlis-rotair shuttle", "proc-vehicle-vanoise-express shuttle", "proc-vehicle-stanserhorn-cabrio shuttle", "proc-vehicle-roosevelt-island-tram shuttle", "proc-vehicle-sugarloaf-bondinho shuttle"]) {
+      const v = CATALOG_VIEWS.find(([x]) => x === n)![1];
+      expect(stops[n]).toBeCloseTo(v.halfLength! + 1, 9);
+      // the arms reach past the stopped cabin's nose
+      expect(platformFront(v)).toBeGreaterThan(stops[n]! + v.halfLength!);
+    }
+    for (const n of ["proc-vehicle-gondola-cabin shuttle", "proc-vehicle-doppelmayr-omega ring", "proc-vehicle-poma-funitel ring", "proc-vehicle-chairlift-chair shuttle", "proc-vehicle-peak-2-peak shuttle"]) expect(stops[n]).toBe(0);
+  });
+
+  it("gives the wheel a rim per haul rope: one for a gondola, two coaxial ones for the funitel, one under a tram's track ropes", () => {
+    const view = (id: string): StationView => CATALOG_VIEWS.find(([n]) => n.startsWith(id))![1];
+    expect(wheelRims(DEFAULT_VIEW)).toEqual([{ r: WHEEL_RADIUS, dy: 0 }]);
+    const f = wheelRims(view("proc-vehicle-poma-funitel"));
+    expect(f).toHaveLength(2);
+    expect(f[0]!.r + f[1]!.r).toBeCloseTo(2 * WHEEL_RADIUS, 6);
+    const v = wheelRims(view("proc-vehicle-vanoise-express"));
+    expect(v).toHaveLength(1);
+    expect(v[0]!.dy).toBeLessThan(0);
+    const m = buildStation("glass_modern", { ...view("proc-vehicle-poma-funitel"), circulating: true });
+    const rims = m.sectors.filter((s) => s.part === "wheel" && s.halfAngle === Math.PI);
+    expect(rims.map((s) => Math.round(((s.rIn + s.rOut) / 2) * 100) / 100)).toEqual(f.map((r) => Math.round(r.r * 100) / 100));
   });
 
   it.each(TYPES)("%s stands no column of its hall in the platform, rectangular or curved", (type) => {
@@ -94,6 +138,11 @@ describe("cable car station types", () => {
         const s = deckSectors[0]!;
         expect(s.cy + s.thick / 2).toBeCloseTo(m.deckY!, 9);
         expect(s.rIn).toBeGreaterThanOrEqual(WHEEL_RADIUS + view.halfWidth + 0.5 - 1e-9);
+      } else if (cabinStop(view) > 0) {
+        // a cabin too wide for the head's ring stops ahead of the wheel, beside an arm each side
+        expect(deckSectors).toEqual([]);
+        expect(deckBoxes).toHaveLength(2);
+        for (const b of deckBoxes) expect(b.cz - b.sz / 2).toBeGreaterThan(m.headZ);
       } else {
         expect(deckSectors).toEqual([]);
         expect(deckBoxes.length).toBeGreaterThanOrEqual(3);
@@ -152,6 +201,27 @@ describe("cable car station types", () => {
 });
 
 describe("the cable car pylon", () => {
+  it("carries each catalog cabin's ropes: sheaves under haul ropes, saddles under track ropes, a portal for a cabin between its ropes", () => {
+    for (const [id, l] of CATALOG) {
+      const boxes = buildPylon(31.5, l.ropes);
+      const portal = l.ropes.some((r) => Math.abs(r.z) > PORTAL_ROPE);
+      for (const s of [-1, 1]) {
+        for (const r of l.ropes) {
+          const x = s * (WHEEL_RADIUS + r.z);
+          // the rope rides the top of what carries it
+          const under = boxes.filter((b) => b.material === "wheel" && Math.abs(b.x - x) < 1e-9 && Math.abs(b.y + b.sy / 2 - (31.5 + r.dy - 0.05)) < 1e-6);
+          expect(under.length, `${id} ${r.kind} at ${x}`).toBeGreaterThan(0);
+        }
+      }
+      if (portal) {
+        // nothing between the masts lower than the ropes' supports but the supports themselves
+        const legX = Math.abs(boxes[0]!.x);
+        expect(legX).toBeGreaterThan(WHEEL_RADIUS + l.halfWidth);
+        expect(boxes[2]!.y - boxes[2]!.sy / 2).toBeGreaterThan(31.5 + 1);
+      }
+    }
+  });
+
   it.each([12, 31.5, 60])("carries both strands on its sheaves' tops at %s studs", (height) => {
     const boxes = buildPylon(height);
     const sheaves = boxes.filter((b) => b.material === "wheel");

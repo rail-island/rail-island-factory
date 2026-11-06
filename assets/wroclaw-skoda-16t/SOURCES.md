@@ -11,7 +11,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
 | `photo-16t-wroclaw-3002.jpg` | 16T Wroclaw 3002.jpg | https://commons.wikimedia.org/wiki/File:16T_Wroclaw_3002.jpg | Bogusław Wielgoszewski | CC BY-SA 3.0 | the five-section body, front, livery |
-| `photo-skoda-16t-08061508.jpg` | Skoda-16T-08061508.jpg | https://commons.wikimedia.org/wiki/File:Skoda-16T-08061508.jpg | Grzegorz W. Tężycki | CC BY-SA 4.0 | the five-section body, front, livery |
 
 ## Published figures
 
