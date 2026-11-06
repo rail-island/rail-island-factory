@@ -49,6 +49,8 @@ export interface CarDef {
   doorBands?: readonly Band[];
   /** A cab front painted apart from the sides: its bands, on the shell from the +X tip back to d. */
   front?: { d: number; bands: readonly Band[]; roof?: string };
+  /** Both ends painted apart from the middle: their bands on the sides up to d from each end, and the end walls' paint (`cap`). */
+  ends?: { d: number; bands: readonly Band[]; cap?: string };
   /** Fluting: thin lines along the side between these heights (stainless cars). */
   /** Horizontal ribs on the sides, round the windows and doors: one band of them, or several. */
   fluting?: Flutes | readonly Flutes[];
@@ -80,7 +82,7 @@ const LEAF_INSET = 0.02;
 
 /** The body of a car. */
 export const carBody = (c: CarDef): SliceBody => {
-  const edges = [...new Set([...c.bands.flatMap(([a, b]) => [a, b]), ...(c.front?.bands ?? []).flatMap(([a, b]) => [a, b]), ...c.windows.flatMap((w) => [w.y[0], w.y[1]])])]
+  const edges = [...new Set([...c.bands.flatMap(([a, b]) => [a, b]), ...(c.front?.bands ?? []).flatMap(([a, b]) => [a, b]), ...(c.ends?.bands ?? []).flatMap(([a, b]) => [a, b]), ...c.windows.flatMap((w) => [w.y[0], w.y[1]])])]
     .filter((y) => y > c.spec.Y + 0.01 && y < c.spec.S - 0.01).sort((a, b) => a - b);
   const strips = (c.strips ?? []).flatMap((p) => [p.d[0], p.d[1]]);
   return carbody({ ...c.spec, edges: [...new Set([...c.spec.edges, ...edges])].sort((a, b) => a - b), ...(strips.length ? { stations: [...(c.spec.stations ?? []), ...strips] } : {}) });
@@ -157,7 +159,11 @@ export function drawCar(m: MeshBuilder, c: CarDef, X: (d: number) => number, o: 
   const b = carBody(c);
   const sides: Painter = bandPainter(c.bands, c.roof, c.under, c.skirt, c.spec.S);
   const front = c.front && { d: c.front.d, paint: bandPainter(c.front.bands, c.front.roof ?? c.roof, c.under, c.skirt, c.spec.S) };
-  const banded: Painter = front ? (d, y, r) => (d < front.d && r !== "bottom" && r !== "skirt" ? front.paint : sides)(d, y, r) : sides;
+  const en = c.ends && { ...c.ends, paint: bandPainter(c.ends.bands, c.roof, c.under, c.skirt, c.spec.S) };
+  const middle: Painter = en
+    ? (d, y, r) => (r === "cap" && en.cap ? en.cap : (d < en.d || d > c.spec.length - en.d) && r !== "bottom" && r !== "skirt" ? en.paint(d, y, r) : sides(d, y, r))
+    : sides;
+  const banded: Painter = front ? (d, y, r) => (d < front.d && r !== "bottom" && r !== "skirt" ? front.paint : middle)(d, y, r) : middle;
   // a warning panel paints over both
   const f = c.field;
   const fielded: Painter = f ? (d, y, r) => (r !== "bottom" && d <= f.d && y >= f.y[0] && y <= f.y[1] ? f.mat : banded(d, y, r)) : banded;

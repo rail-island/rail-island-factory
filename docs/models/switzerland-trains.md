@@ -27,7 +27,7 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
 | `proc-vehicle-rhb-ge443` | RhB Ge 4/4 III | box locomotive, metre gauge | - | Bo-Bo, 16.0 m, 2,400 kW, 100 km/h |
 | `proc-vehicle-rhb-ge66` | RhB Ge 6/6 I Krokodil | box locomotive, hoods, metre gauge | `livery` (`brown`, `green`) | 13.3 m, 794 kW, 55 km/h |
 | `proc-vehicle-mgb-hge442` | MGB HGe 4/4 II | box locomotive, metre gauge | - | Bo-Bo rack, 14.8 m, 1,932 kW, 90 km/h |
-| `proc-vehicle-sbb-ew4-coach` | SBB EW IV coach | coach | `unit` (`a`, `b`), `livery` (`redGrey`, `sbb`) | 26.4 m; 200 km/h |
+| `proc-vehicle-sbb-ew4-coach` | SBB EW IV coach | coach | `unit` (`a`, `b`), `livery` (`redGrey`, `sbb`, `greenGrey`) | 26.4 m; 200 km/h |
 | `proc-vehicle-sbb-ic2000` | SBB IC 2000 coach | coach, double-deck | `unit` (`a`, `b`) | 26.8 m; 200 km/h |
 | `proc-vehicle-glacier-express` | Glacier Express coach | coach, metre gauge | `unit` (`first`, `second`) | 18.4 m, the panorama car: glass over the roof's curve; 90 km/h |
 
@@ -138,6 +138,15 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
   rounded rectangles (slanted wedges on the real face), the cab side's vent grille and the
   pictograms are not drawn; the running number on the photographs is not legible, 500 001 is
   illustrative.
+- **EW IV.** Measured on photographs of the B 50 85 21-95 149-3 and the A 50 85 10-95 031-6 (2021) and orthographic
+  side views of models (assets/sbb-ew4-coach): 26.4 m over the buffers, the bogies 18.6 m apart (both painted on the
+  car); the swing-plug doors 1.4-2.35 m in from each end with an end window (a louvred vent at its foot) and the class
+  panel beside them; ten 1.36 m windows between the doors in first class, eleven 1.42 m in second; the window band
+  2.03-3.1 m, the ribbed roof with rounded end caps and an air intake on one cap a side, UIC rubber-roll gangways.
+  `redGrey` (titled "White and red") is the white-red-black livery of the 2000s (the window band red at the ends,
+  grey skirt and end walls), `sbb` the 2021 repaint (red doors, black ends and skirt, a red line under the roof),
+  `greenGrey` the 1981 fir green with stone-grey bands; first class adds its yellow strip. The windows' rounded
+  corners are drawn square; the SBB emblem is simplified to a cross with two arrowheads.
 
 ## Tests
 

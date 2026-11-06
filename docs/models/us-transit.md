@@ -23,7 +23,8 @@ fittings: side paint bands, window rows (sill, head, spans), passenger doors (sp
 head, the leaf's window) - plug doors that open onto the car's generic cabin (`openable`,
 `plugMove`, `sliceCabin`; doors.md, interiors.md) - stainless fluting (one band or several) broken over windows and
 doors, painted `strips` over the bands (d spans between two heights, down over the skirt: a
-double-deck coach's door strips), a flat cab end's windscreen panes, front mask and lamps, the
+double-deck coach's door strips), a flat cab end's windscreen panes, front mask and lamps, both ends painted
+apart (`ends`: their bands up to d from each end and the end walls' paint), the
 diaphragm (`diaphragmW` its half width, default 0.5), trucks at d
 (the diesel toolkit's bogie geometry), knuckle or centre couplers, lettering and extras.
 `drawCar` takes the ends inside an articulated set (no coupler or diaphragm there) and the
