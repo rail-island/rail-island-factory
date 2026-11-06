@@ -38,8 +38,10 @@ export interface SeriesCabFace {
   /** The grid's base columns per half (face, corner, run, side; default 8, 4, 1, 1) and a paint edge's straightness tolerance (m). */
   cols?: [number, number, number, number];
   tolerance?: number;
-  /** The face's bow: its edges this much behind its centre. */
-  bulge?: number;
+  /** The face's bow: its edges this much behind its centre (by height, [y, bulge], for a vee that deepens or flattens). */
+  bulge?: number | readonly Pt[];
+  /** The distant model's end in place of the face's own profile, plan and rows: a face with a low bonnet ahead of it drawn apart (the series' fittings). */
+  lod?: { profile: Pt[]; corner: Pt[]; rows: number[]; bulge?: number | readonly Pt[]; glass?: boolean };
   /** Grid rows, ascending, from the body's bottom to its crown (the profile's and the paint's heights). */
   rows: number[];
   /** The face's paint by height (default the livery's `front`, else its side bands); the roof's colour from `roofFrom` up. */
@@ -203,10 +205,11 @@ export function drawCabFace(m: MeshBuilder, f: SeriesCabFace, e: number, xTip: n
 }
 
 /** The distant model's end of a cab face: its profile and plan, the face's bands and the panes as glass. */
-export function cabFaceLod(f: SeriesCabFace, e: number, xTip: number, half: Pt[], p: FacePaint, C: number): UnitEnd {
+export function cabFaceLod(face: SeriesCabFace, e: number, xTip: number, half: Pt[], p: FacePaint, C: number): UnitEnd {
+  const f: SeriesCabFace = face.lod ? { ...face, profile: face.lod.profile, corner: face.lod.corner, rows: face.lod.rows, ...(face.lod.bulge !== undefined ? { bulge: face.lod.bulge } : {}) } : face;
   const B = f.rows[0]!;
   const paint: LodBand[] = [...p.face.map(([a, b, mt]): LodBand => [Math.max(a, B), Math.min(b, f.roofFrom), mt]).filter(([a, b]) => b > a + 1e-6), [f.roofFrom, C, p.roof]];
   const lo = Math.min(...f.panes.map((r) => r.y[0])), hi = Math.max(...f.panes.map((r) => r.y[1]));
   const w = Math.max(...f.panes.map((r) => Math.max(Math.abs(r.lat[0]), Math.abs(r.lat[1]))));
-  return noseEnd(spec(f, e, xTip, half), paint, f.panes.length ? [{ u: [-w, w], y: [lo, hi], mat: LOD_GLASS }] : []);
+  return noseEnd(spec(f, e, xTip, half), paint, f.panes.length && f.lod?.glass !== false ? [{ u: [-w, w], y: [lo, hi], mat: LOD_GLASS }] : []);
 }

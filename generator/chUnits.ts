@@ -9,6 +9,7 @@ import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type Shinkanse
 import { c, flirt, kiss, nose, NO_NOSE } from "./seriesHelpers.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
 import type { Pt } from "./sliceLoft.ts";
+import { arrowFittings } from "./roterPfeil.ts";
 
 const SBB_RED = "#eb0000";
 
@@ -37,34 +38,69 @@ export const RAE_TEE: ShinkansenSeries = {
 };
 
 /**
- * The Roter Pfeil's ends (photo-sbb-rae-2-4.jpg, photo-sbb-rae-2-4-rapperswil-hurden.jpg and the works
- * drawing photo-sbb-historic-pl-166-00003-cle-2-4-203-206-sbb.jpg): a low bonnet 2 m long, round in
- * plan, its top at 2.0 m, the lamps on its front; behind it the driver's cab stands up with three
- * front panes under the roof's rounded brow and the top lamp.
+ * The Roter Pfeil's cab (the SBB works drawing L 56926, photo-sbb-historic-pl-166-00003-cle-2-4-203-206-sbb.jpg,
+ * and the photographs): it stands behind the low bonnet (roterPfeil.ts), its front a vee in plan - two
+ * panes either side of the centre post 2.0 m behind the tip, raked back 0.3 m, and a wide pane on each arm
+ * reaching back to 3.05 m - under the roof's brow, which juts out over the panes with the top lamp on it.
  */
+const ARROW_DJOIN = 3.25;
 const ARROW_END: SeriesCabFace = {
-  dJoin: 2.8, dSide: 2.6, first: 5.7, roofFrom: 3.3, cols: [6, 4, 1, 1], tolerance: 0.02, bulge: 0.08,
-  profile: [[0.9, 0.15], [1.05, 0.03], [1.2, 0], [1.6, 0], [1.8, 0.08], [1.9, 0.28], [1.96, 0.65], [1.99, 1.3], [2.02, 1.9], [2.1, 2.05], [2.8, 2.18], [3.0, 2.28], [3.25, 2.42], [3.5, 2.6], [3.65, 2.8]],
-  corner: [[0.9, 0.95], [1.96, 0.95], [2.1, 0.5], [2.8, 0.45], [3.3, 0.35], [3.65, 0.1]],
-  rows: [0.9, 1.05, 1.2, 1.35, 1.55, 1.6, 1.8, 1.9, 1.96, 1.99, 2.02, 2.1, 2.16, 2.78, 2.86, 3.0, 3.25, 3.3, 3.5, 3.65],
-  masks: [
-    { lat: [-1.19, -0.41], y: [2.12, 2.86], r: 0.05, mat: "rubber" }, { lat: [-0.37, 0.37], y: [2.12, 2.86], r: 0.05, mat: "rubber" },
-    { lat: [0.41, 1.19], y: [2.12, 2.86], r: 0.05, mat: "rubber" },
+  dJoin: ARROW_DJOIN, dSide: ARROW_DJOIN, first: 5.5, roofFrom: 2.85, cols: [8, 3, 1, 1], tolerance: 0.015, reach: 0.45,
+  // the vee: 1.05 m deep under the windscreens, the arms' outer edge upright at 3.05 m; flattening over the roof
+  bulge: [[1.55, 1.04], [2.1, 1.02], [2.68, 0.74], [2.76, 0.7], [2.86, 0.72], [2.94, 0.63], [3.026, 0.52], [3.106, 0.4], [3.175, 0.28], [3.232, 0.18], [3.275, 0.1], [3.31, 0]],
+  // the rows above the windscreens are the body's own roof arc's, so the face meets it without a crack
+  profile: [[1.55, 2.0], [2.12, 2.0], [2.68, 2.3], [2.76, 2.33], [2.83, 2.25], [2.85, 2.23], [2.94, 2.2], [3.026, 2.28], [3.106, 2.47], [3.175, 2.68], [3.232, 2.88], [3.275, 3.03], [3.301, 3.12], [3.31, 3.25]],
+  corner: [[1.55, 0.2], [2.8, 0.2], [2.94, 0.3], [3.106, 0.3], [3.175, 0.2], [3.232, 0.12], [3.275, 0.07], [3.31, 0.01]],
+  rows: [1.55, 1.64, 2.12, 2.4, 2.62, 2.68, 2.76, 2.83, 2.85, 2.94, 3.026, 3.106, 3.175, 3.232, 3.275, 3.301, 3.31],
+  // the centre panes and their surrounds; the wide panes' sills follow the bonnet's dome down to the arms
+  masks: [{ lat: [-0.61, -0.02], y: [2.15, 2.71], r: 0.04, mat: "rubber" }, { lat: [0.02, 0.61], y: [2.15, 2.71], r: 0.04, mat: "rubber" }],
+  panes: [{ lat: [-0.58, -0.05], y: [2.18, 2.68], r: 0.03 }, { lat: [0.05, 0.58], y: [2.18, 2.68], r: 0.03 }],
+  fields: [
+    { mat: "rubber", pts: [[0.64, 2.11], [1.24, 1.97], [1.24, 2.71], [0.64, 2.71]] }, { mat: "rubber", pts: [[-1.24, 1.97], [-0.64, 2.11], [-0.64, 2.71], [-1.24, 2.71]] },
+    { mat: "cabGlass", pts: [[0.67, 2.14], [1.21, 2.0], [1.21, 2.68], [0.67, 2.68]] }, { mat: "cabGlass", pts: [[-1.21, 2.0], [-0.67, 2.14], [-0.67, 2.68], [-1.21, 2.68]] },
   ],
-  panes: [{ lat: [-1.15, -0.45], y: [2.16, 2.82], r: 0.04 }, { lat: [-0.33, 0.33], y: [2.16, 2.82], r: 0.04 }, { lat: [0.45, 1.15], y: [2.16, 2.82], r: 0.04 }],
-  lamps: [[-0.82, 1.45, 0.11, "lampHead"], [0.82, 1.45, 0.11, "lampHead"]], roofLamp: [0, 3.08, 0.08],
-  wipers: [[[-0.75, 2.2], [-0.55, 2.7]], [[0.1, 2.2], [0.25, 2.7]]],
+  roofLamp: [0, 3.0, 0.1],
+  // the distant model: the bonnet low ahead of the cab
+  lod: {
+    profile: [[0.62, 0.05], [1.6, 0.15], [2.12, 1.9], [3.31, 3.0]],
+    corner: [[0.62, 0.1], [3.31, 0.1]], rows: [0.62, 1.6, 2.12, 3.31], bulge: 0, glass: false,
+  },
+};
+
+/** The railcar's paint: SBB red, the grey roof, aluminium doors and "S B B - C F F" spaced out in metal letters, as on the drawing. */
+const ARROW_LIVERY: ShinkansenLivery = {
+  title: "Red Arrow", number: "RCe 604",
+  palette: { roofG: c("#9aa0a5", 0.6), skirtG: c("#2e3134", 0.8), cabMask: c("#1d1f22", 0.3), red: c("#c41e1a"), roofS: c("#a9adb0", 0.45), alu: c("#c3c7ca", 0.3) },
+  bands: [[0, 9, "red"]], roof: "roofS", skirt: "skirtG", doors: [[0, 9, "alu"]],
+  // the third class numerals behind the doors
+  endLettering: [{ text: "S B B - C F F", d: 7.5, y: 1.08, h: 0.2, mat: "alu" }, { text: "3", d: 2.95, y: 1.0, h: 0.2, mat: "alu" }, { text: "3", d: 12.05, y: 1.0, h: 0.2, mat: "alu" }],
+};
+
+/** The bonnet's, the roof's and the underfloor's fittings (roterPfeil.ts). */
+const ARROW_FIT = {
+  C: 3.31, dJoin: ARROW_DJOIN, roof: "roofS", B: 0.62, W: 1.45, paint: { body: "red", skirt: "skirtG" },
+  // the three resistor grids of the electric brake, from the cab without the pantograph
+  resistors: [[3.7, 5.7], [6.73, 8.73], [9.77, 11.71]] as ReadonlyArray<readonly [number, number]>,
+};
+
+/** The body between the cab faces (15.0 m): the doors behind the cabs, seven windows 1.5 m apart between them. */
+const ARROW_LAYOUT = {
+  doors: [[1.25, 2.03, -1], [12.97, 13.75, 1]] as ReadonlyArray<readonly [number, number, number]>,
+  windows: Array.from({ length: 7 }, (_, i): readonly [number, number] => [2.41 + 1.5 * i, 3.6 + 1.5 * i]),
 };
 
 export const RED_ARROW: ShinkansenSeries = {
-  endLength: 22.4, midLength: 22.4, W: 1.45, Y: 1.4, S: 2.9, C: 3.65, lean: 0.95, B: 0.9, A: 1.05,
-  nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: ARROW_END, endCoupler: "buffers",
-  // the cab's two side windows over the bonnet's end, d behind the join
-  cabWindows: [[0.1, 0.9, 1.92, 2.7], [1.0, 1.8, 1.92, 2.7]],
-  windows: [[1.9, 2.65]], windowW: 1.2, pitch: 1.5, door: [1.2, 2.95, 1.9, 2.55], doorW: 0.8,
-  // the diamond pantograph of the photographs and the works drawing
-  bogieCentres: 17.1, wheelR: 0.45, wheelbase: 2.7, single: true, endPantograph: true, pantograph: "diamond",
-  liveries: { redArrow: chLivery("redArrow", "RCE 203") },
+  // the RCe 2/4 after its buffers came in 1944: 21.5 m over the bonnets, 22.4 m over the buffers
+  endLength: 22.4, midLength: 22.4, W: 1.45, Y: 1.0, S: 2.85, C: 3.31, lean: 0.97, B: 0.62, A: 0.7,
+  nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: ARROW_END,
+  // one cab side window behind the face's join, as on the drawing (the two rebuilt RAe 2/4 had a second)
+  cabWindows: [[0.03, 0.83, 2.0, 2.66]],
+  windows: [[1.64, 2.62]], windowW: 1.19, pitch: 1.5, door: [0.72, 2.66, 1.64, 2.6], doorW: 0.78,
+  layout: { end: ARROW_LAYOUT, middle: ARROW_LAYOUT }, numberAt: [-7.0, 0.9, 0.1],
+  // the diamond pantograph over the trailing bogie (cab I)
+  bogieCentres: 16.3, wheelR: 0.45, wheelbase: 2.5, single: true, endPantograph: true, pantograph: "diamond",
+  liveries: { redArrow: ARROW_LIVERY },
+  fittings: (m, b, X, car) => arrowFittings(m, b, X, car, ARROW_FIT),
   weight: { end: 40, middle: 40 }, power: 380, maxspeed: 125,
 };
 

@@ -1,7 +1,7 @@
 # Switzerland's trains
 
 **Covers** - the twenty Swiss designs of the eight-country plan: the RAe TEE II, the Roter Pfeil, the ICN, the Giruno, the FV-Dosto, SBB's FLIRT and KISS and the Rhaetian Railway's Allegra; the Re 460, Re 4/4 II, Re 6/6, Ae 6/6, Ce 6/8 II Krokodil and Ae 8/14 Landi; on the metre gauge the RhB Ge 4/4 III and Ge 6/6 I Krokodil and the MGB HGe 4/4 II; the EW IV, IC 2000 and Glacier Express coaches. Their kits, figures, deviations and tests.
-**Code** - `generator/chUnits.ts` (`CH_UNITS`, `chLivery`), `generator/chLocos.ts` (`CH_LOCOS`), `generator/seriesHelpers.ts` (`flirt`, `kiss`), `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `assets/sbb-*/`, `assets/rhb-*/`, `assets/mgb-hge442/`, `assets/glacier-express/`
+**Code** - `generator/chUnits.ts` (`CH_UNITS`, `chLivery`), `generator/roterPfeil.ts`, `generator/chLocos.ts` (`CH_LOCOS`), `generator/seriesHelpers.ts` (`flirt`, `kiss`), `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `assets/sbb-*/`, `assets/rhb-*/`, `assets/mgb-hge442/`, `assets/glacier-express/`
 **See also** - [shinkansen.md](shinkansen.md), [world-locos.md](world-locos.md), [world-coaches.md](world-coaches.md), [netherlands-trains.md](netherlands-trains.md) (the FLIRT's Dutch sister)
 
 The catalog had no Swiss train before. Every design is filed under Switzerland.
@@ -51,6 +51,18 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
   The bogie wheelbase stays at the kit's 2.05 m minimum (real 1.8 m); 90 km/h (the datasheet's
   100 km/h adhesion speed is not taken over). The distant model has the red ends and a glazed roof
   band under the white crown (`lodBody`).
+- **Roter Pfeil.** The RCe 2/4 604 of 1947 - 1956, measured on the SBB works drawing of the CLe
+  2/4 203 - 206 (`assets/sbb-roter-pfeil/`): 21.5 m over the bonnets, 22.4 m over the buffers
+  added in 1944, 16.3 m bogie centres. Its low bonnet is drawn apart from the cab face
+  (`generator/roterPfeil.ts`, through the series' `fittings`): a half ellipse in plan 2.0 m long,
+  the crease at 1.56 m, the dome above it rising to 2.14 m under the windscreens, the lamps
+  under the crease, a grille on each side and the buffers' long red housings out of its lower
+  front. The cab face behind it is a vee in plan (a `bulge` by height): two centre panes and a
+  wide pane on each arm, the roof's brow jutting over them with the top lamp. One cab side
+  window, as on the drawing; the lengthened RAe 2/4 1001 of the photographs has a second and
+  is 25.2 m long. The roof carries the three resistor grids of the electric brake and the two
+  fairings beside the diamond pantograph over cab I. The distant model keeps the bonnet's
+  step in its profile (the face's `lod`) and gives up the cab's glass for the pantograph.
 
 ## Tests
 
