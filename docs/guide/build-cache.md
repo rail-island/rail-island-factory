@@ -2,9 +2,9 @@
 
 **Covers** - the committed `build-cache/` (every design's build facts and the confirmed
 models' thumbnails), how a design's cache key is made, what a build skips for an
-unchanged design, `export/.build-keys.json`, the deploy's export cache, and what to
-commit after a model change.
-**Code** - `generator/buildCache.ts`, `generator/generate.ts` (`generateModels`,
+unchanged design, `export/.build-keys.json`, the deploy's export cache, what to
+commit after a model change, and merging branches that both changed it.
+**Code** - `generator/buildCache.ts`, `generator/cacheResolve.ts`, `.gitattributes`, `generator/generate.ts` (`generateModels`,
 `generateJsModels`, `buildExport`, `designKeys`), `generator/jsModel.ts` (`bundleFlags`),
 `.github/workflows/deploy.yml`, `test/buildCache.test.ts`
 **See also** - [setup-and-build.md](setup-and-build.md), [deploy.md](deploy.md),
@@ -32,7 +32,7 @@ All of it is a pure function of the design's code and data, so it is kept.
 
 | Path | What |
 |---|---|
-| `build-cache/facts.json` | every design's facts under its key, sorted by id: triangles, `glbStats`, rig, side-view frame, rider seat, the JS bundle's switches (`BundleFlags`: rigged, surfaces, passenger hints, interior) and the extents measured for the legacy table and the OpenTTD formations, by parameter values |
+| `build-cache/facts/<id>.json` | a design's facts under its key, a file per design: triangles, `glbStats`, rig, side-view frame, rider seat, the JS bundle's switches (`BundleFlags`: rigged, surfaces, passenger hints, interior) and the extents measured for the legacy table and the OpenTTD formations, by parameter values |
 | `build-cache/thumbs/<id>.png` | a confirmed model's thumbnail (no draft's: the site draws those in the browser, [../site/workshop.md](../site/workshop.md)) |
 
 A design's facts are written only once it passed the checks, so a cached design
@@ -105,6 +105,26 @@ changed or newly confirmed model's facts and thumbnail land there, which also ma
 `test/buildCache.test.ts` fails while the committed cache is stale - a design whose
 key moved, a design that no longer exists, a confirmed model without its thumbnail -
 and names them. Never edit `build-cache/` by hand.
+
+## Merging
+
+The facts are a file per design (they were one `facts.json`, which every pair of
+branches that touched any model conflicted in, and resolving it by taking one side
+threw the other side's entries away, so every design it had re-keyed was built
+again). Now git merges two branches that changed different designs without a
+conflict: each side's files are kept as they are, and after the merge every file
+still matches its design's key unless the merged code re-keys it (a shared kit both
+branches changed), which `pnpm build:models` then rebuilds alone.
+
+Where both branches changed the same design, its file (or thumbnail) conflicts.
+`.gitattributes` marks `build-cache/**` `merge=binary`, so git never writes conflict
+markers into it; run **`pnpm cache:resolve`** (`cacheResolve.ts`): it takes the
+incoming side's file of each conflicted path (or drops one that side deleted), runs
+the build - which rebuilds exactly the designs whose key no longer matches, usually
+the few both branches changed - and stages `build-cache/`. A facts file that does not
+parse or holds another `CACHE_VERSION` is skipped on reading, so its design is
+built again rather than failing the build. An old single `facts.json` is read once
+and removed on the next save.
 
 `CACHE_VERSION` (`buildCache.ts`) is bumped when what a facts entry holds or how a
 key is made changes; `THUMB_VERSION` (`generate.ts`) when a thumbnail's framing or

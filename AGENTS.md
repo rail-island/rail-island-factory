@@ -56,7 +56,10 @@ document that owns it in the same change.** Conventions:
 - **`build-cache/` is generated and committed** (docs/guide/build-cache.md): every
   design's build facts and the confirmed models' thumbnails, keyed on their inputs.
   After a model change run `pnpm build:models` and commit `build-cache/` with it;
-  `pnpm test` fails while it is stale. Never edit it by hand.
+  `pnpm test` fails while it is stale. Never edit it by hand. It holds a file per
+  design, so merges of branches that changed different designs need nothing; when a
+  merge does conflict in it, run `pnpm cache:resolve` (rebuilds only the stale
+  designs) instead of regenerating it whole.
 - The site UI is **English only**, but every text the game shows from the factory -
   model titles, parameter titles and values, set type names and descriptions,
   woods and species names, categories - is **exported in the game's 14 languages**
