@@ -17,7 +17,8 @@
 //
 // The chairlift chair is a new design with no webapp reference: its rope runs
 // along x through the grip at y 3.60 and its seat top is at 0.62, whatever the
-// seat count or cover (CHAIR).
+// seat count or cover (CHAIR). Its seats run across the rope (along z), the
+// riders facing -x, the way the game carries a cabin (CHAIR_TURN).
 //
 // The tramway car is authored ACROSS its length (long axis z, the webapp's yaw
 // is 90); the gondola's rope runs along x (yaw 0). Units are metres; every
@@ -419,8 +420,11 @@ export function gondolaCabin(): MeshBuilder {
 // the chairlift chair
 
 /**
- * The chair's datums and frame, metres. The rope runs along x through the grip
- * at `rope`; the riders sit facing +z on cushions whose top is `seat`; `pitch`
+ * The chair's datums and frame, metres, as the chair is drawn: the riders sit
+ * facing +z on cushions whose top is `seat`, the seats side by side along x,
+ * and CHAIR_TURN then turns it a quarter so they face the travel. The grip on
+ * the rope is drawn in the model's own frame: the rope runs along x through it
+ * at `rope`. `pitch`
  * is the width of one seat place. The bubble cover turns about the pivot axis
  * (y, z) = (`pivotY`, `pivotZ`) and reaches `bubbleR` from it.
  */
@@ -441,6 +445,13 @@ export const CHAIR = {
   backZ: -0.3,
 };
 
+/**
+ * The chair's frame to the model's: a quarter turn about y that takes the riders'
+ * +z to -x, so they face the travel (the game runs a cabin with its +x along
+ * -travel) and the seats line up across the rope. A rotation: faces stay wound outward.
+ */
+export const CHAIR_TURN = ([x, y, z]: Vec3): Vec3 => [-z, y, x];
+
 /** The cover and seat colours of each `color` value: the photo's orange first. */
 const CHAIR_COLOURS: Record<string, { cover: string; seat: string }> = {
   orange: { cover: "#f0761c", seat: "#b8501a" },
@@ -457,8 +468,8 @@ export const CHAIRLIFT_PARAMS: readonly ParamSpec[] = [
     values: [{ value: "6", title: "Six-seater" }, { value: "4", title: "Four-seater" }, { value: "8", title: "Eight-seater" }],
   },
   {
-    name: "cover", title: "Cover", default: "bubble",
-    values: [{ value: "bubble", title: "Weather bubble" }, { value: "none", title: "Open chair" }],
+    name: "cover", title: "Cover", default: "none",
+    values: [{ value: "none", title: "Open chair" }, { value: "bubble", title: "Weather bubble" }],
   },
   {
     name: "color", title: "Colour", default: "orange",
@@ -588,7 +599,7 @@ function chairBody(m: MeshBuilder, seats: number, bubble: boolean): void {
 /** The hanger from the beam over the chair up to the detachable grip on the rope. */
 function chairHanger(m: MeshBuilder): void {
   const r = CHAIR.rope;
-  m.scope("arm", () => {
+  m.scope("arm", () => m.moved(CHAIR_TURN, () => {
     // straight down from the grip, then bent back over the riders' heads to the beam
     // (a quadratic curve from the vertical at y 3.0 to the beam, as six straight lengths)
     const top: [number, number] = [3.0, 0];
@@ -608,8 +619,8 @@ function chairHanger(m: MeshBuilder): void {
       bar(m, "steel", p, [0, q[1] + (q[1] - p[1]) * k, q[2] + (q[2] - p[2]) * k], 0.05, 8);
     }
     m.prism("steel", rect(0.16, 0.16, 0, CHAIR.beamZ), CHAIR.beamY - 0.06, CHAIR.beamY + 0.08);
-  });
-  m.scope("number plate", () => block(m, "white", -0.11, 0.11, 3.1, 3.22, 0.035, 0.055));
+  }));
+  m.scope("number plate", () => m.moved(CHAIR_TURN, () => block(m, "white", -0.11, 0.11, 3.1, 3.22, 0.035, 0.055)));
   m.scope("grip", () => {
     m.scope("body", () => block(m, "trim", -0.34, 0.34, r - 0.17, r - 0.065, -0.11, 0.11));
     m.scope("jaws", () => {
@@ -634,7 +645,7 @@ export function chairliftChair(params?: ParamValues): MeshBuilder {
     seat: { color: colours.seat, metallic: 0.02, roughness: 0.75 },
     frame: { color: "#2b2d30", metallic: 0.3, roughness: 0.5 },
   });
-  m.scope("body", () => chairBody(m, Number(p.seats), p.cover === "bubble"));
+  m.scope("body", () => m.moved(CHAIR_TURN, () => chairBody(m, Number(p.seats), p.cover === "bubble")));
   m.scope("hanger", () => chairHanger(m));
   return m;
 }
@@ -713,7 +724,7 @@ export function chairliftChairLod(params?: ParamValues): MeshBuilder {
       frame: { color: "#2b2d30", metallic: 0.3, roughness: 0.5 },
     },
     parts: [
-      { draw: (m) => {
+      { draw: (m) => m.moved(CHAIR_TURN, () => {
         // the seat and the backrest, the cushions' colour in front, the shell behind
         lodBlock(m, -hw, hw, frameY - 0.02, CHAIR.seat, backZ, frontZ, { side: "seat", bottom: "seat" });
         const b0: Vec3 = [0, CHAIR.seat + 0.03, backZ + 0.03];
@@ -726,16 +737,17 @@ export function chairliftChairLod(params?: ParamValues): MeshBuilder {
         lodBar(m, "steel", [-sx - 0.04, beamY, beamZ], [sx + 0.04, beamY, beamZ], 0.06, 3);
         lodBar(m, "steel", [0, CHAIR.rope - 0.14, 0], [0, 2.75, 0], 0.07, 3);
         lodBar(m, "steel", [0, 2.8, 0.03], [0, beamY, beamZ], 0.07, 3);
-        lodBlock(m, -0.42, 0.42, CHAIR.rope - 0.17, CHAIR.rope + 0.2, -0.11, 0.13, { side: "trim", bottom: "trim" });
         // the footrest, its underside on the ground line
         lodBar(m, "trim", [-hw + 0.1, 0.04 * Math.SQRT1_2, 0.66], [hw - 0.1, 0.04 * Math.SQRT1_2, 0.66], 0.04);
-      } },
-      { optional: 1, draw: (m) => {
+      }) },
+      // the grip, along the rope in the model's own frame
+      { draw: (m) => lodBlock(m, -0.42, 0.42, CHAIR.rope - 0.17, CHAIR.rope + 0.2, -0.11, 0.13, { side: "trim", bottom: "trim" }) },
+      { optional: 1, draw: (m) => m.moved(CHAIR_TURN, () => {
         // the safety bar across the laps and its arms to the pivots
         lodBar(m, "trim", [-hw, 0.9, 0.62], [hw, 0.9, 0.62], 0.04, 3);
         for (const s of [-1, 1]) lodBar(m, "trim", [s * hw, pivotY, pivotZ], [s * hw, 0.9, 0.62], 0.035, 3);
-      } },
-      ...(p.cover === "bubble" ? [{ draw: (m: MeshBuilder) => {
+      }) },
+      ...(p.cover === "bubble" ? [{ draw: (m: MeshBuilder) => m.moved(CHAIR_TURN, () => {
         // the bubble: three facets of its arc about the pivot, outside and in, and its two ends
         const angs = [100, 60, 20, -20].map((d) => (d * Math.PI) / 180);
         const x = hw + 0.02;
@@ -747,7 +759,7 @@ export function chairliftChairLod(params?: ParamValues): MeshBuilder {
           }
           for (const s of [-1, 1]) lodPolygon(m, "cover", [[s * (x + 0.03 * sgn), pivotY, pivotZ], ...angs.map((a) => pt(a, s * (x + 0.03 * sgn)))], [s * sgn, 0, 0]);
         }
-      } }] : []),
+      }) }] : []),
     ],
   });
 }

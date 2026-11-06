@@ -1,7 +1,7 @@
 # Animation
 
-**Covers** - animated models: the mesh builder's animation clips and how they reach the GLB and the JS model, what plays each clip (`clipDrives`: a time loop, the distance travelled, a state, a door or a chosen motion), the wind turbine's `wind` clip, the oil pumpjack's `pumping` mechanism, the steam locomotives' `running` clip (wheelsets, rods, Walschaerts valve gear), the `rolling` clip of the wheels with spokes or wheel nuts (`spin` parts), the horse tram's `trot`, the pantographs as `liftable` mechanisms (`state` clips) and the `rod` primitive they are drawn with, the collector heights they reach (`collector.ts`), the timing contract for consumers, the site's Start/Stop and Up/Down buttons and a character's motion buttons, and the tests.
-**Code** - `generator/meshCore.ts` (`animate`, `AnimationClipSpec`, `ClipDrive`, `clipDrives`, `tube`, `rod`, `sampleDraw`, `movingPart`, `drawRouted`), `generator/liftable.ts`, `generator/collector.ts`, `generator/cd163.ts` (`pushRod`), the pantograph builders (`czElectricKit.ts` `singleArm`/`diamond`, `cd150.ts`, `cd163.ts`, `cd230.ts`, `emuParts.ts`, `shinkansen0.ts`, `tramKit.ts`), `test/liftable.test.ts`, `test/pantographs.test.ts`, `generator/industry.ts` (`industrialWind`, `industrialOilPump`), `generator/pumpjack.ts`, `generator/meshBuilder.ts` (`toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/steamGear.ts` (`RunningGear`, `N_SAMPLES`, `RUNNING_SPEED`, `RUNNING_CLIP`), `generator/rolling.ts` (`rollWheels`, `ROLLING_CLIP`, `ROLLING_SPEED`, `ROLLING_SAMPLES`), `MeshCore.spin`, `generator/cd150.ts` and `generator/photoTrucks.ts` (their rolling wheels), `generator/horseTram.ts` (`TROT_CLIP`, `trotPose`; its wheels and its horse), `generator/glbPose.ts`, `src/ModelViewer.tsx`, `src/viewerMotions.ts`, `test/animation.test.ts`, `test/steam.test.ts`, `test/rolling.test.ts`, `test/horseTram.test.ts`, `test/pumpjack.test.ts`, `test/jsModel.test.ts`
+**Covers** - animated models: the mesh builder's animation clips and how they reach the GLB and the JS model, what plays each clip (`clipDrives`: a time loop, the distance travelled, a state, a door or a chosen motion), the wind turbine's `wind` clip, the oil pumpjack's `pumping` mechanism, the steam locomotives' `running` clip (wheelsets, rods, Walschaerts valve gear), the `rolling` clip of the wheels with spokes or wheel nuts (`spin` parts), the horse tram's `trot`, the pantographs as `liftable` mechanisms (`state` clips) and the `rod` primitive they are drawn with, the collector heights they reach (`collector.ts`), the timing contract for consumers, the aircraft's `flaps` and `droop` clips, the site's Start/Stop, Up/Down, gear, flaps and nose buttons and a character's motion buttons, and the tests.
+**Code** - `generator/meshCore.ts` (`animate`, `AnimationClipSpec`, `ClipDrive`, `clipDrives`, `tube`, `rod`, `sampleDraw`, `movingPart`, `drawRouted`), `generator/liftable.ts`, `generator/collector.ts`, `generator/cd163.ts` (`pushRod`), the pantograph builders (`czElectricKit.ts` `singleArm`/`diamond`, `cd150.ts`, `cd163.ts`, `cd230.ts`, `emuParts.ts`, `shinkansen0.ts`, `tramKit.ts`), `test/liftable.test.ts`, `test/pantographs.test.ts`, `generator/industry.ts` (`industrialWind`, `industrialOilPump`), `generator/pumpjack.ts`, `generator/meshBuilder.ts` (`toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/steamGear.ts` (`RunningGear`, `N_SAMPLES`, `RUNNING_SPEED`, `RUNNING_CLIP`), `generator/rolling.ts` (`rollWheels`, `ROLLING_CLIP`, `ROLLING_SPEED`, `ROLLING_SAMPLES`), `MeshCore.spin`, `generator/cd150.ts`, `generator/photoTrucks.ts`, `generator/busDetail.ts` and `generator/busAssembly.ts` (their rolling wheels), `generator/horseTram.ts` (`TROT_CLIP`, `trotPose`; its wheels and its horse), `generator/glbPose.ts`, `generator/propellers.ts`, `src/ModelViewer.tsx`, `src/viewerMotions.ts`, `test/animation.test.ts`, `test/steam.test.ts`, `test/rolling.test.ts`, `test/horseTram.test.ts`, `test/pumpjack.test.ts`, `test/jsModel.test.ts`
 **See also** - [steam-locomotives.md](steam-locomotives.md), [doors.md](doors.md) (the `door` clips), [characters.md](characters.md) (the `motion` clips), [lamps.md](lamps.md), [vehicles.md](vehicles.md) (parts), [export.md](export.md), [js-format.md](js-format.md), [industry.md](industry.md), [../site/catalog-site.md](../site/catalog-site.md)
 
 ## Clips in the mesh builder
@@ -21,7 +21,7 @@ Every clip states what advances it in a consumer, so the game plays any clip wit
 knowing any model or clip by name:
 
 ```ts
-type ClipDrive = { drive: "time" } | { drive: "distance"; speed: number } | { drive: "state" } | { drive: "door"; side: "left" | "right" } | { drive: "motion" };
+type ClipDrive = { drive: "time" } | { drive: "distance"; speed: number } | { drive: "state" } | { drive: "door"; side: "left" | "right" } | { drive: "motion" } | { drive: "flaps" } | { drive: "droop" };
 ```
 
 - **`time`** - loop at the clip's own duration, whatever the model does: the wind
@@ -48,6 +48,13 @@ type ClipDrive = { drive: "time" } | { drive: "distance"; speed: number } | { dr
   one that ends in another pose eases into that end and holds it (sitting down). A
   drive of its own, not `state`, so that a consumer moving every `state` clip as a
   pantograph leaves a character's limbs alone.
+
+- **`flaps`** and **`droop`** - state clips of an aircraft: its flaps from retracted
+  (0, the rest pose) to the landing setting (1), and Concorde's nose from raised for
+  flight (0, the rest pose) to drooped for the airport (1)
+  ([world-aircraft.md](world-aircraft.md)). The consumer scrubs them as a state; drives of
+  their own so that a consumer moving every `state` clip as a pantograph leaves them
+  alone. The aircraft's propellers turn on a `time` clip, `propellers`.
 
 `animate` refuses any other drive kind. A consumer that does not know a drive must
 leave its clip alone, so a new kind never moves a model in an old consumer.
@@ -141,6 +148,7 @@ steam locomotives (whose `running` clip turns their wheels with the rods):
 | `proc-vehicle-cd-150` | each wheelset: the axle and both spoked wheels | `wheelset-1` .. `wheelset-4`, children of `bogie0` and `bogie1` |
 | `proc-vehicle-tatra-815-tipper`, `proc-vehicle-praga-rv` | each wheel's rim, hub and eight nuts | `wheel-front-left-spin`, `wheel-front-right-spin`, `wheel-rear-<1, 2>-<left, right>` |
 | `proc-vehicle-mercedes-atego-1224` | the same, one rear axle | `wheel-front-<left, right>-spin`, `wheel-rear-1-<left, right>` |
+| the confirmed buses ([buses.md](buses.md)) | each outer wheel's rim, hub and ten nuts (an inner twin is a plain tyre) | `wheel-front-<left, right>-spin`, `wheel-rear-<1, 2>-<left, right>` (the axles behind the steered one, front first; on an articulated bus in its section's node) |
 | `proc-vehicle-horse-tram` | each wheelset: the axle and both eight-spoked wheels | `wheelset-1`, `wheelset-2`, top-level nodes beside the body (a single truck, no bogie) |
 
 - **`MeshCore.spin(name, pivot, fn)`** draws `fn` as a part pivoted on the
@@ -248,6 +256,9 @@ The clip's `clipDrives` entry states exactly this: `distance` at 5 m/s.
   working collector toward raised or folded over 1.5 s from wherever it stands -
   the viewer sets each state action's time from one lift value, as the game drives
   the clip from a state. A model arrives raised, its rest pose;
+- an aircraft's **`flaps`** and **`droop`** clips get **Flaps out / Flaps in** and
+  **Nose down / Nose up**, over 3 s, eased, from wherever they stand; its node `gear`
+  gets **Gear up / Gear down**, which hide and show it as the game does in flight;
 - a **character** (a model with a `motion` clip) gets one button per clip
   instead, named after it, and **Stop** ([characters.md](characters.md),
   `viewerMotions.ts`): the `time` and `distance` clips and a closed `motion` clip

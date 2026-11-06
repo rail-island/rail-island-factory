@@ -188,15 +188,18 @@ export function exhausts(u: readonly [number, number], hw: number, y: number, ra
  * An ocean ship's fittings (docs/models/world-ships.md, "Detail"): the forecastle's
  * bulwark, the anchors in their pockets each side of the bow, the windlasses and
  * bollards on the forecastle, the mooring winches aft at `aft` (metres from the
- * stern; none when empty) and, given the `draft`, the draft marks and the bow
- * thruster's sign on the hull.
+ * stern; none when empty), the railing along the main deck's edge (`rail`: its
+ * span, or false) and, given the `draft`, the draft marks and the bow thruster's
+ * sign on the hull.
  */
-export function fittings(o: { L: number; B: number; D: number; fc: readonly [number, number]; aft?: readonly number[]; anchor?: number; bulwark?: number; rake?: number; draft?: number }): Item[] {
+export function fittings(o: { L: number; B: number; D: number; fc: readonly [number, number]; aft?: readonly number[]; anchor?: number; bulwark?: number; rake?: number; draft?: number; rail?: readonly [number, number] | false }): Item[] {
   const s = o.anchor ?? Math.min(4.5, Math.max(1.1, o.L / 85));
   const k = Math.min(1.6, Math.max(0.5, o.L / 200));
   const top = o.D + o.fc[1];
   const T = o.draft;
   return [
+    // the railing along the main deck's edge, from the stern (or `rail`) to the forecastle
+    ...(o.rail !== false ? [{ k: "edgeRail", u: o.rail ?? [0.6, o.L - o.fc[0] - 0.4], h: 1.1 } as Item] : []),
     ...(T ? [{ k: "marks", at: [o.L * 0.9, o.L * 0.5], y: [Math.max(1, T - 4 * k), T + 4 * k], step: Math.max(0.5, Math.round(k * 2) / 2), s: 0.6 * k, thruster: o.L * 0.95 } as Item] : []),
     { k: "bulwark", u: [o.L - o.fc[0] + 0.8, o.L], h: o.bulwark ?? Math.min(2, Math.max(1, o.L / 220)), t: 0.3 },
     { k: "anchors", u: o.L * (1 - (o.rake ?? 0.03)) - s * 0.9, y: top - s * 1.1, s },
@@ -225,3 +228,44 @@ export function mast(u: number, y0: number, y1: number, r = 0.25): Item {
 export function lifeboats(at: readonly number[], z: number, y: number, len = 8, r = 1.2): Item {
   return { k: "boats", at, z, y, len, r };
 }
+
+/**
+ * The detailed form of a list of deck items (docs/models/world-ships.md, "Detail"); a hull-coloured shell (a car deck) is left as it is:
+ * every tier without one gets a deck edge (its depth from its height), and a tier
+ * with side windows, a square front and a fixed half-width its windows on the front.
+ */
+export function detailed(items: readonly Item[]): Item[] {
+  return items.map((it): Item => {
+    if (it.k !== "tier" || it.lip !== undefined || it.mat === "glass" || it.mat === "hull") return it;
+    const h = it.y[1] - it.y[0];
+    const lip = Math.min(0.4, Math.max(0.08, h * 0.12));
+    const win = it.windows?.[0];
+    const front = !it.front && win && win.mat === undefined && !(it.round?.[1]) && it.hw !== undefined && it.hw > 1
+      ? { front: { y: win.y, h: win.h, w: win.w, n: Math.max(2, Math.round((it.hw * 2) / Math.max(1.4, win.pitch))) } }
+      : {};
+    return { ...it, lip, ...front };
+  });
+}
+
+/**
+ * A passenger ship's fittings: the rubbing fender along the sheer, the anchors at
+ * the bow (and the stern of a double-ended ferry), bollards at both ends and the
+ * draft marks.
+ */
+export function passengerFittings(o: { L: number; B: number; D: number; T: number; both?: boolean; fender?: number; anchor?: number; mooring?: boolean }): Item[] {
+  const k = Math.min(1.4, Math.max(0.3, o.L / 120));
+  const s = o.anchor ?? Math.min(3, Math.max(0.5, o.L / 70), o.D / 1.8);
+  return [
+    ...(o.fender !== 0 ? [{ k: "fender", u: [0, o.L], y: [o.D - 0.6 * k - 0.2, o.D - 0.2], out: o.fender ?? 0.25 * k, mat: "black", name: "rubbing fender" } as Item] : []),
+    { k: "anchors", u: o.L * 0.96 - s * 0.6, y: o.D - s * 0.9, s },
+    ...(o.both ? [{ k: "anchors", u: o.L * 0.04 + s * 0.6, y: o.D - s * 0.9, s, name: "stern anchors" } as Item] : []),
+    ...(o.mooring !== false ? [{ k: "mooring", at: [Math.max(1, o.L * 0.03), o.L - Math.max(1.2, o.L * 0.04)], hw: o.B / 2 - Math.max(0.5, k), s: 0.6 * k } as Item] : []),
+    { k: "marks", at: [o.L * 0.88, o.L * 0.12], y: [Math.max(0.4, o.T - 2 * k), o.T + 1.5 * k], step: k > 0.8 ? 1 : 0.5, s: 0.4 * k },
+  ];
+}
+
+/** Liferaft canisters in a row along both sides at height y. */
+export function liferafts(u0: number, u1: number, n: number, z: number, y: number, r = 0.45): Item[] {
+  return Array.from({ length: n }, (_, i) => u0 + ((u1 - u0) * i) / Math.max(1, n - 1)).flatMap((u): Item[] => [1, -1].map((sd): Item => ({ k: "cyl", u, z: sd * z, y: [y, y + r * 2.2], r, n: 8, mat: "white", name: "liferaft" })));
+}
+

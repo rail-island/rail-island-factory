@@ -98,27 +98,30 @@ are `bottom` (keel to draft), `boot`, `hull`, `stripe`; the deck is drawn in `de
 | `lashing` | container lashing bridges across the bay gaps |
 | `marks` | draft marks (a tick a metre) and the bow thruster's sign (or with `eye`, a painted eye) on the hull, as decals |
 | `fender` | a rubber fender band outside the hull, from u0 to u1 between two heights |
+| `edgeRail` | a railing (posts, top and middle rails) following the deck's edge from u0 to u1 |
+| `hullLine` | a line decal along a polyline on the hull's sides: a bow visor's seam |
 | `strakes` | thin lines along the hull at given heights: plank seams, painted bands |
 
 Some items take detail options: a `tier`'s `lip` (the deck above overhanging the walls, its
 underside closed), a window row's `mat` (vent grilles, a painted line), `hatches`'
-`coaming`, `ridge` and `ribs`, and `containers`' `rows` (one stack per row of boxes, the
+`coaming`, `ridge`, `ribs` and `ribMat`, a `paddle`'s painted `rays` on its boxes, and `containers`' `rows` (one stack per row of boxes, the
 lower and upper boxes in two colours).
 
 Shared shapes are in `worldShips.ts`: `oceanHull`, `deckhouse` (an accommodation stack
 with its wheelhouse and wings), `aftHouse` (that, its funnel, mast and lifeboats),
-`funnel`, `mast`, `lifeboats`, `exhausts`, `fittings`, `bayGaps`, and the `load`, `livery`
+`funnel`, `mast`, `lifeboats`, `exhausts`, `fittings`, `bayGaps`, `detailed`,
+`passengerFittings`, `liferafts`, and the `load`, `livery`
 and `colour` parameters.
 
 ### Detail
 
-The detailed ships (so far the first 50 of the list: the ocean and river cargo ships, the
-service ships but the drillship, fireboat, Shannon and pilot boat, and the narrowboat, Thames
-barge, dhow, junk and felucca) carry, beyond their hull and blocks:
+All 100 ships are detailed (in four batches of the list's order). Beyond their hull and
+blocks they carry:
 
 - **the hull**: `fine` stations; `fittings()` gives the forecastle's bulwark, the anchors, the
-  windlasses and bollards forward, mooring winches aft, the draft marks and the bow thruster
-  sign;
+  windlasses and bollards forward, mooring winches aft, the railing along the main deck's
+  edge (`edgeRail`, its span `rail` or none where a bulwark or crash rail runs), the draft
+  marks and the bow thruster sign;
 - **the house**: `deckhouse`'s and `aftHouse`'s `detail` - a deck edge on every deck, windows
   on the front of every deck and all round the wheelhouse; `aftHouse` adds exhaust pipes in the
   funnel's mouth and, with `freefall`, the freefall lifeboat over the stern and a rescue boat;
@@ -128,12 +131,18 @@ barge, dhow, junk and felucca) carry, beyond their hull and blocks:
   vent masts; the bulkers' ridged and ribbed covers and hold vents; the old cargo ships' cowl
   ventilators, mast houses and well-deck bulwarks; the tugs' fenders and towing gear, the
   fishing gear, the research and offshore ships' deck equipment;
+- **the cruise ships and liners**: balcony glass along the cabin decks, davits, portholes in
+  rows, funnel guys and cowl ventilators (Olympic), radomes; the tall ships' shrouds
+  (`shrouds()` in `worldShipsSmall.ts`), bulwarks, boats, wheels and anchors;
+- **the passenger ships**: `detailed()` (deck edges, front windows) and `passengerFittings()`
+  (rubbing fender, anchors, bollards, draft marks), railings round the open decks, liferafts
+  (`liferafts()`), lifeboats, exhausts and radomes;
 - **the small craft** (4,000 triangles): plank seams (`strakes`), gunwales, rudders and tillers,
   the deck clutter of their trade, a painted eye (`marks` with `eye`), the running rigging that
   reads (sprit, vangs, sheets).
 
-The other 50 ships are still at the first round's level and are to be brought up to it in
-later batches (the `ship` skill, `.agents/skills/ship/`, is the checklist).
+A new ship is brought to the same level (the `ship` skill, `.agents/skills/ship/`, is the
+checklist); `test/worldShips.test.ts` checks each batch's detail and share of its budget.
 
 ### Sails
 
@@ -156,9 +165,9 @@ neighbours' planes, so no two coplanar faces fight.
 
 | ship | triangles | reached |
 |---|---|---|
-| ocean ships over 150 m | 25,000 | 3,900 (PCTC) to 17,500 (MSC Gulsun) for the detailed ships; 2,500 to 10,300 (Icon) for the others |
-| ships up to 150 m | 15,000 | 3,800 (push barge) to 6,200 for the detailed ships; 1,200 to 4,200 for the others |
-| small craft (`small`) | 4,000 | 2,300 to 3,900 for the detailed ones; 500 to 1,300 for the others |
+| ocean ships over 150 m | 25,000 | 3,900 (PCTC) to 19,400 (MSC Gulsun) |
+| ships up to 150 m | 15,000 | 2,600 (SR.N4) to 9,800 (Hurtigruten) |
+| small craft (`small`) | 4,000 | 1,100 (gondola) to 3,900 (junk) |
 | distant model | 100 | 30 to 99 |
 
 `shipBudget(spec)` gives the budget; the suite checks every sampled parameter combination.

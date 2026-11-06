@@ -21,12 +21,12 @@ Second batch, `worldBuses2.ts`:
 | id | title | kind | size (m) | axles (m from the nose) | doors | OpenTTD year / capacity | triangles |
 |---|---|---|---|---|---|---|---|
 | `veh-leyland-atlantean` | Leyland Atlantean | double | 9.45 x 2.5 x 4.38 | 2.1 / 7.05 | 1 | 1958 / 78 | 2,958 |
-| `veh-bristol-lodekka` | Bristol Lodekka | double | 8.23 x 2.44 x 4.09 | 1.35 / 6.23 | 1 | 1949 / 60 | 3,030 |
+| `veh-bristol-lodekka` | Bristol Lodekka | double | 8.23 x 2.44 x 4.09 | 1.35 / 6.23 | 1 | 1949 / 60 | 7,104 |
 | `veh-plaxton-panorama` | Plaxton Panorama Elite | coach | 11 x 2.5 x 3.15 | 2.3 / 8 | 1 | 1968 / 49 | 2,616 |
 | `veh-mb-o302` | Mercedes-Benz O 302 | coach | 11 x 2.5 x 3.1 | 2.4 / 8.35 | 1 | 1965 / 50 | 2,652 |
 | `veh-man-sl200` | MAN SL 200 | city | 11.05 x 2.5 x 2.95 | 2.6 / 8.2 | 3 | 1973 / 100 | 3,154 |
 | `veh-neoplan-cityliner` | Neoplan Cityliner | coach | 12 x 2.5 x 3.55 | 2.65 / 8.65 | 2 | 1971 / 49 | 2,672 |
-| `veh-bussing-d2u` | Bussing D2U | double | 9.8 x 2.5 x 4.25 | 2.2 / 7.4 | 2 | 1951 / 100 | 3,246 |
+| `veh-bussing-d2u` | Bussing D2U | double | 9.8 x 2.5 x 4.25 | 2.2 / 7.4 | 2 | 1951 / 100 | 7,350 |
 | `veh-cobus-3000` | Cobus 3000 | city | 13.97 x 3 x 3 | 3.2 / 10.5 | 4 | 1999 / 110 | 3,128 |
 | `veh-volvo-9700` | Volvo 9700 | coach | 12.3 x 2.55 x 3.55 | 2.75 / 8.95 | 2 | 2001 / 55 | 2,672 |
 | `veh-van-hool-a330` | Van Hool A330 | city | 11.97 x 2.5 x 3.05 | 2.65 / 8.55 | 3 | 1995 / 100 | 2,968 |
@@ -38,11 +38,11 @@ Second batch, `worldBuses2.ts`:
 | `veh-iveco-crossway` | Iveco Crossway | city | 12.1 x 2.55 x 3.18 | 2.7 / 8.75 | 2 | 2006 / 60 | 2,676 |
 | `veh-irizar-i8` | Irizar i8 | coach | 13 x 2.55 x 3.7 | 2.75 / 9.3 | 2 | 2014 / 55 | 2,684 |
 | `veh-solaris-urbino-12e` | Solaris Urbino 12 Electric | city | 12 x 2.55 x 2.9 | 2.7 / 8.6 | 3 | 2013 / 90 | 2,968 |
-| `veh-karosa-sm11` | Karosa SM 11 | city | 11.04 x 2.5 x 2.9 | 2.35 / 7.65 | 3 | 1964 / 100 | 3,000 |
+| `veh-karosa-sm11` | Karosa SM 11 | city | 11.04 x 2.5 x 2.9 | 2.35 / 7.65 | 3 | 1964 / 100 | 7,184 |
 | `veh-sor-nb12` | SOR NB 12 | city | 12 x 2.55 x 3 | 2.8 / 8.7 | 3 | 2010 / 100 | 2,956 |
 | `veh-ikarus-55` | Ikarus 55 | coach | 9.5 x 2.5 x 3 | 2 / 6.7 | 1 | 1953 / 41 | 2,564 |
 | `veh-laz-695` | LAZ-695 | city | 9.19 x 2.5 x 3 | 2.3 / 6.5 | 2 | 1956 / 67 | 2,871 |
-| `veh-liaz-677` | LiAZ-677 | city | 10.53 x 2.5 x 3 | 2.5 / 7.65 | 2 | 1967 / 110 | 2,908 |
+| `veh-liaz-677` | LiAZ-677 | city | 10.53 x 2.5 x 3 | 2.5 / 7.65 | 2 | 1967 / 110 | 7,552 |
 | `veh-liaz-5292` | LiAZ-5292 | city | 12 x 2.5 x 2.9 | 2.8 / 8.6 | 3 | 2004 / 108 | 2,956 |
 | `veh-ziu-9` | ZiU-9 | city, trolley | 11.83 x 2.5 x 3 | 2.4 / 8.4 | 3 | 1972 / 120 | 3,210 |
 
@@ -50,19 +50,19 @@ Third batch, `worldBuses3.ts`:
 
 | id | title | kind | size (m) | axles (m from the nose) | doors | OpenTTD year / capacity | triangles |
 |---|---|---|---|---|---|---|---|
-| `veh-aec-routemaster` | AEC Routemaster | double, half cab | 8.38 x 2.44 x 4.38 | 1.15 / 6.28 | 1 | 1956 / 64 | 2,706 |
+| `veh-aec-routemaster` | AEC Routemaster | double, half cab | 8.38 x 2.44 x 4.38 | 1.15 / 6.28 | 1 | 1956 / 64 | 5,792 |
 | `veh-mb-o3500` | Mercedes-Benz O 3500 | city, bonnet | 9.3 x 2.48 x 2.95 | 1.25 / 5.75 | 2 | 1949 / 40 | 2,617 |
 | `veh-magirus-saturn` | Magirus-Deutz Saturn II | city, bonnet | 10 x 2.5 x 3 | 1.3 / 6.3 | 2 | 1956 / 45 | 2,661 |
 | `veh-vw-t1-samba` | Volkswagen Type 2 Samba | minibus | 4.28 x 1.75 x 1.94 | 0.7 / 3.1 | 1 | 1951 / 8 | 2,328 |
 | `veh-chausson-aph` | Chausson APH | city, bonnet | 9.65 x 2.5 x 2.95 | 1.1 / 6 | 2 | 1950 / 60 | 2,545 |
 | `veh-jelcz-043` | Jelcz 043 | city | 10.7 x 2.5 x 2.95 | 2.1 / 7.25 | 2 | 1964 / 45 | 3,520 |
-| `veh-skoda-706-rto` | Skoda 706 RTO | city | 10.7 x 2.5 x 2.95 | 2.1 / 7.25 | 2 | 1958 / 41 | 3,520 |
+| `veh-skoda-706-rto` | Skoda 706 RTO | city | 10.7 x 2.5 x 2.95 | 2.1 / 7.25 | 2 | 1958 / 41 | 8,520 |
 | `veh-paz-672` | PAZ-672 | city | 7.15 x 2.44 x 2.95 | 1.5 / 5.1 | 2 | 1967 / 45 | 2,976 |
 | `veh-saurer-postbus` | Saurer L4C Postbus | city, bonnet | 10 x 2.4 x 3 | 1.3 / 6 | 2 | 1959 / 37 | 2,585 |
 | `veh-gm-new-look` | GM New Look | city | 12.2 x 2.59 x 3.05 | 2.1 / 9.34 | 2 | 1959 / 70 | 3,056 |
-| `veh-gm-scenicruiser` | GM Scenicruiser | coach, raised deck | 12.2 x 2.44 x 2.95 (deck 3.4) | 2.3 / 9.25 / 10.45 | 1 | 1954 / 43 | 3,686 |
+| `veh-gm-scenicruiser` | GM Scenicruiser | coach, raised deck | 12.2 x 2.44 x 2.95 (deck 3.4) | 2.3 / 9.25 / 10.45 | 1 | 1954 / 43 | 9,186 |
 | `veh-flxible-clipper` | Flxible Clipper | coach | 10.06 x 2.44 x 2.9 | 2.5 / 7.6 | 1 | 1937 / 29 | 2,590 |
-| `veh-blue-bird-vision` | Blue Bird Vision | city, bonnet | 11.7 x 2.44 x 3.2 | 1.1 / 7.2 | 1 | 2003 / 72 | 2,938 |
+| `veh-blue-bird-vision` | Blue Bird Vision | city, bonnet | 11.7 x 2.44 x 3.2 | 1.1 / 7.2 | 1 | 2003 / 72 | 8,566 |
 | `veh-thomas-saf-t-liner` | Thomas Saf-T-Liner C2 | city, bonnet | 11.9 x 2.44 x 3.2 | 1.2 / 7.3 | 1 | 2004 / 77 | 2,838 |
 | `veh-chicken-bus` | Guatemalan Camioneta | city, bonnet | 10.7 x 2.44 x 3.05 | 1.2 / 6.9 | 1 | 1990 / 70 | 2,767 |
 | `veh-toyota-coaster` | Toyota Coaster | minibus | 6.99 x 2.03 x 2.6 | 1.15 / 5.08 | 1 | 1969 / 29 | 2,608 |
@@ -72,7 +72,7 @@ Third batch, `worldBuses3.ts`:
 | `veh-matatu` | Matatu | minibus | 5.38 x 1.88 x 2.29 | 0.85 / 3.96 | 1 | 2000 / 14 | 2,712 |
 | `veh-danfo` | Lagos Danfo | minibus | 4.57 x 1.84 x 1.95 | 0.85 / 3.31 | 1 | 1990 / 14 | 2,650 |
 | `veh-mb-sprinter-minibus` | Mercedes-Benz Sprinter Minibus | minibus | 7 x 1.99 x 2.77 | 0.95 / 5.28 | 1 | 2006 / 20 | 2,334 |
-| `veh-tatra-500-hb` | Tatra 500 HB | city | 10 x 2.5 x 2.9 | 2.1 / 7 | 2 | 1953 / 45 | 2,736 |
+| `veh-tatra-500-hb` | Tatra 500 HB | city | 10 x 2.5 x 2.9 | 2.1 / 7 | 2 | 1953 / 45 | 7,476 |
 | `veh-otokar-kent` | Otokar Kent | city | 12 x 2.55 x 3.15 | 2.75 / 8.65 | 3 | 2008 / 100 | 2,944 |
 | `veh-buenos-aires-colectivo` | Buenos Aires Colectivo | city | 10.5 x 2.5 x 3 | 2.2 / 7.4 | 2 | 1990 / 60 | 3,088 |
 
@@ -85,7 +85,7 @@ Fourth batch, `worldBuses4.ts`:
 | `veh-proterra-catalyst` | Proterra Catalyst | city | 12.8 x 2.59 x 3.35 | 2.4 / 8.9 | 2 | 2014 / 77 | 2,808 |
 | `veh-marcopolo-paradiso-dd` | Marcopolo Paradiso G7 1800 DD | double | 15 x 2.6 x 4.1 | 2.75 / 10.3 / 11.7 | 2 | 2009 / 66 | 3,699 |
 | `veh-marcopolo-torino` | Marcopolo Torino | city | 12.5 x 2.5 x 3.2 | 2.4 / 8.4 | 3 | 2007 / 80 | 3,170 |
-| `veh-curitiba-biarticulado` | Curitiba Biarticulated Bus | city, double articulated | 25 x 2.6 x 3.3 | 2.6 / 8.4 / 15.2 / 22.4 | 4 | 1992 / 270 | 5,797 |
+| `veh-curitiba-biarticulado` | Curitiba Biarticulated Bus | city, double articulated | 25 x 2.6 x 3.3 | 2.6 / 8.4 / 15.2 / 22.4 | 4 | 1992 / 270 | 13,241 |
 | `veh-transmilenio` | TransMilenio Articulated | city, articulated | 18 x 2.6 x 3.3 | 2.7 / 9.2 / 15.4 | 4 | 2000 / 160 | 4,468 |
 | `veh-havana-camello` | Havana Camello | tractor and semi-trailer | 21.3 x 2.5 x 3.75 | 1.1 / 5.0 / 18.4 / 19.7 | 3 (shut) | 1995 / 300 | 2,480 |
 | `veh-hino-blue-ribbon` | Hino Blue Ribbon | city | 10.5 x 2.49 x 3.1 | 2.3 / 7.1 | 2 | 1982 / 77 | 2,952 |
@@ -247,7 +247,7 @@ trolleybuses the resistor one; the rest keep the derived bus diesel.
 ## Checking
 
 `pnpm exec vitest run test/worldBuses2.test.ts test/worldFleet.test.ts`: every bus's size,
-axles, sections and joints, budgets (exterior 10,000, interior 1,500, the distant model 100 a
+axles, sections and joints, budgets (exterior 10,000, an articulated bus 15,000 with one joint and 20,000 with two, interior 1,500, the distant model 100 a
 section) for its sampled parameter combinations; every bonnet's windscreen on the shell's
 front and its fenders clear of the tyre at lock; the half cab's body carried to the nose; the
 raised deck's height; the finish parameters changing colours only. The shared vehicle suites

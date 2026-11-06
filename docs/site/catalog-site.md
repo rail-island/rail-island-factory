@@ -327,7 +327,8 @@ a slider (or a parameter's select) has the focus the arrow keys are its own; the
 step through the list only otherwise (`pageKey`).
 
 A model with looping animation clips (the steam locomotives' running gear, the
-rolling wheels of the CD 150 and the photo trucks) gets
+rolling wheels of the CD 150 and the photo trucks, the aircraft's propellers and the
+helicopters' rotors) gets
 **Start** and **Stop** buttons over the preview: Start plays the clips in a loop
 with a render loop that runs only while they play, Stop halts them in place, and
 another model or parameter choice stops them
@@ -338,7 +339,13 @@ the model always arrives with them raised, its rest pose. A model with opening
 doors (`door` clips) gets **Open left** and **Open right** - each only where it has
 doors on that side - and **Close**, which move each side's doors between shut and
 open over 2 s, eased, from wherever they stand; the model always arrives shut
-([../models/doors.md](../models/doors.md)). Behind the doors each car's cabin
+([../models/doors.md](../models/doors.md)). An aircraft with retractable gear (a
+node named `gear`) gets **Gear up** and **Gear down**, which hide and show it as the
+game does in flight; a big jet with flaps (`flaps` clips) gets **Flaps out** and
+**Flaps in**, and Concorde (its `droop` clip) **Nose down** and **Nose up**, each
+moving over 3 s, eased, from wherever it stands; the model always arrives gear down,
+flaps in and nose up ([../models/world-aircraft.md](../models/world-aircraft.md)).
+Behind the doors each car's cabin
 shows only while one of its doors opens or stands open; **Interior on / Interior
 off** shows every cabin with the doors shut and cuts the model away just under the
 ceilings, so the seat layout shows from above, and the triangle count is the

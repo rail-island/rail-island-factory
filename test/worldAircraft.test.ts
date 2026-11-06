@@ -3,7 +3,9 @@
 // docs/models/world-aircraft.md): each at its published length, span and height,
 // on its wheels (floats, hull) at y = 0, in budget with its LOD, its retractable
 // gear the part "gear", its liveries changing its colours; the helicopters' rotors
-// turning on the time clip "rotor"; and every aircraft has its OpenTTD entry.
+// turning on the time clip "rotor"; every kit aircraft's windscreen; the propellers
+// turning on the time clip "propellers", the big jets' flaps and Concorde's nose on
+// their state clips; and every aircraft has its OpenTTD entry.
 
 import { describe, expect, it } from "vitest";
 import { WORLD_JET_SPECS, WORLD_JETS } from "../generator/worldJets";
@@ -16,6 +18,10 @@ import { coverageCombinations, type ParamValues } from "../generator/design";
 import { geometry } from "../generator/airframeKit";
 import type { MeshBuilder } from "../generator/meshBuilder";
 import { sample } from "./catalogCache";
+import { findCoplanarOverlaps } from "../generator/coplanar";
+import { poseGlb } from "../generator/glbPose";
+import { collectTriangles, parseGlb, type Tri } from "../generator/glbTriangles";
+import { PROP_PERIOD } from "../generator/propellers";
 
 const ALL = [...WORLD_JET_SPECS, ...WORLD_PROP_SPECS, ...WORLD_ROTORCRAFT_SPECS];
 
@@ -40,6 +46,11 @@ function bounds(m: MeshBuilder): { min: number[]; max: number[] } {
   }
   return { min, max };
 }
+
+const trisOf = (glb: Uint8Array): Tri[] => {
+  const { json, bin } = parseGlb(glb);
+  return collectTriangles(json, bin, {});
+};
 
 const partsOf = (m: MeshBuilder): string[] => (m as unknown as { parts: Array<{ name: string }> }).parts.map((p) => p.name);
 
@@ -82,7 +93,13 @@ describe("the world aircraft", () => {
           expect(b.max[2]! - b.min[2]!, "span").toBeLessThan(span + 0.25);
           expect(b.max[2]! - b.min[2]!, "span").toBeGreaterThan(span - 0.3);
           const retract = s.gear.retract && s.gear.kind !== "none" && s.gear.kind !== "floats";
-          expect(partsOf(m)).toEqual(retract ? ["airframe", "gear"] : []);
+          // the moving pieces are child nodes: the propellers, the flaps and a drooping nose
+          const moving = (p: string) => /^(propeller-\d+|flap-(left|right)-\d+|nose)$/.test(p);
+          expect(partsOf(m).filter((p) => !moving(p))).toEqual(retract ? ["airframe", "gear"] : []);
+          const props = s.engines.reduce((t, e) => t + (e.kind === "prop" ? e.s.length * (e.s.includes(0) ? 1 : 2) : 0), 0);
+          expect(partsOf(m).filter((p) => p.startsWith("propeller-")), "a part per propeller").toHaveLength(props);
+          expect(partsOf(m).some((p) => p.startsWith("flap-")), "flaps").toBe(s.wing.flaps === true);
+          expect(partsOf(m).includes("nose"), "a drooping nose").toBe(s.fuselage.droop !== undefined);
         } else if (ROTOR_SPECS[a.id]) {
           const s = ROTOR_SPECS[a.id]!(params);
           expect(b.max[1]!, "the rotor head's top").toBeGreaterThan(s.height - 0.05);
@@ -129,5 +146,73 @@ describe("the world aircraft", () => {
         }
       }
     }
+  });
+
+  // regression: the windscreen's guard was inverted (the crown rises aft, so the screen's top edge lies behind its foot) and no kit aircraft had one
+  it("glazes every kit aircraft's windscreen: glass on the nose ahead of the cabin windows", () => {
+    for (const a of ALL.filter((x) => x.spec)) {
+      const spec = a.spec!();
+      const g = geometry(spec);
+      expect(g.screen.d1, a.id).toBeGreaterThan(g.screen.d0);
+      const tris = trisOf(a.build().toGlb("t"));
+      const ahead = g.x(Math.min(g.screen.d1 + 0.3, ...spec.windows.map((w) => w.from - 0.3)));
+      const screen = tris.filter((t) => t.material === "glass" && t.p.every((p) => p[0] > ahead && p[1] > g.screen.y0 - 0.2));
+      expect(screen.length, a.id).toBeGreaterThan(20);
+      expect(tris.every((t) => t.p.every((p) => p.every(Number.isFinite))), a.id).toBe(true);
+    }
+  });
+
+  it("turns every propeller on the time clip \"propellers\", a closed loop of steps under half a turn", () => {
+    const withProps = ALL.filter((a) => a.spec?.().engines.some((e) => e.kind === "prop") || a.id === "veh-zeppelin-nt");
+    expect(withProps.length).toBeGreaterThan(30);
+    for (const a of withProps) {
+      const m = a.build();
+      const clip = m.animations().find((c) => c.name === "propellers")!;
+      expect(clip, a.id).toBeDefined();
+      expect(m.clipDrives()?.propellers, a.id).toEqual({ drive: "time" });
+      expect(clip.times[clip.times.length - 1]).toBeCloseTo(PROP_PERIOD, 9);
+      expect(clip.tracks.map((t) => t.node).sort(), a.id).toEqual(partsOf(m).filter((p) => p.startsWith("propeller")).sort());
+      for (const t of clip.tracks) {
+        const v = t.values;
+        const n = v.length / 4;
+        const dot = (i: number, j: number) => v[4 * i]! * v[4 * j]! + v[4 * i + 1]! * v[4 * j + 1]! + v[4 * i + 2]! * v[4 * j + 2]! + v[4 * i + 3]! * v[4 * j + 3]!;
+        expect(Math.abs(dot(0, n - 1)), `${a.id} ${t.node}`).toBeCloseTo(1, 6);
+        for (let i = 1; i < n; i++) expect(dot(i, i - 1)).toBeGreaterThan(0);
+      }
+      // no z-fighting a quarter of the way round
+      expect(findCoplanarOverlaps(poseGlb(m.toGlb("t"), 3, m.animations().indexOf(clip))), a.id).toEqual([]);
+    }
+  });
+
+  it("runs the big jets' flaps out and down on the state clip \"flaps\", hidden in the wing at rest", () => {
+    const flapped = ALL.filter((a) => a.spec?.().wing.flaps);
+    expect(flapped.map((a) => a.id).sort()).toEqual(["veh-airbus-a350", "veh-antonov-an225", "veh-boeing-707", "veh-boeing-747-8", "veh-boeing-777"]);
+    for (const a of flapped) {
+      const m = a.build();
+      const k = m.animations().findIndex((c) => c.name === "flaps");
+      expect(m.clipDrives()?.flaps, a.id).toEqual({ drive: "flaps" });
+      const glb = m.toGlb("t");
+      const last = m.animations()[k]!.times.length - 1;
+      const out = poseGlb(glb, last, k);
+      expect(findCoplanarOverlaps(out), a.id).toEqual([]);
+      // the flaps' trailing edges drop well below where they rest inside the wing
+      const [rest, landing] = [trisOf(glb), trisOf(out)];
+      expect(rest.length).toBe(landing.length);
+      expect(landing.some((t, i) => t.p.some((p, j) => rest[i]!.p[j]![1] - p[1] > 0.3)), a.id).toBe(true);
+    }
+  });
+
+  it("droops Concorde's nose on the state clip \"nose\" for the airport", () => {
+    const a = ALL.find((x) => x.id === "veh-concorde")!;
+    const m = a.build();
+    const k = m.animations().findIndex((c) => c.name === "nose");
+    expect(m.clipDrives()?.nose).toEqual({ drive: "droop" });
+    const glb = m.toGlb("t");
+    const down = poseGlb(glb, m.animations()[k]!.times.length - 1, k);
+    expect(findCoplanarOverlaps(down)).toEqual([]);
+    const tip = (t: Tri[]) => t.reduce((b, q) => q.p.reduce((c, p) => (p[0] > c[0] ? p : c), b), [-Infinity, 0, 0] as number[]);
+    const [up, dn] = [tip(trisOf(glb)), tip(trisOf(down))];
+    expect(up[1]! - dn[1]!, "the tip drops").toBeGreaterThan(1);
+    expect(dn[1]!, "above the ground").toBeGreaterThan(0.5);
   });
 });

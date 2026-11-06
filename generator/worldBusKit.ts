@@ -20,6 +20,7 @@ import { arc, block, plate } from "./vehicleParts.ts";
 import type { Ring } from "./meshCore.ts";
 import { liftable } from "./liftable.ts";
 import { TRAM_COLLECTOR_TOP } from "./collector.ts";
+import { detailedGlazing, detailedNose, detailedRear, type EndFinish } from "./worldBusDetail.ts";
 
 export type BusKind = "city" | "coach" | "double" | "minibus";
 
@@ -113,6 +114,16 @@ export interface WorldBusSpec {
   bonnet?: Bonnet;
   /** A raised deck on the roof. */
   deck?: Deck;
+  /**
+   * The fine detail of a refined bus (busAssembly.ts BusSpec.detail: turned wheels that
+   * roll, arch trims, mudflaps, side markers, route displays, rounded corners, end
+   * fittings wrapped round the plan) and the kit's detailed ends (worldBusDetail.ts).
+   */
+  detail?: boolean;
+  /** A refined bus's choices for the detailed ends. */
+  finish?: EndFinish;
+  /** A refined bus's own fittings - its nose, tail, roof and sides - drawn after the kit's. */
+  extras?: (c: CityCtx, s: WorldBusSpec) => void;
 }
 
 /** The trolley poles' length, and the spacing of the two wires they run on (z). */
@@ -152,6 +163,7 @@ export function worldCitySpec(s: WorldBusSpec): CitySpec {
     } } : {}),
     maxSteerDeg: s.maxSteerDeg ?? (s.kind === "coach" ? 45 : 50),
     ...(articulated ? { maxBendDeg: s.maxBendDeg ?? 50 } : {}),
+    ...(s.detail ? { detail: true } : {}),
     details: (c) => details(c, s),
   };
 }
@@ -169,6 +181,11 @@ function details(c: CityCtx, s: WorldBusSpec): void {
   }
   c.d.fit("front", c.nose, () => {
     const m = c.m();
+    if (s.detail) {
+      if (!halfCab) detailedGlazing(m, c.frame, s);
+      if (!s.bonnet) detailedNose(c, s);
+      return;
+    }
     if (!halfCab) noseGlazing(m, c.frame, s);
     if (s.bonnet) return; // the lamps, grille and plate are on the bonnet
     const l = s.lamps;
@@ -201,6 +218,7 @@ function details(c: CityCtx, s: WorldBusSpec): void {
   if (b.window) c.d.glaze(-1, -b.window[2], b.window[2], b.window[0], b.window[1]);
   c.d.fit("rear", c.tail, () => {
     const m = c.m();
+    if (s.detail) return detailedRear(c, s);
     if (b.window) {
       endSlab(m, "frame", c.frame, -1, -b.window[2] - 0.05, b.window[2] + 0.05, b.window[0] - 0.04, b.window[1] + 0.04, 0.01);
       endSlab(m, "glassDark", c.frame, -1, -b.window[2], b.window[2], b.window[0], b.window[1], 0.02);
@@ -228,6 +246,7 @@ function details(c: CityCtx, s: WorldBusSpec): void {
   if (s.trolley) trolleyPoles(c, s);
   if (s.bonnet) bonnet(c, s);
   if (s.deck) deck(c, s);
+  s.extras?.(c, s);
 }
 
 /** The windscreen with its frame, the display behind its top, the wipers, an upper deck's front windows, on the nose `f` describes. */

@@ -4,6 +4,7 @@
 // its OpenTTD entry; a bonnet ahead of a shorter shell, its fenders clear of the
 // steered tyres at full lock; a raised deck; a finish parameter changing only colours.
 
+import { roadTriangleBudget } from "../generator/rig";
 import { describe, expect, it } from "vitest";
 import { WORLD_BUS_SPECS_2 } from "../generator/worldBuses2";
 import { WORLD_BUS_SPECS_3 } from "../generator/worldBuses3";
@@ -46,10 +47,12 @@ describe("the later world buses", () => {
         const m = b.build(params);
         const glb = parseGlb(m.toGlb(b.id));
         const ts = collectTriangles(glb.json, glb.bin);
-        expect(m.triangleCount() - m.interiorTriangleCount()).toBeLessThanOrEqual(10_000);
+        expect(m.triangleCount() - m.interiorTriangleCount()).toBeLessThanOrEqual(roadTriangleBudget(m.rig));
         expect(m.interiorTriangleCount()).toBeLessThanOrEqual(1_500);
-        // the body: as long as the bus, bumpers aside; as wide; on the road
-        const OUTSIDE = (t: Tri) => !["frame", "glass", "rubber", "hub", "pole"].includes(t.material) && !t.material.startsWith("lamp");
+        // the body: as long as the bus, bumpers aside (a refined bus's bumpers, plates, displays
+        // and badges stand proud of its ends; a bonnet's bumper is its nose); as wide; on the road
+        const fittings = ["frame", "glass", "rubber", "hub", "pole", "plate", "chrome", "reflector", "sign", "signText", "marker", ...(spec.detail ? ["bumper"] : [])];
+        const OUTSIDE = (t: Tri) => !fittings.includes(t.material) && !t.material.startsWith("lamp");
         const [x0, x1] = span(ts.filter(OUTSIDE), 0);
         expect(x1 - x0).toBeCloseTo(spec.length, 1);
         const [z0, z1] = span(ts.filter((t) => t.material !== "frame" && t.material !== "glass" && t.material !== "rubber" && t.material !== "hub"), 2);

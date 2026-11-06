@@ -1,3 +1,4 @@
+import { roadTriangleBudget } from "../generator/rig";
 import { proceduralId } from "../generator/modelId.ts";
 // The procedurally authored models (generator/): the mesh builder's winding, each
 // design's shape and budget, and the generator's output on disk.
@@ -300,10 +301,11 @@ describe("the vehicles", () => {
       const fixed = walk(designTree(proceduralId(id)).root).filter((n) => isLeaf(n) && !n.id.startsWith("roof-equipment/pantographs/"));
       expect(Math.max(...fixed.map((n) => n.max![1]))).toBeLessThanOrEqual(4.7);
     }
-    // the road-vehicle budget (.agents/skills/road-vehicle); a rail vehicle,
+    // the road-vehicle budget (.agents/skills/road-vehicle: 10,000, 15,000 with one
+    // joint, 20,000 with two, generator/rig.ts roadTriangleBudget); a rail vehicle,
     // much larger and seen closer along the track, aims at about 15k with
     // room for a small overflow (.agents/skills/railroad-vehicle)
-    expect(s.triangles).toBeLessThanOrEqual(rail ? 16_000 : 10_000);
+    expect(s.triangles).toBeLessThanOrEqual(rail ? 16_000 : roadTriangleBudget(built(proceduralId(id)).rig));
     // a tram: a rigid one has a road vehicle's 10,000, an articulated one (sections) up to 15,000
     if (DESIGNS.get(proceduralId(id))!.catalog?.group === "tram") {
       const articulated = (built(proceduralId(id)).rig?.sections?.length ?? 1) > 1;

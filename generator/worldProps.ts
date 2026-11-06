@@ -364,7 +364,7 @@ export const antonovAn124Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
 
 export const antonovAn225Spec = (): AirframeSpec => ({ ...brief({
   L: 84.0, H: 18.1, W: 7.3, D: 7.6, k: 1.5, nose: "airliner", ns: 0.9, tl: 18, ty: 0.78,
-  span: 88.4, root: 17.0, kink: [0.3, 10.0], tip: 3.2, sweep: 35, dih: -3, at: 28.0, pos: "shoulder",
+  span: 88.4, root: 17.0, kink: [0.3, 10.0], tip: 3.2, sweep: 35, dih: -3, at: 28.0, pos: "shoulder", flaps: true,
   eng: [{ kind: "pod", s: [9.3, 17.0, 24.6], r: 1.45, len: 6.0, ahead: 4.0, drop: 1.1 }],
   tk: "twin", fin: [8.5, 4.0, 35, 70.0], tp: [32.65, 9.0, 4.0, 10, 68.5, 8, 9.6],
   ng: [7.5, 0.65, true], mg: [31, 33.5, 36, 38.5, 41, 43.5, 46].map((d): [number, number, number, boolean] => [d, 3.8, 0.65, true]),

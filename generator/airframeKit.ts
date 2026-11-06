@@ -30,6 +30,7 @@ import {
 } from "./airframeShapes.ts";
 import { airLod, lodAxleWheel, lodBar, type AirEngine, type AirFin, type AirPod, type AirWing } from "./lodAir.ts";
 import { lodPolygon } from "./lodKit.ts";
+import { axisQuat, turnPropellers, type PropellerNode } from "./propellers.ts";
 
 // --- the spec ----------------------------------------------------------------------------
 
@@ -64,6 +65,13 @@ export interface FuselageSpec {
   tips?: { nose: number; tail: number };
   /** Points per section (default 32). */
   n?: number;
+  /**
+   * A nose that droops for the airport (Concorde): the fuselage ahead of the hinge
+   * `at` (d behind the nose tip; default just ahead of the windscreen) is the part
+   * `nose`, which the clip `nose` turns down by `angle` degrees about the hinge's
+   * keel.
+   */
+  droop?: { at?: number; angle: number };
 }
 
 export type TipDevice = "none" | "blended" | "split" | "sharklet" | "fence" | "raked" | "curved" | "canted" | "tiptank";
@@ -94,6 +102,8 @@ export interface WingSpec {
   upper?: { gap: number; span: number; chord: number; stagger: number; struts: number[] };
   /** An explicit planform instead of the chords and sweep (a delta): [half-span position, leading edge d, chord], root first. */
   plan?: Array<[number, number, number]>;
+  /** Fowler flaps (the big jets): hidden in the wing at rest, run out aft and down by the clip `flaps`. */
+  flaps?: boolean;
 }
 
 export type EngineSpec =
@@ -359,8 +369,8 @@ export function geometry(spec: AirframeSpec): Geometry {
   const tailTipY = f.tips?.tail ?? tailMid;
 
   // the windscreen: from where the crown passes y1 to where it passes y0
-  const y1 = k + D * (f.nose === "cowl" ? 0.86 : 0.8);
-  const y0 = k + D * (f.nose === "cowl" ? 0.6 : f.nose === "bizjet" ? 0.6 : 0.65);
+  const y1 = k + D * (f.nose === "cowl" ? 0.86 : f.nose === "pointed" ? 0.82 : 0.76);
+  const y0 = k + D * (f.nose === "cowl" ? 0.6 : f.nose === "bizjet" ? 0.58 : f.nose === "pointed" ? 0.66 : 0.6);
   const crossing = (y: number): number => {
     let lo = 0;
     let hi = split;
@@ -371,7 +381,10 @@ export function geometry(spec: AirframeSpec): Geometry {
     }
     return lo;
   };
-  const screen = { d0: crossing(y0), d1: crossing(Math.min(y1, crownC - 0.03)), y0, y1, u1: W * 0.27 };
+  // a crown that rises slowly (a needle nose) would stretch the screen: it is at most 0.55 W long, its foot raised to fit
+  const d1s = crossing(Math.min(y1, crownC - 0.03));
+  const d0s = Math.max(crossing(y0), d1s - W * 0.55);
+  const screen = { d0: d0s, d1: d1s, y0: Math.max(y0, crown(d0s)), y1, u1: W * 0.27 };
 
   // the wing
   const w = spec.wing;
@@ -537,10 +550,16 @@ const wingUnder = (st: WingStation[], s: number): number => {
   return w.mid - w.thick * 0.42;
 };
 
-/** A propeller standing still in the plane x = px about (y, z): `blades` flat, slightly pitched blades of radius `r`, and a spinner. */
-function propeller(m: MeshBuilder, px: number, c: [number, number], r: number, blades: number, spinner: number, phase = 0): void {
-  m.scope("propeller", () => {
-    const [cy, cz] = c;
+/**
+ * A propeller in the plane x = px about (y, z): `blades` flat, slightly pitched
+ * blades of radius `r`, and a spinner, drawn as the part `propeller-<n>` pivoted on
+ * its hub (listed in `props`, which the clip `propellers` turns).
+ */
+function propeller(m: MeshBuilder, px: number, c: [number, number], r: number, blades: number, spinner: number, props: PropellerNode[], phase = 0): void {
+  const [cy, cz] = c;
+  const node = `propeller-${props.length + 1}`;
+  props.push({ node, axis: [1, 0, 0], dir: 1 });
+  m.spin(node, [px, cy, cz], () => m.scope("propeller", () => {
     for (let i = 0; i < blades; i++) {
       const t = phase + (i * 2 * Math.PI) / blades + Math.PI / 2;
       const radial: Vec3 = [0, Math.sin(t), Math.cos(t)];
@@ -555,7 +574,7 @@ function propeller(m: MeshBuilder, px: number, c: [number, number], r: number, b
     body(m, "white", "x", st);
     fan(m, "white", "x", st[st.length - 1]!.sec, st[st.length - 1]!.a, 1, [px + 0.05 + spinner * 1.55, cy, cz]);
     fan(m, "white", "x", st[0]!.sec, st[0]!.a, -1);
-  });
+  }));
 }
 
 /** A body of circular sections along x through (z, y): (offset from x0, radius) pairs, closed at both ends. */
@@ -567,7 +586,7 @@ function pod(m: MeshBuilder, mat: string, x0: number, z: number, y: number, prof
 }
 
 /** The engines a spec names, drawn on the airframe. */
-function drawEngines(m: MeshBuilder, g: Geometry): void {
+function drawEngines(m: MeshBuilder, g: Geometry, props: PropellerNode[]): void {
   const sides = g.W > 4.5 ? 22 : g.W > 2.6 ? 18 : 14;
   g.spec.engines.forEach((e, ei) => m.scope(`engines ${ei + 1}`, () => {
     if (e.kind === "pod") {
@@ -669,7 +688,7 @@ function drawEngines(m: MeshBuilder, g: Geometry): void {
             fan(m, "darkGrey", "x", ex[0]!.sec, ex[0]!.a, -1);
           });
         }
-        propeller(m, front + 0.02, [yc, z], e.prop, e.blades, Math.max(0.12, e.r * (nose ? 0.45 : 0.42)), side > 0 ? 0 : Math.PI / e.blades / 2);
+        propeller(m, front + 0.02, [yc, z], e.prop, e.blades, Math.max(0.12, e.r * (nose ? 0.45 : 0.42)), props, side > 0 ? 0 : Math.PI / e.blades / 2);
       });
     }
   }));
@@ -840,15 +859,19 @@ function drawDecals(m: MeshBuilder, g: Geometry): void {
   });
   m.scope("cockpit windows", () => {
     const sc = g.screen;
-    if (sc.d1 >= sc.d0 - 0.02) return;
+    // the crown rises aft, so the screen's top edge (d1) lies behind its foot (d0)
+    if (sc.d1 <= sc.d0 + 0.02) return;
     for (const side of [-1, 1]) {
-      const screen = gridTris((u, v) => skinEnd("x", fus, side * lerp(0.05, sc.u1, u), lerp(lerp(sc.y0, sc.y0 + 0.03, u), lerp(sc.y1, sc.y1 - 0.05, u), v), g.x(sc.d0 + 1.5), g.noseTip[0], off * 2.5, insideAny), 5, 3);
-      m.facets("glass", screen, [0.8, 0.5, side * 0.4]);
-      // the side panes, just behind the windscreen
-      const a0 = g.x(sc.d0 + 0.08);
+      const screen = gridTris((u, v) => skinEnd("x", fus, side * lerp(0.05, sc.u1, u), lerp(lerp(sc.y0, sc.y0 + 0.03, u), lerp(sc.y1, sc.y1 - 0.05, u), v), g.x(sc.d1 + 1.5), g.noseTip[0], off * 2.5, insideAny), 5, 3);
+      m.facets("glass", finite(screen), [0.8, 0.5, side * 0.4]);
+      // the side panes, just behind the windscreen's outer edge and raked as it is
+      const aIn = g.x(sc.d1 + 1.5);
+      const yTop = sc.y1 - (sc.y1 - sc.y0) * 0.25;
+      const foot = skinEnd("x", fus, sc.u1, sc.y0 + 0.03, aIn, g.noseTip[0], 0, insideAny)[0] - 0.12;
+      const head = skinEnd("x", fus, sc.u1, yTop, aIn, g.noseTip[0], 0, insideAny)[0] - 0.12;
       const len = Math.max(0.35, g.W * 0.2);
-      const pane: P2[] = [[a0, sc.y0], [a0 - len, sc.y0], [a0 - len, sc.y1 - (sc.y1 - sc.y0) * 0.2], [a0 - len * 0.1, sc.y1 - (sc.y1 - sc.y0) * 0.1]];
-      m.facets("glass", skinDecal("x", fus, pane, side, off * 2.5, 2, 2), [0, 0, side]);
+      const pane: P2[] = [[foot, sc.y0 + 0.05], [foot - len, sc.y0 + 0.05], [Math.min(foot - len, head) - len * 0.4, yTop], [head, yTop]];
+      m.facets("glass", finite(skinDecal("x", fus, pane, side, off * 2.5, 2, 2)), [0, 0, side]);
     }
     if (s.fuselage.nose === "glazed") {
       // the navigator's glazed nose: panes round the lower nose
@@ -861,7 +884,15 @@ function drawDecals(m: MeshBuilder, g: Geometry): void {
   });
   const l = g.livery;
   if (l.stripes?.length) m.scope("cheatline", () => {
-    for (const st of l.stripes!) for (const side of [-1, 1]) m.facets(st.mat, skinStripe("x", fus, st.a0, st.a1, st.y0, st.y1, side, off * 1.2), [0, 0, side]);
+    // a stripe at the windscreen's height ends behind it, so the glass is not cut by it
+    const sc = g.screen;
+    const stop = g.x(sc.d1 + 0.25);
+    for (const st of l.stripes!) {
+      const crosses = sc.d1 > sc.d0 + 0.02 && st.y1 > sc.y0 - 0.05 && st.y0 < sc.y1;
+      const [a0, a1] = crosses ? [Math.min(st.a0, stop), Math.min(st.a1, stop)] : [st.a0, st.a1];
+      if (Math.abs(a1 - a0) < 0.05) continue;
+      for (const side of [-1, 1]) m.facets(st.mat, skinStripe("x", fus, a0, a1, st.y0, st.y1, side, off * 1.2), [0, 0, side]);
+    }
   });
   const titles = s.scheme.titles;
   if (titles) m.scope("titles", () => {
@@ -881,17 +912,45 @@ function drawDecals(m: MeshBuilder, g: Geometry): void {
 }
 
 /** The fuselage skin, nose and tail cone. */
-function drawFuselage(m: MeshBuilder, g: Geometry): void {
+function drawFuselage(m: MeshBuilder, g: Geometry, moving: MovingPiece[]): void {
   const fus = g.stations;
   const l = g.livery;
-  m.scope("skin", () => (l.cut ? cutBody(m, "x", fus, l.skin!, l.cut) : paintedBody(m, "x", fus, l.skin!)));
+  const skin = (st: Station[]): void => (l.cut ? cutBody(m, "x", st, l.skin!, l.cut) : paintedBody(m, "x", st, l.skin!));
   const last = fus[fus.length - 1]!;
   const first = fus[0]!;
   const noseMat = l.skin!(0, last.a);
-  m.scope("nose", () => {
+  const noseCap = (): void => m.scope("nose", () => {
     if (g.spec.fuselage.nose === "cowl") fan(m, noseMat, "x", last.sec, last.a, 1);
     else fan(m, noseMat, "x", last.sec, last.a, 1, g.noseTip);
   });
+  const droop = g.spec.fuselage.droop;
+  if (droop) {
+    // the drooping nose: the skin ahead of the hinge is the part `nose`, turned down about the hinge's keel
+    const xh = g.x(droop.at ?? Math.max(0.5, g.screen.d0 - 0.15));
+    const ring: Station = { a: xh, sec: secAt(fus, xh) };
+    const ahead = fus.filter((st) => st.a > xh + 0.02);
+    m.scope("skin", () => skin([...fus.filter((st) => st.a < xh - 0.02), ring]));
+    // a collar inside the nose, a little smaller, that closes the gap the drooped nose opens over the hinge
+    m.scope("nose collar", () => {
+      const shrink = (st: Station, f: number): Station => {
+        const [cx, cy] = [st.sec.reduce((t, p) => t + p[0], 0) / st.sec.length, st.sec.reduce((t, p) => t + p[1], 0) / st.sec.length];
+        return { a: st.a, sec: st.sec.map(([u, v]) => [cx + (u - cx) * f, cy + (v - cy) * f]) };
+      };
+      const reach = xh + Math.min((g.crown(g.half - xh) - g.keel(g.half - xh)) * Math.sin((droop.angle * Math.PI) / 180) + 0.4, (last.a - xh) * 0.6);
+      const st = [{ a: xh - 0.3, sec: secAt(fus, xh - 0.3) }, ring, ...ahead.filter((a) => a.a < reach), { a: reach, sec: secAt(fus, reach) }].map((a) => shrink(a, 0.95));
+      body(m, noseMat, "x", st);
+      fan(m, noseMat, "x", st[st.length - 1]!.sec, st[st.length - 1]!.a, 1);
+    });
+    const pivot: Vec3 = [xh, Math.min(...ring.sec.map((p) => p[1])) + 0.05, 0];
+    m.spin("nose", pivot, () => {
+      m.scope("skin", () => skin([ring, ...ahead]));
+      noseCap();
+    });
+    moving.push({ clip: "nose", node: "nose", pivot, axis: [0, 0, 1], angle: -droop.angle, shift: [0, 0, 0] });
+  } else {
+    m.scope("skin", () => skin(fus));
+    noseCap();
+  }
   const tailMat = l.cut?.mat ?? l.skin!(0, first.a);
   const sDuct = g.spec.engines.some((e) => e.kind === "tail" && e.duct === "s");
   m.scope("tail cone", () => (sDuct ? fan(m, tailMat, "x", first.sec, first.a, -1) : fan(m, tailMat, "x", first.sec, first.a, -1, g.tailTip)));
@@ -911,19 +970,97 @@ function drawFuselage(m: MeshBuilder, g: Geometry): void {
   });
 }
 
+/**
+ * A piece of the airframe that a state clip moves (a flap, the drooping nose): at
+ * the clip's end turned by `angle` degrees about `axis` through its pivot and
+ * moved by `shift`.
+ */
+interface MovingPiece { clip: "flaps" | "nose"; node: string; pivot: Vec3; axis: Vec3; angle: number; shift: Vec3 }
+
+/** The flaps' landing setting, degrees, and the steps of the state clips. */
+export const FLAP_ANGLE = 35;
+export const PIECE_SAMPLES = 8;
+
+const norm3 = (v: Vec3): Vec3 => {
+  const l = Math.hypot(v[0], v[1], v[2]) || 1;
+  return [v[0] / l, v[1] / l, v[2] / l];
+};
+
+/**
+ * The Fowler flaps of one wing: panels from the fuselage to 72 % of the half
+ * span, broken at the underwing engines. At rest a panel lies inside the wing
+ * (between 60 and 90 % of the chord, thinner than the wing there), so it does not
+ * show; the clip `flaps` runs it out aft, under the trailing edge, and turns it
+ * down by FLAP_ANGLE about its leading edge.
+ */
+function drawFlaps(m: MeshBuilder, g: Geometry, side: number, moving: MovingPiece[]): void {
+  const tipS = g.wing[g.wing.length - 1]!.s;
+  const [s0, s1] = [g.W / 2 + 0.3, tipS * 0.72];
+  const gaps = g.spec.engines.flatMap((e) => (e.kind === "pod" && !e.over ? e.s.map((s) => [s - e.r * 1.2, s + e.r * 1.2] as const) : []));
+  let segs: Array<[number, number]> = [[s0, s1]];
+  for (const [a, b] of gaps) segs = segs.flatMap(([p, q]): Array<[number, number]> => (b <= p || a >= q ? [[p, q]] : [...(a > p ? [[p, a] as [number, number]] : []), ...(b < q ? [[b, q] as [number, number]] : [])]));
+  segs = segs.filter(([p, q]) => q - p >= 1);
+  const [f0, f1] = [0.6, 0.9];
+  const station = (s: number): WingStation => {
+    const w = wingAt(g.wing, s);
+    return { s: side * s, lead: w.lead - f0 * w.chord, chord: (f1 - f0) * w.chord, thick: w.thick * 0.36, mid: w.mid };
+  };
+  segs.forEach(([p, q], i) => {
+    const ss = [p, ...g.wing.map((w) => w.s).filter((s) => s > p + 0.05 && s < q - 0.05), q];
+    const st = ss.map(station);
+    const [a, b] = [st[0]!, st[st.length - 1]!];
+    const axis = norm3([b.lead - a.lead, b.mid - a.mid, b.s - a.s]);
+    const sm = (p + q) / 2;
+    const c = station(sm);
+    const pivot: Vec3 = [c.lead, c.mid, side * sm];
+    // aft, square to the hinge in the wing's plane
+    const dot = -axis[0];
+    const aft = norm3([-1 - dot * axis[0], -dot * axis[1], -dot * axis[2]]);
+    const w = wingAt(g.wing, sm);
+    // the leading edge ends tucked under the trailing edge, at 92 % of the chord, just below the skin
+    const run = (0.92 - f0) * w.chord;
+    const shift: Vec3 = [aft[0] * run, aft[1] * run - w.thick * 0.2, aft[2] * run];
+    // the sense that takes the trailing edge down
+    const down = axis[2] * aft[0] - axis[0] * aft[2] < 0 ? 1 : -1;
+    const node = `flap-${side > 0 ? "right" : "left"}-${i + 1}`;
+    m.spin(node, pivot, () => wing(m, g.mats.wing, "z", st));
+    moving.push({ clip: "flaps", node, pivot, axis, angle: down * FLAP_ANGLE, shift });
+  });
+}
+
+/** The state clips of the moving pieces (drive `flaps`, `droop`): the shift first, the turn following it. */
+function animatePieces(m: MeshBuilder, moving: readonly MovingPiece[]): void {
+  for (const clip of ["flaps", "nose"] as const) {
+    const ps = moving.filter((p) => p.clip === clip);
+    if (!ps.length) continue;
+    const times = Array.from({ length: PIECE_SAMPLES + 1 }, (_, i) => i / PIECE_SAMPLES);
+    const ease = (u: number): number => u * u * (3 - 2 * u);
+    m.animate({
+      name: clip, times, drive: { drive: clip === "flaps" ? "flaps" : "droop" },
+      tracks: ps.flatMap((p) => [
+        { node: p.node, path: "rotation" as const, values: times.flatMap((u) => axisQuat(p.axis, (p.angle * Math.PI / 180) * (clip === "flaps" ? Math.pow(u, 1.6) : ease(u)))) },
+        { node: p.node, path: "translation" as const, values: times.flatMap((u) => { const e = ease(Math.min(1, u * 1.25)); return [p.pivot[0] + p.shift[0] * e, p.pivot[1] + p.shift[1] * e, p.pivot[2] + p.shift[2] * e]; }) },
+      ]),
+    });
+  }
+}
+
 /** Builds an aircraft from its spec. */
 export function airframe(spec: AirframeSpec): MeshBuilder {
   const g = geometry(spec);
   const m = new MeshBuilder(airframePalette(spec));
+  const props: PropellerNode[] = [];
+  const moving: MovingPiece[] = [];
   const draw = (): void => {
     m.scope("fuselage", () => {
-      drawFuselage(m, g);
+      drawFuselage(m, g, moving);
       drawDecals(m, g);
     });
     m.scope("wings", () => {
       for (const side of [-1, 1]) m.scope(side > 0 ? "right wing" : "left wing", () => {
         m.scope("wing", () => wing(m, g.mats.wing, "z", g.wing.map((w) => ({ ...w, s: side * w.s }))));
         if (g.upper) m.scope("upper wing", () => wing(m, g.mats.wing, "z", g.upper!.map((w) => ({ ...w, s: side * w.s }))));
+        if (spec.wing.flaps) m.scope("flaps", () => drawFlaps(m, g, side, moving));
       });
       if (g.devices.length) m.scope("winglets", () => g.devices.forEach((d) => fin(m, g.mats.winglet, "x", d.rings, 1, d.top)));
       if (spec.wing.tipDevice === "tiptank") m.scope("tip tanks", () => {
@@ -951,7 +1088,7 @@ export function airframe(spec: AirframeSpec): MeshBuilder {
         const uw = wingAt(g.upper!, g.W * 0.35);
         for (const fr of [0.2, 0.7]) mirrorRod(m, "alloy", [lerp(uw.lead, uw.lead - uw.chord, fr), g.crown(spec.length / 3) - 0.05, g.W * 0.3], [lerp(uw.lead, uw.lead - uw.chord, fr), uw.mid - uw.thick * 0.3, g.W * 0.35], 0.04, 5);
       });
-      drawEngines(m, g);
+      drawEngines(m, g, props);
     });
     m.scope("tail", () => {
       if (g.fin) m.scope("fin", () => liveryFin(m, g.livery, "x", g.fin!));
@@ -969,6 +1106,8 @@ export function airframe(spec: AirframeSpec): MeshBuilder {
     m.part("airframe", [0, 0, 0], draw);
     m.part("gear", [0, 0, 0], () => drawGear(m, g));
   } else draw();
+  turnPropellers(m, props);
+  animatePieces(m, moving);
   return m;
 }
 
@@ -1058,16 +1197,22 @@ export function airframeLod(spec: AirframeSpec): MeshBuilder {
     for (const side of [-1, 1]) lodBar(m, "alloy", [g.x(dRoot), g.keel(dRoot) + g.D * 0.12, side * g.hw(dRoot) * 0.9], [w.lead - w.chord * 0.3, w.mid - w.thick * 0.3, side * s], Math.max(0.03, g.W * 0.025), 3);
   } });
   const sc = g.screen;
-  return airLod({
+  // the windscreen's forced rings cost triangles: without them where they would not fit
+  const lod = (screen: boolean): MeshBuilder => airLod({
     palette: airframePalette(spec), axis: "x", fuselage: g.stations,
     ...(spec.fuselage.nose === "cowl" ? {} : { nose: g.noseTip }),
     ...(spec.engines.some((e) => e.kind === "tail" && e.duct === "s") ? {} : { tail: g.tailTip }),
     noseMat: l.skin!(0, g.stations[g.stations.length - 1]!.a), tailMat: l.cut?.mat ?? l.skin!(0, g.stations[0]!.a),
     paint: (s, a, p) => (l.cut && p[0] < l.cut.x0 - l.cut.slope * (p[1] - l.cut.y0) ? l.cut.mat : l.skin!(s, a)),
-    ...(sc.d1 < sc.d0 - 0.02 ? { windscreen: { a0: g.x(sc.d0 + g.W * 0.2), a1: g.x(Math.max(0, sc.d1 - 0.2)), s: 0.35 } } : {}),
+    ...(screen && sc.d1 > sc.d0 + 0.02 ? { windscreen: { a0: g.x(sc.d1 + 0.1), a1: g.x(sc.d0), s: 0.35 } } : {}),
     keep: l.cut && !spec.fuselage.hump ? [0, 0.5, 1].map((f) => l.cut!.x0 - l.cut!.slope * f * g.D) : [],
     wings, fins, engines, pods, parts,
   });
+  try {
+    return lod(true);
+  } catch {
+    return lod(false);
+  }
 }
 
 // --- the fleet harness ------------------------------------------------------------------------

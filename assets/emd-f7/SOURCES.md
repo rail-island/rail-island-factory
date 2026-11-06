@@ -7,7 +7,7 @@
 ## Photographs
 
 Downloaded from Wikimedia Commons at 1920 px and scaled to 1600 px on the long side.
-Used for: Santa Fe 49 and 309 in the red warbonnet, Southern Pacific 6378: the bulldog nose, windscreen, portholes, filter grilles, roof fans and the warbonnet's bonnet and band.
+Used for: Santa Fe 49 and 309 in the red warbonnet, Southern Pacific 6378: the bulldog nose, the windscreen panes' shape and gasket, the headlight hood, the nose-door light, class lights and number boards, portholes, filter grilles, roof fans and the warbonnet's bonnet and band.
 
 | file | original | URL | author | licence |
 |---|---|---|---|---|
@@ -17,7 +17,10 @@ Used for: Santa Fe 49 and 309 in the red warbonnet, Southern Pacific 6378: the b
 
 ## Published figures
 
-- **Dimensions** - The Diesel Shop "EMD F7A and F7B" and Wikipedia "EMD F7": 50 ft 8 in over the couplers, cab 10 ft 7 in wide and 15 ft high, hood 9 ft 10 in and 14 ft 1.5 in, truck centres 30 ft, 9 ft Blomberg truck wheelbase, 40 in wheels, 247,300 lb, 1,500 hp, built 1949 - 1953.
+- **User references** - two side views of Santa Fe warbonnet F7 models supplied in the chat
+  (an F7A, and an F7A-B pair): the warbonnet's bonnet, tongue and stripe, the low windscreen,
+  the grilles over the portholes and the A-B set. Not stored (model photographs of unclear licence).
+- **Dimensions** - The Diesel Shop "EMD F7A and F7B" and Wikipedia "EMD F7": 50 ft 8 in over the couplers (the B unit 50 ft 0 in, 238,000 lb), cab 10 ft 7 in wide and 15 ft high, hood 9 ft 10 in and 14 ft 1.5 in, truck centres 30 ft, 9 ft Blomberg truck wheelbase, 40 in wheels, 247,300 lb, 1,500 hp, built 1949 - 1953.
 - **Running numbers** - illustrative (ATSF 37, UP 1469, SP 6402).
 - **Paint** - the schemes simplified to colour fields, stripes and plain letters; no
   heralds or logos are drawn.

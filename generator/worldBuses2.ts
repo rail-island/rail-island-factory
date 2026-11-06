@@ -7,6 +7,7 @@
 
 import type { MeshBuilder } from "./meshBuilder.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
+import * as refined from "./worldBusRefined.ts";
 import { worldBus, worldBusLod, type WorldBusSpec } from "./worldBusKit.ts";
 import { coach, doubleDeck, highFloor, lowFloor, worldBusDesign, type WorldBus, g } from "./worldBuses.ts";
 
@@ -56,7 +57,7 @@ export function lodekkaSpec(p?: ParamValues): WorldBusSpec {
     rake: 0.08,
   });
   // the front engine: its radiator grille in the front, none at the rear
-  return { ...s, grille: [0.6, 1.4, 0.45], lamps: { kind: "round", y0: 0.85, y1: 1.05 }, back: { ...s.back, grille: undefined } };
+  return { ...s, grille: [0.6, 1.4, 0.45], lamps: { kind: "round", y0: 0.85, y1: 1.05 }, back: { ...s.back, grille: undefined }, door: { ...s.door, open: true }, detail: true, extras: refined.lodekka };
 }
 
 export const PANORAMA_PARAMS = liveryParam(["wallaceArnold", "Wallace Arnold"], ["national", "National Express"]);
@@ -132,7 +133,7 @@ export function d2uSpec(): WorldBusSpec {
     paint: [[-1, 11, 0.3, 0.6, "band"], [-1, 9.55, 1.01, 2.16, "band"], [-1, 11, 2.17, 2.5, "cream"], [-1, 9.55, 2.51, 4.11, "band"]],
     rake: 0.1,
   });
-  return { ...s, lamps: { kind: "round", y0: 0.7, y1: 0.9 } };
+  return { ...s, lamps: { kind: "round", y0: 0.7, y1: 0.9 }, detail: true, extras: refined.d2u };
 }
 
 export const COBUS_PARAMS = liveryParam(["cobus", "Cobus"], ["fraport", "Fraport"]);
@@ -319,13 +320,13 @@ export function sm11Spec(p?: ParamValues): WorldBusSpec {
     dpp: { body: "#efe3c0", rub: "#3c3c3c", red: "#c42a26" },
     csad: { body: "#efe3c0", rub: "#3c3c3c", red: "#2a5aa8" },
   }, p);
-  return highFloor({
+  return { ...highFloor({
     length: 11.04, height: 2.9,
     axles: [{ at: 2.35 }, { at: 7.65, drive: true }],
     doors: [[0.3, 1.5], [4.4, 5.6], [8.9, 10.1]],
     livery: l, rake: 0.05,
     paint: [[-1, 12, 0.35, 0.86, "red"], [-1, 12, 0.78, 0.86, "rub"]],
-  });
+  }), detail: true, extras: refined.sm11 };
 }
 
 export const NB12_PARAMS = liveryParam(["dpp", "DPP Praha"], ["dpmb", "DPMB Brno"]);
@@ -372,15 +373,16 @@ export function laz695Spec(): WorldBusSpec {
 }
 
 export function liaz677Spec(): WorldBusSpec {
-  return highFloor({
+  return { ...highFloor({
     length: 10.53, height: 3.0,
     axles: [{ at: 2.5 }, { at: 7.65, drive: true }],
-    doors: [[0.4, 1.7], [8.3, 9.6]],
+    // the rear door clear of the rear arch's trim
+    doors: [[0.4, 1.7], [8.4, 9.7]],
     // the yellow city livery with a cream roof
     livery: { body: "#f2b200", rub: "#3c3c3c", white: "#efe6c8" },
     paint: [[-1, 11.6, 0.78, 0.86, "rub"], [-1, 11.6, 2.62, 3.0, "white"]],
     rake: 0.15,
-  });
+  }), detail: true, extras: refined.liaz677 };
 }
 
 export function liaz5292Spec(): WorldBusSpec {

@@ -13,9 +13,12 @@ import { drawJoint, type JointRig, type SectionRig, type VehicleRig } from "./ri
 import { drawShell, halfWidth, type Arch, type Paint } from "./busBody.ts";
 import { AXLE_FACTOR, axleBeam, busWheel, onSide, sideSlab, type BusFrame } from "./busKit.ts";
 import { block, steeredWheels } from "./vehicleParts.ts";
+import { rollWheels } from "./rolling.ts";
+import { BUS_DETAIL_PALETTE, detailedBusWheel, detailedJoint, drawBusDetail, drawRouteDisplays, jointCollar, turntable, type DetailBus } from "./busDetail.ts";
 import { busLod, emptyBusLodNotes, type BusLodNotes } from "./lodRoad.ts";
 import { openable, plugMove } from "./doors.ts";
 import { CABIN_INSET, drawCabin, INTERIOR_PALETTE, type CabinDoor } from "./interior.ts";
+import type { Vec3 } from "./meshCore.ts";
 
 /** One axle: where it is, and what it carries. */
 export interface Axle {
@@ -60,6 +63,14 @@ export interface BusSpec {
   doorways?: Doorway[];
   /** The side windows' glass (`s` +1 right), seen from inside on the cabin's walls (BusDraft.pane). */
   windows?: Doorway[];
+  /**
+   * The fine detail (busDetail.ts): lathe-turned wheels, arch trims, mudflaps, side
+   * markers and route displays. The confirmed buses (buses.ts) carry it; the drafts
+   * on the same builder keep the plain wheels.
+   */
+  detail?: boolean;
+  /** The end glass (`end` +1 the nose), where the rear route display goes (BusDraft.glaze). */
+  endGlass?: Array<{ end: number; z: [number, number]; y: [number, number] }>;
 }
 
 /** A doorway through side `s` of the shell: x0..x1 along it, sill y0 to head y1. */
@@ -69,6 +80,37 @@ export interface Doorway {
   x1: number;
   y0: number;
   y1: number;
+  /** An open platform's: no cabin behind it, a platform alcove (`platformAlcove`) instead. */
+  open?: boolean;
+}
+
+/** How deep an open platform's alcove reaches into the bus. */
+const PLATFORM_DEPTH = 0.95;
+
+/**
+ * The alcove behind an open platform's doorway `d` (DoorStyle.open): its floor, back
+ * wall, ends and ceiling, all facing into it, from just outside the shell to
+ * PLATFORM_DEPTH in. Part of the exterior: with no doors to open, it is always seen.
+ */
+function platformAlcove(m: MeshBuilder, spec: BusSpec, d: Doorway): void {
+  const s = d.s;
+  const [x0, x1, y0, y1] = [d.x0 + 0.002, d.x1 - 0.002, d.y0 + 0.003, d.y1 - 0.003];
+  const zo = s * (halfWidth(spec.section, (y0 + y1) / 2) + 0.004);
+  const zi = s * (halfWidth(spec.section, (y0 + y1) / 2) - PLATFORM_DEPTH);
+  const face = (mat: string, a: Vec3, b: Vec3, c: Vec3, e: Vec3, n: Vec3): void => {
+    const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+    const v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+    const w = [u[1]! * v[2]! - u[2]! * v[1]!, u[2]! * v[0]! - u[0]! * v[2]!, u[0]! * v[1]! - u[1]! * v[0]!];
+    if (w[0]! * n[0] + w[1]! * n[1] + w[2]! * n[2] >= 0) m.quad(mat, a, b, c, e);
+    else m.quad(mat, e, c, b, a);
+  };
+  m.scope("platform", () => {
+    face("rubber", [x0, y0, zo], [x1, y0, zo], [x1, y0, zi], [x0, y0, zi], [0, 1, 0]);
+    face("frame", [x0, y1, zo], [x1, y1, zo], [x1, y1, zi], [x0, y1, zi], [0, -1, 0]);
+    face("frame", [x0, y0, zi], [x1, y0, zi], [x1, y1, zi], [x0, y1, zi], [0, 0, s]);
+    face("frame", [x0, y0, zo], [x0, y1, zo], [x0, y1, zi], [x0, y0, zi], [1, 0, 0]);
+    face("frame", [x1, y0, zo], [x1, y1, zo], [x1, y1, zi], [x1, y0, zi], [-1, 0, 0]);
+  });
 }
 
 /** The lowest and highest b where the line a = `at` crosses a convex outline of (a, b) points, or null. */
@@ -155,7 +197,7 @@ export function busSections(spec: Pick<BusSpec, "bodies" | "hingeY">): SectionRi
  * the fittings' closures, written before it existed, can draw into it.
  */
 export function assembleBus(spec: BusSpec, bind?: (m: MeshBuilder) => void): MeshBuilder {
-  const m = new MeshBuilder({ ...INTERIOR_PALETTE, ...spec.palette });
+  const m = new MeshBuilder({ ...INTERIOR_PALETTE, ...(spec.detail ? BUS_DETAIL_PALETTE : {}), ...spec.palette });
   bind?.(m);
   const articulated = spec.bodies.length > 1;
   const steer = spec.axles.find((a) => a.steer);
@@ -164,6 +206,28 @@ export function assembleBus(spec: BusSpec, bind?: (m: MeshBuilder) => void): Mes
   const r = spec.wheelRadius;
   const ay = r * AXLE_FACTOR;
   let wheelNodes: [string, string] = ["", ""];
+  // a confirmed bus's wheels carry nuts the eye follows round: their rims roll
+  // (rolling.ts), the front ones in a child of each steered wheel's node
+  const rolling: string[] = [];
+  const wheel = (x: number, z0: number, z1: number, face: number | null, spin?: string): void => {
+    if (!spec.detail) return busWheel(m, x, r, z0, z1, face);
+    if (spin && face !== null) rolling.push(spin);
+    detailedBusWheel(m, x, r, z0, z1, face, face !== null ? spin : undefined);
+  };
+  /** The rolling part of a wheel: wheel-front-<side>-spin, or wheel-rear-<axle behind the front one>-<side>. */
+  const spinName = (ai: number, s: number): string => {
+    const side = s < 0 ? "left" : "right";
+    if (spec.axles[ai]!.steer) return `wheel-front-${side}-spin`;
+    return `wheel-rear-${spec.axles.filter((a, k) => !a.steer && k <= ai).length}-${side}`;
+  };
+  const detail: DetailBus = {
+    frame: { section: spec.section, side: spec.side },
+    arches: spec.arches,
+    rear: spec.axles.filter((a) => !a.steer).map((a) => ({ x: a.x, inner: (a.dual ? spec.tyres.inner : spec.tyres.single)[0] })),
+    doorways: spec.doorways ?? [],
+    glass: (spec.windows ?? []).map((w) => ({ s: w.s, x: [w.x0, w.x1], y: [w.y0, w.y1] })),
+    ends: spec.endGlass ?? [],
+  };
 
   spec.bodies.forEach(([lo, hi], i) => {
     const node = sections[i]!.node;
@@ -176,7 +240,9 @@ export function assembleBus(spec: BusSpec, bind?: (m: MeshBuilder) => void): Mes
         arches: spec.arches, under: "under", x0: lo, x1: hi,
         ...(doors.length ? { doorways: doors.map((d) => ({ ...d, x0: d.x0 - 0.002, x1: d.x1 + 0.002, y0: d.y0 - 0.002, y1: d.y1 + 0.002 })) } : {}),
       });
-      if (doors.length) busCabin(m, spec, lo, hi, doors);
+      const closed = doors.filter((d) => !d.open);
+      if (closed.length) busCabin(m, spec, lo, hi, closed);
+      for (const d of doors) if (d.open) platformAlcove(m, spec, d);
       spec.axles.forEach((a, ai) => {
         if (a.x < lo || a.x > hi) return;
         m.scope(a.steer ? "front axle" : `axle ${ai + 1}`, () => {
@@ -184,16 +250,30 @@ export function assembleBus(spec: BusSpec, bind?: (m: MeshBuilder) => void): Mes
           if (a.steer) return; // its wheels are parts of their own
           for (const s of [-1, 1]) m.scope(s > 0 ? "right wheels" : "left wheels", () => {
             if (a.dual) {
-              busWheel(m, a.x, r, ...onSide(s, ...spec.tyres.inner), null);
-              busWheel(m, a.x, r, ...onSide(s, ...spec.tyres.outer), s);
-            } else busWheel(m, a.x, r, ...onSide(s, ...spec.tyres.single), s);
+              wheel(a.x, ...onSide(s, ...spec.tyres.inner), null);
+              wheel(a.x, ...onSide(s, ...spec.tyres.outer), s, spinName(ai, s));
+            } else wheel(a.x, ...onSide(s, ...spec.tyres.single), s, spinName(ai, s));
           });
         });
       });
       drawFittings(m, spec.fittings, lo, hi);
+      if (spec.detail) {
+        drawBusDetail(m, detail, lo, hi);
+        drawRouteDisplays(m, detail, lo, hi);
+        if (articulated && spec.bellows) {
+          // the bellows' frames on this section's ends, and under the hinge ahead of it the turntable
+          const ends: Array<[number, number]> = [];
+          if (i + 1 < spec.bodies.length) ends.push([lo, -1]);
+          if (i > 0) ends.push([hi, 1]);
+          m.scope("joint frames", () => {
+            for (const [x, dir] of ends) jointCollar(m, detailedJoint(0, 0, 0, spec.bellows!), x, dir);
+          });
+          if (i > 0) m.scope("turntable", () => turntable(m, sections[i]!.pivot[0], spec.bodies[i - 1]![0] - hi, spec.bellows!));
+        }
+      }
     });
     if (i === 0) {
-      wheelNodes = steeredWheels(m, node, steer.x, ay, (s, z0, z1) => busWheel(m, steer.x, r, z0, z1, s), spec.tyres.single);
+      wheelNodes = steeredWheels(m, node, steer.x, ay, (s, z0, z1) => wheel(steer.x, z0, z1, s, spinName(spec.axles.indexOf(steer), s)), spec.tyres.single);
     }
   });
 
@@ -201,7 +281,7 @@ export function assembleBus(spec: BusSpec, bind?: (m: MeshBuilder) => void): Mes
   if (articulated) {
     if (!spec.bellows) throw new Error("an articulated bus needs its bellows");
     for (let i = 0; i + 1 < spec.bodies.length; i++) {
-      const j: JointRig = {
+      const j: JointRig = spec.detail ? detailedJoint(i, spec.bodies[i]![0], spec.bodies[i + 1]![1], spec.bellows) : {
         node: `joint${i}`,
         sections: [i, i + 1],
         front: spec.bodies[i]![0],
@@ -232,6 +312,7 @@ export function assembleBus(spec: BusSpec, bind?: (m: MeshBuilder) => void): Mes
     rig.maxBendDeg = spec.maxBendDeg ?? 45;
   }
   m.rig = rig;
+  if (rolling.length) rollWheels(m, rolling, 2 * r);
   return m;
 }
 
@@ -264,6 +345,8 @@ export interface DoorStyle {
   leafWidth?: number;
   /** The number of leaves, whatever the width (a double door: 2). */
   leaves?: number;
+  /** An open platform (a Routemaster's): the doorway and its frame, no leaves to open. */
+  open?: boolean;
 }
 
 /**
@@ -324,7 +407,7 @@ export class BusDraft {
     // the leaves' span; the doorway 3 cm inside it all round, so the flat leaves
     // overlap the shell at their edges, where its sides lean in under them
     const [ls, le] = [x0 + 0.03, x0 + 0.03 + leaves * lw - 0.02];
-    const hole: Doorway = { s, x0: ls + 0.03, x1: le - 0.03, y0: st.bottom + 0.03, y1: st.top - 0.03 };
+    const hole: Doorway = { s, x0: ls + 0.03, x1: le - 0.03, y0: st.bottom + 0.03, y1: st.top - 0.03, ...(st.open ? { open: true } : {}) };
     this.doorways.push(hole);
     this.fit(s > 0 ? "right doors" : "left doors", (x0 + x1) / 2, () => {
       const m = this.m;
@@ -337,6 +420,7 @@ export class BusDraft {
         if (st.bottom - sill > 1e-3) sideSlab(m, mat, this.frame, s, ls, le, sill, st.bottom, 0.01);
         sideSlab(m, mat, this.frame, s, ls, le, st.top, st.top + 0.04, 0.01);
       });
+      if (st.open) return;
       const hw = halfWidth(this.frame.section, st.bottom + 0.2);
       openable(m, (mm, o) => {
         for (let l = 0; l < leaves; l++) {
@@ -386,7 +470,7 @@ export class BusDraft {
   /** Builds the bus with these fittings. */
   build(spec: Omit<BusSpec, "fittings">): MeshBuilder {
     const windows = this.lod.glass.map((g) => ({ s: g.s, x0: g.x[0], x1: g.x[1], y0: g.y[0], y1: g.y[1] }));
-    return assembleBus({ ...spec, fittings: this.fittings, doorways: this.doorways, windows }, (b) => (this.builder = b));
+    return assembleBus({ ...spec, fittings: this.fittings, doorways: this.doorways, windows, endGlass: this.lod.ends }, (b) => (this.builder = b));
   }
 
   /** Builds the bus's distant model (lodRoad.ts busLod) from the same description and the notes. */

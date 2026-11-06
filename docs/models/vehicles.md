@@ -262,7 +262,8 @@ the final table and before/after errors to the user.
 
 ## Budget
 
-At most **10,000 triangles** per road vehicle and about **15,000** per rail vehicle (tested at most 16,000); there is no file-size budget.
+At most **10,000 triangles** per road vehicle - an articulated bus **15,000** with one joint and **20,000** with two
+(`roadTriangleBudget()`, generator/rig.ts) - and about **15,000** per rail vehicle (tested at most 16,000); there is no file-size budget.
 A **tram** has the road vehicle's **10,000**; an articulated tram (sections and joints) up to
 **15,000** (test/models.test.ts, test/worldTrams.test.ts; [world-trams.md](world-trams.md#triangle-budget)).
 A vehicle's GLB is the same format as a skyscraper's: non-indexed triangle
@@ -389,7 +390,9 @@ is a hole the player sees through. Three rules hold for rail vehicles:
 - **A windscreen follows the shell facet for facet** (`crownPane`): its rows on the
   shell's stations, its columns on the slices' points over the shoulder and the arc,
   each cell split along the shell's own diagonal, so no chord of the glass dips under
-  a curved nose. `bandPainter`'s `roofFrom` (the series kit and the car builder pass
+  a curved nose. `shapedCrownPane` does the same for a pane whose edges follow functions
+  of d (`roundedPane`: rounded corners, a taper toward the roof), with extra rows where
+  its corners turn. `bandPainter`'s `roofFrom` (the series kit and the car builder pass
   the body's shoulder) keeps the roof colour above the shoulder: below it a nose's arc
   takes the side's colour just under the shoulder (one colour, so no stripe steps across
   the nose's facets) instead of the roof colour running down to its tip.

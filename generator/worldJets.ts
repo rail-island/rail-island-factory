@@ -21,7 +21,7 @@ const COLOUR = /* @__PURE__ */ liveries(colourSchemes(...COLOURS), "colour", "Co
 const B707 = /* @__PURE__ */ L("panAm", "qantas", "lufthansa");
 export const boeing707Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 46.61, H: 12.93, W: 3.76, D: 4.1, k: 1.35, nose: "airliner", ns: 1.1, tl: 11.5, ty: 0.7,
-  span: 44.42, root: 10.4, kink: [0.3, 6.6], tip: 2.3, sweep: 36, dih: 7, at: 15.8,
+  span: 44.42, root: 10.4, kink: [0.3, 6.6], tip: 2.3, sweep: 36, dih: 7, at: 15.8, flaps: true,
   eng: [{ kind: "pod", s: [7.4, 12.6], r: 0.72, len: 5.6, ahead: 3.4, drop: 0.8, jet: true }],
   fin: [7.4, 2.3, 40, 36.6, 2.5], tp: [13.95, 4.6, 1.5, 36, 39.6, 7],
   ng: [5.9, 0.44, true], mg: [[23.9, 3.37, 0.62, true, 2]],
@@ -65,7 +65,7 @@ export const boeing7478Spec = (p?: ParamValues): AirframeSpec => {
   return { ...brief({
     L: 76.25, H: 19.35, W: 6.5, D: 6.8, k: 2.15, nose: "airliner", tl: 17, ty: 0.75,
     hump: cargo ? { start: 0.6, full: 11, end: 24, crown: 10.4, hw: 2.55 } : { start: 0.6, full: 12, end: 39, crown: 10.42, hw: 2.55 },
-    span: 68.4, root: 16.6, kink: [0.37, 7.7], tip: 3.6, sweep: 40, dih: 7, at: 28.7, dev: "raked",
+    span: 68.4, root: 16.6, kink: [0.37, 7.7], tip: 3.6, sweep: 40, dih: 7, at: 28.7, dev: "raked", flaps: true,
     eng: [{ kind: "pod", s: [11.9, 21.0], r: 1.6, len: 5.6, ahead: 3.9, drop: 1.1 }],
     fin: [13.6, 4.5, 45, 57.0, 3], tp: [22.17, 9.6, 2.7, 36, 61.2, 7],
     ng: [9.6, 0.62, true], mg: [[37.6, 5.5, 0.62, true, 2], [40.6, 1.9, 0.62, true, 2]],
@@ -96,7 +96,7 @@ export const boeing767Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
 const B777 = /* @__PURE__ */ L("emirates", "airFrance", "cathay");
 export const boeing777Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 73.86, H: 18.5, W: 6.2, D: 6.2, k: 2.0, nose: "airliner", tl: 17,
-  span: 64.8, root: 15.5, kink: [0.32, 8.3], tip: 2.6, sweep: 35, dih: 6, at: 27.5, dev: "raked",
+  span: 64.8, root: 15.5, kink: [0.32, 8.3], tip: 2.6, sweep: 35, dih: 6, at: 27.5, dev: "raked", flaps: true,
   eng: [{ kind: "pod", s: [9.7], r: 1.95, len: 7.3, ahead: 4.7, drop: 0.9 }],
   fin: [11.0, 3.8, 42, 59.3, 3], tp: [21.5, 7.5, 2.5, 35, 62.5, 7],
   ng: [7.0, 0.6, true], mg: [[38.2, 5.5, 0.64, true, 3]],
@@ -248,7 +248,7 @@ export const airbusA340Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
 const A350 = /* @__PURE__ */ L("qatar", "singapore", "finnair");
 export const airbusA350Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 66.8, H: 17.05, W: 5.96, D: 6.09, k: 2.0, nose: "airliner", ns: 1.15, tl: 15.5,
-  span: 64.75, root: 15, kink: [0.3, 8.0], tip: 1.8, sweep: 34, dih: 6, at: 25.5, dev: "curved", dh: 3.2,
+  span: 64.75, root: 15, kink: [0.3, 8.0], tip: 1.8, sweep: 34, dih: 6, at: 25.5, dev: "curved", dh: 3.2, flaps: true,
   eng: [{ kind: "pod", s: [10.3], r: 1.75, len: 6.4, ahead: 4.5, drop: 0.8 }],
   fin: [10.2, 3.4, 42, 53.2, 2.5], tp: [19.5, 6.8, 2.2, 35, 56.5, 6],
   ng: [5.6, 0.53, true], mg: [[34.3, 5.3, 0.63, true, 2]],
@@ -271,7 +271,7 @@ export const airbusA220Spec = (p?: ParamValues): AirframeSpec => ({ ...brief({
 const CONCORDE = /* @__PURE__ */ L("britishAirways", "airFrance");
 export const concordeSpec = (p?: ParamValues): AirframeSpec => ({ ...brief({
   L: 61.66, H: 12.2, W: 2.88, D: 3.32, k: 2.45, nose: "pointed", ns: 0.85, tl: 14, ty: 0.55,
-  span: 25.6, root: 37.5, tip: 3.2, sweep: 60, dih: 0, at: 21.0, wy: 2.95, thick: [0.035, 0.03],
+  span: 25.6, root: 37.5, tip: 3.2, sweep: 60, dih: 0, at: 21.0, wy: 2.95, thick: [0.035, 0.03], droop: { angle: 12.5 },
   plan: [[0, 21.0, 37.5], [1.5, 22.5, 36.0], [3.5, 30.5, 28.0], [6.0, 38.0, 20.5], [9.0, 45.5, 13.0], [11.5, 51.5, 7.0], [12.8, 54.5, 3.2]],
   eng: [{ kind: "pod", s: [3.6, 5.0], r: 0.62, len: 11, ahead: -7, drop: 0.65, jet: true }],
   fin: [10.5, 2.0, 50, 49.5],

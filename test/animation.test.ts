@@ -67,6 +67,10 @@ describe("animation clips", () => {
     // a character's chosen motion (characters.ts) is a drive of its own
     m.animate({ name: "hop", times: [0, 1], tracks, drive: { drive: "motion" } });
     expect(m.clipDrives()).toEqual({ hop: { drive: "motion" } });
+    // an aircraft's flaps and drooping nose (airframeKit.ts) are state clips of drives of their own
+    m.animate({ name: "flaps", times: [0, 1], tracks, drive: { drive: "flaps" } });
+    m.animate({ name: "nose", times: [0, 1], tracks, drive: { drive: "droop" } });
+    expect(m.clipDrives()).toEqual({ hop: { drive: "motion" }, flaps: { drive: "flaps" }, nose: { drive: "droop" } });
   });
 
   it("leave a model without clips byte-identical in layout (no animations key)", () => {

@@ -30,7 +30,7 @@ const span = (ts: Tri[], axis: number): [number, number] => {
 };
 
 describe("the chairlift chair", () => {
-  it("is a parametric cable car design: seats 6/4/8, bubble/none, six colours", () => {
+  it("is a parametric cable car design: seats 6/4/8, an open chair or a bubble, six colours", () => {
     const d = DESIGNS.get(proceduralId(ID))!;
     expect(d.title).toBe("Chairlift Chair");
     expect(d.catalog).toEqual(CABLE_CABIN_CATALOG);
@@ -38,7 +38,7 @@ describe("the chairlift chair", () => {
     expect(d.finishParams).toEqual(["color"]);
     expect(CHAIRLIFT_PARAMS.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([
       ["seats", "6", ["6", "4", "8"]],
-      ["cover", "bubble", ["bubble", "none"]],
+      ["cover", "none", ["none", "bubble"]],
       ["color", "orange", ["orange", "blue", "red", "yellow", "green", "grey"]],
     ]);
     expect(paramCombinations(CHAIRLIFT_PARAMS)).toHaveLength(36);
@@ -64,8 +64,8 @@ describe("the chairlift chair", () => {
       const jaws = ts.filter((t) => t.material === "steel" && t.p.every((p) => Math.hypot(p[1] - CHAIR.rope, p[2]) < 0.07 && Math.abs(p[0]) < 0.31));
       const [y0, y1] = span(jaws, 1);
       expect((y0 + y1) / 2).toBeCloseTo(CHAIR.rope, 3);
-      // the cushions' tops: the highest seat-coloured horizontal faces in front of the backrests
-      const cushions = ts.filter((t) => t.material === "seat" && t.p.every((p) => p[2] > CHAIR.backZ + 0.03));
+      // the cushions' tops: the highest seat-coloured horizontal faces in front of the backrests (the riders face -x)
+      const cushions = ts.filter((t) => t.material === "seat" && t.p.every((p) => -p[0] > CHAIR.backZ + 0.03));
       expect(span(cushions, 1)[1]).toBeCloseTo(CHAIR.seat, 3);
       // it hangs from the rope: the footrest reaches down to the ground line
       const all = span(ts, 1);
@@ -74,16 +74,32 @@ describe("the chairlift chair", () => {
     }
   });
 
+  it("lines its seats up across the rope, the riders facing the travel (-x)", () => {
+    // regression: the chair was drawn with its seats along the rope, a quarter turn out
+    const ts = tris({ seats: "8" });
+    const seats = ts.filter((t) => t.material === "seat");
+    const [x0, x1] = span(seats, 0), [z0, z1] = span(seats, 2);
+    expect(z1 - z0).toBeGreaterThan(8 * CHAIR.pitch - 0.1);
+    expect(x1 - x0).toBeLessThan(1);
+    // the footrest and the safety bar lie ahead of the riders, the backrests behind them
+    const foot = ts.filter((t) => t.material === "gear");
+    expect(span(foot, 0)[0]).toBeLessThan(-0.3);
+    expect(span(seats, 0)[1]).toBeGreaterThan(0.2);
+    // the grip still runs along the rope (x)
+    const jaws = ts.filter((t) => t.material === "steel" && t.p.every((p) => Math.hypot(p[1] - CHAIR.rope, p[2]) < 0.07 && Math.abs(p[0]) < 0.31));
+    expect(span(jaws, 0)[1] - span(jaws, 0)[0]).toBeGreaterThan(0.4);
+  });
+
   it("grows across the rope with its seats; the bubble only adds the cover", () => {
     const width = (combo: ParamValues): number => {
       const s = glbStats(glb(combo));
-      return s.max[0] - s.min[0];
+      return s.max[2] - s.min[2];
     };
     expect(width({ seats: "4" })).toBeLessThan(width({ seats: "6" }));
     expect(width({ seats: "6" })).toBeLessThan(width({ seats: "8" }));
     expect(width({ seats: "6" }) - width({ seats: "4" })).toBeCloseTo(2 * CHAIR.pitch, 1);
     expect(tris({ cover: "none" }).some((t) => t.material === "cover")).toBe(false);
-    const withCover = tris({});
+    const withCover = tris({ cover: "bubble" });
     expect(withCover.some((t) => t.material === "cover")).toBe(true);
     expect(withCover.filter((t) => t.material !== "cover")).toHaveLength(tris({ cover: "none" }).length);
   });
@@ -94,6 +110,6 @@ describe("the chairlift chair", () => {
     for (const v of CHAIRLIFT_PARAMS.find((p) => p.name === "color")!.values) expect(shape({ color: v.value })).toEqual(base);
     const colourOf = (combo: ParamValues): string =>
       JSON.stringify(parseGlb(glb(combo)).json.materials!.find((m) => m.name === "cover")!.pbrMetallicRoughness!.baseColorFactor);
-    expect(colourOf({ color: "blue" })).not.toEqual(colourOf({}));
+    expect(colourOf({ cover: "bubble", color: "blue" })).not.toEqual(colourOf({ cover: "bubble" }));
   });
 });

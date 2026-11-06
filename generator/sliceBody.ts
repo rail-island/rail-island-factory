@@ -187,6 +187,25 @@ export function surfaceDisc(m: MeshBuilder, b: SliceBody, X: (d: number) => numb
   m.slab(mat, pts, mul(n, -depth));
 }
 
+/**
+ * A disc tangent to the body's upper side (the shoulder and the arc, crownPoint) at d and
+ * half width z on side s: for a steep nose front, where a height does not single out a point.
+ */
+export function crownDisc(m: MeshBuilder, b: SliceBody, X: (d: number) => number, d: number, z: number, s: number, mat: string, r: number, proud: number, depth: number, sides = 18): void {
+  const P = (dd: number, zz: number): Vec3 => { const [pz, py] = crownPoint(b, dd, zz); return [X(dd), py, s * pz]; };
+  const base = P(d, z);
+  let n = norm(cross(sub(P(d, z + 0.02), P(d, z - 0.02)), sub(P(d + 0.02, z), P(Math.max(0, d - 0.02), z))));
+  // outward: away from the body's centre line and its middle
+  if (dot(n, [X(0) - X(1), 0, 0]) < 0) n = mul(n, -1);
+  const u = norm(cross([0, 1, 0], n));
+  const v = norm(cross(n, u));
+  const pts = Array.from({ length: sides }, (_, i): Vec3 => {
+    const a = (2 * Math.PI * i) / sides;
+    return add(add(base, mul(n, proud)), add(mul(u, r * Math.cos(a)), mul(v, r * Math.sin(a))));
+  });
+  m.slab(mat, pts, mul(n, -depth));
+}
+
 /** The point of the slice at d whose half width is z on its upper side (the shoulder and the arc), z clamped to the slice. */
 export function crownPoint(b: SliceBody, d: number, z: number): Pt {
   const h = halfSlice(b, d);
@@ -223,8 +242,43 @@ function between(b: SliceBody, d: number): Pt[] {
  */
 export function crownPane(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, mat: string, [d0, d1]: [number, number], [z0, z1]: [number, number], proud: number, _nd = 6, _nz = 4): void {
   if (d1 - d0 < 1e-6 || z1 - z0 < 1e-6) return;
+  shapedCrownPane(m, b, X, s, mat, [d0, d1], () => z0, () => z1, proud);
+}
+
+/** A windscreen pane's outline in (d, half width): its inner and outer edge at d and the extra rows its rounded corners need. */
+export interface PaneOutline {
+  d: [number, number];
+  z0: (d: number) => number;
+  z1: (d: number) => number;
+  rows: number[];
+}
+
+/**
+ * A pane's outline with rounded corners: over d0..d1 (d0 its lower, front
+ * edge on a nose), its inner edge at z0, its outer edge from `outer[0]` at d0
+ * to `outer[1]` at d1 (a windscreen narrowing toward the roof); the outer
+ * corners rounded with radius `r` (`rTop` at d1), the inner ones with `ri`.
+ */
+export function roundedPane([d0, d1]: [number, number], z0: number, outer: [number, number], r: number, ri = 0.03, rTop = r): PaneOutline {
+  const edge = (d: number) => outer[0] + ((outer[1] - outer[0]) * (d - d0)) / (d1 - d0);
+  // how far a corner of radius q pulls the edge in at distance t from the end
+  const pull = (q: number, t: number) => (q > 0 && t < q ? q - Math.sqrt(Math.max(0, q * q - (q - t) ** 2)) : 0);
+  const rows: number[] = [];
+  for (const [q, from, dir] of [[r, d0, 1], [rTop, d1, -1], [ri, d0, 1], [ri, d1, -1]] as const)
+    if (q > 0) for (const a of [0.15, 0.35, 0.6]) rows.push(from + dir * q * (1 - Math.cos(a * Math.PI)));
+  return {
+    d: [d0, d1],
+    z0: (d) => z0 + pull(ri, Math.min(d - d0, d1 - d)),
+    z1: (d) => edge(d) - Math.max(pull(r, d - d0), pull(rTop, d1 - d)),
+    rows: [...new Set(rows.filter((d) => d > d0 + 1e-4 && d < d1 - 1e-4).map((d) => Math.round(d * 1e4) / 1e4))],
+  };
+}
+
+/** A crown pane whose inner and outer edges follow z0(d) and z1(d) (a rounded or tapered windscreen), with extra rows at `extra`. */
+export function shapedCrownPane(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, mat: string, [d0, d1]: [number, number], z0f: (d: number) => number, z1f: (d: number) => number, proud: number, extra: readonly number[] = []): void {
+  if (d1 - d0 < 1e-6) return;
   const st = b.stations;
-  const ds = [d0, ...st.filter((d) => d > d0 + 1e-6 && d < d1 - 1e-6), d1];
+  const ds = [d0, ...[...st, ...extra].filter((d) => d > d0 + 1e-6 && d < d1 - 1e-6), d1].sort((p, q) => p - q).filter((d, i, a) => i === 0 || d - a[i - 1]! > 1e-6);
   const rows = ds.map((d) => between(b, d));
   const k0 = 4 + b.edges(d0).length;
   const n = rows[0]!.length;
@@ -242,7 +296,7 @@ export function crownPane(m: MeshBuilder, b: SliceBody, X: (d: number) => number
     }
     return n - 1;
   };
-  const lo = rows.map((h) => uOf(h, z1)), hi = rows.map((h) => uOf(h, z0));
+  const lo = rows.map((h, r) => uOf(h, z1f(ds[r]!))), hi = rows.map((h, r) => uOf(h, Math.min(z0f(ds[r]!), z1f(ds[r]!))));
   // the columns: every slice point between the pane's widest reach, each row clamped to its own cut
   const cols = [...new Set([Math.min(...lo), ...Array.from({ length: n - k0 }, (_, i) => k0 + i), Math.max(...hi)])]
     .filter((u) => u >= Math.min(...lo) - 1e-9 && u <= Math.max(...hi) + 1e-9).sort((p, q) => p - q);

@@ -147,6 +147,12 @@ above and below and rides on the leaf, so it moves with it.
 **One floor.** A double-deck coach or unit's cabin has a single floor at its
 doors' level.
 
+
+An open bus platform (`DoorStyle.open`: the AEC Routemaster's, the Bristol Lodekka's) has no
+door clip to reveal a cabin, so none is drawn behind it: `platformAlcove` (busAssembly.ts)
+closes the doorway with a floor, a back wall 0.95 m in, its two ends and a ceiling, all part of
+the exterior and always seen.
+
 ## Bundle size
 
 Every JS model carries the shared runtime (`meshCore.ts`, `threeBuilder.ts`), and
