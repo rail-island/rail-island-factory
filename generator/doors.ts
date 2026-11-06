@@ -1,6 +1,7 @@
 // Passenger doors that open (docs/models/doors.md): how a door's leaves move
 // from shut (0) to open (1) in each motion family -- folding, swinging (hinged)
-// and plug (out, then along the side) -- and `openable`, which turns a door drawn
+// plug (out, then along the side) and pocket (in, then along the side into the
+// wall) -- and `openable`, which turns a door drawn
 // at any opening into moving leaf parts and adds them to its side's `door` clip.
 // The shut pose is the rest pose, so a thumbnail, the source tree and a consumer
 // that plays no door clip see the vehicle as it always was. Apart from
@@ -27,18 +28,28 @@ export type Jamb = "low" | "high";
  * - `swing`: leaves hinged at their jamb swing inward -- one at `from`, two from
  *   both jambs (an older coach's double door) -- or `outward` (a compartment door);
  * - `plug`: leaves step `out` from the skin, then slide along it by their own
- *   width -- one toward `toward`, two apart (a modern unit's sliding plug door).
+ *   width -- one toward `toward`, two apart (a modern unit's sliding plug door);
+ * - `pocket`: leaves step `in` behind the skin, then slide along inside the wall by
+ *   their own width -- one toward `toward`, two apart (a metro car's sliding door,
+ *   whose leaves vanish into pockets in the body side).
  */
 export type DoorMotion =
   | { kind: "fold"; leaves: 2 | 3 | 4; from?: Jamb }
   | { kind: "swing"; leaves: 1 | 2; from?: Jamb; outward?: boolean }
-  | { kind: "plug"; leaves: 1 | 2; toward?: Jamb; out?: number };
+  | { kind: "plug"; leaves: 1 | 2; toward?: Jamb; out?: number }
+  | { kind: "pocket"; leaves: 1 | 2; toward?: Jamb; in?: number };
 
 /** How far a folding or swinging leaf turns, open (radians). */
 export const DOOR_FOLD_ANGLE = (80 * Math.PI) / 180;
 /** How far a plug leaf steps out from the skin before it slides (metres). */
 export const DOOR_PLUG_OUT = 0.08;
-/** The part of a plug door's opening spent stepping out; the rest slides. */
+/**
+ * How far a pocket leaf steps in behind the skin before it slides (metres): its
+ * outer face (and the glass of its lights, 22 mm proud) goes behind the skin, its
+ * back stays clear of the cabin's side wall (CABIN_INSET, interior.ts).
+ */
+export const DOOR_POCKET_IN = 0.032;
+/** The part of a plug or pocket door's opening spent stepping out or in; the rest slides. */
 const PLUG_STEP = 0.25;
 /** The gap between two leaves of one door (metres). */
 export const LEAF_GAP = 0.012;
@@ -80,8 +91,9 @@ export function doorLeaves(x0: number, x1: number, s: number, motion: DoorMotion
   const w = (x1 - x0 - (n - 1) * LEAF_GAP) / n;
   const span = (k: number): [number, number] => [x0 + k * (w + LEAF_GAP), x0 + k * (w + LEAF_GAP) + w];
   const out: Leaf[] = [];
-  if (motion.kind === "plug") {
-    const step = motion.out ?? DOOR_PLUG_OUT;
+  if (motion.kind === "plug" || motion.kind === "pocket") {
+    // a pocket leaf steps the other way: in, behind the skin
+    const step = motion.kind === "plug" ? (motion.out ?? DOOR_PLUG_OUT) : -(motion.in ?? DOOR_POCKET_IN);
     for (let k = 0; k < n; k++) {
       // two leaves part; one slides toward its jamb
       const dir = n === 2 ? (k === 0 ? -1 : 1) : (motion.toward ?? "low") === "low" ? -1 : 1;

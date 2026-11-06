@@ -184,8 +184,11 @@ export function drawBusDetail(m: MeshBuilder, b: DetailBus, lo: number, hi: numb
   const f = b.frame;
   const clearOfDoors = (s: number, x0: number, x1: number): boolean => b.doorways.every((d) => d.s !== s || x1 < d.x0 - 0.05 || x0 > d.x1 + 0.05);
   const arches = b.arches.filter((a) => a.x >= lo && a.x <= hi).sort((p, q) => p.x - q.x);
+  // only the arches cut into the shell: a bonneted bus's front wheels sit under wings ahead of it
+  const sideXs = f.side.map(([x]) => x);
+  const inShell = (a: Arch): boolean => a.x - a.half >= Math.min(...sideXs) - 1e-6 && a.x + a.half <= Math.max(...sideXs) + 1e-6;
   m.scope("arch trims", () => {
-    for (const a of arches) for (const s of [-1, 1]) {
+    for (const a of arches.filter(inShell)) for (const s of [-1, 1]) {
       if (clearOfDoors(s, a.x - a.half - 0.06, a.x + a.half + 0.06)) archTrim(m, f, s, a);
     }
   });

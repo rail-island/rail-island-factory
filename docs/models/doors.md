@@ -1,6 +1,6 @@
 # Doors: passenger doors that open
 
-**Covers** - the passenger doors that open on every train, tram and bus: the `door` clip drive and its side, the three motion families (fold, swing, plug) and their leaves, `openable` and the mechanism core it shares with the pantographs, the shut rest pose, how the coach kit draws an opening door (the lights riding on the leaves), the doorways cut through the shell into the car's cabin, which designs open which doors, the site's Open left / Open right / Close buttons, what the game does with the clips today, and the tests.
+**Covers** - the passenger doors that open on every train, tram and bus: the `door` clip drive and its side, the four motion families (fold, swing, plug, pocket) and their leaves, `openable` and the mechanism core it shares with the pantographs, the shut rest pose, how the coach kit draws an opening door (the lights riding on the leaves), the doorways cut through the shell into the car's cabin, which designs open which doors, the site's Open left / Open right / Close buttons, what the game does with the clips today, and the tests.
 **Code** - `generator/csdCoachParts.ts` (`Opening`, `Volume.openings`, `doorOpening`, `doorwaySegment`), `generator/coachCabin.ts`, `generator/dmuKit.ts` (`Car.volume`, `loft`), `generator/doors.ts` (`DoorMotion`, `doorLeaves`, `openable`, `DOOR_SAMPLES`, `DOOR_FOLD_ANGLE`, `DOOR_PLUG_OUT`, `LEAF_GAP`), `generator/liftable.ts` (`mechanism`), `generator/meshCore.ts` (`ClipDrive`, `DoorSide`, `moved`, `currentPartName`), `generator/csdCoachParts.ts` (`Coach.door`), `generator/tramKit.ts` (`doors`), `generator/csdCoaches.ts` (`doors`), `generator/liveryCoach.ts` (`DoorSpec.opens`), `generator/trams.ts`, `generator/cdYCoach.ts`, `generator/uicZCoach.ts`, `generator/bmoCoach.ts`, `generator/emu471.ts`, `generator/emu680.ts`, `generator/db628.ts`, `generator/dmu810.ts`, `generator/cdGreenWhiteCoach.ts`, `generator/zsrCoach.ts`, `generator/dbDoubleDeck.ts`, `generator/drDoubleDeck.ts`, `generator/dbNWagen.ts`, `generator/emu451.ts`, `generator/emu460.ts`, `generator/emu470.ts`, `generator/dmu812.ts`, `generator/dmu843.ts`, `generator/dmuM131.ts`, `generator/dmuM240.ts`, `generator/dmuM296.ts`, `generator/jrKiha40.ts`, `generator/mavMdmot.ts`, `generator/metro.ts`, `generator/busAssembly.ts` (`BusDraft.door`), `generator/tgv.ts`, `generator/ice1.ts`, `generator/tgvDuplex.ts`, `generator/shinkansen0.ts`, `generator/mtrMTrain.ts`, `generator/drVt1816.ts`, `src/ModelViewer.tsx`, `test/doors.test.ts`
 **See also** - [interiors.md](interiors.md), [animation.md](animation.md), [trams.md](trams.md), [csd-coaches.md](csd-coaches.md), [czsk-coaches.md](czsk-coaches.md), [czech-emus.md](czech-emus.md), [czech-dmus.md](czech-dmus.md), [foreign-units.md](foreign-units.md), [../site/catalog-site.md](../site/catalog-site.md)
 
@@ -56,10 +56,14 @@ line's z (the leaf's outer face). Inward is toward the car's centre line.
 | `fold` | 2, 3, 4 | pairs hinged together fold inward against a jamb, the first leaf turning about the jamb, the second turning back from its free edge with its own free edge kept on the door line; 2 leaves fold against `from`, 4 make a pair at each jamb, 3 a pair at `from` and a single swinging leaf at the other jamb; up to `DOOR_FOLD_ANGLE` = 80 degrees |
 | `swing` | 1, 2 | hinged at a jamb, turning inward 80 degrees: one at `from`, two from both jambs (a double door) |
 | `plug` | 1, 2 | step out `DOOR_PLUG_OUT` = 8 cm over the first quarter of the opening, then slide along the side by a leaf's width (and the gap): one toward `toward`, two apart |
+| `pocket` | 1, 2 | step in `DOOR_POCKET_IN` = 32 mm behind the skin over the first quarter, then slide along inside the wall by a leaf's width (and the gap) - one toward `toward`, two apart - and vanish into the body side |
 
 A folding or swinging leaf turns into the vestibule behind its doorway; a plug leaf
 stands outside, over the panels beside the door, 8 cm out - clear of window frames,
-sashes and handrails.
+sashes and handrails. A pocket leaf slides between the skin and the cabin's side wall
+(`CABIN_INSET` = 47 mm in, [interiors.md](interiors.md)): its outer face and its lights'
+glass behind the skin, its back clear of the wall, so its lights take a shallow frame
+(`Coach.window`'s `depth`, 12 mm). It passes through the doorway's jamb as through a slot.
 
 ## `openable` and the mechanism core
 
@@ -128,7 +132,8 @@ its passenger doors, in the motion its prototype has where the drawing allows:
 | Family | Motion |
 | --- | --- |
 | Tatra T3, KT4 (four-leaf folding), KT8D5 (four, the narrow outer doors three), GT4 (two) | `fold` inward, through doorways |
-| Tatra T6A5, the 81-71 metro car, Bmo, DB Regio and DR double-deckers, CD 470, CD 471, MTR M-Train (sliding leaves stepping out 3 cm) | `plug` 2 |
+| the 81-71 metro car (into pockets in the wall) | `pocket` 2 |
+| Tatra T6A5, Bmo, DB Regio and DR double-deckers, CD 470, CD 471, MTR M-Train (sliding leaves stepping out 3 cm) | `plug` 2 |
 | UIC-Z (every operator), CD 680, DB 628 motor car, CD 843 (one-window doors), MAV MDmot trailers, TGV and TGV Duplex trailers, ICE 1, Shinkansen 0, DR VT 18.16 | `plug` 1 toward the car's middle (two-window doors `plug` 2) |
 | CSD Y-type, Balm, Bam, Be31, CD Y coach, ZSR coach, green-and-white coaches, CD 460 and 810, 812, M 131, M 240, M 296 / 853 / 854, JR KiHa 40 | `swing` inward through doorways: one leaf on the jamb toward the nearer end, two (a double door with a window a leaf) from both jambs |
 | CD 451 / 452 | `swing` 2 inward through doorways |
@@ -160,7 +165,8 @@ ends, and a model always arrives shut ([../site/catalog-site.md](../site/catalog
 
 `test/doors.test.ts`: every motion's leaves fill the door and stand still shut; a
 folding pair's second free edge stays on the door line; a plug leaf steps out, then
-slides; `openable` draws the shut pose at rest, the leaves as `door<n>-<k>` parts, a
+slides; a pocket leaf steps in, then slides (and the 81-71's leaves never stand out over
+the side, `test/trams.test.ts`); `openable` draws the shut pose at rest, the leaves as `door<n>-<k>` parts, a
 door clip per side matching a plain build at 0, 0.5 and 1, every door of a side
 joining one clip, numbered apart from a pantograph; a door drive without a side is
 refused. Every design of the passenger groups (but the Dsk and the M 112) opens

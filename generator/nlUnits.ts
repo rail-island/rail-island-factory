@@ -6,7 +6,8 @@
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
-import { c, flatCab, flirt, nose } from "./seriesHelpers.ts";
+import { c, flatCab, flirt, nose, NO_NOSE } from "./seriesHelpers.ts";
+import type { SeriesCabFace } from "./seriesCab.ts";
 
 const NS_YELLOW = "#ffc917";
 const NS_BLUE = "#003082";
@@ -25,13 +26,36 @@ export function nsLivery(kind: "yellowBlue" | "yellowGrey" | "green" | "fyra" | 
 
 const DD_ROWS: ReadonlyArray<readonly [number, number]> = [[1.25, 1.95], [2.8, 3.5]];
 
+/** The Mat '46 in NS green, read from photo-spoorwegmuseum-treinstel-ns-273.jpg: the silver skirt, the red waist and cantrail bands, the silver roof; the red band rising over the front's windows. */
+const MAT46_GREEN: ShinkansenLivery = {
+  title: "NS green", number: "273",
+  palette: { green: c("#2f4a36"), red: c("#c42127"), silver: c("#b6babd", 0.35), roofG: c("#aeb2b5", 0.45), skirtG: c("#2a2c2f", 0.75), cabMask: c("#1d1f22", 0.3) },
+  bands: [[0, 1.22, "silver"], [1.22, 1.36, "red"], [1.36, 2.95, "green"], [2.95, 9, "red"]],
+  front: [[0, 1.22, "silver"], [1.22, 1.36, "red"], [1.36, 2.98, "green"], [2.98, 9, "red"]],
+  roof: "roofG", skirt: "skirtG",
+};
+
+/**
+ * The "Muizenneus" (mouse nose): the end half-round in plan, a band of five windows wrapping
+ * round it under the red band and the silver dome, two lamps low, the Scharfenberg coupler.
+ */
+const MOUSE_NOSE: SeriesCabFace = {
+  dJoin: 1.35, dSide: 1.3, reach: 0.35, first: 3.2, roofFrom: 3.32,
+  profile: [[1.0, 0.15], [1.15, 0.05], [1.35, 0], [2.0, 0], [2.9, 0.06], [3.15, 0.16], [3.4, 0.36], [3.65, 0.72], [3.85, 1.35]],
+  corner: [[1.0, 1.0], [3.0, 1.0], [3.5, 0.6], [3.85, 0.1]], bulge: 0.04,
+  rows: [1.0, 1.15, 1.22, 1.36, 1.55, 2.0, 2.05, 2.45, 2.88, 2.98, 3.15, 3.32, 3.45, 3.65, 3.85],
+  masks: [{ lat: [-1.37, 1.37], y: [2.0, 2.93], r: 0.06, mat: "frameSilver" }],
+  panes: [-2, -1, 0, 1, 2].map((k) => ({ lat: [k * 0.535 - 0.235, k * 0.535 + 0.235] as const, y: [2.05, 2.88] as const, r: 0.05 })),
+  lamps: [[-0.42, 1.6, 0.13, "lampHead"], [0.42, 1.6, 0.13, "lampHead"]], roofLamp: [0, 3.18, 0.06],
+  wipers: [[[-0.6, 2.1], [-0.4, 2.7]], [[0.4, 2.1], [0.6, 2.7]]],
+};
+
 export const MAT46: ShinkansenSeries = {
   endLength: 25.9, midLength: 25.9, W: 1.47, Y: 1.4, S: 3.15, C: 3.85, lean: 0.97, B: 1.0, A: 1.15,
-  nose: nose(0.8, 0.6, 2.2, [[0, 3.3], [0.3, 3.65], [0.8, 3.85]], [[0, 3.1], [0.4, 3.15]], [[0, 1.4], [0.5, 1.4]], [[0, 1.2], [0.4, 1.15]], [[0, 1.1], [0.2, 1.0]]),
-  windscreen: [0.05, 0.6, 0.07, 1.25], lamps: [0.05, 1.55],
+  nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: MOUSE_NOSE,
   windows: [[1.95, 2.8]], windowW: 1.0, pitch: 1.25, door: [1.2, 3.05, 1.95, 2.65], doorW: 0.9,
-  bogieCentres: 18.0, wheelR: 0.5, wheelbase: 3.0, cars: [2], endPantograph: true, endCoupler: "buffers",
-  liveries: { green: nsLivery("green", "273"), yellowGrey: nsLivery("yellowGrey", "283") },
+  bogieCentres: 18.0, wheelR: 0.5, wheelbase: 3.0, cars: [2], endPantograph: true,
+  liveries: { green: MAT46_GREEN, yellowGrey: nsLivery("yellowGrey", "283") },
   weight: { end: 55, middle: 55 }, power: 280, maxspeed: 120,
 };
 
@@ -57,13 +81,42 @@ export const PLAN_V: ShinkansenSeries = {
   weight: { end: 52, middle: 52 }, power: 310, maxspeed: 140,
 };
 
+/**
+ * The DE-I's petrol blue, read from photo-soestduinen-nsm-de1-41-...jpg: the silver skirt and roof,
+ * the orange-red waist band rising to a point under the winged emblem on the front, the red
+ * band over the front's windows wrapping round the cab.
+ */
+const DE1_BLUE: ShinkansenLivery = {
+  title: "Blue Angel", number: "DE 41",
+  palette: { blue: c("#1e5566"), red: c("#e0452b"), silver: c("#b6babd", 0.35), roofG: c("#c4c7c9", 0.45), skirtG: c("#2a2c2f", 0.75), cabMask: c("#1d1f22", 0.3) },
+  bands: [[0, 1.22, "silver"], [1.22, 1.36, "red"], [1.36, 9, "blue"]],
+  front: [[0, 1.22, "silver"], [1.22, 1.36, "red"], [1.36, 2.96, "blue"], [2.96, 9, "red"]],
+  roof: "roofG", skirt: "skirtG",
+};
+
+/** The Blauwe Engel's end: the Mat '46's rounded nose, the red beak and the emblem between the lamps, white window frames. */
+const ANGEL_NOSE: SeriesCabFace = {
+  ...MOUSE_NOSE, wrap: true, cols: [5, 3, 1, 1], tolerance: 0.02,
+  // square-cornered panes and surround: rounded ones refine the whole grid past the budget of a car with two ends
+  masks: [{ lat: [-1.37, 1.37], y: [2.0, 2.93], r: 0, mat: "white" }],
+  panes: MOUSE_NOSE.panes.map((p) => ({ ...p, r: 0 })),
+  decals: [
+    // the beak: the waist band's point rising between the lamps
+    { mat: "red", pts: [[-0.95, 1.3], [0.95, 1.3], [0, 1.86]] },
+    // the winged wheel: its wings and hub
+    { mat: "silver", pts: [[-0.36, 2.0], [-0.06, 1.9], [-0.06, 1.95], [-0.3, 2.03]] },
+    { mat: "silver", pts: [[0.06, 1.9], [0.36, 2.0], [0.3, 2.03], [0.06, 1.95]] },
+    { mat: "silver", pts: [[-0.05, 1.86], [0.05, 1.86], [0.05, 1.98], [-0.05, 1.98]] },
+  ],
+  lamps: [[-0.5, 1.68, 0.12, "lampHead"], [0.5, 1.68, 0.12, "lampHead"]], roofLamp: [0, 3.16, 0.06],
+};
+
 export const DE1: ShinkansenSeries = {
   endLength: 26.0, midLength: 26.0, W: 1.45, Y: 1.4, S: 3.15, C: 3.85, lean: 0.97, B: 1.0, A: 1.15,
-  nose: nose(0.8, 0.6, 2.2, [[0, 3.3], [0.3, 3.65], [0.8, 3.85]], [[0, 3.1], [0.4, 3.15]], [[0, 1.4], [0.5, 1.4]], [[0, 1.2], [0.4, 1.15]], [[0, 1.1], [0.2, 1.0]]),
-  windscreen: [0.05, 0.6, 0.07, 1.25], lamps: [0.05, 1.55],
+  nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: ANGEL_NOSE,
   windows: [[1.95, 2.8]], windowW: 1.0, pitch: 1.25, door: [1.2, 3.05, 1.95, 2.65], doorW: 0.9,
-  bogieCentres: 18.0, wheelR: 0.5, wheelbase: 3.0, traction: "diesel", single: true, endCoupler: "buffers",
-  liveries: { blue: { title: "Blue Angel", palette: { blue: c("#2b5d8a"), cream: c("#e6dcc0"), roofG: c("#8f9396", 0.6), skirtG: c("#2a2c2f", 0.75) }, bands: [[0, 1.85, "blue"], [1.85, 2.85, "cream"], [2.85, 9, "blue"]], roof: "roofG", skirt: "skirtG", number: "DE 41" } },
+  bogieCentres: 18.0, wheelR: 0.5, wheelbase: 3.0, traction: "diesel", single: true,
+  liveries: { blue: DE1_BLUE },
   weight: { end: 64, middle: 64 }, power: 300, maxspeed: 120,
 };
 

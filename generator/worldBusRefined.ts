@@ -289,7 +289,8 @@ export const newRoutemaster: Extras = (c, s) => {
  * triangle, the route number and "via" boxes over the
  * cab, the upper deck's split front windows with their top vents, the rear route
  * box, the open rear platform (no doors: DoorStyle.open) with its grab pole, roof
- * vents over the front.
+ * vents over the front, the lower saloon's front window over the bonnet (and, in the
+ * kit's bonnet, the solid wings and the apron a detailed bus has).
  */
 export const routemaster: Extras = (c, s) => {
   const L = s.length;
@@ -316,6 +317,12 @@ export const routemaster: Extras = (c, s) => {
     for (const z of [-0.45, 0.45]) block(m, "frame", L - 0.55, L - 0.25, s.height - 0.06, s.height + 0.03, z - 0.18, z + 0.18);
   });
   c.d.roofItem(L - 0.55, L - 0.25, -0.63, 0.63, s.height - 0.06, s.height + 0.03, "frame");
+  // the lower saloon's front window over the bonnet, left of the cab, in its frame
+  const hood = Math.max(...b.top);
+  c.d.fit("bulkhead window", c.nose, () => {
+    endSlab(c.m(), "frame", c.frame, 1, -c.hw + 0.08, zr - 0.06, hood + 0.08, s.screen.y1 - 0.02, 0.01);
+    endSlab(c.m(), "glass", c.frame, 1, -c.hw + 0.13, zr - 0.11, hood + 0.13, s.screen.y1 - 0.07, 0.02);
+  });
   rearRouteBox(c, 2.24, 2.5);
   platformPole(c, s);
   gutters(c, s, s.eave - 0.08);
