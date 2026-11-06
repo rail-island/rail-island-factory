@@ -12,6 +12,15 @@ has its own window count and width, number and weight; each livery its paints an
 bands. The car builder draws the shell, windows, opening plug doors onto the cabin,
 the gangway diaphragms, the bogies and the couplers; the LOD is its `carLod`.
 
+A coach whose body the measures cannot state supplies its own `layout` (the car as the
+kit laid it out, the type of car and the body's length in, the car out) and `lod` (the
+distant body, the bogies' top and extra parts). The IC 2000 uses them
+(`ic2000Layout`, [switzerland-trains.md](switzerland-trains.md)): skirt `cuts` over its
+end sections step the bottom up, the car builder's `strips` paint its door and class
+strips (their edges become stations, `CarbodySpec.stations`), a short plan rounding gives
+its end walls round corners, and its LOD draws the dark lower body and the door strips
+as boxes beside a shell from the white up.
+
 ## The designs
 
 | id | country | length | units | liveries |
@@ -22,7 +31,7 @@ the gangway diaphragms, the bogies and the couplers; the LOD is its `carLod`.
 | `proc-vehicle-ciwl-car` | France | 23.45 m | `pullman`, `sleeping` | `pullman`, `ciwlBlue` |
 | `proc-vehicle-ns-icr-coach` | the Netherlands | 26.4 m | `a`, `b` | `yellowGrey`, `yellowBlue` |
 | `proc-vehicle-sbb-ew4-coach` | Switzerland | 26.4 m | `a`, `b` | `redGrey`, `sbb` |
-| `proc-vehicle-sbb-ic2000` | Switzerland | 26.8 m, double-deck | `a`, `b` | - |
+| `proc-vehicle-sbb-ic2000` | Switzerland | 26.8 m, double-deck, stepped ends | `a`, `b` | - |
 | `proc-vehicle-glacier-express` | Switzerland | 18.4 m, metre gauge | `first`, `second` | - |
 | `proc-vehicle-ir-lhb-coach` | India | 24.0 m, knuckle couplers | `ac3`, `chairCar` | `rajdhani`, `shatabdi`, `humsafar`, `tejas` |
 | `proc-vehicle-ir-icf-coach` | India | 22.3 m | `sleeper`, `general` | `blue`, `maroon` |

@@ -62,6 +62,8 @@ export interface CarbodySpec {
   /** Station spacing along the flat body (default 1.0 m) and in a nose (default 0.2 m). */
   step?: number;
   noseStep?: number;
+  /** Extra stations (d): where a painted field's edges cross the flat body. */
+  stations?: readonly number[];
 }
 
 /** What a face is: its slice's region (sliceBody.ts edgeRole) or an end cap. */
@@ -131,6 +133,7 @@ export function carbody(s: CarbodySpec): SliceBody {
     const flip = n === s.rear;
     for (const t of [n.C, n.S, n.Y, n.A, n.B]) for (const [d] of t ?? []) st.add(Math.round((flip ? L - d : d) * 1000) / 1000);
   }
+  for (const d of s.stations ?? []) st.add(Math.round(d * 1000) / 1000);
   // a cut's two ends: the skirt drops just outside them
   for (const [a, b] of s.cuts ?? []) for (const d of [a - 0.001, a, b, b + 0.001]) st.add(Math.round(d * 1000) / 1000);
   // a rounded cut's corners: stations round each arch

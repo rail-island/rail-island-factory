@@ -41,6 +41,21 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
 - **Ae 8/14.** One 34 m body on its eight driving axles in four groups; the articulation
   between its two halves and the six idle guiding axles are left out.
 - **Glacier Express.** The panorama roof is drawn as the dark roof band over tall windows.
+- **IC 2000.** Its own layout on the coach kit (`ic2000Layout`, docs/models/world-coaches.md),
+  measured on the four photographs in `assets/sbb-ic2000/`: the body's bottom (0.45 m between
+  the bogies) steps up to 1.15 m over the 5.4 m end sections; the doors stand in the lower
+  deck where it meets them, 7.0 m from the coupling planes, each in a coral strip from the
+  bottom to the roof's edge with the lounge window over the door and three dashes across the
+  roof, and a blue strip with the class numeral toward the middle. Upper deck: three windows
+  over each end section, five (first class, 2.0 m pitch, 13 a side) or six (second class,
+  1.75 m, 14 a side) between the doors; lower deck five windows between the doors and two
+  stair slits in each end section. Paint: anthracite lower body to 1.43 m, a dark line between
+  the decks (2.5-2.7 m), the roof's grey from 3.73 m over the upper windows' heads; the first
+  class car's yellow length of that line across its door strips is read from the Siegershausen
+  photograph. The ends have rounded corners, the gangway's seal round the outline and the upper
+  deck's gangway door. Left out: the first class car's one side with four lower windows, the
+  Bt control car, AD and dining cars, the windows' rounded corners. Numbers: A 50 85 16-94 073-3,
+  B 50 85 26-94 101-0 (check digits per UIC).
 
 ## Tests
 
