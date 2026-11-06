@@ -23,7 +23,7 @@ There is one environment. The site is public and has no sign-in.
 
 | Workflow | Runs on | Does |
 |---|---|---|
-| `deploy.yml` | push to `master`, or by hand on any branch | `pnpm build`, then `wrangler deploy` |
+| `deploy.yml` | push to `master`, or by hand on any branch | restores the last `export/` from the Actions cache, `pnpm build`, then `wrangler deploy` ([build-cache.md](build-cache.md)) |
 | `test.yml` | push to `master`, or by hand on any branch | `pnpm typecheck`, then `pnpm test` (even if the typecheck failed) |
 
 The two run in parallel; tests do **not** gate the deploy, so a red test run shows
