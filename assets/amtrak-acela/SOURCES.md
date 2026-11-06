@@ -7,7 +7,7 @@
 ## Photographs
 
 Downloaded from Wikimedia Commons at 1920 px and scaled to 1600 px on the long side.
-Used for: Power cars 2037 and 2004 and a business class coach: the power car's nose and windscreen, the silver body with its dark window band, the coach windows.
+Used for: Power cars 2037 and 2004 and a business class coach: the power car's nose, its black windscreen mask, teardrop cab window and the blue band with four headlights, the silver body with its dark window band, the coach windows.
 
 | file | original | URL | author | licence |
 |---|---|---|---|---|
