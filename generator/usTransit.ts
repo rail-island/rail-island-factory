@@ -41,6 +41,10 @@ export interface CarDef {
   windows: ReadonlyArray<{ y: readonly [number, number]; spans: ReadonlyArray<readonly [number, number]>; frame: string }>;
   /** Passenger doors on both sides: d spans, sill and head, the leaf's window. */
   doors: { spans: ReadonlyArray<readonly [number, number]>; y: readonly [number, number]; glass: readonly [number, number] };
+  /** The door leaves' own paint bands (default the side's bands). */
+  doorBands?: readonly Band[];
+  /** A cab front painted apart from the sides: its bands, on the shell from the +X tip back to d. */
+  front?: { d: number; bands: readonly Band[] };
   /** Fluting: thin lines along the side between these heights (stainless cars). */
   fluting?: { y0: number; y1: number; pitch: number; mat: string };
   /** A flat cab end: windscreen panes (z0, z1, y0, y1), lamps (z, y, r, lens), the front's paint. */
@@ -67,7 +71,7 @@ const LEAF_INSET = 0.02;
 
 /** The body of a car. */
 export const carBody = (c: CarDef): SliceBody => {
-  const edges = [...new Set([...c.bands.flatMap(([a, b]) => [a, b]), ...c.windows.flatMap((w) => [w.y[0], w.y[1]])])]
+  const edges = [...new Set([...c.bands.flatMap(([a, b]) => [a, b]), ...(c.front?.bands ?? []).flatMap(([a, b]) => [a, b]), ...c.windows.flatMap((w) => [w.y[0], w.y[1]])])]
     .filter((y) => y > c.spec.Y + 0.01 && y < c.spec.S - 0.01).sort((a, b) => a - b);
   return carbody({ ...c.spec, edges: [...new Set([...c.spec.edges, ...edges])].sort((a, b) => a - b) });
 };
@@ -90,7 +94,7 @@ function door(m: MeshBuilder, c: CarDef, b: SliceBody, X: (d: number) => number,
   openable(m, (mm, o) =>
     mm.moved(plugMove(o, s, dx), () => {
       mm.scope("leaf", () => {
-        for (const [a, cc, mat] of c.bands) {
+        for (const [a, cc, mat] of c.doorBands ?? c.bands) {
           const [lo, hi] = [Math.max(a, y0 + 0.02), Math.min(cc, y1 - 0.02)];
           if (hi - lo > 1e-6) sidePanel(mm, b, X, s, mat, d0 + 0.02, d1 - 0.02, lo, hi, 0.008, 0.003);
         }
@@ -127,7 +131,9 @@ function fluting(m: MeshBuilder, c: CarDef, b: SliceBody, X: (d: number) => numb
  */
 export function drawCar(m: MeshBuilder, c: CarDef, X: (d: number) => number, o: { trucks?: readonly boolean[]; inside?: readonly number[] } = {}): SliceBody {
   const b = carBody(c);
-  const painter: Painter = bandPainter(c.bands, c.roof, c.under, c.skirt, c.spec.S);
+  const sides: Painter = bandPainter(c.bands, c.roof, c.under, c.skirt, c.spec.S);
+  const front = c.front && { d: c.front.d, paint: bandPainter(c.front.bands, c.roof, c.under, c.skirt, c.spec.S) };
+  const painter: Painter = front ? (d, y, r) => (d < front.d && r !== "bottom" && r !== "skirt" ? front.paint : sides)(d, y, r) : sides;
   const leaves = leavesOf(c);
   const cut = leaves.map((l) => ({ ...l, d0: l.d0 - 0.002, d1: l.d1 + 0.002, y0: l.y0 - 0.002, y1: l.y1 + 0.002 }));
   m.scope("body", () => {

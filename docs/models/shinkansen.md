@@ -56,6 +56,12 @@ combinations hashed before and after):
 - `traction: "none"` - an unpowered set of coaches (the Talgo III), filed with the coaches.
 - `windscreenMask` - a black band (`cabMask`) round a nose's windscreen, under its rubber,
   reaching this far past the panes and joined over the centre pillar (the ICNG).
+- `noseCab` - an upright cab on the nose's flat front face: its panes and lamps drawn there
+  as a flat cab's are, in place of the crown's windscreen and headlights, and a gangway
+  door's outline (the Class 378);
+- a livery's `doors` and `front` - the door leaves' own bands, and the cab front's bands over
+  the nose (the Class 378's orange doors and yellow front); the front's band heights become
+  paint edges of the car's slices.
 
 A short car's leading bogie comes in so that its wheels stay under the body. The kit
 refuses a wheelbase under 2.05 m (the bogie's brake cylinders would lie on its

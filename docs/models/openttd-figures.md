@@ -283,6 +283,7 @@ file is the authority.
 | `br-class-158` | Class 158 | train RAIL | 1989 | 70 PASS | 73 / 27 | 2 | 2 cars |
 | `br-class-142` | Class 142 Pacer | train RAIL | 1985 | 56 PASS | 62 / 23 | 2 | 2 cars |
 | `lu-1938-stock` | London 1938 Stock | train ELRL | 1938 | 100 PASS | 66 / 32 | 2 | 7 cars |
+| `br-class-378` | Class 378 Capitalstar | train ELRL | 2009 | 50 PASS | 69 / 28 | 2 | 5 cars |
 | `br-class-55` | Class 55 Deltic | train RAIL | 1961 | 0 PASS | 114 / 59 | 2 | - |
 | `br-class-37` | Class 37 | train RAIL | 1960 | 0 PASS | 82 / 36 | 3 | - |
 | `br-class-47` | Class 47 | train RAIL | 1962 | 0 PASS | 99 / 49 | 3 | - |
