@@ -30,6 +30,14 @@ describe("the horse tram", () => {
     expect(model.triangleCount()).toBeLessThanOrEqual(10_000);
   });
 
+  it("pulls hard enough for the game to hold its 10 km/h on a grade", () => {
+    // regression: 1 kW for 2.8 t, which the game's power-limited acceleration left
+    // at 1-3 km/h on a 5 % grade; 10 kW holds the top speed there
+    const game = DESIGNS.get(ID)!.game!;
+    expect(game.maxspeed).toBe(10);
+    expect(game.power! / game.weight!).toBeGreaterThanOrEqual(3.5);
+  });
+
   it("runs with both standard-gauge rail heads under its treads (0.665 to 0.8 m off the centreline)", () => {
     // regression: the tyres stopped at 0.78 m, short of the rail head's outer edge (0.79 m)
     const { json, bin } = parseGlb(glb);
