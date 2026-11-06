@@ -218,7 +218,10 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-emd-sd40-2": loco(1972, RAIL, { presets: presets(...each("livery", "conrail", "unionPacific")) }),
   "proc-vehicle-ge-es44ac": loco(2005, RAIL, { presets: presets(...each("livery", "unionPacific", "csx")) }),
   "proc-vehicle-emd-sd70ace": loco(2004, RAIL, { presets: presets(...each("livery", "norfolkSouthern", "bnsf")) }),
-  "proc-vehicle-emd-f7": loco(1949, RAIL, { presets: presets(...each("livery", "unionPacific", "southernPacific")) }),
+  "proc-vehicle-emd-f7": loco(1949, RAIL, {
+    presets: presets({ unit: "bUnit" }, ...each("livery", "unionPacific", "southernPacific")),
+    formations: [formation("A-B", {}, { unit: "bUnit" }), formation("A-B-B-A", {}, { unit: "bUnit" }, { unit: "bUnit" }, [{}, "turned"])],
+  }),
   "proc-vehicle-emd-f40ph": loco(1976, RAIL, { presets: presets({ livery: "phaseII" }) }),
   "proc-vehicle-ge-p42dc": loco(1996, RAIL, { presets: presets(...each("livery", "phaseIII", "via")) }),
   "proc-vehicle-siemens-alc42": loco(2022, RAIL, { variants: [at({ livery: "midwest" }, { introYear: 2017 })], presets: presets({ livery: "midwest" }) }),
