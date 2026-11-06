@@ -36,12 +36,20 @@ four stations round it; default 0, a square drop). `carbody(spec)` turns it into
 painted by a `Painter` - a function of the face's d, its height and its region - so a livery is
 horizontal bands (`bandPainter`), a nose field and decals laid on the lofted surface
 (`sideDecal`, `stripDecal`: the warbonnet's band, the GG1's pinstripes). Windscreens are
-`crownPane`s, cab windows and grilles `sidePanel`s, portholes `surfaceDisc`s; nose lamps stand
-where the centre line reaches their height (`noseLamps`).
+`crownPane`s, or shaped ones (`shapedCrownPane` over a `roundedPane` outline: the pane's inner
+and outer edge as functions of d, its corners rounded, its outer edge tapering toward the roof),
+cab windows and grilles `sidePanel`s, portholes `surfaceDisc`s; nose lamps stand where the centre
+line reaches their height (`noseLamps`), on the nose's flank (`flankLamp`) or on its crown,
+turned from the surface toward the front (`crownLamp`); a number board stands out of the
+nose along the surface's chord (`chordBox`).
 
 ## The models
 
-- **EMD F7A** - the bulldog nose rising to the raked windscreen, the cab roof over the
+- **EMD F7A** - the bulldog nose rising to the raked windscreen: two panes either side of the
+  centre post, narrowing toward the roof with their outer corners rounded, each in a rubber
+  gasket and a frame of the roof's paint; the headlight in its hood on top of the nose (the
+  hood in the nose's paint), the second light in the nose door, red class lights on the
+  nose's corners and the number boards standing out of its flanks; the cab roof over the
   carbody's, three portholes and the filter grilles between them, three radiator fans, the
   dynamic brake fan and exhaust, the pilot, a rear diaphragm. Santa Fe's warbonnet: the red
   bonnet over the nose and its band sweeping back to a point, outlined in yellow, on silver.
@@ -72,7 +80,11 @@ where the centre line reaches their height (`noseLamps`).
   door on each side, a plug door opening onto the car's cabin (`plugDoor`, shared with the
   Acela's coaches). The coach has 12 large upper windows a side and four on the lower deck,
   the sleeper 14 smaller upper and six lower ones. Diaphragms at the upper deck's height.
-- **Acela Express** - the power car's long sloping nose and windscreen, its single-arm
+- **Acela Express** - the power car's long sloping nose, blunt and rounded at its tip; the
+  black mask sweeping across it and over the shoulders with the two-pane windscreen inside
+  it, a teardrop cab window on each side behind the mask's pillar, and under the windscreen
+  the blue band, its lower edge a smile, holding the four round headlights in a row; the
+  power car's sides silver (the coaches' dark window band left out), its single-arm
   pantograph (raised) and grilles; the coaches' window bands (business class 13 windows a
   side, first class 11 wider ones, the cafe 8) and end doors. `train` is an articulated set
   (`articulate`, tramKit.ts): a power car at each end, the rear one turned, first class behind
