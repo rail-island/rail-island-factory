@@ -13,7 +13,7 @@ import { paint } from "./dieselParts.ts";
 import { block } from "./vehicleParts.ts";
 import { exhaust } from "./dieselParts.ts";
 import type { Pt } from "./sliceLoft.ts";
-import { crownPane, sidePanel, surfaceDisc, type SliceBody } from "./sliceBody.ts";
+import { crownDisc, crownPane, sideDecal, sidePanel, surfaceDisc, type SliceBody } from "./sliceBody.ts";
 import { decalX } from "./usHoodKit.ts";
 import { CARBODY_PALETTE, faceLamps, type NoseShape } from "./carbodyKit.ts";
 import { INTERIOR_PALETTE } from "./interior.ts";
@@ -48,6 +48,16 @@ export interface ShinkansenLivery {
   doors?: readonly Band[];
   /** The cab front's bands, over the nose (default the side's). */
   front?: readonly Band[];
+  /** How far behind the tip the front's bands reach (default the nose's length and 5 cm): a cab roof painted with the nose. */
+  frontD?: number;
+  /** The front's roof paint (default the livery's roof). */
+  frontRoof?: string;
+  /** The front's colour carried back over the cab roof along a slanted edge, drawn over the bands in `frontRoof` paint: from d[0] (the front's `frontD`) at height y up to d[1] at the shoulder and d[2] at the crown. */
+  capSlope?: { y: number; d: readonly [number, number, number] };
+  /** The end car's own markings on both sides (d from the body's front, foot, height): a power car's emblem and name. */
+  endLettering?: ReadonlyArray<{ text: string; d: number; y: number; h: number; mat: string }>;
+  /** The end car's own side bands (default the livery's): a power car painted apart from its coaches. */
+  endBands?: readonly Band[];
 }
 
 export interface ShinkansenSeries {
@@ -69,6 +79,10 @@ export interface ShinkansenSeries {
   windscreenMask?: number;
   /** The headlights on the nose's sides: d and height. */
   lamps: readonly [number, number];
+  /** Twin headlights side by side on the crown at d, at two half widths, in one black surround reaching `surround` past them (in place of `lamps`). */
+  lampPair?: { d: number; z: readonly [number, number]; r: number; surround: number };
+  /** A black grille across the nose's front on the crown: its d span and half width. */
+  noseGrille?: { d: readonly [number, number]; z: number };
   /** Window rows: sill and head of each (two on a double-deck car), the window's width and pitch. */
   windows: ReadonlyArray<readonly [number, number]>;
   windowW: number;
@@ -211,11 +225,11 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
       ...(end && !s.flatCab ? { front: s.nose, ...(s.single ? { rear: s.nose } : {}) } : {}),
       ...(end && s.flatCab && s.cabNose ? { front: s.cabNose, ...(s.single ? { rear: s.cabNose } : {}) } : {}), cuts: tr.map((d) => [d - reach, d + reach] as const), edges: [], step: 1.0, noseStep: 0.25,
     },
-    bands: l.bands, roof: l.roof, skirt: l.skirt, under: "under",
+    bands: (end && l.endBands) || l.bands, roof: l.roof, skirt: l.skirt, under: "under",
     ...(end && s.cabPanel ? { field: { d: s.cabPanel.d, y: s.cabPanel.y, mat: "cabPanel" } } : {}),
     windows: s.windows.map((y, r) => ({ y, spans: end && s.endSides && r > 0 ? [] : spans, frame: "rubber" })),
     doors: { spans: doors, y: [s.door[0], s.door[1]], glass: [s.door[2], s.door[3]], ...(own && !(end && s.endSides) ? { slides: own.doors.map((o) => o[2]) } : {}) },
-    ...(l.doors ? { doorBands: l.doors } : {}), ...(end && l.front && !s.flatCab ? { front: { d: s.nose.len + 0.05, bands: l.front } } : {}),
+    ...(l.doors ? { doorBands: l.doors } : {}), ...(end && l.front && !s.flatCab ? { front: { d: l.frontD ?? s.nose.len + 0.05, bands: l.front, ...(l.frontRoof ? { roof: l.frontRoof } : {}) } } : {}),
     ...(s.flatCab ? { cab: s.flatCab } : end && s.noseCab ? { cab: s.noseCab } : {}), cabEnds: end && (s.flatCab || s.noseCab) ? (s.single ? [1, -1] : [1]) : [], diaphragm: [s.door[0], s.door[1] + 0.3],
     trucks: tr, truck: {
       axles: s.wheelbase > 0 ? [-s.wheelbase / 2, s.wheelbase / 2] : [0], wheelR: s.wheelR, frameHalf: s.wheelbase > 0 ? s.wheelbase / 2 + s.wheelR + 0.15 : s.wheelR + 0.45, frameTop: s.wheelR + 0.4, frameBottom: s.wheelR + 0.08,
@@ -224,9 +238,10 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
     coupler: s.endCoupler === "buffers" ? "buffers" : "centre", couplerY: couplerOf(s),
     gap: [end ? frontGap(s, true) : GAP, s.single ? frontGap(s, true) : GAP],
     ...(end ? { cabin: [first - 1.2, s.single ? L - first + 1.2 : L] as const } : {}),
-    lettering: [s.numberAt ? { text: number, d: L / 2 + s.numberAt[0], y: s.numberAt[1], h: s.numberAt[2], mat: "lettering" } : { text: number, d: L - 3.0, y: s.Y + 0.1, h: 0.1, mat: "lettering" }],
+    lettering: [s.numberAt ? { text: number, d: L / 2 + s.numberAt[0], y: s.numberAt[1], h: s.numberAt[2], mat: "lettering" } : { text: number, d: L - 3.0, y: s.Y + 0.1, h: 0.1, mat: "lettering" }, ...(end ? (l.endLettering ?? []) : [])],
     extras: (m, b, X) => {
       if (end && !s.flatCab) noseFittings(m, s, b, X);
+      if (end && l.capSlope && l.frontRoof) m.scope("cab roof", () => capSlope(m, b, X, l.capSlope!, l.frontRoof!));
       if (end && s.endGrilles) m.scope("grilles", () => {
         for (const sd of [1, -1]) for (const [d0, d1, y0, y1, n] of s.endGrilles!) {
           sidePanel(m, b, X, sd, "black", d0, d1, y0, y1, 0.006, 0.03);
@@ -249,6 +264,30 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
       else m.scope("underfloor", () => block(m, "under", X(tr[1] - 2.6), X(tr[0] + 2.6), s.B - 0.35, s.B, -s.W * 0.8, s.W * 0.8));
     },
   };
+}
+
+/** The front's colour over the cab roof behind `frontD`, up to a slanted edge: strips on both sides and across the roof's arc. */
+function capSlope(m: MeshBuilder, b: SliceBody, X: (d: number) => number, c: NonNullable<ShinkansenLivery["capSlope"]>, mat: string): void {
+  const [d0, dS, dC] = c.d;
+  const step = 0.2;
+  const n = Math.max(1, Math.ceil((dS - d0) / step));
+  // the side: columns from the slanted edge up to the shoulder
+  const edge = (d: number) => c.y + ((d - d0) / (dS - d0)) * (b.S(d) - c.y);
+  const tris: Pt[] = [];
+  for (let i = 0; i < n; i++) {
+    const [a, e] = [d0 + ((dS - d0) * i) / n, d0 + ((dS - d0) * (i + 1)) / n];
+    const [ya, ye, ta, te] = [edge(a), edge(e), b.S(a), b.S(e)];
+    tris.push([a, ya], [e, ye], [e, te], [a, ya], [e, te], [a, ta]);
+  }
+  for (const sd of [1, -1]) sideDecal(m, b, X, sd, mat, tris, 0.004);
+  // the arc: narrow strips in half width, each reaching further back toward the crown
+  // (fine enough that the edge reads as one slanted line)
+  const zS = b.w(dS) * b.lean, k = 16;
+  for (const sd of [1, -1])
+    for (let i = 0; i < k; i++) {
+      const [zHi, zLo] = [(zS * (k - i)) / k, (zS * (k - i - 1)) / k];
+      crownPane(m, b, X, sd, mat, [d0, dS + ((dC - dS) * (i + 0.5)) / k], [zLo, zHi + (i === 0 ? 0.05 : 0)], 0.004);
+    }
 }
 
 function noseFittings(m: MeshBuilder, s: ShinkansenSeries, b: SliceBody, X: (d: number) => number): void {
@@ -281,6 +320,30 @@ function noseFittings(m: MeshBuilder, s: ShinkansenSeries, b: SliceBody, X: (d: 
       block(m, "black", x - 0.01, x + 0.03, g.y[0], g.y[1], -g.z, g.z);
       const pitch = (g.y[1] - g.y[0]) / (g.slats + 1);
       for (let i = 1; i <= g.slats; i++) block(m, "rubber", x + 0.03, x + 0.045, g.y[0] + i * pitch - 0.012, g.y[0] + i * pitch + 0.012, -g.z + 0.03, g.z - 0.03);
+    });
+    return;
+  }
+  const g = s.noseGrille;
+  if (g) m.scope("grille", () => {
+    for (const sd of [1, -1]) {
+      crownPane(m, b, X, sd, "black", [g.d[0], g.d[1]], [0, g.z], 0.006);
+      const n = 4, k = (g.d[1] - g.d[0]) / (n + 1);
+      for (let i = 1; i <= n; i++) crownPane(m, b, X, sd, "rubber", [g.d[0] + i * k - 0.012, g.d[0] + i * k + 0.012], [0, g.z - 0.03], 0.012);
+    }
+  });
+  const pair = s.lampPair;
+  if (pair) {
+    m.scope("headlights", () => {
+      // side by side across the front at d, in one black surround
+      const [za, zb] = pair.z;
+      for (const sd of [1, -1]) {
+        const steps = 4;
+        for (let i = 0; i <= steps; i++) { const z = za + ((zb - za) * i) / steps; crownDisc(m, b, X, pair.d, z, sd, "black", pair.r + pair.surround, 0.004 + 0.0015 * i, 0.04, 14); }
+        for (const z of [za, zb]) {
+          crownDisc(m, b, X, pair.d, z, sd, "rubber", pair.r, 0.014, 0.004, 14);
+          crownDisc(m, b, X, pair.d, z, sd, "lampHead", pair.r - 0.025, 0.02, 0.004, 14);
+        }
+      }
     });
     return;
   }
@@ -353,7 +416,7 @@ export function buildSeries(s: ShinkansenSeries, params: readonly ParamSpec[], v
 function carLod(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantograph: boolean, X: (d: number) => number, cx: number, turned: boolean, section?: number): { body: UnitBody; parts: LodPart[] } {
   const def = carDef(s, l, end, pantograph, l.number);
   const b = carbody({ ...def.spec, edges: [] });
-  const side: LodBand[] = [...l.bands.map(([a, e, mt]): [number, number, string] => [Math.max(a, s.B), Math.min(e, s.S), mt]).filter(([a, e]) => e > a + 1e-6), [s.S, s.C, l.roof]];
+  const side: LodBand[] = [...((end && l.endBands) || l.bands).map(([a, e, mt]): [number, number, string] => [Math.max(a, s.B), Math.min(e, s.S), mt]).filter(([a, e]) => e > a + 1e-6), [s.S, s.C, l.roof]];
   const at = (y: number) => { for (let k = 0; k <= 2000; k++) { const d = k * 0.01; if (b.B(d) <= y && b.C(d) >= y) return d; } return 0; };
   const ys = [s.B, s.Y, (s.Y + s.S) / 2, s.S, (s.S + s.C) / 2, s.C - 0.02];
   const spans = def.windows[0]!.spans;

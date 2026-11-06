@@ -23,6 +23,28 @@ under the body. The count is in the `pnpm build:models` output and in
 Vehicles are written like the skyscrapers: non-indexed triangle soups with flat
 normals stored per face (tested), so no consumer has to compute them.
 
+## Rolling wheels (any wheel that is not a pure circle)
+
+A wheel that is only rings about its axle - a plain tyre, a flat disc, a centred
+hub - looks the same at any angle and stays static. **A wheel that carries anything
+the eye can follow round - wheel nuts, spokes, holes or slots in the rim, bolts on the
+hub - must roll** (docs/models/animation.md, "Rolling wheels"):
+
+- draw what turns (the rim, the hub, the nuts) as a rolling part on the axle with
+  `m.spin(name, [x, axleY, zMid], fn)`; keep the round tyre in the part that carries
+  the wheel;
+- name them `wheel-front-<left|right>-spin` for the steered wheels - drawn inside the
+  steered wheel's callback, so the spin node is a child of the steered node and steer
+  and roll compose - and `wheel-rear-<axle, counted from the front>-<left|right>` for
+  the others (a twin pair rolls its outer wheel; the inner twin is a plain tyre);
+- add the clip with `rollWheels(m, nodes, 2 * wheelRadius)` (generator/rolling.ts):
+  drive `distance`, so the game turns the wheels with the vehicle's speed;
+- list the vehicle and its nodes in `test/rolling.test.ts`, which also poses the
+  wheels rolled and checks they stay free of flicker and on the road.
+
+The confirmed buses do it in `busAssembly.ts` (`detailedBusWheel` with a spin name);
+the photo trucks in `photoTrucks.ts`.
+
 ## Articulated vehicles (truck + trailer)
 
 An articulated vehicle - a tractor with a semi-trailer - is **one model with two

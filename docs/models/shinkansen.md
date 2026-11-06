@@ -58,7 +58,17 @@ combinations hashed before and after):
   its side grilles with vertical slats (the Class 43's radiator);
 - `faceLamps`, `faceGrille` - a blunt nose's headlights and grille on its front face, in
   place of the side lamps; `cabPanel` - a warning panel painted over the bands at the
-  nose (`cabPanel` paint, the car builder's `field`);
+  nose (`cabPanel` paint, the car builder's `field`); `lampPair` - twin headlights side by
+  side across a steep nose front at one d, in one black surround (`crownDisc` in
+  `sliceBody.ts` sets each on the crown by half width, where a height does not single out
+  a point), and `noseGrille` - a black grille with slats across the front on the crown (the
+  Class 43);
+- a livery's `endBands` - the end car's own side bands (a power car painted apart from its
+  coaches); `frontD` and `frontRoof` - how far behind the tip the livery's `front` bands
+  reach and the roof paint there (the original InterCity 125's yellow cab roof);
+  `capSlope` - that colour carried on back over the cab roof to a slanted edge, drawn over
+  the bands (columns on the sides, narrow strips across the arc); `endLettering` - the end
+  car's own markings on both sides (the InterCity 125's double arrow and name);
 - `endCoupler: "buffers"` - buffers and a screw coupling on a beam at the cab ends (the car
   builder's `buffers` coupler), the coupling plane 0.65 m out;
 - `wheelbase: 0` - a single axle at each truck position (a two-axle railbus, a Talgo car);

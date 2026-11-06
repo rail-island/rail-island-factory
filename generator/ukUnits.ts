@@ -22,23 +22,43 @@ const lv = (title: string, number: string, ...list: Array<[number, string]>): Sh
   return { title, number, palette, bands, roof: "roofG", skirt: "skirtG" };
 };
 
+/**
+ * A power car painted apart from its coaches: the yellow nose, carried back over the
+ * cab roof to a slanted edge (from d[0] at the yellow's top line y to d[1] at the
+ * shoulder and d[2] at the crown), the yellow along the side up to y under the
+ * coaches' lowest colour, and the white double arrow and name on the side.
+ */
+const withNose = (l: ShinkansenLivery, yellow: string, y: number, d: readonly [number, number, number], name: string): ShinkansenLivery => ({
+  ...l, palette: { ...l.palette, nose: c(yellow), markWhite: c("#f4f4f1", 0.5) },
+  endBands: [[0, y, "nose"], [y, 9, "b0"]], front: [[0, 9, "nose"]], frontD: d[0], frontRoof: "nose", capSlope: { y, d },
+  endLettering: [{ text: "\u21c4", d: 7.2, y: 2.42, h: 0.58, mat: "markWhite" }, { text: name, d: 9.75, y: 2.55, h: 0.3, mat: "markWhite" }],
+});
+
 const MK3 = { midLength: 23.0, W: 1.37, Y: 1.3, S: 3.1, C: 3.88, lean: 0.95, B: 0.85, A: 1.05, windows: [[1.85, 2.65]] as Array<readonly [number, number]>, windowW: 1.6, pitch: 2.1, door: [1.15, 2.95, 1.85, 2.55] as const, doorW: 0.8, bogieCentres: 16.0, wheelR: 0.46, wheelbase: 2.6 };
 
 export const HST: ShinkansenSeries = {
   ...MK3, endLength: 17.79,
-  // the Class 43's wedge nose, the cab windscreen low in it
-  nose: nose(3.6, 0.2, 2.4, [[0, 1.45], [0.4, 1.95], [1.8, 2.7], [3.2, 3.5], [4.2, 3.88]], [[0, 1.4], [0.4, 1.85], [1.8, 2.5], [3.2, 2.95], [4.2, 3.1]], [[0, 1.3], [1.0, 1.3]], [[0, 1.15], [0.8, 1.05]], [[0, 0.85], [0.5, 0.6], [1.5, 0.6], [1.7, 0.85]]),
-  windscreen: [1.7, 3.0, 0.07, 1.0], lamps: [0.4, 1.4], traction: "diesel", cars: [4, 6, 8],
+  // the Class 43's long rounded wedge: a bulging chin over the low valance, the
+  // bonnet sloping up to the raked windscreen in its black surround, the cab
+  // roof rounding into the body 4.6 m behind the tip; the plan broad and round
+  nose: nose(3.4, 0.45, 4,
+    [[0, 1.22], [0.06, 1.42], [0.16, 1.57], [0.4, 1.78], [1.0, 2.08], [1.7, 2.36], [2.3, 2.58], [3.0, 3.1], [3.6, 3.52], [4.1, 3.76], [4.6, 3.88]],
+    [[0, 1.17], [0.06, 1.36], [0.16, 1.5], [0.4, 1.7], [1.0, 1.98], [1.7, 2.24], [2.3, 2.42], [3.0, 2.8], [3.6, 3.0], [4.2, 3.1]],
+    [[0, 1.1], [0.3, 1.2], [1.2, 1.3]], [[0, 1.05], [0.3, 0.98], [1.2, 1.05]], [[0, 0.72], [0.1, 0.56], [0.35, 0.5], [1.6, 0.55], [1.9, 0.85]]),
+  windscreen: [2.4, 3.45, 0.03, 1.05], windscreenMask: 0.1, lamps: [0.45, 1.6], lampPair: { d: 0.1, z: [0.46, 0.7], r: 0.1, surround: 0.04 },
+  noseGrille: { d: [0.02, 0.14], z: 0.3 }, traction: "diesel", cars: [4, 6, 8],
   // a locomotive, not a coach: its bogies 10.29 m apart under the middle of the
   // power car, plain sides with the cab door, the radiator grille and the van's
   // door and window at the inner end, the yellow nose below the windscreen
   endBogies: [3.75, 14.04],
-  endSides: { windows: [[3.1, 3.6], [15.3, 15.8]], doors: [[3.85, 4.5], [16.2, 16.85]] },
-  endGrilles: [[12.6, 14.4, 2.05, 3.0, 14], [5.2, 6.2, 2.25, 2.85, 8]],
-  cabPanel: { d: 1.6, y: [0.5, 2.75], colour: "#f2c400" },
+  endSides: { windows: [[4.65, 5.15], [15.3, 15.8]], doors: [[5.3, 5.95], [16.2, 16.85]] },
+  endGrilles: [[12.6, 14.4, 2.05, 3.0, 14]],
+  cabPanel: { d: 2.35, y: [0.45, 2.6], colour: "#f2c400" },
   liveries: {
     swallow: lv("InterCity", "43 096", [1.0, "#3a3d40"], [1.75, "#f1f1ee"], [1.83, "#c8102e"], [1.88, "#f1f1ee"], [9, "#3a3d40"]),
-    blueGrey: lv("BR blue, grey", "43 002", [1.85, "#1d3f80"], [9, "#c9cccd"]),
+    // the original InterCity 125 power car: yellow nose and cab roof, the yellow
+    // carried along the lower side under rail blue; the Mk3s blue and grey
+    blueGrey: withNose(lv("BR blue, grey", "43 002", [1.85, "#1d3f80"], [9, "#c9cccd"]), "#f2c400", 2.3, [3.55, 4.7, 5.3], "Inter-City 125"),
   },
   weight: { end: 70, middle: 34 }, power: 1680, maxspeed: 200,
 };
