@@ -102,6 +102,25 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
   the trailing one folded (`trailingLowered`). The sides are white up to the upper deck's window tops,
   the dark grey roof band starting at the shoulder just above them, as the photographs show. The distant model draws only the lower window
   row's span, now short on the end car.
+- **Allegra.** Its own cab face (`ALLEGRA_FACE`) and livery (`ALLEGRA_RHB`, key `rhb`; the
+  shared `chLivery("rhb")` is unchanged), read from four photographs (assets/rhb-allegra/):
+  the upright glass-fibre front under the silver hood, tapering in plan (a flat face about
+  1.35 m wide; elliptic corners 0.62 - 0.68 m across reach the full 2.65 m about 1.0 m behind
+  the tip low down and 1.45 m at the windscreen's top, the kit's `cornerDepth`), the black
+  mask (1.72 m wide) with the 1.2 m tall windscreen and destination display between the
+  broad red corner panels, the lamps low in black pods on the corners, the
+  Graubuenden arms, the camera box, sockets, coupler and snowplough; the white line low on
+  the sides (12 cm lower on the face, a step at the corner where the real one ramps down);
+  the cab side window behind the pillar, the cab door, the first class's yellow line, white
+  door leaves; silver roof fairings over a dark equipment well. End cars 17.75 m and the
+  middle car 14.0 m (49.5 m); the layout of each car comes from a projective fit along the
+  photographed sides. Of the three pantographs each end car raises its DC one over the cab
+  (the Bernina line, as photographed) and the middle car's AC one lies folded. The middle
+  car's bogies stand near its ends with no underfloor box between them (the lowered floor),
+  its low-floor bay has a double door and one window reaching down to the white line. The
+  number 3502 stands under the cab door's window, lower than on the real car, because the
+  kit puts it on every car at one height. The kit's single wheel radius (0.4 m) serves the
+  middle car's smaller trailer wheels too.
 
 ## Tests
 

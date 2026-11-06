@@ -158,6 +158,10 @@ export interface ShinkansenSeries {
   endPantograph?: boolean | "lead" | "trail";
   /** The end car's bogies (d behind the nose tip) where they do not follow the coaches' rule: a locomotive's, centred under its body. */
   endBogies?: readonly [number, number];
+  /** An intermediate car's bogies (d behind its +X end) where they do not follow the rule: a low-floor car's, near both ends. */
+  midBogies?: readonly [number, number];
+  /** Where the raised pantograph stands, d behind the body's +X end of the car raising it (default 1.5 m ahead of its rear bogie); an end car's measured on its body, not from its tip as `pantographD` is. */
+  pantographAt?: number;
   /** A locomotive end car's sides: its windows (d spans, on the first window row) and doors in place of the passenger layout. */
   endSides?: { windows: ReadonlyArray<readonly [number, number]>; doors: ReadonlyArray<readonly [number, number]> };
   /** Headlights on the nose's front face (z, y, radius, lens) in place of the side lamps: a blunt nose. */
@@ -223,6 +227,7 @@ const midBody = (s: ShinkansenSeries) => s.midLength - 2 * GAP;
 /** Bogie positions (d) of a car: 2.5 m in from each body end, the end car's leading one behind the nose. */
 function bogies(s: ShinkansenSeries, end: boolean): [number, number] {
   if (end && s.endBogies) return [s.endBogies[0], s.endBogies[1]];
+  if (!end && s.midBogies) return [s.midBogies[0], s.midBogies[1]];
   const L = end ? endBody(s) : midBody(s);
   if (s.single || s.centredBogies) return [L / 2 - s.bogieCentres / 2, L / 2 + s.bogieCentres / 2];
   const back = L - 3.5;
@@ -374,8 +379,9 @@ function endSweep(m: MeshBuilder, b: SliceBody, X: (d: number) => number, w: Non
   for (const sd of [1, -1]) sideDecal(m, b, X, sd, w.mat, tris, proud);
 }
 
-/** The pantograph's centre on a car (d behind the body's front): the series' own place, else 1.5 m ahead of the rear bogie. */
+/** The pantograph's centre on a car (d behind the body's front): the series' own place (`pantographAt` on the car's body, `pantographD` from an end car's tip), else 1.5 m ahead of the rear bogie. */
 function pantographAt(s: ShinkansenSeries, end: boolean, tr: readonly number[]): number {
+  if (s.pantographAt !== undefined) return s.pantographAt;
   return s.pantographD !== undefined ? s.pantographD - (end && s.cabFace ? s.cabFace.dJoin : 0) : tr[1]! - 1.5;
 }
 

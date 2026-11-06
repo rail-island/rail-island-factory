@@ -61,6 +61,8 @@ export interface NoseSpec {
   half: Pt[];
   /** The plan's corner radius: [y, r], ascending y. */
   corner: Pt[];
+  /** The corner's depth back along the car: [y, depth], ascending y (default its radius; deeper, an elliptic corner: a face tapering in plan). */
+  cornerDepth?: Pt[];
   /** Extra recess of the face at its edges (|u| = 1) over its centre: a parabolic plan bulge; by height ([y, bulge], ascending) for a face whose vee deepens or flattens. */
   bulge?: number | readonly Pt[];
   /** The grid's rows, ascending; the first is the bottom, the last the crown. */
@@ -135,6 +137,8 @@ export class CabNose {
     const r = Math.min(corner, hw * 0.98);
     const a = hw - r;
     const b = bulgeAt(s.bulge, y);
+    // the corner's depth along the car: its radius (a round corner) unless stated
+    const cd = s.cornerDepth ? lerp(s.cornerDepth, y) : r;
     const au = Math.min(4, Math.abs(u));
     const sg = u < 0 ? -1 : 1;
     let lat: number;
@@ -145,10 +149,10 @@ export class CabNose {
     } else if (au <= 2) {
       const th = ((au - 1) * Math.PI) / 2;
       lat = a + r * Math.sin(th);
-      d = dF + b + r * (1 - Math.cos(th));
+      d = dF + b + cd * (1 - Math.cos(th));
     } else {
       lat = hw;
-      const dA = dF + b + r;
+      const dA = dF + b + cd;
       const dS = Math.min(Math.max(dA, s.dSide), s.dJoin);
       d = au <= 3 ? dA + (au - 2) * (dS - dA) : dS + (au - 3) * (s.dJoin - dS);
     }
