@@ -12,6 +12,7 @@
 | [site/workshop.md](site/workshop.md) | the catalog and the workshop: drafts (models not yet confirmed, `catalogModels.json`), what the export leaves out, the site's Catalog / Workshop switch, a model's web links (`linkTable.ts`) on the Sources tab |
 | [guide/setup-and-build.md](guide/setup-and-build.md) | installing, the scripts, what `pnpm build` produces, tests |
 | [guide/deploy.md](guide/deploy.md) | the Cloudflare Worker, the GitHub Actions workflows, secrets |
+| [guide/build-cache.md](guide/build-cache.md) | the committed `build-cache/`: build facts and thumbnails per design, cache keys, the deploy's export cache |
 | [models/lod.md](models/lod.md) | Low-detail JS variants, triangle budgets, structural silhouettes, flicker checks and preview toggle |
 | [models/skyscrapers.md](models/skyscrapers.md) | the ten skyscraper designs, their four sizes, the mesh builder, adding a design |
 | [models/village.md](models/village.md) | the eight parametric village houses in the Kenney and Quaternius styles and the alpine hut: plan families, the house builder, finish parameters, scale and tests |

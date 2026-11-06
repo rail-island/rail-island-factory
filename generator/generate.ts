@@ -29,10 +29,12 @@
 // each design to GLB bytes in memory -- the one form the thumbnail renderer, the
 // catalog's counts, the z-fighting guard and the tests read.
 //
-// The output is deterministic (materials in name order, no timestamps): an
-// unchanged design produces byte-identical in-memory GLBs, so its thumbnail -- the
-// slow part -- is not re-rendered (thumbs/.sources.json holds each one's hash).
-// Files of a design that no longer exists are deleted.
+// The output is deterministic (materials in name order, no timestamps), so a
+// design whose inputs are unchanged is not built at all: the committed build cache
+// (buildCache.ts, build-cache/) keeps what its build gave -- the counts, the rig,
+// the measurements, a confirmed model's thumbnail -- under a key over its source
+// files and data (docs/guide/build-cache.md). Files of a design that no longer
+// exists are deleted.
 //
 // A design with z-fighting faces (coplanar.ts) fails the build before anything
 // is written: the deploy does not wait for the tests, so this is what keeps a
@@ -41,7 +43,7 @@
 //   pnpm build:models
 import crypto from "node:crypto";
 import fs from "node:fs";
-import { buildLegacyMapping } from "./legacyMapping.ts";
+import { buildLegacyMapping, measureModel } from "./legacyMapping.ts";
 import { build as bundleRuntime } from "esbuild";
 import { proceduralId } from "./modelId.ts";
 import path from "node:path";
@@ -171,7 +173,8 @@ import { idsOf } from "./openttdIds.ts";
 import { OPENTTD_TABLE } from "./openttdTable.ts";
 import { isDraft, unknownCatalogIds } from "./workshop.ts";
 import { linkTableProblems } from "./linkTable.ts";
-import { JS_DIR, bundleDesign, gzipSize, writeIfChanged } from "./jsModel.ts";
+import { JS_DIR, bundleDesign, bundleFlags, gzipSize, writeIfChanged, type BundleFlags } from "./jsModel.ts";
+import { BUILD_CACHE_DIR, BuildCache, SourceGraph, designKey, readExportKeys, writeExportKeys } from "./buildCache.ts";
 import { findCoplanarOverlaps, type CoplanarOverlap } from "./coplanar.ts";
 import {
   CATALOG_FILE, META_FILE, REFERENCE_EXTENSIONS, REFS_DIR, VEHICLE_META_FILE, VILLAGE_META_FILE, catalogRecord, exportMeta,
@@ -198,12 +201,11 @@ export const MAX_DETAIL_TRIANGLES = 10_000;
 const THUMB_SIZE = 512;
 
 /**
- * Bump when a thumbnail's framing or lighting changes: an export whose
- * thumbs/.version differs has every thumbnail re-rendered, not only the changed
- * designs'.
+ * Bump when a thumbnail's framing or lighting changes: it is part of every
+ * design's build-cache key (buildCache.ts), so every thumbnail is re-rendered,
+ * not only the changed designs'.
  */
 export const THUMB_VERSION = "2";
-const THUMB_VERSION_FILE = ".version";
 
 /**
  * Every family of designs with the generator module that exports its build
@@ -399,7 +401,14 @@ export function designGlb(id: string, params?: ParamValues): Uint8Array {
  * every vehicle a GRF can hold; and each formation fits OpenTTD's part cap, its
  * cars measured on their built models.
  */
-export function checkOpenttdDesign(design: ProceduralDesign): void {
+export function checkOpenttdDesign(
+  design: ProceduralDesign,
+  // a car's length along x, metres: measured on its built model unless the build cache knows it
+  carLength: (params: ParamValues) => number = (params) => {
+    const stats = glbStats(toGlb(design.id, design.build(params)));
+    return stats.max[0] - stats.min[0];
+  },
+): void {
   const vehicle = VEHICLE_IDS.has(design.id);
   const feature = vehicle ? openttdFeatureOf(catalogFields(design)) : null;
   checkOpenttdProperties(design, vehicle, feature);
@@ -412,10 +421,7 @@ export function checkOpenttdDesign(design: ProceduralDesign): void {
     let parts = 0;
     for (const car of formation.cars) {
       const key = JSON.stringify(Object.entries(car.params).sort());
-      if (!lengths.has(key)) {
-        const stats = glbStats(toGlb(design.id, design.build(car.params)));
-        lengths.set(key, stats.max[0] - stats.min[0]);
-      }
+      if (!lengths.has(key)) lengths.set(key, carLength(car.params));
       parts += openttdPartCount(lengths.get(key)!);
     }
     const block = ids?.formations[i];
@@ -479,27 +485,40 @@ export class ZFightingError extends Error {
   }
 }
 
-/** Every design's GLB bytes, after checking none of them z-fights. */
-function buildAll(designs: readonly ProceduralDesign[]): Array<{ design: ProceduralDesign; bytes: Uint8Array; triangles: number; tree: SourceTree; rig: VehicleRig | null }> {
+/** A design built for the export: its in-memory GLB and what the export reads of the model. */
+interface BuiltDesign {
+  design: ProceduralDesign;
+  bytes: Uint8Array;
+  triangles: number;
+  tree: SourceTree | null;
+  rig: VehicleRig | null;
+}
+
+/**
+ * Builds `designs` (with their source trees when `withTree` says so) and checks
+ * those `check` names: no z-fighting at any level, LOD, coarse and Max detail
+ * inside their budgets. Throws before anything is written.
+ */
+function buildAll(designs: readonly ProceduralDesign[], check: (design: ProceduralDesign) => boolean, withTree: (design: ProceduralDesign) => boolean): BuiltDesign[] {
   const built = designs.map((design) => {
     const model = design.build();
-    const bytes = toGlb(design.id, model);
     return {
       design,
-      bytes,
+      bytes: toGlb(design.id, model),
       // a vehicle's interior, hidden at rest, has a budget of its own (docs/models/interiors.md)
       triangles: model.exteriorTriangleCount(),
-      tree: model.sourceTree(design.id, design.title),
+      tree: withTree(design) ? model.sourceTree(design.id, design.title) : null,
       rig: model.rig,
     };
   });
+  const checked = built.filter((b) => check(b.design));
   const found = new Map<string, CoplanarOverlap[]>();
-  for (const b of built) {
+  for (const b of checked) {
     const overlaps = findCoplanarOverlaps(b.bytes);
     if (overlaps.length) found.set(b.design.id, overlaps);
   }
   if (found.size) throw new ZFightingError(found);
-  for (const {design} of built) {
+  for (const {design} of checked) {
     const low = buildLodModel(design);
     if (!low.triangleCount() || low.triangleCount() > lodBudget(design)) throw new Error(`${design.id}: invalid LOD triangle count ${low.triangleCount()}`);
     const overlaps = findCoplanarOverlaps(low.toGlb(design.id));
@@ -523,6 +542,8 @@ function buildAll(designs: readonly ProceduralDesign[]): Array<{ design: Procedu
 
 export interface GeneratedModel {
   id: string;
+  /** The design's build-cache key (buildCache.ts); null for a design with no source module, which is never cached. */
+  key: string | null;
   /** The thumbnail's absolute path; null for a workshop draft, whose thumbnail the site renders in the browser (docs/site/workshop.md). */
   thumb: string | null;
   tree: string | null; // absolute path; null for a design without one (`sourceTree: false`)
@@ -535,107 +556,169 @@ export interface GeneratedModel {
   side: SideFrame | null;
   /** A vehicle's rider seat (riderSeat.ts) in the model's frame, metres; null for anything else. */
   seat: Vec3 | null;
-  /** False when the model came out identical to the one its thumbnail was rendered from. */
+  /** What the JS bundle needs of the built models (jsModel.ts). */
+  bundle: BundleFlags;
+  /** True when the design was built and checked afresh: its inputs changed (or its cache entry is missing). */
   changed: boolean;
 }
 
-/**
- * The file beside the thumbnails recording, per design, a hash of the model its
- * thumbnail was rendered from: what lets an unchanged design skip the slow
- * render. The GLB itself is an in-memory form only (no export/glb/).
- */
-const THUMB_SOURCES_FILE = ".sources.json";
+/** The build cache of an export folder: the committed build-cache/ for the repository's, one inside a test's own folder. */
+export function cacheDirFor(dir: string): string {
+  return path.resolve(dir) === EXPORT_DIR ? BUILD_CACHE_DIR : path.join(dir, ".build-cache");
+}
 
-const sha256 = (bytes: Uint8Array): string => crypto.createHash("sha256").update(bytes).digest("hex");
+/** Everything besides its source files the build of a design reads: part of its cache key. */
+function keySettings(design: ProceduralDesign): unknown {
+  const fields = catalogFields(design);
+  return {
+    fields,
+    vehicle: VEHICLE_IDS.has(design.id),
+    side: isSideViewCategory(fields.category),
+    thumb: [THUMB_VERSION, THUMB_SIZE],
+    caps: [COARSE_TRIANGLES, MAX_DETAIL_TRIANGLES],
+  };
+}
+
+/** Every design's build-cache key, by id (null for one with no source module). */
+export function designKeys(designs: readonly ProceduralDesign[], graph = new SourceGraph()): Map<string, string | null> {
+  return new Map(designs.map((d) => [d.id, designKey(graph, d, DESIGN_SOURCE.get(d.id), keySettings(d))] as const));
+}
+
+/** Copies `from` to `to` unless `to` already holds the same bytes. */
+function copyIfChanged(from: string, to: string): void {
+  const bytes = fs.readFileSync(from);
+  if (!fs.existsSync(to) || !bytes.equals(fs.readFileSync(to))) fs.writeFileSync(to, bytes);
+}
 
 /**
- * Builds every design's thumbnail and source tree into `dir`/thumbs and
- * `dir`/tree. The thumbnail is only re-rendered when the model changed (its
- * hash in thumbs/.sources.json), the PNG is missing or THUMB_VERSION moved on,
- * and a tree file is only rewritten when its text changed; files of designs that
- * no longer exist are removed, and so is an old export's glb/ folder. A workshop
- * draft (workshop.ts) gets no thumbnail: rendering one is the slow part, and the
- * site draws a draft's in the browser when it is shown. Throws a
- * ZFightingError, writing nothing, when any design would flicker.
+ * Writes every design's thumbnail and source tree into `dir`/thumbs and
+ * `dir`/tree. A design whose build-cache key is unchanged (buildCache.ts,
+ * docs/guide/build-cache.md) is not built at all: its facts come from the cache,
+ * its thumbnail is copied from it and its tree file stays. Any other is built,
+ * checked and measured, its thumbnail rendered into the cache (a confirmed
+ * model's only: a workshop draft's is drawn by the site in the browser), and the
+ * cache updated. Files of designs that no longer exist are removed, and so is an
+ * old export's glb/ folder. Throws a ZFightingError, writing nothing, when any
+ * design built would flicker.
  */
 export function generateModels(
   dir = EXPORT_DIR,
   designs: readonly ProceduralDesign[] = [...DESIGNS.values()],
+  cache = new BuildCache(cacheDirFor(dir)),
 ): GeneratedModel[] {
-  const built = buildAll(designs); // throws before anything touches the disk
-  const treeTexts = new Map(built.filter((b) => b.design.sourceTree !== false).map((b) => [b.design.id, `${JSON.stringify(b.tree)}\n`]));
-  checkTreeSizes(treeTexts); // so does this
-  const withThumb = new Set(designs.filter((d) => !isDraft(d.id)).map((d) => d.id));
-  const withTree = new Set(treeTexts.keys());
+  const keys = designKeys(designs);
+  const exportKeys = readExportKeys(dir);
   const thumbDir = path.join(dir, "thumbs");
   const treeDir = path.join(dir, TREE_DIR);
+  const withThumb = new Set(designs.filter((d) => !isDraft(d.id)).map((d) => d.id));
+  const withTree = new Set(designs.filter((d) => d.sourceTree !== false).map((d) => d.id));
+  const treeFile = (id: string): string => path.join(treeDir, `${id}.json`);
+  const cached = (d: ProceduralDesign) => cache.get(d.id, keys.get(d.id)!);
+  const needsThumb = (d: ProceduralDesign) => withThumb.has(d.id) && (!cached(d) || !fs.existsSync(cache.thumb(d.id)));
+  const needsTree = (d: ProceduralDesign) => {
+    const key = keys.get(d.id)!;
+    return withTree.has(d.id) && (!cached(d) || key === null || exportKeys.tree[d.id] !== key || !fs.existsSync(treeFile(d.id)));
+  };
+  // only what the cache cannot give is built; a design is checked when its facts are new
+  const built = new Map(buildAll(designs.filter((d) => !cached(d) || needsThumb(d) || needsTree(d)), (d) => !cached(d), needsTree).map((b) => [b.design.id, b]));
+  const treeTexts = new Map([...built.values()].filter((b) => b.tree).map((b) => [b.design.id, `${JSON.stringify(b.tree)}\n`]));
+  checkTreeSizes(treeTexts); // throws before anything touches the disk, too
   fs.mkdirSync(thumbDir, { recursive: true });
   fs.mkdirSync(treeDir, { recursive: true });
+  fs.mkdirSync(path.dirname(cache.thumb("x")), { recursive: true });
   fs.rmSync(path.join(dir, "glb"), { recursive: true, force: true });
-  const versionFile = path.join(thumbDir, THUMB_VERSION_FILE);
-  const stale = !fs.existsSync(versionFile) || fs.readFileSync(versionFile, "utf8").trim() !== THUMB_VERSION;
-  const sourcesFile = path.join(thumbDir, THUMB_SOURCES_FILE);
-  const previous: Record<string, string> = fs.existsSync(sourcesFile) ? JSON.parse(fs.readFileSync(sourcesFile, "utf8")) : {};
-  const sources: Record<string, string> = {};
+  // an older export's thumbnail hashes, from before the build cache
+  for (const old of [".sources.json", ".version"]) fs.rmSync(path.join(thumbDir, old), { force: true });
+  const treeKeys = new Map<string, string>();
   const out: GeneratedModel[] = [];
-  for (const { design, bytes, triangles, rig } of built) {
-    const draft = !withThumb.has(design.id);
-    const thumb = draft ? null : path.join(thumbDir, `${design.id}.png`);
-    const treeText = treeTexts.get(design.id);
-    const tree = treeText === undefined ? null : path.join(treeDir, `${design.id}.json`);
-    if (tree && (!fs.existsSync(tree) || fs.readFileSync(tree, "utf8") !== treeText)) fs.writeFileSync(tree, treeText!);
-    const hash = sha256(bytes);
-    // a draft records no hash: confirmed later, its thumbnail is rendered then
-    if (thumb) sources[design.id] = hash;
-    const changed = previous[design.id] !== hash;
+  for (const design of designs) {
+    const key = keys.get(design.id)!;
+    const b = built.get(design.id);
+    let facts = cached(design);
+    const changed = !facts;
     const sideView = isSideViewCategory(catalogFields(design).category);
-    let side: SideFrame | null = null;
-    if (!thumb) {
-      if (sideView) side = glbSideFrame(bytes);
-    } else if (changed || stale || !fs.existsSync(thumb)) {
-      if (sideView) {
-        const r = renderGlbSideThumb(bytes);
-        side = r.frame;
-        fs.writeFileSync(thumb, PNG.sync.write(r.png));
-      } else {
-        fs.writeFileSync(thumb, PNG.sync.write(renderGlbThumb(bytes, THUMB_SIZE)));
-      }
-    } else if (sideView) {
-      side = glbSideFrame(bytes);
+    if (!facts) {
+      facts = {
+        key: key ?? "",
+        triangles: b!.triangles,
+        stats: glbStats(b!.bytes),
+        rig: b!.rig,
+        side: sideView ? glbSideFrame(b!.bytes) : null,
+        seat: VEHICLE_IDS.has(design.id) ? vehicleSeat(design, b!.bytes) : null,
+        bundle: bundleFlags(design, b!.rig !== null),
+        extents: {},
+      };
+      if (key !== null) cache.set(design.id, facts);
     }
-    const seat = VEHICLE_IDS.has(design.id) ? vehicleSeat(design, bytes) : null;
-    out.push({ id: design.id, thumb, tree, triangles, stats: glbStats(bytes), rig, side, seat, changed });
+    let thumb: string | null = null;
+    if (withThumb.has(design.id)) {
+      thumb = path.join(thumbDir, `${design.id}.png`);
+      if (changed || needsThumb(design)) {
+        const png = sideView ? renderGlbSideThumb(b!.bytes).png : renderGlbThumb(b!.bytes, THUMB_SIZE);
+        fs.writeFileSync(cache.thumb(design.id), PNG.sync.write(png));
+      }
+      copyIfChanged(cache.thumb(design.id), thumb);
+    }
+    let tree: string | null = null;
+    if (withTree.has(design.id)) {
+      tree = treeFile(design.id);
+      const text = treeTexts.get(design.id);
+      if (text !== undefined) writeIfChanged(tree, text);
+      if (key !== null) treeKeys.set(design.id, key);
+    }
+    out.push({ id: design.id, key, thumb, tree, triangles: facts.triangles, stats: facts.stats, rig: facts.rig, side: facts.side, seat: facts.seat, bundle: facts.bundle, changed });
   }
-  if (stale) fs.writeFileSync(versionFile, `${THUMB_VERSION}\n`);
-  const sorted = Object.fromEntries(Object.entries(sources).sort(([a], [b]) => a.localeCompare(b)));
-  writeIfChanged(sourcesFile, `${JSON.stringify(sorted, null, 2)}\n`);
+  writeExportKeys(dir, "tree", treeKeys);
+  cache.save(new Set(designs.map((d) => d.id)), withThumb);
   for (const [sub, ext, keep] of [[thumbDir, ".png", withThumb], [treeDir, ".json", withTree]] as const) {
     for (const name of fs.readdirSync(sub)) {
-      if (name !== THUMB_SOURCES_FILE && name.endsWith(ext) && !keep.has(name.slice(0, -ext.length))) fs.rmSync(path.join(sub, name));
+      if (name.endsWith(ext) && !keep.has(name.slice(0, -ext.length))) fs.rmSync(path.join(sub, name));
     }
   }
   return out;
 }
 
+/** How many designs are bundled at once: esbuild works off the main thread. */
+const BUNDLE_CONCURRENCY = 8;
+
 /**
- * Writes `dir`/js/<id>.js for every design (a file is rewritten only when its
- * text changed) and removes the files of designs that no longer exist. Returns
- * each file's text by id.
+ * Writes `dir`/js/<id>.js for every design and removes the files of designs that
+ * no longer exist. `models` (generateModels' output) gives each design's
+ * build-cache key and bundle flags: a file written for the same key is kept as it
+ * is, without bundling, and a bundle needs no build. A file is rewritten only
+ * when its text changed. Returns each file's text by id.
  */
 export async function generateJsModels(
   dir = EXPORT_DIR,
   designs: readonly ProceduralDesign[] = [...DESIGNS.values()],
+  models?: ReadonlyMap<string, Pick<GeneratedModel, "key" | "bundle">>,
 ): Promise<Map<string, string>> {
   const jsDir = path.join(dir, JS_DIR);
   fs.mkdirSync(jsDir, { recursive: true });
-  const out = new Map<string, string>();
-  for (const design of designs) {
-    const source = DESIGN_SOURCE.get(design.id);
-    if (!source) throw new Error(`no source module for design "${design.id}"`);
-    const text = `${await bundleDesign(design, source)}`;
-    writeIfChanged(path.join(jsDir, `${design.id}.js`), text);
-    out.set(design.id, text);
-  }
+  const written = readExportKeys(dir).js;
+  const texts = new Array<string>(designs.length);
+  const jsKeys = new Map<string, string>();
+  let next = 0;
+  const worker = async (): Promise<void> => {
+    while (next < designs.length) {
+      const i = next++;
+      const design = designs[i]!;
+      const source = DESIGN_SOURCE.get(design.id);
+      if (!source) throw new Error(`no source module for design "${design.id}"`);
+      const known = models?.get(design.id);
+      const file = path.join(jsDir, `${design.id}.js`);
+      if (known?.key && written[design.id] === known.key && fs.existsSync(file)) {
+        texts[i] = fs.readFileSync(file, "utf8");
+      } else {
+        texts[i] = await bundleDesign(design, source, known?.bundle);
+        writeIfChanged(file, texts[i]!);
+      }
+      if (known?.key) jsKeys.set(design.id, known.key);
+    }
+  };
+  await Promise.all(Array.from({ length: BUNDLE_CONCURRENCY }, worker));
+  const out = new Map(designs.map((d, i) => [d.id, texts[i]!] as const));
+  writeExportKeys(dir, "js", jsKeys);
   for (const name of fs.readdirSync(jsDir)) {
     if (name.endsWith(".js") && !out.has(name.slice(0, -3))) fs.rmSync(path.join(jsDir, name));
   }
@@ -719,8 +802,10 @@ export async function buildExport(
   dir = EXPORT_DIR,
   designs: readonly ProceduralDesign[] = [...DESIGNS.values()],
 ): Promise<{ models: GeneratedModel[]; catalog: ModelCatalog; js: Map<string, string> }> {
-  const models = generateModels(dir, designs);
-  const js = await generateJsModels(dir, designs);
+  const cache = new BuildCache(cacheDirFor(dir));
+  const models = generateModels(dir, designs, cache);
+  const keyOf = new Map(models.map((m) => [m.id, m.key] as const));
+  const js = await generateJsModels(dir, designs, new Map(models.map((m) => [m.id, m] as const)));
   const refs = generateReferences(dir, designs);
   // the game's meta files list only the catalog's models: a draft stays in the workshop (workshop.ts)
   const chosen = (list: readonly ProceduralDesign[]) => list.filter((d) => designs.includes(d) && !isDraft(d.id));
@@ -743,7 +828,14 @@ export async function buildExport(
     generateSurfaces(dir);
   }
   fs.writeFileSync(path.join(dir, "industry-migration.json"), `${JSON.stringify({ version: 1, entries: INDUSTRY_MIGRATION }, null, 2)}\n`);
-  for (const design of designs) checkOpenttdDesign(design);
+  // the extents measured on built models are cached with the design's facts (buildCache.ts)
+  const extents = (design: ProceduralDesign, params: ParamValues, measure: () => number[]): number[] =>
+    cache.extents(design.id, keyOf.get(design.id) ?? null, params, measure);
+  const measured = (design: ProceduralDesign, params: ParamValues, modelId = design.id): number[] => {
+    const stats = glbStats(toGlb(modelId, design.build(params)));
+    return stats.max.map((v, i) => v - stats.min[i]!);
+  };
+  for (const design of designs) checkOpenttdDesign(design, (params) => extents(design, params, () => measured(design, params))[0]!);
   // every model soundTable.ts gives a sound must exist (docs/models/sounds.md)
   if (designs.length === DESIGNS.size) {
     const unknown = unknownTableIds(designs);
@@ -770,10 +862,13 @@ export async function buildExport(
   };
   // the legacy table maps old ids onto the whole catalog, so a narrowed export has none
   if (designs.length === DESIGNS.size) {
-    fs.writeFileSync(path.join(dir, "legacy-models.json"), `${JSON.stringify(buildLegacyMapping(DESIGNS), null, 2)}\n`);
+    const table = buildLegacyMapping(DESIGNS, (design, params, modelId) => extents(design, params, () => measureModel(design, params, modelId)));
+    fs.writeFileSync(path.join(dir, "legacy-models.json"), `${JSON.stringify(table, null, 2)}\n`);
   }
   await bundleRuntime({ entryPoints:[path.join(REPO_ROOT,"generator/modelReference.ts")], outfile:path.join(dir,"model-reference.js"), bundle:true, format:"esm", platform:"neutral", target:"es2022" });
   fs.writeFileSync(path.join(dir, CATALOG_FILE), `${JSON.stringify(catalog, null, 2)}\n`);
+  // the extents measured since generateModels saved it
+  cache.save(new Set(designs.map((d) => d.id)), new Set(designs.filter((d) => !isDraft(d.id)).map((d) => d.id)));
   return { models, catalog, js };
 }
 
@@ -788,8 +883,9 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     process.exit(1);
   }
   for (const m of models) {
-    console.log(`${m.id.padEnd(24)} ${String(m.triangles).padStart(5)} tris ${m.changed ? "(written)" : "(unchanged)"}`);
+    console.log(`${m.id.padEnd(24)} ${String(m.triangles).padStart(5)} tris ${m.changed ? "(built)" : "(cached)"}`);
   }
+  console.log(`\n${models.filter((m) => m.changed).length} of ${models.length} designs built; the others came from build-cache/`);
   console.log(`\n${"model".padEnd(24)} ${"JS".padStart(9)} ${"JS gz".padStart(9)}`);
   for (const r of catalog.records) {
     const kb = (n: number): string => `${(n / 1024).toFixed(1)} KB`.padStart(9);
