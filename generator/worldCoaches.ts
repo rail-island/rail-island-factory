@@ -9,8 +9,12 @@ import { paint, type BogieSpec } from "./dieselParts.ts";
 import { block } from "./vehicleParts.ts";
 import { INTERIOR_PALETTE } from "./interior.ts";
 import { CARBODY_PALETTE, type Painter } from "./carbodyKit.ts";
-import { shapedCrownPane, sideDecal, type SliceBody } from "./sliceBody.ts";
+import { crownPane, halfSlice, shapedCrownPane, sideDecal, sideLettering, sidePanel, surfacePoint, type SliceBody } from "./sliceBody.ts";
+import { decalX } from "./usHoodKit.ts";
 import type { Pt } from "./sliceLoft.ts";
+import { strokeText, strokeWidth } from "./strokeFont.ts";
+import { LOD_GLASS, lodSideBox, type LodPart } from "./lodKit.ts";
+import type { Vec3 } from "./meshCore.ts";
 import { carLod, carLodBody, drawCar, type CarDef } from "./usTransit.ts";
 import { bogieParts, fitUnit, type UnitBody } from "./lodUnits.ts";
 import { COACH_CATALOG } from "./csdCoaches.ts";
@@ -61,6 +65,13 @@ export interface WorldCoach {
   adapt?: (c: CarDef, t: CoachType, lod: boolean) => CarDef;
   /** Reshapes the distant model's body (default carLod's own): paint that changes along the car. */
   lodBody?: (b: UnitBody, X: (d: number) => number) => UnitBody;
+  /**
+   * A coach's own layout over the one the measures give (the IC 2000's stepped
+   * double-deck body): the car as laid out, the type of car (`unit`), the body's
+   * length; and its distant model's body and bogie top likewise.
+   */
+  layout?: (c: CarDef, unit: string, L: number) => CarDef;
+  lod?: (b: UnitBody, c: CarDef, X: (d: number) => number, L: number) => { body: UnitBody; bogieTop: number; parts?: LodPart[] };
 }
 
 const GAP = 0.65;
@@ -104,26 +115,32 @@ export function coachParams(s: WorldCoach): ParamSpec[] {
   return out;
 }
 
-function pick(s: WorldCoach, params: readonly ParamSpec[], v?: ParamValues): { t: CoachType; l: CoachLivery } {
+function pick(s: WorldCoach, params: readonly ParamSpec[], v?: ParamValues, lod = false): { t: CoachType; l: CoachLivery; c: CarDef } {
   const p = resolveParams(params, v);
-  return { t: s.types[p.unit!]!, l: s.liveries[p.livery ?? Object.keys(s.liveries)[0]!]! };
+  const t = s.types[p.unit!]!, l = s.liveries[p.livery ?? Object.keys(s.liveries)[0]!]!;
+  const c = coachDef(s, t, l, lod);
+  return { t, l, c: s.layout ? s.layout(c, p.unit!, s.length - 2 * gapOf(s)) : c };
 }
 
 export function buildCoach(s: WorldCoach, params: readonly ParamSpec[], v?: ParamValues): MeshBuilder {
-  const { t, l } = pick(s, params, v);
+  const { l, c } = pick(s, params, v);
   const m = new MeshBuilder({ ...PALETTE, ...l.palette });
-  drawCar(m, coachDef(s, t, l), (d) => s.length / 2 - gapOf(s) - d);
+  drawCar(m, c, (d) => s.length / 2 - gapOf(s) - d);
   return m;
 }
 
 export function buildCoachLod(s: WorldCoach, params: readonly ParamSpec[], v?: ParamValues): MeshBuilder {
-  const { t, l } = pick(s, params, v);
-  const def = coachDef(s, t, l, true), X = (d: number) => s.length / 2 - gapOf(s) - d;
+  const { l, c } = pick(s, params, v, true);
+  const X = (d: number) => s.length / 2 - gapOf(s) - d;
   const palette = { ...CARBODY_PALETTE, under: PALETTE.under!, ...l.palette };
-  if (!s.lodBody) return carLod(def, X, palette);
+  if (s.lod) {
+    const { body, bogieTop, parts = [] } = s.lod(carLodBody(c, X), c, X, s.length - 2 * gapOf(s));
+    return fitUnit({ palette, bodies: [body], parts: [...parts, ...bogieParts(c.trucks.map((d) => [X(d), c.truck.frameHalf] as const), bogieTop)] }, 100);
+  }
+  if (!s.lodBody) return carLod(c, X, palette);
   // carLod's body, reshaped
-  const parts = bogieParts(def.trucks.map((d) => [X(d), def.truck.frameHalf] as const), def.spec.B);
-  return fitUnit({ palette, bodies: [s.lodBody(carLodBody(def, X), X)], parts }, 100);
+  const parts = bogieParts(c.trucks.map((d) => [X(d), c.truck.frameHalf] as const), c.spec.B);
+  return fitUnit({ palette, bodies: [s.lodBody(carLodBody(c, X), X)], parts }, 100);
 }
 
 export function coachGame(s: WorldCoach): GameProperties {
@@ -233,14 +250,174 @@ export const SBB_EW4: WorldCoach = {
   },
 };
 
+/**
+ * The IC 2000 (assets/sbb-ic2000/, de.wikipedia "IC2000"): a double-deck body the full height of the
+ * EBV O2 gauge, its lower deck low between the bogies, the end sections over the bogies single-level
+ * (stairs and equipment under the upper deck, whose gangways run through the end walls) with the
+ * body's bottom stepped up there. The doors stand in the lower deck where it meets each end
+ * section, each a coral strip from the bottom to the roof's edge with the upper deck's lounge window
+ * in it and three dashes across the roof; a blue strip with the class numeral beside it toward the
+ * middle. Paint (the designers' "anthracite top and bottom, a two-part grey-white middle band"):
+ * the dark lower body up to the middle of the lower deck's windows, a dark line between the decks,
+ * the anthracite roof down over the upper deck's windows' heads. Measured on
+ * photo-familienwagen-...-925-2 (heights, at 115 px/m: the line 2.5-2.7 m, the upper windows
+ * 3.32-4.08 m, 1.43 m wide on a 1.98 m pitch, the lower 1.04-1.96 m), the Siegershausen and
+ * ten-car side views (door strips 5-7 m from the coupling planes, end sections, the step) and the
+ * Zuerich - Luzern view (the roof dashes, the small stair windows). 26.80 m over the buffers and
+ * 20.00 m between the bogie centres are lettered on the car.
+ */
+// d from the body's end (the coupling plane is 0.65 m beyond it): the door strip's centre 7.0 m from the coupling plane
+const IC_ENDS = 5.4;
+const IC_DOOR: readonly [number, number] = [5.65, 6.95];
+const IC_STRIP: readonly [number, number] = [5.45, 7.15];
+const IC_BLUE: readonly [number, number] = [7.15, 7.38];
+const IC_UPPER: readonly [number, number] = [3.32, 4.06];
+const IC_LOWER: readonly [number, number] = [1.04, 1.96];
+const IC_STAIRS: readonly [number, number] = [1.78, 2.3];
+const IC_DASHES: ReadonlyArray<readonly [number, number]> = [[1.06, 1.2], [0.7, 0.84], [0.34, 0.48]];
+/** Each type's upper-deck windows between the doors: offsets of their centres from the middle, and width (one a seat bay). */
+const IC_MIDDLE: Record<string, { at: readonly number[]; w: number }> = {
+  // first class: five on a 2.0 m pitch (13 a side, the Siegershausen photograph's A car)
+  a: { at: [-4, -2, 0, 2, 4], w: 1.4 },
+  // second class: six on 1.75 m (14 a side)
+  b: { at: [-4.375, -2.625, -0.875, 0.875, 2.625, 4.375], w: 1.3 },
+};
+/** The upper deck's three windows over each end section (d of their centres from the body's end) and the stair windows under them. */
+const IC_END_UPPER = [0.95, 2.7, 4.4];
+const IC_END_STAIRS = [2.2, 3.5];
+const IC_CLASS: Record<string, string> = { a: "1", b: "2" };
+/** The end walls' rounded corners: a plan narrowing to 88 % over the last 0.35 m. */
+const IC_CORNER = { len: 0.35, tip: 0.88, power: 2, C: [[0, 4.6]] as Pt[], S: [[0, 4.12]] as Pt[] };
+
+/** Lettering on the lower body (below the belly, where the side's plane is not the skin): each point on the slice itself. */
+function lowerLettering(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, text: string, d: number, y: number, h: number, mat: string): void {
+  const w = h * 0.58, gap = h * 0.18;
+  const width = strokeWidth(text, w, gap);
+  const dir = Math.sign(X(0) - X(1));
+  const pts = strokeText(text, -width / 2, y, h, w, gap, false, h * 0.13).map(([u, v]): Vec3 => {
+    const dd = d - dir * s * u;
+    const q = surfacePoint(b, dd, v, s);
+    return [X(dd) + q.n[0] * 0.006, q.p[1] + q.n[1] * 0.006, s * q.p[0] + q.n[2] * 0.006];
+  });
+  m.facets(mat, pts, [0, 0, s]);
+}
+
+function ic2000Layout(c: CarDef, unit: string, L: number): CarDef {
+  const mirror = (p: readonly [number, number]): [number, number] => [L - p[1], L - p[0]];
+  const span = (d: number, w: number): [number, number] => [d - w / 2, d + w / 2];
+  const dc = (IC_STRIP[0] + IC_STRIP[1]) / 2;
+  const mid = IC_MIDDLE[unit]!;
+  const upper = [
+    ...IC_END_UPPER.flatMap((d) => [span(d, 1.1), span(L - d, 1.1)]), span(dc, 1.2), span(L - dc, 1.2),
+    ...mid.at.map((k) => span(L / 2 + k, mid.w)),
+  ].sort((p, q) => p[0] - q[0]);
+  const lower = [-4, -2, 0, 2, 4].map((k) => span(L / 2 + k, 1.38));
+  const stairs = IC_END_STAIRS.flatMap((d) => [span(d, 0.13), span(L - d, 0.13)]).sort((p, q) => p[0] - q[0]);
+  const no = IC_CLASS[unit]!;
+  const number = c.lettering?.[0]?.text ?? "";
+  return {
+    ...c,
+    // the end walls' corners rounded in plan
+    spec: { ...c.spec, lean: 0.95, wl: c.spec.W * 0.97, wa: c.spec.W * 0.99, cuts: [[0, IC_ENDS], [L - IC_ENDS, L]], cutRadius: 0.3, front: IC_CORNER, rear: IC_CORNER, noseStep: 0.07 },
+    strips: [
+      // first class: a yellow length of the line between the decks across the door strips (the Siegershausen A car)
+      ...(unit === "a" ? [[IC_STRIP[0], IC_BLUE[1]] as const, mirror([IC_STRIP[0], IC_BLUE[1]])].map((d) => ({ d, y: [2.5, 2.7] as const, mat: "firstYellow" })) : []),
+      ...[IC_STRIP, mirror(IC_STRIP)].map((d) => ({ d, y: [0, 4.12] as const, mat: "coral" })),
+      ...[IC_BLUE, mirror(IC_BLUE)].map((d) => ({ d, y: [1.43, 3.73] as const, mat: "classBlue" })),
+    ],
+    windows: [
+      { y: IC_LOWER, spans: lower, frame: "rubber" },
+      { y: IC_STAIRS, spans: stairs, frame: "rubber" },
+      { y: IC_UPPER, spans: upper, frame: "rubber" },
+    ],
+    doors: { spans: [IC_DOOR, mirror(IC_DOOR)], y: [0.55, 2.45], glass: [1.25, 2.2], glassW: 0.36 },
+    doorBands: [[0, 9, "coral"]],
+    // the passenger room is the lower deck's floor between the end sections; the gangways' bellows round the upper deck's doors
+    cabin: [IC_ENDS, L - IC_ENDS],
+    diaphragm: null,
+    truck: { ...c.truck, bolster: c.spec.A },
+    lettering: [],
+    extras: (m, b, X) => {
+      for (const s of [1, -1]) {
+        m.scope(s > 0 ? "right side" : "left side", () => {
+          m.scope("class", () => {
+            for (const d of [IC_BLUE, mirror(IC_BLUE)]) for (const y of [2.12, 3.42]) sideLettering(m, b, X, s, no, (d[0] + d[1]) / 2, y, 0.2, "letterW", 0.01);
+          });
+          m.scope("emblem", () => {
+            sidePanel(m, b, X, s, "coral", 0.8, 1.1, 2.8, 3.1, 0.004, 0.003);
+            sidePanel(m, b, X, s, "letterW", 0.92, 0.98, 2.86, 3.04, 0.007, 0.003);
+            sidePanel(m, b, X, s, "letterW", 0.86, 1.04, 2.92, 2.98, 0.007, 0.003);
+            sideLettering(m, b, X, s, "SBB CFF FFS", 1.95, 2.88, 0.14, "lettering", 0.006);
+          });
+          m.scope("lettering", () => lowerLettering(m, b, X, s, number, L / 2, 0.62, 0.09, "letterW"));
+        });
+        m.scope(s > 0 ? "front end" : "rear end", () => {
+          // the gangway's seal round the end's outline from the end section's bottom over the roof, the upper deck's gangway door
+          const [d, e] = s > 0 ? [0, 1] : [L, -1];
+          const x = X(d);
+          const h = halfSlice(b, d).slice(2);
+          const nrm = h.map((_, i) => {
+            const [p, q] = [h[Math.max(0, i - 1)]!, h[Math.min(h.length - 1, i + 1)]!];
+            const [dz, dy] = [q[0] - p[0], q[1] - p[1]];
+            const k = Math.hypot(dz, dy) || 1;
+            return [dy / k, -dz / k] as const;
+          });
+          m.scope("gangway seal", () => {
+            for (const side of [1, -1])
+              for (let i = 0; i + 1 < h.length; i++) {
+                const ring = [i, i + 1].flatMap((j) => [[h[j]![0] + nrm[j]![0] * 0.01, h[j]![1] + nrm[j]![1] * 0.01], [h[j]![0] - nrm[j]![0] * 0.09, h[j]![1] - nrm[j]![1] * 0.09]] as const);
+                const sec = [ring[0]!, ring[2]!, ring[3]!, ring[1]!].map(([z, y]): [number, number] => [side * z, y]);
+                m.sweep("bellows", "x", sec, Math.min(x - e * 0.05, x + e * 0.14), sec, Math.max(x - e * 0.05, x + e * 0.14));
+              }
+          });
+          m.scope("gangway door", () => decalX(m, "diaphragm", x + e * 0.004, e, -e * 0.42, e * 0.42, 2.62, 4.3));
+        });
+        m.scope("roof", () => {
+          for (const d of [IC_STRIP, mirror(IC_STRIP)]) for (const z of IC_DASHES) crownPane(m, b, X, s, "coral", [d[0] + 0.15, d[1] - 0.15], [z[0], z[1]], 0.006);
+        });
+      }
+    },
+  };
+}
+
 export const SBB_IC2000: WorldCoach = {
-  length: 26.8, W: 1.4, Y: 1.2, S: 3.85, C: 4.6, B: 0.7, A: 0.9, rows: [[1.25, 1.95], [2.85, 3.55]], doorIn: 3.3, doorW: 1.3, door: [1.0, 3.05],
+  length: 26.8, W: 1.4, Y: 1.25, S: 4.12, C: 4.6, B: 0.45, A: 1.15, rows: [IC_LOWER, IC_UPPER], doorIn: IC_DOOR[0], doorW: IC_DOOR[1] - IC_DOOR[0], door: [0.55, 2.45],
   bogieCentres: 20.0, wheelR: 0.46, wheelbase: 2.5, coupler: "buffers", maxspeed: 200,
   types: {
-    a: { title: "First class", windows: 10, windowW: 1.4, number: "50 85 26-94 001-8", weight: 50 },
-    b: { title: "Second class", windows: 11, windowW: 1.3, number: "50 85 26-94 101-6", weight: 49 },
+    a: { title: "First class", windows: 13, windowW: 1.4, number: "50 85 16-94 073-3", weight: 50 },
+    b: { title: "Second class", windows: 14, windowW: 1.4, number: "50 85 26-94 101-0", weight: 49 },
   },
-  liveries: { sbb: sbbBands() },
+  liveries: {
+    sbb: {
+      title: "SBB",
+      palette: { white: c("#e9eae6", 0.4), anth: c("#3d4246", 0.55), roofG: c("#5f656b", 0.6), firstYellow: c("#f2c200", 0.45), line: c("#34433f", 0.5), coral: c("#d8432e", 0.45), classBlue: c("#24489a", 0.45), letterW: c("#f4f4f0", 0.5) },
+      bands: [[0, 1.43, "anth"], [1.43, 2.5, "white"], [2.5, 2.7, "line"], [2.7, 3.73, "white"], [3.73, 9, "roofG"]], roof: "roofG", skirt: "anth",
+    },
+  },
+  layout: ic2000Layout,
+  // the distant model: the shell from the white up (the upper deck's windows in it), the dark lower body as
+  // boxes stepped up over the bogies like the body, the coral door strips as panels on both sides
+  lod: (body, c, X, L) => {
+    const top = body.hw[body.hw.length - 1]![0];
+    const [low, W] = [1.43, c.spec.W];
+    const box = (mat: string, d0: number, d1: number, y0: number, y1: number, hw: number, ends = true): LodPart => {
+      const [x0, x1] = [Math.min(X(d0), X(d1)), Math.max(X(d0), X(d1))];
+      return { draw: (m) => m.scope("body", () => lodSideBox(m, mat, [[x0, y0], [x1, y0], [x1, y1], [x0, y1]], -hw, hw, ends)) };
+    };
+    return {
+      body: {
+        ...body, y0: low, hw: [[low, W], ...body.hw.filter(([y]) => y > low + 1e-6)], front: { tip: [[low, X(0)]] }, rear: { tip: [[low, X(L)]] },
+        side: [[low, 3.73, "white"], [3.73, top, "roofG"]],
+        windows: [{ u: [Math.min(X(0.7), X(L - 0.7)), Math.max(X(0.7), X(L - 0.7))], y: IC_UPPER, mat: LOD_GLASS }],
+      },
+      bogieTop: c.spec.A,
+      parts: [
+        box("anth", 0, L, c.spec.A, low, W),
+        box("anth", IC_ENDS, L - IC_ENDS, c.spec.B, c.spec.A, W * 0.97),
+        ...[IC_STRIP, [L - IC_STRIP[1], L - IC_STRIP[0]] as const].map(([d0, d1]) => box("coral", d0, d1, c.spec.B, 4.12, W + 0.02, false)),
+      ],
+    };
+  },
 };
 
 // The panorama car (Stadler, 2006/2009/2011; datasheet WGEX0123: body 17.7 m, 2.68 m wide, 3.695 m high,
