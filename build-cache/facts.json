@@ -8646,7 +8646,7 @@
    "extents": {}
   },
   "proc-vehicle-amtrak-acela": {
-   "key": "15ce239409ce8d8a725ead002ce8495990ad9ec0124b84938c720b0256178622",
+   "key": "1a20204dca6f85c62ec669fc8a64d75d7f3a8d012ba7c2921f7328faa41f826a",
    "triangles": 10308,
    "stats": {
     "triangles": 10308,
@@ -8724,7 +8724,7 @@
    }
   },
   "proc-vehicle-amtrak-superliner": {
-   "key": "422ce916b4f0befa3ac96ede0379d46722f2705cd90fa2f7ff340985480f99f1",
+   "key": "af87b027ec695d7aa66b857a32f0f3f23f47d00012ebf8b7d91df30a75727837",
    "triangles": 8468,
    "stats": {
     "triangles": 8468,
@@ -24105,8 +24105,65 @@
    },
    "extents": {}
   },
+  "proc-vehicle-emd-f40ph": {
+   "key": "100810770dd8262548cfc3e48146012f91edf42d38430770afca005bcf47a3b9",
+   "triangles": 11011,
+   "stats": {
+    "triangles": 11011,
+    "vertices": 33033,
+    "primitives": 31,
+    "materials": 27,
+    "min": [
+     -8.5600004196167,
+     2.5749206544745107e-8,
+     -1.6360000371932983
+    ],
+    "max": [
+     8.5600004196167,
+     4.940000057220459,
+     1.6360000371932983
+    ]
+   },
+   "rig": {
+    "supports": [
+     {
+      "x": -4.648,
+      "node": "bogie1",
+      "axles": 2,
+      "sections": [
+       0
+      ]
+     },
+     {
+      "x": 4.648,
+      "node": "bogie0",
+      "axles": 2,
+      "sections": [
+       0
+      ]
+     }
+    ]
+   },
+   "side": {
+    "widthM": 17.7200008392334,
+    "heightM": 6.3,
+    "bottomM": -0.3
+   },
+   "seat": [
+    7.71,
+    3.4344,
+    0
+   ],
+   "bundle": {
+    "rigged": true,
+    "surfaces": false,
+    "passenger": false,
+    "interior": false
+   },
+   "extents": {}
+  },
   "proc-vehicle-emd-f7": {
-   "key": "aae32227d829e5e8125d732efab51fb7c0868dabb5b4de12a326478e6e394d29",
+   "key": "db05f9cc032b614ac05c023fa7df740b49f3a2ef2b3260ba2a41867aaeef2acb",
    "triangles": 10756,
    "stats": {
     "triangles": 10756,
@@ -26322,7 +26379,7 @@
    "extents": {}
   },
   "proc-vehicle-ge-p42dc": {
-   "key": "feca544e8c15431d444f65d85b7d91c020abc9b7245f0113dc28b9446875a5bd",
+   "key": "5e20ddf1a3e47ce6d44e0f2ee46c603f8a1d8243b289d7a9bc290bf805f04a23",
    "triangles": 8570,
    "stats": {
     "triangles": 8570,
@@ -42202,7 +42259,7 @@
    "extents": {}
   },
   "proc-vehicle-prr-gg1": {
-   "key": "ab7b9b7e1d0e28bcdc5a41d2d1da96fc475dbff3306334946b3b9a2288472ab4",
+   "key": "1d8c5779f9c168ce00983498fd4ddae873a8871836b84bd5d9f08d1e9e1c9ada",
    "triangles": 14428,
    "stats": {
     "triangles": 14428,
@@ -50302,7 +50359,7 @@
    "extents": {}
   },
   "proc-vehicle-siemens-alc42": {
-   "key": "c718f03f524e77c2f4dd231e7960a5a5cc36d6cbf592af3646cc5b730a30d9fe",
+   "key": "c9f37a2fdfa950a7657927eb5f268dacdb3e70a555364bb32975e4b9af87c479",
    "triangles": 10352,
    "stats": {
     "triangles": 10352,
