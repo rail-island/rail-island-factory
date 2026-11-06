@@ -187,6 +187,25 @@ export function surfaceDisc(m: MeshBuilder, b: SliceBody, X: (d: number) => numb
   m.slab(mat, pts, mul(n, -depth));
 }
 
+/**
+ * A disc tangent to the body's upper side (the shoulder and the arc, crownPoint) at d and
+ * half width z on side s: for a steep nose front, where a height does not single out a point.
+ */
+export function crownDisc(m: MeshBuilder, b: SliceBody, X: (d: number) => number, d: number, z: number, s: number, mat: string, r: number, proud: number, depth: number, sides = 18): void {
+  const P = (dd: number, zz: number): Vec3 => { const [pz, py] = crownPoint(b, dd, zz); return [X(dd), py, s * pz]; };
+  const base = P(d, z);
+  let n = norm(cross(sub(P(d, z + 0.02), P(d, z - 0.02)), sub(P(d + 0.02, z), P(Math.max(0, d - 0.02), z))));
+  // outward: away from the body's centre line and its middle
+  if (dot(n, [X(0) - X(1), 0, 0]) < 0) n = mul(n, -1);
+  const u = norm(cross([0, 1, 0], n));
+  const v = norm(cross(n, u));
+  const pts = Array.from({ length: sides }, (_, i): Vec3 => {
+    const a = (2 * Math.PI * i) / sides;
+    return add(add(base, mul(n, proud)), add(mul(u, r * Math.cos(a)), mul(v, r * Math.sin(a))));
+  });
+  m.slab(mat, pts, mul(n, -depth));
+}
+
 /** The point of the slice at d whose half width is z on its upper side (the shoulder and the arc), z clamped to the slice. */
 export function crownPoint(b: SliceBody, d: number, z: number): Pt {
   const h = halfSlice(b, d);

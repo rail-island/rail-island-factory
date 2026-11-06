@@ -76,49 +76,62 @@ function lathe(m: MeshBuilder, x: number, y: number, z0: number, face: number, p
 /**
  * A detailed wheel at axle x, its tyre spanning z0..z1. The tyre's shoulders are
  * bevelled; a wheel seen from outside (`face` +1 or -1, its outer side) shows its
- * sidewall, a dished steel rim with `nuts` wheel nuts round the hub, and a hub
- * cap at most 3 cm proud of the tyre (within the plain wheel's 4 cm, busKit.ts
- * busWheel). An inner twin (`face` null) is the tyre alone, faced on its inside.
+ * sidewall and, in the tyre's bore, a dished steel rim with `nuts` wheel nuts round
+ * the hub and a hub cap at most 3 cm proud of the tyre (within the plain wheel's
+ * 4 cm, busKit.ts busWheel). An inner twin (`face` null) is the plain 16-gon.
+ *
+ * The rim, hub and nuts are what the eye follows round, so they are drawn as the
+ * rolling part `spin` (rolling.ts, MeshCore.spin) on the wheel's axle, turned by the
+ * bus's `rolling` clip; the tyre, rings about the axle, stays with the part that
+ * carries the wheel.
  */
-export function detailedBusWheel(m: MeshBuilder, x: number, radius: number, z0: number, z1: number, face: number | null, nuts = 10): void {
+export function detailedBusWheel(m: MeshBuilder, x: number, radius: number, z0: number, z1: number, face: number | null, spin?: string, nuts = 10): void {
   const R = radius;
   const y = R * AXLE_FACTOR;
   const W = z1 - z0;
   const c = Math.min(0.035, W * 0.15);
-  // drawn from its inner face outward; an inner twin's "face" is the +z side
-  const f = face ?? 1;
-  const zi = f > 0 ? z0 : z1;
   if (face === null) {
     // hidden behind its outer twin: the plain 16-gon
     const tyre = ngon(WHEEL_SIDES, R, Math.PI / WHEEL_SIDES, x, y);
     m.sweep("rubber", "z", tyre, z0, tyre, z1);
     return;
   }
-  lathe(m, x, y, zi, f, [
-    [0, 0], [0, 0.9 * R], [c, R], [W - c, R], [W, 0.9 * R], [W, 0.66 * R],
-    // the rim's flange and its dish, sunk into the tyre's face
-    [W - 0.012, 0.63 * R], [W - 0.05, 0.52 * R], [W - 0.05, 0.29 * R],
-    // the hub, proud of the face
-    [W - 0.02, 0.24 * R], [W + 0.03, 0.18 * R], [W + 0.03, 0],
-  ], ["rubber", "rubber", "rubber", "rubber", "rubber", "rim", "rim", "rim", "hub", "hub", "hub"]);
-  // the wheel nuts on the dish, sunk into it
-  const zf = zi + f * W;
-  for (let k = 0; k < nuts; k++) {
-    const a = (2 * Math.PI * k) / nuts;
-    const cx = x + 0.4 * R * Math.cos(a);
-    const cy = y + 0.4 * R * Math.sin(a);
-    // a hexagonal prism, its back hidden in the dish: six sides and the face
-    const hex: Vec3[] = [];
-    for (let i = 0; i < 6; i++) hex.push([cx + 0.022 * Math.cos(a + (i * Math.PI) / 3), cy + 0.022 * Math.sin(a + (i * Math.PI) / 3), zf - f * 0.028]);
-    const back = hex.map(([px, py]): Vec3 => [px, py, zf - f * 0.056]);
-    const out = (i: number): Vec3 => [Math.cos(a + ((i + 0.5) * Math.PI) / 3), Math.sin(a + ((i + 0.5) * Math.PI) / 3), 0];
-    for (let i = 0; i < 6; i++) {
-      const j = (i + 1) % 6;
-      orient(m, "nut", hex[i]!, hex[j]!, back[j]!, out(i));
-      orient(m, "nut", hex[i]!, back[j]!, back[i]!, out(i));
+  // drawn from its inner face outward
+  const f = face;
+  const zi = f > 0 ? z0 : z1;
+  // the tyre: a ring with a bore the rim sits in
+  const bore = 0.64 * R;
+  lathe(m, x, y, zi, f, [[0, bore], [0, 0.9 * R], [c, R], [W - c, R], [W, 0.9 * R], [W, bore], [0, bore]], ["rubber", "rubber", "rubber", "rubber", "rubber", "rubber"]);
+  const rim = (): void => {
+    lathe(m, x, y, zi, f, [
+      // the rim's back and its flange, reaching into the tyre past the bore
+      [W - 0.07, 0], [W - 0.07, 0.65 * R], [W - 0.008, 0.65 * R],
+      // its dish, sunk into the tyre's face
+      [W - 0.03, 0.56 * R], [W - 0.05, 0.52 * R], [W - 0.05, 0.29 * R],
+      // the hub, proud of the face
+      [W - 0.02, 0.24 * R], [W + 0.03, 0.18 * R], [W + 0.03, 0],
+    ], ["rim", "rim", "rim", "rim", "rim", "hub", "hub", "hub"]);
+    // the wheel nuts on the dish, sunk into it
+    const zf = zi + f * W;
+    for (let k = 0; k < nuts; k++) {
+      const a = (2 * Math.PI * k) / nuts;
+      const cx = x + 0.4 * R * Math.cos(a);
+      const cy = y + 0.4 * R * Math.sin(a);
+      // a hexagonal prism, its back hidden in the dish: six sides and the face
+      const hex: Vec3[] = [];
+      for (let i = 0; i < 6; i++) hex.push([cx + 0.022 * Math.cos(a + (i * Math.PI) / 3), cy + 0.022 * Math.sin(a + (i * Math.PI) / 3), zf - f * 0.028]);
+      const back = hex.map(([px, py]): Vec3 => [px, py, zf - f * 0.056]);
+      const out = (i: number): Vec3 => [Math.cos(a + ((i + 0.5) * Math.PI) / 3), Math.sin(a + ((i + 0.5) * Math.PI) / 3), 0];
+      for (let i = 0; i < 6; i++) {
+        const j = (i + 1) % 6;
+        orient(m, "nut", hex[i]!, hex[j]!, back[j]!, out(i));
+        orient(m, "nut", hex[i]!, back[j]!, back[i]!, out(i));
+      }
+      for (let i = 1; i < 5; i++) orient(m, "nut", hex[0]!, hex[i]!, hex[i + 1]!, [0, 0, f]);
     }
-    for (let i = 1; i < 5; i++) orient(m, "nut", hex[0]!, hex[i]!, hex[i + 1]!, [0, 0, f]);
-  }
+  };
+  if (spin) m.spin(spin, [x, y, (z0 + z1) / 2], rim);
+  else rim();
 }
 
 /** The z range a..b (both >= 0) on side `s`, low end first. */
