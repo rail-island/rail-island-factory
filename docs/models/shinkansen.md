@@ -97,7 +97,11 @@ combinations hashed before and after):
   sides; `cols` and `tolerance` set the grid's resolution; the body ends square `dJoin` behind the tip and the face's
   slices meet the body's own section there (both ends of a `single` railcar). The distant model
   takes its profile, plan, bands and the panes as glass (the VT 98 and the other short-nosed
-  regional and metro units, [germany-trains.md](germany-trains.md));
+  regional and metro units, [germany-trains.md](germany-trains.md)). The `bulge` may be a
+  table by height, a vee that deepens or flattens (the Roter Pfeil's cab); `lod` gives the
+  distant model its own profile, plan and rows, and `glass: false` leaves its panes out, for a
+  face with a bonnet drawn ahead of it in the series' `fittings`
+  ([switzerland-trains.md](switzerland-trains.md));
 - `fluting` - bands of horizontal ribs on every car's sides, round the windows and doors (the car
   builder's `fluting`, which takes several bands); `roofRibs` - ribs along the roof either side of
   the crown (the Talgo III's stainless body);
