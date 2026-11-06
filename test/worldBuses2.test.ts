@@ -16,6 +16,7 @@ import { proceduralId } from "../generator/modelId";
 import { collectTriangles, parseGlb, type Tri } from "../generator/glbTriangles";
 import { coverageCombinations } from "../generator/design";
 import { sample } from "./catalogCache";
+import { poseGlb, sampleCount } from "../generator/glbPose";
 
 const LATER = [...WORLD_BUS_SPECS_2, ...WORLD_BUS_SPECS_3, ...WORLD_BUS_SPECS_4];
 
@@ -108,6 +109,26 @@ describe("the later world buses", () => {
     const s = b.spec();
     const ts = collectTriangles(...(Object.values(parseGlb(b.build().toGlb(b.id))) as [never, never]));
     expect(span(ts.filter((t) => t.material === "body"), 1)[1]).toBeCloseTo(s.deck!.height, 2);
+  });
+
+  it("swings the Blue Bird Vision's two door leaves out from the side, light framed", () => {
+    const b = LATER.find((x) => x.id === "veh-blue-bird-vision")!;
+    const s = b.spec();
+    const bytes = b.build().toGlb(b.id);
+    const clip = (parseGlb(bytes).json as { animations: Array<{ name: string }> }).animations.findIndex((a) => a.name.startsWith("doors-right"));
+    expect(clip).toBeGreaterThanOrEqual(0);
+    const leaves = (glb: Uint8Array) => collectTriangles(...(Object.values(parseGlb(glb)) as [never, never])).filter((t) => t.material === "doorFrame" && t.p.every((p) => p[1] > s.door.bottom - 1e-3));
+    // shut: flat on the side; open: both leaves stand out of it, about their width
+    const shut = span(leaves(bytes), 2);
+    expect(shut[1]).toBeLessThan(s.width / 2 + 0.05);
+    const open = leaves(poseGlb(bytes, sampleCount(bytes, clip) - 1, clip));
+    expect(span(open, 2)[1]).toBeGreaterThan(s.width / 2 + 0.25);
+    const [d0, d1] = s.doors[0]!;
+    const mid = s.length - (d0 + d1) / 2;
+    // one leaf hangs at each jamb: open pieces reach out both ahead of and behind the door's middle
+    const outside = open.filter((t) => t.p.some((p) => p[2] > s.width / 2 + 0.15));
+    expect(outside.some((t) => t.p.every((p) => p[0] > mid))).toBe(true);
+    expect(outside.some((t) => t.p.every((p) => p[0] < mid))).toBe(true);
   });
 
   it("changes only the colours with a finish parameter", () => {

@@ -448,8 +448,10 @@ export const vision: Extras = (c, s) => {
   });
   // the hood's badge
   c.d.fit("hood badge", L - 0.1, () => block(c.m(), "chrome", L - 0.1, L - 0.08, 1.28, 1.34, -0.12, 0.12));
-  for (const sd of [-1, 1]) sideName(c, sd, 3.6, 6.4, 1.33, 0.2, "black", 0.11);
-  hatches(c, s, [4.6, 8.6]);
+  for (const sd of [-1, 1]) sideName(c, sd, 3.6, 6.4, 1.71, 0.16, "black", 0.11);
+  // the black stripe just under the side glass
+  for (const sd of [-1, 1]) sideStrip(c, s, sd, s.bonnet!.length + 0.05, L - 0.12, 1.9, 1.96, "black");
+  hatches(c, s, [4.4, 8.0]);
   // side marker lamps at the cap's ends
   c.d.fit("side lamps", c.nose - 0.3, () => {
     for (const sd of [-1, 1]) sideSlab(c.m(), "marker", c.frame, sd, c.nose - 0.36, c.nose - 0.26, s.eave - 0.1, s.eave - 0.04, 0.02);
