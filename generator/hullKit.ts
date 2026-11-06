@@ -117,7 +117,7 @@ export type Item =
   | { k: "mast"; u: number; z?: number; y: readonly [number, number]; r?: number; yards?: ReadonlyArray<readonly [number, number]>; mat?: string; radar?: boolean; name?: string }
   | { k: "crane"; u: number; z: number; y: number; h: number; jib: number; dir: number; lift?: number; mat?: string; name?: string }
   | { k: "derrick"; u: number; y: number; h: number; boom: number; dir: number; mat?: string; pair?: boolean; name?: string }
-  | { k: "hatches"; u: readonly [number, number]; n: number; hw: number; y: number; h: number; mat?: string; gap?: number; name?: string; coaming?: number; coamingMat?: string; ridge?: number; ribs?: number }
+  | { k: "hatches"; u: readonly [number, number]; n: number; hw: number; y: number; h: number; mat?: string; gap?: number; name?: string; coaming?: number; coamingMat?: string; ridge?: number; ribs?: number; ribMat?: string }
   | { k: "containers"; u: readonly [number, number]; bays: number; hw: number; y: number; tiers: number; groups?: number; seed?: number; name?: string; rows?: number }
   | { k: "domes"; u: readonly [number, number]; n: number; r: number; y: number; h: number; mat?: string; z?: number; name?: string }
   | { k: "spheres"; u: readonly [number, number]; n: number; r: number; y: number; base?: number; mat?: string; cover?: string; name?: string }
@@ -128,7 +128,7 @@ export type Item =
   | { k: "boom"; a: Vec3; b: Vec3; w: number; mat?: string; name?: string }
   | { k: "boats"; at: readonly number[]; z: number; y: number; len: number; r: number; mat?: string; name?: string }
   | { k: "canopy"; u: readonly [number, number]; hw: number; y: number; h: number; mat: string; posts?: string; name?: string }
-  | { k: "paddle"; u: number; r: number; w: number; z: number; y: number; box?: string; mat?: string; stern?: boolean; name?: string }
+  | { k: "paddle"; u: number; r: number; w: number; z: number; y: number; box?: string; mat?: string; stern?: boolean; rays?: string; name?: string }
   | { k: "foil"; u: number; span: number; y: number; chord: number; strut: number; inner?: number; mat?: string; name?: string }
   | { k: "skirt"; u: readonly [number, number]; hw: number; h: number; c: number; mat?: string; name?: string }
   | { k: "prop"; u: number; z: number; y: number; r: number; blades?: number; pylon?: number; mat?: string; name?: string }
@@ -144,6 +144,8 @@ export type Item =
   | { k: "vents"; at: ReadonlyArray<readonly [number, number]>; y?: number; h: number; r: number; cowl?: boolean; mat?: string; name?: string }
   | { k: "freefall"; u: number; y: number; len: number; r?: number; tilt?: number; mat?: string; name?: string }
   | { k: "lashing"; at: readonly number[]; hw: number; y: number; h: number; mat?: string; name?: string }
+  | { k: "edgeRail"; u: readonly [number, number]; h?: number; pitch?: number; mat?: string; name?: string }
+  | { k: "hullLine"; pts: ReadonlyArray<readonly [number, number]>; w?: number; mat?: string; name?: string }
   | { k: "fender"; u: readonly [number, number]; y: readonly [number, number]; out: number; mat?: string; name?: string }
   | { k: "strakes"; u: readonly [number, number]; y: readonly number[]; w?: number; mat?: string; name?: string }
   | { k: "marks"; at: readonly number[]; y: readonly [number, number]; step?: number; s?: number; thruster?: number; eye?: boolean; mat?: string; name?: string };
@@ -885,7 +887,7 @@ function drawItem(c: ShipCtx, it: Item, i: number): void {
           if (ridge > 0) m.sweep(it.mat ?? "hatch", "x", [[hw, ya], [0, ya + ridge], [-hw, ya]], x(u - len / 2), [[hw, ya], [0, ya + ridge], [-hw, ya]], x(u + len / 2), true);
           for (let r = 1; r <= (it.ribs ?? 0); r++) {
             const ur = u - len / 2 + (len * r) / ((it.ribs ?? 0) + 1);
-            m.box(it.mat ?? "hatch", x(ur), 0, 0.35, hw * 2 + 0.16, y0 + (ya - y0) * 0.25, ya + ridge * 0.35);
+            m.box(it.ribMat ?? it.mat ?? "hatch", x(ur), 0, 0.35, hw * 2 + 0.16, y0 + (ya - y0) * 0.25, ya + ridge * 0.35);
           }
         }
       });
@@ -1057,6 +1059,22 @@ function drawItem(c: ShipCtx, it: Item, i: number): void {
             sec.push([xc + Math.cos(a) * it.r * 1.12, it.y + Math.sin(a) * it.r * 1.12]);
           }
           for (const [za, zb] of pairs) m.sweep(it.box, "z", sec, za! - 0.15, sec, zb! + 0.15, true);
+          if (it.rays) {
+            // the paddle box's painted fan: rays from the hub to the rim on its outer face
+            for (const [za, zb] of pairs) {
+              const out = it.stern ? 0 : Math.abs(zb!) > Math.abs(za!) ? 1 : -1;
+              if (!out) continue;
+              const zf = (out > 0 ? zb! + 0.15 : za! - 0.15) + out * 0.03;
+              const batch = new TriBatch();
+              const R = it.r * 1.08;
+              for (let k = 0; k < 7; k++) {
+                const a0 = ((k + 0.25) / 7) * Math.PI;
+                const a1 = ((k + 0.75) / 7) * Math.PI;
+                batch.add([xc, it.y + it.r * 0.12, zf], [xc + Math.cos(a0) * R, it.y + Math.sin(a0) * R, zf], [xc + Math.cos(a1) * R, it.y + Math.sin(a1) * R, zf], [0, 0, out]);
+              }
+              batch.draw(m, it.rays);
+            }
+          }
         }
       });
       return;
@@ -1266,6 +1284,51 @@ function drawItem(c: ShipCtx, it: Item, i: number): void {
       });
       return;
     }
+    case "edgeRail": {
+      m.scope(nm("railing"), () => {
+        const h = it.h ?? 1;
+        const hi = Math.min(c.L, it.u[1]);
+        const us = spaced(it.u[0], hi, it.pitch ?? Math.max(2.5, (hi - it.u[0]) / 60));
+        for (const side of [1, -1]) {
+          const rails = new TriBatch();
+          const pts = us.map((u) => {
+            const yd = c.deck(u);
+            return { u, x: x(u), yd, z: side * Math.max(0.05, c.side(u, yd) - 0.15) };
+          });
+          for (let k = 0; k + 1 < pts.length; k++) {
+            const a = pts[k]!;
+            const b = pts[k + 1]!;
+            for (const [y0, y1] of [[h - 0.06, h], [h * 0.5 - 0.03, h * 0.5 + 0.03]] as const) {
+              rails.quad([a.x, a.yd + y0, a.z], [b.x, b.yd + y0, b.z], [b.x, b.yd + y1, b.z], [a.x, a.yd + y1, a.z], [0, 0, side]);
+              rails.quad([a.x, a.yd + y0, a.z - side * 0.02], [b.x, b.yd + y0, b.z - side * 0.02], [b.x, b.yd + y1, b.z - side * 0.02], [a.x, a.yd + y1, a.z - side * 0.02], [0, 0, -side]);
+            }
+          }
+          rails.draw(m, it.mat ?? "white");
+          for (const p of pts) m.box(it.mat ?? "white", p.x, p.z - side * 0.01, 0.05, 0.05, p.yd - 0.02, p.yd + h - 0.06, 0, false);
+        }
+      });
+      return;
+    }
+    case "hullLine": {
+      m.scope(nm("hull line"), () => {
+        const w = it.w ?? 0.08;
+        for (const side of [1, -1]) {
+          const batch = new TriBatch();
+          const P = (u: number, y: number): Vec3 => [x(u), y, side * (c.side(u, y) + 0.04)];
+          for (let k = 0; k + 1 < it.pts.length; k++) {
+            const [ua, ya] = it.pts[k]!;
+            const [ub, yb] = it.pts[k + 1]!;
+            // the strip's width square to the line in the side's plane
+            const l = Math.hypot(ub - ua, yb - ya) || 1;
+            const du = (-(yb - ya) / l) * (w / 2);
+            const dy = ((ub - ua) / l) * (w / 2);
+            batch.quad(P(ua - du, ya - dy), P(ub - du, yb - dy), P(ub + du, yb + dy), P(ua + du, ya + dy), [0, 0, side]);
+          }
+          batch.draw(m, it.mat ?? "black");
+        }
+      });
+      return;
+    }
     case "fender": {
       m.scope(nm("fender"), () => {
         const [ya, yb] = it.y;
@@ -1305,6 +1368,9 @@ function drawItem(c: ShipCtx, it: Item, i: number): void {
               const a = us[k]!;
               const b = us[k + 1]!;
               if (c.side(a, y) < 0.05 || c.side(b, y) < 0.05) continue;
+              // only where the line runs on the shell: above the keel and below the deck at both ends
+              const h = c.hull;
+              if (h && [a, b].some((u) => y - w < h.keel(u) + 0.02 || y + w > h.deck(u) - 0.01)) continue;
               batch.quad(P(a, y - w / 2), P(b, y - w / 2), P(b, y + w / 2), P(a, y + w / 2), [0, 0, side]);
             }
           }
