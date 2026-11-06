@@ -61,8 +61,8 @@ export interface NoseSpec {
   half: Pt[];
   /** The plan's corner radius: [y, r], ascending y. */
   corner: Pt[];
-  /** Extra recess of the face at its edges (|u| = 1) over its centre: a parabolic plan bulge. */
-  bulge?: number;
+  /** Extra recess of the face at its edges (|u| = 1) over its centre: a parabolic plan bulge; by height as [y, b] (a pointed nose's plan). */
+  bulge?: number | Pt[];
   /** The grid's rows, ascending; the first is the bottom, the last the crown. */
   rows: number[];
   base: string;
@@ -85,6 +85,9 @@ const lerp = (pts: Pt[], y: number): number => {
   }
   return pts[pts.length - 1]![1];
 };
+
+/** The plan's bulge at height y: one value, or by height. */
+export const bulgeAt = (b: number | Pt[] | undefined, y: number): number => (b === undefined ? 0 : typeof b === "number" ? b : lerp(b, y));
 
 const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const add = (a: Vec3, b: Vec3): Vec3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
@@ -131,7 +134,7 @@ export class CabNose {
     const s = this.s;
     const r = Math.min(corner, hw * 0.98);
     const a = hw - r;
-    const b = s.bulge ?? 0;
+    const b = bulgeAt(s.bulge, y);
     const au = Math.min(4, Math.abs(u));
     const sg = u < 0 ? -1 : 1;
     let lat: number;

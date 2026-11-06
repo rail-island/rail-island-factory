@@ -39,7 +39,7 @@ export interface SeriesCabFace {
   cols?: [number, number, number, number];
   tolerance?: number;
   /** The face's bow: its edges this much behind its centre. */
-  bulge?: number;
+  bulge?: number | Pt[];
   /** Grid rows, ascending, from the body's bottom to its crown (the profile's and the paint's heights). */
   rows: number[];
   /** The face's paint by height (default the livery's `front`, else its side bands); the roof's colour from `roofFrom` up. */
@@ -51,6 +51,13 @@ export interface SeriesCabFace {
   fields?: ReadonlyArray<{ mat: string; pts: readonly Pt[] }>;
   /** Convex polygons laid as decals on the face, [lat, y] corners, subdivided to follow its curve: a livery's point, an emblem (cheaper than a field). */
   decals?: ReadonlyArray<{ mat: string; pts: readonly Pt[] }>;
+  /**
+   * Paint over the whole surface, face and cab sides alike, between a front and a back edge, [y, d] by
+   * height (d behind the tip, ascending y) and below `top` (default `roofFrom`); later ones over earlier
+   * ones, drawn over the livery's sweeps and under the fields, masks and panes: a colour field that
+   * runs from the face's front round its corners and back along the nose (a long, pointed nose).
+   */
+  paint?: ReadonlyArray<{ mat: string; front: readonly Pt[]; back: readonly Pt[]; top?: number }>;
   /** The face's bands wrap round onto the cab sides back to the join (default the sides' bands there). */
   wrap?: boolean;
   /** The windscreens and other panes, painted glass. */
@@ -126,6 +133,10 @@ function layers(f: SeriesCabFace, p: FacePaint): NoseLayer[] {
   (p.sweeps ?? []).forEach((w, i) => out.push({
     mat: w.mat, name: `sweep ${i + 1}`,
     inside: (q) => q.side && q.y >= p.A && q.y < p.S && q.y >= w.front[0]![0] && q.y <= w.front[w.front.length - 1]![0] && q.d >= edgeAt(w.front, q.y) && q.d <= edgeAt(w.back, q.y),
+  }));
+  (f.paint ?? []).forEach((w, i) => out.push({
+    mat: w.mat, name: `paint ${i + 1}`,
+    inside: (q) => q.y >= w.front[0]![0] && q.y <= w.front[w.front.length - 1]![0] && q.y < (w.top ?? f.roofFrom) && q.d >= edgeAt(w.front, q.y) && q.d <= edgeAt(w.back, q.y),
   }));
   (f.fields ?? []).forEach((r, i) => out.push({ mat: r.mat, name: `field ${i + 1}`, inside: (q) => onFace(q) && inPoly(q.lat, q.y, r.pts) }));
   (f.masks ?? []).forEach((r, i) => out.push({ mat: r.mat ?? "cabMask", name: `surround ${i + 1}`, inside: (q) => onFace(q) && inRect(q, r) }));
