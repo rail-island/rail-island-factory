@@ -46,7 +46,7 @@ export interface CarDef {
   /** The door leaves' own paint bands (default the side's bands). */
   doorBands?: readonly Band[];
   /** A cab front painted apart from the sides: its bands, on the shell from the +X tip back to d. */
-  front?: { d: number; bands: readonly Band[] };
+  front?: { d: number; bands: readonly Band[]; roof?: string };
   /** Fluting: thin lines along the side between these heights (stainless cars). */
   fluting?: { y0: number; y1: number; pitch: number; mat: string };
   /** A flat cab end: windscreen panes (z0, z1, y0, y1), lamps (z, y, r, lens), the front's paint. */
@@ -134,7 +134,7 @@ function fluting(m: MeshBuilder, c: CarDef, b: SliceBody, X: (d: number) => numb
 export function drawCar(m: MeshBuilder, c: CarDef, X: (d: number) => number, o: { trucks?: readonly boolean[]; inside?: readonly number[] } = {}): SliceBody {
   const b = carBody(c);
   const sides: Painter = bandPainter(c.bands, c.roof, c.under, c.skirt, c.spec.S);
-  const front = c.front && { d: c.front.d, paint: bandPainter(c.front.bands, c.roof, c.under, c.skirt, c.spec.S) };
+  const front = c.front && { d: c.front.d, paint: bandPainter(c.front.bands, c.front.roof ?? c.roof, c.under, c.skirt, c.spec.S) };
   const banded: Painter = front ? (d, y, r) => (d < front.d && r !== "bottom" && r !== "skirt" ? front.paint : sides)(d, y, r) : sides;
   // a warning panel paints over both
   const f = c.field;

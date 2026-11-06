@@ -50,11 +50,19 @@ The catalog had no British train before; the archived webapp Eurostar is now the
   under the middle, the cab door and a porthole behind the cab, the machine room's long
   louvre band, and the pantograph on the power car - raised on the trailing one in a train,
   none on the trailers (photographs in `assets/eurostar-373/`); the leading power car's
-  folded pantograph is not drawn. The HST's Class 43 is drawn as a locomotive: its wedge nose yellow below the
-  windscreen, the yellow valance low ahead of the bogie, bogies 10.29 m apart under the
-  middle of the body, plain sides with the cab door, the radiator grille and the van's
-  door and window at the inner end (photographs in `assets/br-hst/`); the nose's lamp
-  clusters are one lamp a side and its intake grille is not drawn. The IC225's Class 91 is drawn as a locomotive: its
+  folded pantograph is not drawn. The HST's Class 43 is drawn as a locomotive: its long rounded wedge nose
+  (a broad superellipse plan, the chin bulging over the low valance, the bonnet sloping
+  up to the raked windscreen in its black surround, the cab roof rounding into the body
+  4.6 m behind the tip), bogies 10.29 m apart under the middle of the body, plain sides
+  with the cab door, the radiator grille and the van's door and window at the inner end
+  (photographs in `assets/br-hst/`). Across the front under the bonnet's edge it carries
+  the two twin-lamp clusters, each in one black surround (`lampPair`, drawn with
+  `crownDisc` on the steep front), and the black intake grille between them
+  (`noseGrille`). In the `swallow` livery the nose is yellow up to the windscreen; in
+  `blueGrey`, the original InterCity 125 scheme, the power car is painted apart from its
+  blue and grey Mk3s (the livery's `endBands`, `front`, `frontD` and `frontRoof`): the
+  whole nose and the cab roof yellow back to 4.0 m, the yellow carried along the lower
+  side under rail blue. The IC225's Class 91 is drawn as a locomotive: its
   short wedge No. 1 end with the yellow panel, lamps and grille on the front, buffers,
   bogies 10.5 m apart under the middle of the body, plain sides with the cab doors and
   four small windows (photographs in `assets/br-ic225/`). The driving van trailer is that

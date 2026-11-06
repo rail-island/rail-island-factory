@@ -58,6 +58,35 @@ describe("the British power cars", () => {
     expect(g.some((t) => t.p.every((p) => p[2] < -1))).toBe(true);
   });
 
+  it("draws the Class 43's twin lamp clusters and grille across the front of its rounded nose", () => {
+    const tip = HST.endLength / 2;
+    const all = tris("proc-vehicle-br-hst");
+    const lamps = all.filter((t) => t.material === "lampHead");
+    // two lamps a side, side by side across the front just under the bonnet's edge
+    for (const sd of [1, -1]) {
+      const zs = lamps.filter((t) => sd * t.p[0]![2] > 0).map((t) => sd * (t.p[0]![2] + t.p[1]![2] + t.p[2]![2]) / 3);
+      expect(Math.min(...zs)).toBeLessThan(0.55);
+      expect(Math.max(...zs)).toBeGreaterThan(0.6);
+    }
+    for (const t of lamps) for (const p of t.p) {
+      expect(p[0]).toBeGreaterThan(tip - 0.4);
+      expect(p[1]).toBeGreaterThan(1.2);
+      expect(p[1]).toBeLessThan(1.75);
+    }
+    const grille = all.filter((t) => t.material === "black" && t.p.every((p) => p[0] > tip - 0.3 && Math.abs(p[2]) < 0.35));
+    expect(grille.length).toBeGreaterThan(0);
+  });
+
+  it("paints the original InterCity 125 power car's nose, cab roof and lower sides yellow, its coaches blue and grey", () => {
+    const tip = HST.endLength / 2;
+    const car = tris("proc-vehicle-br-hst", { livery: "blueGrey" }).filter((t) => t.material === "nose");
+    // the cab roof behind the windscreen
+    expect(car.some((t) => t.p.every((p) => p[1] > 3.4 && p[0] < tip - 2.8 && p[0] > tip - 4.1))).toBe(true);
+    // the lower side at the car's inner end
+    expect(car.some((t) => t.p.every((p) => p[0] < -tip + 2 && p[1] < 2.3 && Math.abs(p[2]) > 1.2))).toBe(true);
+    expect(tris("proc-vehicle-br-hst", { livery: "blueGrey", unit: "middleCar" }).some((t) => t.material === "nose")).toBe(false);
+  });
+
   it("raises the Eurostar's pantograph on the trailing power car only, none on the trailers", () => {
     for (const n of E300.cars!) {
       const t = shinkansenTrain(E300, n);
