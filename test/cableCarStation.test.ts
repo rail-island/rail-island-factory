@@ -64,13 +64,15 @@ describe("cable car station types", () => {
 
   it("stops a big shuttling cabin ahead of the wheel, beside its platform's arms, and every other cabin at the wheel", () => {
     const stops = Object.fromEntries(CATALOG_VIEWS.map(([n, v]) => [n, cabinStop(v)]));
-    for (const n of ["proc-vehicle-titlis-rotair shuttle", "proc-vehicle-vanoise-express shuttle", "proc-vehicle-stanserhorn-cabrio shuttle", "proc-vehicle-roosevelt-island-tram shuttle", "proc-vehicle-sugarloaf-bondinho shuttle"]) {
+    for (const n of ["proc-vehicle-titlis-rotair shuttle", "proc-vehicle-vanoise-express shuttle", "proc-vehicle-stanserhorn-cabrio shuttle", "proc-vehicle-roosevelt-island-tram shuttle", "proc-vehicle-sugarloaf-bondinho shuttle",
+      // the chair's seats run across the rope: wider than the ring, it waits ahead of the wheel when it shuttles
+      "proc-vehicle-chairlift-chair shuttle"]) {
       const v = CATALOG_VIEWS.find(([x]) => x === n)![1];
       expect(stops[n]).toBeCloseTo(v.halfLength! + 1, 9);
       // the arms reach past the stopped cabin's nose
       expect(platformFront(v)).toBeGreaterThan(stops[n]! + v.halfLength!);
     }
-    for (const n of ["proc-vehicle-gondola-cabin shuttle", "proc-vehicle-doppelmayr-omega ring", "proc-vehicle-poma-funitel ring", "proc-vehicle-chairlift-chair shuttle", "proc-vehicle-peak-2-peak shuttle"]) expect(stops[n]).toBe(0);
+    for (const n of ["proc-vehicle-gondola-cabin shuttle", "proc-vehicle-doppelmayr-omega ring", "proc-vehicle-poma-funitel ring", "proc-vehicle-chairlift-chair ring", "proc-vehicle-peak-2-peak shuttle"]) expect(stops[n]).toBe(0);
   });
 
   it("gives the wheel a rim per haul rope: one for a gondola, two coaxial ones for the funitel, one under a tram's track ropes", () => {
