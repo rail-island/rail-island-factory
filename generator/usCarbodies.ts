@@ -286,9 +286,20 @@ function warbonnet(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: nu
   }
 }
 
-/** The half width of the nose's surface at d and height y (-1 above its crown). */
+/** The lofted shell's half slice at d: its neighbouring stations' slices interpolated point by point, as the loft draws it. */
+function shellSlice(b: SliceBody, d: number): Pt[] {
+  const st = b.stations;
+  let i = 0;
+  while (i + 2 < st.length && st[i + 1]! < d) i++;
+  const [d0, d1] = [st[i]!, st[i + 1]!];
+  const t = d1 > d0 ? Math.min(1, Math.max(0, (d - d0) / (d1 - d0))) : 0;
+  const [h0, h1] = [halfSlice(b, d0), halfSlice(b, d1)];
+  return h0.map((p, k): Pt => [p[0] + (h1[k]![0] - p[0]) * t, p[1] + (h1[k]![1] - p[1]) * t]);
+}
+
+/** The half width of the nose's lofted surface at d and height y (-1 above its crown). */
 function noseWidth(b: SliceBody, d: number, y: number): number {
-  const h = halfSlice(b, d);
+  const h = shellSlice(b, d);
   if (y > h[h.length - 1]![1]) return -1;
   for (let k = 2; k + 1 < h.length; k++) {
     const [za, ya] = h[k]!;
@@ -316,15 +327,21 @@ function frontPt(b: SliceBody, X: (d: number) => number, z: number, y: number, p
   const e = 0.01;
   const [a, u0, u1, v0, v1] = [p(z, y), p(z, y + e), p(z, y - e), p(z + e, y), p(z - e, y)];
   const n = norm(cross([u0[0] - u1[0], u0[1] - u1[1], u0[2] - u1[2]], [v0[0] - v1[0], v0[1] - v1[1], v0[2] - v1[2]]));
-  return [a[0] + n[0] * proud, a[1] + n[1] * proud, a[2] + n[2] * proud];
+  // and forward too: at the crease round the blunt tip the normal turns sideways, and a
+  // chord from there would sink behind the tip's flat face
+  return [a[0] + n[0] * proud + 0.6 * proud, a[1] + n[1] * proud, a[2] + n[2] * proud];
 }
 
 /** A decal on the nose's front: columns over z0..z1, each from lo(z) to hi(z), laid on the surface. */
 function frontDecal(m: MeshBuilder, b: SliceBody, X: (d: number) => number, mat: string, z0: number, z1: number, lo: (z: number) => number, hi: (z: number) => number, proud: number, nz: number, ny: number): void {
   const pts: Vec3[] = [];
   const at = (z: number, t: number) => frontPt(b, X, z, lo(z) + (hi(z) - lo(z)) * t, proud);
-  for (let i = 0; i < nz; i++) {
-    const [za, zb] = [z0 + ((z1 - z0) * i) / nz, z0 + ((z1 - z0) * (i + 1)) / nz];
+  // the columns: even steps, broken at the crease where the blunt tip meets the
+  // rounded nose (a chord across it would sink under the layer beneath)
+  const crease = noseWidth(b, 0, (lo((z0 + z1) / 2) + hi((z0 + z1) / 2)) / 2);
+  const zs = [...new Set([...Array.from({ length: nz + 1 }, (_, i) => z0 + ((z1 - z0) * i) / nz), ...[-crease, crease].filter((z) => z > z0 + 0.01 && z < z1 - 0.01)].map((z) => Math.round(z * 1e4) / 1e4))].sort((p, q) => p - q);
+  for (let i = 0; i + 1 < zs.length; i++) {
+    const [za, zb] = [zs[i]!, zs[i + 1]!];
     if (hi(za) - lo(za) < 1e-4 && hi(zb) - lo(zb) < 1e-4) continue;
     for (let j = 0; j < ny; j++) {
       const [t0, t1] = [j / ny, (j + 1) / ny];
@@ -333,6 +350,18 @@ function frontDecal(m: MeshBuilder, b: SliceBody, X: (d: number) => number, mat:
     }
   }
   if (pts.length) m.facets(mat, pts, [1, 0, 0]);
+}
+
+/** Each triangle (three points in a row) split in four at its edges' midpoints. */
+function splitTris(t: Array<[number, number]>): Array<[number, number]> {
+  const out: Array<[number, number]> = [];
+  const mid = (p: [number, number], q: [number, number]): [number, number] => [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
+  for (let i = 0; i + 2 < t.length; i += 3) {
+    const [a, b, c] = [t[i]!, t[i + 1]!, t[i + 2]!];
+    const [ab, bc, ca] = [mid(a, b), mid(b, c), mid(c, a)];
+    out.push(a, ab, ca, ab, b, bc, ca, bc, c, ab, bc, ca);
+  }
+  return out;
 }
 
 /** An ellipse's upper and lower edge over z (centre zc, yc; half axes rx, ry). */
@@ -345,20 +374,30 @@ const ellipse = (zc: number, yc: number, rx: number, ry: number, sign: number) =
  * along both flanks.
  */
 function santaFeNose(m: MeshBuilder, b: SliceBody, X: (d: number) => number): void {
-  const [yc, rx, ry] = [2.07, 1.02, 0.25];
+  const [yc, rx, ry, o] = [2.07, 1.02, 0.25, 0.035];
+  const P = 0.02;
+  // one layer on the nose, its pieces side by side (stacked layers sink into each
+  // other where the blunt tip meets the rounded nose): the stripe above and below
+  // the herald, the herald's black ring and its yellow field; only the letters and
+  // pinstripes lie on top
+  const outerTop = ellipse(0, yc, rx + o, ry + o, 1), outerBottom = ellipse(0, yc, rx + o, ry + o, -1);
+  const innerTop = ellipse(0, yc, rx, ry, 1), innerBottom = ellipse(0, yc, rx, ry, -1);
   m.scope("stripe", () => {
-    frontDecal(m, b, X, "warYellow", -0.42, 0.42, () => 1.66, () => 2.95, 0.008, 8, 20);
-    for (const z of [-0.14, 0.14]) frontDecal(m, b, X, "warBlack", z - 0.0125, z + 0.0125, () => 2.56, () => 2.8, 0.014, 1, 4);
+    frontDecal(m, b, X, "warYellow", -0.42, 0.42, outerTop, () => 2.95, P, 12, 24);
+    frontDecal(m, b, X, "warYellow", -0.42, 0.42, () => 1.66, outerBottom, P, 12, 4);
+    for (const z of [-0.14, 0.14]) frontDecal(m, b, X, "warBlack", z - 0.0125, z + 0.0125, () => 2.56, () => 2.8, P + 0.008, 1, 6);
   });
   m.scope("herald", () => {
-    const o = 0.035;
-    frontDecal(m, b, X, "warBlack", -rx - o, rx + o, ellipse(0, yc, rx + o, ry + o, -1), ellipse(0, yc, rx + o, ry + o, 1), 0.012, 24, 4);
-    frontDecal(m, b, X, "warYellow", -rx, rx, ellipse(0, yc, rx, ry, -1), ellipse(0, yc, rx, ry, 1), 0.016, 24, 4);
-    // the letters, read from the front (its right hand is -z)
+    frontDecal(m, b, X, "warBlack", -rx, rx, innerTop, outerTop, P, 48, 1);
+    frontDecal(m, b, X, "warBlack", -rx, rx, outerBottom, innerBottom, P, 48, 1);
+    for (const sd of [-1, 1]) frontDecal(m, b, X, "warBlack", sd > 0 ? rx : -rx - o, sd > 0 ? rx + o : -rx, outerBottom, outerTop, P, 3, 4);
+    frontDecal(m, b, X, "warYellow", -rx, rx, innerBottom, innerTop, P, 48, 6);
+    // the letters, read from the front (its right hand is -z), each stroke split so it follows the nose
     const h = 0.2, w = h * 0.58, gap = h * 0.18;
     const width = strokeWidth("SANTA FE", w, gap);
-    const tris = strokeText("SANTA FE", -width / 2, yc - h / 2, h, w, gap, false, h * 0.15);
-    m.facets("warBlack", tris.map(([u, v]) => frontPt(b, X, -u, v, 0.02)), [1, 0, 0]);
+    let tris = strokeText("SANTA FE", -width / 2, yc - h / 2, h, w, gap, false, h * 0.15);
+    for (let k = 0; k < 2; k++) tris = splitTris(tris);
+    m.facets("warBlack", tris.map(([u, v]) => frontPt(b, X, -u, v, P + 0.008)), [1, 0, 0]);
   });
   m.scope("whiskers", () => {
     for (const s of [1, -1]) {
@@ -478,15 +517,15 @@ function drawF7A(m: MeshBuilder, l: F7Livery, rearFree: boolean): void {
   const nosePaint = f7Painter(l);
   m.scope("nose", () => {
     // two wide, low panes either side of the centre post under the cab roof's brow
-    // (more than twice as wide as high: 1.1 m by 0.44 m up the rake), their outer edge
+    // (more than twice as wide as high: 1.1 m by 0.48 m up the rake, a thin brow over them), their outer edge
     // slanting in toward the roof, its corners rounded, set in a rubber gasket in a
     // frame of the cab's paint
     m.scope("windscreen", () => {
       const frame = nosePaint(2.1, 4.0, "arc");
       for (const s of [1, -1]) {
-        outlinePane(m, b, X, s, frame, roundedPane([1.94, 2.32], 0.05, [1.26, 1.04], 0.18, 0.05, 0.2), 0.004);
-        outlinePane(m, b, X, s, "rubber", roundedPane([1.97, 2.29], 0.08, [1.22, 1.01], 0.16, 0.04, 0.18), 0.008);
-        outlinePane(m, b, X, s, "cabGlass", roundedPane([2.0, 2.26], 0.11, [1.18, 0.98], 0.14, 0.03, 0.16), 0.012);
+        outlinePane(m, b, X, s, frame, roundedPane([2.04, 2.46], 0.05, [1.26, 1.04], 0.18, 0.05, 0.2), 0.004);
+        outlinePane(m, b, X, s, "rubber", roundedPane([2.07, 2.43], 0.08, [1.22, 1.01], 0.16, 0.04, 0.18), 0.008);
+        outlinePane(m, b, X, s, "cabGlass", roundedPane([2.1, 2.4], 0.11, [1.18, 0.98], 0.14, 0.03, 0.16), 0.012);
       }
     });
     if (l.front) m.scope("herald", () => l.front!(m, b, X));
@@ -498,7 +537,8 @@ function drawF7A(m: MeshBuilder, l: F7Livery, rearFree: boolean): void {
       m.scope("hood", () => m.sweep(hood, "x", ngon(16, 0.13, 0, 0, F7_LAMP_Y + 0.06), back, ngon(16, 0.25, 0, 0, F7_LAMP_Y), front));
       m.sweep("black", "x", ngon(16, 0.22, 0, 0, F7_LAMP_Y), front - 0.01, ngon(16, 0.22, 0, 0, F7_LAMP_Y), front + 0.03);
       m.sweep("lampHead", "x", ngon(16, 0.17, 0, 0, F7_LAMP_Y), front + 0.03, ngon(16, 0.17, 0, 0, F7_LAMP_Y), front + 0.045);
-      noseLamps(m, b, X, 1, [[0, 2.42, 0.13, "lampHead"]]);
+      // standing out of the herald's stripe when the livery paints one over the nose
+      noseLamps(m, b, l.front ? (d) => X(d) + 0.035 : X, 1, [[0, 2.42, 0.13, "lampHead"]]);
     });
     // the number boards stand out of the nose's flanks under the windscreen
     m.scope("number boards", () => {

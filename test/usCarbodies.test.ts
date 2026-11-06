@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { ACELA_LENGTH, F7_UNIT_LENGTH, SUPERLINER_LENGTH, US_CARBODIES, acela, acelaTrain, amtrakSuperliner, emdF7, f7Set } from "../generator/usCarbodies";
 import { LOADING_GAUGES } from "../generator/loadingGauge";
 import { roundedPane } from "../generator/sliceBody";
+import { readTriangles } from "../generator/renderGlbThumb";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { glbStats } from "../generator/glbStats";
 import { buildLodModel } from "../generator/lodModel";
@@ -74,11 +75,11 @@ describe("the US carbodies", () => {
   it("gives the F7 and the Acela shaped windscreens and their own nose lamps", () => {
     const scopes = (id: string, params?: Record<string, string>) => leaves(design(id).build(params).sourceTree(id, design(id).title).root).map((n) => n.id);
     // the F7: rounded panes narrowing toward the roof, the headlight in its hood, number boards, class lights
-    const pane = roundedPane([2.0, 2.26], 0.11, [1.18, 0.98], 0.14, 0.03, 0.16);
-    expect(pane.z1(2.13)).toBeLessThan(1.18);
-    expect(pane.z1(2.0)).toBeLessThan(pane.z1(2.1) - 0.05);
-    expect(pane.z1(2.26)).toBeLessThan(pane.z1(2.16) - 0.05);
-    expect(pane.z1(2.2)).toBeLessThan(pane.z1(2.06));
+    const pane = roundedPane([2.1, 2.4], 0.11, [1.18, 0.98], 0.14, 0.03, 0.16);
+    expect(pane.z1(2.25)).toBeLessThan(1.18);
+    expect(pane.z1(2.1)).toBeLessThan(pane.z1(2.2) - 0.05);
+    expect(pane.z1(2.4)).toBeLessThan(pane.z1(2.3) - 0.05);
+    expect(pane.z1(2.32)).toBeLessThan(pane.z1(2.18));
     const f7 = scopes("proc-vehicle-emd-f7");
     expect(f7.some((n) => n.startsWith("nose/headlights/hood/"))).toBe(true);
     expect(f7.filter((n) => n.startsWith("nose/class-lights/")).length).toBe(4);
@@ -94,12 +95,12 @@ describe("the US carbodies", () => {
     const nodes = leaves(emdF7().sourceTree("f7", "F7").root);
     const panes = nodes.filter((n) => n.id.startsWith("nose/windscreen/"));
     expect(panes.length).toBeGreaterThan(0);
-    // wide, low panes: the glass about 0.5 m high where its outer corner follows the crown down (3.68 - 4.17 m), twice as wide
+    // wide, low panes under a thin brow: the glass about 0.5 m high where its outer corner follows the crown down (to 4.3 m), twice as wide
     const cab = panes.filter((n) => n.material === "cabGlass");
     expect(cab.length).toBeGreaterThan(0);
     const [y0, y1] = [Math.min(...cab.map((n) => n.min![1])), Math.max(...cab.map((n) => n.max![1]))];
-    expect(y0).toBeGreaterThan(3.6);
-    expect(y1).toBeLessThan(4.25);
+    expect(y0).toBeGreaterThan(3.75);
+    expect(y1).toBeLessThan(4.36);
     expect(y1 - y0).toBeLessThan(0.55);
     const zs = cab.filter((n) => n.min![2] > 0);
     expect(Math.max(...zs.map((n) => n.max![2])) - Math.min(...zs.map((n) => n.min![2]))).toBeGreaterThan(1.8 * (y1 - y0));
@@ -111,6 +112,28 @@ describe("the US carbodies", () => {
     const ids = (livery: string) => leaves(emdF7({ livery }).sourceTree("f7", "F7").root).map((n) => n.id);
     for (const part of ["stripe", "herald", "whiskers"]) expect(ids("santaFe").some((n) => n.startsWith(`nose/herald/${part}/`)), part).toBe(true);
     expect(ids("unionPacific").some((n) => n.startsWith("nose/herald/"))).toBe(false);
+  });
+
+  it("lays the Santa Fe herald and stripe on the nose without the red showing through", () => {
+    const tris = readTriangles(emdF7().toGlb("f7"));
+    // the first surface a ray from the front meets at (z, y)
+    const hit = (z: number, y: number): string => {
+      let best = -Infinity, mat = "";
+      for (const t of tris) {
+        const [a, b, c] = t.p;
+        const d1 = (b[2] - a[2]) * (c[1] - a[1]) - (c[2] - a[2]) * (b[1] - a[1]);
+        if (Math.abs(d1) < 1e-12) continue;
+        const u = ((z - a[2]) * (c[1] - a[1]) - (c[2] - a[2]) * (y - a[1])) / d1;
+        const v = ((b[2] - a[2]) * (y - a[1]) - (z - a[2]) * (b[1] - a[1])) / d1;
+        if (u < 0 || v < 0 || u + v > 1) continue;
+        const x = a[0] + u * (b[0] - a[0]) + v * (c[0] - a[0]);
+        if (x > best) [best, mat] = [x, t.material];
+      }
+      return mat;
+    };
+    // across the herald's field (the letters aside) and the stripe above it, the crease between the blunt tip and the rounded nose included
+    for (let z = -0.9; z <= 0.9; z += 0.0125) for (const y of [1.98, 2.07, 2.16].filter((y) => Math.abs(y - 2.07) < 0.25 * Math.sqrt(1 - (z / 1.02) ** 2) - 0.02)) expect(["warYellow", "warBlack"], `herald ${z.toFixed(3)} ${y}`).toContain(hit(z, y));
+    for (let z = -0.4; z <= 0.4; z += 0.025) for (const y of [1.72, 2.4, 2.6]) expect(["warYellow", "warBlack", "black", "lampHead"], `stripe ${z.toFixed(3)} ${y}`).toContain(hit(z, y));
   });
 
   it("forms the F7 sets A-B, A-B-A and A-B-B-A at their lengths, the rear A unit turned", () => {

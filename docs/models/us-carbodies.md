@@ -46,8 +46,8 @@ nose along the surface's chord (`chordBox`).
 ## The models
 
 - **EMD F7** - the A unit: the bulldog nose rising to the low raked windscreen under the cab
-  roof's brow: two wide, low panes either side of the centre post (about 1.1 m wide and 0.44 m
-  up the rake, 3.8 - 4.17 m at the centre post), their outer edge slanting in toward the roof
+  roof's brow: two wide, low panes either side of the centre post (about 1.1 m wide and 0.48 m
+  up the rake, 3.96 - 4.3 m at the centre post, under a thin brow), their outer edge slanting in toward the roof
   and its corners rounded, each in a rubber gasket and a frame of the cab's paint;
   the headlight in its hood on top of the nose, the second light in the nose door,
   red class lights on the nose's corners and the number boards standing out of its flanks; the
@@ -65,7 +65,9 @@ nose along the surface's chord (`chordBox`).
   yellow; on the nose the yellow stripe down its middle from the yellow headlight hood with
   black pinstripes between the lamps, the yellow oval herald outlined in black and lettered
   SANTA FE, and the yellow whiskers with black pinstripes running back along both flanks
-  (`santaFeNose`: decals laid on the nose seen from the front, `frontDecal`).
+  (`santaFeNose`: decals laid on the lofted nose seen from the front, `frontDecal`, in one
+  layer of pieces side by side - the stripe cut round the herald, its black ring round its
+  yellow field - so none sinks into another where the blunt tip meets the rounded nose).
 - **EMD F40PH** - Amtrak's cowl unit of 1976: the tall short nose with chamfered corners and
   the twin headlight, the raked two-pane windscreen under the number boards and red markers,
   the cab's two side windows and door, the full-width body with vertical sides, the inertial
