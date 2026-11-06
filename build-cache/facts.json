@@ -11225,7 +11225,7 @@
    }
   },
   "proc-vehicle-br-class-142": {
-   "key": "b09762567d0ea2a5f54b8963434f18e47ff9a99e766ba67c0585274c1b952d8c",
+   "key": "bb2a0cc6f8a8dc04a20e5e623247870b48ef6038e91070f30b477d9ba2e55324",
    "triangles": 6119,
    "stats": {
     "triangles": 6119,
@@ -11286,37 +11286,37 @@
    }
   },
   "proc-vehicle-br-class-158": {
-   "key": "2f086e1ebaa26a50e34b413bcf804cf6c91c496bb7369eba3266cbad4b5d05ef",
-   "triangles": 8880,
+   "key": "884bf8c53de56205f0359eecb22eebbd45b0302c64057d9b2a7b6356b1b6f583",
+   "triangles": 8019,
    "stats": {
-    "triangles": 8880,
-    "vertices": 29988,
-    "primitives": 49,
-    "materials": 25,
+    "triangles": 8019,
+    "vertices": 27405,
+    "primitives": 66,
+    "materials": 30,
     "min": [
      -11.28499984741211,
-     8.344650248570673e-9,
-     -1.4035191535949707
+     -8.583068866752086e-9,
+     -1.3720000015199185
     ],
     "max": [
-     11.40504264831543,
-     3.9000000953674316,
-     1.4035191535949707
+     11.28499984741211,
+     3.924999952316284,
+     1.3720000015199185
     ]
    },
    "rig": {
     "supports": [
      {
-      "x": -7.535,
-      "node": "bogie1",
+      "x": -8,
+      "node": "bogie0",
       "axles": 2,
       "sections": [
        0
       ]
      },
      {
-      "x": 8.465,
-      "node": "bogie0",
+      "x": 8,
+      "node": "bogie1",
       "axles": 2,
       "sections": [
        0
@@ -11325,13 +11325,13 @@
     ]
    },
    "side": {
-    "widthM": 23.29004249572754,
+    "widthM": 23.16999969482422,
     "heightM": 6.3,
     "bottomM": -0.3
    },
    "seat": [
-    10.355,
-    3.8,
+    10.135,
+    3.81,
     0
    ],
    "bundle": {
@@ -11342,9 +11342,9 @@
    },
    "extents": {
     "[]": [
-     22.69004249572754,
-     3.9000000870227813,
-     2.8070383071899414
+     22.56999969482422,
+     3.924999960899353,
+     2.744000003039837
     ]
    }
   },
@@ -11406,7 +11406,7 @@
    "extents": {}
   },
   "proc-vehicle-br-class-378": {
-   "key": "99c2f21d45338253e59d9e5d2d2725bd449b46782fd0304355a590aa4af22886",
+   "key": "42bc59905460569edf1183ca9bbd8a942a42181d568ee7878e93d07b210575e2",
    "triangles": 8487,
    "stats": {
     "triangles": 8487,
@@ -11474,7 +11474,7 @@
    }
   },
   "proc-vehicle-br-class-390": {
-   "key": "298d6185b27315b7d9a7b41cc111a4c1cb6fbe05f864519b5010d3414cffbaee",
+   "key": "27892323334b7ae9403f916c332b4592857c8099e6fdd39f6121e6bc5168e58a",
    "triangles": 9080,
    "stats": {
     "triangles": 9080,
@@ -11713,7 +11713,7 @@
    "extents": {}
   },
   "proc-vehicle-br-class-800": {
-   "key": "7cf59f8139e0aab77f1d7ba5ad1cdd4e160bdbf53c2d4ed68b2c5eb025b24442",
+   "key": "1599776f218d48592c11a0abe9d8a09ae6bf10933de38a886f7988c2a8fe187b",
    "triangles": 9134,
    "stats": {
     "triangles": 9134,
@@ -11838,7 +11838,7 @@
    "extents": {}
   },
   "proc-vehicle-br-hst": {
-   "key": "c2a918288f9a7e30f6835f36f2bd47c2d00012d8303d0dd44b2de650faa103fa",
+   "key": "538b081bb900e5cf6e4251b3928c3a7a1168948896391d8e5abb0b78b32bdb34",
    "triangles": 9416,
    "stats": {
     "triangles": 9416,
@@ -11906,7 +11906,7 @@
    }
   },
   "proc-vehicle-br-ic225": {
-   "key": "4e9d7df67d10b82895f769a253fa23751c2380efaa6aaa48240549a72c536340",
+   "key": "f0f2dd8c3f19583699375d59b8cb82dcd64bc7aa067a530e2f31d16308913980",
    "triangles": 10048,
    "stats": {
     "triangles": 10048,
@@ -24487,7 +24487,7 @@
    "extents": {}
   },
   "proc-vehicle-eurostar-373": {
-   "key": "bf406f9dbff829e4edd072233820837031f73f578b39b68fc575632f5b5ed9b9",
+   "key": "7ebe2ad986b5d5c7efaec6ab81b5f7858c3801a38edad24af8b1ade1bd92c99e",
    "triangles": 9898,
    "stats": {
     "triangles": 9898,
@@ -35270,7 +35270,7 @@
    "extents": {}
   },
   "proc-vehicle-lu-1938-stock": {
-   "key": "e551fb9e3238ef42860e9592714fdd358798b3b6fcf3ea3dc6f5cbf36b5d4a34",
+   "key": "c15b8cc529354e1ad31d65f1be6f81db50f8be9493236e6658be4e725cce7850",
    "triangles": 9140,
    "stats": {
     "triangles": 9140,

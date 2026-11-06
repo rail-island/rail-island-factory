@@ -1,7 +1,7 @@
 # The United Kingdom's trains
 
 **Covers** - the twenty British designs of the eight-country plan and London Overground's Class 378 Capitalstar (a draft), at their real size on the W6a gauge (`uk`): the InterCity 125 and 225, the Class 800 IET and the Class 390 Pendolino, the Eurostar e300, the Class 158 and the Class 142 Pacer, London's 1938 tube stock; the Class 55 Deltic, 37, 47, 66 and 86; the LNER A4 and A3, the GWR Castle, the LMS Black Five, the BR 9F and Stephenson's Rocket; the BR Mk1 coach. Their kits, figures, deviations and tests.
-**Code** - `generator/ukUnits.ts` (`UK_UNITS`), `generator/brClass142.ts` (the Pacer's cars), `generator/lu1938Parts.ts`, `generator/ukLocos.ts` (`UK_LOCOS`), `generator/loadingGauge.ts` (`uk`), `generator/worldLocoKit.ts` (the `bonnets` nose), `generator/worldSteamLocos.ts`, `generator/rocket.ts`, `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `test/lu1938.test.ts`, `test/ukPowerCars.test.ts`, `test/rocket.test.ts`, `test/brClass142.test.ts`, `test/brClass378.test.ts`, `assets/br-*/`, `assets/lner-*/`, `assets/gwr-castle/`, `assets/lms-black-five/`, `assets/lu-1938-stock/`, `assets/eurostar-373/`, `assets/rocket/`, `assets/br-class-378/`
+**Code** - `generator/ukUnits.ts` (`UK_UNITS`), `generator/brClass142.ts` (the Pacer's cars), `generator/brClass158.ts` (the Class 158's cars), `generator/lu1938Parts.ts`, `generator/ukLocos.ts` (`UK_LOCOS`), `generator/loadingGauge.ts` (`uk`), `generator/worldLocoKit.ts` (the `bonnets` nose), `generator/worldSteamLocos.ts`, `generator/rocket.ts`, `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `test/lu1938.test.ts`, `test/ukPowerCars.test.ts`, `test/rocket.test.ts`, `test/brClass142.test.ts`, `test/brClass158.test.ts`, `test/brClass378.test.ts`, `assets/br-*/`, `assets/lner-*/`, `assets/gwr-castle/`, `assets/lms-black-five/`, `assets/lu-1938-stock/`, `assets/eurostar-373/`, `assets/rocket/`, `assets/br-class-378/`
 **See also** - [loading-gauge.md](loading-gauge.md), [shinkansen.md](shinkansen.md), [world-locos.md](world-locos.md), [world-steam.md](world-steam.md), [world-coaches.md](world-coaches.md)
 
 The catalog had no British train before; the archived webapp Eurostar is now the
@@ -16,7 +16,7 @@ The catalog had no British train before; the archived webapp Eurostar is now the
 | `proc-vehicle-br-class-800` | Class 800 IET | series | `unit`, `cars` 5 - 8, `livery` (`gwr`, `azuma`) | 26 m cars; 200 km/h |
 | `proc-vehicle-br-class-390` | Class 390 Pendolino | series | `unit`, `cars` 4 - 8, `livery` (`virgin`, `avanti`) | tilting; 225 km/h |
 | `proc-vehicle-eurostar-373` | Eurostar e300 | series | `unit`, `cars` 4 - 8, `livery` (`eurostar`, `eurostar2011`) | 300 km/h |
-| `proc-vehicle-br-class-158` | Class 158 | series, diesel | `unit`, `livery` (`regional`, `northern`) | two cars of 22.57 m; 145 km/h |
+| `proc-vehicle-br-class-158` | Class 158 | its own cars on bogies (`brClass158.ts`) | `unit`, `livery` (`regional`, `northern`) | two cars of 22.57 m, 2.70 m wide; 145 km/h |
 | `proc-vehicle-br-class-142` | Class 142 Pacer | its own two-axle cars (`brClass142.ts`) | `unit`, `livery` (`provincial`, `northern`, `walesTeal`, `provincialBlue`, `metro`, `walesWrap`) | two cars of 15.45 m; 120 km/h |
 | `proc-vehicle-br-class-378` | Class 378 Capitalstar | series, two doors a side | `unit`, `cars` 3 - 5 (4 default) | Electrostar, 2.80 m wide, end car 20.4 m, middle 20.1 m; 2,400 kW a five-car unit; 121 km/h |
 | `proc-vehicle-lu-1938-stock` | London 1938 Stock | series, metro, flat domed cab | `unit`, `cars` 3 - 7 | tube profile, 2.62 m by 2.88 m; 72 km/h |
@@ -136,6 +136,40 @@ its cars are drawn by `brClass142.ts` on the two-axle railcar kit the CD 810 use
 gauge, the budget, no coplanar faces), the three panes, the panel and each axle's spring, damper
 and brakes, the two axles, the coupled unit's sections and supports and
 the distant models' budgets.
+
+## The Class 158
+
+The Express Sprinter keeps the series kit's parameters and figures (the `C158` spec in
+`ukUnits.ts`), but its cars are drawn by `brClass158.ts` on the railcar kit the Class 142 uses
+(`dmuKit.ts`, `cabNose.ts`), after the photographs and the diagram in `assets/br-class-158/`.
+
+- **Body.** 21.9 m from the inner end wall to the cab front's foot, 22.57 m over the couplers,
+  2.70 m wide: the sides tucked in at the foot, upright to the cantrail, the roof's wide radius to
+  the 3.81 m crown. The cab-side window, a double plug door at each end of each side and nine
+  saloon windows between them (the diagram's layout); the side number at the inner end.
+- **Cab.** A flat face upright at the valance, then raked back as one plane from the lamps to the
+  top (0.2 m over 1.95 m) and rounding into the roof, its corners rounded in plan: the gangway
+  door in its black frame standing off the face, its leaf recessed (with a light in the Regional
+  Railways scheme); either side one black surround holding the windscreen, the running number
+  under the right one and the head, marker and tail lamps; the wipers; the valance sloping back
+  under the face with the coupler pocket and the BSI coupler at 0.9 m.
+- **Running gear.** Two air-sprung bogies 16.0 m apart about the car's centre (`unitBogie`),
+  2.6 m wheelbase on 0.84 m wheels; the engine, transmission, silencer, cooler, fuel and air tanks,
+  batteries and the air-conditioning plant between them; the air-conditioning unit with its grille
+  on the roof behind the cab, three vents and the exhaust stack at the inner end.
+- **Unit.** `train` couples two cars, the rear one turned, as two sections hinged at the coupling
+  plane under a bellows; a lone car keeps its gangway.
+- **Liveries.** `regional` (Regional Railways Express, 158 819, the default): light grey, the navy
+  window band and the navy and light blue lines under it, grey door leaves, the yellow end down to
+  the valance. `northern` (158 784): white, the blue panel over the cab end of each side back past
+  the first saloon window, its rear edge leaning, white door leaves, the yellow front over a dark
+  grey valance. Northern's emblem and circles are not drawn; the panel's curved edge is a straight,
+  leaning one.
+
+`test/brClass158.test.ts` checks the parameters, each livery's car (length over the couplers, the
+gauge, the budget, no coplanar faces), the raked face with the two windscreens and the gangway
+door, the doors and windows, the two bogies, the coupled unit's sections and supports and the
+distant models' budgets.
 
 ## Tests
 

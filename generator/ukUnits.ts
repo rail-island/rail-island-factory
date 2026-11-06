@@ -1,13 +1,14 @@
 // British units on the series kit (shinkansen.ts), at their real size on the
 // W6a gauge ("uk", loadingGauge.ts): the InterCity 125 and InterCity 225 (their
 // power car and driving end as the end cars), the Class 800 and the Class 390
-// Pendolino, the Eurostar e300, the Class 158 and the Class 142 Pacer (its own
-// two-axle cars, brClass142.ts), and London Underground's 1938 tube stock, and
+// Pendolino, the Eurostar e300, the Class 158 (its own cars, brClass158.ts) and
+// the Class 142 Pacer (its own two-axle cars, brClass142.ts), and London Underground's 1938 tube stock, and
 // London Overground's Class 378 Capitalstar. See docs/models/uk-trains.md.
 
 import type { MeshBuilder } from "./meshBuilder.ts";
 import { resolveParams, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { class142, class142Lod, type C142Livery, type C142Unit } from "./brClass142.ts";
+import { class158, class158Lod, type C158Livery, type C158Unit } from "./brClass158.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, nose } from "./seriesHelpers.ts";
 import { TUBE_CAB, TUBE_DOOR, TUBE_LAYOUT, TUBE_WINDOW, tubeFittings } from "./lu1938Parts.ts";
@@ -103,14 +104,16 @@ export const E300: ShinkansenSeries = {
 };
 
 export const C158: ShinkansenSeries = {
-  endLength: 22.57, midLength: 22.57, W: 1.39, Y: 1.3, S: 3.0, C: 3.8, lean: 0.96, B: 0.95, A: 1.1,
-  nose: nose(0.9, 0.55, 2.3, [[0, 2.9], [0.3, 3.4], [0.9, 3.8]], [[0, 2.8], [0.4, 3.0]], [[0, 1.4], [0.5, 1.35]], [[0, 1.2], [0.4, 1.1]], [[0, 1.1], [0.2, 0.95]]),
-  windscreen: [0.05, 0.7, 0.07, 1.15], lamps: [0.05, 1.5],
-  windows: [[1.85, 2.65]], windowW: 1.3, pitch: 1.6, door: [1.15, 2.95, 1.85, 2.55], doorW: 0.9,
+  endLength: 22.57, midLength: 22.57, W: 1.35, Y: 1.3, S: 3.0, C: 3.81, lean: 0.96, B: 0.98, A: 1.1,
+  // the Express Sprinter: its cars drawn by brClass158.ts (the series kit's fields here give the
+  // design its parameters and figures)
+  nose: nose(0.75, 0.8, 2.6, [[0, 3.15], [0.3, 3.55], [0.75, 3.81]], [[0, 3.0], [0.3, 3.1]], [[0, 1.3]], [[0, 1.1], [0.3, 1.05]], [[0, 0.98], [0.2, 0.95]]),
+  windscreen: [0, 0, 0, 0], lamps: [0, 0],
+  windows: [[1.92, 2.72]], windowW: 1.44, pitch: 1.79, door: [1.02, 2.98, 1.85, 2.72], doorW: 1.0,
   bogieCentres: 16.0, wheelR: 0.42, wheelbase: 2.6, traction: "diesel", cars: [2],
   liveries: {
-    regional: lv("Regional Rail", "158 701", [1.45, "#1d3f80"], [1.55, "#f1f1ee"], [1.7, "#5aa0d0"], [9, "#c9cccd"]),
-    northern: lv("Northern", "158 901", [1.45, "#262262"], [9, "#d0d3d4"]),
+    regional: lv("Regional Rail", "158 819", [1.6, "#cdd0d2"], [1.84, "#4f8fd0"], [2.8, "#1d2f6e"], [9, "#cdd0d2"]),
+    northern: lv("Northern", "158 784", [3.05, "#e7e8e9"], [9, "#7d8084"]),
   },
   weight: { end: 38, middle: 38 }, power: 260, maxspeed: 145,
 };
@@ -188,8 +191,8 @@ export function brClass390(v?: ParamValues): MeshBuilder { return buildSeries(C3
 export function brClass390Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(C390, P.c390, v); }
 export function eurostar373(v?: ParamValues): MeshBuilder { return buildSeries(E300, P.e300, v); }
 export function eurostar373Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(E300, P.e300, v); }
-export function brClass158(v?: ParamValues): MeshBuilder { return buildSeries(C158, P.c158, v); }
-export function brClass158Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(C158, P.c158, v); }
+export function brClass158(v?: ParamValues): MeshBuilder { const p = resolveParams(P.c158, v); return class158(p.unit as C158Unit, p.livery as C158Livery); }
+export function brClass158Lod(v?: ParamValues): MeshBuilder { const p = resolveParams(P.c158, v); return class158Lod(p.unit as C158Unit, p.livery as C158Livery); }
 export function brClass142(v?: ParamValues): MeshBuilder { const p = resolveParams(P.c142, v); return class142(p.unit as C142Unit, p.livery as C142Livery); }
 export function brClass142Lod(v?: ParamValues): MeshBuilder { const p = resolveParams(P.c142, v); return class142Lod(p.unit as C142Unit, p.livery as C142Livery); }
 export function lu1938Stock(v?: ParamValues): MeshBuilder { return buildSeries(TUBE1938, P.tube, v); }
