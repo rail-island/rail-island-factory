@@ -10,7 +10,7 @@ import { designGlb, designTree } from "../generator/generate";
 import { glbStats } from "../generator/glbStats";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles";
 import { KAROSA_LONG, KAROSA_SHORT } from "../generator/karosa";
-import { jointTriangles, steerLock } from "../generator/rig";
+import { jointTriangles, roadTriangleBudget, steerLock } from "../generator/rig";
 import { isLeaf, type ScopeNode, type TreeNode } from "../generator/sourceTree";
 import type { MeshBuilder } from "../generator/meshBuilder";
 import { insideSeen, type Tri, type V3 } from "./collision";
@@ -130,12 +130,21 @@ describe("the buses", () => {
   it.each(BUSES)("%s fits the road and the budget in every variant", (id) => {
     const d = BUS_DESIGNS.find((x) => x.id === id)!;
     for (const params of sample(paramCombinations(d.params))) {
-      const s = glbStats(d.build(params).toGlb("t", "vehicle"));
+      const m = d.build(params);
+      const s = glbStats(m.toGlb("t", "vehicle"));
       expect(s.min[1]).toBeCloseTo(0, 5);
       expect(s.max[2] - s.min[2]).toBeLessThanOrEqual(2.7);
       expect(s.max[1]).toBeLessThanOrEqual(3.45); // roof equipment included
-      expect(s.triangles).toBeLessThanOrEqual(10_000);
+      // 10,000, 15,000 with one joint, 20,000 with two (generator/rig.ts roadTriangleBudget)
+      expect(s.triangles).toBeLessThanOrEqual(roadTriangleBudget(m.rig));
     }
+  });
+
+  it("budgets 10,000 triangles for a rigid bus, 15,000 with one joint, 20,000 with two", () => {
+    expect(roadTriangleBudget(BUS_DESIGNS.find((d) => d.id === "proc-vehicle-mb-citaro")!.build().rig)).toBe(10_000);
+    expect(roadTriangleBudget(BUS_DESIGNS.find((d) => d.id === "proc-vehicle-karosa-long")!.build().rig)).toBe(15_000);
+    expect(roadTriangleBudget({ joints: [{}, {}] as never })).toBe(20_000);
+    expect(roadTriangleBudget(null)).toBe(10_000);
   });
 
   // the detail (busDetail.ts): ten nuts on every wheel seen from outside, a trim round
@@ -143,9 +152,9 @@ describe("the buses", () => {
   it.each(BUSES)("%s carries the wheel, arch and side detail", (id) => {
     const d = BUS_DESIGNS.find((x) => x.id === id)!;
     const tris = trianglesOf(d.build());
-    // a nut is a hexagonal prism, 20 triangles; a hub cap three rings of 16 quads and a fan
-    const nuts = tris.filter((t) => t.material === "nut").length / 20;
-    const wheels = tris.filter((t) => t.material === "hub").length / (3 * 32 + 16);
+    // a nut is a hexagonal prism with its back in the dish, 16 triangles; a hub cap two rings of 16 quads and a fan
+    const nuts = tris.filter((t) => t.material === "nut").length / 16;
+    const wheels = tris.filter((t) => t.material === "hub").length / (2 * 32 + 16);
     expect(wheels).toBeGreaterThanOrEqual(4);
     expect(nuts).toBe(wheels * 10);
     for (const scope of ["arch-trims", "mudflaps", "side-markers", "side-route-display", "rear-route-display"]) {

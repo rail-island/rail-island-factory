@@ -14,7 +14,8 @@ import type { MeshBuilder } from "./meshBuilder.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
 import type { Arch, Paint } from "./busBody.ts";
 import { BusDraft, type Axle, type BusSpec, type DoorStyle, type PaneStyle } from "./busAssembly.ts";
-import { busPalette, endLamp, endSlab, mirror, sideSlab } from "./busKit.ts";
+import { busPalette, endLamp, endLettering, endSlab, mirror, sideSlab, wiper } from "./busKit.ts";
+import { ngon } from "./meshBuilder.ts";
 import { block } from "./vehicleParts.ts";
 
 type Series = "700" | "900" | "951";
@@ -222,7 +223,8 @@ function karosaDraft(variant: KarosaVariant, long: boolean): { draft: BusDraft; 
     // the destination display behind the windscreen's top, and the wipers at rest
     endSlab(m(), "sign", frame, 1, -0.72, 0.72, wsTop - 0.3, wsTop - 0.06, 0.026);
     endSlab(m(), "signText", frame, 1, -0.6, 0.6, wsTop - 0.22, wsTop - 0.14, 0.03);
-    for (const z of [-0.98, 0.08]) endSlab(m(), "frame", frame, 1, z, z + 0.86, wsBottom + 0.05, wsBottom + 0.08, 0.03);
+    // the wipers at rest (photographs: three on a 700, two on a 900), rising to the right
+    for (const z of series === "700" ? [-1.0, -0.25, 0.5] : [-1.02, -0.02]) wiper(m(), frame, 1, z, wsBottom + 0.07, series === "700" ? 0.72 : 0.95, series === "700" ? 14 : 9);
     if (series === "700") {
       // louvres right of the centre in the coloured panel, indicators at its ends
       endSlab(m(), "grille", frame, 1, -0.42, 0.98, 1.21, 1.47, 0.008);
@@ -231,12 +233,16 @@ function karosaDraft(variant: KarosaVariant, long: boolean): { draft: BusDraft; 
         endSlab(m(), "stripe", frame, 1, z, z + 0.035, 1.21, 1.47, 0.016);
       }
       for (const s of [-1, 1]) endSlab(m(), "lampAmber", frame, 1, s * 1.12 - 0.06, s * 1.12 + 0.06, 1.2, 1.44, 0.014);
+      // the two towing hooks on the white strip over the panel
+      for (const z of [-0.55, 0.5]) endSlab(m(), "frame", frame, 1, z - 0.03, z + 0.03, 1.57, 1.64, 0.03);
       // the black band: the grille's mesh between two round headlamps in square housings
       endSlab(m(), "grille", frame, 1, -0.78, 0.78, 0.7, 1.08, 0.008);
       for (let i = 0; i < 5; i++) endSlab(m(), "frame", frame, 1, -0.76, 0.76, 0.74 + i * 0.07, 0.76 + i * 0.07, 0.014);
       for (const s of [-1, 1]) {
         endSlab(m(), "frame", frame, 1, s * 0.95 - 0.17, s * 0.95 + 0.17, 0.72, 1.06, 0.008);
         endLamp(m(), "lampHead", frame, 1, s * 0.95, 0.89, 0.105, 0.016, "chrome", 12);
+        // the lens's centre: the bulb behind its fluting
+        endLamp(m(), "chrome", frame, 1, s * 0.95, 0.89, 0.03, 0.022, undefined, 8);
       }
     } else {
       // the 900s (photographs of B 941 E, B 961 E): a white panel under the
@@ -258,12 +264,18 @@ function karosaDraft(variant: KarosaVariant, long: boolean): { draft: BusDraft; 
       }
       block(m(), "grille", front - 0.01, front + 0.008, 0.74, 0.87, -0.6, 0.6);
       block(m(), "plateYellow", front, front + 0.015, 0.47, 0.6, -0.26, 0.26);
+      // each headlamp's two lenses, the bumper's rubber foot, the maker's name on the panel
+      for (const s of [-1, 1]) block(m(), "frame", front + 0.012, front + 0.02, 0.74, 0.86, s * 0.93 - 0.006, s * 0.93 + 0.006);
+      block(m(), "rubber", nose - 0.04, front + 0.012, 0.32, 0.37, -1.25, 1.25);
+      endLettering(m(), frame, 1, -0.6, -0.15, 1.02, 0.04, 0.012);
     }
     if (series === "700") {
       // the bumper: a deep bar with rubber blocks; the plate on it, right of the centre
       block(m(), "stripe", nose - 0.04, nose + 0.08, 0.33, 0.62, -1.24, 1.24);
       for (const z of [-0.78, 0.86]) block(m(), "rubber", nose + 0.07, nose + 0.1, 0.36, 0.6, z - 0.05, z + 0.05);
       block(m(), "plateYellow", nose + 0.07, nose + 0.095, 0.41, 0.53, 0.02, 0.54);
+      // the tow eye's cover left of the plate
+      block(m(), "frame", nose + 0.07, nose + 0.092, 0.38, 0.44, -0.6, -0.42);
     }
   });
 
@@ -290,14 +302,24 @@ function karosaDraft(variant: KarosaVariant, long: boolean): { draft: BusDraft; 
     endSlab(m(), "body", frame, -1, -0.84, 0.84, 0.6, 1.34, 0.01);
     endSlab(m(), "chrome", frame, -1, -0.16, 0.16, 1.02, 1.06, 0.02);
     endSlab(m(), "plateYellow", frame, -1, -0.17, 0.17, 0.78, 0.98, 0.016);
+    // the lamp columns (photographs): amber, red, red and the reversing lamp, in a black housing
     for (const s of [-1, 1]) {
       const z = s * 1.04;
-      endSlab(m(), "lampAmber", frame, -1, z - 0.08, z + 0.08, 1.06, 1.16, 0.014);
-      endSlab(m(), "lampRed", frame, -1, z - 0.08, z + 0.08, 0.88, 1.05, 0.014);
-      endSlab(m(), "lampHead", frame, -1, z - 0.08, z + 0.08, 0.77, 0.87, 0.014);
+      endSlab(m(), "frame", frame, -1, z - 0.1, z + 0.1, 0.76, 1.27, 0.008);
+      endSlab(m(), "lampAmber", frame, -1, z - 0.08, z + 0.08, 1.15, 1.25, 0.014);
+      endSlab(m(), "lampRed", frame, -1, z - 0.08, z + 0.08, 1.03, 1.13, 0.014);
+      endSlab(m(), "lampRed", frame, -1, z - 0.08, z + 0.08, 0.91, 1.01, 0.014);
+      endSlab(m(), "lampHead", frame, -1, z - 0.08, z + 0.08, 0.78, 0.89, 0.014);
     }
+    // the trim under the belt, the maker's name on the flap
+    endSlab(m(), "frame", frame, -1, -1.2, 1.2, 1.37, 1.395, 0.006);
+    endLettering(m(), frame, -1, 0.3, 0.72, 1.22, 0.035, 0.016);
     block(m(), bumper, tail - 0.07, tail + 0.03, 0.33, 0.56, -1.24, 1.24);
-    for (const s of [-1, 1]) block(m(), "lampRed", tail - 0.085, tail - 0.065, 0.4, 0.48, s * 1.0 - 0.04, s * 1.0 + 0.04);
+    // round reflectors on the bumper, its rubber end caps
+    for (const s of [-1, 1]) {
+      m().sweep("reflector", "x", ngon(10, 0.045, 0, s * 1.0, 0.445), tail - 0.085, ngon(10, 0.045, 0, s * 1.0, 0.445), tail - 0.065);
+      block(m(), "rubber", tail - 0.075, tail + 0.035, 0.32, 0.57, ...(s > 0 ? [1.14, 1.25] : [-1.25, -1.14]) as [number, number]);
+    }
   });
   // the engine's side grille, low on the right behind the last door (a short
   // three-door Karosa's rear door reaches to within 0.9 m of the tail)

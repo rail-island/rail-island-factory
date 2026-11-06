@@ -108,6 +108,16 @@ export interface VehicleRig {
   maxBendDeg?: number;
 }
 
+/**
+ * The road-vehicle triangle budget (.agents/skills/road-vehicle, the exterior's;
+ * the interior has its own 1,500): 10,000 for a rigid vehicle (a semi-trailer's
+ * hitch has no joint), 15,000 for an articulated one with one joint, 20,000 with
+ * two or more.
+ */
+export function roadTriangleBudget(rig: VehicleRig | null | undefined): number {
+  return 10_000 + 5_000 * Math.min(rig?.joints?.length ?? 0, 2);
+}
+
 /** A pose: the steering angle and one bend per hinge, radians. */
 export interface VehiclePose {
   /** The angle of a virtual wheel midway along the front steered axle; + turns counter-clockwise from above (toward -Z). */

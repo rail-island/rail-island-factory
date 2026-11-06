@@ -11,19 +11,20 @@ Karosas are two parametric families, one body each; the others are single models
 All are road vehicles in the `bus` group (`BUS_CATALOG`), with steered front wheels,
 and the articulated ones with sections and a joint ([vehicle-rig.md](vehicle-rig.md)).
 
-The triangle counts are the exterior's (the 10,000-triangle road-vehicle budget); each
+The triangle counts are the exterior's (the road-vehicle budget: 10,000 for a rigid bus,
+15,000 for an articulated one with its one joint; `roadTriangleBudget()` in `generator/rig.ts`); each
 cabin adds 370-620 within the interiors' own cap ([interiors.md](interiors.md)).
 
 | id | title | vlakosimdb | real bus | triangles |
 |---|---|---|---|---|
-| `veh-karosa-short` | Karosa Short | `variant`: `b731` (default), `b732`, `c734`, `lc735`, `b931`, `b931e`, `b951e` = `bus_kar_*` | 700 series 10.975 m, 900 series 11.345 m, B 951 11.32 m | 5,750-6,600 |
-| `veh-karosa-long` | Karosa Long | `variant`: `b741` (default), `b941`, `b941e`, `b961` | articulated, 17.355 / 17.615 / 17.59 m | 8,450-9,450 |
-| `veh-karosa-renault-citybus-12m` | Karosa Renault City Bus 12M | `bus_karrencity12m` | low floor, 11.99 m | 5,600 |
-| `veh-karosa-renault-citybus-18m` | Karosa Renault City Bus 18M | `bus_karrencity18m` | articulated low floor, 17.80 m | 8,300 |
-| `veh-mb-citaro` | Mercedes-Benz Citaro | `bus_mb_citaro` | O 530, 11.95 m, white and teal | 5,550 |
-| `veh-mb-citaro-blue` | Mercedes-Benz Citaro (blue) | `bus_mb_citarob` | the same bus in dark blue | 5,550 |
-| `veh-mb-o345-g` | Mercedes-Benz O 345 G | `bus_mb_o345` | articulated, 17.94 m, 2-2-2-2 doors | 8,800 |
-| `veh-solaris-urbino-15` | Solaris Urbino 15 | `solaris_urbino_15` | three axles, 14.59 m | 7,700 |
+| `veh-karosa-short` | Karosa Short | `variant`: `b731` (default), `b732`, `c734`, `lc735`, `b931`, `b931e`, `b951e` = `bus_kar_*` | 700 series 10.975 m, 900 series 11.345 m, B 951 11.32 m | 5,650-6,500 |
+| `veh-karosa-long` | Karosa Long | `variant`: `b741` (default), `b941`, `b941e`, `b961` | articulated, 17.355 / 17.615 / 17.59 m | 8,000-8,950 |
+| `veh-karosa-renault-citybus-12m` | Karosa Renault City Bus 12M | `bus_karrencity12m` | low floor, 11.99 m | 5,900 |
+| `veh-karosa-renault-citybus-18m` | Karosa Renault City Bus 18M | `bus_karrencity18m` | articulated low floor, 17.80 m | 8,250 |
+| `veh-mb-citaro` | Mercedes-Benz Citaro | `bus_mb_citaro` | O 530, 11.95 m, white and teal | 5,950 |
+| `veh-mb-citaro-blue` | Mercedes-Benz Citaro (blue) | `bus_mb_citarob` | the same bus in dark blue | 5,950 |
+| `veh-mb-o345-g` | Mercedes-Benz O 345 G | `bus_mb_o345` | articulated, 17.94 m, 2-2-2-2 doors | 8,550 |
+| `veh-solaris-urbino-15` | Solaris Urbino 15 | `solaris_urbino_15` | three axles, 14.59 m | 7,950 |
 | `veh-bus-1` | Bus 1 | `bus_1` | vlakosimdb's generic coach, 11.3 m | 5,600 |
 
 The Karosa variants differ in series (front mask, rear, length), doors and livery:
@@ -100,8 +101,9 @@ road-width rule).
 **The detail** (`busDetail.ts`), drawn by the assembly on every bus, spends the
 budget where the game's camera sees it. The wheels are turned on a lathe (a profile
 revolved on the tyre's 16-gon, a flat side down): bevelled shoulders, the sidewall, a
-dished steel rim with ten wheel nuts and a hub cap at most 3 cm proud of the tyre; an
-inner twin is the bevelled tyre alone. Each wheel arch has a dark rubber trim 4.5 cm
+dished steel rim with ten wheel nuts (hexagonal prisms, their backs hidden in the dish)
+and a hub cap at most 3 cm proud of the tyre; an inner twin, hidden behind its outer
+one, is the plain 16-gon. Each wheel arch has a dark rubber trim 4.5 cm
 wide, 5 mm outside the notch (left off a side where a doorway comes within 5 cm), each
 rear axle mudflaps hung from its arch's rear wall behind the tyres, each stretch
 between two arches an amber side marker (`marker`, no lamp role) unless a doorway is
@@ -110,6 +112,13 @@ window and the top right corner of the rear window. The shell's roof edge is rou
 the city buses' plan and roof corners in five pieces, the Karosas' roof edge in four
 (the XML's single chamfer smoothed); the Karosas also carry a rain gutter along each
 side under the eave and a frame under each roof hatch's lid.
+
+**The ends** carry each model's own fittings (below), drawn with the end kit in
+`busKit.ts`: `wiper` (an arm and a blade at rest from a spindle cap, rising to one side;
+the windscreen's wipers are each design's), `endBar` and `endShape` (a bar or a
+polygon following the end's rake), `endBadge` (a chrome disc in a dark ring, the
+three-pointed star on the Mercedes-Benz buses) and `endLettering` (a maker's name as
+a row of chrome strokes). Rear reflectors are `reflector`, red without a lamp role.
 
 **The assembly** (`assembleBus`) draws each rigid body as a part with its shell, axles,
 twin or single tyres, the fittings whose x falls in it and its detail, then the two steered front
@@ -129,32 +138,45 @@ runs, axles, and a `details` callback for the nose, the tail and the roof.
 - **Karosa 700** (B 731 photographs): a near-upright windscreen down to 1.66 m over a
   white strip and a livery-coloured panel with louvres right of the centre; a black
   band with round headlamps in square housings and the grille between; a deep bumper
-  in the livery colour with rubber blocks and the plate right of the centre. Two-leaf
+  in the livery colour with rubber blocks and the plate right of the centre; three
+  wipers, the two towing hooks on the white strip, the tow eye's cover. Two-leaf
   doors glazed in two panes; windows in a dark surround with top-hung vents. The tail:
-  a big rear window, the belt across the back, a vent high on the left, the engine
-  flap and tail lamp columns.
+  a big rear window, the belt across the back over a dark trim, a vent high on the
+  left, the engine flap with the maker's name, the tail lamp columns (amber, red, red,
+  reversing) in black housings, round reflectors and rubber end caps on the bumper.
 - **Karosa 900, 951** (B 941 E, B 961 E, B 941 photographs): a taller windscreen over
   a white panel - a slatted grille on the right for the 931 and 941, two slots for the
-  951 and 961 - and a deep bumper carrying the headlamps and indicators; a smaller rear
+  951 and 961 - with the maker's name, and a deep bumper on a rubber foot carrying the
+  twin-lens headlamps and indicators; two wipers; a smaller rear
   window with louvres in the belt; the 951 and 961 with a roof air-conditioning pod.
   All Karosas have the engine's grille low on the right of the tail, between the
   last door and the tail (0.6 m long behind a short three-door Karosa's rear door).
 - **City Bus 12M / 18M** (photographs): a black band from the deep bonded windows to
   the roof's edge, a white belt, a red skirt under a black line; a raked windscreen
-  under a destination box proud of the roof; headlamps in the red lower front; big
-  louvred grilles on the rear corners and on the engine flap. The 18M's joint ends
+  under a destination box proud of the roof and two long wipers; twin round headlamps
+  in dark clusters in the red lower front, the Renault diamond between them, the
+  Karosa name, black bumper corners; big louvred grilles on the rear corners and on
+  the engine flap, the Renault and Karosa names under the rear window, the flap's
+  latches, red and reversing lamps in the black band, a black bumper with reflectors. The 18M's joint ends
   ramp up on the roof, as the XML's `roof2` outlines and the photographs show.
 - **Citaro**: an upright box, a black glazing band ending short of the white tail
   (which carries the rear window and the engine grille), the destination display in a
   black panel over the windscreen, "rabbit ear" mirrors, a roof pod and the engine's
-  intake tower at the rear left.
+  intake tower at the rear left; the star on the front grille, round lenses in the
+  corner clusters, the name, a black bumper foot; at the rear the name and the star
+  under the window, the engine flap's seam and latches, the plate lamp, reflectors.
 - **O 345 G** (photographs): a flat front with a one-piece windscreen to the roof,
   the destination display in its top, over a black band; lamp clusters low in the
-  corners with fog lamps under them and a grey bumper; black-framed windows, a dark
+  corners with fog lamps under them, indicators outside, the big star and louvres in
+  the white panel, a grey bumper on a rubber strip; at the rear the flap's seam, the
+  star and latches, the plate lamp and reflectors; black-framed windows, a dark
   rubbing strip, four double doors 1.25 m wide (2-2-2-2, the last one in the trailer's tail), a
   roof air-conditioning box, the engine grille at the trailer's rear right.
 - **Urbino 15**: a big windscreen under a black visor into the roof, "cat's-eye"
-  clusters of three round lamps, a green skirt and roof band, a tandem of the driven
+  clusters of three chrome-ringed round lamps with an indicator outside, fog lamps, the
+  Solaris badge and name, a long and a short wiper, a green skirt and roof band; at the
+  rear a second red and a reversing lamp in each lower cluster, the plate in a frame,
+  a rubber bumper strip and reflectors; a tandem of the driven
   axle and a trailing axle on single tyres, the engine tower in the rear left corner
   (no window there), round rear lamps.
 - **Bus 1**: the source's generic coach: blue under a long window band, a mint sweep
@@ -164,7 +186,9 @@ runs, axles, and a `details` callback for the nose, the tail and the roof.
   with indicators in the corners, a louvred grille and a badge, fog lamps in the
   bumper; three luggage-bay hatches a side between the axles with chrome handles;
   amber side markers; a light air-conditioning unit and two hatches on the roof; a
-  rear window over seven engine louvres, and a dark rear bumper with the plate.
+  rear window over seven engine louvres, and a dark rear bumper with the plate; twin
+  round headlamps in each cluster, a rubber bumper strip, a tow eye, and at the rear
+  the engine flap's seam, latches, badge, plate lamp and reflectors.
 
 ## Tests
 
@@ -173,7 +197,7 @@ as long as the real bus in every variant; the axles of every bus but Bus 1 sit a
 the published overhangs and wheelbases; the steered wheels are the frontmost
 and every door is on the right; the front tyres turn inside their arches up to the
 lock; every variant fits the road (2.7 m with mirrors, 3.45 m with roof equipment) and
-the 10,000-triangle budget; the articulated buses have one joint per gap, hinged in
+the road-vehicle triangle budget; the articulated buses have one joint per gap, hinged in
 its middle, its faces on the sections' ends, its triangles the renderer's rest pose.
 The bodies: no ray from outside meets the inside of a face (no gaps, `insideSeen` in
 `test/collision.ts`); every mirror is one connected piece reaching into the body; the

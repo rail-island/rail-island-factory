@@ -194,3 +194,51 @@ export function mirror(m: MeshBuilder, f: BusFrame, s: number, nose: number, y: 
   block(m, "frame", nose + fwd - 0.03, nose + fwd + 0.04, top - head.h, top, ...zs(zi, reach));
   block(m, "glass", nose + fwd - 0.045, nose + fwd - 0.02, top - head.h + 0.02, top - 0.02, ...zs(zi + 0.02, reach - 0.02));
 }
+
+// --- end details: bars, wipers, badges ----------------------------------------------
+
+/**
+ * A flat polygon (z, y points, convex) on an end, `proud` of it and sunk `depth`
+ * into it, following the end's rake. It must lie within one piece of the side
+ * outline (a windscreen, a panel), where the end is flat.
+ */
+export function endShape(m: MeshBuilder, mat: string, f: BusFrame, end: 1 | -1, pts: Array<[number, number]>, proud: number, depth = backOf(proud)): void {
+  m.slab(mat, pts.map(([z, y]) => endPoint(f, end, z, y, proud)), [-end * (proud + depth), 0, 0]);
+}
+
+/** A straight bar `w` wide on an end from (z, y) `a` to `b` (endShape). */
+export function endBar(m: MeshBuilder, mat: string, f: BusFrame, end: 1 | -1, a: [number, number], b: [number, number], w: number, proud: number): void {
+  const l = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const [nz, ny] = [(-(b[1] - a[1]) / l) * (w / 2), ((b[0] - a[0]) / l) * (w / 2)];
+  endShape(m, mat, f, end, [[a[0] + nz, a[1] + ny], [b[0] + nz, b[1] + ny], [b[0] - nz, b[1] - ny], [a[0] - nz, a[1] - ny]], proud);
+}
+
+/**
+ * A windscreen wiper at rest on an end: its arm from the pivot at (z, y), `len`
+ * long and rising `deg` degrees toward +z (negative: toward -z), the blade along
+ * it, the spindle's cap over the pivot.
+ */
+export function wiper(m: MeshBuilder, f: BusFrame, end: 1 | -1, z: number, y: number, len: number, deg: number): void {
+  const a = (deg * Math.PI) / 180;
+  const at = (t: number): [number, number] => [z + Math.sign(deg || 1) * t * len * Math.cos(a), y + t * len * Math.abs(Math.sin(a))];
+  endBar(m, "frame", f, end, at(0), at(0.82), 0.026, 0.03);
+  endBar(m, "rubber", f, end, at(0.12), at(1), 0.018, 0.04);
+  endLamp(m, "frame", f, end, z, y, 0.03, 0.046, undefined, 6);
+}
+
+/** A round badge on an end: a chrome disc in a dark ring, a three-pointed star on it if `star` (the Mercedes-Benz badge). */
+export function endBadge(m: MeshBuilder, f: BusFrame, end: 1 | -1, z: number, y: number, r: number, proud: number, star = false): void {
+  endLamp(m, "chrome", f, end, z, y, r, proud, "frame", 12);
+  if (!star) return;
+  for (const deg of [90, 210, 330]) {
+    const a = (deg * Math.PI) / 180;
+    endBar(m, "frame", f, end, [z, y], [z + Math.cos(a) * r * 0.85, y + Math.sin(a) * r * 0.85], r * 0.16, proud + 0.006);
+  }
+}
+
+/** A maker's name on an end, read from afar: a row of short chrome strokes over z0..z1, `h` high from y. */
+export function endLettering(m: MeshBuilder, f: BusFrame, end: 1 | -1, z0: number, z1: number, y: number, h: number, proud: number, mat = "chrome"): void {
+  const n = Math.max(3, Math.round((z1 - z0) / 0.05));
+  const w = (z1 - z0) / n;
+  for (let i = 0; i < n; i++) endSlab(m, mat, f, end, z0 + i * w + w * 0.15, z0 + (i + 1) * w - w * 0.15, y, y + h, proud);
+}

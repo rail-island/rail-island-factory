@@ -6,7 +6,7 @@
 // road-vehicle budget where the game's camera sees it: the wheels and the sides.
 // See docs/models/buses.md.
 
-import type { MeshBuilder, MaterialSpec } from "./meshBuilder.ts";
+import { ngon, type MeshBuilder, type MaterialSpec } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { archOutline, halfWidth, type Arch } from "./busBody.ts";
 import { AXLE_FACTOR, bentSlab, endSlab, sideSlab, type BusFrame } from "./busKit.ts";
@@ -18,7 +18,19 @@ export const BUS_DETAIL_PALETTE: Record<string, MaterialSpec> = {
   marker: { color: "#ff9a2e", roughness: 0.3 },
   archTrim: { color: "#202124", roughness: 0.85 },
   nut: { color: "#7d8187", metallic: 0.4, roughness: 0.4 },
+  // rear reflectors: red, but never lit (no lamp role)
+  reflector: { color: "#a3141e", roughness: 0.35 },
 };
+
+/** One triangle a, b, c, wound to face along `out`; nothing if it has no area. */
+function orient(m: MeshBuilder, mat: string, a: Vec3, b: Vec3, c: Vec3, out: Vec3): void {
+  const u: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+  const v: Vec3 = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+  const nn: Vec3 = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+  if (Math.hypot(nn[0], nn[1], nn[2]) < 1e-10) return;
+  if (nn[0] * out[0] + nn[1] * out[1] + nn[2] * out[2] >= 0) m.tri(mat, a, b, c);
+  else m.tri(mat, a, c, b);
+}
 
 /** How many sides a wheel is turned with: the tyre's 16-gon, a flat side down. */
 const WHEEL_SIDES = 16;
@@ -42,15 +54,6 @@ function lathe(m: MeshBuilder, x: number, y: number, z0: number, face: number, p
     area += a0 * b1 - a1 * b0;
   }
   const sgn = area > 0 ? 1 : -1;
-  const tri = (mat: string, a: Vec3, b: Vec3, c: Vec3, out: Vec3): void => {
-    const u: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-    const v: Vec3 = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
-    const nn: Vec3 = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
-    const len = Math.hypot(nn[0], nn[1], nn[2]);
-    if (len < 1e-10) return; // a corner on the axis
-    if (nn[0] * out[0] + nn[1] * out[1] + nn[2] * out[2] >= 0) m.tri(mat, a, b, c);
-    else m.tri(mat, a, c, b);
-  };
   for (let i = 0; i + 1 < profile.length; i++) {
     const [w0, r0] = profile[i]!;
     const [w1, r1] = profile[i + 1]!;
@@ -63,8 +66,8 @@ function lathe(m: MeshBuilder, x: number, y: number, z0: number, face: number, p
       const b = P(j + 1, w0, r0);
       const c = P(j + 1, w1, r1);
       const d = P(j, w1, r1);
-      tri(mats[i]!, a, b, c, out);
-      tri(mats[i]!, a, c, d, out);
+      orient(m, mats[i]!, a, b, c, out);
+      orient(m, mats[i]!, a, c, d, out);
     }
   }
 }
@@ -85,25 +88,35 @@ export function detailedBusWheel(m: MeshBuilder, x: number, radius: number, z0: 
   const f = face ?? 1;
   const zi = f > 0 ? z0 : z1;
   if (face === null) {
-    lathe(m, x, y, zi, f, [[0, 0], [0, 0.9 * R], [c, R], [W - c, R], [W, 0.9 * R], [W, 0]], ["rubber", "rubber", "rubber", "rubber", "rubber"]);
+    // hidden behind its outer twin: the plain 16-gon
+    const tyre = ngon(WHEEL_SIDES, R, Math.PI / WHEEL_SIDES, x, y);
+    m.sweep("rubber", "z", tyre, z0, tyre, z1);
     return;
   }
   lathe(m, x, y, zi, f, [
     [0, 0], [0, 0.9 * R], [c, R], [W - c, R], [W, 0.9 * R], [W, 0.66 * R],
     // the rim's flange and its dish, sunk into the tyre's face
-    [W - 0.012, 0.63 * R], [W - 0.03, 0.56 * R], [W - 0.05, 0.5 * R], [W - 0.05, 0.29 * R],
+    [W - 0.012, 0.63 * R], [W - 0.05, 0.52 * R], [W - 0.05, 0.29 * R],
     // the hub, proud of the face
-    [W - 0.02, 0.24 * R], [W + 0.024, 0.2 * R], [W + 0.03, 0.11 * R], [W + 0.03, 0],
-  ], ["rubber", "rubber", "rubber", "rubber", "rubber", "rim", "rim", "rim", "rim", "hub", "hub", "hub", "hub"]);
+    [W - 0.02, 0.24 * R], [W + 0.03, 0.18 * R], [W + 0.03, 0],
+  ], ["rubber", "rubber", "rubber", "rubber", "rubber", "rim", "rim", "rim", "hub", "hub", "hub"]);
   // the wheel nuts on the dish, sunk into it
   const zf = zi + f * W;
   for (let k = 0; k < nuts; k++) {
     const a = (2 * Math.PI * k) / nuts;
     const cx = x + 0.4 * R * Math.cos(a);
     const cy = y + 0.4 * R * Math.sin(a);
-    const hex: Array<[number, number]> = [];
-    for (let i = 0; i < 6; i++) hex.push([cx + 0.022 * Math.cos(a + (i * Math.PI) / 3), cy + 0.022 * Math.sin(a + (i * Math.PI) / 3)]);
-    m.sweep("nut", "z", hex, zf - f * 0.056, hex, zf - f * 0.028);
+    // a hexagonal prism, its back hidden in the dish: six sides and the face
+    const hex: Vec3[] = [];
+    for (let i = 0; i < 6; i++) hex.push([cx + 0.022 * Math.cos(a + (i * Math.PI) / 3), cy + 0.022 * Math.sin(a + (i * Math.PI) / 3), zf - f * 0.028]);
+    const back = hex.map(([px, py]): Vec3 => [px, py, zf - f * 0.056]);
+    const out = (i: number): Vec3 => [Math.cos(a + ((i + 0.5) * Math.PI) / 3), Math.sin(a + ((i + 0.5) * Math.PI) / 3), 0];
+    for (let i = 0; i < 6; i++) {
+      const j = (i + 1) % 6;
+      orient(m, "nut", hex[i]!, hex[j]!, back[j]!, out(i));
+      orient(m, "nut", hex[i]!, back[j]!, back[i]!, out(i));
+    }
+    for (let i = 1; i < 5; i++) orient(m, "nut", hex[0]!, hex[i]!, hex[i + 1]!, [0, 0, f]);
   }
 }
 
