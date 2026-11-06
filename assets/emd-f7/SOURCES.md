@@ -7,7 +7,7 @@
 ## Photographs
 
 Downloaded from Wikimedia Commons at 1920 px and scaled to 1600 px on the long side.
-Used for: Santa Fe 49 and 309 in the red warbonnet, Southern Pacific 6378: the bulldog nose, windscreen, portholes, filter grilles, roof fans and the warbonnet's bonnet and band.
+Used for: Santa Fe 49 and 309 in the red warbonnet, Southern Pacific 6378: the bulldog nose, the windscreen panes' shape and gasket, the headlight hood, the nose-door light, class lights and number boards, portholes, filter grilles, roof fans and the warbonnet's bonnet and band.
 
 | file | original | URL | author | licence |
 |---|---|---|---|---|

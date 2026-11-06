@@ -3,6 +3,7 @@
 import { describe, expect, it } from "vitest";
 import { ACELA_LENGTH, SUPERLINER_LENGTH, US_CARBODIES, acela, acelaTrain, amtrakSuperliner } from "../generator/usCarbodies";
 import { LOADING_GAUGES } from "../generator/loadingGauge";
+import { roundedPane } from "../generator/sliceBody";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { glbStats } from "../generator/glbStats";
 import { buildLodModel } from "../generator/lodModel";
@@ -68,6 +69,25 @@ describe("the US carbodies", () => {
     expect(front.length).toBeGreaterThan(0);
     expect(Math.max(...front.map((n) => n.max![1]))).toBeLessThan(5.0);
     expect(glbStats(m.toGlb("gg1")).max[1]).toBeGreaterThan(5.8);
+  });
+
+  it("gives the F7 and the Acela shaped windscreens and their own nose lamps", () => {
+    const scopes = (id: string, params?: Record<string, string>) => leaves(design(id).build(params).sourceTree(id, design(id).title).root).map((n) => n.id);
+    // the F7: rounded panes narrowing toward the roof, the headlight in its hood, number boards, class lights
+    const pane = roundedPane([1.7, 2.56], 0.05, [1.0, 0.84], 0.2, 0.05, 0.26);
+    expect(pane.z1(2.1)).toBeLessThan(1.0);
+    expect(pane.z1(1.7)).toBeLessThan(pane.z1(1.9) - 0.1);
+    expect(pane.z1(2.56)).toBeLessThan(pane.z1(2.3) - 0.1);
+    expect(pane.z1(2.3)).toBeLessThan(pane.z1(1.95));
+    const f7 = scopes("proc-vehicle-emd-f7");
+    expect(f7.some((n) => n.startsWith("nose/headlights/hood/"))).toBe(true);
+    expect(f7.filter((n) => n.startsWith("nose/class-lights/")).length).toBe(4);
+    expect(f7.filter((n) => n.startsWith("nose/number-boards/")).length).toBe(6);
+    // the Acela: the mask, the teardrop side windows and four headlights in the blue band
+    const ac = scopes("proc-vehicle-amtrak-acela");
+    expect(ac.filter((n) => n.startsWith("nose/windscreen/side-window")).length).toBe(4);
+    expect(ac.filter((n) => n.startsWith("nose/headlight-band/")).length).toBeGreaterThan(0);
+    expect(ac.filter((n) => n.startsWith("nose/headlights/")).length).toBe(8);
   });
 
   it("forms the Acela with a power car at each end and first class behind the leading one", () => {

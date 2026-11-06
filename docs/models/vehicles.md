@@ -389,7 +389,9 @@ is a hole the player sees through. Three rules hold for rail vehicles:
 - **A windscreen follows the shell facet for facet** (`crownPane`): its rows on the
   shell's stations, its columns on the slices' points over the shoulder and the arc,
   each cell split along the shell's own diagonal, so no chord of the glass dips under
-  a curved nose. `bandPainter`'s `roofFrom` (the series kit and the car builder pass
+  a curved nose. `shapedCrownPane` does the same for a pane whose edges follow functions
+  of d (`roundedPane`: rounded corners, a taper toward the roof), with extra rows where
+  its corners turn. `bandPainter`'s `roofFrom` (the series kit and the car builder pass
   the body's shoulder) keeps the roof colour above the shoulder: below it a nose's arc
   takes the side's colour just under the shoulder (one colour, so no stripe steps across
   the nose's facets) instead of the roof colour running down to its tip.

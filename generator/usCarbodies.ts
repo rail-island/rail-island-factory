@@ -14,8 +14,8 @@ import { resolveParams, type GameProperties, type ParamSpec, type ParamValues, t
 import { DIESEL_LOCO_CATALOG, ELECTRIC_LOCO_CATALOG } from "./cd163.ts";
 import { bogie, exhaust, extrude, horn, paint, roofFan, tankX, type BogieSpec } from "./dieselParts.ts";
 import { block, side } from "./vehicleParts.ts";
-import type { Pt } from "./sliceLoft.ts";
-import { crownPane, sideDecal, sideLettering, sidePanel, sliceCabin, surfaceDisc, type SliceBody, type SliceDoorway } from "./sliceBody.ts";
+import { cross, unit as norm, type Pt } from "./sliceLoft.ts";
+import { crownPane, crownPoint, roundedPane, shapedCrownPane, sideDecal, sideLettering, sidePanel, sliceCabin, surfaceDisc, surfacePoint, type PaneOutline, type SliceBody, type SliceDoorway } from "./sliceBody.ts";
 import { openable, plugMove } from "./doors.ts";
 import { INTERIOR_PALETTE } from "./interior.ts";
 import { CARBODY_PALETTE, bandPainter, carbody, carbodyShell, endDiaphragm, faceLamps, pilotPlate, type CarbodySpec, type Painter } from "./carbodyKit.ts";
@@ -56,6 +56,75 @@ function noseLamps(m: MeshBuilder, b: SliceBody, X: (d: number) => number, e: nu
 function sideWindow(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, d0: number, d1: number, y0: number, y1: number, frame = "rubber", glass = "glass"): void {
   sidePanel(m, b, X, s, frame, d0, d1, y0, y1, 0.006, 0.03);
   sidePanel(m, b, X, s, glass, d0 + 0.04, d1 - 0.04, y0 + 0.04, y1 - 0.04, 0.012, 0.004);
+}
+
+/** A shaped pane (roundedPane) on the crown, on side s. */
+function outlinePane(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, mat: string, o: PaneOutline, proud: number): void {
+  shapedCrownPane(m, b, X, s, mat, o.d, o.z0, o.z1, proud, o.rows);
+}
+
+/** The d at which the slice's outer surface at height y has half width z (the first, from the +X tip): where a lamp on the nose's face stands. */
+function noseDAt(b: SliceBody, y: number, z: number): number {
+  let best = 0, err = Infinity;
+  for (let k = 0; k <= 300; k++) {
+    const d = k * 0.01;
+    if (y < b.B(d) || y > b.C(d)) continue;
+    const e = Math.abs(surfacePoint(b, d, y, 1).p[0] - z);
+    if (e < err) [best, err] = [d, e];
+    if (surfacePoint(b, d, y, 1).p[0] > z) break;
+  }
+  return best;
+}
+
+/** A round lamp on the nose's flank at height y and half width |z| (side sign(z)), tangent to it: its bezel and lens. */
+function flankLamp(m: MeshBuilder, b: SliceBody, X: (d: number) => number, z: number, y: number, r: number, lens: string, sides = 10): void {
+  const s = z < 0 ? -1 : 1;
+  const d = noseDAt(b, y, Math.abs(z));
+  surfaceDisc(m, b, X, d, y, s, "black", r + 0.03, 0.012, 0.05, sides);
+  surfaceDisc(m, b, X, d, y, s, lens, r, 0.022, 0.01, sides);
+}
+
+/**
+ * A round lamp on the crown of the nose at half width |z| (side sign(z)), where
+ * the crown reaches height y, turned from the surface toward the front: its
+ * housing and lens.
+ */
+function crownLamp(m: MeshBuilder, b: SliceBody, X: (d: number) => number, z: number, y: number, r: number, lens: string, sides = 12): void {
+  const s = z < 0 ? -1 : 1;
+  const zz = Math.abs(z);
+  const f = (d: number, w: number) => crownPoint(b, d, w)[1];
+  let d = 0;
+  while (d < b.length / 2 && f(d, zz) < y) d += 0.005;
+  const e = Math.sign(X(0) - X(1));
+  const h = 0.02;
+  const n0 = norm([e * (f(d + h, zz) - f(d - h, zz)) / (2 * h), 1, -s * (f(d, zz + h) - f(d, zz - h)) / (2 * h)]);
+  const n = norm([n0[0] + e * 0.6, n0[1], n0[2]]);
+  const base: Vec3 = [X(d), f(d, zz), s * zz];
+  const u = norm(cross([0, 1, 0], n));
+  const v = norm(cross(n, u));
+  // the tilted disc's upper rim clears the surface rising behind it
+  const out = 0.02 + r * 0.45;
+  const ring = (rr: number, o: number): Vec3[] => Array.from({ length: sides }, (_, i) => {
+    const a = (2 * Math.PI * i) / sides;
+    return [0, 1, 2].map((k) => base[k]! + n[k]! * o + u[k]! * rr * Math.cos(a) + v[k]! * rr * Math.sin(a)) as Vec3;
+  });
+  m.slab("black", ring(r + 0.03, out), n.map((c) => -c * (out + 0.12)) as Vec3);
+  m.slab(lens, ring(r, out + 0.01), n.map((c) => -c * 0.01) as Vec3);
+}
+
+/** A box standing out of the side over d0..d1, y0..y1 along the chord of the surface (a number board): `out` proud of it, `depth` deep. */
+function chordBox(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, mat: string, d0: number, d1: number, y0: number, y1: number, out: number, depth: number): void {
+  const ym = (y0 + y1) / 2;
+  const [p0, p1] = [d0, d1].map((d): Vec3 => [X(d), ym, s * surfacePoint(b, d, ym, s).p[0]]);
+  const t = [p1![0] - p0![0], p1![2] - p0![2]];
+  const l = Math.hypot(t[0]!, t[1]!);
+  let n: Vec3 = [-t[1]! / l, 0, t[0]! / l];
+  if (n[2] * s < 0) n = [-n[0], 0, -n[2]];
+  // the chord pushed out past the surface's bulge between its ends
+  const mid = surfacePoint(b, (d0 + d1) / 2, ym, s).p[0];
+  const sag = Math.max(0, mid - (Math.abs(p0![2]) + Math.abs(p1![2])) / 2) * Math.abs(n[2]);
+  const at = (p: Vec3, y: number): Vec3 => [p[0] + n[0] * (out + sag), y, p[2] + n[2] * (out + sag)];
+  m.slab(mat, [at(p0!, y0), at(p1!, y0), at(p1!, y1), at(p0!, y1)], [-n[0] * depth, 0, -n[2] * depth]);
 }
 
 /** A grille panel on the side: its frame and slats. */
@@ -130,6 +199,7 @@ const F7_REACH = 0.45; // the nose tip behind the front coupler face
 const F7_REAR = 0.35;
 const F7_BODY = F7_LENGTH - F7_REACH - F7_REAR;
 const F7_TRUCK = ft(30) / 2;
+const F7_LAMP_Y = 2.98;
 
 export const F7_SPEC: CarbodySpec = {
   length: F7_BODY, W: 1.58, Y: 1.5, S: 3.75, C: 4.32, lean: 0.95, arc: 7, B: 1.2, wl: 1.5, A: 1.26, wa: 1.56,
@@ -218,17 +288,36 @@ export function buildF7(l: CarbodyLivery): MeshBuilder {
         m.scope("number", () => sideLettering(m, b, X, s, l.number, 3.05, 2.55, 0.26, l.numberMat, 0.012));
       });
   });
+  const nosePaint = f7Painter(l);
   m.scope("nose", () => {
+    // two panes either side of the centre post, narrowing toward the roof, their
+    // outer corners rounded, set in a rubber gasket in a frame of the roof's paint
     m.scope("windscreen", () => {
       for (const s of [1, -1]) {
-        crownPane(m, b, X, s, "rubber", [1.74, 2.48], [0.06, 0.92], 0.006);
-        crownPane(m, b, X, s, "cabGlass", [1.8, 2.42], [0.11, 0.87], 0.012);
+        outlinePane(m, b, X, s, l.roof, roundedPane([1.7, 2.56], 0.05, [1.0, 0.84], 0.2, 0.05, 0.26), 0.004);
+        outlinePane(m, b, X, s, "rubber", roundedPane([1.74, 2.51], 0.08, [0.96, 0.8], 0.17, 0.04, 0.23), 0.008);
+        outlinePane(m, b, X, s, "cabGlass", roundedPane([1.77, 2.48], 0.11, [0.92, 0.76], 0.15, 0.03, 0.2), 0.012);
       }
     });
-    m.scope("headlights", () => noseLamps(m, b, X, 1, [[0, 2.85, 0.15, "lampHead"], [0, 2.45, 0.1, "lampHead"]]));
-    m.scope("number boards", () => {
-      for (const s of [1, -1]) sidePanel(m, b, X, s, "numberBoard", 0.75, 1.25, 2.85, 3.0, 0.006, 0.02);
+    // the headlight in its hood on top of the nose, the oscillating light in the nose door below
+    m.scope("headlights", () => {
+      const d = noseD(b, F7_LAMP_Y) + 0.02;
+      const [front, back] = [X(d) + 0.12, X(1.05)];
+      const hood = nosePaint(0.6, F7_LAMP_Y + 0.1, "arc");
+      m.scope("hood", () => m.sweep(hood, "x", ngon(16, 0.13, 0, 0, F7_LAMP_Y + 0.06), back, ngon(16, 0.25, 0, 0, F7_LAMP_Y), front));
+      m.sweep("black", "x", ngon(16, 0.22, 0, 0, F7_LAMP_Y), front - 0.01, ngon(16, 0.22, 0, 0, F7_LAMP_Y), front + 0.03);
+      m.sweep("lampHead", "x", ngon(16, 0.17, 0, 0, F7_LAMP_Y), front + 0.03, ngon(16, 0.17, 0, 0, F7_LAMP_Y), front + 0.045);
+      noseLamps(m, b, X, 1, [[0, 2.42, 0.13, "lampHead"]]);
     });
+    // the number boards stand out of the nose's flanks under the windscreen
+    m.scope("number boards", () => {
+      for (const s of [1, -1]) {
+        chordBox(m, b, X, s, nosePaint(1.3, 2.8, "side"), 0.95, 1.72, 2.64, 2.98, 0.02, 0.12);
+        chordBox(m, b, X, s, "black", 1.0, 1.67, 2.68, 2.94, 0.03, 0.02);
+        chordBox(m, b, X, s, "numberBoard", 1.04, 1.63, 2.71, 2.91, 0.035, 0.004);
+      }
+    });
+    m.scope("class lights", () => { for (const z of [-1, 1]) flankLamp(m, b, X, z * 1.02, 2.5, 0.07, "lampRed"); });
     m.scope("pilot", () => pilotPlate(m, "warBlack" in l.palette ? "warBlack" : l.skirt, 1, tip - 0.05, 0.15, 1.3, 1.25, 0.4, 0.6));
     m.scope("coupler", () => knuckleCoupler(m, 1, tip - 0.25, F7_LENGTH / 2, COUPLER_Y));
   });
@@ -857,25 +946,40 @@ const isPower = (c: AcelaCar) => c === "powerCar";
 export const acelaLength = (c: AcelaCar) => (isPower(c) ? ACELA_LENGTH.powerCar : ACELA_LENGTH.coach);
 
 const ACELA_PAL = {
-  acSilver: paint("#c7cbce", 0.35), acDark: paint("#3a4049", 0.5), acBlue: paint("#1f3d6b"), acTeal: paint("#3f8f9c"), truckBlack: paint("#2a2c2f", 0.85),
+  acSilver: paint("#c7cbce", 0.35), acMask: paint("#15181c", 0.25), acDark: paint("#3a4049", 0.5), acBlue: paint("#1f3d6b"), acTeal: paint("#3f8f9c"), truckBlack: paint("#2a2c2f", 0.85),
 };
 
 const ACELA_BANDS: ReadonlyArray<readonly [number, number, string]> = [[0, 1.45, "acDark"], [1.45, 2.12, "acSilver"], [2.12, 2.18, "acTeal"], [2.18, 2.28, "acSilver"], [2.28, 3.02, "acDark"], [3.02, 9, "acSilver"]];
 const acelaPaint = bandPainter(ACELA_BANDS, "acSilver", "truckBlack", "acDark");
+/** The power car's paint: silver sides (the coaches' dark window band left out), the dark skirt and the teal line kept. */
+const acelaPowerPaint: Painter = (d, y, region) => {
+  const mat = acelaPaint(d, y, region);
+  return mat === "acDark" && y > 2.2 ? "acSilver" : mat;
+};
 
 const ACELA_POWER_BODY = ACELA_LENGTH.powerCar - ACELA_GAP - 0.4;
 const ACELA_POWER: CarbodySpec = {
   length: ACELA_POWER_BODY, W: 1.58, Y: 1.4, S: 3.95, C: 4.32, lean: 0.95, arc: 6, B: 0.85, wl: 1.48, A: 1.2, wa: 1.56,
   front: {
-    len: 3.6, tip: 0.12, power: 2.2,
-    C: [[0, 1.55], [0.3, 2.0], [1.5, 2.6], [3.2, 3.3], [4.2, 3.92], [4.8, 4.22], [5.2, 4.32]],
-    S: [[0, 1.5], [0.3, 1.92], [1.5, 2.42], [3.2, 3.02], [4.2, 3.62], [5.2, 3.95]],
+    len: 3.4, tip: 0.2, power: 2.2,
+    C: [[0, 1.78], [0.12, 2.06], [0.45, 2.36], [1.5, 2.74], [3.0, 3.36], [4.0, 3.9], [4.6, 4.2], [5.2, 4.32]],
+    S: [[0, 1.72], [0.12, 1.98], [0.45, 2.24], [1.5, 2.52], [3.0, 3.02], [4.2, 3.62], [5.2, 3.95]],
     Y: [[0, 1.35], [1.0, 1.4]],
     A: [[0, 1.3], [0.8, 1.2]],
-    B: [[0, 1.25], [0.3, 0.55], [1.2, 0.5], [1.8, 0.85]],
+    B: [[0, 1.12], [0.25, 0.6], [1.2, 0.5], [1.8, 0.85]],
   },
   edges: [], step: 1.0, noseStep: 0.2,
 };
+/** The power car's windscreen mask, its glass and the blue headlight band under it (d, half width on the crown). */
+const ACELA_MASK: PaneOutline = { ...roundedPane([2.72, 4.62], 0, [1.6, 1.6], 0.3, 0, 0.5), z0: () => 0 };
+const ACELA_SCREEN = roundedPane([2.82, 4.38], 0.05, [1.05, 0.88], 0.14, 0.03, 0.22);
+const ACELA_BAND: PaneOutline = {
+  d: [1.45, 2.74], z0: () => 0,
+  // its lower edge a smile: narrow at the front, the full width at the windscreen
+  z1: (d) => 0.5 + 1.1 * Math.sqrt(Math.min(1, Math.max(0, (d - 1.45) / 1.1))), rows: [1.48, 1.55, 1.65, 1.8, 2.0, 2.25, 2.5],
+};
+/** The side window's sill: a teardrop's lower edge, pointed toward the nose. */
+const acelaSideLo = (d: number) => 3.0 + 0.62 * Math.max(0, (5.05 - d) / 0.63) ** 1.6;
 const ACELA_COACH_BODY = ACELA_LENGTH.coach - 2 * ACELA_GAP;
 const ACELA_COACH: CarbodySpec = {
   length: ACELA_COACH_BODY, W: 1.57, Y: 1.4, S: 3.7, C: 4.23, lean: 0.93, arc: 6, B: 0.85, wl: 1.48, A: 1.2, wa: 1.55,
@@ -955,11 +1059,10 @@ function drawAcelaCar(m: MeshBuilder, c: AcelaCar, X: (d: number) => number, end
   m.scope("body", () => {
     const leaves = power ? [] : acelaLeaves();
     const cut = leaves.map((o) => ({ ...o, d0: o.d0 - 0.002, d1: o.d1 + 0.002, y0: o.y0 - 0.002, y1: o.y1 + 0.002 }));
-    m.scope("shell", () => carbodyShell(m, b, X, acelaPaint, cut));
+    m.scope("shell", () => carbodyShell(m, b, X, power ? acelaPowerPaint : acelaPaint, cut));
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
         if (power) {
-          m.scope("cab window", () => sideWindow(m, b, X, s, 4.6, 5.5, 2.95, 3.5));
           m.scope("grilles", () => { for (const [a, e] of [[7.0, 10.5], [11.2, 14.7]] as const) sideGrille(m, b, X, s, a, e, 2.4, 3.4, true); });
           m.scope("lettering", () => sideLettering(m, b, X, s, "AMTRAK", 16.0, 2.45, 0.34, "acDark"));
         } else {
@@ -977,13 +1080,23 @@ function drawAcelaCar(m: MeshBuilder, c: AcelaCar, X: (d: number) => number, end
   const L = b.length;
   if (power)
     m.scope("nose", () => {
+      // the black mask: one sweep of glass across the nose, wrapping over the
+      // shoulders, split by the centre post; behind it a teardrop side window
       m.scope("windscreen", () => {
         for (const s of [1, -1]) {
-          crownPane(m, b, X, s, "rubber", [3.25, 4.55], [0.02, 1.2], 0.006);
-          crownPane(m, b, X, s, "cabGlass", [3.32, 4.48], [0.06, 1.15], 0.012);
+          outlinePane(m, b, X, s, "acMask", ACELA_MASK, 0.006);
+          outlinePane(m, b, X, s, "cabGlass", ACELA_SCREEN, 0.012);
+          m.scope("side window", () => {
+            stripDecal(m, b, X, s, "acMask", 4.42, 5.75, acelaSideLo, (d) => Math.max(acelaSideLo(d), b.S(d) - 0.08), 0.004, 14);
+            stripDecal(m, b, X, s, "cabGlass", 4.56, 5.68, (d) => acelaSideLo(d) + 0.04, (d) => Math.max(acelaSideLo(d) + 0.04, b.S(d) - 0.12), 0.008, 12);
+          });
         }
       });
-      m.scope("headlights", () => noseLamps(m, b, X, 1, [[-0.6, 1.62, 0.09, "lampHead"], [0.6, 1.62, 0.09, "lampHead"], [0, 2.1, 0.1, "lampHead"]]));
+      // the blue band under the windscreen with its four round headlights
+      m.scope("headlight band", () => { for (const s of [1, -1]) outlinePane(m, b, X, s, "acBlue", ACELA_BAND, 0.004); });
+      m.scope("headlights", () => {
+        for (const z of [-0.66, -0.23, 0.23, 0.66]) crownLamp(m, b, X, z, 2.86 - 0.1 * Math.abs(z), 0.1, "lampHead");
+      });
       m.scope("coupler", () => knuckleCoupler(m, 1, X(0) - 0.2, X(0) + 0.4, COUPLER_Y));
     });
   else
