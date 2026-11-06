@@ -33,6 +33,10 @@ export const MODEL_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-blue-train-24": [
     { title: "Wikipedia: Blue Train (Japan)", url: "https://en.wikipedia.org/wiki/Blue_Train_(Japan)" },
   ],
+  "proc-vehicle-br-class-378": [
+    { title: "Wikipedia: British Rail Class 378", url: "https://en.wikipedia.org/wiki/British_Rail_Class_378" },
+    { title: "TfL: Class 378 data sheet", url: "https://foi.tfl.gov.uk/FOI-0416-2223/Class%20378%20Data%20Sheet.pdf" },
+  ],
   "proc-vehicle-budd-rdc": [
     { title: "Wikipedia: Budd Rail Diesel Car", url: "https://en.wikipedia.org/wiki/Budd_Rail_Diesel_Car" },
   ],

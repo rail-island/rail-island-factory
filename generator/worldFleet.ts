@@ -39,6 +39,8 @@ export interface FleetEntry {
   family: string;
   features: readonly string[];
   size: number;
+  /** What sweeping it costs (a ship's length): between equal gains the cheaper is picked. */
+  cost?: number;
 }
 
 /** The kit options a cabin spec uses. */
@@ -72,7 +74,7 @@ export const WORLD_FLEET: readonly FleetEntry[] = [
   // the world ships: the largest is the longest
   ...[...CARGO_SHIP_SPECS, ...SERVICE_SHIP_SPECS, ...PASSENGER_SHIP_SPECS, ...SMALL_SHIP_SPECS].map((w) => {
     const s = w.spec();
-    return { id: proceduralId(w.id), family: "ships", features: shipFeatures(s, (w.params ?? []).map((p) => p.name)), size: shipLength(s) };
+    return { id: proceduralId(w.id), family: "ships", features: shipFeatures(s, (w.params ?? []).map((p) => p.name)), size: shipLength(s), cost: shipLength(s) };
   }),
   // the world aircraft: the options of every parameter combination; the largest by length times span
   ...[...WORLD_JET_SPECS, ...WORLD_PROP_SPECS, ...WORLD_ROTORCRAFT_SPECS].map((a) => aircraftEntry(a)),
@@ -131,7 +133,7 @@ export function coverSample(entries: readonly FleetEntry[]): string[] {
     for (const e of entries) {
       if (picked.has(e.id)) continue;
       const g = e.features.filter((f) => !covered.has(key(e, f))).length;
-      if (g > gain) { best = e; gain = g; }
+      if (g > gain || (g === gain && g > 0 && best && e.cost !== undefined && best.cost !== undefined && e.cost < best.cost)) { best = e; gain = g; }
     }
     if (!best) break;
     picked.add(best.id);
