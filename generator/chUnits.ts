@@ -21,7 +21,7 @@ export function chLivery(kind: "sbb" | "sbbRegio" | "tee" | "gottardo" | "rhb" |
     case "tee": return { title: "TEE", number, palette: pal({ red: "#8a1c2b", beige: "#e3d3a6" }), bands: [[0, 1.85, "red"], [1.85, 2.9, "beige"], [2.9, 9, "red"]], roof: "roofG", skirt: "skirtG" };
     case "gottardo": return { title: "Gottardo grey", number, palette: pal({ grey: "#9aa0a5", red: SBB_RED, dark: "#4d5257" }), bands: [[0, 1.85, "dark"], [1.85, 1.95, "red"], [1.95, 9, "grey"]], roof: "roofG", skirt: "skirtG" };
     case "rhb": return { title: "RhB red", number, palette: pal({ red: "#c8102e", white: "#f1f1ee", grey: "#4d5257" }), bands: [[0, 1.3, "grey"], [1.3, 9, "red"]], roof: "roofG", skirt: "skirtG" };
-    case "redArrow": return { title: "Red Arrow", number, palette: pal({ red: "#c8102e", cream: "#e6dcc0" }), bands: [[0, 9, "red"]], roof: "red", skirt: "skirtG" };
+    case "redArrow": return { title: "Red Arrow", number, palette: { ...pal({ red: "#c8102e", cream: "#e6dcc0" }), roofS: c("#a9adb0", 0.45) }, bands: [[0, 9, "red"]], roof: "roofS", skirt: "skirtG" };
   }
 }
 
@@ -36,13 +36,33 @@ export const RAE_TEE: ShinkansenSeries = {
   weight: { end: 52, middle: 45 }, power: 580, maxspeed: 160,
 };
 
+/**
+ * The Roter Pfeil's ends (photo-sbb-rae-2-4.jpg, photo-sbb-rae-2-4-rapperswil-hurden.jpg and the works
+ * drawing photo-sbb-historic-pl-166-00003-cle-2-4-203-206-sbb.jpg): a low bonnet 2 m long, round in
+ * plan, its top at 2.0 m, the lamps on its front; behind it the driver's cab stands up with three
+ * front panes under the roof's rounded brow and the top lamp.
+ */
+const ARROW_END: SeriesCabFace = {
+  dJoin: 2.8, dSide: 2.6, first: 5.7, roofFrom: 3.3, cols: [6, 4, 1, 1], tolerance: 0.02, bulge: 0.08,
+  profile: [[0.9, 0.15], [1.05, 0.03], [1.2, 0], [1.6, 0], [1.8, 0.08], [1.9, 0.28], [1.96, 0.65], [1.99, 1.3], [2.02, 1.9], [2.1, 2.05], [2.8, 2.18], [3.0, 2.28], [3.25, 2.42], [3.5, 2.6], [3.65, 2.8]],
+  corner: [[0.9, 0.95], [1.96, 0.95], [2.1, 0.5], [2.8, 0.45], [3.3, 0.35], [3.65, 0.1]],
+  rows: [0.9, 1.05, 1.2, 1.35, 1.55, 1.6, 1.8, 1.9, 1.96, 1.99, 2.02, 2.1, 2.16, 2.78, 2.86, 3.0, 3.25, 3.3, 3.5, 3.65],
+  masks: [
+    { lat: [-1.19, -0.41], y: [2.12, 2.86], r: 0.05, mat: "rubber" }, { lat: [-0.37, 0.37], y: [2.12, 2.86], r: 0.05, mat: "rubber" },
+    { lat: [0.41, 1.19], y: [2.12, 2.86], r: 0.05, mat: "rubber" },
+  ],
+  panes: [{ lat: [-1.15, -0.45], y: [2.16, 2.82], r: 0.04 }, { lat: [-0.33, 0.33], y: [2.16, 2.82], r: 0.04 }, { lat: [0.45, 1.15], y: [2.16, 2.82], r: 0.04 }],
+  lamps: [[-0.82, 1.45, 0.11, "lampHead"], [0.82, 1.45, 0.11, "lampHead"]], roofLamp: [0, 3.08, 0.08],
+  wipers: [[[-0.75, 2.2], [-0.55, 2.7]], [[0.1, 2.2], [0.25, 2.7]]],
+};
+
 export const RED_ARROW: ShinkansenSeries = {
   endLength: 22.4, midLength: 22.4, W: 1.45, Y: 1.4, S: 2.9, C: 3.65, lean: 0.95, B: 0.9, A: 1.05,
-  // the 1935 streamliner: rounded ends, the driver's windows wrapping round them
-  nose: nose(2.2, 0.35, 2.0, [[0, 2.0], [0.4, 2.6], [1.4, 3.3], [2.4, 3.65]], [[0, 1.95], [0.4, 2.45], [1.4, 2.8], [2.4, 2.9]], [[0, 1.45], [1.0, 1.4]], [[0, 1.25], [0.8, 1.05]], [[0, 1.15], [0.4, 0.9]]),
-  windscreen: [0.6, 1.9, 0.07, 1.1], lamps: [0.25, 1.6],
+  nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: ARROW_END, endCoupler: "buffers",
+  // the cab's two side windows over the bonnet's end, d behind the join
+  cabWindows: [[0.1, 0.9, 1.92, 2.7], [1.0, 1.8, 1.92, 2.7]],
   windows: [[1.9, 2.65]], windowW: 1.2, pitch: 1.5, door: [1.2, 2.95, 1.9, 2.55], doorW: 0.8,
-  bogieCentres: 14.0, wheelR: 0.45, wheelbase: 2.6, single: true, endPantograph: true,
+  bogieCentres: 17.1, wheelR: 0.45, wheelbase: 2.7, single: true, endPantograph: true,
   liveries: { redArrow: chLivery("redArrow", "RCE 203") },
   weight: { end: 40, middle: 40 }, power: 380, maxspeed: 125,
 };

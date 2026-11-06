@@ -269,9 +269,11 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
       if (end && l.capSlope && l.frontRoof) m.scope("cab roof", () => capSlope(m, b, X, l.capSlope!, l.frontRoof!));
       if (end && l.endSweeps) m.scope("sweeps", () => l.endSweeps!.forEach((w, i) => m.scope(`sweep ${i + 1}`, () => endSweep(m, b, X, w, s.cabFace?.dJoin ?? 0, 0.003 + 0.0015 * i))));
       if (end && s.cabWindows) m.scope("cab windows", () => {
-        for (const sd of [1, -1]) for (const [d0, d1, y0, y1] of s.cabWindows!) {
-          sidePanel(m, b, X, sd, "rubber", d0, d1, y0, y1, 0.007, 0.03);
-          sidePanel(m, b, X, sd, "glass", d0 + 0.04, d1 - 0.04, y0 + 0.04, y1 - 0.04, 0.012, 0.004);
+        // a single railcar's rear cab too, mirrored
+        const spans = s.cabWindows!.flatMap(([d0, d1, y0, y1]) => [[d0, d1, y0, y1], ...(s.single ? [[L - d1, L - d0, y0, y1]] : [])]);
+        for (const sd of [1, -1]) for (const [d0, d1, y0, y1] of spans) {
+          sidePanel(m, b, X, sd, "rubber", d0!, d1!, y0!, y1!, 0.007, 0.03);
+          sidePanel(m, b, X, sd, "glass", d0! + 0.04, d1! - 0.04, y0! + 0.04, y1! - 0.04, 0.012, 0.004);
         }
       });
       if (end && s.endGrilles) m.scope("grilles", () => {
