@@ -65,11 +65,11 @@ Notes:
 
 | id | title | L x B x H (m) | draft (draftFrac) | bow / stern | triangles (LOD) | params |
 |---|---|---|---|---|---|---|
-| `veh-ship-narrowboat` | Canal Narrowboat | 21.0 x 2.1 x 2.8 | 0.6 (0.2182) | raked / cruiser | 873 (93) | colour: green, red, blue, black |
-| `veh-ship-thames-barge` | Thames Sailing Barge | 25.0 x 6.0 x 26.0 | 1.0 (0.0385) | plumb / transom | 995 (69) | - |
-| `veh-ship-dhow` | Dhow | 20.0 x 6.0 x 22.5 | 2.5 (0.1113) | clipper / transom | 757 (60) | - |
-| `veh-ship-junk` | Chinese Junk | 30.0 x 7.0 x 24.5 | 2.5 (0.102) | barge / transom | 1083 (79) | - |
-| `veh-ship-felucca` | Felucca | 9.0 x 3.0 x 13.4 | 0.6 (0.0447) | clipper / transom | 647 (50) | - |
+| `veh-ship-narrowboat` | Canal Narrowboat | 21.0 x 2.1 x 2.8 | 0.6 (0.2182) | raked / cruiser | 2277 (93) | colour: green, red, blue, black |
+| `veh-ship-thames-barge` | Thames Sailing Barge | 25.0 x 6.0 x 26.0 | 1.0 (0.0385) | plumb / transom | 3433 (99) | - |
+| `veh-ship-dhow` | Dhow | 20.0 x 6.0 x 22.5 | 2.5 (0.1113) | clipper / transom | 3707 (100) | - |
+| `veh-ship-junk` | Chinese Junk | 30.0 x 7.0 x 24.5 | 2.5 (0.102) | barge / transom | 3891 (99) | - |
+| `veh-ship-felucca` | Felucca | 9.0 x 3.0 x 13.4 | 0.6 (0.0447) | clipper / transom | 2337 (100) | - |
 | `veh-ship-kettuvallam` | Kerala Houseboat | 20.0 x 4.5 x 4.3 | 0.8 (0.186) | canoe / canoe | 578 (68) | - |
 | `veh-ship-sedov` | Sedov | 108.0 x 14.6 x 58.0 | 6.3 (0.1086) | clipper / cruiser | 2358 (97) | - |
 | `veh-ship-cutty-sark` | Cutty Sark | 64.7 x 11.0 x 47.0 | 6.1 (0.1298) | clipper / cruiser | 1882 (90) | - |
@@ -94,6 +94,12 @@ Notes:
 - **Traditional craft**: the Thames barge's spritsail, topsail, foresail and mizzen with its
   leeboards; the dhow's and felucca's lateens, the junk's battened sails, the Viking longship's
   square sail and shields, the voyaging canoe's crab-claws on its twin hulls.
+- **Detailed small craft** (see "Detail" in [world-ships.md](world-ships.md)): the narrowboat
+  (porthole row, roof vents, plant box and pole, tiller, button fenders, cratch), the Thames
+  barge (hatch covers, leeboard winches, windlass, wheel, sprit and vangs, tender), the dhow
+  (plank seams, poop rail, transom board, rudder lines, crew shelter, water jars), the junk
+  (wales, stern cabin, painted eye, great rudder, battens' sheets) and the felucca (painted
+  bands, benches, awning, tiller, stays).
 - **Small craft** are held to 4,000 triangles; their JS models (about 47 KB of kit) still stay
   under their GLBs.
 

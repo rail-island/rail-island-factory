@@ -128,6 +128,9 @@ document that owns it in the same change.** Conventions:
 - **`aircraft`** (`.agents/skills/aircraft/`) - use it whenever an aircraft or an
   airline livery is added or changed: the 10,000-triangle budget, bodies and decals,
   the airframe/gear parts, liveries and headless checks.
+- **`ship`** (`.agents/skills/ship/`) - use it whenever a ship is added or changed: the
+  25,000/15,000-triangle budgets (4,000 for small craft), the hull kit, the house, fittings
+  and cargo gear every ship carries, the waterline, OpenTTD, references and headless checks.
 - **`vlakosimdb-transfer`** (`.agents/skills/vlakosimdb-transfer/`) - use it when
   reconstructing or correcting a vehicle from vlakosimdb: XML shapes, original
   BMP measurements, comparison-table optimization and presentation to the user.
