@@ -12,6 +12,7 @@
 import { MeshBuilder } from "./meshBuilder.ts";
 import type { DoorStyle } from "./busAssembly.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
+import * as refined from "./worldBusRefined.ts";
 import { sectionOf, tyres, worldBus, worldBusLod, type WorldBusSpec } from "./worldBusKit.ts";
 import { coach, doubleDeck, highFloor, lowFloor, twoBodies, worldBusDesign, g, type Base, type WorldBus } from "./worldBuses.ts";
 import { BUS_CATALOG } from "./buses.ts";
@@ -55,7 +56,7 @@ export function lighTramSpec(): WorldBusSpec {
 }
 
 export function biarticuladoSpec(): WorldBusSpec {
-  return brt({
+  return { ...brt({
     length: 25.0, width: 2.6, height: 3.3,
     axles: [{ at: 2.6 }, { at: 8.4, drive: true }, { at: 15.2 }, { at: 22.4 }],
     doors: [[1.1, 2.3], [4.4, 5.6], [11.6, 12.8], [18.6, 19.8]],
@@ -63,7 +64,7 @@ export function biarticuladoSpec(): WorldBusSpec {
     // the express lines' red
     livery: { body: "#c8202e", rub: "#3c3c3c", white: "#f4f4f1" },
     paint: [[-1, 26, 0.78, 0.86, "rub"], [-1, 26, 2.95, 3.3, "white"]],
-  }, 0.95);
+  }, 0.95), detail: true, extras: refined.biarticulado };
 }
 
 export function transmilenioSpec(): WorldBusSpec {

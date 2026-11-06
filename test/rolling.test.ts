@@ -49,11 +49,33 @@ const ROLLING: Array<{ id: string; d: number; nodes: string[] }> = [
     ["proc-vehicle-mb-o345-g", 1.0, 2, true],
     ["proc-vehicle-solaris-urbino-15", 0.96, 2, false],
     ["proc-vehicle-bus-1", 1.0, 1, false],
+    // the refined world buses (worldBusRefined.ts) on the same detail
+    ["proc-vehicle-new-routemaster", 1.0, 1, false],
+    ["proc-vehicle-aec-routemaster", 1.0, 1, false],
+    ["proc-vehicle-neoplan-skyliner", 1.0, 2, false],
+    ["proc-vehicle-ikarus-280", 1.0, 2, true],
+    ["proc-vehicle-skoda-15tr", 1.0, 2, true],
+    ["proc-vehicle-van-hool-exquicity", 0.96, 2, true],
+    ["proc-vehicle-blue-bird-vision", 1.0, 1, false],
+    ["proc-vehicle-gm-scenicruiser", 1.0, 2, false],
+    ["proc-vehicle-skoda-706-rto", 1.0, 1, false],
+    ["proc-vehicle-curitiba-biarticulado", 1.0, 3, true],
+    ["proc-vehicle-ikarus-260", 1.0, 1, false],
+    ["proc-vehicle-leyland-national", 1.0, 1, false],
+    ["proc-vehicle-mb-o305", 1.0, 1, false],
+    ["proc-vehicle-skoda-14tr", 1.0, 1, false],
+    ["proc-vehicle-adl-enviro400", 1.0, 1, false],
+    ["proc-vehicle-karosa-sm11", 1.0, 1, false],
+    ["proc-vehicle-liaz-677", 1.0, 1, false],
+    ["proc-vehicle-bristol-lodekka", 1.0, 1, false],
+    ["proc-vehicle-bussing-d2u", 1.0, 1, false],
+    ["proc-vehicle-tatra-500-hb", 1.0, 1, false],
   ] as const).map(([id, d, rear, articulated]) => {
     const pair = (k: number): string[] => [`wheel-rear-${k}-left`, `wheel-rear-${k}-right`];
     const front = ["wheel-front-left-spin", "wheel-front-right-spin"];
-    // an articulated bus draws its front section (middle axle, then the steered wheels) before the rear one
-    const nodes = articulated ? [...pair(1), ...front, ...pair(2)] : [...Array.from({ length: rear }, (_, k) => pair(k + 1)).flat(), ...front];
+    const behind = Array.from({ length: rear - 1 }, (_, k) => pair(k + 2)).flat();
+    // an articulated bus draws its front section (middle axle, then the steered wheels) before the rear ones
+    const nodes = articulated ? [...pair(1), ...front, ...behind] : [...pair(1), ...behind, ...front];
     return { id, d, nodes };
   }),
 ];
