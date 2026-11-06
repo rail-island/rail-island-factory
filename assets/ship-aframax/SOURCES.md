@@ -11,7 +11,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
 | `photo-atlas-maritime-s-mitera-marigo-aframax-oil-tanker.jpg` | Atlas Maritime's Mitera Marigo Aframax Oil Tanker.jpg | https://commons.wikimedia.org/wiki/File:Atlas_Maritime%27s_Mitera_Marigo_Aframax_Oil_Tanker.jpg | Pennykall | CC BY-SA 3.0 | shape, proportions and colours |
-| `photo-fs-etoile-icon.jpg` | FS Etoile-icon.jpg | https://commons.wikimedia.org/wiki/File:FS_Etoile-icon.jpg | unknown | CC BY-SA 3.0 | shape, proportions and colours |
 
 ## Published figures
 

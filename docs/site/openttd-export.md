@@ -227,7 +227,13 @@ the vehicle's position but a corner of its bounding box, moved by direction and,
 for a train, by length (`spriteAnchor`, from each vehicle type's
 `UpdateDeltaXY` in OpenTTD 13 and 14; version 15 keeps the same point). Without
 it a train sat beside its rails and an articulated coach's slices of different
-lengths did not line up. `SpriteRenderer` draws it with WebGL: the materials swapped for flat
+lengths did not line up. A tram's offsets also take it from its lane onto its
+rails (`TRAM_LANE_SHIFT`): OpenTTD drives a tram along a road vehicle's lane
+(13.4 `table/roadveh_movement.h`: on the default right-hand side y 5 heading SW,
+y 9 NE, x 9 SE, x 5 NW), while the tram track lies at 8 like a train's; the
+curve views take the mean of their neighbours. Without it a tram sat beside its
+track, the near rail showing below its body. A game driving on the left puts the
+lanes on the other side, which a sprite cannot know. `SpriteRenderer` draws it with WebGL: the materials swapped for flat
 diffuse ones of the same colour, an ambient (1.2) and a directional (1.5) light
 from the screen's upper left, an antialiased premultiplied canvas at twice the
 4x size. `zoomImages` (`pixels.ts`) box-filters it to OpenTTD's 4x, 2x and

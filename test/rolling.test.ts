@@ -24,6 +24,7 @@ type Gltf = {
 /** The vehicles with irregular wheels, their wheel diameter and the nodes that roll. */
 const ROLLING: Array<{ id: string; d: number; nodes: string[] }> = [
   { id: "proc-vehicle-cd-150", d: 1.25, nodes: ["wheelset-1", "wheelset-2", "wheelset-3", "wheelset-4"] },
+  { id: "proc-vehicle-horse-tram", d: 0.76, nodes: ["wheelset-1", "wheelset-2"] },
   ...[
     ["proc-vehicle-tatra-815-tipper", 1.14, 2],
     ["proc-vehicle-praga-rv", 1.02, 2],

@@ -60,6 +60,8 @@ export interface ShinkansenSeries {
   nose: NoseShape;
   /** The windscreen on the nose: d span and half widths. */
   windscreen: readonly [number, number, number, number];
+  /** A black band round the windscreen, on the nose under its rubber: how far it reaches past the panes (d and half width), joined over the centre pillar. */
+  windscreenMask?: number;
   /** The headlights on the nose's sides: d and height. */
   lamps: readonly [number, number];
   /** Window rows: sill and head of each (two on a double-deck car), the window's width and pitch. */
@@ -189,6 +191,8 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
 function noseFittings(m: MeshBuilder, s: ShinkansenSeries, b: SliceBody, X: (d: number) => number): void {
   const [d0, d1, z0, z1] = s.windscreen;
   m.scope("windscreen", () => {
+    const k = s.windscreenMask;
+    if (k) for (const sd of [1, -1]) crownPane(m, b, X, sd, "cabMask", [d0 - k, d1 + k * 0.5], [0, z1 + k], 0.006);
     for (const sd of [1, -1]) {
       crownPane(m, b, X, sd, "rubber", [d0, d1], [z0, z1], 0.012, 5, 3);
       crownPane(m, b, X, sd, "cabGlass", [d0 + 0.08, d1 - 0.08], [z0 + 0.05, z1 - 0.05], 0.04, 5, 3);

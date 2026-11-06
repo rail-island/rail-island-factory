@@ -8,7 +8,7 @@ import { catalogRecord, metaEntry } from "../generator/catalog";
 import { checkOpenttdProperties, type ProceduralDesign } from "../generator/design";
 import { ALL_VEHICLES, DESIGNS } from "../generator/generate";
 import { downsamplePremultiplied, flipRows, unpremultiply, zoomImages } from "../src/openttd/pixels";
-import { HEADINGS, RENDER_ZOOM, applyMatrix, spriteAnchor, spriteViews, vehicleScale, type ModelBox } from "../src/openttd/projection";
+import { HEADINGS, RENDER_ZOOM, TRAM_LANE_SHIFT, applyMatrix, spriteAnchor, spriteViews, vehicleScale, type ModelBox } from "../src/openttd/projection";
 import {
   HASHED_FIRST_ID, LAST_LOCAL_ID, assignIds, defaultOpenttdFields, defaultSetGrfId, fnv1a, grfIdBytes, grfIdText, parseSetGrfId, openttdFeature, partKey, partLengths, resolveVehicle, variantName,
 } from "../src/openttd/properties";
@@ -210,6 +210,32 @@ describe("spriteViews", () => {
         expect(Math.abs(v.yOffs % RENDER_ZOOM)).toBe(0);
       }
     }
+  });
+
+  // Regression: OpenTTD drives a tram along a road vehicle's lane (y 5 heading SW
+  // on the default right-hand side, the tram track at y 8), so a tram drawn about
+  // its position sat beside its rails, the near rail showing below its body.
+  it("moves a tram's sprites from its lane onto its rails, not a bus's", () => {
+    const box: ModelBox = { min: [-15, 0, -1.2], max: [15, 3.6, 1.2] };
+    const bus = spriteViews("road", box, [8, 8]);
+    const tram = spriteViews("road", box, [8, 8], 0, true);
+    expect(TRAM_LANE_SHIFT[5]).toEqual([0, 3]); // SW: lane y 5 -> track y 8
+    expect(TRAM_LANE_SHIFT[1]).toEqual([0, -1]); // NE: lane y 9
+    expect(TRAM_LANE_SHIFT[3]).toEqual([-1, 0]); // SE: lane x 9
+    expect(TRAM_LANE_SHIFT[7]).toEqual([3, 0]); // NW: lane x 5
+    for (const [k, part] of tram.entries()) {
+      for (const [d, v] of part.entries()) {
+        const b = bus[k]![d]!;
+        const [lx, ly] = TRAM_LANE_SHIFT[d]!;
+        expect(v.xOffs - b.xOffs).toBe(RENDER_ZOOM * 2 * (ly - lx));
+        expect(v.yOffs - b.yOffs).toBe(RENDER_ZOOM * (lx + ly));
+        expect(Math.abs(v.xOffs % RENDER_ZOOM)).toBe(0);
+        expect(Math.abs(v.yOffs % RENDER_ZOOM)).toBe(0);
+        expect([v.width, v.height, v.model]).toEqual([b.width, b.height, b.model]);
+      }
+    }
+    // the flag only concerns road vehicles
+    expect(spriteViews("train", box, [8, 8], 0, true)).toEqual(spriteViews("train", box, [8, 8]));
   });
 
   it("does not slice a ship or aircraft", () => {

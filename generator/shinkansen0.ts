@@ -200,7 +200,7 @@ function sliceBands(L: Livery, p: Profile, d: number): Array<[number, number, st
 /** The car's lofted shell, open over its doors' leaf boxes (2 mm beyond, under the frame); an end car's nose tip needs no cap. */
 function shell(m: MeshBuilder, L: Livery, p: Profile, X: (d: number) => number, nose: boolean, leaves: readonly SliceDoorway[]): void {
   const cut = leaves.map((o) => ({ ...o, d0: o.d0 - 0.002, d1: o.d1 + 0.002, y0: o.y0 - 0.002, y1: o.y1 + 0.002 }));
-  drawShell(m, p, X, (d, k) => edgeMat(L, p, d, k, nose), (d) => sliceBands(L, p, d), { front: !nose, rear: true }, cut);
+  drawShell(m, p, X, (d, k) => edgeMat(L, p, d, k, nose), (d) => sliceBands(L, p, d), cut);
 }
 
 /** A door's outline box (y) and its leaf's, 2 cm inside it. */

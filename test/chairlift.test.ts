@@ -56,15 +56,14 @@ describe("the chairlift chair", () => {
     expect(Buffer.from(glb({ seats: "8", cover: "none" })).equals(Buffer.from(glb({ seats: "8", cover: "none" })))).toBe(true);
   });
 
-  it("keeps the rope at y 3.60 along x and the seat top at 0.62, whatever the variant", () => {
+  it("keeps the rope (through the grip, drawn by the game) at y 3.60 along x and the seat top at 0.62, whatever the variant", () => {
     for (const combo of sample(coverageCombinations(CHAIRLIFT_PARAMS, ["color"]))) {
       const ts = tris(combo);
-      const rope = ts.filter((t) => t.material === "rubber");
-      const [y0, y1] = span(rope, 1);
+      // no rope is drawn (the game draws it); the grip's jaws close round its axis
+      expect(ts.filter((t) => t.material === "rubber")).toHaveLength(0);
+      const jaws = ts.filter((t) => t.material === "steel" && t.p.every((p) => Math.hypot(p[1] - CHAIR.rope, p[2]) < 0.07 && Math.abs(p[0]) < 0.31));
+      const [y0, y1] = span(jaws, 1);
       expect((y0 + y1) / 2).toBeCloseTo(CHAIR.rope, 3);
-      const [z0, z1] = span(rope, 2);
-      expect((z0 + z1) / 2).toBeCloseTo(0, 3);
-      expect(span(rope, 0)[1] - span(rope, 0)[0]).toBeGreaterThan(1);
       // the cushions' tops: the highest seat-coloured horizontal faces in front of the backrests
       const cushions = ts.filter((t) => t.material === "seat" && t.p.every((p) => p[2] > CHAIR.backZ + 0.03));
       expect(span(cushions, 1)[1]).toBeCloseTo(CHAIR.seat, 3);

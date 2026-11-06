@@ -304,6 +304,11 @@ describe("the vehicles", () => {
     // much larger and seen closer along the track, aims at about 15k with
     // room for a small overflow (.agents/skills/railroad-vehicle)
     expect(s.triangles).toBeLessThanOrEqual(rail ? 16_000 : 10_000);
+    // a tram: a rigid one has a road vehicle's 10,000, an articulated one (sections) up to 15,000
+    if (DESIGNS.get(proceduralId(id))!.catalog?.group === "tram") {
+      const articulated = (built(proceduralId(id)).rig?.sections?.length ?? 1) > 1;
+      expect(s.triangles).toBeLessThanOrEqual(articulated ? 15_000 : 10_000);
+    }
     expect(faces(glb).length).toBe(s.triangles);
     const { json } = parseGlb(glb);
     // flat normals are stored, not left to the loader: a pipeline step that
@@ -698,7 +703,7 @@ describe("generateModels", () => {
       expect(first.map((b) => b.id).sort()).toEqual(SAMPLE.map((d) => d.id).sort());
       for (const b of first) {
         expect(b.changed).toBe(true);
-        expect(fs.readFileSync(b.thumb).subarray(1, 4).toString()).toBe("PNG");
+        expect(fs.readFileSync(b.thumb!).subarray(1, 4).toString()).toBe("PNG");
         expect(JSON.parse(fs.readFileSync(b.tree!, "utf8"))).toEqual(built(b.id).tree);
       }
       expect(fs.existsSync(path.join(dir, "tree", "sky-retired.json"))).toBe(false);
@@ -706,9 +711,9 @@ describe("generateModels", () => {
       expect(fs.existsSync(path.join(dir, "glb"))).toBe(false);
       expect(fs.existsSync(path.join(dir, "thumbs", "sky-retired.png"))).toBe(false);
       // a second run finds nothing to rewrite, and leaves the thumbnails alone
-      const mtime = fs.statSync(first[0]!.thumb).mtimeMs;
+      const mtime = fs.statSync(first[0]!.thumb!).mtimeMs;
       expect(generateModels(dir, SAMPLE).every((b) => !b.changed)).toBe(true);
-      expect(fs.statSync(first[0]!.thumb).mtimeMs).toBe(mtime);
+      expect(fs.statSync(first[0]!.thumb!).mtimeMs).toBe(mtime);
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }

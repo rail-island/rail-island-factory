@@ -11,7 +11,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
 | `photo-braunschweig-emsstrae-solaris-tramino-1452.jpg` | Braunschweig Emsstraße Solaris Tramino 1452.JPG | https://commons.wikimedia.org/wiki/File:Braunschweig_Emsstra%C3%9Fe_Solaris_Tramino_1452.JPG | Jacek Rużyczka | CC BY-SA 4.0 | shape, proportions and colours |
-| `photo-innotrans14-solaris-tramino-braunschweig-2.jpg` | InnoTrans14 Solaris Tramino Braunschweig (2).jpg | https://commons.wikimedia.org/wiki/File:InnoTrans14_Solaris_Tramino_Braunschweig_(2).jpg | Travelarz | CC BY-SA 4.0 | shape, proportions and colours |
 
 ## Published figures
 

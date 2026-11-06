@@ -53,6 +53,10 @@ document that owns it in the same change.** Conventions:
 - **Every vehicle states its game properties** (`game` on the design: weight,
   power, maxspeed, accel); the build fails without them.
 - **`export/` and `dist/` are generated and gitignored.** Never commit them.
+- **`build-cache/` is generated and committed** (docs/guide/build-cache.md): every
+  design's build facts and the confirmed models' thumbnails, keyed on their inputs.
+  After a model change run `pnpm build:models` and commit `build-cache/` with it;
+  `pnpm test` fails while it is stale. Never edit it by hand.
 - The site UI is **English only**, but every text the game shows from the factory -
   model titles, parameter titles and values, set type names and descriptions,
   woods and species names, categories - is **exported in the game's 14 languages**
@@ -72,6 +76,11 @@ document that owns it in the same change.** Conventions:
 - **Props** (docs/models/props.md) are the fixed models the game's structures place
   (`proc-prop-*`: a shed, a crane, a tower): drawn in studs from the game's box
   vocabulary, materials named `<kind>#<rrggbb>`, listed in props.meta.json only.
+- **Drafts and the workshop** (docs/site/workshop.md): a model whose id is not in
+  `generator/catalogModels.json` is a draft - the site lists it under Workshop and no
+  game meta file carries it. A new model starts as a draft; add its id to the list only
+  when the user confirms it, and never remove a confirmed id. A model's web links
+  (sources beside its images) go in `generator/linkTable.ts`.
 - Every bug fix ships with a regression test in the suite that owns the behaviour.
 - Use ASCII in code and comments; no emoji.
 - **Source inspiration is stored in git.** Every reference a model is built
@@ -142,7 +151,7 @@ design's defaults and a fixed sample of its other parameter combinations
   alone.
 
 For a model change, also look at `export/thumbs/<id>.png` after
-`pnpm build:models`.
+`pnpm build:models`, and commit the `build-cache/` it updated.
 
 **Headless verification only**: do not drive a real browser (no dev server +
 browser automation) unless the task is about browser tooling and the user agreed

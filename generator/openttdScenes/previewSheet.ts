@@ -131,7 +131,7 @@ async function drawItem(id: string, cars: Car[], feature: OpenttdFeature, direct
       ? { min: [-b.max[0], b.min[1], -b.max[2]], max: [-b.min[0], b.max[1], -b.min[2]] }
       : { min: [b.min[0], b.min[1], b.min[2]], max: [b.max[0], b.max[1], b.max[2]] };
     const lengths = partLengths(box.max[0] - box.min[0], feature);
-    const views = spriteViews(feature, box, lengths, design.game?.draftFrac ?? 0);
+    const views = spriteViews(feature, box, lengths, design.game?.draftFrac ?? 0, catalogFields(design).group === "tram");
     for (const [k, dirs] of views.entries()) {
       const zooms = zoomImages(rasterize(tris, dirs[direction]!, car.turned), dirs[direction]!, SUPERSAMPLE);
       out.push({ length: lengths[k]!, image: zooms.find((z) => z.zoom === (zoom === "1x" ? GRF_ZOOM.normal : GRF_ZOOM.in4x))! });

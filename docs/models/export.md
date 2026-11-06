@@ -5,7 +5,7 @@ file), the `skyscrapers.meta.json`, `village.meta.json`, `vehicles.meta.json`,
 `characters.meta.json` and `woods.meta.json` contracts the game imports, the site's `catalog.json`, the in-memory GLB the build
 analyses, the offline thumbnail renderer and the contact sheet.
 **Code** - `generator/generate.ts`, `generator/catalog.ts`, `generator/renderGlbThumb.ts`, `generator/contactSheet.ts`,
-`generator/jsModel.ts`, `generator/glbStats.ts`, `test/thumbnails.test.ts`, `test/contactSheet.test.ts`, `generator/coplanar.ts`, `generator/glbTriangles.ts`, `generator/glbParse.ts`, `test/export.test.ts`
+`generator/jsModel.ts`, `generator/buildCache.ts`, `generator/glbStats.ts`, `test/thumbnails.test.ts`, `test/contactSheet.test.ts`, `generator/coplanar.ts`, `generator/glbTriangles.ts`, `generator/glbParse.ts`, `test/export.test.ts`
 **See also** - [skyscrapers.md](skyscrapers.md), [village.md](village.md), [vehicles.md](vehicles.md), [game-properties.md](game-properties.md), [characters.md](characters.md), [../site/catalog-site.md](../site/catalog-site.md),
 [../guide/setup-and-build.md](../guide/setup-and-build.md)
 
@@ -32,6 +32,7 @@ the same JS models and trees on demand ([../site/catalog-site.md](../site/catalo
 | `export/text/<code>.json` | every exported text in each of the game's 14 languages ([text.md](text.md)) |
 | `export/textures/*.jpg`, `export/surfaces.meta.json` | the texture library and every named surface, for the game to import ([surfaces.md](surfaces.md)) |
 | `export/catalog.json` | what the site lists |
+| `export/.build-keys.json` | the build-cache key each JS model and tree file was written for ([../guide/build-cache.md](../guide/build-cache.md)) |
 
 `export/` is also Vite's `publicDir`, so `vite build` copies it into `dist/` as
 it stands and the deployed site serves the very files the game imports, at
@@ -45,13 +46,14 @@ counts, the z-fighting guard, the legacy table's sizes, the native comparisons
 and the tests read (`glbParse.ts`, `glbTriangles.ts`, `glbStats.ts`). Nothing of
 it reaches the export or the site.
 
-**Incremental.** An unchanged design produces byte-identical in-memory GLB bytes;
-`export/thumbs/.sources.json` records their SHA-256 per design, and the
-generator leaves the thumbnail of a design whose hash is unchanged alone. The
-thumbnail - a software rasterizer, the slow part - is re-rendered only when the
-model changed, the PNG is missing or `THUMB_VERSION` (`generate.ts`) differs from the one
-`export/thumbs/.version` records, which is how a change of framing or lighting
-reaches every unchanged design. A JS file is rewritten only when its text changed. A file of a design that no longer exists is deleted, so a
+**Incremental.** A design whose inputs are unchanged is not built at all: the
+committed `build-cache/` keeps its facts (counts, bounds, rig, side frame, rider
+seat, the bundle's switches, measured extents) and a confirmed model's thumbnail
+under a key over its source files and data, and `export/.build-keys.json` the key
+each JS model and tree file was written for
+([../guide/build-cache.md](../guide/build-cache.md)). `export/thumbs/` is a copy of
+`build-cache/thumbs/`. `THUMB_VERSION` (`generate.ts`) is part of every key, which is
+how a change of framing or lighting reaches every design. A JS file is rewritten only when its text changed. A file of a design that no longer exists is deleted, so a
 dropped id cannot linger. A tree file is rewritten only when its text changed.
 **Source images.** A design names its folder under `assets/` with
 `references` (`generator/design.ts`; the vehicles set it), or a list of folders
@@ -112,7 +114,10 @@ they reproduce - [reproductions.md](reproductions.md)). The file keeps its name
 from when it held only skyscrapers; `BUILDINGS` in `generator/generate.ts` lists
 what goes into it. The webapp's `pnpm import:factory` mirrors `js/`, `thumbs/`
 and the meta files into its `db/procedural/`; changing a field here is a contract
-change for that importer.
+change for that importer. **A draft** - a model not yet confirmed into the catalog
+(`generator/catalogModels.json`) - is in no meta file, only in `catalog.json` with
+`draft: true`, and gets no thumbnail: the site renders it in the browser
+([../site/workshop.md](../site/workshop.md)).
 
 The five parametric commercial families ([commercial.md](commercial.md)) are
 also in `BUILDINGS` and this file, using `COMMERCIAL_CATALOG`: category
