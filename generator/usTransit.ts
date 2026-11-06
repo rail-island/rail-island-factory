@@ -48,7 +48,8 @@ export interface CarDef {
   /** A cab front painted apart from the sides: its bands, on the shell from the +X tip back to d. */
   front?: { d: number; bands: readonly Band[]; roof?: string };
   /** Fluting: thin lines along the side between these heights (stainless cars). */
-  fluting?: { y0: number; y1: number; pitch: number; mat: string };
+  /** Horizontal ribs on the sides, round the windows and doors: one band of them, or several. */
+  fluting?: Flutes | readonly Flutes[];
   /** A flat cab end: windscreen panes (z0, z1, y0, y1), lamps (z, y, r, lens), the front's paint. */
   cab?: { panes: ReadonlyArray<readonly [number, number, number, number]>; lamps: ReadonlyArray<readonly [number, number, number, string]>; mask?: readonly [number, number, string] };
   /** Which ends are cabs (a flat cab end) and which carry a gangway diaphragm. */
@@ -108,8 +109,15 @@ function door(m: MeshBuilder, c: CarDef, b: SliceBody, X: (d: number) => number,
 }
 
 /** Fluting along a side from d0 to d1 between heights, broken over windows and doors. */
+/** A band of side ribs: from y0 to y1, one every `pitch`, in `mat`. */
+export interface Flutes { y0: number; y1: number; pitch: number; mat: string }
+
 function fluting(m: MeshBuilder, c: CarDef, b: SliceBody, X: (d: number) => number, s: number): void {
-  const f = c.fluting!;
+  const all = c.fluting!;
+  for (const f of "y0" in all ? [all] : all) flutes(m, c, b, X, s, f);
+}
+
+function flutes(m: MeshBuilder, c: CarDef, b: SliceBody, X: (d: number) => number, s: number, f: Flutes): void {
   const holes: Array<readonly [number, number, number, number]> = [
     ...c.windows.flatMap((w) => w.spans.map(([a, e]) => [a - 0.04, e + 0.04, w.y[0] - 0.04, w.y[1] + 0.04] as const)),
     ...c.doors.spans.map(([a, e]) => [a - 0.04, e + 0.04, -9, 99] as const),

@@ -43,7 +43,9 @@ unpowered Talgo III set (filed with the coaches).
   cab face with no windscreen (the series kit's `cabFace`), bowed and upright with rounded corners,
   the red window band between dark lines carried round it over the stainless lower body and under
   the silver roof, the door off to one side with its porthole and outline, the marker lamps high
-  and low, the number, buffers at 1.02 m. The roof's ribs and the sides' fluting are not drawn.
+  and low, the number, buffers at 1.02 m. The stainless body is fluted below and above the red
+  band and its roof ribbed lengthwise (the series kit's `fluting` and `roofRibs`); the tail's
+  riveted dome seams are not drawn.
 
 - **Gauge.** The Iberian broad gauge (1,668 mm) stock keeps its bodies on the game's
   standard-gauge wheelsets.
