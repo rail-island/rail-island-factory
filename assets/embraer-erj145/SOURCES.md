@@ -11,7 +11,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
 | `photo-465ka-4263619765.jpg` | 465ka (4263619765).jpg | https://commons.wikimedia.org/wiki/File:465ka_(4263619765).jpg | Aero Icarus from Zürich, Switzerland | CC BY-SA 2.0 | the airframe's shape, proportions and livery |
-| `photo-american-eagle-emb-145lr-n627ae-6983751319.jpg` | American Eagle EMB-145LR (N627AE) (6983751319).jpg | https://commons.wikimedia.org/wiki/File:American_Eagle_EMB-145LR_(N627AE)_(6983751319).jpg | Cory W. Watts from Madison, Wisconsin, United States of America | CC BY-SA 2.0 | the airframe's shape, proportions and livery |
 
 ## Published figures
 

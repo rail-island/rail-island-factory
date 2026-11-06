@@ -10,7 +10,6 @@ Downloaded from Wikimedia Commons as standard thumbnails, at most 1280 px on the
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-irizar-busworld-europe-2023-brussels-p1140261.jpg` | Irizar, Busworld Europe 2023, Brussels (P1140261).jpg | https://commons.wikimedia.org/wiki/File:Irizar,_Busworld_Europe_2023,_Brussels_(P1140261).jpg | MB-one | CC BY-SA 4.0 | the current Irizar coach range: the front, glazing and proportions |
 | `photo-irizar-i4.jpg` | Irizar i4.jpg | https://commons.wikimedia.org/wiki/File:Irizar_i4.jpg | Jaime Collado Roldán | CC BY-SA 3.0 | a sister Irizar coach: the maker's front and glazing |
 
 ## Published figures

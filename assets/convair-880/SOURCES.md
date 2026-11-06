@@ -11,7 +11,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
 | `photo-air-to-air-with-a-convair-880.jpg` | Air-to-air with a Convair 880.jpg | https://commons.wikimedia.org/wiki/File:Air-to-air_with_a_Convair_880.jpg | Convair | Public domain | the airframe's shape, proportions and livery |
-| `photo-convair-880-lisa-marie-graceland-memphis-tn-2013-04-01-007.jpg` | Convair 880 Lisa Marie Graceland Memphis TN 2013-04-01 007.jpg | https://commons.wikimedia.org/wiki/File:Convair_880_Lisa_Marie_Graceland_Memphis_TN_2013-04-01_007.jpg | Thomas R Machnitzki (thomasmachnitzki.com) | CC BY 3.0 | the airframe's shape, proportions and livery |
 
 ## Published figures
 

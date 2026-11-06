@@ -11,7 +11,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
 | `photo-02-03-69-1er-vol-de-concorde-1969-53fi1931-cropped.jpg` | 02.03.69 1er vol de Concorde (1969) - 53Fi1931 - cropped.jpg | https://commons.wikimedia.org/wiki/File:02.03.69_1er_vol_de_Concorde_(1969)_-_53Fi1931_-_cropped.jpg | André Cros | CC BY-SA 4.0 | the airframe's shape, proportions and livery |
-| `photo-11-12-67-presentation-officielle-du-concorde-1967-53fi1800.jpg` | 11.12.67 Présentation officielle du Concorde (1967) - 53Fi1800.jpg | https://commons.wikimedia.org/wiki/File:11.12.67_Pr%C3%A9sentation_officielle_du_Concorde_(1967)_-_53Fi1800.jpg | André Cros | CC BY-SA 4.0 | the airframe's shape, proportions and livery |
 
 ## Published figures
 

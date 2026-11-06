@@ -11,7 +11,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
 | `photo-air-tanker-at-range-fire.jpg` | Air tanker at Range Fire.jpg | https://commons.wikimedia.org/wiki/File:Air_tanker_at_Range_Fire.jpg | Cal Fire/Kern Co FD | Public domain | the airframe's shape, proportions and livery |
-| `photo-avrorjjets.jpg` | AvroRJjets.JPG | https://commons.wikimedia.org/wiki/File:AvroRJjets.JPG | Kristoferb at English Wikipedia | CC BY-SA 3.0 | the airframe's shape, proportions and livery |
 
 ## Published figures
 

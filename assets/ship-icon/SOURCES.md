@@ -10,7 +10,7 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-icon-aquadome.jpg` | Icon Aquadome.jpg | https://commons.wikimedia.org/wiki/File:Icon_Aquadome.jpg | Shipsoftheworld11 | CC BY-SA 4.0 | shape, proportions and colours |
+| `photo-icon-of-the-seas-puerto-rico-2025-cropped.jpg` | Icon of the Seas Puerto Rico 2025 (cropped).jpg | https://commons.wikimedia.org/wiki/File:Icon_of_the_Seas_Puerto_Rico_2025_(cropped).jpg | Corey Seeman | CC BY-SA 4.0 | the whole Icon Class Cruise Ship (the lead photograph of Wikipedia's "Icon of the Seas") |
 
 ## Published figures
 

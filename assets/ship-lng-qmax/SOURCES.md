@@ -10,7 +10,6 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 
 | file | original | URL | author | licence | use |
 |---|---|---|---|---|---|
-| `photo-max-q-burbank-wetherbee.jpg` | Max-Q - Burbank, Wetherbee.jpg | https://commons.wikimedia.org/wiki/File:Max-Q_-_Burbank,_Wetherbee.jpg | NASA | Public domain | shape, proportions and colours |
 | `photo-mozah.jpg` | Mozah.JPG | https://commons.wikimedia.org/wiki/File:Mozah.JPG | Zariquiegui | Public domain | shape, proportions and colours |
 
 ## Published figures

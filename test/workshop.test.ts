@@ -133,7 +133,11 @@ describe("web links", () => {
     expect(vectron.links).toEqual(MODEL_LINKS["proc-vehicle-vectron"]);
     expect("draft" in vectron).toBe(false);
     const truck = catalogRecord(metaEntry(DESIGNS.get(DRAFT)!), facts);
-    expect("links" in truck).toBe(false);
+    expect(truck.links).toEqual(MODEL_LINKS[DRAFT]);
     expect(truck.draft).toBe(true);
+    // a model without links carries no links field
+    const cd150 = catalogRecord(metaEntry(DESIGNS.get(CONFIRMED)!), facts);
+    expect(MODEL_LINKS[CONFIRMED]).toBeUndefined();
+    expect("links" in cd150).toBe(false);
   });
 });

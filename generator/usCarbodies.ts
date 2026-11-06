@@ -363,6 +363,224 @@ export function buildP42(l: CarbodyLivery): MeshBuilder {
 }
 
 // ---------------------------------------------------------------------------
+// EMD F40PH
+
+const F40_LENGTH = ft(56, 2); // 17.12 m over the couplers
+const F40_REACH = 0.55; // the nose tip behind the front coupler face (the pilot stands out)
+const F40_REAR = 0.4;
+const F40_BODY = F40_LENGTH - F40_REACH - F40_REAR;
+const F40_TRUCK = ft(30, 6) / 2;
+/** Height of the nose's top (its shoulder) and of the body's roof crown. */
+const F40_NOSE_TOP = 3.35;
+const F40_ROOF = 4.6;
+/** The cab front: the windscreen from the nose top at d = 1.55 to its head at d = 1.9; the roof reached at d = 2.4. */
+const F40_CAB = 1.55;
+
+export const F40_SPEC: CarbodySpec = {
+  length: F40_BODY, W: 1.59, Y: 1.42, S: 4.36, C: F40_ROOF, lean: 0.99, arc: 5, B: 1.3, wl: 1.57, A: 1.4, wa: 1.58,
+  front: {
+    len: 0.32, tip: 0.8, power: 1.4,
+    C: [[0, F40_NOSE_TOP - 0.05], [0.25, F40_NOSE_TOP + 0.06], [F40_CAB, F40_NOSE_TOP + 0.14], [F40_CAB + 0.05, F40_NOSE_TOP + 0.24], [1.9, 4.12], [2.15, 4.42], [2.4, F40_ROOF]],
+    S: [[0, F40_NOSE_TOP - 0.12], [0.25, F40_NOSE_TOP], [F40_CAB, F40_NOSE_TOP + 0.08], [F40_CAB + 0.05, F40_NOSE_TOP + 0.15], [1.9, 3.97], [2.15, 4.22], [2.4, 4.36]],
+    Y: [[0, 1.5], [0.2, 1.42]],
+    A: [[0, 1.45], [0.2, 1.4]],
+    B: [[0, 1.4], [0.2, 1.3]],
+  },
+  edges: [], step: 0.8, noseStep: 0.12,
+};
+
+const F40_PAL = {
+  silver: paint("#c3c7cb", 0.35), amBlue: paint("#1f4f9e"), amRed: paint("#c8262c"), amWhite: paint("#eeeeea"), amBlack: paint("#202225"),
+  truckBlack: paint("#242527", 0.85), bell: paint("#b08d3c", 0.4),
+};
+
+/** Amtrak's Phase III: silver with the red, white and blue stripes, the nose top and cab front black. */
+export const F40_LIVERIES: Record<string, CarbodyLivery> = {
+  phaseIII: {
+    title: "Amtrak Phase III", palette: F40_PAL,
+    bands: [[0, 2.16, "silver"], [2.16, 2.36, "amBlue"], [2.36, 2.54, "amWhite"], [2.54, 2.76, "amRed"], [2.76, 9, "silver"]],
+    roof: "silver", skirt: "amBlack", under: "truckBlack",
+    lettering: { text: "Amtrak", d: 9.6, y: 3.15, h: 0.66, mat: "amBlack" },
+    number: "406", numberMat: "amBlack",
+  },
+  phaseII: {
+    title: "Amtrak Phase II", palette: F40_PAL,
+    bands: [[0, 2.44, "silver"], [2.44, 2.56, "amBlue"], [2.56, 2.68, "amWhite"], [2.68, 2.8, "amRed"], [2.8, 9, "silver"]],
+    roof: "silver", skirt: "amBlack", under: "truckBlack",
+    lettering: { text: "Amtrak", d: 9.0, y: 3.2, h: 0.66, mat: "amBlack" },
+    number: "257", numberMat: "amBlack",
+  },
+};
+
+/** The cab roof's black ends here (d from the nose tip): behind the cab door. */
+const F40_CAB_ROOF = 4.6;
+
+/**
+ * The Amtrak wordmark's glyphs ("Amtrak" in the bold lower-case sans of the
+ * Phase II-IV schemes): polylines in units of the capital's height, each with its
+ * advance width. Drawn by `wordmark` as bars on the side, like strokeFont.ts.
+ */
+const AMTRAK_GLYPHS: ReadonlyArray<{ w: number; lines: Array<Array<[number, number]>> }> = [
+  { w: 0.78, lines: [[[0, 0], [0.39, 1], [0.78, 0]], [[0.17, 0.36], [0.61, 0.36]]] },
+  { w: 0.74, lines: [[[0, 0], [0, 0.64]], [[0, 0.44], [0.1, 0.58], [0.22, 0.64], [0.31, 0.6], [0.37, 0.48], [0.37, 0]], [[0.37, 0.44], [0.47, 0.58], [0.59, 0.64], [0.68, 0.6], [0.74, 0.48], [0.74, 0]]] },
+  { w: 0.34, lines: [[[0.14, 0.86], [0.14, 0.1], [0.22, 0.01], [0.34, 0.01]], [[0, 0.62], [0.32, 0.62]]] },
+  { w: 0.34, lines: [[[0, 0], [0, 0.64]], [[0, 0.42], [0.1, 0.57], [0.21, 0.63], [0.34, 0.63]]] },
+  { w: 0.5, lines: [[[0.5, 0.64], [0.5, 0]], [[0.5, 0.44], [0.4, 0.59], [0.25, 0.64], [0.1, 0.58], [0.01, 0.42], [0.01, 0.22], [0.1, 0.06], [0.25, 0], [0.4, 0.05], [0.5, 0.2]]] },
+  { w: 0.46, lines: [[[0, 0], [0, 1]], [[0.44, 0.64], [0, 0.26]], [[0.14, 0.38], [0.46, 0]]] },
+];
+
+/** The wordmark on side s, centred at d, its foot at y, capitals h tall: bold bars (a fifth of h) as decals. */
+function wordmark(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, d: number, y: number, h: number, mat: string, proud = 0.012): void {
+  const gap = 0.15, t = h * 0.2;
+  const width = AMTRAK_GLYPHS.reduce((a, g) => a + g.w + gap, -gap) * h;
+  const dir = Math.sign(X(0) - X(1));
+  const tris: Pt[] = [];
+  let u0 = -width / 2;
+  for (const g of AMTRAK_GLYPHS) {
+    for (const line of g.lines)
+      for (let j = 1; j < line.length; j++) {
+        const [x0, y0] = [u0 + line[j - 1]![0] * h, line[j - 1]![1] * h];
+        const [x1, y1] = [u0 + line[j]![0] * h, line[j]![1] * h];
+        const len = Math.hypot(x1 - x0, y1 - y0) || 1;
+        const [dx, dy] = [((x1 - x0) / len) * (t / 2), ((y1 - y0) / len) * (t / 2)];
+        const q: Pt[] = [[x0 - dx - dy, y0 - dy + dx], [x0 - dx + dy, y0 - dy - dx], [x1 + dx + dy, y1 + dy - dx], [x1 + dx - dy, y1 + dy + dx]];
+        for (const k of [0, 1, 2, 0, 2, 3]) tris.push([d - dir * s * q[k]![0], y + q[k]![1]]);
+      }
+    u0 += (g.w + gap) * h;
+  }
+  sideDecal(m, b, X, s, mat, tris, proud);
+}
+
+/** The livery's bands, the black nose top and cab front (anti-glare) over them. */
+function f40Painter(l: CarbodyLivery): Painter {
+  const base = painter(l, F40_BODY, false);
+  return (d, y, region) => {
+    // the cab's roof black back to the cab's rear wall, as on Kato's Phase III model
+    if (region === "arc" && d < F40_CAB_ROOF) return "amBlack";
+    if (region === "side" && d < F40_CAB + 0.04 && y > F40_NOSE_TOP - 0.12) return "amBlack";
+    if (region === "lower" || region === "skirt") return "amBlack";
+    return base(d, y, region);
+  };
+}
+
+export function buildF40(l: CarbodyLivery): MeshBuilder {
+  const m = new Builder({ ...CARBODY_PALETTE, ...l.palette });
+  const b = carbody({ ...F40_SPEC, edges: [...edgesOf(l, F40_SPEC.Y, F40_SPEC.S), F40_NOSE_TOP - 0.12].sort((p, q) => p - q) });
+  const tip = F40_LENGTH / 2 - F40_REACH;
+  const X = (d: number) => tip - d;
+  const roofY = F40_ROOF;
+  m.scope("body", () => {
+    m.scope("shell", () => carbodyShell(m, b, X, f40Painter(l)));
+    for (const s of [1, -1])
+      m.scope(s > 0 ? "right side" : "left side", () => {
+        m.scope("cab windows", () => {
+          sideWindow(m, b, X, s, 2.5, 3.12, 3.38, 4.12);
+          sideWindow(m, b, X, s, 3.2, 3.7, 3.38, 4.12);
+        });
+        m.scope("cab door", () => sidePanel(m, b, X, s, "black", 3.85, 4.5, 1.55, 4.12, 0.003, 0.004));
+        // the engine-room doors' seams below the grilles
+        m.scope("door seams", () => {
+          for (const d of [5.0, 6.0, 7.0, 8.0, 9.0, 11.6, 12.6, 13.6]) sidePanel(m, b, X, s, "louvre", d, d + 0.025, 1.6, 3.95, 0.003, 0.002);
+        });
+        m.scope("grilles", () => {
+          // the inertial filter behind the cab, the dynamic brake intake and the radiators' long band at the rear
+          sideGrille(m, b, X, s, 4.75, 5.85, 3.8, 4.25);
+          sideGrille(m, b, X, s, 6.2, 7.6, 3.95, 4.25);
+          sideGrille(m, b, X, s, 10.6, F40_BODY - 0.25, 3.85, 4.28, true);
+        });
+        if (l.lettering) m.scope("logo", () => wordmark(m, b, X, s, l.lettering!.d, l.lettering!.y, l.lettering!.h, l.lettering!.mat));
+        // the nose's wordmark in the white stripe, the number under the side's
+        const white = l.bands.find((band) => band[2] === "amWhite")!;
+        m.scope("nose logo", () => wordmark(m, b, X, s, 0.95, white[0] + 0.022, white[1] - white[0] - 0.044, "amBlack"));
+        if (l.lettering) m.scope("number", () => sideLettering(m, b, X, s, l.number, l.lettering!.d, l.lettering!.y - 0.36, 0.24, l.numberMat, 0.012));
+        m.scope("handrails", () => {
+          for (const d of [3.78, 4.58]) {
+            const z = s * (bodyHalf(b, d) + 0.03);
+            m.rod("handrail", [X(d), 1.55, z], [X(d), 3.9, z], 0.016, 6);
+          }
+        });
+      });
+  });
+  m.scope("nose", () => {
+    m.scope("windscreen", () => {
+      for (const s of [1, -1]) {
+        crownPane(m, b, X, s, "rubber", [F40_CAB + 0.08, 1.86], [0.08, 1.4], 0.006);
+        crownPane(m, b, X, s, "cabGlass", [F40_CAB + 0.12, 1.82], [0.13, 1.35], 0.012);
+      }
+    });
+    m.scope("headlights", () => {
+      const x = tip + 0.01;
+      faceLamps(m, 1, x, [[0, 3.05, 0.085, "lampHead"], [0, 2.85, 0.085, "lampHead"], [-1.08, 1.62, 0.075, "ditch"], [1.08, 1.62, 0.075, "ditch"]]);
+    });
+    m.scope("number boards", () => {
+      // the boards and the red marker lamps over the windscreen, on the cab front's head
+      const d = 2.12, y = 4.3;
+      for (const sz of [-1, 1]) {
+        block(m, "amBlack", X(d) - 0.12, X(d) + 0.1, y - 0.12, y + 0.12, ...side(sz, 0.22, 0.75));
+        block(m, "numberBoard", X(d) + 0.1, X(d) + 0.11, y - 0.08, y + 0.08, ...side(sz, 0.26, 0.71));
+        faceLamps(m, 1, X(d) + 0.08, [[sz * 1.0, y, 0.07, "lampRed"]]);
+      }
+    });
+    m.scope("pilot", () => pilotPlate(m, "amBlack", 1, tip + 0.15, 0.18, 1.42, 1.45, 0.35, 0.55));
+    m.scope("coupler", () => knuckleCoupler(m, 1, tip, F40_LENGTH / 2, COUPLER_Y));
+  });
+  m.scope("rear end", () => {
+    const x = X(F40_BODY);
+    faceLamps(m, -1, -x, [[0, 4.05, 0.1, "lampHead"], [-1.15, 3.95, 0.07, "lampRed"], [1.15, 3.95, 0.07, "lampRed"]]);
+    for (const sz of [-1, 1]) block(m, "numberBoard", x - 0.02, x + 0.01, 4.12, 4.28, ...side(sz, 0.25, 0.7));
+    m.scope("coupler", () => knuckleCoupler(m, -1, -x, F40_LENGTH / 2, COUPLER_Y));
+    pilotPlate(m, "amBlack", -1, -x + 0.12, 0.25, 1.42, 1.4, 0.2, 0.45);
+  });
+  m.scope("roof", () => {
+    m.scope("dynamic brake", () => {
+      // the blister over the grids, louvred either side of its fan
+      block(m, "silver", X(6.6), X(4.6), roofY - 0.06, roofY + 0.1, -1.05, 1.05);
+      roofFan(m, X(5.6), 0, roofY + 0.12, 0.42);
+      for (let d = 4.75; d < 6.5; d += 0.16) for (const sz of [-1, 1]) block(m, "louvre", X(d) - 0.035, X(d) + 0.035, roofY + 0.09, roofY + 0.125, ...side(sz, 0.5, 0.97));
+    });
+    m.scope("exhaust", () => exhaust(m, X(8.6), 0, roofY - 0.02, roofY + 0.18, 0.35, 0.7));
+    m.scope("fans", () => {
+      for (const d of [12.3, 14.3]) {
+        roofFan(m, X(d), 0, roofY, 0.68);
+        // the guard's bars across the fan
+        for (const k of [-2, -1, 0, 1, 2]) block(m, "fanGuard", X(d) + k * 0.24 - 0.018, X(d) + k * 0.24 + 0.018, roofY + 0.065, roofY + 0.09, -Math.sqrt(0.62 ** 2 - (k * 0.24) ** 2), Math.sqrt(0.62 ** 2 - (k * 0.24) ** 2));
+        block(m, "fanGuard", X(d) - 0.62, X(d) + 0.62, roofY + 0.09, roofY + 0.11, -0.02, 0.02);
+      }
+    });
+    m.scope("horn", () => {
+      // a five-chime horn on its stand behind the cab: three trumpets forward, two back
+      block(m, "horn", X(3.35) - 0.12, X(3.35) + 0.12, roofY - 0.04, roofY + 0.08, 0.38, 0.62);
+      for (const [e, dx, z, dy] of [[1, 0, 0.42, 0.18], [1, 0.08, 0.5, 0.28], [1, -0.06, 0.58, 0.18], [-1, 0.05, 0.44, 0.24], [-1, -0.04, 0.56, 0.24]] as const) horn(m, e, X(3.35) + dx, z, roofY + dy);
+    });
+    m.scope("bell", () => {
+      const x = X(7.4), z = -0.55, y = roofY - 0.03;
+      block(m, "horn", x - 0.1, x + 0.1, y, y + 0.06, z - 0.03, z + 0.03);
+      m.loft("bell", ngon(10, 0.11, 0, x, z), y + 0.04, ngon(10, 0.06, 0, x, z), y + 0.2);
+    });
+    m.scope("antenna", () => {
+      block(m, "fanGuard", X(3.9) - 0.08, X(3.9) + 0.08, roofY - 0.03, roofY + 0.02, -0.38, -0.22);
+      m.rod("horn", [X(3.9), roofY, -0.3], [X(3.9), roofY + 0.32, -0.3], 0.012, 6);
+    });
+  });
+  m.scope("running gear", () => {
+    const spec = truckSpec([-ft(4, 6), ft(4, 6)], ft(0, 20), 2.0, 1.3);
+    m.scope("front truck", () => truck(m, F40_TRUCK, spec));
+    m.scope("rear truck", () => truck(m, -F40_TRUCK, spec));
+    m.scope("fuel tank", () => {
+      const q: Array<[number, number]> = [[-1.3, 1.29], [-1.3, 0.72], [-1.05, 0.5], [1.05, 0.5], [1.3, 0.72], [1.3, 1.29]];
+      m.sweep("amBlack", "x", q.map(([z, y]) => [z, y] as [number, number]), -2.6, q.map(([z, y]) => [z, y] as [number, number]), 1.5);
+      for (const sz of [-1, 1]) tankX(m, "tank", 1.75, 3.65, sz * 1.05, 1.0, 0.2, 10);
+    });
+  });
+  return m;
+}
+
+/** Half width of the body's side at d and height y (the side's plane). */
+function bodyHalf(b: SliceBody, d: number): number {
+  return b.w(d);
+}
+
+// ---------------------------------------------------------------------------
 // Siemens ALC-42 Charger
 
 const ALC_LENGTH = 21.79;
@@ -987,6 +1205,7 @@ export const F7_PARAMS = liveryParam(F7_LIVERIES);
 export const P42_PARAMS = liveryParam(P42_LIVERIES);
 export const ALC_PARAMS = liveryParam(ALC_LIVERIES);
 export const GG1_PARAMS = liveryParam(GG1_LIVERIES);
+export const F40_PARAMS = liveryParam(F40_LIVERIES);
 
 const pick = (params: readonly ParamSpec[], l: Record<string, CarbodyLivery>, v?: ParamValues) => l[resolveParams(params, v).livery!]!;
 
@@ -997,6 +1216,10 @@ export function emdF7Lod(params?: ParamValues): MeshBuilder {
 export function geP42dc(params?: ParamValues): MeshBuilder { return buildP42(pick(P42_PARAMS, P42_LIVERIES, params)); }
 export function geP42dcLod(params?: ParamValues): MeshBuilder {
   return locoCarbodyLod(P42_SPEC, pick(P42_PARAMS, P42_LIVERIES, params), P42_LENGTH / 2 - P42_REACH, [P42_TRUCK, -P42_TRUCK], 2.0);
+}
+export function emdF40ph(params?: ParamValues): MeshBuilder { return buildF40(pick(F40_PARAMS, F40_LIVERIES, params)); }
+export function emdF40phLod(params?: ParamValues): MeshBuilder {
+  return locoCarbodyLod(F40_SPEC, pick(F40_PARAMS, F40_LIVERIES, params), F40_LENGTH / 2 - F40_REACH, [F40_TRUCK, -F40_TRUCK], 2.0);
 }
 export function siemensAlc42(params?: ParamValues): MeshBuilder { return buildAlc42(pick(ALC_PARAMS, ALC_LIVERIES, params)); }
 export function siemensAlc42Lod(params?: ParamValues): MeshBuilder {
@@ -1068,6 +1291,7 @@ function acelaGame(): GameProperties {
 export const US_CARBODIES: ProceduralDesign[] = [
   { id: "proc-vehicle-emd-f7", title: "EMD F7", build: emdF7, buildLod: emdF7Lod, params: F7_PARAMS, game: { weight: 112, power: 1119, maxspeed: 121, accel: null }, catalog: DIESEL_LOCO_CATALOG, loadingGauge: "us", references: "emd-f7" },
   { id: "proc-vehicle-ge-p42dc", title: "GE P42DC Genesis", build: geP42dc, buildLod: geP42dcLod, params: P42_PARAMS, game: { weight: 122, power: 3169, maxspeed: 177, accel: null }, catalog: DIESEL_LOCO_CATALOG, loadingGauge: "us", references: "ge-p42dc" },
+  { id: "proc-vehicle-emd-f40ph", title: "EMD F40PH", build: emdF40ph, buildLod: emdF40phLod, params: F40_PARAMS, game: { weight: 118, power: 2237, maxspeed: 166, accel: null }, catalog: DIESEL_LOCO_CATALOG, loadingGauge: "us", references: "emd-f40ph" },
   { id: "proc-vehicle-siemens-alc42", title: "Siemens ALC-42 Charger", build: siemensAlc42, buildLod: siemensAlc42Lod, params: ALC_PARAMS, game: { weight: 120, power: 3132, maxspeed: 201, accel: null }, catalog: DIESEL_LOCO_CATALOG, loadingGauge: "us", references: "siemens-alc42" },
   { id: "proc-vehicle-prr-gg1", title: "PRR GG1", build: prrGg1, buildLod: prrGg1Lod, params: GG1_PARAMS, game: { weight: 215, power: 3445, maxspeed: 161, accel: null }, catalog: ELECTRIC_LOCO_CATALOG, loadingGauge: "us", references: "prr-gg1" },
   { id: "proc-vehicle-amtrak-superliner", title: "Amtrak Superliner", build: amtrakSuperliner, buildLod: amtrakSuperlinerLod, params: SUPERLINER_PARAMS, game: { weight: 75, power: 0, maxspeed: 161, accel: null, variants: [{ params: { unit: "sleeper" }, weight: 73 }] }, catalog: COACH_CATALOG, loadingGauge: "us", references: "amtrak-superliner" },
