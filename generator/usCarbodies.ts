@@ -371,17 +371,17 @@ const F40_REAR = 0.4;
 const F40_BODY = F40_LENGTH - F40_REACH - F40_REAR;
 const F40_TRUCK = ft(30, 6) / 2;
 /** Height of the nose's top (its shoulder) and of the body's roof crown. */
-const F40_NOSE_TOP = 3.0;
+const F40_NOSE_TOP = 3.35;
 const F40_ROOF = 4.6;
-/** The cab front: the windscreen from the nose top at d = 1.55 to its head at d = 2.0; the roof reached at d = 2.4. */
+/** The cab front: the windscreen from the nose top at d = 1.55 to its head at d = 1.9; the roof reached at d = 2.4. */
 const F40_CAB = 1.55;
 
 export const F40_SPEC: CarbodySpec = {
   length: F40_BODY, W: 1.59, Y: 1.42, S: 4.36, C: F40_ROOF, lean: 0.99, arc: 5, B: 1.3, wl: 1.57, A: 1.4, wa: 1.58,
   front: {
     len: 0.32, tip: 0.8, power: 1.4,
-    C: [[0, 2.95], [0.25, F40_NOSE_TOP + 0.06], [F40_CAB, F40_NOSE_TOP + 0.16], [F40_CAB + 0.05, 3.3], [2.0, 4.05], [2.25, 4.42], [2.45, F40_ROOF]],
-    S: [[0, 2.88], [0.25, F40_NOSE_TOP], [F40_CAB, F40_NOSE_TOP + 0.1], [F40_CAB + 0.05, 3.2], [2.0, 3.9], [2.25, 4.22], [2.45, 4.36]],
+    C: [[0, F40_NOSE_TOP - 0.05], [0.25, F40_NOSE_TOP + 0.06], [F40_CAB, F40_NOSE_TOP + 0.14], [F40_CAB + 0.05, F40_NOSE_TOP + 0.24], [1.9, 4.12], [2.15, 4.42], [2.4, F40_ROOF]],
+    S: [[0, F40_NOSE_TOP - 0.12], [0.25, F40_NOSE_TOP], [F40_CAB, F40_NOSE_TOP + 0.08], [F40_CAB + 0.05, F40_NOSE_TOP + 0.15], [1.9, 3.97], [2.15, 4.22], [2.4, 4.36]],
     Y: [[0, 1.5], [0.2, 1.42]],
     A: [[0, 1.45], [0.2, 1.4]],
     B: [[0, 1.4], [0.2, 1.3]],
@@ -464,17 +464,17 @@ export function buildF40(l: CarbodyLivery): MeshBuilder {
   m.scope("nose", () => {
     m.scope("windscreen", () => {
       for (const s of [1, -1]) {
-        crownPane(m, b, X, s, "rubber", [F40_CAB + 0.06, 2.12], [0.08, 1.4], 0.006);
-        crownPane(m, b, X, s, "cabGlass", [F40_CAB + 0.1, 2.08], [0.13, 1.35], 0.012);
+        crownPane(m, b, X, s, "rubber", [F40_CAB + 0.08, 1.86], [0.08, 1.4], 0.006);
+        crownPane(m, b, X, s, "cabGlass", [F40_CAB + 0.12, 1.82], [0.13, 1.35], 0.012);
       }
     });
     m.scope("headlights", () => {
       const x = tip + 0.01;
-      faceLamps(m, 1, x, [[0, 2.78, 0.085, "lampHead"], [0, 2.58, 0.085, "lampHead"], [-1.08, 1.62, 0.075, "ditch"], [1.08, 1.62, 0.075, "ditch"]]);
+      faceLamps(m, 1, x, [[0, 3.05, 0.085, "lampHead"], [0, 2.85, 0.085, "lampHead"], [-1.08, 1.62, 0.075, "ditch"], [1.08, 1.62, 0.075, "ditch"]]);
     });
     m.scope("number boards", () => {
       // the boards and the red marker lamps over the windscreen, on the cab front's head
-      const d = 2.3, y = 4.43;
+      const d = 2.12, y = 4.3;
       for (const sz of [-1, 1]) {
         block(m, "amBlack", X(d) - 0.12, X(d) + 0.1, y - 0.12, y + 0.12, ...side(sz, 0.22, 0.75));
         block(m, "numberBoard", X(d) + 0.1, X(d) + 0.11, y - 0.08, y + 0.08, ...side(sz, 0.26, 0.71));
