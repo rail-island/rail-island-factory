@@ -13,10 +13,10 @@ repeated. Every design is filed under France (`generator/countryTable.ts`).
 |---|---|---|---|---|
 | `proc-vehicle-sncf-tgv-m` | TGV M | series, double-deck | `unit`, `cars` 3 - 8, `livery` (`inoui`, `ouigo`) | end 22.15 m, middle 20.6 m; 320 km/h |
 | `proc-vehicle-sncf-z20500` | SNCF Z 20500 | series, double-deck, flat cab | `unit`, `cars` 4 - 5, `livery` (`transilien`, `ileDeFrance`) | 26.4 / 24.28 m; 140 km/h |
-| `proc-vehicle-ratp-mi09` | RER MI 09 | series, double-deck | `unit` (five cars) | 23.6 / 21.0 m, three wide doors a side; 120 km/h |
+| `proc-vehicle-ratp-mi09` | RER MI 09 | series, double-deck, cab face | `unit` (five cars) | 23.6 / 21.0 m, three wide doors a side; 120 km/h |
 | `proc-vehicle-sncf-regio2n` | Regio 2N | series, double-deck | `unit`, `cars` 4 - 6, `livery` (`ter`, `transilien`) | 17.9 / 16.0 m; 160 km/h |
 | `proc-vehicle-sncf-regiolis` | Regiolis | series | `unit`, `cars` 3 - 6, `livery` (`ter`, `grandEst`) | 19.0 / 15.5 m; 160 km/h |
-| `proc-vehicle-sncf-x3800` | SNCF X 3800 Picasso | series, diesel, single | - | 21.85 m over buffers; 120 km/h |
+| `proc-vehicle-sncf-x3800` | SNCF X 3800 Picasso | series, diesel, single, cab face, roof turret | - | 21.85 m over buffers; 120 km/h |
 | `proc-vehicle-sncf-x73500` | SNCF X 73500 | series, diesel, single | `livery` (`ter`, `alsace`) | 28.9 m; 140 km/h |
 | `proc-vehicle-sncf-cc6500` | SNCF CC 6500 | box locomotive, nez casse | `livery` (`capitole`, `maurienne`, `beton`) | C-C, 20.19 m, 5,900 kW, 200 km/h |
 | `proc-vehicle-sncf-cc40100` | SNCF CC 40100 | box locomotive, nez casse | - | C-C, 22.03 m, 4,480 kW, 160 km/h |
@@ -46,8 +46,18 @@ on the CC 7100's and the 1100 on a shortened BB 9200's ([netherlands-trains.md](
 - **Nez casse.** The broken nose is the kit's `nezCasse` end profile: the lower nose,
   the break, the windscreen leaning out to a visor; the real ends' plan curves are
   simplified to the kit's end plan.
-- **X 3800.** The Picasso's driver sits in a turret on the roof, off centre; the model
-  has the series kit's rounded ends with their windscreens instead.
+- **MI 09.** The cab is a cab face (the series kit's `cabFace`, after the photographs in
+  `assets/ratp-mi09/`): raked back from the lamps to the roof, its corners rounded, the big
+  black field over the one windscreen, the lamps in round pods low at the corners with the tail
+  lamps beside them, the dark skirt. The STIF scheme: white, the wide grey band over the lower
+  deck's windows, turquoise door leaves (the real ones are white in turquoise frames).
+- **X 3800.** After the photographs in `assets/sncf-x3800/`: the driver's turret on the roof
+  near one end and off to one side (the series' `fittings`; a roof block in the distant model),
+  its windscreens looking both ways and two windows a side, its top rounded. Both ends are cab
+  faces (the series kit's `cabFace`): upright with rounded corners, two big and two narrow windows
+  in rubber, the big lamps at the corners, the red rising from a V in the middle to them, the
+  number, buffers and a screw coupling. Red below the windows, cream above and on the roof. The
+  turret's curved windscreen tops and the engine compartment's grilles are not drawn.
 - **TGV M.** The ends are drawn as passenger cars with a nose (the series kit); the
   real Avelia Horizon's ends are power cars with no seats.
 - **CIWL.** One body for the Pullman and the sleeping car; the liveries are separate

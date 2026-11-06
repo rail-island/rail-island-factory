@@ -13,6 +13,9 @@ Used for: the body, the paint and the running gear.
 |---|---|---|---|---|
 | `photo-uerdinger-schienenbus-moselweinbahn-db-rheinland.jpg` | Uerdinger Schienenbus Moselweinbahn DB Rheinland-Pfalz.jpg | https://commons.wikimedia.org/wiki/File:Uerdinger_Schienenbus_Moselweinbahn_DB_Rheinland-Pfalz.jpg | Frank Nowotny | CC BY-SA 4.0 |
 | `photo-heidelberg-bahnbetriebswerk-uerdinger-schienenbu.jpg` | Heidelberg Bahnbetriebswerk Uerdinger Schienenbusse.jpg | https://commons.wikimedia.org/wiki/File:Heidelberg_Bahnbetriebswerk_Uerdinger_Schienenbusse.jpg | Frank Nowotny | CC BY-SA 4.0 |
+| `photo-uerdinger-schienenbus-vt98.jpg` | Uerdinger Schienenbus VT98.JPG | https://commons.wikimedia.org/wiki/File:Uerdinger_Schienenbus_VT98.JPG | Witold Grzesiek | CC BY-SA 3.0 | cab front, windscreens and lamps |
+| `photo-uerdinger-schienenbus-konigstein.jpg` | Uerdinger Schienenbus Königstein.jpg | https://commons.wikimedia.org/wiki/File:Uerdinger_Schienenbus_K%C3%B6nigstein.jpg | EvaK | CC BY-SA 2.5 | cab front, windscreens and lamps |
+| `photo-waldbahn-almetal-vt98.jpg` | Waldbahn Almetal VT98.JPG | https://commons.wikimedia.org/wiki/File:Waldbahn_Almetal_VT98.JPG | Witold Grzesiek | CC BY-SA 3.0 | cab front, windscreens and lamps |
 
 ## Published figures
 
