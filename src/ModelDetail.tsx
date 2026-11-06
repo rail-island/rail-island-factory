@@ -141,10 +141,11 @@ export function ModelDetail(props: {
   const specs = () => COLUMNS.filter((c) => c.key !== "title");
   // An export built before source images existed has no list.
   const references = () => props.record.references ?? [];
+  const links = () => props.record.links ?? [];
   const tabs = () =>
-    ([["specs", "Specs"], ["source", "Source"], ["references", "Images"]] as const).filter(
+    ([["specs", "Specs"], ["source", "Source"], ["references", "Sources"]] as const).filter(
       ([tab]) =>
-        (tab !== "references" || references().length > 0 || props.tab === "references") &&
+        (tab !== "references" || references().length > 0 || links().length > 0 || props.tab === "references") &&
         // a city block ships no source tree (docs/models/source-tree.md)
         (tab !== "source" || !props.record.noSourceTree || props.tab === "source"),
     );
@@ -226,6 +227,11 @@ export function ModelDetail(props: {
           <span class="factory-muted">{props.index > 0 ? `${props.index} of ${props.total}` : `not in the current list`}</span>
           <StepLink delta={1} total={props.total} href={props.stepHref(1)} onStep={props.onStep} />
         </div>
+        <Show when={props.record.draft}>
+          <span class="factory-draft" title="Not yet confirmed into the catalog: not exported to the game">
+            Workshop draft
+          </span>
+        </Show>
         {/* a site preview (proc-preview-*) is a drawing of what the game builds, not a model to take away */}
         <Show when={!props.record.id.startsWith("proc-preview-")}>
           <button type="button" class="factory-btn factory-detail__export" disabled={props.exported} onClick={() => props.onAddExport()}>
@@ -322,8 +328,8 @@ export function ModelDetail(props: {
         <Switch>
           <Match when={props.tab === "specs"}>
             {/* A side view at 16 px per metre (half its pixels), so vehicles compare by length. */}
-            {import.meta.env.DEV ? (
-              // `pnpm dev` writes no thumbnails: the browser renders the default (VariantThumb)
+            {import.meta.env.DEV || props.record.draft ? (
+              // `pnpm dev` writes no thumbnails, nor does the build for a draft: the browser renders the default (VariantThumb)
               <VariantThumb record={props.record} params={{}} size="large" title={`${props.record.title} thumbnail`} />
             ) : (
               <img
@@ -349,7 +355,21 @@ export function ModelDetail(props: {
             </dl>
           </Match>
           <Match when={props.tab === "references"}>
-            <Show when={references().length > 0} fallback={<p class="factory-muted">This model has no source images.</p>}>
+            <Show when={links().length > 0}>
+              <ul class="factory-links">
+                <For each={links()}>
+                  {(l) => (
+                    <li>
+                      <a href={l.url} target="_blank" rel="noopener">
+                        {l.title}
+                      </a>
+                      <span class="factory-muted factory-links__host">{hostOf(l.url)}</span>
+                    </li>
+                  )}
+                </For>
+              </ul>
+            </Show>
+            <Show when={references().length > 0} fallback={<Show when={links().length === 0}><p class="factory-muted">This model has no source images or links.</p></Show>}>
               <ul class="factory-refs">
                 <For each={references()}>
                   {(ref) => (
@@ -390,6 +410,15 @@ export function ModelDetail(props: {
       </div>
     </section>
   );
+}
+
+/** A link's host name, shown beside its title ("en.wikipedia.org"). */
+function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return "";
+  }
 }
 
 /** The previous or next model: a link to its page, or a disabled button when the list has no other model. */

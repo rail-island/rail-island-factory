@@ -127,12 +127,11 @@ function fluting(m: MeshBuilder, c: CarDef, b: SliceBody, X: (d: number) => numb
  */
 export function drawCar(m: MeshBuilder, c: CarDef, X: (d: number) => number, o: { trucks?: readonly boolean[]; inside?: readonly number[] } = {}): SliceBody {
   const b = carBody(c);
-  const painter: Painter = bandPainter(c.bands, c.roof, c.under, c.skirt);
+  const painter: Painter = bandPainter(c.bands, c.roof, c.under, c.skirt, c.spec.S);
   const leaves = leavesOf(c);
   const cut = leaves.map((l) => ({ ...l, d0: l.d0 - 0.002, d1: l.d1 + 0.002, y0: l.y0 - 0.002, y1: l.y1 + 0.002 }));
   m.scope("body", () => {
-    const flatEnd = (e: number) => !(e > 0 ? c.spec.front : c.spec.rear);
-    m.scope("shell", () => carbodyShell(m, b, X, painter, { front: flatEnd(1), rear: flatEnd(-1) }, cut));
+    m.scope("shell", () => carbodyShell(m, b, X, painter, cut));
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
         c.windows.forEach((w, r) =>

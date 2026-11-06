@@ -139,6 +139,104 @@ body {
   background: var(--m-state-hover);
 }
 
+/* the add and export buttons: an icon and a label, the icon alone on a phone */
+.factory-bar__add,
+.factory-bar__export {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.factory-bar__icon {
+  flex-shrink: 0;
+}
+
+.factory-bar__count::before {
+  content: "(";
+}
+
+.factory-bar__count::after {
+  content: ")";
+}
+
+@media (max-width: 599px) {
+  .factory-bar {
+    gap: 8px;
+    padding: 0 12px;
+  }
+
+  .factory-bar__label {
+    display: none;
+  }
+
+  .factory-bar__add,
+  .factory-bar__export {
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 9px;
+    gap: 4px;
+  }
+
+  /* the count beside the icon, as a bare number */
+  .factory-bar__count::before,
+  .factory-bar__count::after {
+    content: none;
+  }
+
+  .factory-bar__title {
+    font-size: 18px;
+  }
+}
+
+/* the catalog / workshop switch above the listing */
+.factory-sections {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.factory-section__count {
+  margin-left: 4px;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+
+.factory-sections__note {
+  width: 100%;
+  margin: 0;
+  font-size: 13px;
+}
+
+/* a draft's badge on its model page */
+.factory-draft {
+  display: inline-block;
+  margin: 0 0 8px;
+  padding: 2px 10px;
+  border: 1px dashed var(--m-primary);
+  border-radius: 999px;
+  color: var(--m-primary);
+  font-size: 13px;
+}
+
+/* the model page's web links, above its source images */
+.factory-links {
+  margin: 0 0 16px;
+  padding-left: 20px;
+}
+
+.factory-links a {
+  color: var(--m-primary);
+  overflow-wrap: anywhere;
+}
+
+.factory-links__host {
+  margin-left: 6px;
+  font-size: 13px;
+}
+
 .factory-main {
   padding: 0 16px 64px;
 }

@@ -5,7 +5,7 @@ truck, the trucks reproduced from the game, and the vlakosimdb transfers: buses,
 locomotives, electric and diesel units, high-speed trains, coaches, freight wagons, trams and the metro car), their triangle budget and conventions, articulated vehicles'
 parts, steered front wheels and animated running gear, the `sweep` primitive they are mostly built from, and
 how to add one.
-**Code** - `generator/vehicles.ts`, `generator/cd150.ts`, `generator/cd150Comparison.ts`, `generator/cd150Report.ts`, `test/cd150.test.ts`, `generator/cd163.ts`, `generator/cd163Family.ts`, `generator/cd230.ts`, `generator/cdLogo.ts`, `generator/vehicleParts.ts`, `generator/design.ts`, `generator/meshCore.ts` (`sweep`, `part`), `generator/meshBuilder.ts` (`toGlb`), `src/viewerHighlight.ts`, `test/models.test.ts`, `test/cdLogo.test.ts`, `test/viewerHighlight.test.ts`, `.agents/skills/road-vehicle/SKILL.md`, `.agents/skills/railroad-vehicle/SKILL.md`, `.agents/skills/vlakosimdb-transfer/SKILL.md`
+**Code** - `generator/vehicles.ts`, `generator/cd150.ts`, `generator/cd150Comparison.ts`, `generator/cd150Report.ts`, `test/cd150.test.ts`, `generator/cd163.ts`, `generator/cd163Family.ts`, `generator/cd230.ts`, `generator/cdLogo.ts`, `generator/vehicleParts.ts`, `generator/design.ts`, `generator/meshCore.ts` (`sweep`, `part`), `generator/meshBuilder.ts` (`toGlb`), `src/viewerHighlight.ts`, `test/models.test.ts`, `test/cdLogo.test.ts`, `test/viewerHighlight.test.ts`, `generator/sliceBody.ts` (`drawShell`, `crownPane`), `generator/carbodyKit.ts` (`bandPainter`), `generator/boxLocoKit.ts`, `test/vehicleEnds.test.ts`, `.agents/skills/road-vehicle/SKILL.md`, `.agents/skills/railroad-vehicle/SKILL.md`, `.agents/skills/vlakosimdb-transfer/SKILL.md`
 **See also** - [buses.md](buses.md) (the buses), [vehicle-rig.md](vehicle-rig.md) (steered wheels, sections, joints), [trucks.md](trucks.md), [loco-liveries.md](loco-liveries.md) (the locomotives' liveries and the CD 263), [cd-230.md](cd-230.md) (the laminatka), [cz-electrics.md](cz-electrics.md) (CD 110, 130, 140, 169), [csd-coaches.md](csd-coaches.md) (the CSD coaches), [wagons.md](wagons.md) (the freight wagons), [cd-green-white.md](cd-green-white.md), [bmo-double-deck.md](bmo-double-deck.md), [skyscrapers.md](skyscrapers.md) (the mesh builder, "Flicker"), [export.md](export.md), [source-tree.md](source-tree.md), [wagons.md](wagons.md) and [freight-wagons.md](freight-wagons.md) (the freight wagons), [trams.md](trams.md) (the trams and the metro), [mainline-electrics.md](mainline-electrics.md) (CD 180 / 181 / 182, DNT 184.5, DB 111, DR 243 / DB 143 / 112, OBB 1012, 1040), [vectron.md](vectron.md) (the Siemens Vectron), [small-diesels.md](small-diesels.md) (CD 704, 710, 714, 742, DB 212, MUV 69), [czsk-coaches.md](czsk-coaches.md) (the CD Y, ZSR and UIC-Z coaches), [german-coaches.md](german-coaches.md)
 
 ## The designs
@@ -262,6 +262,8 @@ the final table and before/after errors to the user.
 ## Budget
 
 At most **10,000 triangles** per road vehicle and about **15,000** per rail vehicle (tested at most 16,000); there is no file-size budget.
+A **tram** has the road vehicle's **10,000**; an articulated tram (sections and joints) up to
+**15,000** (test/models.test.ts, test/worldTrams.test.ts; [world-trams.md](world-trams.md#triangle-budget)).
 A vehicle's GLB is the same format as a skyscraper's: non-indexed triangle
 soups with **flat normals stored** per face (tested). The normals are
 redundant - a loader could compute the same ones - but storing them means no
@@ -368,6 +370,32 @@ A non-convex outline, such as a fender's arch, is several convex sweeps: `plate(
 makes one quad per segment, and neighbouring quads meet back to back.
 
 Vertical cylinders (exhaust stacks, air cleaners) are ordinary `prism`s.
+
+## Closed ends
+
+The game culls every back face, so a part wound inside out, or a shell left open,
+is a hole the player sees through. Three rules hold for rail vehicles:
+
+- **A lofted shell is closed at both ends** (`drawShell`, `carbodyShell` in
+  `sliceBody.ts` and `carbodyKit.ts`): a flat wall and a nose's tip alike. A blunt nose
+  (the series kit's `tip`, e.g. the ICNG's 0.3) ends in a slice of real width; it was
+  once left open and showed the cab through the front of some 56 units.
+- **Rings for `prism`, `loft` and `cap` wind counter-clockwise seen from above**
+  (`ngon`'s order: from +x toward -z). A rectangle is `[[x1, w], [x1, -w], [x0, -w],
+  [x0, w]]`; the other order turns the walls inward (the box locomotive kit's frame
+  and roof boxes, the CD 130/140/169/704/714 and DB 212 roofs were drawn that way).
+  `sweep` and `block` orient themselves; these do not.
+- **A windscreen follows the shell facet for facet** (`crownPane`): its rows on the
+  shell's stations, its columns on the slices' points over the shoulder and the arc,
+  each cell split along the shell's own diagonal, so no chord of the glass dips under
+  a curved nose. `bandPainter`'s `roofFrom` (the series kit and the car builder pass
+  the body's shoulder) keeps the roof colour above the shoulder: below it a nose's arc
+  takes the side's colour just under the shoulder (one colour, so no stripe steps across
+  the nose's facets) instead of the roof colour running down to its tip.
+
+`test/vehicleEnds.test.ts` casts rays at both ends of a sample of each kit's designs
+(a first hit on a face turned away from the ray is a hole) and checks that the body
+does not cover a windscreen's glass seen from straight ahead.
 
 ## Flicker
 

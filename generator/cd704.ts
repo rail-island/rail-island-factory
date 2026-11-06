@@ -85,7 +85,7 @@ function body(m: MeshBuilder, l: Cd704Livery): void {
     m.scope("shell", () => shell(m, cab));
     // the overhanging roof: flared 0.3 m in x and falling to 2.2 m across at the top (XML cab clips, native rows 4-6)
     m.scope("roof", () => {
-      const ring = (x0: number, x1: number, w: number) => [[x1, -w], [x1, w], [x0, w], [x0, -w]] as Array<[number, number]>;
+      const ring = (x0: number, x1: number, w: number) => [[x1, w], [x1, -w], [x0, -w], [x0, w]] as Array<[number, number]>;
       m.loft("roofGrey", ring(CAB_X[0] + 0.02, CAB_X[1] - 0.02, 1.38), 3.3, ring(px(35), px(62), 1.46), 3.42, false);
       m.loft("roofGrey", ring(px(35), px(62), 1.46), 3.42, ring(px(35.5), px(61.5), 1.1), 3.6);
     });

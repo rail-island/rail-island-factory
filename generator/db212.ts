@@ -110,7 +110,7 @@ function body(m: MeshBuilder, l: Db212Livery): void {
     m.scope("shell", () => shell(m, cb));
     // the overhanging roof: out to 5.1..8.4 m at 4.2 m, its top at 4.3 m (XML haus, native rows 7-11)
     m.scope("roof", () => {
-      const ring = (x0: number, x1: number, w: number): Ring => [[x1, -w], [x1, w], [x0, w], [x0, -w]];
+      const ring = (x0: number, x1: number, w: number): Ring => [[x1, w], [x1, -w], [x0, -w], [x0, w]];
       m.loft("roofGrey", ring(CAB_X[0] + 0.21, CAB_X[1] - 0.21, 1.31), 3.8, ring(px(51), px(85), 1.42), 4.18, false);
       m.loft("roofGrey", ring(px(51), px(85), 1.42), 4.18, ring(px(52), px(84), 1.2), 4.3);
     });

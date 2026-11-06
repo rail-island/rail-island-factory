@@ -198,7 +198,7 @@ export function jnrEf66(v?: ParamValues): MeshBuilder {
   const X = (d: number) => tip - d;
   const base = bandPainter(l.bands, l.roof, "under", l.bands[0]![2]);
   m.scope("body", () => {
-    m.scope("shell", () => carbodyShell(m, b, X, (d, y, r) => ((d < 0.5 || EF66_BODY - d < 0.5) && r !== "arc" && r !== "bottom" && y < 2.4 ? l.nose : base(d, y, r)), { front: false, rear: false }));
+    m.scope("shell", () => carbodyShell(m, b, X, (d, y, r) => ((d < 0.5 || EF66_BODY - d < 0.5) && r !== "arc" && r !== "bottom" && y < 2.4 ? l.nose : base(d, y, r))));
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
         for (const d of [1.3, EF66_BODY - 2.1]) sidePanel(m, b, X, s, "glass", d, d + 0.75, 2.45, 3.05, 0.01, 0.004);

@@ -387,6 +387,29 @@ export interface ViewState extends ChipPath {
   params: Record<string, string>;
   /** The country chip's pick as a slug (`?country=<slug>`), or null for every country. */
   country: string | null;
+  /** Which models the list shows: the confirmed catalog, or the workshop's drafts (`?section=workshop`). */
+  section: Section;
+}
+
+/**
+ * The site's two lists (docs/site/workshop.md): the catalog of confirmed models, the
+ * default, and the workshop of drafts not yet confirmed (a record's `draft`).
+ */
+export type Section = "catalog" | "workshop";
+
+/** The section a record is listed in. */
+export function sectionOf(r: Pick<CatalogRecord, "draft">): Section {
+  return r.draft ? "workshop" : "catalog";
+}
+
+/** The records one section lists. */
+export function sectionRows<T extends Pick<CatalogRecord, "draft">>(rows: readonly T[], section: Section): T[] {
+  return rows.filter((r) => sectionOf(r) === section);
+}
+
+/** The app bar's heading of a section's list. */
+export function sectionHeading(section: Section): string {
+  return section === "workshop" ? "Rail Island Workshop" : "Rail Island Catalog";
 }
 
 export type DetailTab = "specs" | "source" | "references";
@@ -456,6 +479,7 @@ export function parseView(search: string, pathname = "/"): ViewState {
     stage,
     params,
     country,
+    section: p.get("section") === "workshop" ? "workshop" : "catalog",
   };
 }
 
@@ -516,6 +540,7 @@ export function serializeView(v: ViewState): string {
     }
   }
   if (v.country) p.set("country", chipSlug(v.country));
+  if (v.section === "workshop") p.set("section", "workshop");
   if (v.sort !== DEFAULT_SORT) p.set("sort", v.sort);
   if (v.dir !== (column(v.sort)?.dir ?? DEFAULT_DIR)) p.set("dir", v.dir);
   if (v.model) {

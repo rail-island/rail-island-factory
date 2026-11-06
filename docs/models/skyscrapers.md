@@ -176,8 +176,11 @@ material pair and plane. It runs twice over:
 
 The detector buckets faces by exact plane (rounded to a millimetre), which is the
 case that fights - the designs place coplanar faces at exactly equal
-coordinates. Two surfaces a hair apart are not reported; keep a deliberate gap
-to at least a few centimetres.
+coordinates. A pair in one bucket is then checked against each other's plane:
+every corner of each within a millimetre of the other's (far from the origin the
+rounded normal alone moves the offset by a centimetre, and once paired a pane 6 mm
+off a train's nose with its roof; test/vehicleEnds.test.ts). Two surfaces a hair
+apart are not reported; keep a deliberate gap to at least a few centimetres.
 
 The site's viewer does its part on the other side: it fits the camera's near and
 far planes to each model rather than a fixed range, so depth precision is spent

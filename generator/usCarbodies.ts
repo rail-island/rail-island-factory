@@ -198,7 +198,7 @@ export function buildF7(l: CarbodyLivery): MeshBuilder {
   const tip = F7_LENGTH / 2 - F7_REACH;
   const X = (d: number) => tip - d;
   m.scope("body", () => {
-    m.scope("shell", () => carbodyShell(m, b, X, f7Painter(l), { front: true, rear: true }));
+    m.scope("shell", () => carbodyShell(m, b, X, f7Painter(l)));
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
         if (l.decals) m.scope("paint", () => l.decals!(m, b, X, s));
@@ -317,7 +317,7 @@ export function buildP42(l: CarbodyLivery): MeshBuilder {
   const tip = P42_LENGTH / 2 - P42_REACH;
   const X = (d: number) => tip - d;
   m.scope("body", () => {
-    m.scope("shell", () => carbodyShell(m, b, X, painter(l, P42_BODY, false), { front: true, rear: true }));
+    m.scope("shell", () => carbodyShell(m, b, X, painter(l, P42_BODY, false)));
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
         m.scope("cab window", () => sideWindow(m, b, X, s, 1.95, 2.85, 3.05, 3.65));
@@ -413,7 +413,7 @@ export function buildAlc42(l: CarbodyLivery): MeshBuilder {
   const tip = ALC_LENGTH / 2 - ALC_REACH;
   const X = (d: number) => tip - d;
   m.scope("body", () => {
-    m.scope("shell", () => carbodyShell(m, b, X, painter(l, ALC_BODY, false), { front: true, rear: true }));
+    m.scope("shell", () => carbodyShell(m, b, X, painter(l, ALC_BODY, false)));
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
         m.scope("cab window", () => sideWindow(m, b, X, s, 2.75, 3.55, 3.15, 3.75));
@@ -574,7 +574,7 @@ export function buildGg1(l: CarbodyLivery): MeshBuilder {
   const tip = GG1_LENGTH / 2 - GG1_REACH;
   const X = (d: number) => tip - d;
   m.scope("body", () => {
-    m.scope("shell", () => carbodyShell(m, b, X, painter(l, GG1_BODY, true), { front: false, rear: false }));
+    m.scope("shell", () => carbodyShell(m, b, X, painter(l, GG1_BODY, true)));
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
         if (l.decals) m.scope("paint", () => l.decals!(m, b, X, s));
@@ -737,7 +737,7 @@ function drawAcelaCar(m: MeshBuilder, c: AcelaCar, X: (d: number) => number, end
   m.scope("body", () => {
     const leaves = power ? [] : acelaLeaves();
     const cut = leaves.map((o) => ({ ...o, d0: o.d0 - 0.002, d1: o.d1 + 0.002, y0: o.y0 - 0.002, y1: o.y1 + 0.002 }));
-    m.scope("shell", () => carbodyShell(m, b, X, acelaPaint, { front: !power, rear: true }, cut));
+    m.scope("shell", () => carbodyShell(m, b, X, acelaPaint, cut));
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
         if (power) {
@@ -877,7 +877,7 @@ function drawSuperliner(m: MeshBuilder, u: SuperlinerUnit, X: (d: number) => num
   const cut = leaves.map((o) => ({ ...o, d0: o.d0 - 0.002, d1: o.d1 + 0.002, y0: o.y0 - 0.002, y1: o.y1 + 0.002 }));
   const win = superlinerWindows(u);
   m.scope("body", () => {
-    m.scope("shell", () => carbodyShell(m, b, X, slPaint, { front: true, rear: true }, cut));
+    m.scope("shell", () => carbodyShell(m, b, X, slPaint, cut));
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
         m.scope("upper windows", () => win.upper.forEach(([a, e], i) => m.scope(`window ${i + 1}`, () => sideWindow(m, b, X, s, a, e, SL_UPPER[0], SL_UPPER[1], "slDark", "glass"))));

@@ -11,7 +11,8 @@ for the code is `docs/models/vehicles.md`; this skill is the checklist.
 ## Budget
 
 About **10,000 triangles** per vehicle (hard cap 10,000, enforced by
-`test/models.test.ts`). There is no file-size budget. Spend triangles where they
+`test/models.test.ts`). The same 10,000 holds for a **tram** (an articulated tram up
+to 15,000; the railroad-vehicle skill). There is no file-size budget. Spend triangles where they
 read from the game's camera - wheels, the front, the silhouette - not on parts
 under the body. The count is in the `pnpm build:models` output and in
 `export/catalog.json` (`triangles`).
