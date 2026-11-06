@@ -2,7 +2,7 @@
 
 **Covers** - the site's page URLs (`/`, `/model/<id>/`, `/category/...`), the static page the build writes for each (head, content, JSON-LD), `sitemap.xml`, `robots.txt`, `404.html`, the in-app links and the document head the app keeps in step.
 **Code** - `generator/sitePages.ts`, `src/pageMeta.ts`, `src/Link.tsx`, `src/catalogQuery.ts` (`parseView`, `viewUrl`, `chipSlug`), `src/App.tsx`, `vite.config.ts` (`site-pages`), `wrangler.jsonc`, `test/sitePages.test.ts`, `test/catalogQuery.test.ts`, `test/siteMeta.test.ts`
-**See also** - [catalog-site.md](catalog-site.md), [../guide/deploy.md](../guide/deploy.md), [../models/export.md](../models/export.md), spec [../specs/2026-11-04-seo-prerendered-pages.md](../specs/2026-11-04-seo-prerendered-pages.md)
+**See also** - [workshop.md](workshop.md) (drafts: own page, `noindex`, not listed), [catalog-site.md](catalog-site.md), [../guide/deploy.md](../guide/deploy.md), [../models/export.md](../models/export.md), spec [../specs/2026-11-04-seo-prerendered-pages.md](../specs/2026-11-04-seo-prerendered-pages.md)
 
 The site is a client-rendered Solid app. A crawler, or a link preview that does not run
 scripts, would see only the loading line. So every page a search engine should know
@@ -49,6 +49,11 @@ then writes:
 | `404.html` | the shell with `noindex`; what Cloudflare answers for any other path |
 | `sitemap.xml` | every page above, home first, no `lastmod` |
 | `robots.txt` | allows everything and names the sitemap |
+
+The home and category pages list the confirmed catalog only. A workshop draft (a
+record with `draft: true`, [workshop.md](workshop.md)) still gets its model page, so
+a link to it works, but with `noindex`, a breadcrumb that stops at its group, no
+siblings, and no entry in `sitemap.xml`.
 
 `sitePages(shell, records, thumbSize)` is a pure function. Its output is sorted and has
 no timestamps, so the same catalog gives the same bytes. The build fails when the shell

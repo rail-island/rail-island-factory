@@ -168,6 +168,8 @@ import { glbStats, type GlbStats } from "./glbStats.ts";
 import { catalogOpenttd, openttdFeatureOf, openttdPartCount } from "./openttd.ts";
 import { idsOf } from "./openttdIds.ts";
 import { OPENTTD_TABLE } from "./openttdTable.ts";
+import { isDraft, unknownCatalogIds } from "./workshop.ts";
+import { linkTableProblems } from "./linkTable.ts";
 import { JS_DIR, bundleDesign, gzipSize, writeIfChanged } from "./jsModel.ts";
 import { findCoplanarOverlaps, type CoplanarOverlap } from "./coplanar.ts";
 import {
@@ -711,7 +713,8 @@ export async function buildExport(
   const models = generateModels(dir, designs);
   const js = await generateJsModels(dir, designs);
   const refs = generateReferences(dir, designs);
-  const chosen = (list: readonly ProceduralDesign[]) => list.filter((d) => designs.includes(d));
+  // the game's meta files list only the catalog's models: a draft stays in the workshop (workshop.ts)
+  const chosen = (list: readonly ProceduralDesign[]) => list.filter((d) => designs.includes(d) && !isDraft(d.id));
   fs.writeFileSync(path.join(dir, META_FILE), `${JSON.stringify(exportMeta(chosen(BUILDINGS)), null, 2)}\n`);
   fs.writeFileSync(path.join(dir, VILLAGE_META_FILE), `${JSON.stringify(exportMeta(chosen(VILLAGE_DESIGNS)), null, 2)}\n`);
   const rigs = new Map(models.flatMap((m) => (m.rig ? [[m.id, m.rig] as const] : [])));
@@ -736,6 +739,10 @@ export async function buildExport(
   if (designs.length === DESIGNS.size) {
     const unknown = unknownTableIds(designs);
     if (unknown.length) throw new Error(`generator/soundTable.ts names no such model: ${unknown.join(", ")}`);
+    const unconfirmed = unknownCatalogIds(DESIGNS.keys());
+    if (unconfirmed.length) throw new Error(`generator/catalogModels.json names no such model: ${unconfirmed.join(", ")}`);
+    const badLinks = linkTableProblems(DESIGNS.keys());
+    if (badLinks.length) throw new Error(`generator/linkTable.ts: ${badLinks.join("; ")}`);
   }
   const catalog: ModelCatalog = {
     version: 1,

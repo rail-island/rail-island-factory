@@ -112,7 +112,9 @@ they reproduce - [reproductions.md](reproductions.md)). The file keeps its name
 from when it held only skyscrapers; `BUILDINGS` in `generator/generate.ts` lists
 what goes into it. The webapp's `pnpm import:factory` mirrors `js/`, `thumbs/`
 and the meta files into its `db/procedural/`; changing a field here is a contract
-change for that importer.
+change for that importer. **A draft** - a model not yet confirmed into the catalog
+(`generator/catalogModels.json`) - is in no meta file, only in `catalog.json` with
+`draft: true` ([../site/workshop.md](../site/workshop.md)).
 
 The five parametric commercial families ([commercial.md](commercial.md)) are
 also in `BUILDINGS` and this file, using `COMMERCIAL_CATALOG`: category
