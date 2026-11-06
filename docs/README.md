@@ -40,7 +40,8 @@
 | [models/us-diesels.md](models/us-diesels.md) | the North American hood units EMD GP9, SD40-2, SD70ACe and GE ES44AC at their real size: measures, railroad liveries, the hood unit kit and tests |
 | [models/us-carbodies.md](models/us-carbodies.md) | the North American streamliners EMD F7, GE P42DC, Siemens ALC-42, PRR GG1 and the Acela Express with its coaches and train: the carbody kit, liveries and tests |
 | [models/us-steam.md](models/us-steam.md) | the North American steam locomotives UP Big Boy, PRR K4s, NYC J-3a Hudson and the Golden Spike 4-4-0 (Jupiter, No. 119): specs on the steam kit, US pilots and couplers, liveries and tests |
-| [models/us-transit.md](models/us-transit.md) | the Budd RDC, the Pioneer Zephyr (articulated on Jacobs bogies), the NYC R160 and the Chicago 'L' 5000-series: the car builder with doors and cabins, variants and tests |
+| [models/us-transit.md](models/us-transit.md) | the Budd RDC, the NYC R160 and the Chicago 'L' 5000-series: the car builder with doors and cabins, variants and tests |
+| [models/pioneer-zephyr.md](models/pioneer-zephyr.md) | the Burlington's Pioneer Zephyr: the power car's shovel-nose hull (waterlines, windscreen, grilles, belt), the coach, the observation car's lounge end, the articulated train on Jacobs bogies, measures and tests |
 | [models/us-freight.md](models/us-freight.md) | the cupola caboose, the 50 ft boxcar, the double-stack well car and the San Francisco cable car: measures, parameters, the double-stack gauge and tests |
 | [models/shinkansen.md](models/shinkansen.md) | the later Shinkansen N700S, E5 / H5, 500, 700 / 923 Doctor Yellow, E6, 100 and E4 Max: series specs, cars and trains, liveries and tests |
 | [models/jp-emus.md](models/jp-emus.md) | the Japanese conventional-line units E235, 103, Romancecar GSE, Hinotori, E259, 485 and Hankyu 9000 on the series kit: commuter doors, flat cabs, liveries and tests |

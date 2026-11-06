@@ -106,6 +106,7 @@ import { US_DIESELS } from "./usDiesels.ts";
 import { US_CARBODIES } from "./usCarbodies.ts";
 import { US_STEAM } from "./usSteam.ts";
 import { US_TRANSIT } from "./usTransit.ts";
+import { PIONEER_ZEPHYR } from "./pioneerZephyr.ts";
 import { US_FREIGHT } from "./usFreight.ts";
 import { SHINKANSEN_DESIGNS } from "./shinkansen.ts";
 import { JP_EMUS } from "./jpEmus.ts";
@@ -264,6 +265,7 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: US_CARBODIES, source: "usCarbodies.ts", meta: "vehicles" },
   { designs: US_STEAM, source: "usSteam.ts", meta: "vehicles" },
   { designs: US_TRANSIT, source: "usTransit.ts", meta: "vehicles" },
+  { designs: [PIONEER_ZEPHYR], source: "pioneerZephyr.ts", meta: "vehicles" },
   { designs: US_FREIGHT, source: "usFreight.ts", meta: "vehicles" },
   { designs: SHINKANSEN_DESIGNS, source: "shinkansen.ts", meta: "vehicles" },
   { designs: JP_EMUS, source: "jpEmus.ts", meta: "vehicles" },
