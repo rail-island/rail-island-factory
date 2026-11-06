@@ -17,8 +17,8 @@ import { parseView, prepareRows, sectionHeading, sectionRows, viewUrl } from "..
 import { readStoredFacts } from "../generator/buildCache";
 
 const CONFIRMED = "proc-vehicle-cd-150";
-// a world fleet bus, added after the Vectron: a draft
-const DRAFT = "proc-vehicle-new-routemaster";
+// a Japanese train, added after the Vectron: a draft
+const DRAFT = "proc-vehicle-jnr-103";
 
 describe("catalogModels.json", () => {
   it("is sorted, without duplicates, and names only existing models", () => {
@@ -133,9 +133,9 @@ describe("web links", () => {
     const vectron = catalogRecord(metaEntry(DESIGNS.get("proc-vehicle-vectron")!), facts);
     expect(vectron.links).toEqual(MODEL_LINKS["proc-vehicle-vectron"]);
     expect("draft" in vectron).toBe(false);
-    const truck = catalogRecord(metaEntry(DESIGNS.get(DRAFT)!), facts);
-    expect(truck.links).toEqual(MODEL_LINKS[DRAFT]);
-    expect(truck.draft).toBe(true);
+    const draft = catalogRecord(metaEntry(DESIGNS.get(DRAFT)!), facts);
+    expect(draft.links).toEqual(MODEL_LINKS[DRAFT]);
+    expect(draft.draft).toBe(true);
     // a model without links carries no links field
     const cd150 = catalogRecord(metaEntry(DESIGNS.get(CONFIRMED)!), facts);
     expect(MODEL_LINKS[CONFIRMED]).toBeUndefined();
