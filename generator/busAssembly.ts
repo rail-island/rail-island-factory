@@ -426,7 +426,9 @@ export class BusDraft {
         sideSlab(m, mat, this.frame, s, ls, le, st.top, st.top + 0.04, 0.01);
       });
       if (st.open) return;
-      const hw = halfWidth(this.frame.section, st.bottom + 0.2);
+      // the side's half width just over the sill, or over the shell's underside where a
+      // stepwell's sill hangs below it (the section has no width under the shell)
+      const hw = halfWidth(this.frame.section, Math.max(st.bottom, Math.min(...this.frame.section.map(([, y]) => y))) + 0.2);
       if (st.swing === "out") {
         // hinged on the leaves' outer face at the jambs, each turning out of the side
         const sw = doorLeaves(ls, le, s, { kind: "swing", leaves: leaves === 1 ? 1 : 2, outward: true });

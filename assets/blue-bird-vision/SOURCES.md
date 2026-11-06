@@ -16,4 +16,4 @@ Downloaded from Wikimedia Commons as standard thumbnails, at most 1280 px on the
 
 ## Published figures
 
-- Blue Bird Vision: in service from 2003; 10.8 m long, 2.44 m wide, 3.2 m high; 2 axles, at 1.1, 7.2 m from the nose (the rear overhang and the window glass, 2.0-2.9 m, read off the side photograph) (approx., read off the photographs where not published); 1 doors on the modelled side; about 72 passengers (approx.); 11 t empty, 160 kW, 100 km/h (approx.). Source: Wikipedia "Blue Bird Vision" and the photographs.
+- Blue Bird Vision: in service from 2003; 10.6 m long, 2.44 m wide, 3.2 m high; 2 axles, at 0.9, 7.0 m from the nose (the overhangs, the body's underside 0.7 m over the road and the window glass, 2.0-2.9 m, read off the side photograph) (approx., read off the photographs where not published); 1 doors on the modelled side; about 72 passengers (approx.); 11 t empty, 160 kW, 100 km/h (approx.). Source: Wikipedia "Blue Bird Vision" and the photographs.

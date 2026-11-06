@@ -139,7 +139,7 @@ its passenger doors, in the motion its prototype has where the drawing allows:
 | CD 451 / 452 | `swing` 2 inward through doorways |
 | CSD Bi20 compartment coach | `swing` 1 **outward** through doorways, the brass class numeral riding on its leaf |
 | DB n-Wagen coaches (the DB 628 design's other `unit` values) | `fold` 4 inward through doorways (a single door `swing` 1); the cab car's driver door stays shut |
-| every bus | `plug`: one leaf slides back toward the tail, two slide apart (a style with `swing: "out"` - the Blue Bird Vision's split service door - instead hinges its two leaves at the jambs and swings them out, `swing` with `outward`); right side only, as drawn; the shell cut open over the leaves into the cabin, a frame in the door style's `surround` (else `frame`) round the doorway |
+| every bus | `plug`: one leaf slides back toward the tail, two slide apart (a style with `swing: "out"` - the Blue Bird Vision's split service door - instead hinges its two leaves at the jambs and swings them out, `swing` with `outward`; a sill below the body's underside - a stepwell - keeps the leaves on the side, measured over the underside); right side only, as drawn; the shell cut open over the leaves into the cabin, a frame in the door style's `surround` (else `frame`) round the doorway |
 | AEC Routemaster, Bristol Lodekka | none: an open rear platform (`DoorStyle.open`): the doorway and its frame with no leaves, a fixed platform alcove behind it (`platformAlcove`, busAssembly.ts) instead of a cabin; in the door suite's `NO_DOORS` |
 
 Where the native drawing paints one window across a door, the door opens as one

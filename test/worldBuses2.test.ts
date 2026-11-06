@@ -156,6 +156,10 @@ describe("the later world buses", () => {
     // shut: flat on the side; open: both leaves stand out of it, about their width
     const shut = span(leaves(bytes), 2);
     expect(shut[1]).toBeLessThan(s.width / 2 + 0.05);
+    // on the side even though the sill hangs below the body's underside (the stepwell):
+    // the side's width was once taken under the shell, putting the leaves on the centre line
+    expect(s.door.bottom).toBeLessThan(s.floor);
+    expect(span(leaves(bytes).filter((t) => t.p.every((p) => p[2] > 0)), 2)[0]).toBeGreaterThan(s.width / 2 - 0.05);
     const open = leaves(poseGlb(bytes, sampleCount(bytes, clip) - 1, clip));
     expect(span(open, 2)[1]).toBeGreaterThan(s.width / 2 + 0.25);
     const [d0, d1] = s.doors[0]!;
