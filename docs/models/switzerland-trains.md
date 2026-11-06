@@ -29,7 +29,7 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
 | `proc-vehicle-mgb-hge442` | MGB HGe 4/4 II | box locomotive, metre gauge | - | Bo-Bo rack, 14.8 m, 1,932 kW, 90 km/h |
 | `proc-vehicle-sbb-ew4-coach` | SBB EW IV coach | coach | `unit` (`a`, `b`), `livery` (`redGrey`, `sbb`) | 26.4 m; 200 km/h |
 | `proc-vehicle-sbb-ic2000` | SBB IC 2000 coach | coach, double-deck | `unit` (`a`, `b`) | 26.8 m; 200 km/h |
-| `proc-vehicle-glacier-express` | Glacier Express coach | coach, metre gauge | `unit` (`first`, `second`) | 18.4 m, the panorama windows; 90 km/h |
+| `proc-vehicle-glacier-express` | Glacier Express coach | coach, metre gauge | `unit` (`first`, `second`) | 18.4 m, the panorama car: glass over the roof's curve; 90 km/h |
 
 ## Deviations
 
@@ -40,7 +40,17 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
   (the `hoods` nose type) on two three-axle groups; the side rods are not drawn.
 - **Ae 8/14.** One 34 m body on its eight driving axles in four groups; the articulation
   between its two halves and the six idle guiding axles are left out.
-- **Glacier Express.** The panorama roof is drawn as the dark roof band over tall windows.
+- **Glacier Express.** The Stadler panorama car (datasheet: body 17.7 m, 2.68 m wide, 3.695 m
+  high, pivots 12.83 m, 685 mm wheels) on the coach kit's `adapt` hook (`glacierCar`): the side glass
+  from the 1.8 m sill to the 3.0 m shoulder and the roof glass as real panes over the roof's curve
+  (`shapedCrownPane`) up to a white crown strip 0.84 m wide, one pane per side pane with dark pillars
+  (six bays first class, seven second); red ends whose edge is one slanted line from the belly over
+  the roof (side wedges and crown panes), the roof glass's ends slanted with it; a white body over a red lower
+  band; one white entrance a side at one end with its narrow window, the white flags and the class
+  digit. The photographs show one side; the other side is drawn the same (mirrored), not verified.
+  The bogie wheelbase stays at the kit's 2.05 m minimum (real 1.8 m); 90 km/h (the datasheet's
+  100 km/h adhesion speed is not taken over). The distant model has the red ends and a glazed roof
+  band under the white crown (`lodBody`).
 
 ## Tests
 

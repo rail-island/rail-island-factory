@@ -66,6 +66,8 @@ export interface CarDef {
   lettering?: ReadonlyArray<{ text: string; d: number; y: number; h: number; mat: string }>;
   /** The cabin's d span (default the whole body): behind a nose's cab. */
   cabin?: readonly [number, number];
+  /** Repaints the shell over the bands' painter (default none): paint that changes along the car, its ends. */
+  repaint?: (base: Painter) => Painter;
   /** Anything else: roof equipment, underfloor boxes, a nose's windscreen. */
   extras?: (m: MeshBuilder, b: SliceBody, X: (d: number) => number) => void;
 }
@@ -150,7 +152,8 @@ export function drawCar(m: MeshBuilder, c: CarDef, X: (d: number) => number, o: 
   const banded: Painter = front ? (d, y, r) => (d < front.d && r !== "bottom" && r !== "skirt" ? front.paint : sides)(d, y, r) : sides;
   // a warning panel paints over both
   const f = c.field;
-  const painter: Painter = f ? (d, y, r) => (r !== "bottom" && d <= f.d && y >= f.y[0] && y <= f.y[1] ? f.mat : banded(d, y, r)) : banded;
+  const fielded: Painter = f ? (d, y, r) => (r !== "bottom" && d <= f.d && y >= f.y[0] && y <= f.y[1] ? f.mat : banded(d, y, r)) : banded;
+  const painter: Painter = c.repaint ? c.repaint(fielded) : fielded;
   const leaves = leavesOf(c);
   const cut = leaves.map((l) => ({ ...l, d0: l.d0 - 0.002, d1: l.d1 + 0.002, y0: l.y0 - 0.002, y1: l.y1 + 0.002 }));
   m.scope("body", () => {

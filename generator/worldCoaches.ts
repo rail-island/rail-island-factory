@@ -8,8 +8,11 @@ import { resolveParams, type GameProperties, type ParamSpec, type ParamValues, t
 import { paint, type BogieSpec } from "./dieselParts.ts";
 import { block } from "./vehicleParts.ts";
 import { INTERIOR_PALETTE } from "./interior.ts";
-import { CARBODY_PALETTE } from "./carbodyKit.ts";
-import { carLod, drawCar, type CarDef } from "./usTransit.ts";
+import { CARBODY_PALETTE, type Painter } from "./carbodyKit.ts";
+import { shapedCrownPane, sideDecal, type SliceBody } from "./sliceBody.ts";
+import type { Pt } from "./sliceLoft.ts";
+import { carLod, carLodBody, drawCar, type CarDef } from "./usTransit.ts";
+import { bogieParts, fitUnit, type UnitBody } from "./lodUnits.ts";
 import { COACH_CATALOG } from "./csdCoaches.ts";
 import { enumParam } from "./emuParts.ts";
 
@@ -54,6 +57,10 @@ export interface WorldCoach {
   types: Record<string, CoachType>;
   liveries: Record<string, CoachLivery>;
   maxspeed: number;
+  /** Reshapes the car the measures above describe (default none): a car that is more than its window row (the Glacier Express's panorama car); `lod` for the distant model. */
+  adapt?: (c: CarDef, t: CoachType, lod: boolean) => CarDef;
+  /** Reshapes the distant model's body (default carLod's own): paint that changes along the car. */
+  lodBody?: (b: UnitBody, X: (d: number) => number) => UnitBody;
 }
 
 const GAP = 0.65;
@@ -63,7 +70,12 @@ const truck = (s: WorldCoach): BogieSpec => ({
   frameZ: [0.92, 1.04], primary: "coil", secondary: [-0.4, 0.4], secondaryZ: 1.08, bolster: s.B,
 });
 
-function coachDef(s: WorldCoach, t: CoachType, l: CoachLivery): CarDef {
+function coachDef(s: WorldCoach, t: CoachType, l: CoachLivery, lod = false): CarDef {
+  const c = baseDef(s, t, l);
+  return s.adapt ? s.adapt(c, t, lod) : c;
+}
+
+function baseDef(s: WorldCoach, t: CoachType, l: CoachLivery): CarDef {
   // the bogie's brake cylinders stand 0.55 m inside its axles: a shorter wheelbase puts them on its transoms
   if (s.wheelbase < 2.05) throw new Error(`coach: wheelbase ${s.wheelbase} m is shorter than the bogie kit's 2.05 m`);
   const L = s.length - 2 * gapOf(s);
@@ -106,7 +118,12 @@ export function buildCoach(s: WorldCoach, params: readonly ParamSpec[], v?: Para
 
 export function buildCoachLod(s: WorldCoach, params: readonly ParamSpec[], v?: ParamValues): MeshBuilder {
   const { t, l } = pick(s, params, v);
-  return carLod(coachDef(s, t, l), (d) => s.length / 2 - gapOf(s) - d, { ...CARBODY_PALETTE, under: PALETTE.under!, ...l.palette });
+  const def = coachDef(s, t, l, true), X = (d: number) => s.length / 2 - gapOf(s) - d;
+  const palette = { ...CARBODY_PALETTE, under: PALETTE.under!, ...l.palette };
+  if (!s.lodBody) return carLod(def, X, palette);
+  // carLod's body, reshaped
+  const parts = bogieParts(def.trucks.map((d) => [X(d), def.truck.frameHalf] as const), def.spec.B);
+  return fitUnit({ palette, bodies: [s.lodBody(carLodBody(def, X), X)], parts }, 100);
 }
 
 export function coachGame(s: WorldCoach): GameProperties {
@@ -226,14 +243,116 @@ export const SBB_IC2000: WorldCoach = {
   liveries: { sbb: sbbBands() },
 };
 
+// The panorama car (Stadler, 2006/2009/2011; datasheet WGEX0123: body 17.7 m, 2.68 m wide, 3.695 m high,
+// floor 0.95 m, bogie pivots 12.83 m, wheels 685 mm, entrance 850 mm). Its glass runs from the sill up the
+// side and over the roof's curve to an opaque crown strip; the ends are red, the middle white over a red
+// lower band. d runs from the body's +X end (the door end: one entrance a side, as the photographs show)
+// to its -X end (the plain end). The red ends' edges and the glass band's ends lean like "/" seen from the
+// -Z side (the side view; assets/glacier-express/): the car is drawn the same on both sides.
+const GX = {
+  L: 18.4 - 0.7,
+  /** The side glass from the sill to the shoulder; the glass band at the shoulder, and its roof glass's reach at the crown strip. */
+  sill: 1.8,
+  side: [3.5, 15.7] as const,
+  top: [4.0, 16.35] as const,
+  /** The opaque crown strip's half width; the white rail between the side and the roof glass. */
+  crownZ: 0.42,
+  rail: 0.015,
+  /** The red ends' edge at the crown, the shoulder and the belly: d from the door end, d from the plain end (one slanted line in the side view). */
+  doorEnd: [3.95, 3.25, 2.65] as const,
+  plain: [0.4, 0.9, 1.5] as const,
+  /** The entrance, d from the door end. */
+  door: [0.6, 1.45] as const,
+};
+
+const quad = (p: Pt, q: Pt, r: Pt, t: Pt): Pt[] => [p, q, r, p, r, t];
+
+function glacierCar(c: CarDef, t: CoachType): CarDef {
+  const { L, sill, side } = GX;
+  const S = c.spec.S, Yb = c.spec.Y;
+  const n = t.windows, pitch = (side[1] - side[0]) / n;
+  const spans = Array.from({ length: n }, (_, i): [number, number] => [side[0] + i * pitch, side[0] + (i + 1) * pitch]);
+  const redTop = [GX.doorEnd[1], L - GX.plain[1]] as const;
+  const repaint = (base: Painter): Painter => (d, y, r) => (r !== "bottom" && (d < redTop[0] - 1e-6 || d > redTop[1] + 1e-6) ? "red" : base(d, y, r));
+  const cls = t.title.startsWith("First") ? "1" : "2";
+  return {
+    ...c,
+    spec: { ...c.spec, lean: 0.94, arc: 8, stations: [...redTop] },
+    repaint,
+    windows: [{ y: [sill, S], spans, frame: "rubber" }],
+    doors: { spans: [GX.door], y: c.doors.y, glass: [1.75, 2.65], glassW: 0.28 },
+    doorBands: [[0, 9, "white"]],
+    lettering: [
+      { text: t.number, d: L / 2, y: 0.98, h: 0.09, mat: "letterW" },
+      { text: cls, d: side[0] - 0.25, y: 2.4, h: 0.18, mat: "lettering" },
+    ],
+    extras: (m, b, X) => {
+      c.extras?.(m, b, X);
+      for (const s of [1, -1]) m.scope(s > 0 ? "right side" : "left side", () => glacierSide(m, b, X, s, Yb, S, spans));
+    },
+  };
+}
+
+/** The distant car: the roof's curve glazed under the white crown, the red ends. */
+function glacierLod(u: UnitBody, X: (d: number) => number): UnitBody {
+  const { L } = GX;
+  const top = u.side[u.side.length - 1]!;
+  const side = [...u.side.slice(0, -1), [top[0], top[1], "roofGlass"] as const];
+  const red = [[u.y0, top[1], "red"] as const];
+  const ends = [[0, GX.doorEnd[1]], [L - GX.plain[1], L]].map(([d0, d1]) => ({ x0: Math.min(X(d0!), X(d1!)), x1: Math.max(X(d0!), X(d1!)), side: red }));
+  return { ...u, side, cabs: ends, front: { ...u.front, paint: red }, rear: { ...u.rear, paint: red } };
+}
+
+/** One side's red-end wedges, white flags and the roof glass over the shoulder. */
+function glacierSide(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, Yb: number, S: number, spans: ReadonlyArray<readonly [number, number]>): void {
+  const { L } = GX;
+  m.scope("paint", () => {
+    // the door end: red wider at the shoulder (white below its edge); the plain end: red wider at the belly
+    const [dc, dt, db] = GX.doorEnd, [pc, pt, pb] = GX.plain.map((d) => L - d) as [number, number, number];
+    sideDecal(m, b, X, s, "white", [[dt + 0.03, Yb], [db, Yb], [dt + 0.03, S]]);
+    sideDecal(m, b, X, s, "red", [[pt + 0.03, Yb], [pb, Yb], [pt + 0.03, S]]);
+    // over the roof's curve the edge runs on from the shoulder (the shell's colour changes there) to the crown
+    const zS = b.w(L / 2) * b.lean;
+    const edge = (d0: number, d1: number) => (d: number) => zS * Math.max(0, Math.min(1, 1 - (d - d0) / (d1 - d0)));
+    const steps = (d0: number, d1: number) => Array.from({ length: 9 }, (_, i) => d0 + ((d1 - d0) * (i + 1)) / 10);
+    shapedCrownPane(m, b, X, s, "red", [dt, dc], () => 0, edge(dt, dc), 0.004, steps(dt, dc));
+    shapedCrownPane(m, b, X, s, "white", [pt, pc], () => 0, edge(pt, pc), 0.004, steps(pt, pc));
+    // the white flags: a bar beside the entrance, one high at the plain end
+    sideDecal(m, b, X, s, "white", quad([1.75, 1.75], [2.0, 1.75], [2.12, 2.6], [1.87, 2.6]));
+    sideDecal(m, b, X, s, "white", quad([L - 0.47, 2.15], [L - 0.27, 2.15], [L - 0.17, 3.0], [L - 0.37, 3.0]));
+  });
+  m.scope("roof glass", () => {
+    const zOut = b.w(L / 2) * b.lean - GX.rail, zIn = GX.crownZ;
+    const [s0, s1] = GX.side, [t0, t1] = GX.top;
+    // over the door end's slant the inner edge leaves the shoulder for the crown strip, over the plain end's the outer edge
+    const inner = (d: number, k = 0) => (d >= t0 ? zIn + k : Math.min(zOut, zOut - ((zOut - zIn) * (d - s0)) / (t0 - s0) + k));
+    const outer = (d: number, k = 0) => (d <= s1 ? zOut - k : Math.max(zIn, zOut - ((zOut - zIn) * (d - s1)) / (t1 - s1) - k));
+    // rows across both slants, so their edges run straight over the arc's facets
+    const rows = Array.from({ length: 11 }, (_, i) => [s0 + ((t0 - s0) * i) / 10, s1 + ((t1 - s1) * i) / 10]).flat();
+    shapedCrownPane(m, b, X, s, "rubber", [s0, t1], (d) => inner(d), (d) => outer(d), 0.006, rows);
+    spans.forEach(([a, e], i) => {
+      const d0 = a + 0.04, d1 = i === spans.length - 1 ? t1 - 0.04 : e - 0.04;
+      shapedCrownPane(m, b, X, s, "roofGlass", [d0, d1], (d) => inner(d, 0.04), (d) => outer(d, 0.04), 0.012, rows);
+    });
+  });
+}
+
 export const GLACIER: WorldCoach = {
-  length: 18.4, W: 1.32, Y: 1.25, S: 2.65, C: 3.55, B: 0.85, A: 1.0, rows: [[1.6, 3.3]], doorIn: 0.6, doorW: 0.75, door: [1.05, 2.9],
-  bogieCentres: 12.5, wheelR: 0.38, wheelbase: 2.2, coupler: "centre", maxspeed: 90,
+  length: 18.4, W: 1.34, Y: 1.2, S: 3.0, C: 3.695, B: 0.75, A: 0.95, rows: [[1.8, 3.0]], doorIn: 0.6, doorW: 0.85, door: [1.0, 2.95],
+  bogieCentres: 12.83, wheelR: 0.343, wheelbase: 2.05, coupler: "centre", maxspeed: 90,
   types: {
-    first: { title: "First class", windows: 6, windowW: 2.1, number: "A 4021", weight: 21 },
-    second: { title: "Second class", windows: 7, windowW: 1.8, number: "B 4041", weight: 20 },
+    first: { title: "First class", windows: 6, windowW: 2.0, number: "A 4021", weight: 21 },
+    second: { title: "Second class", windows: 7, windowW: 1.7, number: "B 4041", weight: 20 },
   },
-  liveries: { glacier: { title: "Glacier Express", palette: { red: c("#c8102e"), white: c("#f1f1ee", 0.4), roofG: c("#3a3d40", 0.6), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 1.45, "red"], [1.45, 9, "white"]], roof: "roofG", skirt: "skirtG" } },
+  liveries: {
+    glacier: {
+      title: "Glacier Express",
+      palette: { red: c("#d0101e", 0.35), white: c("#f1f2f0", 0.35), letterW: c("#f4f4f2"), roofGlass: { color: "#2e4b78", metallic: 0.25, roughness: 0.1, glass: true } },
+      bands: [[0, 1.2, "red"], [1.2, 9, "white"]], roof: "white", skirt: "red",
+    },
+  },
+  adapt: glacierCar,
+  lodBody: glacierLod,
 };
 
 // ---------------------------------------------------------------------------

@@ -12,6 +12,12 @@ has its own window count and width, number and weight; each livery its paints an
 bands. The car builder draws the shell, windows, opening plug doors onto the cabin,
 the gangway diaphragms, the bogies and the couplers; the LOD is its `carLod`.
 
+A coach that is more than its window row reshapes the car the measures describe with
+`adapt` (the car definition: its windows, doors, paint through the car builder's `repaint`
+hook, extra shell stations through `CarbodySpec.stations`, extras) and its distant body with
+`lodBody`; without them a design builds as before. The Glacier Express's panorama car uses
+both (its glazed roof, red ends and single entrance; [switzerland-trains.md](switzerland-trains.md)).
+
 ## The designs
 
 | id | country | length | units | liveries |
