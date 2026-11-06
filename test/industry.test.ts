@@ -10,6 +10,7 @@ import { measureHelipad } from '../generator/helipad.ts';
 import { HELIPAD_D } from '../generator/design.ts';
 import { PLATFORM_HELIDECK } from '../generator/offshorePlatform.ts';
 import { parseGlb } from '../generator/glbTriangles.ts';
+import { materialPositions } from '../generator/meshAudit.ts';
 it('covers the 35 audited Industry entries with valid target parameters', () => {
   expect(INDUSTRY_MIGRATION).toHaveLength(35);
   expect(new Set(INDUSTRY_MIGRATION.map(e => e.sourceId)).size).toBe(35);
@@ -85,7 +86,7 @@ it('stands the offshore platform on the waterline with a large helideck and a bu
   // the low detail keeps the deck's silhouette, in the same material
   const low = d.buildLod();
   expect(low.triangleCount()).toBeLessThanOrEqual(500);
-  const lp = low.materialPositions('helipad');
+  const lp = materialPositions(low, 'helipad');
   const xs = lp.filter((_, i) => i % 3 === 0);
   expect(Math.max(...xs) - Math.min(...xs)).toBeCloseTo(PLATFORM_HELIDECK.side, 5);
 });

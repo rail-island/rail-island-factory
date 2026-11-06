@@ -12,6 +12,7 @@ import { glbStats } from "../generator/glbStats";
 import { buildLodModel } from "../generator/lodModel";
 import { isDraft } from "../generator/workshop";
 import { proceduralId } from "../generator/modelId";
+import { materialPositions } from "../generator/meshAudit";
 
 describe("hospital", () => {
   const d = DESIGNS.get("proc-building-hospital")!;
@@ -37,7 +38,7 @@ describe("hospital", () => {
 
   it("exports a small pad on the raised rooftop deck, at least HELIPAD_D.small across", () => {
     const pad = exportMeta([d]).buildings[0]!.game!.helipad!;
-    expect(pad).toEqual({ pad: "small", centre: [HOSPITAL_HELIPAD.x, HOSPITAL_HELIPAD.y1, HOSPITAL_HELIPAD.z], size: HOSPITAL_HELIPAD.side });
+    expect(pad).toEqual({ material: "helipad", pad: "small", centre: [HOSPITAL_HELIPAD.x, HOSPITAL_HELIPAD.y1, HOSPITAL_HELIPAD.z], size: HOSPITAL_HELIPAD.side });
     expect(pad.size).toBeGreaterThanOrEqual(HELIPAD_D.small);
     // above the ward block's parapet; only the stair core and the flues rise higher
     const m = d.build();
@@ -45,7 +46,7 @@ describe("hospital", () => {
     expect(pad.centre[1]).toBeGreaterThan(25.5);
     expect(tops[0]! - pad.centre[1]).toBeLessThan(3);
     // the low detail keeps the deck in the same place and size
-    const lp = buildLodModel(d).materialPositions("helipad");
+    const lp = materialPositions(buildLodModel(d), "helipad");
     const xs = lp.filter((_, i) => i % 3 === 0);
     expect(Math.min(...xs)).toBeCloseTo(HOSPITAL_HELIPAD.x - HOSPITAL_HELIPAD.side / 2, 5);
     expect(Math.max(...xs)).toBeCloseTo(HOSPITAL_HELIPAD.x + HOSPITAL_HELIPAD.side / 2, 5);
