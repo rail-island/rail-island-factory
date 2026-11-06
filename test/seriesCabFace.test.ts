@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { DE_UNITS, VT98 } from "../generator/deUnits.ts";
 import { DE1, MAT46, NL_UNITS } from "../generator/nlUnits.ts";
-import { FR_UNITS, X3800 } from "../generator/frUnits.ts";
+import { FR_UNITS, MI09, X3800 } from "../generator/frUnits.ts";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles.ts";
 import type { ProceduralDesign } from "../generator/design.ts";
@@ -9,11 +9,13 @@ import type { ShinkansenSeries } from "../generator/shinkansen.ts";
 
 // the series kit's cab faces (generator/seriesCab.ts, docs/models/shinkansen.md) on the
 // units that had the generic short nose with the windscreens on its crown
-const CASES: Array<{ design: ProceduralDesign; series: ShinkansenSeries; panes: number; single: boolean }> = [
+// rake: how far the face's top at the panes may stand behind its foot (default 0.5 m, an upright face)
+const CASES: Array<{ design: ProceduralDesign; series: ShinkansenSeries; panes: number; single: boolean; rake?: number }> = [
   { design: DE_UNITS.find((d) => d.id === "proc-vehicle-db-vt98")!, series: VT98, panes: 2, single: true },
   { design: NL_UNITS.find((d) => d.id === "proc-vehicle-ns-mat46")!, series: MAT46, panes: 5, single: false },
   { design: NL_UNITS.find((d) => d.id === "proc-vehicle-ns-de1")!, series: DE1, panes: 5, single: true },
   { design: FR_UNITS.find((d) => d.id === "proc-vehicle-sncf-x3800")!, series: X3800, panes: 4, single: true },
+  { design: FR_UNITS.find((d) => d.id === "proc-vehicle-ratp-mi09")!, series: MI09, panes: 1, single: false, rake: 0.75 },
 ];
 
 function points(d: ProceduralDesign) {
@@ -49,7 +51,7 @@ describe("series cab faces", () => {
       // the coupling plane lies the buffers' or the coupler's reach ahead of the face; the face's top at the panes stays within 0.5 m of its foot
       const foot = front(s.A + 0.2, s.A + 0.8);
       const top = Math.max(...s.cabFace!.panes.map((p) => p.y[1]));
-      expect(foot - front(top - 0.3, top)).toBeLessThan(0.5);
+      expect(foot - front(top - 0.3, top)).toBeLessThan(c.rake ?? 0.5);
       expect(maxX - foot).toBeLessThan(0.9);
     });
   }

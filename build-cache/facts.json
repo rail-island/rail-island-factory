@@ -42620,20 +42620,20 @@
    }
   },
   "proc-vehicle-ratp-mi09": {
-   "key": "15fe21305d4ce2c29c1e54e7fc453b1fafa1324939f30f24abd8a64121105872",
-   "triangles": 9849,
+   "key": "c3c92d8a98bd84c1a049c4c8928e3fb163bcfacfde387989f07fb0e7fc3da3ce",
+   "triangles": 9998,
    "stats": {
-    "triangles": 9849,
-    "vertices": 32547,
-    "primitives": 52,
-    "materials": 24,
+    "triangles": 9998,
+    "vertices": 32514,
+    "primitives": 40,
+    "materials": 25,
     "min": [
      -11.800000190734863,
      -1.1920928966180355e-8,
      -1.4405415058135986
     ],
     "max": [
-     11.800000190734863,
+     11.550000190734863,
      4.300000190734863,
      1.4405415058135986
     ]
@@ -42659,12 +42659,12 @@
     ]
    },
    "side": {
-    "widthM": 24.200000381469728,
+    "widthM": 23.950000381469728,
     "heightM": 6.3,
     "bottomM": -0.3
    },
    "seat": [
-    10.55,
+    10.4,
     4.3,
     0
    ],
@@ -42681,7 +42681,7 @@
      2.8810830116271973
     ],
     "[]": [
-     23.600000381469727,
+     23.350000381469727,
      4.300000202655792,
      2.8810830116271973
     ]
@@ -54259,7 +54259,7 @@
    "extents": {}
   },
   "proc-vehicle-sncf-regio2n": {
-   "key": "864be623f340f90c8845faaeb8bbb9e4a51f3f5eca7c7acf50be30b2f802a658",
+   "key": "cb031fc9be4c173901fb4a00dd34dd6b3e757ffb9ae271c1bc480752ad82e15b",
    "triangles": 8432,
    "stats": {
     "triangles": 8432,
@@ -54327,7 +54327,7 @@
    }
   },
   "proc-vehicle-sncf-regiolis": {
-   "key": "8ad0d62b18e2ab54f6e7f16dc0eb55d5ea63a63aaed53b6ff5d47e84010bd9af",
+   "key": "b3859d54702655a17ce8983b7270b55cefc17bea4488a8263fdf95c89ac7194a",
    "triangles": 8529,
    "stats": {
     "triangles": 8529,
@@ -54395,7 +54395,7 @@
    }
   },
   "proc-vehicle-sncf-tgv-m": {
-   "key": "fba3be75a4954bbe8b1b736f524da5a2ce63d9cd66156cd52b3e3d6273e5c420",
+   "key": "0af45f10af50a24157de0d42c142cf8a328d8436822abca66f393f4b9f1a8354",
    "triangles": 9800,
    "stats": {
     "triangles": 9800,
@@ -54463,7 +54463,7 @@
    }
   },
   "proc-vehicle-sncf-x3800": {
-   "key": "d298b59f2acde617770108f706c1dc1c1015cfc8284312168c8e079292767e04",
+   "key": "ff9da1c9005a59840050383ede3388d73369f6f26214d4b62dcef63a977bbb75",
    "triangles": 12964,
    "stats": {
     "triangles": 12964,
@@ -54520,7 +54520,7 @@
    "extents": {}
   },
   "proc-vehicle-sncf-x73500": {
-   "key": "f1e6fa90a040df81bb45d25afa55e08e1b305eea975a686637d23edfb989214c",
+   "key": "361012ff8507cea08ebc4a515ec37894f3a4b8ed0b114b1a9b26d71ee8468a50",
    "triangles": 9684,
    "stats": {
     "triangles": 9684,
@@ -54577,7 +54577,7 @@
    "extents": {}
   },
   "proc-vehicle-sncf-z20500": {
-   "key": "18f90236e0c56f72aa8d4c727b220436aaf28458d3e924b5edc7b41cde069d63",
+   "key": "cbfb0c0ac865113a9048a2d1a7615682c401376ef6a7112f6caed5f5452ea281",
    "triangles": 8846,
    "stats": {
     "triangles": 8846,

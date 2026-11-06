@@ -49,15 +49,31 @@ export const Z20500: ShinkansenSeries = {
   weight: { end: 64, middle: 48 }, power: 700, maxspeed: 140,
 };
 
+/**
+ * The MI 09's cab, read from photo-ligne-de-nanterre-...jpg and photo-rame-mi09-...-cdg-...jpg: the
+ * face raked back from the lamps to the roof, its corners rounded, the big black field over
+ * the windscreen, the lamps in round pods low at the corners, the dark skirt with the coupler.
+ */
+const MI09_CAB: SeriesCabFace = {
+  dJoin: 1.25, dSide: 1.0, first: 3.6, reach: 0.25, roofFrom: 4.05,
+  profile: [[0.75, 0.1], [0.95, 0.03], [1.2, 0], [2.0, 0.03], [2.3, 0.08], [3.6, 0.5], [4.0, 0.72], [4.2, 0.95], [4.3, 1.25]],
+  corner: [[0.75, 0.3], [2.3, 0.35], [3.6, 0.3], [4.2, 0.15], [4.3, 0.05]], bulge: 0.06, cols: [6, 3, 1, 1],
+  rows: [0.75, 0.95, 1.2, 1.6, 2.0, 2.3, 2.9, 3.6, 3.85, 4.0, 4.2, 4.3],
+  bands: () => [[0, 0.95, "grey"], [0.95, 9, "body"]],
+  masks: [{ lat: [-1.17, 1.17], y: [2.22, 4.02], r: 0.14, mat: "cabMask" }],
+  panes: [{ lat: [-1.05, 1.05], y: [2.4, 3.78], r: 0.08 }],
+  lamps: [[-1.1, 1.3, 0.13, "lampHead"], [1.1, 1.3, 0.13, "lampHead"], [-0.86, 1.3, 0.05, "lampRed"], [0.86, 1.3, 0.05, "lampRed"]],
+  wipers: [[[-0.3, 2.45], [-0.75, 3.4]], [[0.3, 2.45], [0.75, 3.4]]],
+};
+
 export const MI09: ShinkansenSeries = {
   endLength: 23.6, midLength: 21.0, W: 1.43, Y: 1.2, S: 3.85, C: 4.3, lean: 0.97, B: 0.75, A: 0.95,
-  // the rounded RER front leaning back
-  nose: nose(1.4, 0.4, 2.4, [[0, 3.2], [0.5, 3.85], [1.4, 4.3]], [[0, 3.1], [0.5, 3.6], [1.4, 3.85]], [[0, 1.2], [0.8, 1.2]], [[0, 1.0], [0.6, 0.95]], [[0, 0.9], [0.3, 0.75]]),
-  windscreen: [0.2, 1.3, 0.07, 1.2], lamps: [0.1, 1.5],
+  nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: MI09_CAB,
   windows: DD_ROWS, windowW: 1.2, pitch: 1.45, door: [1.1, 3.05, 1.8, 2.6], doorW: 1.95, doorCount: 3,
   bogieCentres: 15.5, wheelR: 0.43, wheelbase: 2.3, cars: [5],
   liveries: {
-    ratp: livery("RATP", "MI 09 001", { body: "#e9ebec", blue: "#1d3f80", red: "#c8102e", grey: "#6f757a" }, [[0, 1.05, "grey"], [1.05, 1.13, "red"], [1.13, 2.2, "body"], [2.2, 2.32, "blue"], [2.32, 9, "body"]]),
+    // the STIF scheme: white, the wide grey band over the lower deck's windows, turquoise round the doors
+    ratp: { ...livery("RATP", "MI 09 001", { body: "#eef0f0", grey: "#8c9196", turquoise: "#1aa596" }, [[0, 0.95, "grey"], [0.95, 1.15, "body"], [1.15, 2.5, "grey"], [2.5, 9, "body"]]), doors: [[0, 9, "turquoise"]] },
   },
   weight: { end: 58, middle: 52 }, power: 750, maxspeed: 120,
 };
