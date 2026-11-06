@@ -59,7 +59,11 @@ bands), smoke deflectors, bogie side frames, buffer beams with buffers and
 coupling (4 mm proud of the body end, a shorter draw gear between a locomotive
 and its tender), lamps and number plates, cylinders with valve chests, slide
 bars, motion brackets and expansion-link brackets - and then the moving parts
-of `RunningGear` and the `running` clip ([animation.md](animation.md)).
+of `RunningGear` and the `running` clip ([animation.md](animation.md)). A
+spec whose gear names a `swivel` unit (the 636 below; the Big Boy,
+[us-steam.md](us-steam.md)) splits its frame at `swivel.x1` and draws the front engine - that frame, the
+truck frames ahead of it, its cylinders and axle boxes and its moving gear - as
+a rail bogie inside the body, which the game turns under the boiler.
 
 ## Deliberate deviations
 
@@ -71,8 +75,10 @@ of `RunningGear` and the `running` clip ([animation.md](animation.md)).
   XML clip to 17.8 m where the BMP paints it to 16.9 m.
 - **456.0, 636**: 1.32 m / 1.3 m coupled wheels and the strokes are read from
   the texture and the XML notches; no class article could be checked.
-- **Rigid**: the 636's front engine is articulated on the real locomotive and
-  rigid here; three-cylinder classes (477.0, 498.1) show only their outside
+- **Articulation**: the 636's front engine - the leading axle, the three front
+  drivers, the front cylinders and motion and the frame to source x 8.3 - is the
+  rail bogie `bogie0` (`swivel`), which the game turns under the boiler; it turns
+  about its axles' mean rather than the real locomotive's hinge. Three-cylinder classes (477.0, 498.1) show only their outside
   cylinders.
 - **386**: the skirts reach 0.2 m above the rail as in the XML, so most of the
   motion is hidden; it is drawn and animated without valve gear.

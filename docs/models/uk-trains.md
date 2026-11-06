@@ -1,7 +1,7 @@
 # The United Kingdom's trains
 
 **Covers** - the twenty British designs of the eight-country plan and London Overground's Class 378 Capitalstar (a draft), at their real size on the W6a gauge (`uk`): the InterCity 125 and 225, the Class 800 IET and the Class 390 Pendolino, the Eurostar e300, the Class 158 and the Class 142 Pacer, London's 1938 tube stock; the Class 55 Deltic, 37, 47, 66 and 86; the LNER A4 and A3, the GWR Castle, the LMS Black Five, the BR 9F and Stephenson's Rocket; the BR Mk1 coach. Their kits, figures, deviations and tests.
-**Code** - `generator/ukUnits.ts` (`UK_UNITS`), `generator/brClass142.ts` (the Pacer's cars), `generator/brClass158.ts` (the Class 158's cars), `generator/lu1938Parts.ts`, `generator/ukLocos.ts` (`UK_LOCOS`), `generator/loadingGauge.ts` (`uk`), `generator/worldLocoKit.ts` (the `bonnets` nose), `generator/worldSteamLocos.ts`, `generator/rocket.ts`, `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `test/lu1938.test.ts`, `test/ukPowerCars.test.ts`, `test/rocket.test.ts`, `test/brClass142.test.ts`, `test/brClass158.test.ts`, `test/brClass378.test.ts`, `assets/br-*/`, `assets/lner-*/`, `assets/gwr-castle/`, `assets/lms-black-five/`, `assets/lu-1938-stock/`, `assets/eurostar-373/`, `assets/rocket/`, `assets/br-class-378/`
+**Code** - `generator/ukUnits.ts` (`UK_UNITS`), `generator/brClass142.ts` (the Pacer's cars), `generator/brClass158.ts` (the Class 158's cars), `generator/lu1938Parts.ts`, `generator/ukLocos.ts` (`UK_LOCOS`), `generator/loadingGauge.ts` (`uk`), `generator/worldLocoKit.ts` (the `bonnets` nose), `generator/worldSteamLocos.ts`, `generator/rocket.ts`, `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `test/lu1938.test.ts`, `test/ukPowerCars.test.ts`, `test/ukLocoFronts.test.ts`, `test/rocket.test.ts`, `test/brClass142.test.ts`, `test/brClass158.test.ts`, `test/brClass378.test.ts`, `assets/br-*/`, `assets/lner-*/`, `assets/gwr-castle/`, `assets/lms-black-five/`, `assets/lu-1938-stock/`, `assets/eurostar-373/`, `assets/rocket/`, `assets/br-class-378/`
 **See also** - [loading-gauge.md](loading-gauge.md), [shinkansen.md](shinkansen.md), [world-locos.md](world-locos.md), [world-steam.md](world-steam.md), [world-coaches.md](world-coaches.md)
 
 The catalog had no British train before; the archived webapp Eurostar is now the
@@ -110,9 +110,29 @@ down to it with the fan vent on the dome: the centre door between two windscreen
 number box (747) on it and the car letter beside it, the destination blind and the marker
 and tail lamps on the left seen from ahead, grab handles on stand-offs, the headstock and
 step under it and the coupler under the floor at 0.45 m. All the equipment hangs under the
-floor between the bogies, as the type introduced. About 9,700 triangles the driving car,
-8,900 the trailer. `test/lu1938.test.ts` checks the profile, the domed cab, the layout and
+floor between the bogies, as the type introduced. What keeps the red from reading flat is
+laid on the shell (`bodyDetail`): a polished frame around every side window, the dark rain
+strip along the side just under the roof's edge, and the roof's transverse panel seams every
+1.3 m in a darker oxide. About 10,500 triangles the driving car.
+`test/lu1938.test.ts` checks the profile, the domed cab, the layout, the body detail and
 the budget.
+
+## The diesels' cab fronts
+
+The box locomotive kit draws one shape per nose type, so the Class 55, 37 and 47 would read
+alike; `ukLocos.ts` (`FRONTS`, `withFront`) gives each its own end over the kit's spec:
+
+- **Class 55 Deltic.** A short nose (1.5 m) whose top slopes down from the cab to a front
+  rounded in plan, a headcode box on its brow, and the windscreen leaning well back (0.6 m
+  from the bonnet to the roof).
+- **Class 37.** A long bonnet (2.05 m), flat on top with a rounded front edge and squarer
+  corners, its centre headcode box at the front, and the windscreen almost upright.
+- **Class 47.** The raked end with the four-character headcode panel in the cab roof's dome
+  over the windscreens, in place of the kit's top headlight.
+
+Where a front sets the cab back, the cab door and side window move back with it so they stay
+on the side wall. `test/ukLocoFronts.test.ts` checks the bonnets, the rake, the headcode
+boxes and the cab doors in every livery.
 
 ## The Class 142 Pacer
 

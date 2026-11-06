@@ -98,6 +98,11 @@ combinations hashed before and after):
   slices meet the body's own section there (both ends of a `single` railcar). The distant model
   takes its profile, plan, bands and the panes as glass (the VT 98 and the other short-nosed
   regional and metro units, [germany-trains.md](germany-trains.md));
+- `fluting` - bands of horizontal ribs on every car's sides, round the windows and doors (the car
+  builder's `fluting`, which takes several bands); `roofRibs` - ribs along the roof either side of
+  the crown (the Talgo III's stainless body);
+- `endGrilles` take `"h"` as a sixth element for horizontal louvres pressed in the side's own
+  paint (the X 3800's engine room) instead of vertical slats on black;
 - `lodRoof` - a block on the end car's roof in the distant model (the X 3800's turret);
 - `wheelbase: 0` cars hang each axle in horn guides reaching up into the body over the skirt's
   cut, on leaf springs.
