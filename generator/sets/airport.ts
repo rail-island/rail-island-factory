@@ -3,12 +3,15 @@
 // and the game's layout solver owns runways, taxiways and stands. What a type
 // decides is the TERMINAL on its pad (a function of the pad's size, `terminal`) and
 // the props that stand round it: the control tower and the windsock
-// (generator/props/airportProps.ts), placed at the furniture scale.
+// (generator/props/airportProps.ts), placed at the furniture scale -- and the
+// HELIPADS: how many a type has and of which class (`TYPE_META`), and each pad's
+// boxes on the site the game's layout gives it (`helipad`). A heliport has pads
+// and no runway (`runways: false`).
 //
 // Pure data, no imports: bundled into export/sets/airport.js for the game.
 
 export type Rgb = [number, number, number];
-export type TerminalMaterial = "brick" | "wood" | "roof" | "steel" | "glass" | "sign" | "column";
+export type TerminalMaterial = "brick" | "wood" | "roof" | "steel" | "glass" | "sign" | "column" | "platform" | "edge" | "safety" | "light";
 
 /** One terminal box in the airport's local frame: the game's station box vocabulary. */
 export interface TerminalBox {
@@ -25,11 +28,34 @@ export interface TerminalBox {
 /** The terminal pad, as the game's layout lays it out. */
 export interface TerminalPad { cx: number; cz: number; w: number; d: number }
 
-/** Per type: the tower it raises (none on a grass field). */
-export const TYPE_META: Record<string, { tower: { prop: string; values: Record<string, string> } | null; windsock: { prop: string } }> = {
-  grass_field: { tower: null, windsock: { prop: "proc-prop-airport-windsock" } },
-  regional: { tower: { prop: "proc-prop-airport-tower", values: { kind: "regional" } }, windsock: { prop: "proc-prop-airport-windsock" } },
-  international: { tower: { prop: "proc-prop-airport-tower", values: { kind: "international" } }, windsock: { prop: "proc-prop-airport-windsock" } },
+/**
+ * A helipad's class: the largest helicopter it takes, by the helicopter's D-value
+ * (its overall length with the rotors turning; the factory's design.ts HELIPAD_D):
+ * a small pad up to 16 m, a large one up to 26 m.
+ */
+export type HelipadClass = "small" | "large";
+
+/** The side of a pad's square touchdown area, studs: its D-value at 1.5 studs a metre, rounded up. */
+export const HELIPAD_SIDE: Record<HelipadClass, number> = { small: 24, large: 39 };
+
+/** Per type's helipads: how many the layout lays out beside the terminal, and their class (count 0: none). */
+export interface HelipadMeta { count: number; pad: HelipadClass }
+
+/**
+ * Per type: the tower it raises (none on a grass field or a heliport), the
+ * windsock, whether its layout has runways (a heliport has none: pads only) and its
+ * helipads.
+ */
+export const TYPE_META: Record<string, {
+  tower: { prop: string; values: Record<string, string> } | null;
+  windsock: { prop: string };
+  runways: boolean;
+  helipads: HelipadMeta;
+}> = {
+  grass_field: { tower: null, windsock: { prop: "proc-prop-airport-windsock" }, runways: true, helipads: { count: 0, pad: "small" } },
+  regional: { tower: { prop: "proc-prop-airport-tower", values: { kind: "regional" } }, windsock: { prop: "proc-prop-airport-windsock" }, runways: true, helipads: { count: 1, pad: "large" } },
+  international: { tower: { prop: "proc-prop-airport-tower", values: { kind: "international" } }, windsock: { prop: "proc-prop-airport-windsock" }, runways: true, helipads: { count: 2, pad: "large" } },
+  heliport: { tower: null, windsock: { prop: "proc-prop-airport-windsock" }, runways: false, helipads: { count: 4, pad: "large" } },
 };
 
 const C: Record<string, Rgb> = {
@@ -53,7 +79,7 @@ export function furniture(pad: TerminalPad, type: string): {
   scale: number; height: number; tower: { x: number; z: number; height: number }; windsock: { x: number; z: number; y: number };
 } {
   const scale = Math.max(0.45, Math.min(1, pad.w / FULL_SIZE_DEPTH));
-  const height = (type === "grass_field" ? 12 : type === "regional" ? 18 : 26) * scale;
+  const height = (type === "grass_field" ? 12 : type === "heliport" ? 10 : type === "regional" ? 18 : 26) * scale;
   const towerHeight = (type === "international" ? TOWER_HEIGHT.international : TOWER_HEIGHT.regional) * scale;
   // keep even the gallery inside the pad, including on a one-stand layout
   const tower = { x: pad.cx + pad.w * 0.22, z: pad.cz + pad.d * 0.39, height: towerHeight };
@@ -80,7 +106,17 @@ export function terminal(pad: TerminalPad, type: string): TerminalBox[] {
     add(x, base + hh / 2 - 0.2, z, w, hh + 0.4, d, color, material, extra);
   const shell = { lod: "shell" } as const;
 
-  if (type === "grass_field") {
+  if (type === "heliport") {
+    // a low glazed operations building with a flat roof, an orange band and a rooftop plant box
+    const hallD = b.d * 0.8;
+    stand(b.cx, 0, b.cz, b.w * 0.9, 1.2 * s, hallD, C.concrete!, "brick", shell);
+    stand(b.cx + b.w * 0.05, 1.2 * s, b.cz, b.w * 0.75, h - 1.2 * s, hallD - s, C.white!, "brick", shell);
+    add(front + b.w * 0.07, h * 0.5, b.cz, 0.22, h * 0.6, hallD * 0.86, C.glass!, "glass");
+    stand(b.cx, h, b.cz, b.w * 0.92, 0.8 * s, hallD + 0.6 * s, C.roof!, "roof", shell);
+    add(front + b.w * 0.06, h * 0.9, b.cz, 0.3, 0.9 * s, hallD * 0.9, C.orange!, "steel");
+    stand(b.cx + b.w * 0.2, h + 0.8 * s - 0.2, b.cz + hallD * 0.2, 4 * s, 1.8 * s + 0.2, 5 * s, C.steel!, "steel");
+    for (const dz of [-0.3, 0.3]) stand(front + b.w * 0.04, 1.2 * s, b.cz + hallD * dz, 0.4 * s, h * 0.62, 0.5 * s, C.steel!, "steel");
+  } else if (type === "grass_field") {
     // a low red-roofed flying club beside a taller, recessed hangar
     const clubZ = b.cz - b.d * 0.325;
     const clubD = b.d * 0.32;
@@ -163,5 +199,61 @@ export function terminal(pad: TerminalPad, type: string): TerminalBox[] {
   // a service cabinet at the frontage, clear of parked aircraft noses
   const serviceZ = b.cz - b.d * 0.41;
   stand(front - 2.5 * s, 0, serviceZ, 4 * s, 2.8 * s, 3 * s, C.orange!, "steel");
+  return out;
+}
+
+/** One helipad the game's layout places: the touchdown square's centre (airport-local studs, on the ground) and its class. */
+export interface HelipadSite { cx: number; cz: number; pad: HelipadClass }
+
+/**
+ * The boxes of one helipad on `site`: a concrete slab a little above the apron,
+ * its white edge and the yellow aiming circle (an octagon of stripes), the "H"
+ * along local Z, and four green edge lights at the corners. Axis-aligned, so the
+ * "H" reads along the airport's runway heading (or, at a heliport, its own).
+ */
+export function helipad(site: HelipadSite, _type: string): TerminalBox[] {
+  const out: TerminalBox[] = [];
+  const side = HELIPAD_SIDE[site.pad];
+  const half = side / 2;
+  const k = side / HELIPAD_SIDE.large;
+  const slab = 0.3;
+  const paint = 0.06;
+  const top = slab + paint / 2 - 0.02;
+  const add = (x: number, y: number, z: number, w: number, hh: number, d: number, color: Rgb, material: TerminalMaterial, extra: Partial<TerminalBox> = {}): void => {
+    out.push({ cx: site.cx + x, cy: y, cz: site.cz + z, sx: w, sy: hh, sz: d, color, material, ...extra });
+  };
+  // the slab, buried a little into the apron so no face is coplanar with it
+  add(0, (slab - 0.1) / 2, 0, side, slab + 0.1, side, C.concrete!, "platform", { lod: "shell" });
+  // the white edge
+  const e = 0.6 * k;
+  for (const sgn of [-1, 1]) {
+    add(0, top, sgn * (half - e / 2 - 0.3 * k), side - 0.6 * k, paint, e, C.white!, "edge");
+    add(sgn * (half - e / 2 - 0.3 * k), top + 0.004, 0, e, paint, side - 2 * e - 0.6 * k, C.white!, "edge");
+  }
+  // the yellow aiming circle: eight stripes round an octagon
+  const r = half * 0.62;
+  const sw = 0.9 * k;
+  const chord = 2 * r * Math.tan(Math.PI / 8);
+  for (let i = 0; i < 8; i++) {
+    const a = (i * Math.PI) / 4;
+    const [cx, cz] = [r * Math.cos(a), r * Math.sin(a)];
+    // the stripes square to x and z are boxes; the diagonal four are short runs of boxes
+    if (i % 2 === 0) add(cx, top + 0.008, cz, Math.abs(Math.cos(a)) > 0.5 ? sw : chord, paint, Math.abs(Math.cos(a)) > 0.5 ? chord : sw, C.orange!, "safety");
+    else {
+      const steps = 3;
+      for (let j = 0; j < steps; j++) {
+        const t = (j + 0.5) / steps - 0.5;
+        add(cx - Math.sin(a) * t * chord, top + 0.008, cz + Math.cos(a) * t * chord, chord / steps + sw * 0.4, paint, chord / steps + sw * 0.4, C.orange!, "safety");
+      }
+    }
+  }
+  // the "H": two uprights along z and the bar
+  const hh = side * 0.34;
+  const hw = side * 0.22;
+  const bar = 1.2 * k;
+  for (const sgn of [-1, 1]) add(sgn * (hw / 2 - bar / 2), top + 0.012, 0, bar, paint, hh, C.white!, "edge");
+  add(0, top + 0.016, 0, hw - 2 * bar + 0.02, paint, bar, C.white!, "edge");
+  // green edge lights at the corners, standing on the slab
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) add(sx * (half - 0.9 * k), slab + 0.25, sz * (half - 0.9 * k), 0.5, 0.5, 0.5, [60, 200, 90], "light");
   return out;
 }

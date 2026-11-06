@@ -406,12 +406,13 @@ export interface HelicopterFlight {
 }
 
 /**
- * A building's helipad (GameProperties.helipad): `node` is the JS model's object
- * that draws the pad (its top is the touchdown surface), `pad` its class, `when`
- * the parameter selection that draws it (absent: every build has it).
+ * A building's helipad (GameProperties.helipad): `material` is the palette entry
+ * the model draws the pad's touchdown surface in (its top is where a helicopter
+ * stands; nothing else is drawn in it), `pad` its class, `when` the parameter
+ * selection that draws it (absent: every build has it).
  */
 export interface HelipadDecl {
-  node: string;
+  material: string;
   pad: HelipadClass;
   when?: ParamValues;
 }
@@ -502,9 +503,10 @@ export interface GameProperties extends Partial<VehicleGameFields> {
   /** A helicopter's flight figures (docs/models/game-properties.md). Helicopters only, required there. */
   flight?: HelicopterFlight;
   /**
-   * A building's helipad, which the game uses as a helicopter stop: the node the
-   * model draws it as, its class and, when a parameter value draws it, that
-   * selection. Buildings only; the build measures the pad on the model (helipad.ts).
+   * A building's helipad, which the game uses as a helicopter stop: the material
+   * the model draws its touchdown surface in, its class and, when a parameter value
+   * draws it, that selection. Buildings only; the export measures the pad on the
+   * model (helipad.ts).
    */
   helipad?: HelipadDecl;
   /**
@@ -603,7 +605,7 @@ function checkAircraftKind(design: ProceduralDesign, game: GameProperties, fail:
 
 /** A building's helipad names a node and a pad class, and a `when` that resolves to a non-default selection. */
 function checkHelipadDecl(design: ProceduralDesign, h: HelipadDecl, fail: (why: string) => never): void {
-  if (typeof h.node !== "string" || !h.node) fail('have a "helipad" without a node');
+  if (typeof h.material !== "string" || !h.material) fail('have a "helipad" without a material');
   if (!(h.pad in HELIPAD_D)) fail(`have an invalid "helipad.pad": ${String(h.pad)} (small or large)`);
   if (h.when) {
     const specs = design.params ?? [];

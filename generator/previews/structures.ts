@@ -142,6 +142,7 @@ const APRON: Record<string, { color: Rgb; surface: SurfaceId }> = {
   grass_field: { color: [96, 140, 70], surface: "airport-grass" },
   regional: { color: [60, 60, 64], surface: "airport-asphalt" },
   international: { color: [150, 150, 146], surface: "airport-concrete" },
+  heliport: { color: [150, 150, 146], surface: "airport-concrete" },
 };
 
 function airportSketch(values: ParamValues | undefined, type: string, lod: boolean): Sketch {
@@ -149,14 +150,28 @@ function airportSketch(values: ParamValues | undefined, type: string, lod: boole
   const pad: airport.TerminalPad = { cx: 0, cz: 0, w, d: w };
   const s = new Sketch();
   const apron = APRON[type] ?? APRON.regional!;
+  const meta = airport.TYPE_META[type];
+  // the type's helipads in a row along the apron's far edge, as a layout might stand them
+  const pads = meta?.helipads.count ?? 0;
+  const side = meta ? airport.HELIPAD_SIDE[meta.helipads.pad] : 0;
+  const gap = 4;
+  const row = pads * (side + gap);
+  const apronW = pads ? Math.max(w, side + 2 * gap) : w;
+  const apronD = Math.max(w * 1.6, row + gap);
   // the terminal pad and the apron in front of it (-X), as the game paves them
   s.box(s.mat("pavement", [168, 165, 158], "stop-concrete"), { cx: 0, cy: 0.1, cz: 0, sx: w, sy: 0.2, sz: w });
-  s.box(s.mat("pavement", apron.color, apron.surface), { cx: -w, cy: 0.1, cz: 0, sx: w, sy: 0.2, sz: w * 1.6 });
+  s.box(s.mat("pavement", apron.color, apron.surface), { cx: -(w + apronW) / 2, cy: 0.1, cz: 0, sx: apronW, sy: 0.2, sz: apronD });
+  for (let i = 0; i < pads; i++) {
+    const site: airport.HelipadSite = { cx: -(w / 2) - apronW / 2, cz: -row / 2 + (i + 0.5) * (side + gap), pad: meta!.helipads.pad };
+    for (const b of airport.helipad(site, type)) {
+      if (lod && b.lod !== "shell") continue;
+      s.box(s.mat(b.material, b.color), { ...b, cy: b.cy + 0.2 });
+    }
+  }
   for (const b of airport.terminal(pad, type)) {
     if (lod && b.lod !== "shell") continue;
     s.box(s.mat(b.material, b.color), { ...b, cy: b.cy + 0.2 });
   }
-  const meta = airport.TYPE_META[type];
   if (meta?.tower) {
     const f = airport.furniture(pad, type);
     const kind = meta.tower.values.kind === "international" ? "international" : "regional";

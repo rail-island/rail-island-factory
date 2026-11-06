@@ -152,6 +152,8 @@ export const SETS: readonly SetDef[] = [
         description: "Asphalt runways with centreline paint and edge lights, a terminal hall and a control tower." },
       { id: "international", label: "International hub",
         description: "Concrete runways, a tall control tower and jet bridges at every stand." },
+      { id: "heliport", label: "Heliport",
+        description: "Helipads and a small operations building, with no runway. Only helicopters land here." },
     ],
   },
   {

@@ -986,6 +986,11 @@ export class MeshCore {
     return out;
   }
 
+  /** The triangle corners drawn in one material, model coordinates, x,y,z flat (a helipad's surface; helipad.ts). */
+  materialPositions(mat: string): number[] {
+    return [...(this.groups.get(mat)?.pos ?? [])];
+  }
+
   triangleCount(): number {
     let n = 0;
     for (const g of this.groups.values()) n += g.pos.length / 9;
