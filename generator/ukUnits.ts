@@ -8,6 +8,7 @@ import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, nose } from "./seriesHelpers.ts";
+import { TUBE_CAB, TUBE_DOOR, TUBE_LAYOUT, TUBE_WINDOW, tubeFittings } from "./lu1938Parts.ts";
 
 /** A livery from [top of band, colour] pairs, bottom first. */
 const lv = (title: string, number: string, ...list: Array<[number, string]>): ShinkansenLivery => {
@@ -103,12 +104,24 @@ export const C142: ShinkansenSeries = {
 };
 
 export const TUBE1938: ShinkansenSeries = {
-  endLength: 16.0, midLength: 15.5, W: 1.3, Y: 0.95, S: 2.45, C: 2.88, lean: 0.9, B: 0.5, A: 0.62,
+  // the tube profile: 2.62 m wide and 2.88 m high, the sides upright to the window heads, a low dome over them
+  endLength: 16.0, midLength: 15.5, W: 1.31, Y: 0.7, S: 2.3, C: 2.88, lean: 0.985, B: 0.6, A: 0.66, arc: 10,
   nose: nose(0.6, 0.5, 2.2, [[0, 2.3], [0.3, 2.65], [0.6, 2.88]], [[0, 2.2], [0.3, 2.4]], [[0, 0.95], [0.3, 0.95]], [[0, 0.7], [0.3, 0.62]], [[0, 0.6], [0.2, 0.5]]),
+  // the flat cab front, its corners rounded in plan and its roof domed down to it
+  flatCab: TUBE_CAB, cabNose: nose(0.3, 0.9, 2.5, [[0, 2.62], [0.25, 2.8], [0.6, 2.88]], [[0, 2.24], [0.25, 2.3]], [], [], []),
   windscreen: [0.05, 0.5, 0.07, 1.05], lamps: [0.05, 1.0],
-  windows: [[1.15, 1.95]], windowW: 1.1, pitch: 1.4, door: [0.7, 2.2, 1.15, 1.95], doorW: 1.0, doorCount: 3,
-  bogieCentres: 10.5, wheelR: 0.4, wheelbase: 2.1, metro: true, cars: [3, 4, 7],
-  liveries: { lu: lv("London Transport", "10012", [9, "#c8102e"]) },
+  windows: [TUBE_WINDOW], windowW: 1.0, pitch: 1.12, door: TUBE_DOOR, doorW: 0.7, layout: TUBE_LAYOUT, numberAt: [-1.6, 0.92, 0.13],
+  bogieCentres: 10.0, centredBogies: true, wheelR: 0.43, wheelbase: 2.1, couplerY: 0.45, metro: true, cars: [3, 4, 7], fittings: tubeFittings,
+  liveries: {
+    lu: {
+      title: "London Transport", number: "10012", bands: [[0, 9, "ltRed"]], roof: "ltRoof", skirt: "skirtG",
+      palette: {
+        ltRed: c("#c3161c", 0.35), ltRoof: c("#8c3a30", 0.7), skirtG: c("#232426", 0.8), cabMask: c("#1d1f22", 0.3),
+        lettering: c("#c9a24a", 0.35), blind: c("#f1efe6", 0.5), lineMagenta: c("#c0267e"), lineBlue: c("#1c2f6e"),
+        vent: c("#5e2620", 0.7), step: c("#b9b6ae", 0.5), underBox: c("#3a3c3f", 0.8),
+      },
+    },
+  },
   weight: { end: 28, middle: 22 }, power: 270, maxspeed: 72,
 };
 
