@@ -168,8 +168,8 @@ The E6 is drawn with a `cabFace` (in place of the lofted nose tables), measured 
 the 3.65 m roof), the head-on and three-quarter photographs for widths.
 
 - **Nose** - joined to the body's section 11.95 m behind the tip (the door follows at once, 12.2 -
-  13.05 m). A round snout 0.42 - 1.55 m high, its foremost point at 1.09 m, the coupler cover's seam
-  under it and the red over white split at 0.95 m; behind it the nose rises to the windscreen's foot
+  13.05 m). A round snout 0.42 - 1.55 m high, upright from 0.8 to 1.1 m, the coupler cover's seam
+  under it and the red over white split at 1.0 m; behind it the nose rises to the windscreen's foot
   (3.6 m back, 1.98 m) and the canopy (3.0 m high from 6 to 7.5 m back), the roof reaching full height
   at the join. The canopy is narrower than the nose under it: the face's bow (up to 2.2 m deep) is the
   canopy's front, 0.65 m half wide; below 2.08 m the corners reach the full width within 2.4 - 5 m.
@@ -177,7 +177,7 @@ the 3.65 m roof), the head-on and three-quarter photographs for widths.
   1.03 m (2 m back) to a point 10.9 m back at 2.0 m; the white wedge from a point at the headlights
   (4.4 m, 1.43 m) up to the roof's edge, the silver arrow line along its top; the grey line under the
   windows (2.02 - 2.09 m) along the body; the red roof over a silver band (3.1 - 3.2 m). The windscreen
-  (3.6 - 7.3 m back) in a black surround; the headlights' long dark lens (4.5 - 6.5 m, 1.48 - 2.05 m)
+  (3.6 - 7.3 m back) a rounded rectangle 1.24 m wide head on (`fields`), in a thin black surround; the headlights' long dark lens (4.5 - 6.5 m, 1.48 - 2.05 m)
   with two lamps at its front. A low white pilot under the nose (0.2 m high, 1.9 - 5.2 m back) and beige
   equipment covers from 5.3 m back, down to 0.42 m (`B`).
 - **Sides** - windows 0.55 m wide, 2.16 - 2.66 m, 0.9 m apart: seven on the end car (E621), sixteen on

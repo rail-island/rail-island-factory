@@ -847,20 +847,21 @@ export const S700: ShinkansenSeries = {
 /** The cab face's join: the body's own section from here back (the door follows at once). */
 const E6_JOIN = 11.95;
 /** The red's lower sweep: its lower edge, level with the coupler at the snout, rising to its point 10.9 m back. */
-const E6_RED_LOW: Pt[] = [[0.95, 0], [1.0, 1.0], [1.03, 2.0], [1.17, 4.5], [1.4, 7.0], [1.66, 9.5], [2.0, 10.9], [2.02, 10.9]];
+const E6_RED_LOW: Pt[] = [[1.0, 0], [1.02, 1.0], [1.04, 2.0], [1.17, 4.5], [1.4, 7.0], [1.66, 9.5], [2.0, 10.9], [2.02, 10.9]];
 /** The white wedge's lower edge (the red sweep's upper one), from its point at the headlights. */
 const E6_WEDGE_LOW: Pt[] = [[1.43, 4.4], [1.61, 7.0], [1.84, 9.5], [2.04, 10.9]];
 /** The white wedge's upper edge (the silver arrow's lower one), up to the roof's edge at the join. */
 const E6_WEDGE_TOP: Pt[] = [[1.43, 4.4], [2.02, 5.75], [2.09, 6.5], [2.34, 7.0], [2.6, 8.25], [2.8, 9.5], [2.96, 10.75], [3.1, E6_JOIN]];
 /** The silver arrow's upper edge (the red's lower one), 0.11 m over the wedge. */
 const E6_ARROW_TOP: Pt[] = [[1.43, 4.2], [1.6, 4.65], [2.1, 5.75], [2.17, 6.5], [2.43, 7.0], [2.69, 8.25], [2.89, 9.5], [3.05, 10.75], [3.19, E6_JOIN]];
-/** The windscreen's back edge round the canopy's sides: from its foot 3.75 m back, its lower rear corner 6.3 m back, up to the canopy's top. */
-const E6_GLASS_BACK: Pt[] = [[1.98, 3.6], [2.08, 4.3], [2.18, 5.5], [2.3, 6.2], [2.5, 6.55], [2.8, 6.8], [2.96, 7.0], [3.02, 7.3]];
+/** The windscreen and its surround seen head on, [lat, y]. */
+const E6_SURROUND: Pt[] = [[0.7, 2.76], [0.677, 2.875], [0.612, 2.972], [0.515, 3.037], [0.4, 3.06], [-0.4, 3.06], [-0.515, 3.037], [-0.612, 2.972], [-0.677, 2.875], [-0.7, 2.76], [-0.7, 2.22], [-0.677, 2.105], [-0.612, 2.008], [-0.515, 1.943], [-0.4, 1.92], [0.4, 1.92], [0.515, 1.943], [0.612, 2.008], [0.677, 2.105], [0.7, 2.22]];
+const E6_SCREEN: Pt[] = [[0.62, 2.75], [0.601, 2.846], [0.547, 2.927], [0.466, 2.981], [0.37, 3.0], [-0.37, 3.0], [-0.466, 2.981], [-0.547, 2.927], [-0.601, 2.846], [-0.62, 2.75], [-0.62, 2.23], [-0.601, 2.134], [-0.547, 2.053], [-0.466, 1.999], [-0.37, 1.98], [0.37, 1.98], [0.466, 1.999], [0.547, 2.053], [0.601, 2.134], [0.62, 2.23]];
 const at = (y0: number, y1: number): Pt[] => [[y0, -9], [y1, -9]];
 
 /**
  * The E6's nose, 11.95 m to the body's full section (the published 13 m includes the roof's last
- * rise): a round snout at the coupler, 1.1 m tall, its cover split red over white at 0.95 m, the low
+ * rise): a round snout at the coupler, 1.1 m tall, its cover split red over white at 1.0 m, the low
  * pilot behind it; the nose rising behind the snout to the canopy cab, whose windscreen runs from 3.75 m
  * to 7.5 m behind the tip and wraps down its sides. The canopy is narrower than the nose under it: the
  * face's bow (2 m deep at the windscreen) is the canopy's front, the corners behind it sweep out to the
@@ -871,34 +872,34 @@ const at = (y0: number, y1: number): Pt[] => [[y0, -9], [y1, -9]];
  */
 const E6_FACE: SeriesCabFace = {
   dJoin: E6_JOIN, dSide: E6_JOIN, first: 13.35, roofFrom: 9, wrap: true, reach: 0, cols: [4, 16, 2, 1], tolerance: 0.05,
-  profile: [[0.42, 0.7], [0.46, 0.54], [0.6, 0.3], [0.78, 0.13], [0.95, 0.03], [1.09, 0], [1.25, 0.07], [1.4, 0.3], [1.48, 0.6], [1.52, 1.06], [1.55, 1.6], [1.57, 1.95], [1.7, 2.3], [1.8, 2.55], [1.93, 3.0], [2.0, 3.55], [2.08, 3.75], [2.18, 4.0], [2.3, 4.25], [2.65, 5.0], [2.95, 6.0], [3.02, 7.0], [3.1, 7.8], [3.22, 8.9], [3.37, 10.7], [3.5, 11.4], [3.6, 11.75], [3.65, E6_JOIN]],
+  profile: [[0.42, 0.5], [0.46, 0.33], [0.55, 0.16], [0.68, 0.06], [0.82, 0.01], [0.95, 0], [1.09, 0], [1.25, 0.07], [1.4, 0.3], [1.48, 0.6], [1.52, 1.06], [1.55, 1.6], [1.57, 1.95], [1.7, 2.3], [1.8, 2.55], [1.93, 3.0], [2.0, 3.55], [2.08, 3.75], [2.18, 4.0], [2.3, 4.25], [2.65, 5.0], [2.95, 6.0], [3.02, 7.0], [3.1, 7.8], [3.22, 8.9], [3.37, 10.7], [3.5, 11.4], [3.6, 11.75], [3.65, E6_JOIN]],
   corner: [[0.42, 1.25], [1.4, 1.3], [1.52, 1.25], [1.57, 1.15], [1.8, 1.15], [2.08, 1.1], [2.18, 0.95], [2.3, 0.82], [2.65, 0.8], [2.95, 0.75], [3.1, 0.8], [3.22, 0.9], [3.37, 0.9], [3.5, 0.7], [3.6, 0.4], [3.65, 0.05]],
   cornerDepth: [[0.42, 4.5], [0.78, 5.0], [1.09, 5.2], [1.4, 5.0], [1.52, 4.6], [1.57, 4.0], [1.8, 3.4], [1.93, 3.0], [2.08, 2.4], [2.18, 2.8], [2.3, 3.4], [2.65, 3.8], [2.95, 3.8], [3.1, 3.4], [3.22, 2.5], [3.37, 1.05], [3.5, 0.5], [3.6, 0.2], [3.65, 0.01]],
   bulge: [[0.42, 0.05], [1.4, 0.05], [1.52, 0.2], [1.57, 0.4], [1.8, 0.6], [2.08, 0.6], [2.18, 1.4], [2.3, 2.1], [2.65, 1.6], [2.95, 1.0], [3.1, 0.6], [3.22, 0.35], [3.37, 0.15], [3.5, 0.05], [3.6, 0]],
-  rows: [0.42, 0.6, 0.78, 0.95, 1.09, 1.25, 1.4, 1.52, 1.57, 1.8, 1.93, 2.0, 2.08, 2.18, 2.3, 2.65, 2.95, 3.1, 3.22, 3.37, 3.5, 3.6, 3.65],
+  rows: [0.42, 0.5, 0.62, 0.78, 1.0, 1.09, 1.25, 1.4, 1.52, 1.57, 1.8, 1.93, 2.0, 2.08, 2.18, 2.3, 2.65, 2.95, 3.1, 3.22, 3.37, 3.5, 3.6, 3.65],
   // the face white under its paint; the distant model's centre line: white under the coupler, red above
   bands: () => [[0, 9, "white"]],
-  lodBands: [[0, 0.95, "white"], [0.95, 9, "red"]],
+  lodBands: [[0, 1.0, "white"], [1.0, 9, "red"]],
   paint: [
     // the beige equipment covers along the lower side from 5.3 m back
     { mat: "skirtG", front: [[0.42, 5.3], [0.9, 5.6]], back: [[0.42, 99], [0.9, 99]] },
     // the red, its lower sweep under the white wedge (over the whole snout ahead of the wedge's point)
     // and its cap over the silver arrow: the wedge between them is the face's own white
-    { mat: "red", front: [[0.95, -9], [1.43, -9], [1.43, 4.4], ...E6_WEDGE_LOW.slice(1)], back: E6_RED_LOW },
+    { mat: "red", front: [[1.0, -9], [1.43, -9], [1.43, 4.4], ...E6_WEDGE_LOW.slice(1)], back: E6_RED_LOW },
     { mat: "red", front: at(1.43, 9), back: [...E6_ARROW_TOP, [3.21, 99], [9, 99]], top: 9 },
     // the silver arrow over the wedge, and the grey line under the windows behind the sweep's point
     { mat: "arrow", front: E6_ARROW_TOP, back: [...E6_WEDGE_TOP.slice(0, -1), [3.1, E6_JOIN], [3.11, 99], [3.2, 99]], top: 3.2 },
     { mat: "arrow", front: [[2.02, 10.9], [2.09, 10.9]], back: [[2.02, 99], [2.09, 99]] },
     // the headlights' long lens at the top of the wedge's front
     { mat: "cabGlass", front: [[1.48, 4.5], [1.86, 5.3], [1.97, 5.65], [2.03, 6.3]], back: [[1.48, 4.56], [1.6, 5.2], [1.86, 6.17], [1.97, 6.45], [2.03, 6.5]] },
-    // the windscreen in its black surround
-    { mat: "cabMask", front: at(1.93, 3.08), back: [[1.93, 3.5], ...E6_GLASS_BACK.map(([y, d]): Pt => [y, d + 0.12]), [3.08, 7.8]], top: 3.09 },
-    { mat: "cabGlass", front: at(1.98, 3.02), back: E6_GLASS_BACK, top: 3.03 },
   ],
   fields: [
+    // the windscreen on the canopy's front, a rounded rectangle in its thin black surround
+    { mat: "cabMask", pts: E6_SURROUND },
+    { mat: "cabGlass", pts: E6_SCREEN },
     // the coupler cover's seam under the snout, white inside it below the red's split
-    { mat: "rubber", pts: [[-1.05, 0.95], [1.05, 0.95], [0.9, 0.78], [0.62, 0.62], [0.3, 0.53], [0, 0.5], [-0.3, 0.53], [-0.62, 0.62], [-0.9, 0.78]] },
-    { mat: "white", pts: [[-0.98, 0.95], [0.98, 0.95], [0.86, 0.81], [0.6, 0.66], [0.29, 0.57], [0, 0.54], [-0.29, 0.57], [-0.6, 0.66], [-0.86, 0.81]] },
+    { mat: "rubber", pts: [[-1.08, 1.0], [1.08, 1.0], [0.95, 0.8], [0.66, 0.6], [0.32, 0.5], [0, 0.47], [-0.32, 0.5], [-0.66, 0.6], [-0.95, 0.8]] },
+    { mat: "white", pts: [[-1.01, 1.0], [1.01, 1.0], [0.9, 0.83], [0.63, 0.64], [0.31, 0.54], [0, 0.51], [-0.31, 0.54], [-0.63, 0.64], [-0.9, 0.83]] },
   ],
   // the windscreen is paint; the distant model's glass over its front
   panes: [], lodGlass: { hw: 0.55, y: [2.05, 2.95] },
