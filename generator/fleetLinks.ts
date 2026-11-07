@@ -1518,6 +1518,8 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-ship-olympic": [
     { title: "Wikipedia: RMS Olympic", url: "https://en.wikipedia.org/wiki/RMS_Olympic" },
     { title: "Wikimedia Commons: Olympic in New York cropped.jpg", url: "https://commons.wikimedia.org/wiki/File:Olympic_in_New_York_cropped.jpg" },
+    { title: "Wikimedia Commons: OLYMPIC - Sjohistoriska museet - Fo192178 (Cropped).jpg", url: "https://commons.wikimedia.org/wiki/File:OLYMPIC_-_Sj%C3%B6historiska_museet_-_Fo192178_(Cropped).jpg" },
+    { title: "Wikimedia Commons: Titanic side plan annotated English.png", url: "https://commons.wikimedia.org/wiki/File:Titanic_side_plan_annotated_English.png" },
   ],
   "proc-vehicle-ship-panamax-container": [
     { title: "Wikipedia: Panamax", url: "https://en.wikipedia.org/wiki/Panamax" },

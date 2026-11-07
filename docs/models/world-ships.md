@@ -69,6 +69,7 @@ stations:
 | `screws`, `rudder` | propellers and the rudder under the stern (ships default to one screw) |
 | `lift` | a hydrofoil's or fin-keel yacht's hull raised on its foils |
 | `fine` | twice the stations along the hull: a smoother entry, run and flare (the detailed ships) |
+| `counter` | an old liner's counter stern: its overhang aft of the sternpost and its underside's height at the post and the tip; the run fines down to the upright post below it and the rudder hangs on the post (Olympic) |
 
 The section blends from the midship shape to a V towards a pointed end. The paint bands
 are `bottom` (keel to draft), `boot`, `hull`, `stripe`; the deck is drawn in `deck`.
