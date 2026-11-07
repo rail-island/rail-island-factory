@@ -8,8 +8,8 @@
 
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamSpec, ParamValues } from "./design.ts";
-import { shipLod, worldShip, type Item, type Mast, type Sail, type ShipSpec } from "./hullKit.ts";
-import { colourParam, detailed, funnel, passengerFittings, pick, shipDesigns, type WorldShip } from "./worldShips.ts";
+import { hullGeometry, shipLod, worldShip, type HullForm, type Item, type Mast, type Sail, type ShipSpec } from "./hullKit.ts";
+import { colourParam, detailed, passengerFittings, pick, shipDesigns, type WorldShip } from "./worldShips.ts";
 
 /** A rod between two points (u, y, z). */
 const rod = (a: [number, number, number], b: [number, number, number], r: number, mat: string, name?: string): Item => ({ k: "rod", a, b, r, mat, ...(name ? { name } : {}) });
@@ -131,31 +131,129 @@ export function bluenoseSpec(): ShipSpec {
   };
 }
 
+/**
+ * SS Great Britain as preserved in Bristol, in her 1843 six-mast rig: masts 1 and 3-6
+ * fore-and-aft (gaff) rigged, the second square-rigged with three yards, one round funnel
+ * between masts 2 and 3. Positions are measured off the 1843 elevation in
+ * assets/ship-ss-great-britain (11.4 px/m): masts at 81.4, 68.3, 51.1, 39.2, 25.4 and 12.6 m
+ * from the stern, the funnel at 57 m. The black hull carries a white band with painted
+ * gunports between two thin lines, the gilt trailboards at the bow and the stern carving;
+ * the flush deck its buff deckhouses with white roofs, saloon skylights and boats in davits.
+ */
 export function greatBritainSpec(): ShipSpec {
   const L = 98;
   const D = 9.8;
+  const hull: HullForm = { fine: true, length: L, beam: 15.4, depth: D, draft: 5.5, bow: "clipper", stern: "cruiser", section: "round", entry: 0.3, run: 0.22, rake: 0.07, sheer: [0.8, 1.6], boot: 0, stripe: 0, screws: 1 };
+  const g = hullGeometry(hull);
+  const dk = (u: number): number => g.deck(u);
+  const hb = (u: number): number => g.halfBeam(u, g.deck(u));
+  const spacedPts = (a: number, b: number, pitch: number): number[] => {
+    const n = Math.max(1, Math.round((b - a) / pitch));
+    return Array.from({ length: n + 1 }, (_, i) => a + ((b - a) * i) / n);
+  };
+  // a line painted along the sheer, `off` below the deck edge
+  const band = (u0: number, u1: number, off: number, w: number, mat: string, name: string): Item =>
+    ({ k: "hullLine", pts: spacedPts(u0, u1, 3).map((u) => [u, dk(u) - off] as const), w, mat, name });
+  // the trailboard on the bow, from L - 12 to the stem, rising from `off0` to `off1` below the deck edge
+  const trail = (off0: number, off1: number, w: number, mat: string, name: string): Item =>
+    ({ k: "hullLine", pts: spacedPts(L - 12, L - 1.4, 0.8).map((u) => [u, dk(u) - off0 + ((off0 - off1) * (u - L + 12)) / 10.6] as const), w, mat, name });
+  // the band's painted gunports: white panels with the black hull showing between them
+  const portPitch = 2.6;
+  const portW = 0.7;
+  const panels: Item[] = [];
+  for (let u = 7; u + portPitch <= L - 12; u += portPitch) {
+    const a = u + portW / 2;
+    const b = u + portPitch - portW / 2;
+    panels.push({ k: "hullLine", pts: [[a, dk(a) - 1.5], [b, dk(b) - 1.5]], w: 1.1, mat: "white", name: "painted band" });
+  }
+  // the bowsprit's centreline height at u (the kit's: from the deck at L - 1 to len 13, rise 6)
+  const sprit = (u: number): number => dk(L) + (6 * (u - (L - 1))) / 14;
+  const masts: Array<[number, number]> = [[81.4, 31], [68.3, 35], [51.1, 29], [39.2, 29], [25.4, 29], [12.6, 26]];
+  // shrouds from below each masthead to the chain plates inside the bulwark
+  const shroudsOf = (u: number, top: number, n: number): Item[] => Array.from({ length: n }, (_, k) => k).flatMap((k): Item[] => {
+    const uf = u - 0.6 - k * 0.7;
+    return [1, -1].map((sd): Item => rod([u, top - k * 0.6, 0], [uf, dk(uf) + 0.3, sd * (hb(uf) - 0.4)], 0.03, "rope", "shroud"));
+  });
+  // a boat hanging in its two davits outboard of the bulwark
+  const davitBoat = (u: number, len: number, r: number): Item[] => {
+    const zi = hb(u) - 0.5;
+    const zb = hb(u) + 1.05;
+    const yb = dk(u) + 2.2;
+    return [
+      { k: "boats", at: [u], z: zb, y: yb, len, r, mat: "white", name: "boats" },
+      ...[1, -1].flatMap((sd): Item[] => [-1, 1].map((e): Item => ({ k: "box", u: [u + (e * len) / 2 - 0.08, u + (e * len) / 2 + 0.08], z: [sd * zb - 0.26, sd * zb + 0.26], y: [yb - 0.26, yb + 0.26], mat: "white", name: "boat stem" }))),
+      ...[1, -1].flatMap((sd): Item[] => [-1, 1].flatMap((e): Item[] => {
+        const ud = u + e * len * 0.32;
+        return [
+          rod([ud, dk(ud) - 0.1, sd * zi], [ud, yb + 1.8, sd * zi], 0.1, "black", "davit"),
+          rod([ud, yb + 1.8, sd * zi], [ud, yb + 2.05, sd * zb], 0.1, "black", "davit"),
+          rod([ud, yb + 2.05, sd * zb], [ud, yb + r * 0.8, sd * zb], 0.03, "rope", "falls"),
+        ];
+      })),
+    ];
+  };
+  // a companionway: a buff house under a white hood
+  const companion = (u0: number, u1: number, hw: number, h: number): Item[] => [
+    { k: "tier", u: [u0, u1], y: [dk((u0 + u1) / 2) - 0.1, D + h], hw, mat: "buff", top: "white", lip: 0, windows: [{ y: h * 0.35, h: h * 0.3, w: 0.5, pitch: 1.4 }], name: "companionway" },
+    { k: "canopy", u: [u0 - 0.1, u1 + 0.1], hw: hw + 0.12, y: D + h, h: 0.5, mat: "white", name: "companionway hood" },
+  ];
+  // a saloon skylight: a low buff coaming with its glazed top
+  const skylight = (u0: number, u1: number, hw: number): Item[] => [
+    { k: "tier", u: [u0, u1], y: [dk((u0 + u1) / 2) - 0.1, D + 0.9], hw, mat: "buff", top: "white", lip: 0.08, name: "saloon skylight" },
+    { k: "box", u: [u0 + 0.3, u1 - 0.3], z: [-hw + 0.3, hw - 0.3], y: [D + 0.95, D + 1.25], mat: "glass", name: "skylight glazing" },
+  ];
   return {
     kind: "sail",
-    hull: { fine: true, length: L, beam: 15.4, depth: D, draft: 5.5, bow: "clipper", stern: "cruiser", section: "round", entry: 0.3, run: 0.22, rake: 0.04, sheer: [0.8, 1.6], boot: 0, stripe: 1.4, screws: 1 },
-    livery: { hull: "#1d2024", stripe: "#f2f0ea", bottom: "#b02a22", deck: "#a07a52", house: "#f2f0ea", sail: "#efe9da", spar: "#3b2a1a", funnel: "#1d2024" },
+    hull,
+    livery: { hull: "#1d2024", stripe: "#f2f0ea", bottom: "#3a3e42", deck: "#b39a74", house: "#f2f0ea", buff: "#dcc08a", gold: "#c9a14a", sail: "#efe9da", spar: "#dcc08a", funnel: "#1d2024" },
     items: detailed([
-      { k: "portholes", u: [12, 88], y: D - 0.7, pitch: 3.2, r: 0.35, mat: "black", name: "gunports" },
-      funnel([50, 54], 1.6, [D - 0.1, D + 11], [["funnel", 1]], 0.6),
-      { k: "tier", u: [46, 58], y: [D - 0.1, D + 1.6], hw: 4, mat: "wood", name: "skylights" },
+      // the painted band, its two lines and the gilt work at the bow and the stern
+      ...panels,
+      band(5, L - 12, 2.2, 0.12, "white", "band line"),
+      band(5, L - 12, 0.8, 0.1, "gold", "band line"),
+      trail(1.55, 0.95, 1.3, "white", "trailboard"),
+      trail(0.8, 0.2, 0.18, "gold", "trailboard gilt"),
+      trail(2.3, 1.7, 0.18, "gold", "trailboard gilt"),
+      { k: "hullLine", pts: spacedPts(0.6, 4.5, 0.8).map((u) => [u, dk(u) - 1 - (u - 0.6) * 0.05] as const), w: 0.9, mat: "gold", name: "stern carving" },
+      { k: "plate", pts: [[L - 1.4, dk(L) - 2], [L + 0.2, dk(L) - 0.6], [L + 0.3, dk(L) + 1.9], [L - 0.6, dk(L) + 2.4], [L - 1.2, dk(L) + 1]], z: 0, t: 0.6, mat: "gold", name: "stem crest" },
+      // the funnel on the engine-room casing
+      { k: "funnel", u: [55.6, 58.4], hw: 1.4, y: [D - 0.1, D + 12], rake: 0, round: true, bands: [["funnel", 0.5], ["black", 0.53], ["funnel", 1]], name: "funnel" },
+      { k: "tier", u: [53.8, 62.2], y: [D - 0.1, D + 1.8], hw: 2.6, mat: "buff", top: "white", lip: 0.1, windows: [{ y: 0.7, h: 0.6, w: 0.6, pitch: 1.6 }], name: "engine-room casing" },
+      ...companion(63.4, 66.4, 1.4, 2),
+      ...companion(43.6, 47.2, 1.5, 2),
+      ...companion(19, 22, 1.4, 2),
+      ...skylight(27.5, 36.5, 1.5),
+      ...skylight(14.6, 18.4, 1.3),
+      ...skylight(5.5, 10.5, 1.4),
+      { k: "box", u: [72, 76], z: [-1.6, 1.6], y: [dk(74) - 0.1, dk(74) + 0.7], mat: "buff", name: "fore hatch" },
+      { k: "box", u: [72.3, 75.7], z: [-1.3, 1.3], y: [dk(74) + 0.7, dk(74) + 0.9], mat: "wood", name: "hatch cover" },
+      // the wheel aft
+      { k: "box", u: [2.6, 3.4], z: [-0.25, 0.25], y: [dk(3) - 0.1, dk(3) + 1], mat: "wood", name: "wheel box" },
+      rod([3, dk(3) + 1.3, -0.3], [3, dk(3) + 1.3, 0.3], 0.75, "wood", "wheel"),
       {
-        k: "rig", bowsprit: { len: 9, rise: 2.4 },
+        k: "rig", bowsprit: { len: 13, rise: 6 },
         masts: [
-          { u: 84, y: [D, D + 30], r: 0.4, sails: [{ kind: "gaff", y: [D + 2, D + 18], len: 9, head: 6 }, { kind: "jib", y: [D + 3, D + 22], tack: L + 8, len: 10 }] },
-          { ...squareMast(70, D, D + 34, [7.6, 6.8, 5.8], 0.45) },
-          ...[40, 30, 20, 10].map((u): Mast => ({ u, y: [D, D + 28], r: 0.36, sails: [{ kind: "gaff", y: [D + 2, D + 17], len: 8.5, head: 6 }] })),
+          { u: 81.4, y: [D, D + 31], r: 0.42, sails: [{ kind: "gaff", y: [D + 2.4, D + 18], len: 7.6, head: 5.6 }] },
+          squareMast(68.3, D, D + 35, [11, 8.6, 6.2], 0.46),
+          ...masts.slice(2).map(([u, h]): Mast => ({ u, y: [D, D + h], r: 0.38, sails: [{ kind: "gaff", y: [D + 2.4, D + h - 11], len: 8, head: 5.8 }] })),
         ],
       },
-      { k: "bulwark", u: [0, L], h: 1.1, t: 0.2, mat: "white" },
-      ...[84, 70].flatMap((u) => shrouds(u, D + 26, D, 7.2, 3)),
-      ...[40, 30, 20, 10].flatMap((u) => shrouds(u, D + 24, D, 7.2, 2)),
-      { k: "boats", at: [36, 60], z: 7.4, y: D + 1.6, len: 6, r: 0.8, mat: "white", name: "boats" },
-      { k: "vents", at: [[46, 3], [46, -3], [58, 3], [58, -3]], h: 1.6, r: 0.4, cowl: true, mat: "white", name: "ventilators" },
-      { k: "anchors", u: L - 4, y: D - 0.8, s: 1.6 },
+      // the jibs set on the bowsprit (the kit's jib tacks at deck height, below this steep bowsprit):
+      // the outer one's luff on the fore stay to the bowsprit's end, the inner one's on its own stay
+      { k: "plate", pts: [[L + 12.4, sprit(L + 12.4) - 0.1], [88.8, D + 24.7], [L - 3, dk(L - 3) + 3.2]], z: 0, t: 0.04, mat: "sail", name: "outer jib" },
+      { k: "plate", pts: [[L + 6, sprit(L + 6) - 0.1], [82, D + 19], [L - 8, dk(L - 8) + 2.6]], z: 0.3, t: 0.04, mat: "sail", name: "inner jib" },
+      rod([81.4, D + 19.3, 0], [L + 6, sprit(L + 6), 0], 0.04, "rope", "inner stay"),
+      // the main mast's white lower mast with its black bands and black doubling
+      { k: "cyl", u: 68.3, z: 0, y: [dk(68.3) - 0.1, D + 15], r: 0.52, n: 10, mat: "white", name: "main mast paint" },
+      ...[D + 3.5, D + 8, D + 12.5].map((y): Item => ({ k: "cyl", u: 68.3, z: 0, y: [y, y + 0.35], r: 0.58, n: 10, mat: "black", name: "mast band" })),
+      { k: "cyl", u: 68.3, z: 0, y: [D + 14.9, D + 22], r: 0.5, n: 10, mat: "black", name: "main mast doubling" },
+      { k: "bulwark", u: [0, L], h: 1.0, t: 0.25, mat: "black" },
+      ...masts.flatMap(([u, h], i): Item[] => shroudsOf(u, D + h - 4, i < 2 ? 3 : 2)),
+      ...davitBoat(31, 7, 0.8),
+      ...davitBoat(60.5, 7, 0.8),
+      ...davitBoat(9, 6, 0.75),
+      { k: "vents", at: [[52.8, 3], [52.8, -3], [63, 3.2], [63, -3.2]], h: 1.6, r: 0.4, cowl: true, mat: "white", name: "ventilators" },
+      { k: "anchors", u: L - 4.5, y: D - 2.2, s: 1.6 },
       { k: "mooring", at: [3, L - 6], hw: 6.6, s: 0.55, winch: true },
     ]),
   };
