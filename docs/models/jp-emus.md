@@ -45,7 +45,9 @@ Moha E259, 20.5 m (body 20.0 m); 2.946 m wide, roof 3.655 m.
   tip), the passenger door (5.0 - 5.95 m), the Green saloon's window 8.7 - 16.0 m and a small one
   near the rear; the intermediate car's doors 0.55 m from each end and the continuous window
   3.5 - 17.6 m. Window glass and the black over it up to the shoulder are one dark frame
-  (1.84 - 3.12 m). Bogies 13.8 m apart, the end car's leading one under its doors; the single-arm
+  (1.84 - 3.17 m), the carmine roof coming down the curved upper side to the 3.2 m shoulder just
+  over it (0.45 m seen side-on, as in the side photographs). The carmine is `#d4325c`, the crimson
+  the sunlit photographs show, not the published #e30304, which renders orange-red. Bogies 13.8 m apart, the end car's leading one under its doors; the single-arm
   pantograph over the Moha's rear bogie.
 - **Liveries**: `nex` is the renewed livery of 2023 (the door silver with "SERIES E259", the
   same at the end car's rear); `original` the 2009 one (the door black with the vertical white

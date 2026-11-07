@@ -166,7 +166,10 @@ const CAB_SURROUND = { front: [[2.8, 0.72], [3.55, 0.96]] as Pt[], back: [[2.8, 
 const e259Livery = (title: string, number: string, palette: ShinkansenLivery["palette"], endLettering: ShinkansenLivery["endLettering"]): ShinkansenLivery => ({
   title, number, endLettering,
   palette: {
-    white: c("#f4f5f3", 0.35), red: c("#e30304", 0.4), black: c("#0b0c0e", 0.3), skirtG: c("#2a2c2f", 0.6), under: c("#3d4044", 0.8),
+    // the carmine as the photographs show it: a crimson leaning to pink (sunlit roof sides sample
+    // 238,128,159 on Ne003, 253,134,161 on Moha E259-1, 211,135,158 on NE018), darker than those
+    // highlights; the published #e30304 reads too orange-red beside them
+    white: c("#f4f5f3", 0.35), red: c("#d4325c", 0.35), black: c("#0b0c0e", 0.3), skirtG: c("#2a2c2f", 0.6), under: c("#3d4044", 0.8),
     ...palette,
   },
   bands: [[0, 9, "white"]], roof: "red", skirt: "skirtG",
@@ -193,7 +196,7 @@ export const E259: ShinkansenSeries = {
   endLength: 21.43, midLength: 20.5, W, Y: 1.3, S, C, lean: 0.97, B, A: 1.05,
   nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: E259_FACE,
   // the continuous window band: the glass and the black over it up to the shoulder in one dark frame
-  windows: [[1.84, 3.12]], windowW: 1.4, pitch: 1.75, door: [1.1, 3.08, 1.82, 2.88], doorW: 0.935, doorGlassW: 0.45,
+  windows: [[1.84, 3.17]], windowW: 1.4, pitch: 1.75, door: [1.1, 3.08, 1.82, 2.88], doorW: 0.935, doorGlassW: 0.45,
   layout: { end: E259_LAYOUT.end, middle: E259_LAYOUT.middle },
   sidePanels: {
     end: [
@@ -215,7 +218,7 @@ export const E259: ShinkansenSeries = {
       [{ text: "SERIES E259", d: 19.6 - DJOIN, y: 2.3, h: 0.14, mat: "seriesInk" }]),
     original: e259Livery("NEX 2009", "KURO E259-2",
       // 2009: the door black with the white N'EX, its red diamond and the grey aeroplane; the red N'EX over the cab's doors
-      { facePanel: c("#0b0c0e", 0.3), nexInk: c("#f4f5f3", 0.35), nexRed: c("#e30304", 0.4), nexPlane: c("#8f959b", 0.4), seriesInk: c("#0b0c0e", 0.3), jrInk: c("#b9bdc1", 0.4) },
+      { facePanel: c("#0b0c0e", 0.3), nexInk: c("#f4f5f3", 0.35), nexRed: c("#d4325c", 0.35), nexPlane: c("#8f959b", 0.4), seriesInk: c("#0b0c0e", 0.3), jrInk: c("#b9bdc1", 0.4) },
       [{ text: "NEX", d: 6.0 - DJOIN, y: 2.95, h: 0.2, mat: "red" }, { text: "SERIES E259", d: 7.2 - DJOIN, y: 2.95, h: 0.07, mat: "red" }, { text: "NEX", d: 19.6 - DJOIN, y: 2.3, h: 0.2, mat: "nexPlane" }]),
   },
   fittings: e259Fittings,
