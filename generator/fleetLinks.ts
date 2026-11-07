@@ -1342,6 +1342,8 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-ship-crane-vessel": [
     { title: "Wikipedia: SSCV Sleipnir", url: "https://en.wikipedia.org/wiki/SSCV_Sleipnir" },
     { title: "Wikimedia Commons: SLEIPNIR (50504958661).jpg", url: "https://commons.wikimedia.org/wiki/File:SLEIPNIR_(50504958661).jpg" },
+    { title: "Wikimedia Commons: Sleipnir in Haugesund, Norway.jpg", url: "https://commons.wikimedia.org/wiki/File:Sleipnir_in_Haugesund,_Norway.jpg" },
+    { title: "Wikimedia Commons: Sleipnir2.jpg", url: "https://commons.wikimedia.org/wiki/File:Sleipnir2.jpg" },
   ],
   "proc-vehicle-ship-cutty-sark": [
     { title: "Wikipedia: Cutty Sark", url: "https://en.wikipedia.org/wiki/Cutty_Sark" },
