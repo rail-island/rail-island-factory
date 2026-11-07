@@ -81,12 +81,15 @@ Moha E259, 20.5 m (body 20.0 m); 2.946 m wide, roof 3.655 m.
 
 - **Cab face** (`cabFace`, joined 3.6 m behind the tip): flat and white across the gangway door
   (1.4 m wide, 0.95 - 3.13 m) and leaning back 0.15 m; corners rounding back 0.9 m with the black
-  lamp housings on them (lat +-0.97 m, 1.96 - 2.62 m); the windscreen 3.16 - 3.61 m in a black
-  surround, raked back to 1.75 m behind the tip; the white pillars beside it; the black cap over the
+  lamp housings on them (lat +-0.97 m, 1.96 - 2.62 m); the windscreen 3.16 - 3.56 m in a black
+  surround (lat +-0.88 m), raked back to 1.75 m behind the tip; the narrow white pillars beside it
+  (to lat +-1.02 m); the black cap over the
   cab (the face's band above the 3.2 m shoulder, `endRoofEdge` to 5.2 m), then the white cab roof up
   to the carmine roof's slanted edge (`capSlope`: 8.4 m at the shoulder, 6.8 m at the crown).
-- **Cab side window**: a wedge on the face's sides (`endSweeps`, glass in a white surround) from
-  0.8 m behind the tip to its point at 3.4 m, 2.86 - 3.44 m high.
+- **Cab side window** (`endSweeps` with `face`, so it wraps onto the face's corners): glass from just
+  outside the pillar (lat 1.02 m) down to 2.86 m, its foot rising steeply behind the corner and running
+  nearly level at 3.25 - 3.28 m back to the join; its head at 3.46 - 3.42 m under a white arch 0.07 m
+  wide that carries the pillar back over the window on the roof's arc, the black cap over that.
 - **Skirt** (`fittings`): white corner fairings over a black lip, the dark coupler pocket between
   them and the coupler reaching the coupling plane.
 - **Sides** (`layout`): the end car's crew door (a seam and its window, 4.05 - 4.75 m behind the

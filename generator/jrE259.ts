@@ -85,24 +85,24 @@ const E259_FACE: SeriesCabFace = {
   profile: [[0.95, 0.1], [1.05, 0.05], [1.3, 0.01], [1.6, 0], [2.6, 0.06], [3.12, 0.16], [3.2, 0.22], [3.3, 0.36], [3.45, 0.7], [3.52, 0.95], [3.58, 1.3], [3.62, 1.75], [3.645, 2.4], [C, DJOIN]],
   corner: [[0.95, 0.72], [2.6, 0.76], [3.12, 0.76], [3.3, 0.7], [3.52, 0.55], [3.62, 0.35], [C, 0.08]],
   cornerDepth: [[0.95, 0.85], [2.6, 0.95], [3.12, 0.95], [3.3, 0.9], [3.52, 0.75], [3.62, 0.5], [C, 0.12]],
-  rows: [0.95, 1.05, 1.2, 1.3, 1.45, 1.6, 1.9, 2.05, 2.2, 2.33, 2.45, 2.6, 2.75, 2.9, 3.0, 3.12, 3.16, 3.2, 3.3, 3.38, 3.45, 3.5, 3.52, 3.56, 3.58, 3.62, 3.645, C],
+  rows: [0.95, 1.05, 1.3, 1.45, 1.6, 1.9, 2.2, 2.45, 2.6, 2.9, 3.0, 3.12, 3.16, 3.2, 3.3, 3.38, 3.45, 3.5, 3.52, 3.56, 3.58, 3.62, 3.645, C],
   // white up to the shoulder, the black cap over the cab above it (the cab's sides too)
   bands: () => [[0, S, "white"], [S, 9, "black"]],
   lodBands: [[0, S, "white"], [S, 9, "black"]],
   fields: [
-    // the white pillars beside the windscreen, carried round the corners to the cab's sides
-    { mat: "white", pts: [[0.84, 3.1], [1.6, 3.1], [1.6, 3.56], [1.0, 3.6], [0.86, 3.6]] },
-    { mat: "white", pts: [[-1.6, 3.1], [-0.84, 3.1], [-0.86, 3.6], [-1.0, 3.6], [-1.6, 3.56]] },
+    // the narrow white pillars beside the windscreen (lat 0.88 - 1.02 m), the side window outside them
+    { mat: "white", pts: [[0.84, 3.1], [1.02, 3.1], [1.02, 3.46], [0.98, 3.52], [0.86, 3.54]] },
+    { mat: "white", pts: [[-1.02, 3.1], [-0.84, 3.1], [-0.86, 3.54], [-0.98, 3.52], [-1.02, 3.46]] },
   ],
   masks: [
     // the windscreen's black surround, then the gangway door over it
-    { lat: [-0.92, 0.92], y: [3.08, 3.64], r: 0.12, mat: "black" },
+    { lat: [-0.88, 0.88], y: [3.08, 3.64], r: 0.12, mat: "black" },
     { lat: [-0.7, 0.7], y: [0.95, 3.13], r: 0.05, mat: "facePanel" },
     // the teardrop lamp housings on the corners
     { lat: [0.86, 1.08], y: [1.96, 2.62], r: 0.11, mat: "black" },
     { lat: [-1.08, -0.86], y: [1.96, 2.62], r: 0.11, mat: "black" },
   ],
-  panes: [{ lat: [-0.86, 0.86], y: [3.16, 3.61], r: 0.12 }],
+  panes: [{ lat: [-0.84, 0.84], y: [3.16, 3.56], r: 0.1 }],
   decals: [
     ...NEX_LETTERS.map((pts) => ({ mat: "nexInk", pts, fine: 1 })),
     { mat: "nexRed", pts: NEX_DIAMOND, fine: 1 },
@@ -158,9 +158,26 @@ function e259Fittings(m: MeshBuilder, _b: SliceBody, X: (d: number) => number, c
   });
 }
 
-/** The cab's side window, a wedge on the face's sides under the white pillar ([y, d] edges behind the tip), and the white round it. */
-const CAB_WINDOW = { front: [[2.86, 0.8], [3.44, 1.02]] as Pt[], back: [[2.86, 0.8], [3.28, 3.42], [3.44, 3.3]] as Pt[] };
-const CAB_SURROUND = { front: [[2.8, 0.72], [3.55, 0.96]] as Pt[], back: [[2.8, 0.72], [3.28, 3.55], [3.55, 3.45]] as Pt[] };
+/**
+ * The cab's side window ([y, d] edges behind the tip, on the face's corners and its cab sides) and
+ * the white round it (photo-jre-series-e259r-ne003.jpg head on: the glass from lat 1.02 m out and
+ * down to 2.86 m behind the narrow white pillar; photo-kuroe259-1.jpg and photo-e259-ne002-... from
+ * the side): the window's foot rising steeply behind the corner and running nearly level just over
+ * the shoulder back past the join, its head under a white arch 0.07 m wide that carries the pillar
+ * back over the window (at half width 1.0 - 1.15 m on the roof's arc), the black cap over that.
+ */
+const CAB_WINDOW = {
+  front: [[2.86, 0.23], [3.1, 0.28], [3.2, 0.34], [3.3, 0.49], [3.4, 0.78], [3.46, 1.02]] as Pt[],
+  // the foot, then the head falling from 3.46 m to 3.42 m at the join
+  back: [[2.86, 0.26], [2.95, 0.45], [3.05, 0.8], [3.15, 1.3], [3.21, 2.0], [3.25, 2.8], [3.28, 3.62], [3.42, 3.62], [3.46, 1.12]] as Pt[],
+  face: true,
+};
+const CAB_SURROUND = {
+  // from the shoulder up only: white is the face's own band below it
+  front: [[3.18, 0.27], [3.3, 0.42], [3.4, 0.7], [3.45, 0.87], [3.5, 1.12], [3.54, 1.42]] as Pt[],
+  back: [[3.18, 3.62], [3.5, 3.62], [3.54, 1.5]] as Pt[],
+  face: true,
+};
 
 /** Both liveries' white body, carmine roof and the end car's cab roof: the black cap to 5.2 m behind the tip, then white up to the roof's slanted red edge. */
 const e259Livery = (title: string, number: string, palette: ShinkansenLivery["palette"], endLettering: ShinkansenLivery["endLettering"]): ShinkansenLivery => ({
@@ -174,8 +191,8 @@ const e259Livery = (title: string, number: string, palette: ShinkansenLivery["pa
   },
   bands: [[0, 9, "white"]], roof: "red", skirt: "skirtG",
   endSweeps: [
-    { mat: "white", ...CAB_SURROUND, top: 3.56 },
-    { mat: "cabGlass", ...CAB_WINDOW, top: 3.5 },
+    { mat: "white", ...CAB_SURROUND, top: 3.55 },
+    { mat: "cabGlass", ...CAB_WINDOW, top: 3.55 },
   ],
   endRoofEdge: { mat: "black", y: C, d: [DJOIN, 5.2, 5.2] },
   frontRoof: "white",
